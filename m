@@ -1,16 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8EIlucX142364 for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 13:47:56 -0500
-Subject: Re: [PATCH 01/18] xfs: single thread inode cache shrinking.
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1284461777-1496-2-git-send-email-david@fromorbit.com>
-References: <1284461777-1496-1-git-send-email-david@fromorbit.com>
-	<1284461777-1496-2-git-send-email-david@fromorbit.com>
-Date: Tue, 14 Sep 2010 13:48:26 -0500
-Message-ID: <1284490106.2098.161.camel@doink>
-Mime-Version: 1.0
-Reply-To: aelder@sgi.com
+	o8EJ5dKD143084 for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 14:05:39 -0500
+Received: from smtp-relay.maven.pl (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 782251E66826
+	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 12:06:27 -0700 (PDT)
+Received: from smtp-relay.maven.pl (smtp-relay.maven.pl [193.239.45.138]) by
+	cuda.sgi.com with ESMTP id HC5GS2Ew3IEKYn8D for
+	<xfs@oss.sgi.com>; Tue, 14 Sep 2010 12:06:27 -0700 (PDT)
+Received: from chello087207113141.chello.pl ([87.207.113.141]:47901
+	helo=tarm.maven.pl)
+	by smtp-relay.maven.pl with esmtpsa (TLSv1:DHE-RSA-AES256-SHA:256)
+	(Exim 4.72) (envelope-from <arekm@maven.pl>) id 1Ovapl-0006T9-Pz
+	for xfs@oss.sgi.com; Tue, 14 Sep 2010 21:06:25 +0200
+Received: from arekm by tarm.maven.pl with local (Exim 4.72)
+	(envelope-from <arekm@maven.pl>) id 1Ovapk-0007qH-Gh
+	for xfs@oss.sgi.com; Tue, 14 Sep 2010 21:06:24 +0200
+From: Arkadiusz Miskiewicz <arekm@maven.pl>
+Subject: Re: Delaylog
+Date: Tue, 14 Sep 2010 21:06:24 +0200
+References: <AANLkTin6FSBK3tMXhSxDuLdjyb+R0LhNnaa2CKt37FcV@mail.gmail.com>
+In-Reply-To: <AANLkTin6FSBK3tMXhSxDuLdjyb+R0LhNnaa2CKt37FcV@mail.gmail.com>
+MIME-Version: 1.0
+Message-Id: <201009142106.24448.arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,57 +31,22 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, 2010-09-14 at 20:56 +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Having multiple CPUs trying to do the same cache shrinking work can
-> be actively harmful to perforamnce when the shrinkers land in the
-> same AGs.  They then lockstep on perag locks, causing contention and
-> slowing each other down. Reclaim walking is sufficiently efficient
-> that we do no need parallelism to make significant progress, so stop
-> parallel access at the door.
-> 
-> Instead, keep track of the number of objects the shrinkers want
-> cleaned and make sure the single running shrinker does not stop
-> until it has hit the threshold that the other shrinker calls have
-> built up.
-> 
-> This increases the cold-cache unlink rate of a 8-way parallel unlink
-> workload from about 15,000 unlinks/s to 60-70,000 unlinks/s for the
-> same CPU usage (~700%), resulting in the runtime for a 200M inode
-> unlink workload dropping from 4h50m to just under 1 hour.
-
-This is an aside, but...
-
-Shrinking still hits the first AG's more than the rest,
-right?  I.e. if AG 0 has nr_to_scan reclaimable inodes, no
-other AG's get their inodes reclaimed?
-
-Anyway, this change looks good.
-
-Reviewed-by: Alex Elder <aelder@sgi.com>
-
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/linux-2.6/xfs_sync.c |   21 +++++++++++++++++++--
->  fs/xfs/xfs_mount.h          |    2 ++
->  2 files changed, 21 insertions(+), 2 deletions(-)
-> 
-> diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
-> index d59c4a6..bc54cd6 100644
-
-. . .
-
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVHVlc2RheSAxNCBvZiBTZXB0ZW1iZXIgMjAxMCwgRmFicmljaW8gQXJjaGFuam8gd3JvdGU6
+Cj4gSGV5IGFsbCwKPiAKPiAgICBJIGp1c3QgdHJ5aW5nIGRlbGF5bG9nIGluIG15IHNlcnZlciB0
+aGF0IGhhcyBhIG15c3FsIGRhdGFiYXNlLiBXaGVuCj4gaSBtb250ZWQgbXkgL3Zhci9saWIvbXlz
+cWwgd2l0aCBkZWxheWxvZyBvcHRpb24sIGl0IHNob3dlZCBtZToKPiAiRW5hYmxpbmcgRVhQRVJJ
+TUVOVEFMIGRlbGF5ZWQgbG9nZ2luZyBmZWF0dXJlIC0gdXNlIGF0IHlvdXIgb3duCj4gcmlzayIu
+IE9rLCBpIGtub3cgaXQncyBleHBlcmltZW50YWwsIGJ1dCB3aGF0IGtpbmQgb2YgcHJvYmxlbSBj
+b3VsZCBpCj4gaGF2ZSB1c2luZyBkZWxheWxvZz8KCi4uLiBhbmQgd2hhdCBwcm9ibGVtcyBpbiBj
+YXNlIG9mIHN5c3RlbSBoYW5nIG9yIHBvd2VyIGxvc3Mgd2hlbiBjb21wYXJlZCB0byAKbm9kZWxh
+eWxvZyBtb2RlPwoKLS0gCkFya2FkaXVzeiBNacWba2lld2ljeiAgICAgICAgUExEL0xpbnV4IFRl
+YW0KYXJla20gLyBtYXZlbi5wbCAgICAgICAgICAgIGh0dHA6Ly9mdHAucGxkLWxpbnV4Lm9yZy8K
+Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWls
+aW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3Rp
+bmZvL3hmcwo=
