@@ -1,29 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8EAuBlf121153 for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 05:56:12 -0500
+	o8EAuOK1121284 for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 05:56:25 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D70F41E65312
-	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 03:56:58 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
-	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	FJ5NqKbuTw7T4ND2 for <xfs@oss.sgi.com>;
-	Tue, 14 Sep 2010 03:56:58 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 369451E6531E
+	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 03:57:12 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
+	[150.101.137.99]) by cuda.sgi.com with ESMTP id
+	3IDMuAhcpkktVA7B for <xfs@oss.sgi.com>;
+	Tue, 14 Sep 2010 03:57:12 -0700 (PDT)
 Received: from dastard (unverified [121.44.127.68])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	38830808-1927428
-	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 20:26:57 +0930 (CST)
+	39287371-1927428
+	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 20:27:11 +0930 (CST)
 Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1OvTC4-0004Ov-8D
-	for xfs@oss.sgi.com; Tue, 14 Sep 2010 20:56:56 +1000
+	(envelope-from <dave@fromorbit.com>) id 1OvTC7-0004P2-Lj
+	for xfs@oss.sgi.com; Tue, 14 Sep 2010 20:56:59 +1000
 Received: from dave by disturbed with local (Exim 4.72)
-	(envelope-from <dave@disturbed.disaster>) id 1OvTBl-0000QH-69
-	for xfs@oss.sgi.com; Tue, 14 Sep 2010 20:56:37 +1000
+	(envelope-from <dave@disturbed.disaster>) id 1OvTBv-0000QM-8z
+	for xfs@oss.sgi.com; Tue, 14 Sep 2010 20:56:47 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 10/18] xfs: store xfs_mount in the buftarg instead of in the
-	xfs_buf
-Date: Tue, 14 Sep 2010 20:56:09 +1000
-Message-Id: <1284461777-1496-11-git-send-email-david@fromorbit.com>
+Subject: [PATCH 12/18] xfs: use unhashed buffers for size checks
+Date: Tue, 14 Sep 2010 20:56:11 +1000
+Message-Id: <1284461777-1496-13-git-send-email-david@fromorbit.com>
 In-Reply-To: <1284461777-1496-1-git-send-email-david@fromorbit.com>
 References: <1284461777-1496-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -43,196 +42,166 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Each buffer contains both a buftarg pointer and a mount pointer. If
-we add a mount pointer into the buftarg, we can avoid needing the
-b_mount field in every buffer and grab it from the buftarg when
-needed instead. This shrinks the xfs_buf by 8 bytes.
+When we are checking we can access the last block of each device, we
+do not need to use cached buffers as they will be tossed away
+immediately. Use uncached buffers for size checks so that all IO
+prior to full in-memory structure initialisation does not use the
+buffer cache.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/linux-2.6/xfs_buf.c   |    9 ++++-----
- fs/xfs/linux-2.6/xfs_buf.h   |    5 +++--
- fs/xfs/linux-2.6/xfs_super.c |    8 +++++---
- fs/xfs/xfs_buf_item.c        |    3 +--
- fs/xfs/xfs_log_recover.c     |   16 +++++++---------
- 5 files changed, 20 insertions(+), 21 deletions(-)
+ fs/xfs/xfs_fsops.c   |   11 +++++------
+ fs/xfs/xfs_mount.c   |   39 ++++++++++++++++-----------------------
+ fs/xfs/xfs_rtalloc.c |   29 +++++++++++++----------------
+ 3 files changed, 34 insertions(+), 45 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
-index 8555974..726a6dc 100644
---- a/fs/xfs/linux-2.6/xfs_buf.c
-+++ b/fs/xfs/linux-2.6/xfs_buf.c
-@@ -892,7 +892,7 @@ xfs_buf_lock(
- 	trace_xfs_buf_lock(bp, _RET_IP_);
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 43b1d56..158d5ab 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -144,12 +144,11 @@ xfs_growfs_data_private(
+ 	if ((error = xfs_sb_validate_fsb_count(&mp->m_sb, nb)))
+ 		return error;
+ 	dpct = pct - mp->m_sb.sb_imax_pct;
+-	error = xfs_read_buf(mp, mp->m_ddev_targp,
+-			XFS_FSB_TO_BB(mp, nb) - XFS_FSS_TO_BB(mp, 1),
+-			XFS_FSS_TO_BB(mp, 1), 0, &bp);
+-	if (error)
+-		return error;
+-	ASSERT(bp);
++	bp = xfs_buf_read_uncached(mp, mp->m_ddev_targp,
++				XFS_FSB_TO_BB(mp, nb) - XFS_FSS_TO_BB(mp, 1),
++				BBTOB(XFS_FSS_TO_BB(mp, 1)));
++	if (!bp)
++		return EIO;
+ 	xfs_buf_relse(bp);
  
- 	if (atomic_read(&bp->b_pin_count) && (bp->b_flags & XBF_STALE))
--		xfs_log_force(bp->b_mount, 0);
-+		xfs_log_force(bp->b_target->bt_mount, 0);
- 	if (atomic_read(&bp->b_io_remaining))
- 		blk_run_address_space(bp->b_target->bt_mapping);
- 	down(&bp->b_sema);
-@@ -1015,7 +1015,6 @@ xfs_bwrite(
+ 	new = nb;	/* use new as a temporary here */
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 4d727d0..d1498a6 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -979,42 +979,35 @@ xfs_check_sizes(xfs_mount_t *mp)
  {
- 	int			error;
+ 	xfs_buf_t	*bp;
+ 	xfs_daddr_t	d;
+-	int		error;
  
--	bp->b_mount = mp;
- 	bp->b_flags |= XBF_WRITE;
- 	bp->b_flags &= ~(XBF_ASYNC | XBF_READ);
- 
-@@ -1036,8 +1035,6 @@ xfs_bdwrite(
- {
- 	trace_xfs_buf_bdwrite(bp, _RET_IP_);
- 
--	bp->b_mount = mp;
--
- 	bp->b_flags &= ~XBF_READ;
- 	bp->b_flags |= (XBF_DELWRI | XBF_ASYNC);
- 
-@@ -1126,7 +1123,7 @@ int
- xfs_bdstrat_cb(
- 	struct xfs_buf	*bp)
- {
--	if (XFS_FORCED_SHUTDOWN(bp->b_mount)) {
-+	if (XFS_FORCED_SHUTDOWN(bp->b_target->bt_mount)) {
- 		trace_xfs_bdstrat_shut(bp, _RET_IP_);
- 		/*
- 		 * Metadata write that didn't get logged but
-@@ -1642,6 +1639,7 @@ out_error:
- 
- xfs_buftarg_t *
- xfs_alloc_buftarg(
-+	struct xfs_mount	*mp,
- 	struct block_device	*bdev,
- 	int			external,
- 	const char		*fsname)
-@@ -1650,6 +1648,7 @@ xfs_alloc_buftarg(
- 
- 	btp = kmem_zalloc(sizeof(*btp), KM_SLEEP);
- 
-+	btp->bt_mount = mp;
- 	btp->bt_dev =  bdev->bd_dev;
- 	btp->bt_bdev = bdev;
- 	if (xfs_setsize_buftarg_early(btp, bdev))
-diff --git a/fs/xfs/linux-2.6/xfs_buf.h b/fs/xfs/linux-2.6/xfs_buf.h
-index 4d5937d..086d2bc 100644
---- a/fs/xfs/linux-2.6/xfs_buf.h
-+++ b/fs/xfs/linux-2.6/xfs_buf.h
-@@ -132,6 +132,7 @@ typedef struct xfs_buftarg {
- 	dev_t			bt_dev;
- 	struct block_device	*bt_bdev;
- 	struct address_space	*bt_mapping;
-+	struct xfs_mount	*bt_mount;
- 	unsigned int		bt_bsize;
- 	unsigned int		bt_sshift;
- 	size_t			bt_smask;
-@@ -189,7 +190,6 @@ typedef struct xfs_buf {
- 	struct completion	b_iowait;	/* queue for I/O waiters */
- 	void			*b_fspriv;
- 	void			*b_fspriv2;
--	struct xfs_mount	*b_mount;
- 	unsigned short		b_error;	/* error code on I/O */
- 	unsigned int		b_page_count;	/* size of page array */
- 	unsigned int		b_offset;	/* page offset in first page */
-@@ -377,7 +377,8 @@ static inline void xfs_buf_relse(xfs_buf_t *bp)
- /*
-  *	Handling of buftargs.
-  */
--extern xfs_buftarg_t *xfs_alloc_buftarg(struct block_device *, int, const char *);
-+extern xfs_buftarg_t *xfs_alloc_buftarg(struct xfs_mount *,
-+			struct block_device *, int, const char *);
- extern void xfs_free_buftarg(struct xfs_mount *, struct xfs_buftarg *);
- extern void xfs_wait_buftarg(xfs_buftarg_t *);
- extern int xfs_setsize_buftarg(xfs_buftarg_t *, unsigned int, unsigned int);
-diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
-index 6205eb8..02c7a7d 100644
---- a/fs/xfs/linux-2.6/xfs_super.c
-+++ b/fs/xfs/linux-2.6/xfs_super.c
-@@ -758,18 +758,20 @@ xfs_open_devices(
- 	 * Setup xfs_mount buffer target pointers
- 	 */
- 	error = ENOMEM;
--	mp->m_ddev_targp = xfs_alloc_buftarg(ddev, 0, mp->m_fsname);
-+	mp->m_ddev_targp = xfs_alloc_buftarg(mp, ddev, 0, mp->m_fsname);
- 	if (!mp->m_ddev_targp)
- 		goto out_close_rtdev;
- 
- 	if (rtdev) {
--		mp->m_rtdev_targp = xfs_alloc_buftarg(rtdev, 1, mp->m_fsname);
-+		mp->m_rtdev_targp = xfs_alloc_buftarg(mp, rtdev, 1,
-+							mp->m_fsname);
- 		if (!mp->m_rtdev_targp)
- 			goto out_free_ddev_targ;
+ 	d = (xfs_daddr_t)XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks);
+ 	if (XFS_BB_TO_FSB(mp, d) != mp->m_sb.sb_dblocks) {
+-		cmn_err(CE_WARN, "XFS: size check 1 failed");
++		cmn_err(CE_WARN, "XFS: filesystem size mismatch detected");
+ 		return XFS_ERROR(EFBIG);
  	}
- 
- 	if (logdev && logdev != ddev) {
--		mp->m_logdev_targp = xfs_alloc_buftarg(logdev, 1, mp->m_fsname);
-+		mp->m_logdev_targp = xfs_alloc_buftarg(mp, logdev, 1,
-+							mp->m_fsname);
- 		if (!mp->m_logdev_targp)
- 			goto out_free_rtdev_targ;
- 	} else {
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index 1b09d7a..ee75576 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -692,8 +692,7 @@ xfs_buf_item_init(
- 	 * the first.  If we do already have one, there is
- 	 * nothing to do here so return.
- 	 */
--	if (bp->b_mount != mp)
--		bp->b_mount = mp;
-+	ASSERT(bp->b_target->bt_mount == mp);
- 	if (XFS_BUF_FSPRIVATE(bp, void *) != NULL) {
- 		lip = XFS_BUF_FSPRIVATE(bp, xfs_log_item_t *);
- 		if (lip->li_type == XFS_LI_BUF) {
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index f1e64db..eb03e9d 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -321,10 +321,11 @@ xlog_recover_iodone(
- 		 * this during recovery. One strike!
- 		 */
- 		xfs_ioerror_alert("xlog_recover_iodone",
--				  bp->b_mount, bp, XFS_BUF_ADDR(bp));
--		xfs_force_shutdown(bp->b_mount, SHUTDOWN_META_IO_ERROR);
-+					bp->b_target->bt_mount, bp,
-+					XFS_BUF_ADDR(bp));
-+		xfs_force_shutdown(bp->b_target->bt_mount,
-+					SHUTDOWN_META_IO_ERROR);
+-	error = xfs_read_buf(mp, mp->m_ddev_targp,
+-			     d - XFS_FSS_TO_BB(mp, 1),
+-			     XFS_FSS_TO_BB(mp, 1), 0, &bp);
+-	if (!error) {
+-		xfs_buf_relse(bp);
+-	} else {
+-		cmn_err(CE_WARN, "XFS: size check 2 failed");
+-		if (error == ENOSPC)
+-			error = XFS_ERROR(EFBIG);
+-		return error;
++	bp = xfs_buf_read_uncached(mp, mp->m_ddev_targp,
++					d - XFS_FSS_TO_BB(mp, 1),
++					BBTOB(XFS_FSS_TO_BB(mp, 1)));
++	if (!bp) {
++		cmn_err(CE_WARN, "XFS: last sector read failed");
++		return EIO;
  	}
--	bp->b_mount = NULL;
- 	XFS_BUF_CLR_IODONE_FUNC(bp);
- 	xfs_biodone(bp);
++	xfs_buf_relse(bp);
+ 
+ 	if (mp->m_logdev_targp != mp->m_ddev_targp) {
+ 		d = (xfs_daddr_t)XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks);
+ 		if (XFS_BB_TO_FSB(mp, d) != mp->m_sb.sb_logblocks) {
+-			cmn_err(CE_WARN, "XFS: size check 3 failed");
++			cmn_err(CE_WARN, "XFS: log size mismatch detected");
+ 			return XFS_ERROR(EFBIG);
+ 		}
+-		error = xfs_read_buf(mp, mp->m_logdev_targp,
+-				     d - XFS_FSB_TO_BB(mp, 1),
+-				     XFS_FSB_TO_BB(mp, 1), 0, &bp);
+-		if (!error) {
+-			xfs_buf_relse(bp);
+-		} else {
+-			cmn_err(CE_WARN, "XFS: size check 3 failed");
+-			if (error == ENOSPC)
+-				error = XFS_ERROR(EFBIG);
+-			return error;
++		bp = xfs_buf_read_uncached(mp, mp->m_logdev_targp,
++					d - XFS_FSB_TO_BB(mp, 1),
++					XFS_FSB_TO_B(mp, 1));
++		if (!bp) {
++			cmn_err(CE_WARN, "XFS: log device read failed");
++			return EIO;
+ 		}
++		xfs_buf_relse(bp);
+ 	}
+ 	return 0;
  }
-@@ -2275,8 +2276,7 @@ xlog_recover_do_buffer_trans(
- 		XFS_BUF_STALE(bp);
- 		error = xfs_bwrite(mp, bp);
- 	} else {
--		ASSERT(bp->b_mount == NULL || bp->b_mount == mp);
--		bp->b_mount = mp;
-+		ASSERT(bp->b_target->bt_mount == mp);
- 		XFS_BUF_SET_IODONE_FUNC(bp, xlog_recover_iodone);
- 		xfs_bdwrite(mp, bp);
+diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+index 891260f..5c5a4c4 100644
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -39,6 +39,7 @@
+ #include "xfs_trans_space.h"
+ #include "xfs_utils.h"
+ #include "xfs_trace.h"
++#include "xfs_buf.h"
+ 
+ 
+ /*
+@@ -1883,13 +1884,13 @@ xfs_growfs_rt(
+ 	/*
+ 	 * Read in the last block of the device, make sure it exists.
+ 	 */
+-	error = xfs_read_buf(mp, mp->m_rtdev_targp,
+-			XFS_FSB_TO_BB(mp, nrblocks - 1),
+-			XFS_FSB_TO_BB(mp, 1), 0, &bp);
+-	if (error)
+-		return error;
+-	ASSERT(bp);
++	bp = xfs_buf_read_uncached(mp, mp->m_rtdev_targp,
++				XFS_FSB_TO_BB(mp, nrblocks - 1),
++				XFS_FSB_TO_B(mp, 1));
++	if (!bp)
++		return EIO;
+ 	xfs_buf_relse(bp);
++
+ 	/*
+ 	 * Calculate new parameters.  These are the final values to be reached.
+ 	 */
+@@ -2215,7 +2216,6 @@ xfs_rtmount_init(
+ {
+ 	xfs_buf_t	*bp;	/* buffer for last block of subvolume */
+ 	xfs_daddr_t	d;	/* address of last block of subvolume */
+-	int		error;	/* error return value */
+ 	xfs_sb_t	*sbp;	/* filesystem superblock copy in mount */
+ 
+ 	sbp = &mp->m_sb;
+@@ -2242,15 +2242,12 @@ xfs_rtmount_init(
+ 			(unsigned long long) mp->m_sb.sb_rblocks);
+ 		return XFS_ERROR(EFBIG);
  	}
-@@ -2540,8 +2540,7 @@ xlog_recover_do_inode_trans(
+-	error = xfs_read_buf(mp, mp->m_rtdev_targp,
+-				d - XFS_FSB_TO_BB(mp, 1),
+-				XFS_FSB_TO_BB(mp, 1), 0, &bp);
+-	if (error) {
+-		cmn_err(CE_WARN,
+-	"XFS: realtime mount -- xfs_read_buf failed, returned %d", error);
+-		if (error == ENOSPC)
+-			return XFS_ERROR(EFBIG);
+-		return error;
++	bp = xfs_buf_read_uncached(mp, mp->m_rtdev_targp,
++					d - XFS_FSB_TO_BB(mp, 1),
++					XFS_FSB_TO_B(mp, 1));
++	if (!bp) {
++		cmn_err(CE_WARN, "XFS: realtime device size check failed");
++		return EIO;
  	}
- 
- write_inode_buffer:
--	ASSERT(bp->b_mount == NULL || bp->b_mount == mp);
--	bp->b_mount = mp;
-+	ASSERT(bp->b_target->bt_mount == mp);
- 	XFS_BUF_SET_IODONE_FUNC(bp, xlog_recover_iodone);
- 	xfs_bdwrite(mp, bp);
- error:
-@@ -2678,8 +2677,7 @@ xlog_recover_do_dquot_trans(
- 	memcpy(ddq, recddq, item->ri_buf[1].i_len);
- 
- 	ASSERT(dq_f->qlf_size == 2);
--	ASSERT(bp->b_mount == NULL || bp->b_mount == mp);
--	bp->b_mount = mp;
-+	ASSERT(bp->b_target->bt_mount == mp);
- 	XFS_BUF_SET_IODONE_FUNC(bp, xlog_recover_iodone);
- 	xfs_bdwrite(mp, bp);
- 
+ 	xfs_buf_relse(bp);
+ 	return 0;
 -- 
 1.7.1
 
