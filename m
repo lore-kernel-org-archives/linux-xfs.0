@@ -1,14 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8EMTnOg151107 for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 17:29:50 -0500
-Subject: Re: [PATCH 13/18] xfs: remove buftarg hash for external devices
+	o8EMKbkx150827 for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 17:20:37 -0500
+Subject: Re: [PATCH 10/18] xfs: store xfs_mount in the buftarg instead of
+	in the xfs_buf
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1284461777-1496-14-git-send-email-david@fromorbit.com>
+In-Reply-To: <1284461777-1496-11-git-send-email-david@fromorbit.com>
 References: <1284461777-1496-1-git-send-email-david@fromorbit.com>
-	<1284461777-1496-14-git-send-email-david@fromorbit.com>
-Date: Tue, 14 Sep 2010 17:29:56 -0500
-Message-ID: <1284503396.9701.96.camel@doink>
+	<1284461777-1496-11-git-send-email-david@fromorbit.com>
+Date: Tue, 14 Sep 2010 17:21:17 -0500
+Message-ID: <1284502877.9701.93.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -29,27 +30,18 @@ Cc: xfs@oss.sgi.com
 On Tue, 2010-09-14 at 20:56 +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> For RT and external log devices, we never use hashed buffers on them
-> now.  Remove the buftarg hash tables that are set up for them.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/linux-2.6/xfs_buf.c |    6 +++++-
->  1 files changed, 5 insertions(+), 1 deletions(-)
+> Each buffer contains both a buftarg pointer and a mount pointer. If
+> we add a mount pointer into the buftarg, we can avoid needing the
+> b_mount field in every buffer and grab it from the buftarg when
+> needed instead. This shrinks the xfs_buf by 8 bytes.
 
 Looks good.
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
 
-> diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
-> index 304515b..1c6206e 100644
-> --- a/fs/xfs/linux-2.6/xfs_buf.c
-> +++ b/fs/xfs/linux-2.6/xfs_buf.c
-> @@ -1456,7 +1456,11 @@ xfs_alloc_bufhash(
->  {
->  	unsigned int		i;
->  
+
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
 
 
 _______________________________________________
