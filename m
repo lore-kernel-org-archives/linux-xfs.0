@@ -1,26 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8ECVGIG125520 for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 07:31:16 -0500
-Received: from kuber.nabble.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6037C17EFB14
-	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 05:32:03 -0700 (PDT)
-Received: from kuber.nabble.com (kuber.nabble.com [216.139.236.158]) by
-	cuda.sgi.com with ESMTP id B6lgqz5dDHInVvmb for
-	<xfs@oss.sgi.com>; Tue, 14 Sep 2010 05:32:03 -0700 (PDT)
-Received: from isper.nabble.com ([192.168.236.156])
-	by kuber.nabble.com with esmtp (Exim 4.63)
-	(envelope-from <lists@nabble.com>) id 1OvUg7-0007P5-Ck
-	for xfs@oss.sgi.com; Tue, 14 Sep 2010 05:32:03 -0700
-Message-ID: <29708085.post@talk.nabble.com>
-Date: Tue, 14 Sep 2010 05:32:03 -0700 (PDT)
-From: pbrunnen <PBrunnen@bccnetworks.net>
-Subject: Re: XFS Filesystem not mounting
-In-Reply-To: <20100914082504.4109712d@galadriel.home>
+	o8ECYv1r125649 for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 07:34:58 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 10F5414F2102
+	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 05:47:29 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
+	[150.101.137.99]) by cuda.sgi.com with ESMTP id
+	8Y5UKwIkKljFO6qD for <xfs@oss.sgi.com>;
+	Tue, 14 Sep 2010 05:47:29 -0700 (PDT)
+Received: from dastard (unverified [121.44.127.68])
+	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
+	39297920-1927428
+	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 22:05:43 +0930 (CST)
+Received: from dave by dastard with local (Exim 4.71)
+	(envelope-from <david@fromorbit.com>) id 1OvUjd-0004Wl-PE
+	for xfs@oss.sgi.com; Tue, 14 Sep 2010 22:35:41 +1000
+Date: Tue, 14 Sep 2010 22:35:41 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 04/18] xfs: lockless per-ag lookups
+Message-ID: <20100914123541.GC15695@dastard>
+References: <1284461777-1496-1-git-send-email-david@fromorbit.com>
+	<1284461777-1496-5-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-References: <29704010.post@talk.nabble.com> <20100914012151.GF411@dastard>
-	<29705139.post@talk.nabble.com> <201009140740.14482@zmi.at>
-	<20100914082504.4109712d@galadriel.home>
+Content-Disposition: inline
+In-Reply-To: <1284461777-1496-5-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,37 +39,31 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
+On Tue, Sep 14, 2010 at 08:56:03PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> When we start taking a reference to the per-ag for every cached
+> buffer in the system, kernel lockstat profiling on an 8-way create
+> workload shows the mp->m_perag_lock has higher acquisition rates
+> than the inode lock and has significantly more contention. That is,
+> it becomes the highest contended lock in the system.
+> 
+> The perag lookup is trivial to convert to lock-less RCU lookups
+> because perag structures never go away. Hence the only thing we need
+> to protect against is tree structure changes during a grow. THis can
+> be done simply by replacing the locking in xfs_perag_get() with RCU
+> read locking. This removes the mp->m_perag_lock completely from this
+> path.
 
-Hello all...
-   First and foremost I want to say Thank You to everyone for the sounding
-board.  Yesterday was a bit panicky for me.  ;-)
+I just noticed that I missed a lookup conversion in reclaim code, so
+the next version will include that as well.
 
-   Time was not my friend and I ended up having to try the route that
-Emmanuel suggested by rebuilding the log with "xfs_repair -L"...   Tried to
-avoid it until the end.
+Cheers,
 
-
-Hi Dave,
-  Yea... that was supposed to be 2.6.18...  I really like to date myself. 
-;-)
-I will keep note of that command though... If I ever see this again I can
-get the right info faster.
-
-
-Hi Michael,
-  Yes, its based on 10.2...  The kernel is one of the only things not
-updated.  I really don't like the newer builds of SuSE as much and have been
-reluctant to upgrade.  I am considering to build a newer kernel or switch to
-debian.
-
-
-Again Thank you Dave, Michael, and Emmanuel for your input!
-Your time is Very Much appreciated.  :-)
-
--Cheers, Peter.
+Dave.
 -- 
-View this message in context: http://old.nabble.com/XFS-Filesystem-not-mounting-tp29704010p29708085.html
-Sent from the Xfs - General mailing list archive at Nabble.com.
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
