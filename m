@@ -1,16 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8EMQjih151004 for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 17:26:46 -0500
-Subject: Re: [PATCH 11/18] xfs: kill XBF_FS_MANAGED buffers
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1284461777-1496-12-git-send-email-david@fromorbit.com>
-References: <1284461777-1496-1-git-send-email-david@fromorbit.com>
-	<1284461777-1496-12-git-send-email-david@fromorbit.com>
-Date: Tue, 14 Sep 2010 17:26:38 -0500
-Message-ID: <1284503198.9701.94.camel@doink>
-Mime-Version: 1.0
-Reply-To: aelder@sgi.com
+	o8ENMXuk153182 for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 18:22:33 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 53B1817F3E81
+	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 16:23:22 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id QddRvZGeSDqH1Qnk for
+	<xfs@oss.sgi.com>; Tue, 14 Sep 2010 16:23:22 -0700 (PDT)
+Date: Tue, 14 Sep 2010 19:23:21 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Delaylog
+Message-ID: <20100914232321.GA11123@infradead.org>
+References: <AANLkTin6FSBK3tMXhSxDuLdjyb+R0LhNnaa2CKt37FcV@mail.gmail.com>
+	<201009142106.24448.arekm@maven.pl>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <201009142106.24448.arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,30 +29,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Arkadiusz Miskiewicz <arekm@maven.pl>
 Cc: xfs@oss.sgi.com
 
-On Tue, 2010-09-14 at 20:56 +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Filesystem level managed buffers are buffers that have their
-> lifecycle controlled by the filesystem layer, not the buffer cache.
-> We currently cache these buffers, which makes cleanup and cache
-> walking somewhat troublesome. Convert the fs managed buffers to
-> uncached buffers obtained by via xfs_buf_get_uncached(), and remove
-> the XBF_FS_MANAGED special cases from the buffer cache.
+On Tue, Sep 14, 2010 at 09:06:24PM +0200, Arkadiusz Miskiewicz wrote:
+> On Tuesday 14 of September 2010, Fabricio Archanjo wrote:
+> > Hey all,
+> > 
+> >    I just trying delaylog in my server that has a mysql database. When
+> > i monted my /var/lib/mysql with delaylog option, it showed me:
+> > "Enabling EXPERIMENTAL delayed logging feature - use at your own
+> > risk". Ok, i know it's experimental, but what kind of problem could i
+> > have using delaylog?
 
-Looks good.  Nicer with the xfs_buf_read_uncached() helper.
+Basically you could hit a race or lockup in the code under high stress
+or unusual workloads.  So far we just had one possible lockup under very
+high dbench load.
 
-Reviewed-by: Alex Elder <aelder@sgi.com>
+> ... and what problems in case of system hang or power loss when compared to 
+> nodelaylog mode?
 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/linux-2.6/xfs_buf.c |   20 +++------------
->  fs/xfs/linux-2.6/xfs_buf.h |    4 ---
->  fs/xfs/xfs_mount.c         |   56 ++++++++++++-------------------------------
->  3 files changed, 20 insertions(+), 60 deletions(-)
-
+The same as with the old log code - if you crash recently written data
+might be lost.  Unless a really severe bugs shows up (in either the old
+or new code) that only includes data since the last fsync/sync.  The
+quantitative difference is that a lot more metadata is now cached in
+core, so on a crash you can lose more recently written but not synced
+metadata.
 
 _______________________________________________
 xfs mailing list
