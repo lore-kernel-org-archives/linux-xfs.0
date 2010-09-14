@@ -1,29 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8EAu5qF121083 for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 05:56:06 -0500
+	o8EAuUe5121316 for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 05:56:30 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AA70811E4F7A
-	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 04:08:36 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B488D1E65324
+	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 03:57:17 -0700 (PDT)
 Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
 	[150.101.137.97]) by cuda.sgi.com with ESMTP id
-	EpIRIOEkwGxMmcdG for <xfs@oss.sgi.com>;
-	Tue, 14 Sep 2010 04:08:36 -0700 (PDT)
+	qgGty8hzLRGhUc1i for <xfs@oss.sgi.com>;
+	Tue, 14 Sep 2010 03:57:17 -0700 (PDT)
 Received: from dastard (unverified [121.44.127.68])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	38985522-1927428
-	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 20:26:50 +0930 (CST)
+	38985560-1927428
+	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 20:27:16 +0930 (CST)
 Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1OvTBn-0004OK-4F
-	for xfs@oss.sgi.com; Tue, 14 Sep 2010 20:56:39 +1000
+	(envelope-from <dave@fromorbit.com>) id 1OvTC7-0004P1-Jv
+	for xfs@oss.sgi.com; Tue, 14 Sep 2010 20:56:59 +1000
 Received: from dave by disturbed with local (Exim 4.72)
-	(envelope-from <dave@disturbed.disaster>) id 1OvTBa-0000Ps-OE
-	for xfs@oss.sgi.com; Tue, 14 Sep 2010 20:56:26 +1000
+	(envelope-from <dave@disturbed.disaster>) id 1OvTBl-0000QJ-87
+	for xfs@oss.sgi.com; Tue, 14 Sep 2010 20:56:37 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 02/18] xfs: reduce the number of CIL lock round trips during
-	commit
-Date: Tue, 14 Sep 2010 20:56:01 +1000
-Message-Id: <1284461777-1496-3-git-send-email-david@fromorbit.com>
+Subject: [PATCH 11/18] xfs: kill XBF_FS_MANAGED buffers
+Date: Tue, 14 Sep 2010 20:56:10 +1000
+Message-Id: <1284461777-1496-12-git-send-email-david@fromorbit.com>
 In-Reply-To: <1284461777-1496-1-git-send-email-david@fromorbit.com>
 References: <1284461777-1496-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -43,186 +42,210 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-When commiting a transaction, we do a lock CIL state lock round trip
-on every single log vector we insert into the CIL. This is resulting
-in the lock being as hot as the inode and dcache locks on 8-way
-create workloads. Rework the insertion loops to bring the number
-of lock round trips to one per transaction for log vectors, and one
-more do the busy extents.
-
-Also change the allocation of the log vector buffer not to zero it
-as we copy over the entire allocated buffer anyway.
+Filesystem level managed buffers are buffers that have their
+lifecycle controlled by the filesystem layer, not the buffer cache.
+We currently cache these buffers, which makes cleanup and cache
+walking somewhat troublesome. Convert the fs managed buffers to
+uncached buffers obtained by via xfs_buf_get_uncached(), and remove
+the XBF_FS_MANAGED special cases from the buffer cache.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_log_cil.c |  116 +++++++++++++++++++++++++++++--------------------
- 1 files changed, 69 insertions(+), 47 deletions(-)
+ fs/xfs/linux-2.6/xfs_buf.c |   20 +++------------
+ fs/xfs/linux-2.6/xfs_buf.h |    4 ---
+ fs/xfs/xfs_mount.c         |   56 ++++++++++++-------------------------------
+ 3 files changed, 20 insertions(+), 60 deletions(-)
 
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index ed575fb..f1e6184 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -146,68 +146,37 @@ xlog_cil_init_post_recovery(
+diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
+index 726a6dc..304515b 100644
+--- a/fs/xfs/linux-2.6/xfs_buf.c
++++ b/fs/xfs/linux-2.6/xfs_buf.c
+@@ -824,8 +824,6 @@ xfs_buf_rele(
+ 			atomic_inc(&bp->b_hold);
+ 			spin_unlock(&hash->bh_lock);
+ 			(*(bp->b_relse)) (bp);
+-		} else if (bp->b_flags & XBF_FS_MANAGED) {
+-			spin_unlock(&hash->bh_lock);
+ 		} else {
+ 			ASSERT(!(bp->b_flags & (XBF_DELWRI|_XBF_DELWRI_Q)));
+ 			list_del_init(&bp->b_hash_list);
+@@ -1431,26 +1429,16 @@ void
+ xfs_wait_buftarg(
+ 	xfs_buftarg_t	*btp)
+ {
+-	xfs_buf_t	*bp, *n;
+ 	xfs_bufhash_t	*hash;
+ 	uint		i;
+ 
+ 	for (i = 0; i < (1 << btp->bt_hashshift); i++) {
+ 		hash = &btp->bt_hash[i];
+-again:
+ 		spin_lock(&hash->bh_lock);
+-		list_for_each_entry_safe(bp, n, &hash->bh_list, b_hash_list) {
+-			ASSERT(btp == bp->b_target);
+-			if (!(bp->b_flags & XBF_FS_MANAGED)) {
+-				spin_unlock(&hash->bh_lock);
+-				/*
+-				 * Catch superblock reference count leaks
+-				 * immediately
+-				 */
+-				BUG_ON(bp->b_bn == 0);
+-				delay(100);
+-				goto again;
+-			}
++		while (!list_empty(&hash->bh_list)) {
++			spin_unlock(&hash->bh_lock);
++			delay(100);
++			spin_lock(&hash->bh_lock);
+ 		}
+ 		spin_unlock(&hash->bh_lock);
+ 	}
+diff --git a/fs/xfs/linux-2.6/xfs_buf.h b/fs/xfs/linux-2.6/xfs_buf.h
+index 086d2bc..9517387 100644
+--- a/fs/xfs/linux-2.6/xfs_buf.h
++++ b/fs/xfs/linux-2.6/xfs_buf.h
+@@ -51,7 +51,6 @@ typedef enum {
+ #define XBF_DONE	(1 << 5) /* all pages in the buffer uptodate */
+ #define XBF_DELWRI	(1 << 6) /* buffer has dirty pages */
+ #define XBF_STALE	(1 << 7) /* buffer has been staled, do not find it */
+-#define XBF_FS_MANAGED	(1 << 8) /* filesystem controls freeing memory */
+ #define XBF_ORDERED	(1 << 11)/* use ordered writes */
+ #define XBF_READ_AHEAD	(1 << 12)/* asynchronous read-ahead */
+ #define XBF_LOG_BUFFER	(1 << 13)/* this is a buffer used for the log */
+@@ -104,7 +103,6 @@ typedef unsigned int xfs_buf_flags_t;
+ 	{ XBF_DONE,		"DONE" }, \
+ 	{ XBF_DELWRI,		"DELWRI" }, \
+ 	{ XBF_STALE,		"STALE" }, \
+-	{ XBF_FS_MANAGED,	"FS_MANAGED" }, \
+ 	{ XBF_ORDERED,		"ORDERED" }, \
+ 	{ XBF_READ_AHEAD,	"READ_AHEAD" }, \
+ 	{ XBF_LOCK,		"LOCK" },  	/* should never be set */\
+@@ -279,8 +277,6 @@ extern void xfs_buf_terminate(void);
+ 					XFS_BUF_DONE(bp);	\
+ 				} while (0)
+ 
+-#define XFS_BUF_UNMANAGE(bp)	((bp)->b_flags &= ~XBF_FS_MANAGED)
+-
+ #define XFS_BUF_DELAYWRITE(bp)		((bp)->b_flags |= XBF_DELWRI)
+ #define XFS_BUF_UNDELAYWRITE(bp)	xfs_buf_delwri_dequeue(bp)
+ #define XFS_BUF_ISDELAYWRITE(bp)	((bp)->b_flags & XBF_DELWRI)
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 546eb1f..4d727d0 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -646,7 +646,6 @@ int
+ xfs_readsb(xfs_mount_t *mp, int flags)
+ {
+ 	unsigned int	sector_size;
+-	unsigned int	extra_flags;
+ 	xfs_buf_t	*bp;
+ 	int		error;
+ 
+@@ -659,28 +658,23 @@ xfs_readsb(xfs_mount_t *mp, int flags)
+ 	 * access to the superblock.
+ 	 */
+ 	sector_size = xfs_getsize_buftarg(mp->m_ddev_targp);
+-	extra_flags = XBF_LOCK | XBF_FS_MANAGED | XBF_MAPPED;
+ 
+-	bp = xfs_buf_read(mp->m_ddev_targp, XFS_SB_DADDR, BTOBB(sector_size),
+-			  extra_flags);
+-	if (!bp || XFS_BUF_ISERROR(bp)) {
+-		xfs_fs_mount_cmn_err(flags, "SB read failed");
+-		error = bp ? XFS_BUF_GETERROR(bp) : ENOMEM;
+-		goto fail;
++reread:
++	bp = xfs_buf_read_uncached(mp, mp->m_ddev_targp, XFS_SB_DADDR, sector_size);
++	if (!bp) {
++		xfs_fs_mount_cmn_err(flags, "SB buffer read failed");
++		return EIO;
+ 	}
+-	ASSERT(XFS_BUF_ISBUSY(bp));
+-	ASSERT(XFS_BUF_VALUSEMA(bp) <= 0);
+ 
+ 	/*
+ 	 * Initialize the mount structure from the superblock.
+ 	 * But first do some basic consistency checking.
+ 	 */
+ 	xfs_sb_from_disk(&mp->m_sb, XFS_BUF_TO_SBP(bp));
+-
+ 	error = xfs_mount_validate_sb(mp, &(mp->m_sb), flags);
+ 	if (error) {
+ 		xfs_fs_mount_cmn_err(flags, "SB validate failed");
+-		goto fail;
++		goto release_buf;
+ 	}
+ 
+ 	/*
+@@ -691,7 +685,7 @@ xfs_readsb(xfs_mount_t *mp, int flags)
+ 			"device supports only %u byte sectors (not %u)",
+ 			sector_size, mp->m_sb.sb_sectsize);
+ 		error = ENOSYS;
+-		goto fail;
++		goto release_buf;
+ 	}
+ 
+ 	/*
+@@ -699,33 +693,20 @@ xfs_readsb(xfs_mount_t *mp, int flags)
+ 	 * re-read the superblock so the buffer is correctly sized.
+ 	 */
+ 	if (sector_size < mp->m_sb.sb_sectsize) {
+-		XFS_BUF_UNMANAGE(bp);
+ 		xfs_buf_relse(bp);
+ 		sector_size = mp->m_sb.sb_sectsize;
+-		bp = xfs_buf_read(mp->m_ddev_targp, XFS_SB_DADDR,
+-				  BTOBB(sector_size), extra_flags);
+-		if (!bp || XFS_BUF_ISERROR(bp)) {
+-			xfs_fs_mount_cmn_err(flags, "SB re-read failed");
+-			error = bp ? XFS_BUF_GETERROR(bp) : ENOMEM;
+-			goto fail;
+-		}
+-		ASSERT(XFS_BUF_ISBUSY(bp));
+-		ASSERT(XFS_BUF_VALUSEMA(bp) <= 0);
++		goto reread;
+ 	}
+ 
+ 	/* Initialize per-cpu counters */
+ 	xfs_icsb_reinit_counters(mp);
+ 
+ 	mp->m_sb_bp = bp;
+-	xfs_buf_relse(bp);
+-	ASSERT(XFS_BUF_VALUSEMA(bp) > 0);
++	xfs_buf_unlock(bp);
+ 	return 0;
+ 
+- fail:
+-	if (bp) {
+-		XFS_BUF_UNMANAGE(bp);
+-		xfs_buf_relse(bp);
+-	}
++release_buf:
++	xfs_buf_relse(bp);
+ 	return error;
+ }
+ 
+@@ -2005,18 +1986,13 @@ xfs_getsb(
+  */
+ void
+ xfs_freesb(
+-	xfs_mount_t	*mp)
++	struct xfs_mount	*mp)
+ {
+-	xfs_buf_t	*bp;
++	struct xfs_buf		*bp = mp->m_sb_bp;
+ 
+-	/*
+-	 * Use xfs_getsb() so that the buffer will be locked
+-	 * when we call xfs_buf_relse().
+-	 */
+-	bp = xfs_getsb(mp, 0);
+-	XFS_BUF_UNMANAGE(bp);
+-	xfs_buf_relse(bp);
++	xfs_buf_lock(bp);
+ 	mp->m_sb_bp = NULL;
++	xfs_buf_relse(bp);
  }
  
  /*
-- * Insert the log item into the CIL and calculate the difference in space
-+ * Insert the log items into the CIL and calculate the difference in space
-  * consumed by the item. Add the space to the checkpoint ticket and calculate
-  * if the change requires additional log metadata. If it does, take that space
-  * as well. Remove the amount of space we addded to the checkpoint ticket from
-  * the current transaction ticket so that the accounting works out correctly.
-- *
-- * If this is the first time the item is being placed into the CIL in this
-- * context, pin it so it can't be written to disk until the CIL is flushed to
-- * the iclog and the iclog written to disk.
-  */
- static void
- xlog_cil_insert(
- 	struct log		*log,
- 	struct xlog_ticket	*ticket,
--	struct xfs_log_item	*item,
--	struct xfs_log_vec	*lv)
-+	struct xfs_log_vec	*log_vector,
-+	int			diff_length,
-+	int			diff_iovecs)
- {
- 	struct xfs_cil		*cil = log->l_cilp;
--	struct xfs_log_vec	*old = lv->lv_item->li_lv;
- 	struct xfs_cil_ctx	*ctx = cil->xc_ctx;
--	int			len;
--	int			diff_iovecs;
- 	int			iclog_space;
-+	int			len = diff_length;
-+	struct xfs_log_vec	*lv;
- 
--	if (old) {
--		/* existing lv on log item, space used is a delta */
--		ASSERT(!list_empty(&item->li_cil));
--		ASSERT(old->lv_buf && old->lv_buf_len && old->lv_niovecs);
--
--		len = lv->lv_buf_len - old->lv_buf_len;
--		diff_iovecs = lv->lv_niovecs - old->lv_niovecs;
--		kmem_free(old->lv_buf);
--		kmem_free(old);
--	} else {
--		/* new lv, must pin the log item */
--		ASSERT(!lv->lv_item->li_lv);
--		ASSERT(list_empty(&item->li_cil));
-+	spin_lock(&cil->xc_cil_lock);
- 
--		len = lv->lv_buf_len;
--		diff_iovecs = lv->lv_niovecs;
--		IOP_PIN(lv->lv_item);
-+	/* move the items to the tail of the CIL */
-+	for (lv = log_vector; lv; lv = lv->lv_next)
-+		list_move_tail(&lv->lv_item->li_cil, &cil->xc_cil);
- 
--	}
-+	/* account for space used by new iovec headers  */
- 	len += diff_iovecs * sizeof(xlog_op_header_t);
--
--	/* attach new log vector to log item */
--	lv->lv_item->li_lv = lv;
--
--	spin_lock(&cil->xc_cil_lock);
--	list_move_tail(&item->li_cil, &cil->xc_cil);
- 	ctx->nvecs += diff_iovecs;
- 
- 	/*
--	 * If this is the first time the item is being committed to the CIL,
--	 * store the sequence number on the log item so we can tell
--	 * in future commits whether this is the first checkpoint the item is
--	 * being committed into.
--	 */
--	if (!item->li_seq)
--		item->li_seq = ctx->sequence;
--
--	/*
- 	 * Now transfer enough transaction reservation to the context ticket
- 	 * for the checkpoint. The context ticket is special - the unit
- 	 * reservation has to grow as well as the current reservation as we
-@@ -286,7 +255,7 @@ xlog_cil_format_items(
- 			len += lv->lv_iovecp[index].i_len;
- 
- 		lv->lv_buf_len = len;
--		lv->lv_buf = kmem_zalloc(lv->lv_buf_len, KM_SLEEP|KM_NOFS);
-+		lv->lv_buf = kmem_alloc(lv->lv_buf_len, KM_SLEEP|KM_NOFS);
- 		ptr = lv->lv_buf;
- 
- 		for (index = 0; index < lv->lv_niovecs; index++) {
-@@ -307,14 +276,67 @@ xlog_cil_insert_items(
- 	struct xlog_ticket	*ticket,
- 	xfs_lsn_t		*start_lsn)
- {
--	struct xfs_log_vec *lv;
-+	struct xfs_log_vec	*lv;
-+	int			len = 0;
-+	int			diff_iovecs = 0;
-+
-+	ASSERT(log_vector);
- 
- 	if (start_lsn)
- 		*start_lsn = log->l_cilp->xc_ctx->sequence;
- 
--	ASSERT(log_vector);
--	for (lv = log_vector; lv; lv = lv->lv_next)
--		xlog_cil_insert(log, ticket, lv->lv_item, lv);
-+	/*
-+	 * Do all the accounting aggregation and switching of log vectors
-+	 * around in a separate loop to the insertion of items into the CIL.
-+	 * Then we can do a separate loop to update the CIL within a single
-+	 * lock/unlock pair. This reduces the number of round trips on the CIL
-+	 * lock from O(nr_logvectors) to O(1) and greatly reduces the overall
-+	 * hold time for the transaction commit.
-+	 *
-+	 * If this is the first time the item is being placed into the CIL in
-+	 * this context, pin it so it can't be written to disk until the CIL is
-+	 * flushed to the iclog and the iclog written to disk.
-+	 *
-+	 * We can do this safely because the context can't checkpoint until we
-+	 * are done so it doesn't matter exactly how we update the CIL.
-+	 */
-+	for (lv = log_vector; lv; lv = lv->lv_next) {
-+		struct xfs_log_vec	*old = lv->lv_item->li_lv;
-+
-+		if (old) {
-+			/* existing lv on log item, space used is a delta */
-+			ASSERT(!list_empty(&lv->lv_item->li_cil));
-+			ASSERT(old->lv_buf && old->lv_buf_len && old->lv_niovecs);
-+
-+			len += lv->lv_buf_len - old->lv_buf_len;
-+			diff_iovecs += lv->lv_niovecs - old->lv_niovecs;
-+			kmem_free(old->lv_buf);
-+			kmem_free(old);
-+		} else {
-+			/* new lv, must pin the log item */
-+			ASSERT(!lv->lv_item->li_lv);
-+			ASSERT(list_empty(&lv->lv_item->li_cil));
-+
-+			len += lv->lv_buf_len;
-+			diff_iovecs += lv->lv_niovecs;
-+			IOP_PIN(lv->lv_item);
-+
-+		}
-+
-+		/* attach new log vector to log item */
-+		lv->lv_item->li_lv = lv;
-+
-+		/*
-+		 * If this is the first time the item is being committed to the
-+		 * CIL, store the sequence number on the log item so we can
-+		 * tell in future commits whether this is the first checkpoint
-+		 * the item is being committed into.
-+		 */
-+		if (!lv->lv_item->li_seq)
-+			lv->lv_item->li_seq = log->l_cilp->xc_ctx->sequence;
-+	}
-+
-+	xlog_cil_insert(log, ticket, log_vector, len, diff_iovecs);
- }
- 
- static void
 -- 
 1.7.1
 
