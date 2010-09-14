@@ -1,31 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8EAu6AI121091 for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 05:56:06 -0500
+	o8EAuPc7121294 for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 05:56:25 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 22AC511E4F7B
-	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 04:08:37 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
-	[150.101.137.102]) by cuda.sgi.com with ESMTP id
-	ijHCjZFFG0Ve5QB8 for <xfs@oss.sgi.com>;
-	Tue, 14 Sep 2010 04:08:37 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 120371E6531E
+	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 03:57:13 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
+	[150.101.137.99]) by cuda.sgi.com with ESMTP id
+	lyeiY0enbnvp6rCH for <xfs@oss.sgi.com>;
+	Tue, 14 Sep 2010 03:57:13 -0700 (PDT)
 Received: from dastard (unverified [121.44.127.68])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	38767467-1927428
-	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 20:26:51 +0930 (CST)
+	39287372-1927428
+	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 20:27:11 +0930 (CST)
 Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1OvTBn-0004OP-AS
-	for xfs@oss.sgi.com; Tue, 14 Sep 2010 20:56:39 +1000
+	(envelope-from <dave@fromorbit.com>) id 1OvTCI-0004PF-0v
+	for xfs@oss.sgi.com; Tue, 14 Sep 2010 20:57:10 +1000
 Received: from dave by disturbed with local (Exim 4.72)
-	(envelope-from <dave@disturbed.disaster>) id 1OvTBa-0000Q1-Tx
-	for xfs@oss.sgi.com; Tue, 14 Sep 2010 20:56:26 +1000
+	(envelope-from <dave@disturbed.disaster>) id 1OvTC0-0000Qi-KP
+	for xfs@oss.sgi.com; Tue, 14 Sep 2010 20:56:52 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 05/18] xfs: convert inode cache lookups to use RCU locking
-Date: Tue, 14 Sep 2010 20:56:04 +1000
-Message-Id: <1284461777-1496-6-git-send-email-david@fromorbit.com>
+Subject: [PATCH 17/18] xfs: add a lru to the XFS buffer cache
+Date: Tue, 14 Sep 2010 20:56:16 +1000
+Message-Id: <1284461777-1496-18-git-send-email-david@fromorbit.com>
 In-Reply-To: <1284461777-1496-1-git-send-email-david@fromorbit.com>
 References: <1284461777-1496-1-git-send-email-david@fromorbit.com>
-MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,177 +33,236 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-RnJvbTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgoKV2l0aCBkZWxheWVkIGxv
-Z2dpbmcgZ3JlYXRseSBpbmNyZWFzaW5nIHRoZSBzdXN0YWluZWQgcGFyYWxsZWxpc20gb2YgaW5v
-ZGUKb3BlcmF0aW9ucywgdGhlIGlub2RlIGNhY2hlIGxvY2tpbmcgaXMgc2hvd2luZyBzaWduaWZp
-Y2FudCByZWFkIHZzIHdyaXRlCmNvbnRlbnRpb24gd2hlbiBpbm9kZSByZWNsYWltIHJ1bnMgYXQg
-dGhlIHNhbWUgdGltZSBhcyBsb29rdXBzLiBUaGVyZSBpcwphbHNvIGEgbG90IG1vcmUgd3JpdGUg
-bG9jayBhY3F1aXN0aW9ucyB0aGFuIHRoZXJlIGFyZSByZWFkIGxvY2tzICg0OjEgcmF0aW8pCnNv
-IHRoZSByZWFkIGxvY2tpbmcgaXMgbm90IHJlYWxseSBidXlpbmcgdXMgbXVjaCBpbiB0aGUgd2F5
-IG9mIHBhcmFsbGVsaXNtLgoKVG8gYXZvaWQgdGhlIHJlYWQgdnMgd3JpdGUgY29udGVudGlvbiwg
-Y2hhbmdlIHRoZSBjYWNoZSB0byB1c2UgUkNVIGxvY2tpbmcgb24KdGhlIHJlYWQgc2lkZS4gVG8g
-YXZvaWQgbmVlZGluZyB0byBSQ1UgZnJlZSBldmVyeSBzaW5nbGUgaW5vZGUsIHVzZSB0aGUgYnVp
-bHQKaW4gc2xhYiBSQ1UgZnJlZWluZyBtZWNoYW5pc20uIFRoaXMgcmVxdWlyZXMgdXMgdG8gYmUg
-YWJsZSB0byBkZXRlY3QgbG9va3VwcyBvZgpmcmVlZCBpbm9kZXMsIHNvIGVu0ZV1cmUgdGhhdCBl
-dmVyIGZyZWVkIGlub2RlIGhhcyBhbiBpbm9kZSBudW1iZXIgb2YgemVybyBhbmQKdGhlIFhGU19J
-UkVDTEFJTSBmbGFnIHNldC4gV2UgYWxyZWFkeSBjaGVjayB0aGUgWEZTX0lSRUNMQUlNIGZsYWcg
-aW4gY2FjaGUgaGl0Cmxvb2t1cCBwYXRoLCBidXQgYWxzbyBhZGQgYSBjaGVjayBmb3IgYSB6ZXJv
-IGlub2RlIG51bWJlciBhcyB3ZWxsLgoKV2UgY2FudGhlbiBjb252ZXJ0IGFsbCB0aGUgcmVhZCBs
-b2NraW5nIGxvY2t1cHMgdG8gdXNlIFJDVSByZWFkIHNpZGUgbG9ja2luZwphbmQgaGVuY2UgcmVt
-b3ZlIGFsbCByZWFkIHNpZGUgbG9ja2luZy4KClNpZ25lZC1vZmYtYnk6IERhdmUgQ2hpbm5lciA8
-ZGNoaW5uZXJAcmVkaGF0LmNvbT4KLS0tCiBmcy94ZnMvbGludXgtMi42L2ttZW0uaCAgICAgICAg
-fCAgICAxICsKIGZzL3hmcy9saW51eC0yLjYveGZzX3N1cGVyLmMgICB8ICAgIDMgKystCiBmcy94
-ZnMvbGludXgtMi42L3hmc19zeW5jLmMgICAgfCAgIDEyICsrKysrKy0tLS0tLQogZnMveGZzL3F1
-b3RhL3hmc19xbV9zeXNjYWxscy5jIHwgICAgNCArKy0tCiBmcy94ZnMveGZzX2lnZXQuYyAgICAg
-ICAgICAgICAgfCAgIDM2ICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrLS0tLS0tLQogZnMv
-eGZzL3hmc19pbm9kZS5jICAgICAgICAgICAgIHwgICAyMiArKysrKysrKysrKysrKy0tLS0tLS0t
-CiA2IGZpbGVzIGNoYW5nZWQsIDU0IGluc2VydGlvbnMoKyksIDI0IGRlbGV0aW9ucygtKQoKZGlm
-ZiAtLWdpdCBhL2ZzL3hmcy9saW51eC0yLjYva21lbS5oIGIvZnMveGZzL2xpbnV4LTIuNi9rbWVt
-LmgKaW5kZXggZjdjOGY3YS4uYzBmZTdlZiAxMDA2NDQKLS0tIGEvZnMveGZzL2xpbnV4LTIuNi9r
-bWVtLmgKKysrIGIvZnMveGZzL2xpbnV4LTIuNi9rbWVtLmgKQEAgLTgyLDYgKzgyLDcgQEAgZXh0
-ZXJuIHZvaWQgKmttZW1femFsbG9jX2dyZWVkeShzaXplX3QgKiwgc2l6ZV90LCBzaXplX3QpOwog
-I2RlZmluZSBLTV9aT05FX0hXQUxJR04JU0xBQl9IV0NBQ0hFX0FMSUdOCiAjZGVmaW5lIEtNX1pP
-TkVfUkVDTEFJTQlTTEFCX1JFQ0xBSU1fQUNDT1VOVAogI2RlZmluZSBLTV9aT05FX1NQUkVBRAlT
-TEFCX01FTV9TUFJFQUQKKyNkZWZpbmUgS01fWk9ORV9SQ1UJU0xBQl9ERVNUUk9ZX0JZX1JDVQog
-CiAjZGVmaW5lIGttZW1fem9uZQlrbWVtX2NhY2hlCiAjZGVmaW5lIGttZW1fem9uZV90CXN0cnVj
-dCBrbWVtX2NhY2hlCmRpZmYgLS1naXQgYS9mcy94ZnMvbGludXgtMi42L3hmc19zdXBlci5jIGIv
-ZnMveGZzL2xpbnV4LTIuNi94ZnNfc3VwZXIuYwppbmRleCBhNGUwNzk3Li42MjA1ZWI4IDEwMDY0
-NAotLS0gYS9mcy94ZnMvbGludXgtMi42L3hmc19zdXBlci5jCisrKyBiL2ZzL3hmcy9saW51eC0y
-LjYveGZzX3N1cGVyLmMKQEAgLTE3MjMsNyArMTcyMyw4IEBAIHhmc19pbml0X3pvbmVzKHZvaWQp
-CiAKIAl4ZnNfaW5vZGVfem9uZSA9CiAJCWttZW1fem9uZV9pbml0X2ZsYWdzKHNpemVvZih4ZnNf
-aW5vZGVfdCksICJ4ZnNfaW5vZGUiLAotCQkJS01fWk9ORV9IV0FMSUdOIHwgS01fWk9ORV9SRUNM
-QUlNIHwgS01fWk9ORV9TUFJFQUQsCisJCQlLTV9aT05FX1JDVSB8IEtNX1pPTkVfSFdBTElHTiB8
-CisJCQlLTV9aT05FX1JFQ0xBSU0gfCBLTV9aT05FX1NQUkVBRCwKIAkJCXhmc19mc19pbm9kZV9p
-bml0X29uY2UpOwogCWlmICgheGZzX2lub2RlX3pvbmUpCiAJCWdvdG8gb3V0X2Rlc3Ryb3lfZWZp
-X3pvbmU7CmRpZmYgLS1naXQgYS9mcy94ZnMvbGludXgtMi42L3hmc19zeW5jLmMgYi9mcy94ZnMv
-bGludXgtMi42L3hmc19zeW5jLmMKaW5kZXggYmM1NGNkNi4uZTU0OWQ2NyAxMDA2NDQKLS0tIGEv
-ZnMveGZzL2xpbnV4LTIuNi94ZnNfc3luYy5jCisrKyBiL2ZzL3hmcy9saW51eC0yLjYveGZzX3N5
-bmMuYwpAQCAtMTAyLDEzICsxMDIsMTMgQEAgcmVzdGFydDoKIAkJaWYgKGV4Y2x1c2l2ZSkKIAkJ
-CXdyaXRlX2xvY2soJnBhZy0+cGFnX2ljaV9sb2NrKTsKIAkJZWxzZQotCQkJcmVhZF9sb2NrKCZw
-YWctPnBhZ19pY2lfbG9jayk7CisJCQlyY3VfcmVhZF9sb2NrKCk7CiAJCWlwID0geGZzX2lub2Rl
-X2FnX2xvb2t1cChtcCwgcGFnLCAmZmlyc3RfaW5kZXgsIHRhZyk7CiAJCWlmICghaXApIHsKIAkJ
-CWlmIChleGNsdXNpdmUpCiAJCQkJd3JpdGVfdW5sb2NrKCZwYWctPnBhZ19pY2lfbG9jayk7CiAJ
-CQllbHNlCi0JCQkJcmVhZF91bmxvY2soJnBhZy0+cGFnX2ljaV9sb2NrKTsKKwkJCQlyY3VfcmVh
-ZF91bmxvY2soKTsKIAkJCWJyZWFrOwogCQl9CiAKQEAgLTIwNCwxMSArMjA0LDEwIEBAIHhmc19p
-bm9kZV9hZ19pdGVyYXRvcigKIAlyZXR1cm4gWEZTX0VSUk9SKGxhc3RfZXJyb3IpOwogfQogCi0v
-KiBtdXN0IGJlIGNhbGxlZCB3aXRoIHBhZ19pY2lfbG9jayBoZWxkIGFuZCByZWxlYXNlcyBpdCAq
-LwogaW50CiB4ZnNfc3luY19pbm9kZV92YWxpZCgKIAlzdHJ1Y3QgeGZzX2lub2RlCSppcCwKLQlz
-dHJ1Y3QgeGZzX3BlcmFnCSpwYWcpCisJc3RydWN0IHhmc19wZXJhZwkqcGFnKSBfX3JlbGVhc2Vz
-KFJDVSkKIHsKIAlzdHJ1Y3QgaW5vZGUJCSppbm9kZSA9IFZGU19JKGlwKTsKIAlpbnQJCQllcnJv
-ciA9IEVGU0NPUlJVUFRFRDsKQEAgLTIxOSw3ICsyMTgsOCBAQCB4ZnNfc3luY19pbm9kZV92YWxp
-ZCgKIAogCS8qIGF2b2lkIG5ldyBvciByZWNsYWltYWJsZSBpbm9kZXMuIExlYXZlIGZvciByZWNs
-YWltIGNvZGUgdG8gZmx1c2ggKi8KIAllcnJvciA9IEVOT0VOVDsKLQlpZiAoeGZzX2lmbGFnc190
-ZXN0KGlwLCBYRlNfSU5FVyB8IFhGU19JUkVDTEFJTUFCTEUgfCBYRlNfSVJFQ0xBSU0pKQorCWlm
-IChpcC0+aV9pbm8gPT0gMCB8fAorCSAgICB4ZnNfaWZsYWdzX3Rlc3QoaXAsIFhGU19JTkVXIHwg
-WEZTX0lSRUNMQUlNQUJMRSB8IFhGU19JUkVDTEFJTSkpCiAJCWdvdG8gb3V0X3VubG9jazsKIAog
-CS8qIElmIHdlIGNhbid0IGdyYWIgdGhlIGlub2RlLCBpdCBtdXN0IG9uIGl0J3Mgd2F5IHRvIHJl
-Y2xhaW0uICovCkBAIC0yMzQsNyArMjM0LDcgQEAgeGZzX3N5bmNfaW5vZGVfdmFsaWQoCiAJLyog
-aW5vZGUgaXMgdmFsaWQgKi8KIAllcnJvciA9IDA7CiBvdXRfdW5sb2NrOgotCXJlYWRfdW5sb2Nr
-KCZwYWctPnBhZ19pY2lfbG9jayk7CisJcmN1X3JlYWRfdW5sb2NrKCk7CiAJcmV0dXJuIGVycm9y
-OwogfQogCmRpZmYgLS1naXQgYS9mcy94ZnMvcXVvdGEveGZzX3FtX3N5c2NhbGxzLmMgYi9mcy94
-ZnMvcXVvdGEveGZzX3FtX3N5c2NhbGxzLmMKaW5kZXggNDVlNTg0OS4uYWI5Y2FmYyAxMDA2NDQK
-LS0tIGEvZnMveGZzL3F1b3RhL3hmc19xbV9zeXNjYWxscy5jCisrKyBiL2ZzL3hmcy9xdW90YS94
-ZnNfcW1fc3lzY2FsbHMuYwpAQCAtODczLDcgKzg3Myw3IEBAIFNUQVRJQyBpbnQKIHhmc19kcXJl
-bGVfaW5vZGUoCiAJc3RydWN0IHhmc19pbm9kZQkqaXAsCiAJc3RydWN0IHhmc19wZXJhZwkqcGFn
-LAotCWludAkJCWZsYWdzKQorCWludAkJCWZsYWdzKSBfX3JlbGVhc2VzKFJDVSkKIHsKIAlpbnQJ
-CQllcnJvcjsKIApAQCAtODgyLDcgKzg4Miw3IEBAIHhmc19kcXJlbGVfaW5vZGUoCiAJICAgIGlw
-ID09IGlwLT5pX21vdW50LT5tX3F1b3RhaW5mby0+cWlfZ3F1b3RhaXApIHsKIAkJQVNTRVJUKGlw
-LT5pX3VkcXVvdCA9PSBOVUxMKTsKIAkJQVNTRVJUKGlwLT5pX2dkcXVvdCA9PSBOVUxMKTsKLQkJ
-cmVhZF91bmxvY2soJnBhZy0+cGFnX2ljaV9sb2NrKTsKKwkJcmN1X3JlYWRfdW5sb2NrKCk7CiAJ
-CXJldHVybiAwOwogCX0KIApkaWZmIC0tZ2l0IGEvZnMveGZzL3hmc19pZ2V0LmMgYi9mcy94ZnMv
-eGZzX2lnZXQuYwppbmRleCBiMWVjYzZmLi5mM2E0NmI2IDEwMDY0NAotLS0gYS9mcy94ZnMveGZz
-X2lnZXQuYworKysgYi9mcy94ZnMveGZzX2lnZXQuYwpAQCAtNjksNiArNjksNyBAQCB4ZnNfaW5v
-ZGVfYWxsb2MoCiAJQVNTRVJUKGF0b21pY19yZWFkKCZpcC0+aV9waW5jb3VudCkgPT0gMCk7CiAJ
-QVNTRVJUKCFzcGluX2lzX2xvY2tlZCgmaXAtPmlfZmxhZ3NfbG9jaykpOwogCUFTU0VSVChjb21w
-bGV0aW9uX2RvbmUoJmlwLT5pX2ZsdXNoKSk7CisJQVNTRVJUKGlwLT5pX2lubyA9PSAwKTsKIAog
-CW1ybG9ja19pbml0KCZpcC0+aV9pb2xvY2ssIE1STE9DS19CQVJSSUVSLCAieGZzaW8iLCBpcC0+
-aV9pbm8pOwogCkBAIC0xMzQsNiArMTM1LDEzIEBAIHhmc19pbm9kZV9mcmVlKAogCUFTU0VSVCgh
-c3Bpbl9pc19sb2NrZWQoJmlwLT5pX2ZsYWdzX2xvY2spKTsKIAlBU1NFUlQoY29tcGxldGlvbl9k
-b25lKCZpcC0+aV9mbHVzaCkpOwogCisJLyoKKwkgKiBiZWNhdXNlIHdlIHVzZSBTTEFCX0RFU1RS
-T1lfQllfUkNVIGZyZWVpbmcsIGVuc3VyZSB0aGUgaW5vZGUKKwkgKiBhbHdheXMgYXBwZWFycyB0
-byBiZSByZWNsYWltZWQgd2l0aCBhbiBpbnZhbGlkIGlub2RlIG51bWJlcgorCSAqIHdoZW4gaW4g
-dGhlIGZyZWUgc3RhdGUuCisJICovCisJaXAtPmlfZmxhZ3MgPSBYRlNfSVJFQ0xBSU07CisJaXAt
-PmlfaW5vID0gMDsKIAlrbWVtX3pvbmVfZnJlZSh4ZnNfaW5vZGVfem9uZSwgaXApOwogfQogCkBA
-IC0xNDUsMTIgKzE1MywyNiBAQCB4ZnNfaWdldF9jYWNoZV9oaXQoCiAJc3RydWN0IHhmc19wZXJh
-ZwkqcGFnLAogCXN0cnVjdCB4ZnNfaW5vZGUJKmlwLAogCWludAkJCWZsYWdzLAotCWludAkJCWxv
-Y2tfZmxhZ3MpIF9fcmVsZWFzZXMocGFnLT5wYWdfaWNpX2xvY2spCisJaW50CQkJbG9ja19mbGFn
-cykgX19yZWxlYXNlcyhSQ1UpCiB7CiAJc3RydWN0IGlub2RlCQkqaW5vZGUgPSBWRlNfSShpcCk7
-CiAJc3RydWN0IHhmc19tb3VudAkqbXAgPSBpcC0+aV9tb3VudDsKIAlpbnQJCQllcnJvcjsKIAor
-CS8qCisJICogY2hlY2sgZm9yIHJlLXVzZSBvZiBhbiBpbm9kZSB3aXRoaW4gYW4gUkNVIGdyYWNl
-IHBlcmlvZCBkdWUgdG8gdGhlCisJICogcmFkaXggdHJlZSBub2RlcyBub3QgYmVpbmcgdXBkYXRl
-ZCB5ZXQuIFdlIG1vbml0b3IgZm9yIHRoaXMgYnkKKwkgKiBzZXR0aW5nIHRoZSBpbm9kZSBudW1i
-ZXIgdG8gemVybyBiZWZvcmUgZnJlZWluZyB0aGUgaW5vZGUgc3RydWN0dXJlLgorCSAqLworCWlm
-IChpcC0+aV9pbm8gPT0gMCkgeworCQl0cmFjZV94ZnNfaWdldF9za2lwKGlwKTsKKwkJWEZTX1NU
-QVRTX0lOQyh4c19pZ19mcmVjeWNsZSk7CisJCXJjdV9yZWFkX3VubG9jaygpOworCQkvKiBFeHBp
-cmUgdGhlIGdyYWNlIHBlcmlvZCBzbyB3ZSBkb24ndCB0cmlwIG92ZXIgaXQgYWdhaW4uICovCisJ
-CXN5bmNocm9uaXplX3JjdSgpOworCQlyZXR1cm4gRUFHQUlOOworCX0KKwogCXNwaW5fbG9jaygm
-aXAtPmlfZmxhZ3NfbG9jayk7CiAKIAkvKgpAQCAtMTk0LDcgKzIxNiw3IEBAIHhmc19pZ2V0X2Nh
-Y2hlX2hpdCgKIAkJaXAtPmlfZmxhZ3MgfD0gWEZTX0lSRUNMQUlNOwogCiAJCXNwaW5fdW5sb2Nr
-KCZpcC0+aV9mbGFnc19sb2NrKTsKLQkJcmVhZF91bmxvY2soJnBhZy0+cGFnX2ljaV9sb2NrKTsK
-KwkJcmN1X3JlYWRfdW5sb2NrKCk7CiAKIAkJZXJyb3IgPSAtaW5vZGVfaW5pdF9hbHdheXMobXAt
-Pm1fc3VwZXIsIGlub2RlKTsKIAkJaWYgKGVycm9yKSB7CkBAIC0yMDIsNyArMjI0LDcgQEAgeGZz
-X2lnZXRfY2FjaGVfaGl0KAogCQkJICogUmUtaW5pdGlhbGl6aW5nIHRoZSBpbm9kZSBmYWlsZWQs
-IGFuZCB3ZSBhcmUgaW4gZGVlcAogCQkJICogdHJvdWJsZS4gIFRyeSB0byByZS1hZGQgaXQgdG8g
-dGhlIHJlY2xhaW0gbGlzdC4KIAkJCSAqLwotCQkJcmVhZF9sb2NrKCZwYWctPnBhZ19pY2lfbG9j
-ayk7CisJCQlyY3VfcmVhZF9sb2NrKCk7CiAJCQlzcGluX2xvY2soJmlwLT5pX2ZsYWdzX2xvY2sp
-OwogCiAJCQlpcC0+aV9mbGFncyAmPSB+WEZTX0lORVc7CkBAIC0yMzAsNyArMjUyLDcgQEAgeGZz
-X2lnZXRfY2FjaGVfaGl0KAogCiAJCS8qIFdlJ3ZlIGdvdCBhIGxpdmUgb25lLiAqLwogCQlzcGlu
-X3VubG9jaygmaXAtPmlfZmxhZ3NfbG9jayk7Ci0JCXJlYWRfdW5sb2NrKCZwYWctPnBhZ19pY2lf
-bG9jayk7CisJCXJjdV9yZWFkX3VubG9jaygpOwogCQl0cmFjZV94ZnNfaWdldF9oaXQoaXApOwog
-CX0KIApAQCAtMjQ0LDcgKzI2Niw3IEBAIHhmc19pZ2V0X2NhY2hlX2hpdCgKIAogb3V0X2Vycm9y
-OgogCXNwaW5fdW5sb2NrKCZpcC0+aV9mbGFnc19sb2NrKTsKLQlyZWFkX3VubG9jaygmcGFnLT5w
-YWdfaWNpX2xvY2spOworCXJjdV9yZWFkX3VubG9jaygpOwogCXJldHVybiBlcnJvcjsKIH0KIApA
-QCAtMzc1LDcgKzM5Nyw3IEBAIHhmc19pZ2V0KAogCiBhZ2FpbjoKIAllcnJvciA9IDA7Ci0JcmVh
-ZF9sb2NrKCZwYWctPnBhZ19pY2lfbG9jayk7CisJcmN1X3JlYWRfbG9jaygpOwogCWlwID0gcmFk
-aXhfdHJlZV9sb29rdXAoJnBhZy0+cGFnX2ljaV9yb290LCBhZ2lubyk7CiAKIAlpZiAoaXApIHsK
-QEAgLTM4Myw3ICs0MDUsNyBAQCBhZ2FpbjoKIAkJaWYgKGVycm9yKQogCQkJZ290byBvdXRfZXJy
-b3Jfb3JfYWdhaW47CiAJfSBlbHNlIHsKLQkJcmVhZF91bmxvY2soJnBhZy0+cGFnX2ljaV9sb2Nr
-KTsKKwkJcmN1X3JlYWRfdW5sb2NrKCk7CiAJCVhGU19TVEFUU19JTkMoeHNfaWdfbWlzc2VkKTsK
-IAogCQllcnJvciA9IHhmc19pZ2V0X2NhY2hlX21pc3MobXAsIHBhZywgdHAsIGlubywgJmlwLApk
-aWZmIC0tZ2l0IGEvZnMveGZzL3hmc19pbm9kZS5jIGIvZnMveGZzL3hmc19pbm9kZS5jCmluZGV4
-IDM0Nzk4ZjMuLjY5Mjc2OTkgMTAwNjQ0Ci0tLSBhL2ZzL3hmcy94ZnNfaW5vZGUuYworKysgYi9m
-cy94ZnMveGZzX2lub2RlLmMKQEAgLTE5OTksMTMgKzE5OTksMTQgQEAgeGZzX2lmcmVlX2NsdXN0
-ZXIoCiAJCSAqLwogCQlmb3IgKGkgPSAwOyBpIDwgbmlub2RlczsgaSsrKSB7CiByZXRyeToKLQkJ
-CXJlYWRfbG9jaygmcGFnLT5wYWdfaWNpX2xvY2spOworCQkJcmN1X3JlYWRfbG9jaygpOwogCQkJ
-aXAgPSByYWRpeF90cmVlX2xvb2t1cCgmcGFnLT5wYWdfaWNpX3Jvb3QsCiAJCQkJCVhGU19JTk9f
-VE9fQUdJTk8obXAsIChpbnVtICsgaSkpKTsKIAogCQkJLyogSW5vZGUgbm90IGluIG1lbW9yeSBv
-ciBzdGFsZSwgbm90aGluZyB0byBkbyAqLwotCQkJaWYgKCFpcCB8fCB4ZnNfaWZsYWdzX3Rlc3Qo
-aXAsIFhGU19JU1RBTEUpKSB7Ci0JCQkJcmVhZF91bmxvY2soJnBhZy0+cGFnX2ljaV9sb2NrKTsK
-KwkJCWlmICghaXAgfHwgIWlwLT5pX2lubyB8fAorCQkJICAgIHhmc19pZmxhZ3NfdGVzdChpcCwg
-WEZTX0lTVEFMRSkpIHsKKwkJCQlyY3VfcmVhZF91bmxvY2soKTsKIAkJCQljb250aW51ZTsKIAkJ
-CX0KIApAQCAtMjAxOCwxMSArMjAxOSwxMSBAQCByZXRyeToKIAkJCSAqLwogCQkJaWYgKGlwICE9
-IGZyZWVfaXAgJiYKIAkJCSAgICAheGZzX2lsb2NrX25vd2FpdChpcCwgWEZTX0lMT0NLX0VYQ0wp
-KSB7Ci0JCQkJcmVhZF91bmxvY2soJnBhZy0+cGFnX2ljaV9sb2NrKTsKKwkJCQlyY3VfcmVhZF91
-bmxvY2soKTsKIAkJCQlkZWxheSgxKTsKIAkJCQlnb3RvIHJldHJ5OwogCQkJfQotCQkJcmVhZF91
-bmxvY2soJnBhZy0+cGFnX2ljaV9sb2NrKTsKKwkJCXJjdV9yZWFkX3VubG9jaygpOwogCiAJCQl4
-ZnNfaWZsb2NrKGlwKTsKIAkJCXhmc19pZmxhZ3Nfc2V0KGlwLCBYRlNfSVNUQUxFKTsKQEAgLTI2
-MjgsNyArMjYyOSw3IEBAIHhmc19pZmx1c2hfY2x1c3RlcigKIAogCW1hc2sgPSB+KCgoWEZTX0lO
-T0RFX0NMVVNURVJfU0laRShtcCkgPj4gbXAtPm1fc2Iuc2JfaW5vZGVsb2cpKSAtIDEpOwogCWZp
-cnN0X2luZGV4ID0gWEZTX0lOT19UT19BR0lOTyhtcCwgaXAtPmlfaW5vKSAmIG1hc2s7Ci0JcmVh
-ZF9sb2NrKCZwYWctPnBhZ19pY2lfbG9jayk7CisJcmN1X3JlYWRfbG9jaygpOwogCS8qIHJlYWxs
-eSBuZWVkIGEgZ2FuZyBsb29rdXAgcmFuZ2UgY2FsbCBoZXJlICovCiAJbnJfZm91bmQgPSByYWRp
-eF90cmVlX2dhbmdfbG9va3VwKCZwYWctPnBhZ19pY2lfcm9vdCwgKHZvaWQqKilpbGlzdCwKIAkJ
-CQkJZmlyc3RfaW5kZXgsIGlub2Rlc19wZXJfY2x1c3Rlcik7CkBAIC0yNjM5LDYgKzI2NDAsMTEg
-QEAgeGZzX2lmbHVzaF9jbHVzdGVyKAogCQlpcSA9IGlsaXN0W2ldOwogCQlpZiAoaXEgPT0gaXAp
-CiAJCQljb250aW51ZTsKKworCQkvKiBjaGVjayB3ZSd2ZSBnb3QgYSB2YWxpZCBpbm9kZSAqLwor
-CQlpZiAoIWlxLT5pX2lubykKKwkJCWNvbnRpbnVlOworCiAJCS8qIGlmIHRoZSBpbm9kZSBsaWVz
-IG91dHNpZGUgdGhpcyBjbHVzdGVyLCB3ZSdyZSBkb25lLiAqLwogCQlpZiAoKFhGU19JTk9fVE9f
-QUdJTk8obXAsIGlxLT5pX2lubykgJiBtYXNrKSAhPSBmaXJzdF9pbmRleCkKIAkJCWJyZWFrOwpA
-QCAtMjY5MSw3ICsyNjk3LDcgQEAgeGZzX2lmbHVzaF9jbHVzdGVyKAogCX0KIAogb3V0X2ZyZWU6
-Ci0JcmVhZF91bmxvY2soJnBhZy0+cGFnX2ljaV9sb2NrKTsKKwlyY3VfcmVhZF91bmxvY2soKTsK
-IAlrbWVtX2ZyZWUoaWxpc3QpOwogb3V0X3B1dDoKIAl4ZnNfcGVyYWdfcHV0KHBhZyk7CkBAIC0y
-NzAzLDcgKzI3MDksNyBAQCBjbHVzdGVyX2NvcnJ1cHRfb3V0OgogCSAqIENvcnJ1cHRpb24gZGV0
-ZWN0ZWQgaW4gdGhlIGNsdXN0ZXJpbmcgbG9vcC4gIEludmFsaWRhdGUgdGhlCiAJICogaW5vZGUg
-YnVmZmVyIGFuZCBzaHV0IGRvd24gdGhlIGZpbGVzeXN0ZW0uCiAJICovCi0JcmVhZF91bmxvY2so
-JnBhZy0+cGFnX2ljaV9sb2NrKTsKKwlyY3VfcmVhZF91bmxvY2soKTsKIAkvKgogCSAqIENsZWFu
-IHVwIHRoZSBidWZmZXIuICBJZiBpdCB3YXMgQl9ERUxXUkksIGp1c3QgcmVsZWFzZSBpdCAtLQog
-CSAqIGJyZWxzZSBjYW4gaGFuZGxlIGl0IHdpdGggbm8gcHJvYmxlbXMuICBJZiBub3QsIHNodXQg
-ZG93biB0aGUKLS0gCjEuNy4xCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNn
-aS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+From: Dave Chinner <dchinner@redhat.com>
+
+Introduce a per-buftarg LRU for memory reclaim to operate on. This
+is the last piece we need to put in place so that we can fully
+control the buffer lifecycle. This allows XFS to be responsibile for
+maintaining the working set of buffers under memory pressure instead
+of relying on the VM reclaim not to take pages we need out from
+underneath us.
+
+The implementation is currently a bit naive - it does not rotate
+buffers on the LRU when they are accessed multiple times. Solving
+this problem is for a later patch series that re-introduces the
+buffer type specific reclaim reference counts to prioritise reclaim
+more effectively.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/linux-2.6/xfs_buf.c |   91 ++++++++++++++++++++++++++++++++++---------
+ fs/xfs/linux-2.6/xfs_buf.h |    5 ++
+ 2 files changed, 77 insertions(+), 19 deletions(-)
+
+diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
+index 3b54fee..12b37c6 100644
+--- a/fs/xfs/linux-2.6/xfs_buf.c
++++ b/fs/xfs/linux-2.6/xfs_buf.c
+@@ -182,6 +182,7 @@ _xfs_buf_initialize(
+ 	memset(bp, 0, sizeof(xfs_buf_t));
+ 	atomic_set(&bp->b_hold, 1);
+ 	init_completion(&bp->b_iowait);
++	INIT_LIST_HEAD(&bp->b_lru);
+ 	INIT_LIST_HEAD(&bp->b_list);
+ 	RB_CLEAR_NODE(&bp->b_rbnode);
+ 	init_MUTEX_LOCKED(&bp->b_sema); /* held, no waiters */
+@@ -257,6 +258,8 @@ xfs_buf_free(
+ {
+ 	trace_xfs_buf_free(bp, _RET_IP_);
+ 
++	ASSERT(list_empty(&bp->b_lru));
++
+ 	if (bp->b_flags & (_XBF_PAGE_CACHE|_XBF_PAGES)) {
+ 		uint		i;
+ 
+@@ -471,6 +474,13 @@ _xfs_buf_find(
+ 		/* the buffer keeps the perag reference until it is freed */
+ 		new_bp->b_pag = pag;
+ 		spin_unlock(&pag->pag_buf_lock);
++
++		/* add to LRU */
++		spin_lock(&btp->bt_lru_lock);
++		list_add_tail(&new_bp->b_lru, &btp->bt_lru);
++		btp->bt_lru_nr++;
++		atomic_inc(&new_bp->b_hold);
++		spin_unlock(&btp->bt_lru_lock);
+ 	} else {
+ 		XFS_STATS_INC(xb_miss_locked);
+ 		spin_unlock(&pag->pag_buf_lock);
+@@ -834,12 +844,14 @@ xfs_buf_rele(
+ 
+ 	if (!pag) {
+ 		ASSERT(!bp->b_relse);
++		ASSERT(list_empty(&bp->b_lru));
+ 		ASSERT(RB_EMPTY_NODE(&bp->b_rbnode));
+ 		if (atomic_dec_and_test(&bp->b_hold))
+ 			xfs_buf_free(bp);
+ 		return;
+ 	}
+ 
++	ASSERT(!list_empty(&bp->b_lru));
+ 	ASSERT(!RB_EMPTY_NODE(&bp->b_rbnode));
+ 	ASSERT(atomic_read(&bp->b_hold) > 0);
+ 	if (atomic_dec_and_lock(&bp->b_hold, &pag->pag_buf_lock)) {
+@@ -848,6 +860,14 @@ xfs_buf_rele(
+ 			spin_unlock(&pag->pag_buf_lock);
+ 			bp->b_relse(bp);
+ 		} else {
++			struct xfs_buftarg *btp = bp->b_target;
++
++			/* remove from LRU */
++			spin_lock(&btp->bt_lru_lock);
++			list_del_init(&bp->b_lru);
++			btp->bt_lru_nr--;
++			spin_unlock(&btp->bt_lru_lock);
++
+ 			ASSERT(!(bp->b_flags & (XBF_DELWRI|_XBF_DELWRI_Q)));
+ 			rb_erase(&bp->b_rbnode, &pag->pag_buf_tree);
+ 			spin_unlock(&pag->pag_buf_lock);
+@@ -1446,27 +1466,29 @@ xfs_buf_iomove(
+  */
+ 
+ /*
+- *	Wait for any bufs with callbacks that have been submitted but
+- *	have not yet returned... walk the hash list for the target.
++ * Wait for any bufs with callbacks that have been submitted but have not yet
++ * returned. These buffers will have an elevated hold count, so wait on those
++ * while freeing all the buffers only held by the LRU.
+  */
+ void
+ xfs_wait_buftarg(
+ 	struct xfs_buftarg	*btp)
+ {
+-	struct xfs_perag	*pag;
+-	uint			i;
+-
+-	for (i = 0; i < btp->bt_mount->m_sb.sb_agcount; i++) {
+-		pag = xfs_perag_get(btp->bt_mount, i);
+-		spin_lock(&pag->pag_buf_lock);
+-		while (rb_first(&pag->pag_buf_tree)) {
+-			spin_unlock(&pag->pag_buf_lock);
++	struct xfs_buf		*bp;
++restart:
++	spin_lock(&btp->bt_lru_lock);
++	while (!list_empty(&btp->bt_lru)) {
++		bp = list_first_entry(&btp->bt_lru, struct xfs_buf, b_lru);
++		if (atomic_read(&bp->b_hold) > 1) {
++			spin_unlock(&btp->bt_lru_lock);
+ 			delay(100);
+-			spin_lock(&pag->pag_buf_lock);
++			goto restart;
+ 		}
+-		spin_unlock(&pag->pag_buf_lock);
+-		xfs_perag_put(pag);
++		spin_unlock(&btp->bt_lru_lock);
++		xfs_buf_rele(bp);
++		spin_lock(&btp->bt_lru_lock);
+ 	}
++	spin_unlock(&btp->bt_lru_lock);
+ }
+ 
+ int
+@@ -1477,15 +1499,44 @@ xfs_buftarg_shrink(
+ {
+ 	struct xfs_buftarg	*btp = container_of(shrink,
+ 					struct xfs_buftarg, bt_shrinker);
+-	if (nr_to_scan) {
+-		if (test_bit(XBT_FORCE_SLEEP, &btp->bt_flags))
+-			return -1;
+-		if (list_empty(&btp->bt_delwrite_queue))
+-			return -1;
++	struct xfs_buf		*bp, *n;
++
++	if (!nr_to_scan)
++		return btp->bt_lru_nr;
++
++	spin_lock(&btp->bt_lru_lock);
++	if (test_and_set_bit(XBT_SHRINKER_ACTIVE, &btp->bt_flags)) {
++		/* LRU walk already in progress */
++		spin_unlock(&btp->bt_lru_lock);
++		return -1;
++	}
++
++	list_for_each_entry_safe(bp, n, &btp->bt_lru, b_lru) {
++		if (nr_to_scan-- <= 0)
++			break;
++		/*
++		 * If the lru holds the only reference count on the buffer,
++		 * release it. Otherwise there is another user of the buffer
++		 * and it will be getting repositioned real soon.
++		 */
++		if (atomic_read(&bp->b_hold) > 1)
++			continue;
++		spin_unlock(&btp->bt_lru_lock);
++		xfs_buf_rele(bp);
++		spin_lock(&btp->bt_lru_lock);
++	}
++	clear_bit(XBT_SHRINKER_ACTIVE, &btp->bt_flags);
++	spin_unlock(&btp->bt_lru_lock);
++
++	/* kick the xfsbufd to write and release dirty buffers */
++	if (!test_bit(XBT_FORCE_SLEEP, &btp->bt_flags) &&
++	    !test_bit(XBT_FORCE_FLUSH, &btp->bt_flags) &&
++	    !list_empty(&btp->bt_delwrite_queue)) {
+ 		set_bit(XBT_FORCE_FLUSH, &btp->bt_flags);
+ 		wake_up_process(btp->bt_task);
+ 	}
+-	return list_empty(&btp->bt_delwrite_queue) ? -1 : 1;
++
++	return btp->bt_lru_nr;
+ }
+ 
+ void
+@@ -1619,6 +1670,8 @@ xfs_alloc_buftarg(
+ 	btp->bt_mount = mp;
+ 	btp->bt_dev =  bdev->bd_dev;
+ 	btp->bt_bdev = bdev;
++	INIT_LIST_HEAD(&btp->bt_lru);
++	spin_lock_init(&btp->bt_lru_lock);
+ 	if (xfs_setsize_buftarg_early(btp, bdev))
+ 		goto error;
+ 	if (xfs_mapping_buftarg(btp, bdev))
+diff --git a/fs/xfs/linux-2.6/xfs_buf.h b/fs/xfs/linux-2.6/xfs_buf.h
+index 6e9310b..36f71aa 100644
+--- a/fs/xfs/linux-2.6/xfs_buf.h
++++ b/fs/xfs/linux-2.6/xfs_buf.h
+@@ -119,6 +119,7 @@ typedef unsigned int xfs_buf_flags_t;
+ typedef enum {
+ 	XBT_FORCE_SLEEP = 0,
+ 	XBT_FORCE_FLUSH = 1,
++	XBT_SHRINKER_ACTIVE = 2,
+ } xfs_buftarg_flags_t;
+ 
+ typedef struct xfs_bufhash {
+@@ -143,6 +144,9 @@ typedef struct xfs_buftarg {
+ 
+ 	/* LRU control structures */
+ 	struct shrinker		bt_shrinker;
++	struct list_head	bt_lru;
++	spinlock_t		bt_lru_lock;
++	unsigned int		bt_lru_nr;
+ } xfs_buftarg_t;
+ 
+ /*
+@@ -178,6 +182,7 @@ typedef struct xfs_buf {
+ 	xfs_buf_flags_t		b_flags;	/* status flags */
+ 	struct semaphore	b_sema;		/* semaphore for lockables */
+ 
++	struct list_head	b_lru;		/* lru list */
+ 	wait_queue_head_t	b_waiters;	/* unpin waiters */
+ 	struct list_head	b_list;
+ 	struct xfs_perag	*b_pag;		/* contains rbtree root */
+-- 
+1.7.1
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
