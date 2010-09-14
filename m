@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8EExVNh131397 for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 09:59:32 -0500
+	o8EErwYQ131155 for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 09:53:58 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6D210DD91A7
-	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 08:12:06 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6353D708A7
+	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 07:54:47 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id 3rW9HAbZbu8c4BfP for
-	<xfs@oss.sgi.com>; Tue, 14 Sep 2010 08:12:06 -0700 (PDT)
-Date: Tue, 14 Sep 2010 11:00:19 -0400
+	by cuda.sgi.com with ESMTP id vvHnDjuFA7yUmmdM for
+	<xfs@oss.sgi.com>; Tue, 14 Sep 2010 07:54:47 -0700 (PDT)
+Date: Tue, 14 Sep 2010 10:54:47 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 12/18] xfs: use unhashed buffers for size checks
-Message-ID: <20100914150019.GJ3400@infradead.org>
+Subject: Re: [PATCH 07/18] xfs: don't use vfs writeback for pure metadata
+	modifications
+Message-ID: <20100914145447.GE3400@infradead.org>
 References: <1284461777-1496-1-git-send-email-david@fromorbit.com>
-	<1284461777-1496-13-git-send-email-david@fromorbit.com>
+	<1284461777-1496-8-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1284461777-1496-13-git-send-email-david@fromorbit.com>
+In-Reply-To: <1284461777-1496-8-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,19 +33,14 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Sep 14, 2010 at 08:56:11PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> When we are checking we can access the last block of each device, we
-> do not need to use cached buffers as they will be tossed away
-> immediately. Use uncached buffers for size checks so that all IO
-> prior to full in-memory structure initialisation does not use the
-> buffer cache.
+On Tue, Sep 14, 2010 at 08:56:06PM +1000, Dave Chinner wrote:
+> Hence we can stop marking VFS inodes dirty during transaction commit or when
+> changing timestamps during transactions. This will keep the inodes in the
+> superblock dirty list to those containing data or unlogged metadata changes.
 
-Looks good,
-
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+But we also use xfs_ichgtime for non-transacion size updates, e.g.
+for truncate of zero length files.  With this patch we lose track of
+the timestamp updates for this case.
 
 _______________________________________________
 xfs mailing list
