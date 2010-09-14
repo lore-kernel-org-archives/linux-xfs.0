@@ -1,30 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8EAuOK1121284 for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 05:56:25 -0500
+	o8EAu5l2121080 for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 05:56:05 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 369451E6531E
-	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 03:57:12 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
-	[150.101.137.99]) by cuda.sgi.com with ESMTP id
-	3IDMuAhcpkktVA7B for <xfs@oss.sgi.com>;
-	Tue, 14 Sep 2010 03:57:12 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5EC8D1E6530B
+	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 03:56:51 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
+	[150.101.137.104]) by cuda.sgi.com with ESMTP id
+	2lawSeBO3brs2ldr for <xfs@oss.sgi.com>;
+	Tue, 14 Sep 2010 03:56:51 -0700 (PDT)
 Received: from dastard (unverified [121.44.127.68])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	39287371-1927428
-	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 20:27:11 +0930 (CST)
+	38830798-1927428
+	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 20:26:50 +0930 (CST)
 Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1OvTC7-0004P2-Lj
-	for xfs@oss.sgi.com; Tue, 14 Sep 2010 20:56:59 +1000
+	(envelope-from <dave@fromorbit.com>) id 1OvTBn-0004OI-2M
+	for xfs@oss.sgi.com; Tue, 14 Sep 2010 20:56:39 +1000
 Received: from dave by disturbed with local (Exim 4.72)
-	(envelope-from <dave@disturbed.disaster>) id 1OvTBv-0000QM-8z
-	for xfs@oss.sgi.com; Tue, 14 Sep 2010 20:56:47 +1000
+	(envelope-from <dave@disturbed.disaster>) id 1OvTBa-0000Po-JQ
+	for xfs@oss.sgi.com; Tue, 14 Sep 2010 20:56:26 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 12/18] xfs: use unhashed buffers for size checks
-Date: Tue, 14 Sep 2010 20:56:11 +1000
-Message-Id: <1284461777-1496-13-git-send-email-david@fromorbit.com>
-In-Reply-To: <1284461777-1496-1-git-send-email-david@fromorbit.com>
-References: <1284461777-1496-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 0/18] xfs: metadata and buffer cache scalability improvements
+Date: Tue, 14 Sep 2010 20:55:59 +1000
+Message-Id: <1284461777-1496-1-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,179 +32,102 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
-
-When we are checking we can access the last block of each device, we
-do not need to use cached buffers as they will be tossed away
-immediately. Use uncached buffers for size checks so that all IO
-prior to full in-memory structure initialisation does not use the
-buffer cache.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_fsops.c   |   11 +++++------
- fs/xfs/xfs_mount.c   |   39 ++++++++++++++++-----------------------
- fs/xfs/xfs_rtalloc.c |   29 +++++++++++++----------------
- 3 files changed, 34 insertions(+), 45 deletions(-)
-
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 43b1d56..158d5ab 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -144,12 +144,11 @@ xfs_growfs_data_private(
- 	if ((error = xfs_sb_validate_fsb_count(&mp->m_sb, nb)))
- 		return error;
- 	dpct = pct - mp->m_sb.sb_imax_pct;
--	error = xfs_read_buf(mp, mp->m_ddev_targp,
--			XFS_FSB_TO_BB(mp, nb) - XFS_FSS_TO_BB(mp, 1),
--			XFS_FSS_TO_BB(mp, 1), 0, &bp);
--	if (error)
--		return error;
--	ASSERT(bp);
-+	bp = xfs_buf_read_uncached(mp, mp->m_ddev_targp,
-+				XFS_FSB_TO_BB(mp, nb) - XFS_FSS_TO_BB(mp, 1),
-+				BBTOB(XFS_FSS_TO_BB(mp, 1)));
-+	if (!bp)
-+		return EIO;
- 	xfs_buf_relse(bp);
- 
- 	new = nb;	/* use new as a temporary here */
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 4d727d0..d1498a6 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -979,42 +979,35 @@ xfs_check_sizes(xfs_mount_t *mp)
- {
- 	xfs_buf_t	*bp;
- 	xfs_daddr_t	d;
--	int		error;
- 
- 	d = (xfs_daddr_t)XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks);
- 	if (XFS_BB_TO_FSB(mp, d) != mp->m_sb.sb_dblocks) {
--		cmn_err(CE_WARN, "XFS: size check 1 failed");
-+		cmn_err(CE_WARN, "XFS: filesystem size mismatch detected");
- 		return XFS_ERROR(EFBIG);
- 	}
--	error = xfs_read_buf(mp, mp->m_ddev_targp,
--			     d - XFS_FSS_TO_BB(mp, 1),
--			     XFS_FSS_TO_BB(mp, 1), 0, &bp);
--	if (!error) {
--		xfs_buf_relse(bp);
--	} else {
--		cmn_err(CE_WARN, "XFS: size check 2 failed");
--		if (error == ENOSPC)
--			error = XFS_ERROR(EFBIG);
--		return error;
-+	bp = xfs_buf_read_uncached(mp, mp->m_ddev_targp,
-+					d - XFS_FSS_TO_BB(mp, 1),
-+					BBTOB(XFS_FSS_TO_BB(mp, 1)));
-+	if (!bp) {
-+		cmn_err(CE_WARN, "XFS: last sector read failed");
-+		return EIO;
- 	}
-+	xfs_buf_relse(bp);
- 
- 	if (mp->m_logdev_targp != mp->m_ddev_targp) {
- 		d = (xfs_daddr_t)XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks);
- 		if (XFS_BB_TO_FSB(mp, d) != mp->m_sb.sb_logblocks) {
--			cmn_err(CE_WARN, "XFS: size check 3 failed");
-+			cmn_err(CE_WARN, "XFS: log size mismatch detected");
- 			return XFS_ERROR(EFBIG);
- 		}
--		error = xfs_read_buf(mp, mp->m_logdev_targp,
--				     d - XFS_FSB_TO_BB(mp, 1),
--				     XFS_FSB_TO_BB(mp, 1), 0, &bp);
--		if (!error) {
--			xfs_buf_relse(bp);
--		} else {
--			cmn_err(CE_WARN, "XFS: size check 3 failed");
--			if (error == ENOSPC)
--				error = XFS_ERROR(EFBIG);
--			return error;
-+		bp = xfs_buf_read_uncached(mp, mp->m_logdev_targp,
-+					d - XFS_FSB_TO_BB(mp, 1),
-+					XFS_FSB_TO_B(mp, 1));
-+		if (!bp) {
-+			cmn_err(CE_WARN, "XFS: log device read failed");
-+			return EIO;
- 		}
-+		xfs_buf_relse(bp);
- 	}
- 	return 0;
- }
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index 891260f..5c5a4c4 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -39,6 +39,7 @@
- #include "xfs_trans_space.h"
- #include "xfs_utils.h"
- #include "xfs_trace.h"
-+#include "xfs_buf.h"
- 
- 
- /*
-@@ -1883,13 +1884,13 @@ xfs_growfs_rt(
- 	/*
- 	 * Read in the last block of the device, make sure it exists.
- 	 */
--	error = xfs_read_buf(mp, mp->m_rtdev_targp,
--			XFS_FSB_TO_BB(mp, nrblocks - 1),
--			XFS_FSB_TO_BB(mp, 1), 0, &bp);
--	if (error)
--		return error;
--	ASSERT(bp);
-+	bp = xfs_buf_read_uncached(mp, mp->m_rtdev_targp,
-+				XFS_FSB_TO_BB(mp, nrblocks - 1),
-+				XFS_FSB_TO_B(mp, 1));
-+	if (!bp)
-+		return EIO;
- 	xfs_buf_relse(bp);
-+
- 	/*
- 	 * Calculate new parameters.  These are the final values to be reached.
- 	 */
-@@ -2215,7 +2216,6 @@ xfs_rtmount_init(
- {
- 	xfs_buf_t	*bp;	/* buffer for last block of subvolume */
- 	xfs_daddr_t	d;	/* address of last block of subvolume */
--	int		error;	/* error return value */
- 	xfs_sb_t	*sbp;	/* filesystem superblock copy in mount */
- 
- 	sbp = &mp->m_sb;
-@@ -2242,15 +2242,12 @@ xfs_rtmount_init(
- 			(unsigned long long) mp->m_sb.sb_rblocks);
- 		return XFS_ERROR(EFBIG);
- 	}
--	error = xfs_read_buf(mp, mp->m_rtdev_targp,
--				d - XFS_FSB_TO_BB(mp, 1),
--				XFS_FSB_TO_BB(mp, 1), 0, &bp);
--	if (error) {
--		cmn_err(CE_WARN,
--	"XFS: realtime mount -- xfs_read_buf failed, returned %d", error);
--		if (error == ENOSPC)
--			return XFS_ERROR(EFBIG);
--		return error;
-+	bp = xfs_buf_read_uncached(mp, mp->m_rtdev_targp,
-+					d - XFS_FSB_TO_BB(mp, 1),
-+					XFS_FSB_TO_B(mp, 1));
-+	if (!bp) {
-+		cmn_err(CE_WARN, "XFS: realtime device size check failed");
-+		return EIO;
- 	}
- 	xfs_buf_relse(bp);
- 	return 0;
--- 
-1.7.1
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+VGhpcyBwYXRjaHNldCBoYXMgZ3Jvd24gcXVpdGUgYSBiaXQgLSBpdCBzdGFydGVkIG91dCBhcyBh
+ICJjb252ZXJ0CnRoZSBidWZmZXIgY2FjaGUgdG8gcmJ0cmVlcyIgcGF0Y2gsIGFuZCBoYXMgZ290
+dGVuIGJpZ2dlciBhcyBJCnBlZWxlZCB0aGUgb25pb24gZnJvbSBvbmUgYm90dGxlbmVjayB0byBh
+bm90aGVyLgoKUGVyZm9ybWFuY2UgbnVtYmVycyBoZXJlIGFyZSA4LXdheSBmc19tYXJrIGNyZWF0
+ZSB0byA1ME0gZmlsZXMsIGFuZAo4LXdheSBybSAtcmYgdG8gcmVtb3ZlIHRoZSBmaWxlcyBjcmVh
+dGVkLgoKCQkJd2FsbCB0aW1lCWZzX21hcmsgcmF0ZQoyLjYuMzYtcmM0OgoJY3JlYXRlOgkJMTNt
+MTBzCQk2NWsgZmlsZS9zCgl1bmxpbms6CQkyM201OHMJCU4vQQoKVGhlIGZpcnN0IHNldCBvZiBw
+YXRjaGVzIGFyZSBnZW5lcmljIGluZnJhc3RydWN0dXJlIGNoYW5nZXMgdGhhdAphZGRyZXNzIHBh
+aW4gcG9pbnRzIHRoZSByYnRyZWUgYmFzZWQgYnVmZmVyIGNhY2hlIGludHJvZHVjZXMuIEkndmUK
+cHV0IHRoZW0gZmlyc3QgYmVjYXVzZSB0aGV5IGFyZSBzaW1wbGVyIHRvIHJldmlldyBhbmQgaGF2
+ZSBpbW1lZGlhdGUKaW1wYWN0IG9uIHBlcmZvcm1hbmNlLiBUaGVzZSBwYXRjaGVzIGFkZHJlc3Mg
+bG9jayBjb250ZW50aW9uIGFzCm1lYXN1cmVkIGJ5IHRoZSBrZXJuZWwgbG9ja3N0YXQgaW5mcmFz
+dHJ1Y3R1cmUuCgp4ZnM6IHNpbmdsZSB0aHJlYWQgaW5vZGUgY2FjaGUgc2hyaW5raW5nLgoJLSBw
+cmV2ZW50cyBwZXItYWcgY29udGVudGlvbiBkdXJpbmcgY2FjaGUgc2hyaW5raW5nCgp4ZnM6IHJl
+ZHVjZSB0aGUgbnVtYmVyIG9mIENJTCBsb2NrIHJvdW5kIHRyaXBzIGR1cmluZyBjb21taXQKCS0g
+cmVkdWNlcyBsb2NrIHRyYWZmaWMgb24gdGhlIHhjX2NpbF9sb2NrIGJ5IHR3byBvcmRlcnMgb2YK
+CSAgbWFnbml0dWRlCgp4ZnM6IHJlbW92ZSBkZWJ1ZyBhc3NlcnQgZm9yIHBlci1hZyByZWZlcmVu
+Y2UgY291bnRpbmcKeGZzOiBsb2NrbGVzcyBwZXItYWcgbG9va3VwcwoJLSBob3R0ZXN0IGxvY2sg
+aW4gdGhlIHN5c3RlbSB3aXRoIGJ1ZmZlciBjYWNoZSByYnRyZWUgcGF0aAoJLSBjb252ZXJ0ZWQg
+dG8gdXNlIFJDVS4KCnhmczogY29udmVydCBpbm9kZSBjYWNoZSBsb29rdXBzIHRvIHVzZSBSQ1Ug
+bG9ja2luZwp4ZnM6IGNvbnZlcnQgcGFnX2ljaV9sb2NrIHRvIGEgc3BpbiBsb2NrCgktIGFkZHJl
+c3NlcyBsb29rdXAgdnMgcmVjbGFpbSBjb250ZW50aW9uIG9uIHBhZ19pY2lfbG9jawoJLSBjb252
+ZXJ0ZWQgdG8gdXNlIFJDVS4KCnhmczogZG9uJ3QgdXNlIHZmcyB3cml0ZWJhY2sgZm9yIHB1cmUg
+bWV0YWRhdGEgbW9kaWZpY2F0aW9ucwoJLSBpbm9kZSB3cml0ZWJhY2sgZG9lcyBub3Qga2VlcCB1
+cCB3aXRoIGRpcnR5aW5nIDEwMCwwMDAKCSAgaW5vZGVzIGEgc2Vjb25kLiBBdm9pZHMgdGhlIHN1
+cGVyYmxvY2sgZGlydHkgbGlzdCB3aGVyZQoJICBwb3NzaWJsZSBieSB1c2luZyB0aGUgQUlMIGFz
+IHRoZSBhZ2Utb3JkZXIgZmx1c2hlci4KClBlcmZvcm1hbmNlIHdpdGggdGhlc2UgcGF0Y2hlczoK
+CjIuNi4zNi1yYzQgKyBzaHJpbmtlciArIENJTCArIFJDVToKCWNyZWF0ZToJCTExbTM4cwkJODBr
+IGZpbGVzL3MKCXVubGluazoJCTE0bTI5cwkJTi9BCgpDcmVhdGUgcmF0ZSBoYXMgaW1wcm92ZWQg
+YnkgMjAlLCB1bmxpbmsgdGltZSBoYXMgYWxtb3N0IGhhbHZlZC4gT24KbGFyZ2UgbnVtYmVycyBv
+ZiBpbm9kZXMsIHRoZSB1bmxpbmsgcmF0ZSBpbXByb3ZlcyBldmVuIG1vcmUKZHJhbWF0aWNhbGx5
+LgoKVGhlIGJ1ZmZlciBjYWNoZSB0byByYnRyZWUgc2VyaWVzIGN1cnJlbnQgc3RhbmRzIGF0OgoK
+eGZzOiByZW5hbWUgeGZzX2J1Zl9nZXRfbm9kYWRkciB0byBiZSBtb3JlIGFwcHJvcHJpYXRlCnhm
+czogaW50cm9kdWNlZCB1bmNhY2hlZCBidWZmZXIgcmVhZCBwcmltaXR2ZQp4ZnM6IHN0b3JlIHhm
+c19tb3VudCBpbiB0aGUgYnVmdGFyZyBpbnN0ZWFkIG9mIGluIHRoZSB4ZnNfYnVmCnhmczoga2ls
+bCBYQkZfRlNfTUFOQUdFRCBidWZmZXJzCnhmczogdXNlIHVuaGFzaGVkIGJ1ZmZlcnMgZm9yIHNp
+emUgY2hlY2tzCnhmczogcmVtb3ZlIGJ1ZnRhcmcgaGFzaCBmb3IgZXh0ZXJuYWwgZGV2aWNlcwoJ
+LSBwcmVwYXJhdG9yeSBidWZmZXIgY2FjaGUgQVBJIGNsZWFudXAgcGF0Y2hlcwoKeGZzOiBjb252
+ZXJ0IGJ1ZmZlciBjYWNoZSBoYXNoIHRvIHJidHJlZQoJLSB3aGF0IGl0IHNheXMgOykKCS0gaW5j
+bHVkZXMgY2hhbmdlcyBiYXNlZCBvbiBBbGV4J3MgcmV2aWV3LgoKeGZzOyBwYWNrIHhmc19idWYg
+c3RydWN0dXJlIG1vcmUgdGlnaHRseQoJLSBtZW1vcnkgdXNhZ2UgcmVkdWN0aW9uLCBtZWFucyBh
+ZGRpbmcgdGhlIExSVSBsaXN0IGhlYWQgaXMKCSAgZWZmZWN0aXZlbHkgbWVtb3J5IHVzYWdlIG5l
+dXRyYWwuCgp4ZnM6IGNvbnZlcnQgeGZzYnVkIHNocmlua2VyIHRvIGEgcGVyLWJ1ZnRhcmcgc2hy
+aW5rZXIuCnhmczogYWRkIGEgbHJ1IHRvIHRoZSBYRlMgYnVmZmVyIGNhY2hlCgktIEFkZCBhbiBM
+UlUgZm9yIHJlY2xhaW0KCnhmczogc3RvcCB1c2luZyB0aGUgcGFnZSBjYWNoZSB0byBiYWNrIHRo
+ZSBidWZmZXIgY2FjaGUKCS0ga2lsbCBhbGwgdGhlIHBhZ2UgY2FjaGUgY29kZQoKMi42LjM2LXJj
+NCArIHNocmlua2VyICsgQ0lMICsgUkNVICsgcmJ0cmVlOgoJY3JlYXRlOgkJIDltNDdzCQk5NWsg
+ZmlsZXMvcwoJdW5saW5rOgkJMTRtMTZzCQlOL0EKCkNyZWF0ZSByYXRlIGhhcyBpbXByb3ZlZCBi
+eSBhbm90aGVyIDIwJSwgdW5saW5rIHJhdGUgaGFzIGltcHJvdmVkCm1hcmdpbmFsbHkgKG5vaXNl
+LCByZWFsbHkpLgoKVGhlcmUgYXJlIHR3byByZW1haW5pbmcgcGFydHMgdG8gdGhlIGJ1ZmZlciBj
+YWNoZSBjb252ZXJzaW9uczoKCgkxLiB3b3JrIG91dCBob3cgdG8gZWZmaWNpZW50bHkgc3VwcG9y
+dCBibG9jayBzaXplIHNtYWxsZXIKCXRoYW4gcGFnZSBzaXplLiBUaGUgY3VycmVudCBjb2RlIHdv
+cmtzLCBidXQgdXNlcyBhIHBhZ2UgcGVyCglzdWItYXBnZSBidWZmZXIuICBBIHNldCBvZiBzbGFi
+IGNhY2hlcyB3b3VsZCBiZSBwZXJmZWN0IGZvcgoJdGhpcyB1c2UsIGJ1dCBJJ20gbm90IHN1cmUg
+dGhhdCB3ZSBhcmUgYWxsb3dlZCB0byB1c2UgdGhlbQoJZm9yIElPIGFueW1vcmUuIENocmlzdG9w
+aD8KCgkyLiBDb25uZWN0IHVwIHRoZSBidWZmZXIgdHlwZSBzZXBjaWZpYyByZWNsYWltIHByaW9y
+aXR5CglyZWZlcmVuY2UgY291bnRpbmcgYW5kIGNvbnZlcnQgdGhlIExSVSByZWNsYWltIHRvIGEg
+Y3Vyc29yCgliYXNlZCB3YWxrIHRoYXQgc2ltcGx5IGRyb3BzIHJlY2xhaW0gcmVmZXJlbmNlIGNv
+dW50cyBhbmQKCWZyZWVzIGFueXRoaW5nIHRoYXQgaGFzIGEgemVybyByZWNsYWltIHJlZmVyZW5j
+ZS4KCk92ZXJhbGwsIEkgY2FuIHN3YXAgdGhlIG9yZGVyIG9mIHRoZSB0d28gcGF0Y2ggc2V0cywg
+YW5kIHRoZQppbmNyZW1lbnRhbCBwZXJmb3JtYW5jZSBpbmNyZWFzZXMgZm9yIGNyZWF0ZSBhcmUg
+cHJldHR5IG11Y2gKaWRlbnRpY2FsLiBGb3IgdW5saW5rLCB0ZSBiZW5lZml0IGNvbWVzIGZyb20g
+dGhlIHNocmlua2VyCm1vZGlmaWNhdGlvbi4gRm9yIHRob3NlIHRoYXQgY2FyZSwgdGhlIHJidHJl
+ZSBwYXRjaCBzZXQgaW4gaXNvbGF0aW9uCnJlc3VsdHMgaW4gYSB0aW1lIG9mIDRoMzhtIHRvIGNy
+ZWF0ZSAxIGJpbGxpb24gaW5vZGVzIG9uIG15IDhwLzRHQgpSQU0gdGVzdCBWTS4gSSBoYXZlbid0
+IHJ1biB0aGlzIHRlc3Qgd2l0aCB0aGUgUkNVIGFuZCB3cml0ZWJhY2sKbW9kaWZpY2F0aW9ucyB5
+ZXQuCgpNb3Zpbmcgb24gZnJvbSB0aGlzIHBvaW50IGlzIHRvIHN0YXJ0IHRlc3RpbmcgYWdhaW5z
+dCBOaWNrIFBpZ2dpbidzClZGUyBzY2FsYWJpbGl0eSB0cmVlLCBh0ZUgdGhlIGlub2RlX2xvY2sg
+YW5kIGRjYWNoZV9sb2NrIGFyZSBub3cgdGhlCnBlcmZvcm1hbmNlIGxpbWl0aW5nIGZhY3RvcnMu
+IFRoYXQgd2lsbCwgd2l0aG91dCBkb3VidCwgYnJpbmcgbmV3CmhvdHNwb3RzIG91dCBpbiBYRlMg
+c28gSSdsbCBiZSBzdGFydGluZyB0aGlzIGN5Y2xlIG92ZXIgYWdhaW4gc29vbi4KCk92ZXJhbGwg
+ZGlmZnN0YXQgYXQgdGhpcyBwb2ludCBpczoKCiBmcy94ZnMvbGludXgtMi42L2ttZW0uaCAgICAg
+ICAgfCAgICAxICsKIGZzL3hmcy9saW51eC0yLjYveGZzX2J1Zi5jICAgICB8ICA1ODggKysrKysr
+KysrKysrKystLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQogZnMveGZzL2xpbnV4LTIuNi94ZnNf
+YnVmLmggICAgIHwgICA2MSArKystLQogZnMveGZzL2xpbnV4LTIuNi94ZnNfaW9wcy5jICAgIHwg
+ICAxOCArLQogZnMveGZzL2xpbnV4LTIuNi94ZnNfc3VwZXIuYyAgIHwgICAxMSArLQogZnMveGZz
+L2xpbnV4LTIuNi94ZnNfc3luYy5jICAgIHwgICA0OSArKystCiBmcy94ZnMvbGludXgtMi42L3hm
+c190cmFjZS5oICAgfCAgICAyICstCiBmcy94ZnMvcXVvdGEveGZzX3FtX3N5c2NhbGxzLmMgfCAg
+ICA0ICstCiBmcy94ZnMveGZzX2FnLmggICAgICAgICAgICAgICAgfCAgICA5ICstCiBmcy94ZnMv
+eGZzX2J1Zl9pdGVtLmMgICAgICAgICAgfCAgICAzICstCiBmcy94ZnMveGZzX2Zzb3BzLmMgICAg
+ICAgICAgICAgfCAgIDExICstCiBmcy94ZnMveGZzX2lnZXQuYyAgICAgICAgICAgICAgfCAgIDQ2
+ICsrKy0KIGZzL3hmcy94ZnNfaW5vZGUuYyAgICAgICAgICAgICB8ICAgMjIgKy0KIGZzL3hmcy94
+ZnNfaW5vZGVfaXRlbS5jICAgICAgICB8ICAgIDkgLQogZnMveGZzL3hmc19sb2cuYyAgICAgICAg
+ICAgICAgIHwgICAgMyArLQogZnMveGZzL3hmc19sb2dfY2lsLmMgICAgICAgICAgIHwgIDExNiAr
+KysrKy0tLS0KIGZzL3hmcy94ZnNfbG9nX3JlY292ZXIuYyAgICAgICB8ICAgMTggKy0KIGZzL3hm
+cy94ZnNfbW91bnQuYyAgICAgICAgICAgICB8ICAxMjYgKysrKy0tLS0tCiBmcy94ZnMveGZzX21v
+dW50LmggICAgICAgICAgICAgfCAgICAyICsKIGZzL3hmcy94ZnNfcnRhbGxvYy5jICAgICAgICAg
+ICB8ICAgMjkgKy0KIGZzL3hmcy94ZnNfdm5vZGVvcHMuYyAgICAgICAgICB8ICAgIDIgKy0KIDIx
+IGZpbGVzIGNoYW5nZWQsIDUwMiBpbnNlcnRpb25zKCspLCA2MjggZGVsZXRpb25zKC0pCgpTbyBp
+dCBpcyBpbXByb3ZpbmcgcGVyZm9ybWFuY2UsIHJlbW92aW5nIGNvZGUgYW5kIGZpeGluZwpsb25n
+c3RhbmRpbmcgYnVncyBhbGwgYXQgdGhlIHNhbWUgdGltZS4gOykKCl9fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5z
+Z2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
