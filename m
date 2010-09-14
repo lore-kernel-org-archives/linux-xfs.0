@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8EEwiKW131352 for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 09:58:45 -0500
+	o8EEuV9v131285 for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 09:56:31 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A9B0470900
-	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 07:59:33 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 11DBBDD89DA
+	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 08:09:05 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id A0dM7n2VXAhcBASa for
-	<xfs@oss.sgi.com>; Tue, 14 Sep 2010 07:59:33 -0700 (PDT)
-Date: Tue, 14 Sep 2010 10:59:33 -0400
+	by cuda.sgi.com with ESMTP id svn9hoEgFqEAj6P2 for
+	<xfs@oss.sgi.com>; Tue, 14 Sep 2010 08:09:05 -0700 (PDT)
+Date: Tue, 14 Sep 2010 10:57:19 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 11/18] xfs: kill XBF_FS_MANAGED buffers
-Message-ID: <20100914145933.GI3400@infradead.org>
+Subject: Re: [PATCH 10/18] xfs: store xfs_mount in the buftarg instead of in
+	the xfs_buf
+Message-ID: <20100914145719.GH3400@infradead.org>
 References: <1284461777-1496-1-git-send-email-david@fromorbit.com>
-	<1284461777-1496-12-git-send-email-david@fromorbit.com>
+	<1284461777-1496-11-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1284461777-1496-12-git-send-email-david@fromorbit.com>
+In-Reply-To: <1284461777-1496-11-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,17 +33,20 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
+On Tue, Sep 14, 2010 at 08:56:09PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Each buffer contains both a buftarg pointer and a mount pointer. If
+> we add a mount pointer into the buftarg, we can avoid needing the
+> b_mount field in every buffer and grab it from the buftarg when
+> needed instead. This shrinks the xfs_buf by 8 bytes.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+
 Looks good,
 
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-
-minor nitpick below:
-
-> +reread:
-> +	bp = xfs_buf_read_uncached(mp, mp->m_ddev_targp, XFS_SB_DADDR, sector_size);
-
-Too long line.
 
 _______________________________________________
 xfs mailing list
