@@ -1,26 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8EKVOnn146993 for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 15:31:24 -0500
-Received: from smtp3-g21.free.fr (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EA46917E5ABF
-	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 13:32:11 -0700 (PDT)
-Received: from smtp3-g21.free.fr (smtp3-g21.free.fr [212.27.42.3]) by
-	cuda.sgi.com with ESMTP id 7kQtXEmw55pmrzsp for
-	<xfs@oss.sgi.com>; Tue, 14 Sep 2010 13:32:11 -0700 (PDT)
-Date: Tue, 14 Sep 2010 22:32:01 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: Now: Debian issues, WAS: XFS Filesystem not mounting
-Message-ID: <20100914223201.21c3bd0f@galadriel.home>
-In-Reply-To: <4C8FB8D6.6080603@hardwarefreak.com>
-References: <29704010.post@talk.nabble.com> <20100914012151.GF411@dastard>
-	<29705139.post@talk.nabble.com> <201009140740.14482@zmi.at>
-	<20100914082504.4109712d@galadriel.home>
-	<29708085.post@talk.nabble.com> <201009141603.24754@zmi.at>
-	<4C8F9E29.2000803@hardwarefreak.com>
-	<29710491.post@talk.nabble.com>
-	<4C8FB8D6.6080603@hardwarefreak.com>
+	o8ELR9MW148893 for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 16:27:09 -0500
+Subject: Re: [PATCH 06/18] xfs: convert pag_ici_lock to a spin lock
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <1284461777-1496-7-git-send-email-david@fromorbit.com>
+References: <1284461777-1496-1-git-send-email-david@fromorbit.com>
+	<1284461777-1496-7-git-send-email-david@fromorbit.com>
+Date: Tue, 14 Sep 2010 16:26:59 -0500
+Message-ID: <1284499619.9701.71.camel@doink>
 Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,44 +19,31 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Stan Hoeppner <stan@hardwarefreak.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-Le Tue, 14 Sep 2010 13:03:02 -0500 vous =E9criviez:
+On Tue, 2010-09-14 at 20:56 +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> now that we are using RCU protection for the inode cache lookups,
+> the lock is only needed on the modification side. Hence it is not
+> necessary for the lock to be a rwlock as there are no read side
+> holders anymore. Convert it to a spin lock to reflect it's exclusive
+> nature.
 
-> > ;-)  That makes a huge difference.  But generally my experience
-> > thus far with debian has been positive.  Enough to make me consider
-> > switching.   And I know the XFS has never given me a lick of
-> > trouble.  =
+This is of course contingent on the correctness of
+the RCU change before this.  But this one looks good.
 
-> =
-
-> I've only been using XFS for about a year now, and I've had zero
-> problems. =
+Reviewed-by: Alex Elder <aelder@sgi.com>
 
 
-I've used XFS only since 1996 and never looked back - I
-still actually miss those sturdy Origin 200 and 2000 :) I've set up
-about 2.5 PB of XFS filesystems in the past 5 years so I think it's
-quite a significant metric.
-
-On the other hand I had some problems (fortunately nothing
-irremediable) on reiser, ext3 though I used them only sparsely.
-Obviously XFS is much more resilient to hardware glitches (I even
-recovered most of the data from a RAID-0 array with a failed drive).
-
--- =
-
-------------------------------------------------------------------------
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
-------------------------------------------------------------------------
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/linux-2.6/xfs_sync.c |   16 ++++++++--------
 
 _______________________________________________
 xfs mailing list
