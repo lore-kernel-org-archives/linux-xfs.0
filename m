@@ -1,29 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8EAu5l2121080 for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 05:56:05 -0500
+	o8EAu5ts121082 for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 05:56:06 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5EC8D1E6530B
-	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 03:56:51 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
-	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	2lawSeBO3brs2ldr for <xfs@oss.sgi.com>;
-	Tue, 14 Sep 2010 03:56:51 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 740CC11E4F78
+	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 04:08:36 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
+	[150.101.137.99]) by cuda.sgi.com with ESMTP id
+	H2QUw5RwVjuy6zhc for <xfs@oss.sgi.com>;
+	Tue, 14 Sep 2010 04:08:36 -0700 (PDT)
 Received: from dastard (unverified [121.44.127.68])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	38830798-1927428
+	39287317-1927428
 	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 20:26:50 +0930 (CST)
 Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1OvTBn-0004OI-2M
-	for xfs@oss.sgi.com; Tue, 14 Sep 2010 20:56:39 +1000
+	(envelope-from <dave@fromorbit.com>) id 1OvTBx-0004OV-An
+	for xfs@oss.sgi.com; Tue, 14 Sep 2010 20:56:49 +1000
 Received: from dave by disturbed with local (Exim 4.72)
-	(envelope-from <dave@disturbed.disaster>) id 1OvTBa-0000Po-JQ
+	(envelope-from <dave@disturbed.disaster>) id 1OvTBa-0000Q4-Vi
 	for xfs@oss.sgi.com; Tue, 14 Sep 2010 20:56:26 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 0/18] xfs: metadata and buffer cache scalability improvements
-Date: Tue, 14 Sep 2010 20:55:59 +1000
-Message-Id: <1284461777-1496-1-git-send-email-david@fromorbit.com>
-MIME-Version: 1.0
+Subject: [PATCH 06/18] xfs: convert pag_ici_lock to a spin lock
+Date: Tue, 14 Sep 2010 20:56:05 +1000
+Message-Id: <1284461777-1496-7-git-send-email-david@fromorbit.com>
+In-Reply-To: <1284461777-1496-1-git-send-email-david@fromorbit.com>
+References: <1284461777-1496-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,102 +33,170 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-VGhpcyBwYXRjaHNldCBoYXMgZ3Jvd24gcXVpdGUgYSBiaXQgLSBpdCBzdGFydGVkIG91dCBhcyBh
-ICJjb252ZXJ0CnRoZSBidWZmZXIgY2FjaGUgdG8gcmJ0cmVlcyIgcGF0Y2gsIGFuZCBoYXMgZ290
-dGVuIGJpZ2dlciBhcyBJCnBlZWxlZCB0aGUgb25pb24gZnJvbSBvbmUgYm90dGxlbmVjayB0byBh
-bm90aGVyLgoKUGVyZm9ybWFuY2UgbnVtYmVycyBoZXJlIGFyZSA4LXdheSBmc19tYXJrIGNyZWF0
-ZSB0byA1ME0gZmlsZXMsIGFuZAo4LXdheSBybSAtcmYgdG8gcmVtb3ZlIHRoZSBmaWxlcyBjcmVh
-dGVkLgoKCQkJd2FsbCB0aW1lCWZzX21hcmsgcmF0ZQoyLjYuMzYtcmM0OgoJY3JlYXRlOgkJMTNt
-MTBzCQk2NWsgZmlsZS9zCgl1bmxpbms6CQkyM201OHMJCU4vQQoKVGhlIGZpcnN0IHNldCBvZiBw
-YXRjaGVzIGFyZSBnZW5lcmljIGluZnJhc3RydWN0dXJlIGNoYW5nZXMgdGhhdAphZGRyZXNzIHBh
-aW4gcG9pbnRzIHRoZSByYnRyZWUgYmFzZWQgYnVmZmVyIGNhY2hlIGludHJvZHVjZXMuIEkndmUK
-cHV0IHRoZW0gZmlyc3QgYmVjYXVzZSB0aGV5IGFyZSBzaW1wbGVyIHRvIHJldmlldyBhbmQgaGF2
-ZSBpbW1lZGlhdGUKaW1wYWN0IG9uIHBlcmZvcm1hbmNlLiBUaGVzZSBwYXRjaGVzIGFkZHJlc3Mg
-bG9jayBjb250ZW50aW9uIGFzCm1lYXN1cmVkIGJ5IHRoZSBrZXJuZWwgbG9ja3N0YXQgaW5mcmFz
-dHJ1Y3R1cmUuCgp4ZnM6IHNpbmdsZSB0aHJlYWQgaW5vZGUgY2FjaGUgc2hyaW5raW5nLgoJLSBw
-cmV2ZW50cyBwZXItYWcgY29udGVudGlvbiBkdXJpbmcgY2FjaGUgc2hyaW5raW5nCgp4ZnM6IHJl
-ZHVjZSB0aGUgbnVtYmVyIG9mIENJTCBsb2NrIHJvdW5kIHRyaXBzIGR1cmluZyBjb21taXQKCS0g
-cmVkdWNlcyBsb2NrIHRyYWZmaWMgb24gdGhlIHhjX2NpbF9sb2NrIGJ5IHR3byBvcmRlcnMgb2YK
-CSAgbWFnbml0dWRlCgp4ZnM6IHJlbW92ZSBkZWJ1ZyBhc3NlcnQgZm9yIHBlci1hZyByZWZlcmVu
-Y2UgY291bnRpbmcKeGZzOiBsb2NrbGVzcyBwZXItYWcgbG9va3VwcwoJLSBob3R0ZXN0IGxvY2sg
-aW4gdGhlIHN5c3RlbSB3aXRoIGJ1ZmZlciBjYWNoZSByYnRyZWUgcGF0aAoJLSBjb252ZXJ0ZWQg
-dG8gdXNlIFJDVS4KCnhmczogY29udmVydCBpbm9kZSBjYWNoZSBsb29rdXBzIHRvIHVzZSBSQ1Ug
-bG9ja2luZwp4ZnM6IGNvbnZlcnQgcGFnX2ljaV9sb2NrIHRvIGEgc3BpbiBsb2NrCgktIGFkZHJl
-c3NlcyBsb29rdXAgdnMgcmVjbGFpbSBjb250ZW50aW9uIG9uIHBhZ19pY2lfbG9jawoJLSBjb252
-ZXJ0ZWQgdG8gdXNlIFJDVS4KCnhmczogZG9uJ3QgdXNlIHZmcyB3cml0ZWJhY2sgZm9yIHB1cmUg
-bWV0YWRhdGEgbW9kaWZpY2F0aW9ucwoJLSBpbm9kZSB3cml0ZWJhY2sgZG9lcyBub3Qga2VlcCB1
-cCB3aXRoIGRpcnR5aW5nIDEwMCwwMDAKCSAgaW5vZGVzIGEgc2Vjb25kLiBBdm9pZHMgdGhlIHN1
-cGVyYmxvY2sgZGlydHkgbGlzdCB3aGVyZQoJICBwb3NzaWJsZSBieSB1c2luZyB0aGUgQUlMIGFz
-IHRoZSBhZ2Utb3JkZXIgZmx1c2hlci4KClBlcmZvcm1hbmNlIHdpdGggdGhlc2UgcGF0Y2hlczoK
-CjIuNi4zNi1yYzQgKyBzaHJpbmtlciArIENJTCArIFJDVToKCWNyZWF0ZToJCTExbTM4cwkJODBr
-IGZpbGVzL3MKCXVubGluazoJCTE0bTI5cwkJTi9BCgpDcmVhdGUgcmF0ZSBoYXMgaW1wcm92ZWQg
-YnkgMjAlLCB1bmxpbmsgdGltZSBoYXMgYWxtb3N0IGhhbHZlZC4gT24KbGFyZ2UgbnVtYmVycyBv
-ZiBpbm9kZXMsIHRoZSB1bmxpbmsgcmF0ZSBpbXByb3ZlcyBldmVuIG1vcmUKZHJhbWF0aWNhbGx5
-LgoKVGhlIGJ1ZmZlciBjYWNoZSB0byByYnRyZWUgc2VyaWVzIGN1cnJlbnQgc3RhbmRzIGF0OgoK
-eGZzOiByZW5hbWUgeGZzX2J1Zl9nZXRfbm9kYWRkciB0byBiZSBtb3JlIGFwcHJvcHJpYXRlCnhm
-czogaW50cm9kdWNlZCB1bmNhY2hlZCBidWZmZXIgcmVhZCBwcmltaXR2ZQp4ZnM6IHN0b3JlIHhm
-c19tb3VudCBpbiB0aGUgYnVmdGFyZyBpbnN0ZWFkIG9mIGluIHRoZSB4ZnNfYnVmCnhmczoga2ls
-bCBYQkZfRlNfTUFOQUdFRCBidWZmZXJzCnhmczogdXNlIHVuaGFzaGVkIGJ1ZmZlcnMgZm9yIHNp
-emUgY2hlY2tzCnhmczogcmVtb3ZlIGJ1ZnRhcmcgaGFzaCBmb3IgZXh0ZXJuYWwgZGV2aWNlcwoJ
-LSBwcmVwYXJhdG9yeSBidWZmZXIgY2FjaGUgQVBJIGNsZWFudXAgcGF0Y2hlcwoKeGZzOiBjb252
-ZXJ0IGJ1ZmZlciBjYWNoZSBoYXNoIHRvIHJidHJlZQoJLSB3aGF0IGl0IHNheXMgOykKCS0gaW5j
-bHVkZXMgY2hhbmdlcyBiYXNlZCBvbiBBbGV4J3MgcmV2aWV3LgoKeGZzOyBwYWNrIHhmc19idWYg
-c3RydWN0dXJlIG1vcmUgdGlnaHRseQoJLSBtZW1vcnkgdXNhZ2UgcmVkdWN0aW9uLCBtZWFucyBh
-ZGRpbmcgdGhlIExSVSBsaXN0IGhlYWQgaXMKCSAgZWZmZWN0aXZlbHkgbWVtb3J5IHVzYWdlIG5l
-dXRyYWwuCgp4ZnM6IGNvbnZlcnQgeGZzYnVkIHNocmlua2VyIHRvIGEgcGVyLWJ1ZnRhcmcgc2hy
-aW5rZXIuCnhmczogYWRkIGEgbHJ1IHRvIHRoZSBYRlMgYnVmZmVyIGNhY2hlCgktIEFkZCBhbiBM
-UlUgZm9yIHJlY2xhaW0KCnhmczogc3RvcCB1c2luZyB0aGUgcGFnZSBjYWNoZSB0byBiYWNrIHRo
-ZSBidWZmZXIgY2FjaGUKCS0ga2lsbCBhbGwgdGhlIHBhZ2UgY2FjaGUgY29kZQoKMi42LjM2LXJj
-NCArIHNocmlua2VyICsgQ0lMICsgUkNVICsgcmJ0cmVlOgoJY3JlYXRlOgkJIDltNDdzCQk5NWsg
-ZmlsZXMvcwoJdW5saW5rOgkJMTRtMTZzCQlOL0EKCkNyZWF0ZSByYXRlIGhhcyBpbXByb3ZlZCBi
-eSBhbm90aGVyIDIwJSwgdW5saW5rIHJhdGUgaGFzIGltcHJvdmVkCm1hcmdpbmFsbHkgKG5vaXNl
-LCByZWFsbHkpLgoKVGhlcmUgYXJlIHR3byByZW1haW5pbmcgcGFydHMgdG8gdGhlIGJ1ZmZlciBj
-YWNoZSBjb252ZXJzaW9uczoKCgkxLiB3b3JrIG91dCBob3cgdG8gZWZmaWNpZW50bHkgc3VwcG9y
-dCBibG9jayBzaXplIHNtYWxsZXIKCXRoYW4gcGFnZSBzaXplLiBUaGUgY3VycmVudCBjb2RlIHdv
-cmtzLCBidXQgdXNlcyBhIHBhZ2UgcGVyCglzdWItYXBnZSBidWZmZXIuICBBIHNldCBvZiBzbGFi
-IGNhY2hlcyB3b3VsZCBiZSBwZXJmZWN0IGZvcgoJdGhpcyB1c2UsIGJ1dCBJJ20gbm90IHN1cmUg
-dGhhdCB3ZSBhcmUgYWxsb3dlZCB0byB1c2UgdGhlbQoJZm9yIElPIGFueW1vcmUuIENocmlzdG9w
-aD8KCgkyLiBDb25uZWN0IHVwIHRoZSBidWZmZXIgdHlwZSBzZXBjaWZpYyByZWNsYWltIHByaW9y
-aXR5CglyZWZlcmVuY2UgY291bnRpbmcgYW5kIGNvbnZlcnQgdGhlIExSVSByZWNsYWltIHRvIGEg
-Y3Vyc29yCgliYXNlZCB3YWxrIHRoYXQgc2ltcGx5IGRyb3BzIHJlY2xhaW0gcmVmZXJlbmNlIGNv
-dW50cyBhbmQKCWZyZWVzIGFueXRoaW5nIHRoYXQgaGFzIGEgemVybyByZWNsYWltIHJlZmVyZW5j
-ZS4KCk92ZXJhbGwsIEkgY2FuIHN3YXAgdGhlIG9yZGVyIG9mIHRoZSB0d28gcGF0Y2ggc2V0cywg
-YW5kIHRoZQppbmNyZW1lbnRhbCBwZXJmb3JtYW5jZSBpbmNyZWFzZXMgZm9yIGNyZWF0ZSBhcmUg
-cHJldHR5IG11Y2gKaWRlbnRpY2FsLiBGb3IgdW5saW5rLCB0ZSBiZW5lZml0IGNvbWVzIGZyb20g
-dGhlIHNocmlua2VyCm1vZGlmaWNhdGlvbi4gRm9yIHRob3NlIHRoYXQgY2FyZSwgdGhlIHJidHJl
-ZSBwYXRjaCBzZXQgaW4gaXNvbGF0aW9uCnJlc3VsdHMgaW4gYSB0aW1lIG9mIDRoMzhtIHRvIGNy
-ZWF0ZSAxIGJpbGxpb24gaW5vZGVzIG9uIG15IDhwLzRHQgpSQU0gdGVzdCBWTS4gSSBoYXZlbid0
-IHJ1biB0aGlzIHRlc3Qgd2l0aCB0aGUgUkNVIGFuZCB3cml0ZWJhY2sKbW9kaWZpY2F0aW9ucyB5
-ZXQuCgpNb3Zpbmcgb24gZnJvbSB0aGlzIHBvaW50IGlzIHRvIHN0YXJ0IHRlc3RpbmcgYWdhaW5z
-dCBOaWNrIFBpZ2dpbidzClZGUyBzY2FsYWJpbGl0eSB0cmVlLCBh0ZUgdGhlIGlub2RlX2xvY2sg
-YW5kIGRjYWNoZV9sb2NrIGFyZSBub3cgdGhlCnBlcmZvcm1hbmNlIGxpbWl0aW5nIGZhY3RvcnMu
-IFRoYXQgd2lsbCwgd2l0aG91dCBkb3VidCwgYnJpbmcgbmV3CmhvdHNwb3RzIG91dCBpbiBYRlMg
-c28gSSdsbCBiZSBzdGFydGluZyB0aGlzIGN5Y2xlIG92ZXIgYWdhaW4gc29vbi4KCk92ZXJhbGwg
-ZGlmZnN0YXQgYXQgdGhpcyBwb2ludCBpczoKCiBmcy94ZnMvbGludXgtMi42L2ttZW0uaCAgICAg
-ICAgfCAgICAxICsKIGZzL3hmcy9saW51eC0yLjYveGZzX2J1Zi5jICAgICB8ICA1ODggKysrKysr
-KysrKysrKystLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQogZnMveGZzL2xpbnV4LTIuNi94ZnNf
-YnVmLmggICAgIHwgICA2MSArKystLQogZnMveGZzL2xpbnV4LTIuNi94ZnNfaW9wcy5jICAgIHwg
-ICAxOCArLQogZnMveGZzL2xpbnV4LTIuNi94ZnNfc3VwZXIuYyAgIHwgICAxMSArLQogZnMveGZz
-L2xpbnV4LTIuNi94ZnNfc3luYy5jICAgIHwgICA0OSArKystCiBmcy94ZnMvbGludXgtMi42L3hm
-c190cmFjZS5oICAgfCAgICAyICstCiBmcy94ZnMvcXVvdGEveGZzX3FtX3N5c2NhbGxzLmMgfCAg
-ICA0ICstCiBmcy94ZnMveGZzX2FnLmggICAgICAgICAgICAgICAgfCAgICA5ICstCiBmcy94ZnMv
-eGZzX2J1Zl9pdGVtLmMgICAgICAgICAgfCAgICAzICstCiBmcy94ZnMveGZzX2Zzb3BzLmMgICAg
-ICAgICAgICAgfCAgIDExICstCiBmcy94ZnMveGZzX2lnZXQuYyAgICAgICAgICAgICAgfCAgIDQ2
-ICsrKy0KIGZzL3hmcy94ZnNfaW5vZGUuYyAgICAgICAgICAgICB8ICAgMjIgKy0KIGZzL3hmcy94
-ZnNfaW5vZGVfaXRlbS5jICAgICAgICB8ICAgIDkgLQogZnMveGZzL3hmc19sb2cuYyAgICAgICAg
-ICAgICAgIHwgICAgMyArLQogZnMveGZzL3hmc19sb2dfY2lsLmMgICAgICAgICAgIHwgIDExNiAr
-KysrKy0tLS0KIGZzL3hmcy94ZnNfbG9nX3JlY292ZXIuYyAgICAgICB8ICAgMTggKy0KIGZzL3hm
-cy94ZnNfbW91bnQuYyAgICAgICAgICAgICB8ICAxMjYgKysrKy0tLS0tCiBmcy94ZnMveGZzX21v
-dW50LmggICAgICAgICAgICAgfCAgICAyICsKIGZzL3hmcy94ZnNfcnRhbGxvYy5jICAgICAgICAg
-ICB8ICAgMjkgKy0KIGZzL3hmcy94ZnNfdm5vZGVvcHMuYyAgICAgICAgICB8ICAgIDIgKy0KIDIx
-IGZpbGVzIGNoYW5nZWQsIDUwMiBpbnNlcnRpb25zKCspLCA2MjggZGVsZXRpb25zKC0pCgpTbyBp
-dCBpcyBpbXByb3ZpbmcgcGVyZm9ybWFuY2UsIHJlbW92aW5nIGNvZGUgYW5kIGZpeGluZwpsb25n
-c3RhbmRpbmcgYnVncyBhbGwgYXQgdGhlIHNhbWUgdGltZS4gOykKCl9fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5z
-Z2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+From: Dave Chinner <dchinner@redhat.com>
+
+now that we are using RCU protection for the inode cache lookups,
+the lock is only needed on the modification side. Hence it is not
+necessary for the lock to be a rwlock as there are no read side
+holders anymore. Convert it to a spin lock to reflect it's exclusive
+nature.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/linux-2.6/xfs_sync.c |   16 ++++++++--------
+ fs/xfs/xfs_ag.h             |    2 +-
+ fs/xfs/xfs_iget.c           |   10 +++++-----
+ fs/xfs/xfs_mount.c          |    2 +-
+ 4 files changed, 15 insertions(+), 15 deletions(-)
+
+diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
+index e549d67..c093e91 100644
+--- a/fs/xfs/linux-2.6/xfs_sync.c
++++ b/fs/xfs/linux-2.6/xfs_sync.c
+@@ -100,13 +100,13 @@ restart:
+ 		xfs_inode_t	*ip;
+ 
+ 		if (exclusive)
+-			write_lock(&pag->pag_ici_lock);
++			spin_lock(&pag->pag_ici_lock);
+ 		else
+ 			rcu_read_lock();
+ 		ip = xfs_inode_ag_lookup(mp, pag, &first_index, tag);
+ 		if (!ip) {
+ 			if (exclusive)
+-				write_unlock(&pag->pag_ici_lock);
++				spin_unlock(&pag->pag_ici_lock);
+ 			else
+ 				rcu_read_unlock();
+ 			break;
+@@ -659,12 +659,12 @@ xfs_inode_set_reclaim_tag(
+ 	struct xfs_perag *pag;
+ 
+ 	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
+-	write_lock(&pag->pag_ici_lock);
++	spin_lock(&pag->pag_ici_lock);
+ 	spin_lock(&ip->i_flags_lock);
+ 	__xfs_inode_set_reclaim_tag(pag, ip);
+ 	__xfs_iflags_set(ip, XFS_IRECLAIMABLE);
+ 	spin_unlock(&ip->i_flags_lock);
+-	write_unlock(&pag->pag_ici_lock);
++	spin_unlock(&pag->pag_ici_lock);
+ 	xfs_perag_put(pag);
+ }
+ 
+@@ -757,12 +757,12 @@ xfs_reclaim_inode(
+ 	if (__xfs_iflags_test(ip, XFS_IRECLAIM)) {
+ 		/* ignore as it is already under reclaim */
+ 		spin_unlock(&ip->i_flags_lock);
+-		write_unlock(&pag->pag_ici_lock);
++		spin_unlock(&pag->pag_ici_lock);
+ 		return 0;
+ 	}
+ 	__xfs_iflags_set(ip, XFS_IRECLAIM);
+ 	spin_unlock(&ip->i_flags_lock);
+-	write_unlock(&pag->pag_ici_lock);
++	spin_unlock(&pag->pag_ici_lock);
+ 
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 	if (!xfs_iflock_nowait(ip)) {
+@@ -834,11 +834,11 @@ reclaim:
+ 	 * added to the tree assert that it's been there before to catch
+ 	 * problems with the inode life time early on.
+ 	 */
+-	write_lock(&pag->pag_ici_lock);
++	spin_lock(&pag->pag_ici_lock);
+ 	if (!radix_tree_delete(&pag->pag_ici_root,
+ 				XFS_INO_TO_AGINO(ip->i_mount, ip->i_ino)))
+ 		ASSERT(0);
+-	write_unlock(&pag->pag_ici_lock);
++	spin_unlock(&pag->pag_ici_lock);
+ 
+ 	/*
+ 	 * Here we do an (almost) spurious inode lock in order to coordinate
+diff --git a/fs/xfs/xfs_ag.h b/fs/xfs/xfs_ag.h
+index 51c42c2..6de9128 100644
+--- a/fs/xfs/xfs_ag.h
++++ b/fs/xfs/xfs_ag.h
+@@ -227,7 +227,7 @@ typedef struct xfs_perag {
+ 
+ 	atomic_t        pagf_fstrms;    /* # of filestreams active in this AG */
+ 
+-	rwlock_t	pag_ici_lock;	/* incore inode lock */
++	spinlock_t	pag_ici_lock;	/* incore inode cache lock */
+ 	struct radix_tree_root pag_ici_root;	/* incore inode cache root */
+ 	int		pag_ici_reclaimable;	/* reclaimable inodes */
+ 
+diff --git a/fs/xfs/xfs_iget.c b/fs/xfs/xfs_iget.c
+index f3a46b6..c46ce03 100644
+--- a/fs/xfs/xfs_iget.c
++++ b/fs/xfs/xfs_iget.c
+@@ -234,14 +234,14 @@ xfs_iget_cache_hit(
+ 			goto out_error;
+ 		}
+ 
+-		write_lock(&pag->pag_ici_lock);
++		spin_lock(&pag->pag_ici_lock);
+ 		spin_lock(&ip->i_flags_lock);
+ 		ip->i_flags &= ~(XFS_IRECLAIMABLE | XFS_IRECLAIM);
+ 		ip->i_flags |= XFS_INEW;
+ 		__xfs_inode_clear_reclaim_tag(mp, pag, ip);
+ 		inode->i_state = I_NEW;
+ 		spin_unlock(&ip->i_flags_lock);
+-		write_unlock(&pag->pag_ici_lock);
++		spin_unlock(&pag->pag_ici_lock);
+ 	} else {
+ 		/* If the VFS inode is being torn down, pause and try again. */
+ 		if (!igrab(inode)) {
+@@ -319,7 +319,7 @@ xfs_iget_cache_miss(
+ 			BUG();
+ 	}
+ 
+-	write_lock(&pag->pag_ici_lock);
++	spin_lock(&pag->pag_ici_lock);
+ 
+ 	/* insert the new inode */
+ 	error = radix_tree_insert(&pag->pag_ici_root, agino, ip);
+@@ -334,14 +334,14 @@ xfs_iget_cache_miss(
+ 	ip->i_udquot = ip->i_gdquot = NULL;
+ 	xfs_iflags_set(ip, XFS_INEW);
+ 
+-	write_unlock(&pag->pag_ici_lock);
++	spin_unlock(&pag->pag_ici_lock);
+ 	radix_tree_preload_end();
+ 
+ 	*ipp = ip;
+ 	return 0;
+ 
+ out_preload_end:
+-	write_unlock(&pag->pag_ici_lock);
++	spin_unlock(&pag->pag_ici_lock);
+ 	radix_tree_preload_end();
+ 	if (lock_flags)
+ 		xfs_iunlock(ip, lock_flags);
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 14fc6e9..546eb1f 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -450,7 +450,7 @@ xfs_initialize_perag(
+ 			goto out_unwind;
+ 		pag->pag_agno = index;
+ 		pag->pag_mount = mp;
+-		rwlock_init(&pag->pag_ici_lock);
++		spin_lock_init(&pag->pag_ici_lock);
+ 		INIT_RADIX_TREE(&pag->pag_ici_root, GFP_ATOMIC);
+ 
+ 		if (radix_tree_preload(GFP_NOFS))
+-- 
+1.7.1
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
