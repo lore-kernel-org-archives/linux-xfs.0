@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8EMGPtx150668 for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 17:16:25 -0500
-Subject: Re: [PATCH 09/18] xfs: introduced uncached buffer read primitve
+	o8EMSltk151063 for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 17:28:47 -0500
+Subject: Re: [PATCH 12/18] xfs: use unhashed buffers for size checks
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1284461777-1496-10-git-send-email-david@fromorbit.com>
+In-Reply-To: <1284461777-1496-13-git-send-email-david@fromorbit.com>
 References: <1284461777-1496-1-git-send-email-david@fromorbit.com>
-	<1284461777-1496-10-git-send-email-david@fromorbit.com>
-Date: Tue, 14 Sep 2010 17:16:39 -0500
-Message-ID: <1284502599.9701.92.camel@doink>
+	<1284461777-1496-13-git-send-email-david@fromorbit.com>
+Date: Tue, 14 Sep 2010 17:29:16 -0500
+Message-ID: <1284503356.9701.95.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -29,14 +29,17 @@ Cc: xfs@oss.sgi.com
 On Tue, 2010-09-14 at 20:56 +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> To avoid the need to use cached buffers for single-shot or buffers
-> cached at the filesystem level, introduce a new buffer read
-> primitive that bypasses the cache an reads directly from disk.
+> When we are checking we can access the last block of each device, we
+> do not need to use cached buffers as they will be tossed away
+> immediately. Use uncached buffers for size checks so that all IO
+> prior to full in-memory structure initialisation does not use the
+> buffer cache.
 
-Looks good (I already reviewed this, basically.)
+Looks good.
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
 
+> 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
 
