@@ -1,28 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8EAu5w2121077 for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 05:56:05 -0500
+	o8EAuKrU121245 for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 05:56:20 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3D3711E65308
-	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 03:56:51 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
-	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	QghMsUZAw3yomv8z for <xfs@oss.sgi.com>;
-	Tue, 14 Sep 2010 03:56:51 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 600141E6531A
+	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 03:57:07 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
+	[150.101.137.97]) by cuda.sgi.com with ESMTP id
+	f5mhB2h2bKHGwB0q for <xfs@oss.sgi.com>;
+	Tue, 14 Sep 2010 03:57:07 -0700 (PDT)
 Received: from dastard (unverified [121.44.127.68])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	38830797-1927428
-	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 20:26:50 +0930 (CST)
+	38985544-1927428
+	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 20:27:06 +0930 (CST)
 Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1OvTBx-0004OL-4t
-	for xfs@oss.sgi.com; Tue, 14 Sep 2010 20:56:49 +1000
+	(envelope-from <dave@fromorbit.com>) id 1OvTCC-0004PD-PM
+	for xfs@oss.sgi.com; Tue, 14 Sep 2010 20:57:04 +1000
 Received: from dave by disturbed with local (Exim 4.72)
-	(envelope-from <dave@disturbed.disaster>) id 1OvTBa-0000Pv-Q5
-	for xfs@oss.sgi.com; Tue, 14 Sep 2010 20:56:26 +1000
+	(envelope-from <dave@disturbed.disaster>) id 1OvTBv-0000QV-BH
+	for xfs@oss.sgi.com; Tue, 14 Sep 2010 20:56:47 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 03/18] xfs: remove debug assert for per-ag reference counting
-Date: Tue, 14 Sep 2010 20:56:02 +1000
-Message-Id: <1284461777-1496-4-git-send-email-david@fromorbit.com>
+Subject: [PATCH 13/18] xfs: remove buftarg hash for external devices
+Date: Tue, 14 Sep 2010 20:56:12 +1000
+Message-Id: <1284461777-1496-14-git-send-email-david@fromorbit.com>
 In-Reply-To: <1284461777-1496-1-git-send-email-david@fromorbit.com>
 References: <1284461777-1496-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -42,30 +42,32 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-When we start taking references per cached buffer to the the perag
-it is cached on, it will blow the current debug maximum reference
-count assert out of the water. The assert has never caught a bug,
-and we have tracing to track changes if there ever is a problem,
-so just remove it.
+For RT and external log devices, we never use hashed buffers on them
+now.  Remove the buftarg hash tables that are set up for them.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_mount.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+ fs/xfs/linux-2.6/xfs_buf.c |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index aeb9d72..00c7a87 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -210,8 +210,6 @@ xfs_perag_get(struct xfs_mount *mp, xfs_agnumber_t agno)
- 	pag = radix_tree_lookup(&mp->m_perag_tree, agno);
- 	if (pag) {
- 		ASSERT(atomic_read(&pag->pag_ref) >= 0);
--		/* catch leaks in the positive direction during testing */
--		ASSERT(atomic_read(&pag->pag_ref) < 1000);
- 		ref = atomic_inc_return(&pag->pag_ref);
- 	}
- 	spin_unlock(&mp->m_perag_lock);
+diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
+index 304515b..1c6206e 100644
+--- a/fs/xfs/linux-2.6/xfs_buf.c
++++ b/fs/xfs/linux-2.6/xfs_buf.c
+@@ -1456,7 +1456,11 @@ xfs_alloc_bufhash(
+ {
+ 	unsigned int		i;
+ 
+-	btp->bt_hashshift = external ? 3 : 12;	/* 8 or 4096 buckets */
++	if (external) {
++		btp->bt_hash = NULL;
++		return;
++	}
++	btp->bt_hashshift = 12;	/* 4096 buckets */
+ 	btp->bt_hash = kmem_zalloc_large((1 << btp->bt_hashshift) *
+ 					 sizeof(xfs_bufhash_t));
+ 	for (i = 0; i < (1 << btp->bt_hashshift); i++) {
 -- 
 1.7.1
 
