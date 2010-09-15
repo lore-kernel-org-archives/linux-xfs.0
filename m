@@ -1,30 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8F0mguc156972 for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 19:48:43 -0500
-Received: from kuber.nabble.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9623373EAB
-	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 17:49:31 -0700 (PDT)
-Received: from kuber.nabble.com (kuber.nabble.com [216.139.236.158]) by
-	cuda.sgi.com with ESMTP id C3b8ywk8im1M8EfC for
-	<xfs@oss.sgi.com>; Tue, 14 Sep 2010 17:49:31 -0700 (PDT)
-Received: from isper.nabble.com ([192.168.236.156])
-	by kuber.nabble.com with esmtp (Exim 4.63)
-	(envelope-from <lists@nabble.com>) id 1OvgBm-0005Wm-UZ
-	for xfs@oss.sgi.com; Tue, 14 Sep 2010 17:49:30 -0700
-Message-ID: <29714354.post@talk.nabble.com>
-Date: Tue, 14 Sep 2010 17:49:30 -0700 (PDT)
-From: pbrunnen <PBrunnen@bccnetworks.net>
-Subject: Re: Now: Debian issues, WAS: XFS Filesystem not mounting
-In-Reply-To: <4C8FB8D6.6080603@hardwarefreak.com>
+	o8F2rtHN161184 for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 21:53:55 -0500
+Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3CF411E66EC2
+	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 19:54:44 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id j0MhkZEs0Q3D8Sap
+	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 19:54:44 -0700 (PDT)
+Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
+	by greer.hardwarefreak.com (Postfix) with ESMTP id C16946C04C
+	for <xfs@oss.sgi.com>; Tue, 14 Sep 2010 21:54:43 -0500 (CDT)
+Message-ID: <4C903573.3090502@hardwarefreak.com>
+Date: Tue, 14 Sep 2010 21:54:43 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-References: <29704010.post@talk.nabble.com> <20100914012151.GF411@dastard>
-	<29705139.post@talk.nabble.com> <201009140740.14482@zmi.at>
-	<20100914082504.4109712d@galadriel.home>
-	<29708085.post@talk.nabble.com> <201009141603.24754@zmi.at>
-	<4C8F9E29.2000803@hardwarefreak.com>
-	<29710491.post@talk.nabble.com>
-	<4C8FB8D6.6080603@hardwarefreak.com>
+Subject: Re: Now: Debian issues, WAS: XFS Filesystem not mounting
+References: <29704010.post@talk.nabble.com>
+	<20100914012151.GF411@dastard>	<29705139.post@talk.nabble.com>
+	<201009140740.14482@zmi.at>	<20100914082504.4109712d@galadriel.home>	<29708085.post@talk.nabble.com>
+	<201009141603.24754@zmi.at>	<4C8F9E29.2000803@hardwarefreak.com>	<29710491.post@talk.nabble.com>	<4C8FB8D6.6080603@hardwarefreak.com>
+	<20100915004431.GM15695@dastard>
+In-Reply-To: <20100915004431.GM15695@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,43 +36,66 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
+Dave Chinner put forth on 9/14/2010 7:44 PM:
 
-Hi Steve,
+> You must be doing it wrong, then.
+> 
+> # apt-cache search "^firmware-"
+> ....
+> 
+> Pick the packages for your hardware, or just install the lot (which
+> is what I normally do) and remake your initramfs. The firmware
+> packages have the correct firmware versions the distro kernels
+> expect.
 
+IIRC it's a bit more complex than this Dave, unfortunately.  The
+firmware issues in Debian almost always revolve around NICs and
+free/non-free blobs.  The most recent example was the RTL8111/8168 blob
+relating to the 2.6.32-trunk kernel, IIRC.
 
-Stan Hoeppner wrote:
->  I can see how this could be an issue to someone who's been using a menu
-> driven package manager for a while.
-Call me spoiled... ;-)
+People upgraded their Debian kernels and their NICs didn't work
+afterward, because the Debian team had changed the blob from free to
+non-free.  Non-free blobs aren't installed automatically, so as soon as
+they rebooted after installing the kernel image and initrd, they had no
+network access.  If one didn't already have the firmware files on the
+machine, many didn't IIRC, there was no way to grab them from the
+mirrors as the NIC was offline--instant catch 22.
 
+This caused one heck of a row on debian-user--because Realtek eth chips
+are everywhere--that lasted over two weeks IIRC.  There was no clear cut
+easily findable Debian documentation on how to remedy this.  Many, many
+OPs ran out an bought Intel NICs so they wouldn't have to fight this and
+could get back up quickly, and so they'd (hopefully) never have to deal
+with something like this again.
 
-Stan Hoeppner wrote:
-> > 2) Vendor support is officially non-existant.
->   For Debian?  Not true.  See below.
-Ok, I give you that.  Not supported by Our vendor is more
-accurate.Unfortunately you could not give me an HP box... Too many bad
-experiences.
+All of this, AIUI, because Debian and the upstream didn't get the right
+"free" documentation in time from Realtek.  All other Realtek firmware
+was free AFAIK, always has been AFAIK, and there'd never been an issue.
+ This Debian kernel upgrade snafu caused a lot of pain for a lot of OPs,
+needlessly.  Many defected to Ubuntu over this single issue, curse words
+flying and all.
 
+> If you run custom kernels, the after building it without the
+> firmware built in, just run 'make firmware_install' before building
+> your new initramfs and everything will just work fine.
 
-Stan Hoeppner wrote:
-> I've only been using XFS for about a year now, and I've had zeroproblems. 
-> One of my favorite features is xfs_fsr.  Dovecot IMAP withmbox storage
-> causes serious fragmentation with large mailboxes.  Thereis no ability to
-> defrag files online with EXT2/3, Reiser, or JFS, sothis really comes in
-> handy.
-I hear you there.  We are standardized on it for five years now.  I can't
-speak highly enough of it. I like it because its generally the fastest
-filesystem overall with all the different kinds of storage we have (size,
-heavy file i/o, and databases).  It scales really big and can grow online...
-some of our luns are in the 30TB range.  Agreed on the online fragmentation
-too... Happy to say this is only the second time ever that I ran
-xfs_repair... and the first time was on my old failing laptop drive, so that
-really doesn't count for much.
+This assumes one is using kernel.org source, correct, not Debian kernel
+source?  Yes, then it should work fine.  I believe it's a bit more
+complex with Debian kernel source due to the way free/non-free
+drivers/blobs are handled by Debian.  Which is a shame really, because
+myself and many others really really like Debian.  I still do.  I just
+mitigate or work around these types of issues myself. :)
 
--Cheers, Peter.
+As I previously stated, I build in the firmware blobs.  I also build in
+all device drivers the system will need, and thus I don't use an initrd,
+ever.  In fact, I've never used modules, and thus I remove loadable
+module support from the kernel to save space.  Most of my kernel images
+run about 1.5 MB with a system map of 500 KB.  I'm always looking for
+things to leave out that aren't needed to decrease kernel size.  And
+yes, I still use LILO--til they pry it from my cold dead hands. :)
+
 -- 
-View this message in context: http://old.nabble.com/XFS-Filesystem-not-mounting-tp29704010p29714354.html
-Sent from the Xfs - General mailing list archive at Nabble.com.
+Stan
 
 _______________________________________________
 xfs mailing list
