@@ -1,32 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8FDEcwk189318 for <xfs@oss.sgi.com>; Wed, 15 Sep 2010 08:14:39 -0500
-Received: from kuber.nabble.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 15AD915E4DF5
-	for <xfs@oss.sgi.com>; Wed, 15 Sep 2010 06:27:17 -0700 (PDT)
-Received: from kuber.nabble.com (kuber.nabble.com [216.139.236.158]) by
-	cuda.sgi.com with ESMTP id KwwvWGPcjbDFVSBz for
-	<xfs@oss.sgi.com>; Wed, 15 Sep 2010 06:27:17 -0700 (PDT)
-Received: from isper.nabble.com ([192.168.236.156])
-	by kuber.nabble.com with esmtp (Exim 4.63)
-	(envelope-from <lists@nabble.com>) id 1Ovrpe-0004ZW-EE
-	for xfs@oss.sgi.com; Wed, 15 Sep 2010 06:15:26 -0700
-Message-ID: <29718375.post@talk.nabble.com>
-Date: Wed, 15 Sep 2010 06:15:26 -0700 (PDT)
-From: pbrunnen <PBrunnen@bccnetworks.net>
-Subject: Re: Now: Debian issues, WAS: XFS Filesystem not mounting
-In-Reply-To: <4C9042D7.90001@hardwarefreak.com>
+	o8FDtSpc191143 for <xfs@oss.sgi.com>; Wed, 15 Sep 2010 08:55:29 -0500
+Received: from ppsw-32.csi.cam.ac.uk (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 88290DE6215
+	for <xfs@oss.sgi.com>; Wed, 15 Sep 2010 07:08:08 -0700 (PDT)
+Received: from ppsw-32.csi.cam.ac.uk (ppsw-32.csi.cam.ac.uk [131.111.8.132])
+	by cuda.sgi.com with ESMTP id EPlBeXfed3k8WQhV for
+	<xfs@oss.sgi.com>; Wed, 15 Sep 2010 07:08:08 -0700 (PDT)
+Received: from mail.mrc-lmb.cam.ac.uk ([131.111.85.9]:33181
+	helo=mail.lmb.internal)
+	by ppsw-32.csi.cam.ac.uk (ppsw.cam.ac.uk [131.111.8.138]:25)
+	with esmtp id 1OvsTA-0001XA-14 (Exim 4.72) for xfs@oss.sgi.com
+	(return-path <dhoworth@mrc-lmb.cam.ac.uk>);
+	Wed, 15 Sep 2010 14:56:16 +0100
+Received: from cpepc210-3.lmb.internal ([10.14.0.2])
+	by mail.lmb.internal with esmtp (Exim 4.63)
+	(envelope-from <dhoworth@mrc-lmb.cam.ac.uk>) id 1OvsTA-0007y5-87
+	for xfs@oss.sgi.com; Wed, 15 Sep 2010 14:56:16 +0100
+Message-ID: <4C90D080.5090004@mrc-lmb.cam.ac.uk>
+Date: Wed, 15 Sep 2010 14:56:16 +0100
+From: Dave Howorth <dhoworth@mrc-lmb.cam.ac.uk>
 MIME-Version: 1.0
-References: <29704010.post@talk.nabble.com> <20100914012151.GF411@dastard>
-	<29705139.post@talk.nabble.com> <201009140740.14482@zmi.at>
-	<20100914082504.4109712d@galadriel.home>
-	<29708085.post@talk.nabble.com> <201009141603.24754@zmi.at>
-	<4C8F9E29.2000803@hardwarefreak.com>
-	<29710491.post@talk.nabble.com>
-	<4C8FB8D6.6080603@hardwarefreak.com>
-	<20100914223201.21c3bd0f@galadriel.home>
-	<29714426.post@talk.nabble.com> <4C9042D7.90001@hardwarefreak.com>
+Subject: no space left on device with 662G free
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -41,45 +37,56 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
+Hello,
 
+I recently started using XFS when I set up a new server and I'm having a
+problem when copying data on to it from an old server. cp reports errors
+like:
 
-Stan Hoeppner wrote:
-> 
-> A single socket 12-core 2 GHz Opteron 6100 series on a SuperMicro mobo
-> with quad DDR3 memory channels w/32 GB RAM, sitting on your desktop,
-> would simply run circles around that old 2 rack 32P O2K system, probably
-> 5 to 1 or greater in parallel linpack--for less than $2k.
-> 
-:-)  Now... not then.  We often forget how much has changed even over just
-the last 10 years.
+cp: cannot create symbolic link
+`/nfs/scop4/data/trembl/xml/releases/2006-01-10/Q6RXU6.xml': No space
+left on device
 
+and later
 
+cp: cannot create directory
+`/nfs/scop4/data/trembl/xml/releases/2006-01-24': No space left on device
 
+The filesystem is in a 2 TB LVM on an md RAID and according to df
+there's 662 GB space free:
 
-Dave Chinner wrote:
-> 
-> You must be doing it wrong, then.
-> 
-> # apt-cache search "^firmware-"
-> ....
-> 
-> Pick the packages for your hardware, or just install the lot (which
-> is what I normally do) and remake your initramfs. The firmware
-> packages have the correct firmware versions the distro kernels
-> expect.
-> 
-Hi Dave.
+  /dev/mapper/vg--storage-lv--data
+                      2.0T  1.4T  662G  68% /nfs/scop4/data
 
-I have to agree with Stan...  I know about the firmware packages... but for
-both the Broadcom BXN2 nics and the Q-Logic QLA23xx HBAs I have never gotten
-the firmware bundle to work properly.  I always ended up with a 5min boot
-delay as the modules couldn't find the firmware files.  So I build my own
-modules with the blobs inside and life is good...
+There are a quite a few directories in the filesystem. Some of the
+directories contain many millions of files and some directories consist
+entirely of symlinks, if any of that's relevant.
 
-Thanks.  -Cheers, Peter.
--- 
-View this message in context: http://old.nabble.com/XFS-Filesystem-not-mounting-tp29704010p29718375.html
-Sent from the Xfs - General mailing list archive at Nabble.com.
+The filesystem is on a newish machine running openSUSE 11.2 (Linux scop4
+2.6.31.12-0.2-desktop #1 SMP PREEMPT 2010-03-16 21:25:39 +0100 x86_64
+x86_64 x86_64 GNU/Linux) and the data is being mirrored from an older
+machine that uses a reiser filesystem and which stores the data without
+problem.
+
+Some folks on the suse mailing list said it was probably an inode
+problem and suggested I run df -i:
+
+# df -i /nfs/scop4/data
+Filesystem            Inodes   IUsed   IFree IUse% Mounted on
+/dev/mapper/vg--storage-lv--data
+                     429496704 -18446744073280007488
+18446744073709504192    - /nfs/scop4/data
+
+I don't understand that output, especially the negative number! I then
+read about the inode64 mount option in the XFS FAQ and I believe I've
+now enabled that and remounted the filesystem. mtab shows
+
+/dev/mapper/vg--storage-lv--data /nfs/scop4/data xfs rw,noatime,inode64 0 0
+
+But I'm still seeing the same errors as before. Is there something else
+I need to do to enable inode64, or am I looking in the wrong direction?
+
+Thanks, Dave
 
 _______________________________________________
 xfs mailing list
