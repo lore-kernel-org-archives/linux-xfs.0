@@ -1,21 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8GKsChr016033
-	for <linux-xfs@oss.sgi.com>; Thu, 16 Sep 2010 15:54:12 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2EDFD7CE28
-	for <linux-xfs@oss.sgi.com>; Thu, 16 Sep 2010 13:55:01 -0700 (PDT)
-Received: from mail.sandeen.net (64-131-60-146.usfamily.net [64.131.60.146])
-	by cuda.sgi.com with ESMTP id HUkHMwP6v20TfDLI for
-	<linux-xfs@oss.sgi.com>; Thu, 16 Sep 2010 13:55:01 -0700 (PDT)
-Message-ID: <4C928424.1020409@sandeen.net>
-Date: Thu, 16 Sep 2010 15:55:00 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
+	o8GLNAVc017402 for <xfs@oss.sgi.com>; Thu, 16 Sep 2010 16:23:10 -0500
+Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 613BCDFB15C
+	for <xfs@oss.sgi.com>; Thu, 16 Sep 2010 14:35:56 -0700 (PDT)
+Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
+	cuda.sgi.com with ESMTP id qYci5Bn1CvquKIOK for
+	<xfs@oss.sgi.com>; Thu, 16 Sep 2010 14:35:56 -0700 (PDT)
+Received: from mailsrv.i.zmi.at (h081217106033.dyn.cm.kabsi.at [81.217.106.33])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
+	by mailsrv14.zmi.at (Postfix) with ESMTPSA id B98C412D
+	for <xfs@oss.sgi.com>; Thu, 16 Sep 2010 23:23:56 +0200 (CEST)
+Received: from saturn.localnet (saturn.i.zmi.at [10.72.27.2])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client did not present a certificate)
+	by mailsrv.i.zmi.at (Postfix) with ESMTPSA id A51D8401C3D
+	for <xfs@oss.sgi.com>; Thu, 16 Sep 2010 23:23:54 +0200 (CEST)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
 Subject: Re: System partially unusable after power loss...
+Date: Thu, 16 Sep 2010 23:23:53 +0200
 References: <i6ttq6$41d$1@dough.gmane.org>
 In-Reply-To: <i6ttq6$41d$1@dough.gmane.org>
+MIME-Version: 1.0
+Message-Id: <201009162323.54133@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,59 +33,74 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============3941617611869468017=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Manuel Reimer <Manuel.Spam@nurfuerspam.de>
-Cc: linux-xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Manuel Reimer wrote:
-> Hello,
-> 
-> Kernel is 2.6.27.7.
-> 
-> My Problem started as I got called, that login from KDM is not longer
-> possible. In fact, the KDE login is possible, but soon after entering
-> the password, a "kbuildsycoca" hangs and takes 100% CPU. Shortly before
-> this happened, power was abruptly lost.
-> 
-> I rebooted to a live CD. As, for some reason, xfs_check was broken on
-> that live CD (something with "db" in it was missing), I directly ran
+--===============3941617611869468017==
+Content-Type: multipart/signed;
+  boundary="nextPart4195562.T40Uu7kZ94";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 
-xfs_check is a shell script that invokes xfs_db
+--nextPart4195562.T40Uu7kZ94
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 
-> xfs_repair on the broken hard drive and it found some zero byte files
+On Donnerstag, 16. September 2010 Manuel Reimer wrote:
+> it found some zero byte files=20
+=20
+I've had the same issues, that's why I now run my KDE directory on an=20
+ext4 partition again. I really love XFS, but KDE it seems doesn't sync=20
+enough, or always changes some files, as I've had crashes at a time=20
+where nobody worked still some KDE config files were 0 afterwards.=20
+Luckily, I do a nightly backup of all those files too.
 
-better to run xfs_repair -n rather than xfs_check anyway ...
+Sorry this is no help for you, I know. But a nightly rsync of the KDE=20
+dir would be good to do, just in case...
 
-> and two files with ELF header, which may be (a part of) library files, I
-> don't know, as the name wasn't restored.
+=2D-=20
+mit freundlichen Gr=FCssen,
+Michael Monnerie, Ing. BSc
 
-Having the xfs_repair output would be helpful.
+it-management Internet Services
+http://proteger.at [gesprochen: Prot-e-schee]
+Tel: 0660 / 415 65 31
 
-> Is it possible to find out what exactly happened to cause this system to
-> be unusable? For me it seems like those restored ELF files are
-> something, needed by KDE to start up properly. Why did library files get
-> destroyed, the user, using this PC, isn't able to write to? Doesn't this
-> mean, they don't get into a write cache and even a power loss can't
-> destroy them?
+****** Aktuelles Radiointerview! ******
+http://www.it-podcast.at/aktuelle-sendung.html
 
-Was there a system software update just prior to the power loss?
+// Wir haben im Moment zwei H=E4user zu verkaufen:
+// http://zmi.at/langegg/
+// http://zmi.at/haus2009/
 
-Did your storage support IO barriers (i.e. was it lvm or md)?
+--nextPart4195562.T40Uu7kZ94
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
-Buffered data is always lost on a power loss, but I'm not sure
-why you should see problems with system files unless they had
-just been written out (and not synced).
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.12 (GNU/Linux)
 
--Eric
+iEYEABECAAYFAkySiuoACgkQzhSR9xwSCbR1xgCg1AWa5fc+veEP8nXyfadaQwF5
+TX4AoMnp/K+8U0A+R443HrM0QCNbAhpw
+=9wNl
+-----END PGP SIGNATURE-----
 
-> Yours
-> 
-> Manuel
+--nextPart4195562.T40Uu7kZ94--
+
+
+--===============3941617611869468017==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============3941617611869468017==--
