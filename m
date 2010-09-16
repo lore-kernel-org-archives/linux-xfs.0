@@ -1,22 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8G0HsmP218809 for <xfs@oss.sgi.com>; Wed, 15 Sep 2010 19:17:55 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 993121D89409
-	for <xfs@oss.sgi.com>; Wed, 15 Sep 2010 17:18:41 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
-	[150.101.137.103]) by cuda.sgi.com with ESMTP id
-	DxpBaaYmcQJlmKdh for <xfs@oss.sgi.com>;
-	Wed, 15 Sep 2010 17:18:41 -0700 (PDT)
-Date: Thu, 16 Sep 2010 10:18:37 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Latencies writing to memory mapped files
-Message-ID: <20100916001837.GF24409@dastard>
-References: <20100915152633.GA2585@BohrerMBP.rgmadvisors.com>
+	o8G7ajpl240148 for <xfs@oss.sgi.com>; Thu, 16 Sep 2010 02:36:46 -0500
+Received: from ebb05.tieto.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id ACC53E19F95
+	for <xfs@oss.sgi.com>; Thu, 16 Sep 2010 00:49:28 -0700 (PDT)
+Received: from ebb05.tieto.com (ebb05.tieto.com [131.207.168.36]) by
+	cuda.sgi.com with ESMTP id B4CCexHcFe1Wwgo2 for
+	<xfs@oss.sgi.com>; Thu, 16 Sep 2010 00:49:28 -0700 (PDT)
+From: Yang Ruirui <ruirui.r.yang@tieto.com>
+Subject: -mm: xfs lockdep warning
+Date: Thu, 16 Sep 2010 15:46:16 +0800
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100915152633.GA2585@BohrerMBP.rgmadvisors.com>
+Message-ID: <201009161546.16909.ruirui.r.yang@tieto.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,252 +26,83 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Shawn Bohrer <shawn.bohrer@gmail.com>
-Cc: xfs@oss.sgi.com
+To: Alex Elder <aelder@sgi.com>, xfs@oss.sgi.com, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 
-On Wed, Sep 15, 2010 at 10:26:33AM -0500, Shawn Bohrer wrote:
-> Hello,
-> 
-> A little while ago I asked about ways to solve the occasional spikes in
-> latency that I see when writing to a shared memory mapped file.
-> 
-> http://oss.sgi.com/pipermail/xfs/2010-July/046311.html
-> 
-> With Dave's suggestions I enabled lazy-count=1 which did help a little:
-> 
-> # xfs_info /home/
-> meta-data=/dev/sda5              isize=256    agcount=32, agsize=8472969 blks
->          =                       sectsz=512   attr=1
-> data     =                       bsize=4096   blocks=271135008, imaxpct=25
->          =                       sunit=0      swidth=0 blks
-> naming   =version 2              bsize=4096   ascii-ci=0
-> log      =internal               bsize=4096   blocks=32768, version=1
->          =                       sectsz=512   sunit=0 blks, lazy-count=1
-> realtime =none                   extsz=4096   blocks=0, rtextents=0
-> 
-> I'm also mounting the partition with "noatime,nobarrier,logbufs=8".
+Hi,
 
-You really should add logbsize=262144 there - it won't prevent the
-latencies, but with less log writes the incidence should decrease
-significantly.
+I got following lockdep warning, xfs related?
 
-> The other change I made which helped the most was to use fallocate()
-> to grow the file instead of lseek() and a write().
-
-Ok, so now you are doing unwritten extent conversion at IO
-completion, which is where this new latency issue has come from.
-
-> The latencies look
-> acceptable at lower data rates but once I reach 2-3 MB/s I start
-> seeing spikes when writeback occurs.  Perhaps my expectations are
-> unreasonable, but I would like to keep my latencies under 0.01s and
-> the lower the better.  I don't have hard real-time requirements, but
-> latencies are important.  These systems also only need to log data for
-> about 7-8 hours, so while I don't exactly know how much data I will
-> get I can make some guesses and preallocate the files or perform other
-> tricks if it would help.
-
-I think doing that is a good idea from a layout persepctive, but it
-won't help this particular latency cause because it is a result of
-using prealocation.
-
-> Below are some snippets of a trace of a 0.3 second delay I captured
-> with ftrace on 2.6.32.21.  I haven't done enough sampling to know if
-> all of the delays happen for the same reason, or if there are multiple
-> code paths that lead to a large delay.
-> 
-> First I see xfsconvertd/7 acquire the xfs_ilock() then try to acquire
-> the xfs_buf_lock() and block:
-> 
-> 
-> xfsconvertd/7-251   [007] 358613.942101: funcgraph_entry:                   |  xfs_end_bio_unwritten() {
-> xfsconvertd/7-251   [007] 358613.942101: funcgraph_entry:                   |    xfs_iomap_write_unwritten() {
-> xfsconvertd/7-251   [007] 358613.942102: funcgraph_entry:                   |      _xfs_trans_alloc() {
-> xfsconvertd/7-251   [007] 358613.942104: funcgraph_exit:         2.582 us   |      }
-> xfsconvertd/7-251   [007] 358613.942104: funcgraph_entry:                   |      xfs_trans_reserve() {
-> xfsconvertd/7-251   [007] 358613.942546: funcgraph_exit:       ! 441.449 us |      }
-> xfsconvertd/7-251   [007] 358613.942546: funcgraph_entry:                   |      xfs_ilock() {
-> xfsconvertd/7-251   [007] 358613.942547: funcgraph_exit:         0.895 us   |      }
-> xfsconvertd/7-251   [007] 358613.942547: funcgraph_entry:                   |      xfs_trans_ijoin() {
-> xfsconvertd/7-251   [007] 358613.942548: funcgraph_exit:         0.667 us   |      }
-> xfsconvertd/7-251   [007] 358613.942548: funcgraph_entry:        0.138 us   |      xfs_trans_ihold();
-> xfsconvertd/7-251   [007] 358613.942549: funcgraph_entry:                   |      xfs_bmapi() {
-> xfsconvertd/7-251   [007] 358613.942549: funcgraph_entry:                   |        xfs_bmap_search_extents() {
-> xfsconvertd/7-251   [007] 358613.942564: funcgraph_exit:       + 14.764 us  |        }
-> xfsconvertd/7-251   [007] 358613.942565: funcgraph_entry:                   |        xfs_bmbt_init_cursor() {
-> xfsconvertd/7-251   [007] 358613.942567: funcgraph_exit:         2.740 us   |        }
-> xfsconvertd/7-251   [007] 358613.942568: funcgraph_entry:                   |        xfs_bmap_add_extent() {
-> xfsconvertd/7-251   [007] 358613.942568: funcgraph_entry:                   |          xfs_iext_get_ext() {
-> xfsconvertd/7-251   [007] 358613.942569: funcgraph_exit:         0.702 us   |          }
-> xfsconvertd/7-251   [007] 358613.942569: funcgraph_entry:        0.215 us   |          xfs_bmbt_get_all();
-> xfsconvertd/7-251   [007] 358613.942569: funcgraph_entry:                   |          xfs_bmap_add_extent_unwritten_real() {
-> xfsconvertd/7-251   [007] 358613.942570: funcgraph_entry:                   |            xfs_iext_get_ext() {
-> xfsconvertd/7-251   [007] 358613.942570: funcgraph_exit:         0.677 us   |            }
-> xfsconvertd/7-251   [007] 358613.942571: funcgraph_entry:        0.218 us   |            xfs_bmbt_get_all();
-> xfsconvertd/7-251   [007] 358613.942571: funcgraph_entry:                   |            xfs_iext_get_ext() {
-> xfsconvertd/7-251   [007] 358613.942572: funcgraph_exit:         0.844 us   |            }
-> xfsconvertd/7-251   [007] 358613.942572: funcgraph_entry:        0.216 us   |            xfs_bmbt_get_all();
-> xfsconvertd/7-251   [007] 358613.942573: funcgraph_entry:                   |            xfs_iext_get_ext() {
-> xfsconvertd/7-251   [007] 358613.942573: funcgraph_exit:         0.708 us   |            }
-> xfsconvertd/7-251   [007] 358613.942574: funcgraph_entry:        0.175 us   |            xfs_bmbt_get_all();
-> xfsconvertd/7-251   [007] 358613.942574: funcgraph_entry:                   |            xfs_iext_get_ext() {
-> xfsconvertd/7-251   [007] 358613.942575: funcgraph_exit:         1.079 us   |            }
-> xfsconvertd/7-251   [007] 358613.942575: funcgraph_entry:        0.220 us   |            xfs_bmbt_set_blockcount();
-> xfsconvertd/7-251   [007] 358613.942576: funcgraph_entry:        0.303 us   |            xfs_bmbt_set_startoff();
-> xfsconvertd/7-251   [007] 358613.942577: funcgraph_entry:        0.216 us   |            xfs_bmbt_set_startblock();
-> xfsconvertd/7-251   [007] 358613.942577: funcgraph_entry:        0.423 us   |            xfs_bmbt_set_blockcount();
-> xfsconvertd/7-251   [007] 358613.942578: funcgraph_entry:                   |            xfs_bmbt_lookup_eq() {
-> xfsconvertd/7-251   [007] 358613.942578: funcgraph_entry:                   |              xfs_btree_lookup() {
-> xfsconvertd/7-251   [007] 358613.942579: funcgraph_entry:        0.212 us   |                xfs_bmbt_init_ptr_from_cur();
-> xfsconvertd/7-251   [007] 358613.942579: funcgraph_entry:                   |                xfs_btree_lookup_get_block() {
-> xfsconvertd/7-251   [007] 358613.942721: funcgraph_exit:       ! 141.594 us |                }
-> xfsconvertd/7-251   [007] 358613.942721: funcgraph_entry:                   |                xfs_lookup_get_search_key() {
-> xfsconvertd/7-251   [007] 358613.942723: funcgraph_exit:         1.205 us   |                }
-> xfsconvertd/7-251   [007] 358613.942723: funcgraph_entry:        0.208 us   |                xfs_bmbt_key_diff();
-> xfsconvertd/7-251   [007] 358613.942723: funcgraph_entry:                   |                xfs_btree_ptr_addr() {
-> xfsconvertd/7-251   [007] 358613.942725: funcgraph_exit:         1.686 us   |                }
-> xfsconvertd/7-251   [007] 358613.942725: funcgraph_entry:                   |                xfs_btree_lookup_get_block() {
-> xfsconvertd/7-251   [007] 358613.942726: funcgraph_entry:                   |                  xfs_btree_read_buf_block() {
-> xfsconvertd/7-251   [007] 358613.942726: funcgraph_entry:        0.252 us   |                    xfs_btree_ptr_to_daddr();
-> xfsconvertd/7-251   [007] 358613.942726: funcgraph_entry:                   |                    xfs_trans_read_buf() {
-> xfsconvertd/7-251   [007] 358613.942727: funcgraph_entry:        0.330 us   |                      xfs_trans_buf_item_match();
-> xfsconvertd/7-251   [007] 358613.942728: funcgraph_entry:                   |                      xfs_buf_read_flags() {
-> xfsconvertd/7-251   [007] 358613.942728: funcgraph_entry:                   |                        xfs_buf_get_flags() {
-> xfsconvertd/7-251   [007] 358613.942728: funcgraph_entry:                   |                          kmem_zone_alloc() {
-> xfsconvertd/7-251   [007] 358613.942885: funcgraph_exit:       ! 156.328 us |                          }
-> xfsconvertd/7-251   [007] 358613.942885: funcgraph_entry:                   |                          _xfs_buf_find() {
-> xfsconvertd/7-251   [007] 358613.942885: funcgraph_entry:        0.150 us   |                            _spin_lock();
-> xfsconvertd/7-251   [007] 358613.942885: funcgraph_entry:                   |                            down_trylock() {
-> xfsconvertd/7-251   [007] 358613.942886: funcgraph_exit:         0.818 us   |                            }
-> xfsconvertd/7-251   [007] 358613.942886: funcgraph_entry:                   |                            xfs_buf_lock() {
-> xfsconvertd/7-251   [007] 358613.942886: funcgraph_entry:                   |                              down() {
-....
-
-Ok, so we need access to a buffer to complete the unwritten extent
-conversion.
-
-
-> Next the flush-8:0 thread tries to aquire the xfs_ilock() and blocks:
-> 
-> 
-> flush-8:0-505   [011] 358613.964686: funcgraph_entry:                   |              __writepage() {
-> flush-8:0-505   [011] 358613.964687: funcgraph_entry:                   |                xfs_vm_writepage() {
-> flush-8:0-505   [011] 358613.964687: funcgraph_entry:        0.467 us   |                  xfs_count_page_state();
-> flush-8:0-505   [011] 358613.964688: funcgraph_entry:                   |                  xfs_page_state_convert() {
-> flush-8:0-505   [011] 358613.964688: funcgraph_entry:                   |                    xfs_probe_cluster() {
-> flush-8:0-505   [011] 358613.964694: funcgraph_exit:         6.002 us   |                    }
-> flush-8:0-505   [011] 358613.964694: funcgraph_entry:                   |                    xfs_map_blocks() {
-> flush-8:0-505   [011] 358613.964695: funcgraph_entry:                   |                      xfs_iomap() {
-> flush-8:0-505   [011] 358613.964695: funcgraph_entry:                   |                        xfs_ilock_map_shared() {
-> flush-8:0-505   [011] 358613.964695: funcgraph_entry:                   |                          xfs_ilock() {
-> flush-8:0-505   [011] 358613.964695: funcgraph_entry:                   |                            down_read() {
-....
-
-Yes, that's normal.
-
-> Then my process writes to the file generates a page fault which tries
-> to acquire the xfs_ilock() and blocks:
-> 
-> 
-> file_writer-30495 [013] 358613.968909: print:                00000000 delay start
-> file_writer-30495 [013] 358613.968913: funcgraph_entry:        0.151 us   |  down_read_trylock();
-> file_writer-30495 [013] 358613.968913: funcgraph_entry:        0.152 us   |  _cond_resched();
-> file_writer-30495 [013] 358613.968913: funcgraph_entry:        0.520 us   |  find_vma();
-> file_writer-30495 [013] 358613.968914: funcgraph_entry:                   |  handle_mm_fault() {
-> file_writer-30495 [013] 358613.968914: funcgraph_entry:                   |    __do_fault() {
-> file_writer-30495 [013] 358613.968914: funcgraph_entry:                   |      filemap_fault() {
-> file_writer-30495 [013] 358613.968915: funcgraph_exit:         1.171 us   |      }
-> file_writer-30495 [013] 358613.968916: funcgraph_entry:                   |      unlock_page() {
-> file_writer-30495 [013] 358613.968916: funcgraph_exit:         0.814 us   |      }
-> file_writer-30495 [013] 358613.968917: funcgraph_entry:                   |      xfs_vm_page_mkwrite() {
-> file_writer-30495 [013] 358613.968917: funcgraph_entry:                   |        block_page_mkwrite() {
-> file_writer-30495 [013] 358613.968917: funcgraph_entry:        0.137 us   |          _cond_resched();
-> file_writer-30495 [013] 358613.968917: funcgraph_entry:                   |          block_prepare_write() {
-> file_writer-30495 [013] 358613.968917: funcgraph_entry:                   |            __block_prepare_write() {
-> file_writer-30495 [013] 358613.968918: funcgraph_entry:                   |              create_empty_buffers() {
-> file_writer-30495 [013] 358613.968920: funcgraph_exit:         2.760 us   |              }
-> file_writer-30495 [013] 358613.968921: funcgraph_entry:                   |              xfs_get_blocks() {
-> file_writer-30495 [013] 358613.968921: funcgraph_entry:                   |                __xfs_get_blocks() {
-> file_writer-30495 [013] 358613.968921: funcgraph_entry:                   |                  xfs_iomap() {
-> file_writer-30495 [013] 358613.968921: funcgraph_entry:                   |                    xfs_ilock() {
-> file_writer-30495 [013] 358613.968921: funcgraph_entry:                   |                      down_write() {
-.....
-
-Yes, I'd expect that to happen, too.
-
-
-> Next I see xfslogd/7 release the xfs_buf_lock which wakes up
-> xfsconvertd/7:
-> 
-> 
-> file_reader-31161 [007] 358614.285351: sched_switch:         task file_reader:31161 [89] (S) ==> xfslogd/7:219 [120]
-> xfslogd/7-219   [007] 358614.285352: funcgraph_entry:                   |    finish_task_switch() {
-> xfslogd/7-219   [007] 358614.285353: funcgraph_exit:         1.327 us   |    }
-> xfslogd/7-219   [007] 358614.285353: funcgraph_exit:       ! 385801.165 us |  }
-> xfslogd/7-219   [007] 358614.285354: funcgraph_entry:        0.403 us   |  finish_wait();
-> xfslogd/7-219   [007] 358614.285355: funcgraph_entry:        0.518 us   |  kthread_should_stop();
-> xfslogd/7-219   [007] 358614.285355: funcgraph_entry:        0.336 us   |  _spin_lock_irq();
-> xfslogd/7-219   [007] 358614.285356: funcgraph_entry:        0.362 us   |  _spin_lock_irqsave();
-> xfslogd/7-219   [007] 358614.285357: funcgraph_entry:        0.331 us   |  _spin_unlock_irqrestore();
-> xfslogd/7-219   [007] 358614.285358: funcgraph_entry:                   |  xfs_buf_iodone_work() {
-> xfslogd/7-219   [007] 358614.285358: funcgraph_entry:                   |    xfs_buf_iodone_callbacks() {
-> xfslogd/7-219   [007] 358614.285359: funcgraph_entry:                   |      xfs_buf_do_callbacks() {
-> xfslogd/7-219   [007] 358614.285367: funcgraph_exit:         7.849 us   |      }
-> xfslogd/7-219   [007] 358614.285367: funcgraph_entry:                   |      xfs_buf_ioend() {
-> xfslogd/7-219   [007] 358614.285367: funcgraph_entry:                   |        xfs_buf_iodone_work() {
-> xfslogd/7-219   [007] 358614.285367: funcgraph_entry:                   |          xfs_buf_unlock() {
-> xfslogd/7-219   [007] 358614.285368: funcgraph_entry:                   |            up() {
-.....
-> xfslogd/7-219   [007] 358614.285381: sched_wakeup:         task xfsconvertd/7:251 [120] success=1 [007]
-
-Ok, the transaction was blocked on a buffer that had it's IO
-completion queued to the xfslogd. But this happened some
-320ms after the above page fault occurred, and 340ms after the
-xfsconvertd got stuck waiting for it. In other words, it looks
-like it it took at least 340ms for the buffer IO to complete after
-it was issued.
-
-
-> xfsconvertd/7 releases the xfs_ilock() waking up flush-8:0:
-....
-> flush-8:0 releases the xfs_ilock() waking up my process:
-....
-> And finally my process finishes the write ending the delay:
-> 
-> 
->      <idle>-0     [013] 358614.285593: sched_switch:         task swapper:0 [120] (R) ==> file_writer:30495 [79]
-> file_writer-30495 [013] 358614.285594: funcgraph_entry:        0.575 us   |                          __math_state_restore();
-> file_writer-30495 [013] 358614.285595: funcgraph_entry:                   |                          finish_task_switch() {
-> file_writer-30495 [013] 358614.285596: funcgraph_exit:         0.698 us   |                          }
-> file_writer-30495 [013] 358614.285596: funcgraph_exit:    ! 316673.836 us |                        }
-> file_writer-30495 [013] 358614.285596: funcgraph_exit:    ! 316675.180 us |                      }
-> file_writer-30495 [013] 358614.285597: funcgraph_exit:    ! 316675.750 us |                    }
-> file_writer-30495 [013] 358614.285597: funcgraph_entry:                   |                    xfs_bmapi() {
-
-And so the delay you app saw was ~320ms. Basically, it blocked
-waiting for an IO to complete. I don't think there is anything we ca
-really do from a filesystem point of view to avoid that - we cannot
-avoid metadata buffer writeback indefinitely.
-
-Fundamentally you are seeing the reason why filesystems cannot
-easily guarantee maximum bound latencies - if we have to wait for IO
-for anything, then the latency is effectively uncontrollable. XFS
-does as much as possible to avoid such latencies for data IO, but
-even then it's not always possible. Even using the RT device in XFS
-won't avoid these latencies - it's caused by latencies in metadata
-modification, not data....
-
-Effectively, the only way you can minimise this is to design your
-storage layout for minimal IO latency under writes (e.g. use mirrors
-instead of RAID5, etc) or use faster drives. Also using the deadline
-scheduler (if you aren't already) might help....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+[  604.416384] =================================
+[  604.416625] [ INFO: inconsistent lock state ]
+[  604.416625] 2.6.36-rc4-mm1 #2
+[  604.416625] ---------------------------------
+[  604.416625] inconsistent {RECLAIM_FS-ON-W} -> {IN-RECLAIM_FS-W} usage.
+[  604.416625] kswapd0/418 [HC0[0]:SC0[0]:HE1:SE1] takes:
+[  604.416625]  (&(&ip->i_iolock)->mr_lock#2){++++?+}, at: [<ffffffff812046df>] xfs_ilock+0x94/0x137
+[  604.416625] {RECLAIM_FS-ON-W} state was registered at:
+[  604.416625]   [<ffffffff81065571>] mark_held_locks+0x4d/0x6b
+[  604.416625]   [<ffffffff81065641>] lockdep_trace_alloc+0xb2/0xd7
+[  604.416625]   [<ffffffff810ee215>] kmem_cache_alloc+0x2a/0x126
+[  604.416625]   [<ffffffff81225d5b>] kmem_zone_alloc+0x67/0xaf
+[  604.416625]   [<ffffffff81225db2>] kmem_zone_zalloc+0xf/0x30
+[  604.416625]   [<ffffffff8121dd73>] _xfs_trans_alloc+0x22/0x5f
+[  604.416625]   [<ffffffff8121ef9f>] xfs_trans_alloc+0x9d/0xaa
+[  604.416625]   [<ffffffff8122520c>] xfs_setattr+0x3d2/0x8b4
+[  604.416625]   [<ffffffff8122eea4>] xfs_vn_setattr+0x16/0x1a
+[  604.416625]   [<ffffffff81106ec7>] notify_change+0x18f/0x27d
+[  604.416625]   [<ffffffff810f1de1>] do_truncate+0x6a/0x88
+[  604.416625]   [<ffffffff810fd7ff>] do_last+0x588/0x58f
+[  604.416625]   [<ffffffff810fda43>] do_filp_open+0x23d/0x5db
+[  604.416625]   [<ffffffff810f1055>] do_sys_open+0x5a/0xf0
+[  604.416625]   [<ffffffff810f1114>] sys_open+0x1b/0x1d
+[  604.416625]   [<ffffffff81002b82>] system_call_fastpath+0x16/0x1b
+[  604.416625] irq event stamp: 144829
+[  604.416625] hardirqs last  enabled at (144829): [<ffffffff815c96ba>] _raw_spin_unlock_irqrestore+0x46/0x55
+[  604.416625] hardirqs last disabled at (144828): [<ffffffff815c910b>] _raw_spin_lock_irqsave+0x24/0x58
+[  604.416625] softirqs last  enabled at (142796): [<ffffffff8103fc97>] __do_softirq+0x1b6/0x1c7
+[  604.416625] softirqs last disabled at (142791): [<ffffffff81003afc>] call_softirq+0x1c/0x28
+[  604.416625] 
+[  604.416625] other info that might help us debug this:
+[  604.416625] 1 lock held by kswapd0/418:
+[  604.416625]  #0:  (shrinker_rwsem){++++..}, at: [<ffffffff810c682c>] shrink_slab+0x38/0x164
+[  604.416625] 
+[  604.416625] stack backtrace:
+[  604.416625] Pid: 418, comm: kswapd0 Not tainted 2.6.36-rc4-mm1 #2
+[  604.416625] Call Trace:
+[  604.416625]  [<ffffffff810652b0>] valid_state+0x18b/0x19e
+[  604.416625]  [<ffffffff8100db7b>] ? save_stack_trace+0x2a/0x48
+[  604.416625]  [<ffffffff81065ca9>] ? check_usage_forwards+0x0/0x7e
+[  604.416625]  [<ffffffff810653c9>] mark_lock+0x106/0x261
+[  604.416625]  [<ffffffff81364cef>] ? radix_tree_tag_clear+0xa5/0x108
+[  604.416625]  [<ffffffff8106676f>] __lock_acquire+0x3bb/0xe1f
+[  604.416625]  [<ffffffff810671c4>] ? __lock_acquire+0xe10/0xe1f
+[  604.416625]  [<ffffffff8100db7b>] ? save_stack_trace+0x2a/0x48
+[  604.416625]  [<ffffffff810671c4>] ? __lock_acquire+0xe10/0xe1f
+[  604.416625]  [<ffffffff81364ecd>] ? radix_tree_delete+0xad/0x1b7
+[  604.416625]  [<ffffffff810672ab>] lock_acquire+0xd8/0x104
+[  604.416625]  [<ffffffff812046df>] ? xfs_ilock+0x94/0x137
+[  604.416625]  [<ffffffff810586cf>] down_write_nested+0x4a/0x6d
+[  604.416625]  [<ffffffff812046df>] ? xfs_ilock+0x94/0x137
+[  604.416625]  [<ffffffff812046df>] xfs_ilock+0x94/0x137
+[  604.416625]  [<ffffffff81231c9f>] xfs_reclaim_inode+0x277/0x2c1
+[  604.416625]  [<ffffffff81232608>] xfs_inode_ag_walk+0x8e/0xe9
+[  604.416625]  [<ffffffff81231a28>] ? xfs_reclaim_inode+0x0/0x2c1
+[  604.416625]  [<ffffffff812326c7>] xfs_inode_ag_iterator+0x64/0xc3
+[  604.416625]  [<ffffffff81231a28>] ? xfs_reclaim_inode+0x0/0x2c1
+[  604.416625]  [<ffffffff81232762>] xfs_reclaim_inode_shrink+0x3c/0x83
+[  604.416625]  [<ffffffff810c68d5>] shrink_slab+0xe1/0x164
+[  604.416625]  [<ffffffff810c6f3c>] kswapd+0x5e4/0x864
+[  604.416625]  [<ffffffff8105499e>] ? autoremove_wake_function+0x0/0x38
+[  604.416625]  [<ffffffff810c6958>] ? kswapd+0x0/0x864
+[  604.416625]  [<ffffffff8105452d>] kthread+0x81/0x89
+[  604.416625]  [<ffffffff81003a04>] kernel_thread_helper+0x4/0x10
+[  604.416625]  [<ffffffff81096ee2>] ? watchdog+0x0/0x281
+[  604.416625]  [<ffffffff815c9ad0>] ? restore_args+0x0/0x30
+[  604.416625]  [<ffffffff810544ac>] ? kthread+0x0/0x89
+[  604.416625]  [<ffffffff81003a00>] ? kernel_thread_helper+0x0/0x10
+--
+Thanks
+Yang Ruirui
 
 _______________________________________________
 xfs mailing list
