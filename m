@@ -1,16 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8GGfGLe003470 for <xfs@oss.sgi.com>; Thu, 16 Sep 2010 11:41:16 -0500
-Subject: Re: [PATCH] 2.6.35.4: Fixed simple warning (array subscript is
-	above array bounds)
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <388312.90213.qm@web45811.mail.sp1.yahoo.com>
+	o8GGll8W003794 for <xfs@oss.sgi.com>; Thu, 16 Sep 2010 11:47:50 -0500
+Date: Thu, 16 Sep 2010 12:48:35 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] 2.6.35.4: Fixed simple warning (array subscript is above
+	array bounds)
+Message-ID: <20100916164835.GA19511@infradead.org>
 References: <388312.90213.qm@web45811.mail.sp1.yahoo.com>
-Date: Thu, 16 Sep 2010 11:42:02 -0500
-Message-ID: <1284655322.2153.22.camel@doink>
-Mime-Version: 1.0
-Reply-To: aelder@sgi.com
+	<1284655322.2153.22.camel@doink>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1284655322.2153.22.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,48 +20,28 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Poyo VL <poyo_vl@yahoo.com>
-Cc: xfs@oss.sgi.com
+To: Alex Elder <aelder@sgi.com>
+Cc: Poyo VL <poyo_vl@yahoo.com>, xfs@oss.sgi.com
 
-T24gVGh1LCAyMDEwLTA5LTAyIGF0IDAyOjEwIC0wNzAwLCBQb3lvIFZMIHdyb3RlOgo+IEZyb206
-IElvbnV0IEdhYnJpZWwgUG9wZXNjdSA8cG95b192bEB5YWhvby5jb20+Cj4gCj4gV2hlbiBJIHRy
-aWVkIHRvIGNvbXBpbGUsIEkgZ290IHRoZSBmb2xsb3dpbmcgd2FybmluZzoKPiBmcy94ZnMveGZz
-X2RpcjJfYmxvY2suYzogSW4gZnVuY3Rpb24g4oCYeGZzX2RpcjJfc2ZfdG9fYmxvY2vigJk6Cj4g
-ZnMveGZzL3hmc19kaXIyX2Jsb2NrLmM6MTE1MzoyNjogd2FybmluZzogYXJyYXkgc3Vic2NyaXB0
-IGlzIGFib3ZlIGFycmF5IGJvdW5kcwo+IFRoZSBjb2RlIChmcy94ZnMveGZzX2RpcjJfYmxvY2su
-YyBsaW5lIDExNTMpIGlzOgo+IGRlcC0+bmFtZVswXSA9IGRlcC0+bmFtZVsxXSA9ICcuJzsKPiBk
-ZXAgaXMgYSBwb2ludGVyIHRvIGEgeGZzX2RpcjJfZGF0YV9lbnRyeV90IHN0cnVjdHVyZSB3aGVy
-ZSBuYW1lIGlzIGRlZmluZWQgYXM6Cj4gX191OCAgICAgICAgICAgIG5hbWVbMV07ICAgIC8qIG5h
-bWUgYnl0ZXMsIG5vIG51bGwgKi8KPiBTbyBpdCBpcyBhIHNpbmdsZSBlbGVtZW50IGFycmF5LCBu
-YW1lWzBdIG5vdCBhbHNvIG5hbWVbMV0gc28gSSBnb3QgdGhhdCB3YXJuaW5nLgo+IFBhdGNoaW5n
-IGlzIGEgc2ltcGxlIHJlcGxhY2VtZW50IG9mIDEgd2l0aCAyLgoKSXQgbG9va3MgdG8gbWUgbGlr
-ZSB0aGlzIHdpbGwgd29yay4gIEJ1dCBJIHdvdWxkIGxpa2UKYSBzZWNvbmQgb3BpbmlvbiBvbiB0
-aGF0IGJlZm9yZSBJIGNvbW1pdCB0aGlzIGNoYW5nZS4KCkFuIHhmc19kaXIyX2RhdGFfZW50cnkg
-c3RydWN0dXJlIGlzIGRlZmluZWQgdGhlIHdheQppdCBpcyB0byBiZSBpbmZvcm1hdGl2ZTsgaXRz
-IHBoeXNpY2FsIHJlcHJlc2VudGF0aW9uCmlzIGRpZmZlcmVudCB3aGVuIGl0J3MgYWN0dWFsbHkg
-dXNlZC4gIFRoZSBuYW1lIGFycmF5CmlzIHNpemVkIGJhc2VkIG9uIHRoZSBhY3R1YWwgbmFtZSBs
-ZW5ndGgsIGFuZCB0aGUgdGFnCmxpZXMgc29tZXdoZXJlIGFmdGVyIHRoYXQtLWF0IHRoZSB2ZXJ5
-IGVuZCBvZiB0aGUKKGR5bmFtaWNhbGx5LXNpemVkKSBkYXRhIGVudHJ5LgoKQWRkaXRpb25hbGx5
-LCB0aGUgYWxpZ25tZW50IG9mIHRoZSBvdmVyYWxsIHN0cnVjdHVyZQp3aWxsIGJlIDY0IGJpdHMg
-YmVjYXVzZSBvZiBodGUgaW51bWJlciBmaWVsZC4gIEV4cGFuZGluZwp0aGUgbmFtZSBmaWVsZCBi
-eSBhbm90aGVyIGJ5dGUgd2lsbCBub3QgY2hhbmdlIHRoYXQuCgpTbyBJIHRoaW5rIHRoaXMgY2hh
-bmdlIGlzIE9LLiAgQ2FuIGFueW9uZSBlbHNlCmJhY2sgbWUgdXA/CgpSZXZpZXdlZC1ieTogQWxl
-eCBFbGRlciA8YWVsZGVyQHNnaS5jb20+Cgo+IFNpZ25lZC1vZmYtYnk6IElvbnV0IEdhYnJpZWwg
-UG9wZXNjdSA8cG95b192bEB5YWhvby5jb20+Cj4gLS0tCj4gCj4gLS0tIGEvZnMveGZzL3hmc19k
-aXIyX2RhdGEuaCAgICAyMDEwLTA5LTAyIDExOjEzOjExLjYzMjAwNzUzNiArMDMwMAo+ICsrKyBi
-L2ZzL3hmcy94ZnNfZGlyMl9kYXRhLmggICAgMjAxMC0wOS0wMiAxMToxMzoyOC4wODAwMDY0ODgg
-KzAzMDAKPiBAQCAtODcsNyArODcsNyBAQAo+ICB0eXBlZGVmIHN0cnVjdCB4ZnNfZGlyMl9kYXRh
-X2VudHJ5IHsKPiAgICAgIF9fYmU2NCAgICAgICAgICAgIGludW1iZXI7ICAgIC8qIGlub2RlIG51
-bWJlciAqLwo+ICAgICAgX191OCAgICAgICAgICAgIG5hbWVsZW47ICAgIC8qIG5hbWUgbGVuZ3Ro
-ICovCj4gLSAgICBfX3U4ICAgICAgICAgICAgbmFtZVsxXTsgICAgLyogbmFtZSBieXRlcywgbm8g
-bnVsbCAqLwo+ICsgICAgX191OCAgICAgICAgICAgIG5hbWVbMl07ICAgIC8qIG5hbWUgYnl0ZXMs
-IG5vIG51bGwgKi8KPiAgICAgICAgICAgICAgICAgICAgICAgICAgLyogdmFyaWFibGUgb2Zmc2V0
-ICovCj4gICAgICBfX2JlMTYgICAgICAgICAgICB0YWc7ICAgICAgICAvKiBzdGFydGluZyBvZmZz
-ZXQgb2YgdXMgKi8KPiAgfSB4ZnNfZGlyMl9kYXRhX2VudHJ5X3Q7Cj4gCj4gCj4gICAgICAgCgoK
-Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWls
-aW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3Rp
-bmZvL3hmcwo=
+On Thu, Sep 16, 2010 at 11:42:02AM -0500, Alex Elder wrote:
+> Additionally, the alignment of the overall structure
+> will be 64 bits because of hte inumber field.  Expanding
+> the name field by another byte will not change that.
+> 
+> So I think this change is OK.  Can anyone else
+> back me up?
+
+We do sizeof requests on a few of these structures, not sure if it
+includes this one.  I have a patchset to dust off that gets rid of
+all the structures that aren't actually physically on disk.  I'll
+try to dust if off and submit it - this was a preparation for the
+CRC enablement of the directory structures.
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
