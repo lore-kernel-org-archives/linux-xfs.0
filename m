@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8GLqISV018652 for <xfs@oss.sgi.com>; Thu, 16 Sep 2010 16:52:18 -0500
-Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B3A0F1D8A736
-	for <xfs@oss.sgi.com>; Thu, 16 Sep 2010 14:53:08 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id EmT84ETV5Rlwd4sD
-	for <xfs@oss.sgi.com>; Thu, 16 Sep 2010 14:53:08 -0700 (PDT)
-Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
-	by greer.hardwarefreak.com (Postfix) with ESMTP id C3E1F6C0B8
-	for <xfs@oss.sgi.com>; Thu, 16 Sep 2010 16:53:07 -0500 (CDT)
-Message-ID: <4C9291C3.7000709@hardwarefreak.com>
-Date: Thu, 16 Sep 2010 16:53:07 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	o8GNUxh8023518 for <xfs@oss.sgi.com>; Thu, 16 Sep 2010 18:31:00 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 279B01D8AD66
+	for <xfs@oss.sgi.com>; Thu, 16 Sep 2010 16:31:48 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
+	[150.101.137.100]) by cuda.sgi.com with ESMTP id
+	PigtHnunjQYwiVCA for <xfs@oss.sgi.com>;
+	Thu, 16 Sep 2010 16:31:48 -0700 (PDT)
+Date: Fri, 17 Sep 2010 09:31:45 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfstests: add local.config example
+Message-ID: <20100916233145.GI24409@dastard>
+References: <4C925CF3.3060303@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: LWN.net article: creating 1 billion files -> Tests we did
-References: <201008191312.49346@zmi.at>
-	<20100916121350.3ab30ca5@harpe.intellique.com>
-In-Reply-To: <20100916121350.3ab30ca5@harpe.intellique.com>
+Content-Disposition: inline
+In-Reply-To: <4C925CF3.3060303@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,25 +29,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-Emmanuel Florac put forth on 9/16/2010 5:13 AM:
+On Thu, Sep 16, 2010 at 01:07:47PM -0500, Eric Sandeen wrote:
+> I think it'd be useful to have a local.config template in the
+> git repo, to avoid having to re-read the README each time
+> to remember the required environment variable names.
+> 
+> Thoughts?  Am I just lazy?  :)
 
-> Test run on a dual Opteron quad core, 16 GB RAM, kernel 2.6.32.11
-> x86_64...
+Lazy makes the world go round. ;)
 
-This is a test of storage system performance, and you left out the
-storage array specs?  By doing so it seems you're stating the underlying
-storage is not relevant to the results.
+A template is probably a good idea.
 
-So, are you saying I should be able to duplicate your results with that
-dual Opty system, but using an md RAID0 stripe over 8x2TB SATA disks
-connected to two $60 4 port SiI 3124 PCIe x1 cards?
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
+Btw, if you are going add a template, you might as well remove all
+the old configs that are there. I don't think any of them exist
+anymore, and they have no further use as templates.....
+
+Cheers,
+
+Dave.
 -- 
-Stan
-
-
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
