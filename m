@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8GNUxh8023518 for <xfs@oss.sgi.com>; Thu, 16 Sep 2010 18:31:00 -0500
+	o8GNHJW9022929 for <xfs@oss.sgi.com>; Thu, 16 Sep 2010 18:17:20 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 279B01D8AD66
-	for <xfs@oss.sgi.com>; Thu, 16 Sep 2010 16:31:48 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
-	[150.101.137.100]) by cuda.sgi.com with ESMTP id
-	PigtHnunjQYwiVCA for <xfs@oss.sgi.com>;
-	Thu, 16 Sep 2010 16:31:48 -0700 (PDT)
-Date: Fri, 17 Sep 2010 09:31:45 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A8E717C221
+	for <xfs@oss.sgi.com>; Thu, 16 Sep 2010 16:18:07 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
+	[150.101.137.101]) by cuda.sgi.com with ESMTP id
+	W1wJW2tu3lWTPjC2 for <xfs@oss.sgi.com>;
+	Thu, 16 Sep 2010 16:18:07 -0700 (PDT)
+Date: Fri, 17 Sep 2010 09:18:03 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfstests: add local.config example
-Message-ID: <20100916233145.GI24409@dastard>
-References: <4C925CF3.3060303@sandeen.net>
+Subject: Re: sector size warning at mount time
+Message-ID: <20100916231803.GH24409@dastard>
+References: <4C92641F.7080504@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4C925CF3.3060303@sandeen.net>
+In-Reply-To: <4C92641F.7080504@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,22 +32,30 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Thu, Sep 16, 2010 at 01:07:47PM -0500, Eric Sandeen wrote:
-> I think it'd be useful to have a local.config template in the
-> git repo, to avoid having to re-read the README each time
-> to remember the required environment variable names.
+On Thu, Sep 16, 2010 at 01:38:23PM -0500, Eric Sandeen wrote:
+> On ppc64 I'm tripping this warning:
 > 
-> Thoughts?  Am I just lazy?  :)
+>         if (verbose &&
+>             (PAGE_CACHE_SIZE / BITS_PER_LONG) > sectorsize) {
+>                 printk(KERN_WARNING
+>                         "XFS: %u byte sectors in use on device %s.  "
+>                         "This is suboptimal; %u or greater is ideal.\n",
+>                         sectorsize, XFS_BUFTARG_NAME(btp),
+>                         (unsigned int)PAGE_CACHE_SIZE / BITS_PER_LONG);
+>         }
+> 
+> and it's telling me I should have 1024-byte sectors...
+> 
+> If the kernel is going to complain at mount, should we get it right
+> at mkfs time?  I'm not even quite sure why it's recommending this?
 
-Lazy makes the world go round. ;)
+Because it requires 128 bits to track each sector in page when the
+buffer cache is has to use sub-page buffers. That's all the
+test/set_region garbage that it has.
 
-A template is probably a good idea.
-
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
-Btw, if you are going add a template, you might as well remove all
-the old configs that are there. I don't think any of them exist
-anymore, and they have no further use as templates.....
+The don't-user-the-page-cache part of my buffer cache rework fixes
+this bug, so I probably wouldn't bother changing anything else at this
+point in time...
 
 Cheers,
 
