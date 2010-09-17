@@ -1,16 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8HDKsB0068699 for <xfs@oss.sgi.com>; Fri, 17 Sep 2010 08:20:54 -0500
-Subject: Re: [PATCH 0/18] xfs: metadata and buffer cache scalability
-	improvements
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1284461777-1496-1-git-send-email-david@fromorbit.com>
-References: <1284461777-1496-1-git-send-email-david@fromorbit.com>
-Date: Fri, 17 Sep 2010 08:21:40 -0500
-Message-ID: <1284729700.5524.53.camel@doink>
-Mime-Version: 1.0
-Reply-To: aelder@sgi.com
+	o8HFijcc076100 for <xfs@oss.sgi.com>; Fri, 17 Sep 2010 10:44:45 -0500
+Received: from mail-vw0-f53.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 05AB880187
+	for <xfs@oss.sgi.com>; Fri, 17 Sep 2010 08:45:35 -0700 (PDT)
+Received: from mail-vw0-f53.google.com (mail-vw0-f53.google.com
+	[209.85.212.53]) by cuda.sgi.com with ESMTP id J7i24ECXcyBEbr3Y
+	for <xfs@oss.sgi.com>; Fri, 17 Sep 2010 08:45:35 -0700 (PDT)
+Received: by vws15 with SMTP id 15so1702670vws.26
+	for <xfs@oss.sgi.com>; Fri, 17 Sep 2010 08:45:35 -0700 (PDT)
+Date: Fri, 17 Sep 2010 10:45:23 -0500
+From: Shawn Bohrer <shawn.bohrer@gmail.com>
+Subject: Re: Latencies writing to memory mapped files
+Message-ID: <20100917154523.GA2739@BohrerMBP.rgmadvisors.com>
+References: <20100915152633.GA2585@BohrerMBP.rgmadvisors.com>
+	<20100916001837.GF24409@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20100916001837.GF24409@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,140 +27,139 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-T24gVHVlLCAyMDEwLTA5LTE0IGF0IDIwOjU1ICsxMDAwLCBEYXZlIENoaW5uZXIgd3JvdGU6Cj4g
-VGhpcyBwYXRjaHNldCBoYXMgZ3Jvd24gcXVpdGUgYSBiaXQgLSBpdCBzdGFydGVkIG91dCBhcyBh
-ICJjb252ZXJ0Cj4gdGhlIGJ1ZmZlciBjYWNoZSB0byByYnRyZWVzIiBwYXRjaCwgYW5kIGhhcyBn
-b3R0ZW4gYmlnZ2VyIGFzIEkKPiBwZWVsZWQgdGhlIG9uaW9uIGZyb20gb25lIGJvdHRsZW5lY2sg
-dG8gYW5vdGhlci4KCkkga25vdyB5b3UncmUgZ29pbmcgdG8gcmUtc3VibWl0IHRoaXMgc2VyaWVz
-LiAgSSB3b3VsZApsaWtlIHlvdSB0byBzcGxpdCBpdCBpbnRvIHNldmVyYWwgc21hbGxlciBzZXJp
-ZXMgaWYgeW91CmRvbid0IG1pbmQuICBTb21lIG9mIHRoZXNlIGFyZSBzaW1wbGVyIHRoYW4gb3Ro
-ZXJzLAphbmQgdGhlcmUgYXJlIHNvbWUgc29tZXdoYXQgbG9naWNhbCBncm91cGluZ3MgKHlvdQpl
-dmVuIGRlc2NyaWJlZCB0aGVtIGhlcmUgYXMgdHdvIHNldHMpLiAgQnV0IGJleW9uZAp0aGF0IGl0
-IHdvdWxkIGJlIG5pY2UgdG8gZ2V0IGF0IGxlYXN0IHNvbWUgb2YgdGhlbQpjb21taXR0ZWQgYmVm
-b3JlIHRoZSBmdWxsIHNlcmllcyBpcyBwZXJmZWN0ZWQuCgpUbyBiZSBjb25zdHJ1Y3RpdmUsIGhl
-cmUncyBhIGdyb3VwaW5nIGJhc2VkIG9uIHdoYXQKc2VlbXMgdG8gYmUgYSBjaGFuZ2Ugb2Ygc2ln
-bmlmaWNhbmNlIHNvbWVob3cuICBJJ20Kbm90IHN1Z2dlc3RpbmcgdGhleSBhbGwgYmUgc2VwYXJh
-dGVkLCBidXQgSSdtIGp1c3QKdHJ5aW5nIHRvIGlkZW50aWZ5IHRoZSBtYW55IHRoaW5ncyB5b3Un
-cmUgZG9pbmcgd2l0aAp0aGlzIHNlcmllcy4gIAoKWzAxLzE4XSB4ZnM6IHNpbmdsZSB0aHJlYWQg
-aW5vZGUgY2FjaGUgc2hyaW5raW5nLgpbMDIvMThdIHhmczogcmVkdWNlIHRoZSBudW1iZXIgb2Yg
-Q0lMIGxvY2sgcm91bmQgdHJpcHMgZHVyaW5nIGNvbW1pdAoKWzA1LzE4XSB4ZnM6IGNvbnZlcnQg
-aW5vZGUgY2FjaGUgbG9va3VwcyB0byB1c2UgUkNVIGxvY2tpbmcKWzA2LzE4XSB4ZnM6IGNvbnZl
-cnQgcGFnX2ljaV9sb2NrIHRvIGEgc3BpbiBsb2NrCgpbMDcvMThdIHhmczogZG9uJ3QgdXNlIHZm
-cyB3cml0ZWJhY2sgZm9yIHB1cmUgbWV0YWRhdGEgbW9kaWZpY2F0aW9ucwoKWzA4LzE4XSB4ZnM6
-IHJlbmFtZSB4ZnNfYnVmX2dldF9ub2RhZGRyIHRvIGJlIG1vcmUgYXBwcm9wcmlhdGUKWzA5LzE4
-XSB4ZnM6IGludHJvZHVjZWQgdW5jYWNoZWQgYnVmZmVyIHJlYWQgcHJpbWl0dmUKWzEwLzE4XSB4
-ZnM6IHN0b3JlIHhmc19tb3VudCBpbiB0aGUgYnVmdGFyZyBpbnN0ZWFkIG9mIGluIHRoZSB4ZnNf
-YnVmClsxMS8xOF0geGZzOiBraWxsIFhCRl9GU19NQU5BR0VEIGJ1ZmZlcnMKWzEyLzE4XSB4ZnM6
-IHVzZSB1bmhhc2hlZCBidWZmZXJzIGZvciBzaXplIGNoZWNrcwpbMTMvMThdIHhmczogcmVtb3Zl
-IGJ1ZnRhcmcgaGFzaCBmb3IgZXh0ZXJuYWwgZGV2aWNlcwoKWzAzLzE4XSB4ZnM6IHJlbW92ZSBk
-ZWJ1ZyBhc3NlcnQgZm9yIHBlci1hZyByZWZlcmVuY2UgY291bnRpbmcKWzA0LzE4XSB4ZnM6IGxv
-Y2tsZXNzIHBlci1hZyBsb29rdXBzClsxNC8xOF0geGZzOiBjb252ZXJ0IGJ1ZmZlciBjYWNoZSBo
-YXNoIHRvIHJidHJlZQoKWzE1LzE4XSB4ZnM7IHBhY2sgeGZzX2J1ZiBzdHJ1Y3R1cmUgbW9yZSB0
-aWdodGx5ClsxNi8xOF0geGZzOiBjb252ZXJ0IHhmc2J1ZCBzaHJpbmtlciB0byBhIHBlci1idWZ0
-YXJnIHNocmlua2VyLgoKWzE3LzE4XSB4ZnM6IGFkZCBhIGxydSB0byB0aGUgWEZTIGJ1ZmZlciBj
-YWNoZQpbMTgvMThdIHhmczogc3RvcCB1c2luZyB0aGUgcGFnZSBjYWNoZSB0byBiYWNrIHRoZSBi
-dWZmZXIgY2FjaGUKClRoYW5rcy4KCgkJCQkJLUFsZXgKCj4gUGVyZm9ybWFuY2UgbnVtYmVycyBo
-ZXJlIGFyZSA4LXdheSBmc19tYXJrIGNyZWF0ZSB0byA1ME0gZmlsZXMsIGFuZAo+IDgtd2F5IHJt
-IC1yZiB0byByZW1vdmUgdGhlIGZpbGVzIGNyZWF0ZWQuCj4gCj4gCQkJd2FsbCB0aW1lCWZzX21h
-cmsgcmF0ZQo+IDIuNi4zNi1yYzQ6Cj4gCWNyZWF0ZToJCTEzbTEwcwkJNjVrIGZpbGUvcwo+IAl1
-bmxpbms6CQkyM201OHMJCU4vQQo+IAo+IFRoZSBmaXJzdCBzZXQgb2YgcGF0Y2hlcyBhcmUgZ2Vu
-ZXJpYyBpbmZyYXN0cnVjdHVyZSBjaGFuZ2VzIHRoYXQKPiBhZGRyZXNzIHBhaW4gcG9pbnRzIHRo
-ZSByYnRyZWUgYmFzZWQgYnVmZmVyIGNhY2hlIGludHJvZHVjZXMuIEkndmUKPiBwdXQgdGhlbSBm
-aXJzdCBiZWNhdXNlIHRoZXkgYXJlIHNpbXBsZXIgdG8gcmV2aWV3IGFuZCBoYXZlIGltbWVkaWF0
-ZQo+IGltcGFjdCBvbiBwZXJmb3JtYW5jZS4gVGhlc2UgcGF0Y2hlcyBhZGRyZXNzIGxvY2sgY29u
-dGVudGlvbiBhcwo+IG1lYXN1cmVkIGJ5IHRoZSBrZXJuZWwgbG9ja3N0YXQgaW5mcmFzdHJ1Y3R1
-cmUuCj4gCj4geGZzOiBzaW5nbGUgdGhyZWFkIGlub2RlIGNhY2hlIHNocmlua2luZy4KPiAJLSBw
-cmV2ZW50cyBwZXItYWcgY29udGVudGlvbiBkdXJpbmcgY2FjaGUgc2hyaW5raW5nCj4gCj4geGZz
-OiByZWR1Y2UgdGhlIG51bWJlciBvZiBDSUwgbG9jayByb3VuZCB0cmlwcyBkdXJpbmcgY29tbWl0
-Cj4gCS0gcmVkdWNlcyBsb2NrIHRyYWZmaWMgb24gdGhlIHhjX2NpbF9sb2NrIGJ5IHR3byBvcmRl
-cnMgb2YKPiAJICBtYWduaXR1ZGUKPiAKPiB4ZnM6IHJlbW92ZSBkZWJ1ZyBhc3NlcnQgZm9yIHBl
-ci1hZyByZWZlcmVuY2UgY291bnRpbmcKPiB4ZnM6IGxvY2tsZXNzIHBlci1hZyBsb29rdXBzCj4g
-CS0gaG90dGVzdCBsb2NrIGluIHRoZSBzeXN0ZW0gd2l0aCBidWZmZXIgY2FjaGUgcmJ0cmVlIHBh
-dGgKPiAJLSBjb252ZXJ0ZWQgdG8gdXNlIFJDVS4KPiAKPiB4ZnM6IGNvbnZlcnQgaW5vZGUgY2Fj
-aGUgbG9va3VwcyB0byB1c2UgUkNVIGxvY2tpbmcKPiB4ZnM6IGNvbnZlcnQgcGFnX2ljaV9sb2Nr
-IHRvIGEgc3BpbiBsb2NrCj4gCS0gYWRkcmVzc2VzIGxvb2t1cCB2cyByZWNsYWltIGNvbnRlbnRp
-b24gb24gcGFnX2ljaV9sb2NrCj4gCS0gY29udmVydGVkIHRvIHVzZSBSQ1UuCj4gCj4geGZzOiBk
-b24ndCB1c2UgdmZzIHdyaXRlYmFjayBmb3IgcHVyZSBtZXRhZGF0YSBtb2RpZmljYXRpb25zCj4g
-CS0gaW5vZGUgd3JpdGViYWNrIGRvZXMgbm90IGtlZXAgdXAgd2l0aCBkaXJ0eWluZyAxMDAsMDAw
-Cj4gCSAgaW5vZGVzIGEgc2Vjb25kLiBBdm9pZHMgdGhlIHN1cGVyYmxvY2sgZGlydHkgbGlzdCB3
-aGVyZQo+IAkgIHBvc3NpYmxlIGJ5IHVzaW5nIHRoZSBBSUwgYXMgdGhlIGFnZS1vcmRlciBmbHVz
-aGVyLgo+IAo+IFBlcmZvcm1hbmNlIHdpdGggdGhlc2UgcGF0Y2hlczoKPiAKPiAyLjYuMzYtcmM0
-ICsgc2hyaW5rZXIgKyBDSUwgKyBSQ1U6Cj4gCWNyZWF0ZToJCTExbTM4cwkJODBrIGZpbGVzL3MK
-PiAJdW5saW5rOgkJMTRtMjlzCQlOL0EKPiAKPiBDcmVhdGUgcmF0ZSBoYXMgaW1wcm92ZWQgYnkg
-MjAlLCB1bmxpbmsgdGltZSBoYXMgYWxtb3N0IGhhbHZlZC4gT24KPiBsYXJnZSBudW1iZXJzIG9m
-IGlub2RlcywgdGhlIHVubGluayByYXRlIGltcHJvdmVzIGV2ZW4gbW9yZQo+IGRyYW1hdGljYWxs
-eS4KPiAKPiBUaGUgYnVmZmVyIGNhY2hlIHRvIHJidHJlZSBzZXJpZXMgY3VycmVudCBzdGFuZHMg
-YXQ6Cj4gCj4geGZzOiByZW5hbWUgeGZzX2J1Zl9nZXRfbm9kYWRkciB0byBiZSBtb3JlIGFwcHJv
-cHJpYXRlCj4geGZzOiBpbnRyb2R1Y2VkIHVuY2FjaGVkIGJ1ZmZlciByZWFkIHByaW1pdHZlCj4g
-eGZzOiBzdG9yZSB4ZnNfbW91bnQgaW4gdGhlIGJ1ZnRhcmcgaW5zdGVhZCBvZiBpbiB0aGUgeGZz
-X2J1Zgo+IHhmczoga2lsbCBYQkZfRlNfTUFOQUdFRCBidWZmZXJzCj4geGZzOiB1c2UgdW5oYXNo
-ZWQgYnVmZmVycyBmb3Igc2l6ZSBjaGVja3MKPiB4ZnM6IHJlbW92ZSBidWZ0YXJnIGhhc2ggZm9y
-IGV4dGVybmFsIGRldmljZXMKPiAJLSBwcmVwYXJhdG9yeSBidWZmZXIgY2FjaGUgQVBJIGNsZWFu
-dXAgcGF0Y2hlcwo+IAo+IHhmczogY29udmVydCBidWZmZXIgY2FjaGUgaGFzaCB0byByYnRyZWUK
-PiAJLSB3aGF0IGl0IHNheXMgOykKPiAJLSBpbmNsdWRlcyBjaGFuZ2VzIGJhc2VkIG9uIEFsZXgn
-cyByZXZpZXcuCj4gCj4geGZzOyBwYWNrIHhmc19idWYgc3RydWN0dXJlIG1vcmUgdGlnaHRseQo+
-IAktIG1lbW9yeSB1c2FnZSByZWR1Y3Rpb24sIG1lYW5zIGFkZGluZyB0aGUgTFJVIGxpc3QgaGVh
-ZCBpcwo+IAkgIGVmZmVjdGl2ZWx5IG1lbW9yeSB1c2FnZSBuZXV0cmFsLgo+IAo+IHhmczogY29u
-dmVydCB4ZnNidWQgc2hyaW5rZXIgdG8gYSBwZXItYnVmdGFyZyBzaHJpbmtlci4KPiB4ZnM6IGFk
-ZCBhIGxydSB0byB0aGUgWEZTIGJ1ZmZlciBjYWNoZQo+IAktIEFkZCBhbiBMUlUgZm9yIHJlY2xh
-aW0KPiAKPiB4ZnM6IHN0b3AgdXNpbmcgdGhlIHBhZ2UgY2FjaGUgdG8gYmFjayB0aGUgYnVmZmVy
-IGNhY2hlCj4gCS0ga2lsbCBhbGwgdGhlIHBhZ2UgY2FjaGUgY29kZQo+IAo+IDIuNi4zNi1yYzQg
-KyBzaHJpbmtlciArIENJTCArIFJDVSArIHJidHJlZToKPiAJY3JlYXRlOgkJIDltNDdzCQk5NWsg
-ZmlsZXMvcwo+IAl1bmxpbms6CQkxNG0xNnMJCU4vQQo+IAo+IENyZWF0ZSByYXRlIGhhcyBpbXBy
-b3ZlZCBieSBhbm90aGVyIDIwJSwgdW5saW5rIHJhdGUgaGFzIGltcHJvdmVkCj4gbWFyZ2luYWxs
-eSAobm9pc2UsIHJlYWxseSkuCj4gCj4gVGhlcmUgYXJlIHR3byByZW1haW5pbmcgcGFydHMgdG8g
-dGhlIGJ1ZmZlciBjYWNoZSBjb252ZXJzaW9uczoKPiAKPiAJMS4gd29yayBvdXQgaG93IHRvIGVm
-ZmljaWVudGx5IHN1cHBvcnQgYmxvY2sgc2l6ZSBzbWFsbGVyCj4gCXRoYW4gcGFnZSBzaXplLiBU
-aGUgY3VycmVudCBjb2RlIHdvcmtzLCBidXQgdXNlcyBhIHBhZ2UgcGVyCj4gCXN1Yi1hcGdlIGJ1
-ZmZlci4gIEEgc2V0IG9mIHNsYWIgY2FjaGVzIHdvdWxkIGJlIHBlcmZlY3QgZm9yCj4gCXRoaXMg
-dXNlLCBidXQgSSdtIG5vdCBzdXJlIHRoYXQgd2UgYXJlIGFsbG93ZWQgdG8gdXNlIHRoZW0KPiAJ
-Zm9yIElPIGFueW1vcmUuIENocmlzdG9waD8KPiAKPiAJMi4gQ29ubmVjdCB1cCB0aGUgYnVmZmVy
-IHR5cGUgc2VwY2lmaWMgcmVjbGFpbSBwcmlvcml0eQo+IAlyZWZlcmVuY2UgY291bnRpbmcgYW5k
-IGNvbnZlcnQgdGhlIExSVSByZWNsYWltIHRvIGEgY3Vyc29yCj4gCWJhc2VkIHdhbGsgdGhhdCBz
-aW1wbHkgZHJvcHMgcmVjbGFpbSByZWZlcmVuY2UgY291bnRzIGFuZAo+IAlmcmVlcyBhbnl0aGlu
-ZyB0aGF0IGhhcyBhIHplcm8gcmVjbGFpbSByZWZlcmVuY2UuCj4gCj4gT3ZlcmFsbCwgSSBjYW4g
-c3dhcCB0aGUgb3JkZXIgb2YgdGhlIHR3byBwYXRjaCBzZXRzLCBhbmQgdGhlCj4gaW5jcmVtZW50
-YWwgcGVyZm9ybWFuY2UgaW5jcmVhc2VzIGZvciBjcmVhdGUgYXJlIHByZXR0eSBtdWNoCj4gaWRl
-bnRpY2FsLiBGb3IgdW5saW5rLCB0ZSBiZW5lZml0IGNvbWVzIGZyb20gdGhlIHNocmlua2VyCj4g
-bW9kaWZpY2F0aW9uLiBGb3IgdGhvc2UgdGhhdCBjYXJlLCB0aGUgcmJ0cmVlIHBhdGNoIHNldCBp
-biBpc29sYXRpb24KPiByZXN1bHRzIGluIGEgdGltZSBvZiA0aDM4bSB0byBjcmVhdGUgMSBiaWxs
-aW9uIGlub2RlcyBvbiBteSA4cC80R0IKPiBSQU0gdGVzdCBWTS4gSSBoYXZlbid0IHJ1biB0aGlz
-IHRlc3Qgd2l0aCB0aGUgUkNVIGFuZCB3cml0ZWJhY2sKPiBtb2RpZmljYXRpb25zIHlldC4KPiAK
-PiBNb3Zpbmcgb24gZnJvbSB0aGlzIHBvaW50IGlzIHRvIHN0YXJ0IHRlc3RpbmcgYWdhaW5zdCBO
-aWNrIFBpZ2dpbidzCj4gVkZTIHNjYWxhYmlsaXR5IHRyZWUsIGHRlSB0aGUgaW5vZGVfbG9jayBh
-bmQgZGNhY2hlX2xvY2sgYXJlIG5vdyB0aGUKPiBwZXJmb3JtYW5jZSBsaW1pdGluZyBmYWN0b3Jz
-LiBUaGF0IHdpbGwsIHdpdGhvdXQgZG91YnQsIGJyaW5nIG5ldwo+IGhvdHNwb3RzIG91dCBpbiBY
-RlMgc28gSSdsbCBiZSBzdGFydGluZyB0aGlzIGN5Y2xlIG92ZXIgYWdhaW4gc29vbi4KPiAKPiBP
-dmVyYWxsIGRpZmZzdGF0IGF0IHRoaXMgcG9pbnQgaXM6Cj4gCj4gIGZzL3hmcy9saW51eC0yLjYv
-a21lbS5oICAgICAgICB8ICAgIDEgKwo+ICBmcy94ZnMvbGludXgtMi42L3hmc19idWYuYyAgICAg
-fCAgNTg4ICsrKysrKysrKysrKysrLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KPiAgZnMveGZz
-L2xpbnV4LTIuNi94ZnNfYnVmLmggICAgIHwgICA2MSArKystLQo+ICBmcy94ZnMvbGludXgtMi42
-L3hmc19pb3BzLmMgICAgfCAgIDE4ICstCj4gIGZzL3hmcy9saW51eC0yLjYveGZzX3N1cGVyLmMg
-ICB8ICAgMTEgKy0KPiAgZnMveGZzL2xpbnV4LTIuNi94ZnNfc3luYy5jICAgIHwgICA0OSArKyst
-Cj4gIGZzL3hmcy9saW51eC0yLjYveGZzX3RyYWNlLmggICB8ICAgIDIgKy0KPiAgZnMveGZzL3F1
-b3RhL3hmc19xbV9zeXNjYWxscy5jIHwgICAgNCArLQo+ICBmcy94ZnMveGZzX2FnLmggICAgICAg
-ICAgICAgICAgfCAgICA5ICstCj4gIGZzL3hmcy94ZnNfYnVmX2l0ZW0uYyAgICAgICAgICB8ICAg
-IDMgKy0KPiAgZnMveGZzL3hmc19mc29wcy5jICAgICAgICAgICAgIHwgICAxMSArLQo+ICBmcy94
-ZnMveGZzX2lnZXQuYyAgICAgICAgICAgICAgfCAgIDQ2ICsrKy0KPiAgZnMveGZzL3hmc19pbm9k
-ZS5jICAgICAgICAgICAgIHwgICAyMiArLQo+ICBmcy94ZnMveGZzX2lub2RlX2l0ZW0uYyAgICAg
-ICAgfCAgICA5IC0KPiAgZnMveGZzL3hmc19sb2cuYyAgICAgICAgICAgICAgIHwgICAgMyArLQo+
-ICBmcy94ZnMveGZzX2xvZ19jaWwuYyAgICAgICAgICAgfCAgMTE2ICsrKysrLS0tLQo+ICBmcy94
-ZnMveGZzX2xvZ19yZWNvdmVyLmMgICAgICAgfCAgIDE4ICstCj4gIGZzL3hmcy94ZnNfbW91bnQu
-YyAgICAgICAgICAgICB8ICAxMjYgKysrKy0tLS0tCj4gIGZzL3hmcy94ZnNfbW91bnQuaCAgICAg
-ICAgICAgICB8ICAgIDIgKwo+ICBmcy94ZnMveGZzX3J0YWxsb2MuYyAgICAgICAgICAgfCAgIDI5
-ICstCj4gIGZzL3hmcy94ZnNfdm5vZGVvcHMuYyAgICAgICAgICB8ICAgIDIgKy0KPiAgMjEgZmls
-ZXMgY2hhbmdlZCwgNTAyIGluc2VydGlvbnMoKyksIDYyOCBkZWxldGlvbnMoLSkKPiAKPiBTbyBp
-dCBpcyBpbXByb3ZpbmcgcGVyZm9ybWFuY2UsIHJlbW92aW5nIGNvZGUgYW5kIGZpeGluZwo+IGxv
-bmdzdGFuZGluZyBidWdzIGFsbCBhdCB0aGUgc2FtZSB0aW1lLiA7KQo+IAo+IF9fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCj4geGZzIG1haWxpbmcgbGlzdAo+
-IHhmc0Bvc3Muc2dpLmNvbQo+IGh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hm
-cwoKCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMg
-bWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9s
-aXN0aW5mby94ZnMK
+Hi Dave,
+
+Thanks again for your replies.
+
+On Thu, Sep 16, 2010 at 10:18:37AM +1000, Dave Chinner wrote:
+> On Wed, Sep 15, 2010 at 10:26:33AM -0500, Shawn Bohrer wrote:
+> > Hello,
+> > 
+> > A little while ago I asked about ways to solve the occasional spikes in
+> > latency that I see when writing to a shared memory mapped file.
+> > 
+> > http://oss.sgi.com/pipermail/xfs/2010-July/046311.html
+> > 
+> > With Dave's suggestions I enabled lazy-count=1 which did help a little:
+> > 
+> > # xfs_info /home/
+> > meta-data=/dev/sda5              isize=256    agcount=32, agsize=8472969 blks
+> >          =                       sectsz=512   attr=1
+> > data     =                       bsize=4096   blocks=271135008, imaxpct=25
+> >          =                       sunit=0      swidth=0 blks
+> > naming   =version 2              bsize=4096   ascii-ci=0
+> > log      =internal               bsize=4096   blocks=32768, version=1
+> >          =                       sectsz=512   sunit=0 blks, lazy-count=1
+> > realtime =none                   extsz=4096   blocks=0, rtextents=0
+> > 
+> > I'm also mounting the partition with "noatime,nobarrier,logbufs=8".
+> 
+> You really should add logbsize=262144 there - it won't prevent the
+> latencies, but with less log writes the incidence should decrease
+> significantly.
+
+I initially tested with logbsize=256k but did not notice any
+difference.  I then later realized that I had been doing a:
+
+mount -o remount,logbsize=256k /home
+
+You may also notice from above that I had version 1 logs and the max
+logbsize for version 1 logs is 32k.  Apparently the "mount -o remount"
+silently ignores the option.  If I instead unmount and remount it
+complains and refuses to mount.
+
+Yesterday I converted to version 2 logs and ran tests for an hour with
+both logbsize=32k and logbsize=256k and I still don't see any
+noticeable difference.  This of course assumes I tested correctly this
+time.
+
+> > The other change I made which helped the most was to use fallocate()
+> > to grow the file instead of lseek() and a write().
+> 
+> Ok, so now you are doing unwritten extent conversion at IO
+> completion, which is where this new latency issue has come from.
+
+I'm a complete newbie when it comes to filesystems.  For my education
+would you mind elaborating a little more here, or pointing to
+something I could read?
+
+An extent describes a contiguous section of data on disk correct?
+So when the page fault occurs and modifies the block the extent is
+modified in memory to record the change?  What does "conversion" mean
+in this context?  And as silly as it sounds what exactly does IO
+completion refer to?  Is this when the data is written to disk?
+
+> Ok, the transaction was blocked on a buffer that had it's IO
+> completion queued to the xfslogd. But this happened some
+> 320ms after the above page fault occurred, and 340ms after the
+> xfsconvertd got stuck waiting for it. In other words, it looks
+> like it it took at least 340ms for the buffer IO to complete after
+> it was issued.
+
+OK, so xfslogd is writing the log, which frees up log buffers.
+Meanwhile xfsconvertd is waiting on a free buffer so it can write more
+to the log correct?  So setting logbufs=8 gives me 8 log buffers and
+logbsize controls how big each of those buffers are correct?  When are
+these buffers filled and freed?  Are they filled when the process
+actually performs the write in memory, or at writeback time?  Likewise
+it seems that they are freed at writeback time correct?  Also do the
+buffers only get freed when fill they completely or are they also
+flushed when partially full?
+
+I get why you suggest increasing logbsize but I'm curious why I don't
+see any difference.  Could it be because I always end up running out
+of log buffers during writeback even at 256k so some of the I/O gets
+stalled anyway?  Maybe increasing the logbsize increases the threshold
+of the amount of data I can writeback before I see a spike?
+
+> And so the delay you app saw was ~320ms. Basically, it blocked
+> waiting for an IO to complete. I don't think there is anything we ca
+> really do from a filesystem point of view to avoid that - we cannot
+> avoid metadata buffer writeback indefinitely.
+
+One more bit of information which may be relevant here is that since I
+see these latencies during writeback I've increased
+vm.dirty_writeback_centisecs from the default 500 to 30000.  I'm OK
+with loosing 5 minutes of data in the event of a crash, and at our
+data rates we still stay well below the vm.dirty_background_ratio.
+This does improve the spikes (I only see them every 5 min) but
+intuitively this seems like might actually make the magnitude of the
+delays larger since there is more to write back.  Strangely from my
+point of view it doesn't seem to increase the magnitude of the spikes,
+so I'm not entirely sure how it really fits into the big picture.  Of
+course with higher data rates it does take longer to write out the
+data so the duration where the spikes can occur does increase.
+
+> Fundamentally you are seeing the reason why filesystems cannot
+> easily guarantee maximum bound latencies - if we have to wait for IO
+> for anything, then the latency is effectively uncontrollable. XFS
+> does as much as possible to avoid such latencies for data IO, but
+> even then it's not always possible. Even using the RT device in XFS
+> won't avoid these latencies - it's caused by latencies in metadata
+> modification, not data....
+> 
+> Effectively, the only way you can minimise this is to design your
+> storage layout for minimal IO latency under writes (e.g. use mirrors
+> instead of RAID5, etc) or use faster drives. Also using the deadline
+> scheduler (if you aren't already) might help....
+
+I have tested with the deadline and noop schedulers and they actually
+make the spikes noticeably worse than cfq.  I'm not sure why that would
+be but, one thought is that I am writing lots of small sequential
+chunks but from a whole disk perspective it would create a lot of
+random IO.  Perhaps cfq is just better at merging these requests.
+
+Thanks,
+Shawn
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
