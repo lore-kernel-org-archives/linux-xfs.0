@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8K5PF1o204359 for <xfs@oss.sgi.com>; Mon, 20 Sep 2010 00:25:15 -0500
-Received: from mx02.colomx.prod.int.phx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 43757181EABE
-	for <xfs@oss.sgi.com>; Sun, 19 Sep 2010 22:26:06 -0700 (PDT)
-Received: from mx02.colomx.prod.int.phx2.redhat.com (mx4-phx2.redhat.com
-	[209.132.183.25]) by cuda.sgi.com with ESMTP id
-	Ze5oipqqRsIpK0oJ for <xfs@oss.sgi.com>;
-	Sun, 19 Sep 2010 22:26:06 -0700 (PDT)
-Date: Mon, 20 Sep 2010 01:25:49 -0400 (EDT)
-From: Lachlan McIlroy <lmcilroy@redhat.com>
-Message-ID: <1545765209.2513061284960349148.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
-In-Reply-To: <1112490894.2512981284960154901.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
-Subject: Re: [PATCH] [RFC] xfs: prevent bmap btree from using alloc btree
-	reserved blocks
+	o8K6kSsw207925 for <xfs@oss.sgi.com>; Mon, 20 Sep 2010 01:46:29 -0500
+Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 495FF181E2F4
+	for <xfs@oss.sgi.com>; Sun, 19 Sep 2010 23:47:18 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id xz9UnxiKpMMN9nPQ
+	for <xfs@oss.sgi.com>; Sun, 19 Sep 2010 23:47:18 -0700 (PDT)
+Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
+	by greer.hardwarefreak.com (Postfix) with ESMTP id 9165B6C015
+	for <xfs@oss.sgi.com>; Mon, 20 Sep 2010 01:47:17 -0500 (CDT)
+Message-ID: <4C970375.5060309@hardwarefreak.com>
+Date: Mon, 20 Sep 2010 01:47:17 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Reply-To: Lachlan McIlroy <lmcilroy@redhat.com>
+Subject: Re: Linux and DMAPI
+References: <AANLkTim5FExj9GFQf9v1rzRmxqtNrdw_UR5VPUs4bPMq@mail.gmail.com>
+In-Reply-To: <AANLkTim5FExj9GFQf9v1rzRmxqtNrdw_UR5VPUs4bPMq@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,208 +30,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Looks good, some questions inline.
-
------ "Dave Chinner" <david@fromorbit.com> wrote:
-
-> ping?
+Diego Woitasen put forth on 9/18/2010 7:08 PM:
+> Hi,
+>  I'm looking for software that supports DMAPI on Linux. I haven't
+> found anything on the web. I need to implement HSM for a mail server,
+> to store old messages in a secondary storage.
 > 
-> On Tue, Aug 24, 2010 at 11:45:33PM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > Recently we've had WANT_CORRUPTED_GOTO filesystem shutdowns
-> reported
-> > on filesystems with large numbers of small AGs. RedHat QA found a
-> > simple test case at:
-> > 
-> > https://bugzilla.redhat.com/show_bug.cgi?id=626244
-> > 
-> > Which was further refined to:
-> > 
-> > # mkfs.xfs -f -d agsize=16m,size=50g <dev>
-> > # mount <dev> /mnt
-> > # xfs_io -f -c 'resvsp 0 40G' /mnt/foo
-> > 
-> > The initial analysis is in the above bug. The fundamental problem
-> is
-> > that the data extent allocation is using all the free blocks in the
-> > allocation group, and then the bmap btree block allocation is
-> > dipping into the reserved block pool that each AG holds for
-> > freespace btree manipulations. This results in failures when
-> > multiple bmap btree blocks are needed for a multilevel split of the
-> > bmap btree.
-> > 
-> > The reason this is occurring is that when we do a btree block
-> > allocation after a data extent allocation we run down the path that
-> > does not set up the minleft allocation parameter. That is, we allow
-> > the btree block allocation to use up all the blocks in the current
-> > AG if that is what will make the current allocation succeed. This
-> > what we are supposed to only allow the low space allocation
-> > algorithm to do, not a normal allocation. The result is that we can
-> > allocate the first block from the AG freelist, and then the second
-> > block allocation in the split will fail in the same AG because we
-> do
-> > not have a minleft parameter set and hence will not pass the checks
-> > in xfs_alloc_fix_freelist() and hence the allocation will fail.
-> > Further, because no minleft parameter is set, the btree block
-> > allocation will not retry the allocation with different parameters
-> > and (potentially) enable the low space algorithm.
+>  Are there something implemented? Open source or propietary one? I
+> prefer open source obviously...
 
-I think the assumption here is that if the first btree block (with
-minleft set) succeeds then all the required free blocks for further
-btree allocations will be available if needed and allocations shouldn't
-fail.  But this clearly isn't holding true.  Do we have multiple threads
-allocating from the same AG stealing each other's minleft blocks?
+This may not be exactly what you're looking for, but Dovecot natively
+supports two level HSM with the dbox/mdbox mail storage formats.
 
-> > 
-> > The result is that we fail a btree block allocation and hence fail
-> > the extent allocation with a dirty btree and transaction. The dirty
-> > btree causes the WANT_CORRUPTED_GOTO warning, and cancelling the
-> > dirty transaction triggers the shutdown.
-> > 
-> > The fix appears to be to ensure that we set the minleft parameter
-> > correctly to reflect the potential number of btree blocks we still
-> > need to allocate from the same AG if we are doing a worst case
-> > split. By doing so, the particular case results in the first btree
-> > block allocation setting minleft to the number of blocks needed for
-> > a split. Hence the AG that we just allocated all the free blocks
-> out
-> > of for the data extent will fail because there are not enough free
-> > blocks for all the blocks in the split in the AG. It will fail this
-> > without dirtying anything, and because minleft is now > 0, will
-> > trigger the retry algorithm.
-> > 
-> > The fallback algorithm also needs a slight modification. It
-> > currently assumes that if minleft is set, no allocation has been
-> > done yet, so it can scan from AG 0 to find a free block. If it is
-> > left like this, it can trigger deadlocks from the new case as we
-> > have a prior allocation and hence cannot allocate from an AG less
-> > than the current AG. Hence it is modified to use a START_AG
-> > allocation to scan upwards from the current AG, hence avoiding the
-> > known AG locking deadlocks.
-> > 
-> > As far as I can tell, the bmap btree code has never handled this
-> > case properly - I checked as far back as 1995 and minleft has never
-> > been set to avoid selecting an AG that cannot be allocated out
-> of...
+http://wiki2.dovecot.org/MailboxFormat/dbox
 
-I'm not surprised - the low space algorithm was broken about that time
-too.
+Bottom of the page, "Alternate storage".  See also:
+http://wiki2.dovecot.org/Tools/Doveadm/Altmove
 
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > ---
-> >  fs/xfs/xfs_bmap_btree.c |   51
-> ++++++++++++++++++++++++++++++++++++++--------
-> >  1 files changed, 42 insertions(+), 9 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_bmap_btree.c b/fs/xfs/xfs_bmap_btree.c
-> > index 87d3c10..d5ef4e3 100644
-> > --- a/fs/xfs/xfs_bmap_btree.c
-> > +++ b/fs/xfs/xfs_bmap_btree.c
-> > @@ -538,6 +538,25 @@ xfs_bmbt_alloc_block(
-> >  		args.type = XFS_ALLOCTYPE_START_BNO;
-> >  	} else {
-> >  		args.type = XFS_ALLOCTYPE_NEAR_BNO;
+So basically you'd cron a script for some duration (daily, weekly,
+monthly, etc) containing the above command to move old mails to your
+alternate near line storage.
 
-Could we use XFS_ALLOCTYPE_START_BNO here so that it automatically tries other
-AGs instead of doing it manually (like you've done below)?  It should even
-restart from AG 0 if no other allocations have been done.
+If it's a really busy server you may want to go with the individual user
+route with one HSM script per user.  This would allow staggered
+scheduling of the cron jobs so as to lessen the load on the server
+compared to one cron job which does all users at once.
 
-> > +
-> > +		/*
-> > +		 * we've come in here because this is the second or subsequent
-> > +		 * btree block we need to allocate for the bmap btree
-> > +		 * modification. If we've just emptied the AG and there are
-> > +		 * only free list blocks left, we need to make sure that we
-> > +		 * take into account the minleft value that was reserved on the
-> > +		 * first allocation through here (the NULLFSBLOCK branch
-> > +		 * above). In that case, minleft will already take into account
-> > +		 * the maximum number of blocks needed for a btree split, and
-> > +		 * the number of blocks already allocated is recorded in the
-> > +		 * cursor. From that, we can work out exactly how much smaller
-> > +		 * the minleft should be so that we don't select an AG that
-> > +		 * does not have enough blocks available to continue the entire
-> > +		 * btree split.
-> > +		 */
-> > +		args.minleft = XFS_BM_MAXLEVELS(args.mp,
-> > +					(int)cur->bc_private.b.whichfork) - 1 -
-> > +				cur->bc_private.b.allocated;
-> >  	}
-> >  
-> >  	args.minlen = args.maxlen = args.prod = 1;
-> > @@ -550,15 +569,29 @@ xfs_bmbt_alloc_block(
-> >  	if (error)
-> >  		goto error0;
-> >  
-> > -	if (args.fsbno == NULLFSBLOCK && args.minleft) {
-> > -		/*
-> > -		 * Could not find an AG with enough free space to satisfy
-> > -		 * a full btree split.  Try again without minleft and if
-> > -		 * successful activate the lowspace algorithm.
-> > -		 */
-> > -		args.fsbno = 0;
-> > -		args.type = XFS_ALLOCTYPE_FIRST_AG;
-> > -		args.minleft = 0;
-> > +	while (args.fsbno == NULLFSBLOCK && args.minleft) {
-> > +		if (cur->bc_private.b.firstblock == NULLFSBLOCK) {
-
-Makes sense, need to check b_firstblock since minleft is always set now.
-Do we still need the check for minleft here?  The only case I can see that
-minleft would be 0 now is for the low space algorithm and there may be some
-benefit it letting it try again.
-
-> > +			/*
-> > +			 * Could not find an AG with enough free space to satisfy
-> > +			 * a full btree split.  Try again without minleft and if
-> > +			 * successful activate the lowspace algorithm.
-> > +			 */
-> > +			args.type = XFS_ALLOCTYPE_FIRST_AG;
-> > +			args.fsbno = 0;
-> > +			args.minleft = 0;
-> > +		} else {
-
-Nice one, allow the allocator to hunt for btree blocks in later AGs.
-
-> > +			/*
-> > +			 * Failed to find enough space for a btree block after
-> > +			 * a extent allocation has already occurred. Continue
-> > +			 * searching other AGs that can hold the remaining
-> > +			 * blocks. If we fail with minleft set, then clear it
-> > +			 * and try again.
-> > +			 */
-> > +			args.type = XFS_ALLOCTYPE_START_AG;
-> > +			args.fsbno = cur->bc_private.b.firstblock;
-> > +			if (cur->bc_private.b.flist->xbf_low)
-
-I don't think xbf_low can be set here - if it was set then minleft
-would be 0 and we wouldn't have reached here.
-
-> > +				args.minleft = 0;
-> > +		}
-> >  		error = xfs_alloc_vextent(&args);
-> >  		if (error)
-> >  			goto error0;
-> > -- 
-> > 1.7.1
-> > 
-> > _______________________________________________
-> > xfs mailing list
-> > xfs@oss.sgi.com
-> > http://oss.sgi.com/mailman/listinfo/xfs
-> > 
-> 
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
