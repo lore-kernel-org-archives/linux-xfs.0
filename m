@@ -1,26 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8KMli0s239661 for <xfs@oss.sgi.com>; Mon, 20 Sep 2010 17:47:45 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7A227D036B1
-	for <xfs@oss.sgi.com>; Mon, 20 Sep 2010 15:48:36 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
-	[150.101.137.100]) by cuda.sgi.com with ESMTP id
-	WHOZ4bXalC7g2pjK for <xfs@oss.sgi.com>;
-	Mon, 20 Sep 2010 15:48:36 -0700 (PDT)
-Date: Tue, 21 Sep 2010 08:48:33 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Latencies writing to memory mapped files
-Message-ID: <20100920224833.GB2614@dastard>
-References: <20100915152633.GA2585@BohrerMBP.rgmadvisors.com>
-	<20100916001837.GF24409@dastard>
-	<20100917154523.GA2739@BohrerMBP.rgmadvisors.com>
-	<20100920000535.GM24409@dastard>
-	<20100920221726.GA3182@BohrerMBP.rgmadvisors.com>
+	o8KNIgTH240649 for <xfs@oss.sgi.com>; Mon, 20 Sep 2010 18:18:43 -0500
+Received: from web50904.mail.re2.yahoo.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with SMTP id 270F48B4CF
+	for <xfs@oss.sgi.com>; Mon, 20 Sep 2010 16:19:35 -0700 (PDT)
+Received: from web50904.mail.re2.yahoo.com (web50904.mail.re2.yahoo.com
+	[206.190.38.124]) by cuda.sgi.com with SMTP id sDIg2F54cNIYDk8s
+	for <xfs@oss.sgi.com>; Mon, 20 Sep 2010 16:19:35 -0700 (PDT)
+Message-ID: <102595.60773.qm@web50904.mail.re2.yahoo.com>
+Date: Mon, 20 Sep 2010 16:19:34 -0700 (PDT)
+From: Sanjiv Topiwalla <shtops@yahoo.com>
+Subject: XFS quota on real-time partition
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20100920221726.GA3182@BohrerMBP.rgmadvisors.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,66 +21,49 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============5141623837153782177=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Shawn Bohrer <shawn.bohrer@gmail.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: shtops@yahoo.com
 
-On Mon, Sep 20, 2010 at 05:17:26PM -0500, Shawn Bohrer wrote:
-> Thanks Dave for your explanations.
-> 
-> On Mon, Sep 20, 2010 at 10:05:35AM +1000, Dave Chinner wrote:
-> > FWIW, if you can work out the magic necessary (perhaps systemtap) it
-> > woul dbe really interesting to know whether it is the same buffer
-> > that is causing the latency every time (i.e. get the bp->b_bn field
-> > from the metadata buffer). With the block number, we can use xfs_db
-> > to dig out what the buffer actually is....
-> 
-> I'm working on a dev box right now so I just added a trace_printk() to
-> print out the bp->b_bn field when the xfs_buf_lock blocks for more
-> than 300ms.  Here are some numbers (I can easily get a lot more):
-> 
-> _xfs_buf_find: xfs_buf_lock blocked for 1843ms on bp->b_bn: 812730376
-> _xfs_buf_find: xfs_buf_lock blocked for 1504ms on bp->b_bn: 406702514
-> _xfs_buf_find: xfs_buf_lock blocked for 307ms on bp->b_bn: 881190896
-> _xfs_buf_find: xfs_buf_lock blocked for 433ms on bp->b_bn: 406703400
-> _xfs_buf_find: xfs_buf_lock blocked for 420ms on bp->b_bn: 541595968
-> _xfs_buf_find: xfs_buf_lock blocked for 308ms on bp->b_bn: 44945968
-> _xfs_buf_find: xfs_buf_lock blocked for 702ms on bp->b_bn: 406027744
-> _xfs_buf_find: xfs_buf_lock blocked for 454ms on bp->b_bn: 474486504
-> _xfs_buf_find: xfs_buf_lock blocked for 869ms on bp->b_bn: 881195976
-> _xfs_buf_find: xfs_buf_lock blocked for 387ms on bp->b_bn: 1287891544
-> _xfs_buf_find: xfs_buf_lock blocked for 397ms on bp->b_bn: 1220116224
-> _xfs_buf_find: xfs_buf_lock blocked for 461ms on bp->b_bn: 2101644280
-> _xfs_buf_find: xfs_buf_lock blocked for 312ms on bp->b_bn: 338919728
-> _xfs_buf_find: xfs_buf_lock blocked for 356ms on bp->b_bn: 1016769536
-> _xfs_buf_find: xfs_buf_lock blocked for 593ms on bp->b_bn: 474488848
-> _xfs_buf_find: xfs_buf_lock blocked for 323ms on bp->b_bn: 1022248984
-> 
-> I should say that not every one of these results in a stall in my
-> application, since my app needs to generate a page fault while that
-> lock is held.
+--===============5141623837153782177==
+Content-Type: multipart/alternative; boundary="0-258585570-1285024774=:60773"
 
-Hmmm - it would be good to know which one produced the latency,
-given there does not appear to be a pattern in the block numbers.
+--0-258585570-1285024774=:60773
+Content-Type: text/plain; charset=us-ascii
 
-> What do I need to do to convert the block numbers to a buffer?
+Hi,
 
-# xfs_db -r -c "daddr 812730376" -c "print" <dev>
+I am using linux kernel version 2.6.18 + xfs progs 3.0.0 and I can successfully perform quotas on non-real-time partitions, however, I can not set projects quotas on realtime partitions.
 
-Will dump the sector at that address. That should be enough to tell
-us what is in the buffer (by the magic number).
+Does the latest XFS support this? If so, what kernel version and xfs progs do I need?
 
-Cheers,
+Thanks,
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Sanjiv.
+
+
+
+      
+--0-258585570-1285024774=:60773
+Content-Type: text/html; charset=us-ascii
+
+<table cellspacing="0" cellpadding="0" border="0" ><tr><td valign="top" style="font: inherit;">Hi,<br><br>I am using linux kernel version 2.6.18 + xfs progs 3.0.0 and I can successfully perform quotas on non-real-time partitions, however, I can not set projects quotas on realtime partitions.<br><br>Does the latest XFS support this? If so, what kernel version and xfs progs do I need?<br><br>Thanks,<br><br>Sanjiv.<br></td></tr></table><br>
+
+      
+--0-258585570-1285024774=:60773--
+
+
+--===============5141623837153782177==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============5141623837153782177==--
