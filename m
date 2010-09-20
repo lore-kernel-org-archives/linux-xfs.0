@@ -1,24 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8K04nWK192463 for <xfs@oss.sgi.com>; Sun, 19 Sep 2010 19:04:50 -0500
+	o8K0vLwK193870 for <xfs@oss.sgi.com>; Sun, 19 Sep 2010 19:57:21 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1508E181D462
-	for <xfs@oss.sgi.com>; Sun, 19 Sep 2010 17:05:39 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 55420865D4
+	for <xfs@oss.sgi.com>; Sun, 19 Sep 2010 17:58:12 -0700 (PDT)
 Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
 	[150.101.137.99]) by cuda.sgi.com with ESMTP id
-	cbZxR2ePD8VjwXFx for <xfs@oss.sgi.com>;
-	Sun, 19 Sep 2010 17:05:39 -0700 (PDT)
-Date: Mon, 20 Sep 2010 10:05:35 +1000
+	05syMuBaWTaKrhGj for <xfs@oss.sgi.com>;
+	Sun, 19 Sep 2010 17:58:12 -0700 (PDT)
+Received: from dastard (unverified [121.44.127.68])
+	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
+	39959528-1927428
+	for <xfs@oss.sgi.com>; Mon, 20 Sep 2010 10:28:10 +0930 (CST)
+Received: from dave by dastard with local (Exim 4.71)
+	(envelope-from <david@fromorbit.com>) id 1OxUhr-0004MU-V0
+	for xfs@oss.sgi.com; Mon, 20 Sep 2010 10:58:08 +1000
+Date: Mon, 20 Sep 2010 10:58:07 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Latencies writing to memory mapped files
-Message-ID: <20100920000535.GM24409@dastard>
-References: <20100915152633.GA2585@BohrerMBP.rgmadvisors.com>
-	<20100916001837.GF24409@dastard>
-	<20100917154523.GA2739@BohrerMBP.rgmadvisors.com>
+Subject: Re: [PATCH] [RFC] xfs: prevent bmap btree from using alloc btree
+	reserved blocks
+Message-ID: <20100920005807.GN24409@dastard>
+References: <1282657533-3400-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100917154523.GA2739@BohrerMBP.rgmadvisors.com>
+In-Reply-To: <1282657533-3400-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,177 +37,160 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Shawn Bohrer <shawn.bohrer@gmail.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Fri, Sep 17, 2010 at 10:45:23AM -0500, Shawn Bohrer wrote:
-> Hi Dave,
+ping?
+
+On Tue, Aug 24, 2010 at 11:45:33PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Thanks again for your replies.
+> Recently we've had WANT_CORRUPTED_GOTO filesystem shutdowns reported
+> on filesystems with large numbers of small AGs. RedHat QA found a
+> simple test case at:
 > 
-> On Thu, Sep 16, 2010 at 10:18:37AM +1000, Dave Chinner wrote:
-> > On Wed, Sep 15, 2010 at 10:26:33AM -0500, Shawn Bohrer wrote:
-> > > Hello,
-> > > 
-> > > A little while ago I asked about ways to solve the occasional spikes in
-> > > latency that I see when writing to a shared memory mapped file.
-> > > 
-> > > http://oss.sgi.com/pipermail/xfs/2010-July/046311.html
-> > > 
-> > > With Dave's suggestions I enabled lazy-count=1 which did help a little:
-> > > 
-> > > # xfs_info /home/
-> > > meta-data=/dev/sda5              isize=256    agcount=32, agsize=8472969 blks
-> > >          =                       sectsz=512   attr=1
-> > > data     =                       bsize=4096   blocks=271135008, imaxpct=25
-> > >          =                       sunit=0      swidth=0 blks
-> > > naming   =version 2              bsize=4096   ascii-ci=0
-> > > log      =internal               bsize=4096   blocks=32768, version=1
-> > >          =                       sectsz=512   sunit=0 blks, lazy-count=1
-> > > realtime =none                   extsz=4096   blocks=0, rtextents=0
-> > > 
-> > > I'm also mounting the partition with "noatime,nobarrier,logbufs=8".
-> > 
-> > You really should add logbsize=262144 there - it won't prevent the
-> > latencies, but with less log writes the incidence should decrease
-> > significantly.
+> https://bugzilla.redhat.com/show_bug.cgi?id=626244
 > 
-> I initially tested with logbsize=256k but did not notice any
-> difference.  I then later realized that I had been doing a:
+> Which was further refined to:
 > 
-> mount -o remount,logbsize=256k /home
+> # mkfs.xfs -f -d agsize=16m,size=50g <dev>
+> # mount <dev> /mnt
+> # xfs_io -f -c 'resvsp 0 40G' /mnt/foo
 > 
-> You may also notice from above that I had version 1 logs and the max
-> logbsize for version 1 logs is 32k.  Apparently the "mount -o remount"
-> silently ignores the option.  If I instead unmount and remount it
-> complains and refuses to mount.
+> The initial analysis is in the above bug. The fundamental problem is
+> that the data extent allocation is using all the free blocks in the
+> allocation group, and then the bmap btree block allocation is
+> dipping into the reserved block pool that each AG holds for
+> freespace btree manipulations. This results in failures when
+> multiple bmap btree blocks are needed for a multilevel split of the
+> bmap btree.
 > 
-> Yesterday I converted to version 2 logs and ran tests for an hour with
-> both logbsize=32k and logbsize=256k and I still don't see any
-> noticeable difference.  This of course assumes I tested correctly this
-> time.
-
-You may not notice any difference if the log is not the latency you
-are tripping over. However, doing up to 8x less log IO is definitely
-good for reducing overall IO latency...
-
-> > > The other change I made which helped the most was to use fallocate()
-> > > to grow the file instead of lseek() and a write().
-> > 
-> > Ok, so now you are doing unwritten extent conversion at IO
-> > completion, which is where this new latency issue has come from.
+> The reason this is occurring is that when we do a btree block
+> allocation after a data extent allocation we run down the path that
+> does not set up the minleft allocation parameter. That is, we allow
+> the btree block allocation to use up all the blocks in the current
+> AG if that is what will make the current allocation succeed. This
+> what we are supposed to only allow the low space allocation
+> algorithm to do, not a normal allocation. The result is that we can
+> allocate the first block from the AG freelist, and then the second
+> block allocation in the split will fail in the same AG because we do
+> not have a minleft parameter set and hence will not pass the checks
+> in xfs_alloc_fix_freelist() and hence the allocation will fail.
+> Further, because no minleft parameter is set, the btree block
+> allocation will not retry the allocation with different parameters
+> and (potentially) enable the low space algorithm.
 > 
-> I'm a complete newbie when it comes to filesystems.  For my education
-> would you mind elaborating a little more here, or pointing to
-> something I could read?
+> The result is that we fail a btree block allocation and hence fail
+> the extent allocation with a dirty btree and transaction. The dirty
+> btree causes the WANT_CORRUPTED_GOTO warning, and cancelling the
+> dirty transaction triggers the shutdown.
 > 
-> An extent describes a contiguous section of data on disk correct?
-
-yes.
-
-> So when the page fault occurs and modifies the block the extent is
-> modified in memory to record the change?
-
-Not exactly.
-
-> What does "conversion" mean
-> in this context?  And as silly as it sounds what exactly does IO
-> completion refer to?  Is this when the data is written to disk?
-
-When you preallocate a range, the blocks are allocated on disk, but
-nothing is written to them. Hence there has to be some mechanism
-recorded with the extent to prevent reads from the extent returning
-whatever is on disk (security issue). IOWs we want a read into
-preallocated space to be functionally equivalent of reading from a
-hole - i.e. like no space was allocated at all.
-
-This means that the extent has state on disk to record the fact it
-is an "unwritten extent" - it's allocated but contains nothing but
-zeros. When we then write data to that extent, the extent state must
-change to remove the "unwritten" flag so that reads will then
-reflect the correct data that has been written to disk. The changing
-of the extent state from unwritten to written is what I referred to
-as "conversion" above.
-
-As to the "conversion at IO completion", if we convert the extent to
-written state before the data IO is issued, then there is a window
-where a system crash/power-fail/etc could occur between the extent
-conversion and the real data being written to disk. IOWs, we could
-convert the extent and then never write data to the range we
-converted. This would then expose stale data from disk next time the
-extent is read.
-
-To avoid this problem, we wait for the data IO to complete (i.e. we
-get the interrupt back from the hardware saying "write done") before
-we convert the extent from unwritten to written. This means that
-even if we crash after the conversion, we will never expose stale
-data from the (un)written extent because we've already written the
-correct data to it before starting the conversion.
-
-> > Ok, the transaction was blocked on a buffer that had it's IO
-> > completion queued to the xfslogd. But this happened some
-> > 320ms after the above page fault occurred, and 340ms after the
-> > xfsconvertd got stuck waiting for it. In other words, it looks
-> > like it it took at least 340ms for the buffer IO to complete after
-> > it was issued.
+> The fix appears to be to ensure that we set the minleft parameter
+> correctly to reflect the potential number of btree blocks we still
+> need to allocate from the same AG if we are doing a worst case
+> split. By doing so, the particular case results in the first btree
+> block allocation setting minleft to the number of blocks needed for
+> a split. Hence the AG that we just allocated all the free blocks out
+> of for the data extent will fail because there are not enough free
+> blocks for all the blocks in the split in the AG. It will fail this
+> without dirtying anything, and because minleft is now > 0, will
+> trigger the retry algorithm.
 > 
-> OK, so xfslogd is writing the log, which frees up log buffers.
-> Meanwhile xfsconvertd is waiting on a free buffer so it can write more
-> to the log correct? 
-
-No. The xfslogd runs both metadata buffer and log buffer IO
-completion processing - it does not write to the log. In this case,
-xfsconvertd is waiting for a metadata buffer IO completion
-processing to unlock the buffer (metadata buffers are locked over IO
-so they are not modified during writeback) because it needs to use
-that metadata buffer in the transaction.
-
-Log buffers and metadata buffers are very different in behaviour and
-lifecycle.
-
-> I get why you suggest increasing logbsize but I'm curious why I don't
-> see any difference.  Could it be because I always end up running out
-> of log buffers during writeback even at 256k so some of the I/O gets
-> stalled anyway?  Maybe increasing the logbsize increases the threshold
-> of the amount of data I can writeback before I see a spike?
-
-The cause of this latency event is not at all related to the log
-buffer size, which is why changing the size of the buffer will not
-prevent it.
-
+> The fallback algorithm also needs a slight modification. It
+> currently assumes that if minleft is set, no allocation has been
+> done yet, so it can scan from AG 0 to find a free block. If it is
+> left like this, it can trigger deadlocks from the new case as we
+> have a prior allocation and hence cannot allocate from an AG less
+> than the current AG. Hence it is modified to use a START_AG
+> allocation to scan upwards from the current AG, hence avoiding the
+> known AG locking deadlocks.
 > 
-> > And so the delay you app saw was ~320ms. Basically, it blocked
-> > waiting for an IO to complete. I don't think there is anything we ca
-> > really do from a filesystem point of view to avoid that - we cannot
-> > avoid metadata buffer writeback indefinitely.
+> As far as I can tell, the bmap btree code has never handled this
+> case properly - I checked as far back as 1995 and minleft has never
+> been set to avoid selecting an AG that cannot be allocated out of...
 > 
-> One more bit of information which may be relevant here is that since I
-> see these latencies during writeback I've increased
-> vm.dirty_writeback_centisecs from the default 500 to 30000.
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_bmap_btree.c |   51 ++++++++++++++++++++++++++++++++++++++--------
+>  1 files changed, 42 insertions(+), 9 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_bmap_btree.c b/fs/xfs/xfs_bmap_btree.c
+> index 87d3c10..d5ef4e3 100644
+> --- a/fs/xfs/xfs_bmap_btree.c
+> +++ b/fs/xfs/xfs_bmap_btree.c
+> @@ -538,6 +538,25 @@ xfs_bmbt_alloc_block(
+>  		args.type = XFS_ALLOCTYPE_START_BNO;
+>  	} else {
+>  		args.type = XFS_ALLOCTYPE_NEAR_BNO;
+> +
+> +		/*
+> +		 * we've come in here because this is the second or subsequent
+> +		 * btree block we need to allocate for the bmap btree
+> +		 * modification. If we've just emptied the AG and there are
+> +		 * only free list blocks left, we need to make sure that we
+> +		 * take into account the minleft value that was reserved on the
+> +		 * first allocation through here (the NULLFSBLOCK branch
+> +		 * above). In that case, minleft will already take into account
+> +		 * the maximum number of blocks needed for a btree split, and
+> +		 * the number of blocks already allocated is recorded in the
+> +		 * cursor. From that, we can work out exactly how much smaller
+> +		 * the minleft should be so that we don't select an AG that
+> +		 * does not have enough blocks available to continue the entire
+> +		 * btree split.
+> +		 */
+> +		args.minleft = XFS_BM_MAXLEVELS(args.mp,
+> +					(int)cur->bc_private.b.whichfork) - 1 -
+> +				cur->bc_private.b.allocated;
+>  	}
+>  
+>  	args.minlen = args.maxlen = args.prod = 1;
+> @@ -550,15 +569,29 @@ xfs_bmbt_alloc_block(
+>  	if (error)
+>  		goto error0;
+>  
+> -	if (args.fsbno == NULLFSBLOCK && args.minleft) {
+> -		/*
+> -		 * Could not find an AG with enough free space to satisfy
+> -		 * a full btree split.  Try again without minleft and if
+> -		 * successful activate the lowspace algorithm.
+> -		 */
+> -		args.fsbno = 0;
+> -		args.type = XFS_ALLOCTYPE_FIRST_AG;
+> -		args.minleft = 0;
+> +	while (args.fsbno == NULLFSBLOCK && args.minleft) {
+> +		if (cur->bc_private.b.firstblock == NULLFSBLOCK) {
+> +			/*
+> +			 * Could not find an AG with enough free space to satisfy
+> +			 * a full btree split.  Try again without minleft and if
+> +			 * successful activate the lowspace algorithm.
+> +			 */
+> +			args.type = XFS_ALLOCTYPE_FIRST_AG;
+> +			args.fsbno = 0;
+> +			args.minleft = 0;
+> +		} else {
+> +			/*
+> +			 * Failed to find enough space for a btree block after
+> +			 * a extent allocation has already occurred. Continue
+> +			 * searching other AGs that can hold the remaining
+> +			 * blocks. If we fail with minleft set, then clear it
+> +			 * and try again.
+> +			 */
+> +			args.type = XFS_ALLOCTYPE_START_AG;
+> +			args.fsbno = cur->bc_private.b.firstblock;
+> +			if (cur->bc_private.b.flist->xbf_low)
+> +				args.minleft = 0;
+> +		}
+>  		error = xfs_alloc_vextent(&args);
+>  		if (error)
+>  			goto error0;
+> -- 
+> 1.7.1
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
-Sure - you see the latency during writeback, so it's no surprise it
-happens less often when you increase the writeback period.
-
-> I'm OK
-> with loosing 5 minutes of data in the event of a crash, and at our
-> data rates we still stay well below the vm.dirty_background_ratio.
-> This does improve the spikes (I only see them every 5 min) but
-> intuitively this seems like might actually make the magnitude of the
-> delays larger since there is more to write back.  Strangely from my
-> point of view it doesn't seem to increase the magnitude of the spikes,
-
-Because you're still only being held up by waiting for a single
-metadata buffer completion?
-
-FWIW, if you can work out the magic necessary (perhaps systemtap) it
-woul dbe really interesting to know whether it is the same buffer
-that is causing the latency every time (i.e. get the bp->b_bn field
-from the metadata buffer). With the block number, we can use xfs_db
-to dig out what the buffer actually is....
-
-Cheers,
-
-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
