@@ -1,17 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8LGMMv7018631 for <xfs@oss.sgi.com>; Tue, 21 Sep 2010 11:22:22 -0500
-Subject: Re: [PATCH 0/18] xfs: metadata and buffer cache scalability
-	improvements
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20100921020203.GC2614@dastard>
-References: <1284461777-1496-1-git-send-email-david@fromorbit.com>
-	<1284729700.5524.53.camel@doink>  <20100921020203.GC2614@dastard>
-Date: Tue, 21 Sep 2010 11:23:12 -0500
-Message-ID: <1285086192.2024.17.camel@doink>
-Mime-Version: 1.0
-Reply-To: aelder@sgi.com
+	o8LI4waa022549 for <xfs@oss.sgi.com>; Tue, 21 Sep 2010 13:04:58 -0500
+Received: from mail-qw0-f53.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A1562182DD90
+	for <xfs@oss.sgi.com>; Tue, 21 Sep 2010 11:05:50 -0700 (PDT)
+Received: from mail-qw0-f53.google.com (mail-qw0-f53.google.com
+	[209.85.216.53]) by cuda.sgi.com with ESMTP id AvByGY55BKdtFgD1
+	for <xfs@oss.sgi.com>; Tue, 21 Sep 2010 11:05:50 -0700 (PDT)
+Received: by qwe5 with SMTP id 5so4796574qwe.26
+	for <xfs@oss.sgi.com>; Tue, 21 Sep 2010 11:05:50 -0700 (PDT)
+Date: Tue, 21 Sep 2010 13:05:41 -0500
+From: Shawn Bohrer <shawn.bohrer@gmail.com>
+Subject: Re: Latencies writing to memory mapped files
+Message-ID: <20100921180541.GA6877@BohrerMBP.rgmadvisors.com>
+References: <20100915152633.GA2585@BohrerMBP.rgmadvisors.com>
+	<20100916001837.GF24409@dastard>
+	<20100917154523.GA2739@BohrerMBP.rgmadvisors.com>
+	<20100920000535.GM24409@dastard>
+	<20100920221726.GA3182@BohrerMBP.rgmadvisors.com>
+	<20100920224833.GB2614@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20100920224833.GB2614@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,41 +36,203 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: XFS Mailing List <xfs@oss.sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Tue, 2010-09-21 at 12:02 +1000, Dave Chinner wrote:
-> On Fri, Sep 17, 2010 at 08:21:40AM -0500, Alex Elder wrote:
-> > On Tue, 2010-09-14 at 20:55 +1000, Dave Chinner wrote:
-> > > This patchset has grown quite a bit - it started out as a "convert
-> > > the buffer cache to rbtrees" patch, and has gotten bigger as I
-> > > peeled the onion from one bottleneck to another.
-. . .
-
+On Tue, Sep 21, 2010 at 08:48:33AM +1000, Dave Chinner wrote:
+> On Mon, Sep 20, 2010 at 05:17:26PM -0500, Shawn Bohrer wrote:
+> > On Mon, Sep 20, 2010 at 10:05:35AM +1000, Dave Chinner wrote:
+> > > FWIW, if you can work out the magic necessary (perhaps systemtap) it
+> > > woul dbe really interesting to know whether it is the same buffer
+> > > that is causing the latency every time (i.e. get the bp->b_bn field
+> > > from the metadata buffer). With the block number, we can use xfs_db
+> > > to dig out what the buffer actually is....
+> > 
+> > I'm working on a dev box right now so I just added a trace_printk() to
+> > print out the bp->b_bn field when the xfs_buf_lock blocks for more
+> > than 300ms.  Here are some numbers (I can easily get a lot more):
+> > 
+> > _xfs_buf_find: xfs_buf_lock blocked for 1843ms on bp->b_bn: 812730376
+> > _xfs_buf_find: xfs_buf_lock blocked for 1504ms on bp->b_bn: 406702514
+> > _xfs_buf_find: xfs_buf_lock blocked for 307ms on bp->b_bn: 881190896
+> > _xfs_buf_find: xfs_buf_lock blocked for 433ms on bp->b_bn: 406703400
+> > _xfs_buf_find: xfs_buf_lock blocked for 420ms on bp->b_bn: 541595968
+> > _xfs_buf_find: xfs_buf_lock blocked for 308ms on bp->b_bn: 44945968
+> > _xfs_buf_find: xfs_buf_lock blocked for 702ms on bp->b_bn: 406027744
+> > _xfs_buf_find: xfs_buf_lock blocked for 454ms on bp->b_bn: 474486504
+> > _xfs_buf_find: xfs_buf_lock blocked for 869ms on bp->b_bn: 881195976
+> > _xfs_buf_find: xfs_buf_lock blocked for 387ms on bp->b_bn: 1287891544
+> > _xfs_buf_find: xfs_buf_lock blocked for 397ms on bp->b_bn: 1220116224
+> > _xfs_buf_find: xfs_buf_lock blocked for 461ms on bp->b_bn: 2101644280
+> > _xfs_buf_find: xfs_buf_lock blocked for 312ms on bp->b_bn: 338919728
+> > _xfs_buf_find: xfs_buf_lock blocked for 356ms on bp->b_bn: 1016769536
+> > _xfs_buf_find: xfs_buf_lock blocked for 593ms on bp->b_bn: 474488848
+> > _xfs_buf_find: xfs_buf_lock blocked for 323ms on bp->b_bn: 1022248984
+> > 
+> > I should say that not every one of these results in a stall in my
+> > application, since my app needs to generate a page fault while that
+> > lock is held.
 > 
-> All together, with the LRU code being reworked a bit w.r.t. stale
-> buffers and shrinker behaviour.
+> Hmmm - it would be good to know which one produced the latency,
+> given there does not appear to be a pattern in the block numbers.
+
+OK here is a little more information which may be relevant.  I've
+currently got 12 processes that read data from a socket and each write
+to a different memory mapped file.  The apps are only appending to the
+file, but they don't write the data in one sequential chunk so it is
+quite possible that it appears as random IO for a short time period.
+
+This time I made some more modifications so that I would only capture
+the bp->b_bn when one of my processes sees a delay of 300ms or greater.
+There still is a small chance for false positives, but most of these
+should have caused real delays.  All of the following came from the
+same process:
+
+[001] 81758.886627: _xfs_buf_find: xfs_buf_lock blocked for 871ms on bp->b_bn: 474487328
+[001] 81920.808163: _xfs_buf_find: xfs_buf_lock blocked for 1038ms on bp->b_bn: 474487568
+[001] 82933.428627: _xfs_buf_find: xfs_buf_lock blocked for 767ms on bp->b_bn: 542273864
+[000] 83048.558413: _xfs_buf_find: xfs_buf_lock blocked for 363ms on bp->b_bn: 474488080
+[001] 86717.251189: _xfs_buf_find: xfs_buf_lock blocked for 514ms on bp->b_bn: 474487560
+[001] 88466.635802: _xfs_buf_find: xfs_buf_lock blocked for 380ms on bp->b_bn: 542274544
+[000] 88972.122062: _xfs_buf_find: xfs_buf_lock blocked for 521ms on bp->b_bn: 474487560
+[001] 89271.988589: _xfs_buf_find: xfs_buf_lock blocked for 496ms on bp->b_bn: 474487560
+[001] 91046.566309: _xfs_buf_find: xfs_buf_lock blocked for 540ms on bp->b_bn: 474487560
+[001] 91047.280042: _xfs_buf_find: xfs_buf_lock blocked for 713ms on bp->b_bn: 542274216
+[001] 91212.458472: _xfs_buf_find: xfs_buf_lock blocked for 490ms on bp->b_bn: 542274544
+[001] 92397.667196: _xfs_buf_find: xfs_buf_lock blocked for 549ms on bp->b_bn: 474487560
+
+> > What do I need to do to convert the block numbers to a buffer?
 > 
-> In reality, though, i don't think that separating them into separate
-> series make much sense. The order they are in right now is
-> bisectable and fairly logical....
+> # xfs_db -r -c "daddr 812730376" -c "print" <dev>
+> 
+> Will dump the sector at that address. That should be enough to tell
+> us what is in the buffer (by the magic number).
 
-I have been thinking about this since sending it.  I think my
-concern was not so much that they were all in one series.  It's
-more about the fact that you are doing a number of non-trivial
-changes, all together.  And as such my perception of the combined
-risk of committing them all at once is higher.  So what I was
-probably after was somehow being able to verify each chunk of
-the series separately, spilling them out gradually rather
-than all at once.
+So I have no idea what I'm looking at but here is the output for the
+above numbers (duplicates removed):
 
-But in the end, I guess I agree with what you say.  If we could
-get some parts--like those you say are standalone--committed
-earlier (and then out for wider exposure sooner) that would be
-good, but otherwise it's OK as a single series.  I'll look for
-your next update, and will just wait for pull request(s) when
-you feel they're ready.
+xfs_db -r -c "daddr 474487328" -c "print" /dev/sda5
+000: 424d4150 0000007f 00000000 07000082 00000000 07000092 00000000 0039a000
+020: 0002c085 ede00009 80000000 0039b200 0002c085 ef000017 00000000 0039e000
+040: 0002c085 f1e0008d 80000000 003afa00 0002c086 03800007 00000000 003b0800
+060: 0002c086 0460000b 80000000 003b1e00 0002c086 05c00001 00000000 003b2000
+080: 0002c086 05e000ce 80000000 003cbc00 0002c086 1fa0001a 00000000 003cf000
+0a0: 0002c086 22e00027 80000000 003d3e00 0002c086 27c00001 00000000 003d4000
+0c0: 0002c086 27e00001 80000000 003d4200 0002c086 28000007 00000000 003d5000
+0e0: 0002c086 28e00010 80000000 003d7000 0002c086 2ae00030 00000000 003dd000
+100: 0002c086 30e0003a 80000000 003e4400 0002c086 38200006 00000000 003e5000
+120: 0002c086 38e00086 80000000 003f5c00 0002c086 49a00002 00000000 003f6000
+140: 0002c086 49e00009 80000000 003f7200 0002c086 4b000007 00000000 003f8000
+160: 0002c0ac dec00004 80000000 003f8800 0002c0ac df400004 00000000 003f9000
+180: 0002c0ac dfc00011 80000000 003fb200 0002c0ac e1e00007 00000000 003fc000
+1a0: 0002c0ac e2c00001 80000000 003fc200 0002c0ac e2e00007 00000000 003fd000
+1c0: 0002c0ac e3c00072 80000000 0040b400 0002c0ac f200000e 00000000 0040d000
+1e0: 0002c0ac f3c00025 80000000 00411a00 0002c0ac f8600007 00000000 00412800
+xfs_db -r -c "daddr 474487568" -c "print" /dev/sda5
+000: 424d4150 000000be 00000000 070000a1 00000000 070000a4 00000000 008b8800
+020: 0002c133 39600003 80000000 008b8e00 0002c133 39c00005 00000000 008b9800
+040: 0002c133 3a600001 80000000 008b9a00 0002c133 3a800007 00000000 008ba800
+060: 0002c133 3b600001 80000000 008baa00 0002c133 3b800007 00000000 008bb800
+080: 0002c133 3c600001 80000000 008bba00 0002c133 3c800007 00000000 008bc800
+0a0: 0002c133 3d600001 80000000 008bca00 0002c133 3d800007 00000000 008bd800
+0c0: 0002c133 3e600001 80000000 008bda00 0002c133 3e800007 00000000 008be800
+0e0: 0002c133 3f60000a 80000000 008bfc00 0002c133 40a00006 00000000 008c0800
+100: 0002c133 41600001 80000000 008c0a00 0002c133 41800007 00000000 008c1800
+120: 0002c133 4260000c 80000000 008c3000 0002c133 43e00004 00000000 008c3800
+140: 0002c133 44600004 80000000 008c4000 0002c133 44e00004 00000000 008c4800
+160: 0002c133 45600001 80000000 008c4a00 0002c133 45800007 00000000 008c5800
+180: 0002c133 4660000a 80000000 008c6c00 0002c133 47a00006 00000000 008c7800
+1a0: 0002c133 48600009 80000000 008c8a00 0002c133 49800007 00000000 008c9800
+1c0: 0002c133 4a600003 80000000 008c9e00 0002c133 4ac00005 00000000 008ca800
+1e0: 0002c133 4b600009 80000000 008cba00 0002c133 4c800007 00000000 008cc800
+xfs_db -r -c "daddr 542273864" -c "print" /dev/sda5
+000: 424d4150 000000ce 00000000 080001e3 00000000 0800020b 80000000 05a45600
+020: 0002c1a5 34e00005 00000000 05a46000 0002c1a5 3580000c 80000000 05a47800
+040: 0002c1a5 37000004 00000000 05a48000 0002c1a5 37800011 80000000 05a4a200
+060: 0002c1a5 39a00017 00000000 05a4d000 0002c1a5 3c80000e 80000000 05a4ec00
+080: 0002c1a5 3e400002 00000000 05a4f000 0002c1a5 3e800003 80000000 05a4f600
+0a0: 0002c1a5 3ee00001 00000000 05a4f800 0002c1a5 3f000009 80000000 05a50a00
+0c0: 0002c1a5 40200007 00000000 05a51800 0002c1a5 41000104 80000000 05a72000
+0e0: 0002c1a5 61800004 00000000 05a72800 0002c1a5 6200000d 80000000 05a74200
+100: 0002c1a5 63a00003 00000000 05a74800 0002c1a5 6400005f 80000000 05a80600
+120: 0002c1a5 6fe000a1 00000000 05a94800 0002c1a5 84000001 80000000 05a94a00
+140: 0002c1a5 84200007 00000000 05a95800 0002c1a5 85000013 80000000 05a97e00
+160: 0002c1a5 8760000d 00000000 05a99800 0002c1a5 89000036 80000000 05aa0400
+180: 0002c1a5 8fc0000a 00000000 05aa1800 0002c1a5 91000015 80000000 05aa4200
+1a0: 0002c1a5 93a0002b 00000000 05aa9800 0002c1a5 990000ba 80000000 05ac0c00
+1c0: 0002c1a5 b0400046 00000000 05ac9800 0002c1a5 b9000014 80000000 05acc000
+1e0: 0002c1a5 bb80000c 00000000 05acd800 0002c1a5 bd000015 80000000 05ad0200
+xfs_db -r -c "daddr 474488080" -c "print" /dev/sda5
+000: 424d4150 000000ab 00000000 070000e2 00000000 070000e4 80000000 00fbb200
+020: 0002c13a 3c000003 00000000 00fbb800 0002c13a 3c600005 80000000 00fbc200
+040: 0002c13a 3d000003 00000000 00fbc800 0002c13a 3d600002 80000000 00fbcc00
+060: 0002c13a 3da00006 00000000 00fbd800 0002c13a 3e60000b 80000000 00fbee00
+080: 0002c13a 3fc00005 00000000 00fbf800 0002c13a 40600001 80000000 00fbfa00
+0a0: 0002c13a 40800007 00000000 00fc0800 0002c13a 41600005 80000000 00fc1200
+0c0: 0002c13a 42000003 00000000 00fc1800 0002c13a 42600009 80000000 00fc2a00
+0e0: 0002c13a 43800007 00000000 00fc3800 0002c13a 44600001 80000000 00fc3a00
+100: 0002c13a 44800007 00000000 00fc4800 0002c13a 4560000a 80000000 00fc5c00
+120: 0002c13a 46a00006 00000000 00fc6800 0002c13a 47600004 80000000 00fc7000
+140: 0002c13a 47e00004 00000000 00fc7800 0002c13a 4860000b 80000000 00fc8e00
+160: 0002c13a 49c00005 00000000 00fc9800 0002c13a 4a600005 80000000 00fca200
+180: 0002c13a 4b000003 00000000 00fca800 0002c13a 4b600002 80000000 00fcac00
+1a0: 0002c13a 4ba00006 00000000 00fcb800 0002c13a 4c600002 80000000 00fcbc00
+1c0: 0002c13a 4ca00006 00000000 00fcc800 0002c13a 4d600003 80000000 00fcce00
+1e0: 0002c13a 4dc00005 00000000 00fcd800 0002c13a 4e60000b 80000000 00fcee00
+xfs_db -r -c "daddr 542274216" -c "print" /dev/sda5
+000: 424d4150 000000dc 00000000 0800020b 00000000 08000208 80000000 0609fc00
+020: 0002c1ab 8f40000e 00000000 060a1800 0002c1ab 9100005f 80000000 060ad600
+040: 0002c1ab 9ce000a1 00000000 060c1800 0002c1ab b1000006 80000000 060c2400
+060: 0002c1ab b1c00002 00000000 060c2800 0002c1ab b2000012 80000000 060c4c00
+080: 0002c1ab b440000e 00000000 060c6800 0002c1ab b6000012 80000000 060c8c00
+0a0: 0002c1ab b840002e 00000000 060ce800 0002c1ab be000011 80000000 060d0a00
+0c0: 0002c1ab c020002f 00000000 060d6800 0002c1ab c600000b 80000000 060d7e00
+0e0: 0002c1ab c7600015 00000000 060da800 0002c1ab ca000011 80000000 060dca00
+100: 0002c1ab cc20000f 00000000 060de800 0002c1ab ce00011a 80000000 06101c00
+120: 0002c1ab f1400012 00000000 06104000 0002c1ab f3800021 80000000 06108200
+140: 0002c1ab f7a00007 00000000 06109000 0002c1ab f8800001 80000000 06109200
+160: 0002c1ab f8a00007 00000000 0610a000 0002c1ab f980000c 80000000 0610b800
+180: 0002c1ab fb000034 00000000 06112000 0002c1ac 01800009 80000000 06113200
+1a0: 0002c1ac 02a00007 00000000 06114000 0002c1ac 03800001 80000000 06114200
+1c0: 0002c1ac 03a00007 00000000 06115000 0002c1ac 04800001 80000000 06115200
+1e0: 0002c1ac 04a00007 00000000 06116000 0002c1ac 05800011 80000000 06118200
+xfs_db -r -c "daddr 542274544" -c "print" /dev/sda5
+000: 424d4150 0000007f 00000000 08000234 00000000 08000238 80000000 04089200
+020: 0002c18b 78a00007 00000000 0408a000 0002c18b 79800001 80000000 0408a200
+040: 0002c18b 79a00007 00000000 0408b000 0002c18b 7a800001 80000000 0408b200
+060: 0002c18b 7aa00007 00000000 0408c000 0002c18b 7b800001 80000000 0408c200
+080: 0002c18b 7ba00007 00000000 0408d000 0002c18b 7c80002d 80000000 04092a00
+0a0: 0002c18b 82200003 00000000 04093000 0002c18b 8280001d 80000000 04096a00
+0c0: 0002c18b 86200003 00000000 04097000 0002c18b 86800029 80000000 0409c200
+0e0: 0002c18b 8ba00007 00000000 0409d000 0002c18b 8c8000d8 80000000 040b8000
+100: 0002c18b a7800004 00000000 040b8800 0002c18b a8000011 80000000 040baa00
+120: 0002c18b aa200007 00000000 040bb800 0002c18b ab000001 80000000 040bba00
+140: 0002c18b ab200007 00000000 040bc800 0002c18b ac000011 80000000 040bea00
+160: 0002c18b ae200007 00000000 040bf800 0002c18b af000179 80000000 040eea00
+180: 0002c18b de200007 00000000 040ef800 0002c18b df000011 80000000 040f1a00
+1a0: 0002c18b e1200007 00000000 040f2800 0002c18b e2000021 80000000 040f6a00
+1c0: 0002c18b e6200003 00000000 040f7000 0002c18b e6800001 80000000 040f7200
+1e0: 0002c18b e6a00007 00000000 040f8000 0002c18b e78000a9 80000000 0410d200
+xfs_db -r -c "daddr 474487560" -c "print" /dev/sda5
+000: 424d4150 0001003e ffffffff ffffffff ffffffff ffffffff 00000000 00000000
+020: 00000000 0000257d 00000000 0000297e 00000000 00002d7f 00000000 000031b6
+040: 00000000 000035bd 00000000 000039c5 00000000 00003dcd 00000000 000041dd
+060: 00000000 000045c4 00000000 000049c0 00000000 00004dd8 00000000 000051d8
+080: 00000000 000055e3 00000000 000059c8 00000000 00005dc7 00000000 000061bc
+0a0: 00000000 000065b4 00000000 000069b4 00000000 00006dc5 00000000 000071cc
+0c0: 00000000 000075cc 00000000 000079d4 00000000 00007dd9 00000000 000081db
+0e0: 00000000 000085cd 00000000 000089bd 00000000 00008dcd 00000000 000092f1
+100: 00000000 000099ac 00000000 0000a049 00000000 0000a56d 00000000 0000abe8
+120: 00000000 0000b349 00000000 0000bd14 00000000 0000cb27 00000000 0000dcd0
+140: 00000000 0000f248 00000000 000105e5 00000000 00011fe0 00000000 0001401c
+160: 00000000 000149fd 00000000 00014ce9 00000000 00016649 00000000 0001a524
+180: 00000000 0001df90 00000000 00020449 00000000 00021e84 00000000 00023c74
+1a0: 00000000 00027290 00000000 00028a92 00000000 0002a188 00000000 0002bcbf
+1c0: 00000000 0002d22b 00000000 0002e811 00000000 000304fe 00000000 000321a8
+1e0: 00000000 00033aca 00000000 000353e5 00000000 00036dc5 00000000 00038a39
 
-					-Alex
+
+Thanks,
+Shawn
 
 _______________________________________________
 xfs mailing list
