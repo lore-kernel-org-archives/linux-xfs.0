@@ -1,20 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8LDgLpi012463
-	for <linux-xfs@oss.sgi.com>; Tue, 21 Sep 2010 08:42:22 -0500
-Received: from mail.researchandmarkets.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with SMTP id 93DA5182ABD9
-	for <linux-xfs@oss.sgi.com>; Tue, 21 Sep 2010 06:43:13 -0700 (PDT)
-Received: from mail.researchandmarkets.net ([193.189.67.213]) by cuda.sgi.com
-	with SMTP id yh6H5YW8w0Jzju0G for <linux-xfs@oss.sgi.com>;
-	Tue, 21 Sep 2010 06:43:13 -0700 (PDT)
-From: "Rachel Thompson" <rachel.thompson@researchandmarkets.org>
-Subject: =?ISO-8859-1?Q?Intersect360 Research Site Census Report =2D Storage?=
-Date: Tue, 21 Sep 2010 13:43:12 GMT
-MIME-Version: 1.0
-Message-Id: <20100921134313.93DA5182ABD9@cuda.sgi.com>
-Reply-To: Rachel Thompson <rachel.thompson@researchandmarkets.org>
+	o8LGMMv7018631 for <xfs@oss.sgi.com>; Tue, 21 Sep 2010 11:22:22 -0500
+Subject: Re: [PATCH 0/18] xfs: metadata and buffer cache scalability
+	improvements
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <20100921020203.GC2614@dastard>
+References: <1284461777-1496-1-git-send-email-david@fromorbit.com>
+	<1284729700.5524.53.camel@doink>  <20100921020203.GC2614@dastard>
+Date: Tue, 21 Sep 2010 11:23:12 -0500
+Message-ID: <1285086192.2024.17.camel@doink>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,96 +24,42 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: XFS Mailing List <xfs@oss.sgi.com>
 
-I enclose details of our high-performance computing storage market report.   
+On Tue, 2010-09-21 at 12:02 +1000, Dave Chinner wrote:
+> On Fri, Sep 17, 2010 at 08:21:40AM -0500, Alex Elder wrote:
+> > On Tue, 2010-09-14 at 20:55 +1000, Dave Chinner wrote:
+> > > This patchset has grown quite a bit - it started out as a "convert
+> > > the buffer cache to rbtrees" patch, and has gotten bigger as I
+> > > peeled the onion from one bottleneck to another.
+. . .
 
-This fourth report in our Site Census series provides an examination of the storage characteristics and capacities found at a sample of HPC user sites. We surveyed a broad range of users about their current computer system installations, storage systems, networks, middleware, and software supporting these computer installations. The initial three reports, HPC User Site Census: Systems, HPC User Site Census: Processors, and HPC User Site Census: Interconnects/Networks focused on server suppliers, server node characteristics, processors-related trends, and system interconnect and network utilization.   
+> 
+> All together, with the LRU code being reworked a bit w.r.t. stale
+> buffers and shrinker behaviour.
+> 
+> In reality, though, i don't think that separating them into separate
+> series make much sense. The order they are in right now is
+> bisectable and fairly logical....
 
-Our goal in this analysis of storage systems is to examine storage usage within the HPC user communities and explore how this usage varies based on categories such as storage capacity and its location, storage supplier, storage network, etc.   
+I have been thinking about this since sending it.  I think my
+concern was not so much that they were all in one series.  It's
+more about the fact that you are doing a number of non-trivial
+changes, all together.  And as such my perception of the combined
+risk of committing them all at once is higher.  So what I was
+probably after was somehow being able to verify each chunk of
+the series separately, spilling them out gradually rather
+than all at once.
 
-Key findings of the survey include the following:   
+But in the end, I guess I agree with what you say.  If we could
+get some parts--like those you say are standalone--committed
+earlier (and then out for wider exposure sooner) that would be
+good, but otherwise it's OK as a single series.  I'll look for
+your next update, and will just wait for pull request(s) when
+you feel they're ready.
 
-- Approximately 47% of the total maximum available storage at respondent's sites resides on compute servers. Storage available to each node (referred to as node-level storage) represents 7% of the capacity, and storage available to the server (referred to as system-level storage) accounts for 40% of the total available storage. The remaining 53% of storage is found at the site level, generally on NAS or SAN systems. On average, 450TB of storage resides at the site level on a storage system.   
-
-- About 75% of the 147 sites have at least one site-level storage system installed. No vendor dominates the storage system market for HPC sites. IBM has the largest share with 10.7% but is closely followed by EMC and Sun with 10.1% each. However, "in-house" and "generic" solutions combine to account for 10.7% of the storage systems installed. We see this last value as reflecting the commodity nature of storage components and the availability of open software for storage systems.   
-
-- NAS (Networked-Attached Storage) and SAN (Storage Area Network) had almost equal representation in the surveyed HPC sites, with 39% SAN and 34% NAS. Commercial sites are more likely to have a NAS storage system while academic sites are more likely to have a SAN storage system.   
-
-- The majority of NAS storage systems are connected using 1 Gigabit Ethernet. Only 8% of the systems were connected to a 10 Gigabit Ethernet network   
-
-- Most storage management software (38%) in use by these sites was provided by the storage system vendor. Very little penetration by add-on storage management suppliers was reported.   
-
-For more information please click on:   
-http://www.researchandmarkets.com/product/18f47a/intersect360_research_site_census_report_st   
-
-Title Index:   
-
-EXECUTIVE SUMMARY   
-
-INTRODUCTION   
-
-METHODOLOGY NOTES   
-
-RESULTS AND ANALYSIS   
-Storage Hierarchy Capacity   
-Local Disk Capacity   
-Node and System-level storage Capacity by System Architecture   
-Site-Level Storage System Analysis   
-Site-Level Storage Systems by Supplier   
-Site-Level Storage Systems by Storage Type   
-Site Level Systems by Primary Network   
-Site-Level Storage Capacity by Primary Network   
-Node-Level Storage by Interconnect   
-Storage Management Software   
-
-CONCLUSIONS   
-Data Explosion and Rebalancing the HPC Market   
-Guidance to Vendors   
-
-
-Pricing:   
-
-Electronic  (Single User) : EUR 3742   
-
-
-Ordering - Three easy ways to place your order:   
-
-1] Order online at http://www.researchandmarkets.com/product/18f47a/intersect360_research_site_census_report_st   
-
-2] Order by fax: Print an Order form from http://www.researchandmarkets.com/product/18f47a/intersect360_research_site_census_report_st and Fax to +353 1 4100 980   
-
-3] Order by mail: Print an Order form from http://www.researchandmarkets.com/product/18f47a/intersect360_research_site_census_report_st and post to Research and Markets Ltd. Guinness Center, Taylors Lane, Dublin 8. Ireland   
-
-
-Related Titles also available from Research and Markets:   
-
-Intersect360 Research User Site Census: Applications -   
-http://www.researchandmarkets.com/product/18f47a/intersect360_research_user_site_census_appli   
-
-Intersect360 Research Traditional HPC Total Market Forecast: 2010 to 2014 -   
-http://www.researchandmarkets.com/product/18f47a/intersect360_research_traditional_hpc_total_m   
-
-
-
-Thank you for your consideration.   
-
-Best Regards,   
-
-Rachel Thompson   
-Senior Manager   
-Research and Markets Ltd   
-rachel.thompson@researchandmarkets.com   
-
-Subscribe: Click on http://www.researchandmarkets.com/register.asp You can subscribe free for regular details on new research in your sector.   
-
-Please note you are currently subscribed as linux-xfs@oss.sgi.com   
-
-If you no longer wish to receive our market research updates, please reply to this message with Suppression Request as the subject line, or use the link below   
-
-http://www.researchandmarkets.com/u.asp?f=u&e=linux-xfs@oss.sgi.com   
-
-
+					-Alex
 
 _______________________________________________
 xfs mailing list
