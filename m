@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8L6XWA4257527 for <xfs@oss.sgi.com>; Tue, 21 Sep 2010 01:33:33 -0500
+	o8LDgLpi012463
+	for <linux-xfs@oss.sgi.com>; Tue, 21 Sep 2010 08:42:22 -0500
 Received: from mail.researchandmarkets.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with SMTP id A7E6EE24C35
-	for <xfs@oss.sgi.com>; Mon, 20 Sep 2010 23:46:46 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with SMTP id 93DA5182ABD9
+	for <linux-xfs@oss.sgi.com>; Tue, 21 Sep 2010 06:43:13 -0700 (PDT)
 Received: from mail.researchandmarkets.net ([193.189.67.213]) by cuda.sgi.com
-	with SMTP id BjJrsbNq74Akp98k for <xfs@oss.sgi.com>;
-	Mon, 20 Sep 2010 23:46:46 -0700 (PDT)
+	with SMTP id yh6H5YW8w0Jzju0G for <linux-xfs@oss.sgi.com>;
+	Tue, 21 Sep 2010 06:43:13 -0700 (PDT)
 From: "Rachel Thompson" <rachel.thompson@researchandmarkets.org>
 Subject: =?ISO-8859-1?Q?Intersect360 Research Site Census Report =2D Storage?=
-Date: Tue, 21 Sep 2010 06:34:25 GMT
+Date: Tue, 21 Sep 2010 13:43:12 GMT
 MIME-Version: 1.0
-Message-Id: <20100921064646.A7E6EE24C35@cuda.sgi.com>
+Message-Id: <20100921134313.93DA5182ABD9@cuda.sgi.com>
 Reply-To: Rachel Thompson <rachel.thompson@researchandmarkets.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -26,7 +27,7 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
 I enclose details of our high-performance computing storage market report.   
 
@@ -109,11 +110,11 @@ rachel.thompson@researchandmarkets.com
 
 Subscribe: Click on http://www.researchandmarkets.com/register.asp You can subscribe free for regular details on new research in your sector.   
 
-Please note you are currently subscribed as xfs@oss.sgi.com   
+Please note you are currently subscribed as linux-xfs@oss.sgi.com   
 
 If you no longer wish to receive our market research updates, please reply to this message with Suppression Request as the subject line, or use the link below   
 
-http://www.researchandmarkets.com/u.asp?f=u&e=xfs@oss.sgi.com   
+http://www.researchandmarkets.com/u.asp?f=u&e=linux-xfs@oss.sgi.com   
 
 
 
