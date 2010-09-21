@@ -1,25 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8LMXEi9032690 for <xfs@oss.sgi.com>; Tue, 21 Sep 2010 17:33:14 -0500
+	o8LNEhKm033939 for <xfs@oss.sgi.com>; Tue, 21 Sep 2010 18:14:43 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 54C74182E8E0
-	for <xfs@oss.sgi.com>; Tue, 21 Sep 2010 15:34:06 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
-	[150.101.137.99]) by cuda.sgi.com with ESMTP id
-	I8NjTAeuHX0koOCJ for <xfs@oss.sgi.com>;
-	Tue, 21 Sep 2010 15:34:06 -0700 (PDT)
-Date: Wed, 22 Sep 2010 08:34:03 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3426212E51E7
+	for <xfs@oss.sgi.com>; Tue, 21 Sep 2010 16:28:00 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
+	[150.101.137.97]) by cuda.sgi.com with ESMTP id
+	c2ZiAiEI93CCp9iN for <xfs@oss.sgi.com>;
+	Tue, 21 Sep 2010 16:28:00 -0700 (PDT)
+Date: Wed, 22 Sep 2010 09:15:31 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 0/18] xfs: metadata and buffer cache scalability
-	improvements
-Message-ID: <20100921223403.GD2614@dastard>
-References: <1284461777-1496-1-git-send-email-david@fromorbit.com>
-	<1284729700.5524.53.camel@doink> <20100921020203.GC2614@dastard>
-	<1285086192.2024.17.camel@doink>
+Subject: Re: Latencies writing to memory mapped files
+Message-ID: <20100921231531.GE2614@dastard>
+References: <20100915152633.GA2585@BohrerMBP.rgmadvisors.com>
+	<20100916001837.GF24409@dastard>
+	<20100917154523.GA2739@BohrerMBP.rgmadvisors.com>
+	<20100920000535.GM24409@dastard>
+	<20100920221726.GA3182@BohrerMBP.rgmadvisors.com>
+	<20100920224833.GB2614@dastard>
+	<20100921180541.GA6877@BohrerMBP.rgmadvisors.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1285086192.2024.17.camel@doink>
+In-Reply-To: <20100921180541.GA6877@BohrerMBP.rgmadvisors.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,49 +35,85 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
-Cc: XFS Mailing List <xfs@oss.sgi.com>
+To: Shawn Bohrer <shawn.bohrer@gmail.com>
+Cc: xfs@oss.sgi.com
 
-On Tue, Sep 21, 2010 at 11:23:12AM -0500, Alex Elder wrote:
-> On Tue, 2010-09-21 at 12:02 +1000, Dave Chinner wrote:
-> > On Fri, Sep 17, 2010 at 08:21:40AM -0500, Alex Elder wrote:
-> > > On Tue, 2010-09-14 at 20:55 +1000, Dave Chinner wrote:
-> > > > This patchset has grown quite a bit - it started out as a "convert
-> > > > the buffer cache to rbtrees" patch, and has gotten bigger as I
-> > > > peeled the onion from one bottleneck to another.
-> . . .
+On Tue, Sep 21, 2010 at 01:05:41PM -0500, Shawn Bohrer wrote:
+> On Tue, Sep 21, 2010 at 08:48:33AM +1000, Dave Chinner wrote:
+> > On Mon, Sep 20, 2010 at 05:17:26PM -0500, Shawn Bohrer wrote:
+> > > On Mon, Sep 20, 2010 at 10:05:35AM +1000, Dave Chinner wrote:
+> > > > FWIW, if you can work out the magic necessary (perhaps systemtap) it
+> > > > woul dbe really interesting to know whether it is the same buffer
+> > > > that is causing the latency every time (i.e. get the bp->b_bn field
+> > > > from the metadata buffer). With the block number, we can use xfs_db
+> > > > to dig out what the buffer actually is....
+.....
+> > Hmmm - it would be good to know which one produced the latency,
+> > given there does not appear to be a pattern in the block numbers.
 > 
+> OK here is a little more information which may be relevant.  I've
+> currently got 12 processes that read data from a socket and each write
+> to a different memory mapped file.  The apps are only appending to the
+> file, but they don't write the data in one sequential chunk so it is
+> quite possible that it appears as random IO for a short time period.
+> 
+> This time I made some more modifications so that I would only capture
+> the bp->b_bn when one of my processes sees a delay of 300ms or greater.
+> There still is a small chance for false positives, but most of these
+> should have caused real delays.  All of the following came from the
+> same process:
+> 
+> [001] 81758.886627: _xfs_buf_find: xfs_buf_lock blocked for 871ms on bp->b_bn: 474487328
+> [001] 81920.808163: _xfs_buf_find: xfs_buf_lock blocked for 1038ms on bp->b_bn: 474487568
+> [001] 82933.428627: _xfs_buf_find: xfs_buf_lock blocked for 767ms on bp->b_bn: 542273864
+> [000] 83048.558413: _xfs_buf_find: xfs_buf_lock blocked for 363ms on bp->b_bn: 474488080
+> [001] 86717.251189: _xfs_buf_find: xfs_buf_lock blocked for 514ms on bp->b_bn: 474487560
+> [001] 88466.635802: _xfs_buf_find: xfs_buf_lock blocked for 380ms on bp->b_bn: 542274544
+> [000] 88972.122062: _xfs_buf_find: xfs_buf_lock blocked for 521ms on bp->b_bn: 474487560
+> [001] 89271.988589: _xfs_buf_find: xfs_buf_lock blocked for 496ms on bp->b_bn: 474487560
+> [001] 91046.566309: _xfs_buf_find: xfs_buf_lock blocked for 540ms on bp->b_bn: 474487560
+> [001] 91047.280042: _xfs_buf_find: xfs_buf_lock blocked for 713ms on bp->b_bn: 542274216
+> [001] 91212.458472: _xfs_buf_find: xfs_buf_lock blocked for 490ms on bp->b_bn: 542274544
+> [001] 92397.667196: _xfs_buf_find: xfs_buf_lock blocked for 549ms on bp->b_bn: 474487560
+> 
+> > > What do I need to do to convert the block numbers to a buffer?
 > > 
-> > All together, with the LRU code being reworked a bit w.r.t. stale
-> > buffers and shrinker behaviour.
+> > # xfs_db -r -c "daddr 812730376" -c "print" <dev>
 > > 
-> > In reality, though, i don't think that separating them into separate
-> > series make much sense. The order they are in right now is
-> > bisectable and fairly logical....
+> > Will dump the sector at that address. That should be enough to tell
+> > us what is in the buffer (by the magic number).
 > 
-> I have been thinking about this since sending it.  I think my
-> concern was not so much that they were all in one series.  It's
-> more about the fact that you are doing a number of non-trivial
-> changes, all together.  And as such my perception of the combined
-> risk of committing them all at once is higher.  So what I was
-> probably after was somehow being able to verify each chunk of
-> the series separately, spilling them out gradually rather
-> than all at once.
+> So I have no idea what I'm looking at but here is the output for the
+> above numbers (duplicates removed):
 > 
-> But in the end, I guess I agree with what you say.  If we could
-> get some parts--like those you say are standalone--committed
-> earlier (and then out for wider exposure sooner) that would be
-> good, but otherwise it's OK as a single series.  I'll look for
-> your next update, and will just wait for pull request(s) when
-> you feel they're ready.
+> xfs_db -r -c "daddr 474487328" -c "print" /dev/sda5
+> 000: 424d4150 0000007f 00000000 07000082 00000000 07000092 00000000 0039a000
+       ^^^^^^^^
+        B M A P
 
-Ok, that sounds reaonable. I can split out all the stand
-alone/cleanup stuff, and leave the functional changes to later. I'll
-do a reorder later today.
+#define XFS_BMAP_MAGIC  0x424d4150      /* 'BMAP' */
+
+So these are inode extent btree blocks your application is getting
+stuck on.  These only get written back as a result of either log
+pressure (i.e.  tail pushing) or by the xfsbufd based on age. They
+aren't actually flushed with the data because changes are logged.
+IOWs, the writeback of the bmap btree blocks is asynchronous to any
+operation that modifies them, so there's no direct connection
+between modification and writeback.
+
+I'm not sure that there is anything that can really be done to
+prevent this. If the cause of writeback is age-based flushing on the
+metadata buffers, you could try increasing the xfsbufd writeback age
+so that only log pressure will cause them to be flushed.
+
+Alternatively, you could change your application to pre-fault pages
+in an async thread so the latency of allocation during the page
+fault is not taken by the main writer...
 
 Cheers,
 
 Dave.
+
 -- 
 Dave Chinner
 david@fromorbit.com
