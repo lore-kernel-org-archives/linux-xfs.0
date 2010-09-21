@@ -1,31 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8LLWcec030695
-	for <linux-xfs@oss.sgi.com>; Tue, 21 Sep 2010 16:32:40 -0500
-Received: from lo.gmane.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 39167182EC75
-	for <linux-xfs@oss.sgi.com>; Tue, 21 Sep 2010 14:33:30 -0700 (PDT)
-Received: from lo.gmane.org (lo.gmane.org [80.91.229.12]) by cuda.sgi.com with
-	ESMTP id YRGZ9toOq2FEwn5d for <linux-xfs@oss.sgi.com>;
-	Tue, 21 Sep 2010 14:33:30 -0700 (PDT)
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1OyASo-0004Rr-74
-	for linux-xfs@oss.sgi.com; Tue, 21 Sep 2010 23:33:22 +0200
-Received: from p4fd4aa0f.dip0.t-ipconnect.de ([79.212.170.15])
-	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-	id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Tue, 21 Sep 2010 23:33:22 +0200
-Received: from Manuel.Spam by p4fd4aa0f.dip0.t-ipconnect.de with local (Gmexim
-	0.1 (Debian)) id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Tue, 21 Sep 2010 23:33:22 +0200
-From: Manuel Reimer <Manuel.Spam@nurfuerspam.de>
-Subject: Re: System partially unusable after power loss...
-Date: Tue, 21 Sep 2010 23:30:05 +0200
-Message-ID: <i7b8ao$erp$1@dough.gmane.org>
-References: <i6ttq6$41d$1@dough.gmane.org> <4C928424.1020409@sandeen.net>
-Mime-Version: 1.0
-In-Reply-To: <4C928424.1020409@sandeen.net>
+	o8LMXEi9032690 for <xfs@oss.sgi.com>; Tue, 21 Sep 2010 17:33:14 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 54C74182E8E0
+	for <xfs@oss.sgi.com>; Tue, 21 Sep 2010 15:34:06 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
+	[150.101.137.99]) by cuda.sgi.com with ESMTP id
+	I8NjTAeuHX0koOCJ for <xfs@oss.sgi.com>;
+	Tue, 21 Sep 2010 15:34:06 -0700 (PDT)
+Date: Wed, 22 Sep 2010 08:34:03 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 0/18] xfs: metadata and buffer cache scalability
+	improvements
+Message-ID: <20100921223403.GD2614@dastard>
+References: <1284461777-1496-1-git-send-email-david@fromorbit.com>
+	<1284729700.5524.53.camel@doink> <20100921020203.GC2614@dastard>
+	<1285086192.2024.17.camel@doink>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1285086192.2024.17.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,45 +28,56 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: Alex Elder <aelder@sgi.com>
+Cc: XFS Mailing List <xfs@oss.sgi.com>
 
-Eric Sandeen wrote:
->> and two files with ELF header, which may be (a part of) library files, I
->> don't know, as the name wasn't restored.
->
-> Having the xfs_repair output would be helpful.
+On Tue, Sep 21, 2010 at 11:23:12AM -0500, Alex Elder wrote:
+> On Tue, 2010-09-21 at 12:02 +1000, Dave Chinner wrote:
+> > On Fri, Sep 17, 2010 at 08:21:40AM -0500, Alex Elder wrote:
+> > > On Tue, 2010-09-14 at 20:55 +1000, Dave Chinner wrote:
+> > > > This patchset has grown quite a bit - it started out as a "convert
+> > > > the buffer cache to rbtrees" patch, and has gotten bigger as I
+> > > > peeled the onion from one bottleneck to another.
+> . . .
+> 
+> > 
+> > All together, with the LRU code being reworked a bit w.r.t. stale
+> > buffers and shrinker behaviour.
+> > 
+> > In reality, though, i don't think that separating them into separate
+> > series make much sense. The order they are in right now is
+> > bisectable and fairly logical....
+> 
+> I have been thinking about this since sending it.  I think my
+> concern was not so much that they were all in one series.  It's
+> more about the fact that you are doing a number of non-trivial
+> changes, all together.  And as such my perception of the combined
+> risk of committing them all at once is higher.  So what I was
+> probably after was somehow being able to verify each chunk of
+> the series separately, spilling them out gradually rather
+> than all at once.
+> 
+> But in the end, I guess I agree with what you say.  If we could
+> get some parts--like those you say are standalone--committed
+> earlier (and then out for wider exposure sooner) that would be
+> good, but otherwise it's OK as a single series.  I'll look for
+> your next update, and will just wait for pull request(s) when
+> you feel they're ready.
 
-I didn't save this...
+Ok, that sounds reaonable. I can split out all the stand
+alone/cleanup stuff, and leave the functional changes to later. I'll
+do a reorder later today.
 
-> Was there a system software update just prior to the power loss?
+Cheers,
 
-The affected files have been updated some days/weeks before.
-
-> Did your storage support IO barriers (i.e. was it lvm or md)?
-
-No lvm, no md. A simple IDE drive.
-
-> Buffered data is always lost on a power loss, but I'm not sure
-> why you should see problems with system files unless they had
-> just been written out (and not synced).
-
-I fixed this system. The reason was this silly "kbuildsycoca" or better 
-a config file, accessible by the user, using this PC. Seems like this 
-"non system file" got corrupted in some way. A run of "kbuildsycoca 
---noincremental" fixed the config and the system was up and running again.
-
-But why did xfs_repair restore files... For me it seems like xfs_repair 
-restored an *old* version of openssl, which has been replaced by the 
-system update process. This would mean: xfs_repair made a deleted file 
-visible. Is this possible?
-
-Yours
-
-Manuel
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
