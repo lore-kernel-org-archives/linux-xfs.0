@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8MJ0SZt078839 for <xfs@oss.sgi.com>; Wed, 22 Sep 2010 14:00:28 -0500
-Received: from smtp-relay.maven.pl (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7D85892D42
-	for <xfs@oss.sgi.com>; Wed, 22 Sep 2010 12:01:19 -0700 (PDT)
-Received: from smtp-relay.maven.pl (smtp-relay.maven.pl [193.239.45.138]) by
-	cuda.sgi.com with ESMTP id gKp6TZFoj1bWooC7 for
-	<xfs@oss.sgi.com>; Wed, 22 Sep 2010 12:01:19 -0700 (PDT)
-From: Arkadiusz Miskiewicz <arekm@maven.pl>
-Subject: Re: [PATCH VER 4] Extend project quotas to support 32bit project
-	identificators.
-Date: Wed, 22 Sep 2010 21:01:13 +0200
+	o8MIhIX9078244 for <xfs@oss.sgi.com>; Wed, 22 Sep 2010 13:43:18 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 97176E430D9
+	for <xfs@oss.sgi.com>; Wed, 22 Sep 2010 11:56:42 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id xneZY9itRMjDqVwF for
+	<xfs@oss.sgi.com>; Wed, 22 Sep 2010 11:56:42 -0700 (PDT)
+Date: Wed, 22 Sep 2010 14:44:12 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH VER 4] xfsprogs: projid32bit handling
+Message-ID: <20100922184412.GB9911@infradead.org>
 References: <1285177343-11108-1-git-send-email-arekm@maven.pl>
-	<20100922184242.GA9911@infradead.org>
-In-Reply-To: <20100922184242.GA9911@infradead.org>
+	<1285177520-11513-1-git-send-email-arekm@maven.pl>
 MIME-Version: 1.0
-Message-Id: <201009222101.13985.arekm@maven.pl>
+Content-Disposition: inline
+In-Reply-To: <1285177520-11513-1-git-send-email-arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,53 +25,22 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Arkadiusz Mi??kiewicz <arekm@maven.pl>
 Cc: xfs@oss.sgi.com
 
-T24gV2VkbmVzZGF5IDIyIG9mIFNlcHRlbWJlciAyMDEwLCBDaHJpc3RvcGggSGVsbHdpZyB3cm90
-ZToKPiBPbiBXZWQsIFNlcCAyMiwgMjAxMCBhdCAwNzo0MjoyM1BNICswMjAwLCBBcmthZGl1c3og
-TWk/P2tpZXdpY3ogd3JvdGU6Cj4gPiAgCWlmIChtYXNrICYgRlNYX1BST0pJRCkgewo+ID4gCj4g
-PiArCQkvKgo+ID4gKwkJICogU3dpdGNoIG9uIHRoZSBQUk9KSUQzMkJJVCBzdXBlcmJsb2NrIGJp
-dCB3aGVuIG5lZWRlZAo+ID4gKwkJICogKGltcGxpZXMgYWxzbyBGRUFUVVJFUzIpCj4gPiArCQkg
-Ki8KPiA+ICsJCWlmICgheGZzX3NiX3ZlcnNpb25faGFzcHJvamlkMzJiaXQoJmlwLT5pX21vdW50
-LT5tX3NiKSAmJgo+ID4gKwkJCQlmYS0+ZnN4X3Byb2ppZCA+IChfX3VpbnQxNl90KS0xKQo+ID4g
-KwkJCXhmc19hZGRwcm9qaWQzMmJpdCh0cCwgaXApOwo+IAo+IERpZG4ndCB3ZSBhZ3JlZSB0aGF0
-IHdlIHdhbnQgdG8gZW5hYmxlIHRoaXMgZmVhdHVyZSBleHBsaWNpdGx5IHZpYQo+IHhmc19hZG1p
-biAob3IgbWtmcy54ZnMpPwoKQWN0dWFsbHkgdGhlcmUgd2FzIG5vIGFncmVlbWVudCBvbiB0aGlz
-LiBTb21lIHRoaW5rIHRoYXQgaXQncyBnb29kIHRvIGRvIHRoYXQgCmF1dG9tYXRpY2x5IChzbyB1
-c2VyIGRvZXNuJ3QgaGF2ZSB0byBkbyBhbnl0aGluZyBhbmQgaGFzIGV2ZXJ5dGhpbmcgd29ya2lu
-ZykgCmFuZCBvdGhlcnMgdGhpbmsgdGhhdCBpdCBzaG91bGQgYmUgdHVybmVkIG9uIGV4cGxpY3Rs
-eSBieSB4ZnNfYWRtaW4vbWtmcy54ZnMuCgpGb3IgbWUgYm90aCBtZXRob2RzIGFyZSBmaW5lLCBi
-b3RoIGhhdmUgc29tZSBhZHZhbnRhZ2VzIGFuZCBkaXNhZHZhbnRhZ2VzLgoKKFRoZXJlIHdhcyBh
-biBhZ3JlZW1lbnQgdGhhdCBzZXBhcmF0ZSBwcm9qaWQgKGZyb20gZ3JvdXApIHF1b3RhIHNob3Vs
-ZCBiZSAKdHVybmVkIG9uIG1hbnVhbGx5IGJ1dCB3YXMgbm8gc3VjaCBhZ3JlZW1lbnQgb24gcHJv
-amlkMzJiaXQpCgo+ID4gLQlfX3UxNgkJYnNfcHJvamlkOwkvKiBwcm9qZWN0IGlkCQkJKi8KPiA+
-ICsJX191MTYJCWJzX3Byb2ppZF9sbzsJLyogbG93ZXIgcGFydCBvZiBwcm9qZWN0IGlkCSovCj4g
-PiAKPiA+ICAJX191MTYJCWJzX2ZvcmtvZmY7CS8qIGlub2RlIGZvcmsgb2Zmc2V0IGluIGJ5dGVz
-CSovCj4gPiAKPiA+IC0JdW5zaWduZWQgY2hhcglic19wYWRbMTJdOwkvKiBwYWQgc3BhY2UsIHVu
-dXNlZAkJKi8KPiA+ICsJX191MTYJCWJzX3Byb2ppZF9oaTsJLyogaGlnaGVyIHBhcnQgb2YgcHJv
-amVjdCBpZAkqLwo+ID4gKwl1bnNpZ25lZCBjaGFyCWJzX3BhZFsxMF07CS8qIHBhZCBzcGFjZSwg
-dW51c2VkCQkqLwo+IAo+IFVubGlrZSBpbiB0aGUgaW5vZGUgd2UgY2FuJ3QganVzdCByZW5hbWUg
-dGhlIGxvIGZpZWxkIGhlcmUgLSB0aGF0IHdvdWxkCj4gYnJlYWsgdGhlIGNvbXBpbGF0aW9uIG9m
-IGV4aXN0aW5nIGFwcGxpY2F0aW9ucy4KCk9rIGJ1dCBtYXliZSBicmVha2luZyB0aGVzZSBpcyBn
-b29kPyBTbyB0aGVzZSBjYW4gYmUgZXh0ZW5kZWQgdG8gc3VwcG9ydCAzMmJpdCAKcHJvamlkLiBP
-dGhlcndpc2UgdGhlc2Ugd2lsbCBnZXQgY3JhcCBpZiAzMmJpdCBwcm9qaWQgaXMgZW5hYmxlZCAo
-YWN0dWFsbHkgCmFscmVhZHkgYnVpbHQgYmluYXJpZXMgd2lsbCBzdGlsbCBnZXQgY3JhcCBmb3Ig
-PiAxNmJpdCB2YWx1ZXMgd2l0aCBwcm9qaWQzMmJpdCAKcGF0Y2gpLgoKPiA+ICt7Cj4gPiArCXNw
-aW5fbG9jaygmaXAtPmlfbW91bnQtPm1fc2JfbG9jayk7Cj4gPiArCWlmICgheGZzX3NiX3ZlcnNp
-b25faGFzcHJvamlkMzJiaXQoJmlwLT5pX21vdW50LT5tX3NiKSkgewo+IAo+IFdlZG9uJ3QgbmVl
-ZCB0aGUgbG9jayBhcm91bmQgdGhlIGNoZWNrLCBpdCdzIGVub3VnaCBpZiBpdCdzIGluc2lkZSB0
-aGUKPiBjb25kaXRpb25hbC4KCkhtLCB4ZnNfYnVtcF9pbm9fdmVyczIgZG9lcyB0aGF0IGV4YWN0
-bHkgdGhhdCB3YXkgKGZvciBhZGRubGluaykgdGh1cyBJIAp0aG91Z2h0IHRoZXJlIGlzIGEgcmVh
-c29uIGZvciB0aGF0LiAKCj4gPiArCQl4ZnNfc2JfdmVyc2lvbl9hZGRwcm9qaWQzMmJpdCgmaXAt
-PmlfbW91bnQtPm1fc2IpOwo+ID4gKwkJc3Bpbl91bmxvY2soJmlwLT5pX21vdW50LT5tX3NiX2xv
-Y2spOwo+ID4gKwkJeGZzX21vZF9zYih0cCwKPiA+ICsJCQkJWEZTX1NCX1ZFUlNJT05OVU0gfCBY
-RlNfU0JfRkVBVFVSRVMyKTsKCi0tIApBcmthZGl1c3ogTWnFm2tpZXdpY3ogICAgICAgIFBMRC9M
-aW51eCBUZWFtCmFyZWttIC8gbWF2ZW4ucGwgICAgICAgICAgICBodHRwOi8vZnRwLnBsZC1saW51
-eC5vcmcvCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4
-ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1h
-bi9saXN0aW5mby94ZnMK
+On Wed, Sep 22, 2010 at 07:45:20PM +0200, Arkadiusz Mi??kiewicz wrote:
+> Add projid32bit handling to userspace. mkfs is able to enable this
+> feature for new filesystems. xfs_db knows what projid_lo/hi are.
+
+Looks good except for the bstat field naming I already mentioned, and
+the possibly required addition of xfs_admin support to toggling the
+flag.
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
