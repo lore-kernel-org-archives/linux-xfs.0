@@ -1,30 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8M6hvZO050858 for <xfs@oss.sgi.com>; Wed, 22 Sep 2010 01:43:57 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A06C4903EA
-	for <xfs@oss.sgi.com>; Tue, 21 Sep 2010 23:44:50 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
-	[150.101.137.101]) by cuda.sgi.com with ESMTP id
-	MDNPFKjbJrOly90f for <xfs@oss.sgi.com>;
-	Tue, 21 Sep 2010 23:44:50 -0700 (PDT)
-Received: from dastard (unverified [121.44.66.70])
-	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	39853676-1927428
-	for <xfs@oss.sgi.com>; Wed, 22 Sep 2010 16:14:49 +0930 (CST)
-Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1OyJ4G-0003tw-Os
-	for xfs@oss.sgi.com; Wed, 22 Sep 2010 16:44:36 +1000
-Received: from dave by disturbed with local (Exim 4.72)
-	(envelope-from <dave@disturbed.disaster>) id 1OyJ4E-0002l9-Gk
-	for xfs@oss.sgi.com; Wed, 22 Sep 2010 16:44:34 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 08/16] xfs: kill XBF_FS_MANAGED buffers
-Date: Wed, 22 Sep 2010 16:44:21 +1000
-Message-Id: <1285137869-10310-9-git-send-email-david@fromorbit.com>
-In-Reply-To: <1285137869-10310-1-git-send-email-david@fromorbit.com>
-References: <1285137869-10310-1-git-send-email-david@fromorbit.com>
+	o8M7QDrf052755 for <xfs@oss.sgi.com>; Wed, 22 Sep 2010 02:26:13 -0500
+Received: from pirx.askja.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2EDC4904E6
+	for <xfs@oss.sgi.com>; Wed, 22 Sep 2010 00:27:06 -0700 (PDT)
+Received: from pirx.askja.de (pirx.askja.de [83.137.103.148]) by cuda.sgi.com
+	with ESMTP id QsSdOpdcyALBqH94 for <xfs@oss.sgi.com>;
+	Wed, 22 Sep 2010 00:27:06 -0700 (PDT)
+Received: from localhost (localhost [127.0.0.1])
+	by pirx.askja.de (Postfix) with ESMTP id 41E583014B
+	for <xfs@oss.sgi.com>; Wed, 22 Sep 2010 09:26:55 +0200 (CEST)
+Received: from pirx.askja.de ([127.0.0.1])
+	by localhost (pirx.askja.de [127.0.0.1]) (amavisd-new, port 10024)
+	with LMTP id 9iJ6z7jCXL+U for <xfs@oss.sgi.com>;
+	Wed, 22 Sep 2010 09:26:53 +0200 (CEST)
+Date: Wed, 22 Sep 2010 09:26:53 +0200
+From: Ralf Gross <Ralf-Lists@ralfgross.de>
+Subject: XFS internal error xfs_da_do_buf(2)
+Message-ID: <20100922072653.GA23326@pirx.askja.de>
+MIME-Version: 1.0
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,224 +29,115 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Hi,
 
-Filesystem level managed buffers are buffers that have their
-lifecycle controlled by the filesystem layer, not the buffer cache.
-We currently cache these buffers, which makes cleanup and cache
-walking somewhat troublesome. Convert the fs managed buffers to
-uncached buffers obtained by via xfs_buf_get_uncached(), and remove
-the XBF_FS_MANAGED special cases from the buffer cache.
+we've a fileserver withe the following setup:
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Alex Elder <aelder@sgi.com>
----
- fs/xfs/linux-2.6/xfs_buf.c |   20 +++------------
- fs/xfs/linux-2.6/xfs_buf.h |    4 ---
- fs/xfs/xfs_mount.c         |   57 +++++++++++++------------------------------
- 3 files changed, 21 insertions(+), 60 deletions(-)
+Debian Lenny AMD64, 2.6.32 bpo Kernel
 
-diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
-index 49374ae..1497362 100644
---- a/fs/xfs/linux-2.6/xfs_buf.c
-+++ b/fs/xfs/linux-2.6/xfs_buf.c
-@@ -826,8 +826,6 @@ xfs_buf_rele(
- 			atomic_inc(&bp->b_hold);
- 			spin_unlock(&hash->bh_lock);
- 			(*(bp->b_relse)) (bp);
--		} else if (bp->b_flags & XBF_FS_MANAGED) {
--			spin_unlock(&hash->bh_lock);
- 		} else {
- 			ASSERT(!(bp->b_flags & (XBF_DELWRI|_XBF_DELWRI_Q)));
- 			list_del_init(&bp->b_hash_list);
-@@ -1433,26 +1431,16 @@ void
- xfs_wait_buftarg(
- 	xfs_buftarg_t	*btp)
- {
--	xfs_buf_t	*bp, *n;
- 	xfs_bufhash_t	*hash;
- 	uint		i;
- 
- 	for (i = 0; i < (1 << btp->bt_hashshift); i++) {
- 		hash = &btp->bt_hash[i];
--again:
- 		spin_lock(&hash->bh_lock);
--		list_for_each_entry_safe(bp, n, &hash->bh_list, b_hash_list) {
--			ASSERT(btp == bp->b_target);
--			if (!(bp->b_flags & XBF_FS_MANAGED)) {
--				spin_unlock(&hash->bh_lock);
--				/*
--				 * Catch superblock reference count leaks
--				 * immediately
--				 */
--				BUG_ON(bp->b_bn == 0);
--				delay(100);
--				goto again;
--			}
-+		while (!list_empty(&hash->bh_list)) {
-+			spin_unlock(&hash->bh_lock);
-+			delay(100);
-+			spin_lock(&hash->bh_lock);
- 		}
- 		spin_unlock(&hash->bh_lock);
- 	}
-diff --git a/fs/xfs/linux-2.6/xfs_buf.h b/fs/xfs/linux-2.6/xfs_buf.h
-index e3aa8c0..d10a954 100644
---- a/fs/xfs/linux-2.6/xfs_buf.h
-+++ b/fs/xfs/linux-2.6/xfs_buf.h
-@@ -51,7 +51,6 @@ typedef enum {
- #define XBF_DONE	(1 << 5) /* all pages in the buffer uptodate */
- #define XBF_DELWRI	(1 << 6) /* buffer has dirty pages */
- #define XBF_STALE	(1 << 7) /* buffer has been staled, do not find it */
--#define XBF_FS_MANAGED	(1 << 8) /* filesystem controls freeing memory */
- #define XBF_ORDERED	(1 << 11)/* use ordered writes */
- #define XBF_READ_AHEAD	(1 << 12)/* asynchronous read-ahead */
- #define XBF_LOG_BUFFER	(1 << 13)/* this is a buffer used for the log */
-@@ -104,7 +103,6 @@ typedef unsigned int xfs_buf_flags_t;
- 	{ XBF_DONE,		"DONE" }, \
- 	{ XBF_DELWRI,		"DELWRI" }, \
- 	{ XBF_STALE,		"STALE" }, \
--	{ XBF_FS_MANAGED,	"FS_MANAGED" }, \
- 	{ XBF_ORDERED,		"ORDERED" }, \
- 	{ XBF_READ_AHEAD,	"READ_AHEAD" }, \
- 	{ XBF_LOCK,		"LOCK" },  	/* should never be set */\
-@@ -279,8 +277,6 @@ extern void xfs_buf_terminate(void);
- 					XFS_BUF_DONE(bp);	\
- 				} while (0)
- 
--#define XFS_BUF_UNMANAGE(bp)	((bp)->b_flags &= ~XBF_FS_MANAGED)
--
- #define XFS_BUF_DELAYWRITE(bp)		((bp)->b_flags |= XBF_DELWRI)
- #define XFS_BUF_UNDELAYWRITE(bp)	xfs_buf_delwri_dequeue(bp)
- #define XFS_BUF_ISDELAYWRITE(bp)	((bp)->b_flags & XBF_DELWRI)
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 14fc6e9..fbca293 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -646,7 +646,6 @@ int
- xfs_readsb(xfs_mount_t *mp, int flags)
- {
- 	unsigned int	sector_size;
--	unsigned int	extra_flags;
- 	xfs_buf_t	*bp;
- 	int		error;
- 
-@@ -659,28 +658,24 @@ xfs_readsb(xfs_mount_t *mp, int flags)
- 	 * access to the superblock.
- 	 */
- 	sector_size = xfs_getsize_buftarg(mp->m_ddev_targp);
--	extra_flags = XBF_LOCK | XBF_FS_MANAGED | XBF_MAPPED;
- 
--	bp = xfs_buf_read(mp->m_ddev_targp, XFS_SB_DADDR, BTOBB(sector_size),
--			  extra_flags);
--	if (!bp || XFS_BUF_ISERROR(bp)) {
--		xfs_fs_mount_cmn_err(flags, "SB read failed");
--		error = bp ? XFS_BUF_GETERROR(bp) : ENOMEM;
--		goto fail;
-+reread:
-+	bp = xfs_buf_read_uncached(mp, mp->m_ddev_targp,
-+					XFS_SB_DADDR, sector_size, 0);
-+	if (!bp) {
-+		xfs_fs_mount_cmn_err(flags, "SB buffer read failed");
-+		return EIO;
- 	}
--	ASSERT(XFS_BUF_ISBUSY(bp));
--	ASSERT(XFS_BUF_VALUSEMA(bp) <= 0);
- 
- 	/*
- 	 * Initialize the mount structure from the superblock.
- 	 * But first do some basic consistency checking.
- 	 */
- 	xfs_sb_from_disk(&mp->m_sb, XFS_BUF_TO_SBP(bp));
--
- 	error = xfs_mount_validate_sb(mp, &(mp->m_sb), flags);
- 	if (error) {
- 		xfs_fs_mount_cmn_err(flags, "SB validate failed");
--		goto fail;
-+		goto release_buf;
- 	}
- 
- 	/*
-@@ -691,7 +686,7 @@ xfs_readsb(xfs_mount_t *mp, int flags)
- 			"device supports only %u byte sectors (not %u)",
- 			sector_size, mp->m_sb.sb_sectsize);
- 		error = ENOSYS;
--		goto fail;
-+		goto release_buf;
- 	}
- 
- 	/*
-@@ -699,33 +694,20 @@ xfs_readsb(xfs_mount_t *mp, int flags)
- 	 * re-read the superblock so the buffer is correctly sized.
- 	 */
- 	if (sector_size < mp->m_sb.sb_sectsize) {
--		XFS_BUF_UNMANAGE(bp);
- 		xfs_buf_relse(bp);
- 		sector_size = mp->m_sb.sb_sectsize;
--		bp = xfs_buf_read(mp->m_ddev_targp, XFS_SB_DADDR,
--				  BTOBB(sector_size), extra_flags);
--		if (!bp || XFS_BUF_ISERROR(bp)) {
--			xfs_fs_mount_cmn_err(flags, "SB re-read failed");
--			error = bp ? XFS_BUF_GETERROR(bp) : ENOMEM;
--			goto fail;
--		}
--		ASSERT(XFS_BUF_ISBUSY(bp));
--		ASSERT(XFS_BUF_VALUSEMA(bp) <= 0);
-+		goto reread;
- 	}
- 
- 	/* Initialize per-cpu counters */
- 	xfs_icsb_reinit_counters(mp);
- 
- 	mp->m_sb_bp = bp;
--	xfs_buf_relse(bp);
--	ASSERT(XFS_BUF_VALUSEMA(bp) > 0);
-+	xfs_buf_unlock(bp);
- 	return 0;
- 
-- fail:
--	if (bp) {
--		XFS_BUF_UNMANAGE(bp);
--		xfs_buf_relse(bp);
--	}
-+release_buf:
-+	xfs_buf_relse(bp);
- 	return error;
- }
- 
-@@ -2005,18 +1987,13 @@ xfs_getsb(
-  */
- void
- xfs_freesb(
--	xfs_mount_t	*mp)
-+	struct xfs_mount	*mp)
- {
--	xfs_buf_t	*bp;
-+	struct xfs_buf		*bp = mp->m_sb_bp;
- 
--	/*
--	 * Use xfs_getsb() so that the buffer will be locked
--	 * when we call xfs_buf_relse().
--	 */
--	bp = xfs_getsb(mp, 0);
--	XFS_BUF_UNMANAGE(bp);
--	xfs_buf_relse(bp);
-+	xfs_buf_lock(bp);
- 	mp->m_sb_bp = NULL;
-+	xfs_buf_relse(bp);
- }
- 
- /*
--- 
-1.7.1
+Infortrend RAID with BBU -> DRBD -> LVM -> XFS
+
+This system is running since beginning of August and replaced some
+older hardware.
+
+Last week xfs began to print some warnings to syslog. The day before a DRBD
+verify ended without showing differences between the 2 cluster nodes.
+
+I asked on #xfs and #drbd IRC about this.
+
+#xfs
+14:52:11 run xfs_repair over it as soon as you can
+14:52:22 this looks a bit like a missing cache flush induced corruption
+14:52:48 so check if you have your disk write cache properly disabled when using drbd
+
+#drbd
+16:48:14  you got that one backwards
+16:52:09 "this looks a bit like a missing cache flush induced corruption"
+[...]
+
+So I ran xfs_repair -n on the fs an it found some problems, put 7 inodes in
+lost+found (I stupidly rebooted too fast to save the xfs_repair output).
+
+Since this reboot there were no more messages in syslog.
+
+The Infortrend device has a BBU, but the option to used the drive caches was
+enabled. So there was a possibility to lose data in case of an power outage.
+I've now disabled that option. Given that and that there was no power outage
+since August, what could be cause of the corruption? I'm not sure where to
+start looking. Before going into production with this server I ran memtest.
+
+This seems not to happen all the time, the server was running 5 weeks without
+these messages. And there were some full backups running during this
+time which read every file on the fs.
+
+
+Any hints what to look for or what to do to notice this corruption as soon as possible?
+
+
+
+Sep 13 12:30:30 VU0EM003 kernel: [2834063.439771] block drbd0: conn( Connected -> VerifyS ) 
+Sep 13 12:30:30 VU0EM003 kernel: [2834063.439803] block drbd0: Starting Online Verify from sector 0
+Sep 15 03:06:59 VU0EM003 kernel: [2972785.494729] block drbd0: Online verify  done (total 138989 sec; paused 0 sec; 33716 K/sec)
+Sep 15 03:06:59 VU0EM003 kernel: [2972785.494794] block drbd0: conn( VerifyS -> Connected ) 
+
+Sep 16 12:18:16 VU0EM003 kernel: [3092032.035881] ffff8803e65c8000: 49 4e 00 00 02 02 00 00 00 00 14 1b 00 00 04 26  IN.............&
+Sep 16 12:18:16 VU0EM003 kernel: [3092032.035936] Filesystem "dm-2": XFS internal error xfs_da_do_buf(2) at line 2112 of file /tmp/buildd/linux-2.6-2.6.32/debian/build/source_amd64_none/fs/xfs/xfs_da_btree.c.  Caller 0xffffffffa02b0a52
+Sep 16 12:18:16 VU0EM003 kernel: [3092032.035938] 
+Sep 16 12:18:16 VU0EM003 kernel: [3092032.036031] Pid: 1691, comm: smbd Not tainted 2.6.32-bpo.5-amd64 #1
+Sep 16 12:18:16 VU0EM003 kernel: [3092032.036059] Call Trace:
+Sep 16 12:18:16 VU0EM003 kernel: [3092032.036096]  [<ffffffffa02b0a52>] ? xfs_da_read_buf+0x24/0x29 [xfs]
+Sep 16 12:18:16 VU0EM003 kernel: [3092032.036143]  [<ffffffffa02b0922>] ? xfs_da_do_buf+0x558/0x61e [xfs]
+Sep 16 12:18:16 VU0EM003 kernel: [3092032.036179]  [<ffffffffa02b0a52>] ? xfs_da_read_buf+0x24/0x29 [xfs]
+Sep 16 12:18:16 VU0EM003 kernel: [3092032.036209]  [<ffffffff810fabd8>] ? poll_freewait+0x3d/0x8a
+Sep 16 12:18:16 VU0EM003 kernel: [3092032.036243]  [<ffffffffa02b0a52>] ? xfs_da_read_buf+0x24/0x29 [xfs]
+Sep 16 12:18:16 VU0EM003 kernel: [3092032.036279]  [<ffffffffa02b4126>] ? xfs_dir2_block_lookup_int+0x45/0x19f [xfs]
+Sep 16 12:18:16 VU0EM003 kernel: [3092032.036331]  [<ffffffffa02b4126>] ? xfs_dir2_block_lookup_int+0x45/0x19f [xfs]
+Sep 16 12:18:16 VU0EM003 kernel: [3092032.036382]  [<ffffffffa02b46c1>] ? xfs_dir2_block_lookup+0x18/0x9f [xfs]
+Sep 16 12:18:16 VU0EM003 kernel: [3092032.036419]  [<ffffffffa02b33b8>] ? xfs_dir_lookup+0xd5/0x147 [xfs]
+Sep 16 12:18:16 VU0EM003 kernel: [3092032.036455]  [<ffffffffa02d5800>] ? xfs_lookup+0x47/0xa3 [xfs]
+Sep 16 12:18:16 VU0EM003 kernel: [3092032.036507]  [<ffffffffa02dd8a3>] ? xfs_vn_lookup+0x3c/0x7b [xfs]
+Sep 16 12:18:16 VU0EM003 kernel: [3092032.036536]  [<ffffffff810f5657>] ? do_lookup+0xd3/0x15d
+Sep 16 12:18:16 VU0EM003 kernel: [3092032.036562]  [<ffffffff810f6084>] ? __link_path_walk+0x5a5/0x6f5
+Sep 16 12:18:16 VU0EM003 kernel: [3092032.036590]  [<ffffffff810f6402>] ? path_walk+0x66/0xc9
+Sep 16 12:18:16 VU0EM003 kernel: [3092032.036624]  [<ffffffff810f786c>] ? do_path_lookup+0x20/0x77
+Sep 16 12:18:16 VU0EM003 kernel: [3092032.036651]  [<ffffffff810f8d4e>] ? user_path_at+0x48/0x79
+Sep 16 12:18:16 VU0EM003 kernel: [3092032.036679]  [<ffffffff810f110b>] ? cp_new_stat+0xe9/0xfc
+Sep 16 12:18:16 VU0EM003 kernel: [3092032.036713]  [<ffffffff81064ae6>] ? autoremove_wake_function+0x0/0x2e
+Sep 16 12:18:16 VU0EM003 kernel: [3092032.036742]  [<ffffffff810f12d2>] ? vfs_fstatat+0x2c/0x57
+Sep 16 12:18:16 VU0EM003 kernel: [3092032.036769]  [<ffffffff810f13c5>] ? sys_newstat+0x11/0x30
+Sep 16 12:18:16 VU0EM003 kernel: [3092032.036797]  [<ffffffff81010b42>] ? system_call_fastpath+0x16/0x1b
+[some more lines]
+Sep 19 03:10:32 VU0EM003 kernel: [3317932.210909] ffff8803e65c8000: 49 4e 00 00 02 02 00 00 00 00 14 1b 00 00 04 26  IN.............&
+Sep 19 03:10:32 VU0EM003 kernel: [3317932.210959] Filesystem "dm-2": XFS internal error xfs_da_do_buf(2) at line 2112 of file /tmp/buildd/linux-2.
+6-2.6.32/debian/build/source_amd64_none/fs/xfs/xfs_da_btree.c.  Caller 0xffffffffa02b0a52
+Sep 19 03:10:32 VU0EM003 kernel: [3317932.210960] 
+Sep 19 03:10:32 VU0EM003 kernel: [3317932.211054] Pid: 27834, comm: rsync Not tainted 2.6.32-bpo.5-amd64 #1
+Sep 19 03:10:32 VU0EM003 kernel: [3317932.211082] Call Trace:
+Sep 19 03:10:32 VU0EM003 kernel: [3317932.211120]  [<ffffffffa02b0a52>] ? xfs_da_read_buf+0x24/0x29 [xfs]
+Sep 19 03:10:32 VU0EM003 kernel: [3317932.211159]  [<ffffffffa02b0922>] ? xfs_da_do_buf+0x558/0x61e [xfs]
+Sep 19 03:10:32 VU0EM003 kernel: [3317932.211196]  [<ffffffffa02b0a52>] ? xfs_da_read_buf+0x24/0x29 [xfs]
+Sep 19 03:10:32 VU0EM003 kernel: [3317932.211232]  [<ffffffffa02db4ca>] ? xfs_dir_open+0x0/0x55 [xfs]
+Sep 19 03:10:32 VU0EM003 kernel: [3317932.211267]  [<ffffffffa02b0a19>] ? xfs_da_reada_buf+0x31/0x46 [xfs]
+Sep 19 03:10:32 VU0EM003 kernel: [3317932.211298]  [<ffffffff810ec6cd>] ? __dentry_open+0x1c4/0x2bf
+Sep 19 03:10:32 VU0EM003 kernel: [3317932.211326]  [<ffffffff810fa464>] ? filldir+0x0/0xb7
+Sep 19 03:10:32 VU0EM003 kernel: [3317932.211359]  [<ffffffffa02b0a52>] ? xfs_da_read_buf+0x24/0x29 [xfs]
+Sep 19 03:10:32 VU0EM003 kernel: [3317932.211395]  [<ffffffffa02b4389>] ? xfs_dir2_block_getdents+0x66/0x1ab [xfs]
+Sep 19 03:10:32 VU0EM003 kernel: [3317932.211446]  [<ffffffffa02b4389>] ? xfs_dir2_block_getdents+0x66/0x1ab [xfs]
+Sep 19 03:10:32 VU0EM003 kernel: [3317932.211490]  [<ffffffff810f110b>] ? cp_new_stat+0xe9/0xfc
+Sep 19 03:10:32 VU0EM003 kernel: [3317932.211517]  [<ffffffff810fa464>] ? filldir+0x0/0xb7
+Sep 19 03:10:32 VU0EM003 kernel: [3317932.211543]  [<ffffffff810fa464>] ? filldir+0x0/0xb7
+Sep 19 03:10:32 VU0EM003 kernel: [3317932.211577]  [<ffffffffa02b319e>] ? xfs_readdir+0x8b/0xb0 [xfs]
+Sep 19 03:10:32 VU0EM003 kernel: [3317932.211604]  [<ffffffff810fa464>] ? filldir+0x0/0xb7
+Sep 19 03:10:32 VU0EM003 kernel: [3317932.211637]  [<ffffffffa02db553>] ? xfs_file_readdir+0x34/0x43 [xfs]
+Sep 19 03:10:32 VU0EM003 kernel: [3317932.211666]  [<ffffffff810fa634>] ? vfs_readdir+0x75/0xa7
+Sep 19 03:10:32 VU0EM003 kernel: [3317932.211693]  [<ffffffff810fa79e>] ? sys_getdents+0x7a/0xc7
+Sep 19 03:10:32 VU0EM003 kernel: [3317932.211721]  [<ffffffff81010b42>] ? system_call_fastpath+0x16/0x1b
 
 _______________________________________________
 xfs mailing list
