@@ -1,28 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8M6hx7L050891 for <xfs@oss.sgi.com>; Wed, 22 Sep 2010 01:43:59 -0500
+	o8M6hwn8050871 for <xfs@oss.sgi.com>; Wed, 22 Sep 2010 01:43:58 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8464F903EC
-	for <xfs@oss.sgi.com>; Tue, 21 Sep 2010 23:44:52 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 73C8814FA49A
+	for <xfs@oss.sgi.com>; Tue, 21 Sep 2010 23:57:17 -0700 (PDT)
 Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
 	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	IyXAsSaqCCYC9uC2 for <xfs@oss.sgi.com>;
-	Tue, 21 Sep 2010 23:44:52 -0700 (PDT)
+	eWkwArqfxO3RiOuj for <xfs@oss.sgi.com>;
+	Tue, 21 Sep 2010 23:57:17 -0700 (PDT)
 Received: from dastard (unverified [121.44.66.70])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	39842544-1927428
+	39842545-1927428
 	for <xfs@oss.sgi.com>; Wed, 22 Sep 2010 16:14:48 +0930 (CST)
 Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1OyJ4Q-0003uH-S9
-	for xfs@oss.sgi.com; Wed, 22 Sep 2010 16:44:46 +1000
+	(envelope-from <dave@fromorbit.com>) id 1OyJ4G-0003tz-R8
+	for xfs@oss.sgi.com; Wed, 22 Sep 2010 16:44:36 +1000
 Received: from dave by disturbed with local (Exim 4.72)
-	(envelope-from <dave@disturbed.disaster>) id 1OyJ4E-0002lF-Mg
+	(envelope-from <dave@disturbed.disaster>) id 1OyJ4E-0002lC-Ik
 	for xfs@oss.sgi.com; Wed, 22 Sep 2010 16:44:34 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 10/16] xfs: remove buftarg hash for external devices
-Date: Wed, 22 Sep 2010 16:44:23 +1000
-Message-Id: <1285137869-10310-11-git-send-email-david@fromorbit.com>
+Subject: [PATCH 09/16] xfs: use unhashed buffers for size checks
+Date: Wed, 22 Sep 2010 16:44:22 +1000
+Message-Id: <1285137869-10310-10-git-send-email-david@fromorbit.com>
 In-Reply-To: <1285137869-10310-1-git-send-email-david@fromorbit.com>
 References: <1285137869-10310-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -42,33 +42,168 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-For RT and external log devices, we never use hashed buffers on them
-now.  Remove the buftarg hash tables that are set up for them.
+When we are checking we can access the last block of each device, we
+do not need to use cached buffers as they will be tossed away
+immediately. Use uncached buffers for size checks so that all IO
+prior to full in-memory structure initialisation does not use the
+buffer cache.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Alex Elder <aelder@sgi.com>
 ---
- fs/xfs/linux-2.6/xfs_buf.c |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
+ fs/xfs/xfs_fsops.c   |   11 +++++------
+ fs/xfs/xfs_mount.c   |   39 ++++++++++++++++-----------------------
+ fs/xfs/xfs_rtalloc.c |   29 +++++++++++++----------------
+ 3 files changed, 34 insertions(+), 45 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
-index 1497362..6de9513 100644
---- a/fs/xfs/linux-2.6/xfs_buf.c
-+++ b/fs/xfs/linux-2.6/xfs_buf.c
-@@ -1458,7 +1458,11 @@ xfs_alloc_bufhash(
- {
- 	unsigned int		i;
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 43b1d56..6a1edb1 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -144,12 +144,11 @@ xfs_growfs_data_private(
+ 	if ((error = xfs_sb_validate_fsb_count(&mp->m_sb, nb)))
+ 		return error;
+ 	dpct = pct - mp->m_sb.sb_imax_pct;
+-	error = xfs_read_buf(mp, mp->m_ddev_targp,
+-			XFS_FSB_TO_BB(mp, nb) - XFS_FSS_TO_BB(mp, 1),
+-			XFS_FSS_TO_BB(mp, 1), 0, &bp);
+-	if (error)
+-		return error;
+-	ASSERT(bp);
++	bp = xfs_buf_read_uncached(mp, mp->m_ddev_targp,
++				XFS_FSB_TO_BB(mp, nb) - XFS_FSS_TO_BB(mp, 1),
++				BBTOB(XFS_FSS_TO_BB(mp, 1)), 0);
++	if (!bp)
++		return EIO;
+ 	xfs_buf_relse(bp);
  
--	btp->bt_hashshift = external ? 3 : 12;	/* 8 or 4096 buckets */
-+	if (external) {
-+		btp->bt_hash = NULL;
-+		return;
-+	}
-+	btp->bt_hashshift = 12;	/* 4096 buckets */
- 	btp->bt_hash = kmem_zalloc_large((1 << btp->bt_hashshift) *
- 					 sizeof(xfs_bufhash_t));
- 	for (i = 0; i < (1 << btp->bt_hashshift); i++) {
+ 	new = nb;	/* use new as a temporary here */
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index fbca293..912101d 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -980,42 +980,35 @@ xfs_check_sizes(xfs_mount_t *mp)
+ {
+ 	xfs_buf_t	*bp;
+ 	xfs_daddr_t	d;
+-	int		error;
+ 
+ 	d = (xfs_daddr_t)XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks);
+ 	if (XFS_BB_TO_FSB(mp, d) != mp->m_sb.sb_dblocks) {
+-		cmn_err(CE_WARN, "XFS: size check 1 failed");
++		cmn_err(CE_WARN, "XFS: filesystem size mismatch detected");
+ 		return XFS_ERROR(EFBIG);
+ 	}
+-	error = xfs_read_buf(mp, mp->m_ddev_targp,
+-			     d - XFS_FSS_TO_BB(mp, 1),
+-			     XFS_FSS_TO_BB(mp, 1), 0, &bp);
+-	if (!error) {
+-		xfs_buf_relse(bp);
+-	} else {
+-		cmn_err(CE_WARN, "XFS: size check 2 failed");
+-		if (error == ENOSPC)
+-			error = XFS_ERROR(EFBIG);
+-		return error;
++	bp = xfs_buf_read_uncached(mp, mp->m_ddev_targp,
++					d - XFS_FSS_TO_BB(mp, 1),
++					BBTOB(XFS_FSS_TO_BB(mp, 1)), 0);
++	if (!bp) {
++		cmn_err(CE_WARN, "XFS: last sector read failed");
++		return EIO;
+ 	}
++	xfs_buf_relse(bp);
+ 
+ 	if (mp->m_logdev_targp != mp->m_ddev_targp) {
+ 		d = (xfs_daddr_t)XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks);
+ 		if (XFS_BB_TO_FSB(mp, d) != mp->m_sb.sb_logblocks) {
+-			cmn_err(CE_WARN, "XFS: size check 3 failed");
++			cmn_err(CE_WARN, "XFS: log size mismatch detected");
+ 			return XFS_ERROR(EFBIG);
+ 		}
+-		error = xfs_read_buf(mp, mp->m_logdev_targp,
+-				     d - XFS_FSB_TO_BB(mp, 1),
+-				     XFS_FSB_TO_BB(mp, 1), 0, &bp);
+-		if (!error) {
+-			xfs_buf_relse(bp);
+-		} else {
+-			cmn_err(CE_WARN, "XFS: size check 3 failed");
+-			if (error == ENOSPC)
+-				error = XFS_ERROR(EFBIG);
+-			return error;
++		bp = xfs_buf_read_uncached(mp, mp->m_logdev_targp,
++					d - XFS_FSB_TO_BB(mp, 1),
++					XFS_FSB_TO_B(mp, 1), 0);
++		if (!bp) {
++			cmn_err(CE_WARN, "XFS: log device read failed");
++			return EIO;
+ 		}
++		xfs_buf_relse(bp);
+ 	}
+ 	return 0;
+ }
+diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+index 891260f..12a1913 100644
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -39,6 +39,7 @@
+ #include "xfs_trans_space.h"
+ #include "xfs_utils.h"
+ #include "xfs_trace.h"
++#include "xfs_buf.h"
+ 
+ 
+ /*
+@@ -1883,13 +1884,13 @@ xfs_growfs_rt(
+ 	/*
+ 	 * Read in the last block of the device, make sure it exists.
+ 	 */
+-	error = xfs_read_buf(mp, mp->m_rtdev_targp,
+-			XFS_FSB_TO_BB(mp, nrblocks - 1),
+-			XFS_FSB_TO_BB(mp, 1), 0, &bp);
+-	if (error)
+-		return error;
+-	ASSERT(bp);
++	bp = xfs_buf_read_uncached(mp, mp->m_rtdev_targp,
++				XFS_FSB_TO_BB(mp, nrblocks - 1),
++				XFS_FSB_TO_B(mp, 1), 0);
++	if (!bp)
++		return EIO;
+ 	xfs_buf_relse(bp);
++
+ 	/*
+ 	 * Calculate new parameters.  These are the final values to be reached.
+ 	 */
+@@ -2215,7 +2216,6 @@ xfs_rtmount_init(
+ {
+ 	xfs_buf_t	*bp;	/* buffer for last block of subvolume */
+ 	xfs_daddr_t	d;	/* address of last block of subvolume */
+-	int		error;	/* error return value */
+ 	xfs_sb_t	*sbp;	/* filesystem superblock copy in mount */
+ 
+ 	sbp = &mp->m_sb;
+@@ -2242,15 +2242,12 @@ xfs_rtmount_init(
+ 			(unsigned long long) mp->m_sb.sb_rblocks);
+ 		return XFS_ERROR(EFBIG);
+ 	}
+-	error = xfs_read_buf(mp, mp->m_rtdev_targp,
+-				d - XFS_FSB_TO_BB(mp, 1),
+-				XFS_FSB_TO_BB(mp, 1), 0, &bp);
+-	if (error) {
+-		cmn_err(CE_WARN,
+-	"XFS: realtime mount -- xfs_read_buf failed, returned %d", error);
+-		if (error == ENOSPC)
+-			return XFS_ERROR(EFBIG);
+-		return error;
++	bp = xfs_buf_read_uncached(mp, mp->m_rtdev_targp,
++					d - XFS_FSB_TO_BB(mp, 1),
++					XFS_FSB_TO_B(mp, 1), 0);
++	if (!bp) {
++		cmn_err(CE_WARN, "XFS: realtime device size check failed");
++		return EIO;
+ 	}
+ 	xfs_buf_relse(bp);
+ 	return 0;
 -- 
 1.7.1
 
