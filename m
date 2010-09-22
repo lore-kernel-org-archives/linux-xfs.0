@@ -1,20 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8M8UsC0055414 for <xfs@oss.sgi.com>; Wed, 22 Sep 2010 03:30:55 -0500
-Received: from smtp3-g21.free.fr (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C6651183AAB3
-	for <xfs@oss.sgi.com>; Wed, 22 Sep 2010 01:31:47 -0700 (PDT)
-Received: from smtp3-g21.free.fr (smtp3-g21.free.fr [212.27.42.3]) by
-	cuda.sgi.com with ESMTP id ldvdRTdjRtb9rZ9x for
-	<xfs@oss.sgi.com>; Wed, 22 Sep 2010 01:31:47 -0700 (PDT)
-Date: Wed, 22 Sep 2010 10:31:34 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: XFS internal error xfs_da_do_buf(2)
-Message-ID: <20100922103134.4e652651@galadriel.home>
-In-Reply-To: <20100922072653.GA23326@pirx.askja.de>
-References: <20100922072653.GA23326@pirx.askja.de>
-Mime-Version: 1.0
+	o8MAPWlC059624 for <xfs@oss.sgi.com>; Wed, 22 Sep 2010 05:25:32 -0500
+Received: from opencube.bzctoons.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id F31D1909F7
+	for <xfs@oss.sgi.com>; Wed, 22 Sep 2010 03:26:25 -0700 (PDT)
+Received: from opencube.bzctoons.net (opencube-2.bzctoons.net
+	[88.191.104.187]) by cuda.sgi.com with ESMTP id
+	YK47RMcfKY7EbgCm for <xfs@oss.sgi.com>;
+	Wed, 22 Sep 2010 03:26:25 -0700 (PDT)
+Received: from localhost (opencube.bzctoons.net.local [127.0.0.1])
+	by opencube.bzctoons.net (Postfix) with ESMTP id 4048790A53
+	for <xfs@oss.sgi.com>; Wed, 22 Sep 2010 12:26:24 +0200 (CEST)
+Received: from opencube.bzctoons.net ([127.0.0.1])
+	by localhost (opencube.bzctoons.net [127.0.0.1]) (amavisd-maia,
+	port 10024) with ESMTP id 19576-08 for <xfs@oss.sgi.com>;
+	Wed, 22 Sep 2010 12:26:22 +0200 (CEST)
+Received: from [192.168.16.148] (opencube03.pck.nerim.net [62.212.120.41])
+	(Authenticated sender: mathieu.avila@opencubetech.com)
+	by opencube.bzctoons.net (Postfix) with ESMTPA id 1BE6C909B9
+	for <xfs@oss.sgi.com>; Wed, 22 Sep 2010 12:26:22 +0200 (CEST)
+Message-ID: <4C99D9EB.20800@opencubetech.com>
+Date: Wed, 22 Sep 2010 12:26:51 +0200
+From: Mathieu AVILA <mathieu.avila@opencubetech.com>
+MIME-Version: 1.0
+Subject: Re: Question regarding performance on big files.
+References: <4C979439.7070906@opencubetech.com>
+	<4C97BA74.5030304@hardwarefreak.com>
+In-Reply-To: <4C97BA74.5030304@hardwarefreak.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,43 +36,124 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="iso-8859-1"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ralf Gross <Ralf-Lists@ralfgross.de>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Le Wed, 22 Sep 2010 09:26:53 +0200 vous =E9criviez:
+  Hello,
 
-> Infortrend RAID with BBU -> DRBD -> LVM -> XFS
+Thank you for your quick answer.
 
-I'm not sure to understand; DRBD is used to mirror devices, are you
-using 2 Infortrend arrays, or one split into two volumes? =
+I have run my test again with default parameters for mkfs.
+I still have this issue. For 20 seconds, the writes are either stalled, =
+
+or very slow.
+I have run "vmstat" at the same time than "dd", and it appears that the =
+
+block device continues to receive write requests, while "dd" is blocked =
+
+in the kernel.
+With blktrace, I can see that during this period of time, the block =
+
+receives a lot of small write requests throughout the volume ranging =
+
+from the start till the point where the file has stopped writing. During =
+
+the other periods of time, the volume is written normally, starting at =
+
+offset 0 and filling the disk continuously.
+
+Could this be an effect of tree rebalancing for extents management (both =
+
+inode of big file and free space trees) ? Can it be a hardware problem ? =
+
+Have you ever seen that issue before ?
+
+--
+Mathieu Avila
 
 
-In any case, battery protected write cache shouldn't create any
-corruption (OTOH it will enhance performance dramatically). AFAIK all
-RAID arrays mirror the drives cache in the array cache until it hits
-platters. There may be some "cheating" hard drives (I heard that WD
-isn't always totally clear about cache policies) but Seagate and Hitachi
-professional grade drives definitely are OK. Hint: don't use desktop
-hard drives in any case because they probably cheat about cache
-synchronisation.
+Le 20/09/2010 21:48, Stan Hoeppner a =E9crit :
+> Mathieu AVILA put forth on 9/20/2010 12:04 PM:
+>>   Hello XFS team,
+>>
+>> I have run into trouble with XFS, but excuse me if this question has
+>> been asked a dozens times.
+>>
+>> I'm am filling a very big file on a XFS filesystem on Linux that stands
+>> on a software RAID 0. Performance are very good until I get 2 "holes"
+>> during which my write stalls for a few seconds.
+>> Mkfs parameters:
+>> mkxfs.xfs -b size 4096 -s size 4096 -d agcount=3D2 -i size=3D2048
+>> The RAID0 is done a 2 SATA disks of 500 GB each.
+> What happens when you make the filesystem using defaults?
+>
+> mkfs.xfs /dev/[device]
+>
+> Not sure if it is related to your issue, but your manual agcount setting
+> seems really low.  agcount greatly affects parallelism.  With a manual
+> setting of 2, you're dictating serial read/write stream behavior to/from
+> each drive.  This is not good.
+>
+> I have a server with a single 500GB SATA drive with two XFS filesystem
+> partitions for data, each of 100GB, and a 35GB EXT partition for the /
+> filesystem.  Over half the drive space is unallocated.  Yet each XFS
+> filesystem has 4 default allocation groups.  If I were to create two
+> more 100GB filesystems, I'd end up with 16 AGs for 400GB worth of XFS
+> filesystems on a single 500GB drive.
+>
+> meta-data=3D/dev/sda6    isize=3D256    agcount=3D4, agsize=3D6103694 blks
+>           =3D             sectsz=3D512   attr=3D2
+> data     =3D             bsize=3D4096   blocks=3D24414775, imaxpct=3D25
+>           =3D             sunit=3D0      swidth=3D0 blks
+> naming   =3Dversion 2    bsize=3D4096
+> log      =3Dinternal     bsize=3D4096   blocks=3D11921, version=3D2
+>           =3D             sectsz=3D512   sunit=3D0 blks, lazy-count=3D0
+> realtime =3Dnone         extsz=3D4096   blocks=3D0, rtextents=3D0
+>
+> My suggestion would be to create the filesystem using default values and
+> see what you get.  2.6.18 is rather old, and I don't know if XFS picks
+> up the mdraid config and uses that info accordingly.  Newer versions of
+> XFS do this automatically and correctly, so you don't need to manually
+> specify anything with mkfs.xfs.
+>
+> If default mkfs values still yield issues/problems, remake the
+> filesystem specifying '-d sw=3D2' and retest.
+>
+> You specified '-b size=3D4096'.  This is the default for block size so
+> there's no need to specify it.
+>
+> You specified '-s size=3D4096'.  This needs to match the sector size of
+> the underlying physical disk, which is 512 bytes in your case.  This may
+> be part of your problem as well.
+>
+> You specified '-d agcount=3D2'.  From man mkfs.xfs:
+>
+> "The data section of the filesystem is divided into _value_ allocation
+> groups (default value is scaled automatically based on the underlying
+> device size)."
+>
+> My guess is that mkfs.xfs with no manual agcount forced would yield
+> something like 32-40 allocations groups on your RAID0 1TB XFS
+> filesystem.  Theoretically, this should boost your performance 16-20
+> times over your current agcount setting of 2 allocation groups.  In
+> reality the boost won't be nearly that great, but your performance
+> should be greatly improved nonetheless.
+>
 
-I see that you may have been running rsync at the time of failure; there
-are quite a lot of quite unclear (to me at least) cases of XFS failures
-when running rsync to copy large amount of data. I it a fully 64 bits
-system?
 
 -- =
 
-------------------------------------------------------------------------
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
-------------------------------------------------------------------------
+*Mathieu Avila*
+IT & Integration Engineer
+mathieu.avila@opencubetech.com
+
+OpenCube Technologies http://www.opencubetech.com
+Parc Technologique du Canal, 9 avenue de l'Europe
+31520 Ramonville St Agne - FRANCE
+Tel. : +33 (0) 561 285 606 - Fax : +33 (0) 561 285 635
 
 _______________________________________________
 xfs mailing list
