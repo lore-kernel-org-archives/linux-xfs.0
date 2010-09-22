@@ -1,28 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8M6hwn8050871 for <xfs@oss.sgi.com>; Wed, 22 Sep 2010 01:43:58 -0500
+	o8M6hvJk050834 for <xfs@oss.sgi.com>; Wed, 22 Sep 2010 01:43:57 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 73C8814FA49A
-	for <xfs@oss.sgi.com>; Tue, 21 Sep 2010 23:57:17 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
-	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	eWkwArqfxO3RiOuj for <xfs@oss.sgi.com>;
-	Tue, 21 Sep 2010 23:57:17 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E1E84183AE80
+	for <xfs@oss.sgi.com>; Tue, 21 Sep 2010 23:44:49 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
+	[150.101.137.97]) by cuda.sgi.com with ESMTP id
+	cNd4SDwwcmJE1aYm for <xfs@oss.sgi.com>;
+	Tue, 21 Sep 2010 23:44:49 -0700 (PDT)
 Received: from dastard (unverified [121.44.66.70])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	39842545-1927428
+	39989421-1927428
 	for <xfs@oss.sgi.com>; Wed, 22 Sep 2010 16:14:48 +0930 (CST)
 Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1OyJ4G-0003tz-R8
+	(envelope-from <dave@fromorbit.com>) id 1OyJ4G-0003to-JD
 	for xfs@oss.sgi.com; Wed, 22 Sep 2010 16:44:36 +1000
 Received: from dave by disturbed with local (Exim 4.72)
-	(envelope-from <dave@disturbed.disaster>) id 1OyJ4E-0002lC-Ik
+	(envelope-from <dave@disturbed.disaster>) id 1OyJ4E-0002l3-Bv
 	for xfs@oss.sgi.com; Wed, 22 Sep 2010 16:44:34 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 09/16] xfs: use unhashed buffers for size checks
-Date: Wed, 22 Sep 2010 16:44:22 +1000
-Message-Id: <1285137869-10310-10-git-send-email-david@fromorbit.com>
+Subject: [PATCH 06/16] xfs: introduced uncached buffer read primitve
+Date: Wed, 22 Sep 2010 16:44:19 +1000
+Message-Id: <1285137869-10310-7-git-send-email-david@fromorbit.com>
 In-Reply-To: <1285137869-10310-1-git-send-email-david@fromorbit.com>
 References: <1285137869-10310-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -42,168 +42,77 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-When we are checking we can access the last block of each device, we
-do not need to use cached buffers as they will be tossed away
-immediately. Use uncached buffers for size checks so that all IO
-prior to full in-memory structure initialisation does not use the
-buffer cache.
+To avoid the need to use cached buffers for single-shot or buffers
+cached at the filesystem level, introduce a new buffer read
+primitive that bypasses the cache an reads directly from disk.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Alex Elder <aelder@sgi.com>
 ---
- fs/xfs/xfs_fsops.c   |   11 +++++------
- fs/xfs/xfs_mount.c   |   39 ++++++++++++++++-----------------------
- fs/xfs/xfs_rtalloc.c |   29 +++++++++++++----------------
- 3 files changed, 34 insertions(+), 45 deletions(-)
+ fs/xfs/linux-2.6/xfs_buf.c |   34 ++++++++++++++++++++++++++++++++++
+ fs/xfs/linux-2.6/xfs_buf.h |    3 +++
+ 2 files changed, 37 insertions(+), 0 deletions(-)
 
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 43b1d56..6a1edb1 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -144,12 +144,11 @@ xfs_growfs_data_private(
- 	if ((error = xfs_sb_validate_fsb_count(&mp->m_sb, nb)))
- 		return error;
- 	dpct = pct - mp->m_sb.sb_imax_pct;
--	error = xfs_read_buf(mp, mp->m_ddev_targp,
--			XFS_FSB_TO_BB(mp, nb) - XFS_FSS_TO_BB(mp, 1),
--			XFS_FSS_TO_BB(mp, 1), 0, &bp);
--	if (error)
--		return error;
--	ASSERT(bp);
-+	bp = xfs_buf_read_uncached(mp, mp->m_ddev_targp,
-+				XFS_FSB_TO_BB(mp, nb) - XFS_FSS_TO_BB(mp, 1),
-+				BBTOB(XFS_FSS_TO_BB(mp, 1)), 0);
-+	if (!bp)
-+		return EIO;
- 	xfs_buf_relse(bp);
- 
- 	new = nb;	/* use new as a temporary here */
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index fbca293..912101d 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -980,42 +980,35 @@ xfs_check_sizes(xfs_mount_t *mp)
- {
- 	xfs_buf_t	*bp;
- 	xfs_daddr_t	d;
--	int		error;
- 
- 	d = (xfs_daddr_t)XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks);
- 	if (XFS_BB_TO_FSB(mp, d) != mp->m_sb.sb_dblocks) {
--		cmn_err(CE_WARN, "XFS: size check 1 failed");
-+		cmn_err(CE_WARN, "XFS: filesystem size mismatch detected");
- 		return XFS_ERROR(EFBIG);
- 	}
--	error = xfs_read_buf(mp, mp->m_ddev_targp,
--			     d - XFS_FSS_TO_BB(mp, 1),
--			     XFS_FSS_TO_BB(mp, 1), 0, &bp);
--	if (!error) {
--		xfs_buf_relse(bp);
--	} else {
--		cmn_err(CE_WARN, "XFS: size check 2 failed");
--		if (error == ENOSPC)
--			error = XFS_ERROR(EFBIG);
--		return error;
-+	bp = xfs_buf_read_uncached(mp, mp->m_ddev_targp,
-+					d - XFS_FSS_TO_BB(mp, 1),
-+					BBTOB(XFS_FSS_TO_BB(mp, 1)), 0);
-+	if (!bp) {
-+		cmn_err(CE_WARN, "XFS: last sector read failed");
-+		return EIO;
- 	}
-+	xfs_buf_relse(bp);
- 
- 	if (mp->m_logdev_targp != mp->m_ddev_targp) {
- 		d = (xfs_daddr_t)XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks);
- 		if (XFS_BB_TO_FSB(mp, d) != mp->m_sb.sb_logblocks) {
--			cmn_err(CE_WARN, "XFS: size check 3 failed");
-+			cmn_err(CE_WARN, "XFS: log size mismatch detected");
- 			return XFS_ERROR(EFBIG);
- 		}
--		error = xfs_read_buf(mp, mp->m_logdev_targp,
--				     d - XFS_FSB_TO_BB(mp, 1),
--				     XFS_FSB_TO_BB(mp, 1), 0, &bp);
--		if (!error) {
--			xfs_buf_relse(bp);
--		} else {
--			cmn_err(CE_WARN, "XFS: size check 3 failed");
--			if (error == ENOSPC)
--				error = XFS_ERROR(EFBIG);
--			return error;
-+		bp = xfs_buf_read_uncached(mp, mp->m_logdev_targp,
-+					d - XFS_FSB_TO_BB(mp, 1),
-+					XFS_FSB_TO_B(mp, 1), 0);
-+		if (!bp) {
-+			cmn_err(CE_WARN, "XFS: log device read failed");
-+			return EIO;
- 		}
-+		xfs_buf_relse(bp);
- 	}
- 	return 0;
+diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
+index fbbc6d3..c8420c0 100644
+--- a/fs/xfs/linux-2.6/xfs_buf.c
++++ b/fs/xfs/linux-2.6/xfs_buf.c
+@@ -638,6 +638,40 @@ xfs_buf_readahead(
+ 	xfs_buf_read(target, ioff, isize, flags);
  }
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index 891260f..12a1913 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -39,6 +39,7 @@
- #include "xfs_trans_space.h"
- #include "xfs_utils.h"
- #include "xfs_trace.h"
-+#include "xfs_buf.h"
  
- 
- /*
-@@ -1883,13 +1884,13 @@ xfs_growfs_rt(
- 	/*
- 	 * Read in the last block of the device, make sure it exists.
- 	 */
--	error = xfs_read_buf(mp, mp->m_rtdev_targp,
--			XFS_FSB_TO_BB(mp, nrblocks - 1),
--			XFS_FSB_TO_BB(mp, 1), 0, &bp);
--	if (error)
--		return error;
--	ASSERT(bp);
-+	bp = xfs_buf_read_uncached(mp, mp->m_rtdev_targp,
-+				XFS_FSB_TO_BB(mp, nrblocks - 1),
-+				XFS_FSB_TO_B(mp, 1), 0);
-+	if (!bp)
-+		return EIO;
- 	xfs_buf_relse(bp);
++/*
++ * Read an uncached buffer from disk. Allocates and returns a locked
++ * buffer containing the disk contents or nothing.
++ */
++struct xfs_buf *
++xfs_buf_read_uncached(
++	struct xfs_mount	*mp,
++	struct xfs_buftarg	*target,
++	xfs_daddr_t		daddr,
++	size_t			length,
++	int			flags)
++{
++	xfs_buf_t		*bp;
++	int			error;
 +
- 	/*
- 	 * Calculate new parameters.  These are the final values to be reached.
- 	 */
-@@ -2215,7 +2216,6 @@ xfs_rtmount_init(
- {
- 	xfs_buf_t	*bp;	/* buffer for last block of subvolume */
- 	xfs_daddr_t	d;	/* address of last block of subvolume */
--	int		error;	/* error return value */
- 	xfs_sb_t	*sbp;	/* filesystem superblock copy in mount */
++	bp = xfs_buf_get_uncached(length, flags, target);
++	if (!bp)
++		return NULL;
++
++	/* set up the buffer for a read IO */
++	xfs_buf_lock(bp);
++	XFS_BUF_SET_ADDR(bp, daddr);
++	XFS_BUF_READ(bp);
++	XFS_BUF_BUSY(bp);
++
++	xfsbdstrat(mp, bp);
++	error = xfs_iowait(bp);
++	if (error || bp->b_error) {
++		xfs_buf_relse(bp);
++		return NULL;
++	}
++	return bp;
++}
++
+ xfs_buf_t *
+ xfs_buf_get_empty(
+ 	size_t			len,
+diff --git a/fs/xfs/linux-2.6/xfs_buf.h b/fs/xfs/linux-2.6/xfs_buf.h
+index fbcc77b..23da2aa 100644
+--- a/fs/xfs/linux-2.6/xfs_buf.h
++++ b/fs/xfs/linux-2.6/xfs_buf.h
+@@ -218,6 +218,9 @@ extern int xfs_buf_associate_memory(xfs_buf_t *, void *, size_t);
+ extern void xfs_buf_hold(xfs_buf_t *);
+ extern void xfs_buf_readahead(xfs_buftarg_t *, xfs_off_t, size_t,
+ 				xfs_buf_flags_t);
++struct xfs_buf *xfs_buf_read_uncached(struct xfs_mount *mp,
++				struct xfs_buftarg *target,
++				xfs_daddr_t daddr, size_t length, int flags);
  
- 	sbp = &mp->m_sb;
-@@ -2242,15 +2242,12 @@ xfs_rtmount_init(
- 			(unsigned long long) mp->m_sb.sb_rblocks);
- 		return XFS_ERROR(EFBIG);
- 	}
--	error = xfs_read_buf(mp, mp->m_rtdev_targp,
--				d - XFS_FSB_TO_BB(mp, 1),
--				XFS_FSB_TO_BB(mp, 1), 0, &bp);
--	if (error) {
--		cmn_err(CE_WARN,
--	"XFS: realtime mount -- xfs_read_buf failed, returned %d", error);
--		if (error == ENOSPC)
--			return XFS_ERROR(EFBIG);
--		return error;
-+	bp = xfs_buf_read_uncached(mp, mp->m_rtdev_targp,
-+					d - XFS_FSB_TO_BB(mp, 1),
-+					XFS_FSB_TO_B(mp, 1), 0);
-+	if (!bp) {
-+		cmn_err(CE_WARN, "XFS: realtime device size check failed");
-+		return EIO;
- 	}
- 	xfs_buf_relse(bp);
- 	return 0;
+ /* Releasing Buffers */
+ extern void xfs_buf_free(xfs_buf_t *);
 -- 
 1.7.1
 
