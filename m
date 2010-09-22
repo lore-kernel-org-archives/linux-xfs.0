@@ -1,28 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8M6i6Bw050900 for <xfs@oss.sgi.com>; Wed, 22 Sep 2010 01:44:06 -0500
+	o8M6hlLS050806 for <xfs@oss.sgi.com>; Wed, 22 Sep 2010 01:43:47 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1056114FA49F
-	for <xfs@oss.sgi.com>; Tue, 21 Sep 2010 23:57:25 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
-	[150.101.137.103]) by cuda.sgi.com with ESMTP id
-	SUL0581SIaEXn0WZ for <xfs@oss.sgi.com>;
-	Tue, 21 Sep 2010 23:57:25 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 72793183A4E6
+	for <xfs@oss.sgi.com>; Tue, 21 Sep 2010 23:44:39 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
+	[150.101.137.104]) by cuda.sgi.com with ESMTP id
+	J7BFIHyceuDJ9EEg for <xfs@oss.sgi.com>;
+	Tue, 21 Sep 2010 23:44:39 -0700 (PDT)
 Received: from dastard (unverified [121.44.66.70])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	39732793-1927428
-	for <xfs@oss.sgi.com>; Wed, 22 Sep 2010 16:14:57 +0930 (CST)
+	39842516-1927428
+	for <xfs@oss.sgi.com>; Wed, 22 Sep 2010 16:14:37 +0930 (CST)
 Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1OyJ4G-0003te-C3
+	(envelope-from <dave@fromorbit.com>) id 1OyJ4G-0003td-A7
 	for xfs@oss.sgi.com; Wed, 22 Sep 2010 16:44:36 +1000
 Received: from dave by disturbed with local (Exim 4.72)
-	(envelope-from <dave@disturbed.disaster>) id 1OyJ4E-0002ku-5x
+	(envelope-from <dave@disturbed.disaster>) id 1OyJ4E-0002kr-44
 	for xfs@oss.sgi.com; Wed, 22 Sep 2010 16:44:34 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 03/16] xfs: lockless per-ag lookups
-Date: Wed, 22 Sep 2010 16:44:16 +1000
-Message-Id: <1285137869-10310-4-git-send-email-david@fromorbit.com>
+Subject: [PATCH 02/16] xfs: remove debug assert for per-ag reference counting
+Date: Wed, 22 Sep 2010 16:44:15 +1000
+Message-Id: <1285137869-10310-3-git-send-email-david@fromorbit.com>
 In-Reply-To: <1285137869-10310-1-git-send-email-david@fromorbit.com>
 References: <1285137869-10310-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -42,131 +42,32 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-When we start taking a reference to the per-ag for every cached
-buffer in the system, kernel lockstat profiling on an 8-way create
-workload shows the mp->m_perag_lock has higher acquisition rates
-than the inode lock and has significantly more contention. That is,
-it becomes the highest contended lock in the system.
-
-The perag lookup is trivial to convert to lock-less RCU lookups
-because perag structures never go away. Hence the only thing we need
-to protect against is tree structure changes during a grow. This can
-be done simply by replacing the locking in xfs_perag_get() with RCU
-read locking. This removes the mp->m_perag_lock completely from this
-path.
+When we start taking references per cached buffer to the the perag
+it is cached on, it will blow the current debug maximum reference
+count assert out of the water. The assert has never caught a bug,
+and we have tracing to track changes if there ever is a problem,
+so just remove it.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Alex Elder <aelder@sgi.com>
 ---
- fs/xfs/linux-2.6/xfs_sync.c |    6 +++---
- fs/xfs/xfs_ag.h             |    3 +++
- fs/xfs/xfs_mount.c          |   25 +++++++++++++++++--------
- 3 files changed, 23 insertions(+), 11 deletions(-)
+ fs/xfs/xfs_mount.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
-index d59c4a6..ddeaff9 100644
---- a/fs/xfs/linux-2.6/xfs_sync.c
-+++ b/fs/xfs/linux-2.6/xfs_sync.c
-@@ -150,17 +150,17 @@ xfs_inode_ag_iter_next_pag(
- 		int found;
- 		int ref;
- 
--		spin_lock(&mp->m_perag_lock);
-+		rcu_read_lock();
- 		found = radix_tree_gang_lookup_tag(&mp->m_perag_tree,
- 				(void **)&pag, *first, 1, tag);
- 		if (found <= 0) {
--			spin_unlock(&mp->m_perag_lock);
-+			rcu_read_unlock();
- 			return NULL;
- 		}
- 		*first = pag->pag_agno + 1;
- 		/* open coded pag reference increment */
- 		ref = atomic_inc_return(&pag->pag_ref);
--		spin_unlock(&mp->m_perag_lock);
-+		rcu_read_unlock();
- 		trace_xfs_perag_get_reclaim(mp, pag->pag_agno, ref, _RET_IP_);
- 	} else {
- 		pag = xfs_perag_get(mp, *first);
-diff --git a/fs/xfs/xfs_ag.h b/fs/xfs/xfs_ag.h
-index 4917d4e..51c42c2 100644
---- a/fs/xfs/xfs_ag.h
-+++ b/fs/xfs/xfs_ag.h
-@@ -230,6 +230,9 @@ typedef struct xfs_perag {
- 	rwlock_t	pag_ici_lock;	/* incore inode lock */
- 	struct radix_tree_root pag_ici_root;	/* incore inode cache root */
- 	int		pag_ici_reclaimable;	/* reclaimable inodes */
-+
-+	/* for rcu-safe freeing */
-+	struct rcu_head	rcu_head;
- #endif
- 	int		pagb_count;	/* pagb slots in use */
- } xfs_perag_t;
 diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 00c7a87..14fc6e9 100644
+index aeb9d72..00c7a87 100644
 --- a/fs/xfs/xfs_mount.c
 +++ b/fs/xfs/xfs_mount.c
-@@ -199,6 +199,8 @@ xfs_uuid_unmount(
- 
- /*
-  * Reference counting access wrappers to the perag structures.
-+ * Because we never free per-ag structures, the only thing we
-+ * have to protect against changes is the tree structure itself.
-  */
- struct xfs_perag *
- xfs_perag_get(struct xfs_mount *mp, xfs_agnumber_t agno)
-@@ -206,13 +208,13 @@ xfs_perag_get(struct xfs_mount *mp, xfs_agnumber_t agno)
- 	struct xfs_perag	*pag;
- 	int			ref = 0;
- 
--	spin_lock(&mp->m_perag_lock);
-+	rcu_read_lock();
+@@ -210,8 +210,6 @@ xfs_perag_get(struct xfs_mount *mp, xfs_agnumber_t agno)
  	pag = radix_tree_lookup(&mp->m_perag_tree, agno);
  	if (pag) {
  		ASSERT(atomic_read(&pag->pag_ref) >= 0);
+-		/* catch leaks in the positive direction during testing */
+-		ASSERT(atomic_read(&pag->pag_ref) < 1000);
  		ref = atomic_inc_return(&pag->pag_ref);
  	}
--	spin_unlock(&mp->m_perag_lock);
-+	rcu_read_unlock();
- 	trace_xfs_perag_get(mp, agno, ref, _RET_IP_);
- 	return pag;
- }
-@@ -227,10 +229,18 @@ xfs_perag_put(struct xfs_perag *pag)
- 	trace_xfs_perag_put(pag->pag_mount, pag->pag_agno, ref, _RET_IP_);
- }
- 
-+STATIC void
-+__xfs_free_perag(
-+	struct rcu_head	*head)
-+{
-+	struct xfs_perag *pag = container_of(head, struct xfs_perag, rcu_head);
-+
-+	ASSERT(atomic_read(&pag->pag_ref) == 0);
-+	kmem_free(pag);
-+}
-+
- /*
-- * Free up the resources associated with a mount structure.  Assume that
-- * the structure was initially zeroed, so we can tell which fields got
-- * initialized.
-+ * Free up the per-ag resources associated with the mount structure.
-  */
- STATIC void
- xfs_free_perag(
-@@ -242,10 +252,9 @@ xfs_free_perag(
- 	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
- 		spin_lock(&mp->m_perag_lock);
- 		pag = radix_tree_delete(&mp->m_perag_tree, agno);
--		ASSERT(pag);
--		ASSERT(atomic_read(&pag->pag_ref) == 0);
- 		spin_unlock(&mp->m_perag_lock);
--		kmem_free(pag);
-+		ASSERT(pag);
-+		call_rcu(&pag->rcu_head, __xfs_free_perag);
- 	}
- }
- 
+ 	spin_unlock(&mp->m_perag_lock);
 -- 
 1.7.1
 
