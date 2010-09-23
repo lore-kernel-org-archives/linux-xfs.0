@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8MNNfwi089217 for <xfs@oss.sgi.com>; Wed, 22 Sep 2010 18:23:42 -0500
+	o8N0dKMq091778 for <xfs@oss.sgi.com>; Wed, 22 Sep 2010 19:39:21 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 367FC1847CC6
-	for <xfs@oss.sgi.com>; Wed, 22 Sep 2010 16:24:35 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
-	[150.101.137.99]) by cuda.sgi.com with ESMTP id
-	1ozT9HZ9RA0xY6FB for <xfs@oss.sgi.com>;
-	Wed, 22 Sep 2010 16:24:35 -0700 (PDT)
-Date: Thu, 23 Sep 2010 09:24:31 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 97B8B93E3A
+	for <xfs@oss.sgi.com>; Wed, 22 Sep 2010 17:40:14 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
+	[150.101.137.97]) by cuda.sgi.com with ESMTP id
+	CoLLYjxYLpS9PMU1 for <xfs@oss.sgi.com>;
+	Wed, 22 Sep 2010 17:40:14 -0700 (PDT)
+Date: Thu, 23 Sep 2010 10:40:12 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS internal error xfs_da_do_buf(2)
-Message-ID: <20100922232431.GH2614@dastard>
-References: <20100922083226.GF2614@dastard>
-	<20100922121123.GB23326@pirx.askja.de>
+Subject: Re: [PATCH 12/16] xfs: implement batched inode lookups for AG walking
+Message-ID: <20100923004012.GK2614@dastard>
+References: <1285137869-10310-1-git-send-email-david@fromorbit.com>
+	<1285137869-10310-13-git-send-email-david@fromorbit.com>
+	<20100922173306.GE5697@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20100922121123.GB23326@pirx.askja.de>
+In-Reply-To: <20100922173306.GE5697@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,34 +31,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ralf Gross <Ralf-Lists@ralfgross.de>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Wed, Sep 22, 2010 at 02:11:23PM +0200, Ralf Gross wrote:
-> Dave Chinner schrieb:
-> > On Wed, Sep 22, 2010 at 09:26:53AM +0200, Ralf Gross wrote:
-> > > Any hints what to look for or what to do to notice this corruption as soon as possible?
-> > 
-> > You won't find an error on disk without scrubbing of some kind.
-> > In the case of filesystem metadata, you need to read all the
-> > metadata and validity check it to find random corruptions. The best
-> > you can do is traverse and stat every file regularly...
+On Wed, Sep 22, 2010 at 01:33:06PM -0400, Christoph Hellwig wrote:
+> > +	int			(*grab)(struct xfs_inode *ip),
 > 
-> 
-> Disk scrubbing is activated on the infortrend RAIDs (2 week schedule).
+> I think we can do without this callback.  The inode verification that
+> needs to be done is always the same.  The only difference is that the
+> dqrele code skips the quota inodes - but this can easily be done in
+> the execute callback, and given that it's a slow path the additional
+> two igrab calls won't hurt either.
 
-Ok, so that should catch bit errors as a result of disk write/read
-errors, but it would take 2 weeks to find it. That still leaves a
-window for undetected disk corruption to be trippd over by the
-filesystem...
+Seems fair - the grab callback is from the first version where the
+reclaim walk was not split out so there was significant differences.
+I'll clean that up.
 
-> With 'stat every file regularly' you mean check the md5sum?
+> To be symmetic with that the IRELE call should also be moved from the
+> execute callbacks into the caller.  All this is stuff enabled by
+> splitting out the reclaim code earlier which was pretty different in
+> this area.  In fact just moving the validation + igrab and IRELE into
+> common code might just be done in a separate patch between the last one
+> and this.
 
-If you just want to read the metadata, then just doing something
-like a 'ls -R <mntpt>' will read every directory block and inode and
-run the checks that trigger the errors you are seeing. running
-md5sum on every file will check the data as well, but will take a
-lot longer.
+Yup, that makes it a lot cleaner. Will do.
 
 Cheers,
 
