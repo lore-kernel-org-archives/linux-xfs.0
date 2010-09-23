@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8NGJ65K135423 for <xfs@oss.sgi.com>; Thu, 23 Sep 2010 11:19:06 -0500
-Subject: Re: [PATCH 04/16] xfs: don't use vfs writeback for pure metadata
-	modifications
+	o8NGivZw136555 for <xfs@oss.sgi.com>; Thu, 23 Sep 2010 11:44:58 -0500
+Subject: Re: [PATCH 11/16] xfs: split inode AG walking into separate code
+	for reclaim
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1285137869-10310-5-git-send-email-david@fromorbit.com>
+In-Reply-To: <1285137869-10310-12-git-send-email-david@fromorbit.com>
 References: <1285137869-10310-1-git-send-email-david@fromorbit.com>
-	<1285137869-10310-5-git-send-email-david@fromorbit.com>
-Date: Thu, 23 Sep 2010 11:19:57 -0500
-Message-ID: <1285258797.1973.10.camel@doink>
+	<1285137869-10310-12-git-send-email-david@fromorbit.com>
+Date: Thu, 23 Sep 2010 11:45:52 -0500
+Message-ID: <1285260352.1973.28.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -30,66 +30,116 @@ Cc: xfs@oss.sgi.com
 On Wed, 2010-09-22 at 16:44 +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> Under heavy multi-way parallel create workloads, the VFS struggles
-> to write back all the inodes that have been changed in age order.
-> The bdi flusher thread becomes CPU bound, spending 85% of it's time
-> in the VFS code, mostly traversing the superblock dirty inode list
-> to separate dirty inodes old enough to flush.
-> 
-> We already keep an index of all metadata changes in age order - in
-> the AIL - and continued log pressure will do age ordered writeback
-> without any extra overhead at all. If there is no pressure on the
-> log, the xfssyncd will periodically write back metadata in ascending
-> disk address offset order so will be very efficient.
-> 
-> Hence we can stop marking VFS inodes dirty during transaction commit
-> or when changing timestamps during transactions. This will keep the
-> inodes in the superblock dirty list to those containing data or
-> unlogged metadata changes.
+> The reclaim walk requires different locking and has a slightly
+> different walk algorithm, so separate it out so that it can be
+> optimised separately.
 
-This looks good.  There is a minor typo I'll highlight
-below in case you want to fix it.
+You assert this above xfs_reclaim_inodes_ag():
+ Walk the AGs and reclaim the inodes in them. Even if the filesystem is
+ corrupted, we still want to try to reclaim all the inodes.
 
-> However, the timstamp changes are slightly more complex than this -
-> there are a couple of places that do unlogged updates of the
-> timestamps, and the VFS need to be informed of these. Hence add a
-> new function xfs_trans_inode_chgtime() for transactional changes,
+I don't refute that statement, but if I'm not mistaken
+this is new handling.  I just felt it should not slip in
+without being mentioned.  I also suggest a short sentence
+along with that comment to justify it might be in order.
 
-You actually used the name "xfs_trans_ichgtime".
-
-> and leave xfs_ichgtime() for the non-transactional changes.
-
-I haven't updated my cscope database, but it looks to me like
-this leaves just one spot where xfs_ichtime() is still used.
-Namely, xfs_setattr(), when truncating a zero-length file.
-
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+I have one other minor comment below, but otherwise this
+looks good.
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
 
-. . . 
-
-> diff --git a/fs/xfs/linux-2.6/xfs_iops.c b/fs/xfs/linux-2.6/xfs_iops.c
-> index b1fc2a6..37918f4 100644
-> --- a/fs/xfs/linux-2.6/xfs_iops.c
-> +++ b/fs/xfs/linux-2.6/xfs_iops.c
-> @@ -96,40 +96,63 @@ xfs_mark_inode_dirty(
->  
->  /*
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/linux-2.6/xfs_sync.c    |  200 ++++++++++++++++++----------------------
+>  fs/xfs/linux-2.6/xfs_sync.h    |    2 +-
+>  fs/xfs/linux-2.6/xfs_trace.h   |    2 +-
+>  fs/xfs/quota/xfs_qm_syscalls.c |    3 +-
+>  fs/xfs/xfs_mount.c             |   26 +++++
+>  fs/xfs/xfs_mount.h             |    2 +
+>  6 files changed, 120 insertions(+), 115 deletions(-)
+> 
+> diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
+> index ddeaff9..7737a13 100644
+> --- a/fs/xfs/linux-2.6/xfs_sync.c
+> +++ b/fs/xfs/linux-2.6/xfs_sync.c
 
 . . .
 
-> +	if (xfs_ichgtime_int(ip, flags))
->  		xfs_mark_inode_dirty_sync(ip);
+> @@ -859,13 +781,70 @@ reclaim:
+>  
 >  }
 >  
->  /*
-> + * Transactional inode timestamp update. requires inod to be locked and joined
+> +/*
+> + * Walk the AGs and reclaim the inodes in them. Even if the filesystem is
+> + * corrupted, we still want to try to reclaim all the inodes.
+> + */
+> +int
+> +xfs_reclaim_inodes_ag(
+> +	struct xfs_mount	*mp,
+> +	int			flags,
+> +	int			*nr_to_scan)
+> +{
+> +	struct xfs_perag	*pag;
+> +	int			error = 0;
+> +	int			last_error = 0;
+> +	xfs_agnumber_t		ag;
+> +
+> +	ag = 0;
+> +	while ((pag = xfs_perag_get_tag(mp, ag, XFS_ICI_RECLAIM_TAG))) {
+> +		unsigned long	first_index = 0;
+> +		int		done = 0;
+> +
+> +		ag = pag->pag_agno + 1;
+> +
+> +		do {
+> +			struct xfs_inode *ip;
+> +			int	nr_found;
+> +
+> +			write_lock(&pag->pag_ici_lock);
+> +			nr_found = radix_tree_gang_lookup_tag(&pag->pag_ici_root,
+> +					(void **)&ip, first_index, 1,
+> +					XFS_ICI_RECLAIM_TAG);
+> +			if (!nr_found) {
+> +				write_unlock(&pag->pag_ici_lock);
+> +				break;
+> +			}
+> +
+> +			/*
+> +			 * Update the index for the next lookup. Catch overflows
+> +			 * into the next AG range which can occur if we have inodes
+> +			 * in the last block of the AG and we are currently
+> +			 * pointing to the last inode.
+> +			 */
+> +			first_index = XFS_INO_TO_AGINO(mp, ip->i_ino + 1);
+> +			if (first_index < XFS_INO_TO_AGINO(mp, ip->i_ino))
+> +				done = 1;
+> +
+> +			error = xfs_reclaim_inode(ip, pag, flags);
+> +			if (error && last_error != EFSCORRUPTED)
+> +				last_error = error;
+> +
+> +		} while (!done && (*nr_to_scan)--);
 
-s/inod /inode /
+I know you guys disagreed with me before on this point.
+But since there is no reason anybody outside this function
+has a need to see the intermediate values of *nr_to_scan,
+you should use a local variable to keep track of it instead,
+and then assign its final value to *nr_to_scan before returning.
+It allows registers to be used rather than updating real
+memory at each iteration.
 
-> + * to the transaction supplied. Relies on the transaction subsystem to track
+> +
+> +		xfs_perag_put(pag);
+> +	}
+> +	return XFS_ERROR(last_error);
+> +}
+> +
+>  int
+>  xfs_reclaim_inodes(
+>  	xfs_mount_t	*mp,
+>  	int		mode)
+>  {
+
 . . .
 
 _______________________________________________
