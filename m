@@ -1,24 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8NM2j9m150627 for <xfs@oss.sgi.com>; Thu, 23 Sep 2010 17:02:45 -0500
-Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3C9C19833E
-	for <xfs@oss.sgi.com>; Thu, 23 Sep 2010 15:03:40 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id YBuKy4BGmfObUuPn
-	for <xfs@oss.sgi.com>; Thu, 23 Sep 2010 15:03:40 -0700 (PDT)
-Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
-	by greer.hardwarefreak.com (Postfix) with ESMTP id 7FBF06C0BA
-	for <xfs@oss.sgi.com>; Thu, 23 Sep 2010 17:03:39 -0500 (CDT)
-Message-ID: <4C9BCEBB.4030800@hardwarefreak.com>
-Date: Thu, 23 Sep 2010 17:03:39 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
-MIME-Version: 1.0
-Subject: Re: Question regarding performance on big files.
-References: <4C979439.7070906@opencubetech.com>	<4C97BA74.5030304@hardwarefreak.com>	<4C99D9EB.20800@opencubetech.com>	<4C9A69DC.8020606@hardwarefreak.com>
-	<4C9B161A.1010301@opencubetech.com>
-In-Reply-To: <4C9B161A.1010301@opencubetech.com>
+	o8NMuoHQ152733 for <xfs@oss.sgi.com>; Thu, 23 Sep 2010 17:56:50 -0500
+Subject: Re: [PATCH VER 4] xfsprogs: projid32bit handling
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <1285177520-11513-1-git-send-email-arekm@maven.pl>
+References: <1285177343-11108-1-git-send-email-arekm@maven.pl>
+	<1285177520-11513-1-git-send-email-arekm@maven.pl>
+Date: Thu, 23 Sep 2010 17:57:44 -0500
+Message-ID: <1285282664.1973.180.camel@doink>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,27 +19,29 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Arkadiusz =?UTF-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Cc: xfs@oss.sgi.com
 
-Mathieu AVILA put forth on 9/23/2010 3:55 AM:
-
-> The small writes are amortized in the stream of data writes from the
-> application, and the application is not frozen.
-> (so you were right: there was a page cache issue)
-
-Given what you've described about the streaming write behavior of your
-application, I'd suggest you rewrite it and use O_DIRECT writes to
-bypass the page cache completely.  You may also want to look into using
-the XFS realtime subvolume feature.
-
--- 
-Stan
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gV2VkLCAyMDEwLTA5LTIyIGF0IDE5OjQ1ICswMjAwLCBBcmthZGl1c3ogTWnFm2tpZXdpY3og
+d3JvdGU6Cj4gQWRkIHByb2ppZDMyYml0IGhhbmRsaW5nIHRvIHVzZXJzcGFjZS4gbWtmcyBpcyBh
+YmxlIHRvIGVuYWJsZSB0aGlzCj4gZmVhdHVyZSBmb3IgbmV3IGZpbGVzeXN0ZW1zLiB4ZnNfZGIg
+a25vd3Mgd2hhdCBwcm9qaWRfbG8vaGkgYXJlLgoKSSBmb3Jnb3QgdG8gbWVudGlvbiB0aGlzIGJl
+Zm9yZS4gIE5vdyB0aGF0IEkgc2VlIG1hbgpwYWdlcyBJIHRoaW5rIEkgc2hvdWxkIGRvIHNvLiAg
+WW91IHNob3VsZCB1c2UgdGhlIHRlcm0KImlkZW50aWZpZXJzIiByYXRoZXIgdGhhbiB0aGUgKG5v
+bi13b3JkKSAiaWRlbnRpZmljYXRvcnMiCnRocm91Z2hvdXQuCgpBIG51bWJlciBvZiB0aGUgY29t
+bWVudHMgSSBoYWQgb24gdGhlIGtlcm5lbCBYRlMgY29kZQphcHBseSB0byB0aGUgdXNlci1zcGFj
+ZSBjb3VudGVycGFydCBjb2RlIGhlcmUsIHNvIEkKd29uJ3Qgb2ZmZXIgdGhvc2UgY29tbWVudHMg
+aGVyZS4gIEkgd2lsbCBqdXN0IGFzayB0aGF0CnlvdSBtYWtlIHRoZSB0d28gYmUgY29uc2lzdGVu
+dCB3aXRoIGVhY2ggb3RoZXIgd2hlcmUgdGhlcmUKaXMgbWF0Y2hpbmcgY29kZS4KCkkgaGF2ZW4n
+dCBnaXZlbiB0aGlzIGNvZGUgYSB2ZXJ5IHRob3JvdWdoIHJldmlldywganVzdAphIHNjYW4gZm9y
+IHRoZSBtb3N0IHBhcnQuICBJJ2QgbGlrZSB0byBoZWFyIHlvdXIgdGhvdWdodHMKb24gbXkgc3Vn
+Z2VzdGlvbnMgZnJvbSB5b3VyIFhGUyBwYXRjaC4KCgkJCQkJLUFsZXgKCj4gU2lnbmVkLW9mZi1i
+eTogQXJrYWRpdXN6IE1pxZtraWV3aWN6IDxhcmVrbUBtYXZlbi5wbD4KPiAtLS0KPiAKPiBXaGF0
+IGhhcyBjaGFuZ2VkPwo+IC0gc2JfYmFkX2ZlYXR1cmVzMiBpcyBhbHNvIHVwZGF0ZWQKPiAtIGJz
+dGF0X2dldF9wcm9qaWQgaGVscGVyIGFkZGVkCgoKX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0
+cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
