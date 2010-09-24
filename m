@@ -1,28 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8OCUgBt180909 for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 07:30:42 -0500
+	o8OCUqeT181029 for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 07:30:52 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0F71999EAE
-	for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 05:31:36 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
-	[150.101.137.103]) by cuda.sgi.com with ESMTP id
-	zZCbk080hpD0R12G for <xfs@oss.sgi.com>;
-	Fri, 24 Sep 2010 05:31:36 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1A72914FBFFD
+	for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 05:44:26 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
+	[150.101.137.99]) by cuda.sgi.com with ESMTP id
+	gjyMWYN5bk12X5ss for <xfs@oss.sgi.com>;
+	Fri, 24 Sep 2010 05:44:26 -0700 (PDT)
 Received: from dastard (unverified [121.44.66.70])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	40046900-1927428
-	for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 22:01:35 +0930 (CST)
+	40606352-1927428
+	for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 22:01:45 +0930 (CST)
 Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1Oz7R8-0007VJ-Ox
+	(envelope-from <dave@fromorbit.com>) id 1Oz7R8-0007Uz-9O
 	for xfs@oss.sgi.com; Fri, 24 Sep 2010 22:31:34 +1000
 Received: from dave by disturbed with local (Exim 4.72)
-	(envelope-from <dave@disturbed.disaster>) id 1Oz7R4-00060U-HY
-	for xfs@oss.sgi.com; Fri, 24 Sep 2010 22:31:30 +1000
+	(envelope-from <dave@disturbed.disaster>) id 1Oz7Qu-000606-2H
+	for xfs@oss.sgi.com; Fri, 24 Sep 2010 22:31:20 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 14/18] xfs: implement batched inode lookups for AG walking
-Date: Fri, 24 Sep 2010 22:31:12 +1000
-Message-Id: <1285331476-23015-15-git-send-email-david@fromorbit.com>
+Subject: [PATCH 06/18] xfs: rename xfs_buf_get_nodaddr to be more appropriate
+Date: Fri, 24 Sep 2010 22:31:04 +1000
+Message-Id: <1285331476-23015-7-git-send-email-david@fromorbit.com>
 In-Reply-To: <1285331476-23015-1-git-send-email-david@fromorbit.com>
 References: <1285331476-23015-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -42,150 +42,134 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-With the reclaim code separated from the generic walking code, it is
-simple to implement batched lookups for the generic walk code.
-Separate out the inode validation from the execute operations and
-modify the tree lookups to get a batch of inodes at a time.
+xfs_buf_get_nodaddr() is really used to allocate a buffer that is
+uncached. While it is not directly assigned a disk address, the fact
+that they are not cached is a more important distinction. With the
+upcoming uncached buffer read primitive, we should be consistent
+with this disctinction.
 
-Reclaim operations will be optimised separately.
+While there, make page allocation in xfs_buf_get_nodaddr() safe
+against memory reclaim re-entrancy into the filesystem by allowing
+a flags parameter to be passed.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Alex Elder <aelder@sgi.com>
 ---
- fs/xfs/linux-2.6/xfs_sync.c |   68 ++++++++++++++++++++++++++++--------------
- fs/xfs/linux-2.6/xfs_sync.h |    2 +-
- 2 files changed, 46 insertions(+), 24 deletions(-)
+ fs/xfs/linux-2.6/xfs_buf.c   |    9 +++++----
+ fs/xfs/linux-2.6/xfs_buf.h   |    2 +-
+ fs/xfs/linux-2.6/xfs_trace.h |    2 +-
+ fs/xfs/xfs_log.c             |    3 ++-
+ fs/xfs/xfs_log_recover.c     |    3 ++-
+ fs/xfs/xfs_vnodeops.c        |    6 +++---
+ 6 files changed, 14 insertions(+), 11 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
-index 11c473f..2a46a80 100644
---- a/fs/xfs/linux-2.6/xfs_sync.c
-+++ b/fs/xfs/linux-2.6/xfs_sync.c
-@@ -39,6 +39,14 @@
- #include <linux/kthread.h>
- #include <linux/freezer.h>
- 
-+/*
-+ * The inode lookup is done in batches to keep the amount of lock traffic and
-+ * radix tree lookups to a minimum. The batch size is a trade off between
-+ * lookup reduction and stack usage. This is in the reclaim path, so we can't
-+ * be too greedy.
-+ */
-+#define XFS_LOOKUP_BATCH	32
-+
- int
- xfs_inode_ag_walk_grab(
- 	struct xfs_inode	*ip)
-@@ -66,7 +74,6 @@ xfs_inode_ag_walk_grab(
- 	return 0;
+diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
+index 286e36e..eca945b 100644
+--- a/fs/xfs/linux-2.6/xfs_buf.c
++++ b/fs/xfs/linux-2.6/xfs_buf.c
+@@ -707,9 +707,10 @@ xfs_buf_associate_memory(
  }
  
--
- STATIC int
- xfs_inode_ag_walk(
- 	struct xfs_mount	*mp,
-@@ -79,54 +86,69 @@ xfs_inode_ag_walk(
- 	int			last_error = 0;
- 	int			skipped;
- 	int			done;
-+	int			nr_found;
+ xfs_buf_t *
+-xfs_buf_get_noaddr(
++xfs_buf_get_uncached(
++	struct xfs_buftarg	*target,
+ 	size_t			len,
+-	xfs_buftarg_t		*target)
++	int			flags)
+ {
+ 	unsigned long		page_count = PAGE_ALIGN(len) >> PAGE_SHIFT;
+ 	int			error, i;
+@@ -725,7 +726,7 @@ xfs_buf_get_noaddr(
+ 		goto fail_free_buf;
  
- restart:
- 	done = 0;
- 	skipped = 0;
- 	first_index = 0;
-+	nr_found = 0;
- 	do {
-+		struct xfs_inode *batch[XFS_LOOKUP_BATCH];
- 		int		error = 0;
--		int		nr_found;
--		xfs_inode_t	*ip;
-+		int		i;
+ 	for (i = 0; i < page_count; i++) {
+-		bp->b_pages[i] = alloc_page(GFP_KERNEL);
++		bp->b_pages[i] = alloc_page(xb_to_gfp(flags));
+ 		if (!bp->b_pages[i])
+ 			goto fail_free_mem;
+ 	}
+@@ -740,7 +741,7 @@ xfs_buf_get_noaddr(
  
- 		read_lock(&pag->pag_ici_lock);
- 		nr_found = radix_tree_gang_lookup(&pag->pag_ici_root,
--				(void **)&ip, first_index, 1);
-+					(void **)batch, first_index,
-+					XFS_LOOKUP_BATCH);
- 		if (!nr_found) {
- 			read_unlock(&pag->pag_ici_lock);
- 			break;
- 		}
+ 	xfs_buf_unlock(bp);
  
- 		/*
--		 * Update the index for the next lookup. Catch overflows
--		 * into the next AG range which can occur if we have inodes
--		 * in the last block of the AG and we are currently
--		 * pointing to the last inode.
-+		 * Grab the inodes before we drop the lock. if we found
-+		 * nothing, nr == 0 and the loop will be skipped.
- 		 */
--		first_index = XFS_INO_TO_AGINO(mp, ip->i_ino + 1);
--		if (first_index < XFS_INO_TO_AGINO(mp, ip->i_ino))
--			done = 1;
-+		for (i = 0; i < nr_found; i++) {
-+			struct xfs_inode *ip = batch[i];
+-	trace_xfs_buf_get_noaddr(bp, _RET_IP_);
++	trace_xfs_buf_get_uncached(bp, _RET_IP_);
+ 	return bp;
  
--		if (xfs_inode_ag_walk_grab(ip)) {
--			read_unlock(&pag->pag_ici_lock);
--			continue;
-+			if (done || xfs_inode_ag_walk_grab(ip))
-+				batch[i] = NULL;
-+
-+			/*
-+			 * Update the index for the next lookup. Catch overflows
-+			 * into the next AG range which can occur if we have inodes
-+			 * in the last block of the AG and we are currently
-+			 * pointing to the last inode.
-+			 */
-+			first_index = XFS_INO_TO_AGINO(mp, ip->i_ino + 1);
-+			if (first_index < XFS_INO_TO_AGINO(mp, ip->i_ino))
-+				done = 1;
- 		}
-+
-+		/* unlock now we've grabbed the inodes. */
- 		read_unlock(&pag->pag_ici_lock);
+  fail_free_mem:
+diff --git a/fs/xfs/linux-2.6/xfs_buf.h b/fs/xfs/linux-2.6/xfs_buf.h
+index 2a05614..fb30447 100644
+--- a/fs/xfs/linux-2.6/xfs_buf.h
++++ b/fs/xfs/linux-2.6/xfs_buf.h
+@@ -213,7 +213,7 @@ extern xfs_buf_t *xfs_buf_read(xfs_buftarg_t *, xfs_off_t, size_t,
+ 				xfs_buf_flags_t);
  
--		error = execute(ip, pag, flags);
--		IRELE(ip);
--		if (error == EAGAIN) {
--			skipped++;
--			continue;
-+		for (i = 0; i < nr_found; i++) {
-+			if (!batch[i])
-+				continue;
-+			error = execute(batch[i], pag, flags);
-+			IRELE(batch[i]);
-+			if (error == EAGAIN) {
-+				skipped++;
-+				continue;
-+			}
-+			if (error && last_error != EFSCORRUPTED)
-+				last_error = error;
- 		}
--		if (error)
--			last_error = error;
+ extern xfs_buf_t *xfs_buf_get_empty(size_t, xfs_buftarg_t *);
+-extern xfs_buf_t *xfs_buf_get_noaddr(size_t, xfs_buftarg_t *);
++extern xfs_buf_t *xfs_buf_get_uncached(struct xfs_buftarg *, size_t, int);
+ extern int xfs_buf_associate_memory(xfs_buf_t *, void *, size_t);
+ extern void xfs_buf_hold(xfs_buf_t *);
+ extern void xfs_buf_readahead(xfs_buftarg_t *, xfs_off_t, size_t,
+diff --git a/fs/xfs/linux-2.6/xfs_trace.h b/fs/xfs/linux-2.6/xfs_trace.h
+index be5dffd..2a1d4fb 100644
+--- a/fs/xfs/linux-2.6/xfs_trace.h
++++ b/fs/xfs/linux-2.6/xfs_trace.h
+@@ -331,7 +331,7 @@ DEFINE_BUF_EVENT(xfs_buf_iowait_done);
+ DEFINE_BUF_EVENT(xfs_buf_delwri_queue);
+ DEFINE_BUF_EVENT(xfs_buf_delwri_dequeue);
+ DEFINE_BUF_EVENT(xfs_buf_delwri_split);
+-DEFINE_BUF_EVENT(xfs_buf_get_noaddr);
++DEFINE_BUF_EVENT(xfs_buf_get_uncached);
+ DEFINE_BUF_EVENT(xfs_bdstrat_shut);
+ DEFINE_BUF_EVENT(xfs_buf_item_relse);
+ DEFINE_BUF_EVENT(xfs_buf_item_iodone);
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 33f718f..c8a3094 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -1131,7 +1131,8 @@ xlog_alloc_log(xfs_mount_t	*mp,
+ 		iclog->ic_prev = prev_iclog;
+ 		prev_iclog = iclog;
  
- 		/* bail out if the filesystem is corrupted.  */
- 		if (error == EFSCORRUPTED)
- 			break;
+-		bp = xfs_buf_get_noaddr(log->l_iclog_size, mp->m_logdev_targp);
++		bp = xfs_buf_get_uncached(mp->m_logdev_targp,
++						log->l_iclog_size, 0);
+ 		if (!bp)
+ 			goto out_free_iclog;
+ 		if (!XFS_BUF_CPSEMA(bp))
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 6f3f5fa..3d88754 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -107,7 +107,8 @@ xlog_get_bp(
+ 		nbblks += log->l_sectBBsize;
+ 	nbblks = round_up(nbblks, log->l_sectBBsize);
  
--	} while (!done);
-+	} while (nr_found && !done);
+-	return xfs_buf_get_noaddr(BBTOB(nbblks), log->l_mp->m_logdev_targp);
++	return xfs_buf_get_uncached(log->l_mp->m_logdev_targp,
++					BBTOB(nbblks), 0);
+ }
  
- 	if (skipped) {
- 		delay(1);
-diff --git a/fs/xfs/linux-2.6/xfs_sync.h b/fs/xfs/linux-2.6/xfs_sync.h
-index e8a3528..32ba662 100644
---- a/fs/xfs/linux-2.6/xfs_sync.h
-+++ b/fs/xfs/linux-2.6/xfs_sync.h
-@@ -47,7 +47,7 @@ void __xfs_inode_set_reclaim_tag(struct xfs_perag *pag, struct xfs_inode *ip);
- void __xfs_inode_clear_reclaim_tag(struct xfs_mount *mp, struct xfs_perag *pag,
- 				struct xfs_inode *ip);
+ STATIC void
+diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
+index 7413a02..e685cc6 100644
+--- a/fs/xfs/xfs_vnodeops.c
++++ b/fs/xfs/xfs_vnodeops.c
+@@ -2431,9 +2431,9 @@ xfs_zero_remaining_bytes(
+ 	if (endoff > ip->i_size)
+ 		endoff = ip->i_size;
  
--int xfs_sync_inode_valid(struct xfs_inode *ip, struct xfs_perag *pag);
-+int xfs_sync_inode_grab(struct xfs_inode *ip);
- int xfs_inode_ag_iterator(struct xfs_mount *mp,
- 	int (*execute)(struct xfs_inode *ip, struct xfs_perag *pag, int flags),
- 	int flags);
+-	bp = xfs_buf_get_noaddr(mp->m_sb.sb_blocksize,
+-				XFS_IS_REALTIME_INODE(ip) ?
+-				mp->m_rtdev_targp : mp->m_ddev_targp);
++	bp = xfs_buf_get_uncached(XFS_IS_REALTIME_INODE(ip) ?
++					mp->m_rtdev_targp : mp->m_ddev_targp,
++				mp->m_sb.sb_blocksize, XBF_DONT_BLOCK);
+ 	if (!bp)
+ 		return XFS_ERROR(ENOMEM);
+ 
 -- 
 1.7.1
 
