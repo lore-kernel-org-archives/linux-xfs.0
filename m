@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8O0afiK155764 for <xfs@oss.sgi.com>; Thu, 23 Sep 2010 19:36:42 -0500
+	o8O0sHp1156258 for <xfs@oss.sgi.com>; Thu, 23 Sep 2010 19:54:17 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1CCF898B9A
-	for <xfs@oss.sgi.com>; Thu, 23 Sep 2010 17:37:35 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
-	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	as02QJB1kXl0G4Ku for <xfs@oss.sgi.com>;
-	Thu, 23 Sep 2010 17:37:35 -0700 (PDT)
-Date: Fri, 24 Sep 2010 10:37:32 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 84E42185A115
+	for <xfs@oss.sgi.com>; Thu, 23 Sep 2010 17:55:10 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
+	[150.101.137.103]) by cuda.sgi.com with ESMTP id
+	PzbKKsXNBT0fzFZc for <xfs@oss.sgi.com>;
+	Thu, 23 Sep 2010 17:55:10 -0700 (PDT)
+Date: Fri, 24 Sep 2010 10:55:07 +1000
 From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH VER 4] Extend project quotas to support 32bit project
 	identificators.
-Message-ID: <20100924003732.GP2614@dastard>
+Message-ID: <20100924005507.GQ2614@dastard>
 References: <1285177343-11108-1-git-send-email-arekm@maven.pl>
-	<20100922184242.GA9911@infradead.org>
-	<201009222101.13985.arekm@maven.pl>
+	<1285282261.1973.176.camel@doink>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <201009222101.13985.arekm@maven.pl>
+In-Reply-To: <1285282261.1973.176.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,81 +27,91 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Arkadiusz Miskiewicz <arekm@maven.pl>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Alex Elder <aelder@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Wed, Sep 22, 2010 at 09:01:13PM +0200, Arkadiusz Miskiewicz wrote:
-> On Wednesday 22 of September 2010, Christoph Hellwig wrote:
-> > On Wed, Sep 22, 2010 at 07:42:23PM +0200, Arkadiusz Mi??kiewicz wrote:
-> > >  	if (mask & FSX_PROJID) {
-> > > 
-> > > +		/*
-> > > +		 * Switch on the PROJID32BIT superblock bit when needed
-> > > +		 * (implies also FEATURES2)
-> > > +		 */
-> > > +		if (!xfs_sb_version_hasprojid32bit(&ip->i_mount->m_sb) &&
-> > > +				fa->fsx_projid > (__uint16_t)-1)
-> > > +			xfs_addprojid32bit(tp, ip);
-> > 
-> > Didn't we agree that we want to enable this feature explicitly via
-> > xfs_admin (or mkfs.xfs)?
-> 
-> Actually there was no agreement on this. Some think that it's good to do that 
-> automaticly (so user doesn't have to do anything and has everything working) 
-> and others think that it should be turned on explictly by xfs_admin/mkfs.xfs.
-> 
-> For me both methods are fine, both have some advantages and disadvantages.
-> 
-> (There was an agreement that separate projid (from group) quota should be 
-> turned on manually but was no such agreement on projid32bit)
-
-I think I eventually agreed with Christoph that xfs_admin/mkfs was
-the way to go, simply from the principle of least surprise. i.e.
-upgrading the kernel shouldn't make a projid set that previously
-failed now succeed and prevent a kernel downgrade that is only
-discovered during downgrade...
-
-
-> > > -	__u16		bs_projid;	/* project id			*/
-> > > +	__u16		bs_projid_lo;	/* lower part of project id	*/
-> > > 
-> > >  	__u16		bs_forkoff;	/* inode fork offset in bytes	*/
-> > > 
-> > > -	unsigned char	bs_pad[12];	/* pad space, unused		*/
-> > > +	__u16		bs_projid_hi;	/* higher part of project id	*/
-> > > +	unsigned char	bs_pad[10];	/* pad space, unused		*/
-> > 
-> > Unlike in the inode we can't just rename the lo field here - that would
-> > break the compilation of existing applications.
-> 
-> Ok but maybe breaking these is good?
-
-No, there is never a good reason for breaking applications like
-this.
-
-> So these can be extended to support 32bit 
-> projid. Otherwise these will get crap if 32bit projid is enabled (actually 
-> already built binaries will still get crap for > 16bit values with projid32bit 
-> patch).
-
-At which point a userspace upgrade is required to match the kernel
-upgrade. Another reason so only allowing the feature to be switched
-on via xfs-admin/mkfs - it means that userspace XFS utilities have
-already been upgraded to support 32 bit projids before it can be
-switched on.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVGh1LCBTZXAgMjMsIDIwMTAgYXQgMDU6NTE6MDFQTSAtMDUwMCwgQWxleCBFbGRlciB3cm90
+ZToKPiBPbiBXZWQsIDIwMTAtMDktMjIgYXQgMTk6NDIgKzAyMDAsIEFya2FkaXVzeiBNacWba2ll
+d2ljeiB3cm90ZToKPiA+IFRoaXMgcGF0Y2ggYWRkcyBzdXBwb3J0IGZvciAzMmJpdCBwcm9qZWN0
+IHF1b3RhIGlkZW50aWZpY2F0b3JzLgo+ID4gCj4gPiBPbiBkaXNrIGZvcm1hdCBpcyBiYWNrd2Fy
+ZCBjb21wYXRpYmxlIHdpdGggMTZiaXQgcHJvamlkIG51bWJlcnMuIHByb2ppZAo+ID4gb24gZGlz
+ayBpcyBub3cga2VlcHQgaW4gdHdvIDE2Yml0IHZhbHVlcyAtIGRpX3Byb2ppZF9sbyAod2hpY2gg
+aG9sZHMgdGhlCj4gPiBzYW1lIHBvc2l0aW9uIGFzIG9sZCAxNmJpdCBwcm9qaWQgdmFsdWUpIGFu
+ZCBuZXcgZGlfcHJvamlkX2hpICh0YWtlcwo+ID4gZXhpc3RpbmcgcGFkZGluZykgYW5kIGNvbnZl
+cnRlcyBmcm9tL3RvIDMyYml0IHZhbHVlIG9uIHRoZSBmbHkuCj4gPiAKPiA+IFBST0pJRDMyQklU
+IGZlYXR1cmUyIGZsYWcgaXMgc2V0IGF1dG9tYXRpY2x5IHdoZW4gdHJ5aW5nIHRvIHVzZSAzMmJp
+dAo+ID4gcXVvdGEgcHJvamVjdCBpZGVudGlmaWNhdG9yLgo+ID4gCj4gPiBTaWduZWQtb2ZmLWJ5
+OiBBcmthZGl1c3ogTWnFm2tpZXdpY3ogPGFyZWttQG1hdmVuLnBsPgo+ID4gLS0tCj4gCj4gU29y
+cnkgaXQgdG9vayBtZSBzbyBsb25nIHRvIHJldmlldyB0aGlzLiAgSSBoYXZlIHNvbWUgZmVlZGJh
+Y2suCj4gCj4gSSB0aGluayB3aGF0IHlvdSd2ZSBkb25lIGxvb2tzIGdlbmVyYWxseSBnb29kLiAg
+VGhlCj4gb25seSBpc3N1ZXMgYXJlIHJlbGF0ZWQgdG8gdGhlIG5ldyBmZWF0dXJlIGJpdC4gIEkg
+YWxzbwo+IHdvbmRlciB3aGV0aGVyIHRoZXJlIGlzICphbnkqIGNoYW5jZSB0aGUgKGZvcm1lcmx5
+IHBhZCkKPiBwcm9qaWRfaGkgZmllbGQgY29udGFpbnMgYW55dGhpbmcgb3RoZXIgdGhhbiAwIG9u
+IGRpc2sgZm9yCj4gYW55IGV4aXN0aW5nIGZpbGVzeXN0ZW1zLgoKSXQgd2lsbCBiZS4gY29udmVy
+aW9uIGJldHdlZW4gdjEgYW5kIHYyIGlub2RlcyBoYXMgYWx3YXlzIHplcm9lZCB0aGUKcGFkZGlu
+ZywgYW5kIGNyZWF0aW9uIG9mIGlub2RlcyBhbHdheXMgemVyb3MgdGhlIGVudGlyZSBpbm9kZSBi
+ZWZvcmUKc3RhbXBpbmcgaXQgd2l0aCB0aGUgaW5vZGUgdGVtcGxhdGUuIGhlbmNlIHdlIGNhbiBh
+c3N1bWUgdGhhdCB0aGUKcGFkZGluZyBpcyBhbHdheXMgemVyby4KCi4uLi4KPiBCdXQgSSBkb24n
+dCBhZ3JlZSB3aXRoIHNldHRpbmcgdGhhdCBmbGFnIGluIGFsbCBjYXNlcywKPiBldmVuIHdoZW4g
+YSAzMi1iaXQgcHJvamVjdCBpZCB2YWx1ZSBpcyBzdXBwbGllZC4gIEkgY291bGQKPiBlbnZpc2lv
+biwgZm9yIGV4YW1wbGUsIHNvbWVvbmUgd2FudGluZyB0byBhdm9pZCBleGNlZWRpbmcKPiB0aGUg
+MTYgYml0IGxpbWl0IHRvIGVuc3VyZSB0aGVpciBmaWxlIHN5c3RlbSByZW1haW5zCj4gY29tcGF0
+aWJsZSB3aXRoIHRoZSBvbGRlciBmb3JtYXQuICBPbiB0aGUgb3RoZXIgaGFuZCwKPiBhdXRvbWF0
+aWNhbGx5IHNldHRpbmcgaXQgaXMgdXNlZnVsIGFzIHdlbGwuCj4KPiBJbnN0ZWFkLCB0aGluayBp
+dCB3b3VsZCBiZSBnb29kIHRvIGhhdmUgYSBtb3VudCBmbGFnIHRoYXQKPiBpbmRpY2F0ZXMgd2hl
+dGhlciAzMi1iaXQgcHJvamVjdCBpZHMgYXJlIHRvIGJlIHN1cHBvcnRlZAo+IChkZWZhdWx0OiBu
+b3Qgc3VwcG9ydGVkKS4gIElmIHRoZSBzdXBlcmJsb2NrIHJlYWQgaW4gYXQKPiBtb3VudCB0aW1l
+IGhhZCBQUk9KSUQzMkJJVCBzZXQsIGJ1dCB0aGUgbW91bnQgb3B0aW9ucyBkaWQKPiBub3QgaW5k
+aWNhdGUgMzItYml0IHByb2plY3QgaWQgc3VwcG9ydCwgdGhlIG1vdW50IHNob3VsZAo+IGZhaWwg
+d2l0aCBhbiBleHBsYW5hdGlvbi4gIChXaXRob3V0IGVuYWJsaW5nIHRoZSBtb3VudAo+IGZsYWcg
+d2Ugd291bGQgbm90IGhhbmRsZSBsYXJnZSBwcm9qZWN0IGlkcyBwcm9wZXJseSkuCgpUb28gbXVj
+aCBjb21wbGV4aXR5LCBhbmQgYSBtb3VudCBvcHRpb24gdGhhdCBuZWVkcyB0byBiZSBzdXBwb3J0
+ZWQKZm9yZXZlci4gSWYgdGhlIGFkbWluIGhhcyB0byBzZXQgYSBtb3VudCBvcHRpb24sIGl0J3Mg
+anVzdCBhcyBlYXN5IHRvCmFzayB0aGVtIHRvIHJ1biB4ZnNfYWRtaW4sIGFuZCB0aGVuIHdlIGRv
+bid0IGhhdmUgYSBidW5jaCBvZiBleHRyYQpjb2RlIGFuZCBjb21wbGV4IG1vdW50IHRpbWUgbG9n
+aWMgdG8gbWFpbnRhaW4gZm9yZXZlci4KCj4gPiArCXJldHVybiB4ZnNfc2JfdmVyc2lvbl9oYXNt
+b3JlYml0cyhzYnApICYmCj4gPiArCQkoc2JwLT5zYl9mZWF0dXJlczIgJiBYRlNfU0JfVkVSU0lP
+TjJfUFJPSklEMzJCSVQpOwo+ID4gK30KPiA+ICsKPiA+ICtzdGF0aWMgaW5saW5lIHZvaWQgeGZz
+X3NiX3ZlcnNpb25fYWRkcHJvamlkMzJiaXQoeGZzX3NiX3QgKnNicCkKPiA+ICt7Cj4gPiArCXNi
+cC0+c2JfdmVyc2lvbm51bSB8PSBYRlNfU0JfVkVSU0lPTl9NT1JFQklUU0JJVDsKPiAKPiBNT1JF
+QklUU0JJVCBpcyBvbmx5IG1lYW5pbmdmdWwgZm9yIHN1cGVyYmxvY2sgdmVyc2lvbiA0Lgo+IFNv
+IHlvdSBzaG91bGQgZmlyc3QgY29udmVydCB0aGlzIGZpZWxkIHRvIHZlcnNpb24gNC4KCkFsbCBY
+RlMgZmlsZXN5c3RlbXMgY3JlYXRlZCBzaW5jZSBJcml4IDYuMiBhcmUgdmVyc2lvbiA0IGZpbGVz
+eXN0ZW1zLAppbmNsdWRpbmcgZXZlcnkgZmlsZXN5c3RlbSBldmVyIG1hZGUgb24gbGludXguICBU
+aGUgc2V0dGluZyBvZiB0aGUKWEZTX1NCX1ZFUlNJT05fTU9SRUJJVFNCSVQgbGlrZSB0aGlzIGlz
+IGp1c3QgZmluZS4KCj4gWW91IG1pZ2h0IHVzZSB1c2luZyBzb21ldGhpbmcgbGlrZSB0aGlzIChi
+dXQgc2V0dGluZwo+IHRoZSBleHRyYSBiaXRzIG1heSBiZSBtb3JlIHRoYW4geW91IHdhbnQpOgo+
+IAlzYnAtPnNiX3ZlcnNpb25udW0gPSB4ZnNfc2JfdmVyc2lvbl90b25ldyhzYnAtPnNiX3ZlcnNp
+b25udW0pOwo+IAlzYnAtPnNiX3ZlcnNpb25udW0gfD0gWEZTX1NCX1ZFUlNJT05fTU9SRUJJVFNC
+SVQ7Cj4gCj4gKEl0IGxvb2tzIGxpa2UgeGZzX3NiX3ZlcnNpb25fYWRkYXR0cjIoKSBzaG91bGQg
+aGF2ZSBiZWVuCj4gd3JpdHRlbiB0aGF0IHdheSBhbHNvLikKPiAKPiA+ICsJc2JwLT5zYl9mZWF0
+dXJlczIgfD0gWEZTX1NCX1ZFUlNJT04yX1BST0pJRDMyQklUOwo+ID4gKwlzYnAtPnNiX2JhZF9m
+ZWF0dXJlczIgfD0gWEZTX1NCX1ZFUlNJT04yX1BST0pJRDMyQklUOwo+IAo+IFRoZXJlIGlzIG5v
+IG5lZWQgdG8gc2V0IHRoZSBzYl9iYWRfZmVhdHVyZXMyIGZpZWxkLiAKCkFjdHVhbGx5LCB0aGVy
+ZSBpcy4gVGhlIGF0dHIyIGNvZGUgaXMgYnJva2VuIHcuci50LiB0byB0aGlzIGFuZCBuZWVkcwpj
+b21wbGV4IGxvZ2ljIGR1cmluZyBtb3VudCB0byBlbnN1cmUgaXQgaXNuJ3QgbG9zdCBvbmNlIHNl
+dC4gU2V0dGluZwp0aGUgc2JfYmFkX2ZlYXR1cmVzMiBoZXJlIG1lYW5zIHRoYXQgd2UgZG9uJ3Qg
+bmVlZCB0byByZWx5IG9uIG90aGVyCmNvZGUgdG8gZml4IHVwIHRoZSBmYWN0IHdlIGRpZG4ndCBr
+ZWVwIHRoZSBzYl9mZWF0dXJlczIgYW5kCnNiX2JhZF9mZWF0dXJlczIgZmllbGRzIGNvbnNpc3Rl
+bnQuIEluZGVlZCwgaWYgd2UgY2xlYXIgYml0cywgd2UKY2Fubm90IHJlbHkgb24gdGhlIG1vdW50
+IGNvZGUgdG8gZml4IHRoYXQgdXAsIGJlY2F1c2UgaXQgb25seQpkZXRlY3RzIG1pc3NpbmcgYml0
+cyBhbmQgc2V0cyB0aGVtIGFnYWluLi4uCgo+IE5vbmUKPiBvZiB0aGUgb3RoZXIgdmVyc2lvbiBm
+dW5jdGlvbnMgZG8gdGhpcy4KCkJlY2F1c2Ugbm9uZSBvZiB0aGVtIChleGNlcHQgYXR0cjIpIGR5
+bmFtaWNhbGx5IHNldCBmZWF0dXJlMiBiaXRzLgpBbGwgdGhlIHVzZXJzcGFjZSBjb2RlIGhhcyBi
+ZWVuIGZpeGVkIHRvIGVuc3VyZSB0aGF0IHdlIHdoZW4gd2Ugc2V0CmEgZmVhdHVyZTIgYml0LCB3
+ZSBhbHNvIHNldCB0aGUgYmFkX2ZlYXR1cmVzMiBiaXQuCgo+IEl0IGlzIGZpeGVkIHdoZW4KPiB0
+aGUgZmlsZSBzeXN0ZW0gaXMgbW91bnRlZCBpZiBuZWNlc3NhcnkuCgpUaGF0IHdhcyBpbnRyb2R1
+Y2VkIHRvIHRyeSB0byBmaXggdXAgdGhlIG1lc3Mgb2YgYmFkIHVzZXJzcGFjZSB0b29scwp3cml0
+aW5nIHRvIHRoZSB3cm9uZyBmZWF0dXJlczIgZmllbGQuIGF0dHIyIGhhbmRsaW5nIGlzIGEgbWVz
+cwpiZWNhdXNlIG9mIHRoaXMuIFdlIHNob3VsZCBub3QgYmUgd3JpdGluZyBuZXcgY29kZSB0aGF0
+IHJlbGllcyBvbgp0aGUgbW91bnQgY29kZSB0byBmaXggdXAgbWlzbWF0Y2hlcywgYW5kIHdlIHNo
+b3VsZCBiZQplbnN1cmluZy9maXhpbmcgYWxsIHRoZSBrZXJuZWwgY29kZSB0aGF0IHNldHMvY2xl
+YXJzIGZlYXR1cmVzMiBiaXRzCnRvIGFsc28gc2V0cy9jbGVhcnMgdGhlIGJhZF9mZWF0dXJlczIg
+Yml0cyBhcyB3ZWxsLgoKQ2hlZXJzLAoKRGF2ZS4KLS0gCkRhdmUgQ2hpbm5lcgpkYXZpZEBmcm9t
+b3JiaXQuY29tCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+Xwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFp
+bG1hbi9saXN0aW5mby94ZnMK
