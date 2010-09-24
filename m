@@ -1,24 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8OE3YSE185141 for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 09:03:35 -0500
-Received: from smtp4-g21.free.fr (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AEB249A624
-	for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 07:04:29 -0700 (PDT)
-Received: from smtp4-g21.free.fr (smtp4-g21.free.fr [212.27.42.4]) by
-	cuda.sgi.com with ESMTP id EmxbKSbZJ9prEN53 for
-	<xfs@oss.sgi.com>; Fri, 24 Sep 2010 07:04:29 -0700 (PDT)
-Date: Fri, 24 Sep 2010 16:04:26 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: Problem with file system on iSCSI FileIO
-Message-ID: <20100924160426.3f0d1629@harpe.intellique.com>
-In-Reply-To: <4C9CAC56.2020601@open-e.com>
-References: <4C9B5786.4010205@open-e.com> <20100923143221.GA1989@infradead.org>
-	<4C9B6B27.5050606@open-e.com>
-	<20100924075505.GA24664@infradead.org>
-	<20100924151846.1208611c@harpe.intellique.com>
-	<4C9CAC56.2020601@open-e.com>
+	o8OE1l4X185080 for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 09:01:47 -0500
+Subject: Re: [PATCH] xfs: force background CIL push under sustained load
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <20100924011855.GR2614@dastard>
+References: <1285208863-31489-1-git-send-email-david@fromorbit.com>
+	<1285268035.1973.109.camel@doink>  <20100924011855.GR2614@dastard>
+Date: Fri, 24 Sep 2010 09:02:39 -0500
+Message-ID: <1285336959.1974.11.camel@doink>
 Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,37 +19,47 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: slawomir.nowakowski@open-e.com
-Cc: Christoph Hellwig <hch@infradead.org>, Artur Piechocki <artur.piechocki@open-e.com>, =?UTF-8?Q?=C5=81ukasz?= Wittig <lukasz.wittig@open-e.com>, 'Ryszard Stawiarski' <ryszard.stawiarski@open-e.com>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Le Fri, 24 Sep 2010 15:49:10 +0200
-Slawomir Nowakowski <slawomir.nowakowski@open-e.com> =E9crivait:
-
-> The problem is that we were able to use this LUN in the target, but =
-
-> suddenly after a reboot we are not.
-> =
-
-
-That's strange indeed. I don't see why the target IO would cause this,
-but I don't know much scst. Did you try this several times? Did you try
-creating the file, unmounting and remounting without starting the scsi
-target, to see it it's something scst does that kills the filesystem?
-
--- =
-
-------------------------------------------------------------------------
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
-------------------------------------------------------------------------
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gRnJpLCAyMDEwLTA5LTI0IGF0IDExOjE4ICsxMDAwLCBEYXZlIENoaW5uZXIgd3JvdGU6Cj4g
+T24gVGh1LCBTZXAgMjMsIDIwMTAgYXQgMDE6NTM6NTVQTSAtMDUwMCwgQWxleCBFbGRlciB3cm90
+ZToKPiA+IE9uIFRodSwgMjAxMC0wOS0yMyBhdCAxMjoyNyArMTAwMCwgRGF2ZSBDaGlubmVyIHdy
+b3RlOgoKLiAuIC4KCj4gPiBJIGRvbid0IHJlYWxseSBjYXJlIG11Y2ggYWJvdXQgdGhpcywgYnV0
+IEknbGwgdGFrZSB0aGlzCj4gPiBvcHBvcnR1bml0eSBmb3IgYSBzbWFsbCByYW50Lgo+ID4gCj4g
+PiBUaGUgZGlmZmVyZW5jZSBpbiBjYWxjdWxhdGlvbiBjb3N0L3NwZWVkIGJldHdlZW4gInggPj4g
+MyIgYW5kCj4gPiAieCAvIDgiIGlzIHZhbmlzaGluZ2x5IHNtYWxsLgo+IAo+IFRoYXQgaXMgYXJj
+aGl0ZWN0dXJlIGRlcGVuZGVudCwgYnV0IGluIG1vc3QgY2FzZXMgdGhlc2UgZGF5cyB0aGUKPiBj
+b21waWxlciB3aWxsIG9wdGltaXNlIGEgZGl2aWRlLWJ5LXBvd2VyLW9m4oiSMi1jb25zdGFudCBp
+bnRvIGEgc2hpZnQKPiBvcGVyYXRpb24gYW55d2F5LiBJJ20gcHJldHR5IHN1cmUgdGhhdCBvcHRp
+bWlzYXRpb24gaXMgZG9uZSBvbiBldmVuCj4gb24geDg2IGFzIGEgc2hpZnQgaXMgYSBzaW5nbGUg
+Y3ljbGUgb3BlcmF0aW9uIHdoaWxlIGFuIGludGVnZXIKPiBkaXZpZGUgc3RpbGwgdGFrZXMgc2V2
+ZXJhbCBjeWNsZXMgYW5kIGNvbnN1bWVzIG1vcmUgcG93ZXIuCgpJIGtub3csIGl0J2xsIHRha2Ug
+YWJvdXQgYSBuYW5vc2Vjb25kIGxvbmdlciB0aGFuIG5lY2Vzc2FyeSwKYW5kIGFuIGV4dHJhIDI1
+IHBpY293YXR0IGhvdXJzIChJRiB0aGUgY29tcGlsZXIgZG9lc24ndCBvcHRpbWl6ZQppdCBhd2F5
+KS4gIFRoaXMgYmVpbmcgZG9uZSB0byBkZXRlcm1pbmUgd2hldGhlciB0byBzdGFydCBhIHNlcmll
+cwpvZiBJL08gb3BlcmF0aW9ucy4uLgoKPiA+IEkgdGhpbmsgaXQgaXMgbWVhbmluZ2Z1bCB0byB1
+c2UKPiA+IGEgc2hpZnQgaW4gcGxhY2VzIHdoZXJlIGEgcG93ZXItb2YtdHdvIGlzIG1hbmRhdGVk
+LCBidXQgaW4gcGxhY2VzCj4gPiBsaWtlIHRoaXMgaXQgc3VnZ2VzdHMgdGhlcmUgaXMgYSBjb25z
+dHJhaW50IHRoYXQgc2ltcGx5IGRvZXNuJ3QKPiA+IGV4aXN0LiAgU28gZm9yIGV4YW1wbGUsIHlv
+dSBjb3VsZCBoYXZlIGNob3NlbiAobG9nLT5sb2dzaXplIC8gMTApCj4gPiBhcyB0aGUgInRyeSBw
+dXNoaW5nIiB2YWx1ZSwgYW5kIChsb2ctPmxvZ3NpemUgLyA0IC0gMSkgYXMgdGhlCj4gPiAibXVz
+dCBwdXNoIiB2YWx1ZS4KPiAKPiBJdCdzIG1vcmUgdGhlIGZhY3QgdGhhdCBYRlMgdXNlcyBwb3dl
+ci1vZi0yIGxvZ2ljIChpLmUgc2hpZnRzKQo+IGV2ZXJ5d2hlcmUuIEkganVzdCB0ZW5kIHRvIGJl
+IGNvbnNpc3RlbnQgd2l0aCB3aGF0IGlzIGFscmVhZHkgdGhlcmUuCj4gSW4gdGhpcyBjYXNlLCB0
+aGUgQUlMIHB1c2ggdGhyZXNob2xkcyBhcmUgY2FsY3VsYXRlZCB1c2luZyBzaGlmdHM6Cj4gCj4g
+CWZyZWVfdGhyZXNob2xkID0gTUFYKGZyZWVfdGhyZXNob2xkLCAobG9nLT5sX2xvZ0JCc2l6ZSA+
+PiAyKSk7Cj4gCj4gYW5kIHNvIHdoZW4geW91IGNvbXBhcmUgdGhhdCB0byB0aGUgWExPR19DSUxf
+U1BBQ0VfTElNSVQoKQo+IGRlZmluaXRpb25zLCBpdCBpcyBpbW1lZGlhdGVseSBjbGVhciB0aGF0
+IHRoZSBDSUwgbGltaXRzIGFyZSBzbWFsbGVyCj4gdGhhbiB0aGUgQUlMIHB1c2ggdGhyZXNob2xk
+Li4uCgpJIGdldCBpdC4gIEFuZCBhcyBJIHNhaWQgYmVmb3JlLCBJIHRydWx5IGRvbid0IGNhcmUg
+bXVjaCBhYm91dAp0aGlzLS1pdCdzIGFuIG9ic2VydmF0aW9uIG1vcmUgdGhhbiBldmVuIGFuIGFu
+bm95YW5jZSwgYW5kIGl0J3MKYWxyZWFkeSB0YWtlbiBhIGxvdCBtb3JlIHRpbWUgYW5kIG1lbnRh
+bCBlbmVyZ3kgKG5vdCB0byBtZW50aW9uCmVsZWN0cmljIHBvd2VyKSB0aGFuIGl0IGV2ZXIgcmVh
+bGx5IGRlc2VydmVkLgoKCQkJCQktQWxleAoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDov
+L29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
