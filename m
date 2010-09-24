@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8ODHs7i183443 for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 08:17:54 -0500
-Received: from smtp4-g21.free.fr (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 70620E53478
-	for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 06:31:27 -0700 (PDT)
-Received: from smtp4-g21.free.fr (smtp4-g21.free.fr [212.27.42.4]) by
-	cuda.sgi.com with ESMTP id jEWhX4CJgwWtzmKE for
-	<xfs@oss.sgi.com>; Fri, 24 Sep 2010 06:31:27 -0700 (PDT)
-Date: Fri, 24 Sep 2010 15:18:46 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
+	o8ODjrBl184670 for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 08:45:54 -0500
+Received: from moutng.kundenserver.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id AD472E62C83
+	for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 06:59:28 -0700 (PDT)
+Received: from moutng.kundenserver.de (moutng.kundenserver.de
+	[212.227.126.187]) by cuda.sgi.com with ESMTP id
+	3NoCIMoDawEivRiR for <xfs@oss.sgi.com>;
+	Fri, 24 Sep 2010 06:59:28 -0700 (PDT)
+Message-ID: <4C9CABC5.6040806@open-e.com>
+Date: Fri, 24 Sep 2010 15:46:45 +0200
+From: Slawomir Nowakowski <slawomir.nowakowski@open-e.com>
+MIME-Version: 1.0
 Subject: Re: Problem with file system on iSCSI FileIO
-Message-ID: <20100924151846.1208611c@harpe.intellique.com>
-In-Reply-To: <20100924075505.GA24664@infradead.org>
 References: <4C9B5786.4010205@open-e.com> <20100923143221.GA1989@infradead.org>
 	<4C9B6B27.5050606@open-e.com>
 	<20100924075505.GA24664@infradead.org>
-Mime-Version: 1.0
+	<4C9C875D.9050308@open-e.com>
+	<20100924151858.10528c86@harpe.intellique.com>
+In-Reply-To: <20100924151858.10528c86@harpe.intellique.com>
+Reply-To: slawomir.nowakowski@open-e.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,49 +29,93 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="iso-8859-1"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: 'Ryszard Stawiarski' <ryszard.stawiarski@open-e.com>, ??ukasz Wittig <lukasz.wittig@open-e.com>, Artur Piechocki <artur.piechocki@open-e.com>, xfs@oss.sgi.com, Slawomir Nowakowski <slawomir.nowakowski@open-e.com>
+To: Emmanuel Florac <eflorac@intellique.com>
+Cc: xfs@oss.sgi.com
 
-Le Fri, 24 Sep 2010 03:55:05 -0400
-Christoph Hellwig <hch@infradead.org> =E9crivait:
+Dear Emmanuel,
 
-> Thanks, I know ISCSI very well.  But what is "iSCSI FileIO" ?  The
-> above sounds like it's an iscsi target, is that correct?
 
-It's an IO Mode that goes through the kernel VFS cache, as opposed to
-blockIO that does direct IO.
+> Le Fri, 24 Sep 2010 13:11:25 +0200
+> Slawomir Nowakowski<slawomir.nowakowski@open-e.com>  =E9crivait:
+>
+>    =
 
-> I still can't make any sense of the actual setups.
-> =
+>> But we believe the problem is with the XFS. With unknown reason we
+>> are not able to mount the LV and after running xfs_repair the file is
+>> missing from the LV. Do you have any ideas how we can try to fix the
+>> broken XFS?
+>>      =
 
-> The above seems to be the backend storage.  Then there's SCST
-> somewhere in which is in a out of tree kernel module.  And then you
-> use XFS somewhere.  Please provide a full description of the setup.
+> This doesn't really make much sense to me. What target are you using?
+> scst, tgt, lio or iet? What looks weird to me is that the dd command
+> example you gave writes over the xfs filesystem :
+>
+> dd if=3D/dev/zero of=3D/dev/vg+vg00/lv+i+lv0000 bs=3D1M conv=3Dnotrunc
+>
+> This is definitely incorrect. Given that /dev/vg+vg00/lv+i+lv0000 is
+> your xfs formatted lv, you must mount it somewhere :
+>
+> mount /dev/vg+vg00/lv+i+lv0000 /mnt/whatever
+>
+> Then you dd the file on /mnt/whatever :
+>
+> dd if=3D/dev/zero of=3D/mnt/whatever/lunfile bs=3D1M
+>
+> Lastly, you declare /mnt/whatever/lunfile as the lun in your target
+> (method varies depending upon the target used), something like (ietd
+> example):
+>
+> Target iqn.2010-09:com.whatever.host.target1
+> 	Alias host.target1
+> 	Lun 0 Type=3Dfileio,Path=3Dmnt/whatever/lunfile,IOMode=3Dwback
+>
+>    =
 
-If the iSCSI targets are actually block devices (lvm lvs, disk
-partitions, etc), than using FileIO is a mistake, it may bring up all
-kind of weird behaviours, though normally no real errors - though I
-don't really know how scst fares in this regard.
+It's my mistake in dd command, sorry for that.
 
-My understanding : he planned to create a file on the mounted XFS
-volume with dd but instead he dd'ed the lv itself, which obviously
-destroyed the filesystem. Or something else, I don't really know :)
+First we mount the LV:
 
-Slawomir, please show us the scst config file. Did you use mkfs
-and dd on the target or the initiator? This isn't clear.
+mount
+[...]
+/dev/vg+vg00/lv+i+lv0000 on /mnt/point type xfs =
 
--- =
+(rw,nouuid,attr2,nobarrier,noquota)
+[...]
 
-------------------------------------------------------------------------
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
-------------------------------------------------------------------------
+then we run dd to file
+
+dd if=3D/dev/zero of=3D/mnt/point/lun bs=3D1M conv=3Dnotrunc count=3D$size
+
+$size is counted to leave some free space on the device
+
+As the iSCSI target we use SCST 1.0.1.2. The scst.conf looks likes like =
+
+this:
+
+[HANDLER vdisk]
+DEVICE 0QSP199WJI1yKOPj,/mnt/point/lun,WT,512,0QSP199WJI1yKOPj
+
+[GROUP Default_iqn.2010-03:sn1.target0]
+[GROUP Default]
+
+[ASSIGNMENT Default_iqn.2010-03:sn1.target0]
+DEVICE 0QSP199WJI1yKOPj,0
+[ASSIGNMENT Default]
+
+[TARGETS enable]
+
+[TARGETS disable]
+
+The problem is that we were able to use this LUN in the target, but =
+
+suddenly after a reboot we are not.
+
+Cheers
+Slawek
 
 _______________________________________________
 xfs mailing list
