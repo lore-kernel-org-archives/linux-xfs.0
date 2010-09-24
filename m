@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8O1I4IN157042 for <xfs@oss.sgi.com>; Thu, 23 Sep 2010 20:18:05 -0500
+	o8O2EISt158654 for <xfs@oss.sgi.com>; Thu, 23 Sep 2010 21:14:19 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EC79F98CB6
-	for <xfs@oss.sgi.com>; Thu, 23 Sep 2010 18:18:58 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
-	[150.101.137.99]) by cuda.sgi.com with ESMTP id
-	vLnVPofxj5IHRH51 for <xfs@oss.sgi.com>;
-	Thu, 23 Sep 2010 18:18:58 -0700 (PDT)
-Date: Fri, 24 Sep 2010 11:18:55 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 63E2FE5E35E
+	for <xfs@oss.sgi.com>; Thu, 23 Sep 2010 19:27:49 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
+	[150.101.137.97]) by cuda.sgi.com with ESMTP id
+	8oZUQjVq6A6hkwd4 for <xfs@oss.sgi.com>;
+	Thu, 23 Sep 2010 19:27:49 -0700 (PDT)
+Date: Fri, 24 Sep 2010 12:15:09 +1000
 From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH] xfs: force background CIL push under sustained load
-Message-ID: <20100924011855.GR2614@dastard>
+Message-ID: <20100924021509.GS2614@dastard>
 References: <1285208863-31489-1-git-send-email-david@fromorbit.com>
-	<1285268035.1973.109.camel@doink>
+	<1285268312.1973.114.camel@doink>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1285268035.1973.109.camel@doink>
+In-Reply-To: <1285268312.1973.114.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,80 +26,51 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Alex Elder <aelder@sgi.com>
 Cc: xfs@oss.sgi.com
 
-T24gVGh1LCBTZXAgMjMsIDIwMTAgYXQgMDE6NTM6NTVQTSAtMDUwMCwgQWxleCBFbGRlciB3cm90
-ZToKPiBPbiBUaHUsIDIwMTAtMDktMjMgYXQgMTI6MjcgKzEwMDAsIERhdmUgQ2hpbm5lciB3cm90
-ZToKPiA+ICsgKiB0aGFuIGhhbGYgdGhlIGxvZyIgcnVsZSB0aGF0IHJlY292ZXJ5IHJlcXVpcmVz
-IHVzIHRvIGtlZXAuCj4gPiArICoKPiA+ICsgKiBGdXJ0aGVyLCB3ZSBuZWVkIHRvIG1ha2Ugc3Vy
-ZSB0aGUgYmFja2dyb3VuZCBDSUwgcHVzaCBpcyBlZmZpY2llbnQsIHdoaWNoCj4gPiArICogbWVh
-bnMgd2UgbmVlZCB0byBnaXZlIHRoZSBiYWNrZ3JvdW5kIHB1c2ggYSBjaGFuY2UgdG8gY29tbWl0
-IHdpdGhvdXQKPiA+ICsgKiBibG9ja2luZyBhbGwgdGhlIGN1cnJlbnQgdHJhbnNhY3Rpb24gY29t
-bWl0cy4gSGVuY2Ugd2UgbmVlZCBzb21lIHNwYWNlCj4gPiArICogYmV0d2VlbiB0aGUgdGhyZXNo
-b2xkIGFuZCB0aGUgMjUlIGxpbWl0IHRvIGFsbG93IGJhY2tncm91bmQgcHVzaGVzIHRvIGJlCj4g
-PiArICogdHJpZWQsIGJ1dCBub3QgZW5mb3JjZWQuIFRvIG1ha2UgdGhpcyBzaW1wbGUgYW5kIGZh
-c3QgdG8gY2FsY3VsYXRlLCBzZXQKPiA+ICsgKiB0aGUgYmFja2dyb3VuZCBwdXNoIHRocmVzaG9s
-ZCB0byAxLzh0aCAoMTIuNSUpIHRoZSBzaXplIG9mIHRoZSBsb2csIGFuZCB0aGVuIHN0YXJ0Cj4g
-PiArICogZW5mb3JjaW5nIHRoZSBiYWNrZ3JvdW5kIHB1c2ggYXQgNTAlIGFib3ZlIHRoaXMuIGku
-ZS4gYXQgMy8xNnRoIG9yIDE4Ljc1JSBvZgo+ID4gKyAqIHRoZSBsb2cgc2l6ZS4gVGhpcyBzaG91
-bGQga2VlcCB1cyB3ZWxsIHVuZGVyIHRoZSBsaW1pdHMgb2YgdGhlIEFJTCBwdXNoaW5nCj4gPiAr
-ICogdGhyZXNob2xkLCB5ZXQgZ2l2ZSB1cyBwbGVudHkgb2Ygc3BhY2UgZm9yIGFnZ3JlZ2F0aW9u
-IG9uIGxhcmdlIGxvZ3MuCj4gPiAgICovCj4gCj4gSSB0aGluayB0aGUgYWJvdmUgZXhwbGFuYXRp
-b24gaXMgcHJldHR5IGdvb2QgYnV0IEkgZG9uJ3Qga25vdyB0aGF0IGl0J3MKPiBhcyBjbGVhciBv
-ciBjb25jaXNlIGFzIGl0IGNvdWxkIGJlLiAgSSBkb24ndCBjbGFpbSB0aGlzIGlzIGJldHRlciBi
-dXQKPiBJJ2xsIHRha2UgYSBzaG90IChJIGRvbid0IGxpa2Ugb2ZmZXJpbmcgY3JpdGljaXNtIHdp
-dGhvdXQgc3VnZ2VzdGluZwo+IGFuIGFsdGVybmF0aXZlKS4KPiAKPiAgKiBXaXRoIGR5bmFtaWMg
-cmVzZXJ2YXRpb25zLCB3ZSBjYW4gYmFzaWNhbGx5IG1ha2UgdXAgYXJiaXRyYXJ5Cj4gICogbGlt
-aXRzIGZvciB0aGUgY2hlY2twb2ludCBzaXplIHNvIGxvbmcgYXMgdGhleSBkb24ndCB2aW9sYXRl
-IGFueQo+ICAqIG90aGVyIHNpemUgcnVsZXMuICBSZWNvdmVyeSBpbXBvc2VzIGEgcnVsZSB0aGF0
-IG5vIHRyYW5zYWN0aW9uCj4gICogZXhjZWVkIGhhbGYgdGhlIGxvZywgc28gd2UgYXJlIGxpbWl0
-ZWQgYnkgdGhhdC4gIEZ1cnRoZXJtb3JlLCB0aGUKPiAgKiBsb2cgdHJhbnNhY3Rpb24gcmVzZXJ2
-YXRpb24gc3Vic3lzdGVtIHRyaWVzIHRvIGtlZXAgMjUlIG9mIHRoZQo+ICAqIGxvZyBmcmVlLCBz
-byB3ZSBzaG91bGQga2VlcCBiZWxvdyB0aGF0IGxpbWl0IG9yIHdlIHJpc2sgbm90IGJlaW5nCj4g
-ICogYWJsZSB0byBnZXQgdGhlIHNwYWNlIHdlIG5lZWQuCj4gICoKPiAgKiBJbiBvcmRlciB0byBr
-ZWVwIGJhY2tncm91bmQgQ0lMIHB1c2ggZWZmaWNpZW50LCB3ZSB3aWxsIHNldCBhCj4gICogbG93
-ZXIgdGhyZXNob2xkIGF0IHdoaWNoIGJhY2tncm91bmQgcHVzaGluZyBpcyBhdHRlbXB0ZWQgd2l0
-aG91dAo+ICAqIGJsb2NraW5nIGN1cnJlbnQgdHJhbnNhY3Rpb24gY29tbWl0cy4gIEEgc2VwYXJh
-dGUsIGhpZ2hlciBib3VuZAo+ICAqIGRlZmluZXMgd2hlbiBDSUwgcHVzaGVzIGFyZSBmb3JjZWQg
-aW4gb3JkZXIgdG8gZW5zdXJlIHdlIHN0YXkKPiAgKiB3aXRoaW4gb3VyIHRyYW5zYWN0aW9uIHNp
-emUgbGltaXRzLgoKWWVzLCBtYWtlcyBzZW5zZS4gSSdsbCByZXdvcmsgaXQgYWxvbmcgdGhlc2Ug
-bGluZXMuCgo+ID4gLQo+ID4gLSNkZWZpbmUgWExPR19DSUxfU1BBQ0VfTElNSVQobG9nKQlcCj4g
-PiAtCShtaW4oKGxvZy0+bF9sb2dzaXplID4+IDIpLCAoOCAqIDEwMjQgKiAxMDI0KSkpCj4gPiAr
-I2RlZmluZSBYTE9HX0NJTF9TUEFDRV9MSU1JVChsb2cpCShsb2ctPmxfbG9nc2l6ZSA+PiAzKQo+
-ID4gKyNkZWZpbmUgWExPR19DSUxfSEFSRF9TUEFDRV9MSU1JVChsb2cpCSgzICogKGxvZy0+bF9s
-b2dzaXplID4+IDQpKQo+IAo+IE1heWJlICJMSU1JVCIgaXNuJ3QgcXVpdGUgdGhlIHJpZ2h0IG5h
-bWUgZm9yIHRoZXNlIHR3by4KPiAoQnV0IEkgaGF2ZSBubyBiZXR0ZXIgc3VnZ2VzdGlvbi4pCgpU
-aHJlc2hvbGQgaXMgcmVhbGx5IHRoZSBvbmx5IG90aGVyIHdvcmQgdGhhdCBtYXRjaGVzLCBidXQg
-SSB0aGluawpsaW1pdCBpcyBiZXR0ZXIgaGVyZSBhcyBpdCBjb252ZXlzIGEgc2Vuc2UgdGhhdCBp
-dCBpcyBzb21ldGhpbmcgd2UKZG9uJ3QgcmVhbGx5IHdhbnQgdG8gY3Jvc3MuLi4KCj4gSSBkb24n
-dCByZWFsbHkgY2FyZSBtdWNoIGFib3V0IHRoaXMsIGJ1dCBJJ2xsIHRha2UgdGhpcwo+IG9wcG9y
-dHVuaXR5IGZvciBhIHNtYWxsIHJhbnQuCj4gCj4gVGhlIGRpZmZlcmVuY2UgaW4gY2FsY3VsYXRp
-b24gY29zdC9zcGVlZCBiZXR3ZWVuICJ4ID4+IDMiIGFuZAo+ICJ4IC8gOCIgaXMgdmFuaXNoaW5n
-bHkgc21hbGwuCgpUaGF0IGlzIGFyY2hpdGVjdHVyZSBkZXBlbmRlbnQsIGJ1dCBpbiBtb3N0IGNh
-c2VzIHRoZXNlIGRheXMgdGhlCmNvbXBpbGVyIHdpbGwgb3B0aW1pc2UgYSBkaXZpZGUtYnktcG93
-ZXItb2biiJIyLWNvbnN0YW50IGludG8gYSBzaGlmdApvcGVyYXRpb24gYW55d2F5LiBJJ20gcHJl
-dHR5IHN1cmUgdGhhdCBvcHRpbWlzYXRpb24gaXMgZG9uZSBvbiBldmVuCm9uIHg4NiBhcyBhIHNo
-aWZ0IGlzIGEgc2luZ2xlIGN5Y2xlIG9wZXJhdGlvbiB3aGlsZSBhbiBpbnRlZ2VyCmRpdmlkZSBz
-dGlsbCB0YWtlcyBzZXZlcmFsIGN5Y2xlcyBhbmQgY29uc3VtZXMgbW9yZSBwb3dlci4KCj4gSSB0
-aGluayBpdCBpcyBtZWFuaW5nZnVsIHRvIHVzZQo+IGEgc2hpZnQgaW4gcGxhY2VzIHdoZXJlIGEg
-cG93ZXItb2YtdHdvIGlzIG1hbmRhdGVkLCBidXQgaW4gcGxhY2VzCj4gbGlrZSB0aGlzIGl0IHN1
-Z2dlc3RzIHRoZXJlIGlzIGEgY29uc3RyYWludCB0aGF0IHNpbXBseSBkb2Vzbid0Cj4gZXhpc3Qu
-ICBTbyBmb3IgZXhhbXBsZSwgeW91IGNvdWxkIGhhdmUgY2hvc2VuIChsb2ctPmxvZ3NpemUgLyAx
-MCkKPiBhcyB0aGUgInRyeSBwdXNoaW5nIiB2YWx1ZSwgYW5kIChsb2ctPmxvZ3NpemUgLyA0IC0g
-MSkgYXMgdGhlCj4gIm11c3QgcHVzaCIgdmFsdWUuCgpJdCdzIG1vcmUgdGhlIGZhY3QgdGhhdCBY
-RlMgdXNlcyBwb3dlci1vZi0yIGxvZ2ljIChpLmUgc2hpZnRzKQpldmVyeXdoZXJlLiBJIGp1c3Qg
-dGVuZCB0byBiZSBjb25zaXN0ZW50IHdpdGggd2hhdCBpcyBhbHJlYWR5IHRoZXJlLgpJbiB0aGlz
-IGNhc2UsIHRoZSBBSUwgcHVzaCB0aHJlc2hvbGRzIGFyZSBjYWxjdWxhdGVkIHVzaW5nIHNoaWZ0
-czoKCglmcmVlX3RocmVzaG9sZCA9IE1BWChmcmVlX3RocmVzaG9sZCwgKGxvZy0+bF9sb2dCQnNp
-emUgPj4gMikpOwoKYW5kIHNvIHdoZW4geW91IGNvbXBhcmUgdGhhdCB0byB0aGUgWExPR19DSUxf
-U1BBQ0VfTElNSVQoKQpkZWZpbml0aW9ucywgaXQgaXMgaW1tZWRpYXRlbHkgY2xlYXIgdGhhdCB0
-aGUgQ0lMIGxpbWl0cyBhcmUgc21hbGxlcgp0aGFuIHRoZSBBSUwgcHVzaCB0aHJlc2hvbGQuLi4K
-CkNoZWVycywKCkRhdmUuCi0tIApEYXZlIENoaW5uZXIKZGF2aWRAZnJvbW9yYml0LmNvbQoKX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcg
-bGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8v
-eGZzCg==
+On Thu, Sep 23, 2010 at 01:58:32PM -0500, Alex Elder wrote:
+> On Thu, 2010-09-23 at 12:27 +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > I have been seeing relatively frequent pauses in transaction throughput up to
+> > 30s long under heavy parallel workloads. The only thing that seemed strange
+> > about them was that the xfsaild was active during the pauses, but making no
+> > progress. It was running exactly 20 times a second (on the 50ms no-progress
+> > backoff), and the number of pushbuf events was constant across this time as
+> > well.  IOWs, the xfsaild appeared to be stuck on buffers that it could not push
+> > out.
+> 
+> . . .
+> 
+> If you like I can take this patch directly (i.e., not wait for you to
+> send a separate pull request).  It fixes a real bug but since delayed
+> logging still an experimental feature I am not inclined to send it to
+> Linus at this point in the cycle.  Let me know if you disagree.
+
+I think it needs to go to linus as well back to 2.6.35.y as it can
+result in recovery silently corrupting the filesystem if a
+checkpoint larger than half the log is present in the log during
+recovery.  I don' tthink the experimental status of the code makes
+any difference, especially as we've already pushed checkpoint/
+recovery corruption fixes into this release....
+
+I'm adding it to the start of the metadata scale patchset branch
+right now, which I'll probably being sending a pull request out for
+later today.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
