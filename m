@@ -1,30 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8OCUXdY180830 for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 07:30:33 -0500
+	o8OCUYJm180840 for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 07:30:34 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3808099EA6
-	for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 05:31:26 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
-	[150.101.137.103]) by cuda.sgi.com with ESMTP id
-	KxdEYgmLynZw4rv8 for <xfs@oss.sgi.com>;
-	Fri, 24 Sep 2010 05:31:26 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C7E7F14FBDB6
+	for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 05:44:06 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
+	[150.101.137.98]) by cuda.sgi.com with ESMTP id
+	hWxMzWWqXrGQaAk8 for <xfs@oss.sgi.com>;
+	Fri, 24 Sep 2010 05:44:06 -0700 (PDT)
 Received: from dastard (unverified [121.44.66.70])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	40046895-1927428
-	for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 22:01:25 +0930 (CST)
+	40432965-1927428
+	for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 22:01:26 +0930 (CST)
 Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1Oz7Qx-0007UU-T1
+	(envelope-from <dave@fromorbit.com>) id 1Oz7Qx-0007UT-T0
 	for xfs@oss.sgi.com; Fri, 24 Sep 2010 22:31:23 +1000
 Received: from dave by disturbed with local (Exim 4.72)
-	(envelope-from <dave@disturbed.disaster>) id 1Oz7Qt-0005zs-LK
+	(envelope-from <dave@disturbed.disaster>) id 1Oz7Qt-0005zq-JU
 	for xfs@oss.sgi.com; Fri, 24 Sep 2010 22:31:19 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 01/18] xfs: force background CIL push under sustained load
-Date: Fri, 24 Sep 2010 22:30:59 +1000
-Message-Id: <1285331476-23015-2-git-send-email-david@fromorbit.com>
-In-Reply-To: <1285331476-23015-1-git-send-email-david@fromorbit.com>
-References: <1285331476-23015-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 0/18] xfs: metadata scalability V3
+Date: Fri, 24 Sep 2010 22:30:58 +1000
+Message-Id: <1285331476-23015-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -40,163 +38,133 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Version 3:
 
-I have been seeing occasional pauses in transaction throughput up to
-30s long under heavy parallel workloads. The only notable thing was
-that the xfsaild was trying to be active during the pauses, but
-making no progress. It was running exactly 20 times a second (on the
-50ms no-progress backoff), and the number of pushbuf events was
-constant across this time as well.  IOWs, the xfsaild appeared to be
-stuck on buffers that it could not push out.
+o added CIL background push fixup. While it is a correctness bug fix,
+  it also signifincantly speeds up sustained workloads. This version
+  of the patch has addresed the review comments.
+o cleaned up some typos and removed useless comments around timestamp
+  changes
+o changed xfs_buf_get_uncached() parameters to pass the buftarg first.
+o split inode walk batch lookup in two patches to separate out grabbing and
+  releasing inodes from the batch lookups.
 
-Further investigation indicated that it was trying to push out inode
-buffers that were pinned and/or locked. The xfsbufd was also getting
-woken at the same frequency (by the xfsaild, no doubt) to push out
-delayed write buffers. The xfsbufd was not making any progress
-because all the buffers in the delwri queue were pinned. This scan-
-and-make-no-progress dance went one in the trace for some seconds,
-before the xfssyncd came along an issued a log force, and then
-things started going again.
+Version 2:
+o dropped inode cache RCU/spinlock conversion (needs more testing)
+o dropped buffer cache LRU/no page cache conversion (needs more testing)
+o added CIL item insertion cleanup as suggested by Christoph.
+o added flags to xfs_buf_get_uncached() and xfs_buf_read_uncached()
+  to control memory allocation flags.
+o cleaned up buffer page allocation failure path
+o reworked inode reclaim shrinker scalability
+	- separated reclaim AG walk from sync walks
+	- implemented batch lookups for both sync and reclaim walks
+	- added per-ag reclaim serialisation locks and traversal
+	  cursors
 
-However, I noticed something strange about the log force - there
-were way too many IO's issued. 516 log buffers were written, to be
-exact. That added up to 129MB of log IO, which got me very
-interested because it's almost exactly 25% of the size of the log.
-He delayed logging code is suppose to aggregate the minimum of 25%
-of the log or 8MB worth of changes before flushing. That's what
-really puzzled me - why did a log force write 129MB instead of only
-8MB?
+This patchset started out as a "convert the buffer cache to rbtrees"
+patch, and just gew from there as I peeled the onion from one
+bottleneck to another. The second version of this patch does not go
+as far as the first version - it drops the more radical changes as
+they are not ready for integration yet.
 
-Essentially what has happened is that no CIL pushes had occurred
-since the previous tail push which cleared out 25% of the log space.
-That caused all the new transactions to block because there wasn't
-log space for them, but they kick the xfsaild to push the tail.
-However, the xfsaild was not making progress because there were
-buffers it could not lock and flush, and the xfsbufd could not flush
-them because they were pinned. As a result, both the xfsaild and the
-xfsbufd could not move the tail of the log forward without the CIL
-first committing.
+The lock contention reductions allowed by the RCU inode cache
+lookups are replaced by more efficient lookup mechanisms during
+inode cache walking - using batching mechanisms as originally
+suggested by Nick Piggin. The code is a lot more efficient than
+Nick's proof of concept as it uses batched gang lookups on the radix
+trees. These batched lookups show almost the same performance
+improvement as the RCU lookup did but without changing the locking
+algorithms at all.  This batching would be necessary for efficient
+reclaim walks regardless of whether the sync walk is protected by
+RCU or the current rwlock.
 
-The cause of the problem was that the background CIL push, which
-should happen when 8MB of aggregated changes have been committed, is
-being held off by the concurrent transaction commit load. The
-background push does a down_write_trylock() which will fail if there
-is a concurrent transaction commit holding the push lock in read
-mode. With 8 CPUs all doing transactions as fast as they can, there
-was enough concurrent transaction commits to hold off the background
-push until tail-pushing could no longer free log space, and the halt
-would occur.
+The shrinker rework improves parallel unlink performance
+substantially more than just single threading the shrinker execution
+and does not have the OOM problems that single threading the
+shrinker had. It avoids the OOM problems by ensuring that every
+shrinker call does some work or sleeps while waiting for an AG to do
+some work on. The lookup optimisations done for gang lookups ensure
+that the scanning is as efficient as possible, so overall shrinker
+overhead has gone down significantly.
 
-It should be noted that there is no reason why it would halt at 25%
-of log space used by a single CIL checkpoint. This bug could
-definitely violate the "no transaction should be larger than half
-the log" requirement and hence result in corruption if the system
-crashed under heavy load. This sort of bug is exactly the reason why
-delayed logging was tagged as experimental....
+Performance numbers here are 8-way fs_mark create to 50M files, and
+8-way rm -rf to remove the files created.
 
-The fix is to start blocking background pushes once the threshold
-has been exceeded. Rework the threshold calculations to keep the
-amount of log space a CIL checkpoint can use to below that of the
-AIL push threshold to avoid the problem completely.
+			wall time	fs_mark rate
+2.6.36-rc4:
+	create:		13m10s		65k file/s
+	unlink:		23m58s		N/A
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Alex Elder <aelder@sgi.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_log_cil.c  |   12 +++++++++---
- fs/xfs/xfs_log_priv.h |   37 +++++++++++++++++++++----------------
- 2 files changed, 30 insertions(+), 19 deletions(-)
+2.6.36-rc4 + v1-patchset:
+	create:		 9m47s		95k files/s
+	unlink:		14m16s		N/A
 
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index ed575fb..7e206fc 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -405,9 +405,15 @@ xlog_cil_push(
- 	new_ctx = kmem_zalloc(sizeof(*new_ctx), KM_SLEEP|KM_NOFS);
- 	new_ctx->ticket = xlog_cil_ticket_alloc(log);
- 
--	/* lock out transaction commit, but don't block on background push */
-+	/*
-+	 * Lock out transaction commit, but don't block for background pushes
-+	 * unless we are well over the CIL space limit. See the definition of
-+	 * XLOG_CIL_HARD_SPACE_LIMIT() for the full explanation of the logic
-+	 * used here.
-+	 */
- 	if (!down_write_trylock(&cil->xc_ctx_lock)) {
--		if (!push_seq)
-+		if (!push_seq &&
-+		    cil->xc_ctx->space_used < XLOG_CIL_HARD_SPACE_LIMIT(log))
- 			goto out_free_ticket;
- 		down_write(&cil->xc_ctx_lock);
- 	}
-@@ -422,7 +428,7 @@ xlog_cil_push(
- 		goto out_skip;
- 
- 	/* check for a previously pushed seqeunce */
--	if (push_seq < cil->xc_ctx->sequence)
-+	if (push_seq && push_seq < cil->xc_ctx->sequence)
- 		goto out_skip;
- 
- 	/*
-diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index ced52b9..edcdfe0 100644
---- a/fs/xfs/xfs_log_priv.h
-+++ b/fs/xfs/xfs_log_priv.h
-@@ -426,13 +426,13 @@ struct xfs_cil {
- };
- 
- /*
-- * The amount of log space we should the CIL to aggregate is difficult to size.
-- * Whatever we chose we have to make we can get a reservation for the log space
-- * effectively, that it is large enough to capture sufficient relogging to
-- * reduce log buffer IO significantly, but it is not too large for the log or
-- * induces too much latency when writing out through the iclogs. We track both
-- * space consumed and the number of vectors in the checkpoint context, so we
-- * need to decide which to use for limiting.
-+ * The amount of log space we allow the CIL to aggregate is difficult to size.
-+ * Whatever we choose, we have to make sure we can get a reservation for the
-+ * log space effectively, that it is large enough to capture sufficient
-+ * relogging to reduce log buffer IO significantly, but it is not too large for
-+ * the log or induces too much latency when writing out through the iclogs. We
-+ * track both space consumed and the number of vectors in the checkpoint
-+ * context, so we need to decide which to use for limiting.
-  *
-  * Every log buffer we write out during a push needs a header reserved, which
-  * is at least one sector and more for v2 logs. Hence we need a reservation of
-@@ -459,16 +459,21 @@ struct xfs_cil {
-  * checkpoint transaction ticket is specific to the checkpoint context, rather
-  * than the CIL itself.
-  *
-- * With dynamic reservations, we can basically make up arbitrary limits for the
-- * checkpoint size so long as they don't violate any other size rules.  Hence
-- * the initial maximum size for the checkpoint transaction will be set to a
-- * quarter of the log or 8MB, which ever is smaller. 8MB is an arbitrary limit
-- * right now based on the latency of writing out a large amount of data through
-- * the circular iclog buffers.
-+ * With dynamic reservations, we can effectively make up arbitrary limits for
-+ * the checkpoint size so long as they don't violate any other size rules.
-+ * Recovery imposes a rule that no transaction exceed half the log, so we are
-+ * limited by that.  Furthermore, the log transaction reservation subsystem
-+ * tries to keep 25% of the log free, so we need to keep below that limit or we
-+ * risk running out of free log space to start any new transactions.
-+ *
-+ * In order to keep background CIL push efficient, we will set a lower
-+ * threshold at which background pushing is attempted without blocking current
-+ * transaction commits.  A separate, higher bound defines when CIL pushes are
-+ * enforced to ensure we stay within our maximum checkpoint size bounds.
-+ * threshold, yet give us plenty of space for aggregation on large logs.
-  */
--
--#define XLOG_CIL_SPACE_LIMIT(log)	\
--	(min((log->l_logsize >> 2), (8 * 1024 * 1024)))
-+#define XLOG_CIL_SPACE_LIMIT(log)	(log->l_logsize >> 3)
-+#define XLOG_CIL_HARD_SPACE_LIMIT(log)	(3 * (log->l_logsize >> 4))
- 
- /*
-  * The reservation head lsn is not made up of a cycle number and block number.
--- 
-1.7.1
+2.6.36-rc3 + v2-patchset:
+	create:		10m32s		85k file/s
+	unlink:		11m49s		N/A
+
+2.6.36-rc4 + v3-patchset
+	create:		10m03s		90k file/s
+	unlink:		11m29s		N/A
+
+The patches are available in the following git tree. The branch is
+based on the current OSS xfs tree, and as such is based on
+2.6.36-rc4. This is a rebase of the previous branch.
+
+The following changes since commit e89318c670af3959db3aa483da509565f5a2536c:
+
+  xfs: eliminate some newly-reported gcc warnings (2010-09-16 12:56:42 -0500)
+
+are available in the git repository at:
+  git://git.kernel.org/pub/scm/linux/kernel/git/dgc/xfsdev.git metadata-scale
+
+Dave Chinner (18):
+      xfs: force background CIL push under sustained load
+      xfs: reduce the number of CIL lock round trips during commit
+      xfs: remove debug assert for per-ag reference counting
+      xfs: lockless per-ag lookups
+      xfs: don't use vfs writeback for pure metadata modifications
+      xfs: rename xfs_buf_get_nodaddr to be more appropriate
+      xfs: introduced uncached buffer read primitve
+      xfs: store xfs_mount in the buftarg instead of in the xfs_buf
+      xfs: kill XBF_FS_MANAGED buffers
+      xfs: use unhashed buffers for size checks
+      xfs: remove buftarg hash for external devices
+      xfs: split inode AG walking into separate code for reclaim
+      xfs: split out inode walk inode grabbing
+      xfs: implement batched inode lookups for AG walking
+      xfs: batch inode reclaim lookup
+      xfs: serialise inode reclaim within an AG
+      xfs: convert buffer cache hash to rbtree
+      xfs: pack xfs_buf structure more tightly
+
+ fs/xfs/linux-2.6/xfs_buf.c     |  200 +++++++++++---------
+ fs/xfs/linux-2.6/xfs_buf.h     |   50 +++---
+ fs/xfs/linux-2.6/xfs_ioctl.c   |    2 +-
+ fs/xfs/linux-2.6/xfs_iops.c    |   55 ++++--
+ fs/xfs/linux-2.6/xfs_super.c   |   15 +-
+ fs/xfs/linux-2.6/xfs_sync.c    |  407 +++++++++++++++++++++++-----------------
+ fs/xfs/linux-2.6/xfs_sync.h    |    4 +-
+ fs/xfs/linux-2.6/xfs_trace.h   |    4 +-
+ fs/xfs/quota/xfs_qm_syscalls.c |   14 +--
+ fs/xfs/xfs_ag.h                |    9 +
+ fs/xfs/xfs_attr.c              |   31 +--
+ fs/xfs/xfs_buf_item.c          |    3 +-
+ fs/xfs/xfs_fsops.c             |   11 +-
+ fs/xfs/xfs_inode.h             |    1 +
+ fs/xfs/xfs_inode_item.c        |    9 -
+ fs/xfs/xfs_log.c               |    3 +-
+ fs/xfs/xfs_log_cil.c           |  244 +++++++++++++-----------
+ fs/xfs/xfs_log_priv.h          |   37 ++--
+ fs/xfs/xfs_log_recover.c       |   19 +-
+ fs/xfs/xfs_mount.c             |  152 ++++++++-------
+ fs/xfs/xfs_mount.h             |    2 +
+ fs/xfs/xfs_rename.c            |   12 +-
+ fs/xfs/xfs_rtalloc.c           |   29 ++--
+ fs/xfs/xfs_utils.c             |    4 +-
+ fs/xfs/xfs_vnodeops.c          |   16 +-
+ 25 files changed, 730 insertions(+), 603 deletions(-)
 
 _______________________________________________
 xfs mailing list
