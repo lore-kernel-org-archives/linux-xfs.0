@@ -1,16 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8OE1l4X185080 for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 09:01:47 -0500
-Subject: Re: [PATCH] xfs: force background CIL push under sustained load
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20100924011855.GR2614@dastard>
-References: <1285208863-31489-1-git-send-email-david@fromorbit.com>
-	<1285268035.1973.109.camel@doink>  <20100924011855.GR2614@dastard>
-Date: Fri, 24 Sep 2010 09:02:39 -0500
-Message-ID: <1285336959.1974.11.camel@doink>
-Mime-Version: 1.0
-Reply-To: aelder@sgi.com
+	o8OE6UO0185230 for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 09:06:31 -0500
+Received: from smtp03-01.atm.binero.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 53F3F14FC7D8
+	for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 07:20:04 -0700 (PDT)
+Received: from smtp03-01.atm.binero.net (lb-smtp01.atm.binero.net
+	[195.74.38.28]) by cuda.sgi.com with ESMTP id 8vYCrWlU5885emLK
+	for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 07:20:04 -0700 (PDT)
+Received: from [192.168.1.128] (81-235-239-15-no92.business.telia.com
+	[81.235.239.15])
+	by smtp03-01.atm.binero.net (Postfix) with ESMTPSA id DED4B116340
+	for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 16:07:23 +0200 (CEST)
+From: Turbo Fredriksson <turbo@bayour.com>
+Subject: No space left on device
+Date: Fri, 24 Sep 2010 16:07:23 +0200
+Message-Id: <A7468B16-5A58-4012-B38B-784D89566D86@bayour.com>
+Mime-Version: 1.0 (Apple Message framework v1081)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,47 +25,62 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-T24gRnJpLCAyMDEwLTA5LTI0IGF0IDExOjE4ICsxMDAwLCBEYXZlIENoaW5uZXIgd3JvdGU6Cj4g
-T24gVGh1LCBTZXAgMjMsIDIwMTAgYXQgMDE6NTM6NTVQTSAtMDUwMCwgQWxleCBFbGRlciB3cm90
-ZToKPiA+IE9uIFRodSwgMjAxMC0wOS0yMyBhdCAxMjoyNyArMTAwMCwgRGF2ZSBDaGlubmVyIHdy
-b3RlOgoKLiAuIC4KCj4gPiBJIGRvbid0IHJlYWxseSBjYXJlIG11Y2ggYWJvdXQgdGhpcywgYnV0
-IEknbGwgdGFrZSB0aGlzCj4gPiBvcHBvcnR1bml0eSBmb3IgYSBzbWFsbCByYW50Lgo+ID4gCj4g
-PiBUaGUgZGlmZmVyZW5jZSBpbiBjYWxjdWxhdGlvbiBjb3N0L3NwZWVkIGJldHdlZW4gInggPj4g
-MyIgYW5kCj4gPiAieCAvIDgiIGlzIHZhbmlzaGluZ2x5IHNtYWxsLgo+IAo+IFRoYXQgaXMgYXJj
-aGl0ZWN0dXJlIGRlcGVuZGVudCwgYnV0IGluIG1vc3QgY2FzZXMgdGhlc2UgZGF5cyB0aGUKPiBj
-b21waWxlciB3aWxsIG9wdGltaXNlIGEgZGl2aWRlLWJ5LXBvd2VyLW9m4oiSMi1jb25zdGFudCBp
-bnRvIGEgc2hpZnQKPiBvcGVyYXRpb24gYW55d2F5LiBJJ20gcHJldHR5IHN1cmUgdGhhdCBvcHRp
-bWlzYXRpb24gaXMgZG9uZSBvbiBldmVuCj4gb24geDg2IGFzIGEgc2hpZnQgaXMgYSBzaW5nbGUg
-Y3ljbGUgb3BlcmF0aW9uIHdoaWxlIGFuIGludGVnZXIKPiBkaXZpZGUgc3RpbGwgdGFrZXMgc2V2
-ZXJhbCBjeWNsZXMgYW5kIGNvbnN1bWVzIG1vcmUgcG93ZXIuCgpJIGtub3csIGl0J2xsIHRha2Ug
-YWJvdXQgYSBuYW5vc2Vjb25kIGxvbmdlciB0aGFuIG5lY2Vzc2FyeSwKYW5kIGFuIGV4dHJhIDI1
-IHBpY293YXR0IGhvdXJzIChJRiB0aGUgY29tcGlsZXIgZG9lc24ndCBvcHRpbWl6ZQppdCBhd2F5
-KS4gIFRoaXMgYmVpbmcgZG9uZSB0byBkZXRlcm1pbmUgd2hldGhlciB0byBzdGFydCBhIHNlcmll
-cwpvZiBJL08gb3BlcmF0aW9ucy4uLgoKPiA+IEkgdGhpbmsgaXQgaXMgbWVhbmluZ2Z1bCB0byB1
-c2UKPiA+IGEgc2hpZnQgaW4gcGxhY2VzIHdoZXJlIGEgcG93ZXItb2YtdHdvIGlzIG1hbmRhdGVk
-LCBidXQgaW4gcGxhY2VzCj4gPiBsaWtlIHRoaXMgaXQgc3VnZ2VzdHMgdGhlcmUgaXMgYSBjb25z
-dHJhaW50IHRoYXQgc2ltcGx5IGRvZXNuJ3QKPiA+IGV4aXN0LiAgU28gZm9yIGV4YW1wbGUsIHlv
-dSBjb3VsZCBoYXZlIGNob3NlbiAobG9nLT5sb2dzaXplIC8gMTApCj4gPiBhcyB0aGUgInRyeSBw
-dXNoaW5nIiB2YWx1ZSwgYW5kIChsb2ctPmxvZ3NpemUgLyA0IC0gMSkgYXMgdGhlCj4gPiAibXVz
-dCBwdXNoIiB2YWx1ZS4KPiAKPiBJdCdzIG1vcmUgdGhlIGZhY3QgdGhhdCBYRlMgdXNlcyBwb3dl
-ci1vZi0yIGxvZ2ljIChpLmUgc2hpZnRzKQo+IGV2ZXJ5d2hlcmUuIEkganVzdCB0ZW5kIHRvIGJl
-IGNvbnNpc3RlbnQgd2l0aCB3aGF0IGlzIGFscmVhZHkgdGhlcmUuCj4gSW4gdGhpcyBjYXNlLCB0
-aGUgQUlMIHB1c2ggdGhyZXNob2xkcyBhcmUgY2FsY3VsYXRlZCB1c2luZyBzaGlmdHM6Cj4gCj4g
-CWZyZWVfdGhyZXNob2xkID0gTUFYKGZyZWVfdGhyZXNob2xkLCAobG9nLT5sX2xvZ0JCc2l6ZSA+
-PiAyKSk7Cj4gCj4gYW5kIHNvIHdoZW4geW91IGNvbXBhcmUgdGhhdCB0byB0aGUgWExPR19DSUxf
-U1BBQ0VfTElNSVQoKQo+IGRlZmluaXRpb25zLCBpdCBpcyBpbW1lZGlhdGVseSBjbGVhciB0aGF0
-IHRoZSBDSUwgbGltaXRzIGFyZSBzbWFsbGVyCj4gdGhhbiB0aGUgQUlMIHB1c2ggdGhyZXNob2xk
-Li4uCgpJIGdldCBpdC4gIEFuZCBhcyBJIHNhaWQgYmVmb3JlLCBJIHRydWx5IGRvbid0IGNhcmUg
-bXVjaCBhYm91dAp0aGlzLS1pdCdzIGFuIG9ic2VydmF0aW9uIG1vcmUgdGhhbiBldmVuIGFuIGFu
-bm95YW5jZSwgYW5kIGl0J3MKYWxyZWFkeSB0YWtlbiBhIGxvdCBtb3JlIHRpbWUgYW5kIG1lbnRh
-bCBlbmVyZ3kgKG5vdCB0byBtZW50aW9uCmVsZWN0cmljIHBvd2VyKSB0aGFuIGl0IGV2ZXIgcmVh
-bGx5IGRlc2VydmVkLgoKCQkJCQktQWxleAoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDov
-L29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+I started with a few hundred gig on my FS
+(on top of LVM which in turn is on top a bunch
+of MD devices).
+
+Slowly increasing the size with pvmove/{vg,lv}extend
+etc. Yesterday, I added more disks yet again and
+now have about 8Tb on one FS... ~1Tb free. But still
+get the 'No space left on device'.
+
+
+I've been looking through the 'Net and it
+must be because I'm out of inodes (and that
+the data is on the first 1Tb etc)...
+
+I'm running on AMD 64bit (native kernel, but
+Debian Lenny 32bit userland - 2.6.2[4-6] kernel).
+
+
+
+Now, if I use (I'll try to upgrade to a newer
+kernel so I can reverse) the inode64, what
+impact will this have? I guess I still have
+to move my firstly created 1Tb of-disk and
+then back again?
+
+
+The worst thing is that every time I grow
+the FS, I have to reboot into a 32bit kernel:
+
+xfs_growfs: XFS_IOC_FSGROWFSDATA xfsctl failed: Invalid argument
+
+and then back to the 64bit kernel... How will
+this (system/FS) react if I go 64bit inodes?!
+
+
+And how safe is this!? I just don't have the
+possibility to do a full backup of all this
+data, not even temporarily... I _might_ be
+able to do this in a few weeks (work is ordering
+a bunch of LaCie 8Tb USB/eSATA storage boxes
+which I might be able to load for a few days
+'to do some stress testing on' :)
+
+
+References:
+http://xfs.org/index.php/XFS_FAQ#Q:_Why_do_I_receive_No_space_left_on_device_after_xfs_growfs.3F
+http://xfs.org/index.php/XFS_FAQ#Q:_Can_I_just_try_the_inode64_option_to_see_if_it_helps_me.3F
+http://www.doc.ic.ac.uk/~dcw/xfs_16tb/
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
