@@ -1,30 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8OCUgNQ180916 for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 07:30:43 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BD23814FBFE5
-	for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 05:44:16 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
-	[150.101.137.101]) by cuda.sgi.com with ESMTP id
-	BVAwlfiDEiRbR5Qp for <xfs@oss.sgi.com>;
-	Fri, 24 Sep 2010 05:44:16 -0700 (PDT)
-Received: from dastard (unverified [121.44.66.70])
-	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	40176987-1927428
-	for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 22:01:36 +0930 (CST)
-Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1Oz7R8-0007VG-NM
-	for xfs@oss.sgi.com; Fri, 24 Sep 2010 22:31:34 +1000
-Received: from dave by disturbed with local (Exim 4.72)
-	(envelope-from <dave@disturbed.disaster>) id 1Oz7R4-00060O-Fo
-	for xfs@oss.sgi.com; Fri, 24 Sep 2010 22:31:30 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 13/18] xfs: split out inode walk inode grabbing
-Date: Fri, 24 Sep 2010 22:31:11 +1000
-Message-Id: <1285331476-23015-14-git-send-email-david@fromorbit.com>
-In-Reply-To: <1285331476-23015-1-git-send-email-david@fromorbit.com>
-References: <1285331476-23015-1-git-send-email-david@fromorbit.com>
+	o8OCuxLg182337 for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 07:56:59 -0500
+Received: from smtp-relay.maven.pl (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 908C39A064
+	for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 05:52:53 -0700 (PDT)
+Received: from smtp-relay.maven.pl (smtp-relay.maven.pl [193.239.45.138]) by
+	cuda.sgi.com with ESMTP id vD1eh1Y6aqkJRnUr for
+	<xfs@oss.sgi.com>; Fri, 24 Sep 2010 05:52:53 -0700 (PDT)
+From: =?UTF-8?q?Arkadiusz=20Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Subject: [PATCH VER 5] xfstests: Quota project id setting overflow
+Date: Fri, 24 Sep 2010 14:52:49 +0200
+Message-Id: <1285332769-13708-1-git-send-email-arekm@maven.pl>
+In-Reply-To: <1285332748-13648-1-git-send-email-arekm@maven.pl>
+References: <1285332748-13648-1-git-send-email-arekm@maven.pl>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,199 +23,103 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
-
-When doing read side inode cache walks, the code to validate and
-grab an inode is common to all callers. Split it out of the execute
-callbacks in preparation for batching lookups. Similarly, split out
-the inode reference dropping from the execute callbacks into the
-main lookup look to be symmetric with the grab.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/linux-2.6/xfs_sync.c    |   79 +++++++++++++++++-----------------------
- fs/xfs/quota/xfs_qm_syscalls.c |    9 -----
- 2 files changed, 34 insertions(+), 54 deletions(-)
-
-diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
-index 359422d..11c473f 100644
---- a/fs/xfs/linux-2.6/xfs_sync.c
-+++ b/fs/xfs/linux-2.6/xfs_sync.c
-@@ -39,6 +39,33 @@
- #include <linux/kthread.h>
- #include <linux/freezer.h>
- 
-+int
-+xfs_inode_ag_walk_grab(
-+	struct xfs_inode	*ip)
-+{
-+	struct inode		*inode = VFS_I(ip);
-+
-+	/* nothing to sync during shutdown */
-+	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
-+		return EFSCORRUPTED;
-+
-+	/* avoid new or reclaimable inodes. Leave for reclaim code to flush */
-+	if (xfs_iflags_test(ip, XFS_INEW | XFS_IRECLAIMABLE | XFS_IRECLAIM))
-+		return ENOENT;
-+
-+	/* If we can't grab the inode, it must on it's way to reclaim. */
-+	if (!igrab(inode))
-+		return ENOENT;
-+
-+	if (is_bad_inode(inode)) {
-+		IRELE(ip);
-+		return ENOENT;
-+	}
-+
-+	/* inode is valid */
-+	return 0;
-+}
-+
- 
- STATIC int
- xfs_inode_ag_walk(
-@@ -80,8 +107,14 @@ restart:
- 		if (first_index < XFS_INO_TO_AGINO(mp, ip->i_ino))
- 			done = 1;
- 
--		/* execute releases pag->pag_ici_lock */
-+		if (xfs_inode_ag_walk_grab(ip)) {
-+			read_unlock(&pag->pag_ici_lock);
-+			continue;
-+		}
-+		read_unlock(&pag->pag_ici_lock);
-+
- 		error = execute(ip, pag, flags);
-+		IRELE(ip);
- 		if (error == EAGAIN) {
- 			skipped++;
- 			continue;
-@@ -128,40 +161,6 @@ xfs_inode_ag_iterator(
- 	return XFS_ERROR(last_error);
- }
- 
--/* must be called with pag_ici_lock held and releases it */
--int
--xfs_sync_inode_valid(
--	struct xfs_inode	*ip,
--	struct xfs_perag	*pag)
--{
--	struct inode		*inode = VFS_I(ip);
--	int			error = EFSCORRUPTED;
--
--	/* nothing to sync during shutdown */
--	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
--		goto out_unlock;
--
--	/* avoid new or reclaimable inodes. Leave for reclaim code to flush */
--	error = ENOENT;
--	if (xfs_iflags_test(ip, XFS_INEW | XFS_IRECLAIMABLE | XFS_IRECLAIM))
--		goto out_unlock;
--
--	/* If we can't grab the inode, it must on it's way to reclaim. */
--	if (!igrab(inode))
--		goto out_unlock;
--
--	if (is_bad_inode(inode)) {
--		IRELE(ip);
--		goto out_unlock;
--	}
--
--	/* inode is valid */
--	error = 0;
--out_unlock:
--	read_unlock(&pag->pag_ici_lock);
--	return error;
--}
--
- STATIC int
- xfs_sync_inode_data(
- 	struct xfs_inode	*ip,
-@@ -172,10 +171,6 @@ xfs_sync_inode_data(
- 	struct address_space *mapping = inode->i_mapping;
- 	int			error = 0;
- 
--	error = xfs_sync_inode_valid(ip, pag);
--	if (error)
--		return error;
--
- 	if (!mapping_tagged(mapping, PAGECACHE_TAG_DIRTY))
- 		goto out_wait;
- 
-@@ -192,7 +187,6 @@ xfs_sync_inode_data(
-  out_wait:
- 	if (flags & SYNC_WAIT)
- 		xfs_ioend_wait(ip);
--	IRELE(ip);
- 	return error;
- }
- 
-@@ -204,10 +198,6 @@ xfs_sync_inode_attr(
- {
- 	int			error = 0;
- 
--	error = xfs_sync_inode_valid(ip, pag);
--	if (error)
--		return error;
--
- 	xfs_ilock(ip, XFS_ILOCK_SHARED);
- 	if (xfs_inode_clean(ip))
- 		goto out_unlock;
-@@ -226,7 +216,6 @@ xfs_sync_inode_attr(
- 
-  out_unlock:
- 	xfs_iunlock(ip, XFS_ILOCK_SHARED);
--	IRELE(ip);
- 	return error;
- }
- 
-diff --git a/fs/xfs/quota/xfs_qm_syscalls.c b/fs/xfs/quota/xfs_qm_syscalls.c
-index ac11fbe..5784743 100644
---- a/fs/xfs/quota/xfs_qm_syscalls.c
-+++ b/fs/xfs/quota/xfs_qm_syscalls.c
-@@ -875,21 +875,14 @@ xfs_dqrele_inode(
- 	struct xfs_perag	*pag,
- 	int			flags)
- {
--	int			error;
--
- 	/* skip quota inodes */
- 	if (ip == ip->i_mount->m_quotainfo->qi_uquotaip ||
- 	    ip == ip->i_mount->m_quotainfo->qi_gquotaip) {
- 		ASSERT(ip->i_udquot == NULL);
- 		ASSERT(ip->i_gdquot == NULL);
--		read_unlock(&pag->pag_ici_lock);
- 		return 0;
- 	}
- 
--	error = xfs_sync_inode_valid(ip, pag);
--	if (error)
--		return error;
--
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 	if ((flags & XFS_UQUOTA_ACCT) && ip->i_udquot) {
- 		xfs_qm_dqrele(ip->i_udquot);
-@@ -900,8 +893,6 @@ xfs_dqrele_inode(
- 		ip->i_gdquot = NULL;
- 	}
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
--
--	IRELE(ip);
- 	return 0;
- }
- 
--- 
-1.7.1
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+RnJvbTogQXJrYWRpdXN6IE1pc2tpZXdpY3ogPGFyZWttQG1hdmVuLnBsPgoKVGVzdCAzIHF1b3Rh
+IHByb2plY3Qgc2V0dGluZyBpZCBjb25kaXRpb25zOgotIHNldCAxNmJpdCBwcm9qZWN0IHF1b3Rh
+IGlkIC0+IHNob3VsZCBzdWNjZWVkCi0gc2V0IDMyYml0IHByb2plY3QgcXVvdGEgaWQgLT4gc2hv
+dWxkIHN1Y2NlZWQgKHdpdGggcHJvamlkMzJiaXQKICBwYXRjaCBhcHBsaWVkOyBmYWlsIG90aGVy
+d2lzZSkKLSBvdmVyIDMyYml0IHByb2plY3QgcXVvdGEgaWQgLT4gc2hvdWxkIGFsd2F5cyBmYWls
+CgpTaWduZWQtb2ZmLWJ5OiBBcmthZGl1c3ogTWnFm2tpZXdpY3ogPGFyZWttQG1hdmVuLnBsPgot
+LS0KTmV3cz8KLSBwYXJ0aWFsIHJld3JpdGUgc2luY2UgcHJvamlkMzJiaXQgZmVhdHVyZTIgYml0
+IGZsYWcgaXMgbm8gbG9uZ2VyCiAgc2V0IGF1dG9tYXRpY2x5Ci0gd2UgY3JlYXRlIHByb2ppZDMy
+Yml0PTAgYW5kIHByb2ppZDMyYml0PTEgZmlsZXN5c3RlbXMgZnJvbSBzY3JhdGNoIG5vdwotIHVz
+ZSBfcmVxdWlyZV9wcmpxdW90YSBmb3Igc2NyYXRjaCBkZXZpY2UKCiAyNDQgICAgIHwgIDEyNSAr
+KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
+KysrKysKIDI0NC5vdXQgfCAgICAyICsKIGdyb3VwICAgfCAgICAxICsKIDMgZmlsZXMgY2hhbmdl
+ZCwgMTI4IGluc2VydGlvbnMoKyksIDAgZGVsZXRpb25zKC0pCiBjcmVhdGUgbW9kZSAxMDA2NDQg
+MjQ0CiBjcmVhdGUgbW9kZSAxMDA2NDQgMjQ0Lm91dAoKZGlmZiAtLWdpdCBhLzI0NCBiLzI0NApu
+ZXcgZmlsZSBtb2RlIDEwMDY0NAppbmRleCAwMDAwMDAwLi44YTg5Zjk3Ci0tLSAvZGV2L251bGwK
+KysrIGIvMjQ0CkBAIC0wLDAgKzEsMTI1IEBACisjISAvYmluL2Jhc2gKKyMgRlMgUUEgVGVzdCBO
+by4gMjQ0CisjCisjIHRlc3QgdG8gdmVyaWZ5IHRoYXQgcHJvcGVyIHByb2plY3QgcXVvdGEgaWQg
+aXMgY29ycmVjdGx5IHNldAorIworIy0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCisjIENvcHlyaWdodCAoYykgMjAx
+MCBBcmthZGl1c3ogTWnFm2tpZXdpY3ouICBBbGwgUmlnaHRzIFJlc2VydmVkLgorIworIyBUaGlz
+IHByb2dyYW0gaXMgZnJlZSBzb2Z0d2FyZTsgeW91IGNhbiByZWRpc3RyaWJ1dGUgaXQgYW5kL29y
+CisjIG1vZGlmeSBpdCB1bmRlciB0aGUgdGVybXMgb2YgdGhlIEdOVSBHZW5lcmFsIFB1YmxpYyBM
+aWNlbnNlIGFzCisjIHB1Ymxpc2hlZCBieSB0aGUgRnJlZSBTb2Z0d2FyZSBGb3VuZGF0aW9uLgor
+IworIyBUaGlzIHByb2dyYW0gaXMgZGlzdHJpYnV0ZWQgaW4gdGhlIGhvcGUgdGhhdCBpdCB3b3Vs
+ZCBiZSB1c2VmdWwsCisjIGJ1dCBXSVRIT1VUIEFOWSBXQVJSQU5UWTsgd2l0aG91dCBldmVuIHRo
+ZSBpbXBsaWVkIHdhcnJhbnR5IG9mCisjIE1FUkNIQU5UQUJJTElUWSBvciBGSVRORVNTIEZPUiBB
+IFBBUlRJQ1VMQVIgUFVSUE9TRS4gIFNlZSB0aGUKKyMgR05VIEdlbmVyYWwgUHVibGljIExpY2Vu
+c2UgZm9yIG1vcmUgZGV0YWlscy4KKyMKKyMgWW91IHNob3VsZCBoYXZlIHJlY2VpdmVkIGEgY29w
+eSBvZiB0aGUgR05VIEdlbmVyYWwgUHVibGljIExpY2Vuc2UKKyMgYWxvbmcgd2l0aCB0aGlzIHBy
+b2dyYW07IGlmIG5vdCwgd3JpdGUgdGhlIEZyZWUgU29mdHdhcmUgRm91bmRhdGlvbiwKKyMgSW5j
+LiwgIDUxIEZyYW5rbGluIFN0LCBGaWZ0aCBGbG9vciwgQm9zdG9uLCBNQSAgMDIxMTAtMTMwMSAg
+VVNBCisjCisjLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KKyMKKyMgY3JlYXRvcgorb3duZXI9YXJla21AbWF2ZW4u
+cGwKKworc2VxPWBiYXNlbmFtZSAkMGAKK2VjaG8gIlFBIG91dHB1dCBjcmVhdGVkIGJ5ICRzZXEi
+CisKK2hlcmU9YHB3ZGAKK3RtcD0vdG1wLyQkCitzdGF0dXM9MQkjIGZhaWx1cmUgaXMgdGhlIGRl
+ZmF1bHQhCit0cmFwICJfY2xlYW51cDsgZXhpdCBcJHN0YXR1cyIgMCAxIDIgMyAxNQorCisjIGdl
+dCBzdGFuZGFyZCBlbnZpcm9ubWVudCwgZmlsdGVycyBhbmQgY2hlY2tzCisuIC4vY29tbW9uLnJj
+CisuIC4vY29tbW9uLmZpbHRlcgorLiAuL2NvbW1vbi5xdW90YQorCitfY2xlYW51cCgpCit7CisJ
+Y2QgLworCXVtb3VudCAkU0NSQVRDSF9NTlQgMj4vZGV2L251bGwKKwlybSAtZiAkdG1wLioKK30K
+KworIyByZWFsIFFBIHRlc3Qgc3RhcnRzIGhlcmUKK19zdXBwb3J0ZWRfZnMgeGZzCitfcmVxdWly
+ZV94ZnNfcXVvdGEKK19yZXF1aXJlX3NjcmF0Y2gKKworZXhwb3J0IE1PVU5UX09QVElPTlM9Ii1v
+cHF1b3RhIgorCisjIG1ha2UgZnMgd2l0aCBubyBwcm9qaWQzMmJpdAorX3NjcmF0Y2hfbWtmc194
+ZnMgLWkgcHJvamlkMzJiaXQ9MCA+PiAkc2VxLmZ1bGwgfHwgX2ZhaWwgIm1rZnMgZmFpbGVkIgor
+X3Ftb3VudAorIyBtYWtlIHN1cmUgcHJvamVjdCBxdW90YSBpcyBzdXBwb3J0ZWQKK19yZXF1aXJl
+X3ByanF1b3RhICR7U0NSQVRDSF9ERVZ9CisKK2Rpcj0kU0NSQVRDSF9NTlQvcHJvamVjdAorCitz
+dGF0dXM9MAorCitlY2hvICJTaWxlbmNlIGlzIGdvbGRlbiIKKworIyBEbyB0ZXN0aW5nIG9uIHBy
+b2ppZDMyYml0IGRpc2FibGVkIGZpbGVzeXN0ZW0KK21rZGlyICRkaXIKKwordG91Y2ggJGRpci9i
+ZWxvdzE2Yml0CisjIGJlbG93IDE2Yml0IHZhbHVlCiskWEZTX1FVT1RBX1BST0cgLXggLWMgInBy
+b2plY3QgLXMgLXAgJGRpci9iZWxvdzE2Yml0IDM0MjIiICRTQ1JBVENIX0RFViA+PiAkc2VxLmZ1
+bGwKK3Byb2ppZD0kKCRYRlNfSU9fUFJPRyAtciAtYyAibHNwcm9qIiAkZGlyL2JlbG93MTZiaXQp
+CitpZiBbICJwcm9qaWQgPSAzNDIyIiAhPSAiJHByb2ppZCIgXTsgdGhlbgorCWVjaG8gIkZBSUw6
+IHByb2ppZDMyYml0IGRpc2FibGVkOiByZXR1cm5lZCBwcm9qaWQgdmFsdWUgKCRwcm9qaWQpIGRv
+ZXNuJ3QgbWF0Y2ggc2V0IG9uZSAocHJvamlkID0gMzQyMikiCisJc3RhdHVzPTEKK2ZpCisKKyMg
+MzJiaXQgdmFsdWUsIHNob3VsZCBmYWlsCit0b3VjaCAkZGlyL292ZXIxNmJpdAoraWYgJFhGU19R
+VU9UQV9QUk9HIC14IC1jICJwcm9qZWN0IC1zIC1wICRkaXIvb3ZlcjE2Yml0IDEwODU0NSIgJFND
+UkFUQ0hfREVWID4+ICRzZXEuZnVsbCAyPiYxOyB0aGVuCisJZWNobyAiRkFJTDogcHJvamlkMzJi
+aXQgZGlzYWJsZWQ6IHNldHRpbmcgMzJiaXQgcHJvamlkIHN1Y2NlZWRlZCB3aGlsZSBpdCBzaG91
+bGQgZmFpbCIKKwlzdGF0dXM9MQorZmkKKworIyBvdmVyIDMyYml0IHZhbHVlLCBzaG91bGQgZmFp
+bAordG91Y2ggJGRpci9vdmVyMzJiaXQKK2lmICRYRlNfUVVPVEFfUFJPRyAteCAtYyAicHJvamVj
+dCAtcyAtcCAkZGlyL292ZXIzMmJpdCA1MzQ0OTY3Mjk2IiAkU0NSQVRDSF9ERVYgPj4gJHNlcS5m
+dWxsIDI+JjE7IHRoZW4KKwllY2hvICJGQUlMOiBwcm9qaWQzMmJpdCBkaXNhYmxlZDogc2V0dGlu
+ZyBvdmVyIDMyYml0IHByb2ppZCBzdWNjZWVkZWQgd2hpbGUgaXQgc2hvdWxkIGZhaWwiCisJc3Rh
+dHVzPTEKK2ZpCisKKyMgIERvIHRlc3Rpbmcgb24gcHJvamlkMzJiaXQgZW5hYmxlZCBmaWxlc3lz
+dGVtCit1bW91bnQgJFNDUkFUQ0hfREVWIDI+L2Rldi9udWxsCitfc2NyYXRjaF9ta2ZzX3hmcyAt
+aSBwcm9qaWQzMmJpdD0xID4+ICRzZXEuZnVsbCB8fCBfZmFpbCAibWtmcyBmYWlsZWQiCitfcW1v
+dW50Citta2RpciAkZGlyCisKK3RvdWNoICRkaXIvYmVsb3cxNmJpdAorIyBiZWxvdyAxNmJpdCB2
+YWx1ZQorJFhGU19RVU9UQV9QUk9HIC14IC1jICJwcm9qZWN0IC1zIC1wICRkaXIvYmVsb3cxNmJp
+dCAzNDIyIiAkU0NSQVRDSF9ERVYgPj4gJHNlcS5mdWxsCitwcm9qaWQ9JCgkWEZTX0lPX1BST0cg
+LXIgLWMgImxzcHJvaiIgJGRpci9iZWxvdzE2Yml0KQoraWYgWyAicHJvamlkID0gMzQyMiIgIT0g
+IiRwcm9qaWQiIF07IHRoZW4KKwllY2hvICJGQUlMOiBwcm9qaWQzMmJpdCBlbmFibGVkOiByZXR1
+cm5lZCBwcm9qaWQgdmFsdWUgKCRwcm9qaWQpIGRvZXNuJ3QgbWF0Y2ggc2V0IG9uZSAocHJvamlk
+ID0gMzQyMikiCisJc3RhdHVzPTEKK2ZpCisKKyMgMzJiaXQgdmFsdWUsIHNob3VsZCBzdWNjZWVk
+Cit0b3VjaCAkZGlyL292ZXIxNmJpdAoraWYgJFhGU19RVU9UQV9QUk9HIC14IC1jICJwcm9qZWN0
+IC1zIC1wICRkaXIvb3ZlcjE2Yml0IDEwODU0NSIgJFNDUkFUQ0hfREVWID4+ICRzZXEuZnVsbCAy
+PiYxOyB0aGVuCisJcHJvamlkPSQoJFhGU19JT19QUk9HIC1yIC1jICJsc3Byb2oiICRkaXIvb3Zl
+cjE2Yml0KQorCWlmIFsgInByb2ppZCA9IDEwODU0NSIgIT0gIiRwcm9qaWQiIF07IHRoZW4KKwkJ
+ZWNobyAiRkFJTDogcHJvamlkMzJiaXQgZW5hYmxlZDogcmV0dXJuZWQgcHJvamlkIHZhbHVlICgk
+cHJvamlkKSBkb2Vzbid0IG1hdGNoIHNldCBvbmUgKHByb2ppZCA9IDEwODU0NSkiCisJCXN0YXR1
+cz0xCisJZmkKK2Vsc2UKKwllY2hvICJGQUlMOiBwcm9qaWQzMmJpdCBlbmFibGVkOiBzZXR0aW5n
+IDMyYml0IHByb2ppZCBmYWlsZWQgd2hpbGUgaXQgc2hvdWxkIHN1Y2NlZWQiCisJc3RhdHVzPTEK
+K2ZpCisKKyMgb3ZlciAzMmJpdCB2YWx1ZSwgc2hvdWxkIGZhaWwKK3RvdWNoICRkaXIvb3ZlcjMy
+Yml0CitpZiAkWEZTX1FVT1RBX1BST0cgLXggLWMgInByb2plY3QgLXMgLXAgJGRpci9vdmVyMzJi
+aXQgNTM0NDk2NzI5NiIgJFNDUkFUQ0hfREVWID4+ICRzZXEuZnVsbCAyPiYxOyB0aGVuCisJZWNo
+byAiRkFJTDogcHJvamlkMzJiaXQgZGlzYWJsZWQ6IHNldHRpbmcgb3ZlciAzMmJpdCBwcm9qaWQg
+c3VjY2VlZGVkIHdoaWxlIGl0IHNob3VsZCBmYWlsIgorCXN0YXR1cz0xCitmaQpkaWZmIC0tZ2l0
+IGEvMjQ0Lm91dCBiLzI0NC5vdXQKbmV3IGZpbGUgbW9kZSAxMDA2NDQKaW5kZXggMDAwMDAwMC4u
+NDQwZGExZgotLS0gL2Rldi9udWxsCisrKyBiLzI0NC5vdXQKQEAgLTAsMCArMSwyIEBACitRQSBv
+dXRwdXQgY3JlYXRlZCBieSAyNDQKK1NpbGVuY2UgaXMgZ29sZGVuCmRpZmYgLS1naXQgYS9ncm91
+cCBiL2dyb3VwCmluZGV4IGU2ZGFiMTMuLjBjZDE1OGIgMTAwNjQ0Ci0tLSBhL2dyb3VwCisrKyBi
+L2dyb3VwCkBAIC0zNTcsMyArMzU3LDQgQEAgZGVwcmVjYXRlZAogMjQxIGF1dG8KIDI0MiBhdXRv
+IHF1aWNrIHByZWFsbG9jCiAyNDMgYXV0byBxdWljayBwcmVhbGxvYworMjQ0IGF1dG8gcXVvdGEg
+cXVpY2sKLS0gCjEuNy4zCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5j
+b20vbWFpbG1hbi9saXN0aW5mby94ZnMK
