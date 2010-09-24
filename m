@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8O7sB72172190 for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 02:54:12 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6D35C99432
-	for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 00:55:07 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id EDzBZjV10zMLCAlU for
-	<xfs@oss.sgi.com>; Fri, 24 Sep 2010 00:55:07 -0700 (PDT)
-Date: Fri, 24 Sep 2010 03:55:05 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Problem with file system on iSCSI FileIO
-Message-ID: <20100924075505.GA24664@infradead.org>
-References: <4C9B5786.4010205@open-e.com> <20100923143221.GA1989@infradead.org>
-	<4C9B6B27.5050606@open-e.com>
+	o8O8u0TV173795 for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 03:56:00 -0500
+Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1C98099811
+	for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 01:56:54 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id KDiwG5ZTX5TBBFcy
+	for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 01:56:54 -0700 (PDT)
+Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
+	by greer.hardwarefreak.com (Postfix) with ESMTP id 1AEB06C04C
+	for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 03:56:54 -0500 (CDT)
+Message-ID: <4C9C67D5.7010803@hardwarefreak.com>
+Date: Fri, 24 Sep 2010 03:56:53 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4C9B6B27.5050606@open-e.com>
+Subject: Re: XFS errors on large Infiniband fileserver setup
+References: <29252416bd0d9dc973a909e411dbec6a@phys.ethz.ch>	<20100923235355.GO2614@dastard>
+	<2276da2491527ca8044fa1daec496b48@phys.ethz.ch>
+In-Reply-To: <2276da2491527ca8044fa1daec496b48@phys.ethz.ch>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,31 +31,64 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Slawomir Nowakowski <slawomir.nowakowski@open-e.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Artur Piechocki <artur.piechocki@open-e.com>, xfs@oss.sgi.com, 'Ryszard Stawiarski' <ryszard.stawiarski@open-e.com>, ??ukasz Wittig <lukasz.wittig@open-e.com>
+To: xfs@oss.sgi.com
 
-On Thu, Sep 23, 2010 at 04:58:47PM +0200, Slawomir Nowakowski wrote:
-> iSCSI FileIO is using struct file that serves it as block level
-> device via iSCSI technology:
-> 
-> http://en.wikipedia.org/wiki/ISCSI
+Christian Herzog put forth on 9/24/2010 12:41 AM:
+> Do you have any particular/typical
+> device in mind? I'd like to check it out nonetheless.
 
-Thanks, I know ISCSI very well.  But what is "iSCSI FileIO" ?  The above
-sounds like it's an iscsi target, is that correct?
+Almost totally ignoring your current hardware investment and Infiniband
+back end...
 
-> There are RAID level 6 unit on the Areca RAID controller (1680). On
-> the unit is created a volume group. In the volume group we have
-> several logical volumes. The iSCSI FileIO volume is mounted and the
-> file (lun) is served via SCST target as iSCSI LUN.
-> 
-> We have checked RAM with memtest+ and verified RAID unit health and
-> no issues were found.
+I recommend the following for performance, storage density and total
+storage, ease of configuration and management, reliability, and cost:
 
-I still can't make any sense of the actual setups.
+http://www.nexstor.co.uk/products/3/13/29/526/Disk_Storage/Nexsan/Nexsan_Storage/Nexsan_SATABeast
 
-The above seems to be the backend storage.  Then there's SCST somewhere
-in which is in a out of tree kernel module.  And then you use XFS
-somewhere.  Please provide a full description of the setup.
+http://www.nexstor.co.uk/products/3/13/29/3537/Disk_Storage/Nexsan/Nexsan_Storage/Nexsan_60_Disks_in_4U_-_Beast_Expansion_Unit
+
+Using 2TB drives, the Nexsan SATABeast with two dual port 8Gbit FC
+controllers combined with the NXS-B60E expansion chassis offers a total
+of 204TB in only 8U of rack space with an advertised sustained host data
+rate of 1.2GB/s using both controllers.
+
+If your bandwidth needs outweigh your capacity needs, and 1.2GB/s is too
+low for a total storage back end, simply acquire multiple SATABeasts and
+forgo the NXS-B60E expansion box.  Using 2 Qlogic QLE2564 x8 PCIe Quad
+port 8Gbit FC HBAs in your front end server would allow multipath
+redundant connection to one FC port on each controller of 4 SATABeast
+units.  This would yield an advertised sustained aggregate data rate of
+4.8GB/s between the front end server and 336TB of storage across 168
+disks in 16U total rack space.
+
+If you have an FC convergence card in your Mellanox IB switch with 4-8
+FC ports, you could forgo the HBAs in the front end server and simply
+jack the SATABeast(s) directly into the IB fabric.  This would
+definitely increase configuration complexity.  I've never done it so I'd
+be of no help.  However, it would allow you to assign LUNs on the
+SATABeasts directly to any hosts on the IB network, assuming all the
+necessary software is installed and configurable on said hosts enabling
+their IB HBAs to present the SATABeast LUNs as SCSI devices to Linux.
+As far as configuring FC zones within an IB fabric to make the LUNs
+visible to the HBAs, I'll leave that to you, as I've never done that
+either.  Zero IB experience here, only FC.  ;)
+
+I'm making a somewhat educated guess that a fully configured SATABeast
+with dual controllers and 42x2TB disks should be attainable for around
+$50K USD today.  If 1.2GB/s sustained is enough performance, from a cost
+and rack footprint perspective, the 8Gbit SATABeast with the NXS-B60E 60
+drive expansion box is really hard to beat--204TB in only 8U, in the
+ballpark of $80K USD.  If my math is correct, that's around $400 USD per
+terabyte.  I'm guessing 1TB of similar performance EMC storage is
+probably at least 4 times that.
+
+
+Disclaimer:  I don't work for Nexsan, Qlogic, nor any reseller.  I'm
+simply a satisfied customer of both.
+
+
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
