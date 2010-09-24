@@ -1,28 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8OCUYJm180840 for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 07:30:34 -0500
+	o8OCUg96180906 for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 07:30:42 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C7E7F14FBDB6
-	for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 05:44:06 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
-	[150.101.137.98]) by cuda.sgi.com with ESMTP id
-	hWxMzWWqXrGQaAk8 for <xfs@oss.sgi.com>;
-	Fri, 24 Sep 2010 05:44:06 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C0B5F1BAB3E7
+	for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 05:31:36 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
+	[150.101.137.99]) by cuda.sgi.com with ESMTP id
+	chElBlK85GcpWEtE for <xfs@oss.sgi.com>;
+	Fri, 24 Sep 2010 05:31:36 -0700 (PDT)
 Received: from dastard (unverified [121.44.66.70])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	40432965-1927428
-	for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 22:01:26 +0930 (CST)
+	40606345-1927428
+	for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 22:01:35 +0930 (CST)
 Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1Oz7Qx-0007UT-T0
-	for xfs@oss.sgi.com; Fri, 24 Sep 2010 22:31:23 +1000
+	(envelope-from <dave@fromorbit.com>) id 1Oz7R8-0007V8-Hd
+	for xfs@oss.sgi.com; Fri, 24 Sep 2010 22:31:34 +1000
 Received: from dave by disturbed with local (Exim 4.72)
-	(envelope-from <dave@disturbed.disaster>) id 1Oz7Qt-0005zq-JU
-	for xfs@oss.sgi.com; Fri, 24 Sep 2010 22:31:19 +1000
+	(envelope-from <dave@disturbed.disaster>) id 1Oz7Qu-00060G-Ao
+	for xfs@oss.sgi.com; Fri, 24 Sep 2010 22:31:20 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 0/18] xfs: metadata scalability V3
-Date: Fri, 24 Sep 2010 22:30:58 +1000
-Message-Id: <1285331476-23015-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 10/18] xfs: use unhashed buffers for size checks
+Date: Fri, 24 Sep 2010 22:31:08 +1000
+Message-Id: <1285331476-23015-11-git-send-email-david@fromorbit.com>
+In-Reply-To: <1285331476-23015-1-git-send-email-david@fromorbit.com>
+References: <1285331476-23015-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,133 +40,172 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Version 3:
+From: Dave Chinner <dchinner@redhat.com>
 
-o added CIL background push fixup. While it is a correctness bug fix,
-  it also signifincantly speeds up sustained workloads. This version
-  of the patch has addresed the review comments.
-o cleaned up some typos and removed useless comments around timestamp
-  changes
-o changed xfs_buf_get_uncached() parameters to pass the buftarg first.
-o split inode walk batch lookup in two patches to separate out grabbing and
-  releasing inodes from the batch lookups.
+When we are checking we can access the last block of each device, we
+do not need to use cached buffers as they will be tossed away
+immediately. Use uncached buffers for size checks so that all IO
+prior to full in-memory structure initialisation does not use the
+buffer cache.
 
-Version 2:
-o dropped inode cache RCU/spinlock conversion (needs more testing)
-o dropped buffer cache LRU/no page cache conversion (needs more testing)
-o added CIL item insertion cleanup as suggested by Christoph.
-o added flags to xfs_buf_get_uncached() and xfs_buf_read_uncached()
-  to control memory allocation flags.
-o cleaned up buffer page allocation failure path
-o reworked inode reclaim shrinker scalability
-	- separated reclaim AG walk from sync walks
-	- implemented batch lookups for both sync and reclaim walks
-	- added per-ag reclaim serialisation locks and traversal
-	  cursors
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Alex Elder <aelder@sgi.com>
+---
+ fs/xfs/xfs_fsops.c   |   11 +++++------
+ fs/xfs/xfs_mount.c   |   39 ++++++++++++++++-----------------------
+ fs/xfs/xfs_rtalloc.c |   29 +++++++++++++----------------
+ 3 files changed, 34 insertions(+), 45 deletions(-)
 
-This patchset started out as a "convert the buffer cache to rbtrees"
-patch, and just gew from there as I peeled the onion from one
-bottleneck to another. The second version of this patch does not go
-as far as the first version - it drops the more radical changes as
-they are not ready for integration yet.
-
-The lock contention reductions allowed by the RCU inode cache
-lookups are replaced by more efficient lookup mechanisms during
-inode cache walking - using batching mechanisms as originally
-suggested by Nick Piggin. The code is a lot more efficient than
-Nick's proof of concept as it uses batched gang lookups on the radix
-trees. These batched lookups show almost the same performance
-improvement as the RCU lookup did but without changing the locking
-algorithms at all.  This batching would be necessary for efficient
-reclaim walks regardless of whether the sync walk is protected by
-RCU or the current rwlock.
-
-The shrinker rework improves parallel unlink performance
-substantially more than just single threading the shrinker execution
-and does not have the OOM problems that single threading the
-shrinker had. It avoids the OOM problems by ensuring that every
-shrinker call does some work or sleeps while waiting for an AG to do
-some work on. The lookup optimisations done for gang lookups ensure
-that the scanning is as efficient as possible, so overall shrinker
-overhead has gone down significantly.
-
-Performance numbers here are 8-way fs_mark create to 50M files, and
-8-way rm -rf to remove the files created.
-
-			wall time	fs_mark rate
-2.6.36-rc4:
-	create:		13m10s		65k file/s
-	unlink:		23m58s		N/A
-
-2.6.36-rc4 + v1-patchset:
-	create:		 9m47s		95k files/s
-	unlink:		14m16s		N/A
-
-2.6.36-rc3 + v2-patchset:
-	create:		10m32s		85k file/s
-	unlink:		11m49s		N/A
-
-2.6.36-rc4 + v3-patchset
-	create:		10m03s		90k file/s
-	unlink:		11m29s		N/A
-
-The patches are available in the following git tree. The branch is
-based on the current OSS xfs tree, and as such is based on
-2.6.36-rc4. This is a rebase of the previous branch.
-
-The following changes since commit e89318c670af3959db3aa483da509565f5a2536c:
-
-  xfs: eliminate some newly-reported gcc warnings (2010-09-16 12:56:42 -0500)
-
-are available in the git repository at:
-  git://git.kernel.org/pub/scm/linux/kernel/git/dgc/xfsdev.git metadata-scale
-
-Dave Chinner (18):
-      xfs: force background CIL push under sustained load
-      xfs: reduce the number of CIL lock round trips during commit
-      xfs: remove debug assert for per-ag reference counting
-      xfs: lockless per-ag lookups
-      xfs: don't use vfs writeback for pure metadata modifications
-      xfs: rename xfs_buf_get_nodaddr to be more appropriate
-      xfs: introduced uncached buffer read primitve
-      xfs: store xfs_mount in the buftarg instead of in the xfs_buf
-      xfs: kill XBF_FS_MANAGED buffers
-      xfs: use unhashed buffers for size checks
-      xfs: remove buftarg hash for external devices
-      xfs: split inode AG walking into separate code for reclaim
-      xfs: split out inode walk inode grabbing
-      xfs: implement batched inode lookups for AG walking
-      xfs: batch inode reclaim lookup
-      xfs: serialise inode reclaim within an AG
-      xfs: convert buffer cache hash to rbtree
-      xfs: pack xfs_buf structure more tightly
-
- fs/xfs/linux-2.6/xfs_buf.c     |  200 +++++++++++---------
- fs/xfs/linux-2.6/xfs_buf.h     |   50 +++---
- fs/xfs/linux-2.6/xfs_ioctl.c   |    2 +-
- fs/xfs/linux-2.6/xfs_iops.c    |   55 ++++--
- fs/xfs/linux-2.6/xfs_super.c   |   15 +-
- fs/xfs/linux-2.6/xfs_sync.c    |  407 +++++++++++++++++++++++-----------------
- fs/xfs/linux-2.6/xfs_sync.h    |    4 +-
- fs/xfs/linux-2.6/xfs_trace.h   |    4 +-
- fs/xfs/quota/xfs_qm_syscalls.c |   14 +--
- fs/xfs/xfs_ag.h                |    9 +
- fs/xfs/xfs_attr.c              |   31 +--
- fs/xfs/xfs_buf_item.c          |    3 +-
- fs/xfs/xfs_fsops.c             |   11 +-
- fs/xfs/xfs_inode.h             |    1 +
- fs/xfs/xfs_inode_item.c        |    9 -
- fs/xfs/xfs_log.c               |    3 +-
- fs/xfs/xfs_log_cil.c           |  244 +++++++++++++-----------
- fs/xfs/xfs_log_priv.h          |   37 ++--
- fs/xfs/xfs_log_recover.c       |   19 +-
- fs/xfs/xfs_mount.c             |  152 ++++++++-------
- fs/xfs/xfs_mount.h             |    2 +
- fs/xfs/xfs_rename.c            |   12 +-
- fs/xfs/xfs_rtalloc.c           |   29 ++--
- fs/xfs/xfs_utils.c             |    4 +-
- fs/xfs/xfs_vnodeops.c          |   16 +-
- 25 files changed, 730 insertions(+), 603 deletions(-)
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 43b1d56..6a1edb1 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -144,12 +144,11 @@ xfs_growfs_data_private(
+ 	if ((error = xfs_sb_validate_fsb_count(&mp->m_sb, nb)))
+ 		return error;
+ 	dpct = pct - mp->m_sb.sb_imax_pct;
+-	error = xfs_read_buf(mp, mp->m_ddev_targp,
+-			XFS_FSB_TO_BB(mp, nb) - XFS_FSS_TO_BB(mp, 1),
+-			XFS_FSS_TO_BB(mp, 1), 0, &bp);
+-	if (error)
+-		return error;
+-	ASSERT(bp);
++	bp = xfs_buf_read_uncached(mp, mp->m_ddev_targp,
++				XFS_FSB_TO_BB(mp, nb) - XFS_FSS_TO_BB(mp, 1),
++				BBTOB(XFS_FSS_TO_BB(mp, 1)), 0);
++	if (!bp)
++		return EIO;
+ 	xfs_buf_relse(bp);
+ 
+ 	new = nb;	/* use new as a temporary here */
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index fbca293..912101d 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -980,42 +980,35 @@ xfs_check_sizes(xfs_mount_t *mp)
+ {
+ 	xfs_buf_t	*bp;
+ 	xfs_daddr_t	d;
+-	int		error;
+ 
+ 	d = (xfs_daddr_t)XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks);
+ 	if (XFS_BB_TO_FSB(mp, d) != mp->m_sb.sb_dblocks) {
+-		cmn_err(CE_WARN, "XFS: size check 1 failed");
++		cmn_err(CE_WARN, "XFS: filesystem size mismatch detected");
+ 		return XFS_ERROR(EFBIG);
+ 	}
+-	error = xfs_read_buf(mp, mp->m_ddev_targp,
+-			     d - XFS_FSS_TO_BB(mp, 1),
+-			     XFS_FSS_TO_BB(mp, 1), 0, &bp);
+-	if (!error) {
+-		xfs_buf_relse(bp);
+-	} else {
+-		cmn_err(CE_WARN, "XFS: size check 2 failed");
+-		if (error == ENOSPC)
+-			error = XFS_ERROR(EFBIG);
+-		return error;
++	bp = xfs_buf_read_uncached(mp, mp->m_ddev_targp,
++					d - XFS_FSS_TO_BB(mp, 1),
++					BBTOB(XFS_FSS_TO_BB(mp, 1)), 0);
++	if (!bp) {
++		cmn_err(CE_WARN, "XFS: last sector read failed");
++		return EIO;
+ 	}
++	xfs_buf_relse(bp);
+ 
+ 	if (mp->m_logdev_targp != mp->m_ddev_targp) {
+ 		d = (xfs_daddr_t)XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks);
+ 		if (XFS_BB_TO_FSB(mp, d) != mp->m_sb.sb_logblocks) {
+-			cmn_err(CE_WARN, "XFS: size check 3 failed");
++			cmn_err(CE_WARN, "XFS: log size mismatch detected");
+ 			return XFS_ERROR(EFBIG);
+ 		}
+-		error = xfs_read_buf(mp, mp->m_logdev_targp,
+-				     d - XFS_FSB_TO_BB(mp, 1),
+-				     XFS_FSB_TO_BB(mp, 1), 0, &bp);
+-		if (!error) {
+-			xfs_buf_relse(bp);
+-		} else {
+-			cmn_err(CE_WARN, "XFS: size check 3 failed");
+-			if (error == ENOSPC)
+-				error = XFS_ERROR(EFBIG);
+-			return error;
++		bp = xfs_buf_read_uncached(mp, mp->m_logdev_targp,
++					d - XFS_FSB_TO_BB(mp, 1),
++					XFS_FSB_TO_B(mp, 1), 0);
++		if (!bp) {
++			cmn_err(CE_WARN, "XFS: log device read failed");
++			return EIO;
+ 		}
++		xfs_buf_relse(bp);
+ 	}
+ 	return 0;
+ }
+diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+index 891260f..12a1913 100644
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -39,6 +39,7 @@
+ #include "xfs_trans_space.h"
+ #include "xfs_utils.h"
+ #include "xfs_trace.h"
++#include "xfs_buf.h"
+ 
+ 
+ /*
+@@ -1883,13 +1884,13 @@ xfs_growfs_rt(
+ 	/*
+ 	 * Read in the last block of the device, make sure it exists.
+ 	 */
+-	error = xfs_read_buf(mp, mp->m_rtdev_targp,
+-			XFS_FSB_TO_BB(mp, nrblocks - 1),
+-			XFS_FSB_TO_BB(mp, 1), 0, &bp);
+-	if (error)
+-		return error;
+-	ASSERT(bp);
++	bp = xfs_buf_read_uncached(mp, mp->m_rtdev_targp,
++				XFS_FSB_TO_BB(mp, nrblocks - 1),
++				XFS_FSB_TO_B(mp, 1), 0);
++	if (!bp)
++		return EIO;
+ 	xfs_buf_relse(bp);
++
+ 	/*
+ 	 * Calculate new parameters.  These are the final values to be reached.
+ 	 */
+@@ -2215,7 +2216,6 @@ xfs_rtmount_init(
+ {
+ 	xfs_buf_t	*bp;	/* buffer for last block of subvolume */
+ 	xfs_daddr_t	d;	/* address of last block of subvolume */
+-	int		error;	/* error return value */
+ 	xfs_sb_t	*sbp;	/* filesystem superblock copy in mount */
+ 
+ 	sbp = &mp->m_sb;
+@@ -2242,15 +2242,12 @@ xfs_rtmount_init(
+ 			(unsigned long long) mp->m_sb.sb_rblocks);
+ 		return XFS_ERROR(EFBIG);
+ 	}
+-	error = xfs_read_buf(mp, mp->m_rtdev_targp,
+-				d - XFS_FSB_TO_BB(mp, 1),
+-				XFS_FSB_TO_BB(mp, 1), 0, &bp);
+-	if (error) {
+-		cmn_err(CE_WARN,
+-	"XFS: realtime mount -- xfs_read_buf failed, returned %d", error);
+-		if (error == ENOSPC)
+-			return XFS_ERROR(EFBIG);
+-		return error;
++	bp = xfs_buf_read_uncached(mp, mp->m_rtdev_targp,
++					d - XFS_FSB_TO_BB(mp, 1),
++					XFS_FSB_TO_B(mp, 1), 0);
++	if (!bp) {
++		cmn_err(CE_WARN, "XFS: realtime device size check failed");
++		return EIO;
+ 	}
+ 	xfs_buf_relse(bp);
+ 	return 0;
+-- 
+1.7.1
 
 _______________________________________________
 xfs mailing list
