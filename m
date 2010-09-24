@@ -1,23 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8OIHPeJ195926 for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 13:17:25 -0500
-Received: from smtp3-g21.free.fr (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A29C69BE06
-	for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 11:18:18 -0700 (PDT)
-Received: from smtp3-g21.free.fr (smtp3-g21.free.fr [212.27.42.3]) by
-	cuda.sgi.com with ESMTP id kgMSKclRZZEwAz95 for
-	<xfs@oss.sgi.com>; Fri, 24 Sep 2010 11:18:18 -0700 (PDT)
-Date: Fri, 24 Sep 2010 20:18:07 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: Problem with file system on iSCSI FileIO
-Message-ID: <20100924201807.16460606@galadriel.home>
-In-Reply-To: <AANLkTimXCo0YtjmdPo9RvX=KfQCjJkkL9hQr3h63UJX7@mail.gmail.com>
-References: <4C9B5786.4010205@open-e.com> <20100923143221.GA1989@infradead.org>
-	<4C9B6B27.5050606@open-e.com>
-	<20100924075505.GA24664@infradead.org>
-	<AANLkTimXCo0YtjmdPo9RvX=KfQCjJkkL9hQr3h63UJX7@mail.gmail.com>
-Mime-Version: 1.0
+	o8OKGYt2199746 for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 15:16:35 -0500
+Received: from smtp-relay.maven.pl (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0CFAE9C29E
+	for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 13:17:28 -0700 (PDT)
+Received: from smtp-relay.maven.pl (smtp-relay.maven.pl [193.239.45.138]) by
+	cuda.sgi.com with ESMTP id vL4MPvQOGUmEW0XW for
+	<xfs@oss.sgi.com>; Fri, 24 Sep 2010 13:17:28 -0700 (PDT)
+Received: from chello087207113141.chello.pl ([87.207.113.141]:49640
+	helo=tarm.maven.pl)
+	by smtp-relay.maven.pl with esmtpsa (TLSv1:DHE-RSA-AES256-SHA:256)
+	(Exim 4.72) (envelope-from <arekm@maven.pl>) id 1OzEhy-0002LO-Sf
+	for xfs@oss.sgi.com; Fri, 24 Sep 2010 22:17:26 +0200
+Received: from arekm by tarm.maven.pl with local (Exim 4.72)
+	(envelope-from <arekm@maven.pl>) id 1OzEhy-0000Eg-BS
+	for xfs@oss.sgi.com; Fri, 24 Sep 2010 22:17:26 +0200
+From: Arkadiusz Miskiewicz <arekm@maven.pl>
+Subject: Re: [PATCH VER 5] xfsprogs: projid32bit handling (xfs_admin patch)
+Date: Fri, 24 Sep 2010 22:17:25 +0200
+References: <1285332677-13490-1-git-send-email-arekm@maven.pl>
+	<1285332748-13648-1-git-send-email-arekm@maven.pl>
+In-Reply-To: <1285332748-13648-1-git-send-email-arekm@maven.pl>
+MIME-Version: 1.0
+Message-Id: <201009242217.26186.arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,31 +32,79 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Richard Sharpe <realrichardsharpe@gmail.com>
-Cc: Ryszard Stawiarski <ryszard.stawiarski@open-e.com>, ??ukasz Wittig <lukasz.wittig@open-e.com>, Artur Piechocki <artur.piechocki@open-e.com>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Slawomir Nowakowski <slawomir.nowakowski@open-e.com>
+To: xfs@oss.sgi.com
 
-Le Fri, 24 Sep 2010 08:10:51 -0700 vous =E9criviez:
-
-> Sounds like iSCSI-SCST to a vdisk_fileio on a file under xfs on a LUN
-> on the Areca RAID controller ...
-
-I use iet and it works fine. It has the beneit of allowing easy copy,
-backup, etc of the virtual lun; and it allows thin provisioning too.
-
--- =
-
-------------------------------------------------------------------------
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
-------------------------------------------------------------------------
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gRnJpZGF5IDI0IG9mIFNlcHRlbWJlciAyMDEwLCBBcmthZGl1c3ogTWnFm2tpZXdpY3ogd3Jv
+dGU6Cgo+IE5vdGUgLSB0aGVyZSBpcyBubyB4ZnNfYWRtaW4gc3VwcG9ydCBmb3Igc2V0dGluZyBw
+cm9qaWQzMmJpdC4KPiBJdCB3b3VsZCBiZSBhIG1lc3Mgd2hlbiBkb2luZyB0aGF0IGluIHNoZWxs
+IGNvZGUsIHNpbWlsYXIgdG8gdGhpcyBvbmU6Cj4gaHR0cDovL3Bhc3RlYmluLmNvbS9XV3k4bTF4
+Ny4KPiAKPiBoY2ggY29tbWVudHMgb24gdGhpczoKPiAxMjozNCA8IGhjaD4gYXJla206IGRvZXNu
+J3QgbG9vayB0b28gcHJldHR5IGluZGVlZAo+IDEyOjM0IDwgaGNoPiBhcmVrbTogbGV0IG1lIHRo
+aW5rIGFib3V0IGhhY2tpbmcgdXAgc29tZSBzaW1wbGUgQyBjb2RlCj4gICAgICAgICAgICAgIGZv
+ciB0b2dnbGluZyBmZWF0dXJlIGJpdHMKPiAxMjozNSA8IGhjaD4gYWx0ZXJuYXRpdmVseSB3ZSBj
+b3VsZCBqdXN0IGRvIGl0IGluIGtlcm5lbHNwYWNlCj4gMTI6MzUgPCBoY2g+IHdoaWNoIHNlZW1z
+IG1vcmUgdXNlZnVsIGFueXdheSBhcyB3ZSBjb3VsZCBkbyBvbmxpbmUgdXBncmFkZXMKPiAxMjo1
+MyA8IGhjaD4gSSB0aGluayBhZGRpbmcgYW4gaW9jdGwgZm9yIGVuYWJsaW5nIGZlYXR1cmVzIGlz
+IHRoZSBiZXR0ZXIKPiB3YXkgMTI6NTMgPCBoY2g+IGFsdGVybmF0aXZlbHkgd2UgY291bGQgb3Zl
+cmxvYWQgcmVtb3VudCwgYnV0IHRoYXQgd2VlbHMgYQo+IGJpdCBjbHVtc3kKPiAKPiBOb3Qgc3Vy
+ZSBpZiBoY2ggaXMgZ29pbmcgdG8gaW1wbGVtZW50IHRoYXQgb3Igb25seSBzdWdnZXN0aW5nIHRo
+YXQKPiBzb2x1dGlvbi4gQW55d2F5IG5vdyBwcm9qaWQzMmJpdCBjYW4gYmUgZW5hYmxlZCBhdCBt
+a2ZzLnhmcyB0aW1lIChmb3IgbmV3Cj4gZmlsZXN5c3RlbXMpIG9yIGlmIHlvdSBhcmUgc21hcnQg
+ZW5vdWdoIHZpYSB4ZnNfZGIgKGZvciBleGlzdGluZwo+IGZpbGVzeXN0ZW1zKS4KCkJ1dCBpZiBz
+b21lb25lIHJlYWxseSB3YW50cyB4ZnNfYWRtaW4gc3VwcG9ydCBpbiBzaGVsbCB0aGVuIGhlcmUg
+aXQgaXM6CgpkaWZmIC0tZ2l0IGEvZGIveGZzX2FkbWluLnNoIGIvZGIveGZzX2FkbWluLnNoCmlu
+ZGV4IGE3YTNmZGIuLmVjODQyNGQgMTAwNzU1Ci0tLSBhL2RiL3hmc19hZG1pbi5zaAorKysgYi9k
+Yi94ZnNfYWRtaW4uc2gKQEAgLTYsOSArNiw0MyBAQAogc3RhdHVzPTAKIERCX09QVFM9IiIKIFJF
+UEFJUl9PUFRTPSIiCi1VU0FHRT0iVXNhZ2U6IHhmc19hZG1pbiBbLWVmamx1Vl0gWy1jIDB8MV0g
+Wy1MIGxhYmVsXSBbLVUgdXVpZF0gZGV2aWNlIgorVVNBR0U9IlVzYWdlOiB4ZnNfYWRtaW4gWy1l
+ZmpscHVWXSBbLWMgMHwxXSBbLUwgbGFiZWxdIFstVSB1dWlkXSBkZXZpY2UiCiAKLXdoaWxlIGdl
+dG9wdHMgImVmamx1YzpMOlU6ViIgYworc2V0X2ZlYXR1cmVzMl9iaXQoKSB7CisJZGV2aWNlPSIk
+MSIKKwliaXQ9IiQyIgorCisJaWYgWyAteiAiJGRldmljZSIgXTsgdGhlbgorCQllY2hvICIkMDog
+ZGV2aWNlIG5hbWUgaXMgbWlzc2luZyIgPiYyCisJCXJldHVybiAxCisJZmkKKworCWlmIFsgLXog
+IiRiaXQiIF07IHRoZW4KKwkJZWNobyAiJDA6IGJpdHMgdG8gc2V0IGFyZSBtaXNzaW5nIiA+JjIK
+KwkJcmV0dXJuIDEKKwlmaQorCisJIyByZWFkIGN1cnJlbnQgYml0cworCWZlYXR1cmVzMj0kKHhm
+c19kYiAtcCB4ZnNfYWRtaW4gLXggLXIgLWMgJ3NiJyAtYyAncHJpbnQgZmVhdHVyZXMyJyAiJGRl
+dmljZSIgfCBhd2sgJyB7IHByaW50ICQzIH0gJykKKwlpZiBbIC16ICIkZmVhdHVyZXMyIiBdOyB0
+aGVuCisJCWVjaG8gIiQwOiBjYW4ndCByZWFkIGZlYXR1cmVzMiBmcm9tIHN1cGVyYmxvY2shIiA+
+JjIKKwkJcmV0dXJuIDEKKwlmaQorCWJhZF9mZWF0dXJlczI9JCh4ZnNfZGIgLXAgeGZzX2FkbWlu
+IC14IC1yIC1jICdzYicgLWMgJ3ByaW50IGJhZF9mZWF0dXJlczInICIkZGV2aWNlIiB8IGF3ayAn
+IHsgcHJpbnQgJDMgfSAnKQorCWlmIFsgLXogIiRiYWRfZmVhdHVyZXMyIiBdOyB0aGVuCisJCWVj
+aG8gIiQwOiBjYW4ndCByZWFkIGJhZF9mZWF0dXJlczIgZnJvbSBzdXBlcmJsb2NrISIgPiYyCisJ
+CXJldHVybiAxCisJZmkKKworCSMgc2V0IG5ldyBiaXRzCisJZmVhdHVyZXMyPSQoKGZlYXR1cmVz
+MiB8IGJpdCkpCisJYmFkX2ZlYXR1cmVzMj0kKChiYWRfZmVhdHVyZXMyIHwgYml0KSkKKwl4ZnNf
+ZGIgLXAgeGZzX2FkbWluIC14IC1jICdzYicgLWMgIndyaXRlIGZlYXR1cmVzMiAkZmVhdHVyZXMy
+IiAiJGRldmljZSIgJiYgXAorCQl4ZnNfZGIgLXAgeGZzX2FkbWluIC14IC1jICdzYicgLWMgIndy
+aXRlIGJhZF9mZWF0dXJlczIgJGJhZF9mZWF0dXJlczIiICIkZGV2aWNlIgorCXJldHVybiAkPwor
+fQorCit3aGlsZSBnZXRvcHRzICJlZmpsdTNjOkw6VTpWIiBjCiBkbwogCWNhc2UgJGMgaW4KIAlj
+KQlSRVBBSVJfT1BUUz0kUkVQQUlSX09QVFMiIC1jIGxhenljb3VudD0iJE9QVEFSRzs7CkBAIC0x
+Nyw2ICs1MSw3IEBAIGRvCiAJaikJREJfT1BUUz0kREJfT1BUUyIgLWMgJ3ZlcnNpb24gbG9nMici
+OzsKIAlsKQlEQl9PUFRTPSREQl9PUFRTIiAtciAtYyBsYWJlbCI7OwogCUwpCURCX09QVFM9JERC
+X09QVFMiIC1jICdsYWJlbCAiJE9QVEFSRyInIjs7CisJMykJRkVBVFVSRVNfQklUPSIweDIwIjs7
+CiAJdSkJREJfT1BUUz0kREJfT1BUUyIgLXIgLWMgdXVpZCI7OwogCVUpCURCX09QVFM9JERCX09Q
+VFMiIC1jICd1dWlkICIkT1BUQVJHIiciOzsKIAlWKQl4ZnNfZGIgLXAgeGZzX2FkbWluIC1WCkBA
+IC0zMSw3ICs2NiwxMiBAQCBkb25lCiBzZXQgLS0gZXh0cmEgJEAKIHNoaWZ0ICRPUFRJTkQKIGNh
+c2UgJCMgaW4KLQkxKQlpZiBbIC1uICIkREJfT1BUUyIgXQorCTEpCWlmIFsgLW4gIiRGRUFUVVJF
+U19CSVQiIF0KKwkJdGhlbgorCQkJc2V0X2ZlYXR1cmVzMl9iaXQgIiQxIiAiJEZFQVRVUkVTX0JJ
+VCIKKwkJCXN0YXR1cz0kPworCQlmaQorCQlpZiBbIC1uICIkREJfT1BUUyIgXQogCQl0aGVuCiAJ
+CQlldmFsIHhmc19kYiAteCAtcCB4ZnNfYWRtaW4gJERCX09QVFMgJDEKIAkJCXN0YXR1cz0kPwpk
+aWZmIC0tZ2l0IGEvbWFuL21hbjgveGZzX2FkbWluLjggYi9tYW4vbWFuOC94ZnNfYWRtaW4uOApp
+bmRleCA4ZTMxNTViLi42YjcyN2YzIDEwMDY0NAotLS0gYS9tYW4vbWFuOC94ZnNfYWRtaW4uOAor
+KysgYi9tYW4vbWFuOC94ZnNfYWRtaW4uOApAQCAtNCw3ICs0LDcgQEAgeGZzX2FkbWluIFwtIGNo
+YW5nZSBwYXJhbWV0ZXJzIG9mIGFuIFhGUyBmaWxlc3lzdGVtCiAuU0ggU1lOT1BTSVMKIC5CIHhm
+c19hZG1pbgogWwotLkIgXC1lZmx1CisuQiBcLWVmbHUzCiBdIFsKIC5CUiAiXC1jIDAiIHwgMQog
+XSBbCkBAIC01NSw2ICs1NSw5IEBAIFByaW50IHRoZSBjdXJyZW50IGZpbGVzeXN0ZW0gbGFiZWwu
+CiAuQiBcLXUKIFByaW50IHRoZSBjdXJyZW50IGZpbGVzeXN0ZW0gVVVJRCAoVW5pdmVyc2FsbHkg
+VW5pcXVlIElEZW50aWZpZXIpLgogLlRQCisuQiBcLTMKK0VuYWJsZSAzMmJpdCBwcm9qZWN0IGlk
+ZW50aWZpZXIgc3VwcG9ydCAoUFJPSklEMzJCSVQgZmVhdHVyZSkuCisuVFAKIC5CUiAiXC1jIDAi
+IHwgMQogRW5hYmxlICgxKSBvciBkaXNhYmxlICgwKSBsYXp5LWNvdW50ZXJzIGluIHRoZSBmaWxl
+c3lzdGVtLgogVGhpcyBvcGVyYXRpb24gbWF5IHRha2UgcXVpdGUgYSBiaXQgb2YgdGltZSBvbiBs
+YXJnZSBmaWxlc3lzdGVtcyBhcyB0aGUKCj4gCj4gU28gaWYgdGhlcmUgYXJlIG5vIG5ldyBjb21t
+ZW50cyBJJ20gYXNraW5nIGZvciBhIG1lcmdlIGZvciBhbGwgMyBwYXRjaGVzLgo+IFRoYW5rcyEK
+Ci0tIApBcmthZGl1c3ogTWnFm2tpZXdpY3ogICAgICAgIFBMRC9MaW51eCBUZWFtCmFyZWttIC8g
+bWF2ZW4ucGwgICAgICAgICAgICBodHRwOi8vZnRwLnBsZC1saW51eC5vcmcvCgpfX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhm
+c0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
