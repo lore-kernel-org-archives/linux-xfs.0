@@ -1,28 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8OCUXTc180834 for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 07:30:34 -0500
+	o8OCUXm6180832 for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 07:30:33 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5779B14FBDBA
-	for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 05:44:06 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
-	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	NRsmSTxfbFOmZ1rK for <xfs@oss.sgi.com>;
-	Fri, 24 Sep 2010 05:44:06 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 49ECB99EA8
+	for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 05:31:27 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
+	[150.101.137.102]) by cuda.sgi.com with ESMTP id
+	rFh1DeafnaGbMnN5 for <xfs@oss.sgi.com>;
+	Fri, 24 Sep 2010 05:31:27 -0700 (PDT)
 Received: from dastard (unverified [121.44.66.70])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	40162890-1927428
+	40083778-1927428
 	for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 22:01:25 +0930 (CST)
 Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1Oz7Qy-0007UZ-5I
+	(envelope-from <dave@fromorbit.com>) id 1Oz7Qy-0007Uh-7p
 	for xfs@oss.sgi.com; Fri, 24 Sep 2010 22:31:24 +1000
 Received: from dave by disturbed with local (Exim 4.72)
-	(envelope-from <dave@disturbed.disaster>) id 1Oz7Qt-000600-RS
-	for xfs@oss.sgi.com; Fri, 24 Sep 2010 22:31:19 +1000
+	(envelope-from <dave@disturbed.disaster>) id 1Oz7Qu-000603-04
+	for xfs@oss.sgi.com; Fri, 24 Sep 2010 22:31:20 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 04/18] xfs: lockless per-ag lookups
-Date: Fri, 24 Sep 2010 22:31:02 +1000
-Message-Id: <1285331476-23015-5-git-send-email-david@fromorbit.com>
+Subject: [PATCH 05/18] xfs: don't use vfs writeback for pure metadata
+	modifications
+Date: Fri, 24 Sep 2010 22:31:03 +1000
+Message-Id: <1285331476-23015-6-git-send-email-david@fromorbit.com>
 In-Reply-To: <1285331476-23015-1-git-send-email-david@fromorbit.com>
 References: <1285331476-23015-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -42,131 +43,394 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-When we start taking a reference to the per-ag for every cached
-buffer in the system, kernel lockstat profiling on an 8-way create
-workload shows the mp->m_perag_lock has higher acquisition rates
-than the inode lock and has significantly more contention. That is,
-it becomes the highest contended lock in the system.
+Under heavy multi-way parallel create workloads, the VFS struggles
+to write back all the inodes that have been changed in age order.
+The bdi flusher thread becomes CPU bound, spending 85% of it's time
+in the VFS code, mostly traversing the superblock dirty inode list
+to separate dirty inodes old enough to flush.
 
-The perag lookup is trivial to convert to lock-less RCU lookups
-because perag structures never go away. Hence the only thing we need
-to protect against is tree structure changes during a grow. This can
-be done simply by replacing the locking in xfs_perag_get() with RCU
-read locking. This removes the mp->m_perag_lock completely from this
-path.
+We already keep an index of all metadata changes in age order - in
+the AIL - and continued log pressure will do age ordered writeback
+without any extra overhead at all. If there is no pressure on the
+log, the xfssyncd will periodically write back metadata in ascending
+disk address offset order so will be very efficient.
+
+Hence we can stop marking VFS inodes dirty during transaction commit
+or when changing timestamps during transactions. This will keep the
+inodes in the superblock dirty list to those containing data or
+unlogged metadata changes.
+
+However, the timstamp changes are slightly more complex than this -
+there are a couple of places that do unlogged updates of the
+timestamps, and the VFS need to be informed of these. Hence add a
+new function xfs_trans_ichgtime() for transactional changes,
+and leave xfs_ichgtime() for the non-transactional changes.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Alex Elder <aelder@sgi.com>
 ---
- fs/xfs/linux-2.6/xfs_sync.c |    6 +++---
- fs/xfs/xfs_ag.h             |    3 +++
- fs/xfs/xfs_mount.c          |   25 +++++++++++++++++--------
- 3 files changed, 23 insertions(+), 11 deletions(-)
+ fs/xfs/linux-2.6/xfs_ioctl.c   |    2 +-
+ fs/xfs/linux-2.6/xfs_iops.c    |   55 ++++++++++++++++++++++++++++-----------
+ fs/xfs/linux-2.6/xfs_super.c   |    7 +----
+ fs/xfs/quota/xfs_qm_syscalls.c |    2 +-
+ fs/xfs/xfs_attr.c              |   31 ++++++++--------------
+ fs/xfs/xfs_inode.h             |    1 +
+ fs/xfs/xfs_inode_item.c        |    9 ------
+ fs/xfs/xfs_rename.c            |   12 ++++++---
+ fs/xfs/xfs_utils.c             |    4 +-
+ fs/xfs/xfs_vnodeops.c          |   10 +++---
+ 10 files changed, 69 insertions(+), 64 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
-index d59c4a6..ddeaff9 100644
---- a/fs/xfs/linux-2.6/xfs_sync.c
-+++ b/fs/xfs/linux-2.6/xfs_sync.c
-@@ -150,17 +150,17 @@ xfs_inode_ag_iter_next_pag(
- 		int found;
- 		int ref;
+diff --git a/fs/xfs/linux-2.6/xfs_ioctl.c b/fs/xfs/linux-2.6/xfs_ioctl.c
+index 03aa908..10206be 100644
+--- a/fs/xfs/linux-2.6/xfs_ioctl.c
++++ b/fs/xfs/linux-2.6/xfs_ioctl.c
+@@ -1088,8 +1088,8 @@ xfs_ioctl_setattr(
+ 		xfs_diflags_to_linux(ip);
+ 	}
  
--		spin_lock(&mp->m_perag_lock);
-+		rcu_read_lock();
- 		found = radix_tree_gang_lookup_tag(&mp->m_perag_tree,
- 				(void **)&pag, *first, 1, tag);
- 		if (found <= 0) {
--			spin_unlock(&mp->m_perag_lock);
-+			rcu_read_unlock();
- 			return NULL;
- 		}
- 		*first = pag->pag_agno + 1;
- 		/* open coded pag reference increment */
- 		ref = atomic_inc_return(&pag->pag_ref);
--		spin_unlock(&mp->m_perag_lock);
-+		rcu_read_unlock();
- 		trace_xfs_perag_get_reclaim(mp, pag->pag_agno, ref, _RET_IP_);
- 	} else {
- 		pag = xfs_perag_get(mp, *first);
-diff --git a/fs/xfs/xfs_ag.h b/fs/xfs/xfs_ag.h
-index 4917d4e..51c42c2 100644
---- a/fs/xfs/xfs_ag.h
-+++ b/fs/xfs/xfs_ag.h
-@@ -230,6 +230,9 @@ typedef struct xfs_perag {
- 	rwlock_t	pag_ici_lock;	/* incore inode lock */
- 	struct radix_tree_root pag_ici_root;	/* incore inode cache root */
- 	int		pag_ici_reclaimable;	/* reclaimable inodes */
-+
-+	/* for rcu-safe freeing */
-+	struct rcu_head	rcu_head;
- #endif
- 	int		pagb_count;	/* pagb slots in use */
- } xfs_perag_t;
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 00c7a87..14fc6e9 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -199,6 +199,8 @@ xfs_uuid_unmount(
++	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+-	xfs_ichgtime(ip, XFS_ICHGTIME_CHG);
+ 
+ 	XFS_STATS_INC(xs_ig_attrchg);
+ 
+diff --git a/fs/xfs/linux-2.6/xfs_iops.c b/fs/xfs/linux-2.6/xfs_iops.c
+index b1fc2a6..b7a6c94 100644
+--- a/fs/xfs/linux-2.6/xfs_iops.c
++++ b/fs/xfs/linux-2.6/xfs_iops.c
+@@ -96,40 +96,63 @@ xfs_mark_inode_dirty(
  
  /*
-  * Reference counting access wrappers to the perag structures.
-+ * Because we never free per-ag structures, the only thing we
-+ * have to protect against changes is the tree structure itself.
+  * Change the requested timestamp in the given inode.
+- * We don't lock across timestamp updates, and we don't log them but
+- * we do record the fact that there is dirty information in core.
   */
- struct xfs_perag *
- xfs_perag_get(struct xfs_mount *mp, xfs_agnumber_t agno)
-@@ -206,13 +208,13 @@ xfs_perag_get(struct xfs_mount *mp, xfs_agnumber_t agno)
- 	struct xfs_perag	*pag;
- 	int			ref = 0;
+-void
+-xfs_ichgtime(
+-	xfs_inode_t	*ip,
+-	int		flags)
++static int
++xfs_ichgtime_int(
++	struct xfs_inode	*ip,
++	int			flags)
+ {
+-	struct inode	*inode = VFS_I(ip);
+-	timespec_t	tv;
+-	int		sync_it = 0;
++	struct inode		*inode = VFS_I(ip);
++	timespec_t		tv;
++	int			dirty = 0;
  
--	spin_lock(&mp->m_perag_lock);
-+	rcu_read_lock();
- 	pag = radix_tree_lookup(&mp->m_perag_tree, agno);
- 	if (pag) {
- 		ASSERT(atomic_read(&pag->pag_ref) >= 0);
- 		ref = atomic_inc_return(&pag->pag_ref);
+ 	tv = current_fs_time(inode->i_sb);
+ 
+ 	if ((flags & XFS_ICHGTIME_MOD) &&
+ 	    !timespec_equal(&inode->i_mtime, &tv)) {
+ 		inode->i_mtime = tv;
+-		sync_it = 1;
++		dirty = 1;
  	}
--	spin_unlock(&mp->m_perag_lock);
-+	rcu_read_unlock();
- 	trace_xfs_perag_get(mp, agno, ref, _RET_IP_);
- 	return pag;
- }
-@@ -227,10 +229,18 @@ xfs_perag_put(struct xfs_perag *pag)
- 	trace_xfs_perag_put(pag->pag_mount, pag->pag_agno, ref, _RET_IP_);
+ 	if ((flags & XFS_ICHGTIME_CHG) &&
+ 	    !timespec_equal(&inode->i_ctime, &tv)) {
+ 		inode->i_ctime = tv;
+-		sync_it = 1;
++		dirty = 1;
+ 	}
++	return dirty;
++}
+ 
+-	/*
+-	 * Update complete - now make sure everyone knows that the inode
+-	 * is dirty.
+-	 */
+-	if (sync_it)
++/*
++ * Non-transactional inode timestamp update. Does not require locks to be held,
++ * and marks the inode dirty at the VFS level so that the change is not lost.
++ */
++void
++xfs_ichgtime(
++	struct xfs_inode	*ip,
++	int			flags)
++{
++	if (xfs_ichgtime_int(ip, flags))
+ 		xfs_mark_inode_dirty_sync(ip);
  }
  
-+STATIC void
-+__xfs_free_perag(
-+	struct rcu_head	*head)
+ /*
++ * Transactional inode timestamp update. Requires the inode to be locked and
++ * joined to the transaction supplied. Relies on the transaction subsystem to
++ * track dirty state and update/writeback the inode accordingly.
++ */
++void
++xfs_trans_ichgtime(
++	struct xfs_trans	*tp,
++	struct xfs_inode	*ip,
++	int			flags)
 +{
-+	struct xfs_perag *pag = container_of(head, struct xfs_perag, rcu_head);
++	ASSERT(tp);
++	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
++	ASSERT(ip->i_transp == tp);
 +
-+	ASSERT(atomic_read(&pag->pag_ref) == 0);
-+	kmem_free(pag);
++	xfs_ichgtime_int(ip, flags);
 +}
 +
- /*
-- * Free up the resources associated with a mount structure.  Assume that
-- * the structure was initially zeroed, so we can tell which fields got
-- * initialized.
-+ * Free up the per-ag resources associated with the mount structure.
-  */
- STATIC void
- xfs_free_perag(
-@@ -242,10 +252,9 @@ xfs_free_perag(
- 	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
- 		spin_lock(&mp->m_perag_lock);
- 		pag = radix_tree_delete(&mp->m_perag_tree, agno);
--		ASSERT(pag);
--		ASSERT(atomic_read(&pag->pag_ref) == 0);
- 		spin_unlock(&mp->m_perag_lock);
--		kmem_free(pag);
-+		ASSERT(pag);
-+		call_rcu(&pag->rcu_head, __xfs_free_perag);
- 	}
- }
++/*
+  * Hook in SELinux.  This is not quite correct yet, what we really need
+  * here (as we do for default ACLs) is a mechanism by which creation of
+  * these attrs can be journalled at inode creation time (along with the
+diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
+index a4e0797..83154c0 100644
+--- a/fs/xfs/linux-2.6/xfs_super.c
++++ b/fs/xfs/linux-2.6/xfs_super.c
+@@ -972,12 +972,7 @@ xfs_fs_inode_init_once(
  
+ /*
+  * Dirty the XFS inode when mark_inode_dirty_sync() is called so that
+- * we catch unlogged VFS level updates to the inode. Care must be taken
+- * here - the transaction code calls mark_inode_dirty_sync() to mark the
+- * VFS inode dirty in a transaction and clears the i_update_core field;
+- * it must clear the field after calling mark_inode_dirty_sync() to
+- * correctly indicate that the dirty state has been propagated into the
+- * inode log item.
++ * we catch unlogged VFS level updates to the inode.
+  *
+  * We need the barrier() to maintain correct ordering between unlogged
+  * updates and the transaction commit code that clears the i_update_core
+diff --git a/fs/xfs/quota/xfs_qm_syscalls.c b/fs/xfs/quota/xfs_qm_syscalls.c
+index 45e5849..7a71336 100644
+--- a/fs/xfs/quota/xfs_qm_syscalls.c
++++ b/fs/xfs/quota/xfs_qm_syscalls.c
+@@ -276,7 +276,7 @@ xfs_qm_scall_trunc_qfile(
+ 		goto out_unlock;
+ 	}
+ 
+-	xfs_ichgtime(ip, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
++	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+ 	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
+ 
+ out_unlock:
+diff --git a/fs/xfs/xfs_attr.c b/fs/xfs/xfs_attr.c
+index c256824..905d390 100644
+--- a/fs/xfs/xfs_attr.c
++++ b/fs/xfs/xfs_attr.c
+@@ -355,16 +355,15 @@ xfs_attr_set_int(
+ 			if (mp->m_flags & XFS_MOUNT_WSYNC) {
+ 				xfs_trans_set_sync(args.trans);
+ 			}
++
++			if (!error && (flags & ATTR_KERNOTIME) == 0) {
++				xfs_trans_ichgtime(args.trans, dp,
++							XFS_ICHGTIME_CHG);
++			}
+ 			err2 = xfs_trans_commit(args.trans,
+ 						 XFS_TRANS_RELEASE_LOG_RES);
+ 			xfs_iunlock(dp, XFS_ILOCK_EXCL);
+ 
+-			/*
+-			 * Hit the inode change time.
+-			 */
+-			if (!error && (flags & ATTR_KERNOTIME) == 0) {
+-				xfs_ichgtime(dp, XFS_ICHGTIME_CHG);
+-			}
+ 			return(error == 0 ? err2 : error);
+ 		}
+ 
+@@ -420,6 +419,9 @@ xfs_attr_set_int(
+ 		xfs_trans_set_sync(args.trans);
+ 	}
+ 
++	if ((flags & ATTR_KERNOTIME) == 0)
++		xfs_trans_ichgtime(args.trans, dp, XFS_ICHGTIME_CHG);
++
+ 	/*
+ 	 * Commit the last in the sequence of transactions.
+ 	 */
+@@ -427,13 +429,6 @@ xfs_attr_set_int(
+ 	error = xfs_trans_commit(args.trans, XFS_TRANS_RELEASE_LOG_RES);
+ 	xfs_iunlock(dp, XFS_ILOCK_EXCL);
+ 
+-	/*
+-	 * Hit the inode change time.
+-	 */
+-	if (!error && (flags & ATTR_KERNOTIME) == 0) {
+-		xfs_ichgtime(dp, XFS_ICHGTIME_CHG);
+-	}
+-
+ 	return(error);
+ 
+ out:
+@@ -567,6 +562,9 @@ xfs_attr_remove_int(xfs_inode_t *dp, struct xfs_name *name, int flags)
+ 		xfs_trans_set_sync(args.trans);
+ 	}
+ 
++	if ((flags & ATTR_KERNOTIME) == 0)
++		xfs_trans_ichgtime(args.trans, dp, XFS_ICHGTIME_CHG);
++
+ 	/*
+ 	 * Commit the last in the sequence of transactions.
+ 	 */
+@@ -574,13 +572,6 @@ xfs_attr_remove_int(xfs_inode_t *dp, struct xfs_name *name, int flags)
+ 	error = xfs_trans_commit(args.trans, XFS_TRANS_RELEASE_LOG_RES);
+ 	xfs_iunlock(dp, XFS_ILOCK_EXCL);
+ 
+-	/*
+-	 * Hit the inode change time.
+-	 */
+-	if (!error && (flags & ATTR_KERNOTIME) == 0) {
+-		xfs_ichgtime(dp, XFS_ICHGTIME_CHG);
+-	}
+-
+ 	return(error);
+ 
+ out:
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 0898c54..37deff1 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -472,6 +472,7 @@ void		xfs_iext_realloc(xfs_inode_t *, int, int);
+ void		xfs_iunpin_wait(xfs_inode_t *);
+ int		xfs_iflush(xfs_inode_t *, uint);
+ void		xfs_ichgtime(xfs_inode_t *, int);
++void		xfs_trans_ichgtime(struct xfs_trans *, struct xfs_inode *, int);
+ void		xfs_lock_inodes(xfs_inode_t **, int, uint);
+ void		xfs_lock_two_inodes(xfs_inode_t *, xfs_inode_t *, uint);
+ 
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index fe00777..c7ac020 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -223,15 +223,6 @@ xfs_inode_item_format(
+ 	nvecs	     = 1;
+ 
+ 	/*
+-	 * Make sure the linux inode is dirty. We do this before
+-	 * clearing i_update_core as the VFS will call back into
+-	 * XFS here and set i_update_core, so we need to dirty the
+-	 * inode first so that the ordering of i_update_core and
+-	 * unlogged modifications still works as described below.
+-	 */
+-	xfs_mark_inode_dirty_sync(ip);
+-
+-	/*
+ 	 * Clear i_update_core if the timestamps (or any other
+ 	 * non-transactional modification) need flushing/logging
+ 	 * and we're about to log them with the rest of the core.
+diff --git a/fs/xfs/xfs_rename.c b/fs/xfs/xfs_rename.c
+index 8fca957..9028733 100644
+--- a/fs/xfs/xfs_rename.c
++++ b/fs/xfs/xfs_rename.c
+@@ -211,7 +211,9 @@ xfs_rename(
+ 			goto error_return;
+ 		if (error)
+ 			goto abort_return;
+-		xfs_ichgtime(target_dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
++
++		xfs_trans_ichgtime(tp, target_dp,
++					XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+ 
+ 		if (new_parent && src_is_directory) {
+ 			error = xfs_bumplink(tp, target_dp);
+@@ -249,7 +251,9 @@ xfs_rename(
+ 					&first_block, &free_list, spaceres);
+ 		if (error)
+ 			goto abort_return;
+-		xfs_ichgtime(target_dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
++
++		xfs_trans_ichgtime(tp, target_dp,
++					XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+ 
+ 		/*
+ 		 * Decrement the link count on the target since the target
+@@ -292,7 +296,7 @@ xfs_rename(
+ 	 * inode isn't really being changed, but old unix file systems did
+ 	 * it and some incremental backup programs won't work without it.
+ 	 */
+-	xfs_ichgtime(src_ip, XFS_ICHGTIME_CHG);
++	xfs_trans_ichgtime(tp, src_ip, XFS_ICHGTIME_CHG);
+ 
+ 	/*
+ 	 * Adjust the link count on src_dp.  This is necessary when
+@@ -315,7 +319,7 @@ xfs_rename(
+ 	if (error)
+ 		goto abort_return;
+ 
+-	xfs_ichgtime(src_dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
++	xfs_trans_ichgtime(tp, src_dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+ 	xfs_trans_log_inode(tp, src_dp, XFS_ILOG_CORE);
+ 	if (new_parent)
+ 		xfs_trans_log_inode(tp, target_dp, XFS_ILOG_CORE);
+diff --git a/fs/xfs/xfs_utils.c b/fs/xfs/xfs_utils.c
+index b7d5769..4c2ba6f 100644
+--- a/fs/xfs/xfs_utils.c
++++ b/fs/xfs/xfs_utils.c
+@@ -235,7 +235,7 @@ xfs_droplink(
+ {
+ 	int	error;
+ 
+-	xfs_ichgtime(ip, XFS_ICHGTIME_CHG);
++	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
+ 
+ 	ASSERT (ip->i_d.di_nlink > 0);
+ 	ip->i_d.di_nlink--;
+@@ -299,7 +299,7 @@ xfs_bumplink(
+ {
+ 	if (ip->i_d.di_nlink >= XFS_MAXLINK)
+ 		return XFS_ERROR(EMLINK);
+-	xfs_ichgtime(ip, XFS_ICHGTIME_CHG);
++	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
+ 
+ 	ASSERT(ip->i_d.di_nlink > 0);
+ 	ip->i_d.di_nlink++;
+diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
+index dc6e4fb..7413a02 100644
+--- a/fs/xfs/xfs_vnodeops.c
++++ b/fs/xfs/xfs_vnodeops.c
+@@ -1391,7 +1391,7 @@ xfs_create(
+ 		ASSERT(error != ENOSPC);
+ 		goto out_trans_abort;
+ 	}
+-	xfs_ichgtime(dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
++	xfs_trans_ichgtime(tp, dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+ 	xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
+ 
+ 	if (is_dir) {
+@@ -1742,7 +1742,7 @@ xfs_remove(
+ 		ASSERT(error != ENOENT);
+ 		goto out_bmap_cancel;
+ 	}
+-	xfs_ichgtime(dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
++	xfs_trans_ichgtime(tp, dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+ 
+ 	if (is_dir) {
+ 		/*
+@@ -1895,7 +1895,7 @@ xfs_link(
+ 					&first_block, &free_list, resblks);
+ 	if (error)
+ 		goto abort_return;
+-	xfs_ichgtime(tdp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
++	xfs_trans_ichgtime(tp, tdp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+ 	xfs_trans_log_inode(tp, tdp, XFS_ILOG_CORE);
+ 
+ 	error = xfs_bumplink(tp, sip);
+@@ -2129,7 +2129,7 @@ xfs_symlink(
+ 					&first_block, &free_list, resblks);
+ 	if (error)
+ 		goto error1;
+-	xfs_ichgtime(dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
++	xfs_trans_ichgtime(tp, dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+ 	xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
+ 
+ 	/*
+@@ -2833,7 +2833,7 @@ xfs_change_file_space(
+ 		if (ip->i_d.di_mode & S_IXGRP)
+ 			ip->i_d.di_mode &= ~S_ISGID;
+ 
+-		xfs_ichgtime(ip, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
++		xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+ 	}
+ 	if (setprealloc)
+ 		ip->i_d.di_flags |= XFS_DIFLAG_PREALLOC;
 -- 
 1.7.1
 
