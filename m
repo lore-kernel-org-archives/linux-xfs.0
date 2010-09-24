@@ -1,29 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8OKGYt2199746 for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 15:16:35 -0500
-Received: from smtp-relay.maven.pl (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0CFAE9C29E
-	for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 13:17:28 -0700 (PDT)
-Received: from smtp-relay.maven.pl (smtp-relay.maven.pl [193.239.45.138]) by
-	cuda.sgi.com with ESMTP id vL4MPvQOGUmEW0XW for
-	<xfs@oss.sgi.com>; Fri, 24 Sep 2010 13:17:28 -0700 (PDT)
-Received: from chello087207113141.chello.pl ([87.207.113.141]:49640
-	helo=tarm.maven.pl)
-	by smtp-relay.maven.pl with esmtpsa (TLSv1:DHE-RSA-AES256-SHA:256)
-	(Exim 4.72) (envelope-from <arekm@maven.pl>) id 1OzEhy-0002LO-Sf
-	for xfs@oss.sgi.com; Fri, 24 Sep 2010 22:17:26 +0200
-Received: from arekm by tarm.maven.pl with local (Exim 4.72)
-	(envelope-from <arekm@maven.pl>) id 1OzEhy-0000Eg-BS
-	for xfs@oss.sgi.com; Fri, 24 Sep 2010 22:17:26 +0200
-From: Arkadiusz Miskiewicz <arekm@maven.pl>
-Subject: Re: [PATCH VER 5] xfsprogs: projid32bit handling (xfs_admin patch)
-Date: Fri, 24 Sep 2010 22:17:25 +0200
-References: <1285332677-13490-1-git-send-email-arekm@maven.pl>
-	<1285332748-13648-1-git-send-email-arekm@maven.pl>
-In-Reply-To: <1285332748-13648-1-git-send-email-arekm@maven.pl>
-MIME-Version: 1.0
-Message-Id: <201009242217.26186.arekm@maven.pl>
+	o8OKl71B200775
+	for <linux-xfs@oss.sgi.com>; Fri, 24 Sep 2010 15:47:07 -0500
+Received: from lo.gmane.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B3A2CE6AFE3
+	for <linux-xfs@oss.sgi.com>; Fri, 24 Sep 2010 14:00:42 -0700 (PDT)
+Received: from lo.gmane.org (lo.gmane.org [80.91.229.12]) by cuda.sgi.com with
+	ESMTP id fDZiy5S8zADXFlTE for <linux-xfs@oss.sgi.com>;
+	Fri, 24 Sep 2010 14:00:42 -0700 (PDT)
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1OzFBW-0007OK-JP
+	for linux-xfs@oss.sgi.com; Fri, 24 Sep 2010 22:47:58 +0200
+Received: from p4fd4a8b5.dip0.t-ipconnect.de ([79.212.168.181])
+	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+	id 1AlnuQ-0007hv-00
+	for <linux-xfs@oss.sgi.com>; Fri, 24 Sep 2010 22:47:58 +0200
+Received: from Manuel.Spam by p4fd4a8b5.dip0.t-ipconnect.de with local (Gmexim
+	0.1 (Debian)) id 1AlnuQ-0007hv-00
+	for <linux-xfs@oss.sgi.com>; Fri, 24 Sep 2010 22:47:58 +0200
+From: Manuel Reimer <Manuel.Spam@nurfuerspam.de>
+Subject: Re: System partially unusable after power loss...
+Date: Fri, 24 Sep 2010 22:44:42 +0200
+Message-ID: <i7j2pl$94a$1@dough.gmane.org>
+References: <i6ttq6$41d$1@dough.gmane.org>
+	<4C928424.1020409@sandeen.net>	<i7b8ao$erp$1@dough.gmane.org>
+	<4C9982F0.6010902@sandeen.net>
+Mime-Version: 1.0
+In-Reply-To: <4C9982F0.6010902@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,79 +36,24 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-T24gRnJpZGF5IDI0IG9mIFNlcHRlbWJlciAyMDEwLCBBcmthZGl1c3ogTWnFm2tpZXdpY3ogd3Jv
-dGU6Cgo+IE5vdGUgLSB0aGVyZSBpcyBubyB4ZnNfYWRtaW4gc3VwcG9ydCBmb3Igc2V0dGluZyBw
-cm9qaWQzMmJpdC4KPiBJdCB3b3VsZCBiZSBhIG1lc3Mgd2hlbiBkb2luZyB0aGF0IGluIHNoZWxs
-IGNvZGUsIHNpbWlsYXIgdG8gdGhpcyBvbmU6Cj4gaHR0cDovL3Bhc3RlYmluLmNvbS9XV3k4bTF4
-Ny4KPiAKPiBoY2ggY29tbWVudHMgb24gdGhpczoKPiAxMjozNCA8IGhjaD4gYXJla206IGRvZXNu
-J3QgbG9vayB0b28gcHJldHR5IGluZGVlZAo+IDEyOjM0IDwgaGNoPiBhcmVrbTogbGV0IG1lIHRo
-aW5rIGFib3V0IGhhY2tpbmcgdXAgc29tZSBzaW1wbGUgQyBjb2RlCj4gICAgICAgICAgICAgIGZv
-ciB0b2dnbGluZyBmZWF0dXJlIGJpdHMKPiAxMjozNSA8IGhjaD4gYWx0ZXJuYXRpdmVseSB3ZSBj
-b3VsZCBqdXN0IGRvIGl0IGluIGtlcm5lbHNwYWNlCj4gMTI6MzUgPCBoY2g+IHdoaWNoIHNlZW1z
-IG1vcmUgdXNlZnVsIGFueXdheSBhcyB3ZSBjb3VsZCBkbyBvbmxpbmUgdXBncmFkZXMKPiAxMjo1
-MyA8IGhjaD4gSSB0aGluayBhZGRpbmcgYW4gaW9jdGwgZm9yIGVuYWJsaW5nIGZlYXR1cmVzIGlz
-IHRoZSBiZXR0ZXIKPiB3YXkgMTI6NTMgPCBoY2g+IGFsdGVybmF0aXZlbHkgd2UgY291bGQgb3Zl
-cmxvYWQgcmVtb3VudCwgYnV0IHRoYXQgd2VlbHMgYQo+IGJpdCBjbHVtc3kKPiAKPiBOb3Qgc3Vy
-ZSBpZiBoY2ggaXMgZ29pbmcgdG8gaW1wbGVtZW50IHRoYXQgb3Igb25seSBzdWdnZXN0aW5nIHRo
-YXQKPiBzb2x1dGlvbi4gQW55d2F5IG5vdyBwcm9qaWQzMmJpdCBjYW4gYmUgZW5hYmxlZCBhdCBt
-a2ZzLnhmcyB0aW1lIChmb3IgbmV3Cj4gZmlsZXN5c3RlbXMpIG9yIGlmIHlvdSBhcmUgc21hcnQg
-ZW5vdWdoIHZpYSB4ZnNfZGIgKGZvciBleGlzdGluZwo+IGZpbGVzeXN0ZW1zKS4KCkJ1dCBpZiBz
-b21lb25lIHJlYWxseSB3YW50cyB4ZnNfYWRtaW4gc3VwcG9ydCBpbiBzaGVsbCB0aGVuIGhlcmUg
-aXQgaXM6CgpkaWZmIC0tZ2l0IGEvZGIveGZzX2FkbWluLnNoIGIvZGIveGZzX2FkbWluLnNoCmlu
-ZGV4IGE3YTNmZGIuLmVjODQyNGQgMTAwNzU1Ci0tLSBhL2RiL3hmc19hZG1pbi5zaAorKysgYi9k
-Yi94ZnNfYWRtaW4uc2gKQEAgLTYsOSArNiw0MyBAQAogc3RhdHVzPTAKIERCX09QVFM9IiIKIFJF
-UEFJUl9PUFRTPSIiCi1VU0FHRT0iVXNhZ2U6IHhmc19hZG1pbiBbLWVmamx1Vl0gWy1jIDB8MV0g
-Wy1MIGxhYmVsXSBbLVUgdXVpZF0gZGV2aWNlIgorVVNBR0U9IlVzYWdlOiB4ZnNfYWRtaW4gWy1l
-ZmpscHVWXSBbLWMgMHwxXSBbLUwgbGFiZWxdIFstVSB1dWlkXSBkZXZpY2UiCiAKLXdoaWxlIGdl
-dG9wdHMgImVmamx1YzpMOlU6ViIgYworc2V0X2ZlYXR1cmVzMl9iaXQoKSB7CisJZGV2aWNlPSIk
-MSIKKwliaXQ9IiQyIgorCisJaWYgWyAteiAiJGRldmljZSIgXTsgdGhlbgorCQllY2hvICIkMDog
-ZGV2aWNlIG5hbWUgaXMgbWlzc2luZyIgPiYyCisJCXJldHVybiAxCisJZmkKKworCWlmIFsgLXog
-IiRiaXQiIF07IHRoZW4KKwkJZWNobyAiJDA6IGJpdHMgdG8gc2V0IGFyZSBtaXNzaW5nIiA+JjIK
-KwkJcmV0dXJuIDEKKwlmaQorCisJIyByZWFkIGN1cnJlbnQgYml0cworCWZlYXR1cmVzMj0kKHhm
-c19kYiAtcCB4ZnNfYWRtaW4gLXggLXIgLWMgJ3NiJyAtYyAncHJpbnQgZmVhdHVyZXMyJyAiJGRl
-dmljZSIgfCBhd2sgJyB7IHByaW50ICQzIH0gJykKKwlpZiBbIC16ICIkZmVhdHVyZXMyIiBdOyB0
-aGVuCisJCWVjaG8gIiQwOiBjYW4ndCByZWFkIGZlYXR1cmVzMiBmcm9tIHN1cGVyYmxvY2shIiA+
-JjIKKwkJcmV0dXJuIDEKKwlmaQorCWJhZF9mZWF0dXJlczI9JCh4ZnNfZGIgLXAgeGZzX2FkbWlu
-IC14IC1yIC1jICdzYicgLWMgJ3ByaW50IGJhZF9mZWF0dXJlczInICIkZGV2aWNlIiB8IGF3ayAn
-IHsgcHJpbnQgJDMgfSAnKQorCWlmIFsgLXogIiRiYWRfZmVhdHVyZXMyIiBdOyB0aGVuCisJCWVj
-aG8gIiQwOiBjYW4ndCByZWFkIGJhZF9mZWF0dXJlczIgZnJvbSBzdXBlcmJsb2NrISIgPiYyCisJ
-CXJldHVybiAxCisJZmkKKworCSMgc2V0IG5ldyBiaXRzCisJZmVhdHVyZXMyPSQoKGZlYXR1cmVz
-MiB8IGJpdCkpCisJYmFkX2ZlYXR1cmVzMj0kKChiYWRfZmVhdHVyZXMyIHwgYml0KSkKKwl4ZnNf
-ZGIgLXAgeGZzX2FkbWluIC14IC1jICdzYicgLWMgIndyaXRlIGZlYXR1cmVzMiAkZmVhdHVyZXMy
-IiAiJGRldmljZSIgJiYgXAorCQl4ZnNfZGIgLXAgeGZzX2FkbWluIC14IC1jICdzYicgLWMgIndy
-aXRlIGJhZF9mZWF0dXJlczIgJGJhZF9mZWF0dXJlczIiICIkZGV2aWNlIgorCXJldHVybiAkPwor
-fQorCit3aGlsZSBnZXRvcHRzICJlZmpsdTNjOkw6VTpWIiBjCiBkbwogCWNhc2UgJGMgaW4KIAlj
-KQlSRVBBSVJfT1BUUz0kUkVQQUlSX09QVFMiIC1jIGxhenljb3VudD0iJE9QVEFSRzs7CkBAIC0x
-Nyw2ICs1MSw3IEBAIGRvCiAJaikJREJfT1BUUz0kREJfT1BUUyIgLWMgJ3ZlcnNpb24gbG9nMici
-OzsKIAlsKQlEQl9PUFRTPSREQl9PUFRTIiAtciAtYyBsYWJlbCI7OwogCUwpCURCX09QVFM9JERC
-X09QVFMiIC1jICdsYWJlbCAiJE9QVEFSRyInIjs7CisJMykJRkVBVFVSRVNfQklUPSIweDIwIjs7
-CiAJdSkJREJfT1BUUz0kREJfT1BUUyIgLXIgLWMgdXVpZCI7OwogCVUpCURCX09QVFM9JERCX09Q
-VFMiIC1jICd1dWlkICIkT1BUQVJHIiciOzsKIAlWKQl4ZnNfZGIgLXAgeGZzX2FkbWluIC1WCkBA
-IC0zMSw3ICs2NiwxMiBAQCBkb25lCiBzZXQgLS0gZXh0cmEgJEAKIHNoaWZ0ICRPUFRJTkQKIGNh
-c2UgJCMgaW4KLQkxKQlpZiBbIC1uICIkREJfT1BUUyIgXQorCTEpCWlmIFsgLW4gIiRGRUFUVVJF
-U19CSVQiIF0KKwkJdGhlbgorCQkJc2V0X2ZlYXR1cmVzMl9iaXQgIiQxIiAiJEZFQVRVUkVTX0JJ
-VCIKKwkJCXN0YXR1cz0kPworCQlmaQorCQlpZiBbIC1uICIkREJfT1BUUyIgXQogCQl0aGVuCiAJ
-CQlldmFsIHhmc19kYiAteCAtcCB4ZnNfYWRtaW4gJERCX09QVFMgJDEKIAkJCXN0YXR1cz0kPwpk
-aWZmIC0tZ2l0IGEvbWFuL21hbjgveGZzX2FkbWluLjggYi9tYW4vbWFuOC94ZnNfYWRtaW4uOApp
-bmRleCA4ZTMxNTViLi42YjcyN2YzIDEwMDY0NAotLS0gYS9tYW4vbWFuOC94ZnNfYWRtaW4uOAor
-KysgYi9tYW4vbWFuOC94ZnNfYWRtaW4uOApAQCAtNCw3ICs0LDcgQEAgeGZzX2FkbWluIFwtIGNo
-YW5nZSBwYXJhbWV0ZXJzIG9mIGFuIFhGUyBmaWxlc3lzdGVtCiAuU0ggU1lOT1BTSVMKIC5CIHhm
-c19hZG1pbgogWwotLkIgXC1lZmx1CisuQiBcLWVmbHUzCiBdIFsKIC5CUiAiXC1jIDAiIHwgMQog
-XSBbCkBAIC01NSw2ICs1NSw5IEBAIFByaW50IHRoZSBjdXJyZW50IGZpbGVzeXN0ZW0gbGFiZWwu
-CiAuQiBcLXUKIFByaW50IHRoZSBjdXJyZW50IGZpbGVzeXN0ZW0gVVVJRCAoVW5pdmVyc2FsbHkg
-VW5pcXVlIElEZW50aWZpZXIpLgogLlRQCisuQiBcLTMKK0VuYWJsZSAzMmJpdCBwcm9qZWN0IGlk
-ZW50aWZpZXIgc3VwcG9ydCAoUFJPSklEMzJCSVQgZmVhdHVyZSkuCisuVFAKIC5CUiAiXC1jIDAi
-IHwgMQogRW5hYmxlICgxKSBvciBkaXNhYmxlICgwKSBsYXp5LWNvdW50ZXJzIGluIHRoZSBmaWxl
-c3lzdGVtLgogVGhpcyBvcGVyYXRpb24gbWF5IHRha2UgcXVpdGUgYSBiaXQgb2YgdGltZSBvbiBs
-YXJnZSBmaWxlc3lzdGVtcyBhcyB0aGUKCj4gCj4gU28gaWYgdGhlcmUgYXJlIG5vIG5ldyBjb21t
-ZW50cyBJJ20gYXNraW5nIGZvciBhIG1lcmdlIGZvciBhbGwgMyBwYXRjaGVzLgo+IFRoYW5rcyEK
-Ci0tIApBcmthZGl1c3ogTWnFm2tpZXdpY3ogICAgICAgIFBMRC9MaW51eCBUZWFtCmFyZWttIC8g
-bWF2ZW4ucGwgICAgICAgICAgICBodHRwOi8vZnRwLnBsZC1saW51eC5vcmcvCgpfX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhm
-c0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+Eric Sandeen wrote:
+> I don't know what to make of that; if you mean the openssl files got replaced
+> by older versions, it sounds very unlikely.
+
+No. What I mean is, that xfs_repair seems to have restored an old 
+version to "/lost+found" without restoring the file name for it.
+
+Yours
+
+Manuel
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
