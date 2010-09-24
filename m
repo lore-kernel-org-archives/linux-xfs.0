@@ -1,28 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8OCUhvj180938 for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 07:30:43 -0500
+	o8OCUY7n180842 for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 07:30:34 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E4ED41BAB3EB
-	for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 05:31:37 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
-	[150.101.137.97]) by cuda.sgi.com with ESMTP id
-	DmOMlBkVIdUd9n6B for <xfs@oss.sgi.com>;
-	Fri, 24 Sep 2010 05:31:37 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A413914FBDBB
+	for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 05:44:07 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
+	[150.101.137.98]) by cuda.sgi.com with ESMTP id
+	zBpoRNxsA8s0ehHO for <xfs@oss.sgi.com>;
+	Fri, 24 Sep 2010 05:44:07 -0700 (PDT)
 Received: from dastard (unverified [121.44.66.70])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	40309808-1927428
-	for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 22:01:36 +0930 (CST)
+	40432966-1927428
+	for <xfs@oss.sgi.com>; Fri, 24 Sep 2010 22:01:26 +0930 (CST)
 Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1Oz7R8-0007VM-TF
-	for xfs@oss.sgi.com; Fri, 24 Sep 2010 22:31:34 +1000
+	(envelope-from <dave@fromorbit.com>) id 1Oz7Qy-0007UV-1x
+	for xfs@oss.sgi.com; Fri, 24 Sep 2010 22:31:24 +1000
 Received: from dave by disturbed with local (Exim 4.72)
-	(envelope-from <dave@disturbed.disaster>) id 1Oz7R4-00060a-Ly
-	for xfs@oss.sgi.com; Fri, 24 Sep 2010 22:31:30 +1000
+	(envelope-from <dave@disturbed.disaster>) id 1Oz7Qt-0005zu-NP
+	for xfs@oss.sgi.com; Fri, 24 Sep 2010 22:31:19 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 16/18] xfs: serialise inode reclaim within an AG
-Date: Fri, 24 Sep 2010 22:31:14 +1000
-Message-Id: <1285331476-23015-17-git-send-email-david@fromorbit.com>
+Subject: [PATCH 02/18] xfs: reduce the number of CIL lock round trips during
+	commit
+Date: Fri, 24 Sep 2010 22:31:00 +1000
+Message-Id: <1285331476-23015-3-git-send-email-david@fromorbit.com>
 In-Reply-To: <1285331476-23015-1-git-send-email-david@fromorbit.com>
 References: <1285331476-23015-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -42,110 +43,298 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Memory reclaim via shrinkers has a terrible habit of having N+M
-concurrent shrinker executions (N = num CPUs, M = num kswapds) all
-trying to shrink the same cache. When the cache they are all working
-on is protected by a single spinlock, massive contention an
-slowdowns occur.
+When commiting a transaction, we do a lock CIL state lock round trip
+on every single log vector we insert into the CIL. This is resulting
+in the lock being as hot as the inode and dcache locks on 8-way
+create workloads. Rework the insertion loops to bring the number
+of lock round trips to one per transaction for log vectors, and one
+more do the busy extents.
 
-Wrap the per-ag inode caches with a reclaim mutex to serialise
-reclaim access to the AG. This will block concurrent reclaim in each
-AG but still allow reclaim to scan multiple AGs concurrently. Allow
-shrinkers to move on to the next AG if it can't get the lock, and if
-we can't get any AG, then start blocking on locks.
+Also change the allocation of the log vector buffer not to zero it
+as we copy over the entire allocated buffer anyway.
 
-To prevent reclaimers from continually scanning the same inodes in
-each AG, add a cursor that tracks where the last reclaim got up to
-and start from that point on the next reclaim. This should avoid
-only ever scanning a small number of inodes at the satart of each AG
-and not making progress. If we have a non-shrinker based reclaim
-pass, ignore the cursor and reset it to zero once we are done.
+This patch also includes a structural cleanup to the CIL item
+insertion provided by Christoph Hellwig.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Alex Elder <aelder@sgi.com>
 ---
- fs/xfs/linux-2.6/xfs_sync.c |   24 ++++++++++++++++++++++++
- fs/xfs/xfs_ag.h             |    2 ++
- fs/xfs/xfs_mount.c          |    1 +
- 3 files changed, 27 insertions(+), 0 deletions(-)
+ fs/xfs/xfs_log_cil.c |  232 +++++++++++++++++++++++++++-----------------------
+ 1 files changed, 127 insertions(+), 105 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
-index c0c09e9..7d6f312 100644
---- a/fs/xfs/linux-2.6/xfs_sync.c
-+++ b/fs/xfs/linux-2.6/xfs_sync.c
-@@ -828,7 +828,9 @@ xfs_reclaim_inodes_ag(
- 	int			error = 0;
- 	int			last_error = 0;
- 	xfs_agnumber_t		ag;
-+	int			trylock = !!(flags & SYNC_TRYLOCK);
- 
-+restart:
- 	ag = 0;
- 	while ((pag = xfs_perag_get_tag(mp, ag, XFS_ICI_RECLAIM_TAG))) {
- 		unsigned long	first_index = 0;
-@@ -837,6 +839,17 @@ xfs_reclaim_inodes_ag(
- 
- 		ag = pag->pag_agno + 1;
- 
-+		if (!mutex_trylock(&pag->pag_ici_reclaim_lock)) {
-+			if (trylock) {
-+				trylock++;
-+				continue;
-+			}
-+			mutex_lock(&pag->pag_ici_reclaim_lock);
-+		}
-+
-+		if (trylock)
-+			first_index = pag->pag_ici_reclaim_cursor;
-+
- 		do {
- 			struct xfs_inode *batch[XFS_LOOKUP_BATCH];
- 			int	i;
-@@ -889,8 +902,19 @@ xfs_reclaim_inodes_ag(
- 
- 		} while (nr_found && !done && *nr_to_scan > 0);
- 
-+		pag->pag_ici_reclaim_cursor = (done || !trylock) ? 0 : first_index;
-+		mutex_unlock(&pag->pag_ici_reclaim_lock);
- 		xfs_perag_put(pag);
- 	}
-+
-+	/*
-+	 * if we skipped any AG, and we still have scan count remaining, do
-+	 * another pass this time waiting on the reclaim locks.
-+	 */
-+	if (trylock > 1 && *nr_to_scan) {
-+		trylock = 0;
-+		goto restart;
-+	}
- 	return XFS_ERROR(last_error);
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index 7e206fc..23d6ceb 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -146,102 +146,6 @@ xlog_cil_init_post_recovery(
  }
  
-diff --git a/fs/xfs/xfs_ag.h b/fs/xfs/xfs_ag.h
-index 51c42c2..baeec83 100644
---- a/fs/xfs/xfs_ag.h
-+++ b/fs/xfs/xfs_ag.h
-@@ -230,6 +230,8 @@ typedef struct xfs_perag {
- 	rwlock_t	pag_ici_lock;	/* incore inode lock */
- 	struct radix_tree_root pag_ici_root;	/* incore inode cache root */
- 	int		pag_ici_reclaimable;	/* reclaimable inodes */
-+	struct mutex	pag_ici_reclaim_lock;	/* serialisation point */
-+	unsigned long	pag_ici_reclaim_cursor;	/* reclaim restart point */
+ /*
+- * Insert the log item into the CIL and calculate the difference in space
+- * consumed by the item. Add the space to the checkpoint ticket and calculate
+- * if the change requires additional log metadata. If it does, take that space
+- * as well. Remove the amount of space we addded to the checkpoint ticket from
+- * the current transaction ticket so that the accounting works out correctly.
+- *
+- * If this is the first time the item is being placed into the CIL in this
+- * context, pin it so it can't be written to disk until the CIL is flushed to
+- * the iclog and the iclog written to disk.
+- */
+-static void
+-xlog_cil_insert(
+-	struct log		*log,
+-	struct xlog_ticket	*ticket,
+-	struct xfs_log_item	*item,
+-	struct xfs_log_vec	*lv)
+-{
+-	struct xfs_cil		*cil = log->l_cilp;
+-	struct xfs_log_vec	*old = lv->lv_item->li_lv;
+-	struct xfs_cil_ctx	*ctx = cil->xc_ctx;
+-	int			len;
+-	int			diff_iovecs;
+-	int			iclog_space;
+-
+-	if (old) {
+-		/* existing lv on log item, space used is a delta */
+-		ASSERT(!list_empty(&item->li_cil));
+-		ASSERT(old->lv_buf && old->lv_buf_len && old->lv_niovecs);
+-
+-		len = lv->lv_buf_len - old->lv_buf_len;
+-		diff_iovecs = lv->lv_niovecs - old->lv_niovecs;
+-		kmem_free(old->lv_buf);
+-		kmem_free(old);
+-	} else {
+-		/* new lv, must pin the log item */
+-		ASSERT(!lv->lv_item->li_lv);
+-		ASSERT(list_empty(&item->li_cil));
+-
+-		len = lv->lv_buf_len;
+-		diff_iovecs = lv->lv_niovecs;
+-		IOP_PIN(lv->lv_item);
+-
+-	}
+-	len += diff_iovecs * sizeof(xlog_op_header_t);
+-
+-	/* attach new log vector to log item */
+-	lv->lv_item->li_lv = lv;
+-
+-	spin_lock(&cil->xc_cil_lock);
+-	list_move_tail(&item->li_cil, &cil->xc_cil);
+-	ctx->nvecs += diff_iovecs;
+-
+-	/*
+-	 * If this is the first time the item is being committed to the CIL,
+-	 * store the sequence number on the log item so we can tell
+-	 * in future commits whether this is the first checkpoint the item is
+-	 * being committed into.
+-	 */
+-	if (!item->li_seq)
+-		item->li_seq = ctx->sequence;
+-
+-	/*
+-	 * Now transfer enough transaction reservation to the context ticket
+-	 * for the checkpoint. The context ticket is special - the unit
+-	 * reservation has to grow as well as the current reservation as we
+-	 * steal from tickets so we can correctly determine the space used
+-	 * during the transaction commit.
+-	 */
+-	if (ctx->ticket->t_curr_res == 0) {
+-		/* first commit in checkpoint, steal the header reservation */
+-		ASSERT(ticket->t_curr_res >= ctx->ticket->t_unit_res + len);
+-		ctx->ticket->t_curr_res = ctx->ticket->t_unit_res;
+-		ticket->t_curr_res -= ctx->ticket->t_unit_res;
+-	}
+-
+-	/* do we need space for more log record headers? */
+-	iclog_space = log->l_iclog_size - log->l_iclog_hsize;
+-	if (len > 0 && (ctx->space_used / iclog_space !=
+-				(ctx->space_used + len) / iclog_space)) {
+-		int hdrs;
+-
+-		hdrs = (len + iclog_space - 1) / iclog_space;
+-		/* need to take into account split region headers, too */
+-		hdrs *= log->l_iclog_hsize + sizeof(struct xlog_op_header);
+-		ctx->ticket->t_unit_res += hdrs;
+-		ctx->ticket->t_curr_res += hdrs;
+-		ticket->t_curr_res -= hdrs;
+-		ASSERT(ticket->t_curr_res >= len);
+-	}
+-	ticket->t_curr_res -= len;
+-	ctx->space_used += len;
+-
+-	spin_unlock(&cil->xc_cil_lock);
+-}
+-
+-/*
+  * Format log item into a flat buffers
+  *
+  * For delayed logging, we need to hold a formatted buffer containing all the
+@@ -286,7 +190,7 @@ xlog_cil_format_items(
+ 			len += lv->lv_iovecp[index].i_len;
  
- 	/* for rcu-safe freeing */
- 	struct rcu_head	rcu_head;
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index d66e87c..59859c3 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -477,6 +477,7 @@ xfs_initialize_perag(
- 		pag->pag_agno = index;
- 		pag->pag_mount = mp;
- 		rwlock_init(&pag->pag_ici_lock);
-+		mutex_init(&pag->pag_ici_reclaim_lock);
- 		INIT_RADIX_TREE(&pag->pag_ici_root, GFP_ATOMIC);
+ 		lv->lv_buf_len = len;
+-		lv->lv_buf = kmem_zalloc(lv->lv_buf_len, KM_SLEEP|KM_NOFS);
++		lv->lv_buf = kmem_alloc(lv->lv_buf_len, KM_SLEEP|KM_NOFS);
+ 		ptr = lv->lv_buf;
  
- 		if (radix_tree_preload(GFP_NOFS))
+ 		for (index = 0; index < lv->lv_niovecs; index++) {
+@@ -300,21 +204,136 @@ xlog_cil_format_items(
+ 	}
+ }
+ 
++/*
++ * Prepare the log item for insertion into the CIL. Calculate the difference in
++ * log space and vectors it will consume, and if it is a new item pin it as
++ * well.
++ */
++STATIC void
++xfs_cil_prepare_item(
++	struct log		*log,
++	struct xfs_log_vec	*lv,
++	int			*len,
++	int			*diff_iovecs)
++{
++	struct xfs_log_vec	*old = lv->lv_item->li_lv;
++
++	if (old) {
++		/* existing lv on log item, space used is a delta */
++		ASSERT(!list_empty(&lv->lv_item->li_cil));
++		ASSERT(old->lv_buf && old->lv_buf_len && old->lv_niovecs);
++
++		*len += lv->lv_buf_len - old->lv_buf_len;
++		*diff_iovecs += lv->lv_niovecs - old->lv_niovecs;
++		kmem_free(old->lv_buf);
++		kmem_free(old);
++	} else {
++		/* new lv, must pin the log item */
++		ASSERT(!lv->lv_item->li_lv);
++		ASSERT(list_empty(&lv->lv_item->li_cil));
++
++		*len += lv->lv_buf_len;
++		*diff_iovecs += lv->lv_niovecs;
++		IOP_PIN(lv->lv_item);
++
++	}
++
++	/* attach new log vector to log item */
++	lv->lv_item->li_lv = lv;
++
++	/*
++	 * If this is the first time the item is being committed to the
++	 * CIL, store the sequence number on the log item so we can
++	 * tell in future commits whether this is the first checkpoint
++	 * the item is being committed into.
++	 */
++	if (!lv->lv_item->li_seq)
++		lv->lv_item->li_seq = log->l_cilp->xc_ctx->sequence;
++}
++
++/*
++ * Insert the log items into the CIL and calculate the difference in space
++ * consumed by the item. Add the space to the checkpoint ticket and calculate
++ * if the change requires additional log metadata. If it does, take that space
++ * as well. Remove the amount of space we addded to the checkpoint ticket from
++ * the current transaction ticket so that the accounting works out correctly.
++ */
+ static void
+ xlog_cil_insert_items(
+ 	struct log		*log,
+ 	struct xfs_log_vec	*log_vector,
+-	struct xlog_ticket	*ticket,
+-	xfs_lsn_t		*start_lsn)
++	struct xlog_ticket	*ticket)
+ {
+-	struct xfs_log_vec *lv;
+-
+-	if (start_lsn)
+-		*start_lsn = log->l_cilp->xc_ctx->sequence;
++	struct xfs_cil		*cil = log->l_cilp;
++	struct xfs_cil_ctx	*ctx = cil->xc_ctx;
++	struct xfs_log_vec	*lv;
++	int			len = 0;
++	int			diff_iovecs = 0;
++	int			iclog_space;
+ 
+ 	ASSERT(log_vector);
++
++	/*
++	 * Do all the accounting aggregation and switching of log vectors
++	 * around in a separate loop to the insertion of items into the CIL.
++	 * Then we can do a separate loop to update the CIL within a single
++	 * lock/unlock pair. This reduces the number of round trips on the CIL
++	 * lock from O(nr_logvectors) to O(1) and greatly reduces the overall
++	 * hold time for the transaction commit.
++	 *
++	 * If this is the first time the item is being placed into the CIL in
++	 * this context, pin it so it can't be written to disk until the CIL is
++	 * flushed to the iclog and the iclog written to disk.
++	 *
++	 * We can do this safely because the context can't checkpoint until we
++	 * are done so it doesn't matter exactly how we update the CIL.
++	 */
++	for (lv = log_vector; lv; lv = lv->lv_next)
++		xfs_cil_prepare_item(log, lv, &len, &diff_iovecs);
++
++	/* account for space used by new iovec headers  */
++	len += diff_iovecs * sizeof(xlog_op_header_t);
++
++	spin_lock(&cil->xc_cil_lock);
++
++	/* move the items to the tail of the CIL */
+ 	for (lv = log_vector; lv; lv = lv->lv_next)
+-		xlog_cil_insert(log, ticket, lv->lv_item, lv);
++		list_move_tail(&lv->lv_item->li_cil, &cil->xc_cil);
++
++	ctx->nvecs += diff_iovecs;
++
++	/*
++	 * Now transfer enough transaction reservation to the context ticket
++	 * for the checkpoint. The context ticket is special - the unit
++	 * reservation has to grow as well as the current reservation as we
++	 * steal from tickets so we can correctly determine the space used
++	 * during the transaction commit.
++	 */
++	if (ctx->ticket->t_curr_res == 0) {
++		/* first commit in checkpoint, steal the header reservation */
++		ASSERT(ticket->t_curr_res >= ctx->ticket->t_unit_res + len);
++		ctx->ticket->t_curr_res = ctx->ticket->t_unit_res;
++		ticket->t_curr_res -= ctx->ticket->t_unit_res;
++	}
++
++	/* do we need space for more log record headers? */
++	iclog_space = log->l_iclog_size - log->l_iclog_hsize;
++	if (len > 0 && (ctx->space_used / iclog_space !=
++				(ctx->space_used + len) / iclog_space)) {
++		int hdrs;
++
++		hdrs = (len + iclog_space - 1) / iclog_space;
++		/* need to take into account split region headers, too */
++		hdrs *= log->l_iclog_hsize + sizeof(struct xlog_op_header);
++		ctx->ticket->t_unit_res += hdrs;
++		ctx->ticket->t_curr_res += hdrs;
++		ticket->t_curr_res -= hdrs;
++		ASSERT(ticket->t_curr_res >= len);
++	}
++	ticket->t_curr_res -= len;
++	ctx->space_used += len;
++
++	spin_unlock(&cil->xc_cil_lock);
+ }
+ 
+ static void
+@@ -638,7 +657,10 @@ xfs_log_commit_cil(
+ 
+ 	/* lock out background commit */
+ 	down_read(&log->l_cilp->xc_ctx_lock);
+-	xlog_cil_insert_items(log, log_vector, tp->t_ticket, commit_lsn);
++	if (commit_lsn)
++		*commit_lsn = log->l_cilp->xc_ctx->sequence;
++
++	xlog_cil_insert_items(log, log_vector, tp->t_ticket);
+ 
+ 	/* check we didn't blow the reservation */
+ 	if (tp->t_ticket->t_curr_res < 0)
 -- 
 1.7.1
 
