@@ -1,25 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8PEDHUN236778 for <xfs@oss.sgi.com>; Sat, 25 Sep 2010 09:13:17 -0500
-Received: from smtp3-g21.free.fr (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 55FAC9DBB2
-	for <xfs@oss.sgi.com>; Sat, 25 Sep 2010 07:14:11 -0700 (PDT)
-Received: from smtp3-g21.free.fr (smtp3-g21.free.fr [212.27.42.3]) by
-	cuda.sgi.com with ESMTP id aM51TwuLi0wgiuZ4 for
-	<xfs@oss.sgi.com>; Sat, 25 Sep 2010 07:14:11 -0700 (PDT)
-Date: Sat, 25 Sep 2010 16:13:57 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: Problem with file system on iSCSI FileIO
-Message-ID: <20100925161357.0a30e20a@galadriel.home>
-In-Reply-To: <4C9D0E3B.20007@open-e.com>
+	o8PEHst9236938 for <xfs@oss.sgi.com>; Sat, 25 Sep 2010 09:17:55 -0500
+Received: from mail-iw0-f181.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D5B251D93F58
+	for <xfs@oss.sgi.com>; Sat, 25 Sep 2010 07:18:50 -0700 (PDT)
+Received: from mail-iw0-f181.google.com (mail-iw0-f181.google.com
+	[209.85.214.181]) by cuda.sgi.com with ESMTP id
+	54xBokomHEWnYKsl for <xfs@oss.sgi.com>;
+	Sat, 25 Sep 2010 07:18:50 -0700 (PDT)
+Received: by iwn39 with SMTP id 39so3101070iwn.26
+	for <xfs@oss.sgi.com>; Sat, 25 Sep 2010 07:18:50 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20100925161357.0a30e20a@galadriel.home>
 References: <4C9B5786.4010205@open-e.com> <20100923143221.GA1989@infradead.org>
 	<4C9B6B27.5050606@open-e.com>
 	<20100924075505.GA24664@infradead.org>
 	<AANLkTimXCo0YtjmdPo9RvX=KfQCjJkkL9hQr3h63UJX7@mail.gmail.com>
 	<20100924201807.16460606@galadriel.home>
 	<4C9D0E3B.20007@open-e.com>
-Mime-Version: 1.0
+	<20100925161357.0a30e20a@galadriel.home>
+Date: Sat, 25 Sep 2010 07:18:50 -0700
+Message-ID: <AANLkTinJ+V7-yuqOM2EDfS243h-0HMm9WEgGoTySmyWe@mail.gmail.com>
+Subject: Re: Problem with file system on iSCSI FileIO
+From: Richard Sharpe <realrichardsharpe@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,28 +36,28 @@ Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: ryszard.stawiarski@open-e.com
-Cc: Richard Sharpe <realrichardsharpe@gmail.com>, =?UTF-8?Q?=C5=81ukasz?= Wittig <lukasz.wittig@open-e.com>, Artur Piechocki <artur.piechocki@open-e.com>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Nowakowski <slawomir.nowakowski@open-e.com>, Slawomir@oss.sgi.com
+To: Emmanuel Florac <eflorac@intellique.com>
+Cc: Vladislav Bolkhovitin <vst@vlnb.net>, ryszard.stawiarski@open-e.com, =?ISO-8859-2?Q?=A3ukasz_Wittig?= <lukasz.wittig@open-e.com>, Artur Piechocki <artur.piechocki@open-e.com>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Slawomir Nowakowski <slawomir.nowakowski@open-e.com>
 
-Le Fri, 24 Sep 2010 22:46:51 +0200 vous =E9criviez:
+On Sat, Sep 25, 2010 at 7:13 AM, Emmanuel Florac <eflorac@intellique.com> w=
+rote:
+> Le Fri, 24 Sep 2010 22:46:51 +0200 vous =E9criviez:
+>
+>> I C that there is no problem with IETD ;-)
+>> But we need to stay focused on SCST in this case :-)
+>>
+>
+> Yes but you'd need to get sure that it's not scst that breaks the
+> filesystem. My guess : it actually is. *I personnally didn't find SCST
+> of acceptable production quality.*
 
-> I C that there is no problem with IETD ;-)
-> But we need to stay focused on SCST in this case :-)
-> =
-
-
-Yes but you'd need to get sure that it's not scst that breaks the
-filesystem. My guess : it actually is. I personnally didn't find SCST
-of acceptable production quality.
+Great call there ... I see that Data Domain, Fusion IO and others have
+ignored your sage advice and suffered the financial consequences.
 
 -- =
 
-------------------------------------------------------------------------
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
-------------------------------------------------------------------------
+Regards,
+Richard Sharpe
 
 _______________________________________________
 xfs mailing list
