@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8Q05bar259180 for <xfs@oss.sgi.com>; Sat, 25 Sep 2010 19:05:38 -0500
+	o8PNn2wV258678 for <xfs@oss.sgi.com>; Sat, 25 Sep 2010 18:49:02 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E7C439E68A
-	for <xfs@oss.sgi.com>; Sat, 25 Sep 2010 17:06:34 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 780101D9483A
+	for <xfs@oss.sgi.com>; Sat, 25 Sep 2010 16:49:31 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id GNqo4eTBfVSRj4li for
-	<xfs@oss.sgi.com>; Sat, 25 Sep 2010 17:06:34 -0700 (PDT)
-Date: Sat, 25 Sep 2010 20:06:34 -0400
+	by cuda.sgi.com with ESMTP id iDWF2qpoFpp1Stk5 for
+	<xfs@oss.sgi.com>; Sat, 25 Sep 2010 16:49:31 -0700 (PDT)
+Date: Sat, 25 Sep 2010 19:49:29 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH VER 5] xfsprogs: projid32bit handling
-Message-ID: <20100926000634.GB18984@infradead.org>
-References: <1285332677-13490-1-git-send-email-arekm@maven.pl>
-	<1285332748-13648-1-git-send-email-arekm@maven.pl>
+Subject: Re: [PATCH 16/18] xfs: serialise inode reclaim within an AG
+Message-ID: <20100925234929.GB23975@infradead.org>
+References: <1285331476-23015-1-git-send-email-david@fromorbit.com>
+	<1285331476-23015-17-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1285332748-13648-1-git-send-email-arekm@maven.pl>
+In-Reply-To: <1285331476-23015-17-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,19 +29,72 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Arkadiusz Mi??kiewicz <arekm@maven.pl>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, Sep 24, 2010 at 02:52:28PM +0200, Arkadiusz Mi??kiewicz wrote:
-> Add projid32bit handling to userspace. mkfs.xfs is able to enable this
-> feature for new filesystems. xfs_db knows what projid_lo/hi are.
-> 
-> Signed-off-by: Arkadiusz Mi??kiewicz <arekm@maven.pl>
+I really don't like the way the "trylock" variable is overloaded here.
+Just add a new skipped variable for restarting the scan and otherwise
+use (flags & SYNC_TRYLOCK) directly.
 
-Looks good,
+> +	int			trylock = !!(flags & SYNC_TRYLOCK);
+>  
+> +restart:
+>  	ag = 0;
+>  	while ((pag = xfs_perag_get_tag(mp, ag, XFS_ICI_RECLAIM_TAG))) {
+>  		unsigned long	first_index = 0;
+> @@ -837,6 +839,17 @@ xfs_reclaim_inodes_ag(
+>  
+>  		ag = pag->pag_agno + 1;
+>  
+> +		if (!mutex_trylock(&pag->pag_ici_reclaim_lock)) {
+> +			if (trylock) {
+> +				trylock++;
+> +				continue;
+> +			}
+> +			mutex_lock(&pag->pag_ici_reclaim_lock);
+> +		}
+> +
+> +		if (trylock)
+> +			first_index = pag->pag_ici_reclaim_cursor;
 
+Also this could be made more clear by:
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+	if (flags & SYNC_TRYLOCK) {
+		if (!mutex_trylock(&pag->pag_ici_reclaim_lock)) {
+			skipped++;
+			continue;
+		}
+
+		first_index = pag->pag_ici_reclaim_cursor;
+	} else {
+		mutex_lock(&pag->pag_ici_reclaim_lock);
+	}
+
+> +
+>  		do {
+>  			struct xfs_inode *batch[XFS_LOOKUP_BATCH];
+>  			int	i;
+> @@ -889,8 +902,19 @@ xfs_reclaim_inodes_ag(
+>  
+>  		} while (nr_found && !done && *nr_to_scan > 0);
+>  
+> +		pag->pag_ici_reclaim_cursor = (done || !trylock) ? 0 : first_index;
+
+		if ((flags & SYNC_TRYLOCK) && !done)
+			pag->pag_ici_reclaim_cursor = first_index;
+		else
+			pag->pag_ici_reclaim_cursor = 0;
+
+> +	/*
+> +	 * if we skipped any AG, and we still have scan count remaining, do
+> +	 * another pass this time waiting on the reclaim locks.
+> +	 */
+> +	if (trylock > 1 && *nr_to_scan) {
+> +		trylock = 0;
+> +		goto restart;
+> +	}
+
+In addition to waiting on the lock this also ignores the reclaim cursor.
 
 _______________________________________________
 xfs mailing list
