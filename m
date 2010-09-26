@@ -1,29 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8Q6D7md012869 for <xfs@oss.sgi.com>; Sun, 26 Sep 2010 01:13:07 -0500
-Received: from smtp-relay.maven.pl (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4EB4F9E9AB
-	for <xfs@oss.sgi.com>; Sat, 25 Sep 2010 23:14:01 -0700 (PDT)
-Received: from smtp-relay.maven.pl (smtp-relay.maven.pl [193.239.45.138]) by
-	cuda.sgi.com with ESMTP id GD5RQ1mVY8fvrq9i for
-	<xfs@oss.sgi.com>; Sat, 25 Sep 2010 23:14:01 -0700 (PDT)
-Received: from chello087207113141.chello.pl ([87.207.113.141]:36715
-	helo=tarm.maven.pl)
-	by smtp-relay.maven.pl with esmtpsa (TLSv1:DHE-RSA-AES256-SHA:256)
-	(Exim 4.72) (envelope-from <arekm@maven.pl>) id 1OzkUq-0006CH-Oq
-	for xfs@oss.sgi.com; Sun, 26 Sep 2010 08:14:01 +0200
-Received: from arekm by tarm.maven.pl with local (Exim 4.72)
-	(envelope-from <arekm@maven.pl>) id 1OzkUq-0008M5-54
-	for xfs@oss.sgi.com; Sun, 26 Sep 2010 08:14:00 +0200
-From: Arkadiusz Miskiewicz <arekm@maven.pl>
-Subject: Re: [PATCH VER 6] xfsprogs: projid32bit handling
-Date: Sun, 26 Sep 2010 08:13:59 +0200
-References: <1285481418-31739-1-git-send-email-arekm@maven.pl>
-	<1285481438-31799-1-git-send-email-arekm@maven.pl>
-In-Reply-To: <1285481438-31799-1-git-send-email-arekm@maven.pl>
+	o8QMFwoG126624 for <xfs@oss.sgi.com>; Sun, 26 Sep 2010 17:15:58 -0500
+Received: from mo111.createsend.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B8BB4134D4E1
+	for <xfs@oss.sgi.com>; Sun, 26 Sep 2010 15:29:47 -0700 (PDT)
+Received: from mo111.createsend.com (mo111.createsend.com [206.72.127.111]) by
+	cuda.sgi.com with ESMTP id Z4DHRBZewiPFRFFQ for
+	<xfs@oss.sgi.com>; Sun, 26 Sep 2010 15:29:47 -0700 (PDT)
+Received: by mo111.createsend.com (PowerMTA(TM) v3.5r15) id hjv35e0vne0j for
+	<xfs@oss.sgi.com>; Mon, 27 Sep 2010 08:16:50 +1000 (envelope-from
+	<SkypeSupport-akdikt1kljyiijkk1r@createsend1.com>)
+From: "Skype Support" <newsletter@skype-technologies.com>
+Date: Mon, 27 Sep 2010 08:12:43 +1000
+Subject: Skype Upgrade Notification - Talk More For Free
 MIME-Version: 1.0
-Message-Id: <201009260814.00111.arekm@maven.pl>
+Message-ID: <cm.akdikt.kljyiijkk.r@createsend1.com>
+Reply-To: newsletter@skype-technologies.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,66 +25,43 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-T24gU3VuZGF5IDI2IG9mIFNlcHRlbWJlciAyMDEwLCBBcmthZGl1c3ogTWnFm2tpZXdpY3ogd3Jv
-dGU6Cj4gQWRkIHByb2ppZDMyYml0IGhhbmRsaW5nIHRvIHVzZXJzcGFjZS4gbWtmcy54ZnMgaXMg
-YWJsZSB0byBlbmFibGUgdGhpcwo+IGZlYXR1cmUgZm9yIG5ldyBmaWxlc3lzdGVtcy4geGZzX2Ri
-IGtub3dzIHdoYXQgcHJvamlkX2xvL2hpIGFyZS4KCi4uLiBhbmQgeGZzX2FkbWluIGlmIHNvbWVv
-bmUgbmVlZHMgaXQgYW55d2F5LgoKTmV3czoKLSB1c2UgMHg4MCBpbnN0ZWFkIG9mIDB4MjAgZm9y
-IFBST0pJRDMyQklUIHN1cGVyYmxvY2sgYml0IChhcyAweDIwCiAgYW5kIDB4NDAgYXJlIHJlc2Vy
-dmVkKQoKZGlmZiAtLWdpdCBhL2RiL3hmc19hZG1pbi5zaCBiL2RiL3hmc19hZG1pbi5zaAppbmRl
-eCBhN2EzZmRiLi5lYzg0MjRkIDEwMDc1NQotLS0gYS9kYi94ZnNfYWRtaW4uc2gKKysrIGIvZGIv
-eGZzX2FkbWluLnNoCkBAIC02LDkgKzYsNDMgQEAKIHN0YXR1cz0wCiBEQl9PUFRTPSIiCiBSRVBB
-SVJfT1BUUz0iIgotVVNBR0U9IlVzYWdlOiB4ZnNfYWRtaW4gWy1lZmpsdVZdIFstYyAwfDFdIFst
-TCBsYWJlbF0gWy1VIHV1aWRdIGRldmljZSIKK1VTQUdFPSJVc2FnZTogeGZzX2FkbWluIFstZWZq
-bHB1Vl0gWy1jIDB8MV0gWy1MIGxhYmVsXSBbLVUgdXVpZF0gZGV2aWNlIgogCi13aGlsZSBnZXRv
-cHRzICJlZmpsdWM6TDpVOlYiIGMKK3NldF9mZWF0dXJlczJfYml0KCkgeworCWRldmljZT0iJDEi
-CisJYml0PSIkMiIKKworCWlmIFsgLXogIiRkZXZpY2UiIF07IHRoZW4KKwkJZWNobyAiJDA6IGRl
-dmljZSBuYW1lIGlzIG1pc3NpbmciID4mMgorCQlyZXR1cm4gMQorCWZpCisKKwlpZiBbIC16ICIk
-Yml0IiBdOyB0aGVuCisJCWVjaG8gIiQwOiBiaXRzIHRvIHNldCBhcmUgbWlzc2luZyIgPiYyCisJ
-CXJldHVybiAxCisJZmkKKworCSMgcmVhZCBjdXJyZW50IGJpdHMKKwlmZWF0dXJlczI9JCh4ZnNf
-ZGIgLXAgeGZzX2FkbWluIC14IC1yIC1jICdzYicgLWMgJ3ByaW50IGZlYXR1cmVzMicgIiRkZXZp
-Y2UiIHwgYXdrICcgeyBwcmludCAkMyB9ICcpCisJaWYgWyAteiAiJGZlYXR1cmVzMiIgXTsgdGhl
-bgorCQllY2hvICIkMDogY2FuJ3QgcmVhZCBmZWF0dXJlczIgZnJvbSBzdXBlcmJsb2NrISIgPiYy
-CisJCXJldHVybiAxCisJZmkKKwliYWRfZmVhdHVyZXMyPSQoeGZzX2RiIC1wIHhmc19hZG1pbiAt
-eCAtciAtYyAnc2InIC1jICdwcmludCBiYWRfZmVhdHVyZXMyJyAiJGRldmljZSIgfCBhd2sgJyB7
-IHByaW50ICQzIH0gJykKKwlpZiBbIC16ICIkYmFkX2ZlYXR1cmVzMiIgXTsgdGhlbgorCQllY2hv
-ICIkMDogY2FuJ3QgcmVhZCBiYWRfZmVhdHVyZXMyIGZyb20gc3VwZXJibG9jayEiID4mMgorCQly
-ZXR1cm4gMQorCWZpCisKKwkjIHNldCBuZXcgYml0cworCWZlYXR1cmVzMj0kKChmZWF0dXJlczIg
-fCBiaXQpKQorCWJhZF9mZWF0dXJlczI9JCgoYmFkX2ZlYXR1cmVzMiB8IGJpdCkpCisJeGZzX2Ri
-IC1wIHhmc19hZG1pbiAteCAtYyAnc2InIC1jICJ3cml0ZSBmZWF0dXJlczIgJGZlYXR1cmVzMiIg
-IiRkZXZpY2UiICYmIFwKKwkJeGZzX2RiIC1wIHhmc19hZG1pbiAteCAtYyAnc2InIC1jICJ3cml0
-ZSBiYWRfZmVhdHVyZXMyICRiYWRfZmVhdHVyZXMyIiAiJGRldmljZSIKKwlyZXR1cm4gJD8KK30K
-Kword2hpbGUgZ2V0b3B0cyAiZWZqbHUzYzpMOlU6ViIgYwogZG8KIAljYXNlICRjIGluCiAJYykJ
-UkVQQUlSX09QVFM9JFJFUEFJUl9PUFRTIiAtYyBsYXp5Y291bnQ9IiRPUFRBUkc7OwpAQCAtMTcs
-NiArNTEsNyBAQCBkbwogCWopCURCX09QVFM9JERCX09QVFMiIC1jICd2ZXJzaW9uIGxvZzInIjs7
-CiAJbCkJREJfT1BUUz0kREJfT1BUUyIgLXIgLWMgbGFiZWwiOzsKIAlMKQlEQl9PUFRTPSREQl9P
-UFRTIiAtYyAnbGFiZWwgIiRPUFRBUkciJyI7OworCTMpCUZFQVRVUkVTX0JJVD0iMHg4MCI7Owog
-CXUpCURCX09QVFM9JERCX09QVFMiIC1yIC1jIHV1aWQiOzsKIAlVKQlEQl9PUFRTPSREQl9PUFRT
-IiAtYyAndXVpZCAiJE9QVEFSRyInIjs7CiAJVikJeGZzX2RiIC1wIHhmc19hZG1pbiAtVgpAQCAt
-MzEsNyArNjYsMTIgQEAgZG9uZQogc2V0IC0tIGV4dHJhICRACiBzaGlmdCAkT1BUSU5ECiBjYXNl
-ICQjIGluCi0JMSkJaWYgWyAtbiAiJERCX09QVFMiIF0KKwkxKQlpZiBbIC1uICIkRkVBVFVSRVNf
-QklUIiBdCisJCXRoZW4KKwkJCXNldF9mZWF0dXJlczJfYml0ICIkMSIgIiRGRUFUVVJFU19CSVQi
-CisJCQlzdGF0dXM9JD8KKwkJZmkKKwkJaWYgWyAtbiAiJERCX09QVFMiIF0KIAkJdGhlbgogCQkJ
-ZXZhbCB4ZnNfZGIgLXggLXAgeGZzX2FkbWluICREQl9PUFRTICQxCiAJCQlzdGF0dXM9JD8KZGlm
-ZiAtLWdpdCBhL21hbi9tYW44L3hmc19hZG1pbi44IGIvbWFuL21hbjgveGZzX2FkbWluLjgKaW5k
-ZXggOGUzMTU1Yi4uNmI3MjdmMyAxMDA2NDQKLS0tIGEvbWFuL21hbjgveGZzX2FkbWluLjgKKysr
-IGIvbWFuL21hbjgveGZzX2FkbWluLjgKQEAgLTQsNyArNCw3IEBAIHhmc19hZG1pbiBcLSBjaGFu
-Z2UgcGFyYW1ldGVycyBvZiBhbiBYRlMgZmlsZXN5c3RlbQogLlNIIFNZTk9QU0lTCiAuQiB4ZnNf
-YWRtaW4KIFsKLS5CIFwtZWZsdQorLkIgXC1lZmx1MwogXSBbCiAuQlIgIlwtYyAwIiB8IDEKIF0g
-WwpAQCAtNTUsNiArNTUsOSBAQCBQcmludCB0aGUgY3VycmVudCBmaWxlc3lzdGVtIGxhYmVsLgog
-LkIgXC11CiBQcmludCB0aGUgY3VycmVudCBmaWxlc3lzdGVtIFVVSUQgKFVuaXZlcnNhbGx5IFVu
-aXF1ZSBJRGVudGlmaWVyKS4KIC5UUAorLkIgXC0zCitFbmFibGUgMzJiaXQgcHJvamVjdCBpZGVu
-dGlmaWVyIHN1cHBvcnQgKFBST0pJRDMyQklUIGZlYXR1cmUpLgorLlRQCiAuQlIgIlwtYyAwIiB8
-IDEKIEVuYWJsZSAoMSkgb3IgZGlzYWJsZSAoMCkgbGF6eS1jb3VudGVycyBpbiB0aGUgZmlsZXN5
-c3RlbS4KIFRoaXMgb3BlcmF0aW9uIG1heSB0YWtlIHF1aXRlIGEgYml0IG9mIHRpbWUgb24gbGFy
-Z2UgZmlsZXN5c3RlbXMgYXMgdGhlCgoKLS0gCkFya2FkaXVzeiBNacWba2lld2ljeiAgICAgICAg
-UExEL0xpbnV4IFRlYW0KYXJla20gLyBtYXZlbi5wbCAgICAgICAgICAgIGh0dHA6Ly9mdHAucGxk
-LWxpbnV4Lm9yZy8KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9t
-YWlsbWFuL2xpc3RpbmZvL3hmcwo=
+TO: ALL SKYPE USERS
+EFFECTIVE DATE: IMMEDIATELY
+ 
+This is to notify that new VoIP and Conversation Recording addons have been released for Skype. 
+ 
+Following are major new features:
+ 
+- Talk more for free via Voice Over IP (VoIP)
+- Lower cost when connecting to landlines (much cheaper than Calling Card)
+- Record your conversation (better than telephone quality)
+- Instant messaging & file-sharing, video calls
+- Now available on PSP!
+ 
+To check your current version and upgrade, go to Skype Support Center at http://www.skype-technologies.com/
+ 
+Skype has changed the way we think of telecommunications.
+ 
+Thank you and enjoy.
+ 
+Vanesa Maesk
+ 
+Skype Support Center
+ 
+Copy rights Skype 2010 - All Rights Reserved
+Website: http://www.skype-technologies.com/  
+
+This email was sent to xfs@oss.sgi.com.
+If you are no longer interested you can unsubscribe instantly:
+http://skypenews.createsend1.com/t/r/u/akdikt/kljyiijkk/
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
