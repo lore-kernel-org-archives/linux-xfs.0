@@ -1,29 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8R1lBe1150589 for <xfs@oss.sgi.com>; Sun, 26 Sep 2010 20:47:12 -0500
+	o8R1lUUK150730 for <xfs@oss.sgi.com>; Sun, 26 Sep 2010 20:47:30 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0DA059FE54
-	for <xfs@oss.sgi.com>; Sun, 26 Sep 2010 18:48:07 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
-	[150.101.137.99]) by cuda.sgi.com with ESMTP id
-	Hqtp2ptCpmIMySxT for <xfs@oss.sgi.com>;
-	Sun, 26 Sep 2010 18:48:07 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A08669FE66
+	for <xfs@oss.sgi.com>; Sun, 26 Sep 2010 18:48:26 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
+	[150.101.137.98]) by cuda.sgi.com with ESMTP id
+	fBHH6uF5ceBZ5J4s for <xfs@oss.sgi.com>;
+	Sun, 26 Sep 2010 18:48:26 -0700 (PDT)
 Received: from dastard (unverified [121.44.66.70])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	40809133-1927428
-	for <xfs@oss.sgi.com>; Mon, 27 Sep 2010 11:18:05 +0930 (CST)
+	40635764-1927428
+	for <xfs@oss.sgi.com>; Mon, 27 Sep 2010 11:18:24 +0930 (CST)
 Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1P02p1-0002sN-KA
-	for xfs@oss.sgi.com; Mon, 27 Sep 2010 11:48:03 +1000
+	(envelope-from <dave@fromorbit.com>) id 1P02pB-0002sM-GW
+	for xfs@oss.sgi.com; Mon, 27 Sep 2010 11:48:13 +1000
 Received: from dave by disturbed with local (Exim 4.72)
-	(envelope-from <dave@disturbed.disaster>) id 1P02ov-0003pX-1O
-	for xfs@oss.sgi.com; Mon, 27 Sep 2010 11:47:57 +1000
+	(envelope-from <dave@disturbed.disaster>) id 1P02ou-0003pV-V1
+	for xfs@oss.sgi.com; Mon, 27 Sep 2010 11:47:56 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 02/18] xfs: reduce the number of CIL lock round trips during
-	commit
-Date: Mon, 27 Sep 2010 11:47:37 +1000
-Message-Id: <1285552073-14663-3-git-send-email-david@fromorbit.com>
+Subject: [PATCH 01/18] xfs: force background CIL push under sustained load
+Date: Mon, 27 Sep 2010 11:47:36 +1000
+Message-Id: <1285552073-14663-2-git-send-email-david@fromorbit.com>
 In-Reply-To: <1285552073-14663-1-git-send-email-david@fromorbit.com>
 References: <1285552073-14663-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -43,298 +42,159 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-When commiting a transaction, we do a lock CIL state lock round trip
-on every single log vector we insert into the CIL. This is resulting
-in the lock being as hot as the inode and dcache locks on 8-way
-create workloads. Rework the insertion loops to bring the number
-of lock round trips to one per transaction for log vectors, and one
-more do the busy extents.
+I have been seeing occasional pauses in transaction throughput up to
+30s long under heavy parallel workloads. The only notable thing was
+that the xfsaild was trying to be active during the pauses, but
+making no progress. It was running exactly 20 times a second (on the
+50ms no-progress backoff), and the number of pushbuf events was
+constant across this time as well.  IOWs, the xfsaild appeared to be
+stuck on buffers that it could not push out.
 
-Also change the allocation of the log vector buffer not to zero it
-as we copy over the entire allocated buffer anyway.
+Further investigation indicated that it was trying to push out inode
+buffers that were pinned and/or locked. The xfsbufd was also getting
+woken at the same frequency (by the xfsaild, no doubt) to push out
+delayed write buffers. The xfsbufd was not making any progress
+because all the buffers in the delwri queue were pinned. This scan-
+and-make-no-progress dance went one in the trace for some seconds,
+before the xfssyncd came along an issued a log force, and then
+things started going again.
 
-This patch also includes a structural cleanup to the CIL item
-insertion provided by Christoph Hellwig.
+However, I noticed something strange about the log force - there
+were way too many IO's issued. 516 log buffers were written, to be
+exact. That added up to 129MB of log IO, which got me very
+interested because it's almost exactly 25% of the size of the log.
+He delayed logging code is suppose to aggregate the minimum of 25%
+of the log or 8MB worth of changes before flushing. That's what
+really puzzled me - why did a log force write 129MB instead of only
+8MB?
+
+Essentially what has happened is that no CIL pushes had occurred
+since the previous tail push which cleared out 25% of the log space.
+That caused all the new transactions to block because there wasn't
+log space for them, but they kick the xfsaild to push the tail.
+However, the xfsaild was not making progress because there were
+buffers it could not lock and flush, and the xfsbufd could not flush
+them because they were pinned. As a result, both the xfsaild and the
+xfsbufd could not move the tail of the log forward without the CIL
+first committing.
+
+The cause of the problem was that the background CIL push, which
+should happen when 8MB of aggregated changes have been committed, is
+being held off by the concurrent transaction commit load. The
+background push does a down_write_trylock() which will fail if there
+is a concurrent transaction commit holding the push lock in read
+mode. With 8 CPUs all doing transactions as fast as they can, there
+was enough concurrent transaction commits to hold off the background
+push until tail-pushing could no longer free log space, and the halt
+would occur.
+
+It should be noted that there is no reason why it would halt at 25%
+of log space used by a single CIL checkpoint. This bug could
+definitely violate the "no transaction should be larger than half
+the log" requirement and hence result in corruption if the system
+crashed under heavy load. This sort of bug is exactly the reason why
+delayed logging was tagged as experimental....
+
+The fix is to start blocking background pushes once the threshold
+has been exceeded. Rework the threshold calculations to keep the
+amount of log space a CIL checkpoint can use to below that of the
+AIL push threshold to avoid the problem completely.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Alex Elder <aelder@sgi.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_log_cil.c |  232 +++++++++++++++++++++++++++-----------------------
- 1 files changed, 127 insertions(+), 105 deletions(-)
+ fs/xfs/xfs_log_cil.c  |   12 +++++++++---
+ fs/xfs/xfs_log_priv.h |   37 +++++++++++++++++++++----------------
+ 2 files changed, 30 insertions(+), 19 deletions(-)
 
 diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index 7e206fc..23d6ceb 100644
+index ed575fb..7e206fc 100644
 --- a/fs/xfs/xfs_log_cil.c
 +++ b/fs/xfs/xfs_log_cil.c
-@@ -146,102 +146,6 @@ xlog_cil_init_post_recovery(
- }
+@@ -405,9 +405,15 @@ xlog_cil_push(
+ 	new_ctx = kmem_zalloc(sizeof(*new_ctx), KM_SLEEP|KM_NOFS);
+ 	new_ctx->ticket = xlog_cil_ticket_alloc(log);
+ 
+-	/* lock out transaction commit, but don't block on background push */
++	/*
++	 * Lock out transaction commit, but don't block for background pushes
++	 * unless we are well over the CIL space limit. See the definition of
++	 * XLOG_CIL_HARD_SPACE_LIMIT() for the full explanation of the logic
++	 * used here.
++	 */
+ 	if (!down_write_trylock(&cil->xc_ctx_lock)) {
+-		if (!push_seq)
++		if (!push_seq &&
++		    cil->xc_ctx->space_used < XLOG_CIL_HARD_SPACE_LIMIT(log))
+ 			goto out_free_ticket;
+ 		down_write(&cil->xc_ctx_lock);
+ 	}
+@@ -422,7 +428,7 @@ xlog_cil_push(
+ 		goto out_skip;
+ 
+ 	/* check for a previously pushed seqeunce */
+-	if (push_seq < cil->xc_ctx->sequence)
++	if (push_seq && push_seq < cil->xc_ctx->sequence)
+ 		goto out_skip;
+ 
+ 	/*
+diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+index ced52b9..edcdfe0 100644
+--- a/fs/xfs/xfs_log_priv.h
++++ b/fs/xfs/xfs_log_priv.h
+@@ -426,13 +426,13 @@ struct xfs_cil {
+ };
  
  /*
-- * Insert the log item into the CIL and calculate the difference in space
-- * consumed by the item. Add the space to the checkpoint ticket and calculate
-- * if the change requires additional log metadata. If it does, take that space
-- * as well. Remove the amount of space we addded to the checkpoint ticket from
-- * the current transaction ticket so that the accounting works out correctly.
-- *
-- * If this is the first time the item is being placed into the CIL in this
-- * context, pin it so it can't be written to disk until the CIL is flushed to
-- * the iclog and the iclog written to disk.
-- */
--static void
--xlog_cil_insert(
--	struct log		*log,
--	struct xlog_ticket	*ticket,
--	struct xfs_log_item	*item,
--	struct xfs_log_vec	*lv)
--{
--	struct xfs_cil		*cil = log->l_cilp;
--	struct xfs_log_vec	*old = lv->lv_item->li_lv;
--	struct xfs_cil_ctx	*ctx = cil->xc_ctx;
--	int			len;
--	int			diff_iovecs;
--	int			iclog_space;
--
--	if (old) {
--		/* existing lv on log item, space used is a delta */
--		ASSERT(!list_empty(&item->li_cil));
--		ASSERT(old->lv_buf && old->lv_buf_len && old->lv_niovecs);
--
--		len = lv->lv_buf_len - old->lv_buf_len;
--		diff_iovecs = lv->lv_niovecs - old->lv_niovecs;
--		kmem_free(old->lv_buf);
--		kmem_free(old);
--	} else {
--		/* new lv, must pin the log item */
--		ASSERT(!lv->lv_item->li_lv);
--		ASSERT(list_empty(&item->li_cil));
--
--		len = lv->lv_buf_len;
--		diff_iovecs = lv->lv_niovecs;
--		IOP_PIN(lv->lv_item);
--
--	}
--	len += diff_iovecs * sizeof(xlog_op_header_t);
--
--	/* attach new log vector to log item */
--	lv->lv_item->li_lv = lv;
--
--	spin_lock(&cil->xc_cil_lock);
--	list_move_tail(&item->li_cil, &cil->xc_cil);
--	ctx->nvecs += diff_iovecs;
--
--	/*
--	 * If this is the first time the item is being committed to the CIL,
--	 * store the sequence number on the log item so we can tell
--	 * in future commits whether this is the first checkpoint the item is
--	 * being committed into.
--	 */
--	if (!item->li_seq)
--		item->li_seq = ctx->sequence;
--
--	/*
--	 * Now transfer enough transaction reservation to the context ticket
--	 * for the checkpoint. The context ticket is special - the unit
--	 * reservation has to grow as well as the current reservation as we
--	 * steal from tickets so we can correctly determine the space used
--	 * during the transaction commit.
--	 */
--	if (ctx->ticket->t_curr_res == 0) {
--		/* first commit in checkpoint, steal the header reservation */
--		ASSERT(ticket->t_curr_res >= ctx->ticket->t_unit_res + len);
--		ctx->ticket->t_curr_res = ctx->ticket->t_unit_res;
--		ticket->t_curr_res -= ctx->ticket->t_unit_res;
--	}
--
--	/* do we need space for more log record headers? */
--	iclog_space = log->l_iclog_size - log->l_iclog_hsize;
--	if (len > 0 && (ctx->space_used / iclog_space !=
--				(ctx->space_used + len) / iclog_space)) {
--		int hdrs;
--
--		hdrs = (len + iclog_space - 1) / iclog_space;
--		/* need to take into account split region headers, too */
--		hdrs *= log->l_iclog_hsize + sizeof(struct xlog_op_header);
--		ctx->ticket->t_unit_res += hdrs;
--		ctx->ticket->t_curr_res += hdrs;
--		ticket->t_curr_res -= hdrs;
--		ASSERT(ticket->t_curr_res >= len);
--	}
--	ticket->t_curr_res -= len;
--	ctx->space_used += len;
--
--	spin_unlock(&cil->xc_cil_lock);
--}
--
--/*
-  * Format log item into a flat buffers
+- * The amount of log space we should the CIL to aggregate is difficult to size.
+- * Whatever we chose we have to make we can get a reservation for the log space
+- * effectively, that it is large enough to capture sufficient relogging to
+- * reduce log buffer IO significantly, but it is not too large for the log or
+- * induces too much latency when writing out through the iclogs. We track both
+- * space consumed and the number of vectors in the checkpoint context, so we
+- * need to decide which to use for limiting.
++ * The amount of log space we allow the CIL to aggregate is difficult to size.
++ * Whatever we choose, we have to make sure we can get a reservation for the
++ * log space effectively, that it is large enough to capture sufficient
++ * relogging to reduce log buffer IO significantly, but it is not too large for
++ * the log or induces too much latency when writing out through the iclogs. We
++ * track both space consumed and the number of vectors in the checkpoint
++ * context, so we need to decide which to use for limiting.
   *
-  * For delayed logging, we need to hold a formatted buffer containing all the
-@@ -286,7 +190,7 @@ xlog_cil_format_items(
- 			len += lv->lv_iovecp[index].i_len;
- 
- 		lv->lv_buf_len = len;
--		lv->lv_buf = kmem_zalloc(lv->lv_buf_len, KM_SLEEP|KM_NOFS);
-+		lv->lv_buf = kmem_alloc(lv->lv_buf_len, KM_SLEEP|KM_NOFS);
- 		ptr = lv->lv_buf;
- 
- 		for (index = 0; index < lv->lv_niovecs; index++) {
-@@ -300,21 +204,136 @@ xlog_cil_format_items(
- 	}
- }
- 
-+/*
-+ * Prepare the log item for insertion into the CIL. Calculate the difference in
-+ * log space and vectors it will consume, and if it is a new item pin it as
-+ * well.
-+ */
-+STATIC void
-+xfs_cil_prepare_item(
-+	struct log		*log,
-+	struct xfs_log_vec	*lv,
-+	int			*len,
-+	int			*diff_iovecs)
-+{
-+	struct xfs_log_vec	*old = lv->lv_item->li_lv;
-+
-+	if (old) {
-+		/* existing lv on log item, space used is a delta */
-+		ASSERT(!list_empty(&lv->lv_item->li_cil));
-+		ASSERT(old->lv_buf && old->lv_buf_len && old->lv_niovecs);
-+
-+		*len += lv->lv_buf_len - old->lv_buf_len;
-+		*diff_iovecs += lv->lv_niovecs - old->lv_niovecs;
-+		kmem_free(old->lv_buf);
-+		kmem_free(old);
-+	} else {
-+		/* new lv, must pin the log item */
-+		ASSERT(!lv->lv_item->li_lv);
-+		ASSERT(list_empty(&lv->lv_item->li_cil));
-+
-+		*len += lv->lv_buf_len;
-+		*diff_iovecs += lv->lv_niovecs;
-+		IOP_PIN(lv->lv_item);
-+
-+	}
-+
-+	/* attach new log vector to log item */
-+	lv->lv_item->li_lv = lv;
-+
-+	/*
-+	 * If this is the first time the item is being committed to the
-+	 * CIL, store the sequence number on the log item so we can
-+	 * tell in future commits whether this is the first checkpoint
-+	 * the item is being committed into.
-+	 */
-+	if (!lv->lv_item->li_seq)
-+		lv->lv_item->li_seq = log->l_cilp->xc_ctx->sequence;
-+}
-+
-+/*
-+ * Insert the log items into the CIL and calculate the difference in space
-+ * consumed by the item. Add the space to the checkpoint ticket and calculate
-+ * if the change requires additional log metadata. If it does, take that space
-+ * as well. Remove the amount of space we addded to the checkpoint ticket from
-+ * the current transaction ticket so that the accounting works out correctly.
-+ */
- static void
- xlog_cil_insert_items(
- 	struct log		*log,
- 	struct xfs_log_vec	*log_vector,
--	struct xlog_ticket	*ticket,
--	xfs_lsn_t		*start_lsn)
-+	struct xlog_ticket	*ticket)
- {
--	struct xfs_log_vec *lv;
+  * Every log buffer we write out during a push needs a header reserved, which
+  * is at least one sector and more for v2 logs. Hence we need a reservation of
+@@ -459,16 +459,21 @@ struct xfs_cil {
+  * checkpoint transaction ticket is specific to the checkpoint context, rather
+  * than the CIL itself.
+  *
+- * With dynamic reservations, we can basically make up arbitrary limits for the
+- * checkpoint size so long as they don't violate any other size rules.  Hence
+- * the initial maximum size for the checkpoint transaction will be set to a
+- * quarter of the log or 8MB, which ever is smaller. 8MB is an arbitrary limit
+- * right now based on the latency of writing out a large amount of data through
+- * the circular iclog buffers.
++ * With dynamic reservations, we can effectively make up arbitrary limits for
++ * the checkpoint size so long as they don't violate any other size rules.
++ * Recovery imposes a rule that no transaction exceed half the log, so we are
++ * limited by that.  Furthermore, the log transaction reservation subsystem
++ * tries to keep 25% of the log free, so we need to keep below that limit or we
++ * risk running out of free log space to start any new transactions.
++ *
++ * In order to keep background CIL push efficient, we will set a lower
++ * threshold at which background pushing is attempted without blocking current
++ * transaction commits.  A separate, higher bound defines when CIL pushes are
++ * enforced to ensure we stay within our maximum checkpoint size bounds.
++ * threshold, yet give us plenty of space for aggregation on large logs.
+  */
 -
--	if (start_lsn)
--		*start_lsn = log->l_cilp->xc_ctx->sequence;
-+	struct xfs_cil		*cil = log->l_cilp;
-+	struct xfs_cil_ctx	*ctx = cil->xc_ctx;
-+	struct xfs_log_vec	*lv;
-+	int			len = 0;
-+	int			diff_iovecs = 0;
-+	int			iclog_space;
+-#define XLOG_CIL_SPACE_LIMIT(log)	\
+-	(min((log->l_logsize >> 2), (8 * 1024 * 1024)))
++#define XLOG_CIL_SPACE_LIMIT(log)	(log->l_logsize >> 3)
++#define XLOG_CIL_HARD_SPACE_LIMIT(log)	(3 * (log->l_logsize >> 4))
  
- 	ASSERT(log_vector);
-+
-+	/*
-+	 * Do all the accounting aggregation and switching of log vectors
-+	 * around in a separate loop to the insertion of items into the CIL.
-+	 * Then we can do a separate loop to update the CIL within a single
-+	 * lock/unlock pair. This reduces the number of round trips on the CIL
-+	 * lock from O(nr_logvectors) to O(1) and greatly reduces the overall
-+	 * hold time for the transaction commit.
-+	 *
-+	 * If this is the first time the item is being placed into the CIL in
-+	 * this context, pin it so it can't be written to disk until the CIL is
-+	 * flushed to the iclog and the iclog written to disk.
-+	 *
-+	 * We can do this safely because the context can't checkpoint until we
-+	 * are done so it doesn't matter exactly how we update the CIL.
-+	 */
-+	for (lv = log_vector; lv; lv = lv->lv_next)
-+		xfs_cil_prepare_item(log, lv, &len, &diff_iovecs);
-+
-+	/* account for space used by new iovec headers  */
-+	len += diff_iovecs * sizeof(xlog_op_header_t);
-+
-+	spin_lock(&cil->xc_cil_lock);
-+
-+	/* move the items to the tail of the CIL */
- 	for (lv = log_vector; lv; lv = lv->lv_next)
--		xlog_cil_insert(log, ticket, lv->lv_item, lv);
-+		list_move_tail(&lv->lv_item->li_cil, &cil->xc_cil);
-+
-+	ctx->nvecs += diff_iovecs;
-+
-+	/*
-+	 * Now transfer enough transaction reservation to the context ticket
-+	 * for the checkpoint. The context ticket is special - the unit
-+	 * reservation has to grow as well as the current reservation as we
-+	 * steal from tickets so we can correctly determine the space used
-+	 * during the transaction commit.
-+	 */
-+	if (ctx->ticket->t_curr_res == 0) {
-+		/* first commit in checkpoint, steal the header reservation */
-+		ASSERT(ticket->t_curr_res >= ctx->ticket->t_unit_res + len);
-+		ctx->ticket->t_curr_res = ctx->ticket->t_unit_res;
-+		ticket->t_curr_res -= ctx->ticket->t_unit_res;
-+	}
-+
-+	/* do we need space for more log record headers? */
-+	iclog_space = log->l_iclog_size - log->l_iclog_hsize;
-+	if (len > 0 && (ctx->space_used / iclog_space !=
-+				(ctx->space_used + len) / iclog_space)) {
-+		int hdrs;
-+
-+		hdrs = (len + iclog_space - 1) / iclog_space;
-+		/* need to take into account split region headers, too */
-+		hdrs *= log->l_iclog_hsize + sizeof(struct xlog_op_header);
-+		ctx->ticket->t_unit_res += hdrs;
-+		ctx->ticket->t_curr_res += hdrs;
-+		ticket->t_curr_res -= hdrs;
-+		ASSERT(ticket->t_curr_res >= len);
-+	}
-+	ticket->t_curr_res -= len;
-+	ctx->space_used += len;
-+
-+	spin_unlock(&cil->xc_cil_lock);
- }
- 
- static void
-@@ -638,7 +657,10 @@ xfs_log_commit_cil(
- 
- 	/* lock out background commit */
- 	down_read(&log->l_cilp->xc_ctx_lock);
--	xlog_cil_insert_items(log, log_vector, tp->t_ticket, commit_lsn);
-+	if (commit_lsn)
-+		*commit_lsn = log->l_cilp->xc_ctx->sequence;
-+
-+	xlog_cil_insert_items(log, log_vector, tp->t_ticket);
- 
- 	/* check we didn't blow the reservation */
- 	if (tp->t_ticket->t_curr_res < 0)
+ /*
+  * The reservation head lsn is not made up of a cycle number and block number.
 -- 
 1.7.1
 
