@@ -1,28 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8R1levo150887 for <xfs@oss.sgi.com>; Sun, 26 Sep 2010 20:47:40 -0500
+	o8R1lUva150726 for <xfs@oss.sgi.com>; Sun, 26 Sep 2010 20:47:30 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 39FA49FE6E
-	for <xfs@oss.sgi.com>; Sun, 26 Sep 2010 18:48:37 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BA7211864615
+	for <xfs@oss.sgi.com>; Sun, 26 Sep 2010 18:48:26 -0700 (PDT)
 Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
 	[150.101.137.102]) by cuda.sgi.com with ESMTP id
-	fwfCQt4gAEKpC7LH for <xfs@oss.sgi.com>;
-	Sun, 26 Sep 2010 18:48:37 -0700 (PDT)
+	TqIxzvlE7nJ3Vwlb for <xfs@oss.sgi.com>;
+	Sun, 26 Sep 2010 18:48:26 -0700 (PDT)
 Received: from dastard (unverified [121.44.66.70])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	40284004-1927428
-	for <xfs@oss.sgi.com>; Mon, 27 Sep 2010 11:18:36 +0930 (CST)
-Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1P02pM-0002tN-Ng
-	for xfs@oss.sgi.com; Mon, 27 Sep 2010 11:48:24 +1000
+	40283963-1927428
+	for <xfs@oss.sgi.com>; Mon, 27 Sep 2010 11:18:25 +0930 (CST)
+Received: from [192.168.1.9] (helo=disturbed) by dastard with esmtp (Exim 4.71)
+	(envelope-from <dave@fromorbit.com>) id 1P02pB-0002sZ-R5
+	for xfs@oss.sgi.com; Mon, 27 Sep 2010 11:48:13 +1000
 Received: from dave by disturbed with local (Exim 4.72)
-	(envelope-from <dave@disturbed.disaster>) id 1P02pG-0003qR-5V
-	for xfs@oss.sgi.com; Mon, 27 Sep 2010 11:48:18 +1000
+	(envelope-from <dave@disturbed.disaster>) id 1P02ov-0003pm-BF
+	for xfs@oss.sgi.com; Mon, 27 Sep 2010 11:47:57 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 18/18] xfs: pack xfs_buf structure more tightly
-Date: Mon, 27 Sep 2010 11:47:53 +1000
-Message-Id: <1285552073-14663-19-git-send-email-david@fromorbit.com>
+Subject: [PATCH 07/18] xfs: introduced uncached buffer read primitve
+Date: Mon, 27 Sep 2010 11:47:42 +1000
+Message-Id: <1285552073-14663-8-git-send-email-david@fromorbit.com>
 In-Reply-To: <1285552073-14663-1-git-send-email-david@fromorbit.com>
 References: <1285552073-14663-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -42,87 +42,77 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-pahole reports the struct xfs_buf has quite a few holes in it, so
-packing the structure better will reduce the size of it by 16 bytes.
-Also, move all the fields used in cache lookups into the first
-cacheline.
-
-Before on x86_64:
-
-        /* size: 320, cachelines: 5 */
-	/* sum members: 298, holes: 6, sum holes: 22 */
-
-After on x86_64:
-
-        /* size: 304, cachelines: 5 */
-	/* padding: 6 */
-	/* last cacheline: 48 bytes */
-
+To avoid the need to use cached buffers for single-shot or buffers
+cached at the filesystem level, introduce a new buffer read
+primitive that bypasses the cache an reads directly from disk.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Alex Elder <aelder@sgi.com>
 ---
- fs/xfs/linux-2.6/xfs_buf.h |   30 +++++++++++++++++++-----------
- 1 files changed, 19 insertions(+), 11 deletions(-)
+ fs/xfs/linux-2.6/xfs_buf.c |   34 ++++++++++++++++++++++++++++++++++
+ fs/xfs/linux-2.6/xfs_buf.h |    3 +++
+ 2 files changed, 37 insertions(+), 0 deletions(-)
 
+diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
+index eca945b..22c7bff 100644
+--- a/fs/xfs/linux-2.6/xfs_buf.c
++++ b/fs/xfs/linux-2.6/xfs_buf.c
+@@ -638,6 +638,40 @@ xfs_buf_readahead(
+ 	xfs_buf_read(target, ioff, isize, flags);
+ }
+ 
++/*
++ * Read an uncached buffer from disk. Allocates and returns a locked
++ * buffer containing the disk contents or nothing.
++ */
++struct xfs_buf *
++xfs_buf_read_uncached(
++	struct xfs_mount	*mp,
++	struct xfs_buftarg	*target,
++	xfs_daddr_t		daddr,
++	size_t			length,
++	int			flags)
++{
++	xfs_buf_t		*bp;
++	int			error;
++
++	bp = xfs_buf_get_uncached(target, length, flags);
++	if (!bp)
++		return NULL;
++
++	/* set up the buffer for a read IO */
++	xfs_buf_lock(bp);
++	XFS_BUF_SET_ADDR(bp, daddr);
++	XFS_BUF_READ(bp);
++	XFS_BUF_BUSY(bp);
++
++	xfsbdstrat(mp, bp);
++	error = xfs_iowait(bp);
++	if (error || bp->b_error) {
++		xfs_buf_relse(bp);
++		return NULL;
++	}
++	return bp;
++}
++
+ xfs_buf_t *
+ xfs_buf_get_empty(
+ 	size_t			len,
 diff --git a/fs/xfs/linux-2.6/xfs_buf.h b/fs/xfs/linux-2.6/xfs_buf.h
-index c79882e..1613337 100644
+index fb30447..57eedc7 100644
 --- a/fs/xfs/linux-2.6/xfs_buf.h
 +++ b/fs/xfs/linux-2.6/xfs_buf.h
-@@ -162,33 +162,41 @@ typedef int (*xfs_buf_bdstrat_t)(struct xfs_buf *);
- #define XB_PAGES	2
+@@ -218,6 +218,9 @@ extern int xfs_buf_associate_memory(xfs_buf_t *, void *, size_t);
+ extern void xfs_buf_hold(xfs_buf_t *);
+ extern void xfs_buf_readahead(xfs_buftarg_t *, xfs_off_t, size_t,
+ 				xfs_buf_flags_t);
++struct xfs_buf *xfs_buf_read_uncached(struct xfs_mount *mp,
++				struct xfs_buftarg *target,
++				xfs_daddr_t daddr, size_t length, int flags);
  
- typedef struct xfs_buf {
-+	/*
-+	 * first cacheline holds all the fields needed for an uncontended cache
-+	 * hit to be fully processed. The semaphore straddles the cacheline
-+	 * boundary, but the counter and lock sits on the first cacheline,
-+	 * which is the only bit that is touched if we hit the semaphore
-+	 * fast-path on locking.
-+	 */
-+	struct rb_node		b_rbnode;	/* rbtree node */
-+	xfs_off_t		b_file_offset;	/* offset in file */
-+	size_t			b_buffer_length;/* size of buffer in bytes */
-+	atomic_t		b_hold;		/* reference count */
-+	xfs_buf_flags_t		b_flags;	/* status flags */
- 	struct semaphore	b_sema;		/* semaphore for lockables */
--	unsigned long		b_queuetime;	/* time buffer was queued */
--	atomic_t		b_pin_count;	/* pin count */
-+
- 	wait_queue_head_t	b_waiters;	/* unpin waiters */
- 	struct list_head	b_list;
--	xfs_buf_flags_t		b_flags;	/* status flags */
--	struct rb_node		b_rbnode;	/* rbtree node */
- 	struct xfs_perag	*b_pag;		/* contains rbtree root */
- 	xfs_buftarg_t		*b_target;	/* buffer target (device) */
--	atomic_t		b_hold;		/* reference count */
- 	xfs_daddr_t		b_bn;		/* block number for I/O */
--	xfs_off_t		b_file_offset;	/* offset in file */
--	size_t			b_buffer_length;/* size of buffer in bytes */
- 	size_t			b_count_desired;/* desired transfer size */
- 	void			*b_addr;	/* virtual address of buffer */
- 	struct work_struct	b_iodone_work;
--	atomic_t		b_io_remaining;	/* #outstanding I/O requests */
- 	xfs_buf_iodone_t	b_iodone;	/* I/O completion function */
- 	xfs_buf_relse_t		b_relse;	/* releasing function */
- 	struct completion	b_iowait;	/* queue for I/O waiters */
- 	void			*b_fspriv;
- 	void			*b_fspriv2;
--	unsigned short		b_error;	/* error code on I/O */
--	unsigned int		b_page_count;	/* size of page array */
--	unsigned int		b_offset;	/* page offset in first page */
- 	struct page		**b_pages;	/* array of page pointers */
- 	struct page		*b_page_array[XB_PAGES]; /* inline pages */
-+	unsigned long		b_queuetime;	/* time buffer was queued */
-+	atomic_t		b_pin_count;	/* pin count */
-+	atomic_t		b_io_remaining;	/* #outstanding I/O requests */
-+	unsigned int		b_page_count;	/* size of page array */
-+	unsigned int		b_offset;	/* page offset in first page */
-+	unsigned short		b_error;	/* error code on I/O */
- #ifdef XFS_BUF_LOCK_TRACKING
- 	int			b_last_holder;
- #endif
+ /* Releasing Buffers */
+ extern void xfs_buf_free(xfs_buf_t *);
 -- 
 1.7.1
 
