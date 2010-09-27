@@ -1,20 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8R5mR4Q171945 for <xfs@oss.sgi.com>; Mon, 27 Sep 2010 00:48:27 -0500
-Received: from phd-imap.ethz.ch (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A07F4134D580
-	for <xfs@oss.sgi.com>; Sun, 26 Sep 2010 23:02:17 -0700 (PDT)
-Received: from phd-imap.ethz.ch (phd-imap.ethz.ch [129.132.80.51]) by
-	cuda.sgi.com with ESMTP id FXGmhA97HMdVzozT for
-	<xfs@oss.sgi.com>; Sun, 26 Sep 2010 23:02:17 -0700 (PDT)
-Subject: Re: XFS errors on large Infiniband fileserver setup
-MIME-Version: 1.0
-Date: Mon, 27 Sep 2010 07:49:22 +0200
-From: Christian Herzog <horeizo@phys.ethz.ch>
-In-Reply-To: <29252416bd0d9dc973a909e411dbec6a@phys.ethz.ch>
-References: <29252416bd0d9dc973a909e411dbec6a@phys.ethz.ch>
-Message-ID: <c0151942b347fef4726ea69d28fd7fac@phys.ethz.ch>
+	o8RFxcMS193925 for <xfs@oss.sgi.com>; Mon, 27 Sep 2010 10:59:39 -0500
+Subject: Re: [PATCH 13/18] xfs: split out inode walk inode grabbing
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <1285552073-14663-14-git-send-email-david@fromorbit.com>
+References: <1285552073-14663-1-git-send-email-david@fromorbit.com>
+	<1285552073-14663-14-git-send-email-david@fromorbit.com>
+Date: Mon, 27 Sep 2010 10:58:56 -0500
+Message-ID: <1285603136.2380.12.camel@doink>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,17 +23,26 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
+
+On Mon, 2010-09-27 at 11:47 +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> When doing read side inode cache walks, the code to validate and
+> grab an inode is common to all callers. Split it out of the execute
+> callbacks in preparation for batching lookups. Similarly, split out
+> the inode reference dropping from the execute callbacks into the
+> main lookup look to be symmetric with the grab.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+
+Looks good.
+
+Reviewed-by: Alex Elder <aelder@sgi.com>
 
 
-Dear list,
-
-thanks a lot for a lot of helpful comments. We will now assess our
-setup and also talk to the supplier. We really should've thought of
-joining this list before buying the hardware, but hey.
-
-thanks and kind regards,
--Christian
 
 _______________________________________________
 xfs mailing list
