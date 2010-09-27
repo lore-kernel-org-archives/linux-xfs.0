@@ -1,28 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8R1lUVi150725 for <xfs@oss.sgi.com>; Sun, 26 Sep 2010 20:47:30 -0500
+	o8R1lbqt150841 for <xfs@oss.sgi.com>; Sun, 26 Sep 2010 20:47:38 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 03EDFE7934D
-	for <xfs@oss.sgi.com>; Sun, 26 Sep 2010 19:01:19 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
-	[150.101.137.103]) by cuda.sgi.com with ESMTP id
-	uZXwDpGYoDFhY3Ch for <xfs@oss.sgi.com>;
-	Sun, 26 Sep 2010 19:01:19 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 46D47E79355
+	for <xfs@oss.sgi.com>; Sun, 26 Sep 2010 19:01:27 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
+	[150.101.137.100]) by cuda.sgi.com with ESMTP id
+	I6aBGzVB9jq1GT0i for <xfs@oss.sgi.com>;
+	Sun, 26 Sep 2010 19:01:27 -0700 (PDT)
 Received: from dastard (unverified [121.44.66.70])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	40246818-1927428
-	for <xfs@oss.sgi.com>; Mon, 27 Sep 2010 11:18:25 +0930 (CST)
+	28957977-1927428
+	for <xfs@oss.sgi.com>; Mon, 27 Sep 2010 11:18:33 +0930 (CST)
 Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1P02pM-0002t8-Ae
+	(envelope-from <dave@fromorbit.com>) id 1P02pM-0002tC-I3
 	for xfs@oss.sgi.com; Mon, 27 Sep 2010 11:48:24 +1000
 Received: from dave by disturbed with local (Exim 4.72)
-	(envelope-from <dave@disturbed.disaster>) id 1P02p5-0003q6-Or
-	for xfs@oss.sgi.com; Mon, 27 Sep 2010 11:48:07 +1000
+	(envelope-from <dave@disturbed.disaster>) id 1P02p6-0003qF-0z
+	for xfs@oss.sgi.com; Mon, 27 Sep 2010 11:48:08 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 11/18] xfs: remove buftarg hash for external devices
-Date: Mon, 27 Sep 2010 11:47:46 +1000
-Message-Id: <1285552073-14663-12-git-send-email-david@fromorbit.com>
+Subject: [PATCH 15/18] xfs: batch inode reclaim lookup
+Date: Mon, 27 Sep 2010 11:47:50 +1000
+Message-Id: <1285552073-14663-16-git-send-email-david@fromorbit.com>
 In-Reply-To: <1285552073-14663-1-git-send-email-david@fromorbit.com>
 References: <1285552073-14663-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -42,33 +42,180 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-For RT and external log devices, we never use hashed buffers on them
-now.  Remove the buftarg hash tables that are set up for them.
+Batch and optimise the per-ag inode lookup for reclaim to minimise
+scanning overhead. This involves gang lookups on the radix trees to
+get multiple inodes during each tree walk, and tighter validation of
+what inodes can be reclaimed without blocking befor we take any
+locks.
+
+This is based on ideas suggested in a proof-of-concept patch
+posted by Nick Piggin.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Alex Elder <aelder@sgi.com>
 ---
- fs/xfs/linux-2.6/xfs_buf.c |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
+ fs/xfs/linux-2.6/xfs_sync.c |  110 ++++++++++++++++++++++++++++++-------------
+ 1 files changed, 77 insertions(+), 33 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
-index 975d658..251bcdc 100644
---- a/fs/xfs/linux-2.6/xfs_buf.c
-+++ b/fs/xfs/linux-2.6/xfs_buf.c
-@@ -1458,7 +1458,11 @@ xfs_alloc_bufhash(
- {
- 	unsigned int		i;
+diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
+index 892ce33..f8e0644 100644
+--- a/fs/xfs/linux-2.6/xfs_sync.c
++++ b/fs/xfs/linux-2.6/xfs_sync.c
+@@ -623,6 +623,43 @@ __xfs_inode_clear_reclaim_tag(
+ }
  
--	btp->bt_hashshift = external ? 3 : 12;	/* 8 or 4096 buckets */
-+	if (external) {
-+		btp->bt_hash = NULL;
-+		return;
+ /*
++ * Grab the inode for reclaim exclusively.
++ * Return 0 if we grabbed it, non-zero otherwise.
++ */
++STATIC int
++xfs_reclaim_inode_grab(
++	struct xfs_inode	*ip,
++	int			flags)
++{
++
++	/*
++	 * do some unlocked checks first to avoid unnecceary lock traffic.
++	 * The first is a flush lock check, the second is a already in reclaim
++	 * check. Only do these checks if we are not going to block on locks.
++	 */
++	if ((flags & SYNC_TRYLOCK) &&
++	    (!ip->i_flush.done || __xfs_iflags_test(ip, XFS_IRECLAIM))) {
++		return 1;
 +	}
-+	btp->bt_hashshift = 12;	/* 4096 buckets */
- 	btp->bt_hash = kmem_zalloc_large((1 << btp->bt_hashshift) *
- 					 sizeof(xfs_bufhash_t));
- 	for (i = 0; i < (1 << btp->bt_hashshift); i++) {
++
++	/*
++	 * The radix tree lock here protects a thread in xfs_iget from racing
++	 * with us starting reclaim on the inode.  Once we have the
++	 * XFS_IRECLAIM flag set it will not touch us.
++	 */
++	spin_lock(&ip->i_flags_lock);
++	ASSERT_ALWAYS(__xfs_iflags_test(ip, XFS_IRECLAIMABLE));
++	if (__xfs_iflags_test(ip, XFS_IRECLAIM)) {
++		/* ignore as it is already under reclaim */
++		spin_unlock(&ip->i_flags_lock);
++		return 1;
++	}
++	__xfs_iflags_set(ip, XFS_IRECLAIM);
++	spin_unlock(&ip->i_flags_lock);
++	return 0;
++}
++
++/*
+  * Inodes in different states need to be treated differently, and the return
+  * value of xfs_iflush is not sufficient to get this right. The following table
+  * lists the inode states and the reclaim actions necessary for non-blocking
+@@ -680,23 +717,6 @@ xfs_reclaim_inode(
+ {
+ 	int	error = 0;
+ 
+-	/*
+-	 * The radix tree lock here protects a thread in xfs_iget from racing
+-	 * with us starting reclaim on the inode.  Once we have the
+-	 * XFS_IRECLAIM flag set it will not touch us.
+-	 */
+-	spin_lock(&ip->i_flags_lock);
+-	ASSERT_ALWAYS(__xfs_iflags_test(ip, XFS_IRECLAIMABLE));
+-	if (__xfs_iflags_test(ip, XFS_IRECLAIM)) {
+-		/* ignore as it is already under reclaim */
+-		spin_unlock(&ip->i_flags_lock);
+-		write_unlock(&pag->pag_ici_lock);
+-		return 0;
+-	}
+-	__xfs_iflags_set(ip, XFS_IRECLAIM);
+-	spin_unlock(&ip->i_flags_lock);
+-	write_unlock(&pag->pag_ici_lock);
+-
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 	if (!xfs_iflock_nowait(ip)) {
+ 		if (!(sync_mode & SYNC_WAIT))
+@@ -813,16 +833,19 @@ xfs_reclaim_inodes_ag(
+ 	while ((pag = xfs_perag_get_tag(mp, ag, XFS_ICI_RECLAIM_TAG))) {
+ 		unsigned long	first_index = 0;
+ 		int		done = 0;
++		int		nr_found = 0;
+ 
+ 		ag = pag->pag_agno + 1;
+ 
+ 		do {
+-			struct xfs_inode *ip;
+-			int	nr_found;
++			struct xfs_inode *batch[XFS_LOOKUP_BATCH];
++			int	i;
+ 
+ 			write_lock(&pag->pag_ici_lock);
+-			nr_found = radix_tree_gang_lookup_tag(&pag->pag_ici_root,
+-					(void **)&ip, first_index, 1,
++			nr_found = radix_tree_gang_lookup_tag(
++					&pag->pag_ici_root,
++					(void **)batch, first_index,
++					XFS_LOOKUP_BATCH,
+ 					XFS_ICI_RECLAIM_TAG);
+ 			if (!nr_found) {
+ 				write_unlock(&pag->pag_ici_lock);
+@@ -830,20 +853,41 @@ xfs_reclaim_inodes_ag(
+ 			}
+ 
+ 			/*
+-			 * Update the index for the next lookup. Catch overflows
+-			 * into the next AG range which can occur if we have inodes
+-			 * in the last block of the AG and we are currently
+-			 * pointing to the last inode.
++			 * Grab the inodes before we drop the lock. if we found
++			 * nothing, nr == 0 and the loop will be skipped.
+ 			 */
+-			first_index = XFS_INO_TO_AGINO(mp, ip->i_ino + 1);
+-			if (first_index < XFS_INO_TO_AGINO(mp, ip->i_ino))
+-				done = 1;
++			for (i = 0; i < nr_found; i++) {
++				struct xfs_inode *ip = batch[i];
++
++				if (done || xfs_reclaim_inode_grab(ip, flags))
++					batch[i] = NULL;
++
++				/*
++				 * Update the index for the next lookup. Catch
++				 * overflows into the next AG range which can
++				 * occur if we have inodes in the last block of
++				 * the AG and we are currently pointing to the
++				 * last inode.
++				 */
++				first_index = XFS_INO_TO_AGINO(mp, ip->i_ino + 1);
++				if (first_index < XFS_INO_TO_AGINO(mp, ip->i_ino))
++					done = 1;
++			}
+ 
+-			error = xfs_reclaim_inode(ip, pag, flags);
+-			if (error && last_error != EFSCORRUPTED)
+-				last_error = error;
++			/* unlock now we've grabbed the inodes. */
++			write_unlock(&pag->pag_ici_lock);
++
++			for (i = 0; i < nr_found; i++) {
++				if (!batch[i])
++					continue;
++				error = xfs_reclaim_inode(batch[i], pag, flags);
++				if (error && last_error != EFSCORRUPTED)
++					last_error = error;
++			}
++
++			*nr_to_scan -= XFS_LOOKUP_BATCH;
+ 
+-		} while (!done && (*nr_to_scan)--);
++		} while (nr_found && !done && *nr_to_scan > 0);
+ 
+ 		xfs_perag_put(pag);
+ 	}
+@@ -879,7 +923,7 @@ xfs_reclaim_inode_shrink(
+ 		if (!(gfp_mask & __GFP_FS))
+ 			return -1;
+ 
+-		xfs_reclaim_inodes_ag(mp, 0, &nr_to_scan);
++		xfs_reclaim_inodes_ag(mp, SYNC_TRYLOCK, &nr_to_scan);
+ 		/* terminate if we don't exhaust the scan */
+ 		if (nr_to_scan > 0)
+ 			return -1;
 -- 
 1.7.1
 
