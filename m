@@ -1,28 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8R1lbqt150841 for <xfs@oss.sgi.com>; Sun, 26 Sep 2010 20:47:38 -0500
+	o8R1lWMe150774 for <xfs@oss.sgi.com>; Sun, 26 Sep 2010 20:47:32 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 46D47E79355
-	for <xfs@oss.sgi.com>; Sun, 26 Sep 2010 19:01:27 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
-	[150.101.137.100]) by cuda.sgi.com with ESMTP id
-	I6aBGzVB9jq1GT0i for <xfs@oss.sgi.com>;
-	Sun, 26 Sep 2010 19:01:27 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 371FD1864615
+	for <xfs@oss.sgi.com>; Sun, 26 Sep 2010 18:48:28 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
+	[150.101.137.99]) by cuda.sgi.com with ESMTP id
+	fsiWyr2qCmrq5YxK for <xfs@oss.sgi.com>;
+	Sun, 26 Sep 2010 18:48:28 -0700 (PDT)
 Received: from dastard (unverified [121.44.66.70])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	28957977-1927428
-	for <xfs@oss.sgi.com>; Mon, 27 Sep 2010 11:18:33 +0930 (CST)
+	40809230-1927428
+	for <xfs@oss.sgi.com>; Mon, 27 Sep 2010 11:18:27 +0930 (CST)
 Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1P02pM-0002tC-I3
+	(envelope-from <dave@fromorbit.com>) id 1P02pM-0002tJ-Lj
 	for xfs@oss.sgi.com; Mon, 27 Sep 2010 11:48:24 +1000
 Received: from dave by disturbed with local (Exim 4.72)
-	(envelope-from <dave@disturbed.disaster>) id 1P02p6-0003qF-0z
-	for xfs@oss.sgi.com; Mon, 27 Sep 2010 11:48:08 +1000
+	(envelope-from <dave@disturbed.disaster>) id 1P02pG-0003qL-3W
+	for xfs@oss.sgi.com; Mon, 27 Sep 2010 11:48:18 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 15/18] xfs: batch inode reclaim lookup
-Date: Mon, 27 Sep 2010 11:47:50 +1000
-Message-Id: <1285552073-14663-16-git-send-email-david@fromorbit.com>
+Subject: [PATCH 17/18] xfs: convert buffer cache hash to rbtree
+Date: Mon, 27 Sep 2010 11:47:52 +1000
+Message-Id: <1285552073-14663-18-git-send-email-david@fromorbit.com>
 In-Reply-To: <1285552073-14663-1-git-send-email-david@fromorbit.com>
 References: <1285552073-14663-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -42,180 +42,322 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Batch and optimise the per-ag inode lookup for reclaim to minimise
-scanning overhead. This involves gang lookups on the radix trees to
-get multiple inodes during each tree walk, and tighter validation of
-what inodes can be reclaimed without blocking befor we take any
-locks.
+The buffer cache hash is showing typical hash scalability problems.
+In large scale testing the number of cached items growing far larger
+than the hash can efficiently handle. Hence we need to move to a
+self-scaling cache indexing mechanism.
 
-This is based on ideas suggested in a proof-of-concept patch
-posted by Nick Piggin.
+I have selected rbtrees for indexing becuse they can have O(log n)
+search scalability, and insert and remove cost is not excessive,
+even on large trees. Hence we should be able to cache large numbers
+of buffers without incurring the excessive cache miss search
+penalties that the hash is imposing on us.
+
+To ensure we still have parallel access to the cache, we need
+multiple trees. Rather than hashing the buffers by disk address to
+select a tree, it seems more sensible to separate trees by typical
+access patterns. Most operations use buffers from within a single AG
+at a time, so rather than searching lots of different lists,
+separate the buffer indexes out into per-AG rbtrees. This means that
+searches during metadata operation have a much higher chance of
+hitting cache resident nodes, and that updates of the tree are less
+likely to disturb trees being accessed on other CPUs doing
+independent operations.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Alex Elder <aelder@sgi.com>
 ---
- fs/xfs/linux-2.6/xfs_sync.c |  110 ++++++++++++++++++++++++++++++-------------
- 1 files changed, 77 insertions(+), 33 deletions(-)
+ fs/xfs/linux-2.6/xfs_buf.c |  138 +++++++++++++++++++++----------------------
+ fs/xfs/linux-2.6/xfs_buf.h |    8 +--
+ fs/xfs/xfs_ag.h            |    4 +
+ fs/xfs/xfs_mount.c         |    2 +
+ 4 files changed, 75 insertions(+), 77 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
-index 892ce33..f8e0644 100644
---- a/fs/xfs/linux-2.6/xfs_sync.c
-+++ b/fs/xfs/linux-2.6/xfs_sync.c
-@@ -623,6 +623,43 @@ __xfs_inode_clear_reclaim_tag(
+diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
+index 251bcdc..749d7d3 100644
+--- a/fs/xfs/linux-2.6/xfs_buf.c
++++ b/fs/xfs/linux-2.6/xfs_buf.c
+@@ -188,7 +188,7 @@ _xfs_buf_initialize(
+ 	atomic_set(&bp->b_hold, 1);
+ 	init_completion(&bp->b_iowait);
+ 	INIT_LIST_HEAD(&bp->b_list);
+-	INIT_LIST_HEAD(&bp->b_hash_list);
++	RB_CLEAR_NODE(&bp->b_rbnode);
+ 	init_MUTEX_LOCKED(&bp->b_sema); /* held, no waiters */
+ 	XB_SET_OWNER(bp);
+ 	bp->b_target = target;
+@@ -262,8 +262,6 @@ xfs_buf_free(
+ {
+ 	trace_xfs_buf_free(bp, _RET_IP_);
+ 
+-	ASSERT(list_empty(&bp->b_hash_list));
+-
+ 	if (bp->b_flags & (_XBF_PAGE_CACHE|_XBF_PAGES)) {
+ 		uint		i;
+ 
+@@ -422,8 +420,10 @@ _xfs_buf_find(
+ {
+ 	xfs_off_t		range_base;
+ 	size_t			range_length;
+-	xfs_bufhash_t		*hash;
+-	xfs_buf_t		*bp, *n;
++	struct xfs_perag	*pag;
++	struct rb_node		**rbp;
++	struct rb_node		*parent;
++	xfs_buf_t		*bp;
+ 
+ 	range_base = (ioff << BBSHIFT);
+ 	range_length = (isize << BBSHIFT);
+@@ -432,14 +432,37 @@ _xfs_buf_find(
+ 	ASSERT(!(range_length < (1 << btp->bt_sshift)));
+ 	ASSERT(!(range_base & (xfs_off_t)btp->bt_smask));
+ 
+-	hash = &btp->bt_hash[hash_long((unsigned long)ioff, btp->bt_hashshift)];
+-
+-	spin_lock(&hash->bh_lock);
+-
+-	list_for_each_entry_safe(bp, n, &hash->bh_list, b_hash_list) {
+-		ASSERT(btp == bp->b_target);
+-		if (bp->b_file_offset == range_base &&
+-		    bp->b_buffer_length == range_length) {
++	/* get tree root */
++	pag = xfs_perag_get(btp->bt_mount,
++				xfs_daddr_to_agno(btp->bt_mount, ioff));
++
++	/* walk tree */
++	spin_lock(&pag->pag_buf_lock);
++	rbp = &pag->pag_buf_tree.rb_node;
++	parent = NULL;
++	bp = NULL;
++	while (*rbp) {
++		parent = *rbp;
++		bp = rb_entry(parent, struct xfs_buf, b_rbnode);
++
++		if (range_base < bp->b_file_offset)
++			rbp = &(*rbp)->rb_left;
++		else if (range_base > bp->b_file_offset)
++			rbp = &(*rbp)->rb_right;
++		else {
++			/*
++			 * found a block offset match. If the range doesn't
++			 * match, the only way this is allowed is if the buffer
++			 * in the cache is stale and the transaction that made
++			 * it stale has not yet committed. i.e. we are
++			 * reallocating a busy extent. Skip this buffer and
++			 * continue searching to the right for an exact match.
++			 */
++			if (bp->b_buffer_length != range_length) {
++				ASSERT(bp->b_flags & XBF_STALE);
++				rbp = &(*rbp)->rb_right;
++				continue;
++			}
+ 			atomic_inc(&bp->b_hold);
+ 			goto found;
+ 		}
+@@ -449,17 +472,21 @@ _xfs_buf_find(
+ 	if (new_bp) {
+ 		_xfs_buf_initialize(new_bp, btp, range_base,
+ 				range_length, flags);
+-		new_bp->b_hash = hash;
+-		list_add(&new_bp->b_hash_list, &hash->bh_list);
++		rb_link_node(&new_bp->b_rbnode, parent, rbp);
++		rb_insert_color(&new_bp->b_rbnode, &pag->pag_buf_tree);
++		/* the buffer keeps the perag reference until it is freed */
++		new_bp->b_pag = pag;
++		spin_unlock(&pag->pag_buf_lock);
+ 	} else {
+ 		XFS_STATS_INC(xb_miss_locked);
++		spin_unlock(&pag->pag_buf_lock);
++		xfs_perag_put(pag);
+ 	}
+-
+-	spin_unlock(&hash->bh_lock);
+ 	return new_bp;
+ 
+ found:
+-	spin_unlock(&hash->bh_lock);
++	spin_unlock(&pag->pag_buf_lock);
++	xfs_perag_put(pag);
+ 
+ 	/* Attempt to get the semaphore without sleeping,
+ 	 * if this does not work then we need to drop the
+@@ -809,27 +836,30 @@ void
+ xfs_buf_rele(
+ 	xfs_buf_t		*bp)
+ {
+-	xfs_bufhash_t		*hash = bp->b_hash;
++	struct xfs_perag	*pag = bp->b_pag;
+ 
+ 	trace_xfs_buf_rele(bp, _RET_IP_);
+ 
+-	if (unlikely(!hash)) {
++	if (!pag) {
+ 		ASSERT(!bp->b_relse);
++		ASSERT(RB_EMPTY_NODE(&bp->b_rbnode));
+ 		if (atomic_dec_and_test(&bp->b_hold))
+ 			xfs_buf_free(bp);
+ 		return;
+ 	}
+ 
++	ASSERT(!RB_EMPTY_NODE(&bp->b_rbnode));
+ 	ASSERT(atomic_read(&bp->b_hold) > 0);
+-	if (atomic_dec_and_lock(&bp->b_hold, &hash->bh_lock)) {
++	if (atomic_dec_and_lock(&bp->b_hold, &pag->pag_buf_lock)) {
+ 		if (bp->b_relse) {
+ 			atomic_inc(&bp->b_hold);
+-			spin_unlock(&hash->bh_lock);
+-			(*(bp->b_relse)) (bp);
++			spin_unlock(&pag->pag_buf_lock);
++			bp->b_relse(bp);
+ 		} else {
+ 			ASSERT(!(bp->b_flags & (XBF_DELWRI|_XBF_DELWRI_Q)));
+-			list_del_init(&bp->b_hash_list);
+-			spin_unlock(&hash->bh_lock);
++			rb_erase(&bp->b_rbnode, &pag->pag_buf_tree);
++			spin_unlock(&pag->pag_buf_lock);
++			xfs_perag_put(pag);
+ 			xfs_buf_free(bp);
+ 		}
+ 	}
+@@ -1429,56 +1459,24 @@ xfs_buf_iomove(
+  */
+ void
+ xfs_wait_buftarg(
+-	xfs_buftarg_t	*btp)
++	struct xfs_buftarg	*btp)
+ {
+-	xfs_bufhash_t	*hash;
+-	uint		i;
++	struct xfs_perag	*pag;
++	uint			i;
+ 
+-	for (i = 0; i < (1 << btp->bt_hashshift); i++) {
+-		hash = &btp->bt_hash[i];
+-		spin_lock(&hash->bh_lock);
+-		while (!list_empty(&hash->bh_list)) {
+-			spin_unlock(&hash->bh_lock);
++	for (i = 0; i < btp->bt_mount->m_sb.sb_agcount; i++) {
++		pag = xfs_perag_get(btp->bt_mount, i);
++		spin_lock(&pag->pag_buf_lock);
++		while (rb_first(&pag->pag_buf_tree)) {
++			spin_unlock(&pag->pag_buf_lock);
+ 			delay(100);
+-			spin_lock(&hash->bh_lock);
++			spin_lock(&pag->pag_buf_lock);
+ 		}
+-		spin_unlock(&hash->bh_lock);
+-	}
+-}
+-
+-/*
+- *	Allocate buffer hash table for a given target.
+- *	For devices containing metadata (i.e. not the log/realtime devices)
+- *	we need to allocate a much larger hash table.
+- */
+-STATIC void
+-xfs_alloc_bufhash(
+-	xfs_buftarg_t		*btp,
+-	int			external)
+-{
+-	unsigned int		i;
+-
+-	if (external) {
+-		btp->bt_hash = NULL;
+-		return;
+-	}
+-	btp->bt_hashshift = 12;	/* 4096 buckets */
+-	btp->bt_hash = kmem_zalloc_large((1 << btp->bt_hashshift) *
+-					 sizeof(xfs_bufhash_t));
+-	for (i = 0; i < (1 << btp->bt_hashshift); i++) {
+-		spin_lock_init(&btp->bt_hash[i].bh_lock);
+-		INIT_LIST_HEAD(&btp->bt_hash[i].bh_list);
++		spin_unlock(&pag->pag_buf_lock);
++		xfs_perag_put(pag);
+ 	}
  }
  
- /*
-+ * Grab the inode for reclaim exclusively.
-+ * Return 0 if we grabbed it, non-zero otherwise.
-+ */
-+STATIC int
-+xfs_reclaim_inode_grab(
-+	struct xfs_inode	*ip,
-+	int			flags)
-+{
-+
-+	/*
-+	 * do some unlocked checks first to avoid unnecceary lock traffic.
-+	 * The first is a flush lock check, the second is a already in reclaim
-+	 * check. Only do these checks if we are not going to block on locks.
-+	 */
-+	if ((flags & SYNC_TRYLOCK) &&
-+	    (!ip->i_flush.done || __xfs_iflags_test(ip, XFS_IRECLAIM))) {
-+		return 1;
-+	}
-+
-+	/*
-+	 * The radix tree lock here protects a thread in xfs_iget from racing
-+	 * with us starting reclaim on the inode.  Once we have the
-+	 * XFS_IRECLAIM flag set it will not touch us.
-+	 */
-+	spin_lock(&ip->i_flags_lock);
-+	ASSERT_ALWAYS(__xfs_iflags_test(ip, XFS_IRECLAIMABLE));
-+	if (__xfs_iflags_test(ip, XFS_IRECLAIM)) {
-+		/* ignore as it is already under reclaim */
-+		spin_unlock(&ip->i_flags_lock);
-+		return 1;
-+	}
-+	__xfs_iflags_set(ip, XFS_IRECLAIM);
-+	spin_unlock(&ip->i_flags_lock);
-+	return 0;
-+}
-+
-+/*
-  * Inodes in different states need to be treated differently, and the return
-  * value of xfs_iflush is not sufficient to get this right. The following table
-  * lists the inode states and the reclaim actions necessary for non-blocking
-@@ -680,23 +717,6 @@ xfs_reclaim_inode(
- {
- 	int	error = 0;
- 
--	/*
--	 * The radix tree lock here protects a thread in xfs_iget from racing
--	 * with us starting reclaim on the inode.  Once we have the
--	 * XFS_IRECLAIM flag set it will not touch us.
--	 */
--	spin_lock(&ip->i_flags_lock);
--	ASSERT_ALWAYS(__xfs_iflags_test(ip, XFS_IRECLAIMABLE));
--	if (__xfs_iflags_test(ip, XFS_IRECLAIM)) {
--		/* ignore as it is already under reclaim */
--		spin_unlock(&ip->i_flags_lock);
--		write_unlock(&pag->pag_ici_lock);
--		return 0;
--	}
--	__xfs_iflags_set(ip, XFS_IRECLAIM);
--	spin_unlock(&ip->i_flags_lock);
--	write_unlock(&pag->pag_ici_lock);
+-STATIC void
+-xfs_free_bufhash(
+-	xfs_buftarg_t		*btp)
+-{
+-	kmem_free_large(btp->bt_hash);
+-	btp->bt_hash = NULL;
+-}
 -
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 	if (!xfs_iflock_nowait(ip)) {
- 		if (!(sync_mode & SYNC_WAIT))
-@@ -813,16 +833,19 @@ xfs_reclaim_inodes_ag(
- 	while ((pag = xfs_perag_get_tag(mp, ag, XFS_ICI_RECLAIM_TAG))) {
- 		unsigned long	first_index = 0;
- 		int		done = 0;
-+		int		nr_found = 0;
+ /*
+  *	buftarg list for delwrite queue processing
+  */
+@@ -1511,7 +1509,6 @@ xfs_free_buftarg(
+ 	xfs_flush_buftarg(btp, 1);
+ 	if (mp->m_flags & XFS_MOUNT_BARRIER)
+ 		xfs_blkdev_issue_flush(btp);
+-	xfs_free_bufhash(btp);
+ 	iput(btp->bt_mapping->host);
  
- 		ag = pag->pag_agno + 1;
+ 	/* Unregister the buftarg first so that we don't get a
+@@ -1651,7 +1648,6 @@ xfs_alloc_buftarg(
+ 		goto error;
+ 	if (xfs_alloc_delwrite_queue(btp, fsname))
+ 		goto error;
+-	xfs_alloc_bufhash(btp, external);
+ 	return btp;
  
- 		do {
--			struct xfs_inode *ip;
--			int	nr_found;
-+			struct xfs_inode *batch[XFS_LOOKUP_BATCH];
-+			int	i;
+ error:
+diff --git a/fs/xfs/linux-2.6/xfs_buf.h b/fs/xfs/linux-2.6/xfs_buf.h
+index 1f109ce..c79882e 100644
+--- a/fs/xfs/linux-2.6/xfs_buf.h
++++ b/fs/xfs/linux-2.6/xfs_buf.h
+@@ -135,10 +135,6 @@ typedef struct xfs_buftarg {
+ 	unsigned int		bt_sshift;
+ 	size_t			bt_smask;
  
- 			write_lock(&pag->pag_ici_lock);
--			nr_found = radix_tree_gang_lookup_tag(&pag->pag_ici_root,
--					(void **)&ip, first_index, 1,
-+			nr_found = radix_tree_gang_lookup_tag(
-+					&pag->pag_ici_root,
-+					(void **)batch, first_index,
-+					XFS_LOOKUP_BATCH,
- 					XFS_ICI_RECLAIM_TAG);
- 			if (!nr_found) {
- 				write_unlock(&pag->pag_ici_lock);
-@@ -830,20 +853,41 @@ xfs_reclaim_inodes_ag(
- 			}
+-	/* per device buffer hash table */
+-	uint			bt_hashshift;
+-	xfs_bufhash_t		*bt_hash;
+-
+ 	/* per device delwri queue */
+ 	struct task_struct	*bt_task;
+ 	struct list_head	bt_list;
+@@ -172,8 +168,8 @@ typedef struct xfs_buf {
+ 	wait_queue_head_t	b_waiters;	/* unpin waiters */
+ 	struct list_head	b_list;
+ 	xfs_buf_flags_t		b_flags;	/* status flags */
+-	struct list_head	b_hash_list;	/* hash table list */
+-	xfs_bufhash_t		*b_hash;	/* hash table list start */
++	struct rb_node		b_rbnode;	/* rbtree node */
++	struct xfs_perag	*b_pag;		/* contains rbtree root */
+ 	xfs_buftarg_t		*b_target;	/* buffer target (device) */
+ 	atomic_t		b_hold;		/* reference count */
+ 	xfs_daddr_t		b_bn;		/* block number for I/O */
+diff --git a/fs/xfs/xfs_ag.h b/fs/xfs/xfs_ag.h
+index baeec83..63c7a1a 100644
+--- a/fs/xfs/xfs_ag.h
++++ b/fs/xfs/xfs_ag.h
+@@ -233,6 +233,10 @@ typedef struct xfs_perag {
+ 	struct mutex	pag_ici_reclaim_lock;	/* serialisation point */
+ 	unsigned long	pag_ici_reclaim_cursor;	/* reclaim restart point */
  
- 			/*
--			 * Update the index for the next lookup. Catch overflows
--			 * into the next AG range which can occur if we have inodes
--			 * in the last block of the AG and we are currently
--			 * pointing to the last inode.
-+			 * Grab the inodes before we drop the lock. if we found
-+			 * nothing, nr == 0 and the loop will be skipped.
- 			 */
--			first_index = XFS_INO_TO_AGINO(mp, ip->i_ino + 1);
--			if (first_index < XFS_INO_TO_AGINO(mp, ip->i_ino))
--				done = 1;
-+			for (i = 0; i < nr_found; i++) {
-+				struct xfs_inode *ip = batch[i];
++	/* buffer cache index */
++	spinlock_t	pag_buf_lock;	/* lock for pag_buf_tree */
++	struct rb_root	pag_buf_tree;	/* ordered tree of active buffers */
 +
-+				if (done || xfs_reclaim_inode_grab(ip, flags))
-+					batch[i] = NULL;
-+
-+				/*
-+				 * Update the index for the next lookup. Catch
-+				 * overflows into the next AG range which can
-+				 * occur if we have inodes in the last block of
-+				 * the AG and we are currently pointing to the
-+				 * last inode.
-+				 */
-+				first_index = XFS_INO_TO_AGINO(mp, ip->i_ino + 1);
-+				if (first_index < XFS_INO_TO_AGINO(mp, ip->i_ino))
-+					done = 1;
-+			}
+ 	/* for rcu-safe freeing */
+ 	struct rcu_head	rcu_head;
+ #endif
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 59859c3..cfa2fb4 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -479,6 +479,8 @@ xfs_initialize_perag(
+ 		rwlock_init(&pag->pag_ici_lock);
+ 		mutex_init(&pag->pag_ici_reclaim_lock);
+ 		INIT_RADIX_TREE(&pag->pag_ici_root, GFP_ATOMIC);
++		spin_lock_init(&pag->pag_buf_lock);
++		pag->pag_buf_tree = RB_ROOT;
  
--			error = xfs_reclaim_inode(ip, pag, flags);
--			if (error && last_error != EFSCORRUPTED)
--				last_error = error;
-+			/* unlock now we've grabbed the inodes. */
-+			write_unlock(&pag->pag_ici_lock);
-+
-+			for (i = 0; i < nr_found; i++) {
-+				if (!batch[i])
-+					continue;
-+				error = xfs_reclaim_inode(batch[i], pag, flags);
-+				if (error && last_error != EFSCORRUPTED)
-+					last_error = error;
-+			}
-+
-+			*nr_to_scan -= XFS_LOOKUP_BATCH;
- 
--		} while (!done && (*nr_to_scan)--);
-+		} while (nr_found && !done && *nr_to_scan > 0);
- 
- 		xfs_perag_put(pag);
- 	}
-@@ -879,7 +923,7 @@ xfs_reclaim_inode_shrink(
- 		if (!(gfp_mask & __GFP_FS))
- 			return -1;
- 
--		xfs_reclaim_inodes_ag(mp, 0, &nr_to_scan);
-+		xfs_reclaim_inodes_ag(mp, SYNC_TRYLOCK, &nr_to_scan);
- 		/* terminate if we don't exhaust the scan */
- 		if (nr_to_scan > 0)
- 			return -1;
+ 		if (radix_tree_preload(GFP_NOFS))
+ 			goto out_unwind;
 -- 
 1.7.1
 
