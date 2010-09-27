@@ -1,31 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8R1lLXL150648 for <xfs@oss.sgi.com>; Sun, 26 Sep 2010 20:47:21 -0500
+	o8R1lNfs150679 for <xfs@oss.sgi.com>; Sun, 26 Sep 2010 20:47:23 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 614961864614
-	for <xfs@oss.sgi.com>; Sun, 26 Sep 2010 18:48:16 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6A827E7934B
+	for <xfs@oss.sgi.com>; Sun, 26 Sep 2010 19:01:12 -0700 (PDT)
 Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
 	[150.101.137.102]) by cuda.sgi.com with ESMTP id
-	BFnB91fX7drwVUsq for <xfs@oss.sgi.com>;
-	Sun, 26 Sep 2010 18:48:16 -0700 (PDT)
+	jBhnLxVL4HBYI3ZQ for <xfs@oss.sgi.com>;
+	Sun, 26 Sep 2010 19:01:12 -0700 (PDT)
 Received: from dastard (unverified [121.44.66.70])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	40283925-1927428
+	40283926-1927428
 	for <xfs@oss.sgi.com>; Mon, 27 Sep 2010 11:18:15 +0930 (CST)
-Received: from disturbed ([192.168.1.9]) by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1P02p1-0002sR-PX
-	for xfs@oss.sgi.com; Mon, 27 Sep 2010 11:48:03 +1000
+Received: from [192.168.1.9] (helo=disturbed) by dastard with esmtp (Exim 4.71)
+	(envelope-from <dave@fromorbit.com>) id 1P02pB-0002sL-DB
+	for xfs@oss.sgi.com; Mon, 27 Sep 2010 11:48:13 +1000
 Received: from dave by disturbed with local (Exim 4.72)
-	(envelope-from <dave@disturbed.disaster>) id 1P02ov-0003pg-7E
-	for xfs@oss.sgi.com; Mon, 27 Sep 2010 11:47:57 +1000
+	(envelope-from <dave@disturbed.disaster>) id 1P02ou-0003pT-Sg
+	for xfs@oss.sgi.com; Mon, 27 Sep 2010 11:47:56 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 05/18] xfs: don't use vfs writeback for pure metadata
-	modifications
-Date: Mon, 27 Sep 2010 11:47:40 +1000
-Message-Id: <1285552073-14663-6-git-send-email-david@fromorbit.com>
-In-Reply-To: <1285552073-14663-1-git-send-email-david@fromorbit.com>
-References: <1285552073-14663-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 0/18] xfs: metadata scalability V4
+Date: Mon, 27 Sep 2010 11:47:35 +1000
+Message-Id: <1285552073-14663-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -41,429 +38,149 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+xfs: Metadata scalability patchset V4
 
-Under heavy multi-way parallel create workloads, the VFS struggles
-to write back all the inodes that have been changed in age order.
-The bdi flusher thread becomes CPU bound, spending 85% of it's time
-in the VFS code, mostly traversing the superblock dirty inode list
-to separate dirty inodes old enough to flush.
+Version 4:
+o removed xfs_ichgtime by open coding the only unlogged time change
+  and moved xfs_trans_ichgtime() to xfs_trans_inode.c
+o cleaned up trylock semantics in per-ag reclaim locking algorithm.
+o made xfs_inode_ag_walk_grab() STATIC.
 
-We already keep an index of all metadata changes in age order - in
-the AIL - and continued log pressure will do age ordered writeback
-without any extra overhead at all. If there is no pressure on the
-log, the xfssyncd will periodically write back metadata in ascending
-disk address offset order so will be very efficient.
+Version 3:
+o added CIL background push fixup. While it is a correctness bug fix,
+  it also signifincantly speeds up sustained workloads. This version
+  of the patch has addresed the review comments.
+o cleaned up some typos and removed useless comments around timestamp
+  changes
+o changed xfs_buf_get_uncached() parameters to pass the buftarg first.
+o split inode walk batch lookup in two patches to separate out grabbing and
+  releasing inodes from the batch lookups.
 
-Hence we can stop marking VFS inodes dirty during transaction commit
-or when changing timestamps during transactions. This will keep the
-inodes in the superblock dirty list to those containing data or
-unlogged metadata changes.
+Version 2:
+o dropped inode cache RCU/spinlock conversion (needs more testing)
+o dropped buffer cache LRU/no page cache conversion (needs more testing)
+o added CIL item insertion cleanup as suggested by Christoph.
+o added flags to xfs_buf_get_uncached() and xfs_buf_read_uncached()
+  to control memory allocation flags.
+o cleaned up buffer page allocation failure path
+o reworked inode reclaim shrinker scalability
+	- separated reclaim AG walk from sync walks
+	- implemented batch lookups for both sync and reclaim walks
+	- added per-ag reclaim serialisation locks and traversal
+	  cursors
 
-However, the timstamp changes are slightly more complex than this -
-there are a couple of places that do unlogged updates of the
-timestamps, and the VFS need to be informed of these. Hence add a
-new function xfs_trans_ichgtime() for transactional changes,
-and leave xfs_ichgtime() for the non-transactional changes.
+This patchset started out as a "convert the buffer cache to rbtrees"
+patch, and just gew from there as I peeled the onion from one
+bottleneck to another. The second version of this patch does not go
+as far as the first version - it drops the more radical changes as
+they are not ready for integration yet.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Alex Elder <aelder@sgi.com>
----
+The lock contention reductions allowed by the RCU inode cache
+lookups are replaced by more efficient lookup mechanisms during
+inode cache walking - using batching mechanisms as originally
+suggested by Nick Piggin. The code is a lot more efficient than
+Nick's proof of concept as it uses batched gang lookups on the radix
+trees. These batched lookups show almost the same performance
+improvement as the RCU lookup did but without changing the locking
+algorithms at all.  This batching would be necessary for efficient
+reclaim walks regardless of whether the sync walk is protected by
+RCU or the current rwlock.
+
+I dropped the no-page-cache conversion patches for the buffer cache
+as well, as they need more work and testing before they are ready.
+
+The shrinker rework improves parallel unlink performance
+substantially more than just single threading the shrinker execution
+and does not have the OOM problems that single threading the
+shrinker had. It avoids the OOM problems by ensuring that every
+shrinker call does some work or sleeps while waiting for an AG to do
+some work on. The lookup optimisations done for gang lookups ensure
+that the scanning is as efficient as possible, so overall shrinker
+overhead has gone down significantly.
+
+Performance numbers here are 8-way fs_mark create to 50M files, and
+8-way rm -rf to remove the files created.
+
+			wall time	fs_mark rate
+2.6.36-rc4:
+	create:		13m10s		65k file/s
+	unlink:		23m58s		N/A
+
+2.6.36-rc4 + v1-patchset:
+	create:		 9m47s		95k files/s
+	unlink:		14m16s		N/A
+
+2.6.36-rc3 + v2-patchset:
+	create:		10m32s		85k file/s
+	unlink:		11m49s		N/A
+
+2.6.36-rc4 + v3-patchset
+	create:		10m03s		90k file/s
+	unlink:		11m29s		N/A
+
+Also, the new CIL push patch has greatly improved 8-way 1 billion inode create
+and unlink times, with create dropping from 4h38m to 3h41m, and 8-way unlink
+dropping from 5h36m to 4h28m.
+
+The patches are available in the following git tree. The branch is
+based on the current OSS xfs tree, and as such is based on
+2.6.36-rc4. This is a rebase of the previous branch.
+
+The following changes since commit e89318c670af3959db3aa483da509565f5a2536c:
+
+  xfs: eliminate some newly-reported gcc warnings (2010-09-16 12:56:42 -0500)
+
+are available in the git repository at:
+  git://git.kernel.org/pub/scm/linux/kernel/git/dgc/xfsdev.git metadata-scale
+
+Dave Chinner (18):
+      xfs: force background CIL push under sustained load
+      xfs: reduce the number of CIL lock round trips during commit
+      xfs: remove debug assert for per-ag reference counting
+      xfs: lockless per-ag lookups
+      xfs: don't use vfs writeback for pure metadata modifications
+      xfs: rename xfs_buf_get_nodaddr to be more appropriate
+      xfs: introduced uncached buffer read primitve
+      xfs: store xfs_mount in the buftarg instead of in the xfs_buf
+      xfs: kill XBF_FS_MANAGED buffers
+      xfs: use unhashed buffers for size checks
+      xfs: remove buftarg hash for external devices
+      xfs: split inode AG walking into separate code for reclaim
+      xfs: split out inode walk inode grabbing
+      xfs: implement batched inode lookups for AG walking
+      xfs: batch inode reclaim lookup
+      xfs: serialise inode reclaim within an AG
+      xfs: convert buffer cache hash to rbtree
+      xfs: pack xfs_buf structure more tightly
+
+ fs/xfs/linux-2.6/xfs_buf.c     |  200 +++++++++++---------
+ fs/xfs/linux-2.6/xfs_buf.h     |   50 +++---
  fs/xfs/linux-2.6/xfs_ioctl.c   |    2 +-
- fs/xfs/linux-2.6/xfs_iops.c    |   35 -----------------------------------
- fs/xfs/linux-2.6/xfs_super.c   |    7 +------
- fs/xfs/quota/xfs_qm_syscalls.c |    2 +-
- fs/xfs/xfs_attr.c              |   31 +++++++++++--------------------
+ fs/xfs/linux-2.6/xfs_iops.c    |   35 ----
+ fs/xfs/linux-2.6/xfs_super.c   |   15 +-
+ fs/xfs/linux-2.6/xfs_sync.c    |  413 +++++++++++++++++++++++-----------------
+ fs/xfs/linux-2.6/xfs_sync.h    |    4 +-
+ fs/xfs/linux-2.6/xfs_trace.h   |    4 +-
+ fs/xfs/quota/xfs_qm_syscalls.c |   14 +--
+ fs/xfs/xfs_ag.h                |    9 +
+ fs/xfs/xfs_attr.c              |   31 +--
+ fs/xfs/xfs_buf_item.c          |    3 +-
+ fs/xfs/xfs_fsops.c             |   11 +-
  fs/xfs/xfs_inode.h             |    1 -
- fs/xfs/xfs_inode_item.c        |    9 ---------
- fs/xfs/xfs_rename.c            |   12 ++++++++----
+ fs/xfs/xfs_inode_item.c        |    9 -
+ fs/xfs/xfs_log.c               |    3 +-
+ fs/xfs/xfs_log_cil.c           |  244 +++++++++++++-----------
+ fs/xfs/xfs_log_priv.h          |   37 ++--
+ fs/xfs/xfs_log_recover.c       |   19 +-
+ fs/xfs/xfs_mount.c             |  152 ++++++++-------
+ fs/xfs/xfs_mount.h             |    2 +
+ fs/xfs/xfs_rename.c            |   12 +-
+ fs/xfs/xfs_rtalloc.c           |   29 ++--
  fs/xfs/xfs_trans.h             |    1 +
- fs/xfs/xfs_trans_inode.c       |   30 ++++++++++++++++++++++++++++++
- fs/xfs/xfs_utils.c             |    4 ++--
- fs/xfs/xfs_vnodeops.c          |   17 ++++++++++-------
- 12 files changed, 65 insertions(+), 86 deletions(-)
-
-diff --git a/fs/xfs/linux-2.6/xfs_ioctl.c b/fs/xfs/linux-2.6/xfs_ioctl.c
-index 03aa908..10206be 100644
---- a/fs/xfs/linux-2.6/xfs_ioctl.c
-+++ b/fs/xfs/linux-2.6/xfs_ioctl.c
-@@ -1088,8 +1088,8 @@ xfs_ioctl_setattr(
- 		xfs_diflags_to_linux(ip);
- 	}
- 
-+	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
--	xfs_ichgtime(ip, XFS_ICHGTIME_CHG);
- 
- 	XFS_STATS_INC(xs_ig_attrchg);
- 
-diff --git a/fs/xfs/linux-2.6/xfs_iops.c b/fs/xfs/linux-2.6/xfs_iops.c
-index b1fc2a6..a788f01 100644
---- a/fs/xfs/linux-2.6/xfs_iops.c
-+++ b/fs/xfs/linux-2.6/xfs_iops.c
-@@ -95,41 +95,6 @@ xfs_mark_inode_dirty(
- }
- 
- /*
-- * Change the requested timestamp in the given inode.
-- * We don't lock across timestamp updates, and we don't log them but
-- * we do record the fact that there is dirty information in core.
-- */
--void
--xfs_ichgtime(
--	xfs_inode_t	*ip,
--	int		flags)
--{
--	struct inode	*inode = VFS_I(ip);
--	timespec_t	tv;
--	int		sync_it = 0;
--
--	tv = current_fs_time(inode->i_sb);
--
--	if ((flags & XFS_ICHGTIME_MOD) &&
--	    !timespec_equal(&inode->i_mtime, &tv)) {
--		inode->i_mtime = tv;
--		sync_it = 1;
--	}
--	if ((flags & XFS_ICHGTIME_CHG) &&
--	    !timespec_equal(&inode->i_ctime, &tv)) {
--		inode->i_ctime = tv;
--		sync_it = 1;
--	}
--
--	/*
--	 * Update complete - now make sure everyone knows that the inode
--	 * is dirty.
--	 */
--	if (sync_it)
--		xfs_mark_inode_dirty_sync(ip);
--}
--
--/*
-  * Hook in SELinux.  This is not quite correct yet, what we really need
-  * here (as we do for default ACLs) is a mechanism by which creation of
-  * these attrs can be journalled at inode creation time (along with the
-diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
-index a4e0797..83154c0 100644
---- a/fs/xfs/linux-2.6/xfs_super.c
-+++ b/fs/xfs/linux-2.6/xfs_super.c
-@@ -972,12 +972,7 @@ xfs_fs_inode_init_once(
- 
- /*
-  * Dirty the XFS inode when mark_inode_dirty_sync() is called so that
-- * we catch unlogged VFS level updates to the inode. Care must be taken
-- * here - the transaction code calls mark_inode_dirty_sync() to mark the
-- * VFS inode dirty in a transaction and clears the i_update_core field;
-- * it must clear the field after calling mark_inode_dirty_sync() to
-- * correctly indicate that the dirty state has been propagated into the
-- * inode log item.
-+ * we catch unlogged VFS level updates to the inode.
-  *
-  * We need the barrier() to maintain correct ordering between unlogged
-  * updates and the transaction commit code that clears the i_update_core
-diff --git a/fs/xfs/quota/xfs_qm_syscalls.c b/fs/xfs/quota/xfs_qm_syscalls.c
-index 45e5849..7a71336 100644
---- a/fs/xfs/quota/xfs_qm_syscalls.c
-+++ b/fs/xfs/quota/xfs_qm_syscalls.c
-@@ -276,7 +276,7 @@ xfs_qm_scall_trunc_qfile(
- 		goto out_unlock;
- 	}
- 
--	xfs_ichgtime(ip, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
-+	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
- 	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
- 
- out_unlock:
-diff --git a/fs/xfs/xfs_attr.c b/fs/xfs/xfs_attr.c
-index c256824..905d390 100644
---- a/fs/xfs/xfs_attr.c
-+++ b/fs/xfs/xfs_attr.c
-@@ -355,16 +355,15 @@ xfs_attr_set_int(
- 			if (mp->m_flags & XFS_MOUNT_WSYNC) {
- 				xfs_trans_set_sync(args.trans);
- 			}
-+
-+			if (!error && (flags & ATTR_KERNOTIME) == 0) {
-+				xfs_trans_ichgtime(args.trans, dp,
-+							XFS_ICHGTIME_CHG);
-+			}
- 			err2 = xfs_trans_commit(args.trans,
- 						 XFS_TRANS_RELEASE_LOG_RES);
- 			xfs_iunlock(dp, XFS_ILOCK_EXCL);
- 
--			/*
--			 * Hit the inode change time.
--			 */
--			if (!error && (flags & ATTR_KERNOTIME) == 0) {
--				xfs_ichgtime(dp, XFS_ICHGTIME_CHG);
--			}
- 			return(error == 0 ? err2 : error);
- 		}
- 
-@@ -420,6 +419,9 @@ xfs_attr_set_int(
- 		xfs_trans_set_sync(args.trans);
- 	}
- 
-+	if ((flags & ATTR_KERNOTIME) == 0)
-+		xfs_trans_ichgtime(args.trans, dp, XFS_ICHGTIME_CHG);
-+
- 	/*
- 	 * Commit the last in the sequence of transactions.
- 	 */
-@@ -427,13 +429,6 @@ xfs_attr_set_int(
- 	error = xfs_trans_commit(args.trans, XFS_TRANS_RELEASE_LOG_RES);
- 	xfs_iunlock(dp, XFS_ILOCK_EXCL);
- 
--	/*
--	 * Hit the inode change time.
--	 */
--	if (!error && (flags & ATTR_KERNOTIME) == 0) {
--		xfs_ichgtime(dp, XFS_ICHGTIME_CHG);
--	}
--
- 	return(error);
- 
- out:
-@@ -567,6 +562,9 @@ xfs_attr_remove_int(xfs_inode_t *dp, struct xfs_name *name, int flags)
- 		xfs_trans_set_sync(args.trans);
- 	}
- 
-+	if ((flags & ATTR_KERNOTIME) == 0)
-+		xfs_trans_ichgtime(args.trans, dp, XFS_ICHGTIME_CHG);
-+
- 	/*
- 	 * Commit the last in the sequence of transactions.
- 	 */
-@@ -574,13 +572,6 @@ xfs_attr_remove_int(xfs_inode_t *dp, struct xfs_name *name, int flags)
- 	error = xfs_trans_commit(args.trans, XFS_TRANS_RELEASE_LOG_RES);
- 	xfs_iunlock(dp, XFS_ILOCK_EXCL);
- 
--	/*
--	 * Hit the inode change time.
--	 */
--	if (!error && (flags & ATTR_KERNOTIME) == 0) {
--		xfs_ichgtime(dp, XFS_ICHGTIME_CHG);
--	}
--
- 	return(error);
- 
- out:
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 0898c54..54781fc 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -471,7 +471,6 @@ int		xfs_iunlink(struct xfs_trans *, xfs_inode_t *);
- void		xfs_iext_realloc(xfs_inode_t *, int, int);
- void		xfs_iunpin_wait(xfs_inode_t *);
- int		xfs_iflush(xfs_inode_t *, uint);
--void		xfs_ichgtime(xfs_inode_t *, int);
- void		xfs_lock_inodes(xfs_inode_t **, int, uint);
- void		xfs_lock_two_inodes(xfs_inode_t *, xfs_inode_t *, uint);
- 
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index fe00777..c7ac020 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -223,15 +223,6 @@ xfs_inode_item_format(
- 	nvecs	     = 1;
- 
- 	/*
--	 * Make sure the linux inode is dirty. We do this before
--	 * clearing i_update_core as the VFS will call back into
--	 * XFS here and set i_update_core, so we need to dirty the
--	 * inode first so that the ordering of i_update_core and
--	 * unlogged modifications still works as described below.
--	 */
--	xfs_mark_inode_dirty_sync(ip);
--
--	/*
- 	 * Clear i_update_core if the timestamps (or any other
- 	 * non-transactional modification) need flushing/logging
- 	 * and we're about to log them with the rest of the core.
-diff --git a/fs/xfs/xfs_rename.c b/fs/xfs/xfs_rename.c
-index 8fca957..9028733 100644
---- a/fs/xfs/xfs_rename.c
-+++ b/fs/xfs/xfs_rename.c
-@@ -211,7 +211,9 @@ xfs_rename(
- 			goto error_return;
- 		if (error)
- 			goto abort_return;
--		xfs_ichgtime(target_dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
-+
-+		xfs_trans_ichgtime(tp, target_dp,
-+					XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
- 
- 		if (new_parent && src_is_directory) {
- 			error = xfs_bumplink(tp, target_dp);
-@@ -249,7 +251,9 @@ xfs_rename(
- 					&first_block, &free_list, spaceres);
- 		if (error)
- 			goto abort_return;
--		xfs_ichgtime(target_dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
-+
-+		xfs_trans_ichgtime(tp, target_dp,
-+					XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
- 
- 		/*
- 		 * Decrement the link count on the target since the target
-@@ -292,7 +296,7 @@ xfs_rename(
- 	 * inode isn't really being changed, but old unix file systems did
- 	 * it and some incremental backup programs won't work without it.
- 	 */
--	xfs_ichgtime(src_ip, XFS_ICHGTIME_CHG);
-+	xfs_trans_ichgtime(tp, src_ip, XFS_ICHGTIME_CHG);
- 
- 	/*
- 	 * Adjust the link count on src_dp.  This is necessary when
-@@ -315,7 +319,7 @@ xfs_rename(
- 	if (error)
- 		goto abort_return;
- 
--	xfs_ichgtime(src_dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
-+	xfs_trans_ichgtime(tp, src_dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
- 	xfs_trans_log_inode(tp, src_dp, XFS_ILOG_CORE);
- 	if (new_parent)
- 		xfs_trans_log_inode(tp, target_dp, XFS_ILOG_CORE);
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index c13c0f9..e2cbe4d 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -473,6 +473,7 @@ void		xfs_trans_dquot_buf(xfs_trans_t *, struct xfs_buf *, uint);
- void		xfs_trans_inode_alloc_buf(xfs_trans_t *, struct xfs_buf *);
- int		xfs_trans_iget(struct xfs_mount *, xfs_trans_t *,
- 			       xfs_ino_t , uint, uint, struct xfs_inode **);
-+void		xfs_trans_ichgtime(struct xfs_trans *, struct xfs_inode *, int);
- void		xfs_trans_ijoin_ref(struct xfs_trans *, struct xfs_inode *, uint);
- void		xfs_trans_ijoin(struct xfs_trans *, struct xfs_inode *);
- void		xfs_trans_log_buf(xfs_trans_t *, struct xfs_buf *, uint, uint);
-diff --git a/fs/xfs/xfs_trans_inode.c b/fs/xfs/xfs_trans_inode.c
-index cdc53a1..ccb3453 100644
---- a/fs/xfs/xfs_trans_inode.c
-+++ b/fs/xfs/xfs_trans_inode.c
-@@ -118,6 +118,36 @@ xfs_trans_ijoin_ref(
- }
- 
- /*
-+ * Transactional inode timestamp update. Requires the inode to be locked and
-+ * joined to the transaction supplied. Relies on the transaction subsystem to
-+ * track dirty state and update/writeback the inode accordingly.
-+ */
-+void
-+xfs_trans_ichgtime(
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*ip,
-+	int			flags)
-+{
-+	struct inode		*inode = VFS_I(ip);
-+	timespec_t		tv;
-+
-+	ASSERT(tp);
-+	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-+	ASSERT(ip->i_transp == tp);
-+
-+	tv = current_fs_time(inode->i_sb);
-+
-+	if ((flags & XFS_ICHGTIME_MOD) &&
-+	    !timespec_equal(&inode->i_mtime, &tv)) {
-+		inode->i_mtime = tv;
-+	}
-+	if ((flags & XFS_ICHGTIME_CHG) &&
-+	    !timespec_equal(&inode->i_ctime, &tv)) {
-+		inode->i_ctime = tv;
-+	}
-+}
-+
-+/*
-  * This is called to mark the fields indicated in fieldmask as needing
-  * to be logged when the transaction is committed.  The inode must
-  * already be associated with the given transaction.
-diff --git a/fs/xfs/xfs_utils.c b/fs/xfs/xfs_utils.c
-index b7d5769..4c2ba6f 100644
---- a/fs/xfs/xfs_utils.c
-+++ b/fs/xfs/xfs_utils.c
-@@ -235,7 +235,7 @@ xfs_droplink(
- {
- 	int	error;
- 
--	xfs_ichgtime(ip, XFS_ICHGTIME_CHG);
-+	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
- 
- 	ASSERT (ip->i_d.di_nlink > 0);
- 	ip->i_d.di_nlink--;
-@@ -299,7 +299,7 @@ xfs_bumplink(
- {
- 	if (ip->i_d.di_nlink >= XFS_MAXLINK)
- 		return XFS_ERROR(EMLINK);
--	xfs_ichgtime(ip, XFS_ICHGTIME_CHG);
-+	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
- 
- 	ASSERT(ip->i_d.di_nlink > 0);
- 	ip->i_d.di_nlink++;
-diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
-index dc6e4fb..a230cd4 100644
---- a/fs/xfs/xfs_vnodeops.c
-+++ b/fs/xfs/xfs_vnodeops.c
-@@ -184,8 +184,11 @@ xfs_setattr(
- 		    ip->i_size == 0 && ip->i_d.di_nextents == 0) {
- 			xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 			lock_flags &= ~XFS_ILOCK_EXCL;
--			if (mask & ATTR_CTIME)
--				xfs_ichgtime(ip, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
-+			if (mask & ATTR_CTIME) {
-+				inode->i_mtime = inode->i_ctime =
-+						current_fs_time(inode->i_sb);
-+				xfs_mark_inode_dirty_sync(ip);
-+			}
- 			code = 0;
- 			goto error_return;
- 		}
-@@ -1391,7 +1394,7 @@ xfs_create(
- 		ASSERT(error != ENOSPC);
- 		goto out_trans_abort;
- 	}
--	xfs_ichgtime(dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
-+	xfs_trans_ichgtime(tp, dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
- 	xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
- 
- 	if (is_dir) {
-@@ -1742,7 +1745,7 @@ xfs_remove(
- 		ASSERT(error != ENOENT);
- 		goto out_bmap_cancel;
- 	}
--	xfs_ichgtime(dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
-+	xfs_trans_ichgtime(tp, dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
- 
- 	if (is_dir) {
- 		/*
-@@ -1895,7 +1898,7 @@ xfs_link(
- 					&first_block, &free_list, resblks);
- 	if (error)
- 		goto abort_return;
--	xfs_ichgtime(tdp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
-+	xfs_trans_ichgtime(tp, tdp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
- 	xfs_trans_log_inode(tp, tdp, XFS_ILOG_CORE);
- 
- 	error = xfs_bumplink(tp, sip);
-@@ -2129,7 +2132,7 @@ xfs_symlink(
- 					&first_block, &free_list, resblks);
- 	if (error)
- 		goto error1;
--	xfs_ichgtime(dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
-+	xfs_trans_ichgtime(tp, dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
- 	xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
- 
- 	/*
-@@ -2833,7 +2836,7 @@ xfs_change_file_space(
- 		if (ip->i_d.di_mode & S_IXGRP)
- 			ip->i_d.di_mode &= ~S_ISGID;
- 
--		xfs_ichgtime(ip, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
-+		xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
- 	}
- 	if (setprealloc)
- 		ip->i_d.di_flags |= XFS_DIFLAG_PREALLOC;
--- 
-1.7.1
+ fs/xfs/xfs_trans_inode.c       |   30 +++
+ fs/xfs/xfs_utils.c             |    4 +-
+ fs/xfs/xfs_vnodeops.c          |   23 ++-
+ 27 files changed, 732 insertions(+), 625 deletions(-)
 
 _______________________________________________
 xfs mailing list
