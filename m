@@ -1,27 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8S2cC3Y216217 for <xfs@oss.sgi.com>; Mon, 27 Sep 2010 21:38:13 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 22F80E87B0F
-	for <xfs@oss.sgi.com>; Mon, 27 Sep 2010 19:52:07 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
-	[150.101.137.100]) by cuda.sgi.com with ESMTP id
-	BooVYpFdEiC2zPls for <xfs@oss.sgi.com>;
-	Mon, 27 Sep 2010 19:52:07 -0700 (PDT)
-Received: from dastard (unverified [121.44.66.70])
-	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	29117220-1927428
-	for <xfs@oss.sgi.com>; Tue, 28 Sep 2010 12:09:07 +0930 (CST)
-Received: from dave by dastard with local (Exim 4.71)
-	(envelope-from <david@fromorbit.com>) id 1P0Q5y-0004fs-8w
-	for xfs@oss.sgi.com; Tue, 28 Sep 2010 12:39:06 +1000
-Date: Tue, 28 Sep 2010 12:39:06 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [GIT PULL] xfs: metadata scalability
-Message-ID: <20100928023906.GE5665@dastard>
+	o8SIqlAU255396 for <xfs@oss.sgi.com>; Tue, 28 Sep 2010 13:52:48 -0500
+Received: from mexforward.lss.emc.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 83FABAEA58
+	for <xfs@oss.sgi.com>; Tue, 28 Sep 2010 11:53:45 -0700 (PDT)
+Received: from mexforward.lss.emc.com (mexforward.lss.emc.com [128.222.32.20])
+	by cuda.sgi.com with ESMTP id 2TpVACeoJ2PHq7FA for
+	<xfs@oss.sgi.com>; Tue, 28 Sep 2010 11:53:45 -0700 (PDT)
+Received: from hop04-l1d11-si04.isus.emc.com (HOP04-L1D11-SI04.isus.emc.com
+	[10.254.111.24])
+	by mexforward.lss.emc.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id
+	o8SIrgSF025242
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Tue, 28 Sep 2010 14:53:43 -0400
+Received: from mailhub.lss.emc.com (mailhub.lss.emc.com [10.254.221.253]) by
+	hop04-l1d11-si04.isus.emc.com (RSA Interceptor) for
+	<xfs@oss.sgi.com>; Tue, 28 Sep 2010 14:53:38 -0400
+Received: from corpussmtp4.corp.emc.com (corpussmtp4.corp.emc.com
+	[10.254.169.197])
+	by mailhub.lss.emc.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id
+	o8SIrK0p015364 for <xfs@oss.sgi.com>; Tue, 28 Sep 2010 14:53:20 -0400
+From: <Ivan.Novick@emc.com>
+Date: Tue, 28 Sep 2010 14:53:46 -0400
+Subject: allocsize mount option
+Message-ID: <C8C787CA.44AA%ivan.novick@emc.com>
+Content-Language: en
 MIME-Version: 1.0
-Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,76 +40,28 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: Timothy.Heath@emc.com
 
-Hi Alex,
+Hi all,
 
-Can you please pull the following branch into the main XFS tree?
-These are all patches for the .37 merge, except for the first one
-(xfs: force background CIL push under sustained load) which needs to
-be sent to Linus for .36.
+According to the documentation the allocsize mount option: "Sets the
+buffered I/O end-of-file preallocation size when doing delayed allocation
+writeout"
 
-Thanks,
+Will this value limit "extent" sizes to be be no smaller than the allocsize?
 
-Dave.
+I have set the following mount options:
+(rw,noatime,nodiratime,logbufs=8,allocsize=512m)
 
-The following changes since commit e89318c670af3959db3aa483da509565f5a2536c:
+And yet, depending on the workload, the extent sizes are often 1 or 2 orders
+of magnitude lower than 512 MB ...
 
-  xfs: eliminate some newly-reported gcc warnings (2010-09-16 12:56:42 -0500)
+If I wanted to do further reading on the subject, can someone point me to an
+approximate location in the code where the size of a newly created extent is
+determined?
 
-are available in the git repository at:
-  git://git.kernel.org/pub/scm/linux/kernel/git/dgc/xfsdev.git metadata-scale
-
-Dave Chinner (18):
-      xfs: force background CIL push under sustained load
-      xfs: reduce the number of CIL lock round trips during commit
-      xfs: remove debug assert for per-ag reference counting
-      xfs: lockless per-ag lookups
-      xfs: don't use vfs writeback for pure metadata modifications
-      xfs: rename xfs_buf_get_nodaddr to be more appropriate
-      xfs: introduced uncached buffer read primitve
-      xfs: store xfs_mount in the buftarg instead of in the xfs_buf
-      xfs: kill XBF_FS_MANAGED buffers
-      xfs: use unhashed buffers for size checks
-      xfs: remove buftarg hash for external devices
-      xfs: split inode AG walking into separate code for reclaim
-      xfs: split out inode walk inode grabbing
-      xfs: implement batched inode lookups for AG walking
-      xfs: batch inode reclaim lookup
-      xfs: serialise inode reclaim within an AG
-      xfs: convert buffer cache hash to rbtree
-      xfs: pack xfs_buf structure more tightly
-
- fs/xfs/linux-2.6/xfs_buf.c     |  200 +++++++++++---------
- fs/xfs/linux-2.6/xfs_buf.h     |   50 +++---
- fs/xfs/linux-2.6/xfs_ioctl.c   |    2 +-
- fs/xfs/linux-2.6/xfs_iops.c    |   35 ----
- fs/xfs/linux-2.6/xfs_super.c   |   15 +-
- fs/xfs/linux-2.6/xfs_sync.c    |  413 +++++++++++++++++++++++-----------------
- fs/xfs/linux-2.6/xfs_sync.h    |    4 +-
- fs/xfs/linux-2.6/xfs_trace.h   |    4 +-
- fs/xfs/quota/xfs_qm_syscalls.c |   14 +--
- fs/xfs/xfs_ag.h                |    9 +
- fs/xfs/xfs_attr.c              |   31 +--
- fs/xfs/xfs_buf_item.c          |    3 +-
- fs/xfs/xfs_fsops.c             |   11 +-
- fs/xfs/xfs_inode.h             |    1 -
- fs/xfs/xfs_inode_item.c        |    9 -
- fs/xfs/xfs_log.c               |    3 +-
- fs/xfs/xfs_log_cil.c           |  244 +++++++++++++-----------
- fs/xfs/xfs_log_priv.h          |   37 ++--
- fs/xfs/xfs_log_recover.c       |   19 +-
- fs/xfs/xfs_mount.c             |  152 ++++++++-------
- fs/xfs/xfs_mount.h             |    2 +
- fs/xfs/xfs_rename.c            |   12 +-
- fs/xfs/xfs_rtalloc.c           |   29 ++--
- fs/xfs/xfs_trans.h             |    1 +
- fs/xfs/xfs_trans_inode.c       |   30 +++
- fs/xfs/xfs_utils.c             |    4 +-
- fs/xfs/xfs_vnodeops.c          |   23 ++-
- 27 files changed, 732 insertions(+), 625 deletions(-)
--- 
-Dave Chinner
-david@fromorbit.com
+Cheers,
+Ivan Novick
 
 _______________________________________________
 xfs mailing list
