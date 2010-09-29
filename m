@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8T43UOf017369 for <xfs@oss.sgi.com>; Tue, 28 Sep 2010 23:03:33 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E810118841AE
-	for <xfs@oss.sgi.com>; Tue, 28 Sep 2010 21:04:29 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id jkKUncinu9Xkmgfs for
-	<xfs@oss.sgi.com>; Tue, 28 Sep 2010 21:04:29 -0700 (PDT)
-Date: Wed, 29 Sep 2010 00:04:25 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: reduce lock traffic on incore sb lock
-Message-ID: <20100929040425.GA29691@infradead.org>
-References: <1285721500-5671-1-git-send-email-david@fromorbit.com>
+	o8T64QcW025718 for <xfs@oss.sgi.com>; Wed, 29 Sep 2010 01:04:26 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7451A1884631
+	for <xfs@oss.sgi.com>; Tue, 28 Sep 2010 23:05:23 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
+	[150.101.137.100]) by cuda.sgi.com with ESMTP id
+	cSnAGYXgd4jwrEax for <xfs@oss.sgi.com>;
+	Tue, 28 Sep 2010 23:05:23 -0700 (PDT)
+Date: Wed, 29 Sep 2010 16:05:09 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: The segment fault with NULL point using when recovering failure
+Message-ID: <20100929060509.GL5665@dastard>
+References: <AANLkTimR-dBLmQQ-Nh0mmjHJMfFidePKxfO6P76y48n8@mail.gmail.com>
+	<20100917014412.GK24409@dastard>
+	<AANLkTi=mGBXYLgwL96VqtF+8eMCxu83mz0V5719YPrkH@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1285721500-5671-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <AANLkTi=mGBXYLgwL96VqtF+8eMCxu83mz0V5719YPrkH@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,32 +31,62 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Mike Gao <ygao.linux@gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-On Wed, Sep 29, 2010 at 10:51:40AM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+[Mike, please don't top-post responses - it makes it really hard to
+quote properly. ]
+
+On Fri, Sep 24, 2010 at 10:53:43AM -0500, Mike Gao wrote:
+> On Thu, Sep 16, 2010 at 8:44 PM, Dave Chinner <david@fromorbit.com> wrote:
+> > On Wed, Sep 15, 2010 at 10:59:07AM -0500, Mike Gao wrote:
+> > > xlog_recover_process_iunlinks(
+> > >     xlog_t        *log)
+> > > {
+> > >                 /*
+> > >                  * Reacquire the agibuffer and continue around
+> > >                  * the loop. This should never fail as we know
+> > >                  * the buffer was good earlier on.
+> > >                  */
+> > >                 error = xfs_read_agi(mp, NULL, agno, &agibp);
+> > >                 ASSERT(error == 0);
+> > >                 agi = XFS_BUF_TO_AGI(agibp);
+> > >
+> > > }
+> > > If no defined DEBUG, ASSERT will not work and agibp could be ZERO if
+> > there
+> > > is a error in xfs_read_agi.
+> > > And the comment shouldn't say it never fail because  xfs_read_agi will
+> > > return error in function and it does when there is forced shutdown.
+> >
+> > Have you seen a failure here?
+>
+> I am curious about how this happens.
+
+What, how a failure happens there? The ASSERT is saying that a
+failure should never happen there....
+
+> This error is caused by log recovery when mount try to fill super block. As
+> super block is protected by log or Journaling, it shouldn't be corrupted or
+> can't be recovery by journaling.
+
+I'm not sure I follow you here - the above is reading an AGI, not a
+superblock. What is the stack trace that you've seen?
+
+> Anyway, this is reported as XFS INTERNAL ERROR.
 > 
-> Under heavy parallel unlink workloads, the incore superblock lock is
-> heavily trafficed in xfs_mod_incore_sb_batch(). This is despite the
-> fact that the counters being modified are typically the counters
-> that are per-cpu and do not require the lock. IOWs, we are locking
-> and unlocking the superblock lock needlessly, and the result is that
-> it is third most heavily contended lock in the system under these
-> workloads.
-> 
-> Fix this by only locking the superblock lock when we are modifying a
-> counter protected by it. This completely removes the m_sb_lock from
-> lock_stat traces during create/remove workloads.
+> XFS internal error XFS_WANT_CORRUPTED_GOTO at line 4147 of file
+> fs/xfs/xfs_bmap.c.  Caller 0x871b9c26
 
-God spot of the idiocy there, but I really don't like the patch.
-I've started writing a small patches series solving the issue slightly
-better by cleaning up this area a bit.
+That is from a corrupted bmap btree, which has no connection to
+the AGI. I'm confused by what problems you are trying to report.
 
-After this we will never use xfs_mod_incore_sb/xfs_mod_incore_sb_batch
-for the percpu counters but rather make those always go through
-xfs_icsb_modify_counters.  I'll need to quickly finish it up and will
-send it out soon.
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
