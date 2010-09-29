@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8TGPxGi064922 for <xfs@oss.sgi.com>; Wed, 29 Sep 2010 11:25:59 -0500
+	o8TGHkOX064271 for <xfs@oss.sgi.com>; Wed, 29 Sep 2010 11:17:47 -0500
 Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 758281E709EC
-	for <xfs@oss.sgi.com>; Wed, 29 Sep 2010 09:26:57 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 794AAE91C1B
+	for <xfs@oss.sgi.com>; Wed, 29 Sep 2010 09:31:52 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id NXfRRKnNdv2ciA0A for
-	<xfs@oss.sgi.com>; Wed, 29 Sep 2010 09:26:57 -0700 (PDT)
-Received: from int-mx02.intmail.prod.int.phx2.redhat.com
-	(int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id o8TGQvCV016324
+	cuda.sgi.com with ESMTP id Uo10v25HNK1j9CJu for
+	<xfs@oss.sgi.com>; Wed, 29 Sep 2010 09:31:52 -0700 (PDT)
+Received: from int-mx08.intmail.prod.int.phx2.redhat.com
+	(int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.21])
+	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id o8TGIiax005259
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Wed, 29 Sep 2010 12:26:57 -0400
-Message-ID: <4CA368CE.3010907@redhat.com>
-Date: Wed, 29 Sep 2010 11:26:54 -0500
+	for <xfs@oss.sgi.com>; Wed, 29 Sep 2010 12:18:45 -0400
+Message-ID: <4CA366E0.4070202@redhat.com>
+Date: Wed, 29 Sep 2010 11:18:40 -0500
 From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 2/2] xfstests: Use $MKFS_OPTIONS in _scratch_mkfs_*()
+Subject: Re: [PATCH 1/2] xfstests 224: Use $SCRATCH_MNT variable
 References: <1285770951-27000-1-git-send-email-lczerner@redhat.com>
-	<1285770951-27000-2-git-send-email-lczerner@redhat.com>
-In-Reply-To: <1285770951-27000-2-git-send-email-lczerner@redhat.com>
+In-Reply-To: <1285770951-27000-1-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,43 +36,32 @@ To: Lukas Czerner <lczerner@redhat.com>
 Cc: esandeen@redhat.com, xfs@oss.sgi.com
 
 Lukas Czerner wrote:
-> Pass MKFS_OPTIONS to mkfs.$FSTYP in _scratch_mkfs_sized().
-> Preserve user defined MKFS_OPTIONS in _scratch_mkfs_geom().
+> Use $SCRATCH_MNT variable instead of hard-coded path (/mnt/scratch) in
+> test 224.
+
+heh, whoops!
+
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
+I'll commit it.
+
 > ---
-
-thanks, this looks good too.  both are committed now.
-
--Eric
-
->  common.rc |    6 +++---
->  1 files changed, 3 insertions(+), 3 deletions(-)
+>  224 |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
 > 
-> diff --git a/common.rc b/common.rc
-> index 65989c1..52b7125 100644
-> --- a/common.rc
-> +++ b/common.rc
-> @@ -327,7 +327,7 @@ _scratch_mkfs_sized()
->  	_scratch_mkfs_xfs -d size=$fssize -b size=$blocksize
->  	;;
->      ext2|ext3|ext4)
-> -	/sbin/mkfs.$FSTYP -b $blocksize $SCRATCH_DEV $blocks
-> +	/sbin/mkfs.$FSTYP $MKFS_OPTIONS -b $blocksize $SCRATCH_DEV $blocks
->  	;;
->      *)
->  	_notrun "Filesystem $FSTYP not supported in _scratch_mkfs_sized"
-> @@ -349,10 +349,10 @@ _scratch_mkfs_geom()
+> diff --git a/224 b/224
+> index 21be9af..00ebd2e 100644
+> --- a/224
+> +++ b/224
+> @@ -60,7 +60,7 @@ _scratch_mount >> $seq.full 2>&1
 >  
->      case $FSTYP in
->      xfs)
-> -	MKFS_OPTIONS="-b size=$blocksize, -d su=$sunit_bytes,sw=$swidth_mult"
-> +	MKFS_OPTIONS+="-b size=$blocksize, -d su=$sunit_bytes,sw=$swidth_mult"
->  	;;
->      ext4)
-> -	MKFS_OPTIONS="-b $blocksize -E stride=$sunit_blocks,stripe_width=$swidth_blocks"
-> +	MKFS_OPTIONS+="-b $blocksize -E stride=$sunit_blocks,stripe_width=$swidth_blocks"
->  	;;
->      *)
->  	_notrun "can't mkfs $FSTYP with geometry"
+>  # set the reserved block pool to almost empty for XFS
+>  if [ "$FSTYP" = "xfs" ]; then
+> -	xfs_io -x -c "resblks 4" /mnt/scratch/ >> $seq.full 2>&1
+> +	xfs_io -x -c "resblks 4" $SCRATCH_MNT >> $seq.full 2>&1
+>  fi
+>  
+>  FILES=1000
 
 _______________________________________________
 xfs mailing list
