@@ -1,25 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8TGHkOX064271 for <xfs@oss.sgi.com>; Wed, 29 Sep 2010 11:17:47 -0500
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 794AAE91C1B
-	for <xfs@oss.sgi.com>; Wed, 29 Sep 2010 09:31:52 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Uo10v25HNK1j9CJu for
-	<xfs@oss.sgi.com>; Wed, 29 Sep 2010 09:31:52 -0700 (PDT)
-Received: from int-mx08.intmail.prod.int.phx2.redhat.com
-	(int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.21])
-	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id o8TGIiax005259
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Wed, 29 Sep 2010 12:18:45 -0400
-Message-ID: <4CA366E0.4070202@redhat.com>
-Date: Wed, 29 Sep 2010 11:18:40 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+	o8TH8Cjq068408 for <xfs@oss.sgi.com>; Wed, 29 Sep 2010 12:08:12 -0500
+From: Alex Elder <aelder@sgi.com>
+Message-Id: <201009291709.o8TH98Cf002604@stout.americas.sgi.com>
+Date: Wed, 29 Sep 2010 12:09:07 -0500
+Subject: [GIT PULL] XFS update for 2.6.36-rc7
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/2] xfstests 224: Use $SCRATCH_MNT variable
-References: <1285770951-27000-1-git-send-email-lczerner@redhat.com>
-In-Reply-To: <1285770951-27000-1-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,36 +19,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Lukas Czerner <lczerner@redhat.com>
-Cc: esandeen@redhat.com, xfs@oss.sgi.com
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-Lukas Czerner wrote:
-> Use $SCRATCH_MNT variable instead of hard-coded path (/mnt/scratch) in
-> test 224.
+Linus, please consider pulling the following change in XFS for
+2.6.36.  It fixes a bug that could cause file system corruption in
+the event of a crash when the new delayed logging functionality is
+enabled.  I re-based and re-tested it this morning, but it was
+subjected to additional testing previously.  Thanks.
 
-heh, whoops!
+					-Alex
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+The following changes since commit 899611ee7d373e5eeda08e9a8632684e1ebbbf00:
 
-I'll commit it.
+  Linux 2.6.36-rc6 (2010-09-28 18:01:22 -0700)
 
-> ---
->  224 |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/224 b/224
-> index 21be9af..00ebd2e 100644
-> --- a/224
-> +++ b/224
-> @@ -60,7 +60,7 @@ _scratch_mount >> $seq.full 2>&1
->  
->  # set the reserved block pool to almost empty for XFS
->  if [ "$FSTYP" = "xfs" ]; then
-> -	xfs_io -x -c "resblks 4" /mnt/scratch/ >> $seq.full 2>&1
-> +	xfs_io -x -c "resblks 4" $SCRATCH_MNT >> $seq.full 2>&1
->  fi
->  
->  FILES=1000
+are available in the git repository at:
+  git://oss.sgi.com/xfs/xfs for-linus
+
+Dave Chinner (1):
+      xfs: force background CIL push under sustained load
+
+ fs/xfs/xfs_log_cil.c  |   12 +++++++++---
+ fs/xfs/xfs_log_priv.h |   37 +++++++++++++++++++++----------------
+ 2 files changed, 30 insertions(+), 19 deletions(-)
 
 _______________________________________________
 xfs mailing list
