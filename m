@@ -1,26 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8T0sAW9009484
-	for <linux-xfs@oss.sgi.com>; Tue, 28 Sep 2010 19:54:10 -0500
-Received: from mail-iw0-f181.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 05A30B0710
-	for <linux-xfs@oss.sgi.com>; Tue, 28 Sep 2010 17:55:08 -0700 (PDT)
-Received: from mail-iw0-f181.google.com (mail-iw0-f181.google.com
-	[209.85.214.181]) by cuda.sgi.com with ESMTP id
-	lrwfxdLl2Vvv9Fzh for <linux-xfs@oss.sgi.com>;
-	Tue, 28 Sep 2010 17:55:08 -0700 (PDT)
-Received: by iwn39 with SMTP id 39so302678iwn.26
-	for <linux-xfs@oss.sgi.com>; Tue, 28 Sep 2010 17:55:08 -0700 (PDT)
+	o8T43UOf017369 for <xfs@oss.sgi.com>; Tue, 28 Sep 2010 23:03:33 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E810118841AE
+	for <xfs@oss.sgi.com>; Tue, 28 Sep 2010 21:04:29 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id jkKUncinu9Xkmgfs for
+	<xfs@oss.sgi.com>; Tue, 28 Sep 2010 21:04:29 -0700 (PDT)
+Date: Wed, 29 Sep 2010 00:04:25 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfs: reduce lock traffic on incore sb lock
+Message-ID: <20100929040425.GA29691@infradead.org>
+References: <1285721500-5671-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-In-Reply-To: <20100929004809.GI5665@dastard>
-References: <AANLkTikd2Gf-=jimO-OvKb-66UquPkjfCN=+bx-3fhY-@mail.gmail.com>
-	<20100929004809.GI5665@dastard>
-Date: Wed, 29 Sep 2010 08:55:08 +0800
-Message-ID: <AANLkTimnxM_cqYAR6LK3foeZJ=sz5Xn7vm6uXeXHR_Ew@mail.gmail.com>
-Subject: Re: how to increase speed to iterate all file's name in a XFS , about
-	million files.
-From: hank peng <pengxihan@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <1285721500-5671-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,33 +29,31 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-2010/9/29 Dave Chinner <david@fromorbit.com>:
-> On Wed, Sep 29, 2010 at 08:28:08AM +0800, hank peng wrote:
->> Hi:
->> I have a XFS file system which contains about million files in it. I
->> want to iterate all file's name using readdir function and I found
->> that a little time-consuming.
->> Anybody to suggest a way to increase its speed?
->
-> In what way was it time consuming? IO bound? CPU bound? something
-> else?
->
-I think it is IO bound, file names information is scattered in whole
-partition, right?
-> Cheers,
->
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
->
+On Wed, Sep 29, 2010 at 10:51:40AM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Under heavy parallel unlink workloads, the incore superblock lock is
+> heavily trafficed in xfs_mod_incore_sb_batch(). This is despite the
+> fact that the counters being modified are typically the counters
+> that are per-cpu and do not require the lock. IOWs, we are locking
+> and unlocking the superblock lock needlessly, and the result is that
+> it is third most heavily contended lock in the system under these
+> workloads.
+> 
+> Fix this by only locking the superblock lock when we are modifying a
+> counter protected by it. This completely removes the m_sb_lock from
+> lock_stat traces during create/remove workloads.
 
+God spot of the idiocy there, but I really don't like the patch.
+I've started writing a small patches series solving the issue slightly
+better by cleaning up this area a bit.
 
-
--- 
-The simplest is not all best but the best is surely the simplest!
+After this we will never use xfs_mod_incore_sb/xfs_mod_incore_sb_batch
+for the percpu counters but rather make those always go through
+xfs_icsb_modify_counters.  I'll need to quickly finish it up and will
+send it out soon.
 
 _______________________________________________
 xfs mailing list
