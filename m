@@ -1,15 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8TC7ODW046300 for <xfs@oss.sgi.com>; Wed, 29 Sep 2010 07:07:24 -0500
-Subject: Re: [PATCH 2/3] [PATCH 2/3] xfs: do not use xfs_mod_incore_sb for
-	per-cpu counters
+	o8TBmuOb045115 for <xfs@oss.sgi.com>; Wed, 29 Sep 2010 06:48:56 -0500
+Subject: Re: [PATCH 1/3] [PATCH 1/3] xfs: remove XFS_MOUNT_NO_PERCPU_SB
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20100929072238.162539532@bombadil.infradead.org>
+In-Reply-To: <20100929072237.865681186@bombadil.infradead.org>
 References: <20100929072221.583672974@bombadil.infradead.org>
-	<20100929072238.162539532@bombadil.infradead.org>
-Date: Wed, 29 Sep 2010 07:06:28 -0500
-Message-ID: <1285761988.5108.1.camel@doink>
+	<20100929072237.865681186@bombadil.infradead.org>
+Date: Wed, 29 Sep 2010 06:49:05 -0500
+Message-ID: <1285760945.5108.0.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -28,11 +27,10 @@ To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
 On Wed, 2010-09-29 at 03:22 -0400, Christoph Hellwig wrote:
-> plain text document attachment
-> (xfs-dont-use-xfs_mod_incore_sb-for-percpu-counters)
-> Export xfs_icsb_modify_counters and always use it for modifying the per-cpu
-> counters.  Remove support for per-cpu counters from xfs_mod_incore_sb to
-> simplify it.
+> plain text document attachment (xfs-kill-XFS_MOUNT_NO_PERCPU_SB)
+> Fail the mount if we can't allocate memory for the per-CPU counters.
+> This is consistent with how we handle everything else in the mount
+> path and makes the superblock counter modification a lot simpler.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
