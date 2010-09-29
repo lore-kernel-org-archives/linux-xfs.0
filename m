@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8T64QcW025718 for <xfs@oss.sgi.com>; Wed, 29 Sep 2010 01:04:26 -0500
+	o8T5usH5025389 for <xfs@oss.sgi.com>; Wed, 29 Sep 2010 00:56:54 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7451A1884631
-	for <xfs@oss.sgi.com>; Tue, 28 Sep 2010 23:05:23 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
-	[150.101.137.100]) by cuda.sgi.com with ESMTP id
-	cSnAGYXgd4jwrEax for <xfs@oss.sgi.com>;
-	Tue, 28 Sep 2010 23:05:23 -0700 (PDT)
-Date: Wed, 29 Sep 2010 16:05:09 +1000
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CC546E8F00E
+	for <xfs@oss.sgi.com>; Tue, 28 Sep 2010 23:10:56 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
+	[150.101.137.101]) by cuda.sgi.com with ESMTP id
+	jt4Ds38NCMEsN4WU for <xfs@oss.sgi.com>;
+	Tue, 28 Sep 2010 23:10:56 -0700 (PDT)
+Date: Wed, 29 Sep 2010 15:57:48 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: The segment fault with NULL point using when recovering failure
-Message-ID: <20100929060509.GL5665@dastard>
-References: <AANLkTimR-dBLmQQ-Nh0mmjHJMfFidePKxfO6P76y48n8@mail.gmail.com>
-	<20100917014412.GK24409@dastard>
-	<AANLkTi=mGBXYLgwL96VqtF+8eMCxu83mz0V5719YPrkH@mail.gmail.com>
+Subject: Re: [PATCH] xfs: reduce lock traffic on incore sb lock
+Message-ID: <20100929055748.GK5665@dastard>
+References: <1285721500-5671-1-git-send-email-david@fromorbit.com>
+	<20100929040425.GA29691@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <AANLkTi=mGBXYLgwL96VqtF+8eMCxu83mz0V5719YPrkH@mail.gmail.com>
+In-Reply-To: <20100929040425.GA29691@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,55 +30,55 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mike Gao <ygao.linux@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-[Mike, please don't top-post responses - it makes it really hard to
-quote properly. ]
-
-On Fri, Sep 24, 2010 at 10:53:43AM -0500, Mike Gao wrote:
-> On Thu, Sep 16, 2010 at 8:44 PM, Dave Chinner <david@fromorbit.com> wrote:
-> > On Wed, Sep 15, 2010 at 10:59:07AM -0500, Mike Gao wrote:
-> > > xlog_recover_process_iunlinks(
-> > >     xlog_t        *log)
-> > > {
-> > >                 /*
-> > >                  * Reacquire the agibuffer and continue around
-> > >                  * the loop. This should never fail as we know
-> > >                  * the buffer was good earlier on.
-> > >                  */
-> > >                 error = xfs_read_agi(mp, NULL, agno, &agibp);
-> > >                 ASSERT(error == 0);
-> > >                 agi = XFS_BUF_TO_AGI(agibp);
-> > >
-> > > }
-> > > If no defined DEBUG, ASSERT will not work and agibp could be ZERO if
-> > there
-> > > is a error in xfs_read_agi.
-> > > And the comment shouldn't say it never fail because  xfs_read_agi will
-> > > return error in function and it does when there is forced shutdown.
-> >
-> > Have you seen a failure here?
->
-> I am curious about how this happens.
-
-What, how a failure happens there? The ASSERT is saying that a
-failure should never happen there....
-
-> This error is caused by log recovery when mount try to fill super block. As
-> super block is protected by log or Journaling, it shouldn't be corrupted or
-> can't be recovery by journaling.
-
-I'm not sure I follow you here - the above is reading an AGI, not a
-superblock. What is the stack trace that you've seen?
-
-> Anyway, this is reported as XFS INTERNAL ERROR.
+On Wed, Sep 29, 2010 at 12:04:25AM -0400, Christoph Hellwig wrote:
+> On Wed, Sep 29, 2010 at 10:51:40AM +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Under heavy parallel unlink workloads, the incore superblock lock is
+> > heavily trafficed in xfs_mod_incore_sb_batch(). This is despite the
+> > fact that the counters being modified are typically the counters
+> > that are per-cpu and do not require the lock. IOWs, we are locking
+> > and unlocking the superblock lock needlessly, and the result is that
+> > it is third most heavily contended lock in the system under these
+> > workloads.
+> > 
+> > Fix this by only locking the superblock lock when we are modifying a
+> > counter protected by it. This completely removes the m_sb_lock from
+> > lock_stat traces during create/remove workloads.
 > 
-> XFS internal error XFS_WANT_CORRUPTED_GOTO at line 4147 of file
-> fs/xfs/xfs_bmap.c.  Caller 0x871b9c26
+> God spot of the idiocy there, but I really don't like the patch.
 
-That is from a corrupted bmap btree, which has no connection to
-the AGI. I'm confused by what problems you are trying to report.
+Fair enough - it is a rather quick hack. ;)
+
+> I've started writing a small patches series solving the issue slightly
+> better by cleaning up this area a bit.
+
+Oh, cool. That code is quite a tangle.
+
+> After this we will never use xfs_mod_incore_sb/xfs_mod_incore_sb_batch
+> for the percpu counters but rather make those always go through
+> xfs_icsb_modify_counters.  I'll need to quickly finish it up and will
+> send it out soon.
+
+FWIW, I've got a prototype that converts the per-cpu counters to the
+generic per-cpu counter infrastructure. It chops out almost all the
+xfs_icsb_* stuff (including xfs_icsb_modify_counters()) and has a
+diffstat of:
+
+6 files changed, 317 insertions(+), 709 deletions(-)
+
+It needs a significant cleanup of xfs_mod_incore_sb() before/after
+the conversion which I haven't done yet because I haven't quite got
+my new percpu_counter_test_and_add_delta() function working
+correctly yet. I spotted this locking problem when testing the
+patch...
+
+That said, there's no reason why my percpu counter code needs to run
+through xfs_mod_incore_sb() at all. If we have a separate path for
+per-cpu counters then I can rework my code on top of that....
 
 Cheers,
 
