@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o8U2P2BA114038 for <xfs@oss.sgi.com>; Wed, 29 Sep 2010 21:25:02 -0500
+	o8U2P1Zh114023 for <xfs@oss.sgi.com>; Wed, 29 Sep 2010 21:25:01 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 25FC7188D335
-	for <xfs@oss.sgi.com>; Wed, 29 Sep 2010 19:26:02 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 90BF7188D335
+	for <xfs@oss.sgi.com>; Wed, 29 Sep 2010 19:26:01 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id eiADkDhECE3qdz8O for
-	<xfs@oss.sgi.com>; Wed, 29 Sep 2010 19:26:02 -0700 (PDT)
+	by cuda.sgi.com with ESMTP id AlFWNBIF9U2PREqz for
+	<xfs@oss.sgi.com>; Wed, 29 Sep 2010 19:26:01 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.72 #1 (Red Hat
-	Linux)) id 1P18qP-0007xr-OT
+	Linux)) id 1P18qP-0007wp-5K
 	for xfs@oss.sgi.com; Thu, 30 Sep 2010 02:26:01 +0000
-Message-Id: <20100930022601.566811585@bombadil.infradead.org>
-Date: Wed, 29 Sep 2010 22:25:56 -0400
+Message-Id: <20100930022600.975540107@bombadil.infradead.org>
+Date: Wed, 29 Sep 2010 22:25:54 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 3/3] [PATCH 3/3] xfs: do not use xfs_mod_incore_sb_batch for
-	per-cpu counters
+Subject: [PATCH 1/3] [PATCH 1/3] xfs: remove XFS_MOUNT_NO_PERCPU_SB
 References: <20100930022553.391390964@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-simplify-icsb-updates
+Content-Disposition: inline; filename=xfs-kill-XFS_MOUNT_NO_PERCPU_SB
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,287 +32,114 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Update the per-cpu counters manually in xfs_trans_unreserve_and_mod_sb and
-remove support for per-cpu counters from xfs_mod_incore_sb_batch to
-simplify it.  And added benefit is that we don't have to take m_sb_lock
-for transactions that only modify per-cpu counters.
+Fail the mount if we can't allocate memory for the per-CPU counters.
+This is consistent with how we handle everything else in the mount
+path and makes the superblock counter modification a lot simpler.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
+Index: xfs/fs/xfs/linux-2.6/xfs_super.c
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_super.c	2010-09-29 20:44:11.711357120 +0900
++++ xfs/fs/xfs/linux-2.6/xfs_super.c	2010-09-30 08:11:46.119709459 +0900
+@@ -1517,8 +1517,9 @@ xfs_fs_fill_super(
+ 	if (error)
+ 		goto out_free_fsname;
+ 
+-	if (xfs_icsb_init_counters(mp))
+-		mp->m_flags |= XFS_MOUNT_NO_PERCPU_SB;
++	error = xfs_icsb_init_counters(mp);
++	if (error)
++		goto out_close_devices;
+ 
+ 	error = xfs_readsb(mp, flags);
+ 	if (error)
+@@ -1579,6 +1580,7 @@ xfs_fs_fill_super(
+ 	xfs_freesb(mp);
+  out_destroy_counters:
+ 	xfs_icsb_destroy_counters(mp);
++ out_close_devices:
+ 	xfs_close_devices(mp);
+  out_free_fsname:
+ 	xfs_free_fsname(mp);
 Index: xfs/fs/xfs/xfs_mount.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_mount.c	2010-09-30 08:11:54.332709458 +0900
-+++ xfs/fs/xfs/xfs_mount.c	2010-09-30 08:12:46.899709458 +0900
-@@ -1856,98 +1856,54 @@ xfs_mod_incore_sb(
- }
- 
- /*
-- * xfs_mod_incore_sb_batch() is used to change more than one field
-- * in the in-core superblock structure at a time.  This modification
-- * is protected by a lock internal to this module.  The fields and
-- * changes to those fields are specified in the array of xfs_mod_sb
-- * structures passed in.
-- *
-- * Either all of the specified deltas will be applied or none of
-- * them will.  If any modified field dips below 0, then all modifications
-- * will be backed out and EINVAL will be returned.
-+ * Change more than one field in the in-core superblock structure at a time.
-+ *
-+ * The fields and changes to those fields are specified in the array of
-+ * xfs_mod_sb structures passed in.  Either all of the specified deltas
-+ * will be applied or none of them will.  If any modified field dips below 0,
-+ * then all modifications will be backed out and EINVAL will be returned.
-+ *
-+ * Note that this function may not be used for the superblock values that
-+ * are tracked with the in-memory per-cpu counters - a direct call to
-+ * xfs_icsb_modify_counters is required for these.
-  */
- int
--xfs_mod_incore_sb_batch(xfs_mount_t *mp, xfs_mod_sb_t *msb, uint nmsb, int rsvd)
-+xfs_mod_incore_sb_batch(
-+	struct xfs_mount	*mp,
-+	xfs_mod_sb_t		*msb,
-+	uint			nmsb,
-+	int			rsvd)
- {
--	int		status=0;
--	xfs_mod_sb_t	*msbp;
-+	xfs_mod_sb_t		*msbp = &msb[0];
-+	int			error = 0;
- 
- 	/*
--	 * Loop through the array of mod structures and apply each
--	 * individually.  If any fail, then back out all those
--	 * which have already been applied.  Do all of this within
--	 * the scope of the m_sb_lock so that all of the changes will
--	 * be atomic.
-+	 * Loop through the array of mod structures and apply each individually.
-+	 * If any fail, then back out all those which have already been applied.
-+	 * Do all of this within the scope of the m_sb_lock so that all of the
-+	 * changes will be atomic.
- 	 */
- 	spin_lock(&mp->m_sb_lock);
--	msbp = &msb[0];
- 	for (msbp = &msbp[0]; msbp < (msb + nmsb); msbp++) {
--		/*
--		 * Apply the delta at index n.  If it fails, break
--		 * from the loop so we'll fall into the undo loop
--		 * below.
--		 */
--		switch (msbp->msb_field) {
--#ifdef HAVE_PERCPU_SB
--		case XFS_SBS_ICOUNT:
--		case XFS_SBS_IFREE:
--		case XFS_SBS_FDBLOCKS:
--			spin_unlock(&mp->m_sb_lock);
--			status = xfs_icsb_modify_counters(mp,
--						msbp->msb_field,
--						msbp->msb_delta, rsvd);
--			spin_lock(&mp->m_sb_lock);
--			break;
--#endif
--		default:
--			status = xfs_mod_incore_sb_unlocked(mp,
--						msbp->msb_field,
--						msbp->msb_delta, rsvd);
+--- xfs.orig/fs/xfs/xfs_mount.c	2010-09-29 20:44:11.716357120 +0900
++++ xfs/fs/xfs/xfs_mount.c	2010-09-30 08:11:34.660709458 +0900
+@@ -1856,12 +1856,8 @@ xfs_mod_incore_sb(
+ 	case XFS_SBS_ICOUNT:
+ 	case XFS_SBS_IFREE:
+ 	case XFS_SBS_FDBLOCKS:
+-		if (!(mp->m_flags & XFS_MOUNT_NO_PERCPU_SB)) {
+-			status = xfs_icsb_modify_counters(mp, field,
+-							delta, rsvd);
 -			break;
 -		}
-+		ASSERT(msbp->msb_field < XFS_SBS_ICOUNT ||
-+		       msbp->msb_field > XFS_SBS_FDBLOCKS);
- 
--		if (status != 0) {
--			break;
--		}
-+		error = xfs_mod_incore_sb_unlocked(mp, msbp->msb_field,
-+						   msbp->msb_delta, rsvd);
-+		if (error)
-+			goto unwind;
- 	}
-+	spin_unlock(&mp->m_sb_lock);
-+	return 0;
- 
--	/*
--	 * If we didn't complete the loop above, then back out
--	 * any changes made to the superblock.  If you add code
--	 * between the loop above and here, make sure that you
--	 * preserve the value of status. Loop back until
--	 * we step below the beginning of the array.  Make sure
--	 * we don't touch anything back there.
--	 */
--	if (status != 0) {
--		msbp--;
--		while (msbp >= msb) {
--			switch (msbp->msb_field) {
--#ifdef HAVE_PERCPU_SB
--			case XFS_SBS_ICOUNT:
--			case XFS_SBS_IFREE:
--			case XFS_SBS_FDBLOCKS:
+-		/* FALLTHROUGH */
++		status = xfs_icsb_modify_counters(mp, field, delta, rsvd);
++		break;
+ #endif
+ 	default:
+ 		spin_lock(&mp->m_sb_lock);
+@@ -1910,15 +1906,12 @@ xfs_mod_incore_sb_batch(xfs_mount_t *mp,
+ 		case XFS_SBS_ICOUNT:
+ 		case XFS_SBS_IFREE:
+ 		case XFS_SBS_FDBLOCKS:
+-			if (!(mp->m_flags & XFS_MOUNT_NO_PERCPU_SB)) {
 -				spin_unlock(&mp->m_sb_lock);
 -				status = xfs_icsb_modify_counters(mp,
--						msbp->msb_field,
--						-(msbp->msb_delta),
--						rsvd);
+-							msbp->msb_field,
+-							msbp->msb_delta, rsvd);
 -				spin_lock(&mp->m_sb_lock);
 -				break;
--#endif
--			default:
--				status = xfs_mod_incore_sb_unlocked(mp,
+-			}
+-			/* FALLTHROUGH */
++			spin_unlock(&mp->m_sb_lock);
++			status = xfs_icsb_modify_counters(mp,
++						msbp->msb_field,
++						msbp->msb_delta, rsvd);
++			spin_lock(&mp->m_sb_lock);
++			break;
+ #endif
+ 		default:
+ 			status = xfs_mod_incore_sb_unlocked(mp,
+@@ -1948,16 +1941,13 @@ xfs_mod_incore_sb_batch(xfs_mount_t *mp,
+ 			case XFS_SBS_ICOUNT:
+ 			case XFS_SBS_IFREE:
+ 			case XFS_SBS_FDBLOCKS:
+-				if (!(mp->m_flags & XFS_MOUNT_NO_PERCPU_SB)) {
+-					spin_unlock(&mp->m_sb_lock);
+-					status = xfs_icsb_modify_counters(mp,
 -							msbp->msb_field,
 -							-(msbp->msb_delta),
 -							rsvd);
--				break;
--			}
--			ASSERT(status == 0);
--			msbp--;
--		}
-+unwind:
-+	while (--msbp >= msb) {
-+		error = xfs_mod_incore_sb_unlocked(mp, msbp->msb_field,
-+						   -msbp->msb_delta, rsvd);
-+		ASSERT(error == 0);
- 	}
- 	spin_unlock(&mp->m_sb_lock);
--	return status;
-+	return error;
- }
- 
- /*
-@@ -2478,7 +2434,7 @@ xfs_icsb_balance_counter(
- 	spin_unlock(&mp->m_sb_lock);
- }
- 
--STATIC int
-+int
- xfs_icsb_modify_counters(
- 	xfs_mount_t	*mp,
- 	xfs_sb_field_t	field,
-Index: xfs/fs/xfs/xfs_trans.c
+-					spin_lock(&mp->m_sb_lock);
+-					break;
+-				}
+-				/* FALLTHROUGH */
++				spin_unlock(&mp->m_sb_lock);
++				status = xfs_icsb_modify_counters(mp,
++						msbp->msb_field,
++						-(msbp->msb_delta),
++						rsvd);
++				spin_lock(&mp->m_sb_lock);
++				break;
+ #endif
+ 			default:
+ 				status = xfs_mod_incore_sb_unlocked(mp,
+Index: xfs/fs/xfs/xfs_mount.h
 ===================================================================
---- xfs.orig/fs/xfs/xfs_trans.c	2010-09-30 08:11:54.342709458 +0900
-+++ xfs/fs/xfs/xfs_trans.c	2010-09-30 08:24:41.837709458 +0900
-@@ -1009,7 +1009,7 @@ void
- xfs_trans_unreserve_and_mod_sb(
- 	xfs_trans_t	*tp)
- {
--	xfs_mod_sb_t	msb[14];	/* If you add cases, add entries */
-+	xfs_mod_sb_t	msb[9];	/* If you add cases, add entries */
- 	xfs_mod_sb_t	*msbp;
- 	xfs_mount_t	*mp = tp->t_mountp;
- 	/* REFERENCED */
-@@ -1017,55 +1017,61 @@ xfs_trans_unreserve_and_mod_sb(
- 	int		rsvd;
- 	int64_t		blkdelta = 0;
- 	int64_t		rtxdelta = 0;
-+	int64_t		idelta = 0;
-+	int64_t		ifreedelta = 0;
- 
- 	msbp = msb;
- 	rsvd = (tp->t_flags & XFS_TRANS_RESERVE) != 0;
- 
--	/* calculate free blocks delta */
-+	/* calculate deltas */
- 	if (tp->t_blk_res > 0)
- 		blkdelta = tp->t_blk_res;
--
- 	if ((tp->t_fdblocks_delta != 0) &&
- 	    (xfs_sb_version_haslazysbcount(&mp->m_sb) ||
- 	     (tp->t_flags & XFS_TRANS_SB_DIRTY)))
- 	        blkdelta += tp->t_fdblocks_delta;
- 
--	if (blkdelta != 0) {
--		msbp->msb_field = XFS_SBS_FDBLOCKS;
--		msbp->msb_delta = blkdelta;
--		msbp++;
--	}
--
--	/* calculate free realtime extents delta */
- 	if (tp->t_rtx_res > 0)
- 		rtxdelta = tp->t_rtx_res;
--
- 	if ((tp->t_frextents_delta != 0) &&
- 	    (tp->t_flags & XFS_TRANS_SB_DIRTY))
- 		rtxdelta += tp->t_frextents_delta;
- 
-+	if (xfs_sb_version_haslazysbcount(&mp->m_sb) ||
-+	     (tp->t_flags & XFS_TRANS_SB_DIRTY)) {
-+		idelta = tp->t_icount_delta;
-+		ifreedelta = tp->t_ifree_delta;
-+	}
-+
-+	/* apply the per-cpu counters */
-+	if (blkdelta) {
-+		error = xfs_icsb_modify_counters(mp, XFS_SBS_FDBLOCKS,
-+						 blkdelta, rsvd);
-+		if (error)
-+			goto out;
-+	}
-+
-+	if (idelta) {
-+		error = xfs_icsb_modify_counters(mp, XFS_SBS_ICOUNT,
-+						 idelta, rsvd);
-+		if (error)
-+			goto out_undo_fdblocks;
-+	}
-+
-+	if (ifreedelta) {
-+		error = xfs_icsb_modify_counters(mp, XFS_SBS_IFREE,
-+						 ifreedelta, rsvd);
-+		if (error)
-+			goto out_undo_icount;
-+	}
-+
-+	/* apply remaining deltas */
- 	if (rtxdelta != 0) {
- 		msbp->msb_field = XFS_SBS_FREXTENTS;
- 		msbp->msb_delta = rtxdelta;
- 		msbp++;
- 	}
- 
--	/* apply remaining deltas */
--
--	if (xfs_sb_version_haslazysbcount(&mp->m_sb) ||
--	     (tp->t_flags & XFS_TRANS_SB_DIRTY)) {
--		if (tp->t_icount_delta != 0) {
--			msbp->msb_field = XFS_SBS_ICOUNT;
--			msbp->msb_delta = tp->t_icount_delta;
--			msbp++;
--		}
--		if (tp->t_ifree_delta != 0) {
--			msbp->msb_field = XFS_SBS_IFREE;
--			msbp->msb_delta = tp->t_ifree_delta;
--			msbp++;
--		}
--	}
--
- 	if (tp->t_flags & XFS_TRANS_SB_DIRTY) {
- 		if (tp->t_dblocks_delta != 0) {
- 			msbp->msb_field = XFS_SBS_DBLOCKS;
-@@ -1115,8 +1121,24 @@ xfs_trans_unreserve_and_mod_sb(
- 	if (msbp > msb) {
- 		error = xfs_mod_incore_sb_batch(tp->t_mountp, msb,
- 			(uint)(msbp - msb), rsvd);
--		ASSERT(error == 0);
-+		if (error)
-+			goto out_undo_ifreecount;
- 	}
-+
-+	return;
-+
-+out_undo_ifreecount:
-+	if (ifreedelta)
-+		xfs_icsb_modify_counters(mp, XFS_SBS_IFREE, -ifreedelta, rsvd);
-+out_undo_icount:
-+	if (idelta)
-+		xfs_icsb_modify_counters(mp, XFS_SBS_ICOUNT, -idelta, rsvd);
-+out_undo_fdblocks:
-+	if (blkdelta)
-+		xfs_icsb_modify_counters(mp, XFS_SBS_FDBLOCKS, -blkdelta, rsvd);
-+out:
-+	ASSERT(error = 0);
-+	return;
- }
- 
- /*
+--- xfs.orig/fs/xfs/xfs_mount.h	2010-09-29 20:44:11.723357120 +0900
++++ xfs/fs/xfs/xfs_mount.h	2010-09-30 08:11:34.669709458 +0900
+@@ -231,8 +231,6 @@ typedef struct xfs_mount {
+ #define XFS_MOUNT_DIRSYNC	(1ULL << 21)	/* synchronous directory ops */
+ #define XFS_MOUNT_COMPAT_IOSIZE	(1ULL << 22)	/* don't report large preferred
+ 						 * I/O size in stat() */
+-#define XFS_MOUNT_NO_PERCPU_SB	(1ULL << 23)	/* don't use per-cpu superblock
+-						   counters */
+ #define XFS_MOUNT_FILESTREAMS	(1ULL << 24)	/* enable the filestreams
+ 						   allocator */
+ #define XFS_MOUNT_NOATTR2	(1ULL << 25)	/* disable use of attr2 format */
 
 _______________________________________________
 xfs mailing list
