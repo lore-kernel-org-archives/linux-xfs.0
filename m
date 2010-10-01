@@ -1,24 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o918YUfc046911 for <xfs@oss.sgi.com>; Fri, 1 Oct 2010 03:34:30 -0500
+	o918ZPtp047010 for <xfs@oss.sgi.com>; Fri, 1 Oct 2010 03:35:25 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C5F73158583D
-	for <xfs@oss.sgi.com>; Fri,  1 Oct 2010 01:35:30 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8D83E150035E
+	for <xfs@oss.sgi.com>; Fri,  1 Oct 2010 01:49:41 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id y3JEGY7dbKj1pTcZ for
-	<xfs@oss.sgi.com>; Fri, 01 Oct 2010 01:35:30 -0700 (PDT)
-Date: Fri, 1 Oct 2010 04:35:29 -0400
+	by cuda.sgi.com with ESMTP id akq6czWgxFGOMrXT for
+	<xfs@oss.sgi.com>; Fri, 01 Oct 2010 01:49:41 -0700 (PDT)
+Date: Fri, 1 Oct 2010 04:36:23 -0400
 From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: xfsprogs Debian mantainaince
-Message-ID: <20101001083529.GA15777@infradead.org>
+Message-ID: <20101001083623.GB15777@infradead.org>
 References: <20100814111513.GA8214@infradead.org>
-	<1697333467.18161281921959476.JavaMail.root@mail-au.aconex.com>
-	<20100829041924.GB2648@mapuche.apana.org.au>
-	<20101001010226.GB3066@master.debian.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20101001010226.GB3066@master.debian.org>
+In-Reply-To: <20100814111513.GA8214@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,14 +28,16 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: An?bal Monsalve Salazar <anibal@debian.org>
-Cc: Christoph Hellwig <hch@infradead.org>, nathans@debian.org, Nathan Scott <nathans@aconex.com>, xfs@oss.sgi.com
+To: nathans@debian.org, anibal@debian.org
+Cc: xfs@oss.sgi.com
 
-On Fri, Oct 01, 2010 at 11:02:26AM +1000, An?bal Monsalve Salazar wrote:
-> Any news about access to kernel.org to merge changes before uploading?
+On Sat, Aug 14, 2010 at 07:15:13AM -0400, Christoph Hellwig wrote:
+> Also can we add xfs@oss.sgi.com to the Cc list for debian xfs
+> bugreports? I think most issues are upstream ones anyway, and
+> automatically sending them to the XFS list will get them a bigger
+> audience.
 
-You'll need to apply yourself at ftpadmin@kernel.org.  Please say it's
-for xfsprogs maintaince and quote me as sponsor.
+Guys, any idea how to get this done?
 
 _______________________________________________
 xfs mailing list
