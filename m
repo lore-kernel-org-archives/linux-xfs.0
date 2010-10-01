@@ -1,17 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o91Dv0Gm080019 for <xfs@oss.sgi.com>; Fri, 1 Oct 2010 08:57:00 -0500
-Subject: Re: [PATCH VER 6] xfsprogs: projid32bit handling
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <201009260814.00111.arekm@maven.pl>
-References: <1285481418-31739-1-git-send-email-arekm@maven.pl>
-	<1285481438-31799-1-git-send-email-arekm@maven.pl>
-	<201009260814.00111.arekm@maven.pl>
-Date: Fri, 01 Oct 2010 08:57:40 -0500
-Message-ID: <1285941460.5119.463.camel@doink>
-Mime-Version: 1.0
-Reply-To: aelder@sgi.com
+	o91E1oYL080551 for <xfs@oss.sgi.com>; Fri, 1 Oct 2010 09:01:50 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9B9F31E72D4A
+	for <xfs@oss.sgi.com>; Fri,  1 Oct 2010 07:02:49 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
+	[150.101.137.97]) by cuda.sgi.com with ESMTP id
+	48LktbxfBpsYXqqj for <xfs@oss.sgi.com>;
+	Fri, 01 Oct 2010 07:02:49 -0700 (PDT)
+Date: Sat, 2 Oct 2010 00:02:37 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [patch] xfs: properly account for reclaimed inodes
+Message-ID: <20101001140237.GC4681@dastard>
+References: <20101001074354.GF2618@cmpxchg.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20101001074354.GF2618@cmpxchg.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,75 +25,56 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Arkadiusz Miskiewicz <arekm@maven.pl>
-Cc: xfs@oss.sgi.com
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: stable@kernel.org, John Hawley <warthog9@kernel.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-T24gU3VuLCAyMDEwLTA5LTI2IGF0IDA4OjEzICswMjAwLCBBcmthZGl1c3ogTWlza2lld2ljeiB3
-cm90ZToKPiBPbiBTdW5kYXkgMjYgb2YgU2VwdGVtYmVyIDIwMTAsIEFya2FkaXVzeiBNacWba2ll
-d2ljeiB3cm90ZToKPiA+IEFkZCBwcm9qaWQzMmJpdCBoYW5kbGluZyB0byB1c2Vyc3BhY2UuIG1r
-ZnMueGZzIGlzIGFibGUgdG8gZW5hYmxlIHRoaXMKPiA+IGZlYXR1cmUgZm9yIG5ldyBmaWxlc3lz
-dGVtcy4geGZzX2RiIGtub3dzIHdoYXQgcHJvamlkX2xvL2hpIGFyZS4KPiAKPiAuLi4gYW5kIHhm
-c19hZG1pbiBpZiBzb21lb25lIG5lZWRzIGl0IGFueXdheS4KCkRvIHlvdSBpbnRlbmQgZm9yIHRo
-aXMgdG8gYmUgaW5jbHVkZWQgb3Igbm90PwoKSSBhbHNvIGhhdmUgYSBxdWVzdGlvbiwgYmVsb3cu
-Cgo+IAo+IE5ld3M6Cj4gLSB1c2UgMHg4MCBpbnN0ZWFkIG9mIDB4MjAgZm9yIFBST0pJRDMyQklU
-IHN1cGVyYmxvY2sgYml0IChhcyAweDIwCj4gICBhbmQgMHg0MCBhcmUgcmVzZXJ2ZWQpCj4gCj4g
-ZGlmZiAtLWdpdCBhL2RiL3hmc19hZG1pbi5zaCBiL2RiL3hmc19hZG1pbi5zaAo+IGluZGV4IGE3
-YTNmZGIuLmVjODQyNGQgMTAwNzU1Cj4gLS0tIGEvZGIveGZzX2FkbWluLnNoCj4gKysrIGIvZGIv
-eGZzX2FkbWluLnNoCj4gQEAgLTYsOSArNiw0MyBAQAo+ICBzdGF0dXM9MAo+ICBEQl9PUFRTPSIi
-Cj4gIFJFUEFJUl9PUFRTPSIiCj4gLVVTQUdFPSJVc2FnZTogeGZzX2FkbWluIFstZWZqbHVWXSBb
-LWMgMHwxXSBbLUwgbGFiZWxdIFstVSB1dWlkXSBkZXZpY2UiCj4gK1VTQUdFPSJVc2FnZTogeGZz
-X2FkbWluIFstZWZqbHB1Vl0gWy1jIDB8MV0gWy1MIGxhYmVsXSBbLVUgdXVpZF0gZGV2aWNlIgoK
-SGVyZSB5b3UgYXJlIGRlc2NyaWJpbmcgYSAicCIgZmxhZywgYnV0IGJlbG93IHlvdSBhcmUKYWN0
-dWFsbHkgYWRkaW5nIGEgIjMiIGZsYWcgKGFuZCBkb2N1bWVudGVkIGFzIHN1Y2ggaW4KdGhlIG1h
-biBwYWdlKS4gIEkgcHJlZmVyICJwIiAoYnV0IG1heWJlIHRoZXJlJ3MgYSByZWFzb24KeW91IHVz
-ZWQgIjMiIGJlbG93KS4gIFdoaWNoIGlzIGl0PwogCj4gLXdoaWxlIGdldG9wdHMgImVmamx1YzpM
-OlU6ViIgYwo+ICtzZXRfZmVhdHVyZXMyX2JpdCgpIHsKPiArCWRldmljZT0iJDEiCj4gKwliaXQ9
-IiQyIgo+ICsKPiArCWlmIFsgLXogIiRkZXZpY2UiIF07IHRoZW4KPiArCQllY2hvICIkMDogZGV2
-aWNlIG5hbWUgaXMgbWlzc2luZyIgPiYyCj4gKwkJcmV0dXJuIDEKPiArCWZpCj4gKwo+ICsJaWYg
-WyAteiAiJGJpdCIgXTsgdGhlbgo+ICsJCWVjaG8gIiQwOiBiaXRzIHRvIHNldCBhcmUgbWlzc2lu
-ZyIgPiYyCj4gKwkJcmV0dXJuIDEKPiArCWZpCj4gKwo+ICsJIyByZWFkIGN1cnJlbnQgYml0cwo+
-ICsJZmVhdHVyZXMyPSQoeGZzX2RiIC1wIHhmc19hZG1pbiAteCAtciAtYyAnc2InIC1jICdwcmlu
-dCBmZWF0dXJlczInICIkZGV2aWNlIiB8IGF3ayAnIHsgcHJpbnQgJDMgfSAnKQo+ICsJaWYgWyAt
-eiAiJGZlYXR1cmVzMiIgXTsgdGhlbgo+ICsJCWVjaG8gIiQwOiBjYW4ndCByZWFkIGZlYXR1cmVz
-MiBmcm9tIHN1cGVyYmxvY2shIiA+JjIKPiArCQlyZXR1cm4gMQo+ICsJZmkKPiArCWJhZF9mZWF0
-dXJlczI9JCh4ZnNfZGIgLXAgeGZzX2FkbWluIC14IC1yIC1jICdzYicgLWMgJ3ByaW50IGJhZF9m
-ZWF0dXJlczInICIkZGV2aWNlIiB8IGF3ayAnIHsgcHJpbnQgJDMgfSAnKQo+ICsJaWYgWyAteiAi
-JGJhZF9mZWF0dXJlczIiIF07IHRoZW4KPiArCQllY2hvICIkMDogY2FuJ3QgcmVhZCBiYWRfZmVh
-dHVyZXMyIGZyb20gc3VwZXJibG9jayEiID4mMgo+ICsJCXJldHVybiAxCj4gKwlmaQo+ICsKPiAr
-CSMgc2V0IG5ldyBiaXRzCj4gKwlmZWF0dXJlczI9JCgoZmVhdHVyZXMyIHwgYml0KSkKPiArCWJh
-ZF9mZWF0dXJlczI9JCgoYmFkX2ZlYXR1cmVzMiB8IGJpdCkpCj4gKwl4ZnNfZGIgLXAgeGZzX2Fk
-bWluIC14IC1jICdzYicgLWMgIndyaXRlIGZlYXR1cmVzMiAkZmVhdHVyZXMyIiAiJGRldmljZSIg
-JiYgXAo+ICsJCXhmc19kYiAtcCB4ZnNfYWRtaW4gLXggLWMgJ3NiJyAtYyAid3JpdGUgYmFkX2Zl
-YXR1cmVzMiAkYmFkX2ZlYXR1cmVzMiIgIiRkZXZpY2UiCj4gKwlyZXR1cm4gJD8KPiArfQo+ICsK
-PiArd2hpbGUgZ2V0b3B0cyAiZWZqbHUzYzpMOlU6ViIKPiAgZG8KPiAgCWNhc2UgJGMgaW4KPiAg
-CWMpCVJFUEFJUl9PUFRTPSRSRVBBSVJfT1BUUyIgLWMgbGF6eWNvdW50PSIkT1BUQVJHOzsKPiBA
-QCAtMTcsNiArNTEsNyBAQCBkbwo+ICAJaikJREJfT1BUUz0kREJfT1BUUyIgLWMgJ3ZlcnNpb24g
-bG9nMiciOzsKPiAgCWwpCURCX09QVFM9JERCX09QVFMiIC1yIC1jIGxhYmVsIjs7Cj4gIAlMKQlE
-Ql9PUFRTPSREQl9PUFRTIiAtYyAnbGFiZWwgIiRPUFRBUkciJyI7Owo+ICsJMykJRkVBVFVSRVNf
-QklUPSIweDgwIjs7Cgo+ICAJdSkJREJfT1BUUz0kREJfT1BUUyIgLXIgLWMgdXVpZCI7Owo+ICAJ
-VSkJREJfT1BUUz0kREJfT1BUUyIgLWMgJ3V1aWQgIiRPUFRBUkciJyI7Owo+ICAJVikJeGZzX2Ri
-IC1wIHhmc19hZG1pbiAtVgo+IEBAIC0zMSw3ICs2NiwxMiBAQCBkb25lCj4gIHNldCAtLSBleHRy
-YSAkQAo+ICBzaGlmdCAkT1BUSU5ECj4gIGNhc2UgJCMgaW4KPiAtCTEpCWlmIFsgLW4gIiREQl9P
-UFRTIiBdCj4gKwkxKQlpZiBbIC1uICIkRkVBVFVSRVNfQklUIiBdCj4gKwkJdGhlbgo+ICsJCQlz
-ZXRfZmVhdHVyZXMyX2JpdCAiJDEiICIkRkVBVFVSRVNfQklUIgo+ICsJCQlzdGF0dXM9JD8KPiAr
-CQlmaQo+ICsJCWlmIFsgLW4gIiREQl9PUFRTIiBdCj4gIAkJdGhlbgo+ICAJCQlldmFsIHhmc19k
-YiAteCAtcCB4ZnNfYWRtaW4gJERCX09QVFMgJDEKPiAgCQkJc3RhdHVzPSQ/Cj4gZGlmZiAtLWdp
-dCBhL21hbi9tYW44L3hmc19hZG1pbi44IGIvbWFuL21hbjgveGZzX2FkbWluLjgKPiBpbmRleCA4
-ZTMxNTViLi42YjcyN2YzIDEwMDY0NAo+IC0tLSBhL21hbi9tYW44L3hmc19hZG1pbi44Cj4gKysr
-IGIvbWFuL21hbjgveGZzX2FkbWluLjgKPiBAQCAtNCw3ICs0LDcgQEAgeGZzX2FkbWluIFwtIGNo
-YW5nZSBwYXJhbWV0ZXJzIG9mIGFuIFhGUyBmaWxlc3lzdGVtCj4gIC5TSCBTWU5PUFNJUwo+ICAu
-QiB4ZnNfYWRtaW4KPiAgWwo+IC0uQiBcLWVmbHUKPiArLkIgXC1lZmx1Mwo+ICBdIFsKPiAgLkJS
-ICJcLWMgMCIgfCAxCj4gIF0gWwo+IEBAIC01NSw2ICs1NSw5IEBAIFByaW50IHRoZSBjdXJyZW50
-IGZpbGVzeXN0ZW0gbGFiZWwuCj4gIC5CIFwtdQo+ICBQcmludCB0aGUgY3VycmVudCBmaWxlc3lz
-dGVtIFVVSUQgKFVuaXZlcnNhbGx5IFVuaXF1ZSBJRGVudGlmaWVyKS4KPiAgLlRQCj4gKy5CIFwt
-Mwo+ICtFbmFibGUgMzJiaXQgcHJvamVjdCBpZGVudGlmaWVyIHN1cHBvcnQgKFBST0pJRDMyQklU
-IGZlYXR1cmUpLgo+ICsuVFAKPiAgLkJSICJcLWMgMCIgfCAxCj4gIEVuYWJsZSAoMSkgb3IgZGlz
-YWJsZSAoMCkgbGF6eS1jb3VudGVycyBpbiB0aGUgZmlsZXN5c3RlbS4KPiAgVGhpcyBvcGVyYXRp
-b24gbWF5IHRha2UgcXVpdGUgYSBiaXQgb2YgdGltZSBvbiBsYXJnZSBmaWxlc3lzdGVtcyBhcyB0
-aGUKPiAKPiAKCgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21h
-aWxtYW4vbGlzdGluZm8veGZzCg==
+On Fri, Oct 01, 2010 at 09:43:54AM +0200, Johannes Weiner wrote:
+> When marking an inode reclaimable, a per-AG counter is increased, the
+> inode is tagged reclaimable in its per-AG tree, and, when this is the
+> first reclaimable inode in the AG, the AG entry in the per-mount tree
+> is also tagged.
+> 
+> When an inode is finally reclaimed, however, it is only deleted from
+> the per-AG tree.  Neither the counter is decreased, nor is the parent
+> tree's AG entry untagged properly.
+> 
+> Since the tags in the per-mount tree are not cleared, the inode
+> shrinker iterates over all AGs that have had reclaimable inodes at one
+> point in time.
+> 
+> The counters on the other hand signal an increasing amount of slab
+> objects to reclaim.  Since "70e60ce xfs: convert inode shrinker to
+> per-filesystem context" this is not a real issue anymore because the
+> shrinker bails out after one iteration.
+> 
+> But the problem was observable on a machine running v2.6.34, where the
+> reclaimable work increased and each process going into direct reclaim
+> eventually got stuck on the xfs inode shrinking path, trying to scan
+> several million objects.
+> 
+> Fix this by properly unwinding the reclaimable-state tracking of an
+> inode when it is reclaimed.
+> 
+> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+> Cc: stable@kernel.org
+
+Looks OK to me, and has run through a few hours of testing without
+problems.
+
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
