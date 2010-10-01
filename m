@@ -1,15 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o91HH7QV100479 for <xfs@oss.sgi.com>; Fri, 1 Oct 2010 12:17:07 -0500
-Subject: Re: [patch] xfs: properly account for reclaimed inodes
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20101001074354.GF2618@cmpxchg.org>
-References: <20101001074354.GF2618@cmpxchg.org>
-Date: Fri, 01 Oct 2010 12:17:23 -0500
-Message-ID: <1285953443.2422.4.camel@doink>
-Mime-Version: 1.0
-Reply-To: aelder@sgi.com
+	o91JZsbL116124 for <xfs@oss.sgi.com>; Fri, 1 Oct 2010 14:35:55 -0500
+Received: from smtp-relay.maven.pl (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0F97C15F1D7A
+	for <xfs@oss.sgi.com>; Fri,  1 Oct 2010 12:50:11 -0700 (PDT)
+Received: from smtp-relay.maven.pl (smtp-relay.maven.pl [193.239.45.138]) by
+	cuda.sgi.com with ESMTP id CNk48HMvRDTAybvf for
+	<xfs@oss.sgi.com>; Fri, 01 Oct 2010 12:50:11 -0700 (PDT)
+Received: from chello087207113141.chello.pl ([87.207.113.141]:46528
+	helo=tarm.maven.pl)
+	by smtp-relay.maven.pl with esmtpsa (TLSv1:DHE-RSA-AES256-SHA:256)
+	(Exim 4.72) (envelope-from <arekm@maven.pl>) id 1P1lPX-0007tM-Hn
+	for xfs@oss.sgi.com; Fri, 01 Oct 2010 21:36:51 +0200
+Received: from arekm by tarm.maven.pl with local (Exim 4.72)
+	(envelope-from <arekm@maven.pl>) id 1P1lPT-0005a7-K6
+	for xfs@oss.sgi.com; Fri, 01 Oct 2010 21:36:47 +0200
+From: Arkadiusz Miskiewicz <arekm@maven.pl>
+Subject: xfs_metadump in never ending loop
+Date: Fri, 1 Oct 2010 21:36:47 +0200
+MIME-Version: 1.0
+Message-Id: <201010012136.47502.arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,52 +29,57 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: stable@kernel.org, John Hawley <warthog9@kernel.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Fri, 2010-10-01 at 09:43 +0200, Johannes Weiner wrote:
-> When marking an inode reclaimable, a per-AG counter is increased, the
-> inode is tagged reclaimable in its per-AG tree, and, when this is the
-> first reclaimable inode in the AG, the AG entry in the per-mount tree
-> is also tagged.
-> 
-> When an inode is finally reclaimed, however, it is only deleted from
-> the per-AG tree.  Neither the counter is decreased, nor is the parent
-> tree's AG entry untagged properly.
-> 
-> Since the tags in the per-mount tree are not cleared, the inode
-> shrinker iterates over all AGs that have had reclaimable inodes at one
-> point in time.
-> 
-> The counters on the other hand signal an increasing amount of slab
-> objects to reclaim.  Since "70e60ce xfs: convert inode shrinker to
-> per-filesystem context" this is not a real issue anymore because the
-> shrinker bails out after one iteration.
-> 
-> But the problem was observable on a machine running v2.6.34, where the
-> reclaimable work increased and each process going into direct reclaim
-> eventually got stuck on the xfs inode shrinking path, trying to scan
-> several million objects.
-> 
-> Fix this by properly unwinding the reclaimable-state tracking of an
-> inode when it is reclaimed.
-> 
-> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
-> Cc: stable@kernel.org
-
-Yes, this looks right to me.  The state was correctly
-adjusted in xfs_iget_cache_hit() when a RECLAIMABLE
-inode is found in the cache, but it was not done when
-reclaim completes.
-
-Reviewed-by: Alex Elder <aelder@sgi.com>
-
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+IApnZW5lcmF0ZV9vYmZ1c2NhdGVkX25hbWUoKSBpbiBtZXRhZHVtcC5jIGNhbiBnbyBpbnRvCm5l
+dmVyIGVuZGluZyBsb29wIGZvciBzb21lIGZpbGUgbmFtZXMuIFJlcHJvZHVjZXIgYmVsb3cuCgpD
+YW4gc29tZW9uZSBsb29rIGludG8gaXQ/IFRoYW5rcy4KCiNpbmNsdWRlIDxzdGRsaWIuaD4KI2lu
+Y2x1ZGUgPGRpcmVudC5oPgoKdHlwZWRlZiB1bnNpZ25lZCBjaGFyICAgICAgICAgICAgICAgdWNo
+YXJfdDsKdHlwZWRlZiAgICAgX191aW50MzJfdCAgICAgIHhmc19kYWhhc2hfdDsKCiNkZWZpbmUg
+aXNfaW52YWxpZF9jaGFyKGMpICAgICAgKChjKSA9PSAnLycgfHwgKGMpID09ICdcMCcpCiNkZWZp
+bmUgcm9sMzIoeCx5KSAgICAgICAgICAgICAgKCgoeCkgPDwgKHkpKSB8ICgoeCkgPj4gKDMyIC0g
+KHkpKSkpCgpzdGF0aWMgaW5saW5lIHVjaGFyX3QKcmFuZG9tX2ZpbGVuYW1lX2NoYXIodm9pZCkK
+ewogICAgICAgIHVjaGFyX3QgICAgICAgICAgICAgICAgIGM7CgogICAgICAgIGRvIHsKICAgICAg
+ICAgICAgICAgIGMgPSByYW5kb20oKSAlIDEyNyArIDE7CiAgICAgICAgfSB3aGlsZSAoYyA9PSAn
+LycpOwogICAgICAgIHJldHVybiBjOwp9CgppbnQgbWFpbigpIHsKCWludCBuYW1lbGVuID0gNSwg
+aSwgZHVwOwoJeGZzX2RhaGFzaF90IGhhc2ggPSA5NzgwNTI5Mjg7Cgl4ZnNfZGFoYXNoX3QgbmV3
+aGFzaDsKCXVjaGFyX3QgKm5hbWUgPSAiUlwzMjNcMjU3TkVcMDAyXDMyMFwwMDAiOwoJdWNoYXJf
+dCBuZXduYW1lW05BTUVfTUFYXTsKCiAgICAgICAgZG8gewogICAgICAgICAgICAgICAgZHVwID0g
+MDsKICAgICAgICAgICAgICAgIG5ld25hbWVbMF0gPSAnLyc7CgogICAgICAgICAgICAgICAgZm9y
+ICg7OykgewogICAgICAgICAgICAgICAgICAgICAgICAvKiBpZiB0aGUgZmlyc3QgY2hhciBpcyBh
+ICIvIiwgcHJlc2VydmUgaXQgKi8KICAgICAgICAgICAgICAgICAgICAgICAgaSA9IChuYW1lWzBd
+ID09ICcvJyk7CgogICAgICAgICAgICAgICAgICAgICAgICBmb3IgKG5ld2hhc2ggPSAwOyBpIDwg
+bmFtZWxlbiAtIDU7IGkrKykgewogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIG5ld25h
+bWVbaV0gPSByYW5kb21fZmlsZW5hbWVfY2hhcigpOwogICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgIG5ld2hhc2ggPSBuZXduYW1lW2ldIF4gcm9sMzIobmV3aGFzaCwgNyk7CiAgICAgICAg
+ICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgICAgICAgICAgbmV3aGFzaCA9IHJvbDMy
+KG5ld2hhc2gsIDMpIF4gaGFzaDsKICAgICAgICAgICAgICAgICAgICAgICAgaWYgKG5hbWVbMF0g
+IT0gJy8nIHx8IG5hbWVsZW4gPiA1KSB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+bmV3bmFtZVtuYW1lbGVuIC0gNV0gPSAobmV3aGFzaCA+PiAyOCkgfAogICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAocmFuZG9tX2ZpbGVuYW1lX2NoYXIoKSAm
+IDB4ZjApOwogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGlmIChpc19pbnZhbGlkX2No
+YXIobmV3bmFtZVtuYW1lbGVuIC0gNV0pKQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgY29udGludWU7CiAgICAgICAgICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAg
+ICAgICAgICAgICAgbmV3bmFtZVtuYW1lbGVuIC0gNF0gPSAobmV3aGFzaCA+PiAyMSkgJiAweDdm
+OwogICAgICAgICAgICAgICAgICAgICAgICBpZiAoaXNfaW52YWxpZF9jaGFyKG5ld25hbWVbbmFt
+ZWxlbiAtIDRdKSkKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBjb250aW51ZTsKICAg
+ICAgICAgICAgICAgICAgICAgICAgbmV3bmFtZVtuYW1lbGVuIC0gM10gPSAobmV3aGFzaCA+PiAx
+NCkgJiAweDdmOwogICAgICAgICAgICAgICAgICAgICAgICBpZiAoaXNfaW52YWxpZF9jaGFyKG5l
+d25hbWVbbmFtZWxlbiAtIDNdKSkKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBjb250
+aW51ZTsKICAgICAgICAgICAgICAgICAgICAgICAgbmV3bmFtZVtuYW1lbGVuIC0gMl0gPSAobmV3
+aGFzaCA+PiA3KSAmIDB4N2Y7CiAgICAgICAgICAgICAgICAgICAgICAgIGlmIChpc19pbnZhbGlk
+X2NoYXIobmV3bmFtZVtuYW1lbGVuIC0gMl0pKQogICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgIGNvbnRpbnVlOwogICAgICAgICAgICAgICAgICAgICAgICBuZXduYW1lW25hbWVsZW4gLSAx
+XSA9ICgobmV3aGFzaCA+PiAwKSBeCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAobmV3bmFtZVtuYW1lbGVuIC0gNV0gPj4gNCkpICYgMHg3ZjsKICAgICAgICAgICAgICAg
+ICAgICAgICAgaWYgKGlzX2ludmFsaWRfY2hhcihuZXduYW1lW25hbWVsZW4gLSAxXSkpCiAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgY29udGludWU7CiAgICAgICAgICAgICAgICAgICAg
+ICAgIGJyZWFrOwogICAgICAgICAgICAgICAgfQoJfSB3aGlsZSAoZHVwKTsKfQoKLS0gCkFya2Fk
+aXVzeiBNacWba2lld2ljeiAgICAgICAgUExEL0xpbnV4IFRlYW0KYXJla20gLyBtYXZlbi5wbCAg
+ICAgICAgICAgIGh0dHA6Ly9mdHAucGxkLWxpbnV4Lm9yZy8KCl9fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2ku
+Y29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
