@@ -1,14 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o91DtqRv079846 for <xfs@oss.sgi.com>; Fri, 1 Oct 2010 08:55:53 -0500
-Subject: Re: [PATCH 1/3] [PATCH 1/3] xfs: remove XFS_MOUNT_NO_PERCPU_SB
+	o91HH7QV100479 for <xfs@oss.sgi.com>; Fri, 1 Oct 2010 12:17:07 -0500
+Subject: Re: [patch] xfs: properly account for reclaimed inodes
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20100930022600.975540107@bombadil.infradead.org>
-References: <20100930022553.391390964@bombadil.infradead.org>
-	<20100930022600.975540107@bombadil.infradead.org>
-Date: Fri, 01 Oct 2010 08:56:40 -0500
-Message-ID: <1285941400.5119.453.camel@doink>
+In-Reply-To: <20101001074354.GF2618@cmpxchg.org>
+References: <20101001074354.GF2618@cmpxchg.org>
+Date: Fri, 01 Oct 2010 12:17:23 -0500
+Message-ID: <1285953443.2422.4.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -23,21 +22,45 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: stable@kernel.org, John Hawley <warthog9@kernel.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Wed, 2010-09-29 at 22:25 -0400, Christoph Hellwig wrote:
-
-> Fail the mount if we can't allocate memory for the per-CPU counters.
-> This is consistent with how we handle everything else in the mount
-> path and makes the superblock counter modification a lot simpler.
+On Fri, 2010-10-01 at 09:43 +0200, Johannes Weiner wrote:
+> When marking an inode reclaimable, a per-AG counter is increased, the
+> inode is tagged reclaimable in its per-AG tree, and, when this is the
+> first reclaimable inode in the AG, the AG entry in the per-mount tree
+> is also tagged.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> When an inode is finally reclaimed, however, it is only deleted from
+> the per-AG tree.  Neither the counter is decreased, nor is the parent
+> tree's AG entry untagged properly.
+> 
+> Since the tags in the per-mount tree are not cleared, the inode
+> shrinker iterates over all AGs that have had reclaimable inodes at one
+> point in time.
+> 
+> The counters on the other hand signal an increasing amount of slab
+> objects to reclaim.  Since "70e60ce xfs: convert inode shrinker to
+> per-filesystem context" this is not a real issue anymore because the
+> shrinker bails out after one iteration.
+> 
+> But the problem was observable on a machine running v2.6.34, where the
+> reclaimable work increased and each process going into direct reclaim
+> eventually got stuck on the xfs inode shrinking path, trying to scan
+> several million objects.
+> 
+> Fix this by properly unwinding the reclaimable-state tracking of an
+> inode when it is reclaimed.
+> 
+> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+> Cc: stable@kernel.org
 
-Looks good.
+Yes, this looks right to me.  The state was correctly
+adjusted in xfs_iget_cache_hit() when a RECLAIMABLE
+inode is found in the cache, but it was not done when
+reclaim completes.
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
-
 
 
 _______________________________________________
