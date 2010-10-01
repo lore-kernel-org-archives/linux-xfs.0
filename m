@@ -1,26 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o91JZsbL116124 for <xfs@oss.sgi.com>; Fri, 1 Oct 2010 14:35:55 -0500
-Received: from smtp-relay.maven.pl (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0F97C15F1D7A
-	for <xfs@oss.sgi.com>; Fri,  1 Oct 2010 12:50:11 -0700 (PDT)
-Received: from smtp-relay.maven.pl (smtp-relay.maven.pl [193.239.45.138]) by
-	cuda.sgi.com with ESMTP id CNk48HMvRDTAybvf for
-	<xfs@oss.sgi.com>; Fri, 01 Oct 2010 12:50:11 -0700 (PDT)
-Received: from chello087207113141.chello.pl ([87.207.113.141]:46528
-	helo=tarm.maven.pl)
-	by smtp-relay.maven.pl with esmtpsa (TLSv1:DHE-RSA-AES256-SHA:256)
-	(Exim 4.72) (envelope-from <arekm@maven.pl>) id 1P1lPX-0007tM-Hn
-	for xfs@oss.sgi.com; Fri, 01 Oct 2010 21:36:51 +0200
-Received: from arekm by tarm.maven.pl with local (Exim 4.72)
-	(envelope-from <arekm@maven.pl>) id 1P1lPT-0005a7-K6
-	for xfs@oss.sgi.com; Fri, 01 Oct 2010 21:36:47 +0200
-From: Arkadiusz Miskiewicz <arekm@maven.pl>
-Subject: xfs_metadump in never ending loop
-Date: Fri, 1 Oct 2010 21:36:47 +0200
+	o91K5AMb119342 for <xfs@oss.sgi.com>; Fri, 1 Oct 2010 15:05:10 -0500
+Received: from mail-qy0-f174.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 049A11E74326
+	for <xfs@oss.sgi.com>; Fri,  1 Oct 2010 13:06:09 -0700 (PDT)
+Received: from mail-qy0-f174.google.com (mail-qy0-f174.google.com
+	[209.85.216.174]) by cuda.sgi.com with ESMTP id
+	gxWBehkeJX5OOLi0 for <xfs@oss.sgi.com>;
+	Fri, 01 Oct 2010 13:06:09 -0700 (PDT)
+Received: by qyk36 with SMTP id 36so3621945qyk.5
+	for <xfs@oss.sgi.com>; Fri, 01 Oct 2010 13:06:09 -0700 (PDT)
 MIME-Version: 1.0
-Message-Id: <201010012136.47502.arekm@maven.pl>
+Date: Fri, 1 Oct 2010 17:06:08 -0300
+Message-ID: <AANLkTi=kzGSGtmk8a_eu5n9w6wbvt_f28Va9gSeWNgCe@mail.gmail.com>
+Subject: xfs_db -c frag -r /dev/sdb1 segmentation fault
+From: Robert Pipca <robertpipca@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,57 +24,78 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: xfs@oss.sgi.com, Robert Pipca <robertpipca@gmail.com>
 
-IApnZW5lcmF0ZV9vYmZ1c2NhdGVkX25hbWUoKSBpbiBtZXRhZHVtcC5jIGNhbiBnbyBpbnRvCm5l
-dmVyIGVuZGluZyBsb29wIGZvciBzb21lIGZpbGUgbmFtZXMuIFJlcHJvZHVjZXIgYmVsb3cuCgpD
-YW4gc29tZW9uZSBsb29rIGludG8gaXQ/IFRoYW5rcy4KCiNpbmNsdWRlIDxzdGRsaWIuaD4KI2lu
-Y2x1ZGUgPGRpcmVudC5oPgoKdHlwZWRlZiB1bnNpZ25lZCBjaGFyICAgICAgICAgICAgICAgdWNo
-YXJfdDsKdHlwZWRlZiAgICAgX191aW50MzJfdCAgICAgIHhmc19kYWhhc2hfdDsKCiNkZWZpbmUg
-aXNfaW52YWxpZF9jaGFyKGMpICAgICAgKChjKSA9PSAnLycgfHwgKGMpID09ICdcMCcpCiNkZWZp
-bmUgcm9sMzIoeCx5KSAgICAgICAgICAgICAgKCgoeCkgPDwgKHkpKSB8ICgoeCkgPj4gKDMyIC0g
-KHkpKSkpCgpzdGF0aWMgaW5saW5lIHVjaGFyX3QKcmFuZG9tX2ZpbGVuYW1lX2NoYXIodm9pZCkK
-ewogICAgICAgIHVjaGFyX3QgICAgICAgICAgICAgICAgIGM7CgogICAgICAgIGRvIHsKICAgICAg
-ICAgICAgICAgIGMgPSByYW5kb20oKSAlIDEyNyArIDE7CiAgICAgICAgfSB3aGlsZSAoYyA9PSAn
-LycpOwogICAgICAgIHJldHVybiBjOwp9CgppbnQgbWFpbigpIHsKCWludCBuYW1lbGVuID0gNSwg
-aSwgZHVwOwoJeGZzX2RhaGFzaF90IGhhc2ggPSA5NzgwNTI5Mjg7Cgl4ZnNfZGFoYXNoX3QgbmV3
-aGFzaDsKCXVjaGFyX3QgKm5hbWUgPSAiUlwzMjNcMjU3TkVcMDAyXDMyMFwwMDAiOwoJdWNoYXJf
-dCBuZXduYW1lW05BTUVfTUFYXTsKCiAgICAgICAgZG8gewogICAgICAgICAgICAgICAgZHVwID0g
-MDsKICAgICAgICAgICAgICAgIG5ld25hbWVbMF0gPSAnLyc7CgogICAgICAgICAgICAgICAgZm9y
-ICg7OykgewogICAgICAgICAgICAgICAgICAgICAgICAvKiBpZiB0aGUgZmlyc3QgY2hhciBpcyBh
-ICIvIiwgcHJlc2VydmUgaXQgKi8KICAgICAgICAgICAgICAgICAgICAgICAgaSA9IChuYW1lWzBd
-ID09ICcvJyk7CgogICAgICAgICAgICAgICAgICAgICAgICBmb3IgKG5ld2hhc2ggPSAwOyBpIDwg
-bmFtZWxlbiAtIDU7IGkrKykgewogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIG5ld25h
-bWVbaV0gPSByYW5kb21fZmlsZW5hbWVfY2hhcigpOwogICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgIG5ld2hhc2ggPSBuZXduYW1lW2ldIF4gcm9sMzIobmV3aGFzaCwgNyk7CiAgICAgICAg
-ICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgICAgICAgICAgbmV3aGFzaCA9IHJvbDMy
-KG5ld2hhc2gsIDMpIF4gaGFzaDsKICAgICAgICAgICAgICAgICAgICAgICAgaWYgKG5hbWVbMF0g
-IT0gJy8nIHx8IG5hbWVsZW4gPiA1KSB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-bmV3bmFtZVtuYW1lbGVuIC0gNV0gPSAobmV3aGFzaCA+PiAyOCkgfAogICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAocmFuZG9tX2ZpbGVuYW1lX2NoYXIoKSAm
-IDB4ZjApOwogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGlmIChpc19pbnZhbGlkX2No
-YXIobmV3bmFtZVtuYW1lbGVuIC0gNV0pKQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgY29udGludWU7CiAgICAgICAgICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAg
-ICAgICAgICAgICAgbmV3bmFtZVtuYW1lbGVuIC0gNF0gPSAobmV3aGFzaCA+PiAyMSkgJiAweDdm
-OwogICAgICAgICAgICAgICAgICAgICAgICBpZiAoaXNfaW52YWxpZF9jaGFyKG5ld25hbWVbbmFt
-ZWxlbiAtIDRdKSkKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBjb250aW51ZTsKICAg
-ICAgICAgICAgICAgICAgICAgICAgbmV3bmFtZVtuYW1lbGVuIC0gM10gPSAobmV3aGFzaCA+PiAx
-NCkgJiAweDdmOwogICAgICAgICAgICAgICAgICAgICAgICBpZiAoaXNfaW52YWxpZF9jaGFyKG5l
-d25hbWVbbmFtZWxlbiAtIDNdKSkKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBjb250
-aW51ZTsKICAgICAgICAgICAgICAgICAgICAgICAgbmV3bmFtZVtuYW1lbGVuIC0gMl0gPSAobmV3
-aGFzaCA+PiA3KSAmIDB4N2Y7CiAgICAgICAgICAgICAgICAgICAgICAgIGlmIChpc19pbnZhbGlk
-X2NoYXIobmV3bmFtZVtuYW1lbGVuIC0gMl0pKQogICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgIGNvbnRpbnVlOwogICAgICAgICAgICAgICAgICAgICAgICBuZXduYW1lW25hbWVsZW4gLSAx
-XSA9ICgobmV3aGFzaCA+PiAwKSBeCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAobmV3bmFtZVtuYW1lbGVuIC0gNV0gPj4gNCkpICYgMHg3ZjsKICAgICAgICAgICAgICAg
-ICAgICAgICAgaWYgKGlzX2ludmFsaWRfY2hhcihuZXduYW1lW25hbWVsZW4gLSAxXSkpCiAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgY29udGludWU7CiAgICAgICAgICAgICAgICAgICAg
-ICAgIGJyZWFrOwogICAgICAgICAgICAgICAgfQoJfSB3aGlsZSAoZHVwKTsKfQoKLS0gCkFya2Fk
-aXVzeiBNacWba2lld2ljeiAgICAgICAgUExEL0xpbnV4IFRlYW0KYXJla20gLyBtYXZlbi5wbCAg
-ICAgICAgICAgIGh0dHA6Ly9mdHAucGxkLWxpbnV4Lm9yZy8KCl9fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2ku
-Y29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+Hi,
+
+I'm using kernel 2.6.34.7 on a gentoo amd64 system.
+
+Towards the end of the command, I get:
+
+read(4, "INA\350\2\1\0\0\0\0\377\376\0\0\377\376\0\0\0\2\0\0\0\0\0\0\0\0\0\0\0\1L"...,
+16384) = 16384
+lseek(4, 352256, SEEK_SET)              = 352256
+read(4, "INA\350\2\1\0\0\0\0\377\376\0\0\377\376\0\0\0\2\0\0\0\0\0\0\0\0\0\0\0\1L"...,
+16384) = 16384
+lseek(4, 376832, SEEK_SET)              = 376832
+read(4, "INA\350\2\1\0\0\0\0\377\376\0\0\377\376\0\0\0\2\0\0\0\0\0\0\0\0\0\0\0\1L"...,
+16384) = 16384
+lseek(4, 393216, SEEK_SET)              = 393216
+read(4, "INA\350\2\1\0\0\0\0\377\376\0\0\377\376\0\0\0\2\0\0\0\0\0\0\0\0\0\0\0\1L"...,
+16384) = 16384
+lseek(4, 417792, SEEK_SET)              = 417792
+read(4, "INA\350\2\1\0\0\0\0\377\376\0\0\377\376\0\0\0\2\0\0\0\0\0\0\0\0\0\0\0\1L"...,
+16384) = 16384
+lseek(4, 434176, SEEK_SET)              = 434176
+read(4, "INA\350\2\1\0\0\0\0\377\376\0\0\377\376\0\0\0\2\0\0\0\0\0\0\0\0\0\0\0\1L"...,
+16384) = 16384
+lseek(4, 450560, SEEK_SET)              = 450560
+read(4, "INA\350\2\1\0\0\0\0\377\376\0\0\377\376\0\0\0\2\0\0\0\0\0\0\0\0\0\0\0\1L"...,
+16384) = 16384
+lseek(4, 475136, SEEK_SET)              = 475136
+read(4, "INA\350\2\1\0\0\0\0\377\376\0\0\377\376\0\0\0\2\0\0\0\0\0\0\0\0\0\0\0\1L"...,
+16384) = 16384
+lseek(4, 491520, SEEK_SET)              = 491520
+read(4, "INA\350\2\1\0\0\0\0\377\376\0\0\377\376\0\0\0\2\0\0\0\0\0\0\0\0\0\0\0\1L"...,
+16384) = 16384
+lseek(4, 516096, SEEK_SET)              = 516096
+read(4, "INA\350\2\1\0\0\0\0\377\376\0\0\377\376\0\0\0\2\0\0\0\0\0\0\0\0\0\0\0\1L"...,
+16384) = 16384
+lseek(4, 14190936064, SEEK_SET)         = 14190936064
+read(4, "BMAP\0\0\0\n\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\0\0\0\0\0\0\0\0\0"...,
+4096) = 4096
+lseek(4, 532480, SEEK_SET)              = 532480
+read(4, "IN\201\240\2\3\0\0\0\0\377\376\0\0\377\376\0\0\0\1\0\0\0\0\0\0\0\0\0\0\0\21L"...,
+16384) = 16384
+lseek(4, 37129601024, SEEK_SET)         = 37129601024
+read(4, "BMAP\0\0\0\n\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\0\0\0\0\0\0\0\0\0"...,
+4096) = 4096
+lseek(4, 37028130816, SEEK_SET)         = 37028130816
+read(4, "BMAP\0\0\0\n\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\0\0\0\0\0\0\0\0\0"...,
+4096) = 4096
+lseek(4, 36522024960, SEEK_SET)         = 36522024960
+read(4, "\177\260g\203\223s\231\364\273\222\276\34\363~\253\355\271\271\17h\237\v\357\274\230\25\334\351x\2719&\34"...,
+4096) = 4096
+brk(0x26af000)                          = 0x26af000
+brk(0x26a0000)                          = 0x26a0000
+mmap(NULL, 200704, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS,
+-1, 0) = 0x7ff07237e000
+brk(0x2690000)                          = 0x2690000
+--- SIGSEGV (Segmentation fault) @ 0 (0) ---
++++ killed by SIGSEGV +++
+
+
+Is this a kernel or a XFS problem?
+
+Cheers,
+
+- Robert
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
