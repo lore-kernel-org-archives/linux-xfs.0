@@ -1,20 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o91D8bxH074965 for <xfs@oss.sgi.com>; Fri, 1 Oct 2010 08:08:37 -0500
-Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 2FD51304066
-	for <xfs@oss.sgi.com>; Fri,  1 Oct 2010 06:09:35 -0700 (PDT)
-Received: from [134.15.95.106] (cf-vpn-hw-arenaud-9.corp.sgi.com
-	[134.15.95.106])
-	by estes.americas.sgi.com (Postfix) with ESMTP id D3C72700186B
-	for <xfs@oss.sgi.com>; Fri,  1 Oct 2010 08:09:34 -0500 (CDT)
-Message-ID: <4CA5DD8D.3010200@sgi.com>
-Date: Fri, 01 Oct 2010 09:09:33 -0400
-From: Alain Renaud <arenaud@sgi.com>
-MIME-Version: 1.0
-Subject: [PATCH] xfstests: make 223 use more compatible indirection operator
-Content-Type: multipart/mixed; boundary="------------020905090800000305080804"
+	o91DuxwW080001 for <xfs@oss.sgi.com>; Fri, 1 Oct 2010 08:56:59 -0500
+Subject: Re: [PATCH VER 6] Extend project quotas to support 32bit project
+	identifiers.
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <1285481418-31739-1-git-send-email-arekm@maven.pl>
+References: <1285481418-31739-1-git-send-email-arekm@maven.pl>
+Date: Fri, 01 Oct 2010 08:57:13 -0500
+Message-ID: <1285941433.5119.460.camel@doink>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,101 +19,64 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Arkadiusz =?UTF-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Cc: xfs@oss.sgi.com
 
-This is a multi-part message in MIME format.
---------------020905090800000305080804
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-
-Hello all,
-
-I notice while running xfstests on SLES machine that the test 223 fail
-because of syntax error.
-
-# bash 223
-QA output created by 223
-223: line 66: syntax error near unexpected token `>'
-223: line 66: `    _scratch_mkfs_geom $SUNIT_BYTES 4 $BLOCKSIZE&>>  $seq.full'
-
-The error is due to the use of the '&>>' operator for redirection that does not
-work  on older bash version(3.2.x).
-Note that this operator only seem to work with bash version 4.X+
-
-This patch simply replace the operator with '>>  $seq.full 2>&1' which does
-the same thing.
-
---
-Signed-off-by: Alain Renaud <arenaud@sgi.com>
-
-
-
-
---------------020905090800000305080804
-Content-Type: text/x-patch;
- name="223.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="223.patch"
-
-Index: xfstests/223
-===================================================================
---- xfstests/223.orig
-+++ xfstests/223
-@@ -63,7 +63,7 @@
- 	let SUNIT_BLOCKS=$SUNIT_BYTES/$BLOCKSIZE
- 
- 	echo "=== mkfs with su $SUNIT_BLOCKS blocks x 4 ==="
--	_scratch_mkfs_geom $SUNIT_BYTES 4 $BLOCKSIZE &>> $seq.full
-+	_scratch_mkfs_geom $SUNIT_BYTES 4 $BLOCKSIZE >> $seq.full 2>&1
- 	_scratch_mount
- 
- 	for SIZE_MULT in 1 2 8 64 256; do
-@@ -73,10 +73,10 @@
- 		for FILE in 1 2 3 4; do
- 			xfs_io -F -f -c "falloc 0 $SIZE" \
- 				$SCRATCH_MNT/file-$FILE-$SIZE-falloc \
--					&>> $seq.full
-+					>> $seq.full 2>&1
- 			xfs_io -F -f -c "pwrite 0 $SIZE" \
- 				$SCRATCH_MNT/file-$FILE-$SIZE-write \
--					&>> $seq.full
-+					>> $seq.full 2>&1
- 			src/t_stripealign $SCRATCH_MNT/file-$FILE-$SIZE-falloc \
- 				$SUNIT_BLOCKS | _filter_scratch
- 			src/t_stripealign $SCRATCH_MNT/file-$FILE-$SIZE-write \
-@@ -85,7 +85,8 @@
- 	done
- 
- 	echo "=== Testing size 1g falloc on ${SUNIT_K}k stripe ==="
--	xfs_io -F -f -c "falloc 0 1g" $SCRATCH_MNT/file-1g-falloc &>> $seq.full
-+	xfs_io -F -f -c "falloc 0 1g" \
-+	    $SCRATCH_MNT/file-1g-falloc >> $seq.full 2>&1
- 	src/t_stripealign $SCRATCH_MNT/file-1g-falloc $SUNIT_BLOCKS \
- 	    | _filter_scratch
- 
-@@ -93,7 +94,7 @@
- 
- 	echo "=== Testing size 1073745920 falloc on ${SUNIT_K}k stripe ==="
- 	xfs_io -F -f -c "falloc 0 1073745920" \
--		$SCRATCH_MNT/file-1073745920-falloc &>> $seq.full
-+		$SCRATCH_MNT/file-1073745920-falloc >> $seq.full 2>&1
- 	src/t_stripealign $SCRATCH_MNT/file-1073745920-falloc \
- 		$SUNIT_BLOCKS | _filter_scratch
- 
-
-
---------------020905090800000305080804
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
-
---------------020905090800000305080804--
+T24gU3VuLCAyMDEwLTA5LTI2IGF0IDA4OjEwICswMjAwLCBBcmthZGl1c3ogTWnFm2tpZXdpY3og
+d3JvdGU6Cj4gVGhpcyBwYXRjaCBhZGRzIHN1cHBvcnQgZm9yIDMyYml0IHByb2plY3QgcXVvdGEg
+aWRlbnRpZmllcnMuCj4gCj4gT24gZGlzayBmb3JtYXQgaXMgYmFja3dhcmQgY29tcGF0aWJsZSB3
+aXRoIDE2Yml0IHByb2ppZCBudW1iZXJzLiBwcm9qaWQKPiBvbiBkaXNrIGlzIG5vdyBrZWVwdCBp
+biB0d28gMTZiaXQgdmFsdWVzIC0gZGlfcHJvamlkX2xvICh3aGljaCBob2xkcyB0aGUKPiBzYW1l
+IHBvc2l0aW9uIGFzIG9sZCAxNmJpdCBwcm9qaWQgdmFsdWUpIGFuZCBuZXcgZGlfcHJvamlkX2hp
+ICh0YWtlcwo+IGV4aXN0aW5nIHBhZGRpbmcpIGFuZCBjb252ZXJ0ZXMgZnJvbS90byAzMmJpdCB2
+YWx1ZSBvbiB0aGUgZmx5Lgo+IAo+IHhmc19hZG1pbiAoZm9yIGV4aXN0aW5nIGZzKSwgbWtmcy54
+ZnMgKGZvciBuZXcgZnMpIG5lZWRzIHRvIGJlIHVzZWQKPiB0byBlbmFibGUgUFJPSklEMzJCSVQg
+c3VwcG9ydC4KPiAKPiBTaWduZWQtb2ZmLWJ5OiBBcmthZGl1c3ogTWnFm2tpZXdpY3ogPGFyZWtt
+QG1hdmVuLnBsPgo+IFJldmlld2VkLWJ5OiBDaHJpc3RvcGggSGVsbHdpZyA8aGNoQGxzdC5kZT4K
+PiAtLS0KCk1pbm9yIHN1Z2dlc3Rpb24sIGJlbG93ICh3aGljaCBJIGNhbiBpbXBsZW1lbnQpLCBv
+dGhlcndpc2UgdGhpcwpsb29rcyBnb29kLgoKSSBkaWRuJ3QgcmV2aWV3IGl0IGFzIGNhcmVmdWxs
+eSB0aGlzIHRpbWUuICBCdXQgdGhlIG1vZGVsIG5vdwppcyB0aGF0IDMyLWJpdCBwcm9qZWN0IGlk
+J3MgYXJlIG9ubHkgc3VwcG9ydGVkIGlmIHRoZSBmaWxlc3lzdGVtCmhhcyB0aGF0IGZlYXR1cmUg
+Yml0IHNldC4gIEFuZCB0aGUgZmVhdHVyZSBiaXQgaXMgb25seSBzZXQgYXQKbWtmcyB0aW1lIG9y
+IGJ5IHhmc19kYiAobm90IGF1dG9tYXRpY2FsbHkgYXMgeW91IGhhZCBpdCBiZWZvcmUpLgpUaGlz
+IHNvdW5kcyBnb29kIHRvIG1lLgoKUmV2aWV3ZWQtYnk6IEFsZXggRWxkZXIgPGFlbGRlckBzZ2ku
+Y29tPgoKPiBOZXdzOgo+IC0gdXNlIDB4ODAgaW5zdGVhZCBvZiAweDIwIGZvciBQUk9KSUQzMkJJ
+VCBzdXBlcmJsb2NrIGJpdCAoYXMgMHgyMAo+ICAgYW5kIDB4NDAgYXJlIHJlc2VydmVkKQo+IC0g
+c3R5bGUgZml4CgouIC4gLgoKPiBkaWZmIC0tZ2l0IGEvZnMveGZzL2xpbnV4LTIuNi94ZnNfaW9j
+dGwzMi5oIGIvZnMveGZzL2xpbnV4LTIuNi94ZnNfaW9jdGwzMi5oCj4gaW5kZXggMTAyNGM0Zi4u
+ZjkyZDY2MiAxMDA2NDQKPiAtLS0gYS9mcy94ZnMvbGludXgtMi42L3hmc19pb2N0bDMyLmgKPiAr
+KysgYi9mcy94ZnMvbGludXgtMi42L3hmc19pb2N0bDMyLmgKPiBAQCAtNjUsOCArNjUsOSBAQCB0
+eXBlZGVmIHN0cnVjdCBjb21wYXRfeGZzX2JzdGF0IHsKPiAgCV9fczMyCQlic19leHRzaXplOwkv
+KiBleHRlbnQgc2l6ZQkJCSovCj4gIAlfX3MzMgkJYnNfZXh0ZW50czsJLyogbnVtYmVyIG9mIGV4
+dGVudHMJCSovCj4gIAlfX3UzMgkJYnNfZ2VuOwkJLyogZ2VuZXJhdGlvbiBjb3VudAkJKi8KPiAt
+CV9fdTE2CQlic19wcm9qaWQ7CS8qIHByb2plY3QgaWQJCQkqLwo+IC0JdW5zaWduZWQgY2hhcgli
+c19wYWRbMTRdOwkvKiBwYWQgc3BhY2UsIHVudXNlZAkJKi8KPiArCV9fdTE2CQlic19wcm9qaWQ7
+CS8qIGxvd2VyIHBhcnQgb2YgcHJvamVjdCBpZAkqLwoKVGhpcyBjb3VsZCBiZToKICAgICAgICAg
+IF9fdTE2ICAgICAgICAgICBic19wcm9qaWRfbG87ICAgLyogLi4uICovCiNkZWZpbmUgYnNfcHJv
+amlkIGJzX3Byb2ppZF9sbwoKLi4udG8gbWFrZSBpdCB3b3JrIHdpdGggb2xkIGNvZGUgYnV0IGJl
+IG1vcmUgY29uc2lzdGVudCB3aXRoIG5ldy4KCj4gKwlfX3UxNgkJYnNfcHJvamlkX2hpOwkvKiBo
+aWdoIHBhcnQgb2YgcHJvamVjdCBpZAkqLwo+ICsJdW5zaWduZWQgY2hhcglic19wYWRbMTJdOwkv
+KiBwYWQgc3BhY2UsIHVudXNlZAkJKi8KPiAgCV9fdTMyCQlic19kbWV2bWFzazsJLyogRE1JRyBl
+dmVudCBtYXNrCQkqLwo+ICAJX191MTYJCWJzX2Rtc3RhdGU7CS8qIERNSUcgc3RhdGUgaW5mbwkJ
+Ki8KPiAgCV9fdTE2CQlic19hZXh0ZW50czsJLyogYXR0cmlidXRlIG51bWJlciBvZiBleHRlbnRz
+CSovCgouIC4gLgoKPiBkaWZmIC0tZ2l0IGEvZnMveGZzL3hmc19mcy5oIGIvZnMveGZzL3hmc19m
+cy5oCj4gaW5kZXggODdjMmU5ZC4uYWUxYzUwMCAxMDA2NDQKPiAtLS0gYS9mcy94ZnMveGZzX2Zz
+LmgKPiArKysgYi9mcy94ZnMveGZzX2ZzLmgKPiBAQCAtMjkzLDkgKzI5MywxMCBAQCB0eXBlZGVm
+IHN0cnVjdCB4ZnNfYnN0YXQgewo+ICAJX19zMzIJCWJzX2V4dHNpemU7CS8qIGV4dGVudCBzaXpl
+CQkJKi8KPiAgCV9fczMyCQlic19leHRlbnRzOwkvKiBudW1iZXIgb2YgZXh0ZW50cwkJKi8KPiAg
+CV9fdTMyCQlic19nZW47CQkvKiBnZW5lcmF0aW9uIGNvdW50CQkqLwo+IC0JX191MTYJCWJzX3By
+b2ppZDsJLyogcHJvamVjdCBpZAkJCSovCj4gKwlfX3UxNgkJYnNfcHJvamlkOwkvKiBsb3dlciBw
+YXJ0IG9mIHByb2plY3QgaWQJKi8KClNhbWUgdGhpbmcgaGVyZS4KCj4gIAlfX3UxNgkJYnNfZm9y
+a29mZjsJLyogaW5vZGUgZm9yayBvZmZzZXQgaW4gYnl0ZXMJKi8KPiAtCXVuc2lnbmVkIGNoYXIJ
+YnNfcGFkWzEyXTsJLyogcGFkIHNwYWNlLCB1bnVzZWQJCSovCj4gKwlfX3UxNgkJYnNfcHJvamlk
+X2hpOwkvKiBoaWdoZXIgcGFydCBvZiBwcm9qZWN0IGlkCSovCj4gKwl1bnNpZ25lZCBjaGFyCWJz
+X3BhZFsxMF07CS8qIHBhZCBzcGFjZSwgdW51c2VkCQkqLwo+ICAJX191MzIJCWJzX2RtZXZtYXNr
+OwkvKiBETUlHIGV2ZW50IG1hc2sJCSovCj4gIAlfX3UxNgkJYnNfZG1zdGF0ZTsJLyogRE1JRyBz
+dGF0ZSBpbmZvCQkqLwo+ICAJX191MTYJCWJzX2FleHRlbnRzOwkvKiBhdHRyaWJ1dGUgbnVtYmVy
+IG9mIGV4dGVudHMJKi8KCi4gLiAuCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3Nz
+LnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
