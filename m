@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o92J1pvm204840 for <xfs@oss.sgi.com>; Sat, 2 Oct 2010 14:01:51 -0500
-Received: from smtp.sauce.co.nz (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DD28D1E74821
-	for <xfs@oss.sgi.com>; Sat,  2 Oct 2010 12:02:51 -0700 (PDT)
-Received: from smtp.sauce.co.nz (smtp.sauce.co.nz [210.48.49.72]) by
-	cuda.sgi.com with ESMTP id stjOZjSPECyb4CZz for
-	<xfs@oss.sgi.com>; Sat, 02 Oct 2010 12:02:51 -0700 (PDT)
-Message-ID: <4CA780D4.9080801@sauce.co.nz>
-Date: Sun, 03 Oct 2010 07:58:28 +1300
-From: Richard Scobie <richard@sauce.co.nz>
+	o936HxLR238920 for <xfs@oss.sgi.com>; Sun, 3 Oct 2010 01:18:00 -0500
+Received: from casper.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B40CC1E750CB
+	for <xfs@oss.sgi.com>; Sat,  2 Oct 2010 23:18:59 -0700 (PDT)
+Received: from casper.infradead.org (casper.infradead.org [85.118.1.10]) by
+	cuda.sgi.com with ESMTP id ATiaBEm1SLsdGOez for
+	<xfs@oss.sgi.com>; Sat, 02 Oct 2010 23:18:59 -0700 (PDT)
+Date: Sun, 3 Oct 2010 02:18:54 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Linux and DMAPI
+Message-ID: <20101003061854.GA24293@infradead.org>
+References: <AANLkTim5FExj9GFQf9v1rzRmxqtNrdw_UR5VPUs4bPMq@mail.gmail.com>
 MIME-Version: 1.0
-Subject: Re: Quota confusion
-References: <4CA55F09.2010609@sauce.co.nz> <20101002103505.GD4681@dastard>
-In-Reply-To: <20101002103505.GD4681@dastard>
+Content-Disposition: inline
+In-Reply-To: <AANLkTim5FExj9GFQf9v1rzRmxqtNrdw_UR5VPUs4bPMq@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,49 +24,34 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Diego Woitasen <diego@woitasen.com.ar>
 Cc: xfs@oss.sgi.com
 
-Dave Chinner wrote:
-
->> Disk quotas for Project shares (1)
->> Filesystem              Blocks      Quota      Limit  Warn/Time
->> Mounted on
->> /dev/dm-0           11816148292          0 12988658280   00
->> [--------] /mnt/storage1
->>
->> the number of blocks is less than the limit.
+On Sat, Sep 18, 2010 at 09:08:16PM -0300, Diego Woitasen wrote:
+> Hi,
+>  I'm looking for software that supports DMAPI on Linux. I haven't
+> found anything on the web. I need to implement HSM for a mail server,
+> to store old messages in a secondary storage.
 > 
-> Ok, that looks normal.
+>  Are there something implemented? Open source or propietary one? I
+> prefer open source obviously...
 
-Ah. I was interpreting as total blocks, not blocks used.
+The XFS on disk format supports the required metadata for DMAPI, but the
+implementation for it never made it into the mainline Linux kernel.  For
+years SGI provided a tree to add the support, but for the last few years
+the support bitrotted heavily.  Alex promised to publush a tree with
+updated DMAPI support in the near future.
 
->> Also, an xfs_quota df:
->>
->> Filesystem           1K-blocks       Used  Available  Use% Pathname
->> /dev/dm-0           13672271872 11816602148 1855669724   87% /mnt/storage1
->> /dev/dm-0           13672271872 23632296584 1855669724  173%
->> /mnt/storage1/share
->>
->> I do not understand the lower "Used" figure.
-> 
-> Hmmm - looks like a directory quota output for a specific directory
-> (/mnt/storage1/share), and for some reason the used field is roughly
-> double the correct value. Can you post your project quota config
-> files?
-
-/etc/projects 1:/mnt/storage1/share
-/etc/projid shares:1
-
-kernel 2.6.35.4 xfsprogs 3.0.4
-
-Regards,
-
-Richard
+You'll still need additional userspace support the to actually driver
+the migration.  The xfstests suite has a minimal implementation for QA
+purposes as free software, but I don't think that's what your looking
+for.  The main user of the XFS DMAPI support is SGI's DMF product,
+and at least a few years ago IBM's Tivoli Storage Manager also supported
+DMAPI.
 
 _______________________________________________
 xfs mailing list
