@@ -1,22 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o936o85Z240263 for <xfs@oss.sgi.com>; Sun, 3 Oct 2010 01:50:08 -0500
-Received: from casper.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C8D70BBEB7
-	for <xfs@oss.sgi.com>; Sat,  2 Oct 2010 23:45:51 -0700 (PDT)
-Received: from casper.infradead.org (casper.infradead.org [85.118.1.10]) by
-	cuda.sgi.com with ESMTP id 7eZM2r0VW4GAjeD9 for
-	<xfs@oss.sgi.com>; Sat, 02 Oct 2010 23:45:51 -0700 (PDT)
-Date: Sun, 3 Oct 2010 02:45:47 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: xfs_db -c frag -r /dev/sdb1 segmentation fault
-Message-ID: <20101003064547.GA9071@infradead.org>
-References: <AANLkTi=kzGSGtmk8a_eu5n9w6wbvt_f28Va9gSeWNgCe@mail.gmail.com>
-	<20101002103902.GE4681@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20101002103902.GE4681@dastard>
+	o9401dUE018285 for <xfs@oss.sgi.com>; Sun, 3 Oct 2010 19:01:39 -0500
+Subject: Re: xfs_metadump in never ending loop
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <201010012136.47502.arekm@maven.pl>
+References: <201010012136.47502.arekm@maven.pl>
+Date: Sun, 03 Oct 2010 18:57:46 -0500
+Message-ID: <1286150266.4344.9.camel@doink>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,14 +22,34 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Robert Pipca <robertpipca@gmail.com>, xfs@oss.sgi.com
+To: Arkadiusz Miskiewicz <arekm@maven.pl>
+Cc: xfs@oss.sgi.com
 
-On Sat, Oct 02, 2010 at 08:39:03PM +1000, Dave Chinner wrote:
-> Note that the crash could be caused by a corrupted filesystem.
+On Fri, 2010-10-01 at 21:36 +0200, Arkadiusz Miskiewicz wrote:
+> generate_obfuscated_name() in metadump.c can go into
+> never ending loop for some file names. Reproducer below.
 
-Or running it on a mounted filesystem.  Robert, did you run the command
-on a mounted or unmounted filesystem?
+The reason it hangs is that the algorithm for computing
+a name with the same hash value as the name is stuck with
+a portion of the hash whose only possible result includes
+the string "/" in it.
+
+The hash for the file "R\323\257NE" is 0x3ab4b3740.
+
+One step in the algorithm is this:
+        newname[namelen - 3] = (newhash >> 14) & 0x7f;
+        if (is_invalid_char(newname[namelen - 3]))
+                continue;
+
+But the result of that is 0x2f, which is the '/'
+character, which is illegal.  So this algorithm
+will try again indefinitely, never finding a file
+name with a matching hash.
+
+I am looking into this a bit more.  Will report back
+later, probably tomorrow.
+
+					-Alex
 
 _______________________________________________
 xfs mailing list
