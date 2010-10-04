@@ -1,20 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o942ufS6024806 for <xfs@oss.sgi.com>; Sun, 3 Oct 2010 21:56:42 -0500
-Received: from mail-ww0-f51.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B34B818A363B
-	for <xfs@oss.sgi.com>; Sun,  3 Oct 2010 19:57:42 -0700 (PDT)
-Received: from mail-ww0-f51.google.com (mail-ww0-f51.google.com
-	[74.125.82.51]) by cuda.sgi.com with ESMTP id BwwSRdCSQXvZGh26
-	for <xfs@oss.sgi.com>; Sun, 03 Oct 2010 19:57:42 -0700 (PDT)
-Received: by wwb28 with SMTP id 28so5134281wwb.32
-	for <xfs@oss.sgi.com>; Sun, 03 Oct 2010 19:57:42 -0700 (PDT)
-MIME-Version: 1.0
-Date: Mon, 4 Oct 2010 02:57:42 +0000
-Message-ID: <AANLkTinH93VekNiAEbJbp43xnG2QPgnr+70nvC771ifG@mail.gmail.com>
-Subject: xfs_repair never finishes on lvm partition
-From: Knowledge Seeker <knoseeker@googlemail.com>
+	o946dDhj049581 for <xfs@oss.sgi.com>; Mon, 4 Oct 2010 01:39:14 -0500
+Received: from smtp03-01.atm.binero.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8D05618A41AB
+	for <xfs@oss.sgi.com>; Sun,  3 Oct 2010 23:40:15 -0700 (PDT)
+Received: from smtp03-01.atm.binero.net (lb-smtp01.atm.binero.net
+	[195.74.38.28]) by cuda.sgi.com with ESMTP id tjKp9MqVKulLCuKT
+	for <xfs@oss.sgi.com>; Sun, 03 Oct 2010 23:40:15 -0700 (PDT)
+Received: from [192.168.1.128] (81-235-239-15-no92.business.telia.com
+	[81.235.239.15])
+	by smtp03-01.atm.binero.net (Postfix) with ESMTPSA id BB779116324
+	for <xfs@oss.sgi.com>; Mon,  4 Oct 2010 08:40:13 +0200 (CEST)
+Mime-Version: 1.0 (Apple Message framework v1081)
+Subject: Re: No space left on device
+From: Turbo Fredriksson <turbo@bayour.com>
+In-Reply-To: <D3DB5B56-D15C-408C-B2B4-58626C23D798@bayour.com>
+Date: Mon, 4 Oct 2010 08:40:13 +0200
+Message-Id: <43FCE115-0B25-42C1-BEE7-D9448AD6D4C3@bayour.com>
+References: <A7468B16-5A58-4012-B38B-784D89566D86@bayour.com>
+	<20100924152324.GA5551@sgi.com>
+	<2D51C7BA-FE51-48AF-9839-1A6AD2171510@bayour.com>
+	<20100927160643.GA10594@sgi.com>
+	<D3DB5B56-D15C-408C-B2B4-58626C23D798@bayour.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,145 +31,111 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============6878192813770383850=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
---===============6878192813770383850==
-Content-Type: multipart/alternative; boundary=0016e648d3d63cfee60491c1b5ed
+[please keep all communication on/to the list for posterity]
 
---0016e648d3d63cfee60491c1b5ed
-Content-Type: text/plain; charset=UTF-8
+On 27 sep 2010, at 18.26, Turbo Fredriksson wrote:
 
-Hi,
+> On 27 sep 2010, at 18.06, Geoffrey Wehrman wrote:
+> 
+>> | > or to a much more recent kernel, and the problem will go
+>> | > away.
+>> | 
+>> | How recent?
+>> 
+>> Based on the following FAQ, 2.6.35 or later.
+>> http://xfs.org/index.php/XFS_FAQ#Q:_Can_I_just_try_the_inode64_option_to_see_if_it_helps_me.3F
+> 
+> That only stated that you can/could switch back
+> and forth between 32/64bit. Not that it was/is
+> solved - or solve my problem.
+> 
+> But thanx. I'll try a later kernel then.
+> 
+> 
+> Ok, so 2.6.35.6 is the very latest!! I'm running
+> 2.6.32, which is ancient... I had expected a much
+> higher minor version... Thanx!
 
-I've sent the below message to the Debian Users list and they told me to
-send it here.
+Ok, I'm now at 2.6.35.6, AMD64 compiled, which let me
+create more files - using the inode64 mount option
+and/or (did both at the same time :) moving what I
+think was the first 5Gb data.
 
-I'm using Debian Lenny box with 2 hds.
-
-The first one is used by the OS and the second one is another system witch
-runs in virtual machine (Virtual Box).
-This virtual machine also runs Debian Lenny.
-
-The vm's hd has 2 fdisk partitions, one being LVM.
-
-On the last week, due a power failure, there was a corruption in the file
-system of my home xfs partition inside the LVM.
-When  I tried to access it, my OS answered that it's not a file or a
-directory.
-Umounting and mounting again, the error persists.
-I tried an xfs_check and it said to mount and umount the filesystem and if
-it does not work to run xfs_repair with -L.
-I tried it a couple of times and it didn't work, so I ran xfs_repair -L
-/dev/mapper/storage-home
-
-On Phase 6, it just freezes in:
-
-bad hash table for directory inode 2147483859 (no data entry): rebuilding
-rebuilding directory inode 2147483859
-
-And never finish.
-I let running for 2 days long.
-
-When I use ps to see the state:
-
- 2359 pts/0    Sl+    0:11 xfs_repair -L /dev/mapper/storage-home
-
-Interruptible sleep (waiting for an event to complete), multi threaded, in
-foreground.
-
-It just stoped when I sent an interrupt signal Ctrl+C.
-
-I tried to do the same from the host machine (real machine), since the HD
-could be accessed from it.
-The funniest thing is that the xfs_repair did not hang, but when I try to
-mount the partition it does not mount the  full partition.
-An ls in the /mnt mounting /dev/storage/home (from host machine), doesn't
-show the /home, it shows a subdirectory from /home.
-And if I start again the Virtual Machine, it prints the same error: /home is
-not file or directory.
-
-Weird..
+Unfortunately, I'm still using a 32bit user land
+(can't upgrade at the moment).
 
 
-Extra information:
-The versions:
-# xfs_repair -V
-xfs_repair version 2.9.8
-
-#fstab entry
-/dev/mapper/storage-home /home           xfs     defaults        0       2
-
-Some one have any idea, how to solve it?
-
-Thanks in advance
-
-Regards
-
--- 
-Knoseeker
-
---0016e648d3d63cfee60491c1b5ed
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-Hi,<br><br>I&#39;ve sent the below message to the Debian Users list and the=
-y told me to send it here.<br><br>I&#39;m using Debian Lenny box with 2 hds=
-.<br><br>The first one is used by the OS and the second one is another syst=
-em witch runs in virtual machine (Virtual Box).<br>
-This virtual machine also runs Debian Lenny.<br>
-<br>The vm&#39;s hd has 2 fdisk partitions, one being LVM.<br><br>On the la=
-st week, due a power failure, there was a corruption in the file system of =
-my home xfs partition inside the LVM.<br>When=C2=A0 I tried to access it, m=
-y OS answered that it&#39;s not a file or a directory.<br>
-
-Umounting and mounting again, the error persists.<br>I tried an xfs_check a=
-nd it said to mount and umount the filesystem and if it does not work to ru=
-n xfs_repair with -L.<br>I tried it a couple of times and it didn&#39;t wor=
-k, so I ran xfs_repair -L /dev/mapper/storage-home<br>
-
-<br>On Phase 6, it just freezes in:<br><br>bad hash table for directory ino=
-de 2147483859 (no data entry): rebuilding<br>rebuilding directory inode 214=
-7483859<br><br>And never finish.<br>I let running for 2 days long.<br>
-<br>
-When I use ps to see the state:<br><br>=C2=A02359 pts/0=C2=A0=C2=A0=C2=A0 S=
-l+=C2=A0=C2=A0=C2=A0 0:11 xfs_repair -L /dev/mapper/storage-home<br><br>Int=
-erruptible sleep (waiting for an event to complete), multi threaded, in for=
-eground.<br><br>It just stoped when I sent an interrupt signal Ctrl+C.<br>
-
-<br>I tried to do the same from the host machine (real machine), since the =
-HD could be accessed from it.<br>The
- funniest thing is that the xfs_repair did not hang, but when I try to=20
-mount the partition it does not mount the=C2=A0 full partition.<br>
-An ls in the /mnt mounting /dev/storage/home (from host machine), doesn&#39=
-;t show the /home, it shows a subdirectory from /home.<br>And if I start ag=
-ain the Virtual Machine, it prints the same error: /home is not file or dir=
-ectory.<br>
-<br>
-Weird..<br>
-<br><br>Extra information:<br>The versions:<br># xfs_repair -V<br>xfs_repai=
-r version 2.9.8<br><br>#fstab entry<br>/dev/mapper/storage-home /home=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 xfs=C2=A0=C2=A0=C2=
-=A0=C2=A0 defaults=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0 2<br><br>Some one have any idea, how to solve it?<=
-br>
-<br>Thanks in advance<br><br>Regards<br clear=3D"all"><br>-- <br>Knoseeker<=
-br>
-
---0016e648d3d63cfee60491c1b5ed--
+celia:~# uname -a
+Linux celia 2.6.35.6 #1 SMP Sat Oct 2 09:12:38 UTC 2010 x86_64 GNU/Linux
+celia:~# file `which xfs_db`
+/usr/sbin/xfs_db: ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.8, stripped
+celia:~# xfs_info /share
+meta-data=/dev/mapper/movies-movies isize=256    agcount=340, agsize=6104768 blks
+        =                       sectsz=512   attr=1
+data    =                       bsize=4096   blocks=2075610112, imaxpct=10
+        =                       sunit=0      swidth=0 blks
+naming  =version 2              bsize=4096   ascii-ci=0
+log     =internal               bsize=4096   blocks=32768, version=1
+        =                       sectsz=512   sunit=0 blks, lazy-count=0
+realtime=none                   extsz=65536  blocks=0, rtextents=0
 
 
---===============6878192813770383850==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+The big question is now, what do I do if/when (soon)
+I have to grow the FS?!
+
+On 24 sep 2010, at 17.23, Geoffrey Wehrman wrote:
+
+> On Fri, Sep 24, 2010 at 04:07:23PM +0200, Turbo Fredriksson wrote:
+> | The worst thing is that every time I grow
+> | the FS, I have to reboot into a 32bit kernel:
+> | 
+> | xfs_growfs: XFS_IOC_FSGROWFSDATA xfsctl failed: Invalid argument
+> 
+> This may be becuase your are running 32bit userland.
+
+On 24 sep 2010, at 23.17, Geoffrey Wehrman wrote:
+
+> On Fri, Sep 24, 2010 at 10:46:47PM +0200, Turbo Fredriksson wrote:
+> | On 24 sep 2010, at 17.23, Geoffrey Wehrman wrote:
+> | > Once you have 64bit inodes, it is difficult to go back to 32bit inodes.
+> | 
+> | Figured that.. But will the growfs stop working?
+> 
+> The 64 bit growfs should work.
+> 
+> | I assume it won't help just recompiling the XFS
+> | binaries since my libs et all is/will be 32bit?.
+> 
+> Correct.  You must have a 64 bit application/libraries/kernel.
+
+Will my current kernel, but compiled as 32bit, work
+without upgrading to a 64bit user land? Or is 2.6.35.6
+also fixing the XFS_IOC_FSGROWFSDATA problem I've been
+getting on 2.6.32/64bit?
+
+But I guess I can't use that older kernel any more,
+since I'm now using 64bit inodes.
+
+The FAQ mentioned above, do say that I'm supposed to
+go back and forth, but ... I'm a coward! (Actually,
+I used to call myself 'careful', but I guess it's
+really the same thing - also, I don't care any more :).
+
+
+It doesn't seem reasonable that I could create a bigger
+(i.e. 64bit) inode table - and files in that table,
+switch back to a kernel that only understands 32bit
+inode tables (correctly and/or 'is buggy'), grow the
+FS, and then go back to using 64bit inodes and still
+have all those files created in the 64bit inode table...
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============6878192813770383850==--
