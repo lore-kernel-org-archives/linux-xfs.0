@@ -1,23 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o959PvRW186603 for <xfs@oss.sgi.com>; Tue, 5 Oct 2010 04:25:58 -0500
-Received: from moutng.kundenserver.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D35834C8417
-	for <xfs@oss.sgi.com>; Tue,  5 Oct 2010 02:26:59 -0700 (PDT)
-Received: from moutng.kundenserver.de (moutng.kundenserver.de
-	[212.227.126.186]) by cuda.sgi.com with ESMTP id
-	Q2pWuoZTEehkUc7l for <xfs@oss.sgi.com>;
-	Tue, 05 Oct 2010 02:26:59 -0700 (PDT)
-From: "Hans-Peter Jansen" <hpj@urpla.net>
-Subject: Re: [patch] xfs: properly account for reclaimed inodes
-Date: Tue, 5 Oct 2010 11:26:46 +0200
-References: <20101001074354.GF2618@cmpxchg.org> <20101004071904.GH4681@dastard>
-	<20101004102213.GJ2618@cmpxchg.org>
-In-Reply-To: <20101004102213.GJ2618@cmpxchg.org>
+	o95A87vI192303 for <xfs@oss.sgi.com>; Tue, 5 Oct 2010 05:08:07 -0500
+Received: from mail-yw0-f53.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 002804C812C
+	for <xfs@oss.sgi.com>; Tue,  5 Oct 2010 03:09:10 -0700 (PDT)
+Received: from mail-yw0-f53.google.com (mail-yw0-f53.google.com
+	[209.85.213.53]) by cuda.sgi.com with ESMTP id Y4w9d6pnghX5G0YR
+	for <xfs@oss.sgi.com>; Tue, 05 Oct 2010 03:09:10 -0700 (PDT)
+Received: by ywo7 with SMTP id 7so297652ywo.26
+	for <xfs@oss.sgi.com>; Tue, 05 Oct 2010 03:09:10 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-Message-Id: <201010051126.47537.hpj@urpla.net>
+In-Reply-To: <20101004092107.GJ4681@dastard>
+References: <201009161546.16909.ruirui.r.yang@tieto.com>
+	<20100917005227.GJ24409@dastard>
+	<20100920191355.GA28443@infradead.org>
+	<AANLkTi=45J+=ytj=NC4bYTVJFRakNQQiFd35K7mrf+Gq@mail.gmail.com>
+	<4CA997DF.5030008@kernel.org> <20101004092107.GJ4681@dastard>
+Date: Tue, 5 Oct 2010 12:09:10 +0200
+Message-ID: <AANLkTi=3jjoCtYoK0endt8OM=omygO284WN2ZQZ=jceo@mail.gmail.com>
+Subject: Re: -mm: xfs lockdep warning
+From: Torsten Kaiser <just.for.lkml@googlemail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,82 +29,86 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: John Hawley <warthog9@kernel.org>, linux-kernel@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, Alex Elder <aelder@sgi.com>, stable@kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Yang Ruirui <ruirui.r.yang@tieto.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Alex Elder <aelder@sgi.com>, Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>
 
-On Monday 04 October 2010, 12:22:13 Johannes Weiner wrote:
-> Hi,
+On Mon, Oct 4, 2010 at 11:21 AM, Dave Chinner <david@fromorbit.com> wrote:
+> On Mon, Oct 04, 2010 at 11:01:19AM +0200, Tejun Heo wrote:
+>> Hello,
+>>
+>> On 09/25/2010 03:08 PM, Torsten Kaiser wrote:
+>> > [adding Tejun Heo, because I'm partly blaming his workqueues]
+>>
+>> :-) Sorry about the delay. =A0I was away the last week.
+>>
+>> > After that I enabled lockdep and retried the same update: This time no
+>> > hang, only the same lockdep report that Yang Ruirui had.
+>> >
+>> > So I'm currently at a loss how I should continue from here. The XFS
+>> > false positive drowns any other lockdep problems, but XFS had some
+>> > hang problems with the new workqueues. (Personally I had no other hang
+>> > with earlier 2.6.36-rcs)
 >
-> On Mon, Oct 04, 2010 at 06:19:04PM +1100, Dave Chinner wrote:
-> > On Fri, Oct 01, 2010 at 12:17:23PM -0500, Alex Elder wrote:
-> > > On Fri, 2010-10-01 at 09:43 +0200, Johannes Weiner wrote:
-> > > > When marking an inode reclaimable, a per-AG counter is increased,
-> > > > the inode is tagged reclaimable in its per-AG tree, and, when this
-> > > > is the first reclaimable inode in the AG, the AG entry in the
-> > > > per-mount tree is also tagged.
-> > > >
-> > > > When an inode is finally reclaimed, however, it is only deleted
-> > > > from the per-AG tree.  Neither the counter is decreased, nor is the
-> > > > parent tree's AG entry untagged properly.
-> > > >
-> > > > Since the tags in the per-mount tree are not cleared, the inode
-> > > > shrinker iterates over all AGs that have had reclaimable inodes at
-> > > > one point in time.
-> > > >
-> > > > The counters on the other hand signal an increasing amount of slab
-> > > > objects to reclaim.  Since "70e60ce xfs: convert inode shrinker to
-> > > > per-filesystem context" this is not a real issue anymore because
-> > > > the shrinker bails out after one iteration.
-> > > >
-> > > > But the problem was observable on a machine running v2.6.34, where
-> > > > the reclaimable work increased and each process going into direct
-> > > > reclaim eventually got stuck on the xfs inode shrinking path,
-> > > > trying to scan several million objects.
-> > > >
-> > > > Fix this by properly unwinding the reclaimable-state tracking of an
-> > > > inode when it is reclaimed.
-> > > >
-> > > > Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
-> > > > Cc: stable@kernel.org
-> > >
-> > > Yes, this looks right to me.  The state was correctly
-> > > adjusted in xfs_iget_cache_hit() when a RECLAIMABLE
-> > > inode is found in the cache, but it was not done when
-> > > reclaim completes.
-> > >
-> > > Reviewed-by: Alex Elder <aelder@sgi.com>
-> >
-> > Alex, can you push this to Linus ASAP? This needs to go back to
-> > stable kernels as well..
->
-> Here is my suggestion of a backport to .34.  Dave, Alex, do you
-> approve?
->
-> 	Hannes
->
-> diff --git a/fs/xfs/xfs_iget.c b/fs/xfs/xfs_iget.c
-> index 6845db9..3314f2a 100644
-> --- a/fs/xfs/xfs_iget.c
-> +++ b/fs/xfs/xfs_iget.c
-> @@ -499,6 +499,7 @@ xfs_ireclaim(
->  	write_lock(&pag->pag_ici_lock);
->  	if (!radix_tree_delete(&pag->pag_ici_root, agino))
->  		ASSERT(0);
-> +	pag->pag_ici_reclaimable--;
->  	write_unlock(&pag->pag_ici_lock);
->  	xfs_perag_put(pag);
->
->
+> What XFS hang problem? I've seen temporary livelocks from the new
+> workqueue code, but thay have been fixed. I haven't come across any
+> deadlocks or hangs. Do you have a pointer to a bug report in case my
+> memory is failing me?
 
-Ping?
+I was referring to the hang that prompted to increase of the priority
+of the xfslogd thread. Its commit
+51749e47e191db8e588ad5cebea731caf7b705d7 in Linus' tree. But it seems
+I have misremembered that one as a hang.
 
-Masters of xfs, please raise your voices!
+The hang I have seen is describe here:
+http://marc.info/?l=3Dlinux-kernel&m=3D128542018414916&w=3D2
 
-Pete
+As 2.6.36-rc5 already includes this priority fix, I believe this hang
+is something different and wrote that mail.
+
+>> If workqueue lockdep annotations are triggering spuriously, just nuke
+>> all lockdep annotations in workqueue.c. =A0Currently the annotations are
+>> the same as before and trigger even when an actual deadlock won't
+>> happen anymore around flushes (but then again all the current users
+>> should be operating under the same constraints as before). =A0I'm
+>> looking into how to improve the lockdep annotations but in the end it
+>> might be best to leave it as it is. =A0I'll try to analyze the warnings.
+>
+> It looks like there's been some discussion that has been private so
+> I'm clueless as to the context being discussed here. =A0Can someone
+> fill me in on whatever is going on?
+
+I only send the above message both to the lkml and the XFS mailing list.
+
+But it could have been wrong to make it a reply in this thread,
+because now there are three different things mixed up.
+
+1) the old livelock, that I was referring too -> That is already fixed
+in mainline, I just wanted to note, that this is unrelated to the hang
+I have seen.
+2) the hang with 2.6.35-rc5 I have seen twice (triggered probably by
+high load while building KOffice on an tmpfs)
+3) the lockdep issue that started this thread and that I am seeing in
+mainline 2.6.36-rc5 and -rc6 and that seems to be rather easy to
+trigger for me.
+
+Because 3) is regarded as a false positive, it should not be the cause
+of 2). But because 3) triggers on my system I can't see if lockdep
+might give better pointers to what might be the real cause of 2).
+
+So, I would like to test the patch Christoph was testing in
+http://marc.info/?l=3Dlinux-kernel&m=3D128501006509743&w=3D2 to see, if that
+helps to debug my hang. (And because I did not see that patch on the
+lkml, I replied to Christophs mail.)
+
+I CC'ed Tejun, because I believe the primary suspect for my hang was
+the stuck kworker/u:8:845 and I was hoping he might see something
+obvious wrong in that stacktrace.
+
+Torsten
 
 _______________________________________________
 xfs mailing list
