@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o95KBG0V258404 for <xfs@oss.sgi.com>; Tue, 5 Oct 2010 15:11:17 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C8BA71502CAD
-	for <xfs@oss.sgi.com>; Tue,  5 Oct 2010 13:25:59 -0700 (PDT)
-Received: from mail.sandeen.net (64-131-28-21.usfamily.net [64.131.28.21]) by
-	cuda.sgi.com with ESMTP id yLTzkxSxlKfEKAjn for
-	<xfs@oss.sgi.com>; Tue, 05 Oct 2010 13:25:59 -0700 (PDT)
-Message-ID: <4CAB86A1.5090305@sandeen.net>
-Date: Tue, 05 Oct 2010 15:12:17 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	o95LRZP3003753 for <xfs@oss.sgi.com>; Tue, 5 Oct 2010 16:27:36 -0500
+Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7CF4B18B93AF
+	for <xfs@oss.sgi.com>; Tue,  5 Oct 2010 14:28:37 -0700 (PDT)
+Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
+	cuda.sgi.com with ESMTP id RapVGay8aG6tB0H9 for
+	<xfs@oss.sgi.com>; Tue, 05 Oct 2010 14:28:37 -0700 (PDT)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: Re: XFS Filename Hash and metadump
+Date: Tue, 5 Oct 2010 23:28:33 +0200
+References: <1286290547.1960.3.camel@doink>
+In-Reply-To: <1286290547.1960.3.camel@doink>
 MIME-Version: 1.0
-Subject: Re: xfs_freeze on multipathd lvm2 ?
-References: <CFFC47E79E870F4EBAD0CA24D8CD7652ECD0E89DCC@CRW-EXM01.int.cggveritas.com>
-In-Reply-To: <CFFC47E79E870F4EBAD0CA24D8CD7652ECD0E89DCC@CRW-EXM01.int.cggveritas.com>
+Message-Id: <201010052328.34390@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,26 +23,76 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============1296430350933356675=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: =?ISO-8859-1?Q?Larsen_Tore_H=F8ivaag?= <tore.hoivaag.larsen@cggveritas.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: aelder@sgi.com
+Cc: xfs@oss.sgi.com
 
-Larsen wrote:
-> Does it work?  
+--===============1296430350933356675==
+Content-Type: multipart/signed;
+  boundary="nextPart19497927.dixTAWZHFp";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 
-I'll say "yes"
+--nextPart19497927.dixTAWZHFp
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 
-Have you tested it and found otherwise?
+On Dienstag, 5. Oktober 2010 Alex Elder wrote:
+> PS  Two more observations:
+>     - There is really no need for the characters to be truly random.
+>       Making the generated name unique and different from the
+>       original is sufficient.  So (with the exception of the last
+>       five bytes) we can select the characters however we like.
+>       They could be a sequential series of names, for example,
+>       rather than computing a random value for each.
 
--Eric
+I was thinking the same when reading your description. Why not simply=20
+"number" the file names from 1 to whatever count of files/dirs there is=20
+within that dir?
 
-> Regards,
-> --ToreL
+=2D-=20
+mit freundlichen Gr=C3=BCssen,
+Michael Monnerie, Ing. BSc
+
+it-management Internet Services
+http://proteger.at [gesprochen: Prot-e-schee]
+Tel: 0660 / 415 65 31
+
+****** Aktuelles Radiointerview! ******
+http://www.it-podcast.at/aktuelle-sendung.html
+
+// Wir haben im Moment zwei H=C3=A4user zu verkaufen:
+// http://zmi.at/langegg/
+// http://zmi.at/haus2009/
+
+--nextPart19497927.dixTAWZHFp
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.15 (GNU/Linux)
+
+iEYEABECAAYFAkyrmIIACgkQzhSR9xwSCbThjACgkFarpsQhnKg+ietMW0jkwYYv
+r2YAoKLLxOKqrcvzED/K4o4BKaUjwp4C
+=mBo4
+-----END PGP SIGNATURE-----
+
+--nextPart19497927.dixTAWZHFp--
+
+
+--===============1296430350933356675==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============1296430350933356675==--
