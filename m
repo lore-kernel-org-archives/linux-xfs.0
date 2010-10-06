@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o95LRZP3003753 for <xfs@oss.sgi.com>; Tue, 5 Oct 2010 16:27:36 -0500
-Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7CF4B18B93AF
-	for <xfs@oss.sgi.com>; Tue,  5 Oct 2010 14:28:37 -0700 (PDT)
-Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
-	cuda.sgi.com with ESMTP id RapVGay8aG6tB0H9 for
-	<xfs@oss.sgi.com>; Tue, 05 Oct 2010 14:28:37 -0700 (PDT)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: Re: XFS Filename Hash and metadump
-Date: Tue, 5 Oct 2010 23:28:33 +0200
-References: <1286290547.1960.3.camel@doink>
-In-Reply-To: <1286290547.1960.3.camel@doink>
+	o964r1iP044792 for <xfs@oss.sgi.com>; Tue, 5 Oct 2010 23:53:01 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 60F58C648E
+	for <xfs@oss.sgi.com>; Tue,  5 Oct 2010 21:54:03 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
+	[150.101.137.99]) by cuda.sgi.com with ESMTP id
+	zfC72YCGnFSu5Bmv for <xfs@oss.sgi.com>;
+	Tue, 05 Oct 2010 21:54:03 -0700 (PDT)
+Date: Wed, 6 Oct 2010 15:53:49 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [patch] xfs: properly account for reclaimed inodes
+Message-ID: <20101006045349.GA13191@dastard>
+References: <20101001074354.GF2618@cmpxchg.org> <1285953443.2422.4.camel@doink>
+	<20101004071904.GH4681@dastard> <20101004102213.GJ2618@cmpxchg.org>
 MIME-Version: 1.0
-Message-Id: <201010052328.34390@zmi.at>
+Content-Disposition: inline
+In-Reply-To: <20101004102213.GJ2618@cmpxchg.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,76 +26,87 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============1296430350933356675=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: aelder@sgi.com
-Cc: xfs@oss.sgi.com
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: stable@kernel.org, xfs@oss.sgi.com, John Hawley <warthog9@kernel.org>, linux-kernel@vger.kernel.org, Alex Elder <aelder@sgi.com>
 
---===============1296430350933356675==
-Content-Type: multipart/signed;
-  boundary="nextPart19497927.dixTAWZHFp";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+On Mon, Oct 04, 2010 at 12:22:13PM +0200, Johannes Weiner wrote:
+> Hi,
+> 
+> On Mon, Oct 04, 2010 at 06:19:04PM +1100, Dave Chinner wrote:
+> > On Fri, Oct 01, 2010 at 12:17:23PM -0500, Alex Elder wrote:
+> > > On Fri, 2010-10-01 at 09:43 +0200, Johannes Weiner wrote:
+> > > > When marking an inode reclaimable, a per-AG counter is increased, the
+> > > > inode is tagged reclaimable in its per-AG tree, and, when this is the
+> > > > first reclaimable inode in the AG, the AG entry in the per-mount tree
+> > > > is also tagged.
+> > > > 
+> > > > When an inode is finally reclaimed, however, it is only deleted from
+> > > > the per-AG tree.  Neither the counter is decreased, nor is the parent
+> > > > tree's AG entry untagged properly.
+> > > > 
+> > > > Since the tags in the per-mount tree are not cleared, the inode
+> > > > shrinker iterates over all AGs that have had reclaimable inodes at one
+> > > > point in time.
+> > > > 
+> > > > The counters on the other hand signal an increasing amount of slab
+> > > > objects to reclaim.  Since "70e60ce xfs: convert inode shrinker to
+> > > > per-filesystem context" this is not a real issue anymore because the
+> > > > shrinker bails out after one iteration.
+> > > > 
+> > > > But the problem was observable on a machine running v2.6.34, where the
+> > > > reclaimable work increased and each process going into direct reclaim
+> > > > eventually got stuck on the xfs inode shrinking path, trying to scan
+> > > > several million objects.
+> > > > 
+> > > > Fix this by properly unwinding the reclaimable-state tracking of an
+> > > > inode when it is reclaimed.
+> > > > 
+> > > > Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+> > > > Cc: stable@kernel.org
+> > > 
+> > > Yes, this looks right to me.  The state was correctly
+> > > adjusted in xfs_iget_cache_hit() when a RECLAIMABLE
+> > > inode is found in the cache, but it was not done when
+> > > reclaim completes.
+> > > 
+> > > Reviewed-by: Alex Elder <aelder@sgi.com>
+> > 
+> > Alex, can you push this to Linus ASAP? This needs to go back to
+> > stable kernels as well..
+> 
+> Here is my suggestion of a backport to .34.  Dave, Alex, do you
+> approve?
+> 
+> 	Hannes
+> 
+> diff --git a/fs/xfs/xfs_iget.c b/fs/xfs/xfs_iget.c
+> index 6845db9..3314f2a 100644
+> --- a/fs/xfs/xfs_iget.c
+> +++ b/fs/xfs/xfs_iget.c
+> @@ -499,6 +499,7 @@ xfs_ireclaim(
+>  	write_lock(&pag->pag_ici_lock);
+>  	if (!radix_tree_delete(&pag->pag_ici_root, agino))
+>  		ASSERT(0);
+> +	pag->pag_ici_reclaimable--;
+>  	write_unlock(&pag->pag_ici_lock);
+>  	xfs_perag_put(pag);
 
---nextPart19497927.dixTAWZHFp
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+Looks good to me.
 
-On Dienstag, 5. Oktober 2010 Alex Elder wrote:
-> PS  Two more observations:
->     - There is really no need for the characters to be truly random.
->       Making the generated name unique and different from the
->       original is sufficient.  So (with the exception of the last
->       five bytes) we can select the characters however we like.
->       They could be a sequential series of names, for example,
->       rather than computing a random value for each.
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-I was thinking the same when reading your description. Why not simply=20
-"number" the file names from 1 to whatever count of files/dirs there is=20
-within that dir?
+Cheers,
 
-=2D-=20
-mit freundlichen Gr=C3=BCssen,
-Michael Monnerie, Ing. BSc
-
-it-management Internet Services
-http://proteger.at [gesprochen: Prot-e-schee]
-Tel: 0660 / 415 65 31
-
-****** Aktuelles Radiointerview! ******
-http://www.it-podcast.at/aktuelle-sendung.html
-
-// Wir haben im Moment zwei H=C3=A4user zu verkaufen:
-// http://zmi.at/langegg/
-// http://zmi.at/haus2009/
-
---nextPart19497927.dixTAWZHFp
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.15 (GNU/Linux)
-
-iEYEABECAAYFAkyrmIIACgkQzhSR9xwSCbThjACgkFarpsQhnKg+ietMW0jkwYYv
-r2YAoKLLxOKqrcvzED/K4o4BKaUjwp4C
-=mBo4
------END PGP SIGNATURE-----
-
---nextPart19497927.dixTAWZHFp--
-
-
---===============1296430350933356675==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============1296430350933356675==--
