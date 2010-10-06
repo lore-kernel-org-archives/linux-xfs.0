@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o96IeLfb110134 for <xfs@oss.sgi.com>; Wed, 6 Oct 2010 13:40:21 -0500
+	o96IeM9C110154 for <xfs@oss.sgi.com>; Wed, 6 Oct 2010 13:40:23 -0500
 Received: from canuck.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E7FC71C01DFE
-	for <xfs@oss.sgi.com>; Wed,  6 Oct 2010 11:41:25 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D93131C01E4E
+	for <xfs@oss.sgi.com>; Wed,  6 Oct 2010 11:41:26 -0700 (PDT)
 Received: from canuck.infradead.org (canuck.infradead.org [134.117.69.58]) by
-	cuda.sgi.com with ESMTP id tpIkhGWvdJAx49Ar for
-	<xfs@oss.sgi.com>; Wed, 06 Oct 2010 11:41:25 -0700 (PDT)
+	cuda.sgi.com with ESMTP id QFhlxeh9KtN4uHG8 for
+	<xfs@oss.sgi.com>; Wed, 06 Oct 2010 11:41:26 -0700 (PDT)
 Received: from hch by canuck.infradead.org with local (Exim 4.72 #1 (Red Hat
-	Linux)) id 1P3Yvd-00018B-FS
-	for xfs@oss.sgi.com; Wed, 06 Oct 2010 18:41:25 +0000
-Message-Id: <20101006184125.327557835@localhost.localdomain>
-Date: Wed, 06 Oct 2010 14:41:12 -0400
+	Linux)) id 1P3Yve-0001AF-IQ
+	for xfs@oss.sgi.com; Wed, 06 Oct 2010 18:41:26 +0000
+Message-Id: <20101006184126.419695420@localhost.localdomain>
+Date: Wed, 06 Oct 2010 14:41:16 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 1/7] xfs: remove unused t_callback field in struct xfs_trans
+Subject: [PATCH 5/7] xfs: remove xfs_globals.h
 References: <20101006184111.634126439@localhost.localdomain>
-Content-Disposition: inline; filename=xfs-remove-t_callback
+Content-Disposition: inline; filename=xfs-kill-globals.h
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,36 +32,51 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
+This header only provides one extern that isn't actually declared anywhere,
+and shadowed by a macro.
+
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: xfs/fs/xfs/xfs_trans.c
+Index: xfs/fs/xfs/linux-2.6/xfs_globals.h
 ===================================================================
---- xfs.orig/fs/xfs/xfs_trans.c	2010-10-05 10:57:50.793254343 +0200
-+++ xfs/fs/xfs/xfs_trans.c	2010-10-06 11:10:13.774254205 +0200
-@@ -1416,10 +1416,6 @@ xfs_trans_committed(
- {
- 	struct xfs_log_item_desc *lidp, *next;
- 
--	/* Call the transaction's completion callback if there is one. */
--	if (tp->t_callback != NULL)
--		tp->t_callback(tp, tp->t_callarg);
+--- xfs.orig/fs/xfs/linux-2.6/xfs_globals.h	2010-09-29 07:57:15.590003897 +0900
++++ /dev/null	1970-01-01 00:00:00.000000000 +0000
+@@ -1,23 +0,0 @@
+-/*
+- * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
+- * All Rights Reserved.
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it would be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write the Free Software Foundation,
+- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+- */
+-#ifndef __XFS_GLOBALS_H__
+-#define __XFS_GLOBALS_H__
 -
- 	list_for_each_entry_safe(lidp, next, &tp->t_items, lid_trans) {
- 		xfs_trans_item_committed(lidp->lid_item, tp->t_lsn, abortflag);
- 		xfs_trans_free_item_desc(lidp);
-Index: xfs/fs/xfs/xfs_trans.h
+-extern uint64_t	xfs_panic_mask;		/* set to cause more panics */
+-
+-#endif	/* __XFS_GLOBALS_H__ */
+Index: xfs/fs/xfs/linux-2.6/xfs_linux.h
 ===================================================================
---- xfs.orig/fs/xfs/xfs_trans.h	2010-10-05 10:57:50.801254064 +0200
-+++ xfs/fs/xfs/xfs_trans.h	2010-10-06 11:10:13.774254205 +0200
-@@ -399,8 +399,6 @@ typedef struct xfs_trans {
- 						 * transaction. */
- 	struct xfs_mount	*t_mountp;	/* ptr to fs mount struct */
- 	struct xfs_dquot_acct   *t_dqinfo;	/* acctg info for dquots */
--	xfs_trans_callback_t	t_callback;	/* transaction callback */
--	void			*t_callarg;	/* callback arg */
- 	unsigned int		t_flags;	/* misc flags */
- 	int64_t			t_icount_delta;	/* superblock icount change */
- 	int64_t			t_ifree_delta;	/* superblock ifree change */
+--- xfs.orig/fs/xfs/linux-2.6/xfs_linux.h	2010-09-29 07:57:06.876003478 +0900
++++ xfs/fs/xfs/linux-2.6/xfs_linux.h	2010-09-29 07:57:10.675215517 +0900
+@@ -86,7 +86,6 @@
+ #include <xfs_iops.h>
+ #include <xfs_aops.h>
+ #include <xfs_super.h>
+-#include <xfs_globals.h>
+ #include <xfs_buf.h>
+ 
+ /*
 
 _______________________________________________
 xfs mailing list
