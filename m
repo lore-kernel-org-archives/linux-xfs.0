@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o96IeMeE110151 for <xfs@oss.sgi.com>; Wed, 6 Oct 2010 13:40:22 -0500
+	o96IeNVW110173 for <xfs@oss.sgi.com>; Wed, 6 Oct 2010 13:40:23 -0500
 Received: from canuck.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BFC404EB25C
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 602BC1C01E0E
 	for <xfs@oss.sgi.com>; Wed,  6 Oct 2010 11:41:26 -0700 (PDT)
 Received: from canuck.infradead.org (canuck.infradead.org [134.117.69.58]) by
-	cuda.sgi.com with ESMTP id x6265rabbwHQBcmQ for
+	cuda.sgi.com with ESMTP id QSBYF5MvLRNY39KJ for
 	<xfs@oss.sgi.com>; Wed, 06 Oct 2010 11:41:26 -0700 (PDT)
 Received: from hch by canuck.infradead.org with local (Exim 4.72 #1 (Red Hat
-	Linux)) id 1P3Yve-00019j-A0
+	Linux)) id 1P3Yve-00019D-1z
 	for xfs@oss.sgi.com; Wed, 06 Oct 2010 18:41:26 +0000
-Message-Id: <20101006184126.161666009@localhost.localdomain>
-Date: Wed, 06 Oct 2010 14:41:15 -0400
+Message-Id: <20101006184125.895296316@localhost.localdomain>
+Date: Wed, 06 Oct 2010 14:41:14 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 4/7] xfs: remove xfs_version.h
+Subject: [PATCH 3/7] xfs: remove xfs_refcache.h
 References: <20101006184111.634126439@localhost.localdomain>
-Content-Disposition: inline; filename=xfs-kill-version.h
+Content-Disposition: inline; filename=xfs-kill-xfs_refcache.h
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,42 +32,17 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-It used to have a place when it contained an automatically generated CVS
-version, but these days it's entirely superflous.
+This header has been completely unused for a couple of years.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: xfs/fs/xfs/linux-2.6/xfs_super.c
+Index: xfs/fs/xfs/xfs_refcache.h
 ===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_super.c	2010-09-29 07:54:47.649262102 +0900
-+++ xfs/fs/xfs/linux-2.6/xfs_super.c	2010-09-29 07:55:42.216005782 +0900
-@@ -44,7 +44,6 @@
- #include "xfs_buf_item.h"
- #include "xfs_utils.h"
- #include "xfs_vnodeops.h"
--#include "xfs_version.h"
- #include "xfs_log_priv.h"
- #include "xfs_trans_priv.h"
- #include "xfs_filestream.h"
-Index: xfs/fs/xfs/linux-2.6/xfs_super.h
-===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_super.h	2010-09-29 07:55:15.945003267 +0900
-+++ xfs/fs/xfs/linux-2.6/xfs_super.h	2010-09-29 07:55:25.893021010 +0900
-@@ -62,6 +62,7 @@ extern void xfs_qm_exit(void);
- # define XFS_DBG_STRING		"no debug"
- #endif
- 
-+#define XFS_VERSION_STRING	"SGI XFS"
- #define XFS_BUILD_OPTIONS	XFS_ACL_STRING \
- 				XFS_SECURITY_STRING \
- 				XFS_REALTIME_STRING \
-Index: xfs/fs/xfs/linux-2.6/xfs_version.h
-===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_version.h	2010-09-29 07:54:47.640253372 +0900
+--- xfs.orig/fs/xfs/xfs_refcache.h	2010-09-06 10:18:29.074253757 -0300
 +++ /dev/null	1970-01-01 00:00:00.000000000 +0000
-@@ -1,29 +0,0 @@
+@@ -1,52 +0,0 @@
 -/*
-- * Copyright (c) 2001-2002,2005 Silicon Graphics, Inc.
+- * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
 - * All Rights Reserved.
 - *
 - * This program is free software; you can redistribute it and/or
@@ -83,18 +58,41 @@ Index: xfs/fs/xfs/linux-2.6/xfs_version.h
 - * along with this program; if not, write the Free Software Foundation,
 - * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 - */
--#ifndef __XFS_VERSION_H__
--#define __XFS_VERSION_H__
+-#ifndef __XFS_REFCACHE_H__
+-#define __XFS_REFCACHE_H__
 -
+-#ifdef HAVE_REFCACHE
 -/*
-- * Dummy file that can contain a timestamp to put into the
-- * XFS init string, to help users keep track of what they're
-- * running
+- * Maximum size (in inodes) for the NFS reference cache
 - */
+-#define XFS_REFCACHE_SIZE_MAX	512
 -
--#define XFS_VERSION_STRING "SGI XFS"
+-struct xfs_inode;
+-struct xfs_mount;
 -
--#endif /* __XFS_VERSION_H__ */
+-extern void xfs_refcache_insert(struct xfs_inode *);
+-extern void xfs_refcache_purge_ip(struct xfs_inode *);
+-extern void xfs_refcache_purge_mp(struct xfs_mount *);
+-extern void xfs_refcache_purge_some(struct xfs_mount *);
+-extern void xfs_refcache_resize(int);
+-extern void xfs_refcache_destroy(void);
+-
+-extern void xfs_refcache_iunlock(struct xfs_inode *, uint);
+-
+-#else
+-
+-#define xfs_refcache_insert(ip)		do { } while (0)
+-#define xfs_refcache_purge_ip(ip)	do { } while (0)
+-#define xfs_refcache_purge_mp(mp)	do { } while (0)
+-#define xfs_refcache_purge_some(mp)	do { } while (0)
+-#define xfs_refcache_resize(size)	do { } while (0)
+-#define xfs_refcache_destroy()		do { } while (0)
+-
+-#define xfs_refcache_iunlock(ip, flags)	xfs_iunlock(ip, flags)
+-
+-#endif
+-
+-#endif	/* __XFS_REFCACHE_H__ */
 
 _______________________________________________
 xfs mailing list
