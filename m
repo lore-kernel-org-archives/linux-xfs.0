@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o96ImcVw111116 for <xfs@oss.sgi.com>; Wed, 6 Oct 2010 13:48:38 -0500
+	o96Ild1W110991 for <xfs@oss.sgi.com>; Wed, 6 Oct 2010 13:47:39 -0500
 Received: from cf--amer001e--3.americas.sgi.com
 	(cf--amer001e--3.americas.sgi.com [137.38.100.5])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id DFDF1AC004
-	for <xfs@oss.sgi.com>; Wed,  6 Oct 2010 11:49:42 -0700 (PDT)
-Subject: [PATCH 5/6] xfsprogs: replace repeated blocks with a loop
+	by relay2.corp.sgi.com (Postfix) with ESMTP id BECEE304064
+	for <xfs@oss.sgi.com>; Wed,  6 Oct 2010 11:48:40 -0700 (PDT)
+Subject: [PATCH, RFC 0/6] xfsprogs: fix generate_obfuscate_name()
 From: Alex Elder <aelder@sgi.com>
-Date: Wed, 06 Oct 2010 13:49:41 -0500
-Message-ID: <1286390981.1951.367.camel@doink>
+Date: Wed, 06 Oct 2010 13:48:40 -0500
+Message-ID: <1286390920.1951.357.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -26,70 +26,26 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Replace a repeated block of code with an equivalent loop.
+I'm sending this out for the moment with an "RFC" tag
+because I don't consider this work done (I want to do
+some refinements, basically).  But I wanted to get the
+code out there for an initial review to see if there
+are any major problems with what I'm proposing here.
 
-Signed-off-by: Alex Elder <aelder@sgi.com>
+This is fixing the problem in xfs_db metadump feature
+in which the attempt to create an obfuscated filename
+can result in an endless loop.
 
----
- db/metadump.c |   43 +++++++++----------------------------------
- 1 file changed, 9 insertions(+), 34 deletions(-)
+I've run it through all possible 6-character names
+starting with 0x01 through 0x07 (and counting...)
+and the new algorithm (which is basically contained
+in patch 3 of the series) produces an alternate
+path with the same hash as the original for all
+cases.  I also ran all the test cases I identified
+previously and all compute an alternate path without
+hanging.
 
-Index: b/db/metadump.c
-===================================================================
---- a/db/metadump.c
-+++ b/db/metadump.c
-@@ -471,41 +471,16 @@ generate_obfuscated_name(
- 		newhash = rol32(newhash, 3) ^ hash;
- 
- 		high_bit = 0;
-+		for (i = 5; i > 0; i--) {
-+		    	int shift = (i - 1) * 7;
- 
--		newp[namelen - 5] = (newhash >> 28) & 0x7f ^ high_bit;
--		if (is_invalid_char(newp[namelen - 5])) {
--			newp[namelen - 5] ^= 1;
--			high_bit = 0x80;
--		} else
--			high_bit = 0;
--
--		newp[namelen - 4] = (newhash >> 21) & 0x7f ^ high_bit;
--		if (is_invalid_char(newp[namelen - 4])) {
--			newp[namelen - 4] ^= 1;
--			high_bit = 0x80;
--		} else
--			high_bit = 0;
--
--		newp[namelen - 3] = (newhash >> 14) & 0x7f ^ high_bit;
--		if (is_invalid_char(newp[namelen - 3])) {
--			newp[namelen - 3] ^= 1;
--			high_bit = 0x80;
--		} else
--			high_bit = 0;
--
--		newp[namelen - 2] = (newhash >> 7) & 0x7f ^ high_bit;
--		if (is_invalid_char(newp[namelen - 2])) {
--			newp[namelen - 2] ^= 1;
--			high_bit = 0x80;
--		} else
--			high_bit = 0;
--
--		newp[namelen - 1] = (newhash >> 0) & 0x7f ^ high_bit;
--		if (is_invalid_char(newp[namelen - 1])) {
--			newp[namelen - 1] ^= 1;
--			high_bit = 0x80;
--		} else
--			high_bit = 0;
-+			newp[namelen - i] = (newhash >> shift) & 0x7f ^ high_bit;
-+			if (is_invalid_char(newp[namelen - i])) {
-+				newp[namelen - i] ^= 1;
-+				high_bit = 0x80;
-+			} else
-+				high_bit = 0;
-+		}
- 
- 		if (high_bit) {
- 			newp[namelen - 5] ^= 0x10;
-
+					-Alex
 
 _______________________________________________
 xfs mailing list
