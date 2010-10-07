@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o97KNQQZ221650 for <xfs@oss.sgi.com>; Thu, 7 Oct 2010 15:23:27 -0500
-Subject: Re: [PATCH 2/7] xfs: fix the xfs_trans_committed
+	o97KNaIm221697 for <xfs@oss.sgi.com>; Thu, 7 Oct 2010 15:23:36 -0500
+Subject: Re: [PATCH 4/7] xfs: remove xfs_version.h
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20101006184125.617230666@localhost.localdomain>
+In-Reply-To: <20101006184126.161666009@localhost.localdomain>
 References: <20101006184111.634126439@localhost.localdomain>
-	<20101006184125.617230666@localhost.localdomain>
-Date: Thu, 07 Oct 2010 15:24:31 -0500
-Message-ID: <1286483071.2670.368.camel@doink>
+	<20101006184126.161666009@localhost.localdomain>
+Date: Thu, 07 Oct 2010 15:24:40 -0500
+Message-ID: <1286483080.2670.370.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -27,15 +27,15 @@ To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
 On Wed, 2010-10-06 at 14:41 -0400, Christoph Hellwig wrote:
-> plain text document attachment (xfs-fix-cb_func_prototype)
-> Use the correct prototype for xfs_trans_committed instead of casting it.
+> plain text document attachment (xfs-kill-version.h)
+> It used to have a place when it contained an automatically generated CVS
+> version, but these days it's entirely superflous.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 Looks good.
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
-
 
 
 _______________________________________________
