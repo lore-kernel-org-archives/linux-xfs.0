@@ -1,15 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o97Lempg227216 for <xfs@oss.sgi.com>; Thu, 7 Oct 2010 16:40:48 -0500
-Subject: Re: XFS Filename Hash and metadump
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <201010052328.34390@zmi.at>
-References: <1286290547.1960.3.camel@doink>  <201010052328.34390@zmi.at>
-Date: Thu, 07 Oct 2010 16:41:49 -0500
-Message-ID: <1286487709.2670.407.camel@doink>
-Mime-Version: 1.0
-Reply-To: aelder@sgi.com
+	o97MLrcU230254 for <xfs@oss.sgi.com>; Thu, 7 Oct 2010 17:21:53 -0500
+Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 25447304064
+	for <xfs@oss.sgi.com>; Thu,  7 Oct 2010 15:22:56 -0700 (PDT)
+Received: from [128.162.232.176] (eagdhcp-232-176.americas.sgi.com
+	[128.162.232.176])
+	by estes.americas.sgi.com (Postfix) with ESMTP id 0B0B970017C5
+	for <xfs@oss.sgi.com>; Thu,  7 Oct 2010 17:22:56 -0500 (CDT)
+Message-ID: <4CAE483F.1020608@sgi.com>
+Date: Thu, 07 Oct 2010 17:22:55 -0500
+From: Alain Renaud <arenaud@sgi.com>
+MIME-Version: 1.0
+Subject: [PATCH] xfstests: Fix some file permission.
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,51 +22,82 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Michael Monnerie <michael.monnerie@is.it-management.at>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, 2010-10-05 at 23:28 +0200, Michael Monnerie wrote:
-> On Dienstag, 5. Oktober 2010 Alex Elder wrote:
-> > PS  Two more observations:
-> >     - There is really no need for the characters to be truly random.
-> >       Making the generated name unique and different from the
-> >       original is sufficient.  So (with the exception of the last
-> >       five bytes) we can select the characters however we like.
-> >       They could be a sequential series of names, for example,
-> >       rather than computing a random value for each.
-> 
-> I was thinking the same when reading your description. Why not simply 
-> "number" the file names from 1 to whatever count of files/dirs there is 
-> within that dir?
-> 
+I notice that some of the test script do not have execute
+permission. To be consistent I changed the permissions to be 755.
+Can someone verify that this is valid.
 
-I'm not entirely sure how best to implement it, and I'm open to
-suggestions.
+Thanks.
 
-As a starting point, I will make it so the random characters making
-up the first part of the name are printable, and could probably restrict
-it even more than that (say, using lower-case alphabetic and numeric
-characters).
+Signed-off-by: Alain Renaud <arenaud@sgi.com>
+---
+  0 files changed, 0 insertions(+), 0 deletions(-)
+  mode change 100644 => 100755 215
+  mode change 100644 => 100755 220
+  mode change 100644 => 100755 221
+  mode change 100644 => 100755 222
+  mode change 100644 => 100755 224
+  mode change 100644 => 100755 225
+  mode change 100644 => 100755 227
+  mode change 100644 => 100755 229
+  mode change 100644 => 100755 236
+  mode change 100644 => 100755 237
+  mode change 100644 => 100755 239
+  mode change 100644 => 100755 242
+  mode change 100644 => 100755 244
 
-A scheme with incrementing file names would need to accomodate names of
-arbitrary length, too, and it might be better to make the varying part
-be at the front of such names.
+diff --git a/215 b/215
+old mode 100644
+new mode 100755
+diff --git a/220 b/220
+old mode 100644
+new mode 100755
+diff --git a/221 b/221
+old mode 100644
+new mode 100755
+diff --git a/222 b/222
+old mode 100644
+new mode 100755
+diff --git a/224 b/224
+old mode 100644
+new mode 100755
+diff --git a/225 b/225
+old mode 100644
+new mode 100755
+diff --git a/227 b/227
+old mode 100644
+new mode 100755
+diff --git a/229 b/229
+old mode 100644
+new mode 100755
+diff --git a/236 b/236
+old mode 100644
+new mode 100755
+diff --git a/237 b/237
+old mode 100644
+new mode 100755
+diff --git a/239 b/239
+old mode 100644
+new mode 100755
+diff --git a/242 b/242
+old mode 100644
+new mode 100755
+diff --git a/244 b/244
+old mode 100644
+new mode 100755
+-- 
+1.6.0.2
 
-We need to be aware that there could be duplicates (filenames hashing
-to the same value), even though that's unlikely.
-
-In any case the last four and a half bytes of the name will need to
-be in the full 8-bit range to make the hash work out right.
-
-I have a few ideas for all of the above.  They didn't get out in my
-first draft of the patch series because like I said I wanted to get
-early feedback rather than waiting to get other stuff implemented.
-
-					-Alex
+-- 
+===============================================
+Alain Renaud     - Cluster File System Engineer
+arenaud@sgi.com  - SGI
+===============================================
 
 _______________________________________________
 xfs mailing list
