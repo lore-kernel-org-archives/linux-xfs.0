@@ -1,21 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o98HHYcx051585 for <xfs@oss.sgi.com>; Fri, 8 Oct 2010 12:17:34 -0500
-Received: from mail-qy0-f181.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5E04FD494E
-	for <xfs@oss.sgi.com>; Fri,  8 Oct 2010 10:18:38 -0700 (PDT)
-Received: from mail-qy0-f181.google.com (mail-qy0-f181.google.com
-	[209.85.216.181]) by cuda.sgi.com with ESMTP id
-	zBfPKtq9JkAzHCJI for <xfs@oss.sgi.com>;
-	Fri, 08 Oct 2010 10:18:38 -0700 (PDT)
-Received: by qyk10 with SMTP id 10so1421448qyk.5
-	for <xfs@oss.sgi.com>; Fri, 08 Oct 2010 10:18:38 -0700 (PDT)
+	o98KWXWd060456 for <xfs@oss.sgi.com>; Fri, 8 Oct 2010 15:32:33 -0500
+Received: from smtp.sauce.co.nz (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2657818E20A6
+	for <xfs@oss.sgi.com>; Fri,  8 Oct 2010 13:33:36 -0700 (PDT)
+Received: from smtp.sauce.co.nz (smtp.sauce.co.nz [210.48.49.72]) by
+	cuda.sgi.com with ESMTP id oddD6OlLVGf0IkLu for
+	<xfs@oss.sgi.com>; Fri, 08 Oct 2010 13:33:36 -0700 (PDT)
+Message-ID: <4CAF801E.9070906@sauce.co.nz>
+Date: Sat, 09 Oct 2010 09:33:34 +1300
+From: Richard Scobie <richard@sauce.co.nz>
 MIME-Version: 1.0
-From: James Braid <jamesb@loreland.org>
-Date: Fri, 8 Oct 2010 18:17:52 +0100
-Message-ID: <AANLkTinwnOm0V=9WwbXiUGFnyjCwT3GUHo0hiQahQNUV@mail.gmail.com>
-Subject: ENOSPC at 90% with plenty of inodes
+Subject: Re: ENOSPC at 90% with plenty of inodes
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,40 +21,26 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hi,
+James Braid wrote:
 
-On a fairly busy mail server hosting about 1000 cyrus mailboxes (each
-message is stored as a separate file), we are observing ENOSPC errors
-from the cyrus pop/imap daemons when attempting to create (tiny)
-files. e.g.
+ > Any ideas for how can we go about debugging where ENOSPC is coming
+ > from?
 
-Oct  8 12:18:49 xxx cyrus/pop3[14119]: IOERROR: creating
-/user/imap/proc/14119: No space left on device
-Oct  8 12:18:49 xxx cyrus/lmtpunix[14361]: IOERROR: creating quota
-file /user/imap/quota/m/user.xx.NEW: No space left on device
-Oct  8 12:18:49 xxx cyrus/imap[12804]: IOERROR: creating quota file
-/user/imap/quota/d/user.xxx.NEW: No space left on device
+Hi James,
 
-The filesystem appears to have plenty of space available:
+You're not hitting this issue are you?
 
-# df -i /user
-Filesystem            Inodes   IUsed   IFree IUse% Mounted on
-/dev/sdb1            102294688 10201313 92093375   10% /user
-# df /user
-Filesystem           1K-blocks      Used Available Use% Mounted on
-/dev/sdb1            213014148 190023408  22990740  90% /user
+<http://xfs.org/index.php/XFS_FAQ#Q:_What_is_the_inode64_mount_option_for.3F>
 
-Any ideas for how can we go about debugging where ENOSPC is coming
-from? Unfortunately it's running a vintage 2.6.24 kernel (Ubuntu 8.04)
-- we're trying to get it upgraded to 10.04 (2.6.32)
+Regards,
 
-Thanks, James
+Richard
 
 _______________________________________________
 xfs mailing list
