@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o98Mp756068078 for <xfs@oss.sgi.com>; Fri, 8 Oct 2010 17:51:07 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 34909D5768
-	for <xfs@oss.sgi.com>; Fri,  8 Oct 2010 15:51:49 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
-	[150.101.137.98]) by cuda.sgi.com with ESMTP id
-	T5jA2OU0NE1F3QE3 for <xfs@oss.sgi.com>;
-	Fri, 08 Oct 2010 15:51:49 -0700 (PDT)
-Date: Sat, 9 Oct 2010 09:51:46 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: ENOSPC at 90% with plenty of inodes
-Message-ID: <20101008225146.GJ4681@dastard>
-References: <AANLkTinwnOm0V=9WwbXiUGFnyjCwT3GUHo0hiQahQNUV@mail.gmail.com>
+	o990lLfL073368 for <xfs@oss.sgi.com>; Fri, 8 Oct 2010 19:47:22 -0500
+Received: from smtp.sauce.co.nz (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DB05818E3F72
+	for <xfs@oss.sgi.com>; Fri,  8 Oct 2010 17:48:25 -0700 (PDT)
+Received: from smtp.sauce.co.nz (smtp.sauce.co.nz [210.48.49.72]) by
+	cuda.sgi.com with ESMTP id bldu42paWN8ICoDc for
+	<xfs@oss.sgi.com>; Fri, 08 Oct 2010 17:48:25 -0700 (PDT)
+Message-ID: <4CAFBBD8.4060408@sauce.co.nz>
+Date: Sat, 09 Oct 2010 13:48:24 +1300
+From: Richard Scobie <richard@sauce.co.nz>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <AANLkTinwnOm0V=9WwbXiUGFnyjCwT3GUHo0hiQahQNUV@mail.gmail.com>
+Subject: Re: Quota confusion
+References: <4CA55F09.2010609@sauce.co.nz> <20101002103505.GD4681@dastard>
+In-Reply-To: <20101002103505.GD4681@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,51 +23,51 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: James Braid <jamesb@loreland.org>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, Oct 08, 2010 at 06:17:52PM +0100, James Braid wrote:
-> Hi,
-> 
-> On a fairly busy mail server hosting about 1000 cyrus mailboxes (each
-> message is stored as a separate file), we are observing ENOSPC errors
-> from the cyrus pop/imap daemons when attempting to create (tiny)
-> files. e.g.
-> 
-> Oct  8 12:18:49 xxx cyrus/pop3[14119]: IOERROR: creating
-> /user/imap/proc/14119: No space left on device
-> Oct  8 12:18:49 xxx cyrus/lmtpunix[14361]: IOERROR: creating quota
-> file /user/imap/quota/m/user.xx.NEW: No space left on device
-> Oct  8 12:18:49 xxx cyrus/imap[12804]: IOERROR: creating quota file
-> /user/imap/quota/d/user.xxx.NEW: No space left on device
-> 
-> The filesystem appears to have plenty of space available:
-> 
-> # df -i /user
-> Filesystem            Inodes   IUsed   IFree IUse% Mounted on
-> /dev/sdb1            102294688 10201313 92093375   10% /user
-> # df /user
-> Filesystem           1K-blocks      Used Available Use% Mounted on
-> /dev/sdb1            213014148 190023408  22990740  90% /user
-> 
-> Any ideas for how can we go about debugging where ENOSPC is coming
-> from? Unfortunately it's running a vintage 2.6.24 kernel (Ubuntu 8.04)
-> - we're trying to get it upgraded to 10.04 (2.6.32)
+Hi Dave,
 
-Sounds like fragmented free space. What is the output of:
+Dave Chinner wrote:
 
-# xfs_db -r -c "freesp -s" <device>
+>> Disk quotas for Project shares (1)
+>> Filesystem              Blocks      Quota      Limit  Warn/Time
+>> Mounted on
+>> /dev/dm-0           11816148292          0 12988658280   00
+>> [--------] /mnt/storage1
+>>
+>> the number of blocks is less than the limit.
+>
+> Ok, that looks normal.
 
-Cheers,
+Ah. I was interpreting as total blocks, not blocks used.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+>> Also, an xfs_quota df:
+>>
+>> Filesystem           1K-blocks       Used  Available  Use% Pathname
+>> /dev/dm-0           13672271872 11816602148 1855669724   87% /mnt/storage1
+>> /dev/dm-0           13672271872 23632296584 1855669724  173%
+>> /mnt/storage1/share
+>>
+>> I do not understand the lower "Used" figure.
+>
+> Hmmm - looks like a directory quota output for a specific directory
+> (/mnt/storage1/share), and for some reason the used field is roughly
+> double the correct value. Can you post your project quota config
+> files?
+
+/etc/projects 1:/mnt/storage1/share
+/etc/projid shares:1
+
+kernel 2.6.35.4 xfsprogs 3.0.4
+
+Regards,
+
+Richard
 
 _______________________________________________
 xfs mailing list
