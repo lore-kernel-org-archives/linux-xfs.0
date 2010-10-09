@@ -1,20 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o990lLfL073368 for <xfs@oss.sgi.com>; Fri, 8 Oct 2010 19:47:22 -0500
-Received: from smtp.sauce.co.nz (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DB05818E3F72
-	for <xfs@oss.sgi.com>; Fri,  8 Oct 2010 17:48:25 -0700 (PDT)
-Received: from smtp.sauce.co.nz (smtp.sauce.co.nz [210.48.49.72]) by
-	cuda.sgi.com with ESMTP id bldu42paWN8ICoDc for
-	<xfs@oss.sgi.com>; Fri, 08 Oct 2010 17:48:25 -0700 (PDT)
-Message-ID: <4CAFBBD8.4060408@sauce.co.nz>
-Date: Sat, 09 Oct 2010 13:48:24 +1300
-From: Richard Scobie <richard@sauce.co.nz>
-MIME-Version: 1.0
-Subject: Re: Quota confusion
-References: <4CA55F09.2010609@sauce.co.nz> <20101002103505.GD4681@dastard>
-In-Reply-To: <20101002103505.GD4681@dastard>
+	o99Lclbi163671 for <xfs@oss.sgi.com>; Sat, 9 Oct 2010 16:38:47 -0500
+Subject: Re: [PATCH VER 8] xfsprogs: projid32bit handling
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <1286179438-18282-1-git-send-email-arekm@maven.pl>
+References: <1286179438-18282-1-git-send-email-arekm@maven.pl>
+Date: Sat, 09 Oct 2010 16:33:18 -0500
+Message-ID: <1286659998.5392.4.camel@doink>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,53 +18,36 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Arkadiusz =?UTF-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
 Cc: xfs@oss.sgi.com
 
-Hi Dave,
-
-Dave Chinner wrote:
-
->> Disk quotas for Project shares (1)
->> Filesystem              Blocks      Quota      Limit  Warn/Time
->> Mounted on
->> /dev/dm-0           11816148292          0 12988658280   00
->> [--------] /mnt/storage1
->>
->> the number of blocks is less than the limit.
->
-> Ok, that looks normal.
-
-Ah. I was interpreting as total blocks, not blocks used.
-
->> Also, an xfs_quota df:
->>
->> Filesystem           1K-blocks       Used  Available  Use% Pathname
->> /dev/dm-0           13672271872 11816602148 1855669724   87% /mnt/storage1
->> /dev/dm-0           13672271872 23632296584 1855669724  173%
->> /mnt/storage1/share
->>
->> I do not understand the lower "Used" figure.
->
-> Hmmm - looks like a directory quota output for a specific directory
-> (/mnt/storage1/share), and for some reason the used field is roughly
-> double the correct value. Can you post your project quota config
-> files?
-
-/etc/projects 1:/mnt/storage1/share
-/etc/projid shares:1
-
-kernel 2.6.35.4 xfsprogs 3.0.4
-
-Regards,
-
-Richard
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gTW9uLCAyMDEwLTEwLTA0IGF0IDEwOjAzICswMjAwLCBBcmthZGl1c3ogTWnFm2tpZXdpY3og
+d3JvdGU6Cj4gQWRkIHByb2ppZDMyYml0IGhhbmRsaW5nIHRvIHVzZXJzcGFjZS4gbWtmcy54ZnMg
+aXMgYWJsZSB0byBlbmFibGUgdGhpcwo+IGZlYXR1cmUgZm9yIG5ldyBmaWxlc3lzdGVtcy4geGZz
+X2RiIGtub3dzIHdoYXQgcHJvamlkX2xvL2hpIGFyZS4KPiAKPiBTaWduZWQtb2ZmLWJ5OiBBcmth
+ZGl1c3ogTWnFm2tpZXdpY3ogPGFyZWttQG1hdmVuLnBsPgoKVGhpcyBsb29rcyBnb29kLiAgSSB0
+ZXN0ZWQgaXQgd2l0aCB5b3VyIHVwZGF0ZSBmb3IgeGZzdGVzdHMKYW5kIG15IGVhcmxpZXIgY29u
+Y2VybnMgc2VlbSB0byBoYXZlIGJlZW4gYWRkcmVzc2VkLgoKSSd2ZSBhbHJlYWR5IGNvbW1pdHRl
+ZCB0aGlzIGNoYW5nZSwgSSBqdXN0IHdhbnRlZCB0bwptYWtlIHN1cmUgeW91IGtuZXcgaXQncyAo
+ZmluYWxseSkgaW4uCgpSZXZpZXdlZC1ieTogQWxleCBFbGRlciA8YWVsZGVyQHNnaS5jb20+Cgo+
+IC0tLQo+IAo+IHZlcnNpb24gNyBuZXdzOgo+IC0geGZzX2FkbWluIGNhbiBub3cgZWFzaWx5IGVu
+YWJsZSBwcm9qaWQzMmJpdCBzdXBwb3J0Cj4gCj4gdmVyc2lvbiA4IG5ld3M6Cj4gLSB4ZnNfbG9n
+cHJpbnQgbm93IHByaW50cyBzaW5nbGUgMzJiaXQgcHJvamlkIGluc3RlYWQgb2YgdHdvCj4gICAx
+NmJpdCBwcm9qaWRfe2xvLGhpfS4gVGh1cyB3ZSBnZXQgdGhlIHNhbWUgb3V0cHV0IGZvcm1hdAo+
+ICAgYXMgYmVmb3JlLgo+IC0gdXNlICV1IGZvciBkaXNwbGF5aW5nIHByb2ppZCAoaW5zdGVhZCBv
+ZiAlZCkKPiAtIHByb2ppZDMyYml0IGZsYWcgaW4gbWtmcy54ZnMgb3V0cHV0IHNlcGFyYXRlZCBi
+eSBjb21hCj4gLSBic19wcm9qaWQgaXMgYmFjayBhcyBic19wcm9qaWRfbG8gKyBkZWZpbmUgZm9y
+IGNvbXBhdGliaWxpdHkKPiAtIG1hbiBwYWdlIGZvcm1hdHRpbmcgZml4Cj4gCj4gIGRiL2NoZWNr
+LmMgICAgICAgICAgICAgICB8ICAgIDIgKy0KPiAgZGIvaW5vZGUuYyAgICAgICAgICAgICAgIHwg
+ICAgNiArKysrLS0KPiAgZGIvc2IuYyAgICAgICAgICAgICAgICAgIHwgICAgNiArKysrKysKPiAg
+ZGIveGZzX2FkbWluLnNoICAgICAgICAgIHwgICAgNSArKystLQo+ICBpbmNsdWRlL3hmc19kaW5v
+ZGUuaCAgICAgfCAgICA1ICsrKy0tCj4gIGluY2x1ZGUveGZzX2ZzLmggICAgICAgICB8ICAgMTcg
+KysrKysrKysrKysrKysrLS0KPiAgaW5jbHVkZS94ZnNfaW5vZGUuaCAgICAgIHwgICAyNSArKysr
+KysrKysrKysrKysrKysrKysrLS0tCj4gIGluY2x1ZGUveGZzX3NiLmggICAgICAgICB8ICAgMTcg
+KysrKysrKysrKysrKysrKy0KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dp
+LmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
