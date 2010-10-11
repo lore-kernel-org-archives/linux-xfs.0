@@ -1,20 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o9B4uwC9172548 for <xfs@oss.sgi.com>; Sun, 10 Oct 2010 23:56:59 -0500
-Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C924418ECE45
-	for <xfs@oss.sgi.com>; Sun, 10 Oct 2010 21:58:03 -0700 (PDT)
-Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
-	cuda.sgi.com with ESMTP id CNDFhY1y6JGVmmDj for
-	<xfs@oss.sgi.com>; Sun, 10 Oct 2010 21:58:03 -0700 (PDT)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: Re: kernel crash 2.6.31.14-0.1-xen from openSUSE 11.2
-Date: Mon, 11 Oct 2010 06:57:55 +0200
-References: <201010092355.17240@zmi.at> <20101010015628.GL4681@dastard>
-In-Reply-To: <20101010015628.GL4681@dastard>
+	o9BE2ih6238837 for <xfs@oss.sgi.com>; Mon, 11 Oct 2010 09:02:44 -0500
+Received: from mail-yx0-f181.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 194D6DA899
+	for <xfs@oss.sgi.com>; Mon, 11 Oct 2010 07:03:50 -0700 (PDT)
+Received: from mail-yx0-f181.google.com (mail-yx0-f181.google.com
+	[209.85.213.181]) by cuda.sgi.com with ESMTP id
+	JlBASB6znCZFMFV3 for <xfs@oss.sgi.com>;
+	Mon, 11 Oct 2010 07:03:50 -0700 (PDT)
+Received: by yxh35 with SMTP id 35so1288665yxh.26
+	for <xfs@oss.sgi.com>; Mon, 11 Oct 2010 07:03:49 -0700 (PDT)
 MIME-Version: 1.0
-Message-Id: <201010110658.00379@zmi.at>
+In-Reply-To: <20101008225146.GJ4681@dastard>
+References: <AANLkTinwnOm0V=9WwbXiUGFnyjCwT3GUHo0hiQahQNUV@mail.gmail.com>
+	<20101008225146.GJ4681@dastard>
+From: James Braid <jamesb@loreland.org>
+Date: Mon, 11 Oct 2010 15:03:28 +0100
+Message-ID: <AANLkTikLyEuSoFRVwirKLws97Vemz4ScNHOqu2Jc5sWR@mail.gmail.com>
+Subject: Re: ENOSPC at 90% with plenty of inodes
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,83 +27,36 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============4105655982038360903=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
---===============4105655982038360903==
-Content-Type: multipart/signed;
-  boundary="nextPart1393302.Eep37k4lRq";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+On Fri, Oct 8, 2010 at 23:51, Dave Chinner <david@fromorbit.com> wrote:
+> Sounds like fragmented free space. What is the output of:
+>
+> # xfs_db -r -c "freesp -s" <device>
 
---nextPart1393302.Eep37k4lRq
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+# xfs_db -r -c "freesp -s" /dev/sdb
+   from      to extents  blocks    pct
+      1       1 2298052 2298052  40.52
+      2       3 1568338 3337017  58.84
+      4       7    8432   35716   0.63
+      8      15      50     423   0.01
+total free extents 3874872
+total free blocks 5671208
+average free extent size 1.46359
 
-On Sonntag, 10. Oktober 2010 Dave Chinner wrote:
-> > [1172140.926859] BUG: unable to handle kernel paging request at
-> > 00000003d03dd178 [1172140.926877] IP: [<ffffffff80034872>]
-> > dequeue_task+0x72/0x110 [1172140.926897] PGD 1b54b067 PUD 0
-> > [1172140.926897] Thread overran stack, or stack corrupted
->=20
->                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->=20
-> The stack trace shows pdflush doing writeback, and way down the
-> stack doing a memory allocation that triggered direct reclaim, which
-> caused writeback to occur, which blew the stack.....
+Which seems to say there are a few tiny pieces of free space
+available? The files that were failing to be written were a few
+hundred bytes in size.
 
-Thanks. So what? Didn't we have this before? I sent a mail on May 21,=20
-2010, with subject "kernel crash: scheduling while atomic". Eric Sandeen=20
-said "I'm guessing you blew the stack".
-
-So what should I do about it? I think I read about a patch that should=20
-fix this. Seems Novell/openSUSE didn't backport it, so could someone=20
-please guide me where to find it? And I guess I should report upstream,=20
-right?
-
-=2D-=20
-mit freundlichen Gr=FCssen,
-Michael Monnerie, Ing. BSc
-
-it-management Internet Services
-http://proteger.at [gesprochen: Prot-e-schee]
-Tel: 0660 / 415 65 31
-
-****** Aktuelles Radiointerview! ******
-http://www.it-podcast.at/aktuelle-sendung.html
-
-// Wir haben im Moment zwei H=E4user zu verkaufen:
-// http://zmi.at/langegg/
-// http://zmi.at/haus2009/
-
---nextPart1393302.Eep37k4lRq
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.15 (GNU/Linux)
-
-iEYEABECAAYFAkyymVgACgkQzhSR9xwSCbTKzwCg7/BDOpHhhdP7zJRFGLSOTT7K
-dx8AoKNMNR1H7DvBEzb5rvbir/sc+A9U
-=XjpO
------END PGP SIGNATURE-----
-
---nextPart1393302.Eep37k4lRq--
-
-
---===============4105655982038360903==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+We haven't seen any errors so far today, but xfs_fsr ran over the
+weekend, so perhaps I guess it's reorganized the filesystem.
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============4105655982038360903==--
