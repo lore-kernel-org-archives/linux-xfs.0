@@ -1,19 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o9CLqtjS173497 for <xfs@oss.sgi.com>; Tue, 12 Oct 2010 16:52:55 -0500
-Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 09C0F3040DB
-	for <xfs@oss.sgi.com>; Tue, 12 Oct 2010 14:54:01 -0700 (PDT)
-Received: from augusta (augusta.americas.sgi.com [128.162.233.117])
-	by estes.americas.sgi.com (Postfix) with ESMTP id D1EAD7001CC4
-	for <xfs@oss.sgi.com>; Tue, 12 Oct 2010 16:54:00 -0500 (CDT)
-Message-Id: <20101012215400.639300973@sgi.com>
-Date: Tue, 12 Oct 2010 16:53:24 -0500
-From: wkendall@sgi.com
-Subject: [PATCH 2/2] xfsrestore: change nrh_t to be 64 bits instead of 32
-References: <20101012215322.749700656@sgi.com>
-Content-Disposition: inline; filename=namreg_64bit
+	o9CNKZTu180289 for <xfs@oss.sgi.com>; Tue, 12 Oct 2010 18:20:36 -0500
+Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2CF19E12E9
+	for <xfs@oss.sgi.com>; Tue, 12 Oct 2010 16:21:43 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id xi3BcdpTfRDXUhlt
+	for <xfs@oss.sgi.com>; Tue, 12 Oct 2010 16:21:43 -0700 (PDT)
+Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
+	by greer.hardwarefreak.com (Postfix) with ESMTP id 1DB006C125
+	for <xfs@oss.sgi.com>; Tue, 12 Oct 2010 18:21:43 -0500 (CDT)
+Message-ID: <4CB4ED86.1010909@hardwarefreak.com>
+Date: Tue, 12 Oct 2010 18:21:42 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
+MIME-Version: 1.0
+Subject: Re: ENOSPC at 90% with plenty of inodes
+References: <AANLkTinwnOm0V=9WwbXiUGFnyjCwT3GUHo0hiQahQNUV@mail.gmail.com>	<20101008225146.GJ4681@dastard>	<AANLkTikLyEuSoFRVwirKLws97Vemz4ScNHOqu2Jc5sWR@mail.gmail.com>	<20101011223507.GB32255@dastard>
+	<4CB3B964.40109@hardwarefreak.com> <20101012102954.GQ4681@dastard>
+In-Reply-To: <20101012102954.GQ4681@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,121 +27,78 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-An nrh_t refers to a byte offset in a file containing all the pathname
-components from a dump. At an average filename length of 20
-characters, an nrh_t would overflow on a dump containing ~214 million
-directory entries.
+Dave Chinner put forth on 10/12/2010 5:29 AM:
+> On Mon, Oct 11, 2010 at 08:27:00PM -0500, Stan Hoeppner wrote:
+>> Dave Chinner put forth on 10/11/2010 5:35 PM:
+>>> On Mon, Oct 11, 2010 at 03:03:28PM +0100, James Braid wrote:
+>>>> On Fri, Oct 8, 2010 at 23:51, Dave Chinner <david@fromorbit.com> wrote:
+>>>>> Sounds like fragmented free space. What is the output of:
+>>>>>
+>>>>> # xfs_db -r -c "freesp -s" <device>
+>>>>
+>>>> # xfs_db -r -c "freesp -s" /dev/sdb
+>>>>    from      to extents  blocks    pct
+>>>>       1       1 2298052 2298052  40.52
+>>>>       2       3 1568338 3337017  58.84
+>>>>       4       7    8432   35716   0.63
+>>>>       8      15      50     423   0.01
+>>>> total free extents 3874872
+>>>> total free blocks 5671208
+>>>> average free extent size 1.46359
+>>>>
+>>>> Which seems to say there are a few tiny pieces of free space
+>>>> available? The files that were failing to be written were a few
+>>>> hundred bytes in size.
+>>>
+>>> The error has nothing to do with the size of the files, but
+>>> everything to do with being able to allocate more inodes. Inode
+>>> allocation requires 4 contiguous blocks (for 256 byte inodes, more
+>>> for larger inodes) with alignment constraints. That means when you
+>>> run out of 8 block or larger free extents, inode allocation will
+>>> start failing and you'll get ENOSPC being reported.
+>>>
+>>>> We haven't seen any errors so far today, but xfs_fsr ran over the
+>>>> weekend, so perhaps I guess it's reorganized the filesystem.
+>>>
+>>> Only a little. xfs_fsr will not improve fragmented free space
+>>> conditions (indeed, it normally fragments free space more). The only
+>>> way to reduce the fragmentation of free space is to remove a
+>>> significant amount of data and inodes from the filesystem...
+>>
+>> Hay Dave, would a "backup/reformat/restore" help with free space
+>> fragmentation in this case?
+> 
+> Of course. But that's the last resort....
+> 
+>> If so, could/should the OP specify anything
+>> during the mkfs.xfs reformat that may help alleviate or mitigate his
+>> problem in the future?
+> 
+> No. These problems usually appear in filesystems that have run at
+> greater than 85-90% full for extended periods of time without being
+> emptied at all. Once you start to free up space, it naturally
+> defragments itself, but if you never free up any significant amount
+> of space in the filesytesm, this cannot occur and so fragmentation
+> just keeps getting worse....
 
-Signed-off-by: Bill Kendall <wkendall@sgi.com>
+So, given that this problem is on a production IMAP server, and the OP
+likely can't just willy nilly start deleting user files, would adding
+more disk (and assuming he's using LVM or somesuch) and growing the
+filesystem alleviate this inode issue?
 
-Index: xfsdump-kernel.org/restore/namreg.h
-===================================================================
---- xfsdump-kernel.org.orig/restore/namreg.h
-+++ xfsdump-kernel.org/restore/namreg.h
-@@ -26,8 +26,8 @@
- 
- /* nrh_t - handle to a registered name
-  */
--typedef size32_t nrh_t;
--#define NRH_NULL	SIZE32MAX
-+typedef size64_t nrh_t;
-+#define NRH_NULL	SIZE64MAX
- 
- 
- /* namreg_init - creates the name registry. resync is TRUE if the
-Index: xfsdump-kernel.org/restore/namreg.c
-===================================================================
---- xfsdump-kernel.org.orig/restore/namreg.c
-+++ xfsdump-kernel.org/restore/namreg.c
-@@ -72,26 +72,20 @@ typedef struct namreg_tran namreg_tran_t
-  */
- #define CHKBITCNT		2
- #define	CHKBITSHIFT		( NBBY * sizeof( nrh_t ) - CHKBITCNT )
--#define	CHKBITLOMASK		( ( 1 << CHKBITCNT ) - 1 )
-+#define	CHKBITLOMASK		( ( 1ULL << CHKBITCNT ) - 1 )
- #define	CHKBITMASK		( CHKBITLOMASK << CHKBITSHIFT )
- #define CHKHDLCNT		CHKBITSHIFT
--#define CHKHDLMASK		( ( 1 << CHKHDLCNT ) - 1 )
--#define CHKGETBIT( h )		( ( h >> CHKBITSHIFT ) & CHKBITLOMASK )
--#define CHKGETHDL( h )		( h & CHKHDLMASK )
--#define CHKMKHDL( c, h )	( ( ( c << CHKBITSHIFT ) & CHKBITMASK )	\
-+#define CHKHDLMASK		( ( 1ULL << CHKHDLCNT ) - 1 )
-+#define CHKGETBIT( h )		( ( (h) >> CHKBITSHIFT ) & CHKBITLOMASK )
-+#define CHKGETHDL( h )		( (h) & CHKHDLMASK )
-+#define CHKMKHDL( c, h )	( ( ( (c) << CHKBITSHIFT ) & CHKBITMASK )	\
- 				  |					\
--				  ( h & CHKHDLMASK ))
-+				  ( (h) & CHKHDLMASK ))
- #define HDLMAX			( ( off64_t )CHKHDLMASK )
- 
- #else /* NAMREGCHK */
- 
--#define HDLMAX			( ( ( off64_t )1			\
--				    <<					\
--				    ( ( off64_t )NBBY			\
--				      *					\
--				      ( off64_t )sizeof( nrh_t )))	\
--				  -					\
--				  ( off64_t )2 ) /* 2 to avoid NRH_NULL */
-+#define HDLMAX			( NRH_NULL - 1 )
- 
- #endif /* NAMREGCHK */
- 
-Index: xfsdump-kernel.org/restore/tree.c
-===================================================================
---- xfsdump-kernel.org.orig/restore/tree.c
-+++ xfsdump-kernel.org/restore/tree.c
-@@ -166,19 +166,18 @@ typedef struct tran tran_t;
- #define NODESZ	48
- 
- struct node {
--	xfs_ino_t n_ino;		/* 8  8 ino */
--	nrh_t n_nrh;		/* 4 12 handle to name in name registry */
--	dah_t n_dah;		/* 4 16 handle to directory attributes */
--	nh_t n_hashh;		/* 4 20 hash array */
--	nh_t n_parh;		/* 4 24 parent */
--	nh_t n_sibh;		/* 4 28 sibling list */
--	nh_t n_sibprevh;	/* 4 32 prev sibling list - dbl link list */
--	nh_t n_cldh;		/* 4 36 children list */
--	nh_t n_lnkh;		/* 4 40 hard link list */
--	gen_t n_gen;		/* 2 42 generation count mod 0x10000 */
--	u_char_t n_flags;	/* 1 43 action and state flags */
--	u_char_t n_nodehkbyte;	/* 1 44 given to node abstraction */
--	int32_t pad;		/* 4 48 padding to 8 byte boundary */
-+	xfs_ino_t n_ino;	/* 8  8 ino */
-+	nrh_t n_nrh;		/* 8 16 handle to name in name registry */
-+	dah_t n_dah;		/* 4 20 handle to directory attributes */
-+	nh_t n_hashh;		/* 4 24 hash array */
-+	nh_t n_parh;		/* 4 28 parent */
-+	nh_t n_sibh;		/* 4 32 sibling list */
-+	nh_t n_sibprevh;	/* 4 36 prev sibling list - dbl link list */
-+	nh_t n_cldh;		/* 4 40 children list */
-+	nh_t n_lnkh;		/* 4 44 hard link list */
-+	gen_t n_gen;		/* 2 46 generation count mod 0x10000 */
-+	u_char_t n_flags;	/* 1 47 action and state flags */
-+	u_char_t n_nodehkbyte;	/* 1 48 given to node abstraction */
- };
- 
- typedef struct node node_t;
-@@ -3393,9 +3392,9 @@ Node_free( nh_t *nhp )
- 		namreg_del( np->n_nrh );
- 		np->n_nrh = NRH_NULL;
- 	}
--	if ( np->n_dah != NRH_NULL ) {
-+	if ( np->n_dah != DAH_NULL ) {
- 		dirattr_del( np->n_dah );
--		np->n_dah = NRH_NULL;
-+		np->n_dah = DAH_NULL;
- 	}
- 	np->n_flags = 0;
- 	np->n_parh = NH_NULL;
+Or would he be better off adding more disk, creating a new filesystem,
+and moving half or so of his mailboxen over to the new filesystem at the
+Cyrus (application) level?  I've never used Cyrus, though IIRC Dovecot
+can do this "split mail store" setup.
+
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
