@@ -1,21 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o9CDpZds100312 for <xfs@oss.sgi.com>; Tue, 12 Oct 2010 08:51:36 -0500
-Received: from flyingAngel.upjs.sk (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 79268DDF66
-	for <xfs@oss.sgi.com>; Tue, 12 Oct 2010 06:52:42 -0700 (PDT)
-Received: from flyingAngel.upjs.sk (static113-109.rudna.net [212.20.113.109])
-	by cuda.sgi.com with ESMTP id 2FsaxVtVNG4sbvZj for
-	<xfs@oss.sgi.com>; Tue, 12 Oct 2010 06:52:42 -0700 (PDT)
-Message-ID: <4CB46828.2030104@mail.upjs.sk>
-Date: Tue, 12 Oct 2010 15:52:40 +0200
-From: Jan Derfinak <ja@mail.upjs.sk>
-MIME-Version: 1.0
-Subject: Re: ENOSPC at 90% with plenty of inodes
-References: <AANLkTinwnOm0V=9WwbXiUGFnyjCwT3GUHo0hiQahQNUV@mail.gmail.com>	<20101008225146.GJ4681@dastard>	<AANLkTikLyEuSoFRVwirKLws97Vemz4ScNHOqu2Jc5sWR@mail.gmail.com>	<20101011223507.GB32255@dastard>
-	<4CB3B964.40109@hardwarefreak.com> <20101012102954.GQ4681@dastard>
-In-Reply-To: <20101012102954.GQ4681@dastard>
+	o9CKCmAr158297 for <xfs@oss.sgi.com>; Tue, 12 Oct 2010 15:12:48 -0500
+Subject: Re: [PATCH] xfstests: Fix some file permission.
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <20101010080502.GA6674@infradead.org>
+References: <4CAE483F.1020608@sgi.com> <1286660111.5392.6.camel@doink>
+	<20101010015723.GM4681@dastard> <20101010080502.GA6674@infradead.org>
+Date: Tue, 12 Oct 2010 15:13:51 -0500
+Message-ID: <1286914431.3750.3.camel@doink>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,26 +23,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Stan Hoeppner <stan@hardwarefreak.com>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Alain Renaud <arenaud@sgi.com>, xfs@oss.sgi.com
 
-Dave Chinner wrote:
-
->> If so, could/should the OP specify anything
->> during the mkfs.xfs reformat that may help alleviate or mitigate his
->> problem in the future?
+On Sun, 2010-10-10 at 04:05 -0400, Christoph Hellwig wrote:
+> On Sun, Oct 10, 2010 at 12:57:23PM +1100, Dave Chinner wrote:
+> > > This looks good to me but I'd like a second opinion,
+> > > to make sure there's no reason any of these should
+> > > be non-executable.
+> > 
+> > I don't think it matters. Consistency is good, though, and we've
+> > taken patches like this in the past.
 > 
-> No. These problems usually appear in filesystems that have run at
-> greater than 85-90% full for extended periods of time without being
-> emptied at all. Once you start to free up space, it naturally
-> defragments itself, but if you never free up any significant amount
-> of space in the filesytesm, this cannot occur and so fragmentation
-> just keeps getting worse....
+> Yeah.  Btw, I'm not sure git-am can apply the mode changes from a patch,
+> in the worst case you might have to do the chmod calls manually.
+> 
 
-I'm curious if using noikeep mount option has any effect on free space
-fragmentation?
+Just a follow-up...  "git am" *does* do the right thing with
+a git-generated patch that describes changes to modes only.
+(But "patch" and "quilt" of course just think it's garbage.)
 
-jan
+I've committed this change to the xfstests-dev tree on kernel.org
+and will push it out to oss next time I update that tree (most
+likely later this week).
+
+					-Alex
 
 _______________________________________________
 xfs mailing list
