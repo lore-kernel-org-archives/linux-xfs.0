@@ -1,27 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o9D0O4Vj188408 for <xfs@oss.sgi.com>; Tue, 12 Oct 2010 19:24:05 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E48E1E1E3B
-	for <xfs@oss.sgi.com>; Tue, 12 Oct 2010 17:25:11 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
-	[150.101.137.98]) by cuda.sgi.com with ESMTP id
-	bh9JtSErBG8ikATW for <xfs@oss.sgi.com>;
-	Tue, 12 Oct 2010 17:25:11 -0700 (PDT)
-Date: Wed, 13 Oct 2010 11:25:09 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: ENOSPC at 90% with plenty of inodes
-Message-ID: <20101013002509.GR4681@dastard>
-References: <AANLkTinwnOm0V=9WwbXiUGFnyjCwT3GUHo0hiQahQNUV@mail.gmail.com>
-	<20101008225146.GJ4681@dastard>
-	<AANLkTikLyEuSoFRVwirKLws97Vemz4ScNHOqu2Jc5sWR@mail.gmail.com>
-	<20101011223507.GB32255@dastard> <4CB3B964.40109@hardwarefreak.com>
-	<20101012102954.GQ4681@dastard>
-	<4CB4ED86.1010909@hardwarefreak.com>
+	o9DM8Df2147747 for <xfs@oss.sgi.com>; Wed, 13 Oct 2010 17:08:13 -0500
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 58838EC978
+	for <xfs@oss.sgi.com>; Wed, 13 Oct 2010 15:09:21 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id Hr3hn2nesnaU1B4O for
+	<xfs@oss.sgi.com>; Wed, 13 Oct 2010 15:09:21 -0700 (PDT)
+Message-ID: <4CB62DBC.9060808@sandeen.net>
+Date: Wed, 13 Oct 2010 17:07:56 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4CB4ED86.1010909@hardwarefreak.com>
+Subject: Re: kernel crash 2.6.31.14-0.1-xen from openSUSE 11.2
+References: <201010092355.17240@zmi.at> <20101010015628.GL4681@dastard>
+In-Reply-To: <20101010015628.GL4681@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,90 +27,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Michael Monnerie <michael.monnerie@is.it-management.at>, xfs@oss.sgi.com
 
-On Tue, Oct 12, 2010 at 06:21:42PM -0500, Stan Hoeppner wrote:
-> Dave Chinner put forth on 10/12/2010 5:29 AM:
-> > On Mon, Oct 11, 2010 at 08:27:00PM -0500, Stan Hoeppner wrote:
-> >> Dave Chinner put forth on 10/11/2010 5:35 PM:
-> >>> On Mon, Oct 11, 2010 at 03:03:28PM +0100, James Braid wrote:
-> >>>> On Fri, Oct 8, 2010 at 23:51, Dave Chinner <david@fromorbit.com> wrote:
-> >>>>> Sounds like fragmented free space. What is the output of:
-> >>>>>
-> >>>>> # xfs_db -r -c "freesp -s" <device>
-> >>>>
-> >>>> # xfs_db -r -c "freesp -s" /dev/sdb
-> >>>>    from      to extents  blocks    pct
-> >>>>       1       1 2298052 2298052  40.52
-> >>>>       2       3 1568338 3337017  58.84
-> >>>>       4       7    8432   35716   0.63
-> >>>>       8      15      50     423   0.01
-> >>>> total free extents 3874872
-> >>>> total free blocks 5671208
-> >>>> average free extent size 1.46359
-> >>>>
-> >>>> Which seems to say there are a few tiny pieces of free space
-> >>>> available? The files that were failing to be written were a few
-> >>>> hundred bytes in size.
-> >>>
-> >>> The error has nothing to do with the size of the files, but
-> >>> everything to do with being able to allocate more inodes. Inode
-> >>> allocation requires 4 contiguous blocks (for 256 byte inodes, more
-> >>> for larger inodes) with alignment constraints. That means when you
-> >>> run out of 8 block or larger free extents, inode allocation will
-> >>> start failing and you'll get ENOSPC being reported.
-> >>>
-> >>>> We haven't seen any errors so far today, but xfs_fsr ran over the
-> >>>> weekend, so perhaps I guess it's reorganized the filesystem.
-> >>>
-> >>> Only a little. xfs_fsr will not improve fragmented free space
-> >>> conditions (indeed, it normally fragments free space more). The only
-> >>> way to reduce the fragmentation of free space is to remove a
-> >>> significant amount of data and inodes from the filesystem...
-> >>
-> >> Hay Dave, would a "backup/reformat/restore" help with free space
-> >> fragmentation in this case?
-> > 
-> > Of course. But that's the last resort....
-> > 
-> >> If so, could/should the OP specify anything
-> >> during the mkfs.xfs reformat that may help alleviate or mitigate his
-> >> problem in the future?
-> > 
-> > No. These problems usually appear in filesystems that have run at
-> > greater than 85-90% full for extended periods of time without being
-> > emptied at all. Once you start to free up space, it naturally
-> > defragments itself, but if you never free up any significant amount
-> > of space in the filesytesm, this cannot occur and so fragmentation
-> > just keeps getting worse....
+On 10/09/2010 08:56 PM, Dave Chinner wrote:
+> On Sat, Oct 09, 2010 at 11:55:16PM +0200, Michael Monnerie wrote:
+>> I just had a bug in one VM, and don't know if this is XFS related, but it seems so.
+>>
+>> [1172140.926859] BUG: unable to handle kernel paging request at 00000003d03dd178
+>> [1172140.926877] IP: [<ffffffff80034872>] dequeue_task+0x72/0x110
+>> [1172140.926897] PGD 1b54b067 PUD 0 
+>> [1172140.926897] Thread overran stack, or stack corrupted
+>                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Awesome, that's the 2nd time in like 4 years I've seen that stack canary
+I put in actually be useful ;)
+
+-Eric
+
+> The stack trace shows pdflush doing writeback, and way down the
+> stack doing a memory allocation that triggered direct reclaim, which
+> caused writeback to occur, which blew the stack.....
 > 
-> So, given that this problem is on a production IMAP server, and the OP
-> likely can't just willy nilly start deleting user files, would adding
-> more disk (and assuming he's using LVM or somesuch) and growing the
-> filesystem alleviate this inode issue?
-
-As long as you are unsing inode64 then growing the filesystem will
-alow more inodes to be allocated.
-
-> Or would he be better off adding more disk, creating a new filesystem,
-> and moving half or so of his mailboxen over to the new filesystem at the
-> Cyrus (application) level?  I've never used Cyrus, though IIRC Dovecot
-> can do this "split mail store" setup.
-
-Sure, that'd work, too.
-
-Fundamentally, moving data and inodes around after a grow (or new
-filesystem is added) is the only way to reduce existing free space
-fragmentation. Achieving this data movement is left as an exercise
-for the reader.  ;)
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> Cheers,
+> 
+> Dave.
+> 
 
 _______________________________________________
 xfs mailing list
