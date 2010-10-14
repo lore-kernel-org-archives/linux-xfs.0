@@ -1,16 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o9EEmwKr024141 for <xfs@oss.sgi.com>; Thu, 14 Oct 2010 09:48:58 -0500
+	o9EEqj5U024502 for <xfs@oss.sgi.com>; Thu, 14 Oct 2010 09:52:45 -0500
 Received: from cf--amer001e--3.americas.sgi.com
 	(cf--amer001e--3.americas.sgi.com [137.38.100.5])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 7FD278F808F
-	for <xfs@oss.sgi.com>; Thu, 14 Oct 2010 07:50:08 -0700 (PDT)
-Subject: [PATCH 02/11] xfstests: randholes: only allocate write buffer when
-	needed
+	by relay2.corp.sgi.com (Postfix) with ESMTP id EB46230408D
+	for <xfs@oss.sgi.com>; Thu, 14 Oct 2010 07:53:54 -0700 (PDT)
+Subject: [PATCH 10/11] xfstests: randholes: encapsulate argument parsing
 From: Alex Elder <aelder@sgi.com>
-Date: Thu, 14 Oct 2010 09:49:52 -0500
-Message-ID: <1287067792.2362.214.camel@doink>
+Date: Thu, 14 Oct 2010 09:50:57 -0500
+Message-ID: <1287067857.2362.225.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -27,96 +26,171 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-If nothing is being written (i.e., in "test" mode), there's no need
-for "randholes" to allocate a write buffer.  But to do this we make
-this series of changes:
-- When "very" verbose (> 1), there's no point in printing the values
-  that have just been written to the file.  They are just the file
-  offset, and the buffer will not have changed between initializing
-  those values and writing it out.
-- If we don't print the values at those offsets, then there's no
-  need to fill them in at all when we're in test mode.
-- Now we only use the write buffer if we're not in test mode,
-  so we can skip the allocation.
+Move the argument parsing code out of main() and into a separate
+parseargs() routine.  The name of the target file for the test
+is returned by parseargs() if no error occurs.
 
 Signed-off-by: Alex Elder <aelder@sgi.com>
 
 ---
- src/randholes.c |   45 ++++++++++++++++++++++++++-------------------
- 1 file changed, 26 insertions(+), 19 deletions(-)
+ src/randholes.c |  134 +++++++++++++++++++++++++++++++-------------------------
+ 1 file changed, 75 insertions(+), 59 deletions(-)
 
 Index: b/src/randholes.c
 ===================================================================
 --- a/src/randholes.c
 +++ b/src/randholes.c
-@@ -233,17 +233,21 @@ writeblks(char *fname, int fd)
- 	int block;
- 	struct flock64 fl;
- 
--	if (direct)
--		buffer = memalign(diob.d_mem, blocksize);
--	else
--		buffer = malloc(blocksize);
--	if (buffer == NULL) {
--		perror("malloc");
--		exit(1);
-+	if (test)
-+		buffer = NULL;
-+	else {
-+		if (direct)
-+			buffer = memalign(diob.d_mem, blocksize);
-+		else
-+			buffer = malloc(blocksize);
-+		if (buffer == NULL) {
-+			perror("malloc");
-+			exit(1);
-+		}
-+		memset(buffer, 0, blocksize);
- 	}
--	memset(buffer, 0, blocksize);
- 
--	for (  ; count > 0; count--) {
-+	do {
- 		if (verbose && ((count % 100) == 0)) {
- 			printf(".");
- 			fflush(stdout);
-@@ -285,23 +289,26 @@ bozo!
- 			        perror("lseek");
- 			        exit(1);
- 		        }
--                }
--		*(__uint64_t *)buffer = *(__uint64_t *)(buffer+256) =
--			fileoffset + offset;
--                if (!test) {
-+			/*
-+			 * Before writing, record offset at the base
-+			 * of the buffer and at offset 256 bytes
-+			 * into it.  We'll verify this when we read
-+			 * it back in again.
-+			 */
-+			*(__uint64_t *) buffer = fileoffset + offset;
-+			*(__uint64_t *) (buffer + 256) = fileoffset + offset;
-+
- 		        if (write(fd, buffer, blocksize) < blocksize) {
- 			        perror("write");
- 			        exit(1);
- 		        }
-                 }
--                if (test && verbose>1) printf("NOT ");
- 		if (verbose > 1) {
--			printf("writing data at offset=%llx, value 0x%llx and 0x%llx\n",
--			       (unsigned long long)(fileoffset + offset),
--			       *(unsigned long long *)buffer,
--			       *(unsigned long long *)(buffer+256));
-+			printf("%swriting data at offset=%llx\n",
-+				test ? "NOT " : "",
-+				(unsigned long long) (fileoffset + offset));
- 		}
--	}
-+	} while (--count);
- 
- 	free(buffer);
+@@ -81,6 +81,76 @@ usage(char *progname)
+ 	exit(1);
  }
+ 
++/* Returns filename if successful or a null pointer if an error occurs */
++
++static char *
++parseargs(int argc, char *argv[])
++{
++	int seed;
++	int ch;
++
++	filesize = DEFAULT_FILESIZE;
++	blocksize = DEFAULT_BLOCKSIZE;
++	count = (int) filesize / blocksize;
++	verbose = 0;
++	wsync = 0;
++	seed = time(NULL);
++	test = 0;
++	while ((ch = getopt(argc, argv, "b:l:s:c:o:x:vwdrapt")) != EOF) {
++		switch(ch) {
++		case 'b':	blocksize  = atoi(optarg);	break;
++		case 'l':	filesize   = strtoull(optarg, NULL, 16); break;
++		case 's':	seed       = atoi(optarg);	break;
++		case 'c':	count      = atoi(optarg);	break;
++		case 'o':	fileoffset = strtoull(optarg, NULL, 16); break;
++		case 'x':	extsize    = atoi(optarg);	break;
++		case 'v':	verbose++;			break;
++		case 'w':	wsync++;			break;
++		case 'd':	direct++;			break;
++		case 'r':	rt++; direct++;			break;
++		case 'a':	alloconly++;			break;
++		case 'p':	preserve++;			break;
++		case 't':	test++; preserve++;		break;
++		default:	usage(argv[0]);			break;
++		}
++	}
++	if (optind != argc - 1)
++		usage(argv[0]);
++
++	if ((filesize % blocksize) != 0) {
++		filesize -= filesize % blocksize;
++		printf("filesize not a multiple of blocksize, reducing filesize to %llu\n",
++		       (unsigned long long)filesize);
++	}
++	if ((fileoffset % blocksize) != 0) {
++		fileoffset -= fileoffset % blocksize;
++		printf("fileoffset not a multiple of blocksize, reducing fileoffset to %llu\n",
++		       (unsigned long long)fileoffset);
++	}
++	if (count > (filesize/blocksize)) {
++		count = (filesize/blocksize);
++		printf("count of blocks written is too large, setting to %d\n",
++			      count);
++	} else if (count < 1) {
++		count = 1;
++		printf("count of blocks written is too small, setting to %d\n",
++			      count);
++	}
++	printf("randholes: Seed = %d (use \"-s %d\" to re-execute this test)\n", seed, seed);
++	srandom(seed);
++
++        printf("randholes: blocksize=%d, filesize=%llu, seed=%d\n"
++               "randholes: count=%d, offset=%llu, extsize=%d\n",
++                blocksize, (unsigned long long)filesize, seed,
++	       count, (unsigned long long)fileoffset, extsize);
++        printf("randholes: verbose=%d, wsync=%d, direct=%d, rt=%d, alloconly=%d, preserve=%d, test=%d\n",
++                verbose, wsync, direct ? 1 : 0, rt, alloconly, preserve, test);
++
++	/* Last argument is the file name.  Return it. */
++
++	return argv[optind];	/* Success */
++}
++
+ int
+ findblock(void)
+ {
+@@ -330,68 +400,14 @@ realtime_setup(char *filename, int fd)
+ int
+ main(int argc, char *argv[])
+ {
+-	int seed, ch, fd, oflags;
+-	char *filename = NULL;
++	int fd, oflags;
++	char *filename;
+         int r;
+ 	size_t alignment;
+ 
+-	filesize = DEFAULT_FILESIZE;
+-	blocksize = DEFAULT_BLOCKSIZE;
+-	count = (int) filesize / blocksize;
+-	verbose = 0;
+-	wsync = 0;
+-	seed = time(NULL);
+-        test = 0;
+-	while ((ch = getopt(argc, argv, "b:l:s:c:o:x:vwdrapt")) != EOF) {
+-		switch(ch) {
+-		case 'b':	blocksize  = atoi(optarg);	break;
+-		case 'l':	filesize   = strtoull(optarg, NULL, 16); break;
+-		case 's':	seed       = atoi(optarg);	break;
+-		case 'c':	count      = atoi(optarg);	break;
+-		case 'o':	fileoffset = strtoull(optarg, NULL, 16); break;
+-		case 'x':	extsize    = atoi(optarg);	break;
+-		case 'v':	verbose++;			break;
+-		case 'w':	wsync++;			break;
+-		case 'd':	direct++;			break;
+-		case 'r':	rt++; direct++;			break;
+-		case 'a':	alloconly++;			break;
+-		case 'p':	preserve++;			break;
+-                case 't':       test++; preserve++;             break;
+-		default:	usage(argv[0]);			break;
+-		}
+-	}
+-	if (optind == argc-1)
+-		filename = argv[optind];
+-	else
+-		usage(argv[0]);
+-	if ((filesize % blocksize) != 0) {
+-		filesize -= filesize % blocksize;
+-		printf("filesize not a multiple of blocksize, reducing filesize to %llu\n",
+-		       (unsigned long long)filesize);
+-	}
+-	if ((fileoffset % blocksize) != 0) {
+-		fileoffset -= fileoffset % blocksize;
+-		printf("fileoffset not a multiple of blocksize, reducing fileoffset to %llu\n",
+-		       (unsigned long long)fileoffset);
+-	}
+-	if (count > (filesize/blocksize)) {
+-		count = (filesize/blocksize);
+-		printf("count of blocks written is too large, setting to %d\n",
+-			      count);
+-	} else if (count < 1) {
+-		count = 1;
+-		printf("count of blocks written is too small, setting to %d\n",
+-			      count);
+-	}
+-	printf("randholes: Seed = %d (use \"-s %d\" to re-execute this test)\n", seed, seed);
+-	srandom(seed);
+-
+-        printf("randholes: blocksize=%d, filesize=%llu, seed=%d\n"
+-               "randholes: count=%d, offset=%llu, extsize=%d\n",
+-                blocksize, (unsigned long long)filesize, seed,
+-	       count, (unsigned long long)fileoffset, extsize);
+-        printf("randholes: verbose=%d, wsync=%d, direct=%d, rt=%d, alloconly=%d, preserve=%d, test=%d\n",
+-                verbose, wsync, direct ? 1 : 0, rt, alloconly, preserve, test);
++	filename = parseargs(argc, argv);
++	if (! filename)
++		return 1;
+ 
+ 	/*
+ 	 * Open the file, write rand block in random places, read them all
 
 
 _______________________________________________
