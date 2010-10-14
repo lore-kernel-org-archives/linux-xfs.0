@@ -1,15 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o9EEqiNr024498 for <xfs@oss.sgi.com>; Thu, 14 Oct 2010 09:52:45 -0500
+	o9EEmwKr024141 for <xfs@oss.sgi.com>; Thu, 14 Oct 2010 09:48:58 -0500
 Received: from cf--amer001e--3.americas.sgi.com
 	(cf--amer001e--3.americas.sgi.com [137.38.100.5])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D7FFF30408A
-	for <xfs@oss.sgi.com>; Thu, 14 Oct 2010 07:53:54 -0700 (PDT)
-Subject: [PATCH 08/11] xfstests: randholes: encapsulate realtime setup code
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 7FD278F808F
+	for <xfs@oss.sgi.com>; Thu, 14 Oct 2010 07:50:08 -0700 (PDT)
+Subject: [PATCH 02/11] xfstests: randholes: only allocate write buffer when
+	needed
 From: Alex Elder <aelder@sgi.com>
-Date: Thu, 14 Oct 2010 09:50:43 -0500
-Message-ID: <1287067843.2362.220.camel@doink>
+Date: Thu, 14 Oct 2010 09:49:52 -0500
+Message-ID: <1287067792.2362.214.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -26,127 +27,96 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Encapsulate the code that sets up the use of files on the realtime
-volume.  Using realtime implies direct I/O; move the code that makes
-that so into the argument parsing code.
+If nothing is being written (i.e., in "test" mode), there's no need
+for "randholes" to allocate a write buffer.  But to do this we make
+this series of changes:
+- When "very" verbose (> 1), there's no point in printing the values
+  that have just been written to the file.  They are just the file
+  offset, and the buffer will not have changed between initializing
+  those values and writing it out.
+- If we don't print the values at those offsets, then there's no
+  need to fill them in at all when we're in test mode.
+- Now we only use the write buffer if we're not in test mode,
+  so we can skip the allocation.
 
 Signed-off-by: Alex Elder <aelder@sgi.com>
 
 ---
- src/randholes.c |   55 ++++++++++++++++++++++++++++++-------------------------
- 1 file changed, 30 insertions(+), 25 deletions(-)
+ src/randholes.c |   45 ++++++++++++++++++++++++++-------------------
+ 1 file changed, 26 insertions(+), 19 deletions(-)
 
 Index: b/src/randholes.c
 ===================================================================
 --- a/src/randholes.c
 +++ b/src/randholes.c
-@@ -43,7 +43,6 @@ int preserve;
- int test;
- __uint64_t fileoffset;
- 
--struct fsxattr rtattr;
- 
- #define	READ_XFER	10	/* block to read at a time when checking */
- 
-@@ -119,13 +118,11 @@ void
- writeblks(char *fname, int fd, size_t alignment)
- {
- 	__uint64_t offset;
--	char *buffer;
-+	char *buffer = NULL;
+@@ -233,17 +233,21 @@ writeblks(char *fname, int fd)
  	int block;
  	struct flock64 fl;
  
--	if (test)
--		buffer = NULL;
--	else {
-+	if (!test) {
- 		if (posix_memalign((void **) &buffer, alignment, blocksize)) {
- 			perror("malloc");
- 			exit(1);
-@@ -307,6 +304,30 @@ get_alignment(char *filename, int fd)
- 	return (size_t) dioattr.d_mem;
- }
- 
-+static int
-+realtime_setup(char *filename, int fd)
-+{
-+	struct fsxattr rtattr;
-+
-+	(void) memset(&rtattr, 0, sizeof rtattr);
-+	if (xfscntl(filename, fd, FSGETXATTR, &rtattr) < 0) {
-+		perror("FSGETXATTR)");
-+		return 1;
-+	}
-+	if ((rtattr.fsx_xflags & XFS_XFLAG_REALTIME) == 0 ||
-+	    (extsize && rtattr.fsx_extsize != extsize * blocksize)) {
-+		rtattr.fsx_xflags |= XFS_XFLAG_REALTIME;
-+		if (extsize)
-+			rtattr.fsx_extsize = extsize * blocksize;
-+		if (xfscntl(filename, fd, FSSETXATTR, &rtattr) < 0) {
-+			perror("FSSETXATTR)");
-+			return 1;
+-	if (direct)
+-		buffer = memalign(diob.d_mem, blocksize);
+-	else
+-		buffer = malloc(blocksize);
+-	if (buffer == NULL) {
+-		perror("malloc");
+-		exit(1);
++	if (test)
++		buffer = NULL;
++	else {
++		if (direct)
++			buffer = memalign(diob.d_mem, blocksize);
++		else
++			buffer = malloc(blocksize);
++		if (buffer == NULL) {
++			perror("malloc");
++			exit(1);
 +		}
-+	}
-+
-+	return 0;
-+}
-+
- int
- main(int argc, char *argv[])
- {
-@@ -333,7 +354,7 @@ main(int argc, char *argv[])
- 		case 'v':	verbose++;			break;
- 		case 'w':	wsync++;			break;
- 		case 'd':	direct++;			break;
--		case 'r':	rt++;				break;
-+		case 'r':	rt++; direct++;			break;
- 		case 'a':	alloconly++;			break;
- 		case 'p':	preserve++;			break;
-                 case 't':       test++; preserve++;             break;
-@@ -371,7 +392,7 @@ main(int argc, char *argv[])
-                 blocksize, (unsigned long long)filesize, seed,
- 	       count, (unsigned long long)fileoffset, extsize);
-         printf("randholes: verbose=%d, wsync=%d, direct=%d, rt=%d, alloconly=%d, preserve=%d, test=%d\n",
--                verbose, wsync, direct, rt, alloconly, preserve, test);
-+                verbose, wsync, direct ? 1 : 0, rt, alloconly, preserve, test);
- 
- 	/*
- 	 * Open the file, write rand block in random places, read them all
-@@ -382,8 +403,6 @@ main(int argc, char *argv[])
- 		perror("malloc");
- 		return 1;
++		memset(buffer, 0, blocksize);
  	}
--	if (rt)
--		direct++;
+-	memset(buffer, 0, blocksize);
  
-         oflags=test?(O_RDONLY):(O_RDWR | O_CREAT);
- 	oflags |=   (preserve ? 0 : O_TRUNC) |
-@@ -395,22 +414,8 @@ main(int argc, char *argv[])
- 		return 1;
- 	}
- 
--	if (rt) {
--		if (xfscntl(filename, fd, FSGETXATTR, &rtattr) < 0) {
--			perror("xfsnctl(FSGETXATTR)");
--			return 1;
--		}
--		if ((rtattr.fsx_xflags & XFS_XFLAG_REALTIME) == 0 ||
--		    (extsize && rtattr.fsx_extsize != extsize * blocksize)) {
--			rtattr.fsx_xflags |= XFS_XFLAG_REALTIME;
--			if (extsize)
--				rtattr.fsx_extsize = extsize * blocksize;
--			if (xfscntl(filename, fd, FSSETXATTR, &rtattr) < 0) {
--				perror("xfscntl(FSSETXATTR)");
--				return 1;
--			}
--		}
+-	for (  ; count > 0; count--) {
++	do {
+ 		if (verbose && ((count % 100) == 0)) {
+ 			printf(".");
+ 			fflush(stdout);
+@@ -285,23 +289,26 @@ bozo!
+ 			        perror("lseek");
+ 			        exit(1);
+ 		        }
+-                }
+-		*(__uint64_t *)buffer = *(__uint64_t *)(buffer+256) =
+-			fileoffset + offset;
+-                if (!test) {
++			/*
++			 * Before writing, record offset at the base
++			 * of the buffer and at offset 256 bytes
++			 * into it.  We'll verify this when we read
++			 * it back in again.
++			 */
++			*(__uint64_t *) buffer = fileoffset + offset;
++			*(__uint64_t *) (buffer + 256) = fileoffset + offset;
++
+ 		        if (write(fd, buffer, blocksize) < blocksize) {
+ 			        perror("write");
+ 			        exit(1);
+ 		        }
+                 }
+-                if (test && verbose>1) printf("NOT ");
+ 		if (verbose > 1) {
+-			printf("writing data at offset=%llx, value 0x%llx and 0x%llx\n",
+-			       (unsigned long long)(fileoffset + offset),
+-			       *(unsigned long long *)buffer,
+-			       *(unsigned long long *)(buffer+256));
++			printf("%swriting data at offset=%llx\n",
++				test ? "NOT " : "",
++				(unsigned long long) (fileoffset + offset));
+ 		}
 -	}
-+	if (rt && realtime_setup(filename, fd))
-+		return 1;
++	} while (--count);
  
- 	alignment = get_alignment(filename, fd);
- 	if (! alignment)
+ 	free(buffer);
+ }
 
 
 _______________________________________________
