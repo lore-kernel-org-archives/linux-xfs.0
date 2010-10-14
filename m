@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o9EHMCn0056638 for <xfs@oss.sgi.com>; Thu, 14 Oct 2010 12:22:12 -0500
-Subject: Re: [RFC, PATCH 0/2] xfs: dynamic speculative preallocation for
-	delalloc
+	o9EIkfOk062552 for <xfs@oss.sgi.com>; Thu, 14 Oct 2010 13:46:41 -0500
+Subject: Re: [PATCH 1/2] xfsrestore: turn off NODECHK
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1286187236-16682-1-git-send-email-david@fromorbit.com>
-References: <1286187236-16682-1-git-send-email-david@fromorbit.com>
-Date: Thu, 14 Oct 2010 12:22:32 -0500
-Message-ID: <1287076952.2362.519.camel@doink>
+In-Reply-To: <20101012215400.430780299@sgi.com>
+References: <20101012215322.749700656@sgi.com>
+	<20101012215400.430780299@sgi.com>
+Date: Thu, 14 Oct 2010 13:45:11 -0500
+Message-ID: <1287081911.2362.574.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -19,112 +19,65 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: wkendall@sgi.com
 Cc: xfs@oss.sgi.com
 
-T24gTW9uLCAyMDEwLTEwLTA0IGF0IDIxOjEzICsxMTAwLCBEYXZlIENoaW5uZXIgd3JvdGU6Cj4g
-V2hlbiBtdWx0aXBsZSBjb25jdXJyZW50IHN0cmVhbWluZyB3cml0ZXMgbGFuZCBpbiB0aGUgc2Ft
-ZSBBRywKPiBhbGxvY2F0aW9uIG9mIGV4dGVudHMgaW50ZXJsZWF2ZXMgYmV0d2VlbiBpbm9kZXMg
-YW5kIGNhdXNlcwo+IGV4Y2Vzc2l2ZSBmcmFnbWVudGF0aW9uIG9mIHRoZSBmaWxlcyBiZWluZyB3
-cml0dGVuLiBUaGF0IGluc3RlYWQgb2YKPiBnZXR0aW5nIG1heGltYWxseSBzaXplZCBleHRlbnRz
-LCB3ZSdsbCBnZXQgd3JpdGViYWNrIHJhbmdlIHNpemVkCj4gZXh0ZW50cyBpbnRlcmxlYXZlZCBv
-biBkaXNrLiB0aGF0IGlzIGZvciBmb3VyIGZpbGVzIEEsIEIsIEMgYW5kIEQsCj4gd2UnbGwgZW5k
-IHVwIHdpdGggZXh0ZW50cyBsaWtlOgo+IAo+ICAgICstLS0rLS0tKy0tLSstLS0rLS0tKy0tLSst
-LS0rLS0tKy0tLSstLS0rLS0tKy0tLSsKPiAgICAgIEExICBCMSAgQzEgIEQxICBBMiAgQjIgIEMy
-ICBBMyAgRDIgIEMzICBCMyAgRDMgLi4uLi4KPiAKPiBpbnN0ZWFkIG9mOgo+IAo+ICAgICstLS0t
-LS0tLS0tLSstLS0tLS0tLS0tLSstLS0tLS0tLS0tLSstLS0tLS0tLS0tLSsKPiAgICAgICAgICBB
-ICAgICAgICAgICBCICAgICAgICAgICBDICAgICAgICAgICBECj4gCj4gSXQgaXMgd2VsbCBrbm93
-biB0aGF0IHVzaW5nIHRoZSBhbGxvY3NpemUgbW91bnQgb3B0aW9uIG1ha2VzIHRoZQo+IGFsbG9j
-YXRvciBiZWhhdmlvdXIgbXVjaCBiZXR0ZXIgYW5kIG1vcmUgbGlrZWx5IHRvIHJlc3VsdCBpbgo+
-IHRoZSBzZWNvbmQgbGF5b3V0IGFib3ZlIHRoYW4gdGhlIGZpcnN0LCBidXQgdGhhdCBkb2Vzbid0
-IHdvcmsgaW4gYWxsCj4gc2l0dWF0aW9ucyAoZS5nLiB3cml0ZXMgZnJvbSB0aGUgTkZTIHNlcnZl
-cikuIEkgdGhpbmsgdGhhdCB3ZSBzaG91bGQKPiBub3QgYmUgcmVseWluZyBvbiBtYW51YWwgY29u
-ZmlndXJhdGlvbiB0byBzb2x2ZSB0aGlzIHByb2JsZW0uCj4gCgouIC4gLiAoZGVsZXRpbmcgc29t
-ZSBvZiB5b3VyIGRlbW9uc3RyYXRpb24gZGV0YWlsKQoKPiBUaGUgc2FtZSByZXN1bHRzIG9jY3Vy
-IGZvciB0ZXN0cyBydW5uaW5nIDE2IGFuZCA2NCBzZXF1ZW50aWFsCj4gd3JpdGVycyBpbnRvIHRo
-ZSBzYW1lIEFHIC0gZXh0ZW50cyBvZiA4R0IgaW4gYWxsIGZpbGVzLCBzbwo+IHRoaXMgaXMgYSBt
-YWpvciBpbXByb3ZlbWVudCBpbiBkZWZhdWx0IGJlaGF2aW91ciBhbmQgZWZmZWN0aXZlbHkKPiBt
-ZWFucyB3ZSBkbyBub3QgbmVlZCB0aGUgYWxsb2NzaXplIG1vdW50IG9wdGlvbiBhbnltb3JlLgo+
-IAo+IFdvcnRoIG5vdGluZyBpcyB0aGF0IHRoZSBleHRlbnRzIHN0aWxsIGludGVybGVhdmUgYmV0
-d2VlbiBmaWxlcyAtCj4gdGhhdCBwcm9ibGVtIHN0aWxsIGV4aXN0cyAtIGJ1dCB0aGUgc2l6ZSBv
-ZiB0aGUgZXh0ZW50cyBub3cgbWVhbnMKPiB0aGF0IHNlcXVlbnRpYWwgcmVhZCBhbmQgd3JpdGUg
-cmF0ZXMgYXJlIG5vdCBnb2luZyB0byBiZSBhZmZlY3RlZAo+IGJ5IGV4Y2Vzc2l2ZSBzZWVrcyBi
-ZXR3ZWVuIGV4dGVudHMgd2l0aGluIGVhY2ggZmlsZS4KCkp1c3QgY3VyaW91cy0tZG8gd2UgaGF2
-ZSBhbnkgY3VycmVudCBhbmQgbWVhbmluZ2Z1bAppbmZvcm1hdGlvbiBhYm91dCB0aGUgdHJhZGUt
-b2ZmIGJldHdlZW4gdGhlIHNpemUgb2YgYW4KZXh0ZW50IGFuZCBzZWVrIHRpbWU/ICBPYnZpb3Vz
-bHkgbWF4aW1pemluZyB0aGUgZXh0ZW50CnNpemUgd2lsbCBtYXhpbWl6ZSB0aGUgYmFuZyAoZGF0
-YSByZWFkKSBmb3IgdGhlIGJ1Y2sgKHNlZWsKY29zdCkgYnV0IGNhbiB3ZSBxdWFudGlmeSB0aGF0
-IHdpdGggY3VycmVudCBzdG9yYWdlIGRldmljZQpzcGVjcz8gIChUaGlzIGlzIHJlYWxseSBhIHRo
-ZW9yZXRpY2FsIGFzaWRlLi4uKQoKPiBHaXZlbiB0aGlzIGRlbW9uc3RyYXRhYmx5IGltcHJvdmVz
-IGFsbG9jYXRpb24gcGF0dGVybnMsIHRoZSBvbmx5Cj4gcXVlc3Rpb24gdGhhdCByZW1haW5zIGlu
-IG15IG1pbmQgaXMgZXhhY3RseSB3aGF0IGFsZ29yaXRobSB0byB1c2UgdG8KPiBzY2FsZSB0aGUg
-cHJlYWxsb2NhdGlvbi4gIFRoZSBjdXJyZW50IHBhdGNoIHJlY29yZHMgdGhlIGxhc3QKPiBwcmVh
-bGxvYyBzaXplIGFuZCBpbmNyZWFzZXMgdGhlIG5leHQgb25lIGZyb20gdGhhdC4gV2hpbGUgdGhh
-dAo+IHByZW92aWRlcyBnb29kIHJlc3VsdHMsIGl0IHdpbGwgY2F1c2UgcHJvYmxlbXMgd2hlbiBp
-bnRlcmFjdGluZyB3aXRoCj4gdHJ1bmNhdGlvbi4gSXQgYWxzbyBtZWFucyB0aGF0IGEgZmlsZSBt
-YXkgaGF2ZSBhIHN1YnN0YW50aWFsIGFtb3VudAo+IG9mIHByZWFsbG9jYXRpbiBiZXlvbmQgRU9G
-IC0gbWF5YmUgc2V2ZXJhbCB0aW1lcyB0aGUgc2l6ZSBvZiB0aGUKPiBmaWxlLgoKSSBob25lc3Rs
-eSBoYXZlbid0IGxvb2tlZCBpbnRvIHRoaXMgeWV0LCBidXQgY2FuIHlvdSBleHBhbmQgb24KdGhl
-IHRydW5jYXRpb24gcHJvYmxlbXMgeW91IG1lbnRpb24/ICBJcyBpdCB0aGF0IHRoZSBwcmVhbGxv
-Y2F0ZWQKYmxvY2tzIHNob3VsZCBiZSBkcm9wcGVkIGFuZCB0aGUgc2NhbGluZyBhbGdvcml0aG0g
-c2hvdWxkIGJlCnJlc2V0IHdoZW4gYSB0cnVuY2F0aW9uIG9jY3VycyBvciBzb21ldGhpbmc/Cgo+
-IEhvd2V2ZXIsIHRoZSBjdXJyZW50IGFsZ29yaXRobSBkb2VzIHdvcmsgd2VsbCB3aGVuIHdyaXRp
-bmcgbG90cyBvZgo+IHJlbGF0aXZlbHkgc21hbGwgZmlsZXMgKGUuZy4gdXAgdG8gYSBmZXcgdGVu
-cyBvZiBtZWdhYnl0ZXMpLCBhcwo+IGluY3JlYXNpbmcgdGhlIHByZWFsbG9jYXRpb24gc2l6ZSBm
-YXN0IHJlZHVjZXMgdGhlIGNoYW5jZXMgb2YKPiBpbnRlcmxlYXZpbmcgc21hbGwgYWxsb2NhdGlv
-bnMuCgpPbmUgdGhpbmcgdGhhdCBJIGtlZXAgd29uZGVyaW5nIGFib3V0IGFzIEkgdGhpbmsgYWJv
-dXQgdGhpcwppcyB3aGF0IHRoZSBlZmZlY3QgaXMgYXMgdGhlIGZpbGUgc3lzdGVtIChvciBBRykg
-Z2V0cyBmdWxsLAphbmQgd2hhdCBsZXZlbCBvZiAiZnVsbCIgaXMgZW5vdWdoIHRvIG1ha2UgYW55
-IGFkdmVyc2UKZWZmZWN0cyBvZiBhIGNoYW5nZSBsaWtlIHRoaXMgc3RhcnQgdG8gc2hvdyB1cC4g
-IFRoZSBvdGhlcgp0aGluZyBpcywgd2hhdCBzb3J0IG9mIHdvcmtsb2FkcyBhcmUgcmVhc29uYWJs
-ZSB0aGluZ3MgdG8KdXNlIHRvIGdhdWdlIHRoZSBlZmZlY3Q/ICBORlMgaXMgcGVyaGFwcyBjb21t
-b24sIGJ1dCBpdCdzCnVuaXF1ZSBpbiBob3cgaXQgY2xvc2VzIGZpbGVzIGFsbCB0aGUgdGltZS4g
-IFdoYXQgaGFwcGVucwp3aGVuIHRoZXJlJ3MgYSBtb3JlICJub3JtYWwiIChub24tTkZTKSB3b3Jr
-bG9hZD8gIEZvciBBR3MKd2l0aCBlbm91Z2ggZnJlZSBzcGFjZSBJIHN1cHBvc2UgaXQncyBhIHdp
-biBvdmVyYWxsLgoKPiBJJ3ZlIGJlZW4gdGhpbmtpbmcgdGhhdCBiYXNpbmcgdGhlIHByZWFsbG9j
-YXRpb24gc2l6ZSBvbiB0aGUgY3VycmVudAo+IGZpbGUgc2l6ZSAtIHNheSBwcmVhbGxvY2F0ZSBo
-YWxmIHRoZSBzaXplIG9mIHRoZSBmaWxlLCBpcyBhIGJldHRlcgo+IG9wdGlvbiBvbmNlIGZpbGUg
-c2l6ZXMgc3RhcnQgdG8gZ3JvdyBsYXJnZSAobW9yZSB0aGFuIGEgZmV3IHRlbnMgb2YKPiBvZiBt
-ZWdhYnl0ZXMpLCBzbyBtYXliZSBhIGNvbWJpbmF0aW9uIG9mIHRoZSB0d28gaXMgYSBiZXR0ZXIg
-aWRlYQo+IChpbmNyZWFzZSBleHBvbmVudGlhbGx5IHVwIHRvIGRlZmF1bHReMiAoNE1CIHByZWFs
-bG9jKSwgdGhlbiB0YWtlCj4gbWluKG1heChpX3NpemUgLyAyLCBkZWZhdWx0XjIpLCBYRlNfTUFY
-RVhUTEVOKSBhcyB0aGUgcHJlYWxsb2Mgc2l6ZQo+IHNvIHRoYXQgd2UgZG9uJ3QgZG8gZXhjZXNz
-aXZlIGFtb3VudHMgb2YgcHJlYWxsb2NhdGlvbj8KCkkgdGhpbmsgYmFzaW5nIGl0IG9uIHRoZSBm
-aWxlIHNpemUgaXMgYSBnb29kIGlkZWEsIGl0CnNjYWxlcyB0aGUgKGluaXRpYWwpIHByZWFsbG9j
-YXRpb24gc2l6ZSB0byB0aGUgc3BlY2lmaWMKZmlsZS4gIFRoaXMgd291bGQgYXNzdW1lIHRoYXQg
-ZmlsZXMgdGVuZCB0byBncm93IGJ5CmFtb3VudHMgY29tcGFyYWJsZSB0byB0aGVpciBzaXplIHJh
-dGhlciB0aGFuIHN1ZGRlbmx5CmFuZCBkcmFtYXRpY2FsbHkgY2hhbmdpbmcuICBUaGF0IHNlZW1z
-IHJlYXNvbmFibGUgYnV0CkkgaGF2ZSBub3RoaW5nIGVtcGlyaWNhbCB0byBiYWNrIHVwIHRoYXQg
-YXNzdW1wdGlvbi4KU2ltaWxhcmx5LCB0aGUgYXNzdW1wdGlvbiB0aGF0IG9uY2UgYSBmaWxlIHN0
-YXJ0cyB0bwpncm93IHlvdSBzaG91bGQgcmFwaWRseSBpbmNyZWFzZSB0aGUgRU9GIHByZWFsbG9j
-YXRpb24KZ29hbCBzZWVtcyBzZW5zaWJsZS0tY2VydGFpbmx5IGZvciB0aGUgaGluZHNpZ2h0IGNh
-c2UKb2YgYSBzdHJlYW0gb2YgYXBwZW5kcy0tYnV0IEkgaGF2ZSBubyBwcm9vZiB0aGF0IGEKbm9y
-bWFsIHVzZSBjYXNlIHdvdWxkbid0IHRyaWdnZXIgdGhpcyBhbGdvcml0aG0gd2hlbgppdCBtaWdo
-dCBiZSBiZXR0ZXIgbm90IHRvLgoKPiAtLQo+IAo+IFdlIG5lZWQgdG8gbWFrZSB0aGUgc2FtZSB3
-cml0ZSBwYXR0ZXJucyByZXN1bHQgaW4gZXF1aXZhbGVudAo+IGFsbG9jYXRpb24gcGF0dGVybnMg
-ZXZlbiB3aGVuIHRoZXkgY29tZSB0aHJvdWdoIHRoZSBORlMgc2VydmVyLgo+IFJpZ2h0IG5vdyB0
-aGUgTkZTIHNlcnZlciB1c2VzIGEgZmlsZSBkZXNjcmlwdG9yIGZvciBlYWNoIHdyaXRlIHRoYXQK
-PiBjb21lcyBhY3Jvc3MgdGhlIHdpcmUuIFRoaXMgbWVhbnMgdGhhdCB0aGUgLT5yZWxlYXNlIGZ1
-bmN0aW9uIGlzCj4gY2FsbGVkIGFmdGVyIGV2ZXJ5IHdyaXRlLCBhbmQgdGhhdCBtZWFucyBYRlMg
-d2lsbCBiZSB0cnVuY2F0aW5nIGF3YXkKPiB0aGUgc3BlY3VsYXRpdmUgcHJlYWxsb2NhdGlvbiBp
-dCBkaWQgZHVyaW5nIHRoZSB3cml0ZS4gSGVuY2Ugd2UgZ2V0Cj4gaW50ZXJsZWF2aW5nIGZpbGVz
-IGFuZCBmcmFnbWVudGF0aW9uLgoKSXQgY291bGQgYmUgdXNlZnVsIHRvIGJhc2UgdGhlIGJlaGF2
-aW9yIG9uIGFjdHVhbCBrbm93bGVkZ2UKdGhhdCBhIGZpbGUgc3lzdGVtIGlzIGJlaW5nIGV4cG9y
-dGVkIGJ5IE5GUy4gIEJ1dCBpdCBtYXkgd2VsbApiZSB0aGF0IG90aGVyIGFwcGxpY2F0aW9ucyAo
-bGlrZSBzaGVsbCBzY3JpcHRzIHRoYXQgbG9vcCBhbmQKYXBwZW5kIHRvIHRoZSBzYW1lIGZpbGUg
-cmVwZWF0ZWRseSkgbWlnaHQgYmVuZWZpdC4KCj4gVG8gYXZvaWQgdGhpcyBwcm9ibGVtLCBkZXRl
-Y3Qgd2hlbiB0aGUgLT5yZWxlYXNlIGZ1bmN0aW9uIGlzIGJlaW5nCj4gY2FsbGVkIHJlcGVhdGVk
-bHkgb24gYW4gaW5vZGUgdGhhdCBoYXMgZGVsYXllZCBhbGxvY2F0aW9uCj4gb3V0c3RhbmRpbmcu
-IElmIHRoaXMgaGFwcGVu0ZUgdHdpY2UgaW4gYSByb3csIHRoZW4gZG9uJ3QgdHJ1bmNhdGUgdGhl
-Cj4gc3BlY3VsYXRpdmUgYWxsb2NhdGlvbiBhd2F5LiBUaGlzIGVuc3VyZXMgdGhhdCB0aGUgc3Bl
-Y3VsYXRpdmUKPiBwcmVhbGxvY2F0aW9uIGlzIHByZXNlcnZlZCB1bnRpbCB0aGUgZGVsYWxsb2Mg
-YmxvY2tzIGFyZSBjb252ZXJ0ZWQKPiB0byByZWFsIGV4dGVudHMgZHVyaW5nIHdyaXRlYmFjay4K
-Ci4gLiAuCgpJIGhhdmUgYSBmZXcgb3RoZXIgY29tbWVudHMgaW4gbXkgcmV2aWV3cyBvZiB5b3Vy
-IHR3byBwYXRjaGVzLgoKLiAuIC4KCj4gQ29tbWVudHMgd2VsY29tZS4KCllvdSBnb3Qgc29tZS4u
-LgoKCQkJCQktQWxleAoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29t
-L21haWxtYW4vbGlzdGluZm8veGZzCg==
+On Tue, 2010-10-12 at 16:53 -0500, wkendall@sgi.com wrote:
+> plain text document attachment (no_node_check)
+> The NODECHK macro should only be enabled as needed for
+> development/debugging.  Having it on limits xfsrestore to
+> 268 million directory entries instead of 4 billion. 
+
+I was going to suggest you leave it in the Makefile in
+commented-out form, perhaps with an explanation that
+it's available for development.  But since NODECHK is
+only ever referenced inside "restore/node.c", maybe
+such a thing could be done inside that file instead.
+
+I.e., something like:
+
+/*
+ * NODECHK can be enabled for development and debugging
+ * in order to enforce additional checks on handles
+ * when nodes are mapped, unmapped, and freed.  It should
+ * not be used for production code, it cuts into the number
+ * of directory entries xfsrestore can handle.
+ */
+/* #define NODECHK */
+
+I'll leave it up to you whether you think that's worth
+doing (and if so, let me know).  Either way:
+
+Reviewed-by: Alex Elder <aelder@sgi.com>
+
+> Signed-off-by: Bill Kendall <wkendall@sgi.com>
+> 
+> Index: xfsdump-kernel.org/restore/Makefile
+> ===================================================================
+> --- xfsdump-kernel.org.orig/restore/Makefile
+> +++ xfsdump-kernel.org/restore/Makefile
+> @@ -103,7 +103,7 @@ LLDLIBS = $(LIBUUID) $(LIBHANDLE) $(LIBA
+>  LTDEPENDENCIES = $(LIBRMT)
+>  
+>  LCFLAGS = -DRESTORE -DRMT -DBASED -DDOSOCKS -DINVCONVFIX -DPIPEINVFIX \
+> -	-DEOMFIX -DSESSCPLT -DWHITEPARSE -DNODECHK -DDIRENTHDR_CHECKSUM \
+> +	-DEOMFIX -DSESSCPLT -DWHITEPARSE -DDIRENTHDR_CHECKSUM \
+>  	-DF_FSSETDM
+>  
+>  default: depend $(LTCOMMAND)
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+
+
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
