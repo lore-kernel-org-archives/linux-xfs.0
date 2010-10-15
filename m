@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o9FMS31J158223 for <xfs@oss.sgi.com>; Fri, 15 Oct 2010 17:28:03 -0500
+	o9FMSER5158249 for <xfs@oss.sgi.com>; Fri, 15 Oct 2010 17:28:14 -0500
 Received: from canuck.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 239D81C02D54
-	for <xfs@oss.sgi.com>; Fri, 15 Oct 2010 15:29:13 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 58A60F4ECA
+	for <xfs@oss.sgi.com>; Fri, 15 Oct 2010 15:29:25 -0700 (PDT)
 Received: from canuck.infradead.org (canuck.infradead.org [134.117.69.58]) by
-	cuda.sgi.com with ESMTP id vZh4qVItsEdRsDhS for
-	<xfs@oss.sgi.com>; Fri, 15 Oct 2010 15:29:13 -0700 (PDT)
+	cuda.sgi.com with ESMTP id 9KdpxfrAciYVNnh2 for
+	<xfs@oss.sgi.com>; Fri, 15 Oct 2010 15:29:25 -0700 (PDT)
 Received: from hch by canuck.infradead.org with local (Exim 4.72 #1 (Red Hat
-	Linux)) id 1P6sm1-0000zN-QS
-	for xfs@oss.sgi.com; Fri, 15 Oct 2010 22:29:13 +0000
-Date: Fri, 15 Oct 2010 18:29:13 -0400
+	Linux)) id 1P6smC-0000zS-Re
+	for xfs@oss.sgi.com; Fri, 15 Oct 2010 22:29:24 +0000
+Date: Fri, 15 Oct 2010 18:29:24 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 3/4] xfstests: fix quota detection
-Message-ID: <20101015222913.GC3781@infradead.org>
+Subject: [PATCH 4/4] xfstests: handle filesystems without FIEMAP support
+Message-ID: <20101015222924.GD3781@infradead.org>
 References: <20101015222820.GA3655@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
@@ -33,47 +33,34 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Even if the kernel has quota support built in most filesystems still
-don't support it.  As there's no good way to find out if a filesystem
-supports quotas hardcode the list of filesystems that do support
-quotas.
+Do a _notrun in 225 if we get EOPNOSUPP back from FIEMAP instead
+of failing the test.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: xfstests-dev/common.quota
-===================================================================
---- xfstests-dev.orig/common.quota	2010-10-14 19:28:41.000000000 +0000
-+++ xfstests-dev/common.quota	2010-10-14 19:33:45.000000000 +0000
-@@ -27,11 +27,24 @@
- _require_quota()
- {
-     [ -n $QUOTA_PROG ] || _notrun "Quota user tools not installed"
--    if [ $FSTYP = "xfs" ]; then
--	[ -f /proc/fs/xfs/xqmstat ] || _notrun "Installed kernel does not support XFS quota"
--    elif [ $FSTYP != "gfs2" ]; then
--	[ -d /proc/sys/fs/quota ] || _notrun "Installed kernel does not support quota"
--    fi
-+
-+    case $FSTYP in
-+    ext2|ext3|ext4|reiserfs)
-+	if [ ! -d /proc/sys/fs/quota ]; then
-+	    _notrun "Installed kernel does not support quotas"
-+	fi
-+	;;
-+    gfs2)
-+	;;
-+    xfs)
-+	if [ ! -f /proc/fs/xfs/xqmstat ]; then
-+	    _notrun "Installed kernel does not support XFS quotas"
-+        fi
-+	;;
-+    *)
-+	_notrun "disk quotas not supported by this filesystem type: $FSTYP"
-+	;;
-+    esac
- }
+--- a/225
++++ b/225
+@@ -49,13 +49,19 @@ _supported_os Linux
+ _setup_testdir
  
- #
+ fiemapfile=$TEST_DIR/fiemap.$$
++fiemaplog=$TEST_DIR/fiemap.$$.log
+ 
+ [ -x $here/src/fiemap-tester ] || _notrun "fiemap-tester not built"
+ 
+ echo "fiemap run without preallocation"
+-$here/src/fiemap-tester -q -p 0 -r 200 $TEST_DIR/fiemapfile
++$here/src/fiemap-tester -q -p 0 -r 200 $TEST_DIR/fiemapfile 2>&1 | tee $fiemaplog
++
++if grep -q "Operation not supported" $fiemaplog; then
++      _notrun "FIEMAP not supported by this filesystem type: $FSTYP"
++fi
+ 
+ rm -f $fiemapfile
++rm -f $fiemaplog
+ rm -f $seq.full
+ 
+ status=0
 
 _______________________________________________
 xfs mailing list
