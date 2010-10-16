@@ -1,34 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o9G2tqDT176502
-	for <linux-xfs@oss.sgi.com>; Fri, 15 Oct 2010 21:55:54 -0500
-Received: from lo.gmane.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0A26211F5C58
-	for <linux-xfs@oss.sgi.com>; Fri, 15 Oct 2010 20:11:37 -0700 (PDT)
-Received: from lo.gmane.org (lo.gmane.org [80.91.229.12]) by cuda.sgi.com with
-	ESMTP id DMw28KbdeClUEvMv for <linux-xfs@oss.sgi.com>;
-	Fri, 15 Oct 2010 20:11:37 -0700 (PDT)
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1P6wx9-000738-5k
-	for linux-xfs@oss.sgi.com; Sat, 16 Oct 2010 04:56:59 +0200
-Received: from 24-176-21-160.dhcp.klmz.mi.charter.com ([24.176.21.160])
-	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-	id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Sat, 16 Oct 2010 04:56:59 +0200
-Received: from mlueck by 24-176-21-160.dhcp.klmz.mi.charter.com with local
-	(Gmexim 0.1 (Debian)) id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Sat, 16 Oct 2010 04:56:59 +0200
-From: Michael Lueck <mlueck@lueckdatasystems.com>
-Subject: Re: xfsdump -- not enough memory to dump attributes? w/>20G free
-	-- how much does it need?
-Date: Fri, 15 Oct 2010 22:56:44 -0400
-Message-ID: <i9b49c$rrp$1@dough.gmane.org>
-References: <4BF7D787.4020903@tlinx.org> <20100525164244.GB18666@infradead.org>
-	<4C083AAD.80906@tlinx.org>
-Mime-Version: 1.0
-In-Reply-To: <4C083AAD.80906@tlinx.org>
-Reply-To: mlueck@lueckdatasystems.com
+	o9G5C7fX191300 for <xfs@oss.sgi.com>; Sat, 16 Oct 2010 00:12:08 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C7707F1B226
+	for <xfs@oss.sgi.com>; Fri, 15 Oct 2010 22:27:53 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
+	[150.101.137.99]) by cuda.sgi.com with ESMTP id
+	EqAiS54DtnurM5da for <xfs@oss.sgi.com>;
+	Fri, 15 Oct 2010 22:27:53 -0700 (PDT)
+Date: Sat, 16 Oct 2010 16:13:13 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 00/11] xfstests: rework src/randholes.c
+Message-ID: <20101016051313.GN4681@dastard>
+References: <1287067771.2362.202.camel@doink>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1287067771.2362.202.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,54 +25,42 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: Alex Elder <aelder@sgi.com>
+Cc: xfs@oss.sgi.com
 
-Greetings Linda-
+On Thu, Oct 14, 2010 at 09:49:31AM -0500, Alex Elder wrote:
+> Dave's recent "dynamic speculative EOF preallocation" changes
+> caused test 008 to no longer produce the kinds of holes it was
+> expecting to see, so it got me looking at the program it uses,
+> "src/randholes.c".
+> 
+> Since 008 is the only test using this program, it probably
+> doesn't deserve the attention I gave it yesterday, but I've
+> done the work so I might as well submit the series for
+> review and get my changes in.
+> 
+> The first patch in the series actually addresses two things
+> that are bugs.
+> 
+> The remaining 10 are just cleanup and refactoring changes.
+> Other than two bug fix changes and one change in output
+> when running in very-verbose mode, the patched code should
+> be pretty much functionally identical to before.
 
-I had not seen this message until this evening, and we too are running Ubuntu Lucid (10.04.1) with all updates.
+I haven't really looked at the whole series closely, but nothing
+stands out as a red flag. Seeing it's test code, it's probably
+OK to go as is. The bug fixes look fine.
 
-/usr/sbin/xfsdump: creating dump session media file 0 (media 0, file 0)
-/usr/sbin/xfsdump: dumping ino map
-/usr/sbin/xfsdump: dumping directories
-/usr/sbin/xfsdump: dumping non-directory files
-/usr/sbin/xfsdump: WARNING: could not get list of non-root attributes for nondir ino 235386: Cannot allocate memory (12)
-/usr/sbin/xfsdump: ending media file
-/usr/sbin/xfsdump: media file size 98262032976 bytes
-/usr/sbin/xfsdump: dump size (non-dir files) : 98162141360 bytes
-/usr/sbin/xfsdump: dump complete: 3481 seconds elapsed
-/usr/sbin/xfsdump: Dump Status: SUCCESS
+Cheers,
 
-$ uname -a
-Linux ldslnx01 2.6.32-25-generic-pae #44-Ubuntu SMP Fri Sep 17 21:57:48 UTC 2010 i686 GNU/Linux
-
-$ free -m
-              total       used       free     shared    buffers     cached
-Mem:          2003       1104        899          0          0       1012
--/+ buffers/cache:         92       1911
-Swap:            0          0          0
-
-Which that memory count is after the backup just completed. Usually this server draws under 512M.
-
-Linda A. Walsh wrote:
-> FWIF -- upgrading to the latest tool set seems to have caused
-> these messages to "go away"...
-
-Where did you get a newer set of xfs tools than what comes from the Ubuntu repo?
-
-I show the following versions: $ dpkg -l|grep xfs
-ii  xfsdump                                   3.0.4                             Administrative utilities for the XFS filesys
-ii  xfsprogs                                  3.1.0ubuntu1                      Utilities for managing the XFS filesystem
-
-Sincerely,
-
+Dave.
 -- 
-Michael Lueck
-Lueck Data Systems
-http://www.lueckdatasystems.com/
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
