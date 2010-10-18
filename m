@@ -1,17 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o9ILvJSM027183 for <xfs@oss.sgi.com>; Mon, 18 Oct 2010 16:57:19 -0500
-Received: from cf--amer001e--3.americas.sgi.com
-	(cf--amer001e--3.americas.sgi.com [137.38.100.5])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 0D0608F8065
-	for <xfs@oss.sgi.com>; Mon, 18 Oct 2010 14:58:29 -0700 (PDT)
-Subject: XFS Master Branch Re-based
-From: Alex Elder <aelder@sgi.com>
-Date: Mon, 18 Oct 2010 16:56:57 -0500
-Message-ID: <1287439017.2382.100.camel@doink>
-Mime-Version: 1.0
-Reply-To: aelder@sgi.com
+	o9IN9BNx037082 for <xfs@oss.sgi.com>; Mon, 18 Oct 2010 18:09:11 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 39359F225B9
+	for <xfs@oss.sgi.com>; Mon, 18 Oct 2010 16:25:13 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
+	[150.101.137.101]) by cuda.sgi.com with ESMTP id
+	XuyLthzSIT4VzzjT for <xfs@oss.sgi.com>;
+	Mon, 18 Oct 2010 16:25:13 -0700 (PDT)
+Date: Tue, 19 Oct 2010 10:10:09 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: cannot defrag volume, fragmentation factor 21.73%
+Message-ID: <20101018231009.GL29677@dastard>
+References: <4CBC3910.70806@cape-horn-eng.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4CBC3910.70806@cape-horn-eng.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,53 +29,72 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Richard Ems <richard.ems@cape-horn-eng.com>
+Cc: xfs@oss.sgi.com
 
-In order to resolve a merge issue, and in preparation
-for the imminent 2.6.36 release, I have re-based the
-XFS master branch (it now appears to be a series of
-commits based on 2.6.36-rc8).
+On Mon, Oct 18, 2010 at 02:09:52PM +0200, Richard Ems wrote:
+> Hi all,
+> 
+> this is on openSUSE 11.3.
+> 
+> # uname -a
+> Linux fs1 2.6.34.7-0.3-default #1 SMP 2010-09-20 15:27:38 +0200
+> x86_64 x86_64 x86_64 GNU/Linux
+> 
+> # echo frag | xfs_db -r /dev/disk/by-label/data1
+> xfs_db> actual 6451844, ideal 5050129, fragmentation factor 21.73%
+> 
+> # xfs_db -V
+> xfs_db version 3.1.2
+> 
+> # xfs_fsr -V
+> xfs_fsr version 3.1.2
+> 
+> # df -h /dev/sdb1
+> Filesystem            Size  Used Avail Use% Mounted on
+> /dev/sdb1              17T   13T  4.3T  75% /data_1
+> 
+> The volume is new, 12TB were rsync'ed from another volume, some new
+> files came after the sync.
+> 
+> I ran several times xfs_fsr, but the 21.73% factor stays there.
+> There where some busy or modified files on which I started xfs_fsr
+> later again, but this ones where small files and the 21.73% is still
+> there.
 
-Because of this, if you have local branch that tracks
-the XFS master branch you will need to use care in
-updating it in order to get the right outcome.  (At
-the moment, a simple pull request will most likely
-report conflicts.)  You must forcibly update your
-local branch to match the newly re-based XFS master
-branch.  To do this, you can supply a special refspec
-to "git pull".
+Understand your numbers. What frag reports is how many extents there
+are vs a perfect layout. It does not tell you how badly fragmented
+your filesystem is. Extent-based filesystems can have
+"fragmentation" like you see reported above, but not suffer at all
+because the extents are large enough not to affect IO throughput.
 
-For example, if your local branch  "xfs-master" is
-tracking the XFS "master" branch on oss.sgi.com, you
-would force the update like this:
- 
-   git pull git://oss.sgi.com/xfs/xfs.git +master:xfs-master
+e.g. If I have a 100GB file in 100x1GB extents, frag would report an
+ideal of 17 extents and measure 100. That would give a frag factor
+of 83%. Now, is that filesystem fragmented? Theoretically yes.
+Practically, no.
 
-This produces a few warning messages.  When I did this with
-xfs-master as my current branch I got:
-    From git://oss.sgi.com/xfs/xfs
-     + 06e6f08...a731cd1 master     -> xfs-master  (forced update)
-    Warning: fetch updated the current branch head.
-    Warning: fast-forwarding your working tree from
-    Warning: commit 06e6f08768cf3e070a557ba812d7a65231e19dd6.
-    Already up-to-date.
+Why? Because extents of 1GB are more than large enough for any IO to
+that file reach full throughput. Therefore, while the file layout is
+not perfect, the "fragmentation" has no impact on performance and
+therefore the filesystem should not be considered fragmented.
 
-You can use "git fetch" also, provided "xfs-master" is not
-your current branch:
+So, for 13TB of data, having 20% of your files with two extents
+rather than one is not a problem unless that causes you application
+measurable performance issues...
 
-   git fetch git://oss.sgi.com/xfs/xfs.git +master:xfs-master
+IOWs, trying to reduce fragmentation without understanding what the
+numbers tell you about the layout of your filesystem can be counter
+productive. Especially as running xfs_fsr when you don't really need
+to can have other side-effects that affect the long-term aging
+characteristics of the filesystem (e.g. causing preamture free space
+fragmentation).
 
-Here I got:
-    From git://oss.sgi.com/xfs/xfs
-     + 06e6f08...a731cd1 master     -> xfs-master  (forced update)
+Cheers,
 
-
-One other (unrelated) note, I pushed the 2.6.36-rc8 tag out
-and it resulted in a message to the list.  (I've suppressed
-these messages in the past and thought I should mention it
-since this time one went out.)
-
-					-Alex
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
