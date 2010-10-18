@@ -1,19 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o9IF6NK7245075 for <xfs@oss.sgi.com>; Mon, 18 Oct 2010 10:06:24 -0500
-Received: from purin.rz.uni-konstanz.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6DAFB1E7C801
-	for <xfs@oss.sgi.com>; Mon, 18 Oct 2010 08:07:34 -0700 (PDT)
-Received: from purin.rz.uni-konstanz.de (purin.rz.uni-konstanz.de
-	[134.34.240.45]) by cuda.sgi.com with ESMTP id i9V49Ct5xhbnTunr
-	for <xfs@oss.sgi.com>; Mon, 18 Oct 2010 08:07:34 -0700 (PDT)
-From: "Markus Roth" <Markus.Roth@uni-konstanz.de>
-message-id: <2a05-4cbc6280-f8f-3364a400@207442557>
-subject: Performance degeneration issues
-date: Mon, 18 Oct 2010 17:07:33 +0200
-MIME-Version: 1.0
-Reply-To: Markus Roth <Markus.Roth@uni-konstanz.de>
+	o9IG0N8f251875 for <xfs@oss.sgi.com>; Mon, 18 Oct 2010 11:00:23 -0500
+Subject: Re: build error in current dev tree
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <20101018120858.GK29677@dastard>
+References: <20101018120858.GK29677@dastard>
+Date: Mon, 18 Oct 2010 11:01:04 -0500
+Message-ID: <1287417664.2382.24.camel@doink>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,38 +18,38 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Hello,
-
-I'm running a Centos 5.4 x64 Server with Raid0 HDDs and XFS.
-
-I did some performance tweaking according to [1] as performance was not good enough with std. options.
-Extracting a tar archive with 6.1 million files (avg. Size just below 2KiB) is blazingly fast after the fs has been
-generated. But after some time while doing deletes/moves (need to sort those files by their contents) the fs
-performance degenerates quite badly (from 8k file writes/sec to about 200).
-
-Is there any way I can find out what the issue is and how I can help it?
-(I tried numerous other FSs and of those XFS has left the best impression in my use case)
-
-Tweaks I used:
-
-mkfs.xfs -b size=2048 -l size=64m
-mount -o noatime,nodiratime,logbufs=8
-
-I tried playing with the log size and logbufs, but to no avail. I would be thankful if you could give me some 
-pointers as I have spent the last 3 weeks fiddling with filesystem etc..
-
-Thanks and Greets from Germany,
-Markus Roth
-
-[1] http://everything2.com/index.pl?node_id=1479435
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gTW9uLCAyMDEwLTEwLTE4IGF0IDIzOjA4ICsxMTAwLCBEYXZlIENoaW5uZXIgd3JvdGU6Cj4g
+SGkgQWxleCwKPiAKPiBDYW4geW91IGZpeCB1cCB0aGUgY3VycmVudCBkZXYgdHJlZT8gV2hlbiBJ
+IG1lcmdlIGl0IGludG8KPiAyLjYuMzYtcmM4LCBJIGdldCB0aGUgZm9sbG93aW5nIGVycm9yOgo+
+IAo+ICAgQ0MgICAgICBmcy94ZnMvc3VwcG9ydC9kZWJ1Zy5vCj4gICBDQyAgICAgIGZzL3hmcy9z
+dXBwb3J0L3V1aWQubwo+IGZzL3hmcy9saW51eC0yLjYveGZzX3N5bmMuYzo2NzE6IGVycm9yOiBy
+ZWRlZmluaXRpb24gb2Yg4oCYX194ZnNfaW5vZGVfY2xlYXJfcmVjbGFpbV90YWfigJkKPiBmcy94
+ZnMvbGludXgtMi42L3hmc19zeW5jLmM6NjIzOiBub3RlOiBwcmV2aW91cyBkZWZpbml0aW9uIG9m
+IOKAmF9feGZzX2lub2RlX2NsZWFyX3JlY2xhaW1fdGFn4oCZIHdhcyBoZXJlCj4gCj4gSSBiZWxl
+aXZlIGl0J3MgYSBtZXJnZSBlcnJvciBiZWNhdXNlIHlvdSByZWJhc2VkIHRoZSBmb3ItbGludXMK
+PiBicmFuY2ggdG8gY2hhbmdlIGEgY29tbWl0IG1lc3NhZ2UgZm9yIGEgcHVsbCB0byBMaW51cywg
+YW5kIHRoZQo+IGxpbnV4LW5leHQgdHJlZSBpcyBhbHNvIHNlZWluZyB0aGlzIHByb2JsZW0uIE5v
+dyB0aGF0IGNvbW1pdCBpcyBpbgo+IG1haW5saW5lIGl0IGlzIG5vdCBtZXJnaW5nIGNsZWFubHkg
+d2l0aCB0aGUgZGV2IGJyYW5jaC4gIENhbiB5b3UKPiBlaXRoZXIgY29tbWl0IGEgZml4IG9yIHJl
+YmFzZSB0aGUgY3VycmVudCB0cmVlIG9uIDIuNi4zNi1yYzg/CgpJIHNlZSB3aGF0IHlvdSdyZSB0
+YWxraW5nIGFib3V0LgoKQXMgSSByZWNhbGwsIDVhZTRlZjgzLi4uICh4ZnM6IHByb3Blcmx5IGFj
+Y291bnQgZm9yIHJlY2xhaW1lZAppbm9kZXMpIGRpZG4ndCBhcHBseSBjbGVhbmx5IHRvIExpbnVz
+JyBtYXN0ZXIgYmVjYXVzZSBvZiBvdGhlcgpyZWNlbnQgY2hhbmdlcyB0byBsaW51eC0yLjYveGZz
+X3N5bmMuYyAocG9zc2libHkgdGhlIGJhdGNoZWQKcGVyLUFHIGxvb2t1cCBjb21taXQgZTFhNDhk
+YmVjLi4uIGNhdXNlZCB0aGUgcHJvYmxlbSkuCgpJdCdzIHBvc3NpYmxlIEkgZGlkIG5vdCBmaW5p
+c2ggb3V0IHJlc29sdmluZyB0aGUgaXNzdWUgcHJvcGVybHkuCkluIGFueSBjYXNlLCBJJ2xsIHRy
+eSB0byByZXNvbHZlIGl0IGJ5IHJlLWJhc2luZyB0aGUgZW50aXJlIFhGUwpkZXYgdHJlZSB0byB2
+Mi42LjI2LXJjOC4gQ2hyaXN0b3BoIGhhZCBzdWdnZXN0ZWQgZG9pbmcgdGhhdCBhbnl3YXkuCgpP
+bmNlIEkndmUgZG9uZSB0aGF0IHBlb3BsZSB3aWxsIGhhdmUgdG8gZm9yY2libHkgdXBkYXRlIHRo
+ZWlyCnRyYWNraW5nIGJyYW5jaGVzOyBJJ2xsIHByb3ZpZGUgaW5mbyBvbmNlIEkndmUgZml4ZWQg
+dGhlIHByb2JsZW0uClRoYW5rcyBhIGxvdCBmb3IgcG9pbnRpbmcgaXQgb3V0LgoKCQkJCQktQWxl
+eAoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1h
+aWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlz
+dGluZm8veGZzCg==
