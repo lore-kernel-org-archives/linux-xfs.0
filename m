@@ -1,15 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o9IG0N8f251875 for <xfs@oss.sgi.com>; Mon, 18 Oct 2010 11:00:23 -0500
-Subject: Re: build error in current dev tree
+	o9IGeAQn256449 for <xfs@oss.sgi.com>; Mon, 18 Oct 2010 11:40:11 -0500
+Received: from stout.americas.sgi.com (stout.americas.sgi.com [128.162.232.50])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E3474304051
+	for <xfs@oss.sgi.com>; Mon, 18 Oct 2010 09:41:19 -0700 (PDT)
+Received: from stout.americas.sgi.com (localhost6.localdomain6 [127.0.0.1])
+	by stout.americas.sgi.com (8.14.4/8.14.2) with ESMTP id o9IGfJ0l008257
+	for <xfs@oss.sgi.com>; Mon, 18 Oct 2010 11:41:19 -0500
+Received: (from aelder@localhost)
+	by stout.americas.sgi.com (8.14.4/8.14.4/Submit) id o9IGfJV0008255
+	for xfs@oss.sgi.com; Mon, 18 Oct 2010 11:41:19 -0500
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20101018120858.GK29677@dastard>
-References: <20101018120858.GK29677@dastard>
-Date: Mon, 18 Oct 2010 11:01:04 -0500
-Message-ID: <1287417664.2382.24.camel@doink>
-Mime-Version: 1.0
-Reply-To: aelder@sgi.com
+Message-Id: <201010181641.o9IGfJV0008255@stout.americas.sgi.com>
+Date: Mon, 18 Oct 2010 11:41:18 -0500
+Subject: [PATCH] xfs: drop duplicate function resulting from merge
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,38 +24,52 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-T24gTW9uLCAyMDEwLTEwLTE4IGF0IDIzOjA4ICsxMTAwLCBEYXZlIENoaW5uZXIgd3JvdGU6Cj4g
-SGkgQWxleCwKPiAKPiBDYW4geW91IGZpeCB1cCB0aGUgY3VycmVudCBkZXYgdHJlZT8gV2hlbiBJ
-IG1lcmdlIGl0IGludG8KPiAyLjYuMzYtcmM4LCBJIGdldCB0aGUgZm9sbG93aW5nIGVycm9yOgo+
-IAo+ICAgQ0MgICAgICBmcy94ZnMvc3VwcG9ydC9kZWJ1Zy5vCj4gICBDQyAgICAgIGZzL3hmcy9z
-dXBwb3J0L3V1aWQubwo+IGZzL3hmcy9saW51eC0yLjYveGZzX3N5bmMuYzo2NzE6IGVycm9yOiBy
-ZWRlZmluaXRpb24gb2Yg4oCYX194ZnNfaW5vZGVfY2xlYXJfcmVjbGFpbV90YWfigJkKPiBmcy94
-ZnMvbGludXgtMi42L3hmc19zeW5jLmM6NjIzOiBub3RlOiBwcmV2aW91cyBkZWZpbml0aW9uIG9m
-IOKAmF9feGZzX2lub2RlX2NsZWFyX3JlY2xhaW1fdGFn4oCZIHdhcyBoZXJlCj4gCj4gSSBiZWxl
-aXZlIGl0J3MgYSBtZXJnZSBlcnJvciBiZWNhdXNlIHlvdSByZWJhc2VkIHRoZSBmb3ItbGludXMK
-PiBicmFuY2ggdG8gY2hhbmdlIGEgY29tbWl0IG1lc3NhZ2UgZm9yIGEgcHVsbCB0byBMaW51cywg
-YW5kIHRoZQo+IGxpbnV4LW5leHQgdHJlZSBpcyBhbHNvIHNlZWluZyB0aGlzIHByb2JsZW0uIE5v
-dyB0aGF0IGNvbW1pdCBpcyBpbgo+IG1haW5saW5lIGl0IGlzIG5vdCBtZXJnaW5nIGNsZWFubHkg
-d2l0aCB0aGUgZGV2IGJyYW5jaC4gIENhbiB5b3UKPiBlaXRoZXIgY29tbWl0IGEgZml4IG9yIHJl
-YmFzZSB0aGUgY3VycmVudCB0cmVlIG9uIDIuNi4zNi1yYzg/CgpJIHNlZSB3aGF0IHlvdSdyZSB0
-YWxraW5nIGFib3V0LgoKQXMgSSByZWNhbGwsIDVhZTRlZjgzLi4uICh4ZnM6IHByb3Blcmx5IGFj
-Y291bnQgZm9yIHJlY2xhaW1lZAppbm9kZXMpIGRpZG4ndCBhcHBseSBjbGVhbmx5IHRvIExpbnVz
-JyBtYXN0ZXIgYmVjYXVzZSBvZiBvdGhlcgpyZWNlbnQgY2hhbmdlcyB0byBsaW51eC0yLjYveGZz
-X3N5bmMuYyAocG9zc2libHkgdGhlIGJhdGNoZWQKcGVyLUFHIGxvb2t1cCBjb21taXQgZTFhNDhk
-YmVjLi4uIGNhdXNlZCB0aGUgcHJvYmxlbSkuCgpJdCdzIHBvc3NpYmxlIEkgZGlkIG5vdCBmaW5p
-c2ggb3V0IHJlc29sdmluZyB0aGUgaXNzdWUgcHJvcGVybHkuCkluIGFueSBjYXNlLCBJJ2xsIHRy
-eSB0byByZXNvbHZlIGl0IGJ5IHJlLWJhc2luZyB0aGUgZW50aXJlIFhGUwpkZXYgdHJlZSB0byB2
-Mi42LjI2LXJjOC4gQ2hyaXN0b3BoIGhhZCBzdWdnZXN0ZWQgZG9pbmcgdGhhdCBhbnl3YXkuCgpP
-bmNlIEkndmUgZG9uZSB0aGF0IHBlb3BsZSB3aWxsIGhhdmUgdG8gZm9yY2libHkgdXBkYXRlIHRo
-ZWlyCnRyYWNraW5nIGJyYW5jaGVzOyBJJ2xsIHByb3ZpZGUgaW5mbyBvbmNlIEkndmUgZml4ZWQg
-dGhlIHByb2JsZW0uClRoYW5rcyBhIGxvdCBmb3IgcG9pbnRpbmcgaXQgb3V0LgoKCQkJCQktQWxl
-eAoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1h
-aWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlz
-dGluZm8veGZzCg==
+The XFS development master branch somehow diverged from Linus'
+master branch in such a way that merging the former into the latter
+caused __xfs_inode_clear_reclaim_tag() to appear twice in the file
+"fs/xfs/linux-2.6/xfs_sync.c".
+
+I'm resolving this by re-basing the XFS branch against linus/master.
+This commit (on top of that rebase) deletes the extra copy of the
+function.
+
+Signed-off-by: Alex Elder <aelder@sgi.com>
+---
+ fs/xfs/linux-2.6/xfs_sync.c |   11 -----------
+ 1 files changed, 0 insertions(+), 11 deletions(-)
+
+diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
+index 574fb71..37d3325 100644
+--- a/fs/xfs/linux-2.6/xfs_sync.c
++++ b/fs/xfs/linux-2.6/xfs_sync.c
+@@ -667,17 +667,6 @@ xfs_reclaim_inode_grab(
+ 	return 0;
+ }
+ 
+-void
+-__xfs_inode_clear_reclaim_tag(
+-	xfs_mount_t	*mp,
+-	xfs_perag_t	*pag,
+-	xfs_inode_t	*ip)
+-{
+-	radix_tree_tag_clear(&pag->pag_ici_root,
+-			XFS_INO_TO_AGINO(mp, ip->i_ino), XFS_ICI_RECLAIM_TAG);
+-	__xfs_inode_clear_reclaim(pag, ip);
+-}
+-
+ /*
+  * Inodes in different states need to be treated differently, and the return
+  * value of xfs_iflush is not sufficient to get this right. The following table
+-- 
+1.7.2.3
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
