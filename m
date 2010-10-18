@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o9IGeAQn256449 for <xfs@oss.sgi.com>; Mon, 18 Oct 2010 11:40:11 -0500
-Received: from stout.americas.sgi.com (stout.americas.sgi.com [128.162.232.50])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E3474304051
-	for <xfs@oss.sgi.com>; Mon, 18 Oct 2010 09:41:19 -0700 (PDT)
-Received: from stout.americas.sgi.com (localhost6.localdomain6 [127.0.0.1])
-	by stout.americas.sgi.com (8.14.4/8.14.2) with ESMTP id o9IGfJ0l008257
-	for <xfs@oss.sgi.com>; Mon, 18 Oct 2010 11:41:19 -0500
-Received: (from aelder@localhost)
-	by stout.americas.sgi.com (8.14.4/8.14.4/Submit) id o9IGfJV0008255
-	for xfs@oss.sgi.com; Mon, 18 Oct 2010 11:41:19 -0500
-From: Alex Elder <aelder@sgi.com>
-Message-Id: <201010181641.o9IGfJV0008255@stout.americas.sgi.com>
-Date: Mon, 18 Oct 2010 11:41:18 -0500
-Subject: [PATCH] xfs: drop duplicate function resulting from merge
+	o9IHvZGj004538 for <xfs@oss.sgi.com>; Mon, 18 Oct 2010 12:57:35 -0500
+Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 378E01935D8B
+	for <xfs@oss.sgi.com>; Mon, 18 Oct 2010 10:58:44 -0700 (PDT)
+Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
+	cuda.sgi.com with ESMTP id YjM7EFO8otWRSuUf for
+	<xfs@oss.sgi.com>; Mon, 18 Oct 2010 10:58:44 -0700 (PDT)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: Re: cannot defrag volume, fragmentation factor 21.73%
+Date: Mon, 18 Oct 2010 19:58:41 +0200
+References: <4CBC3910.70806@cape-horn-eng.com> <201010181439.48143@zmi.at>
+	<4CBC4FB7.2040206@cape-horn-eng.com>
+In-Reply-To: <4CBC4FB7.2040206@cape-horn-eng.com>
 MIME-Version: 1.0
+Message-Id: <201010181958.42188@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,52 +24,71 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============0224208731975406537=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: Richard Ems <richard.ems@cape-horn-eng.com>
 
-The XFS development master branch somehow diverged from Linus'
-master branch in such a way that merging the former into the latter
-caused __xfs_inode_clear_reclaim_tag() to appear twice in the file
-"fs/xfs/linux-2.6/xfs_sync.c".
+--===============0224208731975406537==
+Content-Type: multipart/signed;
+  boundary="nextPart3169839.ShCunjmxHc";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 
-I'm resolving this by re-basing the XFS branch against linus/master.
-This commit (on top of that rebase) deletes the extra copy of the
-function.
+--nextPart3169839.ShCunjmxHc
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Alex Elder <aelder@sgi.com>
----
- fs/xfs/linux-2.6/xfs_sync.c |   11 -----------
- 1 files changed, 0 insertions(+), 11 deletions(-)
+On Montag, 18. Oktober 2010 Richard Ems wrote:
+> Attached the gzipped output of 3 runs of xfs_fsr generated with the
+> command:
 
-diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
-index 574fb71..37d3325 100644
---- a/fs/xfs/linux-2.6/xfs_sync.c
-+++ b/fs/xfs/linux-2.6/xfs_sync.c
-@@ -667,17 +667,6 @@ xfs_reclaim_inode_grab(
- 	return 0;
- }
- 
--void
--__xfs_inode_clear_reclaim_tag(
--	xfs_mount_t	*mp,
--	xfs_perag_t	*pag,
--	xfs_inode_t	*ip)
--{
--	radix_tree_tag_clear(&pag->pag_ici_root,
--			XFS_INO_TO_AGINO(mp, ip->i_ino), XFS_ICI_RECLAIM_TAG);
--	__xfs_inode_clear_reclaim(pag, ip);
--}
--
- /*
-  * Inodes in different states need to be treated differently, and the return
-  * value of xfs_iflush is not sufficient to get this right. The following table
--- 
-1.7.2.3
+All files reported have "after:1", so where does the fragmentation come=20
+from? Interesting. Maybe a umount;mount helps? Could be the info is just=20
+wrong until a remount?
+
+=2D-=20
+mit freundlichen Gr=C3=BCssen,
+Michael Monnerie, Ing. BSc
+
+it-management Internet Services
+http://proteger.at [gesprochen: Prot-e-schee]
+Tel: 0660 / 415 65 31
+
+****** Radiointerview zum Thema Spam ******
+http://www.it-podcast.at/archiv.html#podcast-100716
+
+// Wir haben im Moment zwei H=C3=A4user zu verkaufen:
+// http://zmi.at/langegg/
+// http://zmi.at/haus2009/
+
+--nextPart3169839.ShCunjmxHc
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.15 (GNU/Linux)
+
+iEYEABECAAYFAky8itIACgkQzhSR9xwSCbRT0QCfYwdGe4uE3lTWm6gqvVZLtMgL
+XpUAn0dVm7uiQq0ZbjyKdZ9SAt26ago4
+=makE
+-----END PGP SIGNATURE-----
+
+--nextPart3169839.ShCunjmxHc--
+
+
+--===============0224208731975406537==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============0224208731975406537==--
