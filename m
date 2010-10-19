@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o9IN9BNx037082 for <xfs@oss.sgi.com>; Mon, 18 Oct 2010 18:09:11 -0500
+	o9J1BVGi055028 for <xfs@oss.sgi.com>; Mon, 18 Oct 2010 20:11:32 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 39359F225B9
-	for <xfs@oss.sgi.com>; Mon, 18 Oct 2010 16:25:13 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5ADB81001AB
+	for <xfs@oss.sgi.com>; Mon, 18 Oct 2010 18:12:42 -0700 (PDT)
 Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
 	[150.101.137.101]) by cuda.sgi.com with ESMTP id
-	XuyLthzSIT4VzzjT for <xfs@oss.sgi.com>;
-	Mon, 18 Oct 2010 16:25:13 -0700 (PDT)
-Date: Tue, 19 Oct 2010 10:10:09 +1100
+	ZOkkRvgIB9mmgG7F for <xfs@oss.sgi.com>;
+	Mon, 18 Oct 2010 18:12:42 -0700 (PDT)
+Date: Tue, 19 Oct 2010 12:12:28 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: cannot defrag volume, fragmentation factor 21.73%
-Message-ID: <20101018231009.GL29677@dastard>
-References: <4CBC3910.70806@cape-horn-eng.com>
+Subject: Re: XFS use within multi-threaded apps
+Message-ID: <20101019011228.GM29677@dastard>
+References: <AANLkTi=w1o8EF6-M7o8Qi9VpY-10m+MCR8U+K1_Aze=g@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4CBC3910.70806@cape-horn-eng.com>
+In-Reply-To: <AANLkTi=w1o8EF6-M7o8Qi9VpY-10m+MCR8U+K1_Aze=g@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,78 +25,103 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Richard Ems <richard.ems@cape-horn-eng.com>
+To: Angelo McComis <angelo@mccomis.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, Oct 18, 2010 at 02:09:52PM +0200, Richard Ems wrote:
-> Hi all,
-> 
-> this is on openSUSE 11.3.
-> 
-> # uname -a
-> Linux fs1 2.6.34.7-0.3-default #1 SMP 2010-09-20 15:27:38 +0200
-> x86_64 x86_64 x86_64 GNU/Linux
-> 
-> # echo frag | xfs_db -r /dev/disk/by-label/data1
-> xfs_db> actual 6451844, ideal 5050129, fragmentation factor 21.73%
-> 
-> # xfs_db -V
-> xfs_db version 3.1.2
-> 
-> # xfs_fsr -V
-> xfs_fsr version 3.1.2
-> 
-> # df -h /dev/sdb1
-> Filesystem            Size  Used Avail Use% Mounted on
-> /dev/sdb1              17T   13T  4.3T  75% /data_1
-> 
-> The volume is new, 12TB were rsync'ed from another volume, some new
-> files came after the sync.
-> 
-> I ran several times xfs_fsr, but the 21.73% factor stays there.
-> There where some busy or modified files on which I started xfs_fsr
-> later again, but this ones where small files and the 21.73% is still
-> there.
-
-Understand your numbers. What frag reports is how many extents there
-are vs a perfect layout. It does not tell you how badly fragmented
-your filesystem is. Extent-based filesystems can have
-"fragmentation" like you see reported above, but not suffer at all
-because the extents are large enough not to affect IO throughput.
-
-e.g. If I have a 100GB file in 100x1GB extents, frag would report an
-ideal of 17 extents and measure 100. That would give a frag factor
-of 83%. Now, is that filesystem fragmented? Theoretically yes.
-Practically, no.
-
-Why? Because extents of 1GB are more than large enough for any IO to
-that file reach full throughput. Therefore, while the file layout is
-not perfect, the "fragmentation" has no impact on performance and
-therefore the filesystem should not be considered fragmented.
-
-So, for 13TB of data, having 20% of your files with two extents
-rather than one is not a problem unless that causes you application
-measurable performance issues...
-
-IOWs, trying to reduce fragmentation without understanding what the
-numbers tell you about the layout of your filesystem can be counter
-productive. Especially as running xfs_fsr when you don't really need
-to can have other side-effects that affect the long-term aging
-characteristics of the filesystem (e.g. causing preamture free space
-fragmentation).
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gTW9uLCBPY3QgMTgsIDIwMTAgYXQgMDk6NDI6MDRBTSAtMDQwMCwgQW5nZWxvIE1jQ29taXMg
+d3JvdGU6Cj4gQWxsOgo+IAo+IEFwb2xvZ2llcyBidXQgSSBhbSBuZXcgdG8gdGhpcyBsaXN0LCBh
+bmQgc29tZXdoYXQgbmV3IHRvIFhGUy4KPiAKPiBJIGhhdmUgYSB1c2UgY2FzZSB3aGVyZSBJJ2Qg
+bGlrZSB0byBmb3J3YXJkIHRoZSB1c2Ugb2YgWEZTLiBUaGlzIGlzIGZvcgo+IGxhcmdlIChtdWx0
+aS1HQiwgc2F5IGFueXdoZXJlIGZyb20gNUdCIHRvIDMwMEdCKSBpbmRpdmlkdWFsIGZpbGVzLCBz
+dWNoIGFzCj4gd2hhdCB5b3UnZCBzZWUgdW5kZXIgYSBkYXRhYmFzZSdzIGRhdGEgZmlsZSAvIHRh
+Ymxlc3BhY2UuCgpZdXAsIHBlcmZlY3QgdXNlIGNhc2UgZm9yIFhGUy4KCj4gTXkgZGF0YWJhc2Ug
+dmVuZG9yICh3aG8sIGNvaW5jaWRlbnRhbGx5IG1hcmtldHMgdGhlaXIgb3duIGZpbGVzeXN0ZW1z
+IGFuZAo+IG9wZXJhdGluZyBzeXN0ZW1zKSBzYXlzIHRoYXQgdGhlcmUgYXJlIGNlcnRhaW4gcHJv
+YmxlbXMgdW5kZXIgWEZTIHdpdGgKPiBzcGVjaWZpYyBtZW50aW9uIG9mIGNvcnJ1cHRpb24gaXNz
+dWVzLCBpZiBhIHNpbmdsZSByb290IG9yIHRoZSBtZXRhZGF0YQo+IGJlY29tZSBjb3JydXB0ZWQs
+IHRoZSBlbnRpcmUgZmlsZXN5c3RlbSBpcyBnb25lLAoKWWVzLCB0aGV5IGFyZSByaWdodCBhYm91
+dCBkZXRlY3RlZCBtZXRhZGF0YSBjb3JydXB0aW9uIGNhdXNpbmcgYQpmaWxlc3lzdGVtIF9zaHV0
+ZG93bl8sIGJ1dCB0aGF0IGRvZXMgbm90IG1lYW4gdGhhdCBhIG1ldGFkYXRhCmNvcnJ1cHRpb24g
+ZXZlbnQgd2lsbCBjYXVzZSB5b3VyIGVudGlyZSBmaWxlc3lzdGVtIHRvIGRpc2FwcGVhci4KQmVz
+aWRlcywgdGhlIHdvcnN0IGNhc2UgZm9yIF9hbnlfIGZpbGVzeXN0ZW0gaXMgdGhhdCBpdCBnZXRz
+CmNvcnJ1cHRlZCBiZXlvbmQgcmVwYWlyIGFuZCB5b3UgaGF2ZSB0byByZXN0b3JlIGZyb20gYmFj
+a3VwcywKc28geW91IHN0aWxsIGhhdmUgdG8gcGxhbiBmb3IgdGhpcyBldmVudHVhbGl0eSB3aGVu
+IGRlYWxpbmcgd2l0aApkaXNhc3RlciByZWNvdmVyeSBzY2VuYXJpb3MuCgpXaGF0IHRoZXkgbmVn
+bGVjdCB0byBtZW50aW9uIGlzIHRoYXQgWEZTIGhhcyBhIGxvdCBvZiBtZXRhZGF0YQpjb3JydXB0
+aW9uIGRldGVjdGlvbiBjb2RlLCBhbmQgc2h1dNGVIGRvd24gYXQgdGhlIGZpcnN0IGRldGVjdGlv
+biB0bwpwcmV2ZW50IHRoZSBmaWxlc3lzdGVtIGZvciBiZWluZyBmdXJ0aGVyIGRhbWFnZWQgYmVm
+b3JlIGEgcmVwYWlyCnByb2Nlc3MgY2FuIGJlIHJ1bi4gQXBhcnQgZnJvbSBidHJmcywgWEZTIGhh
+cyB0aGUgYmVzdCBydW4tdGltZQptZXRhZGF0YSBjb3JydXB0aW9uIGRldGVjdGlvbiBvZiBhbnkg
+ZmlsZXN5c3RlbSBpbiBMaW51eCwgYW5kIGV2ZW4Kc28gdGhlcmUgYXJlIHBsYW5zIHRvIGltcHJv
+dmUgdGhhdCBvdmVyIHRoZSBuZXh0IHllYXIgb2Ygc28uLi4uCgo+IGFuZCBpdCBoYXMgcGVyZm9y
+bWFuY2UKPiBpc3N1ZXMgb24gYSBtdWx0aS10aHJlYWRlZCB3b3JrbG9hZCwgY2F1c2VkIGJ5IHRo
+ZSBzaW5nbGUgcm9vdCBmaWxlc3lzdGVtCj4gZm9yIG1ldGFkYXRhIGJlY29taW5nIGEgYm90dGxl
+bmVjay4KClNpbmdsZSByb290IGRlc2lnbiBoYXMgbm90aGluZyB0byBkbyB3aXRoIHBlcmZvcm1h
+bmNlIG9uCm11bHRpdGhyZWFkZWQgd29ya2xvYWRzLiBIb3dldmVyLCBYRlMgcmVhbGx5IGlzbid0
+IGEgc2luZ2xlLXJvb3QKZGVzaWduLiBXaGlsZSBpdCBoYXMgYSBzaW5nbGUgcm9vdCBmb3IgdGhl
+IF9kaXJlY3Rvcnkgc3RydWN0dXJlXywKdGhlIGFsbG9jYXRpb24gc3Vic3lzdGVtIGhhcyBhIHJv
+b3QgcGVyIGFsbG9jYXRpb24gZ3JvdXAgYW5kIGhlbmNlCmFsbG9jYXRpb24gb3BlcmF0aW9ucyBj
+YW4gb2NjdXIgaW4gcGFyYWxsZWwgaW4gWEZTLgoKSGVuY2UgdGhlIG9ubHkgcG9pbnRzIG9mIHNl
+cmlhbGlzYXRpb24gZm9yIG1vc3Qgb3BlcmF0aW9ucyBpcyBlaXRoZXIKYW4gaW5kaXZpZHVhbCBk
+aXJlY3RvcnkgYmVpbmcgb3BlcmF0ZWQgb24gb3IgdGhlIGpvdXJuYWxsaW5nIHN1YnN5c3RlbS4K
+ClNpbXVsdGFuZW91cyBkaXJlY3RvcnkgbW9kaWZpY2F0aW9ucyBhcmUgbm90IHNvbWV0aGluZyB0
+aGF0CmRhdGFiYXNlcyAob3IgYW55IGFwcGxpY2F0aW9uKSBkbyB2ZXJ5IG9mdGVuLCBzbyB0aGF0
+IHBvaW50IG9mCnNlcmlhbGlzYXRpb24gaXMgbm90IHNvbWV0aGluZyB5b3UncmUgZXZlciBsaWtl
+bHkgdG8gaGl0LiBCZXNpZGVzLAp0aGlzIHNlcmlhbGlzYXRpb24gaXMgYSBsaW1pdGF0aW9uIG9m
+IHRoZSBsaW51eCBWRlMsIG5vdCBzb21ldGhpbmcKc3BlY2lmaWMgdG8gWEZTLiAgU2ltaWxhcmx5
+LCBkYXRhYmFzZXMgZG9uJ3QgZG8gYSBsb3Qgb2YgbWV0YWRhdGEKb3BlcmF0aW9ucyBzbyB0aGUg
+am91cm5hbGxpbmcgc3Vic3l0ZW0gd29uJ3QgYmUgYSBib3R0bGVuZWNrLAplaXRoZXIuCgpEYXRh
+YmFzZXMgZG8gbGFyZ2UgYW1vdW50cyBvZiBfZGF0YSBJT18gdG8gYW5kIGZyb20gZmlsZXMsIGFu
+ZCB0aGF0CmlzIHdoYXQgWEZTIGV4Y2VscyBhdC4gRXNwZWNpYWxseSBpZiB0aGUgZGF0YWJhc2Ug
+aXMgdXNpbmcgZGlyZWN0CklPLCBiZWNhdXNlIHRoZW4gWEZTIGFsbG93cyBjb25jdXJyZW50IHJl
+YWQgYW5kIHdyaXRlIGFjY2VzcyB0byB0aGUKZmlsZSBzbyB0aGUgb25seSBsaW1pdGF0aW9ucyBp
+biB0aHJvdWdocHV0IGlzIHRoZSBzdG9yYWdlIHN1YnN5c3RlbQphbmQgdGhlIGRhdGFiYXNlIGl0
+c2VsZi4uLgoKQW5kIEZXSVcsIEkndmUgZG9uZSBub3RoaW5nIGJ1dCBpbXByb3ZlIG11bHRpdGhy
+ZWFkZWQgdGhyb3VnaHB1dCBmb3IKbWV0YWRhdGEgb3BlcmF0aW9ucyBpbiBYRlMgZm9yIHRoZSBw
+YXN0IGZldyBtb250aHMsIHNvIHRoZSBjbGFpbXMKeW91ciB2ZW5kb3IgaXMgbWFraW5nIHJlYWxs
+eSBoYXZlIG5vIGJhc2lzIGluIHJlYWxpdHkuCgo+IFRoaXMgZmVlZGJhY2sgZnJvbSB0aGUgdmVu
+ZG9yIGlzIHN1cmVseSB0YWtlbiB3aXRoIGEgZ3JhaW4gb2Ygc2FsdCBhcyB0aGV5Cj4gaGF2ZSBt
+YXJrZXRpbmcgbW90aXZhdGlvbnMgb2YgdGhlaXIgb3duIHByb2R1Y3QgdG8gY29uc2lkZXIuCj4g
+Cj4gU3VyZWx5LCBzb21ldGhpbmcgbGlrZSBjb3JydXB0aW9uIGFuZCBib3R0bGVuZWNrcyB1bmRl
+ciBoZWF2eSBsb2FkIC8KPiBtdWx0aS10aHJlYWRlZCB1c2Ugd291bGQgYmUgYSBidWcgdGhhdCB3
+b3VsZCBiZSBhZGRyZXNzZWQsIHJpZ2h0PwoKWWVzLCBhYnNvbHV0ZWx5LiBQbGVhc2UgYXNrIHRo
+ZSB2ZW5kb3IgdG8gcmFpc2UgYnVncyBmb3IgYW55IGlzc3Vlcwp0aGV5IGhhdmUgc2VlbiBuZXh0
+IHRpbWUgdGhleSBzYXkgdGhpcyB0byB5b3UuCgo+IEFuZCBzdXJlbHksIHNvbWV0aGluZyBsaWtl
+IGEgQlRyZWUgc3RydWN0dXJlLCB3aXRoIGEgcm9vdCBub2RlLCBqb3VybmFsZWQKPiBtZXRhZGF0
+YSwgZXRjLiB3b3VsZCBiZSBpbmhlcmVudCBpbiBvdGhlciBmaWxlc3lzdGVtIGNob2ljZXMgYXMg
+d2VsbCwgcmlnaHQ/CgpZZXMuCgo+IFRoZSB2ZW5kb3IsIGluIHRoZSBlbmQsIGRpZCByZWNvbW1l
+bmQgZXh0NCwgYnV0IGV4dDQgaXMgbm90IGluIG15IG1haW5saW5lCj4gTGludXgga2VybmVsIGFz
+IGFueXRoaW5nIGJleW9uZCAidGVjaCBwcmV2aWV3IiBhdCB0aGlzIHBvaW50LgoKT2gsIG1hbiwg
+SSBhbG1vc3Qgc3BhdCBvdXQgbXkgY29mZmVlIGFsbCBvdmVyIG15IGtleWJvYXJkIHdoZW4gSQpy
+ZWFkIHRoYXQuIEkgbmVlZGVkIGEgZ29vZCBsYXVnaCB0aGlzIG1vcm5pbmcuIDopCgpTbyB3aGF0
+IHdlIGhhdmUgaGVyZSBpcyBhIGNsYXNzaWMgY2FzZSBvZiBGVUQuCgpZb3VyIHZlbmRvcidzIHJl
+Y29tbWVuZGF0aW9uIHRvIHVzZSBleHQ0IGluc3RlYWQgb2YgWEZTIGRpcmVjdGx5CmNvbnRyYWRp
+Y3RzIHRoZWlyIG1lc3NhZ2Ugbm90IHRvIHVzZSBYRlMuICBleHQ0IGlzIGV4YWN0bHkgdGhlIHNh
+bWUKYXMgWEZTIGluIHJlZ2FyZCB0byB0aGUgc2luZ2xlIHJvb3QvbWV0YWRhdGEgY29ycnVwdGlv
+biBkZXNpZ24KaXNzdWVzLCBidXQgZXh0NCBkb2VzIGEgbXVjaCB3b3JzZSBqb2Igb2YgZGV0ZWN0
+aW5nIGNvcnJ1cHRpb24KYXQgcnVudGltZSBjb21wYXJlZCB0byBYRlMuCgpleHQ0IGlzIGFsc28g
+aW1tYXR1cmUsIGlzIHByZXR0eSBtdWNoIHVudGVzdGVkIGluIGxvbmctdGVybQpwcm9kdWN0aW9u
+IGVudmlyb25tZW50cyBhbmQgaGFzIGRldmVsb3BlcnMgdGhhdCBhcmUgYWxyZWFkeQpzdHJ1Z2ds
+aW5nIHRvIHVuZGVyc3RhbmQgYW5kIG1haW50YWluIHRoZSBjb2RlIGJlY2F1c2Ugb2YgdGhlIHdh
+eSBpdApoYXMgYmVlbiBpbXBsZW1lbnRlZC4KCklPV3MsIHlvdXIgdmVuZG9yIGlzIHJlY29tbWVu
+ZGluZyBhIGZpbGVzeXN0ZW0gdGhhdCBpcyBfaW5mZXJpb3IgdG8gWEZTXy4KClRoYXQncyBhIGNs
+YXNzaWMgc2FsZXMgdGVjaG5pcXVlIC0gbGV2ZWwgRlVEIGF0IGEgY29tcGV0aXRvciwgdGhlbgpy
+ZWNvbW1lbmQgYW4gaW5mZXJpb3Igc29sdXRpb24gYXMgdGhlIF9iZXR0ZXIgYWx0ZXJuYXRpdmVf
+LiBUaGUga2V5CnRvIHRoaXMgdGVjaG5pcXVlIGlzIHRoYXQgdGhlIGFsdGVybmF0aXZlIG5lZWRz
+IHRvIGJlIHNvbWV0aGluZyB0aGF0CnRoZSBjdXN0b21lciB3aWxsIHJlY29nbmlzZSBhcyBub3Qg
+YmVpbmcgdmlhYmxlIGZvciBkZXBsb3ltZW50IGluCmJ1c2luZXNzIGNyaXRpY2FsIHN5c3RlbXMu
+IFNvIG5vdyB0aGUgY3VzdG9tZXIgZG9lc24ndCB3YW50IHRvIHVzZQplaXRoZXIsIGFuZCB0aGV5
+IGFyZSByZWFkeSBmb3IgdGhlICJidXQgd2UndmUgZ290IHRoaXMgcmVhbGx5IHJvYnVzdApzb2x1
+dGlvbiBhbmQgaXQgb25seSBjb3N0cyAkJCQiIHN1Y2tlci1wdW5jaC4KCk15IGJlc3QgZ3Vlc3Mg
+YXQgdGhlIHJlYXNvbiBmb3Igc3VjaCBhIGNhcmVmdWxseSB0YXJnZXRlZCBzYWxlcwp0ZWNobmlx
+dWUgaXMgdGhhdCB0aGVpciBkYXRhYmFzZSBpcyBqdXN0IGFzIHJvYnVzdCBhbmQgcGVyZm9ybXMg
+anVzdAphcyB3ZWxsIG9uIFhGUyBhcyBpdCBkb2VzIG9uIHRoZWlyIG93biBzb2x1dGlvbnMgdGhh
+dCBjb3N0IG1lZ2EtJCQkLgpXaGF0IG90aGVyIG1vdGl2YXRpb24gaXMgdGhlcmUgZm9yIHRha2lu
+ZyBzdWNoIGFuIGFwcHJvYWNoPwoKQ2hlZXJzLAoKRGF2ZS4KLS0gCkRhdmUgQ2hpbm5lcgpkYXZp
+ZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5j
+b20vbWFpbG1hbi9saXN0aW5mby94ZnMK
