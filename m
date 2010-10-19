@@ -1,18 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o9JAjt2N151499 for <xfs@oss.sgi.com>; Tue, 19 Oct 2010 05:45:56 -0500
-Received: from mail16-a-ab.linkedin.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id ED3C51DA5591
-	for <xfs@oss.sgi.com>; Tue, 19 Oct 2010 03:47:08 -0700 (PDT)
-Received: from mail16-a-ab.linkedin.com (mail16-a-ab.linkedin.com
-	[64.74.98.140]) by cuda.sgi.com with ESMTP id MUTUUdXXl8BnSaaw
-	for <xfs@oss.sgi.com>; Tue, 19 Oct 2010 03:47:08 -0700 (PDT)
-Date: Tue, 19 Oct 2010 03:47:08 -0700 (PDT)
-From: "abc abc (LinkedIn Invitations)" <invitations@linkedin.com>
-Message-ID: <1438368793.8639693.1287485228695.JavaMail.app@ech3-cdn09.prod>
-Subject: Reminder about your invitation from abc abc
+	o9JDZUSp183655 for <xfs@oss.sgi.com>; Tue, 19 Oct 2010 08:35:31 -0500
+Received: from pyrimidin.rz.uni-konstanz.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 77EE21518CAD
+	for <xfs@oss.sgi.com>; Tue, 19 Oct 2010 06:51:37 -0700 (PDT)
+Received: from pyrimidin.rz.uni-konstanz.de (pyrimidin.rz.uni-konstanz.de
+	[134.34.240.46]) by cuda.sgi.com with ESMTP id dqNQQOsyD3BwQwX2
+	for <xfs@oss.sgi.com>; Tue, 19 Oct 2010 06:51:37 -0700 (PDT)
+in-reply-to: 20101019014245.GN29677@dastard
+From: "Markus Roth" <Markus.Roth@uni-konstanz.de>
+message-id: <1eca-4cbd9f00-19-5fdb7300@218342653>
+subject: Re: Performance degeneration issues
+date: Tue, 19 Oct 2010 15:36:41 +0200
 MIME-Version: 1.0
+Reply-To: Markus Roth <Markus.Roth@uni-konstanz.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,130 +23,92 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============0645182332441960245=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
---===============0645182332441960245==
-Content-Type: multipart/alternative;
-	boundary="----=_Part_8639691_1941021579.1287485228691"
+Hello and thanks for your reply. 
 
-------=_Part_8639691_1941021579.1287485228691
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-
-LinkedIn
-------------  
-
-This is a reminder that on October 17, abc abc sent you an invitation to become part of his or her professional network at LinkedIn.
-
-
-
-Follow this link to accept abc abc's invitation.
-
-https://www.linkedin.com/e/fsd0lq-gfgngoeq-5m/doi/1790151809/B4DvJvDZ/gir_204271632_0/EML-inv_17_rem/
-
-Signing up is free and takes less than a minute.
-
-
-On October 17, abc abc wrote:
-
-> To:  [xfs@oss.sgi.com]
-> From: abc abc [rekrutacja119@gmail.com]
-> Subject: Invitation to connect on LinkedIn
->
-> I'd like to add you to my professional network on LinkedIn.
-> 
-> - abc
-
-
-The only way to get access to abc abc's professional network on LinkedIn is through the following link:
-
-https://www.linkedin.com/e/fsd0lq-gfgngoeq-5m/doi/1790151809/B4DvJvDZ/gir_204271632_0/EML-inv_17_rem/
-
-You can remove yourself from abc abc's network at any time.
-
-
---------------
-
-
-
+Am Dienstag 19 Oktober 2010 03:42 CEST, Dave Chinner <david@fromorbit.com> schrieb: 
  
--- 
-(c) 2010, LinkedIn Corporation
-------=_Part_8639691_1941021579.1287485228691
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+> What's the layout of you storage? how many disks, size, etc.
+> How much RAM, number of CPUs in your server?
 
+Server hardware is a tricky question as there are 4 different servers
+I have tested XFS on. Three of those are running as a VM guest under
+VMWare ESX. One is on pure hardware.
 
-<html>
-  <body>
+All of the servers have Xeon Processors, every CentOS installation
+limited to only use 2 Cores (vCPUs in VMWare).
 
-  
+Listing by server (VMs flagged with a *):
+    Intel(R) Xeon(TM) CPU 3.00GHz - 8GB DDR2 ECC - 2x single HDDs, no RAID, 10k rpm SAS (80 + 140GB)
+*   Intel(R) Xeon(TM) MV CPU 3.20GHz - 4GB DDR2 ECC - Storage is a SAN (via FibreChannel) (90 GB exclusive)
+*   Intel(R) Xeon(R) CPU 5160  @ 3.00GHz - 10GB DDR2 ECC - 2x RAID0 with 10k rpm SAS (74GB each)
+*   Intel(R) Xeon(R) CPU X5560  @ 2.80GHz - 16 GB DDR3 ECC - Storage is a SAN (via FibreChannel) (80GB exclusive)
 
-<table border="0" width="550" cellpadding="0" cellspacing="0" style="max-width:550px; border-top:4px solid #39C; font: 12px arial, sans-serif; margin: 0 auto;"><tr><td>  
-  <h1 style="color: #000; font: bold 23px arial; margin:5px 0;" >LinkedIn</h1>
+With the SANs I checked if they are under heavy load (they are not).
+Of those VMs only I is situated in an environment where there is load
+from other VMs.
 
-<table cellpadding="0" cellspacing="0" border="0">
-  <tr>
-    <td style="font:12px arial, helvetica, sans-serif;">  
+> Using information from a 7 year old web page about how someone
+> optimised their filesystem for a specific bonnie++ workload
+> is not really a good place to start when it comes to real-world
+> optimisation.
 
+Well it gave me some pointers and after some thinking and testing I
+ended up with those options. I have to admit that my knowledge of
+XFS is based only on that and some other webpages so I wouldn't
+know where and how to improve performance.
 
-      <p>This is a reminder that on October 17, abc abc sent you an invitation to become part of his or her professional network at LinkedIn.</p>
+> 
+> You need understand why the performance falls through the floor
+> first, then work out what needs optimising. It may be that your sort
+> algorithm has exponential complexity, or you are running out of RAM,
+> or something else. It may not have anything at all to do with the
+> filesystem.
+ 
+It isn't really a sorting algorithm. Every file has 3 elements that can be 
+used to categorise it. So the actual sorting amounts to a linear search
+(read) for those elements and a move/copy&delete (after possible 
+creation of 4 directories in which to sort/categorise). 
+[categorisation is done in this pattern: /<unique id>/<year>/fixed/(a|b)]
 
-      <p>
- Follow this link to accept abc abc's invitation. </p>
+After some testing it seems copy&delete is 4x slower than reading the file.
 
-      <p>
-      <a href="https://www.linkedin.com/e/fsd0lq-gfgngoeq-5m/doi/1790151809/B4DvJvDZ/gir_204271632_0/EML-inv_17_rem/">https://www.linkedin.com/e/fsd0lq-gfgngoeq-5m/doi/1790151809/B4DvJvDZ/gir_204271632_0/EML-inv_17_rem/</a>
-      </p>
+> The symptoms you describe sound like the difference between
+> operation in cache vs out of cache (i.e. RAM speed vs disk speed),
+> and if so then no amount of filesystem tweaking will fix it.
 
-      <p> Signing up is free and takes less than a minute. </p>
+I see your point but I can't see much caching with inflating tar/bzip2
+(and that is where XFS really shines here ...).
 
-      <p>On October 17, abc abc wrote:<br><br> > To:  [xfs@oss.sgi.com]<br> > From: abc abc [rekrutacja119@gmail.com]<br> > Subject: Invitation to connect on LinkedIn<br>
-      <br>
-      &gt; I'd like to add you to my professional network on LinkedIn.<br>
-&gt; <br>
-&gt; - abc<br>
+> However, if you describe you system and the algorithms you are using
+> in more detail, we might be able to help identify the cause...
 
-      </p>
+The only addition I can make to the algorithms is this:
+My application is written in Java and I have tried three different approaches
+to the copy & delete matter
+   - java.io -> Read + immediate Write, then Delete (via Readers and Writers)
+   - java.io -> renameTo (applicable not for all directories/paths)
+   - java.nio -> FileChannels (transferTo)
 
-      <p> The only way to get access to abc abc's professional network on LinkedIn is through the following link: </p>
+All of which show the same issues. So my reasoning was either hardware
+or FS. But seeing as the degeneration als happens with the SANs I thought
+it might be more of a FS specific issue.
 
-      <p>
-      <a href="https://www.linkedin.com/e/fsd0lq-gfgngoeq-5m/doi/1790151809/B4DvJvDZ/gir_204271632_0/EML-inv_17_rem/">https://www.linkedin.com/e/fsd0lq-gfgngoeq-5m/doi/1790151809/B4DvJvDZ/gir_204271632_0/EML-inv_17_rem/</a>
-      </p>
+Application is mostly single threaded (at least at the point I'm having
+trouble with)
 
-      <p> You can remove yourself from abc abc's network at any time. </p>
+If you would like more information feel free to ask.
 
-      <br>
-      --------------
-      <br>
-
-
-    </td>
-  </tr>
-</table>
-
-
-
-  <p style="width: 550px; margin: 3px auto; font: 10px arial, sans-serif; color: #999;">&#169; 2010, LinkedIn Corporation</p>
-  
-</body>
-</html>
-------=_Part_8639691_1941021579.1287485228691--
-
-
---===============0645182332441960245==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Thanks and Greetings from Germany,
+Markus
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============0645182332441960245==--
