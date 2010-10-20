@@ -1,18 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o9K7XFo6040341 for <xfs@oss.sgi.com>; Wed, 20 Oct 2010 02:33:15 -0500
-Received: from dodg384257.farm.tech.int.digex.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3F47D194A1EF
-	for <xfs@oss.sgi.com>; Wed, 20 Oct 2010 00:34:25 -0700 (PDT)
-Received: from dodg384257.farm.tech.int.digex.com (waldorf.eil.com
-	[213.225.138.106]) by cuda.sgi.com with ESMTP id
-	Zch0hyNrRgeu9M4B for <xfs@oss.sgi.com>;
-	Wed, 20 Oct 2010 00:34:25 -0700 (PDT)
-From: <Sales@eil.com>
-Subject: A music recommendation from Mike Jones and eil.com
-Date: Wed, 20 Oct 2010 08:34:24 +0100
-Message-ID: <DODG384257GRWvUbLki00036fa9@dodg384257.farm.tech.int.digex.com>
+	o9K8BUwY043015 for <xfs@oss.sgi.com>; Wed, 20 Oct 2010 03:11:30 -0500
+Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 16AD21E7E207
+	for <xfs@oss.sgi.com>; Wed, 20 Oct 2010 01:12:41 -0700 (PDT)
+Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
+	cuda.sgi.com with ESMTP id aFVTcW4w4prGyzfD for
+	<xfs@oss.sgi.com>; Wed, 20 Oct 2010 01:12:41 -0700 (PDT)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: Re: Interesting possible XFS crash condition
+Date: Wed, 20 Oct 2010 10:12:30 +0200
+References: <4CBE887F.6020506@dolphinlogic.com>
+In-Reply-To: <4CBE887F.6020506@dolphinlogic.com>
+MIME-Version: 1.0
+Message-Id: <201010201012.39778@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,54 +23,74 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============2340587254003586183=="
+Content-Type: multipart/mixed; boundary="===============3762860691997427982=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: Shawn Usry <shawn@dolphinlogic.com>
 
---===============2340587254003586183==
-Content-Type: text/plain
+--===============3762860691997427982==
+Content-Type: multipart/signed;
+  boundary="nextPart1449362.HLG6LIrvcE";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 
-Hi  Friend,
+--nextPart1449362.HLG6LIrvcE
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 
-Chances are you will never find something this rare and incredible again.
+On Mittwoch, 20. Oktober 2010 Shawn Usry wrote:
+> Limited information shown in what I've been able to capture in the=20
+> kernel crash.  Nothing really specific or repeatable (different
+> message  each time) - some instances to the term "atomic" and "xfs"
+> - other times "irq" related
 
-==> http://shrunk.net/4d27aea7
+I'm not a dev, but I'd say a kernel crash dump would be very helpful.=20
+Can't you at least take pictures of the messages?
 
-This is a chance to copy exactly what a 25 year old unemployed "dude" did 
-to make $27,408 in under 30 days... but only for a limited time.
+I've never read about such XFS errors, maybe you should=20
+1) xfs_metadump
+2) xfs_mdrestore (into a file)
+3) mount that file
+and try to access files there. If this also crashes, it will really be=20
+XFS related.
 
-The information revealed is downright alarming.
+Also, can you try putting the hard disks onto another system, possibly=20
+with changing the RAID controller? It might be a hardware error.
 
-Here it is:
-http://shrunk.net/4d27aea7
+=2D-=20
+mit freundlichen Gr=FCssen,
+Michael Monnerie, Ing. BSc
 
-Thanks,
-Mike Jones
+it-management Internet Services
+http://proteger.at [gesprochen: Prot-e-schee]
+Tel: 0660 / 415 65 31
 
-P.S. There actually very few spots left... he is pulling the site down 
-once they are filled!
+****** Radiointerview zum Thema Spam ******
+http://www.it-podcast.at/archiv.html#podcast-100716
 
-http://shrunk.net/4d27aea7
+// Wir haben im Moment zwei H=E4user zu verkaufen:
+// http://zmi.at/langegg/
+// http://zmi.at/haus2009/
 
-Discover 6 decades of music history at eil.com the world's premier on-line 
-store for new, rare and collectable vinyl, compact discs and music 
-memorabilia.
+--nextPart1449362.HLG6LIrvcE
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
-This message was sent to you on behalf of Mike Jones using the 'tell a 
-friend' service at http://eil.com
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.15 (GNU/Linux)
 
-____________ discover more @ eil.com ____________
-all the latest arrivals - http://eil.com/click_here_4/shopping
-£9.99 album chart - http://eil.com/click_here_4/album_chart
-future releases - http://eil.com/click_here_4/future_releases
-latest music news - http://eil.com/click_here_4/music_news
-exclusive games - http://eil.com/click_here_4/games_zone
-music discussion board - http://eil.com/click_here_4/chat 
+iEYEABECAAYFAky+pHcACgkQzhSR9xwSCbTkjACgy6IKgUj021ICUI/grNC68xbk
+XfsAoPHOz080a7P/2/t9MSdzSD37qGlG
+=zPph
+-----END PGP SIGNATURE-----
+
+--nextPart1449362.HLG6LIrvcE--
 
 
---===============2340587254003586183==
+--===============3762860691997427982==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -79,4 +101,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============2340587254003586183==--
+--===============3762860691997427982==--
