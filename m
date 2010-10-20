@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o9KBnlWP060794 for <xfs@OSS.SGI.com>; Wed, 20 Oct 2010 06:49:47 -0500
+	o9KBnkGB060786 for <xfs@OSS.SGI.com>; Wed, 20 Oct 2010 06:49:46 -0500
 Received: from ty.sabi.co.UK (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E5F8A1070AC
-	for <xfs@OSS.SGI.com>; Wed, 20 Oct 2010 04:51:00 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5E9FA194F209
+	for <xfs@OSS.SGI.com>; Wed, 20 Oct 2010 04:50:58 -0700 (PDT)
 Received: from ty.sabi.co.UK (82-69-39-138.dsl.in-addr.zen.co.uk
-	[82.69.39.138]) by cuda.sgi.com with ESMTP id 5p7VaRExWgDEGx4E
-	for <xfs@OSS.SGI.com>; Wed, 20 Oct 2010 04:51:00 -0700 (PDT)
+	[82.69.39.138]) by cuda.sgi.com with ESMTP id kpHtBeztP4ALEl12
+	for <xfs@OSS.SGI.com>; Wed, 20 Oct 2010 04:50:58 -0700 (PDT)
 Received: from from [127.0.0.1] (helo=tree.ty.sabi.co.uk)
-	by ty.sabi.co.UK with esmtp(Exim 4.63 #1) id 1P8WtG-000773-Qb
-	for <xfs@OSS.SGI.com>; Wed, 20 Oct 2010 12:31:30 +0100
+	by ty.sabi.co.UK with esmtp(Exim 4.63 #1) id 1P8XBz-000789-7E
+	for <xfs@OSS.SGI.com>; Wed, 20 Oct 2010 12:50:51 +0100
 MIME-Version: 1.0
-Message-ID: <19646.54031.427786.109841@tree.ty.sabi.co.uk>
-Date: Wed, 20 Oct 2010 12:31:27 +0100
+Message-ID: <19646.55189.843933.481529@tree.ty.sabi.co.uk>
+Date: Wed, 20 Oct 2010 12:50:45 +0100
 Subject: Re: avoid mbox file fragmentation
-In-Reply-To: <4CBE55B3.5010405@hardwarefreak.com>
+In-Reply-To: <20101019234217.GD12506@dastard>
 References: <4CBE2403.8070108@hardwarefreak.com>
 	<20101019234217.GD12506@dastard>
-	<4CBE55B3.5010405@hardwarefreak.com>
 From: pg@xfs2.to.sabi.co.UK (Peter Grandi)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -34,46 +33,53 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Linux XFS <xfs@oss.sgi.com>
 
-[ ... ]
+[ ...  multiple slowly growing streams case ... ]
 
-> Odds are long as I believe mbox has a very small user base
-> today compared to maildir [ ... ]
+> What you want is _physical_ preallocation, not speculative
+> preallocation.
 
-Why? It is a good format and lots and lots of programs default
-to it. Maildir is the result of the usual "file systems are the
-optimal DBMS for databases with many small records" attitude.
+Not even that. What he wants really is applications based on a
+mail database layer that handles these issues, like real DBMSes do
+(or *should* do), with tablespaces and the like, including where
+necessary reservations and the like as you say:
 
-Actually it was designed to avoid locking issues on filesystem
-with poor locking implementations, for things like spool files
-with high update rates, not for archiving emails, for which 'mbox'
-is usually a lot better.
+> i.e. look up XFS_IOC_RESVSP or FIEMAP so your application does
+> _permanent_ preallocate past EOF. Alteratively, the filesystem
+> will avoid the truncation on close() is the file has the APPEND
+> attribute set and the application is writing via O_APPEND...
 
-> I just thought there may be a tweak in XFS to lessen the
-> fragmentation effects.
+Because these issues are common to essentially all multiple slow
+growing files. I have seen slowly downloading ISO images with
+hundreds of thousands of extents, never mind log files.
 
-The simplest tweak would be write a predictive custom allocator
-with advising (which is sort of what DaveC said), as nothing else
-would do.
+> The filesystem cannot do everything for you. Sometimes the
+> application has to help....
 
-> Maybe it's simply time for me to move to maildir format which
-> pretty much eliminates fragmentation altogether.
+That's only because file system authors are lazy and haven't
+implemented 'O_PONIES' yet. :-)
 
-HAHAHAHAHAHAHA! Good one. Genius level insight. Just par for the
-course for many posts to this (and others) mailing list.
 
-As a curiosity, how do you square this amazing insight with
-writing later that:
+However, I am a fan of having *default* physical preallocation,
+because as a rule one can trade off space for speed nowadays, and
+padding files with "future growth" tails is fairly cheap, and one
+could modify the filesystem code or 'fsck' to reclaim unused space
+in "future grown" tails.
 
-> The main reason I like mbox is the fast full body searching of
-> mail folders. Doing so with maildir crawls, relatively speaking,
-> especially for folders with 15k+ emails.
+Ideally applications would advise the filesystem with the expected
+allocation patterns (e.g. "immutable", or "loglike", or "rewritable")
+but the 'O_PONIES' discussions shows that it is unrealistic.
+Userspace sucks.
 
-This reminds me of the other recent post where some other genius
-thought that they were sorting the contents of files by changing
-the order of directory entries and wondered why the result was so
-slow.
+Even if I think that a lot of good could be done by autoadvising in
+the 'stdio' library, as 'stdio' flags often give a pretty huge hint.
+Uhm I just remembered that I wriote in my blog something fairly
+related, with a nice if sadly still true quote from a crucial paper
+on all this userspace (and sometimes kernel) suckage:
 
-[ ... ]
+  http://www.sabi.co.uk/blog/anno05-4th.html#051011
+  http://www.sabi.co.uk/blog/anno05-4th.html#051011b
+  http://www.sabi.co.uk/blog/anno05-4th.html#051012
+  http://www.sabi.co.uk/blog/anno05-4th.html#051012d
 
 _______________________________________________
 xfs mailing list
