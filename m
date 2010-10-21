@@ -1,35 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o9L4i9EB182716 for <xfs@oss.sgi.com>; Wed, 20 Oct 2010 23:44:09 -0500
-Received: from mail1.noloco.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 776E41959FDD
-	for <xfs@oss.sgi.com>; Wed, 20 Oct 2010 21:45:22 -0700 (PDT)
-Received: from mail1.noloco.com (mail.skunberg.com [38.119.107.104]) by
-	cuda.sgi.com with ESMTP id d39HVK2ayCYVpiJf for
-	<xfs@oss.sgi.com>; Wed, 20 Oct 2010 21:45:22 -0700 (PDT)
-Received: from ASSP.nospam (localhost.localdomain [127.0.0.1])
-	by mail1.noloco.com (Postfix) with ESMTP id 4B290268001
-	for <xfs@oss.sgi.com>; Wed, 20 Oct 2010 23:45:24 -0500 (CDT)
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by mail1.noloco.com (Postfix) with ESMTP id A0A1BE11C5
-	for <xfs@oss.sgi.com>; Wed, 20 Oct 2010 23:45:23 -0500 (CDT)
-Received: from mail1.noloco.com ([127.0.0.1])
-	by localhost (mail1.noloco.com [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id CDLgBzvlSJXP for <xfs@oss.sgi.com>;
-	Wed, 20 Oct 2010 23:45:18 -0500 (CDT)
-Received: from [127.0.0.1] (173-165-241-186-minnesota.hfc.comcastbusiness.net
-	[173.165.241.186])
-	by mail1.noloco.com (Postfix) with ESMTPSA id 3E8B7E118F
-	for <xfs@oss.sgi.com>; Wed, 20 Oct 2010 23:45:18 -0500 (CDT)
-Message-ID: <4CBFC54F.8030403@dolphinlogic.com>
-Date: Wed, 20 Oct 2010 23:45:03 -0500
-From: Shawn Usry <shawn@dolphinlogic.com>
+	o9L54HB2187816 for <xfs@oss.sgi.com>; Thu, 21 Oct 2010 00:04:17 -0500
+Date: Thu, 21 Oct 2010 01:05:31 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 4/4] xfstests: handle filesystems without FIEMAP support
+Message-ID: <20101021050531.GB1752@infradead.org>
+References: <20101015222820.GA3655@infradead.org>
+	<20101015222924.GD3781@infradead.org>
+	<1287596221.2284.97.camel@doink>
 MIME-Version: 1.0
-Subject: Re: Interesting possible XFS crash condition
-References: <4CBE887F.6020506@dolphinlogic.com>	<201010201012.39778@zmi.at>	<4CBF3C6C.2020803@dolphinlogic.com>
-	<20101020232758.51ac507a@galadriel.home>
-In-Reply-To: <20101020232758.51ac507a@galadriel.home>
+Content-Disposition: inline
+In-Reply-To: <1287596221.2284.97.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,32 +20,65 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="iso-8859-1"; Format="flowed"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Alex Elder <aelder@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
+On Wed, Oct 20, 2010 at 12:37:01PM -0500, Alex Elder wrote:
+> Looks good, but I think if the operation is not
+> supported you want to delete both "${fiemapfile}"
+> and "${fiemaplog}".
+> 
+> While you're at it, make use of the "${fiemapfile}"
+> variable in the fiemap-tester command...  (This
+> appears to be a bug in the original test.)
 
-On 10/20/2010 4:27 PM, Emmanuel Florac wrote:
-> Le Wed, 20 Oct 2010 14:01:00 -0500 vous =E9criviez:
->
->> 2.  I did upgrade the firmware on the controller to a newer version
->> AFTER the issue appeared, hoping this would resolve it.  Same results.
->>
->> At this point I'm leaning toward faulty hardware somewhere.
-> Another possibility is a memory problem, possibly making the machine
-> crash under heavy load; if most RAM is used as filesystem caching, this
-> maybe may lead to apparently xfs related errors. You could try running
-> memtest86+ on the system for a couple of hours.
->
-Great minds think alike :)  Actually I have indeed already run a =
+Updated version below:
 
-memtest86+ on the system which completed without a problem.   Loading up =
+---
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 4/4] xfstests: handle filesystems without FIEMAP support
 
-read/writes on other single disks on the system also doesn't produce a =
+Do a _notrun in 225 if we get EOPNOSUPP back from FIEMAP instead
+of failing the test.
 
-problem.  Just this one filesystem ;)     It's a stumper!
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Index: xfstests-dev/225
+===================================================================
+--- xfstests-dev.orig/225	2010-10-21 05:00:30.000000000 +0000
++++ xfstests-dev/225	2010-10-21 05:00:38.000000000 +0000
+@@ -49,13 +49,26 @@ _supported_os Linux
+ _setup_testdir
+ 
+ fiemapfile=$TEST_DIR/fiemap.$$
++fiemaplog=$TEST_DIR/fiemap.$$.log
+ 
+ [ -x $here/src/fiemap-tester ] || _notrun "fiemap-tester not built"
+ 
++_cleanup()
++{
++	rm -f $fiemapfile
++	rm -f $fiemaplog
++}
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
+ echo "fiemap run without preallocation"
+-$here/src/fiemap-tester -q -p 0 -r 200 $TEST_DIR/fiemapfile
++$here/src/fiemap-tester -q -p 0 -r 200 $fiemapfile 2>&1 | tee $fiemaplog
++
++if grep -q "Operation not supported" $fiemaplog; then
++      _notrun "FIEMAP not supported by this filesystem type: $FSTYP"
++fi
+ 
+ rm -f $fiemapfile
++rm -f $fiemaplog
+ rm -f $seq.full
+ 
+ status=0
 
 _______________________________________________
 xfs mailing list
