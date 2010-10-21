@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o9L0IatJ148673 for <xfs@OSS.SGI.com>; Wed, 20 Oct 2010 19:18:37 -0500
-Received: from ty.sabi.co.UK (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 019881955E59
-	for <xfs@OSS.SGI.com>; Wed, 20 Oct 2010 17:19:34 -0700 (PDT)
-Received: from ty.sabi.co.UK (82-69-39-138.dsl.in-addr.zen.co.uk
-	[82.69.39.138]) by cuda.sgi.com with ESMTP id 6ZWHGl10ZhsLAOwz
-	for <xfs@OSS.SGI.com>; Wed, 20 Oct 2010 17:19:34 -0700 (PDT)
-Received: from from [127.0.0.1] (helo=tree.ty.sabi.co.uk)
-	by ty.sabi.co.UK with esmtp(Exim 4.63 #1) id 1P8isT-0001Id-4L
-	for <xfs@OSS.SGI.com>; Thu, 21 Oct 2010 01:19:29 +0100
-Message-ID: <19647.34574.786118.56593@tree.ty.sabi.co.uk>
-Date: Thu, 21 Oct 2010 01:19:26 +0100
+	o9L1Nmpm156875 for <xfs@oss.sgi.com>; Wed, 20 Oct 2010 20:23:48 -0500
+Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5A1011956306
+	for <xfs@oss.sgi.com>; Wed, 20 Oct 2010 18:25:00 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	WRhGNonRUCcaRfdz for <xfs@oss.sgi.com>;
+	Wed, 20 Oct 2010 18:25:00 -0700 (PDT)
+Date: Thu, 21 Oct 2010 12:24:56 +1100
+From: Nick Piggin <npiggin@kernel.dk>
+Subject: Re: XFS bad inode magic/vsn daddr 64 #8 (magic=5858)
+Message-ID: <20101021012456.GA3459@amd>
+References: <20101020082409.GA5415@amd> <20101020151927.GA21057@infradead.org>
 MIME-Version: 1.0
-Subject: Re: Question/Problem: Mounting of XFS filesystem takes a lot of time
-In-Reply-To: <1287593846.2338.5.camel@nukebox>
-References: <1287593846.2338.5.camel@nukebox>
-From: pg_xf2@xf2.for.sabi.co.UK (Peter Grandi)
+Content-Disposition: inline
+In-Reply-To: <20101020151927.GA21057@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,35 +29,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Linux XFS <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Nick Piggin <npiggin@kernel.dk>, xfs@oss.sgi.com
 
+On Wed, Oct 20, 2010 at 11:19:27AM -0400, Christoph Hellwig wrote:
+> On Wed, Oct 20, 2010 at 07:24:09PM +1100, Nick Piggin wrote:
+> > Hi, I keep hitting this bug running xfstests, and managed to
+> > reproduce it several times on current vanilla upstream kernel
+> > too, below is one trace.
+> > 
+> > Nothing special about the xfstests run, except that it is run
+> > on brd device for both the test and the scratch mounts. No
+> > special mount options or mkfs flags. It seems pretty reproducable
+> > though, triggering every time I've run the tests like this.
+> > 
+> > I didn't narrow down the test that causes the bug because it
+> > keeps running other tests and then eventually hanging. Any hints
+> > to narrow it down?
+> 
+> Care to check if it goes away if you remove the special casing of
+> BLKFLSBUF in brd_ioctl?
 
->> Check your disks. I've seen harddisks dying in that way.
->> Suddenly access times are horrible. Test random access I/O and
->> compare times, not sequential - those might still look good.
-
-> [ ... ] When messing around with the BIOS settings (switching
-> SATA mode from RAID to IDE) I get quite an obvious message
-> stating that the S.M.A.R.T.  status of one of the disks is
-> BAD.  Removing that disk solved the problem. [ ... ]
-
-The suggestion about checking disk error status was good, and
-relates to an important but little known detail about SATA vs. SAS
-disk drives.
-
-Usually SATA drives are pogrammed to do a large number of firmware
-driven retries in case of data errors, hanging the IO subsystem,
-while SAS drives, which are expected to be used in RAID sets,
-don't, and report errors immediately. So called "Raid Edition"
-SATA drives often behave like SAS drives in this respect.
-
-It is often possible but usually quite awkward to change that
-setting for ordinary SATA drives.
-
-Disabling extended fw retries is usually a good idea with Linux
-anyhow, as it does sw retries anyhow, and very good for drives
-used in RAID sets with redundancy, to reduce latency in the case
-of errors.
+Ah yes that stupid special case is probably causing other problems
+even if not this crash. I'll try your suggestions when I start some more
+tests running later today.
 
 _______________________________________________
 xfs mailing list
