@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o9L5YJBJ192563 for <xfs@oss.sgi.com>; Thu, 21 Oct 2010 00:34:20 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EDD4F11268B
-	for <xfs@oss.sgi.com>; Wed, 20 Oct 2010 22:35:32 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
-	[150.101.137.98]) by cuda.sgi.com with ESMTP id
-	YyAMQyi8b1q5NRHA for <xfs@oss.sgi.com>;
-	Wed, 20 Oct 2010 22:35:32 -0700 (PDT)
-Date: Thu, 21 Oct 2010 16:35:29 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 4/4] xfstests: handle filesystems without FIEMAP support
-Message-ID: <20101021053529.GR32255@dastard>
-References: <20101015222820.GA3655@infradead.org>
-	<20101015222924.GD3781@infradead.org>
-	<1287596221.2284.97.camel@doink>
-	<20101021050531.GB1752@infradead.org>
+	o9L5Cksl189312 for <xfs@oss.sgi.com>; Thu, 21 Oct 2010 00:12:46 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 313B2F3C42C
+	for <xfs@oss.sgi.com>; Wed, 20 Oct 2010 22:29:04 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id fhYtYvSB52CtlHpd for
+	<xfs@oss.sgi.com>; Wed, 20 Oct 2010 22:29:04 -0700 (PDT)
+Date: Thu, 21 Oct 2010 01:13:57 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfsdocs-xml: fix various formatting errors
+Message-ID: <20101021051357.GA7604@infradead.org>
+References: <20101008094412.GA7118@infradead.org>
+	<20101021050949.GQ32255@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20101021050531.GB1752@infradead.org>
+In-Reply-To: <20101021050949.GQ32255@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,37 +29,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com, Alex Elder <aelder@sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Turbo Fredriksson <turbo@bayour.com>, xfs@oss.sgi.com
 
-On Thu, Oct 21, 2010 at 01:05:31AM -0400, Christoph Hellwig wrote:
-> On Wed, Oct 20, 2010 at 12:37:01PM -0500, Alex Elder wrote:
-> > Looks good, but I think if the operation is not
-> > supported you want to delete both "${fiemapfile}"
-> > and "${fiemaplog}".
+On Thu, Oct 21, 2010 at 04:09:49PM +1100, Dave Chinner wrote:
+> On Fri, Oct 08, 2010 at 05:44:12AM -0400, Christoph Hellwig wrote:
 > > 
-> > While you're at it, make use of the "${fiemapfile}"
-> > variable in the fiemap-tester command...  (This
-> > appears to be a bug in the original test.)
+> > Fix up a few formatting errors pointed out by Turbo Fredriksson, and while
+> > at it also remove various non-ASCII characters that sneaked in during the
+> > initial conversion
+> > 
+> > Reported-by: Turbo Fredriksson <turbo@bayour.com>
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > 
-> Updated version below:
+> looks good to me, but one minor change still needed....
 > 
-> ---
-> From: Christoph Hellwig <hch@lst.de>
-> Subject: [PATCH 4/4] xfstests: handle filesystems without FIEMAP support
-> 
-> Do a _notrun in 225 if we get EOPNOSUPP back from FIEMAP instead
-> of failing the test.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Dave Chinner <david@fromorbit.com>
 
-Looks good.
-
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks, pushed.
 
 _______________________________________________
 xfs mailing list
