@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o9L1x03L161166 for <xfs@oss.sgi.com>; Wed, 20 Oct 2010 20:59:00 -0500
+	o9L1sYti160835 for <xfs@oss.sgi.com>; Wed, 20 Oct 2010 20:54:35 -0500
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2AF5475EC24
-	for <xfs@oss.sgi.com>; Wed, 20 Oct 2010 19:15:15 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
-	[150.101.137.100]) by cuda.sgi.com with ESMTP id
-	UcO6Q1rKMhrTpE6G for <xfs@oss.sgi.com>;
-	Wed, 20 Oct 2010 19:15:15 -0700 (PDT)
-Date: Thu, 21 Oct 2010 13:00:09 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E521319567B1
+	for <xfs@oss.sgi.com>; Wed, 20 Oct 2010 18:55:46 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
+	[150.101.137.103]) by cuda.sgi.com with ESMTP id
+	Z7L44sOHQ59e00Qq for <xfs@oss.sgi.com>;
+	Wed, 20 Oct 2010 18:55:46 -0700 (PDT)
+Date: Thu, 21 Oct 2010 12:55:43 +1100
 From: Dave Chinner <david@fromorbit.com>
 Subject: Re: avoid mbox file fragmentation
-Message-ID: <20101021020009.GG12506@dastard>
+Message-ID: <20101021015543.GF12506@dastard>
 References: <4CBE2403.8070108@hardwarefreak.com>
 	<20101019234217.GD12506@dastard>
-	<19646.55189.843933.481529@tree.ty.sabi.co.uk>
+	<4CBE5BF7.1090001@hardwarefreak.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <19646.55189.843933.481529@tree.ty.sabi.co.uk>
+In-Reply-To: <4CBE5BF7.1090001@hardwarefreak.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,29 +31,40 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Peter Grandi <pg@xfs2.to.sabi.co.UK>
-Cc: Linux XFS <xfs@oss.sgi.com>
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: xfs@oss.sgi.com
 
-On Wed, Oct 20, 2010 at 12:50:45PM +0100, Peter Grandi wrote:
-> However, I am a fan of having *default* physical preallocation,
-> because as a rule one can trade off space for speed nowadays, and
-> padding files with "future growth" tails is fairly cheap, and one
-> could modify the filesystem code or 'fsck' to reclaim unused space
-> in "future grown" tails.
+On Tue, Oct 19, 2010 at 10:03:19PM -0500, Stan Hoeppner wrote:
+> Dave Chinner put forth on 10/19/2010 6:42 PM:
+> 
+> > I've explained how allocsize works, and that speculative allocation
+> > gets truncated away whenteh file is closed. Hence is the application
+> > is doing:
+> > 
+> > 	open()
+> > 	seek(EOF)
+> > 	write()
+> > 	close()
+> 
+> I don't know if it changes anything in the sequence above, but Dovecot
+> uses mmap i/o.  As I've said, I'm not a dev.  Just thought this
+> could/might be relevant.  Would using mmap be compatible with physical
+> preallocation?
 
-When writing lots of small files (e.g. unpacking a kernel tarball),
-leaving space at the file tail due to preallocation (that will never
-get used) means that the file data is now sparse on disk instead of
-packed into adjacent blocks.
+mmap() can't write beyond EOF or extend the file. hence it would
+have to be:
 
-The result? Instead of the elevate merging adjacent file data IOs
-into a large IO, they all get issued individually, and the seek
-count for IO goes way up. Not truncating away the specualtive
-prealocation beyond EOF will cause this, too, and that slows down
-such workloads by an order of magnitude....
+	open()
+	mmap()
+	ftrucate(new_size)
+	<write via mmap>
 
-So, Peter, you don't get the pony because we gave it to someone
-else. ;)
+In this method, there is no speculative preallocation because the
+there is never a delayed allocation that extends the file size.  it
+simply doesn't matter where the close() occurs. Hence if you use
+mmap() writes like this, the only way you can avoid fragmentation is
+to use physical preallocation beyond EOF before you start any
+writes....
 
 Cheers,
 
