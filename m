@@ -1,19 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o9LCAako251399 for <xfs@oss.sgi.com>; Thu, 21 Oct 2010 07:10:36 -0500
-Received: from mail-iw0-f181.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5AACC1DA698E
-	for <xfs@oss.sgi.com>; Thu, 21 Oct 2010 05:11:49 -0700 (PDT)
-Received: from mail-iw0-f181.google.com (mail-iw0-f181.google.com
-	[209.85.214.181]) by cuda.sgi.com with ESMTP id
-	Uo6oi7Fsv84dXeCu for <xfs@oss.sgi.com>;
-	Thu, 21 Oct 2010 05:11:49 -0700 (PDT)
-Received: by iwn39 with SMTP id 39so5974432iwn.26
-	for <xfs@oss.sgi.com>; Thu, 21 Oct 2010 05:11:49 -0700 (PDT)
+	o9LCkcDN256345 for <xfs@oss.sgi.com>; Thu, 21 Oct 2010 07:46:38 -0500
+Received: from mail-pw0-f53.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BD8D615F9995
+	for <xfs@oss.sgi.com>; Thu, 21 Oct 2010 06:02:56 -0700 (PDT)
+Received: from mail-pw0-f53.google.com (mail-pw0-f53.google.com
+	[209.85.160.53]) by cuda.sgi.com with ESMTP id WPD6Aj2as5nUQnYC
+	for <xfs@oss.sgi.com>; Thu, 21 Oct 2010 06:02:56 -0700 (PDT)
+Received: by pwj5 with SMTP id 5so84819pwj.26
+	for <xfs@oss.sgi.com>; Thu, 21 Oct 2010 05:47:51 -0700 (PDT)
 MIME-Version: 1.0
-Date: Thu, 21 Oct 2010 17:41:43 +0530
-Message-ID: <AANLkTi=wbBhb=s3z9vyw9gL9Qwy0goj+8UtueFyNq+y2@mail.gmail.com>
+In-Reply-To: <AANLkTi=wbBhb=s3z9vyw9gL9Qwy0goj+8UtueFyNq+y2@mail.gmail.com>
+References: <AANLkTi=wbBhb=s3z9vyw9gL9Qwy0goj+8UtueFyNq+y2@mail.gmail.com>
+Date: Thu, 21 Oct 2010 18:17:50 +0530
+Message-ID: <AANLkTinA-w8ZPrrSr-YaaMd84YziR1_vh9FXWjG+2PO5@mail.gmail.com>
 Subject: XFS: bad clientid on recovery on MIPS (VIPT cache)
 From: Ajeet Yadav <ajeet.yadav.77@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -24,18 +25,18 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============4142631779465495937=="
+Content-Type: multipart/mixed; boundary="===============4560554615075840318=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
---===============4142631779465495937==
-Content-Type: multipart/alternative; boundary=00221532be90e933a704931f6d91
+--===============4560554615075840318==
+Content-Type: multipart/alternative; boundary=000e0cd32d1e1208d904931fef03
 
---00221532be90e933a704931f6d91
+--000e0cd32d1e1208d904931fef03
 Content-Type: text/plain; charset=ISO-8859-1
 
-Dear member,
+ Dear member,
 If I remove USB flash storage from PC/ARM/MIPS target (i.e
 without umount) while copying file to XFS partition and connect it to MIPS
 target I always get
@@ -84,10 +85,11 @@ xlog_do_recovery_pass().
 WIth Regards
 Ajeet Yadav
 
---00221532be90e933a704931f6d91
+--000e0cd32d1e1208d904931fef03
 Content-Type: text/html; charset=ISO-8859-1
 Content-Transfer-Encoding: quoted-printable
 
+<div class=3D"gmail_quote">
 <div>Dear member,</div>
 <div>If I remove=A0USB flash storage from PC/ARM/MIPS target (i.e without=
 =A0umount)=A0while copying=A0file=A0to XFS partition=A0and connect it to MI=
@@ -136,13 +138,13 @@ r =3D xlog_bread(log, blk_no + hblks, bblks, dbp,<br>=A0=A0=A0=A0=A0=A0=A0=
 =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 goto bread_err2;=A0</div>
 <div>=A0</div>
 <div>WIth Regards</div>
-<div>Ajeet Yadav</div>
-<div>=A0=A0=A0 =A0=A0=A0=A0</div>
+<div>Ajeet Yadav</div><font color=3D"#888888">
+<div>=A0=A0=A0 =A0=A0=A0=A0</div></font></div><br>
 
---00221532be90e933a704931f6d91--
+--000e0cd32d1e1208d904931fef03--
 
 
---===============4142631779465495937==
+--===============4560554615075840318==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -153,4 +155,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============4142631779465495937==--
+--===============4560554615075840318==--
