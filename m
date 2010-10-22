@@ -1,20 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o9MABHVu164051 for <xfs@oss.sgi.com>; Fri, 22 Oct 2010 05:11:18 -0500
-Received: from smtprelay04.ispgateway.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 53A78F4D562
-	for <xfs@oss.sgi.com>; Fri, 22 Oct 2010 03:27:41 -0700 (PDT)
-Received: from smtprelay04.ispgateway.de (smtprelay04.ispgateway.de
-	[80.67.31.42]) by cuda.sgi.com with ESMTP id JMW8LDUKEqAoNJ65
-	for <xfs@oss.sgi.com>; Fri, 22 Oct 2010 03:27:41 -0700 (PDT)
-Message-ID: <4CC1638B.4070807@cape-horn-eng.com>
-Date: Fri, 22 Oct 2010 12:12:27 +0200
-From: Richard Ems <richard.ems@cape-horn-eng.com>
+	o9MBlfqU173921 for <xfs@oss.sgi.com>; Fri, 22 Oct 2010 06:47:41 -0500
+Date: Fri, 22 Oct 2010 07:48:55 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: xfstests: use a common _filter_scratch function
+Message-ID: <20101022114855.GA13867@infradead.org>
+References: <201010211900.o9LJ086G002762@stout.americas.sgi.com>
 MIME-Version: 1.0
-Subject: Re: cannot defrag volume, fragmentation factor 21.73%
-References: <4CBC3910.70806@cape-horn-eng.com> <20101018231009.GL29677@dastard>
-In-Reply-To: <20101018231009.GL29677@dastard>
+Content-Disposition: inline
+In-Reply-To: <201010211900.o9LJ086G002762@stout.americas.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,46 +18,28 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="iso-8859-1"; Format="flowed"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Alex Elder <aelder@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On 10/19/2010 01:10 AM, Dave Chinner wrote:
-> Understand your numbers. What frag reports is how many extents there
-> are vs a perfect layout. It does not tell you how badly fragmented
-> your filesystem is. Extent-based filesystems can have
-> "fragmentation" like you see reported above, but not suffer at all
-> because the extents are large enough not to affect IO throughput.
+On Thu, Oct 21, 2010 at 02:00:08PM -0500, Alex Elder wrote:
+> There are a number of tests that use a shell function called
+> "filter_scratch" or "_filter_scratch" in order to have the actual
+> scratch device or mount point show up in test output with a symbolic
+> name.  There are two sets, each following a slightly different
+> convention.  Put a common _filter_scratch function definition in
+> "common.filter" and have all test scripts use that instead.
+> Choosing one of the two conventions meant that a few test output
+> files had to be changed.
+> 
+> In addition, add a call to _filter_scratch to test 185, and update
+> its output accordingly.
 
-Hi Dave,
-
-I think I almost got that now.
-But, at which numbers should I look at before starting a defrag then?
-
-Up to now, I ran always "echo frag | xfs_db -r /dev/..." to get a =
-
-"number" that could tell me if starting a xfs_fsr was necessary.
-
-At which other numbers should I look at to see if running a xfs_fsr =
-
-defrag is necessary or not?
-
-Many thanks,
-Richard
-
-
--- =
-
-Richard Ems       mail: Richard.Ems@Cape-Horn-Eng.com
-
-Cape Horn Engineering S.L.
-C/ Dr. J.J. D=F3mine 1, 5=BA piso
-46011 Valencia
-Tel : +34 96 3242923 / Fax 924
-http://www.cape-horn-eng.com
+Looks good.  It might be worth to add a TEST_DIR filter for completeness
+as well.
 
 _______________________________________________
 xfs mailing list
