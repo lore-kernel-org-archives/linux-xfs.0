@@ -1,20 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o9MClS7E178097
-	for <linux-xfs@oss.sgi.com>; Fri, 22 Oct 2010 07:47:29 -0500
-Received: from mail.researchandmarkets.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with SMTP id 3BBC61BBD3AD
-	for <linux-xfs@oss.sgi.com>; Fri, 22 Oct 2010 05:48:42 -0700 (PDT)
-Received: from mail.researchandmarkets.net ([193.189.66.189]) by cuda.sgi.com
-	with SMTP id KGbuIpDhyVHPxG5o for <linux-xfs@oss.sgi.com>;
-	Fri, 22 Oct 2010 05:48:42 -0700 (PDT)
-From: "Laura Wood" <laura.wood@researchandmarkets.org>
-Subject: Cloud computing fundamentals
-Date: Fri, 22 Oct 2010 12:47:48 GMT
+	o9MDSisQ180172 for <xfs@oss.sgi.com>; Fri, 22 Oct 2010 08:28:44 -0500
+From: Alex Elder <aelder@sgi.com>
+Message-Id: <201010221329.o9MDTs0Y001227@stout.americas.sgi.com>
+Date: Fri, 22 Oct 2010 08:29:54 -0500
+Subject: [GIT PULL] XFS update for 2.6.37-rc1
 MIME-Version: 1.0
-Message-Id: <20101022124842.3BBC61BBD3AD@cuda.sgi.com>
-Reply-To: Laura Wood <laura.wood@researchandmarkets.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,149 +19,131 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-I enclose details of our cloud computing fundamentals report.   
+The following changes since commit d4429f608abde89e8bc1e24b43cd503feb95c496:
 
-IT is a fashion industry, and cloud computing is the new black. Currently at the height of its hype, it will suffer a backlash before becoming fully mainstream and established, by which time a new phrase will have captured the imagination of IT pundits.   
+  Merge branch 'next' of git://git.kernel.org/pub/scm/linux/kernel/git/benh/powerpc (2010-10-21 21:19:54 -0700)
 
-Some fashions are longer lasting than others. Cloud computing as a term may have a use-by date, but the technical, operational, and commercial innovations behind it are here to stay. Cloud computing is a real innovation in the logic of how IT is sourced and managed and how services are delivered, and its use will grow steadily over the next 12 months. It is no longer a question of whether or not enterprises will use cloud computing, they already are. However, it is still early days for both suppliers and users, many of which have yet to figure out how to take advantage of the various elements of cloud computing. There are plenty of early-adopter benefits to be gained, despite the variety of challenges that cloud computing puts in their way. Taking advantage of the new capabilities of cloud computing requires a change of mindset and the learning of new skills, both of which are better done on the basis of practical experience than academic discussion. Getting hands-on with th!
- e cloud is the best way to understand its strengths and weaknesses and its impact.   
+are available in the git repository at:
 
+  git://oss.sgi.com/xfs/xfs for-linus
 
+Alex Elder (1):
+      Merge branch 'v2.6.36'
 
-For more information please click on:   
-http://www.researchandmarkets.com/product/429547/cloud_computing_fundamentals   
+Arkadiusz Mi?kiewicz (1):
+      xfs: Extend project quotas to support 32bit project ids
 
-Title Index:   
+Christoph Hellwig (14):
+      xfs: simplify xfs_qm_dqusage_adjust
+      xfs: stop using xfs_qm_dqtobp in xfs_qm_dqflush
+      xfs: remove the ->kill_root btree operation
+      xfs: remove XFS_MOUNT_NO_PERCPU_SB
+      xfs: do not use xfs_mod_incore_sb for per-cpu counters
+      xfs: do not use xfs_mod_incore_sb_batch for per-cpu counters
+      xfs: fix bogus m_maxagi check in xfs_iget
+      xfs: remove unused t_callback field in struct xfs_trans
+      xfs: fix the xfs_trans_committed
+      xfs: remove xfs_refcache.h
+      xfs: remove xfs_version.h
+      xfs: remove xfs_globals.h
+      xfs: remove xfs_cred.h
+      xfs: remove xfs_buf wrappers
 
-SUMMARY   
-Definition   
-Impact   
-Ovum view   
-Key messages   
+Dave Chinner (19):
+      xfs: use range primitives for xfs page cache operations
+      xfs: Introduce XFS_IOC_ZERO_RANGE
+      xfs: reduce the number of CIL lock round trips during commit
+      xfs: remove debug assert for per-ag reference counting
+      xfs: lockless per-ag lookups
+      xfs: don't use vfs writeback for pure metadata modifications
+      xfs: rename xfs_buf_get_nodaddr to be more appropriate
+      xfs: introduced uncached buffer read primitve
+      xfs: store xfs_mount in the buftarg instead of in the xfs_buf
+      xfs: kill XBF_FS_MANAGED buffers
+      xfs: use unhashed buffers for size checks
+      xfs: remove buftarg hash for external devices
+      xfs: split inode AG walking into separate code for reclaim
+      xfs: split out inode walk inode grabbing
+      xfs: implement batched inode lookups for AG walking
+      xfs: batch inode reclaim lookup
+      xfs: serialise inode reclaim within an AG
+      xfs: convert buffer cache hash to rbtree
+      xfs: pack xfs_buf structure more tightly
 
-BUSINESS IMPACT   
-Cloud computing   
-Overview   
-Benefits   
-Private clouds   
-Overview   
-Benefits   
-Public clouds   
-Overview   
-Benefits   
-IaaS public clouds   
-Overview   
-Benefits   
-PaaS public clouds   
-Overview   
-Benefits   
-SaaS public clouds   
-Overview   
-Benefits   
-Hybrid clouds   
-Overview   
-Benefits   
+Poyo VL (1):
+      xfs: eliminate some newly-reported gcc warnings
 
-SELECTION CRITERIA   
-Cloud computing   
-Private clouds   
-Public clouds   
-IaaS public clouds   
-PaaS public clouds   
-SaaS public clouds   
-Hybrid clouds   
+Thomas Gleixner (1):
+      xfs: semaphore cleanup
 
-SOLUTION MATURITY   
-Cloud computing   
-Private clouds   
-Public clouds   
-IaaS public clouds   
-PaaS public clouds   
-SaaS public clouds   
-Hybrid clouds   
-
-DEPLOYMENT AND MANAGEMENT CONSIDERATIONS   
-Cloud computing   
-Private clouds   
-Public clouds   
-IaaS public clouds   
-PaaS public clouds   
-SaaS public clouds   
-Hybrid clouds   
-
-RECOMMENDATIONS   
-Recommendations for enterprises   
-Be specific   
-Consider whether you are ready for cloud computing, not just whether cloud computing is ready for you   
-Adopt a holistic approach to public, private, and hybrid clouds   
-Take your time, but start now   
-Head up, take stock, and create your own recipes   
-Look at cloud computing with a fresh eye   
-Cloud computing will make IT more complex   
-Public clouds can reduce costs but need to be scrutinized   
-Practicality is more important than lower costs   
-Always have a "plan B"   
-Recommendations for vendors   
-Weave cloud computing into your strategy   
-Adopt lock-in risk-mitigation strategies   
-Focus on why customers should rather than can   
-Improve and diversify SLAs   
-Be transparent and proactive   
-Help enterprises make the right technology and design choices   
-Help users' governance efforts   
-
-APPENDIX   
-Methodology   
-Ask the analyst   
-Further reading   
-
-
-Pricing:   
-
-Electronic  (Single User) : EUR 1789   
-Hard Copy  : EUR 1861   
-Electronic  (Enterprisewide) : EUR 4473   
-
-
-Ordering - Three easy ways to place your order:   
-
-1] Order online at http://www.researchandmarkets.com/product/429547/cloud_computing_fundamentals   
-
-2] Order by fax: Print an Order form from http://www.researchandmarkets.com/product/429547/cloud_computing_fundamentals and Fax to +353 1 4100 980   
-
-3] Order by mail: Print an Order form from http://www.researchandmarkets.com/product/429547/cloud_computing_fundamentals and post to Research and Markets Ltd. Guinness Center, Taylors Lane, Dublin 8. Ireland.   
-
-
-Related Titles also available from Research and Markets:   
-
-Global Cloud Computing Market (2010 - 2015) -   
-http://www.researchandmarkets.com/product/429547/global_cloud_computing_market_2010_2015   
-
-Global Cloud Computing Service Market Outlook 2014 -   
-http://www.researchandmarkets.com/product/429547/global_cloud_computing_service_market_outlook   
-
-
-
-Thank you for your consideration.   
-
-Best Regards,   
-
-Laura Wood   
-Senior Manager   
-Research and Markets Ltd   
-laura.wood@researchandmarkets.com   
-
-Subscribe: Click on http://www.researchandmarkets.com/register.asp You can subscribe free for regular details on new research in your sector.   
-
-Please note you are currently subscribed as linux-xfs@oss.sgi.com   
-
-If you no longer wish to receive our market research updates, please reply to this message with Suppression Request as the subject line, or use the link below   
-
-http://www.researchandmarkets.com/u.asp?f=u&e=linux-xfs@oss.sgi.com   
-
-
+ fs/xfs/linux-2.6/xfs_buf.c     |  219 ++++++++++++----------
+ fs/xfs/linux-2.6/xfs_buf.h     |   70 +++----
+ fs/xfs/linux-2.6/xfs_cred.h    |   28 ---
+ fs/xfs/linux-2.6/xfs_fs_subr.c |   31 ++--
+ fs/xfs/linux-2.6/xfs_globals.c |    1 -
+ fs/xfs/linux-2.6/xfs_globals.h |   23 ---
+ fs/xfs/linux-2.6/xfs_ioctl.c   |   19 +-
+ fs/xfs/linux-2.6/xfs_ioctl32.c |    5 +-
+ fs/xfs/linux-2.6/xfs_ioctl32.h |    6 +-
+ fs/xfs/linux-2.6/xfs_iops.c    |   39 +----
+ fs/xfs/linux-2.6/xfs_linux.h   |    5 +-
+ fs/xfs/linux-2.6/xfs_super.c   |   24 +--
+ fs/xfs/linux-2.6/xfs_super.h   |    1 +
+ fs/xfs/linux-2.6/xfs_sync.c    |  413 +++++++++++++++++++++++-----------------
+ fs/xfs/linux-2.6/xfs_sync.h    |    4 +-
+ fs/xfs/linux-2.6/xfs_trace.h   |    4 +-
+ fs/xfs/linux-2.6/xfs_version.h |   29 ---
+ fs/xfs/quota/xfs_dquot.c       |  164 ++++++++---------
+ fs/xfs/quota/xfs_qm.c          |  221 +++++++---------------
+ fs/xfs/quota/xfs_qm_bhv.c      |    2 +-
+ fs/xfs/quota/xfs_qm_syscalls.c |   16 +--
+ fs/xfs/xfs_ag.h                |    9 +
+ fs/xfs/xfs_alloc.c             |    4 +-
+ fs/xfs/xfs_alloc_btree.c       |   33 ----
+ fs/xfs/xfs_attr.c              |   37 ++---
+ fs/xfs/xfs_bmap.c              |   44 +++--
+ fs/xfs/xfs_bmap.h              |    9 +-
+ fs/xfs/xfs_btree.c             |   56 +++++-
+ fs/xfs/xfs_btree.h             |   14 +--
+ fs/xfs/xfs_buf_item.c          |    7 +-
+ fs/xfs/xfs_da_btree.c          |    2 +-
+ fs/xfs/xfs_dinode.h            |    5 +-
+ fs/xfs/xfs_dir2_leaf.c         |    2 +-
+ fs/xfs/xfs_fs.h                |    7 +-
+ fs/xfs/xfs_fsops.c             |   14 +-
+ fs/xfs/xfs_ialloc.c            |    2 +-
+ fs/xfs/xfs_ialloc_btree.c      |   33 ----
+ fs/xfs/xfs_iget.c              |    4 +-
+ fs/xfs/xfs_inode.c             |   17 +-
+ fs/xfs/xfs_inode.h             |   30 +++-
+ fs/xfs/xfs_inode_item.c        |    9 -
+ fs/xfs/xfs_itable.c            |    3 +-
+ fs/xfs/xfs_log.c               |    5 +-
+ fs/xfs/xfs_log_cil.c           |  232 ++++++++++++----------
+ fs/xfs/xfs_log_recover.c       |   25 ++--
+ fs/xfs/xfs_mount.c             |  308 ++++++++++++------------------
+ fs/xfs/xfs_mount.h             |    9 +-
+ fs/xfs/xfs_refcache.h          |   52 -----
+ fs/xfs/xfs_rename.c            |   14 +-
+ fs/xfs/xfs_rtalloc.c           |   29 ++--
+ fs/xfs/xfs_sb.h                |   10 +-
+ fs/xfs/xfs_trans.c             |   91 ++++++----
+ fs/xfs/xfs_trans.h             |    3 +-
+ fs/xfs/xfs_trans_buf.c         |    2 +-
+ fs/xfs/xfs_trans_inode.c       |   30 +++
+ fs/xfs/xfs_types.h             |    2 -
+ fs/xfs/xfs_utils.c             |    9 +-
+ fs/xfs/xfs_utils.h             |    3 +-
+ fs/xfs/xfs_vnodeops.c          |   65 ++++---
+ fs/xfs/xfs_vnodeops.h          |    6 +-
+ 60 files changed, 1185 insertions(+), 1375 deletions(-)
+ delete mode 100644 fs/xfs/linux-2.6/xfs_cred.h
+ delete mode 100644 fs/xfs/linux-2.6/xfs_globals.h
+ delete mode 100644 fs/xfs/linux-2.6/xfs_version.h
+ delete mode 100644 fs/xfs/xfs_refcache.h
 
 _______________________________________________
 xfs mailing list
