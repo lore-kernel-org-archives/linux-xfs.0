@@ -1,12 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o9ME8CTq181855 for <xfs@oss.sgi.com>; Fri, 22 Oct 2010 09:08:13 -0500
-From: Alex Elder <aelder@sgi.com>
-Message-Id: <201010221409.o9ME9OTQ003885@stout.americas.sgi.com>
-Date: Fri, 22 Oct 2010 09:09:24 -0500
-Subject: [PATCH] xfstests: use a common _filter_test_dir function
+	o9ML1Qre218173 for <xfs@oss.sgi.com>; Fri, 22 Oct 2010 16:01:26 -0500
+Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8DE6F11DA53
+	for <xfs@oss.sgi.com>; Fri, 22 Oct 2010 14:02:41 -0700 (PDT)
+Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
+	cuda.sgi.com with ESMTP id zpQoUT8eT2d1JZsZ for
+	<xfs@oss.sgi.com>; Fri, 22 Oct 2010 14:02:41 -0700 (PDT)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: Re: cannot defrag volume, fragmentation factor 21.73%
+Date: Fri, 22 Oct 2010 23:02:38 +0200
+References: <4CBC3910.70806@cape-horn-eng.com> <20101018231009.GL29677@dastard>
+	<4CC1638B.4070807@cape-horn-eng.com>
+In-Reply-To: <4CC1638B.4070807@cape-horn-eng.com>
 MIME-Version: 1.0
+Message-Id: <201010222302.39061@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -15,107 +24,82 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============3065479620385130285=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: Richard Ems <richard.ems@cape-horn-eng.com>
 
-Christoph Hellwig suggested that a function similar to the common
-"_filter_scratch" function ought to be created to handle filtering
-of the TEST_DIR and TEST_DEV variables.  This patch implements that.
+--===============3065479620385130285==
+Content-Type: multipart/signed;
+  boundary="nextPart3969359.xkFzNuiKzc";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 
-The name "_filter_test" seems like it might suggest it does
-something different, so I'm calling this one "_filter_test_dir".
-This unfortunately makes the "test" and "scratch" functions have
-different naming conventions, but I guess we should be accustomed
-to that by now (consider "TEST_DIR" and "SCRATCH_MNT").
+--nextPart3969359.xkFzNuiKzc
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Alex Elder <aelder@sgi.com>
+On Freitag, 22. Oktober 2010 Richard Ems wrote:
+> But, at which numbers should I look at before starting a defrag then?
 
----
- 084           |    3 +--
- 084.out       |    4 ++--
- 088           |    3 +--
- 203           |    2 +-
- common.filter |    5 +++++
- 5 files changed, 10 insertions(+), 7 deletions(-)
+Watch the performance of your application. Record answer times with=20
+munin or something, and if you ever "feel" it's too slow, look at the=20
+recorded numbers again to see if your feelings fit the measurements.=20
+Don't be paranoid about fragmentation. The more people access a server=20
+at a time, the less important fragmentation is.=20
 
-Index: b/084
-===================================================================
---- a/084
-+++ b/084
-@@ -39,8 +39,7 @@ trap "rm -f $tmp.*; exit \$status" 0 1 2
- 
- _filter_resv()
- {
--	sed -e "s,$TEST_DIR/resv,[TESTFILE],g" \
--	    -e 's/[0-9][0-9]* bytes/NUM bytes/g'
-+	_filter_test_dir | sed -e 's/[0-9][0-9]* bytes/NUM bytes/g'
- }
- 
- pgsize=`$here/src/feature -s`
-Index: b/084.out
-===================================================================
---- a/084.out
-+++ b/084.out
-@@ -1,9 +1,9 @@
- QA output created by 084
- 
- *** First case - I/O blocksize same as pagesize
--reserved NUM bytes for [TESTFILE] using XFS_IOC_RESVSP64
-+reserved NUM bytes for TEST_DIR/resv using XFS_IOC_RESVSP64
- done
- 
- *** Second case - 512 byte I/O blocksize
--reserved NUM bytes for [TESTFILE] using XFS_IOC_RESVSP64
-+reserved NUM bytes for TEST_DIR/resv using XFS_IOC_RESVSP64
- done
-Index: b/088
-===================================================================
---- a/088
-+++ b/088
-@@ -39,8 +39,7 @@ trap "rm -f $tmp.*; exit \$status" 0 1 2
- 
- _filter()
- {
--    sed -e "s#$TEST_DIR#TEST_DIR#g" \
--        -e '/----------/d'
-+    _filter_test_dir | sed -e '/----------/d'
- }
- 
- # link correct .out file
-Index: b/203
-===================================================================
---- a/203
-+++ b/203
-@@ -48,7 +48,7 @@ _write_holes()
- #       1: [8..2047]: hole
- _filter_bmap()
- {
--	sed "s#$TEST_DIR#TEST_DIR#g" | \
-+	_filter_test_dir |
- 	awk '$3 ~ /hole/ { print $1, $2, $3; next }
-              {print $1, $2; next}'
- }
-Index: b/common.filter
-===================================================================
---- a/common.filter
-+++ b/common.filter
-@@ -214,6 +214,11 @@ _filter_xfs_io_unique()
-     common_line_filter | _filter_xfs_io
- }
- 
-+_filter_test_dir()
-+{
-+	sed -e "s,$TEST_DEV,TEST_DEV,g" -e "s,$TEST_DIR,TEST_DIR,g"
-+}
-+
- _filter_scratch()
- {
- 	sed -e "s,$SCRATCH_DEV,SCRATCH_DEV,g" -e "s,$SCRATCH_MNT,SCRATCH_MNT,g"
+If you got 100 people streaming 100 perfect defragmented files, you=20
+still got an access pattern that needs to move the disk head to 100=20
+different positions all the time. If your single disk can't do that many=20
+I/O's, build up a RAID, or get faster disks (10kprm, 15krpm, SSD).
+
+Defrag is more for single threaded I/O workloads, where one stream at a=20
+time has to be read/written. Therefore it helps on a Windows PC more=20
+than on a server. Only use defrag if you really have lots of chunks per=20
+file.
+
+=2D-=20
+mit freundlichen Gr=FCssen,
+Michael Monnerie, Ing. BSc
+
+it-management Internet Services
+http://proteger.at [gesprochen: Prot-e-schee]
+Tel: 0660 / 415 65 31
+
+****** Radiointerview zum Thema Spam ******
+http://www.it-podcast.at/archiv.html#podcast-100716
+
+// Wir haben im Moment zwei H=E4user zu verkaufen:
+// http://zmi.at/langegg/
+// http://zmi.at/haus2009/
+
+--nextPart3969359.xkFzNuiKzc
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.15 (GNU/Linux)
+
+iEYEABECAAYFAkzB++8ACgkQzhSR9xwSCbTMCgCgnTmI5N3GT7zTldXJz6SFhR86
+1rIAoO+1ExBmSRy8dIRyKpPa9S9fd9NQ
+=VzJT
+-----END PGP SIGNATURE-----
+
+--nextPart3969359.xkFzNuiKzc--
+
+
+--===============3065479620385130285==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============3065479620385130285==--
