@@ -1,31 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o9MKsW9U217480 for <xfs@oss.sgi.com>; Fri, 22 Oct 2010 15:54:32 -0500
-Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CE5E511D93D
-	for <xfs@oss.sgi.com>; Fri, 22 Oct 2010 13:55:43 -0700 (PDT)
-Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
-	cuda.sgi.com with ESMTP id 5OUhdKp3cdd0iUMj for
-	<xfs@oss.sgi.com>; Fri, 22 Oct 2010 13:55:43 -0700 (PDT)
-Received: from mailsrv.i.zmi.at (h081217106033.dyn.cm.kabsi.at [81.217.106.33])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
-	by mailsrv14.zmi.at (Postfix) with ESMTPSA id 1510560B
-	for <xfs@oss.sgi.com>; Fri, 22 Oct 2010 22:55:42 +0200 (CEST)
-Received: from saturn.localnet (saturn.i.zmi.at [10.72.27.2])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client did not present a certificate)
-	by mailsrv.i.zmi.at (Postfix) with ESMTPSA id 5E8AD401C3E
-	for <xfs@oss.sgi.com>; Fri, 22 Oct 2010 22:55:41 +0200 (CEST)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: Re: Implementing checksums in XFS
-Date: Fri, 22 Oct 2010 22:55:40 +0200
-References: <4CC14C1B.5060409@ics.forth.gr>
-	<20101022124928.GA16437@infradead.org>
-In-Reply-To: <20101022124928.GA16437@infradead.org>
+	o9NIC2mJ054213 for <xfs@oss.sgi.com>; Sat, 23 Oct 2010 13:12:02 -0500
+Received: from ty.sabi.co.UK (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EA18412030BA
+	for <xfs@oss.sgi.com>; Sat, 23 Oct 2010 11:28:33 -0700 (PDT)
+Received: from ty.sabi.co.UK (82-69-39-138.dsl.in-addr.zen.co.uk
+	[82.69.39.138]) by cuda.sgi.com with ESMTP id J88MpTousFifgnVn
+	for <xfs@oss.sgi.com>; Sat, 23 Oct 2010 11:28:33 -0700 (PDT)
+Received: from from [127.0.0.1] (helo=tree.ty.sabi.co.uk)
+	by ty.sabi.co.UK with esmtp(Exim 4.63 #1) id 1P9iae-0000Cz-5n
+	for <xfs@oss.sgi.com>; Sat, 23 Oct 2010 19:13:12 +0100
 MIME-Version: 1.0
-Message-Id: <201010222255.40861@zmi.at>
+Message-ID: <19651.9652.631329.903552@tree.ty.sabi.co.uk>
+Date: Sat, 23 Oct 2010 19:13:08 +0100
+Subject: Re: Best filesystems ?
+In-Reply-To: <Pine.LNX.4.64.1010211258070.24449@andrew.triumf.ca>
+References: <4CBE2403.8070108@hardwarefreak.com>
+	<20101019234217.GD12506@dastard>
+	<19646.55189.843933.481529@tree.ty.sabi.co.uk>
+	<20101021020009.GG12506@dastard>
+	<19648.27859.799400.168394@tree.ty.sabi.co.uk>
+	<Pine.LNX.4.64.1010211258070.24449@andrew.triumf.ca>
+From: pg_xf2@xf2.for.sabi.co.UK (Peter Grandi)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,72 +31,111 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============8346304268078069745=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Linux XFS <xfs@oss.sgi.com>
 
---===============8346304268078069745==
-Content-Type: multipart/signed;
-  boundary="nextPart3710564.P20eEUWALY";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+[ ... ]
 
---nextPart3710564.P20eEUWALY
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+>> But the ig deal here is that's not something that a filesystem
+>> targeted at high bandwidth multistreaming loads should be
+>> optimized for, at least by default.
 
-On Freitag, 22. Oktober 2010 Christoph Hellwig wrote:
-> Yes, it's work in progress that has been stalled a little.  See:
-> http://oss.sgi.com/archives/xfs/2009-02/msg00200.html for some more
-> details.
+> Has someone documented (recently, and correctly) what
+> filesystems (XFS, ext3, ext4, reiser, JFS, VFAT etc.) are best
+> for what tasks (mailboxes, database, general computing, video
+> streaming etc.) ?
 
-Oh that would be very welcome. A "secure" filesystem sounds really good,=20
-especially if it's fast as XFS is :-)
-I'd implement it everywhere immediately as soon as it's available. Will=20
-existing XFS's be upgradeable in some way other that backup/restore?
+That's impossible. In part because it would take a lot of work,
+but mostly because file system performance is so anisotropic with
+storage and application profiles, and there are too many variables.
+File systems also have somewhat different features. I have written
+some impressions on what matters here:
 
-=2D-=20
-mit freundlichen Gr=FCssen,
-Michael Monnerie, Ing. BSc
+  http://www.sabi.co.uk/blog/0804apr.html#080415
 
-it-management Internet Services
-http://proteger.at [gesprochen: Prot-e-schee]
-Tel: 0660 / 415 65 31
+The basic performance metric for a file systems used to be which
+percent of the native performance of a hard disk it could deliver
+to a single process, but currently most file systems are at 90%
+or higher for most of that.
 
-****** Radiointerview zum Thema Spam ******
-http://www.it-podcast.at/archiv.html#podcast-100716
+My current impressions are:
 
-// Wir haben im Moment zwei H=E4user zu verkaufen:
-// http://zmi.at/langegg/
-// http://zmi.at/haus2009/
+* Reiser3 is nice with the right parameters for the few cases
+  where there is a significant number of small files on a small
+  storage system accessed by a single process.
 
---nextPart3710564.P20eEUWALY
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+* 'ext2' is nice for small freshly loaded filesystems with not
+  too big files, and for MS-Windows compatibility.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.15 (GNU/Linux)
+* 'ext3' is good for widespread compatibility and for somewhat
+  "average", small or middling filesystems up to 2TB.
 
-iEYEABECAAYFAkzB+kwACgkQzhSR9xwSCbRs6QCeOCygdslexebnswqXRQD+lv+P
-1agAn0La5okQpjt92VRwnEp1yDY01EqZ
-=iQuP
------END PGP SIGNATURE-----
+* 'ext4' is good for inplace upgradeability from 'ext3', and some
+  more scalability and features, but I can't see any real reason
+  why it was developed but offering an in-place upgrade path to RH
+  customers, given that JFS and XFS were there are fairly mature
+  already. I think it has a bit more scalability and performance
+  than 'ext3' (especially better internal parallelism).
 
---nextPart3710564.P20eEUWALY--
+* JFS is good for almost everything, including largish filesystems
+  on somewhat largish systems with lots of processes accessing
+  lots of files, and works equally well on 32b and 64b, is very
+  stable, and has a couple of nice features. Its major downside is
+  less care than XFS for barriers. I think that it can support
+  well filesystems up to 10-15TB, and perhaps beyond. It should
+  have been made the default for Linux for at least a decade
+  instead of 'ext3'.
 
+* XFS is like JFS, and with somewhat higher scalability both as to
+  sizes and as to higher internal parallelism in the of multiple
+  processes accessing the same file, and has a couple of nice
+  features (mostly barrier support, but also small blocks and large
+  inodes). Its major limitation are internal complexity and should
+  only be used on 64b systems. It can support single filesystems
+  larger than 10-15TB, but that's stretching things.
 
---===============8346304268078069745==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+* Lustre works well as a network parallel large file streaming
+  filesystem. It is however somewhat unstable and great care has to
+  be taken in integration testing because of that.
+
+I currently think that JFS, XFS and Lustre cover more or less all
+common workloads. I occasionally use 'ext2' or NTFS for data
+exchange between Linux and MS-Windows.
+
+There are some other interesting ones:
+
+* UDF could be a very decent small-average sized file systems,
+  especially for interchange, but also general purpose use.
+  Implementations are a bit lacking.
+
+* OCFS2 used in non cluster mode works well, and has pretty decent
+  performance, and can be used in shared-storage mode too, but it
+  seems still a bit too unstable.
+
+* NILFS2 seems just the right thing for SSD based file systems,
+  and with a collector could be a general purpose file systems.
+
+* GlusterFS seems quite interesting for the distributed case.
+
+Reiser4 also looked fairly good, but it has been sort of succeeded
+by BTRFS (whose author used to work on Reiser4), but BTRFS seems
+like a non entirely justified successor to 'ext4', but it has also
+a few nice extra features builtin that I am not sure really need to
+be built in ( have the same feeling for ZFS).
+
+Then there are traditional file systems which also have some
+special interest, like OpenAFS or GFS2.
+
+The major current issue with all of these is 'fsck' times and lack
+of scalability to single-pool filesystems larger than several TB,
+but doing that well is still a research issue (which hasn't stopped
+happy-go-lucky people from creating much larger filesystems,
+usually with XFS, "because you can", but good luck to them).
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============8346304268078069745==--
