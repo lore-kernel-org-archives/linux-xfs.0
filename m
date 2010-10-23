@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o9NKFXVM061812 for <xfs@oss.sgi.com>; Sat, 23 Oct 2010 15:15:33 -0500
-Received: from smtp3-g21.free.fr (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B1394B84D85
-	for <xfs@oss.sgi.com>; Sat, 23 Oct 2010 13:32:05 -0700 (PDT)
-Received: from smtp3-g21.free.fr (smtp3-g21.free.fr [212.27.42.3]) by
-	cuda.sgi.com with ESMTP id yPjKNI21hFVtaxFX for
-	<xfs@oss.sgi.com>; Sat, 23 Oct 2010 13:32:05 -0700 (PDT)
-Date: Sat, 23 Oct 2010 22:16:39 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: Best filesystems ?
-Message-ID: <20101023221639.5ac29ad9@galadriel.home>
-In-Reply-To: <19651.9652.631329.903552@tree.ty.sabi.co.uk>
-References: <4CBE2403.8070108@hardwarefreak.com>
-	<20101019234217.GD12506@dastard>
-	<19646.55189.843933.481529@tree.ty.sabi.co.uk>
-	<20101021020009.GG12506@dastard>
-	<19648.27859.799400.168394@tree.ty.sabi.co.uk>
-	<Pine.LNX.4.64.1010211258070.24449@andrew.triumf.ca>
-	<19651.9652.631329.903552@tree.ty.sabi.co.uk>
-Mime-Version: 1.0
+	o9NL0puD064273 for <xfs@oss.sgi.com>; Sat, 23 Oct 2010 16:00:51 -0500
+Received: from mail-gw0-f53.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 12F82F432E9
+	for <xfs@oss.sgi.com>; Sat, 23 Oct 2010 14:17:24 -0700 (PDT)
+Received: from mail-gw0-f53.google.com (mail-gw0-f53.google.com
+	[74.125.83.53]) by cuda.sgi.com with ESMTP id i7Z3mLCq431OpyEh
+	for <xfs@oss.sgi.com>; Sat, 23 Oct 2010 14:17:24 -0700 (PDT)
+Received: by gwb1 with SMTP id 1so2268223gwb.26
+	for <xfs@oss.sgi.com>; Sat, 23 Oct 2010 14:02:05 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTikcgqA_cPLyMOXkgbu_PLkZRQ7qmch+LZdp_L6H@mail.gmail.com>
+References: <AANLkTi=w1o8EF6-M7o8Qi9VpY-10m+MCR8U+K1_Aze=g@mail.gmail.com>
+	<87eibm4xon.fsf@willster.local.flamingspork.com>
+	<AANLkTikqHvSmr=WSZ3t8m3wKOGcUmQQ1v9Qx9MqGArS+@mail.gmail.com>
+	<19651.15840.54770.942761@tree.ty.sabi.co.uk>
+	<AANLkTikcgqA_cPLyMOXkgbu_PLkZRQ7qmch+LZdp_L6H@mail.gmail.com>
+From: Angelo McComis <angelo@mccomis.com>
+Date: Sat, 23 Oct 2010 17:01:45 -0400
+Message-ID: <AANLkTi=RZ=qf5xqMQNZjZaikAdw12PzbzD3vo-hZfNHT@mail.gmail.com>
+Subject: Re: XFS use within multi-threaded apps
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,34 +29,55 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: multipart/mixed; boundary="===============0640844538513976292=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Peter Grandi <pg_xf2@xf2.for.sabi.co.UK>
-Cc: Linux XFS <xfs@oss.sgi.com>
+To: Linux XFS <xfs@oss.sgi.com>
 
-Le Sat, 23 Oct 2010 19:13:08 +0100 vous =E9criviez:
+--===============0640844538513976292==
+Content-Type: multipart/alternative; boundary=000e0cd30a444f193a04934f12e1
 
-> Its major limitation are internal complexity and should
->   only be used on 64b systems. It can support single filesystems
->   larger than 10-15TB, but that's stretching things.
+--000e0cd30a444f193a04934f12e1
+Content-Type: text/plain; charset=UTF-8
 
-I currently take care of 100 servers with 20 to 80 TB XFS filesystems.
-Most are under heavy use, 95% filled for more than 3 years in a row,
-etc. I can safely affirm that XFS is definitely safe for anything up to
-80 TB.
+Correction:
 
--- =
 
-------------------------------------------------------------------------
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
-------------------------------------------------------------------------
+> They quoted as having 10+TB databases running OLTP transactions on XFS,
+> with 4-5GB/sec sustained throughput to the disk system.  And 20-30TB for
+> data warehouse type
+>
+
+They quoted having 10+TB databases running OLTP on EXT3 with 4-5GB/sec
+sustained throughput (not XFS).
+
+--000e0cd30a444f193a04934f12e1
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+Correction:<br>=C2=A0<br><div class=3D"gmail_quote"><blockquote class=3D"gm=
+ail_quote" style=3D"margin: 0pt 0pt 0pt 0.8ex; border-left: 1px solid rgb(2=
+04, 204, 204); padding-left: 1ex;"><div class=3D"gmail_quote"><div>They quo=
+ted as having 10+TB databases running OLTP transactions on XFS, with 4-5GB/=
+sec sustained throughput to the disk system.=C2=A0 And 20-30TB for data war=
+ehouse type </div>
+
+</div></blockquote><div><br>They quoted having 10+TB databases running OLTP=
+ on EXT3 with 4-5GB/sec sustained throughput (not XFS).<br></div><div>=C2=
+=A0<br><br></div><br></div><br>
+
+--000e0cd30a444f193a04934f12e1--
+
+
+--===============0640844538513976292==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============0640844538513976292==--
