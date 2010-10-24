@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o9O0GcRc076777 for <xfs@oss.sgi.com>; Sat, 23 Oct 2010 19:16:39 -0500
-Received: from omr3.networksolutionsemail.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1EB704EC355
-	for <xfs@oss.sgi.com>; Sat, 23 Oct 2010 17:17:54 -0700 (PDT)
-Received: from omr3.networksolutionsemail.com (omr3.networksolutionsemail.com
-	[205.178.146.53]) by cuda.sgi.com with ESMTP id
-	JVfMzYooDga8TXMJ for <xfs@oss.sgi.com>;
-	Sat, 23 Oct 2010 17:17:54 -0700 (PDT)
-Received: from cm-omr9 (mail.networksolutionsemail.com [205.178.146.50])
-	by omr3.networksolutionsemail.com (8.13.6/8.13.6) with ESMTP id
-	o9O0HsQ8021474 for <xfs@oss.sgi.com>; Sat, 23 Oct 2010 20:17:54 -0400
-Message-ID: <4CC37B2D.3050005@chaven.com>
-Date: Sat, 23 Oct 2010 19:17:49 -0500
-From: Steve Costaras <stevecs@chaven.com>
+	o9O2CgEp083673 for <xfs@oss.sgi.com>; Sat, 23 Oct 2010 21:12:43 -0500
+Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 174A511F520
+	for <xfs@oss.sgi.com>; Sat, 23 Oct 2010 19:13:58 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id oe0LAG3FgtGEEu7z
+	for <xfs@oss.sgi.com>; Sat, 23 Oct 2010 19:13:58 -0700 (PDT)
+Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
+	by greer.hardwarefreak.com (Postfix) with ESMTP id 5F6A16C102
+	for <xfs@oss.sgi.com>; Sat, 23 Oct 2010 21:13:58 -0500 (CDT)
+Message-ID: <4CC39666.3050900@hardwarefreak.com>
+Date: Sat, 23 Oct 2010 21:13:58 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Subject: Re: Best filesystems ?
-References: <4CBE2403.8070108@hardwarefreak.com>	<20101019234217.GD12506@dastard>	<19646.55189.843933.481529@tree.ty.sabi.co.uk>	<20101021020009.GG12506@dastard>	<19648.27859.799400.168394@tree.ty.sabi.co.uk>	<Pine.LNX.4.64.1010211258070.24449@andrew.triumf.ca>
-	<19651.9652.631329.903552@tree.ty.sabi.co.uk>
-In-Reply-To: <19651.9652.631329.903552@tree.ty.sabi.co.uk>
+Subject: Re: XFS use within multi-threaded apps
+References: <AANLkTi=w1o8EF6-M7o8Qi9VpY-10m+MCR8U+K1_Aze=g@mail.gmail.com>	<87eibm4xon.fsf@willster.local.flamingspork.com>	<AANLkTikqHvSmr=WSZ3t8m3wKOGcUmQQ1v9Qx9MqGArS+@mail.gmail.com>	<19651.15840.54770.942761@tree.ty.sabi.co.uk>	<AANLkTikcgqA_cPLyMOXkgbu_PLkZRQ7qmch+LZdp_L6H@mail.gmail.com>
+	<AANLkTi=RZ=qf5xqMQNZjZaikAdw12PzbzD3vo-hZfNHT@mail.gmail.com>
+In-Reply-To: <AANLkTi=RZ=qf5xqMQNZjZaikAdw12PzbzD3vo-hZfNHT@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,46 +27,37 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
+Angelo McComis put forth on 10/23/2010 4:01 PM:
+> Correction:
+> 
+> 
+>> They quoted as having 10+TB databases running OLTP transactions on XFS,
+>> with 4-5GB/sec sustained throughput to the disk system.  And 20-30TB for
+>> data warehouse type
+>>
+> 
+> They quoted having 10+TB databases running OLTP on EXT3 with 4-5GB/sec
+> sustained throughput (not XFS).
 
+Given the data rate above, this sounds like they're quoting a shared
+nothing data model on a cluster, not a single host setup.  You are
+interested in a single host setup, correct?
 
-On 2010-10-23 13:13, Peter Grandi wrote:
->
-> * JFS is good for almost everything, including largish filesystems
->    on somewhat largish systems with lots of processes accessing
->    lots of files, and works equally well on 32b and 64b, is very
->    stable, and has a couple of nice features. Its major downside is
->    less care than XFS for barriers. I think that it can support
->    well filesystems up to 10-15TB, and perhaps beyond. It should
->    have been made the default for Linux for at least a decade
->    instead of 'ext3'.
+Did you ask for a contact at their customer's organization so you could
+at least attempt to verify these performance claims?  Or did they state
+these numbers are from an internal test system?  With no way for you to
+verify these claims, they are, literally, worthless, as this vendor is
+asking you to take their claims on faith.  Faith is for religion, not a
+business transaction.
 
-Would comment here that JFS is indeed very good, but does have a problem 
-when reaching/hitting the 32TB boundary.   This appears to be a user 
-space tool issue.   It is the main reason why I switched over to XFS as 
-was running into this problem too often.
-
-> * XFS is like JFS, and with somewhat higher scalability both as to
->    sizes and as to higher internal parallelism in the of multiple
->    processes accessing the same file, and has a couple of nice
->    features (mostly barrier support, but also small blocks and large
->    inodes). Its major limitation are internal complexity and should
->    only be used on 64b systems. It can support single filesystems
->    larger than 10-15TB, but that's stretching things.
-
-Have used XFS up to 120TB myself on real media (i.e. not sparse files) 
-under linux; will be building >128 shortly.    Have used more w/ XFS 
-Irix in the past.
-
-
-Generally I find with most file  systems/tools there are many bugs when 
-you cross bit boundaries where they were not tested.    Whenever 
-using/planning large systems /always/ test first and  have good backups.
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
