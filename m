@@ -1,32 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o9OIQn18147497 for <xfs@oss.sgi.com>; Sun, 24 Oct 2010 13:26:49 -0500
-Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 080CAF5D217
-	for <xfs@oss.sgi.com>; Sun, 24 Oct 2010 11:43:25 -0700 (PDT)
-Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
-	cuda.sgi.com with ESMTP id FIH9KBV3zNx7AzPw for
-	<xfs@oss.sgi.com>; Sun, 24 Oct 2010 11:43:25 -0700 (PDT)
-Received: from mailsrv.i.zmi.at (h081217106033.dyn.cm.kabsi.at [81.217.106.33])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
-	by mailsrv14.zmi.at (Postfix) with ESMTPSA id 6131442B
-	for <xfs@oss.sgi.com>; Sun, 24 Oct 2010 20:28:01 +0200 (CEST)
-Received: from saturn.localnet (saturn.i.zmi.at [10.72.27.2])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client did not present a certificate)
-	by mailsrv.i.zmi.at (Postfix) with ESMTPSA id 63105401C3E
-	for <xfs@oss.sgi.com>; Sun, 24 Oct 2010 20:28:00 +0200 (CEST)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
+	o9OKpUZn157512 for <xfs@oss.sgi.com>; Sun, 24 Oct 2010 15:51:30 -0500
+Received: from smtp3-g21.free.fr (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0381811E915
+	for <xfs@oss.sgi.com>; Sun, 24 Oct 2010 13:52:45 -0700 (PDT)
+Received: from smtp3-g21.free.fr (smtp3-g21.free.fr [212.27.42.3]) by
+	cuda.sgi.com with ESMTP id DHtbpNqlZaUP039T for
+	<xfs@oss.sgi.com>; Sun, 24 Oct 2010 13:52:45 -0700 (PDT)
+Date: Sun, 24 Oct 2010 22:52:32 +0200
+From: Emmanuel Florac <eflorac@intellique.com>
 Subject: Re: Best filesystems ?
-Date: Sun, 24 Oct 2010 20:27:59 +0200
+Message-ID: <20101024225232.0b6b8d1f@galadriel.home>
+In-Reply-To: <201010242028.00106@zmi.at>
 References: <4CBE2403.8070108@hardwarefreak.com>
 	<Pine.LNX.4.64.1010211258070.24449@andrew.triumf.ca>
 	<19651.9652.631329.903552@tree.ty.sabi.co.uk>
-In-Reply-To: <19651.9652.631329.903552@tree.ty.sabi.co.uk>
-MIME-Version: 1.0
-Message-Id: <201010242028.00106@zmi.at>
+	<201010242028.00106@zmi.at>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,75 +26,25 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============3359793112558971107=="
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Michael Monnerie <michael.monnerie@is.it-management.at>
+Cc: xfs@oss.sgi.com
 
---===============3359793112558971107==
-Content-Type: multipart/signed;
-  boundary="nextPart3718428.blGH6C1jkH";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
-
---nextPart3718428.blGH6C1jkH
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-
-On Samstag, 23. Oktober 2010 Peter Grandi wrote:
-> * Reiser3 is nice with the right parameters for the few cases
->   where there is a significant number of small files on a small
->   storage system accessed by a single process.
-
-I still use reiser3 for all servers root filesystems, it's very good for=20
-that. Never had a problem.=20
-
-=46or anything else I use XFS for performance reasons. Except for my KDE=20
-/home partition, that stays on reiserfs because KDE seems to rely on=20
-O_PONIES and crashes lead to zero size config files which is not a lot=20
-of fun.
-
-=2D-=20
-mit freundlichen Gr=FCssen,
-Michael Monnerie, Ing. BSc
-
-it-management Internet Services
-http://proteger.at [gesprochen: Prot-e-schee]
-Tel: 0660 / 415 65 31
-
-****** Radiointerview zum Thema Spam ******
-http://www.it-podcast.at/archiv.html#podcast-100716
-
-// Wir haben im Moment zwei H=E4user zu verkaufen:
-// http://zmi.at/langegg/
-// http://zmi.at/haus2009/
-
---nextPart3718428.blGH6C1jkH
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.15 (GNU/Linux)
-
-iEYEABECAAYFAkzEerAACgkQzhSR9xwSCbRANwCgsenGzp5Dq4qmeNrBvTf07Ka8
-ylwAniimwPyoWT6P59EidRUBXcaT4TZo
-=t/gq
------END PGP SIGNATURE-----
-
---nextPart3718428.blGH6C1jkH--
-
-
---===============3359793112558971107==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
-
---===============3359793112558971107==--
+TGUgU3VuLCAyNCBPY3QgMjAxMCAyMDoyNzo1OSArMDIwMCB2b3VzIMOpY3JpdmllejoKCj4gSSBz
+dGlsbCB1c2UgcmVpc2VyMyBmb3IgYWxsIHNlcnZlcnMgcm9vdCBmaWxlc3lzdGVtcywgaXQncyB2
+ZXJ5IGdvb2QKPiBmb3IgdGhhdC4gTmV2ZXIgaGFkIGEgcHJvYmxlbS4gCj4gCj4gRm9yIGFueXRo
+aW5nIGVsc2UgSSB1c2UgWEZTIGZvciBwZXJmb3JtYW5jZSByZWFzb25zLiAKCkkgZGlkIGV4YWN0
+bHkgdGhlIHNhbWUuIEFjdHVhbGx5IEkndmUgc2V0IHVwIGFib3V0IDI1MDAgc2VydmVycyB0aGlz
+CndheSBpbiB0aGUgcGFzdCA3IHllYXJzIGFuZCBzZXJpb3VzIHByb2JsZW1zIGNhbiBiZSBjb3Vu
+dGVkIG9uIG9uZQpoYW5kLgoKLS0gCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQpFbW1hbnVlbCBGbG9yYWMgICAg
+IHwgICBEaXJlY3Rpb24gdGVjaG5pcXVlCiAgICAgICAgICAgICAgICAgICAgfCAgIEludGVsbGlx
+dWUKICAgICAgICAgICAgICAgICAgICB8CTxlZmxvcmFjQGludGVsbGlxdWUuY29tPgogICAgICAg
+ICAgICAgICAgICAgIHwgICArMzMgMSA3OCA5NCA4NCAwMgotLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KCl9fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxp
+c3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hm
+cwo=
