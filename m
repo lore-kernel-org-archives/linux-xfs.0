@@ -1,18 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o9NNpYpP075279 for <xfs@oss.sgi.com>; Sat, 23 Oct 2010 18:51:35 -0500
-Received: from dodg384258.farm.tech.int.digex.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 48EE01218C12
-	for <xfs@oss.sgi.com>; Sat, 23 Oct 2010 17:08:07 -0700 (PDT)
-Received: from dodg384258.farm.tech.int.digex.com (statler.eil.com
-	[213.225.138.107]) by cuda.sgi.com with ESMTP id
-	xAXPYuangasfhjjD for <xfs@oss.sgi.com>;
-	Sat, 23 Oct 2010 17:08:07 -0700 (PDT)
-From: <Sales@eil.com>
-Subject: A music recommendation from Jessica Jackson and eil.com
-Date: Sun, 24 Oct 2010 00:52:47 +0100
-Message-ID: <DODG3842581KiaexdDA0003a0b0@dodg384258.farm.tech.int.digex.com>
+	o9O0GcRc076777 for <xfs@oss.sgi.com>; Sat, 23 Oct 2010 19:16:39 -0500
+Received: from omr3.networksolutionsemail.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1EB704EC355
+	for <xfs@oss.sgi.com>; Sat, 23 Oct 2010 17:17:54 -0700 (PDT)
+Received: from omr3.networksolutionsemail.com (omr3.networksolutionsemail.com
+	[205.178.146.53]) by cuda.sgi.com with ESMTP id
+	JVfMzYooDga8TXMJ for <xfs@oss.sgi.com>;
+	Sat, 23 Oct 2010 17:17:54 -0700 (PDT)
+Received: from cm-omr9 (mail.networksolutionsemail.com [205.178.146.50])
+	by omr3.networksolutionsemail.com (8.13.6/8.13.6) with ESMTP id
+	o9O0HsQ8021474 for <xfs@oss.sgi.com>; Sat, 23 Oct 2010 20:17:54 -0400
+Message-ID: <4CC37B2D.3050005@chaven.com>
+Date: Sat, 23 Oct 2010 19:17:49 -0500
+From: Steve Costaras <stevecs@chaven.com>
+MIME-Version: 1.0
+Subject: Re: Best filesystems ?
+References: <4CBE2403.8070108@hardwarefreak.com>	<20101019234217.GD12506@dastard>	<19646.55189.843933.481529@tree.ty.sabi.co.uk>	<20101021020009.GG12506@dastard>	<19648.27859.799400.168394@tree.ty.sabi.co.uk>	<Pine.LNX.4.64.1010211258070.24449@andrew.triumf.ca>
+	<19651.9652.631329.903552@tree.ty.sabi.co.uk>
+In-Reply-To: <19651.9652.631329.903552@tree.ty.sabi.co.uk>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,122 +28,48 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============5137396163169124469=="
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
---===============5137396163169124469==
-Content-Type: text/plain
 
 
-Hello Friend,
+On 2010-10-23 13:13, Peter Grandi wrote:
+>
+> * JFS is good for almost everything, including largish filesystems
+>    on somewhat largish systems with lots of processes accessing
+>    lots of files, and works equally well on 32b and 64b, is very
+>    stable, and has a couple of nice features. Its major downside is
+>    less care than XFS for barriers. I think that it can support
+>    well filesystems up to 10-15TB, and perhaps beyond. It should
+>    have been made the default for Linux for at least a decade
+>    instead of 'ext3'.
 
-Congratulations: Get your $740.00 Commissions Now!
+Would comment here that JFS is indeed very good, but does have a problem 
+when reaching/hitting the 32TB boundary.   This appears to be a user 
+space tool issue.   It is the main reason why I switched over to XFS as 
+was running into this problem too often.
 
-Imagine waking up at 10 in the morning.. doing your short workout 
-routine.. opening
-your computer..and finding out you made $740.00 - while you were asleep!
+> * XFS is like JFS, and with somewhat higher scalability both as to
+>    sizes and as to higher internal parallelism in the of multiple
+>    processes accessing the same file, and has a couple of nice
+>    features (mostly barrier support, but also small blocks and large
+>    inodes). Its major limitation are internal complexity and should
+>    only be used on 64b systems. It can support single filesystems
+>    larger than 10-15TB, but that's stretching things.
 
-It's Easy To Make Money Everyday Even If You're Starting From Scratch With
-Zero Knowledge, Experience Or Budget!I'll Show You Exactly How.
-
-We've Start putting New 20 Members in YOUR TEAM for the  October 
-15th -30th 2010
-commission  cycle... and  GROWING everyday  earn by $100 up to $200 or 
-more.
-
-IMPORTANT:  October 30, 2010 is the Cut-Off day to lock in your
-position then faster you act the higher commission you  will earn!!!
-
-Go Here To Secure not less than $740.00 commission Now and it still 
-growing
-as  many people joining under you if you secure your position right away:
-The $740.00 commission will Arrive Through your Pypal or Credit Card on 
-the
-30th of November 2010...
-
-URGENTLY CLICK HERE: on below!!!
-
-ORDER here >=>> http://shrunk.net/28db4ac8
-
-TYPE   DATE & TIME --- NEW MEMBERS --- COUNTRY
-
-P -- OCT. 22  @ 2:38  AM-----Miguel    Denver-------- United States
-P -- OCT. 22  @ 2:53  AM-----JOan       Milestone --- United Kingdom
-P -- OCT. 22  @ 2:56  AM-----Mandene    Senhuko------ Hungary
-M -- OCT. 21  @ 4:19  AM-----Cristy     Chan--------- Singapore
-P -- OCT. 21  @ 4:28  AM-----Jhon Carlo Borces------- Italy
-M -- OCT. 20  @ 6:01  AM-----lalaine    ferguson----- Australia
-P -- OCT. 20  @ 7:11  AM-----Rebecca    Underwood---- Canada
-P -- OCT. 19  @ 7:39  AM-----Jericho    Morales------ Mexico
-P -- OCT. 19  @ 9:42  AM-----Thomas     Silva ------- California
-M -- OCT. 18  @ 9:58  PM-----Grace      Taylor------- Germany
-P -- OCT. 18  @ 10:21 PM-----Gina       Henry-------- New Zealand
-P -- OCT. 17  @ 11:24 PM-----Mohammed   Ahmen ------- Oman
-M -- OCT. 17  @ 11:33 PM-----Tracia     Furlong------ Puerto Rico
-P -- OCT. 17  @ 11:41 PM-----Jane       Mckay-------- United States
-P -- OCT. 16  @ 9:42  AM-----Steve      Scott ------- Netherland
-M -- OCT. 16  @ 9:58  PM-----Greg       Stanley------ Japan
-P -- OCT. 16  @ 10:21 PM-----Jack       Perkins------ New Zealand
-P -- OCT. 15  @ 11:24 PM-----Arlene     Tan --------- China
-M -- OCT. 15  @ 11:33 PM-----Andy       William------ New York
-P -- OCT. 15  @ 11:41 PM-----Jhon       Robinson----- United States
-
-P= Paid Members
-M= Members Trial
-
-Therefore, you have a GUARANTEED $740.00 CommissionS  every month from now 
-on!.
-
-Earn $37 Per Process!Each $37 x 20 = $740.00 Commission  will be yours...!
-
-Be Sure to Copy the link below & Paste into your browser and press enter:
-To Secure your $740.00 commission!
-
-ORDER here >=>> http://shrunk.net/28db4ac8
-
-If you join Early, your membership secure And you can recieve bigger 
-commissions
-waiting at the end of the month. Today its $740.00 For the start of the 
-month of
-October if goes up daily until the end of the month.
-
-You must UPGRADE right away or before others do....
-
-Caring for Your Success, Jessica Jackson
+Have used XFS up to 120TB myself on real media (i.e. not sparse files) 
+under linux; will be building >128 shortly.    Have used more w/ XFS 
+Irix in the past.
 
 
-
-
-
-
-Discover 6 decades of music history at eil.com the world's premier on-line 
-store for new, rare and collectable vinyl, compact discs and music 
-memorabilia.
-
-This message was sent to you on behalf of Jessica Jackson using the 'tell 
-a friend' service at http://eil.com
-
-____________ discover more @ eil.com ____________
-all the latest arrivals - http://eil.com/click_here_4/shopping
-£9.99 album chart - http://eil.com/click_here_4/album_chart
-future releases - http://eil.com/click_here_4/future_releases
-latest music news - http://eil.com/click_here_4/music_news
-exclusive games - http://eil.com/click_here_4/games_zone
-music discussion board - http://eil.com/click_here_4/chat 
-
-
---===============5137396163169124469==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Generally I find with most file  systems/tools there are many bugs when 
+you cross bit boundaries where they were not tested.    Whenever 
+using/planning large systems /always/ test first and  have good backups.
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============5137396163169124469==--
