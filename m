@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o9PDgTbU234852 for <xfs@oss.sgi.com>; Mon, 25 Oct 2010 08:42:29 -0500
+	o9PDhptt234929 for <xfs@oss.sgi.com>; Mon, 25 Oct 2010 08:43:52 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C539C151E53B
-	for <xfs@oss.sgi.com>; Mon, 25 Oct 2010 06:59:13 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3937A197B1FB
+	for <xfs@oss.sgi.com>; Mon, 25 Oct 2010 06:45:08 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id AlHFA4KiFUJ5D4c3 for
-	<xfs@oss.sgi.com>; Mon, 25 Oct 2010 06:59:13 -0700 (PDT)
-Date: Mon, 25 Oct 2010 09:43:45 -0400
+	by cuda.sgi.com with ESMTP id W7mGSmZsTl9khei2 for
+	<xfs@oss.sgi.com>; Mon, 25 Oct 2010 06:45:08 -0700 (PDT)
+Date: Mon, 25 Oct 2010 09:45:07 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: XFS: bad clientid on recovery on MIPS (VIPT cache)
-Message-ID: <20101025134345.GB3758@infradead.org>
-References: <AANLkTi=wbBhb=s3z9vyw9gL9Qwy0goj+8UtueFyNq+y2@mail.gmail.com>
-	<20101021125219.GA21472@infradead.org>
-	<AANLkTimFuG6cVLkYt+7-Y_8PnapFvmry5RUcmpOHaPco@mail.gmail.com>
-	<AANLkTikYuWMdHRtAKLauZpyWiarioB2ezxW2qVb4s9Sv@mail.gmail.com>
+Subject: Re: Implementing checksums in XFS
+Message-ID: <20101025134507.GB4235@infradead.org>
+References: <4CC14C1B.5060409@ics.forth.gr>
+	<20101022124928.GA16437@infradead.org> <201010222255.40861@zmi.at>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <AANLkTikYuWMdHRtAKLauZpyWiarioB2ezxW2qVb4s9Sv@mail.gmail.com>
+In-Reply-To: <201010222255.40861@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,15 +29,17 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ajeet Yadav <ajeet.yadav.77@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Michael Monnerie <michael.monnerie@is.it-management.at>
+Cc: xfs@oss.sgi.com
 
-On Fri, Oct 22, 2010 at 10:55:44AM +0530, Ajeet Yadav wrote:
-> Hello,
-> I wish to know, why the problem of bad clientid does not come, if we safely
-> umount the USB storage device.
+On Fri, Oct 22, 2010 at 10:55:40PM +0200, Michael Monnerie wrote:
+> Oh that would be very welcome. A "secure" filesystem sounds really good, 
+> especially if it's fast as XFS is :-)
+> I'd implement it everywhere immediately as soon as it's available. Will 
+> existing XFS's be upgradeable in some way other that backup/restore?
 
-Because there the log is only recovered on an unclean umount.
+checksumming inodes and btree nodes means larger data structures for
+those, so no there's no upgrade path available.
 
 _______________________________________________
 xfs mailing list
