@@ -1,18 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o9P9GZEQ216805 for <xfs@oss.sgi.com>; Mon, 25 Oct 2010 04:16:35 -0500
-Received: from dodg384258.farm.tech.int.digex.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0015419785F8
-	for <xfs@oss.sgi.com>; Mon, 25 Oct 2010 02:17:48 -0700 (PDT)
-Received: from dodg384258.farm.tech.int.digex.com (statler.eil.com
-	[213.225.138.107]) by cuda.sgi.com with ESMTP id
-	0pEGho0gk27yW64A for <xfs@oss.sgi.com>;
-	Mon, 25 Oct 2010 02:17:48 -0700 (PDT)
-From: <Sales@eil.com>
-Subject: A music recommendation from David Scott and eil.com
-Date: Mon, 25 Oct 2010 10:17:47 +0100
-Message-ID: <DODG384258TrBHxvZ9a00090c38@dodg384258.farm.tech.int.digex.com>
+	o9PBG9O7225271 for <xfs@oss.sgi.com>; Mon, 25 Oct 2010 06:16:09 -0500
+Received: from mail.sotech1.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 83A2D1218F0
+	for <xfs@oss.sgi.com>; Mon, 25 Oct 2010 04:17:25 -0700 (PDT)
+Received: from mail.sotech1.com (sl-speci32-137461-0.sprintlink.net
+	[144.232.190.126]) by cuda.sgi.com with ESMTP id
+	MPtfPYbEMBoQjJDz for <xfs@oss.sgi.com>;
+	Mon, 25 Oct 2010 04:17:25 -0700 (PDT)
+From: Andrew Debenham <adebenham@sotech1.com>
+Date: Mon, 25 Oct 2010 07:17:24 -0400
+Subject: Re: XFS Test Results Interpretation 
+Message-ID: <3C5E029826A0704DB5998577FCFF46F0095A278CEB@dagobah>
+Content-Language: en-US
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,123 +23,73 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============9004644981735229204=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
---===============9004644981735229204==
-Content-Type: text/plain
+Stan -
 
+Thank you for your response and I apologize if my initial explanation wasn't clear.  The applications will be running on identical hardware (see specs. below) but each application will be running on a dedicated system.  My original spreadsheet had this information but it obviously didn't come through correctly.  I would like to tune the XFS file systems to accommodate the two different applications.  As I mentioned before, I experimented with various parameters (e.g. sunit, swidth, log size, etc.) and different mounting options (e.g. logbufs, logbsize, etc.), but it sounds like I may have been wasting my time attempting to benchmark the file systems.  Any information or recommendations you can provide would be greatly appreciated.  Also, can you recommend a tool that would be good for benchmarking an XFS file system (if one exists)?  Thanks again!
 
-Hello Friend,
-
-Congratulations: Get your $940 Commissions Now!
-
-Imagine waking up at 10 in the morning.. doing your short workout 
-routine.. opening
-your computer..and finding out you made $100 up to $200 - while you were 
-asleep!
-
-It's Easy To Make Money Everyday Even If You're Starting From Scratch With
-Zero Knowledge, Experience Or Budget!I'll Show You Exactly How.
-
-We've Start putting New 20 Members in YOUR TEAM for the  October 
-15th -30th 2010
-commission  cycle... and  GROWING everyday earn by $100 up to $200 or 
-more.
-
-IMPORTANT:  October 30, 2010 is the Cut-Off day to lock in your
-position then faster you act the higher commission you  will earn!!!
-
-Go Here To Secure not less than $940.00 commission Now and it still 
-growing
-as  many people joining under you if you secure your position right away:
-The $940.00 commission will Arrive Through your Paypal or Credit Card on 
-the
-30th of November 2010...Hurry'this limited time, only 3 Positions are 
-available Now.
-
-URGENTLY CLICK HERE: on below!!!
+- Andy
 
 
-ORDER here >=>> http://shrunk.net/49b69b56
-
-TYPE   DATE & TIME --- NEW MEMBERS --- COUNTRY
-
-P -- OCT. 24  @ 2:38  AM-----Mike------ William------ United States
-P -- OCT. 24  @ 2:53  AM-----JOan------ Milestone --- United Kingdom
-P -- OCT. 24  @ 2:56  AM-----Mandene -- Senhuko------ Germany
-M -- OCT. 23  @ 4:19  AM-----Cristy---- Chan--------- Hungary
-P -- OCT. 23  @ 4:28  AM-----Carlo----- Wonder------- Italy
-M -- OCT. 23  @ 6:01  AM-----lalaine--- ferguson----- Australia
-P -- OCT. 22  @ 7:11  AM-----Rebecca--- Underwood---- Canada
-P -- OCT. 22  @ 7:39  AM-----Jericho--- Morales------ Mexico
-P -- OCT. 22  @ 9:42  AM-----Thomas---- Silva ------- California
-M -- OCT. 21  @ 9:58  PM-----Grace----- Taylor------- Singapore
-P -- OCT. 21  @ 10:21 PM-----Gina------ Henry-------- New Zealand
-P -- OCT. 20  @ 11:24 PM-----Mohammed-- Ahmen ------- Oman
-M -- OCT. 20  @ 11:33 PM-----Tracia---- Furlong------ Puerto Rico
-P -- OCT. 19  @ 11:41 PM-----Jane------ Mckay-------- United States
-P -- OCT. 19  @ 9:42  AM-----Steve----- Scott ------- Netherlands
-M -- OCT. 18  @ 9:58  PM-----Greg------ Stanley------ Japan
-P -- OCT. 18  @ 10:21 PM-----Jack------ Perkins------ Amsterdam
-P -- OCT. 18  @ 11:24 PM-----Arlene---- Tan --------- China
-M -- OCT. 18  @ 11:33 PM-----Andy------ Hopekins----- New York
-P -- OCT. 18  @ 11:41 PM-----Jhon------ Robinson----- United States
-
-Therefore, you have a GUARANTEED $940 CommissionS  every month from now 
-on!.
-
-Earn $47 Per Process!Each $47 x 20 = $940 Commission  will be yours...!
-
-Be Sure to Copy the link below & Paste into your browser and press enter:
-To Secure your $940 commission!
-
-ORDER here >=>> http://shrunk.net/49b69b56
-
-If you join Now, your membership automatic cover, And you can recieve 
-bigger
-commissions waiting at the end of the month. Today its $940.00 For the 
-start
-of the month of October if goes up daily until the end of the month.
-
-You must UPGRADE right away or before others do....
-
-
-Caring for Your Success, David Scott
-Add to Calendar
-Nov-30-2010
+System Specs
+-----------------
+Motherboard:  Supermicro X8DTU
+Chipset:  Intel 5520 (Tylersburg)
+Processors:  Dual Intel Xeon E5540 @2.53GHz
+RAM:  32GB PC3-8500 1066MHz
+OS:  CentOS 5.3
+Kernel:  2.6.18-128.el5
+RAID Controller:  3ware 9650SE-12M
+Disk Type:  SATA
+Disk Size:  1.82 TB
+RAID Level:  6
+# of disks:  11
+Stripe Size:  256 KB
+File System Size:  16.37 TB
+XFS Info:  kmod-xfs-0.4-2, xfsprogs-2.9.4-1.el5.centos
 
 
 
+> ----------------------------------------------------------------------
+> Message: 1
+> Date: Sat, 23 Oct 2010 22:38:25 -0500
+> From: Stan Hoeppner <stan@hardwarefreak.com>
+> Subject: Re: XFS Test Results Interpretation
+> To: xfs@oss.sgi.com
+> Message-ID: <4CC3AA31.2000101@hardwarefreak.com>
+> Content-Type: text/plain; charset=ISO-8859-1
 
-Discover 6 decades of music history at eil.com the world's premier on-line 
-store for new, rare and collectable vinyl, compact discs and music 
-memorabilia.
+> Andrew Debenham put forth on 10/23/2010 9:59 PM:
+> > I am in the process of trying to determine the best parameters to use when creating and mounting an XFS file system on some new hardware we are going to be using.  My company has two separate applications that will
+> > be running on the same hardware (but on separate systems).  One application is the PostgreSQL database and the other is a custom application that does writes to many (~1,000) relatively small (~672MB) files
+>> concurrently.
 
-This message was sent to you on behalf of David Scott using the 'tell a 
-friend' service at http://eil.com
+> Post the detailed hardware specs (server, local RAID or SAN, number of disks in stripe set, RAID level, etc), and if both applications are running on the same physical machine or different machines.  Are both apps writing to > the same XFS filesystem or two different filesystems?
+> Your description of "what is where" was very confusing.
 
-____________ discover more @ eil.com ____________
-all the latest arrivals - http://eil.com/click_here_4/shopping
-£9.99 album chart - http://eil.com/click_here_4/album_chart
-future releases - http://eil.com/click_here_4/future_releases
-latest music news - http://eil.com/click_here_4/music_news
-exclusive games - http://eil.com/click_here_4/games_zone
-music discussion board - http://eil.com/click_here_4/chat 
+> Oh, and Bonnie++ test results are usually useless, as well as IOZone, etc.  Next time ask before taking the time to run benchmarks and jump through hoops to get the data onto the list. :)
+
+> -- Stan
 
 
---===============9004644981735229204==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+This email and any attachments may be confidential and are intended solely for the use of the individual to whom it is addressed.
+
+If you are not the intended recipient of this email, the following stipulations govern the use of this information:  You may not take any action based upon its contents.  You may not copy or show this message or attachments to anyone. You should contact the sender and subsequently delete this message and all attachments.
+
+Any views or opinions expressed are solely those of the author and do not necessarily represent those of Special Operations Technology, Incorporated.
+
+While antivirus software has been applied, you should perform due diligence to check this email and attachments for the presence of viruses.  No warranties or assurances are made in relation to the safety and content of this email and attachments.  Special Operations Technology, Incorporated accepts no liability for any damages caused by any virus transmitted by or contained in this email and attachments.
+
+No liability is accepted for any consequences arising from this email transmission whatsoever.
+
+Special Operations Technology, Incorporated is a premier IT professional services firm focused in the government and law enforcement space.
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============9004644981735229204==--
