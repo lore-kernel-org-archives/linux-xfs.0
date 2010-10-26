@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o9Q7qKpM054360 for <xfs@oss.sgi.com>; Tue, 26 Oct 2010 02:52:20 -0500
-Received: from server655-han.de-nserver.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B87AC1977B36
-	for <xfs@oss.sgi.com>; Tue, 26 Oct 2010 00:53:37 -0700 (PDT)
-Received: from server655-han.de-nserver.de (server655-han.de-nserver.de
-	[85.158.177.45]) by cuda.sgi.com with ESMTP id vCmeLe07Vd4A2AcY
-	for <xfs@oss.sgi.com>; Tue, 26 Oct 2010 00:53:37 -0700 (PDT)
-Message-ID: <4CC688FE.7010206@profihost.ag>
-Date: Tue, 26 Oct 2010 09:53:34 +0200
-From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+	o9Q9Iaf0059638 for <xfs@oss.sgi.com>; Tue, 26 Oct 2010 04:18:36 -0500
+Received: from mail-wy0-f181.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BFB501E852FD
+	for <xfs@oss.sgi.com>; Tue, 26 Oct 2010 02:19:52 -0700 (PDT)
+Received: from mail-wy0-f181.google.com (mail-wy0-f181.google.com
+	[74.125.82.181]) by cuda.sgi.com with ESMTP id PY6pmdrrDSDW7kRF
+	for <xfs@oss.sgi.com>; Tue, 26 Oct 2010 02:19:52 -0700 (PDT)
+Received: by wyb40 with SMTP id 40so3922929wyb.26
+	for <xfs@oss.sgi.com>; Tue, 26 Oct 2010 02:19:52 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: Pid: 8345, comm: rsync Not tainted 2.6.32.22intel #1
-References: <4CC67450.9020602@profihost.ag>	<20101026092205.086c0d89@galadriel.home>	<4CC68249.7050409@profihost.ag>
-	<20101026094111.48670eb7@galadriel.home>
-In-Reply-To: <20101026094111.48670eb7@galadriel.home>
+In-Reply-To: <AANLkTi=Zq3mh=0Q-g6oi-OqYFRsENiTjLcHfvPNsOkGa@mail.gmail.com>
+References: <AANLkTi=Zq3mh=0Q-g6oi-OqYFRsENiTjLcHfvPNsOkGa@mail.gmail.com>
+Date: Tue, 26 Oct 2010 09:19:52 +0000
+Message-ID: <AANLkTi=Gnt+L6Cg0iNha=qn6Kd__pFK7Xhbup0NWtSUt@mail.gmail.com>
+Subject: Re: Possible deadlock when deleting from realtime section
+From: Denny Priebe <denny.priebe@googlemail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,63 +25,64 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Emmanuel Florac <eflorac@intellique.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
->> /dev/sdc3 on /sdc3 type xfs (rw,noatime,nodiratime,nobarrier,prjquota)
->> /sdc3/serverbackup on /serverbackup type none (rw,bind)
->> /sdc3/serverbackup_rootserver on /serverbackup_rootserver type none
->> (rw,bind)
->
-> OK, looks fine to me. Aren't there any messages related to /dev/sdc in
-> dmesg? Apparently it's a single drive, any IO errors? What's the smart
-> status like?
-No it is a Raid 5 (3Ware Controller). First Message in dmesg is 
-(attention reverse order):
-2010-10-26 02:07:42     [1217871.154330] Pid: 8345, comm: rsync Not 
-tainted 2.6.32.22intel #1
-2010-10-26 02:07:42     [1217871.178925] Call Trace:
-2010-10-26 02:07:42     [1217871.202924] [] ? xfs_da_read_buf+0x24/0x29
-2010-10-26 02:07:42     [1217871.226724] [] ? xfs_da_do_buf+0x557/0x620
-2010-10-26 02:07:42     [1217871.249821] [] ? xfs_da_read_buf+0x24/0x29
-2010-10-26 02:07:42     [1217871.272475] [] ? xfs_da_read_buf+0x24/0x29
-2010-10-26 02:07:42     [1217871.294558] [] ? 
-xfs_dir2_block_lookup_int+0x45/0x197
-2010-10-26 02:07:42     [1217871.316206] [] ? 
-xfs_dir2_block_lookup_int+0x45/0x197
-2010-10-26 02:07:42     [1217871.337603] [] ? 
-xfs_dir2_block_lookup+0x18/0xb0
-2010-10-26 02:07:42     [1217871.358986] [] ? xfs_dir_lookup+0xd5/0x147
-2010-10-26 02:07:42     [1217871.380585] [] ? xfs_lookup+0x47/0xa3
-2010-10-26 02:07:42     [1217871.402313] [] ? xfs_vn_lookup+0x3c/0x7b
-2010-10-26 02:07:42     [1217871.424465] [] ? do_lookup+0xd5/0x1b3
-2010-10-26 02:07:42     [1217871.445750] [] ? __link_path_walk+0x8f5/0xda2
-2010-10-26 02:07:42     [1217871.466323] [] ? sock_aio_write+0xd6/0xe1
-2010-10-26 02:07:42     [1217871.487141] [] ? path_walk+0x66/0xcb
-2010-10-26 02:07:42     [1217871.507783] [] ? do_path_lookup+0x20/0x41
-2010-10-26 02:07:42     [1217871.528673] [] ? user_path_at+0x48/0x7f
-2010-10-26 02:07:42     [1217871.549518] [] ? 
-autoremove_wake_function+0x0/0x2e
-2010-10-26 02:07:42     [1217871.569930] [] ? vfs_fstatat+0x2c/0x58
-2010-10-26 02:07:42     [1217871.589714] [] ? _atomic_dec_and_lock+0x33/0x50
-2010-10-26 02:07:42     [1217871.609072] [] ? sys_newlstat+0x11/0x30
-2010-10-26 02:07:42     [1217871.627679] [] ? mntput_no_expire+0x23/0xdf
-2010-10-26 02:07:42     [1217871.645558] [] ? filp_close+0x5b/0x62
-2010-10-26 02:07:41     [1217870.507397] ffff8803104df000: 00 00 00 00 
-00 00 00 00 00 00 00 00 00 00 00 00 ................
-2010-10-26 02:07:41     [1217870.530516] Filesystem "sdc3": XFS internal 
-error xfs_da_do_buf(2) at line 2112 of file fs/xfs/xfs_da_btree.c. 
-Caller 0xffffffff8117bdea
-2010-10-26 02:07:41     [1217870.530518]
-2010-10-26 02:07:41     [1217870.603393] Pid: 8345, comm: rsync Not 
-tainted 2.6.32.22intel #1
-2010-10-26 02:07:41     [1217870.628925] Call Trace:
+After that, recovery hangs as well:
 
-Stefan
+SGI XFS with ACLs, security attributes, realtime, large block/inode
+numbers, debug enabled
+SGI XFS Quota Management subsystem
+Filesystem "sdb2": Disabling barriers, not supported with external log device
+XFS mounting filesystem sdb2
+Starting XFS recovery on filesystem: sdb2 (logdev: /dev/sdb1)
+SysRq : Show Blocked State
+  task                        PC stack   pid father
+mount         D 0000000000000000     0  1481   1464 0x00000080
+ ffff880186c17558 0000000000000086 ffff880100000000 ffff880186c16010
+ ffff880186c17fd8 00000000000148c0 ffff880187364530 ffff8801873648e8
+ ffff8801873648e0 00000000000148c0 00000000000148c0 ffff880186c17fd8
+Call Trace:
+ [<ffffffff81437739>] rwsem_down_failed_common+0xd3/0x105
+ [<ffffffff8143777e>] rwsem_down_write_failed+0x13/0x15
+ [<ffffffff81202ad3>] call_rwsem_down_write_failed+0x13/0x20
+ [<ffffffff81436e3d>] ? down_write+0x40/0x44
+ [<ffffffffa032b7d0>] xfs_ilock+0xb7/0x114 [xfs]
+ [<ffffffffa032bead>] xfs_iget+0x34c/0x61b [xfs]
+ [<ffffffffa03479b7>] xfs_trans_iget+0x1b/0x54 [xfs]
+ [<ffffffffa02f588e>] xfs_rtfree_extent+0x37/0x117 [xfs]
+ [<ffffffffa03311f2>] ? xfs_iext_remove+0xdd/0xef [xfs]
+ [<ffffffffa030b52f>] ? xfs_bmap_del_extent+0x40c/0xab5 [xfs]
+ [<ffffffffa030b3ad>] xfs_bmap_del_extent+0x28a/0xab5 [xfs]
+ [<ffffffffa030dce8>] xfs_bunmapi+0xa0c/0xdd2 [xfs]
+ [<ffffffff810f17ef>] ? new_slab+0x199/0x1c0
+ [<ffffffffa032e26a>] xfs_itruncate_finish+0x32e/0x4f1 [xfs]
+ [<ffffffffa034a5d1>] xfs_inactive+0x224/0x47a [xfs]
+ [<ffffffffa035615d>] xfs_fs_evict_inode+0x101/0x109 [xfs]
+ [<ffffffff8111282b>] evict+0x22/0x92
+ [<ffffffff81112c60>] iput+0x1bc/0x225
+ [<ffffffffa033b84a>] xlog_recover_process_one_iunlink+0x118/0x17e [xfs]
+ [<ffffffffa033b930>] xlog_recover_process_iunlinks+0x80/0xf7 [xfs]
+ [<ffffffffa033bc5b>] xlog_recover_finish+0x54/0xbc [xfs]
+ [<ffffffffa0339e46>] xfs_log_mount_finish+0x1c/0x44 [xfs]
+ [<ffffffffa0342832>] xfs_mountfs+0x559/0x683 [xfs]
+ [<ffffffffa034c569>] ? kmem_zalloc+0x11/0x2c [xfs]
+ [<ffffffffa0342bfb>] ? xfs_mru_cache_create+0x117/0x146 [xfs]
+ [<ffffffffa0357a03>] xfs_fs_fill_super+0x1d9/0x316 [xfs]
+ [<ffffffff81102c48>] get_sb_bdev+0x14b/0x1ae
+ [<ffffffffa035782a>] ? xfs_fs_fill_super+0x0/0x316 [xfs]
+ [<ffffffffa0355c54>] xfs_fs_get_sb+0x13/0x15 [xfs]
+ [<ffffffff8110229f>] vfs_kern_mount+0xb8/0x1a2
+ [<ffffffff811023e7>] do_kern_mount+0x48/0xe8
+ [<ffffffff811175ef>] do_mount+0x74f/0x7c6
+ [<ffffffff811176e9>] sys_mount+0x83/0xbd
+ [<ffffffff81009ac2>] system_call_fastpath+0x16/0x1b
+
+Regards,
+Denny
 
 _______________________________________________
 xfs mailing list
