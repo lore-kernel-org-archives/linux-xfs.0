@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o9QNR2sW113913 for <xfs@oss.sgi.com>; Tue, 26 Oct 2010 18:27:03 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 47B4912F8F0A
-	for <xfs@oss.sgi.com>; Tue, 26 Oct 2010 16:43:53 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
-	[150.101.137.102]) by cuda.sgi.com with ESMTP id
-	DGSHLVB8kOHv4YKN for <xfs@oss.sgi.com>;
-	Tue, 26 Oct 2010 16:43:53 -0700 (PDT)
-Date: Wed, 27 Oct 2010 10:28:16 +1100
-From: Dave Chinner <david@fromorbit.com>
+	o9QNvmRm115806 for <xfs@oss.sgi.com>; Tue, 26 Oct 2010 18:57:48 -0500
+Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3328512F908F
+	for <xfs@oss.sgi.com>; Tue, 26 Oct 2010 17:14:40 -0700 (PDT)
+Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
+	cuda.sgi.com with ESMTP id sxTFvEp5gK84hwVq for
+	<xfs@oss.sgi.com>; Tue, 26 Oct 2010 17:14:40 -0700 (PDT)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
 Subject: Re: XFS journaling position
-Message-ID: <20101026232816.GB32255@dastard>
+Date: Wed, 27 Oct 2010 01:59:02 +0200
 References: <31c7e56286d37870011c17ee8e002760.squirrel@webmail.ics.forth.gr>
-	<20101025161052.GC19425@sgi.com> <201010270027.26687@zmi.at>
+	<201010270027.26687@zmi.at> <20101026232816.GB32255@dastard>
+In-Reply-To: <20101026232816.GB32255@dastard>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <201010270027.26687@zmi.at>
+Message-Id: <201010270159.03002@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,57 +24,68 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: multipart/mixed; boundary="===============1733313272783725833=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Michael Monnerie <michael.monnerie@is.it-management.at>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-T24gV2VkLCBPY3QgMjcsIDIwMTAgYXQgMTI6Mjc6MjZBTSArMDIwMCwgTWljaGFlbCBNb25uZXJp
-ZSB3cm90ZToKPiBPbiBNb250YWcsIDI1LiBPa3RvYmVyIDIwMTAgR2VvZmZyZXkgV2Vocm1hbiB3
-cm90ZToKPiA+IEkgaGF2ZW4ndCBmb3VuZCBhbnkgZG9jdW1lbnRhdGlvbiB0byBzdXBwb3J0IHRo
-aXMsIGJ1dCBJIGhhdmUgYmVlbgo+ID4gdG9sZCB0aGF0IHRoZSBtaWRkbGUgd2FzIHNlbGVjdGVk
-IGZvciB0aGUgc2luZ2xlIGRpc2sgY2FzZSB0bwo+ID4gbWluaW1pemUgc2VlayB0aW1lcy4gIFRo
-ZSBkaXN0YW5jZSB0aGUgaGVhZCBtdXN0IHRyYXZlbCB0byBvciBmcm9tCj4gPiBvdGhlciBsb2Nh
-dGlvbnMgb24gdGhlIGRpc2sgaXMgb3B0aW1pemVkIGJ5IHBsYWNpbmcgdGhlIGxvZyBpbiB0aGUK
-PiA+IG1pZGRsZSBvZiB0aGUgZGlzay4KPiAKPiBUaGlzIGlzIGJhc2VkIG9uIHRoZSBhc3N1bXB0
-aW9uIHRoYXQKPiAxKSBhIGRpc2sgaXMgdG90YWxseSBmaWxsZWQgd2l0aCBkYXRhIGFuZAo+IDIp
-IHRoZSBwYXJ0aXRpb24gdGhhdCBYRlMgcmVzaWRlcyBvbiBpcyB0aGUgb25seSBvbmUgb24gdGhl
-IGRpc2suCj4gCj4gRm9yIFBDcyBvciBzbWFsbCBzZXJ2ZXJzIHlvdSBub3JtYWxseSBoYXZlIGEg
-c3dhcCBwYXJ0aXRpb24sIHRoZSAKPiByZWNvbW1lbmRlZCBzaXplIGlzIFJBTXgyIChhdCBsZWFz
-dCBpdCB3YXMgb25jZSBzdWdnZXN0ZWQsIEkndmUgYWx3YXlzIAo+IG9ubHkgc2V0IGl0IHRvIFJB
-TSBzaXplKS4gVGhlbiB5b3UgaGF2ZSBhdCBsZWFzdCBhIHJvb3QgZmlsZXN5c3RlbSwgCj4gd2hp
-Y2ggb2Z0ZW4gd29uJ3QgYmUgWEZTLCBhbmQgdGhlbiB0aGUgZGF0YSBwYXJ0aXRpb24sIHdoaWNo
-IGNvdWxkIGJlIGEgCj4gc2luZ2xlIHBhcnRpdGlvbiB1bnRpbCB0aGUgZW5kIG9mIHRoZSBkaXNr
-LiBGb3IgYSBzaW5nbGUgMzAwR0IgZGlzaywgCj4gdGhpcyBtZWFucyB0aGF0IGFyb3VuZCAyMC01
-MEdCIHdpbGwgYmUgdXNlZCBieSAib3RoZXIiIChzd2FwLCByb290LCAKPiB3aW5kb3dzPykgcGFy
-dGl0aW9ucywgdGhlbiBtYXliZSBhIHNpbmdsZSAyNTAtMjgwR0IgcGFydGl0aW9uIGZvciBYRlMu
-IAoKRG9lc24ndCBtYXR0ZXIgLSB0aGUgcGxhY2VtZW50IG9mIHRoZSBsb2cgbWF0dGVycyB3aGVu
-IHRoZSBYRlMKcGFydGl0aW9uIGlzIGJ1c3ksIG5vdCB3aGVuIHlvdSBhcmUgc3dhcHBpbmcgb3Ig
-eW91ciByb290IGZpbGVzeXN0ZW0KaXMgZG9pbmcgc3R1ZmYuIElmIHlvdSBoYXZlIHRyYWZmaWMg
-dG8gbXVsdGlwbGUgcGFydGl0aW9ucyBhdCBvbmNlLAp0aGVuIG5vdGhpbmcgeW91IGRvIHRvIHRo
-ZSBmaWxlc3lzdGVtIGxheW91dCB3aWxsIG1ha2UgbXVjaApkaWZmZXJlbmNlLgoKPiBJZiB5b3Ug
-cGxhY2UgdGhlIGpvdXJuYWwgaW4gdGhlIG1pZGRsZSBvZiB0aGUgcGFydGl0aW9uLCB5b3UgYXJl
-IGFscmVhZHkgCj4gaW4gYW4gYXJlYSB3aGVyZSBkaXNrcyBhcmUgc2xvd2VyIHRoYW4gb24gdGhl
-IG91dHNpZGUuIEFuZCBpZiB5b3UgZmlsbCAKPiBvbmx5IGhhbGYgb2YgdGhlIHBhcnRpdGlvbiwg
-aXQgbWVhbnMgeW91ciBsb2cgaXMgdG90YWxseSBvbiB0aGUgZW5kIG9mIAo+IHRoZSBkaXNrLCBh
-Y2Nlc3Mtd2lzZS4KCldlbGwsIG5vLiBYRlMgZG9lcyBub3QgZmlsbCB0aGUgZmlsZXN5c3RlbSBm
-cm9tIHRoZSBzdGFydCB0byB0aGUKZW5kLiBYRlMgc3ByZWFkcyB0aGUgZGF0YSBhbmQgbWV0YWRh
-dGEgYWNyb3NzIGFsbCB0aGUgYWxsb2NhdGlvbgpncm91cHMsIGFuZCBzbyB0aGVyZSBpcyBnZW5l
-cmFsbHkgYXMgbXVjaCBtZXRhxJFhdGEvZGF0YSBvbiBlaXRoZXIKc2lkZSBvZiB0aGUgbG9nIGF0
-IGFueSBnaXZlbiB0aW1lLiBGb3IgZXhhbXBsZSwgYSBrZXJuZWwgdHJlZSBvbiBhCjEyMEdCIGZp
-bGVzeXN0ZW0gd2l0aCA0IEFHcyBoYXMgdGhlIGZvbGxvd2luZyBkaXN0cmlidXRpb24gb2YKZXh0
-ZW50czoKCkFHCWV4dGVudHMKMAkxMDc1MAoxCTEwNzMwCjIJIDk5OTQKMwkxMDI2NQoKU28geW91
-IGNhbiBzZWUgdGhhdCB3aXRoIHRoZSBsb2cgYXQgdGhlIHN0YXJ0IG9mIEFHIDIsIHRoZXJlIGlz
-IGEKcHJldHR5IGV2ZW4gY2hhbmNlIG9mIGFueSBzcGVjaWZpYyBJTyBpbiB0aGF0IGtlcm5lbCB0
-cmVlIGJlaW5nCmVpdGhlciBzaWRlIG9mIHRoZSBsb2cuLi4uCgpUaGUgZGlmZmVyZW5jZSBpbiBz
-ZXF1ZW50aWFsIHBlcmZvcm1hbmNlIGZyb20gQUcgMCB0byBBRyAzIG9uIHRoaXMKZHJpdmUgaXMg
-YWJvdXQgMTBNQi9zLCBidXQgdGhlIHdvcnN0IGNhc2Ugc2VlayB0aW1lIGlzIGFyb3VuZCAxOG1z
-CmFuZCBhdmVyYWdlIGlzIGFib3V0IDltcy4gSU9XcywgdGhlIGJlbmVmaXQgb2Ygc2VlayB0aW1l
-IHJlZHVjdGlvbgpieSBwbGFjaW5nIHRoZSBsb2cgaW4gdGhlIG1pZGRsZSBpcyBmb3IgbW9yZSB0
-aGFuIHRoZSBpbXByb3ZlbWVudAppbiBzZXF1ZW50aWFsIHRocm91Z2hwdXQgd291bGQgZ2l2ZSBi
-eSBwbGFjaW5nIHRoZSBsb2cgaW4gQUcgMC4KCkNoZWVycywKCkRhdmUuCi0tIApEYXZlIENoaW5u
-ZXIKZGF2aWRAZnJvbW9yYml0LmNvbQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29z
-cy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+--===============1733313272783725833==
+Content-Type: multipart/signed;
+  boundary="nextPart1787230.vMih50t9hL";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
+
+--nextPart1787230.vMih50t9hL
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+On Mittwoch, 27. Oktober 2010 Dave Chinner wrote:
+> XFS does not fill the filesystem from the start to the
+> end.
+
+Nice to know, thanks!
+
+=2D-=20
+mit freundlichen Gr=C3=BCssen,
+Michael Monnerie, Ing. BSc
+
+it-management Internet Services
+http://proteger.at [gesprochen: Prot-e-schee]
+Tel: 0660 / 415 65 31
+
+****** Radiointerview zum Thema Spam ******
+http://www.it-podcast.at/archiv.html#podcast-100716
+
+// Wir haben im Moment zwei H=C3=A4user zu verkaufen:
+// http://zmi.at/langegg/
+// http://zmi.at/haus2009/
+
+--nextPart1787230.vMih50t9hL
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.15 (GNU/Linux)
+
+iEYEABECAAYFAkzHa0YACgkQzhSR9xwSCbRpdgCfeRAwHqR25b0OiviaqHRAqijV
+CCIAn2jsQpEUGrOBpdFifx0QujEUNxIY
+=UMaR
+-----END PGP SIGNATURE-----
+
+--nextPart1787230.vMih50t9hL--
+
+
+--===============1733313272783725833==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============1733313272783725833==--
