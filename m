@@ -1,28 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o9QMWKLb110645 for <xfs@oss.sgi.com>; Tue, 26 Oct 2010 17:32:21 -0500
-Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B2FA41600381
-	for <xfs@oss.sgi.com>; Tue, 26 Oct 2010 15:33:38 -0700 (PDT)
-Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
-	cuda.sgi.com with ESMTP id lUFVJotrOxIjUCcs for
-	<xfs@oss.sgi.com>; Tue, 26 Oct 2010 15:33:38 -0700 (PDT)
-Received: from mailsrv.i.zmi.at (h081217106033.dyn.cm.kabsi.at [81.217.106.33])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
-	by mailsrv14.zmi.at (Postfix) with ESMTPSA id 1FF5B17C
-	for <xfs@oss.sgi.com>; Wed, 27 Oct 2010 00:33:37 +0200 (CEST)
-Received: from saturn.localnet (saturn.i.zmi.at [10.72.27.2])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client did not present a certificate)
-	by mailsrv.i.zmi.at (Postfix) with ESMTPSA id 2B7EF401C3D
-	for <xfs@oss.sgi.com>; Wed, 27 Oct 2010 00:33:36 +0200 (CEST)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: XFS Performance on NetApp
-Date: Wed, 27 Oct 2010 00:33:35 +0200
+	o9QMvPgP112130 for <xfs@oss.sgi.com>; Tue, 26 Oct 2010 17:57:26 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5E85712F89E3
+	for <xfs@oss.sgi.com>; Tue, 26 Oct 2010 16:14:17 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
+	[150.101.137.102]) by cuda.sgi.com with ESMTP id
+	zocbyQ9HLUeSss8z for <xfs@oss.sgi.com>;
+	Tue, 26 Oct 2010 16:14:17 -0700 (PDT)
+Date: Wed, 27 Oct 2010 09:58:39 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Possible deadlock when deleting from realtime section
+Message-ID: <20101026225839.GZ32255@dastard>
+References: <AANLkTi=Zq3mh=0Q-g6oi-OqYFRsENiTjLcHfvPNsOkGa@mail.gmail.com>
 MIME-Version: 1.0
-Message-Id: <201010270033.35894@zmi.at>
+Content-Disposition: inline
+In-Reply-To: <AANLkTi=Zq3mh=0Q-g6oi-OqYFRsENiTjLcHfvPNsOkGa@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,70 +25,111 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============3134247249871137003=="
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Denny Priebe <denny.priebe@googlemail.com>
+Cc: xfs@oss.sgi.com
 
---===============3134247249871137003==
-Content-Type: multipart/signed;
-  boundary="nextPart1760448.QiIqxk3psY";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+On Mon, Oct 25, 2010 at 03:59:22PM +0000, Denny Priebe wrote:
+> Hi,
+> =
 
---nextPart1760448.QiIqxk3psY
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+> I'm experiencing a deadlock situation when deleting directories placed in
+> the realtime section. This is reproducable with kernel versions 2.6.35.7 =
+and
+> 2.6.36-rc8. I haven't tried final 2.6.36 yet. The same setup is working
+> perfectly without using the realtime section. The file system has been
+> created with
+> =
 
-Does anybody have a report how XFS behaves on a NetApp storage with thin=20
-provisioning? They have a completely "weird" storage, their WAFL (write=20
-anywhere file layout) together with deduplication and other things make=20
-me think the best is to not-at-all specify any "performance options" in=20
-mkfs/mount, like sunit/swidth or largeio, swalloc, etc.
+> =A0mkfs.xfs -f -l logdev=3D/dev/sdb1 -r rtdev=3D/dev/sdb3,extsize=3D256k =
+/dev/sdb2
 
-Does someone have information on that?
+FYI, using an external log on the same device as the main device will be
+slower than using the default internal log....
 
-=2D-=20
-mit freundlichen Gr=C3=BCssen,
-Michael Monnerie, Ing. BSc
+> and mounted with
+> =
 
-it-management Internet Services
-http://proteger.at [gesprochen: Prot-e-schee]
-Tel: 0660 / 415 65 31
+> =A0mount -t xfs -o logdev=3D/dev/sdb1,rtdev=3D/dev/sdb3,sunit=3D512,swidt=
+h=3D2048 \
+> =A0/dev/sdb2 /there
+> =
 
-****** Radiointerview zum Thema Spam ******
-http://www.it-podcast.at/archiv.html#podcast-100716
+> This is where rm blocks:
+> =
 
-// Wir haben im Moment zwei H=C3=A4user zu verkaufen:
-// http://zmi.at/langegg/
-// http://zmi.at/haus2009/
+> SysRq : Show Blocked State
+> =A0task =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0PC stack =A0 pid f=
+ather
+> rm =A0 =A0 =A0 =A0 =A0 =A0D 0000000000000005 =A0 =A0 0 =A01705 =A0 1658 0=
+x00000080
+> ffff88018c40d858 0000000000000086 ffff880100000000 ffff88018c40c010
+> ffff88018c40dfd8 00000000000148c0 ffff88018b1c2e20 ffff88018b1c31d8
+> ffff88018b1c31d0 00000000000148c0 00000000000148c0 ffff88018c40dfd8
+> Call Trace:
+> [<ffffffff81437739>] rwsem_down_failed_common+0xd3/0x105
+> [<ffffffff8143777e>] rwsem_down_write_failed+0x13/0x15
+> [<ffffffff81202ad3>] call_rwsem_down_write_failed+0x13/0x20
+> [<ffffffff81436e3d>] ? down_write+0x40/0x44
+> [<ffffffffa033be9b>] xfs_ilock+0x4a/0x9a [xfs]
+> [<ffffffffa033c413>] xfs_iget+0x34c/0x5cd [xfs]
+> [<ffffffffa0351fa9>] xfs_trans_iget+0x1b/0x56 [xfs]
+> [<ffffffffa0313035>] xfs_rtfree_extent+0x37/0xdc [xfs]
+> [<ffffffffa033fce2>] ? xfs_iext_remove+0xc0/0xd2 [xfs]
+> [<ffffffffa0324ffe>] ? xfs_bmap_del_extent+0x2e8/0x93d [xfs]
+> [<ffffffffa0324e87>] xfs_bmap_del_extent+0x171/0x93d [xfs]
+> [<ffffffffa03506eb>] ? xfs_trans_commit_iclog+0x2ba/0x2d3 [xfs]
+> [<ffffffffa0325dc3>] xfs_bunmapi+0x770/0xa28 [xfs]
+> [<ffffffffa033e44e>] xfs_itruncate_finish+0x185/0x2b8 [xfs]
+> [<ffffffffa0354437>] xfs_inactive+0x1c8/0x3d5 [xfs]
+> [<ffffffffa035f38c>] xfs_fs_evict_inode+0xd5/0xdd [xfs]
+> [<ffffffff8111282b>] evict+0x22/0x92
+> [<ffffffff81112c60>] iput+0x1bc/0x225
+> [<ffffffff8110b079>] do_unlinkat+0x103/0x156
+> [<ffffffff811086c5>] ? path_put+0x1d/0x22
+> [<ffffffff81093e2c>] ? audit_syscall_entry+0x119/0x145
+> [<ffffffff8110b205>] sys_unlinkat+0x24/0x26
+> [<ffffffff81009ac2>] system_call_fastpath+0x16/0x1b
 
---nextPart1760448.QiIqxk3psY
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+So it is blocked trying to lock the allocation bitmap inode.
+Hmmm, I suspect that XFS_ITRUNC_MAX_EXTENTS is the start of
+the problem here.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.15 (GNU/Linux)
+i.e. what I think might be the problem is that xfs_bunmapi() is
+trying to free two extents in the one transaction, and what we see
+above is the second extent being freed via xfs_rtfree_extent().
+The bitmap inode won't be unlocked until the transaction commits,
+so the second call to xfs_trans_iget() in the same transaction will
+hang like this.
 
-iEYEABECAAYFAkzHVz8ACgkQzhSR9xwSCbS7CACgkkFuufq6T9nqCThDuWoTrr/V
-HWcAnRP8LsibNpPKCH96/5DxWmU5gd+G
-=KBcz
------END PGP SIGNATURE-----
+Hmmm. Looks like we broke recursive inode locking in
+xfs_trans_iget() in commit aa72a5cf00001d0b952c7c755be404b9118ceb2e
+("xfs: simplify xfs_trans_iget"). The changelog says:
 
---nextPart1760448.QiIqxk3psY--
+"....
+    A quick audit of the callers of xfs_trans_iget shows that no
+    caller really relies on this behaviour fortunately - xfs_ialloc
+    allows this inode from disk so it must not be there before, and
+    all the RT allocator routines only every add each RT bitmap
+    inode once.
+...."
 
+What we didn't take into account is multiple RT allocator calls in
+the same transaction context. Let me think about the best way to fix
+this.
 
---===============3134247249871137003==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Cheers,
+
+Dave.
+-- =
+
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============3134247249871137003==--
