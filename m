@@ -1,21 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o9QC80JI070571 for <xfs@oss.sgi.com>; Tue, 26 Oct 2010 07:08:00 -0500
-Received: from server655-han.de-nserver.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9F15315FAC3A
-	for <xfs@oss.sgi.com>; Tue, 26 Oct 2010 05:24:49 -0700 (PDT)
-Received: from server655-han.de-nserver.de (server655-han.de-nserver.de
-	[85.158.177.45]) by cuda.sgi.com with ESMTP id 4lTPHthCYmgqqZhU
-	for <xfs@oss.sgi.com>; Tue, 26 Oct 2010 05:24:49 -0700 (PDT)
-Message-ID: <4CC6C4E8.6010409@profihost.ag>
-Date: Tue, 26 Oct 2010 14:09:12 +0200
-From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
-MIME-Version: 1.0
+	o9QBjpni069216 for <xfs@oss.sgi.com>; Tue, 26 Oct 2010 06:45:51 -0500
+Received: from smtp4-g21.free.fr (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0C105125AEC
+	for <xfs@oss.sgi.com>; Tue, 26 Oct 2010 04:47:07 -0700 (PDT)
+Received: from smtp4-g21.free.fr (smtp4-g21.free.fr [212.27.42.4]) by
+	cuda.sgi.com with ESMTP id O1W3FyWwZte74z2L for
+	<xfs@oss.sgi.com>; Tue, 26 Oct 2010 04:47:07 -0700 (PDT)
+Date: Tue, 26 Oct 2010 13:47:03 +0200
+From: Emmanuel Florac <eflorac@intellique.com>
 Subject: Re: Pid: 8345, comm: rsync Not tainted 2.6.32.22intel #1
-References: <4CC67450.9020602@profihost.ag>	<20101026092205.086c0d89@galadriel.home>	<4CC68249.7050409@profihost.ag>	<20101026094111.48670eb7@galadriel.home>	<4CC688FE.7010206@profihost.ag>	<20101026130103.7cc43aec@harpe.intellique.com>	<4CC6B56B.7020007@profihost.ag>
-	<20101026132505.6af29d5d@harpe.intellique.com>
-In-Reply-To: <20101026132505.6af29d5d@harpe.intellique.com>
+Message-ID: <20101026134703.3f06cfda@harpe.intellique.com>
+In-Reply-To: <CFFC47E79E870F4EBAD0CA24D8CD7652ED04A5F7F8@CRW-EXM01.int.cggveritas.com>
+References: <4CC67450.9020602@profihost.ag>
+	<20101026092205.086c0d89@galadriel.home>
+	<4CC68249.7050409@profihost.ag>
+	<20101026094111.48670eb7@galadriel.home>
+	<4CC688FE.7010206@profihost.ag>
+	<20101026130103.7cc43aec@harpe.intellique.com>
+	<4CC6B56B.7020007@profihost.ag>
+	<CFFC47E79E870F4EBAD0CA24D8CD7652ED04A5F7F8@CRW-EXM01.int.cggveritas.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,85 +30,37 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="iso-8859-1"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Emmanuel Florac <eflorac@intellique.com>
-Cc: xfs@oss.sgi.com
+To: Tore =?ISO-8859-1?Q?H=F8ivaag?= <tore.hoivaag.larsen@cggveritas.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
 
-Hi,
+Le Tue, 26 Oct 2010 12:30:22 +0100
+Larsen, Tore H=F8ivaag <tore.hoivaag.larsen@cggveritas.com> =E9crivait:
 
-thanks for your suggestions.
+> You should keep the driver and firmware ins sync wither kernel.
+> Choose e.g. latest 9.4.3 iso for 2.6.9, and 9.5.3 for
+> RHEL5/SLES11/Fedora13. Do not use 9.5.3 firmware with RHEL4/SLES10
+> native driver. If I remeber correctly tw_update doesn't even let you
+> mix a downgrade driver with new firmware, and vs.versus.
 
- > My other advices : generally don't use cfq scheduler with a RAID
- > controller, it will defeat the whole purpose of RAID cache and command
- > reordering abilities. Use noop, generally, and deepen the queue :
- >
- > echo "noop">  /sys/block/sdc/queue/scheduler
- > echo 512>  /sys/block/sdc/queue/nr_requests
+Yes, it will complain in case your driver/api isn't compatible with the
+newer firmware. Of course, only actually upgrade if it tells you :
+"proceed to update".
 
-Is there a way to make this static to this disk?
+However I'm pretty sure 2.6.23 is safe for 4.x firmware (2.6.24
+definitely is).
 
- > Don't hesitate to enlarge tremendously the read-ahead cache, too. I
- > generally use about 512 to 1024 sectors  per drive as a rule of the
- > thumb, so a 4 drives array will use 2048 to 4096 :
- >
- > blockdev --setra 4096 /dev/sdc
-Is there also a way to make this static?
+-- =
 
- > You should see a 100% write/read speed improvement with these
- > parameters.
-That would be great.
-
-
-Thanks Stefan
-
-Am 26.10.2010 13:25, schrieb Emmanuel Florac:
-> Le Tue, 26 Oct 2010 13:03:07 +0200
-> Stefan Priebe - Profihost AG<s.priebe@profihost.ag>  =E9crivait:
->
->> it is a 9650SE-8LPML with Firmware: FE9X 3.06.00.003.
->
-> Augh, this firmware is antique :) The latest is 4.10.xx.xx. Anyway,
-> don't use firmware before 3.08.xx.xx, there were some nasty bugs.
->
->> So you mean i should upgrade to 4.x Firmware?
->
-> Definitely. It will much improve performances, too. Simply download the
-> firmware file, extract it, and flash the controller with tw_cli :
->
-> tw_cli /cXX update fw=3Dprom0006.img
->
-> (the firmware is always in the prom00xx.img file).
->
->> Do i then have to do a
->> filesystem repair? Or just wait if the error accours again?
->
-> No, the filesystem will be fine. However you should start a RAID scrub
-> with
->
-> tw_cli /cXX/uXX start verify
->
-> This will rebuild the parity with the new 4.X format (faster writes)
-> and help detect any hardware fault.
->
-> My other advices : generally don't use cfq scheduler with a RAID
-> controller, it will defeat the whole purpose of RAID cache and command
-> reordering abilities. Use noop, generally, and deepen the queue :
->
-> echo "noop">  /sys/block/sdc/queue/scheduler
-> echo 512>  /sys/block/sdc/queue/nr_requests
->
-> Don't hesitate to enlarge tremendously the read-ahead cache, too. I
-> generally use about 512 to 1024 sectors  per drive as a rule of the
-> thumb, so a 4 drives array will use 2048 to 4096 :
->
-> blockdev --setra 4096 /dev/sdc
->
-> You should see a 100% write/read speed improvement with these
-> parameters.
->
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
 
 _______________________________________________
 xfs mailing list
