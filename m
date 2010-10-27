@@ -1,20 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o9QNtqog115744 for <xfs@oss.sgi.com>; Tue, 26 Oct 2010 18:55:52 -0500
-Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AE28F128144
-	for <xfs@oss.sgi.com>; Tue, 26 Oct 2010 16:57:06 -0700 (PDT)
-Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
-	cuda.sgi.com with ESMTP id YEl6gMRmrYmHL08m for
-	<xfs@oss.sgi.com>; Tue, 26 Oct 2010 16:57:06 -0700 (PDT)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: Re: XFS Performance on NetApp
-Date: Wed, 27 Oct 2010 01:57:03 +0200
-References: <201010270033.35894@zmi.at> <20101026231007.GA32255@dastard>
-In-Reply-To: <20101026231007.GA32255@dastard>
+	o9R3slig133149 for <xfs@oss.sgi.com>; Tue, 26 Oct 2010 22:54:47 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2323313619C2
+	for <xfs@oss.sgi.com>; Tue, 26 Oct 2010 21:11:38 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
+	[150.101.137.98]) by cuda.sgi.com with ESMTP id
+	UGvd2tN0xABf4yWb for <xfs@oss.sgi.com>;
+	Tue, 26 Oct 2010 21:11:38 -0700 (PDT)
+Date: Wed, 27 Oct 2010 14:55:48 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Pid: 8345, comm: rsync Not tainted 2.6.32.22intel #1
+Message-ID: <20101027035548.GD32255@dastard>
+References: <4CC67450.9020602@profihost.ag> <4CC6B56B.7020007@profihost.ag>
+	<20101026132505.6af29d5d@harpe.intellique.com>
+	<201010270124.44846@zmi.at>
 MIME-Version: 1.0
-Message-Id: <201010270157.04276@zmi.at>
+Content-Disposition: inline
+In-Reply-To: <201010270124.44846@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,78 +27,54 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============2207989752152233796=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, Dave Chinner <david@fromorbit.com>
+To: Michael Monnerie <michael.monnerie@is.it-management.at>
+Cc: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>, xfs@oss.sgi.com
 
---===============2207989752152233796==
-Content-Type: multipart/signed;
-  boundary="nextPart3601255.z1EFAu9d68";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+On Wed, Oct 27, 2010 at 01:23:35AM +0200, Michael Monnerie wrote:
+> On Dienstag, 26. Oktober 2010 Emmanuel Florac wrote:
+> > echo "noop" > /sys/block/sdc/queue/scheduler
+> > echo 512 > /sys/block/sdc/queue/nr_requests
+> > blockdev --setra 4096 /dev/sdc
+> 
+> How about this small script in /etc/init.d/boot.local?
+> 
+> for i in /dev/xvd? /dev/sd? ; do
+>    if test "$i" == "${i%\?}" ; then
+>       echo i=$i
+>       blockdev --setra 1024 $i
+>       j=${i#/dev/}
+>       echo j=$j
+>       echo noop >/sys/block/$j/queue/scheduler
+>       echo 512 >/sys/block/$j/queue/nr_requests
+>    fi
+> done
+> 
+> This works for VMs within XenServer (/dev/xvda) and real servers 
+> (/dev/sda), and sets some values for all drives.
 
---nextPart3601255.z1EFAu9d68
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+I'd suggest that people learn how to tweak udev hotplug rules so
+that when the device is first created (i.e. during hotplug) the
+scheduler, queue depth and readahead are set automatically. That way
+you don't have to rely on devices being discovered before your script
+runs...
 
-On Mittwoch, 27. Oktober 2010 Dave Chinner wrote:
-> However, options that
-> reduce filesystem fragmentation (e.g. allocsize) still have value in
-> keeping the amount of metadata and ptotential seeks down...
+Another benefit of doing it this way is that it is easy to set
+default rules for different types of devices based on regex matching
+e.g. different configs for "sd*" vs "dm*" vs "vd*" are trivial to
+set up.
 
-Yes, but for NetApp: maybe. With this whole deduplication thingy, I=20
-wonder if even such a simple assumption is true. And then some people=20
-make a snapshot every hour, whichmeans your log will wander around on=20
-the storage anyway. So it's best to "just use it".
+Cheers,
 
-Another thing just crosses my mind: on a thin provisioned system, would=20
-the TRIM command be useful? Do such storages recognise this command? It=20
-would be very clever, I think. Let's say you run xfs_fsr, that would=20
-allow the upper layer to relaim unused space. Would that be the storage=20
-or XenServer/VMware which needs to understand this command?
-
-=2D-=20
-mit freundlichen Gr=FCssen,
-Michael Monnerie, Ing. BSc
-
-it-management Internet Services
-http://proteger.at [gesprochen: Prot-e-schee]
-Tel: 0660 / 415 65 31
-
-****** Radiointerview zum Thema Spam ******
-http://www.it-podcast.at/archiv.html#podcast-100716
-
-// Wir haben im Moment zwei H=E4user zu verkaufen:
-// http://zmi.at/langegg/
-// http://zmi.at/haus2009/
-
---nextPart3601255.z1EFAu9d68
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.15 (GNU/Linux)
-
-iEYEABECAAYFAkzHatAACgkQzhSR9xwSCbTEyACg61exbXmVAk8+xLYSklyFHLxv
-UDMAoO454ogHg6p6Udfq6/7bj+HtFByB
-=Ik9u
------END PGP SIGNATURE-----
-
---nextPart3601255.z1EFAu9d68--
-
-
---===============2207989752152233796==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============2207989752152233796==--
