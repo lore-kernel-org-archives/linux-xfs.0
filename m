@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o9V9rQun119543 for <xfs@oss.sgi.com>; Sun, 31 Oct 2010 04:53:26 -0500
-Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 455D61BC35B4
-	for <xfs@oss.sgi.com>; Sun, 31 Oct 2010 02:54:46 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id J9J0aGRApAk7zIDR
-	for <xfs@oss.sgi.com>; Sun, 31 Oct 2010 02:54:46 -0700 (PDT)
-Message-ID: <4CCD3CE6.8060407@hardwarefreak.com>
-Date: Sun, 31 Oct 2010 04:54:46 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
-MIME-Version: 1.0
+	o9VE8mJ7127186 for <xfs@oss.sgi.com>; Sun, 31 Oct 2010 09:08:48 -0500
+Received: from smtp3-g21.free.fr (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 57EB91379459
+	for <xfs@oss.sgi.com>; Sun, 31 Oct 2010 07:26:07 -0700 (PDT)
+Received: from smtp3-g21.free.fr (smtp3-g21.free.fr [212.27.42.3]) by
+	cuda.sgi.com with ESMTP id bnce4Z0MYR6Gzq2B for
+	<xfs@oss.sgi.com>; Sun, 31 Oct 2010 07:26:07 -0700 (PDT)
+Date: Sun, 31 Oct 2010 15:10:00 +0100
+From: Emmanuel Florac <eflorac@intellique.com>
 Subject: Re: xfs_repair of critical volume
-References: <75C248E3-2C99-426E-AE7D-9EC543726796@ucsc.edu>
+Message-ID: <20101031151000.70dcd6b9@galadriel.home>
 In-Reply-To: <75C248E3-2C99-426E-AE7D-9EC543726796@ucsc.edu>
+References: <75C248E3-2C99-426E-AE7D-9EC543726796@ucsc.edu>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,38 +23,41 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: ermorris@ucsc.edu
+To: Eli Morris <ermorris@ucsc.edu>
+Cc: xfs@oss.sgi.com
 
-Eli Morris put forth on 10/31/2010 2:54 AM:
-> Hi,
-> 
-> I have a large XFS filesystem (60 TB) that is composed of 5 hardware RAID 6 volumes. One of those volumes had several drives fail in a very short time and we lost that volume. However, four of the volumes seem OK. We are in a worse state because our backup unit failed a week later when four drives simultaneously went offline. So we are in a bad very state. I am able to mount the filesystem that consists of the four remaining volumes. I was thinking about running xfs_repair on the filesystem in hopes it would recover all the files that were not on the bad volume, which are obviously gone. Since our backup is gone, I'm very concerned about doing anything to lose the data that will still have. I ran xfs_repair with the -n flag and I have a lengthly file of things that program would do to our filesystem. I don't have the expertise to decipher the output and figure out if xfs_repair would fix the filesystem in a way that would retain our remaining data or if it would, let's say
- 
- t!
->  runcate the filesystem at the data loss boundary (our lost volume was the middle one of the five volumes), returning 2/5 of the filesystem or some other undesirable result. I would post the xfs_repair -n output here, but it is more than a megabyte. I'm hoping some one of you xfs gurus will take pity on me and let me send you the output to look at or give me an idea as to what they think xfs_repair is likely to do if I should run it or if anyone has any suggestions as to how to get back as much data as possible in this recovery.
+Le Sun, 31 Oct 2010 00:54:13 -0700 vous =E9criviez:
 
-This isn't the storage that houses the genome data is it?
+> I have a large XFS filesystem (60 TB) that is composed of 5 hardware
+> RAID 6 volumes. One of those volumes had several drives fail in a
+> very short time and we lost that volume.
 
-Unfortunately I don't have an answer for you Eli, or, at least, not one
-you would like to hear.  One of the devs will be able to tell you if you
-need to start typing the letter of resignation or loading the suicide
-pistol.  (Apologies if the attempt at humor during this difficult time
-is inappropriate.  Sometimes a grin, giggle, or laugh can help with the
-stress, even if for only a moment or two. :)
+You may still have a slight chance to repair the broken RAID volume.
+What is the type and model of RAID controller? What is the model of the
+drives? Did you aggregate the RAID arrays with LVM?
 
-One thing I recommend is simply posting the xfs_repair output to a web
-page so you don't have to email it to multiple people.  If you don't
-have an easily accessible resource for this at the university I'll
-gladly post it on my webserver and post the URL here to the XFS
-list--takes me about 2 minutes.
 
--- 
-Stan
+Most drives failures (particularly on late 2009 Seagate SATA drives) are
+both relatively frequent and transitory, i. e. may randomly recover
+after a while.
+
+What did you try? Can you power down the faulty RAID array
+entirely and power it up after a while? Did you try to actually freeze
+the failed drives (it may revive them for a while)? Did you try to run
+SpinRite or another utility on the broken drives, individually ?
+
+-- =
+
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
 
 _______________________________________________
 xfs mailing list
