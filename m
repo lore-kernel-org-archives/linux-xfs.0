@@ -1,11 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o9UEP2Sq066027 for <xfs@oss.sgi.com>; Sat, 30 Oct 2010 09:25:03 -0500
-From: Vasiliy Kulikov <segooon@gmail.com>
-Subject: [PATCH] xfs: linux-2.6: xfs_ioctl: fix information leak to userland
-Date: Sat, 30 Oct 2010 18:26:17 +0400
-Message-Id: <1288448778-5373-1-git-send-email-segooon@gmail.com>
+	o9V7qv4X115679 for <xfs@oss.sgi.com>; Sun, 31 Oct 2010 02:52:57 -0500
+Received: from ucsc.edu (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D460C1400F4
+	for <xfs@oss.sgi.com>; Sun, 31 Oct 2010 00:54:18 -0700 (PDT)
+Received: from ucsc.edu (email-prod-out-1.ucsc.edu [128.114.129.85]) by
+	cuda.sgi.com with ESMTP id IzVcRv6dXG45bExQ for
+	<xfs@oss.sgi.com>; Sun, 31 Oct 2010 00:54:18 -0700 (PDT)
+Received: from [128.114.125.112] (HELO ucsc.edu)
+	by email-prod-out-1.ucsc.edu (CommuniGate Pro SMTP 5.2.13)
+	with ESMTPS id 25146513 for xfs@oss.sgi.com;
+	Sun, 31 Oct 2010 00:54:18 -0700
+Received: from [71.198.233.81] (account ermorris@ucsc.edu HELO [10.0.1.4])
+	by email-prod-fe-1.ucsc.edu (CommuniGate Pro SMTP 5.2.13)
+	with ESMTPSA id 375278665 for xfs@oss.sgi.com;
+	Sun, 31 Oct 2010 00:54:13 -0700
+From: Eli Morris <ermorris@ucsc.edu>
+Subject: xfs_repair of critical volume
+Date: Sun, 31 Oct 2010 00:54:13 -0700
+Message-Id: <75C248E3-2C99-426E-AE7D-9EC543726796@ucsc.edu>
+Mime-Version: 1.0 (Apple Message framework v1081)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -14,40 +29,21 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: kernel-janitors@vger.kernel.org
-Cc: Eric Sandeen <sandeen@redhat.com>, Alex Elder <aelder@sgi.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, xfs-masters@oss.sgi.com, Dave Chinner <dchinner@redhat.com>, Christoph Hellwig <hch@lst.de>
+To: xfs@oss.sgi.com
 
-al_hreq is copied from userland.  If al_hreq.buflen is not properly aligned then
-xfs_attr_list will ignore the last bytes of kbuf.  These bytes are unitialized.
-It leads to leaking of contents of kernel stack memory.
+Hi,
 
-Signed-off-by: Vasiliy Kulikov <segooon@gmail.com>
----
- Compile tested.
+I have a large XFS filesystem (60 TB) that is composed of 5 hardware RAID 6 volumes. One of those volumes had several drives fail in a very short time and we lost that volume. However, four of the volumes seem OK. We are in a worse state because our backup unit failed a week later when four drives simultaneously went offline. So we are in a bad very state. I am able to mount the filesystem that consists of the four remaining volumes. I was thinking about running xfs_repair on the filesystem in hopes it would recover all the files that were not on the bad volume, which are obviously gone. Since our backup is gone, I'm very concerned about doing anything to lose the data that will still have. I ran xfs_repair with the -n flag and I have a lengthly file of things that program would do to our filesystem. I don't have the expertise to decipher the output and figure out if xfs_repair would fix the filesystem in a way that would retain our remaining data or if it would, let's say t!
+ runcate the filesystem at the data loss boundary (our lost volume was the middle one of the five volumes), returning 2/5 of the filesystem or some other undesirable result. I would post the xfs_repair -n output here, but it is more than a megabyte. I'm hoping some one of you xfs gurus will take pity on me and let me send you the output to look at or give me an idea as to what they think xfs_repair is likely to do if I should run it or if anyone has any suggestions as to how to get back as much data as possible in this recovery.
 
- fs/xfs/linux-2.6/xfs_ioctl.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+thanks very much,
 
-diff --git a/fs/xfs/linux-2.6/xfs_ioctl.c b/fs/xfs/linux-2.6/xfs_ioctl.c
-index 2ea238f..ad442d9 100644
---- a/fs/xfs/linux-2.6/xfs_ioctl.c
-+++ b/fs/xfs/linux-2.6/xfs_ioctl.c
-@@ -416,7 +416,7 @@ xfs_attrlist_by_handle(
- 	if (IS_ERR(dentry))
- 		return PTR_ERR(dentry);
- 
--	kbuf = kmalloc(al_hreq.buflen, GFP_KERNEL);
-+	kbuf = kzalloc(al_hreq.buflen, GFP_KERNEL);
- 	if (!kbuf)
- 		goto out_dput;
- 
--- 
-1.7.0.4
+Eli
+
 
 _______________________________________________
 xfs mailing list
