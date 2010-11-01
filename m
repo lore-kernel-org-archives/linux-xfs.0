@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oA13dAto162480 for <xfs@oss.sgi.com>; Sun, 31 Oct 2010 22:39:10 -0500
-Received: from ucsc.edu (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C6829137AF8C
-	for <xfs@oss.sgi.com>; Sun, 31 Oct 2010 20:56:34 -0700 (PDT)
-Received: from ucsc.edu (email-prod-out-1.ucsc.edu [128.114.129.85]) by
-	cuda.sgi.com with ESMTP id cL03zVMrP73RJKvg for
-	<xfs@oss.sgi.com>; Sun, 31 Oct 2010 20:56:34 -0700 (PDT)
-Subject: Re: xfs_repair of critical volume
-Mime-Version: 1.0 (Apple Message framework v1081)
-From: Eli Morris <ermorris@ucsc.edu>
-In-Reply-To: <20101031214021.686f43b8@galadriel.home>
-Date: Sun, 31 Oct 2010 20:40:20 -0700
-Message-Id: <1A57C61E-463F-4CB4-967C-DD6B66857E28@ucsc.edu>
-References: <C17C2CB6-A695-41B2-B12A-1CBF6DAD556F@ucsc.edu>
-	<20101031214021.686f43b8@galadriel.home>
+	oA17xsqF188091 for <xfs@oss.sgi.com>; Mon, 1 Nov 2010 02:59:55 -0500
+Received: from server655-han.de-nserver.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9AF2D137CE2D
+	for <xfs@oss.sgi.com>; Mon,  1 Nov 2010 01:17:18 -0700 (PDT)
+Received: from server655-han.de-nserver.de (server655-han.de-nserver.de
+	[85.158.177.45]) by cuda.sgi.com with ESMTP id QMALL13QkAbJLHiO
+	for <xfs@oss.sgi.com>; Mon, 01 Nov 2010 01:17:18 -0700 (PDT)
+Message-ID: <4CCE73C8.8070705@profihost.ag>
+Date: Mon, 01 Nov 2010 09:01:12 +0100
+From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+MIME-Version: 1.0
+Subject: Re: Pid: 8345, comm: rsync Not tainted 2.6.32.22intel #1
+References: <4CC67450.9020602@profihost.ag>
+	<20101026092205.086c0d89@galadriel.home>
+	<4CC68249.7050409@profihost.ag>
+In-Reply-To: <4CC68249.7050409@profihost.ag>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,70 +25,70 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Emmanuel Florac <eflorac@intellique.com>
 Cc: xfs@oss.sgi.com
 
-
-On Oct 31, 2010, at 1:40 PM, Emmanuel Florac wrote:
-
-> Le Sun, 31 Oct 2010 12:56:33 -0700 vous =E9criviez:
-> =
-
->> OK, that's a long tale of woe. Thanks for any advise. =
-
-> =
-
-> oK, so what we'd like to do is get the backup RAID volume back in
-> working order. You said it's made of 2TB Caviar green drives, but
-> didn't mention the RAID controller type... As I understand it, you
-> power-cycled the RAID array, so the cache is gone, whatever have been
-> in it... =
-
-> =
-
-> All arrays I know will happily reassemble a working RAID if you
-> succesfully revive the failed drives.
-> =
-
-> Logically the failed drives are almost certainly not really dead, but
-> in a temporary failure state mode. First, you must check WD support and
-> utilities to see if something may apply to your configuration. Anyway,
-> checking the failed drives' health with the western digital disk
-> utility should allow you to determine if they're toast or not.
-> =
-
-> In the case they're not actually dead, you could try to revive the
-> badblocks with Spinrite (www.grc.com), it saved my life a couple of
-> times, however it's quite risky when used with SMART-tripped drives.
-> =
-
-> -- =
-
-> ------------------------------------------------------------------------
-> Emmanuel Florac     |   Direction technique
->                    |   Intellique
->                    |	<eflorac@intellique.com>
->                    |   +33 1 78 94 84 02
-> ------------------------------------------------------------------------
-
 Hi,
 
-Thanks for your help. The RAID is a SCSI connected direct attached storage =
-16 bay unit made by Maxtronic. It is a Janus 6640, is case that helps anyth=
-ing. At the time of its problem, it was mounted read-only as I was trying t=
-o be careful of the data, since the main volume failed and this was our onl=
-y copy. So maybe the cache isn't a big deal. I'll try the "dead" drives tom=
-orrow with a WD utility. I'll give Spinrite a try, if the WD utility doesn'=
-t revive them.
+i've done all you advises - updating 3ware, setting other scheduler, 
+block size, ...
 
-thanks a lot for the help. I'll let you all know how things go.
+but today i got again hundrets of these messages:
+[318343.901809] Filesystem "sdc3": XFS internal error xfs_da_do_buf(2) 
+at line 2112 of file fs/xfs/xfs_da_btree.c.  Caller 0xffffffff8117bdea
+[318343.901811]
+[318343.901813] Pid: 20299, comm: rsync Not tainted 2.6.32.22intel #1
+[318343.901815] Call Trace:
+[318343.901819]  [<ffffffff8117bdea>] ? xfs_da_read_buf+0x24/0x29
+[318343.901823]  [<ffffffff8117bcb7>] ? xfs_da_do_buf+0x557/0x620
+[318343.901827]  [<ffffffff8117bdea>] ? xfs_da_read_buf+0x24/0x29
+[318343.901831]  [<ffffffff810538a7>] ? bit_waitqueue+0x10/0xa0
+[318343.901834]  [<ffffffff8117bdea>] ? xfs_da_read_buf+0x24/0x29
+[318343.901839]  [<ffffffff8117f43c>] ? xfs_dir2_block_lookup_int+0x45/0x197
+[318343.901843]  [<ffffffff8117f43c>] ? xfs_dir2_block_lookup_int+0x45/0x197
+[318343.901846]  [<ffffffff813751d0>] ? tcp_write_xmit+0x466/0x96c
+[318343.901850]  [<ffffffff8117f9c2>] ? xfs_dir2_block_lookup+0x18/0xb0
+[318343.901854]  [<ffffffff8117e71c>] ? xfs_dir_lookup+0xd5/0x147
+[318343.901857]  [<ffffffff811a11bd>] ? xfs_lookup+0x47/0xa3
+[318343.901861]  [<ffffffff811a90d1>] ? xfs_vn_lookup+0x3c/0x7b
+[318343.901865]  [<ffffffff810c1de7>] ? __lookup_hash+0xfa/0x11e
+[318343.901869]  [<ffffffff810c51a8>] ? do_filp_open+0x208/0x934
+[318343.901873]  [<ffffffff810c7242>] ? poll_select_copy_remaining+0xd0/0xf3
+[318343.901877]  [<ffffffff810cd62a>] ? alloc_fd+0x67/0x10b
+[318343.901880]  [<ffffffff810b8a60>] ? do_sys_open+0x55/0x103
+[318343.901884]  [<ffffffff8100ae6b>] ? system_call_fastpath+0x16/0x1b
 
-Eli =
+Stefan
 
+Am 26.10.2010 09:24, schrieb Stefan Priebe - Profihost AG:
+> Am 26.10.2010 09:22, schrieb Emmanuel Florac:
+>> xfs_info /dev/sdc3
+>
+> Hi here are the details:
+>
+> root@server361-han:~# xfs_info /dev/sdc3
+>
+> meta-data=/dev/sdc3 isize=256 agcount=32, agsize=40038461 blks
+> = sectsz=512 attr=0
+> data = bsize=4096 blocks=1281230752, imaxpct=25
+> = sunit=0 swidth=0 blks
+> naming =version 2 bsize=4096
+> log =internal bsize=4096 blocks=32768, version=2
+> = sectsz=512 sunit=0 blks, lazy-count=1
+> realtime =none extsz=4096 blocks=0, rtextents=0
+>
+> root@server361-han:~# mount|grep sdc3
+>
+> /dev/sdc3 on /sdc3 type xfs (rw,noatime,nodiratime,nobarrier,prjquota)
+> /sdc3/serverbackup on /serverbackup type none (rw,bind)
+> /sdc3/serverbackup_rootserver on /serverbackup_rootserver type none
+> (rw,bind)
+>
+> Stefan
 
 _______________________________________________
 xfs mailing list
