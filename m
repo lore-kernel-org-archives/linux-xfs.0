@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oA1CouZD210845 for <xfs@oss.sgi.com>; Mon, 1 Nov 2010 07:50:56 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 61C5B137D437
-	for <xfs@oss.sgi.com>; Mon,  1 Nov 2010 06:08:22 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
-	[150.101.137.101]) by cuda.sgi.com with ESMTP id
-	ETDi7m5w5reyGFb3 for <xfs@oss.sgi.com>;
-	Mon, 01 Nov 2010 06:08:22 -0700 (PDT)
-Date: Mon, 1 Nov 2010 23:52:14 +1100
-From: Dave Chinner <david@fromorbit.com>
+	oA1DSLXx213814 for <xfs@oss.sgi.com>; Mon, 1 Nov 2010 08:28:21 -0500
+Received: from smtp3-g21.free.fr (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 66703137D58E
+	for <xfs@oss.sgi.com>; Mon,  1 Nov 2010 06:45:46 -0700 (PDT)
+Received: from smtp3-g21.free.fr (smtp3-g21.free.fr [212.27.42.3]) by
+	cuda.sgi.com with ESMTP id oo7MkfDB88GYA5uD for
+	<xfs@oss.sgi.com>; Mon, 01 Nov 2010 06:45:46 -0700 (PDT)
+Date: Mon, 1 Nov 2010 14:29:33 +0100
+From: Emmanuel Florac <eflorac@intellique.com>
 Subject: Re: Pid: 8345, comm: rsync Not tainted 2.6.32.22intel #1
-Message-ID: <20101101125214.GM2715@dastard>
+Message-ID: <20101101142933.4911a30c@galadriel.home>
+In-Reply-To: <4CCEB27E.1000605@profihost.ag>
 References: <4CC67450.9020602@profihost.ag>
 	<20101026092205.086c0d89@galadriel.home>
 	<4CC68249.7050409@profihost.ag> <4CCE73C8.8070705@profihost.ag>
 	<20101101122751.GL2715@dastard> <4CCEB27E.1000605@profihost.ag>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4CCEB27E.1000605@profihost.ag>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,67 +26,30 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
 Cc: xfs@oss.sgi.com
 
-[ please don't top-post - fixed. ]
+Le Mon, 01 Nov 2010 13:28:46 +0100 vous =E9criviez:
 
-On Mon, Nov 01, 2010 at 01:28:46PM +0100, Stefan Priebe - Profihost AG wrote:
-> Am 01.11.2010 13:27, schrieb Dave Chinner:
-> >On Mon, Nov 01, 2010 at 09:01:12AM +0100, Stefan Priebe - Profihost AG wrote:
-> >>Hi,
-> >>
-> >>i've done all you advises - updating 3ware, setting other scheduler,
-> >>block size, ...
-> >>
-> >>but today i got again hundrets of these messages:
-> >>[318343.901809] Filesystem "sdc3": XFS internal error
-> >>xfs_da_do_buf(2) at line 2112 of file fs/xfs/xfs_da_btree.c.  Caller
-> >>0xffffffff8117bdea
-> >>[318343.901811]
-> >>[318343.901813] Pid: 20299, comm: rsync Not tainted 2.6.32.22intel #1
-> >>[318343.901815] Call Trace:
-> >>[318343.901819]  [<ffffffff8117bdea>] ? xfs_da_read_buf+0x24/0x29
-> >>[318343.901823]  [<ffffffff8117bcb7>] ? xfs_da_do_buf+0x557/0x620
-> >>[318343.901827]  [<ffffffff8117bdea>] ? xfs_da_read_buf+0x24/0x29
-> >>[318343.901831]  [<ffffffff810538a7>] ? bit_waitqueue+0x10/0xa0
-> >>[318343.901834]  [<ffffffff8117bdea>] ? xfs_da_read_buf+0x24/0x29
-> >>[318343.901839]  [<ffffffff8117f43c>] ? xfs_dir2_block_lookup_int+0x45/0x197
-> >>[318343.901843]  [<ffffffff8117f43c>] ? xfs_dir2_block_lookup_int+0x45/0x197
-> >>[318343.901846]  [<ffffffff813751d0>] ? tcp_write_xmit+0x466/0x96c
-> >>[318343.901850]  [<ffffffff8117f9c2>] ? xfs_dir2_block_lookup+0x18/0xb0
-> >>[318343.901854]  [<ffffffff8117e71c>] ? xfs_dir_lookup+0xd5/0x147
-> >>[318343.901857]  [<ffffffff811a11bd>] ? xfs_lookup+0x47/0xa3
-> >>[318343.901861]  [<ffffffff811a90d1>] ? xfs_vn_lookup+0x3c/0x7b
-> >>[318343.901865]  [<ffffffff810c1de7>] ? __lookup_hash+0xfa/0x11e
-> >>[318343.901869]  [<ffffffff810c51a8>] ? do_filp_open+0x208/0x934
-> >>[318343.901873]  [<ffffffff810c7242>] ? poll_select_copy_remaining+0xd0/0xf3
-> >>[318343.901877]  [<ffffffff810cd62a>] ? alloc_fd+0x67/0x10b
-> >>[318343.901880]  [<ffffffff810b8a60>] ? do_sys_open+0x55/0x103
-> >>[318343.901884]  [<ffffffff8100ae6b>] ? system_call_fastpath+0x16/0x1b
-> >
-> >Have you run repair to fix all the existing problems after doing all
-> >the firmware upgrades, etc?
->
 > no, as Emmanuel told me i don't have todo that.
 
-Perhaps you've been told the wrong thing.
+Did you run the "verify" round on the array after the upgrade? That
+would rebuild all checksum and insure that the RAID is fully coherent.
+If the verify comes out with any message, there is a sloght chance that
+the data on disk wasn't entirely coherent or clean.
 
-You are getting reports of on-disk corruption being encountered. You
-need to run repair to find and fix all these existing problems.
-before these problems will go away. Otherwise you'll keep getting
-these reports every time you read the corrupted directory....
+-- =
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
 
 _______________________________________________
 xfs mailing list
