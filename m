@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oA1AAVZZ199595 for <xfs@oss.sgi.com>; Mon, 1 Nov 2010 05:10:31 -0500
+	oA1A6Rta199133 for <xfs@oss.sgi.com>; Mon, 1 Nov 2010 05:06:27 -0500
 Received: from smtp3-g21.free.fr (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D4D96141F54
-	for <xfs@oss.sgi.com>; Mon,  1 Nov 2010 03:11:51 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 50123141F32
+	for <xfs@oss.sgi.com>; Mon,  1 Nov 2010 03:07:47 -0700 (PDT)
 Received: from smtp3-g21.free.fr (smtp3-g21.free.fr [212.27.42.3]) by
-	cuda.sgi.com with ESMTP id TBRweCp9W7piHVes for
-	<xfs@oss.sgi.com>; Mon, 01 Nov 2010 03:11:51 -0700 (PDT)
-Date: Mon, 1 Nov 2010 11:11:42 +0100
+	cuda.sgi.com with ESMTP id TiBVKvkldr9tl7Gt for
+	<xfs@oss.sgi.com>; Mon, 01 Nov 2010 03:07:47 -0700 (PDT)
+Date: Mon, 1 Nov 2010 11:07:34 +0100
 From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: Pid: 8345, comm: rsync Not tainted 2.6.32.22intel #1
-Message-ID: <20101101111142.5db7fa4e@galadriel.home>
-In-Reply-To: <4CCE73C8.8070705@profihost.ag>
-References: <4CC67450.9020602@profihost.ag>
-	<20101026092205.086c0d89@galadriel.home>
-	<4CC68249.7050409@profihost.ag> <4CCE73C8.8070705@profihost.ag>
+Subject: Re: xfs_repair of critical volume
+Message-ID: <20101101110734.3ce15556@galadriel.home>
+In-Reply-To: <1A57C61E-463F-4CB4-967C-DD6B66857E28@ucsc.edu>
+References: <C17C2CB6-A695-41B2-B12A-1CBF6DAD556F@ucsc.edu>
+	<20101031214021.686f43b8@galadriel.home>
+	<1A57C61E-463F-4CB4-967C-DD6B66857E28@ucsc.edu>
 Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -29,18 +29,30 @@ Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+To: Eli Morris <ermorris@ucsc.edu>
 Cc: xfs@oss.sgi.com
 
-Le Mon, 01 Nov 2010 09:01:12 +0100 vous =E9criviez:
+Le Sun, 31 Oct 2010 20:40:20 -0700 vous =E9criviez:
 
-> but today i got again hundrets of these messages:
-> [318343.901809] Filesystem "sdc3": XFS internal error
-> xfs_da_do_buf(2) =
+> Thanks for your help. The RAID is a SCSI connected direct attached
+> storage 16 bay unit made by Maxtronic. It is a Janus 6640, is case
+> that helps anything.
 
+Alas, never heard of it... Looks like a quite low end hardware, without
+redundant controllers. Probably similar to Infortrend. The possibility
+of an unreliable firmware cannot be excluded with these :)
 
-That's weird. What do "uname -a" and "free" tells? I'm wondering if
-there isn't some low memory condition at work here.
+> At the time of its problem, it was mounted
+> read-only as I was trying to be careful of the data, since the main
+> volume failed and this was our only copy. So maybe the cache isn't a
+> big deal.
+
+Indeed, nothing to lose in RO mode.
+
+> I'll try the "dead" drives tomorrow with a WD utility. I'll
+> give Spinrite a try, if the WD utility doesn't revive them.
+
+Good luck.
 
 -- =
 
