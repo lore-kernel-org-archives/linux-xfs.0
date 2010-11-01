@@ -1,24 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	o9VL8mdJ142935 for <xfs@oss.sgi.com>; Sun, 31 Oct 2010 16:08:49 -0500
-Received: from omr7.networksolutionsemail.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5EFCC4CA212
-	for <xfs@oss.sgi.com>; Sun, 31 Oct 2010 14:10:10 -0700 (PDT)
-Received: from omr7.networksolutionsemail.com (omr7.networksolutionsemail.com
-	[205.178.146.57]) by cuda.sgi.com with ESMTP id
-	lirdMOTiGlVSBw85 for <xfs@oss.sgi.com>;
-	Sun, 31 Oct 2010 14:10:10 -0700 (PDT)
-Received: from cm-omr7 (mail.networksolutionsemail.com [205.178.146.50])
-	by omr7.networksolutionsemail.com (8.13.6/8.13.6) with ESMTP id
-	o9VLA915006288 for <xfs@oss.sgi.com>; Sun, 31 Oct 2010 17:10:09 -0400
-Message-ID: <4CCDDB2E.1080508@chaven.com>
-Date: Sun, 31 Oct 2010 16:10:06 -0500
-From: Steve Costaras <stevecs@chaven.com>
-MIME-Version: 1.0
+	oA13dAto162480 for <xfs@oss.sgi.com>; Sun, 31 Oct 2010 22:39:10 -0500
+Received: from ucsc.edu (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C6829137AF8C
+	for <xfs@oss.sgi.com>; Sun, 31 Oct 2010 20:56:34 -0700 (PDT)
+Received: from ucsc.edu (email-prod-out-1.ucsc.edu [128.114.129.85]) by
+	cuda.sgi.com with ESMTP id cL03zVMrP73RJKvg for
+	<xfs@oss.sgi.com>; Sun, 31 Oct 2010 20:56:34 -0700 (PDT)
 Subject: Re: xfs_repair of critical volume
+Mime-Version: 1.0 (Apple Message framework v1081)
+From: Eli Morris <ermorris@ucsc.edu>
+In-Reply-To: <20101031214021.686f43b8@galadriel.home>
+Date: Sun, 31 Oct 2010 20:40:20 -0700
+Message-Id: <1A57C61E-463F-4CB4-967C-DD6B66857E28@ucsc.edu>
 References: <C17C2CB6-A695-41B2-B12A-1CBF6DAD556F@ucsc.edu>
-In-Reply-To: <C17C2CB6-A695-41B2-B12A-1CBF6DAD556F@ucsc.edu>
+	<20101031214021.686f43b8@galadriel.home>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,51 +24,69 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eli Morris <ermorris@ucsc.edu>
+To: Emmanuel Florac <eflorac@intellique.com>
 Cc: xfs@oss.sgi.com
 
 
+On Oct 31, 2010, at 1:40 PM, Emmanuel Florac wrote:
 
-On 2010-10-31 14:56, Eli Morris wrote:
->
-> Hi guys,
->
-> Thanks for all the responses. On the XFS volume that I'm trying to recover here, I've already re-initialized the RAID, so I've kissed that data goodbye. I am using LVM2. Each of the 5 RAID volumes is a physical volume. Then a logical volume is created out of those, and then the filesystem lies on top of that. So now we have, in order, 2 intact PVs, 1 OK, but blank PV, 2 intact PVs. On the RAID where we lost the drives, replacements are in place and I created a now healthy volume. Through LVM, I was then able to create a new PV from the re-constituted RAID volume and put that into our logical volume in place of the destroyed PV. So now, I have a logical volume that I can activate and I can see the filesystem. It still reports as having all the old files as before, although it doesn't. So the hardware is now OK. It's just what to do with our damaged filesystem that has a huge chunk missing out of it. I put the xfs_repair trial output on an http server, as suggested (good sug!
- ge!
->   stion) and it is here:
+> Le Sun, 31 Oct 2010 12:56:33 -0700 vous =E9criviez:
+> =
 
-What was your raid stripe size (hardware)?  Did you have any 
-partitioning scheme on the hdw raid volumes or did you just use the 
-native device?    When you created the volume group & lv did you do any 
-striping or just concatenation of the luns?  if striping what was your 
-lvcreate parameters (stripe size et al).
+>> OK, that's a long tale of woe. Thanks for any advise. =
 
-You mentioned that you lost only 1 of the 5 arrays.    Assuming the 
-others did not have any failures?    You wiped the array that failed so 
-you  have 4/5 of the data and 1/5 is zeroed.     Which removes the 
-possibility of vendor recovery/assistance.
+> =
 
-Assuming that everything is equal there should be an equal distribution 
-of files across the AG's and the AG's should have been distributed 
-across the 5 volumes.    Do you have the xfs_info data?     I think you 
-may be a bit out of luck here with xfs_repair.     I am not sure how XFS 
-handles files/fragmentation between AG's and AG's relation to the 
-underlying 'physical volume'.    I.e.  problem would be if a particular 
-AG was on a different volume than the blocks of the actual file, 
-likewise another complexity would be fragmented files where data was not 
-contiguous.    What is the average size of the files that you had on the 
-volume?
+> oK, so what we'd like to do is get the backup RAID volume back in
+> working order. You said it's made of 2TB Caviar green drives, but
+> didn't mention the RAID controller type... As I understand it, you
+> power-cycled the RAID array, so the cache is gone, whatever have been
+> in it... =
 
-In similar circumstances if files were small enough to be on the 
-remaining disks and contiguous/non fragmented I've had some luck w/ 
-forensic tools Foremost & Scalpel.
+> =
 
-Steve
+> All arrays I know will happily reassemble a working RAID if you
+> succesfully revive the failed drives.
+> =
 
+> Logically the failed drives are almost certainly not really dead, but
+> in a temporary failure state mode. First, you must check WD support and
+> utilities to see if something may apply to your configuration. Anyway,
+> checking the failed drives' health with the western digital disk
+> utility should allow you to determine if they're toast or not.
+> =
+
+> In the case they're not actually dead, you could try to revive the
+> badblocks with Spinrite (www.grc.com), it saved my life a couple of
+> times, however it's quite risky when used with SMART-tripped drives.
+> =
+
+> -- =
+
+> ------------------------------------------------------------------------
+> Emmanuel Florac     |   Direction technique
+>                    |   Intellique
+>                    |	<eflorac@intellique.com>
+>                    |   +33 1 78 94 84 02
+> ------------------------------------------------------------------------
+
+Hi,
+
+Thanks for your help. The RAID is a SCSI connected direct attached storage =
+16 bay unit made by Maxtronic. It is a Janus 6640, is case that helps anyth=
+ing. At the time of its problem, it was mounted read-only as I was trying t=
+o be careful of the data, since the main volume failed and this was our onl=
+y copy. So maybe the cache isn't a big deal. I'll try the "dead" drives tom=
+orrow with a WD utility. I'll give Spinrite a try, if the WD utility doesn'=
+t revive them.
+
+thanks a lot for the help. I'll let you all know how things go.
+
+Eli =
 
 
 _______________________________________________
