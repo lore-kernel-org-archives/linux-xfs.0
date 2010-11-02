@@ -1,26 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oA26YR2P008542 for <xfs@oss.sgi.com>; Tue, 2 Nov 2010 01:34:27 -0500
-Received: from mail-vw0-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9FCF6137EDC2
-	for <xfs@oss.sgi.com>; Mon,  1 Nov 2010 23:51:57 -0700 (PDT)
-Received: from mail-vw0-f53.google.com (mail-vw0-f53.google.com
-	[209.85.212.53]) by cuda.sgi.com with ESMTP id pFoUYTjtHHpCiUQM
-	for <xfs@oss.sgi.com>; Mon, 01 Nov 2010 23:51:57 -0700 (PDT)
-Received: by vws19 with SMTP id 19so5550044vws.26
-	for <xfs@oss.sgi.com>; Mon, 01 Nov 2010 23:35:48 -0700 (PDT)
+	oA2G0kJF034693 for <xfs@oss.sgi.com>; Tue, 2 Nov 2010 11:00:49 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1FD79145E5E
+	for <xfs@oss.sgi.com>; Tue,  2 Nov 2010 09:02:09 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id WlPwMXwpr7yQnNsU for
+	<xfs@oss.sgi.com>; Tue, 02 Nov 2010 09:02:09 -0700 (PDT)
+Date: Tue, 2 Nov 2010 12:02:01 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [2.6.32] scheduling while atomic
+Message-ID: <20101102160201.GA924@infradead.org>
+References: <4CCED8B2.2030604@nangu.tv>
+ <20101102001244.GP2715@dastard>
 MIME-Version: 1.0
-In-Reply-To: <20101025134345.GB3758@infradead.org>
-References: <AANLkTi=wbBhb=s3z9vyw9gL9Qwy0goj+8UtueFyNq+y2@mail.gmail.com>
-	<20101021125219.GA21472@infradead.org>
-	<AANLkTimFuG6cVLkYt+7-Y_8PnapFvmry5RUcmpOHaPco@mail.gmail.com>
-	<AANLkTikYuWMdHRtAKLauZpyWiarioB2ezxW2qVb4s9Sv@mail.gmail.com>
-	<20101025134345.GB3758@infradead.org>
-Date: Tue, 2 Nov 2010 12:05:47 +0530
-Message-ID: <AANLkTik2nZH0tEAT1vQbZf9Y2SM0p=EJrZxgRA=sAaR0@mail.gmail.com>
-Subject: Re: XFS: bad clientid on recovery on MIPS (VIPT cache)
-From: Ajeet Yadav <ajeet.yadav.77@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20101102001244.GP2715@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,51 +25,24 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============6349279694355696883=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Martin Hamrle <martin.hamrle@nangu.tv>, xfs@oss.sgi.com
 
---===============6349279694355696883==
-Content-Type: multipart/alternative; boundary=0015175caade9d420d04940c2205
+On Tue, Nov 02, 2010 at 11:12:44AM +1100, Dave Chinner wrote:
+> With a trace like that, it's almost certain that you've blown
+> the stack and that is why the system is crashing. Can you turn on
+> stack depth checking (might require a kernel rebuild) so we can tell
+> if these problems are a result of overruning the stack?
 
---0015175caade9d420d04940c2205
-Content-Type: text/plain; charset=ISO-8859-1
-
-Ok, I will implement flush_kernel_vmap_range/invalidate_kernel_vmap_range
-APIs but do I need to modify XFS code also ?
-Where do I make call to flush_kernel_vmap_range()/
-invalidate_kernel_vmap_range() in XFS code ?
-
-Also I wish to understand why this problem is not occuring on ARM cortex-A8,
-I check the code it does not implement above API's.
-
---0015175caade9d420d04940c2205
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-
-<div>Ok, I will implement flush_kernel_vmap_range/invalidate_kernel_vmap_ra=
-nge APIs=A0but do I need to modify XFS code also ?</div>
-<div>Where do I make call to flush_kernel_vmap_range()/ invalidate_kernel_v=
-map_range() in XFS code ?</div>
-<div>=A0</div>
-<div>Also I wish to understand why this problem is not occuring on ARM cort=
-ex-A8, I check the code it does not implement above API&#39;s.=A0=A0=A0=A0=
-=A0=A0</div>
-
---0015175caade9d420d04940c2205--
-
-
---===============6349279694355696883==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Even better move on to a recent kernel - we're now preventing the
+VM from reentering the filesystem for reclaim, which should take
+care of all practical stack overlfow issues.
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============6349279694355696883==--
