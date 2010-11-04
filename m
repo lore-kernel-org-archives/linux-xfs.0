@@ -1,18 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oA4CdbOx145629 for <xfs@oss.sgi.com>; Thu, 4 Nov 2010 07:39:38 -0500
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 852991600736
-	for <xfs@oss.sgi.com>; Thu,  4 Nov 2010 05:57:20 -0700 (PDT)
-Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
-	[150.101.137.101]) by cuda.sgi.com with ESMTP id
-	ksMGeApOrd2v1wFh for <xfs@oss.sgi.com>;
-	Thu, 04 Nov 2010 05:57:20 -0700 (PDT)
-Date: Thu, 4 Nov 2010 23:40:51 +1100
-From: Dave Chinner <david@fromorbit.com>
+	oA4CnTuL146066 for <xfs@oss.sgi.com>; Thu, 4 Nov 2010 07:49:30 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D0C3C1600540
+	for <xfs@oss.sgi.com>; Thu,  4 Nov 2010 06:07:14 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id GGUcGd4YhBmCsZS7 for
+	<xfs@oss.sgi.com>; Thu, 04 Nov 2010 06:07:14 -0700 (PDT)
+Date: Thu, 4 Nov 2010 08:50:52 -0400
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: XFS mounting fails on MIPS
-Message-ID: <20101104124051.GB13830@dastard>
+Message-ID: <20101104125052.GA22429@infradead.org>
 References: <AANLkTi=mLwQ0N_cErHzES1ZWvOa8jQspeYwKgn9sU4Jm@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
@@ -36,21 +35,12 @@ On Thu, Nov 04, 2010 at 11:27:24AM +0530, Ajeet Yadav wrote:
 > Linux XFS version : 2.6.34
 > Architecure: MIPS
 > I am getting the following error during mount.
-> 
-> XFS mounting filesystem sda2
-> Starting XFS recovery on filesystem: sda2 (logdev: internal)
-> XFS internal error XFS_WANT_CORRUPTED_GOTO at line 1518 of file
-> fs/xfs/xfs_alloc.c.  Caller 0x801174a0
 
-Corrupted freespace btree. Run xfs_repair to find out if it is
-on-disk corruption (and to fix it).
+Is this the same mips system that you have the vmap aliasing problems
+during log recovery with?
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+As long as that is not fixed I would deeply distrust any callchain
+from the recovery code like this one.
 
 _______________________________________________
 xfs mailing list
