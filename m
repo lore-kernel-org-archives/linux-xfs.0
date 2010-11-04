@@ -1,21 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oA4CnTuL146066 for <xfs@oss.sgi.com>; Thu, 4 Nov 2010 07:49:30 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D0C3C1600540
-	for <xfs@oss.sgi.com>; Thu,  4 Nov 2010 06:07:14 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id GGUcGd4YhBmCsZS7 for
-	<xfs@oss.sgi.com>; Thu, 04 Nov 2010 06:07:14 -0700 (PDT)
-Date: Thu, 4 Nov 2010 08:50:52 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: XFS mounting fails on MIPS
-Message-ID: <20101104125052.GA22429@infradead.org>
-References: <AANLkTi=mLwQ0N_cErHzES1ZWvOa8jQspeYwKgn9sU4Jm@mail.gmail.com>
+	oA4MxHjc167951 for <xfs@oss.sgi.com>; Thu, 4 Nov 2010 17:59:18 -0500
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8BA141563E2
+	for <xfs@oss.sgi.com>; Thu,  4 Nov 2010 16:00:40 -0700 (PDT)
+Received: from mail.internode.on.net (bld-mail20.adl6.internode.on.net
+	[150.101.137.105]) by cuda.sgi.com with ESMTP id
+	mo4h1do3iEcCL2JG for <xfs@oss.sgi.com>;
+	Thu, 04 Nov 2010 16:00:40 -0700 (PDT)
+Received: from dastard (unverified [121.44.196.177])
+	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id 117881-1927428
+	for <xfs@oss.sgi.com>; Fri, 05 Nov 2010 09:30:38 +1030 (CDT)
+Received: from dave by dastard with local (Exim 4.71)
+	(envelope-from <david@fromorbit.com>) id 1PE8nN-00051N-AF
+	for xfs@oss.sgi.com; Fri, 05 Nov 2010 10:00:37 +1100
+Date: Fri, 5 Nov 2010 10:00:37 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [bug, 2.6.37-current] Assertion failed:
+	atomic_read(&pag->pag_ref) == 0
+Message-ID: <20101104230037.GD13830@dastard>
+References: <20101026071356.GY32255@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <AANLkTi=mLwQ0N_cErHzES1ZWvOa8jQspeYwKgn9sU4Jm@mail.gmail.com>
+In-Reply-To: <20101026071356.GY32255@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,25 +32,81 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ajeet Yadav <ajeet.yadav.77@gmail.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On Thu, Nov 04, 2010 at 11:27:24AM +0530, Ajeet Yadav wrote:
-> Linux XFS version : 2.6.34
-> Architecure: MIPS
-> I am getting the following error during mount.
-
-Is this the same mips system that you have the vmap aliasing problems
-during log recovery with?
-
-As long as that is not fixed I would deeply distrust any callchain
-from the recovery code like this one.
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVHVlLCBPY3QgMjYsIDIwMTAgYXQgMDY6MTM6NTZQTSArMTEwMCwgRGF2ZSBDaGlubmVyIHdy
+b3RlOgo+IEZvbGtzLAo+IAo+IFNpbmNlIHRoZW1haW5saW5lIG1lcmdlLCBJJ3ZlIGJlZW4gZ2V0
+dGluZyB1bm1vdW50IGZhaWx1cmVzIGR1cmluZwo+IHNodXRkb3duIHRoYXQgbG9vayBsaWtlOgo+
+IAo+IFVubW91bnRpbmcgbG9jYWwgZmlsZXN5c3RlbXMuLi5kb25lLgo+IFNodXR0aW5nIGRvd24g
+TFZNIFZvbHVtZSBHcm91cHNbIDcwODguODIwMTIzXSBBc3NlcnRpb24gZmFpbGVkOiBhdG9taWNf
+cmVhZCgmcGFnLT5wYWdfcmVmKSA9PSAwLCBmaWxlOiBmcy94ZnMveGZzX21vdW50LmMsIGxpbmU6
+IDI1OQo+IFsgNzA4OC44MjE4MTFdIC0tLS0tLS0tLS0tLVsgY3V0IGhlcmUgXS0tLS0tLS0tLS0t
+LQo+IFsgNzA4OC44MjI1OTRdIGtlcm5lbCBCVUcgYXQgZnMveGZzL3N1cHBvcnQvZGVidWcuYzox
+MDghCj4gWyA3MDg4LjgyMzM4M10gaW52YWxpZCBvcGNvZGU6IDAwMDAgWyMxXSBTTVAgCj4gWyA3
+MDg4LjgyNDAxOV0gbGFzdCBzeXNmcyBmaWxlOiAvc3lzL2RldmljZXMvc3lzdGVtL25vZGUvbm9k
+ZTAvY3B1bWFwCj4gWyA3MDg4LjgyNDA0NV0gQ1BVIDEgCj4gWyA3MDg4LjgyNDA0NV0gTW9kdWxl
+cyBsaW5rZWQgaW46Cj4gWyA3MDg4LjgyNDA0NV0gCj4gWyA3MDg4LjgyNDA0NV0gUGlkOiAwLCBj
+b21tOiBrd29ya2VyLzA6MCBOb3QgdGFpbnRlZCAyLjYuMzYtZGdjKyAjNTg3IC9Cb2Nocwo+IFsg
+NzA4OC44MjQwNDVdIFJJUDogMDAxMDpbPGZmZmZmZmZmODE0Yjc0Y2Y+XSAgWzxmZmZmZmZmZjgx
+NGI3NGNmPl0gYXNzZmFpbCsweDFmLzB4MzAKPiBbIDcwODguODI0MDQ1XSBSU1A6IDAwMTg6ZmZm
+Zjg4MDBkZjAwM2U1MCAgRUZMQUdTOiAwMDAxMDI4Ngo+IFsgNzA4OC44MjQwNDVdIFJBWDogMDAw
+MDAwMDAwMDAwMDA2OSBSQlg6IGZmZmY4ODAxMTc2MGE0MDAgUkNYOiAwMDAwMDAwMDAwMDAwMDAx
+Cj4gWyA3MDg4LjgyNDA0NV0gUkRYOiBmZmZmODgwMTFiNzc0MmMwIFJTSTogMDAwMDAwMDAwMDAw
+MDAwMSBSREk6IDAwMDAwMDAwMDAwMDAyNDYKPiBbIDcwODguODI0MDQ1XSBSQlA6IGZmZmY4ODAw
+ZGYwMDNlNTAgUjA4OiAwMDAwMDAwMDAwMDAwMDAxIFIwOTogMDAwMDAwMDAwMDAwMDAwMQo+IFsg
+NzA4OC44MjQwNDVdIFIxMDogMDAwMDAwMDAwMDAwMDAwMCBSMTE6IDAwMDAwMDAwMDAwMDAwMDEg
+UjEyOiBmZmZmZmZmZjgxZWY4ZjAwCj4gWyA3MDg4LjgyNDA0NV0gUjEzOiBmZmZmODgwMTE3MTE4
+ZGY4IFIxNDogZmZmZjg4MDBkZjFjZWNmMCBSMTU6IGZmZmY4ODAxMTZlYmY2ZTgKPiBbIDcwODgu
+ODI0MDQ1XSBGUzogIDAwMDAwMDAwMDAwMDAwMDAoMDAwMCkgR1M6ZmZmZjg4MDBkZjAwMDAwMCgw
+MDAwKSBrbmxHUzowMDAwMDAwMDAwMDAwMDAwCj4gWyA3MDg4LjgyNDA0NV0gQ1M6ICAwMDEwIERT
+OiAwMDAwIEVTOiAwMDAwIENSMDogMDAwMDAwMDA4MDA1MDAzYgo+IFsgNzA4OC44MjQwNDVdIENS
+MjogMDAwMDdmZmQ4YzhiNjk5MCBDUjM6IDAwMDAwMDAwMDFlZGIwMDAgQ1I0OiAwMDAwMDAwMDAw
+MDAwNmUwCj4gWyA3MDg4LjgyNDA0NV0gRFIwOiAwMDAwMDAwMDAwMDAwMDAwIERSMTogMDAwMDAw
+MDAwMDAwMDAwMCBEUjI6IDAwMDAwMDAwMDAwMDAwMDAKPiBbIDcwODguODI0MDQ1XSBEUjM6IDAw
+MDAwMDAwMDAwMDAwMDAgRFI2OiAwMDAwMDAwMGZmZmYwZmYwIERSNzogMDAwMDAwMDAwMDAwMDQw
+MAo+IFsgNzA4OC44MjQwNDVdIFByb2Nlc3Mga3dvcmtlci8wOjAgKHBpZDogMCwgdGhyZWFkaW5m
+byBmZmZmODgwMTFiNzc2MDAwLCB0YXNrIGZmZmY4ODAxMWI3NzQyYzApCj4gWyA3MDg4LjgyNDA0
+NV0gU3RhY2s6Cj4gWyA3MDg4LjgyNDA0NV0gIGZmZmY4ODAwZGYwMDNlNzAgZmZmZmZmZmY4MTQ5
+OTAwNyBmZmZmODgwMGRmMDAzZTcwIGZmZmY4ODAwZGYxY2VjYzAKPiBbIDcwODguODI0MDQ1XSA8
+MD4gZmZmZjg4MDBkZjAwM2VkMCBmZmZmZmZmZjgxMGU5MDBhIDAwMDAwMDAwMDAwMDAwMDEgMDAw
+MDAwMDAwMDAwMDAwYQo+IFsgNzA4OC44MjQwNDVdIDwwPiBmZmZmODgwMTAwMDAwMDA2IDAwMDAw
+MDAwMDAwMDAyMDIgMDAwMDAwMDAwMDAwMDEwMCAwMDAwMDAwMDAwMDAwMDQ4Cj4gWyA3MDg4Ljgy
+NDA0NV0gQ2FsbCBUcmFjZToKPiBbIDcwODguODI0MDQ1XSAgPElSUT4gCj4gWyA3MDg4LjgyNDA0
+NV0gIFs8ZmZmZmZmZmY4MTQ5OTAwNz5dIF9feGZzX2ZyZWVfcGVyYWcrMHgzNy8weDUwCj4gWyA3
+MDg4LjgyNDA0NV0gIFs8ZmZmZmZmZmY4MTBlOTAwYT5dIF9fcmN1X3Byb2Nlc3NfY2FsbGJhY2tz
+KzB4MTNhLzB4M2UwCj4gWyA3MDg4LjgyNDA0NV0gIFs8ZmZmZmZmZmY4MTBlOTJkOD5dIHJjdV9w
+cm9jZXNzX2NhbGxiYWNrcysweDI4LzB4NTAKPiBbIDcwODguODI0MDQ1XSAgWzxmZmZmZmZmZjgx
+MDg4NDhkPl0gX19kb19zb2Z0aXJxKzB4Y2QvMHgyOTAKPiBbIDcwODguODI0MDQ1XSAgWzxmZmZm
+ZmZmZjgxMGE4ODA4Pl0gPyBocnRpbWVyX2ludGVycnVwdCsweDEzOC8weDI1MAo+IFsgNzA4OC44
+MjQwNDVdICBbPGZmZmZmZmZmODEwMzdmNWM+XSBjYWxsX3NvZnRpcnErMHgxYy8weDUwCj4gWyA3
+MDg4LjgyNDA0NV0gIFs8ZmZmZmZmZmY4MTAzOThkZD5dIGRvX3NvZnRpcnErMHg5ZC8weGQwCj4g
+WyA3MDg4LjgyNDA0NV0gIFs8ZmZmZmZmZmY4MTA4ODFlNT5dIGlycV9leGl0KzB4OTUvMHhhMAo+
+IFsgNzA4OC44MjQwNDVdICBbPGZmZmZmZmZmODFiMDYzODA+XSBzbXBfYXBpY190aW1lcl9pbnRl
+cnJ1cHQrMHg3MC8weDliCj4gWyA3MDg4LjgyNDA0NV0gIFs8ZmZmZmZmZmY4MTAzN2ExMz5dIGFw
+aWNfdGltZXJfaW50ZXJydXB0KzB4MTMvMHgyMAo+IFsgNzA4OC44MjQwNDVdICA8RU9JPiAKPiBb
+IDcwODguODI0MDQ1XSAgWzxmZmZmZmZmZjgxMDYwZjZiPl0gPyBuYXRpdmVfc2FmZV9oYWx0KzB4
+Yi8weDEwCj4gWyA3MDg4LjgyNDA0NV0gIFs8ZmZmZmZmZmY4MTBiYWRlZD5dID8gdHJhY2VfaGFy
+ZGlycXNfb24rMHhkLzB4MTAKPiBbIDcwODguODI0MDQ1XSAgWzxmZmZmZmZmZjgxMDNmZDcwPl0g
+ZGVmYXVsdF9pZGxlKzB4NTAvMHhiMAo+IFsgNzA4OC44MjQwNDVdICBbPGZmZmZmZmZmODEwMzVl
+Mjg+XSBjcHVfaWRsZSsweDc4LzB4MTAwCj4gWyA3MDg4LjgyNDA0NV0gIFs8ZmZmZmZmZmY4MWFm
+NjI3Yj5dIHN0YXJ0X3NlY29uZGFyeSsweDFhYy8weDFiMQo+IFsgNzA4OC44MjQwNDVdIENvZGU6
+IDY2IDY2IDY2IDJlIDBmIDFmIDg0IDAwIDAwIDAwIDAwIDAwIDU1IDQ4IDg5IGU1IDBmIDFmIDQ0
+IDAwIDAwIDMxIGMwIDg5IGQxIDQ4IDg5IGYyIDQ4IDg5IGZlIDQ4IGM3IGM3IDA4IDM4IGRmIDgx
+IGU4IDdiIDM0IDY0IDAwIDwwZj4gMGIgZWIgZmUgNjYgNjYgNjYgNjYgMmUgIAo+IFsgNzA4OC44
+MjQwNDVdIFJJUCAgWzxmZmZmZmZmZjgxNGI3NGNmPl0gYXNzZmFpbCsweDFmLzB4MzAKPiBbIDcw
+ODguODI0MDQ1XSAgUlNQIDxmZmZmODgwMGRmMDAzZTUwPgo+IFsgNzA4OC44NjMwOTFdIC0tLVsg
+ZW5kIHRyYWNlIGVjNzZmODEzNWMzYWRiYTkgXS0tLQo+IAo+IEknbSBub3Qgc2VlaW5nIGZhaWx1
+cmVzIGR1cmluZyB4ZnN0ZXN0cyBydW5zLCBpdCBzZWVtcyB0aGF0IGRiZW5jaCBtYXkgYmUgdGhl
+Cj4gdHJpZ2dlci4gIElzIGFueW9uZSBlbHNlIHNlZWluZyByZWZlcmVuY2UgY291bnRpbmcgcHJv
+YmxlbXMgbGlrZSB0aGlzIG9uIHRoZQo+IGN1cnJlbnQgbGludXMgdHJlZT8KCk9rLCBmb3VuZCB0
+aGUgYnVnIC0gaXQncyBpbiB0aGUgcmVjbGFpbSBzY2FsYWJpbGl0eSBwYXRjaHNldCB0aGF0Cndh
+cyBtZXJnZWQgaW50byAuMzctcmMxIC0gd2hlbiB0aGUgc2hyaW5rZXIgc2tpcHMgYSBsb2NrZWQg
+QUcgaXQKbWlzc2XRlSBhIHhmc19wZXJhZ19wdXQoKSBjYWxsLiAgSSdsbCBwdXNoIG91dCBhIHBh
+dGNoIHNvb24uCgpDaGVlcnMsCgpEYXZlLgotLSAKRGF2ZSBDaGlubmVyCmRhdmlkQGZyb21vcmJp
+dC5jb20KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhm
+cyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFu
+L2xpc3RpbmZvL3hmcwo=
