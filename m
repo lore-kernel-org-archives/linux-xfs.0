@@ -1,11 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Subject: Re: [PATCH] xfs: linux-2.6: xfs_ioctl: fix information leak to
-	userland
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
+	oA5JFaCI218001 for <xfs@oss.sgi.com>; Fri, 5 Nov 2010 14:15:36 -0500
+Subject: Re: Linux and DMAPI
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1288448778-5373-1-git-send-email-segooon@gmail.com>
-References: <1288448778-5373-1-git-send-email-segooon@gmail.com>
-Date: Fri, 05 Nov 2010 12:19:49 -0500
-Message-ID: <1288977589.2295.27.camel@doink>
+In-Reply-To: <20101003061854.GA24293@infradead.org>
+References: <AANLkTim5FExj9GFQf9v1rzRmxqtNrdw_UR5VPUs4bPMq@mail.gmail.com>
+	<20101003061854.GA24293@infradead.org>
+Date: Fri, 05 Nov 2010 14:16:57 -0500
+Message-ID: <1288984617.2295.35.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -20,39 +23,45 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Vasiliy Kulikov <segooon@gmail.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, Christoph@oss.sgi.com, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, xfs-masters@oss.sgi.com, Dave Chinner <dchinner@redhat.com>, Hellwig <hch@lst.de>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Diego Woitasen <diego@woitasen.com.ar>, xfs@oss.sgi.com
 
-On Sat, 2010-10-30 at 18:26 +0400, Vasiliy Kulikov wrote:
-> al_hreq is copied from userland.  If al_hreq.buflen is not properly aligned then
-> xfs_attr_list will ignore the last bytes of kbuf.  These bytes are unitialized.
-> It leads to leaking of contents of kernel stack memory.
+On Sun, 2010-10-03 at 02:18 -0400, Christoph Hellwig wrote:
+> On Sat, Sep 18, 2010 at 09:08:16PM -0300, Diego Woitasen wrote:
+> > Hi,
+> >  I'm looking for software that supports DMAPI on Linux. I haven't
+> > found anything on the web. I need to implement HSM for a mail server,
+> > to store old messages in a secondary storage.
+> > 
+> >  Are there something implemented? Open source or propietary one? I
+> > prefer open source obviously...
 > 
-> Signed-off-by: Vasiliy Kulikov <segooon@gmail.com>
-> ---
->  Compile tested.
-> 
->  fs/xfs/linux-2.6/xfs_ioctl.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/fs/xfs/linux-2.6/xfs_ioctl.c b/fs/xfs/linux-2.6/xfs_ioctl.c
-> index 2ea238f..ad442d9 100644
-> --- a/fs/xfs/linux-2.6/xfs_ioctl.c
-> +++ b/fs/xfs/linux-2.6/xfs_ioctl.c
-> @@ -416,7 +416,7 @@ xfs_attrlist_by_handle(
->  	if (IS_ERR(dentry))
->  		return PTR_ERR(dentry);
->  
-> -	kbuf = kmalloc(al_hreq.buflen, GFP_KERNEL);
-> +	kbuf = kzalloc(al_hreq.buflen, GFP_KERNEL);
->  	if (!kbuf)
->  		goto out_dput;
->  
+> The XFS on disk format supports the required metadata for DMAPI, but the
+> implementation for it never made it into the mainline Linux kernel.  For
+> years SGI provided a tree to add the support, but for the last few years
+> the support bitrotted heavily.  Alex promised to publush a tree with
+> updated DMAPI support in the near future.
 
-Looks good.  I will take this in and will send
-it to Linus for 2.6.37.  Thanks.
+(Catching up on old mail, sorry I didn't respond earlier.)
+I will keep my promise...  I have it ported to the
+2.6.32-stable and 2.6.33-stable branches at this point.
+I was going to try to get up-to-date with the newest
+kernels first, but am now setting my sights on getting
+just what I have so far published.  I will send an
+announcement when it's available.
+ 
+> You'll still need additional userspace support the to actually driver
+> the migration.  The xfstests suite has a minimal implementation for QA
+> purposes as free software, but I don't think that's what your looking
+> for.  The main user of the XFS DMAPI support is SGI's DMF product,
+> and at least a few years ago IBM's Tivoli Storage Manager also supported
+> DMAPI.
 
-Reviewed-by: Alex Elder <aelder@sgi.com>
+As Christoph said, SGI offers DMF (Data Migration Facility),
+but it is a proprietary product.
+
+					-Alex
+
 
 _______________________________________________
 xfs mailing list
