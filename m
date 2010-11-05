@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oA5GZM40209045 for <xfs@oss.sgi.com>; Fri, 5 Nov 2010 11:35:22 -0500
+	oA5GZL0m209004 for <xfs@oss.sgi.com>; Fri, 5 Nov 2010 11:35:21 -0500
 Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 4184EAC016
-	for <xfs@oss.sgi.com>; Fri,  5 Nov 2010 09:36:44 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C00F1124075
+	for <xfs@oss.sgi.com>; Fri,  5 Nov 2010 09:36:43 -0700 (PDT)
 Received: from augusta (augusta.americas.sgi.com [128.162.233.117])
-	by estes.americas.sgi.com (Postfix) with ESMTP id C4DDD7003735
+	by estes.americas.sgi.com (Postfix) with ESMTP id A8D197003733
 	for <xfs@oss.sgi.com>; Fri,  5 Nov 2010 11:36:43 -0500 (CDT)
-Message-Id: <20101105163643.571496225@sgi.com>
-Date: Fri, 05 Nov 2010 11:35:03 -0500
+Message-Id: <20101105163643.341036303@sgi.com>
+Date: Fri, 05 Nov 2010 11:35:02 -0500
 From: wkendall@sgi.com
-Subject: [PATCH v2 3/9] xfsrestore: cache path lookups
+Subject: [PATCH v2 2/9] xfsrestore: change nrh_t from 32 to 64 bits
 References: <20101105163500.747192954@sgi.com>
-Content-Disposition: inline; filename=node2path_caching
+Content-Disposition: inline; filename=namreg_64bit
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,127 +29,121 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-In order to resolve a pathname, xfsrestore must work from an inode
-number (from the dump) and recurse up the directory entry tree that it
-has constructed. Each level of recursion requires a seek and read to
-get the name of the dirent, and possibly a mmap of a section of the
-directory entry tree if it is not already mapped (and in that case,
-possibly a munmap of another section). It's quite common to resolve
-pathnames in the same directory consecutively, so simply caching the
-parent directory pathname from the previous lookup saves quite a bit
-of overhead.
+An nrh_t refers to a byte offset in a file containing all the pathname
+components from a dump. At an average filename length of 20
+characters, an nrh_t would overflow on a dump containing ~214 million
+directory entries. Removing this limitation allows xfsrestore to
+handle 4 billion directory entries.
 
 Signed-off-by: Bill Kendall <wkendall@sgi.com>
 
-
 ---
- restore/tree.c |   41 ++++++++++++++++++++++++++++++++++++-----
- 1 file changed, 36 insertions(+), 5 deletions(-)
+ restore/namreg.c |   20 +++++++-------------
+ restore/namreg.h |    4 ++--
+ restore/tree.c   |   29 ++++++++++++++---------------
+ 3 files changed, 23 insertions(+), 30 deletions(-)
 
+Index: xfsdump-kernel.org/restore/namreg.h
+===================================================================
+--- xfsdump-kernel.org.orig/restore/namreg.h
++++ xfsdump-kernel.org/restore/namreg.h
+@@ -26,8 +26,8 @@
+ 
+ /* nrh_t - handle to a registered name
+  */
+-typedef size32_t nrh_t;
+-#define NRH_NULL	SIZE32MAX
++typedef size64_t nrh_t;
++#define NRH_NULL	SIZE64MAX
+ 
+ 
+ /* namreg_init - creates the name registry. resync is TRUE if the
+Index: xfsdump-kernel.org/restore/namreg.c
+===================================================================
+--- xfsdump-kernel.org.orig/restore/namreg.c
++++ xfsdump-kernel.org/restore/namreg.c
+@@ -72,26 +72,20 @@ typedef struct namreg_tran namreg_tran_t
+  */
+ #define CHKBITCNT		2
+ #define	CHKBITSHIFT		( NBBY * sizeof( nrh_t ) - CHKBITCNT )
+-#define	CHKBITLOMASK		( ( 1 << CHKBITCNT ) - 1 )
++#define	CHKBITLOMASK		( ( 1ULL << CHKBITCNT ) - 1 )
+ #define	CHKBITMASK		( CHKBITLOMASK << CHKBITSHIFT )
+ #define CHKHDLCNT		CHKBITSHIFT
+-#define CHKHDLMASK		( ( 1 << CHKHDLCNT ) - 1 )
+-#define CHKGETBIT( h )		( ( h >> CHKBITSHIFT ) & CHKBITLOMASK )
+-#define CHKGETHDL( h )		( h & CHKHDLMASK )
+-#define CHKMKHDL( c, h )	( ( ( c << CHKBITSHIFT ) & CHKBITMASK )	\
++#define CHKHDLMASK		( ( 1ULL << CHKHDLCNT ) - 1 )
++#define CHKGETBIT( h )		( ( (h) >> CHKBITSHIFT ) & CHKBITLOMASK )
++#define CHKGETHDL( h )		( (h) & CHKHDLMASK )
++#define CHKMKHDL( c, h )	( ( ( (c) << CHKBITSHIFT ) & CHKBITMASK )	\
+ 				  |					\
+-				  ( h & CHKHDLMASK ))
++				  ( (h) & CHKHDLMASK ))
+ #define HDLMAX			( ( off64_t )CHKHDLMASK )
+ 
+ #else /* NAMREGCHK */
+ 
+-#define HDLMAX			( ( ( off64_t )1			\
+-				    <<					\
+-				    ( ( off64_t )NBBY			\
+-				      *					\
+-				      ( off64_t )sizeof( nrh_t )))	\
+-				  -					\
+-				  ( off64_t )2 ) /* 2 to avoid NRH_NULL */
++#define HDLMAX			( NRH_NULL - 1 )
+ 
+ #endif /* NAMREGCHK */
+ 
 Index: xfsdump-kernel.org/restore/tree.c
 ===================================================================
 --- xfsdump-kernel.org.orig/restore/tree.c
 +++ xfsdump-kernel.org/restore/tree.c
-@@ -236,6 +236,14 @@ struct link_iter_context {
+@@ -166,19 +166,18 @@ typedef struct tran tran_t;
+ #define NODESZ	48
+ 
+ struct node {
+-	xfs_ino_t n_ino;		/* 8  8 ino */
+-	nrh_t n_nrh;		/* 4 12 handle to name in name registry */
+-	dah_t n_dah;		/* 4 16 handle to directory attributes */
+-	nh_t n_hashh;		/* 4 20 hash array */
+-	nh_t n_parh;		/* 4 24 parent */
+-	nh_t n_sibh;		/* 4 28 sibling list */
+-	nh_t n_sibprevh;	/* 4 32 prev sibling list - dbl link list */
+-	nh_t n_cldh;		/* 4 36 children list */
+-	nh_t n_lnkh;		/* 4 40 hard link list */
+-	gen_t n_gen;		/* 2 42 generation count mod 0x10000 */
+-	u_char_t n_flags;	/* 1 43 action and state flags */
+-	u_char_t n_nodehkbyte;	/* 1 44 given to node abstraction */
+-	int32_t pad;		/* 4 48 padding to 8 byte boundary */
++	xfs_ino_t n_ino;	/* 8  8 ino */
++	nrh_t n_nrh;		/* 8 16 handle to name in name registry */
++	dah_t n_dah;		/* 4 20 handle to directory attributes */
++	nh_t n_hashh;		/* 4 24 hash array */
++	nh_t n_parh;		/* 4 28 parent */
++	nh_t n_sibh;		/* 4 32 sibling list */
++	nh_t n_sibprevh;	/* 4 36 prev sibling list - dbl link list */
++	nh_t n_cldh;		/* 4 40 children list */
++	nh_t n_lnkh;		/* 4 44 hard link list */
++	gen_t n_gen;		/* 2 46 generation count mod 0x10000 */
++	u_char_t n_flags;	/* 1 47 action and state flags */
++	u_char_t n_nodehkbyte;	/* 1 48 given to node abstraction */
  };
- typedef struct link_iter_context link_iter_context_t;
  
-+/* used for caching parent pathname from previous Node2path result
-+ */
-+struct path_cache {
-+	nh_t nh;
-+	intgen_t len;
-+	char buf[MAXPATHLEN];
-+};
-+typedef struct path_cache path_cache_t;
- 
- /* declarations of externally defined global symbols *************************/
- 
-@@ -254,7 +262,8 @@ static nh_t Node_alloc( xfs_ino_t ino,
- static void Node_free( nh_t *nhp );
- static node_t * Node_map( nh_t nh );
- static void Node_unmap( nh_t nh, node_t **npp );
--static intgen_t Node2path_recurse( nh_t nh, char *buf, intgen_t bufsz );
-+static intgen_t Node2path_recurse( nh_t nh, char *buf,
-+				   intgen_t bufsz, intgen_t level );
- static void adopt( nh_t parh, nh_t cldh, nrh_t nrh );
- static nrh_t disown( nh_t cldh );
- static void selsubtree( nh_t nh, bool_t sensepr );
-@@ -3435,7 +3444,7 @@ Node2path( nh_t nh, char *path, char *er
- {
- 	intgen_t remainingcnt;
- 	path[ 0 ] = 0; /* in case root node passed in */
--	remainingcnt = Node2path_recurse( nh, path, MAXPATHLEN );
-+	remainingcnt = Node2path_recurse( nh, path, MAXPATHLEN, 0 );
- 	if ( remainingcnt <= 0 ) {
- 		node_t *np = Node_map( nh );
- 		xfs_ino_t ino = np->n_ino;
-@@ -3459,13 +3468,15 @@ Node2path( nh_t nh, char *path, char *er
-  * works because the buffer size is secretly 2 * MAXPATHLEN.
-  */
- static intgen_t
--Node2path_recurse( nh_t nh, char *buf, intgen_t bufsz )
-+Node2path_recurse( nh_t nh, char *buf, intgen_t bufsz, intgen_t level )
- {
-+	static path_cache_t cache = { NH_NULL, 0, "" };
- 	node_t *np;
- 	nh_t parh;
- 	xfs_ino_t ino;
- 	gen_t gen;
- 	nrh_t nrh;
-+	char *oldbuf;
- 	intgen_t oldbufsz;
- 	intgen_t namelen;
- 
-@@ -3475,6 +3486,13 @@ Node2path_recurse( nh_t nh, char *buf, i
- 		return bufsz;
+ typedef struct node node_t;
+@@ -3393,9 +3392,9 @@ Node_free( nh_t *nhp )
+ 		namreg_del( np->n_nrh );
+ 		np->n_nrh = NRH_NULL;
  	}
- 
-+	/* if we have a cache hit, no need to recurse any further
-+	 */
-+	if ( nh == cache.nh && bufsz > cache.len ) {
-+		strcpy( buf, cache.buf );
-+		return bufsz - cache.len;
-+	}
-+
- 	/* extract useful node members
- 	 */
- 	np = Node_map( nh );
-@@ -3486,8 +3504,9 @@ Node2path_recurse( nh_t nh, char *buf, i
- 
- 	/* build path to parent
- 	 */
-+	oldbuf = buf;
- 	oldbufsz = bufsz;
--	bufsz = Node2path_recurse( parh, buf, bufsz ); /* RECURSION */
-+	bufsz = Node2path_recurse( parh, buf, bufsz, level+1 ); /* RECURSION */
- 	if ( bufsz <= 0 ) {
- 		return bufsz;
+-	if ( np->n_dah != NRH_NULL ) {
++	if ( np->n_dah != DAH_NULL ) {
+ 		dirattr_del( np->n_dah );
+-		np->n_dah = NRH_NULL;
++		np->n_dah = DAH_NULL;
  	}
-@@ -3517,10 +3536,22 @@ Node2path_recurse( nh_t nh, char *buf, i
- 		ASSERT( namelen > 0 );
- 	}
- 
--	/* return remaining buffer size
-+	/* update remaining buffer size
- 	 */
- 	bufsz -= namelen;
- 	ASSERT( bufsz + MAXPATHLEN > 0 );
-+
-+	/* update the cache if we're the target's parent
-+	 * (and the pathname is not too long)
-+	 */
-+	if ( level == 1 && bufsz > 0 ) {
-+		cache.nh = nh;
-+		strcpy( cache.buf, oldbuf );
-+		cache.len = oldbufsz - bufsz;
-+	}
-+
-+	/* return remaining buffer size
-+	 */
- 	return bufsz;
- }
- 
+ 	np->n_flags = 0;
+ 	np->n_parh = NH_NULL;
 
 _______________________________________________
 xfs mailing list
