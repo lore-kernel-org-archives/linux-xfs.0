@@ -1,15 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oA537hKE176383 for <xfs@oss.sgi.com>; Thu, 4 Nov 2010 22:07:43 -0500
-From: Joe Perches <joe@perches.com>
-Subject: [PATCH 41/49] fs/xfs: Use vzalloc
-Date: Thu,  4 Nov 2010 20:08:05 -0700
-Message-Id: <10acc19712bf3d1e0ea68e7c16e1723922541249.1288925425.git.joe@perches.com>
-In-Reply-To: <alpine.DEB.2.00.1011031108260.11625@router.home>
-References: <alpine.DEB.2.00.1011031108260.11625@router.home>
-In-Reply-To: <cover.1288925424.git.joe@perches.com>
-References: <cover.1288925424.git.joe@perches.com>
+	oA5GZL1H209015 for <xfs@oss.sgi.com>; Fri, 5 Nov 2010 11:35:21 -0500
+Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D2926AC011
+	for <xfs@oss.sgi.com>; Fri,  5 Nov 2010 09:36:43 -0700 (PDT)
+Received: from augusta (augusta.americas.sgi.com [128.162.233.117])
+	by estes.americas.sgi.com (Postfix) with ESMTP id 7AE707003729
+	for <xfs@oss.sgi.com>; Fri,  5 Nov 2010 11:36:43 -0500 (CDT)
+Message-Id: <20101105163500.747192954@sgi.com>
+Date: Fri, 05 Nov 2010 11:35:00 -0500
+From: wkendall@sgi.com
+Subject: [PATCH v2 0/9] xfsrestore dirent limitations and scaling issues
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,34 +25,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jiri Kosina <trivial@kernel.org>
-Cc: xfs-masters@oss.sgi.com, xfs@oss.sgi.com, linux-kernel@vger.kernel.org, Alex Elder <aelder@sgi.com>
+To: xfs@oss.sgi.com
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- fs/xfs/linux-2.6/kmem.h |    7 +------
- 1 files changed, 1 insertions(+), 6 deletions(-)
+The first two patches in this series remove dirent limitations that
+exist in the current xfsrestore, allowing restore to now handle 4
+billion directory entries. Restore would map 200 GB of memory to do
+so, so don't go thinking this is a good idea. :)  (These two patches
+were previously submitted to the list but I've made some changes to
+them as suggested by Alex Elder.)
 
-diff --git a/fs/xfs/linux-2.6/kmem.h b/fs/xfs/linux-2.6/kmem.h
-index f7c8f7a..292eff1 100644
---- a/fs/xfs/linux-2.6/kmem.h
-+++ b/fs/xfs/linux-2.6/kmem.h
-@@ -61,12 +61,7 @@ extern void  kmem_free(const void *);
- 
- static inline void *kmem_zalloc_large(size_t size)
- {
--	void *ptr;
--
--	ptr = vmalloc(size);
--	if (ptr)
--		memset(ptr, 0, size);
--	return ptr;
-+	return vzalloc(size);
- }
- static inline void kmem_free_large(void *ptr)
- {
--- 
-1.7.3.1.g432b3.dirty
+The remaining patches mostly deal with improving restore
+performance, most noticeably on dumps containing upwards of 10
+million inodes/dirents.  This resulted in a 50% improvement in the
+time required to build restore's node table (a mmap'd representation
+of the dump's directory structure), so for interactive restores and
+restoring sub-directories this is very helpful. For full restores
+with millions of files the overall restore time is dominated by
+creating inodes and laying down the data, so the improvements here
+would be less noticeable.
+
+For dumps with lots of hard links, these changes fix a bug that was
+causing xfsrestore to constantly have to map and unmap segments of
+the node table, leading to horrible performance.
+
+Several of these patches modify the on-disk state information that
+xfsrestore leaves around for resuming restores. The final patch adds
+versioning information to the on-disk state to detect cases where
+the user tries to resume a restore with an incompatible version of
+xfsrstore (or an incompatible system).
+
+Bill
 
 _______________________________________________
 xfs mailing list
