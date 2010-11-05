@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oA5GZLbf209040 for <xfs@oss.sgi.com>; Fri, 5 Nov 2010 11:35:22 -0500
+	oA5GZM7M209041 for <xfs@oss.sgi.com>; Fri, 5 Nov 2010 11:35:22 -0500
 Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 171FAAC014
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 261ACAC015
 	for <xfs@oss.sgi.com>; Fri,  5 Nov 2010 09:36:47 -0700 (PDT)
 Received: from augusta (augusta.americas.sgi.com [128.162.233.117])
-	by estes.americas.sgi.com (Postfix) with ESMTP id 5F5EB7006201
+	by estes.americas.sgi.com (Postfix) with ESMTP id E9F1F7006204
 	for <xfs@oss.sgi.com>; Fri,  5 Nov 2010 11:36:44 -0500 (CDT)
-Message-Id: <20101105163644.182690256@sgi.com>
-Date: Fri, 05 Nov 2010 11:35:06 -0500
+Message-Id: <20101105163644.761748638@sgi.com>
+Date: Fri, 05 Nov 2010 11:35:09 -0500
 From: wkendall@sgi.com
-Subject: [PATCH v2 6/9] xfsrestore: fix node table setup
+Subject: [PATCH v2 9/9] xfsrestore: check for compatible xfsrestore
 References: <20101105163500.747192954@sgi.com>
-Content-Disposition: inline; filename=winmap_max_fix
+Content-Disposition: inline; filename=check_compatible_restore
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,290 +29,200 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-The node table setup code unintentionally limits the amount of virtual
-memory that will be used for the node table. Rather than setting a
-limit based on the remaining virtual memory, the node table is limited
-to the amount of memory it thinks it will need based on the dump's
-inode count. But the node table stores directory entries, not inodes,
-and so dumps with lots of hard links end up thrashing mapping and
-unmapping segments of the node table to stay within the self-imposed
-virtual memory limit.
+When resuming a restore or doing a cumulative restore, xfsrestore
+reads state information left around by the previous invocation.
+This patch adds logic to determine whether or not restore is
+able to make sense of the sense information.
 
-This patch also changes the node table to ensure that there are a
-power of two nodes per segment. Profiling revealed that while building
-the node table, 50% of the restore cpu time was spent doing division
-and modulo to convert a node index into its segment index and offset
-within the segment. This change prepares the node table for another
-patch which will change the lookup mechanism to use shift and
-bitwise-and.
-
-Also don't bother passing the estimated segment table size to the
-window abstraction. It has to deal with resizing the table anyway and
-can choose a reasonable starting size.
-
+The xfsrestore man page has also been updated to make the user
+aware of the requirement to use a compatible restore and
+system when resuming restores.
 
 Signed-off-by: Bill Kendall <wkendall@sgi.com>
 
 ---
- restore/node.c |  125 ++++++++++++++++++++++++++++++++++-----------------------
- restore/win.c  |    7 +--
- restore/win.h  |    3 -
- 3 files changed, 80 insertions(+), 55 deletions(-)
+ man/man8/xfsrestore.8 |   26 +++++++++++---
+ restore/content.c     |   92 +++++++++++++++++++++++++++++++++++++++++++++++---
+ 2 files changed, 108 insertions(+), 10 deletions(-)
 
-Index: xfsdump-kernel.org/restore/node.c
+Index: xfsdump-kernel.org/man/man8/xfsrestore.8
 ===================================================================
---- xfsdump-kernel.org.orig/restore/node.c
-+++ xfsdump-kernel.org/restore/node.c
-@@ -97,19 +97,14 @@ extern size_t pgmask;
+--- xfsdump-kernel.org.orig/man/man8/xfsrestore.8
++++ xfsdump-kernel.org/man/man8/xfsrestore.8
+@@ -61,6 +61,18 @@ The deltas must be applied in the order 
+ Each delta applied must have been produced with the previously applied
+ delta as its base.
+ .P
++.I xfsrestore
++keeps state information in the
++.IR xfsrestorehousekeepingdir ,
++to inform subsequent invocations when used in
++cumulative mode, or in the event a restore is interrupted.
++To ensure that the state information can be processed,
++a compatible version of
++.I xfsrestore
++must be used for each subsequent invocation. Additionally,
++each invocation must run on a system of the same endianness
++and page size.
++.P
+ The options to
+ .I xfsrestore
+ are:
+@@ -78,11 +90,11 @@ option allows the operator to specify an
+ in which
+ .I xfsrestore
+ creates the
+-.I xfsrestorehousekeeping
+-directory.
+-When performing a cumulative (\f3\-r\f1 option) restore,
+-each successive invocation of \f2xfsrestore\f1 must specify the same alternate
++.I xfsrestorehousekeepingdir
+ directory.
++When performing a cumulative (\f3\-r\f1 option) restore or
++resuming (\f3\-R\f1 option) a restore, each successive invocation
++must specify the same alternate directory.
+ .TP 5
+ \f3\-b\f1 \f2blocksize\f1
+ Specifies the blocksize, in bytes, to be used for the restore. 
+@@ -205,7 +217,11 @@ Source tape drive is a QIC tape.  QIC ta
+ blocksize, for which \f2xfsrestore\f1 must make special allowances.
+ .TP 5
+ \f3\-r\f1
+-Selects the cumulative mode of operation.
++Selects the cumulative mode of operation. The
++.B \-a
++and
++.I destination
++options must be the same for each invocation.
+ .TP 5
+ \f3\-s\f1 \f2subtree\f1
+ Specifies a subtree to restore.
+Index: xfsdump-kernel.org/restore/content.c
+===================================================================
+--- xfsdump-kernel.org.orig/restore/content.c
++++ xfsdump-kernel.org/restore/content.c
+@@ -71,6 +71,13 @@
  
- #else /* NODECHK */
+ /* structure definitions used locally ****************************************/
  
--#define NIX_MAX			( ( ( off64_t )1			\
--				    <<					\
--				    ( ( off64_t )NBBY			\
--				      *					\
--				      ( off64_t )sizeof( nh_t )))	\
--				  -					\
--				  ( off64_t )2 ) /* 2 to avoid NH_NULL */
-+#define NIX_MAX			( NH_NULL - 1 )
++#define HOUSEKEEPING_MAGIC	0x686b6d61
++	/* "hkma" - see the housekeeping_magic field of pers_t below.
++	 */
++#define HOUSEKEEPING_VERSION	1
++	/* see the housekeeping_version field of pers_t below.
++	 */
++
+ #define WRITE_TRIES_MAX	3
+ 	/* retry loop tuning for write(2) workaround
+ 	 */
+@@ -358,12 +365,43 @@ struct stream_context {
  
- #endif /* NODECHK */
+ typedef struct stream_context stream_context_t;
  
- /* window constraints
+-/* persistent state file header - two parts: accumulation state
+- * which spans several sessions, and session state. each has a valid
+- * bit, and no fields are valid until the valid bit is set.
+- * all elements defined such that a bzero results in a valid initial state.
++/* persistent state file header - on-disk format information plus
++ * accumulation state (which spans several sessions) and session state.
++ * the latter two have a valid bit, and their fields are not valid until
++ * the valid bit is set. all elements defined such that a bzero results
++ * in a valid initial state.
   */
--#define NODESPERSEGMIN	1000000
-+#define NODESPERSEG_MIN	1048576
-+#define WINMAP_MIN	4
- 
- /* a node is identified internally by its index into the backing store.
-  * this index is the offset of the node into the segmented portion of
-@@ -135,17 +130,14 @@ struct node_hdr {
- 		/* index of byte in each node the user has reserved
- 		 * for use by me
- 		 */
--	size_t nh_nodesperseg;
-+	nh_t nh_nodesperseg;
- 		/* an integral number of internal nodes must fit into a
- 		 * segment
- 		 */
--	size_t nh_segsz;
-+	size64_t nh_segsz;
- 		/* the backing store is partitoned into segment, which
- 		 * can be mapped into VM windows  by the win abstraction
- 		 */
--	size64_t nh_segtblsz;
--		/* the estimated size of the entire segment table.
--		 */
- 	size_t nh_winmapmax;
- 		/* maximum number of windows which can be mapped
- 		 */
-@@ -191,13 +183,13 @@ node_init( intgen_t fd,
- 	   size64_t vmsz,
- 	   size64_t dirs_nondirs_cnt )
- {
--	size64_t nodesz;
--	size64_t winmap_mem;
-+	size_t nodesz;
- 	size64_t segsz;
--	size64_t segtablesz;
--	size64_t nodesperseg;
--	size64_t minsegsz;
--	size64_t winmapmax;
-+	nh_t nodesperseg;
-+	size_t max_segments;
-+	size_t winmapmax;
-+	size_t segcount;
-+	intgen_t segixshift;
- 	intgen_t rval;
- 
- 	/* sanity checks
-@@ -218,36 +210,76 @@ node_init( intgen_t fd,
- 	*/
- 	nodesz = ( usrnodesz + nodealignsz - 1 ) & ~( nodealignsz - 1 );
- 
--#define	WINMAP_MAX	20	/* maximum number of windows to use */
--#define	WINMAP_MIN	4	/* minimum number of windows to use */
--#define	HARDLINK_FUDGE	1.2	/* approx 1.2 hard links per file */
--
--	/* Calculate the expected size of the segment table using the number
--	 * of dirs and non-dirs.  Since we don't know how many hard-links
--	 * there will be, scale the size upward using HARDLINK_FUDGE.
-+	/* Calculate the node table params based on the number of inodes in the
-+	 * dump, since that's all we know. Ideally we'd base this on the number
-+	 * of dirents in the dump instead as there's a node per dirent.
+ struct pers {
++	/* on-disk format information used to verify that xfsrestore
++	 * can make sense of the data in xfsrestorehousekeepingdir
++	 * when running in cumulative mode or when resuming a restore.
 +	 *
-+	 * Due to virtual memory constraints and the fact that we don't know
-+	 * the final node table size, we can't guarantee that the entire node
-+	 * table can be mapped at once. Instead segments will be mapped using a
-+	 * window abstraction. Some operations require WINMAP_MIN nodes to be
-+	 * referenced at a time, therefore we must ensure that this many
-+	 * segments fit in virtual memory.
-+	 *
-+	 * nodesperseg must be a power of two. Earlier versions did not enforce
-+	 * this, and profiling showed that nearly 50% of cpu time during the
-+	 * node table construction was consumed doing division and modulo to
-+	 * convert an nh_t to a segment index and node offset.  By making
-+	 * nodesperseg a power of two we can use shift and bitwise-and instead.
-+	 *
-+	 * Each segment must hold an integral number of nodes and be an integral
-+	 * number of pages. #1 ensures this except when nodesperseg is small, so
-+	 * the smallest allowed segsz is pgsz * nodesz (i.e., nodesperseg ==
-+	 * pgsz). However this is of no consequence as we enforce a larger
-+	 * minimum nodesperseg (NODESPERSEG_MIN) anyway in order to place a
-+	 * reasonable cap on the max number of segments.
++	 * for backwards/forwards compatibility, this struct must be
++	 * the first field! also any changes to the struct must address
++	 * compatibility with other xfsrestore versions.
++	 */
++	struct {
++		size32_t housekeeping_magic;
++			/* used to determine if this struct has been
++			 * initialized, and whether the machine's
++			 * endianness is the same as the previous
++			 * invocation. (data written to xfsrestore's
++			 * state directory is not converted to an
++			 * endian-neutral format since it only persists
++			 * for the life of one or more restore sessions.)
++			 */
++		size32_t housekeeping_version;
++			/* version of the data structures used in the
++			 * state files in housekeepingdir. this must be
++			 * bumped whenever the on-disk format changes.
++			 */
++		size64_t pagesize;
++			/* headers in the persistent state files
++			 * are aligned on page size boundaries, so
++			 * this cannot change betweeen invocations.
++			 */
++	} v;
++
+ 	/* command line arguments from first session, and session
+ 	 * history.
  	 */
- 
--	segtablesz = ( (size64_t)(HARDLINK_FUDGE * (double)dirs_nondirs_cnt) * nodesz);
-+	ASSERT( NODESPERSEG_MIN >= pgsz );
+@@ -1301,6 +1339,49 @@ content_init( intgen_t argc, char *argv[
+ 		      strerror( errno ));
+ 		return BOOL_FALSE;
+ 	}
 +
-+	if ( vmsz < WINMAP_MIN * NODESPERSEG_MIN * nodesz ) {
-+		mlog( MLOG_NORMAL | MLOG_ERROR, _(
-+		  "not enough virtual memory for node abstraction: "
-+		  "remaining-vsmz=%llu need=%llu\n"),
-+		  vmsz, WINMAP_MIN * NODESPERSEG_MIN * nodesz );
-+		return BOOL_FALSE;
-+	}
- 
--	/* Figure out how much memory is available for use by winmaps, and
--	 * use that to pick an appropriate winmapmax, segsz, and nodesperseg,
--	 * the goal being that if at all possible we want the entire segment
--	 * table to be mapped so that we aren't constantly mapping and
--	 * unmapping winmaps.  There must be at least WINMAP_MIN winmaps
--	 * because references can be held on more than one winmap at the
--	 * same time.  More winmaps are generally better to reduce the
--	 * number of nodes that are unmapped if unmapping does occur.
-+	/* This is checked as nodes are allocated as well (remember that
-+	 * dirs_nondirs_cnt may be less than the number of nodes/dirents).
-+	 * Checking this here prevents potential overflow in the logic below.
- 	 */
-+	if ( dirs_nondirs_cnt > NIX_MAX ) {
-+		mlog( MLOG_NORMAL | MLOG_ERROR, _(
-+		  "dump contains %llu inodes, restore can only handle %llu\n"),
-+		  dirs_nondirs_cnt, NIX_MAX );
-+		return BOOL_FALSE;
-+	}
-+
-+	for ( winmapmax = 0, segcount = 1; winmapmax < WINMAP_MIN; segcount <<= 1 ) {
-+
-+		nodesperseg = max( dirs_nondirs_cnt / segcount, NODESPERSEG_MIN );
-+
-+		/* nodesperseg must be a power of 2 */
-+		for ( segixshift = 0;
-+		      ( 1ULL << segixshift ) < nodesperseg;
-+		      segixshift++ );
- 
--	minsegsz = pgsz * nodesz;	/* must be pgsz and nodesz multiple */
--	winmap_mem = min(vmsz, segtablesz);
--	segsz = (((winmap_mem / WINMAP_MAX) + minsegsz - 1) / minsegsz) * minsegsz;
--	segsz = max(segsz, minsegsz);
-+		/* rounding up to a power of 2 may have caused overflow */
-+		if ( ( 1ULL << segixshift ) > NIX_MAX )
-+			segixshift--;
- 
--	nodesperseg = segsz / nodesz;
-+		nodesperseg = 1UL << segixshift;
- 
--	winmapmax = min(WINMAP_MAX, vmsz / segsz);
--	winmapmax = max(winmapmax, WINMAP_MIN);
-+		max_segments = 1UL << ( NBBY * sizeof(nh_t) - segixshift );
-+
-+		segsz = nodesperseg * nodesz;
-+
-+		/* max number of segments that will fit in virtual memory,
-+		 * capped at the max possible number of segments
++	/* but first setup or verify the on-disk format information
++	 */
++	if ( ! persp->a.valpr ) {
++		/* this is the first restore session
 +		 */
-+		winmapmax = min( vmsz / segsz, max_segments );
++		persp->v.housekeeping_magic = HOUSEKEEPING_MAGIC;
++		persp->v.housekeeping_version = HOUSEKEEPING_VERSION;
++		persp->v.pagesize = pgsz;
++
++	} else {
++		/* cumulative or resuming a restore, verify the header
++		 */
++		if ( persp->v.housekeeping_magic != HOUSEKEEPING_MAGIC ) {
++			mlog( MLOG_NORMAL | MLOG_ERROR, _(
++			      "%s format corrupt or wrong endianness "
++			      "(0x%x, expected 0x%x)\n"),
++			      hkdirname,
++			      persp->v.housekeeping_magic,
++			      HOUSEKEEPING_MAGIC );
++			return BOOL_FALSE;
++		}
++		if ( persp->v.housekeeping_version != HOUSEKEEPING_VERSION ) {
++			mlog( MLOG_NORMAL | MLOG_ERROR, _(
++			      "%s format version differs from previous "
++			      "restore (%u, expected %u)\n"),
++			      hkdirname,
++			      persp->v.housekeeping_version,
++			      HOUSEKEEPING_VERSION );
++			return BOOL_FALSE;
++		}
++		if ( persp->v.pagesize != pgsz ) {
++			mlog( MLOG_NORMAL | MLOG_ERROR, _(
++			      "%s format differs from previous "
++			      "restore due to page size change "
++			      "(was %lu, now %lu)\n"),
++			      hkdirname,
++			      persp->v.pagesize,
++			      pgsz );
++			return BOOL_FALSE;
++		}
 +	}
- 
- 	/* map the abstraction header
- 	 */
-@@ -272,7 +304,6 @@ node_init( intgen_t fd,
- 	node_hdrp->nh_nodesz = nodesz;
- 	node_hdrp->nh_nodehkix = nodehkix;
- 	node_hdrp->nh_segsz = segsz;
--	node_hdrp->nh_segtblsz = segtablesz;
- 	node_hdrp->nh_winmapmax = winmapmax;
- 	node_hdrp->nh_nodesperseg = nodesperseg;
- 	node_hdrp->nh_nodealignsz = nodealignsz;
-@@ -309,7 +340,6 @@ node_init( intgen_t fd,
- 	win_init( fd,
- 		  node_hdrp->nh_firstsegoff,
- 		  segsz,
--		  segtablesz,
- 		  winmapmax );
- 	
- 	/* announce the results
-@@ -317,14 +347,12 @@ node_init( intgen_t fd,
- 	mlog( MLOG_DEBUG | MLOG_TREE,
- 	      "node_init:"
- 	      " vmsz = %llu (0x%llx)"
--	      " segsz = %u (0x%x)"
--	      " segtblsz = %llu (0x%llx)"
-+	      " segsz = %llu (0x%llx)"
- 	      " nodesperseg = %u (0x%x)"
--	      " winmapmax = %llu (0x%llx)"
-+	      " winmapmax = %lu (0x%lx)"
- 	      "\n",
- 	      vmsz, vmsz,
- 	      segsz, segsz,
--	      segtablesz, segtablesz,
- 	      nodesperseg, nodesperseg,
- 	      winmapmax, winmapmax );
- 
-@@ -364,7 +392,6 @@ node_sync( intgen_t fd, off64_t off )
- 	win_init( fd,
- 		  node_hdrp->nh_firstsegoff,
- 		  node_hdrp->nh_segsz,
--		  node_hdrp->nh_segtblsz,
- 		  node_hdrp->nh_winmapmax );
- 
- 	return BOOL_TRUE;
-Index: xfsdump-kernel.org/restore/win.c
-===================================================================
---- xfsdump-kernel.org.orig/restore/win.c
-+++ xfsdump-kernel.org/restore/win.c
-@@ -80,7 +80,7 @@ struct tran {
- 	off64_t t_firstoff;
- 		/* offset of first seg within backing store (for mmap( ))
- 		 */
--	size_t t_segsz;
-+	size64_t t_segsz;
- 		/* backing store segment / window size
- 		 */
- 	size_t t_winmax;
-@@ -147,8 +147,7 @@ win_getnum_mmaps(void)
- void
- win_init( intgen_t fd,
- 	  off64_t firstoff,
--	  size_t segsz,
--	  size64_t segtablesz,
-+	  size64_t segsz,
- 	  size_t winmax )
- {
- 	/* validate parameters
-@@ -167,7 +166,7 @@ win_init( intgen_t fd,
- 	tranp->t_segsz = segsz;
- 	tranp->t_winmax = winmax;
- 
--	tranp->t_segmaplen = (size_t)(segtablesz / segsz) + 1;
-+	tranp->t_segmaplen = SEGMAP_INCR;
- 	tranp->t_segmap = (win_t **)
- 	calloc( tranp->t_segmaplen, sizeof(win_t *) );
- 	ASSERT( tranp->t_segmap );
-Index: xfsdump-kernel.org/restore/win.h
-===================================================================
---- xfsdump-kernel.org.orig/restore/win.h
-+++ xfsdump-kernel.org/restore/win.h
-@@ -25,8 +25,7 @@
-  */
- void win_init( intgen_t fd,
- 	       off64_t rngoff,		/* offset into file of windowing */
--	       size_t winsz,		/* window size */
--	       size64_t segtablesz,     /* estimate of segment table size */
-+	       size64_t winsz,		/* window size */
- 	       size_t wincntmax );	/* max number of windows to manage */
- 
- /* supply a pointer to the portion of the file identified by off.
++
+ 	if ( ! persp->a.valpr ) {
+ 		if ( ! dstdir ) {
+ 			mlog( MLOG_NORMAL | MLOG_ERROR, _(
+@@ -1565,7 +1646,8 @@ content_init( intgen_t argc, char *argv[
+ 		stpgcnt = 0;
+ 		newstpgcnt = ( stsz + pgmask ) / pgsz;
+ 		descpgcnt = 0;
+-		memset( ( void * )persp, 0, sizeof( pers_t ));
++		memset( ( void * )&persp->a, 0,
++			sizeof( pers_t ) - offsetofmember( pers_t, a ));
+ 	} else if ( ! persp->s.valpr ) {
+ 		stpgcnt = persp->a.stpgcnt;
+ 		newstpgcnt = stpgcnt;
 
 _______________________________________________
 xfs mailing list
