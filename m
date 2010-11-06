@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oA6BfI9g255271 for <xfs@oss.sgi.com>; Sat, 6 Nov 2010 06:41:19 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A6BC9139596E
-	for <xfs@oss.sgi.com>; Sat,  6 Nov 2010 04:42:44 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id ePIKTXWnGt9JBkvP for
-	<xfs@oss.sgi.com>; Sat, 06 Nov 2010 04:42:44 -0700 (PDT)
-Received: from hch by bombadil.infradead.org with local (Exim 4.72 #1 (Red Hat
-	Linux)) id 1PEhAS-0006cF-1k
-	for xfs@oss.sgi.com; Sat, 06 Nov 2010 11:42:44 +0000
-Date: Sat, 6 Nov 2010 07:42:44 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 1/3] xfs: tell lockdep about parent iolock usage in filestreams
-Message-ID: <20101106114243.GB25395@infradead.org>
+	oA6HoCM0005625 for <xfs@oss.sgi.com>; Sat, 6 Nov 2010 12:50:12 -0500
+Received: from one.firstfloor.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8B51A1C1FCFE
+	for <xfs@oss.sgi.com>; Sat,  6 Nov 2010 10:51:37 -0700 (PDT)
+Received: from one.firstfloor.org (one.firstfloor.org [213.235.205.2]) by
+	cuda.sgi.com with ESMTP id K7mDowoQWwqFcxY3 for
+	<xfs@oss.sgi.com>; Sat, 06 Nov 2010 10:51:37 -0700 (PDT)
+From: Andi Kleen <andi@firstfloor.org>
+Subject: Re: [PATCH 2/3] xfs: fix a few compiler warnings with
+	CONFIG_XFS_QUOTA=n
 References: <20101106114226.GA25395@infradead.org>
+	<20101106114256.GC25395@infradead.org>
+Date: Sat, 06 Nov 2010 18:51:29 +0100
+In-Reply-To: <20101106114256.GC25395@infradead.org> (Christoph Hellwig's
+	message of "Sat, 6 Nov 2010 07:42:56 -0400")
+Message-ID: <87aalmtk66.fsf@basil.nowhere.org>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20101106114226.GA25395@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,37 +30,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-The filestreams code may take the iolock on the parent inode while holding it
-on a child.  This is the only place in XFS where we take both the child and
-parent iolock, so just telling lockdep about it is enough.  The lock flag
-required for that was already added as part of the ilock lockdep annotations
-and unused so far.
+Christoph Hellwig <hch@infradead.org> writes:
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Andi Kleen reported that gcc-4.5 gives lots of warnings for him inside the
+> XFS code.  It turned out most of them are due to the quota stubs beeing
+> macros, and gcc now complaining about macros evaluating to 0 that are not
+> assigned to variables.
 
-Index: xfs/fs/xfs/xfs_filestream.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_filestream.c	2010-11-02 14:28:57.888491016 -0400
-+++ xfs/fs/xfs/xfs_filestream.c	2010-11-02 14:30:42.591824351 -0400
-@@ -744,9 +744,15 @@ xfs_filestream_new_ag(
- 	 * If the file's parent directory is known, take its iolock in exclusive
- 	 * mode to prevent two sibling files from racing each other to migrate
- 	 * themselves and their parent to different AGs.
-+	 *
-+	 * Note that we lock the parent directory iolock inside the child
-+	 * iolock here.  That's fine as we never hold both parent and child
-+	 * iolock in any other place.  This is different from the ilock,
-+	 * which requires locking of the child after the parent for namespace
-+	 * operations.
- 	 */
- 	if (pip)
--		xfs_ilock(pip, XFS_IOLOCK_EXCL);
-+		xfs_ilock(pip, XFS_IOLOCK_EXCL | XFS_IOLOCK_PARENT);
- 
- 	/*
- 	 * A new AG needs to be found for the file.  If the file's parent
+Thanks. BTW I believe this was already fixed in my big warning patchkit
+from some time ago, unfortunately that didn't make it in :-/
+
+A gcc 4.6 build is also still incredibly noisy.
+
+-Andi
+
+-- 
+ak@linux.intel.com -- Speaking for myself only.
 
 _______________________________________________
 xfs mailing list
