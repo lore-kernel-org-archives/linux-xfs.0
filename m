@@ -1,30 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oA88tEp7089669 for <xfs@oss.sgi.com>; Mon, 8 Nov 2010 02:55:14 -0600
+	oA88srKY089523 for <xfs@oss.sgi.com>; Mon, 8 Nov 2010 02:54:53 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A1B5A15F7D3
-	for <xfs@oss.sgi.com>; Mon,  8 Nov 2010 00:56:39 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E582A1398EE1
+	for <xfs@oss.sgi.com>; Mon,  8 Nov 2010 00:56:18 -0800 (PST)
 Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
 	[150.101.137.98]) by cuda.sgi.com with ESMTP id
-	iOe7TIwhd0BIBmRG for <xfs@oss.sgi.com>;
-	Mon, 08 Nov 2010 00:56:39 -0800 (PST)
+	PHR4SZtcVdjTO0QU for <xfs@oss.sgi.com>;
+	Mon, 08 Nov 2010 00:56:18 -0800 (PST)
 Received: from dastard (unverified [121.44.100.105])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	45901309-1927428
-	for <xfs@oss.sgi.com>; Mon, 08 Nov 2010 19:26:38 +1030 (CDT)
+	45901293-1927428
+	for <xfs@oss.sgi.com>; Mon, 08 Nov 2010 19:26:17 +1030 (CDT)
 Received: from chute ([192.168.1.1] helo=disappointment)
 	by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1PFNWd-0001DF-3K
-	for xfs@oss.sgi.com; Mon, 08 Nov 2010 19:56:27 +1100
+	(envelope-from <dave@fromorbit.com>) id 1PFNWI-0001CT-FT
+	for xfs@oss.sgi.com; Mon, 08 Nov 2010 19:56:06 +1100
 Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1PFNVv-0004nx-7R
-	for xfs@oss.sgi.com; Mon, 08 Nov 2010 19:55:43 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1PFNVa-0004nL-KW
+	for xfs@oss.sgi.com; Mon, 08 Nov 2010 19:55:22 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 14/16] xfs: remove all the inodes on a buffer from the AIL in
-	bulk
-Date: Mon,  8 Nov 2010 19:55:17 +1100
-Message-Id: <1289206519-18377-15-git-send-email-david@fromorbit.com>
+Subject: [PATCH 02/16] xfs: move delayed write buffer trace
+Date: Mon,  8 Nov 2010 19:55:05 +1100
+Message-Id: <1289206519-18377-3-git-send-email-david@fromorbit.com>
 In-Reply-To: <1289206519-18377-1-git-send-email-david@fromorbit.com>
 References: <1289206519-18377-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -44,284 +43,39 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-When inode buffer IO completes, usually all of the inodes are removed from the
-AIL. This involves processing them one at a time and taking the AIL lock once
-for every inode. When all CPUs are processing inode IO completions, this causes
-excessive amount sof contention on the AIL lock.
-
-Instead, change the way we process inode IO completion in the buffer
-IO done callback. Allow the inode IO done callback to walk the list
-of IO done callbacks and pull all the inodes off the buffer in one
-go and then process them as a batch.
-
-Once all the inodes for removal are collected, take the AIL lock
-once and do a bulk removal operation to minimise traffic on the AIL
-lock.
+The delayed write buffer split trace currently issues a trace for
+every buffer it scans. These buffers are not necessarily queued for
+delayed write. Indeed, when buffers are pinned, there can be
+thousands of traces of buffers that aren't actually queued for
+delayed write and the ones that are are lost in the noise. Move the
+trace point to record only buffers that are split out for IO to be
+issued on.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_buf_item.c   |   17 +++++++--
- fs/xfs/xfs_inode_item.c |   92 ++++++++++++++++++++++++++++++++++++++---------
- fs/xfs/xfs_trans_ail.c  |   65 +++++++++++++++++++++++++++++++++
- fs/xfs/xfs_trans_priv.h |    4 ++
- 4 files changed, 158 insertions(+), 20 deletions(-)
+ fs/xfs/linux-2.6/xfs_buf.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index 2686d0d..46a7ef2 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -918,6 +918,18 @@ xfs_buf_attach_iodone(
- 	XFS_BUF_SET_IODONE_FUNC(bp, xfs_buf_iodone_callbacks);
- }
+diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
+index 63fd2c0..aa1d353 100644
+--- a/fs/xfs/linux-2.6/xfs_buf.c
++++ b/fs/xfs/linux-2.6/xfs_buf.c
+@@ -1781,7 +1781,6 @@ xfs_buf_delwri_split(
+ 	INIT_LIST_HEAD(list);
+ 	spin_lock(dwlk);
+ 	list_for_each_entry_safe(bp, n, dwq, b_list) {
+-		trace_xfs_buf_delwri_split(bp, _RET_IP_);
+ 		ASSERT(bp->b_flags & XBF_DELWRI);
  
-+/*
-+ * We can have many callbacks on a buffer. Running the callbacks individually
-+ * can cause a lot of contention on the AIL lock, so we allow for a single
-+ * callback to be able to scan the remaining lip->li_bio_list for other items
-+ * of the same type and callback to be processed in the first call.
-+ *
-+ * As a result, the loop walking the callback list below will also modify the
-+ * list. it removes the first item from the list and then runs the callback.
-+ * The loop then restarts from the new head of the list. This allows the
-+ * callback to scan and modify the list attached to the buffer and we don't
-+ * have to care about maintaining a next item pointer.
-+ */
- STATIC void
- xfs_buf_do_callbacks(
- 	xfs_buf_t	*bp,
-@@ -925,8 +937,8 @@ xfs_buf_do_callbacks(
- {
- 	xfs_log_item_t	*nlip;
- 
--	while (lip != NULL) {
--		nlip = lip->li_bio_list;
-+	while ((lip = XFS_BUF_FSPRIVATE(bp, xfs_log_item_t *)) != NULL) {
-+		XFS_BUF_SET_FSPRIVATE(bp, lip->li_bio_list);
- 		ASSERT(lip->li_cb != NULL);
- 		/*
- 		 * Clear the next pointer so we don't have any
-@@ -936,7 +948,6 @@ xfs_buf_do_callbacks(
- 		 */
- 		lip->li_bio_list = NULL;
- 		lip->li_cb(bp, lip);
--		lip = nlip;
+ 		if (!XFS_BUF_ISPINNED(bp) && !xfs_buf_cond_lock(bp)) {
+@@ -1795,6 +1794,7 @@ xfs_buf_delwri_split(
+ 					 _XBF_RUN_QUEUES);
+ 			bp->b_flags |= XBF_WRITE;
+ 			list_move_tail(&bp->b_list, list);
++			trace_xfs_buf_delwri_split(bp, _RET_IP_);
+ 		} else
+ 			skipped++;
  	}
- }
- 
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index 3be7bdc..cb341ba 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -843,15 +843,64 @@ xfs_inode_item_destroy(
-  * flushed to disk.  It is responsible for removing the inode item
-  * from the AIL if it has not been re-logged, and unlocking the inode's
-  * flush lock.
-+ *
-+ * To reduce AIL lock traffic as much as possible, we scan the buffer log item
-+ * list for other inodes that will run this function. We remove them from the
-+ * buffer list so we can process all the inode IO completions in one AIL lock
-+ * traversal.
-  */
- void
- xfs_iflush_done(
- 	struct xfs_buf		*bp,
- 	struct xfs_log_item	*lip)
- {
--	struct xfs_inode_log_item *iip = INODE_ITEM(lip);
--	xfs_inode_t		*ip = iip->ili_inode;
-+	struct xfs_inode_log_item *iip;
-+	struct xfs_log_item	*blip;
-+	struct xfs_log_item	*next;
-+	struct xfs_log_item	*prev;
- 	struct xfs_ail		*ailp = lip->li_ailp;
-+	int			need_ail = 0;
-+
-+	/*
-+	 * Scan the buffer IO completions for other inodes being completed and
-+	 * attach them to the current inode log item.
-+	 */
-+	blip = XFS_BUF_FSPRIVATE(bp, xfs_log_item_t *);
-+	prev = NULL;
-+	while (blip != NULL) {
-+		if (lip->li_cb != xfs_iflush_done) {
-+			prev = blip;
-+			blip = blip->li_bio_list;
-+			continue;
-+		}
-+
-+		/* remove from list */
-+		next = blip->li_bio_list;
-+		if (!prev) {
-+			XFS_BUF_SET_FSPRIVATE(bp, next);
-+		} else {
-+			prev->li_bio_list = next;
-+		}
-+
-+		/* add to current list */
-+		blip->li_bio_list = lip->li_bio_list;
-+		lip->li_bio_list = blip;
-+
-+		/*
-+		 * while we have the item, do the unlocked check for needing
-+		 * the AIL lock.
-+		 */
-+		iip = INODE_ITEM(blip);
-+		if (iip->ili_logged && blip->li_lsn == iip->ili_flush_lsn)
-+			need_ail++;
-+
-+		blip = next;
-+	}
-+
-+	/* make sure we capture the state of the initial inode. */
-+	iip = INODE_ITEM(lip);
-+	if (iip->ili_logged && lip->li_lsn == iip->ili_flush_lsn)
-+		need_ail++;
- 
- 	/*
- 	 * We only want to pull the item from the AIL if it is
-@@ -862,28 +911,37 @@ xfs_iflush_done(
- 	 * the lock since it's cheaper, and then we recheck while
- 	 * holding the lock before removing the inode from the AIL.
- 	 */
--	if (iip->ili_logged && lip->li_lsn == iip->ili_flush_lsn) {
-+	if (need_ail) {
-+		struct xfs_log_item *lgia[need_ail];
-+		int i = 0;
- 		spin_lock(&ailp->xa_lock);
--		if (lip->li_lsn == iip->ili_flush_lsn) {
--			/* xfs_trans_ail_delete() drops the AIL lock. */
--			xfs_trans_ail_delete(ailp, lip);
--		} else {
--			spin_unlock(&ailp->xa_lock);
-+		for (blip = lip; blip; blip = blip->li_bio_list) {
-+			iip = INODE_ITEM(blip);
-+			if (iip->ili_logged &&
-+			    blip->li_lsn == iip->ili_flush_lsn) {
-+				lgia[i++] = blip;
-+			}
-+			ASSERT(i <= need_ail);
- 		}
-+		/* xfs_trans_ail_delete_bulk() drops the AIL lock. */
-+		xfs_trans_ail_delete_bulk(ailp, lgia, i);
- 	}
- 
--	iip->ili_logged = 0;
- 
- 	/*
--	 * Clear the ili_last_fields bits now that we know that the
--	 * data corresponding to them is safely on disk.
-+	 * clean up and unlock the flush lock now we are done. We can clear the
-+	 * ili_last_fields bits now that we know that the data corresponding to
-+	 * them is safely on disk.
- 	 */
--	iip->ili_last_fields = 0;
-+	for (blip = lip; blip; blip = next) {
-+		next = blip->li_bio_list;
-+		blip->li_bio_list = NULL;
- 
--	/*
--	 * Release the inode's flush lock since we're done with it.
--	 */
--	xfs_ifunlock(ip);
-+		iip = INODE_ITEM(blip);
-+		iip->ili_logged = 0;
-+		iip->ili_last_fields = 0;
-+		xfs_ifunlock(iip->ili_inode);
-+	}
- }
- 
- /*
-diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-index c83e6e9..4261d75 100644
---- a/fs/xfs/xfs_trans_ail.c
-+++ b/fs/xfs/xfs_trans_ail.c
-@@ -634,6 +634,71 @@ xfs_trans_ail_delete(
- 	}
- }
- 
-+/*
-+ * Bulk update version of xfs_trans_ail_delete
-+ *
-+ * This version takes an array of log items that all need to removed from the
-+ * AIL. The caller is already holding the AIL lock, and done all the checks
-+ * necessary to ensure the items passed in via @lgia are ready for deletion.
-+ *
-+ * This function will not drop the AIL lock until all items are removed from
-+ * the AIL to minimise the amount of lock traffic on the AIL. This does not
-+ * greatly increase the AIL hold time, but does significantly reduce the amount
-+ * of traffic on the lock, especially during IO completion.
-+ */
-+void
-+xfs_trans_ail_delete_bulk(
-+	struct xfs_ail		*ailp,
-+	struct xfs_log_item	**lgia,
-+	int			nr_items) __releases(ailp->xa_lock)
-+{
-+	xfs_log_item_t		*mlip;
-+	int			mlip_changed = 0;
-+	int			i;
-+
-+	mlip = xfs_ail_min(ailp);
-+
-+	for (i = 0; i < nr_items; i++) {
-+		struct xfs_log_item *lip = lgia[i];
-+		if (!(lip->li_flags & XFS_LI_IN_AIL)) {
-+			struct xfs_mount	*mp = ailp->xa_mount;
-+
-+			spin_unlock(&ailp->xa_lock);
-+			if (!XFS_FORCED_SHUTDOWN(mp)) {
-+				xfs_cmn_err(XFS_PTAG_AILDELETE, CE_ALERT, mp,
-+		"%s: attempting to delete a log item that is not in the AIL",
-+						__func__);
-+				xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
-+			}
-+			return;
-+		}
-+
-+		xfs_ail_delete(ailp, lip);
-+		lip->li_flags &= ~XFS_LI_IN_AIL;
-+		lip->li_lsn = 0;
-+		if (mlip == lip)
-+			mlip_changed = 1;
-+	}
-+
-+	if (mlip_changed) {
-+		/*
-+		 * It is not safe to access mlip after the AIL lock is
-+		 * dropped, so we must get a copy of li_lsn before we do
-+		 * so.  This is especially important on 32-bit platforms
-+		 * where accessing and updating 64-bit values like li_lsn
-+		 * is not atomic. It is possible we've emptied the AIL here,
-+		 * so if that is the case, return a LSN of 0.
-+		 */
-+		xfs_lsn_t	tail_lsn;
-+
-+		mlip = xfs_ail_min(ailp);
-+		tail_lsn = mlip ? mlip->li_lsn : 0;
-+		spin_unlock(&ailp->xa_lock);
-+		xfs_log_move_tail(ailp->xa_mount, tail_lsn);
-+		return;
-+	}
-+	spin_unlock(&ailp->xa_lock);
-+}
- 
- 
- /*
-diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
-index d25460f..8110e6f 100644
---- a/fs/xfs/xfs_trans_priv.h
-+++ b/fs/xfs/xfs_trans_priv.h
-@@ -84,6 +84,10 @@ void			 xfs_trans_ail_update_bulk(struct xfs_ail *ailp,
- void			xfs_trans_ail_delete(struct xfs_ail *ailp,
- 					struct xfs_log_item *lip)
- 					__releases(ailp->xa_lock);
-+void			xfs_trans_ail_delete_bulk(struct xfs_ail *ailp,
-+					struct xfs_log_item **lgia,
-+					int nr_items)
-+					__releases(ailp->xa_lock);
- void			xfs_trans_ail_push(struct xfs_ail *, xfs_lsn_t);
- void			xfs_trans_unlocked_item(struct xfs_ail *,
- 					xfs_log_item_t *);
 -- 
 1.7.2.3
 
