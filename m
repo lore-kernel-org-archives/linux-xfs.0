@@ -1,31 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oA88sr9J089531 for <xfs@oss.sgi.com>; Mon, 8 Nov 2010 02:54:54 -0600
+	oA88t4SZ089589 for <xfs@oss.sgi.com>; Mon, 8 Nov 2010 02:55:04 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A20E715F7AD
-	for <xfs@oss.sgi.com>; Mon,  8 Nov 2010 00:56:19 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
-	[150.101.137.101]) by cuda.sgi.com with ESMTP id
-	4AO3hDFEqj2MufTN for <xfs@oss.sgi.com>;
-	Mon, 08 Nov 2010 00:56:19 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C6CA61398EE9
+	for <xfs@oss.sgi.com>; Mon,  8 Nov 2010 00:56:29 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
+	[150.101.137.100]) by cuda.sgi.com with ESMTP id
+	n2qBL9LEGK28hUWK for <xfs@oss.sgi.com>;
+	Mon, 08 Nov 2010 00:56:29 -0800 (PST)
 Received: from dastard (unverified [121.44.100.105])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	45631758-1927428
-	for <xfs@oss.sgi.com>; Mon, 08 Nov 2010 19:26:18 +1030 (CDT)
+	34240401-1927428
+	for <xfs@oss.sgi.com>; Mon, 08 Nov 2010 19:26:28 +1030 (CDT)
 Received: from chute ([192.168.1.1] helo=disappointment)
 	by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1PFNWS-0001Cq-Qv
+	(envelope-from <dave@fromorbit.com>) id 1PFNWS-0001Cf-KB
 	for xfs@oss.sgi.com; Mon, 08 Nov 2010 19:56:16 +1100
 Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1PFNVk-0004ng-W0
+	(envelope-from <dave@disappointment.disaster>) id 1PFNVk-0004nU-Or
 	for xfs@oss.sgi.com; Mon, 08 Nov 2010 19:55:32 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 09/16] xfs: convert xfsbud shrinker to a per-buftarg shrinker.
-Date: Mon,  8 Nov 2010 19:55:12 +1100
-Message-Id: <1289206519-18377-10-git-send-email-david@fromorbit.com>
+Subject: [PATCH 05/16] xfs: don't truncate prealloc from frequently accessed
+	inodes
+Date: Mon,  8 Nov 2010 19:55:08 +1100
+Message-Id: <1289206519-18377-6-git-send-email-david@fromorbit.com>
 In-Reply-To: <1289206519-18377-1-git-send-email-david@fromorbit.com>
 References: <1289206519-18377-1-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,221 +36,132 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
-
-Before we introduce per-buftarg LRU lists, split the shrinker
-implementation into per-buftarg shrinker callbacks. At the moment
-we wake all the xfsbufds to run the delayed write queues to free
-the dirty buffers and make their pages available for reclaim.
-However, with an LRU, we want to be able to free clean, unused
-buffers as well, so we need to separate the xfsbufd from the
-shrinker callbacks.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Alex Elder <aelder@sgi.com>
----
- fs/xfs/linux-2.6/xfs_buf.c |   89 ++++++++++++--------------------------------
- fs/xfs/linux-2.6/xfs_buf.h |    4 +-
- 2 files changed, 27 insertions(+), 66 deletions(-)
-
-diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
-index aa1d353..f21803b 100644
---- a/fs/xfs/linux-2.6/xfs_buf.c
-+++ b/fs/xfs/linux-2.6/xfs_buf.c
-@@ -44,12 +44,7 @@
- 
- static kmem_zone_t *xfs_buf_zone;
- STATIC int xfsbufd(void *);
--STATIC int xfsbufd_wakeup(struct shrinker *, int, gfp_t);
- STATIC void xfs_buf_delwri_queue(xfs_buf_t *, int);
--static struct shrinker xfs_buf_shake = {
--	.shrink = xfsbufd_wakeup,
--	.seeks = DEFAULT_SEEKS,
--};
- 
- static struct workqueue_struct *xfslogd_workqueue;
- struct workqueue_struct *xfsdatad_workqueue;
-@@ -337,7 +332,6 @@ _xfs_buf_lookup_pages(
- 					__func__, gfp_mask);
- 
- 			XFS_STATS_INC(xb_page_retries);
--			xfsbufd_wakeup(NULL, 0, gfp_mask);
- 			congestion_wait(BLK_RW_ASYNC, HZ/50);
- 			goto retry;
- 		}
-@@ -1464,28 +1458,23 @@ xfs_wait_buftarg(
- 	}
- }
- 
--/*
-- *	buftarg list for delwrite queue processing
-- */
--static LIST_HEAD(xfs_buftarg_list);
--static DEFINE_SPINLOCK(xfs_buftarg_lock);
--
--STATIC void
--xfs_register_buftarg(
--	xfs_buftarg_t           *btp)
--{
--	spin_lock(&xfs_buftarg_lock);
--	list_add(&btp->bt_list, &xfs_buftarg_list);
--	spin_unlock(&xfs_buftarg_lock);
--}
--
--STATIC void
--xfs_unregister_buftarg(
--	xfs_buftarg_t           *btp)
-+int
-+xfs_buftarg_shrink(
-+	struct shrinker		*shrink,
-+	int			nr_to_scan,
-+	gfp_t			mask)
- {
--	spin_lock(&xfs_buftarg_lock);
--	list_del(&btp->bt_list);
--	spin_unlock(&xfs_buftarg_lock);
-+	struct xfs_buftarg	*btp = container_of(shrink,
-+					struct xfs_buftarg, bt_shrinker);
-+	if (nr_to_scan) {
-+		if (test_bit(XBT_FORCE_SLEEP, &btp->bt_flags))
-+			return -1;
-+		if (list_empty(&btp->bt_delwrite_queue))
-+			return -1;
-+		set_bit(XBT_FORCE_FLUSH, &btp->bt_flags);
-+		wake_up_process(btp->bt_task);
-+	}
-+	return list_empty(&btp->bt_delwrite_queue) ? -1 : 1;
- }
- 
- void
-@@ -1493,17 +1482,14 @@ xfs_free_buftarg(
- 	struct xfs_mount	*mp,
- 	struct xfs_buftarg	*btp)
- {
-+	unregister_shrinker(&btp->bt_shrinker);
-+
- 	xfs_flush_buftarg(btp, 1);
- 	if (mp->m_flags & XFS_MOUNT_BARRIER)
- 		xfs_blkdev_issue_flush(btp);
- 	iput(btp->bt_mapping->host);
- 
--	/* Unregister the buftarg first so that we don't get a
--	 * wakeup finding a non-existent task
--	 */
--	xfs_unregister_buftarg(btp);
- 	kthread_stop(btp->bt_task);
--
- 	kmem_free(btp);
- }
- 
-@@ -1600,20 +1586,13 @@ xfs_alloc_delwrite_queue(
- 	xfs_buftarg_t		*btp,
- 	const char		*fsname)
- {
--	int	error = 0;
--
--	INIT_LIST_HEAD(&btp->bt_list);
- 	INIT_LIST_HEAD(&btp->bt_delwrite_queue);
- 	spin_lock_init(&btp->bt_delwrite_lock);
- 	btp->bt_flags = 0;
- 	btp->bt_task = kthread_run(xfsbufd, btp, "xfsbufd/%s", fsname);
--	if (IS_ERR(btp->bt_task)) {
--		error = PTR_ERR(btp->bt_task);
--		goto out_error;
--	}
--	xfs_register_buftarg(btp);
--out_error:
--	return error;
-+	if (IS_ERR(btp->bt_task))
-+		return PTR_ERR(btp->bt_task);
-+	return 0;
- }
- 
- xfs_buftarg_t *
-@@ -1636,6 +1615,9 @@ xfs_alloc_buftarg(
- 		goto error;
- 	if (xfs_alloc_delwrite_queue(btp, fsname))
- 		goto error;
-+	btp->bt_shrinker.shrink = xfs_buftarg_shrink;
-+	btp->bt_shrinker.seeks = DEFAULT_SEEKS;
-+	register_shrinker(&btp->bt_shrinker);
- 	return btp;
- 
- error:
-@@ -1740,27 +1722,6 @@ xfs_buf_runall_queues(
- 	flush_workqueue(queue);
- }
- 
--STATIC int
--xfsbufd_wakeup(
--	struct shrinker		*shrink,
--	int			priority,
--	gfp_t			mask)
--{
--	xfs_buftarg_t		*btp;
--
--	spin_lock(&xfs_buftarg_lock);
--	list_for_each_entry(btp, &xfs_buftarg_list, bt_list) {
--		if (test_bit(XBT_FORCE_SLEEP, &btp->bt_flags))
--			continue;
--		if (list_empty(&btp->bt_delwrite_queue))
--			continue;
--		set_bit(XBT_FORCE_FLUSH, &btp->bt_flags);
--		wake_up_process(btp->bt_task);
--	}
--	spin_unlock(&xfs_buftarg_lock);
--	return 0;
--}
--
- /*
-  * Move as many buffers as specified to the supplied list
-  * idicating if we skipped any buffers to prevent deadlocks.
-@@ -1955,7 +1916,6 @@ xfs_buf_init(void)
- 	if (!xfsconvertd_workqueue)
- 		goto out_destroy_xfsdatad_workqueue;
- 
--	register_shrinker(&xfs_buf_shake);
- 	return 0;
- 
-  out_destroy_xfsdatad_workqueue:
-@@ -1971,7 +1931,6 @@ xfs_buf_init(void)
- void
- xfs_buf_terminate(void)
- {
--	unregister_shrinker(&xfs_buf_shake);
- 	destroy_workqueue(xfsconvertd_workqueue);
- 	destroy_workqueue(xfsdatad_workqueue);
- 	destroy_workqueue(xfslogd_workqueue);
-diff --git a/fs/xfs/linux-2.6/xfs_buf.h b/fs/xfs/linux-2.6/xfs_buf.h
-index 383a3f3..9344103 100644
---- a/fs/xfs/linux-2.6/xfs_buf.h
-+++ b/fs/xfs/linux-2.6/xfs_buf.h
-@@ -128,10 +128,12 @@ typedef struct xfs_buftarg {
- 
- 	/* per device delwri queue */
- 	struct task_struct	*bt_task;
--	struct list_head	bt_list;
- 	struct list_head	bt_delwrite_queue;
- 	spinlock_t		bt_delwrite_lock;
- 	unsigned long		bt_flags;
-+
-+	/* LRU control structures */
-+	struct shrinker		bt_shrinker;
- } xfs_buftarg_t;
- 
- /*
--- 
-1.7.2.3
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+RnJvbTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgoKQSBsb25nIHN0YW5kaW5n
+IHByb2JsZW0gZm9yIHN0cmVhbWluZyB3cml0ZdGVIHRocm91Z2ggdGhlIE5GUyBzZXJ2ZXIKaGFz
+IGJlZW4gdGhhdCB0aGUgTkZTIHNlcnZlciBvcGVucyBhbmQgY2xvc2VzIGZpbGUgZGVzY3JpcHRv
+cnMgb24gYW4KaW5vZGUgZm9yIGV2ZXJ5IHdyaXRlLiBUaGUgcmVzdWx0IG9mIHRoaXMgYmVoYXZp
+b3VyIGlzIHRoYXQgdGhlCi0+cmVsZWFzZSgpIGZ1bmN0aW9uIGlzIGNhbGxlZCBvbiBldmVyeSBj
+bG9zZSBhbmQgdGhhdCByZXN1bHRzIGluClhGUyB0cnVuY2F0aW5nIHNwZWN1bGF0aXZlIHByZWFs
+bG9jYXRpb24gYmV5b25kIHRoZSBFT0YuICBUaGlzIGhhcwphbiBhZHZlcnNlIGVmZmVjdCBvbiBm
+aWxlIGxheW91dCB3aGVuIG11bHRpcGxlIGZpbGVzIGFyZSBiZWluZwp3cml0dGVuIGF0IHRoZSBz
+YW1lIHRpbWUgLSB0aGV5IGludGVybGVhdmUgdGhlaXIgZXh0ZW50cyBhbmQgY2FuCnJlc3VsdCBp
+biBzZXZlcmUgZnJhZ21lbnRhdGlvbi4KClRvIGF2b2lkIHRoaXMgcHJvYmxlbSwga2VlcCBhIGNv
+dW50IG9mIHRoZSBudW1iZXIgb2YgLT5yZWxlYXNlIGNhbGxzCm1hZGUgb24gYW4gaW5vZGUuIEZv
+ciBtb3N0IGNhc2VzLCBhbiBpbm9kZSBpcyBvbmx5IGdvaW5nIHRvIGJlIG9wZW5lZApvbmNlIGZv
+ciB3cml0aW5nIGFuZCB0aGVuIGNsb3NlZCBhZ2FpbiBkdXJpbmcgaXQncyBsaWZldGltZSBpbgpj
+YWNoZS4gSGVuY2UgaWYgdGhlcmUgYXJlIG11bHRpcGxlIC0+cmVsZWFzZSBjYWxscywgdGhlcmUg
+aXMgYSBnb29kCmNoYW5jZSB0aGF0IHRoZSBpbm9kZSBpcyBiZWluZyBhY2Nlc3NlZCBieSB0aGUg
+TkZTIHNlcnZlci4gSGVuY2UKY291bnQgdXAgZXZlcnkgdGltZSAtPnJlbGVhc2UgaXMgY2FsbGVk
+IHdoaWxlIHRoZXJlIGFyZSBkZWxhbGxvYwpibG9ja3Mgc3RpbGwgb3V0c3RhbmRpbmcgb24gdGhl
+IGlub2RlLgoKSWYgdGhpcyBjb3VudCBpcyBub24temVybyB3aGVuIC0+cmVsZWFzZSBpcyBuZXh0
+IGNhbGxlZCwgdGhlbiBkbyBubwp0cnVuY2F0ZSBhd2F5IHRoZSBzcGVjdWxhdGl2ZSBwcmVhbGxv
+Y2F0aW9uIC0gbGVhdmUgaXQgdGhlcmUgc28gdGhhdApzdWJzZXF1ZW50IHdyaXRlcyBkbyBub3Qg
+bmVlZCB0byByZWFsbG9jYXRlIHRoZSBkZWxhbGxvYyBzcGFjZS4gVGhpcwp3aWxsIHByZXZlbnQg
+aW50ZXJsZWF2aW5nIG9mIGV4dGVudHMgb2YgZGlmZmVyZW50IGlub2RlcyB3cml0dGVuCmNvbmN1
+cnJlbnRseSB0byB0aGUgc2FtZSBBRy4KCklmIHdlIGdldCB0aGlzIHdyb25nLCBpdCBpcyBub3Qg
+YSBiaWcgZGVhbCBhcyB3ZSB0cnVuY2F0ZQpzcGVjdWxhdGl2ZSBhbGxvY2F0aW9uIGJleW9uZCBF
+T0YgYW55d2F5IGluIHhmc19pbmFjdGl2ZSgpIHdoZW4gdGhlCmlub2RlIGlzIHRocm93biBvdXQg
+b2YgdGhlIGNhY2hlLgoKVGhlIG5ldyBjb3VudGVyIGluIHRoZSBzdHJ1Y3QgeGZzX2lub2RlIGZp
+dHMgaW50byBhIGhvbGUgaW4gdGhlCnN0cnVjdHVyZSBvbiA2NCBiaXQgbWFjaGluZXMsIHNvIGRv
+ZXMgbm90IGdyb3cgdGhlIHNpemUgb2YgdGhlIGlub2RlCmF0IGFsbC4KClNpZ25lZC1vZmYtYnk6
+IERhdmUgQ2hpbm5lciA8ZGNoaW5uZXJAcmVkaGF0LmNvbT4KLS0tCiBmcy94ZnMveGZzX2JtYXAu
+YyAgICAgfCAgICA5ICsrKysrLQogZnMveGZzL3hmc19kZnJhZy5jICAgIHwgICAxMyArKysrKysr
+KysrCiBmcy94ZnMveGZzX2lnZXQuYyAgICAgfCAgICAxICsKIGZzL3hmcy94ZnNfaW5vZGUuaCAg
+ICB8ICAgIDEgKwogZnMveGZzL3hmc192bm9kZW9wcy5jIHwgICA2MSArKysrKysrKysrKysrKysr
+KysrKysrKysrKysrKysrKy0tLS0tLS0tLS0tLS0tLS0tCiA1IGZpbGVzIGNoYW5nZWQsIDYyIGlu
+c2VydGlvbnMoKyksIDIzIGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2ZzL3hmcy94ZnNfYm1h
+cC5jIGIvZnMveGZzL3hmc19ibWFwLmMKaW5kZXggOGFiZDEyZS4uNzc2NGE0ZiAxMDA2NDQKLS0t
+IGEvZnMveGZzL3hmc19ibWFwLmMKKysrIGIvZnMveGZzL3hmc19ibWFwLmMKQEAgLTU0NzEsOCAr
+NTQ3MSwxMyBAQCB4ZnNfZ2V0Ym1hcCgKIAkJCWlmIChlcnJvcikKIAkJCQlnb3RvIG91dF91bmxv
+Y2tfaW9sb2NrOwogCQl9Ci0KLQkJQVNTRVJUKGlwLT5pX2RlbGF5ZWRfYmxrcyA9PSAwKTsKKwkJ
+LyoKKwkJICogZXZlbiBhZnRlciBmbHVzaGluZyB0aGUgaW5vZGUsIHRoZXJlIGNhbiBzdGlsbCBi
+ZSBkZWxhbGxvYworCQkgKiBibG9ja3Mgb24gdGhlIGlub2RlIGJleW9uZCBFT0YgZHVlIHRvIHNw
+ZWN1bGF0aXZlCisJCSAqIHByZWFsbG9jYXRpb24uIFRoZXNlIGFyZSBub3QgcmVtb3ZlZCB1bnRp
+bCB0aGUgcmVsZWFzZQorCQkgKiBmdW5jdGlvbiBpcyBjYWxsZWQgb3IgdGhlIGlub2RlIGlzIGlu
+YWN0aXZhdGVkLiBIZW5jZSB3ZQorCQkgKiBjYW5ub3QgYXNzZXJ0IGhlcmUgdGhhdCBpcC0+aV9k
+ZWxheWVkX2Jsa3MgPT0gMC4KKwkJICovCiAJfQogCiAJbG9jayA9IHhmc19pbG9ja19tYXBfc2hh
+cmVkKGlwKTsKZGlmZiAtLWdpdCBhL2ZzL3hmcy94ZnNfZGZyYWcuYyBiL2ZzL3hmcy94ZnNfZGZy
+YWcuYwppbmRleCAzYjk1ODJjLi5lNjA0OTBiIDEwMDY0NAotLS0gYS9mcy94ZnMveGZzX2RmcmFn
+LmMKKysrIGIvZnMveGZzL3hmc19kZnJhZy5jCkBAIC0zNzcsNiArMzc3LDE5IEBAIHhmc19zd2Fw
+X2V4dGVudHMoCiAJaXAtPmlfZC5kaV9mb3JtYXQgPSB0aXAtPmlfZC5kaV9mb3JtYXQ7CiAJdGlw
+LT5pX2QuZGlfZm9ybWF0ID0gdG1wOwogCisJLyoKKwkgKiBUaGUgZXh0ZW50cyBpbiB0aGUgc291
+cmNlIGlub2RlIGNvdWxkIHN0aWxsIGNvbnRhaW4gc3BlY3VsYXRpdmUKKwkgKiBwcmVhbGxvY2F0
+aW9uIGJleW9uZCBFT0YgKGUuZy4gdGhlIGZpbGUgaXMgb3BlbiBidXQgbm90IG1vZGlmaWVkCisJ
+ICogd2hpbGUgZGVmcmFnIGlzIGluIHByb2dyZXNzKS4gSW4gdGhhdCBjYXNlLCB3ZSBuZWVkIHRv
+IGNvcHkgb3ZlciB0aGUKKwkgKiBudW1iZXIgb2YgZGVsYWxsb2MgYmxvY2tzIHRoZSBkYXRhIGZv
+cmsgaW4gdGhlIHNvdXJjZSBpbm9kZSBpcworCSAqIHRyYWNraW5nIGJleW9uZCBFT0Ygc28gdGhh
+dCB3aGVuIHRoZSBmb3JrIGlzIHRydW5jYXRlZCBhd2F5IHdoZW4gdGhlCisJICogdGVtcG9yYXJ5
+IGlub2RlIGlzIHVubGlua2VkIHdlIGRvbid0IHVuZGVycnVuIHRoZSBpX2RlbGF5ZWRfYmxrcwor
+CSAqIGNvdW50ZXIgb24gdGhhdCBpbm9kZS4KKwkgKi8KKwlBU1NFUlQodGlwLT5pX2RlbGF5ZWRf
+YmxrcyA9PSAwKTsKKwl0aXAtPmlfZGVsYXllZF9ibGtzID0gaXAtPmlfZGVsYXllZF9ibGtzOwor
+CWlwLT5pX2RlbGF5ZWRfYmxrcyA9IDA7CisKIAlpbGZfZmllbGRzID0gWEZTX0lMT0dfQ09SRTsK
+IAogCXN3aXRjaChpcC0+aV9kLmRpX2Zvcm1hdCkgewpkaWZmIC0tZ2l0IGEvZnMveGZzL3hmc19p
+Z2V0LmMgYi9mcy94ZnMveGZzX2lnZXQuYwppbmRleCAwY2RkMjY5Li4xODk5MWE5IDEwMDY0NAot
+LS0gYS9mcy94ZnMveGZzX2lnZXQuYworKysgYi9mcy94ZnMveGZzX2lnZXQuYwpAQCAtODQsNiAr
+ODQsNyBAQCB4ZnNfaW5vZGVfYWxsb2MoCiAJbWVtc2V0KCZpcC0+aV9kLCAwLCBzaXplb2YoeGZz
+X2ljZGlub2RlX3QpKTsKIAlpcC0+aV9zaXplID0gMDsKIAlpcC0+aV9uZXdfc2l6ZSA9IDA7CisJ
+aXAtPmlfZGlydHlfcmVsZWFzZXMgPSAwOwogCiAJLyogcHJldmVudCBhbnlvbmUgZnJvbSB1c2lu
+ZyB0aGlzIHlldCAqLwogCVZGU19JKGlwKS0+aV9zdGF0ZSA9IElfTkVXOwpkaWZmIC0tZ2l0IGEv
+ZnMveGZzL3hmc19pbm9kZS5oIGIvZnMveGZzL3hmc19pbm9kZS5oCmluZGV4IGZiMmNhMmUuLmVh
+MmYzNGUgMTAwNjQ0Ci0tLSBhL2ZzL3hmcy94ZnNfaW5vZGUuaAorKysgYi9mcy94ZnMveGZzX2lu
+b2RlLmgKQEAgLTI2MCw2ICsyNjAsNyBAQCB0eXBlZGVmIHN0cnVjdCB4ZnNfaW5vZGUgewogCXhm
+c19mc2l6ZV90CQlpX3NpemU7CQkvKiBpbi1tZW1vcnkgc2l6ZSAqLwogCXhmc19mc2l6ZV90CQlp
+X25ld19zaXplOwkvKiBzaXplIHdoZW4gd3JpdGUgY29tcGxldGVzICovCiAJYXRvbWljX3QJCWlf
+aW9jb3VudDsJLyogb3V0c3RhbmRpbmcgSS9PIGNvdW50ICovCisJaW50CQkJaV9kaXJ0eV9yZWxl
+YXNlczsgLyogZGlydHkgLT5yZWxlYXNlIGNhbGxzICovCiAKIAkvKiBWRlMgaW5vZGUgKi8KIAlz
+dHJ1Y3QgaW5vZGUJCWlfdm5vZGU7CS8qIGVtYmVkZGVkIFZGUyBpbm9kZSAqLwpkaWZmIC0tZ2l0
+IGEvZnMveGZzL3hmc192bm9kZW9wcy5jIGIvZnMveGZzL3hmc192bm9kZW9wcy5jCmluZGV4IDhl
+NGE2M2MuLjQ5ZjNhNWEgMTAwNjQ0Ci0tLSBhL2ZzL3hmcy94ZnNfdm5vZGVvcHMuYworKysgYi9m
+cy94ZnMveGZzX3Zub2Rlb3BzLmMKQEAgLTk2NCwyOSArOTY0LDQ4IEBAIHhmc19yZWxlYXNlKAog
+CQkJeGZzX2ZsdXNoX3BhZ2VzKGlwLCAwLCAtMSwgWEJGX0FTWU5DLCBGSV9OT05FKTsKIAl9CiAK
+LQlpZiAoaXAtPmlfZC5kaV9ubGluayAhPSAwKSB7Ci0JCWlmICgoKChpcC0+aV9kLmRpX21vZGUg
+JiBTX0lGTVQpID09IFNfSUZSRUcpICYmCi0JCSAgICAgKChpcC0+aV9zaXplID4gMCkgfHwgKFZO
+X0NBQ0hFRChWRlNfSShpcCkpID4gMCB8fAotCQkgICAgICAgaXAtPmlfZGVsYXllZF9ibGtzID4g
+MCkpICYmCi0JCSAgICAgKGlwLT5pX2RmLmlmX2ZsYWdzICYgWEZTX0lGRVhURU5UUykpICAmJgot
+CQkgICAgKCEoaXAtPmlfZC5kaV9mbGFncyAmCi0JCQkJKFhGU19ESUZMQUdfUFJFQUxMT0MgfCBY
+RlNfRElGTEFHX0FQUEVORCkpKSkgeworCWlmIChpcC0+aV9kLmRpX25saW5rID09IDApCisJCXJl
+dHVybiAwOwogCi0JCQkvKgotCQkJICogSWYgd2UgY2FuJ3QgZ2V0IHRoZSBpb2xvY2sganVzdCBz
+a2lwIHRydW5jYXRpbmcKLQkJCSAqIHRoZSBibG9ja3MgcGFzdCBFT0YgYmVjYXVzZSB3ZSBjb3Vs
+ZCBkZWFkbG9jawotCQkJICogd2l0aCB0aGUgbW1hcF9zZW0gb3RoZXJ3aXNlLiAgV2UnbGwgZ2V0
+IGFub3RoZXIKLQkJCSAqIGNoYW5jZSB0byBkcm9wIHRoZW0gb25jZSB0aGUgbGFzdCByZWZlcmVu
+Y2UgdG8KLQkJCSAqIHRoZSBpbm9kZSBpcyBkcm9wcGVkLCBzbyB3ZSdsbCBuZXZlciBsZWFrIGJs
+b2NrcwotCQkJICogcGVybWFuZW50bHkuCi0JCQkgKi8KLQkJCWVycm9yID0geGZzX2ZyZWVfZW9m
+YmxvY2tzKG1wLCBpcCwKLQkJCQkJCSAgIFhGU19GUkVFX0VPRl9UUllMT0NLKTsKLQkJCWlmIChl
+cnJvcikKLQkJCQlyZXR1cm4gZXJyb3I7Ci0JCX0KLQl9CisJaWYgKCgoKGlwLT5pX2QuZGlfbW9k
+ZSAmIFNfSUZNVCkgPT0gU19JRlJFRykgJiYKKwkgICAgICgoaXAtPmlfc2l6ZSA+IDApIHx8IChW
+Tl9DQUNIRUQoVkZTX0koaXApKSA+IDAgfHwKKwkgICAgICAgaXAtPmlfZGVsYXllZF9ibGtzID4g
+MCkpICYmCisJICAgICAoaXAtPmlfZGYuaWZfZmxhZ3MgJiBYRlNfSUZFWFRFTlRTKSkgICYmCisJ
+ICAgICghKGlwLT5pX2QuZGlfZmxhZ3MgJiAoWEZTX0RJRkxBR19QUkVBTExPQyB8IFhGU19ESUZM
+QUdfQVBQRU5EKSkpKSB7CisJCS8qCisJCSAqIElmIHdlIGNhbid0IGdldCB0aGUgaW9sb2NrIGp1
+c3Qgc2tpcCB0cnVuY2F0aW5nIHRoZSBibG9ja3MKKwkJICogcGFzdCBFT0YgYmVjYXVzZSB3ZSBj
+b3VsZCBkZWFkbG9jayB3aXRoIHRoZSBtbWFwX3NlbQorCQkgKiBvdGhlcndpc2UuICBXZSdsbCBn
+ZXQgYW5vdGhlciBjaGFuY2UgdG8gZHJvcCB0aGVtIG9uY2UgdGhlCisJCSAqIGxhc3QgcmVmZXJl
+bmNlIHRvIHRoZSBpbm9kZSBpcyBkcm9wcGVkLCBzbyB3ZSdsbCBuZXZlciBsZWFrCisJCSAqIGJs
+b2NrcyBwZXJtYW5lbnRseS4KKwkJICoKKwkJICogRnVydGhlciwgY291bnQgdGhlIG51bWJlciBv
+ZiB0aW1lcyB3ZSBnZXQgaGVyZSBpbiB0aGUgbGlmZQorCQkgKiBvZiB0aGlzIGlub2RlLiBJZiB0
+aGUgaW5vZGUgaXMgYmVpbmcgb3BlbmVkLCB3cml0dGVuIGFuZAorCQkgKiBjbG9zZWQgZnJlcXVl
+bnRseSBhbmQgd2UgaGF2ZSBkZWxheWVkIGFsbG9jYXRpb24gYmxvY2tzCisJCSAqIG91c3RhbmRp
+bmcgKGUuZy4gc3RyZWFtaW5nIHdyaXRlcyBmcm9tIHRoZSBORlMgc2VydmVyKSwKKwkJICogdHJ1
+bmNhdGluZyB0aGUgYmxvY2tzIHBhc3QgRU9GIHdpbGwgY2F1c2UgZnJhZ21lbnRhdGlvbiB0bwor
+CQkgKiBvY2N1ci4KKwkJICoKKwkJICogSW4gdGhpcyBjYXNlIGRvbid0IGRvIHRoZSB0cnVuY2F0
+aW9uLCBlaXRoZXIsIGJ1dCB3ZSBoYXZlIHRvCisJCSAqIGJlIGNhcmVmdWwgaG93IHdlIGRldGVj
+dCB0aGlzIGNhc2UuIEJsb2NrcyBiZXlvbmQgRU9GIHNob3cKKwkJICogdXAgYXMgaV9kZWxheWVk
+X2Jsa3MgZXZlbiB3aGVuIHRoZSBpbm9kZSBpcyBjbGVhbiwgc28gd2UKKwkJICogbmVlZCB0byB0
+cnVuY2F0ZSB0aGVtIGF3YXkgZmlyc3QgYmVmb3JlIGNoZWNraW5nIGZvciBhIGRpcnR5CisJCSAq
+IHJlbGVhc2UuIEhlbmNlIG9uIHRoZSBmaXJzdCBjb3VwbGUgb2YgZGlydHkgY2xvc2VzLHdlIHdp
+bGwKKwkJICogc3RpbGwgcmVtb3ZlIHRoZSBzcGVjdWxhdGl2ZSBhbGxvY2F0aW9uLCBidXQgdGhl
+biB3ZSB3aWxsCisJCSAqIGxlYXZlIGl0IGluIHBsYWNlLgorCQkgKi8KKwkJaWYgKGlwLT5pX2Rp
+cnR5X3JlbGVhc2VzID4gMSkKKwkJCXJldHVybiAwOwogCisJCWVycm9yID0geGZzX2ZyZWVfZW9m
+YmxvY2tzKG1wLCBpcCwKKwkJCQkJICAgWEZTX0ZSRUVfRU9GX1RSWUxPQ0spOworCQlpZiAoZXJy
+b3IpCisJCQlyZXR1cm4gZXJyb3I7CisKKwkJLyogZGVsYWxsb2MgYmxvY2tzIGFmdGVyIHRydW5j
+YXRpb24gbWVhbnMgaXQgcmVhbGx5IGlzIGRpcnR5ICovCisJCWlmIChpcC0+aV9kZWxheWVkX2Js
+a3MpCisJCQlpcC0+aV9kaXJ0eV9yZWxlYXNlcysrOworCX0KIAlyZXR1cm4gMDsKIH0KIAotLSAK
+MS43LjIuMwoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18K
+eGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxt
+YW4vbGlzdGluZm8veGZzCg==
