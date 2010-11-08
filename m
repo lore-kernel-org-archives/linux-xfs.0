@@ -1,30 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oA88t3PW089563 for <xfs@oss.sgi.com>; Mon, 8 Nov 2010 02:55:03 -0600
+	oA88tOFl089741 for <xfs@oss.sgi.com>; Mon, 8 Nov 2010 02:55:24 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EF6E91398EE4
-	for <xfs@oss.sgi.com>; Mon,  8 Nov 2010 00:56:28 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
-	[150.101.137.101]) by cuda.sgi.com with ESMTP id
-	aJdLF3TYTfYqQ16k for <xfs@oss.sgi.com>;
-	Mon, 08 Nov 2010 00:56:28 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 20C4015F7D7
+	for <xfs@oss.sgi.com>; Mon,  8 Nov 2010 00:56:50 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
+	[150.101.137.104]) by cuda.sgi.com with ESMTP id
+	AJq7Pev2vocKlwx6 for <xfs@oss.sgi.com>;
+	Mon, 08 Nov 2010 00:56:50 -0800 (PST)
 Received: from dastard (unverified [121.44.100.105])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	45631768-1927428
-	for <xfs@oss.sgi.com>; Mon, 08 Nov 2010 19:26:27 +1030 (CDT)
-Received: from chute ([192.168.1.1] helo=disappointment)
+	45137914-1927428
+	for <xfs@oss.sgi.com>; Mon, 08 Nov 2010 19:26:49 +1030 (CDT)
+Received: from [192.168.1.1] (helo=disappointment)
 	by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1PFNWS-0001CS-Ce
-	for xfs@oss.sgi.com; Mon, 08 Nov 2010 19:56:16 +1100
+	(envelope-from <dave@fromorbit.com>) id 1PFNWm-0001DD-Ud
+	for xfs@oss.sgi.com; Mon, 08 Nov 2010 19:56:37 +1100
 Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1PFNVa-0004nJ-IB
-	for xfs@oss.sgi.com; Mon, 08 Nov 2010 19:55:22 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1PFNVv-0004ns-5g
+	for xfs@oss.sgi.com; Mon, 08 Nov 2010 19:55:43 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 01/16] xfs: fix per-ag reference counting in inode reclaim
-	tree walking
-Date: Mon,  8 Nov 2010 19:55:04 +1100
-Message-Id: <1289206519-18377-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH 13/16] xfs: reduce the number of AIL push wakeups
+Date: Mon,  8 Nov 2010 19:55:16 +1100
+Message-Id: <1289206519-18377-14-git-send-email-david@fromorbit.com>
 In-Reply-To: <1289206519-18377-1-git-send-email-david@fromorbit.com>
 References: <1289206519-18377-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -44,40 +43,57 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The walk fails to decrement the per-ag reference count when the
-non-blocking walk fails to obtain the per-ag reclaim lock, leading
-to an assert failure on debug kernels when unmounting a filesystem.
+The xfaild often tries to rest to wait for congestion to pass of for
+IO to complete, but is regularly woken in tail-pushing situations.
+In severe cases, the xfsaild is getting woken tens of thousands of
+times a second. Reduce the number needless wakeups by only waking
+the xfsaild if the new target is larger than the old one. Further
+make short sleeps uninterruptible as they occur when the xfsaild has
+decided it needs to back off to allow some IO to complete and being
+woken early is counter-productive.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/linux-2.6/xfs_sync.c |    1 +
- fs/xfs/xfs_mount.c          |    1 +
- 2 files changed, 2 insertions(+), 0 deletions(-)
+ fs/xfs/linux-2.6/xfs_super.c |   18 +++++++++++++++---
+ 1 files changed, 15 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
-index 37d3325..afb0d7c 100644
---- a/fs/xfs/linux-2.6/xfs_sync.c
-+++ b/fs/xfs/linux-2.6/xfs_sync.c
-@@ -853,6 +853,7 @@ restart:
- 		if (trylock) {
- 			if (!mutex_trylock(&pag->pag_ici_reclaim_lock)) {
- 				skipped++;
-+				xfs_perag_put(pag);
- 				continue;
- 			}
- 			first_index = pag->pag_ici_reclaim_cursor;
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index b1498ab..19e9dfa 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -275,6 +275,7 @@ xfs_free_perag(
- 		pag = radix_tree_delete(&mp->m_perag_tree, agno);
- 		spin_unlock(&mp->m_perag_lock);
- 		ASSERT(pag);
-+		ASSERT(atomic_read(&pag->pag_ref) == 0);
- 		call_rcu(&pag->rcu_head, __xfs_free_perag);
- 	}
+diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
+index fa789b7..668b010 100644
+--- a/fs/xfs/linux-2.6/xfs_super.c
++++ b/fs/xfs/linux-2.6/xfs_super.c
+@@ -837,8 +837,11 @@ xfsaild_wakeup(
+ 	struct xfs_ail		*ailp,
+ 	xfs_lsn_t		threshold_lsn)
+ {
+-	ailp->xa_target = threshold_lsn;
+-	wake_up_process(ailp->xa_task);
++	/* only ever move the target forwards */
++	if (XFS_LSN_CMP(threshold_lsn, ailp->xa_target) > 0) {
++		ailp->xa_target = threshold_lsn;
++		wake_up_process(ailp->xa_task);
++	}
  }
+ 
+ STATIC int
+@@ -850,8 +853,17 @@ xfsaild(
+ 	long		tout = 0; /* milliseconds */
+ 
+ 	while (!kthread_should_stop()) {
+-		schedule_timeout_interruptible(tout ?
++		/*
++		 * for short sleeps indicating congestion, don't allow us to
++		 * get woken early. Otherwise all we do is bang on the AIL lock
++		 * without making progress.
++		 */
++		if (tout && tout <= 20) {
++			schedule_timeout_uninterruptible(msecs_to_jiffies(tout));
++		} else {
++			schedule_timeout_interruptible(tout ?
+ 				msecs_to_jiffies(tout) : MAX_SCHEDULE_TIMEOUT);
++		}
+ 
+ 		/* swsusp */
+ 		try_to_freeze();
 -- 
 1.7.2.3
 
