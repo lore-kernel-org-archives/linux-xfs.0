@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oA8N8q5e123286 for <xfs@oss.sgi.com>; Mon, 8 Nov 2010 17:08:52 -0600
+	oA8NI1V8123729 for <xfs@oss.sgi.com>; Mon, 8 Nov 2010 17:18:02 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3E217139C783
-	for <xfs@oss.sgi.com>; Mon,  8 Nov 2010 15:10:20 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 60EAD139C804
+	for <xfs@oss.sgi.com>; Mon,  8 Nov 2010 15:19:29 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id f67Me7BeavDJLCcw for
-	<xfs@oss.sgi.com>; Mon, 08 Nov 2010 15:10:20 -0800 (PST)
-Date: Mon, 8 Nov 2010 18:10:19 -0500
+	by cuda.sgi.com with ESMTP id MVpoEOC2RnKaF9LD for
+	<xfs@oss.sgi.com>; Mon, 08 Nov 2010 15:19:29 -0800 (PST)
+Date: Mon, 8 Nov 2010 18:19:28 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 08/16] xfs: convert pag_ici_lock to a spin lock
-Message-ID: <20101108231019.GB13299@infradead.org>
+Subject: Re: [PATCH 10/16] xfs: add a lru to the XFS buffer cache
+Message-ID: <20101108231928.GA20647@infradead.org>
 References: <1289206519-18377-1-git-send-email-david@fromorbit.com>
-	<1289206519-18377-9-git-send-email-david@fromorbit.com>
+	<1289206519-18377-11-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1289206519-18377-9-git-send-email-david@fromorbit.com>
+In-Reply-To: <1289206519-18377-11-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,22 +32,17 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, Nov 08, 2010 at 07:55:11PM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> now that we are using RCU protection for the inode cache lookups,
-> the lock is only needed on the modification side. Hence it is not
-> necessary for the lock to be a rwlock as there are no read side
-> holders anymore. Convert it to a spin lock to reflect it's exclusive
-> nature.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> Reviewed-by: Alex Elder <aelder@sgi.com>
+> @@ -471,6 +546,8 @@ _xfs_buf_find(
+>  		/* the buffer keeps the perag reference until it is freed */
+>  		new_bp->b_pag = pag;
+>  		spin_unlock(&pag->pag_buf_lock);
+> +
+> +		xfs_buf_lru_add(new_bp);
 
-Looks good, and this will make Thomas happy given that XFS is now
-rwlock_t-free.
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Why do we add the buffer to the lru when we find it?  Normally we
+would remove it here (unless we want a lazy lru scheme), and potentially
+increment b_lru_ref - although that seems to be done by the callers
+in the next patch.
 
 _______________________________________________
 xfs mailing list
