@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oA8BNgIx096020 for <xfs@oss.sgi.com>; Mon, 8 Nov 2010 05:23:42 -0600
+	oA8BZIkg096421 for <xfs@oss.sgi.com>; Mon, 8 Nov 2010 05:35:19 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B8B671C23501
-	for <xfs@oss.sgi.com>; Mon,  8 Nov 2010 03:25:09 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 149771C22746
+	for <xfs@oss.sgi.com>; Mon,  8 Nov 2010 03:36:45 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id BcD4Fppi2237Ehr3 for
-	<xfs@oss.sgi.com>; Mon, 08 Nov 2010 03:25:09 -0800 (PST)
-Date: Mon, 8 Nov 2010 06:25:09 -0500
+	by cuda.sgi.com with ESMTP id u492Ei4HpPKD53ke for
+	<xfs@oss.sgi.com>; Mon, 08 Nov 2010 03:36:45 -0800 (PST)
+Date: Mon, 8 Nov 2010 06:36:45 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 11/16] xfs: connect up buffer reclaim priority hooks
-Message-ID: <20101108112509.GA7654@infradead.org>
+Subject: Re: [PATCH 05/16] xfs: don't truncate prealloc from frequently
+	accessed inodes
+Message-ID: <20101108113645.GA16418@infradead.org>
 References: <1289206519-18377-1-git-send-email-david@fromorbit.com>
-	<1289206519-18377-12-git-send-email-david@fromorbit.com>
+	<1289206519-18377-6-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1289206519-18377-12-git-send-email-david@fromorbit.com>
+In-Reply-To: <1289206519-18377-6-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,22 +33,24 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-> +/*
-> + * buffer types 
-> + */
-> +#define	B_FS_DQUOT	1
-> +#define	B_FS_AGFL	2
-> +#define	B_FS_AGF	3
-> +#define	B_FS_ATTR_BTREE	4
-> +#define	B_FS_DIR_BTREE	5
-> +#define	B_FS_MAP	6
-> +#define	B_FS_INOMAP	7
-> +#define	B_FS_AGI	8
-> +#define	B_FS_INO	9
+I'd be much more happy about fixing this properly in nfsd.  But I guess
+the fix is simple enough that we can put it into XFS for now.  Any
+reason you use up a whole int in the inode instead of using a flag in
+i_flags?
 
-Is there any good reason to keep/reintroduce the buffer types?  In this
-series we're only using the refcounts, and I can't see any good use for
-the types either.
+> -
+> -		ASSERT(ip->i_delayed_blks == 0);
+> +		/*
+> +		 * even after flushing the inode, there can still be delalloc
+> +		 * blocks on the inode beyond EOF due to speculative
+> +		 * preallocation. These are not removed until the release
+> +		 * function is called or the inode is inactivated. Hence we
+> +		 * cannot assert here that ip->i_delayed_blks == 0.
+> +		 */
+
+Shouldn't this be in a separate patch given that we can fail the flush
+due to iolock contention?  I think this and the swapext fix are .37
+material in fact.
 
 _______________________________________________
 xfs mailing list
