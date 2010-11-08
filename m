@@ -1,17 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oA8Kd725118109 for <xfs@oss.sgi.com>; Mon, 8 Nov 2010 14:39:07 -0600
+	oA8KdBjm118143 for <xfs@oss.sgi.com>; Mon, 8 Nov 2010 14:39:11 -0600
 Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C5784139B9E7
-	for <xfs@oss.sgi.com>; Mon,  8 Nov 2010 12:40:33 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C36981638AC
+	for <xfs@oss.sgi.com>; Mon,  8 Nov 2010 12:40:37 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 5npU1vqaADjPMe5v for
-	<xfs@oss.sgi.com>; Mon, 08 Nov 2010 12:40:33 -0800 (PST)
+	cuda.sgi.com with ESMTP id eJkdxYbl35eUn37b for
+	<xfs@oss.sgi.com>; Mon, 08 Nov 2010 12:40:37 -0800 (PST)
 From: Josef Bacik <josef@redhat.com>
-Subject: [PATCH 1/6] fs: add hole punching to fallocate
-Date: Mon,  8 Nov 2010 15:32:02 -0500
-Message-Id: <1289248327-16308-1-git-send-email-josef@redhat.com>
+Subject: [PATCH 5/6] Btrfs: fail if we try to use hole punch
+Date: Mon,  8 Nov 2010 15:32:06 -0500
+Message-Id: <1289248327-16308-5-git-send-email-josef@redhat.com>
+In-Reply-To: <1289248327-16308-1-git-send-email-josef@redhat.com>
+References: <1289248327-16308-1-git-send-email-josef@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,44 +29,30 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, joel.becker@oracle.com, cmm@us.ibm.com, cluster-devel@redhat.com
 
-Hole punching has already been implemented by XFS and OCFS2, and has the
-potential to be implemented on both BTRFS and EXT4 so we need a generic way to
-get to this feature.  The simplest way in my mind is to add FALLOC_FL_PUNCH_HOLE
-to fallocate() since it already looks like the normal fallocate() operation.
-I've tested this patch with XFS and BTRFS to make sure XFS did what it's
-supposed to do and that BTRFS failed like it was supposed to.  Thank you,
+Btrfs doesn't have the ability to punch holes yet, so make sure we return
+EOPNOTSUPP if we try to use hole punching through fallocate.  This support can
+be added later.  Thanks,
 
 Signed-off-by: Josef Bacik <josef@redhat.com>
 ---
- fs/open.c              |    2 +-
- include/linux/falloc.h |    1 +
- 2 files changed, 2 insertions(+), 1 deletions(-)
+ fs/btrfs/inode.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
-diff --git a/fs/open.c b/fs/open.c
-index 4197b9e..ab8dedf 100644
---- a/fs/open.c
-+++ b/fs/open.c
-@@ -223,7 +223,7 @@ int do_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
- 		return -EINVAL;
+diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
+index 78877d7..c590add 100644
+--- a/fs/btrfs/inode.c
++++ b/fs/btrfs/inode.c
+@@ -6936,6 +6936,10 @@ static long btrfs_fallocate(struct inode *inode, int mode,
+ 	alloc_start = offset & ~mask;
+ 	alloc_end =  (offset + len + mask) & ~mask;
  
- 	/* Return error if mode is not supported */
--	if (mode && !(mode & FALLOC_FL_KEEP_SIZE))
-+	if (mode && (mode & ~(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE)))
- 		return -EOPNOTSUPP;
- 
- 	if (!(file->f_mode & FMODE_WRITE))
-diff --git a/include/linux/falloc.h b/include/linux/falloc.h
-index 3c15510..851cba2 100644
---- a/include/linux/falloc.h
-+++ b/include/linux/falloc.h
-@@ -2,6 +2,7 @@
- #define _FALLOC_H_
- 
- #define FALLOC_FL_KEEP_SIZE	0x01 /* default is extend size */
-+#define FALLOC_FL_PUNCH_HOLE	0X02 /* de-allocates range */
- 
- #ifdef __KERNEL__
- 
++	/* We only support the FALLOC_FL_KEEP_SIZE mode */
++	if (mode && (mode & FALLOC_FL_KEEP_SIZE))
++		return -EOPNOTSUPP;
++
+ 	/*
+ 	 * wait for ordered IO before we have any locks.  We'll loop again
+ 	 * below with the locks held.
 -- 
 1.6.6.1
 
