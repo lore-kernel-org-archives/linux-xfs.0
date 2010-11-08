@@ -1,19 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oA8KdBt0118145 for <xfs@oss.sgi.com>; Mon, 8 Nov 2010 14:39:11 -0600
+	oA8Kd725118109 for <xfs@oss.sgi.com>; Mon, 8 Nov 2010 14:39:07 -0600
 Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0B04B1C24E23
-	for <xfs@oss.sgi.com>; Mon,  8 Nov 2010 12:40:38 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C5784139B9E7
+	for <xfs@oss.sgi.com>; Mon,  8 Nov 2010 12:40:33 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Fs5YTeUvgdGdh6Oc for
-	<xfs@oss.sgi.com>; Mon, 08 Nov 2010 12:40:38 -0800 (PST)
+	cuda.sgi.com with ESMTP id 5npU1vqaADjPMe5v for
+	<xfs@oss.sgi.com>; Mon, 08 Nov 2010 12:40:33 -0800 (PST)
 From: Josef Bacik <josef@redhat.com>
-Subject: [PATCH 6/6] Gfs2: fail if we try to use hole punch
-Date: Mon,  8 Nov 2010 15:32:07 -0500
-Message-Id: <1289248327-16308-6-git-send-email-josef@redhat.com>
-In-Reply-To: <1289248327-16308-1-git-send-email-josef@redhat.com>
-References: <1289248327-16308-1-git-send-email-josef@redhat.com>
+Subject: [PATCH 1/6] fs: add hole punching to fallocate
+Date: Mon,  8 Nov 2010 15:32:02 -0500
+Message-Id: <1289248327-16308-1-git-send-email-josef@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,29 +27,43 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, joel.becker@oracle.com, cmm@us.ibm.com, cluster-devel@redhat.com
 
-Gfs2 doesn't have the ability to punch holes yet, so make sure we return
-EOPNOTSUPP if we try to use hole punching through fallocate.  This support can
-be added later.  Thanks,
+Hole punching has already been implemented by XFS and OCFS2, and has the
+potential to be implemented on both BTRFS and EXT4 so we need a generic way to
+get to this feature.  The simplest way in my mind is to add FALLOC_FL_PUNCH_HOLE
+to fallocate() since it already looks like the normal fallocate() operation.
+I've tested this patch with XFS and BTRFS to make sure XFS did what it's
+supposed to do and that BTRFS failed like it was supposed to.  Thank you,
 
 Signed-off-by: Josef Bacik <josef@redhat.com>
 ---
- fs/gfs2/ops_inode.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+ fs/open.c              |    2 +-
+ include/linux/falloc.h |    1 +
+ 2 files changed, 2 insertions(+), 1 deletions(-)
 
-diff --git a/fs/gfs2/ops_inode.c b/fs/gfs2/ops_inode.c
-index 12cbea7..93ecc9f 100644
---- a/fs/gfs2/ops_inode.c
-+++ b/fs/gfs2/ops_inode.c
-@@ -1439,6 +1439,10 @@ static long gfs2_fallocate(struct inode *inode, int mode, loff_t offset,
- 	loff_t next = (offset + len - 1) >> sdp->sd_sb.sb_bsize_shift;
- 	next = (next + 1) << sdp->sd_sb.sb_bsize_shift;
+diff --git a/fs/open.c b/fs/open.c
+index 4197b9e..ab8dedf 100644
+--- a/fs/open.c
++++ b/fs/open.c
+@@ -223,7 +223,7 @@ int do_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
+ 		return -EINVAL;
  
-+	/* We only support the FALLOC_FL_KEEP_SIZE mode */
-+	if (mode && (mode & FALLOC_FL_KEEP_SIZE))
-+		return -EOPNOTSUPP;
-+
- 	offset = (offset >> sdp->sd_sb.sb_bsize_shift) <<
- 		 sdp->sd_sb.sb_bsize_shift;
+ 	/* Return error if mode is not supported */
+-	if (mode && !(mode & FALLOC_FL_KEEP_SIZE))
++	if (mode && (mode & ~(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE)))
+ 		return -EOPNOTSUPP;
+ 
+ 	if (!(file->f_mode & FMODE_WRITE))
+diff --git a/include/linux/falloc.h b/include/linux/falloc.h
+index 3c15510..851cba2 100644
+--- a/include/linux/falloc.h
++++ b/include/linux/falloc.h
+@@ -2,6 +2,7 @@
+ #define _FALLOC_H_
+ 
+ #define FALLOC_FL_KEEP_SIZE	0x01 /* default is extend size */
++#define FALLOC_FL_PUNCH_HOLE	0X02 /* de-allocates range */
+ 
+ #ifdef __KERNEL__
  
 -- 
 1.6.6.1
