@@ -1,24 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oA8NoIsA124980 for <xfs@oss.sgi.com>; Mon, 8 Nov 2010 17:50:18 -0600
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A7C0F16417C
-	for <xfs@oss.sgi.com>; Mon,  8 Nov 2010 15:51:44 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
-	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	OIqwESW8HZZHaFGn for <xfs@oss.sgi.com>;
-	Mon, 08 Nov 2010 15:51:44 -0800 (PST)
-Date: Tue, 9 Nov 2010 10:51:42 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 13/16] xfs: reduce the number of AIL push wakeups
-Message-ID: <20101108235142.GV2715@dastard>
-References: <1289206519-18377-1-git-send-email-david@fromorbit.com>
-	<1289206519-18377-14-git-send-email-david@fromorbit.com>
-	<20101108113204.GB7654@infradead.org>
+	oA8NqKIh125065 for <xfs@oss.sgi.com>; Mon, 8 Nov 2010 17:52:20 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C8D6916418E
+	for <xfs@oss.sgi.com>; Mon,  8 Nov 2010 15:53:47 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id xn3SEwto2zdnjkm9 for
+	<xfs@oss.sgi.com>; Mon, 08 Nov 2010 15:53:47 -0800 (PST)
+Date: Mon, 8 Nov 2010 18:53:46 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: XFS status update for October 2010
+Message-ID: <20101108235346.GA8498@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20101108113204.GB7654@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,49 +26,41 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com, linux-kernel@vger.kernel.org
 
-On Mon, Nov 08, 2010 at 06:32:04AM -0500, Christoph Hellwig wrote:
-> >  STATIC int
-> > @@ -850,8 +853,17 @@ xfsaild(
-> >  	long		tout = 0; /* milliseconds */
-> >  
-> >  	while (!kthread_should_stop()) {
-> > -		schedule_timeout_interruptible(tout ?
-> > +		/*
-> > +		 * for short sleeps indicating congestion, don't allow us to
-> > +		 * get woken early. Otherwise all we do is bang on the AIL lock
-> > +		 * without making progress.
-> > +		 */
-> > +		if (tout && tout <= 20) {
-> > +			schedule_timeout_uninterruptible(msecs_to_jiffies(tout));
-> > +		} else {
-> > +			schedule_timeout_interruptible(tout ?
-> >  				msecs_to_jiffies(tout) : MAX_SCHEDULE_TIMEOUT);
-> > +		}
-> 
-> How about just setting the state ourselves and calling schedule_timeout?
-> That seems a lot more readable to me.  Also we can switch to
-> TASK_KILLABLE for the short sleeps, just to not introduce any delay
-> in shutting down aild when kthread_stop is called.  It would look
-> something like this:
-> 
-> 		if (tout && tout <= 20)
-> 			__set_current_state(TASK_KILLABLE);
-> 		else
-> 			__set_current_state(TASK_UNINTERRUPTIBLE);
-> 		schedule_timeout(tout ?
-> 				 msecs_to_jiffies(tout) : MAX_SCHEDULE_TIMEOUT);
+Near the end of the month we finally saw the release of Linux 2.6.36.
+Just a single fix made it into mainline in this month, showing that the
+stabilization period before has worked very well.
 
-Yes, seems reasonable. I'll convert it to do this.
+Linux 2.6.36 has been another impressive release for XFS, seeing
+various performance improvements in the new delayed logging code,
+for direct I/O and the sync system call, a few bug fixes, and lots
+of cleanups, resulting in a net removal of over 2000 lines of code:
 
-Cheers,
+	89 files changed, 1998 insertions(+), 4279 deletions(-)
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+The merge window for Linux 2.6.37 opened just a few days after the
+release of Linux 2.6.36 and already contains another large XFS update
+at the end of October.  Highlights of the XFS tree merged into 2.6.37-rc1
+are another large set of metadata scalability patches, support for 32-bit
+wide project IDs, and support for the new XFS_IOC_ZERO_RANGE ioctl,
+which allows to punch a whole and convert it to an unwritten extent
+in a single atomic operation.  
+
+The metadata scalability changes improve 8-way fs_mark of 50 million files
+by over 15% and removal of those files by over 100%, with further
+improvements expected by the next round of XFS metadata scalability
+and VFS scalability improvements targeted at Linux 2.6.38.
+
+On the user space side October was a rather quit month for xfsprogs, which
+only saw the addition of 32-bit project ID handling, and a fix for
+parsing the mount table in fsr when used together with disk encryption
+tools.  A few patches for xfsdump were posted on the list, but none
+was applied, leaving the majority of the user space activity to
+xfstests, which saw very active development.  Various patches went
+into xfstests to improve portability to filesystems with a limited
+feature set, and to move more filters to generic code.  In addition
+various cleanups to test cases in test programs were applied.
 
 _______________________________________________
 xfs mailing list
