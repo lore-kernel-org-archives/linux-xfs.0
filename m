@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oA95oJd9137035 for <xfs@oss.sgi.com>; Mon, 8 Nov 2010 23:50:20 -0600
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AFB47164FCB
-	for <xfs@oss.sgi.com>; Mon,  8 Nov 2010 21:51:45 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
-	[150.101.137.97]) by cuda.sgi.com with ESMTP id
-	EalIQBKPiSzOQRcw for <xfs@oss.sgi.com>;
-	Mon, 08 Nov 2010 21:51:45 -0800 (PST)
-Date: Tue, 9 Nov 2010 16:51:42 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH, RFC] xfs: fix failed write handling
-Message-ID: <20101109055142.GJ2715@dastard>
-References: <20101109002559.GA30016@infradead.org>
+	oA9A4Bvm148165 for <xfs@oss.sgi.com>; Tue, 9 Nov 2010 04:04:11 -0600
+Received: from mail-wy0-f181.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 347E8139DD32
+	for <xfs@oss.sgi.com>; Tue,  9 Nov 2010 02:05:36 -0800 (PST)
+Received: from mail-wy0-f181.google.com (mail-wy0-f181.google.com
+	[74.125.82.181]) by cuda.sgi.com with ESMTP id ZoIFh8HhQhGQWQvC
+	for <xfs@oss.sgi.com>; Tue, 09 Nov 2010 02:05:36 -0800 (PST)
+Received: by wyb40 with SMTP id 40so7222241wyb.26
+	for <xfs@oss.sgi.com>; Tue, 09 Nov 2010 02:05:35 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20101109002559.GA30016@infradead.org>
+In-Reply-To: <1289248327-16308-5-git-send-email-josef@redhat.com>
+References: <1289248327-16308-1-git-send-email-josef@redhat.com>
+	<1289248327-16308-5-git-send-email-josef@redhat.com>
+Date: Tue, 9 Nov 2010 10:05:34 +0000
+Message-ID: <AANLkTiksTsZqo1yUNVEJSiwE-7ccyWDv+wLvTZaoZOJ0@mail.gmail.com>
+Subject: Re: [PATCH 5/6] Btrfs: fail if we try to use hole punch
+From: Will Newton <will.newton@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,54 +26,44 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Josef Bacik <josef@redhat.com>
+Cc: xfs@oss.sgi.com, joel.becker@oracle.com, linux-kernel@vger.kernel.org, cluster-devel@redhat.com, cmm@us.ibm.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
 
-On Mon, Nov 08, 2010 at 07:26:00PM -0500, Christoph Hellwig wrote:
-> Since the move to the new truncate sequence we call xfs_setattr to
-> truncate down excessively instanciated blocks.  As shown by the testcase
-> in kernel.org BZ #22452 that doesn't work too well.  Due to the confusion
-> of the internal inode size, and the VFS inode i_size it zeroes data that
-> it shouldn't.
-> 
-> But full blown truncate seems like overkill here.  We only instanciate
-> delayed allocations in the write path, and given that we never released
-> the iolock we can't have converted them to real allocations yet either.
-> 
-> The only nasty case is pre-existing preallocation which we need to skip.
-> The patch below does that by borrowing code from xfs_aops_discard_page.
-> It does pass xfstests for 4k block filesystems and fixes the original
-> bug.  I'm not quite sure if we could hit a corner case with smaller
-> block sizes when parts of a page are preallocated and some not.
+On Mon, Nov 8, 2010 at 8:32 PM, Josef Bacik <josef@redhat.com> wrote:
 
-Seems likely - preallocated block past EOF are not unusual.
+Hi Josef,
 
-> That
-> could be handled by looping around bmapi as long as we find extents
-> for our range.  The path could probably also be refactored to share
-> code with xfs_aops_discard_page.  And we probably need the ilock
-> just as in that path, but I only got to that when almost through
-> xfstests, and the day is over for me today, so let's just get the
-> patch out for now.
+> Btrfs doesn't have the ability to punch holes yet, so make sure we return
+> EOPNOTSUPP if we try to use hole punching through fallocate. =A0This supp=
+ort can
+> be added later. =A0Thanks,
+>
+> Signed-off-by: Josef Bacik <josef@redhat.com>
+> ---
+> =A0fs/btrfs/inode.c | =A0 =A04 ++++
+> =A01 files changed, 4 insertions(+), 0 deletions(-)
+>
+> diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
+> index 78877d7..c590add 100644
+> --- a/fs/btrfs/inode.c
+> +++ b/fs/btrfs/inode.c
+> @@ -6936,6 +6936,10 @@ static long btrfs_fallocate(struct inode *inode, i=
+nt mode,
+> =A0 =A0 =A0 =A0alloc_start =3D offset & ~mask;
+> =A0 =A0 =A0 =A0alloc_end =3D =A0(offset + len + mask) & ~mask;
+>
+> + =A0 =A0 =A0 /* We only support the FALLOC_FL_KEEP_SIZE mode */
+> + =A0 =A0 =A0 if (mode && (mode & FALLOC_FL_KEEP_SIZE))
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return -EOPNOTSUPP;
+> +
 
-Yes, definitely need the ilock - that's the only lock that provides
-protection for the extent tree.
-
-It looks to me that we need a general "discard delalloc blocks from
-range" function - I'll write one (basically the guts of
-xfs_aops_discard_page) and convert xfs_aops_discard_page() and this
-code to use it....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+This test looks rather odd. Why do we need to test that mode is
+non-zero AND that mode has a specific bit set? Is there a missing !
+here?
 
 _______________________________________________
 xfs mailing list
