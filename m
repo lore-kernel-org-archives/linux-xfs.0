@@ -1,23 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oA9Bvmef152418 for <xfs@oss.sgi.com>; Tue, 9 Nov 2010 05:57:48 -0600
+	oA9BxXr1152488 for <xfs@oss.sgi.com>; Tue, 9 Nov 2010 05:59:34 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2CE134CD418
-	for <xfs@oss.sgi.com>; Tue,  9 Nov 2010 03:59:14 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
-	[150.101.137.101]) by cuda.sgi.com with ESMTP id
-	YK7FFxLfbZQeAqrI for <xfs@oss.sgi.com>;
-	Tue, 09 Nov 2010 03:59:14 -0800 (PST)
-Date: Tue, 9 Nov 2010 22:59:11 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BADD31C28147
+	for <xfs@oss.sgi.com>; Tue,  9 Nov 2010 04:00:59 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
+	[150.101.137.104]) by cuda.sgi.com with ESMTP id
+	8cWZ7q1ZNmOB6WKp for <xfs@oss.sgi.com>;
+	Tue, 09 Nov 2010 04:00:59 -0800 (PST)
+Received: from dastard (unverified [121.44.100.105])
+	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
+	45280381-1927428
+	for <xfs@oss.sgi.com>; Tue, 09 Nov 2010 22:30:58 +1030 (CDT)
+Date: Tue, 9 Nov 2010 23:00:36 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfstests: add test for renaming over non-empty directories
-Message-ID: <20101109115911.GL2715@dastard>
-References: <20101028115224.GA1429@infradead.org>
-	<20101109113459.GB21237@infradead.org>
+Subject: Re: [PATCH] xfstests: add _require_sparse_files
+Message-ID: <20101109120036.GM2715@dastard>
+References: <20101028123414.GA24977@infradead.org>
+	<20101109113453.GA21237@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20101109113459.GB21237@infradead.org>
+In-Reply-To: <20101109113453.GA21237@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,18 +37,34 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Tue, Nov 09, 2010 at 06:34:59AM -0500, Christoph Hellwig wrote:
-> ping?
+On Tue, Nov 09, 2010 at 06:34:54AM -0500, Christoph Hellwig wrote:
+> updated version to also include test 239 which reqires the check, too.
 > 
-> On Thu, Oct 28, 2010 at 07:52:24AM -0400, Christoph Hellwig wrote:
-> > Per Posix renames over non-empty directories should fail, but hfsplus used to
-> > allow this (and corrupt the filesystem while doing so).
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+> From: Christoph Hellwig <hch@lst.de>
+> Subject: [PATCH] xfstests: add _require_sparse_files
+> 
+> Add a helper to check if the filesystem supports sparse files.  This is
+> used to guard tests that exercise sparse file functionality and would
+> take forever on filesystems that have to zero all blocks on extending
+> truncates.
+> 
+> Unfortunately there's no good way to autodetect this functionality, so
+> just implement it as a blacklist for now.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-looks OK to me.
+Looks ok, minor typo needs fixing, but:
 
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
+
+> +#
+> +# Check if the filesystem supports sparese files.
+                                      sparse
+
+Cheers,
+
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
