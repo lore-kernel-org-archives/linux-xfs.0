@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oA952wMJ135749 for <xfs@oss.sgi.com>; Mon, 8 Nov 2010 23:02:59 -0600
+	oA95oJd9137035 for <xfs@oss.sgi.com>; Mon, 8 Nov 2010 23:50:20 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E653F164DE2
-	for <xfs@oss.sgi.com>; Mon,  8 Nov 2010 21:04:24 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
-	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	UzE5zzirSSn7Pixc for <xfs@oss.sgi.com>;
-	Mon, 08 Nov 2010 21:04:24 -0800 (PST)
-Date: Tue, 9 Nov 2010 16:04:17 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id AFB47164FCB
+	for <xfs@oss.sgi.com>; Mon,  8 Nov 2010 21:51:45 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
+	[150.101.137.97]) by cuda.sgi.com with ESMTP id
+	EalIQBKPiSzOQRcw for <xfs@oss.sgi.com>;
+	Mon, 08 Nov 2010 21:51:45 -0800 (PST)
+Date: Tue, 9 Nov 2010 16:51:42 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 07/16] xfs: convert inode cache lookups to use RCU locking
-Message-ID: <20101109050417.GI2715@dastard>
-References: <1289206519-18377-1-git-send-email-david@fromorbit.com>
-	<1289206519-18377-8-git-send-email-david@fromorbit.com>
-	<20101108230929.GA13299@infradead.org>
-	<20101109033628.GN4032@linux.vnet.ibm.com>
+Subject: Re: [PATCH, RFC] xfs: fix failed write handling
+Message-ID: <20101109055142.GJ2715@dastard>
+References: <20101109002559.GA30016@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20101109033628.GN4032@linux.vnet.ibm.com>
+In-Reply-To: <20101109002559.GA30016@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,52 +29,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
-Cc: Christoph Hellwig <hch@infradead.org>, eric.dumazet@gmail.com, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Mon, Nov 08, 2010 at 07:36:28PM -0800, Paul E. McKenney wrote:
-> On Mon, Nov 08, 2010 at 06:09:29PM -0500, Christoph Hellwig wrote:
-> > This patch generally looks good to me, but with so much RCU magic I'd prefer
-> > if Paul & Eric could look over it.
+On Mon, Nov 08, 2010 at 07:26:00PM -0500, Christoph Hellwig wrote:
+> Since the move to the new truncate sequence we call xfs_setattr to
+> truncate down excessively instanciated blocks.  As shown by the testcase
+> in kernel.org BZ #22452 that doesn't work too well.  Due to the confusion
+> of the internal inode size, and the VFS inode i_size it zeroes data that
+> it shouldn't.
 > 
-> Is there a git tree, tarball, or whatever? 
+> But full blown truncate seems like overkill here.  We only instanciate
+> delayed allocations in the write path, and given that we never released
+> the iolock we can't have converted them to real allocations yet either.
+> 
+> The only nasty case is pre-existing preallocation which we need to skip.
+> The patch below does that by borrowing code from xfs_aops_discard_page.
+> It does pass xfstests for 4k block filesystems and fixes the original
+> bug.  I'm not quite sure if we could hit a corner case with smaller
+> block sizes when parts of a page are preallocated and some not.
 
-git://git.kernel.org/pub/scm/linux/kernel/git/dgc/xfsdev.git working
+Seems likely - preallocated block past EOF are not unusual.
 
-contains the series that this patch is in.
+> That
+> could be handled by looping around bmapi as long as we find extents
+> for our range.  The path could probably also be refactored to share
+> code with xfs_aops_discard_page.  And we probably need the ilock
+> just as in that path, but I only got to that when almost through
+> xfstests, and the day is over for me today, so let's just get the
+> patch out for now.
 
-> For example, I don't see
-> how this patch handles the case of an inode being freed just as an RCU
-> reader gains a reference to it,
+Yes, definitely need the ilock - that's the only lock that provides
+protection for the extent tree.
 
-XFS_IRECLAIM flag is set on inodes as they transition into the
-reclaim state long before they are freed. The XFS_IRECLAIM flag is left there once
-freed. Hence lookups in xfs_iget_cache_hit() will see this.
-
-If the inode has been reallocated, the inode number will not yet be
-set, or the inode state will have changed to XFS_INEW, both of which
-xfs_iget_cache_hit() will also reject.
-
-> but then reallocated as some other inode
-> (so that ->ino is nonzero) before the RCU reader gets a chance to actually
-> look at the inode.
-
-XFS_INEW is not cleared until well after a new ->i_ino is set, so
-the lookup should find trip over XFS_INEW in that case. I think that
-I may need to move the inode number check under the i_flags_lock
-after validating the flags - more to check that we've got the
-correct inode than to validate we have a freed inode.
-
-> But such a check might well be in the code that this
-> patch didn't change...
-
-Yeah, most of the XFS code is already in a form compatible with such
-RCU use because inodes have always had a quiescent "reclaimable"
-state between active and reclaim (XFS_INEW -> active ->
-XFS_IRECLAIMABLE -> XFS_IRECLAIM) where the inode can be reused
-before being freed. The result is that lookups have always had to
-handle races with inodes that have just transitioned into the
-XFS_IRECLAIM state and hence cannot be immediately reused...
+It looks to me that we need a general "discard delalloc blocks from
+range" function - I'll write one (basically the guts of
+xfs_aops_discard_page) and convert xfs_aops_discard_page() and this
+code to use it....
 
 Cheers,
 
