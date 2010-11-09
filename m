@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oA90JUKB126219 for <xfs@oss.sgi.com>; Mon, 8 Nov 2010 18:19:31 -0600
+	oA91Bcnp128124 for <xfs@oss.sgi.com>; Mon, 8 Nov 2010 19:11:39 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BF0C81C25E24
-	for <xfs@oss.sgi.com>; Mon,  8 Nov 2010 16:20:56 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
-	[150.101.137.97]) by cuda.sgi.com with ESMTP id
-	G9ClB7l4CMRghRv6 for <xfs@oss.sgi.com>;
-	Mon, 08 Nov 2010 16:20:56 -0800 (PST)
-Date: Tue, 9 Nov 2010 11:20:43 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9DB111C26DF4
+	for <xfs@oss.sgi.com>; Mon,  8 Nov 2010 17:13:04 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail20.adl6.internode.on.net
+	[150.101.137.105]) by cuda.sgi.com with ESMTP id
+	ZVuEFlC7qYFms90d for <xfs@oss.sgi.com>;
+	Mon, 08 Nov 2010 17:13:04 -0800 (PST)
+Date: Tue, 9 Nov 2010 12:12:22 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 03/16] [RFC] xfs: use generic per-cpu counter
-	infrastructure
-Message-ID: <20101109002043.GY2715@dastard>
-References: <1289206519-18377-1-git-send-email-david@fromorbit.com>
-	<1289206519-18377-4-git-send-email-david@fromorbit.com>
-	<20101108121322.GA3023@infradead.org>
+Subject: Re: [PATCH 1/6] fs: add hole punching to fallocate
+Message-ID: <20101109011222.GD2715@dastard>
+References: <1289248327-16308-1-git-send-email-josef@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20101108121322.GA3023@infradead.org>
+In-Reply-To: <1289248327-16308-1-git-send-email-josef@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,180 +29,79 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Josef Bacik <josef@redhat.com>
+Cc: xfs@oss.sgi.com, joel.becker@oracle.com, linux-kernel@vger.kernel.org, cluster-devel@redhat.com, cmm@us.ibm.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
 
-On Mon, Nov 08, 2010 at 07:13:22AM -0500, Christoph Hellwig wrote:
-> On Mon, Nov 08, 2010 at 07:55:06PM +1100, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > XFS has a per-cpu counter implementation for in-core superblock
-> > counters that pre-dated the generic implementation. It is complex
-> > and baroque as it is tailored directly to the needs of ENOSPC
-> > detection. Implement the complex accurate-compare-and-add
-> > calculation in the generic per-cpu counter code and convert the
-> > XFS counters to use the much simpler generic counter code.
-> > 
-> > Passes xfsqa on SMP system.
+On Mon, Nov 08, 2010 at 03:32:02PM -0500, Josef Bacik wrote:
+> Hole punching has already been implemented by XFS and OCFS2, and has the
+> potential to be implemented on both BTRFS and EXT4 so we need a generic way to
+> get to this feature.  The simplest way in my mind is to add FALLOC_FL_PUNCH_HOLE
+> to fallocate() since it already looks like the normal fallocate() operation.
+> I've tested this patch with XFS and BTRFS to make sure XFS did what it's
+> supposed to do and that BTRFS failed like it was supposed to.  Thank you,
 > 
-> Some mostly cosmetic comments below.  I haven't looked at the more
-> hairy bits like the changes to the generic percpu code and the
-> reservation handling yet.
+> Signed-off-by: Josef Bacik <josef@redhat.com>
+> ---
+>  fs/open.c              |    2 +-
+>  include/linux/falloc.h |    1 +
+>  2 files changed, 2 insertions(+), 1 deletions(-)
 > 
-> > 	1. kill the no-per-cpu-counter mode?
-> 
-> already done.
-> 
-> > 	3. do we need to factor xfs_mod_sb_incore()?
-> 
-> Doesn't exist anymore. 
+> diff --git a/fs/open.c b/fs/open.c
+> index 4197b9e..ab8dedf 100644
+> --- a/fs/open.c
+> +++ b/fs/open.c
+> @@ -223,7 +223,7 @@ int do_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
+>  		return -EINVAL;
+>  
+>  	/* Return error if mode is not supported */
+> -	if (mode && !(mode & FALLOC_FL_KEEP_SIZE))
+> +	if (mode && (mode & ~(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE)))
+>  		return -EOPNOTSUPP;
+>  
+>  	if (!(file->f_mode & FMODE_WRITE))
+> diff --git a/include/linux/falloc.h b/include/linux/falloc.h
+> index 3c15510..851cba2 100644
+> --- a/include/linux/falloc.h
+> +++ b/include/linux/falloc.h
+> @@ -2,6 +2,7 @@
+>  #define _FALLOC_H_
+>  
+>  #define FALLOC_FL_KEEP_SIZE	0x01 /* default is extend size */
+> +#define FALLOC_FL_PUNCH_HOLE	0X02 /* de-allocates range */
 
-Ah, forgot to update the commit message ;)
+Hole punching was not included originally in fallocate() for a
+variety of reasons. IIRC, they were along the lines of:
 
-> > -	xfs_icsb_sync_counters(mp, XFS_ICSB_LAZY_COUNT);
-> > +	xfs_icsb_sync_counters(mp);
-> >  	spin_lock(&mp->m_sb_lock);
-> 
-> Can be moved inside the lock and use the unlocked version, too.
+	1 de-allocating of blocks in an allocation syscall is wrong.
+	  People wanted a new syscall for this functionality.
+	2 no glibc interface needs it
+	3 at the time, only XFS supported punching holes, so there
+	  is not need to support it in a generic interface
+	4 the use cases presented were not considered compelling
+	  enough to justify the additional complexity (!)
 
-OK, I just went for the straight transformation approach.
+In the end, I gave up arguing for it to be included because just
+getting the FALLOC_FL_KEEP_SIZE functionality was a hard enough
+battle.
 
-> > +static inline int
-> > +xfs_icsb_add(
-> > +	struct xfs_mount	*mp,
-> > +	int			counter,
-> > +	int64_t			delta,
-> > +	int64_t			threshold)
-> > +{
-> > +	int			ret;
-> > +
-> > +	ret = percpu_counter_add_unless_lt(&mp->m_icsb[counter], delta,
-> > +								threshold);
-> > +	if (ret < 0)
-> > +		return -ENOSPC;
-> > +	return 0;
-> > +}
-> > +
-> > +static inline void
-> > +xfs_icsb_set(
-> > +	struct xfs_mount	*mp,
-> > +	int			counter,
-> > +	int64_t			value)
-> > +{
-> > +	percpu_counter_set(&mp->m_icsb[counter], value);
-> > +}
-> > +
-> > +static inline int64_t
-> > +xfs_icsb_sum(
-> > +	struct xfs_mount	*mp,
-> > +	int			counter)
-> > +{
-> > +	return percpu_counter_sum_positive(&mp->m_icsb[counter]);
-> > +}
-> > +
-> > +static inline int64_t
-> > +xfs_icsb_read(
-> > +	struct xfs_mount	*mp,
-> > +	int			counter)
-> > +{
-> > +	return percpu_counter_read_positive(&mp->m_icsb[counter]);
-> > +}
-> 
-> I would just opencode all these helpers in their callers.  There's
-> generally just one caller of each, which iterates over the three
-> counters anyway.
+Anyway, #3 isn't the case any more, #4 was just an excuse not to
+support anything ext4 couldn't do and lots of apps are calling
+fallocate directly (because glibc can't use FALLOC_FL_KEEP_SIZE) so
+#2 isn't an issue, either. I guess that leaves #1 to be debated;
+I don't think there is any problem with doing what you propose.
 
-That seems reasonable, but I had is a good reason for adding the
-wrappers. That is, I'm not sure that the fixed percpu counter batch
-size (32) scales well enough for large systems. In the bdi code, a
-custom batch size that is logarithmicaly scaled with the number of
-CPUs is used and I suspect we'll need to do this here, too. Hence
-I'd like to keep the wrappers to minimise the number of places we'd
-need to modify to handle customised batch sizes.
-
-> > +int
-> > +xfs_icsb_modify_counters(
-> > +	xfs_mount_t	*mp,
-> > +	xfs_sb_field_t	field,
-> > +	int64_t		delta,
-> > +	int		rsvd)
-> 
-> I can't see the point of keeping this multiplexer.  The inode counts
-> are handled entirely different from the block count, so they should
-> have separate functions.
-
-I just went for the simple approach - I wanted to get it working
-without having to modify lots of other code. Now that it is working,
-I can see why getting rid of the wrapper altogether would be good.
-
-> 
-> > +{
-> > +	int64_t		lcounter;
-> > +	int64_t		res_used;
-> > +	int		ret = 0;
-> > +
-> > +
-> > +	switch (field) {
-> > +	case XFS_SBS_ICOUNT:
-> > +		ret = xfs_icsb_add(mp, XFS_ICSB_ICOUNT, delta, 0);
-> > +		if (ret < 0) {
-> > +			ASSERT(0);
-> > +			return XFS_ERROR(EINVAL);
-> > +		}
-> > +		return 0;
-> > +
-> > +	case XFS_SBS_IFREE:
-> > +		ret = xfs_icsb_add(mp, XFS_ICSB_IFREE, delta, 0);
-> > +		if (ret < 0) {
-> > +			ASSERT(0);
-> > +			return XFS_ERROR(EINVAL);
-> > +		}
-> > +		return 0;
-> 
-> If you're keeping a common helper for both inode counts this can be
-> simplified by sharing the code and just passing on the field instead
-> of having two cases.
-> 
-> > +	struct percpu_counter	m_icsb[XFS_ICSB_MAX];
-> 
-> I wonder if there's all that much of a point in keeping the array.
-> We basically only use the fact it's an array for the init/destroy
-> code.  Maybe it would be a tad cleaner to just have three separate
-> percpu counters.
-
-Not sure - I'd like to extend the per-cpu counters to more fields in
-the superblock (e.g. the rt extent counter), and having an array
-makes that pretty simple...
-
-
-> > +++ b/include/linux/percpu_counter.h
-> > @@ -41,6 +41,8 @@ void percpu_counter_set(struct percpu_counter *fbc, s64 amount);
-> >  void __percpu_counter_add(struct percpu_counter *fbc, s64 amount, s32 batch);
-> >  s64 __percpu_counter_sum(struct percpu_counter *fbc);
-> >  int percpu_counter_compare(struct percpu_counter *fbc, s64 rhs);
-> > +int percpu_counter_add_unless_lt(struct percpu_counter *fbc, s64 amount,
-> > +							s64 threshold);
-> >  
-> >  static inline void percpu_counter_add(struct percpu_counter *fbc, s64 amount)
-> >  {
-> > @@ -153,6 +155,20 @@ static inline int percpu_counter_initialized(struct percpu_counter *fbc)
-> >  	return 1;
-> >  }
-> >  
-> > +static inline int percpu_counter_test_and_add_delta(struct percpu_counter *fbc, s64 delta)
-> 
-> This doesn't match the function provided for CONFIG_SMP.
-> 
-
-Doh - I hadn't retested UP since I renamed the function that did all
-the work.
-
-And I just realised that with UP using the icsb functions, I
-can kill all the cases in the locked variant....
+What I will suggest is that this requires a generic xfstest to be
+written and support added to xfs_io to enable that test (and others)
+to issue hole punches. Something along the lines of test 242 which I
+wrote for testing all the edge case of XFS_IOC_ZERO_RANGE (*) would be
+good.
 
 Cheers,
 
 Dave.
+
+(*) fallocate() version:
+http://git.kernel.org/?p=linux/kernel/git/dgc/xfsdev.git;a=commitdiff;h=45f3e1831e3abc8bd12ec1e6c548f73a8dd9e36d
 -- 
 Dave Chinner
 david@fromorbit.com
