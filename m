@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oA9Cqi2x154865 for <xfs@oss.sgi.com>; Tue, 9 Nov 2010 06:52:45 -0600
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A11551602DB3
-	for <xfs@oss.sgi.com>; Tue,  9 Nov 2010 04:54:11 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id dIn5fWg2ZZsODtW5 for
-	<xfs@oss.sgi.com>; Tue, 09 Nov 2010 04:54:11 -0800 (PST)
-Date: Tue, 9 Nov 2010 07:53:50 -0500
-From: Josef Bacik <josef@redhat.com>
-Subject: Re: [PATCH 5/6] Btrfs: fail if we try to use hole punch
-Message-ID: <20101109125350.GE27816@dhcp231-156.rdu.redhat.com>
-References: <1289248327-16308-1-git-send-email-josef@redhat.com>
-	<1289248327-16308-5-git-send-email-josef@redhat.com>
-	<AANLkTiksTsZqo1yUNVEJSiwE-7ccyWDv+wLvTZaoZOJ0@mail.gmail.com>
+	oA9DcLSt156465 for <xfs@oss.sgi.com>; Tue, 9 Nov 2010 07:38:21 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4D2481C280BE
+	for <xfs@oss.sgi.com>; Tue,  9 Nov 2010 05:39:49 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id l7uHl1QfYauHHI5f for
+	<xfs@oss.sgi.com>; Tue, 09 Nov 2010 05:39:49 -0800 (PST)
+Date: Tue, 9 Nov 2010 08:39:48 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 2/2] xfsprogs: update deb package maintainer, bump version
+Message-ID: <20101109133948.GB2066@infradead.org>
+References: <318337928.18811289303806950.JavaMail.root@acxmail-au2.aconex.com>
+	<247647061.18861289303840801.JavaMail.root@acxmail-au2.aconex.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <AANLkTiksTsZqo1yUNVEJSiwE-7ccyWDv+wLvTZaoZOJ0@mail.gmail.com>
+In-Reply-To: <247647061.18861289303840801.JavaMail.root@acxmail-au2.aconex.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,56 +25,87 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Will Newton <will.newton@gmail.com>
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com, cluster-devel@redhat.com, cmm@us.ibm.com, Josef Bacik <josef@redhat.com>, joel.becker@oracle.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
+To: nathans@aconex.com
+Cc: Anibal Monsalve Salazar <anibal@debian.org>, xfs <xfs@oss.sgi.com>
 
-On Tue, Nov 09, 2010 at 10:05:34AM +0000, Will Newton wrote:
-> On Mon, Nov 8, 2010 at 8:32 PM, Josef Bacik <josef@redhat.com> wrote:
-> =
+On Tue, Nov 09, 2010 at 10:57:20PM +1100, nathans@aconex.com wrote:
+> Update xfsprogs Debian maintainer annotation, bump version.
+> ???? ??
+> Signed-off-by: Nathan Scott <nathans@debian.org>
 
-> Hi Josef,
-> =
+Looks good except for lots of weird chacaters which hopefully only
+happen in the mail and not the actual patch.
 
-> > Btrfs doesn't have the ability to punch holes yet, so make sure we retu=
-rn
-> > EOPNOTSUPP if we try to use hole punching through fallocate. =A0This su=
-pport can
-> > be added later. =A0Thanks,
-> >
-> > Signed-off-by: Josef Bacik <josef@redhat.com>
-> > ---
-> > =A0fs/btrfs/inode.c | =A0 =A04 ++++
-> > =A01 files changed, 4 insertions(+), 0 deletions(-)
-> >
-> > diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
-> > index 78877d7..c590add 100644
-> > --- a/fs/btrfs/inode.c
-> > +++ b/fs/btrfs/inode.c
-> > @@ -6936,6 +6936,10 @@ static long btrfs_fallocate(struct inode *inode,=
- int mode,
-> > =A0 =A0 =A0 =A0alloc_start =3D offset & ~mask;
-> > =A0 =A0 =A0 =A0alloc_end =3D =A0(offset + len + mask) & ~mask;
-> >
-> > + =A0 =A0 =A0 /* We only support the FALLOC_FL_KEEP_SIZE mode */
-> > + =A0 =A0 =A0 if (mode && (mode & FALLOC_FL_KEEP_SIZE))
-> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return -EOPNOTSUPP;
-> > +
-> =
+Alex has various outstanding xfs_metadump updates, can you coordinate
+the release with him, as it might be worth picking those up?
 
-> This test looks rather odd. Why do we need to test that mode is
-> non-zero AND that mode has a specific bit set? Is there a missing !
-> here?
-
-Yeah I'm missing a !, I copy and pasted the wrong bit when I went around ad=
-ding
-this check to everybody, I'll be fixing it up for the next go around.  Than=
-ks,
-
-Josef
+> diff --git a/VERSION b/VERSION
+> index 58a77e2..e68ef43 100644
+> --- a/VERSION
+> +++ b/VERSION
+> @@ -3,5 +3,5 @@
+> ??#
+> ??PKG_MAJOR=3
+> ??PKG_MINOR=1
+> -PKG_REVISION=3
+> +PKG_REVISION=4
+> ??PKG_BUILD=1
+> diff --git a/debian/changelog b/debian/changelog
+> index 24e5c20..1ce0b7e 100644
+> --- a/debian/changelog
+> +++ b/debian/changelog
+> @@ -1,3 +1,11 @@
+> +xfsprogs (3.1.4) unstable; urgency=low
+> +
+> + ??* New upstream release (32 projid resolution, fsr uses /proc/mounts)
+> + ??* Annotate Debian packages as being team maintained now.
+> + ??* Resolve Lenny upgrade issue with xfsdump (closes: #601988, #601710)
+> +
+> + -- Nathan Scott <nathans@debian.org> ??Tue, 09 Nov 2010 22:39:04 +1100
+> +
+> ??xfsprogs (3.1.3) unstable; urgency=low
+> ??
+> ???? * New upstream release
+> diff --git a/debian/control b/debian/control
+> index f429434..401cdab 100644
+> --- a/debian/control
+> +++ b/debian/control
+> @@ -1,8 +1,8 @@
+> ??Source: xfsprogs
+> ??Section: admin
+> ??Priority: optional
+> -Maintainer: Nathan Scott <nathans@debian.org>
+> -Uploaders: Anibal Monsalve Salazar <anibal@debian.org>
+> +Maintainer: XFS Development Team <xfs@oss.sgi.com>
+> +Uploaders: Nathan Scott <nathans@debian.org>, Anibal Monsalve Salazar <anibal@debian.org>
+> ??Build-Depends: uuid-dev, autoconf, debhelper (>= 5), gettext, libtool, libreadline5-dev, libblkid-dev (>= 2.17)
+> ??Standards-Version: 3.9.1
+> ??Homepage: http://oss.sgi.com/projects/xfs/
+> diff --git a/doc/CHANGES b/doc/CHANGES
+> index 4ae94d6..fc42eba 100644
+> --- a/doc/CHANGES
+> +++ b/doc/CHANGES
+> @@ -1,3 +1,10 @@
+> +xfsprogs-3.1.4 (9 November 2010)
+> +????????????????- Add projid32bit handling to userspace, resolving type
+> +???????????????? ??sizing issues when dealing with 32 bit project ids.
+> +????????????????- Make xfs_fsr use /proc/mounts if available.
+> +????????????????- Annotate that Debian packages are group maintained.
+> +????????????????- Fix a Debian packaging issue causing upgrade pain.
+> +
+> ??xfsprogs-3.1.3 (26 August 2010)
+> ??????????????????- Add xfs_io support for XFS_IOC_ZERO_RANGE
+> ??????????????????- Fix depend targets.
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+---end quoted text---
 
 _______________________________________________
 xfs mailing list
