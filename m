@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oA9Bu70p152340 for <xfs@oss.sgi.com>; Tue, 9 Nov 2010 05:56:08 -0600
-Received: from postoffice2.aconex.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C9D724CD408
-	for <xfs@oss.sgi.com>; Tue,  9 Nov 2010 03:57:33 -0800 (PST)
-Received: from postoffice2.aconex.com (mail.aconex.com [203.89.202.182]) by
-	cuda.sgi.com with ESMTP id Ir18v5nu5AGwcqAF for
-	<xfs@oss.sgi.com>; Tue, 09 Nov 2010 03:57:33 -0800 (PST)
-Date: Tue, 9 Nov 2010 22:57:20 +1100 (EST)
-From: nathans@aconex.com
-Message-ID: <247647061.18861289303840801.JavaMail.root@acxmail-au2.aconex.com>
-In-Reply-To: <318337928.18811289303806950.JavaMail.root@acxmail-au2.aconex.com>
-Subject: [PATCH 2/2] xfsprogs: update deb package maintainer, bump version
+	oA9Blu0F152042 for <xfs@oss.sgi.com>; Tue, 9 Nov 2010 05:47:56 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 61814165C5A
+	for <xfs@oss.sgi.com>; Tue,  9 Nov 2010 03:49:24 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id 7XJ0jKyjvrZPXWZx for
+	<xfs@oss.sgi.com>; Tue, 09 Nov 2010 03:49:24 -0800 (PST)
+Date: Tue, 9 Nov 2010 06:49:23 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH] xfstests: check block truncation after write failure
+Message-ID: <20101109114923.GA29629@infradead.org>
 MIME-Version: 1.0
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,50 +22,191 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs <xfs@oss.sgi.com>
-Cc: Anibal Monsalve Salazar <anibal@debian.org>
+To: xfs@oss.sgi.com
+Cc: Marius Tolzmann <tolzmann@molgen.mpg.de>
 
-VXBkYXRlIHhmc3Byb2dzIERlYmlhbiBtYWludGFpbmVyIGFubm90YXRpb24sIGJ1bXAgdmVyc2lv
-bi4KwqDCoCDCoApTaWduZWQtb2ZmLWJ5OiBOYXRoYW4gU2NvdHQgPG5hdGhhbnNAZGViaWFuLm9y
-Zz4KCmRpZmYgLS1naXQgYS9WRVJTSU9OIGIvVkVSU0lPTgppbmRleCA1OGE3N2UyLi5lNjhlZjQz
-IDEwMDY0NAotLS0gYS9WRVJTSU9OCisrKyBiL1ZFUlNJT04KQEAgLTMsNSArMyw1IEBACsKgIwrC
-oFBLR19NQUpPUj0zCsKgUEtHX01JTk9SPTEKLVBLR19SRVZJU0lPTj0zCitQS0dfUkVWSVNJT049
-NArCoFBLR19CVUlMRD0xCmRpZmYgLS1naXQgYS9kZWJpYW4vY2hhbmdlbG9nIGIvZGViaWFuL2No
-YW5nZWxvZwppbmRleCAyNGU1YzIwLi4xY2UwYjdlIDEwMDY0NAotLS0gYS9kZWJpYW4vY2hhbmdl
-bG9nCisrKyBiL2RlYmlhbi9jaGFuZ2Vsb2cKQEAgLTEsMyArMSwxMSBAQAoreGZzcHJvZ3MgKDMu
-MS40KSB1bnN0YWJsZTsgdXJnZW5jeT1sb3cKKworIMKgKiBOZXcgdXBzdHJlYW0gcmVsZWFzZSAo
-MzIgcHJvamlkIHJlc29sdXRpb24sIGZzciB1c2VzIC9wcm9jL21vdW50cykKKyDCoCogQW5ub3Rh
-dGUgRGViaWFuIHBhY2thZ2VzIGFzIGJlaW5nIHRlYW0gbWFpbnRhaW5lZCBub3cuCisgwqAqIFJl
-c29sdmUgTGVubnkgdXBncmFkZSBpc3N1ZSB3aXRoIHhmc2R1bXAgKGNsb3NlczogIzYwMTk4OCwg
-IzYwMTcxMCkKKworIC0tIE5hdGhhbiBTY290dCA8bmF0aGFuc0BkZWJpYW4ub3JnPiDCoFR1ZSwg
-MDkgTm92IDIwMTAgMjI6Mzk6MDQgKzExMDAKKwrCoHhmc3Byb2dzICgzLjEuMykgdW5zdGFibGU7
-IHVyZ2VuY3k9bG93CsKgCsKgwqAgKiBOZXcgdXBzdHJlYW0gcmVsZWFzZQpkaWZmIC0tZ2l0IGEv
-ZGViaWFuL2NvbnRyb2wgYi9kZWJpYW4vY29udHJvbAppbmRleCBmNDI5NDM0Li40MDFjZGFiIDEw
-MDY0NAotLS0gYS9kZWJpYW4vY29udHJvbAorKysgYi9kZWJpYW4vY29udHJvbApAQCAtMSw4ICsx
-LDggQEAKwqBTb3VyY2U6IHhmc3Byb2dzCsKgU2VjdGlvbjogYWRtaW4KwqBQcmlvcml0eTogb3B0
-aW9uYWwKLU1haW50YWluZXI6IE5hdGhhbiBTY290dCA8bmF0aGFuc0BkZWJpYW4ub3JnPgotVXBs
-b2FkZXJzOiBBbmliYWwgTW9uc2FsdmUgU2FsYXphciA8YW5pYmFsQGRlYmlhbi5vcmc+CitNYWlu
-dGFpbmVyOiBYRlMgRGV2ZWxvcG1lbnQgVGVhbSA8eGZzQG9zcy5zZ2kuY29tPgorVXBsb2FkZXJz
-OiBOYXRoYW4gU2NvdHQgPG5hdGhhbnNAZGViaWFuLm9yZz4sIEFuaWJhbCBNb25zYWx2ZSBTYWxh
-emFyIDxhbmliYWxAZGViaWFuLm9yZz4KwqBCdWlsZC1EZXBlbmRzOiB1dWlkLWRldiwgYXV0b2Nv
-bmYsIGRlYmhlbHBlciAoPj0gNSksIGdldHRleHQsIGxpYnRvb2wsIGxpYnJlYWRsaW5lNS1kZXYs
-IGxpYmJsa2lkLWRldiAoPj0gMi4xNykKwqBTdGFuZGFyZHMtVmVyc2lvbjogMy45LjEKwqBIb21l
-cGFnZTogaHR0cDovL29zcy5zZ2kuY29tL3Byb2plY3RzL3hmcy8KZGlmZiAtLWdpdCBhL2RvYy9D
-SEFOR0VTIGIvZG9jL0NIQU5HRVMKaW5kZXggNGFlOTRkNi4uZmM0MmViYSAxMDA2NDQKLS0tIGEv
-ZG9jL0NIQU5HRVMKKysrIGIvZG9jL0NIQU5HRVMKQEAgLTEsMyArMSwxMCBAQAoreGZzcHJvZ3Mt
-My4xLjQgKDkgTm92ZW1iZXIgMjAxMCkKK8KgwqDCoMKgwqDCoMKgwqAtIEFkZCBwcm9qaWQzMmJp
-dCBoYW5kbGluZyB0byB1c2Vyc3BhY2UsIHJlc29sdmluZyB0eXBlCivCoMKgwqDCoMKgwqDCoMKg
-IMKgc2l6aW5nIGlzc3VlcyB3aGVuIGRlYWxpbmcgd2l0aCAzMiBiaXQgcHJvamVjdCBpZHMuCivC
-oMKgwqDCoMKgwqDCoMKgLSBNYWtlIHhmc19mc3IgdXNlIC9wcm9jL21vdW50cyBpZiBhdmFpbGFi
-bGUuCivCoMKgwqDCoMKgwqDCoMKgLSBBbm5vdGF0ZSB0aGF0IERlYmlhbiBwYWNrYWdlcyBhcmUg
-Z3JvdXAgbWFpbnRhaW5lZC4KK8KgwqDCoMKgwqDCoMKgwqAtIEZpeCBhIERlYmlhbiBwYWNrYWdp
-bmcgaXNzdWUgY2F1c2luZyB1cGdyYWRlIHBhaW4uCisKwqB4ZnNwcm9ncy0zLjEuMyAoMjYgQXVn
-dXN0IDIwMTApCsKgwqDCoMKgwqDCoMKgwqDCoC0gQWRkIHhmc19pbyBzdXBwb3J0IGZvciBYRlNf
-SU9DX1pFUk9fUkFOR0UKwqDCoMKgwqDCoMKgwqDCoMKgLSBGaXggZGVwZW5kIHRhcmdldHMuCgpf
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGlu
-ZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5m
-by94ZnMK
+Extraced from  https://bugzilla.kernel.org/show_bug.cgi?id=22452
+"data corruption after mmap()ing a file and writev() some data to another file"
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Index: xfstests-dev/246
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ xfstests-dev/246	2010-11-09 11:40:47.000000000 +0000
+@@ -0,0 +1,60 @@
++#! /bin/bash
++# FS QA Test No. 246
++#
++# Check that truncation after failed writes does not zero too much data.
++#
++# Based on a bug report and testcase from
++# Marius Tolzmann <tolzmann@molgen.mpg.de>
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2010 Christoph Hellwig.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#
++#-----------------------------------------------------------------------
++#
++# creator
++owner=hch@lst.de
++
++seq=`basename $0`
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++
++# get standard environment, filters and checks
++. ./common.rc
++. ./common.filter
++
++# real QA test starts here
++_supported_fs generic
++_supported_os Linux
++
++file=$TEST_DIR/mmap-writev
++
++_cleanup()
++{
++	rm -rf $file
++	rm -rf $file.NEW
++}
++
++trap "_cleanup ; exit \$status" 0 1 2 3 15
++
++echo -n "cccccccccc" > $file
++$here/src/t_mmap_writev $file $file.NEW
++xxd $file.NEW
++
++status=0
++exit $status
+Index: xfstests-dev/246.out
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ xfstests-dev/246.out	2010-11-09 11:41:34.000000000 +0000
+@@ -0,0 +1,3 @@
++QA output created by 246
++0000000: 6161 6161 6161 6161 6161 6262 6262 6262  aaaaaaaaaabbbbbb
++0000010: 6262 6262 6363 6363 6363 6363 6363       bbbbcccccccccc
+Index: xfstests-dev/group
+===================================================================
+--- xfstests-dev.orig/group	2010-11-09 11:32:04.000000000 +0000
++++ xfstests-dev/group	2010-11-09 11:32:09.000000000 +0000
+@@ -359,3 +359,4 @@ deprecated
+ 243 auto quick prealloc
+ 244 auto quota quick
+ 245 auto quick dir
++246 auto quick rw
+Index: xfstests-dev/src/Makefile
+===================================================================
+--- xfstests-dev.orig/src/Makefile	2010-11-09 11:33:32.000000000 +0000
++++ xfstests-dev/src/Makefile	2010-11-09 11:33:39.000000000 +0000
+@@ -10,7 +10,8 @@ TARGETS = dirstress fill fill2 getpagesi
+ 	mmapcat append_reader append_writer dirperf metaperf \
+ 	devzero feature alloc fault fstest t_access_root \
+ 	godown resvtest writemod makeextents itrash rename \
+-	multi_open_unlink dmiperf unwritten_sync genhashnames t_holes
++	multi_open_unlink dmiperf unwritten_sync genhashnames t_holes \
++	t_mmap_writev
+ 
+ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
+ 	preallo_rw_pattern_writer ftrunc trunc fs_perms testx looptest \
+Index: xfstests-dev/src/t_mmap_writev.c
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ xfstests-dev/src/t_mmap_writev.c	2010-11-09 11:39:10.000000000 +0000
+@@ -0,0 +1,70 @@
++/*
++    mmap() a file and writev() back to another file
++         - kernel bug #22452 testcase
++
++    Copyright (C) 2010
++         by D.Buczek - Max Planck Institute for Molecular Genetics Berlin
++
++    This program is free software; you can redistribute it and/or modify
++    it under the terms of the GNU General Public License as published by
++    the Free Software Foundation; either version 2 of the License, or
++    (at your option) any later version.
++
++    This program is distributed in the hope that it will be useful,
++    but WITHOUT ANY WARRANTY; without even the implied warranty of
++    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++    GNU General Public License for more details.
++
++    You should have received a copy of the GNU General Public License along
++    with this program; if not, write to the Free Software Foundation, Inc.,
++    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
++*/
++
++#include <sys/types.h>
++#include <fcntl.h>
++#include <stdio.h>
++#include <stdlib.h>
++
++#include <sys/mman.h>
++#include <string.h>
++#include <sys/uio.h>
++#include <unistd.h>
++
++int main(int argc, char **argv)
++{
++	char *file = argv[1];
++	char *new_file = argv[2];
++	int fd;
++	int fd_new;
++	void *base;
++
++	struct iovec iovec[3]=
++	{
++		{ "aaaaaaaaaa" , 10 },
++		{ "bbbbbbbbbb" , 10 },
++	 	{ NULL , 10 }
++	};
++
++	int i;
++
++	fd=open(file, O_RDONLY);
++	if (fd==-1) {perror("open");exit(1);}
++
++	base = mmap(NULL,16384,PROT_READ,MAP_SHARED,fd,0);
++	if  (base == (void *)-1) { perror("mmap");exit(1); }
++
++	unlink(new_file);
++
++	fd_new=open(new_file,O_RDWR|O_CREAT,0666);
++	if (fd_new==-1) {perror("creat");exit(1);}
++
++	iovec[2].iov_base=(char *)base;
++	i=writev(fd_new,iovec,sizeof(iovec)/sizeof(*iovec));
++	if (i==-1) {perror("writev");exit(1);}
++
++	close(fd_new);
++	munmap(base,16384);
++	close(fd);
++
++	return 0;
++}
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
