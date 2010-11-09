@@ -1,40 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oA9Bu7ch152342 for <xfs@oss.sgi.com>; Tue, 9 Nov 2010 05:56:08 -0600
+	oA9Bu70p152340 for <xfs@oss.sgi.com>; Tue, 9 Nov 2010 05:56:08 -0600
 Received: from postoffice2.aconex.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4F92C1C27E10
-	for <xfs@oss.sgi.com>; Tue,  9 Nov 2010 03:57:34 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C9D724CD408
+	for <xfs@oss.sgi.com>; Tue,  9 Nov 2010 03:57:33 -0800 (PST)
 Received: from postoffice2.aconex.com (mail.aconex.com [203.89.202.182]) by
-	cuda.sgi.com with ESMTP id Mf6hntCUF226hmuM for
-	<xfs@oss.sgi.com>; Tue, 09 Nov 2010 03:57:34 -0800 (PST)
-Received: from postoffice.aconex.com (localhost [127.0.0.1])
-	by postoffice2.aconex.com (Spam & Virus Firewall) with ESMTP id
-	DE8BB5835BB
-	for <xfs@oss.sgi.com>; Tue,  9 Nov 2010 22:57:13 +1100 (EST)
-Received: from postoffice.aconex.com (postoffice.yarra.acx [192.168.102.1]) by
-	postoffice2.aconex.com with ESMTP id n3wNxQ2C809CmVzg for
-	<xfs@oss.sgi.com>; Tue, 09 Nov 2010 22:57:13 +1100 (EST)
-Received: from gatekeeper.aconex.com (gatekeeper.yarra.acx [192.168.102.10])
-	by postoffice.aconex.com (Postfix) with ESMTP id CDE3BA5011D
-	for <xfs@oss.sgi.com>; Tue,  9 Nov 2010 22:57:13 +1100 (EST)
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by gatekeeper.aconex.com (Postfix) with ESMTP id C8A3F9D0001
-	for <xfs@oss.sgi.com>; Tue,  9 Nov 2010 22:57:13 +1100 (EST)
-Received: from gatekeeper.aconex.com ([127.0.0.1])
-	by localhost (gatekeeper.aconex.com [127.0.0.1]) (amavisd-new,
-	port 10024) with ESMTP id KFFC19mlU37m for <xfs@oss.sgi.com>;
-	Tue,  9 Nov 2010 22:56:58 +1100 (EST)
-Received: from acxmail-au2.aconex.com (acxmail-au2.aconex.com [192.168.102.14])
-	by gatekeeper.aconex.com (Postfix) with ESMTP id 0C8BA9D0002
-	for <xfs@oss.sgi.com>; Tue,  9 Nov 2010 22:56:58 +1100 (EST)
-Date: Tue, 9 Nov 2010 22:56:58 +1100 (EST)
-From: nathans@debian.org
-Message-ID: <1431731622.18831289303817979.JavaMail.root@acxmail-au2.aconex.com>
-In-Reply-To: <1189766076.18791289303743211.JavaMail.root@acxmail-au2.aconex.com>
-Subject: [PATCH 1/2] xfsprogs: fix debian upgrade issue
+	cuda.sgi.com with ESMTP id Ir18v5nu5AGwcqAF for
+	<xfs@oss.sgi.com>; Tue, 09 Nov 2010 03:57:33 -0800 (PST)
+Date: Tue, 9 Nov 2010 22:57:20 +1100 (EST)
+From: nathans@aconex.com
+Message-ID: <247647061.18861289303840801.JavaMail.root@acxmail-au2.aconex.com>
+In-Reply-To: <318337928.18811289303806950.JavaMail.root@acxmail-au2.aconex.com>
+Subject: [PATCH 2/2] xfsprogs: update deb package maintainer, bump version
 MIME-Version: 1.0
-Reply-To: Nathan Scott <nathans@debian.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -43,35 +22,50 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs <xfs@oss.sgi.com>
+Cc: Anibal Monsalve Salazar <anibal@debian.org>
 
-Fix xfs_estimate issue upgrading xfsprogs/xfsdump from lenny
-    
-Fix bug "xfsprogs: file conflict when upgrading from lenny":
-add 'Replaces: xfsdump (<< 3.0.0); thanks to Vagrant Cascadian
-for the analysis.
-    
-Signed-off-by: Gregor Herrman <gregoa@debian.org>
-Reviewed-by: Nathan Scott <nathans@debian.org>
-
-diff --git a/debian/control b/debian/control
-index 652ffcb..f429434 100644
---- a/debian/control
-+++ b/debian/control
-@@ -12,6 +12,7 @@ Depends: ${shlibs:Depends}, ${misc:Depends}
- Provides: fsck-backend
- Suggests: xfsdump, acl, attr, quota
- Breaks: xfsdump (<< 3.0.0)
-+Replaces: xfsdump (<< 3.0.0)
- Architecture: any
- Description: Utilities for managing the XFS filesystem
-  A set of commands to use the XFS filesystem, including mkfs.xfs.
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+VXBkYXRlIHhmc3Byb2dzIERlYmlhbiBtYWludGFpbmVyIGFubm90YXRpb24sIGJ1bXAgdmVyc2lv
+bi4KwqDCoCDCoApTaWduZWQtb2ZmLWJ5OiBOYXRoYW4gU2NvdHQgPG5hdGhhbnNAZGViaWFuLm9y
+Zz4KCmRpZmYgLS1naXQgYS9WRVJTSU9OIGIvVkVSU0lPTgppbmRleCA1OGE3N2UyLi5lNjhlZjQz
+IDEwMDY0NAotLS0gYS9WRVJTSU9OCisrKyBiL1ZFUlNJT04KQEAgLTMsNSArMyw1IEBACsKgIwrC
+oFBLR19NQUpPUj0zCsKgUEtHX01JTk9SPTEKLVBLR19SRVZJU0lPTj0zCitQS0dfUkVWSVNJT049
+NArCoFBLR19CVUlMRD0xCmRpZmYgLS1naXQgYS9kZWJpYW4vY2hhbmdlbG9nIGIvZGViaWFuL2No
+YW5nZWxvZwppbmRleCAyNGU1YzIwLi4xY2UwYjdlIDEwMDY0NAotLS0gYS9kZWJpYW4vY2hhbmdl
+bG9nCisrKyBiL2RlYmlhbi9jaGFuZ2Vsb2cKQEAgLTEsMyArMSwxMSBAQAoreGZzcHJvZ3MgKDMu
+MS40KSB1bnN0YWJsZTsgdXJnZW5jeT1sb3cKKworIMKgKiBOZXcgdXBzdHJlYW0gcmVsZWFzZSAo
+MzIgcHJvamlkIHJlc29sdXRpb24sIGZzciB1c2VzIC9wcm9jL21vdW50cykKKyDCoCogQW5ub3Rh
+dGUgRGViaWFuIHBhY2thZ2VzIGFzIGJlaW5nIHRlYW0gbWFpbnRhaW5lZCBub3cuCisgwqAqIFJl
+c29sdmUgTGVubnkgdXBncmFkZSBpc3N1ZSB3aXRoIHhmc2R1bXAgKGNsb3NlczogIzYwMTk4OCwg
+IzYwMTcxMCkKKworIC0tIE5hdGhhbiBTY290dCA8bmF0aGFuc0BkZWJpYW4ub3JnPiDCoFR1ZSwg
+MDkgTm92IDIwMTAgMjI6Mzk6MDQgKzExMDAKKwrCoHhmc3Byb2dzICgzLjEuMykgdW5zdGFibGU7
+IHVyZ2VuY3k9bG93CsKgCsKgwqAgKiBOZXcgdXBzdHJlYW0gcmVsZWFzZQpkaWZmIC0tZ2l0IGEv
+ZGViaWFuL2NvbnRyb2wgYi9kZWJpYW4vY29udHJvbAppbmRleCBmNDI5NDM0Li40MDFjZGFiIDEw
+MDY0NAotLS0gYS9kZWJpYW4vY29udHJvbAorKysgYi9kZWJpYW4vY29udHJvbApAQCAtMSw4ICsx
+LDggQEAKwqBTb3VyY2U6IHhmc3Byb2dzCsKgU2VjdGlvbjogYWRtaW4KwqBQcmlvcml0eTogb3B0
+aW9uYWwKLU1haW50YWluZXI6IE5hdGhhbiBTY290dCA8bmF0aGFuc0BkZWJpYW4ub3JnPgotVXBs
+b2FkZXJzOiBBbmliYWwgTW9uc2FsdmUgU2FsYXphciA8YW5pYmFsQGRlYmlhbi5vcmc+CitNYWlu
+dGFpbmVyOiBYRlMgRGV2ZWxvcG1lbnQgVGVhbSA8eGZzQG9zcy5zZ2kuY29tPgorVXBsb2FkZXJz
+OiBOYXRoYW4gU2NvdHQgPG5hdGhhbnNAZGViaWFuLm9yZz4sIEFuaWJhbCBNb25zYWx2ZSBTYWxh
+emFyIDxhbmliYWxAZGViaWFuLm9yZz4KwqBCdWlsZC1EZXBlbmRzOiB1dWlkLWRldiwgYXV0b2Nv
+bmYsIGRlYmhlbHBlciAoPj0gNSksIGdldHRleHQsIGxpYnRvb2wsIGxpYnJlYWRsaW5lNS1kZXYs
+IGxpYmJsa2lkLWRldiAoPj0gMi4xNykKwqBTdGFuZGFyZHMtVmVyc2lvbjogMy45LjEKwqBIb21l
+cGFnZTogaHR0cDovL29zcy5zZ2kuY29tL3Byb2plY3RzL3hmcy8KZGlmZiAtLWdpdCBhL2RvYy9D
+SEFOR0VTIGIvZG9jL0NIQU5HRVMKaW5kZXggNGFlOTRkNi4uZmM0MmViYSAxMDA2NDQKLS0tIGEv
+ZG9jL0NIQU5HRVMKKysrIGIvZG9jL0NIQU5HRVMKQEAgLTEsMyArMSwxMCBAQAoreGZzcHJvZ3Mt
+My4xLjQgKDkgTm92ZW1iZXIgMjAxMCkKK8KgwqDCoMKgwqDCoMKgwqAtIEFkZCBwcm9qaWQzMmJp
+dCBoYW5kbGluZyB0byB1c2Vyc3BhY2UsIHJlc29sdmluZyB0eXBlCivCoMKgwqDCoMKgwqDCoMKg
+IMKgc2l6aW5nIGlzc3VlcyB3aGVuIGRlYWxpbmcgd2l0aCAzMiBiaXQgcHJvamVjdCBpZHMuCivC
+oMKgwqDCoMKgwqDCoMKgLSBNYWtlIHhmc19mc3IgdXNlIC9wcm9jL21vdW50cyBpZiBhdmFpbGFi
+bGUuCivCoMKgwqDCoMKgwqDCoMKgLSBBbm5vdGF0ZSB0aGF0IERlYmlhbiBwYWNrYWdlcyBhcmUg
+Z3JvdXAgbWFpbnRhaW5lZC4KK8KgwqDCoMKgwqDCoMKgwqAtIEZpeCBhIERlYmlhbiBwYWNrYWdp
+bmcgaXNzdWUgY2F1c2luZyB1cGdyYWRlIHBhaW4uCisKwqB4ZnNwcm9ncy0zLjEuMyAoMjYgQXVn
+dXN0IDIwMTApCsKgwqDCoMKgwqDCoMKgwqDCoC0gQWRkIHhmc19pbyBzdXBwb3J0IGZvciBYRlNf
+SU9DX1pFUk9fUkFOR0UKwqDCoMKgwqDCoMKgwqDCoMKgLSBGaXggZGVwZW5kIHRhcmdldHMuCgpf
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGlu
+ZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5m
+by94ZnMK
