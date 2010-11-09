@@ -1,17 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oA9LqXeR175010 for <xfs@oss.sgi.com>; Tue, 9 Nov 2010 15:52:33 -0600
-Received: from mx1.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A1B6A167C2C
-	for <xfs@oss.sgi.com>; Tue,  9 Nov 2010 13:54:01 -0800 (PST)
-Received: from mx1.suse.de (cantor.suse.de [195.135.220.2]) by cuda.sgi.com
-	with ESMTP id q9Du9hoK0fHAFW2q for <xfs@oss.sgi.com>;
-	Tue, 09 Nov 2010 13:54:01 -0800 (PST)
-Date: Tue, 9 Nov 2010 22:53:57 +0100
-From: Jan Kara <jack@suse.cz>
+	oA9Ne7sv178676 for <xfs@oss.sgi.com>; Tue, 9 Nov 2010 17:40:07 -0600
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B2A931C2A1F3
+	for <xfs@oss.sgi.com>; Tue,  9 Nov 2010 15:41:33 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
+	[150.101.137.103]) by cuda.sgi.com with ESMTP id
+	hG9lnOMBWKSTo1Ds for <xfs@oss.sgi.com>;
+	Tue, 09 Nov 2010 15:41:33 -0800 (PST)
+Date: Wed, 10 Nov 2010 10:40:49 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH 1/6] fs: add hole punching to fallocate
-Message-ID: <20101109215357.GI4936@quack.suse.cz>
+Message-ID: <20101109234049.GQ2715@dastard>
 References: <1289248327-16308-1-git-send-email-josef@redhat.com>
 	<20101109011222.GD2715@dastard> <20101109033038.GF3099@thunk.org>
 	<20101109044242.GH2715@dastard> <20101109214147.GK3099@thunk.org>
@@ -26,51 +27,62 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ted Ts'o <tytso@mit.edu>
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com, cluster-devel@redhat.com, cmm@us.ibm.com, Josef Bacik <josef@redhat.com>, joel.becker@oracle.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
+To: Ted Ts'o <tytso@mit.edu>, Josef Bacik <josef@redhat.com>, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, joel.becker@oracle.com, cmm@us.ibm.com, cluster-devel@redhat.com
 
-On Tue 09-11-10 16:41:47, Ted Ts'o wrote:
-> On Tue, Nov 09, 2010 at 03:42:42PM +1100, Dave Chinner wrote:
-> > Implementation is up to the filesystem. However, XFS does (b)
-> > because:
-> > 
-> > 	1) it was extremely simple to implement (one of the
-> > 	   advantages of having an exceedingly complex allocation
-> > 	   interface to begin with :P)
-> > 	2) conversion is atomic, fast and reliable
-> > 	3) it is independent of the underlying storage; and
-> > 	4) reads of unwritten extents operate at memory speed,
-> > 	   not disk speed.
-> 
-> Yeah, I was thinking that using a device-style TRIM might be better
-> since future attempts to write to it won't require a separate seek to
-> modify the extent tree.  But yeah, there are a bunch of advantages of
-> simply mutating the extent tree.
-> 
-> While we're on the subject of changes to fallocate, what do people
-> think of FALLOC_FL_EXPOSE_OLD_DATA, which requires either root
-> privileges or (if capabilities are in use) CAP_DAC_OVERRIDE &&
-> CAP_MAC_OVERRIDE && CAP_SYS_ADMIN.  This would allow a trusted process
-> to fallocate blocks with the extent already marked initialized.  I've
-> had two requests for such functionality for ext4 already.  
-> 
-> (Take for example a trusted cluster filesystem backend that checks the
-> object checksum before returning any data to the user; and if the
-> check fails the cluster file system will try to use some other replica
-> stored on some other server.)
-  Hum, could you elaborate a bit? I fail to see how above fallocate() flag
-could be used to help solving this problem... Just curious...
-
-								Honza
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVHVlLCBOb3YgMDksIDIwMTAgYXQgMDQ6NDE6NDdQTSAtMDUwMCwgVGVkIFRzJ28gd3JvdGU6
+Cj4gT24gVHVlLCBOb3YgMDksIDIwMTAgYXQgMDM6NDI6NDJQTSArMTEwMCwgRGF2ZSBDaGlubmVy
+IHdyb3RlOgo+ID4gSW1wbGVtZW50YXRpb24gaXMgdXAgdG8gdGhlIGZpbGVzeXN0ZW0uIEhvd2V2
+ZXIsIFhGUyBkb2VzIChiKQo+ID4gYmVjYXVzZToKPiA+IAo+ID4gCTEpIGl0IHdhcyBleHRyZW1l
+bHkgc2ltcGxlIHRvIGltcGxlbWVudCAob25lIG9mIHRoZQo+ID4gCSAgIGFkdmFudGFnZXMgb2Yg
+aGF2aW5nIGFuIGV4Y2VlZGluZ2x5IGNvbXBsZXggYWxsb2NhdGlvbgo+ID4gCSAgIGludGVyZmFj
+ZSB0byBiZWdpbiB3aXRoIDpQKQo+ID4gCTIpIGNvbnZlcnNpb24gaXMgYXRvbWljLCBmYXN0IGFu
+ZCByZWxpYWJsZQo+ID4gCTMpIGl0IGlzIGluZGVwZW5kZW50IG9mIHRoZSB1bmRlcmx5aW5nIHN0
+b3JhZ2U7IGFuZAo+ID4gCTQpIHJlYWRzIG9mIHVud3JpdHRlbiBleHRlbnRzIG9wZXJhdGUgYXQg
+bWVtb3J5IHNwZWVkLAo+ID4gCSAgIG5vdCBkaXNrIHNwZWVkLgo+IAo+IFllYWgsIEkgd2FzIHRo
+aW5raW5nIHRoYXQgdXNpbmcgYSBkZXZpY2Utc3R5bGUgVFJJTSBtaWdodCBiZSBiZXR0ZXIKPiBz
+aW5jZSBmdXR1cmUgYXR0ZW1wdHMgdG8gd3JpdGUgdG8gaXQgd29uJ3QgcmVxdWlyZSBhIHNlcGFy
+YXRlIHNlZWsgdG8KPiBtb2RpZnkgdGhlIGV4dGVudCB0cmVlLiAgQnV0IHllYWgsIHRoZXJlIGFy
+ZSBhIGJ1bmNoIG9mIGFkdmFudGFnZXMgb2YKPiBzaW1wbHkgbXV0YXRpbmcgdGhlIGV4dGVudCB0
+cmVlLgo+IAo+IFdoaWxlIHdlJ3JlIG9uIHRoZSBzdWJqZWN0IG9mIGNoYW5nZXMgdG8gZmFsbG9j
+YXRlLCB3aGF0IGRvIHBlb3BsZQo+IHRoaW5rIG9mIEZBTExPQ19GTF9FWFBPU0VfT0xEX0RBVEEs
+IHdoaWNoIHJlcXVpcmVzIGVpdGhlciByb290Cj4gcHJpdmlsZWdlcyBvciAoaWYgY2FwYWJpbGl0
+aWVzIGFyZSBpbiB1c2UpIENBUF9EQUNfT1ZFUlJJREUgJiYKPiBDQVBfTUFDX09WRVJSSURFICYm
+IENBUF9TWVNfQURNSU4uICBUaGlzIHdvdWxkIGFsbG93IGEgdHJ1c3RlZCBwcm9jZXNzCj4gdG8g
+ZmFsbG9jYXRlIGJsb2NrcyB3aXRoIHRoZSBleHRlbnQgYWxyZWFkeSBtYXJrZWQgaW5pdGlhbGl6
+ZWQuICBJJ3ZlCj4gaGFkIHR3byByZXF1ZXN0cyBmb3Igc3VjaCBmdW5jdGlvbmFsaXR5IGZvciBl
+eHQ0IGFscmVhZHkuICAKCldlIHJlbW92ZWQgdGhhdCBhYmlsaXR5IGZyb20gWEZTIGFib3V0IHRo
+cmVlIHllYXJzIGFnbyBiZWNhdXNlIGl0J3MKYSBtYXNzaXZlIHNlY3VyaXR5IGhvbGUuIGUuZy4g
+d2hhdCBoYXBwZW5zIGlmIHRoZSBmaWxlIGlzIHdvcmxkCnJlYWRhYmxlLCBldmVuIHRob3VnaCB0
+aGUgcHJvY2VzcyB0aGF0IGNhbGxlZApGQUxMT0NfRkxfRVhQT1NFX09MRF9EQVRBIHdhcyBwcml2
+aWxlZ2VkIGFuZCB3YXMgYWxsb3dlZCB0byBleHBvc2UKc3VjaCBkYXRhPyBPciB0aGUgZmlsZSBp
+cyBjaG1vZCA3NzcgYWZ0ZXIgYmVpbmcgZXhwb3NlZD8KClRoZSBoaXN0b3JpY2FsIHJlYXNvbiBm
+b3Igc3VjaCBiZWhhdmlvdXIgZXhpc3RpbmcgaW4gWEZTIHdhcyB0aGF0IGluCjE5OTcgdGhlIENQ
+VSBhbmQgSU8gbGF0ZW5jeSBjb3N0IG9mIHVud3JpdHRlbiBleHRlbnQgY29udmVyc2lvbiB3YXMK
+c2lnbmlmaWNhbnQsIHNvIHVzZXJzIHdpdGggcmVhbCBwaHlzaWNhbCBzZWN1cml0eSAoaS5lLiBt
+YXJpbmVzIHdpdGgKZ3Vucykgd2VyZSBhYmxlIHRvIG1ha2UgdXNlIG9mIGZhc3QgcHJlYWxsb2Nh
+dGlvbiB3aXRoIG5vIGNvbnZlcnNpb24Kb3ZlcmhlYWQgd2l0aG91dCBjYXJpbmcgYWJvdXQgdGhl
+IHNlY3VyaXR5IGltcGxpY2F0aW9ucy4gVGhlc2UgZGF5cywKdGhlIHBlcmZvcm1hbmNlIG92ZXJo
+ZWFkIG9mIHVud3JpdHRlbiBleHRlbnQgY29udmVyc2lvbiBpcyBtaW5pbWFsIC0KSSBnZW5lcmFs
+bHkgY2FuJ3QgbWVhc3VyZSBhIGRpZmZlcmVuY2UgaW4gSU8gcGVyZm9ybWFuY2UgYXMgYSByZXN1
+bHQKb2YgaXQgLSBzbyB0aGVyZSBpcyBzaW1wbHkgbm8gZ29vZCByZWHRlW9uIGZvciBsZWF2aW5n
+IHN1Y2ggYSBnYXBpbmcKc2VjdXJpdHkgaG9sZSBpbiB0aGUgc3lzdGVtLgoKSWYgYW55b25lIHdh
+bnRzIHRvIHJlYWQgdGhlIHVuZGVybHlpbmcgZGF0YSwgdGhlbiB1c2UgZmllbWFwIHRvIG1hcAp0
+aGUgcGh5c2ljYWwgYmxvY2tzIGFuZCByZWFkIGl0IGRpcmVjdGx5IGZyb20gdGhlIGJsb2NrIGRl
+dmljZS4gVGhhdApyZXF1aXJlcyByb290IHByaXZpbGVnZXMgYnV0IGRvZXMgbm90IG9wZW4gYW55
+IG5ldyBzdGFsZSBkYXRhCmV4cG9zdXJlIHByb2JsZW1zLi4uLgoKPiAoVGFrZSBmb3IgZXhhbXBs
+ZSBhIHRydXN0ZWQgY2x1c3RlciBmaWxlc3lzdGVtIGJhY2tlbmQgdGhhdCBjaGVja3MgdGhlCj4g
+b2JqZWN0IGNoZWNrc3VtIGJlZm9yZSByZXR1cm5pbmcgYW55IGRhdGEgdG8gdGhlIHVzZXI7IGFu
+ZCBpZiB0aGUKPiBjaGVjayBmYWlscyB0aGUgY2x1c3RlciBmaWxlIHN5c3RlbSB3aWxsIHRyeSB0
+byB1c2Ugc29tZSBvdGhlciByZXBsaWNhCj4gc3RvcmVkIG9uIHNvbWUgb3RoZXIgc2VydmVyLikK
+CklPV3MsIGFsbCB0aGV5IHdhbnQgdG8gZG8gaXMgYXZvaWQgdGhlIHVud3JpdHRlbiBleHRlbnQg
+Y29udmVyc2lvbgpvdmVyaGVhZC4gVGltZSBoYXMgc2hvd24gdGhhdCBhIGJhZCBzZWN1cml0eS9w
+ZXJmb3JtYW5jZSB0cmFkZW9mZgpkZWNpc2lvbiB3YXMgbWFkZSAxMyB5ZWFycyBhZ28gaW4gWEZT
+LCBzbyBJIHNlZSBsaXR0bGUgcmVhc29uIHRvCnJlcGVhdCBpdCBmb3IgZXh0NCB0b2RheS4uLi4K
+CkNoZWVycywKCkRhdmUuCi0tIApEYXZlIENoaW5uZXIKZGF2aWRAZnJvbW9yYml0LmNvbQoKX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcg
+bGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8v
+eGZzCg==
