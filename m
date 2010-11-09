@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oA9MX9dP176493 for <xfs@oss.sgi.com>; Tue, 9 Nov 2010 16:33:09 -0600
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 29BC81683E8
-	for <xfs@oss.sgi.com>; Tue,  9 Nov 2010 14:34:35 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
-	[150.101.137.102]) by cuda.sgi.com with ESMTP id
-	PPCgbXNX64NIqMeh for <xfs@oss.sgi.com>;
-	Tue, 09 Nov 2010 14:34:35 -0800 (PST)
-Date: Wed, 10 Nov 2010 09:34:26 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfstests: check block truncation after write failure
-Message-ID: <20101109223426.GO2715@dastard>
-References: <20101109114923.GA29629@infradead.org>
+	oA9LqXeR175010 for <xfs@oss.sgi.com>; Tue, 9 Nov 2010 15:52:33 -0600
+Received: from mx1.suse.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A1B6A167C2C
+	for <xfs@oss.sgi.com>; Tue,  9 Nov 2010 13:54:01 -0800 (PST)
+Received: from mx1.suse.de (cantor.suse.de [195.135.220.2]) by cuda.sgi.com
+	with ESMTP id q9Du9hoK0fHAFW2q for <xfs@oss.sgi.com>;
+	Tue, 09 Nov 2010 13:54:01 -0800 (PST)
+Date: Tue, 9 Nov 2010 22:53:57 +0100
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 1/6] fs: add hole punching to fallocate
+Message-ID: <20101109215357.GI4936@quack.suse.cz>
+References: <1289248327-16308-1-git-send-email-josef@redhat.com>
+	<20101109011222.GD2715@dastard> <20101109033038.GF3099@thunk.org>
+	<20101109044242.GH2715@dastard> <20101109214147.GK3099@thunk.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20101109114923.GA29629@infradead.org>
+In-Reply-To: <20101109214147.GK3099@thunk.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,42 +30,45 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Marius Tolzmann <tolzmann@molgen.mpg.de>, xfs@oss.sgi.com
+To: Ted Ts'o <tytso@mit.edu>
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com, cluster-devel@redhat.com, cmm@us.ibm.com, Josef Bacik <josef@redhat.com>, joel.becker@oracle.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
 
-On Tue, Nov 09, 2010 at 06:49:23AM -0500, Christoph Hellwig wrote:
-> Extraced from  https://bugzilla.kernel.org/show_bug.cgi?id=22452
-> "data corruption after mmap()ing a file and writev() some data to another file"
+On Tue 09-11-10 16:41:47, Ted Ts'o wrote:
+> On Tue, Nov 09, 2010 at 03:42:42PM +1100, Dave Chinner wrote:
+> > Implementation is up to the filesystem. However, XFS does (b)
+> > because:
+> > 
+> > 	1) it was extremely simple to implement (one of the
+> > 	   advantages of having an exceedingly complex allocation
+> > 	   interface to begin with :P)
+> > 	2) conversion is atomic, fast and reliable
+> > 	3) it is independent of the underlying storage; and
+> > 	4) reads of unwritten extents operate at memory speed,
+> > 	   not disk speed.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Yeah, I was thinking that using a device-style TRIM might be better
+> since future attempts to write to it won't require a separate seek to
+> modify the extent tree.  But yeah, there are a bunch of advantages of
+> simply mutating the extent tree.
+> 
+> While we're on the subject of changes to fallocate, what do people
+> think of FALLOC_FL_EXPOSE_OLD_DATA, which requires either root
+> privileges or (if capabilities are in use) CAP_DAC_OVERRIDE &&
+> CAP_MAC_OVERRIDE && CAP_SYS_ADMIN.  This would allow a trusted process
+> to fallocate blocks with the extent already marked initialized.  I've
+> had two requests for such functionality for ext4 already.  
+> 
+> (Take for example a trusted cluster filesystem backend that checks the
+> object checksum before returning any data to the user; and if the
+> check fails the cluster file system will try to use some other replica
+> stored on some other server.)
+  Hum, could you elaborate a bit? I fail to see how above fallocate() flag
+could be used to help solving this problem... Just curious...
 
-Looks good. One comment below....
-
-Reviewed-by: Dave Chinner <david@fromorbit.com>
-
-> +{
-> +	rm -rf $file
-> +	rm -rf $file.NEW
-> +}
-> +
-> +trap "_cleanup ; exit \$status" 0 1 2 3 15
-> +
-> +echo -n "cccccccccc" > $file
-> +$here/src/t_mmap_writev $file $file.NEW
-> +xxd $file.NEW
-
-xxd - on debian that's packaged in the vim-common package, which
-not everyone will have installed (e.g. emacs users ;).
-
-Better to use 'od -Ax' as od is part of coreutils and already used
-in other qa tests so we don't introduce a new external dependency...
-
-CHeers,
-
-Dave.
+								Honza
 -- 
-Dave Chinner
-david@fromorbit.com
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
