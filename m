@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oA9Ab6uN149336 for <xfs@oss.sgi.com>; Tue, 9 Nov 2010 04:37:06 -0600
-Received: from firestarter.dermichi.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5DADF1665B2
-	for <xfs@oss.sgi.com>; Tue,  9 Nov 2010 02:38:32 -0800 (PST)
-Received: from firestarter.dermichi.com (firestarter.dermichi.com
-	[78.41.115.230]) by cuda.sgi.com with ESMTP id gtnLPEuu6M1lA2Xp
-	for <xfs@oss.sgi.com>; Tue, 09 Nov 2010 02:38:32 -0800 (PST)
-Received: from cl-840.mbx-01.si.sixxs.net ([2001:15c0:65ff:347::2])
-	by firestarter.dermichi.com with esmtpsa
-	(TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32) (Exim 4.72)
-	(envelope-from <mw@dermichi.com>) id 1PFlaw-0005XN-K7
-	for xfs@oss.sgi.com; Tue, 09 Nov 2010 11:38:30 +0100
-Message-ID: <4CD924A6.6040200@dermichi.com>
-Date: Tue, 09 Nov 2010 11:38:30 +0100
-From: Michael Weissenbacher <mw@dermichi.com>
+	oA9BBdZv150603 for <xfs@oss.sgi.com>; Tue, 9 Nov 2010 05:11:39 -0600
+Received: from mail-iw0-f181.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 39CA7160299A
+	for <xfs@oss.sgi.com>; Tue,  9 Nov 2010 03:13:05 -0800 (PST)
+Received: from mail-iw0-f181.google.com (mail-iw0-f181.google.com
+	[209.85.214.181]) by cuda.sgi.com with ESMTP id
+	AdJ4BOYSR0O6sbDr for <xfs@oss.sgi.com>;
+	Tue, 09 Nov 2010 03:13:05 -0800 (PST)
+Received: by iwn3 with SMTP id 3so8739563iwn.26
+	for <xfs@oss.sgi.com>; Tue, 09 Nov 2010 03:13:05 -0800 (PST)
 MIME-Version: 1.0
-Subject: vmap allocation for size 1048576 failed
+In-Reply-To: <20101104125052.GA22429@infradead.org>
+References: <AANLkTi=mLwQ0N_cErHzES1ZWvOa8jQspeYwKgn9sU4Jm@mail.gmail.com>
+	<20101104125052.GA22429@infradead.org>
+Date: Tue, 9 Nov 2010 16:43:04 +0530
+Message-ID: <AANLkTinqK-HvuHPeaTgxJOJuWMfomP2C12G=uVcqhWdn@mail.gmail.com>
+Subject: Re: XFS mounting fails on MIPS
+From: Ajeet Yadav <ajeet.yadav.77@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,93 +27,157 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============2686012277258433501=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Dear List!
+--===============2686012277258433501==
+Content-Type: multipart/alternative; boundary=001636d352371bff2c04949cd3ec
 
-On one of my machines i started getting errors like this after upgrading
-from Kernel 2.6.35 to 2.6.36.
---- --- snip --- ---
-Nov  9 11:25:57 xxxxx kernel: [591880.880679] vmap allocation for size
-1048576 failed: use vmalloc=<size> to increase size.
-... (repeats a few times, with differing sizes)
-Nov  9 11:25:57 xxxxx kernel: [591880.881651] xfs_buf_get: failed to map
-pages
-... (repeats a few times)
-Nov  9 11:25:57 xxxxx kernel: [591881.111625] Filesystem "loop0": XFS
-internal error xfs_trans_cancel at line 1796 of file fs/xfs/xfs_trans.c.
- Caller 0xc0270288
-Nov  9 11:25:57 xxxxx kernel: [591881.111629]
-Nov  9 11:25:57 xxxxx kernel: [591881.111636] Pid: 24899, comm: rsync
-Not tainted 2.6.36 #1
-Nov  9 11:25:57 xxxxx kernel: [591881.111640] Call Trace:
-Nov  9 11:25:57 xxxxx kernel: [591881.111653]  [<c0254756>]
-xfs_error_report+0x2c/0x2e
-Nov  9 11:25:57 xxxxx kernel: [591881.111663]  [<c026c691>]
-xfs_trans_cancel+0x4b/0xc9
-Nov  9 11:25:57 xxxxx kernel: [591881.111674]  [<c0270288>] ?
-xfs_create+0x473/0x4ef
-Nov  9 11:25:57 xxxxx kernel: [591881.111683]  [<c0270288>]
-xfs_create+0x473/0x4ef
-Nov  9 11:25:57 xxxxx kernel: [591881.111693]  [<c02791c7>]
-xfs_vn_mknod+0xca/0x156
-Nov  9 11:25:57 xxxxx kernel: [591881.111700]  [<c027926c>]
-xfs_vn_create+0xa/0xc
-Nov  9 11:25:57 xxxxx kernel: [591881.111709]  [<c01bcedd>]
-vfs_create+0x85/0xcf
-Nov  9 11:25:57 xxxxx kernel: [591881.111716]  [<c01bd56e>]
-do_last+0x277/0x4f8
-Nov  9 11:25:57 xxxxx kernel: [591881.111725]  [<c01bed11>]
-do_filp_open+0x197/0x458
-Nov  9 11:25:57 xxxxx kernel: [591881.111733]  [<c01bd0fb>] ?
-getname+0x1b/0xb9
-Nov  9 11:25:57 xxxxx kernel: [591881.111741]  [<c01b3766>]
-do_sys_open+0x48/0xc9
-Nov  9 11:25:57 xxxxx kernel: [591881.111746]  [<c01b3829>]
-sys_open+0x1e/0x26
-Nov  9 11:25:57 xxxxx kernel: [591881.111752]  [<c0102798>]
-sysenter_do_call+0x12/0x28
-Nov  9 11:25:57 xxxxx kernel: [591881.111759]
-xfs_force_shutdown(loop0,0x8) called from line 1797 of file
-fs/xfs/xfs_trans.c.  Return address = 0xc026c6a7
-Nov  9 11:25:57 xxxxx kernel: [591881.214442] Filesystem "loop0":
-Corruption of in-memory data detected.  Shutting down filesystem: loop0
-Nov  9 11:25:57 xxxxx kernel: [591881.214449] Please umount the
-filesystem, and rectify the problem(s)
-Nov  9 11:26:11 xxxxx kernel: [591894.827022] Filesystem "loop0":
-xfs_log_force: error 5 returned.
-Nov  9 11:26:41 xxxxx kernel: [591924.827024] Filesystem "loop0":
-xfs_log_force: error 5 returned.
-Nov  9 11:27:11 xxxxx kernel: [591954.827023] Filesystem "loop0":
-xfs_log_force: error 5 returned.
-Nov  9 11:27:18 xxxxx kernel: [591961.412716]
-xfs_force_shutdown(loop0,0x1) called from line 994 of file
-fs/xfs/linux-2.6/xfs_buf.c.  Return address = 0xc0275738
-Nov  9 11:27:18 xxxxx kernel: [591961.660660] Filesystem "loop0":
-xfs_log_force: error 5 returned.
---- --- snip --- ---
+--001636d352371bff2c04949cd3ec
+Content-Type: text/plain; charset=ISO-8859-1
 
-A few thoughts:
- * It always happens when i run "rsync" on the machine.
- * I've already tried setting vmalloc=256M and vmalloc=512M which both
-delayed the problem but didn't cure it.
- * It's a 32-bit machine and the problem only occurs on a loop'ed XFS,
-never on the root XFS.
- * I've used the experimental "delaylog" mount option, which may be
-important.
- * I'm not sure if the problem is 100% related to the kernel upgrade
-because i didn't use a loop XFS on this machine before the kernel upgrade.
+True, its the same system and you were right it was cache VIPT cache problem
+the cache hold the stale value even after xlog_bread() update the buffer.
+I do not know whether its correct ways to resolve the problem, but the
+problem no longer occur.
 
-Any ideas how to narrow down the problem?
 
-tia,
-Michael
+diff -Naur -X fs/xfs/linux-2.6/xfs_buf.c fs-dirty/xfs/linux-2.6/xfs_buf.c
+
+--- fs/xfs/linux-2.6/xfs_buf.c 2010-07-18 12:27:11.000000000 +0530
+
++++ fs-dirty/xfs/linux-2.6/xfs_buf.c 2010-10-25 11:01:28.252762355 +0530
+
+@@ -1166,6 +1166,13 @@
+
+xfs_buf_ioerror(bp, -error);
+
++ if (!error &&
+
++ (bp->b_flags & XBF_MAPPED) &&
+
++ (bp->b_page_count > 1) &&
+
++ (bp->b_flags & XBF_READ)) {
+
++ dma_cache_inv((unsigned long)bp->b_addr,
+
++ (bp->b_page_count * PAGE_SIZE) - bp->b_offset);
+
++ }
+
+do {
+
+struct page *page = bvec->bv_page;
+
+@@ -1275,6 +1282,10 @@
+
+submit_io:
+
+if (likely(bio->bi_size)) {
+
++ if ((bp->b_flags & XBF_MAPPED) && (bp->b_page_count > 1)) {
+
++ dma_cache_wback_inv((unsigned long)bp->b_addr,
+
++ (bp->b_page_count * PAGE_SIZE) - bp->b_offset);
+
++ }
+
+submit_bio(rw, bio);
+
+if (size)
+
+goto next_chunk;
+
+
+On Thu, Nov 4, 2010 at 6:20 PM, Christoph Hellwig <hch@infradead.org> wrote:
+
+> On Thu, Nov 04, 2010 at 11:27:24AM +0530, Ajeet Yadav wrote:
+> > Linux XFS version : 2.6.34
+> > Architecure: MIPS
+> > I am getting the following error during mount.
+>
+> Is this the same mips system that you have the vmap aliasing problems
+> during log recovery with?
+>
+> As long as that is not fixed I would deeply distrust any callchain
+> from the recovery code like this one.
+>
+
+--001636d352371bff2c04949cd3ec
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+
+<div>True, its the same system and you were right it was cache VIPT=A0cache=
+ problem</div>
+<div>the cache hold the stale value even after xlog_bread() update the buff=
+er.</div>
+<div>I do not know whether its correct ways to=A0resolve the problem, but t=
+he problem no longer occur.</div>
+<div>=A0</div>
+<div><span lang=3D"EN">
+<p>diff -Naur -X=A0fs/xfs/linux-2.6/xfs_buf.c fs-dirty/xfs/linux-2.6/xfs_bu=
+f.c</p>
+<p>--- fs/xfs/linux-2.6/xfs_buf.c 2010-07-18 12:27:11.000000000 +0530</p>
+<p>+++ fs-dirty/xfs/linux-2.6/xfs_buf.c 2010-10-25 11:01:28.252762355 +0530=
+</p>
+<p>@@ -1166,6 +1166,13 @@</p>
+<p></p>
+<p>xfs_buf_ioerror(bp, -error);</p>
+<p></p>
+<p>+ if (!error &amp;&amp; </p>
+<p>+ (bp-&gt;b_flags &amp; XBF_MAPPED) &amp;&amp; </p>
+<p>+ (bp-&gt;b_page_count &gt; 1) &amp;&amp; </p>
+<p>+ (bp-&gt;b_flags &amp; XBF_READ)) {</p>
+<p>+ dma_cache_inv((unsigned long)bp-&gt;b_addr, </p>
+<p>+ (bp-&gt;b_page_count * PAGE_SIZE) - bp-&gt;b_offset);</p>
+<p>+ } </p>
+<p>do {</p>
+<p>struct page *page =3D bvec-&gt;bv_page;</p>
+<p></p>
+<p>@@ -1275,6 +1282,10 @@</p>
+<p></p>
+<p>submit_io:</p>
+<p>if (likely(bio-&gt;bi_size)) {</p>
+<p>+ if ((bp-&gt;b_flags &amp; XBF_MAPPED) &amp;&amp; (bp-&gt;b_page_count =
+&gt; 1)) { </p>
+<p>+ dma_cache_wback_inv((unsigned long)bp-&gt;b_addr, </p>
+<p>+ (bp-&gt;b_page_count * PAGE_SIZE) - bp-&gt;b_offset);</p>
+<p>+ }</p>
+<p>submit_bio(rw, bio);</p>
+<p>if (size)</p>
+<p>goto next_chunk;</p>
+<p>=A0</p></span></div>
+<div class=3D"gmail_quote">On Thu, Nov 4, 2010 at 6:20 PM, Christoph Hellwi=
+g <span dir=3D"ltr">&lt;<a href=3D"mailto:hch@infradead.org">hch@infradead.=
+org</a>&gt;</span> wrote:<br>
+<blockquote style=3D"BORDER-LEFT: #ccc 1px solid; MARGIN: 0px 0px 0px 0.8ex=
+; PADDING-LEFT: 1ex" class=3D"gmail_quote">
+<div class=3D"im">On Thu, Nov 04, 2010 at 11:27:24AM +0530, Ajeet Yadav wro=
+te:<br></div>
+<div class=3D"im">&gt; Linux XFS version : 2.6.34<br>&gt; Architecure: MIPS=
+<br>&gt; I am getting the following error during mount.<br><br></div>Is thi=
+s the same mips system that you have the vmap aliasing problems<br>during l=
+og recovery with?<br>
+<br>As long as that is not fixed I would deeply distrust any callchain<br>f=
+rom the recovery code like this one.<br></blockquote></div><br>
+
+--001636d352371bff2c04949cd3ec--
+
+
+--===============2686012277258433501==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============2686012277258433501==--
