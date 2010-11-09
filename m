@@ -1,19 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oA9Blu0F152042 for <xfs@oss.sgi.com>; Tue, 9 Nov 2010 05:47:56 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 61814165C5A
-	for <xfs@oss.sgi.com>; Tue,  9 Nov 2010 03:49:24 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id 7XJ0jKyjvrZPXWZx for
-	<xfs@oss.sgi.com>; Tue, 09 Nov 2010 03:49:24 -0800 (PST)
-Date: Tue, 9 Nov 2010 06:49:23 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] xfstests: check block truncation after write failure
-Message-ID: <20101109114923.GA29629@infradead.org>
+	oA9Cqi2x154865 for <xfs@oss.sgi.com>; Tue, 9 Nov 2010 06:52:45 -0600
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A11551602DB3
+	for <xfs@oss.sgi.com>; Tue,  9 Nov 2010 04:54:11 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id dIn5fWg2ZZsODtW5 for
+	<xfs@oss.sgi.com>; Tue, 09 Nov 2010 04:54:11 -0800 (PST)
+Date: Tue, 9 Nov 2010 07:53:50 -0500
+From: Josef Bacik <josef@redhat.com>
+Subject: Re: [PATCH 5/6] Btrfs: fail if we try to use hole punch
+Message-ID: <20101109125350.GE27816@dhcp231-156.rdu.redhat.com>
+References: <1289248327-16308-1-git-send-email-josef@redhat.com>
+	<1289248327-16308-5-git-send-email-josef@redhat.com>
+	<AANLkTiksTsZqo1yUNVEJSiwE-7ccyWDv+wLvTZaoZOJ0@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <AANLkTiksTsZqo1yUNVEJSiwE-7ccyWDv+wLvTZaoZOJ0@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,189 +26,56 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Marius Tolzmann <tolzmann@molgen.mpg.de>
+To: Will Newton <will.newton@gmail.com>
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com, cluster-devel@redhat.com, cmm@us.ibm.com, Josef Bacik <josef@redhat.com>, joel.becker@oracle.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
 
-Extraced from  https://bugzilla.kernel.org/show_bug.cgi?id=22452
-"data corruption after mmap()ing a file and writev() some data to another file"
+On Tue, Nov 09, 2010 at 10:05:34AM +0000, Will Newton wrote:
+> On Mon, Nov 8, 2010 at 8:32 PM, Josef Bacik <josef@redhat.com> wrote:
+> =
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Hi Josef,
+> =
 
-Index: xfstests-dev/246
-===================================================================
---- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ xfstests-dev/246	2010-11-09 11:40:47.000000000 +0000
-@@ -0,0 +1,60 @@
-+#! /bin/bash
-+# FS QA Test No. 246
-+#
-+# Check that truncation after failed writes does not zero too much data.
-+#
-+# Based on a bug report and testcase from
-+# Marius Tolzmann <tolzmann@molgen.mpg.de>
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2010 Christoph Hellwig.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#
-+#-----------------------------------------------------------------------
-+#
-+# creator
-+owner=hch@lst.de
-+
-+seq=`basename $0`
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+
-+# get standard environment, filters and checks
-+. ./common.rc
-+. ./common.filter
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
-+
-+file=$TEST_DIR/mmap-writev
-+
-+_cleanup()
-+{
-+	rm -rf $file
-+	rm -rf $file.NEW
-+}
-+
-+trap "_cleanup ; exit \$status" 0 1 2 3 15
-+
-+echo -n "cccccccccc" > $file
-+$here/src/t_mmap_writev $file $file.NEW
-+xxd $file.NEW
-+
-+status=0
-+exit $status
-Index: xfstests-dev/246.out
-===================================================================
---- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ xfstests-dev/246.out	2010-11-09 11:41:34.000000000 +0000
-@@ -0,0 +1,3 @@
-+QA output created by 246
-+0000000: 6161 6161 6161 6161 6161 6262 6262 6262  aaaaaaaaaabbbbbb
-+0000010: 6262 6262 6363 6363 6363 6363 6363       bbbbcccccccccc
-Index: xfstests-dev/group
-===================================================================
---- xfstests-dev.orig/group	2010-11-09 11:32:04.000000000 +0000
-+++ xfstests-dev/group	2010-11-09 11:32:09.000000000 +0000
-@@ -359,3 +359,4 @@ deprecated
- 243 auto quick prealloc
- 244 auto quota quick
- 245 auto quick dir
-+246 auto quick rw
-Index: xfstests-dev/src/Makefile
-===================================================================
---- xfstests-dev.orig/src/Makefile	2010-11-09 11:33:32.000000000 +0000
-+++ xfstests-dev/src/Makefile	2010-11-09 11:33:39.000000000 +0000
-@@ -10,7 +10,8 @@ TARGETS = dirstress fill fill2 getpagesi
- 	mmapcat append_reader append_writer dirperf metaperf \
- 	devzero feature alloc fault fstest t_access_root \
- 	godown resvtest writemod makeextents itrash rename \
--	multi_open_unlink dmiperf unwritten_sync genhashnames t_holes
-+	multi_open_unlink dmiperf unwritten_sync genhashnames t_holes \
-+	t_mmap_writev
- 
- LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
- 	preallo_rw_pattern_writer ftrunc trunc fs_perms testx looptest \
-Index: xfstests-dev/src/t_mmap_writev.c
-===================================================================
---- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ xfstests-dev/src/t_mmap_writev.c	2010-11-09 11:39:10.000000000 +0000
-@@ -0,0 +1,70 @@
-+/*
-+    mmap() a file and writev() back to another file
-+         - kernel bug #22452 testcase
-+
-+    Copyright (C) 2010
-+         by D.Buczek - Max Planck Institute for Molecular Genetics Berlin
-+
-+    This program is free software; you can redistribute it and/or modify
-+    it under the terms of the GNU General Public License as published by
-+    the Free Software Foundation; either version 2 of the License, or
-+    (at your option) any later version.
-+
-+    This program is distributed in the hope that it will be useful,
-+    but WITHOUT ANY WARRANTY; without even the implied warranty of
-+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+    GNU General Public License for more details.
-+
-+    You should have received a copy of the GNU General Public License along
-+    with this program; if not, write to the Free Software Foundation, Inc.,
-+    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-+*/
-+
-+#include <sys/types.h>
-+#include <fcntl.h>
-+#include <stdio.h>
-+#include <stdlib.h>
-+
-+#include <sys/mman.h>
-+#include <string.h>
-+#include <sys/uio.h>
-+#include <unistd.h>
-+
-+int main(int argc, char **argv)
-+{
-+	char *file = argv[1];
-+	char *new_file = argv[2];
-+	int fd;
-+	int fd_new;
-+	void *base;
-+
-+	struct iovec iovec[3]=
-+	{
-+		{ "aaaaaaaaaa" , 10 },
-+		{ "bbbbbbbbbb" , 10 },
-+	 	{ NULL , 10 }
-+	};
-+
-+	int i;
-+
-+	fd=open(file, O_RDONLY);
-+	if (fd==-1) {perror("open");exit(1);}
-+
-+	base = mmap(NULL,16384,PROT_READ,MAP_SHARED,fd,0);
-+	if  (base == (void *)-1) { perror("mmap");exit(1); }
-+
-+	unlink(new_file);
-+
-+	fd_new=open(new_file,O_RDWR|O_CREAT,0666);
-+	if (fd_new==-1) {perror("creat");exit(1);}
-+
-+	iovec[2].iov_base=(char *)base;
-+	i=writev(fd_new,iovec,sizeof(iovec)/sizeof(*iovec));
-+	if (i==-1) {perror("writev");exit(1);}
-+
-+	close(fd_new);
-+	munmap(base,16384);
-+	close(fd);
-+
-+	return 0;
-+}
+> > Btrfs doesn't have the ability to punch holes yet, so make sure we retu=
+rn
+> > EOPNOTSUPP if we try to use hole punching through fallocate. =A0This su=
+pport can
+> > be added later. =A0Thanks,
+> >
+> > Signed-off-by: Josef Bacik <josef@redhat.com>
+> > ---
+> > =A0fs/btrfs/inode.c | =A0 =A04 ++++
+> > =A01 files changed, 4 insertions(+), 0 deletions(-)
+> >
+> > diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
+> > index 78877d7..c590add 100644
+> > --- a/fs/btrfs/inode.c
+> > +++ b/fs/btrfs/inode.c
+> > @@ -6936,6 +6936,10 @@ static long btrfs_fallocate(struct inode *inode,=
+ int mode,
+> > =A0 =A0 =A0 =A0alloc_start =3D offset & ~mask;
+> > =A0 =A0 =A0 =A0alloc_end =3D =A0(offset + len + mask) & ~mask;
+> >
+> > + =A0 =A0 =A0 /* We only support the FALLOC_FL_KEEP_SIZE mode */
+> > + =A0 =A0 =A0 if (mode && (mode & FALLOC_FL_KEEP_SIZE))
+> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return -EOPNOTSUPP;
+> > +
+> =
+
+> This test looks rather odd. Why do we need to test that mode is
+> non-zero AND that mode has a specific bit set? Is there a missing !
+> here?
+
+Yeah I'm missing a !, I copy and pasted the wrong bit when I went around ad=
+ding
+this check to everybody, I'll be fixing it up for the next go around.  Than=
+ks,
+
+Josef
 
 _______________________________________________
 xfs mailing list
