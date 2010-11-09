@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oA94L0uH133580 for <xfs@oss.sgi.com>; Mon, 8 Nov 2010 22:21:00 -0600
+	oA952wMJ135749 for <xfs@oss.sgi.com>; Mon, 8 Nov 2010 23:02:59 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D9404164F14
-	for <xfs@oss.sgi.com>; Mon,  8 Nov 2010 20:22:25 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail20.adl6.internode.on.net
-	[150.101.137.105]) by cuda.sgi.com with ESMTP id
-	ILdCU71In5nh7NTt for <xfs@oss.sgi.com>;
-	Mon, 08 Nov 2010 20:22:25 -0800 (PST)
-Date: Tue, 9 Nov 2010 15:21:56 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E653F164DE2
+	for <xfs@oss.sgi.com>; Mon,  8 Nov 2010 21:04:24 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
+	[150.101.137.104]) by cuda.sgi.com with ESMTP id
+	UzE5zzirSSn7Pixc for <xfs@oss.sgi.com>;
+	Mon, 08 Nov 2010 21:04:24 -0800 (PST)
+Date: Tue, 9 Nov 2010 16:04:17 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/6] XFS: handle hole punching via fallocate properly
-Message-ID: <20101109042156.GG2715@dastard>
-References: <1289248327-16308-1-git-send-email-josef@redhat.com>
-	<1289248327-16308-2-git-send-email-josef@redhat.com>
-	<20101109012254.GE2715@dastard>
-	<20101109020509.GB27816@dhcp231-156.rdu.redhat.com>
+Subject: Re: [PATCH 07/16] xfs: convert inode cache lookups to use RCU locking
+Message-ID: <20101109050417.GI2715@dastard>
+References: <1289206519-18377-1-git-send-email-david@fromorbit.com>
+	<1289206519-18377-8-git-send-email-david@fromorbit.com>
+	<20101108230929.GA13299@infradead.org>
+	<20101109033628.GN4032@linux.vnet.ibm.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20101109020509.GB27816@dhcp231-156.rdu.redhat.com>
+In-Reply-To: <20101109033628.GN4032@linux.vnet.ibm.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,121 +32,52 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Josef Bacik <josef@redhat.com>
-Cc: xfs@oss.sgi.com, joel.becker@oracle.com, linux-kernel@vger.kernel.org, cluster-devel@redhat.com, cmm@us.ibm.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
+To: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
+Cc: Christoph Hellwig <hch@infradead.org>, eric.dumazet@gmail.com, xfs@oss.sgi.com
 
-On Mon, Nov 08, 2010 at 09:05:09PM -0500, Josef Bacik wrote:
-> On Tue, Nov 09, 2010 at 12:22:54PM +1100, Dave Chinner wrote:
-> > On Mon, Nov 08, 2010 at 03:32:03PM -0500, Josef Bacik wrote:
-> > > This patch simply allows XFS to handle the hole punching flag in fallocate
-> > > properly.  I've tested this with a little program that does a bunch of random
-> > > hole punching with FL_KEEP_SIZE and without it to make sure it does the right
-> > > thing.  Thanks,
-> > > 
-> > > Signed-off-by: Josef Bacik <josef@redhat.com>
-> > > ---
-> > >  fs/xfs/linux-2.6/xfs_iops.c |   12 +++++++++---
-> > >  1 files changed, 9 insertions(+), 3 deletions(-)
-> > > 
-> > > diff --git a/fs/xfs/linux-2.6/xfs_iops.c b/fs/xfs/linux-2.6/xfs_iops.c
-> > > index 96107ef..99df347 100644
-> > > --- a/fs/xfs/linux-2.6/xfs_iops.c
-> > > +++ b/fs/xfs/linux-2.6/xfs_iops.c
-> > > @@ -516,6 +516,7 @@ xfs_vn_fallocate(
-> > >  	loff_t		new_size = 0;
-> > >  	xfs_flock64_t	bf;
-> > >  	xfs_inode_t	*ip = XFS_I(inode);
-> > > +	int		cmd = XFS_IOC_RESVSP;
-> > >  
-> > >  	/* preallocation on directories not yet supported */
-> > >  	error = -ENODEV;
-> > > @@ -528,17 +529,22 @@ xfs_vn_fallocate(
-> > >  
-> > >  	xfs_ilock(ip, XFS_IOLOCK_EXCL);
-> > >  
-> > > +	if (mode & FALLOC_FL_PUNCH_HOLE)
-> > > +		cmd = XFS_IOC_UNRESVSP;
-> > > +
-> > >  	/* check the new inode size is valid before allocating */
-> > >  	if (!(mode & FALLOC_FL_KEEP_SIZE) &&
-> > >  	    offset + len > i_size_read(inode)) {
-> > > -		new_size = offset + len;
-> > > +		if (cmd == XFS_IOC_UNRESVSP)
-> > > +			new_size = offset;
-> > > +		else
-> > > +			new_size = offset + len;
-> > 
-> > What semantic is FALLOC_FL_KEEP_SIZE supposed to convey during a
-> > hole punch? Doesn't this just turn the hole punch operation into
-> > a truncate? If so, what's the point of punching the hole when you
-> > can just call ftruncate() to get the same result?
-> >
+On Mon, Nov 08, 2010 at 07:36:28PM -0800, Paul E. McKenney wrote:
+> On Mon, Nov 08, 2010 at 06:09:29PM -0500, Christoph Hellwig wrote:
+> > This patch generally looks good to me, but with so much RCU magic I'd prefer
+> > if Paul & Eric could look over it.
 > 
-> Well your UNRESVSP can do the same thing as a ftruncate
+> Is there a git tree, tarball, or whatever? 
 
-Actually, it can't because it leaves the file size unchanged.  Like
-XFS_IOC_RESVSP, the use case is to allow punching out pre-allocated
-blocks beyond EOF (that were put there by XFS_IOC_RESVSP). e.g:
+git://git.kernel.org/pub/scm/linux/kernel/git/dgc/xfsdev.git working
 
-# xfs_io -f \
-> -c "truncate 20k" \
-> -c "resvsp 16k 16k" \
-> -c "unresvsp 24k 4k" \
-> -c "bmap -v" \
-> -c "stat" \
-> test.out
-test.out:
- EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL FLAGS
-   0: [0..31]:         hole                                    32
-   1: [32..47]:        136..151          0 (136..151)          16 10000
-   2: [48..55]:        hole                                     8
-   3: [56..63]:        160..167          0 (160..167)           8 10000
-fd.path = "test.out"
-fd.flags = non-sync,non-direct,read-write
-stat.ino = 134
-stat.type = regular file
-stat.size = 20480
-stat.blocks = 24
-fsxattr.xflags = 0x2 [prealloc]
-fsxattr.projid = 0
-fsxattr.extsize = 0
-fsxattr.nextents = 2
-fsxattr.naextents = 0
-dioattr.mem = 0x200
-dioattr.miniosz = 512
-dioattr.maxiosz = 2147483136
-#
+contains the series that this patch is in.
 
-Which leaves us witha file size of 20k and two unwritten extents
-from 16-24k and 28-32k.
+> For example, I don't see
+> how this patch handles the case of an inode being freed just as an RCU
+> reader gains a reference to it,
 
+XFS_IRECLAIM flag is set on inodes as they transition into the
+reclaim state long before they are freed. The XFS_IRECLAIM flag is left there once
+freed. Hence lookups in xfs_iget_cache_hit() will see this.
 
-> so I figured it was ok
-> to just go ahead and use it rather than add complexity, especially since I don't
-> understand this crazy fs of yours ;).
+If the inode has been reallocated, the inode number will not yet be
+set, or the inode state will have changed to XFS_INEW, both of which
+xfs_iget_cache_hit() will also reject.
 
-Ask, and ye shall receive enlightenment. :)
+> but then reallocated as some other inode
+> (so that ->ino is nonzero) before the RCU reader gets a chance to actually
+> look at the inode.
 
-> > I'd suggest that FALLOC_FL_PUNCH_HOLE should, by definition, not
-> > change the file size, and have no option to be able to change it.
-> > This needs to be defined and documented - can you include a man
-> > page update in this series that defines the expected behaviour
-> > of FALLOC_FL_PUNCH_HOLE?
-> 
-> Oh I see you mean don't allow hole punch to change the size at all.
+XFS_INEW is not cleared until well after a new ->i_ino is set, so
+the lookup should find trip over XFS_INEW in that case. I think that
+I may need to move the inode number check under the i_flags_lock
+after validating the flags - more to check that we've got the
+correct inode than to validate we have a freed inode.
 
-Exactly. If you can preallocate beyond EOF, then you need to be able
-to punch beyond EOF, too. The only other way to remove persistent
-preallocation beyond EOF is to truncate, but that doesn't allow you
-to only punch specific ranges beyond EOF...
+> But such a check might well be in the code that this
+> patch didn't change...
 
-> I was thinking of doing this originally, but like I said above I
-> figured that there was no harm in doing the equivalent of an
-> ftruncate.  But you are right, theres no sense in duplicating
-> functionality, I'll change it to keep PUNCH_HOLE from changin the
-> size.  Now I just need to figure out where that man page is...
-
->From the man page: http://www.kernel.org/doc/man-pages/
+Yeah, most of the XFS code is already in a form compatible with such
+RCU use because inodes have always had a quiescent "reclaimable"
+state between active and reclaim (XFS_INEW -> active ->
+XFS_IRECLAIMABLE -> XFS_IRECLAIM) where the inode can be reused
+before being freed. The result is that lookups have always had to
+handle races with inodes that have just transitioned into the
+XFS_IRECLAIM state and hence cannot be immediately reused...
 
 Cheers,
 
