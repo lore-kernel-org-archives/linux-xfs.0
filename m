@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oA9C5mdo152757 for <xfs@oss.sgi.com>; Tue, 9 Nov 2010 06:05:48 -0600
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2B779160C2E
-	for <xfs@oss.sgi.com>; Tue,  9 Nov 2010 04:07:15 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
-	[150.101.137.100]) by cuda.sgi.com with ESMTP id
-	vfCOGP7d4N9BRbko for <xfs@oss.sgi.com>;
-	Tue, 09 Nov 2010 04:07:15 -0800 (PST)
-Date: Tue, 9 Nov 2010 23:07:01 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: vmap allocation for size 1048576 failed
-Message-ID: <20101109120701.GN2715@dastard>
-References: <4CD924A6.6040200@dermichi.com>
+	oA9C19ib152580 for <xfs@oss.sgi.com>; Tue, 9 Nov 2010 06:01:09 -0600
+Received: from firestarter.dermichi.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8EABB160BFC
+	for <xfs@oss.sgi.com>; Tue,  9 Nov 2010 04:02:36 -0800 (PST)
+Received: from firestarter.dermichi.com (firestarter.dermichi.com
+	[78.41.115.230]) by cuda.sgi.com with ESMTP id G9OfiPUp9C9qC4BZ
+	for <xfs@oss.sgi.com>; Tue, 09 Nov 2010 04:02:36 -0800 (PST)
+Received: from cl-840.mbx-01.si.sixxs.net ([2001:15c0:65ff:347::2])
+	by firestarter.dermichi.com with esmtpsa
+	(TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32) (Exim 4.72)
+	(envelope-from <mw@dermichi.com>) id 1PFmuJ-0000hi-Fs
+	for xfs@oss.sgi.com; Tue, 09 Nov 2010 13:02:35 +0100
+Message-ID: <4CD9385A.7070201@dermichi.com>
+Date: Tue, 09 Nov 2010 13:02:34 +0100
+From: Michael Weissenbacher <mw@dermichi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4CD924A6.6040200@dermichi.com>
+Subject: Re: vmap allocation for size 1048576 failed
+References: <4CD924A6.6040200@dermichi.com> <201011091213.52728@zmi.at>
+In-Reply-To: <201011091213.52728@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,70 +32,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Michael Weissenbacher <mw@dermichi.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Nov 09, 2010 at 11:38:30AM +0100, Michael Weissenbacher wrote:
-> Dear List!
-> 
-> On one of my machines i started getting errors like this after upgrading
-> from Kernel 2.6.35 to 2.6.36.
-> --- --- snip --- ---
-> Nov  9 11:25:57 xxxxx kernel: [591880.880679] vmap allocation for size
-> 1048576 failed: use vmalloc=<size> to increase size.
-> ... (repeats a few times, with differing sizes)
-> Nov  9 11:25:57 xxxxx kernel: [591880.881651] xfs_buf_get: failed to map
-> pages
-> ... (repeats a few times)
-> Nov  9 11:25:57 xxxxx kernel: [591881.111625] Filesystem "loop0": XFS
-> internal error xfs_trans_cancel at line 1796 of file fs/xfs/xfs_trans.c.
->  Caller 0xc0270288
-> Nov  9 11:25:57 xxxxx kernel: [591881.111629]
-> Nov  9 11:25:57 xxxxx kernel: [591881.111636] Pid: 24899, comm: rsync
-> Not tainted 2.6.36 #1
-> Nov  9 11:25:57 xxxxx kernel: [591881.111640] Call Trace:
-> Nov  9 11:25:57 xxxxx kernel: [591881.111653]  [<c0254756>]
-> xfs_error_report+0x2c/0x2e
-> Nov  9 11:25:57 xxxxx kernel: [591881.111663]  [<c026c691>]
-> xfs_trans_cancel+0x4b/0xc9
-> Nov  9 11:25:57 xxxxx kernel: [591881.111674]  [<c0270288>] ?
-> xfs_create+0x473/0x4ef
+> You should describe the loop setup and all devices down to the disk. 
+> Might be easier for the devs to help then.
 
-I didn't think anything other than log recovery tries to vmap
-buffers. This is clearly not in log recovery. Can you post an
-unedited error log, how much data you are rsyncing, the
-configuration of your filesystem (xfs_info, mount options, loop dev
-config, etc) to give us an idea of what you are doing to trigger
-this?
+-rw-r--r--   1 root root 2.0G Nov  9 13:01 portage-loopback
 
-> A few thoughts:
->  * It always happens when i run "rsync" on the machine.
->  * I've already tried setting vmalloc=256M and vmalloc=512M which both
-> delayed the problem but didn't cure it.
->  * It's a 32-bit machine and the problem only occurs on a loop'ed XFS,
-> never on the root XFS.
+/dev/loop0 /mnt/portage xfs rw,noatime,attr2,delaylog,logbsize=256k,noquota
+meta-data=/dev/loop0             isize=256    agcount=4, agsize=1048576 blks
+         =                       sectsz=512   attr=2
+data     =                       bsize=512    blocks=4194304, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0
+log      =internal               bsize=512    blocks=65536, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
 
-Can't you run on a 64-bit machine?
+/dev/sda3 / xfs
+rw,swalloc,attr2,delaylog,logbsize=256k,sunit=128,swidth=384,usrquota,grpquota
+meta-data=/dev/sda3              isize=256    agcount=4, agsize=90929920
+blks
+         =                       sectsz=512   attr=2
+data     =                       bsize=4096   blocks=363719632, imaxpct=10
+         =                       sunit=16     swidth=48 blks
+naming   =version 2              bsize=4096   ascii-ci=0
+log      =internal               bsize=4096   blocks=32768, version=2
+         =                       sectsz=512   sunit=16 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
 
->  * I've used the experimental "delaylog" mount option, which may be
-> important.
-
-Should be completely irrelevant.
-
->  * I'm not sure if the problem is 100% related to the kernel upgrade
-> because i didn't use a loop XFS on this machine before the kernel upgrade.
-
-Can you downgrade your kernel and run the loop device there to tell
-us whether this is actually a regression or not? If it is a
-regression, then if you could run a bisect to find the exact patch
-that causes it woul dbe very helpful....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+/dev/sda is a 4-disk RAID-5 on a 3ware 8506-4LP Controller.
 
 _______________________________________________
 xfs mailing list
