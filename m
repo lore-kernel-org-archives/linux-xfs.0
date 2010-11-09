@@ -1,25 +1,40 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oA9C19ib152580 for <xfs@oss.sgi.com>; Tue, 9 Nov 2010 06:01:09 -0600
-Received: from firestarter.dermichi.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8EABB160BFC
-	for <xfs@oss.sgi.com>; Tue,  9 Nov 2010 04:02:36 -0800 (PST)
-Received: from firestarter.dermichi.com (firestarter.dermichi.com
-	[78.41.115.230]) by cuda.sgi.com with ESMTP id G9OfiPUp9C9qC4BZ
-	for <xfs@oss.sgi.com>; Tue, 09 Nov 2010 04:02:36 -0800 (PST)
-Received: from cl-840.mbx-01.si.sixxs.net ([2001:15c0:65ff:347::2])
-	by firestarter.dermichi.com with esmtpsa
-	(TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32) (Exim 4.72)
-	(envelope-from <mw@dermichi.com>) id 1PFmuJ-0000hi-Fs
-	for xfs@oss.sgi.com; Tue, 09 Nov 2010 13:02:35 +0100
-Message-ID: <4CD9385A.7070201@dermichi.com>
-Date: Tue, 09 Nov 2010 13:02:34 +0100
-From: Michael Weissenbacher <mw@dermichi.com>
+	oA9Bu7ch152342 for <xfs@oss.sgi.com>; Tue, 9 Nov 2010 05:56:08 -0600
+Received: from postoffice2.aconex.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4F92C1C27E10
+	for <xfs@oss.sgi.com>; Tue,  9 Nov 2010 03:57:34 -0800 (PST)
+Received: from postoffice2.aconex.com (mail.aconex.com [203.89.202.182]) by
+	cuda.sgi.com with ESMTP id Mf6hntCUF226hmuM for
+	<xfs@oss.sgi.com>; Tue, 09 Nov 2010 03:57:34 -0800 (PST)
+Received: from postoffice.aconex.com (localhost [127.0.0.1])
+	by postoffice2.aconex.com (Spam & Virus Firewall) with ESMTP id
+	DE8BB5835BB
+	for <xfs@oss.sgi.com>; Tue,  9 Nov 2010 22:57:13 +1100 (EST)
+Received: from postoffice.aconex.com (postoffice.yarra.acx [192.168.102.1]) by
+	postoffice2.aconex.com with ESMTP id n3wNxQ2C809CmVzg for
+	<xfs@oss.sgi.com>; Tue, 09 Nov 2010 22:57:13 +1100 (EST)
+Received: from gatekeeper.aconex.com (gatekeeper.yarra.acx [192.168.102.10])
+	by postoffice.aconex.com (Postfix) with ESMTP id CDE3BA5011D
+	for <xfs@oss.sgi.com>; Tue,  9 Nov 2010 22:57:13 +1100 (EST)
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by gatekeeper.aconex.com (Postfix) with ESMTP id C8A3F9D0001
+	for <xfs@oss.sgi.com>; Tue,  9 Nov 2010 22:57:13 +1100 (EST)
+Received: from gatekeeper.aconex.com ([127.0.0.1])
+	by localhost (gatekeeper.aconex.com [127.0.0.1]) (amavisd-new,
+	port 10024) with ESMTP id KFFC19mlU37m for <xfs@oss.sgi.com>;
+	Tue,  9 Nov 2010 22:56:58 +1100 (EST)
+Received: from acxmail-au2.aconex.com (acxmail-au2.aconex.com [192.168.102.14])
+	by gatekeeper.aconex.com (Postfix) with ESMTP id 0C8BA9D0002
+	for <xfs@oss.sgi.com>; Tue,  9 Nov 2010 22:56:58 +1100 (EST)
+Date: Tue, 9 Nov 2010 22:56:58 +1100 (EST)
+From: nathans@debian.org
+Message-ID: <1431731622.18831289303817979.JavaMail.root@acxmail-au2.aconex.com>
+In-Reply-To: <1189766076.18791289303743211.JavaMail.root@acxmail-au2.aconex.com>
+Subject: [PATCH 1/2] xfsprogs: fix debian upgrade issue
 MIME-Version: 1.0
-Subject: Re: vmap allocation for size 1048576 failed
-References: <4CD924A6.6040200@dermichi.com> <201011091213.52728@zmi.at>
-In-Reply-To: <201011091213.52728@zmi.at>
+Reply-To: Nathan Scott <nathans@debian.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,36 +47,29 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: xfs <xfs@oss.sgi.com>
 
-> You should describe the loop setup and all devices down to the disk. 
-> Might be easier for the devs to help then.
+Fix xfs_estimate issue upgrading xfsprogs/xfsdump from lenny
+    
+Fix bug "xfsprogs: file conflict when upgrading from lenny":
+add 'Replaces: xfsdump (<< 3.0.0); thanks to Vagrant Cascadian
+for the analysis.
+    
+Signed-off-by: Gregor Herrman <gregoa@debian.org>
+Reviewed-by: Nathan Scott <nathans@debian.org>
 
--rw-r--r--   1 root root 2.0G Nov  9 13:01 portage-loopback
-
-/dev/loop0 /mnt/portage xfs rw,noatime,attr2,delaylog,logbsize=256k,noquota
-meta-data=/dev/loop0             isize=256    agcount=4, agsize=1048576 blks
-         =                       sectsz=512   attr=2
-data     =                       bsize=512    blocks=4194304, imaxpct=25
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0
-log      =internal               bsize=512    blocks=65536, version=2
-         =                       sectsz=512   sunit=0 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-
-/dev/sda3 / xfs
-rw,swalloc,attr2,delaylog,logbsize=256k,sunit=128,swidth=384,usrquota,grpquota
-meta-data=/dev/sda3              isize=256    agcount=4, agsize=90929920
-blks
-         =                       sectsz=512   attr=2
-data     =                       bsize=4096   blocks=363719632, imaxpct=10
-         =                       sunit=16     swidth=48 blks
-naming   =version 2              bsize=4096   ascii-ci=0
-log      =internal               bsize=4096   blocks=32768, version=2
-         =                       sectsz=512   sunit=16 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-
-/dev/sda is a 4-disk RAID-5 on a 3ware 8506-4LP Controller.
+diff --git a/debian/control b/debian/control
+index 652ffcb..f429434 100644
+--- a/debian/control
++++ b/debian/control
+@@ -12,6 +12,7 @@ Depends: ${shlibs:Depends}, ${misc:Depends}
+ Provides: fsck-backend
+ Suggests: xfsdump, acl, attr, quota
+ Breaks: xfsdump (<< 3.0.0)
++Replaces: xfsdump (<< 3.0.0)
+ Architecture: any
+ Description: Utilities for managing the XFS filesystem
+  A set of commands to use the XFS filesystem, including mkfs.xfs.
 
 _______________________________________________
 xfs mailing list
