@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oA928w3E130117 for <xfs@oss.sgi.com>; Mon, 8 Nov 2010 20:08:58 -0600
+	oA9247Ax129985 for <xfs@oss.sgi.com>; Mon, 8 Nov 2010 20:04:07 -0600
 Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 34C56139CD8E
-	for <xfs@oss.sgi.com>; Mon,  8 Nov 2010 18:10:25 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 167F11649AB
+	for <xfs@oss.sgi.com>; Mon,  8 Nov 2010 18:05:33 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id svwO9H8BKrAm1dlD for
-	<xfs@oss.sgi.com>; Mon, 08 Nov 2010 18:10:25 -0800 (PST)
-Date: Mon, 8 Nov 2010 21:10:03 -0500
+	cuda.sgi.com with ESMTP id PhpMGgLT3kEYQlJe for
+	<xfs@oss.sgi.com>; Mon, 08 Nov 2010 18:05:33 -0800 (PST)
+Date: Mon, 8 Nov 2010 21:05:09 -0500
 From: Josef Bacik <josef@redhat.com>
-Subject: Re: [PATCH 1/6] fs: add hole punching to fallocate
-Message-ID: <20101109021002.GC27816@dhcp231-156.rdu.redhat.com>
+Subject: Re: [PATCH 2/6] XFS: handle hole punching via fallocate properly
+Message-ID: <20101109020509.GB27816@dhcp231-156.rdu.redhat.com>
 References: <1289248327-16308-1-git-send-email-josef@redhat.com>
-	<20101109011222.GD2715@dastard>
+	<1289248327-16308-2-git-send-email-josef@redhat.com>
+	<20101109012254.GE2715@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20101109011222.GD2715@dastard>
+In-Reply-To: <20101109012254.GE2715@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,73 +33,67 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com, cluster-devel@redhat.com, cmm@us.ibm.com, Josef Bacik <josef@redhat.com>, joel.becker@oracle.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
 
-On Tue, Nov 09, 2010 at 12:12:22PM +1100, Dave Chinner wrote:
-> On Mon, Nov 08, 2010 at 03:32:02PM -0500, Josef Bacik wrote:
-> > Hole punching has already been implemented by XFS and OCFS2, and has the
-> > potential to be implemented on both BTRFS and EXT4 so we need a generic way to
-> > get to this feature.  The simplest way in my mind is to add FALLOC_FL_PUNCH_HOLE
-> > to fallocate() since it already looks like the normal fallocate() operation.
-> > I've tested this patch with XFS and BTRFS to make sure XFS did what it's
-> > supposed to do and that BTRFS failed like it was supposed to.  Thank you,
+On Tue, Nov 09, 2010 at 12:22:54PM +1100, Dave Chinner wrote:
+> On Mon, Nov 08, 2010 at 03:32:03PM -0500, Josef Bacik wrote:
+> > This patch simply allows XFS to handle the hole punching flag in fallocate
+> > properly.  I've tested this with a little program that does a bunch of random
+> > hole punching with FL_KEEP_SIZE and without it to make sure it does the right
+> > thing.  Thanks,
 > > 
 > > Signed-off-by: Josef Bacik <josef@redhat.com>
 > > ---
-> >  fs/open.c              |    2 +-
-> >  include/linux/falloc.h |    1 +
-> >  2 files changed, 2 insertions(+), 1 deletions(-)
+> >  fs/xfs/linux-2.6/xfs_iops.c |   12 +++++++++---
+> >  1 files changed, 9 insertions(+), 3 deletions(-)
 > > 
-> > diff --git a/fs/open.c b/fs/open.c
-> > index 4197b9e..ab8dedf 100644
-> > --- a/fs/open.c
-> > +++ b/fs/open.c
-> > @@ -223,7 +223,7 @@ int do_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
-> >  		return -EINVAL;
+> > diff --git a/fs/xfs/linux-2.6/xfs_iops.c b/fs/xfs/linux-2.6/xfs_iops.c
+> > index 96107ef..99df347 100644
+> > --- a/fs/xfs/linux-2.6/xfs_iops.c
+> > +++ b/fs/xfs/linux-2.6/xfs_iops.c
+> > @@ -516,6 +516,7 @@ xfs_vn_fallocate(
+> >  	loff_t		new_size = 0;
+> >  	xfs_flock64_t	bf;
+> >  	xfs_inode_t	*ip = XFS_I(inode);
+> > +	int		cmd = XFS_IOC_RESVSP;
 > >  
-> >  	/* Return error if mode is not supported */
-> > -	if (mode && !(mode & FALLOC_FL_KEEP_SIZE))
-> > +	if (mode && (mode & ~(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE)))
-> >  		return -EOPNOTSUPP;
+> >  	/* preallocation on directories not yet supported */
+> >  	error = -ENODEV;
+> > @@ -528,17 +529,22 @@ xfs_vn_fallocate(
 > >  
-> >  	if (!(file->f_mode & FMODE_WRITE))
-> > diff --git a/include/linux/falloc.h b/include/linux/falloc.h
-> > index 3c15510..851cba2 100644
-> > --- a/include/linux/falloc.h
-> > +++ b/include/linux/falloc.h
-> > @@ -2,6 +2,7 @@
-> >  #define _FALLOC_H_
+> >  	xfs_ilock(ip, XFS_IOLOCK_EXCL);
 > >  
-> >  #define FALLOC_FL_KEEP_SIZE	0x01 /* default is extend size */
-> > +#define FALLOC_FL_PUNCH_HOLE	0X02 /* de-allocates range */
+> > +	if (mode & FALLOC_FL_PUNCH_HOLE)
+> > +		cmd = XFS_IOC_UNRESVSP;
+> > +
+> >  	/* check the new inode size is valid before allocating */
+> >  	if (!(mode & FALLOC_FL_KEEP_SIZE) &&
+> >  	    offset + len > i_size_read(inode)) {
+> > -		new_size = offset + len;
+> > +		if (cmd == XFS_IOC_UNRESVSP)
+> > +			new_size = offset;
+> > +		else
+> > +			new_size = offset + len;
 > 
-> Hole punching was not included originally in fallocate() for a
-> variety of reasons. IIRC, they were along the lines of:
-> 
-> 	1 de-allocating of blocks in an allocation syscall is wrong.
-> 	  People wanted a new syscall for this functionality.
-> 	2 no glibc interface needs it
-> 	3 at the time, only XFS supported punching holes, so there
-> 	  is not need to support it in a generic interface
-> 	4 the use cases presented were not considered compelling
-> 	  enough to justify the additional complexity (!)
-> 
-> In the end, I gave up arguing for it to be included because just
-> getting the FALLOC_FL_KEEP_SIZE functionality was a hard enough
-> battle.
-> 
-> Anyway, #3 isn't the case any more, #4 was just an excuse not to
-> support anything ext4 couldn't do and lots of apps are calling
-> fallocate directly (because glibc can't use FALLOC_FL_KEEP_SIZE) so
-> #2 isn't an issue, either. I guess that leaves #1 to be debated;
-> I don't think there is any problem with doing what you propose.
+> What semantic is FALLOC_FL_KEEP_SIZE supposed to convey during a
+> hole punch? Doesn't this just turn the hole punch operation into
+> a truncate? If so, what's the point of punching the hole when you
+> can just call ftruncate() to get the same result?
 >
-> What I will suggest is that this requires a generic xfstest to be
-> written and support added to xfs_io to enable that test (and others)
-> to issue hole punches. Something along the lines of test 242 which I
-> wrote for testing all the edge case of XFS_IOC_ZERO_RANGE (*) would be
-> good.
 
-Sounds good.  Do you want me to build my PUNCH_HOLE patch ontop of your
-ZERO_RANGE patch?  Thanks,
+Well your UNRESVSP can do the same thing as a ftruncate so I figured it was ok
+to just go ahead and use it rather than add complexity, especially since I don't
+understand this crazy fs of yours ;).
+ 
+> I'd suggest that FALLOC_FL_PUNCH_HOLE should, by definition, not
+> change the file size, and have no option to be able to change it.
+> This needs to be defined and documented - can you include a man
+> page update in this series that defines the expected behaviour
+> of FALLOC_FL_PUNCH_HOLE?
+
+Oh I see you mean don't allow hole punch to change the size at all.  I was
+thinking of doing this originally, but like I said above I figured that there
+was no harm in doing the equivalent of an ftruncate.  But you are right, theres
+no sense in duplicating functionality, I'll change it to keep PUNCH_HOLE from
+changin the size.  Now I just need to figure out where that man page is...
 
 Josef
 
