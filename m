@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAACTTCN220783 for <xfs@oss.sgi.com>; Wed, 10 Nov 2010 06:29:29 -0600
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E888D169F35
-	for <xfs@oss.sgi.com>; Wed, 10 Nov 2010 04:30:55 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
-	[150.101.137.99]) by cuda.sgi.com with ESMTP id
-	zFXoBKOSX93oDdc8 for <xfs@oss.sgi.com>;
-	Wed, 10 Nov 2010 04:30:55 -0800 (PST)
-Date: Wed, 10 Nov 2010 23:30:52 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: vmap allocation for size 1048576 failed
-Message-ID: <20101110123052.GW2715@dastard>
-References: <4CD924A6.6040200@dermichi.com> <20101109120701.GN2715@dastard>
-	<4CDA54E3.308@dermichi.com>
+	oAACrdkh222301 for <xfs@oss.sgi.com>; Wed, 10 Nov 2010 06:53:40 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 891E1169D92
+	for <xfs@oss.sgi.com>; Wed, 10 Nov 2010 04:55:08 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id 4FZ9WYBhIj4NYOlR for
+	<xfs@oss.sgi.com>; Wed, 10 Nov 2010 04:55:08 -0800 (PST)
+Date: Wed, 10 Nov 2010 07:55:00 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfstests: check block truncation after write failure
+Message-ID: <20101110125500.GA9828@infradead.org>
+References: <20101109114923.GA29629@infradead.org>
+	<20101109223426.GO2715@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4CDA54E3.308@dermichi.com>
+In-Reply-To: <20101109223426.GO2715@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,62 +29,195 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Michael Weissenbacher <mw@dermichi.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Marius Tolzmann <tolzmann@molgen.mpg.de>, xfs@oss.sgi.com
 
-On Wed, Nov 10, 2010 at 09:16:35AM +0100, Michael Weissenbacher wrote:
-> Hi Dave!
-> 
-> > I didn't think anything other than log recovery tries to vmap
-> > buffers. This is clearly not in log recovery. Can you post an
-> > unedited error log, how much data you are rsyncing, the
-> > configuration of your filesystem (xfs_info, mount options, loop dev
-> > config, etc) to give us an idea of what you are doing to trigger
-> > this?
->  * I'm attaching the latest kern.log, unedited
->  * I am syncing the gentoo portage tree, not much data but many small
-> files (currently 228MiB in 117880 files). This sync is done twice per hour.
->  * I already posted my xfs_info and mount options in another post. Maybe
-> i should note that the loop file system was deliberately created with
-> blocksize=512 to accommodate the fs to the nature of the portage tree
-> (many small files...)
->  * TBH i don't know about any special configuration of the loop device.
-> I just created an empty file with "dd if=/dev/zero ..." and then did
-> mkfs.xfs on it.
+Below is a version using od.  The output in case of failure is not
+quite as easily readable as the original, but in the end portability
+wins:
 
-Ok, thanks for the info. I'm struggling to work out what is actually
-consuming vmap space given what you are doing and the storage
-config. None of the operations you are doing should be triggering
-mapping of multipage metadata buffers given the filesystem
-configuration....
+---
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] xfstests: check block truncation after write failure
+Cc: Marius Tolzmann <tolzmann@molgen.mpg.de>
 
-> > Can't you run on a 64-bit machine?
-> 80% of my machines are 64-bit and i never saw anything like that on
-> them. But otoh i dont' use loop devices very much. Unfortunately this is
-> machine is old hardware (P4 class) which can't run a 64-bit kernel.
-> 
-> > Can you downgrade your kernel and run the loop device there to tell
-> > us whether this is actually a regression or not? If it is a
-> > regression, then if you could run a bisect to find the exact patch
-> > that causes it woul dbe very helpful....
-> Already did that yesterday and i can confirm it has the same problem -
-> so no regression. The kern.log i attached to this mail is from Kernel
-> 2.6.35.8
+Extraced from  https://bugzilla.kernel.org/show_bug.cgi?id=22452
+"data corruption after mmap()ing a file and writev() some data to another file"
 
-Ok, I havent looked at this yet, but having looked at the code I
-don't think it will tell me anything useful. However, if you can
-reproduce the problem easily, the tracing output (google for
-trace-cmd and/or kernelshark) of the xfs trace events for the short
-period across the error condition (just a couple of seconds before
-and after the error occurs) would tell me a lot more about what is
-going wrong...
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Index: xfstests-dev/246
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ xfstests-dev/246	2010-11-10 12:50:10.000000000 +0000
+@@ -0,0 +1,60 @@
++#! /bin/bash
++# FS QA Test No. 246
++#
++# Check that truncation after failed writes does not zero too much data.
++#
++# Based on a bug report and testcase from
++# Marius Tolzmann <tolzmann@molgen.mpg.de>
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2010 Christoph Hellwig.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#
++#-----------------------------------------------------------------------
++#
++# creator
++owner=hch@lst.de
++
++seq=`basename $0`
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++
++# get standard environment, filters and checks
++. ./common.rc
++. ./common.filter
++
++# real QA test starts here
++_supported_fs generic
++_supported_os Linux
++
++file=$TEST_DIR/mmap-writev
++
++_cleanup()
++{
++	rm -rf $file
++	rm -rf $file.NEW
++}
++
++trap "_cleanup ; exit \$status" 0 1 2 3 15
++
++echo -n "cccccccccc" > $file
++$here/src/t_mmap_writev $file $file.NEW
++od -t x2 $file.NEW
++
++status=0
++exit $status
+Index: xfstests-dev/246.out
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ xfstests-dev/246.out	2010-11-10 12:50:30.000000000 +0000
+@@ -0,0 +1,4 @@
++QA output created by 246
++0000000 6161 6161 6161 6161 6161 6262 6262 6262
++0000020 6262 6262 6363 6363 6363 6363 6363
++0000036
+Index: xfstests-dev/group
+===================================================================
+--- xfstests-dev.orig/group	2010-11-10 12:40:29.000000000 +0000
++++ xfstests-dev/group	2010-11-10 12:40:40.000000000 +0000
+@@ -359,3 +359,4 @@ deprecated
+ 243 auto quick prealloc
+ 244 auto quota quick
+ 245 auto quick dir
++246 auto quick rw
+Index: xfstests-dev/src/Makefile
+===================================================================
+--- xfstests-dev.orig/src/Makefile	2010-11-10 12:39:26.000000000 +0000
++++ xfstests-dev/src/Makefile	2010-11-10 12:40:40.000000000 +0000
+@@ -10,7 +10,8 @@ TARGETS = dirstress fill fill2 getpagesi
+ 	mmapcat append_reader append_writer dirperf metaperf \
+ 	devzero feature alloc fault fstest t_access_root \
+ 	godown resvtest writemod makeextents itrash rename \
+-	multi_open_unlink dmiperf unwritten_sync genhashnames t_holes
++	multi_open_unlink dmiperf unwritten_sync genhashnames t_holes \
++	t_mmap_writev
+ 
+ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
+ 	preallo_rw_pattern_writer ftrunc trunc fs_perms testx looptest \
+Index: xfstests-dev/src/t_mmap_writev.c
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ xfstests-dev/src/t_mmap_writev.c	2010-11-10 12:40:40.000000000 +0000
+@@ -0,0 +1,70 @@
++/*
++    mmap() a file and writev() back to another file
++         - kernel bug #22452 testcase
++
++    Copyright (C) 2010
++         by D.Buczek - Max Planck Institute for Molecular Genetics Berlin
++
++    This program is free software; you can redistribute it and/or modify
++    it under the terms of the GNU General Public License as published by
++    the Free Software Foundation; either version 2 of the License, or
++    (at your option) any later version.
++
++    This program is distributed in the hope that it will be useful,
++    but WITHOUT ANY WARRANTY; without even the implied warranty of
++    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++    GNU General Public License for more details.
++
++    You should have received a copy of the GNU General Public License along
++    with this program; if not, write to the Free Software Foundation, Inc.,
++    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
++*/
++
++#include <sys/types.h>
++#include <fcntl.h>
++#include <stdio.h>
++#include <stdlib.h>
++
++#include <sys/mman.h>
++#include <string.h>
++#include <sys/uio.h>
++#include <unistd.h>
++
++int main(int argc, char **argv)
++{
++	char *file = argv[1];
++	char *new_file = argv[2];
++	int fd;
++	int fd_new;
++	void *base;
++
++	struct iovec iovec[3]=
++	{
++		{ "aaaaaaaaaa" , 10 },
++		{ "bbbbbbbbbb" , 10 },
++	 	{ NULL , 10 }
++	};
++
++	int i;
++
++	fd=open(file, O_RDONLY);
++	if (fd==-1) {perror("open");exit(1);}
++
++	base = mmap(NULL,16384,PROT_READ,MAP_SHARED,fd,0);
++	if  (base == (void *)-1) { perror("mmap");exit(1); }
++
++	unlink(new_file);
++
++	fd_new=open(new_file,O_RDWR|O_CREAT,0666);
++	if (fd_new==-1) {perror("creat");exit(1);}
++
++	iovec[2].iov_base=(char *)base;
++	i=writev(fd_new,iovec,sizeof(iovec)/sizeof(*iovec));
++	if (i==-1) {perror("writev");exit(1);}
++
++	close(fd_new);
++	munmap(base,16384);
++	close(fd);
++
++	return 0;
++}
 
 _______________________________________________
 xfs mailing list
