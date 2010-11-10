@@ -1,15 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAALlZDf258360 for <xfs@oss.sgi.com>; Wed, 10 Nov 2010 15:47:35 -0600
-Subject: Re: [PATCH] xfs: remove incorrect assert in xfs_vm_writepage
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20101110213911.GA11214@infradead.org>
-References: <20101110213911.GA11214@infradead.org>
-Date: Wed, 10 Nov 2010 15:48:47 -0600
-Message-ID: <1289425727.1925.4.camel@doink>
-Mime-Version: 1.0
-Reply-To: aelder@sgi.com
+	oAAMIPaI260831 for <xfs@oss.sgi.com>; Wed, 10 Nov 2010 16:18:26 -0600
+Received: from postoffice2.aconex.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7516B13A6FD3
+	for <xfs@oss.sgi.com>; Wed, 10 Nov 2010 14:19:52 -0800 (PST)
+Received: from postoffice2.aconex.com (mail.aconex.com [203.89.202.182]) by
+	cuda.sgi.com with ESMTP id HdokiaDRW7ROZFTW for
+	<xfs@oss.sgi.com>; Wed, 10 Nov 2010 14:19:52 -0800 (PST)
+Date: Thu, 11 Nov 2010 09:19:30 +1100 (EST)
+From: Nathan Scott <nathans@aconex.com>
+Message-ID: <477680717.25681289427570428.JavaMail.root@acxmail-au2.aconex.com>
+In-Reply-To: <1289410568.1925.3.camel@doink>
+Subject: Re: [PATCH 2/2] xfsprogs: update deb package maintainer, bump version
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,30 +26,37 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: aelder@sgi.com
+Cc: Christoph Hellwig <hch@infradead.org>, Anibal Monsalve Salazar <anibal@debian.org>, xfs <xfs@oss.sgi.com>
 
-On Wed, 2010-11-10 at 16:39 -0500, Christoph Hellwig wrote:
-> In commit 20cb52ebd1b5ca6fa8a5d9b6b1392292f5ca8a45, titled
-> "xfs: simplify xfs_vm_writepage" I added an assert that any !mapped
-> and
-> uptodate buffers are not dirty.  That asserts turns out to trigger a
-> lot
-> when running fsx on filesystems with small block sizes.  The reason
-> for
-> that is that the assert is simply incorrect.  !mapped and uptodate
-> just mean this buffer covers a hole, and whenever we do a
-> set_page_dirty
-> we mark all blocks in the page dirty, no matter if they have data or
-> not.  So remove the assert, and update the comment above the condition
-> to match reality.
+Hi Alex,
+
+----- "Alex Elder" <aelder@sgi.com> wrote:
+
+> On Wed, 2010-11-10 at 10:53 +1100, Nathan Scott wrote:
+> > No worries - do you have an ETA there Alex?
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> I wanted to update them and re-post and get
+> an actual review this time.
+> 
+> I can get that done with a few hours effort.
+> What is your time frame?  I'm in the middle of a
+> few things right now but can move this to the
+> front of my queue if you're short on time.
 
-Looks good.
+Ideally we'd get a release out asap for Debian folks,
+as the upgrade issue is biting quite a few people.  If
+the metadump stuff needs more time, doing a subsequent
+release with that is a fine option too... lemme know.
+Since Debian is moving toward a (distro) release, the
+less change we're putting into this release, the better
+- so, my vote would be to hold off on further changes
+till next time, but up to you.
 
-Reviewed-by: Alex Elder <aelder@sgi.com>
+cheers.
 
+-- 
+Nathan
 
 _______________________________________________
 xfs mailing list
