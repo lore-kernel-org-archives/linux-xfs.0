@@ -1,22 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAACvRhG222530 for <xfs@oss.sgi.com>; Wed, 10 Nov 2010 06:57:27 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4237913A6F20
-	for <xfs@oss.sgi.com>; Wed, 10 Nov 2010 04:58:55 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id Wk9avr3gIZLluVty for
-	<xfs@oss.sgi.com>; Wed, 10 Nov 2010 04:58:55 -0800 (PST)
-Received: from hch by bombadil.infradead.org with local (Exim 4.72 #1 (Red Hat
-	Linux)) id 1PGAGN-0004oi-4H
-	for xfs@oss.sgi.com; Wed, 10 Nov 2010 12:58:55 +0000
-Date: Wed, 10 Nov 2010 07:58:55 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] xfstests: fix 108 golden output
-Message-ID: <20101110125855.GA18357@infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
+	oAAHZgqo240950 for <xfs@oss.sgi.com>; Wed, 10 Nov 2010 11:35:42 -0600
+Subject: Re: [PATCH 2/2] xfsprogs: update deb package maintainer, bump version
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <1541591436.20791289346808565.JavaMail.root@acxmail-au2.aconex.com>
+References: <1541591436.20791289346808565.JavaMail.root@acxmail-au2.aconex.com>
+Date: Wed, 10 Nov 2010 11:36:08 -0600
+Message-ID: <1289410568.1925.3.camel@doink>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,54 +22,23 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Nathan Scott <nathans@aconex.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Anibal@oss.sgi.com, Monsalve Salazar <anibal@debian.org>, xfs <xfs@oss.sgi.com>
 
-The new common scratch mount filter produces slightly different
-whitespaces than the old home grown filter, so adjust the golden
-output.
+On Wed, 2010-11-10 at 10:53 +1100, Nathan Scott wrote:
+> No worries - do you have an ETA there Alex?
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+I wanted to update them and re-post and get
+an actual review this time.
 
-Index: xfstests-dev/108.out
-===================================================================
---- xfstests-dev.orig/108.out	2010-11-10 12:53:41.000000000 +0000
-+++ xfstests-dev/108.out	2010-11-10 12:53:48.000000000 +0000
-@@ -33,10 +33,10 @@ projid = 3
-   Mode: (0600/-rw-------)         Uid: (1)  Gid: (2)
- Disk quotas for User #1 (1)
- Filesystem   Blocks  Quota  Limit Warn/Time    Mounted on
--SCRATCH_DEV        48M      0      0  00 [------] SCRATCH_MNT
-+SCRATCH_DEV       48M      0      0  00 [------] SCRATCH_MNT
- Disk quotas for User #1 (1)
- Filesystem    Files  Quota  Limit Warn/Time    Mounted on
--SCRATCH_DEV          3      0      0  00 [------] SCRATCH_MNT
-+SCRATCH_DEV         3      0      0  00 [------] SCRATCH_MNT
- 
- ### test group accounting
- 
-@@ -65,10 +65,10 @@ projid = 3
-   Mode: (0600/-rw-------)         Uid: (1)  Gid: (2)
- Disk quotas for Group #2 (2)
- Filesystem   Blocks  Quota  Limit Warn/Time    Mounted on
--SCRATCH_DEV        48M      0      0  00 [------] SCRATCH_MNT
-+SCRATCH_DEV       48M      0      0  00 [------] SCRATCH_MNT
- Disk quotas for Group #2 (2)
- Filesystem    Files  Quota  Limit Warn/Time    Mounted on
--SCRATCH_DEV          3      0      0  00 [------] SCRATCH_MNT
-+SCRATCH_DEV         3      0      0  00 [------] SCRATCH_MNT
- 
- ### create files, setting up ownership (type=p)
-   File: "SCRATCH_MNT/buffer"
-@@ -95,7 +95,7 @@ projid = 3
-   Mode: (0600/-rw-------)         Uid: (1)  Gid: (2)
- Disk quotas for Project #3 (3)
- Filesystem   Blocks  Quota  Limit Warn/Time    Mounted on
--SCRATCH_DEV        48M      0      0  00 [------] SCRATCH_MNT
-+SCRATCH_DEV       48M      0      0  00 [------] SCRATCH_MNT
- Disk quotas for Project #3 (3)
- Filesystem    Files  Quota  Limit Warn/Time    Mounted on
--SCRATCH_DEV          3      0      0  00 [------] SCRATCH_MNT
-+SCRATCH_DEV         3      0      0  00 [------] SCRATCH_MNT
+I can get that done with a few hours effort.
+What is your time frame?  I'm in the middle of a
+few things right now but can move this to the
+front of my queue if you're short on time.
+
+					-Alex
+
+
 
 _______________________________________________
 xfs mailing list
