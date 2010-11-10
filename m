@@ -1,17 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAAMXq8k261975 for <xfs@oss.sgi.com>; Wed, 10 Nov 2010 16:33:52 -0600
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8F85C16A211
-	for <xfs@oss.sgi.com>; Wed, 10 Nov 2010 14:32:42 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id VstRecBnvT77lWud for
-	<xfs@oss.sgi.com>; Wed, 10 Nov 2010 14:32:42 -0800 (PST)
-From: Josef Bacik <josef@redhat.com>
-Subject: [PATCH] Xfsprogs: add fiemap command to xfs_io
-Date: Wed, 10 Nov 2010 17:24:03 -0500
-Message-Id: <1289427843-11032-1-git-send-email-josef@redhat.com>
+	oAAMudcH002438 for <xfs@oss.sgi.com>; Wed, 10 Nov 2010 16:56:39 -0600
+From: Alex Elder <aelder@sgi.com>
+Message-Id: <201011102258.oAAMw2fT017804@stout.americas.sgi.com>
+Date: Wed, 10 Nov 2010 16:58:02 -0600
+Subject: [GIT PULL] XFS update for 2.6.37-rc2
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,406 +15,60 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, david@fromorbit.com
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-When trying to add a test for hole punching I noticed that the "bmap" command
-only works on XFS, which makes testing hole punching on other fs's kind of
-difficult.  To fix this I've added an fiemap command that works almost exactly
-like bmap.  It is formatted similarly and takes similar flags, the only thing
-thats different is obviously it doesn't spit out AG info and it doesn't make
-finding prealloc space optional.  This is my first foray into all of this stuff
-so a good hard look would be appreciated.  I tested it with a few different
-files to make sure bmap and fiemap both looked the same.  Thanks,
+Linus, please include the following patches in 2.6.37-rc2 (or if
+it's too late for that, 2.6.37-rc3).
 
-Signed-off-by: Josef Bacik <josef@redhat.com>
----
- io/Makefile |    3 +-
- io/fiemap.c |  342 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- io/init.c   |    1 +
- 3 files changed, 345 insertions(+), 1 deletions(-)
- create mode 100644 io/fiemap.c
+The first one simply drops a "this is an experimental feature"
+warning message; this has been planned for 2.6.37 since earlier this
+year.  The next two are simple cleanups, and the fourth makes use of
+the newly available hlist_add_fake().
 
-diff --git a/io/Makefile b/io/Makefile
-index fc98166..ea772f4 100644
---- a/io/Makefile
-+++ b/io/Makefile
-@@ -10,7 +10,8 @@ LSRCFILES = xfs_bmap.sh xfs_freeze.sh xfs_mkfile.sh
- HFILES = init.h io.h
- CFILES = init.c \
- 	attr.c bmap.c file.c freeze.c fsync.c getrusage.c imap.c mmap.c \
--	open.c parent.c pread.c prealloc.c pwrite.c shutdown.c truncate.c
-+	open.c parent.c pread.c prealloc.c pwrite.c shutdown.c truncate.c \
-+	fiemap.c
- 
- LLDLIBS = $(LIBXCMD) $(LIBHANDLE)
- LTDEPENDENCIES = $(LIBXCMD) $(LIBHANDLE)
-diff --git a/io/fiemap.c b/io/fiemap.c
-new file mode 100644
-index 0000000..126c359
---- /dev/null
-+++ b/io/fiemap.c
-@@ -0,0 +1,342 @@
-+/*
-+ * Copyright (c) 2010 Red Hat, Inc.
-+ * All Rights Reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ */
-+
-+#include <xfs/xfs.h>
-+#include <xfs/command.h>
-+#include <linux/fiemap.h>
-+#include <linux/fs.h>
-+#include "init.h"
-+#include "io.h"
-+
-+static cmdinfo_t fiemap_cmd;
-+
-+static void
-+fiemap_help(void)
-+{
-+	printf(_(
-+"\n"
-+" prints the block mapping for a file's data or attribute forks"
-+"\n"
-+" Example:\n"
-+" 'bmap -vp' - tabular format verbose map, including unwritten extents\n"
-+"\n"
-+" bmap prints the map of disk blocks used by the current file.\n"
-+" The map lists each extent used by the file, as well as regions in the\n"
-+" file that do not have any corresponding blocks (holes).\n"
-+" By default, each line of the listing takes the following form:\n"
-+"     extent: [startoffset..endoffset]: startblock..endblock\n"
-+" Holes are marked by replacing the startblock..endblock with 'hole'.\n"
-+" All the file offsets and disk blocks are in units of 512-byte blocks.\n"
-+" -a -- prints the attribute fork map instead of the data fork.\n"
-+" -l -- also displays the length of each extent in 512-byte blocks.\n"
-+" -n -- query n extents.\n"
-+" -v -- Verbose information\n"
-+" Note: the bmap for non-regular files can be obtained provided the file\n"
-+" was opened appropriately (in particular, must be opened read-only).\n"
-+"\n"));
-+}
-+
-+static int
-+numlen(
-+	__u64	val,
-+	int	base)
-+{
-+	__u64	tmp;
-+	int	len;
-+
-+	for (len = 0, tmp = val; tmp > 0; tmp = tmp/base)
-+		len++;
-+	return (len == 0 ? 1 : len);
-+}
-+
-+static void
-+print_verbose(
-+	struct fiemap_extent	*extent,
-+	int			blocksize,
-+	int			foff_w,
-+	int			boff_w,
-+	int			tot_w,
-+	int			flg_w,
-+	int			*cur_extent,
-+	__u64			*last_logical)
-+{
-+	__u64			lstart;
-+	__u64			len;
-+	__u64			block;
-+	char			lbuf[32];
-+	char			bbuf[32];
-+	char			flgbuf[16];
-+
-+	lstart = extent->fe_logical / blocksize;
-+	len = extent->fe_length / blocksize;
-+	block = extent->fe_physical / blocksize;
-+
-+	memset(lbuf, 0, sizeof(lbuf));
-+	memset(bbuf, 0, sizeof(bbuf));
-+
-+	if (lstart != *last_logical) {
-+		snprintf(lbuf, sizeof(lbuf), "[%llu..%llu]:", *last_logical,
-+			 lstart - 1);
-+		printf("%4d: %-*s %-*s %-*llu\n", *cur_extent, foff_w, lbuf,
-+		       boff_w, _("hole"), tot_w, lstart - *last_logical);
-+		(*cur_extent)++;
-+		memset(lbuf, 0, sizeof(lbuf));
-+	}
-+	snprintf(lbuf, sizeof(lbuf), "[%llu..%llu]:", lstart,
-+		 lstart + len -1);
-+	snprintf(bbuf, sizeof(bbuf), "%llu..%llu", block, block + len - 1);
-+	snprintf(flgbuf, sizeof(flgbuf), "0x%x", extent->fe_flags);
-+	printf("%4d: %-*s %-*s %*llu %*s\n", *cur_extent, foff_w, lbuf,
-+	       boff_w, bbuf, tot_w, len, flg_w, flgbuf);
-+
-+	(*cur_extent)++;
-+	*last_logical = lstart + len;
-+}
-+
-+static void
-+print_plain(
-+	struct fiemap_extent	*extent,
-+	int			lflag,
-+	int			blocksize,
-+	int			*cur_extent,
-+	__u64			*last_logical)
-+{
-+	__u64			lstart;
-+	__u64			block;
-+	__u64			len;
-+
-+	lstart = extent->fe_logical / blocksize;
-+	len = extent->fe_length / blocksize;
-+	block = extent->fe_physical / blocksize;
-+
-+	if (lstart != *last_logical) {
-+		printf("\t%d: [%llu..%llu]: hole", *cur_extent,
-+		       *last_logical, lstart - 1LL);
-+		if (lflag)
-+			printf(_(" %llu blocks\n"),
-+			       lstart - *last_logical);
-+		else
-+			printf("\n");
-+		(*cur_extent)++;
-+	}
-+
-+	printf("\t%d: [%llu..%llu]: %llu..%llu", *cur_extent,
-+	       lstart, lstart + len - 1LL, block,
-+	       block + len - 1);
-+
-+	if (lflag)
-+		printf(_(" %llu blocks\n"), len);
-+	else
-+		printf("\n");
-+	(*cur_extent)++;
-+	*last_logical = lstart + len;
-+}
-+
-+int
-+fiemap_f(
-+	int		argc,
-+	char		**argv)
-+{
-+	struct fiemap	*fiemap;
-+	int		num_extents = 32;
-+	int		nflag = 0;
-+	int		lflag = 0;
-+	int		vflag = 0;
-+	int		fiemap_flags = FIEMAP_FLAG_SYNC;
-+	int		c;
-+	int		i;
-+	int		map_size;
-+	int		ret;
-+	int		cur_extent = 0;
-+	int		foff_w = 16;	/* 16 just for a good minimum range */
-+	int		boff_w = 16;
-+	int		tot_w = 5;	/* 5 since its just one number */
-+	int		flg_w = 5;
-+	__u64		blocksize = 512;
-+	__u64		last_logical = 0;
-+	struct stat	st;
-+
-+	while ((c = getopt(argc, argv, "aln:v")) != EOF) {
-+		switch (c) {
-+		case 'a':
-+			fiemap_flags |= FIEMAP_FLAG_XATTR;
-+			break;
-+		case 'l':
-+			lflag = 1;
-+			break;
-+		case 'n':
-+			num_extents = atoi(optarg);
-+			nflag = 1;
-+			break;
-+		case 'v':
-+			vflag++;
-+			break;
-+		default:
-+			return command_usage(&fiemap_cmd);
-+		}
-+	}
-+
-+	map_size = sizeof(struct fiemap) +
-+		(num_extents * sizeof(struct fiemap_extent));
-+	fiemap = malloc(map_size);
-+	if (!fiemap) {
-+		fprintf(stderr, _("%s: malloc of %d bytes failed.\n"),
-+			progname, map_size);
-+		exitcode = 1;
-+		return 0;
-+	}
-+
-+	memset(fiemap, 0, map_size);
-+	fiemap->fm_flags = fiemap_flags;
-+	fiemap->fm_length = -1;
-+	fiemap->fm_extent_count = nflag ? 0 : num_extents;
-+
-+	ret = ioctl(file->fd, FS_IOC_FIEMAP, (unsigned long)fiemap);
-+	if (ret < 0) {
-+		fprintf(stderr, "%s: ioctl(FS_IOC_FIEMAP) [\"%s\"]: "
-+			"%s\n", progname, file->name, strerror(errno));
-+		free(fiemap);
-+		exitcode = 1;
-+		return 0;
-+	}
-+
-+	if (!nflag) {
-+		if (fiemap->fm_mapped_extents > num_extents) {
-+			num_extents = fiemap->fm_mapped_extents;
-+			map_size = sizeof(struct fiemap) +
-+				(num_extents * sizeof(struct fiemap_extent));
-+			fiemap = realloc(fiemap, map_size);
-+			if (!fiemap) {
-+				fprintf(stderr, _("%s: realloc of %d bytes "
-+						  "failed.\n"), progname,
-+						  map_size);
-+				exitcode = 1;
-+				return 0;
-+			}
-+		}
-+		memset(fiemap, 0, map_size);
-+		fiemap->fm_flags = fiemap_flags;
-+		fiemap->fm_length = -1;
-+		fiemap->fm_extent_count = num_extents;
-+
-+		ret = ioctl(file->fd, FS_IOC_FIEMAP, (unsigned long)fiemap);
-+		if (ret < 0) {
-+			fprintf(stderr, "%s: ioctl(FS_IOC_FIEMAP) [\"%s\"]: "
-+				"%s\n", progname, file->name, strerror(errno));
-+			free(fiemap);
-+			exitcode = 1;
-+			return 0;
-+		}
-+	}
-+
-+	printf("%s:\n", file->name);
-+
-+	if (vflag) {
-+		for (i = 0; i < fiemap->fm_mapped_extents; i++) {
-+			char			lbuf[32];
-+			char			bbuf[32];
-+			__u64			logical;
-+			__u64			block;
-+			__u64			len;
-+			struct fiemap_extent	*extent;
-+
-+			extent = &fiemap->fm_extents[i];
-+			logical = extent->fe_logical / blocksize;
-+			len = extent->fe_length / blocksize;
-+			block = extent->fe_physical / blocksize;
-+
-+			snprintf(lbuf, sizeof(lbuf), "[%llu..%llu]", logical,
-+				 logical + len - 1);
-+			snprintf(bbuf, sizeof(bbuf), "%llu..%llu", block,
-+				 block + len - 1);
-+			foff_w = max(foff_w, strlen(lbuf));
-+			boff_w = max(boff_w, strlen(bbuf));
-+			tot_w = max(tot_w, numlen(len, 10));
-+			flg_w = max(flg_w, numlen(extent->fe_flags, 16));
-+			if (extent->fe_flags & FIEMAP_EXTENT_LAST)
-+				break;
-+		}
-+		printf("%4s: %-*s %-*s %*s %*s\n", _("EXT"),
-+		       foff_w, _("FILE-OFFSET"),
-+		       boff_w, _("BLOCK-RANGE"),
-+		       tot_w, _("TOTAL"),
-+		       flg_w, _("FLAGS"));
-+	}
-+
-+	for (i = 0; i < fiemap->fm_mapped_extents; i++) {
-+		struct fiemap_extent	*extent;
-+
-+		extent = &fiemap->fm_extents[i];
-+		if (vflag)
-+			print_verbose(extent, blocksize, foff_w, boff_w, tot_w,
-+				      flg_w, &cur_extent, &last_logical);
-+		else
-+			print_plain(extent, lflag, blocksize,
-+				    &cur_extent, &last_logical);
-+		if (extent->fe_flags & FIEMAP_EXTENT_LAST)
-+			break;
-+	}
-+
-+	memset(&st, 0, sizeof(st));
-+	if (fstat(file->fd, &st)) {
-+		fprintf(stderr, "%s: fstat failed: %s\n", progname,
-+			strerror(errno));
-+		free(fiemap);
-+		exitcode = 1;
-+		return 0;
-+	}
-+
-+	if (cur_extent && last_logical < (st.st_size / blocksize)) {
-+		char	lbuf[32];
-+
-+		snprintf(lbuf, sizeof(lbuf), "[%llu..%llu]:",
-+			 last_logical, (st.st_size / blocksize) - 1);
-+		if (vflag) {
-+			printf("%4d: %-*s %-*s %*llu\n", cur_extent,
-+			       foff_w, lbuf, boff_w, _("hole"), tot_w,
-+			       (st.st_size / blocksize) - last_logical);
-+		} else {
-+			printf("\t%d: %s %s", cur_extent, lbuf,
-+			       _("hole"));
-+			if (lflag)
-+				printf(_(" %llu blocks\n"),
-+				       (st.st_size / blocksize) -
-+				       last_logical);
-+			else
-+				printf("\n");
-+		}
-+	}
-+
-+	free(fiemap);
-+	return 0;
-+}
-+
-+void
-+fiemap_init(void)
-+{
-+	fiemap_cmd.name = "fiemap";
-+	fiemap_cmd.cfunc = fiemap_f;
-+	fiemap_cmd.argmin = 0;
-+	fiemap_cmd.argmax = -1;
-+	fiemap_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
-+	fiemap_cmd.args = _("[-alv] [-n nx]");
-+	fiemap_cmd.oneline = _("print block mapping for a file");
-+	fiemap_cmd.help = fiemap_help;
-+
-+	add_command(&fiemap_cmd);
-+}
-diff --git a/io/init.c b/io/init.c
-index f8fc25d..a166ad1 100644
---- a/io/init.c
-+++ b/io/init.c
-@@ -71,6 +71,7 @@ init_commands(void)
- 	parent_init();
- 	pread_init();
- 	prealloc_init();
-+	fiemap_init();
- 	pwrite_init();
- 	quit_init();
- 	resblks_init();
--- 
-1.6.6.1
+The last four fix real bugs and are the most imporant.
+
+Thanks.
+
+					-Alex
+
+The following changes since commit f6614b7bb405a9b35dd28baea989a749492c46b2:
+
+  Merge git://git.kernel.org/pub/scm/linux/kernel/git/sfrench/cifs-2.6 (2010-11-09 10:34:48 -0800)
+
+are available in the git repository at:
+
+  git://oss.sgi.com/xfs/xfs for-linus
+
+Christoph Hellwig (5):
+      xfs: remove experimental tag from the delaylog option
+      xfs: tell lockdep about parent iolock usage in filestreams
+      xfs: fix a few compiler warnings with CONFIG_XFS_QUOTA=n
+      xfs: use hlist_add_fake
+      xfs: remove incorrect assert in xfs_vm_writepage
+
+Dave Chinner (2):
+      xfs: fix per-ag reference counting in inode reclaim tree walking
+      xfs: move delayed write buffer trace
+
+Kulikov Vasiliy (1):
+      xfs: xfs_ioctl: fix information leak to userland
+
+ .../filesystems/xfs-delayed-logging-design.txt     |   11 -----------
+ fs/xfs/linux-2.6/xfs_aops.c                        |    7 ++++---
+ fs/xfs/linux-2.6/xfs_buf.c                         |    2 +-
+ fs/xfs/linux-2.6/xfs_ioctl.c                       |    2 +-
+ fs/xfs/linux-2.6/xfs_iops.c                        |    3 ++-
+ fs/xfs/linux-2.6/xfs_super.c                       |    3 ---
+ fs/xfs/linux-2.6/xfs_sync.c                        |    1 +
+ fs/xfs/xfs_filestream.c                            |    8 +++++++-
+ fs/xfs/xfs_mount.c                                 |    1 +
+ fs/xfs/xfs_quota.h                                 |   20 ++++++++++++++++----
+ 10 files changed, 33 insertions(+), 25 deletions(-)
 
 _______________________________________________
 xfs mailing list
