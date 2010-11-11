@@ -1,16 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oABG3urk060053 for <xfs@oss.sgi.com>; Thu, 11 Nov 2010 10:04:02 -0600
-Date: Thu, 11 Nov 2010 11:05:23 -0500
-From: Christoph Hellwig <hch@infradead.org>
+	oABG2TLE059992 for <xfs@oss.sgi.com>; Thu, 11 Nov 2010 10:02:29 -0600
 Subject: Re: [PATCH 2/2] xfsprogs: update deb package maintainer, bump version
-Message-ID: <20101111160523.GA4223@infradead.org>
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <120112634.29711289446960016.JavaMail.root@acxmail-au2.aconex.com>
 References: <120112634.29711289446960016.JavaMail.root@acxmail-au2.aconex.com>
-	<1289491406.2280.7.camel@doink>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1289491406.2280.7.camel@doink>
+Date: Thu, 11 Nov 2010 10:03:26 -0600
+Message-ID: <1289491406.2280.7.camel@doink>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,25 +22,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Anibal Monsalve Salazar <anibal@debian.org>, Nathan Scott <nathans@aconex.com>, xfs <xfs@oss.sgi.com>
+To: Nathan Scott <nathans@aconex.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Anibal@oss.sgi.com, Monsalve Salazar <anibal@debian.org>, xfs <xfs@oss.sgi.com>
 
-On Thu, Nov 11, 2010 at 10:03:26AM -0600, Alex Elder wrote:
-> OK, I think I found the problem.  You are sending to
-> "linux-xfs@oss.sgi.com" and I'm not on that list.
-> I wasn't even aware of it.  Something in majordomo
-> still shows Jim Mostek as having some sort of
-> ownership for that list (which would be at least 10
-> year old information).
+On Thu, 2010-11-11 at 14:42 +1100, Nathan Scott wrote:
+> ----- "Alex Elder" <aelder@sgi.com> wrote:
+. . .
+> > I'm not sure where you sent these patches the first time
+> > but I seem to have missed them.  In the future please
+> > send this sort of thing to the list for review.
 > 
-> I'd prefer everyone uses "xfs@oss.sgi.com", which seems
-> to be what most resources I found use as *the* XFS mailing
-> list.  Discussion about this is welcome, but I think
-> it's best to not have multiple lists for the same purpose.
+> They went to the list (thats where hch found 'em), perhaps
+> caught in a spam trap at your end or something like that?
 
-Yes, we should have just one list.  My preference would be
-linux-xfs@vger.kernel.org as vger doesn't have the various issues
-of the SGI mail setup, but the important bit is to concentrate on one.
+OK, I think I found the problem.  You are sending to
+"linux-xfs@oss.sgi.com" and I'm not on that list.
+I wasn't even aware of it.  Something in majordomo
+still shows Jim Mostek as having some sort of
+ownership for that list (which would be at least 10
+year old information).
+
+I'd prefer everyone uses "xfs@oss.sgi.com", which seems
+to be what most resources I found use as *the* XFS mailing
+list.  Discussion about this is welcome, but I think
+it's best to not have multiple lists for the same purpose.
+
+					-Alex
+
 
 _______________________________________________
 xfs mailing list
