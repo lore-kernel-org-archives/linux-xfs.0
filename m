@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oACNMT8i171502 for <xfs@oss.sgi.com>; Fri, 12 Nov 2010 17:22:29 -0600
-Subject: Re: [PATCH v2 1/9] xfsrestore: turn off NODECHK
+	oACNNWoj171553 for <xfs@oss.sgi.com>; Fri, 12 Nov 2010 17:23:33 -0600
+Subject: Re: [PATCH v2 2/9] xfsrestore: change nrh_t from 32 to 64 bits
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20101105163643.135791532@sgi.com>
+In-Reply-To: <20101105163643.341036303@sgi.com>
 References: <20101105163500.747192954@sgi.com>
-	<20101105163643.135791532@sgi.com>
-Date: Fri, 12 Nov 2010 17:23:19 -0600
-Message-ID: <1289604199.2315.895.camel@doink>
+	<20101105163643.341036303@sgi.com>
+Date: Fri, 12 Nov 2010 17:24:44 -0600
+Message-ID: <1289604284.2315.902.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -27,15 +27,19 @@ To: wkendall@sgi.com
 Cc: xfs@oss.sgi.com
 
 On Fri, 2010-11-05 at 11:35 -0500, wkendall@sgi.com wrote:
-> The NODECHK macro should only be enabled as needed for
-> development/debugging. Having it on limits xfsrestore to dumps
-> with 268 million directory entries instead of 4 billion. 
+> plain text document attachment (namreg_64bit)
+> An nrh_t refers to a byte offset in a file containing all the pathname
+> components from a dump. At an average filename length of 20
+> characters, an nrh_t would overflow on a dump containing ~214 million
+> directory entries. Removing this limitation allows xfsrestore to
+> handle 4 billion directory entries.
 > 
-> Signed-off-by: Bill Kendall <wkendall@sgi.com> 
+> Signed-off-by: Bill Kendall <wkendall@sgi.com>
 
 Looks good.
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
+
 
 
 _______________________________________________
