@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oACDL3xX125169 for <xfs@oss.sgi.com>; Fri, 12 Nov 2010 07:21:04 -0600
+	oACFGlsP134303 for <xfs@oss.sgi.com>; Fri, 12 Nov 2010 09:16:47 -0600
 Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3BFCA172FF1
-	for <xfs@oss.sgi.com>; Fri, 12 Nov 2010 05:22:31 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5C204173B10
+	for <xfs@oss.sgi.com>; Fri, 12 Nov 2010 07:18:11 -0800 (PST)
 Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
-	cuda.sgi.com with ESMTP id 5b2Zk3nsBGhlbu1N for
-	<xfs@oss.sgi.com>; Fri, 12 Nov 2010 05:22:31 -0800 (PST)
+	cuda.sgi.com with ESMTP id StGwzERuzOMbQSVU for
+	<xfs@oss.sgi.com>; Fri, 12 Nov 2010 07:18:11 -0800 (PST)
 From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: Re: xfs_repair of critical volume
-Date: Fri, 12 Nov 2010 14:22:28 +0100
-References: <75C248E3-2C99-426E-AE7D-9EC543726796@ucsc.edu>
-	<4CCD3CE6.8060407@hardwarefreak.com>
-	<864DA9C9-B4A4-4B6B-A901-A457E2B9F5A5@ucsc.edu>
-In-Reply-To: <864DA9C9-B4A4-4B6B-A901-A457E2B9F5A5@ucsc.edu>
+Subject: Re: reducing imaxpct on linux
+Date: Fri, 12 Nov 2010 16:18:08 +0100
+References: <1289561141.20961.24.camel@sekli> <201011121401.52477@zmi.at>
+	<1289571841.20961.44.camel@sekli>
+In-Reply-To: <1289571841.20961.44.camel@sekli>
 MIME-Version: 1.0
-Message-Id: <201011121422.28993@zmi.at>
+Message-Id: <201011121618.09040@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,57 +24,63 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============5689165323632154160=="
+Content-Type: multipart/mixed; boundary="===============8291315158162901140=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Eli Morris <ermorris@ucsc.edu>
+To: "CZEH, Istvan" <iczeh@virusbuster.hu>
+Cc: xfs@oss.sgi.com
 
---===============5689165323632154160==
+--===============8291315158162901140==
 Content-Type: multipart/signed;
-  boundary="nextPart1926187.CGDXGOtDsH";
+  boundary="nextPart12432309.0zy2D7ORRa";
   protocol="application/pgp-signature";
   micalg=pgp-sha1
 Content-Transfer-Encoding: 7bit
 
---nextPart1926187.CGDXGOtDsH
+--nextPart12432309.0zy2D7ORRa
 Content-Type: Text/Plain;
-  charset="iso-8859-1"
+  charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Freitag, 12. November 2010 Eli Morris wrote:
-> The filesystem must be pointing to files that don't exist, or
-> something like that. Is there a way to fix that, to say, remove
-> files that don't exist anymore, sort of command? I thought that
-> xfs_repair would do that, but apparently not in this case.
+On Freitag, 12. November 2010 CZEH, Istvan wrote:
+> I already made the things written in the FAQ (question 32.) but still
+> having the problem. Maybe I should find the oldest data again? It
+> won't be easy...
 
-The filesystem is not optimized for "I replace part of the disk contents=20
-with zeroes" and find that errors. You will have to look in each file if=20
-it's contents are still valid, or maybe bogus.
+I guess the FAQ is a bit wrong here:
 
-I find the robustness of XFS amazing: You overwrote 1/5th of the disk=20
-with zeroes, and it still works :-)
+http://xfs.org/index.php/XFS_FAQ#Q:_Why_do_I_receive_No_space_left_on_devic=
+e_after_xfs_growfs.3F
 
-Now that you are in this state, I'd recommend you
-a) make a *real* *tape* *backup*
-You learned it the hard way: a disk copy is no backup, at least I hope=20
-you learned that lesson
-b) Maybe also copy all your files to another system, or you trust your=20
-backup from a) very much
-c) reinitialize the full array. Really recreate every array, 2 b sure=20
-all your RAIDs work this time.
-d) copy your data backup - either from the other copy of b), or from the=20
-tape backup in a)
+Because it is not the "oldest" data, but the data that is within the=20
+space in the first TeraByte of the partition.
 
-Then you will see a correct view of disk space used and which files are=20
-still there. Now you must check every files content, some will have=20
-bogus content.
+Dave Chinner explained to me, that XFS will split data equally amongst=20
+all AGs. So if you have a partition with 4TB and 4 AGs, and you put 1TB=20
+data on that partition, each AG will have around 250GB data, meaining=20
+you still have 750GB free within the first TB.
+When you do NOT use the inode64 option, all inodes will be placed in the=20
+first TB *only*. Even when later you use the inode64 option, it might=20
+not succeed in finding space for the inodes.
+
+I can imaginge this would help
+1) Run xfs_fsr, if it finds files below 1TB and defrags them to a space=20
+>1TB, you're lucky
+2) use the "noikeep" option before doing what XFS Q32 describes. If you=20
+remove a large portion of inodes, and later move them back, they should=20
+be newly allocated, and when you use inode64 then, chances are good the=20
+go at a place >1TB.
+3) Find files that are placed at <1TB. I think some xfs_db magic can do=20
+that, but I never used it so someone else should say.
+
+Anyway: Dave, I'd like to "repair" the FAQ question 32 to be more=20
+correct and descriptive, would my description be correct?
 
 =2D-=20
-mit freundlichen Gr=FCssen,
+mit freundlichen Gr=C3=BCssen,
 Michael Monnerie, Ing. BSc
 
-it-management Internet Services: Prot=E9ger
+it-management Internet Services: Prot=C3=A9ger
 http://proteger.at [gesprochen: Prot-e-schee]
 Tel: +43 660 / 415 6531
 
@@ -84,22 +89,22 @@ Tel: +43 660 / 415 6531
 //=20
 // Haus zu verkaufen: http://zmi.at/langegg/
 
---nextPart1926187.CGDXGOtDsH
+--nextPart12432309.0zy2D7ORRa
 Content-Type: application/pgp-signature; name=signature.asc 
 Content-Description: This is a digitally signed message part.
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.15 (GNU/Linux)
 
-iEYEABECAAYFAkzdP5QACgkQzhSR9xwSCbReMQCbB7XWjcDIlbG32uswpT3TlHp7
-yToAnjR4j5moKtp5bQsb5WY6/OZ2KobC
-=TTaE
+iEYEABECAAYFAkzdWrAACgkQzhSR9xwSCbTqZwCdEUqNNv7TzI9wc2WHEi3ydatT
+eRAAnAngfOwdKocXxTmd+6lxVgT2Kbi+
+=7fY4
 -----END PGP SIGNATURE-----
 
---nextPart1926187.CGDXGOtDsH--
+--nextPart12432309.0zy2D7ORRa--
 
 
---===============5689165323632154160==
+--===============8291315158162901140==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -110,4 +115,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============5689165323632154160==--
+--===============8291315158162901140==--
