@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oACNNWoj171553 for <xfs@oss.sgi.com>; Fri, 12 Nov 2010 17:23:33 -0600
-Subject: Re: [PATCH v2 2/9] xfsrestore: change nrh_t from 32 to 64 bits
+	oACNOaCv171605 for <xfs@oss.sgi.com>; Fri, 12 Nov 2010 17:24:36 -0600
+Subject: Re: [PATCH v2 8/9] xfsrestore: remove nix_t
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20101105163643.341036303@sgi.com>
+In-Reply-To: <20101105163644.563280731@sgi.com>
 References: <20101105163500.747192954@sgi.com>
-	<20101105163643.341036303@sgi.com>
-Date: Fri, 12 Nov 2010 17:24:44 -0600
-Message-ID: <1289604284.2315.902.camel@doink>
+	<20101105163644.563280731@sgi.com>
+Date: Fri, 12 Nov 2010 17:25:32 -0600
+Message-ID: <1289604332.2315.910.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -27,19 +27,17 @@ To: wkendall@sgi.com
 Cc: xfs@oss.sgi.com
 
 On Fri, 2010-11-05 at 11:35 -0500, wkendall@sgi.com wrote:
-> plain text document attachment (namreg_64bit)
-> An nrh_t refers to a byte offset in a file containing all the pathname
-> components from a dump. At an average filename length of 20
-> characters, an nrh_t would overflow on a dump containing ~214 million
-> directory entries. Removing this limitation allows xfsrestore to
-> handle 4 billion directory entries.
+> plain text document attachment (nuke_nix)
+> The nix_t type is a 64-bit version of a (32-bit) nh_t, created "to
+> facilitate conversion to a 64-bit offset." At this point there's only
+> one case where an nh_t is converted to an off64_t, so just do an
+> explicit cast in that case and remove the nix_t.
 > 
 > Signed-off-by: Bill Kendall <wkendall@sgi.com>
 
 Looks good.
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
-
 
 
 _______________________________________________
