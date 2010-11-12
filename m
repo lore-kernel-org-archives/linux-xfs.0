@@ -1,14 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oACNOaCv171605 for <xfs@oss.sgi.com>; Fri, 12 Nov 2010 17:24:36 -0600
-Subject: Re: [PATCH v2 8/9] xfsrestore: remove nix_t
+	oACNOas0171608 for <xfs@oss.sgi.com>; Fri, 12 Nov 2010 17:24:36 -0600
+Subject: Re: [PATCH v2 0/9] xfsrestore dirent limitations and scaling issues
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20101105163644.563280731@sgi.com>
+In-Reply-To: <20101105163500.747192954@sgi.com>
 References: <20101105163500.747192954@sgi.com>
-	<20101105163644.563280731@sgi.com>
-Date: Fri, 12 Nov 2010 17:25:32 -0600
-Message-ID: <1289604332.2315.910.camel@doink>
+Date: Fri, 12 Nov 2010 17:25:50 -0600
+Message-ID: <1289604350.2315.912.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -27,18 +26,37 @@ To: wkendall@sgi.com
 Cc: xfs@oss.sgi.com
 
 On Fri, 2010-11-05 at 11:35 -0500, wkendall@sgi.com wrote:
-> plain text document attachment (nuke_nix)
-> The nix_t type is a 64-bit version of a (32-bit) nh_t, created "to
-> facilitate conversion to a 64-bit offset." At this point there's only
-> one case where an nh_t is converted to an off64_t, so just do an
-> explicit cast in that case and remove the nix_t.
+> The first two patches in this series remove dirent limitations that
+> exist in the current xfsrestore, allowing restore to now handle 4
+> billion directory entries. Restore would map 200 GB of memory to do
+> so, so don't go thinking this is a good idea. :)  (These two patches
+> were previously submitted to the list but I've made some changes to
+> them as suggested by Alex Elder.)
 > 
-> Signed-off-by: Bill Kendall <wkendall@sgi.com>
+> The remaining patches mostly deal with improving restore
+> performance, most noticeably on dumps containing upwards of 10
+> million inodes/dirents.  This resulted in a 50% improvement in the
+> time required to build restore's node table (a mmap'd representation
+> of the dump's directory structure), so for interactive restores and
+> restoring sub-directories this is very helpful. For full restores
+> with millions of files the overall restore time is dominated by
+> creating inodes and laying down the data, so the improvements here
+> would be less noticeable.
+> 
+> For dumps with lots of hard links, these changes fix a bug that was
+> causing xfsrestore to constantly have to map and unmap segments of
+> the node table, leading to horrible performance.
+> 
+> Several of these patches modify the on-disk state information that
+> xfsrestore leaves around for resuming restores. The final patch adds
+> versioning information to the on-disk state to detect cases where
+> the user tries to resume a restore with an incompatible version of
+> xfsrstore (or an incompatible system).
 
-Looks good.
+I've reviewed most of these but I'll have to return
+to the rest next week.
 
-Reviewed-by: Alex Elder <aelder@sgi.com>
-
+					-Alex
 
 _______________________________________________
 xfs mailing list
