@@ -1,13 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oACNOas0171608 for <xfs@oss.sgi.com>; Fri, 12 Nov 2010 17:24:36 -0600
-Subject: Re: [PATCH v2 0/9] xfsrestore dirent limitations and scaling issues
+	oACNOakW171604 for <xfs@oss.sgi.com>; Fri, 12 Nov 2010 17:24:36 -0600
+Subject: Re: [PATCH v2 3/9] xfsrestore: cache path lookups
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20101105163500.747192954@sgi.com>
+In-Reply-To: <20101105163643.571496225@sgi.com>
 References: <20101105163500.747192954@sgi.com>
-Date: Fri, 12 Nov 2010 17:25:50 -0600
-Message-ID: <1289604350.2315.912.camel@doink>
+	<20101105163643.571496225@sgi.com>
+Date: Fri, 12 Nov 2010 17:25:11 -0600
+Message-ID: <1289604311.2315.908.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -26,37 +27,58 @@ To: wkendall@sgi.com
 Cc: xfs@oss.sgi.com
 
 On Fri, 2010-11-05 at 11:35 -0500, wkendall@sgi.com wrote:
-> The first two patches in this series remove dirent limitations that
-> exist in the current xfsrestore, allowing restore to now handle 4
-> billion directory entries. Restore would map 200 GB of memory to do
-> so, so don't go thinking this is a good idea. :)  (These two patches
-> were previously submitted to the list but I've made some changes to
-> them as suggested by Alex Elder.)
 > 
-> The remaining patches mostly deal with improving restore
-> performance, most noticeably on dumps containing upwards of 10
-> million inodes/dirents.  This resulted in a 50% improvement in the
-> time required to build restore's node table (a mmap'd representation
-> of the dump's directory structure), so for interactive restores and
-> restoring sub-directories this is very helpful. For full restores
-> with millions of files the overall restore time is dominated by
-> creating inodes and laying down the data, so the improvements here
-> would be less noticeable.
+> In order to resolve a pathname, xfsrestore must work from an inode
+> number (from the dump) and recurse up the directory entry tree that it
+> has constructed. Each level of recursion requires a seek and read to
+> get the name of the dirent, and possibly a mmap of a section of the
+> directory entry tree if it is not already mapped (and in that case,
+> possibly a munmap of another section). It's quite common to resolve
+> pathnames in the same directory consecutively, so simply caching the
+> parent directory pathname from the previous lookup saves quite a bit
+> of overhead.
 > 
-> For dumps with lots of hard links, these changes fix a bug that was
-> causing xfsrestore to constantly have to map and unmap segments of
-> the node table, leading to horrible performance.
-> 
-> Several of these patches modify the on-disk state information that
-> xfsrestore leaves around for resuming restores. The final patch adds
-> versioning information to the on-disk state to detect cases where
-> the user tries to resume a restore with an incompatible version of
-> xfsrstore (or an incompatible system).
+> Signed-off-by: Bill Kendall <wkendall@sgi.com>
 
-I've reviewed most of these but I'll have to return
-to the rest next week.
+I think an assertion would do in a place I show below,
+but it's nothing to worry about.
 
-					-Alex
+Reviewed-by: Alex Elder <aelder@sgi.com>
+
+> ---
+>  restore/tree.c |   41 ++++++++++++++++++++++++++++++++++++-----
+>  1 file changed, 36 insertions(+), 5 deletions(-)
+> 
+> Index: xfsdump-kernel.org/restore/tree.c
+> ===================================================================
+> --- xfsdump-kernel.org.orig/restore/tree.c
+> +++ xfsdump-kernel.org/restore/tree.c
+
+. . .
+
+> @@ -3475,6 +3486,13 @@ Node2path_recurse( nh_t nh, char *buf, i
+>  		return bufsz;
+>  	}
+>  
+> +	/* if we have a cache hit, no need to recurse any further
+> +	 */
+> +	if ( nh == cache.nh && bufsz > cache.len ) {
+
+Since a nh basically encodes the entire path,
+the check that the buffer is big enough should
+not be necessary, and could probably be inserted
+instead:
+		ASSERT(bufsz > cache.len);
+
+> +		strcpy( buf, cache.buf );
+> +		return bufsz - cache.len;
+> +	}
+> +
+>  	/* extract useful node members
+>  	 */
+>  	np = Node_map( nh );
+
+ . . .
 
 _______________________________________________
 xfs mailing list
