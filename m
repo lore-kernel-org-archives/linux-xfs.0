@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oACMZdQt167764 for <xfs@oss.sgi.com>; Fri, 12 Nov 2010 16:35:39 -0600
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 716F91751FA
-	for <xfs@oss.sgi.com>; Fri, 12 Nov 2010 14:37:09 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id ryrDM06cAAJddLSl for
-	<xfs@oss.sgi.com>; Fri, 12 Nov 2010 14:37:09 -0800 (PST)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id oACMb8rO031681
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Fri, 12 Nov 2010 17:37:08 -0500
-Message-ID: <4CDDC193.9030208@redhat.com>
-Date: Fri, 12 Nov 2010 16:37:07 -0600
-From: Eric Sandeen <sandeen@redhat.com>
-MIME-Version: 1.0
-Subject: [PATCH] xfstests 246: Test for race between direct I/O and mmap
+	oACN0U6L169370 for <xfs@oss.sgi.com>; Fri, 12 Nov 2010 17:00:31 -0600
+Received: from ucsc.edu (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DE0271C3B30E
+	for <xfs@oss.sgi.com>; Fri, 12 Nov 2010 15:01:57 -0800 (PST)
+Received: from ucsc.edu (email-prod-out-1.ucsc.edu [128.114.129.85]) by
+	cuda.sgi.com with ESMTP id GnqESzA0ckq6yFfA for
+	<xfs@oss.sgi.com>; Fri, 12 Nov 2010 15:01:57 -0800 (PST)
+Subject: Re: xfs_repair of critical volume
+Mime-Version: 1.0 (Apple Message framework v1082)
+From: Eli Morris <ermorris@ucsc.edu>
+In-Reply-To: <201011121422.28993@zmi.at>
+Date: Fri, 12 Nov 2010 15:01:47 -0800
+Message-Id: <BE08758D-20B4-48F1-8BF7-FCD0341D38C2@ucsc.edu>
+References: <75C248E3-2C99-426E-AE7D-9EC543726796@ucsc.edu>
+	<4CCD3CE6.8060407@hardwarefreak.com>
+	<864DA9C9-B4A4-4B6B-A901-A457E2B9F5A5@ucsc.edu>
+	<201011121422.28993@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,111 +26,131 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs mailing list <xfs@oss.sgi.com>
-Cc: Lachlan McIlroy <lmcilroy@redhat.com>
+To: Michael Monnerie <michael.monnerie@is.it-management.at>
+Cc: xfs@oss.sgi.com
 
 
+On Nov 12, 2010, at 5:22 AM, Michael Monnerie wrote:
 
-From: Lachlan McIlroy <lmcilory@redhat.com>
+> On Freitag, 12. November 2010 Eli Morris wrote:
+>> The filesystem must be pointing to files that don't exist, or
+>> something like that. Is there a way to fix that, to say, remove
+>> files that don't exist anymore, sort of command? I thought that
+>> xfs_repair would do that, but apparently not in this case.
+> =
 
-A customer reported a problem:
+> The filesystem is not optimized for "I replace part of the disk contents =
 
-If a process is using mmap to write to a file on an 
-ext4 filesystem while another process is using direct 
-I/O to write to the same file the first thread may 
-receive a SIGBUS during a page fault.
+> with zeroes" and find that errors. You will have to look in each file if =
 
-A SIGBUS occurs if the page fault tries to access a 
-page that is entirely beyond the end of the file but 
-in this test case that should not be happening.
+> it's contents are still valid, or maybe bogus.
+> =
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+> I find the robustness of XFS amazing: You overwrote 1/5th of the disk =
 
-#! /bin/bash
-# FS QA Test No. 246
-#
-# Test for race between direct I/O and mmap
-#
-#-----------------------------------------------------------------------
-# Copyright (c) 2010 Red Hat, Inc.  All Rights Reserved.
-#
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License as
-# published by the Free Software Foundation.
-#
-# This program is distributed in the hope that it would be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write the Free Software Foundation,
-# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#-----------------------------------------------------------------------
-#
-# creator
-owner=lmcilroy@redhat.com
+> with zeroes, and it still works :-)
+> =
 
-seq=`basename $0`
-echo "QA output created by $seq"
+> Now that you are in this state, I'd recommend you
+> a) make a *real* *tape* *backup*
+> You learned it the hard way: a disk copy is no backup, at least I hope =
 
-here=`pwd`
-tmp=/tmp/$$
-status=1	# failure is the default!
-trap "_cleanup; exit \$status" 0 1 2 3 7 15
+> you learned that lesson
+> b) Maybe also copy all your files to another system, or you trust your =
 
-_cleanup()
-{
-    cd /
-    rm -f $tmp.* $testfile
-    wait
-}
+> backup from a) very much
+> c) reinitialize the full array. Really recreate every array, 2 b sure =
 
-# get standard environment, filters and checks
-. ./common.rc
-. ./common.filter
+> all your RAIDs work this time.
+> d) copy your data backup - either from the other copy of b), or from the =
 
-# real QA test starts here
+> tape backup in a)
+> =
 
-# Modify as appropriate.
-_supported_fs generic
-_supported_os Linux
+> Then you will see a correct view of disk space used and which files are =
 
-testfile=$TEST_DIR/$seq.$$
+> still there. Now you must check every files content, some will have =
 
-loops=500
-iosize=1048576
+> bogus content.
+> =
 
-# Initialise file
-dd if=/dev/zero of=$testfile bs=$iosize count=$loops &> /dev/null
-[ $? -ne 0 ] && exit
-sync
-	
-# Direct I/O overwriter
-dd if=/dev/zero of=$testfile oflag=direct bs=$iosize count=$loops conv=notrunc &> /dev/null &
-[ $? -ne 0 ] && exit
+> -- =
 
-# Mmap writer
-start=`expr $loops - 1`
-for i in `seq $start -1 0`
-do
-	offset=`expr $i \* $iosize`
-	$XFS_IO_PROG -F -f -c "mmap -w $offset $iosize" -c "mwrite $offset $iosize" $testfile
-	[ $? -ne 0 ] && exit
-done
+> mit freundlichen Gr=FCssen,
+> Michael Monnerie, Ing. BSc
+> =
 
-wait
+> it-management Internet Services: Prot=E9ger
+> http://proteger.at [gesprochen: Prot-e-schee]
+> Tel: +43 660 / 415 6531
+> =
 
-echo "Silence is golden."
+> // ****** Radiointerview zum Thema Spam ******
+> // http://www.it-podcast.at/archiv.html#podcast-100716
+> // =
 
-# success, all done
-status=0
-exit
+> // Haus zu verkaufen: http://zmi.at/langegg/
+
+
+Hi Michael,
+
+thanks for the advise. =
+
+
+Let me see if I can give you and everyone else a little more information an=
+d clarify this problem somewhat. And if there is nothing practical that can=
+ be done, then OK. What I am looking for is the best PRACTICAL outcome here=
+ given our resources and if anyone has an idea that might be helpful, that =
+would be awesome. I put practical in caps, because that is the rub in all t=
+his. We could send X to a data recovery service, but there is no money for =
+that. We could do Y, but if it takes a couple of months to accomplish, it m=
+ight be better to do Z, even though Z is riskier or deletes some amount of =
+data, because it is cheap and only takes one day to do.
+
+
+This is a small University lab setup. We do not have access to a lot of res=
+ources. We do have a partial tape backup of this data, but...
+
+a) The time it takes to back up the full 62 TB is long enough to tape that =
+it is not really much of a help. Most days we have hundreds of GBs generate=
+d and removed. We back up about 12 TB of the most important files, and ones=
+ that don't rapidly change, but our tape backup system just can not keep up=
+ with everything. Yes, it would be *fantastic* to have a full tape backup s=
+ystem that is practical and has the capacity to deal with everything. Becau=
+se we have had so many problems with our storage lately, the backup is some=
+what stale, partial, and a little suspect. Still, it is there and I will in=
+vestigate what can be recovered from it.
+
+b) I don't have another system to copy the files to. Our disk backup is scr=
+ewed up and that is all of our storage. We do have a tape backup, as I ment=
+ioned, and while it is theoretically possible to dump to tape, rebuild the =
+RAID arrays, then dump back, the practical aspects of this process make thi=
+s a so-so option. Realistically, it would take more than a month to accompl=
+ish. It is a possibility, but is not a really great option.
+
+c) We are working on making sure everything is working OK. I think the powe=
+r output from our UPS might be problematic. We are definitely investigating=
+ that, because it could be behind all these crazy problems.
+
+d) Checking every files' content manually is not something that is going to=
+ work. It would, literally, take years.
+
+Again, thanks for any advise. I'm not trying to be negative, just realistic=
+ in what I have to work with in terms of resources and time. =
+
+
+Would de-fraging the filesystem remove those zeroed files from the filesyst=
+em? Does anyone make a XFS utility program that might help? Maybe an XFS ut=
+ility that can be used to remove zeroed files from the filesystem? Or remov=
+e files that are stored in that one bad LVM volume?
+
+thanks very much,
+
+Eli
 
 
 _______________________________________________
