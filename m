@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAFKb5k9175028 for <xfs@oss.sgi.com>; Mon, 15 Nov 2010 14:37:05 -0600
-Subject: Re: [PATCH v2 7/9] xfsrestore: make node lookup more efficient
+	oAFKb4QM175017 for <xfs@oss.sgi.com>; Mon, 15 Nov 2010 14:37:04 -0600
+Subject: Re: [PATCH v2 6/9] xfsrestore: fix node table setup
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20101105163644.371326494@sgi.com>
+In-Reply-To: <20101105163644.182690256@sgi.com>
 References: <20101105163500.747192954@sgi.com>
-	<20101105163644.371326494@sgi.com>
-Date: Mon, 15 Nov 2010 14:38:37 -0600
-Message-ID: <1289853517.2199.226.camel@doink>
+	<20101105163644.182690256@sgi.com>
+Date: Mon, 15 Nov 2010 14:38:35 -0600
+Message-ID: <1289853515.2199.225.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -27,131 +27,51 @@ To: wkendall@sgi.com
 Cc: xfs@oss.sgi.com
 
 On Fri, 2010-11-05 at 11:35 -0500, wkendall@sgi.com wrote:
-> plain text document attachment (window_lookup_performance)
-> When converting an nh_t to a segment index and relative node index,
-> use shift and bitwise-and instead of division and modulo. Results show
-> this is about 50% faster than the current method.
+> plain text document attachment (winmap_max_fix)
+> The node table setup code unintentionally limits the amount of virtual
+> memory that will be used for the node table. Rather than setting a
+> limit based on the remaining virtual memory, the node table is limited
+> to the amount of memory it thinks it will need based on the dump's
+> inode count. But the node table stores directory entries, not inodes,
+> and so dumps with lots of hard links end up thrashing mapping and
+> unmapping segments of the node table to stay within the self-imposed
+> virtual memory limit.
+> 
+> This patch also changes the node table to ensure that there are a
+> power of two nodes per segment. Profiling revealed that while building
+> the node table, 50% of the restore cpu time was spent doing division
+> and modulo to convert a node index into its segment index and offset
+> within the segment. This change prepares the node table for another
+> patch which will change the lookup mechanism to use shift and
+> bitwise-and.
+> 
+> Also don't bother passing the estimated segment table size to the
+> window abstraction. It has to deal with resizing the table anyway and
+> can choose a reasonable starting size.
 > 
 > 
 > Signed-off-by: Bill Kendall <wkendall@sgi.com>
 
-I have a few comments below.  They are suggestions and
-don't indicate that I've found any real problems in your
-code.  If you think that updating things in response to
-my suggestions is warranted, but want to do it later (as
-a separate change) that's OK with me.
+This looks good to me.
+
+In your loop determining how many segments to
+use, etc., you might as well start with the
+minimum number of segments.  I.e.:
+
+winmapmax = 0;
+for ( segcount = WINMAP_MIN; winmapmax < WINMAP_MIN; segcount <<= 1 ) {
+
+I had a feeling there could be a pathological case
+in which the the computation of winmapmax, etc. would
+get stuck looping indefinitely, but I gave up trying
+to see if I could identify such a case...
+
+And although I'm not that confident I understand the way
+the windows on the tree file are used, I don't see anything
+really wrong with your change.
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
 
-> ---
->  restore/node.c |  150 ++++++++++++++++++++++++++++-----------------------------
->  restore/win.c  |   36 +++----------
->  restore/win.h  |    6 +-
->  3 files changed, 87 insertions(+), 105 deletions(-)
-> 
-> Index: xfsdump-kernel.org/restore/node.c
-> ===================================================================
-> --- xfsdump-kernel.org.orig/restore/node.c
-> +++ xfsdump-kernel.org/restore/node.c
-
-. . .
-
-> @@ -173,6 +166,12 @@ typedef struct node_hdr node_hdr_t;
->  static node_hdr_t *node_hdrp;
->  static intgen_t node_fd;
-
-The following forward declarations could be eliminated
-if you just move their definitions up in the file.
-
-> +/* forward declarations of locally defined static functions ******************/
-> +static inline size_t nh2segix( nh_t nh );
-> +static inline nh_t nh2relnix( nh_t nh );
-> +static inline void node_map_internal( nh_t nh, void **pp );
-> +static inline void node_unmap_internal( nh_t nh, void **pp, bool_t freepr );
-> +
->  /* ARGSUSED */
->  bool_t
->  node_init( intgen_t fd,
-
-. . .
-
-> @@ -281,6 +280,8 @@ node_init( intgen_t fd,
->  		winmapmax = min( vmsz / segsz, max_segments );
->  	}
->  
-> +	relnixmask = nodesperseg - 1;
-> +
-
-Is nodesperseg guaranteed to be a power of 2?  It may
-be, but it's not obvious to me from glancing at this
-block of code.
-
->  	/* map the abstraction header
->  	 */
->  	ASSERT( ( NODE_HDRSZ & pgmask ) == 0 );
-
-. . .
-
->  void
-> Index: xfsdump-kernel.org/restore/win.c
-> ===================================================================
-> --- xfsdump-kernel.org.orig/restore/win.c
-> +++ xfsdump-kernel.org/restore/win.c
-> @@ -177,31 +177,16 @@ win_init( intgen_t fd,
->  }
->  
->  void
-> -win_map( off64_t off, void **pp )
-> +win_map( size_t segix, void **pp )
-
-It might be nice to have a segix_t or something.
-The point being that what you are passing in here
-is an index value (not a size), which is computed
-from a node handle by figuring out which segment
-that node handle resides in.
-
-I was a little puzzled that nh2segix() took a
-node handle and returned a size_t.
-
-Similarly, a relnix appears to be an index
-value within a segment; an integral typedef
-could be used to clear that up. (and make
-it clear it's different from just a nh_t).
-Again, this suggestion comes out of my
-not understanding the return type of
-nh2relnix().
-
->  {
-> -	size_t offwithinseg;
-> -	size_t segix;
->  	off64_t segoff;
->  	win_t *winp;
->  
->  	CRITICAL_BEGIN();
->  
-> -	/* calculate offset within segment
-> -	 */
-> -	offwithinseg = ( size_t )( off % ( off64_t )tranp->t_segsz );
-> -
-> -	/* calculate segment index
-> -	 */
-> -	segix = (size_t)( off / ( off64_t )tranp->t_segsz );
-> -
-> -	/* calculate offset of segment
-> -	 */
-> -	segoff = off - ( off64_t )offwithinseg;
-> -
->  #ifdef TREE_DEBUG
->  	mlog(MLOG_DEBUG | MLOG_TREE | MLOG_NOLOCK,
-> -	     "win_map(off=%lld,addr=%x): off within = %llu, segoff = %lld\n",
-> -	      off, pp, offwithinseg, segoff);
-> +	     "win_map(segix=%lu,addr=%p)\n", segix, pp);
->  #endif
->  	/* resize the array if necessary */
->  	if ( segix >= tranp->t_segmaplen )
-
-
-. . .
 
 _______________________________________________
 xfs mailing list
