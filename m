@@ -1,17 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAFHDJjC149266 for <xfs@oss.sgi.com>; Mon, 15 Nov 2010 11:13:19 -0600
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BBC78180657
-	for <xfs@oss.sgi.com>; Mon, 15 Nov 2010 09:14:50 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id cL2Rf15iuOnTrDVw for
-	<xfs@oss.sgi.com>; Mon, 15 Nov 2010 09:14:50 -0800 (PST)
-From: Josef Bacik <josef@redhat.com>
-Subject: Hole Punching V2
-Date: Mon, 15 Nov 2010 12:05:17 -0500
-Message-Id: <1289840723-3056-1-git-send-email-josef@redhat.com>
+	oAFKb0qY175006 for <xfs@oss.sgi.com>; Mon, 15 Nov 2010 14:37:00 -0600
+Subject: Re: [PATCH v2 5/9] xfsrestore: cleanup node allocation
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <20101105163643.987306372@sgi.com>
+References: <20101105163500.747192954@sgi.com>
+	<20101105163643.987306372@sgi.com>
+Date: Mon, 15 Nov 2010 14:38:29 -0600
+Message-ID: <1289853509.2199.224.camel@doink>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,26 +19,36 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: david@fromorbit.com, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, cmm@us.ibm.com, cluster-devel@redhat.com, ocfs2-devel@oss.oracle.com
+To: wkendall@sgi.com
+Cc: xfs@oss.sgi.com
 
-This is version 2 of the hole punching series I posted last week.  The following
-things have changed
+On Fri, 2010-11-05 at 11:35 -0500, wkendall@sgi.com wrote:
+> plain text document attachment (node_alloc_cleanup)
+> Simplify the node allocation code. The current code takes some
+> number of nodes from a new segment and links them into the
+> freelist whenever the freelist is depleted. There's no reason
+> to put the new nodes on the freelist, we can just allocate the
+> next available new node as needed. This also saves a trip through
+> win_map/win_unmap if there are no nodes on the freelist (the
+> common case).
 
--Hole punching doesn't change file size
--Fixed the mode checks in ext4/btrfs/gfs2 so they do what they are supposed to
+Prior to your change, a node allocated off the "virgin"
+segment got zeroed before it gets returned for use. Your
+change eliminates that.  Is that OK?
 
-I posted updates to xfstests and xfsprogs in order to test this new interface,
-and ran the test on xfs to make sure hole punching worked properly for xfs and I
-tested it on btrfs to make sure it failed properly.  This series also adds
-support for doing hole punching to ocfs2, but I did not test this part of it,
-albiet it's an obvious fix so it should work fine.  Thanks,
+You also dropped a few TREE_DEBUG messages.  Were they
+not useful?  (Just curious.)
 
-Josef
+Otherwise looks good.
+
+Reviewed-by: Alex Elder <aelder@sgi.com>
+
+> Signed-off-by: Bill Kendall <wkendall@sgi.com>
+
 
 _______________________________________________
 xfs mailing list
