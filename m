@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAFLYgeQ179191 for <xfs@oss.sgi.com>; Mon, 15 Nov 2010 15:34:42 -0600
+	oAFLoDVQ179839 for <xfs@oss.sgi.com>; Mon, 15 Nov 2010 15:50:13 -0600
 Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 99ADAAC002
-	for <xfs@oss.sgi.com>; Mon, 15 Nov 2010 13:36:14 -0800 (PST)
-Message-ID: <4CE1A7CE.7040905@sgi.com>
-Date: Mon, 15 Nov 2010 15:36:14 -0600
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A5152AC002
+	for <xfs@oss.sgi.com>; Mon, 15 Nov 2010 13:51:45 -0800 (PST)
+Message-ID: <4CE1AB71.3000708@sgi.com>
+Date: Mon, 15 Nov 2010 15:51:45 -0600
 From: Bill Kendall <wkendall@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH v2 5/9] xfsrestore: cleanup node allocation
+Subject: Re: [PATCH v2 4/9] xfsrestore: mmap dirent names for faster lookups
 References: <20101105163500.747192954@sgi.com>	
-	<20101105163643.987306372@sgi.com>
-	<1289853509.2199.224.camel@doink>
-In-Reply-To: <1289853509.2199.224.camel@doink>
+	<20101105163643.799606284@sgi.com>
+	<1289604322.2315.909.camel@doink>
+In-Reply-To: <1289604322.2315.909.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,40 +29,52 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: aelder@sgi.com
 Cc: xfs@oss.sgi.com
 
-On 11/15/2010 02:38 PM, Alex Elder wrote:
+On 11/12/2010 05:25 PM, Alex Elder wrote:
 > On Fri, 2010-11-05 at 11:35 -0500, wkendall@sgi.com wrote:
->> plain text document attachment (node_alloc_cleanup)
->> Simplify the node allocation code. The current code takes some
->> number of nodes from a new segment and links them into the
->> freelist whenever the freelist is depleted. There's no reason
->> to put the new nodes on the freelist, we can just allocate the
->> next available new node as needed. This also saves a trip through
->> win_map/win_unmap if there are no nodes on the freelist (the
->> common case).
+>> plain text document attachment (namreg_map)
+>> Pathname resolution in xfsrestore is about 4x faster if the file
+>> containing dirent names ("namreg") is memory mapped.  If xfsrestore is
+>> unable to map the file (e.g., due to virtual memory constraints)
+>> fallback to the existing seek-and-read approach.
+>>
+>> The file is mapped after all directory entries have been written to
+>> the "namreg" file. If the caller tries to add additional entries after
+>> the file has been mapped, it will be unmapped and restore will resort
+>> back to seek-and-read lookups.
+>>
+>> Signed-off-by: Bill Kendall<wkendall@sgi.com>
 >
-> Prior to your change, a node allocated off the "virgin"
-> segment got zeroed before it gets returned for use. Your
-> change eliminates that.  Is that OK?
+> I guess I might have created a simple namreg_flush_final()
+> routine to encapsulate the namreg_flush() and namreg_map()
+> calls, rather than adding a flag.  Then namreg_flush() could
+> have been made to have static scope.  No big deal though.
+>
+> Also, you fall back to the non-mmapped method in case a
+> flush or add happens after you've mapped the file.  That
+> is in some sense comforting, but it would be nice to be
+> assured it simply won't happen.  If you come to a point
+> someday where you are sure of this it would be nice to
+> see that code switched to assertions instead.
+>
+> You could define the new namreg_*map*() functions earlier
+> in the file and skip the forward declarations.
 
-There's a wrapper function, Node_alloc, through which
-all callers allocate nodes. Node_alloc initializes each
-field. So this is okay.
+But the comments told me to put the functions there! ;)
+xfsdump/restore could benefit from some major refactoring.
 
 >
-> You also dropped a few TREE_DEBUG messages.  Were they
-> not useful?  (Just curious.)
+> These aren't all that important though, I think it's a
+> good change.  Let me know if you think you will
+> re-work it but I think it's OK as-is.
 
-I did not find them useful (though probably should have
-mentioned it in the commit message.)
+I'll leave this patch as is, and make a note to look
+at changing the mmap-checks into asserts.
 
 Bill
 
 >
-> Otherwise looks good.
->
 > Reviewed-by: Alex Elder<aelder@sgi.com>
 >
->> Signed-off-by: Bill Kendall<wkendall@sgi.com>
 >
 
 _______________________________________________
