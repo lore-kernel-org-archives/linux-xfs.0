@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAFHDM7N149326 for <xfs@oss.sgi.com>; Mon, 15 Nov 2010 11:13:23 -0600
+	oAFHDIOO149264 for <xfs@oss.sgi.com>; Mon, 15 Nov 2010 11:13:19 -0600
 Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3F7B818065C
-	for <xfs@oss.sgi.com>; Mon, 15 Nov 2010 09:14:54 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0F13213BF7EB
+	for <xfs@oss.sgi.com>; Mon, 15 Nov 2010 09:14:50 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id P2xSxT6sERgvrzH3 for
-	<xfs@oss.sgi.com>; Mon, 15 Nov 2010 09:14:54 -0800 (PST)
+	cuda.sgi.com with ESMTP id rNixUe8DJquG8JZN for
+	<xfs@oss.sgi.com>; Mon, 15 Nov 2010 09:14:50 -0800 (PST)
 From: Josef Bacik <josef@redhat.com>
-Subject: [PATCH 6/6] Gfs2: fail if we try to use hole punch
-Date: Mon, 15 Nov 2010 12:05:23 -0500
-Message-Id: <1289840723-3056-7-git-send-email-josef@redhat.com>
+Subject: [PATCH 2/6] XFS: handle hole punching via fallocate properly
+Date: Mon, 15 Nov 2010 12:05:19 -0500
+Message-Id: <1289840723-3056-3-git-send-email-josef@redhat.com>
 In-Reply-To: <1289840723-3056-1-git-send-email-josef@redhat.com>
 References: <1289840723-3056-1-git-send-email-josef@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -29,29 +29,50 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, cmm@us.ibm.com, cluster-devel@redhat.com, ocfs2-devel@oss.oracle.com
 
-Gfs2 doesn't have the ability to punch holes yet, so make sure we return
-EOPNOTSUPP if we try to use hole punching through fallocate.  This support can
-be added later.  Thanks,
+This patch simply allows XFS to handle the hole punching flag in fallocate
+properly.  I've tested this with a little program that does a bunch of random
+hole punching with FL_KEEP_SIZE and without it to make sure it does the right
+thing.  Thanks,
 
 Signed-off-by: Josef Bacik <josef@redhat.com>
 ---
- fs/gfs2/ops_inode.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+ fs/xfs/linux-2.6/xfs_iops.c |    9 ++++++---
+ 1 files changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/fs/gfs2/ops_inode.c b/fs/gfs2/ops_inode.c
-index 12cbea7..65cb5f6 100644
---- a/fs/gfs2/ops_inode.c
-+++ b/fs/gfs2/ops_inode.c
-@@ -1439,6 +1439,10 @@ static long gfs2_fallocate(struct inode *inode, int mode, loff_t offset,
- 	loff_t next = (offset + len - 1) >> sdp->sd_sb.sb_bsize_shift;
- 	next = (next + 1) << sdp->sd_sb.sb_bsize_shift;
+diff --git a/fs/xfs/linux-2.6/xfs_iops.c b/fs/xfs/linux-2.6/xfs_iops.c
+index 96107ef..63cc929 100644
+--- a/fs/xfs/linux-2.6/xfs_iops.c
++++ b/fs/xfs/linux-2.6/xfs_iops.c
+@@ -516,6 +516,7 @@ xfs_vn_fallocate(
+ 	loff_t		new_size = 0;
+ 	xfs_flock64_t	bf;
+ 	xfs_inode_t	*ip = XFS_I(inode);
++	int		cmd = XFS_IOC_RESVSP;
  
-+	/* We only support the FALLOC_FL_KEEP_SIZE mode */
-+	if (mode && (mode != FALLOC_FL_KEEP_SIZE))
-+		return -EOPNOTSUPP;
+ 	/* preallocation on directories not yet supported */
+ 	error = -ENODEV;
+@@ -528,8 +529,11 @@ xfs_vn_fallocate(
+ 
+ 	xfs_ilock(ip, XFS_IOLOCK_EXCL);
+ 
++	if (mode & FALLOC_FL_PUNCH_HOLE)
++		cmd = XFS_IOC_UNRESVSP;
 +
- 	offset = (offset >> sdp->sd_sb.sb_bsize_shift) <<
- 		 sdp->sd_sb.sb_bsize_shift;
+ 	/* check the new inode size is valid before allocating */
+-	if (!(mode & FALLOC_FL_KEEP_SIZE) &&
++	if (!(mode & (FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE)) &&
+ 	    offset + len > i_size_read(inode)) {
+ 		new_size = offset + len;
+ 		error = inode_newsize_ok(inode, new_size);
+@@ -537,8 +541,7 @@ xfs_vn_fallocate(
+ 			goto out_unlock;
+ 	}
+ 
+-	error = -xfs_change_file_space(ip, XFS_IOC_RESVSP, &bf,
+-				       0, XFS_ATTR_NOLOCK);
++	error = -xfs_change_file_space(ip, cmd, &bf, 0, XFS_ATTR_NOLOCK);
+ 	if (error)
+ 		goto out_unlock;
  
 -- 
 1.6.6.1
