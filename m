@@ -1,21 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAFGP26Z143918 for <xfs@oss.sgi.com>; Mon, 15 Nov 2010 10:25:02 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8BE201C42425
-	for <xfs@oss.sgi.com>; Mon, 15 Nov 2010 08:26:34 -0800 (PST)
-Received: from mail.sandeen.net (64-131-28-21.usfamily.net [64.131.28.21]) by
-	cuda.sgi.com with ESMTP id UqWGANesyJ7JKOsT for
-	<xfs@oss.sgi.com>; Mon, 15 Nov 2010 08:26:33 -0800 (PST)
-Message-ID: <4CE15F39.2010904@sandeen.net>
-Date: Mon, 15 Nov 2010 10:26:33 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: Fwd: xfs - fixing wrong xfs size
-References: <dbd747120904130713t7388971axf75ee779b5b1e1f2@mail.gmail.com>	<49E353FD.5060207@sandeen.net>	<dbd747120904130933i6ae66aedt7912a47b7e561f76@mail.gmail.com>	<4BE1EF9D.2030901@sandeen.net>
-	<30211747.post@talk.nabble.com>
-In-Reply-To: <30211747.post@talk.nabble.com>
+	oAFHDQac149309 for <xfs@oss.sgi.com>; Mon, 15 Nov 2010 11:13:27 -0600
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 44F5613BF7EF
+	for <xfs@oss.sgi.com>; Mon, 15 Nov 2010 09:14:53 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id oCW0l3AR349dxDtZ for
+	<xfs@oss.sgi.com>; Mon, 15 Nov 2010 09:14:53 -0800 (PST)
+From: Josef Bacik <josef@redhat.com>
+Subject: [PATCH 5/6] Btrfs: fail if we try to use hole punch
+Date: Mon, 15 Nov 2010 12:05:22 -0500
+Message-Id: <1289840723-3056-6-git-send-email-josef@redhat.com>
+In-Reply-To: <1289840723-3056-1-git-send-email-josef@redhat.com>
+References: <1289840723-3056-1-git-send-email-josef@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,48 +22,39 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: johahoff <jh@not-dark-yet.de>
-Cc: xfs@oss.sgi.com
+To: david@fromorbit.com, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, cmm@us.ibm.com, cluster-devel@redhat.com, ocfs2-devel@oss.oracle.com
 
-On 11/14/10 5:16 AM, johahoff wrote:
-> 
->> You can use xfs_db to set it; or you could comment out the kernel
->> check... and mount readonly, and copy off the data you can get to?
-> 
-> I have got the same problem after recovering a xfs volume using ddrescue. It
-> seems that the new 1 TB drive I dd'ed to is a few blocks short ...
-> 
-> I had a look at the xfs_db man page, but wasn't able to figure out which
-> command would allow me to set the block count of the fs. Can you please give
-> the appropriate commands? I think I'll be able to figure out the correct
-> counts on my own.
-> 
-> Thanks a lot!
-> 
-> -Johannes
+Btrfs doesn't have the ability to punch holes yet, so make sure we return
+EOPNOTSUPP if we try to use hole punching through fallocate.  This support can
+be added later.  Thanks,
 
-# xfs_db -w /dev/blah
-xfs_db> sb 0
-xfs_db> p
-...
-magicnum = 0x58465342
-blocksize = 4096
-dblocks = XXXXXX
-...
-xfs_db> w dblocks <NEW VALUE>
-xfs_db> quit
+Signed-off-by: Josef Bacik <josef@redhat.com>
+---
+ fs/btrfs/inode.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
-You may have to do it for each of the superblocks but I think the first
-should suffice.
-
-If files reference the blocks past the device then of course you'll hit
-errors trying to read them as well ...
-
--Eric
+diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
+index 78877d7..6f08892 100644
+--- a/fs/btrfs/inode.c
++++ b/fs/btrfs/inode.c
+@@ -6936,6 +6936,10 @@ static long btrfs_fallocate(struct inode *inode, int mode,
+ 	alloc_start = offset & ~mask;
+ 	alloc_end =  (offset + len + mask) & ~mask;
+ 
++	/* We only support the FALLOC_FL_KEEP_SIZE mode */
++	if (mode && (mode != FALLOC_FL_KEEP_SIZE))
++		return -EOPNOTSUPP;
++
+ 	/*
+ 	 * wait for ordered IO before we have any locks.  We'll loop again
+ 	 * below with the locks held.
+-- 
+1.6.6.1
 
 _______________________________________________
 xfs mailing list
