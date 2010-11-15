@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAFLoDVQ179839 for <xfs@oss.sgi.com>; Mon, 15 Nov 2010 15:50:13 -0600
+	oAFM55v3181374 for <xfs@oss.sgi.com>; Mon, 15 Nov 2010 16:05:05 -0600
 Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A5152AC002
-	for <xfs@oss.sgi.com>; Mon, 15 Nov 2010 13:51:45 -0800 (PST)
-Message-ID: <4CE1AB71.3000708@sgi.com>
-Date: Mon, 15 Nov 2010 15:51:45 -0600
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A13BF8F8087
+	for <xfs@oss.sgi.com>; Mon, 15 Nov 2010 14:06:34 -0800 (PST)
+Message-ID: <4CE1AEEA.5050403@sgi.com>
+Date: Mon, 15 Nov 2010 16:06:34 -0600
 From: Bill Kendall <wkendall@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH v2 4/9] xfsrestore: mmap dirent names for faster lookups
+Subject: Re: [PATCH v2 7/9] xfsrestore: make node lookup more efficient
 References: <20101105163500.747192954@sgi.com>	
-	<20101105163643.799606284@sgi.com>
-	<1289604322.2315.909.camel@doink>
-In-Reply-To: <1289604322.2315.909.camel@doink>
+	<20101105163644.371326494@sgi.com>
+	<1289853517.2199.226.camel@doink>
+In-Reply-To: <1289853517.2199.226.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,53 +29,146 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: aelder@sgi.com
 Cc: xfs@oss.sgi.com
 
-On 11/12/2010 05:25 PM, Alex Elder wrote:
+On 11/15/2010 02:38 PM, Alex Elder wrote:
 > On Fri, 2010-11-05 at 11:35 -0500, wkendall@sgi.com wrote:
->> plain text document attachment (namreg_map)
->> Pathname resolution in xfsrestore is about 4x faster if the file
->> containing dirent names ("namreg") is memory mapped.  If xfsrestore is
->> unable to map the file (e.g., due to virtual memory constraints)
->> fallback to the existing seek-and-read approach.
+>> plain text document attachment (window_lookup_performance)
+>> When converting an nh_t to a segment index and relative node index,
+>> use shift and bitwise-and instead of division and modulo. Results show
+>> this is about 50% faster than the current method.
 >>
->> The file is mapped after all directory entries have been written to
->> the "namreg" file. If the caller tries to add additional entries after
->> the file has been mapped, it will be unmapped and restore will resort
->> back to seek-and-read lookups.
 >>
 >> Signed-off-by: Bill Kendall<wkendall@sgi.com>
 >
-> I guess I might have created a simple namreg_flush_final()
-> routine to encapsulate the namreg_flush() and namreg_map()
-> calls, rather than adding a flag.  Then namreg_flush() could
-> have been made to have static scope.  No big deal though.
+> I have a few comments below.  They are suggestions and
+> don't indicate that I've found any real problems in your
+> code.  If you think that updating things in response to
+> my suggestions is warranted, but want to do it later (as
+> a separate change) that's OK with me.
 >
-> Also, you fall back to the non-mmapped method in case a
-> flush or add happens after you've mapped the file.  That
-> is in some sense comforting, but it would be nice to be
-> assured it simply won't happen.  If you come to a point
-> someday where you are sure of this it would be nice to
-> see that code switched to assertions instead.
+> Reviewed-by: Alex Elder<aelder@sgi.com>
 >
-> You could define the new namreg_*map*() functions earlier
-> in the file and skip the forward declarations.
+>> ---
+>>   restore/node.c |  150 ++++++++++++++++++++++++++++-----------------------------
+>>   restore/win.c  |   36 +++----------
+>>   restore/win.h  |    6 +-
+>>   3 files changed, 87 insertions(+), 105 deletions(-)
+>>
+>> Index: xfsdump-kernel.org/restore/node.c
+>> ===================================================================
+>> --- xfsdump-kernel.org.orig/restore/node.c
+>> +++ xfsdump-kernel.org/restore/node.c
+>
+> . . .
+>
+>> @@ -173,6 +166,12 @@ typedef struct node_hdr node_hdr_t;
+>>   static node_hdr_t *node_hdrp;
+>>   static intgen_t node_fd;
+>
+> The following forward declarations could be eliminated
+> if you just move their definitions up in the file.
+>
+>> +/* forward declarations of locally defined static functions ******************/
+>> +static inline size_t nh2segix( nh_t nh );
+>> +static inline nh_t nh2relnix( nh_t nh );
+>> +static inline void node_map_internal( nh_t nh, void **pp );
+>> +static inline void node_unmap_internal( nh_t nh, void **pp, bool_t freepr );
+>> +
+>>   /* ARGSUSED */
+>>   bool_t
+>>   node_init( intgen_t fd,
+>
+> . . .
+>
+>> @@ -281,6 +280,8 @@ node_init( intgen_t fd,
+>>   		winmapmax = min( vmsz / segsz, max_segments );
+>>   	}
+>>
+>> +	relnixmask = nodesperseg - 1;
+>> +
+>
+> Is nodesperseg guaranteed to be a power of 2?  It may
+> be, but it's not obvious to me from glancing at this
+> block of code.
 
-But the comments told me to put the functions there! ;)
-xfsdump/restore could benefit from some major refactoring.
+Yes, just above this hunk nodesperseg is set using a bitshift.
 
 >
-> These aren't all that important though, I think it's a
-> good change.  Let me know if you think you will
-> re-work it but I think it's OK as-is.
+>>   	/* map the abstraction header
+>>   	 */
+>>   	ASSERT( ( NODE_HDRSZ&  pgmask ) == 0 );
+>
+> . . .
+>
+>>   void
+>> Index: xfsdump-kernel.org/restore/win.c
+>> ===================================================================
+>> --- xfsdump-kernel.org.orig/restore/win.c
+>> +++ xfsdump-kernel.org/restore/win.c
+>> @@ -177,31 +177,16 @@ win_init( intgen_t fd,
+>>   }
+>>
+>>   void
+>> -win_map( off64_t off, void **pp )
+>> +win_map( size_t segix, void **pp )
+>
+> It might be nice to have a segix_t or something.
+> The point being that what you are passing in here
+> is an index value (not a size), which is computed
+> from a node handle by figuring out which segment
+> that node handle resides in.
+>
+> I was a little puzzled that nh2segix() took a
+> node handle and returned a size_t.
+>
+> Similarly, a relnix appears to be an index
+> value within a segment; an integral typedef
+> could be used to clear that up. (and make
+> it clear it's different from just a nh_t).
+> Again, this suggestion comes out of my
+> not understanding the return type of
+> nh2relnix().
 
-I'll leave this patch as is, and make a note to look
-at changing the mmap-checks into asserts.
+I agree, these were bad choices. I based them off
+the fact that the old code unnecessarily passed
+a size64_t to the winmap interface for one of
+the params, then just changed it to size_t.
+
+I'll rework this one and resubmit the series.
 
 Bill
 
 >
-> Reviewed-by: Alex Elder<aelder@sgi.com>
+>>   {
+>> -	size_t offwithinseg;
+>> -	size_t segix;
+>>   	off64_t segoff;
+>>   	win_t *winp;
+>>
+>>   	CRITICAL_BEGIN();
+>>
+>> -	/* calculate offset within segment
+>> -	 */
+>> -	offwithinseg = ( size_t )( off % ( off64_t )tranp->t_segsz );
+>> -
+>> -	/* calculate segment index
+>> -	 */
+>> -	segix = (size_t)( off / ( off64_t )tranp->t_segsz );
+>> -
+>> -	/* calculate offset of segment
+>> -	 */
+>> -	segoff = off - ( off64_t )offwithinseg;
+>> -
+>>   #ifdef TREE_DEBUG
+>>   	mlog(MLOG_DEBUG | MLOG_TREE | MLOG_NOLOCK,
+>> -	     "win_map(off=%lld,addr=%x): off within = %llu, segoff = %lld\n",
+>> -	      off, pp, offwithinseg, segoff);
+>> +	     "win_map(segix=%lu,addr=%p)\n", segix, pp);
+>>   #endif
+>>   	/* resize the array if necessary */
+>>   	if ( segix>= tranp->t_segmaplen )
 >
 >
+> . . .
 
 _______________________________________________
 xfs mailing list
