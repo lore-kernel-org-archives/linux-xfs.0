@@ -1,18 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAF6LaQW042356 for <xfs@oss.sgi.com>; Mon, 15 Nov 2010 00:21:36 -0600
-Received: from relay4.sion.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 933C01C40BE1
-	for <xfs@oss.sgi.com>; Sun, 14 Nov 2010 22:23:06 -0800 (PST)
-Received: from relay4.sion.com (apu.sion.com [200.69.32.231]) by cuda.sgi.com
-	with ESMTP id wAevPOA0HBzUjJAC for <xfs@oss.sgi.com>;
-	Sun, 14 Nov 2010 22:23:06 -0800 (PST)
-Date: Mon, 15 Nov 2010 03:22:56 -0300
-From: Mail Delivery Subsystem <MAILER-DAEMON@apu.sion.com>
-Message-Id: <201011150622.oAF6MuAI018041@relay4.sion.com>
+	oAFGP26Z143918 for <xfs@oss.sgi.com>; Mon, 15 Nov 2010 10:25:02 -0600
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8BE201C42425
+	for <xfs@oss.sgi.com>; Mon, 15 Nov 2010 08:26:34 -0800 (PST)
+Received: from mail.sandeen.net (64-131-28-21.usfamily.net [64.131.28.21]) by
+	cuda.sgi.com with ESMTP id UqWGANesyJ7JKOsT for
+	<xfs@oss.sgi.com>; Mon, 15 Nov 2010 08:26:33 -0800 (PST)
+Message-ID: <4CE15F39.2010904@sandeen.net>
+Date: Mon, 15 Nov 2010 10:26:33 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Returned mail: see transcript for details
+Subject: Re: Fwd: xfs - fixing wrong xfs size
+References: <dbd747120904130713t7388971axf75ee779b5b1e1f2@mail.gmail.com>	<49E353FD.5060207@sandeen.net>	<dbd747120904130933i6ae66aedt7912a47b7e561f76@mail.gmail.com>	<4BE1EF9D.2030901@sandeen.net>
+	<30211747.post@talk.nabble.com>
+In-Reply-To: <30211747.post@talk.nabble.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,78 +24,50 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============8510670683743667665=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: johahoff <jh@not-dark-yet.de>
+Cc: xfs@oss.sgi.com
 
-This is a MIME-encapsulated message
+On 11/14/10 5:16 AM, johahoff wrote:
+> 
+>> You can use xfs_db to set it; or you could comment out the kernel
+>> check... and mount readonly, and copy off the data you can get to?
+> 
+> I have got the same problem after recovering a xfs volume using ddrescue. It
+> seems that the new 1 TB drive I dd'ed to is a few blocks short ...
+> 
+> I had a look at the xfs_db man page, but wasn't able to figure out which
+> command would allow me to set the block count of the fs. Can you please give
+> the appropriate commands? I think I'll be able to figure out the correct
+> counts on my own.
+> 
+> Thanks a lot!
+> 
+> -Johannes
 
---===============8510670683743667665==
-Content-Type: multipart/report; report-type=delivery-status;
-	boundary="oAF6MuAI018041.1289802176/relay4.sion.com"
-Content-Transfer-Encoding: 8bit
+# xfs_db -w /dev/blah
+xfs_db> sb 0
+xfs_db> p
+...
+magicnum = 0x58465342
+blocksize = 4096
+dblocks = XXXXXX
+...
+xfs_db> w dblocks <NEW VALUE>
+xfs_db> quit
 
-This is a MIME-encapsulated message
+You may have to do it for each of the superblocks but I think the first
+should suffice.
 
---oAF6MuAI018041.1289802176/relay4.sion.com
+If files reference the blocks past the device then of course you'll hit
+errors trying to read them as well ...
 
-The original message was received at Mon, 15 Nov 2010 03:22:50 -0300
-from [123.237.210.1]
-
-   ----- The following addresses had permanent fatal errors -----
-<xhl94c2185r@datafull.com>
-    (reason: 550 Gateway: (xhl94c2185r@datafull.com) 550 No such user (xhl94c2185r) -ERR xhl94c2185r@datafull.com Not Located)
-
-   ----- Transcript of session follows -----
-... while talking to surgedatafull.sion.com.:
->>> RCPT To:<xhl94c2185r@datafull.com>
-<<< 550 Gateway: (xhl94c2185r@datafull.com) 550 No such user (xhl94c2185r) -ERR xhl94c2185r@datafull.com Not Located
-550 5.1.1 <xhl94c2185r@datafull.com>... User unknown
-
---oAF6MuAI018041.1289802176/relay4.sion.com
-Content-Type: message/delivery-status
-
-Reporting-MTA: dns; relay4.sion.com
-Received-From-MTA: DNS; [123.237.210.1]
-Arrival-Date: Mon, 15 Nov 2010 03:22:50 -0300
-
-Final-Recipient: RFC822; xhl94c2185r@datafull.com
-Action: failed
-Status: 5.1.1
-Remote-MTA: DNS; surgedatafull.sion.com
-Diagnostic-Code: SMTP; 550 Gateway: (xhl94c2185r@datafull.com) 550 No such user (xhl94c2185r) -ERR xhl94c2185r@datafull.com Not Located
-Last-Attempt-Date: Mon, 15 Nov 2010 03:22:55 -0300
-
---oAF6MuAI018041.1289802176/relay4.sion.com
-Content-Type: text/rfc822-headers
-Content-Transfer-Encoding: 8bit
-
-Return-Path: <xfs@oss.sgi.com>
-Received: from mj ([123.237.210.1])
-	by relay4.sion.com (8.13.5/8.13.5/Debian-3) with SMTP id oAF6MlAI017982
-	for <xhl94c2185r@datafull.com>; Mon, 15 Nov 2010 03:22:50 -0300
-Date: Mon, 15 Nov 2010 03:22:47 -0300
-Message-Id: <201011150622.oAF6MlAI017982@relay4.sion.com>
-From: "Rolex.com" <no-reply@rolex.com>
-To: xhl94c2185r@datafull.com
-Subject: xhl94c2185r@datafull.com Rolex For You -50%
-Mime-Version: 1.0
-Content-type: text/html; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-
---oAF6MuAI018041.1289802176/relay4.sion.com--
-
-
---===============8510670683743667665==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+-Eric
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============8510670683743667665==--
