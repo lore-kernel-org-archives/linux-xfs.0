@@ -1,27 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAEBEWhE164589 for <xfs@oss.sgi.com>; Sun, 14 Nov 2010 05:14:32 -0600
-Received: from kuber.nabble.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 26B721C3E60C
-	for <xfs@oss.sgi.com>; Sun, 14 Nov 2010 03:16:02 -0800 (PST)
-Received: from kuber.nabble.com (kuber.nabble.com [216.139.236.158]) by
-	cuda.sgi.com with ESMTP id jfUZRDYCgyJpHwQR for
-	<xfs@oss.sgi.com>; Sun, 14 Nov 2010 03:16:02 -0800 (PST)
-Received: from isper.nabble.com ([192.168.236.156])
-	by kuber.nabble.com with esmtp (Exim 4.63)
-	(envelope-from <lists@nabble.com>) id 1PHaYz-0000cc-27
-	for xfs@oss.sgi.com; Sun, 14 Nov 2010 03:16:01 -0800
-Message-ID: <30211747.post@talk.nabble.com>
-Date: Sun, 14 Nov 2010 03:16:01 -0800 (PST)
-From: johahoff <jh@not-dark-yet.de>
-Subject: Re: Fwd: xfs - fixing wrong xfs size
-In-Reply-To: <4BE1EF9D.2030901@sandeen.net>
+	oAF108n0001234 for <xfs@oss.sgi.com>; Sun, 14 Nov 2010 19:00:08 -0600
+Received: from mx4-phx2.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B669A13B5D83
+	for <xfs@oss.sgi.com>; Sun, 14 Nov 2010 17:01:39 -0800 (PST)
+Received: from mx4-phx2.redhat.com (mx4-phx2.redhat.com [209.132.183.25]) by
+	cuda.sgi.com with ESMTP id AgwGK5JEPECZBB6Z for
+	<xfs@oss.sgi.com>; Sun, 14 Nov 2010 17:01:39 -0800 (PST)
+Date: Sun, 14 Nov 2010 20:01:39 -0500 (EST)
+From: Lachlan McIlroy <lmcilroy@redhat.com>
+Message-ID: <1825553240.2178961289782899012.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
+In-Reply-To: <4CDDC193.9030208@redhat.com>
+Subject: Re: [PATCH] xfstests 246: Test for race between direct I/O and mmap
 MIME-Version: 1.0
-References: <dbd747120904130713t7388971axf75ee779b5b1e1f2@mail.gmail.com>
-	<49E353FD.5060207@sandeen.net>
-	<dbd747120904130933i6ae66aedt7912a47b7e561f76@mail.gmail.com>
-	<4BE1EF9D.2030901@sandeen.net>
+Reply-To: Lachlan McIlroy <lmcilroy@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,26 +27,114 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs mailing list <xfs@oss.sgi.com>
 
+----- "Eric Sandeen" <sandeen@redhat.com> wrote:
 
-> You can use xfs_db to set it; or you could comment out the kernel
-> check... and mount readonly, and copy off the data you can get to?
+> From: Lachlan McIlroy <lmcilory@redhat.com>
+lmcilroy - although I was briefly known as lmcilory due a HR error.
 
-I have got the same problem after recovering a xfs volume using ddrescue. It
-seems that the new 1 TB drive I dd'ed to is a few blocks short ...
+Eric, the test looks good to me, thanks for fixing the errors in it.
 
-I had a look at the xfs_db man page, but wasn't able to figure out which
-command would allow me to set the block count of the fs. Can you please give
-the appropriate commands? I think I'll be able to figure out the correct
-counts on my own.
-
-Thanks a lot!
-
--Johannes
--- 
-View this message in context: http://old.nabble.com/xfs---fixing-wrong-xfs-size-tp23023562p30211747.html
-Sent from the Xfs - General mailing list archive at Nabble.com.
+> 
+> A customer reported a problem:
+> 
+> If a process is using mmap to write to a file on an 
+> ext4 filesystem while another process is using direct 
+> I/O to write to the same file the first thread may 
+> receive a SIGBUS during a page fault.
+> 
+> A SIGBUS occurs if the page fault tries to access a 
+> page that is entirely beyond the end of the file but 
+> in this test case that should not be happening.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> #! /bin/bash
+> # FS QA Test No. 246
+> #
+> # Test for race between direct I/O and mmap
+> #
+> #-----------------------------------------------------------------------
+> # Copyright (c) 2010 Red Hat, Inc.  All Rights Reserved.
+> #
+> # This program is free software; you can redistribute it and/or
+> # modify it under the terms of the GNU General Public License as
+> # published by the Free Software Foundation.
+> #
+> # This program is distributed in the hope that it would be useful,
+> # but WITHOUT ANY WARRANTY; without even the implied warranty of
+> # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> # GNU General Public License for more details.
+> #
+> # You should have received a copy of the GNU General Public License
+> # along with this program; if not, write the Free Software
+> Foundation,
+> # Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> #-----------------------------------------------------------------------
+> #
+> # creator
+> owner=lmcilroy@redhat.com
+> 
+> seq=`basename $0`
+> echo "QA output created by $seq"
+> 
+> here=`pwd`
+> tmp=/tmp/$$
+> status=1	# failure is the default!
+> trap "_cleanup; exit \$status" 0 1 2 3 7 15
+> 
+> _cleanup()
+> {
+>     cd /
+>     rm -f $tmp.* $testfile
+>     wait
+> }
+> 
+> # get standard environment, filters and checks
+> . ./common.rc
+> . ./common.filter
+> 
+> # real QA test starts here
+> 
+> # Modify as appropriate.
+> _supported_fs generic
+> _supported_os Linux
+> 
+> testfile=$TEST_DIR/$seq.$$
+> 
+> loops=500
+> iosize=1048576
+> 
+> # Initialise file
+> dd if=/dev/zero of=$testfile bs=$iosize count=$loops &> /dev/null
+> [ $? -ne 0 ] && exit
+> sync
+> 	
+> # Direct I/O overwriter
+> dd if=/dev/zero of=$testfile oflag=direct bs=$iosize count=$loops
+> conv=notrunc &> /dev/null &
+> [ $? -ne 0 ] && exit
+> 
+> # Mmap writer
+> start=`expr $loops - 1`
+> for i in `seq $start -1 0`
+> do
+> 	offset=`expr $i \* $iosize`
+> 	$XFS_IO_PROG -F -f -c "mmap -w $offset $iosize" -c "mwrite $offset
+> $iosize" $testfile
+> 	[ $? -ne 0 ] && exit
+> done
+> 
+> wait
+> 
+> echo "Silence is golden."
+> 
+> # success, all done
+> status=0
+> exit
 
 _______________________________________________
 xfs mailing list
