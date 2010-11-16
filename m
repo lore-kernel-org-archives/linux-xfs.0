@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAGF5Y2c069917 for <xfs@oss.sgi.com>; Tue, 16 Nov 2010 09:05:34 -0600
+	oAGF5WVY069887 for <xfs@oss.sgi.com>; Tue, 16 Nov 2010 09:05:32 -0600
 Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 798258F80BB
-	for <xfs@oss.sgi.com>; Tue, 16 Nov 2010 07:07:04 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A733A8F80BB
+	for <xfs@oss.sgi.com>; Tue, 16 Nov 2010 07:07:05 -0800 (PST)
 Received: from augusta (augusta.americas.sgi.com [128.162.233.117])
-	by estes.americas.sgi.com (Postfix) with ESMTP id 4F95870017C8
-	for <xfs@oss.sgi.com>; Tue, 16 Nov 2010 09:07:04 -0600 (CST)
-Message-Id: <20101116150703.775155599@sgi.com>
-Date: Tue, 16 Nov 2010 09:05:03 -0600
+	by estes.americas.sgi.com (Postfix) with ESMTP id 9A74E70017CC
+	for <xfs@oss.sgi.com>; Tue, 16 Nov 2010 09:07:05 -0600 (CST)
+Message-Id: <20101116150705.423217632@sgi.com>
+Date: Tue, 16 Nov 2010 09:05:11 -0600
 From: wkendall@sgi.com
-Subject: [PATCH v3 1/9] xfsrestore: turn off NODECHK
+Subject: [PATCH v3 9/9] xfsrestore: check for compatible xfsrestore
 References: <20101116150502.179825893@sgi.com>
-Content-Disposition: inline; filename=no_node_check
+Content-Disposition: inline; filename=check_compatible_restore
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,47 +29,202 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-The NODECHK macro should only be enabled as needed for
-development/debugging. Having it on limits xfsrestore to dumps
-with 268 million directory entries instead of 4 billion. 
+When resuming a restore or doing a cumulative restore, xfsrestore
+reads state information left around by the previous invocation.
+This patch adds logic to determine whether or not restore is
+able to make sense of the sense information.
+
+The xfsrestore man page has also been updated to make the user
+aware of the requirement to use a compatible restore and
+system when resuming restores.
 
 Signed-off-by: Bill Kendall <wkendall@sgi.com>
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
 
 ---
- restore/Makefile |    2 +-
- restore/node.c   |    4 +++-
- 2 files changed, 4 insertions(+), 2 deletions(-)
+ man/man8/xfsrestore.8 |   26 +++++++++++---
+ restore/content.c     |   92 +++++++++++++++++++++++++++++++++++++++++++++++---
+ 2 files changed, 108 insertions(+), 10 deletions(-)
 
-Index: xfsdump-kernel.org/restore/Makefile
+Index: xfsdump-kernel.org/man/man8/xfsrestore.8
 ===================================================================
---- xfsdump-kernel.org.orig/restore/Makefile
-+++ xfsdump-kernel.org/restore/Makefile
-@@ -103,7 +103,7 @@ LLDLIBS = $(LIBUUID) $(LIBHANDLE) $(LIBA
- LTDEPENDENCIES = $(LIBRMT)
- 
- LCFLAGS = -DRESTORE -DRMT -DBASED -DDOSOCKS -DINVCONVFIX -DPIPEINVFIX \
--	-DEOMFIX -DSESSCPLT -DWHITEPARSE -DNODECHK -DDIRENTHDR_CHECKSUM \
-+	-DEOMFIX -DSESSCPLT -DWHITEPARSE -DDIRENTHDR_CHECKSUM \
- 	-DF_FSSETDM
- 
- default: depend $(LTCOMMAND)
-Index: xfsdump-kernel.org/restore/node.c
+--- xfsdump-kernel.org.orig/man/man8/xfsrestore.8
++++ xfsdump-kernel.org/man/man8/xfsrestore.8
+@@ -61,6 +61,18 @@ The deltas must be applied in the order 
+ Each delta applied must have been produced with the previously applied
+ delta as its base.
+ .P
++.I xfsrestore
++keeps state information in the
++.IR xfsrestorehousekeepingdir ,
++to inform subsequent invocations when used in
++cumulative mode, or in the event a restore is interrupted.
++To ensure that the state information can be processed,
++a compatible version of
++.I xfsrestore
++must be used for each subsequent invocation. Additionally,
++each invocation must run on a system of the same endianness
++and page size.
++.P
+ The options to
+ .I xfsrestore
+ are:
+@@ -78,11 +90,11 @@ option allows the operator to specify an
+ in which
+ .I xfsrestore
+ creates the
+-.I xfsrestorehousekeeping
+-directory.
+-When performing a cumulative (\f3\-r\f1 option) restore,
+-each successive invocation of \f2xfsrestore\f1 must specify the same alternate
++.I xfsrestorehousekeepingdir
+ directory.
++When performing a cumulative (\f3\-r\f1 option) restore or
++resuming (\f3\-R\f1 option) a restore, each successive invocation
++must specify the same alternate directory.
+ .TP 5
+ \f3\-b\f1 \f2blocksize\f1
+ Specifies the blocksize, in bytes, to be used for the restore. 
+@@ -205,7 +217,11 @@ Source tape drive is a QIC tape.  QIC ta
+ blocksize, for which \f2xfsrestore\f1 must make special allowances.
+ .TP 5
+ \f3\-r\f1
+-Selects the cumulative mode of operation.
++Selects the cumulative mode of operation. The
++.B \-a
++and
++.I destination
++options must be the same for each invocation.
+ .TP 5
+ \f3\-s\f1 \f2subtree\f1
+ Specifies a subtree to restore.
+Index: xfsdump-kernel.org/restore/content.c
 ===================================================================
---- xfsdump-kernel.org.orig/restore/node.c
-+++ xfsdump-kernel.org/restore/node.c
-@@ -42,7 +42,9 @@ extern size_t pgmask;
+--- xfsdump-kernel.org.orig/restore/content.c
++++ xfsdump-kernel.org/restore/content.c
+@@ -71,6 +71,13 @@
  
- /* macros for manipulating node handles when handle consistency
-  * checking is enabled. the upper bits of a handle will be loaded
-- * with the node gen count, described below.
-+ * with the node gen count, described below. this should not be
-+ * used for production code, it cuts into the number of dirents
-+ * that xfsrestore can handle.
+ /* structure definitions used locally ****************************************/
+ 
++#define HOUSEKEEPING_MAGIC	0x686b6d61
++	/* "hkma" - see the housekeeping_magic field of pers_t below.
++	 */
++#define HOUSEKEEPING_VERSION	1
++	/* see the housekeeping_version field of pers_t below.
++	 */
++
+ #define WRITE_TRIES_MAX	3
+ 	/* retry loop tuning for write(2) workaround
+ 	 */
+@@ -358,12 +365,43 @@ struct stream_context {
+ 
+ typedef struct stream_context stream_context_t;
+ 
+-/* persistent state file header - two parts: accumulation state
+- * which spans several sessions, and session state. each has a valid
+- * bit, and no fields are valid until the valid bit is set.
+- * all elements defined such that a bzero results in a valid initial state.
++/* persistent state file header - on-disk format information plus
++ * accumulation state (which spans several sessions) and session state.
++ * the latter two have a valid bit, and their fields are not valid until
++ * the valid bit is set. all elements defined such that a bzero results
++ * in a valid initial state.
   */
- #define HDLGENCNT		4
- #define	HDLGENSHIFT		( NBBY * sizeof ( nh_t ) - HDLGENCNT )
+ struct pers {
++	/* on-disk format information used to verify that xfsrestore
++	 * can make sense of the data in xfsrestorehousekeepingdir
++	 * when running in cumulative mode or when resuming a restore.
++	 *
++	 * for backwards/forwards compatibility, this struct must be
++	 * the first field! also any changes to the struct must address
++	 * compatibility with other xfsrestore versions.
++	 */
++	struct {
++		size32_t housekeeping_magic;
++			/* used to determine if this struct has been
++			 * initialized, and whether the machine's
++			 * endianness is the same as the previous
++			 * invocation. (data written to xfsrestore's
++			 * state directory is not converted to an
++			 * endian-neutral format since it only persists
++			 * for the life of one or more restore sessions.)
++			 */
++		size32_t housekeeping_version;
++			/* version of the data structures used in the
++			 * state files in housekeepingdir. this must be
++			 * bumped whenever the on-disk format changes.
++			 */
++		size64_t pagesize;
++			/* headers in the persistent state files
++			 * are aligned on page size boundaries, so
++			 * this cannot change betweeen invocations.
++			 */
++	} v;
++
+ 	/* command line arguments from first session, and session
+ 	 * history.
+ 	 */
+@@ -1301,6 +1339,49 @@ content_init( intgen_t argc, char *argv[
+ 		      strerror( errno ));
+ 		return BOOL_FALSE;
+ 	}
++
++	/* but first setup or verify the on-disk format information
++	 */
++	if ( ! persp->a.valpr ) {
++		/* this is the first restore session
++		 */
++		persp->v.housekeeping_magic = HOUSEKEEPING_MAGIC;
++		persp->v.housekeeping_version = HOUSEKEEPING_VERSION;
++		persp->v.pagesize = pgsz;
++
++	} else {
++		/* cumulative or resuming a restore, verify the header
++		 */
++		if ( persp->v.housekeeping_magic != HOUSEKEEPING_MAGIC ) {
++			mlog( MLOG_NORMAL | MLOG_ERROR, _(
++			      "%s format corrupt or wrong endianness "
++			      "(0x%x, expected 0x%x)\n"),
++			      hkdirname,
++			      persp->v.housekeeping_magic,
++			      HOUSEKEEPING_MAGIC );
++			return BOOL_FALSE;
++		}
++		if ( persp->v.housekeeping_version != HOUSEKEEPING_VERSION ) {
++			mlog( MLOG_NORMAL | MLOG_ERROR, _(
++			      "%s format version differs from previous "
++			      "restore (%u, expected %u)\n"),
++			      hkdirname,
++			      persp->v.housekeeping_version,
++			      HOUSEKEEPING_VERSION );
++			return BOOL_FALSE;
++		}
++		if ( persp->v.pagesize != pgsz ) {
++			mlog( MLOG_NORMAL | MLOG_ERROR, _(
++			      "%s format differs from previous "
++			      "restore due to page size change "
++			      "(was %lu, now %lu)\n"),
++			      hkdirname,
++			      persp->v.pagesize,
++			      pgsz );
++			return BOOL_FALSE;
++		}
++	}
++
+ 	if ( ! persp->a.valpr ) {
+ 		if ( ! dstdir ) {
+ 			mlog( MLOG_NORMAL | MLOG_ERROR, _(
+@@ -1565,7 +1646,8 @@ content_init( intgen_t argc, char *argv[
+ 		stpgcnt = 0;
+ 		newstpgcnt = ( stsz + pgmask ) / pgsz;
+ 		descpgcnt = 0;
+-		memset( ( void * )persp, 0, sizeof( pers_t ));
++		memset( ( void * )&persp->a, 0,
++			sizeof( pers_t ) - offsetofmember( pers_t, a ));
+ 	} else if ( ! persp->s.valpr ) {
+ 		stpgcnt = persp->a.stpgcnt;
+ 		newstpgcnt = stpgcnt;
 
 _______________________________________________
 xfs mailing list
