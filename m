@@ -1,20 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAGLqZpk123849 for <xfs@oss.sgi.com>; Tue, 16 Nov 2010 15:52:35 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 33B2413C4C01
-	for <xfs@oss.sgi.com>; Tue, 16 Nov 2010 13:54:07 -0800 (PST)
-Received: from mail.sandeen.net (64-131-28-21.usfamily.net [64.131.28.21]) by
-	cuda.sgi.com with ESMTP id 2KlY9SrlfqFCzWDS for
-	<xfs@oss.sgi.com>; Tue, 16 Nov 2010 13:54:07 -0800 (PST)
-Message-ID: <4CE2FD7E.1040901@sandeen.net>
-Date: Tue, 16 Nov 2010 15:54:06 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	oAGLroRY123961 for <xfs@oss.sgi.com>; Tue, 16 Nov 2010 15:53:51 -0600
+Received: from mexforward.lss.emc.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CDB00186DB4
+	for <xfs@oss.sgi.com>; Tue, 16 Nov 2010 13:55:23 -0800 (PST)
+Received: from mexforward.lss.emc.com (mexforward.lss.emc.com [128.222.32.20])
+	by cuda.sgi.com with ESMTP id 4U3TAK0W53xOF4jV for
+	<xfs@oss.sgi.com>; Tue, 16 Nov 2010 13:55:23 -0800 (PST)
+Received: from hop04-l1d11-si02.isus.emc.com (HOP04-L1D11-SI02.isus.emc.com
+	[10.254.111.55])
+	by mexforward.lss.emc.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id
+	oAGLtMGo017482
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Tue, 16 Nov 2010 16:55:22 -0500
+Received: from mailhub.lss.emc.com (mailhub.lss.emc.com [10.254.222.226]) by
+	hop04-l1d11-si02.isus.emc.com (RSA Interceptor) for
+	<xfs@oss.sgi.com>; Tue, 16 Nov 2010 16:55:14 -0500
+Received: from corpussmtp3.corp.emc.com (corpussmtp3.corp.emc.com
+	[10.254.169.196])
+	by mailhub.lss.emc.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id
+	oAGLt28x003825 for <xfs@oss.sgi.com>; Tue, 16 Nov 2010 16:55:02 -0500
+From: <Ivan.Novick@emc.com>
+Date: Tue, 16 Nov 2010 16:56:00 -0500
+Subject: allocsize mount option behavior
+Message-ID: <C9083DF0.FCE%ivan.novick@emc.com>
+Content-Language: en-US
 MIME-Version: 1.0
-Subject: Re: XFS: I/O Error Detected / 2.6.27.39
-References: <4CE282DB.8060200@open-e.com>
-In-Reply-To: <4CE282DB.8060200@open-e.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,67 +35,34 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Piotr Kandziora <piotr.kandziora@open-e.com>
-Cc: Artur Piechocki <artur.piechocki@open-e.com>, lukasz.wittig@open-e.com, Janusz Bak <jb@open-e.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Timothy.Heath@emc.com
 
-On 11/16/10 7:10 AM, Piotr Kandziora wrote:
-> Hi,
-> 
-> Our environment is following:
-> - we have 24GB RAM,
-> - we are using 3ware controller (and it does not report any errors),
-> - we have one big logical volume (20TB) exported via NFS with large amount of small files (about 150k),
-> - we are doing periodically backup of this logical volume using rsync to another server.
-> - we have kernel 2.6.27.39,
-> 
-> Unfortunately our system is freezing unexpectedly without reason. We started investigating this problem and noticed that cache memory is slowly increasing.
-> 
-> We tried to dump this cache memory using:
-> /bin/echo "3" > /proc/sys/vm/drop_caches
-> 
-> In a result, cache was dumped, but in logs we noticed a lot of errors with XFS:
-> 
-> [kern.warning] kernel: xfs_iunlink_remove: xfs_inotobp()  returned an error 22 on dm-16.  Returning error.
+Hello,
 
-so this got EINVAL:
+I am using the allocsize mount option to reduce fragmentation, by ensuring =
+extents are of a minimum size.
 
-#define EINVAL          22      /* Invalid argument */
+Under a workload with heavy concurrency we noticed that disk space usage we=
+nt up noticeably.
 
-> [kern.notice] kernel: xfs_inactive:\011xfs_ifree() returned an error = 22 on dm-16
-> [kern.notice] kernel: xfs_force_shutdown(dm-16,0x1) called from line 1406 of file fs/xfs/xfs_vnodeops.c.  Return address = 0x
-> [kern.alert] kernel: Filesystem \"dm-16\": I/O Error Detected.  Shutting down filesystem: dm-16
+Can someone clarify the expected behavior of allocsize.  Does it force file=
+s to be at least the allocsize size on disk, or is the allocsize size reser=
+ved for each open file and then freed up if it is not used and the file is =
+closed, or does it work some other way.
 
-which shut down the filesystem:
+For example if allocsize=3D1g and I open 1000 files and start writing a sma=
+ll amount of data to each file =85. Would the device show as using 1000* 1g=
+ of disk space while the files are opened and after they are closed then on=
+ly the amount of space actually written by the user would be shown as used =
+on disk?
 
-> [kern.alert] kernel: Please umount the filesystem, and rectify the problem(s)
-
-leading to IO errors after that:
-
-#define EIO              5      /* I/O error */
-
-> [kern.warning] kernel: xfs_imap_to_bp: xfs_trans_read_buf()returned an error 5 on dm-16.  Returning error.
-> [kern.warning] kernel: xfs_imap_to_bp: xfs_trans_read_buf()returned an error 5 on dm-16.  Returning error.
-> [kern.warning] kernel: xfs_imap_to_bp: xfs_trans_read_buf()returned an error 5 on dm-16.  Returning error.
-> 
-> We are wondering if this is problem connected to hardware or rather this is XFS problem (if yes, was it fixed?).
-
-I'd probably start with xfs_repair (with -n if you want a dry run)
-and see if it finds any metadata corruption, first.
-
--Eric
- 
-> Best regards
-> Piotr K
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+Cheers,
+Ivan Novick
 
 _______________________________________________
 xfs mailing list
