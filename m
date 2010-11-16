@@ -1,13 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAGJLgTr106073 for <xfs@oss.sgi.com>; Tue, 16 Nov 2010 13:21:42 -0600
-Subject: Re: [PATCH v3 0/9] xfsrestore dirent limitations and scaling issues
+	oAGJJdJv105714 for <xfs@oss.sgi.com>; Tue, 16 Nov 2010 13:19:39 -0600
+Subject: Re: [PATCH v3 7/9] xfsrestore: make node lookup more efficient
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20101116150502.179825893@sgi.com>
+In-Reply-To: <20101116150705.030079100@sgi.com>
 References: <20101116150502.179825893@sgi.com>
-Date: Tue, 16 Nov 2010 13:21:55 -0600
-Message-ID: <1289935315.1950.91.camel@doink>
+	<20101116150705.030079100@sgi.com>
+Date: Tue, 16 Nov 2010 13:20:07 -0600
+Message-ID: <1289935207.1950.89.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -26,21 +27,25 @@ To: wkendall@sgi.com
 Cc: xfs@oss.sgi.com
 
 On Tue, 2010-11-16 at 09:05 -0600, wkendall@sgi.com wrote:
-> v3 of this series reworks a couple of the patches based on feedback
-> from Alex Elder:
-> 
-> - 3rd patch: changed a buffer size check to an assert.
-> - 7th patch: move static functions up in the file and
->   create typedefs for segix_t and relnix_t.
-> 
-> The remainder is unchanged from the previous submission.
+> plain text document attachment (window_lookup_performance)
+> When converting an nh_t to a segment index and relative node index,
+> use shift and bitwise-and instead of division and modulo. Results show
+> this is about 50% faster than the current method.
 
-I'm shepherd this series in to the xfsdump-dev tree
-for Bill.  I'll wait until tomorrow though, to give
-others one more chance to review.  If anyone has any
-objection please say so.
+So the mapping interface now takes a segment index
+rather than a node index, and you have node_map_*()
+functions that operate on node handles.  I think
+that's good.  That change seems to be bigger, but
+it basically enabled you to make the switch to
+masking only affect those new functions.
 
-					-Alex
+Anyway, looks good to me.
+
+Reviewed-by: Alex Elder <aelder@sgi.com>
+
+> 
+> Signed-off-by: Bill Kendall <wkendall@sgi.com>
+
 
 _______________________________________________
 xfs mailing list
