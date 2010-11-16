@@ -1,23 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAGGW48l085650 for <xfs@oss.sgi.com>; Tue, 16 Nov 2010 10:32:05 -0600
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0217F185480
-	for <xfs@oss.sgi.com>; Tue, 16 Nov 2010 08:33:37 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id jkDyyjmQCXyaPBwF for
-	<xfs@oss.sgi.com>; Tue, 16 Nov 2010 08:33:37 -0800 (PST)
-Date: Tue, 16 Nov 2010 11:33:21 -0500
-From: Josef Bacik <josef@redhat.com>
-Subject: Re: [PATCH 4/6] Ext4: fail if we try to use hole punch
-Message-ID: <20101116163320.GB2524@localhost.localdomain>
-References: <1289840723-3056-1-git-send-email-josef@redhat.com>
-	<1289840723-3056-5-git-send-email-josef@redhat.com>
-	<4CE2AF5B.7020500@draigBrady.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4CE2AF5B.7020500@draigBrady.com>
+	oAGJLgTr106073 for <xfs@oss.sgi.com>; Tue, 16 Nov 2010 13:21:42 -0600
+Subject: Re: [PATCH v3 0/9] xfsrestore dirent limitations and scaling issues
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <20101116150502.179825893@sgi.com>
+References: <20101116150502.179825893@sgi.com>
+Date: Tue, 16 Nov 2010 13:21:55 -0600
+Message-ID: <1289935315.1950.91.camel@doink>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,57 +18,29 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: =?iso-8859-1?Q?P=E1draig?= Brady <P@draigBrady.com>
-Cc: ocfs2-devel@oss.oracle.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, cluster-devel@redhat.com, cmm@us.ibm.com, Josef Bacik <josef@redhat.com>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
+To: wkendall@sgi.com
+Cc: xfs@oss.sgi.com
 
-On Tue, Nov 16, 2010 at 04:20:43PM +0000, P=E1draig Brady wrote:
-> On 15/11/10 17:05, Josef Bacik wrote:
-> > Ext4 doesn't have the ability to punch holes yet, so make sure we return
-> > EOPNOTSUPP if we try to use hole punching through fallocate.  This supp=
-ort can
-> > be added later.  Thanks,
-> > =
+On Tue, 2010-11-16 at 09:05 -0600, wkendall@sgi.com wrote:
+> v3 of this series reworks a couple of the patches based on feedback
+> from Alex Elder:
+> 
+> - 3rd patch: changed a buffer size check to an assert.
+> - 7th patch: move static functions up in the file and
+>   create typedefs for segix_t and relnix_t.
+> 
+> The remainder is unchanged from the previous submission.
 
-> > Signed-off-by: Josef Bacik <josef@redhat.com>
-> > ---
-> >  fs/ext4/extents.c |    4 ++++
-> >  1 files changed, 4 insertions(+), 0 deletions(-)
-> > =
+I'm shepherd this series in to the xfsdump-dev tree
+for Bill.  I'll wait until tomorrow though, to give
+others one more chance to review.  If anyone has any
+objection please say so.
 
-> > diff --git a/fs/ext4/extents.c b/fs/ext4/extents.c
-> > index 0554c48..35bca73 100644
-> > --- a/fs/ext4/extents.c
-> > +++ b/fs/ext4/extents.c
-> > @@ -3622,6 +3622,10 @@ long ext4_fallocate(struct inode *inode, int mod=
-e, loff_t offset, loff_t len)
-> >  	struct ext4_map_blocks map;
-> >  	unsigned int credits, blkbits =3D inode->i_blkbits;
-> >  =
-
-> > +	/* We only support the FALLOC_FL_KEEP_SIZE mode */
-> > +	if (mode && (mode !=3D FALLOC_FL_KEEP_SIZE))
-> > +		return -EOPNOTSUPP;
-> > +
-> >  	/*
-> >  	 * currently supporting (pre)allocate mode for extent-based
-> >  	 * files _only_
-> =
-
-> So for older versions of ext4 or other filesystems, how do we know
-> that fallocate(...,FALLOC_FL_PUNCH_HOLE) is not supported.
-> I.E. how do we detect at runtime that the call succeeded
-> and didn't just do a normal fallocate()?
->
-
-Older kernels won't accept FALLOC_FL_PUNCH_HOLE, so you'll get an error.
-Thanks,
-
-Josef =
-
+					-Alex
 
 _______________________________________________
 xfs mailing list
