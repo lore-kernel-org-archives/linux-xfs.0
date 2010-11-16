@@ -1,23 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAGD6Ci3050531 for <xfs@oss.sgi.com>; Tue, 16 Nov 2010 07:06:12 -0600
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6FA491C467DC
-	for <xfs@oss.sgi.com>; Tue, 16 Nov 2010 05:07:45 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 1Q1aadfWG5GcNk6s for
-	<xfs@oss.sgi.com>; Tue, 16 Nov 2010 05:07:45 -0800 (PST)
-Message-ID: <4CE28211.6060204@redhat.com>
-Date: Tue, 16 Nov 2010 15:07:29 +0200
-From: Avi Kivity <avi@redhat.com>
+	oAGD540B050328 for <xfs@oss.sgi.com>; Tue, 16 Nov 2010 07:05:05 -0600
+Received: from moutng.kundenserver.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 54C601C46572
+	for <xfs@oss.sgi.com>; Tue, 16 Nov 2010 05:06:35 -0800 (PST)
+Received: from moutng.kundenserver.de (moutng.kundenserver.de
+	[212.227.126.171]) by cuda.sgi.com with ESMTP id
+	SHTqd2ztKSs5IHPf for <xfs@oss.sgi.com>;
+	Tue, 16 Nov 2010 05:06:35 -0800 (PST)
+Message-ID: <4CE282DB.8060200@open-e.com>
+Date: Tue, 16 Nov 2010 14:10:51 +0100
+From: Piotr Kandziora <piotr.kandziora@open-e.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 4/6] Ext4: fail if we try to use hole punch
-References: <1289840723-3056-1-git-send-email-josef@redhat.com>
-	<1289840723-3056-5-git-send-email-josef@redhat.com>
-	<4CE2783F.1020004@redhat.com>
-	<20101116125016.GA31957@dhcp231-156.rdu.redhat.com>
-In-Reply-To: <20101116125016.GA31957@dhcp231-156.rdu.redhat.com>
+Subject: XFS: I/O Error Detected / 2.6.27.39
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,32 +26,52 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Josef Bacik <josef@redhat.com>
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com, cluster-devel@redhat.com, cmm@us.ibm.com, ocfs2-devel@oss.oracle.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
+To: xfs@oss.sgi.com
+Cc: Artur Piechocki <artur.piechocki@open-e.com>, Janusz Bak <jb@open-e.com>, lukasz.wittig@open-e.com
 
-On 11/16/2010 02:50 PM, Josef Bacik wrote:
-> On Tue, Nov 16, 2010 at 02:25:35PM +0200, Avi Kivity wrote:
-> >  On 11/15/2010 07:05 PM, Josef Bacik wrote:
-> >>  Ext4 doesn't have the ability to punch holes yet, so make sure we return
-> >>  EOPNOTSUPP if we try to use hole punching through fallocate.  This support can
-> >>  be added later.  Thanks,
-> >>
-> >
-> >  Instead of teaching filesystems to fail if they don't support the
-> >  capability, why don't supporting filesystems say so, allowing the fail
-> >  code to be in common code?
-> >
->
-> There is no simple way to test if a filesystem supports hole punching or not so
-> the check has to be done per fs.  Thanks,
+Hi,
 
-Could put a flag word in superblock_operations.  Filesystems which 
-support punching (or other features) can enable it there.
+Our environment is following:
+- we have 24GB RAM,
+- we are using 3ware controller (and it does not report any errors),
+- we have one big logical volume (20TB) exported via NFS with large 
+amount of small files (about 150k),
+- we are doing periodically backup of this logical volume using rsync to 
+another server.
+- we have kernel 2.6.27.39,
 
-Or even have its own callback.
+Unfortunately our system is freezing unexpectedly without reason. We 
+started investigating this problem and noticed that cache memory is 
+slowly increasing.
 
--- 
-error compiling committee.c: too many arguments to function
+We tried to dump this cache memory using:
+/bin/echo "3" > /proc/sys/vm/drop_caches
+
+In a result, cache was dumped, but in logs we noticed a lot of errors 
+with XFS:
+
+[kern.warning] kernel: xfs_iunlink_remove: xfs_inotobp()  returned an 
+error 22 on dm-16.  Returning error.
+[kern.notice] kernel: xfs_inactive:\011xfs_ifree() returned an error = 
+22 on dm-16
+[kern.notice] kernel: xfs_force_shutdown(dm-16,0x1) called from line 
+1406 of file fs/xfs/xfs_vnodeops.c.  Return address = 0x
+[kern.alert] kernel: Filesystem \"dm-16\": I/O Error Detected.  Shutting 
+down filesystem: dm-16
+[kern.alert] kernel: Please umount the filesystem, and rectify the 
+problem(s)
+[kern.warning] kernel: xfs_imap_to_bp: xfs_trans_read_buf()returned an 
+error 5 on dm-16.  Returning error.
+[kern.warning] kernel: xfs_imap_to_bp: xfs_trans_read_buf()returned an 
+error 5 on dm-16.  Returning error.
+[kern.warning] kernel: xfs_imap_to_bp: xfs_trans_read_buf()returned an 
+error 5 on dm-16.  Returning error.
+
+We are wondering if this is problem connected to hardware or rather this 
+is XFS problem (if yes, was it fixed?).
+
+Best regards
+Piotr K
 
 _______________________________________________
 xfs mailing list
