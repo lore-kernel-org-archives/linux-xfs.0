@@ -1,25 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAH6UmHP196229 for <xfs@oss.sgi.com>; Wed, 17 Nov 2010 00:30:49 -0600
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 40C2A13C7AA0
-	for <xfs@oss.sgi.com>; Tue, 16 Nov 2010 22:32:21 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id dEP3C2bSdefWVqLv for
-	<xfs@oss.sgi.com>; Tue, 16 Nov 2010 22:32:21 -0800 (PST)
-Date: Wed, 17 Nov 2010 01:31:26 -0500
-From: Josef Bacik <josef@redhat.com>
-Subject: Re: [PATCH 4/6] Ext4: fail if we try to use hole punch
-Message-ID: <20101117063125.GE5618@dhcp231-156.rdu.redhat.com>
-References: <1289840723-3056-1-git-send-email-josef@redhat.com>
-	<1289840723-3056-5-git-send-email-josef@redhat.com>
-	<4CE2783F.1020004@redhat.com>
-	<20101116125016.GA31957@dhcp231-156.rdu.redhat.com>
-	<4CE28211.6060204@redhat.com> <20101117030640.GD3290@thunk.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20101117030640.GD3290@thunk.org>
+	oAH7SMgq203123 for <xfs@oss.sgi.com>; Wed, 17 Nov 2010 01:28:22 -0600
+Received: from ucsc.edu (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2357813C71B9
+	for <xfs@oss.sgi.com>; Tue, 16 Nov 2010 23:29:54 -0800 (PST)
+Received: from ucsc.edu (email-prod-out-1.ucsc.edu [128.114.129.85]) by
+	cuda.sgi.com with ESMTP id 3CPFvTE6Zt9e0nBo for
+	<xfs@oss.sgi.com>; Tue, 16 Nov 2010 23:29:54 -0800 (PST)
+Subject: Re: xfs_repair of critical volume
+Mime-Version: 1.0 (Apple Message framework v1082)
+From: Eli Morris <ermorris@ucsc.edu>
+In-Reply-To: <20101116000436.GG22876@dastard>
+Date: Tue, 16 Nov 2010 23:29:41 -0800
+Message-Id: <A219F774-E2D5-4CEB-AB2B-399F3053DFF9@ucsc.edu>
+References: <75C248E3-2C99-426E-AE7D-9EC543726796@ucsc.edu>
+	<4CCD3CE6.8060407@hardwarefreak.com>
+	<864DA9C9-B4A4-4B6B-A901-A457E2B9F5A5@ucsc.edu>
+	<201011121422.28993@zmi.at>
+	<BE08758D-20B4-48F1-8BF7-FCD0341D38C2@ucsc.edu>
+	<20101114110559.GB22876@dastard>
+	<87214B07-148B-4580-84F2-792266DE2C55@ucsc.edu>
+	<20101116000436.GG22876@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,33 +34,112 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ted Ts'o <tytso@mit.edu>, Avi Kivity <avi@redhat.com>, Josef Bacik <josef@redhat.com>, david@fromorbit.com, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, cmm@us.ibm.com, cluster-devel@redhat.com, ocfs2-devel@oss.oracle.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Tue, Nov 16, 2010 at 10:06:40PM -0500, Ted Ts'o wrote:
-> > >There is no simple way to test if a filesystem supports hole punching or not so
-> > >the check has to be done per fs.  Thanks,
-> > 
-> > Could put a flag word in superblock_operations.  Filesystems which
-> > support punching (or other features) can enable it there.
+
+On Nov 15, 2010, at 4:04 PM, Dave Chinner wrote:
+
+> On Sun, Nov 14, 2010 at 08:09:35PM -0800, Eli Morris wrote:
+>> On Nov 14, 2010, at 3:05 AM, Dave Chinner wrote:
+>>> On Fri, Nov 12, 2010 at 03:01:47PM -0800, Eli Morris wrote:
+>>>> On Nov 12, 2010, at 5:22 AM, Michael Monnerie wrote:
+>>>>> On Freitag, 12. November 2010 Eli Morris wrote:
+>>>>>> The filesystem must be pointing to files that don't exist, or
+>>>>>> something like that. Is there a way to fix that, to say, remove
+>>>>>> files that don't exist anymore, sort of command? I thought that
+>>>>>> xfs_repair would do that, but apparently not in this case.
+>>>>> 
+>>>>> The filesystem is not optimized for "I replace part of the disk contents 
+>>>>> with zeroes" and find that errors. You will have to look in each file if 
+>>>>> it's contents are still valid, or maybe bogus.
+>>> ....
+>>>> Let me see if I can give you and everyone else a little more
+>>>> information and clarify this problem somewhat. And if there is
+>>>> nothing practical that can be done, then OK. What I am looking for
+>>>> is the best PRACTICAL outcome here given our resources and if
+>>>> anyone has an idea that might be helpful, that would be awesome. I
+>>>> put practical in caps, because that is the rub in all this. We
+>>>> could send X to a data recovery service, but there is no money for
+>>>> that. We could do Y, but if it takes a couple of months to
+>>>> accomplish, it might be better to do Z, even though Z is riskier
+>>>> or deletes some amount of data, because it is cheap and only takes
+>>>> one day to do..
+>>> 
+>>> Well, the best thing you can do is work out where in the block
+>>> device the zeroed range was, and then walk the entire filesystem
+>>> running xfs_bmap on every file to work out where their physical
+>>> extents are. i.e. build a physical block map of the good and bad
+>>> regions, then find what files have bits in the bad regions.
+>>> I've seen this done before with a perl script, and shouldn't take
+>>> more than a few hours to write and run....
+>> 
+>> I think that's a really good suggestion. I was thinking along
+>> those same lines myself. I understand how I would find where the
+>> files are located using xfs_bmap. Do you know which command I
+>> would use to find where the 'bad region' is located, so I can
+>> compare them to the file locations?
 > 
-> No, it couldn't be in super_operations.  It may vary on a per-inode
-> basis for some file systems, such as ext4 (depending on whether the
-> inode is extent-mapped or indirect-block mapped).
+> There isn't a command to find the 'bad region'. The bad region(s)
+> need to be worked out based on the storage geometry. e.g. if you had
+> a linear concat of 3 luns ilke so:
 > 
-> So at least for ext4 we'd need to call into fallocate() function
-> anyway, once we add support.  I suppose if other file systems really
-> want it, we could add a flag to the super block ops structure, so they
-> don't have do the "do we support the punch" operation.  I can go
-> either way on that; although if we think the majority of file systems
-> are going support punch in the long-term, then it might not be worth
-> it to add such a flag.
->
+> 	lun		logical offset		length
+> 	 0		     0GB		500GB
+> 	 1		   500GB		500GB
+> 	 2		  1000GB		500GB
+> 
+> And you lost lun 1, then your bad region is from 500GB-1000GB, and
+> it's easy to map that. However, if you have a RAID5/6 of those luns,
+> it gets a whole lot more complex because you need to know how the
+> RAID layout works (e.g. left-asymmetric) to work out where all the
+> parity is stored for each stripe and hence which disk contains data.
+> 
+> I'm not sure what your layout is, but you should be able to
+> calculate the bad regions specifically from the geometry of the
+> storage and your knowledge of which lun got zeroed....
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 
-Yeah thats alot of extra code just for one part of fallocate.  Calling into
-->fallocate is perfectly reasonable, especially since ext4 works the way it
-does, I'm going to leave things as they are.  Thanks,
 
-Josef 
+
+Hi Dave,
+
+Thanks a lot for your help. I looked at the man page and elsewhere for this info and can't find what this means:
+
+
+extent: [startoffset..endoffset]: startblock..endblock
+
+
+I understand what an offset would be, but what the heck is a startoffset and an endoffset? 
+
+Is the formula for the location of the file:
+
+ startoffset + startblock through endoffset + endblock, where the blocks and the offsets are in 512 bytes?
+
+
+So this file:
+
+0: [0..1053271]: 5200578944..5201632215
+
+would be contained from:
+
+beginning: 	(0 + 5200578944) * 512 bytes
+ending:		(1053271 + 5201632215) * 512 bytes
+
+Is that correct?
+
+thanks again,
+
+Eli
+
+
+
 
 _______________________________________________
 xfs mailing list
