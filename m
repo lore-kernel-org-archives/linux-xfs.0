@@ -1,29 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAH9T9A6218962 for <xfs@oss.sgi.com>; Wed, 17 Nov 2010 03:29:09 -0600
-Received: from idcmail-mo2no.shaw.ca (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1153E188771
-	for <xfs@oss.sgi.com>; Wed, 17 Nov 2010 01:30:42 -0800 (PST)
-Received: from idcmail-mo2no.shaw.ca (idcmail-mo2no.shaw.ca [64.59.134.9]) by
-	cuda.sgi.com with ESMTP id mhl2NyyQWiepxCTg for
-	<xfs@oss.sgi.com>; Wed, 17 Nov 2010 01:30:42 -0800 (PST)
-Subject: Re: [PATCH 1/6] fs: add hole punching to fallocate
-Mime-Version: 1.0 (Apple Message framework v1081)
-From: Andreas Dilger <adilger@dilger.ca>
-In-Reply-To: <20101117023456.GD5618@dhcp231-156.rdu.redhat.com>
-Date: Wed, 17 Nov 2010 03:30:40 -0600
-Message-Id: <23A45B17-C23C-45DA-8C51-1CF315C851E2@dilger.ca>
-References: <1289840723-3056-1-git-send-email-josef@redhat.com>
-	<1289840723-3056-2-git-send-email-josef@redhat.com>
-	<20101116111611.GA4757@quack.suse.cz>
-	<20101116114346.GB4757@quack.suse.cz>
-	<20101116125249.GB31957@dhcp231-156.rdu.redhat.com>
-	<20101116131451.GH4757@quack.suse.cz>
-	<18ACAA85-8847-4B12-9839-F99FB6C7B3E4@dilger.ca>
-	<20101117021150.GL22876@dastard>
-	<20101117022814.GB5618@dhcp231-156.rdu.redhat.com>
-	<20101117023456.GD5618@dhcp231-156.rdu.redhat.com>
+	oAH9ugvk225102 for <xfs@oss.sgi.com>; Wed, 17 Nov 2010 03:56:42 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EDBBF1C4E8B1
+	for <xfs@oss.sgi.com>; Wed, 17 Nov 2010 01:58:15 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id UgUrhpdqOdqCHSbX for
+	<xfs@oss.sgi.com>; Wed, 17 Nov 2010 01:58:15 -0800 (PST)
+Date: Wed, 17 Nov 2010 04:58:15 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: WARNING: at fs/xfs/linux-2.6/xfs_aops.c:1289
+	xfs_vm_releasepage+0x32/0x41()
+Message-ID: <20101117095815.GA5531@infradead.org>
+References: <4CE33550.1040302@mnsu.edu>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4CE33550.1040302@mnsu.edu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,23 +29,44 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Josef Bacik <josef@redhat.com>
-Cc: Jan Kara <jack@suse.cz>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, cluster-devel@redhat.com, cmm@us.ibm.com, ocfs2-devel@oss.oracle.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
+To: Jeffrey Hundstad <jeffrey.hundstad@mnsu.edu>
+Cc: xfs@oss.sgi.com
 
-On 2010-11-16, at 20:34, Josef Bacik wrote:
-> FWIW I agree with Dave, the only question at this point is do we force users to specify KEEP_SIZE with PUNCH_HOLE?  On one hand it makes the interface a bit more consistent, on the other hand it makes the documentation a little weird
+On Tue, Nov 16, 2010 at 07:52:16PM -0600, Jeffrey Hundstad wrote:
+> Hello,
 > 
-> "We have mode here, but if you want to use PUNCH_HOLE you also have to specify KEEP_SIZE, so really it's like a flags field it's just named poorly"
+> I'm not sure if this is interesting at all.  Let me know if it is, I
+> can do bisects if needed, let me know which config additions you
+> need for debugging.
 
-Even if this is the case, and we decide today that PUNCH_HOLE without KEEP_SIZE is not desirable to implement, it would be better to just return -EOPNOTSUPP if both flags are not set than assume one or the other is what the user wanted.  That allows the ability to implement this in the future without breaking every application, while if it is assumed that KEEP_SIZE is always implicit there will never be a way to add that functionality without something awful like a separate CHANGE_SIZE flag for PUNCH_HOLE.
+It's very interesting.  I put these WARN_ONs in because we believed we
+could never get a releasepage call with delayed or unwritten extents
+still on.  Previous it could happen during truncate, but with the new
+truncate sequence that should be gone.  Your trace on the other hand
+comes from kswapd.
 
-One option is to define FALLOC_FL_PUNCH_HOLE as 0x3 (so that KEEP_SIZE is always passed) and in the future we can define some new flag name like TRUNCATE_HOLE (or whatever) that is 0x2 only.
+>  [<c1019687>] ? warn_slowpath_common+0x7c/0x8f
+>  [<c10dbdcc>] ? xfs_vm_releasepage+0x32/0x41
+>  [<c10dbdcc>] ? xfs_vm_releasepage+0x32/0x41
+>  [<c10196b5>] ? warn_slowpath_null+0x1b/0x1e
+>  [<c10dbdcc>] ? xfs_vm_releasepage+0x32/0x41
+>  [<c1046672>] ? try_to_release_page+0x2c/0x3c
+>  [<c104fc12>] ? shrink_page_list+0x47d/0x5e3
+>  [<c104ea7a>] ? isolate_lru_pages+0x64/0x1cf
+>  [<c104fee4>] ? shrink_inactive_list+0x16c/0x1f3
+>  [<c1050272>] ? shrink_zone+0x307/0x3af
+>  [<c10506c6>] ? kswapd+0x3ac/0x574
+>  [<c102b335>] ? autoremove_wake_function+0x0/0x31
+>  [<c105031a>] ? kswapd+0x0/0x574
+>  [<c102b15f>] ? kthread+0x62/0x67
+>  [<c102b0fd>] ? kthread+0x0/0x67
+>  [<c1002b16>] ? kernel_thread_helper+0x6/0x10
 
-Cheers, Andreas
+This looks like some sort of race between writepage and redirtying.
 
-
-
-
+Let me think about it a bit more, but I think it's harmless.  What
+worries me more is that aptitude is apparently able to trigger
+kswapd writeback easily.
 
 _______________________________________________
 xfs mailing list
