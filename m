@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAHLGBxR094951 for <xfs@oss.sgi.com>; Wed, 17 Nov 2010 15:16:12 -0600
-Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 44C8D4CFCDB
-	for <xfs@oss.sgi.com>; Wed, 17 Nov 2010 13:17:42 -0800 (PST)
-Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
-	cuda.sgi.com with ESMTP id PydvViXsZ7v5Y3wh for
-	<xfs@oss.sgi.com>; Wed, 17 Nov 2010 13:17:42 -0800 (PST)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: Re: XFS: I/O Error Detected / 2.6.27.39
-Date: Wed, 17 Nov 2010 22:17:37 +0100
-References: <4CE282DB.8060200@open-e.com>
-	<20101116214415.61ecb7cd@galadriel.home>
-	<4CE3B1C0.3060308@open-e.com>
-In-Reply-To: <4CE3B1C0.3060308@open-e.com>
+	oAHNR4kY110397 for <xfs@oss.sgi.com>; Wed, 17 Nov 2010 17:27:06 -0600
+Received: from rcsinet10.oracle.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3E91613B5418
+	for <xfs@oss.sgi.com>; Wed, 17 Nov 2010 15:28:37 -0800 (PST)
+Received: from rcsinet10.oracle.com (rcsinet10.oracle.com [148.87.113.121]) by
+	cuda.sgi.com with ESMTP id 5v7B9Kk0pBZSQr4U for
+	<xfs@oss.sgi.com>; Wed, 17 Nov 2010 15:28:37 -0800 (PST)
+Date: Wed, 17 Nov 2010 15:27:45 -0800
+From: Joel Becker <Joel.Becker@oracle.com>
+Subject: Re: [PATCH 3/6] Ocfs2: handle hole punching via fallocate properly
+Message-ID: <20101117232745.GG25677@mail.oracle.com>
+References: <1289840723-3056-1-git-send-email-josef@redhat.com>
+	<1289840723-3056-4-git-send-email-josef@redhat.com>
 MIME-Version: 1.0
-Message-Id: <201011172217.39796@zmi.at>
+Content-Disposition: inline
+In-Reply-To: <1289840723-3056-4-git-send-email-josef@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,68 +25,84 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============7430913517972358157=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Piotr Kandziora <piotr.kandziora@open-e.com>, Artur Piechocki <artur.piechocki@open-e.com>, Janusz Bak <jb@open-e.com>, lukasz.wittig@open-e.com
+To: Josef Bacik <josef@redhat.com>
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com, cluster-devel@redhat.com, cmm@us.ibm.com, ocfs2-devel@oss.oracle.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
 
---===============7430913517972358157==
-Content-Type: multipart/signed;
-  boundary="nextPart2648030.LsI9mWO7Om";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+On Mon, Nov 15, 2010 at 12:05:20PM -0500, Josef Bacik wrote:
+> This patch just makes ocfs2 use its UNRESERVP ioctl when we get the hole punch
+> flag in fallocate.  I didn't test it, but it seems simple enough.  Thanks,
+> 
+> Signed-off-by: Josef Bacik <josef@redhat.com>
 
---nextPart2648030.LsI9mWO7Om
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Seems reasonable to me.
+Acked-by: Joel Becker <joel.becker@oracle.com>
 
-On Mittwoch, 17. November 2010 Piotr Kandziora wrote:
-> - xfs tools version 2.10.1
+Joel
 
-You should really use 3.1.x, but maybe "xfs tools" has a different=20
-numbering than "xfsprogs"? xfs_repair -V should show 3.1.x at least.
+> ---
+>  fs/ocfs2/file.c |   10 ++++++++--
+>  1 files changed, 8 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/ocfs2/file.c b/fs/ocfs2/file.c
+> index 77b4c04..181ae52 100644
+> --- a/fs/ocfs2/file.c
+> +++ b/fs/ocfs2/file.c
+> @@ -1992,6 +1992,7 @@ static long ocfs2_fallocate(struct inode *inode, int mode, loff_t offset,
+>  	struct ocfs2_super *osb = OCFS2_SB(inode->i_sb);
+>  	struct ocfs2_space_resv sr;
+>  	int change_size = 1;
+> +	int cmd = OCFS2_IOC_RESVSP64;
+>  
+>  	if (!ocfs2_writes_unwritten_extents(osb))
+>  		return -EOPNOTSUPP;
+> @@ -2002,12 +2003,17 @@ static long ocfs2_fallocate(struct inode *inode, int mode, loff_t offset,
+>  	if (mode & FALLOC_FL_KEEP_SIZE)
+>  		change_size = 0;
+>  
+> +	if (mode & FALLOC_FL_PUNCH_HOLE) {
+> +		cmd = OCFS2_IOC_UNRESVSP64;
+> +		change_size = 0;
+> +	}
+> +
+>  	sr.l_whence = 0;
+>  	sr.l_start = (s64)offset;
+>  	sr.l_len = (s64)len;
+>  
+> -	return __ocfs2_change_file_space(NULL, inode, offset,
+> -					 OCFS2_IOC_RESVSP64, &sr, change_size);
+> +	return __ocfs2_change_file_space(NULL, inode, offset, cmd, &sr,
+> +					 change_size);
+>  }
+>  
+>  int ocfs2_check_range_for_refcount(struct inode *inode, loff_t pos,
+> -- 
+> 1.6.6.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+> 
 
+-- 
 
-=2D-=20
-mit freundlichen Gr=FCssen,
-Michael Monnerie, Ing. BSc
+"Born under a bad sign.
+ I been down since I began to crawl.
+ If it wasn't for bad luck,
+ I wouldn't have no luck at all."
 
-it-management Internet Services: Prot=E9ger
-http://proteger.at [gesprochen: Prot-e-schee]
-Tel: +43 660 / 415 6531
-
-// ****** Radiointerview zum Thema Spam ******
-// http://www.it-podcast.at/archiv.html#podcast-100716
-//=20
-// Haus zu verkaufen: http://zmi.at/langegg/
-
---nextPart2648030.LsI9mWO7Om
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.15 (GNU/Linux)
-
-iEYEABECAAYFAkzkRnMACgkQzhSR9xwSCbRr+ACeKAw6WaWW/owlLt1dhtq6UYJW
-qboAoLOf/U1oXsUuarNUEpnvym09Inzp
-=AncX
------END PGP SIGNATURE-----
-
---nextPart2648030.LsI9mWO7Om--
-
-
---===============7430913517972358157==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Joel Becker
+Senior Development Manager
+Oracle
+E-mail: joel.becker@oracle.com
+Phone: (650) 506-8127
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============7430913517972358157==--
