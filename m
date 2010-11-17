@@ -1,23 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAH9GLRs216383 for <xfs@oss.sgi.com>; Wed, 17 Nov 2010 03:16:22 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5376D1C4F003
-	for <xfs@oss.sgi.com>; Wed, 17 Nov 2010 01:17:55 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id DnkXN6BLMPuy3L5P for
-	<xfs@oss.sgi.com>; Wed, 17 Nov 2010 01:17:55 -0800 (PST)
-Date: Wed, 17 Nov 2010 04:17:49 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfstests: check block truncation after write failure
-Message-ID: <20101117091749.GB17317@infradead.org>
-References: <20101109114923.GA29629@infradead.org>
-	<20101109223426.GO2715@dastard>
-	<20101110125500.GA9828@infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20101110125500.GA9828@infradead.org>
+	oAH9T9A6218962 for <xfs@oss.sgi.com>; Wed, 17 Nov 2010 03:29:09 -0600
+Received: from idcmail-mo2no.shaw.ca (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1153E188771
+	for <xfs@oss.sgi.com>; Wed, 17 Nov 2010 01:30:42 -0800 (PST)
+Received: from idcmail-mo2no.shaw.ca (idcmail-mo2no.shaw.ca [64.59.134.9]) by
+	cuda.sgi.com with ESMTP id mhl2NyyQWiepxCTg for
+	<xfs@oss.sgi.com>; Wed, 17 Nov 2010 01:30:42 -0800 (PST)
+Subject: Re: [PATCH 1/6] fs: add hole punching to fallocate
+Mime-Version: 1.0 (Apple Message framework v1081)
+From: Andreas Dilger <adilger@dilger.ca>
+In-Reply-To: <20101117023456.GD5618@dhcp231-156.rdu.redhat.com>
+Date: Wed, 17 Nov 2010 03:30:40 -0600
+Message-Id: <23A45B17-C23C-45DA-8C51-1CF315C851E2@dilger.ca>
+References: <1289840723-3056-1-git-send-email-josef@redhat.com>
+	<1289840723-3056-2-git-send-email-josef@redhat.com>
+	<20101116111611.GA4757@quack.suse.cz>
+	<20101116114346.GB4757@quack.suse.cz>
+	<20101116125249.GB31957@dhcp231-156.rdu.redhat.com>
+	<20101116131451.GH4757@quack.suse.cz>
+	<18ACAA85-8847-4B12-9839-F99FB6C7B3E4@dilger.ca>
+	<20101117021150.GL22876@dastard>
+	<20101117022814.GB5618@dhcp231-156.rdu.redhat.com>
+	<20101117023456.GD5618@dhcp231-156.rdu.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,204 +36,23 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Marius Tolzmann <tolzmann@molgen.mpg.de>, xfs@oss.sgi.com
+To: Josef Bacik <josef@redhat.com>
+Cc: Jan Kara <jack@suse.cz>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, cluster-devel@redhat.com, cmm@us.ibm.com, ocfs2-devel@oss.oracle.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
 
-ping?
+On 2010-11-16, at 20:34, Josef Bacik wrote:
+> FWIW I agree with Dave, the only question at this point is do we force users to specify KEEP_SIZE with PUNCH_HOLE?  On one hand it makes the interface a bit more consistent, on the other hand it makes the documentation a little weird
+> 
+> "We have mode here, but if you want to use PUNCH_HOLE you also have to specify KEEP_SIZE, so really it's like a flags field it's just named poorly"
 
-On Wed, Nov 10, 2010 at 07:55:00AM -0500, Christoph Hellwig wrote:
-> Below is a version using od.  The output in case of failure is not
-> quite as easily readable as the original, but in the end portability
-> wins:
-> 
-> ---
-> From: Christoph Hellwig <hch@lst.de>
-> Subject: [PATCH] xfstests: check block truncation after write failure
-> Cc: Marius Tolzmann <tolzmann@molgen.mpg.de>
-> 
-> Extraced from  https://bugzilla.kernel.org/show_bug.cgi?id=22452
-> "data corruption after mmap()ing a file and writev() some data to another file"
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
-> Index: xfstests-dev/246
-> ===================================================================
-> --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-> +++ xfstests-dev/246	2010-11-10 12:50:10.000000000 +0000
-> @@ -0,0 +1,60 @@
-> +#! /bin/bash
-> +# FS QA Test No. 246
-> +#
-> +# Check that truncation after failed writes does not zero too much data.
-> +#
-> +# Based on a bug report and testcase from
-> +# Marius Tolzmann <tolzmann@molgen.mpg.de>
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2010 Christoph Hellwig.  All Rights Reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#
-> +#-----------------------------------------------------------------------
-> +#
-> +# creator
-> +owner=hch@lst.de
-> +
-> +seq=`basename $0`
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +
-> +# get standard environment, filters and checks
-> +. ./common.rc
-> +. ./common.filter
-> +
-> +# real QA test starts here
-> +_supported_fs generic
-> +_supported_os Linux
-> +
-> +file=$TEST_DIR/mmap-writev
-> +
-> +_cleanup()
-> +{
-> +	rm -rf $file
-> +	rm -rf $file.NEW
-> +}
-> +
-> +trap "_cleanup ; exit \$status" 0 1 2 3 15
-> +
-> +echo -n "cccccccccc" > $file
-> +$here/src/t_mmap_writev $file $file.NEW
-> +od -t x2 $file.NEW
-> +
-> +status=0
-> +exit $status
-> Index: xfstests-dev/246.out
-> ===================================================================
-> --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-> +++ xfstests-dev/246.out	2010-11-10 12:50:30.000000000 +0000
-> @@ -0,0 +1,4 @@
-> +QA output created by 246
-> +0000000 6161 6161 6161 6161 6161 6262 6262 6262
-> +0000020 6262 6262 6363 6363 6363 6363 6363
-> +0000036
-> Index: xfstests-dev/group
-> ===================================================================
-> --- xfstests-dev.orig/group	2010-11-10 12:40:29.000000000 +0000
-> +++ xfstests-dev/group	2010-11-10 12:40:40.000000000 +0000
-> @@ -359,3 +359,4 @@ deprecated
->  243 auto quick prealloc
->  244 auto quota quick
->  245 auto quick dir
-> +246 auto quick rw
-> Index: xfstests-dev/src/Makefile
-> ===================================================================
-> --- xfstests-dev.orig/src/Makefile	2010-11-10 12:39:26.000000000 +0000
-> +++ xfstests-dev/src/Makefile	2010-11-10 12:40:40.000000000 +0000
-> @@ -10,7 +10,8 @@ TARGETS = dirstress fill fill2 getpagesi
->  	mmapcat append_reader append_writer dirperf metaperf \
->  	devzero feature alloc fault fstest t_access_root \
->  	godown resvtest writemod makeextents itrash rename \
-> -	multi_open_unlink dmiperf unwritten_sync genhashnames t_holes
-> +	multi_open_unlink dmiperf unwritten_sync genhashnames t_holes \
-> +	t_mmap_writev
->  
->  LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
->  	preallo_rw_pattern_writer ftrunc trunc fs_perms testx looptest \
-> Index: xfstests-dev/src/t_mmap_writev.c
-> ===================================================================
-> --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-> +++ xfstests-dev/src/t_mmap_writev.c	2010-11-10 12:40:40.000000000 +0000
-> @@ -0,0 +1,70 @@
-> +/*
-> +    mmap() a file and writev() back to another file
-> +         - kernel bug #22452 testcase
-> +
-> +    Copyright (C) 2010
-> +         by D.Buczek - Max Planck Institute for Molecular Genetics Berlin
-> +
-> +    This program is free software; you can redistribute it and/or modify
-> +    it under the terms of the GNU General Public License as published by
-> +    the Free Software Foundation; either version 2 of the License, or
-> +    (at your option) any later version.
-> +
-> +    This program is distributed in the hope that it will be useful,
-> +    but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +    GNU General Public License for more details.
-> +
-> +    You should have received a copy of the GNU General Public License along
-> +    with this program; if not, write to the Free Software Foundation, Inc.,
-> +    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-> +*/
-> +
-> +#include <sys/types.h>
-> +#include <fcntl.h>
-> +#include <stdio.h>
-> +#include <stdlib.h>
-> +
-> +#include <sys/mman.h>
-> +#include <string.h>
-> +#include <sys/uio.h>
-> +#include <unistd.h>
-> +
-> +int main(int argc, char **argv)
-> +{
-> +	char *file = argv[1];
-> +	char *new_file = argv[2];
-> +	int fd;
-> +	int fd_new;
-> +	void *base;
-> +
-> +	struct iovec iovec[3]=
-> +	{
-> +		{ "aaaaaaaaaa" , 10 },
-> +		{ "bbbbbbbbbb" , 10 },
-> +	 	{ NULL , 10 }
-> +	};
-> +
-> +	int i;
-> +
-> +	fd=open(file, O_RDONLY);
-> +	if (fd==-1) {perror("open");exit(1);}
-> +
-> +	base = mmap(NULL,16384,PROT_READ,MAP_SHARED,fd,0);
-> +	if  (base == (void *)-1) { perror("mmap");exit(1); }
-> +
-> +	unlink(new_file);
-> +
-> +	fd_new=open(new_file,O_RDWR|O_CREAT,0666);
-> +	if (fd_new==-1) {perror("creat");exit(1);}
-> +
-> +	iovec[2].iov_base=(char *)base;
-> +	i=writev(fd_new,iovec,sizeof(iovec)/sizeof(*iovec));
-> +	if (i==-1) {perror("writev");exit(1);}
-> +
-> +	close(fd_new);
-> +	munmap(base,16384);
-> +	close(fd);
-> +
-> +	return 0;
-> +}
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
----end quoted text---
+Even if this is the case, and we decide today that PUNCH_HOLE without KEEP_SIZE is not desirable to implement, it would be better to just return -EOPNOTSUPP if both flags are not set than assume one or the other is what the user wanted.  That allows the ability to implement this in the future without breaking every application, while if it is assumed that KEEP_SIZE is always implicit there will never be a way to add that functionality without something awful like a separate CHANGE_SIZE flag for PUNCH_HOLE.
+
+One option is to define FALLOC_FL_PUNCH_HOLE as 0x3 (so that KEEP_SIZE is always passed) and in the future we can define some new flag name like TRUNCATE_HOLE (or whatever) that is 0x2 only.
+
+Cheers, Andreas
+
+
+
+
 
 _______________________________________________
 xfs mailing list
