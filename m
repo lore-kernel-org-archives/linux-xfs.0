@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAIICBTX191931 for <xfs@oss.sgi.com>; Thu, 18 Nov 2010 12:12:11 -0600
-Received: from webbox110.server-home.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1AC3F4D0DD4
-	for <xfs@oss.sgi.com>; Thu, 18 Nov 2010 10:13:44 -0800 (PST)
-Received: from webbox110.server-home.org (webbox110-temp.server-home.org
-	[83.220.144.194]) by cuda.sgi.com with ESMTP id
-	5GFQZHtLw2tBGhiH for <xfs@oss.sgi.com>;
-	Thu, 18 Nov 2010 10:13:44 -0800 (PST)
-Subject: NEEDED............
-From: arlin <arlinschnieder862@gmail.com>
+	oAIJwxHs202569 for <xfs@oss.sgi.com>; Thu, 18 Nov 2010 13:58:59 -0600
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1FCBB18B565
+	for <xfs@oss.sgi.com>; Thu, 18 Nov 2010 12:00:32 -0800 (PST)
+Received: from mail.sandeen.net (64-131-28-21.usfamily.net [64.131.28.21]) by
+	cuda.sgi.com with ESMTP id JCBhNu1nfYwcLWOm for
+	<xfs@oss.sgi.com>; Thu, 18 Nov 2010 12:00:32 -0800 (PST)
+Message-ID: <4CE585DF.9040107@sandeen.net>
+Date: Thu, 18 Nov 2010 14:00:31 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Message-Id: <20101118181319.D736BF032B0@webbox110.server-home.org>
-Date: Thu, 18 Nov 2010 19:13:19 +0100 (CET)
-Reply-To: arlinschnieder862@gmail.com
+Subject: Re: xfstests: MKFS_OPTIONS is not being reinitialized
+References: <718862571.1487061290102036972.JavaMail.root@zmail01.collab.prod.int.phx2.redhat.com>
+In-Reply-To: <718862571.1487061290102036972.JavaMail.root@zmail01.collab.prod.int.phx2.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,27 +27,95 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Boris Ranto <branto@redhat.com>
+Cc: xfs@oss.sgi.com
 
+On 11/18/10 11:40 AM, Boris Ranto wrote:
+> 
+> ----- "Dave Chinner" <david@fromorbit.com> wrote:
+> 
+>> On Wed, Nov 17, 2010 at 04:49:58PM +0100, Boris Ranto wrote:
+>>> Test case 223 constantly fails because the variable carrying
+>>> mkfs options is not being reinitialized.
+>>> 
+>>> Test calls function _scratch_mkfs_geom repeatedly in for loop
+>> without
+>>> cleaning the MKFS_OPTIONS variable. Since _scratch_mkfs_geom
+>>> only appends options to the variable, MKFS_OPTIONS looks like
+>>> this in
+>> 5th
+>>> iteration: MKFS_OPTIONS="-bsize=4096-b size=4096 -d
+>>> su=8192,sw=4-b size=4096
+>> -d
+>>> su=16384,sw=4-b size=4096 -d su=32768,sw=4-b size=4096 -d 
+>>> su=65536,sw=4-b size=4096 -d su=131072,sw=4"
+>>> 
+>>> It is also easy to see that _scratch_mkfs_geom does not append
+>> leading
+>>> space when it appends the variable.
+>>> 
+>>> Following patch fixes the issue for me and based on my testing
+>>> does
+>> not
+>>> break any other test case:
+>>> 
+>>> diff -uprN xfstests-dev/223 xfstests-dev-new/223 ---
+>>> xfstests-dev/223	2010-11-09 08:53:39.000000000 -0500 +++
+>>> xfstests-dev-new/223	2010-11-17 08:05:56.745068628 -0500 @@ -58,6
+>>> +58,7 @@ for SUNIT_K in 8 16 32 64 128; do let
+>>> SUNIT_BLOCKS=$SUNIT_BYTES/$BLOCKSIZE
+>>> 
+>>> echo "=== mkfs with su $SUNIT_BLOCKS blocks x 4 ===" +	export
+>>> MKFS_OPTIONS="" _scratch_mkfs_geom $SUNIT_BYTES 4 $BLOCKSIZE >>
+>>> $seq.full 2>&1 _scratch_mount
+>> 
+>> That'll drop any custom mkfs options on the floor for that test.
+>> 
+>>> 
+>>> diff -uprN xfstests-dev/common.rc xfstests-dev-new/common.rc ---
+>>> xfstests-dev/common.rc	2010-11-09 08:53:39.000000000 -0500 +++
+>>> xfstests-dev-new/common.rc	2010-11-17 08:07:06.972132647 -0500 @@
+>>> -349,10 +349,10 @@ _scratch_mkfs_geom()
+>>> 
+>>> case $FSTYP in xfs) -	MKFS_OPTIONS+="-b size=$blocksize, -d
+>> su=$sunit_bytes,sw=$swidth_mult"
+>>> +	MKFS_OPTIONS+=" -b size=$blocksize, -d su=$sunit_bytes,sw= 
+>>> $swidth_mult" ;; ext4) -	MKFS_OPTIONS+="-b $blocksize -E
+>> stride=$sunit_blocks,stripe_width=
+>>> $swidth_blocks" +	MKFS_OPTIONS+=" -b $blocksize -E
+>> stride=$sunit_blocks,stripe_width=
+>>> $swidth_blocks" ;; *) _notrun "can't mkfs $FSTYP with geometry"
+>> 
+>> Perhaps rather than using MKFS_OPTIONS, this should call 
+>> scratch_mkfs directly with these as extra options, similar to the 
+>> way _scratch_mkfs_sized() does. That would leave custom options
+>> set, and only pass the test specific options once to mkfs....
 
-My Name is Arlin Schneider,i will like to travel to your country with my family for trips and tours, we will be staying for a 5 days holidays therefore I will like to know  whether you can provide them with any of your tour program.I want you to  get back to me with the price rate and all payment will be done in  advance also let me know the type of credit card you accept as your mode  of payment.
+I thought about that too, but I'm worried about some options
+clashing.
 
-The guest check in date as follows:
+>> Cheers,
+>> 
+>> Dave. -- Dave Chinner david@fromorbit.com
+> 
+> If I remember it right this would not work because MKFS_OPTIONS
+> already contained -bsize=4096 at the beginning of the test and if
+> another -b size=$blocksize would be added to the options mkfs would
+> fail again.
 
-Arrival Date:   14 of DEC.2010
-Departure Date: 19  of ODEC.2010
+*nod*
 
-Names of Guest.
-Master Peter Schneider....Age : 35 years
-Miss Laura Schneider....Age : 30 years
-Mr Arlin & Mrs Mary Schneider
+I think I'm ok with it the way it is.  FWIW, I committed it yesterday ...
+We can change further if needed though, of course.
 
-Hope to hear from you soonest.
-Best Regards,
-Arlin Schneider.
+Thanks,
+-Eric
 
-
-
+> Cheers, Boris Ranto <branto@redhat.com>
+> 
+> _______________________________________________ xfs mailing list 
+> xfs@oss.sgi.com http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
