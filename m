@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAI1sYhD115683 for <xfs@oss.sgi.com>; Wed, 17 Nov 2010 19:54:35 -0600
+	oAI1scHq115735 for <xfs@oss.sgi.com>; Wed, 17 Nov 2010 19:54:38 -0600
 Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 943F718BF6F
-	for <xfs@oss.sgi.com>; Wed, 17 Nov 2010 17:56:08 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 405FC13C9752
+	for <xfs@oss.sgi.com>; Wed, 17 Nov 2010 17:56:12 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id BnohCdJDUMNd43UR for
-	<xfs@oss.sgi.com>; Wed, 17 Nov 2010 17:56:08 -0800 (PST)
+	cuda.sgi.com with ESMTP id pUee5EAXIY8ocxKz for
+	<xfs@oss.sgi.com>; Wed, 17 Nov 2010 17:56:12 -0800 (PST)
 From: Josef Bacik <josef@redhat.com>
-Subject: [PATCH 2/6] XFS: handle hole punching via fallocate properly
-Date: Wed, 17 Nov 2010 20:46:16 -0500
-Message-Id: <1290044780-2902-3-git-send-email-josef@redhat.com>
+Subject: [PATCH 6/6] Gfs2: fail if we try to use hole punch
+Date: Wed, 17 Nov 2010 20:46:20 -0500
+Message-Id: <1290044780-2902-7-git-send-email-josef@redhat.com>
 In-Reply-To: <1290044780-2902-1-git-send-email-josef@redhat.com>
 References: <1290044780-2902-1-git-send-email-josef@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -29,47 +29,29 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, cmm@us.ibm.com, cluster-devel@redhat.com, joel.becker@oracle.com, jack@suse.cz
 
-This patch simply allows XFS to handle the hole punching flag in fallocate
-properly.  I've tested this with a little program that does a bunch of random
-hole punching with FL_KEEP_SIZE and without it to make sure it does the right
-thing.  Thanks,
+Gfs2 doesn't have the ability to punch holes yet, so make sure we return
+EOPNOTSUPP if we try to use hole punching through fallocate.  This support can
+be added later.  Thanks,
 
 Signed-off-by: Josef Bacik <josef@redhat.com>
 ---
- fs/xfs/linux-2.6/xfs_iops.c |    7 +++++--
- 1 files changed, 5 insertions(+), 2 deletions(-)
+ fs/gfs2/ops_inode.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_iops.c b/fs/xfs/linux-2.6/xfs_iops.c
-index 96107ef..07d2164 100644
---- a/fs/xfs/linux-2.6/xfs_iops.c
-+++ b/fs/xfs/linux-2.6/xfs_iops.c
-@@ -516,6 +516,7 @@ xfs_vn_fallocate(
- 	loff_t		new_size = 0;
- 	xfs_flock64_t	bf;
- 	xfs_inode_t	*ip = XFS_I(inode);
-+	int		cmd = XFS_IOC_RESVSP;
+diff --git a/fs/gfs2/ops_inode.c b/fs/gfs2/ops_inode.c
+index 12cbea7..65cb5f6 100644
+--- a/fs/gfs2/ops_inode.c
++++ b/fs/gfs2/ops_inode.c
+@@ -1439,6 +1439,10 @@ static long gfs2_fallocate(struct inode *inode, int mode, loff_t offset,
+ 	loff_t next = (offset + len - 1) >> sdp->sd_sb.sb_bsize_shift;
+ 	next = (next + 1) << sdp->sd_sb.sb_bsize_shift;
  
- 	/* preallocation on directories not yet supported */
- 	error = -ENODEV;
-@@ -528,6 +529,9 @@ xfs_vn_fallocate(
- 
- 	xfs_ilock(ip, XFS_IOLOCK_EXCL);
- 
-+	if (mode & FALLOC_FL_PUNCH_HOLE)
-+		cmd = XFS_IOC_UNRESVSP;
++	/* We only support the FALLOC_FL_KEEP_SIZE mode */
++	if (mode && (mode != FALLOC_FL_KEEP_SIZE))
++		return -EOPNOTSUPP;
 +
- 	/* check the new inode size is valid before allocating */
- 	if (!(mode & FALLOC_FL_KEEP_SIZE) &&
- 	    offset + len > i_size_read(inode)) {
-@@ -537,8 +541,7 @@ xfs_vn_fallocate(
- 			goto out_unlock;
- 	}
- 
--	error = -xfs_change_file_space(ip, XFS_IOC_RESVSP, &bf,
--				       0, XFS_ATTR_NOLOCK);
-+	error = -xfs_change_file_space(ip, cmd, &bf, 0, XFS_ATTR_NOLOCK);
- 	if (error)
- 		goto out_unlock;
+ 	offset = (offset >> sdp->sd_sb.sb_bsize_shift) <<
+ 		 sdp->sd_sb.sb_bsize_shift;
  
 -- 
 1.6.6.1
