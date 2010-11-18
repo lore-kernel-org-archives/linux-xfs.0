@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAI1sZMd115689 for <xfs@oss.sgi.com>; Wed, 17 Nov 2010 19:54:35 -0600
+	oAI1sZpq115687 for <xfs@oss.sgi.com>; Wed, 17 Nov 2010 19:54:35 -0600
 Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4E50818BF6F
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 17C9C13C974D
 	for <xfs@oss.sgi.com>; Wed, 17 Nov 2010 17:56:08 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id zk0cwalgEeNFK2Qt for
+	cuda.sgi.com with ESMTP id cMQQBXwbHfezM6sD for
 	<xfs@oss.sgi.com>; Wed, 17 Nov 2010 17:56:08 -0800 (PST)
 From: Josef Bacik <josef@redhat.com>
-Subject: [PATCH 3/6] Ocfs2: handle hole punching via fallocate properly
-Date: Wed, 17 Nov 2010 20:46:17 -0500
-Message-Id: <1290044780-2902-4-git-send-email-josef@redhat.com>
+Subject: [PATCH 1/6] fs: add hole punching to fallocate
+Date: Wed, 17 Nov 2010 20:46:15 -0500
+Message-Id: <1290044780-2902-2-git-send-email-josef@redhat.com>
 In-Reply-To: <1290044780-2902-1-git-send-email-josef@redhat.com>
 References: <1290044780-2902-1-git-send-email-josef@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -29,46 +29,49 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, cmm@us.ibm.com, cluster-devel@redhat.com, joel.becker@oracle.com, jack@suse.cz
 
-This patch just makes ocfs2 use its UNRESERVP ioctl when we get the hole punch
-flag in fallocate.  I didn't test it, but it seems simple enough.  Thanks,
+Hole punching has already been implemented by XFS and OCFS2, and has the
+potential to be implemented on both BTRFS and EXT4 so we need a generic way to
+get to this feature.  The simplest way in my mind is to add FALLOC_FL_PUNCH_HOLE
+to fallocate() since it already looks like the normal fallocate() operation.
+I've tested this patch with XFS and BTRFS to make sure XFS did what it's
+supposed to do and that BTRFS failed like it was supposed to.  Thank you,
 
-Acked-by: Jan Kara <jack@suse.cz>
-Acked-by: Joel Becker <joel.becker@oracle.com>
 Signed-off-by: Josef Bacik <josef@redhat.com>
 ---
- fs/ocfs2/file.c |    8 ++++++--
- 1 files changed, 6 insertions(+), 2 deletions(-)
+ fs/open.c              |    7 ++++++-
+ include/linux/falloc.h |    1 +
+ 2 files changed, 7 insertions(+), 1 deletions(-)
 
-diff --git a/fs/ocfs2/file.c b/fs/ocfs2/file.c
-index 77b4c04..ad23a18 100644
---- a/fs/ocfs2/file.c
-+++ b/fs/ocfs2/file.c
-@@ -1992,6 +1992,7 @@ static long ocfs2_fallocate(struct inode *inode, int mode, loff_t offset,
- 	struct ocfs2_super *osb = OCFS2_SB(inode->i_sb);
- 	struct ocfs2_space_resv sr;
- 	int change_size = 1;
-+	int cmd = OCFS2_IOC_RESVSP64;
+diff --git a/fs/open.c b/fs/open.c
+index 4197b9e..5b6ef7e 100644
+--- a/fs/open.c
++++ b/fs/open.c
+@@ -223,7 +223,12 @@ int do_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
+ 		return -EINVAL;
  
- 	if (!ocfs2_writes_unwritten_extents(osb))
- 		return -EOPNOTSUPP;
-@@ -2002,12 +2003,15 @@ static long ocfs2_fallocate(struct inode *inode, int mode, loff_t offset,
- 	if (mode & FALLOC_FL_KEEP_SIZE)
- 		change_size = 0;
- 
-+	if (mode & FALLOC_FL_PUNCH_HOLE)
-+		cmd = OCFS2_IOC_UNRESVSP64;
+ 	/* Return error if mode is not supported */
+-	if (mode && !(mode & FALLOC_FL_KEEP_SIZE))
++	if (mode & ~(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE))
++		return -EOPNOTSUPP;
 +
- 	sr.l_whence = 0;
- 	sr.l_start = (s64)offset;
- 	sr.l_len = (s64)len;
++	/* Punch hole must have keep size set */
++	if ((mode & FALLOC_FL_PUNCH_HOLE) &&
++	    !(mode & FALLOC_FL_KEEP_SIZE))
+ 		return -EOPNOTSUPP;
  
--	return __ocfs2_change_file_space(NULL, inode, offset,
--					 OCFS2_IOC_RESVSP64, &sr, change_size);
-+	return __ocfs2_change_file_space(NULL, inode, offset, cmd, &sr,
-+					 change_size);
- }
+ 	if (!(file->f_mode & FMODE_WRITE))
+diff --git a/include/linux/falloc.h b/include/linux/falloc.h
+index 3c15510..73e0b62 100644
+--- a/include/linux/falloc.h
++++ b/include/linux/falloc.h
+@@ -2,6 +2,7 @@
+ #define _FALLOC_H_
  
- int ocfs2_check_range_for_refcount(struct inode *inode, loff_t pos,
+ #define FALLOC_FL_KEEP_SIZE	0x01 /* default is extend size */
++#define FALLOC_FL_PUNCH_HOLE	0x02 /* de-allocates range */
+ 
+ #ifdef __KERNEL__
+ 
 -- 
 1.6.6.1
 
