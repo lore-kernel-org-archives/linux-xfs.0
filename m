@@ -1,22 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAI9kOnI139613 for <xfs@oss.sgi.com>; Thu, 18 Nov 2010 03:46:25 -0600
-Received: from moutng.kundenserver.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3691C1C53656
-	for <xfs@oss.sgi.com>; Thu, 18 Nov 2010 01:47:57 -0800 (PST)
-Received: from moutng.kundenserver.de (moutng.kundenserver.de
-	[212.227.126.186]) by cuda.sgi.com with ESMTP id
-	e7KZpGfdCa930K78 for <xfs@oss.sgi.com>;
-	Thu, 18 Nov 2010 01:47:57 -0800 (PST)
-From: =?utf-8?q?=C5=81ukasz_Ole=C5=9B?= <lukasz.oles@open-e.com>
-Subject: Re: xfsprogs 2.x vs 3.x logsize changed
-Date: Thu, 18 Nov 2010 10:49:41 +0100
-References: <201011171549.04806.lukasz.oles@open-e.com>
-	<4CE41315.8070402@sandeen.net>
-In-Reply-To: <4CE41315.8070402@sandeen.net>
+	oAIAmtvb141614 for <xfs@oss.sgi.com>; Thu, 18 Nov 2010 04:48:56 -0600
+Received: from firestarter.dermichi.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8B9E813D1E49
+	for <xfs@oss.sgi.com>; Thu, 18 Nov 2010 02:50:28 -0800 (PST)
+Received: from firestarter.dermichi.com (firestarter.dermichi.com
+	[78.41.115.230]) by cuda.sgi.com with ESMTP id Ffe6iQ08O455ssTh
+	for <xfs@oss.sgi.com>; Thu, 18 Nov 2010 02:50:28 -0800 (PST)
+Received: from cl-840.mbx-01.si.sixxs.net ([2001:15c0:65ff:347::2])
+	by firestarter.dermichi.com with esmtpsa
+	(TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32) (Exim 4.72)
+	(envelope-from <mw@dermichi.com>) id 1PJ24Q-0002bx-G2
+	for xfs@oss.sgi.com; Thu, 18 Nov 2010 11:50:26 +0100
+Message-ID: <4CE504F1.3010305@dermichi.com>
+Date: Thu, 18 Nov 2010 11:50:25 +0100
+From: Michael Weissenbacher <mw@dermichi.com>
 MIME-Version: 1.0
-Message-Id: <201011181049.42048.lukasz.oles@open-e.com>
+Subject: Re: vmap allocation for size 1048576 failed
+References: <4CD924A6.6040200@dermichi.com>
+	<20101109120701.GN2715@dastard>	<4CDA54E3.308@dermichi.com>
+	<20101110123052.GW2715@dastard>
+In-Reply-To: <20101110123052.GW2715@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,65 +30,29 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: Eric Sandeen <sandeen@sandeen.net>
 
-T24gV2VkbmVzZGF5IDE3IG9mIE5vdmVtYmVyIDIwMTAgMTg6Mzg6MjkgRXJpYyBTYW5kZWVuIHdy
-b3RlOgo+IE9uIDExLzE3LzEwIDg6NDkgQU0sIMWBdWthc3ogT2xlxZsgd3JvdGU6Cj4gPiBIaSwK
-PiA+IAo+ID4gSSdtIHVwZ3JhZGluZyB4ZnNwcm9ncyBmcm9tIDIuMTAuMSB0byB0aGUgbGF0ZXN0
-IDMuMS40IHZlcnNpb24uIEkgbm90aWNlZAo+ID4gdGhhdCB3aGVuIEknbSBjcmVhdGluZyBsYXJn
-ZSBsdm0gdm9sdW1lICgyVCkgdGhlIGxvZyBzaXplIGlzIGFsbW9zdCAxRwo+ID4gaW4gdGhlIG9s
-ZCB2ZXJzaW9uIGl0IHdhcyAxMjhNLgo+ID4gSSBrbm93IEkgY2FuIG1hbmlwdWxhdGUgdGhpcyB2
-YWx1ZSB3aXRoIC1sc2l6ZSBvcHRpb24sIGJ1dCBJJ20gd29uZGVyaW5nCj4gPiB3aHkgdGhpcyBk
-aWZmZXJlbmNlIGlzIHNvIGh1Z2U/Cj4gPiAKPiA+IE9uIHRoaXMgdm9sdW1lIEkgaGF2ZSBvbmUg
-c3BhcnNlIGZpbGUgd2hpY2ggaXMgZXhwb3J0ZWQgYnkgaVNDU0kgVGFyZ2V0LiAKPiA+IEkgaGF2
-ZSBzY3JpcHQgd2hpY2ggY2FsY3VsYXRlcyAgZm9yIG1lICJzZWVrIiB2YWx1ZSBmb3IgZGQgY29t
-bWFuZCBhbmQKPiA+IG5vdyBpdCByZXR1cm5zIG1lIHdyb25nIHZhbHVlcy4KPiA+IENhbiBJIHN0
-YXkgd2l0aCB0aGUgb2xkIGxvZyBzaXplIG9yIG1heWJlIHRoZXJlIGFyZSBzb21lIGdvb2QgcmVh
-c29ucyB0bwo+ID4gdXNlIG5ldyB2YWx1ZXM/Cj4gPiAKPiA+IFJlZ2FyZHMsCj4gPiDFgXVrYXN6
-IE9sZcWbCj4gCj4gY29tbWl0IGE2NjM0ZmJhM2RlYzRhOTJmMGEyYzRlMzBjODBiNjM0YzA1NzZh
-ZDUKPiBBdXRob3I6IERhdmlkIENoaW5uZXIgPGRnY0BzZ2kuY29tPgo+IERhdGU6ICAgU3VuIE1h
-eSAxMCAyMTozMToyMiAyMDA5ICswMjAwCj4gCj4gICAgIG1rZnM6IGFsbG93IHRvIG1ha2UgbGFy
-Z2VyIGxvZ3MKPiAKPiAgICAgSW5jcmVhc2UgdGhlIG1heGltdW0gbG9nIHNpemUgc3VwcG9ydGVk
-IGJ5IG1rZnMuCj4gCj4gICAgIFRoZSBsb2cgc2l6ZSBjYW4gYmUgaW5jcmVhc2VkIGVhc2lseSBp
-biBta2ZzIGJ5IGNoYW5naW5nIGEgZmV3Cj4gICAgIGRlZmluZXMgYW5kIGEgY291cGxlIG9mIHR5
-cGVzIHRvIGFsbG93IHRoZSBsb2cgc2l6ZSB0byBpbmNyZWFzZSB0bwo+ICAgICBqdXN0IHVuZGVy
-IDJHQi4gVGhlb3JldGljYWxseSwgdGhlIGxvZyBzaXplIGNhbiBiZSBtYWRlIG11Y2gsIG11Y2gK
-PiAgICAgbGFyZ2VyIHRoYW4gdGhpcyAodXAgdG8gMl4zMiBzZWN0b3JzKSwgYnV0IGdvaW5nIGJl
-eW9uZCAyXjMxCj4gICAgICpieXRlcyogY2F1c2VzIGludGVnZXIgb3ZlcmZsb3cgaXNzdWVzIGlu
-IHRoZSBrZXJuZWwgbG9nIGNvZGUuCj4gCj4gICAgIFdlIHVzZSBhIG1heGltdW0gc2l6ZSBvZiBq
-dXN0IHVuZGVyIDJHQiBhcyBleGFjdGx5IDJHQiB3aWxsIGNhdXNlCj4gICAgIG92ZXJmbG93IGlz
-c3VlcyBvbiB0aGUgZmlyc3QgdHJhbnNhY3Rpb24gcmVzZXJ2YXRpb24uCj4gCj4gICAgIE1heGlt
-dW0gbG9nIHNpemUgaXMgbm93IHJlYWNoZWQgYXQgYSBmcyBzaXplIG9mIH40VEIuCj4gCj4gICAg
-IFNpZ25lZC1vZmYtYnk6IERhdmUgQ2hpbm5lciA8ZGdjQHNnaS5jb20+Cj4gICAgIFNpZ25lZC1v
-ZmYtYnk6IENocmlzdG9waCBIZWxsd2lnIDxoY2hAbHN0LmRlPgo+IAo+IAo+IGRpZDoKPiAKPiBA
-QCAtMTczNywxMCArMTczNywxMCBAQCBfKCJzaXplICVzIHNwZWNpZmllZCBmb3IgbG9nIHN1YnZv
-bHVtZSBpcyB0b28KPiBsYXJnZSwgbWF4aW11bSBpcyAlbGxkIGJsb2Nrc1xuIiksIGxvZ2Jsb2Nr
-cyA9IDA7Cj4gICAgICAgICB9IGVsc2UgaWYgKGxvZ2ludGVybmFsICYmICFsb2dzaXplKSB7Cj4g
-ICAgICAgICAgICAgICAgIC8qCj4gLSAgICAgICAgICAgICAgICAqIGxvZ2Jsb2NrcyBncm93cyBm
-cm9tIG1pbl9sb2dibG9ja3MgdG8gWEZTX01BWF9MT0dfQkxPQ0tTCj4gLSAgICAgICAgICAgICAg
-ICAqIGF0IDEyOEdCCj4gLSAgICAgICAgICAgICAgICAqCj4gLSAgICAgICAgICAgICAgICAqIDIw
-NDggPSAxMjhHQiAvIE1BWF9MT0dfQllURVMKPiArICAgICAgICAgICAgICAgICogV2l0aCBhIDJH
-QiBtYXggbG9nIHNpemUsIGRlZmF1bHQgdG8gbWF4aW11bSBzaXplCj4gKyAgICAgICAgICAgICAg
-ICAqIGF0IDRUQi4gVGhpcyBrZWVwcyB0aGUgc2FtZSByYXRpbyBmcm9tIHRoZSBvbGRlcgo+ICsg
-ICAgICAgICAgICAgICAgKiBtYXggbG9nIHNpemUgb2YgMTI4TSBhdCAyNTZHQiBmcyBzaXplLiBJ
-T1dzLAo+ICsgICAgICAgICAgICAgICAgKiB0aGUgcmF0aW8gb2YgZnMgc2l6ZSB0byBsb2cgc2l6
-ZSBpcyAyMDQ4OjEuCj4gICAgICAgICAgICAgICAgICAqLwo+ICAgICAgICAgICAgICAgICBsb2di
-bG9ja3MgPSAoZGJsb2NrcyA8PCBibG9ja2xvZykgLyAyMDQ4Owo+ICAgICAgICAgICAgICAgICBs
-b2dibG9ja3MgPSBsb2dibG9ja3MgPj4gYmxvY2tsb2c7Cj4gCj4gb2xkIE1BWCB3YXM6Cj4gCj4g
-LSNkZWZpbmUgWEZTX01BWF9MT0dfQllURVMgICAgICAoMTI4ICogMTAyNCAqIDEwMjQpCj4gCj4g
-SW4geW91ciBjYXNlIC4uLiBJJ20gbm90IHN1cmUgYSBsYXJnZXIgbG9nIGlzIGdvaW5nIHRvIGhl
-bHAsIEkgdGhpbmsKPiBrZWVwaW5nIGl0IHNtYWxsZXIgaXMgZmluZSBpZiB5b3Ugd2lzaC4KPiAK
-PiBEYXZlIG1heSBoYXZlIGEgZGlmZmVyZW50IG9waW5pb24gdGhvdWdoIDopCj4gCj4gLUVyaWMK
-Ck9rLCBzbyBpdCdzIHRoaXMgY29tbWl0IGh0dHA6Ly9naXQua2VybmVsLm9yZy8/cD1mcy94ZnMv
-eGZzcHJvZ3MtCmRldi5naXQ7YT1jb21taXRkaWZmO2g9YTY2MzRmYmEzZGVjNGE5MmYwYTJjNGUz
-MGM4MGI2MzRjMDU3NmFkNQoKV291bGQgaXQgYmUgc2FmZSBpZiBJIGp1c3QgcmV2ZXJ0IHRoaXMg
-Y29tbWl0PyAgSXQgbG9va3Mgc2FmZSBmb3IgbWUsIGJ1dCAKbWF5YmUgb3RoZXIgdGhpbmdzIGRl
-cGVuZHMgb24gaXQgYW5kIEkgd2lsbCBicmVhayBzb21ldGhpbmcuCgpSZWdhcmRzLArFgXVrYXN6
-IE9sZcWbCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4
-ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1h
-bi9saXN0aW5mby94ZnMK
+Hi Dave!
+> 
+> Ok, thanks for the info. I'm struggling to work out what is actually
+> consuming vmap space given what you are doing and the storage
+> config. None of the operations you are doing should be triggering
+> mapping of multipage metadata buffers given the filesystem
+> configuration....
+> 
+I've set vmalloc=768M and haven't seen the problem since. Maybe the
+vmalloc/vmap problem has to do with the fact that i'm running
+iscsi_target on the same machine? As long as the problem doesn't occur
+again i'm ok with setting the vmalloc parameter.
+
+Thanks for your help,
+Michael
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
