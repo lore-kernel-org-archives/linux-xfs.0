@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAI8PIcl135362 for <xfs@oss.sgi.com>; Thu, 18 Nov 2010 02:25:19 -0600
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 042AA13D174D
-	for <xfs@oss.sgi.com>; Thu, 18 Nov 2010 00:26:52 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id fV30wHE4FBUk50aN for
-	<xfs@oss.sgi.com>; Thu, 18 Nov 2010 00:26:52 -0800 (PST)
-Date: Thu, 18 Nov 2010 03:25:53 -0500
-From: Josef Bacik <josef@redhat.com>
-Subject: Re: [PATCH] Xfsprogs: add fiemap command to xfs_io V2
-Message-ID: <20101118082553.GK5618@dhcp231-156.rdu.redhat.com>
-References: <1289582374-19324-1-git-send-email-josef@redhat.com>
-	<20101118051029.GR13830@dastard>
+	oAI9kOnI139613 for <xfs@oss.sgi.com>; Thu, 18 Nov 2010 03:46:25 -0600
+Received: from moutng.kundenserver.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3691C1C53656
+	for <xfs@oss.sgi.com>; Thu, 18 Nov 2010 01:47:57 -0800 (PST)
+Received: from moutng.kundenserver.de (moutng.kundenserver.de
+	[212.227.126.186]) by cuda.sgi.com with ESMTP id
+	e7KZpGfdCa930K78 for <xfs@oss.sgi.com>;
+	Thu, 18 Nov 2010 01:47:57 -0800 (PST)
+From: =?utf-8?q?=C5=81ukasz_Ole=C5=9B?= <lukasz.oles@open-e.com>
+Subject: Re: xfsprogs 2.x vs 3.x logsize changed
+Date: Thu, 18 Nov 2010 10:49:41 +0100
+References: <201011171549.04806.lukasz.oles@open-e.com>
+	<4CE41315.8070402@sandeen.net>
+In-Reply-To: <4CE41315.8070402@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20101118051029.GR13830@dastard>
+Message-Id: <201011181049.42048.lukasz.oles@open-e.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,252 +25,65 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Josef Bacik <josef@redhat.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Eric Sandeen <sandeen@sandeen.net>
 
-On Thu, Nov 18, 2010 at 04:10:29PM +1100, Dave Chinner wrote:
-> On Fri, Nov 12, 2010 at 12:19:34PM -0500, Josef Bacik wrote:
-> > When trying to add a test for hole punching I noticed that the "bmap" command
-> > only works on XFS, which makes testing hole punching on other fs's kind of
-> > difficult.  To fix this I've added an fiemap command that works almost exactly
-> > like bmap.  It is formatted similarly and takes similar flags, the only thing
-> > thats different is obviously it doesn't spit out AG info and it doesn't make
-> > finding prealloc space optional.  This is my first foray into all of this stuff
-> > so a good hard look would be appreciated.  I tested it with a few different
-> > files to make sure bmap and fiemap both looked the same.  Thanks,
-> > 
-> > Signed-off-by: Josef Bacik <josef@redhat.com>
-> > ---
-> > V1->V2: add checks to make sure the system supports fiemap so xfsprogs builds on
-> > things other than linux :).
-> > +static void
-> > +fiemap_help(void)
-> > +{
-> > +	printf(_(
-> > +"\n"
-> > +" prints the block mapping for a file's data or attribute forks"
-> > +"\n"
-> > +" Example:\n"
-> > +" 'bmap -vp' - tabular format verbose map, including unwritten extents\n"
-> 
-> 'fiemap -vp' ?
-> 
-> > +"\n"
-> > +" bmap prints the map of disk blocks used by the current file.\n"
-> 
-> fiemap prints...
-> 
-> > +" The map lists each extent used by the file, as well as regions in the\n"
-> > +" file that do not have any corresponding blocks (holes).\n"
-> > +" By default, each line of the listing takes the following form:\n"
-> > +"     extent: [startoffset..endoffset]: startblock..endblock\n"
-> > +" Holes are marked by replacing the startblock..endblock with 'hole'.\n"
-> > +" All the file offsets and disk blocks are in units of 512-byte blocks.\n"
-> > +" -a -- prints the attribute fork map instead of the data fork.\n"
-> > +" -l -- also displays the length of each extent in 512-byte blocks.\n"
-> > +" -n -- query n extents.\n"
-> > +" -v -- Verbose information\n"
-> > +" Note: the bmap for non-regular files can be obtained provided the file\n"
-> > +" was opened appropriately (in particular, must be opened read-only).\n"
-> > +"\n"));
-> 
-> This last note about non-regular files is not true for fiemap,
-> right?
-> 
-> > +}
-> > +
-> > +static int
-> > +numlen(
-> > +	__u64	val,
-> > +	int	base)
-> > +{
-> > +	__u64	tmp;
-> > +	int	len;
-> > +
-> > +	for (len = 0, tmp = val; tmp > 0; tmp = tmp/base)
-> > +		len++;
-> > +	return (len == 0 ? 1 : len);
-> > +}
-> > +
-> > +static void
-> > +print_verbose(
-> > +	struct fiemap_extent	*extent,
-> > +	int			blocksize,
-> > +	int			foff_w,
-> > +	int			boff_w,
-> > +	int			tot_w,
-> > +	int			flg_w,
-> > +	int			*cur_extent,
-> > +	__u64			*last_logical)
-> > +{
-> > +	__u64			lstart;
-> > +	__u64			len;
-> > +	__u64			block;
-> > +	char			lbuf[32];
-> > +	char			bbuf[32];
-> 
-> I don't think these two buffers are large enough to hold 2
-> 64 bit integers as strings.
-> 
-> > +static void
-> > +print_plain(
-> > +	struct fiemap_extent	*extent,
-> > +	int			lflag,
-> > +	int			blocksize,
-> > +	int			*cur_extent,
-> > +	__u64			*last_logical)
-> > +{
-> > +	__u64			lstart;
-> > +	__u64			block;
-> > +	__u64			len;
-> > +
-> > +	lstart = extent->fe_logical / blocksize;
-> > +	len = extent->fe_length / blocksize;
-> > +	block = extent->fe_physical / blocksize;
-> > +
-> > +	if (lstart != *last_logical) {
-> > +		printf("\t%d: [%llu..%llu]: hole", *cur_extent,
-> > +		       *last_logical, lstart - 1LL);
-> > +		if (lflag)
-> > +			printf(_(" %llu blocks\n"),
-> > +			       lstart - *last_logical);
-> > +		else
-> > +			printf("\n");
-> > +		(*cur_extent)++;
-> > +	}
-> > +
-> > +	printf("\t%d: [%llu..%llu]: %llu..%llu", *cur_extent,
-> > +	       lstart, lstart + len - 1LL, block,
-> > +	       block + len - 1);
-> 
-> Why the "1LL" here and not anywhere else?
-> 
-> > +
-> > +	if (lflag)
-> > +		printf(_(" %llu blocks\n"), len);
-> > +	else
-> > +		printf("\n");
-> > +	(*cur_extent)++;
-> > +	*last_logical = lstart + len;
-> > +}
-> > +
-> > +int
-> > +fiemap_f(
-> > +	int		argc,
-> > +	char		**argv)
-> > +{
-> > +	struct fiemap	*fiemap;
-> > +	int		num_extents = 32;
-> > +	int		nflag = 0;
-> > +	int		lflag = 0;
-> > +	int		vflag = 0;
-> > +	int		fiemap_flags = FIEMAP_FLAG_SYNC;
-> > +	int		c;
-> > +	int		i;
-> > +	int		map_size;
-> > +	int		ret;
-> > +	int		cur_extent = 0;
-> > +	int		foff_w = 16;	/* 16 just for a good minimum range */
-> > +	int		boff_w = 16;
-> > +	int		tot_w = 5;	/* 5 since its just one number */
-> > +	int		flg_w = 5;
-> > +	__u64		blocksize = 512;
-> > +	__u64		last_logical = 0;
-> > +	struct stat	st;
-> > +
-> > +	while ((c = getopt(argc, argv, "aln:v")) != EOF) {
-> > +		switch (c) {
-> > +		case 'a':
-> > +			fiemap_flags |= FIEMAP_FLAG_XATTR;
-> > +			break;
-> > +		case 'l':
-> > +			lflag = 1;
-> > +			break;
-> > +		case 'n':
-> > +			num_extents = atoi(optarg);
-> > +			nflag = 1;
-> > +			break;
-> > +		case 'v':
-> > +			vflag++;
-> > +			break;
-> > +		default:
-> > +			return command_usage(&fiemap_cmd);
-> > +		}
-> > +	}
-> > +
-> > +	map_size = sizeof(struct fiemap) +
-> > +		(num_extents * sizeof(struct fiemap_extent));
-> 
-> Need to validate num_extents before using it.
-> 
-> > +	fiemap = malloc(map_size);
-> > +	if (!fiemap) {
-> > +		fprintf(stderr, _("%s: malloc of %d bytes failed.\n"),
-> > +			progname, map_size);
-> > +		exitcode = 1;
-> > +		return 0;
-> > +	}
-> > +
-> > +	memset(fiemap, 0, map_size);
-> > +	fiemap->fm_flags = fiemap_flags;
-> > +	fiemap->fm_length = -1;
-> > +	fiemap->fm_extent_count = nflag ? 0 : num_extents;
-> > +
-> > +	ret = ioctl(file->fd, FS_IOC_FIEMAP, (unsigned long)fiemap);
-> > +	if (ret < 0) {
-> > +		fprintf(stderr, "%s: ioctl(FS_IOC_FIEMAP) [\"%s\"]: "
-> > +			"%s\n", progname, file->name, strerror(errno));
-> > +		free(fiemap);
-> > +		exitcode = 1;
-> > +		return 0;
-> > +	}
-> > +
-> > +	if (!nflag) {
-> > +		if (fiemap->fm_mapped_extents > num_extents) {
-> > +			num_extents = fiemap->fm_mapped_extents;
-> > +			map_size = sizeof(struct fiemap) +
-> > +				(num_extents * sizeof(struct fiemap_extent));
-> > +			fiemap = realloc(fiemap, map_size);
-> > +			if (!fiemap) {
-> > +				fprintf(stderr, _("%s: realloc of %d bytes "
-> > +						  "failed.\n"), progname,
-> > +						  map_size);
-> > +				exitcode = 1;
-> > +				return 0;
-> > +			}
-> > +		}
-> > +		memset(fiemap, 0, map_size);
-> > +		fiemap->fm_flags = fiemap_flags;
-> > +		fiemap->fm_length = -1;
-> > +		fiemap->fm_extent_count = num_extents;
-> > +
-> > +		ret = ioctl(file->fd, FS_IOC_FIEMAP, (unsigned long)fiemap);
-> > +		if (ret < 0) {
-> > +			fprintf(stderr, "%s: ioctl(FS_IOC_FIEMAP) [\"%s\"]: "
-> > +				"%s\n", progname, file->name, strerror(errno));
-> > +			free(fiemap);
-> > +			exitcode = 1;
-> > +			return 0;
-> > +		}
-> > +	}
-> 
-> Hmmm. I'd prefer to see a loop mapping and printing N extents at a
-> time rather than one massive allocation and hoping it fits in memory
-> (think of a file with hundreds of thousands of extents). That's a
-> problem with the existing xfs_bmap code - should we be duplicating
-> that problem here?
->
-
-Heh you know thats what I did before but decided it was better to do it the way
-bmap did it.  Thanks for the review, I'll fix all these things up,
-
-Josef
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gV2VkbmVzZGF5IDE3IG9mIE5vdmVtYmVyIDIwMTAgMTg6Mzg6MjkgRXJpYyBTYW5kZWVuIHdy
+b3RlOgo+IE9uIDExLzE3LzEwIDg6NDkgQU0sIMWBdWthc3ogT2xlxZsgd3JvdGU6Cj4gPiBIaSwK
+PiA+IAo+ID4gSSdtIHVwZ3JhZGluZyB4ZnNwcm9ncyBmcm9tIDIuMTAuMSB0byB0aGUgbGF0ZXN0
+IDMuMS40IHZlcnNpb24uIEkgbm90aWNlZAo+ID4gdGhhdCB3aGVuIEknbSBjcmVhdGluZyBsYXJn
+ZSBsdm0gdm9sdW1lICgyVCkgdGhlIGxvZyBzaXplIGlzIGFsbW9zdCAxRwo+ID4gaW4gdGhlIG9s
+ZCB2ZXJzaW9uIGl0IHdhcyAxMjhNLgo+ID4gSSBrbm93IEkgY2FuIG1hbmlwdWxhdGUgdGhpcyB2
+YWx1ZSB3aXRoIC1sc2l6ZSBvcHRpb24sIGJ1dCBJJ20gd29uZGVyaW5nCj4gPiB3aHkgdGhpcyBk
+aWZmZXJlbmNlIGlzIHNvIGh1Z2U/Cj4gPiAKPiA+IE9uIHRoaXMgdm9sdW1lIEkgaGF2ZSBvbmUg
+c3BhcnNlIGZpbGUgd2hpY2ggaXMgZXhwb3J0ZWQgYnkgaVNDU0kgVGFyZ2V0LiAKPiA+IEkgaGF2
+ZSBzY3JpcHQgd2hpY2ggY2FsY3VsYXRlcyAgZm9yIG1lICJzZWVrIiB2YWx1ZSBmb3IgZGQgY29t
+bWFuZCBhbmQKPiA+IG5vdyBpdCByZXR1cm5zIG1lIHdyb25nIHZhbHVlcy4KPiA+IENhbiBJIHN0
+YXkgd2l0aCB0aGUgb2xkIGxvZyBzaXplIG9yIG1heWJlIHRoZXJlIGFyZSBzb21lIGdvb2QgcmVh
+c29ucyB0bwo+ID4gdXNlIG5ldyB2YWx1ZXM/Cj4gPiAKPiA+IFJlZ2FyZHMsCj4gPiDFgXVrYXN6
+IE9sZcWbCj4gCj4gY29tbWl0IGE2NjM0ZmJhM2RlYzRhOTJmMGEyYzRlMzBjODBiNjM0YzA1NzZh
+ZDUKPiBBdXRob3I6IERhdmlkIENoaW5uZXIgPGRnY0BzZ2kuY29tPgo+IERhdGU6ICAgU3VuIE1h
+eSAxMCAyMTozMToyMiAyMDA5ICswMjAwCj4gCj4gICAgIG1rZnM6IGFsbG93IHRvIG1ha2UgbGFy
+Z2VyIGxvZ3MKPiAKPiAgICAgSW5jcmVhc2UgdGhlIG1heGltdW0gbG9nIHNpemUgc3VwcG9ydGVk
+IGJ5IG1rZnMuCj4gCj4gICAgIFRoZSBsb2cgc2l6ZSBjYW4gYmUgaW5jcmVhc2VkIGVhc2lseSBp
+biBta2ZzIGJ5IGNoYW5naW5nIGEgZmV3Cj4gICAgIGRlZmluZXMgYW5kIGEgY291cGxlIG9mIHR5
+cGVzIHRvIGFsbG93IHRoZSBsb2cgc2l6ZSB0byBpbmNyZWFzZSB0bwo+ICAgICBqdXN0IHVuZGVy
+IDJHQi4gVGhlb3JldGljYWxseSwgdGhlIGxvZyBzaXplIGNhbiBiZSBtYWRlIG11Y2gsIG11Y2gK
+PiAgICAgbGFyZ2VyIHRoYW4gdGhpcyAodXAgdG8gMl4zMiBzZWN0b3JzKSwgYnV0IGdvaW5nIGJl
+eW9uZCAyXjMxCj4gICAgICpieXRlcyogY2F1c2VzIGludGVnZXIgb3ZlcmZsb3cgaXNzdWVzIGlu
+IHRoZSBrZXJuZWwgbG9nIGNvZGUuCj4gCj4gICAgIFdlIHVzZSBhIG1heGltdW0gc2l6ZSBvZiBq
+dXN0IHVuZGVyIDJHQiBhcyBleGFjdGx5IDJHQiB3aWxsIGNhdXNlCj4gICAgIG92ZXJmbG93IGlz
+c3VlcyBvbiB0aGUgZmlyc3QgdHJhbnNhY3Rpb24gcmVzZXJ2YXRpb24uCj4gCj4gICAgIE1heGlt
+dW0gbG9nIHNpemUgaXMgbm93IHJlYWNoZWQgYXQgYSBmcyBzaXplIG9mIH40VEIuCj4gCj4gICAg
+IFNpZ25lZC1vZmYtYnk6IERhdmUgQ2hpbm5lciA8ZGdjQHNnaS5jb20+Cj4gICAgIFNpZ25lZC1v
+ZmYtYnk6IENocmlzdG9waCBIZWxsd2lnIDxoY2hAbHN0LmRlPgo+IAo+IAo+IGRpZDoKPiAKPiBA
+QCAtMTczNywxMCArMTczNywxMCBAQCBfKCJzaXplICVzIHNwZWNpZmllZCBmb3IgbG9nIHN1YnZv
+bHVtZSBpcyB0b28KPiBsYXJnZSwgbWF4aW11bSBpcyAlbGxkIGJsb2Nrc1xuIiksIGxvZ2Jsb2Nr
+cyA9IDA7Cj4gICAgICAgICB9IGVsc2UgaWYgKGxvZ2ludGVybmFsICYmICFsb2dzaXplKSB7Cj4g
+ICAgICAgICAgICAgICAgIC8qCj4gLSAgICAgICAgICAgICAgICAqIGxvZ2Jsb2NrcyBncm93cyBm
+cm9tIG1pbl9sb2dibG9ja3MgdG8gWEZTX01BWF9MT0dfQkxPQ0tTCj4gLSAgICAgICAgICAgICAg
+ICAqIGF0IDEyOEdCCj4gLSAgICAgICAgICAgICAgICAqCj4gLSAgICAgICAgICAgICAgICAqIDIw
+NDggPSAxMjhHQiAvIE1BWF9MT0dfQllURVMKPiArICAgICAgICAgICAgICAgICogV2l0aCBhIDJH
+QiBtYXggbG9nIHNpemUsIGRlZmF1bHQgdG8gbWF4aW11bSBzaXplCj4gKyAgICAgICAgICAgICAg
+ICAqIGF0IDRUQi4gVGhpcyBrZWVwcyB0aGUgc2FtZSByYXRpbyBmcm9tIHRoZSBvbGRlcgo+ICsg
+ICAgICAgICAgICAgICAgKiBtYXggbG9nIHNpemUgb2YgMTI4TSBhdCAyNTZHQiBmcyBzaXplLiBJ
+T1dzLAo+ICsgICAgICAgICAgICAgICAgKiB0aGUgcmF0aW8gb2YgZnMgc2l6ZSB0byBsb2cgc2l6
+ZSBpcyAyMDQ4OjEuCj4gICAgICAgICAgICAgICAgICAqLwo+ICAgICAgICAgICAgICAgICBsb2di
+bG9ja3MgPSAoZGJsb2NrcyA8PCBibG9ja2xvZykgLyAyMDQ4Owo+ICAgICAgICAgICAgICAgICBs
+b2dibG9ja3MgPSBsb2dibG9ja3MgPj4gYmxvY2tsb2c7Cj4gCj4gb2xkIE1BWCB3YXM6Cj4gCj4g
+LSNkZWZpbmUgWEZTX01BWF9MT0dfQllURVMgICAgICAoMTI4ICogMTAyNCAqIDEwMjQpCj4gCj4g
+SW4geW91ciBjYXNlIC4uLiBJJ20gbm90IHN1cmUgYSBsYXJnZXIgbG9nIGlzIGdvaW5nIHRvIGhl
+bHAsIEkgdGhpbmsKPiBrZWVwaW5nIGl0IHNtYWxsZXIgaXMgZmluZSBpZiB5b3Ugd2lzaC4KPiAK
+PiBEYXZlIG1heSBoYXZlIGEgZGlmZmVyZW50IG9waW5pb24gdGhvdWdoIDopCj4gCj4gLUVyaWMK
+Ck9rLCBzbyBpdCdzIHRoaXMgY29tbWl0IGh0dHA6Ly9naXQua2VybmVsLm9yZy8/cD1mcy94ZnMv
+eGZzcHJvZ3MtCmRldi5naXQ7YT1jb21taXRkaWZmO2g9YTY2MzRmYmEzZGVjNGE5MmYwYTJjNGUz
+MGM4MGI2MzRjMDU3NmFkNQoKV291bGQgaXQgYmUgc2FmZSBpZiBJIGp1c3QgcmV2ZXJ0IHRoaXMg
+Y29tbWl0PyAgSXQgbG9va3Mgc2FmZSBmb3IgbWUsIGJ1dCAKbWF5YmUgb3RoZXIgdGhpbmdzIGRl
+cGVuZHMgb24gaXQgYW5kIEkgd2lsbCBicmVhayBzb21ldGhpbmcuCgpSZWdhcmRzLArFgXVrYXN6
+IE9sZcWbCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4
+ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1h
+bi9saXN0aW5mby94ZnMK
