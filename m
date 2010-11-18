@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAI8VQmS135662 for <xfs@oss.sgi.com>; Thu, 18 Nov 2010 02:31:26 -0600
+	oAI8PIcl135362 for <xfs@oss.sgi.com>; Thu, 18 Nov 2010 02:25:19 -0600
 Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 485DF18D037
-	for <xfs@oss.sgi.com>; Thu, 18 Nov 2010 00:32:59 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 042AA13D174D
+	for <xfs@oss.sgi.com>; Thu, 18 Nov 2010 00:26:52 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id XqifUtb5pmLZacGU for
-	<xfs@oss.sgi.com>; Thu, 18 Nov 2010 00:32:59 -0800 (PST)
-Date: Thu, 18 Nov 2010 03:32:19 -0500
+	cuda.sgi.com with ESMTP id fV30wHE4FBUk50aN for
+	<xfs@oss.sgi.com>; Thu, 18 Nov 2010 00:26:52 -0800 (PST)
+Date: Thu, 18 Nov 2010 03:25:53 -0500
 From: Josef Bacik <josef@redhat.com>
-Subject: Re: [PATCH] xfstests: add test for fallocate with hole punching
-Message-ID: <20101118083219.GM5618@dhcp231-156.rdu.redhat.com>
-References: <1289598949-19216-1-git-send-email-josef@redhat.com>
-	<20101118053052.GT13830@dastard>
+Subject: Re: [PATCH] Xfsprogs: add fiemap command to xfs_io V2
+Message-ID: <20101118082553.GK5618@dhcp231-156.rdu.redhat.com>
+References: <1289582374-19324-1-git-send-email-josef@redhat.com>
+	<20101118051029.GR13830@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20101118053052.GT13830@dastard>
+In-Reply-To: <20101118051029.GR13830@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,149 +32,241 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: Josef Bacik <josef@redhat.com>, xfs@oss.sgi.com
 
-On Thu, Nov 18, 2010 at 04:30:52PM +1100, Dave Chinner wrote:
-> On Fri, Nov 12, 2010 at 04:55:49PM -0500, Josef Bacik wrote:
-> > This test is based on 242, just modified to use fiemap, fallocate and fallocate
-> > -p.  I've looked at all of the output by hand and verified that it's working
-> > properly.  Thanks,
+On Thu, Nov 18, 2010 at 04:10:29PM +1100, Dave Chinner wrote:
+> On Fri, Nov 12, 2010 at 12:19:34PM -0500, Josef Bacik wrote:
+> > When trying to add a test for hole punching I noticed that the "bmap" command
+> > only works on XFS, which makes testing hole punching on other fs's kind of
+> > difficult.  To fix this I've added an fiemap command that works almost exactly
+> > like bmap.  It is formatted similarly and takes similar flags, the only thing
+> > thats different is obviously it doesn't spit out AG info and it doesn't make
+> > finding prealloc space optional.  This is my first foray into all of this stuff
+> > so a good hard look would be appreciated.  I tested it with a few different
+> > files to make sure bmap and fiemap both looked the same.  Thanks,
 > > 
 > > Signed-off-by: Josef Bacik <josef@redhat.com>
 > > ---
-> >  245       |  189 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  245.out   |   47 +++++++++++++++
-> >  common.rc |   27 +++++++++
-> >  group     |    1 +
-> >  4 files changed, 264 insertions(+), 0 deletions(-)
-> >  create mode 100755 245
-> >  create mode 100644 245.out
-> > 
-> > diff --git a/245 b/245
-> > new file mode 100755
-> > index 0000000..6f7a502
-> > --- /dev/null
-> > +++ b/245
-> > @@ -0,0 +1,189 @@
-> > +#! /bin/bash
-> > +# FS QA Test No. 242
+> > V1->V2: add checks to make sure the system supports fiemap so xfsprogs builds on
+> > things other than linux :).
+> > +static void
+> > +fiemap_help(void)
+> > +{
+> > +	printf(_(
+> > +"\n"
+> > +" prints the block mapping for a file's data or attribute forks"
+> > +"\n"
+> > +" Example:\n"
+> > +" 'bmap -vp' - tabular format verbose map, including unwritten extents\n"
 > 
-> Not test 242 anymore...
+> 'fiemap -vp' ?
 > 
-> > +#
-> > +# Test XFS_IOC_ZERO_RANGE
+> > +"\n"
+> > +" bmap prints the map of disk blocks used by the current file.\n"
 > 
-> Nor that. ;)
+> fiemap prints...
+> 
+> > +" The map lists each extent used by the file, as well as regions in the\n"
+> > +" file that do not have any corresponding blocks (holes).\n"
+> > +" By default, each line of the listing takes the following form:\n"
+> > +"     extent: [startoffset..endoffset]: startblock..endblock\n"
+> > +" Holes are marked by replacing the startblock..endblock with 'hole'.\n"
+> > +" All the file offsets and disk blocks are in units of 512-byte blocks.\n"
+> > +" -a -- prints the attribute fork map instead of the data fork.\n"
+> > +" -l -- also displays the length of each extent in 512-byte blocks.\n"
+> > +" -n -- query n extents.\n"
+> > +" -v -- Verbose information\n"
+> > +" Note: the bmap for non-regular files can be obtained provided the file\n"
+> > +" was opened appropriately (in particular, must be opened read-only).\n"
+> > +"\n"));
+> 
+> This last note about non-regular files is not true for fiemap,
+> right?
+> 
+> > +}
+> > +
+> > +static int
+> > +numlen(
+> > +	__u64	val,
+> > +	int	base)
+> > +{
+> > +	__u64	tmp;
+> > +	int	len;
+> > +
+> > +	for (len = 0, tmp = val; tmp > 0; tmp = tmp/base)
+> > +		len++;
+> > +	return (len == 0 ? 1 : len);
+> > +}
+> > +
+> > +static void
+> > +print_verbose(
+> > +	struct fiemap_extent	*extent,
+> > +	int			blocksize,
+> > +	int			foff_w,
+> > +	int			boff_w,
+> > +	int			tot_w,
+> > +	int			flg_w,
+> > +	int			*cur_extent,
+> > +	__u64			*last_logical)
+> > +{
+> > +	__u64			lstart;
+> > +	__u64			len;
+> > +	__u64			block;
+> > +	char			lbuf[32];
+> > +	char			bbuf[32];
+> 
+> I don't think these two buffers are large enough to hold 2
+> 64 bit integers as strings.
+> 
+> > +static void
+> > +print_plain(
+> > +	struct fiemap_extent	*extent,
+> > +	int			lflag,
+> > +	int			blocksize,
+> > +	int			*cur_extent,
+> > +	__u64			*last_logical)
+> > +{
+> > +	__u64			lstart;
+> > +	__u64			block;
+> > +	__u64			len;
+> > +
+> > +	lstart = extent->fe_logical / blocksize;
+> > +	len = extent->fe_length / blocksize;
+> > +	block = extent->fe_physical / blocksize;
+> > +
+> > +	if (lstart != *last_logical) {
+> > +		printf("\t%d: [%llu..%llu]: hole", *cur_extent,
+> > +		       *last_logical, lstart - 1LL);
+> > +		if (lflag)
+> > +			printf(_(" %llu blocks\n"),
+> > +			       lstart - *last_logical);
+> > +		else
+> > +			printf("\n");
+> > +		(*cur_extent)++;
+> > +	}
+> > +
+> > +	printf("\t%d: [%llu..%llu]: %llu..%llu", *cur_extent,
+> > +	       lstart, lstart + len - 1LL, block,
+> > +	       block + len - 1);
+> 
+> Why the "1LL" here and not anywhere else?
+> 
+> > +
+> > +	if (lflag)
+> > +		printf(_(" %llu blocks\n"), len);
+> > +	else
+> > +		printf("\n");
+> > +	(*cur_extent)++;
+> > +	*last_logical = lstart + len;
+> > +}
+> > +
+> > +int
+> > +fiemap_f(
+> > +	int		argc,
+> > +	char		**argv)
+> > +{
+> > +	struct fiemap	*fiemap;
+> > +	int		num_extents = 32;
+> > +	int		nflag = 0;
+> > +	int		lflag = 0;
+> > +	int		vflag = 0;
+> > +	int		fiemap_flags = FIEMAP_FLAG_SYNC;
+> > +	int		c;
+> > +	int		i;
+> > +	int		map_size;
+> > +	int		ret;
+> > +	int		cur_extent = 0;
+> > +	int		foff_w = 16;	/* 16 just for a good minimum range */
+> > +	int		boff_w = 16;
+> > +	int		tot_w = 5;	/* 5 since its just one number */
+> > +	int		flg_w = 5;
+> > +	__u64		blocksize = 512;
+> > +	__u64		last_logical = 0;
+> > +	struct stat	st;
+> > +
+> > +	while ((c = getopt(argc, argv, "aln:v")) != EOF) {
+> > +		switch (c) {
+> > +		case 'a':
+> > +			fiemap_flags |= FIEMAP_FLAG_XATTR;
+> > +			break;
+> > +		case 'l':
+> > +			lflag = 1;
+> > +			break;
+> > +		case 'n':
+> > +			num_extents = atoi(optarg);
+> > +			nflag = 1;
+> > +			break;
+> > +		case 'v':
+> > +			vflag++;
+> > +			break;
+> > +		default:
+> > +			return command_usage(&fiemap_cmd);
+> > +		}
+> > +	}
+> > +
+> > +	map_size = sizeof(struct fiemap) +
+> > +		(num_extents * sizeof(struct fiemap_extent));
+> 
+> Need to validate num_extents before using it.
+> 
+> > +	fiemap = malloc(map_size);
+> > +	if (!fiemap) {
+> > +		fprintf(stderr, _("%s: malloc of %d bytes failed.\n"),
+> > +			progname, map_size);
+> > +		exitcode = 1;
+> > +		return 0;
+> > +	}
+> > +
+> > +	memset(fiemap, 0, map_size);
+> > +	fiemap->fm_flags = fiemap_flags;
+> > +	fiemap->fm_length = -1;
+> > +	fiemap->fm_extent_count = nflag ? 0 : num_extents;
+> > +
+> > +	ret = ioctl(file->fd, FS_IOC_FIEMAP, (unsigned long)fiemap);
+> > +	if (ret < 0) {
+> > +		fprintf(stderr, "%s: ioctl(FS_IOC_FIEMAP) [\"%s\"]: "
+> > +			"%s\n", progname, file->name, strerror(errno));
+> > +		free(fiemap);
+> > +		exitcode = 1;
+> > +		return 0;
+> > +	}
+> > +
+> > +	if (!nflag) {
+> > +		if (fiemap->fm_mapped_extents > num_extents) {
+> > +			num_extents = fiemap->fm_mapped_extents;
+> > +			map_size = sizeof(struct fiemap) +
+> > +				(num_extents * sizeof(struct fiemap_extent));
+> > +			fiemap = realloc(fiemap, map_size);
+> > +			if (!fiemap) {
+> > +				fprintf(stderr, _("%s: realloc of %d bytes "
+> > +						  "failed.\n"), progname,
+> > +						  map_size);
+> > +				exitcode = 1;
+> > +				return 0;
+> > +			}
+> > +		}
+> > +		memset(fiemap, 0, map_size);
+> > +		fiemap->fm_flags = fiemap_flags;
+> > +		fiemap->fm_length = -1;
+> > +		fiemap->fm_extent_count = num_extents;
+> > +
+> > +		ret = ioctl(file->fd, FS_IOC_FIEMAP, (unsigned long)fiemap);
+> > +		if (ret < 0) {
+> > +			fprintf(stderr, "%s: ioctl(FS_IOC_FIEMAP) [\"%s\"]: "
+> > +				"%s\n", progname, file->name, strerror(errno));
+> > +			free(fiemap);
+> > +			exitcode = 1;
+> > +			return 0;
+> > +		}
+> > +	}
+> 
+> Hmmm. I'd prefer to see a loop mapping and printing N extents at a
+> time rather than one massive allocation and hoping it fits in memory
+> (think of a file with hundreds of thousands of extents). That's a
+> problem with the existing xfs_bmap code - should we be duplicating
+> that problem here?
 >
 
-Crap what the hell this is all right in my local copy.  I must have forgotten
-to commit my changes.
- 
-> > +#
-> > +#-----------------------------------------------------------------------
-> > +# Copyright (c) 2010 Red Hat.  All Rights Reserved.
-> > +#
-> > +# This program is free software; you can redistribute it and/or
-> > +# modify it under the terms of the GNU General Public License as
-> > +# published by the Free Software Foundation.
-> > +#
-> > +# This program is distributed in the hope that it would be useful,
-> > +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> > +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> > +# GNU General Public License for more details.
-> > +#
-> > +# You should have received a copy of the GNU General Public License
-> > +# along with this program; if not, write the Free Software Foundation,
-> > +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> > +#
-> > +#-----------------------------------------------------------------------
-> > +#
-> > +# creator
-> > +owner=dchinner@redhat.com
-> 
-> Not me ;)
-> 
-> > +
-> > +seq=`basename $0`
-> > +echo "QA output created by $seq"
-> > +
-> > +here=`pwd`
-> > +tmp=/tmp/$$
-> > +status=1	# failure is the default!
-> > +
-> > +_cleanup()
-> > +{
-> > +    rm -f $tmp.*
-> > +}
-> > +
-> > +trap "_cleanup ; exit \$status" 0 1 2 3 15
-> > +
-> > +# get standard environment, filters and checks
-> > +. ./common.rc
-> > +. ./common.filter
-> > +
-> > +# real QA test starts here
-> > +_supported_fs generic
-> > +_supported_os Linux
-> > +
-> > +_require_xfs_io_falloc_punch
-> > +_require_xfs_io_fiemap
-> > +
-> > +_filter_bmap()
-> > +{
-> > +    awk --posix '$3 ~ /hole/ { print $1, $2, $3; next }
-> > +		 $5 ~ /0x[[:digit:]]*8[[:digit:]]{2}/ { print $1, $2, "unwritten"; next }
-> > +		 $5 ~ /0x[[:digit:]]+/ {print $1, $2, "data" }'
-> > +}
-> > +
-> > +# test the different corner cases for falloc -ping a range:
-> 
->                                          punching
-> 
-> > +#
-> > +#	1. into a hole
-> > +#	2. into allocated space
-> > +#	3. into unwritten space
-> > +#	4. hole -> data
-> > +#	5. hole -> unwritten
-> > +#	6. data -> hole
-> > +#	7. data -> unwritten
-> > +#	8. unwritten -> hole
-> > +#	9. unwritten -> data
-> > +#	10. hole -> data -> hole
-> > +#	11. data -> hole -> data
-> > +#	12. unwritten -> data -> unwritten
-> > +#	13. data -> unwritten -> data
-> > +
-> > +testfile=$TEST_DIR/242.$$
->                       ^^^
-> 
-> > +
-> > +echo "	1. into a hole"
-> > +rm -f $testfile
-> > +$XFS_IO_PROG -F -f -c "truncate 20k" \
-> > +	-c "falloc -p 4k 8k" \
-> > +	-c "fiemap -v" $testfile | _filter_bmap
-> > +[ $? -ne 0 ] && die_now
-> 
-> This looks almost almost exactly the same test as 242 just with the
-> alloc, map and punch commands changed.  I'd suggest making all these
-> cases into a function that takes three parameters - alloc_cmd
-> punch_cmd and map_cmd - and pulling it into common.punch.
-> 
-
-Oh yeah, like I said I just did "cp 242 245" and then changed everything to use
-falloc -p instead of zero :).
-
-> e.g. we end up with a function full of commands like:
-> 
-> $XFS_IO_PROG -F -f -c "truncate 20k" \
-> 	-c "$punch_cmd 4k 8k" \
-> 	-c "$map_cmd" $testfile | _filter_bmap
-> 
-> Which means it can be used for 242, this test, and another test for
-> the xfs resvsp/unresvsp ioctls...
-> 
-
-Sounds good I can do that.  Thanks,
+Heh you know thats what I did before but decided it was better to do it the way
+bmap did it.  Thanks for the review, I'll fix all these things up,
 
 Josef
 
