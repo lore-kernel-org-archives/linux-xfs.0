@@ -1,22 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAIEcSHO167037 for <xfs@oss.sgi.com>; Thu, 18 Nov 2010 08:38:29 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AE3251E8EEE5
-	for <xfs@oss.sgi.com>; Thu, 18 Nov 2010 06:40:02 -0800 (PST)
-Received: from mail.sandeen.net (64-131-28-21.usfamily.net [64.131.28.21]) by
-	cuda.sgi.com with ESMTP id xXT7CFy2ZrVjL1iU for
-	<xfs@oss.sgi.com>; Thu, 18 Nov 2010 06:40:02 -0800 (PST)
-Message-ID: <4CE53ABE.6030501@sandeen.net>
-Date: Thu, 18 Nov 2010 08:39:58 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	oAIHdG43187567 for <xfs@oss.sgi.com>; Thu, 18 Nov 2010 11:39:16 -0600
+Received: from mx4-phx2.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 28BD313D4F72
+	for <xfs@oss.sgi.com>; Thu, 18 Nov 2010 09:40:49 -0800 (PST)
+Received: from mx4-phx2.redhat.com (mx4-phx2.redhat.com [209.132.183.25]) by
+	cuda.sgi.com with ESMTP id LpEWqLVBDK1YSbra for
+	<xfs@oss.sgi.com>; Thu, 18 Nov 2010 09:40:49 -0800 (PST)
+Date: Thu, 18 Nov 2010 12:40:36 -0500 (EST)
+From: Boris Ranto <branto@redhat.com>
+Message-ID: <718862571.1487061290102036972.JavaMail.root@zmail01.collab.prod.int.phx2.redhat.com>
+In-Reply-To: <1979397072.1486461290101694923.JavaMail.root@zmail01.collab.prod.int.phx2.redhat.com>
+Subject: Re: xfstests: MKFS_OPTIONS is not being reinitialized
 MIME-Version: 1.0
-Subject: Re: xfsprogs 2.x vs 3.x logsize changed
-References: <201011171549.04806.lukasz.oles@open-e.com>
-	<4CE41315.8070402@sandeen.net>
-	<201011181049.42048.lukasz.oles@open-e.com>
-In-Reply-To: <201011181049.42048.lukasz.oles@open-e.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,21 +22,95 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: =?UTF-8?B?xYF1a2FzeiBPbGXFmw==?= <lukasz.oles@open-e.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-T24gMTEvMTgvMTAgMzo0OSBBTSwgxYF1a2FzeiBPbGXFmyB3cm90ZToKCj4gT2ssIHNvIGl0J3Mg
-dGhpcyBjb21taXQgaHR0cDovL2dpdC5rZXJuZWwub3JnLz9wPWZzL3hmcy94ZnNwcm9ncy0KPiBk
-ZXYuZ2l0O2E9Y29tbWl0ZGlmZjtoPWE2NjM0ZmJhM2RlYzRhOTJmMGEyYzRlMzBjODBiNjM0YzA1
-NzZhZDUKPiAKPiBXb3VsZCBpdCBiZSBzYWZlIGlmIEkganVzdCByZXZlcnQgdGhpcyBjb21taXQ/
-ICBJdCBsb29rcyBzYWZlIGZvciBtZSwgYnV0IAo+IG1heWJlIG90aGVyIHRoaW5ncyBkZXBlbmRz
-IG9uIGl0IGFuZCBJIHdpbGwgYnJlYWsgc29tZXRoaW5nLgoKSSB3b3VsZCBqdXN0IHNwZWNpZnkg
-YSBzbWFsbGVyIGxvZyBvbiB0aGUgY29tbWFuZGxpbmUgaWYgdGhhdAppcyB3aGF0IHlvdSBwcmVm
-ZXIsIHJhdGhlciB0aGFuIGNoYW5naW5nIHRoZSBjb2RlLgoKLUVyaWMKIAo+IFJlZ2FyZHMsCj4g
-xYF1a2FzeiBPbGXFmwo+IAoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2ku
-Y29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+
+----- "Dave Chinner" <david@fromorbit.com> wrote:
+
+> On Wed, Nov 17, 2010 at 04:49:58PM +0100, Boris Ranto wrote:
+> > Test case 223 constantly fails because the variable carrying mkfs
+> > options is not being reinitialized.
+> > 
+> > Test calls function _scratch_mkfs_geom repeatedly in for loop
+> without
+> > cleaning the MKFS_OPTIONS variable. Since _scratch_mkfs_geom only
+> > appends options to the variable, MKFS_OPTIONS looks like this in
+> 5th
+> > iteration:
+> > MKFS_OPTIONS="-bsize=4096-b size=4096 -d su=8192,sw=4-b size=4096
+> -d
+> > su=16384,sw=4-b size=4096 -d su=32768,sw=4-b size=4096 -d
+> > su=65536,sw=4-b size=4096 -d su=131072,sw=4"
+> > 
+> > It is also easy to see that _scratch_mkfs_geom does not append
+> leading
+> > space when it appends the variable.
+> > 
+> > Following patch fixes the issue for me and based on my testing does
+> not
+> > break any other test case:
+> > 
+> > diff -uprN xfstests-dev/223 xfstests-dev-new/223
+> > --- xfstests-dev/223	2010-11-09 08:53:39.000000000 -0500
+> > +++ xfstests-dev-new/223	2010-11-17 08:05:56.745068628 -0500
+> > @@ -58,6 +58,7 @@ for SUNIT_K in 8 16 32 64 128; do
+> >  	let SUNIT_BLOCKS=$SUNIT_BYTES/$BLOCKSIZE
+> >  
+> >  	echo "=== mkfs with su $SUNIT_BLOCKS blocks x 4 ==="
+> > +	export MKFS_OPTIONS=""
+> >  	_scratch_mkfs_geom $SUNIT_BYTES 4 $BLOCKSIZE >> $seq.full 2>&1
+> >  	_scratch_mount
+> 
+> That'll drop any custom mkfs options on the floor for that test.
+> 
+> >  
+> > diff -uprN xfstests-dev/common.rc xfstests-dev-new/common.rc
+> > --- xfstests-dev/common.rc	2010-11-09 08:53:39.000000000 -0500
+> > +++ xfstests-dev-new/common.rc	2010-11-17 08:07:06.972132647 -0500
+> > @@ -349,10 +349,10 @@ _scratch_mkfs_geom()
+> >  
+> >      case $FSTYP in
+> >      xfs)
+> > -	MKFS_OPTIONS+="-b size=$blocksize, -d
+> su=$sunit_bytes,sw=$swidth_mult"
+> > +	MKFS_OPTIONS+=" -b size=$blocksize, -d su=$sunit_bytes,sw=
+> > $swidth_mult"
+> >  	;;
+> >      ext4)
+> > -	MKFS_OPTIONS+="-b $blocksize -E
+> stride=$sunit_blocks,stripe_width=
+> > $swidth_blocks"
+> > +	MKFS_OPTIONS+=" -b $blocksize -E
+> stride=$sunit_blocks,stripe_width=
+> > $swidth_blocks"
+> >  	;;
+> >      *)
+> >  	_notrun "can't mkfs $FSTYP with geometry"
+> 
+> Perhaps rather than using MKFS_OPTIONS, this should call
+> scratch_mkfs directly with these as extra options, similar to the
+> way _scratch_mkfs_sized() does. That would leave custom options set,
+> and only pass the test specific options once to mkfs....
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+
+If I remember it right this would not work because MKFS_OPTIONS already contained -bsize=4096 at the beginning of the test and if another -b size=$blocksize would be added to the options mkfs would fail again.
+
+Cheers,
+Boris Ranto
+<branto@redhat.com>
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
