@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAI5DEng125608 for <xfs@oss.sgi.com>; Wed, 17 Nov 2010 23:13:14 -0600
+	oAI5hWwX127295 for <xfs@oss.sgi.com>; Wed, 17 Nov 2010 23:43:32 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 167C51C52CE1
-	for <xfs@oss.sgi.com>; Wed, 17 Nov 2010 21:14:46 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
-	[150.101.137.101]) by cuda.sgi.com with ESMTP id
-	MKFCLxMhhP7Q60nU for <xfs@oss.sgi.com>;
-	Wed, 17 Nov 2010 21:14:46 -0800 (PST)
-Date: Thu, 18 Nov 2010 16:14:44 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7DDC713D102D
+	for <xfs@oss.sgi.com>; Wed, 17 Nov 2010 21:45:04 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
+	[150.101.137.103]) by cuda.sgi.com with ESMTP id
+	YUCD43A2sEzHSLJF for <xfs@oss.sgi.com>;
+	Wed, 17 Nov 2010 21:45:04 -0800 (PST)
+Date: Thu, 18 Nov 2010 16:44:56 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] [RFC] xfsprogs: add -p for hole punching to falloc command
-Message-ID: <20101118051444.GS13830@dastard>
-References: <1289598905-18614-1-git-send-email-josef@redhat.com>
+Subject: Re: [PATCH] xfstests: fix 108 golden output
+Message-ID: <20101118054456.GV13830@dastard>
+References: <20101110125855.GA18357@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1289598905-18614-1-git-send-email-josef@redhat.com>
+In-Reply-To: <20101110125855.GA18357@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,79 +29,21 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Josef Bacik <josef@redhat.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Fri, Nov 12, 2010 at 04:55:05PM -0500, Josef Bacik wrote:
-> Obviously this is highly dependant upon my current implementation of hole
-> punching via fallocate going in, but this is the support code for falloc to deal
-> with hole punching.  This is necessary to run the xfstest I have to make sure
-> the punching stuff is working properly.  Thanks,
-> 
-> Signed-off-by: Josef Bacik <josef@redhat.com>
-> ---
->  io/prealloc.c |   17 ++++++++++++++++-
->  1 files changed, 16 insertions(+), 1 deletions(-)
-> 
-> diff --git a/io/prealloc.c b/io/prealloc.c
-> index c8b7df6..4b14da7 100644
-> --- a/io/prealloc.c
-> +++ b/io/prealloc.c
-> @@ -153,12 +153,23 @@ fallocate_f(
->  	xfs_flock64_t	segment;
->  	int		mode = 0;
->  	int		c;
-> +	const char	*opts;
->  
-> -	while ((c = getopt(argc, argv, "k")) != EOF) {
-> +#if defined (FALLOC_FL_PUNCH_HOLE)
-> +	opts = "kp";
-> +#else
-> +	opts = "k";
-> +#endif
-> +	while ((c = getopt(argc, argv, opts)) != EOF) {
->  		switch (c) {
->  		case 'k':
->  			mode = FALLOC_FL_KEEP_SIZE;
->  			break;
-> +#if defined (FALLOC_FL_PUNCH_HOLE)
-> +		case 'p':
-> +			mode = FALLOC_FL_PUNCH_HOLE;
-> +			break;
-> +#endif
->  		default:
->  			command_usage(&falloc_cmd);
->  		}
-> @@ -236,7 +247,11 @@ prealloc_init(void)
->  	falloc_cmd.argmin = 2;
->  	falloc_cmd.argmax = -1;
->  	falloc_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
-> +#if defined (FALLOC_FL_PUNCH_HOLE)
-> +	falloc_cmd.args = _("[-k] [-p] off len");
-> +#else
->  	falloc_cmd.args = _("[-k] off len");
-> +#endif
->  	falloc_cmd.oneline =
->  		_("allocates space associated with part of a file via fallocate");
+On Wed, Nov 10, 2010 at 07:58:55AM -0500, Christoph Hellwig wrote:
+> The new common scratch mount filter produces slightly different
+> whitespaces than the old home grown filter, so adjust the golden
+> output.
 
-I'd prefer that there is a separate command for FALLOC_FL_PUNCH_HOLE
-rather than a flag that changed the behaviour of the falloc command
-completely. This is the way we've done resvsp/unresvsp, so I think
-it makes sense to follow this command structure e.g. falloc/fpunch.
+I'm not seeing it fail with the new filter, so I'm not sure whether
+there's a whitespace problem. The userspace i just tested on is
+3.1.2, maybe there's something different at your end?
 
 Cheers,
 
 Dave.
->  
-> -- 
-> 1.6.6.1
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
-
 -- 
 Dave Chinner
 david@fromorbit.com
