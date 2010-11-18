@@ -1,17 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAI1sZRM115693 for <xfs@oss.sgi.com>; Wed, 17 Nov 2010 19:54:35 -0600
+	oAI1saxj115701 for <xfs@oss.sgi.com>; Wed, 17 Nov 2010 19:54:36 -0600
 Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 61C6D13C9752
-	for <xfs@oss.sgi.com>; Wed, 17 Nov 2010 17:56:08 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 599A018BF75
+	for <xfs@oss.sgi.com>; Wed, 17 Nov 2010 17:56:09 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id SrYwrRGz3EuUZIpY for
-	<xfs@oss.sgi.com>; Wed, 17 Nov 2010 17:56:08 -0800 (PST)
+	cuda.sgi.com with ESMTP id 7nvPZVMM3n31SCCl for
+	<xfs@oss.sgi.com>; Wed, 17 Nov 2010 17:56:09 -0800 (PST)
 From: Josef Bacik <josef@redhat.com>
-Subject: Hole Punching V3
-Date: Wed, 17 Nov 2010 20:46:14 -0500
-Message-Id: <1290044780-2902-1-git-send-email-josef@redhat.com>
+Subject: [PATCH 4/6] Ext4: fail if we try to use hole punch
+Date: Wed, 17 Nov 2010 20:46:18 -0500
+Message-Id: <1290044780-2902-5-git-send-email-josef@redhat.com>
+In-Reply-To: <1290044780-2902-1-git-send-email-josef@redhat.com>
+References: <1290044780-2902-1-git-send-email-josef@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,23 +29,33 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, cmm@us.ibm.com, cluster-devel@redhat.com, joel.becker@oracle.com, jack@suse.cz
 
-This is version 3 of the hole punching series I've been posting.  Not much has
-changed, the history is below
+Ext4 doesn't have the ability to punch holes yet, so make sure we return
+EOPNOTSUPP if we try to use hole punching through fallocate.  This support can
+be added later.  Thanks,
 
-V2->V3
--FALLOC_FL_PUNCH_HOLE must also have FALLOC_FL_KEEP_SIZE in order to work
--formatting fixes
+Acked-by: Jan Kara <jack@suse.cz>
+Signed-off-by: Josef Bacik <josef@redhat.com>
+---
+ fs/ext4/extents.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
-V1->V2
--Hole punching doesn't change file size
--Fixed the mode checks in ext4/btrfs/gfs2 so they do what they are supposed to
-
-I've updated my local copies of the xfsprogs patches I have to test this to use
-KEEP_SIZE and PUNCH_HOLE together, I'll post them after it looks like these
-patches are good to go, including the manpage update.  The xfstest I wrote ran
-fine both on xfs and btrfs (failing on btrfs obviously).  Thanks,
-
-Josef
+diff --git a/fs/ext4/extents.c b/fs/ext4/extents.c
+index 0554c48..35bca73 100644
+--- a/fs/ext4/extents.c
++++ b/fs/ext4/extents.c
+@@ -3622,6 +3622,10 @@ long ext4_fallocate(struct inode *inode, int mode, loff_t offset, loff_t len)
+ 	struct ext4_map_blocks map;
+ 	unsigned int credits, blkbits = inode->i_blkbits;
+ 
++	/* We only support the FALLOC_FL_KEEP_SIZE mode */
++	if (mode && (mode != FALLOC_FL_KEEP_SIZE))
++		return -EOPNOTSUPP;
++
+ 	/*
+ 	 * currently supporting (pre)allocate mode for extent-based
+ 	 * files _only_
+-- 
+1.6.6.1
 
 _______________________________________________
 xfs mailing list
