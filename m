@@ -1,19 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAI1sb4W115707 for <xfs@oss.sgi.com>; Wed, 17 Nov 2010 19:54:37 -0600
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4ED72175E889
-	for <xfs@oss.sgi.com>; Wed, 17 Nov 2010 17:56:10 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id YNdDsMiDxRTIsdnE for
-	<xfs@oss.sgi.com>; Wed, 17 Nov 2010 17:56:10 -0800 (PST)
-From: Josef Bacik <josef@redhat.com>
-Subject: [PATCH 5/6] Btrfs: fail if we try to use hole punch
-Date: Wed, 17 Nov 2010 20:46:19 -0500
-Message-Id: <1290044780-2902-6-git-send-email-josef@redhat.com>
-In-Reply-To: <1290044780-2902-1-git-send-email-josef@redhat.com>
-References: <1290044780-2902-1-git-send-email-josef@redhat.com>
+	oAI4hLgr124643 for <xfs@oss.sgi.com>; Wed, 17 Nov 2010 22:43:21 -0600
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id AA6F718BE71
+	for <xfs@oss.sgi.com>; Wed, 17 Nov 2010 20:44:53 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
+	[150.101.137.99]) by cuda.sgi.com with ESMTP id
+	bJfj2m72RX8tgHSx for <xfs@oss.sgi.com>;
+	Wed, 17 Nov 2010 20:44:53 -0800 (PST)
+Date: Thu, 18 Nov 2010 15:44:40 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfstests: MKFS_OPTIONS is not being reinitialized
+Message-ID: <20101118044440.GQ13830@dastard>
+References: <1290008998.18362.101.camel@dhcp-31-190.brq.redhat.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1290008998.18362.101.camel@dhcp-31-190.brq.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,39 +25,76 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: david@fromorbit.com, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, cmm@us.ibm.com, cluster-devel@redhat.com, joel.becker@oracle.com, jack@suse.cz
+To: Boris Ranto <branto@redhat.com>
+Cc: xfs@oss.sgi.com
 
-Btrfs doesn't have the ability to punch holes yet, so make sure we return
-EOPNOTSUPP if we try to use hole punching through fallocate.  This support can
-be added later.  Thanks,
+On Wed, Nov 17, 2010 at 04:49:58PM +0100, Boris Ranto wrote:
+> Test case 223 constantly fails because the variable carrying mkfs
+> options is not being reinitialized.
+> 
+> Test calls function _scratch_mkfs_geom repeatedly in for loop without
+> cleaning the MKFS_OPTIONS variable. Since _scratch_mkfs_geom only
+> appends options to the variable, MKFS_OPTIONS looks like this in 5th
+> iteration:
+> MKFS_OPTIONS="-bsize=4096-b size=4096 -d su=8192,sw=4-b size=4096 -d
+> su=16384,sw=4-b size=4096 -d su=32768,sw=4-b size=4096 -d
+> su=65536,sw=4-b size=4096 -d su=131072,sw=4"
+> 
+> It is also easy to see that _scratch_mkfs_geom does not append leading
+> space when it appends the variable.
+> 
+> Following patch fixes the issue for me and based on my testing does not
+> break any other test case:
+> 
+> diff -uprN xfstests-dev/223 xfstests-dev-new/223
+> --- xfstests-dev/223	2010-11-09 08:53:39.000000000 -0500
+> +++ xfstests-dev-new/223	2010-11-17 08:05:56.745068628 -0500
+> @@ -58,6 +58,7 @@ for SUNIT_K in 8 16 32 64 128; do
+>  	let SUNIT_BLOCKS=$SUNIT_BYTES/$BLOCKSIZE
+>  
+>  	echo "=== mkfs with su $SUNIT_BLOCKS blocks x 4 ==="
+> +	export MKFS_OPTIONS=""
+>  	_scratch_mkfs_geom $SUNIT_BYTES 4 $BLOCKSIZE >> $seq.full 2>&1
+>  	_scratch_mount
 
-Signed-off-by: Josef Bacik <josef@redhat.com>
----
- fs/btrfs/inode.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+That'll drop any custom mkfs options on the floor for that test.
 
-diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
-index 78877d7..6f08892 100644
---- a/fs/btrfs/inode.c
-+++ b/fs/btrfs/inode.c
-@@ -6936,6 +6936,10 @@ static long btrfs_fallocate(struct inode *inode, int mode,
- 	alloc_start = offset & ~mask;
- 	alloc_end =  (offset + len + mask) & ~mask;
- 
-+	/* We only support the FALLOC_FL_KEEP_SIZE mode */
-+	if (mode && (mode != FALLOC_FL_KEEP_SIZE))
-+		return -EOPNOTSUPP;
-+
- 	/*
- 	 * wait for ordered IO before we have any locks.  We'll loop again
- 	 * below with the locks held.
+>  
+> diff -uprN xfstests-dev/common.rc xfstests-dev-new/common.rc
+> --- xfstests-dev/common.rc	2010-11-09 08:53:39.000000000 -0500
+> +++ xfstests-dev-new/common.rc	2010-11-17 08:07:06.972132647 -0500
+> @@ -349,10 +349,10 @@ _scratch_mkfs_geom()
+>  
+>      case $FSTYP in
+>      xfs)
+> -	MKFS_OPTIONS+="-b size=$blocksize, -d su=$sunit_bytes,sw=$swidth_mult"
+> +	MKFS_OPTIONS+=" -b size=$blocksize, -d su=$sunit_bytes,sw=
+> $swidth_mult"
+>  	;;
+>      ext4)
+> -	MKFS_OPTIONS+="-b $blocksize -E stride=$sunit_blocks,stripe_width=
+> $swidth_blocks"
+> +	MKFS_OPTIONS+=" -b $blocksize -E stride=$sunit_blocks,stripe_width=
+> $swidth_blocks"
+>  	;;
+>      *)
+>  	_notrun "can't mkfs $FSTYP with geometry"
+
+Perhaps rather than using MKFS_OPTIONS, this should call
+scratch_mkfs directly with these as extra options, similar to the
+way _scratch_mkfs_sized() does. That would leave custom options set,
+and only pass the test specific options once to mkfs....
+
+Cheers,
+
+Dave.
 -- 
-1.6.6.1
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
