@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAIJwxHs202569 for <xfs@oss.sgi.com>; Thu, 18 Nov 2010 13:58:59 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1FCBB18B565
-	for <xfs@oss.sgi.com>; Thu, 18 Nov 2010 12:00:32 -0800 (PST)
-Received: from mail.sandeen.net (64-131-28-21.usfamily.net [64.131.28.21]) by
-	cuda.sgi.com with ESMTP id JCBhNu1nfYwcLWOm for
-	<xfs@oss.sgi.com>; Thu, 18 Nov 2010 12:00:32 -0800 (PST)
-Message-ID: <4CE585DF.9040107@sandeen.net>
-Date: Thu, 18 Nov 2010 14:00:31 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	oAINfx6u238370 for <xfs@oss.sgi.com>; Thu, 18 Nov 2010 17:42:00 -0600
+Received: from mx2.suse.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 25AA418FBC8
+	for <xfs@oss.sgi.com>; Thu, 18 Nov 2010 15:43:33 -0800 (PST)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id cbQ3BXnRIRBXsP4j for <xfs@oss.sgi.com>;
+	Thu, 18 Nov 2010 15:43:33 -0800 (PST)
+Date: Fri, 19 Nov 2010 00:43:31 +0100
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 1/6] fs: add hole punching to fallocate
+Message-ID: <20101118234331.GD5004@quack.suse.cz>
+References: <1290044780-2902-1-git-send-email-josef@redhat.com>
+	<1290044780-2902-2-git-send-email-josef@redhat.com>
 MIME-Version: 1.0
-Subject: Re: xfstests: MKFS_OPTIONS is not being reinitialized
-References: <718862571.1487061290102036972.JavaMail.root@zmail01.collab.prod.int.phx2.redhat.com>
-In-Reply-To: <718862571.1487061290102036972.JavaMail.root@zmail01.collab.prod.int.phx2.redhat.com>
+Content-Disposition: inline
+In-Reply-To: <1290044780-2902-2-git-send-email-josef@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,95 +29,62 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Boris Ranto <branto@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Josef Bacik <josef@redhat.com>
+Cc: jack@suse.cz, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, cluster-devel@redhat.com, cmm@us.ibm.com, joel.becker@oracle.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
 
-On 11/18/10 11:40 AM, Boris Ranto wrote:
+On Wed 17-11-10 20:46:15, Josef Bacik wrote:
+> Hole punching has already been implemented by XFS and OCFS2, and has the
+> potential to be implemented on both BTRFS and EXT4 so we need a generic way to
+> get to this feature.  The simplest way in my mind is to add FALLOC_FL_PUNCH_HOLE
+> to fallocate() since it already looks like the normal fallocate() operation.
+> I've tested this patch with XFS and BTRFS to make sure XFS did what it's
+> supposed to do and that BTRFS failed like it was supposed to.  Thank you,
+  Looks nice now. Acked-by: Jan Kara <jack@suse.cz>
+
+									Honza
 > 
-> ----- "Dave Chinner" <david@fromorbit.com> wrote:
+> Signed-off-by: Josef Bacik <josef@redhat.com>
+> ---
+>  fs/open.c              |    7 ++++++-
+>  include/linux/falloc.h |    1 +
+>  2 files changed, 7 insertions(+), 1 deletions(-)
 > 
->> On Wed, Nov 17, 2010 at 04:49:58PM +0100, Boris Ranto wrote:
->>> Test case 223 constantly fails because the variable carrying
->>> mkfs options is not being reinitialized.
->>> 
->>> Test calls function _scratch_mkfs_geom repeatedly in for loop
->> without
->>> cleaning the MKFS_OPTIONS variable. Since _scratch_mkfs_geom
->>> only appends options to the variable, MKFS_OPTIONS looks like
->>> this in
->> 5th
->>> iteration: MKFS_OPTIONS="-bsize=4096-b size=4096 -d
->>> su=8192,sw=4-b size=4096
->> -d
->>> su=16384,sw=4-b size=4096 -d su=32768,sw=4-b size=4096 -d 
->>> su=65536,sw=4-b size=4096 -d su=131072,sw=4"
->>> 
->>> It is also easy to see that _scratch_mkfs_geom does not append
->> leading
->>> space when it appends the variable.
->>> 
->>> Following patch fixes the issue for me and based on my testing
->>> does
->> not
->>> break any other test case:
->>> 
->>> diff -uprN xfstests-dev/223 xfstests-dev-new/223 ---
->>> xfstests-dev/223	2010-11-09 08:53:39.000000000 -0500 +++
->>> xfstests-dev-new/223	2010-11-17 08:05:56.745068628 -0500 @@ -58,6
->>> +58,7 @@ for SUNIT_K in 8 16 32 64 128; do let
->>> SUNIT_BLOCKS=$SUNIT_BYTES/$BLOCKSIZE
->>> 
->>> echo "=== mkfs with su $SUNIT_BLOCKS blocks x 4 ===" +	export
->>> MKFS_OPTIONS="" _scratch_mkfs_geom $SUNIT_BYTES 4 $BLOCKSIZE >>
->>> $seq.full 2>&1 _scratch_mount
->> 
->> That'll drop any custom mkfs options on the floor for that test.
->> 
->>> 
->>> diff -uprN xfstests-dev/common.rc xfstests-dev-new/common.rc ---
->>> xfstests-dev/common.rc	2010-11-09 08:53:39.000000000 -0500 +++
->>> xfstests-dev-new/common.rc	2010-11-17 08:07:06.972132647 -0500 @@
->>> -349,10 +349,10 @@ _scratch_mkfs_geom()
->>> 
->>> case $FSTYP in xfs) -	MKFS_OPTIONS+="-b size=$blocksize, -d
->> su=$sunit_bytes,sw=$swidth_mult"
->>> +	MKFS_OPTIONS+=" -b size=$blocksize, -d su=$sunit_bytes,sw= 
->>> $swidth_mult" ;; ext4) -	MKFS_OPTIONS+="-b $blocksize -E
->> stride=$sunit_blocks,stripe_width=
->>> $swidth_blocks" +	MKFS_OPTIONS+=" -b $blocksize -E
->> stride=$sunit_blocks,stripe_width=
->>> $swidth_blocks" ;; *) _notrun "can't mkfs $FSTYP with geometry"
->> 
->> Perhaps rather than using MKFS_OPTIONS, this should call 
->> scratch_mkfs directly with these as extra options, similar to the 
->> way _scratch_mkfs_sized() does. That would leave custom options
->> set, and only pass the test specific options once to mkfs....
-
-I thought about that too, but I'm worried about some options
-clashing.
-
->> Cheers,
->> 
->> Dave. -- Dave Chinner david@fromorbit.com
+> diff --git a/fs/open.c b/fs/open.c
+> index 4197b9e..5b6ef7e 100644
+> --- a/fs/open.c
+> +++ b/fs/open.c
+> @@ -223,7 +223,12 @@ int do_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
+>  		return -EINVAL;
+>  
+>  	/* Return error if mode is not supported */
+> -	if (mode && !(mode & FALLOC_FL_KEEP_SIZE))
+> +	if (mode & ~(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE))
+> +		return -EOPNOTSUPP;
+> +
+> +	/* Punch hole must have keep size set */
+> +	if ((mode & FALLOC_FL_PUNCH_HOLE) &&
+> +	    !(mode & FALLOC_FL_KEEP_SIZE))
+>  		return -EOPNOTSUPP;
+>  
+>  	if (!(file->f_mode & FMODE_WRITE))
+> diff --git a/include/linux/falloc.h b/include/linux/falloc.h
+> index 3c15510..73e0b62 100644
+> --- a/include/linux/falloc.h
+> +++ b/include/linux/falloc.h
+> @@ -2,6 +2,7 @@
+>  #define _FALLOC_H_
+>  
+>  #define FALLOC_FL_KEEP_SIZE	0x01 /* default is extend size */
+> +#define FALLOC_FL_PUNCH_HOLE	0x02 /* de-allocates range */
+>  
+>  #ifdef __KERNEL__
+>  
+> -- 
+> 1.6.6.1
 > 
-> If I remember it right this would not work because MKFS_OPTIONS
-> already contained -bsize=4096 at the beginning of the test and if
-> another -b size=$blocksize would be added to the options mkfs would
-> fail again.
-
-*nod*
-
-I think I'm ok with it the way it is.  FWIW, I committed it yesterday ...
-We can change further if needed though, of course.
-
-Thanks,
--Eric
-
-> Cheers, Boris Ranto <branto@redhat.com>
-> 
-> _______________________________________________ xfs mailing list 
-> xfs@oss.sgi.com http://oss.sgi.com/mailman/listinfo/xfs
-> 
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
