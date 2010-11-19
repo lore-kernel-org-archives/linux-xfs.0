@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAINfx6u238370 for <xfs@oss.sgi.com>; Thu, 18 Nov 2010 17:42:00 -0600
-Received: from mx2.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 25AA418FBC8
-	for <xfs@oss.sgi.com>; Thu, 18 Nov 2010 15:43:33 -0800 (PST)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id cbQ3BXnRIRBXsP4j for <xfs@oss.sgi.com>;
-	Thu, 18 Nov 2010 15:43:33 -0800 (PST)
-Date: Fri, 19 Nov 2010 00:43:31 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 1/6] fs: add hole punching to fallocate
-Message-ID: <20101118234331.GD5004@quack.suse.cz>
-References: <1290044780-2902-1-git-send-email-josef@redhat.com>
-	<1290044780-2902-2-git-send-email-josef@redhat.com>
+	oAJ12wos252872 for <xfs@oss.sgi.com>; Thu, 18 Nov 2010 19:02:58 -0600
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5F3F413C4C38
+	for <xfs@oss.sgi.com>; Thu, 18 Nov 2010 17:04:30 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail20.adl6.internode.on.net
+	[150.101.137.105]) by cuda.sgi.com with ESMTP id
+	HzDJ2ED0uUwl5OiX for <xfs@oss.sgi.com>;
+	Thu, 18 Nov 2010 17:04:30 -0800 (PST)
+Date: Fri, 19 Nov 2010 12:04:21 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfsprogs 2.x vs 3.x logsize changed
+Message-ID: <20101119010421.GZ13830@dastard>
+References: <201011171549.04806.lukasz.oles@open-e.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1290044780-2902-2-git-send-email-josef@redhat.com>
+In-Reply-To: <201011171549.04806.lukasz.oles@open-e.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,68 +25,40 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Josef Bacik <josef@redhat.com>
-Cc: jack@suse.cz, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, cluster-devel@redhat.com, cmm@us.ibm.com, joel.becker@oracle.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
+To: =?utf-8?B?xYF1a2FzeiBPbGXFmw==?= <lukasz.oles@open-e.com>
+Cc: Artur Piechocki <artur.piechocki@open-e.com>, xfs@oss.sgi.com
 
-On Wed 17-11-10 20:46:15, Josef Bacik wrote:
-> Hole punching has already been implemented by XFS and OCFS2, and has the
-> potential to be implemented on both BTRFS and EXT4 so we need a generic way to
-> get to this feature.  The simplest way in my mind is to add FALLOC_FL_PUNCH_HOLE
-> to fallocate() since it already looks like the normal fallocate() operation.
-> I've tested this patch with XFS and BTRFS to make sure XFS did what it's
-> supposed to do and that BTRFS failed like it was supposed to.  Thank you,
-  Looks nice now. Acked-by: Jan Kara <jack@suse.cz>
-
-									Honza
-> 
-> Signed-off-by: Josef Bacik <josef@redhat.com>
-> ---
->  fs/open.c              |    7 ++++++-
->  include/linux/falloc.h |    1 +
->  2 files changed, 7 insertions(+), 1 deletions(-)
-> 
-> diff --git a/fs/open.c b/fs/open.c
-> index 4197b9e..5b6ef7e 100644
-> --- a/fs/open.c
-> +++ b/fs/open.c
-> @@ -223,7 +223,12 @@ int do_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
->  		return -EINVAL;
->  
->  	/* Return error if mode is not supported */
-> -	if (mode && !(mode & FALLOC_FL_KEEP_SIZE))
-> +	if (mode & ~(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE))
-> +		return -EOPNOTSUPP;
-> +
-> +	/* Punch hole must have keep size set */
-> +	if ((mode & FALLOC_FL_PUNCH_HOLE) &&
-> +	    !(mode & FALLOC_FL_KEEP_SIZE))
->  		return -EOPNOTSUPP;
->  
->  	if (!(file->f_mode & FMODE_WRITE))
-> diff --git a/include/linux/falloc.h b/include/linux/falloc.h
-> index 3c15510..73e0b62 100644
-> --- a/include/linux/falloc.h
-> +++ b/include/linux/falloc.h
-> @@ -2,6 +2,7 @@
->  #define _FALLOC_H_
->  
->  #define FALLOC_FL_KEEP_SIZE	0x01 /* default is extend size */
-> +#define FALLOC_FL_PUNCH_HOLE	0x02 /* de-allocates range */
->  
->  #ifdef __KERNEL__
->  
-> -- 
-> 1.6.6.1
-> 
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gV2VkLCBOb3YgMTcsIDIwMTAgYXQgMDM6NDk6MDRQTSArMDEwMCwgxYF1a2FzeiBPbGXFmyB3
+cm90ZToKPiBIaSwKPiAKPiBJJ20gdXBncmFkaW5nIHhmc3Byb2dzIGZyb20gMi4xMC4xIHRvIHRo
+ZSBsYXRlc3QgMy4xLjQgdmVyc2lvbi4gSSBub3RpY2VkIHRoYXQgCj4gd2hlbiBJJ20gY3JlYXRp
+bmcgbGFyZ2UgbHZtIHZvbHVtZSAoMlQpIHRoZSBsb2cgc2l6ZSBpcyBhbG1vc3QgMUcgaW4gdGhl
+IG9sZCAKPiB2ZXJzaW9uIGl0IHdhcyAxMjhNLiAgCj4gSSBrbm93IEkgY2FuIG1hbmlwdWxhdGUg
+dGhpcyB2YWx1ZSB3aXRoIC1sc2l6ZSBvcHRpb24sIGJ1dCBJJ20gd29uZGVyaW5nIHdoeSAKPiB0
+aGlzIGRpZmZlcmVuY2UgaXMgc28gaHVnZT8gCgpNYW55IHdvcmtsb2FkcyB3ZXJlIGRlbW9uc3Ry
+YXRlZCB0byBoYXZlIHN1YnN0YW50aWFsbHkgYmV0dGVyCnBlcmZvcm1hbmNlIHdpdGggbGFyZ2Vy
+IGxvZ3MsIGV2ZW4gb24gc21hbGwgZmlsZXN5c3RlbXMuIEF0IDRUQiwKbW9zdCBwZW9wbGUgYXJl
+IHVzaW5nIFJBSUQgb2Ygc29tZSBraW5kLCBzbyBsYXJnZXIgbG9ncyBhcmUgcXVpdGUKYmVuZWZp
+Y2lhbCBoZXJlLgoKPiBPbiB0aGlzIHZvbHVtZSBJIGhhdmUgb25lIHNwYXJzZSBmaWxlIHdoaWNo
+IGlzIGV4cG9ydGVkIGJ5IGlTQ1NJIFRhcmdldC4gIEkgCj4gaGF2ZSBzY3JpcHQgd2hpY2ggY2Fs
+Y3VsYXRlcyAgZm9yIG1lICJzZWVrIiB2YWx1ZSBmb3IgZGQgY29tbWFuZCBhbmQgbm93IGl0IAo+
+IHJldHVybnMgbWUgd3JvbmcgdmFsdWVzLgo+IENhbiBJIHN0YXkgd2l0aCB0aGUgb2xkIGxvZyBz
+aXplIG9yIG1heWJlIHRoZXJlIGFyZSBzb21lIGdvb2QgcmVhc29ucyB0byB1c2UgCj4gbmV3IHZh
+bHVlcz8KClN0YXlpbmcgd2l0aCB0aGUgb2xkIGxvZyBzaXplIGlzIGp1c3QgZmluZSAtIGl0J2xs
+IGJlaGF2ZSBleGFjdGx5CnRoZSBzYW1lIGFzIGl0IGRvZXMgbm93LiBUaGVyZSBhcmUgdHdvIG1h
+aW4gdGhpbmdzIGhhdCBtYWtlIGEgbGFyZ2VyCmxvZyBzaXplIGF0dHJhY3RpdmU6CgoJMS4gbG9n
+IHNpemUgZGV0ZXJtaW5lcyBtYXhpbXVtIHRyYW5zYWN0aW9uIHBhcmFsbGVsaXNtLCBzbwoJICAg
+c28gc21hbGxlciBsb2dzIG1heSBsaW1pdCBvcGVyYXRpb25hbCBjb25jdXJyZW5jeS4gQQoJICAg
+MTI4TUIgbG9nIHR5cGljYWxseSBhbGxvd3MgfjI1MCBjb25jdXJyZW50IHRyYW5zYWN0aW9ucwoJ
+ICAgb24gYSAxVEIsIDRrIGJsb2NrIHNpemUgZmlsZXN5c3RlbS4KCTIuIGxhcmdlciBsb2dzIGFs
+bG93IHRoZSBmaWxlc3lzdGVtIHRvIHNvYWsgdXAgbGFyZ2VyIGJ1cnN0CgkgICBvZiBtZXRhZGF0
+YSBtb2RpZmljYXRpb25zIHdpdGhvdXQgbmVlZGluZyB0byB3cml0ZSBiYWNrCgkgICBkaXJ0eSBt
+ZXRhZGF0YS4KClRoZSBkb3duc2lkZSBvdCBhIGxhcmdlciBsb2cgaXMgdGhhdCByZWNvdmVyeSBj
+YW4gdGFrZSBsb25nZXIgYWZ0ZXIKYSBjcmFzaC4KCkFueXdheSwgaWYgeW91IGFyZSBoYXZpbmcg
+bm8gcHJvYmxlbXMgYXQgMTI4TUIsIHRoZW4ganVzdCB1c2UKdGhhdC4uLgoKQ2hlZXJzLAoKRGF2
+ZS4KLS0gCkRhdmUgQ2hpbm5lcgpkYXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Mu
+c2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
