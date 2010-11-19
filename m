@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAJJaRZM153171 for <xfs@oss.sgi.com>; Fri, 19 Nov 2010 13:36:27 -0600
+	oAJJh8Gr153508 for <xfs@oss.sgi.com>; Fri, 19 Nov 2010 13:43:08 -0600
 Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D99FE1C5A52D
-	for <xfs@oss.sgi.com>; Fri, 19 Nov 2010 11:38:02 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 34B6C1C5AC79
+	for <xfs@oss.sgi.com>; Fri, 19 Nov 2010 11:44:41 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id m7YgRx81xgckRSlA for
-	<xfs@oss.sgi.com>; Fri, 19 Nov 2010 11:38:02 -0800 (PST)
+	cuda.sgi.com with ESMTP id Fdv6rNOQMX896aAy for
+	<xfs@oss.sgi.com>; Fri, 19 Nov 2010 11:44:41 -0800 (PST)
 From: Josef Bacik <josef@redhat.com>
-Subject: [PATCH] Xfsprogs: add fiemap command to xfs_io V2
-Date: Fri, 19 Nov 2010 14:28:04 -0500
-Message-Id: <1290194884-19101-1-git-send-email-josef@redhat.com>
+Subject: [PATCH] xfstests 248: add test for fallocate with hole punching V2
+Date: Fri, 19 Nov 2010 14:34:54 -0500
+Message-Id: <1290195294-19295-1-git-send-email-josef@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,468 +27,515 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com, david@fromorbit.com
 
-When trying to add a test for hole punching I noticed that the "bmap" command
-only works on XFS, which makes testing hole punching on other fs's kind of
-difficult.  To fix this I've added an fiemap command that works almost exactly
-like bmap.  It is formatted similarly and takes similar flags, the only thing
-thats different is obviously it doesn't spit out AG info and it doesn't make
-finding prealloc space optional.  This is my first foray into all of this stuff
-so a good hard look would be appreciated.  I tested it with a few different
-files to make sure bmap and fiemap both looked the same.  Thanks,
+As Dave Chinner requested I moved the major test meat of 242 into common.punch
+and made it take all the arguments for alloc/punch/zero/map and such.  This way
+242 and 248 can use the same base test and just pass in their specific commands
+they are testing.  I ran both 242 and 248 on XFS and the both pass.  Thanks,
 
 Signed-off-by: Josef Bacik <josef@redhat.com>
 ---
 V1->V2:
--various formatting problems
--loop calling fiemap with a max of 32 extents at a time
+-factor out the test stuff in 242 to common.punch and add 248 to use that code
 
- configure.in          |    1 +
- include/builddefs.in  |    1 +
- io/Makefile           |    7 +
- io/fiemap.c           |  347 +++++++++++++++++++++++++++++++++++++++++++++++++
- io/init.c             |    1 +
- io/io.h               |    6 +
- m4/package_libcdev.m4 |    8 +
- 7 files changed, 371 insertions(+), 0 deletions(-)
- create mode 100644 io/fiemap.c
+ 242          |  141 +---------------------------------------------------
+ 248          |   57 +++++++++++++++++++++
+ 248.out      |   47 +++++++++++++++++
+ common.punch |  157 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ common.rc    |   27 ++++++++++
+ group        |    1 +
+ 6 files changed, 291 insertions(+), 139 deletions(-)
+ create mode 100755 248
+ create mode 100644 248.out
 
-diff --git a/configure.in b/configure.in
-index 30907de..16441ce 100644
---- a/configure.in
-+++ b/configure.in
-@@ -103,6 +103,7 @@ AC_HAVE_SENDFILE
- AC_HAVE_GETMNTENT
- AC_HAVE_GETMNTINFO
- AC_HAVE_FALLOCATE
-+AC_HAVE_FIEMAP
- AC_HAVE_BLKID_TOPO($enable_blkid)
+diff --git a/242 b/242
+index 083aa31..9a0c89e 100755
+--- a/242
++++ b/242
+@@ -41,6 +41,7 @@ trap "_cleanup ; exit \$status" 0 1 2 3 15
+ # get standard environment, filters and checks
+ . ./common.rc
+ . ./common.filter
++. ./common.punch
  
- AC_TYPE_PSINT
-diff --git a/include/builddefs.in b/include/builddefs.in
-index 93d1e67..f895ed9 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -98,6 +98,7 @@ HAVE_SENDFILE = @have_sendfile@
- HAVE_GETMNTENT = @have_getmntent@
- HAVE_GETMNTINFO = @have_getmntinfo@
- HAVE_FALLOCATE = @have_fallocate@
-+HAVE_FIEMAP = @have_fiemap@
+ # real QA test starts here
+ _supported_fs xfs
+@@ -55,147 +56,9 @@ _test_io_zero()
  
- GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall 
- #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
-diff --git a/io/Makefile b/io/Makefile
-index fc98166..9d79dca 100644
---- a/io/Makefile
-+++ b/io/Makefile
-@@ -44,6 +44,13 @@ else
- LSRCFILES += sendfile.c
- endif
+ [ $(_test_io_zero) -eq 0 ] && _notrun "zero command not supported"
  
-+ifeq ($(HAVE_FIEMAP),yes)
-+CFILES += fiemap.c
-+LCFLAGS += -DHAVE_FIEMAP
-+else
-+LSRCFILES += fiemap.c
-+endif
-+
- ifeq ($(PKG_PLATFORM),irix)
- LSRCFILES += inject.c resblks.c
- else
-diff --git a/io/fiemap.c b/io/fiemap.c
-new file mode 100644
-index 0000000..fa990cc
+-die_now()
+-{
+-	status=1
+-	exit
+-}
+-
+-_filter_bmap()
+-{
+-    awk '$3 ~ /hole/ { print $1, $2, $3; next }
+-         $7 ~ /10000/ { print $1, $2, "unwritten"; next }
+-         $7 ~ /00000/ {print $1, $2, "data" }'
+-}
+-
+-# test the different corner cases for zeroing a range:
+-#
+-#	1. into a hole
+-#	2. into allocated space
+-#	3. into unwritten space
+-#	4. hole -> data
+-#	5. hole -> unwritten
+-#	6. data -> hole
+-#	7. data -> unwritten
+-#	8. unwritten -> hole
+-#	9. unwritten -> data
+-#	10. hole -> data -> hole
+-#	11. data -> hole -> data
+-#	12. unwritten -> data -> unwritten
+-#	13. data -> unwritten -> data
+ 
+ testfile=$TEST_DIR/242.$$
+ 
+-echo "	1. into a hole"
+-rm -f $testfile
+-$XFS_IO_PROG -f -c "truncate 20k" \
+-	-c "zero 4k 8k" \
+-	-c "bmap -vp" $testfile | _filter_bmap
+-[ $? -ne 0 ] && die_now
+-
+-echo "	2. into allocated space"
+-rm -f $testfile
+-$XFS_IO_PROG -f -c "truncate 20k" \
+-	-c "pwrite 0 20k" -c "fsync" \
+-	-c "zero 4k 8k" \
+-	-c "bmap -vp" $testfile | _filter_bmap
+-[ $? -ne 0 ] && die_now
+-
+-echo "	3. into unwritten space"
+-rm -f $testfile
+-$XFS_IO_PROG -f -c "truncate 20k" \
+-	-c "resvsp 0 20k" \
+-	-c "zero 4k 8k" \
+-	-c "bmap -vp" $testfile | _filter_bmap
+-[ $? -ne 0 ] && die_now
+-
+-echo "	4. hole -> data"
+-rm -f $testfile
+-$XFS_IO_PROG -f -c "truncate 20k" \
+-	-c "pwrite 8k 8k" -c "fsync" \
+-	-c "zero 4k 8k" \
+-	-c "bmap -vp" $testfile | _filter_bmap
+-[ $? -ne 0 ] && die_now
+-
+-echo "	5. hole -> unwritten"
+-rm -f $testfile
+-$XFS_IO_PROG -f -c "truncate 20k" \
+-	-c "resvsp 8k 8k" \
+-	-c "zero 4k 8k" \
+-	-c "bmap -vp" $testfile | _filter_bmap
+-[ $? -ne 0 ] && die_now
+-
+-echo "	6. data -> hole"
+-rm -f $testfile
+-$XFS_IO_PROG -f -c "truncate 20k" \
+-	-c "pwrite 0 8k" -c "fsync" \
+-	-c "zero 4k 8k" \
+-	-c "bmap -vp" $testfile | _filter_bmap
+-[ $? -ne 0 ] && die_now
+-
+-echo "	7. data -> unwritten"
+-rm -f $testfile
+-$XFS_IO_PROG -f -c "truncate 20k" \
+-	-c "pwrite 0 8k" -c "fsync" \
+-	-c "resvsp 8k 8k" \
+-	-c "zero 4k 8k" \
+-	-c "bmap -vp" $testfile | _filter_bmap
+-[ $? -ne 0 ] && die_now
+-
+-echo "	8. unwritten -> hole"
+-rm -f $testfile
+-$XFS_IO_PROG -f -c "truncate 20k" \
+-	-c "resvsp 0 8k" \
+-	-c "zero 4k 8k" \
+-	-c "bmap -vp" $testfile | _filter_bmap
+-[ $? -ne 0 ] && die_now
+-
+-echo "	9. unwritten -> data"
+-rm -f $testfile
+-$XFS_IO_PROG -f -c "truncate 20k" \
+-	-c "resvsp 0 8k" \
+-	-c "pwrite 8k 8k" -c "fsync" \
+-	-c "zero 4k 8k" \
+-	-c "bmap -vp" $testfile | _filter_bmap
+-[ $? -ne 0 ] && die_now
+-
+-echo "	10. hole -> data -> hole"
+-rm -f $testfile
+-$XFS_IO_PROG -f -c "truncate 20k" \
+-	-c "pwrite 8k 4k" -c "fsync" \
+-	-c "zero 4k 12k" \
+-	-c "bmap -vp" $testfile | _filter_bmap
+-[ $? -ne 0 ] && die_now
+-
+-echo "	11. data -> hole -> data"
+-rm -f $testfile
+-$XFS_IO_PROG -f -c "truncate 20k" \
+-	-c "resvsp 0 20k" \
+-	-c "pwrite 0 8k" \
+-	-c "pwrite 12k 8k" -c "fsync" \
+-	-c "unresvsp 8k 4k" \
+-	-c "zero 4k 12k" \
+-	-c "bmap -vp" $testfile | _filter_bmap
+-[ $? -ne 0 ] && die_now
+-
+-echo "	12. unwritten -> data -> unwritten"
+-rm -f $testfile
+-$XFS_IO_PROG -f -c "truncate 20k" \
+-	-c "resvsp 0 20k" \
+-	-c "pwrite 8k 4k" -c "fsync" \
+-	-c "zero 4k 12k" \
+-	-c "bmap -vp" $testfile | _filter_bmap
+-[ $? -ne 0 ] && die_now
+-
+-
+-echo "	13. data -> unwritten -> data"
+-rm -f $testfile
+-$XFS_IO_PROG -f -c "truncate 20k" \
+-	-c "resvsp 0 20k" \
+-	-c "pwrite 0k 8k" -c "fsync" \
+-	-c "pwrite 12k 8k" -c "fsync" \
+-	-c "zero 4k 12k" \
+-	-c "bmap -vp" $testfile | _filter_bmap
+-[ $? -ne 0 ] && die_now
++_test_generic_punch resvsp unresvsp zero 'bmap -p' _filter_bmap $testfile
+ 
+ status=0 ; exit
+diff --git a/248 b/248
+new file mode 100755
+index 0000000..2649487
 --- /dev/null
-+++ b/io/fiemap.c
-@@ -0,0 +1,347 @@
-+/*
-+ * Copyright (c) 2010 Red Hat, Inc.
-+ * All Rights Reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ */
-+
-+#include <xfs/xfs.h>
-+#include <xfs/command.h>
-+#include <linux/fiemap.h>
-+#include <linux/fs.h>
-+#include "init.h"
-+#include "io.h"
-+
-+static cmdinfo_t fiemap_cmd;
-+
-+static void
-+fiemap_help(void)
-+{
-+	printf(_(
-+"\n"
-+" prints the block mapping for a file's data or attribute forks"
-+"\n"
-+" Example:\n"
-+" 'fiemap -v' - tabular format verbose map\n"
-+"\n"
-+" fiemap prints the map of disk blocks used by the current file.\n"
-+" The map lists each extent used by the file, as well as regions in the\n"
-+" file that do not have any corresponding blocks (holes).\n"
-+" By default, each line of the listing takes the following form:\n"
-+"     extent: [startoffset..endoffset]: startblock..endblock\n"
-+" Holes are marked by replacing the startblock..endblock with 'hole'.\n"
-+" All the file offsets and disk blocks are in units of 512-byte blocks.\n"
-+" -a -- prints the attribute fork map instead of the data fork.\n"
-+" -l -- also displays the length of each extent in 512-byte blocks.\n"
-+" -n -- query n extents.\n"
-+" -v -- Verbose information\n"
-+"\n"));
-+}
-+
-+static int
-+numlen(
-+	__u64	val,
-+	int	base)
-+{
-+	__u64	tmp;
-+	int	len;
-+
-+	for (len = 0, tmp = val; tmp > 0; tmp = tmp/base)
-+		len++;
-+	return (len == 0 ? 1 : len);
-+}
-+
-+static void
-+print_verbose(
-+	struct fiemap_extent	*extent,
-+	int			blocksize,
-+	int			foff_w,
-+	int			boff_w,
-+	int			tot_w,
-+	int			flg_w,
-+	int			max_extents,
-+	int			*cur_extent,
-+	__u64			*last_logical)
-+{
-+	__u64			lstart;
-+	__u64			len;
-+	__u64			block;
-+	char			lbuf[48];
-+	char			bbuf[48];
-+	char			flgbuf[16];
-+
-+	lstart = extent->fe_logical / blocksize;
-+	len = extent->fe_length / blocksize;
-+	block = extent->fe_physical / blocksize;
-+
-+	memset(lbuf, 0, sizeof(lbuf));
-+	memset(bbuf, 0, sizeof(bbuf));
-+
-+	if (lstart != *last_logical) {
-+		snprintf(lbuf, sizeof(lbuf), "[%llu..%llu]:", *last_logical,
-+			 lstart - 1ULL);
-+		printf("%4d: %-*s %-*s %*llu\n", *cur_extent, foff_w, lbuf,
-+		       boff_w, _("hole"), tot_w, lstart - *last_logical);
-+		(*cur_extent)++;
-+		memset(lbuf, 0, sizeof(lbuf));
-+	}
-+
-+	if ((*cur_extent + 1) == max_extents)
-+		return;
-+
-+	snprintf(lbuf, sizeof(lbuf), "[%llu..%llu]:", lstart,
-+		 lstart + len - 1ULL);
-+	snprintf(bbuf, sizeof(bbuf), "%llu..%llu", block, block + len - 1ULL);
-+	snprintf(flgbuf, sizeof(flgbuf), "0x%x", extent->fe_flags);
-+	printf("%4d: %-*s %-*s %*llu %*s\n", *cur_extent, foff_w, lbuf,
-+	       boff_w, bbuf, tot_w, len, flg_w, flgbuf);
-+
-+	(*cur_extent)++;
-+	*last_logical = lstart + len;
-+}
-+
-+static void
-+print_plain(
-+	struct fiemap_extent	*extent,
-+	int			lflag,
-+	int			blocksize,
-+	int			max_extents,
-+	int			*cur_extent,
-+	__u64			*last_logical)
-+{
-+	__u64			lstart;
-+	__u64			block;
-+	__u64			len;
-+
-+	lstart = extent->fe_logical / blocksize;
-+	len = extent->fe_length / blocksize;
-+	block = extent->fe_physical / blocksize;
-+
-+	if (lstart != *last_logical) {
-+		printf("\t%d: [%llu..%llu]: hole", *cur_extent,
-+		       *last_logical, lstart - 1ULL);
-+		if (lflag)
-+			printf(_(" %llu blocks\n"),
-+			       lstart - *last_logical);
-+		else
-+			printf("\n");
-+		(*cur_extent)++;
-+	}
-+
-+	if ((*cur_extent + 1) == max_extents)
-+		return;
-+
-+	printf("\t%d: [%llu..%llu]: %llu..%llu", *cur_extent,
-+	       lstart, lstart + len - 1ULL, block,
-+	       block + len - 1ULL);
-+
-+	if (lflag)
-+		printf(_(" %llu blocks\n"), len);
-+	else
-+		printf("\n");
-+	(*cur_extent)++;
-+	*last_logical = lstart + len;
-+}
-+
-+int
-+fiemap_f(
-+	int		argc,
-+	char		**argv)
-+{
-+	struct fiemap	*fiemap;
-+	int		max_extents = 0;
-+	int		num_extents = 32;
-+	int		last = 0;
-+	int		nflag = 0;
-+	int		lflag = 0;
-+	int		vflag = 0;
-+	int		fiemap_flags = FIEMAP_FLAG_SYNC;
-+	int		c;
-+	int		i;
-+	int		map_size;
-+	int		ret;
-+	int		cur_extent = 0;
-+	int		foff_w = 16;	/* 16 just for a good minimum range */
-+	int		boff_w = 16;
-+	int		tot_w = 5;	/* 5 since its just one number */
-+	int		flg_w = 5;
-+	__u64		blocksize = 512;
-+	__u64		last_logical = 0;
-+	struct stat	st;
-+
-+	while ((c = getopt(argc, argv, "aln:v")) != EOF) {
-+		switch (c) {
-+		case 'a':
-+			fiemap_flags |= FIEMAP_FLAG_XATTR;
-+			break;
-+		case 'l':
-+			lflag = 1;
-+			break;
-+		case 'n':
-+			max_extents = atoi(optarg);
-+			nflag = 1;
-+			break;
-+		case 'v':
-+			vflag++;
-+			break;
-+		default:
-+			return command_usage(&fiemap_cmd);
-+		}
-+	}
-+
-+	if (max_extents)
-+		num_extents = min(num_extents, max_extents);
-+	map_size = sizeof(struct fiemap) +
-+		(num_extents * sizeof(struct fiemap_extent));
-+	fiemap = malloc(map_size);
-+	if (!fiemap) {
-+		fprintf(stderr, _("%s: malloc of %d bytes failed.\n"),
-+			progname, map_size);
-+		exitcode = 1;
-+		return 0;
-+	}
-+
-+	printf("%s:\n", file->name);
-+
-+	if (vflag) {
-+		for (i = 0; i < fiemap->fm_mapped_extents; i++) {
-+			char			lbuf[32];
-+			char			bbuf[32];
-+			__u64			logical;
-+			__u64			block;
-+			__u64			len;
-+			struct fiemap_extent	*extent;
-+
-+			extent = &fiemap->fm_extents[i];
-+			logical = extent->fe_logical / blocksize;
-+			len = extent->fe_length / blocksize;
-+			block = extent->fe_physical / blocksize;
-+
-+			snprintf(lbuf, sizeof(lbuf), "[%llu..%llu]", logical,
-+				 logical + len - 1);
-+			snprintf(bbuf, sizeof(bbuf), "%llu..%llu", block,
-+				 block + len - 1);
-+			foff_w = max(foff_w, strlen(lbuf));
-+			boff_w = max(boff_w, strlen(bbuf));
-+			tot_w = max(tot_w, numlen(len, 10));
-+			flg_w = max(flg_w, numlen(extent->fe_flags, 16));
-+			if (extent->fe_flags & FIEMAP_EXTENT_LAST)
-+				break;
-+		}
-+		printf("%4s: %-*s %-*s %*s %*s\n", _("EXT"),
-+		       foff_w, _("FILE-OFFSET"),
-+		       boff_w, _("BLOCK-RANGE"),
-+		       tot_w, _("TOTAL"),
-+		       flg_w, _("FLAGS"));
-+	}
-+
-+	while (!last && ((cur_extent + 1) != max_extents)) {
-+		if (max_extents)
-+			num_extents = min(num_extents,
-+					  max_extents - (cur_extent + 1));
-+
-+		memset(fiemap, 0, map_size);
-+		fiemap->fm_flags = fiemap_flags;
-+		fiemap->fm_start = last_logical;
-+		fiemap->fm_length = -1;
-+		fiemap->fm_extent_count = num_extents;
-+
-+		ret = ioctl(file->fd, FS_IOC_FIEMAP, (unsigned long)fiemap);
-+		if (ret < 0) {
-+			fprintf(stderr, "%s: ioctl(FS_IOC_FIEMAP) [\"%s\"]: "
-+				"%s\n", progname, file->name, strerror(errno));
-+			free(fiemap);
-+			exitcode = 1;
-+			return 0;
-+		}
-+
-+		/* No more extents to map, exit */
-+		if (!fiemap->fm_mapped_extents)
-+			break;
-+
-+		for (i = 0; i < fiemap->fm_mapped_extents; i++) {
-+			struct fiemap_extent	*extent;
-+
-+			extent = &fiemap->fm_extents[i];
-+			if (vflag)
-+				print_verbose(extent, blocksize, foff_w,
-+					      boff_w, tot_w, flg_w,
-+					      max_extents, &cur_extent,
-+					      &last_logical);
-+			else
-+				print_plain(extent, lflag, blocksize,
-+					    max_extents, &cur_extent,
-+					    &last_logical);
-+			if (extent->fe_flags & FIEMAP_EXTENT_LAST) {
-+				last = 1;
-+				break;
-+			}
-+
-+			if ((cur_extent + 1) == max_extents)
-+				break;
-+		}
-+	}
-+
-+	if ((cur_extent + 1) == max_extents)
-+		goto out;
-+
-+	memset(&st, 0, sizeof(st));
-+	if (fstat(file->fd, &st)) {
-+		fprintf(stderr, "%s: fstat failed: %s\n", progname,
-+			strerror(errno));
-+		free(fiemap);
-+		exitcode = 1;
-+		return 0;
-+	}
-+
-+	if (cur_extent && last_logical < (st.st_size / blocksize)) {
-+		char	lbuf[32];
-+
-+		snprintf(lbuf, sizeof(lbuf), "[%llu..%llu]:",
-+			 last_logical, (st.st_size / blocksize) - 1);
-+		if (vflag) {
-+			printf("%4d: %-*s %-*s %*llu\n", cur_extent,
-+			       foff_w, lbuf, boff_w, _("hole"), tot_w,
-+			       (st.st_size / blocksize) - last_logical);
-+		} else {
-+			printf("\t%d: %s %s", cur_extent, lbuf,
-+			       _("hole"));
-+			if (lflag)
-+				printf(_(" %llu blocks\n"),
-+				       (st.st_size / blocksize) -
-+				       last_logical);
-+			else
-+				printf("\n");
-+		}
-+	}
-+
-+out:
-+	free(fiemap);
-+	return 0;
-+}
-+
-+void
-+fiemap_init(void)
-+{
-+	fiemap_cmd.name = "fiemap";
-+	fiemap_cmd.cfunc = fiemap_f;
-+	fiemap_cmd.argmin = 0;
-+	fiemap_cmd.argmax = -1;
-+	fiemap_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
-+	fiemap_cmd.args = _("[-alv] [-n nx]");
-+	fiemap_cmd.oneline = _("print block mapping for a file");
-+	fiemap_cmd.help = fiemap_help;
-+
-+	add_command(&fiemap_cmd);
-+}
-diff --git a/io/init.c b/io/init.c
-index f8fc25d..a166ad1 100644
---- a/io/init.c
-+++ b/io/init.c
-@@ -71,6 +71,7 @@ init_commands(void)
- 	parent_init();
- 	pread_init();
- 	prealloc_init();
-+	fiemap_init();
- 	pwrite_init();
- 	quit_init();
- 	resblks_init();
-diff --git a/io/io.h b/io/io.h
-index 630897d..2923362 100644
---- a/io/io.h
-+++ b/io/io.h
-@@ -135,3 +135,9 @@ extern void		mincore_init(void);
- #else
- #define mincore_init()	do { } while (0)
- #endif
-+
-+#ifdef HAVE_FIEMAP
-+extern void		fiemap_init(void);
-+#else
-+#define fiemap_init()	do { } while (0)
-+#endif
-diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
-index 1c1859d..8192181 100644
---- a/m4/package_libcdev.m4
-+++ b/m4/package_libcdev.m4
-@@ -116,3 +116,11 @@ AC_DEFUN([AC_HAVE_FALLOCATE],
-        AC_MSG_RESULT(no))
-     AC_SUBST(have_fallocate)
-   ])
-+
++++ b/248
+@@ -0,0 +1,57 @@
++#! /bin/bash
++# FS QA Test No. 248
 +#
-+# Check if we have the fiemap ioctl (Linux)
++# Test fallocate hole punching
 +#
-+AC_DEFUN([AC_HAVE_FIEMAP],
-+  [ AC_CHECK_HEADERS([linux/fiemap.h], [ have_fiemap=yes ], [ have_fiemap=no ])
-+    AC_SUBST(have_fiemap)
-+  ])
++#-----------------------------------------------------------------------
++# Copyright (c) 2010 Red Hat.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#
++#-----------------------------------------------------------------------
++#
++# creator
++owner=josef@redhat.com
++
++seq=`basename $0`
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++
++_cleanup()
++{
++    rm -f $tmp.*
++}
++
++trap "_cleanup ; exit \$status" 0 1 2 3 15
++
++# get standard environment, filters and checks
++. ./common.rc
++. ./common.filter
++. ./common.punch
++
++# real QA test starts here
++_supported_fs generic
++_supported_os Linux
++
++_require_xfs_io_falloc_punch
++_require_xfs_io_fiemap
++
++testfile=$TEST_DIR/248.$$
++
++_test_generic_punch falloc fpunch fpunch fiemap _filter_fiemap $testfile -F
++
++status=0 ; exit
+diff --git a/248.out b/248.out
+new file mode 100644
+index 0000000..0683dd1
+--- /dev/null
++++ b/248.out
+@@ -0,0 +1,47 @@
++QA output created by 248
++	1. into a hole
++	2. into allocated space
++0: [0..7]: data
++1: [8..23]: hole
++2: [24..39]: data
++	3. into unwritten space
++0: [0..7]: unwritten
++1: [8..23]: hole
++2: [24..39]: unwritten
++	4. hole -> data
++0: [0..23]: hole
++1: [24..31]: data
++2: [32..39]: hole
++	5. hole -> unwritten
++0: [0..23]: hole
++1: [24..31]: unwritten
++2: [32..39]: hole
++	6. data -> hole
++0: [0..7]: data
++1: [8..39]: hole
++	7. data -> unwritten
++0: [0..7]: data
++1: [8..23]: hole
++2: [24..31]: unwritten
++3: [32..39]: hole
++	8. unwritten -> hole
++0: [0..7]: unwritten
++1: [8..39]: hole
++	9. unwritten -> data
++0: [0..7]: unwritten
++1: [8..23]: hole
++2: [24..31]: data
++3: [32..39]: hole
++	10. hole -> data -> hole
++	11. data -> hole -> data
++0: [0..7]: data
++1: [8..31]: hole
++2: [32..39]: data
++	12. unwritten -> data -> unwritten
++0: [0..7]: unwritten
++1: [8..31]: hole
++2: [32..39]: unwritten
++	13. data -> unwritten -> data
++0: [0..7]: data
++1: [8..31]: hole
++2: [32..39]: data
+diff --git a/common.punch b/common.punch
+index b6576f6..fb20d58 100644
+--- a/common.punch
++++ b/common.punch
+@@ -176,3 +176,160 @@ _test_punch() {
+ 		_do_bmap $filename		# print out the state of the file
+ 	done
+ }
++
++_filter_fiemap()
++{
++    awk --posix '$3 ~ /hole/ { print $1, $2, $3; next }
++		 $5 ~ /0x[[:digit:]]*8[[:digit:]]{2}/ { print $1, $2, "unwritten"; next }
++		 $5 ~ /0x[[:digit:]]+/ {print $1, $2, "data" }'
++}
++
++_filter_bmap()
++{
++    awk '$3 ~ /hole/ { print $1, $2, $3; next }
++         $7 ~ /10000/ { print $1, $2, "unwritten"; next }
++         $7 ~ /00000/ {print $1, $2, "data" }'
++}
++
++die_now()
++{
++	status=1
++	exit
++}
++
++# test the different corner cases for zeroing a range:
++#
++#	1. into a hole
++#	2. into allocated space
++#	3. into unwritten space
++#	4. hole -> data
++#	5. hole -> unwritten
++#	6. data -> hole
++#	7. data -> unwritten
++#	8. unwritten -> hole
++#	9. unwritten -> data
++#	10. hole -> data -> hole
++#	11. data -> hole -> data
++#	12. unwritten -> data -> unwritten
++#	13. data -> unwritten -> data
++_test_generic_punch()
++{
++	alloc_cmd=$1
++	punch_cmd=$2
++	zero_cmd=$3	#if not testing zero just set to punch
++	map_cmd=$4
++	filter_cmd=$5
++	testfile=$6
++	xfs_io_opt=$7	#needs to be -F if not testing xfs
++
++	echo "	1. into a hole"
++	rm -f $testfile
++	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
++		-c "$zero_cmd 4k 8k" \
++		-c "$map_cmd -v" $testfile | $filter_cmd
++	[ $? -ne 0 ] && die_now
++
++	echo "	2. into allocated space"
++	rm -f $testfile
++	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
++		-c "pwrite 0 20k" -c "fsync" \
++		-c "$zero_cmd 4k 8k" \
++		-c "$map_cmd -v" $testfile | $filter_cmd
++	[ $? -ne 0 ] && die_now
++
++	echo "	3. into unwritten space"
++	rm -f $testfile
++	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
++		-c "$alloc_cmd 0 20k" \
++		-c "$zero_cmd 4k 8k" \
++		-c "$map_cmd -v" $testfile | $filter_cmd
++	[ $? -ne 0 ] && die_now
++
++	echo "	4. hole -> data"
++	rm -f $testfile
++	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
++		-c "pwrite 8k 8k" -c "fsync" \
++		-c "$zero_cmd 4k 8k" \
++		-c "$map_cmd -v" $testfile | $filter_cmd
++	[ $? -ne 0 ] && die_now
++
++	echo "	5. hole -> unwritten"
++	rm -f $testfile
++	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
++		-c "$alloc_cmd 8k 8k" \
++		-c "$zero_cmd 4k 8k" \
++		-c "$map_cmd -v" $testfile | $filter_cmd
++	[ $? -ne 0 ] && die_now
++
++	echo "	6. data -> hole"
++	rm -f $testfile
++	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
++		-c "pwrite 0 8k" -c "fsync" \
++		-c "$zero_cmd 4k 8k" \
++		-c "$map_cmd -v" $testfile | $filter_cmd
++	[ $? -ne 0 ] && die_now
++
++	echo "	7. data -> unwritten"
++	rm -f $testfile
++	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
++		-c "pwrite 0 8k" -c "fsync" \
++		-c "$alloc_cmd 8k 8k" \
++		-c "$zero_cmd 4k 8k" \
++		-c "$map_cmd -v" $testfile | $filter_cmd
++	[ $? -ne 0 ] && die_now
++
++	echo "	8. unwritten -> hole"
++	rm -f $testfile
++	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
++		-c "$alloc_cmd 0 8k" \
++		-c "$zero_cmd 4k 8k" \
++		-c "$map_cmd -v" $testfile | $filter_cmd
++	[ $? -ne 0 ] && die_now
++
++	echo "	9. unwritten -> data"
++	rm -f $testfile
++	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
++		-c "$alloc_cmd 0 8k" \
++		-c "pwrite 8k 8k" -c "fsync" \
++		-c "$zero_cmd 4k 8k" \
++		-c "$map_cmd -v" $testfile | $filter_cmd
++	[ $? -ne 0 ] && die_now
++
++	echo "	10. hole -> data -> hole"
++	rm -f $testfile
++	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
++		-c "pwrite 8k 4k" -c "fsync" \
++		-c "$zero_cmd 4k 12k" \
++		-c "$map_cmd -v" $testfile | $filter_cmd
++	[ $? -ne 0 ] && die_now
++
++	echo "	11. data -> hole -> data"
++	rm -f $testfile
++	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
++		-c "$alloc_cmd 0 20k" \
++		-c "pwrite 0 8k" \
++		-c "pwrite 12k 8k" -c "fsync" \
++		-c "$punch_cmd 8k 4k" \
++		-c "$zero_cmd 4k 12k" \
++		-c "$map_cmd -v" $testfile | $filter_cmd
++	[ $? -ne 0 ] && die_now
++
++	echo "	12. unwritten -> data -> unwritten"
++	rm -f $testfile
++	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
++		-c "$alloc_cmd 0 20k" \
++		-c "pwrite 8k 4k" -c "fsync" \
++		-c "$zero_cmd 4k 12k" \
++		-c "$map_cmd -v" $testfile | $filter_cmd
++	[ $? -ne 0 ] && die_now
++
++	echo "	13. data -> unwritten -> data"
++	rm -f $testfile
++	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
++		-c "$alloc_cmd 0 20k" \
++		-c "pwrite 0k 8k" -c "fsync" \
++		-c "pwrite 12k 8k" -c "fsync" \
++		-c "$zero_cmd 4k 12k" \
++		-c "$map_cmd -v" $testfile | $filter_cmd
++	[ $? -ne 0 ] && die_now
++}
+diff --git a/common.rc b/common.rc
+index a5db913..459bdf5 100644
+--- a/common.rc
++++ b/common.rc
+@@ -844,6 +844,33 @@ _require_xfs_io_falloc()
+ 		_notrun "xfs_io fallocate command failed (old kernel/wrong fs?)"
+ }
+ 
++# check that xfs_io, kernel and filesystem all support fallocate with hole
++# punching
++_require_xfs_io_falloc_punch()
++{
++	testfile=$TEST_DIR/$$.falloc
++	testio=`$XFS_IO_PROG -F -f -c "pwrite 0 20k" -c "fsync" \
++		-c "fpunch 4k 8k" $testfile 2>&1`
++	rm -f $testfile 2>&1 > /dev/null
++	echo $testio | grep -q "not found" && \
++		_notrun "xfs_io fallocate punch support is missing"
++	echo $testio | grep -q "Operation not supported" && \
++		_notrun "xfs_io fallocate punch command failed (no fs support?)"
++}
++
++# check that xfs_io, kernel and filesystem support fiemap
++_require_xfs_io_fiemap()
++{
++	testfile=$TEST_DIR/$$.fiemap
++	testio=`$XFS_IO_PROG -F -f -c "pwrite 0 20k" -c "fsync" \
++		-c "fiemap -v" $testfile 2>&1`
++	rm -f $testfile 2>&1 > /dev/null
++	echo $testio | grep -q "not found" && \
++		_notrun "xfs_io fiemap support is missing"
++	echo $testio | grep -q "Operation not supported" && \
++		_notrun "xfs_io fiemap command failed (no fs support?)"
++}
++
+ # Check that a fs has enough free space (in 1024b blocks)
+ #
+ _require_fs_space()
+diff --git a/group b/group
+index 0f94dd9..151ddc9 100644
+--- a/group
++++ b/group
+@@ -361,3 +361,4 @@ deprecated
+ 245 auto quick dir
+ 246 auto quick rw
+ 247 auto quick rw
++248 auto quick prealloc
 -- 
 1.6.6.1
 
