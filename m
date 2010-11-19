@@ -1,22 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAJ12wos252872 for <xfs@oss.sgi.com>; Thu, 18 Nov 2010 19:02:58 -0600
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5F3F413C4C38
-	for <xfs@oss.sgi.com>; Thu, 18 Nov 2010 17:04:30 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail20.adl6.internode.on.net
-	[150.101.137.105]) by cuda.sgi.com with ESMTP id
-	HzDJ2ED0uUwl5OiX for <xfs@oss.sgi.com>;
-	Thu, 18 Nov 2010 17:04:30 -0800 (PST)
-Date: Fri, 19 Nov 2010 12:04:21 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfsprogs 2.x vs 3.x logsize changed
-Message-ID: <20101119010421.GZ13830@dastard>
-References: <201011171549.04806.lukasz.oles@open-e.com>
+	oAJDbFII117992 for <xfs@oss.sgi.com>; Fri, 19 Nov 2010 07:37:16 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 15D7913D8D64
+	for <xfs@oss.sgi.com>; Fri, 19 Nov 2010 05:38:50 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id LVvY2c52MyOm143y for
+	<xfs@oss.sgi.com>; Fri, 19 Nov 2010 05:38:50 -0800 (PST)
+Date: Fri, 19 Nov 2010 08:38:49 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH] xfs: fix exporting with left over 64-bit inodes
+Message-ID: <20101119133848.GA5471@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <201011171549.04806.lukasz.oles@open-e.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,40 +22,52 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: =?utf-8?B?xYF1a2FzeiBPbGXFmw==?= <lukasz.oles@open-e.com>
-Cc: Artur Piechocki <artur.piechocki@open-e.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Samuel Kvasnica <samuel.kvasnica@ims.co.at>
 
-T24gV2VkLCBOb3YgMTcsIDIwMTAgYXQgMDM6NDk6MDRQTSArMDEwMCwgxYF1a2FzeiBPbGXFmyB3
-cm90ZToKPiBIaSwKPiAKPiBJJ20gdXBncmFkaW5nIHhmc3Byb2dzIGZyb20gMi4xMC4xIHRvIHRo
-ZSBsYXRlc3QgMy4xLjQgdmVyc2lvbi4gSSBub3RpY2VkIHRoYXQgCj4gd2hlbiBJJ20gY3JlYXRp
-bmcgbGFyZ2UgbHZtIHZvbHVtZSAoMlQpIHRoZSBsb2cgc2l6ZSBpcyBhbG1vc3QgMUcgaW4gdGhl
-IG9sZCAKPiB2ZXJzaW9uIGl0IHdhcyAxMjhNLiAgCj4gSSBrbm93IEkgY2FuIG1hbmlwdWxhdGUg
-dGhpcyB2YWx1ZSB3aXRoIC1sc2l6ZSBvcHRpb24sIGJ1dCBJJ20gd29uZGVyaW5nIHdoeSAKPiB0
-aGlzIGRpZmZlcmVuY2UgaXMgc28gaHVnZT8gCgpNYW55IHdvcmtsb2FkcyB3ZXJlIGRlbW9uc3Ry
-YXRlZCB0byBoYXZlIHN1YnN0YW50aWFsbHkgYmV0dGVyCnBlcmZvcm1hbmNlIHdpdGggbGFyZ2Vy
-IGxvZ3MsIGV2ZW4gb24gc21hbGwgZmlsZXN5c3RlbXMuIEF0IDRUQiwKbW9zdCBwZW9wbGUgYXJl
-IHVzaW5nIFJBSUQgb2Ygc29tZSBraW5kLCBzbyBsYXJnZXIgbG9ncyBhcmUgcXVpdGUKYmVuZWZp
-Y2lhbCBoZXJlLgoKPiBPbiB0aGlzIHZvbHVtZSBJIGhhdmUgb25lIHNwYXJzZSBmaWxlIHdoaWNo
-IGlzIGV4cG9ydGVkIGJ5IGlTQ1NJIFRhcmdldC4gIEkgCj4gaGF2ZSBzY3JpcHQgd2hpY2ggY2Fs
-Y3VsYXRlcyAgZm9yIG1lICJzZWVrIiB2YWx1ZSBmb3IgZGQgY29tbWFuZCBhbmQgbm93IGl0IAo+
-IHJldHVybnMgbWUgd3JvbmcgdmFsdWVzLgo+IENhbiBJIHN0YXkgd2l0aCB0aGUgb2xkIGxvZyBz
-aXplIG9yIG1heWJlIHRoZXJlIGFyZSBzb21lIGdvb2QgcmVhc29ucyB0byB1c2UgCj4gbmV3IHZh
-bHVlcz8KClN0YXlpbmcgd2l0aCB0aGUgb2xkIGxvZyBzaXplIGlzIGp1c3QgZmluZSAtIGl0J2xs
-IGJlaGF2ZSBleGFjdGx5CnRoZSBzYW1lIGFzIGl0IGRvZXMgbm93LiBUaGVyZSBhcmUgdHdvIG1h
-aW4gdGhpbmdzIGhhdCBtYWtlIGEgbGFyZ2VyCmxvZyBzaXplIGF0dHJhY3RpdmU6CgoJMS4gbG9n
-IHNpemUgZGV0ZXJtaW5lcyBtYXhpbXVtIHRyYW5zYWN0aW9uIHBhcmFsbGVsaXNtLCBzbwoJICAg
-c28gc21hbGxlciBsb2dzIG1heSBsaW1pdCBvcGVyYXRpb25hbCBjb25jdXJyZW5jeS4gQQoJICAg
-MTI4TUIgbG9nIHR5cGljYWxseSBhbGxvd3MgfjI1MCBjb25jdXJyZW50IHRyYW5zYWN0aW9ucwoJ
-ICAgb24gYSAxVEIsIDRrIGJsb2NrIHNpemUgZmlsZXN5c3RlbS4KCTIuIGxhcmdlciBsb2dzIGFs
-bG93IHRoZSBmaWxlc3lzdGVtIHRvIHNvYWsgdXAgbGFyZ2VyIGJ1cnN0CgkgICBvZiBtZXRhZGF0
-YSBtb2RpZmljYXRpb25zIHdpdGhvdXQgbmVlZGluZyB0byB3cml0ZSBiYWNrCgkgICBkaXJ0eSBt
-ZXRhZGF0YS4KClRoZSBkb3duc2lkZSBvdCBhIGxhcmdlciBsb2cgaXMgdGhhdCByZWNvdmVyeSBj
-YW4gdGFrZSBsb25nZXIgYWZ0ZXIKYSBjcmFzaC4KCkFueXdheSwgaWYgeW91IGFyZSBoYXZpbmcg
-bm8gcHJvYmxlbXMgYXQgMTI4TUIsIHRoZW4ganVzdCB1c2UKdGhhdC4uLgoKQ2hlZXJzLAoKRGF2
-ZS4KLS0gCkRhdmUgQ2hpbm5lcgpkYXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Mu
-c2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+From: Samuel Kvasnica <samuel.kvasnica@ims.co.at>
+
+We now support mounting and using filesystems with 64-bit inodes even
+when not mounted with the inode64 option (which now only controls if
+we allocate new inodes in that space or not).  Make sure we always
+use large NFS file handles when exporting a filesystem that may contain
+64-bit inodes.  Note that this only affects newly generated file handles,
+any outstanding 32-bit file handle is still accepted.
+
+[hch: the comment and commit log are mine, the rest is from a patch
+ snipplet from Samuel]
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Index: xfs/fs/xfs/linux-2.6/xfs_export.c
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_export.c	2010-11-10 17:08:27.341529680 +0100
++++ xfs/fs/xfs/linux-2.6/xfs_export.c	2010-11-10 17:10:10.321529680 +0100
+@@ -70,8 +70,16 @@ xfs_fs_encode_fh(
+ 	else
+ 		fileid_type = FILEID_INO32_GEN_PARENT;
+ 
+-	/* filesystem may contain 64bit inode numbers */
+-	if (!(XFS_M(inode->i_sb)->m_flags & XFS_MOUNT_SMALL_INUMS))
++	/*
++	 * If the the filesystem may contain 64bit inode numbers, we need
++	 * to use larger file handles that can represent them.
++	 *
++	 * While we only allocate inodes that do not fit into 32 bits any
++	 * large enough filesystem may contain them, thus the slightly
++	 * confusing looking conditional below.
++	 */
++	if (!(XFS_M(inode->i_sb)->m_flags & XFS_MOUNT_SMALL_INUMS) ||
++	    (XFS_M(inode->i_sb)->m_flags & XFS_MOUNT_32BITINODES))
+ 		fileid_type |= XFS_FILEID_TYPE_64FLAG;
+ 
+ 	/*
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
