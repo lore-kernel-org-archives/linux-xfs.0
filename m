@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAMLwF0X113886 for <xfs@oss.sgi.com>; Mon, 22 Nov 2010 15:58:15 -0600
-Received: from ssec.wisc.edu (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B01711C675FD
-	for <xfs@oss.sgi.com>; Mon, 22 Nov 2010 13:59:52 -0800 (PST)
-Received: from ssec.wisc.edu (mahogany.ssec.wisc.edu [128.104.110.2]) by
-	cuda.sgi.com with ESMTP id WKHGOWsgm3UMoQ0i for
-	<xfs@oss.sgi.com>; Mon, 22 Nov 2010 13:59:52 -0800 (PST)
-Received: from arthur.ssec.wisc.edu (account jstroik@ssec.wisc.edu
-	[128.104.111.93] verified)
-	by ssec.wisc.edu (CommuniGate Pro SMTP 5.3.9)
-	with ESMTPSA id 52365420 for xfs@oss.sgi.com;
-	Mon, 22 Nov 2010 15:59:52 -0600
-Message-ID: <4CEAE7D7.6050401@ssec.wisc.edu>
-Date: Mon, 22 Nov 2010 15:59:51 -0600
-From: Jesse Stroik <jstroik@ssec.wisc.edu>
-MIME-Version: 1.0
-Subject: Improving XFS file system inode performance
+	oAMMO5sK117074 for <xfs@oss.sgi.com>; Mon, 22 Nov 2010 16:24:06 -0600
+Received: from smtp3-g21.free.fr (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0A4CC13E1712
+	for <xfs@oss.sgi.com>; Mon, 22 Nov 2010 14:25:40 -0800 (PST)
+Received: from smtp3-g21.free.fr (smtp3-g21.free.fr [212.27.42.3]) by
+	cuda.sgi.com with ESMTP id pDBqQsb4t7U6brX4 for
+	<xfs@oss.sgi.com>; Mon, 22 Nov 2010 14:25:40 -0800 (PST)
+Date: Mon, 22 Nov 2010 23:25:28 +0100
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: Improving XFS file system inode performance
+Message-ID: <20101122232528.21b78a9e@galadriel.home>
+In-Reply-To: <4CEAE7D7.6050401@ssec.wisc.edu>
+References: <4CEAE7D7.6050401@ssec.wisc.edu>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,43 +23,30 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Linux XFS <xfs@oss.sgi.com>
+To: Jesse Stroik <jstroik@ssec.wisc.edu>
+Cc: Linux XFS <xfs@oss.sgi.com>
 
-XFS community,
+Le Mon, 22 Nov 2010 15:59:51 -0600 vous =E9criviez:
 
-I have a couple of medium-sized file systems on an ftp server (10TB file 
-system mounted within a 20TB file system).  The load on these file 
-systems is getting pretty high because we have many users mirroring 
-datasets from the server.  As far as I can tell, the main issue is with 
-inode performance.  For example, an 'ls' on a directory may take 20 
-seconds to complete.  At any given time, there is > 50 ftp STAT, LIST or 
-NLST commands some of which list entire directories or wildcards.
+> Performance was fine before the file system was filled -- last week
+> ~8TB showed up and filled the 20TB file system.  Since, it has been =
 
-Sadly, the file system was created with 32 bit inodes.  I've remounted 
-it with the inode64 option, but I assume performance will be boosted 
-primarily when old files are replaced with new files.  Is there anything 
-I can do to improve performance now?
+> performing poorly.
 
-I'm also using noatime and logbufs=8.
+Maybe it got fragmented? How does fragmentation look like?
 
-Performance was fine before the file system was filled -- last week ~8TB 
-showed up and filled the 20TB file system.  Since, it has been 
-performing poorly.
+-- =
 
-I'd also be interested in inode cache tuning options specific to XFS. 
-i've been having trouble finding documentation on this particular issue.
-
-This is a production file system so please frame your suggestions with 
-respect to that.  It is a RHEL 5.5 system running xfsprogs-2.9.4.1 
-centos and redhat kernel version 2.6.18-194.17.1 which includes a 
-variety of backported xfs fixes.
-
-Best,
-Jesse
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
 
 _______________________________________________
 xfs mailing list
