@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAMD7S4D228637 for <xfs@oss.sgi.com>; Mon, 22 Nov 2010 07:07:28 -0600
+	oAMD7RND228583 for <xfs@oss.sgi.com>; Mon, 22 Nov 2010 07:07:27 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 77D9113DECAD
-	for <xfs@oss.sgi.com>; Mon, 22 Nov 2010 05:09:05 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3BC831990F6
+	for <xfs@oss.sgi.com>; Mon, 22 Nov 2010 05:09:04 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id thdqZSTM1mTarAvQ for
-	<xfs@oss.sgi.com>; Mon, 22 Nov 2010 05:09:05 -0800 (PST)
+	by cuda.sgi.com with ESMTP id 9UmHquayOsDWx2t4 for
+	<xfs@oss.sgi.com>; Mon, 22 Nov 2010 05:09:04 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.72 #1 (Red Hat
-	Linux)) id 1PKW8m-0005gg-Pu
-	for xfs@oss.sgi.com; Mon, 22 Nov 2010 13:09:04 +0000
-Message-Id: <20101122130904.770817106@bombadil.infradead.org>
-Date: Mon, 22 Nov 2010 08:05:15 -0500
+	Linux)) id 1PKW8l-0005e5-Op
+	for xfs@oss.sgi.com; Mon, 22 Nov 2010 13:09:03 +0000
+Message-Id: <20101122130903.730638974@bombadil.infradead.org>
+Date: Mon, 22 Nov 2010 08:05:10 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 09/10] xfs: refactor xfs_vm_writepage
+Subject: [PATCH 04/10] xfs: cleanup the xfs_iomap_write_* helpers
 References: <20101122130506.868076797@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-factor-writepage
+Content-Disposition: inline; filename=xfs-cleanup-iomap-helpers
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,136 +32,174 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-After the last patches the code for overwrites is the same as for
-delayed and unwritten extents except that it doesn't need to call
-xfs_map_at_offset.  Take care of that fact to simplify xfs_vm_writepage.
-
-The buffer loop now first checks the type of buffer and checks/sets
-the ioend type, or continues to the next buffer if it's not interesting
-to us.  Only after that we validate the iomap and perform the block
-mapping if needed, all in common code for the cases where we have to
-do work.
+Remove passing the BMAPI_* flags to these helpers, in xfs_iomap_write_direct
+the check BMAPI_DIRECT was always true, and in the xfs_iomap_write_delay
+path is was never checked at all.  Remove the nmap return value as
+we never make use of it.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: xfs/fs/xfs/linux-2.6/xfs_aops.c
+Index: xfs/fs/xfs/xfs_iomap.c
 ===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_aops.c	2010-11-19 15:47:24.164253529 +0100
-+++ xfs/fs/xfs/linux-2.6/xfs_aops.c	2010-11-19 17:05:03.221254018 +0100
-@@ -1044,74 +1044,55 @@ xfs_vm_writepage(
- 			continue;
+--- xfs.orig/fs/xfs/xfs_iomap.c	2010-11-02 11:10:15.000103373 -0400
++++ xfs/fs/xfs/xfs_iomap.c	2010-11-02 11:14:14.640103375 -0400
+@@ -51,11 +51,11 @@
+ #define XFS_WRITE_IMAPS		XFS_BMAP_MAX_NMAP
+ 
+ STATIC int xfs_iomap_write_direct(struct xfs_inode *, xfs_off_t, size_t,
+-				  int, struct xfs_bmbt_irec *, int *);
+-STATIC int xfs_iomap_write_delay(struct xfs_inode *, xfs_off_t, size_t, int,
+-				 struct xfs_bmbt_irec *, int *);
++				  struct xfs_bmbt_irec *, int);
++STATIC int xfs_iomap_write_delay(struct xfs_inode *, xfs_off_t, size_t,
++				 struct xfs_bmbt_irec *);
+ STATIC int xfs_iomap_write_allocate(struct xfs_inode *, xfs_off_t, size_t,
+-				struct xfs_bmbt_irec *, int *);
++				struct xfs_bmbt_irec *);
+ 
+ int
+ xfs_iomap(
+@@ -134,12 +134,12 @@ xfs_iomap(
  		}
  
--		if (imap_valid)
--			imap_valid = xfs_imap_valid(inode, &imap, offset);
--
--		if (buffer_unwritten(bh) || buffer_delay(bh)) {
--			if (buffer_unwritten(bh)) {
--				if (type != IO_UNWRITTEN) {
--					type = IO_UNWRITTEN;
--					imap_valid = 0;
--				}
--			} else if (buffer_delay(bh)) {
--				if (type != IO_DELALLOC) {
--					type = IO_DELALLOC;
--					imap_valid = 0;
--				}
--			}
--
--			if (!imap_valid) {
--				/*
--				 * If we didn't have a valid mapping then we
--				 * need to ensure that we put the new mapping
--				 * in a new ioend structure. This needs to be
--				 * done to ensure that the ioends correctly
--				 * reflect the block mappings at io completion
--				 * for unwritten extent conversion.
--				 */
--				new_ioend = 1;
--				err = xfs_map_blocks(inode, offset, &imap,
--						     type, nonblocking);
--				if (err)
--					goto error;
--				imap_valid = xfs_imap_valid(inode, &imap,
--							    offset);
-+		if (buffer_unwritten(bh)) {
-+			if (type != IO_UNWRITTEN) {
-+				type = IO_UNWRITTEN;
-+				imap_valid = 0;
- 			}
--			if (imap_valid) {
--				xfs_map_at_offset(inode, bh, &imap, offset);
--				xfs_add_to_ioend(inode, bh, offset, type,
--						 &ioend, new_ioend);
--				count++;
-+		} else if (buffer_delay(bh)) {
-+			if (type != IO_DELALLOC) {
-+				type = IO_DELALLOC;
-+				imap_valid = 0;
- 			}
- 		} else if (buffer_uptodate(bh)) {
--			/*
--			 * we got here because the buffer is already mapped.
--			 * That means it must already have extents allocated
--			 * underneath it. Map the extent by reading it.
--			 */
- 			if (type != IO_OVERWRITE) {
- 				type = IO_OVERWRITE;
- 				imap_valid = 0;
- 			}
--			if (!imap_valid) {
--				new_ioend = 1;
--				err = xfs_map_blocks(inode, offset,
--						&imap, type, nonblocking);
--				if (err)
--					goto error;
--				imap_valid = xfs_imap_valid(inode, &imap,
--							    offset);
-+		} else {
-+			if (PageUptodate(page)) {
-+				ASSERT(buffer_mapped(bh));
-+				imap_valid = 0;
- 			}
-+			continue;
-+		}
- 
--			if (imap_valid) {
-+		if (imap_valid)
-+			imap_valid = xfs_imap_valid(inode, &imap, offset);
-+		if (!imap_valid) {
-+			/*
-+			 * If we didn't have a valid mapping then we need to
-+			 * put the new mapping into a separate ioend structure.
-+			 * This ensures non-contiguous extents always have
-+			 * separate ioends, which is particularly important
-+			 * for unwritten extent conversion at I/O completion
-+			 * time.
-+			 */
-+			new_ioend = 1;
-+			err = xfs_map_blocks(inode, offset, &imap, type,
-+					     nonblocking);
-+			if (err)
-+				goto error;
-+			imap_valid = xfs_imap_valid(inode, &imap, offset);
-+		}
-+		if (imap_valid) {
-+			if (type == IO_OVERWRITE)
- 				lock_buffer(bh);
--				xfs_add_to_ioend(inode, bh, offset, type,
--						&ioend, new_ioend);
--				count++;
--			}
--		} else if (PageUptodate(page)) {
--			ASSERT(buffer_mapped(bh));
--			imap_valid = 0;
-+			else
-+				xfs_map_at_offset(inode, bh, &imap, offset);
-+			xfs_add_to_ioend(inode, bh, offset, type, &ioend,
-+					 new_ioend);
-+			count++;
+ 		if (flags & BMAPI_DIRECT) {
+-			error = xfs_iomap_write_direct(ip, offset, count, flags,
+-						       imap, nimaps);
++			error = xfs_iomap_write_direct(ip, offset, count, imap,
++						       *nimaps);
+ 		} else {
+-			error = xfs_iomap_write_delay(ip, offset, count, flags,
+-						      imap, nimaps);
++			error = xfs_iomap_write_delay(ip, offset, count, imap);
+ 		}
++
+ 		if (!error) {
+ 			trace_xfs_iomap_alloc(ip, offset, count, flags, imap);
+ 		}
+@@ -155,13 +155,10 @@ xfs_iomap(
+ 			break;
  		}
  
- 		if (!iohead)
+-		error = xfs_iomap_write_allocate(ip, offset, count,
+-						 imap, nimaps);
++		error = xfs_iomap_write_allocate(ip, offset, count, imap);
+ 		break;
+ 	}
+ 
+-	ASSERT(*nimaps <= 1);
+-
+ out:
+ 	if (lockmode)
+ 		xfs_iunlock(ip, lockmode);
+@@ -241,9 +238,8 @@ xfs_iomap_write_direct(
+ 	xfs_inode_t	*ip,
+ 	xfs_off_t	offset,
+ 	size_t		count,
+-	int		flags,
+ 	xfs_bmbt_irec_t *imap,
+-	int		*nmaps)
++	int		nmaps)
+ {
+ 	xfs_mount_t	*mp = ip->i_mount;
+ 	xfs_fileoff_t	offset_fsb;
+@@ -279,7 +275,7 @@ xfs_iomap_write_direct(
+ 		if (error)
+ 			goto error_out;
+ 	} else {
+-		if (*nmaps && (imap->br_startblock == HOLESTARTBLOCK))
++		if (nmaps && (imap->br_startblock == HOLESTARTBLOCK))
+ 			last_fsb = MIN(last_fsb, (xfs_fileoff_t)
+ 					imap->br_blockcount +
+ 					imap->br_startoff);
+@@ -331,7 +327,7 @@ xfs_iomap_write_direct(
+ 	xfs_trans_ijoin(tp, ip);
+ 
+ 	bmapi_flag = XFS_BMAPI_WRITE;
+-	if ((flags & BMAPI_DIRECT) && (offset < ip->i_size || extsz))
++	if (offset < ip->i_size || extsz)
+ 		bmapi_flag |= XFS_BMAPI_PREALLOC;
+ 
+ 	/*
+@@ -370,7 +366,6 @@ xfs_iomap_write_direct(
+ 		goto error_out;
+ 	}
+ 
+-	*nmaps = 1;
+ 	return 0;
+ 
+ error0:	/* Cancel bmap, unlock inode, unreserve quota blocks, cancel trans */
+@@ -379,7 +374,6 @@ error0:	/* Cancel bmap, unlock inode, un
+ 
+ error1:	/* Just cancel transaction */
+ 	xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES | XFS_TRANS_ABORT);
+-	*nmaps = 0;	/* nothing set-up here */
+ 
+ error_out:
+ 	return XFS_ERROR(error);
+@@ -396,7 +390,6 @@ xfs_iomap_eof_want_preallocate(
+ 	xfs_inode_t	*ip,
+ 	xfs_off_t	offset,
+ 	size_t		count,
+-	int		ioflag,
+ 	xfs_bmbt_irec_t *imap,
+ 	int		nimaps,
+ 	int		*prealloc)
+@@ -440,9 +433,7 @@ xfs_iomap_write_delay(
+ 	xfs_inode_t	*ip,
+ 	xfs_off_t	offset,
+ 	size_t		count,
+-	int		ioflag,
+-	xfs_bmbt_irec_t *ret_imap,
+-	int		*nmaps)
++	xfs_bmbt_irec_t *ret_imap)
+ {
+ 	xfs_mount_t	*mp = ip->i_mount;
+ 	xfs_fileoff_t	offset_fsb;
+@@ -470,7 +461,7 @@ xfs_iomap_write_delay(
+ 	offset_fsb = XFS_B_TO_FSBT(mp, offset);
+ 
+ 	error = xfs_iomap_eof_want_preallocate(mp, ip, offset, count,
+-				ioflag, imap, XFS_WRITE_IMAPS, &prealloc);
++				imap, XFS_WRITE_IMAPS, &prealloc);
+ 	if (error)
+ 		return error;
+ 
+@@ -523,8 +514,6 @@ retry:
+ 		return xfs_cmn_err_fsblock_zero(ip, &imap[0]);
+ 
+ 	*ret_imap = imap[0];
+-	*nmaps = 1;
+-
+ 	return 0;
+ }
+ 
+@@ -543,8 +532,7 @@ xfs_iomap_write_allocate(
+ 	xfs_inode_t	*ip,
+ 	xfs_off_t	offset,
+ 	size_t		count,
+-	xfs_bmbt_irec_t *imap,
+-	int		*retmap)
++	xfs_bmbt_irec_t *imap)
+ {
+ 	xfs_mount_t	*mp = ip->i_mount;
+ 	xfs_fileoff_t	offset_fsb, last_block;
+@@ -557,8 +545,6 @@ xfs_iomap_write_allocate(
+ 	int		error = 0;
+ 	int		nres;
+ 
+-	*retmap = 0;
+-
+ 	/*
+ 	 * Make sure that the dquots are there.
+ 	 */
+@@ -680,7 +666,6 @@ xfs_iomap_write_allocate(
+ 		if ((offset_fsb >= imap->br_startoff) &&
+ 		    (offset_fsb < (imap->br_startoff +
+ 				   imap->br_blockcount))) {
+-			*retmap = 1;
+ 			XFS_STATS_INC(xs_xstrat_quick);
+ 			return 0;
+ 		}
 
 _______________________________________________
 xfs mailing list
