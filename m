@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAMAMILx215525 for <xfs@oss.sgi.com>; Mon, 22 Nov 2010 04:22:19 -0600
+	oAMD7Qln228582 for <xfs@oss.sgi.com>; Mon, 22 Nov 2010 07:07:27 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5784D198BE7
-	for <xfs@oss.sgi.com>; Mon, 22 Nov 2010 02:23:55 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 21B121C64EBF
+	for <xfs@oss.sgi.com>; Mon, 22 Nov 2010 05:09:03 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id nPJ3VEcVPcTxVTwD for
-	<xfs@oss.sgi.com>; Mon, 22 Nov 2010 02:23:55 -0800 (PST)
-Date: Mon, 22 Nov 2010 05:23:51 -0500
+	by cuda.sgi.com with ESMTP id teugMO7ZHm12IQU1 for
+	<xfs@oss.sgi.com>; Mon, 22 Nov 2010 05:09:03 -0800 (PST)
+Received: from hch by bombadil.infradead.org with local (Exim 4.72 #1 (Red Hat
+	Linux)) id 1PKW8l-0005bp-0Q
+	for xfs@oss.sgi.com; Mon, 22 Nov 2010 13:09:03 +0000
+Message-Id: <20101122130506.868076797@bombadil.infradead.org>
+Date: Mon, 22 Nov 2010 08:05:06 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: fix exporting with left over 64-bit inodes
-Message-ID: <20101122102350.GA7440@infradead.org>
-References: <20101119133848.GA5471@infradead.org>
-	<20101122003754.GE13830@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20101122003754.GE13830@dastard>
+Subject: [PATCH 00/10] writeback updates
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,25 +23,29 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Samuel Kvasnica <samuel.kvasnica@ims.co.at>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mon, Nov 22, 2010 at 11:37:54AM +1100, Dave Chinner wrote:
-> Won't this mean that people exporting non-root directories suddenly
-> have those exports stop working on a kernel upgrade due to changing
-> the handle format?
+This serious revamps a lot of the way we do the block mapping for
+writeback.  It gets rid of the xfs_iomap interface and now calls
+xfs_bmapi directly from __xfs_get_blocks and xfs_vm_writepage,
+and simplifies the code in writepage a lot.
 
-No, if NFSD used ->encode_fh to encode the handle for the export
-directory we wouldn't even have that problem.  NFSD directly encodes
-i_ino as 32-bit value for the legacy subdirectory export fs handle.
-So it will break whenever that particulat inode has a too large
-inode number.
+It removes about 200 lines of code and a superflous radix tree
+lookup for already allocated blocks.
 
-Check fs/nfsd/nfsfh.h:mk_fsid() for the glory details.
+It also shows a pretty clear path to how we can get rid of buffer
+heads.  The new writepage code shows that we rely very little on
+buffers for writeback - I think we can relatively easy switch it
+from looping over bufferheads to loop over the xfs_bmapi results
+and it will still work.  We'll need some more work on the get_blocks
+and truncate side, but I think we can pretty easily remove the
+buffer heads in XFS without any replacement and just rely on the
+extent cache in the inode underneath xfs_bmapi.
 
 _______________________________________________
 xfs mailing list
