@@ -1,32 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAM0AG5G158506 for <xfs@oss.sgi.com>; Sun, 21 Nov 2010 18:10:16 -0600
-Received: from mexforward.lss.emc.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 60A6C1C63045
-	for <xfs@oss.sgi.com>; Sun, 21 Nov 2010 16:11:51 -0800 (PST)
-Received: from mexforward.lss.emc.com (mexforward.lss.emc.com [128.222.32.20])
-	by cuda.sgi.com with ESMTP id BI8XXbF3HjwGxbEd for
-	<xfs@oss.sgi.com>; Sun, 21 Nov 2010 16:11:51 -0800 (PST)
-Received: from hop04-l1d11-si01.isus.emc.com (HOP04-L1D11-SI01.isus.emc.com
-	[10.254.111.54])
-	by mexforward.lss.emc.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id
-	oAM0Bn3S013505
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Sun, 21 Nov 2010 19:11:50 -0500
-Received: from mailhub.lss.emc.com (mailhub.lss.emc.com [10.254.221.251]) by
-	hop04-l1d11-si01.isus.emc.com (RSA Interceptor) for
-	<xfs@oss.sgi.com>; Sun, 21 Nov 2010 19:11:45 -0500
-Received: from corpussmtp3.corp.emc.com (corpussmtp3.corp.emc.com
-	[10.254.169.196])
-	by mailhub.lss.emc.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id
-	oAM0BU0M022891 for <xfs@oss.sgi.com>; Sun, 21 Nov 2010 19:11:30 -0500
-From: <Ivan.Novick@emc.com>
-Date: Sun, 21 Nov 2010 19:12:38 -0500
-Subject: clarifications on inode64 mount option
-Message-ID: <C90EF576.118F%ivan.novick@emc.com>
-Content-Language: en-US
+	oAM0adUV160830 for <xfs@oss.sgi.com>; Sun, 21 Nov 2010 18:36:39 -0600
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 80EA513DDA77
+	for <xfs@oss.sgi.com>; Sun, 21 Nov 2010 16:38:13 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
+	[150.101.137.100]) by cuda.sgi.com with ESMTP id
+	FwlYn2Xx8KDS9dJs for <xfs@oss.sgi.com>;
+	Sun, 21 Nov 2010 16:38:13 -0800 (PST)
+Date: Mon, 22 Nov 2010 11:37:54 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: fix exporting with left over 64-bit inodes
+Message-ID: <20101122003754.GE13830@dastard>
+References: <20101119133848.GA5471@infradead.org>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20101119133848.GA5471@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,21 +29,34 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Timothy.Heath@emc.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Samuel Kvasnica <samuel.kvasnica@ims.co.at>, xfs@oss.sgi.com
 
-Hi all,
+On Fri, Nov 19, 2010 at 08:38:49AM -0500, Christoph Hellwig wrote:
+> From: Samuel Kvasnica <samuel.kvasnica@ims.co.at>
+> 
+> We now support mounting and using filesystems with 64-bit inodes even
+> when not mounted with the inode64 option (which now only controls if
+> we allocate new inodes in that space or not).  Make sure we always
+> use large NFS file handles when exporting a filesystem that may contain
+> 64-bit inodes.  Note that this only affects newly generated file handles,
+> any outstanding 32-bit file handle is still accepted.
+> 
+> [hch: the comment and commit log are mine, the rest is from a patch
+>  snipplet from Samuel]
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-My understanding from the documentation is that inode64 allows inode numbers to be 64 bits in size rather than the default of 32.
-
-Is this correct?  Will the option work fine on 32 bit X86 builds?
-
-The documentation also says:
-"This is provided for backwards compatibility, but causes problems for backup applications that cannot handle large inode numbers."
-Is this a current issue?  Any examples of backup applications that have trouble reading a file system that uses this option?
+Won't this mean that people exporting non-root directories suddenly
+have those exports stop working on a kernel upgrade due to changing
+the handle format?
 
 Cheers,
-Ivan Novick
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
