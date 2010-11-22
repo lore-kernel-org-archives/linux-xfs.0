@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAMMUUfZ117956 for <xfs@oss.sgi.com>; Mon, 22 Nov 2010 16:30:30 -0600
-Received: from ssec.wisc.edu (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C643313E1C98
-	for <xfs@oss.sgi.com>; Mon, 22 Nov 2010 14:32:07 -0800 (PST)
-Received: from ssec.wisc.edu (mahogany.ssec.wisc.edu [128.104.110.2]) by
-	cuda.sgi.com with ESMTP id jdvJdYGDFVzXKQ5s for
-	<xfs@oss.sgi.com>; Mon, 22 Nov 2010 14:32:07 -0800 (PST)
-Message-ID: <4CEAEF66.7030708@ssec.wisc.edu>
-Date: Mon, 22 Nov 2010 16:32:06 -0600
-From: Jesse Stroik <jstroik@ssec.wisc.edu>
+	oAMN5uwK122884 for <xfs@oss.sgi.com>; Mon, 22 Nov 2010 17:05:56 -0600
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DD03613E1A4B
+	for <xfs@oss.sgi.com>; Mon, 22 Nov 2010 15:07:31 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
+	[150.101.137.100]) by cuda.sgi.com with ESMTP id
+	hGBapbuCKtVpZqs5 for <xfs@oss.sgi.com>;
+	Mon, 22 Nov 2010 15:07:31 -0800 (PST)
+Date: Tue, 23 Nov 2010 10:07:28 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Is xfs defrag *reliably* aligned to stripes?
+Message-ID: <20101122230728.GI13830@dastard>
+References: <4CEAC203.9040800@shiftmail.org>
 MIME-Version: 1.0
-Subject: Re: Improving XFS file system inode performance
-References: <4CEAE7D7.6050401@ssec.wisc.edu>
-	<20101122232528.21b78a9e@galadriel.home>
-In-Reply-To: <20101122232528.21b78a9e@galadriel.home>
+Content-Disposition: inline
+In-Reply-To: <4CEAC203.9040800@shiftmail.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,35 +25,36 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="iso-8859-1"; Format="flowed"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Emmanuel Florac <eflorac@intellique.com>
-Cc: Linux XFS <xfs@oss.sgi.com>
+To: Spelic <spelic@shiftmail.org>
+Cc: xfs@oss.sgi.com
 
-On 11/22/2010 04:25 PM, Emmanuel Florac wrote:
-> Le Mon, 22 Nov 2010 15:59:51 -0600 vous =E9criviez:
->
->> Performance was fine before the file system was filled -- last week
->> ~8TB showed up and filled the 20TB file system.  Since, it has been
->> performing poorly.
->
-> Maybe it got fragmented? How does fragmentation look like?
+On Mon, Nov 22, 2010 at 08:18:27PM +0100, Spelic wrote:
+> Hello xfs people,
+> 
+> does the xfs defrag (xfs_fsr, I think) reliably aligns files to stripes?
 
+No, the allocator does best effort attempts only.
 
-I wasn't able to resolve this in reasonable time.  Part of the issue is =
+> Does it do that? Will it do that in the future?
 
-that we're dealing with files within about 100k directories.  I'll =
+If the filesystem has large enough contiguous free space extents, it
+will align the initial allocation to stripe unit, but once you age
+the filesystem there is no guarantee this will be possible. use
+"xfs_bmap -vvp" to look at the alignment of files.
 
-attempt to get the fragmentation numbers overnight.
+Of course, this all only works if you mkfs your filesystem with
+sunit/swidth or su/sw parameters....
 
-I suspect the regularly listed set of files on this fs exceeds the inode =
+Cheers,
 
-cache.  Where can I determine the cache misses and tune the file system?
-
-Best,
-Jesse
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
