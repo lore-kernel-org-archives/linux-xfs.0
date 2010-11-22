@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAM0mSwA161589 for <xfs@oss.sgi.com>; Sun, 21 Nov 2010 18:48:29 -0600
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 57FA013DDD92
-	for <xfs@oss.sgi.com>; Sun, 21 Nov 2010 16:50:04 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
-	[150.101.137.102]) by cuda.sgi.com with ESMTP id
-	UqfYlzRAM1JPU7ry for <xfs@oss.sgi.com>;
-	Sun, 21 Nov 2010 16:50:04 -0800 (PST)
-Date: Mon, 22 Nov 2010 11:49:57 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: clarifications on inode64 mount option
-Message-ID: <20101122004957.GF13830@dastard>
-References: <C90EF576.118F%ivan.novick@emc.com>
+	oAM96hYk209949 for <xfs@oss.sgi.com>; Mon, 22 Nov 2010 03:06:44 -0600
+Received: from mail.ims.co.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E8D2D1989DF
+	for <xfs@oss.sgi.com>; Mon, 22 Nov 2010 01:05:33 -0800 (PST)
+Received: from mail.ims.co.at (mail.ims.co.at [81.223.138.19]) by cuda.sgi.com
+	with ESMTP id JIseD0Bnc31VT6Az for <xfs@oss.sgi.com>;
+	Mon, 22 Nov 2010 01:05:33 -0800 (PST)
+Date: Mon, 22 Nov 2010 10:05:27 +0100
+From: Samuel Kvasnica <samuel.kvasnica@ims.co.at>
+Message-ID: <4CEA3257.6090309@ims.co.at>
+In-Reply-To: <20101122003754.GE13830@dastard>
+References: <20101119133848.GA5471@infradead.org>
+References: <20101122003754.GE13830@dastard>
+Subject: Re: [PATCH] xfs: fix exporting with left over 64-bit inodes
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <C90EF576.118F%ivan.novick@emc.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,46 +29,42 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ivan.Novick@emc.com
-Cc: Timothy.Heath@emc.com, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Sun, Nov 21, 2010 at 07:12:38PM -0500, Ivan.Novick@emc.com wrote:
-> Hi all,
-> 
-> My understanding from the documentation is that inode64 allows
-> inode numbers to be 64 bits in size rather than the default of
-> 32.
-> 
-> Is this correct? 
 
-Yes.
+On 11/22/2010 01:37 AM, Dave Chinner wrote:
+> On Fri, Nov 19, 2010 at 08:38:49AM -0500, Christoph Hellwig wrote:
+>> From: Samuel Kvasnica <samuel.kvasnica@ims.co.at>
+>>
+>> We now support mounting and using filesystems with 64-bit inodes even
+>> when not mounted with the inode64 option (which now only controls if
+>> we allocate new inodes in that space or not).  Make sure we always
+>> use large NFS file handles when exporting a filesystem that may contain
+>> 64-bit inodes.  Note that this only affects newly generated file handles,
+>> any outstanding 32-bit file handle is still accepted.
+>>
+>> [hch: the comment and commit log are mine, the rest is from a patch
+>>  snipplet from Samuel]
+>>
+>> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Won't this mean that people exporting non-root directories suddenly
+> have those exports stop working on a kernel upgrade due to changing
+> the handle format?
+>
+> Cheers,
+>
+> Dave.
+Hello Dave,
 
-> Will the option work fine on 32 bit X86 builds?
+nothing is really changing, it is a bugfix. NFS was trying to use 32bit
+inodes which was incorrect (i.e. broken at client) for xfs filesystem
+containing 64bit inodes in one special case. This is fixed now.
 
-Yes, with a few caveats - all userspace applications, libraries, etc
-need to use stat64() rather than stat() so that 64 bit inode numbers
-can be correctly exported to userspace.
+regards,
 
-> The documentation also says:
-> "This is provided for backwards compatibility, but causes problems
-> for backup applications that cannot handle large inode numbers."
-> Is this a current issue?  Any examples of backup applications that
-> have trouble reading a file system that uses this option?
+Sam
 
-See this discussion:
-
-http://oss.sgi.com/archives/xfs/2010-04/msg00111.html
-
-EMC Networker is one of the backup programs that has historically
-not supported 64 bit inodes. Whether that is still true or not,
-maybe you can find out for us. ;)
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
