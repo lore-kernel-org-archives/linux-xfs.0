@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAMD7Qln228582 for <xfs@oss.sgi.com>; Mon, 22 Nov 2010 07:07:27 -0600
+	oAMD7S7i228636 for <xfs@oss.sgi.com>; Mon, 22 Nov 2010 07:07:28 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 21B121C64EBF
-	for <xfs@oss.sgi.com>; Mon, 22 Nov 2010 05:09:03 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 78C0513DECC1
+	for <xfs@oss.sgi.com>; Mon, 22 Nov 2010 05:09:05 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id teugMO7ZHm12IQU1 for
-	<xfs@oss.sgi.com>; Mon, 22 Nov 2010 05:09:03 -0800 (PST)
+	by cuda.sgi.com with ESMTP id xzQCMeBQV4GO3HC3 for
+	<xfs@oss.sgi.com>; Mon, 22 Nov 2010 05:09:05 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.72 #1 (Red Hat
-	Linux)) id 1PKW8l-0005bp-0Q
+	Linux)) id 1PKW8l-0005cO-6c
 	for xfs@oss.sgi.com; Mon, 22 Nov 2010 13:09:03 +0000
-Message-Id: <20101122130506.868076797@bombadil.infradead.org>
-Date: Mon, 22 Nov 2010 08:05:06 -0500
+Message-Id: <20101122130903.165758570@bombadil.infradead.org>
+Date: Mon, 22 Nov 2010 08:05:07 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 00/10] writeback updates
+Subject: [PATCH 01/10] xfs: improve mapping type check in xfs_vm_writepage
+References: <20101122130506.868076797@bombadil.infradead.org>
+Content-Disposition: inline; filename=xfs-fix-iomap-type-checking
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,22 +32,56 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-This serious revamps a lot of the way we do the block mapping for
-writeback.  It gets rid of the xfs_iomap interface and now calls
-xfs_bmapi directly from __xfs_get_blocks and xfs_vm_writepage,
-and simplifies the code in writepage a lot.
+Currently we only refuse a "read-only" mapping for writing out
+unwritten and delayed buffers, and refuse any other for overwrites.
+Improve the checks to require delalloc mappings for delayed buffers,
+and unwritten extent mappings for unwritten extents.
 
-It removes about 200 lines of code and a superflous radix tree
-lookup for already allocated blocks.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-It also shows a pretty clear path to how we can get rid of buffer
-heads.  The new writepage code shows that we rely very little on
-buffers for writeback - I think we can relatively easy switch it
-from looping over bufferheads to loop over the xfs_bmapi results
-and it will still work.  We'll need some more work on the get_blocks
-and truncate side, but I think we can pretty easily remove the
-buffer heads in XFS without any replacement and just rely on the
-extent cache in the inode underneath xfs_bmapi.
+Index: xfs/fs/xfs/linux-2.6/xfs_aops.c
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_aops.c	2010-11-19 14:39:37.476261771 +0100
++++ xfs/fs/xfs/linux-2.6/xfs_aops.c	2010-11-19 14:41:41.801005380 +0100
+@@ -1127,17 +1127,17 @@ xfs_vm_writepage(
+ 		if (buffer_unwritten(bh) || buffer_delay(bh)) {
+ 			int new_ioend = 0;
+ 
+-			/*
+-			 * Make sure we don't use a read-only iomap
+-			 */
+-			if (flags == BMAPI_READ)
+-				imap_valid = 0;
+-
+ 			if (buffer_unwritten(bh)) {
+-				type = IO_UNWRITTEN;
++				if (type != IO_UNWRITTEN) {
++					type = IO_UNWRITTEN;
++					imap_valid = 0;
++				}
+ 				flags = BMAPI_WRITE | BMAPI_IGNSTATE;
+ 			} else if (buffer_delay(bh)) {
+-				type = IO_DELAY;
++				if (type != IO_DELAY) {
++					type = IO_DELAY;
++					imap_valid = 0;
++				}
+ 				flags = BMAPI_ALLOCATE;
+ 
+ 				if (wbc->sync_mode == WB_SYNC_NONE)
+@@ -1173,8 +1173,11 @@ xfs_vm_writepage(
+ 			 * That means it must already have extents allocated
+ 			 * underneath it. Map the extent by reading it.
+ 			 */
+-			if (!imap_valid || flags != BMAPI_READ) {
++			if (flags != BMAPI_READ) {
+ 				flags = BMAPI_READ;
++				imap_valid = 0;
++			}
++			if (!imap_valid) {
+ 				size = xfs_probe_cluster(inode, page, bh, head);
+ 				err = xfs_map_blocks(inode, offset, size,
+ 						&imap, flags);
 
 _______________________________________________
 xfs mailing list
