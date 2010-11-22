@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAMD7SPZ228635 for <xfs@oss.sgi.com>; Mon, 22 Nov 2010 07:07:28 -0600
+	oAMD7Qx7228580 for <xfs@oss.sgi.com>; Mon, 22 Nov 2010 07:07:26 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 74EB219915F
-	for <xfs@oss.sgi.com>; Mon, 22 Nov 2010 05:09:05 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CBBB81990F6
+	for <xfs@oss.sgi.com>; Mon, 22 Nov 2010 05:09:03 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id mNvUQbs3n0j2QUbQ for
-	<xfs@oss.sgi.com>; Mon, 22 Nov 2010 05:09:05 -0800 (PST)
+	by cuda.sgi.com with ESMTP id 8kiKfIDrBo9zqbcz for
+	<xfs@oss.sgi.com>; Mon, 22 Nov 2010 05:09:03 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.72 #1 (Red Hat
-	Linux)) id 1PKW8n-0005hC-04
-	for xfs@oss.sgi.com; Mon, 22 Nov 2010 13:09:05 +0000
-Message-Id: <20101122130904.961028436@bombadil.infradead.org>
-Date: Mon, 22 Nov 2010 08:05:16 -0500
+	Linux)) id 1PKW8l-0005d0-CN
+	for xfs@oss.sgi.com; Mon, 22 Nov 2010 13:09:03 +0000
+Message-Id: <20101122130903.350647429@bombadil.infradead.org>
+Date: Mon, 22 Nov 2010 08:05:08 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 10/10] xfs: simplify xfs_map_at_offset
+Subject: [PATCH 02/10] xfs: remove some dead bio handling code
 References: <20101122130506.868076797@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-simplify-xfs_map_at_offset
+Content-Disposition: inline; filename=xfs-aop-cleanups
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,54 +32,57 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Move the buffer locking into the callers as they need to do it wether they
-call xfs_map_at_offset or not.  Remove the b_bdev assignment, which is
-already done by get_blocks.  Remove the duplicate extent type asserts in
-xfs_convert_page just before calling xfs_map_at_offset.
+We'll never have BIO_EOPNOTSUPP set after calling submit_bio as
+this can only happen for discards, and used to happen for barriers,
+none of which is every submitted by xfs_submit_ioend_bio.  Also
+remove the loop around bio_alloc as it will never fail due to it's
+mempool backing.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 Index: xfs/fs/xfs/linux-2.6/xfs_aops.c
 ===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_aops.c	2010-11-19 16:55:59.276019838 +0100
-+++ xfs/fs/xfs/linux-2.6/xfs_aops.c	2010-11-19 16:58:45.791254577 +0100
-@@ -626,9 +626,7 @@ xfs_map_at_offset(
- 	ASSERT(imap->br_startblock != HOLESTARTBLOCK);
- 	ASSERT(imap->br_startblock != DELAYSTARTBLOCK);
+--- xfs.orig/fs/xfs/linux-2.6/xfs_aops.c	2010-11-19 14:49:28.115261980 +0100
++++ xfs/fs/xfs/linux-2.6/xfs_aops.c	2010-11-19 14:49:29.417024168 +0100
+@@ -380,26 +380,18 @@ xfs_submit_ioend_bio(
  
--	lock_buffer(bh);
- 	xfs_map_buffer(inode, bh, imap, offset);
--	bh->b_bdev = xfs_find_bdev_for_inode(inode);
- 	set_buffer_mapped(bh);
- 	clear_buffer_delay(bh);
- 	clear_buffer_unwritten(bh);
-@@ -751,12 +749,8 @@ xfs_convert_page(
- 				continue;
- 			}
+ 	submit_bio(wbc->sync_mode == WB_SYNC_ALL ?
+ 		   WRITE_SYNC_PLUG : WRITE, bio);
+-	ASSERT(!bio_flagged(bio, BIO_EOPNOTSUPP));
+-	bio_put(bio);
+ }
  
--			ASSERT(imap->br_startblock != HOLESTARTBLOCK);
--			ASSERT(imap->br_startblock != DELAYSTARTBLOCK);
+ STATIC struct bio *
+ xfs_alloc_ioend_bio(
+ 	struct buffer_head	*bh)
+ {
+-	struct bio		*bio;
+ 	int			nvecs = bio_get_nr_vecs(bh->b_bdev);
 -
--			if (type == IO_OVERWRITE)
--				lock_buffer(bh);
--			else
-+			lock_buffer(bh);
-+			if (type != IO_OVERWRITE)
- 				xfs_map_at_offset(inode, bh, imap, offset);
- 			xfs_add_to_ioend(inode, bh, offset, type,
- 					 ioendp, done);
-@@ -1086,9 +1080,8 @@ xfs_vm_writepage(
- 			imap_valid = xfs_imap_valid(inode, &imap, offset);
- 		}
- 		if (imap_valid) {
--			if (type == IO_OVERWRITE)
--				lock_buffer(bh);
--			else
-+			lock_buffer(bh);
-+			if (type != IO_OVERWRITE)
- 				xfs_map_at_offset(inode, bh, &imap, offset);
- 			xfs_add_to_ioend(inode, bh, offset, type, &ioend,
- 					 new_ioend);
+-	do {
+-		bio = bio_alloc(GFP_NOIO, nvecs);
+-		nvecs >>= 1;
+-	} while (!bio);
++	struct bio		*bio = bio_alloc(GFP_NOIO, nvecs);
+ 
+ 	ASSERT(bio->bi_private == NULL);
+ 	bio->bi_sector = bh->b_blocknr * (bh->b_size >> 9);
+ 	bio->bi_bdev = bh->b_bdev;
+-	bio_get(bio);
+ 	return bio;
+ }
+ 
+@@ -470,9 +462,8 @@ xfs_submit_ioend(
+ 	/* Pass 1 - start writeback */
+ 	do {
+ 		next = ioend->io_list;
+-		for (bh = ioend->io_buffer_head; bh; bh = bh->b_private) {
++		for (bh = ioend->io_buffer_head; bh; bh = bh->b_private)
+ 			xfs_start_buffer_writeback(bh);
+-		}
+ 	} while ((ioend = next) != NULL);
+ 
+ 	/* Pass 2 - submit I/O */
 
 _______________________________________________
 xfs mailing list
