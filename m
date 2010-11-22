@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAMD7RB4228614 for <xfs@oss.sgi.com>; Mon, 22 Nov 2010 07:07:27 -0600
+	oAMD7RXC228606 for <xfs@oss.sgi.com>; Mon, 22 Nov 2010 07:07:27 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 060AE19915D
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9CB8D1C64EF9
 	for <xfs@oss.sgi.com>; Mon, 22 Nov 2010 05:09:04 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id A9R5ZnDD2pyhNHoW for
+	by cuda.sgi.com with ESMTP id LLW58k3XvtTPikYG for
 	<xfs@oss.sgi.com>; Mon, 22 Nov 2010 05:09:04 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.72 #1 (Red Hat
-	Linux)) id 1PKW8m-0005gA-Io
+	Linux)) id 1PKW8m-0005f8-5H
 	for xfs@oss.sgi.com; Mon, 22 Nov 2010 13:09:04 +0000
-Message-Id: <20101122130904.551028056@bombadil.infradead.org>
-Date: Mon, 22 Nov 2010 08:05:14 -0500
+Message-Id: <20101122130904.122411257@bombadil.infradead.org>
+Date: Mon, 22 Nov 2010 08:05:12 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 08/10] xfs: remove the all_bh flag from xfs_convert_page
+Subject: [PATCH 06/10] xfs: simplify xfs_map_blocks
 References: <20101122130506.868076797@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-kill-all-bh
+Content-Disposition: inline; filename=xfs-simplify-map_blocks
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,113 +32,128 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-The all_bh flag is always set when entering the page clustering machinery
-with a regular written extent, which means the check for it is superflous.
+No need to lock the extent map exclusive when performing an overwrite,
+we know the extent map must already have been loaded by get_blocks.
+Apply the non-blocking inode semantics to all mapping types instead of
+just delayed allocations.  Remove the handling of not yet allocated
+blocks for the IO_UNWRITTEN case - if an extent is marked as delayed
+allocated in the buffer it must already have an extent on disk.
+
+Add asserts to verify all the assumptions above in debug builds.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 Index: xfs/fs/xfs/linux-2.6/xfs_aops.c
 ===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_aops.c	2010-11-19 15:07:33.000000000 +0100
-+++ xfs/fs/xfs/linux-2.6/xfs_aops.c	2010-11-19 15:07:59.221005096 +0100
-@@ -682,8 +682,7 @@ xfs_convert_page(
- 	loff_t			tindex,
- 	struct xfs_bmbt_irec	*imap,
- 	xfs_ioend_t		**ioendp,
--	struct writeback_control *wbc,
--	int			all_bh)
-+	struct writeback_control *wbc)
- {
- 	struct buffer_head	*bh, *head;
- 	xfs_off_t		end_offset;
-@@ -738,11 +737,14 @@ xfs_convert_page(
- 			continue;
- 		}
+--- xfs.orig/fs/xfs/linux-2.6/xfs_aops.c	2010-10-31 15:10:59.000000000 -0400
++++ xfs/fs/xfs/linux-2.6/xfs_aops.c	2010-10-31 15:13:27.777719469 -0400
+@@ -313,81 +313,54 @@ xfs_map_blocks(
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	xfs_fileoff_t		offset_fsb, end_fsb;
+ 	int			error = 0;
+-	int			lockmode = 0;
+ 	int			bmapi_flags = XFS_BMAPI_ENTIRE;
+ 	int			nimaps = 1;
  
--		if (buffer_unwritten(bh) || buffer_delay(bh)) {
-+		if (buffer_unwritten(bh) || buffer_delay(bh) ||
-+		    buffer_mapped(bh)) {
- 			if (buffer_unwritten(bh))
- 				type = IO_UNWRITTEN;
--			else
-+			else if (buffer_delay(bh))
- 				type = IO_DELALLOC;
-+			else
-+				type = IO_OVERWRITE;
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return -XFS_ERROR(EIO);
  
- 			if (!xfs_imap_valid(inode, imap, offset)) {
- 				done = 1;
-@@ -752,23 +754,17 @@ xfs_convert_page(
- 			ASSERT(imap->br_startblock != HOLESTARTBLOCK);
- 			ASSERT(imap->br_startblock != DELAYSTARTBLOCK);
- 
--			xfs_map_at_offset(inode, bh, imap, offset);
-+			if (type == IO_OVERWRITE)
-+				lock_buffer(bh);
-+			else
-+				xfs_map_at_offset(inode, bh, imap, offset);
- 			xfs_add_to_ioend(inode, bh, offset, type,
- 					 ioendp, done);
- 
- 			page_dirty--;
- 			count++;
- 		} else {
--			type = IO_OVERWRITE;
--			if (buffer_mapped(bh) && all_bh) {
--				lock_buffer(bh);
--				xfs_add_to_ioend(inode, bh, offset,
--						type, ioendp, done);
--				count++;
--				page_dirty--;
--			} else {
--				done = 1;
--			}
-+			done = 1;
- 		}
- 	} while (offset += len, (bh = bh->b_this_page) != head);
- 
-@@ -800,7 +796,6 @@ xfs_cluster_write(
- 	struct xfs_bmbt_irec	*imap,
- 	xfs_ioend_t		**ioendp,
- 	struct writeback_control *wbc,
--	int			all_bh,
- 	pgoff_t			tlast)
- {
- 	struct pagevec		pvec;
-@@ -815,7 +810,7 @@ xfs_cluster_write(
- 
- 		for (i = 0; i < pagevec_count(&pvec); i++) {
- 			done = xfs_convert_page(inode, pvec.pages[i], tindex++,
--					imap, ioendp, wbc, all_bh);
-+					imap, ioendp, wbc);
- 			if (done)
- 				break;
- 		}
-@@ -974,7 +969,6 @@ xfs_vm_writepage(
- 	ssize_t			len;
- 	int			err, imap_valid = 0, uptodate = 1;
- 	int			count = 0;
--	int			all_bh = 0;
- 	int			nonblocking = 0;
- 
- 	trace_xfs_writepage(inode, page, 0);
-@@ -1110,7 +1104,6 @@ xfs_vm_writepage(
- 			}
- 
- 			if (imap_valid) {
--				all_bh = 1;
- 				lock_buffer(bh);
- 				xfs_add_to_ioend(inode, bh, offset, type,
- 						&ioend, new_ioend);
-@@ -1147,7 +1140,7 @@ xfs_vm_writepage(
- 			end_index = last_index;
- 
- 		xfs_cluster_write(inode, page->index + 1, &imap, &ioend,
--					wbc, all_bh, end_index);
-+				  wbc, end_index);
+-	switch (type) {
+-	case IO_OVERWRITE:
+-		lockmode = xfs_ilock_map_shared(ip);
+-		break;
+-	case IO_UNWRITTEN:
+-		lockmode = XFS_ILOCK_EXCL;
++	if (type == IO_UNWRITTEN)
+ 		bmapi_flags |= XFS_BMAPI_IGSTATE;
+-		xfs_ilock(ip, lockmode);
+-		break;
+-	case IO_DELALLOC:
+-		lockmode = XFS_ILOCK_SHARED;
+-
+-		if (!xfs_ilock_nowait(ip, lockmode)) {
+-			if (nonblocking)
+-				return -XFS_ERROR(EAGAIN);
+-			xfs_ilock(ip, lockmode);
+-		}
+-		break;
++
++	if (!xfs_ilock_nowait(ip, XFS_ILOCK_SHARED)) {
++		if (nonblocking)
++			return -XFS_ERROR(EAGAIN);
++		xfs_ilock(ip, XFS_ILOCK_SHARED);
  	}
  
- 	if (iohead)
++	ASSERT(ip->i_d.di_format != XFS_DINODE_FMT_BTREE ||
++	       (ip->i_df.if_flags & XFS_IFEXTENTS));
+ 	ASSERT(offset <= mp->m_maxioffset);
++
+ 	if (offset + count > mp->m_maxioffset)
+ 		count = mp->m_maxioffset - offset;
+ 	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + count);
+ 	offset_fsb = XFS_B_TO_FSBT(mp, offset);
+-
+ 	error = xfs_bmapi(NULL, ip, offset_fsb, end_fsb - offset_fsb,
+ 			  bmapi_flags,  NULL, 0, imap, &nimaps, NULL);
+-	if (error)
+-		goto out;
+-
+-	switch (type) {
+-	case IO_UNWRITTEN:
+-		/* If we found an extent, return it */
+-		if (nimaps &&
+-		    (imap->br_startblock != HOLESTARTBLOCK) &&
+-		    (imap->br_startblock != DELAYSTARTBLOCK)) {
+-			trace_xfs_map_blocks_found(ip, offset, count, type, imap);
+-			break;
+-		}
++	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+ 
+-		error = xfs_iomap_write_delay(ip, offset, count, imap);
+-		if (!error)
+-			trace_xfs_map_blocks_alloc(ip, offset, count, type, imap);
+-		break;
+-	case IO_DELALLOC:
+-		/* If we found an extent, return it */
+-		xfs_iunlock(ip, lockmode);
+-		lockmode = 0;
+-
+-		if (nimaps && !isnullstartblock(imap->br_startblock)) {
+-			trace_xfs_map_blocks_found(ip, offset, count, type, imap);
+-			break;
+-		}
++	if (error)
++		return -XFS_ERROR(error);
+ 
++	if (type == IO_DELALLOC &&
++	    (!nimaps || isnullstartblock(imap->br_startblock))) {
+ 		error = xfs_iomap_write_allocate(ip, offset, count, imap);
+ 		if (!error)
+ 			trace_xfs_map_blocks_alloc(ip, offset, count, type, imap);
+-		break;
+-	default:
+-		if (nimaps)
+-			trace_xfs_map_blocks_found(ip, offset, count, type, imap);
++		return -XFS_ERROR(error);
+ 	}
+ 
+-out:
+-	if (lockmode)
+-		xfs_iunlock(ip, lockmode);
+-	return -XFS_ERROR(error);
++#ifdef DEBUG
++	if (type == IO_UNWRITTEN) {
++		ASSERT(nimaps);
++		ASSERT(imap->br_startblock != HOLESTARTBLOCK);
++		ASSERT(imap->br_startblock != DELAYSTARTBLOCK);
++	}
++#endif
++	if (nimaps)
++		trace_xfs_map_blocks_found(ip, offset, count, type, imap);
++	return 0;
+ }
+ 
+ STATIC int
 
 _______________________________________________
 xfs mailing list
