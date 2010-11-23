@@ -1,25 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oANMCdpp016029 for <xfs@oss.sgi.com>; Tue, 23 Nov 2010 16:12:40 -0600
-Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9F8A81C6BD0E
-	for <xfs@oss.sgi.com>; Tue, 23 Nov 2010 14:14:17 -0800 (PST)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id gPshlN7JKfZEIbAQ
-	for <xfs@oss.sgi.com>; Tue, 23 Nov 2010 14:14:17 -0800 (PST)
-Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
-	by greer.hardwarefreak.com (Postfix) with ESMTP id DA1E56C149
-	for <xfs@oss.sgi.com>; Tue, 23 Nov 2010 16:14:16 -0600 (CST)
-Message-ID: <4CEC3CB8.8000509@hardwarefreak.com>
-Date: Tue, 23 Nov 2010 16:14:16 -0600
-From: Stan Hoeppner <stan@hardwarefreak.com>
-MIME-Version: 1.0
+	oANMkit8020322 for <xfs@oss.sgi.com>; Tue, 23 Nov 2010 16:46:44 -0600
+Received: from smtp3-g21.free.fr (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5834013E59DF
+	for <xfs@oss.sgi.com>; Tue, 23 Nov 2010 14:48:19 -0800 (PST)
+Received: from smtp3-g21.free.fr (smtp3-g21.free.fr [212.27.42.3]) by
+	cuda.sgi.com with ESMTP id u7tIGByHQ1aYOUWX for
+	<xfs@oss.sgi.com>; Tue, 23 Nov 2010 14:48:19 -0800 (PST)
+Date: Tue, 23 Nov 2010 23:48:11 +0100
+From: Emmanuel Florac <eflorac@intellique.com>
 Subject: Re: Xfs delaylog hanged up
-References: <4CEAC412.9000406@shiftmail.org>
-	<20101122232929.GJ13830@dastard>	<4CEBA2D5.2020708@shiftmail.org>
-	<20101123204609.GW22876@dastard>
+Message-ID: <20101123234811.0ea3c41c@galadriel.home>
 In-Reply-To: <20101123204609.GW22876@dastard>
+References: <4CEAC412.9000406@shiftmail.org> <20101122232929.GJ13830@dastard>
+	<4CEBA2D5.2020708@shiftmail.org> <20101123204609.GW22876@dastard>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,29 +24,32 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com, Spelic <spelic@shiftmail.org>
 
-Dave Chinner put forth on 11/23/2010 2:46 PM:
+Le Wed, 24 Nov 2010 07:46:09 +1100 vous =E9criviez:
 
-> I've been unable to reproduce the problem with your test case (been
-> running over night) on a 12-disk, 16TB dm RAID0 array, but I'll keep
-> trying to reproduce it for a while. I note that the load is
-> generating close to 10,000 iops on my test system, so it may very
-> well be triggering load related problems in your raid controller...
+> Hmmmm. We get plenty of reports about problems with 3ware RAID
+> controllers, many of which are RAID controller problems. Can you
+> make sure you are running the latest firmware on the controller?
 
-Somewhat off topic, but how are you generating 10,000 IOPS by carving a
-16TB LUN/volume from 12 x 2TB SATA disk spindles?  Such drives aren't
-even capable of 200 seeks per second.  Even if they were you'd top out
-at less than 2,500 IOPS (random).  16TB/12=1.33 TB per disk.  No such
-capacity disk exists.  So I assume you're using 12 x 2TB disks and
-slicing/dicing out 16TB.  What am I missing Dave?
+So Spelic, you're using the 3Ware as a SATA controller, but not a RAID
+controller? This is quite unexpected, though going with md
+instead provides better IOPS. =
 
--- 
-Stan
+
+-- =
+
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
 
 _______________________________________________
 xfs mailing list
