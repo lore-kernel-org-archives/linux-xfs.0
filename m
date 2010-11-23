@@ -1,21 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oANKQ6YF002758 for <xfs@oss.sgi.com>; Tue, 23 Nov 2010 14:26:07 -0600
-Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0B95719F66B
-	for <xfs@oss.sgi.com>; Tue, 23 Nov 2010 12:27:41 -0800 (PST)
-Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
-	cuda.sgi.com with ESMTP id Z9WgQOSnRRmCnUoo for
-	<xfs@oss.sgi.com>; Tue, 23 Nov 2010 12:27:41 -0800 (PST)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
+	oANKPwCN002737 for <xfs@oss.sgi.com>; Tue, 23 Nov 2010 14:25:58 -0600
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D812819F669
+	for <xfs@oss.sgi.com>; Tue, 23 Nov 2010 12:27:34 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
+	[150.101.137.99]) by cuda.sgi.com with ESMTP id
+	xejZBV3QGf8sfn12 for <xfs@oss.sgi.com>;
+	Tue, 23 Nov 2010 12:27:34 -0800 (PST)
+Date: Wed, 24 Nov 2010 07:27:21 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: Improving XFS file system inode performance
-Date: Tue, 23 Nov 2010 21:27:36 +0100
-References: <4CEAE7D7.6050401@ssec.wisc.edu> <20101122234419.GK13830@dastard>
+Message-ID: <20101123202721.GT22876@dastard>
+References: <4CEAE7D7.6050401@ssec.wisc.edu>
+	<20101122232528.21b78a9e@galadriel.home>
+	<4CEAEF66.7030708@ssec.wisc.edu> <20101122234419.GK13830@dastard>
 	<4CEBD47F.1040004@ssec.wisc.edu>
-In-Reply-To: <4CEBD47F.1040004@ssec.wisc.edu>
 MIME-Version: 1.0
-Message-Id: <201011232127.37796@zmi.at>
+Content-Disposition: inline
+In-Reply-To: <4CEBD47F.1040004@ssec.wisc.edu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,73 +28,43 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============4321460958974544281=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Jesse Stroik <jstroik@ssec.wisc.edu>
+To: Jesse Stroik <jstroik@ssec.wisc.edu>
+Cc: Linux XFS <xfs@oss.sgi.com>
 
---===============4321460958974544281==
-Content-Type: multipart/signed;
-  boundary="nextPart3146334.4FdljxVhAf";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
-
---nextPart3146334.4FdljxVhAf
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-
-On Dienstag, 23. November 2010 Jesse Stroik wrote:
+On Tue, Nov 23, 2010 at 08:49:35AM -0600, Jesse Stroik wrote:
+> Dave,
+> 
+> Thanks.  This is precisely what I was looking for.  I'll let you
+> know how it turns out.
+> 
 > As this file system is likely to continue to increase in number of
-> files  at a fairly rapid rate, we're going to need a long term
+> files at a fairly rapid rate, we're going to need a long term
 > strategy.  I suspect it may be necessary in the near future to
 > double or quadruple the memory to 32GB or 64GB, but the uncertainty
 > in the formula makes me nervous.
+> 
+> For a situation like this, it would be ideal if we could specify an
+> inode cache size.
 
-Using tools like "munin" helps you see the problem in graphs, so you can=20
-easily check what's going on. Munin draws graphs from a lot of=20
-parameters of a system, and helped me find problems that you couldn't=20
-find otherwise.
+That's the third request in a few weeks I've had for being able to
+fix the inode cache size to either prevent it from growing too large
+or to prevent it from being reclaimed prematurely. I doubt I'll ever
+be able to get the VFS cache capped (people have tried in the past
+with no success), so I'm going to look at providing a method for XFS
+to provide limits on the size of it's inode cache.
 
-=2D-=20
-mit freundlichen Gr=FCssen,
-Michael Monnerie, Ing. BSc
+Cheers,
 
-it-management Internet Services: Prot=E9ger
-http://proteger.at [gesprochen: Prot-e-schee]
-Tel: +43 660 / 415 6531
-
-// ****** Radiointerview zum Thema Spam ******
-// http://www.it-podcast.at/archiv.html#podcast-100716
-//=20
-// Haus zu verkaufen: http://zmi.at/langegg/
-
---nextPart3146334.4FdljxVhAf
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.15 (GNU/Linux)
-
-iEYEABECAAYFAkzsI7kACgkQzhSR9xwSCbQM1ACgv6O6JkxK7RWu32wC9MBY29e+
-pQIAn0QCzW+U8YR+ev+ZGx4+jntF8cxa
-=hrW1
------END PGP SIGNATURE-----
-
---nextPart3146334.4FdljxVhAf--
-
-
---===============4321460958974544281==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============4321460958974544281==--
