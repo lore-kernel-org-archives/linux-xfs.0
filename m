@@ -1,20 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oANAJ1Vo192084 for <xfs@oss.sgi.com>; Tue, 23 Nov 2010 04:19:01 -0600
-Received: from mail-qw0-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 580E419C847
-	for <xfs@oss.sgi.com>; Tue, 23 Nov 2010 02:20:37 -0800 (PST)
-Received: from mail-qw0-f53.google.com (mail-qw0-f53.google.com
-	[209.85.216.53]) by cuda.sgi.com with ESMTP id NXOWLeFiNZgT9GpE
-	for <xfs@oss.sgi.com>; Tue, 23 Nov 2010 02:20:37 -0800 (PST)
-Received: by qwc9 with SMTP id 9so330539qwc.26
-	for <xfs@oss.sgi.com>; Tue, 23 Nov 2010 02:20:37 -0800 (PST)
-MIME-Version: 1.0
-Date: Tue, 23 Nov 2010 15:50:37 +0530
-Message-ID: <AANLkTimNBapoCGa--2+PDME0q4nD5soLEudznHjFVB84@mail.gmail.com>
-Subject: 2.6.34 - XFS crash radix_tree_tag_set
-From: Ajeet Yadav <ajeet.yadav.77@gmail.com>
+	oANBG9Dk198519 for <xfs@oss.sgi.com>; Tue, 23 Nov 2010 05:16:09 -0600
+Received: from BLADE4.ISTI.CNR.IT (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6114E13E4C4E
+	for <xfs@oss.sgi.com>; Tue, 23 Nov 2010 03:17:45 -0800 (PST)
+Received: from BLADE4.ISTI.CNR.IT (blade4.isti.cnr.it [194.119.192.20]) by
+	cuda.sgi.com with ESMTP id tZKcsFkgOCMIOiXE for
+	<xfs@oss.sgi.com>; Tue, 23 Nov 2010 03:17:45 -0800 (PST)
+Received: from SCRIPT-SPFWL-DAEMON.mx.isti.cnr.it by mx.isti.cnr.it
+	(PMDF V6.5 #31825) id <01NULG5HN6RKLGYGNJ@mx.isti.cnr.it> for
+	xfs@oss.sgi.com; Tue, 23 Nov 2010 12:16:38 +0100 (MET)
+Received: from conversionlocal.isti.cnr.it by mx.isti.cnr.it (PMDF V6.5 #31825)
+	id <01NULG5C3ER4LGYABD@mx.isti.cnr.it> for xfs@oss.sgi.com; Tue,
+	23 Nov 2010 12:15:42 +0100 (MET)
+Date: Tue, 23 Nov 2010 12:17:41 +0100
+From: Spelic <spelic@shiftmail.org>
+Subject: Re: Xfs delaylog hanged up
+In-reply-to: <20101122232929.GJ13830@dastard>
+Message-id: <4CEBA2D5.2020708@shiftmail.org>
+MIME-version: 1.0
+References: <4CEAC412.9000406@shiftmail.org> <20101122232929.GJ13830@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,164 +29,86 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============6460377013090860353=="
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
---===============6460377013090860353==
-Content-Type: multipart/alternative; boundary=0015175cd0fc5241490495b5b93a
+On 11/23/2010 12:29 AM, Dave Chinner wrote:
+>> 16 disk MD raid-5
+>>      
+> What is the storage hardware and the MD raid5 configuration?
+>    
 
---0015175cd0fc5241490495b5b93a
-Content-Type: text/plain; charset=ISO-8859-1
+Tyan motherboard with 5400 chipset
+dual Xeon E5420
 
-I have the following backtrace on my ARM target, please have a look
+16 disks on this one:
+05:00.0 RAID bus controller: 3ware Inc 9650SE SATA-II RAID PCIe (rev 01)
+         Subsystem: 3ware Inc 9650SE SATA-II RAID PCIe
+         Flags: bus master, fast devsel, latency 0, IRQ 16
+         Memory at ce000000 (64-bit, prefetchable) [size=32M]
+         Memory at d2600000 (64-bit, non-prefetchable) [size=4K]
+         I/O ports at 3000 [size=256]
+         [virtual] Expansion ROM at d26e0000 [disabled] [size=128K]
+         Capabilities: <access denied>
+         Kernel driver in use: 3w-9xxx
+         Kernel modules: 3w-9xxx
 
-Backtrace:
+mdadm --create /dev/md5 --raid-devices=16 --chunk=1024 --level=5 
+--metadata=1.0 pci-0000:05:00.0-scsi-0:0:{15..0}:0 
+--name=backup:perftest --assume-clean
 
-[<c002f414>] (__bug+0x0/0x30) from [<c0207124>]
-(radix_tree_tag_set+0xa0/0xe8)
+>> mount line:
+>>         /dev/mapper/perftestvg-xfslv /perftest/xfs xfs rw,relatime,attr2,delaylog,nobarrier,inode64,logbufs=8,logbsize=256k,noquota
+>> 0 0
+>>      
+> FYI, relatime, attr2, logbufs=8 and noquota are default values that
+> you don't need to specify.
+>    
 
-[<c0207084>] (radix_tree_tag_set+0x0/0xe8) from [<c01e6fb0>]
-(__xfs_inode_set_reclaim_tag+0x44/0x54)
+ok, that was the /proc/mounts line..
 
-[<c01e6f6c>] (__xfs_inode_set_reclaim_tag+0x0/0x54) from [<c01e700c>]
-(xfs_inode_set_reclaim_tag+0x4c/0xac)
+mkfs.xfs -l size=128m -d agcount=16 <device>
 
- r6:00000002 r5:ce558000 r4:d7ca6f00 r3:00000000
-
-[<c01e6fc0>] (xfs_inode_set_reclaim_tag+0x0/0xac) from [<c01e50e0>]
-(xfs_fs_destroy_inode+0x150/0x16c)
-
- r5:d7ca6f00 r4:d7ca7020
-
-[<c01e4f90>] (xfs_fs_destroy_inode+0x0/0x16c) from [<c00e58a0>]
-(destroy_inode+0x30/0x4c)
-
- r7:00000000 r6:00000002 r5:ce663c00 r4:d7ca7020
-
-[<c00e5870>] (destroy_inode+0x0/0x4c) from [<c01b8c9c>]
-(xfs_iget+0x78c/0x854)
-
- r4:cd87c000 r3:c031a2b8
-
-[<c01b8510>] (xfs_iget+0x0/0x854) from [<c01d71a4>] (xfs_lookup+0x128/0x15c)
-
-[<c01d707c>] (xfs_lookup+0x0/0x15c) from [<c01e39f8>]
-(xfs_vn_lookup+0x48/0x90)
-
-[<c01e39b0>] (xfs_vn_lookup+0x0/0x90) from [<c00dae84>]
-(do_lookup+0xcc/0x19c)
-
- r6:d7ca640c r5:cd87de00 r4:cd87de90
-
-[<c00dadb8>] (do_lookup+0x0/0x19c) from [<c00dcaa4>]
-(__link_path_walk+0x964/0xe0c)
-
-[<c00dc140>] (__link_path_walk+0x0/0xe0c) from [<c00dd0ec>]
-(path_walk+0x50/0x9c)
-
-[<c00dd09c>] (path_walk+0x0/0x9c) from [<c00dd2a8>]
-(do_path_lookup+0x128/0x150)
-
- r7:cd87c000 r6:00000001 r5:cd87de90 r4:d69bf000
-
-[<c00dd180>] (do_path_lookup+0x0/0x150) from [<c00ddcb4>]
-(user_path_at+0x60/0x94)
-
- r8:00000001 r7:cd87df08 r6:ffffff9c r5:cd87de90 r4:d69bf000
-
-[<c00ddc54>] (user_path_at+0x0/0x94) from [<c00d5d20>]
-(vfs_fstatat+0x34/0x64)
-
- r8:c002b528 r7:000000c3 r6:880ae7b0 r5:cd87df40 r4:cd87df08
-
-[<c00d5cec>] (vfs_fstatat+0x0/0x64) from [<c00d5e50>] (vfs_stat+0x24/0x28)
-
- r6:880ae7b0 r5:880ae740 r4:cd87df40
-
-[<c00d5e2c>] (vfs_stat+0x0/0x28) from [<c00d5e74>] (sys_stat64+0x20/0x3c)
-
-[<c00d5e54>] (sys_stat64+0x0/0x3c) from [<c002b380>]
-(ret_fast_syscall+0x0/0x2c)
-
---0015175cd0fc5241490495b5b93a
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-
-<div class=3D"MsoNormal"><span lang=3D"EN-US">I have the following backtrac=
-e on my ARM target, please have a look</span></div>
-<div class=3D"MsoNormal"><span lang=3D"EN-US"></span>=A0</div>
-<div class=3D"MsoNormal"><span lang=3D"EN-US">Backtrace: </span></div>
-<p class=3D"MsoNormal"><span lang=3D"EN-US">[&lt;c002f414&gt;] (__bug+0x0/0=
-x30) from [&lt;c0207124&gt;] (radix_tree_tag_set+0xa0/0xe8)</span></p>
-<p class=3D"MsoNormal"><span lang=3D"EN-US">[&lt;c0207084&gt;] (radix_tree_=
-tag_set+0x0/0xe8) from [&lt;c01e6fb0&gt;] (__xfs_inode_set_reclaim_tag+0x44=
-/0x54)</span></p>
-<p class=3D"MsoNormal"><span lang=3D"EN-US">[&lt;c01e6f6c&gt;] (__xfs_inode=
-_set_reclaim_tag+0x0/0x54) from [&lt;c01e700c&gt;] (xfs_inode_set_reclaim_t=
-ag+0x4c/0xac)</span></p>
-<p class=3D"MsoNormal"><span lang=3D"EN-US">=A0r6:00000002 r5:ce558000 r4:d=
-7ca6f00 r3:00000000</span></p>
-<p class=3D"MsoNormal"><span lang=3D"EN-US">[&lt;c01e6fc0&gt;] (xfs_inode_s=
-et_reclaim_tag+0x0/0xac) from [&lt;c01e50e0&gt;] (xfs_fs_destroy_inode+0x15=
-0/0x16c)</span></p>
-<p class=3D"MsoNormal"><span lang=3D"EN-US">=A0r5:d7ca6f00 r4:d7ca7020</spa=
-n></p>
-<p class=3D"MsoNormal"><span lang=3D"EN-US">[&lt;c01e4f90&gt;] (xfs_fs_dest=
-roy_inode+0x0/0x16c) from [&lt;c00e58a0&gt;] (destroy_inode+0x30/0x4c)</spa=
-n></p>
-<p class=3D"MsoNormal"><span lang=3D"EN-US">=A0r7:00000000 r6:00000002 r5:c=
-e663c00 r4:d7ca7020</span></p>
-<p class=3D"MsoNormal"><span lang=3D"EN-US">[&lt;c00e5870&gt;] (destroy_ino=
-de+0x0/0x4c) from [&lt;c01b8c9c&gt;] (xfs_iget+0x78c/0x854)</span></p>
-<p class=3D"MsoNormal"><span lang=3D"EN-US">=A0r4:cd87c000 r3:c031a2b8</spa=
-n></p>
-<p class=3D"MsoNormal"><span lang=3D"EN-US">[&lt;c01b8510&gt;] (xfs_iget+0x=
-0/0x854) from [&lt;c01d71a4&gt;] (xfs_lookup+0x128/0x15c)</span></p>
-<p class=3D"MsoNormal"><span lang=3D"EN-US">[&lt;c01d707c&gt;] (xfs_lookup+=
-0x0/0x15c) from [&lt;c01e39f8&gt;] (xfs_vn_lookup+0x48/0x90)</span></p>
-<p class=3D"MsoNormal"><span lang=3D"EN-US">[&lt;c01e39b0&gt;] (xfs_vn_look=
-up+0x0/0x90) from [&lt;c00dae84&gt;] (do_lookup+0xcc/0x19c)</span></p>
-<p class=3D"MsoNormal"><span lang=3D"EN-US">=A0r6:d7ca640c r5:cd87de00 r4:c=
-d87de90</span></p>
-<p class=3D"MsoNormal"><span lang=3D"EN-US">[&lt;c00dadb8&gt;] (do_lookup+0=
-x0/0x19c) from [&lt;c00dcaa4&gt;] (__link_path_walk+0x964/0xe0c)</span></p>
-<p class=3D"MsoNormal"><span lang=3D"EN-US">[&lt;c00dc140&gt;] (__link_path=
-_walk+0x0/0xe0c) from [&lt;c00dd0ec&gt;] (path_walk+0x50/0x9c)</span></p>
-<p class=3D"MsoNormal"><span lang=3D"EN-US">[&lt;c00dd09c&gt;] (path_walk+0=
-x0/0x9c) from [&lt;c00dd2a8&gt;] (do_path_lookup+0x128/0x150)</span></p>
-<p class=3D"MsoNormal"><span lang=3D"EN-US">=A0r7:cd87c000 r6:00000001 r5:c=
-d87de90 r4:d69bf000</span></p>
-<p class=3D"MsoNormal"><span lang=3D"EN-US">[&lt;c00dd180&gt;] (do_path_loo=
-kup+0x0/0x150) from [&lt;c00ddcb4&gt;] (user_path_at+0x60/0x94)</span></p>
-<p class=3D"MsoNormal"><span lang=3D"EN-US">=A0r8:00000001 r7:cd87df08 r6:f=
-fffff9c r5:cd87de90 r4:d69bf000</span></p>
-<p class=3D"MsoNormal"><span lang=3D"EN-US">[&lt;c00ddc54&gt;] (user_path_a=
-t+0x0/0x94) from [&lt;c00d5d20&gt;] (vfs_fstatat+0x34/0x64)</span></p>
-<p class=3D"MsoNormal"><span lang=3D"EN-US">=A0r8:c002b528 r7:000000c3 r6:8=
-80ae7b0 r5:cd87df40 r4:cd87df08</span></p>
-<p class=3D"MsoNormal"><span lang=3D"EN-US">[&lt;c00d5cec&gt;] (vfs_fstatat=
-+0x0/0x64) from [&lt;c00d5e50&gt;] (vfs_stat+0x24/0x28)</span></p>
-<p class=3D"MsoNormal"><span lang=3D"EN-US">=A0r6:880ae7b0 r5:880ae740 r4:c=
-d87df40</span></p>
-<p class=3D"MsoNormal"><span lang=3D"EN-US">[&lt;c00d5e2c&gt;] (vfs_stat+0x=
-0/0x28) from [&lt;c00d5e74&gt;] (sys_stat64+0x20/0x3c)</span></p>
-<p class=3D"MsoNormal"><span lang=3D"EN-US">[&lt;c00d5e54&gt;] (sys_stat64+=
-0x0/0x3c) from [&lt;c002b380&gt;] (ret_fast_syscall+0x0/0x2c)</span></p>
-
---0015175cd0fc5241490495b5b93a--
+mount -o delaylog,nobarrier,inode64,logbufs=8,logbsize=256k <device> 
+<mountpoint>
 
 
---===============6460377013090860353==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+> Thanks for the test case - I'll try to reproduce this. One more key
+> piece of information I need: the output of mkfs.xfs so I can see your
+> filesystem geometry. if you have the filesystem mounted, then the
+> output of 'xfs_info<mntpt>' will give the same information.
+>    
+
+/# xfs_info /perftest/xfs/
+meta-data=/dev/mapper/perftestvg-xfslv isize=256    agcount=16, 
+agsize=50331648 blks
+          =                       sectsz=512   attr=2
+data     =                       bsize=4096   blocks=805306368, imaxpct=5
+          =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0
+log      =internal               bsize=4096   blocks=32768, version=2
+          =                       sectsz=512   sunit=0 blks, lazy-count=0
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+> It is stable enough that all my local machines are running with
+> delaylog. And as a dev team, we have enough confidence in it to
+> remove the EXPERIMENTAL status for the 2.6.37 release. That doesn't
+> mean it is perfectly bug free - it just means more people will start
+> to use it.  And as this happens, we will find new problems in
+> different environments (just like you have), but this is a pretty
+> normal occurrence for new code.
+>    
+
+ok I understand...
+
+thanks for your work!
+
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============6460377013090860353==--
