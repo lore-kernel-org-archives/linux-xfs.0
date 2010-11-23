@@ -1,15 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oANDkf0I216021 for <xfs@oss.sgi.com>; Tue, 23 Nov 2010 07:46:41 -0600
-Date: Tue, 23 Nov 2010 08:48:18 -0500
+	oANDgr1o215798 for <xfs@oss.sgi.com>; Tue, 23 Nov 2010 07:42:53 -0600
+Date: Tue, 23 Nov 2010 08:44:30 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v4 4/9] xfsrestore: mmap dirent names for faster lookups
-Message-ID: <20101123134818.GA31206@infradead.org>
-References: <20101119183837.GA9505@sgi.com>
+Subject: Re: [PATCH v3 9/9] xfsrestore: check for compatible xfsrestore
+Message-ID: <20101123134430.GA30548@infradead.org>
+References: <20101116150502.179825893@sgi.com>
+	<20101116150705.423217632@sgi.com>
+	<20101117093842.GI17317@infradead.org> <4CE3F55C.9080902@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20101119183837.GA9505@sgi.com>
+In-Reply-To: <4CE3F55C.9080902@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,21 +25,23 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Bill Kendall <wkendall@sgi.com>
-Cc: xfs@oss.sgi.com
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Fri, Nov 19, 2010 at 12:38:37PM -0600, Bill Kendall wrote:
-> Pathname resolution in xfsrestore is about 4x faster if the file
-> containing dirent names ("namreg") is memory mapped.  If xfsrestore is
-> unable to map the file (e.g., due to virtual memory constraints)
-> fallback to the existing seek-and-read approach.
+On Wed, Nov 17, 2010 at 09:31:40AM -0600, Bill Kendall wrote:
+> Just to be clear, the state information is used only for the life of
+> a series of restores. You restore your level 0 dump, then run restore
+> again on your level 1, and so on. After that the state information is not
+> used and would be deleted.
 > 
-> The file is mapped after all directory entries have been written to
-> the "namreg" file. If the caller tries to add additional entries after
-> the file has been mapped, it will be unmapped and restore will resort
-> back to seek-and-read lookups.
+> Given how unlikely it is for someone to start a restore on one system
+> and continue it on another (incompatible) system, and since your suggested
+> change would ripple out into all the code that touches any of the on-disk
+> structures, I'd prefer to simply detect a change in the size of types. I
+> would think that recording/checking the size of a pointer would be
+> sufficient, assuming your main concern is type size differences between
+> 32-bit and 64-bit systems.
 
-This looks much simpler indeed.  Is it intentional that the namreg file
-is never unmapped any more?
+Ok, still not nice, but no reason to revamp all of xfsdump due to this.
 
 _______________________________________________
 xfs mailing list
