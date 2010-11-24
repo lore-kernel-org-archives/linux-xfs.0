@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAO0Io9f033183 for <xfs@oss.sgi.com>; Tue, 23 Nov 2010 18:18:50 -0600
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B014915282EF
-	for <xfs@oss.sgi.com>; Tue, 23 Nov 2010 16:20:26 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
-	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	kZ1mZ7rilCeZrqoL for <xfs@oss.sgi.com>;
-	Tue, 23 Nov 2010 16:20:26 -0800 (PST)
-Date: Wed, 24 Nov 2010 11:20:23 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Xfs delaylog hanged up
-Message-ID: <20101124002023.GA22876@dastard>
-References: <4CEAC412.9000406@shiftmail.org> <20101122232929.GJ13830@dastard>
-	<4CEBA2D5.2020708@shiftmail.org> <20101123204609.GW22876@dastard>
-	<4CEC3CB8.8000509@hardwarefreak.com>
+	oAO0ul94037585 for <xfs@oss.sgi.com>; Tue, 23 Nov 2010 18:56:48 -0600
+Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CE6C71A03F9
+	for <xfs@oss.sgi.com>; Tue, 23 Nov 2010 16:58:24 -0800 (PST)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	VFai2we6oeO3A4BY for <xfs@oss.sgi.com>;
+	Tue, 23 Nov 2010 16:58:24 -0800 (PST)
+Date: Wed, 24 Nov 2010 11:58:11 +1100
+From: Nick Piggin <npiggin@kernel.dk>
+Subject: Re: XFS reclaim lock order bug
+Message-ID: <20101124005811.GC3168@amd>
+References: <20101123121802.GA4785@amd>
+ <20101123211258.GY22876@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4CEC3CB8.8000509@hardwarefreak.com>
+In-Reply-To: <20101123211258.GY22876@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,42 +30,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Nick Piggin <npiggin@kernel.dk>, xfs@oss.sgi.com
 
-On Tue, Nov 23, 2010 at 04:14:16PM -0600, Stan Hoeppner wrote:
-> Dave Chinner put forth on 11/23/2010 2:46 PM:
+On Wed, Nov 24, 2010 at 08:12:58AM +1100, Dave Chinner wrote:
+> On Tue, Nov 23, 2010 at 11:18:02PM +1100, Nick Piggin wrote:
+> > Hi,
+> > 
+> > IIRC I've reported this before. Perhaps it is a false positive, but even
+> > so it is still annoying that it triggers and turns off lockdep for
+> > subsequent debugging.
+> > 
+> > Any chance it can get fixed or properly annotated?
 > 
-> > I've been unable to reproduce the problem with your test case (been
-> > running over night) on a 12-disk, 16TB dm RAID0 array, but I'll keep
-> > trying to reproduce it for a while. I note that the load is
-> > generating close to 10,000 iops on my test system, so it may very
-> > well be triggering load related problems in your raid controller...
-> 
-> Somewhat off topic, but how are you generating 10,000 IOPS by carving a
-> 16TB LUN/volume from 12 x 2TB SATA disk spindles?  Such drives aren't
-> even capable of 200 seeks per second.  Even if they were you'd top out
-> at less than 2,500 IOPS (random).  16TB/12=1.33 TB per disk.  No such
-> capacity disk exists.  So I assume you're using 12 x 2TB disks and
-> slicing/dicing out 16TB.  What am I missing Dave?
+> It is supposed to be handled by the re-initialisation of the
+> ip->i_iolock in ->evict_inode (xfs_fs_evict_inode). An inode found
+> in the reclaim state must have passed through this reinitialisation,
+> so from a lockdep perspective the iolock in the vfs path is a
+> different context to the iolock in the reclaim path. That fixed all
+> the non-reclaim state related lockdep false positives, so Perhaps
+> there is an issue with the lockdep reclaim state checking that does
+> not interact well with re-initialised lock contexts?
 
-512MB of BBWC backing the disks. The BBWC does a much better job of
-reordering out-of-order writes than the Linux elevators because
-512MB is a much bigger window than a couple of thousand 4k IOs.
-Hence metadata/small file intensive workloads go much faster than
-you'd expect from just looking at the IO patterns and the capability
-of the disks.
+Hmm. I suppose that should work.
 
-IOWs, for write workloads that are not purely random, the disk
-subsystem behaves more like an SSD than a RAID0 array of spinning
-rust...
+So xfs_reclaim_inode can only call xfs_ilock _after_ the Linux inode
+has gone through ->evict_inode call? If so, then let's ask the lockdep
+people.
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks,
+Nick
 
 _______________________________________________
 xfs mailing list
