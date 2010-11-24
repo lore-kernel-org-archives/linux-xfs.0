@@ -1,29 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAOBPmbF101216 for <xfs@oss.sgi.com>; Wed, 24 Nov 2010 05:25:49 -0600
+	oAOBPnml101220 for <xfs@oss.sgi.com>; Wed, 24 Nov 2010 05:25:49 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C15D91A22F5
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2659A13E85B4
 	for <xfs@oss.sgi.com>; Wed, 24 Nov 2010 03:27:25 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
-	[150.101.137.103]) by cuda.sgi.com with ESMTP id
-	2Y1nieWhgszcNFiL for <xfs@oss.sgi.com>;
+Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
+	[150.101.137.100]) by cuda.sgi.com with ESMTP id
+	nuqP0T6W8vnwBSG7 for <xfs@oss.sgi.com>;
 	Wed, 24 Nov 2010 03:27:25 -0800 (PST)
 Received: from dastard (unverified [121.44.7.57])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	47313727-1927428
+	36102031-1927428
 	for <xfs@oss.sgi.com>; Wed, 24 Nov 2010 21:57:24 +1030 (CDT)
 Received: from chute ([192.168.1.1] helo=disappointment)
 	by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1PLDVT-0002H8-4I
+	(envelope-from <dave@fromorbit.com>) id 1PLDVT-0002H7-2l
 	for xfs@oss.sgi.com; Wed, 24 Nov 2010 22:27:23 +1100
 Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1PLDSn-0001Wb-S5
+	(envelope-from <dave@disappointment.disaster>) id 1PLDSn-0001WZ-Pm
 	for xfs@oss.sgi.com; Wed, 24 Nov 2010 22:24:37 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/2] xfs: push stale, pinned buffers on trylock failures
-Date: Wed, 24 Nov 2010 22:24:33 +1100
-Message-Id: <1290597873-5807-3-git-send-email-david@fromorbit.com>
+Subject: [PATCH 1/2] xfs: fix failed write truncation handling.
+Date: Wed, 24 Nov 2010 22:24:32 +1100
+Message-Id: <1290597873-5807-2-git-send-email-david@fromorbit.com>
 In-Reply-To: <1290597873-5807-1-git-send-email-david@fromorbit.com>
 References: <1290597873-5807-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -43,103 +43,264 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-As reported by Nick Piggin, XFS is suffering from long pauses under
-highly concurrent workloads when hosted on ramdisks. The problem is
-that an inode buffer is stuck in the pinned state in memory and as a
-result either the inode buffer or one of the inodes within the
-buffer is stopping the tail of the log from being moved forward.
+Since the move to the new truncate sequence we call xfs_setattr to
+truncate down excessively instanciated blocks.  As shown by the testcase
+in kernel.org BZ #22452 that doesn't work too well.  Due to the confusion
+of the internal inode size, and the VFS inode i_size it zeroes data that
+it shouldn't.
 
-The system remains in this state until a periodic log force issued
-by xfssyncd causes the buffer to be unpinned. The main problem is
-that these are stale buffers, and are hence held locked until the
-transaction/checkpoint that marked them state has been committed to
-disk. When the filesystem gets into this state, only the xfssyncd
-can cause the async transactions to be committed to disk and hence
-unpin the inode buffer.
+But full blown truncate seems like overkill here.  We only instanciate
+delayed allocations in the write path, and given that we never released
+the iolock we can't have converted them to real allocations yet either.
 
-This problem was encountered when scaling the busy extent list, but
-only the blocking lock interface was fixed to solve the problem.
-Extend the same fix to the buffer trylock operations - if we fail to
-lock a pinned, stale buffer, then force the log immediately so that
-when the next attempt to lock it comes around, it will have been
-unpinned.
+The only nasty case is pre-existing preallocation which we need to skip.
+We already do this for page discard during writeback, so make the delayed
+allocation block punching a generic function and call it from the failed
+write path as well as xfs_aops_discard_page. The callers are
+responsible for ensuring that partial blocks are not truncated away,
+and that they hold the ilock.
+
+Based on a fix originally from Christoph Hellwig. This version used
+filesystem blocks as the range unit.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/linux-2.6/xfs_buf.c |   36 +++++++++++++++++++-----------------
- 1 files changed, 19 insertions(+), 17 deletions(-)
+ fs/xfs/linux-2.6/xfs_aops.c |   94 ++++++++++++++++++------------------------
+ fs/xfs/xfs_bmap.c           |   76 ++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_bmap.h           |    5 ++
+ 3 files changed, 121 insertions(+), 54 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
-index aa1d353..94e69a7 100644
---- a/fs/xfs/linux-2.6/xfs_buf.c
-+++ b/fs/xfs/linux-2.6/xfs_buf.c
-@@ -488,29 +488,21 @@ found:
- 	spin_unlock(&pag->pag_buf_lock);
- 	xfs_perag_put(pag);
+diff --git a/fs/xfs/linux-2.6/xfs_aops.c b/fs/xfs/linux-2.6/xfs_aops.c
+index 7d287af..691f612 100644
+--- a/fs/xfs/linux-2.6/xfs_aops.c
++++ b/fs/xfs/linux-2.6/xfs_aops.c
+@@ -934,7 +934,6 @@ xfs_aops_discard_page(
+ 	struct xfs_inode	*ip = XFS_I(inode);
+ 	struct buffer_head	*bh, *head;
+ 	loff_t			offset = page_offset(page);
+-	ssize_t			len = 1 << inode->i_blkbits;
  
--	/* Attempt to get the semaphore without sleeping,
--	 * if this does not work then we need to drop the
--	 * spinlock and do a hard attempt on the semaphore.
-+	/*
-+	 * Attempt to get the semaphore without sleeping first. if we fail then
-+	 * do a blocking lock if requested.
- 	 */
--	if (down_trylock(&bp->b_sema)) {
-+	if (xfs_buf_cond_lock(bp)) {
- 		if (!(flags & XBF_TRYLOCK)) {
- 			/* wait for buffer ownership */
- 			xfs_buf_lock(bp);
- 			XFS_STATS_INC(xb_get_locked_waited);
- 		} else {
--			/* We asked for a trylock and failed, no need
--			 * to look at file offset and length here, we
--			 * know that this buffer at least overlaps our
--			 * buffer and is locked, therefore our buffer
--			 * either does not exist, or is this buffer.
--			 */
-+			/* We asked for a trylock and failed.  */
- 			xfs_buf_rele(bp);
- 			XFS_STATS_INC(xb_busy_locked);
- 			return NULL;
+ 	if (!xfs_is_delayed_page(page, IO_DELAY))
+ 		goto out_invalidate;
+@@ -949,58 +948,14 @@ xfs_aops_discard_page(
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 	bh = head = page_buffers(page);
+ 	do {
+-		int		done;
+-		xfs_fileoff_t	offset_fsb;
+-		xfs_bmbt_irec_t	imap;
+-		int		nimaps = 1;
+ 		int		error;
+-		xfs_fsblock_t	firstblock;
+-		xfs_bmap_free_t flist;
++		xfs_fileoff_t	start_fsb;
+ 
+ 		if (!buffer_delay(bh))
+ 			goto next_buffer;
+ 
+-		offset_fsb = XFS_B_TO_FSBT(ip->i_mount, offset);
+-
+-		/*
+-		 * Map the range first and check that it is a delalloc extent
+-		 * before trying to unmap the range. Otherwise we will be
+-		 * trying to remove a real extent (which requires a
+-		 * transaction) or a hole, which is probably a bad idea...
+-		 */
+-		error = xfs_bmapi(NULL, ip, offset_fsb, 1,
+-				XFS_BMAPI_ENTIRE,  NULL, 0, &imap,
+-				&nimaps, NULL);
+-
+-		if (error) {
+-			/* something screwed, just bail */
+-			if (!XFS_FORCED_SHUTDOWN(ip->i_mount)) {
+-				xfs_fs_cmn_err(CE_ALERT, ip->i_mount,
+-				"page discard failed delalloc mapping lookup.");
+-			}
+-			break;
+-		}
+-		if (!nimaps) {
+-			/* nothing there */
+-			goto next_buffer;
+-		}
+-		if (imap.br_startblock != DELAYSTARTBLOCK) {
+-			/* been converted, ignore */
+-			goto next_buffer;
+-		}
+-		WARN_ON(imap.br_blockcount == 0);
+-
+-		/*
+-		 * Note: while we initialise the firstblock/flist pair, they
+-		 * should never be used because blocks should never be
+-		 * allocated or freed for a delalloc extent and hence we need
+-		 * don't cancel or finish them after the xfs_bunmapi() call.
+-		 */
+-		xfs_bmap_init(&flist, &firstblock);
+-		error = xfs_bunmapi(NULL, ip, offset_fsb, 1, 0, 1, &firstblock,
+-					&flist, &done);
+-
+-		ASSERT(!flist.xbf_count && !flist.xbf_first);
++		start_fsb = XFS_B_TO_FSBT(ip->i_mount, offset);
++		error = xfs_bmap_punch_delalloc_range(ip, start_fsb, 1);
+ 		if (error) {
+ 			/* something screwed, just bail */
+ 			if (!XFS_FORCED_SHUTDOWN(ip->i_mount)) {
+@@ -1010,7 +965,7 @@ xfs_aops_discard_page(
+ 			break;
  		}
--	} else {
--		/* trylock worked */
--		XB_SET_OWNER(bp);
+ next_buffer:
+-		offset += len;
++		offset += 1 << inode->i_blkbits;
+ 
+ 	} while ((bh = bh->b_this_page) != head);
+ 
+@@ -1505,11 +1460,42 @@ xfs_vm_write_failed(
+ 	struct inode		*inode = mapping->host;
+ 
+ 	if (to > inode->i_size) {
+-		struct iattr	ia = {
+-			.ia_valid	= ATTR_SIZE | ATTR_FORCE,
+-			.ia_size	= inode->i_size,
+-		};
+-		xfs_setattr(XFS_I(inode), &ia, XFS_ATTR_NOLOCK);
++		/*
++		 * punch out the delalloc blocks we have already allocated. We
++		 * don't call xfs_setattr() to do this as we may be in the
++		 * middle of a multi-iovec write and so the vfs inode->i_size
++		 * will not match the xfs ip->i_size and so it will zero too
++		 * much. Hence we jus truncate the page cache to zero what is
++		 * necessary and punch the delalloc blocks directly.
++		 */
++		struct xfs_inode	*ip = XFS_I(inode);
++		xfs_fileoff_t		start_fsb;
++		xfs_fileoff_t		end_fsb;
++		int			error;
++
++		truncate_pagecache(inode, to, inode->i_size);
++
++		/*
++		 * Check if there are any blocks that are outside of i_size
++		 * that need to be trimmed back.
++		 */
++		start_fsb = XFS_B_TO_FSB(ip->i_mount, inode->i_size) + 1;
++		end_fsb = XFS_B_TO_FSB(ip->i_mount, to);
++		if (end_fsb <= start_fsb)
++			return;
++
++		xfs_ilock(ip, XFS_ILOCK_EXCL);
++		error = xfs_bmap_punch_delalloc_range(ip, start_fsb,
++							end_fsb - start_fsb);
++		if (error) {
++			/* something screwed, just bail */
++			if (!XFS_FORCED_SHUTDOWN(ip->i_mount)) {
++				xfs_fs_cmn_err(CE_ALERT, ip->i_mount,
++			"xfs_vm_write_failed: unable to clean up ino %lld",
++						ip->i_ino);
++			}
++		}
++		xfs_iunlock(ip, XFS_ILOCK_EXCL);
  	}
+ }
  
- 	if (bp->b_flags & XBF_STALE) {
-@@ -876,10 +868,18 @@ xfs_buf_rele(
-  */
+diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
+index 8abd12e..08b179f 100644
+--- a/fs/xfs/xfs_bmap.c
++++ b/fs/xfs/xfs_bmap.c
+@@ -6070,3 +6070,79 @@ xfs_bmap_disk_count_leaves(
+ 		*count += xfs_bmbt_disk_get_blockcount(frp);
+ 	}
+ }
++
++/*
++ * dead simple method of punching delalyed allocation blocks from a range in
++ * the inode. Walks a block at a time so will be slow, but is only executed in
++ * rare error cases so the overhead is not critical. This will alays punch out
++ * both the start and end blocks, even if the ranges only partially overlap
++ * them, so it is up to the caller to ensure that partial blocks are not
++ * passed in.
++ */
++int
++xfs_bmap_punch_delalloc_range(
++	struct xfs_inode	*ip,
++	xfs_fileoff_t		start_fsb,
++	xfs_fileoff_t		length)
++{
++	xfs_fileoff_t		remaining = length;
++	int			error = 0;
++
++	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
++
++	do {
++		int		done;
++		xfs_bmbt_irec_t	imap;
++		int		nimaps = 1;
++		xfs_fsblock_t	firstblock;
++		xfs_bmap_free_t flist;
++
++		/*
++		 * Map the range first and check that it is a delalloc extent
++		 * before trying to unmap the range. Otherwise we will be
++		 * trying to remove a real extent (which requires a
++		 * transaction) or a hole, which is probably a bad idea...
++		 */
++		error = xfs_bmapi(NULL, ip, start_fsb, 1,
++				XFS_BMAPI_ENTIRE,  NULL, 0, &imap,
++				&nimaps, NULL);
++
++		if (error) {
++			/* something screwed, just bail */
++			if (!XFS_FORCED_SHUTDOWN(ip->i_mount)) {
++				xfs_fs_cmn_err(CE_ALERT, ip->i_mount,
++			"Failed delalloc mapping lookup ino %lld fsb %lld.",
++						ip->i_ino, start_fsb);
++			}
++			break;
++		}
++		if (!nimaps) {
++			/* nothing there */
++			goto next_block;
++		}
++		if (imap.br_startblock != DELAYSTARTBLOCK) {
++			/* been converted, ignore */
++			goto next_block;
++		}
++		WARN_ON(imap.br_blockcount == 0);
++
++		/*
++		 * Note: while we initialise the firstblock/flist pair, they
++		 * should never be used because blocks should never be
++		 * allocated or freed for a delalloc extent and hence we need
++		 * don't cancel or finish them after the xfs_bunmapi() call.
++		 */
++		xfs_bmap_init(&flist, &firstblock);
++		error = xfs_bunmapi(NULL, ip, start_fsb, 1, 0, 1, &firstblock,
++					&flist, &done);
++		if (error)
++			break;
++
++		ASSERT(!flist.xbf_count && !flist.xbf_first);
++next_block:
++		start_fsb++;
++		remaining--;
++	} while(remaining > 0);
++
++	return error;
++}
+diff --git a/fs/xfs/xfs_bmap.h b/fs/xfs/xfs_bmap.h
+index 71ec9b6..3651191 100644
+--- a/fs/xfs/xfs_bmap.h
++++ b/fs/xfs/xfs_bmap.h
+@@ -394,6 +394,11 @@ xfs_bmap_count_blocks(
+ 	int			whichfork,
+ 	int			*count);
  
- /*
-- *	Locks a buffer object, if it is not already locked.
-- *	Note that this in no way locks the underlying pages, so it is only
-- *	useful for synchronizing concurrent use of buffer objects, not for
-- *	synchronizing independent access to the underlying pages.
-+ *	Locks a buffer object, if it is not already locked.  Note that this in
-+ *	no way locks the underlying pages, so it is only useful for
-+ *	synchronizing concurrent use of buffer objects, not for synchronizing
-+ *	independent access to the underlying pages.
-+ *
-+ *	If we come across a stale, pinned, locked buffer, we know that we are
-+ *	being asked to lock a buffer that has been reallocated. Because it is
-+ *	pinned, we know that the log has not been pushed to disk and hence it
-+ *	will still be locked.  Rather than continuing to have trylock attempts
-+ *	fail until someone else pushes the log, push it ourselves before
-+ *	returning.  This means that the xfsaild will not get stuck trying
-+ *	to push on stale inode buffers.
-  */
- int
- xfs_buf_cond_lock(
-@@ -890,6 +890,8 @@ xfs_buf_cond_lock(
- 	locked = down_trylock(&bp->b_sema) == 0;
- 	if (locked)
- 		XB_SET_OWNER(bp);
-+	else if (atomic_read(&bp->b_pin_count) && (bp->b_flags & XBF_STALE))
-+		xfs_log_force(bp->b_target->bt_mount, 0);
++int
++xfs_bmap_punch_delalloc_range(
++	struct xfs_inode	*ip,
++	xfs_fileoff_t		start_fsb,
++	xfs_fileoff_t		length);
+ #endif	/* __KERNEL__ */
  
- 	trace_xfs_buf_cond_lock(bp, _RET_IP_);
- 	return locked ? 0 : -EBUSY;
+ #endif	/* __XFS_BMAP_H__ */
 -- 
 1.7.2.3
 
