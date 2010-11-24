@@ -1,28 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAO0XfpR035819 for <xfs@oss.sgi.com>; Tue, 23 Nov 2010 18:33:41 -0600
-Received: from BLADE3.ISTI.CNR.IT (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1FE6A19FB2F
-	for <xfs@oss.sgi.com>; Tue, 23 Nov 2010 16:35:18 -0800 (PST)
-Received: from BLADE3.ISTI.CNR.IT (blade3.isti.cnr.it [194.119.192.19]) by
-	cuda.sgi.com with ESMTP id KDnL0xBRH7TUuNPD for
-	<xfs@oss.sgi.com>; Tue, 23 Nov 2010 16:35:18 -0800 (PST)
-Received: from SCRIPT-SPFWL-DAEMON.mx.isti.cnr.it by mx.isti.cnr.it
-	(PMDF V6.5 #31825) id <01NUM81T9XVKLGYSFA@mx.isti.cnr.it> for
-	xfs@oss.sgi.com; Wed, 24 Nov 2010 01:34:30 +0100 (MET)
-Received: from conversionlocal.isti.cnr.it by mx.isti.cnr.it (PMDF V6.5 #31825)
-	id <01NUM81T4XZKLGYJQD@mx.isti.cnr.it> for xfs@oss.sgi.com; Wed,
-	24 Nov 2010 01:34:30 +0100 (MET)
-Date: Wed, 24 Nov 2010 01:36:37 +0100
-From: Spelic <spelic@shiftmail.org>
+	oAO0Io9f033183 for <xfs@oss.sgi.com>; Tue, 23 Nov 2010 18:18:50 -0600
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B014915282EF
+	for <xfs@oss.sgi.com>; Tue, 23 Nov 2010 16:20:26 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
+	[150.101.137.104]) by cuda.sgi.com with ESMTP id
+	kZ1mZ7rilCeZrqoL for <xfs@oss.sgi.com>;
+	Tue, 23 Nov 2010 16:20:26 -0800 (PST)
+Date: Wed, 24 Nov 2010 11:20:23 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: Xfs delaylog hanged up
-In-reply-to: <20101123234811.0ea3c41c@galadriel.home>
-Message-id: <4CEC5E15.7080307@shiftmail.org>
-MIME-version: 1.0
+Message-ID: <20101124002023.GA22876@dastard>
 References: <4CEAC412.9000406@shiftmail.org> <20101122232929.GJ13830@dastard>
 	<4CEBA2D5.2020708@shiftmail.org> <20101123204609.GW22876@dastard>
-	<20101123234811.0ea3c41c@galadriel.home>
+	<4CEC3CB8.8000509@hardwarefreak.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4CEC3CB8.8000509@hardwarefreak.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,26 +27,46 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Emmanuel Florac <eflorac@intellique.com>
+To: Stan Hoeppner <stan@hardwarefreak.com>
 Cc: xfs@oss.sgi.com
 
-On 11/23/2010 11:48 PM, Emmanuel Florac wrote:
-> So Spelic, you're using the 3Ware as a SATA controller, but not a RAID
-> controller? This is quite unexpected, though going with md
-> instead provides better IOPS.
->    
+On Tue, Nov 23, 2010 at 04:14:16PM -0600, Stan Hoeppner wrote:
+> Dave Chinner put forth on 11/23/2010 2:46 PM:
+> 
+> > I've been unable to reproduce the problem with your test case (been
+> > running over night) on a 12-disk, 16TB dm RAID0 array, but I'll keep
+> > trying to reproduce it for a while. I note that the load is
+> > generating close to 10,000 iops on my test system, so it may very
+> > well be triggering load related problems in your raid controller...
+> 
+> Somewhat off topic, but how are you generating 10,000 IOPS by carving a
+> 16TB LUN/volume from 12 x 2TB SATA disk spindles?  Such drives aren't
+> even capable of 200 seeks per second.  Even if they were you'd top out
+> at less than 2,500 IOPS (random).  16TB/12=1.33 TB per disk.  No such
+> capacity disk exists.  So I assume you're using 12 x 2TB disks and
+> slicing/dicing out 16TB.  What am I missing Dave?
 
-Yep, because I know MD better, I can see the code, it's more flexible 
-and customizable, can be controlled with scripts more easily... Also 
-parameters to the underlying drives can be controlled if I use MD, and 
-it's easier to align filesystem to stripes. Also my time is better spent 
-learning it as MD won't change the next time I buy a different hw 
-controller.
-What would be the advantage of using hardware raid?
+512MB of BBWC backing the disks. The BBWC does a much better job of
+reordering out-of-order writes than the Linux elevators because
+512MB is a much bigger window than a couple of thousand 4k IOs.
+Hence metadata/small file intensive workloads go much faster than
+you'd expect from just looking at the IO patterns and the capability
+of the disks.
+
+IOWs, for write workloads that are not purely random, the disk
+subsystem behaves more like an SSD than a RAID0 array of spinning
+rust...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
