@@ -1,22 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAOHJITa135771 for <xfs@oss.sgi.com>; Wed, 24 Nov 2010 11:19:19 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C8B4B1A511E
-	for <xfs@oss.sgi.com>; Wed, 24 Nov 2010 09:20:56 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id A7i4rJyPxs3sDYDB for
-	<xfs@oss.sgi.com>; Wed, 24 Nov 2010 09:20:56 -0800 (PST)
-Date: Wed, 24 Nov 2010 12:20:51 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/2] xfs: push stale, pinned buffers on trylock failures
-Message-ID: <20101124172051.GA32129@infradead.org>
-References: <1290597873-5807-1-git-send-email-david@fromorbit.com>
-	<1290597873-5807-3-git-send-email-david@fromorbit.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1290597873-5807-3-git-send-email-david@fromorbit.com>
+	oAOIb2dH143992 for <xfs@oss.sgi.com>; Wed, 24 Nov 2010 12:37:02 -0600
+Received: from mx2.isti.cnr.it (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DD7071A56BD
+	for <xfs@oss.sgi.com>; Wed, 24 Nov 2010 10:38:40 -0800 (PST)
+Received: from mx2.isti.cnr.it (mx2.isti.cnr.it [194.119.192.4]) by
+	cuda.sgi.com with ESMTP id g6X2QZeW8eG0uwBm for
+	<xfs@oss.sgi.com>; Wed, 24 Nov 2010 10:38:40 -0800 (PST)
+Received: from SCRIPT-SPFWL-DAEMON.mx.isti.cnr.it by mx.isti.cnr.it
+	(PMDF V6.5 #31825) id <01NUN9UYWQO0LGZ9HO@mx.isti.cnr.it> for
+	xfs@oss.sgi.com; Wed, 24 Nov 2010 19:37:50 +0100 (MET)
+Received: from conversionlocal.isti.cnr.it by mx.isti.cnr.it (PMDF V6.5 #31825)
+	id <01NUN9UYRRQ8LGZ4PF@mx.isti.cnr.it> for xfs@oss.sgi.com; Wed,
+	24 Nov 2010 19:37:50 +0100 (MET)
+Received: from [192.168.7.52] (firewall.itb.cnr.it [155.253.6.254])
+	by mx.isti.cnr.it (PMDF V6.5 #31826)
+	with ESMTPSA id <01NUN9UX2X2MLLWTQ8@mx.isti.cnr.it> for xfs@oss.sgi.com;
+	Wed, 24 Nov 2010 19:37:49 +0100 (MET)
+Date: Wed, 24 Nov 2010 19:39:56 +0100
+From: Spelic <spelic@shiftmail.org>
+Subject: Verify filesystem is aligned to stripes
+Message-id: <4CED5BFC.8000906@shiftmail.org>
+MIME-version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,45 +31,42 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-> -	/* Attempt to get the semaphore without sleeping,
-> -	 * if this does not work then we need to drop the
-> -	 * spinlock and do a hard attempt on the semaphore.
-> +	/*
-> +	 * Attempt to get the semaphore without sleeping first. if we fail then
-> +	 * do a blocking lock if requested.
->  	 */
+Hi there,
+I thought there was a way to empirically check that the filesystem is 
+correctly aligned to RAID stripes, but my attempts fail.
+I don't mean by looking at sunit and swidth from xfs_info, because that 
+would not detect if there is some LVM offset problem.
 
-You might as well remove the comment entirely, as it's utterly
-pointless.
+I am particularly interested for parity RAIDs in MD.
 
-> -	if (down_trylock(&bp->b_sema)) {
-> +	if (xfs_buf_cond_lock(bp)) {
->  		if (!(flags & XBF_TRYLOCK)) {
->  			/* wait for buffer ownership */
->  			xfs_buf_lock(bp);
->  			XFS_STATS_INC(xb_get_locked_waited);
->  		} else {
-> -			/* We asked for a trylock and failed, no need
-> -			 * to look at file offset and length here, we
-> -			 * know that this buffer at least overlaps our
-> -			 * buffer and is locked, therefore our buffer
-> -			 * either does not exist, or is this buffer.
-> -			 */
-> +			/* We asked for a trylock and failed.  */
->  			xfs_buf_rele(bp);
->  			XFS_STATS_INC(xb_busy_locked);
->  			return NULL;
->  		}
+I was thinking at "iostat -x 1": if writes are aligned I shouldn't see 
+any reads from the drives in a parity RAID...
 
-In case we wait for the lock we now do the log force twice, but that
-should be fine.
+unfortunately this does not work:
+- a dd streaming write test has almost no reads even when I mount with 
+"noalign", with sufficiently large stripe_cache_size such as 1024. If it 
+is smaller, always reads, even if xfs is aligned.
+- a kernel untar will show lots of reads at any stripe_cache_size even 
+if I'm pretty sure I aligned the stripes correctly on my 1024k x 15 data 
+disks and the .tar.bz2 file was in cache. I tried with both xfs stripes 
+autodetection in 2.6.37-rc2 and by specifying su and sw values by hand, 
+which turned out to be the same; I was without LVM so I'm pretty sure 
+alignment was correct. Why are there still lots of reads in this case?
+
+so I'm pretty clueless. Anyone has good suggestions?
+Thank you
+
+PS, OT: do you confirm it's not a good idea to have agsize multiple of 
+stripe size like the mkfs warns you against? Today I offsetted it by +1 
+stripe unit (chunk) so that every AG begins on a different drive but 
+performances didn't improve noticeably. Wouldn't that cause more 
+unfilled stripes when writing?
 
 _______________________________________________
 xfs mailing list
