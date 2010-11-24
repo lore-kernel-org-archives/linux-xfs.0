@@ -1,28 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAOIb2dH143992 for <xfs@oss.sgi.com>; Wed, 24 Nov 2010 12:37:02 -0600
-Received: from mx2.isti.cnr.it (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DD7071A56BD
-	for <xfs@oss.sgi.com>; Wed, 24 Nov 2010 10:38:40 -0800 (PST)
-Received: from mx2.isti.cnr.it (mx2.isti.cnr.it [194.119.192.4]) by
-	cuda.sgi.com with ESMTP id g6X2QZeW8eG0uwBm for
-	<xfs@oss.sgi.com>; Wed, 24 Nov 2010 10:38:40 -0800 (PST)
-Received: from SCRIPT-SPFWL-DAEMON.mx.isti.cnr.it by mx.isti.cnr.it
-	(PMDF V6.5 #31825) id <01NUN9UYWQO0LGZ9HO@mx.isti.cnr.it> for
-	xfs@oss.sgi.com; Wed, 24 Nov 2010 19:37:50 +0100 (MET)
-Received: from conversionlocal.isti.cnr.it by mx.isti.cnr.it (PMDF V6.5 #31825)
-	id <01NUN9UYRRQ8LGZ4PF@mx.isti.cnr.it> for xfs@oss.sgi.com; Wed,
-	24 Nov 2010 19:37:50 +0100 (MET)
-Received: from [192.168.7.52] (firewall.itb.cnr.it [155.253.6.254])
-	by mx.isti.cnr.it (PMDF V6.5 #31826)
-	with ESMTPSA id <01NUN9UX2X2MLLWTQ8@mx.isti.cnr.it> for xfs@oss.sgi.com;
-	Wed, 24 Nov 2010 19:37:49 +0100 (MET)
-Date: Wed, 24 Nov 2010 19:39:56 +0100
-From: Spelic <spelic@shiftmail.org>
-Subject: Verify filesystem is aligned to stripes
-Message-id: <4CED5BFC.8000906@shiftmail.org>
-MIME-version: 1.0
+	oAOK28aT154437 for <xfs@oss.sgi.com>; Wed, 24 Nov 2010 14:02:10 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C42B01A5E70
+	for <xfs@oss.sgi.com>; Wed, 24 Nov 2010 12:03:47 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id d8AeFWjv0ty8FGs0 for
+	<xfs@oss.sgi.com>; Wed, 24 Nov 2010 12:03:47 -0800 (PST)
+Date: Wed, 24 Nov 2010 15:03:41 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: XFS reclaim lock order bug
+Message-ID: <20101124200341.GA2493@infradead.org>
+References: <20101123121802.GA4785@amd>
+ <20101123211258.GY22876@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20101123211258.GY22876@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,42 +25,26 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Nick Piggin <npiggin@kernel.dk>, xfs@oss.sgi.com
 
-Hi there,
-I thought there was a way to empirically check that the filesystem is 
-correctly aligned to RAID stripes, but my attempts fail.
-I don't mean by looking at sunit and swidth from xfs_info, because that 
-would not detect if there is some LVM offset problem.
+On Wed, Nov 24, 2010 at 08:12:58AM +1100, Dave Chinner wrote:
+> It is supposed to be handled by the re-initialisation of the
+> ip->i_iolock in ->evict_inode (xfs_fs_evict_inode). An inode found
+> in the reclaim state must have passed through this reinitialisation,
+> so from a lockdep perspective the iolock in the vfs path is a
+> different context to the iolock in the reclaim path. That fixed all
+> the non-reclaim state related lockdep false positives, so Perhaps
+> there is an issue with the lockdep reclaim state checking that does
+> not interact well with re-initialised lock contexts?
 
-I am particularly interested for parity RAIDs in MD.
-
-I was thinking at "iostat -x 1": if writes are aligned I shouldn't see 
-any reads from the drives in a parity RAID...
-
-unfortunately this does not work:
-- a dd streaming write test has almost no reads even when I mount with 
-"noalign", with sufficiently large stripe_cache_size such as 1024. If it 
-is smaller, always reads, even if xfs is aligned.
-- a kernel untar will show lots of reads at any stripe_cache_size even 
-if I'm pretty sure I aligned the stripes correctly on my 1024k x 15 data 
-disks and the .tar.bz2 file was in cache. I tried with both xfs stripes 
-autodetection in 2.6.37-rc2 and by specifying su and sw values by hand, 
-which turned out to be the same; I was without LVM so I'm pretty sure 
-alignment was correct. Why are there still lots of reads in this case?
-
-so I'm pretty clueless. Anyone has good suggestions?
-Thank you
-
-PS, OT: do you confirm it's not a good idea to have agsize multiple of 
-stripe size like the mkfs warns you against? Today I offsetted it by +1 
-stripe unit (chunk) so that every AG begins on a different drive but 
-performances didn't improve noticeably. Wouldn't that cause more 
-unfilled stripes when writing?
+I've been looking through this again, and I think it's indeed not
+enough.  We don't just need to re-initialize it, but also set a
+different lockclass for it.
 
 _______________________________________________
 xfs mailing list
