@@ -1,21 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oANMkit8020322 for <xfs@oss.sgi.com>; Tue, 23 Nov 2010 16:46:44 -0600
-Received: from smtp3-g21.free.fr (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5834013E59DF
-	for <xfs@oss.sgi.com>; Tue, 23 Nov 2010 14:48:19 -0800 (PST)
-Received: from smtp3-g21.free.fr (smtp3-g21.free.fr [212.27.42.3]) by
-	cuda.sgi.com with ESMTP id u7tIGByHQ1aYOUWX for
-	<xfs@oss.sgi.com>; Tue, 23 Nov 2010 14:48:19 -0800 (PST)
-Date: Tue, 23 Nov 2010 23:48:11 +0100
-From: Emmanuel Florac <eflorac@intellique.com>
+	oAO0XfpR035819 for <xfs@oss.sgi.com>; Tue, 23 Nov 2010 18:33:41 -0600
+Received: from BLADE3.ISTI.CNR.IT (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1FE6A19FB2F
+	for <xfs@oss.sgi.com>; Tue, 23 Nov 2010 16:35:18 -0800 (PST)
+Received: from BLADE3.ISTI.CNR.IT (blade3.isti.cnr.it [194.119.192.19]) by
+	cuda.sgi.com with ESMTP id KDnL0xBRH7TUuNPD for
+	<xfs@oss.sgi.com>; Tue, 23 Nov 2010 16:35:18 -0800 (PST)
+Received: from SCRIPT-SPFWL-DAEMON.mx.isti.cnr.it by mx.isti.cnr.it
+	(PMDF V6.5 #31825) id <01NUM81T9XVKLGYSFA@mx.isti.cnr.it> for
+	xfs@oss.sgi.com; Wed, 24 Nov 2010 01:34:30 +0100 (MET)
+Received: from conversionlocal.isti.cnr.it by mx.isti.cnr.it (PMDF V6.5 #31825)
+	id <01NUM81T4XZKLGYJQD@mx.isti.cnr.it> for xfs@oss.sgi.com; Wed,
+	24 Nov 2010 01:34:30 +0100 (MET)
+Date: Wed, 24 Nov 2010 01:36:37 +0100
+From: Spelic <spelic@shiftmail.org>
 Subject: Re: Xfs delaylog hanged up
-Message-ID: <20101123234811.0ea3c41c@galadriel.home>
-In-Reply-To: <20101123204609.GW22876@dastard>
+In-reply-to: <20101123234811.0ea3c41c@galadriel.home>
+Message-id: <4CEC5E15.7080307@shiftmail.org>
+MIME-version: 1.0
 References: <4CEAC412.9000406@shiftmail.org> <20101122232929.GJ13830@dastard>
 	<4CEBA2D5.2020708@shiftmail.org> <20101123204609.GW22876@dastard>
-Mime-Version: 1.0
+	<20101123234811.0ea3c41c@galadriel.home>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,32 +31,26 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com, Spelic <spelic@shiftmail.org>
+To: Emmanuel Florac <eflorac@intellique.com>
+Cc: xfs@oss.sgi.com
 
-Le Wed, 24 Nov 2010 07:46:09 +1100 vous =E9criviez:
+On 11/23/2010 11:48 PM, Emmanuel Florac wrote:
+> So Spelic, you're using the 3Ware as a SATA controller, but not a RAID
+> controller? This is quite unexpected, though going with md
+> instead provides better IOPS.
+>    
 
-> Hmmmm. We get plenty of reports about problems with 3ware RAID
-> controllers, many of which are RAID controller problems. Can you
-> make sure you are running the latest firmware on the controller?
-
-So Spelic, you're using the 3Ware as a SATA controller, but not a RAID
-controller? This is quite unexpected, though going with md
-instead provides better IOPS. =
-
-
--- =
-
-------------------------------------------------------------------------
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
-------------------------------------------------------------------------
+Yep, because I know MD better, I can see the code, it's more flexible 
+and customizable, can be controlled with scripts more easily... Also 
+parameters to the underlying drives can be controlled if I use MD, and 
+it's easier to align filesystem to stripes. Also my time is better spent 
+learning it as MD won't change the next time I buy a different hw 
+controller.
+What would be the advantage of using hardware raid?
 
 _______________________________________________
 xfs mailing list
