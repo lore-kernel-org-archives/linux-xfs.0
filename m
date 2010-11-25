@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAPAUcMF256714 for <xfs@oss.sgi.com>; Thu, 25 Nov 2010 04:30:38 -0600
+	oAPAE48d254908 for <xfs@oss.sgi.com>; Thu, 25 Nov 2010 04:14:04 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4E9E71C71C72
-	for <xfs@oss.sgi.com>; Thu, 25 Nov 2010 02:32:15 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
-	[150.101.137.103]) by cuda.sgi.com with ESMTP id
-	YksrHXHvEvJAKF9b for <xfs@oss.sgi.com>;
-	Thu, 25 Nov 2010 02:32:15 -0800 (PST)
-Date: Thu, 25 Nov 2010 21:32:00 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A47C013EC3BD
+	for <xfs@oss.sgi.com>; Thu, 25 Nov 2010 02:15:41 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
+	[150.101.137.102]) by cuda.sgi.com with ESMTP id
+	9LVNxtyblP2KR7O4 for <xfs@oss.sgi.com>;
+	Thu, 25 Nov 2010 02:15:41 -0800 (PST)
+Date: Thu, 25 Nov 2010 21:15:37 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS reclaim lock order bug
-Message-ID: <20101125103200.GF12187@dastard>
-References: <20101123121802.GA4785@amd> <20101123211258.GY22876@dastard>
-	<20101124200341.GA2493@infradead.org> <20101125034824.GA3359@amd>
-	<1290666325.2072.535.camel@laptop> <20101125070817.GA4120@amd>
-	<1290670097.2072.554.camel@laptop>
+Subject: Re: Verify filesystem is aligned to stripes
+Message-ID: <20101125101537.GD12187@dastard>
+References: <4CED5BFC.8000906@shiftmail.org> <20101125054607.GM13830@dastard>
+	<4CEE0995.9030900@hardwarefreak.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1290670097.2072.554.camel@laptop>
+In-Reply-To: <4CEE0995.9030900@hardwarefreak.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,54 +30,41 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: Christoph Hellwig <hch@infradead.org>, Ingo Molnar <mingo@redhat.com>, Nick Piggin <npiggin@kernel.dk>, xfs@oss.sgi.com
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: xfs@oss.sgi.com
 
-On Thu, Nov 25, 2010 at 08:28:17AM +0100, Peter Zijlstra wrote:
-> On Thu, 2010-11-25 at 18:08 +1100, Nick Piggin wrote:
-> > > +static struct lock_class_key xfs_dead_inode;
-> > > +
-> > >  STATIC void
-> > >  xfs_fs_evict_inode(
-> > >       struct inode            *inode)
-> > > @@ -1118,6 +1120,8 @@ xfs_fs_evict_inode(
-> > >        */
-> > >       ASSERT(!rwsem_is_locked(&ip->i_iolock.mr_lock));
-> > >       mrlock_init(&ip->i_iolock, MRLOCK_BARRIER, "xfsio", ip->i_ino);
-> > > +     lockdep_set_class_and_name(&ip->i_iolock->mr_lock, &xfs_dead_inode, 
-> > > +                     "xfd_dead_inode");
-> > >  
-> > >       xfs_inactive(ip);
-> > >  }
-> > 
-> > With this change, I assume the mrlock_init can go? (it would be nice
-> > to have a wrapper to allocate the class by itself)
+On Thu, Nov 25, 2010 at 01:00:37AM -0600, Stan Hoeppner wrote:
+> Dave Chinner put forth on 11/24/2010 11:46 PM:
 > 
+> > Because writes for workloads like this are never full stripe writes.
+> > Hence reads must be done to pullin the rest of the stripe before the
+> > new parity can be calculated. This RMW cycle for small IOs has
+> > always been the pain point for stripe based parity protection. If
+> > you are doing lots of small IOs, RAID1 is your friend.
 > 
-> mrlock_init() does allocate a class (well rwsem_init, really), but sets
-> the name to a stringified version of the lock argument.
-> 
-> The lockdep_set_class*() interface is only guaranteed to work on a
-> freshly initialized lock structure -- which in this case is a bit of a
-> waste, but for debugging purposes would allow setting a clearer name.
-> 
-> Alternatively, you can write the code like:
-> 
->   xfs_inode_t	dead_ip = XFS_I(inode);
-> 
->   mrlock_init(&dead_ip->i_iolock, ...);
-> 
-> In which case its also obvious, as that would result in:
-> 
->    (&(&dead_ip->i_iolock)->mr_lock)
-> 
-> as opposed to:
-> 
->    (&(&ip->i_iolock)->mr_lock)
+> Do you really mean RAID1 here Dave, or RAID10?  If RAID1, please
+> elaborate a bit.
 
-Ok, that's a handy trick to know. I'll try and sort this out
-tomorrow and make use of this trick to help identify the different
-lock classes.
+RAID10 is just a convenient way of saying "striped mirrors" or
+"mirrored stripes". Fundamentally they are still using RAID1 for
+redundancy - a mirror of two devices. A device could be a single
+drive or a stripe of drives.
+
+> RAID1 traditionally has equal read performance to a
+> single device, and half the write performance of a single device.
+
+A good RAID1 implementation typically has the read performance of
+two devices (i.e. it can read from both legs simultaneously) and the
+write performance of a single device.
+
+Parity based RAID is only fast for large write IOs or small IOs that
+are close enough together that a stripe cache can coalesce them into
+large writes. If this can't be acheived, parity based raid will be
+no faster than a _single drive_ for writes because all drives will
+be involved in RMW cycles. Indeed, I've seen RAID5 luns be saturated
+at only 50 iops because every IO required a RMW cycle, while an
+equivalent number of drives using RAID1 of RAID0 stripes did 1,000
+iops...
 
 Cheers,
 
