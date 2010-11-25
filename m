@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAP7Qtxp237702 for <xfs@oss.sgi.com>; Thu, 25 Nov 2010 01:26:55 -0600
-Received: from casper.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1C0951A6B77
-	for <xfs@oss.sgi.com>; Wed, 24 Nov 2010 23:28:32 -0800 (PST)
-Received: from casper.infradead.org (casper.infradead.org [85.118.1.10]) by
-	cuda.sgi.com with ESMTP id B2mbPfZi3pQvtkXM for
-	<xfs@oss.sgi.com>; Wed, 24 Nov 2010 23:28:32 -0800 (PST)
-Subject: Re: XFS reclaim lock order bug
-From: Peter Zijlstra <peterz@infradead.org>
-In-Reply-To: <20101125070817.GA4120@amd>
-References: <20101123121802.GA4785@amd> <20101123211258.GY22876@dastard>
-	<20101124200341.GA2493@infradead.org> <20101125034824.GA3359@amd>
-	<1290666325.2072.535.camel@laptop>  <20101125070817.GA4120@amd>
-Date: Thu, 25 Nov 2010 08:28:17 +0100
-Message-ID: <1290670097.2072.554.camel@laptop>
-Mime-Version: 1.0
+	oAP9uGVw251427 for <xfs@oss.sgi.com>; Thu, 25 Nov 2010 03:56:17 -0600
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D535F13EBB8E
+	for <xfs@oss.sgi.com>; Thu, 25 Nov 2010 01:57:54 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail20.adl6.internode.on.net
+	[150.101.137.105]) by cuda.sgi.com with ESMTP id
+	3jnIH2HDZICmtEp5 for <xfs@oss.sgi.com>;
+	Thu, 25 Nov 2010 01:57:54 -0800 (PST)
+Date: Thu, 25 Nov 2010 20:57:51 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: XFS Direct IO, unaligned block zeroing at 128K boundery
+Message-ID: <20101125095751.GC12187@dastard>
+References: <AANLkTi=3BNqaUJGLuCOipQX_eP07QXa6dCBB-nUqmqG0@mail.gmail.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <AANLkTi=3BNqaUJGLuCOipQX_eP07QXa6dCBB-nUqmqG0@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,50 +29,34 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Nick Piggin <npiggin@kernel.dk>
-Cc: Christoph Hellwig <hch@infradead.org>, Ingo Molnar <mingo@redhat.com>, xfs@oss.sgi.com
+To: Ajeet Yadav <ajeet.yadav.77@gmail.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Thu, 2010-11-25 at 18:08 +1100, Nick Piggin wrote:
-> > +static struct lock_class_key xfs_dead_inode;
-> > +
-> >  STATIC void
-> >  xfs_fs_evict_inode(
-> >       struct inode            *inode)
-> > @@ -1118,6 +1120,8 @@ xfs_fs_evict_inode(
-> >        */
-> >       ASSERT(!rwsem_is_locked(&ip->i_iolock.mr_lock));
-> >       mrlock_init(&ip->i_iolock, MRLOCK_BARRIER, "xfsio", ip->i_ino);
-> > +     lockdep_set_class_and_name(&ip->i_iolock->mr_lock, &xfs_dead_inode, 
-> > +                     "xfd_dead_inode");
-> >  
-> >       xfs_inactive(ip);
-> >  }
-> 
-> With this change, I assume the mrlock_init can go? (it would be nice
-> to have a wrapper to allocate the class by itself)
+On Thu, Nov 25, 2010 at 12:23:11PM +0530, Ajeet Yadav wrote:
+> Dear all
+> I made a simple script that creates a 2MB file using directio write
+> operation,
+> The objective was to test with different buffer sizes from 4K-5K-6K..8K, the
+> buffer was filled with 5,
+> Than take hexdump of file to check data integrity.
 
+what kernel? Can you reproduce it on a mainline kernel? If so,
+can you apply the three patches in this thread:
 
-mrlock_init() does allocate a class (well rwsem_init, really), but sets
-the name to a stringified version of the lock argument.
+http://marc.info/?l=linux-fsdevel&m=128920213904443&w=2
 
-The lockdep_set_class*() interface is only guaranteed to work on a
-freshly initialized lock structure -- which in this case is a bit of a
-waste, but for debugging purposes would allow setting a clearer name.
+and see if that fixes the problem?
 
-Alternatively, you can write the code like:
+Also, if you are writing new test scripts that demonstrate problems,
+it's handy to attach them to your bug reports, or better yet, send
+patches to add them to the xfstests suite....
 
-  xfs_inode_t	dead_ip = XFS_I(inode);
+Cheers,
 
-  mrlock_init(&dead_ip->i_iolock, ...);
-
-In which case its also obvious, as that would result in:
-
-   (&(&dead_ip->i_iolock)->mr_lock)
-
-as opposed to:
-
-   (&(&ip->i_iolock)->mr_lock)
-
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
