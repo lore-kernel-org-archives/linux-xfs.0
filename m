@@ -1,27 +1,35 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAQCbrZO163849 for <xfs@oss.sgi.com>; Fri, 26 Nov 2010 06:37:53 -0600
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 97CD11DB3F83
-	for <xfs@oss.sgi.com>; Fri, 26 Nov 2010 04:39:31 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail20.adl6.internode.on.net
-	[150.101.137.105]) by cuda.sgi.com with ESMTP id
-	CjyuGcySdJwW5HA3 for <xfs@oss.sgi.com>;
-	Fri, 26 Nov 2010 04:39:31 -0800 (PST)
-Received: from dastard (unverified [121.44.88.148])
-	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	2553143-1927428
-	for <xfs@oss.sgi.com>; Fri, 26 Nov 2010 23:09:29 +1030 (CDT)
-Received: from dave by dastard with local (Exim 4.71)
-	(envelope-from <david@fromorbit.com>) id 1PLxaK-0005d1-5P
-	for xfs@oss.sgi.com; Fri, 26 Nov 2010 23:39:28 +1100
-Date: Fri, 26 Nov 2010 23:39:28 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [bug] deadlock in forced shutdown
-Message-ID: <20101126123928.GI12187@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
+	oAQDC3Lc165793 for <xfs@oss.sgi.com>; Fri, 26 Nov 2010 07:12:04 -0600
+Received: from BLADE3.ISTI.CNR.IT (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 46A0E13EFE10
+	for <xfs@oss.sgi.com>; Fri, 26 Nov 2010 05:13:41 -0800 (PST)
+Received: from BLADE3.ISTI.CNR.IT (blade3.isti.cnr.it [194.119.192.19]) by
+	cuda.sgi.com with ESMTP id Cc2eU7pAPoMPO9FJ for
+	<xfs@oss.sgi.com>; Fri, 26 Nov 2010 05:13:41 -0800 (PST)
+Received: from SCRIPT-SPFWL-DAEMON.mx.isti.cnr.it by mx.isti.cnr.it
+	(PMDF V6.5 #31825) id <01NUPR4GEI0GLS4YB0@mx.isti.cnr.it> for
+	xfs@oss.sgi.com; Fri, 26 Nov 2010 14:13:30 +0100 (MET)
+Received: from conversionlocal.isti.cnr.it by mx.isti.cnr.it (PMDF V6.5 #31825)
+	id <01NUPR4FLWJ4LS4T43@mx.isti.cnr.it> for xfs@oss.sgi.com; Fri,
+	26 Nov 2010 14:13:26 +0100 (MET)
+Received: from [192.168.7.52] (firewall.itb.cnr.it [155.253.6.254])
+	by mx.isti.cnr.it (PMDF V6.5 #31826)
+	with ESMTPSA id <01NUPR4EEJ6YLOF4VD@mx.isti.cnr.it> for xfs@oss.sgi.com;
+	Fri, 26 Nov 2010 14:13:24 +0100 (MET)
+Date: Fri, 26 Nov 2010 14:15:35 +0100
+From: Spelic <spelic@shiftmail.org>
+Subject: Re: Verify filesystem is aligned to stripes
+In-reply-to: <20101126122218.GH12187@dastard>
+Message-id: <4CEFB2F7.5070103@shiftmail.org>
+MIME-version: 1.0
+References: <4CED5BFC.8000906@shiftmail.org> <20101125054607.GM13830@dastard>
+	<4CEE0995.9030900@hardwarefreak.com>
+	<20101125101537.GD12187@dastard>
+	<4CEEE9BC.2030401@hardwarefreak.com>
+	<20101126091622.264830fa@galadriel.home>
+	<20101126122218.GH12187@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,79 +38,34 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Christoph, Alex,
+On 11/26/2010 01:22 PM, Dave Chinner wrote:
+>
+> FWIW, for workloads that do random, small IO, XFS works best when you
+> _turn off_ aligned allocation and just let it spray the IO at the
+> disks. This works best if you are using RAID 0/1/10. All the numbers
+> I've been posting are with aligned allocation turned off (i.e. no
+> sunit/swidth set).
+>    
 
-Just so you know, I just had a forced shutdown deadlock like so:
+I think I also noticed this...
 
-[  276.038251] Filesystem "vdb": xfs_trans_ail_delete_bulk: attempting to delete a log item that is not in the AIL
-[  276.039467] xfs_force_shutdown(vdb,0x8) called from line 562 of file fs/xfs/xfs_trans_ail.c.  Return address = 0xffffffff814a0d6a
-[  276.041085] Filesystem "vdb": xfs_inactive: xfs_trans_commit() returned error 5
-[  276.042848] xfs_imap_to_bp: xfs_trans_read_buf()returned an error 5 on vdb.  Returning error.
-[  276.047176] xfs_imap_to_bp: xfs_trans_read_buf()returned an error 5 on vdb.  Returning error.
-[  338.176185] SysRq : Show Blocked State
-[  338.176785]   task                        PC stack   pid father
-[  338.177608] kworker/5:1   D 0000000000000001     0   390      2 0x00000000
-[  338.178581]  ffff88011b2898d0 0000000000000046 ffff88011b289830 ffffffff810ae1f8
-[  338.179662]  00000000001d2ac0 ffff88011b0ac9c0 ffff88011b0acd28 ffff88011b289fd8
-[  338.180024]  ffff88011b0acd30 00000000001d2ac0 ffff88011b288010 00000000001d2ac0
-[  338.180024] Call Trace:
-[  338.180024]  [<ffffffff810ae1f8>] ? sched_clock_cpu+0xb8/0x110
-[  338.180024]  [<ffffffff816ba34e>] ? do_raw_spin_unlock+0x5e/0xb0
-[  338.180024]  [<ffffffff81491d42>] _xfs_log_force+0x142/0x2b0
-[  338.180024]  [<ffffffff8107e7b0>] ? default_wake_function+0x0/0x20
-[  338.180024]  [<ffffffff816ba34e>] ? do_raw_spin_unlock+0x5e/0xb0
-[  338.180024]  [<ffffffff81492050>] xfs_log_force_umount+0x1a0/0x2d0
-[  338.180024]  [<ffffffff814a887b>] xfs_do_force_shutdown+0x6b/0x1a0
-[  338.180024]  [<ffffffff814a0d6a>] ? xfs_trans_ail_delete_bulk+0x13a/0x170
-[  338.180024]  [<ffffffff814a0d6a>] xfs_trans_ail_delete_bulk+0x13a/0x170
-[  338.180024]  [<ffffffff8147b1de>] xfs_efi_release+0x8e/0xa0
-[  338.180024]  [<ffffffff81b19d1b>] ? _raw_spin_unlock+0x2b/0x40
-[  338.180024]  [<ffffffff8147b216>] xfs_efd_item_committed+0x26/0x40
-[  338.180024]  [<ffffffff8149e9d8>] xfs_trans_committed_bulk+0x78/0x210
-[  338.180024]  [<ffffffff8148e57e>] ? xlog_state_do_callback+0x17e/0x3d0
-[  338.180024]  [<ffffffff810637c9>] ? kvm_clock_read+0x19/0x20
-[  338.180024]  [<ffffffff81041339>] ? sched_clock+0x9/0x10
-[  338.180024]  [<ffffffff810ae0d5>] ? sched_clock_local+0x25/0x90
-[  338.180024]  [<ffffffff810ae1f8>] ? sched_clock_cpu+0xb8/0x110
-[  338.180024]  [<ffffffff810b9c3d>] ? trace_hardirqs_off+0xd/0x10
-[  338.180024]  [<ffffffff810ae2bf>] ? local_clock+0x6f/0x80
-[  338.180024]  [<ffffffff8148e57e>] ? xlog_state_do_callback+0x17e/0x3d0
-[  338.180024]  [<ffffffff814928a2>] xlog_cil_committed+0x32/0xe0
-[  338.180024]  [<ffffffff8148e595>] xlog_state_do_callback+0x195/0x3d0
-[  338.180024]  [<ffffffff8148e8cd>] xlog_state_done_syncing+0xfd/0x130
-[  338.180024]  [<ffffffff8148f2ca>] xlog_iodone+0xba/0x150
-[  338.180024]  [<ffffffff814ae416>] xfs_buf_iodone_work+0x26/0x70
-[  338.180024]  [<ffffffff8109fa3d>] process_one_work+0x1ad/0x520
-[  338.180024]  [<ffffffff8109f9cf>] ? process_one_work+0x13f/0x520
-[  338.180024]  [<ffffffff814ae3f0>] ? xfs_buf_iodone_work+0x0/0x70
-[  338.180024]  [<ffffffff810a25d2>] worker_thread+0x172/0x400
-[  338.180024]  [<ffffffff810a2460>] ? worker_thread+0x0/0x400
-[  338.180024]  [<ffffffff810a6f66>] kthread+0xa6/0xb0
-[  338.180024]  [<ffffffff8103ae64>] kernel_thread_helper+0x4/0x10
-[  338.180024]  [<ffffffff81b1a110>] ? restore_args+0x0/0x30
-[  338.180024]  [<ffffffff810a6ec0>] ? kthread+0x0/0xb0
-[  338.180024]  [<ffffffff8103ae60>] ? kernel_thread_helper+0x0/0x10
+The thing is, for large sequential I/O it seems to me it's indifferent 
+if XFS is aligned or not, because the resulting file will anyway be 
+sequential, and if you have raid10 or even parity raid with a large 
+stripe cache there won't be any reads anyway. Ok maybe with alignment 
+you could avoid reads on the first stripe (not sure, it might read 
+anyway if the RAID reacts fast, before enough output is sent to it), but 
+that's the only one.
 
-Yes, I know the trigger was a change I was testing, but the deadlock
-is caused by the fact we've tried to force the log iduring shutdown
-from inside the log IO completion context. It's gone to sleep
-waiting on the processing only it can complete. I haven't looked
-into this in any detail yet, just wanted to to make sure you guys
-know about it...
+So when is alignment to be turned on?
 
-Cheers,
-
-Dave.
-
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks for the info
 
 _______________________________________________
 xfs mailing list
