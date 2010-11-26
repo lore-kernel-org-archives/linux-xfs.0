@@ -1,25 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAQEYeKI170677 for <xfs@oss.sgi.com>; Fri, 26 Nov 2010 08:34:40 -0600
-Received: from smtp4-g21.free.fr (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C7AD01DB4306
-	for <xfs@oss.sgi.com>; Fri, 26 Nov 2010 06:36:17 -0800 (PST)
-Received: from smtp4-g21.free.fr (smtp4-g21.free.fr [212.27.42.4]) by
-	cuda.sgi.com with ESMTP id AgKNyKLWvCY8wno4 for
-	<xfs@oss.sgi.com>; Fri, 26 Nov 2010 06:36:17 -0800 (PST)
-Date: Fri, 26 Nov 2010 15:36:14 +0100
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: Verify filesystem is aligned to stripes
-Message-ID: <20101126153614.3b62a557@harpe.intellique.com>
-In-Reply-To: <20101126122218.GH12187@dastard>
-References: <4CED5BFC.8000906@shiftmail.org> <20101125054607.GM13830@dastard>
-	<4CEE0995.9030900@hardwarefreak.com>
-	<20101125101537.GD12187@dastard>
-	<4CEEE9BC.2030401@hardwarefreak.com>
-	<20101126091622.264830fa@galadriel.home>
-	<20101126122218.GH12187@dastard>
-Mime-Version: 1.0
+	oAQMep3V206814 for <xfs@oss.sgi.com>; Fri, 26 Nov 2010 16:40:51 -0600
+Received: from BLADE3.ISTI.CNR.IT (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C55281C78D55
+	for <xfs@oss.sgi.com>; Fri, 26 Nov 2010 14:42:29 -0800 (PST)
+Received: from BLADE3.ISTI.CNR.IT (blade3.isti.cnr.it [194.119.192.19]) by
+	cuda.sgi.com with ESMTP id BVzDIW2HZaNF9OCr for
+	<xfs@oss.sgi.com>; Fri, 26 Nov 2010 14:42:29 -0800 (PST)
+Received: from SCRIPT-SPFWL-DAEMON.mx.isti.cnr.it by mx.isti.cnr.it
+	(PMDF V6.5 #31825) id <01NUQAYJSFOWLKPH5Z@mx.isti.cnr.it> for
+	xfs@oss.sgi.com; Fri, 26 Nov 2010 23:41:28 +0100 (MET)
+Received: from conversionlocal.isti.cnr.it by mx.isti.cnr.it (PMDF V6.5 #31825)
+	id <01NUQAYINZGGLS534R@mx.isti.cnr.it> for xfs@oss.sgi.com; Fri,
+	26 Nov 2010 23:41:19 +0100 (MET)
+Received: from [164.132.138.155] by mx.isti.cnr.it (PMDF V6.5 #31826)
+	with ESMTPSA id <01NUQAYFWGGYLOFEQZ@mx.isti.cnr.it> for xfs@oss.sgi.com;
+	Fri, 26 Nov 2010 23:41:18 +0100 (MET)
+Date: Fri, 26 Nov 2010 23:43:26 +0100
+From: Spelic <spelic@shiftmail.org>
+Subject: Re: Xfs delaylog hanged up
+In-reply-to: <4CED973B.60102@shiftmail.org>
+Message-id: <4CF0380E.5000706@shiftmail.org>
+MIME-version: 1.0
+References: <4CEAC412.9000406@shiftmail.org> <4CED973B.60102@shiftmail.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,32 +32,41 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Stan Hoeppner <stan@hardwarefreak.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Le Fri, 26 Nov 2010 23:22:18 +1100
-Dave Chinner <david@fromorbit.com> =E9crivait:
+On 11/24/2010 11:52 PM, Spelic wrote:
+> On 11/22/2010 08:27 PM, Spelic wrote:
+>> ....
+>> I was doing a parallel-kernel-unpack benchmark:
+>> ....
+>
+> I tried to reproduce it today but unfortunately I wasn't able to, not 
+> even on the same hardware.
+>
+> The first time it happened so soon after starting such 
+> parallel-kernel-unpack benchmark (at the second run!) that I was 
+> confident it was possible to reproduce it easily, but today in many 
+> hours it never happened again. Sorry. Unfortunately the machine is 
+> going back to production soon so I'm not sure I can do further testing.
 
-> Assuming synchronous IO. If you are doing async IO, a single CPU
-> should be able to keep hundreds of SRDs (Spinning Rust Disks) busy...
-> =
 
+I had another smaller hangup, and unfortunately I wasn't paying 
+attention. I just noticed that between a zillion runs of the "benchmark" 
+taking 1 minute (for the part before the sync) I just had one that took 
+2m30s for the same part. The system was absolutely idle except that test 
+so I can't really see an explanation other than being another smaller 
+hangup...
 
-What I had in mind (typical random IO) is DB access, which is AFAIK
-synchronous IO, my bad :)
+The good news is that it definitely came out of the hangup by itself: 
+this time I didn't press Ctrl-C. So even if it was an xfs bug it doesn't 
+seem fatal.
 
--- =
-
-------------------------------------------------------------------------
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
-------------------------------------------------------------------------
+The dmesg this time showed nothing; probably because the hangup this 
+time was shorter than 120 seconds so the watchdog didn't notice anything.
 
 _______________________________________________
 xfs mailing list
