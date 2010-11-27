@@ -1,29 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAQMep3V206814 for <xfs@oss.sgi.com>; Fri, 26 Nov 2010 16:40:51 -0600
-Received: from BLADE3.ISTI.CNR.IT (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C55281C78D55
-	for <xfs@oss.sgi.com>; Fri, 26 Nov 2010 14:42:29 -0800 (PST)
-Received: from BLADE3.ISTI.CNR.IT (blade3.isti.cnr.it [194.119.192.19]) by
-	cuda.sgi.com with ESMTP id BVzDIW2HZaNF9OCr for
-	<xfs@oss.sgi.com>; Fri, 26 Nov 2010 14:42:29 -0800 (PST)
-Received: from SCRIPT-SPFWL-DAEMON.mx.isti.cnr.it by mx.isti.cnr.it
-	(PMDF V6.5 #31825) id <01NUQAYJSFOWLKPH5Z@mx.isti.cnr.it> for
-	xfs@oss.sgi.com; Fri, 26 Nov 2010 23:41:28 +0100 (MET)
-Received: from conversionlocal.isti.cnr.it by mx.isti.cnr.it (PMDF V6.5 #31825)
-	id <01NUQAYINZGGLS534R@mx.isti.cnr.it> for xfs@oss.sgi.com; Fri,
-	26 Nov 2010 23:41:19 +0100 (MET)
-Received: from [164.132.138.155] by mx.isti.cnr.it (PMDF V6.5 #31826)
-	with ESMTPSA id <01NUQAYFWGGYLOFEQZ@mx.isti.cnr.it> for xfs@oss.sgi.com;
-	Fri, 26 Nov 2010 23:41:18 +0100 (MET)
-Date: Fri, 26 Nov 2010 23:43:26 +0100
-From: Spelic <spelic@shiftmail.org>
-Subject: Re: Xfs delaylog hanged up
-In-reply-to: <4CED973B.60102@shiftmail.org>
-Message-id: <4CF0380E.5000706@shiftmail.org>
-MIME-version: 1.0
-References: <4CEAC412.9000406@shiftmail.org> <4CED973B.60102@shiftmail.org>
+	oARG2cBe063248 for <xfs@oss.sgi.com>; Sat, 27 Nov 2010 10:02:39 -0600
+Subject: Re: [bug] deadlock in forced shutdown
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <20101126123928.GI12187@dastard>
+References: <20101126123928.GI12187@dastard>
+Date: Sat, 27 Nov 2010 09:59:47 -0600
+Message-ID: <1290873587.3554.60.camel@doink>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,41 +18,87 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On 11/24/2010 11:52 PM, Spelic wrote:
-> On 11/22/2010 08:27 PM, Spelic wrote:
->> ....
->> I was doing a parallel-kernel-unpack benchmark:
->> ....
->
-> I tried to reproduce it today but unfortunately I wasn't able to, not 
-> even on the same hardware.
->
-> The first time it happened so soon after starting such 
-> parallel-kernel-unpack benchmark (at the second run!) that I was 
-> confident it was possible to reproduce it easily, but today in many 
-> hours it never happened again. Sorry. Unfortunately the machine is 
-> going back to production soon so I'm not sure I can do further testing.
+On Fri, 2010-11-26 at 23:39 +1100, Dave Chinner wrote:
+> Christoph, Alex,
+> 
+> Just so you know, I just had a forced shutdown deadlock like so:
 
 
-I had another smaller hangup, and unfortunately I wasn't paying 
-attention. I just noticed that between a zillion runs of the "benchmark" 
-taking 1 minute (for the part before the sync) I just had one that took 
-2m30s for the same part. The system was absolutely idle except that test 
-so I can't really see an explanation other than being another smaller 
-hangup...
 
-The good news is that it definitely came out of the hangup by itself: 
-this time I didn't press Ctrl-C. So even if it was an xfs bug it doesn't 
-seem fatal.
+I'll try to take a look at this the coming week.  Thanks for
+reporting it.
 
-The dmesg this time showed nothing; probably because the hangup this 
-time was shorter than 120 seconds so the watchdog didn't notice anything.
+					-Alex
+
+> [  276.038251] Filesystem "vdb": xfs_trans_ail_delete_bulk: attempting to delete a log item that is not in the AIL
+> [  276.039467] xfs_force_shutdown(vdb,0x8) called from line 562 of file fs/xfs/xfs_trans_ail.c.  Return address = 0xffffffff814a0d6a
+> [  276.041085] Filesystem "vdb": xfs_inactive: xfs_trans_commit() returned error 5
+> [  276.042848] xfs_imap_to_bp: xfs_trans_read_buf()returned an error 5 on vdb.  Returning error.
+> [  276.047176] xfs_imap_to_bp: xfs_trans_read_buf()returned an error 5 on vdb.  Returning error.
+> [  338.176185] SysRq : Show Blocked State
+> [  338.176785]   task                        PC stack   pid father
+> [  338.177608] kworker/5:1   D 0000000000000001     0   390      2 0x00000000
+> [  338.178581]  ffff88011b2898d0 0000000000000046 ffff88011b289830 ffffffff810ae1f8
+> [  338.179662]  00000000001d2ac0 ffff88011b0ac9c0 ffff88011b0acd28 ffff88011b289fd8
+> [  338.180024]  ffff88011b0acd30 00000000001d2ac0 ffff88011b288010 00000000001d2ac0
+> [  338.180024] Call Trace:
+> [  338.180024]  [<ffffffff810ae1f8>] ? sched_clock_cpu+0xb8/0x110
+> [  338.180024]  [<ffffffff816ba34e>] ? do_raw_spin_unlock+0x5e/0xb0
+> [  338.180024]  [<ffffffff81491d42>] _xfs_log_force+0x142/0x2b0
+> [  338.180024]  [<ffffffff8107e7b0>] ? default_wake_function+0x0/0x20
+> [  338.180024]  [<ffffffff816ba34e>] ? do_raw_spin_unlock+0x5e/0xb0
+> [  338.180024]  [<ffffffff81492050>] xfs_log_force_umount+0x1a0/0x2d0
+> [  338.180024]  [<ffffffff814a887b>] xfs_do_force_shutdown+0x6b/0x1a0
+> [  338.180024]  [<ffffffff814a0d6a>] ? xfs_trans_ail_delete_bulk+0x13a/0x170
+> [  338.180024]  [<ffffffff814a0d6a>] xfs_trans_ail_delete_bulk+0x13a/0x170
+> [  338.180024]  [<ffffffff8147b1de>] xfs_efi_release+0x8e/0xa0
+> [  338.180024]  [<ffffffff81b19d1b>] ? _raw_spin_unlock+0x2b/0x40
+> [  338.180024]  [<ffffffff8147b216>] xfs_efd_item_committed+0x26/0x40
+> [  338.180024]  [<ffffffff8149e9d8>] xfs_trans_committed_bulk+0x78/0x210
+> [  338.180024]  [<ffffffff8148e57e>] ? xlog_state_do_callback+0x17e/0x3d0
+> [  338.180024]  [<ffffffff810637c9>] ? kvm_clock_read+0x19/0x20
+> [  338.180024]  [<ffffffff81041339>] ? sched_clock+0x9/0x10
+> [  338.180024]  [<ffffffff810ae0d5>] ? sched_clock_local+0x25/0x90
+> [  338.180024]  [<ffffffff810ae1f8>] ? sched_clock_cpu+0xb8/0x110
+> [  338.180024]  [<ffffffff810b9c3d>] ? trace_hardirqs_off+0xd/0x10
+> [  338.180024]  [<ffffffff810ae2bf>] ? local_clock+0x6f/0x80
+> [  338.180024]  [<ffffffff8148e57e>] ? xlog_state_do_callback+0x17e/0x3d0
+> [  338.180024]  [<ffffffff814928a2>] xlog_cil_committed+0x32/0xe0
+> [  338.180024]  [<ffffffff8148e595>] xlog_state_do_callback+0x195/0x3d0
+> [  338.180024]  [<ffffffff8148e8cd>] xlog_state_done_syncing+0xfd/0x130
+> [  338.180024]  [<ffffffff8148f2ca>] xlog_iodone+0xba/0x150
+> [  338.180024]  [<ffffffff814ae416>] xfs_buf_iodone_work+0x26/0x70
+> [  338.180024]  [<ffffffff8109fa3d>] process_one_work+0x1ad/0x520
+> [  338.180024]  [<ffffffff8109f9cf>] ? process_one_work+0x13f/0x520
+> [  338.180024]  [<ffffffff814ae3f0>] ? xfs_buf_iodone_work+0x0/0x70
+> [  338.180024]  [<ffffffff810a25d2>] worker_thread+0x172/0x400
+> [  338.180024]  [<ffffffff810a2460>] ? worker_thread+0x0/0x400
+> [  338.180024]  [<ffffffff810a6f66>] kthread+0xa6/0xb0
+> [  338.180024]  [<ffffffff8103ae64>] kernel_thread_helper+0x4/0x10
+> [  338.180024]  [<ffffffff81b1a110>] ? restore_args+0x0/0x30
+> [  338.180024]  [<ffffffff810a6ec0>] ? kthread+0x0/0xb0
+> [  338.180024]  [<ffffffff8103ae60>] ? kernel_thread_helper+0x0/0x10
+> 
+> Yes, I know the trigger was a change I was testing, but the deadlock
+> is caused by the fact we've tried to force the log iduring shutdown
+> from inside the log IO completion context. It's gone to sleep
+> waiting on the processing only it can complete. I haven't looked
+> into this in any detail yet, just wanted to to make sure you guys
+> know about it...
+> 
+> Cheers,
+> 
+> Dave.
+> 
+
+
 
 _______________________________________________
 xfs mailing list
