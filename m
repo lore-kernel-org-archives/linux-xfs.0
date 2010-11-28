@@ -1,15 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oARG2cBe063248 for <xfs@oss.sgi.com>; Sat, 27 Nov 2010 10:02:39 -0600
-Subject: Re: [bug] deadlock in forced shutdown
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20101126123928.GI12187@dastard>
-References: <20101126123928.GI12187@dastard>
-Date: Sat, 27 Nov 2010 09:59:47 -0600
-Message-ID: <1290873587.3554.60.camel@doink>
-Mime-Version: 1.0
-Reply-To: aelder@sgi.com
+	oASMnOwk056236 for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 16:49:24 -0600
+Received: from mail-qw0-f53.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B5B811C7B8E6
+	for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 14:51:05 -0800 (PST)
+Received: from mail-qw0-f53.google.com (mail-qw0-f53.google.com
+	[209.85.216.53]) by cuda.sgi.com with ESMTP id XmzYdEm3j0db3gsP
+	for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 14:51:05 -0800 (PST)
+Received: by qwe5 with SMTP id 5so3339086qwe.26
+	for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 14:51:04 -0800 (PST)
+MIME-Version: 1.0
+Date: Sun, 28 Nov 2010 22:51:04 +0000
+Message-ID: <AANLkTi=u8dX0ehPN3Rv3FQ+84htY3AYEv0eboGgC7_qi@mail.gmail.com>
+Subject: XFS: performance
+From: Yclept Nemo <orbisvicis@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,83 +27,92 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Fri, 2010-11-26 at 23:39 +1100, Dave Chinner wrote:
-> Christoph, Alex,
-> 
-> Just so you know, I just had a forced shutdown deadlock like so:
+After 3-4 years of using one XFS partition for every mount point
+(/,/usr,/etc,/home,/tmp...) I started noticing a rapid performance
+degradation. Subjectively I now feel my XFS partition is 5-10x slower
+... while other partitions (ntfs,ext3) remain the same.
+Now I just purchased a new hard-drive and I'm going to be copying all
+my original files over onto a *new* XFS partition. When using mkfs.xfs
+I'd like to optimize and avoid whatever it was that made my old XFS
+partition slower than a snail.
 
+in all cases, bsize=4096
 
-
-I'll try to take a look at this the coming week.  Thanks for
-reporting it.
-
-					-Alex
-
-> [  276.038251] Filesystem "vdb": xfs_trans_ail_delete_bulk: attempting to delete a log item that is not in the AIL
-> [  276.039467] xfs_force_shutdown(vdb,0x8) called from line 562 of file fs/xfs/xfs_trans_ail.c.  Return address = 0xffffffff814a0d6a
-> [  276.041085] Filesystem "vdb": xfs_inactive: xfs_trans_commit() returned error 5
-> [  276.042848] xfs_imap_to_bp: xfs_trans_read_buf()returned an error 5 on vdb.  Returning error.
-> [  276.047176] xfs_imap_to_bp: xfs_trans_read_buf()returned an error 5 on vdb.  Returning error.
-> [  338.176185] SysRq : Show Blocked State
-> [  338.176785]   task                        PC stack   pid father
-> [  338.177608] kworker/5:1   D 0000000000000001     0   390      2 0x00000000
-> [  338.178581]  ffff88011b2898d0 0000000000000046 ffff88011b289830 ffffffff810ae1f8
-> [  338.179662]  00000000001d2ac0 ffff88011b0ac9c0 ffff88011b0acd28 ffff88011b289fd8
-> [  338.180024]  ffff88011b0acd30 00000000001d2ac0 ffff88011b288010 00000000001d2ac0
-> [  338.180024] Call Trace:
-> [  338.180024]  [<ffffffff810ae1f8>] ? sched_clock_cpu+0xb8/0x110
-> [  338.180024]  [<ffffffff816ba34e>] ? do_raw_spin_unlock+0x5e/0xb0
-> [  338.180024]  [<ffffffff81491d42>] _xfs_log_force+0x142/0x2b0
-> [  338.180024]  [<ffffffff8107e7b0>] ? default_wake_function+0x0/0x20
-> [  338.180024]  [<ffffffff816ba34e>] ? do_raw_spin_unlock+0x5e/0xb0
-> [  338.180024]  [<ffffffff81492050>] xfs_log_force_umount+0x1a0/0x2d0
-> [  338.180024]  [<ffffffff814a887b>] xfs_do_force_shutdown+0x6b/0x1a0
-> [  338.180024]  [<ffffffff814a0d6a>] ? xfs_trans_ail_delete_bulk+0x13a/0x170
-> [  338.180024]  [<ffffffff814a0d6a>] xfs_trans_ail_delete_bulk+0x13a/0x170
-> [  338.180024]  [<ffffffff8147b1de>] xfs_efi_release+0x8e/0xa0
-> [  338.180024]  [<ffffffff81b19d1b>] ? _raw_spin_unlock+0x2b/0x40
-> [  338.180024]  [<ffffffff8147b216>] xfs_efd_item_committed+0x26/0x40
-> [  338.180024]  [<ffffffff8149e9d8>] xfs_trans_committed_bulk+0x78/0x210
-> [  338.180024]  [<ffffffff8148e57e>] ? xlog_state_do_callback+0x17e/0x3d0
-> [  338.180024]  [<ffffffff810637c9>] ? kvm_clock_read+0x19/0x20
-> [  338.180024]  [<ffffffff81041339>] ? sched_clock+0x9/0x10
-> [  338.180024]  [<ffffffff810ae0d5>] ? sched_clock_local+0x25/0x90
-> [  338.180024]  [<ffffffff810ae1f8>] ? sched_clock_cpu+0xb8/0x110
-> [  338.180024]  [<ffffffff810b9c3d>] ? trace_hardirqs_off+0xd/0x10
-> [  338.180024]  [<ffffffff810ae2bf>] ? local_clock+0x6f/0x80
-> [  338.180024]  [<ffffffff8148e57e>] ? xlog_state_do_callback+0x17e/0x3d0
-> [  338.180024]  [<ffffffff814928a2>] xlog_cil_committed+0x32/0xe0
-> [  338.180024]  [<ffffffff8148e595>] xlog_state_do_callback+0x195/0x3d0
-> [  338.180024]  [<ffffffff8148e8cd>] xlog_state_done_syncing+0xfd/0x130
-> [  338.180024]  [<ffffffff8148f2ca>] xlog_iodone+0xba/0x150
-> [  338.180024]  [<ffffffff814ae416>] xfs_buf_iodone_work+0x26/0x70
-> [  338.180024]  [<ffffffff8109fa3d>] process_one_work+0x1ad/0x520
-> [  338.180024]  [<ffffffff8109f9cf>] ? process_one_work+0x13f/0x520
-> [  338.180024]  [<ffffffff814ae3f0>] ? xfs_buf_iodone_work+0x0/0x70
-> [  338.180024]  [<ffffffff810a25d2>] worker_thread+0x172/0x400
-> [  338.180024]  [<ffffffff810a2460>] ? worker_thread+0x0/0x400
-> [  338.180024]  [<ffffffff810a6f66>] kthread+0xa6/0xb0
-> [  338.180024]  [<ffffffff8103ae64>] kernel_thread_helper+0x4/0x10
-> [  338.180024]  [<ffffffff81b1a110>] ? restore_args+0x0/0x30
-> [  338.180024]  [<ffffffff810a6ec0>] ? kthread+0x0/0xb0
-> [  338.180024]  [<ffffffff8103ae60>] ? kernel_thread_helper+0x0/0x10
-> 
-> Yes, I know the trigger was a change I was testing, but the deadlock
-> is caused by the fact we've tried to force the log iduring shutdown
-> from inside the log IO completion context. It's gone to sleep
-> waiting on the processing only it can complete. I haven't looked
-> into this in any detail yet, just wanted to to make sure you guys
-> know about it...
-> 
-> Cheers,
-> 
-> Dave.
-> 
+Original hard drive (98GB Seagate, 39.8Gb XFS partition)
+# xfs_info /dev/sdb5
+meta-data=/dev/sdb5
+    isize=256
+    agcount=4, agsize=2595896 blks (9.9 GB)
+    sectsz=512    attr=2
+data=
+    bsize=4096
+    blocks=10383582, imaxpct=25 (39.6 GB)
+    sunit=0    swidth=0 blks
+naming=version 2
+    bsize=4096   ascii-ci=0
+log=internal
+    bsize=4096
+    blocks=5070, version=2 (19.8 MB)
+    sectsz=512
+    sunit=0 blks, lazy-count=0
+realtime =none
+    extsz=4096
+    blocks=0, rtextents=0
 
 
+New hard drive (500GB Samsung MP4, 100GB XFS partition)
+# mkfs.xfs /dev/sda5
+meta-data=/dev/sda5
+    isize=256
+    agcount=4, agsize=6553600 blks (25.0 GB)
+    sectsz=512    attr=2
+data=
+    bsize=4096
+    blocks=26214400, imaxpct=25 (100.0 GB)
+    sunit=0    swidth=0 blks
+naming=version 2
+    bsize=4096   ascii-ci=0
+log=internal
+    bsize=4096
+    blocks=12800, version=2 (50MB)
+    sectsz=512
+    sunit=0 blks, lazy-count=1
+realtime=none
+    extsz=4096
+    blocks=0, rtextents=0
+
+I was considering running "mkfs.xfs -d agcount=32 -i attr=2 -l
+version=2,lazy-count=1,size=256m /dev/sda5".
+
+Yes, I know that in xfs_progs 3.1.3 "-i attr=2 -l
+version=2,lazy-count=1" are already default options. However I think I
+should tweak the log size, blocksize, and data allocation group counts
+beyond the default values and I'm looking for some recommendations or
+input.
+
+I assume mkfs.xfs automatically selects optimal values, but I *have*
+space to spare for a larger log section... and perhaps my old XFS
+partition became sluggish when the log section had filled up, if this
+is even possible.
+Similarly a larger agcount should always give better performance,
+right? Some resources claim that agcount should never fall below
+eight.
+I'm also hesitant about reducing the blocksize from a maximum of 4096
+bytes, but since XFS manages my entire file-system tree, a blocksize
+of 512, 1024,or even 2048 bytes might squeeze out some extra
+performance. [I assume] the performance w.r.t. blocksize is:
+ . a larger blocksize dramatically increases large file performance,
+but also increases space usage when dealing with small files.
+. a smaller blocksize dramatically decreases performance for large
+files, and somewhat increases performance for small files, while also
+slightly increasing space usage with extra inodes(?)
+
+I want to make it clear that I prefer performance over space efficiency.
+
+Many thanks,
+orbisvicis
 
 _______________________________________________
 xfs mailing list
