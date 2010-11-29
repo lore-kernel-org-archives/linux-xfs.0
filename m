@@ -1,20 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAT0nX4b074622 for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 18:49:34 -0600
+	oAT1BIZZ076894 for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 19:11:18 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 304411AB01D
-	for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 16:51:14 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
-	[150.101.137.103]) by cuda.sgi.com with ESMTP id
-	AcSvkPENSmL88YAD for <xfs@oss.sgi.com>;
-	Sun, 28 Nov 2010 16:51:14 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1CCDD1C7CEF2
+	for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 17:12:57 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
+	[150.101.137.97]) by cuda.sgi.com with ESMTP id
+	v3u3RVzDSD5iH8cJ for <xfs@oss.sgi.com>;
+	Sun, 28 Nov 2010 17:12:57 -0800 (PST)
+Received: from dastard (unverified [121.44.88.148])
+	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
+	48051309-1927428
+	for <xfs@oss.sgi.com>; Mon, 29 Nov 2010 11:42:56 +1030 (CDT)
+Received: from chute ([192.168.1.1] helo=disappointment)
+	by dastard with esmtp (Exim 4.71)
+	(envelope-from <dave@fromorbit.com>) id 1PMsIT-0000ae-N3
+	for xfs@oss.sgi.com; Mon, 29 Nov 2010 12:12:49 +1100
+Received: from dave by disappointment with local (Exim 4.72)
+	(envelope-from <dave@disappointment.disaster>) id 1PMsIE-0005Um-BW
+	for xfs@oss.sgi.com; Mon, 29 Nov 2010 12:12:34 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/2] xfs: convert pag_ici_lock to a spin lock
-Date: Mon, 29 Nov 2010 11:50:26 +1100
-Message-Id: <1290991826-20714-3-git-send-email-david@fromorbit.com>
-In-Reply-To: <1290991826-20714-1-git-send-email-david@fromorbit.com>
-References: <1290991826-20714-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 2/8] xfs: clean up xfs_ail_delete()
+Date: Mon, 29 Nov 2010 12:12:26 +1100
+Message-Id: <1290993152-20999-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1290993152-20999-1-git-send-email-david@fromorbit.com>
+References: <1290993152-20999-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,159 +40,134 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: paulmck@linux.vnet.ibm.com, eric.dumazet@gmail.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-now that we are using RCU protection for the inode cache lookups,
-the lock is only needed on the modification side. Hence it is not
-necessary for the lock to be a rwlock as there are no read side
-holders anymore. Convert it to a spin lock to reflect it's exclusive
-nature.
+xfs_ail_delete() has a needlessly complex interface. It returns the log item
+that was passed in for deletion (which the callers then assert is identical to
+the one passed in), and callers of xfs_ail_delete() still need to invalidate
+current traversal cursors.
+
+Make xfs_ail_delete() return void, move the cursor invalidation inside it, and
+clean up the callers just to use the log item pointer they passed in.
+
+While cleaning up, remove the messy and unnecessary "/* ARGUSED */" comments
+around all these functions.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Alex Elder <aelder@sgi.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/linux-2.6/xfs_sync.c |   14 +++++++-------
- fs/xfs/xfs_ag.h             |    2 +-
- fs/xfs/xfs_iget.c           |   10 +++++-----
- fs/xfs/xfs_mount.c          |    2 +-
- 4 files changed, 14 insertions(+), 14 deletions(-)
+ fs/xfs/xfs_trans_ail.c |   27 +++++++--------------------
+ 1 files changed, 7 insertions(+), 20 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
-index 5ee02d7..d3b3b4f 100644
---- a/fs/xfs/linux-2.6/xfs_sync.c
-+++ b/fs/xfs/linux-2.6/xfs_sync.c
-@@ -602,12 +602,12 @@ xfs_inode_set_reclaim_tag(
- 	struct xfs_perag *pag;
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index dc90695..645928c 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -29,7 +29,7 @@
+ #include "xfs_error.h"
  
- 	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
--	write_lock(&pag->pag_ici_lock);
-+	spin_lock(&pag->pag_ici_lock);
- 	spin_lock(&ip->i_flags_lock);
- 	__xfs_inode_set_reclaim_tag(pag, ip);
- 	__xfs_iflags_set(ip, XFS_IRECLAIMABLE);
- 	spin_unlock(&ip->i_flags_lock);
--	write_unlock(&pag->pag_ici_lock);
-+	spin_unlock(&pag->pag_ici_lock);
- 	xfs_perag_put(pag);
+ STATIC void xfs_ail_insert(struct xfs_ail *, xfs_log_item_t *);
+-STATIC xfs_log_item_t * xfs_ail_delete(struct xfs_ail *, xfs_log_item_t *);
++STATIC void xfs_ail_delete(struct xfs_ail *, xfs_log_item_t *);
+ STATIC xfs_log_item_t * xfs_ail_min(struct xfs_ail *);
+ STATIC xfs_log_item_t * xfs_ail_next(struct xfs_ail *, xfs_log_item_t *);
+ 
+@@ -468,16 +468,13 @@ xfs_trans_ail_update(
+ 	xfs_log_item_t	*lip,
+ 	xfs_lsn_t	lsn) __releases(ailp->xa_lock)
+ {
+-	xfs_log_item_t		*dlip = NULL;
+ 	xfs_log_item_t		*mlip;	/* ptr to minimum lip */
+ 	xfs_lsn_t		tail_lsn;
+ 
+ 	mlip = xfs_ail_min(ailp);
+ 
+ 	if (lip->li_flags & XFS_LI_IN_AIL) {
+-		dlip = xfs_ail_delete(ailp, lip);
+-		ASSERT(dlip == lip);
+-		xfs_trans_ail_cursor_clear(ailp, dlip);
++		xfs_ail_delete(ailp, lip);
+ 	} else {
+ 		lip->li_flags |= XFS_LI_IN_AIL;
+ 	}
+@@ -485,7 +482,7 @@ xfs_trans_ail_update(
+ 	lip->li_lsn = lsn;
+ 	xfs_ail_insert(ailp, lip);
+ 
+-	if (mlip == dlip) {
++	if (mlip == lip) {
+ 		mlip = xfs_ail_min(ailp);
+ 		/*
+ 		 * It is not safe to access mlip after the AIL lock is
+@@ -524,21 +521,18 @@ xfs_trans_ail_delete(
+ 	struct xfs_ail	*ailp,
+ 	xfs_log_item_t	*lip) __releases(ailp->xa_lock)
+ {
+-	xfs_log_item_t		*dlip;
+ 	xfs_log_item_t		*mlip;
+ 	xfs_lsn_t		tail_lsn;
+ 
+ 	if (lip->li_flags & XFS_LI_IN_AIL) {
+ 		mlip = xfs_ail_min(ailp);
+-		dlip = xfs_ail_delete(ailp, lip);
+-		ASSERT(dlip == lip);
+-		xfs_trans_ail_cursor_clear(ailp, dlip);
++		xfs_ail_delete(ailp, lip);
+ 
+ 
+ 		lip->li_flags &= ~XFS_LI_IN_AIL;
+ 		lip->li_lsn = 0;
+ 
+-		if (mlip == dlip) {
++		if (mlip == lip) {
+ 			mlip = xfs_ail_min(ailp);
+ 			/*
+ 			 * It is not safe to access mlip after the AIL lock
+@@ -632,7 +626,6 @@ STATIC void
+ xfs_ail_insert(
+ 	struct xfs_ail	*ailp,
+ 	xfs_log_item_t	*lip)
+-/* ARGSUSED */
+ {
+ 	xfs_log_item_t	*next_lip;
+ 
+@@ -661,18 +654,14 @@ xfs_ail_insert(
+ /*
+  * Delete the given item from the AIL.  Return a pointer to the item.
+  */
+-/*ARGSUSED*/
+-STATIC xfs_log_item_t *
++STATIC void
+ xfs_ail_delete(
+ 	struct xfs_ail	*ailp,
+ 	xfs_log_item_t	*lip)
+-/* ARGSUSED */
+ {
+ 	xfs_ail_check(ailp, lip);
+-
+ 	list_del(&lip->li_ail);
+-
+-	return lip;
++	xfs_trans_ail_cursor_clear(ailp, lip);
  }
  
-@@ -808,12 +808,12 @@ reclaim:
- 	 * added to the tree assert that it's been there before to catch
- 	 * problems with the inode life time early on.
- 	 */
--	write_lock(&pag->pag_ici_lock);
-+	spin_lock(&pag->pag_ici_lock);
- 	if (!radix_tree_delete(&pag->pag_ici_root,
- 				XFS_INO_TO_AGINO(ip->i_mount, ip->i_ino)))
- 		ASSERT(0);
- 	__xfs_inode_clear_reclaim(pag, ip);
--	write_unlock(&pag->pag_ici_lock);
-+	spin_unlock(&pag->pag_ici_lock);
- 
- 	/*
- 	 * Here we do an (almost) spurious inode lock in order to coordinate
-@@ -877,14 +877,14 @@ restart:
- 			struct xfs_inode *batch[XFS_LOOKUP_BATCH];
- 			int	i;
- 
--			write_lock(&pag->pag_ici_lock);
-+			spin_lock(&pag->pag_ici_lock);
- 			nr_found = radix_tree_gang_lookup_tag(
- 					&pag->pag_ici_root,
- 					(void **)batch, first_index,
- 					XFS_LOOKUP_BATCH,
- 					XFS_ICI_RECLAIM_TAG);
- 			if (!nr_found) {
--				write_unlock(&pag->pag_ici_lock);
-+				spin_unlock(&pag->pag_ici_lock);
- 				break;
- 			}
- 
-@@ -911,7 +911,7 @@ restart:
- 			}
- 
- 			/* unlock now we've grabbed the inodes. */
--			write_unlock(&pag->pag_ici_lock);
-+			spin_unlock(&pag->pag_ici_lock);
- 
- 			for (i = 0; i < nr_found; i++) {
- 				if (!batch[i])
-diff --git a/fs/xfs/xfs_ag.h b/fs/xfs/xfs_ag.h
-index 63c7a1a..58632cc 100644
---- a/fs/xfs/xfs_ag.h
-+++ b/fs/xfs/xfs_ag.h
-@@ -227,7 +227,7 @@ typedef struct xfs_perag {
- 
- 	atomic_t        pagf_fstrms;    /* # of filestreams active in this AG */
- 
--	rwlock_t	pag_ici_lock;	/* incore inode lock */
-+	spinlock_t	pag_ici_lock;	/* incore inode cache lock */
- 	struct radix_tree_root pag_ici_root;	/* incore inode cache root */
- 	int		pag_ici_reclaimable;	/* reclaimable inodes */
- 	struct mutex	pag_ici_reclaim_lock;	/* serialisation point */
-diff --git a/fs/xfs/xfs_iget.c b/fs/xfs/xfs_iget.c
-index 0d2b6d2..f6845e1 100644
---- a/fs/xfs/xfs_iget.c
-+++ b/fs/xfs/xfs_iget.c
-@@ -236,14 +236,14 @@ xfs_iget_cache_hit(
- 			goto out_error;
- 		}
- 
--		write_lock(&pag->pag_ici_lock);
-+		spin_lock(&pag->pag_ici_lock);
- 		spin_lock(&ip->i_flags_lock);
- 		ip->i_flags &= ~(XFS_IRECLAIMABLE | XFS_IRECLAIM);
- 		ip->i_flags |= XFS_INEW;
- 		__xfs_inode_clear_reclaim_tag(mp, pag, ip);
- 		inode->i_state = I_NEW;
- 		spin_unlock(&ip->i_flags_lock);
--		write_unlock(&pag->pag_ici_lock);
-+		spin_unlock(&pag->pag_ici_lock);
- 	} else {
- 		/* If the VFS inode is being torn down, pause and try again. */
- 		if (!igrab(inode)) {
-@@ -321,7 +321,7 @@ xfs_iget_cache_miss(
- 			BUG();
- 	}
- 
--	write_lock(&pag->pag_ici_lock);
-+	spin_lock(&pag->pag_ici_lock);
- 
- 	/* insert the new inode */
- 	error = radix_tree_insert(&pag->pag_ici_root, agino, ip);
-@@ -336,14 +336,14 @@ xfs_iget_cache_miss(
- 	ip->i_udquot = ip->i_gdquot = NULL;
- 	xfs_iflags_set(ip, XFS_INEW);
- 
--	write_unlock(&pag->pag_ici_lock);
-+	spin_unlock(&pag->pag_ici_lock);
- 	radix_tree_preload_end();
- 
- 	*ipp = ip;
- 	return 0;
- 
- out_preload_end:
--	write_unlock(&pag->pag_ici_lock);
-+	spin_unlock(&pag->pag_ici_lock);
- 	radix_tree_preload_end();
- 	if (lock_flags)
- 		xfs_iunlock(ip, lock_flags);
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 98cb266..a33ab94 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -634,7 +634,7 @@ xfs_initialize_perag(
- 			goto out_unwind;
- 		pag->pag_agno = index;
- 		pag->pag_mount = mp;
--		rwlock_init(&pag->pag_ici_lock);
-+		spin_lock_init(&pag->pag_ici_lock);
- 		mutex_init(&pag->pag_ici_reclaim_lock);
- 		INIT_RADIX_TREE(&pag->pag_ici_root, GFP_ATOMIC);
- 		spin_lock_init(&pag->pag_buf_lock);
+ /*
+@@ -682,7 +671,6 @@ xfs_ail_delete(
+ STATIC xfs_log_item_t *
+ xfs_ail_min(
+ 	struct xfs_ail	*ailp)
+-/* ARGSUSED */
+ {
+ 	if (list_empty(&ailp->xa_ail))
+ 		return NULL;
+@@ -699,7 +687,6 @@ STATIC xfs_log_item_t *
+ xfs_ail_next(
+ 	struct xfs_ail	*ailp,
+ 	xfs_log_item_t	*lip)
+-/* ARGSUSED */
+ {
+ 	if (lip->li_ail.next == &ailp->xa_ail)
+ 		return NULL;
 -- 
 1.7.2.3
 
