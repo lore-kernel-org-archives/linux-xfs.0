@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oATErfTk176441 for <xfs@oss.sgi.com>; Mon, 29 Nov 2010 08:53:42 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EEB6D1DB4CB0
-	for <xfs@oss.sgi.com>; Mon, 29 Nov 2010 06:55:23 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id CmM3eX6BC7jLHnxa for
-	<xfs@oss.sgi.com>; Mon, 29 Nov 2010 06:55:23 -0800 (PST)
-Date: Mon, 29 Nov 2010 09:55:23 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: XFS repair utils
-Message-ID: <20101129145523.GA22839@infradead.org>
-References: <AANLkTikUOZJeSnSHO+pAM5d6DjWEPBdUSiua1dcv0pxt@mail.gmail.com>
+	oATFRfQd181377 for <xfs@oss.sgi.com>; Mon, 29 Nov 2010 09:27:41 -0600
+Received: from mail-qy0-f193.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 12A3F1C7ED3D
+	for <xfs@oss.sgi.com>; Mon, 29 Nov 2010 07:29:22 -0800 (PST)
+Received: from mail-qy0-f193.google.com (mail-qy0-f193.google.com
+	[209.85.216.193]) by cuda.sgi.com with ESMTP id
+	zjzal85fDRJiopaL for <xfs@oss.sgi.com>;
+	Mon, 29 Nov 2010 07:29:22 -0800 (PST)
+Received: by qyk5 with SMTP id 5so1367867qyk.8
+	for <xfs@oss.sgi.com>; Mon, 29 Nov 2010 07:29:22 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <AANLkTikUOZJeSnSHO+pAM5d6DjWEPBdUSiua1dcv0pxt@mail.gmail.com>
+Date: Mon, 29 Nov 2010 20:59:22 +0530
+Message-ID: <AANLkTik+L=56GTzYOMZvWH4sVd4xdUvjogxx=FEmx+vP@mail.gmail.com>
+Subject: XFS repair utils
+From: naveen yadav <yad.naveen@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,16 +28,50 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: naveen yadav <yad.naveen@gmail.com>
-Cc: xfs@oss.sgi.com
+To: hch@infradead.org, xfs@oss.sgi.com
+
+Thanks for your response.
+
+I am using ARM as my target, and I got some time issue in radix tree..
+with error Kernel BUG.
+
+radix_tree_tag_set+0x74/0xe43
+
+
+[<801dfa80>] radix_tree_tag_set+0x74/0xe4 from[<801b6be0>]
+__xfs_inode_set_reclaim_tag+0x4c/0x7358:49:736
+0358:49:736
+[<801b6be0>] __xfs_inode_set_reclaim_tag+0x4c/0x70 from[<801b6c58>]
+xfs_inode_set_reclaim_tag+0358:49:752
+x54/0xb8358:49:752
+[<801b6c58>] xfs_inode_set_reclaim_tag+0x54/0xb8 from[<80182948>]
+xfs_iget+0x7d8/0x8b0358:49:752
+[<80182948>] xfs_iget+0x7d8/0x8b0 from[<801a0eb0>]
+xfs_trans_iget+0x48/0x88358:49:767
+[<801a0eb0>] xfs_trans_iget+0x48/0x88 from[<80186e88>]
+xfs_ialloc+0xd4/0x5b8358:49:767
+[<80186e88>] xfs_ialloc+0xd4/0x5b8 from[<801a2014>]
+xfs_dir_ialloc+0x98/0x2a4358:49:783
+[<801a2014>] xfs_dir_ialloc+0x98/0x2a4 from[<801a48b4>]
+xfs_create+0x2e0/0x6b8358:49:783
+[<801a48b4>] xfs_create+0x2e0/0x6b8 from[<801b2fc0>]
+xfs_vn_mknod+0xc0/0x130358:49:783
+[<801b2fc0>] xfs_vn_mknod+0xc0/0x130 from[<800c22cc>]
+vfs_create+0x80/0xe4358:49:799
+[<800c22cc>] vfs_create+0x80/0xe4 from[<800c5328>]
+do_filp_open+0x284/0x8c8358:49:799
+[<800c5328>] do_filp_open+0x284/0x8c8 from[<800b5858>]
+do_sys_open+0x6c/0x114358:49:814
+[<800b5858>] do_sys_open+0x6c/0x114 from[<800102c4>]
+stack_done+0x20/0x3c358:49:814
 
 On Mon, Nov 29, 2010 at 07:30:50PM +0530, naveen yadav wrote:
 > Hi All,
-> 
+>
 > I am using XFS 2.6.34 kernel on my target, and I have
 > #xfs_repair -V
 > xfs_repair version 3.0.5
-> 
+>
 > So is there any issue of compatibility with latest XFS_repair utils.
 > or it will work fine with my latest kernel(2.6.34).
 
