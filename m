@@ -1,32 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAT1BNtr076939 for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 19:11:24 -0600
+	oAT0nfcl074655 for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 18:49:41 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DCE741AF8FE
-	for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 17:13:03 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
-	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	BzC5zn9yNCw8SL9c for <xfs@oss.sgi.com>;
-	Sun, 28 Nov 2010 17:13:03 -0800 (PST)
-Received: from dastard (unverified [121.44.88.148])
-	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	47443933-1927428
-	for <xfs@oss.sgi.com>; Mon, 29 Nov 2010 11:43:02 +1030 (CDT)
-Received: from chute ([192.168.1.1] helo=disappointment)
-	by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1PMsIT-0000an-Tw
-	for xfs@oss.sgi.com; Mon, 29 Nov 2010 12:12:49 +1100
-Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1PMsIE-0005Uy-IM
-	for xfs@oss.sgi.com; Mon, 29 Nov 2010 12:12:34 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4242B1AF6FA
+	for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 16:51:20 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
+	[150.101.137.98]) by cuda.sgi.com with ESMTP id
+	wKwuDEV2O5WEscei for <xfs@oss.sgi.com>;
+	Sun, 28 Nov 2010 16:51:20 -0800 (PST)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 6/8] xfs: remove all the inodes on a buffer from the AIL in
-	bulk
-Date: Mon, 29 Nov 2010 12:12:30 +1100
-Message-Id: <1290993152-20999-7-git-send-email-david@fromorbit.com>
-In-Reply-To: <1290993152-20999-1-git-send-email-david@fromorbit.com>
-References: <1290993152-20999-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 1/2] xfs: convert inode cache lookups to use RCU locking
+Date: Mon, 29 Nov 2010 11:50:25 +1100
+Message-Id: <1290991826-20714-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1290991826-20714-1-git-send-email-david@fromorbit.com>
+References: <1290991826-20714-1-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,253 +24,186 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: paulmck@linux.vnet.ibm.com, eric.dumazet@gmail.com
 
-From: Dave Chinner <dchinner@redhat.com>
-
-When inode buffer IO completes, usually all of the inodes are removed from the
-AIL. This involves processing them one at a time and taking the AIL lock once
-for every inode. When all CPUs are processing inode IO completions, this causes
-excessive amount sof contention on the AIL lock.
-
-Instead, change the way we process inode IO completion in the buffer
-IO done callback. Allow the inode IO done callback to walk the list
-of IO done callbacks and pull all the inodes off the buffer in one
-go and then process them as a batch.
-
-Once all the inodes for removal are collected, take the AIL lock
-once and do a bulk removal operation to minimise traffic on the AIL
-lock.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_inode_item.c |   92 ++++++++++++++++++++++++++++++++++++++---------
- fs/xfs/xfs_trans_ail.c  |   64 ++++++++++++++++++++++++++++++++
- fs/xfs/xfs_trans_priv.h |    4 ++
- 3 files changed, 143 insertions(+), 17 deletions(-)
-
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index 7c8d30c..1d72bb1 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -842,15 +842,64 @@ xfs_inode_item_destroy(
-  * flushed to disk.  It is responsible for removing the inode item
-  * from the AIL if it has not been re-logged, and unlocking the inode's
-  * flush lock.
-+ *
-+ * To reduce AIL lock traffic as much as possible, we scan the buffer log item
-+ * list for other inodes that will run this function. We remove them from the
-+ * buffer list so we can process all the inode IO completions in one AIL lock
-+ * traversal.
-  */
- void
- xfs_iflush_done(
- 	struct xfs_buf		*bp,
- 	struct xfs_log_item	*lip)
- {
--	struct xfs_inode_log_item *iip = INODE_ITEM(lip);
--	xfs_inode_t		*ip = iip->ili_inode;
-+	struct xfs_inode_log_item *iip;
-+	struct xfs_log_item	*blip;
-+	struct xfs_log_item	*next;
-+	struct xfs_log_item	*prev;
- 	struct xfs_ail		*ailp = lip->li_ailp;
-+	int			need_ail = 0;
-+
-+	/*
-+	 * Scan the buffer IO completions for other inodes being completed and
-+	 * attach them to the current inode log item.
-+	 */
-+	blip = XFS_BUF_FSPRIVATE(bp, xfs_log_item_t *);
-+	prev = NULL;
-+	while (blip != NULL) {
-+		if (lip->li_cb != xfs_iflush_done) {
-+			prev = blip;
-+			blip = blip->li_bio_list;
-+			continue;
-+		}
-+
-+		/* remove from list */
-+		next = blip->li_bio_list;
-+		if (!prev) {
-+			XFS_BUF_SET_FSPRIVATE(bp, next);
-+		} else {
-+			prev->li_bio_list = next;
-+		}
-+
-+		/* add to current list */
-+		blip->li_bio_list = lip->li_bio_list;
-+		lip->li_bio_list = blip;
-+
-+		/*
-+		 * while we have the item, do the unlocked check for needing
-+		 * the AIL lock.
-+		 */
-+		iip = INODE_ITEM(blip);
-+		if (iip->ili_logged && blip->li_lsn == iip->ili_flush_lsn)
-+			need_ail++;
-+
-+		blip = next;
-+	}
-+
-+	/* make sure we capture the state of the initial inode. */
-+	iip = INODE_ITEM(lip);
-+	if (iip->ili_logged && lip->li_lsn == iip->ili_flush_lsn)
-+		need_ail++;
- 
- 	/*
- 	 * We only want to pull the item from the AIL if it is
-@@ -861,28 +910,37 @@ xfs_iflush_done(
- 	 * the lock since it's cheaper, and then we recheck while
- 	 * holding the lock before removing the inode from the AIL.
- 	 */
--	if (iip->ili_logged && lip->li_lsn == iip->ili_flush_lsn) {
-+	if (need_ail) {
-+		struct xfs_log_item *lgia[need_ail];
-+		int i = 0;
- 		spin_lock(&ailp->xa_lock);
--		if (lip->li_lsn == iip->ili_flush_lsn) {
--			/* xfs_trans_ail_delete() drops the AIL lock. */
--			xfs_trans_ail_delete(ailp, lip);
--		} else {
--			spin_unlock(&ailp->xa_lock);
-+		for (blip = lip; blip; blip = blip->li_bio_list) {
-+			iip = INODE_ITEM(blip);
-+			if (iip->ili_logged &&
-+			    blip->li_lsn == iip->ili_flush_lsn) {
-+				lgia[i++] = blip;
-+			}
-+			ASSERT(i <= need_ail);
- 		}
-+		/* xfs_trans_ail_delete_bulk() drops the AIL lock. */
-+		xfs_trans_ail_delete_bulk(ailp, lgia, i);
- 	}
- 
--	iip->ili_logged = 0;
- 
- 	/*
--	 * Clear the ili_last_fields bits now that we know that the
--	 * data corresponding to them is safely on disk.
-+	 * clean up and unlock the flush lock now we are done. We can clear the
-+	 * ili_last_fields bits now that we know that the data corresponding to
-+	 * them is safely on disk.
- 	 */
--	iip->ili_last_fields = 0;
-+	for (blip = lip; blip; blip = next) {
-+		next = blip->li_bio_list;
-+		blip->li_bio_list = NULL;
- 
--	/*
--	 * Release the inode's flush lock since we're done with it.
--	 */
--	xfs_ifunlock(ip);
-+		iip = INODE_ITEM(blip);
-+		iip->ili_logged = 0;
-+		iip->ili_last_fields = 0;
-+		xfs_ifunlock(iip->ili_inode);
-+	}
- }
- 
- /*
-diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-index f70f295..d450092 100644
---- a/fs/xfs/xfs_trans_ail.c
-+++ b/fs/xfs/xfs_trans_ail.c
-@@ -635,6 +635,70 @@ xfs_trans_ail_delete(
- 	}
- }
- 
-+/*
-+ * Bulk update version of xfs_trans_ail_delete
-+ *
-+ * This version takes an array of log items that all need to removed from the
-+ * AIL. The caller is already holding the AIL lock, and done all the checks
-+ * necessary to ensure the items passed in via @lgia are ready for deletion.
-+ *
-+ * This function will not drop the AIL lock until all items are removed from
-+ * the AIL to minimise the amount of lock traffic on the AIL. This does not
-+ * greatly increase the AIL hold time, but does significantly reduce the amount
-+ * of traffic on the lock, especially during IO completion.
-+ */
-+void
-+xfs_trans_ail_delete_bulk(
-+	struct xfs_ail		*ailp,
-+	struct xfs_log_item	**lgia,
-+	int			nr_items) __releases(ailp->xa_lock)
-+{
-+	xfs_log_item_t		*mlip;
-+	xfs_lsn_t		tail_lsn;
-+	int			mlip_changed = 0;
-+	int			i;
-+
-+	mlip = xfs_ail_min(ailp);
-+
-+	for (i = 0; i < nr_items; i++) {
-+		struct xfs_log_item *lip = lgia[i];
-+		if (!(lip->li_flags & XFS_LI_IN_AIL)) {
-+			struct xfs_mount	*mp = ailp->xa_mount;
-+
-+			spin_unlock(&ailp->xa_lock);
-+			if (!XFS_FORCED_SHUTDOWN(mp)) {
-+				xfs_cmn_err(XFS_PTAG_AILDELETE, CE_ALERT, mp,
-+		"%s: attempting to delete a log item that is not in the AIL",
-+						__func__);
-+				xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
-+			}
-+			return;
-+		}
-+
-+		xfs_ail_delete(ailp, lip);
-+		lip->li_flags &= ~XFS_LI_IN_AIL;
-+		lip->li_lsn = 0;
-+		if (mlip == lip)
-+			mlip_changed = 1;
-+	}
-+
-+	if (!mlip_changed) {
-+		spin_unlock(&ailp->xa_lock);
-+		return;
-+	}
-+
-+	/*
-+	 * It is not safe to access mlip after the AIL lock is dropped, so we
-+	 * must get a copy of li_lsn before we do so.  This is especially
-+	 * important on 32-bit platforms where accessing and updating 64-bit
-+	 * values like li_lsn is not atomic. It is possible we've emptied the
-+	 * AIL here, so if that is the case, pass an LSN of 0 to the tail move.
-+	 */
-+	mlip = xfs_ail_min(ailp);
-+	tail_lsn = mlip ? mlip->li_lsn : 0;
-+	spin_unlock(&ailp->xa_lock);
-+	xfs_log_move_tail(ailp->xa_mount, tail_lsn);
-+}
- 
- 
- /*
-diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
-index 07ea4b7..4ab7377 100644
---- a/fs/xfs/xfs_trans_priv.h
-+++ b/fs/xfs/xfs_trans_priv.h
-@@ -85,6 +85,10 @@ void			 xfs_trans_ail_update_bulk(struct xfs_ail *ailp,
- void			xfs_trans_ail_delete(struct xfs_ail *ailp,
- 					struct xfs_log_item *lip)
- 					__releases(ailp->xa_lock);
-+void			xfs_trans_ail_delete_bulk(struct xfs_ail *ailp,
-+					struct xfs_log_item **lgia,
-+					int nr_items)
-+					__releases(ailp->xa_lock);
- void			xfs_trans_ail_push(struct xfs_ail *, xfs_lsn_t);
- void			xfs_trans_unlocked_item(struct xfs_ail *,
- 					xfs_log_item_t *);
--- 
-1.7.2.3
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+RnJvbTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgoKV2l0aCBkZWxheWVkIGxv
+Z2dpbmcgZ3JlYXRseSBpbmNyZWFzaW5nIHRoZSBzdXN0YWluZWQgcGFyYWxsZWxpc20gb2YgaW5v
+ZGUKb3BlcmF0aW9ucywgdGhlIGlub2RlIGNhY2hlIGxvY2tpbmcgaXMgc2hvd2luZyBzaWduaWZp
+Y2FudCByZWFkIHZzIHdyaXRlCmNvbnRlbnRpb24gd2hlbiBpbm9kZSByZWNsYWltIHJ1bnMgYXQg
+dGhlIHNhbWUgdGltZSBhcyBsb29rdXBzLiBUaGVyZSBpcwphbHNvIGEgbG90IG1vcmUgd3JpdGUg
+bG9jayBhY3F1aXN0aW9ucyB0aGFuIHRoZXJlIGFyZSByZWFkIGxvY2tzICg0OjEgcmF0aW8pCnNv
+IHRoZSByZWFkIGxvY2tpbmcgaXMgbm90IHJlYWxseSBidXlpbmcgdXMgbXVjaCBpbiB0aGUgd2F5
+IG9mIHBhcmFsbGVsaXNtLgoKVG8gYXZvaWQgdGhlIHJlYWQgdnMgd3JpdGUgY29udGVudGlvbiwg
+Y2hhbmdlIHRoZSBjYWNoZSB0byB1c2UgUkNVIGxvY2tpbmcgb24KdGhlIHJlYWQgc2lkZS4gVG8g
+YXZvaWQgbmVlZGluZyB0byBSQ1UgZnJlZSBldmVyeSBzaW5nbGUgaW5vZGUsIHVzZSB0aGUgYnVp
+bHQKaW4gc2xhYiBSQ1UgZnJlZWluZyBtZWNoYW5pc20uIFRoaXMgcmVxdWlyZXMgdXMgdG8gYmUg
+YWJsZSB0byBkZXRlY3QgbG9va3VwcyBvZgpmcmVlZCBpbm9kZXMsIHNvIGVu0ZV1cmUgdGhhdCBl
+dmVyIGZyZWVkIGlub2RlIGhhcyBhbiBpbm9kZSBudW1iZXIgb2YgemVybyBhbmQKdGhlIFhGU19J
+UkVDTEFJTSBmbGFnIHNldC4gV2UgYWxyZWFkeSBjaGVjayB0aGUgWEZTX0lSRUNMQUlNIGZsYWcg
+aW4gY2FjaGUgaGl0Cmxvb2t1cCBwYXRoLCBidXQgYWxzbyBhZGQgYSBjaGVjayBmb3IgYSB6ZXJv
+IGlub2RlIG51bWJlciBhcyB3ZWxsLgoKV2UgY2FudGhlbiBjb252ZXJ0IGFsbCB0aGUgcmVhZCBs
+b2NraW5nIGxvY2t1cHMgdG8gdXNlIFJDVSByZWFkIHNpZGUgbG9ja2luZwphbmQgaGVuY2UgcmVt
+b3ZlIGFsbCByZWFkIHNpZGUgbG9ja2luZy4KClNpZ25lZC1vZmYtYnk6IERhdmUgQ2hpbm5lciA8
+ZGNoaW5uZXJAcmVkaGF0LmNvbT4KUmV2aWV3ZWQtYnk6IEFsZXggRWxkZXIgPGFlbGRlckBzZ2ku
+Y29tPgotLS0KIGZzL3hmcy9saW51eC0yLjYveGZzX3N5bmMuYyB8ICAgMjcgKysrKysrKysrKysr
+KysrKy0tLS0tCiBmcy94ZnMveGZzX2lnZXQuYyAgICAgICAgICAgfCAgIDQzICsrKysrKysrKysr
+KysrKysrKysrKysrKysrKy0tLS0tLS0tCiBmcy94ZnMveGZzX2lub2RlLmMgICAgICAgICAgfCAg
+IDUyICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKy0tLS0tLS0tLS0KIDMgZmlsZXMg
+Y2hhbmdlZCwgOTMgaW5zZXJ0aW9ucygrKSwgMjkgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEv
+ZnMveGZzL2xpbnV4LTIuNi94ZnNfc3luYy5jIGIvZnMveGZzL2xpbnV4LTIuNi94ZnNfc3luYy5j
+CmluZGV4IGFmYjBkN2MuLjVlZTAyZDcgMTAwNjQ0Ci0tLSBhL2ZzL3hmcy9saW51eC0yLjYveGZz
+X3N5bmMuYworKysgYi9mcy94ZnMvbGludXgtMi42L3hmc19zeW5jLmMKQEAgLTUzLDE0ICs1Mywy
+MCBAQCB4ZnNfaW5vZGVfYWdfd2Fsa19ncmFiKAogewogCXN0cnVjdCBpbm9kZQkJKmlub2RlID0g
+VkZTX0koaXApOwogCisJLyogY2hlY2sgZm9yIHN0YWxlIFJDVSBmcmVlZCBpbm9kZSAqLworCXNw
+aW5fbG9jaygmaXAtPmlfZmxhZ3NfbG9jayk7CisJaWYgKCFpcC0+aV9pbm8pCisJCWdvdG8gb3V0
+X3VubG9ja19ub2VudDsKKworCS8qIGF2b2lkIG5ldyBvciByZWNsYWltYWJsZSBpbm9kZXMuIExl
+YXZlIGZvciByZWNsYWltIGNvZGUgdG8gZmx1c2ggKi8KKwlpZiAoX194ZnNfaWZsYWdzX3Rlc3Qo
+aXAsIFhGU19JTkVXIHwgWEZTX0lSRUNMQUlNQUJMRSB8IFhGU19JUkVDTEFJTSkpCisJCWdvdG8g
+b3V0X3VubG9ja19ub2VudDsKKwlzcGluX3VubG9jaygmaXAtPmlfZmxhZ3NfbG9jayk7CisKIAkv
+KiBub3RoaW5nIHRvIHN5bmMgZHVyaW5nIHNodXRkb3duICovCiAJaWYgKFhGU19GT1JDRURfU0hV
+VERPV04oaXAtPmlfbW91bnQpKQogCQlyZXR1cm4gRUZTQ09SUlVQVEVEOwogCi0JLyogYXZvaWQg
+bmV3IG9yIHJlY2xhaW1hYmxlIGlub2Rlcy4gTGVhdmUgZm9yIHJlY2xhaW0gY29kZSB0byBmbHVz
+aCAqLwotCWlmICh4ZnNfaWZsYWdzX3Rlc3QoaXAsIFhGU19JTkVXIHwgWEZTX0lSRUNMQUlNQUJM
+RSB8IFhGU19JUkVDTEFJTSkpCi0JCXJldHVybiBFTk9FTlQ7Ci0KIAkvKiBJZiB3ZSBjYW4ndCBn
+cmFiIHRoZSBpbm9kZSwgaXQgbXVzdCBvbiBpdCdzIHdheSB0byByZWNsYWltLiAqLwogCWlmICgh
+aWdyYWIoaW5vZGUpKQogCQlyZXR1cm4gRU5PRU5UOwpAQCAtNzIsNiArNzgsMTAgQEAgeGZzX2lu
+b2RlX2FnX3dhbGtfZ3JhYigKIAogCS8qIGlub2RlIGlzIHZhbGlkICovCiAJcmV0dXJuIDA7CisK
+K291dF91bmxvY2tfbm9lbnQ6CisJc3Bpbl91bmxvY2soJmlwLT5pX2ZsYWdzX2xvY2spOworCXJl
+dHVybiBFTk9FTlQ7CiB9CiAKIFNUQVRJQyBpbnQKQEAgLTk4LDEyICsxMDgsMTIgQEAgcmVzdGFy
+dDoKIAkJaW50CQllcnJvciA9IDA7CiAJCWludAkJaTsKIAotCQlyZWFkX2xvY2soJnBhZy0+cGFn
+X2ljaV9sb2NrKTsKKwkJcmN1X3JlYWRfbG9jaygpOwogCQlucl9mb3VuZCA9IHJhZGl4X3RyZWVf
+Z2FuZ19sb29rdXAoJnBhZy0+cGFnX2ljaV9yb290LAogCQkJCQkodm9pZCAqKiliYXRjaCwgZmly
+c3RfaW5kZXgsCiAJCQkJCVhGU19MT09LVVBfQkFUQ0gpOwogCQlpZiAoIW5yX2ZvdW5kKSB7Ci0J
+CQlyZWFkX3VubG9jaygmcGFnLT5wYWdfaWNpX2xvY2spOworCQkJcmN1X3JlYWRfdW5sb2NrKCk7
+CiAJCQlicmVhazsKIAkJfQogCkBAIC0xMjksNyArMTM5LDcgQEAgcmVzdGFydDoKIAkJfQogCiAJ
+CS8qIHVubG9jayBub3cgd2UndmUgZ3JhYmJlZCB0aGUgaW5vZGVzLiAqLwotCQlyZWFkX3VubG9j
+aygmcGFnLT5wYWdfaWNpX2xvY2spOworCQlyY3VfcmVhZF91bmxvY2soKTsKIAogCQlmb3IgKGkg
+PSAwOyBpIDwgbnJfZm91bmQ7IGkrKykgewogCQkJaWYgKCFiYXRjaFtpXSkKQEAgLTYzOSw2ICs2
+NDksOSBAQCB4ZnNfcmVjbGFpbV9pbm9kZV9ncmFiKAogCXN0cnVjdCB4ZnNfaW5vZGUJKmlwLAog
+CWludAkJCWZsYWdzKQogeworCS8qIGNoZWNrIGZvciBzdGFsZSBSQ1UgZnJlZWQgaW5vZGUgKi8K
+KwlpZiAoIWlwLT5pX2lubykKKwkJcmV0dXJuIDE7CiAKIAkvKgogCSAqIGRvIHNvbWUgdW5sb2Nr
+ZWQgY2hlY2tzIGZpcnN0IHRvIGF2b2lkIHVubmVjY2VhcnkgbG9jayB0cmFmZmljLgpkaWZmIC0t
+Z2l0IGEvZnMveGZzL3hmc19pZ2V0LmMgYi9mcy94ZnMveGZzX2lnZXQuYwppbmRleCAxODk5MWE5
+Li4wZDJiNmQyIDEwMDY0NAotLS0gYS9mcy94ZnMveGZzX2lnZXQuYworKysgYi9mcy94ZnMveGZz
+X2lnZXQuYwpAQCAtNjksNiArNjksNyBAQCB4ZnNfaW5vZGVfYWxsb2MoCiAJQVNTRVJUKGF0b21p
+Y19yZWFkKCZpcC0+aV9waW5jb3VudCkgPT0gMCk7CiAJQVNTRVJUKCFzcGluX2lzX2xvY2tlZCgm
+aXAtPmlfZmxhZ3NfbG9jaykpOwogCUFTU0VSVChjb21wbGV0aW9uX2RvbmUoJmlwLT5pX2ZsdXNo
+KSk7CisJQVNTRVJUKGlwLT5pX2lubyA9PSAwKTsKIAogCW1ybG9ja19pbml0KCZpcC0+aV9pb2xv
+Y2ssIE1STE9DS19CQVJSSUVSLCAieGZzaW8iLCBpcC0+aV9pbm8pOwogCkBAIC04Niw5ICs4Nyw2
+IEBAIHhmc19pbm9kZV9hbGxvYygKIAlpcC0+aV9uZXdfc2l6ZSA9IDA7CiAJaXAtPmlfZGlydHlf
+cmVsZWFzZXMgPSAwOwogCi0JLyogcHJldmVudCBhbnlvbmUgZnJvbSB1c2luZyB0aGlzIHlldCAq
+LwotCVZGU19JKGlwKS0+aV9zdGF0ZSA9IElfTkVXOwotCiAJcmV0dXJuIGlwOwogfQogCkBAIC0x
+MzUsNiArMTMzLDE2IEBAIHhmc19pbm9kZV9mcmVlKAogCUFTU0VSVCghc3Bpbl9pc19sb2NrZWQo
+JmlwLT5pX2ZsYWdzX2xvY2spKTsKIAlBU1NFUlQoY29tcGxldGlvbl9kb25lKCZpcC0+aV9mbHVz
+aCkpOwogCisJLyoKKwkgKiBiZWNhdXNlIHdlIHVzZSBTTEFCX0RFU1RST1lfQllfUkNVIGZyZWVp
+bmcsIGVuc3VyZSB0aGUgaW5vZGUKKwkgKiBhbHdheXMgYXBwZWFycyB0byBiZSByZWNsYWltZWQg
+d2l0aCBhbiBpbnZhbGlkIGlub2RlIG51bWJlcgorCSAqIHdoZW4gaW4gdGhlIGZyZWUgc3RhdGUu
+IFRoZSBpcC0+aV9mbGFnc19sb2NrIHByb3ZpZGVzIHRoZSBiYXJyaWVyCisJICogYWdhaW5zdCBs
+b29rdXAgcmFjZXMuCisJICovCisJc3Bpbl9sb2NrKCZpcC0+aV9mbGFnc19sb2NrKTsKKwlpcC0+
+aV9mbGFncyA9IFhGU19JUkVDTEFJTTsKKwlpcC0+aV9pbm8gPSAwOworCXNwaW5fdW5sb2NrKCZp
+cC0+aV9mbGFnc19sb2NrKTsKIAlrbWVtX3pvbmVfZnJlZSh4ZnNfaW5vZGVfem9uZSwgaXApOwog
+fQogCkBAIC0xNDYsMTMgKzE1NCwyOCBAQCB4ZnNfaWdldF9jYWNoZV9oaXQoCiAJc3RydWN0IHhm
+c19wZXJhZwkqcGFnLAogCXN0cnVjdCB4ZnNfaW5vZGUJKmlwLAogCWludAkJCWZsYWdzLAotCWlu
+dAkJCWxvY2tfZmxhZ3MpIF9fcmVsZWFzZXMocGFnLT5wYWdfaWNpX2xvY2spCisJaW50CQkJbG9j
+a19mbGFncykgX19yZWxlYXNlcyhSQ1UpCiB7CiAJc3RydWN0IGlub2RlCQkqaW5vZGUgPSBWRlNf
+SShpcCk7CiAJc3RydWN0IHhmc19tb3VudAkqbXAgPSBpcC0+aV9tb3VudDsKIAlpbnQJCQllcnJv
+cjsKIAorCS8qCisJICogY2hlY2sgZm9yIHJlLXVzZSBvZiBhbiBpbm9kZSB3aXRoaW4gYW4gUkNV
+IGdyYWNlIHBlcmlvZCBkdWUgdG8gdGhlCisJICogcmFkaXggdHJlZSBub2RlcyBub3QgYmVpbmcg
+dXBkYXRlZCB5ZXQuIFdlIG1vbml0b3IgZm9yIHRoaXMgYnkKKwkgKiBzZXR0aW5nIHRoZSBpbm9k
+ZSBudW1iZXIgdG8gemVybyBiZWZvcmUgZnJlZWluZyB0aGUgaW5vZGUgc3RydWN0dXJlLgorCSAq
+LwogCXNwaW5fbG9jaygmaXAtPmlfZmxhZ3NfbG9jayk7CisJaWYgKGlwLT5pX2lubyA9PSAwKSB7
+CisJCXRyYWNlX3hmc19pZ2V0X3NraXAoaXApOworCQlYRlNfU1RBVFNfSU5DKHhzX2lnX2ZyZWN5
+Y2xlKTsKKwkJc3Bpbl91bmxvY2soJmlwLT5pX2ZsYWdzX2xvY2spOworCQlyY3VfcmVhZF91bmxv
+Y2soKTsKKwkJLyogRXhwaXJlIHRoZSBncmFjZSBwZXJpb2Qgc28gd2UgZG9uJ3QgdHJpcCBvdmVy
+IGl0IGFnYWluLiAqLworCQlzeW5jaHJvbml6ZV9yY3UoKTsKKwkJcmV0dXJuIEVBR0FJTjsKKwl9
+CisKIAogCS8qCiAJICogSWYgd2UgYXJlIHJhY2luZyB3aXRoIGFub3RoZXIgY2FjaGUgaGl0IHRo
+YXQgaXMgY3VycmVudGx5CkBAIC0xOTUsNyArMjE4LDcgQEAgeGZzX2lnZXRfY2FjaGVfaGl0KAog
+CQlpcC0+aV9mbGFncyB8PSBYRlNfSVJFQ0xBSU07CiAKIAkJc3Bpbl91bmxvY2soJmlwLT5pX2Zs
+YWdzX2xvY2spOwotCQlyZWFkX3VubG9jaygmcGFnLT5wYWdfaWNpX2xvY2spOworCQlyY3VfcmVh
+ZF91bmxvY2soKTsKIAogCQllcnJvciA9IC1pbm9kZV9pbml0X2Fsd2F5cyhtcC0+bV9zdXBlciwg
+aW5vZGUpOwogCQlpZiAoZXJyb3IpIHsKQEAgLTIwMyw3ICsyMjYsNyBAQCB4ZnNfaWdldF9jYWNo
+ZV9oaXQoCiAJCQkgKiBSZS1pbml0aWFsaXppbmcgdGhlIGlub2RlIGZhaWxlZCwgYW5kIHdlIGFy
+ZSBpbiBkZWVwCiAJCQkgKiB0cm91YmxlLiAgVHJ5IHRvIHJlLWFkZCBpdCB0byB0aGUgcmVjbGFp
+bSBsaXN0LgogCQkJICovCi0JCQlyZWFkX2xvY2soJnBhZy0+cGFnX2ljaV9sb2NrKTsKKwkJCXJj
+dV9yZWFkX2xvY2soKTsKIAkJCXNwaW5fbG9jaygmaXAtPmlfZmxhZ3NfbG9jayk7CiAKIAkJCWlw
+LT5pX2ZsYWdzICY9IH5YRlNfSU5FVzsKQEAgLTIzMSw3ICsyNTQsNyBAQCB4ZnNfaWdldF9jYWNo
+ZV9oaXQoCiAKIAkJLyogV2UndmUgZ290IGEgbGl2ZSBvbmUuICovCiAJCXNwaW5fdW5sb2NrKCZp
+cC0+aV9mbGFnc19sb2NrKTsKLQkJcmVhZF91bmxvY2soJnBhZy0+cGFnX2ljaV9sb2NrKTsKKwkJ
+cmN1X3JlYWRfdW5sb2NrKCk7CiAJCXRyYWNlX3hmc19pZ2V0X2hpdChpcCk7CiAJfQogCkBAIC0y
+NDUsNyArMjY4LDcgQEAgeGZzX2lnZXRfY2FjaGVfaGl0KAogCiBvdXRfZXJyb3I6CiAJc3Bpbl91
+bmxvY2soJmlwLT5pX2ZsYWdzX2xvY2spOwotCXJlYWRfdW5sb2NrKCZwYWctPnBhZ19pY2lfbG9j
+ayk7CisJcmN1X3JlYWRfdW5sb2NrKCk7CiAJcmV0dXJuIGVycm9yOwogfQogCkBAIC0zNzYsNyAr
+Mzk5LDcgQEAgeGZzX2lnZXQoCiAKIGFnYWluOgogCWVycm9yID0gMDsKLQlyZWFkX2xvY2soJnBh
+Zy0+cGFnX2ljaV9sb2NrKTsKKwlyY3VfcmVhZF9sb2NrKCk7CiAJaXAgPSByYWRpeF90cmVlX2xv
+b2t1cCgmcGFnLT5wYWdfaWNpX3Jvb3QsIGFnaW5vKTsKIAogCWlmIChpcCkgewpAQCAtMzg0LDcg
+KzQwNyw3IEBAIGFnYWluOgogCQlpZiAoZXJyb3IpCiAJCQlnb3RvIG91dF9lcnJvcl9vcl9hZ2Fp
+bjsKIAl9IGVsc2UgewotCQlyZWFkX3VubG9jaygmcGFnLT5wYWdfaWNpX2xvY2spOworCQlyY3Vf
+cmVhZF91bmxvY2soKTsKIAkJWEZTX1NUQVRTX0lOQyh4c19pZ19taXNzZWQpOwogCiAJCWVycm9y
+ID0geGZzX2lnZXRfY2FjaGVfbWlzcyhtcCwgcGFnLCB0cCwgaW5vLCAmaXAsCmRpZmYgLS1naXQg
+YS9mcy94ZnMveGZzX2lub2RlLmMgYi9mcy94ZnMveGZzX2lub2RlLmMKaW5kZXggMTA4YzdhMC4u
+NDNmZmQ5MCAxMDA2NDQKLS0tIGEvZnMveGZzL3hmc19pbm9kZS5jCisrKyBiL2ZzL3hmcy94ZnNf
+aW5vZGUuYwpAQCAtMjAwMCwxNyArMjAwMCwzMyBAQCB4ZnNfaWZyZWVfY2x1c3RlcigKIAkJICov
+CiAJCWZvciAoaSA9IDA7IGkgPCBuaW5vZGVzOyBpKyspIHsKIHJldHJ5OgotCQkJcmVhZF9sb2Nr
+KCZwYWctPnBhZ19pY2lfbG9jayk7CisJCQlyY3VfcmVhZF9sb2NrKCk7CiAJCQlpcCA9IHJhZGl4
+X3RyZWVfbG9va3VwKCZwYWctPnBhZ19pY2lfcm9vdCwKIAkJCQkJWEZTX0lOT19UT19BR0lOTyht
+cCwgKGludW0gKyBpKSkpOwogCi0JCQkvKiBJbm9kZSBub3QgaW4gbWVtb3J5IG9yIHN0YWxlLCBu
+b3RoaW5nIHRvIGRvICovCi0JCQlpZiAoIWlwIHx8IHhmc19pZmxhZ3NfdGVzdChpcCwgWEZTX0lT
+VEFMRSkpIHsKLQkJCQlyZWFkX3VubG9jaygmcGFnLT5wYWdfaWNpX2xvY2spOworCQkJLyogSW5v
+ZGUgbm90IGluIG1lbW9yeSwgbm90aGluZyB0byBkbyAqLworCQkJaWYgKCFpcCkgeworCQkJCXJj
+dV9yZWFkX3VubG9jaygpOwogCQkJCWNvbnRpbnVlOwogCQkJfQogCiAJCQkvKgorCQkJICogYmVj
+YXVzZSB0aGlzIGlzIGFuIFJDVSBwcm90ZWN0ZWQgbG9va3VwLCB3ZSBjb3VsZAorCQkJICogZmlu
+ZCBhIHJlY2VudGx5IGZyZWVkIG9yIGV2ZW4gcmVhbGxvY2F0ZWQgaW5vZGUKKwkJCSAqIGR1cmlu
+ZyB0aGUgbG9va3VwLiBXZSBuZWVkIHRvIGNoZWNrIHVuZGVyIHRoZQorCQkJICogaV9mbGFnc19s
+b2NrIGZvciBhIHZhbGlkIGlub2RlIGhlcmUuIFNraXAgaXQgaWYgaXQKKwkJCSAqIGlzIG5vdCB2
+YWxpZCwgdGhlIHdyb25nIGlub2RlIG9yIHN0YWxlLgorCQkJICovCisJCQlzcGluX2xvY2soJmlw
+LT5pX2ZsYWdzX2xvY2spOworCQkJaWYgKGlwLT5pX2lubyAhPSBpbnVtICsgaSB8fAorCQkJICAg
+IF9feGZzX2lmbGFnc190ZXN0KGlwLCBYRlNfSVNUQUxFKSkgeworCQkJCXNwaW5fdW5sb2NrKCZp
+cC0+aV9mbGFnc19sb2NrKTsKKwkJCQlyY3VfcmVhZF91bmxvY2soKTsKKwkJCQljb250aW51ZTsK
+KwkJCX0KKwkJCXNwaW5fdW5sb2NrKCZpcC0+aV9mbGFnc19sb2NrKTsKKworCQkJLyoKIAkJCSAq
+IERvbid0IHRyeSB0byBsb2NrL3VubG9jayB0aGUgY3VycmVudCBpbm9kZSwgYnV0IHdlCiAJCQkg
+KiBfY2Fubm90XyBza2lwIHRoZSBvdGhlciBpbm9kZXMgdGhhdCB3ZSBkaWQgbm90IGZpbmQKIAkJ
+CSAqIGluIHRoZSBsaXN0IGF0dGFjaGVkIHRvIHRoZSBidWZmZXIgYW5kIGFyZSBub3QKQEAgLTIw
+MTksMTEgKzIwMzUsMTEgQEAgcmV0cnk6CiAJCQkgKi8KIAkJCWlmIChpcCAhPSBmcmVlX2lwICYm
+CiAJCQkgICAgIXhmc19pbG9ja19ub3dhaXQoaXAsIFhGU19JTE9DS19FWENMKSkgewotCQkJCXJl
+YWRfdW5sb2NrKCZwYWctPnBhZ19pY2lfbG9jayk7CisJCQkJcmN1X3JlYWRfdW5sb2NrKCk7CiAJ
+CQkJZGVsYXkoMSk7CiAJCQkJZ290byByZXRyeTsKIAkJCX0KLQkJCXJlYWRfdW5sb2NrKCZwYWct
+PnBhZ19pY2lfbG9jayk7CisJCQlyY3VfcmVhZF91bmxvY2soKTsKIAogCQkJeGZzX2lmbG9jayhp
+cCk7CiAJCQl4ZnNfaWZsYWdzX3NldChpcCwgWEZTX0lTVEFMRSk7CkBAIC0yNjI5LDcgKzI2NDUs
+NyBAQCB4ZnNfaWZsdXNoX2NsdXN0ZXIoCiAKIAltYXNrID0gfigoKFhGU19JTk9ERV9DTFVTVEVS
+X1NJWkUobXApID4+IG1wLT5tX3NiLnNiX2lub2RlbG9nKSkgLSAxKTsKIAlmaXJzdF9pbmRleCA9
+IFhGU19JTk9fVE9fQUdJTk8obXAsIGlwLT5pX2lubykgJiBtYXNrOwotCXJlYWRfbG9jaygmcGFn
+LT5wYWdfaWNpX2xvY2spOworCXJjdV9yZWFkX2xvY2soKTsKIAkvKiByZWFsbHkgbmVlZCBhIGdh
+bmcgbG9va3VwIHJhbmdlIGNhbGwgaGVyZSAqLwogCW5yX2ZvdW5kID0gcmFkaXhfdHJlZV9nYW5n
+X2xvb2t1cCgmcGFnLT5wYWdfaWNpX3Jvb3QsICh2b2lkKiopaWxpc3QsCiAJCQkJCWZpcnN0X2lu
+ZGV4LCBpbm9kZXNfcGVyX2NsdXN0ZXIpOwpAQCAtMjY0MCw5ICsyNjU2LDIxIEBAIHhmc19pZmx1
+c2hfY2x1c3RlcigKIAkJaXEgPSBpbGlzdFtpXTsKIAkJaWYgKGlxID09IGlwKQogCQkJY29udGlu
+dWU7Ci0JCS8qIGlmIHRoZSBpbm9kZSBsaWVzIG91dHNpZGUgdGhpcyBjbHVzdGVyLCB3ZSdyZSBk
+b25lLiAqLwotCQlpZiAoKFhGU19JTk9fVE9fQUdJTk8obXAsIGlxLT5pX2lubykgJiBtYXNrKSAh
+PSBmaXJzdF9pbmRleCkKLQkJCWJyZWFrOworCisJCS8qCisJCSAqIGJlY2F1c2UgdGhpcyBpcyBh
+biBSQ1UgcHJvdGVjdGVkIGxvb2t1cCwgd2UgY291bGQgZmluZCBhCisJCSAqIHJlY2VudGx5IGZy
+ZWVkIG9yIGV2ZW4gcmVhbGxvY2F0ZWQgaW5vZGUgZHVyaW5nIHRoZSBsb29rdXAuCisJCSAqIFdl
+IG5lZWQgdG8gY2hlY2sgdW5kZXIgdGhlIGlfZmxhZ3NfbG9jayBmb3IgYSB2YWxpZCBpbm9kZQor
+CQkgKiBoZXJlLiBTa2lwIGl0IGlmIGl0IGlzIG5vdCB2YWxpZCBvciB0aGUgd3JvbmcgaW5vZGUu
+CisJCSAqLworCQlzcGluX2xvY2soJmlwLT5pX2ZsYWdzX2xvY2spOworCQlpZiAoIWlwLT5pX2lu
+byB8fAorCQkgICAgKFhGU19JTk9fVE9fQUdJTk8obXAsIGlxLT5pX2lubykgJiBtYXNrKSAhPSBm
+aXJzdF9pbmRleCkgeworCQkJc3Bpbl91bmxvY2soJmlwLT5pX2ZsYWdzX2xvY2spOworCQkJY29u
+dGludWU7CisJCX0KKwkJc3Bpbl91bmxvY2soJmlwLT5pX2ZsYWdzX2xvY2spOworCiAJCS8qCiAJ
+CSAqIERvIGFuIHVuLXByb3RlY3RlZCBjaGVjayB0byBzZWUgaWYgdGhlIGlub2RlIGlzIGRpcnR5
+IGFuZAogCQkgKiBpcyBhIGNhbmRpZGF0ZSBmb3IgZmx1c2hpbmcuICBUaGVzZSBjaGVja3Mgd2ls
+bCBiZSByZXBlYXRlZApAQCAtMjY5Miw3ICsyNzIwLDcgQEAgeGZzX2lmbHVzaF9jbHVzdGVyKAog
+CX0KIAogb3V0X2ZyZWU6Ci0JcmVhZF91bmxvY2soJnBhZy0+cGFnX2ljaV9sb2NrKTsKKwlyY3Vf
+cmVhZF91bmxvY2soKTsKIAlrbWVtX2ZyZWUoaWxpc3QpOwogb3V0X3B1dDoKIAl4ZnNfcGVyYWdf
+cHV0KHBhZyk7CkBAIC0yNzA0LDcgKzI3MzIsNyBAQCBjbHVzdGVyX2NvcnJ1cHRfb3V0OgogCSAq
+IENvcnJ1cHRpb24gZGV0ZWN0ZWQgaW4gdGhlIGNsdXN0ZXJpbmcgbG9vcC4gIEludmFsaWRhdGUg
+dGhlCiAJICogaW5vZGUgYnVmZmVyIGFuZCBzaHV0IGRvd24gdGhlIGZpbGVzeXN0ZW0uCiAJICov
+Ci0JcmVhZF91bmxvY2soJnBhZy0+cGFnX2ljaV9sb2NrKTsKKwlyY3VfcmVhZF91bmxvY2soKTsK
+IAkvKgogCSAqIENsZWFuIHVwIHRoZSBidWZmZXIuICBJZiBpdCB3YXMgQl9ERUxXUkksIGp1c3Qg
+cmVsZWFzZSBpdCAtLQogCSAqIGJyZWxzZSBjYW4gaGFuZGxlIGl0IHdpdGggbm8gcHJvYmxlbXMu
+ICBJZiBub3QsIHNodXQgZG93biB0aGUKLS0gCjEuNy4yLjMKCl9fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2ku
+Y29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
