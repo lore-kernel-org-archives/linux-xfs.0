@@ -1,32 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAT1BNSC076930 for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 19:11:23 -0600
+	oAT0vfiE075271 for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 18:57:41 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 90C001AF8D1
-	for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 17:13:03 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
-	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	qDtqUktkVX2nJB12 for <xfs@oss.sgi.com>;
-	Sun, 28 Nov 2010 17:13:03 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3DF631C7CE19
+	for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 16:59:20 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail20.adl6.internode.on.net
+	[150.101.137.105]) by cuda.sgi.com with ESMTP id
+	6SHlKOrdhiWH4YtY for <xfs@oss.sgi.com>;
+	Sun, 28 Nov 2010 16:59:20 -0800 (PST)
 Received: from dastard (unverified [121.44.88.148])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	47443934-1927428
-	for <xfs@oss.sgi.com>; Mon, 29 Nov 2010 11:43:01 +1030 (CDT)
+	2738758-1927428
+	for <xfs@oss.sgi.com>; Mon, 29 Nov 2010 11:29:19 +1030 (CDT)
 Received: from chute ([192.168.1.1] helo=disappointment)
 	by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1PMsIe-0000bB-0O
-	for xfs@oss.sgi.com; Mon, 29 Nov 2010 12:13:00 +1100
+	(envelope-from <dave@fromorbit.com>) id 1PMs5O-0000Yz-1c
+	for xfs@oss.sgi.com; Mon, 29 Nov 2010 11:59:18 +1100
 Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1PMsIO-0005V3-Ko
-	for xfs@oss.sgi.com; Mon, 29 Nov 2010 12:12:44 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1PMs58-0005Rg-NN
+	for xfs@oss.sgi.com; Mon, 29 Nov 2010 11:59:02 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 8/8] xfs: use AIL bulk delete function to implement single
-	delete
-Date: Mon, 29 Nov 2010 12:12:32 +1100
-Message-Id: <1290993152-20999-9-git-send-email-david@fromorbit.com>
-In-Reply-To: <1290993152-20999-1-git-send-email-david@fromorbit.com>
-References: <1290993152-20999-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 1/3] xfs: convert xfsbud shrinker to a per-buftarg shrinker.
+Date: Mon, 29 Nov 2010 11:58:57 +1100
+Message-Id: <1290992339-20849-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1290992339-20849-1-git-send-email-david@fromorbit.com>
+References: <1290992339-20849-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -44,147 +43,208 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-We now have two copies of AIL delete operations that are mostly
-duplicate functionality. The single log item deletes can be
-implemented via the bulk updates by turning xfs_trans_ail_delete()
-into a simple wrapper. This removes all the duplicate delete
-functionality and associated helpers.
+Before we introduce per-buftarg LRU lists, split the shrinker
+implementation into per-buftarg shrinker callbacks. At the moment
+we wake all the xfsbufds to run the delayed write queues to free
+the dirty buffers and make their pages available for reclaim.
+However, with an LRU, we want to be able to free clean, unused
+buffers as well, so we need to separate the xfsbufd from the
+shrinker callbacks.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Alex Elder <aelder@sgi.com>
 ---
- fs/xfs/xfs_trans_ail.c  |   70 +++-------------------------------------------
- fs/xfs/xfs_trans_priv.h |   20 +++++++++-----
- 2 files changed, 18 insertions(+), 72 deletions(-)
+ fs/xfs/linux-2.6/xfs_buf.c |   89 ++++++++++++--------------------------------
+ fs/xfs/linux-2.6/xfs_buf.h |    4 +-
+ 2 files changed, 27 insertions(+), 66 deletions(-)
 
-diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-index 2f44f92..91aaf7b 100644
---- a/fs/xfs/xfs_trans_ail.c
-+++ b/fs/xfs/xfs_trans_ail.c
-@@ -520,80 +520,21 @@ xfs_trans_ail_update_bulk(
+diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
+index 4c5deb6..0a00d7a 100644
+--- a/fs/xfs/linux-2.6/xfs_buf.c
++++ b/fs/xfs/linux-2.6/xfs_buf.c
+@@ -44,12 +44,7 @@
+ 
+ static kmem_zone_t *xfs_buf_zone;
+ STATIC int xfsbufd(void *);
+-STATIC int xfsbufd_wakeup(struct shrinker *, int, gfp_t);
+ STATIC void xfs_buf_delwri_queue(xfs_buf_t *, int);
+-static struct shrinker xfs_buf_shake = {
+-	.shrink = xfsbufd_wakeup,
+-	.seeks = DEFAULT_SEEKS,
+-};
+ 
+ static struct workqueue_struct *xfslogd_workqueue;
+ struct workqueue_struct *xfsdatad_workqueue;
+@@ -337,7 +332,6 @@ _xfs_buf_lookup_pages(
+ 					__func__, gfp_mask);
+ 
+ 			XFS_STATS_INC(xb_page_retries);
+-			xfsbufd_wakeup(NULL, 0, gfp_mask);
+ 			congestion_wait(BLK_RW_ASYNC, HZ/50);
+ 			goto retry;
+ 		}
+@@ -1461,28 +1455,23 @@ xfs_wait_buftarg(
+ 	}
  }
  
- /*
-- * Delete the given item from the AIL.  It must already be in
-- * the AIL.
-- *
-- * Wakeup anyone with an lsn less than item's lsn.    If the item
-- * we delete in the AIL is the minimum one, update the tail lsn in the
-- * log manager.
-- *
-- * Clear the IN_AIL flag from the item, reset its lsn to 0, and
-- * bump the AIL's generation count to indicate that the tree
-- * has changed.
-- *
-- * This function must be called with the AIL lock held.  The lock
-- * is dropped before returning.
+-/*
+- *	buftarg list for delwrite queue processing
 - */
--void
--xfs_trans_ail_delete(
--	struct xfs_ail	*ailp,
--	xfs_log_item_t	*lip) __releases(ailp->xa_lock)
+-static LIST_HEAD(xfs_buftarg_list);
+-static DEFINE_SPINLOCK(xfs_buftarg_lock);
+-
+-STATIC void
+-xfs_register_buftarg(
+-	xfs_buftarg_t           *btp)
 -{
--	xfs_log_item_t		*mlip;
--	xfs_lsn_t		tail_lsn;
--
--	if (lip->li_flags & XFS_LI_IN_AIL) {
--		mlip = xfs_ail_min(ailp);
--		xfs_ail_delete(ailp, lip);
--
--
--		lip->li_flags &= ~XFS_LI_IN_AIL;
--		lip->li_lsn = 0;
--
--		if (mlip == lip) {
--			mlip = xfs_ail_min(ailp);
--			/*
--			 * It is not safe to access mlip after the AIL lock
--			 * is dropped, so we must get a copy of li_lsn
--			 * before we do so.  This is especially important
--			 * on 32-bit platforms where accessing and updating
--			 * 64-bit values like li_lsn is not atomic.
--			 */
--			tail_lsn = mlip ? mlip->li_lsn : 0;
--			spin_unlock(&ailp->xa_lock);
--			xfs_log_move_tail(ailp->xa_mount, tail_lsn);
--		} else {
--			spin_unlock(&ailp->xa_lock);
--		}
--	}
--	else {
--		/*
--		 * If the file system is not being shutdown, we are in
--		 * serious trouble if we get to this stage.
--		 */
--		struct xfs_mount	*mp = ailp->xa_mount;
--
--		spin_unlock(&ailp->xa_lock);
--		if (!XFS_FORCED_SHUTDOWN(mp)) {
--			xfs_cmn_err(XFS_PTAG_AILDELETE, CE_ALERT, mp,
--		"%s: attempting to delete a log item that is not in the AIL",
--					__func__);
--			xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
--		}
--	}
+-	spin_lock(&xfs_buftarg_lock);
+-	list_add(&btp->bt_list, &xfs_buftarg_list);
+-	spin_unlock(&xfs_buftarg_lock);
 -}
 -
--/*
-  * Bulk update version of xfs_trans_ail_delete
-  *
-  * This version takes an array of log items that all need to removed from the
-  * AIL. The caller is already holding the AIL lock, and done all the checks
-  * necessary to ensure the items passed in via @lgia are ready for deletion.
-+ * If an item we delete in the AIL is the minimum one, update the tail lsn in
-+ * the log manager.
-  *
-  * This function will not drop the AIL lock until all items are removed from
-  * the AIL to minimise the amount of lock traffic on the AIL. This does not
-  * greatly increase the AIL hold time, but does significantly reduce the amount
-  * of traffic on the lock, especially during IO completion.
-+ *
-+ * This function must be called with the AIL lock held.  The lock is dropped
-+ * before returning.
-  */
- void
- xfs_trans_ail_delete_bulk(
-@@ -648,7 +589,6 @@ xfs_trans_ail_delete_bulk(
- 	xfs_log_move_tail(ailp->xa_mount, tail_lsn);
+-STATIC void
+-xfs_unregister_buftarg(
+-	xfs_buftarg_t           *btp)
++int
++xfs_buftarg_shrink(
++	struct shrinker		*shrink,
++	int			nr_to_scan,
++	gfp_t			mask)
+ {
+-	spin_lock(&xfs_buftarg_lock);
+-	list_del(&btp->bt_list);
+-	spin_unlock(&xfs_buftarg_lock);
++	struct xfs_buftarg	*btp = container_of(shrink,
++					struct xfs_buftarg, bt_shrinker);
++	if (nr_to_scan) {
++		if (test_bit(XBT_FORCE_SLEEP, &btp->bt_flags))
++			return -1;
++		if (list_empty(&btp->bt_delwrite_queue))
++			return -1;
++		set_bit(XBT_FORCE_FLUSH, &btp->bt_flags);
++		wake_up_process(btp->bt_task);
++	}
++	return list_empty(&btp->bt_delwrite_queue) ? -1 : 1;
  }
  
+ void
+@@ -1490,17 +1479,14 @@ xfs_free_buftarg(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_buftarg	*btp)
+ {
++	unregister_shrinker(&btp->bt_shrinker);
++
+ 	xfs_flush_buftarg(btp, 1);
+ 	if (mp->m_flags & XFS_MOUNT_BARRIER)
+ 		xfs_blkdev_issue_flush(btp);
+ 	iput(btp->bt_mapping->host);
+ 
+-	/* Unregister the buftarg first so that we don't get a
+-	 * wakeup finding a non-existent task
+-	 */
+-	xfs_unregister_buftarg(btp);
+ 	kthread_stop(btp->bt_task);
+-
+ 	kmem_free(btp);
+ }
+ 
+@@ -1597,20 +1583,13 @@ xfs_alloc_delwrite_queue(
+ 	xfs_buftarg_t		*btp,
+ 	const char		*fsname)
+ {
+-	int	error = 0;
+-
+-	INIT_LIST_HEAD(&btp->bt_list);
+ 	INIT_LIST_HEAD(&btp->bt_delwrite_queue);
+ 	spin_lock_init(&btp->bt_delwrite_lock);
+ 	btp->bt_flags = 0;
+ 	btp->bt_task = kthread_run(xfsbufd, btp, "xfsbufd/%s", fsname);
+-	if (IS_ERR(btp->bt_task)) {
+-		error = PTR_ERR(btp->bt_task);
+-		goto out_error;
+-	}
+-	xfs_register_buftarg(btp);
+-out_error:
+-	return error;
++	if (IS_ERR(btp->bt_task))
++		return PTR_ERR(btp->bt_task);
++	return 0;
+ }
+ 
+ xfs_buftarg_t *
+@@ -1633,6 +1612,9 @@ xfs_alloc_buftarg(
+ 		goto error;
+ 	if (xfs_alloc_delwrite_queue(btp, fsname))
+ 		goto error;
++	btp->bt_shrinker.shrink = xfs_buftarg_shrink;
++	btp->bt_shrinker.seeks = DEFAULT_SEEKS;
++	register_shrinker(&btp->bt_shrinker);
+ 	return btp;
+ 
+ error:
+@@ -1737,27 +1719,6 @@ xfs_buf_runall_queues(
+ 	flush_workqueue(queue);
+ }
+ 
+-STATIC int
+-xfsbufd_wakeup(
+-	struct shrinker		*shrink,
+-	int			priority,
+-	gfp_t			mask)
+-{
+-	xfs_buftarg_t		*btp;
+-
+-	spin_lock(&xfs_buftarg_lock);
+-	list_for_each_entry(btp, &xfs_buftarg_list, bt_list) {
+-		if (test_bit(XBT_FORCE_SLEEP, &btp->bt_flags))
+-			continue;
+-		if (list_empty(&btp->bt_delwrite_queue))
+-			continue;
+-		set_bit(XBT_FORCE_FLUSH, &btp->bt_flags);
+-		wake_up_process(btp->bt_task);
+-	}
+-	spin_unlock(&xfs_buftarg_lock);
+-	return 0;
+-}
 -
  /*
-  * The active item list (AIL) is a doubly linked list of log
-  * items sorted by ascending lsn.  The base of the list is
-diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
-index 1cf42e7..2bd3c19 100644
---- a/fs/xfs/xfs_trans_priv.h
-+++ b/fs/xfs/xfs_trans_priv.h
-@@ -89,13 +89,19 @@ xfs_trans_ail_update(
- 	xfs_trans_ail_update_bulk(ailp, lgia, 1, lsn);
- }
+  * Move as many buffers as specified to the supplied list
+  * idicating if we skipped any buffers to prevent deadlocks.
+@@ -1952,7 +1913,6 @@ xfs_buf_init(void)
+ 	if (!xfsconvertd_workqueue)
+ 		goto out_destroy_xfsdatad_workqueue;
  
--void			xfs_trans_ail_delete(struct xfs_ail *ailp,
--					struct xfs_log_item *lip)
--					__releases(ailp->xa_lock);
--void			xfs_trans_ail_delete_bulk(struct xfs_ail *ailp,
--					struct xfs_log_item **lgia,
--					int nr_items)
--					__releases(ailp->xa_lock);
-+void	xfs_trans_ail_delete_bulk(struct xfs_ail *ailp,
-+				struct xfs_log_item **lgia, int nr_items)
-+				__releases(ailp->xa_lock);
-+static inline void
-+xfs_trans_ail_delete(
-+	struct xfs_ail	*ailp,
-+	xfs_log_item_t	*lip) __releases(ailp->xa_lock)
-+{
-+	struct xfs_log_item	*lgia[1] = { lip, };
+-	register_shrinker(&xfs_buf_shake);
+ 	return 0;
+ 
+  out_destroy_xfsdatad_workqueue:
+@@ -1968,7 +1928,6 @@ xfs_buf_init(void)
+ void
+ xfs_buf_terminate(void)
+ {
+-	unregister_shrinker(&xfs_buf_shake);
+ 	destroy_workqueue(xfsconvertd_workqueue);
+ 	destroy_workqueue(xfsdatad_workqueue);
+ 	destroy_workqueue(xfslogd_workqueue);
+diff --git a/fs/xfs/linux-2.6/xfs_buf.h b/fs/xfs/linux-2.6/xfs_buf.h
+index 383a3f3..9344103 100644
+--- a/fs/xfs/linux-2.6/xfs_buf.h
++++ b/fs/xfs/linux-2.6/xfs_buf.h
+@@ -128,10 +128,12 @@ typedef struct xfs_buftarg {
+ 
+ 	/* per device delwri queue */
+ 	struct task_struct	*bt_task;
+-	struct list_head	bt_list;
+ 	struct list_head	bt_delwrite_queue;
+ 	spinlock_t		bt_delwrite_lock;
+ 	unsigned long		bt_flags;
 +
-+	xfs_trans_ail_delete_bulk(ailp, lgia, 1);
-+}
-+
- void			xfs_trans_ail_push(struct xfs_ail *, xfs_lsn_t);
- void			xfs_trans_unlocked_item(struct xfs_ail *,
- 					xfs_log_item_t *);
++	/* LRU control structures */
++	struct shrinker		bt_shrinker;
+ } xfs_buftarg_t;
+ 
+ /*
 -- 
 1.7.2.3
 
