@@ -1,29 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAT1bOIl082134 for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 19:37:24 -0600
+	oAT1bQWR082161 for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 19:37:26 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B6D9B1C7C9FB
-	for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 17:39:04 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
-	[150.101.137.101]) by cuda.sgi.com with ESMTP id
-	hgBDWei3ign9RJRf for <xfs@oss.sgi.com>;
-	Sun, 28 Nov 2010 17:39:04 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 826D213F6558
+	for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 17:39:06 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
+	[150.101.137.98]) by cuda.sgi.com with ESMTP id
+	Crn0CD3E9zcxLWtY for <xfs@oss.sgi.com>;
+	Sun, 28 Nov 2010 17:39:06 -0800 (PST)
 Received: from dastard (unverified [121.44.88.148])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	47949950-1927428
+	48209016-1927428
 	for <xfs@oss.sgi.com>; Mon, 29 Nov 2010 12:09:03 +1030 (CDT)
 Received: from chute ([192.168.1.1] helo=disappointment)
 	by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1PMshf-0000dS-Kl
+	(envelope-from <dave@fromorbit.com>) id 1PMshf-0000dJ-Ee
 	for xfs@oss.sgi.com; Mon, 29 Nov 2010 12:38:51 +1100
 Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1PMshQ-0005cW-6D
-	for xfs@oss.sgi.com; Mon, 29 Nov 2010 12:38:36 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1PMshQ-0005cK-04
+	for xfs@oss.sgi.com; Mon, 29 Nov 2010 12:38:35 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 06/14] xfs: convert l_last_sync_lsn to an atomic variable
-Date: Mon, 29 Nov 2010 12:38:24 +1100
-Message-Id: <1290994712-21376-7-git-send-email-david@fromorbit.com>
+Subject: [PATCH 02/14] xfs: clean up log space grant functions
+Date: Mon, 29 Nov 2010 12:38:20 +1100
+Message-Id: <1290994712-21376-3-git-send-email-david@fromorbit.com>
 In-Reply-To: <1290994712-21376-1-git-send-email-david@fromorbit.com>
 References: <1290994712-21376-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -43,204 +43,324 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-log->l_last_sync_lsn is updated in only one critical spot - log
-buffer Io completion - and is protected by the grant lock here. This
-requires the grant lock to be taken for every log buffer IO
-completion. Converting the l_last_sync_lsn variable to an atomic64_t
-means that we do not need to take the grant lock in log buffer IO
-completion to update it.
+xlog_grant_log_space and xlog_regrant_log_write_space both have very
+similar structure. Both have a "wait on non-empty queue" section at
+the start, followed by a "wait for space" loop of which the contents
+are almost identical to the initial non-empty queue section.
 
-This also removes the need for explicitly holding a spinlock to read
-the l_last_sync_lsn on 32 bit platforms.
+In both cases, the non-empty queue wait can be folded into the wait
+for space loop, simply by entering the loop if the queue is not
+empty and the current ticket is not on the queue. If we trigger the
+non-empty queue case, we always add ourselves to the queue, and
+hence the second and subsequent loops are always driven by the "wait
+for space" test.
+
+IOWs, both wait conditions can be folded into the one loop, removing
+a bunch of duplicated code and making it simpler to modify in
+future patches.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_log.c         |   57 ++++++++++++++++++++-------------------------
- fs/xfs/xfs_log_priv.h    |    9 ++++++-
- fs/xfs/xfs_log_recover.c |    6 ++--
- 3 files changed, 36 insertions(+), 36 deletions(-)
+ fs/xfs/linux-2.6/xfs_trace.h |   12 +--
+ fs/xfs/xfs_log.c             |  171 +++++++++++++++---------------------------
+ 2 files changed, 64 insertions(+), 119 deletions(-)
 
+diff --git a/fs/xfs/linux-2.6/xfs_trace.h b/fs/xfs/linux-2.6/xfs_trace.h
+index f400668..0884f93 100644
+--- a/fs/xfs/linux-2.6/xfs_trace.h
++++ b/fs/xfs/linux-2.6/xfs_trace.h
+@@ -831,17 +831,13 @@ DEFINE_LOGGRANT_EVENT(xfs_log_umount_write);
+ DEFINE_LOGGRANT_EVENT(xfs_log_grant_enter);
+ DEFINE_LOGGRANT_EVENT(xfs_log_grant_exit);
+ DEFINE_LOGGRANT_EVENT(xfs_log_grant_error);
+-DEFINE_LOGGRANT_EVENT(xfs_log_grant_sleep1);
+-DEFINE_LOGGRANT_EVENT(xfs_log_grant_wake1);
+-DEFINE_LOGGRANT_EVENT(xfs_log_grant_sleep2);
+-DEFINE_LOGGRANT_EVENT(xfs_log_grant_wake2);
++DEFINE_LOGGRANT_EVENT(xfs_log_grant_sleep);
++DEFINE_LOGGRANT_EVENT(xfs_log_grant_wake);
+ DEFINE_LOGGRANT_EVENT(xfs_log_regrant_write_enter);
+ DEFINE_LOGGRANT_EVENT(xfs_log_regrant_write_exit);
+ DEFINE_LOGGRANT_EVENT(xfs_log_regrant_write_error);
+-DEFINE_LOGGRANT_EVENT(xfs_log_regrant_write_sleep1);
+-DEFINE_LOGGRANT_EVENT(xfs_log_regrant_write_wake1);
+-DEFINE_LOGGRANT_EVENT(xfs_log_regrant_write_sleep2);
+-DEFINE_LOGGRANT_EVENT(xfs_log_regrant_write_wake2);
++DEFINE_LOGGRANT_EVENT(xfs_log_regrant_write_sleep);
++DEFINE_LOGGRANT_EVENT(xfs_log_regrant_write_wake);
+ DEFINE_LOGGRANT_EVENT(xfs_log_regrant_reserve_enter);
+ DEFINE_LOGGRANT_EVENT(xfs_log_regrant_reserve_exit);
+ DEFINE_LOGGRANT_EVENT(xfs_log_regrant_reserve_sub);
 diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index a35ef8f..90a605cc 100644
+index 1b82735..399e559 100644
 --- a/fs/xfs/xfs_log.c
 +++ b/fs/xfs/xfs_log.c
-@@ -360,7 +360,7 @@ xfs_log_reserve(
+@@ -68,14 +68,14 @@ STATIC void xlog_state_switch_iclogs(xlog_t		*log,
+ STATIC void xlog_state_want_sync(xlog_t	*log, xlog_in_core_t *iclog);
  
- 		spin_lock(&log->l_grant_lock);
- 		xlog_grant_push_ail(log, log->l_tail_lsn,
--				    log->l_last_sync_lsn,
-+				    atomic64_read(&log->l_last_sync_lsn),
- 				    internal_ticket->t_unit_res);
- 		spin_unlock(&log->l_grant_lock);
- 		retval = xlog_regrant_write_log_space(log, internal_ticket);
-@@ -378,7 +378,7 @@ xfs_log_reserve(
+ /* local functions to manipulate grant head */
+-STATIC int  xlog_grant_log_space(xlog_t		*log,
+-				 xlog_ticket_t	*xtic);
++STATIC int  xlog_grant_log_space(struct log		*log,
++				 struct xlog_ticket	*xtic);
+ STATIC void xlog_grant_push_ail(xfs_mount_t	*mp,
+ 				int		need_bytes);
+ STATIC void xlog_regrant_reserve_log_space(xlog_t	 *log,
+ 					   xlog_ticket_t *ticket);
+-STATIC int xlog_regrant_write_log_space(xlog_t		*log,
+-					 xlog_ticket_t  *ticket);
++STATIC int xlog_regrant_write_log_space(struct log		*log,
++					struct xlog_ticket	*xtic);
+ STATIC void xlog_ungrant_log_space(xlog_t	 *log,
+ 				   xlog_ticket_t *ticket);
  
- 		spin_lock(&log->l_grant_lock);
- 		xlog_grant_push_ail(log, log->l_tail_lsn,
--				    log->l_last_sync_lsn,
-+				    atomic64_read(&log->l_last_sync_lsn),
- 				    (internal_ticket->t_unit_res *
- 				     internal_ticket->t_cnt));
- 		spin_unlock(&log->l_grant_lock);
-@@ -718,12 +718,8 @@ xfs_log_move_tail(xfs_mount_t	*mp,
+@@ -2498,52 +2498,27 @@ restart:
+  * the needed reservation is satisfied.
+  */
+ STATIC int
+-xlog_grant_log_space(xlog_t	   *log,
+-		     xlog_ticket_t *tic)
++xlog_grant_log_space(
++	struct log		*log,
++	struct xlog_ticket	*tic)
+ {
+-	int		 free_bytes;
+-	int		 need_bytes;
++	int			 free_bytes;
++	int			 need_bytes;
+ #ifdef DEBUG
+-	xfs_lsn_t	 tail_lsn;
+-#endif
++	xfs_lsn_t		 tail_lsn;
+ 
+-
+-#ifdef DEBUG
+ 	if (log->l_flags & XLOG_ACTIVE_RECOVERY)
+ 		panic("grant Recovery problem");
+ #endif
+ 
+ 	/* Is there space or do we need to sleep? */
+ 	spin_lock(&log->l_grant_lock);
+-
+ 	trace_xfs_log_grant_enter(log, tic);
++	ASSERT(list_empty(&tic->t_queue));
+ 
+-	/* something is already sleeping; insert new transaction at end */
+-	if (!list_empty(&log->l_reserveq)) {
+-		list_add_tail(&tic->t_queue, &log->l_reserveq);
+-
+-		trace_xfs_log_grant_sleep1(log, tic);
+-
+-		/*
+-		 * Gotta check this before going to sleep, while we're
+-		 * holding the grant lock.
+-		 */
+-		if (XLOG_FORCED_SHUTDOWN(log))
+-			goto error_return;
+-
+-		XFS_STATS_INC(xs_sleep_logspace);
+-		sv_wait(&tic->t_wait, PINOD|PLTWAIT, &log->l_grant_lock, s);
+-		/*
+-		 * If we got an error, and the filesystem is shutting down,
+-		 * we'll catch it down below. So just continue...
+-		 */
+-		trace_xfs_log_grant_wake1(log, tic);
+-		spin_lock(&log->l_grant_lock);
+-	}
++	need_bytes = tic->t_unit_res;
+ 	if (tic->t_flags & XFS_LOG_PERM_RESERV)
+-		need_bytes = tic->t_unit_res*tic->t_ocnt;
+-	else
+-		need_bytes = tic->t_unit_res;
++		need_bytes *= tic->t_ocnt;
+ 
+ redo:
  	if (XLOG_FORCED_SHUTDOWN(log))
- 		return;
+@@ -2551,25 +2526,25 @@ redo:
  
--	if (tail_lsn == 0) {
--		/* needed since sync_lsn is 64 bits */
--		spin_lock(&log->l_icloglock);
--		tail_lsn = log->l_last_sync_lsn;
--		spin_unlock(&log->l_icloglock);
--	}
-+	if (tail_lsn == 0)
-+		tail_lsn = atomic64_read(&log->l_last_sync_lsn);
- 
- 	spin_lock(&log->l_grant_lock);
- 
-@@ -845,11 +841,9 @@ xlog_assign_tail_lsn(xfs_mount_t *mp)
- 
- 	tail_lsn = xfs_trans_ail_tail(mp->m_ail);
- 	spin_lock(&log->l_grant_lock);
--	if (tail_lsn != 0) {
--		log->l_tail_lsn = tail_lsn;
--	} else {
--		tail_lsn = log->l_tail_lsn = log->l_last_sync_lsn;
--	}
-+	if (!tail_lsn)
-+		tail_lsn = atomic64_read(&log->l_last_sync_lsn);
-+	log->l_tail_lsn = tail_lsn;
- 	spin_unlock(&log->l_grant_lock);
- 
- 	return tail_lsn;
-@@ -1057,10 +1051,9 @@ xlog_alloc_log(xfs_mount_t	*mp,
- 	log->l_flags	   |= XLOG_ACTIVE_RECOVERY;
- 
- 	log->l_prev_block  = -1;
--	log->l_tail_lsn	   = xlog_assign_lsn(1, 0);
--	/* log->l_tail_lsn = 0x100000000LL; cycle = 1; current block = 0 */
--	log->l_last_sync_lsn = log->l_tail_lsn;
- 	log->l_curr_cycle  = 1;	    /* 0 is bad since this is initial value */
-+	log->l_tail_lsn	   = xlog_assign_lsn(1, 0);
-+	atomic64_set(&log->l_last_sync_lsn, log->l_tail_lsn);
- 	log->l_grant_reserve_lsn = xlog_assign_lsn(1, 0);
- 	log->l_grant_write_lsn = xlog_assign_lsn(1, 0);
- 	INIT_LIST_HEAD(&log->l_reserveq);
-@@ -2241,7 +2234,7 @@ xlog_state_do_callback(
- 				lowest_lsn = xlog_get_lowest_lsn(log);
- 				if (lowest_lsn &&
- 				    XFS_LSN_CMP(lowest_lsn,
--				    		be64_to_cpu(iclog->ic_header.h_lsn)) < 0) {
-+						be64_to_cpu(iclog->ic_header.h_lsn)) < 0) {
- 					iclog = iclog->ic_next;
- 					continue; /* Leave this iclog for
- 						   * another thread */
-@@ -2249,23 +2242,21 @@ xlog_state_do_callback(
- 
- 				iclog->ic_state = XLOG_STATE_CALLBACK;
- 
--				spin_unlock(&log->l_icloglock);
- 
--				/* l_last_sync_lsn field protected by
--				 * l_grant_lock. Don't worry about iclog's lsn.
--				 * No one else can be here except us.
-+				/*
-+				 * update the last_sync_lsn before we drop the
-+				 * icloglock to ensure we are the only one that
-+				 * can update it.
- 				 */
--				spin_lock(&log->l_grant_lock);
--				ASSERT(XFS_LSN_CMP(log->l_last_sync_lsn,
--				       be64_to_cpu(iclog->ic_header.h_lsn)) <= 0);
--				log->l_last_sync_lsn =
--					be64_to_cpu(iclog->ic_header.h_lsn);
--				spin_unlock(&log->l_grant_lock);
-+				ASSERT(XFS_LSN_CMP(atomic64_read(&log->l_last_sync_lsn),
-+					be64_to_cpu(iclog->ic_header.h_lsn)) <= 0);
-+				atomic64_set(&log->l_last_sync_lsn,
-+					be64_to_cpu(iclog->ic_header.h_lsn));
- 
--			} else {
--				spin_unlock(&log->l_icloglock);
-+			} else
- 				ioerrors++;
--			}
-+
-+			spin_unlock(&log->l_icloglock);
- 
- 			/*
- 			 * Keep processing entries in the callback list until
-@@ -2576,7 +2567,8 @@ redo:
+ 	free_bytes = xlog_space_left(log, log->l_grant_reserve_cycle,
+ 				     log->l_grant_reserve_bytes);
+-	if (free_bytes < need_bytes) {
++	/*
++	 * If there is not enough space or there is queued waiter and we
++	 * are not already on the queue, we need to wait.
++	 */
++	if (free_bytes < need_bytes ||
++	    (!list_empty(&log->l_reserveq) && list_empty(&tic->t_queue))) {
+ 		if (list_empty(&tic->t_queue))
  			list_add_tail(&tic->t_queue, &log->l_reserveq);
  
- 		xlog_grant_push_ail(log, log->l_tail_lsn,
--				    log->l_last_sync_lsn, need_bytes);
-+				    atomic64_read(&log->l_last_sync_lsn),
-+				    need_bytes);
+-		trace_xfs_log_grant_sleep2(log, tic);
+-
+ 		spin_unlock(&log->l_grant_lock);
+ 		xlog_grant_push_ail(log->l_mp, need_bytes);
+ 		spin_lock(&log->l_grant_lock);
  
  		XFS_STATS_INC(xs_sleep_logspace);
- 		trace_xfs_log_grant_sleep(log, tic);
-@@ -2683,7 +2675,8 @@ redo:
- 		}
++		trace_xfs_log_grant_sleep(log, tic);
+ 		sv_wait(&tic->t_wait, PINOD|PLTWAIT, &log->l_grant_lock, s);
  
- 		xlog_grant_push_ail(log, log->l_tail_lsn,
--				    log->l_last_sync_lsn, need_bytes);
-+				    atomic64_read(&log->l_last_sync_lsn),
-+				    need_bytes);
+ 		spin_lock(&log->l_grant_lock);
+-		if (XLOG_FORCED_SHUTDOWN(log))
+-			goto error_return;
+-
+-		trace_xfs_log_grant_wake2(log, tic);
+-
++		trace_xfs_log_grant_wake(log, tic);
+ 		goto redo;
+ 	}
  
- 		XFS_STATS_INC(xs_sleep_logspace);
- 		trace_xfs_log_regrant_write_sleep(log, tic);
-diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index 6fcee10..97db8a8 100644
---- a/fs/xfs/xfs_log_priv.h
-+++ b/fs/xfs/xfs_log_priv.h
-@@ -508,7 +508,6 @@ typedef struct log {
- 	spinlock_t		l_icloglock;    /* grab to change iclog state */
- 	xfs_lsn_t		l_tail_lsn;     /* lsn of 1st LR with unflushed
- 						 * buffers */
--	xfs_lsn_t		l_last_sync_lsn;/* lsn of last LR on disk */
- 	int			l_curr_cycle;   /* Cycle number of log writes */
- 	int			l_prev_cycle;   /* Cycle number before last
- 						 * block increment */
-@@ -522,6 +521,14 @@ typedef struct log {
- 	xfs_lsn_t		l_grant_reserve_lsn;
- 	xfs_lsn_t		l_grant_write_lsn;
+@@ -2608,21 +2583,21 @@ redo:
+ 	tic->t_cnt = 0; /* ungrant will give back unit_res * t_cnt. */
+ 	spin_unlock(&log->l_grant_lock);
+ 	return XFS_ERROR(EIO);
+-}	/* xlog_grant_log_space */
++}
  
-+	/*
-+	 * l_last_sync_lsn is an atomic so it can be set and read without
-+	 * needing to hold specific locks. To avoid operations contending with
-+	 * other hot objects, place it on a separate cacheline.
-+	 */
-+	/* lsn of last LR on disk */
-+	atomic64_t		l_last_sync_lsn ____cacheline_aligned_in_smp;
-+
- 	/* The following field are used for debugging; need to hold icloglock */
+ 
+ /*
+  * Replenish the byte reservation required by moving the grant write head.
+- *
+- *
+  */
+ STATIC int
+-xlog_regrant_write_log_space(xlog_t	   *log,
+-			     xlog_ticket_t *tic)
++xlog_regrant_write_log_space(
++	struct log		*log,
++	struct xlog_ticket	*tic)
+ {
+-	int		free_bytes, need_bytes;
++	int			free_bytes;
++	int			need_bytes;
  #ifdef DEBUG
- 	char			*l_iclog_bak[XLOG_MAX_ICLOGS];
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index d8c62f0..2ce7b48 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -926,7 +926,7 @@ xlog_find_tail(
- 	if (found == 2)
- 		log->l_curr_cycle++;
- 	log->l_tail_lsn = be64_to_cpu(rhead->h_tail_lsn);
--	log->l_last_sync_lsn = be64_to_cpu(rhead->h_lsn);
-+	atomic64_set(&log->l_last_sync_lsn, be64_to_cpu(rhead->h_lsn));
- 	log->l_grant_reserve_lsn = xlog_assign_lsn(log->l_curr_cycle,
- 						BBTOB(log->l_curr_block));
- 	log->l_grant_write_lsn = xlog_assign_lsn(log->l_curr_cycle,
-@@ -978,9 +978,9 @@ xlog_find_tail(
- 			log->l_tail_lsn =
- 				xlog_assign_lsn(log->l_curr_cycle,
- 						after_umount_blk);
--			log->l_last_sync_lsn =
-+			atomic64_set(&log->l_last_sync_lsn,
- 				xlog_assign_lsn(log->l_curr_cycle,
--						after_umount_blk);
-+						after_umount_blk));
- 			*tail_blk = after_umount_blk;
+-	xfs_lsn_t	tail_lsn;
++	xfs_lsn_t		tail_lsn;
+ #endif
  
- 			/*
+ 	tic->t_curr_res = tic->t_unit_res;
+@@ -2637,81 +2612,55 @@ xlog_regrant_write_log_space(xlog_t	   *log,
+ #endif
+ 
+ 	spin_lock(&log->l_grant_lock);
+-
+ 	trace_xfs_log_regrant_write_enter(log, tic);
++	ASSERT(list_empty(&tic->t_queue));
+ 
+-	if (XLOG_FORCED_SHUTDOWN(log))
+-		goto error_return;
+-
+-	/* If there are other waiters on the queue then give them a
+-	 * chance at logspace before us. Wake up the first waiters,
+-	 * if we do not wake up all the waiters then go to sleep waiting
+-	 * for more free space, otherwise try to get some space for
+-	 * this transaction.
+-	 */
+ 	need_bytes = tic->t_unit_res;
+-	if (!list_empty(&log->l_writeq)) {
+-		struct xlog_ticket *ntic;
+-		free_bytes = xlog_space_left(log, log->l_grant_write_cycle,
+-					     log->l_grant_write_bytes);
+-		list_for_each_entry(ntic, &log->l_writeq, t_queue) {
+-			ASSERT(ntic->t_flags & XLOG_TIC_PERM_RESERV);
+-
+-			if (free_bytes < ntic->t_unit_res)
+-				break;
+-			free_bytes -= ntic->t_unit_res;
+-			sv_signal(&ntic->t_wait);
+-		}
+-
+-		if (ntic != list_first_entry(&log->l_writeq,
+-						struct xlog_ticket, t_queue)) {
+-			if (list_empty(&tic->t_queue))
+-				list_add_tail(&tic->t_queue, &log->l_writeq);
+-
+-			trace_xfs_log_regrant_write_sleep1(log, tic);
+-
+-			spin_unlock(&log->l_grant_lock);
+-			xlog_grant_push_ail(log->l_mp, need_bytes);
+-			spin_lock(&log->l_grant_lock);
+-
+-			XFS_STATS_INC(xs_sleep_logspace);
+-			sv_wait(&tic->t_wait, PINOD|PLTWAIT,
+-				&log->l_grant_lock, s);
+-
+-			/* If we're shutting down, this tic is already
+-			 * off the queue */
+-			spin_lock(&log->l_grant_lock);
+-			if (XLOG_FORCED_SHUTDOWN(log))
+-				goto error_return;
+-
+-			trace_xfs_log_regrant_write_wake1(log, tic);
+-		}
+-	}
+-
+ redo:
+ 	if (XLOG_FORCED_SHUTDOWN(log))
+ 		goto error_return;
+ 
+ 	free_bytes = xlog_space_left(log, log->l_grant_write_cycle,
+ 				     log->l_grant_write_bytes);
+-	if (free_bytes < need_bytes) {
+-		if (list_empty(&tic->t_queue))
++	/*
++	 * If there is not enough space or there is queued waiter and we
++	 * are not already on the queue, we need to wait.
++	 */
++	if (free_bytes < need_bytes ||
++	    (!list_empty(&log->l_writeq) && list_empty(&tic->t_queue))) {
++		if (list_empty(&tic->t_queue)) {
++			/*
++			 * give existing waiters a chance at logspace before
++			 * us.  If we woke all the waiters, then immediately
++			 * retry the space, otherwise sleep first.
++			 */
++			struct xlog_ticket	*ntic;
++			int			woke_all = 1;
++			list_for_each_entry(ntic, &log->l_writeq, t_queue) {
++				ASSERT(ntic->t_flags & XLOG_TIC_PERM_RESERV);
++
++				if (free_bytes < ntic->t_unit_res) {
++					woke_all = 0;
++					break;
++				}
++				free_bytes -= ntic->t_unit_res;
++				sv_signal(&ntic->t_wait);
++			}
+ 			list_add_tail(&tic->t_queue, &log->l_writeq);
++			if (woke_all)
++				goto redo;
++		}
++
+ 		spin_unlock(&log->l_grant_lock);
+ 		xlog_grant_push_ail(log->l_mp, need_bytes);
+ 		spin_lock(&log->l_grant_lock);
+ 
+ 		XFS_STATS_INC(xs_sleep_logspace);
+-		trace_xfs_log_regrant_write_sleep2(log, tic);
+-
++		trace_xfs_log_regrant_write_sleep(log, tic);
+ 		sv_wait(&tic->t_wait, PINOD|PLTWAIT, &log->l_grant_lock, s);
+ 
+-		/* If we're shutting down, this tic is already off the queue */
+ 		spin_lock(&log->l_grant_lock);
+-		if (XLOG_FORCED_SHUTDOWN(log))
+-			goto error_return;
+-
+-		trace_xfs_log_regrant_write_wake2(log, tic);
++		trace_xfs_log_regrant_write_wake(log, tic);
+ 		goto redo;
+ 	}
+ 
+@@ -2747,7 +2696,7 @@ redo:
+ 	tic->t_cnt = 0; /* ungrant will give back unit_res * t_cnt. */
+ 	spin_unlock(&log->l_grant_lock);
+ 	return XFS_ERROR(EIO);
+-}	/* xlog_regrant_write_log_space */
++}
+ 
+ 
+ /* The first cnt-1 times through here we don't need to
 -- 
 1.7.2.3
 
