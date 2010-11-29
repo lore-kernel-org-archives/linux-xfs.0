@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oATFRfQd181377 for <xfs@oss.sgi.com>; Mon, 29 Nov 2010 09:27:41 -0600
-Received: from mail-qy0-f193.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 12A3F1C7ED3D
-	for <xfs@oss.sgi.com>; Mon, 29 Nov 2010 07:29:22 -0800 (PST)
-Received: from mail-qy0-f193.google.com (mail-qy0-f193.google.com
-	[209.85.216.193]) by cuda.sgi.com with ESMTP id
-	zjzal85fDRJiopaL for <xfs@oss.sgi.com>;
-	Mon, 29 Nov 2010 07:29:22 -0800 (PST)
-Received: by qyk5 with SMTP id 5so1367867qyk.8
-	for <xfs@oss.sgi.com>; Mon, 29 Nov 2010 07:29:22 -0800 (PST)
+	oATFrbdf183541 for <xfs@oss.sgi.com>; Mon, 29 Nov 2010 09:53:37 -0600
+Received: from mail-qy0-f174.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8595F1C7EE0E
+	for <xfs@oss.sgi.com>; Mon, 29 Nov 2010 07:55:19 -0800 (PST)
+Received: from mail-qy0-f174.google.com (mail-qy0-f174.google.com
+	[209.85.216.174]) by cuda.sgi.com with ESMTP id
+	WKhhJ7hIHeEzPJJb for <xfs@oss.sgi.com>;
+	Mon, 29 Nov 2010 07:55:19 -0800 (PST)
+Received: by qyk11 with SMTP id 11so36862qyk.5
+	for <xfs@oss.sgi.com>; Mon, 29 Nov 2010 07:55:19 -0800 (PST)
 MIME-Version: 1.0
-Date: Mon, 29 Nov 2010 20:59:22 +0530
-Message-ID: <AANLkTik+L=56GTzYOMZvWH4sVd4xdUvjogxx=FEmx+vP@mail.gmail.com>
-Subject: XFS repair utils
+In-Reply-To: <20101129145523.GA22839@infradead.org>
+References: <AANLkTikUOZJeSnSHO+pAM5d6DjWEPBdUSiua1dcv0pxt@mail.gmail.com>
+	<20101129145523.GA22839@infradead.org>
+Date: Mon, 29 Nov 2010 21:25:18 +0530
+Message-ID: <AANLkTi=aRdWhYbPTt0nBQD+yBfJxTEV+ospxTkRC3npT@mail.gmail.com>
+Subject: Re: XFS repair utils
 From: naveen yadav <yad.naveen@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -28,7 +31,8 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: hch@infradead.org, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
 Thanks for your response.
 
@@ -65,22 +69,33 @@ do_sys_open+0x6c/0x114358:49:814
 [<800b5858>] do_sys_open+0x6c/0x114 from[<800102c4>]
 stack_done+0x20/0x3c358:49:814
 
-On Mon, Nov 29, 2010 at 07:30:50PM +0530, naveen yadav wrote:
-> Hi All,
+
+
+
+
+
+
+
+
+On Mon, Nov 29, 2010 at 8:25 PM, Christoph Hellwig <hch@infradead.org> wrote:
+> On Mon, Nov 29, 2010 at 07:30:50PM +0530, naveen yadav wrote:
+>> Hi All,
+>>
+>> I am using XFS 2.6.34 kernel on my target, and I have
+>> #xfs_repair -V
+>> xfs_repair version 3.0.5
+>>
+>> So is there any issue of compatibility with latest XFS_repair utils.
+>> or it will work fine with my latest kernel(2.6.34).
 >
-> I am using XFS 2.6.34 kernel on my target, and I have
-> #xfs_repair -V
-> xfs_repair version 3.0.5
+> It works just fine, but the 3.1.x series of xfsprogs brings large
+> repair memory savings.
 >
-> So is there any issue of compatibility with latest XFS_repair utils.
-> or it will work fine with my latest kernel(2.6.34).
-
-It works just fine, but the 3.1.x series of xfsprogs brings large
-repair memory savings.
-
-> Since some time mount fails.
-
-What mount messages, what platform?
+>> Since some time mount fails.
+>
+> What mount messages, what platform?
+>
+>
 
 _______________________________________________
 xfs mailing list
