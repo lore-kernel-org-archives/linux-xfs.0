@@ -1,31 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAT1bP8b082139 for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 19:37:25 -0600
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 89D5013F6558
-	for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 17:39:05 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
-	[150.101.137.102]) by cuda.sgi.com with ESMTP id
-	gcGOkxTK5iZkwflX for <xfs@oss.sgi.com>;
-	Sun, 28 Nov 2010 17:39:05 -0800 (PST)
-Received: from dastard (unverified [121.44.88.148])
-	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	47821785-1927428
-	for <xfs@oss.sgi.com>; Mon, 29 Nov 2010 12:09:04 +1030 (CDT)
-Received: from chute ([192.168.1.1] helo=disappointment)
-	by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1PMshq-0000e5-0L
-	for xfs@oss.sgi.com; Mon, 29 Nov 2010 12:39:02 +1100
-Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1PMsha-0005cu-Hk
-	for xfs@oss.sgi.com; Mon, 29 Nov 2010 12:38:46 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 14/14] xfs: remove sv wrappers
-Date: Mon, 29 Nov 2010 12:38:32 +1100
-Message-Id: <1290994712-21376-15-git-send-email-david@fromorbit.com>
-In-Reply-To: <1290994712-21376-1-git-send-email-david@fromorbit.com>
-References: <1290994712-21376-1-git-send-email-david@fromorbit.com>
+	oAT3ttao098528 for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 21:55:55 -0600
+Received: from mail-qy0-f181.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C491B1AF603
+	for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 19:57:36 -0800 (PST)
+Received: from mail-qy0-f181.google.com (mail-qy0-f181.google.com
+	[209.85.216.181]) by cuda.sgi.com with ESMTP id
+	keFaGd2ozPfvHnQV for <xfs@oss.sgi.com>;
+	Sun, 28 Nov 2010 19:57:36 -0800 (PST)
+Received: by qyk12 with SMTP id 12so4528289qyk.5
+	for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 19:57:35 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTikw086Z_66cz_U-EdFQx14TXP6XmiG-KyLN4BLo@mail.gmail.com>
+References: <AANLkTi=u8dX0ehPN3Rv3FQ+84htY3AYEv0eboGgC7_qi@mail.gmail.com>
+	<20101129001112.GA28672@dastard>
+	<AANLkTikom6jpkuZquTfinGpaqz4Gp0y8niYN7yWQgmzj@mail.gmail.com>
+	<20101129015937.GB28672@dastard>
+	<AANLkTikw086Z_66cz_U-EdFQx14TXP6XmiG-KyLN4BLo@mail.gmail.com>
+Date: Mon, 29 Nov 2010 03:57:35 +0000
+Message-ID: <AANLkTi=-y0v4MzyU+qWPmvazouDu0N3gqSvVTU1z4Gke@mail.gmail.com>
+Subject: Re: XFS: performance
+From: Yclept Nemo <orbisvicis@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,119 +30,119 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
-
-The sv_t type is no longer used in XFS. Remove the header file defining the
-wrapper and the fragments that still reference it.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/linux-2.6/sv.h        |   59 ------------------------------------------
- fs/xfs/linux-2.6/xfs_linux.h |    1 -
- fs/xfs/quota/xfs_dquot.c     |    1 -
- 3 files changed, 0 insertions(+), 61 deletions(-)
- delete mode 100644 fs/xfs/linux-2.6/sv.h
-
-diff --git a/fs/xfs/linux-2.6/sv.h b/fs/xfs/linux-2.6/sv.h
-deleted file mode 100644
-index 4dfc7c3..0000000
---- a/fs/xfs/linux-2.6/sv.h
-+++ /dev/null
-@@ -1,59 +0,0 @@
--/*
-- * Copyright (c) 2000-2002,2005 Silicon Graphics, Inc.
-- * All Rights Reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it would be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write the Free Software Foundation,
-- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-- */
--#ifndef __XFS_SUPPORT_SV_H__
--#define __XFS_SUPPORT_SV_H__
--
--#include <linux/wait.h>
--#include <linux/sched.h>
--#include <linux/spinlock.h>
--
--/*
-- * Synchronisation variables.
-- *
-- * (Parameters "pri", "svf" and "rts" are not implemented)
-- */
--
--typedef struct sv_s {
--	wait_queue_head_t waiters;
--} sv_t;
--
--static inline void _sv_wait(sv_t *sv, spinlock_t *lock)
--{
--	DECLARE_WAITQUEUE(wait, current);
--
--	add_wait_queue_exclusive(&sv->waiters, &wait);
--	__set_current_state(TASK_UNINTERRUPTIBLE);
--	spin_unlock(lock);
--
--	schedule();
--
--	remove_wait_queue(&sv->waiters, &wait);
--}
--
--#define sv_init(sv,flag,name) \
--	init_waitqueue_head(&(sv)->waiters)
--#define sv_destroy(sv) \
--	/*NOTHING*/
--#define sv_wait(sv, pri, lock, s) \
--	_sv_wait(sv, lock)
--#define sv_signal(sv) \
--	wake_up(&(sv)->waiters)
--#define sv_broadcast(sv) \
--	wake_up_all(&(sv)->waiters)
--
--#endif /* __XFS_SUPPORT_SV_H__ */
-diff --git a/fs/xfs/linux-2.6/xfs_linux.h b/fs/xfs/linux-2.6/xfs_linux.h
-index 559bf25..e7cfa27 100644
---- a/fs/xfs/linux-2.6/xfs_linux.h
-+++ b/fs/xfs/linux-2.6/xfs_linux.h
-@@ -37,7 +37,6 @@
- 
- #include <kmem.h>
- #include <mrlock.h>
--#include <sv.h>
- #include <time.h>
- 
- #include <support/debug.h>
-diff --git a/fs/xfs/quota/xfs_dquot.c b/fs/xfs/quota/xfs_dquot.c
-index faf8e1a..d22aa31 100644
---- a/fs/xfs/quota/xfs_dquot.c
-+++ b/fs/xfs/quota/xfs_dquot.c
-@@ -149,7 +149,6 @@ xfs_qm_dqdestroy(
- 	ASSERT(list_empty(&dqp->q_freelist));
- 
- 	mutex_destroy(&dqp->q_qlock);
--	sv_destroy(&dqp->q_pinwait);
- 	kmem_zone_free(xfs_Gqm->qm_dqzone, dqp);
- 
- 	atomic_dec(&xfs_Gqm->qm_totaldquots);
--- 
-1.7.2.3
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+PiBJZiBvbmx5IEkgaGFkIGEgZG9sbGFyIGZvciBldmVyeSB0aW1lIEkgZm9yZ290IHRvICdjYyB0
+aGUgbWFpbGluZyBsaXN0IHdpdGhpbiBHbWFpbDoKCgpPbiBNb24sIE5vdiAyOSwgMjAxMCBhdCAx
+OjU5IEFNLCBEYXZlIENoaW5uZXIgPGRhdmlkQGZyb21vcmJpdC5jb20+IHdyb3RlOgo+IE9uIE1v
+biwgTm92IDI5LCAyMDEwIGF0IDAxOjIxOjExQU0gKzAwMDAsIFljbGVwdCBOZW1vIHdyb3RlOgo+
+PiBPbiBNb24sIE5vdiAyOSwgMjAxMCBhdCAxMjoxMSBBTSwgRGF2ZSBDaGlubmVyIDxkYXZpZEBm
+cm9tb3JiaXQuY29tPiB3cm90ZToKPj4gPiBPbiBTdW4sIE5vdiAyOCwgMjAxMCBhdCAxMDo1MTow
+NFBNICswMDAwLCBZY2xlcHQgTmVtbyB3cm90ZToKPj4gPj4gQWZ0ZXIgMy00IHllYXJzIG9mIHVz
+aW5nIG9uZSBYRlMgcGFydGl0aW9uIGZvciBldmVyeSBtb3VudCBwb2ludAo+PiA+PiAoLywvdXNy
+LC9ldGMsL2hvbWUsL3RtcC4uLikgSSBzdGFydGVkIG5vdGljaW5nIGEgcmFwaWQgcGVyZm9ybWFu
+Y2UKPj4gPj4gZGVncmFkYXRpb24uIFN1YmplY3RpdmVseSBJIG5vdyBmZWVsIG15IFhGUyBwYXJ0
+aXRpb24gaXMgNS0xMHggc2xvd2VyCj4+ID4+IC4uLiB3aGlsZSBvdGhlciBwYXJ0aXRpb25zIChu
+dGZzLGV4dDMpIHJlbWFpbiB0aGUgc2FtZS4KPj4gPgo+PiA+IENhbiB5b3UgcnVuIHNvbWUgYmVu
+Y2htYXJrcyB0byBzaG93IHRoaXMgbm9uLXN1YmplY3RpdmVseT8gQWdlZAo+PiA+IGZpbGVzeXN0
+ZW1zIHdpbGwgYmUgc2xvd2VyIHRoYW4gbmV3IGZpbGVzeXRzZW1zLCBhbmQgaXQgc2hvdWxkIGJl
+Cj4+ID4gbWVhc3VyYWJsZS4gQWxzbywga25vd2luZyB3aGF0IHlvdSBmaWxlc3lzdGVtIGNvbnRh
+aW5zIChudW1iZXIgb2YKPj4gPiBmaWxlcywgdXNlZCBjYXBhY2l0eSwgd2hldGhlciB5b3UgaGF2
+ZSBydW4gaXQgbmVhciBFTk9TUEMgZm9yCj4+ID4gZXh0ZW5kZWQgcGVyaW9kcyBvZiB0aW1lLCBl
+dGMpIHdvdWxkIGhlbHAgdXMgdW5kZXJzdGFuZCB0aGUgd2F5IHRoZQo+PiA+IGZpbGVzeXRlc20g
+aGFzIGFnZWQgYXMgd2VsbC4KPj4KPj4gQ2VydGFpbmx5LCBpZiB5b3UgYXJlIGludGVyZXN0ZWQg
+SSBjYW4gcnVuIGVpdGhlciBkYmVuY2ggb3IgYm9ubmllKysKPj4gdGVzdHMgY29tcGFyaW5nIGFu
+IFhGUyBwYXJ0aXRpb24gKHdpdGggZGVmYXVsdCB2YWx1ZXMgZnJvbSB4ZnNwcm9ncwo+PiAzLjEu
+Mykgb24gdGhlIG5ldyBoYXJkLWRyaXZlIHRvIHRoZSBleGlzdGluZyBwYXJ0aXRpb24gb24gdGhl
+IG9sZC4gQXMKPj4gSSdtIG5vdCBzdXJlIHdoYXQgeW91J3JlIGxvb2tpbmcgZm9yLCB3aGF0IGNv
+bW1hbmQgcGFyYW1ldGVycyBzaG91bGQgSQo+PiBwcm9maWxlIGFnYWluc3Q/Cj4+Cj4+IFRoZSBY
+RlMgcGFydGl0aW9uIGluIHF1ZXN0aW9uIGlzIDM5LjYxR0IgaW4gc2l6ZSwgb2Ygd2hpY2ggMzAu
+NzFHQiBhcmUKPj4gaW4gdXNlICg4LjkwR0IgZnJlZSkuIEl0IGNvbnRhaW5zIGEgdHlwaWNhbCBB
+cmNoIExpbnV4IGluc3RhbGxhdGlvbgo+PiB3aXRoIG1hbnkgcHJvZ3JhbXMgYW5kIG1hbnkgcGVy
+c29uYWwgZmlsZXMuIFVzYWdlIHBhdHRlcm4gYXMgZm9sbG93czoKPj4gLiBlcXVhbCBydW50aW1l
+IHNwbGl0IGJldHdlZW4gKG5lYXIgRU5PU1BDKSBhbmQgKGFwcHJveGltYXRlbHkgMTAuMEdCIGZy
+ZWUpCj4KPiBUaGVyZSdzIHlvdXIgcHJvYmxlbSAtIGl0J3MgYSB3ZWxsIGtub3duIGZhY3QgdGhh
+dCBydW5uaW5nIFhGUyBhdAo+IG1vcmUgdGhhbiA4NS05MCUgY2FwYWNpdHkgZm9yIGV4dGVuZGVk
+IHBlcmlvZHMgb2YgdGltZSBjYXVzZXMgZnJlZQo+IHNwYWNlIGZyYWdtZW50YXRpb24gYW5kIHRo
+YXQgcmVzdWx0cyBpbiBwZXJmb3JtYW5jZSBkZWdyYWRhdGlvbi4KPgo+PiAuIG1vc3RseSBzbWFs
+bCBmaWxlcywgb25lIG9yIHR3byBleGNlcHRpb25zCj4+IC4gb2Z0ZW4gcmVhY2ggRU5PU1BDIHRo
+cm91Z2ggY2FyZWxlc3NuZXNzCj4+IC4gcnVuIHhmc19mc3IgdmVyeSBvZnRlbgo+Cj4gQW5kIHhm
+c19mc3IgaXMgYWxzbyBrbm93biB0byBjYXVzZSBmcmVlIHNwYWNlIGZyYWdtZW50YXRpb24gd2hl
+biBydW4KPiBvbiBmaWxlc3lzdGVtcyB3aXRoIG5vdCBtdWNoIHNwYWNlIGF2YWlsYWJsZS4uLgoK
+UGhld3cuLi4gSSdtIHJlbGlldmVkIHRvIGxlYXJuIHRoYXQgbXkgcGVyZm9ybWFuY2UgZGVncmFk
+YXRpb24gd2lsbCBiZQphbGxldmlhdGVkIHdpdGggdGhpcyBoYXJkLWRyaXZlIHVwZGF0ZS4gV2hp
+Y2ggYWxzbyBtZWFucyBJIG5lZWQgbm8KbG9uZ2VyIGJlIHNvIG9ic2Vzc2l2ZS1jb21wdWxzaXZl
+IHdoZW4gdHdlYWtpbmcgdGhlIHNlY29uZCBpbmNhcm5hdGlvbgpvZiBteSBYRlMgZmlsZS1zeXN0
+ZW0uCgo+PiA+PiBTaW1pbGFybHkgYSBsYXJnZXIgYWdjb3VudCBzaG91bGQgYWx3YXlzIGdpdmUg
+YmV0dGVyIHBlcmZvcm1hbmNlLAo+PiA+PiByaWdodD8KPj4gPgo+PiA+IE5vLgo+PiA+Cj4+ID4+
+IFNvbWUgcmVzb3VyY2VzIGNsYWltIHRoYXQgYWdjb3VudCBzaG91bGQgbmV2ZXIgZmFsbCBiZWxv
+dwo+PiA+PiBlaWdodC4KPj4gPgo+PiA+IElmIHRob3NlIHJlc291cmNlcyBhcmUgcmlnaHQsIHRo
+ZW4gd2h5IHdvdWxkIHdlIGRlZmF1bHQgdG8gNCBBR3MgZm9yCj4+ID4gZmlsZXN5c3RlbXMgb24g
+c2luZ2xlIHNwaW5kbGVzPwo+Pgo+PiBPYnZpb3VzbHkgeW91IGFyZSBhZ2FpbnN0IG1vZGlmeWlu
+ZyB0aGUgYWdjb3VudCAtIEkgd29uJ3QgdG91Y2ggaXQgOikKPgo+IE5vLCB3aGF0IEknbSBwb2lu
+dGluZyBvdXQgaXMgdGhhdCA8c29tZSByYW5kb20gd2ViIHJlZmVyZW5jZT4gaXMgbm90Cj4gYSBn
+b29kIGd1aWRlIGZvciB0dW5pbmcgYW4gWEZTIGZpbGVzeXN0ZW0uIFlvdSBuZWVkIHRvIF91bmRl
+cnN0YW5kXwo+IHdoYXQgY2hhbmdpbmcgdGhhdCBrbm9iIGRvZXMgYmVmb3JlIHlvdSBjaGFuZ2Ug
+aXQuIElmIHlvdSBkb24ndAo+IHVuZGVyc3RhbmQgd2hhdCBpdCBkb2VzLCB0aGVuIGRvbid0IGNo
+YW5nZSBpdC4uLgoKQXMgSSB1bmRlcnN0YW5kIGFuIFhGUyBzeXN0ZW0gaXMgZGVtYXJjYXRlZCBp
+bnRvIHNldmVyYWwgYWxsb2NhdGlvbgpncm91cHMgZWFjaCBjb250YWluaW5nIGEgc3VwZXJibG9j
+ayBhcyB3ZWxsIGFzIHByaXZhdGUgaW5vZGUgYW5kCmZyZWUtc3BhY2UgYnRyZWVzLCBhbmQgdGh1
+cyBpbmNyZWFzaW5nIHRoZSBBRyBjb3VudCBpbmNyZWFzZXMKcGFyYWxsZWxpemF0aW9uLiBJIHNp
+bXBseSBhc3N1bWVkIHRoZSBwcm9jZXNzIHdhcyBDUFUtYm91bmQsIG5vdCBkaXNrCmJvdW5kLiBU
+aG91Z2ggYnkgbWVudGlvbmluZyBzcGluZGxlcywgSSByZWFsaXplZCBpdCBtYWtlcyBzZW5zZSB0
+bwpsaW1pdCB0aGUgYW1vdW50IG9mIHBhcmFsbGVsIGFjY2VzcyB0byBhIHNpbmdsZSBoYXJkIGRy
+aXZlOyBJJ3ZlIG9mdGVuCm5vdGljZWQgWEZTIGNvbWUgdG8gYSBjcmF3bCB3aGVuIEkgc2ltdWx0
+YW5lb3VzbHkgY2FsbCBtdWx0aXBsZQppbnRlbnNpdmUgSU8gb3BlcmF0aW9ucy4KCj4+IE5vdCBh
+Y3R1YWxseSBzdXJlIHdoYXQgSSBpbnRlbmRlZC4gTXkga25vd2xlZGdlIG9mIGZpbGUtc3lzdGVt
+cwo+PiBkZXBlbmRzIG9uIEdvb2dsZSBhbmQgdGhhdCBzdGF0ZW1lbnQgd2FzIG9ubHkgYSBzaG90
+IGluIHRoZSBkYXJrLgo+PiBIb3dldmVyLCB5b3UndmUgY29udmluY2VkIG1lIG5vdCB0byBjaGFu
+Z2UgdGhlIGJsb2Nrc2l6ZSAoa2VlcCBpbiBtaW5kCj4+IEknbSBydW5uaW5nIGFuIGVudGlyZSBM
+aW51eCBpbnN0YWxsYXRpb24gZnJvbSB0aGlzIG9uZSBYRlMgcGFydGl0aW9uLAo+PiBzbWFsbCBm
+aWxlcyBpbmNsdWRlZCkuCj4KPiBTdXJlLCBJIGRvIHRoYXQgdG9vLiBNeSB3b3Jrc3RhdGlvbiBo
+YXMgYSAyMjBHQiByb290IHBhcnRpdGlvbiB0aGF0Cj4gY29udGFpbnMgYWxsIG15IGtlcm5lbCB0
+cmVlcywgYnVpbGQgYXJlYXMsIGV0Yy4gSXQgaGFzIGFnY291bnQ9MTYKPiBiZWNhdXNlIEknbSBy
+dW5uaW5nIG9uIGEgOGMgbWFjaGluZSBhbmQgZG8gOC13YXkgcGFyYWxsZWwgYnVpbGRzLCBhCj4g
+bG9nIG9mIDEwNU1CIGFuZCBJJ20gdXNpbmcgZGVsYXlsb2cuLi4uCgpZb3UgbWVudGlvbiBhbiBl
+aWdodC1jb3JlIG1hY2hpbmUgKDhjPykuIFNpbmNlIEkgb3BlcmF0ZSBhIGR1YWwtY29yZQpzeXN0
+ZW0sIHdvdWxkIGl0IG1ha2Ugc2Vuc2UgdG8gaW5jcmVhc2UgbXkgQUcgY291bnQgc2xpZ2h0bHks
+IHRvIGZpdmUKb3Igc2l4PwoKSG0uLiBJIHdhcyBnb2luZyB0byB3YWl0IHRpbGwgMi42LjM5IGJ1
+dCBJIHRoaW5rIEknbGwgZW5hYmxlIGRlbGF5ZWQKbG9nZ2luZyByaWdodCBub3chCgo+PiBJZiB0
+aGUgYmxvY2tzaXplIG9wdGlvbiBpcyBzbwo+PiBwZXJmb3JtYW5jZS1pbmRlcGVuZGVudCwgd2h5
+IGRvZXMgaXQgZXZlbiBleGlzdD8KPgo+IEJlY2F1c2UgdGhlcmUgYXJlIHNpdHVhdGlvbnMgd2hl
+cmUgaXQgbWFrZXMgc2Vuc2UgdG8gY2hhbmdlIHRoZQo+IGJsb2NrIHNpemUuIFRoYXQgaXNuJ3Qg
+cmVhbGx5IGEgZ2VuZXJhbCB1c2Ugcm9vdCBmaWxlc3lzdGVtLAo+IHRob3VnaC4uLgoKTm93IGZv
+ciB0aGUgaW1wbGVtZW50YXRpb24gb2YgdHJhbnNmZXJyaW5nIHRoZSBkYXRhIHRvIG5ldyBYRlMK
+cGFydGl0aW9uL2hhcmQtZHJpdmUuLi4KSSB3YXMgb3JpZ2luYWxseSBnb2luZyB0byB1c2UgwqAi
+cnN5bmMgLWF2eEFIWCIgdW50aWwgSSBzdHVtYmxlZCBhY3Jvc3MKdGhpcyBsaXN0J3MgdGhyZWFk
+LCAiRU5PU1BDIGF0IDkwJSB3aXRoIHBsZW50eSBvZiBpbm9kZXMiIHdoaWNoCm1lbnRpb25lZCB4
+ZnNkdW1wIGFuZCB4ZnNyZXN0b3JlLiBJIG5vdyBoYXZlIHRocmVlIHF1ZXN0aW9uczoKCi4gc2lu
+Y2UgeGZzZHVtcCBhbmQgeGZzcmVzdG9yZSBhY2Nlc3MgdGhlIGJhc2UgZmlsZS1zeXN0ZW0gc3Ry
+dWN0dXJlLAp0aGVzZSB0b29scyB3aWxsIGJlIGFibGUgdG8gY29weSBldmVyeXRoaW5nID8/PzoK
+wqAgLSBmaWxlcwrCoCAtIHNwZWNpYWwgZmlsZXMgKHNvY2tldHMvZmlmb3MpCsKgIC0gcGVybWlz
+c2lvbnMKwqAgLSBhdHRyaWJ1dGVzCsKgIC0gYWNscyAoaXQgaXMgaW4gdGhlIG1hbiBwYWdlLCBi
+dXQgSSBsaXN0IGl0IGhlcmUgZm9yIGNvbXBsZXRpb24pCsKgIC0gc3ltbGlua3MKwqAgLSBoYXJk
+IGxpbmtzCsKgIC0gZXh0ZW5kZWQgYXR0cmlidXRlcwrCoCAtIGNoYXJhY3Rlci9ibG9jayBkZXZp
+Y2VzCsKgIC0gbW9kaWZpY2F0aW9uIHRpbWVzCsKgIC0gZXRjLi4uIGV2ZXJ5dGhpbmc6IGFueXRo
+aW5nIHJzeW5jIGNvdWxkIGNvcHkgYW5kIG1vcmUKCi4gc2luY2UgeGZzZHVtcCBhbmQgeGZzcmVz
+dG9yZSBhY2Nlc3MgdGhlIGJhc2UgZmlsZS1zeXN0ZW0gc3RydWN0dXJlLAp3aWxsIHRoZXkgYmUg
+YWJsZSB0bzoKwqAgLSB1cGRhdGUgY3JlYXRpb24tdGltZSBYRlMgcGFyYW1ldGVycyAoZnJvbSB0
+aGUgb3JpZ2luYWwKZmlsZS1zeXN0ZW0pIHRvIGFkYXB0IHRvIHRoZSBuZXcgWEZTIGZpbGUtc3lz
+dGVtIGluIG9yZGVyIHRvIGJlbmVmaXQKZnJvbSBwZXJmb3JtYW5jZSBhbmQgY2FwYWJpbGl0eSBp
+bXByb3ZlbWVudHMuIEZvciBleGFtcGxlOgrCoCDCoCDCoC4gYWRhcHQgdGhlIGxvZyBzZWN0aW9u
+IGZyb20gdmVyc2lvbjEgdG8gdmVyc2lvbjIKwqAgwqAgwqAuIG1vZGlmeSB0aGUgYWdjb3VudArC
+oCDCoCDCoC4gdXBkYXRlIHRoZSBtZXRhZGF0YSBhdHRyaWJ1dGVzIHRvIHZlcnNpb24gMgrCoCDC
+oCDCoC4gZW5hYmxlIGxhenktY291bnQgZm9yIGFsbCBmaWxlcwrCoCDCoCDCoC4gZXRjCsKgIC0g
+cmVkdWNlIGZyYWdtZW50YXRpb24gYW5kIGZyZWUtc3BhY2UgZnJhZ21lbnRhdGlvbiB1cG9uCnhm
+c3Jlc3RvcmUuIChvciBkb2VzIHhmc3Jlc3RvcmUgc2ltcGx5IGNvcHkgYml0LWJ5LWJpdCB0aGUg
+b2xkIFhGUwpzdHJ1Y3R1cmUgaW50byB0aGUgbmV3IGZpbGUtc3lzdGVtKS4KCsKgIC1JZiBub3Qs
+IGFyZSB0aGVyZSBhbnkgcmVhc29ucyB0byBub25ldGhlbGVzcyBwcmVmZXIKeGZzZHVtcC94ZnNy
+ZXN0b3JlIG92ZXIgcnN5bmM/CgpJZiBhbnkgb2YgdGhpcyBpcyBhbHJlYWR5IG1lbnRpb25lZCBp
+biB0aGUgeGZzZHVtcC9yZXN0b3JlIG1hbiBwYWdlcywKaSBhcG9sb2dpemU7IEkgc2ltcGx5IGRv
+bid0IHdhbnQgdG8gd2FpdCB0aWxsIHRvbW9ycm93IHRvIGJlZ2luIHRoZQpiYWNrdXAvcmVzdG9y
+ZSBwcm9jZXNzLgoKU2luY2VyZWx5LApvcmJpc3ZpY2lzCgpfX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNv
+bQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
