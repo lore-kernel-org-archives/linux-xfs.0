@@ -1,31 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAT0vfiE075271 for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 18:57:41 -0600
+	oAT1BMtm076927 for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 19:11:23 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3DF631C7CE19
-	for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 16:59:20 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail20.adl6.internode.on.net
-	[150.101.137.105]) by cuda.sgi.com with ESMTP id
-	6SHlKOrdhiWH4YtY for <xfs@oss.sgi.com>;
-	Sun, 28 Nov 2010 16:59:20 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 76DB51C7CEF8
+	for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 17:13:03 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
+	[150.101.137.101]) by cuda.sgi.com with ESMTP id
+	W7WlAjmYb4gt8D5w for <xfs@oss.sgi.com>;
+	Sun, 28 Nov 2010 17:13:03 -0800 (PST)
 Received: from dastard (unverified [121.44.88.148])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	2738758-1927428
-	for <xfs@oss.sgi.com>; Mon, 29 Nov 2010 11:29:19 +1030 (CDT)
+	47946204-1927428
+	for <xfs@oss.sgi.com>; Mon, 29 Nov 2010 11:43:01 +1030 (CDT)
 Received: from chute ([192.168.1.1] helo=disappointment)
 	by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1PMs5O-0000Yz-1c
-	for xfs@oss.sgi.com; Mon, 29 Nov 2010 11:59:18 +1100
+	(envelope-from <dave@fromorbit.com>) id 1PMsIT-0000ac-Ju
+	for xfs@oss.sgi.com; Mon, 29 Nov 2010 12:12:49 +1100
 Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1PMs58-0005Rg-NN
-	for xfs@oss.sgi.com; Mon, 29 Nov 2010 11:59:02 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1PMsIE-0005Ui-7Y
+	for xfs@oss.sgi.com; Mon, 29 Nov 2010 12:12:34 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/3] xfs: convert xfsbud shrinker to a per-buftarg shrinker.
-Date: Mon, 29 Nov 2010 11:58:57 +1100
-Message-Id: <1290992339-20849-2-git-send-email-david@fromorbit.com>
-In-Reply-To: <1290992339-20849-1-git-send-email-david@fromorbit.com>
-References: <1290992339-20849-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 0/8] xfs: AIL lock contention reduction V2
+Date: Mon, 29 Nov 2010 12:12:24 +1100
+Message-Id: <1290993152-20999-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -41,212 +39,44 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+This series reduces AIL locking overhead by introducing bulk operations for
+insert and delete. With delayed logging, we can be doing insert operations on
+thousands of items at a time, so using a bulk operation to reduce AIL lock
+traffic is a major win in terms of reducing contention on the lock.
 
-Before we introduce per-buftarg LRU lists, split the shrinker
-implementation into per-buftarg shrinker callbacks. At the moment
-we wake all the xfsbufds to run the delayed write queues to free
-the dirty buffers and make their pages available for reclaim.
-However, with an LRU, we want to be able to free clean, unused
-buffers as well, so we need to separate the xfsbufd from the
-shrinker callbacks.
+Similarly, when we have inode buffer IO completion running on multiple CPUs at
+once, the AIl lock contention from each individual AIL removal is significant.
+By batching all the inodes on the buffer to be removed from the AIL in a single
+bulk operation, contention on the AIL is reduced by an order of magnitude.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Alex Elder <aelder@sgi.com>
----
- fs/xfs/linux-2.6/xfs_buf.c |   89 ++++++++++++--------------------------------
- fs/xfs/linux-2.6/xfs_buf.h |    4 +-
- 2 files changed, 27 insertions(+), 66 deletions(-)
+Finally, there is a modification to the xfsaild wakeup code to prevent too many
+wakeups when the xfsaild is pausing waiting for some work to complete. This
+prevents an excessive number of AIL scanning traversals by the xfsaild when
+tail pushing is backing off and waiting for some IO to complete.
 
-diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
-index 4c5deb6..0a00d7a 100644
---- a/fs/xfs/linux-2.6/xfs_buf.c
-+++ b/fs/xfs/linux-2.6/xfs_buf.c
-@@ -44,12 +44,7 @@
- 
- static kmem_zone_t *xfs_buf_zone;
- STATIC int xfsbufd(void *);
--STATIC int xfsbufd_wakeup(struct shrinker *, int, gfp_t);
- STATIC void xfs_buf_delwri_queue(xfs_buf_t *, int);
--static struct shrinker xfs_buf_shake = {
--	.shrink = xfsbufd_wakeup,
--	.seeks = DEFAULT_SEEKS,
--};
- 
- static struct workqueue_struct *xfslogd_workqueue;
- struct workqueue_struct *xfsdatad_workqueue;
-@@ -337,7 +332,6 @@ _xfs_buf_lookup_pages(
- 					__func__, gfp_mask);
- 
- 			XFS_STATS_INC(xb_page_retries);
--			xfsbufd_wakeup(NULL, 0, gfp_mask);
- 			congestion_wait(BLK_RW_ASYNC, HZ/50);
- 			goto retry;
- 		}
-@@ -1461,28 +1455,23 @@ xfs_wait_buftarg(
- 	}
- }
- 
--/*
-- *	buftarg list for delwrite queue processing
-- */
--static LIST_HEAD(xfs_buftarg_list);
--static DEFINE_SPINLOCK(xfs_buftarg_lock);
--
--STATIC void
--xfs_register_buftarg(
--	xfs_buftarg_t           *btp)
--{
--	spin_lock(&xfs_buftarg_lock);
--	list_add(&btp->bt_list, &xfs_buftarg_list);
--	spin_unlock(&xfs_buftarg_lock);
--}
--
--STATIC void
--xfs_unregister_buftarg(
--	xfs_buftarg_t           *btp)
-+int
-+xfs_buftarg_shrink(
-+	struct shrinker		*shrink,
-+	int			nr_to_scan,
-+	gfp_t			mask)
- {
--	spin_lock(&xfs_buftarg_lock);
--	list_del(&btp->bt_list);
--	spin_unlock(&xfs_buftarg_lock);
-+	struct xfs_buftarg	*btp = container_of(shrink,
-+					struct xfs_buftarg, bt_shrinker);
-+	if (nr_to_scan) {
-+		if (test_bit(XBT_FORCE_SLEEP, &btp->bt_flags))
-+			return -1;
-+		if (list_empty(&btp->bt_delwrite_queue))
-+			return -1;
-+		set_bit(XBT_FORCE_FLUSH, &btp->bt_flags);
-+		wake_up_process(btp->bt_task);
-+	}
-+	return list_empty(&btp->bt_delwrite_queue) ? -1 : 1;
- }
- 
- void
-@@ -1490,17 +1479,14 @@ xfs_free_buftarg(
- 	struct xfs_mount	*mp,
- 	struct xfs_buftarg	*btp)
- {
-+	unregister_shrinker(&btp->bt_shrinker);
-+
- 	xfs_flush_buftarg(btp, 1);
- 	if (mp->m_flags & XFS_MOUNT_BARRIER)
- 		xfs_blkdev_issue_flush(btp);
- 	iput(btp->bt_mapping->host);
- 
--	/* Unregister the buftarg first so that we don't get a
--	 * wakeup finding a non-existent task
--	 */
--	xfs_unregister_buftarg(btp);
- 	kthread_stop(btp->bt_task);
--
- 	kmem_free(btp);
- }
- 
-@@ -1597,20 +1583,13 @@ xfs_alloc_delwrite_queue(
- 	xfs_buftarg_t		*btp,
- 	const char		*fsname)
- {
--	int	error = 0;
--
--	INIT_LIST_HEAD(&btp->bt_list);
- 	INIT_LIST_HEAD(&btp->bt_delwrite_queue);
- 	spin_lock_init(&btp->bt_delwrite_lock);
- 	btp->bt_flags = 0;
- 	btp->bt_task = kthread_run(xfsbufd, btp, "xfsbufd/%s", fsname);
--	if (IS_ERR(btp->bt_task)) {
--		error = PTR_ERR(btp->bt_task);
--		goto out_error;
--	}
--	xfs_register_buftarg(btp);
--out_error:
--	return error;
-+	if (IS_ERR(btp->bt_task))
-+		return PTR_ERR(btp->bt_task);
-+	return 0;
- }
- 
- xfs_buftarg_t *
-@@ -1633,6 +1612,9 @@ xfs_alloc_buftarg(
- 		goto error;
- 	if (xfs_alloc_delwrite_queue(btp, fsname))
- 		goto error;
-+	btp->bt_shrinker.shrink = xfs_buftarg_shrink;
-+	btp->bt_shrinker.seeks = DEFAULT_SEEKS;
-+	register_shrinker(&btp->bt_shrinker);
- 	return btp;
- 
- error:
-@@ -1737,27 +1719,6 @@ xfs_buf_runall_queues(
- 	flush_workqueue(queue);
- }
- 
--STATIC int
--xfsbufd_wakeup(
--	struct shrinker		*shrink,
--	int			priority,
--	gfp_t			mask)
--{
--	xfs_buftarg_t		*btp;
--
--	spin_lock(&xfs_buftarg_lock);
--	list_for_each_entry(btp, &xfs_buftarg_list, bt_list) {
--		if (test_bit(XBT_FORCE_SLEEP, &btp->bt_flags))
--			continue;
--		if (list_empty(&btp->bt_delwrite_queue))
--			continue;
--		set_bit(XBT_FORCE_FLUSH, &btp->bt_flags);
--		wake_up_process(btp->bt_task);
--	}
--	spin_unlock(&xfs_buftarg_lock);
--	return 0;
--}
--
- /*
-  * Move as many buffers as specified to the supplied list
-  * idicating if we skipped any buffers to prevent deadlocks.
-@@ -1952,7 +1913,6 @@ xfs_buf_init(void)
- 	if (!xfsconvertd_workqueue)
- 		goto out_destroy_xfsdatad_workqueue;
- 
--	register_shrinker(&xfs_buf_shake);
- 	return 0;
- 
-  out_destroy_xfsdatad_workqueue:
-@@ -1968,7 +1928,6 @@ xfs_buf_init(void)
- void
- xfs_buf_terminate(void)
- {
--	unregister_shrinker(&xfs_buf_shake);
- 	destroy_workqueue(xfsconvertd_workqueue);
- 	destroy_workqueue(xfsdatad_workqueue);
- 	destroy_workqueue(xfslogd_workqueue);
-diff --git a/fs/xfs/linux-2.6/xfs_buf.h b/fs/xfs/linux-2.6/xfs_buf.h
-index 383a3f3..9344103 100644
---- a/fs/xfs/linux-2.6/xfs_buf.h
-+++ b/fs/xfs/linux-2.6/xfs_buf.h
-@@ -128,10 +128,12 @@ typedef struct xfs_buftarg {
- 
- 	/* per device delwri queue */
- 	struct task_struct	*bt_task;
--	struct list_head	bt_list;
- 	struct list_head	bt_delwrite_queue;
- 	spinlock_t		bt_delwrite_lock;
- 	unsigned long		bt_flags;
-+
-+	/* LRU control structures */
-+	struct shrinker		bt_shrinker;
- } xfs_buftarg_t;
- 
- /*
--- 
-1.7.2.3
+In combination, these modification reduce AIL lock contention sufficiently
+to drop the AIL lock out of the "top 10" contended locks on 8-way fs_mark
+and dbench workloads.
+
+Version 2:
+
+- split out stale inode AIL insertion bug fix
+- split bulk AIL insertion into multiple patches
+	- EFI/EFD handling changes
+	- stale inode AIL insertion bug fix
+	- simplify code calling xfs_ail_delete
+	- bulk ail insertion modifications
+- use atomic_inc_return for extent recording in xfs_trans_log_efi_extent()
+- modified AIL sleep code to explicitly set task state as suggested by Christoph.
+- split AIL bulk deletion into two patches
+	- buffer iodone callback modifications
+	- bulk AIL deletion and inode iodone callback mods.
+- removed lip parameter from xfs_buf_do_callbacks() as the loop fetches
+          it from the buffer anyway.
+- fixed unused variable warning in xfs_buf_do_callbacks().
+- added two new patches to reduce code duplication
+        - use AIL bulk insertion function to implement single updates
+        - use AIL bulk delete function to implement single deletes
 
 _______________________________________________
 xfs mailing list
