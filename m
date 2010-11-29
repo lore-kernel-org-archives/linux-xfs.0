@@ -1,21 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAT0Zh4M071378 for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 18:35:43 -0600
+	oAT1BNtr076939 for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 19:11:24 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E770F1C7CBC2
-	for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 16:37:23 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
-	[150.101.137.101]) by cuda.sgi.com with ESMTP id
-	9CdzTAsTQxNw8WYG for <xfs@oss.sgi.com>;
-	Sun, 28 Nov 2010 16:37:23 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DCE741AF8FE
+	for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 17:13:03 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
+	[150.101.137.104]) by cuda.sgi.com with ESMTP id
+	BzC5zn9yNCw8SL9c for <xfs@oss.sgi.com>;
+	Sun, 28 Nov 2010 17:13:03 -0800 (PST)
+Received: from dastard (unverified [121.44.88.148])
+	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
+	47443933-1927428
+	for <xfs@oss.sgi.com>; Mon, 29 Nov 2010 11:43:02 +1030 (CDT)
+Received: from chute ([192.168.1.1] helo=disappointment)
+	by dastard with esmtp (Exim 4.71)
+	(envelope-from <dave@fromorbit.com>) id 1PMsIT-0000an-Tw
+	for xfs@oss.sgi.com; Mon, 29 Nov 2010 12:12:49 +1100
+Received: from dave by disappointment with local (Exim 4.72)
+	(envelope-from <dave@disappointment.disaster>) id 1PMsIE-0005Uy-IM
+	for xfs@oss.sgi.com; Mon, 29 Nov 2010 12:12:34 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: =?UTF-8?q?=5BPATCH=201/3=5D=20lib=3A=20percpu=20counter=20add=20unless=20less=20than=20functionality?=
-Date: Mon, 29 Nov 2010 11:36:39 +1100
-Message-Id: <1290991002-18680-2-git-send-email-david@fromorbit.com>
-In-Reply-To: <1290991002-18680-1-git-send-email-david@fromorbit.com>
-References: <1290991002-18680-1-git-send-email-david@fromorbit.com>
-MIME-Version: 1.0
+Subject: [PATCH 6/8] xfs: remove all the inodes on a buffer from the AIL in
+	bulk
+Date: Mon, 29 Nov 2010 12:12:30 +1100
+Message-Id: <1290993152-20999-7-git-send-email-david@fromorbit.com>
+In-Reply-To: <1290993152-20999-1-git-send-email-david@fromorbit.com>
+References: <1290993152-20999-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,109 +35,253 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: linux-kernel@vger.kernel.org, a.p.zijlstra@chello.nl
 
-RnJvbTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgoKVG8gdXNlIHRoZSBnZW5l
-cmljIHBlcmNwdSBjb3VudGVyIGluZnJhc3RydWN0dXJlIGZvciBjb3VudGVycyB0aGF0CnJlcXVp
-cmUgY29uZGl0aW9uYWwgYWRkaXRpb24gYmFzZWQgb24gYSB0aHJlc2hvbGQgdmFsdWUgd2UgbmVl
-ZApzcGVjaWFsIGhhbmRsaW5nIG9mIHRoZSBjb3VudGVyLiBGdXJ0aGVyLCB0aGUgY2FsbGVyIG5l
-ZWRzIHRvIGtub3cKdGhlIHN0YXR1cyBvZiB0aGUgY29uZGl0aW9uYWwgYWRkaXRpb24gdG8gZGV0
-ZXJtaW5lIHdoYXQgYWN0aW9uIHRvCnRha2UgZGVwZW5kaW5nIG9uIHdoZXRoZXIgdGhlIGFkZGl0
-aW9uIG9jY3VycmVkIG9yIG5vdC4gIEV4YW1wbGVzIG9mCnRoaXMgc29ydCBvZiB1c2FnZSBhcmUg
-cmVzb3VyY2UgY291bnRlcnMgdGhhdCBjYW5ub3QgZ28gYmVsb3cgemVybwooZS5nLiBmaWxlc3lz
-dGVtIGZyZWUgYmxvY2tzKS4KClRvIGFsbG93IFhGUyB0byByZXBsYWNlIGl0J3MgY29tcGxleCBy
-b2xsLXlvdXItb3duIHBlci1jcHUKc3VwZXJibG9jayBjb3VudGVycywgYSBzaW5nbGUgZ2VuZXJp
-YyBjb25kaXRpb25hbCBmdW5jdGlvbiBpcwpyZXF1aXJlZDogcGVyY3B1X2NvdW50ZXJfYWRkX3Vu
-bGVzc19sdCgpLiBUaGlzIHdpbGwgYWRkIHRoZSBhbW91bnQKdG8gdGhlIGNvdW50ZXIgdW5sZXNz
-IHRoZSByZXN1bHQgd291bGQgYmUgbGVzcyB0aGFuIHRoZSBnaXZlbgp0aHJlc2hvbGQuIEEgY2Fs
-bGVyIHN1cHBsaWVkIHRocmVzaG9sZCBpcyByZXF1aXJlZCBiZWNhdXNlIFhGUyBkb2VzCm5vdCBu
-ZWNlc3NhcmlseSB1c2UgdGhlIHNhbWUgdGhyZXNob2xkIGZvciBldmVyeSBjb3VudGVyLgoKcGVy
-Y3B1X2NvdW50ZXJfYWRkX3VubGVzc19sdCgpIGF0dGVtcHRzIHRvIG1pbmltaXNlIGNvdW50ZXIg
-bG9jawp0cmF2ZXJzYWxzIGJ5IG9ubHkgdGFraW5nIHRoZSBjb3VudGVyIGxvY2sgd2hlbiB0aGUg
-dGhyZXNob2xkIGlzCndpdGhpbiB0aGUgZXJyb3IgcmFuZ2Ugb2YgdGhlIGN1cnJlbnQgY291bnRl
-ciB2YWx1ZS4gSGVuY2Ugd2hlbiB0aGUKdGhyZXNob2xkIGlzIG5vdCB3aXRoaW4gdGhlIGNvdW50
-ZXIgZXJyb3IgcmFuZ2UsIHRoZSBjb3VudGVyIHdpbGwKc3RpbGwgaGF2ZSB0aGUgc2FtZSBzY2Fs
-YWJpbGl0eSBjaGFyYWN0ZXJpc3RpY3MgYXMgdGhlIG5vcm1hbApwZXJjcHVfY291bnRlcl9hZGQo
-KSBmdW5jdGlvbi4KCkFkZGluZyB0aGlzIGZ1bmN0aW9uYWxpdHkgdG8gdGhlIGdlbmVyaWMgcGVy
-Y3B1IGNvdW50ZXJzIGFsbG93cyB1cwp0byByZW1vdmUgdGhlIG11Y2ggbW9yZSBjb21wbGV4IGFu
-ZCBsZXNzIGVmZmljaWVudCBYRlMgcGVyY3B1CmNvdW50ZXIgY29kZSAofjcwMCBsaW5lcyBvZiBj
-b2RlKSBhbmQgcmVwbGFjZSBpdCB3aXRoIGdlbmVyaWMKcGVyY3B1IGNvdW50ZXJzLgoKU2lnbmVk
-LW9mZi1ieTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgotLS0KIGluY2x1ZGUv
-bGludXgvcGVyY3B1X2NvdW50ZXIuaCB8ICAgMjAgKysrKysrKysrKwogbGliL3BlcmNwdV9jb3Vu
-dGVyLmMgICAgICAgICAgIHwgICA3OCArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
-KysrKysrCiAyIGZpbGVzIGNoYW5nZWQsIDk4IGluc2VydGlvbnMoKyksIDAgZGVsZXRpb25zKC0p
-CgpkaWZmIC0tZ2l0IGEvaW5jbHVkZS9saW51eC9wZXJjcHVfY291bnRlci5oIGIvaW5jbHVkZS9s
-aW51eC9wZXJjcHVfY291bnRlci5oCmluZGV4IDQ2ZjZiYTUuLjQ2NWI2NThmIDEwMDY0NAotLS0g
-YS9pbmNsdWRlL2xpbnV4L3BlcmNwdV9jb3VudGVyLmgKKysrIGIvaW5jbHVkZS9saW51eC9wZXJj
-cHVfY291bnRlci5oCkBAIC00MSw2ICs0MSw4IEBAIHZvaWQgcGVyY3B1X2NvdW50ZXJfc2V0KHN0
-cnVjdCBwZXJjcHVfY291bnRlciAqZmJjLCBzNjQgYW1vdW50KTsKIHZvaWQgX19wZXJjcHVfY291
-bnRlcl9hZGQoc3RydWN0IHBlcmNwdV9jb3VudGVyICpmYmMsIHM2NCBhbW91bnQsIHMzMiBiYXRj
-aCk7CiBzNjQgX19wZXJjcHVfY291bnRlcl9zdW0oc3RydWN0IHBlcmNwdV9jb3VudGVyICpmYmMp
-OwogaW50IHBlcmNwdV9jb3VudGVyX2NvbXBhcmUoc3RydWN0IHBlcmNwdV9jb3VudGVyICpmYmMs
-IHM2NCByaHMpOworaW50IHBlcmNwdV9jb3VudGVyX2FkZF91bmxlc3NfbHQoc3RydWN0IHBlcmNw
-dV9jb3VudGVyICpmYmMsIHM2NCBhbW91bnQsCisJCQkJCQkJczY0IHRocmVzaG9sZCk7CiAKIHN0
-YXRpYyBpbmxpbmUgdm9pZCBwZXJjcHVfY291bnRlcl9hZGQoc3RydWN0IHBlcmNwdV9jb3VudGVy
-ICpmYmMsIHM2NCBhbW91bnQpCiB7CkBAIC0xNTMsNiArMTU1LDI0IEBAIHN0YXRpYyBpbmxpbmUg
-aW50IHBlcmNwdV9jb3VudGVyX2luaXRpYWxpemVkKHN0cnVjdCBwZXJjcHVfY291bnRlciAqZmJj
-KQogCXJldHVybiAxOwogfQogCitzdGF0aWMgaW5saW5lIGludCBwZXJjcHVfY291bnRlcl9hZGRf
-dW5sZXNzX2x0KHN0cnVjdCBwZXJjcHVfY291bnRlciAqZmJjLCBzNjQgYW1vdW50LAorCQkJCQkJ
-CXM2NCB0aHJlc2hvbGQpCit7CisJczY0IGNvdW50OworCWludCByZXQgPSDigJAxOworCisJcHJl
-ZW1wdF9kaXNhYmxlKCk7CisJY291bnQgPSBmYmMtPmNvdW50ICsgYW1vdW50OworCWlmIChjb3Vu
-dCA8IHRocmVzaG9sZCkKKwkJZ290byBvdXQ7CisJZmJjLT5jb3VudCA9IGNvdW50OworCXJldCA9
-IGNvdW50ID09IHRocmVzaG9sZCA/IDAgOiAxOworb3V0OgorCXByZWVtcHRfZW5hYmxlKCk7CisJ
-cmV0dXJuIHJldDsKK30KKworCiAjZW5kaWYJLyogQ09ORklHX1NNUCAqLwogCiBzdGF0aWMgaW5s
-aW5lIHZvaWQgcGVyY3B1X2NvdW50ZXJfaW5jKHN0cnVjdCBwZXJjcHVfY291bnRlciAqZmJjKQpk
-aWZmIC0tZ2l0IGEvbGliL3BlcmNwdV9jb3VudGVyLmMgYi9saWIvcGVyY3B1X2NvdW50ZXIuYwpp
-bmRleCA2MDQ2NzhkLi5iYTYyNWI3IDEwMDY0NAotLS0gYS9saWIvcGVyY3B1X2NvdW50ZXIuYwor
-KysgYi9saWIvcGVyY3B1X2NvdW50ZXIuYwpAQCAtMjEzLDYgKzIxMyw4NCBAQCBpbnQgcGVyY3B1
-X2NvdW50ZXJfY29tcGFyZShzdHJ1Y3QgcGVyY3B1X2NvdW50ZXIgKmZiYywgczY0IHJocykKIH0K
-IEVYUE9SVF9TWU1CT0wocGVyY3B1X2NvdW50ZXJfY29tcGFyZSk7CiAKKy8qKgorICogcGVyY3B1
-X2NvdW50ZXJfYWRkX3VubGVzc19sdCAtIGFkZCB0byBhIGNvdW50ZXIgYXZvaWRpbmcgdW5kZXJy
-dW5zCisgKiBAZmJjOgljb3VudGVyCisgKiBAYW1vdW50OglhbW91bnQgdG8gYWRkCisgKiBAdGhy
-ZXNob2xkOgl1bmRlcnJ1biB0aHJlc2hvbGQKKyAqCisgKiBBZGQgQGFtb3VudCB0byBAZmRjIGlm
-IGFuZCBvbmx5IGlmIHJlc3VsdCBvZiBhZGRpdGlvbiBpcyBncmVhdGVyIHRoYW4gb3IKKyAqIGVx
-dWFsIHRvIEB0aHJlc2hvbGQgIFJldHVybiAxIGlmIGdyZWF0ZXIgYW5kIGFkZGVkLCAwIGlmIGVx
-dWFsIGFuZCBhZGRlZAorICogYW5kIC0xIGlmIGFuZCB1bmRlcnJ1biB3b3VsZCBoYXZlIG9jY3Vy
-ZWQuCisgKgorICogVGhpcyBpcyB1c2VmdWwgZm9yIG9wZXJhdGlvbnMgdGhhdCBtdXN0IGFjY3Vy
-YXRlbHkgYW5kIGF0b21pY2FsbHkgb25seSBhZGQgYQorICogZGVsdGEgdG8gYSBjb3VudGVyIGlm
-IHRoZSByZXN1bHQgaXMgZ3JlYXRlciB0aGFuIGEgZ2l2ZW4gKGUuZy4gZm9yIGZyZWVzcGFjZQor
-ICogYWNjb3VudGluZyB3aXRoIEVOT1NQQyBjaGVja2luZyBpbiBmaWxlc3lzdGVtcykuCisgKi8K
-K2ludCBwZXJjcHVfY291bnRlcl9hZGRfdW5sZXNzX2x0KHN0cnVjdCBwZXJjcHVfY291bnRlciAq
-ZmJjLCBzNjQgYW1vdW50LAorCQkJCQkJczY0IHRocmVzaG9sZCkKK3sKKwlzNjQJY291bnQ7CisJ
-czY0CWVycm9yID0gMiAqIHBlcmNwdV9jb3VudGVyX2JhdGNoICogbnVtX29ubGluZV9jcHVzKCk7
-CisJaW50CWNwdTsKKwlpbnQJcmV0ID0gLTE7CisKKwlwcmVlbXB0X2Rpc2FibGUoKTsKKworCS8q
-IENoZWNrIHRvIHNlZSBpZiByb3VnaCBjb3VudCB3aWxsIGJlIHN1ZmZpY2llbnQgZm9yIGNvbXBh
-cmlzb24gKi8KKwljb3VudCA9IHBlcmNwdV9jb3VudGVyX3JlYWQoZmJjKTsKKwlpZiAoY291bnQg
-KyBhbW91bnQgPCB0aHJlc2hvbGQgLSBlcnJvcikKKwkJZ290byBvdXQ7CisKKwkvKgorCSAqIElm
-IHRoZSBjb3VudGVyIGlzIG92ZXIgdGhlIHRocmVzaG9sZCBhbmQgdGhlIGNoYW5nZSBpcyBsZXNz
-IHRoYW4gdGhlCisJICogYmF0Y2ggc2l6ZSwgd2UgbWlnaHQgYmUgYWJsZSB0byBhdm9pZCBsb2Nr
-aW5nLgorCSAqLworCWlmIChjb3VudCA+IHRocmVzaG9sZCArIGVycm9yICYmIGFicyhhbW91bnQp
-IDwgcGVyY3B1X2NvdW50ZXJfYmF0Y2gpIHsKKwkJX19wZXJjcHVfY291bnRlcl9hZGQoZmJjLCBh
-bW91bnQsIHBlcmNwdV9jb3VudGVyX2JhdGNoKTsKKwkJcmV0ID0gMTsKKwkJZ290byBvdXQ7CisJ
-fQorCisJLyoKKwkgKiBJZiB0aGUgcmVzdWx0IGlzIGlzIG92ZXIgdGhlIGVycm9yIHRocmVzaG9s
-ZCwgd2UgY2FuIGp1c3QgYWRkIGl0CisJICogaW50byB0aGUgZ2xvYmFsIGNvdW50ZXIgaWdub3Jp
-bmcgd2hhdCBpcyBpbiB0aGUgcGVyLWNwdSBjb3VudGVycworCSAqIGFzIHRoZXkgd2lsbCBub3Qg
-Y2hhbmdlIHRoZSByZXN1bHQgb2YgdGhlIGNhbGN1bGF0aW9uLgorCSAqLworCXNwaW5fbG9jaygm
-ZmJjLT5sb2NrKTsKKwlpZiAoZmJjLT5jb3VudCArIGFtb3VudCA+IHRocmVzaG9sZCArIGVycm9y
-KSB7CisJCWZiYy0+Y291bnQgKz0gYW1vdW50OworCQlyZXQgPSAxOworCQlnb3RvIG91dF91bmxv
-Y2s7CisJfQorCisJLyoKKwkgKiBSZXN1bHQgaXMgd2l0aGluZyB0aGUgZXJyb3IgbWFyZ2luLiBS
-dW4gYW4gb3Blbi1jb2RlZCBzdW0gb2YgdGhlCisJICogcGVyLWNwdSBjb3VudGVycyB0byBnZXQg
-dGhlIGV4YWN0IHZhbHVlIGF0IHRoaXMgcG9pbnQgaW4gdGltZSwKKwkgKiBhbmQgaWYgdGhlIHJl
-c3VsdCB3b3VsIGRiZSBhYm92ZSB0aGUgdGhyZXNob2xkLCBhZGQgdGhlIGFtb3VudCB0bworCSAq
-IHRoZSBnbG9iYWwgY291bnRlci4KKwkgKi8KKwljb3VudCA9IGZiYy0+Y291bnQ7CisJZm9yX2Vh
-Y2hfb25saW5lX2NwdShjcHUpIHsKKwkJczMyICpwY291bnQgPSBwZXJfY3B1X3B0cihmYmMtPmNv
-dW50ZXJzLCBjcHUpOworCQljb3VudCArPSAqcGNvdW50OworCX0KKwlXQVJOX09OKGNvdW50IDwg
-dGhyZXNob2xkKTsKKworCWlmIChjb3VudCArIGFtb3VudCA+PSB0aHJlc2hvbGQpIHsKKwkJcmV0
-ID0gMDsKKwkJaWYgKGNvdW50ICsgYW1vdW50ID4gdGhyZXNob2xkKQorCQkJcmV0ID0gMTsKKwkJ
-ZmJjLT5jb3VudCArPSBhbW91bnQ7CisJfQorb3V0X3VubG9jazoKKwlzcGluX3VubG9jaygmZmJj
-LT5sb2NrKTsKK291dDoKKwlwcmVlbXB0X2VuYWJsZSgpOworCXJldHVybiByZXQ7Cit9CitFWFBP
-UlRfU1lNQk9MKHBlcmNwdV9jb3VudGVyX2FkZF91bmxlc3NfbHQpOworCiBzdGF0aWMgaW50IF9f
-aW5pdCBwZXJjcHVfY291bnRlcl9zdGFydHVwKHZvaWQpCiB7CiAJY29tcHV0ZV9iYXRjaF92YWx1
-ZSgpOwotLSAKMS43LjIuMwoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2ku
-Y29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+From: Dave Chinner <dchinner@redhat.com>
+
+When inode buffer IO completes, usually all of the inodes are removed from the
+AIL. This involves processing them one at a time and taking the AIL lock once
+for every inode. When all CPUs are processing inode IO completions, this causes
+excessive amount sof contention on the AIL lock.
+
+Instead, change the way we process inode IO completion in the buffer
+IO done callback. Allow the inode IO done callback to walk the list
+of IO done callbacks and pull all the inodes off the buffer in one
+go and then process them as a batch.
+
+Once all the inodes for removal are collected, take the AIL lock
+once and do a bulk removal operation to minimise traffic on the AIL
+lock.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_inode_item.c |   92 ++++++++++++++++++++++++++++++++++++++---------
+ fs/xfs/xfs_trans_ail.c  |   64 ++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_trans_priv.h |    4 ++
+ 3 files changed, 143 insertions(+), 17 deletions(-)
+
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index 7c8d30c..1d72bb1 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -842,15 +842,64 @@ xfs_inode_item_destroy(
+  * flushed to disk.  It is responsible for removing the inode item
+  * from the AIL if it has not been re-logged, and unlocking the inode's
+  * flush lock.
++ *
++ * To reduce AIL lock traffic as much as possible, we scan the buffer log item
++ * list for other inodes that will run this function. We remove them from the
++ * buffer list so we can process all the inode IO completions in one AIL lock
++ * traversal.
+  */
+ void
+ xfs_iflush_done(
+ 	struct xfs_buf		*bp,
+ 	struct xfs_log_item	*lip)
+ {
+-	struct xfs_inode_log_item *iip = INODE_ITEM(lip);
+-	xfs_inode_t		*ip = iip->ili_inode;
++	struct xfs_inode_log_item *iip;
++	struct xfs_log_item	*blip;
++	struct xfs_log_item	*next;
++	struct xfs_log_item	*prev;
+ 	struct xfs_ail		*ailp = lip->li_ailp;
++	int			need_ail = 0;
++
++	/*
++	 * Scan the buffer IO completions for other inodes being completed and
++	 * attach them to the current inode log item.
++	 */
++	blip = XFS_BUF_FSPRIVATE(bp, xfs_log_item_t *);
++	prev = NULL;
++	while (blip != NULL) {
++		if (lip->li_cb != xfs_iflush_done) {
++			prev = blip;
++			blip = blip->li_bio_list;
++			continue;
++		}
++
++		/* remove from list */
++		next = blip->li_bio_list;
++		if (!prev) {
++			XFS_BUF_SET_FSPRIVATE(bp, next);
++		} else {
++			prev->li_bio_list = next;
++		}
++
++		/* add to current list */
++		blip->li_bio_list = lip->li_bio_list;
++		lip->li_bio_list = blip;
++
++		/*
++		 * while we have the item, do the unlocked check for needing
++		 * the AIL lock.
++		 */
++		iip = INODE_ITEM(blip);
++		if (iip->ili_logged && blip->li_lsn == iip->ili_flush_lsn)
++			need_ail++;
++
++		blip = next;
++	}
++
++	/* make sure we capture the state of the initial inode. */
++	iip = INODE_ITEM(lip);
++	if (iip->ili_logged && lip->li_lsn == iip->ili_flush_lsn)
++		need_ail++;
+ 
+ 	/*
+ 	 * We only want to pull the item from the AIL if it is
+@@ -861,28 +910,37 @@ xfs_iflush_done(
+ 	 * the lock since it's cheaper, and then we recheck while
+ 	 * holding the lock before removing the inode from the AIL.
+ 	 */
+-	if (iip->ili_logged && lip->li_lsn == iip->ili_flush_lsn) {
++	if (need_ail) {
++		struct xfs_log_item *lgia[need_ail];
++		int i = 0;
+ 		spin_lock(&ailp->xa_lock);
+-		if (lip->li_lsn == iip->ili_flush_lsn) {
+-			/* xfs_trans_ail_delete() drops the AIL lock. */
+-			xfs_trans_ail_delete(ailp, lip);
+-		} else {
+-			spin_unlock(&ailp->xa_lock);
++		for (blip = lip; blip; blip = blip->li_bio_list) {
++			iip = INODE_ITEM(blip);
++			if (iip->ili_logged &&
++			    blip->li_lsn == iip->ili_flush_lsn) {
++				lgia[i++] = blip;
++			}
++			ASSERT(i <= need_ail);
+ 		}
++		/* xfs_trans_ail_delete_bulk() drops the AIL lock. */
++		xfs_trans_ail_delete_bulk(ailp, lgia, i);
+ 	}
+ 
+-	iip->ili_logged = 0;
+ 
+ 	/*
+-	 * Clear the ili_last_fields bits now that we know that the
+-	 * data corresponding to them is safely on disk.
++	 * clean up and unlock the flush lock now we are done. We can clear the
++	 * ili_last_fields bits now that we know that the data corresponding to
++	 * them is safely on disk.
+ 	 */
+-	iip->ili_last_fields = 0;
++	for (blip = lip; blip; blip = next) {
++		next = blip->li_bio_list;
++		blip->li_bio_list = NULL;
+ 
+-	/*
+-	 * Release the inode's flush lock since we're done with it.
+-	 */
+-	xfs_ifunlock(ip);
++		iip = INODE_ITEM(blip);
++		iip->ili_logged = 0;
++		iip->ili_last_fields = 0;
++		xfs_ifunlock(iip->ili_inode);
++	}
+ }
+ 
+ /*
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index f70f295..d450092 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -635,6 +635,70 @@ xfs_trans_ail_delete(
+ 	}
+ }
+ 
++/*
++ * Bulk update version of xfs_trans_ail_delete
++ *
++ * This version takes an array of log items that all need to removed from the
++ * AIL. The caller is already holding the AIL lock, and done all the checks
++ * necessary to ensure the items passed in via @lgia are ready for deletion.
++ *
++ * This function will not drop the AIL lock until all items are removed from
++ * the AIL to minimise the amount of lock traffic on the AIL. This does not
++ * greatly increase the AIL hold time, but does significantly reduce the amount
++ * of traffic on the lock, especially during IO completion.
++ */
++void
++xfs_trans_ail_delete_bulk(
++	struct xfs_ail		*ailp,
++	struct xfs_log_item	**lgia,
++	int			nr_items) __releases(ailp->xa_lock)
++{
++	xfs_log_item_t		*mlip;
++	xfs_lsn_t		tail_lsn;
++	int			mlip_changed = 0;
++	int			i;
++
++	mlip = xfs_ail_min(ailp);
++
++	for (i = 0; i < nr_items; i++) {
++		struct xfs_log_item *lip = lgia[i];
++		if (!(lip->li_flags & XFS_LI_IN_AIL)) {
++			struct xfs_mount	*mp = ailp->xa_mount;
++
++			spin_unlock(&ailp->xa_lock);
++			if (!XFS_FORCED_SHUTDOWN(mp)) {
++				xfs_cmn_err(XFS_PTAG_AILDELETE, CE_ALERT, mp,
++		"%s: attempting to delete a log item that is not in the AIL",
++						__func__);
++				xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
++			}
++			return;
++		}
++
++		xfs_ail_delete(ailp, lip);
++		lip->li_flags &= ~XFS_LI_IN_AIL;
++		lip->li_lsn = 0;
++		if (mlip == lip)
++			mlip_changed = 1;
++	}
++
++	if (!mlip_changed) {
++		spin_unlock(&ailp->xa_lock);
++		return;
++	}
++
++	/*
++	 * It is not safe to access mlip after the AIL lock is dropped, so we
++	 * must get a copy of li_lsn before we do so.  This is especially
++	 * important on 32-bit platforms where accessing and updating 64-bit
++	 * values like li_lsn is not atomic. It is possible we've emptied the
++	 * AIL here, so if that is the case, pass an LSN of 0 to the tail move.
++	 */
++	mlip = xfs_ail_min(ailp);
++	tail_lsn = mlip ? mlip->li_lsn : 0;
++	spin_unlock(&ailp->xa_lock);
++	xfs_log_move_tail(ailp->xa_mount, tail_lsn);
++}
+ 
+ 
+ /*
+diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
+index 07ea4b7..4ab7377 100644
+--- a/fs/xfs/xfs_trans_priv.h
++++ b/fs/xfs/xfs_trans_priv.h
+@@ -85,6 +85,10 @@ void			 xfs_trans_ail_update_bulk(struct xfs_ail *ailp,
+ void			xfs_trans_ail_delete(struct xfs_ail *ailp,
+ 					struct xfs_log_item *lip)
+ 					__releases(ailp->xa_lock);
++void			xfs_trans_ail_delete_bulk(struct xfs_ail *ailp,
++					struct xfs_log_item **lgia,
++					int nr_items)
++					__releases(ailp->xa_lock);
+ void			xfs_trans_ail_push(struct xfs_ail *, xfs_lsn_t);
+ void			xfs_trans_unlocked_item(struct xfs_ail *,
+ 					xfs_log_item_t *);
+-- 
+1.7.2.3
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
