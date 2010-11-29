@@ -1,29 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAT1bNMv082122 for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 19:37:23 -0600
+	oAT1bEZu082061 for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 19:37:14 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1391A1AE776
-	for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 17:39:03 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
-	[150.101.137.97]) by cuda.sgi.com with ESMTP id
-	Fsd0IlrupUdtc59U for <xfs@oss.sgi.com>;
-	Sun, 28 Nov 2010 17:39:03 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3C1F21C7C51C
+	for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 17:38:54 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
+	[150.101.137.102]) by cuda.sgi.com with ESMTP id
+	UG0IHJR085rLfBxa for <xfs@oss.sgi.com>;
+	Sun, 28 Nov 2010 17:38:54 -0800 (PST)
 Received: from dastard (unverified [121.44.88.148])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	48055179-1927428
-	for <xfs@oss.sgi.com>; Mon, 29 Nov 2010 12:09:02 +1030 (CDT)
+	47821747-1927428
+	for <xfs@oss.sgi.com>; Mon, 29 Nov 2010 12:08:53 +1030 (CDT)
 Received: from chute ([192.168.1.1] helo=disappointment)
 	by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1PMshp-0000de-RM
-	for xfs@oss.sgi.com; Mon, 29 Nov 2010 12:39:01 +1100
+	(envelope-from <dave@fromorbit.com>) id 1PMshf-0000dM-Hi
+	for xfs@oss.sgi.com; Mon, 29 Nov 2010 12:38:51 +1100
 Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1PMshQ-0005ck-Dj
+	(envelope-from <dave@disappointment.disaster>) id 1PMshQ-0005cQ-3A
 	for xfs@oss.sgi.com; Mon, 29 Nov 2010 12:38:36 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 11/14] xfs: remove log grant lock
-Date: Mon, 29 Nov 2010 12:38:29 +1100
-Message-Id: <1290994712-21376-12-git-send-email-david@fromorbit.com>
+Subject: [PATCH 04/14] xfs: use wait queues directly for log grant queues
+Date: Mon, 29 Nov 2010 12:38:22 +1100
+Message-Id: <1290994712-21376-5-git-send-email-david@fromorbit.com>
 In-Reply-To: <1290994712-21376-1-git-send-email-david@fromorbit.com>
 References: <1290994712-21376-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -43,57 +43,139 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The log grant lock no longer protects anything, so remove the remaining
-initialisation and teardown code that still exists.
+The log grant queues are one of the few places left using sv_t
+constructs for waiting. Convert them to use wait queues directly
+while we are cleaning up the code to move one step closer to remove
+the sv_t type from the XFS codebase.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_log.c      |    3 ---
- fs/xfs/xfs_log_priv.h |    3 ---
- 2 files changed, 0 insertions(+), 6 deletions(-)
+ fs/xfs/xfs_log.c      |   32 +++++++++++++++++++++-----------
+ fs/xfs/xfs_log_priv.h |    2 +-
+ 2 files changed, 22 insertions(+), 12 deletions(-)
 
 diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 50cf6af..d54d8f8 100644
+index 69a9563..93b5b2d 100644
 --- a/fs/xfs/xfs_log.c
 +++ b/fs/xfs/xfs_log.c
-@@ -1118,7 +1118,6 @@ xlog_alloc_log(xfs_mount_t	*mp,
- 	log->l_xbuf = bp;
- 
- 	spin_lock_init(&log->l_icloglock);
--	spin_lock_init(&log->l_grant_lock);
- 	sv_init(&log->l_flush_wait, 0, "flush_wait");
- 
- 	/* log record size must be multiple of BBSIZE; see xlog_rec_header_t */
-@@ -1199,7 +1198,6 @@ out_free_iclog:
- 		kmem_free(iclog);
+@@ -739,7 +739,7 @@ xfs_log_move_tail(xfs_mount_t	*mp,
+ 				break;
+ 			tail_lsn = 0;
+ 			free_bytes -= tic->t_unit_res;
+-			sv_signal(&tic->t_wait);
++			wake_up(&tic->t_wait);
+ 		}
  	}
- 	spinlock_destroy(&log->l_icloglock);
--	spinlock_destroy(&log->l_grant_lock);
- 	xfs_buf_free(log->l_xbuf);
- out_free_log:
- 	kmem_free(log);
-@@ -1516,7 +1514,6 @@ xlog_dealloc_log(xlog_t *log)
- 		iclog = next_iclog;
- 	}
- 	spinlock_destroy(&log->l_icloglock);
--	spinlock_destroy(&log->l_grant_lock);
  
- 	xfs_buf_free(log->l_xbuf);
- 	log->l_mp->m_log = NULL;
+@@ -759,7 +759,7 @@ xfs_log_move_tail(xfs_mount_t	*mp,
+ 				break;
+ 			tail_lsn = 0;
+ 			free_bytes -= need_bytes;
+-			sv_signal(&tic->t_wait);
++			wake_up(&tic->t_wait);
+ 		}
+ 	}
+ 	spin_unlock(&log->l_grant_lock);
+@@ -2537,6 +2537,7 @@ xlog_grant_log_space(
+ {
+ 	int			 free_bytes;
+ 	int			 need_bytes;
++	DECLARE_WAITQUEUE(wait, current);
+ 
+ #ifdef DEBUG
+ 	if (log->l_flags & XLOG_ACTIVE_RECOVERY)
+@@ -2573,7 +2574,12 @@ redo:
+ 
+ 		XFS_STATS_INC(xs_sleep_logspace);
+ 		trace_xfs_log_grant_sleep(log, tic);
+-		sv_wait(&tic->t_wait, PINOD|PLTWAIT, &log->l_grant_lock, s);
++
++		add_wait_queue_exclusive(&tic->t_wait, &wait);
++		__set_current_state(TASK_UNINTERRUPTIBLE);
++		spin_unlock(&log->l_grant_lock);
++		schedule();
++		remove_wait_queue(&tic->t_wait, &wait);
+ 
+ 		spin_lock(&log->l_grant_lock);
+ 		trace_xfs_log_grant_wake(log, tic);
+@@ -2617,6 +2623,7 @@ xlog_regrant_write_log_space(
+ {
+ 	int			free_bytes;
+ 	int			need_bytes;
++	DECLARE_WAITQUEUE(wait, current);
+ 
+ 	tic->t_curr_res = tic->t_unit_res;
+ 	xlog_tic_reset_res(tic);
+@@ -2662,7 +2669,7 @@ redo:
+ 					break;
+ 				}
+ 				free_bytes -= ntic->t_unit_res;
+-				sv_signal(&ntic->t_wait);
++				wake_up(&ntic->t_wait);
+ 			}
+ 			list_add_tail(&tic->t_queue, &log->l_writeq);
+ 			if (woke_all)
+@@ -2675,7 +2682,12 @@ redo:
+ 
+ 		XFS_STATS_INC(xs_sleep_logspace);
+ 		trace_xfs_log_regrant_write_sleep(log, tic);
+-		sv_wait(&tic->t_wait, PINOD|PLTWAIT, &log->l_grant_lock, s);
++
++		add_wait_queue_exclusive(&tic->t_wait, &wait);
++		__set_current_state(TASK_UNINTERRUPTIBLE);
++		spin_unlock(&log->l_grant_lock);
++		schedule();
++		remove_wait_queue(&tic->t_wait, &wait);
+ 
+ 		spin_lock(&log->l_grant_lock);
+ 		trace_xfs_log_regrant_write_wake(log, tic);
+@@ -3237,10 +3249,8 @@ xfs_log_ticket_put(
+ 	xlog_ticket_t	*ticket)
+ {
+ 	ASSERT(atomic_read(&ticket->t_ref) > 0);
+-	if (atomic_dec_and_test(&ticket->t_ref)) {
+-		sv_destroy(&ticket->t_wait);
++	if (atomic_dec_and_test(&ticket->t_ref))
+ 		kmem_zone_free(xfs_log_ticket_zone, ticket);
+-	}
+ }
+ 
+ xlog_ticket_t *
+@@ -3373,7 +3383,7 @@ xlog_ticket_alloc(
+ 	tic->t_trans_type	= 0;
+ 	if (xflags & XFS_LOG_PERM_RESERV)
+ 		tic->t_flags |= XLOG_TIC_PERM_RESERV;
+-	sv_init(&tic->t_wait, SV_DEFAULT, "logtick");
++	init_waitqueue_head(&tic->t_wait);
+ 
+ 	xlog_tic_reset_res(tic);
+ 
+@@ -3701,10 +3711,10 @@ xfs_log_force_umount(
+ 	 * action is protected by the GRANTLOCK.
+ 	 */
+ 	list_for_each_entry(tic, &log->l_reserveq, t_queue)
+-		sv_signal(&tic->t_wait);
++		wake_up(&tic->t_wait);
+ 
+ 	list_for_each_entry(tic, &log->l_writeq, t_queue)
+-		sv_signal(&tic->t_wait);
++		wake_up(&tic->t_wait);
+ 	spin_unlock(&log->l_grant_lock);
+ 
+ 	if (!(log->l_iclog->ic_state & XLOG_STATE_IOERROR)) {
 diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index 621002c..cd62400 100644
+index 4ebaf07..6fcee10 100644
 --- a/fs/xfs/xfs_log_priv.h
 +++ b/fs/xfs/xfs_log_priv.h
-@@ -512,9 +512,6 @@ typedef struct log {
- 	int			l_curr_block;   /* current logical log block */
- 	int			l_prev_block;   /* previous logical log block */
+@@ -242,7 +242,7 @@ typedef struct xlog_res {
+ } xlog_res_t;
  
--	/* The following block of fields are changed while holding grant_lock */
--	spinlock_t		l_grant_lock ____cacheline_aligned_in_smp;
--
- 	/*
- 	 * l_last_sync_lsn and l_tail_lsn are atomics so they can be set and
- 	 * read without needing to hold specific locks. To avoid operations
+ typedef struct xlog_ticket {
+-	sv_t		   t_wait;	 /* ticket wait queue            : 20 */
++	wait_queue_head_t  t_wait;	 /* ticket wait queue */
+ 	struct list_head   t_queue;	 /* reserve/write queue */
+ 	xlog_tid_t	   t_tid;	 /* transaction identifier	 : 4  */
+ 	atomic_t	   t_ref;	 /* ticket reference count       : 4  */
 -- 
 1.7.2.3
 
