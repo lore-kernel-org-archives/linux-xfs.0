@@ -1,31 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAT0voGd075291 for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 18:57:50 -0600
+	oAT0tR8v075106 for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 18:55:27 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D965E13DF71B
-	for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 16:59:30 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
-	[150.101.137.97]) by cuda.sgi.com with ESMTP id
-	XekVuvYaAVZwmW6B for <xfs@oss.sgi.com>;
-	Sun, 28 Nov 2010 16:59:30 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CF6701AF8A4
+	for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 16:44:11 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail20.adl6.internode.on.net
+	[150.101.137.105]) by cuda.sgi.com with ESMTP id
+	FpkSZedOOfZpmTns for <xfs@oss.sgi.com>;
+	Sun, 28 Nov 2010 16:44:11 -0800 (PST)
 Received: from dastard (unverified [121.44.88.148])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	48049199-1927428
-	for <xfs@oss.sgi.com>; Mon, 29 Nov 2010 11:29:29 +1030 (CDT)
+	2736919-1927428
+	for <xfs@oss.sgi.com>; Mon, 29 Nov 2010 11:14:10 +1030 (CDT)
 Received: from chute ([192.168.1.1] helo=disappointment)
 	by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1PMs5Y-0000ZB-3z
-	for xfs@oss.sgi.com; Mon, 29 Nov 2010 11:59:28 +1100
+	(envelope-from <dave@fromorbit.com>) id 1PMrqj-0000XX-9c
+	for xfs@oss.sgi.com; Mon, 29 Nov 2010 11:44:09 +1100
 Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1PMs5I-0005Ro-Pi
-	for xfs@oss.sgi.com; Mon, 29 Nov 2010 11:59:12 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1PMrqU-0005MS-1e
+	for xfs@oss.sgi.com; Mon, 29 Nov 2010 11:43:54 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 3/3] xfs: connect up buffer reclaim priority hooks
-Date: Mon, 29 Nov 2010 11:58:59 +1100
-Message-Id: <1290992339-20849-4-git-send-email-david@fromorbit.com>
-In-Reply-To: <1290992339-20849-1-git-send-email-david@fromorbit.com>
-References: <1290992339-20849-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 2/2] xfs: don't truncate prealloc from frequently accessed
+	inodes
+Date: Mon, 29 Nov 2010 11:43:51 +1100
+Message-Id: <1290991431-20519-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1290991431-20519-1-git-send-email-david@fromorbit.com>
+References: <1290991431-20519-1-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,114 +36,104 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
-
-Now that the buffer reclaim infrastructure can handle different reclaim
-priorities for different types of buffers, reconnect the hooks in the
-XFS code that has been sitting dormant since it was ported to Linux. This
-should finally give use reclaim prioritisation that is on a par with the
-functionality that Irix provided XFS 15 years ago.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/linux-2.6/xfs_buf.h |   10 ++++++++--
- fs/xfs/xfs_btree.c         |    9 ++++-----
- fs/xfs/xfs_inode.c         |    2 +-
- fs/xfs/xfs_trans.h         |    2 +-
- 4 files changed, 14 insertions(+), 9 deletions(-)
-
-diff --git a/fs/xfs/linux-2.6/xfs_buf.h b/fs/xfs/linux-2.6/xfs_buf.h
-index 4601eab..a76c242 100644
---- a/fs/xfs/linux-2.6/xfs_buf.h
-+++ b/fs/xfs/linux-2.6/xfs_buf.h
-@@ -336,9 +336,15 @@ void xfs_buf_stale(struct xfs_buf *bp);
- #define XFS_BUF_SIZE(bp)		((bp)->b_buffer_length)
- #define XFS_BUF_SET_SIZE(bp, cnt)	((bp)->b_buffer_length = (cnt))
- 
--#define XFS_BUF_SET_VTYPE_REF(bp, type, ref)	do { } while (0)
-+static inline void
-+xfs_buf_set_ref(
-+	struct xfs_buf	*bp,
-+	int		lru_ref)
-+{
-+	atomic_set(&bp->b_lru_ref, lru_ref);
-+}
-+#define XFS_BUF_SET_VTYPE_REF(bp, type, ref)	xfs_buf_set_ref(bp, ref)
- #define XFS_BUF_SET_VTYPE(bp, type)		do { } while (0)
--#define XFS_BUF_SET_REF(bp, ref)		do { } while (0)
- 
- #define XFS_BUF_ISPINNED(bp)	atomic_read(&((bp)->b_pin_count))
- 
-diff --git a/fs/xfs/xfs_btree.c b/fs/xfs/xfs_btree.c
-index 04f9cca..2f9e97c 100644
---- a/fs/xfs/xfs_btree.c
-+++ b/fs/xfs/xfs_btree.c
-@@ -634,9 +634,8 @@ xfs_btree_read_bufl(
- 		return error;
- 	}
- 	ASSERT(!bp || !XFS_BUF_GETERROR(bp));
--	if (bp != NULL) {
-+	if (bp)
- 		XFS_BUF_SET_VTYPE_REF(bp, B_FS_MAP, refval);
--	}
- 	*bpp = bp;
- 	return 0;
- }
-@@ -944,13 +943,13 @@ xfs_btree_set_refs(
- 	switch (cur->bc_btnum) {
- 	case XFS_BTNUM_BNO:
- 	case XFS_BTNUM_CNT:
--		XFS_BUF_SET_VTYPE_REF(*bpp, B_FS_MAP, XFS_ALLOC_BTREE_REF);
-+		XFS_BUF_SET_VTYPE_REF(bp, B_FS_MAP, XFS_ALLOC_BTREE_REF);
- 		break;
- 	case XFS_BTNUM_INO:
--		XFS_BUF_SET_VTYPE_REF(*bpp, B_FS_INOMAP, XFS_INO_BTREE_REF);
-+		XFS_BUF_SET_VTYPE_REF(bp, B_FS_INOMAP, XFS_INO_BTREE_REF);
- 		break;
- 	case XFS_BTNUM_BMAP:
--		XFS_BUF_SET_VTYPE_REF(*bpp, B_FS_MAP, XFS_BMAP_BTREE_REF);
-+		XFS_BUF_SET_VTYPE_REF(bp, B_FS_MAP, XFS_BMAP_BTREE_REF);
- 		break;
- 	default:
- 		ASSERT(0);
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 43ffd90..be7cf62 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -887,7 +887,7 @@ xfs_iread(
- 	 * around for a while.  This helps to keep recently accessed
- 	 * meta-data in-core longer.
- 	 */
--	XFS_BUF_SET_REF(bp, XFS_INO_REF);
-+	xfs_buf_set_ref(bp, XFS_INO_REF);
- 
- 	/*
- 	 * Use xfs_trans_brelse() to release the buffer containing the
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index 246286b..c2042b7 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -294,8 +294,8 @@ struct xfs_log_item_desc {
- #define	XFS_ALLOC_BTREE_REF	2
- #define	XFS_BMAP_BTREE_REF	2
- #define	XFS_DIR_BTREE_REF	2
-+#define	XFS_INO_REF		2
- #define	XFS_ATTR_BTREE_REF	1
--#define	XFS_INO_REF		1
- #define	XFS_DQUOT_REF		1
- 
- #ifdef __KERNEL__
--- 
-1.7.2.3
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+RnJvbTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgoKQSBsb25nIHN0YW5kaW5n
+IHByb2JsZW0gZm9yIHN0cmVhbWluZyB3cml0ZdGVIHRocm91Z2ggdGhlIE5GUyBzZXJ2ZXIKaGFz
+IGJlZW4gdGhhdCB0aGUgTkZTIHNlcnZlciBvcGVucyBhbmQgY2xvc2VzIGZpbGUgZGVzY3JpcHRv
+cnMgb24gYW4KaW5vZGUgZm9yIGV2ZXJ5IHdyaXRlLiBUaGUgcmVzdWx0IG9mIHRoaXMgYmVoYXZp
+b3VyIGlzIHRoYXQgdGhlCi0+cmVsZWFzZSgpIGZ1bmN0aW9uIGlzIGNhbGxlZCBvbiBldmVyeSBj
+bG9zZSBhbmQgdGhhdCByZXN1bHRzIGluClhGUyB0cnVuY2F0aW5nIHNwZWN1bGF0aXZlIHByZWFs
+bG9jYXRpb24gYmV5b25kIHRoZSBFT0YuICBUaGlzIGhhcwphbiBhZHZlcnNlIGVmZmVjdCBvbiBm
+aWxlIGxheW91dCB3aGVuIG11bHRpcGxlIGZpbGVzIGFyZSBiZWluZwp3cml0dGVuIGF0IHRoZSBz
+YW1lIHRpbWUgLSB0aGV5IGludGVybGVhdmUgdGhlaXIgZXh0ZW50cyBhbmQgY2FuCnJlc3VsdCBp
+biBzZXZlcmUgZnJhZ21lbnRhdGlvbi4KClRvIGF2b2lkIHRoaXMgcHJvYmxlbSwga2VlcCBhIGNv
+dW50IG9mIHRoZSBudW1iZXIgb2YgLT5yZWxlYXNlIGNhbGxzCm1hZGUgb24gYW4gaW5vZGUuIEZv
+ciBtb3N0IGNhc2VzLCBhbiBpbm9kZSBpcyBvbmx5IGdvaW5nIHRvIGJlIG9wZW5lZApvbmNlIGZv
+ciB3cml0aW5nIGFuZCB0aGVuIGNsb3NlZCBhZ2FpbiBkdXJpbmcgaXQncyBsaWZldGltZSBpbgpj
+YWNoZS4gSGVuY2UgaWYgdGhlcmUgYXJlIG11bHRpcGxlIC0+cmVsZWFzZSBjYWxscywgdGhlcmUg
+aXMgYSBnb29kCmNoYW5jZSB0aGF0IHRoZSBpbm9kZSBpcyBiZWluZyBhY2Nlc3NlZCBieSB0aGUg
+TkZTIHNlcnZlci4gSGVuY2UKY291bnQgdXAgZXZlcnkgdGltZSAtPnJlbGVhc2UgaXMgY2FsbGVk
+IHdoaWxlIHRoZXJlIGFyZSBkZWxhbGxvYwpibG9ja3Mgc3RpbGwgb3V0c3RhbmRpbmcgb24gdGhl
+IGlub2RlLgoKSWYgdGhpcyBjb3VudCBpcyBub24temVybyB3aGVuIC0+cmVsZWFzZSBpcyBuZXh0
+IGNhbGxlZCwgdGhlbiBkbyBubwp0cnVuY2F0ZSBhd2F5IHRoZSBzcGVjdWxhdGl2ZSBwcmVhbGxv
+Y2F0aW9uIC0gbGVhdmUgaXQgdGhlcmUgc28gdGhhdApzdWJzZXF1ZW50IHdyaXRlcyBkbyBub3Qg
+bmVlZCB0byByZWFsbG9jYXRlIHRoZSBkZWxhbGxvYyBzcGFjZS4gVGhpcwp3aWxsIHByZXZlbnQg
+aW50ZXJsZWF2aW5nIG9mIGV4dGVudHMgb2YgZGlmZmVyZW50IGlub2RlcyB3cml0dGVuCmNvbmN1
+cnJlbnRseSB0byB0aGUgc2FtZSBBRy4KCklmIHdlIGdldCB0aGlzIHdyb25nLCBpdCBpcyBub3Qg
+YSBiaWcgZGVhbCBhcyB3ZSB0cnVuY2F0ZQpzcGVjdWxhdGl2ZSBhbGxvY2F0aW9uIGJleW9uZCBF
+T0YgYW55d2F5IGluIHhmc19pbmFjdGl2ZSgpIHdoZW4gdGhlCmlub2RlIGlzIHRocm93biBvdXQg
+b2YgdGhlIGNhY2hlLgoKVGhlIG5ldyBjb3VudGVyIGluIHRoZSBzdHJ1Y3QgeGZzX2lub2RlIGZp
+dHMgaW50byBhIGhvbGUgaW4gdGhlCnN0cnVjdHVyZSBvbiA2NCBiaXQgbWFjaGluZXMsIHNvIGRv
+ZXMgbm90IGdyb3cgdGhlIHNpemUgb2YgdGhlIGlub2RlCmF0IGFsbC4KClNpZ25lZC1vZmYtYnk6
+IERhdmUgQ2hpbm5lciA8ZGNoaW5uZXJAcmVkaGF0LmNvbT4KLS0tCiBmcy94ZnMveGZzX2lnZXQu
+YyAgICAgfCAgICAxICsKIGZzL3hmcy94ZnNfaW5vZGUuaCAgICB8ICAgIDEgKwogZnMveGZzL3hm
+c192bm9kZW9wcy5jIHwgICA2MSArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKy0tLS0t
+LS0tLS0tLS0tLS0tCiAzIGZpbGVzIGNoYW5nZWQsIDQyIGluc2VydGlvbnMoKyksIDIxIGRlbGV0
+aW9ucygtKQoKZGlmZiAtLWdpdCBhL2ZzL3hmcy94ZnNfaWdldC5jIGIvZnMveGZzL3hmc19pZ2V0
+LmMKaW5kZXggMGNkZDI2OS4uMTg5OTFhOSAxMDA2NDQKLS0tIGEvZnMveGZzL3hmc19pZ2V0LmMK
+KysrIGIvZnMveGZzL3hmc19pZ2V0LmMKQEAgLTg0LDYgKzg0LDcgQEAgeGZzX2lub2RlX2FsbG9j
+KAogCW1lbXNldCgmaXAtPmlfZCwgMCwgc2l6ZW9mKHhmc19pY2Rpbm9kZV90KSk7CiAJaXAtPmlf
+c2l6ZSA9IDA7CiAJaXAtPmlfbmV3X3NpemUgPSAwOworCWlwLT5pX2RpcnR5X3JlbGVhc2VzID0g
+MDsKIAogCS8qIHByZXZlbnQgYW55b25lIGZyb20gdXNpbmcgdGhpcyB5ZXQgKi8KIAlWRlNfSShp
+cCktPmlfc3RhdGUgPSBJX05FVzsKZGlmZiAtLWdpdCBhL2ZzL3hmcy94ZnNfaW5vZGUuaCBiL2Zz
+L3hmcy94ZnNfaW5vZGUuaAppbmRleCBmYjJjYTJlLi5lYTJmMzRlIDEwMDY0NAotLS0gYS9mcy94
+ZnMveGZzX2lub2RlLmgKKysrIGIvZnMveGZzL3hmc19pbm9kZS5oCkBAIC0yNjAsNiArMjYwLDcg
+QEAgdHlwZWRlZiBzdHJ1Y3QgeGZzX2lub2RlIHsKIAl4ZnNfZnNpemVfdAkJaV9zaXplOwkJLyog
+aW4tbWVtb3J5IHNpemUgKi8KIAl4ZnNfZnNpemVfdAkJaV9uZXdfc2l6ZTsJLyogc2l6ZSB3aGVu
+IHdyaXRlIGNvbXBsZXRlcyAqLwogCWF0b21pY190CQlpX2lvY291bnQ7CS8qIG91dHN0YW5kaW5n
+IEkvTyBjb3VudCAqLworCWludAkJCWlfZGlydHlfcmVsZWFzZXM7IC8qIGRpcnR5IC0+cmVsZWFz
+ZSBjYWxscyAqLwogCiAJLyogVkZTIGlub2RlICovCiAJc3RydWN0IGlub2RlCQlpX3Zub2RlOwkv
+KiBlbWJlZGRlZCBWRlMgaW5vZGUgKi8KZGlmZiAtLWdpdCBhL2ZzL3hmcy94ZnNfdm5vZGVvcHMu
+YyBiL2ZzL3hmcy94ZnNfdm5vZGVvcHMuYwppbmRleCA4ZTRhNjNjLi40OWYzYTVhIDEwMDY0NAot
+LS0gYS9mcy94ZnMveGZzX3Zub2Rlb3BzLmMKKysrIGIvZnMveGZzL3hmc192bm9kZW9wcy5jCkBA
+IC05NjQsMjkgKzk2NCw0OCBAQCB4ZnNfcmVsZWFzZSgKIAkJCXhmc19mbHVzaF9wYWdlcyhpcCwg
+MCwgLTEsIFhCRl9BU1lOQywgRklfTk9ORSk7CiAJfQogCi0JaWYgKGlwLT5pX2QuZGlfbmxpbmsg
+IT0gMCkgewotCQlpZiAoKCgoaXAtPmlfZC5kaV9tb2RlICYgU19JRk1UKSA9PSBTX0lGUkVHKSAm
+JgotCQkgICAgICgoaXAtPmlfc2l6ZSA+IDApIHx8IChWTl9DQUNIRUQoVkZTX0koaXApKSA+IDAg
+fHwKLQkJICAgICAgIGlwLT5pX2RlbGF5ZWRfYmxrcyA+IDApKSAmJgotCQkgICAgIChpcC0+aV9k
+Zi5pZl9mbGFncyAmIFhGU19JRkVYVEVOVFMpKSAgJiYKLQkJICAgICghKGlwLT5pX2QuZGlfZmxh
+Z3MgJgotCQkJCShYRlNfRElGTEFHX1BSRUFMTE9DIHwgWEZTX0RJRkxBR19BUFBFTkQpKSkpIHsK
+KwlpZiAoaXAtPmlfZC5kaV9ubGluayA9PSAwKQorCQlyZXR1cm4gMDsKIAotCQkJLyoKLQkJCSAq
+IElmIHdlIGNhbid0IGdldCB0aGUgaW9sb2NrIGp1c3Qgc2tpcCB0cnVuY2F0aW5nCi0JCQkgKiB0
+aGUgYmxvY2tzIHBhc3QgRU9GIGJlY2F1c2Ugd2UgY291bGQgZGVhZGxvY2sKLQkJCSAqIHdpdGgg
+dGhlIG1tYXBfc2VtIG90aGVyd2lzZS4gIFdlJ2xsIGdldCBhbm90aGVyCi0JCQkgKiBjaGFuY2Ug
+dG8gZHJvcCB0aGVtIG9uY2UgdGhlIGxhc3QgcmVmZXJlbmNlIHRvCi0JCQkgKiB0aGUgaW5vZGUg
+aXMgZHJvcHBlZCwgc28gd2UnbGwgbmV2ZXIgbGVhayBibG9ja3MKLQkJCSAqIHBlcm1hbmVudGx5
+LgotCQkJICovCi0JCQllcnJvciA9IHhmc19mcmVlX2VvZmJsb2NrcyhtcCwgaXAsCi0JCQkJCQkg
+ICBYRlNfRlJFRV9FT0ZfVFJZTE9DSyk7Ci0JCQlpZiAoZXJyb3IpCi0JCQkJcmV0dXJuIGVycm9y
+OwotCQl9Ci0JfQorCWlmICgoKChpcC0+aV9kLmRpX21vZGUgJiBTX0lGTVQpID09IFNfSUZSRUcp
+ICYmCisJICAgICAoKGlwLT5pX3NpemUgPiAwKSB8fCAoVk5fQ0FDSEVEKFZGU19JKGlwKSkgPiAw
+IHx8CisJICAgICAgIGlwLT5pX2RlbGF5ZWRfYmxrcyA+IDApKSAmJgorCSAgICAgKGlwLT5pX2Rm
+LmlmX2ZsYWdzICYgWEZTX0lGRVhURU5UUykpICAmJgorCSAgICAoIShpcC0+aV9kLmRpX2ZsYWdz
+ICYgKFhGU19ESUZMQUdfUFJFQUxMT0MgfCBYRlNfRElGTEFHX0FQUEVORCkpKSkgeworCQkvKgor
+CQkgKiBJZiB3ZSBjYW4ndCBnZXQgdGhlIGlvbG9jayBqdXN0IHNraXAgdHJ1bmNhdGluZyB0aGUg
+YmxvY2tzCisJCSAqIHBhc3QgRU9GIGJlY2F1c2Ugd2UgY291bGQgZGVhZGxvY2sgd2l0aCB0aGUg
+bW1hcF9zZW0KKwkJICogb3RoZXJ3aXNlLiAgV2UnbGwgZ2V0IGFub3RoZXIgY2hhbmNlIHRvIGRy
+b3AgdGhlbSBvbmNlIHRoZQorCQkgKiBsYXN0IHJlZmVyZW5jZSB0byB0aGUgaW5vZGUgaXMgZHJv
+cHBlZCwgc28gd2UnbGwgbmV2ZXIgbGVhaworCQkgKiBibG9ja3MgcGVybWFuZW50bHkuCisJCSAq
+CisJCSAqIEZ1cnRoZXIsIGNvdW50IHRoZSBudW1iZXIgb2YgdGltZXMgd2UgZ2V0IGhlcmUgaW4g
+dGhlIGxpZmUKKwkJICogb2YgdGhpcyBpbm9kZS4gSWYgdGhlIGlub2RlIGlzIGJlaW5nIG9wZW5l
+ZCwgd3JpdHRlbiBhbmQKKwkJICogY2xvc2VkIGZyZXF1ZW50bHkgYW5kIHdlIGhhdmUgZGVsYXll
+ZCBhbGxvY2F0aW9uIGJsb2NrcworCQkgKiBvdXN0YW5kaW5nIChlLmcuIHN0cmVhbWluZyB3cml0
+ZXMgZnJvbSB0aGUgTkZTIHNlcnZlciksCisJCSAqIHRydW5jYXRpbmcgdGhlIGJsb2NrcyBwYXN0
+IEVPRiB3aWxsIGNhdXNlIGZyYWdtZW50YXRpb24gdG8KKwkJICogb2NjdXIuCisJCSAqCisJCSAq
+IEluIHRoaXMgY2FzZSBkb24ndCBkbyB0aGUgdHJ1bmNhdGlvbiwgZWl0aGVyLCBidXQgd2UgaGF2
+ZSB0bworCQkgKiBiZSBjYXJlZnVsIGhvdyB3ZSBkZXRlY3QgdGhpcyBjYXNlLiBCbG9ja3MgYmV5
+b25kIEVPRiBzaG93CisJCSAqIHVwIGFzIGlfZGVsYXllZF9ibGtzIGV2ZW4gd2hlbiB0aGUgaW5v
+ZGUgaXMgY2xlYW4sIHNvIHdlCisJCSAqIG5lZWQgdG8gdHJ1bmNhdGUgdGhlbSBhd2F5IGZpcnN0
+IGJlZm9yZSBjaGVja2luZyBmb3IgYSBkaXJ0eQorCQkgKiByZWxlYXNlLiBIZW5jZSBvbiB0aGUg
+Zmlyc3QgY291cGxlIG9mIGRpcnR5IGNsb3Nlcyx3ZSB3aWxsCisJCSAqIHN0aWxsIHJlbW92ZSB0
+aGUgc3BlY3VsYXRpdmUgYWxsb2NhdGlvbiwgYnV0IHRoZW4gd2Ugd2lsbAorCQkgKiBsZWF2ZSBp
+dCBpbiBwbGFjZS4KKwkJICovCisJCWlmIChpcC0+aV9kaXJ0eV9yZWxlYXNlcyA+IDEpCisJCQly
+ZXR1cm4gMDsKIAorCQllcnJvciA9IHhmc19mcmVlX2VvZmJsb2NrcyhtcCwgaXAsCisJCQkJCSAg
+IFhGU19GUkVFX0VPRl9UUllMT0NLKTsKKwkJaWYgKGVycm9yKQorCQkJcmV0dXJuIGVycm9yOwor
+CisJCS8qIGRlbGFsbG9jIGJsb2NrcyBhZnRlciB0cnVuY2F0aW9uIG1lYW5zIGl0IHJlYWxseSBp
+cyBkaXJ0eSAqLworCQlpZiAoaXAtPmlfZGVsYXllZF9ibGtzKQorCQkJaXAtPmlfZGlydHlfcmVs
+ZWFzZXMrKzsKKwl9CiAJcmV0dXJuIDA7CiB9CiAKLS0gCjEuNy4yLjMKCl9fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9z
+cy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
