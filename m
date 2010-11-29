@@ -1,24 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAT1JVZs079132 for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 19:19:31 -0600
-Received: from mail-qy0-f181.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3050B13F6611
-	for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 17:21:11 -0800 (PST)
-Received: from mail-qy0-f181.google.com (mail-qy0-f181.google.com
-	[209.85.216.181]) by cuda.sgi.com with ESMTP id
-	YDx1C1LGz6tLHFHt for <xfs@oss.sgi.com>;
-	Sun, 28 Nov 2010 17:21:11 -0800 (PST)
-Received: by qyk12 with SMTP id 12so4414265qyk.5
-	for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 17:21:11 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20101129001112.GA28672@dastard>
-References: <AANLkTi=u8dX0ehPN3Rv3FQ+84htY3AYEv0eboGgC7_qi@mail.gmail.com>
-	<20101129001112.GA28672@dastard>
-Date: Mon, 29 Nov 2010 01:21:11 +0000
-Message-ID: <AANLkTikom6jpkuZquTfinGpaqz4Gp0y8niYN7yWQgmzj@mail.gmail.com>
-Subject: Re: XFS: performance
-From: Yclept Nemo <orbisvicis@gmail.com>
+	oAT1bY0d082250 for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 19:37:34 -0600
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A9C971C7CA48
+	for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 17:39:14 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
+	[150.101.137.101]) by cuda.sgi.com with ESMTP id
+	vShh8kQJUIC1r2U7 for <xfs@oss.sgi.com>;
+	Sun, 28 Nov 2010 17:39:14 -0800 (PST)
+Received: from dastard (unverified [121.44.88.148])
+	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
+	47949966-1927428
+	for <xfs@oss.sgi.com>; Mon, 29 Nov 2010 12:09:13 +1030 (CDT)
+Received: from chute ([192.168.1.1] helo=disappointment)
+	by dastard with esmtp (Exim 4.71)
+	(envelope-from <dave@fromorbit.com>) id 1PMshp-0000dr-J7
+	for xfs@oss.sgi.com; Mon, 29 Nov 2010 12:39:01 +1100
+Received: from dave by disappointment with local (Exim 4.72)
+	(envelope-from <dave@disappointment.disaster>) id 1PMshQ-0005cT-4f
+	for xfs@oss.sgi.com; Mon, 29 Nov 2010 12:38:36 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 05/14] xfs: make AIL tail pushing independent of the grant lock
+Date: Mon, 29 Nov 2010 12:38:23 +1100
+Message-Id: <1290994712-21376-6-git-send-email-david@fromorbit.com>
+In-Reply-To: <1290994712-21376-1-git-send-email-david@fromorbit.com>
+References: <1290994712-21376-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,114 +34,220 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-T24gTW9uLCBOb3YgMjksIDIwMTAgYXQgMTI6MTEgQU0sIERhdmUgQ2hpbm5lciA8ZGF2aWRAZnJv
-bW9yYml0LmNvbT4gd3JvdGU6Cj4gT24gU3VuLCBOb3YgMjgsIDIwMTAgYXQgMTA6NTE6MDRQTSAr
-MDAwMCwgWWNsZXB0IE5lbW8gd3JvdGU6Cj4+IEFmdGVyIDMtNCB5ZWFycyBvZiB1c2luZyBvbmUg
-WEZTIHBhcnRpdGlvbiBmb3IgZXZlcnkgbW91bnQgcG9pbnQKPj4gKC8sL3VzciwvZXRjLC9ob21l
-LC90bXAuLi4pIEkgc3RhcnRlZCBub3RpY2luZyBhIHJhcGlkIHBlcmZvcm1hbmNlCj4+IGRlZ3Jh
-ZGF0aW9uLiBTdWJqZWN0aXZlbHkgSSBub3cgZmVlbCBteSBYRlMgcGFydGl0aW9uIGlzIDUtMTB4
-IHNsb3dlcgo+PiAuLi4gd2hpbGUgb3RoZXIgcGFydGl0aW9ucyAobnRmcyxleHQzKSByZW1haW4g
-dGhlIHNhbWUuCj4KPiBDYW4geW91IHJ1biBzb21lIGJlbmNobWFya3MgdG8gc2hvdyB0aGlzIG5v
-bi1zdWJqZWN0aXZlbHk/IEFnZWQKPiBmaWxlc3lzdGVtcyB3aWxsIGJlIHNsb3dlciB0aGFuIG5l
-dyBmaWxlc3l0c2VtcywgYW5kIGl0IHNob3VsZCBiZQo+IG1lYXN1cmFibGUuIEFsc28sIGtub3dp
-bmcgd2hhdCB5b3UgZmlsZXN5c3RlbSBjb250YWlucyAobnVtYmVyIG9mCj4gZmlsZXMsIHVzZWQg
-Y2FwYWNpdHksIHdoZXRoZXIgeW91IGhhdmUgcnVuIGl0IG5lYXIgRU5PU1BDIGZvcgo+IGV4dGVu
-ZGVkIHBlcmlvZHMgb2YgdGltZSwgZXRjKSB3b3VsZCBoZWxwIHVzIHVuZGVyc3RhbmQgdGhlIHdh
-eSB0aGUKPiBmaWxlc3l0ZXNtIGhhcyBhZ2VkIGFzIHdlbGwuCgpDZXJ0YWlubHksIGlmIHlvdSBh
-cmUgaW50ZXJlc3RlZCBJIGNhbiBydW4gZWl0aGVyIGRiZW5jaCBvciBib25uaWUrKwp0ZXN0cyBj
-b21wYXJpbmcgYW4gWEZTIHBhcnRpdGlvbiAod2l0aCBkZWZhdWx0IHZhbHVlcyBmcm9tIHhmc3By
-b2dzCjMuMS4zKSBvbiB0aGUgbmV3IGhhcmQtZHJpdmUgdG8gdGhlIGV4aXN0aW5nIHBhcnRpdGlv
-biBvbiB0aGUgb2xkLiBBcwpJJ20gbm90IHN1cmUgd2hhdCB5b3UncmUgbG9va2luZyBmb3IsIHdo
-YXQgY29tbWFuZCBwYXJhbWV0ZXJzIHNob3VsZCBJCnByb2ZpbGUgYWdhaW5zdD8KClRoZSBYRlMg
-cGFydGl0aW9uIGluIHF1ZXN0aW9uIGlzIDM5LjYxR0IgaW4gc2l6ZSwgb2Ygd2hpY2ggMzAuNzFH
-QiBhcmUKaW4gdXNlICg4LjkwR0IgZnJlZSkuIEl0IGNvbnRhaW5zIGEgdHlwaWNhbCBBcmNoIExp
-bnV4IGluc3RhbGxhdGlvbgp3aXRoIG1hbnkgcHJvZ3JhbXMgYW5kIG1hbnkgcGVyc29uYWwgZmls
-ZXMuIFVzYWdlIHBhdHRlcm4gYXMgZm9sbG93czoKLiBlcXVhbCBydW50aW1lIHNwbGl0IGJldHdl
-ZW4gKG5lYXIgRU5PU1BDKSBhbmQgKGFwcHJveGltYXRlbHkgMTAuMEdCIGZyZWUpCi4gbW9zdGx5
-IHNtYWxsIGZpbGVzLCBvbmUgb3IgdHdvIGV4Y2VwdGlvbnMKLiBvZnRlbiByZWFjaCBFTk9TUEMg
-dGhyb3VnaCBjYXJlbGVzc25lc3MKLiBydW4geGZzX2ZzciB2ZXJ5IG9mdGVuCgpCcmVha2Rvd24g
-b2Ygc3BhY2U6Ci9ob21lOiAxNC42R0IKL3VzcjogMTIuM0dCCi92YXI6IDEwMDUuMSBNQgovZXRj
-OiA1OC44IE1CCgo+PiBOb3cgSSBqdXN0IHB1cmNoYXNlZCBhIG5ldyBoYXJkLWRyaXZlIGFuZCBJ
-J20gZ29pbmcgdG8gYmUgY29weWluZyBhbGwKPj4gbXkgb3JpZ2luYWwgZmlsZXMgb3ZlciBvbnRv
-IGEgKm5ldyogWEZTIHBhcnRpdGlvbi4gV2hlbiB1c2luZyBta2ZzLnhmcwo+PiBJJ2QgbGlrZSB0
-byBvcHRpbWl6ZSBhbmQgYXZvaWQgd2hhdGV2ZXIgaXQgd2FzIHRoYXQgbWFkZSBteSBvbGQgWEZT
-Cj4+IHBhcnRpdGlvbiBzbG93ZXIgdGhhbiBhIHNuYWlsLgo+Cj4gTm9ib2R5IGNhbiBnaXZlIGRl
-ZmluaXRlIGFkdmljZSB3aXRob3V0IGZpcnN0IHF1YW50aWZ5aW5nIGFuZCB0aGVuCj4gdW5kZXJz
-dGFuZGluZyB0aGUgYWdpbmcgc2xvd2Rvd24geW91J3ZlIGJlZW4gc2VlaW5nLgo+Cj4gLi4uLgoK
-KHNlZSBhYm92ZSkKCj4+IEkgd2FzIGNvbnNpZGVyaW5nIHJ1bm5pbmcgIm1rZnMueGZzIC1kIGFn
-Y291bnQ9MzIgLWkgYXR0cj0yIC1sCj4+IHZlcnNpb249MixsYXp5LWNvdW50PTEsc2l6ZT0yNTZt
-IC9kZXYvc2RhNSIuCj4+Cj4+IFllcywgSSBrbm93IHRoYXQgaW4geGZzX3Byb2dzIDMuMS4zICIt
-aSBhdHRyPTIgLWwKPj4gdmVyc2lvbj0yLGxhenktY291bnQ9MSIgYXJlIGFscmVhZHkgZGVmYXVs
-dCBvcHRpb25zLiBIb3dldmVyIEkgdGhpbmsgSQo+PiBzaG91bGQgdHdlYWsgdGhlIGxvZyBzaXpl
-LCBibG9ja3NpemUsIGFuZCBkYXRhIGFsbG9jYXRpb24gZ3JvdXAgY291bnRzCj4+IGJleW9uZCB0
-aGUgZGVmYXVsdCB2YWx1ZXMgYW5kIEknbSBsb29raW5nIGZvciBzb21lIHJlY29tbWVuZGF0aW9u
-cyBvcgo+PiBpbnB1dC4KPgo+IFdoeSBkbyB5b3UgdGhpbmsgeW91IHNob3VsZCB0d2VhayB0aGVt
-PwoKVG8gYXZvaWQgdGhlIGFnaW5nIHNsb3dkb3duIGFzIHdlbGwgYXMgdG8gaW5jcmVhc2UgcmVh
-ZC93cml0ZS9tZXRhZGF0YQpwZXJmb3JtYW5jZSB3aXRoIHNtYWxsIGZpbGVzLgoKPj4gSSBhc3N1
-bWUgbWtmcy54ZnMgYXV0b21hdGljYWxseSBzZWxlY3RzIG9wdGltYWwgdmFsdWVzLCBidXQgSSAq
-aGF2ZSoKPj4gc3BhY2UgdG8gc3BhcmUgZm9yIGEgbGFyZ2VyIGxvZyBzZWN0aW9uLi4uIGFuZCBw
-ZXJoYXBzIG15IG9sZCBYRlMKPj4gcGFydGl0aW9uIGJlY2FtZSBzbHVnZ2lzaCB3aGVuIHRoZSBs
-b2cgc2VjdGlvbiBoYWQgZmlsbGVkIHVwLCBpZiB0aGlzCj4+IGlzIGV2ZW4gcG9zc2libGUuCj4K
-PiBXZWxsLCB5b3UgaGFkIGEgdmVyeSBzbWFsbCBsb2cgKDIwTUIpIG9uIHRoZSBvcmlnaW5hbCBm
-aWxlc3lzdGVtLAo+IGFuZCBzbyBhcyB0aGUgZmlsZXN5c3RlbXMgYWdlcyAoZS5nLiBmcmVlIHNw
-YWNlIGZyYWdtZW50cyksIGVhY2gKPiBhbGxvY2F0aW9uL2ZyZWUgdHJhbnNhY3Rpb24gd291bGQg
-YmUgbGFyZ2VyIHRoYW4gb24gYSBuZXcgZmlsZXN5dHNlbQo+IGJlY2F1c2Ugb2YgdGhlIGxhcmdl
-ciBidHJlZXMgdGhhdCBuZWVkIHRvIGJlIG1hbmlwdWxhdGVkLiBXaXRoIHN1Y2gKPiBhIHNtYWxs
-IGxvZywgdGhhdCBjb3VsZCBiZSBwYXJ0IG9mIHRoZSByZWFzb24gZm9yIHRoZSBzbG93ZG93biB5
-b3UKPiB3ZXJlIHNlZWluZy4gwqBIb3dldmVyLCB3aXRob3V0IGtub3dpbmcgd2hhdCB5b3UgZmls
-ZXN5c3RlbSBsb29rcwo+IGxpa2UgcGh5c2ljYWxseSwgdGhpcyBpcyBvbmx5IHNwZWN1bGF0aW9u
-Lgo+Cj4gVGhhdCBiZWluZyBzYWlkLCB0aGUgbGFyZ2VyIGxvZyAoNTBNQikgdGhhdCB0aGUgbmV3
-IGZpbGVzeXN0ZW0gaGFzCj4gc2hvdWxkbid0IGhhdmUgdGhlIHNhbWUgZGVncmVlIG9mIGRlZ3Jh
-ZGF0aW9uIHVuZGVyIHRoZSBzYW1lIGFnaW5nCj4gY2hhcmFjdGVyaXN0aWNzLiBJdCdzIHByb2Jh
-Ymx5IG5vdCBuZWNlc2FyeSB0byBnbyBsYXJnZXIgdGhhbiB+MTAwTUIKPiBmb3IgcGFydGl0aW9u
-IG9mIDEwMEdCIG9uIGEgc2luZ2xlIHNwaW5kbGUuLi4KCkluIHRoaXMgY2FzZSBJJ2xsIGFpbSBm
-b3IgYSBsYXJnZSBsb2cgc2VjdGlvbiwgcHJvYmFibHkgMjU2IG9yIDUxMk1CLAp1bmxlc3MgaXQg
-d2lsbCBpbXBlZGUgcGVyZm9ybWFuY2UuIFRoYXQgd2F5IHRoZXJlIHdpbGwgYmUgbm8gcHJvYmxl
-bXMKd2hlbiBJIHJlc2l6ZSB0aGUgcGFydGl0aW9uIHRvIDIwMEdCIC4uLiAzMDBHQi4uLiB1cCB0
-byBhIG1heGltdW0gb2YKNDUwR0IuIEluIGZhY3QgdGhlIG1hbnVhbCBwYWdlIG9mIHhmc19ncm93
-ZnMgLSB3aGljaCBtaWdodCBiZSBvdXRkYXRlZAotIHdhcm5zIHRoYXQgbG9nIHJlc2l6aW5nIGlz
-IG5vdCBpbXBsZW1lbnRlZCwgc28gaXQgd291bGQgcHJvYmFibHkgYmUKYXVzcGljaW91cyB0byBj
-cmVhdGUgYW4gb3Zlcmx5LWxhcmdlIGxvZyBzZWN0aW9uLgoKPj4gU2ltaWxhcmx5IGEgbGFyZ2Vy
-IGFnY291bnQgc2hvdWxkIGFsd2F5cyBnaXZlIGJldHRlciBwZXJmb3JtYW5jZSwKPj4gcmlnaHQ/
-Cj4KPiBOby4KPgo+PiBTb21lIHJlc291cmNlcyBjbGFpbSB0aGF0IGFnY291bnQgc2hvdWxkIG5l
-dmVyIGZhbGwgYmVsb3cKPj4gZWlnaHQuCj4KPiBJZiB0aG9zZSByZXNvdXJjZXMgYXJlIHJpZ2h0
-LCB0aGVuIHdoeSB3b3VsZCB3ZSBkZWZhdWx0IHRvIDQgQUdzIGZvcgo+IGZpbGVzeXN0ZW1zIG9u
-IHNpbmdsZSBzcGluZGxlcz8KCk9idmlvdXNseSB5b3UgYXJlIGFnYWluc3QgbW9kaWZ5aW5nIHRo
-ZSBhZ2NvdW50IC0gSSB3b24ndCB0b3VjaCBpdCA6KQoKPj4gSSdtIGFsc28gaGVzaXRhbnQgYWJv
-dXQgcmVkdWNpbmcgdGhlIGJsb2Nrc2l6ZSBmcm9tIGEgbWF4aW11bSBvZiA0MDk2Cj4+IGJ5dGVz
-LCBidXQgc2luY2UgWEZTIG1hbmFnZXMgbXkgZW50aXJlIGZpbGUtc3lzdGVtIHRyZWUsIGEgYmxv
-Y2tzaXplCj4+IG9mIDUxMiwgMTAyNCxvciBldmVuIDIwNDggYnl0ZXMgbWlnaHQgc3F1ZWV6ZSBv
-dXQgc29tZSBleHRyYQo+PiBwZXJmb3JtYW5jZS4gW0kgYXNzdW1lXSB0aGUgcGVyZm9ybWFuY2Ug
-dy5yLnQuIGJsb2Nrc2l6ZSBpczoKPj4gwqAuIGEgbGFyZ2VyIGJsb2Nrc2l6ZSBkcmFtYXRpY2Fs
-bHkgaW5jcmVhc2VzIGxhcmdlIGZpbGUgcGVyZm9ybWFuY2UsCj4KPiBObywgaXQgZG9lc24ndCAt
-IG1heWJlIGEgZmV3IHBlcmNlbnQgZGlmZmVyZW5jZSB3aGVuIHlvdSd2ZSBnb3QKPiBtdWx0aXBs
-ZSBHQi9zIHRocm91Z2hwdXQsIGJ1dCBpdCdzIG1vc3RseSBub2lzZSBmb3Igc2luZ2xlIHNwaW5k
-bGVzLgo+IEV4dGVudCBiYXNlZCBhbGxvY2F0aW9uIG1ha2VzIGJsb2NrIHNpemUgwqBwcmV0dHkg
-bXVjaCBpcnJlbGV2YW50IGZvcgo+IHNlcXVlbnRpYWwgd3JpdGUgcGVyZm9ybWFuY2UuLi4KPgo+
-PiBidXQgYWxzbyBpbmNyZWFzZXMgc3BhY2UgdXNhZ2Ugd2hlbiBkZWFsaW5nIHdpdGggc21hbGwg
-ZmlsZXMuCj4KPiBOb3Qgc2lnbmlmaWNhbnRseSBlbm91Z2ggdG8gbWF0dGVyIGZvciBtb2Rlcm4g
-ZGlza3MuCj4KPj4gLiBhIHNtYWxsZXIgYmxvY2tzaXplIGRyYW1hdGljYWxseSBkZWNyZWFzZXMg
-cGVyZm9ybWFuY2UgZm9yIGxhcmdlCj4+IGZpbGVzLAo+Cj4gU2VlIGFib3ZlLgo+Cj4+IGFuZCBz
-b21ld2hhdCBpbmNyZWFzZXMgcGVyZm9ybWFuY2UgZm9yIHNtYWxsIGZpbGVzLAo+Cj4gTm90IHJl
-YWxseS4KPgo+PiB3aGlsZSBhbHNvCj4+IHNsaWdodGx5IGluY3JlYXNpbmcgc3BhY2UgdXNhZ2Ug
-d2l0aCBleHRyYSBpbm9kZXMoPykKPgo+ID8/Pz8KCk5vdCBhY3R1YWxseSBzdXJlIHdoYXQgSSBp
-bnRlbmRlZC4gTXkga25vd2xlZGdlIG9mIGZpbGUtc3lzdGVtcwpkZXBlbmRzIG9uIEdvb2dsZSBh
-bmQgdGhhdCBzdGF0ZW1lbnQgd2FzIG9ubHkgYSBzaG90IGluIHRoZSBkYXJrLgpIb3dldmVyLCB5
-b3UndmUgY29udmluY2VkIG1lIG5vdCB0byBjaGFuZ2UgdGhlIGJsb2Nrc2l6ZSAoa2VlcCBpbiBt
-aW5kCkknbSBydW5uaW5nIGFuIGVudGlyZSBMaW51eCBpbnN0YWxsYXRpb24gZnJvbSB0aGlzIG9u
-ZSBYRlMgcGFydGl0aW9uLApzbWFsbCBmaWxlcyBpbmNsdWRlZCkuIElmIHRoZSBibG9ja3NpemUg
-b3B0aW9uIGlzIHNvCnBlcmZvcm1hbmNlLWluZGVwZW5kZW50LCB3aHkgZG9lcyBpdCBldmVuIGV4
-aXN0PwoKPj4gSSB3YW50IHRvIG1ha2UgaXQgY2xlYXIgdGhhdCBJIHByZWZlciBwZXJmb3JtYW5j
-ZSBvdmVyIHNwYWNlIGVmZmljaWVuY3kuCj4KPiBUaGF0J3Mgd2hhdCB0aGUgZGVmYXVsdHMgYXJl
-IGJpYXNlZCB0b3dhcmRzLgoKR29vZCB0byBrbm93IHRoZSBkZWZhdWx0cyBhcmUgc2FuZSAtIHll
-dCBhbm90aGVyIHJlYXNvbiBub3QgdG8gbW9kaWZ5CnRoZSBibG9ja3NpemUgYW5kIGRhdGEgYWxs
-b2NhdGlvbiBncm91cCBjb3VudHMuCgpUaGFua3MsCm9yYmlzdmljaXMKCl9fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9z
-cy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+From: Dave Chinner <dchinner@redhat.com>
+
+The xlog_grant_push_ail() currently takes the grant lock internally to sample
+the tail lsn, last sync lsn and the reserve grant head. Most of the callers
+already hold the grant lock but have to drop it before calling
+xlog_grant_push_ail(). This is a left over from when the AIl tail pushing was
+done in line and hence xlog_grant_push_ail had to drop the grant lock. AIL push
+is now done in another thread and hence we can safely hold the grant lock over
+the entire xlog_grant_push_ail call.
+
+Push the grant lock outside of xlog_grant_push_ail() and pass the tail lsn and
+last sync lsn values as parameters to make the internals completely oblivious
+to the source of the values and independent of whatever locking or
+synchronisation they require.  This will reduce traffic on the grant lock by
+itself, but this is only one step in preparing for the complete removal of the
+grant lock.
+
+While there, clean up the indenting of xlog_grant_push_ail() to match the
+rest of the XFS code.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_log.c |  123 ++++++++++++++++++++++++++++--------------------------
+ 1 files changed, 64 insertions(+), 59 deletions(-)
+
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 93b5b2d..a35ef8f 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -71,7 +71,9 @@ STATIC void xlog_state_want_sync(xlog_t	*log, xlog_in_core_t *iclog);
+ /* local functions to manipulate grant head */
+ STATIC int  xlog_grant_log_space(struct log		*log,
+ 				 struct xlog_ticket	*xtic);
+-STATIC void xlog_grant_push_ail(xfs_mount_t	*mp,
++STATIC void xlog_grant_push_ail(struct log	*log,
++				xfs_lsn_t	tail_lsn,
++				xfs_lsn_t	last_sync_lsn,
+ 				int		need_bytes);
+ STATIC void xlog_regrant_reserve_log_space(xlog_t	 *log,
+ 					   xlog_ticket_t *ticket);
+@@ -356,7 +358,11 @@ xfs_log_reserve(
+ 
+ 		trace_xfs_log_reserve(log, internal_ticket);
+ 
+-		xlog_grant_push_ail(mp, internal_ticket->t_unit_res);
++		spin_lock(&log->l_grant_lock);
++		xlog_grant_push_ail(log, log->l_tail_lsn,
++				    log->l_last_sync_lsn,
++				    internal_ticket->t_unit_res);
++		spin_unlock(&log->l_grant_lock);
+ 		retval = xlog_regrant_write_log_space(log, internal_ticket);
+ 	} else {
+ 		/* may sleep if need to allocate more tickets */
+@@ -370,9 +376,12 @@ xfs_log_reserve(
+ 
+ 		trace_xfs_log_reserve(log, internal_ticket);
+ 
+-		xlog_grant_push_ail(mp,
++		spin_lock(&log->l_grant_lock);
++		xlog_grant_push_ail(log, log->l_tail_lsn,
++				    log->l_last_sync_lsn,
+ 				    (internal_ticket->t_unit_res *
+ 				     internal_ticket->t_cnt));
++		spin_unlock(&log->l_grant_lock);
+ 		retval = xlog_grant_log_space(log, internal_ticket);
+ 	}
+ 
+@@ -1226,60 +1235,58 @@ xlog_commit_record(
+  * water mark.  In this manner, we would be creating a low water mark.
+  */
+ STATIC void
+-xlog_grant_push_ail(xfs_mount_t	*mp,
+-		    int		need_bytes)
+-{
+-    xlog_t	*log = mp->m_log;	/* pointer to the log */
+-    xfs_lsn_t	tail_lsn;		/* lsn of the log tail */
+-    xfs_lsn_t	threshold_lsn = 0;	/* lsn we'd like to be at */
+-    int		free_blocks;		/* free blocks left to write to */
+-    int		free_bytes;		/* free bytes left to write to */
+-    int		threshold_block;	/* block in lsn we'd like to be at */
+-    int		threshold_cycle;	/* lsn cycle we'd like to be at */
+-    int		free_threshold;
+-
+-    ASSERT(BTOBB(need_bytes) < log->l_logBBsize);
+-
+-    spin_lock(&log->l_grant_lock);
+-    free_bytes = xlog_space_left(log->l_logsize, log->l_tail_lsn,
+-						log->l_grant_reserve_lsn);
+-    tail_lsn = log->l_tail_lsn;
+-    free_blocks = BTOBBT(free_bytes);
+-
+-    /*
+-     * Set the threshold for the minimum number of free blocks in the
+-     * log to the maximum of what the caller needs, one quarter of the
+-     * log, and 256 blocks.
+-     */
+-    free_threshold = BTOBB(need_bytes);
+-    free_threshold = MAX(free_threshold, (log->l_logBBsize >> 2));
+-    free_threshold = MAX(free_threshold, 256);
+-    if (free_blocks < free_threshold) {
+-	threshold_block = BLOCK_LSN(tail_lsn) + free_threshold;
+-	threshold_cycle = CYCLE_LSN(tail_lsn);
+-	if (threshold_block >= log->l_logBBsize) {
+-	    threshold_block -= log->l_logBBsize;
+-	    threshold_cycle += 1;
+-	}
+-	threshold_lsn = xlog_assign_lsn(threshold_cycle, threshold_block);
+-
+-	/* Don't pass in an lsn greater than the lsn of the last
+-	 * log record known to be on disk.
++xlog_grant_push_ail(
++	struct log	*log,
++	xfs_lsn_t	tail_lsn,
++	xfs_lsn_t	last_sync_lsn,
++	int		need_bytes)
++{
++	xfs_lsn_t	threshold_lsn = 0;
++	int		free_blocks;
++	int		free_bytes;
++	int		threshold_block;
++	int		threshold_cycle;
++	int		free_threshold;
++
++	ASSERT(BTOBB(need_bytes) < log->l_logBBsize);
++
++	free_bytes = xlog_space_left(log->l_logsize, tail_lsn,
++					log->l_grant_reserve_lsn);
++	free_blocks = BTOBBT(free_bytes);
++
++	/*
++	 * Set the threshold for the minimum number of free blocks in the
++	 * log to the maximum of what the caller needs, one quarter of the
++	 * log, and 256 blocks.
+ 	 */
+-	if (XFS_LSN_CMP(threshold_lsn, log->l_last_sync_lsn) > 0)
+-	    threshold_lsn = log->l_last_sync_lsn;
+-    }
+-    spin_unlock(&log->l_grant_lock);
+-
+-    /*
+-     * Get the transaction layer to kick the dirty buffers out to
+-     * disk asynchronously. No point in trying to do this if
+-     * the filesystem is shutting down.
+-     */
+-    if (threshold_lsn &&
+-	!XLOG_FORCED_SHUTDOWN(log))
+-	    xfs_trans_ail_push(log->l_ailp, threshold_lsn);
+-}	/* xlog_grant_push_ail */
++	free_threshold = BTOBB(need_bytes);
++	free_threshold = MAX(free_threshold, (log->l_logBBsize >> 2));
++	free_threshold = MAX(free_threshold, 256);
++	if (free_blocks < free_threshold) {
++		threshold_block = BLOCK_LSN(tail_lsn) + free_threshold;
++		threshold_cycle = CYCLE_LSN(tail_lsn);
++		if (threshold_block >= log->l_logBBsize) {
++			threshold_block -= log->l_logBBsize;
++			threshold_cycle += 1;
++		}
++		threshold_lsn = xlog_assign_lsn(threshold_cycle,
++						threshold_block);
++		/*
++		 * Don't pass in an lsn greater than the lsn of the last
++		 * log record known to be on disk.
++		 */
++		if (XFS_LSN_CMP(threshold_lsn, last_sync_lsn) > 0)
++			threshold_lsn = last_sync_lsn;
++	}
++
++	/*
++	 * Get the transaction layer to kick the dirty buffers out to
++	 * disk asynchronously. No point in trying to do this if
++	 * the filesystem is shutting down.
++	 */
++	if (threshold_lsn && !XLOG_FORCED_SHUTDOWN(log))
++		xfs_trans_ail_push(log->l_ailp, threshold_lsn);
++}
+ 
+ /*
+  * The bdstrat callback function for log bufs. This gives us a central
+@@ -2568,9 +2575,8 @@ redo:
+ 		if (list_empty(&tic->t_queue))
+ 			list_add_tail(&tic->t_queue, &log->l_reserveq);
+ 
+-		spin_unlock(&log->l_grant_lock);
+-		xlog_grant_push_ail(log->l_mp, need_bytes);
+-		spin_lock(&log->l_grant_lock);
++		xlog_grant_push_ail(log, log->l_tail_lsn,
++				    log->l_last_sync_lsn, need_bytes);
+ 
+ 		XFS_STATS_INC(xs_sleep_logspace);
+ 		trace_xfs_log_grant_sleep(log, tic);
+@@ -2676,9 +2682,8 @@ redo:
+ 				goto redo;
+ 		}
+ 
+-		spin_unlock(&log->l_grant_lock);
+-		xlog_grant_push_ail(log->l_mp, need_bytes);
+-		spin_lock(&log->l_grant_lock);
++		xlog_grant_push_ail(log, log->l_tail_lsn,
++				    log->l_last_sync_lsn, need_bytes);
+ 
+ 		XFS_STATS_INC(xs_sleep_logspace);
+ 		trace_xfs_log_regrant_write_sleep(log, tic);
+-- 
+1.7.2.3
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
