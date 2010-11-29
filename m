@@ -1,13 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oATKlcvZ215495 for <xfs@oss.sgi.com>; Mon, 29 Nov 2010 14:47:38 -0600
-Subject: Re: [PATCH] xfsdump: fix xfs_invutil dependency generation
+	oATMDBIQ226651 for <xfs@oss.sgi.com>; Mon, 29 Nov 2010 16:13:11 -0600
+Received: from cf--amer001e--3.americas.sgi.com
+	(cf--amer001e--3.americas.sgi.com [137.38.100.5])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B8F0A8F8052
+	for <xfs@oss.sgi.com>; Mon, 29 Nov 2010 14:14:50 -0800 (PST)
+Subject: [PATCH] xfstests: ensure uint64_t is defined for <linux/fs.h>
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20101129163424.GA22014@sgi.com>
-References: <20101129163424.GA22014@sgi.com>
-Date: Mon, 29 Nov 2010 14:48:57 -0600
-Message-ID: <1291063737.2425.13.camel@doink>
+Date: Mon, 29 Nov 2010 16:14:00 -0600
+Message-ID: <1291068840.2425.15.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -22,44 +24,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Bill Kendall <wkendall@sgi.com>
-Cc: xfs@oss.sgi.com
+To: XFS Mailing List <xfs@oss.sgi.com>
 
-On Mon, 2010-11-29 at 10:34 -0600, Bill Kendall wrote:
-> Correct the target name for dependency generation in the
-> invutil Makefile. This is now consistent with other dump
-> makefiles and eliminates "No such file or directory"
-> errors during the build.
-> 
-> Signed-off-by: Bill Kendall <wkendall@sgi.com>
+When compiling "fiemap-tester.c" in my environment, I am
+getting complaints at the first reference to "uint64_t"
+in <linux/fs.h>.  This simple patch resolves that.
 
-Looks good.
+Signed-off-by: Alex Elder <aelder@sgi.com>
 
-Reviewed-by: Alex Elder <aelder@sgi.com>
+---
+ src/fiemap-tester.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-> ---
->  invutil/Makefile |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> Index: xfsdump-kernel.org/invutil/Makefile
-> ===================================================================
-> --- xfsdump-kernel.org.orig/invutil/Makefile
-> +++ xfsdump-kernel.org/invutil/Makefile
-> @@ -70,7 +70,7 @@ install: default
->  	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
->  install-dev:
->  
-> -depend: $(COMMINCL) $(COMMON) $(INVINCL) $(INVCOMMON)
-> +.dep: $(COMMINCL) $(COMMON) $(INVINCL) $(INVCOMMON)
->  
->  $(COMMINCL) $(COMMON):
->  	@echo "    [LN]     $@"
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-
+Index: b/src/fiemap-tester.c
+===================================================================
+--- a/src/fiemap-tester.c
++++ b/src/fiemap-tester.c
+@@ -18,6 +18,7 @@
+ 
+ #include <stdio.h>
+ #include <stdlib.h>
++#include <stdint.h>
+ #include <unistd.h>
+ #include <fcntl.h>
+ #include <string.h>
 
 
 _______________________________________________
