@@ -1,32 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAT11ltF075685 for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 19:01:47 -0600
+	oAT1bOIl082134 for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 19:37:24 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CADEB13F5D3E
-	for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 16:44:12 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
-	[150.101.137.98]) by cuda.sgi.com with ESMTP id
-	AT7IC6jD1qBGChkU for <xfs@oss.sgi.com>;
-	Sun, 28 Nov 2010 16:44:12 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B6D9B1C7C9FB
+	for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 17:39:04 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
+	[150.101.137.101]) by cuda.sgi.com with ESMTP id
+	hgBDWei3ign9RJRf for <xfs@oss.sgi.com>;
+	Sun, 28 Nov 2010 17:39:04 -0800 (PST)
 Received: from dastard (unverified [121.44.88.148])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	48200733-1927428
-	for <xfs@oss.sgi.com>; Mon, 29 Nov 2010 11:14:11 +1030 (CDT)
+	47949950-1927428
+	for <xfs@oss.sgi.com>; Mon, 29 Nov 2010 12:09:03 +1030 (CDT)
 Received: from chute ([192.168.1.1] helo=disappointment)
 	by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1PMrqj-0000XW-83
-	for xfs@oss.sgi.com; Mon, 29 Nov 2010 11:44:09 +1100
+	(envelope-from <dave@fromorbit.com>) id 1PMshf-0000dS-Kl
+	for xfs@oss.sgi.com; Mon, 29 Nov 2010 12:38:51 +1100
 Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1PMrqT-0005MQ-VU
-	for xfs@oss.sgi.com; Mon, 29 Nov 2010 11:43:53 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1PMshQ-0005cW-6D
+	for xfs@oss.sgi.com; Mon, 29 Nov 2010 12:38:36 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/2] xfs: dynamic speculative EOF preallocation
-Date: Mon, 29 Nov 2010 11:43:50 +1100
-Message-Id: <1290991431-20519-2-git-send-email-david@fromorbit.com>
-In-Reply-To: <1290991431-20519-1-git-send-email-david@fromorbit.com>
-References: <1290991431-20519-1-git-send-email-david@fromorbit.com>
-MIME-Version: 1.0
+Subject: [PATCH 06/14] xfs: convert l_last_sync_lsn to an atomic variable
+Date: Mon, 29 Nov 2010 12:38:24 +1100
+Message-Id: <1290994712-21376-7-git-send-email-david@fromorbit.com>
+In-Reply-To: <1290994712-21376-1-git-send-email-david@fromorbit.com>
+References: <1290994712-21376-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,198 +34,217 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-RnJvbTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgoKQ3VycmVudGx5IHRoZSBz
-aXplIG9mIHRoZSBzcGVjdWxhdGl2ZSBwcmVhbGxvY2F0aW9uIGR1cmluZyBkZWxheWVkCmFsbG9j
-YXRpb24gaXMgZml4ZWQgYnkgZWl0aGVyIHRoZSBhbGxvY3NpemUgbW91bnQgb3B0aW9uIG9mIGEK
-ZGVmYXVsdCBzaXplLiBXZSBhcmUgc2VlaW5nIGEgbG90IG9mIGNhc2VzIHdoZXJlIHdlIG5lZWQg
-dG8KcmVjb21tZW5kIHVzaW5nIHRoZSBhbGxvY3NpemUgbW91bnQgb3B0aW9uIHRvIHByZXZlbnQg
-ZnJhZ21lbnRhdGlvbgp3aGVuIGJ1ZmZlcmVkIHdyaXRlcyBsYW5kIGluIHRoZSBzYW1lIEFHLgoK
-UmF0aGVyIHRoYW4gdXNpbmcgYSBmaXhlZCBwcmVhbGxvY2F0aW9uIHNpemUgYnkgZGVmYXVsdCAo
-dXAgdG8gNjRrKSwKbWFrZSBpdCBkeW5hbWljIGJ5IGJhc2luZyBpdCBvbiB0aGUgY3VycmVudCBp
-bm9kZSBzaXplLiBUaGF0IHdheSB0aGUKRU9GIHByZWFsbG9jYXRpb24gd2lsbCBpbmNyZWFzZSBh
-cyB0aGUgZmlsZSBzaXplIGluY3JlYXNlcy4gIEhlbmNlCmZvciBzdHJlYW1pbmcgd3JpdGVzIHdl
-IGFyZSBtdWNoIG1vcmUgbGlrZWx5IHRvIGdldCBsYXJnZQpwcmVhbGxvY2F0aW9ucyBleGFjdGx5
-IHdoZW4gd2UgbmVlZCBpdCB0byByZWR1Y2UgZnJhZ2VtZW50YXRpb24uCgpGb3IgZGVmYXVsdCBz
-ZXR0aW5ncywgdGhlIHNpemUgb2YgdGhlIGluaXRpYWwgZXh0ZW50cyBpcyBkZXRlcm1pbmVkCmJ5
-IHRoZSBudW1iZXIgb2YgcGFyYWxsZWwgd3JpdGVycyBhbmQgdGhlIGFtb3VudCBvZiBtZW1vcnkg
-aW4gdGhlCm1hY2hpbmUuIEZvciA0R0IgUkFNIGFuZCA0IGNvbmN1cnJlbnQgMzJHQiBmaWxlIHdy
-aXRlczoKCkVYVDogRklMRS1PRkZTRVQgICAgICAgICAgIEJMT0NLLVJBTkdFICAgICAgICAgIEFH
-IEFHLU9GRlNFVCAgICAgICAgICAgICAgICAgVE9UQUwKICAgMDogWzAuLjEwNDg1NzVdOiAgICAg
-ICAgIDEwNDg2NzIuLjIwOTcyNDcgICAgICAwICgxMDQ4NjcyLi4yMDk3MjQ3KSAgICAgIDEwNDg1
-NzYKICAgMTogWzEwNDg1NzYuLjIwOTcxNTFdOiAgIDUyNDI5NzYuLjYyOTE1NTEgICAgICAwICg1
-MjQyOTc2Li42MjkxNTUxKSAgICAgIDEwNDg1NzYKICAgMjogWzIwOTcxNTIuLjQxOTQzMDNdOiAg
-IDEyNTgzMDA4Li4xNDY4MDE1OSAgICAwICgxMjU4MzAwOC4uMTQ2ODAxNTkpICAgIDIwOTcxNTIK
-ICAgMzogWzQxOTQzMDQuLjgzODg2MDddOiAgIDI1MTY1OTIwLi4yOTM2MDIyMyAgICAwICgyNTE2
-NTkyMC4uMjkzNjAyMjMpICAgIDQxOTQzMDQKICAgNDogWzgzODg2MDguLjE2Nzc3MjE1XTogIDU4
-NzIwMzUyLi42NzEwODk1OSAgICAwICg1ODcyMDM1Mi4uNjcxMDg5NTkpICAgIDgzODg2MDgKICAg
-NTogWzE2Nzc3MjE2Li4zMzU1NDQyM106IDExNzQ0MDU4NC4uMTM0MjE3NzkxICAwICgxMTc0NDA1
-ODQuLjEzNDIxNzc5MSkgMTY3NzcyMDgKICAgNjogWzMzNTU0NDI0Li41MDMzMTUxMV06IDE4NDU0
-OTA1Ni4uMjAxMzI2MTQzICAwICgxODQ1NDkwNTYuLjIwMTMyNjE0MykgMTY3NzcwODgKICAgNzog
-WzUwMzMxNTEyLi42NzEwODU5OV06IDI1MTY1NzQwOC4uMjY4NDM0NDk1ICAwICgyNTE2NTc0MDgu
-LjI2ODQzNDQ5NSkgMTY3NzcwODgKCmFuZCBmb3IgMTYgY29uY3VycmVudCAxNkdCIGZpbGUgd3Jp
-dGVzOgoKIEVYVDogRklMRS1PRkZTRVQgICAgICAgICAgIEJMT0NLLVJBTkdFICAgICAgICAgIEFH
-IEFHLU9GRlNFVCAgICAgICAgICAgICAgICAgVE9UQUwKICAgMDogWzAuLjI2MjE0M106ICAgICAg
-ICAgIDI0OTA0NzIuLjI3NTI2MTUgICAgICAwICgyNDkwNDcyLi4yNzUyNjE1KSAgICAgICAyNjIx
-NDQKICAgMTogWzI2MjE0NC4uNTI0Mjg3XTogICAgIDYyOTE1NjAuLjY1NTM3MDMgICAgICAwICg2
-MjkxNTYwLi42NTUzNzAzKSAgICAgICAyNjIxNDQKICAgMjogWzUyNDI4OC4uMTA0ODU3NV06ICAg
-IDEzNjMxNTkyLi4xNDE1NTg3OSAgICAwICgxMzYzMTU5Mi4uMTQxNTU4NzkpICAgICA1MjQyODgK
-ICAgMzogWzEwNDg1NzYuLjIwOTcxNTFdOiAgIDMwNDA4ODA4Li4zMTQ1NzM4MyAgICAwICgzMDQw
-ODgwOC4uMzE0NTczODMpICAgIDEwNDg1NzYKICAgNDogWzIwOTcxNTIuLjQxOTQzMDNdOiAgIDUy
-NDI4OTA0Li41NDUyNjA1NSAgICAwICg1MjQyODkwNC4uNTQ1MjYwNTUpICAgIDIwOTcxNTIKICAg
-NTogWzQxOTQzMDQuLjgzODg2MDddOiAgIDEwNDg1NzcwNC4uMTA5MDUyMDA3ICAwICgxMDQ4NTc3
-MDQuLjEwOTA1MjAwNykgIDQxOTQzMDQKICAgNjogWzgzODg2MDguLjE2Nzc3MjE1XTogIDIwOTcx
-NTMwNC4uMjE4MTAzOTExICAwICgyMDk3MTUzMDQuLjIxODEwMzkxMSkgIDgzODg2MDgKICAgNzog
-WzE2Nzc3MjE2Li4zMzU1NDQyM106IDQ1Mjk4NDg0OC4uNDY5NzYyMDU1ICAwICg0NTI5ODQ4NDgu
-LjQ2OTc2MjA1NSkgMTY3NzcyMDgKCkJlY2F1c2UgaXQgaXMgaGFyZCB0byB0YWtlIGJhY2sgc3Bl
-Y3VhbHRpdmUgcHJlYWxsb2NhdGlvbiwgY2FzZXMKd2hlcmUgdGhlcmUgYXJlIGxhcmdlIHNsb3cg
-Z3Jvd2luZyBsb2cgZmlsZXMgb24gYSBuZWFybHkgZnVsbApmaWxlc3lzdGVtIG1heSBjYXVzZSBw
-cmVtYXR1cmUgRU5PU1BDLiBIZW5jZSBhcyB0aGUgZmlsZXN5c3RlbSBuZWFycwpmdWxsLCB0aGUg
-bWF4aW11bSBkeW5hbWljIHByZWFsbG9jIHNpemUg0ZZzIHJlZHVjZWQgYWNjb3JkaW5nIHRvIHRo
-aXMKdGFibGUgKGJhc2VkIG9uIDRrIGJsb2NrIHNpemUpOgoKZnJlZXNwYWNlICAgICAgIG1heCBw
-cmVhbGxvYyBzaXplCiAgPjUlICAgICAgICAgICAgIGZ1bGwgZXh0ZW50ICg4R0IpCiAgNC01JSAg
-ICAgICAgICAgICAyR0IgKDhHQiA+PiAyKQogIDMtNCUgICAgICAgICAgICAgMUdCICg4R0IgPj4g
-MykKICAyLTMlICAgICAgICAgICA1MTJNQiAoOEdCID4+IDQpCiAgMS0yJSAgICAgICAgICAgMjU2
-TUIgKDhHQiA+PiA1KQogIDwxJSAgICAgICAgICAgIDEyOE1CICg4R0IgPj4gNikKClRoaXMgc2hv
-dWxkIHJlZHVjZSB0aGUgYW1vdW50IG9mIHNwYWNlIGhlbGQgaW4gc3BlY3VsYXRpdmUKcHJlYWxs
-b2NhdGlvbiBmb3Igc3VjaCBjYXNlcy4KClRoZSBhbGxvY3NpemUgbW91bnQgb3B0aW9uIHR1cm5z
-IG9mZiB0aGUgZHluYW1pYyBiZWhhdmlvdXIgYW5kIGZpeGVzCnRoZSBwcmVhbGxvYyBzaXplIHRv
-IHdoYXRldmVyIHRoZSBtb3VudCBvcHRpb24gc3BlY2lmaWVzLiBpLmUuIHRoZQpiZWhhdmlvdXIg
-aXMgdW5jaGFuZ2VkLgoKU2lnbmVkLW9mZi1ieTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRo
-YXQuY29tPgotLS0KIGZzL3hmcy94ZnNfZnNvcHMuYyB8ICAgIDEgKwogZnMveGZzL3hmc19pb21h
-cC5jIHwgICA3NCArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKyst
-LS0tLS0tCiBmcy94ZnMveGZzX21vdW50LmMgfCAgIDI2ICsrKysrKysrKysrKy0tLS0tCiBmcy94
-ZnMveGZzX21vdW50LmggfCAgIDI2ICsrKysrKysrKysrKysrKysrLQogNCBmaWxlcyBjaGFuZ2Vk
-LCAxMDcgaW5zZXJ0aW9ucygrKSwgMjAgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvZnMveGZz
-L3hmc19mc29wcy5jIGIvZnMveGZzL3hmc19mc29wcy5jCmluZGV4IGJlMzRmZjIuLjZkMTcyMDYg
-MTAwNjQ0Ci0tLSBhL2ZzL3hmcy94ZnNfZnNvcHMuYworKysgYi9mcy94ZnMveGZzX2Zzb3BzLmMK
-QEAgLTM3NCw2ICszNzQsNyBAQCB4ZnNfZ3Jvd2ZzX2RhdGFfcHJpdmF0ZSgKIAkJbXAtPm1fbWF4
-aWNvdW50ID0gaWNvdW50IDw8IG1wLT5tX3NiLnNiX2lub3BibG9nOwogCX0gZWxzZQogCQltcC0+
-bV9tYXhpY291bnQgPSAwOworCXhmc19zZXRfbG93X3NwYWNlX3RocmVzaG9sZHMobXApOwogCiAJ
-LyogdXBkYXRlIHNlY29uZGFyeSBzdXBlcmJsb2Nrcy4gKi8KIAlmb3IgKGFnbm8gPSAxOyBhZ25v
-IDwgbmFnY291bnQ7IGFnbm8rKykgewpkaWZmIC0tZ2l0IGEvZnMveGZzL3hmc19pb21hcC5jIGIv
-ZnMveGZzL3hmc19pb21hcC5jCmluZGV4IDIwNTc2MTQuLmQ3YzJmMDUgMTAwNjQ0Ci0tLSBhL2Zz
-L3hmcy94ZnNfaW9tYXAuYworKysgYi9mcy94ZnMveGZzX2lvbWFwLmMKQEAgLTM4OSw2ICszODks
-OSBAQCBlcnJvcl9vdXQ6CiAgKiBJZiB0aGUgY2FsbGVyIGlzIGRvaW5nIGEgd3JpdGUgYXQgdGhl
-IGVuZCBvZiB0aGUgZmlsZSwgdGhlbiBleHRlbmQgdGhlCiAgKiBhbGxvY2F0aW9uIG91dCB0byB0
-aGUgZmlsZSBzeXN0ZW0ncyB3cml0ZSBpb3NpemUuICBXZSBjbGVhbiB1cCBhbnkgZXh0cmEKICAq
-IHNwYWNlIGxlZnQgb3ZlciB3aGVuIHRoZSBmaWxlIGlzIGNsb3NlZCBpbiB4ZnNfaW5hY3RpdmUo
-KS4KKyAqCisgKiBJZiB3ZSBmaW5kIHdlIGFscmVhZHkgaGF2ZSBkZWxhbGxvYyBwcmVhbGxvY2F0
-aW9uIGJleW9uZCBFT0YsIGRvbid0IGRvIG1vcmUKKyAqIHByZWFsbG9jYXRpb24gYXMgaXQgaXQg
-bm90IG5lZWRlZC4KICAqLwogU1RBVElDIGludAogeGZzX2lvbWFwX2VvZl93YW50X3ByZWFsbG9j
-YXRlKApAQCAtNDA1LDYgKzQwOCw3IEBAIHhmc19pb21hcF9lb2Zfd2FudF9wcmVhbGxvY2F0ZSgK
-IAl4ZnNfZmlsYmxrc190ICAgY291bnRfZnNiOwogCXhmc19mc2Jsb2NrX3QJZmlyc3RibG9jazsK
-IAlpbnQJCW4sIGVycm9yLCBpbWFwczsKKwlpbnQJCWZvdW5kX2RlbGFsbG9jID0gMDsKIAogCSpw
-cmVhbGxvYyA9IDA7CiAJaWYgKChvZmZzZXQgKyBjb3VudCkgPD0gaXAtPmlfc2l6ZSkKQEAgLTQy
-NywxMSArNDMxLDE2IEBAIHhmc19pb21hcF9lb2Zfd2FudF9wcmVhbGxvY2F0ZSgKIAkJCWlmICgo
-aW1hcFtuXS5icl9zdGFydGJsb2NrICE9IEhPTEVTVEFSVEJMT0NLKSAmJgogCQkJICAgIChpbWFw
-W25dLmJyX3N0YXJ0YmxvY2sgIT0gREVMQVlTVEFSVEJMT0NLKSkKIAkJCQlyZXR1cm4gMDsKKwog
-CQkJc3RhcnRfZnNiICs9IGltYXBbbl0uYnJfYmxvY2tjb3VudDsKIAkJCWNvdW50X2ZzYiAtPSBp
-bWFwW25dLmJyX2Jsb2NrY291bnQ7CisKKwkJCWlmIChpbWFwW25dLmJyX3N0YXJ0YmxvY2sgPT0g
-REVMQVlTVEFSVEJMT0NLKQorCQkJCWZvdW5kX2RlbGFsbG9jID0gMTsKIAkJfQogCX0KLQkqcHJl
-YWxsb2MgPSAxOworCWlmICghZm91bmRfZGVsYWxsb2MpCisJCSpwcmVhbGxvYyA9IDE7CiAJcmV0
-dXJuIDA7CiB9CiAKQEAgLTQ2OSw2ICs0NzgsNyBAQCB4ZnNfaW9tYXBfd3JpdGVfZGVsYXkoCiAJ
-ZXh0c3ogPSB4ZnNfZ2V0X2V4dHN6X2hpbnQoaXApOwogCW9mZnNldF9mc2IgPSBYRlNfQl9UT19G
-U0JUKG1wLCBvZmZzZXQpOwogCisKIAllcnJvciA9IHhmc19pb21hcF9lb2Zfd2FudF9wcmVhbGxv
-Y2F0ZShtcCwgaXAsIG9mZnNldCwgY291bnQsCiAJCQkJaW9mbGFnLCBpbWFwLCBYRlNfV1JJVEVf
-SU1BUFMsICZwcmVhbGxvYyk7CiAJaWYgKGVycm9yKQpAQCAtNDc2LDkgKzQ4Niw0NCBAQCB4ZnNf
-aW9tYXBfd3JpdGVfZGVsYXkoCiAKIHJldHJ5OgogCWlmIChwcmVhbGxvYykgeworCQl4ZnNfZmls
-ZW9mZl90CWFsbG9jX2Jsb2NrcyA9IDA7CisJCS8qCisJCSAqIElmIHdlIGRvbid0IGhhdmUgYSB1
-c2VyIHNwZWNpZmllZCBwcmVhbGxvY2F0aW9uIHNpemUsIGR5bmFtaWNhbGx5CisJCSAqIGluY3Jl
-YXNlIHRoZSBwcmVhbGxvY2F0aW9uIHNpemUgYXMgdGhlIHNpemUgb2YgdGhlIGZpbGUKKwkJICog
-Z3Jvd3MuIENhcCB0aGUgbWF4aW11bSBzaXplIGF0IGEgc2luZ2xlIGV4dGVudCBvciBsZXNzIGlm
-CisJCSAqIHRoZSBmaWxlc3lzdGVtIGlzIG5lYXIgZnVsbC4gVGhlIGNsb3NlciB0aGUgZmlsZXN5
-c3RlbSBpcyB0bworCQkgKiBmdWxsLCB0aGUgc21hbGxlciB0aGUgbWF4aW11bSBwcmVhbG9jYXRp
-b24uCisJCSAqLworCQlpZiAoIShtcC0+bV9mbGFncyAmIFhGU19NT1VOVF9ERkxUX0lPU0laRSkp
-IHsKKwkJCWludCBzaGlmdCA9IDA7CisJCQlpbnQ2NF90IGZyZWVzcDsKKworCQkJYWxsb2NfYmxv
-Y2tzID0gWEZTX0JfVE9fRlNCKG1wLCBpcC0+aV9zaXplKTsKKwkJCWFsbG9jX2Jsb2NrcyA9IFhG
-U19GSUxFT0ZGX01JTihNQVhFWFRMRU4sCisJCQkJCXJvdW5kZG93bl9wb3dfb2ZfdHdvKGFsbG9j
-X2Jsb2NrcykpOworCisJCQlmcmVlc3AgPSB4ZnNfaWNzYl9yZWFkKG1wLCBYRlNfSUNTQl9GREJM
-T0NLUyk7CisJCQlpZiAoZnJlZXNwIDwgbXAtPm1fbG93X3NwYWNlW1hGU19MT1dTUF81X1BDTlRd
-KSB7CisJCQkJc2hpZnQgPSAyOworCQkJCWlmIChmcmVlc3AgPCBtcC0+bV9sb3dfc3BhY2VbWEZT
-X0xPV1NQXzRfUENOVF0pCisJCQkJCXNoaWZ0Kys7CisJCQkJaWYgKGZyZWVzcCA8IG1wLT5tX2xv
-d19zcGFjZVtYRlNfTE9XU1BfM19QQ05UXSkKKwkJCQkJc2hpZnQrKzsKKwkJCQlpZiAoZnJlZXNw
-IDwgbXAtPm1fbG93X3NwYWNlW1hGU19MT1dTUF8yX1BDTlRdKQorCQkJCQlzaGlmdCsrOworCQkJ
-CWlmIChmcmVlc3AgPCBtcC0+bV9sb3dfc3BhY2VbWEZTX0xPV1NQXzFfUENOVF0pCisJCQkJCXNo
-aWZ0Kys7CisJCQl9CisJCQlpZiAoc2hpZnQpCisJCQkJYWxsb2NfYmxvY2tzID4+PSBzaGlmdDsK
-KwkJfQorCisJCWlmIChhbGxvY19ibG9ja3MgPCBtcC0+bV93cml0ZWlvX2Jsb2NrcykKKwkJCWFs
-bG9jX2Jsb2NrcyA9IG1wLT5tX3dyaXRlaW9fYmxvY2tzOworCiAJCWFsaWduZWRfb2Zmc2V0ID0g
-WEZTX1dSSVRFSU9fQUxJR04obXAsIChvZmZzZXQgKyBjb3VudCAtIDEpKTsKIAkJaW9hbGlnbiA9
-IFhGU19CX1RPX0ZTQlQobXAsIGFsaWduZWRfb2Zmc2V0KTsKLQkJbGFzdF9mc2IgPSBpb2FsaWdu
-ICsgbXAtPm1fd3JpdGVpb19ibG9ja3M7CisJCWxhc3RfZnNiID0gaW9hbGlnbiArIGFsbG9jX2Js
-b2NrczsKIAl9IGVsc2UgewogCQlsYXN0X2ZzYiA9IFhGU19CX1RPX0ZTQihtcCwgKCh4ZnNfdWZz
-aXplX3QpKG9mZnNldCArIGNvdW50KSkpOwogCX0KQEAgLTQ5NiwyMiArNTQxLDMxIEBAIHJldHJ5
-OgogCQkJICBYRlNfQk1BUElfREVMQVkgfCBYRlNfQk1BUElfV1JJVEUgfAogCQkJICBYRlNfQk1B
-UElfRU5USVJFLCAmZmlyc3RibG9jaywgMSwgaW1hcCwKIAkJCSAgJm5pbWFwcywgTlVMTCk7Ci0J
-aWYgKGVycm9yICYmIChlcnJvciAhPSBFTk9TUEMpKQorCXN3aXRjaCAoZXJyb3IpIHsKKwljYXNl
-IDA6CisJY2FzZSBFTk9TUEM6CisJY2FzZSBFRFFVT1Q6CisJCWJyZWFrOworCWRlZmF1bHQ6CiAJ
-CXJldHVybiBYRlNfRVJST1IoZXJyb3IpOworCX0KIAogCS8qCi0JICogSWYgYm1hcGkgcmV0dXJu
-ZWQgdXMgbm90aGluZywgYW5kIGlmIHdlIGRpZG4ndCBnZXQgYmFjayBFRFFVT1QsCi0JICogdGhl
-biB3ZSBtdXN0IGhhdmUgcnVuIG91dCBvZiBzcGFjZSAtIGZsdXNoIGFsbCBvdGhlciBpbm9kZXMg
-d2l0aAotCSAqIGRlbGFsbG9jIGJsb2NrcyBhbmQgcmV0cnkgd2l0aG91dCBFT0YgcHJlYWxsb2Nh
-dGlvbi4KKwkgKiBJZiBibWFwaSByZXR1cm5lZCB1cyBub3RoaW5nLCB3ZSBnb3QgZWl0aGVyIEVO
-T1NQQyBvciBFRFFVT1QuICBGb3IKKwkgKiBFTk9TUEMsICogZmx1c2ggYWxsIG90aGVyIGlub2Rl
-cyB3aXRoIGRlbGFsbG9jIGJsb2NrcyB0byBmcmVlIHVwCisJICogc29tZSBvZiB0aGUgZXhjZXNz
-IHJlc2VydmVkIG1ldGFkYXRhIHNwYWNlLiBGb3IgYm90aCBjYXNlcywgcmV0cnkKKwkgKiB3aXRo
-b3V0IEVPRiBwcmVhbGxvY2F0aW9uLgogCSAqLwogCWlmIChuaW1hcHMgPT0gMCkgewogCQl0cmFj
-ZV94ZnNfZGVsYWxsb2NfZW5vc3BjKGlwLCBvZmZzZXQsIGNvdW50KTsKIAkJaWYgKGZsdXNoZWQp
-Ci0JCQlyZXR1cm4gWEZTX0VSUk9SKEVOT1NQQyk7CisJCQlyZXR1cm4gWEZTX0VSUk9SKGVycm9y
-ID8gZXJyb3IgOiBFTk9TUEMpOwogCi0JCXhmc19pdW5sb2NrKGlwLCBYRlNfSUxPQ0tfRVhDTCk7
-Ci0JCXhmc19mbHVzaF9pbm9kZXMoaXApOwotCQl4ZnNfaWxvY2soaXAsIFhGU19JTE9DS19FWENM
-KTsKKwkJaWYgKGVycm9yID09IEVOT1NQQykgeworCQkJeGZzX2l1bmxvY2soaXAsIFhGU19JTE9D
-S19FWENMKTsKKwkJCXhmc19mbHVzaF9pbm9kZXMoaXApOworCQkJeGZzX2lsb2NrKGlwLCBYRlNf
-SUxPQ0tfRVhDTCk7CisJCX0KIAogCQlmbHVzaGVkID0gMTsKIAkJZXJyb3IgPSAwOwpkaWZmIC0t
-Z2l0IGEvZnMveGZzL3hmc19tb3VudC5jIGIvZnMveGZzL3hmc19tb3VudC5jCmluZGV4IDM5MDVm
-YzMuLjk4Y2IyNjYgMTAwNjQ0Ci0tLSBhL2ZzL3hmcy94ZnNfbW91bnQuYworKysgYi9mcy94ZnMv
-eGZzX21vdW50LmMKQEAgLTMxNSwxNCArMzE1LDYgQEAgeGZzX2ljc2Jfc3VtKAogCXJldHVybiBw
-ZXJjcHVfY291bnRlcl9zdW1fcG9zaXRpdmUoJm1wLT5tX2ljc2JbY291bnRlcl0pOwogfQogCi1z
-dGF0aWMgaW5saW5lIGludDY0X3QKLXhmc19pY3NiX3JlYWQoCi0Jc3RydWN0IHhmc19tb3VudAkq
-bXAsCi0JaW50CQkJY291bnRlcikKLXsKLQlyZXR1cm4gcGVyY3B1X2NvdW50ZXJfcmVhZF9wb3Np
-dGl2ZSgmbXAtPm1faWNzYltjb3VudGVyXSk7Ci19Ci0KIHZvaWQKIHhmc19pY3NiX3JlaW5pdF9j
-b3VudGVycygKIAlzdHJ1Y3QgeGZzX21vdW50CSptcCkKQEAgLTExNDUsNiArMTEzNywyMSBAQCB4
-ZnNfc2V0X3J3X3NpemVzKHhmc19tb3VudF90ICptcCkKIH0KIAogLyoKKyAqIHByZWNhbGN1bGF0
-ZSB0aGUgbG93IHNwYWNlIHRocmVzaG9sZHMgZm9yIGR5bmFtaWMgc3BlY3VsYXRpdmUgcHJlYWxs
-b2NhdGlvbi4KKyAqLwordm9pZAoreGZzX3NldF9sb3dfc3BhY2VfdGhyZXNob2xkcygKKwlzdHJ1
-Y3QgeGZzX21vdW50CSptcCkKK3sKKwlpbnQgaTsKKworCWZvciAoaSA9IDA7IGkgPCBYRlNfTE9X
-U1BfTUFYOyBpKyspIHsKKwkJbXAtPm1fbG93X3NwYWNlW2ldID0gbXAtPm1fc2Iuc2JfZGJsb2Nr
-cyAvIDEwMCAqIChpICsgMSk7CisJfQorfQorCisKKy8qCiAgKiBTZXQgd2hldGhlciB3ZSdyZSB1
-c2luZyBpbm9kZSBhbGlnbm1lbnQuCiAgKi8KIFNUQVRJQyB2b2lkCkBAIC0xMzY2LDYgKzEzNzMs
-OSBAQCB4ZnNfbW91bnRmcygKIAkgKi8KIAl4ZnNfc2V0X3J3X3NpemVzKG1wKTsKIAorCS8qIHNl
-dCB0aGUgbG93IHNwYWNlIHRocmVzaG9sZHMgZm9yIGR5bmFtaWMgcHJlYWxsb2NhdGlvbiAqLwor
-CXhmc19zZXRfbG93X3NwYWNlX3RocmVzaG9sZHMobXApOworCiAJLyoKIAkgKiBTZXQgdGhlIGlu
-b2RlIGNsdXN0ZXIgc2l6ZS4KIAkgKiBUaGlzIG1heSBzdGlsbCBiZSBvdmVycmlkZGVuIGJ5IHRo
-ZSBmaWxlIHN5c3RlbQpkaWZmIC0tZ2l0IGEvZnMveGZzL3hmc19tb3VudC5oIGIvZnMveGZzL3hm
-c19tb3VudC5oCmluZGV4IGM4ZmY0MzUuLjlmOTlhNjIgMTAwNjQ0Ci0tLSBhL2ZzL3hmcy94ZnNf
-bW91bnQuaAorKysgYi9mcy94ZnMveGZzX21vdW50LmgKQEAgLTc1LDggKzc1LDE1IEBAIGVudW0g
-ewogCVhGU19JQ1NCX01BWCwKIH07CiAKLWV4dGVybiBpbnQJeGZzX2ljc2JfbW9kaWZ5X2lub2Rl
-cyhzdHJ1Y3QgeGZzX21vdW50ICosIGludCwgaW50NjRfdCwgaW50KTsKLWV4dGVybiBpbnQJeGZz
-X2ljc2JfbW9kaWZ5X2ZyZWVfYmxvY2tzKHN0cnVjdCB4ZnNfbW91bnQgKiwgaW50NjRfdCwgaW50
-KTsKKy8qIGR5bmFtaWMgcHJlYWxsb2NhdGlvbiBmcmVlIHNwYWNlIHRocmVzaG9sZHMsIDUlIGRv
-d24gdG8gMSUgKi8KK2VudW0geworCVhGU19MT1dTUF8xX1BDTlQgPSAwLAorCVhGU19MT1dTUF8y
-X1BDTlQsCisJWEZTX0xPV1NQXzNfUENOVCwKKwlYRlNfTE9XU1BfNF9QQ05ULAorCVhGU19MT1dT
-UF81X1BDTlQsCisJWEZTX0xPV1NQX01BWCwKK307CiAKIHR5cGVkZWYgc3RydWN0IHhmc19tb3Vu
-dCB7CiAJc3RydWN0IHN1cGVyX2Jsb2NrCSptX3N1cGVyOwpAQCAtMTcyLDYgKzE3OSw4IEBAIHR5
-cGVkZWYgc3RydWN0IHhmc19tb3VudCB7CiAJCQkJCQkgICBvbiB0aGUgbmV4dCByZW1vdW50LHJ3
-ICovCiAJc3RydWN0IHNocmlua2VyCQltX2lub2RlX3NocmluazsJLyogaW5vZGUgcmVjbGFpbSBz
-aHJpbmtlciAqLwogCXN0cnVjdCBwZXJjcHVfY291bnRlcgltX2ljc2JbWEZTX0lDU0JfTUFYXTsK
-KwlpbnQ2NF90CQkJbV9sb3dfc3BhY2VbWEZTX0xPV1NQX01BWF07CisJCQkJCQkvKiBsb3cgZnJl
-ZSBzcGFjZSB0aHJlc2hvbGRzICovCiB9IHhmc19tb3VudF90OwogCiAvKgpAQCAtMzMzLDYgKzM0
-MiwxOSBAQCBleHRlcm4gaW50CXhmc19pY3NiX2luaXRfY291bnRlcnMoc3RydWN0IHhmc19tb3Vu
-dCAqKTsKIGV4dGVybiB2b2lkCXhmc19pY3NiX3JlaW5pdF9jb3VudGVycyhzdHJ1Y3QgeGZzX21v
-dW50ICopOwogZXh0ZXJuIHZvaWQJeGZzX2ljc2JfZGVzdHJveV9jb3VudGVycyhzdHJ1Y3QgeGZz
-X21vdW50ICopOwogZXh0ZXJuIHZvaWQJeGZzX2ljc2Jfc3luY19jb3VudGVycyhzdHJ1Y3QgeGZz
-X21vdW50ICopOworZXh0ZXJuIGludAl4ZnNfaWNzYl9tb2RpZnlfaW5vZGVzKHN0cnVjdCB4ZnNf
-bW91bnQgKiwgaW50LCBpbnQ2NF90LCBpbnQpOworZXh0ZXJuIGludAl4ZnNfaWNzYl9tb2RpZnlf
-ZnJlZV9ibG9ja3Moc3RydWN0IHhmc19tb3VudCAqLCBpbnQ2NF90LCBpbnQpOworCitzdGF0aWMg
-aW5saW5lIGludDY0X3QKK3hmc19pY3NiX3JlYWQoCisJc3RydWN0IHhmc19tb3VudAkqbXAsCisJ
-aW50CQkJY291bnRlcikKK3sKKwlyZXR1cm4gcGVyY3B1X2NvdW50ZXJfcmVhZF9wb3NpdGl2ZSgm
-bXAtPm1faWNzYltjb3VudGVyXSk7Cit9CisKK2V4dGVybiB2b2lkCXhmc19zZXRfbG93X3NwYWNl
-X3RocmVzaG9sZHMoc3RydWN0IHhmc19tb3VudCAqKTsKKwogCiAjZW5kaWYJLyogX19LRVJORUxf
-XyAqLwogCi0tIAoxLjcuMi4zCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNn
-aS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+From: Dave Chinner <dchinner@redhat.com>
+
+log->l_last_sync_lsn is updated in only one critical spot - log
+buffer Io completion - and is protected by the grant lock here. This
+requires the grant lock to be taken for every log buffer IO
+completion. Converting the l_last_sync_lsn variable to an atomic64_t
+means that we do not need to take the grant lock in log buffer IO
+completion to update it.
+
+This also removes the need for explicitly holding a spinlock to read
+the l_last_sync_lsn on 32 bit platforms.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_log.c         |   57 ++++++++++++++++++++-------------------------
+ fs/xfs/xfs_log_priv.h    |    9 ++++++-
+ fs/xfs/xfs_log_recover.c |    6 ++--
+ 3 files changed, 36 insertions(+), 36 deletions(-)
+
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index a35ef8f..90a605cc 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -360,7 +360,7 @@ xfs_log_reserve(
+ 
+ 		spin_lock(&log->l_grant_lock);
+ 		xlog_grant_push_ail(log, log->l_tail_lsn,
+-				    log->l_last_sync_lsn,
++				    atomic64_read(&log->l_last_sync_lsn),
+ 				    internal_ticket->t_unit_res);
+ 		spin_unlock(&log->l_grant_lock);
+ 		retval = xlog_regrant_write_log_space(log, internal_ticket);
+@@ -378,7 +378,7 @@ xfs_log_reserve(
+ 
+ 		spin_lock(&log->l_grant_lock);
+ 		xlog_grant_push_ail(log, log->l_tail_lsn,
+-				    log->l_last_sync_lsn,
++				    atomic64_read(&log->l_last_sync_lsn),
+ 				    (internal_ticket->t_unit_res *
+ 				     internal_ticket->t_cnt));
+ 		spin_unlock(&log->l_grant_lock);
+@@ -718,12 +718,8 @@ xfs_log_move_tail(xfs_mount_t	*mp,
+ 	if (XLOG_FORCED_SHUTDOWN(log))
+ 		return;
+ 
+-	if (tail_lsn == 0) {
+-		/* needed since sync_lsn is 64 bits */
+-		spin_lock(&log->l_icloglock);
+-		tail_lsn = log->l_last_sync_lsn;
+-		spin_unlock(&log->l_icloglock);
+-	}
++	if (tail_lsn == 0)
++		tail_lsn = atomic64_read(&log->l_last_sync_lsn);
+ 
+ 	spin_lock(&log->l_grant_lock);
+ 
+@@ -845,11 +841,9 @@ xlog_assign_tail_lsn(xfs_mount_t *mp)
+ 
+ 	tail_lsn = xfs_trans_ail_tail(mp->m_ail);
+ 	spin_lock(&log->l_grant_lock);
+-	if (tail_lsn != 0) {
+-		log->l_tail_lsn = tail_lsn;
+-	} else {
+-		tail_lsn = log->l_tail_lsn = log->l_last_sync_lsn;
+-	}
++	if (!tail_lsn)
++		tail_lsn = atomic64_read(&log->l_last_sync_lsn);
++	log->l_tail_lsn = tail_lsn;
+ 	spin_unlock(&log->l_grant_lock);
+ 
+ 	return tail_lsn;
+@@ -1057,10 +1051,9 @@ xlog_alloc_log(xfs_mount_t	*mp,
+ 	log->l_flags	   |= XLOG_ACTIVE_RECOVERY;
+ 
+ 	log->l_prev_block  = -1;
+-	log->l_tail_lsn	   = xlog_assign_lsn(1, 0);
+-	/* log->l_tail_lsn = 0x100000000LL; cycle = 1; current block = 0 */
+-	log->l_last_sync_lsn = log->l_tail_lsn;
+ 	log->l_curr_cycle  = 1;	    /* 0 is bad since this is initial value */
++	log->l_tail_lsn	   = xlog_assign_lsn(1, 0);
++	atomic64_set(&log->l_last_sync_lsn, log->l_tail_lsn);
+ 	log->l_grant_reserve_lsn = xlog_assign_lsn(1, 0);
+ 	log->l_grant_write_lsn = xlog_assign_lsn(1, 0);
+ 	INIT_LIST_HEAD(&log->l_reserveq);
+@@ -2241,7 +2234,7 @@ xlog_state_do_callback(
+ 				lowest_lsn = xlog_get_lowest_lsn(log);
+ 				if (lowest_lsn &&
+ 				    XFS_LSN_CMP(lowest_lsn,
+-				    		be64_to_cpu(iclog->ic_header.h_lsn)) < 0) {
++						be64_to_cpu(iclog->ic_header.h_lsn)) < 0) {
+ 					iclog = iclog->ic_next;
+ 					continue; /* Leave this iclog for
+ 						   * another thread */
+@@ -2249,23 +2242,21 @@ xlog_state_do_callback(
+ 
+ 				iclog->ic_state = XLOG_STATE_CALLBACK;
+ 
+-				spin_unlock(&log->l_icloglock);
+ 
+-				/* l_last_sync_lsn field protected by
+-				 * l_grant_lock. Don't worry about iclog's lsn.
+-				 * No one else can be here except us.
++				/*
++				 * update the last_sync_lsn before we drop the
++				 * icloglock to ensure we are the only one that
++				 * can update it.
+ 				 */
+-				spin_lock(&log->l_grant_lock);
+-				ASSERT(XFS_LSN_CMP(log->l_last_sync_lsn,
+-				       be64_to_cpu(iclog->ic_header.h_lsn)) <= 0);
+-				log->l_last_sync_lsn =
+-					be64_to_cpu(iclog->ic_header.h_lsn);
+-				spin_unlock(&log->l_grant_lock);
++				ASSERT(XFS_LSN_CMP(atomic64_read(&log->l_last_sync_lsn),
++					be64_to_cpu(iclog->ic_header.h_lsn)) <= 0);
++				atomic64_set(&log->l_last_sync_lsn,
++					be64_to_cpu(iclog->ic_header.h_lsn));
+ 
+-			} else {
+-				spin_unlock(&log->l_icloglock);
++			} else
+ 				ioerrors++;
+-			}
++
++			spin_unlock(&log->l_icloglock);
+ 
+ 			/*
+ 			 * Keep processing entries in the callback list until
+@@ -2576,7 +2567,8 @@ redo:
+ 			list_add_tail(&tic->t_queue, &log->l_reserveq);
+ 
+ 		xlog_grant_push_ail(log, log->l_tail_lsn,
+-				    log->l_last_sync_lsn, need_bytes);
++				    atomic64_read(&log->l_last_sync_lsn),
++				    need_bytes);
+ 
+ 		XFS_STATS_INC(xs_sleep_logspace);
+ 		trace_xfs_log_grant_sleep(log, tic);
+@@ -2683,7 +2675,8 @@ redo:
+ 		}
+ 
+ 		xlog_grant_push_ail(log, log->l_tail_lsn,
+-				    log->l_last_sync_lsn, need_bytes);
++				    atomic64_read(&log->l_last_sync_lsn),
++				    need_bytes);
+ 
+ 		XFS_STATS_INC(xs_sleep_logspace);
+ 		trace_xfs_log_regrant_write_sleep(log, tic);
+diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+index 6fcee10..97db8a8 100644
+--- a/fs/xfs/xfs_log_priv.h
++++ b/fs/xfs/xfs_log_priv.h
+@@ -508,7 +508,6 @@ typedef struct log {
+ 	spinlock_t		l_icloglock;    /* grab to change iclog state */
+ 	xfs_lsn_t		l_tail_lsn;     /* lsn of 1st LR with unflushed
+ 						 * buffers */
+-	xfs_lsn_t		l_last_sync_lsn;/* lsn of last LR on disk */
+ 	int			l_curr_cycle;   /* Cycle number of log writes */
+ 	int			l_prev_cycle;   /* Cycle number before last
+ 						 * block increment */
+@@ -522,6 +521,14 @@ typedef struct log {
+ 	xfs_lsn_t		l_grant_reserve_lsn;
+ 	xfs_lsn_t		l_grant_write_lsn;
+ 
++	/*
++	 * l_last_sync_lsn is an atomic so it can be set and read without
++	 * needing to hold specific locks. To avoid operations contending with
++	 * other hot objects, place it on a separate cacheline.
++	 */
++	/* lsn of last LR on disk */
++	atomic64_t		l_last_sync_lsn ____cacheline_aligned_in_smp;
++
+ 	/* The following field are used for debugging; need to hold icloglock */
+ #ifdef DEBUG
+ 	char			*l_iclog_bak[XLOG_MAX_ICLOGS];
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index d8c62f0..2ce7b48 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -926,7 +926,7 @@ xlog_find_tail(
+ 	if (found == 2)
+ 		log->l_curr_cycle++;
+ 	log->l_tail_lsn = be64_to_cpu(rhead->h_tail_lsn);
+-	log->l_last_sync_lsn = be64_to_cpu(rhead->h_lsn);
++	atomic64_set(&log->l_last_sync_lsn, be64_to_cpu(rhead->h_lsn));
+ 	log->l_grant_reserve_lsn = xlog_assign_lsn(log->l_curr_cycle,
+ 						BBTOB(log->l_curr_block));
+ 	log->l_grant_write_lsn = xlog_assign_lsn(log->l_curr_cycle,
+@@ -978,9 +978,9 @@ xlog_find_tail(
+ 			log->l_tail_lsn =
+ 				xlog_assign_lsn(log->l_curr_cycle,
+ 						after_umount_blk);
+-			log->l_last_sync_lsn =
++			atomic64_set(&log->l_last_sync_lsn,
+ 				xlog_assign_lsn(log->l_curr_cycle,
+-						after_umount_blk);
++						after_umount_blk));
+ 			*tail_blk = after_umount_blk;
+ 
+ 			/*
+-- 
+1.7.2.3
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
