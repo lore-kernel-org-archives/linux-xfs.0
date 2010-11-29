@@ -1,19 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oATGWkHO186688 for <xfs@oss.sgi.com>; Mon, 29 Nov 2010 10:32:46 -0600
-Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 85A21304066
-	for <xfs@oss.sgi.com>; Mon, 29 Nov 2010 08:34:25 -0800 (PST)
-Received: from augusta (augusta.americas.sgi.com [128.162.233.117])
-	by estes.americas.sgi.com (Postfix) with ESMTP id 5DC7A700204B
-	for <xfs@oss.sgi.com>; Mon, 29 Nov 2010 10:34:25 -0600 (CST)
-Date: Mon, 29 Nov 2010 10:34:24 -0600
-From: Bill Kendall <wkendall@sgi.com>
-Subject: [PATCH] xfsdump: fix xfs_invutil dependency generation
-Message-ID: <20101129163424.GA22014@sgi.com>
+	oATGCxQ1185362 for <xfs@oss.sgi.com>; Mon, 29 Nov 2010 10:13:00 -0600
+Date: Mon, 29 Nov 2010 11:14:41 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfsdump: remove old namreg code
+Message-ID: <20101129161441.GA9513@infradead.org>
+References: <20101129160023.GA20755@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <20101129160023.GA20755@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,32 +22,18 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Bill Kendall <wkendall@sgi.com>
+Cc: xfs@oss.sgi.com
 
-Correct the target name for dependency generation in the
-invutil Makefile. This is now consistent with other dump
-makefiles and eliminates "No such file or directory"
-errors during the build.
+On Mon, Nov 29, 2010 at 10:00:23AM -0600, Bill Kendall wrote:
+> Remove the old, unused namreg code under the 'common' directory.
+> This was superceded a long time ago by the version under the
+> 'restore' directory.
 
-Signed-off-by: Bill Kendall <wkendall@sgi.com>
+Looks good,
 
----
- invutil/Makefile |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Index: xfsdump-kernel.org/invutil/Makefile
-===================================================================
---- xfsdump-kernel.org.orig/invutil/Makefile
-+++ xfsdump-kernel.org/invutil/Makefile
-@@ -70,7 +70,7 @@ install: default
- 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
- install-dev:
- 
--depend: $(COMMINCL) $(COMMON) $(INVINCL) $(INVCOMMON)
-+.dep: $(COMMINCL) $(COMMON) $(INVINCL) $(INVCOMMON)
- 
- $(COMMINCL) $(COMMON):
- 	@echo "    [LN]     $@"
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
