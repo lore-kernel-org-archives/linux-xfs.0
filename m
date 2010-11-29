@@ -1,29 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAT1BIZZ076894 for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 19:11:18 -0600
+	oAT1BR7A076997 for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 19:11:27 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1CCDD1C7CEF2
-	for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 17:12:57 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
-	[150.101.137.97]) by cuda.sgi.com with ESMTP id
-	v3u3RVzDSD5iH8cJ for <xfs@oss.sgi.com>;
-	Sun, 28 Nov 2010 17:12:57 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A6BE313F659E
+	for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 17:13:07 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
+	[150.101.137.99]) by cuda.sgi.com with ESMTP id
+	QZNMGPf4BMQeQksD for <xfs@oss.sgi.com>;
+	Sun, 28 Nov 2010 17:13:07 -0800 (PST)
 Received: from dastard (unverified [121.44.88.148])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	48051309-1927428
-	for <xfs@oss.sgi.com>; Mon, 29 Nov 2010 11:42:56 +1030 (CDT)
+	48418095-1927428
+	for <xfs@oss.sgi.com>; Mon, 29 Nov 2010 11:43:06 +1030 (CDT)
 Received: from chute ([192.168.1.1] helo=disappointment)
 	by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1PMsIT-0000ae-N3
-	for xfs@oss.sgi.com; Mon, 29 Nov 2010 12:12:49 +1100
+	(envelope-from <dave@fromorbit.com>) id 1PMsIY-0000aj-Tv
+	for xfs@oss.sgi.com; Mon, 29 Nov 2010 12:12:54 +1100
 Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1PMsIE-0005Um-BW
+	(envelope-from <dave@disappointment.disaster>) id 1PMsIE-0005Uv-Gd
 	for xfs@oss.sgi.com; Mon, 29 Nov 2010 12:12:34 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/8] xfs: clean up xfs_ail_delete()
-Date: Mon, 29 Nov 2010 12:12:26 +1100
-Message-Id: <1290993152-20999-3-git-send-email-david@fromorbit.com>
+Subject: [PATCH 5/8] xfs: consume iodone callback items on buffers as they are
+	processed
+Date: Mon, 29 Nov 2010 12:12:29 +1100
+Message-Id: <1290993152-20999-6-git-send-email-david@fromorbit.com>
 In-Reply-To: <1290993152-20999-1-git-send-email-david@fromorbit.com>
 References: <1290993152-20999-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -43,131 +44,112 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-xfs_ail_delete() has a needlessly complex interface. It returns the log item
-that was passed in for deletion (which the callers then assert is identical to
-the one passed in), and callers of xfs_ail_delete() still need to invalidate
-current traversal cursors.
+To allow buffer iodone callbacks to consume multiple items off the
+callback list, first we need to convert the xfs_buf_do_callbacks()
+to consume items and always pull the next item from the head of the
+list.
 
-Make xfs_ail_delete() return void, move the cursor invalidation inside it, and
-clean up the callers just to use the log item pointer they passed in.
-
-While cleaning up, remove the messy and unnecessary "/* ARGUSED */" comments
-around all these functions.
+The means the item list walk is never dependent on knowing the
+next item on the list and hence allows callbacks to remove itesm
+from the list as well. This allows callbacks to do bulk operations
+by scanning the list for identical callbacks, consuming them all
+and then processing them in bulk, negating the need for multiple
+callbacks of that type.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_trans_ail.c |   27 +++++++--------------------
- 1 files changed, 7 insertions(+), 20 deletions(-)
+ fs/xfs/xfs_buf_item.c |   32 +++++++++++++++++++++-----------
+ 1 files changed, 21 insertions(+), 11 deletions(-)
 
-diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-index dc90695..645928c 100644
---- a/fs/xfs/xfs_trans_ail.c
-+++ b/fs/xfs/xfs_trans_ail.c
-@@ -29,7 +29,7 @@
- #include "xfs_error.h"
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index 2686d0d..ed2b65f 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -142,7 +142,7 @@ xfs_buf_item_log_check(
+ #endif
  
- STATIC void xfs_ail_insert(struct xfs_ail *, xfs_log_item_t *);
--STATIC xfs_log_item_t * xfs_ail_delete(struct xfs_ail *, xfs_log_item_t *);
-+STATIC void xfs_ail_delete(struct xfs_ail *, xfs_log_item_t *);
- STATIC xfs_log_item_t * xfs_ail_min(struct xfs_ail *);
- STATIC xfs_log_item_t * xfs_ail_next(struct xfs_ail *, xfs_log_item_t *);
+ STATIC void	xfs_buf_error_relse(xfs_buf_t *bp);
+-STATIC void	xfs_buf_do_callbacks(xfs_buf_t *bp, xfs_log_item_t *lip);
++STATIC void	xfs_buf_do_callbacks(struct xfs_buf *bp);
  
-@@ -468,16 +468,13 @@ xfs_trans_ail_update(
- 	xfs_log_item_t	*lip,
- 	xfs_lsn_t	lsn) __releases(ailp->xa_lock)
- {
--	xfs_log_item_t		*dlip = NULL;
- 	xfs_log_item_t		*mlip;	/* ptr to minimum lip */
- 	xfs_lsn_t		tail_lsn;
- 
- 	mlip = xfs_ail_min(ailp);
- 
- 	if (lip->li_flags & XFS_LI_IN_AIL) {
--		dlip = xfs_ail_delete(ailp, lip);
--		ASSERT(dlip == lip);
--		xfs_trans_ail_cursor_clear(ailp, dlip);
-+		xfs_ail_delete(ailp, lip);
- 	} else {
- 		lip->li_flags |= XFS_LI_IN_AIL;
- 	}
-@@ -485,7 +482,7 @@ xfs_trans_ail_update(
- 	lip->li_lsn = lsn;
- 	xfs_ail_insert(ailp, lip);
- 
--	if (mlip == dlip) {
-+	if (mlip == lip) {
- 		mlip = xfs_ail_min(ailp);
- 		/*
- 		 * It is not safe to access mlip after the AIL lock is
-@@ -524,21 +521,18 @@ xfs_trans_ail_delete(
- 	struct xfs_ail	*ailp,
- 	xfs_log_item_t	*lip) __releases(ailp->xa_lock)
- {
--	xfs_log_item_t		*dlip;
- 	xfs_log_item_t		*mlip;
- 	xfs_lsn_t		tail_lsn;
- 
- 	if (lip->li_flags & XFS_LI_IN_AIL) {
- 		mlip = xfs_ail_min(ailp);
--		dlip = xfs_ail_delete(ailp, lip);
--		ASSERT(dlip == lip);
--		xfs_trans_ail_cursor_clear(ailp, dlip);
-+		xfs_ail_delete(ailp, lip);
- 
- 
- 		lip->li_flags &= ~XFS_LI_IN_AIL;
- 		lip->li_lsn = 0;
- 
--		if (mlip == dlip) {
-+		if (mlip == lip) {
- 			mlip = xfs_ail_min(ailp);
- 			/*
- 			 * It is not safe to access mlip after the AIL lock
-@@ -632,7 +626,6 @@ STATIC void
- xfs_ail_insert(
- 	struct xfs_ail	*ailp,
- 	xfs_log_item_t	*lip)
--/* ARGSUSED */
- {
- 	xfs_log_item_t	*next_lip;
- 
-@@ -661,18 +654,14 @@ xfs_ail_insert(
  /*
-  * Delete the given item from the AIL.  Return a pointer to the item.
-  */
--/*ARGSUSED*/
--STATIC xfs_log_item_t *
-+STATIC void
- xfs_ail_delete(
- 	struct xfs_ail	*ailp,
- 	xfs_log_item_t	*lip)
--/* ARGSUSED */
- {
- 	xfs_ail_check(ailp, lip);
--
- 	list_del(&lip->li_ail);
--
--	return lip;
-+	xfs_trans_ail_cursor_clear(ailp, lip);
+  * This returns the number of log iovecs needed to log the
+@@ -450,7 +450,7 @@ xfs_buf_item_unpin(
+ 		 * xfs_trans_ail_delete() drops the AIL lock.
+ 		 */
+ 		if (bip->bli_flags & XFS_BLI_STALE_INODE) {
+-			xfs_buf_do_callbacks(bp, (xfs_log_item_t *)bip);
++			xfs_buf_do_callbacks(bp);
+ 			XFS_BUF_SET_FSPRIVATE(bp, NULL);
+ 			XFS_BUF_CLR_IODONE_FUNC(bp);
+ 		} else {
+@@ -918,15 +918,26 @@ xfs_buf_attach_iodone(
+ 	XFS_BUF_SET_IODONE_FUNC(bp, xfs_buf_iodone_callbacks);
  }
  
- /*
-@@ -682,7 +671,6 @@ xfs_ail_delete(
- STATIC xfs_log_item_t *
- xfs_ail_min(
- 	struct xfs_ail	*ailp)
--/* ARGSUSED */
++/*
++ * We can have many callbacks on a buffer. Running the callbacks individually
++ * can cause a lot of contention on the AIL lock, so we allow for a single
++ * callback to be able to scan the remaining lip->li_bio_list for other items
++ * of the same type and callback to be processed in the first call.
++ *
++ * As a result, the loop walking the callback list below will also modify the
++ * list. it removes the first item from the list and then runs the callback.
++ * The loop then restarts from the new head of the list. This allows the
++ * callback to scan and modify the list attached to the buffer and we don't
++ * have to care about maintaining a next item pointer.
++ */
+ STATIC void
+ xfs_buf_do_callbacks(
+-	xfs_buf_t	*bp,
+-	xfs_log_item_t	*lip)
++	struct xfs_buf		*bp)
  {
- 	if (list_empty(&ailp->xa_ail))
- 		return NULL;
-@@ -699,7 +687,6 @@ STATIC xfs_log_item_t *
- xfs_ail_next(
- 	struct xfs_ail	*ailp,
- 	xfs_log_item_t	*lip)
--/* ARGSUSED */
- {
- 	if (lip->li_ail.next == &ailp->xa_ail)
- 		return NULL;
+-	xfs_log_item_t	*nlip;
++	struct xfs_log_item	*lip;
+ 
+-	while (lip != NULL) {
+-		nlip = lip->li_bio_list;
++	while ((lip = XFS_BUF_FSPRIVATE(bp, xfs_log_item_t *)) != NULL) {
++		XFS_BUF_SET_FSPRIVATE(bp, lip->li_bio_list);
+ 		ASSERT(lip->li_cb != NULL);
+ 		/*
+ 		 * Clear the next pointer so we don't have any
+@@ -936,7 +947,6 @@ xfs_buf_do_callbacks(
+ 		 */
+ 		lip->li_bio_list = NULL;
+ 		lip->li_cb(bp, lip);
+-		lip = nlip;
+ 	}
+ }
+ 
+@@ -970,7 +980,7 @@ xfs_buf_iodone_callbacks(
+ 			ASSERT(XFS_BUF_TARGET(bp) == mp->m_ddev_targp);
+ 			XFS_BUF_SUPER_STALE(bp);
+ 			trace_xfs_buf_item_iodone(bp, _RET_IP_);
+-			xfs_buf_do_callbacks(bp, lip);
++			xfs_buf_do_callbacks(bp);
+ 			XFS_BUF_SET_FSPRIVATE(bp, NULL);
+ 			XFS_BUF_CLR_IODONE_FUNC(bp);
+ 			xfs_buf_ioend(bp, 0);
+@@ -1029,7 +1039,7 @@ xfs_buf_iodone_callbacks(
+ 		return;
+ 	}
+ 
+-	xfs_buf_do_callbacks(bp, lip);
++	xfs_buf_do_callbacks(bp);
+ 	XFS_BUF_SET_FSPRIVATE(bp, NULL);
+ 	XFS_BUF_CLR_IODONE_FUNC(bp);
+ 	xfs_buf_ioend(bp, 0);
+@@ -1063,7 +1073,7 @@ xfs_buf_error_relse(
+ 	 * We have to unpin the pinned buffers so do the
+ 	 * callbacks.
+ 	 */
+-	xfs_buf_do_callbacks(bp, lip);
++	xfs_buf_do_callbacks(bp);
+ 	XFS_BUF_SET_FSPRIVATE(bp, NULL);
+ 	XFS_BUF_CLR_IODONE_FUNC(bp);
+ 	XFS_BUF_SET_BRELSE_FUNC(bp,NULL);
 -- 
 1.7.2.3
 
