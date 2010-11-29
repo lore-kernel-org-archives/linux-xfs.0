@@ -1,16 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oATEslwY176665 for <xfs@oss.sgi.com>; Mon, 29 Nov 2010 08:54:47 -0600
-Date: Mon, 29 Nov 2010 09:56:27 -0500
+	oATErfTk176441 for <xfs@oss.sgi.com>; Mon, 29 Nov 2010 08:53:42 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EEB6D1DB4CB0
+	for <xfs@oss.sgi.com>; Mon, 29 Nov 2010 06:55:23 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id CmM3eX6BC7jLHnxa for
+	<xfs@oss.sgi.com>; Mon, 29 Nov 2010 06:55:23 -0800 (PST)
+Date: Mon, 29 Nov 2010 09:55:23 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v4 4/9] xfsrestore: mmap dirent names for faster lookups
-Message-ID: <20101129145627.GB22839@infradead.org>
-References: <20101119183837.GA9505@sgi.com>
-	<20101123134818.GA31206@infradead.org> <4CF3B875.3020701@sgi.com>
+Subject: Re: XFS repair utils
+Message-ID: <20101129145523.GA22839@infradead.org>
+References: <AANLkTikUOZJeSnSHO+pAM5d6DjWEPBdUSiua1dcv0pxt@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4CF3B875.3020701@sgi.com>
+In-Reply-To: <AANLkTikUOZJeSnSHO+pAM5d6DjWEPBdUSiua1dcv0pxt@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,19 +28,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Bill Kendall <wkendall@sgi.com>
+To: naveen yadav <yad.naveen@gmail.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, Nov 29, 2010 at 08:28:05AM -0600, Bill Kendall wrote:
-> There are several modules in xfsrestore which map files. None of them
-> currently contain a destructor/cleanup function for unmapping the files.
-> It would be a good change to make though.
+On Mon, Nov 29, 2010 at 07:30:50PM +0530, naveen yadav wrote:
+> Hi All,
+> 
+> I am using XFS 2.6.34 kernel on my target, and I have
+> #xfs_repair -V
+> xfs_repair version 3.0.5
+> 
+> So is there any issue of compatibility with latest XFS_repair utils.
+> or it will work fine with my latest kernel(2.6.34).
 
-If keeping it mapped later it's fine with me.  So ACK from me for the
-whole series.
+It works just fine, but the 3.1.x series of xfsprogs brings large
+repair memory savings.
 
-Alex, maybe it's time to push out another xfsdump release after this?
-There's quite a few changes that have accumulated.
+> Since some time mount fails.
+
+What mount messages, what platform?
 
 _______________________________________________
 xfs mailing list
