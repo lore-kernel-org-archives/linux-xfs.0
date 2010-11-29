@@ -1,29 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAT0J6JP069752 for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 18:19:06 -0600
+	oAT0J68i069768 for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 18:19:06 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 441061AF6DD
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 646E11C78F7D
 	for <xfs@oss.sgi.com>; Sun, 28 Nov 2010 16:20:46 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
-	[150.101.137.103]) by cuda.sgi.com with ESMTP id
-	FHd9Awy74n5esXr3 for <xfs@oss.sgi.com>;
+Received: from mail.internode.on.net (bld-mail20.adl6.internode.on.net
+	[150.101.137.105]) by cuda.sgi.com with ESMTP id
+	2yP8lxHjf5NqQP6e for <xfs@oss.sgi.com>;
 	Sun, 28 Nov 2010 16:20:46 -0800 (PST)
 Received: from dastard (unverified [121.44.88.148])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	47767714-1927428
+	2734099-1927428
 	for <xfs@oss.sgi.com>; Mon, 29 Nov 2010 10:50:45 +1030 (CDT)
 Received: from chute ([192.168.1.1] helo=disappointment)
 	by dastard with esmtp (Exim 4.71)
-	(envelope-from <dave@fromorbit.com>) id 1PMrU3-0000VX-Oc
+	(envelope-from <dave@fromorbit.com>) id 1PMrU3-0000VY-QL
 	for xfs@oss.sgi.com; Mon, 29 Nov 2010 11:20:43 +1100
 Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1PMrTo-00049f-JT
+	(envelope-from <dave@disappointment.disaster>) id 1PMrTo-00049i-LC
 	for xfs@oss.sgi.com; Mon, 29 Nov 2010 11:20:28 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/5] xfs: push stale, pinned buffers on trylock failures
-Date: Mon, 29 Nov 2010 11:20:21 +1100
-Message-Id: <1290990024-15898-3-git-send-email-david@fromorbit.com>
+Subject: [PATCH 3/5] xfs: delayed alloc blocks beyond EOF are valid after
+	writeback
+Date: Mon, 29 Nov 2010 11:20:22 +1100
+Message-Id: <1290990024-15898-4-git-send-email-david@fromorbit.com>
 In-Reply-To: <1290990024-15898-1-git-send-email-david@fromorbit.com>
 References: <1290990024-15898-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -43,100 +44,72 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-As reported by Nick Piggin, XFS is suffering from long pauses under
-highly concurrent workloads when hosted on ramdisks. The problem is
-that an inode buffer is stuck in the pinned state in memory and as a
-result either the inode buffer or one of the inodes within the
-buffer is stopping the tail of the log from being moved forward.
+There is an assumption in the parts of XFS that flushing a dirty
+file will make all the delayed allocation blocks disappear from an
+inode. That is, that after calling xfs_flush_pages() then
+ip->i_delayed_blks will be zero.
 
-The system remains in this state until a periodic log force issued
-by xfssyncd causes the buffer to be unpinned. The main problem is
-that these are stale buffers, and are hence held locked until the
-transaction/checkpoint that marked them state has been committed to
-disk. When the filesystem gets into this state, only the xfssyncd
-can cause the async transactions to be committed to disk and hence
-unpin the inode buffer.
+This is an invalid assumption as we may have specualtive
+preallocation beyond EOF and they are recorded in
+ip->i_delayed_blks. A flush of the dirty pages of an inode will not
+change the state of these blocks beyond EOF, so a non-zero
+deeelalloc block count after a flush is valid.
 
-This problem was encountered when scaling the busy extent list, but
-only the blocking lock interface was fixed to solve the problem.
-Extend the same fix to the buffer trylock operations - if we fail to
-lock a pinned, stale buffer, then force the log immediately so that
-when the next attempt to lock it comes around, it will have been
-unpinned.
+The bmap code has an invalid ASSERT() that needs to be removed, and
+the swapext code has a bug in that while it swaps the data forks
+around, it fails to swap the i_delayed_blks counter associated with
+the fork and hence can get the block accounting wrong.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/linux-2.6/xfs_buf.c |   35 ++++++++++++++++-------------------
- 1 files changed, 16 insertions(+), 19 deletions(-)
+ fs/xfs/xfs_bmap.c  |    9 +++++++--
+ fs/xfs/xfs_dfrag.c |   13 +++++++++++++
+ 2 files changed, 20 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
-index aa1d353..4c5deb6 100644
---- a/fs/xfs/linux-2.6/xfs_buf.c
-+++ b/fs/xfs/linux-2.6/xfs_buf.c
-@@ -488,29 +488,16 @@ found:
- 	spin_unlock(&pag->pag_buf_lock);
- 	xfs_perag_put(pag);
- 
--	/* Attempt to get the semaphore without sleeping,
--	 * if this does not work then we need to drop the
--	 * spinlock and do a hard attempt on the semaphore.
--	 */
--	if (down_trylock(&bp->b_sema)) {
-+	if (xfs_buf_cond_lock(bp)) {
-+		/* failed, so wait for the lock if requested. */
- 		if (!(flags & XBF_TRYLOCK)) {
--			/* wait for buffer ownership */
- 			xfs_buf_lock(bp);
- 			XFS_STATS_INC(xb_get_locked_waited);
- 		} else {
--			/* We asked for a trylock and failed, no need
--			 * to look at file offset and length here, we
--			 * know that this buffer at least overlaps our
--			 * buffer and is locked, therefore our buffer
--			 * either does not exist, or is this buffer.
--			 */
- 			xfs_buf_rele(bp);
- 			XFS_STATS_INC(xb_busy_locked);
- 			return NULL;
+diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
+index 08b179f..4111cd3 100644
+--- a/fs/xfs/xfs_bmap.c
++++ b/fs/xfs/xfs_bmap.c
+@@ -5471,8 +5471,13 @@ xfs_getbmap(
+ 			if (error)
+ 				goto out_unlock_iolock;
  		}
--	} else {
--		/* trylock worked */
--		XB_SET_OWNER(bp);
+-
+-		ASSERT(ip->i_delayed_blks == 0);
++		/*
++		 * even after flushing the inode, there can still be delalloc
++		 * blocks on the inode beyond EOF due to speculative
++		 * preallocation. These are not removed until the release
++		 * function is called or the inode is inactivated. Hence we
++		 * cannot assert here that ip->i_delayed_blks == 0.
++		 */
  	}
  
- 	if (bp->b_flags & XBF_STALE) {
-@@ -876,10 +863,18 @@ xfs_buf_rele(
-  */
+ 	lock = xfs_ilock_map_shared(ip);
+diff --git a/fs/xfs/xfs_dfrag.c b/fs/xfs/xfs_dfrag.c
+index 3b9582c..e60490b 100644
+--- a/fs/xfs/xfs_dfrag.c
++++ b/fs/xfs/xfs_dfrag.c
+@@ -377,6 +377,19 @@ xfs_swap_extents(
+ 	ip->i_d.di_format = tip->i_d.di_format;
+ 	tip->i_d.di_format = tmp;
  
- /*
-- *	Locks a buffer object, if it is not already locked.
-- *	Note that this in no way locks the underlying pages, so it is only
-- *	useful for synchronizing concurrent use of buffer objects, not for
-- *	synchronizing independent access to the underlying pages.
-+ *	Locks a buffer object, if it is not already locked.  Note that this in
-+ *	no way locks the underlying pages, so it is only useful for
-+ *	synchronizing concurrent use of buffer objects, not for synchronizing
-+ *	independent access to the underlying pages.
-+ *
-+ *	If we come across a stale, pinned, locked buffer, we know that we are
-+ *	being asked to lock a buffer that has been reallocated. Because it is
-+ *	pinned, we know that the log has not been pushed to disk and hence it
-+ *	will still be locked.  Rather than continuing to have trylock attempts
-+ *	fail until someone else pushes the log, push it ourselves before
-+ *	returning.  This means that the xfsaild will not get stuck trying
-+ *	to push on stale inode buffers.
-  */
- int
- xfs_buf_cond_lock(
-@@ -890,6 +885,8 @@ xfs_buf_cond_lock(
- 	locked = down_trylock(&bp->b_sema) == 0;
- 	if (locked)
- 		XB_SET_OWNER(bp);
-+	else if (atomic_read(&bp->b_pin_count) && (bp->b_flags & XBF_STALE))
-+		xfs_log_force(bp->b_target->bt_mount, 0);
++	/*
++	 * The extents in the source inode could still contain speculative
++	 * preallocation beyond EOF (e.g. the file is open but not modified
++	 * while defrag is in progress). In that case, we need to copy over the
++	 * number of delalloc blocks the data fork in the source inode is
++	 * tracking beyond EOF so that when the fork is truncated away when the
++	 * temporary inode is unlinked we don't underrun the i_delayed_blks
++	 * counter on that inode.
++	 */
++	ASSERT(tip->i_delayed_blks == 0);
++	tip->i_delayed_blks = ip->i_delayed_blks;
++	ip->i_delayed_blks = 0;
++
+ 	ilf_fields = XFS_ILOG_CORE;
  
- 	trace_xfs_buf_cond_lock(bp, _RET_IP_);
- 	return locked ? 0 : -EBUSY;
+ 	switch(ip->i_d.di_format) {
 -- 
 1.7.2.3
 
