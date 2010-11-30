@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAUMOr42145098 for <xfs@oss.sgi.com>; Tue, 30 Nov 2010 16:24:53 -0600
+	oAUMOhte145069 for <xfs@oss.sgi.com>; Tue, 30 Nov 2010 16:24:44 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BC1321C840DD
-	for <xfs@oss.sgi.com>; Tue, 30 Nov 2010 14:26:36 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 093A8140188B
+	for <xfs@oss.sgi.com>; Tue, 30 Nov 2010 14:26:25 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id iEklAwCKz04eIHkk for
-	<xfs@oss.sgi.com>; Tue, 30 Nov 2010 14:26:36 -0800 (PST)
-Date: Tue, 30 Nov 2010 17:26:36 -0500
+	by cuda.sgi.com with ESMTP id sdrxmoMF60JRsf73 for
+	<xfs@oss.sgi.com>; Tue, 30 Nov 2010 14:26:25 -0800 (PST)
+Date: Tue, 30 Nov 2010 17:26:24 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] Xfstests: make _scratch_mkfs_sized work for btrfs
-Message-ID: <20101130222636.GB10381@infradead.org>
-References: <1291153839-12317-1-git-send-email-josef@redhat.com>
+Subject: Re: [PATCH] Xfstest 245: accept ENOTEMPTY as a valid error for the
+	test
+Message-ID: <20101130222624.GA10381@infradead.org>
+References: <1291149565-31762-1-git-send-email-josef@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1291153839-12317-1-git-send-email-josef@redhat.com>
+In-Reply-To: <1291149565-31762-1-git-send-email-josef@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
