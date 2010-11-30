@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAUKI445136456 for <xfs@oss.sgi.com>; Tue, 30 Nov 2010 14:18:04 -0600
+	oAUKFtXX136300 for <xfs@oss.sgi.com>; Tue, 30 Nov 2010 14:15:55 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 30CBF1400D4A
-	for <xfs@oss.sgi.com>; Tue, 30 Nov 2010 12:19:46 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8F1BB1B78D1
+	for <xfs@oss.sgi.com>; Tue, 30 Nov 2010 12:17:37 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id cON6ks2dLITciPYn for
-	<xfs@oss.sgi.com>; Tue, 30 Nov 2010 12:19:46 -0800 (PST)
-Date: Tue, 30 Nov 2010 15:19:46 -0500
+	by cuda.sgi.com with ESMTP id S61Ib3v6WwdbD1oF for
+	<xfs@oss.sgi.com>; Tue, 30 Nov 2010 12:17:37 -0800 (PST)
+Date: Tue, 30 Nov 2010 15:17:34 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 4/8] xfs: reduce the number of AIL push wakeups
-Message-ID: <20101130201946.GC16079@infradead.org>
+Subject: Re: [PATCH 1/8] xfs: Pull EFI/EFD handling out from under the AIL lock
+Message-ID: <20101130201734.GA16079@infradead.org>
 References: <1290993152-20999-1-git-send-email-david@fromorbit.com>
-	<1290993152-20999-5-git-send-email-david@fromorbit.com>
+	<1290993152-20999-2-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1290993152-20999-5-git-send-email-david@fromorbit.com>
+In-Reply-To: <1290993152-20999-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,73 +32,33 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, Nov 29, 2010 at 12:12:28PM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> The xfaild often tries to rest to wait for congestion to pass of for
-> IO to complete, but is regularly woken in tail-pushing situations.
-> In severe cases, the xfsaild is getting woken tens of thousands of
-> times a second. Reduce the number needless wakeups by only waking
-> the xfsaild if the new target is larger than the old one. Further
-> make short sleeps uninterruptible as they occur when the xfsaild has
-> decided it needs to back off to allow some IO to complete and being
-> woken early is counter-productive.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-Looks good,
+ - xfs_efi_init needs to initialize efi_next_extent using ATOMIC_INIT
+ - there is a behaviour change about the xfs_trans_del_item call
+   in xfs_efi_item_unpin - before it was protected by the
+   XFS_EFI_CANCELED which was never set, and now it's not.
+ - what happened to XFS_EFI_RECOVERED?  You changed it to be indexed
+   for the atomic bit-ops, but it's still used non-atomic in the log
+   recovery code.
+ - Why is XFS_EFI_COMMITTED cleared in xlog_recover_do_efi_trans,
+   where it can't ever be set?
+ - can you please add a shared helper for xfs_efi_item_unpin and
+   xfs_efi_release, ala:
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/linux-2.6/xfs_super.c |   20 ++++++++++++++++----
->  1 files changed, 16 insertions(+), 4 deletions(-)
-> 
-> diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
-> index 6cbebb2..8546805 100644
-> --- a/fs/xfs/linux-2.6/xfs_super.c
-> +++ b/fs/xfs/linux-2.6/xfs_super.c
-> @@ -834,8 +834,11 @@ xfsaild_wakeup(
->  	struct xfs_ail		*ailp,
->  	xfs_lsn_t		threshold_lsn)
->  {
-> -	ailp->xa_target = threshold_lsn;
-> -	wake_up_process(ailp->xa_task);
-> +	/* only ever move the target forwards */
-> +	if (XFS_LSN_CMP(threshold_lsn, ailp->xa_target) > 0) {
-> +		ailp->xa_target = threshold_lsn;
-> +		wake_up_process(ailp->xa_task);
-> +	}
->  }
->  
->  STATIC int
-> @@ -847,8 +850,17 @@ xfsaild(
->  	long		tout = 0; /* milliseconds */
->  
->  	while (!kthread_should_stop()) {
-> -		schedule_timeout_interruptible(tout ?
-> -				msecs_to_jiffies(tout) : MAX_SCHEDULE_TIMEOUT);
-> +		/*
-> +		 * for short sleeps indicating congestion, don't allow us to
-> +		 * get woken early. Otherwise all we do is bang on the AIL lock
-> +		 * without making progress.
-> +		 */
-> +		if (tout && tout <= 20)
-> +			__set_current_state(TASK_KILLABLE);
-> +		else
-> +			__set_current_state(TASK_UNINTERRUPTIBLE);
-> +		schedule_timeout(tout ?
-> +				 msecs_to_jiffies(tout) : MAX_SCHEDULE_TIMEOUT);
->  
->  		/* swsusp */
->  		try_to_freeze();
-> -- 
-> 1.7.2.3
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
----end quoted text---
+STATIC void
+__xfs_efi_release(
+	xfs_efi_log_item_t	*efip)
+{
+	if (!test_and_clear_bit(XFS_EFI_COMMITTED, &efip->efi_flags)) {
+		struct xfs_ail          *ailp = efip->efi_item.li_ailp;
+
+		spin_lock(&ailp->xa_lock);
+		/* xfs_trans_ail_delete() drops the AIL lock. */
+		xfs_trans_ail_delete(ailp, &efip->efi_item);
+		xfs_efi_item_free(efip);
+	}
+
+   so that it's obvious they do the same release operation?
 
 _______________________________________________
 xfs mailing list
