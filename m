@@ -1,23 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAUH1K0i126906 for <xfs@oss.sgi.com>; Tue, 30 Nov 2010 11:01:20 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BAE481E9008A
-	for <xfs@oss.sgi.com>; Tue, 30 Nov 2010 09:03:03 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id svdqOcwvmiXzZUya for
-	<xfs@oss.sgi.com>; Tue, 30 Nov 2010 09:03:03 -0800 (PST)
-Date: Tue, 30 Nov 2010 12:03:01 -0500
+	oAUGgVcM124967 for <xfs@oss.sgi.com>; Tue, 30 Nov 2010 10:42:34 -0600
+Date: Tue, 30 Nov 2010 11:44:13 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/2] xfs: don't truncate prealloc from frequently
-	accessed inodes
-Message-ID: <20101130170301.GA5712@infradead.org>
-References: <1290991431-20519-1-git-send-email-david@fromorbit.com>
-	<1290991431-20519-3-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH] xfstests: ensure uint64_t is defined for <linux/fs.h>
+Message-ID: <20101130164413.GA28205@infradead.org>
+References: <1291068840.2425.15.camel@doink>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1290991431-20519-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1291068840.2425.15.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,11 +22,21 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Alex Elder <aelder@sgi.com>
+Cc: XFS Mailing List <xfs@oss.sgi.com>
 
-Did any problems show up with just trying to use an inode flag instead
-of the counter?  I'd really hate to bloat the inode without reason.
+On Mon, Nov 29, 2010 at 04:14:00PM -0600, Alex Elder wrote:
+> When compiling "fiemap-tester.c" in my environment, I am
+> getting complaints at the first reference to "uint64_t"
+> in <linux/fs.h>.  This simple patch resolves that.
+> 
+> Signed-off-by: Alex Elder <aelder@sgi.com>
+
+This should be fixed again by newer kernels, but given that the fix is
+entirely harmless I'm fine with it.
+
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
