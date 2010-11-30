@@ -1,29 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAU7L5DZ059476 for <xfs@oss.sgi.com>; Tue, 30 Nov 2010 01:21:05 -0600
-Received: from ucsc.edu (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F334D1B4CE2
-	for <xfs@oss.sgi.com>; Mon, 29 Nov 2010 23:22:47 -0800 (PST)
-Received: from ucsc.edu (email-prod-out-1.ucsc.edu [128.114.129.85]) by
-	cuda.sgi.com with ESMTP id wyyzvdSNUUEdtph1 for
-	<xfs@oss.sgi.com>; Mon, 29 Nov 2010 23:22:47 -0800 (PST)
-Subject: Re: xfs_repair of critical volume
-Mime-Version: 1.0 (Apple Message framework v1082)
-From: Eli Morris <ermorris@ucsc.edu>
-In-Reply-To: <20101117074708.GP22876@dastard>
-Date: Mon, 29 Nov 2010 23:22:31 -0800
-Message-Id: <BA70F631-15CB-4E52-913A-3715CC9678A0@ucsc.edu>
-References: <75C248E3-2C99-426E-AE7D-9EC543726796@ucsc.edu>
-	<4CCD3CE6.8060407@hardwarefreak.com>
-	<864DA9C9-B4A4-4B6B-A901-A457E2B9F5A5@ucsc.edu>
-	<201011121422.28993@zmi.at>
-	<BE08758D-20B4-48F1-8BF7-FCD0341D38C2@ucsc.edu>
-	<20101114110559.GB22876@dastard>
-	<87214B07-148B-4580-84F2-792266DE2C55@ucsc.edu>
-	<20101116000436.GG22876@dastard>
-	<A219F774-E2D5-4CEB-AB2B-399F3053DFF9@ucsc.edu>
-	<20101117074708.GP22876@dastard>
+	oAU7nVW2064883 for <xfs@oss.sgi.com>; Tue, 30 Nov 2010 01:49:31 -0600
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0258B1B4DB0
+	for <xfs@oss.sgi.com>; Mon, 29 Nov 2010 23:51:12 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
+	[150.101.137.102]) by cuda.sgi.com with ESMTP id
+	hFEF6VCWct2BT9JK for <xfs@oss.sgi.com>;
+	Mon, 29 Nov 2010 23:51:12 -0800 (PST)
+Date: Tue, 30 Nov 2010 18:51:09 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: XFS: performance
+Message-ID: <20101130075109.GN13830@dastard>
+References: <AANLkTi=u8dX0ehPN3Rv3FQ+84htY3AYEv0eboGgC7_qi@mail.gmail.com>
+	<20101129001112.GA28672@dastard>
+	<AANLkTikom6jpkuZquTfinGpaqz4Gp0y8niYN7yWQgmzj@mail.gmail.com>
+	<20101129015937.GB28672@dastard>
+	<AANLkTikw086Z_66cz_U-EdFQx14TXP6XmiG-KyLN4BLo@mail.gmail.com>
+	<AANLkTi=-y0v4MzyU+qWPmvazouDu0N3gqSvVTU1z4Gke@mail.gmail.com>
+	<4CF33D0F.6080404@hardwarefreak.com>
+	<20101130042913.GB3556@dastard>
+	<4CF48299.2030204@hardwarefreak.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4CF48299.2030204@hardwarefreak.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,72 +37,53 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Stan Hoeppner <stan@hardwarefreak.com>
 Cc: xfs@oss.sgi.com
 
-
-On Nov 16, 2010, at 11:47 PM, Dave Chinner wrote:
-
-> On Tue, Nov 16, 2010 at 11:29:41PM -0800, Eli Morris wrote:
->> Hi Dave,
->> 
->> Thanks a lot for your help. I looked at the man page and elsewhere for this info and can't find what this means:
->> 
->> 
->> extent: [startoffset..endoffset]: startblock..endblock
->> 
->> 
->> I understand what an offset would be, but what the heck is a startoffset and an endoffset? 
+On Mon, Nov 29, 2010 at 10:50:33PM -0600, Stan Hoeppner wrote:
+> Dave Chinner put forth on 11/29/2010 10:29 PM:
+> > On Sun, Nov 28, 2010 at 11:41:35PM -0600, Stan Hoeppner wrote:
+> >> Yclept Nemo put forth on 11/28/2010 9:57 PM:
+> >>> You mention an eight-core machine (8c?). Since I operate a dual-core
+> >>> system, would it make sense to increase my AG count slightly, to five
+> >>> or six?
+> >>
+> >> Dave didn't mention the disk configuration of his "workstation".  I'm
+> >> guessing he's got a local RAID setup with 8-16 drives.
+> > 
+> > 2 SSDs in RAID0.
 > 
-> startoffset: file offset of the start of the extent
-> endoffset: file offset of the end of the extent
+> From an IOPs and throughput perspective, very similar to my guess.
+> Curious, are those Intel, OCZ, or other SSDs?  Which model,
+> specifically?  Benchmark data?  I ask as all the results I find on the
+> web for SSDs are from Windows 7 machines. :(  I like to see some Linux
+> results.
+
+Cheap as it gets 120GB Sandforce 1200 drives. In RAID0, I'm getting about
+450MB/s sequential write, a little more for read. I'm seeing up to
+12-14k random 4k writes per drive through XFS. Other than that I
+didn't bother with any more benchmarks because it was clearly Fast
+Enough.
+
+> > And to point out the not-so-obvious, this is the _default layout_
+> > that mkfs.xfs in the debian squeeze installer came up with. IOWs,
+> > mkfs.xfs did exactly what I wanted without me having to tweak
+> > _anything_.
 > 
->> Is the formula for the location of the file:
->> 
->> startoffset + startblock through endoffset + endblock, where the blocks and the offsets are in 512 bytes?
-> 
-> no.
-> 
->> So this file:
->> 
->> 0: [0..1053271]: 5200578944..5201632215
->> 
->> would be contained from:
->> 
->> beginning: 	(0 + 5200578944) * 512 bytes
->> ending:		(1053271 + 5201632215) * 512 bytes
-> 
-> No, it translates like this:
-> 
->    Logical		  Physical
-> File Offset (bytes)	block on disk
-> -------------------     -------------
->   0 (0..511)		5200578944
->   1 (512..1023)	5200578945
->   2 (1024..1536)	5200578946
-> .....			.....
-> 1053270			5201632214
-> 1053271			5201632215
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> Forgive me for I've not looked at the code.  How exactly does mkfs.xfs
+> determine the AG count?  If you'd had a single 7.2k SATA drive instead
+> of 2 RAID0 SSDs, would it have still given you 16 AGs?  If so, I'd say
+> that's a bug.
 
-Hi Dave,
+No, it detected the RAID configuration. 16 AGs is the default for a
+RAID device, 4 AGs is used if RAID is not detected.
 
-Thanks for your help with this. I wrote the program and ran it through and it looks like we have we able to preserve 44 TB of valid data, while removing the corrupted files, which is a great result, considering the circumstances. 
+Cheers,
 
-Thanks again,
-
-Eli
-
-
-
-
-
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
