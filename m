@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAUMOhte145069 for <xfs@oss.sgi.com>; Tue, 30 Nov 2010 16:24:44 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 093A8140188B
-	for <xfs@oss.sgi.com>; Tue, 30 Nov 2010 14:26:25 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id sdrxmoMF60JRsf73 for
-	<xfs@oss.sgi.com>; Tue, 30 Nov 2010 14:26:25 -0800 (PST)
-Date: Tue, 30 Nov 2010 17:26:24 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] Xfstest 245: accept ENOTEMPTY as a valid error for the
-	test
-Message-ID: <20101130222624.GA10381@infradead.org>
-References: <1291149565-31762-1-git-send-email-josef@redhat.com>
+	oAUNAuaC149263 for <xfs@oss.sgi.com>; Tue, 30 Nov 2010 17:10:57 -0600
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 302071B00F8
+	for <xfs@oss.sgi.com>; Tue, 30 Nov 2010 15:12:38 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
+	[150.101.137.100]) by cuda.sgi.com with ESMTP id
+	hgWi0hWPhk0JC1Gu for <xfs@oss.sgi.com>;
+	Tue, 30 Nov 2010 15:12:38 -0800 (PST)
+Date: Wed, 1 Dec 2010 10:12:35 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfstests: getfacl -n unsupported in older acl package
+Message-ID: <20101130231235.GK3556@dastard>
+References: <1291124858.3340.9.camel@dhcp-31-190.brq.redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1291149565-31762-1-git-send-email-josef@redhat.com>
+In-Reply-To: <1291124858.3340.9.camel@dhcp-31-190.brq.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,10 +29,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Josef Bacik <josef@redhat.com>
+To: Boris Ranto <branto@redhat.com>
 Cc: xfs@oss.sgi.com
 
-Thanks, applied.
+On Tue, Nov 30, 2010 at 02:47:38PM +0100, Boris Ranto wrote:
+> Test cases 051 and 067 use getfacl with option -n. This works well on newer systems but older acl package know only its longer version: --numeric.
+> 
+> I've tested the two tests with long option and they both passed.
+> 
+> Therefore I'd propose this patch to fix this for earlier acl versions:
+
+Looks fine to me.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
