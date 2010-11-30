@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oAULwWlk143107 for <xfs@oss.sgi.com>; Tue, 30 Nov 2010 15:58:33 -0600
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B72C01401053
-	for <xfs@oss.sgi.com>; Tue, 30 Nov 2010 14:00:15 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id PhyAMzKTwYGclSSV for
-	<xfs@oss.sgi.com>; Tue, 30 Nov 2010 14:00:15 -0800 (PST)
-Received: from int-mx12.intmail.prod.int.phx2.redhat.com
-	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
-	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id oAUM0EDP028020
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Tue, 30 Nov 2010 17:00:14 -0500
-Received: from localhost.localdomain (test1244.test.redhat.com [10.10.10.244])
-	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with
-	ESMTP id oAUM0DRr029216
-	for <xfs@oss.sgi.com>; Tue, 30 Nov 2010 17:00:14 -0500
-From: Josef Bacik <josef@redhat.com>
-Subject: [PATCH] Xfstests: make _scratch_mkfs_sized work for btrfs
-Date: Tue, 30 Nov 2010 16:50:39 -0500
-Message-Id: <1291153839-12317-1-git-send-email-josef@redhat.com>
+	oAULx00C143150 for <xfs@oss.sgi.com>; Tue, 30 Nov 2010 15:59:01 -0600
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 24D0E1C83D72
+	for <xfs@oss.sgi.com>; Tue, 30 Nov 2010 14:00:42 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
+	[150.101.137.97]) by cuda.sgi.com with ESMTP id
+	ESW2cbbFGB1EPGzL for <xfs@oss.sgi.com>;
+	Tue, 30 Nov 2010 14:00:42 -0800 (PST)
+Date: Wed, 1 Dec 2010 09:00:38 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/2] xfs: don't truncate prealloc from frequently
+	accessed inodes
+Message-ID: <20101130220038.GH3556@dastard>
+References: <1290991431-20519-1-git-send-email-david@fromorbit.com>
+	<1290991431-20519-3-git-send-email-david@fromorbit.com>
+	<20101130170301.GA5712@infradead.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20101130170301.GA5712@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,38 +28,27 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-This patch simply makes _scratch_mkfs_sized work right for btrfs.  I've run a
-few of the tests that use _scratch_mkfs_sized (204 and 226) and everything seems
-to work right now.  Thanks,
+On Tue, Nov 30, 2010 at 12:03:01PM -0500, Christoph Hellwig wrote:
+> Did any problems show up with just trying to use an inode flag instead
+> of the counter?  I'd really hate to bloat the inode without reason.
 
-Signed-off-by: Josef Bacik <josef@redhat.com>
----
- common.rc |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+None that I've noticed in local testing, but I haven't been
+focussing on this aspect so I hadn't changed it. I'll change it to a
+flag, and we can go back to a counter if necessary.
 
-diff --git a/common.rc b/common.rc
-index 459bdf5..58e7318 100644
---- a/common.rc
-+++ b/common.rc
-@@ -329,6 +329,9 @@ _scratch_mkfs_sized()
-     ext2|ext3|ext4)
- 	/sbin/mkfs.$FSTYP $MKFS_OPTIONS -b $blocksize $SCRATCH_DEV $blocks
- 	;;
-+     btrfs)
-+	/sbin/mkfs.$FSTYP $MKFS_OPTIONS $SCRATCH_DEV -b $fssize
-+	;;
-     *)
- 	_notrun "Filesystem $FSTYP not supported in _scratch_mkfs_sized"
- 	;;
+Cheers,
+
+Dave.
 -- 
-1.6.6.1
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
