@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oB14mRns172900 for <xfs@oss.sgi.com>; Tue, 30 Nov 2010 22:48:28 -0600
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C379E1402E58
-	for <xfs@oss.sgi.com>; Tue, 30 Nov 2010 20:50:09 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
-	[150.101.137.102]) by cuda.sgi.com with ESMTP id
-	ssBSDhyyyjGzoX27 for <xfs@oss.sgi.com>;
-	Tue, 30 Nov 2010 20:50:09 -0800 (PST)
-Date: Wed, 1 Dec 2010 15:50:06 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 10/10] xfs: simplify xfs_map_at_offset
-Message-ID: <20101201045006.GK16922@dastard>
-References: <20101122130506.868076797@bombadil.infradead.org>
-	<20101122130904.961028436@bombadil.infradead.org>
+	oB14gF50172500 for <xfs@oss.sgi.com>; Tue, 30 Nov 2010 22:42:16 -0600
+Received: from mail-qy0-f174.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 02CB91402E34
+	for <xfs@oss.sgi.com>; Tue, 30 Nov 2010 20:43:58 -0800 (PST)
+Received: from mail-qy0-f174.google.com (mail-qy0-f174.google.com
+	[209.85.216.174]) by cuda.sgi.com with ESMTP id
+	3VsSgiNYF55tPfXx for <xfs@oss.sgi.com>;
+	Tue, 30 Nov 2010 20:43:58 -0800 (PST)
+Received: by qyk11 with SMTP id 11so2216693qyk.5
+	for <xfs@oss.sgi.com>; Tue, 30 Nov 2010 20:43:58 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20101122130904.961028436@bombadil.infradead.org>
+Date: Wed, 1 Dec 2010 10:13:57 +0530
+Message-ID: <AANLkTinsLNNbzDoTUpPsss6HL7YjPf3uZ9ivu5VDVpqz@mail.gmail.com>
+Subject: issue with unmount of XFS partation
+From: naveen yadav <yad.naveen@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,23 +28,42 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mon, Nov 22, 2010 at 08:05:16AM -0500, Christoph Hellwig wrote:
-> Move the buffer locking into the callers as they need to do it wether they
-> call xfs_map_at_offset or not.  Remove the b_bdev assignment, which is
-> already done by get_blocks.  Remove the duplicate extent type asserts in
-> xfs_convert_page just before calling xfs_map_at_offset.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+Hi all,
 
-Looks good.
+I am running XFS 2.6.34  on ARM target, When i do USB plug and uplug
+some 30~40 times i found that system show USB mounted, but there is no
+USB,
+The USB have two partation FAT and XFS, FAT on First and XFS on Second.
+FAT got unmounted every time, but XFS does not,
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
--- 
-Dave Chinner
-david@fromorbit.com
+/dev/sda2 on /dtv/usb/sda2 type xfs (rw,relatime,nouuid,attr2,noquota)
+/dev/sdb2 on /dtv/usb/sdb2 type xfs (rw,relatime,nouuid,attr2,noquota)
+
+If I do sync on Shell I got below error.
+
+xfs_force_shutdown(sda2,0x1) called from line 1004 of file fs/xfs/linux-2.6/xfs_
+buf.c.  Return address = 0x801c7aa8
+xfs_force_shutdown(sdb2,0x1) called from line 1004 of file fs/xfs/linux-2.6/xfs_
+buf.c.  Return address = 0x801c7aa8But If i do manual umount
+
+and this message continues display
+
+ Filesystem "sda2": xfs_log_force: error 5 returned.
+Filesystem "sdb2": xfs_log_force: error 5 returned.
+Filesystem "sda2": xfs_log_force: error 5 returned.
+Filesystem "sdb2": xfs_log_force: error 5 returned.
+Filesystem "sda2": xfs_log_force: error 5 returned.
+Filesystem "sdb2": xfs_log_force: error 5 returned.
+Filesystem "sda2": xfs_log_force: error 5 returned.
+Filesystem "sdb2": xfs_log_force: error 5 returned.
+Filesystem "sda2": xfs_log_force: error 5 returned.
+Filesystem "sdb2": xfs_log_force: error 5 returned.
+Filesystem "sda2": xfs_log_force: error 5 returned.
+Filesystem "sdb2": xfs_log_force: error 5 returned.
+Filesystem "sda2": xfs_log_force: error 5 returned.
+Filesystem "sdb2": xfs_log_force: error 5 returned.
 
 _______________________________________________
 xfs mailing list
