@@ -1,20 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oB1ErMMD217074 for <xfs@oss.sgi.com>; Wed, 1 Dec 2010 08:53:23 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F22CB16071C5
-	for <xfs@oss.sgi.com>; Wed,  1 Dec 2010 06:55:04 -0800 (PST)
-Received: from mail.sandeen.net (64-131-28-21.usfamily.net [64.131.28.21]) by
-	cuda.sgi.com with ESMTP id 9kPCTeEBnCjprria for
-	<xfs@oss.sgi.com>; Wed, 01 Dec 2010 06:55:04 -0800 (PST)
-Message-ID: <4CF661C7.2020103@sandeen.net>
-Date: Wed, 01 Dec 2010 08:55:03 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: XFS file system corruption(Return Bad Transaction) kernel - 2.6.34
-References: <AANLkTikzCpQ1j9uWGSTY9TEguVDvAB5AVYtbDtdePFci@mail.gmail.com>
-In-Reply-To: <AANLkTikzCpQ1j9uWGSTY9TEguVDvAB5AVYtbDtdePFci@mail.gmail.com>
+	oB1KSaFd232389 for <xfs@oss.sgi.com>; Wed, 1 Dec 2010 14:28:36 -0600
+Subject: xfstests 065 failures
+From: Alex Elder <aelder@sgi.com>
+Date: Wed, 01 Dec 2010 14:29:39 -0600
+Message-ID: <1291235379.2556.28.camel@doink>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,29 +20,60 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Amit Sahrawat <amit.sahrawat83@gmail.com>
-Cc: sandeen-xfs@sandeen.net, xfs@oss.sgi.com
+To: dchinner@redhat.com
+Cc: XFS Mailing List <xfs@oss.sgi.com>
 
-On 12/1/10 1:14 AM, Amit Sahrawat wrote:
-> Dear Member,
->  
-> I am getting following corruption on XFS formatted disk during a simple copy operation:
-> sd 9:0:0:0: Attached scsi removable disk sdc
-> sd 9:0:0:0: Attached scsi generic sg2 type 0
-> XFS mounting filesystem sdc2
-> Starting XFS recovery on filesystem: sdc2 (logdev: internal)
-> XFS: xlog_recover_process_data: bad transaction
-> XFS: log mount/recovery failed: error 5
-> XFS: log mount failed
+Dave, you were asking on IRC about test 065 failures.
+I asked Bill Kendall about it and he bisected to find
+that the commit below seems to be where the problems
+started.  I believe the problem is that one of the
+times is not updated properly when renaming the file
+"addedfile4".  Here are the commands that might affect
+that file in test 065:
 
-hm, that's not a simple copy operation, that is a mount failing;
-your log appears to be corrupted.
+	mv addeddir4/addedfile5 addeddir4/addedfile4
+	mv addeddir4 addeddir6
 
-offhand I'm going to blame it on having a write cache enabled
-on your drive, and having barriers either off, or not working
-properly.
+I glanced at the commit and saw nothing obviously
+wrong, but at the moment I can't really dig into
+it any deeper so I thought I'd report what Bill
+found so others could look.
 
--Eric
+					-Alex
+
+>From dcd79a1423f64ee0184629874805c3ac40f3a2c5 Mon Sep 17 00:00:00 2001
+From: Dave Chinner <dchinner@redhat.com>
+Date: Tue, 28 Sep 2010 12:27:25 +1000
+Subject: [PATCH] xfs: don't use vfs writeback for pure metadata
+modifications
+
+Under heavy multi-way parallel create workloads, the VFS struggles
+to write back all the inodes that have been changed in age order.
+The bdi flusher thread becomes CPU bound, spending 85% of it's time
+in the VFS code, mostly traversing the superblock dirty inode list
+to separate dirty inodes old enough to flush.
+
+We already keep an index of all metadata changes in age order - in
+the AIL - and continued log pressure will do age ordered writeback
+without any extra overhead at all. If there is no pressure on the
+log, the xfssyncd will periodically write back metadata in ascending
+disk address offset order so will be very efficient.
+
+Hence we can stop marking VFS inodes dirty during transaction commit
+or when changing timestamps during transactions. This will keep the
+inodes in the superblock dirty list to those containing data or
+unlogged metadata changes.
+
+However, the timstamp changes are slightly more complex than this -
+there are a couple of places that do unlogged updates of the
+timestamps, and the VFS need to be informed of these. Hence add a
+new function xfs_trans_ichgtime() for transactional changes,
+and leave xfs_ichgtime() for the non-transactional changes.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Alex Elder <aelder@sgi.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+
 
 _______________________________________________
 xfs mailing list
