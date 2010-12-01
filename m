@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oB145PVN169174 for <xfs@oss.sgi.com>; Tue, 30 Nov 2010 22:05:25 -0600
+	oB149OCe169402 for <xfs@oss.sgi.com>; Tue, 30 Nov 2010 22:09:24 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E64911B7A38
-	for <xfs@oss.sgi.com>; Tue, 30 Nov 2010 20:07:07 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail20.adl6.internode.on.net
-	[150.101.137.105]) by cuda.sgi.com with ESMTP id
-	nbzskQE8ZEp0Zwa2 for <xfs@oss.sgi.com>;
-	Tue, 30 Nov 2010 20:07:07 -0800 (PST)
-Date: Wed, 1 Dec 2010 15:07:04 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A35F31C8355E
+	for <xfs@oss.sgi.com>; Tue, 30 Nov 2010 20:11:04 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
+	[150.101.137.102]) by cuda.sgi.com with ESMTP id
+	Bh2N3lSoxQY6beje for <xfs@oss.sgi.com>;
+	Tue, 30 Nov 2010 20:11:04 -0800 (PST)
+Date: Wed, 1 Dec 2010 15:11:02 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 03/10] xfs: a few small tweaks for overwrites in
-	xfs_vm_writepage
-Message-ID: <20101201040704.GD16922@dastard>
+Subject: Re: [PATCH 04/10] xfs: cleanup the xfs_iomap_write_* helpers
+Message-ID: <20101201041102.GE16922@dastard>
 References: <20101122130506.868076797@bombadil.infradead.org>
-	<20101122130903.533699161@bombadil.infradead.org>
+	<20101122130903.730638974@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20101122130903.533699161@bombadil.infradead.org>
+In-Reply-To: <20101122130903.730638974@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,22 +33,15 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Mon, Nov 22, 2010 at 08:05:09AM -0500, Christoph Hellwig wrote:
-> Don't trylock the buffer.  We are the only one ever locking it for
-> a regular file address space, and trylock was only copied from the
-> generic code which did it due to the old buffer based writeout in
-> jbd.  Also make sure to only write out the buffer if the iomap
-> actually is valid, because we wouldn't have a proper mapping
-> otherwise.  In practice we will never get an invalid mapping here
-> as the page lock guarantees truncate doesn't race with us, but
-> better be safe than sorry.  Also make sure we allocate a new ioend
-> when crossing boundaries between mappings, just like we do for
-> delalloc and unwritten extents.  Again this currently doesn't
-> matter as the I/O end handler only cares for the boundaries for
-> unwritten extents, but this makes the code fully correct and the
-> same as for delalloc/unwritten extents.
+On Mon, Nov 22, 2010 at 08:05:10AM -0500, Christoph Hellwig wrote:
+> Remove passing the BMAPI_* flags to these helpers, in xfs_iomap_write_direct
+> the check BMAPI_DIRECT was always true, and in the xfs_iomap_write_delay
+> path is was never checked at all.  Remove the nmap return value as
+> we never make use of it.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Makes sense - fewer useless parameters being passed around is good...
 
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 -- 
