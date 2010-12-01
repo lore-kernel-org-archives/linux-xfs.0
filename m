@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oB1DAPuD209478 for <xfs@oss.sgi.com>; Wed, 1 Dec 2010 07:10:25 -0600
+	oB1Cr0E4208341 for <xfs@oss.sgi.com>; Wed, 1 Dec 2010 06:53:01 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 44C391BA3EC
-	for <xfs@oss.sgi.com>; Wed,  1 Dec 2010 05:12:09 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EC8231404474
+	for <xfs@oss.sgi.com>; Wed,  1 Dec 2010 04:54:43 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id q64kedN01J7Mzlkm for
-	<xfs@oss.sgi.com>; Wed, 01 Dec 2010 05:12:09 -0800 (PST)
-Date: Wed, 1 Dec 2010 08:12:08 -0500
+	by cuda.sgi.com with ESMTP id cUkp1cjKU1cRCXnc for
+	<xfs@oss.sgi.com>; Wed, 01 Dec 2010 04:54:43 -0800 (PST)
+Date: Wed, 1 Dec 2010 07:54:43 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 09/14] xfs: introduce new locks for the log grant ticket
-	wait queues
-Message-ID: <20101201131208.GA22455@infradead.org>
+Subject: Re: [PATCH 06/14] xfs: convert l_last_sync_lsn to an atomic variable
+Message-ID: <20101201125443.GD612@infradead.org>
 References: <1290994712-21376-1-git-send-email-david@fromorbit.com>
-	<1290994712-21376-10-git-send-email-david@fromorbit.com>
+	<1290994712-21376-7-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1290994712-21376-10-git-send-email-david@fromorbit.com>
+In-Reply-To: <1290994712-21376-7-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,13 +32,9 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-> +		/* co-ordinate with xfs_log_force_shutdown */
-> +		if (XLOG_FORCED_SHUTDOWN(log)) {
-> +			spin_unlock(&log->l_grant_reserve_lock);
-> +			goto error_return;
-> +		}
+Looks good,
 
-Where is this coming from?  Otherwise the patch looks good to me.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
