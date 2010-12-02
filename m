@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oB21llGK244843 for <xfs@oss.sgi.com>; Wed, 1 Dec 2010 19:47:48 -0600
+	oB228pYl245854 for <xfs@oss.sgi.com>; Wed, 1 Dec 2010 20:08:52 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BA54F1BB301
-	for <xfs@oss.sgi.com>; Wed,  1 Dec 2010 17:49:30 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
-	[150.101.137.99]) by cuda.sgi.com with ESMTP id
-	cfYJDBJR0PX5fX3A for <xfs@oss.sgi.com>;
-	Wed, 01 Dec 2010 17:49:30 -0800 (PST)
-Date: Thu, 2 Dec 2010 12:49:28 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 697681B9487
+	for <xfs@oss.sgi.com>; Wed,  1 Dec 2010 18:10:34 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
+	[150.101.137.101]) by cuda.sgi.com with ESMTP id
+	Aye7sVXZM3MCP7qG for <xfs@oss.sgi.com>;
+	Wed, 01 Dec 2010 18:10:34 -0800 (PST)
+Date: Thu, 2 Dec 2010 13:10:31 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 03/14] xfs: convert log grant heads to LSN notation
-Message-ID: <20101202014927.GO16922@dastard>
+Subject: Re: [PATCH 09/14] xfs: introduce new locks for the log grant
+	ticket wait queues
+Message-ID: <20101202021031.GT16922@dastard>
 References: <1290994712-21376-1-git-send-email-david@fromorbit.com>
-	<1290994712-21376-4-git-send-email-david@fromorbit.com>
-	<20101201124234.GB612@infradead.org>
+	<1290994712-21376-10-git-send-email-david@fromorbit.com>
+	<20101201131208.GA22455@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20101201124234.GB612@infradead.org>
+In-Reply-To: <20101201131208.GA22455@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,12 +35,20 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Wed, Dec 01, 2010 at 07:42:35AM -0500, Christoph Hellwig wrote:
-> The patch looks good to me, but I really hate overloading the lsn types
-> and helpers.  Just add duplicated of CYCLE_LSN/BLOCK_LSN and
-> xlog_assign_lsn for a new type as use them.
+On Wed, Dec 01, 2010 at 08:12:08AM -0500, Christoph Hellwig wrote:
+> > +		/* co-ordinate with xfs_log_force_shutdown */
+> > +		if (XLOG_FORCED_SHUTDOWN(log)) {
+> > +			spin_unlock(&log->l_grant_reserve_lock);
+> > +			goto error_return;
+> > +		}
+> 
+> Where is this coming from?  Otherwise the patch looks good to me.
 
-Ok, will fix.
+To handles the race condition between xfs_log_force_shutdown() clearing
+all the tickets off the queue and a racing log reserve that had
+already checked the shutdown flag and was spinning waiting for the
+reserve lock to add the ticket to the queue. The race condition is
+documented in xfs_log_force_shutdown()...
 
 Cheers,
 
