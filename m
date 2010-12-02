@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oB22EapY246391 for <xfs@oss.sgi.com>; Wed, 1 Dec 2010 20:14:36 -0600
+	oB22Ja0P246609 for <xfs@oss.sgi.com>; Wed, 1 Dec 2010 20:19:36 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id ABCC7160ADB3
-	for <xfs@oss.sgi.com>; Wed,  1 Dec 2010 18:16:18 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail20.adl6.internode.on.net
-	[150.101.137.105]) by cuda.sgi.com with ESMTP id
-	DssgHF5xm04GlEHr for <xfs@oss.sgi.com>;
-	Wed, 01 Dec 2010 18:16:18 -0800 (PST)
-Date: Thu, 2 Dec 2010 13:16:09 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0CD4A1BAC59
+	for <xfs@oss.sgi.com>; Wed,  1 Dec 2010 18:21:18 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
+	[150.101.137.100]) by cuda.sgi.com with ESMTP id
+	rAc5VXRMhTeuidCo for <xfs@oss.sgi.com>;
+	Wed, 01 Dec 2010 18:21:18 -0800 (PST)
+Date: Thu, 2 Dec 2010 13:21:16 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS file system corruption(Return Bad Transaction) kernel - 2.6.34
-Message-ID: <20101202021609.GV16922@dastard>
-References: <AANLkTikzCpQ1j9uWGSTY9TEguVDvAB5AVYtbDtdePFci@mail.gmail.com>
+Subject: Re: xfstests 065 failures
+Message-ID: <20101202022116.GW16922@dastard>
+References: <1291235379.2556.28.camel@doink>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <AANLkTikzCpQ1j9uWGSTY9TEguVDvAB5AVYtbDtdePFci@mail.gmail.com>
+In-Reply-To: <1291235379.2556.28.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,25 +29,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Amit Sahrawat <amit.sahrawat83@gmail.com>
-Cc: sandeen-xfs@sandeen.net, Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: Alex Elder <aelder@sgi.com>
+Cc: XFS Mailing List <xfs@oss.sgi.com>, dchinner@redhat.com
 
-On Wed, Dec 01, 2010 at 12:44:58PM +0530, Amit Sahrawat wrote:
-> Dear Member,
+On Wed, Dec 01, 2010 at 02:29:39PM -0600, Alex Elder wrote:
+> Dave, you were asking on IRC about test 065 failures.
+> I asked Bill Kendall about it and he bisected to find
+> that the commit below seems to be where the problems
+> started.  I believe the problem is that one of the
+> times is not updated properly when renaming the file
+> "addedfile4".  Here are the commands that might affect
+> that file in test 065:
 > 
-> I am getting following corruption on XFS formatted disk during a simple copy
-> operation:
-> sd 9:0:0:0: Attached scsi removable disk sdc
-> sd 9:0:0:0: Attached scsi generic sg2 type 0
-> XFS mounting filesystem sdc2
-> Starting XFS recovery on filesystem: sdc2 (logdev: internal)
-> XFS: xlog_recover_process_data: bad transaction
-> XFS: log mount/recovery failed: error 5
-> XFS: log mount failed
-> [root@localhost TEGRA]#
+> 	mv addeddir4/addedfile5 addeddir4/addedfile4
+> 	mv addeddir4 addeddir6
+> 
+> I glanced at the commit and saw nothing obviously
+> wrong, but at the moment I can't really dig into
+> it any deeper so I thought I'd report what Bill
+> found so others could look.
 
-"TEGRA" - You're running on an ARM device? If so, what kernel are
-you running? i.e. does it have the VIVT cache aliasing fixes in it?
+Yeah, I know that this patch was the cause, and IIRC it only affects
+a hard linked directory. What I found is that the iterative dump
+actually contains all the correct changes (the restore part of the
+test does not fail) - it's just that the dump image table of
+contents does not contain the all the changes. I haven't tracked
+down why the dump TOC does not contain a modification that is
+actually in the dump yet....
 
 Cheers,
 
