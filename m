@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oB2N6GOW045850 for <xfs@oss.sgi.com>; Thu, 2 Dec 2010 17:06:16 -0600
+	oB2MhROQ044750 for <xfs@oss.sgi.com>; Thu, 2 Dec 2010 16:43:28 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 643181BE568
-	for <xfs@oss.sgi.com>; Thu,  2 Dec 2010 15:07:59 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
-	[150.101.137.97]) by cuda.sgi.com with ESMTP id
-	XcfMHcds7sDUAg62 for <xfs@oss.sgi.com>;
-	Thu, 02 Dec 2010 15:07:59 -0800 (PST)
-Date: Fri, 3 Dec 2010 10:07:43 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 51346137A73E
+	for <xfs@oss.sgi.com>; Thu,  2 Dec 2010 14:45:09 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
+	[150.101.137.102]) by cuda.sgi.com with ESMTP id
+	eWZXz8OSPff13P7d for <xfs@oss.sgi.com>;
+	Thu, 02 Dec 2010 14:45:09 -0800 (PST)
+Date: Fri, 3 Dec 2010 09:45:06 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Bugs in mkfs.xfs, device mapper, xfs, and /dev/ram
-Message-ID: <20101202230743.GZ16922@dastard>
-References: <4CF7A539.1050206@shiftmail.org> <4CF7A9CF.2020904@shiftmail.org>
+Subject: Re: XFS mount fail: XFS_WANT_CORRUPTED_GOTO fs/xfs/xfs_alloc.c
+Message-ID: <20101202224506.GY16922@dastard>
+References: <AANLkTi=7r8gV-cnBU9WNkn6kHz82qnUp8XD2dzAY+LF7@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4CF7A9CF.2020904@shiftmail.org>
+In-Reply-To: <AANLkTi=7r8gV-cnBU9WNkn6kHz82qnUp8XD2dzAY+LF7@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,72 +29,50 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Spelic <spelic@shiftmail.org>
-Cc: linux-lvm@redhat.com, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+To: Ajeet Yadav <ajeet.yadav.77@gmail.com>
+Cc: xfs@oss.sgi.com
 
-On Thu, Dec 02, 2010 at 03:14:39PM +0100, Spelic wrote:
-> Sorry for replying to my own email already
-> one more thing on the 3rd bug:
+On Thu, Dec 02, 2010 at 12:31:30PM +0530, Ajeet Yadav wrote:
+> Dear all,
+> This is XFS fail mount log on linux 2.6.30.9
 > 
-> On 12/02/2010 02:55 PM, Spelic wrote:
-> >Hello all
-> >[CUT]
-> >.......
-> >with NFS over <RDMA or IPoIB> over Infiniband over XFS over
-> >ramdisk it is possible to write a file (2.3GB) which is larger
-> >than
+> XFS mounting filesystem sda2
+> Starting XFS recovery on filesystem: sda2 (logdev: internal)
+> XFS internal error XFS_WANT_CORRUPTED_GOTO at line 1629 of file
+> fs/xfs/xfs_alloc.c.  Caller 0x80129658
+> Call Trace:
+> [<802dedc8>] dump_stack+0x8/0x34 from[<80127400>]
+> xfs_free_ag_extent+0x128/0x7ac
+> [<80127400>] xfs_free_ag_extent+0x128/0x7ac from[<80129658>]
+> xfs_free_extent+0xb8/0xe8
+> [<80129658>] xfs_free_extent+0xb8/0xe8 from[<80163978>]
+> xlog_recover_process_efi+0x160/0x214
+> [<80163978>] xlog_recover_process_efi+0x160/0x214 from[<80163ac4>]
+> xlog_recover_process_efis+0x98/0x11c
+> [<80163ac4>] xlog_recover_process_efis+0x98/0x11c from[<8016663c>]
+> xlog_recover_finish+0x28/0xdc
+> [<8016663c>] xlog_recover_finish+0x28/0xdc from[<8016aec0>]
+> xfs_mountfs+0x4d0/0x610
+> [<8016aec0>] xfs_mountfs+0x4d0/0x610 from[<80184434>]
+> xfs_fs_fill_super+0x1fc/0x418
+> [<80184434>] xfs_fs_fill_super+0x1fc/0x418 from[<800bae48>]
+> get_sb_bdev+0x11c/0x1c0
+> [<800bae48>] get_sb_bdev+0x11c/0x1c0 from[<80181f20>]
+> xfs_fs_get_sb+0x20/0x2c
+> [<80181f20>] xfs_fs_get_sb+0x20/0x2c from[<800b9424>]
+> vfs_kern_mount+0x68/0xd0
+> [<800b9424>] vfs_kern_mount+0x68/0xd0 from[<800b94f0>]
+> do_kern_mount+0x54/0x118
+> [<800b94f0>] do_kern_mount+0x54/0x118 from[<800d44e8>] do_mount+0x7b4/0x828
+> [<800d44e8>] do_mount+0x7b4/0x828 from[<800d45f8>] sys_mount+0x9c/0x194
+> [<800d45f8>] sys_mount+0x9c/0x194 from[<800102c4>] stack_done+0x20/0x3c
 > 
-> This is also reproducible with:
-> NFS over TCP over Ethernet over XFS over ramdisk.
-> You don't need infiniband for this.
-> With ethernet it doesn't hang (that's another bug, for RDMA people,
-> in the othter thread) but the file is still 1.9GB, i.e. larger than
-> the device.
-> 
-> 
-> Look, after running the test over ethernet,
-> at server side:
-> 
-> # ll -h /mnt/ram
-> total 1.5G
-> drwxr-xr-x 2 root root   21 2010-12-02 12:54 ./
-> drwxr-xr-x 3 root root 4.0K 2010-11-29 23:51 ../
-> -rw-r--r-- 1 root root 1.9G 2010-12-02 15:04 zerofile
+> Failed to recover EFIs on filesystem: sda2
+> XFS: log mount finish failed
 
-This is a classic ENOSPC vs NFS client writeback overcommit caching
-issue.  Have a look at the block map output - I bet theres holes in
-the file and it's only consuming 1.5GB of disk space. use xfs_bmap
-to check this. du should tell you the same thing.
-
-Basically, the NFS client overcommits the server filesystem space by
-doing local writeback caching. Hence it caches 1.9GB of data before
-it gets the first ENOSPC error back from the server at around 1.5GB
-of written data. At that point, the data that gets ENOSPC errors is
-tossed by the NFS client, and a ENOSPC error is placed on the
-address space to be reported to the next write/sync call. That gets
-to the dd process when it's 1.9GB into the write.
-
-However, there is still (in this case) 400MB of dirty data in the
-NFS client cache that it will try to write to the server. Because
-XFS uses speculative preallocation and reserves some space for
-metadata allocation during delayed allocation, it's handling of the
-initial ENOSPC condition can result in some space being freed up
-again as unused reserved metadata space is returned to the free pool
-as delalloc occurs during server writeback. This usually takes a
-second or two to complete.
-
-As a result, shortly after the first ENOSPC has been reported and
-subsequent writes have also ENOSPC, we can have space freed up and
-another write will succeed. At that point, the write that succeeds
-will be a different offset to the last one that succeeded, leaving a
-hole in the file and moving the EOF well past 1.5GB. That will go on
-until there really is no space left at all or the NFS client has no
-more dirty data to send.
-
-Basically, what you see it not a bug in XFS, it is a result of NFS
-clients being able to overcommit server filesystem space and the
-interaction that has with the way the filesystem on the NFS server
-handles ENOSPC.
+You corrupted a free space btree. Care to tell uswhat test you were
+running that caused this?  Did you pull the plug on the device
+during a copy again?
 
 Cheers,
 
