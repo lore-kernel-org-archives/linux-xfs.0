@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oB21R305243939 for <xfs@oss.sgi.com>; Wed, 1 Dec 2010 19:27:03 -0600
+	oB21ktbw244793 for <xfs@oss.sgi.com>; Wed, 1 Dec 2010 19:46:55 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4EA8E160AA63
-	for <xfs@oss.sgi.com>; Wed,  1 Dec 2010 17:28:45 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
-	[150.101.137.100]) by cuda.sgi.com with ESMTP id
-	8bkHc1d6Coebwv3m for <xfs@oss.sgi.com>;
-	Wed, 01 Dec 2010 17:28:45 -0800 (PST)
-Date: Thu, 2 Dec 2010 12:28:41 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DEB951401FAE
+	for <xfs@oss.sgi.com>; Wed,  1 Dec 2010 17:48:37 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
+	[150.101.137.104]) by cuda.sgi.com with ESMTP id
+	cu1SBKhiqWMQJm7I for <xfs@oss.sgi.com>;
+	Wed, 01 Dec 2010 17:48:37 -0800 (PST)
+Date: Thu, 2 Dec 2010 12:48:33 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/8] xfs: Pull EFI/EFD handling out from under the AIL lock
-Message-ID: <20101202012841.GL16922@dastard>
-References: <1290993152-20999-1-git-send-email-david@fromorbit.com>
-	<1290993152-20999-2-git-send-email-david@fromorbit.com>
-	<20101130201734.GA16079@infradead.org>
+Subject: Re: [PATCH 02/14] xfs: clean up log space grant functions
+Message-ID: <20101202014833.GN16922@dastard>
+References: <1290994712-21376-1-git-send-email-david@fromorbit.com>
+	<1290994712-21376-3-git-send-email-david@fromorbit.com>
+	<20101201123032.GA20378@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20101130201734.GA16079@infradead.org>
+In-Reply-To: <20101201123032.GA20378@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,44 +34,64 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Tue, Nov 30, 2010 at 03:17:34PM -0500, Christoph Hellwig wrote:
+On Wed, Dec 01, 2010 at 07:30:32AM -0500, Christoph Hellwig wrote:
+> On Mon, Nov 29, 2010 at 12:38:20PM +1100, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > xlog_grant_log_space and xlog_regrant_log_write_space both have very
+> > similar structure. Both have a "wait on non-empty queue" section at
+> > the start, followed by a "wait for space" loop of which the contents
+> > are almost identical to the initial non-empty queue section.
+> > 
+> > In both cases, the non-empty queue wait can be folded into the wait
+> > for space loop, simply by entering the loop if the queue is not
+> > empty and the current ticket is not on the queue. If we trigger the
+> > non-empty queue case, we always add ourselves to the queue, and
+> > hence the second and subsequent loops are always driven by the "wait
+> > for space" test.
+> > 
+> > IOWs, both wait conditions can be folded into the one loop, removing
+> > a bunch of duplicated code and making it simpler to modify in
+> > future patches.
 > 
->  - xfs_efi_init needs to initialize efi_next_extent using ATOMIC_INIT
+> I don't really like this patch.  The new conditions are overly
+> complicated because of the desire to only go through the loop once
+> for the queue not empty case.  In addition there's some behaviour
+> changes:
+> 
+>  - in xlog_grant_log_space we previously didn't call xlog_grant_push_ail
+>    for the queue not empty case, and now we do.
 
-OK.
+As you point out, there's no actual harm in doing that.
 
->  - there is a behaviour change about the xfs_trans_del_item call
->    in xfs_efi_item_unpin - before it was protected by the
->    XFS_EFI_CANCELED which was never set, and now it's not.
+>  - in xlog_regrant_write_log_space the old version of the queue not
+>    empty case would loop over all waiting tickets, and if we could
+>    wake up all of them we'll skip the first wait, and given enough
+>    free space also the second wait, while the new code always adds it
+>    to the writeq, although it will still skip the actualy wait later.
 
-XFS_EFI_CANCELED has not been set in the code base since
-xfs_efi_cancel() was removed back in 2006 by commit
-065d312e15902976d256ddaf396a7950ec0350a8 ("[XFS] Remove unused
-iop_abort log item operation), and even then xfs_efi_cancel() was
-never called. I haven't tracked it back further than that (beyond
-git history), but handling of efis in cancelled transactions has
-been broken for a long time.
+I didn't think there's any harm in that, either, because we're
+walking the entire queue anyway and it does not dirty any global
+shared cachelines we aren't already dirtying by taking the queue
+lock.
 
-Basically, when we get an IOP_UNPIN(lip, 1); call from
-xfs_trans_uncommit() (i.e. remove == 1), if we don't free the log
-item descriptor we leak it. IOWs, the new behaviour introduced in
-this patch is actually the correct behaviour.
+> My recommendation would be to skip this patch for now and revisit the
+> area later.
 
->  - what happened to XFS_EFI_RECOVERED?  You changed it to be indexed
->    for the atomic bit-ops, but it's still used non-atomic in the log
->    recovery code.
+Ugh. That means the following 10 patches need to be reworked.
 
-Ah, I forgot to convert it.
+> For example the superflous xlog_grant_push_ail actually
+> is rather harmless these days with the xfsaild threshold, so not
+> skipping it for the first case probably is fine in the end.  Then again
+> the whole add to the queue just in case if it's non-empty doesn't make
+> much sense to me to start with.  As soon as xfs_log_move_tail makes
+> space in the log it wakes up all tickets waiting for it anyway, so
+> adding us to the queue just in case seems rather inefficient, and not
+> overl helpful.
 
->  - Why is XFS_EFI_COMMITTED cleared in xlog_recover_do_efi_trans,
->    where it can't ever be set?
-
-It was just a straight transformation. I'll kill it.
-
->  - can you please add a shared helper for xfs_efi_item_unpin and
->    xfs_efi_release, ala:
-
-Ok. Will do.
+Ok, so your main objection is the needless addition to the queue?
+That can be avoided easily enough via a local variable. Would that
+be sufficient to alleviate your concerns?
 
 Cheers,
 
