@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oB21UXJj244091 for <xfs@oss.sgi.com>; Wed, 1 Dec 2010 19:30:34 -0600
+	oB21R305243939 for <xfs@oss.sgi.com>; Wed, 1 Dec 2010 19:27:03 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A36B81BB270
-	for <xfs@oss.sgi.com>; Wed,  1 Dec 2010 17:32:16 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
-	[150.101.137.99]) by cuda.sgi.com with ESMTP id
-	BySFDH6YoApFGSYT for <xfs@oss.sgi.com>;
-	Wed, 01 Dec 2010 17:32:16 -0800 (PST)
-Date: Thu, 2 Dec 2010 12:32:13 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4EA8E160AA63
+	for <xfs@oss.sgi.com>; Wed,  1 Dec 2010 17:28:45 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
+	[150.101.137.100]) by cuda.sgi.com with ESMTP id
+	8bkHc1d6Coebwv3m for <xfs@oss.sgi.com>;
+	Wed, 01 Dec 2010 17:28:45 -0800 (PST)
+Date: Thu, 2 Dec 2010 12:28:41 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 3/8] xfs: bulk AIL insertion during transaction commit
-Message-ID: <20101202013213.GM16922@dastard>
+Subject: Re: [PATCH 1/8] xfs: Pull EFI/EFD handling out from under the AIL lock
+Message-ID: <20101202012841.GL16922@dastard>
 References: <1290993152-20999-1-git-send-email-david@fromorbit.com>
-	<1290993152-20999-4-git-send-email-david@fromorbit.com>
-	<20101130224057.GA16143@infradead.org>
+	<1290993152-20999-2-git-send-email-david@fromorbit.com>
+	<20101130201734.GA16079@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20101130224057.GA16143@infradead.org>
+In-Reply-To: <20101130201734.GA16079@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,60 +34,44 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Tue, Nov 30, 2010 at 05:40:57PM -0500, Christoph Hellwig wrote:
-> Generally looks good, a few minor comments below:
+On Tue, Nov 30, 2010 at 03:17:34PM -0500, Christoph Hellwig wrote:
 > 
-> > +void
-> > +xfs_trans_committed_bulk(
-> > +	struct xfs_ail		*ailp,
-> > +	struct xfs_log_vec	*log_vector,
-> > +	xfs_lsn_t		commit_lsn,
-> > +	int			aborted)
-> > +{
-> > +#define LGIA_SIZE	32
-> > +	struct xfs_log_item	*lgia[LGIA_SIZE];
-> 
-> The lgia name seems a bit to obscure to me.
+>  - xfs_efi_init needs to initialize efi_next_extent using ATOMIC_INIT
 
-lgia == "log item array"
+OK.
 
-> What about just log_items
-> as variable name, and LOG_ITEM_BATCH_SIZE or similar for the size?
+>  - there is a behaviour change about the xfs_trans_del_item call
+>    in xfs_efi_item_unpin - before it was protected by the
+>    XFS_EFI_CANCELED which was never set, and now it's not.
 
-Ok, that's easy to do.
+XFS_EFI_CANCELED has not been set in the code base since
+xfs_efi_cancel() was removed back in 2006 by commit
+065d312e15902976d256ddaf396a7950ec0350a8 ("[XFS] Remove unused
+iop_abort log item operation), and even then xfs_efi_cancel() was
+never called. I haven't tracked it back further than that (beyond
+git history), but handling of efis in cancelled transactions has
+been broken for a long time.
 
-> > +			spin_lock(&ailp->xa_lock);
-> > +			xfs_trans_ail_update_bulk(ailp, lgia, LGIA_SIZE,
-> > +							commit_lsn);
-> > +			for (i = 0; i < LGIA_SIZE; i++)
-> > +				IOP_UNPIN(lgia[i], 0);
-> 
-> > +		spin_lock(&ailp->xa_lock);
-> > +		xfs_trans_ail_update_bulk(ailp, lgia, i, commit_lsn);
-> > +		for (j = 0; j < i; j++)
-> > +			IOP_UNPIN(lgia[j], 0);
-> 
-> It might be worth to factor these two little sniplets into a little
-> helper.
+Basically, when we get an IOP_UNPIN(lip, 1); call from
+xfs_trans_uncommit() (i.e. remove == 1), if we don't free the log
+item descriptor we leak it. IOWs, the new behaviour introduced in
+this patch is actually the correct behaviour.
 
-I thought about it, but didn't because there was more code in
-writing a helper. I'll do it anyway...
+>  - what happened to XFS_EFI_RECOVERED?  You changed it to be indexed
+>    for the atomic bit-ops, but it's still used non-atomic in the log
+>    recovery code.
 
-> 
-> > + * Bulk update version of xfs_trans_ail_update.
-> 
-> That won't be a very useful comment anymore once xfs_trans_ail_update is
-> implemented as a wrapper around this function..
+Ah, I forgot to convert it.
 
-Yup, but when the wrapper is introduced the comment is updated
-appropriately.
+>  - Why is XFS_EFI_COMMITTED cleared in xlog_recover_do_efi_trans,
+>    where it can't ever be set?
 
-> 
-> > +	struct xfs_log_item	**lgia,
-> 
-> Same naming comment here.
+It was just a straight transformation. I'll kill it.
 
-Will fix.
+>  - can you please add a shared helper for xfs_efi_item_unpin and
+>    xfs_efi_release, ala:
+
+Ok. Will do.
 
 Cheers,
 
