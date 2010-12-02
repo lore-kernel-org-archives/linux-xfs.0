@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oB228pYl245854 for <xfs@oss.sgi.com>; Wed, 1 Dec 2010 20:08:52 -0600
+	oB22EapY246391 for <xfs@oss.sgi.com>; Wed, 1 Dec 2010 20:14:36 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 697681B9487
-	for <xfs@oss.sgi.com>; Wed,  1 Dec 2010 18:10:34 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
-	[150.101.137.101]) by cuda.sgi.com with ESMTP id
-	Aye7sVXZM3MCP7qG for <xfs@oss.sgi.com>;
-	Wed, 01 Dec 2010 18:10:34 -0800 (PST)
-Date: Thu, 2 Dec 2010 13:10:31 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id ABCC7160ADB3
+	for <xfs@oss.sgi.com>; Wed,  1 Dec 2010 18:16:18 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail20.adl6.internode.on.net
+	[150.101.137.105]) by cuda.sgi.com with ESMTP id
+	DssgHF5xm04GlEHr for <xfs@oss.sgi.com>;
+	Wed, 01 Dec 2010 18:16:18 -0800 (PST)
+Date: Thu, 2 Dec 2010 13:16:09 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 09/14] xfs: introduce new locks for the log grant
-	ticket wait queues
-Message-ID: <20101202021031.GT16922@dastard>
-References: <1290994712-21376-1-git-send-email-david@fromorbit.com>
-	<1290994712-21376-10-git-send-email-david@fromorbit.com>
-	<20101201131208.GA22455@infradead.org>
+Subject: Re: XFS file system corruption(Return Bad Transaction) kernel - 2.6.34
+Message-ID: <20101202021609.GV16922@dastard>
+References: <AANLkTikzCpQ1j9uWGSTY9TEguVDvAB5AVYtbDtdePFci@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20101201131208.GA22455@infradead.org>
+In-Reply-To: <AANLkTikzCpQ1j9uWGSTY9TEguVDvAB5AVYtbDtdePFci@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,23 +29,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Amit Sahrawat <amit.sahrawat83@gmail.com>
+Cc: sandeen-xfs@sandeen.net, Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-On Wed, Dec 01, 2010 at 08:12:08AM -0500, Christoph Hellwig wrote:
-> > +		/* co-ordinate with xfs_log_force_shutdown */
-> > +		if (XLOG_FORCED_SHUTDOWN(log)) {
-> > +			spin_unlock(&log->l_grant_reserve_lock);
-> > +			goto error_return;
-> > +		}
+On Wed, Dec 01, 2010 at 12:44:58PM +0530, Amit Sahrawat wrote:
+> Dear Member,
 > 
-> Where is this coming from?  Otherwise the patch looks good to me.
+> I am getting following corruption on XFS formatted disk during a simple copy
+> operation:
+> sd 9:0:0:0: Attached scsi removable disk sdc
+> sd 9:0:0:0: Attached scsi generic sg2 type 0
+> XFS mounting filesystem sdc2
+> Starting XFS recovery on filesystem: sdc2 (logdev: internal)
+> XFS: xlog_recover_process_data: bad transaction
+> XFS: log mount/recovery failed: error 5
+> XFS: log mount failed
+> [root@localhost TEGRA]#
 
-To handles the race condition between xfs_log_force_shutdown() clearing
-all the tickets off the queue and a racing log reserve that had
-already checked the shutdown flag and was spinning waiting for the
-reserve lock to add the ticket to the queue. The race condition is
-documented in xfs_log_force_shutdown()...
+"TEGRA" - You're running on an ARM device? If so, what kernel are
+you running? i.e. does it have the VIVT cache aliasing fixes in it?
 
 Cheers,
 
