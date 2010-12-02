@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oB2BVTh4014138 for <xfs@oss.sgi.com>; Thu, 2 Dec 2010 05:31:30 -0600
-Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CA99E1C883BB
-	for <xfs@oss.sgi.com>; Thu,  2 Dec 2010 03:33:11 -0800 (PST)
-Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
-	cuda.sgi.com with ESMTP id eHYkEGr4gWzzTT4h for
-	<xfs@oss.sgi.com>; Thu, 02 Dec 2010 03:33:11 -0800 (PST)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: Re: xfs_repair of critical volume
-Date: Thu, 2 Dec 2010 12:33:02 +0100
-References: <75C248E3-2C99-426E-AE7D-9EC543726796@ucsc.edu>
-	<20101117074708.GP22876@dastard>
-	<BA70F631-15CB-4E52-913A-3715CC9678A0@ucsc.edu>
-In-Reply-To: <BA70F631-15CB-4E52-913A-3715CC9678A0@ucsc.edu>
+	oB2Bd6Hq014506 for <xfs@oss.sgi.com>; Thu, 2 Dec 2010 05:39:06 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9C5581C888FB
+	for <xfs@oss.sgi.com>; Thu,  2 Dec 2010 03:40:50 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id 5sagJsvC2a0Yp2Lj for
+	<xfs@oss.sgi.com>; Thu, 02 Dec 2010 03:40:50 -0800 (PST)
+Date: Thu, 2 Dec 2010 06:40:50 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 02/14] xfs: clean up log space grant functions
+Message-ID: <20101202114049.GB21365@infradead.org>
+References: <1290994712-21376-1-git-send-email-david@fromorbit.com>
+	<1290994712-21376-3-git-send-email-david@fromorbit.com>
+	<20101201123032.GA20378@infradead.org>
+	<20101202014833.GN16922@dastard>
 MIME-Version: 1.0
-Message-Id: <201012021233.07213@zmi.at>
+Content-Disposition: inline
+In-Reply-To: <20101202014833.GN16922@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,74 +27,24 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============9167459286273024371=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Eli Morris <ermorris@ucsc.edu>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
---===============9167459286273024371==
-Content-Type: multipart/signed;
-  boundary="nextPart2592691.X4ZIO1cIyr";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+On Thu, Dec 02, 2010 at 12:48:33PM +1100, Dave Chinner wrote:
+> Ok, so your main objection is the needless addition to the queue?
+> That can be avoided easily enough via a local variable. Would that
+> be sufficient to alleviate your concerns?
 
---nextPart2592691.X4ZIO1cIyr
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-
-On Dienstag, 30. November 2010 Eli Morris wrote:
-> Thanks for your help with this. I wrote the program and ran it
-> through and it looks like we have we able to preserve 44 TB of valid
-> data, while removing the corrupted files, which is a great result,
-> considering the circumstances.=20
-
-Eli, could you post the relevant program here so others can use it if=20
-needed? There are requests from time to time, and it would be good if=20
-such a program were available (like I'm sure you'd been happy if it=20
-already existed the time you needed it).
-
-Thanks, and wow: what an amazing filesystem can recover such an event!
-
-=2D-=20
-mit freundlichen Gr=FCssen,
-Michael Monnerie, Ing. BSc
-
-it-management Internet Services: Prot=E9ger
-http://proteger.at [gesprochen: Prot-e-schee]
-Tel: +43 660 / 415 6531
-
-// ****** Radiointerview zum Thema Spam ******
-// http://www.it-podcast.at/archiv.html#podcast-100716
-//=20
-// Haus zu verkaufen: http://zmi.at/langegg/
-
---nextPart2592691.X4ZIO1cIyr
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.15 (GNU/Linux)
-
-iEYEABECAAYFAkz3g/MACgkQzhSR9xwSCbSqfACg3RkCYB+j5dLKRL3PTvGvmA7H
-Rw8An24uOFEeD0Kgzxb6Wug0hvbNuJXi
-=wvwl
------END PGP SIGNATURE-----
-
---nextPart2592691.X4ZIO1cIyr--
-
-
---===============9167459286273024371==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+The main objection is that the new code might be a bit shorted,
+but is a lot less readable.  If you really want it go with it and
+an updated changelog mentioning the behaviour change, but I don't
+really feel too good about it.
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============9167459286273024371==--
