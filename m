@@ -1,12 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oB2GfNXO029777 for <xfs@oss.sgi.com>; Thu, 2 Dec 2010 10:41:23 -0600
-From: Alex Elder <aelder@sgi.com>
-Message-Id: <201012021643.oB2Gh3JL006178@stout.americas.sgi.com>
-Date: Thu, 02 Dec 2010 10:43:03 -0600
-Subject: [GIT PULL] XFS update for 2.6.37-rc5
+	oB2LL2Jg041167 for <xfs@oss.sgi.com>; Thu, 2 Dec 2010 15:21:03 -0600
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 414491BE224
+	for <xfs@oss.sgi.com>; Thu,  2 Dec 2010 13:22:46 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id yDVCpbiFyUxs9S6S for
+	<xfs@oss.sgi.com>; Thu, 02 Dec 2010 13:22:46 -0800 (PST)
+Date: Thu, 2 Dec 2010 16:22:27 -0500
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: Bugs in mkfs.xfs, device mapper, xfs, and /dev/ram
+Message-ID: <20101202212227.GA22703@redhat.com>
+References: <4CF7A539.1050206@shiftmail.org>
+	<20101202141134.GA22012@infradead.org>
+	<4CF7A9C4.2040607@shiftmail.org>
+	<20101202141737.GA29799@infradead.org>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20101202141737.GA29799@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,37 +31,56 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: LVM general discussion and development <linux-lvm@redhat.com>
+Cc: npiggin@kernel.dk, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, dm-devel@redhat.com, Spelic <spelic@shiftmail.org>
 
-Linus, please pull the following five XFS bug fixes for 2.6.37.
+On Thu, Dec 02 2010 at  9:17am -0500,
+Christoph Hellwig <hch@infradead.org> wrote:
 
-					-Alex
+> On Thu, Dec 02, 2010 at 03:14:28PM +0100, Spelic wrote:
+> > On 12/02/2010 03:11 PM, Christoph Hellwig wrote:
+> > >I'm pretty sure you have CONFIG_DEBUG_BLOCK_EXT_DEVT enabled.  This
+> > >option must never be enabled, as it causes block devices to be
+> > >randomly renumered.  Together with the ramdisk driver overloading
+> > >the BLKFLSBUF ioctl to discard all data it guarantees you to get
+> > >data loss like yours.
+> > 
+> > Nope...
+> > 
+> > # CONFIG_DEBUG_BLOCK_EXT_DEVT is not set
+> 
+> Hmm, I suspect dm-linear's dumb forwarding of ioctls has the same
+> effect.
 
-The following changes since commit 22a5b566c8c442b0b35b3b106795e2f2b3578096:
+For the benefit of others:
+- mkfs.xfs will avoid sending BLKFLSBUF to any device whose major is
+  ramdisk's major, this dates back to 2004:
+  http://oss.sgi.com/archives/xfs/2004-08/msg00463.html
+- but because a kpartx partition overlay (linear DM mapping) is used for
+  the /dev/ram0p1 device, mkfs.xfs only sees a device with DM's major 
+- so mkfs.xfs sends BLKFLSBUF to the DM device blissfully unaware that
+  the backing device (behind the DM linear target) is a brd device
+- DM will forward the BLKFLSBUF ioctl to brd, which triggers
+  drivers/block/brd.c:brd_ioctl (nuking the entire ramdisk in the
+  process)
 
-  Merge branch 'for_linus' of git://github.com/at91linux/linux-2.6-at91 (2010-11-30 17:57:57 -0800)
+So coming full circle this is what hch was referring to when he
+mentioned:
+1) "ramdisk driver overloading the BLKFLSBUF ioctl ..."
+2) "dm-linear's dumb forwarding of ioctls ..."
 
-are available in the git repository at:
+I really can't see DM adding a specific check for ramdisk's major when
+forwarding the BLKFLSBUF ioctl.
 
-  git://oss.sgi.com/xfs/xfs for-linus
+brd has direct partition support (see commit d7853d1f8932c) so maybe
+kpartx should just blacklist /dev/ram devices?
 
-Dave Chinner (5):
-      xfs: fix failed write truncation handling.
-      xfs: push stale, pinned buffers on trylock failures
-      xfs: delayed alloc blocks beyond EOF are valid after writeback
-      xfs: avoid moving stale inodes in the AIL
-      xfs: only run xfs_error_test if error injection is active
+Alternatively, what about switching brd away from overloading BLKFLSBUF
+to a real implementation of (overloaded) BLKDISCARD support in brd.c?
+One that doesn't blindly nuke the entire device but that properly
+processes the discard request.
 
- fs/xfs/linux-2.6/xfs_aops.c |   94 ++++++++++++++++++------------------------
- fs/xfs/linux-2.6/xfs_buf.c  |   35 +++++++---------
- fs/xfs/xfs_bmap.c           |   85 ++++++++++++++++++++++++++++++++++++++-
- fs/xfs/xfs_bmap.h           |    5 ++
- fs/xfs/xfs_dfrag.c          |   13 ++++++
- fs/xfs/xfs_error.c          |    3 +
- fs/xfs/xfs_error.h          |    5 +-
- fs/xfs/xfs_inode_item.c     |   31 +++++++++++---
- 8 files changed, 188 insertions(+), 83 deletions(-)
+Mike
 
 _______________________________________________
 xfs mailing list
