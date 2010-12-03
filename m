@@ -1,20 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oB33o0Rw059397 for <xfs@oss.sgi.com>; Thu, 2 Dec 2010 21:50:01 -0600
-Received: from mx3-phx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 86E4C140D133
-	for <xfs@oss.sgi.com>; Thu,  2 Dec 2010 19:51:44 -0800 (PST)
-Received: from mx3-phx2.redhat.com (mx3-phx2.redhat.com [209.132.183.24]) by
-	cuda.sgi.com with ESMTP id C8aEQCkSdAmJ8kZ3 for
-	<xfs@oss.sgi.com>; Thu, 02 Dec 2010 19:51:44 -0800 (PST)
-Date: Thu, 2 Dec 2010 22:51:32 -0500 (EST)
-From: Lachlan McIlroy <lmcilroy@redhat.com>
-Message-ID: <275948151.359301291348292101.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
-In-Reply-To: <121488966.359171291347997519.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
+	oB34b6w1061885 for <xfs@oss.sgi.com>; Thu, 2 Dec 2010 22:37:07 -0600
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 939671BF14B
+	for <xfs@oss.sgi.com>; Thu,  2 Dec 2010 20:38:49 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
+	[150.101.137.103]) by cuda.sgi.com with ESMTP id
+	wXxizzRzz70u7Hqv for <xfs@oss.sgi.com>;
+	Thu, 02 Dec 2010 20:38:49 -0800 (PST)
+Received: from dastard (unverified [121.44.88.148])
+	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
+	48350448-1927428
+	for <xfs@oss.sgi.com>; Fri, 03 Dec 2010 15:08:48 +1030 (CDT)
+Received: from dave by dastard with local (Exim 4.71)
+	(envelope-from <david@fromorbit.com>) id 1PONPy-00087q-VW
+	for xfs@oss.sgi.com; Fri, 03 Dec 2010 15:38:47 +1100
+Date: Fri, 3 Dec 2010 15:38:46 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH] xfs: prevent NMI timeouts in cmn_err
+Message-ID: <20101203043846.GB23339@dastard>
+References: <1291341315-31338-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-Reply-To: Lachlan McIlroy <lmcilroy@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <1291341315-31338-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,14 +36,9 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Dave, overall it looks good - just a few minor points below.
-Thanks for doing this.
-
------ "Dave Chinner" <david@fromorbit.com> wrote:
-
+On Fri, Dec 03, 2010 at 12:55:15PM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
 > We currently have a global error message buffer in cmn_err that is
@@ -72,339 +76,41 @@ Thanks for doing this.
 > series that is not easily back portable to enterprise kernels. Hence
 > this initial fix is only to address the direct problem in the lowest
 > impact way possible.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/linux-2.6/xfs_sysctl.c |   22 +++++++++++-
->  fs/xfs/support/debug.c        |   76
-> -----------------------------------------
->  fs/xfs/support/debug.h        |   40 +++++++++++++++++-----
->  fs/xfs/xfs_error.c            |   31 -----------------
->  fs/xfs/xfs_error.h            |   14 ++-----
->  fs/xfs/xfs_log.c              |    2 +-
->  fs/xfs/xfs_log_recover.c      |    2 +-
->  7 files changed, 58 insertions(+), 129 deletions(-)
-> 
-> diff --git a/fs/xfs/linux-2.6/xfs_sysctl.c
-> b/fs/xfs/linux-2.6/xfs_sysctl.c
-> index 7bb5092..768acd8 100644
-> --- a/fs/xfs/linux-2.6/xfs_sysctl.c
-> +++ b/fs/xfs/linux-2.6/xfs_sysctl.c
-> @@ -51,6 +51,26 @@ xfs_stats_clear_proc_handler(
->  
->  	return ret;
->  }
-> +
-> +STATIC int
-> +xfs_panic_mask_proc_handler(
-> +	ctl_table	*ctl,
-> +	int		write,
-> +	void		__user *buffer,
-> +	size_t		*lenp,
-> +	loff_t		*ppos)
-> +{
-> +	int		ret, *valp = ctl->data;
-> +
-> +	ret = proc_dointvec_minmax(ctl, write, buffer, lenp, ppos);
-> +	if (!ret && write) {
-> +		xfs_panic_mask = *valp;
-> +#ifdef DEBUG
-> +		xfs_panic_mask |= (XFS_PTAG_SHUTDOWN_CORRUPT | XFS_PTAG_LOGRES);
-> +#endif
-> +	}
-> +	return ret;
-> +}
->  #endif /* CONFIG_PROC_FS */
->  
->  static ctl_table xfs_table[] = {
-> @@ -77,7 +97,7 @@ static ctl_table xfs_table[] = {
->  		.data		= &xfs_params.panic_mask.val,
->  		.maxlen		= sizeof(int),
->  		.mode		= 0644,
-> -		.proc_handler	= proc_dointvec_minmax,
-> +		.proc_handler	= xfs_panic_mask_proc_handler,
->  		.extra1		= &xfs_params.panic_mask.min,
->  		.extra2		= &xfs_params.panic_mask.max
->  	},
-> diff --git a/fs/xfs/support/debug.c b/fs/xfs/support/debug.c
-> index 975aa10..fa39e98 100644
-> --- a/fs/xfs/support/debug.c
-> +++ b/fs/xfs/support/debug.c
-> @@ -25,82 +25,6 @@
->  #include "xfs_mount.h"
->  #include "xfs_error.h"
->  
-> -static char		message[1024];	/* keep it off the stack */
-> -static DEFINE_SPINLOCK(xfs_err_lock);
-> -
-> -/* Translate from CE_FOO to KERN_FOO, err_level(CE_FOO) == KERN_FOO
-> */
-> -#define XFS_MAX_ERR_LEVEL	7
-> -#define XFS_ERR_MASK		((1 << 3) - 1)
-> -static const char * const	err_level[XFS_MAX_ERR_LEVEL+1] =
-> -					{KERN_EMERG, KERN_ALERT, KERN_CRIT,
-> -					 KERN_ERR, KERN_WARNING, KERN_NOTICE,
-> -					 KERN_INFO, KERN_DEBUG};
-> -
-> -void
-> -cmn_err(register int level, char *fmt, ...)
-> -{
-> -	char	*fp = fmt;
-> -	int	len;
-> -	ulong	flags;
-> -	va_list	ap;
-> -
-> -	level &= XFS_ERR_MASK;
-> -	if (level > XFS_MAX_ERR_LEVEL)
-> -		level = XFS_MAX_ERR_LEVEL;
-> -	spin_lock_irqsave(&xfs_err_lock,flags);
-> -	va_start(ap, fmt);
-> -	if (*fmt == '!') fp++;
-> -	len = vsnprintf(message, sizeof(message), fp, ap);
-> -	if (len >= sizeof(message))
-> -		len = sizeof(message) - 1;
-> -	if (message[len-1] == '\n')
-> -		message[len-1] = 0;
-> -	printk("%s%s\n", err_level[level], message);
-> -	va_end(ap);
-> -	spin_unlock_irqrestore(&xfs_err_lock,flags);
-> -	BUG_ON(level == CE_PANIC);
-> -}
-> -
-> -void
-> -xfs_fs_vcmn_err(
-> -	int			level,
-> -	struct xfs_mount	*mp,
-> -	char			*fmt,
-> -	va_list			ap)
-> -{
-> -	unsigned long		flags;
-> -	int			len = 0;
-> -
-> -	level &= XFS_ERR_MASK;
-> -	if (level > XFS_MAX_ERR_LEVEL)
-> -		level = XFS_MAX_ERR_LEVEL;
-> -
-> -	spin_lock_irqsave(&xfs_err_lock,flags);
-> -
-> -	if (mp) {
-> -		len = sprintf(message, "Filesystem \"%s\": ", mp->m_fsname);
-> -
-> -		/*
-> -		 * Skip the printk if we can't print anything useful
-> -		 * due to an over-long device name.
-> -		 */
-> -		if (len >= sizeof(message))
-> -			goto out;
-> -	}
-> -
-> -	len = vsnprintf(message + len, sizeof(message) - len, fmt, ap);
-> -	if (len >= sizeof(message))
-> -		len = sizeof(message) - 1;
-> -	if (message[len-1] == '\n')
-> -		message[len-1] = 0;
-> -
-> -	printk("%s%s\n", err_level[level], message);
-> - out:
-> -	spin_unlock_irqrestore(&xfs_err_lock,flags);
-> -
-> -	BUG_ON(level == CE_PANIC);
-> -}
-> -
->  void
->  assfail(char *expr, char *file, int line)
->  {
-> diff --git a/fs/xfs/support/debug.h b/fs/xfs/support/debug.h
-> index d2d2046..f659bd0 100644
-> --- a/fs/xfs/support/debug.h
-> +++ b/fs/xfs/support/debug.h
-> @@ -20,15 +20,37 @@
->  
->  #include <stdarg.h>
->  
-> -#define CE_DEBUG        7               /* debug        */
-> -#define CE_CONT         6               /* continuation */
-> -#define CE_NOTE         5               /* notice       */
-> -#define CE_WARN         4               /* warning      */
-> -#define CE_ALERT        1               /* alert        */
-> -#define CE_PANIC        0               /* panic        */
-> -
-> -extern void cmn_err(int, char *, ...)
-> -	__attribute__ ((format (printf, 2, 3)));
-> +#define CE_DEBUG        KERN_DEBUG
-> +#define CE_CONT         KERN_INFO
-> +#define CE_NOTE         KERN_NOTICE
-> +#define CE_WARN         KERN_WARNING
-> +#define CE_ALERT        KERN_ALERT
-> +#define CE_PANIC        KERN_EMERG
-> +
-> +#define cmn_err(lvl, fmt, args...)	\
-> +	do { \
-> +		printk(lvl fmt, ## args); \
 
-The old cmn_err() routine would append a newline if one was not supplied.
-As far as I know printk() will not do the same so either we need to fix
-all calls to cmn_err() to supply a '\n' or add it here (at the risk of
-having two newlines) - maybe:
+FWIW, while these macros are the best way to make a simple backport
+is possible, I just discovered that mainline has a %pV format
+operator that allows an implementation like:
 
-printk(lvl fmt "\n", ## args);
+void
+xfs_fs_cmn_err(
+	const char              *lvl,
+	struct xfs_mount        *mp,
+	const char              *fmt,
+	...)
+{
+	struct va_format        vaf;
+	va_list                 args;
 
-> +		BUG_ON(strncmp(lvl, KERN_EMERG, strlen(KERN_EMERG)) == 0); \
-> +	} while (0)
-> +
-> +#define xfs_fs_cmn_err(lvl, mp, fmt, args...)	\
-> +	do { \
-> +		printk(lvl "Filesystem %s: " fmt, (mp)->m_fsname, ## args); \
+	va_start(args, fmt);
+	vaf.fmt = fmt;
+	vaf.va = &args;
 
-printk(lvl "Filesystem %s: " fmt "\n", (mp)->m_fsname, ## args);
+	printk("%sFilesystem %s: %pV", lvl, mp->m_fsname, &vaf);
+	va_end(args);
 
-> +		BUG_ON(strncmp(lvl, KERN_EMERG, strlen(KERN_EMERG)) == 0); \
-> +	} while (0)
-> +
-> +/* All callers to xfs_cmn_err use CE_ALERT, so don't bother testing
-> lvl */
-> +#define xfs_cmn_err(panic_tag, lvl, mp, fmt, args...)	\
-> +	do { \
-> +		int	panic = 0; \
-> +		if (xfs_panic_mask && (xfs_panic_mask & panic_tag)) { \
-> +			printk(KERN_ALERT "XFS: Transforming an alert into a BUG."); \
-> +			panic = 1; \
-> +		} \
-> +		printk(KERN_ALERT "Filesystem %s: " fmt, (mp)->m_fsname, ## args);
-> \
-> +		BUG_ON(panic); \
-> +	} while (0)
+	BUG_ON(strncmp(lvl, KERN_EMERG, strlen(KERN_EMERG)) == 0);
+}
 
-I think we can simplify this case a bit and remove the panic variable,
-like this:
+Would this be a preferable method for replacing the existing
+implementations, or are the macros good enough as the first step of
+a mainline cleanup?
 
-	do { \
-		printk(KERN_ALERT "Filesystem %s: " fmt "\n", (mp)->m_fsname, ## args);
-		if (xfs_panic_mask && (xfs_panic_mask & panic_tag)) { \
-			printk(KERN_ALERT "XFS: Transforming an alert into a BUG.\n"); \
-			BUG_ON(1); \
-		} \
-	} while (0)
+Cheers,,,
 
-This also reorders the messages which I think makes more sense.
-
-> +
->  extern void assfail(char *expr, char *f, int l);
->  
->  #define ASSERT_ALWAYS(expr)	\
-> diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-> index c78cc6a..4c7db74 100644
-> --- a/fs/xfs/xfs_error.c
-> +++ b/fs/xfs/xfs_error.c
-> @@ -152,37 +152,6 @@ xfs_errortag_clearall(xfs_mount_t *mp, int loud)
->  }
->  #endif /* DEBUG */
->  
-> -
-> -void
-> -xfs_fs_cmn_err(int level, xfs_mount_t *mp, char *fmt, ...)
-> -{
-> -	va_list ap;
-> -
-> -	va_start(ap, fmt);
-> -	xfs_fs_vcmn_err(level, mp, fmt, ap);
-> -	va_end(ap);
-> -}
-> -
-> -void
-> -xfs_cmn_err(int panic_tag, int level, xfs_mount_t *mp, char *fmt,
-> ...)
-> -{
-> -	va_list ap;
-> -
-> -#ifdef DEBUG
-> -	xfs_panic_mask |= (XFS_PTAG_SHUTDOWN_CORRUPT | XFS_PTAG_LOGRES);
-> -#endif
-> -
-> -	if (xfs_panic_mask && (xfs_panic_mask & panic_tag)
-> -	    && (level & CE_ALERT)) {
-> -		level &= ~CE_ALERT;
-> -		level |= CE_PANIC;
-> -		cmn_err(CE_ALERT, "XFS: Transforming an alert into a BUG.");
-> -	}
-> -	va_start(ap, fmt);
-> -	xfs_fs_vcmn_err(level, mp, fmt, ap);
-> -	va_end(ap);
-> -}
-> -
->  void
->  xfs_error_report(
->  	const char		*tag,
-> diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
-> index f338847..6b518d2 100644
-> --- a/fs/xfs/xfs_error.h
-> +++ b/fs/xfs/xfs_error.h
-> @@ -162,21 +162,15 @@ extern int xfs_errortag_clearall(xfs_mount_t
-> *mp, int loud);
->  
->  struct xfs_mount;
->  
-> -extern void xfs_fs_vcmn_err(int level, struct xfs_mount *mp,
-> -		char *fmt, va_list ap)
-> -	__attribute__ ((format (printf, 3, 0)));
-> -extern void xfs_cmn_err(int panic_tag, int level, struct xfs_mount
-> *mp,
-> -			char *fmt, ...)
-> -	__attribute__ ((format (printf, 4, 5)));
-> -extern void xfs_fs_cmn_err(int level, struct xfs_mount *mp, char
-> *fmt, ...)
-> -	__attribute__ ((format (printf, 3, 4)));
-> -
->  extern void xfs_hex_dump(void *p, int length);
->  
->  #define xfs_fs_repair_cmn_err(level, mp, fmt, args...) \
->  	xfs_fs_cmn_err(level, mp, fmt "  Unmount and run xfs_repair.", ##
-> args)
->  
->  #define xfs_fs_mount_cmn_err(f, fmt, args...) \
-> -	((f & XFS_MFSI_QUIET)? (void)0 : cmn_err(CE_WARN, "XFS: " fmt, ##
-> args))
-> +	do { \
-> +		if (!(f & XFS_MFSI_QUIET)) 	\
-> +			cmn_err(CE_WARN, "XFS: " fmt, ## args); \
-> +	} while (0)
->  
->  #endif	/* __XFS_ERROR_H__ */
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index abdcbd0..2209035 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -431,7 +431,7 @@ xfs_log_mount(
->  		cmn_err(CE_NOTE, "XFS mounting filesystem %s", mp->m_fsname);
->  	else {
->  		cmn_err(CE_NOTE,
-> -			"!Mounting filesystem \"%s\" in no-recovery mode.  Filesystem will
-> be inconsistent.",
-> +			"Mounting filesystem \"%s\" in no-recovery mode.  Filesystem will
-> be inconsistent.",
->  			mp->m_fsname);
->  		ASSERT(mp->m_flags & XFS_MOUNT_RDONLY);
->  	}
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index 6e7dfbb..411f3a9 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -3934,7 +3934,7 @@ xlog_recover_finish(
->  		log->l_flags &= ~XLOG_RECOVERY_NEEDED;
->  	} else {
->  		cmn_err(CE_DEBUG,
-> -			"!Ending clean XFS mount for filesystem: %s\n",
-> +			"Ending clean XFS mount for filesystem: %s\n",
->  			log->l_mp->m_fsname);
->  	}
->  	return 0;
-> -- 
-> 1.7.2.3
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
