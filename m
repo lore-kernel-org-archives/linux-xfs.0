@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oB61dBMt170725 for <xfs@oss.sgi.com>; Sun, 5 Dec 2010 19:39:11 -0600
-Received: from mx3-phx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 194A61C96474
-	for <xfs@oss.sgi.com>; Sun,  5 Dec 2010 17:40:57 -0800 (PST)
-Received: from mx3-phx2.redhat.com (mx3-phx2.redhat.com [209.132.183.24]) by
-	cuda.sgi.com with ESMTP id 84TM0j2mSlruQJS8 for
-	<xfs@oss.sgi.com>; Sun, 05 Dec 2010 17:40:57 -0800 (PST)
-Date: Sun, 5 Dec 2010 20:40:46 -0500 (EST)
-From: Lachlan McIlroy <lmcilroy@redhat.com>
-Message-ID: <1860606102.27381291599646249.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
-In-Reply-To: <2033621546.27171291599487418.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
-Subject: Re: [PATCH] xfs: prevent NMI timeouts in cmn_err
+	oB648ErI186491 for <xfs@oss.sgi.com>; Sun, 5 Dec 2010 22:08:15 -0600
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6908D1C98E06
+	for <xfs@oss.sgi.com>; Sun,  5 Dec 2010 20:09:58 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
+	[150.101.137.103]) by cuda.sgi.com with ESMTP id
+	CdxUFzBvYCWGMECE for <xfs@oss.sgi.com>;
+	Sun, 05 Dec 2010 20:09:58 -0800 (PST)
+Date: Mon, 6 Dec 2010 15:09:40 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Bugs in mkfs.xfs, device mapper, xfs, and /dev/ram
+Message-ID: <20101206040940.GA16103@dastard>
+References: <4CF7A539.1050206@shiftmail.org> <4CF7A9CF.2020904@shiftmail.org>
+	<20101202230743.GZ16922@dastard> <4CF8F9BE.6000604@shiftmail.org>
 MIME-Version: 1.0
-Reply-To: Lachlan McIlroy <lmcilroy@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <4CF8F9BE.6000604@shiftmail.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,178 +30,109 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Spelic <spelic@shiftmail.org>
+Cc: linux-lvm@redhat.com, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
------ "Dave Chinner" <david@fromorbit.com> wrote:
+On Fri, Dec 03, 2010 at 03:07:58PM +0100, Spelic wrote:
+> On 12/03/2010 12:07 AM, Dave Chinner wrote:
+> >This is a classic ENOSPC vs NFS client writeback overcommit caching
+> >issue.  Have a look at the block map output - I bet theres holes in
+> >the file and it's only consuming 1.5GB of disk space. use xfs_bmap
+> >to check this. du should tell you the same thing.
+> >
+> 
+> Yes you are right!
+....
+> root@server:/mnt/ram# xfs_bmap zerofile
+> zerofile:
+....
+>         30: [3473240..3485567]: 2265328..2277655
+>         31: [3485568..3632983]: hole
+>         32: [3632984..3645311]: 2277656..2289983
+>         33: [3645312..3866455]: hole
+>         34: [3866456..3878783]: 2289984..2302311
+> 
+> (many delayed allocation extents cannot be filled because space on
+> device is finished)
+> 
+> However ...
+> 
+> 
+> >Basically, the NFS client overcommits the server filesystem space by
+> >doing local writeback caching. Hence it caches 1.9GB of data before
+> >it gets the first ENOSPC error back from the server at around 1.5GB
+> >of written data. At that point, the data that gets ENOSPC errors is
+> >tossed by the NFS client, and a ENOSPC error is placed on the
+> >address space to be reported to the next write/sync call. That gets
+> >to the dd process when it's 1.9GB into the write.
+> 
+> I'm no great expert but isn't this a design flaw in NFS?
 
-> On Thu, Dec 02, 2010 at 10:51:32PM -0500, Lachlan McIlroy wrote:
-> > Dave, overall it looks good - just a few minor points below.
-> > Thanks for doing this.
-> > 
-> > ----- "Dave Chinner" <david@fromorbit.com> wrote:
-> 
-> [snip]
-> 
-> > > -void
-> > > -cmn_err(register int level, char *fmt, ...)
-> > > -{
-> > > -	char	*fp = fmt;
-> > > -	int	len;
-> > > -	ulong	flags;
-> > > -	va_list	ap;
-> > > -
-> > > -	level &= XFS_ERR_MASK;
-> > > -	if (level > XFS_MAX_ERR_LEVEL)
-> > > -		level = XFS_MAX_ERR_LEVEL;
-> > > -	spin_lock_irqsave(&xfs_err_lock,flags);
-> > > -	va_start(ap, fmt);
-> > > -	if (*fmt == '!') fp++;
-> > > -	len = vsnprintf(message, sizeof(message), fp, ap);
-> > > -	if (len >= sizeof(message))
-> > > -		len = sizeof(message) - 1;
-> > > -	if (message[len-1] == '\n')
-> > > -		message[len-1] = 0;
->         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> 
-> > > -	printk("%s%s\n", err_level[level], message);
-> > > -	va_end(ap);
-> > > -	spin_unlock_irqrestore(&xfs_err_lock,flags);
-> > > -	BUG_ON(level == CE_PANIC);
-> > > -}
-> 
-> [snip]
-> 
-> > > +#define CE_DEBUG        KERN_DEBUG
-> > > +#define CE_CONT         KERN_INFO
-> > > +#define CE_NOTE         KERN_NOTICE
-> > > +#define CE_WARN         KERN_WARNING
-> > > +#define CE_ALERT        KERN_ALERT
-> > > +#define CE_PANIC        KERN_EMERG
-> > > +
-> > > +#define cmn_err(lvl, fmt, args...)	\
-> > > +	do { \
-> > > +		printk(lvl fmt, ## args); \
-> > 
-> > The old cmn_err() routine would append a newline if one was not
-> supplied.
-> > As far as I know printk() will not do the same so either we need to
-> fix
-> > all calls to cmn_err() to supply a '\n' or add it here (at the risk
-> of
-> > having two newlines) - maybe:
-> 
-> See above - I think you have it the wrong way around - it looks to
-> me like the old cmn_err() stripped the newline character if it
-> existed, then added one itself.
+Yes, sure is.
 
-That's the same thing - the input may or may not have a newline but
-the output always will.  We should at least try to maintain that
-behaviour.
+[ Well, to be precise the original NFSv2 specification
+didn't have this flaw because all writes were synchronous. NFSv3
+introduced asynchronous writes (writeback caching) and with it this
+problem. NFSv4 does not fix this flaw. ]
 
+> Ok in this case we were lucky it was all zeroes so XFS made a sparse
+> file and could fit a 1.9GB into 1.5GB device size.
 > 
-> > printk(lvl fmt "\n", ## args);
-> 
-> printk() is actually pretty tolerant of missing newlines - if it
-> detects the previous printk() was not newline terminated and the
-> next one starts with a log level that is not KERN_CONT, it will
-> print the new message on a new line automatically. This is the code
-> in vprintk() that handles it:
-> 
->         /* Do we have a loglevel in the string? */
->         if (p[0] == '<') {
->                 unsigned char c = p[1];
->                 if (c && p[2] == '>') {
->                         switch (c) {
->                         case '0' ... '7': /* loglevel */
->                                 current_log_level = c - '0';
->                         /* Fallthrough - make sure we're on a new line
-> */
->                         case 'd': /* KERN_DEFAULT */
->                                 if (!new_text_line) {
->                                         emit_log_char('\n');
->                                         new_text_line = 1;
->                                 }
->                         /* Fallthrough - skip the loglevel */
->                         case 'c': /* KERN_CONT */
->                                 p += 3;
->                                 break;
->                         }
->                 }
->         }
-> 
-> So we are probably OK not to need additional newlines. Indeed, I
-> didn't notice the output being screwed up without them. ;)
+> In general with nonzero data it seems to me you will get data
+> corruption because the NFS client thinks it has written the data
+> while the NFS server really can't write more data than the device
+> size.
 
-What if the next message after a cmn_err() message doesn't have a log
-level?  There are many users of printk() that don't specify a log level
-so it could potentially be joined with the previous message.
-(BTW that code above is not in rhel5).
+Yup, well known issue. Simple rule: don't run your NFS server out of
+space.
 
-> 
-> I can add them if you want, though.
+> It's nice that the NFS server does local writeback caching but it
+> should also cache the filesystem's free space (and check it
+> periodically, since nfs-server is presumably not the only process
+> writing in that filesystem) so that it doesn't accept more data than
+> it can really write. Alternatively, when free space drops below 1GB
+> (or a reasonable size based on network speed), nfs-server should
+> turn off filesystem writeback caching.
 
-I think we should add them.
+This isn't a NFS server problem, or one that canbe worked around at
+the server. it's a NFS _client_ problem in that it does not get
+synchronous ENOSPC errors when using writeback caching. There is no
+way for the NFS client to know the server is near ENOSPC conditions
+prior to writing the data to the server as clients operate
+independently.
 
-> 
-> > 
-> > > +		BUG_ON(strncmp(lvl, KERN_EMERG, strlen(KERN_EMERG)) == 0); \
-> > > +	} while (0)
-> > > +
-> > > +#define xfs_fs_cmn_err(lvl, mp, fmt, args...)	\
-> > > +	do { \
-> > > +		printk(lvl "Filesystem %s: " fmt, (mp)->m_fsname, ## args); \
-> > 
-> > printk(lvl "Filesystem %s: " fmt "\n", (mp)->m_fsname, ## args);
-> > 
-> > > +		BUG_ON(strncmp(lvl, KERN_EMERG, strlen(KERN_EMERG)) == 0); \
-> > > +	} while (0)
-> > > +
-> > > +/* All callers to xfs_cmn_err use CE_ALERT, so don't bother
-> testing
-> > > lvl */
-> > > +#define xfs_cmn_err(panic_tag, lvl, mp, fmt, args...)	\
-> > > +	do { \
-> > > +		int	panic = 0; \
-> > > +		if (xfs_panic_mask && (xfs_panic_mask & panic_tag)) { \
-> > > +			printk(KERN_ALERT "XFS: Transforming an alert into a BUG.");
-> \
-> > > +			panic = 1; \
-> > > +		} \
-> > > +		printk(KERN_ALERT "Filesystem %s: " fmt, (mp)->m_fsname, ##
-> args);
-> > > \
-> > > +		BUG_ON(panic); \
-> > > +	} while (0)
-> > 
-> > I think we can simplify this case a bit and remove the panic
-> variable,
-> > like this:
-> > 
-> > 	do { \
-> > 		printk(KERN_ALERT "Filesystem %s: " fmt "\n", (mp)->m_fsname, ##
-> args);
-> > 		if (xfs_panic_mask && (xfs_panic_mask & panic_tag)) { \
-> > 			printk(KERN_ALERT "XFS: Transforming an alert into a BUG.\n"); \
-> > 			BUG_ON(1); \
-> > 		} \
-> > 	} while (0)
-> > 
-> > This also reorders the messages which I think makes more sense.
-> 
-> Definitely. That's a vast improvement. ;)
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+If you really want your NFS clients to behave correctly when the
+server goes ENOSPC, turn off writeback caching at the client side,
+not the server (i.e. use sync mounts on the client side).
+Write performance will suck, but if you want sane ENOSPC behaviour...
+
+.....
+
+> Holes in a random file!
+> This is data corruption, and nobody is notified of this data
+> corruption: no error at client side or server side!
+> Is it good semantics? How could client get notified of this? Some
+> kind of fsync maybe?
+
+Use wireshark to determine if the server sends an ENOSPC to the
+client when the first background write fails. I bet it does and that
+your dd write failed with ENOSPC, too. Something stopped it writing
+at 1.9GB....
+
+What happens to the remaining cached writeback data in the NFS
+client once the server runs out of space is NFS client specific
+behaviour. If you end up with only bits of the file on the server,
+ending up on the server, then that's a result of NFS client
+behaviour, not a NFS server problem.
+
+Cheers,
+
+Dave.
+
+
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
