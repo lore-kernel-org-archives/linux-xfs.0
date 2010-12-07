@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oB7IH1av197241 for <xfs@oss.sgi.com>; Tue, 7 Dec 2010 12:17:02 -0600
-Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B713C1CA0A0D
-	for <xfs@oss.sgi.com>; Tue,  7 Dec 2010 10:18:49 -0800 (PST)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id PFSDrdEeJ9KqC9MP
-	for <xfs@oss.sgi.com>; Tue, 07 Dec 2010 10:18:49 -0800 (PST)
-Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
-	by greer.hardwarefreak.com (Postfix) with ESMTP id 27A686C14E
-	for <xfs@oss.sgi.com>; Tue,  7 Dec 2010 12:18:49 -0600 (CST)
-Message-ID: <4CFE7A89.2010307@hardwarefreak.com>
-Date: Tue, 07 Dec 2010 12:18:49 -0600
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	oB7JVBnR207746 for <xfs@oss.sgi.com>; Tue, 7 Dec 2010 13:31:12 -0600
+Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E26A4160F3F5
+	for <xfs@oss.sgi.com>; Tue,  7 Dec 2010 11:32:56 -0800 (PST)
+Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
+	cuda.sgi.com with ESMTP id tpIThEkXFI12uJuA for
+	<xfs@oss.sgi.com>; Tue, 07 Dec 2010 11:32:56 -0800 (PST)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: Re: possible xfs corruption
+Date: Tue, 7 Dec 2010 20:32:53 +0100
+References: <30395558.post@talk.nabble.com>
+	<20101207151039.25d45cb5@harpe.intellique.com>
+	<30397173.post@talk.nabble.com>
+In-Reply-To: <30397173.post@talk.nabble.com>
 MIME-Version: 1.0
-Subject: Re: kernel panic-xfs errors
-References: <30397503.post@talk.nabble.com>	<20101207165917.0c96dd95@harpe.intellique.com>	<30398448.post@talk.nabble.com>
-	<20101207190038.61e9dbb7@harpe.intellique.com>
-In-Reply-To: <20101207190038.61e9dbb7@harpe.intellique.com>
+Message-Id: <201012072032.54069@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,42 +25,69 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: multipart/mixed; boundary="===============0811464141874220135=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: blacknred <leo1783@hotmail.co.uk>
 
-Emmanuel Florac put forth on 12/7/2010 12:00 PM:
-> Le Tue, 7 Dec 2010 09:20:17 -0800 (PST)
-> blacknred <leo1783@hotmail.co.uk> =E9crivait:
-> =
+--===============0811464141874220135==
+Content-Type: multipart/signed;
+  boundary="nextPart7703918.QEWK9RTnrp";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 
->>  [<f894585c>] do_cciss_request+0x397/0x3a3 [cciss]
->> looks like the controller was wedged there?
->>
-> =
+--nextPart7703918.QEWK9RTnrp
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 
-> Yes, apparently your controller wrote garbage at the beginning of the
-> filesystem... you have lots of trouble with these controllers, has
-> anything special happened? that's weird.
-> =
+On Dienstag, 7. Dezember 2010 blacknred wrote:
+> Yes, It's a Smart Array in HP Proliant Server.
+> No power failure, just upgraded the controller firmware and rebooted
+> the server.....
 
-> You should try using a newer xfs_repair (> 3.x), for instance by booting
-> from an Ubuntu 10.10 live CD, and see if it fares any better from there.
+What Server, controller, and from which firmware version did you go to=20
+which one?
 
-The answer for the one server is simple:  back out the firmware--flash
-it with the previously installed version.
+=2D-=20
+mit freundlichen Gr=C3=BCssen,
+Michael Monnerie, Ing. BSc
 
-BTW, what need prompted the new flash in the first place?  I _never_
-flash controller firmware unless absolutely necessary.  You've
-demonstrated today why I practice that faith.
+it-management Internet Services: Prot=C3=A9ger
+http://proteger.at [gesprochen: Prot-e-schee]
+Tel: +43 660 / 415 6531
 
--- =
+// ****** Radiointerview zum Thema Spam ******
+// http://www.it-podcast.at/archiv.html#podcast-100716
+//=20
+// Haus zu verkaufen: http://zmi.at/langegg/
 
-Stan
+--nextPart7703918.QEWK9RTnrp
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.15 (GNU/Linux)
+
+iEYEABECAAYFAkz+i+YACgkQzhSR9xwSCbTfOwCcDMY9VzesWwignv1DVKO1O42b
+VTYAoOjO0jRWFnJEjmtMCg2QFeL8bWDs
+=uAsw
+-----END PGP SIGNATURE-----
+
+--nextPart7703918.QEWK9RTnrp--
+
+
+--===============0811464141874220135==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============0811464141874220135==--
