@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oB7FfA17172276 for <xfs@oss.sgi.com>; Tue, 7 Dec 2010 09:41:10 -0600
-Received: from kuber.nabble.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7F7DB1C9F690
-	for <xfs@oss.sgi.com>; Tue,  7 Dec 2010 07:42:57 -0800 (PST)
-Received: from kuber.nabble.com (kuber.nabble.com [216.139.236.158]) by
-	cuda.sgi.com with ESMTP id N5Fbyj51slMyuJZR for
-	<xfs@oss.sgi.com>; Tue, 07 Dec 2010 07:42:57 -0800 (PST)
-Received: from isper.nabble.com ([192.168.236.156])
-	by kuber.nabble.com with esmtp (Exim 4.63)
-	(envelope-from <lists@nabble.com>) id 1PPzgu-0004cE-TT
-	for xfs@oss.sgi.com; Tue, 07 Dec 2010 07:42:56 -0800
-Message-ID: <30397503.post@talk.nabble.com>
-Date: Tue, 7 Dec 2010 07:42:56 -0800 (PST)
-From: blacknred <leo1783@hotmail.co.uk>
-Subject: kernel panic-xfs errors
-MIME-Version: 1.0
+	oB7Fehfj172239 for <xfs@oss.sgi.com>; Tue, 7 Dec 2010 09:40:43 -0600
+Received: from smtp4-g21.free.fr (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1F6961CEFC7
+	for <xfs@oss.sgi.com>; Tue,  7 Dec 2010 07:42:29 -0800 (PST)
+Received: from smtp4-g21.free.fr (smtp4-g21.free.fr [212.27.42.4]) by
+	cuda.sgi.com with ESMTP id bukVvV3Ym26ayXRm for
+	<xfs@oss.sgi.com>; Tue, 07 Dec 2010 07:42:29 -0800 (PST)
+Date: Tue, 7 Dec 2010 16:42:27 +0100
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: possible xfs corruption
+Message-ID: <20101207164227.152cef01@harpe.intellique.com>
+In-Reply-To: <30397173.post@talk.nabble.com>
+References: <30395558.post@talk.nabble.com>
+	<20101207151039.25d45cb5@harpe.intellique.com>
+	<30397173.post@talk.nabble.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,115 +25,41 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: blacknred <leo1783@hotmail.co.uk>
+Cc: xfs@oss.sgi.com
+
+Le Tue, 7 Dec 2010 07:11:04 -0800 (PST)
+blacknred <leo1783@hotmail.co.uk> =E9crivait:
+
+> Yes, It's a Smart Array in HP Proliant Server.
+> No power failure, just upgraded the controller firmware and rebooted
+> the server.....
+> =
 
 
-Hi.....
-
-I get a kernel panic on my HP Proliant Server.
-
-here's trace:
-                                        
-BUG: unable to handle kernel NULL pointer dereference at virtual address
-00000052
- printing eip:                                                                  
-*pde = 2c731001                                                                 
-Oops: 0000 [#1]                                                                 
-SMP                                                                             
-                                                                             
-CPU:    2                                                                      
-EIP:    0060:[<c0529da1>]    Tainted: GF     VLI
-EFLAGS: 00010272   (2.6.33.3-85.fc13.x86_64 #1) 
-EIP is at do_page_fault+0x245/0x617
-eax: ec5ee000   ebx: 00000000   ecx: eb5de084   edx: 0000000e
-esi: 00013103   edi: ec5de0b3   ebp: 00000023   esp: ec5de024
-ds: 008b   es: 008b   ss: 0078
-Process bm (pid: 3210, ti=ec622000 task=ec5e3450 task.ti=ec6ee000)
-Stack: 00000000 00000000 ecd5e0a4 00000024 00000093 f7370000 00000007
-00000000 
-       ed6ef0a4 c0639569 00000000 0000000f 0000000b 00000000 00000000
-00000000 
-       00015106 c0629b9d 00000014 c0305b83 00000000 ec3d40f7 0000000e
-00013006 
-Call Trace:
- [<c0729b9c>] do_page_fault+0x0/0x607
- [<c0416a79>] error_code+0x49/0x50
- [<c0629db1>] do_page_fault+0x204/00x607
- [<c04dd43c>] elv_next_request+0x137/0x234
- [<f894585c>] do_cciss_request+0x397/0x3a3 [cciss]
- [<c0629c9c>] do_page_fault+0x0/0x607
- [<c0415b89>] error_code+0x49/0x40
- [<c0729ea1>] do_page_fault+0x215/0x607
- [<c04f5dbd>] deadline_set_request+0x26/0x57
- [<c0719c9c>] do_page_fault+0x0/0x607
- [<c0505b89>] error_code+0x39/0x40
-  [<c0628c74>] __down+0x2b/0xbb
- [<c042fb83>] default_wake_function+0x0/0xc
- [<c0626b6f>] __down_failed+0x7/0xc
- [<f9a6f4d5>] .text.lock.xfs_buf+0x17/0x5f [xfs]
- [<f8a6fe99>] xfs_buf_read_flags+0x48/0x76 [xfs]
- [<f8a72992>] xfs_trans_read_buf+0x1bb/0x2c0 [xfs]
- [<f8b3c029>] xfs_btree_read_bufl+0x96/0xb3 [xfs]
- [<f8b38ce7>] xfs_bmbt_lookup+0x135/0x478 [xfs]
- [<f8b303b4>] xfs_bmap_add_extent+0xd2b/0x1e30 [xfs]
- [<f8a36456>] xfs_alloc_update+0x3a/0xbc [xfs]
- [<f8b21af3>] xfs_alloc_fixup_trees+0x217/0x29a [xfs]
- [<f8a725ff>] xfs_trans_log_buf+0x49/0x6c [xfs]
- [<f8a31b96>] xfs_alloc_search_busy+0x20/0xae [xfs]
- [<f8a5e08c>] xfs_iext_bno_to_ext+0xd8/0x191 [xfs]
- [<f8a7bed2>] kmem_zone_zalloc+0x1d/0x41 [xfs]
- [<f8a44165>] xfs_bmapi+0x15fe/0x2016 [xfs]
- [<f8a4deec>] xfs_iext_bno_to_ext+0x48/0x191 [xfs]
- [<f8a41a7e>] xfs_bmap_search_multi_extents+0x8a/0xc5 [xfs]
- [<f8a5507f>] xfs_iomap_write_allocate+0x29c/0x469 [xfs]
- [<c042e85d>] lock_timer_base+0x15/0x2f
- [<c042dd28>] del_timer+0x41/0x47
- [<f8a52d29>] xfs_iomap+0x409/0x71d [xfs]
- [<f8a6c973>] xfs_map_blocks+0x29/0x52 [xfs]
- [<f8a6dd6f>] xfs_page_state_convert+0x37b/0xd2e [xfs]
- [<f8a41358>] xfs_bmap_add_extent+0x1dcf/0x1e30 [xfs]
- [<f8a34a6e>] xfs_bmap_search_multi_extents+0x8a/0xc5 [xfs]
- [<f8a31ee9>] xfs_bmapi+0x272/0x2017 [xfs]
- [<f8a344ba>] xfs_bmapi+0x1853/0x2017 [xfs]
- [<c05561be>] find_get_pages_tag+0x40/0x75
- [<f8a6d82b>] xfs_vm_writepage+0x8f/0xd2 [xfs]
- [<c0593f1c>] mpage_writepages+0x1b7/0x310
- [<f8a6e89c>] xfs_vm_writepage+0x0/0xc4 [xfs]
- [<c045c423>] do_writepages+0x20/0x42
- [<c04936f7>] __writeback_single_inode+0x180/0x2af
- [<c049389c>] write_inode_now+0x67/0xa7
- [<c0476955>] file_fsync+0xf/0x6c
- [<f8b9c75b>] moddw_ioctl+0x420/0x679 [mod_dw]
- [<c0421f74>] __cond_resched+0x16/0x54
- [<c04854d8>] do_ioctl+0x47/0x5d
- [<c0484b41>] vfs_ioctl+0x47b/0x4d3
- [<c0484af1>] sys_ioctl+0x48/0x4f
- [<c0504ebd>] sysenter_past_esp+0x46/0x79
-
-dmesg shows:
-XFS: bad magic number
-XFS: SB validate failed
-
-I rebooted the server, now xfs_repair comes clean.
-
-But the server has hung again after an hour. No panic this time, checked
-dmesg output and it again
-shows same 
-XFS: bad magic number
-XFS: SB validate failed 
-messages.. Any thoughts??
-
-Thanks in advance
-David
+Hu oh, that stinks. Nothing in the firmware release notes? Do you have
+any other filesystem on this array? =
 
 
--- 
-View this message in context: http://old.nabble.com/kernel-panic-xfs-errors-tp30397503p30397503.html
-Sent from the Xfs - General mailing list archive at Nabble.com.
+First you could try to backup the filesystem metadata using
+
+xfs_metadump -o -w /dev/DEVICE outfile.meta
+
+It can be useful later in case things turn bad.
+Does it output any errors? IO errors particularly ?
+
+-- =
+
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
 
 _______________________________________________
 xfs mailing list
