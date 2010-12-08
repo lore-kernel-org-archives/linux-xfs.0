@@ -1,24 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oB89bOC8091327 for <xfs@oss.sgi.com>; Wed, 8 Dec 2010 03:37:24 -0600
-Received: from kuber.nabble.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D3E241D34E0
-	for <xfs@oss.sgi.com>; Wed,  8 Dec 2010 01:39:11 -0800 (PST)
-Received: from kuber.nabble.com (kuber.nabble.com [216.139.236.158]) by
-	cuda.sgi.com with ESMTP id AaOlAr3OyY1orAEz for
-	<xfs@oss.sgi.com>; Wed, 08 Dec 2010 01:39:11 -0800 (PST)
-Received: from isper.nabble.com ([192.168.236.156])
-	by kuber.nabble.com with esmtp (Exim 4.63)
-	(envelope-from <lists@nabble.com>) id 1PQGUQ-0002dP-PC
-	for xfs@oss.sgi.com; Wed, 08 Dec 2010 01:39:10 -0800
-Message-ID: <30403823.post@talk.nabble.com>
-Date: Wed, 8 Dec 2010 01:39:10 -0800 (PST)
-From: blacknred <leo1783@hotmail.co.uk>
+	oB8Atei9106466 for <xfs@oss.sgi.com>; Wed, 8 Dec 2010 04:55:40 -0600
+Received: from smtp4-g21.free.fr (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 42EFC1CA59C7
+	for <xfs@oss.sgi.com>; Wed,  8 Dec 2010 02:57:26 -0800 (PST)
+Received: from smtp4-g21.free.fr (smtp4-g21.free.fr [212.27.42.4]) by
+	cuda.sgi.com with ESMTP id fI1CNF4dHqnLMPXY for
+	<xfs@oss.sgi.com>; Wed, 08 Dec 2010 02:57:26 -0800 (PST)
+Date: Wed, 8 Dec 2010 11:57:24 +0100
+From: Emmanuel Florac <eflorac@intellique.com>
 Subject: Re: kernel panic-xfs errors
-In-Reply-To: <20101207222558.GC29333@dastard>
-MIME-Version: 1.0
+Message-ID: <20101208115724.0b2c210a@harpe.intellique.com>
+In-Reply-To: <30403823.post@talk.nabble.com>
 References: <30397503.post@talk.nabble.com> <20101207222558.GC29333@dastard>
+	<30403823.post@talk.nabble.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,189 +24,32 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: blacknred <leo1783@hotmail.co.uk>
+Cc: xfs@oss.sgi.com
+
+Le Wed, 8 Dec 2010 01:39:10 -0800 (PST)
+blacknred <leo1783@hotmail.co.uk> =E9crivait:
+
+> But now its hung with the 7.x fw as well and same error shows in
+> dmesg which makes me worried about the fs more....
+> =
 
 
+Maybe there's a remaining hidden corruption. Could you try with latest
+xfs_repair ?
 
->You've done a forced module load. No guarantee your kernel is in any
->sane shape if you've done that....
+-- =
 
-Agree, but I'm reasonably convinced that module isn't the issue, because it
-works fine with my other servers......
-
->Strange failure. Hmmm - i386 arch and fedora - are you running with
-4k stacks? If so, maybe it blew the stack...
-
-i386 arch, rhel 5.0
-
-># dd if=<device> bs=512 count=1 | od -c
-This is what i get now, but now server's been rebooted and running OK, what
-should i be expecting or rather what are we looking for in this output at
-point of failure?
-1+0 records in
-1+0 records out
-0000000    X   F   S   B  \0  \0 020  \0  \0  \0  \0  \0 025 324 304  \0
-512 bytes (512 B) copied0000020   \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0 
-\0  \0  \0  \0  \0
-0000040  330   k 004   8   A 365   F 023 221 035 215   E 277   +   v 256
-0000060   \0  \0  \0  \0 020  \0  \0   @  \0  \0  \0  \0  \0  \0  \0 200
-, 3.8e-05 seconds, 13.5 MB/s
-0000100   \0  \0  \0  \0  \0  \0  \0 201  \0  \0  \0  \0  \0  \0  \0 202
-0000120   \0  \0  \0 001  \0 256 246   @  \0  \0  \0      \0  \0  \0  \0
-0000140   \0  \0 200  \0 261 204 002  \0  \b  \0  \0 002  \0  \0  \0  \0
-0000160   \0  \0  \0  \0  \0  \0  \0  \0  \b  \t  \v 001 030  \0  \0  \0
-0000200   \0  \0  \0  \0  \0 023 240   @  \0  \0  \0  \0  \0 004 264 344
-0000220   \0  \0  \0  \0  \b 346 311   (  \0  \0  \0  \0  \0  \0  \0  \0
-0000240   \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0
-0000260   \0  \0  \0  \0  \0  \0  \0 002  \0  \0  \0   @  \0  \0 001  \0
-0000300   \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \b  \0  \0  \0  \b
-0000320   \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0  \0
-*
-0001000
-
->why did I flash the controller
-I was on 5.22 fw version which has a known 'lockup' issue which is fixed in
-7.x ver.
-This is a critical fix.
-So initially i was thinking the lockup caused the xfs errors in dmesg on the
-panicked server.
-But now its hung with the 7.x fw as well and same error shows in dmesg which
-makes me worried about the fs more....
-
-
-Dave Chinner wrote:
-> 
-> On Tue, Dec 07, 2010 at 07:42:56AM -0800, blacknred wrote:
->> 
->> Hi.....
->> 
->> I get a kernel panic on my HP Proliant Server.
->> 
->> here's trace:
->>                                         
->> BUG: unable to handle kernel NULL pointer dereference at virtual address
->> 00000052
->>  printing eip:                                                                  
->> *pde = 2c731001                                                                 
->> Oops: 0000 [#1]                                                                 
->> SMP                                                                             
->>                                                                              
->> CPU:    2                                                                      
->> EIP:    0060:[<c0529da1>]    Tainted: GF     VLI
->                                ^^^^^^^^^^^
-> 
-> You've done a forced module load. No guarantee your kernel is in any
-> sane shape if you've done that....
-> 
->> EFLAGS: 00010272   (2.6.33.3-85.fc13.x86_64 #1) 
->> EIP is at do_page_fault+0x245/0x617
->> eax: ec5ee000   ebx: 00000000   ecx: eb5de084   edx: 0000000e
->> esi: 00013103   edi: ec5de0b3   ebp: 00000023   esp: ec5de024
->> ds: 008b   es: 008b   ss: 0078
->> Process bm (pid: 3210, ti=ec622000 task=ec5e3450 task.ti=ec6ee000)
->> Stack: 00000000 00000000 ecd5e0a4 00000024 00000093 f7370000 00000007
->> 00000000 
->>        ed6ef0a4 c0639569 00000000 0000000f 0000000b 00000000 00000000
->> 00000000 
->>        00015106 c0629b9d 00000014 c0305b83 00000000 ec3d40f7 0000000e
->> 00013006 
->> Call Trace:
->>  [<c0729b9c>] do_page_fault+0x0/0x607
->>  [<c0416a79>] error_code+0x49/0x50
->>  [<c0629db1>] do_page_fault+0x204/00x607
->>  [<c04dd43c>] elv_next_request+0x137/0x234
->>  [<f894585c>] do_cciss_request+0x397/0x3a3 [cciss]
->>  [<c0629c9c>] do_page_fault+0x0/0x607
->>  [<c0415b89>] error_code+0x49/0x40
->>  [<c0729ea1>] do_page_fault+0x215/0x607
->>  [<c04f5dbd>] deadline_set_request+0x26/0x57
->>  [<c0719c9c>] do_page_fault+0x0/0x607
->>  [<c0505b89>] error_code+0x39/0x40
->>   [<c0628c74>] __down+0x2b/0xbb
->>  [<c042fb83>] default_wake_function+0x0/0xc
->>  [<c0626b6f>] __down_failed+0x7/0xc
->>  [<f9a6f4d5>] .text.lock.xfs_buf+0x17/0x5f [xfs]
->>  [<f8a6fe99>] xfs_buf_read_flags+0x48/0x76 [xfs]
->>  [<f8a72992>] xfs_trans_read_buf+0x1bb/0x2c0 [xfs]
->>  [<f8b3c029>] xfs_btree_read_bufl+0x96/0xb3 [xfs]
->>  [<f8b38ce7>] xfs_bmbt_lookup+0x135/0x478 [xfs]
->>  [<f8b303b4>] xfs_bmap_add_extent+0xd2b/0x1e30 [xfs]
->>  [<f8a36456>] xfs_alloc_update+0x3a/0xbc [xfs]
->>  [<f8b21af3>] xfs_alloc_fixup_trees+0x217/0x29a [xfs]
->>  [<f8a725ff>] xfs_trans_log_buf+0x49/0x6c [xfs]
->>  [<f8a31b96>] xfs_alloc_search_busy+0x20/0xae [xfs]
->>  [<f8a5e08c>] xfs_iext_bno_to_ext+0xd8/0x191 [xfs]
->>  [<f8a7bed2>] kmem_zone_zalloc+0x1d/0x41 [xfs]
->>  [<f8a44165>] xfs_bmapi+0x15fe/0x2016 [xfs]
->>  [<f8a4deec>] xfs_iext_bno_to_ext+0x48/0x191 [xfs]
->>  [<f8a41a7e>] xfs_bmap_search_multi_extents+0x8a/0xc5 [xfs]
->>  [<f8a5507f>] xfs_iomap_write_allocate+0x29c/0x469 [xfs]
->>  [<c042e85d>] lock_timer_base+0x15/0x2f
->>  [<c042dd28>] del_timer+0x41/0x47
->>  [<f8a52d29>] xfs_iomap+0x409/0x71d [xfs]
->>  [<f8a6c973>] xfs_map_blocks+0x29/0x52 [xfs]
->>  [<f8a6dd6f>] xfs_page_state_convert+0x37b/0xd2e [xfs]
->>  [<f8a41358>] xfs_bmap_add_extent+0x1dcf/0x1e30 [xfs]
->>  [<f8a34a6e>] xfs_bmap_search_multi_extents+0x8a/0xc5 [xfs]
->>  [<f8a31ee9>] xfs_bmapi+0x272/0x2017 [xfs]
->>  [<f8a344ba>] xfs_bmapi+0x1853/0x2017 [xfs]
->>  [<c05561be>] find_get_pages_tag+0x40/0x75
->>  [<f8a6d82b>] xfs_vm_writepage+0x8f/0xd2 [xfs]
->>  [<c0593f1c>] mpage_writepages+0x1b7/0x310
->>  [<f8a6e89c>] xfs_vm_writepage+0x0/0xc4 [xfs]
->>  [<c045c423>] do_writepages+0x20/0x42
->>  [<c04936f7>] __writeback_single_inode+0x180/0x2af
->>  [<c049389c>] write_inode_now+0x67/0xa7
->>  [<c0476955>] file_fsync+0xf/0x6c
->>  [<f8b9c75b>] moddw_ioctl+0x420/0x679 [mod_dw]
->>  [<c0421f74>] __cond_resched+0x16/0x54
->>  [<c04854d8>] do_ioctl+0x47/0x5d
->>  [<c0484b41>] vfs_ioctl+0x47b/0x4d3
->>  [<c0484af1>] sys_ioctl+0x48/0x4f
->>  [<c0504ebd>] sysenter_past_esp+0x46/0x79
-> 
-> Strange failure. Hmmm - i386 arch and fedora - are you running with
-> 4k stacks? If so, maybe it blew the stack...
-> 
->> 
->> dmesg shows:
->> XFS: bad magic number
->> XFS: SB validate failed
->> 
->> I rebooted the server, now xfs_repair comes clean.
->> 
->> But the server has hung again after an hour. No panic this time, checked
->> dmesg output and it again
->> shows same 
->> XFS: bad magic number
->> XFS: SB validate failed 
->> messages.. Any thoughts??
-> 
-> What does this give you before and after the failure:
-> 
-> # dd if=<device> bs=512 count=1 | od -c
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
-> 
-
--- 
-View this message in context: http://old.nabble.com/kernel-panic-xfs-errors-tp30397503p30403823.html
-Sent from the Xfs - General mailing list archive at Nabble.com.
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
 
 _______________________________________________
 xfs mailing list
