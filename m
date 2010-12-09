@@ -1,20 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oB9HkT6B047431 for <xfs@oss.sgi.com>; Thu, 9 Dec 2010 11:46:30 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A1BFB1436751
-	for <xfs@oss.sgi.com>; Thu,  9 Dec 2010 09:48:17 -0800 (PST)
-Received: from mail.sandeen.net (64-131-28-21.usfamily.net [64.131.28.21]) by
-	cuda.sgi.com with ESMTP id 4aMMzKCZLFqLJCFS for
-	<xfs@oss.sgi.com>; Thu, 09 Dec 2010 09:48:17 -0800 (PST)
-Message-ID: <4D011660.200@sandeen.net>
-Date: Thu, 09 Dec 2010 11:48:16 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: XFS Testsuite
-References: <AANLkTi=c1ihyOdyaabzM4DRwYRt8tvLHpLLF5a_6+r3=@mail.gmail.com>
-In-Reply-To: <AANLkTi=c1ihyOdyaabzM4DRwYRt8tvLHpLLF5a_6+r3=@mail.gmail.com>
+	oB9I5sgW050863 for <xfs@oss.sgi.com>; Thu, 9 Dec 2010 12:05:54 -0600
+Subject: Re: [PATCH] fs/vfs/security: pass last path component to LSM on
+	inode creation
+From: Eric Paris <eparis@redhat.com>
+In-Reply-To: <19713.5738.653711.301814@quad.stoffel.home>
+References: <20101208194527.13537.77202.stgit@paris.rdu.redhat.com>
+	<19712.61515.201226.938553@quad.stoffel.home>
+	<1291909941.3072.70.camel@localhost.localdomain>
+	<19713.5738.653711.301814@quad.stoffel.home>
+Date: Thu, 09 Dec 2010 13:05:21 -0500
+Message-ID: <1291917921.12683.4.camel@localhost.localdomain>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,30 +25,34 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: naveen yadav <yad.naveen@gmail.com>
-Cc: xfs@oss.sgi.com
+To: John Stoffel <john@stoffel.org>
+Cc: jfs-discussion@lists.sourceforge.net, jack@suse.cz, jeffm@suse.com, jmorris@namei.org, dhowells@redhat.com, linux-mm@kvack.org, linux-mtd@lists.infradead.org, shaggy@linux.vnet.ibm.com, shemminger@vyatta.com, hch@lst.de, penguin-kernel@I-love.SAKURA.ne.jp, hughd@google.com, joel.becker@oracle.com, cluster-devel@redhat.com, aelder@sgi.com, kees.cook@canonical.com, linux-ext4@vger.kernel.org, sds@tycho.nsa.gov, paul.moore@hp.com, mfasheh@suse.com, reiserfs-devel@vger.kernel.org, xfs@oss.sgi.com, xfs-masters@oss.sgi.com, viro@zeniv.linux.org.uk, dchinner@redhat.com, eparis@parisplace.org, swhiteho@redhat.com, chris.mason@oracle.com, tytso@mit.edu, linux-kernel@vger.kernel.org, linux-security-module@vger.kernel.org, linux-btrfs@vger.kernel.org, casey@schaufler-ca.com, adilger.kernel@dilger.ca, akpm@linux-foundation.org, dwmw2@infradead.org, ocfs2-devel@oss.oracle.com
 
-On 12/9/10 9:32 AM, naveen yadav wrote:
-> Hi all,
+On Thu, 2010-12-09 at 12:48 -0500, John Stoffel wrote:
+> >>>>> "Eric" == Eric Paris <eparis@redhat.com> writes:
 > 
-> I want to setup XFS testsuite for my embedded ARM Target, Is it possible ?
-> If any body have already done, Please help me. I am trying but there
-> are lots of constrain and problem
-
-It certainly is possible, and a very good idea - what problems have you
-encountered?
-
-I assume you've started with the README instructions?
-
--Eric
-
-> Thanks
+> Eric> On Thu, 2010-12-09 at 10:05 -0500, John Stoffel wrote:
+> >> >>>>> "Eric" == Eric Paris <eparis@redhat.com> writes:
 > 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> Eric> This patch adds a 4th piece of information, the name of the
+> Eric> object being created.  An obvious situation where this will be
+> Eric> useful is devtmpfs (although you'll find other examples in the
+> Eric> above thread).  devtmpfs when it creates char/block devices is
+> Eric> unable to distinguish between kmem and console and so they are
+> Eric> created with a generic label.  hotplug/udev is then called which
+> Eric> does some pathname like matching and relabels them to something
+> Eric> more specific.  We've found that many people are able to race
+> Eric> against this particular updating and get spurious denials in
+> Eric> /dev.  With this patch devtmpfs will be able to get the labels
+> Eric> correct to begin with.
 > 
+> So your Label based access controls are *also* based on pathnames?
+> Right?
+
+Access decisions are still based solely on the label.  This patch can
+influence how new objects get their label, which makes the access
+decisions indirectly path based.  You'll find a reasonable summary and
+commentary on lwn in this weeks security section.
 
 _______________________________________________
 xfs mailing list
