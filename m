@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oB90Q3oR154028 for <xfs@oss.sgi.com>; Wed, 8 Dec 2010 18:26:03 -0600
-Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A5A421CA8667
-	for <xfs@oss.sgi.com>; Wed,  8 Dec 2010 16:27:51 -0800 (PST)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id hDXytBuwkkwogvAh
-	for <xfs@oss.sgi.com>; Wed, 08 Dec 2010 16:27:51 -0800 (PST)
-Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
-	by greer.hardwarefreak.com (Postfix) with ESMTP id C2B386C173
-	for <xfs@oss.sgi.com>; Wed,  8 Dec 2010 18:27:50 -0600 (CST)
-Message-ID: <4D002286.2080204@hardwarefreak.com>
-Date: Wed, 08 Dec 2010 18:27:50 -0600
-From: Stan Hoeppner <stan@hardwarefreak.com>
-MIME-Version: 1.0
+	oB913lnA155554 for <xfs@oss.sgi.com>; Wed, 8 Dec 2010 19:03:47 -0600
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 289501D6025
+	for <xfs@oss.sgi.com>; Wed,  8 Dec 2010 17:05:34 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
+	[150.101.137.100]) by cuda.sgi.com with ESMTP id
+	prTuhfhyJjQTKHG2 for <xfs@oss.sgi.com>;
+	Wed, 08 Dec 2010 17:05:34 -0800 (PST)
+Date: Thu, 9 Dec 2010 12:05:31 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: xfs tuning for a 830 GB partition (mkfs.xfs options)
-References: <AANLkTimkZB20eqywSPvwh00gcXWcr4_Eqm5u40P6RqaJ@mail.gmail.com>	<4D00032D.4040000@hardwarefreak.com>
-	<AANLkTi=qkM9c5ukdJj7Hqhj8XMWSOGNENLEG9_Uz_DBT@mail.gmail.com>
-In-Reply-To: <AANLkTi=qkM9c5ukdJj7Hqhj8XMWSOGNENLEG9_Uz_DBT@mail.gmail.com>
+Message-ID: <20101209010531.GE32766@dastard>
+References: <AANLkTimkZB20eqywSPvwh00gcXWcr4_Eqm5u40P6RqaJ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <AANLkTimkZB20eqywSPvwh00gcXWcr4_Eqm5u40P6RqaJ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,54 +29,53 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Abel Coto <whitewolf573@gmail.com>
+Cc: xfs@oss.sgi.com
 
-Abel Coto put forth on 12/8/2010 5:29 PM:
-
-> By the moment i will use one hard disk for / (on ext3) and /home , and
-> the data partition for saving 3d projects working on in another hard
-> disk (1,5 tb one , with the 350 GB partition and one of 1 TB for
-> backups of /home mostly)
+On Wed, Dec 08, 2010 at 08:32:28PM +0100, Abel Coto wrote:
+> I want to create a 830 GB partition, to mount as /home in my Centos 5.4
+> workstation.
 > 
-> so agcount should be in both cases 4, as i haven't got a raid (the 1,5
-> tb disk won't be in the LVM neither).
+> Actually i have /home not mounted ,so i would have to create the new
+> partition in the lvm,format it and use rsync to copy /home directory to it.
 > 
-> I have read that in xfsprogs 3.1.2, i think, -l lazy-count=1,version=2
-> and -i attr=2 is the default option like agcount=4. So  i should only
-> specify the -l size=128m if i want a log size of 128m for improve
-> deleting performance and improving system in general.
-
-With a single disk filesystem, you can tweak these things forever, and
-you will gain almost no performance benefit over the mkfs.xfs defaults,
-though you may decrease performance if you don't know exactly what
-you're doing, such as with your previous misunderstanding of agcount.
-
-The one thing you can tweak beyond defaults to get improved performance
-is using delayed logging, which will increase metadata write performance
-substantially.  For example, deletes of large groups (thousands) of
-small files will be "massively" faster using delayed logging.  IIRC this
-requires kernel 2.6.36 or later.  Simply add "delaylog" to you
-/etc/fstab mount options.
-
-> I think in /home the most important thing is read/write seqential
-> performance , and in /data (the 350 GB partition) the same.
+> for a 830 GB partition that i will use to save my data in general and also
+> 3d / CG projects and renders once finished them what agcount value should be
+> used. I have read that mkfs default option creates 1 allocation group each
+> 4G , so i understand that for a 830 GB partition agcount should be 208.
 > 
-> I don't think /data would have to handle too many ramdon reads/ writes
-> when Maya saves and read data from it, i think would be mostly
-> seqential and then allocated in memory.
+> It is this correct ?
 
-Again, with a single disk, there's not much you can tweak to increase
-general XFS performance, except for metadata writes using delaylog.  For
-sequential file reads/writes and random reads/writes, you're at the
-mercy of the drive's spindle speed.
+No, you've read something that is at least 5 years out of date. Just
+use the defaults - they are already optimised for best performance
+in most circumstances.
 
-XFS options can't improve upon the poor physics of a single spinning
-drive.  If you need improved file performance (not metadata), your
-options are to add spindles and stripe the data (RAID card or mdadm,
-RAID 0/5/6/10), or use a good quality SSD.
+> I have read that too much allocation groups are bad , but i don't now if 416
+> are  too much for a 830 GB partition (and shoukd use 208 to 300) or not.
 
+Any more than 4 AGs on a single spindle is bad for performance. AGs
+can be up to 1TB in size, so you're going to get 4 as the default
+for your 830GB partition.
+
+> I will mount the partition with logbufs=8. (i use a 128m journal and
+> logbufs=8 to improve a bit deleting performance). I will perhaps use noatime
+> too ,but i have to see if my backup app, uses atime or not.
+
+logbufs=8 is the default. Also, the default atime option is relatime
+which has pretty much zero compareeed to noatime, so once again just
+use the defaults.
+
+> for this partition , that will handle mostly big files (500 MB to 2-3 GB at
+> least) what mkfs.xfs options should i use ?
+
+The defaults.
+
+Cheers,
+
+Dave.
 -- 
-Stan
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
