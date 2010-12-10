@@ -1,15 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBAA58Lf221316 for <xfs@oss.sgi.com>; Fri, 10 Dec 2010 04:05:08 -0600
-Subject: Re: [PATCH] xfstests: fix 108 golden output
-From: Boris Ranto <branto@redhat.com>
-In-Reply-To: <1291929579.13355.30.camel@doink>
-References: <20101110125855.GA18357@infradead.org>
-	<1291929579.13355.30.camel@doink>
-Date: Fri, 10 Dec 2010 11:06:49 +0100
-Message-ID: <1291975609.3282.7.camel@dhcp-31-190.brq.redhat.com>
-Mime-Version: 1.0
+	oBADRnPJ257855 for <xfs@oss.sgi.com>; Fri, 10 Dec 2010 07:27:50 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 418EA1CB11D7
+	for <xfs@oss.sgi.com>; Fri, 10 Dec 2010 05:29:39 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id YEPyLRg9sR2kSd2v for
+	<xfs@oss.sgi.com>; Fri, 10 Dec 2010 05:29:39 -0800 (PST)
+Date: Fri, 10 Dec 2010 08:29:35 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfs: prevent NMI timeouts in cmn_err
+Message-ID: <20101210132935.GA24210@infradead.org>
+References: <1291341315-31338-1-git-send-email-david@fromorbit.com>
+	<20101203043846.GB23339@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20101203043846.GB23339@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,44 +29,37 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: aelder@sgi.com
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Thu, 2010-12-09 at 15:19 -0600, Alex Elder wrote:
-> On Wed, 2010-11-10 at 07:58 -0500, Christoph Hellwig wrote:
-> > The new common scratch mount filter produces slightly different
-> > whitespaces than the old home grown filter, so adjust the golden
-> > output.
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Fri, Dec 03, 2010 at 03:38:46PM +1100, Dave Chinner wrote:
+> FWIW, while these macros are the best way to make a simple backport
+> is possible, I just discovered that mainline has a %pV format
+> operator that allows an implementation like:
 > 
-> I found out why this is happening.  I get no
-> such error, and Dave Chinner said he wasn't seeing
-> it either.
+> void
+> xfs_fs_cmn_err(
+> 	const char              *lvl,
+> 	struct xfs_mount        *mp,
+> 	const char              *fmt,
+> 	...)
+> {
+> 	struct va_format        vaf;
+> 	va_list                 args;
 > 
-> xfs_quota is formatting its output such that the
-> second and later columns always align at a certain
-> offset from the beginning of the line.  As a result,
-> path names assigned as SCRATCH_DEV of different
-> lengths will produce different (filtered) output,
-> with more or fewer blanks between SCRATCH_DEV and
-> the usage number.
+> 	va_start(args, fmt);
+> 	vaf.fmt = fmt;
+> 	vaf.va = &args;
 > 
-> Boris Ranto has proposed a change that would
-> add the "-b" flag to diff when checking output
-> against golden output.  That should fix it, but
-> it's possible we *want* differences in white
-> space to matter in some cases.  Have to look
-> into this.
+> 	printk("%sFilesystem %s: %pV", lvl, mp->m_fsname, &vaf);
+> 	va_end(args);
 > 
-> 					-Alex
-> 
+> 	BUG_ON(strncmp(lvl, KERN_EMERG, strlen(KERN_EMERG)) == 0);
+> }
 
-The change was designed to add the "-b" flag only for this test case.
-Any other test case could also modify its diff options through
-DIFF_OPTIONS variable in its config file ($seq.config).
-
--Boris
+With this we can also keep the existing integer-based CE_ values
+and do trivial array lookup.  That also avoids having to do a strcmp for
+every message printed.
 
 _______________________________________________
 xfs mailing list
