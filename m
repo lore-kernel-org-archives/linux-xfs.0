@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBA8fE4q205194 for <xfs@oss.sgi.com>; Fri, 10 Dec 2010 02:41:14 -0600
+	oBA8fE6N205197 for <xfs@oss.sgi.com>; Fri, 10 Dec 2010 02:41:14 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 06144160F98E
-	for <xfs@oss.sgi.com>; Fri, 10 Dec 2010 00:43:03 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3DB91160F98F
+	for <xfs@oss.sgi.com>; Fri, 10 Dec 2010 00:43:04 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id beg1NP4dVCRIg084 for
-	<xfs@oss.sgi.com>; Fri, 10 Dec 2010 00:43:03 -0800 (PST)
+	by cuda.sgi.com with ESMTP id Ro4r6ARB8ko6TmeQ for
+	<xfs@oss.sgi.com>; Fri, 10 Dec 2010 00:43:04 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.72 #1 (Red Hat
-	Linux)) id 1PQyZD-0006RQ-Be
+	Linux)) id 1PQyZD-0006Rw-Ia
 	for xfs@oss.sgi.com; Fri, 10 Dec 2010 08:43:03 +0000
-Message-Id: <20101210084303.320837611@bombadil.infradead.org>
-Date: Fri, 10 Dec 2010 03:42:24 -0500
+Message-Id: <20101210084303.537974157@bombadil.infradead.org>
+Date: Fri, 10 Dec 2010 03:42:25 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 09/10] xfs: refactor xfs_vm_writepage
+Subject: [PATCH 10/10] xfs: simplify xfs_map_at_offset
 References: <20101210084215.259628825@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-factor-writepage
+Content-Disposition: inline; filename=xfs-simplify-xfs_map_at_offset
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,137 +32,55 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-After the last patches the code for overwrites is the same as for
-delayed and unwritten extents except that it doesn't need to call
-xfs_map_at_offset.  Take care of that fact to simplify xfs_vm_writepage.
-
-The buffer loop now first checks the type of buffer and checks/sets
-the ioend type, or continues to the next buffer if it's not interesting
-to us.  Only after that we validate the iomap and perform the block
-mapping if needed, all in common code for the cases where we have to
-do work.
+Move the buffer locking into the callers as they need to do it wether they
+call xfs_map_at_offset or not.  Remove the b_bdev assignment, which is
+already done by get_blocks.  Remove the duplicate extent type asserts in
+xfs_convert_page just before calling xfs_map_at_offset.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
 Index: xfs/fs/xfs/linux-2.6/xfs_aops.c
 ===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_aops.c	2010-12-09 15:52:12.718004124 +0100
-+++ xfs/fs/xfs/linux-2.6/xfs_aops.c	2010-12-09 15:52:23.144273297 +0100
-@@ -999,74 +999,55 @@ xfs_vm_writepage(
- 			continue;
- 		}
+--- xfs.orig/fs/xfs/linux-2.6/xfs_aops.c	2010-12-09 15:52:23.144273297 +0100
++++ xfs/fs/xfs/linux-2.6/xfs_aops.c	2010-12-09 15:52:41.846254159 +0100
+@@ -626,9 +626,7 @@ xfs_map_at_offset(
+ 	ASSERT(imap->br_startblock != HOLESTARTBLOCK);
+ 	ASSERT(imap->br_startblock != DELAYSTARTBLOCK);
  
--		if (imap_valid)
--			imap_valid = xfs_imap_valid(inode, &imap, offset);
+-	lock_buffer(bh);
+ 	xfs_map_buffer(inode, bh, imap, offset);
+-	bh->b_bdev = xfs_find_bdev_for_inode(inode);
+ 	set_buffer_mapped(bh);
+ 	clear_buffer_delay(bh);
+ 	clear_buffer_unwritten(bh);
+@@ -751,12 +749,8 @@ xfs_convert_page(
+ 				continue;
+ 			}
+ 
+-			ASSERT(imap->br_startblock != HOLESTARTBLOCK);
+-			ASSERT(imap->br_startblock != DELAYSTARTBLOCK);
 -
--		if (buffer_unwritten(bh) || buffer_delay(bh)) {
--			if (buffer_unwritten(bh)) {
--				if (type != IO_UNWRITTEN) {
--					type = IO_UNWRITTEN;
--					imap_valid = 0;
--				}
--			} else if (buffer_delay(bh)) {
--				if (type != IO_DELALLOC) {
--					type = IO_DELALLOC;
--					imap_valid = 0;
--				}
--			}
--
--			if (!imap_valid) {
--				/*
--				 * If we didn't have a valid mapping then we
--				 * need to ensure that we put the new mapping
--				 * in a new ioend structure. This needs to be
--				 * done to ensure that the ioends correctly
--				 * reflect the block mappings at io completion
--				 * for unwritten extent conversion.
--				 */
--				new_ioend = 1;
--				err = xfs_map_blocks(inode, offset, &imap,
--						     type, nonblocking);
--				if (err)
--					goto error;
--				imap_valid = xfs_imap_valid(inode, &imap,
--							    offset);
-+		if (buffer_unwritten(bh)) {
-+			if (type != IO_UNWRITTEN) {
-+				type = IO_UNWRITTEN;
-+				imap_valid = 0;
- 			}
--			if (imap_valid) {
--				xfs_map_at_offset(inode, bh, &imap, offset);
--				xfs_add_to_ioend(inode, bh, offset, type,
--						 &ioend, new_ioend);
--				count++;
-+		} else if (buffer_delay(bh)) {
-+			if (type != IO_DELALLOC) {
-+				type = IO_DELALLOC;
-+				imap_valid = 0;
- 			}
- 		} else if (buffer_uptodate(bh)) {
--			/*
--			 * we got here because the buffer is already mapped.
--			 * That means it must already have extents allocated
--			 * underneath it. Map the extent by reading it.
--			 */
- 			if (type != IO_OVERWRITE) {
- 				type = IO_OVERWRITE;
- 				imap_valid = 0;
- 			}
--			if (!imap_valid) {
--				new_ioend = 1;
--				err = xfs_map_blocks(inode, offset,
--						&imap, type, nonblocking);
--				if (err)
--					goto error;
--				imap_valid = xfs_imap_valid(inode, &imap,
--							    offset);
-+		} else {
-+			if (PageUptodate(page)) {
-+				ASSERT(buffer_mapped(bh));
-+				imap_valid = 0;
- 			}
-+			continue;
-+		}
- 
--			if (imap_valid) {
-+		if (imap_valid)
-+			imap_valid = xfs_imap_valid(inode, &imap, offset);
-+		if (!imap_valid) {
-+			/*
-+			 * If we didn't have a valid mapping then we need to
-+			 * put the new mapping into a separate ioend structure.
-+			 * This ensures non-contiguous extents always have
-+			 * separate ioends, which is particularly important
-+			 * for unwritten extent conversion at I/O completion
-+			 * time.
-+			 */
-+			new_ioend = 1;
-+			err = xfs_map_blocks(inode, offset, &imap, type,
-+					     nonblocking);
-+			if (err)
-+				goto error;
-+			imap_valid = xfs_imap_valid(inode, &imap, offset);
-+		}
-+		if (imap_valid) {
-+			if (type == IO_OVERWRITE)
- 				lock_buffer(bh);
--				xfs_add_to_ioend(inode, bh, offset, type,
--						&ioend, new_ioend);
--				count++;
--			}
--		} else if (PageUptodate(page)) {
--			ASSERT(buffer_mapped(bh));
--			imap_valid = 0;
-+			else
-+				xfs_map_at_offset(inode, bh, &imap, offset);
-+			xfs_add_to_ioend(inode, bh, offset, type, &ioend,
-+					 new_ioend);
-+			count++;
+-			if (type == IO_OVERWRITE)
+-				lock_buffer(bh);
+-			else
++			lock_buffer(bh);
++			if (type != IO_OVERWRITE)
+ 				xfs_map_at_offset(inode, bh, imap, offset);
+ 			xfs_add_to_ioend(inode, bh, offset, type,
+ 					 ioendp, done);
+@@ -1041,9 +1035,8 @@ xfs_vm_writepage(
+ 			imap_valid = xfs_imap_valid(inode, &imap, offset);
  		}
- 
- 		if (!iohead)
+ 		if (imap_valid) {
+-			if (type == IO_OVERWRITE)
+-				lock_buffer(bh);
+-			else
++			lock_buffer(bh);
++			if (type != IO_OVERWRITE)
+ 				xfs_map_at_offset(inode, bh, &imap, offset);
+ 			xfs_add_to_ioend(inode, bh, offset, type, &ioend,
+ 					 new_ioend);
 
 _______________________________________________
 xfs mailing list
