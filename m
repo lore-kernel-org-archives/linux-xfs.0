@@ -1,29 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBD1P9Lc148093 for <xfs@oss.sgi.com>; Sun, 12 Dec 2010 19:25:09 -0600
+	oBD1X9Jn148789 for <xfs@oss.sgi.com>; Sun, 12 Dec 2010 19:33:09 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 94DCB1E2B5F
-	for <xfs@oss.sgi.com>; Sun, 12 Dec 2010 17:26:59 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
-	[150.101.137.103]) by cuda.sgi.com with ESMTP id
-	6w5QCGUpoXGtiZBT for <xfs@oss.sgi.com>;
-	Sun, 12 Dec 2010 17:26:59 -0800 (PST)
-Received: from dastard (unverified [121.44.88.148])
-	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	49418373-1927428
-	for <xfs@oss.sgi.com>; Mon, 13 Dec 2010 11:56:58 +1030 (CDT)
-Received: from chute ([192.168.1.1] helo=disappointment)
-	by dastard with esmtp (Exim 4.72)
-	(envelope-from <dave@fromorbit.com>) id 1PRxBf-0001lv-5L
-	for xfs@oss.sgi.com; Mon, 13 Dec 2010 12:26:47 +1100
-Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1PRxAB-00045q-Og
-	for xfs@oss.sgi.com; Mon, 13 Dec 2010 12:25:15 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BD56A1CBC360
+	for <xfs@oss.sgi.com>; Sun, 12 Dec 2010 17:34:59 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
+	[150.101.137.104]) by cuda.sgi.com with ESMTP id
+	pX4pS3cIjqB5HWyi for <xfs@oss.sgi.com>;
+	Sun, 12 Dec 2010 17:34:59 -0800 (PST)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 0/2] xfs: dynamic speculative allocation beyond EOF V4
-Date: Mon, 13 Dec 2010 12:25:09 +1100
-Message-Id: <1292203511-15685-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 0/2] xfs: RCU inode freeing and lookups V3
+Date: Mon, 13 Dec 2010 12:32:34 +1100
+Message-Id: <1292203957-15819-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,28 +27,31 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: paulmck@linux.vnet.ibm.com, eric.dumazet@gmail.com
 
-This is the latest version of the dynamic speculative allocation
-beyond EOF patch set. The description of the patchset can be found
-here:
-
-http://oss.sgi.com/archives/xfs/2010-10/msg00040.html
-
-Version 4:
-- factored prealloc size into separate function to keep
-  xfs_iomap_write_delay() easy to read.
-- convert i_dirty_releases counter to a flag.
+This series converts the XFS inode cache to use RCU freeing
+for freeing of the inodes and uses RCU locking for all the lookups.
+It uses the ip->i_ino values and ip->i_flags & XFS_IRECLAIM being
+checked under the ip->i_flags_lock to detect inodes that have been
+freed during lookups.
 
 Version 3:
-- allocsize mount option returned to fixed preallocation size only.
-- reduces maximum dynamic prealloc size as the filesytem gets near
-  full.
-- split i_delayed_blks bug fixes into new patch (posted in 2.6.37-rc
-  bug fix series)
+- add patch for specific RCU freeing of inodes rather than relying
+  on an external tree to provide RCU freeing functionality. This
+  uses standard RCU freeing mechanisms rather than
+  SLAB_DESTROY_BY_RCU. This is kept as a separate patch to minimise
+  the merge conflict issues that may arise if the change is made
+  through VFS code first.
+- Drop specific references to SLAB_DESTROY_BY_RCU, but keep all the
+  lookup guards for reclaimed/reused inodes as they are mostly the
+  same for both methods of RCU inode freeing.
 
 Version 2:
-- base speculative execution size on current inode size, not the
-  number of previous speculative allocations.
+- check ip->i_ino under i_flags lock on cache hit
+- remove duplicate ip->i_ino == 0 check in xfs_dqrele_inode
+- Fixed inode cluster walks to check for valid i_ino under
+  i_flags_lock.
+- Fixed ag walk lookups to check i_ino under i_flags_lock.
 
 _______________________________________________
 xfs mailing list
