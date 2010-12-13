@@ -1,24 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBD0T7sc145354 for <xfs@oss.sgi.com>; Sun, 12 Dec 2010 18:29:08 -0600
+	oBD176iH147279 for <xfs@oss.sgi.com>; Sun, 12 Dec 2010 19:07:06 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7E8251E2F6B
-	for <xfs@oss.sgi.com>; Sun, 12 Dec 2010 16:30:57 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
-	[150.101.137.103]) by cuda.sgi.com with ESMTP id
-	VG2V59UFGmEOflWE for <xfs@oss.sgi.com>;
-	Sun, 12 Dec 2010 16:30:57 -0800 (PST)
-Date: Mon, 13 Dec 2010 11:30:43 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 779CB1CBBA1F
+	for <xfs@oss.sgi.com>; Sun, 12 Dec 2010 17:08:56 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
+	[150.101.137.100]) by cuda.sgi.com with ESMTP id
+	EDwvCXBel6y2BiFB for <xfs@oss.sgi.com>;
+	Sun, 12 Dec 2010 17:08:56 -0800 (PST)
+Received: from dastard (unverified [121.44.88.148])
+	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
+	38232230-1927428
+	for <xfs@oss.sgi.com>; Mon, 13 Dec 2010 11:38:54 +1030 (CDT)
+Received: from chute ([192.168.1.1] helo=disappointment)
+	by dastard with esmtp (Exim 4.72)
+	(envelope-from <dave@fromorbit.com>) id 1PRwuA-0001jO-UG
+	for xfs@oss.sgi.com; Mon, 13 Dec 2010 12:08:42 +1100
+Received: from dave by disappointment with local (Exim 4.72)
+	(envelope-from <dave@disappointment.disaster>) id 1PRwsh-0003zc-Iy
+	for xfs@oss.sgi.com; Mon, 13 Dec 2010 12:07:11 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: prevent NMI timeouts in cmn_err
-Message-ID: <20101213003043.GC9925@dastard>
-References: <1291341315-31338-1-git-send-email-david@fromorbit.com>
-	<20101203043846.GB23339@dastard>
-	<20101210132935.GA24210@infradead.org>
+Subject: =?UTF-8?q?=5BPATCH=5D=20xfs=3A=20provide=20a=20inode=20iolock=20lockdep=20class?=
+Date: Mon, 13 Dec 2010 12:07:11 +1100
+Message-Id: <1292202431-15320-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20101210132935.GA24210@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,101 +33,73 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Fri, Dec 10, 2010 at 08:29:35AM -0500, Christoph Hellwig wrote:
-> On Fri, Dec 03, 2010 at 03:38:46PM +1100, Dave Chinner wrote:
-> > FWIW, while these macros are the best way to make a simple backport
-> > is possible, I just discovered that mainline has a %pV format
-> > operator that allows an implementation like:
-> > 
-> > void
-> > xfs_fs_cmn_err(
-> > 	const char              *lvl,
-> > 	struct xfs_mount        *mp,
-> > 	const char              *fmt,
-> > 	...)
-> > {
-> > 	struct va_format        vaf;
-> > 	va_list                 args;
-> > 
-> > 	va_start(args, fmt);
-> > 	vaf.fmt = fmt;
-> > 	vaf.va = &args;
-> > 
-> > 	printk("%sFilesystem %s: %pV", lvl, mp->m_fsname, &vaf);
-> > 	va_end(args);
-> > 
-> > 	BUG_ON(strncmp(lvl, KERN_EMERG, strlen(KERN_EMERG)) == 0);
-> > }
-> 
-> With this we can also keep the existing integer-based CE_ values
-> and do trivial array lookup.  That also avoids having to do a strcmp for
-> every message printed.
-
-Very true.
-
-Ok, so how do we want to process for this? I'm happy to drop the
-macro-ised patch and only use it as a backportable fix for old
-kernels - mainline appears to have a lot more functionality in this
-area than even recent distro kernels. Lachlan - is that an
-acceptable approach for you?
-
-It seems to me that the above is a much better way to start cleaning
-up the mainline code base, in the following way:
-
-	1. the above patch to remove the local message buffer +
-	   lock.
-	2. rationalise all the differences in error reporting down
-	   to a common interface
-	3. convert the common interface to use kernel log levels
-	   directly.
-
-The current trend seems to be to move towards logging interfaces
-with the following template:
-
-	{sub_sys}_pr_{level}(priv, fmt, ...)
-
-Which in this case would give us:
-
-	xfs_pr_debug(struct xfs_mount *mp, char *fmt, ...);
-	xfs_pr_note(struct xfs_mount *mp, char *fmt, ...);
-	....
-	xfs_pr_alert(struct xfs_mount *mp, char *fmt, ...);
-	xfs_pr_emergency(struct xfs_mount *mp, char *fmt, ...);
-
-And a variant for the panic mask tagged version of xfs_pr_alert()
-of:
-
-	xfs_pr_alert_tag(struct xfs_mount *mp, int tag, char *fmt, ...);
-
-I can't see any particular reason for needing to keep the separate
-parameter for the log level, nor for keeping all the different
-logging variants we currently have.
-
-I'm open to other ideas on the best way to rationalise all the
-logging we currently have - the above is just my current thoughts on
-what to do. I'm pushing this out as a proposal for discussion before
-I change anything as I don't relish the idea of iterating different
-logging APIs through patches...
-
-Cheers,
-
-Dave.
-
-> 
-> 
-
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+RnJvbTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgoKVGhlIFhGUyBpb2xvY2sg
+bmVlZHMgdG8gYmUgcmUtaW5pdGlhbGlzZWQgdG8gYSBuZXcgbG9jayBjbGFzcyBiZWZvcmUKaXQg
+ZW50ZXJzIHJlY2xhaW0gdG8gcHJldmVudCBsb2NrZGVwIGZhbHNlIHBvc2l0aXZlcy4gVW5mb3J0
+dW5hdGVseSwKdGhpcyBpcyBub3Qgc3VmZmljaWVudCBwcm90ZWN0aW9uIGFzIGlub2RlcyBpbiB0
+aGUgWEZTX0lSRUNMQUlNQUJMRQpzdGF0ZSBjYW4gYmUgcmVjeWNsZWQgYW5kIG5vdCByZS1pbml0
+aWFsaXNlZCBiZWZvcmUgYmVpbmcgcmV1c2VkLgoKV2UgbmVlZCB0byByZS1pbml0aWFsaXNlIHRo
+ZSBsb2NrIHN0YXRlIHdoZW4gdHJhbnNmZXJpbmcgb3V0IG9mClhGU19JUkVDTEFJTUFCTEUgc3Rh
+dGUgdG8gWEZTX0lORVcsIGJ1dCB3ZSBuZWVkIHRvIGtlZXAgdGhlIHNhbWUKY2xhc3MgYXMgaWYg
+dGhlIGlub2RlIHdhcyBqdXN0IGFsbG9jYXRlZC4gSGVuY2Ugd2UgbmVlZCBhIHNwZWNpZmljCmxv
+Y2tkZXAgY2xhc3MgdmFyaWFibGUgZm9yIHRoZSBpb2xvY2sgc28gdGhhdCBib3RoIGluaXRpYWxp
+c2F0aW9ucwp1c2UgdGhlIHNhbWUgY2xhc3MuCgpXaGlsZSB0aGVyZSwgYWRkIGEgc3BlY2lmaWMg
+Y2xhc3MgZm9yIGlub2RlcyBpbiB0aGUgcmVjbGFpbSBzdGF0ZSBzbwp0aGF0IGl0IGlzIGVhc3kg
+dG8gdGVsbCBmcm9tIGxvY2tkZXAgcmVwb3J0cyB3aGF0IHN0YXRlIHRoZSBpbm9kZQp3YXMgaW4g
+dGhhdCBnZW5lcmF0ZWQgdGhlIHJlcG9ydC4KClNpZ25lZC1vZmYtYnk6IERhdmUgQ2hpbm5lciA8
+ZGNoaW5uZXJAcmVkaGF0LmNvbT4KLS0tCiBmcy94ZnMvbGludXgtMi42L3hmc19zdXBlci5jIHwg
+ICAgMiArKwogZnMveGZzL3hmc19pZ2V0LmMgICAgICAgICAgICB8ICAgMTkgKysrKysrKysrKysr
+KysrKysrKwogZnMveGZzL3hmc19pbm9kZS5oICAgICAgICAgICB8ICAgIDIgKysKIDMgZmlsZXMg
+Y2hhbmdlZCwgMjMgaW5zZXJ0aW9ucygrKSwgMCBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9m
+cy94ZnMvbGludXgtMi42L3hmc19zdXBlci5jIGIvZnMveGZzL2xpbnV4LTIuNi94ZnNfc3VwZXIu
+YwppbmRleCAwNjRmOTY0Li5jNDViMzIzIDEwMDY0NAotLS0gYS9mcy94ZnMvbGludXgtMi42L3hm
+c19zdXBlci5jCisrKyBiL2ZzL3hmcy9saW51eC0yLjYveGZzX3N1cGVyLmMKQEAgLTExMTgsNiAr
+MTExOCw4IEBAIHhmc19mc19ldmljdF9pbm9kZSgKIAkgKi8KIAlBU1NFUlQoIXJ3c2VtX2lzX2xv
+Y2tlZCgmaXAtPmlfaW9sb2NrLm1yX2xvY2spKTsKIAltcmxvY2tfaW5pdCgmaXAtPmlfaW9sb2Nr
+LCBNUkxPQ0tfQkFSUklFUiwgInhmc2lvIiwgaXAtPmlfaW5vKTsKKwlsb2NrZGVwX3NldF9jbGFz
+c19hbmRfbmFtZSgmaXAtPmlfaW9sb2NrLm1yX2xvY2ssCisJCQkmeGZzX2lvbG9ja19yZWNsYWlt
+YWJsZSwgInhmc19pb2xvY2tfcmVjbGFpbWFibGUiKTsKIAogCXhmc19pbmFjdGl2ZShpcCk7CiB9
+CmRpZmYgLS1naXQgYS9mcy94ZnMveGZzX2lnZXQuYyBiL2ZzL3hmcy94ZnNfaWdldC5jCmluZGV4
+IDBjZGQyNjkuLmNkYjFjMjUgMTAwNjQ0Ci0tLSBhL2ZzL3hmcy94ZnNfaWdldC5jCisrKyBiL2Zz
+L3hmcy94ZnNfaWdldC5jCkBAIC00Myw2ICs0MywxNyBAQAogCiAKIC8qCisgKiBEZWZpbmUgeGZz
+IGlub2RlIGlvbG9jayBsb2NrZGVwIGNsYXNzZXMuIFdlIG5lZWQgdG8gZW5zdXJlIHRoYXQgYWxs
+IGFjdGl2ZQorICogaW5vZGVzIGFyZSBjb25zaWRlcmVkIHRoZSBzYW1lIGZvciBsb2NrZGVwIHB1
+cnBvc2VzLCBpbmNsdWRpbmcgaW5vZGVzIHRoYXQKKyAqIGFyZSByZWN5Y2xlZCB0aHJvdWdoIHRo
+ZSBYRlNfSVJFQ0xBSU1BQkxFIHN0YXRlLiBUaGlzIGlzIHRoZSB0aGUgb25seSB3YXkgdG8KKyAq
+IGd1YXJhbnRlZSB0aGUgbG9ja3MgYXJlIGNvbnNpZGVyZWQgdGhlIHNhbWUgd2hlbiB0aGVyZSBh
+cmUgbXVsdGlwbGUgbG9jaworICogaW5pdGlhbGlzYXRpb24gc2l0ZdGVLiBBbHNvLCBkZWZpbmUg
+YSByZWNsYWltYWJsZSBpbm9kZSBjbGFzcyBzbyBpdCBpcworICogb2J2aW91cyBpbiBsb2NrZGVw
+IHJlcG9ydHMgd2hpY2ggY2xhc3MgdGhlIHJlcG9ydCBpcyBhZ2FpbnN0LgorICovCitzdGF0aWMg
+c3RydWN0IGxvY2tfY2xhc3Nfa2V5IHhmc19pb2xvY2tfYWN0aXZlOworc3RydWN0IGxvY2tfY2xh
+c3Nfa2V5IHhmc19pb2xvY2tfcmVjbGFpbWFibGU7CisKKy8qCiAgKiBBbGxvY2F0ZSBhbmQgaW5p
+dGlhbGlzZSBhbiB4ZnNfaW5vZGUuCiAgKi8KIFNUQVRJQyBzdHJ1Y3QgeGZzX2lub2RlICoKQEAg
+LTcxLDYgKzgyLDggQEAgeGZzX2lub2RlX2FsbG9jKAogCUFTU0VSVChjb21wbGV0aW9uX2RvbmUo
+JmlwLT5pX2ZsdXNoKSk7CiAKIAltcmxvY2tfaW5pdCgmaXAtPmlfaW9sb2NrLCBNUkxPQ0tfQkFS
+UklFUiwgInhmc2lvIiwgaXAtPmlfaW5vKTsKKwlsb2NrZGVwX3NldF9jbGFzc19hbmRfbmFtZSgm
+aXAtPmlfaW9sb2NrLm1yX2xvY2ssCisJCQkmeGZzX2lvbG9ja19hY3RpdmUsICJ4ZnNfaW9sb2Nr
+X2FjdGl2ZSIpOwogCiAJLyogaW5pdGlhbGlzZSB0aGUgeGZzIGlub2RlICovCiAJaXAtPmlfaW5v
+ID0gaW5vOwpAQCAtMjE4LDYgKzIzMSwxMiBAQCB4ZnNfaWdldF9jYWNoZV9oaXQoCiAJCWlwLT5p
+X2ZsYWdzIHw9IFhGU19JTkVXOwogCQlfX3hmc19pbm9kZV9jbGVhcl9yZWNsYWltX3RhZyhtcCwg
+cGFnLCBpcCk7CiAJCWlub2RlLT5pX3N0YXRlID0gSV9ORVc7CisKKwkJQVNTRVJUKCFyd3NlbV9p
+c19sb2NrZWQoJmlwLT5pX2lvbG9jay5tcl9sb2NrKSk7CisJCW1ybG9ja19pbml0KCZpcC0+aV9p
+b2xvY2ssIE1STE9DS19CQVJSSUVSLCAieGZzaW8iLCBpcC0+aV9pbm8pOworCQlsb2NrZGVwX3Nl
+dF9jbGFzc19hbmRfbmFtZSgmaXAtPmlfaW9sb2NrLm1yX2xvY2ssCisJCQkJJnhmc19pb2xvY2tf
+YWN0aXZlLCAieGZzX2lvbG9ja19hY3RpdmUiKTsKKwogCQlzcGluX3VubG9jaygmaXAtPmlfZmxh
+Z3NfbG9jayk7CiAJCXdyaXRlX3VubG9jaygmcGFnLT5wYWdfaWNpX2xvY2spOwogCX0gZWxzZSB7
+CmRpZmYgLS1naXQgYS9mcy94ZnMveGZzX2lub2RlLmggYi9mcy94ZnMveGZzX2lub2RlLmgKaW5k
+ZXggZmIyY2EyZS4uMWM2NTE0ZCAxMDA2NDQKLS0tIGEvZnMveGZzL3hmc19pbm9kZS5oCisrKyBi
+L2ZzL3hmcy94ZnNfaW5vZGUuaApAQCAtNDM4LDYgKzQzOCw4IEBAIHN0YXRpYyBpbmxpbmUgdm9p
+ZCB4ZnNfaWZ1bmxvY2soeGZzX2lub2RlX3QgKmlwKQogI2RlZmluZSBYRlNfSU9MT0NLX0RFUChm
+bGFncykJKCgoZmxhZ3MpICYgWEZTX0lPTE9DS19ERVBfTUFTSykgPj4gWEZTX0lPTE9DS19TSElG
+VCkKICNkZWZpbmUgWEZTX0lMT0NLX0RFUChmbGFncykJKCgoZmxhZ3MpICYgWEZTX0lMT0NLX0RF
+UF9NQVNLKSA+PiBYRlNfSUxPQ0tfU0hJRlQpCiAKK2V4dGVybiBzdHJ1Y3QgbG9ja19jbGFzc19r
+ZXkgeGZzX2lvbG9ja19yZWNsYWltYWJsZTsKKwogLyoKICAqIEZsYWdzIGZvciB4ZnNfaXRydW5j
+YXRlX3N0YXJ0KCkuCiAgKi8KLS0gCjEuNy4yLjMKCl9fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0
+dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
