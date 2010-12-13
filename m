@@ -1,29 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBD4WMB7158242 for <xfs@oss.sgi.com>; Sun, 12 Dec 2010 22:32:22 -0600
+	oBD4WCsP158201 for <xfs@oss.sgi.com>; Sun, 12 Dec 2010 22:32:12 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 923CA1CBC730
-	for <xfs@oss.sgi.com>; Sun, 12 Dec 2010 20:34:12 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
-	[150.101.137.102]) by cuda.sgi.com with ESMTP id
-	Qmn0TOePX5VUQgdi for <xfs@oss.sgi.com>;
-	Sun, 12 Dec 2010 20:34:12 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 84748143FE2E
+	for <xfs@oss.sgi.com>; Sun, 12 Dec 2010 20:34:01 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
+	[150.101.137.98]) by cuda.sgi.com with ESMTP id
+	Xq8c7gkvGagptflV for <xfs@oss.sgi.com>;
+	Sun, 12 Dec 2010 20:34:01 -0800 (PST)
 Received: from dastard (unverified [121.44.88.148])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	49483524-1927428
-	for <xfs@oss.sgi.com>; Mon, 13 Dec 2010 15:04:11 +1030 (CDT)
+	49888020-1927428
+	for <xfs@oss.sgi.com>; Mon, 13 Dec 2010 15:04:00 +1030 (CDT)
 Received: from chute ([192.168.1.1] helo=disappointment)
 	by dastard with esmtp (Exim 4.72)
-	(envelope-from <dave@fromorbit.com>) id 1PS06p-000211-HU
+	(envelope-from <dave@fromorbit.com>) id 1PS06p-00021E-VC
 	for xfs@oss.sgi.com; Mon, 13 Dec 2010 15:33:59 +1100
 Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1PS05L-0004iN-Dd
+	(envelope-from <dave@disappointment.disaster>) id 1PS05L-0004ii-Rv
 	for xfs@oss.sgi.com; Mon, 13 Dec 2010 15:32:27 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/9] xfs: fix EFI transaction cancellation.
-Date: Mon, 13 Dec 2010 15:32:15 +1100
-Message-Id: <1292214743-18073-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH 9/9] xfs: use AIL bulk delete function to implement single
+	delete
+Date: Mon, 13 Dec 2010 15:32:23 +1100
+Message-Id: <1292214743-18073-10-git-send-email-david@fromorbit.com>
 In-Reply-To: <1292214743-18073-1-git-send-email-david@fromorbit.com>
 References: <1292214743-18073-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -43,79 +44,132 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-XFS_EFI_CANCELED has not been set in the code base since
-xfs_efi_cancel() was removed back in 2006 by commit
-065d312e15902976d256ddaf396a7950ec0350a8 ("[XFS] Remove unused
-iop_abort log item operation), and even then xfs_efi_cancel() was
-never called. I haven't tracked it back further than that (beyond
-git history), but it indicates that the handling of EFIs in
-cancelled transactions has been broken for a long time.
-
-Basically, when we get an IOP_UNPIN(lip, 1); call from
-xfs_trans_uncommit() (i.e. remove == 1), if we don't free the log
-item descriptor we leak it. Fix the behviour to be correct and kill
-the XFS_EFI_CANCELED flag.
+We now have two copies of AIL delete operations that are mostly
+duplicate functionality. The single log item deletes can be
+implemented via the bulk updates by turning xfs_trans_ail_delete()
+into a simple wrapper. This removes all the duplicate delete
+functionality and associated helpers.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_extfree_item.c |   20 +++++++++-----------
- fs/xfs/xfs_extfree_item.h |    1 -
- 2 files changed, 9 insertions(+), 12 deletions(-)
+ fs/xfs/xfs_trans_ail.c  |   65 -----------------------------------------------
+ fs/xfs/xfs_trans_priv.h |   20 +++++++++-----
+ 2 files changed, 13 insertions(+), 72 deletions(-)
 
-diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-index a55e687..5997efa 100644
---- a/fs/xfs/xfs_extfree_item.c
-+++ b/fs/xfs/xfs_extfree_item.c
-@@ -99,10 +99,11 @@ xfs_efi_item_pin(
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index 8481a5a..c5bbbc4 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -523,70 +523,6 @@ xfs_trans_ail_update_bulk(
  }
  
  /*
-- * While EFIs cannot really be pinned, the unpin operation is the
-- * last place at which the EFI is manipulated during a transaction.
-- * Here we coordinate with xfs_efi_cancel() to determine who gets to
-- * free the EFI.
-+ * While EFIs cannot really be pinned, the unpin operation is the last place at
-+ * which the EFI is manipulated during a transaction.  If we are being asked to
-+ * remove the EFI it's because the transaction has been cancelled and by
-+ * definition that means the EFI cannot be in the AIL so remove it from the
-+ * transaction and free it.
-  */
- STATIC void
- xfs_efi_item_unpin(
-@@ -113,17 +114,14 @@ xfs_efi_item_unpin(
- 	struct xfs_ail		*ailp = lip->li_ailp;
- 
- 	spin_lock(&ailp->xa_lock);
--	if (efip->efi_flags & XFS_EFI_CANCELED) {
--		if (remove)
--			xfs_trans_del_item(lip);
+- * Delete the given item from the AIL.  It must already be in
+- * the AIL.
+- *
+- * Wakeup anyone with an lsn less than item's lsn.    If the item
+- * we delete in the AIL is the minimum one, update the tail lsn in the
+- * log manager.
+- *
+- * Clear the IN_AIL flag from the item, reset its lsn to 0, and
+- * bump the AIL's generation count to indicate that the tree
+- * has changed.
+- *
+- * This function must be called with the AIL lock held.  The lock
+- * is dropped before returning.
+- */
+-void
+-xfs_trans_ail_delete(
+-	struct xfs_ail	*ailp,
+-	xfs_log_item_t	*lip) __releases(ailp->xa_lock)
+-{
+-	xfs_log_item_t		*mlip;
+-	xfs_lsn_t		tail_lsn;
 -
--		/* xfs_trans_ail_delete() drops the AIL lock. */
--		xfs_trans_ail_delete(ailp, lip);
-+	if (remove) {
-+		ASSERT(!(lip->li_flags & XFS_LI_IN_AIL));
-+		xfs_trans_del_item(lip);
- 		xfs_efi_item_free(efip);
- 	} else {
- 		efip->efi_flags |= XFS_EFI_COMMITTED;
+-	if (lip->li_flags & XFS_LI_IN_AIL) {
+-		mlip = xfs_ail_min(ailp);
+-		xfs_ail_delete(ailp, lip);
+-
+-
+-		lip->li_flags &= ~XFS_LI_IN_AIL;
+-		lip->li_lsn = 0;
+-
+-		if (mlip == lip) {
+-			mlip = xfs_ail_min(ailp);
+-			/*
+-			 * It is not safe to access mlip after the AIL lock
+-			 * is dropped, so we must get a copy of li_lsn
+-			 * before we do so.  This is especially important
+-			 * on 32-bit platforms where accessing and updating
+-			 * 64-bit values like li_lsn is not atomic.
+-			 */
+-			tail_lsn = mlip ? mlip->li_lsn : 0;
+-			spin_unlock(&ailp->xa_lock);
+-			xfs_log_move_tail(ailp->xa_mount, tail_lsn);
+-		} else {
+-			spin_unlock(&ailp->xa_lock);
+-		}
+-	}
+-	else {
+-		/*
+-		 * If the file system is not being shutdown, we are in
+-		 * serious trouble if we get to this stage.
+-		 */
+-		struct xfs_mount	*mp = ailp->xa_mount;
+-
 -		spin_unlock(&ailp->xa_lock);
- 	}
-+	spin_unlock(&ailp->xa_lock);
+-		if (!XFS_FORCED_SHUTDOWN(mp)) {
+-			xfs_cmn_err(XFS_PTAG_AILDELETE, CE_ALERT, mp,
+-		"%s: attempting to delete a log item that is not in the AIL",
+-					__func__);
+-			xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+-		}
+-	}
+-}
+-
+-/*
+  * xfs_trans_ail_delete_bulk - remove multiple log items from the AIL
+  *
+  * @xfs_trans_ail_delete_bulk takes an array of log items that all need to
+@@ -660,7 +596,6 @@ xfs_trans_ail_delete_bulk(
+ 	xfs_log_move_tail(ailp->xa_mount, tail_lsn);
  }
  
+-
  /*
-diff --git a/fs/xfs/xfs_extfree_item.h b/fs/xfs/xfs_extfree_item.h
-index 0d22c56..f7834ec 100644
---- a/fs/xfs/xfs_extfree_item.h
-+++ b/fs/xfs/xfs_extfree_item.h
-@@ -115,7 +115,6 @@ typedef struct xfs_efd_log_format_64 {
-  */
- #define	XFS_EFI_RECOVERED	0x1
- #define	XFS_EFI_COMMITTED	0x2
--#define	XFS_EFI_CANCELED	0x4
+  * The active item list (AIL) is a doubly linked list of log
+  * items sorted by ascending lsn.  The base of the list is
+diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
+index 95c95b6..a252469 100644
+--- a/fs/xfs/xfs_trans_priv.h
++++ b/fs/xfs/xfs_trans_priv.h
+@@ -89,13 +89,19 @@ xfs_trans_ail_update(
+ 	xfs_trans_ail_update_bulk(ailp, log_items, 1, lsn);
+ }
  
- /*
-  * This is the "extent free intention" log item.  It is used
+-void			xfs_trans_ail_delete(struct xfs_ail *ailp,
+-					struct xfs_log_item *lip)
+-					__releases(ailp->xa_lock);
+-void			xfs_trans_ail_delete_bulk(struct xfs_ail *ailp,
+-					struct xfs_log_item **log_items,
+-					int nr_items)
+-					__releases(ailp->xa_lock);
++void	xfs_trans_ail_delete_bulk(struct xfs_ail *ailp,
++				struct xfs_log_item **log_items, int nr_items)
++				__releases(ailp->xa_lock);
++static inline void
++xfs_trans_ail_delete(
++	struct xfs_ail	*ailp,
++	xfs_log_item_t	*lip) __releases(ailp->xa_lock)
++{
++	struct xfs_log_item	*log_items[1] = { lip, };
++
++	xfs_trans_ail_delete_bulk(ailp, log_items, 1);
++}
++
+ void			xfs_trans_ail_push(struct xfs_ail *, xfs_lsn_t);
+ void			xfs_trans_unlocked_item(struct xfs_ail *,
+ 					xfs_log_item_t *);
 -- 
 1.7.2.3
 
