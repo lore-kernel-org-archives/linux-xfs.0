@@ -1,29 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBD4WMT0158240 for <xfs@oss.sgi.com>; Sun, 12 Dec 2010 22:32:22 -0600
+	oBD4WMB7158242 for <xfs@oss.sgi.com>; Sun, 12 Dec 2010 22:32:22 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5B8AE1CBC72F
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 923CA1CBC730
 	for <xfs@oss.sgi.com>; Sun, 12 Dec 2010 20:34:12 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
-	[150.101.137.100]) by cuda.sgi.com with ESMTP id
-	uGmtFRZzUBLIAOUC for <xfs@oss.sgi.com>;
+Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
+	[150.101.137.102]) by cuda.sgi.com with ESMTP id
+	Qmn0TOePX5VUQgdi for <xfs@oss.sgi.com>;
 	Sun, 12 Dec 2010 20:34:12 -0800 (PST)
 Received: from dastard (unverified [121.44.88.148])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	38255308-1927428
+	49483524-1927428
 	for <xfs@oss.sgi.com>; Mon, 13 Dec 2010 15:04:11 +1030 (CDT)
 Received: from chute ([192.168.1.1] helo=disappointment)
 	by dastard with esmtp (Exim 4.72)
-	(envelope-from <dave@fromorbit.com>) id 1PS06p-000210-GW
+	(envelope-from <dave@fromorbit.com>) id 1PS06p-000211-HU
 	for xfs@oss.sgi.com; Mon, 13 Dec 2010 15:33:59 +1100
 Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1PS05L-0004iL-Bv
+	(envelope-from <dave@disappointment.disaster>) id 1PS05L-0004iN-Dd
 	for xfs@oss.sgi.com; Mon, 13 Dec 2010 15:32:27 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: xfs: AIL lock contention reduction V3
-Date: Mon, 13 Dec 2010 15:32:14 +1100
-Message-Id: <1292214743-18073-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 1/9] xfs: fix EFI transaction cancellation.
+Date: Mon, 13 Dec 2010 15:32:15 +1100
+Message-Id: <1292214743-18073-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1292214743-18073-1-git-send-email-david@fromorbit.com>
+References: <1292214743-18073-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,59 +41,83 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-This series reduces AIL locking overhead by introducing bulk
-operations for insert and delete. With delayed logging, we can be
-doing insert operations on thousands of items at a time, so using a
-bulk operation to reduce AIL lock traffic is a major win in terms of
-reducing contention on the lock.
+From: Dave Chinner <dchinner@redhat.com>
 
-Similarly, when we have inode buffer IO completion running on
-multiple CPUs at once, the AIl lock contention from each individual
-AIL removal is significant.  By batching all the inodes on the
-buffer to be removed from the AIL in a single bulk operation,
-contention on the AIL is reduced by an order of magnitude.
+XFS_EFI_CANCELED has not been set in the code base since
+xfs_efi_cancel() was removed back in 2006 by commit
+065d312e15902976d256ddaf396a7950ec0350a8 ("[XFS] Remove unused
+iop_abort log item operation), and even then xfs_efi_cancel() was
+never called. I haven't tracked it back further than that (beyond
+git history), but it indicates that the handling of EFIs in
+cancelled transactions has been broken for a long time.
 
-Finally, there is a modification to the xfsaild wakeup code to
-prevent too many wakeups when the xfsaild is pausing waiting for
-some work to complete. This prevents an excessive number of AIL
-scanning traversals by the xfsaild when tail pushing is backing off
-and waiting for some IO to complete.
+Basically, when we get an IOP_UNPIN(lip, 1); call from
+xfs_trans_uncommit() (i.e. remove == 1), if we don't free the log
+item descriptor we leak it. Fix the behviour to be correct and kill
+the XFS_EFI_CANCELED flag.
 
-In combination, these modification reduce AIL lock contention
-sufficiently to drop the AIL lock out of the "top 10" contended
-locks on 8-way fs_mark and dbench workloads.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_extfree_item.c |   20 +++++++++-----------
+ fs/xfs/xfs_extfree_item.h |    1 -
+ 2 files changed, 9 insertions(+), 12 deletions(-)
 
-Version 3:
-- split XFS_EFI_CANCELED fixup into separate patch
-- initialised efi_next_extent correctly
-- converted XFS_EFI_RECOVERED to use correct bit set/clear
-  operations
-- removed unneeded clearing of XFS_EFI_COMMITTED in recovery.
-- added helper for freeing an EFI.
-- cleaned up log item array variable naming.
-- cleaned up bulk AIL operation comments.
-
-Version 2:
-- split out stale inode AIL insertion bug fix
-- split bulk AIL insertion into multiple patches
-	- EFI/EFD handling changes
-	- stale inode AIL insertion bug fix
-	- simplify code calling xfs_ail_delete
-	- bulk ail insertion modifications
-- use atomic_inc_return for extent recording in
-  xfs_trans_log_efi_extent()
-- modified AIL sleep code to explicitly set task state as suggested
-  by Christoph.
-- split AIL bulk deletion into two patches
-	- buffer iodone callback modifications
-	- bulk AIL deletion and inode iodone callback mods.
-- removed lip parameter from xfs_buf_do_callbacks() as the loop
-  fetches it from the buffer anyway.
-- fixed unused variable warning in xfs_buf_do_callbacks().
-- added two new patches to reduce code duplication
-	- use AIL bulk insertion function to implement single
-	  updates
-	- use AIL bulk delete function to implement single deletes
+diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
+index a55e687..5997efa 100644
+--- a/fs/xfs/xfs_extfree_item.c
++++ b/fs/xfs/xfs_extfree_item.c
+@@ -99,10 +99,11 @@ xfs_efi_item_pin(
+ }
+ 
+ /*
+- * While EFIs cannot really be pinned, the unpin operation is the
+- * last place at which the EFI is manipulated during a transaction.
+- * Here we coordinate with xfs_efi_cancel() to determine who gets to
+- * free the EFI.
++ * While EFIs cannot really be pinned, the unpin operation is the last place at
++ * which the EFI is manipulated during a transaction.  If we are being asked to
++ * remove the EFI it's because the transaction has been cancelled and by
++ * definition that means the EFI cannot be in the AIL so remove it from the
++ * transaction and free it.
+  */
+ STATIC void
+ xfs_efi_item_unpin(
+@@ -113,17 +114,14 @@ xfs_efi_item_unpin(
+ 	struct xfs_ail		*ailp = lip->li_ailp;
+ 
+ 	spin_lock(&ailp->xa_lock);
+-	if (efip->efi_flags & XFS_EFI_CANCELED) {
+-		if (remove)
+-			xfs_trans_del_item(lip);
+-
+-		/* xfs_trans_ail_delete() drops the AIL lock. */
+-		xfs_trans_ail_delete(ailp, lip);
++	if (remove) {
++		ASSERT(!(lip->li_flags & XFS_LI_IN_AIL));
++		xfs_trans_del_item(lip);
+ 		xfs_efi_item_free(efip);
+ 	} else {
+ 		efip->efi_flags |= XFS_EFI_COMMITTED;
+-		spin_unlock(&ailp->xa_lock);
+ 	}
++	spin_unlock(&ailp->xa_lock);
+ }
+ 
+ /*
+diff --git a/fs/xfs/xfs_extfree_item.h b/fs/xfs/xfs_extfree_item.h
+index 0d22c56..f7834ec 100644
+--- a/fs/xfs/xfs_extfree_item.h
++++ b/fs/xfs/xfs_extfree_item.h
+@@ -115,7 +115,6 @@ typedef struct xfs_efd_log_format_64 {
+  */
+ #define	XFS_EFI_RECOVERED	0x1
+ #define	XFS_EFI_COMMITTED	0x2
+-#define	XFS_EFI_CANCELED	0x4
+ 
+ /*
+  * This is the "extent free intention" log item.  It is used
+-- 
+1.7.2.3
 
 _______________________________________________
 xfs mailing list
