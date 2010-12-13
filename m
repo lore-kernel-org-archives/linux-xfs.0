@@ -1,29 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBD4WCFd158200 for <xfs@oss.sgi.com>; Sun, 12 Dec 2010 22:32:12 -0600
+	oBD4WLc5158230 for <xfs@oss.sgi.com>; Sun, 12 Dec 2010 22:32:21 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8B37B143FE32
-	for <xfs@oss.sgi.com>; Sun, 12 Dec 2010 20:34:01 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
-	[150.101.137.98]) by cuda.sgi.com with ESMTP id
-	0uNJp55QPV2c02Xj for <xfs@oss.sgi.com>;
-	Sun, 12 Dec 2010 20:34:01 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0A3EC1CBC72C
+	for <xfs@oss.sgi.com>; Sun, 12 Dec 2010 20:34:11 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
+	[150.101.137.101]) by cuda.sgi.com with ESMTP id
+	1IjGBv077NKXTnj3 for <xfs@oss.sgi.com>;
+	Sun, 12 Dec 2010 20:34:11 -0800 (PST)
 Received: from dastard (unverified [121.44.88.148])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	49888021-1927428
-	for <xfs@oss.sgi.com>; Mon, 13 Dec 2010 15:04:01 +1030 (CDT)
+	49639688-1927428
+	for <xfs@oss.sgi.com>; Mon, 13 Dec 2010 15:04:10 +1030 (CDT)
 Received: from chute ([192.168.1.1] helo=disappointment)
 	by dastard with esmtp (Exim 4.72)
-	(envelope-from <dave@fromorbit.com>) id 1PS06p-000217-OL
-	for xfs@oss.sgi.com; Mon, 13 Dec 2010 15:33:59 +1100
+	(envelope-from <dave@fromorbit.com>) id 1PS06z-00021O-KW
+	for xfs@oss.sgi.com; Mon, 13 Dec 2010 15:34:09 +1100
 Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1PS05L-0004iY-L0
+	(envelope-from <dave@disappointment.disaster>) id 1PS05L-0004iS-Ha
 	for xfs@oss.sgi.com; Mon, 13 Dec 2010 15:32:27 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 5/9] xfs: reduce the number of AIL push wakeups
-Date: Mon, 13 Dec 2010 15:32:19 +1100
-Message-Id: <1292214743-18073-6-git-send-email-david@fromorbit.com>
+Subject: [PATCH 3/9] xfs: clean up xfs_ail_delete()
+Date: Mon, 13 Dec 2010 15:32:17 +1100
+Message-Id: <1292214743-18073-4-git-send-email-david@fromorbit.com>
 In-Reply-To: <1292214743-18073-1-git-send-email-david@fromorbit.com>
 References: <1292214743-18073-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -43,59 +43,132 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The xfaild often tries to rest to wait for congestion to pass of for
-IO to complete, but is regularly woken in tail-pushing situations.
-In severe cases, the xfsaild is getting woken tens of thousands of
-times a second. Reduce the number needless wakeups by only waking
-the xfsaild if the new target is larger than the old one. Further
-make short sleeps uninterruptible as they occur when the xfsaild has
-decided it needs to back off to allow some IO to complete and being
-woken early is counter-productive.
+xfs_ail_delete() has a needlessly complex interface. It returns the log item
+that was passed in for deletion (which the callers then assert is identical to
+the one passed in), and callers of xfs_ail_delete() still need to invalidate
+current traversal cursors.
+
+Make xfs_ail_delete() return void, move the cursor invalidation inside it, and
+clean up the callers just to use the log item pointer they passed in.
+
+While cleaning up, remove the messy and unnecessary "/* ARGUSED */" comments
+around all these functions.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/linux-2.6/xfs_super.c |   20 ++++++++++++++++----
- 1 files changed, 16 insertions(+), 4 deletions(-)
+ fs/xfs/xfs_trans_ail.c |   27 +++++++--------------------
+ 1 files changed, 7 insertions(+), 20 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
-index abcda07..b49ad02 100644
---- a/fs/xfs/linux-2.6/xfs_super.c
-+++ b/fs/xfs/linux-2.6/xfs_super.c
-@@ -834,8 +834,11 @@ xfsaild_wakeup(
- 	struct xfs_ail		*ailp,
- 	xfs_lsn_t		threshold_lsn)
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index dc90695..645928c 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -29,7 +29,7 @@
+ #include "xfs_error.h"
+ 
+ STATIC void xfs_ail_insert(struct xfs_ail *, xfs_log_item_t *);
+-STATIC xfs_log_item_t * xfs_ail_delete(struct xfs_ail *, xfs_log_item_t *);
++STATIC void xfs_ail_delete(struct xfs_ail *, xfs_log_item_t *);
+ STATIC xfs_log_item_t * xfs_ail_min(struct xfs_ail *);
+ STATIC xfs_log_item_t * xfs_ail_next(struct xfs_ail *, xfs_log_item_t *);
+ 
+@@ -468,16 +468,13 @@ xfs_trans_ail_update(
+ 	xfs_log_item_t	*lip,
+ 	xfs_lsn_t	lsn) __releases(ailp->xa_lock)
  {
--	ailp->xa_target = threshold_lsn;
--	wake_up_process(ailp->xa_task);
-+	/* only ever move the target forwards */
-+	if (XFS_LSN_CMP(threshold_lsn, ailp->xa_target) > 0) {
-+		ailp->xa_target = threshold_lsn;
-+		wake_up_process(ailp->xa_task);
-+	}
+-	xfs_log_item_t		*dlip = NULL;
+ 	xfs_log_item_t		*mlip;	/* ptr to minimum lip */
+ 	xfs_lsn_t		tail_lsn;
+ 
+ 	mlip = xfs_ail_min(ailp);
+ 
+ 	if (lip->li_flags & XFS_LI_IN_AIL) {
+-		dlip = xfs_ail_delete(ailp, lip);
+-		ASSERT(dlip == lip);
+-		xfs_trans_ail_cursor_clear(ailp, dlip);
++		xfs_ail_delete(ailp, lip);
+ 	} else {
+ 		lip->li_flags |= XFS_LI_IN_AIL;
+ 	}
+@@ -485,7 +482,7 @@ xfs_trans_ail_update(
+ 	lip->li_lsn = lsn;
+ 	xfs_ail_insert(ailp, lip);
+ 
+-	if (mlip == dlip) {
++	if (mlip == lip) {
+ 		mlip = xfs_ail_min(ailp);
+ 		/*
+ 		 * It is not safe to access mlip after the AIL lock is
+@@ -524,21 +521,18 @@ xfs_trans_ail_delete(
+ 	struct xfs_ail	*ailp,
+ 	xfs_log_item_t	*lip) __releases(ailp->xa_lock)
+ {
+-	xfs_log_item_t		*dlip;
+ 	xfs_log_item_t		*mlip;
+ 	xfs_lsn_t		tail_lsn;
+ 
+ 	if (lip->li_flags & XFS_LI_IN_AIL) {
+ 		mlip = xfs_ail_min(ailp);
+-		dlip = xfs_ail_delete(ailp, lip);
+-		ASSERT(dlip == lip);
+-		xfs_trans_ail_cursor_clear(ailp, dlip);
++		xfs_ail_delete(ailp, lip);
+ 
+ 
+ 		lip->li_flags &= ~XFS_LI_IN_AIL;
+ 		lip->li_lsn = 0;
+ 
+-		if (mlip == dlip) {
++		if (mlip == lip) {
+ 			mlip = xfs_ail_min(ailp);
+ 			/*
+ 			 * It is not safe to access mlip after the AIL lock
+@@ -632,7 +626,6 @@ STATIC void
+ xfs_ail_insert(
+ 	struct xfs_ail	*ailp,
+ 	xfs_log_item_t	*lip)
+-/* ARGSUSED */
+ {
+ 	xfs_log_item_t	*next_lip;
+ 
+@@ -661,18 +654,14 @@ xfs_ail_insert(
+ /*
+  * Delete the given item from the AIL.  Return a pointer to the item.
+  */
+-/*ARGSUSED*/
+-STATIC xfs_log_item_t *
++STATIC void
+ xfs_ail_delete(
+ 	struct xfs_ail	*ailp,
+ 	xfs_log_item_t	*lip)
+-/* ARGSUSED */
+ {
+ 	xfs_ail_check(ailp, lip);
+-
+ 	list_del(&lip->li_ail);
+-
+-	return lip;
++	xfs_trans_ail_cursor_clear(ailp, lip);
  }
  
- STATIC int
-@@ -847,8 +850,17 @@ xfsaild(
- 	long		tout = 0; /* milliseconds */
- 
- 	while (!kthread_should_stop()) {
--		schedule_timeout_interruptible(tout ?
--				msecs_to_jiffies(tout) : MAX_SCHEDULE_TIMEOUT);
-+		/*
-+		 * for short sleeps indicating congestion, don't allow us to
-+		 * get woken early. Otherwise all we do is bang on the AIL lock
-+		 * without making progress.
-+		 */
-+		if (tout && tout <= 20)
-+			__set_current_state(TASK_KILLABLE);
-+		else
-+			__set_current_state(TASK_UNINTERRUPTIBLE);
-+		schedule_timeout(tout ?
-+				 msecs_to_jiffies(tout) : MAX_SCHEDULE_TIMEOUT);
- 
- 		/* swsusp */
- 		try_to_freeze();
+ /*
+@@ -682,7 +671,6 @@ xfs_ail_delete(
+ STATIC xfs_log_item_t *
+ xfs_ail_min(
+ 	struct xfs_ail	*ailp)
+-/* ARGSUSED */
+ {
+ 	if (list_empty(&ailp->xa_ail))
+ 		return NULL;
+@@ -699,7 +687,6 @@ STATIC xfs_log_item_t *
+ xfs_ail_next(
+ 	struct xfs_ail	*ailp,
+ 	xfs_log_item_t	*lip)
+-/* ARGSUSED */
+ {
+ 	if (lip->li_ail.next == &ailp->xa_ail)
+ 		return NULL;
 -- 
 1.7.2.3
 
