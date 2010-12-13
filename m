@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBD1X3jK148757 for <xfs@oss.sgi.com>; Sun, 12 Dec 2010 19:33:03 -0600
+	oBD1M6q8147909 for <xfs@oss.sgi.com>; Sun, 12 Dec 2010 19:22:06 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1B02C1E2B80
-	for <xfs@oss.sgi.com>; Sun, 12 Dec 2010 17:34:52 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
-	[150.101.137.99]) by cuda.sgi.com with ESMTP id
-	nNGqwBEojpfcj1YQ for <xfs@oss.sgi.com>;
-	Sun, 12 Dec 2010 17:34:52 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 351F61CBC306
+	for <xfs@oss.sgi.com>; Sun, 12 Dec 2010 17:23:55 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
+	[150.101.137.100]) by cuda.sgi.com with ESMTP id
+	EI792UySx7YgzkYl for <xfs@oss.sgi.com>;
+	Sun, 12 Dec 2010 17:23:55 -0800 (PST)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/3] xfs: convert inode cache lookups to use RCU locking
-Date: Mon, 13 Dec 2010 12:32:36 +1100
-Message-Id: <1292203957-15819-3-git-send-email-david@fromorbit.com>
-In-Reply-To: <1292203957-15819-1-git-send-email-david@fromorbit.com>
-References: <1292203957-15819-1-git-send-email-david@fromorbit.com>
-MIME-Version: 1.0
+Subject: [PATCH 3/3] xfs: demultiplex xfs_icsb_modify_counters()
+Date: Mon, 13 Dec 2010 12:21:53 +1100
+Message-Id: <1292203313-15570-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1292203313-15570-1-git-send-email-david@fromorbit.com>
+References: <1292203313-15570-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,197 +23,431 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: paulmck@linux.vnet.ibm.com, eric.dumazet@gmail.com
+Cc: linux-kernel@vger.kernel.org, a.p.zijlstra@chello.nl
 
-RnJvbTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgoKV2l0aCBkZWxheWVkIGxv
-Z2dpbmcgZ3JlYXRseSBpbmNyZWFzaW5nIHRoZSBzdXN0YWluZWQgcGFyYWxsZWxpc20gb2YgaW5v
-ZGUKb3BlcmF0aW9ucywgdGhlIGlub2RlIGNhY2hlIGxvY2tpbmcgaXMgc2hvd2luZyBzaWduaWZp
-Y2FudCByZWFkIHZzIHdyaXRlCmNvbnRlbnRpb24gd2hlbiBpbm9kZSByZWNsYWltIHJ1bnMgYXQg
-dGhlIHNhbWUgdGltZSBhcyBsb29rdXBzLiBUaGVyZSBpcwphbHNvIGEgbG90IG1vcmUgd3JpdGUg
-bG9jayBhY3F1aXN0aW9ucyB0aGFuIHRoZXJlIGFyZSByZWFkIGxvY2tzICg0OjEgcmF0aW8pCnNv
-IHRoZSByZWFkIGxvY2tpbmcgaXMgbm90IHJlYWxseSBidXlpbmcgdXMgbXVjaCBpbiB0aGUgd2F5
-IG9mIHBhcmFsbGVsaXNtLgoKVG8gYXZvaWQgdGhlIHJlYWQgdnMgd3JpdGUgY29udGVudGlvbiwg
-Y2hhbmdlIHRoZSBjYWNoZSB0byB1c2UgUkNVIGxvY2tpbmcgb24KdGhlIHJlYWQgc2lkZS4gVG8g
-YXZvaWQgbmVlZGluZyB0byBSQ1UgZnJlZSBldmVyeSBzaW5nbGUgaW5vZGUsIHVzZSB0aGUgYnVp
-bHQKaW4gc2xhYiBSQ1UgZnJlZWluZyBtZWNoYW5pc20uIFRoaXMgcmVxdWlyZXMgdXMgdG8gYmUg
-YWJsZSB0byBkZXRlY3QgbG9va3VwcyBvZgpmcmVlZCBpbm9kZXMsIHNvIGVu0ZV1cmUgdGhhdCBl
-dmVyIGZyZWVkIGlub2RlIGhhcyBhbiBpbm9kZSBudW1iZXIgb2YgemVybyBhbmQKdGhlIFhGU19J
-UkVDTEFJTSBmbGFnIHNldC4gV2UgYWxyZWFkeSBjaGVjayB0aGUgWEZTX0lSRUNMQUlNIGZsYWcg
-aW4gY2FjaGUgaGl0Cmxvb2t1cCBwYXRoLCBidXQgYWxzbyBhZGQgYSBjaGVjayBmb3IgYSB6ZXJv
-IGlub2RlIG51bWJlciBhcyB3ZWxsLgoKV2UgY2FudGhlbiBjb252ZXJ0IGFsbCB0aGUgcmVhZCBs
-b2NraW5nIGxvY2t1cHMgdG8gdXNlIFJDVSByZWFkIHNpZGUgbG9ja2luZwphbmQgaGVuY2UgcmVt
-b3ZlIGFsbCByZWFkIHNpZGUgbG9ja2luZy4KClNpZ25lZC1vZmYtYnk6IERhdmUgQ2hpbm5lciA8
-ZGNoaW5uZXJAcmVkaGF0LmNvbT4KUmV2aWV3ZWQtYnk6IEFsZXggRWxkZXIgPGFlbGRlckBzZ2ku
-Y29tPgotLS0KIGZzL3hmcy9saW51eC0yLjYveGZzX3N5bmMuYyB8ICAgMjcgKysrKysrKysrKysr
-KysrKy0tLS0tCiBmcy94ZnMveGZzX2lnZXQuYyAgICAgICAgICAgfCAgIDUwICsrKysrKysrKysr
-KysrKysrKysrKysrKysrKysrKystLS0tLS0tLS0tCiBmcy94ZnMveGZzX2lub2RlLmMgICAgICAg
-ICAgfCAgIDUyICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKy0tLS0tLS0tLS0KIDMg
-ZmlsZXMgY2hhbmdlZCwgOTggaW5zZXJ0aW9ucygrKSwgMzEgZGVsZXRpb25zKC0pCgpkaWZmIC0t
-Z2l0IGEvZnMveGZzL2xpbnV4LTIuNi94ZnNfc3luYy5jIGIvZnMveGZzL2xpbnV4LTIuNi94ZnNf
-c3luYy5jCmluZGV4IGFmYjBkN2MuLjVlZTAyZDcgMTAwNjQ0Ci0tLSBhL2ZzL3hmcy9saW51eC0y
-LjYveGZzX3N5bmMuYworKysgYi9mcy94ZnMvbGludXgtMi42L3hmc19zeW5jLmMKQEAgLTUzLDE0
-ICs1MywyMCBAQCB4ZnNfaW5vZGVfYWdfd2Fsa19ncmFiKAogewogCXN0cnVjdCBpbm9kZQkJKmlu
-b2RlID0gVkZTX0koaXApOwogCisJLyogY2hlY2sgZm9yIHN0YWxlIFJDVSBmcmVlZCBpbm9kZSAq
-LworCXNwaW5fbG9jaygmaXAtPmlfZmxhZ3NfbG9jayk7CisJaWYgKCFpcC0+aV9pbm8pCisJCWdv
-dG8gb3V0X3VubG9ja19ub2VudDsKKworCS8qIGF2b2lkIG5ldyBvciByZWNsYWltYWJsZSBpbm9k
-ZXMuIExlYXZlIGZvciByZWNsYWltIGNvZGUgdG8gZmx1c2ggKi8KKwlpZiAoX194ZnNfaWZsYWdz
-X3Rlc3QoaXAsIFhGU19JTkVXIHwgWEZTX0lSRUNMQUlNQUJMRSB8IFhGU19JUkVDTEFJTSkpCisJ
-CWdvdG8gb3V0X3VubG9ja19ub2VudDsKKwlzcGluX3VubG9jaygmaXAtPmlfZmxhZ3NfbG9jayk7
-CisKIAkvKiBub3RoaW5nIHRvIHN5bmMgZHVyaW5nIHNodXRkb3duICovCiAJaWYgKFhGU19GT1JD
-RURfU0hVVERPV04oaXAtPmlfbW91bnQpKQogCQlyZXR1cm4gRUZTQ09SUlVQVEVEOwogCi0JLyog
-YXZvaWQgbmV3IG9yIHJlY2xhaW1hYmxlIGlub2Rlcy4gTGVhdmUgZm9yIHJlY2xhaW0gY29kZSB0
-byBmbHVzaCAqLwotCWlmICh4ZnNfaWZsYWdzX3Rlc3QoaXAsIFhGU19JTkVXIHwgWEZTX0lSRUNM
-QUlNQUJMRSB8IFhGU19JUkVDTEFJTSkpCi0JCXJldHVybiBFTk9FTlQ7Ci0KIAkvKiBJZiB3ZSBj
-YW4ndCBncmFiIHRoZSBpbm9kZSwgaXQgbXVzdCBvbiBpdCdzIHdheSB0byByZWNsYWltLiAqLwog
-CWlmICghaWdyYWIoaW5vZGUpKQogCQlyZXR1cm4gRU5PRU5UOwpAQCAtNzIsNiArNzgsMTAgQEAg
-eGZzX2lub2RlX2FnX3dhbGtfZ3JhYigKIAogCS8qIGlub2RlIGlzIHZhbGlkICovCiAJcmV0dXJu
-IDA7CisKK291dF91bmxvY2tfbm9lbnQ6CisJc3Bpbl91bmxvY2soJmlwLT5pX2ZsYWdzX2xvY2sp
-OworCXJldHVybiBFTk9FTlQ7CiB9CiAKIFNUQVRJQyBpbnQKQEAgLTk4LDEyICsxMDgsMTIgQEAg
-cmVzdGFydDoKIAkJaW50CQllcnJvciA9IDA7CiAJCWludAkJaTsKIAotCQlyZWFkX2xvY2soJnBh
-Zy0+cGFnX2ljaV9sb2NrKTsKKwkJcmN1X3JlYWRfbG9jaygpOwogCQlucl9mb3VuZCA9IHJhZGl4
-X3RyZWVfZ2FuZ19sb29rdXAoJnBhZy0+cGFnX2ljaV9yb290LAogCQkJCQkodm9pZCAqKiliYXRj
-aCwgZmlyc3RfaW5kZXgsCiAJCQkJCVhGU19MT09LVVBfQkFUQ0gpOwogCQlpZiAoIW5yX2ZvdW5k
-KSB7Ci0JCQlyZWFkX3VubG9jaygmcGFnLT5wYWdfaWNpX2xvY2spOworCQkJcmN1X3JlYWRfdW5s
-b2NrKCk7CiAJCQlicmVhazsKIAkJfQogCkBAIC0xMjksNyArMTM5LDcgQEAgcmVzdGFydDoKIAkJ
-fQogCiAJCS8qIHVubG9jayBub3cgd2UndmUgZ3JhYmJlZCB0aGUgaW5vZGVzLiAqLwotCQlyZWFk
-X3VubG9jaygmcGFnLT5wYWdfaWNpX2xvY2spOworCQlyY3VfcmVhZF91bmxvY2soKTsKIAogCQlm
-b3IgKGkgPSAwOyBpIDwgbnJfZm91bmQ7IGkrKykgewogCQkJaWYgKCFiYXRjaFtpXSkKQEAgLTYz
-OSw2ICs2NDksOSBAQCB4ZnNfcmVjbGFpbV9pbm9kZV9ncmFiKAogCXN0cnVjdCB4ZnNfaW5vZGUJ
-KmlwLAogCWludAkJCWZsYWdzKQogeworCS8qIGNoZWNrIGZvciBzdGFsZSBSQ1UgZnJlZWQgaW5v
-ZGUgKi8KKwlpZiAoIWlwLT5pX2lubykKKwkJcmV0dXJuIDE7CiAKIAkvKgogCSAqIGRvIHNvbWUg
-dW5sb2NrZWQgY2hlY2tzIGZpcnN0IHRvIGF2b2lkIHVubmVjY2VhcnkgbG9jayB0cmFmZmljLgpk
-aWZmIC0tZ2l0IGEvZnMveGZzL3hmc19pZ2V0LmMgYi9mcy94ZnMveGZzX2lnZXQuYwppbmRleCA5
-ZmFlNDc1Li4xZTNiMDM1IDEwMDY0NAotLS0gYS9mcy94ZnMveGZzX2lnZXQuYworKysgYi9mcy94
-ZnMveGZzX2lnZXQuYwpAQCAtODAsNiArODAsNyBAQCB4ZnNfaW5vZGVfYWxsb2MoCiAJQVNTRVJU
-KGF0b21pY19yZWFkKCZpcC0+aV9waW5jb3VudCkgPT0gMCk7CiAJQVNTRVJUKCFzcGluX2lzX2xv
-Y2tlZCgmaXAtPmlfZmxhZ3NfbG9jaykpOwogCUFTU0VSVChjb21wbGV0aW9uX2RvbmUoJmlwLT5p
-X2ZsdXNoKSk7CisJQVNTRVJUKGlwLT5pX2lubyA9PSAwKTsKIAogCW1ybG9ja19pbml0KCZpcC0+
-aV9pb2xvY2ssIE1STE9DS19CQVJSSUVSLCAieGZzaW8iLCBpcC0+aV9pbm8pOwogCWxvY2tkZXBf
-c2V0X2NsYXNzX2FuZF9uYW1lKCZpcC0+aV9pb2xvY2subXJfbG9jaywKQEAgLTk4LDkgKzk5LDYg
-QEAgeGZzX2lub2RlX2FsbG9jKAogCWlwLT5pX3NpemUgPSAwOwogCWlwLT5pX25ld19zaXplID0g
-MDsKIAotCS8qIHByZXZlbnQgYW55b25lIGZyb20gdXNpbmcgdGhpcyB5ZXQgKi8KLQlWRlNfSShp
-cCktPmlfc3RhdGUgPSBJX05FVzsKLQogCXJldHVybiBpcDsKIH0KIApAQCAtMTU5LDYgKzE1Nywx
-NiBAQCB4ZnNfaW5vZGVfZnJlZSgKIAlBU1NFUlQoIXNwaW5faXNfbG9ja2VkKCZpcC0+aV9mbGFn
-c19sb2NrKSk7CiAJQVNTRVJUKGNvbXBsZXRpb25fZG9uZSgmaXAtPmlfZmx1c2gpKTsKIAorCS8q
-CisJICogQmVjYXVzZSB3ZSB1c2UgUkNVIGZyZWVpbmcgd2UgbmVlZCB0byBlbnN1cmUgdGhlIGlu
-b2RlIGFsd2F5cworCSAqIGFwcGVhcnMgdG8gYmUgcmVjbGFpbWVkIHdpdGggYW4gaW52YWxpZCBp
-bm9kZSBudW1iZXIgd2hlbiBpbiB0aGUKKwkgKiBmcmVlIHN0YXRlLiBUaGUgaXAtPmlfZmxhZ3Nf
-bG9jayBwcm92aWRlcyB0aGUgYmFycmllciBhZ2FpbnN0IGxvb2t1cAorCSAqIHJhY2VzLgorCSAq
-LworCXNwaW5fbG9jaygmaXAtPmlfZmxhZ3NfbG9jayk7CisJaXAtPmlfZmxhZ3MgPSBYRlNfSVJF
-Q0xBSU07CisJaXAtPmlfaW5vID0gMDsKKwlzcGluX3VubG9jaygmaXAtPmlfZmxhZ3NfbG9jayk7
-CiAJY2FsbF9yY3UoKHN0cnVjdCByY3VfaGVhZCAqKSZWRlNfSShpcCktPmlfZGVudHJ5LCBfX3hm
-c19pbm9kZV9mcmVlKTsKIH0KIApAQCAtMTY5LDE0ICsxNzcsMzIgQEAgc3RhdGljIGludAogeGZz
-X2lnZXRfY2FjaGVfaGl0KAogCXN0cnVjdCB4ZnNfcGVyYWcJKnBhZywKIAlzdHJ1Y3QgeGZzX2lu
-b2RlCSppcCwKKwl4ZnNfaW5vX3QJCWlubywKIAlpbnQJCQlmbGFncywKLQlpbnQJCQlsb2NrX2Zs
-YWdzKSBfX3JlbGVhc2VzKHBhZy0+cGFnX2ljaV9sb2NrKQorCWludAkJCWxvY2tfZmxhZ3MpIF9f
-cmVsZWFzZXMoUkNVKQogewogCXN0cnVjdCBpbm9kZQkJKmlub2RlID0gVkZTX0koaXApOwogCXN0
-cnVjdCB4ZnNfbW91bnQJKm1wID0gaXAtPmlfbW91bnQ7CiAJaW50CQkJZXJyb3I7CiAKKwkvKgor
-CSAqIGNoZWNrIGZvciByZS11c2Ugb2YgYW4gaW5vZGUgd2l0aGluIGFuIFJDVSBncmFjZSBwZXJp
-b2QgZHVlIHRvIHRoZQorCSAqIHJhZGl4IHRyZWUgbm9kZXMgbm90IGJlaW5nIHVwZGF0ZWQgeWV0
-LiBXZSBtb25pdG9yIGZvciB0aGlzIGJ5CisJICogc2V0dGluZyB0aGUgaW5vZGUgbnVtYmVyIHRv
-IHplcm8gYmVmb3JlIGZyZWVpbmcgdGhlIGlub2RlIHN0cnVjdHVyZS4KKwkgKiBJZiB0aGUgaW5v
-ZGUgaGFzIGJlZW4gcmVhbGxvY2F0ZWQgYW5kIHNldCB1cCwgdGhlbiB0aGUgaW5vZGUgbnVtYmVy
-CisJICogd2lsbCBub3QgbWF0Y2gsIHNvIGNoZWNrIGZvciB0aGF0LCB0b28uCisJICovCiAJc3Bp
-bl9sb2NrKCZpcC0+aV9mbGFnc19sb2NrKTsKKwlpZiAoaXAtPmlfaW5vICE9IGlubykgeworCQl0
-cmFjZV94ZnNfaWdldF9za2lwKGlwKTsKKwkJWEZTX1NUQVRTX0lOQyh4c19pZ19mcmVjeWNsZSk7
-CisJCXNwaW5fdW5sb2NrKCZpcC0+aV9mbGFnc19sb2NrKTsKKwkJcmN1X3JlYWRfdW5sb2NrKCk7
-CisJCS8qIEV4cGlyZSB0aGUgZ3JhY2UgcGVyaW9kIHNvIHdlIGRvbid0IHRyaXAgb3ZlciBpdCBh
-Z2Fpbi4gKi8KKwkJc3luY2hyb25pemVfcmN1KCk7CisJCXJldHVybiBFQUdBSU47CisJfQorCiAK
-IAkvKgogCSAqIElmIHdlIGFyZSByYWNpbmcgd2l0aCBhbm90aGVyIGNhY2hlIGhpdCB0aGF0IGlz
-IGN1cnJlbnRseQpAQCAtMjE5LDcgKzI0NSw3IEBAIHhmc19pZ2V0X2NhY2hlX2hpdCgKIAkJaXAt
-PmlfZmxhZ3MgfD0gWEZTX0lSRUNMQUlNOwogCiAJCXNwaW5fdW5sb2NrKCZpcC0+aV9mbGFnc19s
-b2NrKTsKLQkJcmVhZF91bmxvY2soJnBhZy0+cGFnX2ljaV9sb2NrKTsKKwkJcmN1X3JlYWRfdW5s
-b2NrKCk7CiAKIAkJZXJyb3IgPSAtaW5vZGVfaW5pdF9hbHdheXMobXAtPm1fc3VwZXIsIGlub2Rl
-KTsKIAkJaWYgKGVycm9yKSB7CkBAIC0yMjcsNyArMjUzLDcgQEAgeGZzX2lnZXRfY2FjaGVfaGl0
-KAogCQkJICogUmUtaW5pdGlhbGl6aW5nIHRoZSBpbm9kZSBmYWlsZWQsIGFuZCB3ZSBhcmUgaW4g
-ZGVlcAogCQkJICogdHJvdWJsZS4gIFRyeSB0byByZS1hZGQgaXQgdG8gdGhlIHJlY2xhaW0gbGlz
-dC4KIAkJCSAqLwotCQkJcmVhZF9sb2NrKCZwYWctPnBhZ19pY2lfbG9jayk7CisJCQlyY3VfcmVh
-ZF9sb2NrKCk7CiAJCQlzcGluX2xvY2soJmlwLT5pX2ZsYWdzX2xvY2spOwogCiAJCQlpcC0+aV9m
-bGFncyAmPSB+WEZTX0lORVc7CkBAIC0yNjEsNyArMjg3LDcgQEAgeGZzX2lnZXRfY2FjaGVfaGl0
-KAogCiAJCS8qIFdlJ3ZlIGdvdCBhIGxpdmUgb25lLiAqLwogCQlzcGluX3VubG9jaygmaXAtPmlf
-ZmxhZ3NfbG9jayk7Ci0JCXJlYWRfdW5sb2NrKCZwYWctPnBhZ19pY2lfbG9jayk7CisJCXJjdV9y
-ZWFkX3VubG9jaygpOwogCQl0cmFjZV94ZnNfaWdldF9oaXQoaXApOwogCX0KIApAQCAtMjc1LDcg
-KzMwMSw3IEBAIHhmc19pZ2V0X2NhY2hlX2hpdCgKIAogb3V0X2Vycm9yOgogCXNwaW5fdW5sb2Nr
-KCZpcC0+aV9mbGFnc19sb2NrKTsKLQlyZWFkX3VubG9jaygmcGFnLT5wYWdfaWNpX2xvY2spOwor
-CXJjdV9yZWFkX3VubG9jaygpOwogCXJldHVybiBlcnJvcjsKIH0KIApAQCAtMzk3LDcgKzQyMyw3
-IEBAIHhmc19pZ2V0KAogCXhmc19hZ2lub190CWFnaW5vOwogCiAJLyogcmVqZWN0IGlub2RlIG51
-bWJlcnMgb3V0c2lkZSBleGlzdGluZyBBR3MgKi8KLQlpZiAoWEZTX0lOT19UT19BR05PKG1wLCBp
-bm8pID49IG1wLT5tX3NiLnNiX2FnY291bnQpCisJaWYgKCFpbm8gfHwgWEZTX0lOT19UT19BR05P
-KG1wLCBpbm8pID49IG1wLT5tX3NiLnNiX2FnY291bnQpCiAJCXJldHVybiBFSU5WQUw7CiAKIAkv
-KiBnZXQgdGhlIHBlcmFnIHN0cnVjdHVyZSBhbmQgZW5zdXJlIHRoYXQgaXQncyBpbm9kZSBjYXBh
-YmxlICovCkBAIC00MDYsMTUgKzQzMiwxNSBAQCB4ZnNfaWdldCgKIAogYWdhaW46CiAJZXJyb3Ig
-PSAwOwotCXJlYWRfbG9jaygmcGFnLT5wYWdfaWNpX2xvY2spOworCXJjdV9yZWFkX2xvY2soKTsK
-IAlpcCA9IHJhZGl4X3RyZWVfbG9va3VwKCZwYWctPnBhZ19pY2lfcm9vdCwgYWdpbm8pOwogCiAJ
-aWYgKGlwKSB7Ci0JCWVycm9yID0geGZzX2lnZXRfY2FjaGVfaGl0KHBhZywgaXAsIGZsYWdzLCBs
-b2NrX2ZsYWdzKTsKKwkJZXJyb3IgPSB4ZnNfaWdldF9jYWNoZV9oaXQocGFnLCBpcCwgaW5vLCBm
-bGFncywgbG9ja19mbGFncyk7CiAJCWlmIChlcnJvcikKIAkJCWdvdG8gb3V0X2Vycm9yX29yX2Fn
-YWluOwogCX0gZWxzZSB7Ci0JCXJlYWRfdW5sb2NrKCZwYWctPnBhZ19pY2lfbG9jayk7CisJCXJj
-dV9yZWFkX3VubG9jaygpOwogCQlYRlNfU1RBVFNfSU5DKHhzX2lnX21pc3NlZCk7CiAKIAkJZXJy
-b3IgPSB4ZnNfaWdldF9jYWNoZV9taXNzKG1wLCBwYWcsIHRwLCBpbm8sICZpcCwKZGlmZiAtLWdp
-dCBhL2ZzL3hmcy94ZnNfaW5vZGUuYyBiL2ZzL3hmcy94ZnNfaW5vZGUuYwppbmRleCAxMDhjN2Ew
-Li40M2ZmZDkwIDEwMDY0NAotLS0gYS9mcy94ZnMveGZzX2lub2RlLmMKKysrIGIvZnMveGZzL3hm
-c19pbm9kZS5jCkBAIC0yMDAwLDE3ICsyMDAwLDMzIEBAIHhmc19pZnJlZV9jbHVzdGVyKAogCQkg
-Ki8KIAkJZm9yIChpID0gMDsgaSA8IG5pbm9kZXM7IGkrKykgewogcmV0cnk6Ci0JCQlyZWFkX2xv
-Y2soJnBhZy0+cGFnX2ljaV9sb2NrKTsKKwkJCXJjdV9yZWFkX2xvY2soKTsKIAkJCWlwID0gcmFk
-aXhfdHJlZV9sb29rdXAoJnBhZy0+cGFnX2ljaV9yb290LAogCQkJCQlYRlNfSU5PX1RPX0FHSU5P
-KG1wLCAoaW51bSArIGkpKSk7CiAKLQkJCS8qIElub2RlIG5vdCBpbiBtZW1vcnkgb3Igc3RhbGUs
-IG5vdGhpbmcgdG8gZG8gKi8KLQkJCWlmICghaXAgfHwgeGZzX2lmbGFnc190ZXN0KGlwLCBYRlNf
-SVNUQUxFKSkgewotCQkJCXJlYWRfdW5sb2NrKCZwYWctPnBhZ19pY2lfbG9jayk7CisJCQkvKiBJ
-bm9kZSBub3QgaW4gbWVtb3J5LCBub3RoaW5nIHRvIGRvICovCisJCQlpZiAoIWlwKSB7CisJCQkJ
-cmN1X3JlYWRfdW5sb2NrKCk7CiAJCQkJY29udGludWU7CiAJCQl9CiAKIAkJCS8qCisJCQkgKiBi
-ZWNhdXNlIHRoaXMgaXMgYW4gUkNVIHByb3RlY3RlZCBsb29rdXAsIHdlIGNvdWxkCisJCQkgKiBm
-aW5kIGEgcmVjZW50bHkgZnJlZWQgb3IgZXZlbiByZWFsbG9jYXRlZCBpbm9kZQorCQkJICogZHVy
-aW5nIHRoZSBsb29rdXAuIFdlIG5lZWQgdG8gY2hlY2sgdW5kZXIgdGhlCisJCQkgKiBpX2ZsYWdz
-X2xvY2sgZm9yIGEgdmFsaWQgaW5vZGUgaGVyZS4gU2tpcCBpdCBpZiBpdAorCQkJICogaXMgbm90
-IHZhbGlkLCB0aGUgd3JvbmcgaW5vZGUgb3Igc3RhbGUuCisJCQkgKi8KKwkJCXNwaW5fbG9jaygm
-aXAtPmlfZmxhZ3NfbG9jayk7CisJCQlpZiAoaXAtPmlfaW5vICE9IGludW0gKyBpIHx8CisJCQkg
-ICAgX194ZnNfaWZsYWdzX3Rlc3QoaXAsIFhGU19JU1RBTEUpKSB7CisJCQkJc3Bpbl91bmxvY2so
-JmlwLT5pX2ZsYWdzX2xvY2spOworCQkJCXJjdV9yZWFkX3VubG9jaygpOworCQkJCWNvbnRpbnVl
-OworCQkJfQorCQkJc3Bpbl91bmxvY2soJmlwLT5pX2ZsYWdzX2xvY2spOworCisJCQkvKgogCQkJ
-ICogRG9uJ3QgdHJ5IHRvIGxvY2svdW5sb2NrIHRoZSBjdXJyZW50IGlub2RlLCBidXQgd2UKIAkJ
-CSAqIF9jYW5ub3RfIHNraXAgdGhlIG90aGVyIGlub2RlcyB0aGF0IHdlIGRpZCBub3QgZmluZAog
-CQkJICogaW4gdGhlIGxpc3QgYXR0YWNoZWQgdG8gdGhlIGJ1ZmZlciBhbmQgYXJlIG5vdApAQCAt
-MjAxOSwxMSArMjAzNSwxMSBAQCByZXRyeToKIAkJCSAqLwogCQkJaWYgKGlwICE9IGZyZWVfaXAg
-JiYKIAkJCSAgICAheGZzX2lsb2NrX25vd2FpdChpcCwgWEZTX0lMT0NLX0VYQ0wpKSB7Ci0JCQkJ
-cmVhZF91bmxvY2soJnBhZy0+cGFnX2ljaV9sb2NrKTsKKwkJCQlyY3VfcmVhZF91bmxvY2soKTsK
-IAkJCQlkZWxheSgxKTsKIAkJCQlnb3RvIHJldHJ5OwogCQkJfQotCQkJcmVhZF91bmxvY2soJnBh
-Zy0+cGFnX2ljaV9sb2NrKTsKKwkJCXJjdV9yZWFkX3VubG9jaygpOwogCiAJCQl4ZnNfaWZsb2Nr
-KGlwKTsKIAkJCXhmc19pZmxhZ3Nfc2V0KGlwLCBYRlNfSVNUQUxFKTsKQEAgLTI2MjksNyArMjY0
-NSw3IEBAIHhmc19pZmx1c2hfY2x1c3RlcigKIAogCW1hc2sgPSB+KCgoWEZTX0lOT0RFX0NMVVNU
-RVJfU0laRShtcCkgPj4gbXAtPm1fc2Iuc2JfaW5vZGVsb2cpKSAtIDEpOwogCWZpcnN0X2luZGV4
-ID0gWEZTX0lOT19UT19BR0lOTyhtcCwgaXAtPmlfaW5vKSAmIG1hc2s7Ci0JcmVhZF9sb2NrKCZw
-YWctPnBhZ19pY2lfbG9jayk7CisJcmN1X3JlYWRfbG9jaygpOwogCS8qIHJlYWxseSBuZWVkIGEg
-Z2FuZyBsb29rdXAgcmFuZ2UgY2FsbCBoZXJlICovCiAJbnJfZm91bmQgPSByYWRpeF90cmVlX2dh
-bmdfbG9va3VwKCZwYWctPnBhZ19pY2lfcm9vdCwgKHZvaWQqKilpbGlzdCwKIAkJCQkJZmlyc3Rf
-aW5kZXgsIGlub2Rlc19wZXJfY2x1c3Rlcik7CkBAIC0yNjQwLDkgKzI2NTYsMjEgQEAgeGZzX2lm
-bHVzaF9jbHVzdGVyKAogCQlpcSA9IGlsaXN0W2ldOwogCQlpZiAoaXEgPT0gaXApCiAJCQljb250
-aW51ZTsKLQkJLyogaWYgdGhlIGlub2RlIGxpZXMgb3V0c2lkZSB0aGlzIGNsdXN0ZXIsIHdlJ3Jl
-IGRvbmUuICovCi0JCWlmICgoWEZTX0lOT19UT19BR0lOTyhtcCwgaXEtPmlfaW5vKSAmIG1hc2sp
-ICE9IGZpcnN0X2luZGV4KQotCQkJYnJlYWs7CisKKwkJLyoKKwkJICogYmVjYXVzZSB0aGlzIGlz
-IGFuIFJDVSBwcm90ZWN0ZWQgbG9va3VwLCB3ZSBjb3VsZCBmaW5kIGEKKwkJICogcmVjZW50bHkg
-ZnJlZWQgb3IgZXZlbiByZWFsbG9jYXRlZCBpbm9kZSBkdXJpbmcgdGhlIGxvb2t1cC4KKwkJICog
-V2UgbmVlZCB0byBjaGVjayB1bmRlciB0aGUgaV9mbGFnc19sb2NrIGZvciBhIHZhbGlkIGlub2Rl
-CisJCSAqIGhlcmUuIFNraXAgaXQgaWYgaXQgaXMgbm90IHZhbGlkIG9yIHRoZSB3cm9uZyBpbm9k
-ZS4KKwkJICovCisJCXNwaW5fbG9jaygmaXAtPmlfZmxhZ3NfbG9jayk7CisJCWlmICghaXAtPmlf
-aW5vIHx8CisJCSAgICAoWEZTX0lOT19UT19BR0lOTyhtcCwgaXEtPmlfaW5vKSAmIG1hc2spICE9
-IGZpcnN0X2luZGV4KSB7CisJCQlzcGluX3VubG9jaygmaXAtPmlfZmxhZ3NfbG9jayk7CisJCQlj
-b250aW51ZTsKKwkJfQorCQlzcGluX3VubG9jaygmaXAtPmlfZmxhZ3NfbG9jayk7CisKIAkJLyoK
-IAkJICogRG8gYW4gdW4tcHJvdGVjdGVkIGNoZWNrIHRvIHNlZSBpZiB0aGUgaW5vZGUgaXMgZGly
-dHkgYW5kCiAJCSAqIGlzIGEgY2FuZGlkYXRlIGZvciBmbHVzaGluZy4gIFRoZXNlIGNoZWNrcyB3
-aWxsIGJlIHJlcGVhdGVkCkBAIC0yNjkyLDcgKzI3MjAsNyBAQCB4ZnNfaWZsdXNoX2NsdXN0ZXIo
-CiAJfQogCiBvdXRfZnJlZToKLQlyZWFkX3VubG9jaygmcGFnLT5wYWdfaWNpX2xvY2spOworCXJj
-dV9yZWFkX3VubG9jaygpOwogCWttZW1fZnJlZShpbGlzdCk7CiBvdXRfcHV0OgogCXhmc19wZXJh
-Z19wdXQocGFnKTsKQEAgLTI3MDQsNyArMjczMiw3IEBAIGNsdXN0ZXJfY29ycnVwdF9vdXQ6CiAJ
-ICogQ29ycnVwdGlvbiBkZXRlY3RlZCBpbiB0aGUgY2x1c3RlcmluZyBsb29wLiAgSW52YWxpZGF0
-ZSB0aGUKIAkgKiBpbm9kZSBidWZmZXIgYW5kIHNodXQgZG93biB0aGUgZmlsZXN5c3RlbS4KIAkg
-Ki8KLQlyZWFkX3VubG9jaygmcGFnLT5wYWdfaWNpX2xvY2spOworCXJjdV9yZWFkX3VubG9jaygp
-OwogCS8qCiAJICogQ2xlYW4gdXAgdGhlIGJ1ZmZlci4gIElmIGl0IHdhcyBCX0RFTFdSSSwganVz
-dCByZWxlYXNlIGl0IC0tCiAJICogYnJlbHNlIGNhbiBoYW5kbGUgaXQgd2l0aCBubyBwcm9ibGVt
-cy4gIElmIG5vdCwgc2h1dCBkb3duIHRoZQotLSAKMS43LjIuMwoKX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNn
-aS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+From: Dave Chinner <dchinner@redhat.com>
+
+With the conversion to percpu counters, xfs_icsb_modify_counters() really does
+not need to exist. Convert the inode counter modifications to use a common
+helper function for the one place that calls them, and add another function for
+the free block modification and convert all the callers to use that.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_bmap.c  |   34 +++++-------
+ fs/xfs/xfs_fsops.c |    3 +-
+ fs/xfs/xfs_mount.c |  160 ++++++++++++++++++++++++---------------------------
+ fs/xfs/xfs_mount.h |    5 +-
+ fs/xfs/xfs_trans.c |   23 +++----
+ 5 files changed, 102 insertions(+), 123 deletions(-)
+
+diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
+index 4111cd3..6a47556 100644
+--- a/fs/xfs/xfs_bmap.c
++++ b/fs/xfs/xfs_bmap.c
+@@ -614,8 +614,8 @@ xfs_bmap_add_extent(
+ 			nblks += cur->bc_private.b.allocated;
+ 		ASSERT(nblks <= da_old);
+ 		if (nblks < da_old)
+-			xfs_icsb_modify_counters(ip->i_mount, XFS_SBS_FDBLOCKS,
+-				(int64_t)(da_old - nblks), rsvd);
++			xfs_icsb_modify_free_blocks(ip->i_mount,
++					(int64_t)(da_old - nblks), rsvd);
+ 	}
+ 	/*
+ 	 * Clear out the allocated field, done with it now in any case.
+@@ -1079,7 +1079,7 @@ xfs_bmap_add_extent_delay_real(
+ 		diff = (int)(temp + temp2 - startblockval(PREV.br_startblock) -
+ 			(cur ? cur->bc_private.b.allocated : 0));
+ 		if (diff > 0 &&
+-		    xfs_icsb_modify_counters(ip->i_mount, XFS_SBS_FDBLOCKS,
++		    xfs_icsb_modify_free_blocks(ip->i_mount,
+ 					     -((int64_t)diff), rsvd)) {
+ 			/*
+ 			 * Ick gross gag me with a spoon.
+@@ -1090,8 +1090,7 @@ xfs_bmap_add_extent_delay_real(
+ 					temp--;
+ 					diff--;
+ 					if (!diff ||
+-					    !xfs_icsb_modify_counters(ip->i_mount,
+-						    XFS_SBS_FDBLOCKS,
++					    !xfs_icsb_modify_free_blocks(ip->i_mount,
+ 						    -((int64_t)diff), rsvd))
+ 						break;
+ 				}
+@@ -1099,8 +1098,7 @@ xfs_bmap_add_extent_delay_real(
+ 					temp2--;
+ 					diff--;
+ 					if (!diff ||
+-					    !xfs_icsb_modify_counters(ip->i_mount,
+-						    XFS_SBS_FDBLOCKS,
++					    !xfs_icsb_modify_free_blocks(ip->i_mount,
+ 						    -((int64_t)diff), rsvd))
+ 						break;
+ 				}
+@@ -1769,8 +1767,8 @@ xfs_bmap_add_extent_hole_delay(
+ 	}
+ 	if (oldlen != newlen) {
+ 		ASSERT(oldlen > newlen);
+-		xfs_icsb_modify_counters(ip->i_mount, XFS_SBS_FDBLOCKS,
+-			(int64_t)(oldlen - newlen), rsvd);
++		xfs_icsb_modify_free_blocks(ip->i_mount,
++					(int64_t)(oldlen - newlen), rsvd);
+ 		/*
+ 		 * Nothing to do for disk quota accounting here.
+ 		 */
+@@ -3114,10 +3112,9 @@ xfs_bmap_del_extent(
+ 	 * Nothing to do for disk quota accounting here.
+ 	 */
+ 	ASSERT(da_old >= da_new);
+-	if (da_old > da_new) {
+-		xfs_icsb_modify_counters(mp, XFS_SBS_FDBLOCKS,
+-			(int64_t)(da_old - da_new), rsvd);
+-	}
++	if (da_old > da_new)
++		xfs_icsb_modify_free_blocks(ip->i_mount,
++					(int64_t)(da_old - da_new), rsvd);
+ done:
+ 	*logflagsp = flags;
+ 	return error;
+@@ -4530,14 +4527,12 @@ xfs_bmapi(
+ 							-((int64_t)extsz), (flags &
+ 							XFS_BMAPI_RSVBLOCKS));
+ 				} else {
+-					error = xfs_icsb_modify_counters(mp,
+-							XFS_SBS_FDBLOCKS,
++					error = xfs_icsb_modify_free_blocks(mp,
+ 							-((int64_t)alen), (flags &
+ 							XFS_BMAPI_RSVBLOCKS));
+ 				}
+ 				if (!error) {
+-					error = xfs_icsb_modify_counters(mp,
+-							XFS_SBS_FDBLOCKS,
++					error = xfs_icsb_modify_free_blocks(mp,
+ 							-((int64_t)indlen), (flags &
+ 							XFS_BMAPI_RSVBLOCKS));
+ 					if (error && rt)
+@@ -4546,8 +4541,7 @@ xfs_bmapi(
+ 							(int64_t)extsz, (flags &
+ 							XFS_BMAPI_RSVBLOCKS));
+ 					else if (error)
+-						xfs_icsb_modify_counters(mp,
+-							XFS_SBS_FDBLOCKS,
++						xfs_icsb_modify_free_blocks(mp,
+ 							(int64_t)alen, (flags &
+ 							XFS_BMAPI_RSVBLOCKS));
+ 				}
+@@ -5210,7 +5204,7 @@ xfs_bunmapi(
+ 					ip, -((long)del.br_blockcount), 0,
+ 					XFS_QMOPT_RES_RTBLKS);
+ 			} else {
+-				xfs_icsb_modify_counters(mp, XFS_SBS_FDBLOCKS,
++				xfs_icsb_modify_free_blocks(mp,
+ 						(int64_t)del.br_blockcount, rsvd);
+ 				(void)xfs_trans_reserve_quota_nblks(NULL,
+ 					ip, -((long)del.br_blockcount), 0,
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index fb9a9c8..be34ff2 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -596,8 +596,7 @@ out:
+ 		 * the extra reserve blocks from the reserve.....
+ 		 */
+ 		int error;
+-		error = xfs_icsb_modify_counters(mp, XFS_SBS_FDBLOCKS,
+-						 fdblks_delta, 0);
++		error = xfs_icsb_modify_free_blocks(mp, fdblks_delta, 0);
+ 		if (error == ENOSPC)
+ 			goto retry;
+ 	}
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 16be1b1..5e41ef3 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -332,6 +332,80 @@ xfs_icsb_sync_counters(
+ 		percpu_counter_sum_positive(&mp->m_icsb[XFS_ICSB_FDBLOCKS]);
+ }
+ 
++int
++xfs_icsb_modify_inodes(
++	struct xfs_mount	*mp,
++	int			cntr,
++	int64_t			delta)
++{
++	int			ret;
++
++	ASSERT(cntr == XFS_ICSB_ICOUNT || cntr == XFS_ICSB_IFREE);
++
++	ret = percpu_counter_add_unless_lt(&mp->m_icsb[cntr],
++							delta, 0);
++	if (likely(ret >= 0))
++		return 0;
++	return ret;
++}
++
++int
++xfs_icsb_modify_free_blocks(
++	struct xfs_mount	*mp,
++	int64_t			delta,
++	int			rsvd)
++{
++	int64_t			lcounter;
++	int64_t			res_used;
++	int			ret;
++
++	/*
++	 * if we are putting blocks back, put them into the reserve
++	 * block pool first.
++	 */
++	if (unlikely(mp->m_resblks != mp->m_resblks_avail) && delta > 0) {
++		spin_lock(&mp->m_sb_lock);
++		res_used = (int64_t)(mp->m_resblks -
++					mp->m_resblks_avail);
++		if (res_used > delta) {
++			mp->m_resblks_avail += delta;
++			delta = 0;
++		} else {
++			delta -= res_used;
++			mp->m_resblks_avail = mp->m_resblks;
++		}
++		spin_unlock(&mp->m_sb_lock);
++		if (!delta)
++			return 0;
++	}
++
++	/* try the change */
++	ret = percpu_counter_add_unless_lt(&mp->m_icsb[XFS_ICSB_FDBLOCKS],
++						delta, XFS_ALLOC_SET_ASIDE(mp));
++	if (likely(ret >= 0))
++		return 0;
++
++	/* ENOSPC */
++	ASSERT(delta < 0);
++
++	if (!rsvd)
++		return XFS_ERROR(ENOSPC);
++
++	spin_lock(&mp->m_sb_lock);
++	lcounter = (int64_t)mp->m_resblks_avail + delta;
++	if (lcounter >= 0) {
++		mp->m_resblks_avail = lcounter;
++		spin_unlock(&mp->m_sb_lock);
++		return 0;
++	}
++	spin_unlock(&mp->m_sb_lock);
++	printk_once(KERN_WARNING
++		"Filesystem \"%s\": reserve blocks depleted! "
++		"Consider increasing reserve pool size.",
++		mp->m_fsname);
++	return XFS_ERROR(ENOSPC);
++}
++
+ /*
+  * Check size of device based on the (data/realtime) block count.
+  * Note: this check is used by the growfs code as well as mount.
+@@ -1857,7 +1931,7 @@ xfs_mod_incore_sb(
+  *
+  * Note that this function may not be used for the superblock values that
+  * are tracked with the in-memory per-cpu counters - a direct call to
+- * xfs_icsb_modify_counters is required for these.
++ * xfs_icsb_modify_xxx is required for these.
+  */
+ int
+ xfs_mod_incore_sb_batch(
+@@ -1898,90 +1972,6 @@ unwind:
+ 	return error;
+ }
+ 
+-int
+-xfs_icsb_modify_counters(
+-	xfs_mount_t	*mp,
+-	xfs_sb_field_t	field,
+-	int64_t		delta,
+-	int		rsvd)
+-{
+-	int64_t		lcounter;
+-	int64_t		res_used;
+-	int		ret = 0;
+-
+-
+-	switch (field) {
+-	case XFS_SBS_ICOUNT:
+-		ret = percpu_counter_add_unless_lt(&mp->m_icsb[XFS_SBS_ICOUNT],
+-							delta, 0);
+-		if (ret < 0) {
+-			ASSERT(0);
+-			return XFS_ERROR(EINVAL);
+-		}
+-		return 0;
+-
+-	case XFS_SBS_IFREE:
+-		ret = percpu_counter_add_unless_lt(&mp->m_icsb[XFS_SBS_IFREE],
+-							delta, 0);
+-		if (ret < 0) {
+-			ASSERT(0);
+-			return XFS_ERROR(EINVAL);
+-		}
+-		return 0;
+-
+-	case XFS_SBS_FDBLOCKS:
+-		/*
+-		 * if we are putting blocks back, put them into the reserve
+-		 * block pool first.
+-		 */
+-		if (mp->m_resblks != mp->m_resblks_avail && delta > 0) {
+-			spin_lock(&mp->m_sb_lock);
+-			res_used = (int64_t)(mp->m_resblks -
+-						mp->m_resblks_avail);
+-			if (res_used > delta) {
+-				mp->m_resblks_avail += delta;
+-				delta = 0;
+-			} else {
+-				delta -= res_used;
+-				mp->m_resblks_avail = mp->m_resblks;
+-			}
+-			spin_unlock(&mp->m_sb_lock);
+-			if (!delta)
+-				return 0;
+-		}
+-
+-		/* try the change */
+-		ret = percpu_counter_add_unless_lt(&mp->m_icsb[XFS_ICSB_FDBLOCKS],
+-						delta, XFS_ALLOC_SET_ASIDE(mp));
+-		if (likely(ret >= 0))
+-			return 0;
+-
+-		/* ENOSPC */
+-		ASSERT(delta < 0);
+-
+-		if (!rsvd)
+-			return XFS_ERROR(ENOSPC);
+-
+-		spin_lock(&mp->m_sb_lock);
+-		lcounter = (int64_t)mp->m_resblks_avail + delta;
+-		if (lcounter >= 0) {
+-			mp->m_resblks_avail = lcounter;
+-			spin_unlock(&mp->m_sb_lock);
+-			return 0;
+-		}
+-		spin_unlock(&mp->m_sb_lock);
+-		printk_once(KERN_WARNING
+-			"Filesystem \"%s\": reserve blocks depleted! "
+-			"Consider increasing reserve pool size.",
+-			mp->m_fsname);
+-		return XFS_ERROR(ENOSPC);
+-	default:
+-		ASSERT(0);
+-		return XFS_ERROR(EINVAL);
+-	}
+-	return 0;
+-}
+-
+ /*
+  * xfs_getsb() is called to obtain the buffer for the superblock.
+  * The buffer is returned locked and read in from disk.
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 42d31df..03ad25c6 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -75,9 +75,6 @@ enum {
+ 	XFS_ICSB_MAX,
+ };
+ 
+-extern int	xfs_icsb_modify_counters(struct xfs_mount *, xfs_sb_field_t,
+-						int64_t, int);
+-
+ typedef struct xfs_mount {
+ 	struct super_block	*m_super;
+ 	xfs_tid_t		m_tid;		/* next unused tid for fs */
+@@ -333,6 +330,8 @@ extern int	xfs_icsb_init_counters(struct xfs_mount *);
+ extern void	xfs_icsb_reinit_counters(struct xfs_mount *);
+ extern void	xfs_icsb_destroy_counters(struct xfs_mount *);
+ extern void	xfs_icsb_sync_counters(struct xfs_mount *);
++extern int	xfs_icsb_modify_inodes(struct xfs_mount *, int, int64_t);
++extern int	xfs_icsb_modify_free_blocks(struct xfs_mount *, int64_t, int);
+ 
+ #endif	/* __KERNEL__ */
+ 
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index f6d956b..8139a2e 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -696,7 +696,7 @@ xfs_trans_reserve(
+ 	 * fail if the count would go below zero.
+ 	 */
+ 	if (blocks > 0) {
+-		error = xfs_icsb_modify_counters(tp->t_mountp, XFS_SBS_FDBLOCKS,
++		error = xfs_icsb_modify_free_blocks(tp->t_mountp,
+ 					  -((int64_t)blocks), rsvd);
+ 		if (error != 0) {
+ 			current_restore_flags_nested(&tp->t_pflags, PF_FSTRANS);
+@@ -767,8 +767,8 @@ undo_log:
+ 
+ undo_blocks:
+ 	if (blocks > 0) {
+-		xfs_icsb_modify_counters(tp->t_mountp, XFS_SBS_FDBLOCKS,
+-					 (int64_t)blocks, rsvd);
++		xfs_icsb_modify_free_blocks(tp->t_mountp,
++						(int64_t)blocks, rsvd);
+ 		tp->t_blk_res = 0;
+ 	}
+ 
+@@ -1045,22 +1045,19 @@ xfs_trans_unreserve_and_mod_sb(
+ 
+ 	/* apply the per-cpu counters */
+ 	if (blkdelta) {
+-		error = xfs_icsb_modify_counters(mp, XFS_SBS_FDBLOCKS,
+-						 blkdelta, rsvd);
++		error = xfs_icsb_modify_free_blocks(mp, blkdelta, rsvd);
+ 		if (error)
+ 			goto out;
+ 	}
+ 
+ 	if (idelta) {
+-		error = xfs_icsb_modify_counters(mp, XFS_SBS_ICOUNT,
+-						 idelta, rsvd);
++		error = xfs_icsb_modify_inodes(mp, XFS_ICSB_ICOUNT, idelta);
+ 		if (error)
+ 			goto out_undo_fdblocks;
+ 	}
+ 
+ 	if (ifreedelta) {
+-		error = xfs_icsb_modify_counters(mp, XFS_SBS_IFREE,
+-						 ifreedelta, rsvd);
++		error = xfs_icsb_modify_inodes(mp, XFS_ICSB_IFREE, ifreedelta);
+ 		if (error)
+ 			goto out_undo_icount;
+ 	}
+@@ -1129,15 +1126,15 @@ xfs_trans_unreserve_and_mod_sb(
+ 
+ out_undo_ifreecount:
+ 	if (ifreedelta)
+-		xfs_icsb_modify_counters(mp, XFS_SBS_IFREE, -ifreedelta, rsvd);
++		xfs_icsb_modify_inodes(mp, XFS_ICSB_IFREE, -ifreedelta);
+ out_undo_icount:
+ 	if (idelta)
+-		xfs_icsb_modify_counters(mp, XFS_SBS_ICOUNT, -idelta, rsvd);
++		xfs_icsb_modify_inodes(mp, XFS_ICSB_ICOUNT, -idelta);
+ out_undo_fdblocks:
+ 	if (blkdelta)
+-		xfs_icsb_modify_counters(mp, XFS_SBS_FDBLOCKS, -blkdelta, rsvd);
++		xfs_icsb_modify_free_blocks(mp, -blkdelta, rsvd);
+ out:
+-	ASSERT(error = 0);
++	ASSERT(error == 0);
+ 	return;
+ }
+ 
+-- 
+1.7.2.3
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
