@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBE7ICEv086345 for <xfs@oss.sgi.com>; Tue, 14 Dec 2010 01:18:12 -0600
-Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 30438144882E
-	for <xfs@oss.sgi.com>; Mon, 13 Dec 2010 23:20:02 -0800 (PST)
-Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
-	cuda.sgi.com with ESMTP id d634rHbVtjEIFqqM for
-	<xfs@oss.sgi.com>; Mon, 13 Dec 2010 23:20:02 -0800 (PST)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: Re: inode64 mount option added after data exists
-Date: Tue, 14 Dec 2010 08:19:57 +0100
-References: <C92BDD2E.1C75%ivan.novick@emc.com>
-	<20101214044355.GB16267@dastard>
-In-Reply-To: <20101214044355.GB16267@dastard>
-MIME-Version: 1.0
-Message-Id: <201012140819.58723@zmi.at>
+	oBEEprjV131851 for <xfs@oss.sgi.com>; Tue, 14 Dec 2010 08:51:53 -0600
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E96A51E9572
+	for <xfs@oss.sgi.com>; Tue, 14 Dec 2010 06:53:45 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id iFKNoMc2gLc2ftqd for
+	<xfs@oss.sgi.com>; Tue, 14 Dec 2010 06:53:45 -0800 (PST)
+Subject: Re: xfstests: fix 108 through config mechanism
+From: Boris Ranto <branto@redhat.com>
+In-Reply-To: <20101210143717.GB1415@infradead.org>
+References: <1291905612.3196.49.camel@dhcp-31-190.brq.redhat.com>
+	<20101210143717.GB1415@infradead.org>
+Date: Tue, 14 Dec 2010 15:53:37 +0100
+Message-ID: <1292338417.3296.57.camel@dhcp-31-190.brq.redhat.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,78 +24,105 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============0396608567917766619=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Ivan.Novick@emc.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
---===============0396608567917766619==
-Content-Type: multipart/signed;
-  boundary="nextPart3245705.9MkWnFbgBt";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+On Fri, 2010-12-10 at 09:37 -0500, Christoph Hellwig wrote:
+> I don't rally like the per-test option.  What about adding a
+> _filter_xfs_quota helper that uses sed to output a canonical
+> number of whitespaces?
+> 
 
---nextPart3245705.9MkWnFbgBt
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+I didn't like it much either but I found it quite easy to implement with quite high probability of future usage.
 
-On Dienstag, 14. Dezember 2010 Dave Chinner wrote:
-> > Will it still work as intended in this case (use 64 bit inodes)?
->=20
-> Yes, for newly created inodes and data.
+I found the following modification sufficient although I'm not sure I put the _filter_spaces in right place (I'd say it's quite universal so it could find a usage in other cases):
 
-When you have the existing files/dirs, would it help to take an existing=20
-dir "$path/old", create a new dir "$path/new", and then do
+diff -urpN a/xfstests/108 b/xfstests/108
+--- a/xfstests/108	2010-12-09 11:34:37.733245986 +0100
++++ b/xfstests/108	2010-12-14 14:50:16.813494309 +0100
+@@ -72,9 +72,9 @@ test_accounting()
+ 	for file in $SCRATCH_MNT/{buffer,direct,mmap}; do
+ 		$here/src/lstat64 $file | head -3 | _filter_scratch
+ 	done
+-	xfs_quota -c "quota -hnb -$type $id" $QARGS | _filter_scratch
+-	xfs_quota -c "quota -hni -$type $id" $QARGS | _filter_scratch
+-	xfs_quota -c "quota -hnr -$type $id" $QARGS | _filter_scratch
++	xfs_quota -c "quota -hnb -$type $id" $QARGS | _filter_scratch | _filter_spaces
++	xfs_quota -c "quota -hni -$type $id" $QARGS | _filter_scratch | _filter_spaces
++	xfs_quota -c "quota -hnr -$type $id" $QARGS | _filter_scratch | _filter_spaces
+ }
+ 
+ export MOUNT_OPTIONS="-opquota"
+diff -urpN a/xfstests/108.out b/xfstests/108.out
+--- a/xfstests/108.out	2010-12-09 11:24:48.973251551 +0100
++++ b/xfstests/108.out	2010-12-14 15:01:33.640484268 +0100
+@@ -32,11 +32,11 @@ projid = 3
+   Size: 16777216     Filetype: Regular File
+   Mode: (0600/-rw-------)         Uid: (1)  Gid: (2)
+ Disk quotas for User #1 (1)
+-Filesystem   Blocks  Quota  Limit Warn/Time    Mounted on
+-SCRATCH_DEV        48M      0      0  00 [------] SCRATCH_MNT
++Filesystem Blocks Quota Limit Warn/Time Mounted on
++SCRATCH_DEV 48M 0 0 00 [------] SCRATCH_MNT
+ Disk quotas for User #1 (1)
+-Filesystem    Files  Quota  Limit Warn/Time    Mounted on
+-SCRATCH_DEV          3      0      0  00 [------] SCRATCH_MNT
++Filesystem Files Quota Limit Warn/Time Mounted on
++SCRATCH_DEV 3 0 0 00 [------] SCRATCH_MNT
+ 
+ ### test group accounting
+ 
+@@ -64,11 +64,11 @@ projid = 3
+   Size: 16777216     Filetype: Regular File
+   Mode: (0600/-rw-------)         Uid: (1)  Gid: (2)
+ Disk quotas for Group #2 (2)
+-Filesystem   Blocks  Quota  Limit Warn/Time    Mounted on
+-SCRATCH_DEV        48M      0      0  00 [------] SCRATCH_MNT
++Filesystem Blocks Quota Limit Warn/Time Mounted on
++SCRATCH_DEV 48M 0 0 00 [------] SCRATCH_MNT
+ Disk quotas for Group #2 (2)
+-Filesystem    Files  Quota  Limit Warn/Time    Mounted on
+-SCRATCH_DEV          3      0      0  00 [------] SCRATCH_MNT
++Filesystem Files Quota Limit Warn/Time Mounted on
++SCRATCH_DEV 3 0 0 00 [------] SCRATCH_MNT
+ 
+ ### create files, setting up ownership (type=p)
+   File: "SCRATCH_MNT/buffer"
+@@ -94,8 +94,8 @@ projid = 3
+   Size: 16777216     Filetype: Regular File
+   Mode: (0600/-rw-------)         Uid: (1)  Gid: (2)
+ Disk quotas for Project #3 (3)
+-Filesystem   Blocks  Quota  Limit Warn/Time    Mounted on
+-SCRATCH_DEV        48M      0      0  00 [------] SCRATCH_MNT
++Filesystem Blocks Quota Limit Warn/Time Mounted on
++SCRATCH_DEV 48M 0 0 00 [------] SCRATCH_MNT
+ Disk quotas for Project #3 (3)
+-Filesystem    Files  Quota  Limit Warn/Time    Mounted on
+-SCRATCH_DEV          3      0      0  00 [------] SCRATCH_MNT
++Filesystem Files Quota Limit Warn/Time Mounted on
++SCRATCH_DEV 3 0 0 00 [------] SCRATCH_MNT
+diff -urpN a/xfstests/common.filter b/xfstests/common.filter
+--- a/xfstests/common.filter	2010-12-09 11:24:44.315240233 +0100
++++ b/xfstests/common.filter	2010-12-14 14:45:53.566228712 +0100
+@@ -224,5 +224,10 @@ _filter_scratch()
+ 	sed -e "s,$SCRATCH_DEV,SCRATCH_DEV,g" -e "s,$SCRATCH_MNT,SCRATCH_MNT,g"
+ }
+ 
++_filter_spaces()
++{
++	sed -e 's/ [ ]*/ /g'
++}
++
+ # make sure this script returns success
+ /bin/true
 
-cd $path/old
-find . -type f -exec "ln {}  ../new/" \;
-rm *
-mv ../new/* .
-
-to get the inodes created in the new space? This could be necessary in=20
-case the first 1TB is full, and no more inodes can be created. I'm just=20
-not sure if that would be enough.
-
-=2D-=20
-mit freundlichen Gr=FCssen,
-Michael Monnerie, Ing. BSc
-
-it-management Internet Services: Prot=E9ger
-http://proteger.at [gesprochen: Prot-e-schee]
-Tel: +43 660 / 415 6531
-
-// ****** Radiointerview zum Thema Spam ******
-// http://www.it-podcast.at/archiv.html#podcast-100716
-//=20
-// Haus zu verkaufen: http://zmi.at/langegg/
-
---nextPart3245705.9MkWnFbgBt
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.15 (GNU/Linux)
-
-iEYEABECAAYFAk0HGp4ACgkQzhSR9xwSCbShuQCg8i4/s4sdSnbGbJZczZXOnvPO
-7YYAoM31N6wvXMpkULJSW4sM3bUKQdfa
-=i7uX
------END PGP SIGNATURE-----
-
---nextPart3245705.9MkWnFbgBt--
-
-
---===============0396608567917766619==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Signed-off-by: Boris Ranto <branto@redhat.com>
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============0396608567917766619==--
