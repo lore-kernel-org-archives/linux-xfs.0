@@ -1,31 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBDMNEI2016164 for <xfs@oss.sgi.com>; Mon, 13 Dec 2010 16:23:14 -0600
-Received: from mexforward.lss.emc.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D66CC1CBFEDB
-	for <xfs@oss.sgi.com>; Mon, 13 Dec 2010 14:25:05 -0800 (PST)
-Received: from mexforward.lss.emc.com (mexforward.lss.emc.com [128.222.32.20])
-	by cuda.sgi.com with ESMTP id W8nYyGKEz6ASiEl5 for
-	<xfs@oss.sgi.com>; Mon, 13 Dec 2010 14:25:05 -0800 (PST)
-Received: from hop04-l1d11-si04.isus.emc.com (HOP04-L1D11-SI04.isus.emc.com
-	[10.254.111.24])
-	by mexforward.lss.emc.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id
-	oBDMP4pG016177
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Mon, 13 Dec 2010 17:25:04 -0500
-Received: from mailhub.lss.emc.com (mailhub.lss.emc.com [10.254.221.145]) by
-	hop04-l1d11-si04.isus.emc.com (RSA Interceptor) for
-	<xfs@oss.sgi.com>; Mon, 13 Dec 2010 17:25:01 -0500
-Received: from mxhub19.corp.emc.com (mxhub19.corp.emc.com [10.254.93.48])
-	by mailhub.lss.emc.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id
-	oBDMOmnl028856 for <xfs@oss.sgi.com>; Mon, 13 Dec 2010 17:24:48 -0500
-From: <Ivan.Novick@emc.com>
-Date: Mon, 13 Dec 2010 17:24:46 -0500
-Subject: inode64 mount option added after data exists
-Message-ID: <C92BDD2E.1C75%ivan.novick@emc.com>
-Content-Language: en-US
-MIME-Version: 1.0
+	oBE2wXEt059301 for <xfs@oss.sgi.com>; Mon, 13 Dec 2010 20:58:33 -0600
+Received: from mga02.intel.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9311C1E6A86
+	for <xfs@oss.sgi.com>; Mon, 13 Dec 2010 19:00:25 -0800 (PST)
+Received: from mga02.intel.com (mga02.intel.com [134.134.136.20]) by
+	cuda.sgi.com with ESMTP id v33E99Zgkn7WIKjK for
+	<xfs@oss.sgi.com>; Mon, 13 Dec 2010 19:00:25 -0800 (PST)
+From: "Zhong, Xin" <xin.zhong@intel.com>
+Subject: [PATCH v2] xfstests: pwrite hang when writing from mmaped buffer of
+	the same page
+Date: Tue, 14 Dec 2010 11:00:52 +0800
+Message-Id: <1292295652-9508-1-git-send-email-xin.zhong@intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,22 +21,210 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: xin.zhong@intel.com
 
-Hi all,
+The problem is found in meego testing on btrfs:
+http://bugs.meego.com/show_bug.cgi?id=6672
 
-Quick question about the inode64 mount option.
+Reviewed-by: Hellwig, Christoph <hch@infradead.org>
+Signed-off-by: Zhong, Xin <xin.zhong@intel.com>
+---
+ 248                       |   58 +++++++++++++++++++++++++++++++++
+ 248.out                   |    2 +
+ group                     |    1 +
+ src/Makefile              |    2 +-
+ src/pwrite_mmap_blocked.c |   78 +++++++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 140 insertions(+), 1 deletions(-)
+ create mode 100755 248
+ create mode 100644 248.out
+ create mode 100644 src/pwrite_mmap_blocked.c
 
-Is it safe to add this mount option to a file system that was already created and wrote lots of data without it.
-
-Will it still work as intended in this case (use 64 bit inodes)?
-
-Cheers,
-Ivan
+diff --git a/248 b/248
+new file mode 100755
+index 0000000..a4664d9
+--- /dev/null
++++ b/248
+@@ -0,0 +1,58 @@
++#! /bin/bash
++# FS QA Test No. 248
++#
++# Test for pwrite hang problem when writing from mmaped buffer of the same page 
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2010 YOUR NAME HERE.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++# creator
++owner=xin.zhong@intel.com
++
++seq=`basename $0`
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    cd /
++    rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common.rc
++. ./common.filter
++
++# real QA test starts here
++
++# Modify as appropriate.
++_supported_fs generic
++_supported_os Linux
++
++TESTFILE=$TEST_DIR/test_file
++TEST_PROG=$here/src/pwrite_mmap_blocked
++
++$TEST_PROG $TESTFILE
++rm -f $TESTFILE
++
++# success, all done
++status=0
++exit
+diff --git a/248.out b/248.out
+new file mode 100644
+index 0000000..d02c1ac
+--- /dev/null
++++ b/248.out
+@@ -0,0 +1,2 @@
++QA output created by 248
++pwrite 1 bytes from 2 to 3
+diff --git a/group b/group
+index 0f94dd9..ddda26c 100644
+--- a/group
++++ b/group
+@@ -361,3 +361,4 @@ deprecated
+ 245 auto quick dir
+ 246 auto quick rw
+ 247 auto quick rw
++248 other quick rw 
+diff --git a/src/Makefile b/src/Makefile
+index b827bd0..47d7334 100644
+--- a/src/Makefile
++++ b/src/Makefile
+@@ -17,7 +17,7 @@ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
+ 	preallo_rw_pattern_writer ftrunc trunc fs_perms testx looptest \
+ 	locktest unwritten_mmap bulkstat_unlink_test t_stripealign \
+ 	bulkstat_unlink_test_modified t_dir_offset t_futimens t_immutable \
+-	stale_handle
++	stale_handle pwrite_mmap_blocked
+ 
+ SUBDIRS =
+ 
+diff --git a/src/pwrite_mmap_blocked.c b/src/pwrite_mmap_blocked.c
+new file mode 100644
+index 0000000..288a62f
+--- /dev/null
++++ b/src/pwrite_mmap_blocked.c
+@@ -0,0 +1,78 @@
++/*    Copyright (c) 2010 Intel Corporation
++ *
++ *    This program is free software; you can redistribute it and/or modify it
++ *    under the terms of the GNU General Public License as published by the Free
++ *    Software Foundation; version 2 of the License
++ *
++ *    This program is distributed in the hope that it will be useful, but
++ *    WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
++ *    or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++ *    for more details.
++ *
++ *    You should have received a copy of the GNU General Public License along
++ *    with this program; if not, write to the Free Software Foundation, Inc., 59
++ *    Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ */
++
++#include <stdio.h>
++#include <unistd.h>
++#include <fcntl.h>
++#include <stdlib.h>
++#include <string.h>
++#include <errno.h>
++#include <time.h>
++#include <sys/mman.h>
++#include <sys/signal.h>
++#include <sys/stat.h>
++
++char *progname;
++loff_t size;
++int fd;
++void *mapped_mem;
++
++
++int main(int argc, char *argv[])
++{
++	int ret;
++
++	progname = argv[0];
++	size = 5;
++	fd = open(argv[1], O_RDWR|O_TRUNC|O_CREAT, 0666);
++	if (fd < 0) {
++		fprintf(stderr, "%s: Cannot open `%s': %s\n",
++			progname, argv[1], strerror(errno));
++		exit(1);
++	}
++
++	char *cc = "01234";
++	if ((ret = pwrite(fd, (const char *)cc,
++				size, 0)) != size) {
++		fprintf(stderr, "%s: pwrite returned %d\n",
++			__FUNCTION__, ret);
++		perror("pwrite");
++		exit(1);
++	}
++
++	mapped_mem = mmap(0, size, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
++	if (mapped_mem == MAP_FAILED) {
++		perror("mmap");
++		exit(1);
++	}
++	loff_t amount = 1;
++	loff_t from = 2;
++	loff_t to = 3;
++	printf("pwrite %Ld bytes from %Ld to %Ld\n", amount, from, to);
++	if ((ret = pwrite(fd, (char *)mapped_mem + from, amount, to)) != amount) {
++		printf("%s: pwrite returned %d, not %Ld\n",
++					__FUNCTION__, ret, amount);
++		if (errno == EFAULT) {
++			printf("pwrite: EFAULT\n");
++		} else if (ret < 0) {
++			perror("pwrite");
++			exit(1);
++		}
++	}
++	munmap(mapped_mem,0);
++	close(fd);
++	exit(0);
++}
+-- 
+1.6.2.2
 
 _______________________________________________
 xfs mailing list
