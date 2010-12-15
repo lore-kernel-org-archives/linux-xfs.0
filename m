@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBFN2llX247140 for <xfs@oss.sgi.com>; Wed, 15 Dec 2010 17:02:47 -0600
+	oBFMv2hH246821 for <xfs@oss.sgi.com>; Wed, 15 Dec 2010 16:57:02 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5296A1F5FD6
-	for <xfs@oss.sgi.com>; Wed, 15 Dec 2010 15:04:39 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
-	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	fF72Po2IrNzDEDJV for <xfs@oss.sgi.com>;
-	Wed, 15 Dec 2010 15:04:39 -0800 (PST)
-Date: Thu, 16 Dec 2010 10:04:21 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6D0311458CC4
+	for <xfs@oss.sgi.com>; Wed, 15 Dec 2010 14:58:53 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail20.adl6.internode.on.net
+	[150.101.137.105]) by cuda.sgi.com with ESMTP id
+	a3mKKyJ6Tq4CbqdE for <xfs@oss.sgi.com>;
+	Wed, 15 Dec 2010 14:58:53 -0800 (PST)
+Date: Thu, 16 Dec 2010 09:58:50 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS in LINUX embedded environment
-Message-ID: <20101215230421.GI9925@dastard>
-References: <6385EF5E30011E42B75895D851412B2A64BB14EFEA@ILMA1.IL.NDS.COM>
+Subject: Re: [PATCH v3] xfstests: pwrite hang when writing from mmaped
+	buffer of the same page
+Message-ID: <20101215225850.GH9925@dastard>
+References: <1292304018-10827-1-git-send-email-xin.zhong@intel.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <6385EF5E30011E42B75895D851412B2A64BB14EFEA@ILMA1.IL.NDS.COM>
+In-Reply-To: <1292304018-10827-1-git-send-email-xin.zhong@intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,26 +30,41 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: "Zak, Semion" <SZak@nds.com>
-Cc: XTV FS Group <XTVFSGroup@nds.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: "Zhong, Xin" <xin.zhong@intel.com>
+Cc: xfs@oss.sgi.com
 
-On Wed, Dec 15, 2010 at 05:39:03PM +0200, Zak, Semion wrote:
-> Hi,
-> I try to use XFS in LINUX embedded environment, without virtual memory.
-
-Can you describe your platform and environment for us? Does
-"without virtual memory" mean you are using a uclinux variant? Or
-does it mean you are simply not using any swap?
-
-> In one of the tests I got "Out of memory" error.
-
-Can you provide the test case and details of the OOM error?
-
-> My question is:
+On Tue, Dec 14, 2010 at 01:20:18PM +0800, Zhong, Xin wrote:
+> The problem is found in meego testing on btrfs:
+> http://bugs.meego.com/show_bug.cgi?id=6672
 > 
-> Is it possible to bound or decrease memory use by XFS?
+> Reviewed-by: Hellwig, Christoph <hch@infradead.org> and Chinner, Dave <david@fromorbit.com>
+> Signed-off-by: Zhong, Xin <xin.zhong@intel.com>
+> ---
+>  248                       |   57 ++++++++++++++++++++++++++++++++++++
+>  248.out                   |    2 +
+>  group                     |    1 +
+>  src/Makefile              |    2 +-
+>  src/pwrite_mmap_blocked.c |   71 +++++++++++++++++++++++++++++++++++++++++++++
+>  5 files changed, 132 insertions(+), 1 deletions(-)
+>  create mode 100644 248
+>  create mode 100644 248.out
+>  create mode 100644 src/pwrite_mmap_blocked.c
+> 
+> diff --git a/248 b/248
+> new file mode 100644
+> index 0000000..ea4313f
+> --- /dev/null
+> +++ b/248
+> @@ -0,0 +1,57 @@
+> +#! /bin/bash
+> +# FS QA Test No. 248
+> +#
+> +# Test for pwrite hang problem when writing from mmaped buffer of the same page 
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2010 YOUR NAME HERE.  All Rights Reserved.
 
-Not directly - same as every other linux filesystem.
+Still needs the copyright line updated.
 
 Cheers,
 
