@@ -1,37 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBF13m2L158708 for <xfs@oss.sgi.com>; Tue, 14 Dec 2010 19:03:48 -0600
-Received: from e7.ny.us.ibm.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CB0981ECCAF
-	for <xfs@oss.sgi.com>; Tue, 14 Dec 2010 17:05:40 -0800 (PST)
-Received: from e7.ny.us.ibm.com (e7.ny.us.ibm.com [32.97.182.137]) by
-	cuda.sgi.com with ESMTP id Uc0EpL4Ix3di9roa for
-	<xfs@oss.sgi.com>; Tue, 14 Dec 2010 17:05:40 -0800 (PST)
-Received: from d01dlp01.pok.ibm.com (d01dlp01.pok.ibm.com [9.56.224.56])
-	by e7.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id oBF0ljh6020083
-	for <xfs@oss.sgi.com>; Tue, 14 Dec 2010 19:47:52 -0500
-Received: from d01relay03.pok.ibm.com (d01relay03.pok.ibm.com [9.56.227.235])
-	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id E864B728080
-	for <xfs@oss.sgi.com>; Tue, 14 Dec 2010 20:05:38 -0500 (EST)
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay03.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	oBF15cni298558 for <xfs@oss.sgi.com>; Tue, 14 Dec 2010 20:05:38 -0500
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
-	oBF15cFt027846 for <xfs@oss.sgi.com>; Tue, 14 Dec 2010 20:05:38 -0500
-Date: Tue, 14 Dec 2010 17:05:36 -0800
-From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
-Subject: Re: [PATCH 2/3] xfs: convert inode cache lookups to use RCU locking
-Message-ID: <20101215010536.GT2161@linux.vnet.ibm.com>
-References: <1292203957-15819-1-git-send-email-david@fromorbit.com>
-	<1292203957-15819-3-git-send-email-david@fromorbit.com>
-	<20101214211801.GH2161@linux.vnet.ibm.com>
-	<20101214230047.GC16267@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20101214230047.GC16267@dastard>
-Reply-To: paulmck@linux.vnet.ibm.com
+	oBF1NR6T159515 for <xfs@oss.sgi.com>; Tue, 14 Dec 2010 19:23:28 -0600
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D63101CC777D
+	for <xfs@oss.sgi.com>; Tue, 14 Dec 2010 17:25:18 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
+	[150.101.137.101]) by cuda.sgi.com with ESMTP id
+	jC9gZ7zx1aPYIKBH for <xfs@oss.sgi.com>;
+	Tue, 14 Dec 2010 17:25:18 -0800 (PST)
+Received: from dastard (unverified [121.44.88.148])
+	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
+	49873086-1927428
+	for <xfs@oss.sgi.com>; Wed, 15 Dec 2010 11:55:17 +1030 (CDT)
+Received: from chute ([192.168.1.1] helo=disappointment)
+	by dastard with esmtp (Exim 4.72)
+	(envelope-from <dave@fromorbit.com>) id 1PSg7I-00064W-5r
+	for xfs@oss.sgi.com; Wed, 15 Dec 2010 12:25:16 +1100
+Received: from dave by disappointment with local (Exim 4.72)
+	(envelope-from <dave@disappointment.disaster>) id 1PSg5d-0004HQ-Ty
+	for xfs@oss.sgi.com; Wed, 15 Dec 2010 12:23:33 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 7/7] xfs: serialise unaligned direct IOs
+Date: Wed, 15 Dec 2010 12:23:28 +1100
+Message-Id: <1292376208-16282-8-git-send-email-david@fromorbit.com>
+In-Reply-To: <1292376208-16282-1-git-send-email-david@fromorbit.com>
+References: <1292376208-16282-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -40,165 +34,110 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: eric.dumazet@gmail.com, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-T24gV2VkLCBEZWMgMTUsIDIwMTAgYXQgMTA6MDA6NDdBTSArMTEwMCwgRGF2ZSBDaGlubmVyIHdy
-b3RlOgo+IE9uIFR1ZSwgRGVjIDE0LCAyMDEwIGF0IDAxOjE4OjAxUE0gLTA4MDAsIFBhdWwgRS4g
-TWNLZW5uZXkgd3JvdGU6Cj4gPiBPbiBNb24sIERlYyAxMywgMjAxMCBhdCAxMjozMjozNlBNICsx
-MTAwLCBEYXZlIENoaW5uZXIgd3JvdGU6Cj4gPiA+IEZyb206IERhdmUgQ2hpbm5lciA8ZGNoaW5u
-ZXJAcmVkaGF0LmNvbT4KPiA+ID4gCj4gPiA+IFdpdGggZGVsYXllZCBsb2dnaW5nIGdyZWF0bHkg
-aW5jcmVhc2luZyB0aGUgc3VzdGFpbmVkIHBhcmFsbGVsaXNtIG9mIGlub2RlCj4gPiA+IG9wZXJh
-dGlvbnMsIHRoZSBpbm9kZSBjYWNoZSBsb2NraW5nIGlzIHNob3dpbmcgc2lnbmlmaWNhbnQgcmVh
-ZCB2cyB3cml0ZQo+ID4gPiBjb250ZW50aW9uIHdoZW4gaW5vZGUgcmVjbGFpbSBydW5zIGF0IHRo
-ZSBzYW1lIHRpbWUgYXMgbG9va3Vwcy4gVGhlcmUgaXMKPiA+ID4gYWxzbyBhIGxvdCBtb3JlIHdy
-aXRlIGxvY2sgYWNxdWlzdGlvbnMgdGhhbiB0aGVyZSBhcmUgcmVhZCBsb2NrcyAoNDoxIHJhdGlv
-KQo+ID4gPiBzbyB0aGUgcmVhZCBsb2NraW5nIGlzIG5vdCByZWFsbHkgYnV5aW5nIHVzIG11Y2gg
-aW4gdGhlIHdheSBvZiBwYXJhbGxlbGlzbS4KPiA+ID4gCj4gPiA+IFRvIGF2b2lkIHRoZSByZWFk
-IHZzIHdyaXRlIGNvbnRlbnRpb24sIGNoYW5nZSB0aGUgY2FjaGUgdG8gdXNlIFJDVSBsb2NraW5n
-IG9uCj4gPiA+IHRoZSByZWFkIHNpZGUuIFRvIGF2b2lkIG5lZWRpbmcgdG8gUkNVIGZyZWUgZXZl
-cnkgc2luZ2xlIGlub2RlLCB1c2UgdGhlIGJ1aWx0Cj4gPiA+IGluIHNsYWIgUkNVIGZyZWVpbmcg
-bWVjaGFuaXNtLiBUaGlzIHJlcXVpcmVzIHVzIHRvIGJlIGFibGUgdG8gZGV0ZWN0IGxvb2t1cHMg
-b2YKPiA+ID4gZnJlZWQgaW5vZGVzLCBzbyBlbtGVdXJlIHRoYXQgZXZlciBmcmVlZCBpbm9kZSBo
-YXMgYW4gaW5vZGUgbnVtYmVyIG9mIHplcm8gYW5kCj4gPiA+IHRoZSBYRlNfSVJFQ0xBSU0gZmxh
-ZyBzZXQuIFdlIGFscmVhZHkgY2hlY2sgdGhlIFhGU19JUkVDTEFJTSBmbGFnIGluIGNhY2hlIGhp
-dAo+ID4gPiBsb29rdXAgcGF0aCwgYnV0IGFsc28gYWRkIGEgY2hlY2sgZm9yIGEgemVybyBpbm9k
-ZSBudW1iZXIgYXMgd2VsbC4KPiA+ID4gCj4gPiA+IFdlIGNhbnRoZW4gY29udmVydCBhbGwgdGhl
-IHJlYWQgbG9ja2luZyBsb2NrdXBzIHRvIHVzZSBSQ1UgcmVhZCBzaWRlIGxvY2tpbmcKPiA+ID4g
-YW5kIGhlbmNlIHJlbW92ZSBhbGwgcmVhZCBzaWRlIGxvY2tpbmcuCj4gPiAKPiA+IE9LLCBzbyB0
-aGUgeGZzX2lub2RlIHVzZXMgc3RyYWlnaHQgUkNVLCBhbmQgdGhlcmUgZm9yZSBjYW5ub3QgYmUg
-ZnJlZWQgYW5kCj4gPiBpbW1lZGlhdGVseSByZWFsbG9jYXRlZCwgd2hpbGUgdGhlIGlub2RlIGl0
-c2VsZiB1c2VzIFNMQUJfREVTVFJPWV9CWV9SQ1UsCj4gPiB3aGljaCBkb2VzIGFsbG93IHRoZSBp
-bm9kZSB0byBiZSBmcmVlZCBhbmQgaW1tZWRpYXRlbHkgcmVhbGxvY2F0ZWQsCj4gPiBjb3JyZWN0
-Pwo+IAo+IE5vLCB0aGUgc3RydWN0IGlub2RlIGlzIGVtYmVkZGVkIGluIHRoZSBzdHJ1Y3QgeGZz
-X2lub2RlLCBzbyB0aGV5Cj4gaGF2ZSB0aGUgc2FtZSBsaWZlY3ljbGUuIGkuZS4gd2UgZG9uJ3Qg
-c2VwYXJhdGVseSBhbGxvY2F0ZSBhbmQgZnJlZQo+IHRoZSBzdHJ1Y3QgaW5vZGUuIFNvIGl0IGlz
-IGFsbCB1c2luZyBzdHJhaWdodCBSQ1UuCj4gCj4gPiBTb21lIHF1ZXN0aW9ucyBhbmQgY29tbWVu
-dHMgYmVsb3cuCj4gPiAKPiA+IAkJCQkJCQlUaGFueCwgUGF1bAo+ID4gCj4gPiA+IFNpZ25lZC1v
-ZmYtYnk6IERhdmUgQ2hpbm5lciA8ZGNoaW5uZXJAcmVkaGF0LmNvbT4KPiA+ID4gUmV2aWV3ZWQt
-Ynk6IEFsZXggRWxkZXIgPGFlbGRlckBzZ2kuY29tPgo+ID4gPiAtLS0KPiA+ID4gIGZzL3hmcy9s
-aW51eC0yLjYveGZzX3N5bmMuYyB8ICAgMjcgKysrKysrKysrKysrKysrKy0tLS0tCj4gPiA+ICBm
-cy94ZnMveGZzX2lnZXQuYyAgICAgICAgICAgfCAgIDUwICsrKysrKysrKysrKysrKysrKysrKysr
-KysrKysrKystLS0tLS0tLS0tCj4gPiA+ICBmcy94ZnMveGZzX2lub2RlLmMgICAgICAgICAgfCAg
-IDUyICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKy0tLS0tLS0tLS0KPiA+ID4gIDMg
-ZmlsZXMgY2hhbmdlZCwgOTggaW5zZXJ0aW9ucygrKSwgMzEgZGVsZXRpb25zKC0pCj4gPiA+IAo+
-ID4gPiBkaWZmIC0tZ2l0IGEvZnMveGZzL2xpbnV4LTIuNi94ZnNfc3luYy5jIGIvZnMveGZzL2xp
-bnV4LTIuNi94ZnNfc3luYy5jCj4gPiA+IGluZGV4IGFmYjBkN2MuLjVlZTAyZDcgMTAwNjQ0Cj4g
-PiA+IC0tLSBhL2ZzL3hmcy9saW51eC0yLjYveGZzX3N5bmMuYwo+ID4gPiArKysgYi9mcy94ZnMv
-bGludXgtMi42L3hmc19zeW5jLmMKPiA+ID4gQEAgLTUzLDE0ICs1MywyMCBAQCB4ZnNfaW5vZGVf
-YWdfd2Fsa19ncmFiKAo+ID4gPiAgewo+ID4gPiAgCXN0cnVjdCBpbm9kZQkJKmlub2RlID0gVkZT
-X0koaXApOwo+ID4gPiAKPiA+ID4gKwkvKiBjaGVjayBmb3Igc3RhbGUgUkNVIGZyZWVkIGlub2Rl
-ICovCj4gPiA+ICsJc3Bpbl9sb2NrKCZpcC0+aV9mbGFnc19sb2NrKTsKPiA+ID4gKwlpZiAoIWlw
-LT5pX2lubykKPiA+ID4gKwkJZ290byBvdXRfdW5sb2NrX25vZW50Owo+ID4gPiArCj4gPiA+ICsJ
-LyogYXZvaWQgbmV3IG9yIHJlY2xhaW1hYmxlIGlub2Rlcy4gTGVhdmUgZm9yIHJlY2xhaW0gY29k
-ZSB0byBmbHVzaCAqLwo+ID4gPiArCWlmIChfX3hmc19pZmxhZ3NfdGVzdChpcCwgWEZTX0lORVcg
-fCBYRlNfSVJFQ0xBSU1BQkxFIHwgWEZTX0lSRUNMQUlNKSkKPiA+ID4gKwkJZ290byBvdXRfdW5s
-b2NrX25vZW50Owo+ID4gPiArCXNwaW5fdW5sb2NrKCZpcC0+aV9mbGFnc19sb2NrKTsKPiA+ID4g
-Kwo+ID4gCj4gPiBPSywgdGhpcyB3b3JrcyBiZWNhdXNlIHRoZSB4ZnNfaW5vZGUgY2Fubm90IGJl
-IGZyZWVkIGFuZCByZWFsbG9jYXRlZCAod2hpY2gKPiA+IHRoZSBSQ1UgY2hhbmdlIHNob3VsZCBl
-bmZvcmNlKS4gIEl0IGlzIG5vdCBjbGVhciB0byBtZSB0aGF0IHRoZSBhYm92ZQo+ID4gd291bGQg
-d29yayBpZiB1c2luZyB0aGUgU0xBQl9ERVNUUk9ZX0JZX1JDVSBhcHByb2FjaCwgYXQgbGVhc3Qg
-bm90IHVubGVzcwo+ID4gc29tZSBoaWdoZXItbGV2ZWwgY2hlY2tzIGNhbiByZWxpYWJseSBjYXRj
-aCBhbiBpbm9kZSBjaGFuZ2luZyBpZGVudGl0eQo+ID4gZHVlIHRvIHF1aWNrIGZyZWUgYW5kIHJl
-YWxsb2NhdGlvbi4KPiAKPiBJbiB0aGlzIGNhc2UsIEkgZG9uJ3QgYmVsaWV2ZSBpdCBtYXR0ZXJz
-IGlmIHRoZSBpbm9kZSBoYXMgY2hhbmdlZAo+IGlkZW50aXR5IC0gd2UgYXJlIHdhbGtpbmcgZm9y
-IHdyaXRlYmFjaywgc28gaWYgd2UgZ2V0IGEgcmVhbGxvY2F0ZWQKPiBpbm9kZSB3ZSdsbCB3cml0
-ZSBpdCBiYWNrIGlmIGl0IGlzIGRpcnR5LiBJZiBpdCBoYXMgbm90IGJlZW4KPiByZWFsbG9jYXRl
-ZCBvciBzdGlsbCBiZWluZyBpbml0aWFsaXNlZCwgdGhlICFpcC0+aV9pbm8gYW5kCj4gWEZTX0lO
-RVd8WEZTX0lSRUNMQUlNIGNoZWNrcyBhcmUgc3VmZmljaWVudCB0byBhdm9pZCB1c2luZyB0aGUg
-aW5vZGUuCj4gCj4gSSBwcm9iYWJseSBzaG91bGQgYWRkIGEgY29tbWVudCB0byB0aGlzIGVmZmVj
-dCwgeWVzPwoKT25lIHZvdGUgaW4gZmF2b3IgZnJvbSBtZS4gIDstKQoKPiA+IEFsc28sIGFsbCBj
-YWxscyB0byB4ZnNfaW5vZGVfYWdfd2Fsa19ncmFiKCkgbXVzdCBiZSBpbiBSQ1UgcmVhZC1zaWRl
-Cj4gPiBjcml0aWNhbCBzZWN0aW9ucy4uLiAgSSBzdWdnZXN0IGEgZGVidWcgY2hlY2sgZm9yIHJj
-dV9yZWFkX2xvY2tfaGVsZCgpIHRvCj4gPiBjYXRjaCBhbnkgY2FsbCBwYXRocyB0aGF0IG1pZ2h0
-IGhhdmUgc2xpcHBlZCB0aHJvdWdoLiAKPiAKPiBZZXMsIGdvb2QgaWRlYS4KPiAKPiA+IEF0IGZp
-cnN0IGdsYW5jZSwKPiA+IGl0IGFwcGVhcnMgdGhhdCBSQ1UgaXMgcmVwbGFjaW5nIHNvbWUgb2Yg
-LT5wYWdfaWNpX2xvY2ssIGJ1dCBJIGNvdWxkCj4gPiBlYXNpbHkgYmUgbWlzdGFrZW4uCj4gCj4g
-Q29ycmVjdCwgaXQgaXMgcmVwbGFjaW5nIHRoZSByZWFkIHNpZGUgb2YgdGhlIC0+cGFnX2ljaV9s
-b2NrLgoKT0ssIGdvb2QhCgo+ID4gPiBAQCAtNjM5LDYgKzY0OSw5IEBAIHhmc19yZWNsYWltX2lu
-b2RlX2dyYWIoCj4gPiA+ICAJc3RydWN0IHhmc19pbm9kZQkqaXAsCj4gPiA+ICAJaW50CQkJZmxh
-Z3MpCj4gPiA+ICB7Cj4gPiA+ICsJLyogY2hlY2sgZm9yIHN0YWxlIFJDVSBmcmVlZCBpbm9kZSAq
-Lwo+ID4gPiArCWlmICghaXAtPmlfaW5vKQo+ID4gPiArCQlyZXR1cm4gMTsKPiA+IAo+ID4gRG9l
-cyB0aGlzIG1lYW4gdGhhdCB3ZSBuZWVkIHRvIGJlIHVuZGVyIHJjdV9yZWFkX2xvY2soKSBoZXJl
-PyAgSWYgbm90LAo+ID4gaG93IGRvIHdlIGtlZXAgdGhlIGlub2RlIGZyb20gcmVhbGx5IGJlaW5n
-IGZyZWVkIG91dCBmcm9tIHVuZGVyIHVzPwo+IAo+IEhtbW0sIEkgdGhpbmsgSSd2ZSBtaXNtZXJn
-ZWQgYSBwYXRjaCBzb21ld2hlcmUgYWxvbmcgdGhlIGxpbmUuIEluCj4gdGhpcyBwYXRjaCB0aGUg
-cmVjbGFpbSB0cmVlIHdhbGsgaXMgdW5kZXIgdGhlIC0+cGFnX2ljaV9sb2NrKCksIHdoZW4KPiBp
-biBmYWN0IGl0IHNob3VsZCBiZSB1bmRlciB0aGUgcmN1X3JlYWRfbG9jaygpLiBHb29kIGNhdGNo
-LCBQYXVsLgo+IAo+IEFzIGl0IGlzLCBiZWluZyB1bmRlciB0aGUgLT5wYWdfaWNpX2xvY2sgbWVh
-bnMgdGhhdCB0aGUgdHJlZSBpcwo+IGNvbnNpc3RlbnQgYW5kIHdlIHdvbid0IGJlIHNlZWluZyBS
-Q1UgZnJlZWQgaW5vZGVzIGluIHRoZSB3YWxrLgo+IEhlbmNlIHRoZSBjb2RlIGlzIGZ1bmN0aW9u
-aW5nIGNvcnJlY3RseSwganVzdCBub3QgYXMgd2Fzc3MgaW50ZW5kZWQuCj4gCj4gPiAoQWdhaW4s
-IGlmIHdlIGRvIG5lZWQgdG8gYmUgdW5kZXIgcmN1X3JlYWRfbG9jaygpLCBJIGhpZ2hseSByZWNv
-bW1lbmQKPiA+IGEgZGVidWcgY2hlY2sgZm9yIHJjdV9yZWFkX2xvY2tfaGVsZCgpLikKPiAKPiBZ
-dXAsIHdoaWNoIHdvdWxkIGhhdmUgY2F1Z2h0IHRoZSBtZXJnZSBzY3Jld3VwLi4uCgo7LSkKCj4g
-Li4uLgo+ID4gPiAKPiA+ID4gKwkvKgo+ID4gPiArCSAqIGNoZWNrIGZvciByZS11c2Ugb2YgYW4g
-aW5vZGUgd2l0aGluIGFuIFJDVSBncmFjZSBwZXJpb2QgZHVlIHRvIHRoZQo+ID4gPiArCSAqIHJh
-ZGl4IHRyZWUgbm9kZXMgbm90IGJlaW5nIHVwZGF0ZWQgeWV0LiBXZSBtb25pdG9yIGZvciB0aGlz
-IGJ5Cj4gPiA+ICsJICogc2V0dGluZyB0aGUgaW5vZGUgbnVtYmVyIHRvIHplcm8gYmVmb3JlIGZy
-ZWVpbmcgdGhlIGlub2RlIHN0cnVjdHVyZS4KPiA+ID4gKwkgKiBJZiB0aGUgaW5vZGUgaGFzIGJl
-ZW4gcmVhbGxvY2F0ZWQgYW5kIHNldCB1cCwgdGhlbiB0aGUgaW5vZGUgbnVtYmVyCj4gPiA+ICsJ
-ICogd2lsbCBub3QgbWF0Y2gsIHNvIGNoZWNrIGZvciB0aGF0LCB0b28uCj4gPiA+ICsJICovCj4g
-PiA+ICAJc3Bpbl9sb2NrKCZpcC0+aV9mbGFnc19sb2NrKTsKPiA+ID4gKwlpZiAoaXAtPmlfaW5v
-ICE9IGlubykgewo+ID4gPiArCQl0cmFjZV94ZnNfaWdldF9za2lwKGlwKTsKPiA+ID4gKwkJWEZT
-X1NUQVRTX0lOQyh4c19pZ19mcmVjeWNsZSk7Cj4gPiA+ICsJCXNwaW5fdW5sb2NrKCZpcC0+aV9m
-bGFnc19sb2NrKTsKPiA+ID4gKwkJcmN1X3JlYWRfdW5sb2NrKCk7Cj4gPiA+ICsJCS8qIEV4cGly
-ZSB0aGUgZ3JhY2UgcGVyaW9kIHNvIHdlIGRvbid0IHRyaXAgb3ZlciBpdCBhZ2Fpbi4gKi8KPiA+
-ID4gKwkJc3luY2hyb25pemVfcmN1KCk7Cj4gPiAKPiA+IEhtbW0uLi4gIEludGVyZXN0aW5nLiAg
-V291bGRuJ3QgdGhlIGZhY3QgdGhhdCB3ZSBhY3F1aXJlZCB0aGUgc2FtZSBsb2NrCj4gPiB0aGF0
-IHdhcyBoZWxkIGFmdGVyIHJlbW92aW5nIHRoZSBpbm9kZSBndWFyYW50ZWUgdGhhdCBhbiBpbW1l
-ZGlhdGUgcmV0cnkKPiA+IHdvdWxkIG1hbmFnZSBub3QgdG8gZmluZCB0aGlzIHNhbWUgaW5vZGUg
-YWdhaW4/Cj4gCj4gVGhhdCBpcyB3aGF0IEknbSBub3Qgc3VyZSBvZi4gSSB3YXMgbW9yZSB3b3Jy
-aWVkIGFib3V0IHJlc29sdmluZyB0aGUKPiBjb250ZW50cyBvZiB0aGUgcmFkaXggdHJlZSBub2Rl
-cywgbm90IHNvIG11Y2ggdGhlIGlub2RlIGl0c2VsZi4gSWYgYQo+IG5ldyB0cmF2ZXJzYWwgd2ls
-bCByZXNvbHZlIHRoZSB0cmVlIGNvcnJlY3RseSAod2hpY2ggaXMgd2hhdCB5b3UgYXJlCj4gaW1w
-bHlpbmcpLCB0aGVuIHN5bmNocm9uaXplX3JjdSgpIGlzIG5vdCBuZWVkZWQuLi4uCgpIZXJlIGlz
-IHRoZSBzZXF1ZW5jZSBvZiBldmVudHMgdGhhdCBJIGJlbGlldmUgbXVzdCBiZSBpbiBwbGFjZToK
-CjEuCVNvbWUgQ1BVIHJlbW92ZXMgdGhlIHZmc19pbm9kZSBmcm9tIHRoZSByYWRpeCB0cmVlLCBw
-cmVzdW1hYmx5Cgl3aGlsZSBob2xkaW5nIHNvbWUgbG9jayB3aG9zZSBpZGVudGl0eSBkb2VzIG5v
-dCBtYXR0ZXIgaGVyZS4KCjIuCUJlZm9yZSBpbnZva2luZyBjYWxsX3JjdSgpIG9uIGEgZ2l2ZW4g
-dmZzX2lub2RlLCB0aGlzIHNhbWUKCUNQVSBjbGVhcnMgdGhlIGlub2RlIG51bWJlciB3aGlsZSBo
-b2xkaW5nIC0+aV9mbGFnc19sb2NrLgoKCUlmIHRoZSBDUFUgaW4gIzEgYW5kICMyIG1pZ2h0IGJl
-IGRpZmZlcmVudCwgdGhlbiBlaXRoZXIKCUNQVSAjMSBtdXN0IGhvbGQgLT5pX2ZsYWdzX2xvY2sg
-d2hpbGUgcmVtb3ZpbmcgdGhlIHZmc19pbm9kZQoJZnJvbSB0aGUgcmFkaXggdHJlZSwgb3IgSSBk
-b24ndCB1bmRlcnN0YW5kIGhvdyB0aGlzIGNhbiB3b3JrCglldmVuIHdpdGggdGhlIHN5bmNocm9u
-aXplX3JjdSgpLgoKMy4JU29tZSBDUFUsIHBvc3NpYmx5IGRpZmZlcmVudCB0aGFuIHRoYXQgaW4g
-IzEgYW5kICMyIGFib3ZlLAoJZXhlY3V0ZXMgdGhlIGFib3ZlIGNvZGUuICBJZiBsb2NraW5nIHdv
-cmtzIGNvcnJlY3RseSwgaXQKCW11c3Qgc2VlIHRoZSBlYXJsaWVyIGNoYW5nZXMsIHNvIGEgc3Vi
-c2VxdWVudCBhY2Nlc3Mgc2hvdWxkCglzZWUgdGhlIHJlc3VsdHMgb2YgIzEgYWJvdmUsIHNvIHRo
-YXQgaXQgd29uJ3Qgc2VlIHRoZSBlbGVtZW50Cgl0aGF0IHdhcyByZW1vdmVkIHRoZXJlLgoKVGhh
-dCBzYWlkLCBJIGRvbid0IGNsYWltIHRvIHVuZGVyc3RhbmQgZWl0aGVyIHZmcyBvciB4ZnMgdmVy
-eSB3ZWxsLCBzbwpJIHdvdWxkIGJlIGFyYml0cmFyaWx5IGRlZXBseSBjb25mdXNlZC4KCj4gPiBJ
-ZiB0aGlzIGlzIG5vdCB0aGUgY2FzZSwgdGhlbiByZWFkZXJzIGZpbmRpbmcgaXQgYWdhaW4gd2ls
-bCBub3QgYmUKPiA+IHByb3RlY3RlZCBieSB0aGUgUkNVIGdyYWNlIHBlcmlvZCwgcmlnaHQ/Cj4g
-PiAKPiA+IEluIHNob3J0LCBJIGRvbid0IHVuZGVyc3RhbmQgd2h5IHRoZSBzeW5jaHJvbml6ZV9y
-Y3UoKSBpcyBuZWVkZWQuCj4gPiBJZiBpdCBpcyBzb21laG93IGhlbHBpbmcsIHRoYXQgc291bmRz
-IHRvIG1lIGxpa2UgaXQgaXMgY292ZXJpbmcgdXAKPiA+IGEgcmVhbCBidWcgdGhhdCBzaG91bGQg
-YmUgZml4ZWQgc2VwYXJhdGVseS4KPiAKPiBJdCBpc24ndCBjb3ZlcmluZyB1cCBhIGJ1ZywgaXQg
-d2FzIG1vcmUgdHJ5aW5ndCBvIGJlIGNvbnNpc3RlbnQgd2l0aAo+IHRoZSByZXN0IG9mIHRoZSB4
-ZnNfaW5vZGUgbG9va3VwIGZhaWx1cmVzIC0gd2UgYmFjayBvZmYgYW5kIHRyeQo+IGFnYWluIGxh
-dGVyLiBJZiB0aGF0IGlzIHVubmVjZXNzYXJ5IHJlc29sdmUgdGhlIFJDVSBsb29rdXAgcmFjZSwK
-PiB0aGVuIGl0IGNhbiBiZSBkcm9wcGVkLgoKT0ssIHBsZWFzZSBsZXQgbWUga25vdyB3aGV0aGVy
-IG15IHNlcXVlbmNlIG9mIHN0ZXBzIGFib3ZlIG1ha2VzIHNlbnNlLgoKPiA+ID4gQEAgLTM5Nyw3
-ICs0MjMsNyBAQCB4ZnNfaWdldCgKPiA+ID4gIAl4ZnNfYWdpbm9fdAlhZ2lubzsKPiA+ID4gCj4g
-PiA+ICAJLyogcmVqZWN0IGlub2RlIG51bWJlcnMgb3V0c2lkZSBleGlzdGluZyBBR3MgKi8KPiA+
-ID4gLQlpZiAoWEZTX0lOT19UT19BR05PKG1wLCBpbm8pID49IG1wLT5tX3NiLnNiX2FnY291bnQp
-Cj4gPiA+ICsJaWYgKCFpbm8gfHwgWEZTX0lOT19UT19BR05PKG1wLCBpbm8pID49IG1wLT5tX3Ni
-LnNiX2FnY291bnQpCj4gPiAKPiA+IEZvciB0aGUgYWJvdmUgY2hlY2sgdG8gYmUgc2FmZSwgZG9u
-J3Qgd2UgbmVlZCB0byBhbHJlYWR5IGJlIGluIGFuCj4gPiBSQ1UgcmVhZC1zaWRlIGNyaXRpY2Fs
-IHNlY3Rpb24/ICBPciBpcyBzb21ldGhpbmcgZWxzZSBwcm90ZWN0aW5nIHVzPwo+IAo+ICJpbm8i
-IGlzIHRoZSBpbm9kZSBudW1iZXIgdXNlZCBhcyB0aGUgbG9va3VwIGtleSB0byBmaW5kIHRoZSBz
-dHJ1Y3QKPiB4ZnNfaW5vZGUuIFRoaXMgaXMgZW5zdXJpbmcgd2UgZG9uJ3QgdHJ5IHRvIGxvb2sg
-dXAgYW4gaW5vZGUgbnVtYmVyCj4gb2YgemVybyBnaXZlbiBpdCdzIG5ldyBzcGVjaWFsIG1lYW5p
-bmcgYXMgYSBmcmVlZCBpbm9kZS4gSGVuY2UgaXQKPiBjYW4gYmUgc2FmZWx5IHZhbGlkYXRlZCBv
-dXRzaWRlIHRoZSBSQ1UgcmVhZC1zaWRlIGNyaXRpY2FsIHNlY3Rpb25pCj4gYXMgaXQgaXMgYSBj
-b25zdGFudC4KCkFoLCBPSywgZ290IGl0IQoKCQkJCQkJCVRoYW54LCBQYXVsCgo+IFRoYW5rcyBm
-b3IgdGhlIHJldmlldywgUGF1bC4gSSdsbCBmaXggdXAgdGhlIGlzc3VlcyB5b3UndmUgcG9pbnRl
-ZAo+IG91dCBhbmQgcmV0ZXN0Lgo+IAo+IENoZWVycywKPiAKPiBEYXZlLgo+IC0tIAo+IERhdmUg
-Q2hpbm5lcgo+IGRhdmlkQGZyb21vcmJpdC5jb20KCl9fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0
-dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+From: Dave Chinner <dchinner@redhat.com>
+
+When two concurrent unaligned, non-overlapping direct IOs are issued
+to the same block, the direct Io layer will race to zero the block.
+The result is that one of the concurrent IOs will overwrite data
+written by the other IO with zeros. This is demonstrated by the
+xfsqa test 240.
+
+To avoid this problem, serialise all unaligned direct IOs to an
+inode with a big hammer. We need a big hammer approach as we need to
+serialise AIO as well, so we can't just block writes on locks.
+Hence, the big hammer is calling xfs_ioend_wait() while holding out
+other unaligned direct IOs from starting.
+
+We don't bother trying to serialised aligned vs unaligned IOs as
+they are overlapping IO and the result of concurrent overlapping IOs
+is undefined - the result of either IO is a valid result so we let
+them race. Hence we only penalise unaligned IO, which already has a
+major overhead compared to aligned IO so this isn't a major problem.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/linux-2.6/xfs_file.c |   29 ++++++++++++++++++++++++-----
+ 1 files changed, 24 insertions(+), 5 deletions(-)
+
+diff --git a/fs/xfs/linux-2.6/xfs_file.c b/fs/xfs/linux-2.6/xfs_file.c
+index 269da12..68f88a5 100644
+--- a/fs/xfs/linux-2.6/xfs_file.c
++++ b/fs/xfs/linux-2.6/xfs_file.c
+@@ -648,10 +648,21 @@ xfs_file_aio_write_checks(
+  * xfs_file_dio_aio_write - handle direct IO writes
+  *
+  * Lock the inode appropriately to prepare for and issue a direct IO write.
+- * By spearating it from the buffered write path we remove all the tricky to
++ * By separating it from the buffered write path we remove all the tricky to
+  * follow locking changes and looping. This also clearly indicates that XFS
+  * does not fall back to buffered IO in the direct IO write path.
+  *
++ * In most cases the direct IO writes will be done with IOLOCK_SHARED allowing
++ * them to be done in parallel with reads and other direct IO writes. However,
++ * if the IO is not aligned to filesystem blocks, the direct IO layer needs to
++ * do sub-block zeroing and that requires serialisation against other direct
++ * IOs to the same block. In this case we need to serialise the submission of
++ * the unaligned IOs so that we don't get racing block zeroing in the dio layer.
++ * To avoid the problem with aio, we also need to wait for outstanding IOs to
++ * complete so that unwritten extent conversion is completed before we try to
++ * map the overlapping block. This is currently implemented by hitting it
++ * with a big hammer (i.e. xfs_ioend_wait()).
++ *
+  * Returns with locks held indicated by @need_i_mutex and @iolock.
+  */
+ STATIC ssize_t
+@@ -671,6 +682,7 @@ xfs_file_dio_aio_write(
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	ssize_t			error = 0;
+ 	size_t			count = ocount;
++	int			unaligned_io = 0;
+ 	xfs_buftarg_t		*target = XFS_IS_REALTIME_INODE(ip) ?
+ 					mp->m_rtdev_targp : mp->m_ddev_targp;
+ 
+@@ -679,10 +691,15 @@ xfs_file_dio_aio_write(
+ 	if ((pos & target->bt_smask) || (count & target->bt_smask))
+ 		return XFS_ERROR(-EINVAL);
+ 
+-	if (mapping->nrpages || pos > ip->i_size) {
++	if ((pos & mp->m_blockmask) || ((pos + count) & mp->m_blockmask))
++		unaligned_io = 1;
++
++	if (unaligned_io || mapping->nrpages || pos > ip->i_size) {
+ 		*iolock = XFS_IOLOCK_EXCL;
+ 		*need_i_mutex = 1;
+ 		mutex_lock(&inode->i_mutex);
++		if (unaligned_io)
++			xfs_ioend_wait(ip);
+ 	} else {
+ 		*iolock = XFS_IOLOCK_SHARED;
+ 	}
+@@ -700,10 +717,12 @@ xfs_file_dio_aio_write(
+ 	}
+ 
+ 	if (*need_i_mutex) {
+-		/* demote the lock now the cached pages are gone */
+-		xfs_ilock_demote(ip, XFS_IOLOCK_EXCL);
++		/* demote the lock now the cached pages are gone if we can */
++		if (!unaligned_io) {
++			xfs_ilock_demote(ip, XFS_IOLOCK_EXCL);
++			*iolock = XFS_IOLOCK_SHARED;
++		}
+ 		mutex_unlock(&inode->i_mutex);
+-		*iolock = XFS_IOLOCK_SHARED;
+ 		*need_i_mutex = 0;
+ 	}
+ 
+-- 
+1.7.2.3
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
