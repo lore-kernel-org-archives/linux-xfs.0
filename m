@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBFMtLSE246673 for <xfs@oss.sgi.com>; Wed, 15 Dec 2010 16:55:22 -0600
+	oBFNOHOR248557 for <xfs@oss.sgi.com>; Wed, 15 Dec 2010 17:24:18 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 11AE31F5F76
-	for <xfs@oss.sgi.com>; Wed, 15 Dec 2010 14:57:13 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
-	[150.101.137.102]) by cuda.sgi.com with ESMTP id
-	wz319DeiaLh27TTF for <xfs@oss.sgi.com>;
-	Wed, 15 Dec 2010 14:57:13 -0800 (PST)
-Date: Thu, 16 Dec 2010 09:57:10 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 12466152DF0A
+	for <xfs@oss.sgi.com>; Wed, 15 Dec 2010 15:26:09 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail20.adl6.internode.on.net
+	[150.101.137.105]) by cuda.sgi.com with ESMTP id
+	GIxDvKT9rO7TpVGY for <xfs@oss.sgi.com>;
+	Wed, 15 Dec 2010 15:26:09 -0800 (PST)
+Date: Thu, 16 Dec 2010 10:26:07 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: provide a inode iolock lockdep class
-Message-ID: <20101215225710.GG9925@dastard>
-References: <1292202431-15320-1-git-send-email-david@fromorbit.com>
-	<20101215121811.GA3122@infradead.org>
+Subject: Re: [PATCH 00/10] writeback updates V2
+Message-ID: <20101215232606.GJ9925@dastard>
+References: <20101210084215.259628825@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20101215121811.GA3122@infradead.org>
+In-Reply-To: <20101210084215.259628825@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,38 +32,14 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Wed, Dec 15, 2010 at 07:18:11AM -0500, Christoph Hellwig wrote:
-> On Mon, Dec 13, 2010 at 12:07:11PM +1100, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > The XFS iolock needs to be re-initialised to a new lock class before
-> > it enters reclaim to prevent lockdep false positives. Unfortunately,
-> > this is not sufficient protection as inodes in the XFS_IRECLAIMABLE
-> > state can be recycled and not re-initialised before being reused.
-> > 
-> > We need to re-initialise the lock state when transfering out of
-> > XFS_IRECLAIMABLE state to XFS_INEW, but we need to keep the same
-> > class as if the inode was just allocated. Hence we need a specific
-> > lockdep class variable for the iolock so that both initialisations
-> > use the same class.
-> > 
-> > While there, add a specific class for inodes in the reclaim state so
-> > that it is easy to tell from lockdep reports what state the inode
-> > was in that generated the report.
-> 
-> Looks good to me.  As long as we have the mrlock abstraction we might as
-> well hide this behind it, but as I plan on killing the abstraction
-> that's probably not worth the effort.
+On Fri, Dec 10, 2010 at 03:42:15AM -0500, Christoph Hellwig wrote:
+>  - add IO_DIRECT per Dave's review comment
+>  - fix up a commit message as per Dave's review comment
+>  - add Reviewed-by: tags for Dave's reviews
 
-I thought about doing that, too, after looking at what the abstraction
-still provides us with. I think it only provides an extra "is write
-locked" debug check which I think could be added to the generic
-rwsem code pretty easily. But I've got a big enough patch stack out
-for review right now. ;)
-
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-
-Thanks, I'll add it to the for-2.6.38 stack.
+Christoph, do you want me to add this to my xfs-for-2.6.38 branch so
+it is easier to test with all the other pending changes we have for
+2.6.38?
 
 Cheers,
 
