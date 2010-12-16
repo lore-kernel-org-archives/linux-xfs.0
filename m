@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBG1llvu254526 for <xfs@oss.sgi.com>; Wed, 15 Dec 2010 19:47:47 -0600
-Received: from mga14.intel.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CFCBF1F670C
-	for <xfs@oss.sgi.com>; Wed, 15 Dec 2010 17:49:40 -0800 (PST)
-Received: from mga14.intel.com (mga14.intel.com [143.182.124.37]) by
-	cuda.sgi.com with ESMTP id oNvsqpEQBuwEp2VB for
-	<xfs@oss.sgi.com>; Wed, 15 Dec 2010 17:49:40 -0800 (PST)
+	oBG2LXhJ256552 for <xfs@oss.sgi.com>; Wed, 15 Dec 2010 20:21:34 -0600
+Received: from mga11.intel.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DF01B14594BC
+	for <xfs@oss.sgi.com>; Wed, 15 Dec 2010 18:23:26 -0800 (PST)
+Received: from mga11.intel.com (mga11.intel.com [192.55.52.93]) by
+	cuda.sgi.com with ESMTP id N3fbsuMRbvZPGmU7 for
+	<xfs@oss.sgi.com>; Wed, 15 Dec 2010 18:23:26 -0800 (PST)
 From: "Zhong, Xin" <xin.zhong@intel.com>
-Date: Thu, 16 Dec 2010 09:48:29 +0800
+Date: Thu, 16 Dec 2010 10:22:38 +0800
 Subject: RE: [PATCH v3] xfstests: pwrite hang when writing from mmaped
 	buffer of the same page
-Message-ID: <1865303E0DED764181A9D882DEF65FB6859A064AFE@shsmsx502.ccr.corp.intel.com>
+Message-ID: <1865303E0DED764181A9D882DEF65FB6859A064B54@shsmsx502.ccr.corp.intel.com>
 References: <1292304018-10827-1-git-send-email-xin.zhong@intel.com>
-	<20101215120840.GA29650@infradead.org>
-In-Reply-To: <20101215120840.GA29650@infradead.org>
+	<20101215225850.GH9925@dastard>
+In-Reply-To: <20101215225850.GH9925@dastard>
 Content-Language: en-US
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -30,14 +30,14 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Dave Chinner <david@fromorbit.com>
 Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Thanks a lot for your help!
+I will submit another one. Thanks a lot for your careful review,:-).
 
 -----Original Message-----
-From: Christoph Hellwig [mailto:hch@infradead.org] 
-Sent: Wednesday, December 15, 2010 8:09 PM
+From: Dave Chinner [mailto:david@fromorbit.com] 
+Sent: Thursday, December 16, 2010 6:59 AM
 To: Zhong, Xin
 Cc: xfs@oss.sgi.com
 Subject: Re: [PATCH v3] xfstests: pwrite hang when writing from mmaped buffer of the same page
@@ -48,10 +48,39 @@ On Tue, Dec 14, 2010 at 01:20:18PM +0800, Zhong, Xin wrote:
 > 
 > Reviewed-by: Hellwig, Christoph <hch@infradead.org> and Chinner, Dave <david@fromorbit.com>
 > Signed-off-by: Zhong, Xin <xin.zhong@intel.com>
+> ---
+>  248                       |   57 ++++++++++++++++++++++++++++++++++++
+>  248.out                   |    2 +
+>  group                     |    1 +
+>  src/Makefile              |    2 +-
+>  src/pwrite_mmap_blocked.c |   71 +++++++++++++++++++++++++++++++++++++++++++++
+>  5 files changed, 132 insertions(+), 1 deletions(-)
+>  create mode 100644 248
+>  create mode 100644 248.out
+>  create mode 100644 src/pwrite_mmap_blocked.c
+> 
+> diff --git a/248 b/248
+> new file mode 100644
+> index 0000000..ea4313f
+> --- /dev/null
+> +++ b/248
+> @@ -0,0 +1,57 @@
+> +#! /bin/bash
+> +# FS QA Test No. 248
+> +#
+> +# Test for pwrite hang problem when writing from mmaped buffer of the same page 
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2010 YOUR NAME HERE.  All Rights Reserved.
 
-Thanks, the new patch looks good.  I'll fix up the rewiewed-by line to
-be two separate ones, and move the variable declarations to the top of
-the main functions as pointed out by Dave and will commit it.
+Still needs the copyright line updated.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
