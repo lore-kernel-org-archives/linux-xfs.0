@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBGFasdU077829 for <xfs@oss.sgi.com>; Thu, 16 Dec 2010 09:36:54 -0600
+	oBGFYgoq077331 for <xfs@oss.sgi.com>; Thu, 16 Dec 2010 09:34:43 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4DF4F152F06B
-	for <xfs@oss.sgi.com>; Thu, 16 Dec 2010 07:38:47 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 64A911CD2E57
+	for <xfs@oss.sgi.com>; Thu, 16 Dec 2010 07:36:37 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id vaVlam5tVUIJmFZZ for
-	<xfs@oss.sgi.com>; Thu, 16 Dec 2010 07:38:47 -0800 (PST)
-Date: Thu, 16 Dec 2010 10:38:47 -0500
+	by cuda.sgi.com with ESMTP id rWYTO5RYBaTEMrnF for
+	<xfs@oss.sgi.com>; Thu, 16 Dec 2010 07:36:37 -0800 (PST)
+Date: Thu, 16 Dec 2010 10:36:34 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 5/9] xfs: reduce the number of AIL push wakeups
-Message-ID: <20101216153846.GC24185@infradead.org>
-References: <1292214743-18073-1-git-send-email-david@fromorbit.com>
-	<1292214743-18073-6-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH 2/3] xfs: use generic per-cpu counter infrastructure
+Message-ID: <20101216153634.GA24185@infradead.org>
+References: <1292203313-15570-1-git-send-email-david@fromorbit.com>
+	<1292203313-15570-3-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1292214743-18073-6-git-send-email-david@fromorbit.com>
+In-Reply-To: <1292203313-15570-3-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,46 +30,36 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+Cc: a.p.zijlstra@chello.nl, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Mon, Dec 13, 2010 at 03:32:19PM +1100, Dave Chinner wrote:
+On Mon, Dec 13, 2010 at 12:21:52PM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> The xfaild often tries to rest to wait for congestion to pass of for
-> IO to complete, but is regularly woken in tail-pushing situations.
-> In severe cases, the xfsaild is getting woken tens of thousands of
-> times a second. Reduce the number needless wakeups by only waking
-> the xfsaild if the new target is larger than the old one. Further
-> make short sleeps uninterruptible as they occur when the xfsaild has
-> decided it needs to back off to allow some IO to complete and being
-> woken early is counter-productive.
+> XFS has a per-cpu counter implementation for in-core superblock
+> counters that pre-dated the generic implementation. It is complex
+> and baroque as it is tailored directly to the needs of ENOSPC
+> detection.
+> 
+> Now that the generic percpu counter infrastructure has the
+> percpu_counter_add_unless_lt() function that implements the
+> necessary threshold checks for us, switch the XFS per-cpu
+> superblock counters to use the generic percpu counter
+> infrastructure.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-This patch causes softlockup warnings in xfsaild for various testcases
-on my 32-bit x86 VM, but the testcases continue otherwise normally.
+Looks good to me,
 
-Example below:
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-[  361.692515] INFO: task xfsaild/vdb5:8705 blocked for more than 120 seconds.
-[  361.697272] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-[  361.703929] xfsaild/vdb5  D 00000000     0  8705      2 0x00000000
-[  361.708148]  f4933f10 00000046 f4b37464 00000000 00000000 f4b37100 f4b37100 00000046
-[  361.711501]  f4933eb4 00000046 f4b37100 c0936092 f4b37264 f4b37268 00000000 c0d52d00
-[  361.714786]  c0d52d08 c0e96c00 f5735d38 f4933ec0 f4b37100 f6946c00 f4933eec c0160553
-[  361.718120] Call Trace:
-[  361.721856]  [<c0936092>] ? _raw_spin_unlock_irq+0x22/0x30
-[  361.723439]  [<c0160553>] ? finish_task_switch+0x73/0x100
-[  361.725056]  [<c0160517>] ? finish_task_switch+0x37/0x100
-[  361.726592]  [<c09334b3>] ? schedule+0x263/0x9d0
-[  361.727932]  [<c0198f4b>] ? trace_hardirqs_off+0xb/0x10
-[  361.729548]  [<c0933f05>] schedule_timeout+0x185/0x250
-[  361.731258]  [<c09360d5>] ? _raw_spin_unlock_irqrestore+0x35/0x60
-[  361.733037]  [<c019c68b>] ? trace_hardirqs_on+0xb/0x10
-[  361.734513]  [<c04ed504>] xfsaild+0x54/0xc0
-[  361.735786]  [<c04ed4b0>] ? xfsaild+0x0/0xc0
-[  361.737171]  [<c0187634>] kthread+0x74/0x80
-[  361.738446]  [<c01875c0>] ? kthread+0x0/0x80
-[  361.739987]  [<c013507a>] kernel_thread_helper+0x6/0x1c
-[  361.741589] no locks held by xfsaild/vdb5/8705.
+A little nipick:
+
+> -#ifdef HAVE_PERCPU_SB
+>  	ASSERT(field < XFS_SBS_ICOUNT || field > XFS_SBS_FDBLOCKS);
+> -#endif
+
+No need to keep this assert - xfs_mod_incore_sb_unlocked already
+has one for unknown fields.
 
 _______________________________________________
 xfs mailing list
