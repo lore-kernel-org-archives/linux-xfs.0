@@ -1,23 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBG3ATwB259412 for <xfs@oss.sgi.com>; Wed, 15 Dec 2010 21:10:30 -0600
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 272A31CD09C7
-	for <xfs@oss.sgi.com>; Wed, 15 Dec 2010 19:12:21 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
-	[150.101.137.103]) by cuda.sgi.com with ESMTP id
-	7PqJxtTjVEPKLE8m for <xfs@oss.sgi.com>;
-	Wed, 15 Dec 2010 19:12:21 -0800 (PST)
-Date: Thu, 16 Dec 2010 14:12:13 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v4] xfstests: pwrite hang when writing from mmaped
-	buffer of the same page
-Message-ID: <20101216031213.GK9925@dastard>
-References: <1292466652-15563-1-git-send-email-xin.zhong@intel.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1292466652-15563-1-git-send-email-xin.zhong@intel.com>
+	oBG2S6mb256948 for <xfs@oss.sgi.com>; Wed, 15 Dec 2010 20:28:07 -0600
+Received: from mga11.intel.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D14061CD0819
+	for <xfs@oss.sgi.com>; Wed, 15 Dec 2010 18:29:59 -0800 (PST)
+Received: from mga11.intel.com (mga11.intel.com [192.55.52.93]) by
+	cuda.sgi.com with ESMTP id BuijKB487HIRRteV for
+	<xfs@oss.sgi.com>; Wed, 15 Dec 2010 18:29:59 -0800 (PST)
+From: "Zhong, Xin" <xin.zhong@intel.com>
+Subject: [PATCH v4] xfstests: pwrite hang when writing from mmaped buffer of
+	the same page
+Date: Thu, 16 Dec 2010 10:30:52 +0800
+Message-Id: <1292466652-15563-1-git-send-email-xin.zhong@intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,29 +21,206 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: "Zhong, Xin" <xin.zhong@intel.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: xin.zhong@intel.com
 
-On Thu, Dec 16, 2010 at 10:30:52AM +0800, Zhong, Xin wrote:
-> The problem is found in meego testing on btrfs:
-> http://bugs.meego.com/show_bug.cgi?id=6672
-> 
-> Reviewed-by: Hellwig, Christoph <hch@infradead.org>
-> Reviewed-by: Chinner, Dave <david@fromorbit.com>
-> Signed-off-by: Zhong, Xin <xin.zhong@intel.com>
+The problem is found in meego testing on btrfs:
+http://bugs.meego.com/show_bug.cgi?id=6672
 
-Looks good now. Thanks.
+Reviewed-by: Hellwig, Christoph <hch@infradead.org>
+Reviewed-by: Chinner, Dave <david@fromorbit.com>
+Signed-off-by: Zhong, Xin <xin.zhong@intel.com>
+---
+ 248                       |   58 +++++++++++++++++++++++++++++++++++
+ 248.out                   |    2 +
+ group                     |    1 +
+ src/Makefile              |    2 +-
+ src/pwrite_mmap_blocked.c |   73 +++++++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 135 insertions(+), 1 deletions(-)
+ create mode 100644 248
+ create mode 100644 248.out
+ create mode 100644 src/pwrite_mmap_blocked.c
 
-Cheers,
-
-Dave.
+diff --git a/248 b/248
+new file mode 100644
+index 0000000..38eb442
+--- /dev/null
++++ b/248
+@@ -0,0 +1,58 @@
++#! /bin/bash
++# FS QA Test No. 248
++#
++# Test for pwrite hang problem when writing from mmaped buffer of the same page 
++#
++#-----------------------------------------------------------------------
++#    Copyright (c) 2010 Intel Corporation
++#
++#    This program is free software; you can redistribute it and/or modify it
++#    under the terms of the GNU General Public License as published by the Free
++#    Software Foundation; version 2 of the License
++#
++#    This program is distributed in the hope that it will be useful, but
++#    WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
++#    or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++#    for more details.
++#
++#    You should have received a copy of the GNU General Public License along
++#    with this program; if not, write to the Free Software Foundation, Inc., 59
++#    Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++#
++#-----------------------------------------------------------------------
++#
++# creator
++owner=xin.zhong@intel.com
++
++seq=`basename $0`
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    cd /
++    rm -f $tmp.* $TESTFILE
++}
++
++# get standard environment, filters and checks
++. ./common.rc
++. ./common.filter
++
++# real QA test starts here
++
++# Modify as appropriate.
++_supported_fs generic
++_supported_os Linux
++
++TESTFILE=$TEST_DIR/test_file
++TEST_PROG=$here/src/pwrite_mmap_blocked
++
++$TEST_PROG $TESTFILE
++
++# success, all done
++status=0
++exit
+diff --git a/248.out b/248.out
+new file mode 100644
+index 0000000..d02c1ac
+--- /dev/null
++++ b/248.out
+@@ -0,0 +1,2 @@
++QA output created by 248
++pwrite 1 bytes from 2 to 3
+diff --git a/group b/group
+index 0f94dd9..a40c98f 100644
+--- a/group
++++ b/group
+@@ -361,3 +361,4 @@ deprecated
+ 245 auto quick dir
+ 246 auto quick rw
+ 247 auto quick rw
++248 auto quick rw 
+diff --git a/src/Makefile b/src/Makefile
+index b827bd0..47d7334 100644
+--- a/src/Makefile
++++ b/src/Makefile
+@@ -17,7 +17,7 @@ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
+ 	preallo_rw_pattern_writer ftrunc trunc fs_perms testx looptest \
+ 	locktest unwritten_mmap bulkstat_unlink_test t_stripealign \
+ 	bulkstat_unlink_test_modified t_dir_offset t_futimens t_immutable \
+-	stale_handle
++	stale_handle pwrite_mmap_blocked
+ 
+ SUBDIRS =
+ 
+diff --git a/src/pwrite_mmap_blocked.c b/src/pwrite_mmap_blocked.c
+new file mode 100644
+index 0000000..f24f718
+--- /dev/null
++++ b/src/pwrite_mmap_blocked.c
+@@ -0,0 +1,73 @@
++/*    Copyright (c) 2010 Intel Corporation
++ *
++ *    This program is free software; you can redistribute it and/or modify it
++ *    under the terms of the GNU General Public License as published by the Free
++ *    Software Foundation; version 2 of the License
++ *
++ *    This program is distributed in the hope that it will be useful, but
++ *    WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
++ *    or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++ *    for more details.
++ *
++ *    You should have received a copy of the GNU General Public License along
++ *    with this program; if not, write to the Free Software Foundation, Inc., 59
++ *    Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ */
++
++#include <stdio.h>
++#include <unistd.h>
++#include <fcntl.h>
++#include <stdlib.h>
++#include <string.h>
++#include <errno.h>
++#include <time.h>
++#include <sys/mman.h>
++#include <sys/signal.h>
++#include <sys/stat.h>
++
++
++
++int main(int argc, char *argv[])
++{
++	int ret;
++	char *cc = "01234";
++	char *progname;
++	loff_t size;
++	loff_t amount = 1;
++	loff_t from = 2;
++	loff_t to = 3;
++	int fd;
++	void *mapped_mem;
++
++	progname = argv[0];
++	size = 5;
++	fd = open(argv[1], O_RDWR|O_TRUNC|O_CREAT, 0666);
++	if (fd < 0) {
++		fprintf(stderr, "%s: Cannot open `%s': %s\n",
++			progname, argv[1], strerror(errno));
++		exit(1);
++	}
++
++	if ((ret = pwrite(fd, (const char *)cc,
++				size, 0)) != size) {
++		perror("pwrite");
++		exit(1);
++	}
++
++	mapped_mem = mmap(0, size, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
++	if (mapped_mem == MAP_FAILED) {
++		perror("mmap");
++		exit(1);
++	}
++	printf("pwrite %Ld bytes from %Ld to %Ld\n", amount, from, to);
++
++	ret = pwrite(fd, (char *)mapped_mem + from, amount, to);
++	if (ret != amount) {
++		perror("pwrite");
++		exit(1);
++	}
++
++	munmap(mapped_mem,0);
++	close(fd);
++	exit(0);
++}
 -- 
-Dave Chinner
-david@fromorbit.com
+1.6.2.2
 
 _______________________________________________
 xfs mailing list
