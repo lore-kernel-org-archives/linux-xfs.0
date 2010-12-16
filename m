@@ -1,22 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBGFaWDe077748 for <xfs@oss.sgi.com>; Thu, 16 Dec 2010 09:36:32 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0FDC51CD111B
-	for <xfs@oss.sgi.com>; Thu, 16 Dec 2010 07:38:26 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id gop7wBNQRkBUXeJT for
-	<xfs@oss.sgi.com>; Thu, 16 Dec 2010 07:38:26 -0800 (PST)
-Date: Thu, 16 Dec 2010 10:38:26 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/3] xfs: demultiplex xfs_icsb_modify_counters()
-Message-ID: <20101216153826.GB24185@infradead.org>
-References: <1292203313-15570-1-git-send-email-david@fromorbit.com>
-	<1292203313-15570-4-git-send-email-david@fromorbit.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1292203313-15570-4-git-send-email-david@fromorbit.com>
+	oBGKnpfL122842 for <xfs@oss.sgi.com>; Thu, 16 Dec 2010 14:49:51 -0600
+Subject: Re: [PATCH 1/7] xfs: ensure sync write errors are returned
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <1292376208-16282-2-git-send-email-david@fromorbit.com>
+References: <1292376208-16282-1-git-send-email-david@fromorbit.com>
+	<1292376208-16282-2-git-send-email-david@fromorbit.com>
+Date: Thu, 16 Dec 2010 14:50:49 -0600
+Message-ID: <1292532649.2457.54.camel@doink>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,20 +24,75 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: a.p.zijlstra@chello.nl, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-On Mon, Dec 13, 2010 at 12:21:53PM +1100, Dave Chinner wrote:
+On Wed, 2010-12-15 at 12:23 +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> With the conversion to percpu counters, xfs_icsb_modify_counters() really does
-> not need to exist. Convert the inode counter modifications to use a common
-> helper function for the one place that calls them, and add another function for
-> the free block modification and convert all the callers to use that.
+> xfs_file_aio_write() only returns the error from synchronous
+> flushing of the data and inode if error == 0. At the point where
+> error is being checked, it is guaranteed to be > 0. Therefore any
 
-Looks good,
+Actually, we have this above the affected code:
+        ...
+        error = -ret;   
+        if (ret <= 0)
+                goto out_unlock_internal;
+
+So ret must be positive, therefore error is negative
+(the negative of the number of bytes written).  In
+other words, we enter this block without having seen
+an error.
+
+The return at the end of the function is:
+	return -error;
+
+And by the convoluted logic here, that means that the
+value of error should be a negative byte count if
+successful, or a positive errno otherwise.
+
+And since filemap_write_and_wait_range() returns a
+negative errno, your fix doesn't look right to me.
+
+The existing code is wrong and should be fixed, but a
+better fix might make the meaning of the variable "error"
+a little less weird.
+
+					-Alex
+
+> errors returned by the data or fsync flush will never be returned.
+> Fix the checks so we overwrite the current error once and only if an
+> error really occurred.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/linux-2.6/xfs_file.c |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/xfs/linux-2.6/xfs_file.c b/fs/xfs/linux-2.6/xfs_file.c
+> index ba8ad42..e1eaec2 100644
+> --- a/fs/xfs/linux-2.6/xfs_file.c
+> +++ b/fs/xfs/linux-2.6/xfs_file.c
+> @@ -769,7 +769,7 @@ write_retry:
+>  			mutex_unlock(&inode->i_mutex);
+>  
+>  		error2 = filemap_write_and_wait_range(mapping, pos, end);
+> -		if (!error)
+> +		if (error2)
+>  			error = error2;
+>  		if (need_i_mutex)
+>  			mutex_lock(&inode->i_mutex);
+> @@ -777,7 +777,7 @@ write_retry:
+>  
+>  		error2 = -xfs_file_fsync(file,
+>  					 (file->f_flags & __O_SYNC) ? 0 : 1);
+> -		if (!error)
+> +		if (error2 && error >= 0)
+>  			error = error2;
+>  	}
+>  
 
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
