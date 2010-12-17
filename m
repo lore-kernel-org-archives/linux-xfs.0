@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBI029GD007603 for <xfs@oss.sgi.com>; Fri, 17 Dec 2010 18:02:09 -0600
+	oBHNqJCq007121 for <xfs@oss.sgi.com>; Fri, 17 Dec 2010 17:52:20 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D8C511FEEB0
-	for <xfs@oss.sgi.com>; Fri, 17 Dec 2010 16:02:48 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
-	[150.101.137.99]) by cuda.sgi.com with ESMTP id
-	NQv2WLoZ5I5XdST1 for <xfs@oss.sgi.com>;
-	Fri, 17 Dec 2010 16:02:48 -0800 (PST)
-Date: Sat, 18 Dec 2010 11:02:45 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EBDB91CDA97C
+	for <xfs@oss.sgi.com>; Fri, 17 Dec 2010 15:54:12 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
+	[150.101.137.100]) by cuda.sgi.com with ESMTP id
+	h9psjZX8zq7Lruzf for <xfs@oss.sgi.com>;
+	Fri, 17 Dec 2010 15:54:12 -0800 (PST)
+Date: Sat, 18 Dec 2010 10:54:09 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs_efi_item slab leak
-Message-ID: <20101218000245.GG5193@dastard>
-References: <AANLkTi=LrU2CsC-VZmJ5M9U7eJpjqfAv8UgaEYv=Sg01@mail.gmail.com>
+Subject: Re: Another questionable lock order bug
+Message-ID: <20101217235408.GF5193@dastard>
+References: <AANLkTi=0E2eh=wnX+Kr=egLoigkMDq5UuaGyOxnk+T1Q@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <AANLkTi=LrU2CsC-VZmJ5M9U7eJpjqfAv8UgaEYv=Sg01@mail.gmail.com>
+In-Reply-To: <AANLkTi=0E2eh=wnX+Kr=egLoigkMDq5UuaGyOxnk+T1Q@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,63 +25,105 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Nick Piggin <npiggin@gmail.com>
 Cc: xfs@oss.sgi.com
 
-T24gU2F0LCBEZWMgMTgsIDIwMTAgYXQgMDU6MDQ6NDBBTSArMTEwMCwgTmljayBQaWdnaW4gd3Jv
-dGU6Cj4gQWZ0ZXIgcnVubmluZyB4ZnN0ZXN0cyBhbmQgdGhlbiB1bm1vdW50aW5nIGFuZCBybW1v
-ZGRpbmcgeGZzLCBJIGdldCB0aGlzIGJ1Zwo+IAo+IFsgMzQ3My4xOTQ1MTddID09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09Cj4gWyAzNDczLjE5NDY5N10gQlVHIHhmc19lZmlfaXRlbTogT2JqZWN0cyByZW1h
-aW5pbmcgb24ga21lbV9jYWNoZV9jbG9zZSgpCj4gWyAzNDczLjE5NDc5M10gLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0KPiBbIDM0NzMuMTk0Nzk0XQo+IFsgMzQ3My4xOTUwNTZdIElORk86IFNsYWIgMHhm
-ZmZmZWEwMDA2YWQ1ZTAwIG9iamVjdHM9MzUgdXNlZD0yCj4gZnA9MHhmZmZmODgwMWU4NjQwZTgw
-IGZsYWdzPTB4YzAwMDAwMDAwMDAwNDA4MAo+IFsgMzQ3My4xOTUyMDFdIFBpZDogMjIwMTEsIGNv
-bW06IHJtbW9kIE5vdCB0YWludGVkIDIuNi4zNy1yYzYrICMxMTYKPiBbIDM0NzMuMTk1MjAxXSBD
-YWxsIFRyYWNlOgo+IFsgMzQ3My4xOTUyMDFdICBbPGZmZmZmZmZmODExMGJjZjE+XSBzbGFiX2Vy
-cisweDkxLzB4YTAKPiBbIDM0NzMuMTk1MjAxXSAgWzxmZmZmZmZmZjgxMTBmMDg4Pl0gPyBfX3Ns
-YWJfYWxsb2MrMHgxMzgvMHg0ODAKPiBbIDM0NzMuMTk1MjAxXSAgWzxmZmZmZmZmZjgxMDgwODFk
-Pl0gPyB0cmFjZV9oYXJkaXJxc19vZmYrMHhkLzB4MTAKPiBbIDM0NzMuMTk1MjAxXSAgWzxmZmZm
-ZmZmZjgxMTExMmE0Pl0gPyBrbWVtX2NhY2hlX2Rlc3Ryb3krMHgxNTQvMHgzZTAKPiBbIDM0NzMu
-MTk1MjAxXSAgWzxmZmZmZmZmZjgxMDgwODFkPl0gPyB0cmFjZV9oYXJkaXJxc19vZmYrMHhkLzB4
-MTAKPiBbIDM0NzMuMTk1MjAxXSAgWzxmZmZmZmZmZjgxMTEwNWE0Pl0gPyBfX2ttYWxsb2MrMHgx
-MDQvMHgyMjAKPiBbIDM0NzMuMTk1MjAxXSAgWzxmZmZmZmZmZjgxMTExMmM3Pl0ga21lbV9jYWNo
-ZV9kZXN0cm95KzB4MTc3LzB4M2UwCj4gWyAzNDczLjE5NTIwMV0gIFs8ZmZmZmZmZmZhMDA4NmU0
-Nz5dIHhmc19kZXN0cm95X3pvbmVzKzB4MzcvMHgxMDAgW3hmc10KPiBbIDM0NzMuMTk1MjAxXSAg
-WzxmZmZmZmZmZmEwMDg4Zjg4Pl0gZXhpdF94ZnNfZnMrMHgzMy8weDNkIFt4ZnNdCj4gWyAzNDcz
-LjE5NTIwMV0gIFs8ZmZmZmZmZmY4MTA5MDYwYT5dIHN5c19kZWxldGVfbW9kdWxlKzB4MTdhLzB4
-MjcwCj4gWyAzNDczLjE5NTIwMV0gIFs8ZmZmZmZmZmY4MTYwMzQwZj5dID8gbG9ja2RlcF9zeXNf
-ZXhpdF90aHVuaysweDM1LzB4NjcKPiBbIDM0NzMuMTk1MjAxXSAgWzxmZmZmZmZmZjgxMDAzMGJi
-Pl0gc3lzdGVtX2NhbGxfZmFzdHBhdGgrMHgxNi8weDFiCj4gWyAzNDczLjE5NTIwMV0gSU5GTzog
-T2JqZWN0IDB4ZmZmZjg4MDFlODY0MDkxMCBAb2Zmc2V0PTIzMjAKPiBbIDM0NzMuMTk1MjAxXSBJ
-TkZPOiBBbGxvY2F0ZWQgaW4ga21lbV96b25lX2FsbG9jKzB4OGMvMHhkMCBbeGZzXQo+IGFnZT0y
-MjYzOTE3IGNwdT0xNSBwaWQ9NDUxNAo+IFsgMzQ3My4xOTUyMDFdIElORk86IEZyZWVkIGluIHhm
-c19lZmlfaXRlbV9mcmVlKzB4MTkvMHgzMCBbeGZzXQo+IGFnZT0yMjYzOTE4IGNwdT0xNSBwaWQ9
-NDUxNAo+IFsgMzQ3My4xOTUyMDFdIElORk86IE9iamVjdCAweGZmZmY4ODAxZTg2NDI3ZTAgQG9m
-ZnNldD0xMDIwOAo+IFsgMzQ3My4xOTUyMDFdIElORk86IEFsbG9jYXRlZCBpbiBrbWVtX3pvbmVf
-YWxsb2MrMHg4Yy8weGQwIFt4ZnNdCj4gYWdlPTIxMDMwMzQgY3B1PTE1IHBpZD0yMjMyOQo+IFsg
-MzQ3My4xOTUyMDFdIElORk86IEZyZWVkIGluIHhmc19lZmlfaXRlbV9mcmVlKzB4MTkvMHgzMCBb
-eGZzXQo+IGFnZT0yMTAzMDM0IGNwdT0xNSBwaWQ9MjIzMjkKPiBbIDM0NzMuMTk3NjE2XSBTTFVC
-IHhmc19lZmlfaXRlbToga21lbV9jYWNoZV9kZXN0cm95IGNhbGxlZCBmb3IgY2FjaGUKPiB0aGF0
-IHN0aWxsIGhhcyBvYmplY3RzLgo+IFsgMzQ3My4xOTc3OTRdIFBpZDogMjIwMTEsIGNvbW06IHJt
-bW9kIE5vdCB0YWludGVkIDIuNi4zNy1yYzYrICMxMTYKPiBbIDM0NzMuMTk3ODkyXSBDYWxsIFRy
-YWNlOgo+IFsgMzQ3My4xOTc5ODBdICBbPGZmZmZmZmZmODExMTE0YTc+XSBrbWVtX2NhY2hlX2Rl
-c3Ryb3krMHgzNTcvMHgzZTAKPiBbIDM0NzMuMTk4MTIwXSAgWzxmZmZmZmZmZmEwMDg2ZTQ3Pl0g
-eGZzX2Rlc3Ryb3lfem9uZXMrMHgzNy8weDEwMCBbeGZzXQo+IFsgMzQ3My4xOTgyNDBdICBbPGZm
-ZmZmZmZmYTAwODhmODg+XSBleGl0X3hmc19mcysweDMzLzB4M2QgW3hmc10KPiBbIDM0NzMuMTk4
-MzM3XSAgWzxmZmZmZmZmZjgxMDkwNjBhPl0gc3lzX2RlbGV0ZV9tb2R1bGUrMHgxN2EvMHgyNzAK
-PiBbIDM0NzMuMTk4NDM1XSAgWzxmZmZmZmZmZjgxNjAzNDBmPl0gPyBsb2NrZGVwX3N5c19leGl0
-X3RodW5rKzB4MzUvMHg2Nwo+IFsgMzQ3My4xOTg1MzRdICBbPGZmZmZmZmZmODEwMDMwYmI+XSBz
-eXN0ZW1fY2FsbF9mYXN0cGF0aCsweDE2LzB4MWIKCk9rLCBhZnRlciB1bm1vdW50aW5nIGV2ZXJ5
-dGhpbmcgSSBjYW4gc2VlIHR3byBpdGVtcyBpbiByZW1haW5pbmcgaW4KdGhlIHhmc19lZmlfaXRl
-bSBjYWNoZSBhZnRlciBhbiB4ZnN0ZXN0cyBydW4uINCGdCdzIHByb2JhYmx5IHRvIGRvCndpdGgg
-YSBmaWxlc3lzdGVtIHNodXRkb3duIG5vdCBjbGVhbmluZyB0aGVtIHVwIGNvcnJlY3RseS4gSSds
-bCBwdXQKaXQgb24gbXkgbGlzdCBvZiBzdHVmZiB0byB0cmFjayBkb3duLgoKQ2hlZXJzLAoKRGF2
-ZS4KLS0gCkRhdmUgQ2hpbm5lcgpkYXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Mu
-c2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+On Sat, Dec 18, 2010 at 04:40:23AM +1100, Nick Piggin wrote:
+> With the iprune_sem and iolock lock order warnings taken care of,
+> lockdep soon after chokes on i_lock
+
+What kernel are you running? It does not appear to be vanilla XFS,
+as:
+
+> [  716.364005] inconsistent {RECLAIM_FS-ON-R} -> {IN-RECLAIM_FS-W} usage.
+> [  716.364005] cp/8370 [HC0[0]:SC0[0]:HE1:SE1] takes:
+> [  716.364005]  (&(&ip->i_lock)->mr_lock){++++-?}, at:
+> [<ffffffffa005537c>] xfs_ilock+0x8c/0x150 [xfs]
+> [  716.364005] {RECLAIM_FS-ON-R} state was registered at:
+> [  716.364005]   [<ffffffff8108392b>] mark_held_locks+0x6b/0xa0
+> [  716.364005]   [<ffffffff810839f1>] lockdep_trace_alloc+0x91/0xd0
+> [  716.364005]   [<ffffffff811104fa>] __kmalloc+0x5a/0x220
+> [  716.364005]   [<ffffffffa0078717>] kmem_alloc+0x87/0xd0 [xfs]
+> [  716.364005]   [<ffffffffa002b8fb>] xfs_attr_shortform_list+0xfb/0x480 [xfs]
+> [  716.364005]   [<ffffffffa0027ab8>] xfs_attr_list_int+0xd8/0xe0 [xfs]
+> [  716.364005]   [<ffffffffa0088b5f>] xfs_vn_listxattr+0x7f/0x160 [xfs]
+> [  716.364005]   [<ffffffff811396ef>] vfs_listxattr+0x1f/0x30
+> [  716.364005]   [<ffffffff81139b1f>] listxattr+0x3f/0xf0
+> [  716.364005]   [<ffffffff81139c14>] sys_flistxattr+0x44/0x70
+> [  716.364005]   [<ffffffff810030bb>] system_call_fastpath+0x16/0x1b[
+> 716.364005] irq event stamp: 322521151
+> [  716.364005] hardirqs last  enabled at (322521151):
+> [<ffffffff81601cbd>] mutex_trylock+0x11d/0x190
+> [  716.364005] hardirqs last disabled at (322521150):
+> [<ffffffff81601bde>] mutex_trylock+0x3e/0x190
+> [  716.364005] softirqs last  enabled at (322518910):
+> [<ffffffff81050d0e>] __do_softirq+0x16e/0x360
+> [  716.364005] softirqs last disabled at (322518881):
+> [<ffffffff81003f8c>] call_softirq+0x1c/0x50
+> [  716.364005]
+> [  716.364005] other info that might help us debug this:
+> [  716.364005] 3 locks held by cp/8370:
+> [  716.364005]  #0:  (xfs_iolock_active){++++++}, at:
+                        ^^^^^^^^^^^^^^^^^
+
+This patch is not yet mainline. If you really want to do significant
+XFS scalability testing for .38, you should probably pull these branches
+in for testing:
+
+git://git.kernel.org/pub/scm/linux/dgc/xfsdev.git inode-scale
+git://git.kernel.org/pub/scm/linux/dgc/xfsdev.git xfs-for-2.6.38
+
+> [<ffffffffa0055395>] xfs_ilock+0xa5/0x150 [xfs]
+> [  716.364005]  #1:  (shrinker_rwsem){++++..}, at:
+> [<ffffffff810d91c8>] shrink_slab+0x38/0x190
+> [  716.364005]  #2:  (&pag->pag_ici_reclaim_lock){+.+...}, at:
+> [<ffffffffa00875c4>] xfs_reclaim_inodes_ag+
+> 0xa4/0x360 [xfs]
+> [  716.364005]
+> [  716.364005] stack backtrace:
+> [  716.364005] Pid: 8370, comm: cp Not tainted 2.6.37-rc6+ #116
+> [  716.364005] Call Trace:
+> [  716.364005]  [<ffffffff81082a10>] print_usage_bug+0x170/0x180
+> [  716.364005]  [<ffffffff810836d1>] mark_lock+0x211/0x400
+> [  716.364005]  [<ffffffff810842ce>] __lock_acquire+0x40e/0x1490
+> [  716.364005]  [<ffffffff810853e5>] lock_acquire+0x95/0x1b0
+> [  716.364005]  [<ffffffffa005537c>] ? xfs_ilock+0x8c/0x150 [xfs]
+> [  716.364005]  [<ffffffff8127c35c>] ? rcu_read_lock_held+0x2c/0x30
+> [  716.364005]  [<ffffffff81073d5a>] down_write_nested+0x4a/0x70
+> [  716.364005]  [<ffffffffa005537c>] ? xfs_ilock+0x8c/0x150 [xfs]
+> [  716.364005]  [<ffffffffa005537c>] xfs_ilock+0x8c/0x150 [xfs]
+> [  716.364005]  [<ffffffffa00872e6>] xfs_reclaim_inode+0x36/0x270 [xfs]
+> [  716.364005]  [<ffffffffa008772f>] xfs_reclaim_inodes_ag+0x20f/0x360 [xfs]
+> [  716.364005]  [<ffffffffa00878f8>] xfs_reclaim_inode_shrink+0x78/0x80 [xfs]
+> [  716.364005]  [<ffffffff810d92b7>] shrink_slab+0x127/0x190
+> [  716.364005]  [<ffffffff810dc189>] zone_reclaim+0x349/0x420
+>
+> I assume this should be a false positive too, for the same reason,
+> and could be handled the same way as iolock.
+
+The ilock is very different to the iolock in terms of usage - the
+ilock is required in the writeback path (for block mapping,
+allocation and file size updates) while the iolock is not.
+
+Hence this is indicative of a potential deadlock and we shouldn't
+be doing memory allocation with the ilock outside a transaction.
+Allocations inside transactions are transformed to GFP_NOFS so are
+safe against such lock recursion, but outside transactions we need
+to use KM_NOFS directly. I'll send out a patch on Monday after I've
+looked at the code in more detail....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
