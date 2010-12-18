@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBI23Djp013939 for <xfs@oss.sgi.com>; Fri, 17 Dec 2010 20:03:13 -0600
-Received: from mail-wy0-f181.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8FE6A14653BB
-	for <xfs@oss.sgi.com>; Fri, 17 Dec 2010 18:05:06 -0800 (PST)
-Received: from mail-wy0-f181.google.com (mail-wy0-f181.google.com
-	[74.125.82.181]) by cuda.sgi.com with ESMTP id 4wx52XqxBGMf47Sf
-	for <xfs@oss.sgi.com>; Fri, 17 Dec 2010 18:05:06 -0800 (PST)
-Received: by wyf22 with SMTP id 22so1291421wyf.26
-	for <xfs@oss.sgi.com>; Fri, 17 Dec 2010 18:05:05 -0800 (PST)
+	oBIBOGZQ044796 for <xfs@oss.sgi.com>; Sat, 18 Dec 2010 05:24:16 -0600
+Received: from mail.pzystorm.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 36865203F3C
+	for <xfs@oss.sgi.com>; Sat, 18 Dec 2010 03:26:10 -0800 (PST)
+Received: from mail.pzystorm.de (mail.pzystorm.de [188.40.193.4]) by
+	cuda.sgi.com with ESMTP id IDINfOPWwHrKapg1 for
+	<xfs@oss.sgi.com>; Sat, 18 Dec 2010 03:26:10 -0800 (PST)
+Received: from 77-22-192-189-dynip.superkabel.de ([77.22.192.189]
+	helo=[192.168.178.27])
+	by mail.pzystorm.de with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.69) (envelope-from <xfs@pzystorm.de>) id 1PTuvR-00079p-AC
+	for xfs@oss.sgi.com; Sat, 18 Dec 2010 12:26:09 +0100
+Message-ID: <4D0C9A4F.4040108@pzystorm.de>
+Date: Sat, 18 Dec 2010 12:26:07 +0100
+From: Kevin Richter <xfs@pzystorm.de>
 MIME-Version: 1.0
-In-Reply-To: <20101217235408.GF5193@dastard>
-References: <AANLkTi=0E2eh=wnX+Kr=egLoigkMDq5UuaGyOxnk+T1Q@mail.gmail.com>
-	<20101217235408.GF5193@dastard>
-Date: Sat, 18 Dec 2010 13:05:05 +1100
-Message-ID: <AANLkTi=xVrev9WCw+=47AvAc4so6S8HAa3qPdqBtuvdH@mail.gmail.com>
-Subject: Re: Another questionable lock order bug
-From: Nick Piggin <npiggin@gmail.com>
+Subject: Problem with XFS on USB 2TB HD
+Reply-To: xfs@pzystorm.de
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,121 +27,123 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Sat, Dec 18, 2010 at 10:54 AM, Dave Chinner <david@fromorbit.com> wrote:
-> On Sat, Dec 18, 2010 at 04:40:23AM +1100, Nick Piggin wrote:
->> With the iprune_sem and iolock lock order warnings taken care of,
->> lockdep soon after chokes on i_lock
->
-> What kernel are you running? It does not appear to be vanilla XFS,
-> as:
-
-It's just vanilla plus your patch to fix iolock and Christoph's iprune patc=
-h to
-fix that one -- lockdep doesn't get very far without them.
-
-
->> [ =A0716.364005] inconsistent {RECLAIM_FS-ON-R} -> {IN-RECLAIM_FS-W} usa=
-ge.
->> [ =A0716.364005] cp/8370 [HC0[0]:SC0[0]:HE1:SE1] takes:
->> [ =A0716.364005] =A0(&(&ip->i_lock)->mr_lock){++++-?}, at:
->> [<ffffffffa005537c>] xfs_ilock+0x8c/0x150 [xfs]
->> [ =A0716.364005] {RECLAIM_FS-ON-R} state was registered at:
->> [ =A0716.364005] =A0 [<ffffffff8108392b>] mark_held_locks+0x6b/0xa0
->> [ =A0716.364005] =A0 [<ffffffff810839f1>] lockdep_trace_alloc+0x91/0xd0
->> [ =A0716.364005] =A0 [<ffffffff811104fa>] __kmalloc+0x5a/0x220
->> [ =A0716.364005] =A0 [<ffffffffa0078717>] kmem_alloc+0x87/0xd0 [xfs]
->> [ =A0716.364005] =A0 [<ffffffffa002b8fb>] xfs_attr_shortform_list+0xfb/0=
-x480 [xfs]
->> [ =A0716.364005] =A0 [<ffffffffa0027ab8>] xfs_attr_list_int+0xd8/0xe0 [x=
-fs]
->> [ =A0716.364005] =A0 [<ffffffffa0088b5f>] xfs_vn_listxattr+0x7f/0x160 [x=
-fs]
->> [ =A0716.364005] =A0 [<ffffffff811396ef>] vfs_listxattr+0x1f/0x30
->> [ =A0716.364005] =A0 [<ffffffff81139b1f>] listxattr+0x3f/0xf0
->> [ =A0716.364005] =A0 [<ffffffff81139c14>] sys_flistxattr+0x44/0x70
->> [ =A0716.364005] =A0 [<ffffffff810030bb>] system_call_fastpath+0x16/0x1b[
->> 716.364005] irq event stamp: 322521151
->> [ =A0716.364005] hardirqs last =A0enabled at (322521151):
->> [<ffffffff81601cbd>] mutex_trylock+0x11d/0x190
->> [ =A0716.364005] hardirqs last disabled at (322521150):
->> [<ffffffff81601bde>] mutex_trylock+0x3e/0x190
->> [ =A0716.364005] softirqs last =A0enabled at (322518910):
->> [<ffffffff81050d0e>] __do_softirq+0x16e/0x360
->> [ =A0716.364005] softirqs last disabled at (322518881):
->> [<ffffffff81003f8c>] call_softirq+0x1c/0x50
->> [ =A0716.364005]
->> [ =A0716.364005] other info that might help us debug this:
->> [ =A0716.364005] 3 locks held by cp/8370:
->> [ =A0716.364005] =A0#0: =A0(xfs_iolock_active){++++++}, at:
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0^^^^^^^^^^^^^^^^^
->
-> This patch is not yet mainline. If you really want to do significant
-> XFS scalability testing for .38, you should probably pull these branches
-> in for testing:
->
-> git://git.kernel.org/pub/scm/linux/dgc/xfsdev.git inode-scale
-> git://git.kernel.org/pub/scm/linux/dgc/xfsdev.git xfs-for-2.6.38
-
-OK I'll keep it in mind, however in this case I was stress testing
-some other patches
-which required that lockdep stay up.
-
->
->> [<ffffffffa0055395>] xfs_ilock+0xa5/0x150 [xfs]
->> [ =A0716.364005] =A0#1: =A0(shrinker_rwsem){++++..}, at:
->> [<ffffffff810d91c8>] shrink_slab+0x38/0x190
->> [ =A0716.364005] =A0#2: =A0(&pag->pag_ici_reclaim_lock){+.+...}, at:
->> [<ffffffffa00875c4>] xfs_reclaim_inodes_ag+
->> 0xa4/0x360 [xfs]
->> [ =A0716.364005]
->> [ =A0716.364005] stack backtrace:
->> [ =A0716.364005] Pid: 8370, comm: cp Not tainted 2.6.37-rc6+ #116
->> [ =A0716.364005] Call Trace:
->> [ =A0716.364005] =A0[<ffffffff81082a10>] print_usage_bug+0x170/0x180
->> [ =A0716.364005] =A0[<ffffffff810836d1>] mark_lock+0x211/0x400
->> [ =A0716.364005] =A0[<ffffffff810842ce>] __lock_acquire+0x40e/0x1490
->> [ =A0716.364005] =A0[<ffffffff810853e5>] lock_acquire+0x95/0x1b0
->> [ =A0716.364005] =A0[<ffffffffa005537c>] ? xfs_ilock+0x8c/0x150 [xfs]
->> [ =A0716.364005] =A0[<ffffffff8127c35c>] ? rcu_read_lock_held+0x2c/0x30
->> [ =A0716.364005] =A0[<ffffffff81073d5a>] down_write_nested+0x4a/0x70
->> [ =A0716.364005] =A0[<ffffffffa005537c>] ? xfs_ilock+0x8c/0x150 [xfs]
->> [ =A0716.364005] =A0[<ffffffffa005537c>] xfs_ilock+0x8c/0x150 [xfs]
->> [ =A0716.364005] =A0[<ffffffffa00872e6>] xfs_reclaim_inode+0x36/0x270 [x=
-fs]
->> [ =A0716.364005] =A0[<ffffffffa008772f>] xfs_reclaim_inodes_ag+0x20f/0x3=
-60 [xfs]
->> [ =A0716.364005] =A0[<ffffffffa00878f8>] xfs_reclaim_inode_shrink+0x78/0=
-x80 [xfs]
->> [ =A0716.364005] =A0[<ffffffff810d92b7>] shrink_slab+0x127/0x190
->> [ =A0716.364005] =A0[<ffffffff810dc189>] zone_reclaim+0x349/0x420
->>
->> I assume this should be a false positive too, for the same reason,
->> and could be handled the same way as iolock.
->
-> The ilock is very different to the iolock in terms of usage - the
-> ilock is required in the writeback path (for block mapping,
-> allocation and file size updates) while the iolock is not.
->
-> Hence this is indicative of a potential deadlock and we shouldn't
-> be doing memory allocation with the ilock outside a transaction.
-> Allocations inside transactions are transformed to GFP_NOFS so are
-> safe against such lock recursion, but outside transactions we need
-> to use KM_NOFS directly. I'll send out a patch on Monday after I've
-> looked at the code in more detail..
-
-OK, good to know it uncovered a real problem.
-
-Thanks,
-Nick
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+SGksCgpJIGhhdmUgYW4gZXh0ZXJuYWwgVVNCIDJUQiBoYXJkZGlzayB3aXRoIGFuIFhGUyBmaWxl
+c3lzdGVtIGNvbm5lY3RlZCB0bwphIERlYmlhbiBMZW5ueSB3aXRoIGEgMi42LjMzLjQga2VybmVs
+LgoKNSBkYXlzIGFnbyBJIGJhY2t1cGVkIG15IGRhdGEgdG8gdGhpcyBleHRlcm5hbCBkcml2ZS4g
+V2hpbGUgdGhpcyBiYWNrdXAKcHJvY2VzcyB0aGUgVVNCIHBvcnQgZ290IHJlc2V0IGFuZCBub3cg
+YWxsIHRoZSBkYXRhIG9uIHRoZSB4ZnMgaXMgbG9zdC4KSSBjYW5ub3QgbW91bnQgdGhlIGZpbGVz
+eXN0ZW0gYW55bW9yZS4KCmhvbWU6LyMgbW91bnQgL2Rldi9tYXBwZXIvYmFja3VwIC9tbnQvYmFj
+a3VwLwptb3VudDogd3JvbmcgZnMgdHlwZSwgYmFkIG9wdGlvbiwgYmFkIHN1cGVyYmxvY2sgb24g
+L2Rldi9tYXBwZXIvYmFja3VwLAogICAgICAgbWlzc2luZyBjb2RlcGFnZSBvciBoZWxwZXIgcHJv
+Z3JhbSwgb3Igb3RoZXIgZXJyb3IKICAgICAgIEluIHNvbWUgY2FzZXMgdXNlZnVsIGluZm8gaXMg
+Zm91bmQgaW4gc3lzbG9nIC0gdHJ5CiAgICAgICBkbWVzZyB8IHRhaWwgIG9yIHNvCgpob21lOi8j
+IG1vdW50IC10IHhmcyAvZGV2L21hcHBlci9iYWNrdXAgL21udC9iYWNrdXAvCm1vdW50OiB3cm9u
+ZyBmcyB0eXBlLCBiYWQgb3B0aW9uLCBiYWQgc3VwZXJibG9jayBvbiAvZGV2L21hcHBlci9iYWNr
+dXAsCiAgICAgICBtaXNzaW5nIGNvZGVwYWdlIG9yIGhlbHBlciBwcm9ncmFtLCBvciBvdGhlciBl
+cnJvcgogICAgICAgSW4gc29tZSBjYXNlcyB1c2VmdWwgaW5mbyBpcyBmb3VuZCBpbiBzeXNsb2cg
+LSB0cnkKICAgICAgIGRtZXNnIHwgdGFpbCAgb3Igc28KCgpUaGUgWEZTIGlzIGluIGEgTFVLUyB2
+b2x1bWUsIGJ1dCB0aGUgbHVrc09wZW4gd29ya3MgZmxhd2xlc3NseQooY3J5cHRzZXR1cCBsdWtz
+T3BlbiAvZGV2L3NkYjQgYmFja3VwKS4KCgpUaGUgc3lzbG9nIGF0IHRoZSB0aW1lIG9mIHRoZSBi
+YWNrdXAgcHJvY2VzczoKRGVjIDEzIDIyOjM0OjI2IGhvbWUga2VybmVsOiB1c2IgMS01OiByZXNl
+dCBoaWdoIHNwZWVkIFVTQiBkZXZpY2UgdXNpbmcKZWhjaV9oY2QgYW5kIGFkZHJlc3MgNQpEZWMg
+MTMgMjI6MzQ6MzcgaG9tZSBrZXJuZWw6IHVzYiAxLTU6IHJlc2V0IGhpZ2ggc3BlZWQgVVNCIGRl
+dmljZSB1c2luZwplaGNpX2hjZCBhbmQgYWRkcmVzcyA1CkRlYyAxMyAyMjozNToxNSBob21lIGtl
+cm5lbDogZDJmZDEwMDA6IGMyIDViIGVkIDA0IDI5IGMxIDE5IDA0IGRkIDUxIGY4Cjg0IDVjIGNh
+IDMzIDc5ICAuWy4uKS4uLi5RLi5cLjN5CkRlYyAxMyAyMjozNToxNSBob21lIGtlcm5lbDogRmls
+ZXN5c3RlbSAiZG0tMCI6IFhGUyBpbnRlcm5hbCBlcnJvcgp4ZnNfZGFfZG9fYnVmKDIpIGF0IGxp
+bmUgMjExMyBvZiBmaWxlIGZzL3hmcy94ZnNfZGFfYnRyZWUuYy4gIENhbGxlcgoweGMxMTVkM2Nm
+CkRlYyAxMyAyMjozNToxNSBob21lIGtlcm5lbDoKRGVjIDEzIDIyOjM1OjE1IGhvbWUga2VybmVs
+OiBQaWQ6IDMwMTEzLCBjb21tOiBzbWJkIE5vdCB0YWludGVkIDIuNi4zMy40ICM0CkRlYyAxMyAy
+MjozNToxNSBob21lIGtlcm5lbDogQ2FsbCBUcmFjZToKRGVjIDEzIDIyOjM1OjE1IGhvbWUga2Vy
+bmVsOiBbPGMxMTY3MjBlPl0geGZzX2Vycm9yX3JlcG9ydCsweDJjLzB4MmUKRGVjIDEzIDIyOjM1
+OjE1IGhvbWUga2VybmVsOiBbPGMxMTY3MjQ1Pl0geGZzX2NvcnJ1cHRpb25fZXJyb3IrMHgzNS8w
+eDQwCkRlYyAxMyAyMjozNToxNSBob21lIGtlcm5lbDogWzxjMTE1ZDNjZj5dID8geGZzX2RhX3Jl
+YWRfYnVmKzB4MTgvMHgxZApEZWMgMTMgMjI6MzU6MTUgaG9tZSBrZXJuZWw6IFs8YzExNWQyYmM+
+XSB4ZnNfZGFfZG9fYnVmKzB4NTcxLzB4NjI5CkRlYyAxMyAyMjozNToxNSBob21lIGtlcm5lbDog
+WzxjMTE1ZDNjZj5dID8geGZzX2RhX3JlYWRfYnVmKzB4MTgvMHgxZApEZWMgMTMgMjI6MzU6MTUg
+aG9tZSBrZXJuZWw6IFs8YzEzNzJhNzY+XSA/IGlwX291dHB1dCsweDc4LzB4N2QKRGVjIDEzIDIy
+OjM1OjE1IGhvbWUga2VybmVsOiBbPGMxMzcyNGY3Pl0gPyBpcF9xdWV1ZV94bWl0KzB4MmNlLzB4
+MzA0CkRlYyAxMyAyMjozNToxNSBob21lIGtlcm5lbDogWzxjMTE1ZDNjZj5dIHhmc19kYV9yZWFk
+X2J1ZisweDE4LzB4MWQKRGVjIDEzIDIyOjM1OjE1IGhvbWUga2VybmVsOiBbPGMxMTYwNWIwPl0g
+Pwp4ZnNfZGlyMl9ibG9ja19sb29rdXBfaW50KzB4MzkvMHgxN2MKRGVjIDEzIDIyOjM1OjE1IGhv
+bWUga2VybmVsOiBbPGMxMTYwNWIwPl0KeGZzX2RpcjJfYmxvY2tfbG9va3VwX2ludCsweDM5LzB4
+MTdjCkRlYyAxMyAyMjozNToxNSBob21lIGtlcm5lbDogWzxjMTBjYjdmYj5dID8gX19leHQzX2dl
+dF9pbm9kZV9sb2MrMHhjNi8weDI2MApEZWMgMTMgMjI6MzU6MTUgaG9tZSBrZXJuZWw6IFs8YzEx
+NGY0OGU+XSA/IHhmc19ibWFwX2xhc3Rfb2Zmc2V0KzB4ZTgvMHhmYwpEZWMgMTMgMjI6MzU6MTUg
+aG9tZSBrZXJuZWw6IFs8YzExNjBiMzQ+XSB4ZnNfZGlyMl9ibG9ja19sb29rdXArMHgxNi8weGEy
+CkRlYyAxMyAyMjozNToxNSBob21lIGtlcm5lbDogWzxjMTE1Zjk5Mz5dIHhmc19kaXJfbG9va3Vw
+KzB4OTgvMHgxMDAKRGVjIDEzIDIyOjM1OjE1IGhvbWUga2VybmVsOiBbPGMxMTgxMzFiPl0geGZz
+X2xvb2t1cCsweDNkLzB4OTQKRGVjIDEzIDIyOjM1OjE1IGhvbWUga2VybmVsOiBbPGMxMTg4NzM2
+Pl0geGZzX3ZuX2xvb2t1cCsweDM4LzB4NzAKRGVjIDEzIDIyOjM1OjE1IGhvbWUga2VybmVsOiBb
+PGMxMDcwNGQwPl0gZG9fbG9va3VwKzB4ZDAvMHgxNmYKRGVjIDEzIDIyOjM1OjE1IGhvbWUga2Vy
+bmVsOiBbPGMxMDcxZTI3Pl0gbGlua19wYXRoX3dhbGsrMHg2M2IvMHg5ZGMKRGVjIDEzIDIyOjM1
+OjE1IGhvbWUga2VybmVsOiBbPGMxMDcyMmY1Pl0gcGF0aF93YWxrKzB4NTAvMHhiMgpEZWMgMTMg
+MjI6MzU6MTUgaG9tZSBrZXJuZWw6IFs8YzEwNzI0MDA+XSBkb19wYXRoX2xvb2t1cCsweDIxLzB4
+NDIKRGVjIDEzIDIyOjM1OjE1IGhvbWUga2VybmVsOiBbPGMxMDcyYzI3Pl0gdXNlcl9wYXRoX2F0
+KzB4M2MvMHg2NwpEZWMgMTMgMjI6MzU6MTUgaG9tZSBrZXJuZWw6IFs8YzEwNmNjMjA+XSB2ZnNf
+ZnN0YXRhdCsweDJkLzB4NTQKRGVjIDEzIDIyOjM1OjE1IGhvbWUga2VybmVsOiBbPGMxMDZjZDE4
+Pl0gdmZzX3N0YXQrMHgxMy8weDE1CkRlYyAxMyAyMjozNToxNSBob21lIGtlcm5lbDogWzxjMTA2
+Y2QyZT5dIHN5c19zdGF0NjQrMHgxNC8weDI4CkRlYyAxMyAyMjozNToxNSBob21lIGtlcm5lbDog
+WzxjMTAwMjVkMD5dIHN5c2VudGVyX2RvX2NhbGwrMHgxMi8weDI2CgoKClRoZSBjdXJyZW50IFhG
+UyBoZWFkZXIgYnl0ZXMgb2YgdGhlIC9kZXYvbWFwcGVyL2JhY2t1cCB2b2x1bWU6CjAwMDAwMDAw
+ICA1OCA0NiA1MyA0MiAwMCAwMCAxMCAwMCAgMDAgMDAgMDAgMDAgMWMgZDggYzMgYTQKfFhGU0Iu
+Li4uLi4uLi7DmMODwqR8CjAwMDAwMDEwICAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAgMDAgMDAg
+MDAgMDAgMDAgMDAgMDAgMDAKfC4uLi4uLi4uLi4uLi4uLi58CjAwMDAwMDIwICBlYyAyNCAyOSBh
+ZSA5YyAyZiA0YSA3NSAgYTggNTkgNTggMTQgYjUgMmQgNWUgYWMKfMOsJCnCri4vSnXCqFlYLsK1
+LV7CrHwKMDAwMDAwMzAgIDAwIDAwIDAwIDAwIDEwIDAwIDAwIDA0ICAwMCAwMCAwMCAwMCAwMCAw
+MCAwMCA4MAp8Li4uLi4uLi4uLi4uLi4uLnwKMDAwMDAwNDAgIDk4IDU1IGU0IDUzIGVmIGU2IGU5
+IDAzICA5YSA3MSA0ZiAxOSAzZiA4YiA2ZiAxNAp8LlXDpFPDr8Omw6kuLnFPLj8uby58CjAwMDAw
+MDUwICA3NSBkNiA1MSA5YSBkZCA4NCA1MyAzZSAgYzQgODAgYWUgYTEgYzIgODMgNTMgNWUKfHXD
+llEuw50uUz7DhC7CrsKhw4IuU158CjAwMDAwMDYwICA2OSBjMyBmOCAxYiAzNSAwYiAxNSBmMiAg
+NGYgMTUgNDYgNDIgNzkgNmYgOGIgMTMKfGnDg8O4LjUuLsOyTy5GQnlvLi58CjAwMDAwMDcwICA0
+YyA2NSA2NCBiYSAzOCBjZCA1MSA4YiAgMDAgMDAgMDAgMDAgMmMgZjkgYWMgMmMKfExlZMK6OMON
+US4uLi4uLMO5wqwsfAowMDAwMDA4MCAgNDcgOTEgODAgNDUgNzMgM2UgOTMgNzcgIDhmIDk1IDgw
+IDgxIGFiIDhiIGI4IGViCnxHLi5Fcz4udy4uLi7Cqy7CuMOrfAowMDAwMDA5MCAgMDAgMDAgMDAg
+MDAgMDAgMDAgMDAgMDAgIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwCnwuLi4uLi4uLi4uLi4uLi4u
+fAowMDAwMDBhMCAgZWMgMjQgMjkgYWUgOWMgMmYgNGEgNzUgIGE4IDU5IDU4IDE0IGI1IDJkIDVl
+IGFjCnzDrCQpwq4uL0p1wqhZWC7CtS1ewqx8CjAwMDAwMGIwICAwMCAwMCAwMCAwMCAxMCAwMCAw
+MCAwNCAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgODAKfC4uLi4uLi4uLi4uLi4uLi58CjAwMDAwMGMw
+ICA5OCA1NSBlNCA1MyBlZiBlNiBlOSAwMyAgOWEgNzEgNGYgMTkgM2YgOGIgNmYgMTQKfC5Vw6RT
+w6/DpsOpLi5xTy4/Lm8ufAowMDAwMDBkMCAgNzUgZDYgNTEgOWEgZGQgODQgNTMgM2UgIGM0IDgw
+IGFlIGExIGMyIDgzIDUzIDVlCnx1w5ZRLsOdLlM+w4Quwq7CocOCLlNefAowMDAwMDBlMCAgNjkg
+YzMgZjggMWIgMzUgMGIgMTUgZjIgIDRmIDE1IDQ2IDQyIDc5IDZmIDhiIDEzCnxpw4PDuC41Li7D
+sk8uRkJ5by4ufAowMDAwMDBmMCAgNGMgNjUgNjQgYmEgMzggY2QgNTEgOGIgIDAwIDAwIDAwIDAw
+IDJjIGY5IGFjIDJjCnxMZWTCujjDjVEuLi4uLizDucKsLHwKMDAwMDAxMDAgIDQ3IDkxIDgwIDQ1
+IDczIDNlIDkzIDc3ICA4ZiA5NSA4MCA4MSBhYiA4YiBiOCBlYgp8Ry4uRXM+LncuLi4uwqsuwrjD
+q3wKMDAwMDAxMTAgIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwICAwMCAwMCAwMCAwMCAwMCAwMCAw
+MCAwMAp8Li4uLi4uLi4uLi4uLi4uLnwKMDAwMDAxMjAgIGVjIDI0IDI5IGFlIDljIDJmIDRhIDc1
+ICBhOCA1OSA1OCAxNCBiNSAyZCA1ZSBhYwp8w6wkKcKuLi9KdcKoWVguwrUtXsKsfAowMDAwMDEz
+MCAgMDAgMDAgMDAgMDAgMTAgMDAgMDAgMDQgIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDgwCnwuLi4u
+Li4uLi4uLi4uLi4ufAowMDAwMDE0MCAgOTggNTUgZTQgNTMgZWYgZTYgZTkgMDMgIDlhIDcxIDRm
+IDE5IDNmIDhiIDZmIDE0CnwuVcOkU8Ovw6bDqS4ucU8uPy5vLnwKMDAwMDAxNTAgIDc1IGQ2IDUx
+IDlhIGRkIDg0IDUzIDNlICBjNCA4MCBhZSBhMSBjMiA4MyA1MyA1ZQp8dcOWUS7DnS5TPsOELsKu
+wqHDgi5TXnwKMDAwMDAxNjAgIDY5IGMzIGY4IDFiIDM1IDBiIDE1IGYyICA0ZiAxNSA0NiA0MiA3
+OSA2ZiA4YiAxMwp8acODw7guNS4uw7JPLkZCeW8uLnwKMDAwMDAxNzAgIDRjIDY1IDY0IGJhIDM4
+IGNkIDUxIDhiICAwMCAwMCAwMCAwMCAyYyBmOSBhYyAyYwp8TGVkwro4w41RLi4uLi4sw7nCrCx8
+CjAwMDAwMTgwICA0NyA5MSA4MCA0NSA3MyAzZSA5MyA3NyAgOGYgOTUgODAgODEgYWIgOGIgYjgg
+ZWIKfEcuLkVzPi53Li4uLsKrLsK4w6t8CjAwMDAwMTkwICAwMCAwMCAwMCAwMCAwMCAwMCAwMCAw
+MCAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAKfC4uLi4uLi4uLi4uLi4uLi58CjAwMDAwMWEwICBl
+YyAyNCAyOSBhZSA5YyAyZiA0YSA3NSAgYTggNTkgNTggMTQgYjUgMmQgNWUgYWMKfMOsJCnCri4v
+SnXCqFlYLsK1LV7CrHwKMDAwMDAxYjAgIDAwIDAwIDAwIDAwIDEwIDAwIDAwIDA0ICAwMCAwMCAw
+MCAwMCAwMCAwMCAwMCA4MAp8Li4uLi4uLi4uLi4uLi4uLnwKMDAwMDAxYzAgIDk4IDU1IGU0IDUz
+IGVmIGU2IGU5IDAzICA5YSA3MSA0ZiAxOSAzZiA4YiA2ZiAxNAp8LlXDpFPDr8Omw6kuLnFPLj8u
+by58CjAwMDAwMWQwICA3NSBkNiA1MSA5YSBkZCA4NCA1MyAzZSAgYzQgODAgYWUgYTEgYzIgODMg
+NTMgNWUKfHXDllEuw50uUz7DhC7CrsKhw4IuU158CjAwMDAwMWUwICA2OSBjMyBmOCAxYiAzNSAw
+YiAxNSBmMiAgNGYgMTUgNDYgNDIgNzkgNmYgOGIgMTMKfGnDg8O4LjUuLsOyTy5GQnlvLi58CjAw
+MDAwMWYwICA0YyA2NSA2NCBiYSAzOCBjZCA1MSA4YiAgMDAgMDAgMDAgMDAgMmMgZjkgYWMgMmMK
+fExlZMK6OMONUS4uLi4uLMO5wqwsfAoKCgp4ZnNfcmVwYWlyIHJ1bnMgc2luY2UgYSBmZXcgaG91
+cnMsIGJ1dCBoYXMganVzdCBwcmludGVkIGEgYnVuY2ggb2YgZG90cy4KVGhlIGZpcnN0IGxpbmUg
+b2YgeGZzX3JlcGFpciBpcyAiYmFkIG9yIHVuc3VwcG9ydGVkIHZlcnNpb24iIGFuZCB0aGF0IGl0
+CmNhbnQgZmluZCBhIHN1cGVyYmxvY2suCgoKU29tZSBpZGVhcz8KV2hhdCBoYXBwZW5lZD8KRG8g
+SSB1c2UgYSBidWdneSB2ZXJzaW9uPwpJIGhhdmUgMi45LjggKGh0dHA6Ly9wYWNrYWdlcy5kZWJp
+YW4ub3JnL2xlbm55L3hmc3Byb2dzKQpXaGF0IGNhbiBJIGRvIHRvIGF2b2lkIHRoZXNlIHByb2Js
+ZW1zIGluIHRoZSBmdXR1cmU/Ckl0IGlzIGEgcHJvYmxlbSB3aXRoIHRoZSBpbnRlcmFjdGlvbiBv
+ZiBMVUtTLCBYRlMgYW5kIFVTQj8KCgoKVGhhbmtzIGluIGFkdmFuY2UKS2V2aW4KCl9fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QK
+eGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
