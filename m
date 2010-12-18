@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBHI2lhO250102 for <xfs@oss.sgi.com>; Fri, 17 Dec 2010 12:02:48 -0600
-Received: from mail-wy0-f181.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A0DA614611B7
-	for <xfs@oss.sgi.com>; Fri, 17 Dec 2010 10:04:41 -0800 (PST)
-Received: from mail-wy0-f181.google.com (mail-wy0-f181.google.com
-	[74.125.82.181]) by cuda.sgi.com with ESMTP id 7OHA2bcU8zE2CoMT
-	for <xfs@oss.sgi.com>; Fri, 17 Dec 2010 10:04:41 -0800 (PST)
-Received: by wyf22 with SMTP id 22so924888wyf.26
-	for <xfs@oss.sgi.com>; Fri, 17 Dec 2010 10:04:40 -0800 (PST)
+	oBI029GD007603 for <xfs@oss.sgi.com>; Fri, 17 Dec 2010 18:02:09 -0600
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D8C511FEEB0
+	for <xfs@oss.sgi.com>; Fri, 17 Dec 2010 16:02:48 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
+	[150.101.137.99]) by cuda.sgi.com with ESMTP id
+	NQv2WLoZ5I5XdST1 for <xfs@oss.sgi.com>;
+	Fri, 17 Dec 2010 16:02:48 -0800 (PST)
+Date: Sat, 18 Dec 2010 11:02:45 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfs_efi_item slab leak
+Message-ID: <20101218000245.GG5193@dastard>
+References: <AANLkTi=LrU2CsC-VZmJ5M9U7eJpjqfAv8UgaEYv=Sg01@mail.gmail.com>
 MIME-Version: 1.0
-Date: Sat, 18 Dec 2010 05:04:40 +1100
-Message-ID: <AANLkTi=LrU2CsC-VZmJ5M9U7eJpjqfAv8UgaEYv=Sg01@mail.gmail.com>
-Subject: xfs_efi_item slab leak
-From: Nick Piggin <npiggin@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <AANLkTi=LrU2CsC-VZmJ5M9U7eJpjqfAv8UgaEYv=Sg01@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,56 +25,63 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Nick Piggin <npiggin@gmail.com>
+Cc: xfs@oss.sgi.com
 
-After running xfstests and then unmounting and rmmodding xfs, I get this bug
-
-[ 3473.194517] =============================================================================
-[ 3473.194697] BUG xfs_efi_item: Objects remaining on kmem_cache_close()
-[ 3473.194793] -----------------------------------------------------------------------------
-[ 3473.194794]
-[ 3473.195056] INFO: Slab 0xffffea0006ad5e00 objects=35 used=2
-fp=0xffff8801e8640e80 flags=0xc000000000004080
-[ 3473.195201] Pid: 22011, comm: rmmod Not tainted 2.6.37-rc6+ #116
-[ 3473.195201] Call Trace:
-[ 3473.195201]  [<ffffffff8110bcf1>] slab_err+0x91/0xa0
-[ 3473.195201]  [<ffffffff8110f088>] ? __slab_alloc+0x138/0x480
-[ 3473.195201]  [<ffffffff8108081d>] ? trace_hardirqs_off+0xd/0x10
-[ 3473.195201]  [<ffffffff811112a4>] ? kmem_cache_destroy+0x154/0x3e0
-[ 3473.195201]  [<ffffffff8108081d>] ? trace_hardirqs_off+0xd/0x10
-[ 3473.195201]  [<ffffffff811105a4>] ? __kmalloc+0x104/0x220
-[ 3473.195201]  [<ffffffff811112c7>] kmem_cache_destroy+0x177/0x3e0
-[ 3473.195201]  [<ffffffffa0086e47>] xfs_destroy_zones+0x37/0x100 [xfs]
-[ 3473.195201]  [<ffffffffa0088f88>] exit_xfs_fs+0x33/0x3d [xfs]
-[ 3473.195201]  [<ffffffff8109060a>] sys_delete_module+0x17a/0x270
-[ 3473.195201]  [<ffffffff8160340f>] ? lockdep_sys_exit_thunk+0x35/0x67
-[ 3473.195201]  [<ffffffff810030bb>] system_call_fastpath+0x16/0x1b
-[ 3473.195201] INFO: Object 0xffff8801e8640910 @offset=2320
-[ 3473.195201] INFO: Allocated in kmem_zone_alloc+0x8c/0xd0 [xfs]
-age=2263917 cpu=15 pid=4514
-[ 3473.195201] INFO: Freed in xfs_efi_item_free+0x19/0x30 [xfs]
-age=2263918 cpu=15 pid=4514
-[ 3473.195201] INFO: Object 0xffff8801e86427e0 @offset=10208
-[ 3473.195201] INFO: Allocated in kmem_zone_alloc+0x8c/0xd0 [xfs]
-age=2103034 cpu=15 pid=22329
-[ 3473.195201] INFO: Freed in xfs_efi_item_free+0x19/0x30 [xfs]
-age=2103034 cpu=15 pid=22329
-[ 3473.197616] SLUB xfs_efi_item: kmem_cache_destroy called for cache
-that still has objects.
-[ 3473.197794] Pid: 22011, comm: rmmod Not tainted 2.6.37-rc6+ #116
-[ 3473.197892] Call Trace:
-[ 3473.197980]  [<ffffffff811114a7>] kmem_cache_destroy+0x357/0x3e0
-[ 3473.198120]  [<ffffffffa0086e47>] xfs_destroy_zones+0x37/0x100 [xfs]
-[ 3473.198240]  [<ffffffffa0088f88>] exit_xfs_fs+0x33/0x3d [xfs]
-[ 3473.198337]  [<ffffffff8109060a>] sys_delete_module+0x17a/0x270
-[ 3473.198435]  [<ffffffff8160340f>] ? lockdep_sys_exit_thunk+0x35/0x67
-[ 3473.198534]  [<ffffffff810030bb>] system_call_fastpath+0x16/0x1b
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gU2F0LCBEZWMgMTgsIDIwMTAgYXQgMDU6MDQ6NDBBTSArMTEwMCwgTmljayBQaWdnaW4gd3Jv
+dGU6Cj4gQWZ0ZXIgcnVubmluZyB4ZnN0ZXN0cyBhbmQgdGhlbiB1bm1vdW50aW5nIGFuZCBybW1v
+ZGRpbmcgeGZzLCBJIGdldCB0aGlzIGJ1Zwo+IAo+IFsgMzQ3My4xOTQ1MTddID09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09Cj4gWyAzNDczLjE5NDY5N10gQlVHIHhmc19lZmlfaXRlbTogT2JqZWN0cyByZW1h
+aW5pbmcgb24ga21lbV9jYWNoZV9jbG9zZSgpCj4gWyAzNDczLjE5NDc5M10gLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0KPiBbIDM0NzMuMTk0Nzk0XQo+IFsgMzQ3My4xOTUwNTZdIElORk86IFNsYWIgMHhm
+ZmZmZWEwMDA2YWQ1ZTAwIG9iamVjdHM9MzUgdXNlZD0yCj4gZnA9MHhmZmZmODgwMWU4NjQwZTgw
+IGZsYWdzPTB4YzAwMDAwMDAwMDAwNDA4MAo+IFsgMzQ3My4xOTUyMDFdIFBpZDogMjIwMTEsIGNv
+bW06IHJtbW9kIE5vdCB0YWludGVkIDIuNi4zNy1yYzYrICMxMTYKPiBbIDM0NzMuMTk1MjAxXSBD
+YWxsIFRyYWNlOgo+IFsgMzQ3My4xOTUyMDFdICBbPGZmZmZmZmZmODExMGJjZjE+XSBzbGFiX2Vy
+cisweDkxLzB4YTAKPiBbIDM0NzMuMTk1MjAxXSAgWzxmZmZmZmZmZjgxMTBmMDg4Pl0gPyBfX3Ns
+YWJfYWxsb2MrMHgxMzgvMHg0ODAKPiBbIDM0NzMuMTk1MjAxXSAgWzxmZmZmZmZmZjgxMDgwODFk
+Pl0gPyB0cmFjZV9oYXJkaXJxc19vZmYrMHhkLzB4MTAKPiBbIDM0NzMuMTk1MjAxXSAgWzxmZmZm
+ZmZmZjgxMTExMmE0Pl0gPyBrbWVtX2NhY2hlX2Rlc3Ryb3krMHgxNTQvMHgzZTAKPiBbIDM0NzMu
+MTk1MjAxXSAgWzxmZmZmZmZmZjgxMDgwODFkPl0gPyB0cmFjZV9oYXJkaXJxc19vZmYrMHhkLzB4
+MTAKPiBbIDM0NzMuMTk1MjAxXSAgWzxmZmZmZmZmZjgxMTEwNWE0Pl0gPyBfX2ttYWxsb2MrMHgx
+MDQvMHgyMjAKPiBbIDM0NzMuMTk1MjAxXSAgWzxmZmZmZmZmZjgxMTExMmM3Pl0ga21lbV9jYWNo
+ZV9kZXN0cm95KzB4MTc3LzB4M2UwCj4gWyAzNDczLjE5NTIwMV0gIFs8ZmZmZmZmZmZhMDA4NmU0
+Nz5dIHhmc19kZXN0cm95X3pvbmVzKzB4MzcvMHgxMDAgW3hmc10KPiBbIDM0NzMuMTk1MjAxXSAg
+WzxmZmZmZmZmZmEwMDg4Zjg4Pl0gZXhpdF94ZnNfZnMrMHgzMy8weDNkIFt4ZnNdCj4gWyAzNDcz
+LjE5NTIwMV0gIFs8ZmZmZmZmZmY4MTA5MDYwYT5dIHN5c19kZWxldGVfbW9kdWxlKzB4MTdhLzB4
+MjcwCj4gWyAzNDczLjE5NTIwMV0gIFs8ZmZmZmZmZmY4MTYwMzQwZj5dID8gbG9ja2RlcF9zeXNf
+ZXhpdF90aHVuaysweDM1LzB4NjcKPiBbIDM0NzMuMTk1MjAxXSAgWzxmZmZmZmZmZjgxMDAzMGJi
+Pl0gc3lzdGVtX2NhbGxfZmFzdHBhdGgrMHgxNi8weDFiCj4gWyAzNDczLjE5NTIwMV0gSU5GTzog
+T2JqZWN0IDB4ZmZmZjg4MDFlODY0MDkxMCBAb2Zmc2V0PTIzMjAKPiBbIDM0NzMuMTk1MjAxXSBJ
+TkZPOiBBbGxvY2F0ZWQgaW4ga21lbV96b25lX2FsbG9jKzB4OGMvMHhkMCBbeGZzXQo+IGFnZT0y
+MjYzOTE3IGNwdT0xNSBwaWQ9NDUxNAo+IFsgMzQ3My4xOTUyMDFdIElORk86IEZyZWVkIGluIHhm
+c19lZmlfaXRlbV9mcmVlKzB4MTkvMHgzMCBbeGZzXQo+IGFnZT0yMjYzOTE4IGNwdT0xNSBwaWQ9
+NDUxNAo+IFsgMzQ3My4xOTUyMDFdIElORk86IE9iamVjdCAweGZmZmY4ODAxZTg2NDI3ZTAgQG9m
+ZnNldD0xMDIwOAo+IFsgMzQ3My4xOTUyMDFdIElORk86IEFsbG9jYXRlZCBpbiBrbWVtX3pvbmVf
+YWxsb2MrMHg4Yy8weGQwIFt4ZnNdCj4gYWdlPTIxMDMwMzQgY3B1PTE1IHBpZD0yMjMyOQo+IFsg
+MzQ3My4xOTUyMDFdIElORk86IEZyZWVkIGluIHhmc19lZmlfaXRlbV9mcmVlKzB4MTkvMHgzMCBb
+eGZzXQo+IGFnZT0yMTAzMDM0IGNwdT0xNSBwaWQ9MjIzMjkKPiBbIDM0NzMuMTk3NjE2XSBTTFVC
+IHhmc19lZmlfaXRlbToga21lbV9jYWNoZV9kZXN0cm95IGNhbGxlZCBmb3IgY2FjaGUKPiB0aGF0
+IHN0aWxsIGhhcyBvYmplY3RzLgo+IFsgMzQ3My4xOTc3OTRdIFBpZDogMjIwMTEsIGNvbW06IHJt
+bW9kIE5vdCB0YWludGVkIDIuNi4zNy1yYzYrICMxMTYKPiBbIDM0NzMuMTk3ODkyXSBDYWxsIFRy
+YWNlOgo+IFsgMzQ3My4xOTc5ODBdICBbPGZmZmZmZmZmODExMTE0YTc+XSBrbWVtX2NhY2hlX2Rl
+c3Ryb3krMHgzNTcvMHgzZTAKPiBbIDM0NzMuMTk4MTIwXSAgWzxmZmZmZmZmZmEwMDg2ZTQ3Pl0g
+eGZzX2Rlc3Ryb3lfem9uZXMrMHgzNy8weDEwMCBbeGZzXQo+IFsgMzQ3My4xOTgyNDBdICBbPGZm
+ZmZmZmZmYTAwODhmODg+XSBleGl0X3hmc19mcysweDMzLzB4M2QgW3hmc10KPiBbIDM0NzMuMTk4
+MzM3XSAgWzxmZmZmZmZmZjgxMDkwNjBhPl0gc3lzX2RlbGV0ZV9tb2R1bGUrMHgxN2EvMHgyNzAK
+PiBbIDM0NzMuMTk4NDM1XSAgWzxmZmZmZmZmZjgxNjAzNDBmPl0gPyBsb2NrZGVwX3N5c19leGl0
+X3RodW5rKzB4MzUvMHg2Nwo+IFsgMzQ3My4xOTg1MzRdICBbPGZmZmZmZmZmODEwMDMwYmI+XSBz
+eXN0ZW1fY2FsbF9mYXN0cGF0aCsweDE2LzB4MWIKCk9rLCBhZnRlciB1bm1vdW50aW5nIGV2ZXJ5
+dGhpbmcgSSBjYW4gc2VlIHR3byBpdGVtcyBpbiByZW1haW5pbmcgaW4KdGhlIHhmc19lZmlfaXRl
+bSBjYWNoZSBhZnRlciBhbiB4ZnN0ZXN0cyBydW4uINCGdCdzIHByb2JhYmx5IHRvIGRvCndpdGgg
+YSBmaWxlc3lzdGVtIHNodXRkb3duIG5vdCBjbGVhbmluZyB0aGVtIHVwIGNvcnJlY3RseS4gSSds
+bCBwdXQKaXQgb24gbXkgbGlzdCBvZiBzdHVmZiB0byB0cmFjayBkb3duLgoKQ2hlZXJzLAoKRGF2
+ZS4KLS0gCkRhdmUgQ2hpbm5lcgpkYXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Mu
+c2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
