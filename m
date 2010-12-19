@@ -1,23 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBJ2ZdfJ142982 for <xfs@oss.sgi.com>; Sat, 18 Dec 2010 20:35:40 -0600
-Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8F5D71466C68
-	for <xfs@oss.sgi.com>; Sat, 18 Dec 2010 18:37:33 -0800 (PST)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id bfgBa6VobzDufjSR
-	for <xfs@oss.sgi.com>; Sat, 18 Dec 2010 18:37:33 -0800 (PST)
-Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
-	by greer.hardwarefreak.com (Postfix) with ESMTP id E7D9B6C068
-	for <xfs@oss.sgi.com>; Sat, 18 Dec 2010 20:37:32 -0600 (CST)
-Message-ID: <4D0D6FEC.70900@hardwarefreak.com>
-Date: Sat, 18 Dec 2010 20:37:32 -0600
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	oBJEZvIo228290 for <xfs@oss.sgi.com>; Sun, 19 Dec 2010 08:35:57 -0600
+Received: from sam.nabble.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 85CDC1CDD282
+	for <xfs@oss.sgi.com>; Sun, 19 Dec 2010 06:37:47 -0800 (PST)
+Received: from sam.nabble.com (sam.nabble.com [216.139.236.26]) by
+	cuda.sgi.com with ESMTP id C270PbBkab21QHCD for
+	<xfs@oss.sgi.com>; Sun, 19 Dec 2010 06:37:47 -0800 (PST)
+Received: from isper.nabble.com ([192.168.236.156])
+	by sam.nabble.com with esmtp (Exim 4.69)
+	(envelope-from <lists@nabble.com>) id 1PUKOQ-0001hs-Dt
+	for xfs@oss.sgi.com; Sun, 19 Dec 2010 06:37:46 -0800
+Message-ID: <30492876.post@talk.nabble.com>
+Date: Sun, 19 Dec 2010 06:37:46 -0800 (PST)
+From: johahoff <jh@not-dark-yet.de>
+Subject: Re: Fwd: xfs - fixing wrong xfs size
+In-Reply-To: <4CE15F39.2010904@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: Problem with XFS on USB 2TB HD
-References: <4D0C9A4F.4040108@pzystorm.de> <4D0D6825.9010209@pzystorm.de>
-In-Reply-To: <4D0D6825.9010209@pzystorm.de>
+References: <dbd747120904130713t7388971axf75ee779b5b1e1f2@mail.gmail.com>
+	<49E353FD.5060207@sandeen.net>
+	<dbd747120904130933i6ae66aedt7912a47b7e561f76@mail.gmail.com>
+	<4BE1EF9D.2030901@sandeen.net> <30211747.post@talk.nabble.com>
+	<4CE15F39.2010904@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,22 +37,18 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Kevin Richter put forth on 12/18/2010 8:04 PM:
-> ... the xfs_repair process did succeed.
-> But in the end I still cannot mount the volume.
-> In the following there is a log of my actions with the appropriate
-> syslog messages.
-> 
-> The xfs_check (see below) says that there is a bug in xfs. So I am
-> writing to this list a second time asking for help :)
 
-I don't have a solution to your problem unfortunately.  Keep in mind you
-posted this problem on a weekend, and one week before Christmas no less.
- Your timing is not optimal for receiving a prompt response.  It's
-possible you may have to wait until Monday for help. :(
+That worked perfectly, thanks a lot, Eric!
 
+One minor issue: I had to use 'xfs_db -x', not '-w', but probably that's
+because of an old version of xfs-utils on the SystemRescueCD I was using.
+Just a hint if anybody is wondering.
+
+Thanks again,
+Johannes
 -- 
-Stan
+View this message in context: http://old.nabble.com/xfs---fixing-wrong-xfs-size-tp23023562p30492876.html
+Sent from the Xfs - General mailing list archive at Nabble.com.
 
 _______________________________________________
 xfs mailing list
