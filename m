@@ -1,17 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBKBQvqH115555 for <xfs@oss.sgi.com>; Mon, 20 Dec 2010 05:26:58 -0600
-Date: Mon, 20 Dec 2010 06:28:52 -0500
+	oBKBZYng116034 for <xfs@oss.sgi.com>; Mon, 20 Dec 2010 05:35:34 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 97E8B20E061
+	for <xfs@oss.sgi.com>; Mon, 20 Dec 2010 03:37:31 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id M6HWTpocg1XcEyUi for
+	<xfs@oss.sgi.com>; Mon, 20 Dec 2010 03:37:31 -0800 (PST)
+Date: Mon, 20 Dec 2010 06:37:31 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/4] xfs: refactor xlog_recover_commit_trans
-Message-ID: <20101220112852.GB6881@infradead.org>
-References: <20101201220620.340188389@bombadil.infradead.org>
-	<20101201220710.454838485@bombadil.infradead.org>
-	<1292534295.2457.58.camel@doink>
+Subject: Re: [PATCH 03/12] xfs: rework log grant space calculations
+Message-ID: <20101220113731.GB12806@infradead.org>
+References: <1292215483-18224-1-git-send-email-david@fromorbit.com>
+	<1292215483-18224-4-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1292534295.2457.58.camel@doink>
+In-Reply-To: <1292215483-18224-4-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,29 +29,14 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Thu, Dec 16, 2010 at 03:18:15PM -0600, Alex Elder wrote:
-> On Wed, 2010-12-01 at 17:06 -0500, Christoph Hellwig wrote:
-> > 
-> > Merge the call to xlog_recover_reorder_trans and the loop over the
-> > recovery items from xlog_recover_do_trans into xlog_recover_commit_trans,
-> > and keep the switch statement over the log item types as a separate helper.
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > 
-> 
-> I'm making a small change to this one patch though...
+Looks good,
 
-> > +	case XFS_LI_BUF:
-> > +		return xlog_recover_do_buffer_trans(log, item, pass);
-> > +		break;
-> 
-> I have deleted this "break" statement.
 
-Yeah, this is a leftover from an earlier variant.  Thanks for spotting
-it.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+
 
 _______________________________________________
 xfs mailing list
