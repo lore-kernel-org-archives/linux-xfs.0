@@ -1,22 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBKBTiZM115739 for <xfs@oss.sgi.com>; Mon, 20 Dec 2010 05:29:45 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8E0A6146C9F4
-	for <xfs@oss.sgi.com>; Mon, 20 Dec 2010 03:31:41 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id CiHBtTNupkuqQNMP for
-	<xfs@oss.sgi.com>; Mon, 20 Dec 2010 03:31:41 -0800 (PST)
-Date: Mon, 20 Dec 2010 06:31:39 -0500
+	oBKBQvqH115555 for <xfs@oss.sgi.com>; Mon, 20 Dec 2010 05:26:58 -0600
+Date: Mon, 20 Dec 2010 06:28:52 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: xfs_efi_item slab leak
-Message-ID: <20101220113139.GA10324@infradead.org>
-References: <AANLkTi=LrU2CsC-VZmJ5M9U7eJpjqfAv8UgaEYv=Sg01@mail.gmail.com>
-	<20101218000245.GG5193@dastard>
+Subject: Re: [PATCH 3/4] xfs: refactor xlog_recover_commit_trans
+Message-ID: <20101220112852.GB6881@infradead.org>
+References: <20101201220620.340188389@bombadil.infradead.org>
+	<20101201220710.454838485@bombadil.infradead.org>
+	<1292534295.2457.58.camel@doink>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20101218000245.GG5193@dastard>
+In-Reply-To: <1292534295.2457.58.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,18 +24,29 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Nick Piggin <npiggin@gmail.com>, xfs@oss.sgi.com
+To: Alex Elder <aelder@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Sat, Dec 18, 2010 at 11:02:45AM +1100, Dave Chinner wrote:
-> Ok, after unmounting everything I can see two items in remaining in
-> the xfs_efi_item cache after an xfstests run. ??t's probably to do
-> with a filesystem shutdown not cleaning them up correctly. I'll put
-> it on my list of stuff to track down.
+On Thu, Dec 16, 2010 at 03:18:15PM -0600, Alex Elder wrote:
+> On Wed, 2010-12-01 at 17:06 -0500, Christoph Hellwig wrote:
+> > 
+> > Merge the call to xlog_recover_reorder_trans and the loop over the
+> > recovery items from xlog_recover_do_trans into xlog_recover_commit_trans,
+> > and keep the switch statement over the log item types as a separate helper.
+> > 
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > 
+> 
+> I'm making a small change to this one patch though...
 
-Does it still happen with your working tree?  The incorrect handling
-of IOP_UNPING with remove == 1 looks like it could cause something
-similar.
+> > +	case XFS_LI_BUF:
+> > +		return xlog_recover_do_buffer_trans(log, item, pass);
+> > +		break;
+> 
+> I have deleted this "break" statement.
+
+Yeah, this is a leftover from an earlier variant.  Thanks for spotting
+it.
 
 _______________________________________________
 xfs mailing list
