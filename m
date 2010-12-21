@@ -1,32 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBL7S1VQ244578 for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 01:28:01 -0600
+	oBL7S1Et244569 for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 01:28:01 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 469901CE33C6
-	for <xfs@oss.sgi.com>; Mon, 20 Dec 2010 23:29:56 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
-	[150.101.137.101]) by cuda.sgi.com with ESMTP id
-	rXHrsy1h2JeiVjeL for <xfs@oss.sgi.com>;
-	Mon, 20 Dec 2010 23:29:56 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3AEAD1CE33C4
+	for <xfs@oss.sgi.com>; Mon, 20 Dec 2010 23:29:57 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
+	[150.101.137.98]) by cuda.sgi.com with ESMTP id
+	jxiNExXf68F3A4iZ for <xfs@oss.sgi.com>;
+	Mon, 20 Dec 2010 23:29:57 -0800 (PST)
 Received: from dastard (unverified [121.44.88.148])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	50575222-1927428
+	50839304-1927428
 	for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 17:59:55 +1030 (CDT)
 Received: from chute ([192.168.1.1] helo=disappointment)
 	by dastard with esmtp (Exim 4.72)
-	(envelope-from <dave@fromorbit.com>) id 1PUwfI-0001CL-6J
+	(envelope-from <dave@fromorbit.com>) id 1PUwfI-0001CM-7w
 	for xfs@oss.sgi.com; Tue, 21 Dec 2010 18:29:44 +1100
 Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1PUwf6-0006Yi-R1
+	(envelope-from <dave@disappointment.disaster>) id 1PUwf6-0006Yk-TG
 	for xfs@oss.sgi.com; Tue, 21 Dec 2010 18:29:32 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: =?UTF-8?q?=5BPATCH=2001/34=5D=20xfs=3A=20provide=20a=20inode=20iolock=20lockdep=20class?=
-Date: Tue, 21 Dec 2010 18:28:57 +1100
-Message-Id: <1292916570-25015-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH 02/34] xfs: use KM_NOFS for allocations during attribute list
+	operations
+Date: Tue, 21 Dec 2010 18:28:58 +1100
+Message-Id: <1292916570-25015-3-git-send-email-david@fromorbit.com>
 In-Reply-To: <1292916570-25015-1-git-send-email-david@fromorbit.com>
 References: <1292916570-25015-1-git-send-email-david@fromorbit.com>
-MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,73 +35,54 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-RnJvbTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgoKVGhlIFhGUyBpb2xvY2sg
-bmVlZHMgdG8gYmUgcmUtaW5pdGlhbGlzZWQgdG8gYSBuZXcgbG9jayBjbGFzcyBiZWZvcmUKaXQg
-ZW50ZXJzIHJlY2xhaW0gdG8gcHJldmVudCBsb2NrZGVwIGZhbHNlIHBvc2l0aXZlcy4gVW5mb3J0
-dW5hdGVseSwKdGhpcyBpcyBub3Qgc3VmZmljaWVudCBwcm90ZWN0aW9uIGFzIGlub2RlcyBpbiB0
-aGUgWEZTX0lSRUNMQUlNQUJMRQpzdGF0ZSBjYW4gYmUgcmVjeWNsZWQgYW5kIG5vdCByZS1pbml0
-aWFsaXNlZCBiZWZvcmUgYmVpbmcgcmV1c2VkLgoKV2UgbmVlZCB0byByZS1pbml0aWFsaXNlIHRo
-ZSBsb2NrIHN0YXRlIHdoZW4gdHJhbnNmZXJpbmcgb3V0IG9mClhGU19JUkVDTEFJTUFCTEUgc3Rh
-dGUgdG8gWEZTX0lORVcsIGJ1dCB3ZSBuZWVkIHRvIGtlZXAgdGhlIHNhbWUKY2xhc3MgYXMgaWYg
-dGhlIGlub2RlIHdhcyBqdXN0IGFsbG9jYXRlZC4gSGVuY2Ugd2UgbmVlZCBhIHNwZWNpZmljCmxv
-Y2tkZXAgY2xhc3MgdmFyaWFibGUgZm9yIHRoZSBpb2xvY2sgc28gdGhhdCBib3RoIGluaXRpYWxp
-c2F0aW9ucwp1c2UgdGhlIHNhbWUgY2xhc3MuCgpXaGlsZSB0aGVyZSwgYWRkIGEgc3BlY2lmaWMg
-Y2xhc3MgZm9yIGlub2RlcyBpbiB0aGUgcmVjbGFpbSBzdGF0ZSBzbwp0aGF0IGl0IGlzIGVhc3kg
-dG8gdGVsbCBmcm9tIGxvY2tkZXAgcmVwb3J0cyB3aGF0IHN0YXRlIHRoZSBpbm9kZQp3YXMgaW4g
-dGhhdCBnZW5lcmF0ZWQgdGhlIHJlcG9ydC4KClNpZ25lZC1vZmYtYnk6IERhdmUgQ2hpbm5lciA8
-ZGNoaW5uZXJAcmVkaGF0LmNvbT4KLS0tCiBmcy94ZnMvbGludXgtMi42L3hmc19zdXBlci5jIHwg
-ICAgMiArKwogZnMveGZzL3hmc19pZ2V0LmMgICAgICAgICAgICB8ICAgMTkgKysrKysrKysrKysr
-KysrKysrKwogZnMveGZzL3hmc19pbm9kZS5oICAgICAgICAgICB8ICAgIDIgKysKIDMgZmlsZXMg
-Y2hhbmdlZCwgMjMgaW5zZXJ0aW9ucygrKSwgMCBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9m
-cy94ZnMvbGludXgtMi42L3hmc19zdXBlci5jIGIvZnMveGZzL2xpbnV4LTIuNi94ZnNfc3VwZXIu
-YwppbmRleCAwNjRmOTY0Li5jNDViMzIzIDEwMDY0NAotLS0gYS9mcy94ZnMvbGludXgtMi42L3hm
-c19zdXBlci5jCisrKyBiL2ZzL3hmcy9saW51eC0yLjYveGZzX3N1cGVyLmMKQEAgLTExMTgsNiAr
-MTExOCw4IEBAIHhmc19mc19ldmljdF9pbm9kZSgKIAkgKi8KIAlBU1NFUlQoIXJ3c2VtX2lzX2xv
-Y2tlZCgmaXAtPmlfaW9sb2NrLm1yX2xvY2spKTsKIAltcmxvY2tfaW5pdCgmaXAtPmlfaW9sb2Nr
-LCBNUkxPQ0tfQkFSUklFUiwgInhmc2lvIiwgaXAtPmlfaW5vKTsKKwlsb2NrZGVwX3NldF9jbGFz
-c19hbmRfbmFtZSgmaXAtPmlfaW9sb2NrLm1yX2xvY2ssCisJCQkmeGZzX2lvbG9ja19yZWNsYWlt
-YWJsZSwgInhmc19pb2xvY2tfcmVjbGFpbWFibGUiKTsKIAogCXhmc19pbmFjdGl2ZShpcCk7CiB9
-CmRpZmYgLS1naXQgYS9mcy94ZnMveGZzX2lnZXQuYyBiL2ZzL3hmcy94ZnNfaWdldC5jCmluZGV4
-IDBjZGQyNjkuLmNkYjFjMjUgMTAwNjQ0Ci0tLSBhL2ZzL3hmcy94ZnNfaWdldC5jCisrKyBiL2Zz
-L3hmcy94ZnNfaWdldC5jCkBAIC00Myw2ICs0MywxNyBAQAogCiAKIC8qCisgKiBEZWZpbmUgeGZz
-IGlub2RlIGlvbG9jayBsb2NrZGVwIGNsYXNzZXMuIFdlIG5lZWQgdG8gZW5zdXJlIHRoYXQgYWxs
-IGFjdGl2ZQorICogaW5vZGVzIGFyZSBjb25zaWRlcmVkIHRoZSBzYW1lIGZvciBsb2NrZGVwIHB1
-cnBvc2VzLCBpbmNsdWRpbmcgaW5vZGVzIHRoYXQKKyAqIGFyZSByZWN5Y2xlZCB0aHJvdWdoIHRo
-ZSBYRlNfSVJFQ0xBSU1BQkxFIHN0YXRlLiBUaGlzIGlzIHRoZSB0aGUgb25seSB3YXkgdG8KKyAq
-IGd1YXJhbnRlZSB0aGUgbG9ja3MgYXJlIGNvbnNpZGVyZWQgdGhlIHNhbWUgd2hlbiB0aGVyZSBh
-cmUgbXVsdGlwbGUgbG9jaworICogaW5pdGlhbGlzYXRpb24gc2l0ZdGVLiBBbHNvLCBkZWZpbmUg
-YSByZWNsYWltYWJsZSBpbm9kZSBjbGFzcyBzbyBpdCBpcworICogb2J2aW91cyBpbiBsb2NrZGVw
-IHJlcG9ydHMgd2hpY2ggY2xhc3MgdGhlIHJlcG9ydCBpcyBhZ2FpbnN0LgorICovCitzdGF0aWMg
-c3RydWN0IGxvY2tfY2xhc3Nfa2V5IHhmc19pb2xvY2tfYWN0aXZlOworc3RydWN0IGxvY2tfY2xh
-c3Nfa2V5IHhmc19pb2xvY2tfcmVjbGFpbWFibGU7CisKKy8qCiAgKiBBbGxvY2F0ZSBhbmQgaW5p
-dGlhbGlzZSBhbiB4ZnNfaW5vZGUuCiAgKi8KIFNUQVRJQyBzdHJ1Y3QgeGZzX2lub2RlICoKQEAg
-LTcxLDYgKzgyLDggQEAgeGZzX2lub2RlX2FsbG9jKAogCUFTU0VSVChjb21wbGV0aW9uX2RvbmUo
-JmlwLT5pX2ZsdXNoKSk7CiAKIAltcmxvY2tfaW5pdCgmaXAtPmlfaW9sb2NrLCBNUkxPQ0tfQkFS
-UklFUiwgInhmc2lvIiwgaXAtPmlfaW5vKTsKKwlsb2NrZGVwX3NldF9jbGFzc19hbmRfbmFtZSgm
-aXAtPmlfaW9sb2NrLm1yX2xvY2ssCisJCQkmeGZzX2lvbG9ja19hY3RpdmUsICJ4ZnNfaW9sb2Nr
-X2FjdGl2ZSIpOwogCiAJLyogaW5pdGlhbGlzZSB0aGUgeGZzIGlub2RlICovCiAJaXAtPmlfaW5v
-ID0gaW5vOwpAQCAtMjE4LDYgKzIzMSwxMiBAQCB4ZnNfaWdldF9jYWNoZV9oaXQoCiAJCWlwLT5p
-X2ZsYWdzIHw9IFhGU19JTkVXOwogCQlfX3hmc19pbm9kZV9jbGVhcl9yZWNsYWltX3RhZyhtcCwg
-cGFnLCBpcCk7CiAJCWlub2RlLT5pX3N0YXRlID0gSV9ORVc7CisKKwkJQVNTRVJUKCFyd3NlbV9p
-c19sb2NrZWQoJmlwLT5pX2lvbG9jay5tcl9sb2NrKSk7CisJCW1ybG9ja19pbml0KCZpcC0+aV9p
-b2xvY2ssIE1STE9DS19CQVJSSUVSLCAieGZzaW8iLCBpcC0+aV9pbm8pOworCQlsb2NrZGVwX3Nl
-dF9jbGFzc19hbmRfbmFtZSgmaXAtPmlfaW9sb2NrLm1yX2xvY2ssCisJCQkJJnhmc19pb2xvY2tf
-YWN0aXZlLCAieGZzX2lvbG9ja19hY3RpdmUiKTsKKwogCQlzcGluX3VubG9jaygmaXAtPmlfZmxh
-Z3NfbG9jayk7CiAJCXdyaXRlX3VubG9jaygmcGFnLT5wYWdfaWNpX2xvY2spOwogCX0gZWxzZSB7
-CmRpZmYgLS1naXQgYS9mcy94ZnMveGZzX2lub2RlLmggYi9mcy94ZnMveGZzX2lub2RlLmgKaW5k
-ZXggZmIyY2EyZS4uMWM2NTE0ZCAxMDA2NDQKLS0tIGEvZnMveGZzL3hmc19pbm9kZS5oCisrKyBi
-L2ZzL3hmcy94ZnNfaW5vZGUuaApAQCAtNDM4LDYgKzQzOCw4IEBAIHN0YXRpYyBpbmxpbmUgdm9p
-ZCB4ZnNfaWZ1bmxvY2soeGZzX2lub2RlX3QgKmlwKQogI2RlZmluZSBYRlNfSU9MT0NLX0RFUChm
-bGFncykJKCgoZmxhZ3MpICYgWEZTX0lPTE9DS19ERVBfTUFTSykgPj4gWEZTX0lPTE9DS19TSElG
-VCkKICNkZWZpbmUgWEZTX0lMT0NLX0RFUChmbGFncykJKCgoZmxhZ3MpICYgWEZTX0lMT0NLX0RF
-UF9NQVNLKSA+PiBYRlNfSUxPQ0tfU0hJRlQpCiAKK2V4dGVybiBzdHJ1Y3QgbG9ja19jbGFzc19r
-ZXkgeGZzX2lvbG9ja19yZWNsYWltYWJsZTsKKwogLyoKICAqIEZsYWdzIGZvciB4ZnNfaXRydW5j
-YXRlX3N0YXJ0KCkuCiAgKi8KLS0gCjEuNy4yLjMKCl9fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0
-dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+From: Dave Chinner <dchinner@redhat.com>
+
+When listing attributes, we are doiing memory allocations under the
+inode ilock using only KM_SLEEP. This allows memory allocation to
+recurse back into the filesystem and do writeback, which may the
+ilock we already hold on the current inode. THis will deadlock.
+Hence use KM_NOFS for such allocations outside of transaction
+context to ensure that reclaim recursion does not occur.
+
+Reported-by: Nick Piggin <npiggin@gmail.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_attr_leaf.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/fs/xfs/xfs_attr_leaf.c b/fs/xfs/xfs_attr_leaf.c
+index a6cff8e..71e90dc2 100644
+--- a/fs/xfs/xfs_attr_leaf.c
++++ b/fs/xfs/xfs_attr_leaf.c
+@@ -637,7 +637,7 @@ xfs_attr_shortform_list(xfs_attr_list_context_t *context)
+ 	 * It didn't all fit, so we have to sort everything on hashval.
+ 	 */
+ 	sbsize = sf->hdr.count * sizeof(*sbuf);
+-	sbp = sbuf = kmem_alloc(sbsize, KM_SLEEP);
++	sbp = sbuf = kmem_alloc(sbsize, KM_SLEEP | KM_NOFS);
+ 
+ 	/*
+ 	 * Scan the attribute list for the rest of the entries, storing
+@@ -2386,7 +2386,7 @@ xfs_attr_leaf_list_int(xfs_dabuf_t *bp, xfs_attr_list_context_t *context)
+ 				args.dp = context->dp;
+ 				args.whichfork = XFS_ATTR_FORK;
+ 				args.valuelen = valuelen;
+-				args.value = kmem_alloc(valuelen, KM_SLEEP);
++				args.value = kmem_alloc(valuelen, KM_SLEEP | KM_NOFS);
+ 				args.rmtblkno = be32_to_cpu(name_rmt->valueblk);
+ 				args.rmtblkcnt = XFS_B_TO_FSB(args.dp->i_mount, valuelen);
+ 				retval = xfs_attr_rmtval_get(&args);
+-- 
+1.7.2.3
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
