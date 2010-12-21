@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBLFDFYl044236 for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 09:13:15 -0600
+	oBLFEHJt044411 for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 09:14:18 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 99C962014CD
-	for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 07:15:13 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 989921465B27
+	for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 07:16:15 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id dhpiRo8hY3ihTjUp for
-	<xfs@oss.sgi.com>; Tue, 21 Dec 2010 07:15:13 -0800 (PST)
-Date: Tue, 21 Dec 2010 10:15:11 -0500
+	by cuda.sgi.com with ESMTP id rpRQXZl6rODbE3VJ for
+	<xfs@oss.sgi.com>; Tue, 21 Dec 2010 07:16:15 -0800 (PST)
+Date: Tue, 21 Dec 2010 10:16:14 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 06/34] xfs: dynamic speculative EOF preallocation
-Message-ID: <20101221151511.GA26127@infradead.org>
+Subject: Re: [PATCH 02/34] xfs: use KM_NOFS for allocations during attribute
+	list operations
+Message-ID: <20101221151614.GC26127@infradead.org>
 References: <1292916570-25015-1-git-send-email-david@fromorbit.com>
-	<1292916570-25015-7-git-send-email-david@fromorbit.com>
+	<1292916570-25015-3-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1292916570-25015-7-git-send-email-david@fromorbit.com>
+In-Reply-To: <1292916570-25015-3-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,9 +33,19 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-This patch causes tesr 014 to take ~ 870 seconds instead of 6, thus
-beeing almost 150 times slower on mt 32-bit test VM, so I'll have to NAK
-it for now.
+On Tue, Dec 21, 2010 at 06:28:58PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> When listing attributes, we are doiing memory allocations under the
+> inode ilock using only KM_SLEEP. This allows memory allocation to
+> recurse back into the filesystem and do writeback, which may the
+> ilock we already hold on the current inode. THis will deadlock.
+> Hence use KM_NOFS for such allocations outside of transaction
+> context to ensure that reclaim recursion does not occur.
+
+Looks good,
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
