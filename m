@@ -1,22 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBKMP1Da184775 for <xfs@oss.sgi.com>; Mon, 20 Dec 2010 16:25:01 -0600
+	oBL0o3tJ200147 for <xfs@oss.sgi.com>; Mon, 20 Dec 2010 18:50:03 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1A32B1CE1F0F
-	for <xfs@oss.sgi.com>; Mon, 20 Dec 2010 14:26:56 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
-	[150.101.137.101]) by cuda.sgi.com with ESMTP id
-	BQ5LPm7KyRDnKj7j for <xfs@oss.sgi.com>;
-	Mon, 20 Dec 2010 14:26:56 -0800 (PST)
-Date: Tue, 21 Dec 2010 09:26:53 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1766E146F504
+	for <xfs@oss.sgi.com>; Mon, 20 Dec 2010 16:51:57 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
+	[150.101.137.100]) by cuda.sgi.com with ESMTP id
+	CSJD4WxRnM3kFPsh for <xfs@oss.sgi.com>;
+	Mon, 20 Dec 2010 16:51:57 -0800 (PST)
+Date: Tue, 21 Dec 2010 11:51:54 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Question regarding xfs_repair / memory requirement.
-Message-ID: <20101220222653.GL5193@dastard>
-References: <alpine.DEB.2.00.1012200519230.26485@p34.internal.lan>
+Subject: Re: [PATCH 4/7] xfs: split direct IO write path from
+	xfs_file_aio_write
+Message-ID: <20101221005154.GM5193@dastard>
+References: <1292376208-16282-1-git-send-email-david@fromorbit.com>
+	<1292376208-16282-5-git-send-email-david@fromorbit.com>
+	<20101216120629.GC20445@infradead.org>
+	<20101217073125.GE5193@dastard>
+	<20101220112947.GC6881@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.00.1012200519230.26485@p34.internal.lan>
+In-Reply-To: <20101220112947.GC6881@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,40 +34,23 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Mon, Dec 20, 2010 at 05:20:18AM -0500, Justin Piszcz wrote:
-> Hi,
+On Mon, Dec 20, 2010 at 06:29:47AM -0500, Christoph Hellwig wrote:
+> On Fri, Dec 17, 2010 at 06:31:25PM +1100, Dave Chinner wrote:
+> > > Speaking of that, shouldn't xfs_file_aio_read also take the iolock
+> > > exclusive during the page invalidation and then demote it, just like
+> > > the write case?  The above helpers would enforce that nicely.
+> > 
+> > Probably, though it might be best to leave that to another cleanup
+> > series. I'll see how much perturbation of the read path it makes....
 > 
-> I am looking at FS to use for a possible 43TB array.
-> If there is a problem with a volume this large, how much ram will
-> xfs_repair need to fsck the volume?
+> Yes, it should be a separate patch for sure.  If you prefer another
+> series that's fine with me, too.
 
-$ dd if=/dev/zero of=/mnt/scratch/test.img bs=1048576 count=1 seek=50000000
-1+0 records in
-1+0 records out
-1048576 bytes (1.0 MB) copied, 0.00463602 s, 226 MB/s
-$ ls -lh /mnt/scratch/test.img 
--rw-r--r-- 1 dave dave 48T Dec 21 09:22 /mnt/scratch/test.img
-$ sudo mkfs.xfs -d name=/mnt/scratch/test.img,file,size=43t
-[sudo] password for dave: 
-meta-data=/mnt/scratch/test.img  isize=256    agcount=43, agsize=268435455 blks
-         =                       sectsz=512   attr=2
-data     =                       bsize=4096   blocks=11542724565, imaxpct=5
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0
-log      =internal log           bsize=4096   blocks=521728, version=2
-         =                       sectsz=512   sunit=0 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-$ sudo xfs_repair -m 1 -vv /mnt/scratch/test.img 
-Phase 1 - find and verify superblock...
-        - max_mem = 1024, icount = 64, imem = 0, dblock = 11542724565, dmem = 5636095
-Required memory for repair is greater that the maximum specified with the -m option. Please increase it to at least 5552
-$
-
-Not taking inodes into account, you'll need at least 5.5GB of RAM to run
-xfs_repair on a 43TB filesystem.
+Turns out to be pretty trivial to do - I included it in the
+new xfs_rw_ilock conversion patch for the moment.
 
 Cheers,
 
