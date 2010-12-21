@@ -1,27 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBL0o3tJ200147 for <xfs@oss.sgi.com>; Mon, 20 Dec 2010 18:50:03 -0600
+	oBL0smcG200467 for <xfs@oss.sgi.com>; Mon, 20 Dec 2010 18:54:49 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1766E146F504
-	for <xfs@oss.sgi.com>; Mon, 20 Dec 2010 16:51:57 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
-	[150.101.137.100]) by cuda.sgi.com with ESMTP id
-	CSJD4WxRnM3kFPsh for <xfs@oss.sgi.com>;
-	Mon, 20 Dec 2010 16:51:57 -0800 (PST)
-Date: Tue, 21 Dec 2010 11:51:54 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0DCAA1CE2416
+	for <xfs@oss.sgi.com>; Mon, 20 Dec 2010 16:56:44 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
+	[150.101.137.97]) by cuda.sgi.com with ESMTP id
+	Nn3LoGdmkh3r0qrj for <xfs@oss.sgi.com>;
+	Mon, 20 Dec 2010 16:56:44 -0800 (PST)
+Received: from dastard (unverified [121.44.88.148])
+	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
+	50641490-1927428
+	for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 11:26:43 +1030 (CDT)
+Received: from chute ([192.168.1.1] helo=disappointment)
+	by dastard with esmtp (Exim 4.72)
+	(envelope-from <dave@fromorbit.com>) id 1PUqWw-0000iN-En
+	for xfs@oss.sgi.com; Tue, 21 Dec 2010 11:56:42 +1100
+Received: from dave by disappointment with local (Exim 4.72)
+	(envelope-from <dave@disappointment.disaster>) id 1PUqWn-0003F4-FV
+	for xfs@oss.sgi.com; Tue, 21 Dec 2010 11:56:33 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 4/7] xfs: split direct IO write path from
-	xfs_file_aio_write
-Message-ID: <20101221005154.GM5193@dastard>
-References: <1292376208-16282-1-git-send-email-david@fromorbit.com>
-	<1292376208-16282-5-git-send-email-david@fromorbit.com>
-	<20101216120629.GC20445@infradead.org>
-	<20101217073125.GE5193@dastard>
-	<20101220112947.GC6881@infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20101220112947.GC6881@infradead.org>
+Subject: [PATCH] xfs: use KM_NOFS for allocations during attribute list
+	operations
+Date: Tue, 21 Dec 2010 11:56:33 +1100
+Message-Id: <1292892993-12424-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,34 +33,52 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mon, Dec 20, 2010 at 06:29:47AM -0500, Christoph Hellwig wrote:
-> On Fri, Dec 17, 2010 at 06:31:25PM +1100, Dave Chinner wrote:
-> > > Speaking of that, shouldn't xfs_file_aio_read also take the iolock
-> > > exclusive during the page invalidation and then demote it, just like
-> > > the write case?  The above helpers would enforce that nicely.
-> > 
-> > Probably, though it might be best to leave that to another cleanup
-> > series. I'll see how much perturbation of the read path it makes....
-> 
-> Yes, it should be a separate patch for sure.  If you prefer another
-> series that's fine with me, too.
+From: Dave Chinner <dchinner@redhat.com>
 
-Turns out to be pretty trivial to do - I included it in the
-new xfs_rw_ilock conversion patch for the moment.
+When listing attributes, we are doiing memory allocations under the
+inode ilock using only KM_SLEEP. This allows memory allocation to
+recurse back into the filesystem and do writeback, which may the
+ilock we already hold on the current inode. THis will deadlock.
+Hence use KM_NOFS for such allocations outside of transaction
+context to ensure that reclaim recursion does not occur.
 
-Cheers,
+Reported-by: Nick Piggin <npiggin@gmail.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_attr_leaf.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Dave.
+diff --git a/fs/xfs/xfs_attr_leaf.c b/fs/xfs/xfs_attr_leaf.c
+index a6cff8e..71e90dc2 100644
+--- a/fs/xfs/xfs_attr_leaf.c
++++ b/fs/xfs/xfs_attr_leaf.c
+@@ -637,7 +637,7 @@ xfs_attr_shortform_list(xfs_attr_list_context_t *context)
+ 	 * It didn't all fit, so we have to sort everything on hashval.
+ 	 */
+ 	sbsize = sf->hdr.count * sizeof(*sbuf);
+-	sbp = sbuf = kmem_alloc(sbsize, KM_SLEEP);
++	sbp = sbuf = kmem_alloc(sbsize, KM_SLEEP | KM_NOFS);
+ 
+ 	/*
+ 	 * Scan the attribute list for the rest of the entries, storing
+@@ -2386,7 +2386,7 @@ xfs_attr_leaf_list_int(xfs_dabuf_t *bp, xfs_attr_list_context_t *context)
+ 				args.dp = context->dp;
+ 				args.whichfork = XFS_ATTR_FORK;
+ 				args.valuelen = valuelen;
+-				args.value = kmem_alloc(valuelen, KM_SLEEP);
++				args.value = kmem_alloc(valuelen, KM_SLEEP | KM_NOFS);
+ 				args.rmtblkno = be32_to_cpu(name_rmt->valueblk);
+ 				args.rmtblkcnt = XFS_B_TO_FSB(args.dp->i_mount, valuelen);
+ 				retval = xfs_attr_rmtval_get(&args);
 -- 
-Dave Chinner
-david@fromorbit.com
+1.7.2.3
 
 _______________________________________________
 xfs mailing list
