@@ -1,32 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBL7SCbX244706 for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 01:28:12 -0600
+	oBL7SNQt244816 for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 01:28:23 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B566A212027
-	for <xfs@oss.sgi.com>; Mon, 20 Dec 2010 23:30:08 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail20.adl6.internode.on.net
-	[150.101.137.105]) by cuda.sgi.com with ESMTP id
-	jxiE0AZb4nEF4GGa for <xfs@oss.sgi.com>;
-	Mon, 20 Dec 2010 23:30:08 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0F1481CE33D1
+	for <xfs@oss.sgi.com>; Mon, 20 Dec 2010 23:30:18 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
+	[150.101.137.101]) by cuda.sgi.com with ESMTP id
+	nPEA6ynSHtdUWHXm for <xfs@oss.sgi.com>;
+	Mon, 20 Dec 2010 23:30:18 -0800 (PST)
 Received: from dastard (unverified [121.44.88.148])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	5388607-1927428
-	for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 18:00:06 +1030 (CDT)
+	50575233-1927428
+	for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 18:00:17 +1030 (CDT)
 Received: from chute ([192.168.1.1] helo=disappointment)
 	by dastard with esmtp (Exim 4.72)
-	(envelope-from <dave@fromorbit.com>) id 1PUwfS-0001Cl-Kj
-	for xfs@oss.sgi.com; Tue, 21 Dec 2010 18:29:54 +1100
+	(envelope-from <dave@fromorbit.com>) id 1PUwfn-0001E2-OE
+	for xfs@oss.sgi.com; Tue, 21 Dec 2010 18:30:15 +1100
 Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1PUwfH-0006Z6-8x
-	for xfs@oss.sgi.com; Tue, 21 Dec 2010 18:29:43 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1PUwfc-0006Zy-CR
+	for xfs@oss.sgi.com; Tue, 21 Dec 2010 18:30:04 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 09/34] xfs: convert inode cache lookups to use RCU locking
-Date: Tue, 21 Dec 2010 18:29:05 +1100
-Message-Id: <1292916570-25015-10-git-send-email-david@fromorbit.com>
+Subject: [PATCH 27/34] xfs: use wait queues directly for the log wait queues
+Date: Tue, 21 Dec 2010 18:29:23 +1100
+Message-Id: <1292916570-25015-28-git-send-email-david@fromorbit.com>
 In-Reply-To: <1292916570-25015-1-git-send-email-david@fromorbit.com>
 References: <1292916570-25015-1-git-send-email-david@fromorbit.com>
-MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,259 +34,466 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-RnJvbTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgoKV2l0aCBkZWxheWVkIGxv
-Z2dpbmcgZ3JlYXRseSBpbmNyZWFzaW5nIHRoZSBzdXN0YWluZWQgcGFyYWxsZWxpc20gb2YgaW5v
-ZGUKb3BlcmF0aW9ucywgdGhlIGlub2RlIGNhY2hlIGxvY2tpbmcgaXMgc2hvd2luZyBzaWduaWZp
-Y2FudCByZWFkIHZzIHdyaXRlCmNvbnRlbnRpb24gd2hlbiBpbm9kZSByZWNsYWltIHJ1bnMgYXQg
-dGhlIHNhbWUgdGltZSBhcyBsb29rdXBzLiBUaGVyZSBpcwphbHNvIGEgbG90IG1vcmUgd3JpdGUg
-bG9jayBhY3F1aXN0aW9ucyB0aGFuIHRoZXJlIGFyZSByZWFkIGxvY2tzICg0OjEgcmF0aW8pCnNv
-IHRoZSByZWFkIGxvY2tpbmcgaXMgbm90IHJlYWxseSBidXlpbmcgdXMgbXVjaCBpbiB0aGUgd2F5
-IG9mIHBhcmFsbGVsaXNtLgoKVG8gYXZvaWQgdGhlIHJlYWQgdnMgd3JpdGUgY29udGVudGlvbiwg
-Y2hhbmdlIHRoZSBjYWNoZSB0byB1c2UgUkNVIGxvY2tpbmcgb24KdGhlIHJlYWQgc2lkZS4gVG8g
-YXZvaWQgbmVlZGluZyB0byBSQ1UgZnJlZSBldmVyeSBzaW5nbGUgaW5vZGUsIHVzZSB0aGUgYnVp
-bHQKaW4gc2xhYiBSQ1UgZnJlZWluZyBtZWNoYW5pc20uIFRoaXMgcmVxdWlyZXMgdXMgdG8gYmUg
-YWJsZSB0byBkZXRlY3QgbG9va3VwcyBvZgpmcmVlZCBpbm9kZXMsIHNvIGVu0ZV1cmUgdGhhdCBl
-dmVyIGZyZWVkIGlub2RlIGhhcyBhbiBpbm9kZSBudW1iZXIgb2YgemVybyBhbmQKdGhlIFhGU19J
-UkVDTEFJTSBmbGFnIHNldC4gV2UgYWxyZWFkeSBjaGVjayB0aGUgWEZTX0lSRUNMQUlNIGZsYWcg
-aW4gY2FjaGUgaGl0Cmxvb2t1cCBwYXRoLCBidXQgYWxzbyBhZGQgYSBjaGVjayBmb3IgYSB6ZXJv
-IGlub2RlIG51bWJlciBhcyB3ZWxsLgoKV2UgY2FudGhlbiBjb252ZXJ0IGFsbCB0aGUgcmVhZCBs
-b2NraW5nIGxvY2t1cHMgdG8gdXNlIFJDVSByZWFkIHNpZGUgbG9ja2luZwphbmQgaGVuY2UgcmVt
-b3ZlIGFsbCByZWFkIHNpZGUgbG9ja2luZy4KClNpZ25lZC1vZmYtYnk6IERhdmUgQ2hpbm5lciA8
-ZGNoaW5uZXJAcmVkaGF0LmNvbT4KUmV2aWV3ZWQtYnk6IEFsZXggRWxkZXIgPGFlbGRlckBzZ2ku
-Y29tPgotLS0KIGZzL3hmcy9saW51eC0yLjYveGZzX3N5bmMuYyB8ICAgODQgKysrKysrKysrKysr
-KysrKysrKysrKysrKysrKysrKysrLS0tLS0tLS0tCiBmcy94ZnMveGZzX2lnZXQuYyAgICAgICAg
-ICAgfCAgIDQ3ICsrKysrKysrKysrKysrKysrKy0tLS0tLQogZnMveGZzL3hmc19pbm9kZS5jICAg
-ICAgICAgIHwgICA1MiArKysrKysrKysrKysrKysrKysrKy0tLS0tLQogMyBmaWxlcyBjaGFuZ2Vk
-LCAxNDEgaW5zZXJ0aW9ucygrKSwgNDIgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvZnMveGZz
-L2xpbnV4LTIuNi94ZnNfc3luYy5jIGIvZnMveGZzL2xpbnV4LTIuNi94ZnNfc3luYy5jCmluZGV4
-IGFmYjBkN2MuLmZkMzg2ODIgMTAwNjQ0Ci0tLSBhL2ZzL3hmcy9saW51eC0yLjYveGZzX3N5bmMu
-YworKysgYi9mcy94ZnMvbGludXgtMi42L3hmc19zeW5jLmMKQEAgLTUzLDE0ICs1MywzMCBAQCB4
-ZnNfaW5vZGVfYWdfd2Fsa19ncmFiKAogewogCXN0cnVjdCBpbm9kZQkJKmlub2RlID0gVkZTX0ko
-aXApOwogCisJQVNTRVJUKHJjdV9yZWFkX2xvY2tfaGVsZCgpKTsKKworCS8qCisJICogY2hlY2sg
-Zm9yIHN0YWxlIFJDVSBmcmVlZCBpbm9kZQorCSAqCisJICogSWYgdGhlIGlub2RlIGhhcyBiZWVu
-IHJlYWxsb2NhdGVkLCBpdCBkb2Vzbid0IG1hdHRlciBpZiBpdCdzIG5vdCBpbgorCSAqIHRoZSBB
-RyB3ZSBhcmUgd2Fsa2luZyAtIHdlIGFyZSB3YWxraW5nIGZvciB3cml0ZWJhY2ssIHNvIGlmIGl0
-CisJICogcGFzc2VzIGFsbCB0aGUgInZhbGlkIGlub2RlIiBjaGVja3MgYW5kIGlzIGRpcnR5LCB0
-aGVuIHdlJ2xsIHdyaXRlCisJICogaXQgYmFjayBhbnl3YXkuICBJZiBpdCBoYXMgYmVlbiByZWFs
-bG9jYXRlZCBhbmQgc3RpbGwgYmVpbmcKKwkgKiBpbml0aWFsaXNlZCwgdGhlIFhGU19JTkVXIGNo
-ZWNrIGJlbG93IHdpbGwgY2F0Y2ggaXQuCisJICovCisJc3Bpbl9sb2NrKCZpcC0+aV9mbGFnc19s
-b2NrKTsKKwlpZiAoIWlwLT5pX2lubykKKwkJZ290byBvdXRfdW5sb2NrX25vZW50OworCisJLyog
-YXZvaWQgbmV3IG9yIHJlY2xhaW1hYmxlIGlub2Rlcy4gTGVhdmUgZm9yIHJlY2xhaW0gY29kZSB0
-byBmbHVzaCAqLworCWlmIChfX3hmc19pZmxhZ3NfdGVzdChpcCwgWEZTX0lORVcgfCBYRlNfSVJF
-Q0xBSU1BQkxFIHwgWEZTX0lSRUNMQUlNKSkKKwkJZ290byBvdXRfdW5sb2NrX25vZW50OworCXNw
-aW5fdW5sb2NrKCZpcC0+aV9mbGFnc19sb2NrKTsKKwogCS8qIG5vdGhpbmcgdG8gc3luYyBkdXJp
-bmcgc2h1dGRvd24gKi8KIAlpZiAoWEZTX0ZPUkNFRF9TSFVURE9XTihpcC0+aV9tb3VudCkpCiAJ
-CXJldHVybiBFRlNDT1JSVVBURUQ7CiAKLQkvKiBhdm9pZCBuZXcgb3IgcmVjbGFpbWFibGUgaW5v
-ZGVzLiBMZWF2ZSBmb3IgcmVjbGFpbSBjb2RlIHRvIGZsdXNoICovCi0JaWYgKHhmc19pZmxhZ3Nf
-dGVzdChpcCwgWEZTX0lORVcgfCBYRlNfSVJFQ0xBSU1BQkxFIHwgWEZTX0lSRUNMQUlNKSkKLQkJ
-cmV0dXJuIEVOT0VOVDsKLQogCS8qIElmIHdlIGNhbid0IGdyYWIgdGhlIGlub2RlLCBpdCBtdXN0
-IG9uIGl0J3Mgd2F5IHRvIHJlY2xhaW0uICovCiAJaWYgKCFpZ3JhYihpbm9kZSkpCiAJCXJldHVy
-biBFTk9FTlQ7CkBAIC03Miw2ICs4OCwxMCBAQCB4ZnNfaW5vZGVfYWdfd2Fsa19ncmFiKAogCiAJ
-LyogaW5vZGUgaXMgdmFsaWQgKi8KIAlyZXR1cm4gMDsKKworb3V0X3VubG9ja19ub2VudDoKKwlz
-cGluX3VubG9jaygmaXAtPmlfZmxhZ3NfbG9jayk7CisJcmV0dXJuIEVOT0VOVDsKIH0KIAogU1RB
-VElDIGludApAQCAtOTgsMTIgKzExOCwxMiBAQCByZXN0YXJ0OgogCQlpbnQJCWVycm9yID0gMDsK
-IAkJaW50CQlpOwogCi0JCXJlYWRfbG9jaygmcGFnLT5wYWdfaWNpX2xvY2spOworCQlyY3VfcmVh
-ZF9sb2NrKCk7CiAJCW5yX2ZvdW5kID0gcmFkaXhfdHJlZV9nYW5nX2xvb2t1cCgmcGFnLT5wYWdf
-aWNpX3Jvb3QsCiAJCQkJCSh2b2lkICoqKWJhdGNoLCBmaXJzdF9pbmRleCwKIAkJCQkJWEZTX0xP
-T0tVUF9CQVRDSCk7CiAJCWlmICghbnJfZm91bmQpIHsKLQkJCXJlYWRfdW5sb2NrKCZwYWctPnBh
-Z19pY2lfbG9jayk7CisJCQlyY3VfcmVhZF91bmxvY2soKTsKIAkJCWJyZWFrOwogCQl9CiAKQEAg
-LTExOCwxOCArMTM4LDI2IEBAIHJlc3RhcnQ6CiAJCQkJYmF0Y2hbaV0gPSBOVUxMOwogCiAJCQkv
-KgotCQkJICogVXBkYXRlIHRoZSBpbmRleCBmb3IgdGhlIG5leHQgbG9va3VwLiBDYXRjaCBvdmVy
-Zmxvd3MKLQkJCSAqIGludG8gdGhlIG5leHQgQUcgcmFuZ2Ugd2hpY2ggY2FuIG9jY3VyIGlmIHdl
-IGhhdmUgaW5vZGVzCi0JCQkgKiBpbiB0aGUgbGFzdCBibG9jayBvZiB0aGUgQUcgYW5kIHdlIGFy
-ZSBjdXJyZW50bHkKLQkJCSAqIHBvaW50aW5nIHRvIHRoZSBsYXN0IGlub2RlLgorCQkJICogVXBk
-YXRlIHRoZSBpbmRleCBmb3IgdGhlIG5leHQgbG9va3VwLiBDYXRjaAorCQkJICogb3ZlcmZsb3dz
-IGludG8gdGhlIG5leHQgQUcgcmFuZ2Ugd2hpY2ggY2FuIG9jY3VyIGlmCisJCQkgKiB3ZSBoYXZl
-IGlub2RlcyBpbiB0aGUgbGFzdCBibG9jayBvZiB0aGUgQUcgYW5kIHdlCisJCQkgKiBhcmUgY3Vy
-cmVudGx5IHBvaW50aW5nIHRvIHRoZSBsYXN0IGlub2RlLgorCQkJICoKKwkJCSAqIEJlY2F1c2Ug
-d2UgbWF5IHNlZSBpbm9kZXMgdGhhdCBhcmUgZnJvbSB0aGUgd3JvbmcgQUcKKwkJCSAqIGR1ZSB0
-byBSQ1UgZnJlZWluZyBhbmQgcmVhbGxvY2F0aW9uLCBvbmx5IHVwZGF0ZSB0aGUKKwkJCSAqIGlu
-ZGV4IGlmIGl0IGxpZXMgaW4gdGhpcyBBRy4gSXQgd2FzIGEgcmFjZSB0aGF0IGxlYWQKKwkJCSAq
-IHVzIHRvIHNlZSB0aGlzIGlub2RlLCBzbyBhbm90aGVyIGxvb2t1cCBmcm9tIHRoZQorCQkJICog
-c2FtZSBpbmRleCB3aWxsIG5vdCBmaW5kIGl0IGFnYWluLgogCQkJICovCisJCQlpZiAoWEZTX0lO
-T19UT19BR05PKG1wLCBpcC0+aV9pbm8pICE9IHBhZy0+cGFnX2Fnbm8pCisJCQkJY29udGludWU7
-CiAJCQlmaXJzdF9pbmRleCA9IFhGU19JTk9fVE9fQUdJTk8obXAsIGlwLT5pX2lubyArIDEpOwog
-CQkJaWYgKGZpcnN0X2luZGV4IDwgWEZTX0lOT19UT19BR0lOTyhtcCwgaXAtPmlfaW5vKSkKIAkJ
-CQlkb25lID0gMTsKIAkJfQogCiAJCS8qIHVubG9jayBub3cgd2UndmUgZ3JhYmJlZCB0aGUgaW5v
-ZGVzLiAqLwotCQlyZWFkX3VubG9jaygmcGFnLT5wYWdfaWNpX2xvY2spOworCQlyY3VfcmVhZF91
-bmxvY2soKTsKIAogCQlmb3IgKGkgPSAwOyBpIDwgbnJfZm91bmQ7IGkrKykgewogCQkJaWYgKCFi
-YXRjaFtpXSkKQEAgLTYzOSw5ICs2NjcsMTQgQEAgeGZzX3JlY2xhaW1faW5vZGVfZ3JhYigKIAlz
-dHJ1Y3QgeGZzX2lub2RlCSppcCwKIAlpbnQJCQlmbGFncykKIHsKKwlBU1NFUlQocmN1X3JlYWRf
-bG9ja19oZWxkKCkpOworCisJLyogcXVpY2sgY2hlY2sgZm9yIHN0YWxlIFJDVSBmcmVlZCBpbm9k
-ZSAqLworCWlmICghaXAtPmlfaW5vKQorCQlyZXR1cm4gMTsKIAogCS8qCi0JICogZG8gc29tZSB1
-bmxvY2tlZCBjaGVja3MgZmlyc3QgdG8gYXZvaWQgdW5uZWNjZWFyeSBsb2NrIHRyYWZmaWMuCisJ
-ICogZG8gc29tZSB1bmxvY2tlZCBjaGVja3MgZmlyc3QgdG8gYXZvaWQgdW5uZWNlc3NhcnkgbG9j
-ayB0cmFmZmljLgogCSAqIFRoZSBmaXJzdCBpcyBhIGZsdXNoIGxvY2sgY2hlY2ssIHRoZSBzZWNv
-bmQgaXMgYSBhbHJlYWR5IGluIHJlY2xhaW0KIAkgKiBjaGVjay4gT25seSBkbyB0aGVzZSBjaGVj
-a3MgaWYgd2UgYXJlIG5vdCBnb2luZyB0byBibG9jayBvbiBsb2Nrcy4KIAkgKi8KQEAgLTY1NCwx
-MSArNjg3LDE2IEBAIHhmc19yZWNsYWltX2lub2RlX2dyYWIoCiAJICogVGhlIHJhZGl4IHRyZWUg
-bG9jayBoZXJlIHByb3RlY3RzIGEgdGhyZWFkIGluIHhmc19pZ2V0IGZyb20gcmFjaW5nCiAJICog
-d2l0aCB1cyBzdGFydGluZyByZWNsYWltIG9uIHRoZSBpbm9kZS4gIE9uY2Ugd2UgaGF2ZSB0aGUK
-IAkgKiBYRlNfSVJFQ0xBSU0gZmxhZyBzZXQgaXQgd2lsbCBub3QgdG91Y2ggdXMuCisJICoKKwkg
-KiBEdWUgdG8gUkNVIGxvb2t1cCwgd2UgbWF5IGZpbmQgaW5vZGVzIHRoYXQgaGF2ZSBiZWVuIGZy
-ZWVkIGFuZCBvbmx5CisJICogaGF2ZSBYRlNfSVJFQ0xBSU0gc2V0LiAgSW5kZWVkLCB3ZSBtYXkg
-c2VlIHJlYWxsb2NhdGVkIGlub2RlcyB0aGF0CisJICogYXJlbid0IGNhbmRpZGF0ZXMgZm9yIHJl
-Y2xhaW0gYXQgYWxsLCBzbyB3ZSBtdXN0IGNoZWNrIHRoZQorCSAqIFhGU19JUkVDTEFJTUFCTEUg
-aXMgc2V0IGZpcnN0IGJlZm9yZSBwcm9jZWVkaW5nIHRvIHJlY2xhaW0uCiAJICovCiAJc3Bpbl9s
-b2NrKCZpcC0+aV9mbGFnc19sb2NrKTsKLQlBU1NFUlRfQUxXQVlTKF9feGZzX2lmbGFnc190ZXN0
-KGlwLCBYRlNfSVJFQ0xBSU1BQkxFKSk7Ci0JaWYgKF9feGZzX2lmbGFnc190ZXN0KGlwLCBYRlNf
-SVJFQ0xBSU0pKSB7Ci0JCS8qIGlnbm9yZSBhcyBpdCBpcyBhbHJlYWR5IHVuZGVyIHJlY2xhaW0g
-Ki8KKwlpZiAoIV9feGZzX2lmbGFnc190ZXN0KGlwLCBYRlNfSVJFQ0xBSU1BQkxFKSB8fAorCSAg
-ICBfX3hmc19pZmxhZ3NfdGVzdChpcCwgWEZTX0lSRUNMQUlNKSkgeworCQkvKiBub3QgYSByZWNs
-YWltIGNhbmRpZGF0ZS4gKi8KIAkJc3Bpbl91bmxvY2soJmlwLT5pX2ZsYWdzX2xvY2spOwogCQly
-ZXR1cm4gMTsKIAl9CkBAIC04NjQsMTQgKzkwMiwxNCBAQCByZXN0YXJ0OgogCQkJc3RydWN0IHhm
-c19pbm9kZSAqYmF0Y2hbWEZTX0xPT0tVUF9CQVRDSF07CiAJCQlpbnQJaTsKIAotCQkJd3JpdGVf
-bG9jaygmcGFnLT5wYWdfaWNpX2xvY2spOworCQkJcmN1X3JlYWRfbG9jaygpOwogCQkJbnJfZm91
-bmQgPSByYWRpeF90cmVlX2dhbmdfbG9va3VwX3RhZygKIAkJCQkJJnBhZy0+cGFnX2ljaV9yb290
-LAogCQkJCQkodm9pZCAqKiliYXRjaCwgZmlyc3RfaW5kZXgsCiAJCQkJCVhGU19MT09LVVBfQkFU
-Q0gsCiAJCQkJCVhGU19JQ0lfUkVDTEFJTV9UQUcpOwogCQkJaWYgKCFucl9mb3VuZCkgewotCQkJ
-CXdyaXRlX3VubG9jaygmcGFnLT5wYWdfaWNpX2xvY2spOworCQkJCXJjdV9yZWFkX3VubG9jaygp
-OwogCQkJCWJyZWFrOwogCQkJfQogCkBAIC04OTEsMTQgKzkyOSwyNCBAQCByZXN0YXJ0OgogCQkJ
-CSAqIG9jY3VyIGlmIHdlIGhhdmUgaW5vZGVzIGluIHRoZSBsYXN0IGJsb2NrIG9mCiAJCQkJICog
-dGhlIEFHIGFuZCB3ZSBhcmUgY3VycmVudGx5IHBvaW50aW5nIHRvIHRoZQogCQkJCSAqIGxhc3Qg
-aW5vZGUuCisJCQkJICoKKwkJCQkgKiBCZWNhdXNlIHdlIG1heSBzZWUgaW5vZGVzIHRoYXQgYXJl
-IGZyb20gdGhlCisJCQkJICogd3JvbmcgQUcgZHVlIHRvIFJDVSBmcmVlaW5nIGFuZAorCQkJCSAq
-IHJlYWxsb2NhdGlvbiwgb25seSB1cGRhdGUgdGhlIGluZGV4IGlmIGl0CisJCQkJICogbGllcyBp
-biB0aGlzIEFHLiBJdCB3YXMgYSByYWNlIHRoYXQgbGVhZCB1cworCQkJCSAqIHRvIHNlZSB0aGlz
-IGlub2RlLCBzbyBhbm90aGVyIGxvb2t1cCBmcm9tCisJCQkJICogdGhlIHNhbWUgaW5kZXggd2ls
-bCBub3QgZmluZCBpdCBhZ2Fpbi4KIAkJCQkgKi8KKwkJCQlpZiAoWEZTX0lOT19UT19BR05PKG1w
-LCBpcC0+aV9pbm8pICE9CisJCQkJCQkJCXBhZy0+cGFnX2Fnbm8pCisJCQkJCWNvbnRpbnVlOwog
-CQkJCWZpcnN0X2luZGV4ID0gWEZTX0lOT19UT19BR0lOTyhtcCwgaXAtPmlfaW5vICsgMSk7CiAJ
-CQkJaWYgKGZpcnN0X2luZGV4IDwgWEZTX0lOT19UT19BR0lOTyhtcCwgaXAtPmlfaW5vKSkKIAkJ
-CQkJZG9uZSA9IDE7CiAJCQl9CiAKIAkJCS8qIHVubG9jayBub3cgd2UndmUgZ3JhYmJlZCB0aGUg
-aW5vZGVzLiAqLwotCQkJd3JpdGVfdW5sb2NrKCZwYWctPnBhZ19pY2lfbG9jayk7CisJCQlyY3Vf
-cmVhZF91bmxvY2soKTsKIAogCQkJZm9yIChpID0gMDsgaSA8IG5yX2ZvdW5kOyBpKyspIHsKIAkJ
-CQlpZiAoIWJhdGNoW2ldKQpkaWZmIC0tZ2l0IGEvZnMveGZzL3hmc19pZ2V0LmMgYi9mcy94ZnMv
-eGZzX2lnZXQuYwppbmRleCA5ZmFlNDc1Li4wNGVkMDliIDEwMDY0NAotLS0gYS9mcy94ZnMveGZz
-X2lnZXQuYworKysgYi9mcy94ZnMveGZzX2lnZXQuYwpAQCAtODAsNiArODAsNyBAQCB4ZnNfaW5v
-ZGVfYWxsb2MoCiAJQVNTRVJUKGF0b21pY19yZWFkKCZpcC0+aV9waW5jb3VudCkgPT0gMCk7CiAJ
-QVNTRVJUKCFzcGluX2lzX2xvY2tlZCgmaXAtPmlfZmxhZ3NfbG9jaykpOwogCUFTU0VSVChjb21w
-bGV0aW9uX2RvbmUoJmlwLT5pX2ZsdXNoKSk7CisJQVNTRVJUKGlwLT5pX2lubyA9PSAwKTsKIAog
-CW1ybG9ja19pbml0KCZpcC0+aV9pb2xvY2ssIE1STE9DS19CQVJSSUVSLCAieGZzaW8iLCBpcC0+
-aV9pbm8pOwogCWxvY2tkZXBfc2V0X2NsYXNzX2FuZF9uYW1lKCZpcC0+aV9pb2xvY2subXJfbG9j
-aywKQEAgLTk4LDkgKzk5LDYgQEAgeGZzX2lub2RlX2FsbG9jKAogCWlwLT5pX3NpemUgPSAwOwog
-CWlwLT5pX25ld19zaXplID0gMDsKIAotCS8qIHByZXZlbnQgYW55b25lIGZyb20gdXNpbmcgdGhp
-cyB5ZXQgKi8KLQlWRlNfSShpcCktPmlfc3RhdGUgPSBJX05FVzsKLQogCXJldHVybiBpcDsKIH0K
-IApAQCAtMTU5LDYgKzE1NywxNiBAQCB4ZnNfaW5vZGVfZnJlZSgKIAlBU1NFUlQoIXNwaW5faXNf
-bG9ja2VkKCZpcC0+aV9mbGFnc19sb2NrKSk7CiAJQVNTRVJUKGNvbXBsZXRpb25fZG9uZSgmaXAt
-PmlfZmx1c2gpKTsKIAorCS8qCisJICogQmVjYXVzZSB3ZSB1c2UgUkNVIGZyZWVpbmcgd2UgbmVl
-ZCB0byBlbnN1cmUgdGhlIGlub2RlIGFsd2F5cworCSAqIGFwcGVhcnMgdG8gYmUgcmVjbGFpbWVk
-IHdpdGggYW4gaW52YWxpZCBpbm9kZSBudW1iZXIgd2hlbiBpbiB0aGUKKwkgKiBmcmVlIHN0YXRl
-LiBUaGUgaXAtPmlfZmxhZ3NfbG9jayBwcm92aWRlcyB0aGUgYmFycmllciBhZ2FpbnN0IGxvb2t1
-cAorCSAqIHJhY2VzLgorCSAqLworCXNwaW5fbG9jaygmaXAtPmlfZmxhZ3NfbG9jayk7CisJaXAt
-PmlfZmxhZ3MgPSBYRlNfSVJFQ0xBSU07CisJaXAtPmlfaW5vID0gMDsKKwlzcGluX3VubG9jaygm
-aXAtPmlfZmxhZ3NfbG9jayk7CiAJY2FsbF9yY3UoKHN0cnVjdCByY3VfaGVhZCAqKSZWRlNfSShp
-cCktPmlfZGVudHJ5LCBfX3hmc19pbm9kZV9mcmVlKTsKIH0KIApAQCAtMTY5LDE0ICsxNzcsMjkg
-QEAgc3RhdGljIGludAogeGZzX2lnZXRfY2FjaGVfaGl0KAogCXN0cnVjdCB4ZnNfcGVyYWcJKnBh
-ZywKIAlzdHJ1Y3QgeGZzX2lub2RlCSppcCwKKwl4ZnNfaW5vX3QJCWlubywKIAlpbnQJCQlmbGFn
-cywKLQlpbnQJCQlsb2NrX2ZsYWdzKSBfX3JlbGVhc2VzKHBhZy0+cGFnX2ljaV9sb2NrKQorCWlu
-dAkJCWxvY2tfZmxhZ3MpIF9fcmVsZWFzZXMoUkNVKQogewogCXN0cnVjdCBpbm9kZQkJKmlub2Rl
-ID0gVkZTX0koaXApOwogCXN0cnVjdCB4ZnNfbW91bnQJKm1wID0gaXAtPmlfbW91bnQ7CiAJaW50
-CQkJZXJyb3I7CiAKKwkvKgorCSAqIGNoZWNrIGZvciByZS11c2Ugb2YgYW4gaW5vZGUgd2l0aGlu
-IGFuIFJDVSBncmFjZSBwZXJpb2QgZHVlIHRvIHRoZQorCSAqIHJhZGl4IHRyZWUgbm9kZXMgbm90
-IGJlaW5nIHVwZGF0ZWQgeWV0LiBXZSBtb25pdG9yIGZvciB0aGlzIGJ5CisJICogc2V0dGluZyB0
-aGUgaW5vZGUgbnVtYmVyIHRvIHplcm8gYmVmb3JlIGZyZWVpbmcgdGhlIGlub2RlIHN0cnVjdHVy
-ZS4KKwkgKiBJZiB0aGUgaW5vZGUgaGFzIGJlZW4gcmVhbGxvY2F0ZWQgYW5kIHNldCB1cCwgdGhl
-biB0aGUgaW5vZGUgbnVtYmVyCisJICogd2lsbCBub3QgbWF0Y2gsIHNvIGNoZWNrIGZvciB0aGF0
-LCB0b28uCisJICovCiAJc3Bpbl9sb2NrKCZpcC0+aV9mbGFnc19sb2NrKTsKKwlpZiAoaXAtPmlf
-aW5vICE9IGlubykgeworCQl0cmFjZV94ZnNfaWdldF9za2lwKGlwKTsKKwkJWEZTX1NUQVRTX0lO
-Qyh4c19pZ19mcmVjeWNsZSk7CisJCWVycm9yID0gRUFHQUlOOworCQlnb3RvIG91dF9lcnJvcjsK
-Kwl9CisKIAogCS8qCiAJICogSWYgd2UgYXJlIHJhY2luZyB3aXRoIGFub3RoZXIgY2FjaGUgaGl0
-IHRoYXQgaXMgY3VycmVudGx5CkBAIC0yMTksNyArMjQyLDcgQEAgeGZzX2lnZXRfY2FjaGVfaGl0
-KAogCQlpcC0+aV9mbGFncyB8PSBYRlNfSVJFQ0xBSU07CiAKIAkJc3Bpbl91bmxvY2soJmlwLT5p
-X2ZsYWdzX2xvY2spOwotCQlyZWFkX3VubG9jaygmcGFnLT5wYWdfaWNpX2xvY2spOworCQlyY3Vf
-cmVhZF91bmxvY2soKTsKIAogCQllcnJvciA9IC1pbm9kZV9pbml0X2Fsd2F5cyhtcC0+bV9zdXBl
-ciwgaW5vZGUpOwogCQlpZiAoZXJyb3IpIHsKQEAgLTIyNyw3ICsyNTAsNyBAQCB4ZnNfaWdldF9j
-YWNoZV9oaXQoCiAJCQkgKiBSZS1pbml0aWFsaXppbmcgdGhlIGlub2RlIGZhaWxlZCwgYW5kIHdl
-IGFyZSBpbiBkZWVwCiAJCQkgKiB0cm91YmxlLiAgVHJ5IHRvIHJlLWFkZCBpdCB0byB0aGUgcmVj
-bGFpbSBsaXN0LgogCQkJICovCi0JCQlyZWFkX2xvY2soJnBhZy0+cGFnX2ljaV9sb2NrKTsKKwkJ
-CXJjdV9yZWFkX2xvY2soKTsKIAkJCXNwaW5fbG9jaygmaXAtPmlfZmxhZ3NfbG9jayk7CiAKIAkJ
-CWlwLT5pX2ZsYWdzICY9IH5YRlNfSU5FVzsKQEAgLTI2MSw3ICsyODQsNyBAQCB4ZnNfaWdldF9j
-YWNoZV9oaXQoCiAKIAkJLyogV2UndmUgZ290IGEgbGl2ZSBvbmUuICovCiAJCXNwaW5fdW5sb2Nr
-KCZpcC0+aV9mbGFnc19sb2NrKTsKLQkJcmVhZF91bmxvY2soJnBhZy0+cGFnX2ljaV9sb2NrKTsK
-KwkJcmN1X3JlYWRfdW5sb2NrKCk7CiAJCXRyYWNlX3hmc19pZ2V0X2hpdChpcCk7CiAJfQogCkBA
-IC0yNzUsNyArMjk4LDcgQEAgeGZzX2lnZXRfY2FjaGVfaGl0KAogCiBvdXRfZXJyb3I6CiAJc3Bp
-bl91bmxvY2soJmlwLT5pX2ZsYWdzX2xvY2spOwotCXJlYWRfdW5sb2NrKCZwYWctPnBhZ19pY2lf
-bG9jayk7CisJcmN1X3JlYWRfdW5sb2NrKCk7CiAJcmV0dXJuIGVycm9yOwogfQogCkBAIC0zOTcs
-NyArNDIwLDcgQEAgeGZzX2lnZXQoCiAJeGZzX2FnaW5vX3QJYWdpbm87CiAKIAkvKiByZWplY3Qg
-aW5vZGUgbnVtYmVycyBvdXRzaWRlIGV4aXN0aW5nIEFHcyAqLwotCWlmIChYRlNfSU5PX1RPX0FH
-Tk8obXAsIGlubykgPj0gbXAtPm1fc2Iuc2JfYWdjb3VudCkKKwlpZiAoIWlubyB8fCBYRlNfSU5P
-X1RPX0FHTk8obXAsIGlubykgPj0gbXAtPm1fc2Iuc2JfYWdjb3VudCkKIAkJcmV0dXJuIEVJTlZB
-TDsKIAogCS8qIGdldCB0aGUgcGVyYWcgc3RydWN0dXJlIGFuZCBlbnN1cmUgdGhhdCBpdCdzIGlu
-b2RlIGNhcGFibGUgKi8KQEAgLTQwNiwxNSArNDI5LDE1IEBAIHhmc19pZ2V0KAogCiBhZ2FpbjoK
-IAllcnJvciA9IDA7Ci0JcmVhZF9sb2NrKCZwYWctPnBhZ19pY2lfbG9jayk7CisJcmN1X3JlYWRf
-bG9jaygpOwogCWlwID0gcmFkaXhfdHJlZV9sb29rdXAoJnBhZy0+cGFnX2ljaV9yb290LCBhZ2lu
-byk7CiAKIAlpZiAoaXApIHsKLQkJZXJyb3IgPSB4ZnNfaWdldF9jYWNoZV9oaXQocGFnLCBpcCwg
-ZmxhZ3MsIGxvY2tfZmxhZ3MpOworCQllcnJvciA9IHhmc19pZ2V0X2NhY2hlX2hpdChwYWcsIGlw
-LCBpbm8sIGZsYWdzLCBsb2NrX2ZsYWdzKTsKIAkJaWYgKGVycm9yKQogCQkJZ290byBvdXRfZXJy
-b3Jfb3JfYWdhaW47CiAJfSBlbHNlIHsKLQkJcmVhZF91bmxvY2soJnBhZy0+cGFnX2ljaV9sb2Nr
-KTsKKwkJcmN1X3JlYWRfdW5sb2NrKCk7CiAJCVhGU19TVEFUU19JTkMoeHNfaWdfbWlzc2VkKTsK
-IAogCQllcnJvciA9IHhmc19pZ2V0X2NhY2hlX21pc3MobXAsIHBhZywgdHAsIGlubywgJmlwLApk
-aWZmIC0tZ2l0IGEvZnMveGZzL3hmc19pbm9kZS5jIGIvZnMveGZzL3hmc19pbm9kZS5jCmluZGV4
-IDEwOGM3YTAuLjQzZmZkOTAgMTAwNjQ0Ci0tLSBhL2ZzL3hmcy94ZnNfaW5vZGUuYworKysgYi9m
-cy94ZnMveGZzX2lub2RlLmMKQEAgLTIwMDAsMTcgKzIwMDAsMzMgQEAgeGZzX2lmcmVlX2NsdXN0
-ZXIoCiAJCSAqLwogCQlmb3IgKGkgPSAwOyBpIDwgbmlub2RlczsgaSsrKSB7CiByZXRyeToKLQkJ
-CXJlYWRfbG9jaygmcGFnLT5wYWdfaWNpX2xvY2spOworCQkJcmN1X3JlYWRfbG9jaygpOwogCQkJ
-aXAgPSByYWRpeF90cmVlX2xvb2t1cCgmcGFnLT5wYWdfaWNpX3Jvb3QsCiAJCQkJCVhGU19JTk9f
-VE9fQUdJTk8obXAsIChpbnVtICsgaSkpKTsKIAotCQkJLyogSW5vZGUgbm90IGluIG1lbW9yeSBv
-ciBzdGFsZSwgbm90aGluZyB0byBkbyAqLwotCQkJaWYgKCFpcCB8fCB4ZnNfaWZsYWdzX3Rlc3Qo
-aXAsIFhGU19JU1RBTEUpKSB7Ci0JCQkJcmVhZF91bmxvY2soJnBhZy0+cGFnX2ljaV9sb2NrKTsK
-KwkJCS8qIElub2RlIG5vdCBpbiBtZW1vcnksIG5vdGhpbmcgdG8gZG8gKi8KKwkJCWlmICghaXAp
-IHsKKwkJCQlyY3VfcmVhZF91bmxvY2soKTsKIAkJCQljb250aW51ZTsKIAkJCX0KIAogCQkJLyoK
-KwkJCSAqIGJlY2F1c2UgdGhpcyBpcyBhbiBSQ1UgcHJvdGVjdGVkIGxvb2t1cCwgd2UgY291bGQK
-KwkJCSAqIGZpbmQgYSByZWNlbnRseSBmcmVlZCBvciBldmVuIHJlYWxsb2NhdGVkIGlub2RlCisJ
-CQkgKiBkdXJpbmcgdGhlIGxvb2t1cC4gV2UgbmVlZCB0byBjaGVjayB1bmRlciB0aGUKKwkJCSAq
-IGlfZmxhZ3NfbG9jayBmb3IgYSB2YWxpZCBpbm9kZSBoZXJlLiBTa2lwIGl0IGlmIGl0CisJCQkg
-KiBpcyBub3QgdmFsaWQsIHRoZSB3cm9uZyBpbm9kZSBvciBzdGFsZS4KKwkJCSAqLworCQkJc3Bp
-bl9sb2NrKCZpcC0+aV9mbGFnc19sb2NrKTsKKwkJCWlmIChpcC0+aV9pbm8gIT0gaW51bSArIGkg
-fHwKKwkJCSAgICBfX3hmc19pZmxhZ3NfdGVzdChpcCwgWEZTX0lTVEFMRSkpIHsKKwkJCQlzcGlu
-X3VubG9jaygmaXAtPmlfZmxhZ3NfbG9jayk7CisJCQkJcmN1X3JlYWRfdW5sb2NrKCk7CisJCQkJ
-Y29udGludWU7CisJCQl9CisJCQlzcGluX3VubG9jaygmaXAtPmlfZmxhZ3NfbG9jayk7CisKKwkJ
-CS8qCiAJCQkgKiBEb24ndCB0cnkgdG8gbG9jay91bmxvY2sgdGhlIGN1cnJlbnQgaW5vZGUsIGJ1
-dCB3ZQogCQkJICogX2Nhbm5vdF8gc2tpcCB0aGUgb3RoZXIgaW5vZGVzIHRoYXQgd2UgZGlkIG5v
-dCBmaW5kCiAJCQkgKiBpbiB0aGUgbGlzdCBhdHRhY2hlZCB0byB0aGUgYnVmZmVyIGFuZCBhcmUg
-bm90CkBAIC0yMDE5LDExICsyMDM1LDExIEBAIHJldHJ5OgogCQkJICovCiAJCQlpZiAoaXAgIT0g
-ZnJlZV9pcCAmJgogCQkJICAgICF4ZnNfaWxvY2tfbm93YWl0KGlwLCBYRlNfSUxPQ0tfRVhDTCkp
-IHsKLQkJCQlyZWFkX3VubG9jaygmcGFnLT5wYWdfaWNpX2xvY2spOworCQkJCXJjdV9yZWFkX3Vu
-bG9jaygpOwogCQkJCWRlbGF5KDEpOwogCQkJCWdvdG8gcmV0cnk7CiAJCQl9Ci0JCQlyZWFkX3Vu
-bG9jaygmcGFnLT5wYWdfaWNpX2xvY2spOworCQkJcmN1X3JlYWRfdW5sb2NrKCk7CiAKIAkJCXhm
-c19pZmxvY2soaXApOwogCQkJeGZzX2lmbGFnc19zZXQoaXAsIFhGU19JU1RBTEUpOwpAQCAtMjYy
-OSw3ICsyNjQ1LDcgQEAgeGZzX2lmbHVzaF9jbHVzdGVyKAogCiAJbWFzayA9IH4oKChYRlNfSU5P
-REVfQ0xVU1RFUl9TSVpFKG1wKSA+PiBtcC0+bV9zYi5zYl9pbm9kZWxvZykpIC0gMSk7CiAJZmly
-c3RfaW5kZXggPSBYRlNfSU5PX1RPX0FHSU5PKG1wLCBpcC0+aV9pbm8pICYgbWFzazsKLQlyZWFk
-X2xvY2soJnBhZy0+cGFnX2ljaV9sb2NrKTsKKwlyY3VfcmVhZF9sb2NrKCk7CiAJLyogcmVhbGx5
-IG5lZWQgYSBnYW5nIGxvb2t1cCByYW5nZSBjYWxsIGhlcmUgKi8KIAlucl9mb3VuZCA9IHJhZGl4
-X3RyZWVfZ2FuZ19sb29rdXAoJnBhZy0+cGFnX2ljaV9yb290LCAodm9pZCoqKWlsaXN0LAogCQkJ
-CQlmaXJzdF9pbmRleCwgaW5vZGVzX3Blcl9jbHVzdGVyKTsKQEAgLTI2NDAsOSArMjY1NiwyMSBA
-QCB4ZnNfaWZsdXNoX2NsdXN0ZXIoCiAJCWlxID0gaWxpc3RbaV07CiAJCWlmIChpcSA9PSBpcCkK
-IAkJCWNvbnRpbnVlOwotCQkvKiBpZiB0aGUgaW5vZGUgbGllcyBvdXRzaWRlIHRoaXMgY2x1c3Rl
-ciwgd2UncmUgZG9uZS4gKi8KLQkJaWYgKChYRlNfSU5PX1RPX0FHSU5PKG1wLCBpcS0+aV9pbm8p
-ICYgbWFzaykgIT0gZmlyc3RfaW5kZXgpCi0JCQlicmVhazsKKworCQkvKgorCQkgKiBiZWNhdXNl
-IHRoaXMgaXMgYW4gUkNVIHByb3RlY3RlZCBsb29rdXAsIHdlIGNvdWxkIGZpbmQgYQorCQkgKiBy
-ZWNlbnRseSBmcmVlZCBvciBldmVuIHJlYWxsb2NhdGVkIGlub2RlIGR1cmluZyB0aGUgbG9va3Vw
-LgorCQkgKiBXZSBuZWVkIHRvIGNoZWNrIHVuZGVyIHRoZSBpX2ZsYWdzX2xvY2sgZm9yIGEgdmFs
-aWQgaW5vZGUKKwkJICogaGVyZS4gU2tpcCBpdCBpZiBpdCBpcyBub3QgdmFsaWQgb3IgdGhlIHdy
-b25nIGlub2RlLgorCQkgKi8KKwkJc3Bpbl9sb2NrKCZpcC0+aV9mbGFnc19sb2NrKTsKKwkJaWYg
-KCFpcC0+aV9pbm8gfHwKKwkJICAgIChYRlNfSU5PX1RPX0FHSU5PKG1wLCBpcS0+aV9pbm8pICYg
-bWFzaykgIT0gZmlyc3RfaW5kZXgpIHsKKwkJCXNwaW5fdW5sb2NrKCZpcC0+aV9mbGFnc19sb2Nr
-KTsKKwkJCWNvbnRpbnVlOworCQl9CisJCXNwaW5fdW5sb2NrKCZpcC0+aV9mbGFnc19sb2NrKTsK
-KwogCQkvKgogCQkgKiBEbyBhbiB1bi1wcm90ZWN0ZWQgY2hlY2sgdG8gc2VlIGlmIHRoZSBpbm9k
-ZSBpcyBkaXJ0eSBhbmQKIAkJICogaXMgYSBjYW5kaWRhdGUgZm9yIGZsdXNoaW5nLiAgVGhlc2Ug
-Y2hlY2tzIHdpbGwgYmUgcmVwZWF0ZWQKQEAgLTI2OTIsNyArMjcyMCw3IEBAIHhmc19pZmx1c2hf
-Y2x1c3RlcigKIAl9CiAKIG91dF9mcmVlOgotCXJlYWRfdW5sb2NrKCZwYWctPnBhZ19pY2lfbG9j
-ayk7CisJcmN1X3JlYWRfdW5sb2NrKCk7CiAJa21lbV9mcmVlKGlsaXN0KTsKIG91dF9wdXQ6CiAJ
-eGZzX3BlcmFnX3B1dChwYWcpOwpAQCAtMjcwNCw3ICsyNzMyLDcgQEAgY2x1c3Rlcl9jb3JydXB0
-X291dDoKIAkgKiBDb3JydXB0aW9uIGRldGVjdGVkIGluIHRoZSBjbHVzdGVyaW5nIGxvb3AuICBJ
-bnZhbGlkYXRlIHRoZQogCSAqIGlub2RlIGJ1ZmZlciBhbmQgc2h1dCBkb3duIHRoZSBmaWxlc3lz
-dGVtLgogCSAqLwotCXJlYWRfdW5sb2NrKCZwYWctPnBhZ19pY2lfbG9jayk7CisJcmN1X3JlYWRf
-dW5sb2NrKCk7CiAJLyoKIAkgKiBDbGVhbiB1cCB0aGUgYnVmZmVyLiAgSWYgaXQgd2FzIEJfREVM
-V1JJLCBqdXN0IHJlbGVhc2UgaXQgLS0KIAkgKiBicmVsc2UgY2FuIGhhbmRsZSBpdCB3aXRoIG5v
-IHByb2JsZW1zLiAgSWYgbm90LCBzaHV0IGRvd24gdGhlCi0tIAoxLjcuMi4zCgpfX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhm
-c0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+From: Dave Chinner <dchinner@redhat.com>
+
+The log grant queues are one of the few places left using sv_t
+constructs for waiting. Given we are touching this code, we should
+convert them to plain wait queues. While there, convert all the
+other sv_t users in the log code as well.
+
+Seeing as this removes the last users of the sv_t type, remove the
+header file defining the wrapper and the fragments that still
+reference it.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/linux-2.6/sv.h        |   59 --------------------------------------
+ fs/xfs/linux-2.6/xfs_linux.h |    1 -
+ fs/xfs/quota/xfs_dquot.c     |    1 -
+ fs/xfs/xfs_log.c             |   64 ++++++++++++++++++-----------------------
+ fs/xfs/xfs_log_cil.c         |    8 ++--
+ fs/xfs/xfs_log_priv.h        |   25 +++++++++++++---
+ 6 files changed, 52 insertions(+), 106 deletions(-)
+ delete mode 100644 fs/xfs/linux-2.6/sv.h
+
+diff --git a/fs/xfs/linux-2.6/sv.h b/fs/xfs/linux-2.6/sv.h
+deleted file mode 100644
+index 4dfc7c3..0000000
+--- a/fs/xfs/linux-2.6/sv.h
++++ /dev/null
+@@ -1,59 +0,0 @@
+-/*
+- * Copyright (c) 2000-2002,2005 Silicon Graphics, Inc.
+- * All Rights Reserved.
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it would be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write the Free Software Foundation,
+- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+- */
+-#ifndef __XFS_SUPPORT_SV_H__
+-#define __XFS_SUPPORT_SV_H__
+-
+-#include <linux/wait.h>
+-#include <linux/sched.h>
+-#include <linux/spinlock.h>
+-
+-/*
+- * Synchronisation variables.
+- *
+- * (Parameters "pri", "svf" and "rts" are not implemented)
+- */
+-
+-typedef struct sv_s {
+-	wait_queue_head_t waiters;
+-} sv_t;
+-
+-static inline void _sv_wait(sv_t *sv, spinlock_t *lock)
+-{
+-	DECLARE_WAITQUEUE(wait, current);
+-
+-	add_wait_queue_exclusive(&sv->waiters, &wait);
+-	__set_current_state(TASK_UNINTERRUPTIBLE);
+-	spin_unlock(lock);
+-
+-	schedule();
+-
+-	remove_wait_queue(&sv->waiters, &wait);
+-}
+-
+-#define sv_init(sv,flag,name) \
+-	init_waitqueue_head(&(sv)->waiters)
+-#define sv_destroy(sv) \
+-	/*NOTHING*/
+-#define sv_wait(sv, pri, lock, s) \
+-	_sv_wait(sv, lock)
+-#define sv_signal(sv) \
+-	wake_up(&(sv)->waiters)
+-#define sv_broadcast(sv) \
+-	wake_up_all(&(sv)->waiters)
+-
+-#endif /* __XFS_SUPPORT_SV_H__ */
+diff --git a/fs/xfs/linux-2.6/xfs_linux.h b/fs/xfs/linux-2.6/xfs_linux.h
+index 9fa4f2a..ccebd86 100644
+--- a/fs/xfs/linux-2.6/xfs_linux.h
++++ b/fs/xfs/linux-2.6/xfs_linux.h
+@@ -37,7 +37,6 @@
+ 
+ #include <kmem.h>
+ #include <mrlock.h>
+-#include <sv.h>
+ #include <time.h>
+ 
+ #include <support/debug.h>
+diff --git a/fs/xfs/quota/xfs_dquot.c b/fs/xfs/quota/xfs_dquot.c
+index faf8e1a..d22aa31 100644
+--- a/fs/xfs/quota/xfs_dquot.c
++++ b/fs/xfs/quota/xfs_dquot.c
+@@ -149,7 +149,6 @@ xfs_qm_dqdestroy(
+ 	ASSERT(list_empty(&dqp->q_freelist));
+ 
+ 	mutex_destroy(&dqp->q_qlock);
+-	sv_destroy(&dqp->q_pinwait);
+ 	kmem_zone_free(xfs_Gqm->qm_dqzone, dqp);
+ 
+ 	atomic_dec(&xfs_Gqm->qm_totaldquots);
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 6bba8b4..cc0504e 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -547,8 +547,8 @@ xfs_log_unmount_write(xfs_mount_t *mp)
+ 		if (!(iclog->ic_state == XLOG_STATE_ACTIVE ||
+ 		      iclog->ic_state == XLOG_STATE_DIRTY)) {
+ 			if (!XLOG_FORCED_SHUTDOWN(log)) {
+-				sv_wait(&iclog->ic_force_wait, PMEM,
+-					&log->l_icloglock, s);
++				xlog_wait(&iclog->ic_force_wait,
++							&log->l_icloglock);
+ 			} else {
+ 				spin_unlock(&log->l_icloglock);
+ 			}
+@@ -588,8 +588,8 @@ xfs_log_unmount_write(xfs_mount_t *mp)
+ 			|| iclog->ic_state == XLOG_STATE_DIRTY
+ 			|| iclog->ic_state == XLOG_STATE_IOERROR) ) {
+ 
+-				sv_wait(&iclog->ic_force_wait, PMEM,
+-					&log->l_icloglock, s);
++				xlog_wait(&iclog->ic_force_wait,
++							&log->l_icloglock);
+ 		} else {
+ 			spin_unlock(&log->l_icloglock);
+ 		}
+@@ -700,7 +700,7 @@ xfs_log_move_tail(xfs_mount_t	*mp,
+ 				break;
+ 			tail_lsn = 0;
+ 			free_bytes -= tic->t_unit_res;
+-			sv_signal(&tic->t_wait);
++			wake_up(&tic->t_wait);
+ 		}
+ 	}
+ 
+@@ -719,7 +719,7 @@ xfs_log_move_tail(xfs_mount_t	*mp,
+ 				break;
+ 			tail_lsn = 0;
+ 			free_bytes -= need_bytes;
+-			sv_signal(&tic->t_wait);
++			wake_up(&tic->t_wait);
+ 		}
+ 	}
+ 	spin_unlock(&log->l_grant_lock);
+@@ -1060,7 +1060,7 @@ xlog_alloc_log(xfs_mount_t	*mp,
+ 
+ 	spin_lock_init(&log->l_icloglock);
+ 	spin_lock_init(&log->l_grant_lock);
+-	sv_init(&log->l_flush_wait, 0, "flush_wait");
++	init_waitqueue_head(&log->l_flush_wait);
+ 
+ 	/* log record size must be multiple of BBSIZE; see xlog_rec_header_t */
+ 	ASSERT((XFS_BUF_SIZE(bp) & BBMASK) == 0);
+@@ -1116,8 +1116,8 @@ xlog_alloc_log(xfs_mount_t	*mp,
+ 
+ 		ASSERT(XFS_BUF_ISBUSY(iclog->ic_bp));
+ 		ASSERT(XFS_BUF_VALUSEMA(iclog->ic_bp) <= 0);
+-		sv_init(&iclog->ic_force_wait, SV_DEFAULT, "iclog-force");
+-		sv_init(&iclog->ic_write_wait, SV_DEFAULT, "iclog-write");
++		init_waitqueue_head(&iclog->ic_force_wait);
++		init_waitqueue_head(&iclog->ic_write_wait);
+ 
+ 		iclogp = &iclog->ic_next;
+ 	}
+@@ -1132,11 +1132,8 @@ xlog_alloc_log(xfs_mount_t	*mp,
+ out_free_iclog:
+ 	for (iclog = log->l_iclog; iclog; iclog = prev_iclog) {
+ 		prev_iclog = iclog->ic_next;
+-		if (iclog->ic_bp) {
+-			sv_destroy(&iclog->ic_force_wait);
+-			sv_destroy(&iclog->ic_write_wait);
++		if (iclog->ic_bp)
+ 			xfs_buf_free(iclog->ic_bp);
+-		}
+ 		kmem_free(iclog);
+ 	}
+ 	spinlock_destroy(&log->l_icloglock);
+@@ -1453,8 +1450,6 @@ xlog_dealloc_log(xlog_t *log)
+ 
+ 	iclog = log->l_iclog;
+ 	for (i=0; i<log->l_iclog_bufs; i++) {
+-		sv_destroy(&iclog->ic_force_wait);
+-		sv_destroy(&iclog->ic_write_wait);
+ 		xfs_buf_free(iclog->ic_bp);
+ 		next_iclog = iclog->ic_next;
+ 		kmem_free(iclog);
+@@ -2261,7 +2256,7 @@ xlog_state_do_callback(
+ 			xlog_state_clean_log(log);
+ 
+ 			/* wake up threads waiting in xfs_log_force() */
+-			sv_broadcast(&iclog->ic_force_wait);
++			wake_up_all(&iclog->ic_force_wait);
+ 
+ 			iclog = iclog->ic_next;
+ 		} while (first_iclog != iclog);
+@@ -2308,7 +2303,7 @@ xlog_state_do_callback(
+ 	spin_unlock(&log->l_icloglock);
+ 
+ 	if (wake)
+-		sv_broadcast(&log->l_flush_wait);
++		wake_up_all(&log->l_flush_wait);
+ }
+ 
+ 
+@@ -2359,7 +2354,7 @@ xlog_state_done_syncing(
+ 	 * iclog buffer, we wake them all, one will get to do the
+ 	 * I/O, the others get to wait for the result.
+ 	 */
+-	sv_broadcast(&iclog->ic_write_wait);
++	wake_up_all(&iclog->ic_write_wait);
+ 	spin_unlock(&log->l_icloglock);
+ 	xlog_state_do_callback(log, aborted, iclog);	/* also cleans log */
+ }	/* xlog_state_done_syncing */
+@@ -2408,7 +2403,7 @@ restart:
+ 		XFS_STATS_INC(xs_log_noiclogs);
+ 
+ 		/* Wait for log writes to have flushed */
+-		sv_wait(&log->l_flush_wait, 0, &log->l_icloglock, 0);
++		xlog_wait(&log->l_flush_wait, &log->l_icloglock);
+ 		goto restart;
+ 	}
+ 
+@@ -2523,7 +2518,8 @@ xlog_grant_log_space(xlog_t	   *log,
+ 			goto error_return;
+ 
+ 		XFS_STATS_INC(xs_sleep_logspace);
+-		sv_wait(&tic->t_wait, PINOD|PLTWAIT, &log->l_grant_lock, s);
++		xlog_wait(&tic->t_wait, &log->l_grant_lock);
++
+ 		/*
+ 		 * If we got an error, and the filesystem is shutting down,
+ 		 * we'll catch it down below. So just continue...
+@@ -2552,7 +2548,7 @@ redo:
+ 		spin_lock(&log->l_grant_lock);
+ 
+ 		XFS_STATS_INC(xs_sleep_logspace);
+-		sv_wait(&tic->t_wait, PINOD|PLTWAIT, &log->l_grant_lock, s);
++		xlog_wait(&tic->t_wait, &log->l_grant_lock);
+ 
+ 		spin_lock(&log->l_grant_lock);
+ 		if (XLOG_FORCED_SHUTDOWN(log))
+@@ -2635,7 +2631,7 @@ xlog_regrant_write_log_space(xlog_t	   *log,
+ 			if (free_bytes < ntic->t_unit_res)
+ 				break;
+ 			free_bytes -= ntic->t_unit_res;
+-			sv_signal(&ntic->t_wait);
++			wake_up(&ntic->t_wait);
+ 		}
+ 
+ 		if (ntic != list_first_entry(&log->l_writeq,
+@@ -2650,8 +2646,7 @@ xlog_regrant_write_log_space(xlog_t	   *log,
+ 			spin_lock(&log->l_grant_lock);
+ 
+ 			XFS_STATS_INC(xs_sleep_logspace);
+-			sv_wait(&tic->t_wait, PINOD|PLTWAIT,
+-				&log->l_grant_lock, s);
++			xlog_wait(&tic->t_wait, &log->l_grant_lock);
+ 
+ 			/* If we're shutting down, this tic is already
+ 			 * off the queue */
+@@ -2677,8 +2672,7 @@ redo:
+ 
+ 		XFS_STATS_INC(xs_sleep_logspace);
+ 		trace_xfs_log_regrant_write_sleep2(log, tic);
+-
+-		sv_wait(&tic->t_wait, PINOD|PLTWAIT, &log->l_grant_lock, s);
++		xlog_wait(&tic->t_wait, &log->l_grant_lock);
+ 
+ 		/* If we're shutting down, this tic is already off the queue */
+ 		spin_lock(&log->l_grant_lock);
+@@ -3029,7 +3023,7 @@ maybe_sleep:
+ 			return XFS_ERROR(EIO);
+ 		}
+ 		XFS_STATS_INC(xs_log_force_sleep);
+-		sv_wait(&iclog->ic_force_wait, PINOD, &log->l_icloglock, s);
++		xlog_wait(&iclog->ic_force_wait, &log->l_icloglock);
+ 		/*
+ 		 * No need to grab the log lock here since we're
+ 		 * only deciding whether or not to return EIO
+@@ -3147,8 +3141,8 @@ try_again:
+ 
+ 				XFS_STATS_INC(xs_log_force_sleep);
+ 
+-				sv_wait(&iclog->ic_prev->ic_write_wait,
+-					PSWP, &log->l_icloglock, s);
++				xlog_wait(&iclog->ic_prev->ic_write_wait,
++							&log->l_icloglock);
+ 				if (log_flushed)
+ 					*log_flushed = 1;
+ 				already_slept = 1;
+@@ -3176,7 +3170,7 @@ try_again:
+ 				return XFS_ERROR(EIO);
+ 			}
+ 			XFS_STATS_INC(xs_log_force_sleep);
+-			sv_wait(&iclog->ic_force_wait, PSWP, &log->l_icloglock, s);
++			xlog_wait(&iclog->ic_force_wait, &log->l_icloglock);
+ 			/*
+ 			 * No need to grab the log lock here since we're
+ 			 * only deciding whether or not to return EIO
+@@ -3251,10 +3245,8 @@ xfs_log_ticket_put(
+ 	xlog_ticket_t	*ticket)
+ {
+ 	ASSERT(atomic_read(&ticket->t_ref) > 0);
+-	if (atomic_dec_and_test(&ticket->t_ref)) {
+-		sv_destroy(&ticket->t_wait);
++	if (atomic_dec_and_test(&ticket->t_ref))
+ 		kmem_zone_free(xfs_log_ticket_zone, ticket);
+-	}
+ }
+ 
+ xlog_ticket_t *
+@@ -3387,7 +3379,7 @@ xlog_ticket_alloc(
+ 	tic->t_trans_type	= 0;
+ 	if (xflags & XFS_LOG_PERM_RESERV)
+ 		tic->t_flags |= XLOG_TIC_PERM_RESERV;
+-	sv_init(&tic->t_wait, SV_DEFAULT, "logtick");
++	init_waitqueue_head(&tic->t_wait);
+ 
+ 	xlog_tic_reset_res(tic);
+ 
+@@ -3719,10 +3711,10 @@ xfs_log_force_umount(
+ 	 * action is protected by the GRANTLOCK.
+ 	 */
+ 	list_for_each_entry(tic, &log->l_reserveq, t_queue)
+-		sv_signal(&tic->t_wait);
++		wake_up(&tic->t_wait);
+ 
+ 	list_for_each_entry(tic, &log->l_writeq, t_queue)
+-		sv_signal(&tic->t_wait);
++		wake_up(&tic->t_wait);
+ 	spin_unlock(&log->l_grant_lock);
+ 
+ 	if (!(log->l_iclog->ic_state & XLOG_STATE_IOERROR)) {
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index f36f1a2..9dc8125 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -61,7 +61,7 @@ xlog_cil_init(
+ 	INIT_LIST_HEAD(&cil->xc_committing);
+ 	spin_lock_init(&cil->xc_cil_lock);
+ 	init_rwsem(&cil->xc_ctx_lock);
+-	sv_init(&cil->xc_commit_wait, SV_DEFAULT, "cilwait");
++	init_waitqueue_head(&cil->xc_commit_wait);
+ 
+ 	INIT_LIST_HEAD(&ctx->committing);
+ 	INIT_LIST_HEAD(&ctx->busy_extents);
+@@ -563,7 +563,7 @@ restart:
+ 			 * It is still being pushed! Wait for the push to
+ 			 * complete, then start again from the beginning.
+ 			 */
+-			sv_wait(&cil->xc_commit_wait, 0, &cil->xc_cil_lock, 0);
++			xlog_wait(&cil->xc_commit_wait, &cil->xc_cil_lock);
+ 			goto restart;
+ 		}
+ 	}
+@@ -587,7 +587,7 @@ restart:
+ 	 */
+ 	spin_lock(&cil->xc_cil_lock);
+ 	ctx->commit_lsn = commit_lsn;
+-	sv_broadcast(&cil->xc_commit_wait);
++	wake_up_all(&cil->xc_commit_wait);
+ 	spin_unlock(&cil->xc_cil_lock);
+ 
+ 	/* release the hounds! */
+@@ -752,7 +752,7 @@ restart:
+ 			 * It is still being pushed! Wait for the push to
+ 			 * complete, then start again from the beginning.
+ 			 */
+-			sv_wait(&cil->xc_commit_wait, 0, &cil->xc_cil_lock, 0);
++			xlog_wait(&cil->xc_commit_wait, &cil->xc_cil_lock);
+ 			goto restart;
+ 		}
+ 		if (ctx->sequence != sequence)
+diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+index 2f74c80..e2bb276 100644
+--- a/fs/xfs/xfs_log_priv.h
++++ b/fs/xfs/xfs_log_priv.h
+@@ -241,7 +241,7 @@ typedef struct xlog_res {
+ } xlog_res_t;
+ 
+ typedef struct xlog_ticket {
+-	sv_t		   t_wait;	 /* ticket wait queue            : 20 */
++	wait_queue_head_t  t_wait;	 /* ticket wait queue */
+ 	struct list_head   t_queue;	 /* reserve/write queue */
+ 	xlog_tid_t	   t_tid;	 /* transaction identifier	 : 4  */
+ 	atomic_t	   t_ref;	 /* ticket reference count       : 4  */
+@@ -349,8 +349,8 @@ typedef union xlog_in_core2 {
+  * and move everything else out to subsequent cachelines.
+  */
+ typedef struct xlog_in_core {
+-	sv_t			ic_force_wait;
+-	sv_t			ic_write_wait;
++	wait_queue_head_t	ic_force_wait;
++	wait_queue_head_t	ic_write_wait;
+ 	struct xlog_in_core	*ic_next;
+ 	struct xlog_in_core	*ic_prev;
+ 	struct xfs_buf		*ic_bp;
+@@ -417,7 +417,7 @@ struct xfs_cil {
+ 	struct xfs_cil_ctx	*xc_ctx;
+ 	struct rw_semaphore	xc_ctx_lock;
+ 	struct list_head	xc_committing;
+-	sv_t			xc_commit_wait;
++	wait_queue_head_t	xc_commit_wait;
+ 	xfs_lsn_t		xc_current_sequence;
+ };
+ 
+@@ -499,7 +499,7 @@ typedef struct log {
+ 	int			l_logBBsize;    /* size of log in BB chunks */
+ 
+ 	/* The following block of fields are changed while holding icloglock */
+-	sv_t			l_flush_wait ____cacheline_aligned_in_smp;
++	wait_queue_head_t	l_flush_wait ____cacheline_aligned_in_smp;
+ 						/* waiting for iclog flush */
+ 	int			l_covered_state;/* state of "covering disk
+ 						 * log entries" */
+@@ -602,6 +602,21 @@ xlog_cil_force(struct log *log)
+  */
+ #define XLOG_UNMOUNT_REC_TYPE	(-1U)
+ 
++/*
++ * Wrapper function for waiting on a wait queue serialised against wakeups
++ * by a spinlock. This matches the semantics of all the wait queues used in the
++ * log code.
++ */
++static inline void xlog_wait(wait_queue_head_t *wq, spinlock_t *lock)
++{
++	DECLARE_WAITQUEUE(wait, current);
++
++	add_wait_queue_exclusive(wq, &wait);
++	__set_current_state(TASK_UNINTERRUPTIBLE);
++	spin_unlock(lock);
++	schedule();
++	remove_wait_queue(wq, &wait);
++}
+ #endif	/* __KERNEL__ */
+ 
+ #endif	/* __XFS_LOG_PRIV_H__ */
+-- 
+1.7.2.3
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
