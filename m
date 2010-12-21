@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBLF2G7x043162 for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 09:02:16 -0600
+	oBLFDFYl044236 for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 09:13:15 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2472F4F3B0C
-	for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 07:04:14 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 99C962014CD
+	for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 07:15:13 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id gZNTIjV6kg7AILSz for
-	<xfs@oss.sgi.com>; Tue, 21 Dec 2010 07:04:14 -0800 (PST)
-Date: Tue, 21 Dec 2010 10:04:13 -0500
+	by cuda.sgi.com with ESMTP id dhpiRo8hY3ihTjUp for
+	<xfs@oss.sgi.com>; Tue, 21 Dec 2010 07:15:13 -0800 (PST)
+Date: Tue, 21 Dec 2010 10:15:11 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] Add test 248: Check filesystem FITRIM implementation
-Message-ID: <20101221150413.GA15542@infradead.org>
-References: <1291996407-26251-1-git-send-email-lczerner@redhat.com>
+Subject: Re: [PATCH 06/34] xfs: dynamic speculative EOF preallocation
+Message-ID: <20101221151511.GA26127@infradead.org>
+References: <1292916570-25015-1-git-send-email-david@fromorbit.com>
+	<1292916570-25015-7-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1291996407-26251-1-git-send-email-lczerner@redhat.com>
+In-Reply-To: <1292916570-25015-7-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,14 +29,12 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Lukas Czerner <lczerner@redhat.com>
-Cc: hch@infradead.org, esandeen@redhat.com, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Another one I only noticed now:
-
-fstrim.c: In function 'main':
-fstrim.c:245: warning: format '%lu' expects type 'long unsigned int',
-but argument 3 has type 'uint64_t'
+This patch causes tesr 014 to take ~ 870 seconds instead of 6, thus
+beeing almost 150 times slower on mt 32-bit test VM, so I'll have to NAK
+it for now.
 
 _______________________________________________
 xfs mailing list
