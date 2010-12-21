@@ -1,31 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBL7SMhC244804 for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 01:28:22 -0600
+	oBL7S8nj244652 for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 01:28:08 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8337221202B
-	for <xfs@oss.sgi.com>; Mon, 20 Dec 2010 23:30:18 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
-	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	yZq6tYkBMFaR2Zuk for <xfs@oss.sgi.com>;
-	Mon, 20 Dec 2010 23:30:18 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id AD3771470319
+	for <xfs@oss.sgi.com>; Mon, 20 Dec 2010 23:30:03 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
+	[150.101.137.97]) by cuda.sgi.com with ESMTP id
+	sbhg05XoXe9lBFGH for <xfs@oss.sgi.com>;
+	Mon, 20 Dec 2010 23:30:03 -0800 (PST)
 Received: from dastard (unverified [121.44.88.148])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	50071198-1927428
-	for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 18:00:17 +1030 (CDT)
+	50692750-1927428
+	for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 18:00:01 +1030 (CDT)
 Received: from chute ([192.168.1.1] helo=disappointment)
 	by dastard with esmtp (Exim 4.72)
-	(envelope-from <dave@fromorbit.com>) id 1PUwfn-0001Ds-G6
-	for xfs@oss.sgi.com; Tue, 21 Dec 2010 18:30:15 +1100
-Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1PUwfS-0006Zm-3V
+	(envelope-from <dave@fromorbit.com>) id 1PUwfS-0001Ce-Ev
 	for xfs@oss.sgi.com; Tue, 21 Dec 2010 18:29:54 +1100
+Received: from dave by disappointment with local (Exim 4.72)
+	(envelope-from <dave@disappointment.disaster>) id 1PUwfH-0006Yy-3D
+	for xfs@oss.sgi.com; Tue, 21 Dec 2010 18:29:43 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 23/34] xfs: convert log grant ticket queues to list heads
-Date: Tue, 21 Dec 2010 18:29:19 +1100
-Message-Id: <1292916570-25015-24-git-send-email-david@fromorbit.com>
+Subject: [PATCH 06/34] xfs: dynamic speculative EOF preallocation
+Date: Tue, 21 Dec 2010 18:29:02 +1100
+Message-Id: <1292916570-25015-7-git-send-email-david@fromorbit.com>
 In-Reply-To: <1292916570-25015-1-git-send-email-david@fromorbit.com>
 References: <1292916570-25015-1-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,385 +35,189 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
-
-The grant write and reserve queues use a roll-your-own double linked
-list, so convert it to a standard list_head structure and convert
-all the list traversals to use list_for_each_entry(). We can also
-get rid of the XLOG_TIC_IN_Q flag as we can use the list_empty()
-check to tell if the ticket is in a list or not.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/linux-2.6/xfs_trace.h |   16 +++---
- fs/xfs/xfs_log.c             |  123 ++++++++++++++----------------------------
- fs/xfs/xfs_log_priv.h        |   11 ++---
- 3 files changed, 53 insertions(+), 97 deletions(-)
-
-diff --git a/fs/xfs/linux-2.6/xfs_trace.h b/fs/xfs/linux-2.6/xfs_trace.h
-index 83e8760..69b9e1f 100644
---- a/fs/xfs/linux-2.6/xfs_trace.h
-+++ b/fs/xfs/linux-2.6/xfs_trace.h
-@@ -766,8 +766,8 @@ DECLARE_EVENT_CLASS(xfs_loggrant_class,
- 		__field(int, curr_res)
- 		__field(int, unit_res)
- 		__field(unsigned int, flags)
--		__field(void *, reserve_headq)
--		__field(void *, write_headq)
-+		__field(int, reserveq)
-+		__field(int, writeq)
- 		__field(int, grant_reserve_cycle)
- 		__field(int, grant_reserve_bytes)
- 		__field(int, grant_write_cycle)
-@@ -784,8 +784,8 @@ DECLARE_EVENT_CLASS(xfs_loggrant_class,
- 		__entry->curr_res = tic->t_curr_res;
- 		__entry->unit_res = tic->t_unit_res;
- 		__entry->flags = tic->t_flags;
--		__entry->reserve_headq = log->l_reserve_headq;
--		__entry->write_headq = log->l_write_headq;
-+		__entry->reserveq = list_empty(&log->l_reserveq);
-+		__entry->writeq = list_empty(&log->l_writeq);
- 		__entry->grant_reserve_cycle = log->l_grant_reserve_cycle;
- 		__entry->grant_reserve_bytes = log->l_grant_reserve_bytes;
- 		__entry->grant_write_cycle = log->l_grant_write_cycle;
-@@ -795,8 +795,8 @@ DECLARE_EVENT_CLASS(xfs_loggrant_class,
- 		__entry->tail_lsn = log->l_tail_lsn;
- 	),
- 	TP_printk("dev %d:%d type %s t_ocnt %u t_cnt %u t_curr_res %u "
--		  "t_unit_res %u t_flags %s reserve_headq 0x%p "
--		  "write_headq 0x%p grant_reserve_cycle %d "
-+		  "t_unit_res %u t_flags %s reserveq %s "
-+		  "writeq %s grant_reserve_cycle %d "
- 		  "grant_reserve_bytes %d grant_write_cycle %d "
- 		  "grant_write_bytes %d curr_cycle %d curr_block %d "
- 		  "tail_cycle %d tail_block %d",
-@@ -807,8 +807,8 @@ DECLARE_EVENT_CLASS(xfs_loggrant_class,
- 		  __entry->curr_res,
- 		  __entry->unit_res,
- 		  __print_flags(__entry->flags, "|", XLOG_TIC_FLAGS),
--		  __entry->reserve_headq,
--		  __entry->write_headq,
-+		  __entry->reserveq ? "empty" : "active",
-+		  __entry->writeq ? "empty" : "active",
- 		  __entry->grant_reserve_cycle,
- 		  __entry->grant_reserve_bytes,
- 		  __entry->grant_write_cycle,
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index cee4ab9..1b82735 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -95,38 +95,6 @@ STATIC void	xlog_verify_tail_lsn(xlog_t *log, xlog_in_core_t *iclog,
- 
- STATIC int	xlog_iclogs_empty(xlog_t *log);
- 
--
--static void
--xlog_ins_ticketq(struct xlog_ticket **qp, struct xlog_ticket *tic)
--{
--	if (*qp) {
--		tic->t_next	    = (*qp);
--		tic->t_prev	    = (*qp)->t_prev;
--		(*qp)->t_prev->t_next = tic;
--		(*qp)->t_prev	    = tic;
--	} else {
--		tic->t_prev = tic->t_next = tic;
--		*qp = tic;
--	}
--
--	tic->t_flags |= XLOG_TIC_IN_Q;
--}
--
--static void
--xlog_del_ticketq(struct xlog_ticket **qp, struct xlog_ticket *tic)
--{
--	if (tic == tic->t_next) {
--		*qp = NULL;
--	} else {
--		*qp = tic->t_next;
--		tic->t_next->t_prev = tic->t_prev;
--		tic->t_prev->t_next = tic->t_next;
--	}
--
--	tic->t_next = tic->t_prev = NULL;
--	tic->t_flags &= ~XLOG_TIC_IN_Q;
--}
--
- static void
- xlog_grant_sub_space(struct log *log, int bytes)
- {
-@@ -724,7 +692,7 @@ xfs_log_move_tail(xfs_mount_t	*mp,
- 		log->l_tail_lsn = tail_lsn;
- 	}
- 
--	if ((tic = log->l_write_headq)) {
-+	if (!list_empty(&log->l_writeq)) {
- #ifdef DEBUG
- 		if (log->l_flags & XLOG_ACTIVE_RECOVERY)
- 			panic("Recovery problem");
-@@ -732,7 +700,7 @@ xfs_log_move_tail(xfs_mount_t	*mp,
- 		cycle = log->l_grant_write_cycle;
- 		bytes = log->l_grant_write_bytes;
- 		free_bytes = xlog_space_left(log, cycle, bytes);
--		do {
-+		list_for_each_entry(tic, &log->l_writeq, t_queue) {
- 			ASSERT(tic->t_flags & XLOG_TIC_PERM_RESERV);
- 
- 			if (free_bytes < tic->t_unit_res && tail_lsn != 1)
-@@ -740,10 +708,10 @@ xfs_log_move_tail(xfs_mount_t	*mp,
- 			tail_lsn = 0;
- 			free_bytes -= tic->t_unit_res;
- 			sv_signal(&tic->t_wait);
--			tic = tic->t_next;
--		} while (tic != log->l_write_headq);
-+		}
- 	}
--	if ((tic = log->l_reserve_headq)) {
-+
-+	if (!list_empty(&log->l_reserveq)) {
- #ifdef DEBUG
- 		if (log->l_flags & XLOG_ACTIVE_RECOVERY)
- 			panic("Recovery problem");
-@@ -751,7 +719,7 @@ xfs_log_move_tail(xfs_mount_t	*mp,
- 		cycle = log->l_grant_reserve_cycle;
- 		bytes = log->l_grant_reserve_bytes;
- 		free_bytes = xlog_space_left(log, cycle, bytes);
--		do {
-+		list_for_each_entry(tic, &log->l_reserveq, t_queue) {
- 			if (tic->t_flags & XLOG_TIC_PERM_RESERV)
- 				need_bytes = tic->t_unit_res*tic->t_cnt;
- 			else
-@@ -761,8 +729,7 @@ xfs_log_move_tail(xfs_mount_t	*mp,
- 			tail_lsn = 0;
- 			free_bytes -= need_bytes;
- 			sv_signal(&tic->t_wait);
--			tic = tic->t_next;
--		} while (tic != log->l_reserve_headq);
-+		}
- 	}
- 	spin_unlock(&log->l_grant_lock);
- }	/* xfs_log_move_tail */
-@@ -1053,6 +1020,8 @@ xlog_alloc_log(xfs_mount_t	*mp,
- 	log->l_curr_cycle  = 1;	    /* 0 is bad since this is initial value */
- 	log->l_grant_reserve_cycle = 1;
- 	log->l_grant_write_cycle = 1;
-+	INIT_LIST_HEAD(&log->l_reserveq);
-+	INIT_LIST_HEAD(&log->l_writeq);
- 
- 	error = EFSCORRUPTED;
- 	if (xfs_sb_version_hassector(&mp->m_sb)) {
-@@ -2550,8 +2519,8 @@ xlog_grant_log_space(xlog_t	   *log,
- 	trace_xfs_log_grant_enter(log, tic);
- 
- 	/* something is already sleeping; insert new transaction at end */
--	if (log->l_reserve_headq) {
--		xlog_ins_ticketq(&log->l_reserve_headq, tic);
-+	if (!list_empty(&log->l_reserveq)) {
-+		list_add_tail(&tic->t_queue, &log->l_reserveq);
- 
- 		trace_xfs_log_grant_sleep1(log, tic);
- 
-@@ -2583,8 +2552,8 @@ redo:
- 	free_bytes = xlog_space_left(log, log->l_grant_reserve_cycle,
- 				     log->l_grant_reserve_bytes);
- 	if (free_bytes < need_bytes) {
--		if ((tic->t_flags & XLOG_TIC_IN_Q) == 0)
--			xlog_ins_ticketq(&log->l_reserve_headq, tic);
-+		if (list_empty(&tic->t_queue))
-+			list_add_tail(&tic->t_queue, &log->l_reserveq);
- 
- 		trace_xfs_log_grant_sleep2(log, tic);
- 
-@@ -2602,8 +2571,9 @@ redo:
- 		trace_xfs_log_grant_wake2(log, tic);
- 
- 		goto redo;
--	} else if (tic->t_flags & XLOG_TIC_IN_Q)
--		xlog_del_ticketq(&log->l_reserve_headq, tic);
-+	}
-+
-+	list_del_init(&tic->t_queue);
- 
- 	/* we've got enough space */
- 	xlog_grant_add_space(log, need_bytes);
-@@ -2626,9 +2596,7 @@ redo:
- 	return 0;
- 
-  error_return:
--	if (tic->t_flags & XLOG_TIC_IN_Q)
--		xlog_del_ticketq(&log->l_reserve_headq, tic);
--
-+	list_del_init(&tic->t_queue);
- 	trace_xfs_log_grant_error(log, tic);
- 
- 	/*
-@@ -2653,7 +2621,6 @@ xlog_regrant_write_log_space(xlog_t	   *log,
- 			     xlog_ticket_t *tic)
- {
- 	int		free_bytes, need_bytes;
--	xlog_ticket_t	*ntic;
- #ifdef DEBUG
- 	xfs_lsn_t	tail_lsn;
- #endif
-@@ -2683,22 +2650,23 @@ xlog_regrant_write_log_space(xlog_t	   *log,
- 	 * this transaction.
- 	 */
- 	need_bytes = tic->t_unit_res;
--	if ((ntic = log->l_write_headq)) {
-+	if (!list_empty(&log->l_writeq)) {
-+		struct xlog_ticket *ntic;
- 		free_bytes = xlog_space_left(log, log->l_grant_write_cycle,
- 					     log->l_grant_write_bytes);
--		do {
-+		list_for_each_entry(ntic, &log->l_writeq, t_queue) {
- 			ASSERT(ntic->t_flags & XLOG_TIC_PERM_RESERV);
- 
- 			if (free_bytes < ntic->t_unit_res)
- 				break;
- 			free_bytes -= ntic->t_unit_res;
- 			sv_signal(&ntic->t_wait);
--			ntic = ntic->t_next;
--		} while (ntic != log->l_write_headq);
-+		}
- 
--		if (ntic != log->l_write_headq) {
--			if ((tic->t_flags & XLOG_TIC_IN_Q) == 0)
--				xlog_ins_ticketq(&log->l_write_headq, tic);
-+		if (ntic != list_first_entry(&log->l_writeq,
-+						struct xlog_ticket, t_queue)) {
-+			if (list_empty(&tic->t_queue))
-+				list_add_tail(&tic->t_queue, &log->l_writeq);
- 
- 			trace_xfs_log_regrant_write_sleep1(log, tic);
- 
-@@ -2727,8 +2695,8 @@ redo:
- 	free_bytes = xlog_space_left(log, log->l_grant_write_cycle,
- 				     log->l_grant_write_bytes);
- 	if (free_bytes < need_bytes) {
--		if ((tic->t_flags & XLOG_TIC_IN_Q) == 0)
--			xlog_ins_ticketq(&log->l_write_headq, tic);
-+		if (list_empty(&tic->t_queue))
-+			list_add_tail(&tic->t_queue, &log->l_writeq);
- 		spin_unlock(&log->l_grant_lock);
- 		xlog_grant_push_ail(log->l_mp, need_bytes);
- 		spin_lock(&log->l_grant_lock);
-@@ -2745,8 +2713,9 @@ redo:
- 
- 		trace_xfs_log_regrant_write_wake2(log, tic);
- 		goto redo;
--	} else if (tic->t_flags & XLOG_TIC_IN_Q)
--		xlog_del_ticketq(&log->l_write_headq, tic);
-+	}
-+
-+	list_del_init(&tic->t_queue);
- 
- 	/* we've got enough space */
- 	xlog_grant_add_space_write(log, need_bytes);
-@@ -2766,9 +2735,7 @@ redo:
- 
- 
-  error_return:
--	if (tic->t_flags & XLOG_TIC_IN_Q)
--		xlog_del_ticketq(&log->l_reserve_headq, tic);
--
-+	list_del_init(&tic->t_queue);
- 	trace_xfs_log_regrant_write_error(log, tic);
- 
- 	/*
-@@ -3435,6 +3402,7 @@ xlog_ticket_alloc(
-         }
- 
- 	atomic_set(&tic->t_ref, 1);
-+	INIT_LIST_HEAD(&tic->t_queue);
- 	tic->t_unit_res		= unit_bytes;
- 	tic->t_curr_res		= unit_bytes;
- 	tic->t_cnt		= cnt;
-@@ -3742,26 +3710,17 @@ xfs_log_force_umount(
- 	spin_unlock(&log->l_icloglock);
- 
- 	/*
--	 * We don't want anybody waiting for log reservations
--	 * after this. That means we have to wake up everybody
--	 * queued up on reserve_headq as well as write_headq.
--	 * In addition, we make sure in xlog_{re}grant_log_space
--	 * that we don't enqueue anything once the SHUTDOWN flag
--	 * is set, and this action is protected by the GRANTLOCK.
-+	 * We don't want anybody waiting for log reservations after this. That
-+	 * means we have to wake up everybody queued up on reserveq as well as
-+	 * writeq.  In addition, we make sure in xlog_{re}grant_log_space that
-+	 * we don't enqueue anything once the SHUTDOWN flag is set, and this
-+	 * action is protected by the GRANTLOCK.
- 	 */
--	if ((tic = log->l_reserve_headq)) {
--		do {
--			sv_signal(&tic->t_wait);
--			tic = tic->t_next;
--		} while (tic != log->l_reserve_headq);
--	}
-+	list_for_each_entry(tic, &log->l_reserveq, t_queue)
-+		sv_signal(&tic->t_wait);
- 
--	if ((tic = log->l_write_headq)) {
--		do {
--			sv_signal(&tic->t_wait);
--			tic = tic->t_next;
--		} while (tic != log->l_write_headq);
--	}
-+	list_for_each_entry(tic, &log->l_writeq, t_queue)
-+		sv_signal(&tic->t_wait);
- 	spin_unlock(&log->l_grant_lock);
- 
- 	if (!(log->l_iclog->ic_state & XLOG_STATE_IOERROR)) {
-diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index c1ce505..a5b3c02 100644
---- a/fs/xfs/xfs_log_priv.h
-+++ b/fs/xfs/xfs_log_priv.h
-@@ -132,12 +132,10 @@ static inline uint xlog_get_client_id(__be32 i)
-  */
- #define XLOG_TIC_INITED		0x1	/* has been initialized */
- #define XLOG_TIC_PERM_RESERV	0x2	/* permanent reservation */
--#define XLOG_TIC_IN_Q		0x4
- 
- #define XLOG_TIC_FLAGS \
- 	{ XLOG_TIC_INITED,	"XLOG_TIC_INITED" }, \
--	{ XLOG_TIC_PERM_RESERV,	"XLOG_TIC_PERM_RESERV" }, \
--	{ XLOG_TIC_IN_Q,	"XLOG_TIC_IN_Q" }
-+	{ XLOG_TIC_PERM_RESERV,	"XLOG_TIC_PERM_RESERV" }
- 
- #endif	/* __KERNEL__ */
- 
-@@ -244,8 +242,7 @@ typedef struct xlog_res {
- 
- typedef struct xlog_ticket {
- 	sv_t		   t_wait;	 /* ticket wait queue            : 20 */
--	struct xlog_ticket *t_next;	 /*			         :4|8 */
--	struct xlog_ticket *t_prev;	 /*				 :4|8 */
-+	struct list_head   t_queue;	 /* reserve/write queue */
- 	xlog_tid_t	   t_tid;	 /* transaction identifier	 : 4  */
- 	atomic_t	   t_ref;	 /* ticket reference count       : 4  */
- 	int		   t_curr_res;	 /* current reservation in bytes : 4  */
-@@ -519,8 +516,8 @@ typedef struct log {
- 
- 	/* The following block of fields are changed while holding grant_lock */
- 	spinlock_t		l_grant_lock ____cacheline_aligned_in_smp;
--	xlog_ticket_t		*l_reserve_headq;
--	xlog_ticket_t		*l_write_headq;
-+	struct list_head	l_reserveq;
-+	struct list_head	l_writeq;
- 	int			l_grant_reserve_cycle;
- 	int			l_grant_reserve_bytes;
- 	int			l_grant_write_cycle;
--- 
-1.7.2.3
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+RnJvbTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgoKQ3VycmVudGx5IHRoZSBz
+aXplIG9mIHRoZSBzcGVjdWxhdGl2ZSBwcmVhbGxvY2F0aW9uIGR1cmluZyBkZWxheWVkCmFsbG9j
+YXRpb24gaXMgZml4ZWQgYnkgZWl0aGVyIHRoZSBhbGxvY3NpemUgbW91bnQgb3B0aW9uIG9mIGEK
+ZGVmYXVsdCBzaXplLiBXZSBhcmUgc2VlaW5nIGEgbG90IG9mIGNhc2VzIHdoZXJlIHdlIG5lZWQg
+dG8KcmVjb21tZW5kIHVzaW5nIHRoZSBhbGxvY3NpemUgbW91bnQgb3B0aW9uIHRvIHByZXZlbnQg
+ZnJhZ21lbnRhdGlvbgp3aGVuIGJ1ZmZlcmVkIHdyaXRlcyBsYW5kIGluIHRoZSBzYW1lIEFHLgoK
+UmF0aGVyIHRoYW4gdXNpbmcgYSBmaXhlZCBwcmVhbGxvY2F0aW9uIHNpemUgYnkgZGVmYXVsdCAo
+dXAgdG8gNjRrKSwKbWFrZSBpdCBkeW5hbWljIGJ5IGJhc2luZyBpdCBvbiB0aGUgY3VycmVudCBp
+bm9kZSBzaXplLiBUaGF0IHdheSB0aGUKRU9GIHByZWFsbG9jYXRpb24gd2lsbCBpbmNyZWFzZSBh
+cyB0aGUgZmlsZSBzaXplIGluY3JlYXNlcy4gIEhlbmNlCmZvciBzdHJlYW1pbmcgd3JpdGVzIHdl
+IGFyZSBtdWNoIG1vcmUgbGlrZWx5IHRvIGdldCBsYXJnZQpwcmVhbGxvY2F0aW9ucyBleGFjdGx5
+IHdoZW4gd2UgbmVlZCBpdCB0byByZWR1Y2UgZnJhZ2VtZW50YXRpb24uCgpGb3IgZGVmYXVsdCBz
+ZXR0aW5ncywgdGhlIHNpemUgb2YgdGhlIGluaXRpYWwgZXh0ZW50cyBpcyBkZXRlcm1pbmVkCmJ5
+IHRoZSBudW1iZXIgb2YgcGFyYWxsZWwgd3JpdGVycyBhbmQgdGhlIGFtb3VudCBvZiBtZW1vcnkg
+aW4gdGhlCm1hY2hpbmUuIEZvciA0R0IgUkFNIGFuZCA0IGNvbmN1cnJlbnQgMzJHQiBmaWxlIHdy
+aXRlczoKCkVYVDogRklMRS1PRkZTRVQgICAgICAgICAgIEJMT0NLLVJBTkdFICAgICAgICAgIEFH
+IEFHLU9GRlNFVCAgICAgICAgICAgICAgICAgVE9UQUwKICAgMDogWzAuLjEwNDg1NzVdOiAgICAg
+ICAgIDEwNDg2NzIuLjIwOTcyNDcgICAgICAwICgxMDQ4NjcyLi4yMDk3MjQ3KSAgICAgIDEwNDg1
+NzYKICAgMTogWzEwNDg1NzYuLjIwOTcxNTFdOiAgIDUyNDI5NzYuLjYyOTE1NTEgICAgICAwICg1
+MjQyOTc2Li42MjkxNTUxKSAgICAgIDEwNDg1NzYKICAgMjogWzIwOTcxNTIuLjQxOTQzMDNdOiAg
+IDEyNTgzMDA4Li4xNDY4MDE1OSAgICAwICgxMjU4MzAwOC4uMTQ2ODAxNTkpICAgIDIwOTcxNTIK
+ICAgMzogWzQxOTQzMDQuLjgzODg2MDddOiAgIDI1MTY1OTIwLi4yOTM2MDIyMyAgICAwICgyNTE2
+NTkyMC4uMjkzNjAyMjMpICAgIDQxOTQzMDQKICAgNDogWzgzODg2MDguLjE2Nzc3MjE1XTogIDU4
+NzIwMzUyLi42NzEwODk1OSAgICAwICg1ODcyMDM1Mi4uNjcxMDg5NTkpICAgIDgzODg2MDgKICAg
+NTogWzE2Nzc3MjE2Li4zMzU1NDQyM106IDExNzQ0MDU4NC4uMTM0MjE3NzkxICAwICgxMTc0NDA1
+ODQuLjEzNDIxNzc5MSkgMTY3NzcyMDgKICAgNjogWzMzNTU0NDI0Li41MDMzMTUxMV06IDE4NDU0
+OTA1Ni4uMjAxMzI2MTQzICAwICgxODQ1NDkwNTYuLjIwMTMyNjE0MykgMTY3NzcwODgKICAgNzog
+WzUwMzMxNTEyLi42NzEwODU5OV06IDI1MTY1NzQwOC4uMjY4NDM0NDk1ICAwICgyNTE2NTc0MDgu
+LjI2ODQzNDQ5NSkgMTY3NzcwODgKCmFuZCBmb3IgMTYgY29uY3VycmVudCAxNkdCIGZpbGUgd3Jp
+dGVzOgoKIEVYVDogRklMRS1PRkZTRVQgICAgICAgICAgIEJMT0NLLVJBTkdFICAgICAgICAgIEFH
+IEFHLU9GRlNFVCAgICAgICAgICAgICAgICAgVE9UQUwKICAgMDogWzAuLjI2MjE0M106ICAgICAg
+ICAgIDI0OTA0NzIuLjI3NTI2MTUgICAgICAwICgyNDkwNDcyLi4yNzUyNjE1KSAgICAgICAyNjIx
+NDQKICAgMTogWzI2MjE0NC4uNTI0Mjg3XTogICAgIDYyOTE1NjAuLjY1NTM3MDMgICAgICAwICg2
+MjkxNTYwLi42NTUzNzAzKSAgICAgICAyNjIxNDQKICAgMjogWzUyNDI4OC4uMTA0ODU3NV06ICAg
+IDEzNjMxNTkyLi4xNDE1NTg3OSAgICAwICgxMzYzMTU5Mi4uMTQxNTU4NzkpICAgICA1MjQyODgK
+ICAgMzogWzEwNDg1NzYuLjIwOTcxNTFdOiAgIDMwNDA4ODA4Li4zMTQ1NzM4MyAgICAwICgzMDQw
+ODgwOC4uMzE0NTczODMpICAgIDEwNDg1NzYKICAgNDogWzIwOTcxNTIuLjQxOTQzMDNdOiAgIDUy
+NDI4OTA0Li41NDUyNjA1NSAgICAwICg1MjQyODkwNC4uNTQ1MjYwNTUpICAgIDIwOTcxNTIKICAg
+NTogWzQxOTQzMDQuLjgzODg2MDddOiAgIDEwNDg1NzcwNC4uMTA5MDUyMDA3ICAwICgxMDQ4NTc3
+MDQuLjEwOTA1MjAwNykgIDQxOTQzMDQKICAgNjogWzgzODg2MDguLjE2Nzc3MjE1XTogIDIwOTcx
+NTMwNC4uMjE4MTAzOTExICAwICgyMDk3MTUzMDQuLjIxODEwMzkxMSkgIDgzODg2MDgKICAgNzog
+WzE2Nzc3MjE2Li4zMzU1NDQyM106IDQ1Mjk4NDg0OC4uNDY5NzYyMDU1ICAwICg0NTI5ODQ4NDgu
+LjQ2OTc2MjA1NSkgMTY3NzcyMDgKCkJlY2F1c2UgaXQgaXMgaGFyZCB0byB0YWtlIGJhY2sgc3Bl
+Y3VhbHRpdmUgcHJlYWxsb2NhdGlvbiwgY2FzZXMKd2hlcmUgdGhlcmUgYXJlIGxhcmdlIHNsb3cg
+Z3Jvd2luZyBsb2cgZmlsZXMgb24gYSBuZWFybHkgZnVsbApmaWxlc3lzdGVtIG1heSBjYXVzZSBw
+cmVtYXR1cmUgRU5PU1BDLiBIZW5jZSBhcyB0aGUgZmlsZXN5c3RlbSBuZWFycwpmdWxsLCB0aGUg
+bWF4aW11bSBkeW5hbWljIHByZWFsbG9jIHNpemUg0ZZzIHJlZHVjZWQgYWNjb3JkaW5nIHRvIHRo
+aXMKdGFibGUgKGJhc2VkIG9uIDRrIGJsb2NrIHNpemUpOgoKZnJlZXNwYWNlICAgICAgIG1heCBw
+cmVhbGxvYyBzaXplCiAgPjUlICAgICAgICAgICAgIGZ1bGwgZXh0ZW50ICg4R0IpCiAgNC01JSAg
+ICAgICAgICAgICAyR0IgKDhHQiA+PiAyKQogIDMtNCUgICAgICAgICAgICAgMUdCICg4R0IgPj4g
+MykKICAyLTMlICAgICAgICAgICA1MTJNQiAoOEdCID4+IDQpCiAgMS0yJSAgICAgICAgICAgMjU2
+TUIgKDhHQiA+PiA1KQogIDwxJSAgICAgICAgICAgIDEyOE1CICg4R0IgPj4gNikKClRoaXMgc2hv
+dWxkIHJlZHVjZSB0aGUgYW1vdW50IG9mIHNwYWNlIGhlbGQgaW4gc3BlY3VsYXRpdmUKcHJlYWxs
+b2NhdGlvbiBmb3Igc3VjaCBjYXNlcy4KClRoZSBhbGxvY3NpemUgbW91bnQgb3B0aW9uIHR1cm5z
+IG9mZiB0aGUgZHluYW1pYyBiZWhhdmlvdXIgYW5kIGZpeGVzCnRoZSBwcmVhbGxvYyBzaXplIHRv
+IHdoYXRldmVyIHRoZSBtb3VudCBvcHRpb24gc3BlY2lmaWVzLiBpLmUuIHRoZQpiZWhhdmlvdXIg
+aXMgdW5jaGFuZ2VkLgoKU2lnbmVkLW9mZi1ieTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRo
+YXQuY29tPgotLS0KIGZzL3hmcy94ZnNfZnNvcHMuYyB8ICAgIDEgKwogZnMveGZzL3hmc19pb21h
+cC5jIHwgICA4NCArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKyst
+LS0tLS0KIGZzL3hmcy94ZnNfbW91bnQuYyB8ICAgMjEgKysrKysrKysrKysrKwogZnMveGZzL3hm
+c19tb3VudC5oIHwgICAxNCArKysrKysrKwogNCBmaWxlcyBjaGFuZ2VkLCAxMTAgaW5zZXJ0aW9u
+cygrKSwgMTAgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvZnMveGZzL3hmc19mc29wcy5jIGIv
+ZnMveGZzL3hmc19mc29wcy5jCmluZGV4IGJlMzRmZjIuLjZkMTcyMDYgMTAwNjQ0Ci0tLSBhL2Zz
+L3hmcy94ZnNfZnNvcHMuYworKysgYi9mcy94ZnMveGZzX2Zzb3BzLmMKQEAgLTM3NCw2ICszNzQs
+NyBAQCB4ZnNfZ3Jvd2ZzX2RhdGFfcHJpdmF0ZSgKIAkJbXAtPm1fbWF4aWNvdW50ID0gaWNvdW50
+IDw8IG1wLT5tX3NiLnNiX2lub3BibG9nOwogCX0gZWxzZQogCQltcC0+bV9tYXhpY291bnQgPSAw
+OworCXhmc19zZXRfbG93X3NwYWNlX3RocmVzaG9sZHMobXApOwogCiAJLyogdXBkYXRlIHNlY29u
+ZGFyeSBzdXBlcmJsb2Nrcy4gKi8KIAlmb3IgKGFnbm8gPSAxOyBhZ25vIDwgbmFnY291bnQ7IGFn
+bm8rKykgewpkaWZmIC0tZ2l0IGEvZnMveGZzL3hmc19pb21hcC5jIGIvZnMveGZzL3hmc19pb21h
+cC5jCmluZGV4IDIyYjYyYTEuLmYzNmQyYzggMTAwNjQ0Ci0tLSBhL2ZzL3hmcy94ZnNfaW9tYXAu
+YworKysgYi9mcy94ZnMveGZzX2lvbWFwLmMKQEAgLTI2Nyw2ICsyNjcsOSBAQCBlcnJvcl9vdXQ6
+CiAgKiBJZiB0aGUgY2FsbGVyIGlzIGRvaW5nIGEgd3JpdGUgYXQgdGhlIGVuZCBvZiB0aGUgZmls
+ZSwgdGhlbiBleHRlbmQgdGhlCiAgKiBhbGxvY2F0aW9uIG91dCB0byB0aGUgZmlsZSBzeXN0ZW0n
+cyB3cml0ZSBpb3NpemUuICBXZSBjbGVhbiB1cCBhbnkgZXh0cmEKICAqIHNwYWNlIGxlZnQgb3Zl
+ciB3aGVuIHRoZSBmaWxlIGlzIGNsb3NlZCBpbiB4ZnNfaW5hY3RpdmUoKS4KKyAqCisgKiBJZiB3
+ZSBmaW5kIHdlIGFscmVhZHkgaGF2ZSBkZWxhbGxvYyBwcmVhbGxvY2F0aW9uIGJleW9uZCBFT0Ys
+IGRvbid0IGRvIG1vcmUKKyAqIHByZWFsbG9jYXRpb24gYXMgaXQgaXQgbm90IG5lZWRlZC4KICAq
+LwogU1RBVElDIGludAogeGZzX2lvbWFwX2VvZl93YW50X3ByZWFsbG9jYXRlKApAQCAtMjgyLDYg
+KzI4NSw3IEBAIHhmc19pb21hcF9lb2Zfd2FudF9wcmVhbGxvY2F0ZSgKIAl4ZnNfZmlsYmxrc190
+ICAgY291bnRfZnNiOwogCXhmc19mc2Jsb2NrX3QJZmlyc3RibG9jazsKIAlpbnQJCW4sIGVycm9y
+LCBpbWFwczsKKwlpbnQJCWZvdW5kX2RlbGFsbG9jID0gMDsKIAogCSpwcmVhbGxvYyA9IDA7CiAJ
+aWYgKChvZmZzZXQgKyBjb3VudCkgPD0gaXAtPmlfc2l6ZSkKQEAgLTMwNiwxMiArMzEwLDYwIEBA
+IHhmc19pb21hcF9lb2Zfd2FudF9wcmVhbGxvY2F0ZSgKIAkJCQlyZXR1cm4gMDsKIAkJCXN0YXJ0
+X2ZzYiArPSBpbWFwW25dLmJyX2Jsb2NrY291bnQ7CiAJCQljb3VudF9mc2IgLT0gaW1hcFtuXS5i
+cl9ibG9ja2NvdW50OworCisJCQlpZiAoaW1hcFtuXS5icl9zdGFydGJsb2NrID09IERFTEFZU1RB
+UlRCTE9DSykKKwkJCQlmb3VuZF9kZWxhbGxvYyA9IDE7CiAJCX0KIAl9Ci0JKnByZWFsbG9jID0g
+MTsKKwlpZiAoIWZvdW5kX2RlbGFsbG9jKQorCQkqcHJlYWxsb2MgPSAxOwogCXJldHVybiAwOwog
+fQogCisvKgorICogSWYgd2UgZG9uJ3QgaGF2ZSBhIHVzZXIgc3BlY2lmaWVkIHByZWFsbG9jYXRp
+b24gc2l6ZSwgZHluYW1pY2FsbHkgaW5jcmVhc2UKKyAqIHRoZSBwcmVhbGxvY2F0aW9uIHNpemUg
+YXMgdGhlIHNpemUgb2YgdGhlIGZpbGUgZ3Jvd3MuIENhcCB0aGUgbWF4aW11bSBzaXplCisgKiBh
+dCBhIHNpbmdsZSBleHRlbnQgb3IgbGVzcyBpZiB0aGUgZmlsZXN5c3RlbSBpcyBuZWFyIGZ1bGwu
+IFRoZSBjbG9zZXIgdGhlCisgKiBmaWxlc3lzdGVtIGlzIHRvIGZ1bGwsIHRoZSBzbWFsbGVyIHRo
+ZSBtYXhpbXVtIHByZWFsb2NhdGlvbi4KKyAqLworU1RBVElDIHhmc19mc2Jsb2NrX3QKK3hmc19p
+b21hcF9wcmVhbGxvY19zaXplKAorCXN0cnVjdCB4ZnNfbW91bnQJKm1wLAorCXN0cnVjdCB4ZnNf
+aW5vZGUJKmlwKQoreworCXhmc19mc2Jsb2NrX3QJCWFsbG9jX2Jsb2NrcyA9IDA7CisKKwlpZiAo
+IShtcC0+bV9mbGFncyAmIFhGU19NT1VOVF9ERkxUX0lPU0laRSkpIHsKKwkJaW50IHNoaWZ0ID0g
+MDsKKwkJaW50NjRfdCBmcmVlc3A7CisKKwkJYWxsb2NfYmxvY2tzID0gWEZTX0JfVE9fRlNCKG1w
+LCBpcC0+aV9zaXplKTsKKwkJYWxsb2NfYmxvY2tzID0gWEZTX0ZJTEVPRkZfTUlOKE1BWEVYVExF
+TiwKKwkJCQkJcm91bmRkb3duX3Bvd19vZl90d28oYWxsb2NfYmxvY2tzKSk7CisKKwkJZnJlZXNw
+ID0gcGVyY3B1X2NvdW50ZXJfcmVhZF9wb3NpdGl2ZSgKKwkJCQkJCSZtcC0+bV9pY3NiW1hGU19J
+Q1NCX0ZEQkxPQ0tTXSk7CisJCWlmIChmcmVlc3AgPCBtcC0+bV9sb3dfc3BhY2VbWEZTX0xPV1NQ
+XzVfUENOVF0pIHsKKwkJCXNoaWZ0ID0gMjsKKwkJCWlmIChmcmVlc3AgPCBtcC0+bV9sb3dfc3Bh
+Y2VbWEZTX0xPV1NQXzRfUENOVF0pCisJCQkJc2hpZnQrKzsKKwkJCWlmIChmcmVlc3AgPCBtcC0+
+bV9sb3dfc3BhY2VbWEZTX0xPV1NQXzNfUENOVF0pCisJCQkJc2hpZnQrKzsKKwkJCWlmIChmcmVl
+c3AgPCBtcC0+bV9sb3dfc3BhY2VbWEZTX0xPV1NQXzJfUENOVF0pCisJCQkJc2hpZnQrKzsKKwkJ
+CWlmIChmcmVlc3AgPCBtcC0+bV9sb3dfc3BhY2VbWEZTX0xPV1NQXzFfUENOVF0pCisJCQkJc2hp
+ZnQrKzsKKwkJfQorCQlpZiAoc2hpZnQpCisJCQlhbGxvY19ibG9ja3MgPj49IHNoaWZ0OworCX0K
+KworCWlmIChhbGxvY19ibG9ja3MgPCBtcC0+bV93cml0ZWlvX2Jsb2NrcykKKwkJYWxsb2NfYmxv
+Y2tzID0gbXAtPm1fd3JpdGVpb19ibG9ja3M7CisKKwlyZXR1cm4gYWxsb2NfYmxvY2tzOworfQor
+CiBpbnQKIHhmc19pb21hcF93cml0ZV9kZWxheSgKIAl4ZnNfaW5vZGVfdAkqaXAsCkBAIC0zNDQs
+NiArMzk2LDcgQEAgeGZzX2lvbWFwX3dyaXRlX2RlbGF5KAogCWV4dHN6ID0geGZzX2dldF9leHRz
+el9oaW50KGlwKTsKIAlvZmZzZXRfZnNiID0gWEZTX0JfVE9fRlNCVChtcCwgb2Zmc2V0KTsKIAor
+CiAJZXJyb3IgPSB4ZnNfaW9tYXBfZW9mX3dhbnRfcHJlYWxsb2NhdGUobXAsIGlwLCBvZmZzZXQs
+IGNvdW50LAogCQkJCWltYXAsIFhGU19XUklURV9JTUFQUywgJnByZWFsbG9jKTsKIAlpZiAoZXJy
+b3IpCkBAIC0zNTEsOSArNDA0LDExIEBAIHhmc19pb21hcF93cml0ZV9kZWxheSgKIAogcmV0cnk6
+CiAJaWYgKHByZWFsbG9jKSB7CisJCXhmc19mc2Jsb2NrX3QJYWxsb2NfYmxvY2tzID0geGZzX2lv
+bWFwX3ByZWFsbG9jX3NpemUobXAsIGlwKTsKKwogCQlhbGlnbmVkX29mZnNldCA9IFhGU19XUklU
+RUlPX0FMSUdOKG1wLCAob2Zmc2V0ICsgY291bnQgLSAxKSk7CiAJCWlvYWxpZ24gPSBYRlNfQl9U
+T19GU0JUKG1wLCBhbGlnbmVkX29mZnNldCk7Ci0JCWxhc3RfZnNiID0gaW9hbGlnbiArIG1wLT5t
+X3dyaXRlaW9fYmxvY2tzOworCQlsYXN0X2ZzYiA9IGlvYWxpZ24gKyBhbGxvY19ibG9ja3M7CiAJ
+fSBlbHNlIHsKIAkJbGFzdF9mc2IgPSBYRlNfQl9UT19GU0IobXAsICgoeGZzX3Vmc2l6ZV90KShv
+ZmZzZXQgKyBjb3VudCkpKTsKIAl9CkBAIC0zNzEsMjIgKzQyNiwzMSBAQCByZXRyeToKIAkJCSAg
+WEZTX0JNQVBJX0RFTEFZIHwgWEZTX0JNQVBJX1dSSVRFIHwKIAkJCSAgWEZTX0JNQVBJX0VOVElS
+RSwgJmZpcnN0YmxvY2ssIDEsIGltYXAsCiAJCQkgICZuaW1hcHMsIE5VTEwpOwotCWlmIChlcnJv
+ciAmJiAoZXJyb3IgIT0gRU5PU1BDKSkKKwlzd2l0Y2ggKGVycm9yKSB7CisJY2FzZSAwOgorCWNh
+c2UgRU5PU1BDOgorCWNhc2UgRURRVU9UOgorCQlicmVhazsKKwlkZWZhdWx0OgogCQlyZXR1cm4g
+WEZTX0VSUk9SKGVycm9yKTsKKwl9CiAKIAkvKgotCSAqIElmIGJtYXBpIHJldHVybmVkIHVzIG5v
+dGhpbmcsIGFuZCBpZiB3ZSBkaWRuJ3QgZ2V0IGJhY2sgRURRVU9ULAotCSAqIHRoZW4gd2UgbXVz
+dCBoYXZlIHJ1biBvdXQgb2Ygc3BhY2UgLSBmbHVzaCBhbGwgb3RoZXIgaW5vZGVzIHdpdGgKLQkg
+KiBkZWxhbGxvYyBibG9ja3MgYW5kIHJldHJ5IHdpdGhvdXQgRU9GIHByZWFsbG9jYXRpb24uCisJ
+ICogSWYgYm1hcGkgcmV0dXJuZWQgdXMgbm90aGluZywgd2UgZ290IGVpdGhlciBFTk9TUEMgb3Ig
+RURRVU9ULiAgRm9yCisJICogRU5PU1BDLCAqIGZsdXNoIGFsbCBvdGhlciBpbm9kZXMgd2l0aCBk
+ZWxhbGxvYyBibG9ja3MgdG8gZnJlZSB1cAorCSAqIHNvbWUgb2YgdGhlIGV4Y2VzcyByZXNlcnZl
+ZCBtZXRhZGF0YSBzcGFjZS4gRm9yIGJvdGggY2FzZXMsIHJldHJ5CisJICogd2l0aG91dCBFT0Yg
+cHJlYWxsb2NhdGlvbi4KIAkgKi8KIAlpZiAobmltYXBzID09IDApIHsKIAkJdHJhY2VfeGZzX2Rl
+bGFsbG9jX2Vub3NwYyhpcCwgb2Zmc2V0LCBjb3VudCk7CiAJCWlmIChmbHVzaGVkKQotCQkJcmV0
+dXJuIFhGU19FUlJPUihFTk9TUEMpOworCQkJcmV0dXJuIFhGU19FUlJPUihlcnJvciA/IGVycm9y
+IDogRU5PU1BDKTsKIAotCQl4ZnNfaXVubG9jayhpcCwgWEZTX0lMT0NLX0VYQ0wpOwotCQl4ZnNf
+Zmx1c2hfaW5vZGVzKGlwKTsKLQkJeGZzX2lsb2NrKGlwLCBYRlNfSUxPQ0tfRVhDTCk7CisJCWlm
+IChlcnJvciA9PSBFTk9TUEMpIHsKKwkJCXhmc19pdW5sb2NrKGlwLCBYRlNfSUxPQ0tfRVhDTCk7
+CisJCQl4ZnNfZmx1c2hfaW5vZGVzKGlwKTsKKwkJCXhmc19pbG9jayhpcCwgWEZTX0lMT0NLX0VY
+Q0wpOworCQl9CiAKIAkJZmx1c2hlZCA9IDE7CiAJCWVycm9yID0gMDsKZGlmZiAtLWdpdCBhL2Zz
+L3hmcy94ZnNfbW91bnQuYyBiL2ZzL3hmcy94ZnNfbW91bnQuYwppbmRleCBkNTcxMDIzMi4uZjFi
+MDk0ZCAxMDA2NDQKLS0tIGEvZnMveGZzL3hmc19tb3VudC5jCisrKyBiL2ZzL3hmcy94ZnNfbW91
+bnQuYwpAQCAtMTEwMSw2ICsxMTAxLDI0IEBAIHhmc19zZXRfcndfc2l6ZXMoeGZzX21vdW50X3Qg
+Km1wKQogfQogCiAvKgorICogcHJlY2FsY3VsYXRlIHRoZSBsb3cgc3BhY2UgdGhyZXNob2xkcyBm
+b3IgZHluYW1pYyBzcGVjdWxhdGl2ZSBwcmVhbGxvY2F0aW9uLgorICovCit2b2lkCit4ZnNfc2V0
+X2xvd19zcGFjZV90aHJlc2hvbGRzKAorCXN0cnVjdCB4ZnNfbW91bnQJKm1wKQoreworCWludCBp
+OworCisJZm9yIChpID0gMDsgaSA8IFhGU19MT1dTUF9NQVg7IGkrKykgeworCQlfX3VpbnQ2NF90
+IHNwYWNlID0gbXAtPm1fc2Iuc2JfZGJsb2NrczsKKworCQlkb19kaXYoc3BhY2UsIDEwMCk7CisJ
+CW1wLT5tX2xvd19zcGFjZVtpXSA9IHNwYWNlICogKGkgKyAxKTsKKwl9Cit9CisKKworLyoKICAq
+IFNldCB3aGV0aGVyIHdlJ3JlIHVzaW5nIGlub2RlIGFsaWdubWVudC4KICAqLwogU1RBVElDIHZv
+aWQKQEAgLTEzMjIsNiArMTM0MCw5IEBAIHhmc19tb3VudGZzKAogCSAqLwogCXhmc19zZXRfcndf
+c2l6ZXMobXApOwogCisJLyogc2V0IHRoZSBsb3cgc3BhY2UgdGhyZXNob2xkcyBmb3IgZHluYW1p
+YyBwcmVhbGxvY2F0aW9uICovCisJeGZzX3NldF9sb3dfc3BhY2VfdGhyZXNob2xkcyhtcCk7CisK
+IAkvKgogCSAqIFNldCB0aGUgaW5vZGUgY2x1c3RlciBzaXplLgogCSAqIFRoaXMgbWF5IHN0aWxs
+IGJlIG92ZXJyaWRkZW4gYnkgdGhlIGZpbGUgc3lzdGVtCmRpZmYgLS1naXQgYS9mcy94ZnMveGZz
+X21vdW50LmggYi9mcy94ZnMveGZzX21vdW50LmgKaW5kZXggMDNhZDI1YzYuLjdiNDJlMDQgMTAw
+NjQ0Ci0tLSBhL2ZzL3hmcy94ZnNfbW91bnQuaAorKysgYi9mcy94ZnMveGZzX21vdW50LmgKQEAg
+LTc1LDYgKzc1LDE2IEBAIGVudW0gewogCVhGU19JQ1NCX01BWCwKIH07CiAKKy8qIGR5bmFtaWMg
+cHJlYWxsb2NhdGlvbiBmcmVlIHNwYWNlIHRocmVzaG9sZHMsIDUlIGRvd24gdG8gMSUgKi8KK2Vu
+dW0geworCVhGU19MT1dTUF8xX1BDTlQgPSAwLAorCVhGU19MT1dTUF8yX1BDTlQsCisJWEZTX0xP
+V1NQXzNfUENOVCwKKwlYRlNfTE9XU1BfNF9QQ05ULAorCVhGU19MT1dTUF81X1BDTlQsCisJWEZT
+X0xPV1NQX01BWCwKK307CisKIHR5cGVkZWYgc3RydWN0IHhmc19tb3VudCB7CiAJc3RydWN0IHN1
+cGVyX2Jsb2NrCSptX3N1cGVyOwogCXhmc190aWRfdAkJbV90aWQ7CQkvKiBuZXh0IHVudXNlZCB0
+aWQgZm9yIGZzICovCkBAIC0xNjksNiArMTc5LDggQEAgdHlwZWRlZiBzdHJ1Y3QgeGZzX21vdW50
+IHsKIAkJCQkJCSAgIG9uIHRoZSBuZXh0IHJlbW91bnQscncgKi8KIAlzdHJ1Y3Qgc2hyaW5rZXIJ
+CW1faW5vZGVfc2hyaW5rOwkvKiBpbm9kZSByZWNsYWltIHNocmlua2VyICovCiAJc3RydWN0IHBl
+cmNwdV9jb3VudGVyCW1faWNzYltYRlNfSUNTQl9NQVhdOworCWludDY0X3QJCQltX2xvd19zcGFj
+ZVtYRlNfTE9XU1BfTUFYXTsKKwkJCQkJCS8qIGxvdyBmcmVlIHNwYWNlIHRocmVzaG9sZHMgKi8K
+IH0geGZzX21vdW50X3Q7CiAKIC8qCkBAIC0zMzMsNiArMzQ1LDggQEAgZXh0ZXJuIHZvaWQJeGZz
+X2ljc2Jfc3luY19jb3VudGVycyhzdHJ1Y3QgeGZzX21vdW50ICopOwogZXh0ZXJuIGludAl4ZnNf
+aWNzYl9tb2RpZnlfaW5vZGVzKHN0cnVjdCB4ZnNfbW91bnQgKiwgaW50LCBpbnQ2NF90KTsKIGV4
+dGVybiBpbnQJeGZzX2ljc2JfbW9kaWZ5X2ZyZWVfYmxvY2tzKHN0cnVjdCB4ZnNfbW91bnQgKiwg
+aW50NjRfdCwgaW50KTsKIAorZXh0ZXJuIHZvaWQJeGZzX3NldF9sb3dfc3BhY2VfdGhyZXNob2xk
+cyhzdHJ1Y3QgeGZzX21vdW50ICopOworCiAjZW5kaWYJLyogX19LRVJORUxfXyAqLwogCiBleHRl
+cm4gdm9pZAl4ZnNfbW9kX3NiKHN0cnVjdCB4ZnNfdHJhbnMgKiwgX19pbnQ2NF90KTsKLS0gCjEu
+Ny4yLjMKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhm
+cyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFu
+L2xpc3RpbmZvL3hmcwo=
