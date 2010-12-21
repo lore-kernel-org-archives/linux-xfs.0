@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBLFEHJt044411 for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 09:14:18 -0600
+	oBLFDtFt044315 for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 09:13:55 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 989921465B27
-	for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 07:16:15 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5AC902136A9
+	for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 07:15:53 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id rpRQXZl6rODbE3VJ for
-	<xfs@oss.sgi.com>; Tue, 21 Dec 2010 07:16:15 -0800 (PST)
-Date: Tue, 21 Dec 2010 10:16:14 -0500
+	by cuda.sgi.com with ESMTP id JYI4WW43SFLb3Afi for
+	<xfs@oss.sgi.com>; Tue, 21 Dec 2010 07:15:53 -0800 (PST)
+Date: Tue, 21 Dec 2010 10:15:52 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 02/34] xfs: use KM_NOFS for allocations during attribute
-	list operations
-Message-ID: <20101221151614.GC26127@infradead.org>
+Subject: Re: [PATCH 01/34] xfs: provide a inode iolock lockdep class
+Message-ID: <20101221151552.GB26127@infradead.org>
 References: <1292916570-25015-1-git-send-email-david@fromorbit.com>
-	<1292916570-25015-3-git-send-email-david@fromorbit.com>
+	<1292916570-25015-2-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1292916570-25015-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1292916570-25015-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,17 +32,28 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Dec 21, 2010 at 06:28:58PM +1100, Dave Chinner wrote:
+On Tue, Dec 21, 2010 at 06:28:57PM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> When listing attributes, we are doiing memory allocations under the
-> inode ilock using only KM_SLEEP. This allows memory allocation to
-> recurse back into the filesystem and do writeback, which may the
-> ilock we already hold on the current inode. THis will deadlock.
-> Hence use KM_NOFS for such allocations outside of transaction
-> context to ensure that reclaim recursion does not occur.
+> The XFS iolock needs to be re-initialised to a new lock class before
+> it enters reclaim to prevent lockdep false positives. Unfortunately,
+> this is not sufficient protection as inodes in the XFS_IRECLAIMABLE
+> state can be recycled and not re-initialised before being reused.
+> 
+> We need to re-initialise the lock state when transfering out of
+> XFS_IRECLAIMABLE state to XFS_INEW, but we need to keep the same
+> class as if the inode was just allocated. Hence we need a specific
+> lockdep class variable for the iolock so that both initialisations
+> use the same class.
+> 
+> While there, add a specific class for inodes in the reclaim state so
+> that it is easy to tell from lockdep reports what state the inode
+> was in that generated the report.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-Looks good,
+I think I already reviewed this one, but in case it got lost:
+
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 
