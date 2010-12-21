@@ -1,30 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBL7SVXw244893 for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 01:28:32 -0600
+	oBL7Sbeo244960 for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 01:28:37 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C7A691470328
-	for <xfs@oss.sgi.com>; Mon, 20 Dec 2010 23:30:27 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
-	[150.101.137.101]) by cuda.sgi.com with ESMTP id
-	rYS4GVXXi1GtZrxF for <xfs@oss.sgi.com>;
-	Mon, 20 Dec 2010 23:30:27 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 964F7212035
+	for <xfs@oss.sgi.com>; Mon, 20 Dec 2010 23:30:33 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
+	[150.101.137.98]) by cuda.sgi.com with ESMTP id
+	dFN8aAPtqcxZwCCM for <xfs@oss.sgi.com>;
+	Mon, 20 Dec 2010 23:30:33 -0800 (PST)
 Received: from dastard (unverified [121.44.88.148])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	50575236-1927428
-	for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 18:00:26 +1030 (CDT)
+	50839323-1927428
+	for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 18:00:32 +1030 (CDT)
 Received: from chute ([192.168.1.1] helo=disappointment)
 	by dastard with esmtp (Exim 4.72)
-	(envelope-from <dave@fromorbit.com>) id 1PUwfn-0001Do-6J
-	for xfs@oss.sgi.com; Tue, 21 Dec 2010 18:30:15 +1100
+	(envelope-from <dave@fromorbit.com>) id 1PUwfd-0001DO-4o
+	for xfs@oss.sgi.com; Tue, 21 Dec 2010 18:30:05 +1100
 Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1PUwfR-0006Za-Re
+	(envelope-from <dave@disappointment.disaster>) id 1PUwfR-0006ZY-Px
 	for xfs@oss.sgi.com; Tue, 21 Dec 2010 18:29:53 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 19/34] xfs: consume iodone callback items on buffers as they
-	are processed
-Date: Tue, 21 Dec 2010 18:29:15 +1100
-Message-Id: <1292916570-25015-20-git-send-email-david@fromorbit.com>
+Subject: [PATCH 18/34] xfs: reduce the number of AIL push wakeups
+Date: Tue, 21 Dec 2010 18:29:14 +1100
+Message-Id: <1292916570-25015-19-git-send-email-david@fromorbit.com>
 In-Reply-To: <1292916570-25015-1-git-send-email-david@fromorbit.com>
 References: <1292916570-25015-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -44,113 +43,59 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-To allow buffer iodone callbacks to consume multiple items off the
-callback list, first we need to convert the xfs_buf_do_callbacks()
-to consume items and always pull the next item from the head of the
-list.
-
-The means the item list walk is never dependent on knowing the
-next item on the list and hence allows callbacks to remove items
-from the list as well. This allows callbacks to do bulk operations
-by scanning the list for identical callbacks, consuming them all
-and then processing them in bulk, negating the need for multiple
-callbacks of that type.
+The xfaild often tries to rest to wait for congestion to pass of for
+IO to complete, but is regularly woken in tail-pushing situations.
+In severe cases, the xfsaild is getting woken tens of thousands of
+times a second. Reduce the number needless wakeups by only waking
+the xfsaild if the new target is larger than the old one. Further
+make short sleeps uninterruptible as they occur when the xfsaild has
+decided it needs to back off to allow some IO to complete and being
+woken early is counter-productive.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_buf_item.c |   32 +++++++++++++++++++++-----------
- 1 files changed, 21 insertions(+), 11 deletions(-)
+ fs/xfs/linux-2.6/xfs_super.c |   20 ++++++++++++++++----
+ 1 files changed, 16 insertions(+), 4 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index 2686d0d..ed2b65f 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -142,7 +142,7 @@ xfs_buf_item_log_check(
- #endif
- 
- STATIC void	xfs_buf_error_relse(xfs_buf_t *bp);
--STATIC void	xfs_buf_do_callbacks(xfs_buf_t *bp, xfs_log_item_t *lip);
-+STATIC void	xfs_buf_do_callbacks(struct xfs_buf *bp);
- 
- /*
-  * This returns the number of log iovecs needed to log the
-@@ -450,7 +450,7 @@ xfs_buf_item_unpin(
- 		 * xfs_trans_ail_delete() drops the AIL lock.
- 		 */
- 		if (bip->bli_flags & XFS_BLI_STALE_INODE) {
--			xfs_buf_do_callbacks(bp, (xfs_log_item_t *)bip);
-+			xfs_buf_do_callbacks(bp);
- 			XFS_BUF_SET_FSPRIVATE(bp, NULL);
- 			XFS_BUF_CLR_IODONE_FUNC(bp);
- 		} else {
-@@ -918,15 +918,26 @@ xfs_buf_attach_iodone(
- 	XFS_BUF_SET_IODONE_FUNC(bp, xfs_buf_iodone_callbacks);
- }
- 
-+/*
-+ * We can have many callbacks on a buffer. Running the callbacks individually
-+ * can cause a lot of contention on the AIL lock, so we allow for a single
-+ * callback to be able to scan the remaining lip->li_bio_list for other items
-+ * of the same type and callback to be processed in the first call.
-+ *
-+ * As a result, the loop walking the callback list below will also modify the
-+ * list. it removes the first item from the list and then runs the callback.
-+ * The loop then restarts from the new head of the list. This allows the
-+ * callback to scan and modify the list attached to the buffer and we don't
-+ * have to care about maintaining a next item pointer.
-+ */
- STATIC void
- xfs_buf_do_callbacks(
--	xfs_buf_t	*bp,
--	xfs_log_item_t	*lip)
-+	struct xfs_buf		*bp)
+diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
+index abcda07..6a12da3 100644
+--- a/fs/xfs/linux-2.6/xfs_super.c
++++ b/fs/xfs/linux-2.6/xfs_super.c
+@@ -834,8 +834,11 @@ xfsaild_wakeup(
+ 	struct xfs_ail		*ailp,
+ 	xfs_lsn_t		threshold_lsn)
  {
--	xfs_log_item_t	*nlip;
-+	struct xfs_log_item	*lip;
- 
--	while (lip != NULL) {
--		nlip = lip->li_bio_list;
-+	while ((lip = XFS_BUF_FSPRIVATE(bp, xfs_log_item_t *)) != NULL) {
-+		XFS_BUF_SET_FSPRIVATE(bp, lip->li_bio_list);
- 		ASSERT(lip->li_cb != NULL);
- 		/*
- 		 * Clear the next pointer so we don't have any
-@@ -936,7 +947,6 @@ xfs_buf_do_callbacks(
- 		 */
- 		lip->li_bio_list = NULL;
- 		lip->li_cb(bp, lip);
--		lip = nlip;
- 	}
+-	ailp->xa_target = threshold_lsn;
+-	wake_up_process(ailp->xa_task);
++	/* only ever move the target forwards */
++	if (XFS_LSN_CMP(threshold_lsn, ailp->xa_target) > 0) {
++		ailp->xa_target = threshold_lsn;
++		wake_up_process(ailp->xa_task);
++	}
  }
  
-@@ -970,7 +980,7 @@ xfs_buf_iodone_callbacks(
- 			ASSERT(XFS_BUF_TARGET(bp) == mp->m_ddev_targp);
- 			XFS_BUF_SUPER_STALE(bp);
- 			trace_xfs_buf_item_iodone(bp, _RET_IP_);
--			xfs_buf_do_callbacks(bp, lip);
-+			xfs_buf_do_callbacks(bp);
- 			XFS_BUF_SET_FSPRIVATE(bp, NULL);
- 			XFS_BUF_CLR_IODONE_FUNC(bp);
- 			xfs_buf_ioend(bp, 0);
-@@ -1029,7 +1039,7 @@ xfs_buf_iodone_callbacks(
- 		return;
- 	}
+ STATIC int
+@@ -847,8 +850,17 @@ xfsaild(
+ 	long		tout = 0; /* milliseconds */
  
--	xfs_buf_do_callbacks(bp, lip);
-+	xfs_buf_do_callbacks(bp);
- 	XFS_BUF_SET_FSPRIVATE(bp, NULL);
- 	XFS_BUF_CLR_IODONE_FUNC(bp);
- 	xfs_buf_ioend(bp, 0);
-@@ -1063,7 +1073,7 @@ xfs_buf_error_relse(
- 	 * We have to unpin the pinned buffers so do the
- 	 * callbacks.
- 	 */
--	xfs_buf_do_callbacks(bp, lip);
-+	xfs_buf_do_callbacks(bp);
- 	XFS_BUF_SET_FSPRIVATE(bp, NULL);
- 	XFS_BUF_CLR_IODONE_FUNC(bp);
- 	XFS_BUF_SET_BRELSE_FUNC(bp,NULL);
+ 	while (!kthread_should_stop()) {
+-		schedule_timeout_interruptible(tout ?
+-				msecs_to_jiffies(tout) : MAX_SCHEDULE_TIMEOUT);
++		/*
++		 * for short sleeps indicating congestion, don't allow us to
++		 * get woken early. Otherwise all we do is bang on the AIL lock
++		 * without making progress.
++		 */
++		if (tout && tout <= 20)
++			__set_current_state(TASK_KILLABLE);
++		else
++			__set_current_state(TASK_INTERRUPTIBLE);
++		schedule_timeout(tout ?
++				 msecs_to_jiffies(tout) : MAX_SCHEDULE_TIMEOUT);
+ 
+ 		/* swsusp */
+ 		try_to_freeze();
 -- 
 1.7.2.3
 
