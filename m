@@ -1,29 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBL7SB0A244676 for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 01:28:11 -0600
+	oBL7SVct244895 for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 01:28:32 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 92A031CE33C9
-	for <xfs@oss.sgi.com>; Mon, 20 Dec 2010 23:30:07 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
-	[150.101.137.102]) by cuda.sgi.com with ESMTP id
-	DlLnsnDp6BZV3VPN for <xfs@oss.sgi.com>;
-	Mon, 20 Dec 2010 23:30:07 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 40209212031
+	for <xfs@oss.sgi.com>; Mon, 20 Dec 2010 23:30:27 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail20.adl6.internode.on.net
+	[150.101.137.105]) by cuda.sgi.com with ESMTP id
+	6R9kk4J9kkPdL7U4 for <xfs@oss.sgi.com>;
+	Mon, 20 Dec 2010 23:30:27 -0800 (PST)
 Received: from dastard (unverified [121.44.88.148])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	50434433-1927428
-	for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 18:00:06 +1030 (CDT)
+	5388621-1927428
+	for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 18:00:26 +1030 (CDT)
 Received: from chute ([192.168.1.1] helo=disappointment)
 	by dastard with esmtp (Exim 4.72)
-	(envelope-from <dave@fromorbit.com>) id 1PUwfS-0001Ct-O9
-	for xfs@oss.sgi.com; Tue, 21 Dec 2010 18:29:54 +1100
+	(envelope-from <dave@fromorbit.com>) id 1PUwfd-0001DQ-86
+	for xfs@oss.sgi.com; Tue, 21 Dec 2010 18:30:05 +1100
 Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1PUwfH-0006ZC-Cp
-	for xfs@oss.sgi.com; Tue, 21 Dec 2010 18:29:43 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1PUwfR-0006Zd-TM
+	for xfs@oss.sgi.com; Tue, 21 Dec 2010 18:29:53 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 11/34] xfs: convert xfsbud shrinker to a per-buftarg shrinker.
-Date: Tue, 21 Dec 2010 18:29:07 +1100
-Message-Id: <1292916570-25015-12-git-send-email-david@fromorbit.com>
+Subject: [PATCH 20/34] xfs: remove all the inodes on a buffer from the AIL in
+	bulk
+Date: Tue, 21 Dec 2010 18:29:16 +1100
+Message-Id: <1292916570-25015-21-git-send-email-david@fromorbit.com>
 In-Reply-To: <1292916570-25015-1-git-send-email-david@fromorbit.com>
 References: <1292916570-25015-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -43,208 +44,250 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Before we introduce per-buftarg LRU lists, split the shrinker
-implementation into per-buftarg shrinker callbacks. At the moment
-we wake all the xfsbufds to run the delayed write queues to free
-the dirty buffers and make their pages available for reclaim.
-However, with an LRU, we want to be able to free clean, unused
-buffers as well, so we need to separate the xfsbufd from the
-shrinker callbacks.
+When inode buffer IO completes, usually all of the inodes are removed from the
+AIL. This involves processing them one at a time and taking the AIL lock once
+for every inode. When all CPUs are processing inode IO completions, this causes
+excessive amount sof contention on the AIL lock.
+
+Instead, change the way we process inode IO completion in the buffer
+IO done callback. Allow the inode IO done callback to walk the list
+of IO done callbacks and pull all the inodes off the buffer in one
+go and then process them as a batch.
+
+Once all the inodes for removal are collected, take the AIL lock
+once and do a bulk removal operation to minimise traffic on the AIL
+lock.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Alex Elder <aelder@sgi.com>
 ---
- fs/xfs/linux-2.6/xfs_buf.c |   89 ++++++++++++--------------------------------
- fs/xfs/linux-2.6/xfs_buf.h |    4 +-
- 2 files changed, 27 insertions(+), 66 deletions(-)
+ fs/xfs/xfs_inode_item.c |   92 ++++++++++++++++++++++++++++++++++++++---------
+ fs/xfs/xfs_trans_ail.c  |   73 +++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_trans_priv.h |    4 ++
+ 3 files changed, 152 insertions(+), 17 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
-index 4c5deb6..0a00d7a 100644
---- a/fs/xfs/linux-2.6/xfs_buf.c
-+++ b/fs/xfs/linux-2.6/xfs_buf.c
-@@ -44,12 +44,7 @@
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index 7c8d30c..fd4f398 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -842,15 +842,64 @@ xfs_inode_item_destroy(
+  * flushed to disk.  It is responsible for removing the inode item
+  * from the AIL if it has not been re-logged, and unlocking the inode's
+  * flush lock.
++ *
++ * To reduce AIL lock traffic as much as possible, we scan the buffer log item
++ * list for other inodes that will run this function. We remove them from the
++ * buffer list so we can process all the inode IO completions in one AIL lock
++ * traversal.
+  */
+ void
+ xfs_iflush_done(
+ 	struct xfs_buf		*bp,
+ 	struct xfs_log_item	*lip)
+ {
+-	struct xfs_inode_log_item *iip = INODE_ITEM(lip);
+-	xfs_inode_t		*ip = iip->ili_inode;
++	struct xfs_inode_log_item *iip;
++	struct xfs_log_item	*blip;
++	struct xfs_log_item	*next;
++	struct xfs_log_item	*prev;
+ 	struct xfs_ail		*ailp = lip->li_ailp;
++	int			need_ail = 0;
++
++	/*
++	 * Scan the buffer IO completions for other inodes being completed and
++	 * attach them to the current inode log item.
++	 */
++	blip = XFS_BUF_FSPRIVATE(bp, xfs_log_item_t *);
++	prev = NULL;
++	while (blip != NULL) {
++		if (lip->li_cb != xfs_iflush_done) {
++			prev = blip;
++			blip = blip->li_bio_list;
++			continue;
++		}
++
++		/* remove from list */
++		next = blip->li_bio_list;
++		if (!prev) {
++			XFS_BUF_SET_FSPRIVATE(bp, next);
++		} else {
++			prev->li_bio_list = next;
++		}
++
++		/* add to current list */
++		blip->li_bio_list = lip->li_bio_list;
++		lip->li_bio_list = blip;
++
++		/*
++		 * while we have the item, do the unlocked check for needing
++		 * the AIL lock.
++		 */
++		iip = INODE_ITEM(blip);
++		if (iip->ili_logged && blip->li_lsn == iip->ili_flush_lsn)
++			need_ail++;
++
++		blip = next;
++	}
++
++	/* make sure we capture the state of the initial inode. */
++	iip = INODE_ITEM(lip);
++	if (iip->ili_logged && lip->li_lsn == iip->ili_flush_lsn)
++		need_ail++;
  
- static kmem_zone_t *xfs_buf_zone;
- STATIC int xfsbufd(void *);
--STATIC int xfsbufd_wakeup(struct shrinker *, int, gfp_t);
- STATIC void xfs_buf_delwri_queue(xfs_buf_t *, int);
--static struct shrinker xfs_buf_shake = {
--	.shrink = xfsbufd_wakeup,
--	.seeks = DEFAULT_SEEKS,
--};
- 
- static struct workqueue_struct *xfslogd_workqueue;
- struct workqueue_struct *xfsdatad_workqueue;
-@@ -337,7 +332,6 @@ _xfs_buf_lookup_pages(
- 					__func__, gfp_mask);
- 
- 			XFS_STATS_INC(xb_page_retries);
--			xfsbufd_wakeup(NULL, 0, gfp_mask);
- 			congestion_wait(BLK_RW_ASYNC, HZ/50);
- 			goto retry;
+ 	/*
+ 	 * We only want to pull the item from the AIL if it is
+@@ -861,28 +910,37 @@ xfs_iflush_done(
+ 	 * the lock since it's cheaper, and then we recheck while
+ 	 * holding the lock before removing the inode from the AIL.
+ 	 */
+-	if (iip->ili_logged && lip->li_lsn == iip->ili_flush_lsn) {
++	if (need_ail) {
++		struct xfs_log_item *log_items[need_ail];
++		int i = 0;
+ 		spin_lock(&ailp->xa_lock);
+-		if (lip->li_lsn == iip->ili_flush_lsn) {
+-			/* xfs_trans_ail_delete() drops the AIL lock. */
+-			xfs_trans_ail_delete(ailp, lip);
+-		} else {
+-			spin_unlock(&ailp->xa_lock);
++		for (blip = lip; blip; blip = blip->li_bio_list) {
++			iip = INODE_ITEM(blip);
++			if (iip->ili_logged &&
++			    blip->li_lsn == iip->ili_flush_lsn) {
++				log_items[i++] = blip;
++			}
++			ASSERT(i <= need_ail);
  		}
-@@ -1461,28 +1455,23 @@ xfs_wait_buftarg(
++		/* xfs_trans_ail_delete_bulk() drops the AIL lock. */
++		xfs_trans_ail_delete_bulk(ailp, log_items, i);
+ 	}
+ 
+-	iip->ili_logged = 0;
+ 
+ 	/*
+-	 * Clear the ili_last_fields bits now that we know that the
+-	 * data corresponding to them is safely on disk.
++	 * clean up and unlock the flush lock now we are done. We can clear the
++	 * ili_last_fields bits now that we know that the data corresponding to
++	 * them is safely on disk.
+ 	 */
+-	iip->ili_last_fields = 0;
++	for (blip = lip; blip; blip = next) {
++		next = blip->li_bio_list;
++		blip->li_bio_list = NULL;
+ 
+-	/*
+-	 * Release the inode's flush lock since we're done with it.
+-	 */
+-	xfs_ifunlock(ip);
++		iip = INODE_ITEM(blip);
++		iip->ili_logged = 0;
++		iip->ili_last_fields = 0;
++		xfs_ifunlock(iip->ili_inode);
++	}
+ }
+ 
+ /*
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index fe991a7..218f968 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -639,6 +639,79 @@ xfs_trans_ail_delete(
  	}
  }
  
--/*
-- *	buftarg list for delwrite queue processing
-- */
--static LIST_HEAD(xfs_buftarg_list);
--static DEFINE_SPINLOCK(xfs_buftarg_lock);
--
--STATIC void
--xfs_register_buftarg(
--	xfs_buftarg_t           *btp)
--{
--	spin_lock(&xfs_buftarg_lock);
--	list_add(&btp->bt_list, &xfs_buftarg_list);
--	spin_unlock(&xfs_buftarg_lock);
--}
--
--STATIC void
--xfs_unregister_buftarg(
--	xfs_buftarg_t           *btp)
-+int
-+xfs_buftarg_shrink(
-+	struct shrinker		*shrink,
-+	int			nr_to_scan,
-+	gfp_t			mask)
- {
--	spin_lock(&xfs_buftarg_lock);
--	list_del(&btp->bt_list);
--	spin_unlock(&xfs_buftarg_lock);
-+	struct xfs_buftarg	*btp = container_of(shrink,
-+					struct xfs_buftarg, bt_shrinker);
-+	if (nr_to_scan) {
-+		if (test_bit(XBT_FORCE_SLEEP, &btp->bt_flags))
-+			return -1;
-+		if (list_empty(&btp->bt_delwrite_queue))
-+			return -1;
-+		set_bit(XBT_FORCE_FLUSH, &btp->bt_flags);
-+		wake_up_process(btp->bt_task);
++/*
++ * xfs_trans_ail_delete_bulk - remove multiple log items from the AIL
++ *
++ * @xfs_trans_ail_delete_bulk takes an array of log items that all need to
++ * removed from the AIL. The caller is already holding the AIL lock, and done
++ * all the checks necessary to ensure the items passed in via @log_items are
++ * ready for deletion. This includes checking that the items are in the AIL.
++ *
++ * For each log item to be removed, unlink it  from the AIL, clear the IN_AIL
++ * flag from the item and reset the item's lsn to 0. If we remove the first
++ * item in the AIL, update the log tail to match the new minimum LSN in the
++ * AIL.
++ *
++ * This function will not drop the AIL lock until all items are removed from
++ * the AIL to minimise the amount of lock traffic on the AIL. This does not
++ * greatly increase the AIL hold time, but does significantly reduce the amount
++ * of traffic on the lock, especially during IO completion.
++ *
++ * This function must be called with the AIL lock held.  The lock is dropped
++ * before returning.
++ */
++void
++xfs_trans_ail_delete_bulk(
++	struct xfs_ail		*ailp,
++	struct xfs_log_item	**log_items,
++	int			nr_items) __releases(ailp->xa_lock)
++{
++	xfs_log_item_t		*mlip;
++	xfs_lsn_t		tail_lsn;
++	int			mlip_changed = 0;
++	int			i;
++
++	mlip = xfs_ail_min(ailp);
++
++	for (i = 0; i < nr_items; i++) {
++		struct xfs_log_item *lip = log_items[i];
++		if (!(lip->li_flags & XFS_LI_IN_AIL)) {
++			struct xfs_mount	*mp = ailp->xa_mount;
++
++			spin_unlock(&ailp->xa_lock);
++			if (!XFS_FORCED_SHUTDOWN(mp)) {
++				xfs_cmn_err(XFS_PTAG_AILDELETE, CE_ALERT, mp,
++		"%s: attempting to delete a log item that is not in the AIL",
++						__func__);
++				xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
++			}
++			return;
++		}
++
++		xfs_ail_delete(ailp, lip);
++		lip->li_flags &= ~XFS_LI_IN_AIL;
++		lip->li_lsn = 0;
++		if (mlip == lip)
++			mlip_changed = 1;
 +	}
-+	return list_empty(&btp->bt_delwrite_queue) ? -1 : 1;
- }
- 
- void
-@@ -1490,17 +1479,14 @@ xfs_free_buftarg(
- 	struct xfs_mount	*mp,
- 	struct xfs_buftarg	*btp)
- {
-+	unregister_shrinker(&btp->bt_shrinker);
 +
- 	xfs_flush_buftarg(btp, 1);
- 	if (mp->m_flags & XFS_MOUNT_BARRIER)
- 		xfs_blkdev_issue_flush(btp);
- 	iput(btp->bt_mapping->host);
- 
--	/* Unregister the buftarg first so that we don't get a
--	 * wakeup finding a non-existent task
--	 */
--	xfs_unregister_buftarg(btp);
- 	kthread_stop(btp->bt_task);
--
- 	kmem_free(btp);
- }
- 
-@@ -1597,20 +1583,13 @@ xfs_alloc_delwrite_queue(
- 	xfs_buftarg_t		*btp,
- 	const char		*fsname)
- {
--	int	error = 0;
--
--	INIT_LIST_HEAD(&btp->bt_list);
- 	INIT_LIST_HEAD(&btp->bt_delwrite_queue);
- 	spin_lock_init(&btp->bt_delwrite_lock);
- 	btp->bt_flags = 0;
- 	btp->bt_task = kthread_run(xfsbufd, btp, "xfsbufd/%s", fsname);
--	if (IS_ERR(btp->bt_task)) {
--		error = PTR_ERR(btp->bt_task);
--		goto out_error;
--	}
--	xfs_register_buftarg(btp);
--out_error:
--	return error;
-+	if (IS_ERR(btp->bt_task))
-+		return PTR_ERR(btp->bt_task);
-+	return 0;
- }
- 
- xfs_buftarg_t *
-@@ -1633,6 +1612,9 @@ xfs_alloc_buftarg(
- 		goto error;
- 	if (xfs_alloc_delwrite_queue(btp, fsname))
- 		goto error;
-+	btp->bt_shrinker.shrink = xfs_buftarg_shrink;
-+	btp->bt_shrinker.seeks = DEFAULT_SEEKS;
-+	register_shrinker(&btp->bt_shrinker);
- 	return btp;
- 
- error:
-@@ -1737,27 +1719,6 @@ xfs_buf_runall_queues(
- 	flush_workqueue(queue);
- }
- 
--STATIC int
--xfsbufd_wakeup(
--	struct shrinker		*shrink,
--	int			priority,
--	gfp_t			mask)
--{
--	xfs_buftarg_t		*btp;
--
--	spin_lock(&xfs_buftarg_lock);
--	list_for_each_entry(btp, &xfs_buftarg_list, bt_list) {
--		if (test_bit(XBT_FORCE_SLEEP, &btp->bt_flags))
--			continue;
--		if (list_empty(&btp->bt_delwrite_queue))
--			continue;
--		set_bit(XBT_FORCE_FLUSH, &btp->bt_flags);
--		wake_up_process(btp->bt_task);
--	}
--	spin_unlock(&xfs_buftarg_lock);
--	return 0;
--}
--
- /*
-  * Move as many buffers as specified to the supplied list
-  * idicating if we skipped any buffers to prevent deadlocks.
-@@ -1952,7 +1913,6 @@ xfs_buf_init(void)
- 	if (!xfsconvertd_workqueue)
- 		goto out_destroy_xfsdatad_workqueue;
- 
--	register_shrinker(&xfs_buf_shake);
- 	return 0;
- 
-  out_destroy_xfsdatad_workqueue:
-@@ -1968,7 +1928,6 @@ xfs_buf_init(void)
- void
- xfs_buf_terminate(void)
- {
--	unregister_shrinker(&xfs_buf_shake);
- 	destroy_workqueue(xfsconvertd_workqueue);
- 	destroy_workqueue(xfsdatad_workqueue);
- 	destroy_workqueue(xfslogd_workqueue);
-diff --git a/fs/xfs/linux-2.6/xfs_buf.h b/fs/xfs/linux-2.6/xfs_buf.h
-index 383a3f3..9344103 100644
---- a/fs/xfs/linux-2.6/xfs_buf.h
-+++ b/fs/xfs/linux-2.6/xfs_buf.h
-@@ -128,10 +128,12 @@ typedef struct xfs_buftarg {
- 
- 	/* per device delwri queue */
- 	struct task_struct	*bt_task;
--	struct list_head	bt_list;
- 	struct list_head	bt_delwrite_queue;
- 	spinlock_t		bt_delwrite_lock;
- 	unsigned long		bt_flags;
++	if (!mlip_changed) {
++		spin_unlock(&ailp->xa_lock);
++		return;
++	}
 +
-+	/* LRU control structures */
-+	struct shrinker		bt_shrinker;
- } xfs_buftarg_t;
++	/*
++	 * It is not safe to access mlip after the AIL lock is dropped, so we
++	 * must get a copy of li_lsn before we do so.  This is especially
++	 * important on 32-bit platforms where accessing and updating 64-bit
++	 * values like li_lsn is not atomic. It is possible we've emptied the
++	 * AIL here, so if that is the case, pass an LSN of 0 to the tail move.
++	 */
++	mlip = xfs_ail_min(ailp);
++	tail_lsn = mlip ? mlip->li_lsn : 0;
++	spin_unlock(&ailp->xa_lock);
++	xfs_log_move_tail(ailp->xa_mount, tail_lsn);
++}
+ 
  
  /*
+diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
+index e039729..246ca4d 100644
+--- a/fs/xfs/xfs_trans_priv.h
++++ b/fs/xfs/xfs_trans_priv.h
+@@ -85,6 +85,10 @@ void			 xfs_trans_ail_update_bulk(struct xfs_ail *ailp,
+ void			xfs_trans_ail_delete(struct xfs_ail *ailp,
+ 					struct xfs_log_item *lip)
+ 					__releases(ailp->xa_lock);
++void			xfs_trans_ail_delete_bulk(struct xfs_ail *ailp,
++					struct xfs_log_item **log_items,
++					int nr_items)
++					__releases(ailp->xa_lock);
+ void			xfs_trans_ail_push(struct xfs_ail *, xfs_lsn_t);
+ void			xfs_trans_unlocked_item(struct xfs_ail *,
+ 					xfs_log_item_t *);
 -- 
 1.7.2.3
 
