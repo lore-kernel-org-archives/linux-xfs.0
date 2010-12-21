@@ -1,30 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBL0smcG200467 for <xfs@oss.sgi.com>; Mon, 20 Dec 2010 18:54:49 -0600
+	oBL0qDKr200298 for <xfs@oss.sgi.com>; Mon, 20 Dec 2010 18:52:13 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0DCAA1CE2416
-	for <xfs@oss.sgi.com>; Mon, 20 Dec 2010 16:56:44 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
-	[150.101.137.97]) by cuda.sgi.com with ESMTP id
-	Nn3LoGdmkh3r0qrj for <xfs@oss.sgi.com>;
-	Mon, 20 Dec 2010 16:56:44 -0800 (PST)
-Received: from dastard (unverified [121.44.88.148])
-	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	50641490-1927428
-	for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 11:26:43 +1030 (CDT)
-Received: from chute ([192.168.1.1] helo=disappointment)
-	by dastard with esmtp (Exim 4.72)
-	(envelope-from <dave@fromorbit.com>) id 1PUqWw-0000iN-En
-	for xfs@oss.sgi.com; Tue, 21 Dec 2010 11:56:42 +1100
-Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1PUqWn-0003F4-FV
-	for xfs@oss.sgi.com; Tue, 21 Dec 2010 11:56:33 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3F2991CE2402
+	for <xfs@oss.sgi.com>; Mon, 20 Dec 2010 16:54:08 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
+	[150.101.137.104]) by cuda.sgi.com with ESMTP id
+	l9LoxzYTdevWMr3O for <xfs@oss.sgi.com>;
+	Mon, 20 Dec 2010 16:54:08 -0800 (PST)
+Date: Tue, 21 Dec 2010 11:54:05 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfs: use KM_NOFS for allocations during attribute list
-	operations
-Date: Tue, 21 Dec 2010 11:56:33 +1100
-Message-Id: <1292892993-12424-1-git-send-email-david@fromorbit.com>
+Subject: Re: xfs_efi_item slab leak
+Message-ID: <20101221005405.GN5193@dastard>
+References: <AANLkTi=LrU2CsC-VZmJ5M9U7eJpjqfAv8UgaEYv=Sg01@mail.gmail.com>
+	<20101218000245.GG5193@dastard>
+	<20101220113139.GA10324@infradead.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20101220113139.GA10324@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,52 +27,34 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Nick Piggin <npiggin@gmail.com>, xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+On Mon, Dec 20, 2010 at 06:31:39AM -0500, Christoph Hellwig wrote:
+> On Sat, Dec 18, 2010 at 11:02:45AM +1100, Dave Chinner wrote:
+> > Ok, after unmounting everything I can see two items in remaining in
+> > the xfs_efi_item cache after an xfstests run. ??t's probably to do
+> > with a filesystem shutdown not cleaning them up correctly. I'll put
+> > it on my list of stuff to track down.
+> 
+> Does it still happen with your working tree?  The incorrect handling
+> of IOP_UNPING with remove == 1 looks like it could cause something
+> similar.
 
-When listing attributes, we are doiing memory allocations under the
-inode ilock using only KM_SLEEP. This allows memory allocation to
-recurse back into the filesystem and do writeback, which may the
-ilock we already hold on the current inode. THis will deadlock.
-Hence use KM_NOFS for such allocations outside of transaction
-context to ensure that reclaim recursion does not occur.
+I haven't checked the current patch set - just on the kernel that I
+was currently running - I'll do more analysis later this afternoon.
+I agree that the IOP_UNPIN() handling is a likely culprit, though.
 
-Reported-by: Nick Piggin <npiggin@gmail.com>
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_attr_leaf.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+Cheers,
 
-diff --git a/fs/xfs/xfs_attr_leaf.c b/fs/xfs/xfs_attr_leaf.c
-index a6cff8e..71e90dc2 100644
---- a/fs/xfs/xfs_attr_leaf.c
-+++ b/fs/xfs/xfs_attr_leaf.c
-@@ -637,7 +637,7 @@ xfs_attr_shortform_list(xfs_attr_list_context_t *context)
- 	 * It didn't all fit, so we have to sort everything on hashval.
- 	 */
- 	sbsize = sf->hdr.count * sizeof(*sbuf);
--	sbp = sbuf = kmem_alloc(sbsize, KM_SLEEP);
-+	sbp = sbuf = kmem_alloc(sbsize, KM_SLEEP | KM_NOFS);
- 
- 	/*
- 	 * Scan the attribute list for the rest of the entries, storing
-@@ -2386,7 +2386,7 @@ xfs_attr_leaf_list_int(xfs_dabuf_t *bp, xfs_attr_list_context_t *context)
- 				args.dp = context->dp;
- 				args.whichfork = XFS_ATTR_FORK;
- 				args.valuelen = valuelen;
--				args.value = kmem_alloc(valuelen, KM_SLEEP);
-+				args.value = kmem_alloc(valuelen, KM_SLEEP | KM_NOFS);
- 				args.rmtblkno = be32_to_cpu(name_rmt->valueblk);
- 				args.rmtblkcnt = XFS_B_TO_FSB(args.dp->i_mount, valuelen);
- 				retval = xfs_attr_rmtval_get(&args);
+Dave.
 -- 
-1.7.2.3
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
