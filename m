@@ -1,29 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBL7SgUQ244998 for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 01:28:43 -0600
+	oBL7SIEw244757 for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 01:28:18 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E1CB71470330
-	for <xfs@oss.sgi.com>; Mon, 20 Dec 2010 23:30:38 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail20.adl6.internode.on.net
-	[150.101.137.105]) by cuda.sgi.com with ESMTP id
-	TqxVfw06OEexU1sk for <xfs@oss.sgi.com>;
-	Mon, 20 Dec 2010 23:30:38 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A81BE147031F
+	for <xfs@oss.sgi.com>; Mon, 20 Dec 2010 23:30:14 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
+	[150.101.137.99]) by cuda.sgi.com with ESMTP id
+	WOarUWKLzfJzmz9Q for <xfs@oss.sgi.com>;
+	Mon, 20 Dec 2010 23:30:14 -0800 (PST)
 Received: from dastard (unverified [121.44.88.148])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	5388626-1927428
-	for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 18:00:37 +1030 (CDT)
+	51088109-1927428
+	for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 18:00:12 +1030 (CDT)
 Received: from chute ([192.168.1.1] helo=disappointment)
 	by dastard with esmtp (Exim 4.72)
-	(envelope-from <dave@fromorbit.com>) id 1PUwfx-0001EH-TG
-	for xfs@oss.sgi.com; Tue, 21 Dec 2010 18:30:25 +1100
+	(envelope-from <dave@fromorbit.com>) id 1PUwfd-0001DK-2z
+	for xfs@oss.sgi.com; Tue, 21 Dec 2010 18:30:05 +1100
 Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1PUwfm-0006aA-Hq
-	for xfs@oss.sgi.com; Tue, 21 Dec 2010 18:30:14 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1PUwfR-0006ZR-O3
+	for xfs@oss.sgi.com; Tue, 21 Dec 2010 18:29:53 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 30/34] xfs: convert l_tail_lsn to an atomic variable.
-Date: Tue, 21 Dec 2010 18:29:26 +1100
-Message-Id: <1292916570-25015-31-git-send-email-david@fromorbit.com>
+Subject: [PATCH 17/34] xfs: bulk AIL insertion during transaction commit
+Date: Tue, 21 Dec 2010 18:29:13 +1100
+Message-Id: <1292916570-25015-18-git-send-email-david@fromorbit.com>
 In-Reply-To: <1292916570-25015-1-git-send-email-david@fromorbit.com>
 References: <1292916570-25015-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -43,291 +43,337 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-log->l_tail_lsn is currently protected by the log grant lock. The
-lock is only needed for serialising readers against writers, so we
-don't really need the lock if we make the l_tail_lsn variable an
-atomic. Converting the l_tail_lsn variable to an atomic64_t means we
-can start to peel back the grant lock from various operations.
+When inserting items into the AIL from the transaction committed
+callbacks, we take the AIL lock for every single item that is to be
+inserted. For a CIL checkpoint commit, this can be tens of thousands
+of individual inserts, yet almost all of the items will be inserted
+at the same point in the AIL because they have the same index.
 
-Also, provide functions to safely crack an atomic LSN variable into
-it's component pieces and to recombined the components into an
-atomic variable. Use them where appropriate.
+To reduce the overhead and contention on the AIL lock for such
+operations, introduce a "bulk insert" operation which allows a list
+of log items with the same LSN to be inserted in a single operation
+via a list splice. To do this, we need to pre-sort the log items
+being committed into a temporary list for insertion.
 
-This also removes the need for explicitly holding a spinlock to read
-the l_tail_lsn on 32 bit platforms.
+The complexity is that not every log item will end up with the same
+LSN, and not every item is actually inserted into the AIL. Items
+that don't match the commit LSN will be inserted and unpinned as per
+the current one-at-a-time method (relatively rare), while items that
+are not to be inserted will be unpinned and freed immediately. Items
+that are to be inserted at the given commit lsn are placed in a
+temporary array and inserted into the AIL in bulk each time the
+array fills up.
+
+As a result of this, we trade off AIL hold time for a significant
+reduction in traffic. lock_stat output shows that the worst case
+hold time is unchanged, but contention from AIL inserts drops by an
+order of magnitude and the number of lock traversal decreases
+significantly.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/linux-2.6/xfs_trace.h |    2 +-
- fs/xfs/xfs_log.c             |   56 ++++++++++++++++++-----------------------
- fs/xfs/xfs_log_priv.h        |   37 +++++++++++++++++++++++----
- fs/xfs/xfs_log_recover.c     |   14 ++++------
- 4 files changed, 63 insertions(+), 46 deletions(-)
+ fs/xfs/xfs_log_cil.c    |    9 +---
+ fs/xfs/xfs_trans.c      |   79 +++++++++++++++++++++++++++++++++-
+ fs/xfs/xfs_trans_ail.c  |  109 ++++++++++++++++++++++++++++++++++++++++++++++-
+ fs/xfs/xfs_trans_priv.h |   10 +++-
+ 4 files changed, 195 insertions(+), 12 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_trace.h b/fs/xfs/linux-2.6/xfs_trace.h
-index 3ff6b35..b180e1b 100644
---- a/fs/xfs/linux-2.6/xfs_trace.h
-+++ b/fs/xfs/linux-2.6/xfs_trace.h
-@@ -794,7 +794,7 @@ DECLARE_EVENT_CLASS(xfs_loggrant_class,
- 				&__entry->grant_write_bytes);
- 		__entry->curr_cycle = log->l_curr_cycle;
- 		__entry->curr_block = log->l_curr_block;
--		__entry->tail_lsn = log->l_tail_lsn;
-+		__entry->tail_lsn = atomic64_read(&log->l_tail_lsn);
- 	),
- 	TP_printk("dev %d:%d type %s t_ocnt %u t_cnt %u t_curr_res %u "
- 		  "t_unit_res %u t_flags %s reserveq %s "
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 70790eb..d118bf8 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -678,15 +678,11 @@ xfs_log_move_tail(xfs_mount_t	*mp,
- 	if (tail_lsn == 0)
- 		tail_lsn = atomic64_read(&log->l_last_sync_lsn);
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index 23d6ceb..f36f1a2 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -361,15 +361,10 @@ xlog_cil_committed(
+ 	int	abort)
+ {
+ 	struct xfs_cil_ctx	*ctx = args;
+-	struct xfs_log_vec	*lv;
+-	int			abortflag = abort ? XFS_LI_ABORTED : 0;
+ 	struct xfs_busy_extent	*busyp, *n;
  
--	spin_lock(&log->l_grant_lock);
--
--	/* Also an invalid lsn.  1 implies that we aren't passing in a valid
--	 * tail_lsn.
--	 */
--	if (tail_lsn != 1) {
--		log->l_tail_lsn = tail_lsn;
+-	/* unpin all the log items */
+-	for (lv = ctx->lv_chain; lv; lv = lv->lv_next ) {
+-		xfs_trans_item_committed(lv->lv_item, ctx->start_lsn,
+-							abortflag);
 -	}
-+	/* tail_lsn == 1 implies that we weren't passed a valid value.  */
-+	if (tail_lsn != 1)
-+		atomic64_set(&log->l_tail_lsn, tail_lsn);
++	xfs_trans_committed_bulk(ctx->cil->xc_log->l_ailp, ctx->lv_chain,
++					ctx->start_lsn, abort);
  
-+	spin_lock(&log->l_grant_lock);
- 	if (!list_empty(&log->l_writeq)) {
- #ifdef DEBUG
- 		if (log->l_flags & XLOG_ACTIVE_RECOVERY)
-@@ -789,21 +785,19 @@ xfs_log_need_covered(xfs_mount_t *mp)
-  * We may be holding the log iclog lock upon entering this routine.
+ 	list_for_each_entry_safe(busyp, n, &ctx->busy_extents, list)
+ 		xfs_alloc_busy_clear(ctx->cil->xc_log->l_mp, busyp);
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index 8139a2e..7bb1439 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -1347,7 +1347,7 @@ xfs_trans_fill_vecs(
+  * they could be immediately flushed and we'd have to race with the flusher
+  * trying to pull the item from the AIL as we add it.
   */
- xfs_lsn_t
--xlog_assign_tail_lsn(xfs_mount_t *mp)
-+xlog_assign_tail_lsn(
-+	struct xfs_mount	*mp)
- {
--	xfs_lsn_t tail_lsn;
--	xlog_t	  *log = mp->m_log;
-+	xfs_lsn_t		tail_lsn;
-+	struct log		*log = mp->m_log;
- 
- 	tail_lsn = xfs_trans_ail_tail(mp->m_ail);
--	spin_lock(&log->l_grant_lock);
- 	if (!tail_lsn)
- 		tail_lsn = atomic64_read(&log->l_last_sync_lsn);
--	log->l_tail_lsn = tail_lsn;
--	spin_unlock(&log->l_grant_lock);
- 
-+	atomic64_set(&log->l_tail_lsn, tail_lsn);
- 	return tail_lsn;
--}	/* xlog_assign_tail_lsn */
--
-+}
- 
- /*
-  * Return the space in the log between the tail and the head.  The head
-@@ -831,8 +825,8 @@ xlog_space_left(
- 	int		head_bytes;
- 
- 	xlog_crack_grant_head(head, &head_cycle, &head_bytes);
--	tail_bytes = BBTOB(BLOCK_LSN(log->l_tail_lsn));
--	tail_cycle = CYCLE_LSN(log->l_tail_lsn);
-+	xlog_crack_atomic_lsn(&log->l_tail_lsn, &tail_cycle, &tail_bytes);
-+	tail_bytes = BBTOB(tail_bytes);
- 	if (tail_cycle == head_cycle && head_bytes >= tail_bytes)
- 		free_bytes = log->l_logsize - (head_bytes - tail_bytes);
- 	else if (tail_cycle + 1 < head_cycle)
-@@ -1009,8 +1003,8 @@ xlog_alloc_log(xfs_mount_t	*mp,
- 
- 	log->l_prev_block  = -1;
- 	/* log->l_tail_lsn = 0x100000000LL; cycle = 1; current block = 0 */
--	log->l_tail_lsn	   = xlog_assign_lsn(1, 0);
--	atomic64_set(&log->l_last_sync_lsn, xlog_assign_lsn(1, 0));
-+	xlog_assign_atomic_lsn(&log->l_tail_lsn, 1, 0);
-+	xlog_assign_atomic_lsn(&log->l_last_sync_lsn, 1, 0);
- 	log->l_curr_cycle  = 1;	    /* 0 is bad since this is initial value */
- 	xlog_assign_grant_head(&log->l_grant_reserve_head, 1, 0);
- 	xlog_assign_grant_head(&log->l_grant_write_head, 1, 0);
-@@ -1189,7 +1183,6 @@ xlog_grant_push_ail(
- {
- 	xfs_lsn_t	threshold_lsn = 0;
- 	xfs_lsn_t	last_sync_lsn;
--	xfs_lsn_t	tail_lsn;
- 	int		free_blocks;
- 	int		free_bytes;
- 	int		threshold_block;
-@@ -1198,7 +1191,6 @@ xlog_grant_push_ail(
- 
- 	ASSERT(BTOBB(need_bytes) < log->l_logBBsize);
- 
--	tail_lsn = log->l_tail_lsn;
- 	free_bytes = xlog_space_left(log, &log->l_grant_reserve_head);
- 	free_blocks = BTOBBT(free_bytes);
- 
-@@ -1213,8 +1205,9 @@ xlog_grant_push_ail(
- 	if (free_blocks >= free_threshold)
- 		return;
- 
--	threshold_block = BLOCK_LSN(tail_lsn) + free_threshold;
--	threshold_cycle = CYCLE_LSN(tail_lsn);
-+	xlog_crack_atomic_lsn(&log->l_tail_lsn, &threshold_cycle,
-+						&threshold_block);
-+	threshold_block += free_threshold;
- 	if (threshold_block >= log->l_logBBsize) {
- 		threshold_block -= log->l_logBBsize;
- 		threshold_cycle += 1;
-@@ -2828,11 +2821,11 @@ xlog_state_release_iclog(
- 
- 	if (iclog->ic_state == XLOG_STATE_WANT_SYNC) {
- 		/* update tail before writing to iclog */
--		xlog_assign_tail_lsn(log->l_mp);
-+		xfs_lsn_t tail_lsn = xlog_assign_tail_lsn(log->l_mp);
- 		sync++;
- 		iclog->ic_state = XLOG_STATE_SYNCING;
--		iclog->ic_header.h_tail_lsn = cpu_to_be64(log->l_tail_lsn);
--		xlog_verify_tail_lsn(log, iclog, log->l_tail_lsn);
-+		iclog->ic_header.h_tail_lsn = cpu_to_be64(tail_lsn);
-+		xlog_verify_tail_lsn(log, iclog, tail_lsn);
- 		/* cycle incremented when incrementing curr_block */
- 	}
- 	spin_unlock(&log->l_icloglock);
-@@ -3435,7 +3428,7 @@ STATIC void
- xlog_verify_grant_tail(
- 	struct log	*log)
- {
--	xfs_lsn_t	tail_lsn = log->l_tail_lsn;
-+	int		tail_cycle, tail_blocks;
- 	int		cycle, space;
- 
- 	/*
-@@ -3445,9 +3438,10 @@ xlog_verify_grant_tail(
- 	 * check the byte count.
- 	 */
- 	xlog_crack_grant_head(&log->l_grant_write_head, &cycle, &space);
--	if (CYCLE_LSN(tail_lsn) != cycle) {
--		ASSERT(cycle - 1 == CYCLE_LSN(tail_lsn));
--		ASSERT(space <= BBTOB(BLOCK_LSN(tail_lsn)));
-+	xlog_crack_atomic_lsn(&log->l_tail_lsn, &tail_cycle, &tail_blocks);
-+	if (tail_cycle != cycle) {
-+		ASSERT(cycle - 1 == tail_cycle);
-+		ASSERT(space <= BBTOB(tail_blocks));
- 	}
+-void
++static void
+ xfs_trans_item_committed(
+ 	struct xfs_log_item	*lip,
+ 	xfs_lsn_t		commit_lsn,
+@@ -1422,6 +1422,83 @@ xfs_trans_committed(
+ 	xfs_trans_free(tp);
  }
  
-diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index 958f356..d34af1c 100644
---- a/fs/xfs/xfs_log_priv.h
-+++ b/fs/xfs/xfs_log_priv.h
-@@ -53,7 +53,6 @@ struct xfs_mount;
- 	BTOBB(XLOG_MAX_ICLOGS << (xfs_sb_version_haslogv2(&log->l_mp->m_sb) ? \
- 	 XLOG_MAX_RECORD_BSHIFT : XLOG_BIG_RECORD_BSHIFT))
++static inline void
++xfs_log_item_batch_insert(
++	struct xfs_ail		*ailp,
++	struct xfs_log_item	**log_items,
++	int			nr_items,
++	xfs_lsn_t		commit_lsn)
++{
++	int	i;
++
++	spin_lock(&ailp->xa_lock);
++	/* xfs_trans_ail_update_bulk drops ailp->xa_lock */
++	xfs_trans_ail_update_bulk(ailp, log_items, nr_items, commit_lsn);
++
++	for (i = 0; i < nr_items; i++)
++		IOP_UNPIN(log_items[i], 0);
++}
++
++/*
++ * Bulk operation version of xfs_trans_committed that takes a log vector of
++ * items to insert into the AIL. This uses bulk AIL insertion techniques to
++ * minimise lock traffic.
++ */
++void
++xfs_trans_committed_bulk(
++	struct xfs_ail		*ailp,
++	struct xfs_log_vec	*log_vector,
++	xfs_lsn_t		commit_lsn,
++	int			aborted)
++{
++#define LOG_ITEM_BATCH_SIZE	32
++	struct xfs_log_item	*log_items[LOG_ITEM_BATCH_SIZE];
++	struct xfs_log_vec	*lv;
++	int			i = 0;
++
++	/* unpin all the log items */
++	for (lv = log_vector; lv; lv = lv->lv_next ) {
++		struct xfs_log_item	*lip = lv->lv_item;
++		xfs_lsn_t		item_lsn;
++
++		if (aborted)
++			lip->li_flags |= XFS_LI_ABORTED;
++		item_lsn = IOP_COMMITTED(lip, commit_lsn);
++
++		/* item_lsn of -1 means the item was freed */
++		if (XFS_LSN_CMP(item_lsn, (xfs_lsn_t)-1) == 0)
++			continue;
++
++		if (item_lsn != commit_lsn) {
++
++			/*
++			 * Not a bulk update option due to unusual item_lsn.
++			 * Push into AIL immediately, rechecking the lsn once
++			 * we have the ail lock. Then unpin the item.
++			 */
++			spin_lock(&ailp->xa_lock);
++			if (XFS_LSN_CMP(item_lsn, lip->li_lsn) > 0)
++				xfs_trans_ail_update(ailp, lip, item_lsn);
++			else
++				spin_unlock(&ailp->xa_lock);
++			IOP_UNPIN(lip, 0);
++			continue;
++		}
++
++		/* Item is a candidate for bulk AIL insert.  */
++		log_items[i++] = lv->lv_item;
++		if (i >= LOG_ITEM_BATCH_SIZE) {
++			xfs_log_item_batch_insert(ailp, log_items,
++					LOG_ITEM_BATCH_SIZE, commit_lsn);
++			i = 0;
++		}
++	}
++
++	/* make sure we insert the remainder! */
++	if (i)
++		xfs_log_item_batch_insert(ailp, log_items, i, commit_lsn);
++}
++
+ /*
+  * Called from the trans_commit code when we notice that
+  * the filesystem is in the middle of a forced shutdown.
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index 645928c..fe991a7 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -29,6 +29,7 @@
+ #include "xfs_error.h"
  
--
- static inline xfs_lsn_t xlog_assign_lsn(uint cycle, uint block)
- {
- 	return ((xfs_lsn_t)cycle << 32) | block;
-@@ -505,8 +504,6 @@ typedef struct log {
- 						 * log entries" */
- 	xlog_in_core_t		*l_iclog;       /* head log queue	*/
- 	spinlock_t		l_icloglock;    /* grab to change iclog state */
--	xfs_lsn_t		l_tail_lsn;     /* lsn of 1st LR with unflushed
--						 * buffers */
- 	int			l_curr_cycle;   /* Cycle number of log writes */
- 	int			l_prev_cycle;   /* Cycle number before last
- 						 * block increment */
-@@ -521,12 +518,15 @@ typedef struct log {
- 	int64_t			l_grant_write_head;
- 
- 	/*
--	 * l_last_sync_lsn is an atomic so it can be set and read without
--	 * needing to hold specific locks. To avoid operations contending with
--	 * other hot objects, place it on a separate cacheline.
-+	 * l_last_sync_lsn and l_tail_lsn are atomics so they can be set and
-+	 * read without needing to hold specific locks. To avoid operations
-+	 * contending with other hot objects, place each of them on a separate
-+	 * cacheline.
- 	 */
- 	/* lsn of last LR on disk */
- 	atomic64_t		l_last_sync_lsn ____cacheline_aligned_in_smp;
-+	/* lsn of 1st LR with unflushed * buffers */
-+	atomic64_t		l_tail_lsn ____cacheline_aligned_in_smp;
- 
- 	/* The following field are used for debugging; need to hold icloglock */
- #ifdef DEBUG
-@@ -566,6 +566,31 @@ int	xlog_write(struct log *log, struct xfs_log_vec *log_vector,
- 				xlog_in_core_t **commit_iclog, uint flags);
+ STATIC void xfs_ail_insert(struct xfs_ail *, xfs_log_item_t *);
++STATIC void xfs_ail_splice(struct xfs_ail *, struct list_head *, xfs_lsn_t);
+ STATIC void xfs_ail_delete(struct xfs_ail *, xfs_log_item_t *);
+ STATIC xfs_log_item_t * xfs_ail_min(struct xfs_ail *);
+ STATIC xfs_log_item_t * xfs_ail_next(struct xfs_ail *, xfs_log_item_t *);
+@@ -502,6 +503,79 @@ xfs_trans_ail_update(
+ }	/* xfs_trans_update_ail */
  
  /*
-+ * When we crack an atomic LSN, we sample it first so that the value will not
-+ * change while we are cracking it into the component values. This means we
-+ * will always get consistent component values to work from. This should always
-+ * be used to smaple and crack LSNs taht are stored and updated in atomic
-+ * variables.
++ * xfs_trans_ail_update - bulk AIL insertion operation.
++ *
++ * @xfs_trans_ail_update takes an array of log items that all need to be
++ * positioned at the same LSN in the AIL. If an item is not in the AIL, it will
++ * be added.  Otherwise, it will be repositioned  by removing it and re-adding
++ * it to the AIL. If we move the first item in the AIL, update the log tail to
++ * match the new minimum LSN in the AIL.
++ *
++ * This function takes the AIL lock once to execute the update operations on
++ * all the items in the array, and as such should not be called with the AIL
++ * lock held. As a result, once we have the AIL lock, we need to check each log
++ * item LSN to confirm it needs to be moved forward in the AIL.
++ *
++ * To optimise the insert operation, we delete all the items from the AIL in
++ * the first pass, moving them into a temporary list, then splice the temporary
++ * list into the correct position in the AIL. This avoids needing to do an
++ * insert operation on every item.
++ *
++ * This function must be called with the AIL lock held.  The lock is dropped
++ * before returning.
 + */
-+static inline void
-+xlog_crack_atomic_lsn(atomic64_t *lsn, uint *cycle, uint *block)
++void
++xfs_trans_ail_update_bulk(
++	struct xfs_ail		*ailp,
++	struct xfs_log_item	**log_items,
++	int			nr_items,
++	xfs_lsn_t		lsn) __releases(ailp->xa_lock)
 +{
-+	xfs_lsn_t val = atomic64_read(lsn);
++	xfs_log_item_t		*mlip;
++	xfs_lsn_t		tail_lsn;
++	int			mlip_changed = 0;
++	int			i;
++	LIST_HEAD(tmp);
 +
-+	*cycle = CYCLE_LSN(val);
-+	*block = BLOCK_LSN(val);
++	mlip = xfs_ail_min(ailp);
++
++	for (i = 0; i < nr_items; i++) {
++		struct xfs_log_item *lip = log_items[i];
++		if (lip->li_flags & XFS_LI_IN_AIL) {
++			/* check if we really need to move the item */
++			if (XFS_LSN_CMP(lsn, lip->li_lsn) <= 0)
++				continue;
++
++			xfs_ail_delete(ailp, lip);
++			if (mlip == lip)
++				mlip_changed = 1;
++		} else {
++			lip->li_flags |= XFS_LI_IN_AIL;
++		}
++		lip->li_lsn = lsn;
++		list_add(&lip->li_ail, &tmp);
++	}
++
++	xfs_ail_splice(ailp, &tmp, lsn);
++
++	if (!mlip_changed) {
++		spin_unlock(&ailp->xa_lock);
++		return;
++	}
++
++	/*
++	 * It is not safe to access mlip after the AIL lock is dropped, so we
++	 * must get a copy of li_lsn before we do so.  This is especially
++	 * important on 32-bit platforms where accessing and updating 64-bit
++	 * values like li_lsn is not atomic.
++	 */
++	mlip = xfs_ail_min(ailp);
++	tail_lsn = mlip->li_lsn;
++	spin_unlock(&ailp->xa_lock);
++	xfs_log_move_tail(ailp->xa_mount, tail_lsn);
 +}
 +
 +/*
-+ * Calculate and assign a value to an atomic LSN variable from component pieces.
-+ */
-+static inline void
-+xlog_assign_atomic_lsn(atomic64_t *lsn, uint cycle, uint block)
-+{
-+	atomic64_set(lsn, xlog_assign_lsn(cycle, block));
-+}
-+
-+/*
-  * When we crack the grrant head, we sample it first so that the value will not
-  * change while we are cracking it into the component values. This means we
-  * will always get consistent component values to work from.
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 18e1e18..204d8e5 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -936,7 +936,7 @@ xlog_find_tail(
- 	log->l_curr_cycle = be32_to_cpu(rhead->h_cycle);
- 	if (found == 2)
- 		log->l_curr_cycle++;
--	log->l_tail_lsn = be64_to_cpu(rhead->h_tail_lsn);
-+	atomic64_set(&log->l_tail_lsn, be64_to_cpu(rhead->h_tail_lsn));
- 	atomic64_set(&log->l_last_sync_lsn, be64_to_cpu(rhead->h_lsn));
- 	xlog_assign_grant_head(&log->l_grant_reserve_head, log->l_curr_cycle,
- 					BBTOB(log->l_curr_block));
-@@ -971,7 +971,7 @@ xlog_find_tail(
+  * Delete the given item from the AIL.  It must already be in
+  * the AIL.
+  *
+@@ -642,8 +716,8 @@ xfs_ail_insert(
+ 			break;
  	}
- 	after_umount_blk = (i + hblks + (int)
- 		BTOBB(be32_to_cpu(rhead->h_len))) % log->l_logBBsize;
--	tail_lsn = log->l_tail_lsn;
-+	tail_lsn = atomic64_read(&log->l_tail_lsn);
- 	if (*head_blk == after_umount_blk &&
- 	    be32_to_cpu(rhead->h_num_logops) == 1) {
- 		umount_data_blk = (i + hblks) % log->l_logBBsize;
-@@ -986,12 +986,10 @@ xlog_find_tail(
- 			 * log records will point recovery to after the
- 			 * current unmount record.
- 			 */
--			log->l_tail_lsn =
--				xlog_assign_lsn(log->l_curr_cycle,
--						after_umount_blk);
--			atomic64_set(&log->l_last_sync_lsn,
--				xlog_assign_lsn(log->l_curr_cycle,
--						after_umount_blk));
-+			xlog_assign_atomic_lsn(&log->l_tail_lsn,
-+					log->l_curr_cycle, after_umount_blk);
-+			xlog_assign_atomic_lsn(&log->l_last_sync_lsn,
-+					log->l_curr_cycle, after_umount_blk);
- 			*tail_blk = after_umount_blk;
  
- 			/*
+-	ASSERT((&next_lip->li_ail == &ailp->xa_ail) ||
+-	       (XFS_LSN_CMP(next_lip->li_lsn, lip->li_lsn) <= 0));
++	ASSERT(&next_lip->li_ail == &ailp->xa_ail ||
++	       XFS_LSN_CMP(next_lip->li_lsn, lip->li_lsn) <= 0);
+ 
+ 	list_add(&lip->li_ail, &next_lip->li_ail);
+ 
+@@ -652,6 +726,37 @@ xfs_ail_insert(
+ }
+ 
+ /*
++ * splice the log item list into the AIL at the given LSN.
++ */
++STATIC void
++xfs_ail_splice(
++	struct xfs_ail	*ailp,
++	struct list_head *list,
++	xfs_lsn_t	lsn)
++{
++	xfs_log_item_t	*next_lip;
++
++	/*
++	 * If the list is empty, just insert the item.
++	 */
++	if (list_empty(&ailp->xa_ail)) {
++		list_splice(list, &ailp->xa_ail);
++		return;
++	}
++
++	list_for_each_entry_reverse(next_lip, &ailp->xa_ail, li_ail) {
++		if (XFS_LSN_CMP(next_lip->li_lsn, lsn) <= 0)
++			break;
++	}
++
++	ASSERT((&next_lip->li_ail == &ailp->xa_ail) ||
++	       (XFS_LSN_CMP(next_lip->li_lsn, lsn) <= 0));
++
++	list_splice_init(list, &next_lip->li_ail);
++	return;
++}
++
++/*
+  * Delete the given item from the AIL.  Return a pointer to the item.
+  */
+ STATIC void
+diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
+index 62da86c..e039729 100644
+--- a/fs/xfs/xfs_trans_priv.h
++++ b/fs/xfs/xfs_trans_priv.h
+@@ -22,15 +22,17 @@ struct xfs_log_item;
+ struct xfs_log_item_desc;
+ struct xfs_mount;
+ struct xfs_trans;
++struct xfs_ail;
++struct xfs_log_vec;
+ 
+ void	xfs_trans_add_item(struct xfs_trans *, struct xfs_log_item *);
+ void	xfs_trans_del_item(struct xfs_log_item *);
+ void	xfs_trans_free_items(struct xfs_trans *tp, xfs_lsn_t commit_lsn,
+ 				int flags);
+-void	xfs_trans_item_committed(struct xfs_log_item *lip,
+-				xfs_lsn_t commit_lsn, int aborted);
+ void	xfs_trans_unreserve_and_mod_sb(struct xfs_trans *tp);
+ 
++void	xfs_trans_committed_bulk(struct xfs_ail *ailp, struct xfs_log_vec *lv,
++				xfs_lsn_t commit_lsn, int aborted);
+ /*
+  * AIL traversal cursor.
+  *
+@@ -76,6 +78,10 @@ struct xfs_ail {
+ void			xfs_trans_ail_update(struct xfs_ail *ailp,
+ 					struct xfs_log_item *lip, xfs_lsn_t lsn)
+ 					__releases(ailp->xa_lock);
++void			 xfs_trans_ail_update_bulk(struct xfs_ail *ailp,
++					struct xfs_log_item **log_items,
++					int nr_items, xfs_lsn_t lsn)
++					__releases(ailp->xa_lock);
+ void			xfs_trans_ail_delete(struct xfs_ail *ailp,
+ 					struct xfs_log_item *lip)
+ 					__releases(ailp->xa_lock);
 -- 
 1.7.2.3
 
