@@ -1,29 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBL7SIEw244757 for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 01:28:18 -0600
+	oBL7SCUG244695 for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 01:28:12 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A81BE147031F
-	for <xfs@oss.sgi.com>; Mon, 20 Dec 2010 23:30:14 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
-	[150.101.137.99]) by cuda.sgi.com with ESMTP id
-	WOarUWKLzfJzmz9Q for <xfs@oss.sgi.com>;
-	Mon, 20 Dec 2010 23:30:14 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 94DF2212024
+	for <xfs@oss.sgi.com>; Mon, 20 Dec 2010 23:30:08 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
+	[150.101.137.104]) by cuda.sgi.com with ESMTP id
+	nBqU59KB1bMQQxgI for <xfs@oss.sgi.com>;
+	Mon, 20 Dec 2010 23:30:08 -0800 (PST)
 Received: from dastard (unverified [121.44.88.148])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	51088109-1927428
-	for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 18:00:12 +1030 (CDT)
+	50071179-1927428
+	for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 18:00:06 +1030 (CDT)
 Received: from chute ([192.168.1.1] helo=disappointment)
 	by dastard with esmtp (Exim 4.72)
-	(envelope-from <dave@fromorbit.com>) id 1PUwfd-0001DK-2z
-	for xfs@oss.sgi.com; Tue, 21 Dec 2010 18:30:05 +1100
+	(envelope-from <dave@fromorbit.com>) id 1PUwfc-0001D5-Pa
+	for xfs@oss.sgi.com; Tue, 21 Dec 2010 18:30:04 +1100
 Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1PUwfR-0006ZR-O3
-	for xfs@oss.sgi.com; Tue, 21 Dec 2010 18:29:53 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1PUwfH-0006ZF-Ef
+	for xfs@oss.sgi.com; Tue, 21 Dec 2010 18:29:43 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 17/34] xfs: bulk AIL insertion during transaction commit
-Date: Tue, 21 Dec 2010 18:29:13 +1100
-Message-Id: <1292916570-25015-18-git-send-email-david@fromorbit.com>
+Subject: [PATCH 12/34] xfs: add a lru to the XFS buffer cache
+Date: Tue, 21 Dec 2010 18:29:08 +1100
+Message-Id: <1292916570-25015-13-git-send-email-david@fromorbit.com>
 In-Reply-To: <1292916570-25015-1-git-send-email-david@fromorbit.com>
 References: <1292916570-25015-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -43,337 +43,319 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-When inserting items into the AIL from the transaction committed
-callbacks, we take the AIL lock for every single item that is to be
-inserted. For a CIL checkpoint commit, this can be tens of thousands
-of individual inserts, yet almost all of the items will be inserted
-at the same point in the AIL because they have the same index.
+Introduce a per-buftarg LRU for memory reclaim to operate on. This
+is the last piece we need to put in place so that we can fully
+control the buffer lifecycle. This allows XFS to be responsibile for
+maintaining the working set of buffers under memory pressure instead
+of relying on the VM reclaim not to take pages we need out from
+underneath us.
 
-To reduce the overhead and contention on the AIL lock for such
-operations, introduce a "bulk insert" operation which allows a list
-of log items with the same LSN to be inserted in a single operation
-via a list splice. To do this, we need to pre-sort the log items
-being committed into a temporary list for insertion.
+The implementation introduces a b_lru_ref counter into the buffer.
+This is currently set to 1 whenever the buffer is referenced and so is used to
+determine if the buffer should be added to the LRU or not when freed.
+Effectively it allows lazy LRU initialisation of the buffer so we do not need
+to touch the LRU list and locks in xfs_buf_find().
 
-The complexity is that not every log item will end up with the same
-LSN, and not every item is actually inserted into the AIL. Items
-that don't match the commit LSN will be inserted and unpinned as per
-the current one-at-a-time method (relatively rare), while items that
-are not to be inserted will be unpinned and freed immediately. Items
-that are to be inserted at the given commit lsn are placed in a
-temporary array and inserted into the AIL in bulk each time the
-array fills up.
+Instead, when the buffer is being released and we drop the last
+reference to it, we check the b_lru_ref count and if it is none zero
+we re-add the buffer reference and add the inode to the LRU. The
+b_lru_ref counter is decremented by the shrinker, and whenever the
+shrinker comes across a buffer with a zero b_lru_ref counter, if
+released the LRU reference on the buffer. In the absence of a lookup
+race, this will result in the buffer being freed.
 
-As a result of this, we trade off AIL hold time for a significant
-reduction in traffic. lock_stat output shows that the worst case
-hold time is unchanged, but contention from AIL inserts drops by an
-order of magnitude and the number of lock traversal decreases
-significantly.
+This counting mechanism is used instead of a reference flag so that
+it is simple to re-introduce buffer-type specific reclaim reference
+counts to prioritise reclaim more effectively. We still have all
+those hooks in the XFS code, so this will provide the infrastructure
+to re-implement that functionality.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_log_cil.c    |    9 +---
- fs/xfs/xfs_trans.c      |   79 +++++++++++++++++++++++++++++++++-
- fs/xfs/xfs_trans_ail.c  |  109 ++++++++++++++++++++++++++++++++++++++++++++++-
- fs/xfs/xfs_trans_priv.h |   10 +++-
- 4 files changed, 195 insertions(+), 12 deletions(-)
+ fs/xfs/linux-2.6/xfs_buf.c |  166 ++++++++++++++++++++++++++++++++++++++------
+ fs/xfs/linux-2.6/xfs_buf.h |    8 ++-
+ 2 files changed, 151 insertions(+), 23 deletions(-)
 
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index 23d6ceb..f36f1a2 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -361,15 +361,10 @@ xlog_cil_committed(
- 	int	abort)
- {
- 	struct xfs_cil_ctx	*ctx = args;
--	struct xfs_log_vec	*lv;
--	int			abortflag = abort ? XFS_LI_ABORTED : 0;
- 	struct xfs_busy_extent	*busyp, *n;
+diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
+index 0a00d7a..92f1f2a 100644
+--- a/fs/xfs/linux-2.6/xfs_buf.c
++++ b/fs/xfs/linux-2.6/xfs_buf.c
+@@ -163,8 +163,79 @@ test_page_region(
+ }
  
--	/* unpin all the log items */
--	for (lv = ctx->lv_chain; lv; lv = lv->lv_next ) {
--		xfs_trans_item_committed(lv->lv_item, ctx->start_lsn,
--							abortflag);
--	}
-+	xfs_trans_committed_bulk(ctx->cil->xc_log->l_ailp, ctx->lv_chain,
-+					ctx->start_lsn, abort);
- 
- 	list_for_each_entry_safe(busyp, n, &ctx->busy_extents, list)
- 		xfs_alloc_busy_clear(ctx->cil->xc_log->l_mp, busyp);
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index 8139a2e..7bb1439 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -1347,7 +1347,7 @@ xfs_trans_fill_vecs(
-  * they could be immediately flushed and we'd have to race with the flusher
-  * trying to pull the item from the AIL as we add it.
+ /*
+- *	Internal xfs_buf_t object manipulation
++ * xfs_buf_lru_add - add a buffer to the LRU.
++ *
++ * The LRU takes a new reference to the buffer so that it will only be freed
++ * once the shrinker takes the buffer off the LRU.
   */
--void
-+static void
- xfs_trans_item_committed(
- 	struct xfs_log_item	*lip,
- 	xfs_lsn_t		commit_lsn,
-@@ -1422,6 +1422,83 @@ xfs_trans_committed(
- 	xfs_trans_free(tp);
- }
- 
-+static inline void
-+xfs_log_item_batch_insert(
-+	struct xfs_ail		*ailp,
-+	struct xfs_log_item	**log_items,
-+	int			nr_items,
-+	xfs_lsn_t		commit_lsn)
++STATIC void
++xfs_buf_lru_add(
++	struct xfs_buf	*bp)
 +{
-+	int	i;
++	struct xfs_buftarg *btp = bp->b_target;
 +
-+	spin_lock(&ailp->xa_lock);
-+	/* xfs_trans_ail_update_bulk drops ailp->xa_lock */
-+	xfs_trans_ail_update_bulk(ailp, log_items, nr_items, commit_lsn);
-+
-+	for (i = 0; i < nr_items; i++)
-+		IOP_UNPIN(log_items[i], 0);
++	spin_lock(&btp->bt_lru_lock);
++	if (list_empty(&bp->b_lru)) {
++		atomic_inc(&bp->b_hold);
++		list_add_tail(&bp->b_lru, &btp->bt_lru);
++		btp->bt_lru_nr++;
++	}
++	spin_unlock(&btp->bt_lru_lock);
 +}
 +
 +/*
-+ * Bulk operation version of xfs_trans_committed that takes a log vector of
-+ * items to insert into the AIL. This uses bulk AIL insertion techniques to
-+ * minimise lock traffic.
-+ */
-+void
-+xfs_trans_committed_bulk(
-+	struct xfs_ail		*ailp,
-+	struct xfs_log_vec	*log_vector,
-+	xfs_lsn_t		commit_lsn,
-+	int			aborted)
-+{
-+#define LOG_ITEM_BATCH_SIZE	32
-+	struct xfs_log_item	*log_items[LOG_ITEM_BATCH_SIZE];
-+	struct xfs_log_vec	*lv;
-+	int			i = 0;
-+
-+	/* unpin all the log items */
-+	for (lv = log_vector; lv; lv = lv->lv_next ) {
-+		struct xfs_log_item	*lip = lv->lv_item;
-+		xfs_lsn_t		item_lsn;
-+
-+		if (aborted)
-+			lip->li_flags |= XFS_LI_ABORTED;
-+		item_lsn = IOP_COMMITTED(lip, commit_lsn);
-+
-+		/* item_lsn of -1 means the item was freed */
-+		if (XFS_LSN_CMP(item_lsn, (xfs_lsn_t)-1) == 0)
-+			continue;
-+
-+		if (item_lsn != commit_lsn) {
-+
-+			/*
-+			 * Not a bulk update option due to unusual item_lsn.
-+			 * Push into AIL immediately, rechecking the lsn once
-+			 * we have the ail lock. Then unpin the item.
-+			 */
-+			spin_lock(&ailp->xa_lock);
-+			if (XFS_LSN_CMP(item_lsn, lip->li_lsn) > 0)
-+				xfs_trans_ail_update(ailp, lip, item_lsn);
-+			else
-+				spin_unlock(&ailp->xa_lock);
-+			IOP_UNPIN(lip, 0);
-+			continue;
-+		}
-+
-+		/* Item is a candidate for bulk AIL insert.  */
-+		log_items[i++] = lv->lv_item;
-+		if (i >= LOG_ITEM_BATCH_SIZE) {
-+			xfs_log_item_batch_insert(ailp, log_items,
-+					LOG_ITEM_BATCH_SIZE, commit_lsn);
-+			i = 0;
-+		}
-+	}
-+
-+	/* make sure we insert the remainder! */
-+	if (i)
-+		xfs_log_item_batch_insert(ailp, log_items, i, commit_lsn);
-+}
-+
- /*
-  * Called from the trans_commit code when we notice that
-  * the filesystem is in the middle of a forced shutdown.
-diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-index 645928c..fe991a7 100644
---- a/fs/xfs/xfs_trans_ail.c
-+++ b/fs/xfs/xfs_trans_ail.c
-@@ -29,6 +29,7 @@
- #include "xfs_error.h"
- 
- STATIC void xfs_ail_insert(struct xfs_ail *, xfs_log_item_t *);
-+STATIC void xfs_ail_splice(struct xfs_ail *, struct list_head *, xfs_lsn_t);
- STATIC void xfs_ail_delete(struct xfs_ail *, xfs_log_item_t *);
- STATIC xfs_log_item_t * xfs_ail_min(struct xfs_ail *);
- STATIC xfs_log_item_t * xfs_ail_next(struct xfs_ail *, xfs_log_item_t *);
-@@ -502,6 +503,79 @@ xfs_trans_ail_update(
- }	/* xfs_trans_update_ail */
- 
- /*
-+ * xfs_trans_ail_update - bulk AIL insertion operation.
++ * xfs_buf_lru_del - remove a buffer from the LRU
 + *
-+ * @xfs_trans_ail_update takes an array of log items that all need to be
-+ * positioned at the same LSN in the AIL. If an item is not in the AIL, it will
-+ * be added.  Otherwise, it will be repositioned  by removing it and re-adding
-+ * it to the AIL. If we move the first item in the AIL, update the log tail to
-+ * match the new minimum LSN in the AIL.
-+ *
-+ * This function takes the AIL lock once to execute the update operations on
-+ * all the items in the array, and as such should not be called with the AIL
-+ * lock held. As a result, once we have the AIL lock, we need to check each log
-+ * item LSN to confirm it needs to be moved forward in the AIL.
-+ *
-+ * To optimise the insert operation, we delete all the items from the AIL in
-+ * the first pass, moving them into a temporary list, then splice the temporary
-+ * list into the correct position in the AIL. This avoids needing to do an
-+ * insert operation on every item.
-+ *
-+ * This function must be called with the AIL lock held.  The lock is dropped
-+ * before returning.
-+ */
-+void
-+xfs_trans_ail_update_bulk(
-+	struct xfs_ail		*ailp,
-+	struct xfs_log_item	**log_items,
-+	int			nr_items,
-+	xfs_lsn_t		lsn) __releases(ailp->xa_lock)
-+{
-+	xfs_log_item_t		*mlip;
-+	xfs_lsn_t		tail_lsn;
-+	int			mlip_changed = 0;
-+	int			i;
-+	LIST_HEAD(tmp);
-+
-+	mlip = xfs_ail_min(ailp);
-+
-+	for (i = 0; i < nr_items; i++) {
-+		struct xfs_log_item *lip = log_items[i];
-+		if (lip->li_flags & XFS_LI_IN_AIL) {
-+			/* check if we really need to move the item */
-+			if (XFS_LSN_CMP(lsn, lip->li_lsn) <= 0)
-+				continue;
-+
-+			xfs_ail_delete(ailp, lip);
-+			if (mlip == lip)
-+				mlip_changed = 1;
-+		} else {
-+			lip->li_flags |= XFS_LI_IN_AIL;
-+		}
-+		lip->li_lsn = lsn;
-+		list_add(&lip->li_ail, &tmp);
-+	}
-+
-+	xfs_ail_splice(ailp, &tmp, lsn);
-+
-+	if (!mlip_changed) {
-+		spin_unlock(&ailp->xa_lock);
-+		return;
-+	}
-+
-+	/*
-+	 * It is not safe to access mlip after the AIL lock is dropped, so we
-+	 * must get a copy of li_lsn before we do so.  This is especially
-+	 * important on 32-bit platforms where accessing and updating 64-bit
-+	 * values like li_lsn is not atomic.
-+	 */
-+	mlip = xfs_ail_min(ailp);
-+	tail_lsn = mlip->li_lsn;
-+	spin_unlock(&ailp->xa_lock);
-+	xfs_log_move_tail(ailp->xa_mount, tail_lsn);
-+}
-+
-+/*
-  * Delete the given item from the AIL.  It must already be in
-  * the AIL.
-  *
-@@ -642,8 +716,8 @@ xfs_ail_insert(
- 			break;
- 	}
- 
--	ASSERT((&next_lip->li_ail == &ailp->xa_ail) ||
--	       (XFS_LSN_CMP(next_lip->li_lsn, lip->li_lsn) <= 0));
-+	ASSERT(&next_lip->li_ail == &ailp->xa_ail ||
-+	       XFS_LSN_CMP(next_lip->li_lsn, lip->li_lsn) <= 0);
- 
- 	list_add(&lip->li_ail, &next_lip->li_ail);
- 
-@@ -652,6 +726,37 @@ xfs_ail_insert(
- }
- 
- /*
-+ * splice the log item list into the AIL at the given LSN.
++ * The unlocked check is safe here because it only occurs when there are not
++ * b_lru_ref counts left on the inode under the pag->pag_buf_lock. it is there
++ * to optimise the shrinker removing the buffer from the LRU and calling
++ * xfs_buf_free(). i.e. it removes an unneccessary round trip on the
++ * bt_lru_lock.
 + */
 +STATIC void
-+xfs_ail_splice(
-+	struct xfs_ail	*ailp,
-+	struct list_head *list,
-+	xfs_lsn_t	lsn)
++xfs_buf_lru_del(
++	struct xfs_buf	*bp)
 +{
-+	xfs_log_item_t	*next_lip;
++	struct xfs_buftarg *btp = bp->b_target;
 +
-+	/*
-+	 * If the list is empty, just insert the item.
-+	 */
-+	if (list_empty(&ailp->xa_ail)) {
-+		list_splice(list, &ailp->xa_ail);
++	if (list_empty(&bp->b_lru))
 +		return;
++
++	spin_lock(&btp->bt_lru_lock);
++	if (!list_empty(&bp->b_lru)) {
++		list_del_init(&bp->b_lru);
++		btp->bt_lru_nr--;
 +	}
-+
-+	list_for_each_entry_reverse(next_lip, &ailp->xa_ail, li_ail) {
-+		if (XFS_LSN_CMP(next_lip->li_lsn, lsn) <= 0)
-+			break;
-+	}
-+
-+	ASSERT((&next_lip->li_ail == &ailp->xa_ail) ||
-+	       (XFS_LSN_CMP(next_lip->li_lsn, lsn) <= 0));
-+
-+	list_splice_init(list, &next_lip->li_ail);
-+	return;
++	spin_unlock(&btp->bt_lru_lock);
 +}
 +
 +/*
-  * Delete the given item from the AIL.  Return a pointer to the item.
-  */
++ * When we mark a buffer stale, we remove the buffer from the LRU and clear the
++ * b_lru_ref count so that the buffer is freed immediately when the buffer
++ * reference count falls to zero. If the buffer is already on the LRU, we need
++ * to remove the reference that LRU holds on the buffer.
++ *
++ * This prevents build-up of stale buffers on the LRU.
++ */
++void
++xfs_buf_stale(
++	struct xfs_buf	*bp)
++{
++	bp->b_flags |= XBF_STALE;
++	atomic_set(&(bp)->b_lru_ref, 0);
++	if (!list_empty(&bp->b_lru)) {
++		struct xfs_buftarg *btp = bp->b_target;
++
++		spin_lock(&btp->bt_lru_lock);
++		if (!list_empty(&bp->b_lru)) {
++			list_del_init(&bp->b_lru);
++			btp->bt_lru_nr--;
++			atomic_dec(&bp->b_hold);
++		}
++		spin_unlock(&btp->bt_lru_lock);
++	}
++	ASSERT(atomic_read(&bp->b_hold) >= 1);
++}
+ 
  STATIC void
-diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
-index 62da86c..e039729 100644
---- a/fs/xfs/xfs_trans_priv.h
-+++ b/fs/xfs/xfs_trans_priv.h
-@@ -22,15 +22,17 @@ struct xfs_log_item;
- struct xfs_log_item_desc;
- struct xfs_mount;
- struct xfs_trans;
-+struct xfs_ail;
-+struct xfs_log_vec;
+ _xfs_buf_initialize(
+@@ -181,7 +252,9 @@ _xfs_buf_initialize(
  
- void	xfs_trans_add_item(struct xfs_trans *, struct xfs_log_item *);
- void	xfs_trans_del_item(struct xfs_log_item *);
- void	xfs_trans_free_items(struct xfs_trans *tp, xfs_lsn_t commit_lsn,
- 				int flags);
--void	xfs_trans_item_committed(struct xfs_log_item *lip,
--				xfs_lsn_t commit_lsn, int aborted);
- void	xfs_trans_unreserve_and_mod_sb(struct xfs_trans *tp);
+ 	memset(bp, 0, sizeof(xfs_buf_t));
+ 	atomic_set(&bp->b_hold, 1);
++	atomic_set(&bp->b_lru_ref, 1);
+ 	init_completion(&bp->b_iowait);
++	INIT_LIST_HEAD(&bp->b_lru);
+ 	INIT_LIST_HEAD(&bp->b_list);
+ 	RB_CLEAR_NODE(&bp->b_rbnode);
+ 	sema_init(&bp->b_sema, 0); /* held, no waiters */
+@@ -257,6 +330,8 @@ xfs_buf_free(
+ {
+ 	trace_xfs_buf_free(bp, _RET_IP_);
  
-+void	xfs_trans_committed_bulk(struct xfs_ail *ailp, struct xfs_log_vec *lv,
-+				xfs_lsn_t commit_lsn, int aborted);
++	ASSERT(list_empty(&bp->b_lru));
++
+ 	if (bp->b_flags & (_XBF_PAGE_CACHE|_XBF_PAGES)) {
+ 		uint		i;
+ 
+@@ -822,6 +897,7 @@ xfs_buf_rele(
+ 
+ 	if (!pag) {
+ 		ASSERT(!bp->b_relse);
++		ASSERT(list_empty(&bp->b_lru));
+ 		ASSERT(RB_EMPTY_NODE(&bp->b_rbnode));
+ 		if (atomic_dec_and_test(&bp->b_hold))
+ 			xfs_buf_free(bp);
+@@ -829,13 +905,19 @@ xfs_buf_rele(
+ 	}
+ 
+ 	ASSERT(!RB_EMPTY_NODE(&bp->b_rbnode));
++
+ 	ASSERT(atomic_read(&bp->b_hold) > 0);
+ 	if (atomic_dec_and_lock(&bp->b_hold, &pag->pag_buf_lock)) {
+ 		if (bp->b_relse) {
+ 			atomic_inc(&bp->b_hold);
+ 			spin_unlock(&pag->pag_buf_lock);
+ 			bp->b_relse(bp);
++		} else if (!(bp->b_flags & XBF_STALE) &&
++			   atomic_read(&bp->b_lru_ref)) {
++			xfs_buf_lru_add(bp);
++			spin_unlock(&pag->pag_buf_lock);
+ 		} else {
++			xfs_buf_lru_del(bp);
+ 			ASSERT(!(bp->b_flags & (XBF_DELWRI|_XBF_DELWRI_Q)));
+ 			rb_erase(&bp->b_rbnode, &pag->pag_buf_tree);
+ 			spin_unlock(&pag->pag_buf_lock);
+@@ -1432,27 +1514,35 @@ xfs_buf_iomove(
+  */
+ 
  /*
-  * AIL traversal cursor.
-  *
-@@ -76,6 +78,10 @@ struct xfs_ail {
- void			xfs_trans_ail_update(struct xfs_ail *ailp,
- 					struct xfs_log_item *lip, xfs_lsn_t lsn)
- 					__releases(ailp->xa_lock);
-+void			 xfs_trans_ail_update_bulk(struct xfs_ail *ailp,
-+					struct xfs_log_item **log_items,
-+					int nr_items, xfs_lsn_t lsn)
-+					__releases(ailp->xa_lock);
- void			xfs_trans_ail_delete(struct xfs_ail *ailp,
- 					struct xfs_log_item *lip)
- 					__releases(ailp->xa_lock);
+- *	Wait for any bufs with callbacks that have been submitted but
+- *	have not yet returned... walk the hash list for the target.
++ * Wait for any bufs with callbacks that have been submitted but have not yet
++ * returned. These buffers will have an elevated hold count, so wait on those
++ * while freeing all the buffers only held by the LRU.
+  */
+ void
+ xfs_wait_buftarg(
+ 	struct xfs_buftarg	*btp)
+ {
+-	struct xfs_perag	*pag;
+-	uint			i;
++	struct xfs_buf		*bp;
+ 
+-	for (i = 0; i < btp->bt_mount->m_sb.sb_agcount; i++) {
+-		pag = xfs_perag_get(btp->bt_mount, i);
+-		spin_lock(&pag->pag_buf_lock);
+-		while (rb_first(&pag->pag_buf_tree)) {
+-			spin_unlock(&pag->pag_buf_lock);
++restart:
++	spin_lock(&btp->bt_lru_lock);
++	while (!list_empty(&btp->bt_lru)) {
++		bp = list_first_entry(&btp->bt_lru, struct xfs_buf, b_lru);
++		if (atomic_read(&bp->b_hold) > 1) {
++			spin_unlock(&btp->bt_lru_lock);
+ 			delay(100);
+-			spin_lock(&pag->pag_buf_lock);
++			goto restart;
+ 		}
+-		spin_unlock(&pag->pag_buf_lock);
+-		xfs_perag_put(pag);
++		/*
++		 * clear the LRU reference count so the bufer doesn't get
++		 * ignored in xfs_buf_rele().
++		 */
++		atomic_set(&bp->b_lru_ref, 0);
++		spin_unlock(&btp->bt_lru_lock);
++		xfs_buf_rele(bp);
++		spin_lock(&btp->bt_lru_lock);
+ 	}
++	spin_unlock(&btp->bt_lru_lock);
+ }
+ 
+ int
+@@ -1463,15 +1553,45 @@ xfs_buftarg_shrink(
+ {
+ 	struct xfs_buftarg	*btp = container_of(shrink,
+ 					struct xfs_buftarg, bt_shrinker);
+-	if (nr_to_scan) {
+-		if (test_bit(XBT_FORCE_SLEEP, &btp->bt_flags))
+-			return -1;
+-		if (list_empty(&btp->bt_delwrite_queue))
+-			return -1;
+-		set_bit(XBT_FORCE_FLUSH, &btp->bt_flags);
+-		wake_up_process(btp->bt_task);
++	struct xfs_buf		*bp;
++	LIST_HEAD(dispose);
++
++	if (!nr_to_scan)
++		return btp->bt_lru_nr;
++
++	spin_lock(&btp->bt_lru_lock);
++	while (!list_empty(&btp->bt_lru)) {
++		if (nr_to_scan-- <= 0)
++			break;
++
++		bp = list_first_entry(&btp->bt_lru, struct xfs_buf, b_lru);
++
++		/*
++		 * Decrement the b_lru_ref count unless the value is already
++		 * zero. If the value is already zero, we need to reclaim the
++		 * buffer, otherwise it gets another trip through the LRU.
++		 */
++		if (!atomic_add_unless(&bp->b_lru_ref, -1, 0)) {
++			list_move_tail(&bp->b_lru, &btp->bt_lru);
++			continue;
++		}
++
++		/*
++		 * remove the buffer from the LRU now to avoid needing another
++		 * lock round trip inside xfs_buf_rele().
++		 */
++		list_move(&bp->b_lru, &dispose);
++		btp->bt_lru_nr--;
+ 	}
+-	return list_empty(&btp->bt_delwrite_queue) ? -1 : 1;
++	spin_unlock(&btp->bt_lru_lock);
++
++	while (!list_empty(&dispose)) {
++		bp = list_first_entry(&dispose, struct xfs_buf, b_lru);
++		list_del_init(&bp->b_lru);
++		xfs_buf_rele(bp);
++	}
++
++	return btp->bt_lru_nr;
+ }
+ 
+ void
+@@ -1606,6 +1726,8 @@ xfs_alloc_buftarg(
+ 	btp->bt_mount = mp;
+ 	btp->bt_dev =  bdev->bd_dev;
+ 	btp->bt_bdev = bdev;
++	INIT_LIST_HEAD(&btp->bt_lru);
++	spin_lock_init(&btp->bt_lru_lock);
+ 	if (xfs_setsize_buftarg_early(btp, bdev))
+ 		goto error;
+ 	if (xfs_mapping_buftarg(btp, bdev))
+diff --git a/fs/xfs/linux-2.6/xfs_buf.h b/fs/xfs/linux-2.6/xfs_buf.h
+index 9344103..4601eab 100644
+--- a/fs/xfs/linux-2.6/xfs_buf.h
++++ b/fs/xfs/linux-2.6/xfs_buf.h
+@@ -134,6 +134,9 @@ typedef struct xfs_buftarg {
+ 
+ 	/* LRU control structures */
+ 	struct shrinker		bt_shrinker;
++	struct list_head	bt_lru;
++	spinlock_t		bt_lru_lock;
++	unsigned int		bt_lru_nr;
+ } xfs_buftarg_t;
+ 
+ /*
+@@ -166,9 +169,11 @@ typedef struct xfs_buf {
+ 	xfs_off_t		b_file_offset;	/* offset in file */
+ 	size_t			b_buffer_length;/* size of buffer in bytes */
+ 	atomic_t		b_hold;		/* reference count */
++	atomic_t		b_lru_ref;	/* lru reclaim ref count */
+ 	xfs_buf_flags_t		b_flags;	/* status flags */
+ 	struct semaphore	b_sema;		/* semaphore for lockables */
+ 
++	struct list_head	b_lru;		/* lru list */
+ 	wait_queue_head_t	b_waiters;	/* unpin waiters */
+ 	struct list_head	b_list;
+ 	struct xfs_perag	*b_pag;		/* contains rbtree root */
+@@ -266,7 +271,8 @@ extern void xfs_buf_terminate(void);
+ #define XFS_BUF_ZEROFLAGS(bp)	((bp)->b_flags &= \
+ 		~(XBF_READ|XBF_WRITE|XBF_ASYNC|XBF_DELWRI|XBF_ORDERED))
+ 
+-#define XFS_BUF_STALE(bp)	((bp)->b_flags |= XBF_STALE)
++void xfs_buf_stale(struct xfs_buf *bp);
++#define XFS_BUF_STALE(bp)	xfs_buf_stale(bp);
+ #define XFS_BUF_UNSTALE(bp)	((bp)->b_flags &= ~XBF_STALE)
+ #define XFS_BUF_ISSTALE(bp)	((bp)->b_flags & XBF_STALE)
+ #define XFS_BUF_SUPER_STALE(bp)	do {				\
 -- 
 1.7.2.3
 
