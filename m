@@ -1,31 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBL7SXv5244913 for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 01:28:34 -0600
+	oBL7S1VQ244578 for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 01:28:01 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7B3F1147032A
-	for <xfs@oss.sgi.com>; Mon, 20 Dec 2010 23:30:29 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
-	[150.101.137.100]) by cuda.sgi.com with ESMTP id
-	fmOCwNABDGSibCgo for <xfs@oss.sgi.com>;
-	Mon, 20 Dec 2010 23:30:29 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 469901CE33C6
+	for <xfs@oss.sgi.com>; Mon, 20 Dec 2010 23:29:56 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
+	[150.101.137.101]) by cuda.sgi.com with ESMTP id
+	rXHrsy1h2JeiVjeL for <xfs@oss.sgi.com>;
+	Mon, 20 Dec 2010 23:29:56 -0800 (PST)
 Received: from dastard (unverified [121.44.88.148])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	39223400-1927428
-	for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 18:00:27 +1030 (CDT)
+	50575222-1927428
+	for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 17:59:55 +1030 (CDT)
 Received: from chute ([192.168.1.1] helo=disappointment)
 	by dastard with esmtp (Exim 4.72)
-	(envelope-from <dave@fromorbit.com>) id 1PUwfs-0001EB-Hr
-	for xfs@oss.sgi.com; Tue, 21 Dec 2010 18:30:20 +1100
+	(envelope-from <dave@fromorbit.com>) id 1PUwfI-0001CL-6J
+	for xfs@oss.sgi.com; Tue, 21 Dec 2010 18:29:44 +1100
 Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1PUwfc-0006Zr-5m
-	for xfs@oss.sgi.com; Tue, 21 Dec 2010 18:30:04 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1PUwf6-0006Yi-R1
+	for xfs@oss.sgi.com; Tue, 21 Dec 2010 18:29:32 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 25/34] xfs: rework log grant space calculations
-Date: Tue, 21 Dec 2010 18:29:21 +1100
-Message-Id: <1292916570-25015-26-git-send-email-david@fromorbit.com>
+Subject: =?UTF-8?q?=5BPATCH=2001/34=5D=20xfs=3A=20provide=20a=20inode=20iolock=20lockdep=20class?=
+Date: Tue, 21 Dec 2010 18:28:57 +1100
+Message-Id: <1292916570-25015-2-git-send-email-david@fromorbit.com>
 In-Reply-To: <1292916570-25015-1-git-send-email-david@fromorbit.com>
 References: <1292916570-25015-1-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,203 +35,73 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
-
-The log grant space calculations are repeated for both write and
-reserve grant heads. To make it simpler to convert the calculations
-toa different algorithm, factor them so both the gratn heads use the
-same calculation functions. Once this is done we can drop the
-wrappers that are used in only a couple of place to update both
-grant heads at once as they don't provide any particular value.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_log.c |   95 +++++++++++++++++++++++++++--------------------------
- 1 files changed, 48 insertions(+), 47 deletions(-)
-
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 99c6285..9a4b9ed 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -98,53 +98,34 @@ STATIC void	xlog_verify_tail_lsn(xlog_t *log, xlog_in_core_t *iclog,
- STATIC int	xlog_iclogs_empty(xlog_t *log);
- 
- static void
--xlog_grant_sub_space(struct log *log, int bytes)
--{
--	log->l_grant_write_bytes -= bytes;
--	if (log->l_grant_write_bytes < 0) {
--		log->l_grant_write_bytes += log->l_logsize;
--		log->l_grant_write_cycle--;
--	}
--
--	log->l_grant_reserve_bytes -= bytes;
--	if ((log)->l_grant_reserve_bytes < 0) {
--		log->l_grant_reserve_bytes += log->l_logsize;
--		log->l_grant_reserve_cycle--;
--	}
--
--}
--
--static void
--xlog_grant_add_space_write(struct log *log, int bytes)
-+xlog_grant_sub_space(
-+	struct log	*log,
-+	int		*cycle,
-+	int		*space,
-+	int		bytes)
- {
--	int tmp = log->l_logsize - log->l_grant_write_bytes;
--	if (tmp > bytes)
--		log->l_grant_write_bytes += bytes;
--	else {
--		log->l_grant_write_cycle++;
--		log->l_grant_write_bytes = bytes - tmp;
-+	*space -= bytes;
-+	if (*space < 0) {
-+		*space += log->l_logsize;
-+		(*cycle)--;
- 	}
- }
- 
- static void
--xlog_grant_add_space_reserve(struct log *log, int bytes)
-+xlog_grant_add_space(
-+	struct log	*log,
-+	int		*cycle,
-+	int		*space,
-+	int		bytes)
- {
--	int tmp = log->l_logsize - log->l_grant_reserve_bytes;
-+	int tmp = log->l_logsize - *space;
- 	if (tmp > bytes)
--		log->l_grant_reserve_bytes += bytes;
-+		*space += bytes;
- 	else {
--		log->l_grant_reserve_cycle++;
--		log->l_grant_reserve_bytes = bytes - tmp;
-+		*space = bytes - tmp;
-+		(*cycle)++;
- 	}
- }
--
--static inline void
--xlog_grant_add_space(struct log *log, int bytes)
--{
--	xlog_grant_add_space_write(log, bytes);
--	xlog_grant_add_space_reserve(log, bytes);
--}
--
- static void
- xlog_tic_reset_res(xlog_ticket_t *tic)
- {
-@@ -1344,7 +1325,10 @@ xlog_sync(xlog_t		*log,
- 
- 	/* move grant heads by roundoff in sync */
- 	spin_lock(&log->l_grant_lock);
--	xlog_grant_add_space(log, roundoff);
-+	xlog_grant_add_space(log, &log->l_grant_reserve_cycle,
-+				&log->l_grant_reserve_bytes, roundoff);
-+	xlog_grant_add_space(log, &log->l_grant_write_cycle,
-+				&log->l_grant_write_bytes, roundoff);
- 	spin_unlock(&log->l_grant_lock);
- 
- 	/* put cycle number in every block */
-@@ -2574,7 +2558,10 @@ redo:
- 	list_del_init(&tic->t_queue);
- 
- 	/* we've got enough space */
--	xlog_grant_add_space(log, need_bytes);
-+	xlog_grant_add_space(log, &log->l_grant_reserve_cycle,
-+				&log->l_grant_reserve_bytes, need_bytes);
-+	xlog_grant_add_space(log, &log->l_grant_write_cycle,
-+				&log->l_grant_write_bytes, need_bytes);
- 	trace_xfs_log_grant_exit(log, tic);
- 	xlog_verify_grant_head(log, 1);
- 	xlog_verify_grant_tail(log);
-@@ -2701,7 +2688,8 @@ redo:
- 	list_del_init(&tic->t_queue);
- 
- 	/* we've got enough space */
--	xlog_grant_add_space_write(log, need_bytes);
-+	xlog_grant_add_space(log, &log->l_grant_write_cycle,
-+				&log->l_grant_write_bytes, need_bytes);
- 	trace_xfs_log_regrant_write_exit(log, tic);
- 	xlog_verify_grant_head(log, 1);
- 	xlog_verify_grant_tail(log);
-@@ -2742,7 +2730,12 @@ xlog_regrant_reserve_log_space(xlog_t	     *log,
- 		ticket->t_cnt--;
- 
- 	spin_lock(&log->l_grant_lock);
--	xlog_grant_sub_space(log, ticket->t_curr_res);
-+	xlog_grant_sub_space(log, &log->l_grant_reserve_cycle,
-+				&log->l_grant_reserve_bytes,
-+				ticket->t_curr_res);
-+	xlog_grant_sub_space(log, &log->l_grant_write_cycle,
-+				&log->l_grant_write_bytes,
-+				ticket->t_curr_res);
- 	ticket->t_curr_res = ticket->t_unit_res;
- 	xlog_tic_reset_res(ticket);
- 
-@@ -2756,7 +2749,9 @@ xlog_regrant_reserve_log_space(xlog_t	     *log,
- 		return;
- 	}
- 
--	xlog_grant_add_space_reserve(log, ticket->t_unit_res);
-+	xlog_grant_add_space(log, &log->l_grant_reserve_cycle,
-+				&log->l_grant_reserve_bytes,
-+				ticket->t_unit_res);
- 
- 	trace_xfs_log_regrant_reserve_exit(log, ticket);
- 
-@@ -2785,24 +2780,30 @@ STATIC void
- xlog_ungrant_log_space(xlog_t	     *log,
- 		       xlog_ticket_t *ticket)
- {
-+	int	bytes;
-+
- 	if (ticket->t_cnt > 0)
- 		ticket->t_cnt--;
- 
- 	spin_lock(&log->l_grant_lock);
- 	trace_xfs_log_ungrant_enter(log, ticket);
--
--	xlog_grant_sub_space(log, ticket->t_curr_res);
--
- 	trace_xfs_log_ungrant_sub(log, ticket);
- 
--	/* If this is a permanent reservation ticket, we may be able to free
-+	/*
-+	 * If this is a permanent reservation ticket, we may be able to free
- 	 * up more space based on the remaining count.
- 	 */
-+	bytes = ticket->t_curr_res;
- 	if (ticket->t_cnt > 0) {
- 		ASSERT(ticket->t_flags & XLOG_TIC_PERM_RESERV);
--		xlog_grant_sub_space(log, ticket->t_unit_res*ticket->t_cnt);
-+		bytes += ticket->t_unit_res*ticket->t_cnt;
- 	}
- 
-+	xlog_grant_sub_space(log, &log->l_grant_reserve_cycle,
-+				&log->l_grant_reserve_bytes, bytes);
-+	xlog_grant_sub_space(log, &log->l_grant_write_cycle,
-+				&log->l_grant_write_bytes, bytes);
-+
- 	trace_xfs_log_ungrant_exit(log, ticket);
- 
- 	xlog_verify_grant_head(log, 1);
--- 
-1.7.2.3
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+RnJvbTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgoKVGhlIFhGUyBpb2xvY2sg
+bmVlZHMgdG8gYmUgcmUtaW5pdGlhbGlzZWQgdG8gYSBuZXcgbG9jayBjbGFzcyBiZWZvcmUKaXQg
+ZW50ZXJzIHJlY2xhaW0gdG8gcHJldmVudCBsb2NrZGVwIGZhbHNlIHBvc2l0aXZlcy4gVW5mb3J0
+dW5hdGVseSwKdGhpcyBpcyBub3Qgc3VmZmljaWVudCBwcm90ZWN0aW9uIGFzIGlub2RlcyBpbiB0
+aGUgWEZTX0lSRUNMQUlNQUJMRQpzdGF0ZSBjYW4gYmUgcmVjeWNsZWQgYW5kIG5vdCByZS1pbml0
+aWFsaXNlZCBiZWZvcmUgYmVpbmcgcmV1c2VkLgoKV2UgbmVlZCB0byByZS1pbml0aWFsaXNlIHRo
+ZSBsb2NrIHN0YXRlIHdoZW4gdHJhbnNmZXJpbmcgb3V0IG9mClhGU19JUkVDTEFJTUFCTEUgc3Rh
+dGUgdG8gWEZTX0lORVcsIGJ1dCB3ZSBuZWVkIHRvIGtlZXAgdGhlIHNhbWUKY2xhc3MgYXMgaWYg
+dGhlIGlub2RlIHdhcyBqdXN0IGFsbG9jYXRlZC4gSGVuY2Ugd2UgbmVlZCBhIHNwZWNpZmljCmxv
+Y2tkZXAgY2xhc3MgdmFyaWFibGUgZm9yIHRoZSBpb2xvY2sgc28gdGhhdCBib3RoIGluaXRpYWxp
+c2F0aW9ucwp1c2UgdGhlIHNhbWUgY2xhc3MuCgpXaGlsZSB0aGVyZSwgYWRkIGEgc3BlY2lmaWMg
+Y2xhc3MgZm9yIGlub2RlcyBpbiB0aGUgcmVjbGFpbSBzdGF0ZSBzbwp0aGF0IGl0IGlzIGVhc3kg
+dG8gdGVsbCBmcm9tIGxvY2tkZXAgcmVwb3J0cyB3aGF0IHN0YXRlIHRoZSBpbm9kZQp3YXMgaW4g
+dGhhdCBnZW5lcmF0ZWQgdGhlIHJlcG9ydC4KClNpZ25lZC1vZmYtYnk6IERhdmUgQ2hpbm5lciA8
+ZGNoaW5uZXJAcmVkaGF0LmNvbT4KLS0tCiBmcy94ZnMvbGludXgtMi42L3hmc19zdXBlci5jIHwg
+ICAgMiArKwogZnMveGZzL3hmc19pZ2V0LmMgICAgICAgICAgICB8ICAgMTkgKysrKysrKysrKysr
+KysrKysrKwogZnMveGZzL3hmc19pbm9kZS5oICAgICAgICAgICB8ICAgIDIgKysKIDMgZmlsZXMg
+Y2hhbmdlZCwgMjMgaW5zZXJ0aW9ucygrKSwgMCBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9m
+cy94ZnMvbGludXgtMi42L3hmc19zdXBlci5jIGIvZnMveGZzL2xpbnV4LTIuNi94ZnNfc3VwZXIu
+YwppbmRleCAwNjRmOTY0Li5jNDViMzIzIDEwMDY0NAotLS0gYS9mcy94ZnMvbGludXgtMi42L3hm
+c19zdXBlci5jCisrKyBiL2ZzL3hmcy9saW51eC0yLjYveGZzX3N1cGVyLmMKQEAgLTExMTgsNiAr
+MTExOCw4IEBAIHhmc19mc19ldmljdF9pbm9kZSgKIAkgKi8KIAlBU1NFUlQoIXJ3c2VtX2lzX2xv
+Y2tlZCgmaXAtPmlfaW9sb2NrLm1yX2xvY2spKTsKIAltcmxvY2tfaW5pdCgmaXAtPmlfaW9sb2Nr
+LCBNUkxPQ0tfQkFSUklFUiwgInhmc2lvIiwgaXAtPmlfaW5vKTsKKwlsb2NrZGVwX3NldF9jbGFz
+c19hbmRfbmFtZSgmaXAtPmlfaW9sb2NrLm1yX2xvY2ssCisJCQkmeGZzX2lvbG9ja19yZWNsYWlt
+YWJsZSwgInhmc19pb2xvY2tfcmVjbGFpbWFibGUiKTsKIAogCXhmc19pbmFjdGl2ZShpcCk7CiB9
+CmRpZmYgLS1naXQgYS9mcy94ZnMveGZzX2lnZXQuYyBiL2ZzL3hmcy94ZnNfaWdldC5jCmluZGV4
+IDBjZGQyNjkuLmNkYjFjMjUgMTAwNjQ0Ci0tLSBhL2ZzL3hmcy94ZnNfaWdldC5jCisrKyBiL2Zz
+L3hmcy94ZnNfaWdldC5jCkBAIC00Myw2ICs0MywxNyBAQAogCiAKIC8qCisgKiBEZWZpbmUgeGZz
+IGlub2RlIGlvbG9jayBsb2NrZGVwIGNsYXNzZXMuIFdlIG5lZWQgdG8gZW5zdXJlIHRoYXQgYWxs
+IGFjdGl2ZQorICogaW5vZGVzIGFyZSBjb25zaWRlcmVkIHRoZSBzYW1lIGZvciBsb2NrZGVwIHB1
+cnBvc2VzLCBpbmNsdWRpbmcgaW5vZGVzIHRoYXQKKyAqIGFyZSByZWN5Y2xlZCB0aHJvdWdoIHRo
+ZSBYRlNfSVJFQ0xBSU1BQkxFIHN0YXRlLiBUaGlzIGlzIHRoZSB0aGUgb25seSB3YXkgdG8KKyAq
+IGd1YXJhbnRlZSB0aGUgbG9ja3MgYXJlIGNvbnNpZGVyZWQgdGhlIHNhbWUgd2hlbiB0aGVyZSBh
+cmUgbXVsdGlwbGUgbG9jaworICogaW5pdGlhbGlzYXRpb24gc2l0ZdGVLiBBbHNvLCBkZWZpbmUg
+YSByZWNsYWltYWJsZSBpbm9kZSBjbGFzcyBzbyBpdCBpcworICogb2J2aW91cyBpbiBsb2NrZGVw
+IHJlcG9ydHMgd2hpY2ggY2xhc3MgdGhlIHJlcG9ydCBpcyBhZ2FpbnN0LgorICovCitzdGF0aWMg
+c3RydWN0IGxvY2tfY2xhc3Nfa2V5IHhmc19pb2xvY2tfYWN0aXZlOworc3RydWN0IGxvY2tfY2xh
+c3Nfa2V5IHhmc19pb2xvY2tfcmVjbGFpbWFibGU7CisKKy8qCiAgKiBBbGxvY2F0ZSBhbmQgaW5p
+dGlhbGlzZSBhbiB4ZnNfaW5vZGUuCiAgKi8KIFNUQVRJQyBzdHJ1Y3QgeGZzX2lub2RlICoKQEAg
+LTcxLDYgKzgyLDggQEAgeGZzX2lub2RlX2FsbG9jKAogCUFTU0VSVChjb21wbGV0aW9uX2RvbmUo
+JmlwLT5pX2ZsdXNoKSk7CiAKIAltcmxvY2tfaW5pdCgmaXAtPmlfaW9sb2NrLCBNUkxPQ0tfQkFS
+UklFUiwgInhmc2lvIiwgaXAtPmlfaW5vKTsKKwlsb2NrZGVwX3NldF9jbGFzc19hbmRfbmFtZSgm
+aXAtPmlfaW9sb2NrLm1yX2xvY2ssCisJCQkmeGZzX2lvbG9ja19hY3RpdmUsICJ4ZnNfaW9sb2Nr
+X2FjdGl2ZSIpOwogCiAJLyogaW5pdGlhbGlzZSB0aGUgeGZzIGlub2RlICovCiAJaXAtPmlfaW5v
+ID0gaW5vOwpAQCAtMjE4LDYgKzIzMSwxMiBAQCB4ZnNfaWdldF9jYWNoZV9oaXQoCiAJCWlwLT5p
+X2ZsYWdzIHw9IFhGU19JTkVXOwogCQlfX3hmc19pbm9kZV9jbGVhcl9yZWNsYWltX3RhZyhtcCwg
+cGFnLCBpcCk7CiAJCWlub2RlLT5pX3N0YXRlID0gSV9ORVc7CisKKwkJQVNTRVJUKCFyd3NlbV9p
+c19sb2NrZWQoJmlwLT5pX2lvbG9jay5tcl9sb2NrKSk7CisJCW1ybG9ja19pbml0KCZpcC0+aV9p
+b2xvY2ssIE1STE9DS19CQVJSSUVSLCAieGZzaW8iLCBpcC0+aV9pbm8pOworCQlsb2NrZGVwX3Nl
+dF9jbGFzc19hbmRfbmFtZSgmaXAtPmlfaW9sb2NrLm1yX2xvY2ssCisJCQkJJnhmc19pb2xvY2tf
+YWN0aXZlLCAieGZzX2lvbG9ja19hY3RpdmUiKTsKKwogCQlzcGluX3VubG9jaygmaXAtPmlfZmxh
+Z3NfbG9jayk7CiAJCXdyaXRlX3VubG9jaygmcGFnLT5wYWdfaWNpX2xvY2spOwogCX0gZWxzZSB7
+CmRpZmYgLS1naXQgYS9mcy94ZnMveGZzX2lub2RlLmggYi9mcy94ZnMveGZzX2lub2RlLmgKaW5k
+ZXggZmIyY2EyZS4uMWM2NTE0ZCAxMDA2NDQKLS0tIGEvZnMveGZzL3hmc19pbm9kZS5oCisrKyBi
+L2ZzL3hmcy94ZnNfaW5vZGUuaApAQCAtNDM4LDYgKzQzOCw4IEBAIHN0YXRpYyBpbmxpbmUgdm9p
+ZCB4ZnNfaWZ1bmxvY2soeGZzX2lub2RlX3QgKmlwKQogI2RlZmluZSBYRlNfSU9MT0NLX0RFUChm
+bGFncykJKCgoZmxhZ3MpICYgWEZTX0lPTE9DS19ERVBfTUFTSykgPj4gWEZTX0lPTE9DS19TSElG
+VCkKICNkZWZpbmUgWEZTX0lMT0NLX0RFUChmbGFncykJKCgoZmxhZ3MpICYgWEZTX0lMT0NLX0RF
+UF9NQVNLKSA+PiBYRlNfSUxPQ0tfU0hJRlQpCiAKK2V4dGVybiBzdHJ1Y3QgbG9ja19jbGFzc19r
+ZXkgeGZzX2lvbG9ja19yZWNsYWltYWJsZTsKKwogLyoKICAqIEZsYWdzIGZvciB4ZnNfaXRydW5j
+YXRlX3N0YXJ0KCkuCiAgKi8KLS0gCjEuNy4yLjMKCl9fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0
+dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
