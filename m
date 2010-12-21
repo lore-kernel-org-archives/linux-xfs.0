@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBLNpNs8118493 for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 17:51:23 -0600
+	oBLNgJpO116663 for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 17:42:19 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 07BB721533D
-	for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 15:53:19 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
-	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	NyxwrBI9wsuRD0Yy for <xfs@oss.sgi.com>;
-	Tue, 21 Dec 2010 15:53:19 -0800 (PST)
-Date: Wed, 22 Dec 2010 10:53:01 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4F5AE1CE9852
+	for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 15:44:14 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
+	[150.101.137.99]) by cuda.sgi.com with ESMTP id
+	WZWxVLcOj1Vc2xCj for <xfs@oss.sgi.com>;
+	Tue, 21 Dec 2010 15:44:14 -0800 (PST)
+Date: Wed, 22 Dec 2010 10:44:12 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS status update for November 2010
-Message-ID: <20101221235301.GD4907@dastard>
-References: <20101220180013.GA16283@infradead.org>
-	<4D109047.8050300@panasas.com>
+Subject: Re: [PATCH 06/34] xfs: dynamic speculative EOF preallocation
+Message-ID: <20101221234412.GC4907@dastard>
+References: <1292916570-25015-1-git-send-email-david@fromorbit.com>
+	<1292916570-25015-7-git-send-email-david@fromorbit.com>
+	<20101221151511.GA26127@infradead.org>
+	<20101221214240.GB4907@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4D109047.8050300@panasas.com>
+In-Reply-To: <20101221214240.GB4907@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,52 +32,99 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Tue, Dec 21, 2010 at 01:32:23PM +0200, Boaz Harrosh wrote:
-> On 12/20/2010 08:00 PM, Christoph Hellwig wrote:
-> >>From looking at the kernel git commits November looked like a pretty
-> > slow month with just two hand full fixes going into the release candidates
-> > for Linux 2.6.37, and none at all going into the development tree.
-> > But in this case git statistics didn't tell the whole story - there
-> > was a lot of activity on patches for the next merge window on the list.
-> > The focus in November was still at metadata scalability, with various
-> > patchsets that improves parallel creates and unlinks again, and also
-> > improves 8-way dbench throughput by 30%.  In addition to that there
-> > were patches to improve preallocation for NFS servers, to simplify
-> > the writeback code, and to remove the XFS-internal percpu counters
-> > for free space for the generic kernel percpu counters, which just needed
-> > a small improvement.
-> > 
-> > On the user space side we saw the release of xfsprogs 3.1.4, which
-> > contains various accumulated bug fixes and Debian packaging updates.
-> > The xfsdump tree saw a large update to speed up restore by using
-> > mmap for an internal database and remove the limitation of ~ 214
-> > million directory entries per dump file.  The xfstests test suite
-> > saw three new testcases and various fixes, including support for the
-> > hfsplus filesystem.
+On Wed, Dec 22, 2010 at 08:42:40AM +1100, Dave Chinner wrote:
+> On Tue, Dec 21, 2010 at 10:15:11AM -0500, Christoph Hellwig wrote:
+> > This patch causes tesr 014 to take ~ 870 seconds instead of 6, thus
+> > beeing almost 150 times slower on mt 32-bit test VM, so I'll have to NAK
+> > it for now.
 > 
-> Hi Christoph, happy holidays
+> It's not the speculative preallocation changes - ithey are just
+> exposing some other regression. That is, using MOUNT_OPTIONS="-o
+> allocsize=4k" gives the previous behaviour, while allocsize=512m
+> gives the same behaviour as the dynamic preallocation.
 > 
-> I love these reports you do, thank you
-> 
-> I have one small request, could you please post them to
-> linux-fsdevel as well. linux-kernel@vger.kernel.org is so crowded
-> I keep missing them.
+> The dynamic behaviour is resulting in megabyte sized IOs being
+> issued for random 512 byte writes (which is wrong), so I'm tending
+> towards it being a regression caused by the reecent writeback path
+> changes. I'll dig deeper today.
 
-Boaz, you can set up a modification watch on this page:
+Ok, it's not a recent regression - it's the fact that the test is 
+writing and truncating to random offsets so the file size is
+constantly changing resulting in xfs_zero_eof() writing huge amounts
+of zeros into preallocated extents beyond EOF. The patch below
+explains the situation and the change to the test to avoid
+the extended runtime.
 
-http://xfs.org/index.php/XFS_Status_Updates
+Ultimately, we probably need to change xfs_zero_eof() to allocate
+unwritten extents rather than write megabytes of zero for
+speculative allocation beyond EOF. However, I'm going to worry about
+that when (if) we come across applications that trigger this issue.
 
-as Christoph posts the updates there as well.
+--
 
-Cheers,
+xfstests: 014 takes forever with large preallocation sizes
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+From: Dave Chinner <dchinner@redhat.com>
+
+Christoph reported that test 014 went from 7s to 870s runtime with
+the dynamic speculative delayed allocation changes. Analysis of test
+014 shows that it does this loop 10,000 times:
+
+	pwrite(random offset, 512 bytes);
+	truncate(random offset);
+
+Where the random offset is anywhere in a 256MB file. Hence on
+average every second write or truncate extends the file.
+
+If large preallocatione beyond EOF sizes are used each extending
+write or truncate will zero large numbers of blocks - tens of
+megabytes at a time. The result is that instead of only writing
+~10,000 blocks, we write hundreds to thousands of megabytes of zeros
+to the file and that is where the difference in runtime is coming
+from.
+
+The IO pattern that this test is using does not reflect a common (or
+sane!) real-world application IO pattern, so it is really just
+exercising the allocation and truncation paths in XFS. To do this,
+we don't need large amounts of preallocation beyond EOF that just
+slows down the operation, so execute the test with a fixed, small
+preallocation size that reflects the previous default.
+
+By specifying the preallocation size via the allocsize mount option,
+this also overrides any custom allocsize option provided for the
+test, so the test will not revert to extremely long runtimes when
+allocsize is provided on the command line.
+
+However, to ensure that we do actually get some coverage of the
+zeroing paths, set the allocsize mount option to 64k - this
+exercises the EOF zeroing paths, but does not affect the runtime of
+the test.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ 014 |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
+
+diff --git a/014 b/014
+index a0c0403..e6e0a6f 100755
+--- a/014
++++ b/014
+@@ -50,6 +50,12 @@ _supported_os IRIX Linux
+ _require_sparse_files
+ _setup_testdir
+ 
++# ensure EOF preallocation doesn't massively extend the runtime of this test
++# by limiting the amount of preallocation and therefore the amount of blocks
++# zeroed during the truncfile test run.
++umount $TEST_DIR
++_test_mount -o allocsize=64k
++
+ echo "brevity is wit..."
+ 
+ echo "------"
 
 _______________________________________________
 xfs mailing list
