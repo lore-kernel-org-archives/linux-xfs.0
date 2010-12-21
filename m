@@ -1,33 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBL7S0nZ244565 for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 01:28:00 -0600
+	oBL7Sgte244994 for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 01:28:42 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1391121201D
-	for <xfs@oss.sgi.com>; Mon, 20 Dec 2010 23:29:56 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
-	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	vEm4l9qBHQGvYcjQ for <xfs@oss.sgi.com>;
-	Mon, 20 Dec 2010 23:29:56 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8C3621CE33D9
+	for <xfs@oss.sgi.com>; Mon, 20 Dec 2010 23:30:38 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
+	[150.101.137.98]) by cuda.sgi.com with ESMTP id
+	BTjpepplhlLzJR6M for <xfs@oss.sgi.com>;
+	Mon, 20 Dec 2010 23:30:38 -0800 (PST)
 Received: from dastard (unverified [121.44.88.148])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	50071161-1927428
-	for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 17:59:55 +1030 (CDT)
+	50839345-1927428
+	for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 18:00:37 +1030 (CDT)
 Received: from chute ([192.168.1.1] helo=disappointment)
 	by dastard with esmtp (Exim 4.72)
-	(envelope-from <dave@fromorbit.com>) id 1PUwfS-0001Cf-Gc
-	for xfs@oss.sgi.com; Tue, 21 Dec 2010 18:29:54 +1100
+	(envelope-from <dave@fromorbit.com>) id 1PUwfx-0001EG-RN
+	for xfs@oss.sgi.com; Tue, 21 Dec 2010 18:30:25 +1100
 Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1PUwfH-0006Z0-5U
-	for xfs@oss.sgi.com; Tue, 21 Dec 2010 18:29:43 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1PUwfm-0006a8-FV
+	for xfs@oss.sgi.com; Tue, 21 Dec 2010 18:30:14 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 07/34] xfs: don't truncate prealloc from frequently accessed
-	inodes
-Date: Tue, 21 Dec 2010 18:29:03 +1100
-Message-Id: <1292916570-25015-8-git-send-email-david@fromorbit.com>
+Subject: [PATCH 29/34] xfs: convert l_last_sync_lsn to an atomic variable
+Date: Tue, 21 Dec 2010 18:29:25 +1100
+Message-Id: <1292916570-25015-30-git-send-email-david@fromorbit.com>
 In-Reply-To: <1292916570-25015-1-git-send-email-david@fromorbit.com>
 References: <1292916570-25015-1-git-send-email-david@fromorbit.com>
-MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,109 +34,203 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-RnJvbTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgoKQSBsb25nIHN0YW5kaW5n
-IHByb2JsZW0gZm9yIHN0cmVhbWluZyB3cml0ZdGVIHRocm91Z2ggdGhlIE5GUyBzZXJ2ZXIKaGFz
-IGJlZW4gdGhhdCB0aGUgTkZTIHNlcnZlciBvcGVucyBhbmQgY2xvc2VzIGZpbGUgZGVzY3JpcHRv
-cnMgb24gYW4KaW5vZGUgZm9yIGV2ZXJ5IHdyaXRlLiBUaGUgcmVzdWx0IG9mIHRoaXMgYmVoYXZp
-b3VyIGlzIHRoYXQgdGhlCi0+cmVsZWFzZSgpIGZ1bmN0aW9uIGlzIGNhbGxlZCBvbiBldmVyeSBj
-bG9zZSBhbmQgdGhhdCByZXN1bHRzIGluClhGUyB0cnVuY2F0aW5nIHNwZWN1bGF0aXZlIHByZWFs
-bG9jYXRpb24gYmV5b25kIHRoZSBFT0YuICBUaGlzIGhhcwphbiBhZHZlcnNlIGVmZmVjdCBvbiBm
-aWxlIGxheW91dCB3aGVuIG11bHRpcGxlIGZpbGVzIGFyZSBiZWluZwp3cml0dGVuIGF0IHRoZSBz
-YW1lIHRpbWUgLSB0aGV5IGludGVybGVhdmUgdGhlaXIgZXh0ZW50cyBhbmQgY2FuCnJlc3VsdCBp
-biBzZXZlcmUgZnJhZ21lbnRhdGlvbi4KClRvIGF2b2lkIHRoaXMgcHJvYmxlbSwga2VlcCBhIGNv
-dW50IG9mIHRoZSBudW1iZXIgb2YgLT5yZWxlYXNlIGNhbGxzCm1hZGUgb24gYW4gaW5vZGUuIEZv
-ciBtb3N0IGNhc2VzLCBhbiBpbm9kZSBpcyBvbmx5IGdvaW5nIHRvIGJlIG9wZW5lZApvbmNlIGZv
-ciB3cml0aW5nIGFuZCB0aGVuIGNsb3NlZCBhZ2FpbiBkdXJpbmcgaXQncyBsaWZldGltZSBpbgpj
-YWNoZS4gSGVuY2UgaWYgdGhlcmUgYXJlIG11bHRpcGxlIC0+cmVsZWFzZSBjYWxscywgdGhlcmUg
-aXMgYSBnb29kCmNoYW5jZSB0aGF0IHRoZSBpbm9kZSBpcyBiZWluZyBhY2Nlc3NlZCBieSB0aGUg
-TkZTIHNlcnZlci4gSGVuY2UKY291bnQgdXAgZXZlcnkgdGltZSAtPnJlbGVhc2UgaXMgY2FsbGVk
-IHdoaWxlIHRoZXJlIGFyZSBkZWxhbGxvYwpibG9ja3Mgc3RpbGwgb3V0c3RhbmRpbmcgb24gdGhl
-IGlub2RlLgoKSWYgdGhpcyBjb3VudCBpcyBub24temVybyB3aGVuIC0+cmVsZWFzZSBpcyBuZXh0
-IGNhbGxlZCwgdGhlbiBkbyBubwp0cnVuY2F0ZSBhd2F5IHRoZSBzcGVjdWxhdGl2ZSBwcmVhbGxv
-Y2F0aW9uIC0gbGVhdmUgaXQgdGhlcmUgc28gdGhhdApzdWJzZXF1ZW50IHdyaXRlcyBkbyBub3Qg
-bmVlZCB0byByZWFsbG9jYXRlIHRoZSBkZWxhbGxvYyBzcGFjZS4gVGhpcwp3aWxsIHByZXZlbnQg
-aW50ZXJsZWF2aW5nIG9mIGV4dGVudHMgb2YgZGlmZmVyZW50IGlub2RlcyB3cml0dGVuCmNvbmN1
-cnJlbnRseSB0byB0aGUgc2FtZSBBRy4KCklmIHdlIGdldCB0aGlzIHdyb25nLCBpdCBpcyBub3Qg
-YSBiaWcgZGVhbCBhcyB3ZSB0cnVuY2F0ZQpzcGVjdWxhdGl2ZSBhbGxvY2F0aW9uIGJleW9uZCBF
-T0YgYW55d2F5IGluIHhmc19pbmFjdGl2ZSgpIHdoZW4gdGhlCmlub2RlIGlzIHRocm93biBvdXQg
-b2YgdGhlIGNhY2hlLgoKVGhlIG5ldyBjb3VudGVyIGluIHRoZSBzdHJ1Y3QgeGZzX2lub2RlIGZp
-dHMgaW50byBhIGhvbGUgaW4gdGhlCnN0cnVjdHVyZSBvbiA2NCBiaXQgbWFjaGluZXMsIHNvIGRv
-ZXMgbm90IGdyb3cgdGhlIHNpemUgb2YgdGhlIGlub2RlCmF0IGFsbC4KClNpZ25lZC1vZmYtYnk6
-IERhdmUgQ2hpbm5lciA8ZGNoaW5uZXJAcmVkaGF0LmNvbT4KLS0tCiBmcy94ZnMveGZzX2lub2Rl
-LmggICAgfCAgIDEzICsrKysrLS0tLS0KIGZzL3hmcy94ZnNfdm5vZGVvcHMuYyB8ICAgNjEgKysr
-KysrKysrKysrKysrKysrKysrKysrKysrKysrKystLS0tLS0tLS0tLS0tLS0tLQogMiBmaWxlcyBj
-aGFuZ2VkLCA0NyBpbnNlcnRpb25zKCspLCAyNyBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9m
-cy94ZnMveGZzX2lub2RlLmggYi9mcy94ZnMveGZzX2lub2RlLmgKaW5kZXggMWM2NTE0ZC4uNWM5
-NWZhOCAxMDA2NDQKLS0tIGEvZnMveGZzL3hmc19pbm9kZS5oCisrKyBiL2ZzL3hmcy94ZnNfaW5v
-ZGUuaApAQCAtMzc2LDEyICszNzYsMTMgQEAgc3RhdGljIGlubGluZSB2b2lkIHhmc19pZnVubG9j
-ayh4ZnNfaW5vZGVfdCAqaXApCiAvKgogICogSW4tY29yZSBpbm9kZSBmbGFncy4KICAqLwotI2Rl
-ZmluZSBYRlNfSVJFQ0xBSU0gICAgMHgwMDAxICAvKiB3ZSBoYXZlIHN0YXJ0ZWQgcmVjbGFpbWlu
-ZyB0aGlzIGlub2RlICAgICovCi0jZGVmaW5lIFhGU19JU1RBTEUJMHgwMDAyCS8qIGlub2RlIGhh
-cyBiZWVuIHN0YWxlZCAqLwotI2RlZmluZSBYRlNfSVJFQ0xBSU1BQkxFIDB4MDAwNCAvKiBpbm9k
-ZSBjYW4gYmUgcmVjbGFpbWVkICovCi0jZGVmaW5lIFhGU19JTkVXCTB4MDAwOAkvKiBpbm9kZSBo
-YXMganVzdCBiZWVuIGFsbG9jYXRlZCAqLwotI2RlZmluZSBYRlNfSUZJTEVTVFJFQU0JMHgwMDEw
-CS8qIGlub2RlIGlzIGluIGEgZmlsZXN0cmVhbSBkaXJlY3RvcnkgKi8KLSNkZWZpbmUgWEZTX0lU
-UlVOQ0FURUQJMHgwMDIwCS8qIHRydW5jYXRlZCBkb3duIHNvIGZsdXNoLW9uLWNsb3NlICovCisj
-ZGVmaW5lIFhGU19JUkVDTEFJTQkJMHgwMDAxICAvKiBzdGFydGVkIHJlY2xhaW1pbmcgdGhpcyBp
-bm9kZSAqLworI2RlZmluZSBYRlNfSVNUQUxFCQkweDAwMDIJLyogaW5vZGUgaGFzIGJlZW4gc3Rh
-bGVkICovCisjZGVmaW5lIFhGU19JUkVDTEFJTUFCTEUJMHgwMDA0CS8qIGlub2RlIGNhbiBiZSBy
-ZWNsYWltZWQgKi8KKyNkZWZpbmUgWEZTX0lORVcJCTB4MDAwOAkvKiBpbm9kZSBoYXMganVzdCBi
-ZWVuIGFsbG9jYXRlZCAqLworI2RlZmluZSBYRlNfSUZJTEVTVFJFQU0JCTB4MDAxMAkvKiBpbm9k
-ZSBpcyBpbiBhIGZpbGVzdHJlYW0gZGlyZWN0b3J5ICovCisjZGVmaW5lIFhGU19JVFJVTkNBVEVE
-CQkweDAwMjAJLyogdHJ1bmNhdGVkIGRvd24gc28gZmx1c2gtb24tY2xvc2UgKi8KKyNkZWZpbmUg
-WEZTX0lESVJUWV9SRUxFQVNFCTB4MDA0MAkvKiBkaXJ0eSByZWxlYXNlIGFscmVhZHkgc2VlbiAq
-LwogCiAvKgogICogRmxhZ3MgZm9yIGlub2RlIGxvY2tpbmcuCmRpZmYgLS1naXQgYS9mcy94ZnMv
-eGZzX3Zub2Rlb3BzLmMgYi9mcy94ZnMveGZzX3Zub2Rlb3BzLmMKaW5kZXggOGU0YTYzYy4uZDhl
-NmY4YyAxMDA2NDQKLS0tIGEvZnMveGZzL3hmc192bm9kZW9wcy5jCisrKyBiL2ZzL3hmcy94ZnNf
-dm5vZGVvcHMuYwpAQCAtOTY0LDI5ICs5NjQsNDggQEAgeGZzX3JlbGVhc2UoCiAJCQl4ZnNfZmx1
-c2hfcGFnZXMoaXAsIDAsIC0xLCBYQkZfQVNZTkMsIEZJX05PTkUpOwogCX0KIAotCWlmIChpcC0+
-aV9kLmRpX25saW5rICE9IDApIHsKLQkJaWYgKCgoKGlwLT5pX2QuZGlfbW9kZSAmIFNfSUZNVCkg
-PT0gU19JRlJFRykgJiYKLQkJICAgICAoKGlwLT5pX3NpemUgPiAwKSB8fCAoVk5fQ0FDSEVEKFZG
-U19JKGlwKSkgPiAwIHx8Ci0JCSAgICAgICBpcC0+aV9kZWxheWVkX2Jsa3MgPiAwKSkgJiYKLQkJ
-ICAgICAoaXAtPmlfZGYuaWZfZmxhZ3MgJiBYRlNfSUZFWFRFTlRTKSkgICYmCi0JCSAgICAoIShp
-cC0+aV9kLmRpX2ZsYWdzICYKLQkJCQkoWEZTX0RJRkxBR19QUkVBTExPQyB8IFhGU19ESUZMQUdf
-QVBQRU5EKSkpKSB7CisJaWYgKGlwLT5pX2QuZGlfbmxpbmsgPT0gMCkKKwkJcmV0dXJuIDA7CiAK
-LQkJCS8qCi0JCQkgKiBJZiB3ZSBjYW4ndCBnZXQgdGhlIGlvbG9jayBqdXN0IHNraXAgdHJ1bmNh
-dGluZwotCQkJICogdGhlIGJsb2NrcyBwYXN0IEVPRiBiZWNhdXNlIHdlIGNvdWxkIGRlYWRsb2Nr
-Ci0JCQkgKiB3aXRoIHRoZSBtbWFwX3NlbSBvdGhlcndpc2UuICBXZSdsbCBnZXQgYW5vdGhlcgot
-CQkJICogY2hhbmNlIHRvIGRyb3AgdGhlbSBvbmNlIHRoZSBsYXN0IHJlZmVyZW5jZSB0bwotCQkJ
-ICogdGhlIGlub2RlIGlzIGRyb3BwZWQsIHNvIHdlJ2xsIG5ldmVyIGxlYWsgYmxvY2tzCi0JCQkg
-KiBwZXJtYW5lbnRseS4KLQkJCSAqLwotCQkJZXJyb3IgPSB4ZnNfZnJlZV9lb2ZibG9ja3MobXAs
-IGlwLAotCQkJCQkJICAgWEZTX0ZSRUVfRU9GX1RSWUxPQ0spOwotCQkJaWYgKGVycm9yKQotCQkJ
-CXJldHVybiBlcnJvcjsKLQkJfQotCX0KKwlpZiAoKCgoaXAtPmlfZC5kaV9tb2RlICYgU19JRk1U
-KSA9PSBTX0lGUkVHKSAmJgorCSAgICAgKChpcC0+aV9zaXplID4gMCkgfHwgKFZOX0NBQ0hFRChW
-RlNfSShpcCkpID4gMCB8fAorCSAgICAgICBpcC0+aV9kZWxheWVkX2Jsa3MgPiAwKSkgJiYKKwkg
-ICAgIChpcC0+aV9kZi5pZl9mbGFncyAmIFhGU19JRkVYVEVOVFMpKSAgJiYKKwkgICAgKCEoaXAt
-PmlfZC5kaV9mbGFncyAmIChYRlNfRElGTEFHX1BSRUFMTE9DIHwgWEZTX0RJRkxBR19BUFBFTkQp
-KSkpIHsKIAorCQkvKgorCQkgKiBJZiB3ZSBjYW4ndCBnZXQgdGhlIGlvbG9jayBqdXN0IHNraXAg
-dHJ1bmNhdGluZyB0aGUgYmxvY2tzCisJCSAqIHBhc3QgRU9GIGJlY2F1c2Ugd2UgY291bGQgZGVh
-ZGxvY2sgd2l0aCB0aGUgbW1hcF9zZW0KKwkJICogb3RoZXJ3aXNlLiAgV2UnbGwgZ2V0IGFub3Ro
-ZXIgY2hhbmNlIHRvIGRyb3AgdGhlbSBvbmNlIHRoZQorCQkgKiBsYXN0IHJlZmVyZW5jZSB0byB0
-aGUgaW5vZGUgaXMgZHJvcHBlZCwgc28gd2UnbGwgbmV2ZXIgbGVhaworCQkgKiBibG9ja3MgcGVy
-bWFuZW50bHkuCisJCSAqCisJCSAqIEZ1cnRoZXIsIGNoZWNrIGlmIHRoZSBpbm9kZSBpcyBiZWlu
-ZyBvcGVuZWQsIHdyaXR0ZW4gYW5kCisJCSAqIGNsb3NlZCBmcmVxdWVudGx5IGFuZCB3ZSBoYXZl
-IGRlbGF5ZWQgYWxsb2NhdGlvbiBibG9ja3MKKwkJICogb3VzdGFuZGluZyAoZS5nLiBzdHJlYW1p
-bmcgd3JpdGVzIGZyb20gdGhlIE5GUyBzZXJ2ZXIpLAorCQkgKiB0cnVuY2F0aW5nIHRoZSBibG9j
-a3MgcGFzdCBFT0Ygd2lsbCBjYXVzZSBmcmFnbWVudGF0aW9uIHRvCisJCSAqIG9jY3VyLgorCQkg
-KgorCQkgKiBJbiB0aGlzIGNhc2UgZG9uJ3QgZG8gdGhlIHRydW5jYXRpb24sIGVpdGhlciwgYnV0
-IHdlIGhhdmUgdG8KKwkJICogYmUgY2FyZWZ1bCBob3cgd2UgZGV0ZWN0IHRoaXMgY2FzZS4gQmxv
-Y2tzIGJleW9uZCBFT0Ygc2hvdworCQkgKiB1cCBhcyBpX2RlbGF5ZWRfYmxrcyBldmVuIHdoZW4g
-dGhlIGlub2RlIGlzIGNsZWFuLCBzbyB3ZQorCQkgKiBuZWVkIHRvIHRydW5jYXRlIHRoZW0gYXdh
-eSBmaXJzdCBiZWZvcmUgY2hlY2tpbmcgZm9yIGEgZGlydHkKKwkJICogcmVsZWFzZS4gSGVuY2Ug
-b24gdGhlIGZpcnN0IGRpcnR5IGNsb3NlIHdlIHdpbGwgc3RpbGwgcmVtb3ZlCisJCSAqIHRoZSBz
-cGVjdWxhdGl2ZSBhbGxvY2F0aW9uLCBidXQgYWZ0ZXIgdGhhdCB3ZSB3aWxsIGxlYXZlIGl0CisJ
-CSAqIGluIHBsYWNlLgorCQkgKi8KKwkJaWYgKHhmc19pZmxhZ3NfdGVzdChpcCwgWEZTX0lESVJU
-WV9SRUxFQVNFKSkKKwkJCXJldHVybiAwOworCisJCWVycm9yID0geGZzX2ZyZWVfZW9mYmxvY2tz
-KG1wLCBpcCwKKwkJCQkJICAgWEZTX0ZSRUVfRU9GX1RSWUxPQ0spOworCQlpZiAoZXJyb3IpCisJ
-CQlyZXR1cm4gZXJyb3I7CisKKwkJLyogZGVsYWxsb2MgYmxvY2tzIGFmdGVyIHRydW5jYXRpb24g
-bWVhbnMgaXQgcmVhbGx5IGlzIGRpcnR5ICovCisJCWlmIChpcC0+aV9kZWxheWVkX2Jsa3MpCisJ
-CQl4ZnNfaWZsYWdzX3NldChpcCwgWEZTX0lESVJUWV9SRUxFQVNFKTsKKwl9CiAJcmV0dXJuIDA7
-CiB9CiAKLS0gCjEuNy4yLjMKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dp
-LmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+From: Dave Chinner <dchinner@redhat.com>
+
+log->l_last_sync_lsn is updated in only one critical spot - log
+buffer Io completion - and is protected by the grant lock here. This
+requires the grant lock to be taken for every log buffer IO
+completion. Converting the l_last_sync_lsn variable to an atomic64_t
+means that we do not need to take the grant lock in log buffer IO
+completion to update it.
+
+This also removes the need for explicitly holding a spinlock to read
+the l_last_sync_lsn on 32 bit platforms.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_log.c         |   55 +++++++++++++++++++++-------------------------
+ fs/xfs/xfs_log_priv.h    |    9 ++++++-
+ fs/xfs/xfs_log_recover.c |    6 ++--
+ 3 files changed, 36 insertions(+), 34 deletions(-)
+
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 1e2020d..70790eb 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -675,12 +675,8 @@ xfs_log_move_tail(xfs_mount_t	*mp,
+ 	if (XLOG_FORCED_SHUTDOWN(log))
+ 		return;
+ 
+-	if (tail_lsn == 0) {
+-		/* needed since sync_lsn is 64 bits */
+-		spin_lock(&log->l_icloglock);
+-		tail_lsn = log->l_last_sync_lsn;
+-		spin_unlock(&log->l_icloglock);
+-	}
++	if (tail_lsn == 0)
++		tail_lsn = atomic64_read(&log->l_last_sync_lsn);
+ 
+ 	spin_lock(&log->l_grant_lock);
+ 
+@@ -800,11 +796,9 @@ xlog_assign_tail_lsn(xfs_mount_t *mp)
+ 
+ 	tail_lsn = xfs_trans_ail_tail(mp->m_ail);
+ 	spin_lock(&log->l_grant_lock);
+-	if (tail_lsn != 0) {
+-		log->l_tail_lsn = tail_lsn;
+-	} else {
+-		tail_lsn = log->l_tail_lsn = log->l_last_sync_lsn;
+-	}
++	if (!tail_lsn)
++		tail_lsn = atomic64_read(&log->l_last_sync_lsn);
++	log->l_tail_lsn = tail_lsn;
+ 	spin_unlock(&log->l_grant_lock);
+ 
+ 	return tail_lsn;
+@@ -1014,9 +1008,9 @@ xlog_alloc_log(xfs_mount_t	*mp,
+ 	log->l_flags	   |= XLOG_ACTIVE_RECOVERY;
+ 
+ 	log->l_prev_block  = -1;
+-	log->l_tail_lsn	   = xlog_assign_lsn(1, 0);
+ 	/* log->l_tail_lsn = 0x100000000LL; cycle = 1; current block = 0 */
+-	log->l_last_sync_lsn = log->l_tail_lsn;
++	log->l_tail_lsn	   = xlog_assign_lsn(1, 0);
++	atomic64_set(&log->l_last_sync_lsn, xlog_assign_lsn(1, 0));
+ 	log->l_curr_cycle  = 1;	    /* 0 is bad since this is initial value */
+ 	xlog_assign_grant_head(&log->l_grant_reserve_head, 1, 0);
+ 	xlog_assign_grant_head(&log->l_grant_write_head, 1, 0);
+@@ -1194,6 +1188,7 @@ xlog_grant_push_ail(
+ 	int		need_bytes)
+ {
+ 	xfs_lsn_t	threshold_lsn = 0;
++	xfs_lsn_t	last_sync_lsn;
+ 	xfs_lsn_t	tail_lsn;
+ 	int		free_blocks;
+ 	int		free_bytes;
+@@ -1228,10 +1223,12 @@ xlog_grant_push_ail(
+ 					threshold_block);
+ 	/*
+ 	 * Don't pass in an lsn greater than the lsn of the last
+-	 * log record known to be on disk.
++	 * log record known to be on disk. Use a snapshot of the last sync lsn
++	 * so that it doesn't change between the compare and the set.
+ 	 */
+-	if (XFS_LSN_CMP(threshold_lsn, log->l_last_sync_lsn) > 0)
+-		threshold_lsn = log->l_last_sync_lsn;
++	last_sync_lsn = atomic64_read(&log->l_last_sync_lsn);
++	if (XFS_LSN_CMP(threshold_lsn, last_sync_lsn) > 0)
++		threshold_lsn = last_sync_lsn;
+ 
+ 	/*
+ 	 * Get the transaction layer to kick the dirty buffers out to
+@@ -2194,7 +2191,7 @@ xlog_state_do_callback(
+ 				lowest_lsn = xlog_get_lowest_lsn(log);
+ 				if (lowest_lsn &&
+ 				    XFS_LSN_CMP(lowest_lsn,
+-				    		be64_to_cpu(iclog->ic_header.h_lsn)) < 0) {
++						be64_to_cpu(iclog->ic_header.h_lsn)) < 0) {
+ 					iclog = iclog->ic_next;
+ 					continue; /* Leave this iclog for
+ 						   * another thread */
+@@ -2202,23 +2199,21 @@ xlog_state_do_callback(
+ 
+ 				iclog->ic_state = XLOG_STATE_CALLBACK;
+ 
+-				spin_unlock(&log->l_icloglock);
+ 
+-				/* l_last_sync_lsn field protected by
+-				 * l_grant_lock. Don't worry about iclog's lsn.
+-				 * No one else can be here except us.
++				/*
++				 * update the last_sync_lsn before we drop the
++				 * icloglock to ensure we are the only one that
++				 * can update it.
+ 				 */
+-				spin_lock(&log->l_grant_lock);
+-				ASSERT(XFS_LSN_CMP(log->l_last_sync_lsn,
+-				       be64_to_cpu(iclog->ic_header.h_lsn)) <= 0);
+-				log->l_last_sync_lsn =
+-					be64_to_cpu(iclog->ic_header.h_lsn);
+-				spin_unlock(&log->l_grant_lock);
++				ASSERT(XFS_LSN_CMP(atomic64_read(&log->l_last_sync_lsn),
++					be64_to_cpu(iclog->ic_header.h_lsn)) <= 0);
++				atomic64_set(&log->l_last_sync_lsn,
++					be64_to_cpu(iclog->ic_header.h_lsn));
+ 
+-			} else {
+-				spin_unlock(&log->l_icloglock);
++			} else
+ 				ioerrors++;
+-			}
++
++			spin_unlock(&log->l_icloglock);
+ 
+ 			/*
+ 			 * Keep processing entries in the callback list until
+diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+index e2bb276..958f356 100644
+--- a/fs/xfs/xfs_log_priv.h
++++ b/fs/xfs/xfs_log_priv.h
+@@ -507,7 +507,6 @@ typedef struct log {
+ 	spinlock_t		l_icloglock;    /* grab to change iclog state */
+ 	xfs_lsn_t		l_tail_lsn;     /* lsn of 1st LR with unflushed
+ 						 * buffers */
+-	xfs_lsn_t		l_last_sync_lsn;/* lsn of last LR on disk */
+ 	int			l_curr_cycle;   /* Cycle number of log writes */
+ 	int			l_prev_cycle;   /* Cycle number before last
+ 						 * block increment */
+@@ -521,6 +520,14 @@ typedef struct log {
+ 	int64_t			l_grant_reserve_head;
+ 	int64_t			l_grant_write_head;
+ 
++	/*
++	 * l_last_sync_lsn is an atomic so it can be set and read without
++	 * needing to hold specific locks. To avoid operations contending with
++	 * other hot objects, place it on a separate cacheline.
++	 */
++	/* lsn of last LR on disk */
++	atomic64_t		l_last_sync_lsn ____cacheline_aligned_in_smp;
++
+ 	/* The following field are used for debugging; need to hold icloglock */
+ #ifdef DEBUG
+ 	char			*l_iclog_bak[XLOG_MAX_ICLOGS];
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 1550404..18e1e18 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -937,7 +937,7 @@ xlog_find_tail(
+ 	if (found == 2)
+ 		log->l_curr_cycle++;
+ 	log->l_tail_lsn = be64_to_cpu(rhead->h_tail_lsn);
+-	log->l_last_sync_lsn = be64_to_cpu(rhead->h_lsn);
++	atomic64_set(&log->l_last_sync_lsn, be64_to_cpu(rhead->h_lsn));
+ 	xlog_assign_grant_head(&log->l_grant_reserve_head, log->l_curr_cycle,
+ 					BBTOB(log->l_curr_block));
+ 	xlog_assign_grant_head(&log->l_grant_write_head, log->l_curr_cycle,
+@@ -989,9 +989,9 @@ xlog_find_tail(
+ 			log->l_tail_lsn =
+ 				xlog_assign_lsn(log->l_curr_cycle,
+ 						after_umount_blk);
+-			log->l_last_sync_lsn =
++			atomic64_set(&log->l_last_sync_lsn,
+ 				xlog_assign_lsn(log->l_curr_cycle,
+-						after_umount_blk);
++						after_umount_blk));
+ 			*tail_blk = after_umount_blk;
+ 
+ 			/*
+-- 
+1.7.2.3
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
