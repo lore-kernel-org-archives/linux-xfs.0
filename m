@@ -1,29 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBL7ShAa245000 for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 01:28:43 -0600
+	oBL7SaBB244956 for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 01:28:36 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 542081CE33DD
-	for <xfs@oss.sgi.com>; Mon, 20 Dec 2010 23:30:39 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C6B6F1CE33D7
+	for <xfs@oss.sgi.com>; Mon, 20 Dec 2010 23:30:32 -0800 (PST)
 Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
 	[150.101.137.98]) by cuda.sgi.com with ESMTP id
-	CmkzloHfFL5pAySt for <xfs@oss.sgi.com>;
-	Mon, 20 Dec 2010 23:30:39 -0800 (PST)
+	pGKamhftCvhvENtu for <xfs@oss.sgi.com>;
+	Mon, 20 Dec 2010 23:30:32 -0800 (PST)
 Received: from dastard (unverified [121.44.88.148])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	50839347-1927428
-	for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 18:00:38 +1030 (CDT)
+	50839318-1927428
+	for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 18:00:28 +1030 (CDT)
 Received: from chute ([192.168.1.1] helo=disappointment)
 	by dastard with esmtp (Exim 4.72)
-	(envelope-from <dave@fromorbit.com>) id 1PUwfx-0001EK-Us
-	for xfs@oss.sgi.com; Tue, 21 Dec 2010 18:30:25 +1100
+	(envelope-from <dave@fromorbit.com>) id 1PUwfc-0001DA-SQ
+	for xfs@oss.sgi.com; Tue, 21 Dec 2010 18:30:04 +1100
 Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1PUwfm-0006aD-Ja
-	for xfs@oss.sgi.com; Tue, 21 Dec 2010 18:30:14 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1PUwfH-0006ZL-IH
+	for xfs@oss.sgi.com; Tue, 21 Dec 2010 18:29:43 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 31/34] xfs: convert log grant heads to atomic variables
-Date: Tue, 21 Dec 2010 18:29:27 +1100
-Message-Id: <1292916570-25015-32-git-send-email-david@fromorbit.com>
+Subject: [PATCH 14/34] xfs: fix EFI transaction cancellation.
+Date: Tue, 21 Dec 2010 18:29:10 +1100
+Message-Id: <1292916570-25015-15-git-send-email-david@fromorbit.com>
 In-Reply-To: <1292916570-25015-1-git-send-email-david@fromorbit.com>
 References: <1292916570-25015-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -43,96 +43,80 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Convert the log grant heads to atomic64_t types in preparation for
-converting the accounting algorithms to atomic operations. his patch
-just converts the variables; the algorithmic changes are in a
-separate patch for clarity.
+XFS_EFI_CANCELED has not been set in the code base since
+xfs_efi_cancel() was removed back in 2006 by commit
+065d312e15902976d256ddaf396a7950ec0350a8 ("[XFS] Remove unused
+iop_abort log item operation), and even then xfs_efi_cancel() was
+never called. I haven't tracked it back further than that (beyond
+git history), but it indicates that the handling of EFIs in
+cancelled transactions has been broken for a long time.
+
+Basically, when we get an IOP_UNPIN(lip, 1); call from
+xfs_trans_uncommit() (i.e. remove == 1), if we don't free the log
+item descriptor we leak it. Fix the behviour to be correct and kill
+the XFS_EFI_CANCELED flag.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_log.c      |    8 ++++----
- fs/xfs/xfs_log_priv.h |   12 ++++++------
- 2 files changed, 10 insertions(+), 10 deletions(-)
+ fs/xfs/xfs_extfree_item.c |   20 +++++++++-----------
+ fs/xfs/xfs_extfree_item.h |    1 -
+ 2 files changed, 9 insertions(+), 12 deletions(-)
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index d118bf8..a1d7d12 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -47,7 +47,7 @@ STATIC xlog_t *  xlog_alloc_log(xfs_mount_t	*mp,
- 				xfs_buftarg_t	*log_target,
- 				xfs_daddr_t	blk_offset,
- 				int		num_bblks);
--STATIC int	 xlog_space_left(struct log *log, int64_t *head);
-+STATIC int	 xlog_space_left(struct log *log, atomic64_t *head);
- STATIC int	 xlog_sync(xlog_t *log, xlog_in_core_t *iclog);
- STATIC void	 xlog_dealloc_log(xlog_t *log);
- 
-@@ -100,7 +100,7 @@ STATIC int	xlog_iclogs_empty(xlog_t *log);
- static void
- xlog_grant_sub_space(
- 	struct log	*log,
--	int64_t		*head,
-+	atomic64_t	*head,
- 	int		bytes)
- {
- 	int		cycle, space;
-@@ -119,7 +119,7 @@ xlog_grant_sub_space(
- static void
- xlog_grant_add_space(
- 	struct log	*log,
--	int64_t		*head,
-+	atomic64_t	*head,
- 	int		bytes)
- {
- 	int		tmp;
-@@ -816,7 +816,7 @@ xlog_assign_tail_lsn(
- STATIC int
- xlog_space_left(
- 	struct log	*log,
--	int64_t		*head)
-+	atomic64_t	*head)
- {
- 	int		free_bytes;
- 	int		tail_bytes;
-diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index d34af1c..7619d6a 100644
---- a/fs/xfs/xfs_log_priv.h
-+++ b/fs/xfs/xfs_log_priv.h
-@@ -514,8 +514,8 @@ typedef struct log {
- 	spinlock_t		l_grant_lock ____cacheline_aligned_in_smp;
- 	struct list_head	l_reserveq;
- 	struct list_head	l_writeq;
--	int64_t			l_grant_reserve_head;
--	int64_t			l_grant_write_head;
-+	atomic64_t			l_grant_reserve_head;
-+	atomic64_t			l_grant_write_head;
- 
- 	/*
- 	 * l_last_sync_lsn and l_tail_lsn are atomics so they can be set and
-@@ -596,18 +596,18 @@ xlog_assign_atomic_lsn(atomic64_t *lsn, uint cycle, uint block)
-  * will always get consistent component values to work from.
-  */
- static inline void
--xlog_crack_grant_head(int64_t *head, int *cycle, int *space)
-+xlog_crack_grant_head(atomic64_t *head, int *cycle, int *space)
- {
--	int64_t	val = *head;
-+	int64_t	val = atomic64_read(head);
- 
- 	*cycle = val >> 32;
- 	*space = val & 0xffffffff;
- }
- 
- static inline void
--xlog_assign_grant_head(int64_t *head, int cycle, int space)
-+xlog_assign_grant_head(atomic64_t *head, int cycle, int space)
- {
--	*head = ((int64_t)cycle << 32) | space;
-+	atomic64_set(head, ((int64_t)cycle << 32) | space);
+diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
+index a55e687..5997efa 100644
+--- a/fs/xfs/xfs_extfree_item.c
++++ b/fs/xfs/xfs_extfree_item.c
+@@ -99,10 +99,11 @@ xfs_efi_item_pin(
  }
  
  /*
+- * While EFIs cannot really be pinned, the unpin operation is the
+- * last place at which the EFI is manipulated during a transaction.
+- * Here we coordinate with xfs_efi_cancel() to determine who gets to
+- * free the EFI.
++ * While EFIs cannot really be pinned, the unpin operation is the last place at
++ * which the EFI is manipulated during a transaction.  If we are being asked to
++ * remove the EFI it's because the transaction has been cancelled and by
++ * definition that means the EFI cannot be in the AIL so remove it from the
++ * transaction and free it.
+  */
+ STATIC void
+ xfs_efi_item_unpin(
+@@ -113,17 +114,14 @@ xfs_efi_item_unpin(
+ 	struct xfs_ail		*ailp = lip->li_ailp;
+ 
+ 	spin_lock(&ailp->xa_lock);
+-	if (efip->efi_flags & XFS_EFI_CANCELED) {
+-		if (remove)
+-			xfs_trans_del_item(lip);
+-
+-		/* xfs_trans_ail_delete() drops the AIL lock. */
+-		xfs_trans_ail_delete(ailp, lip);
++	if (remove) {
++		ASSERT(!(lip->li_flags & XFS_LI_IN_AIL));
++		xfs_trans_del_item(lip);
+ 		xfs_efi_item_free(efip);
+ 	} else {
+ 		efip->efi_flags |= XFS_EFI_COMMITTED;
+-		spin_unlock(&ailp->xa_lock);
+ 	}
++	spin_unlock(&ailp->xa_lock);
+ }
+ 
+ /*
+diff --git a/fs/xfs/xfs_extfree_item.h b/fs/xfs/xfs_extfree_item.h
+index 0d22c56..f7834ec 100644
+--- a/fs/xfs/xfs_extfree_item.h
++++ b/fs/xfs/xfs_extfree_item.h
+@@ -115,7 +115,6 @@ typedef struct xfs_efd_log_format_64 {
+  */
+ #define	XFS_EFI_RECOVERED	0x1
+ #define	XFS_EFI_COMMITTED	0x2
+-#define	XFS_EFI_CANCELED	0x4
+ 
+ /*
+  * This is the "extent free intention" log item.  It is used
 -- 
 1.7.2.3
 
