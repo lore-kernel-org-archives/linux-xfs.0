@@ -1,29 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBL7SK6i244774 for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 01:28:20 -0600
+	oBL7SXv5244913 for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 01:28:34 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CD5BE1470321
-	for <xfs@oss.sgi.com>; Mon, 20 Dec 2010 23:30:16 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
-	[150.101.137.99]) by cuda.sgi.com with ESMTP id
-	u6mgSYrZOXX8y2jv for <xfs@oss.sgi.com>;
-	Mon, 20 Dec 2010 23:30:16 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7B3F1147032A
+	for <xfs@oss.sgi.com>; Mon, 20 Dec 2010 23:30:29 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
+	[150.101.137.100]) by cuda.sgi.com with ESMTP id
+	fmOCwNABDGSibCgo for <xfs@oss.sgi.com>;
+	Mon, 20 Dec 2010 23:30:29 -0800 (PST)
 Received: from dastard (unverified [121.44.88.148])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	51088111-1927428
-	for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 18:00:15 +1030 (CDT)
+	39223400-1927428
+	for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 18:00:27 +1030 (CDT)
 Received: from chute ([192.168.1.1] helo=disappointment)
 	by dastard with esmtp (Exim 4.72)
-	(envelope-from <dave@fromorbit.com>) id 1PUwfc-0001D7-Qi
-	for xfs@oss.sgi.com; Tue, 21 Dec 2010 18:30:04 +1100
+	(envelope-from <dave@fromorbit.com>) id 1PUwfs-0001EB-Hr
+	for xfs@oss.sgi.com; Tue, 21 Dec 2010 18:30:20 +1100
 Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1PUwfH-0006ZI-GR
-	for xfs@oss.sgi.com; Tue, 21 Dec 2010 18:29:43 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1PUwfc-0006Zr-5m
+	for xfs@oss.sgi.com; Tue, 21 Dec 2010 18:30:04 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 13/34] xfs: connect up buffer reclaim priority hooks
-Date: Tue, 21 Dec 2010 18:29:09 +1100
-Message-Id: <1292916570-25015-14-git-send-email-david@fromorbit.com>
+Subject: [PATCH 25/34] xfs: rework log grant space calculations
+Date: Tue, 21 Dec 2010 18:29:21 +1100
+Message-Id: <1292916570-25015-26-git-send-email-david@fromorbit.com>
 In-Reply-To: <1292916570-25015-1-git-send-email-david@fromorbit.com>
 References: <1292916570-25015-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -43,102 +43,190 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Now that the buffer reclaim infrastructure can handle different reclaim
-priorities for different types of buffers, reconnect the hooks in the
-XFS code that has been sitting dormant since it was ported to Linux. This
-should finally give use reclaim prioritisation that is on a par with the
-functionality that Irix provided XFS 15 years ago.
+The log grant space calculations are repeated for both write and
+reserve grant heads. To make it simpler to convert the calculations
+toa different algorithm, factor them so both the gratn heads use the
+same calculation functions. Once this is done we can drop the
+wrappers that are used in only a couple of place to update both
+grant heads at once as they don't provide any particular value.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/linux-2.6/xfs_buf.h |   10 ++++++++--
- fs/xfs/xfs_btree.c         |    9 ++++-----
- fs/xfs/xfs_inode.c         |    2 +-
- fs/xfs/xfs_trans.h         |    2 +-
- 4 files changed, 14 insertions(+), 9 deletions(-)
+ fs/xfs/xfs_log.c |   95 +++++++++++++++++++++++++++--------------------------
+ 1 files changed, 48 insertions(+), 47 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_buf.h b/fs/xfs/linux-2.6/xfs_buf.h
-index 4601eab..a76c242 100644
---- a/fs/xfs/linux-2.6/xfs_buf.h
-+++ b/fs/xfs/linux-2.6/xfs_buf.h
-@@ -336,9 +336,15 @@ void xfs_buf_stale(struct xfs_buf *bp);
- #define XFS_BUF_SIZE(bp)		((bp)->b_buffer_length)
- #define XFS_BUF_SET_SIZE(bp, cnt)	((bp)->b_buffer_length = (cnt))
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 99c6285..9a4b9ed 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -98,53 +98,34 @@ STATIC void	xlog_verify_tail_lsn(xlog_t *log, xlog_in_core_t *iclog,
+ STATIC int	xlog_iclogs_empty(xlog_t *log);
  
--#define XFS_BUF_SET_VTYPE_REF(bp, type, ref)	do { } while (0)
-+static inline void
-+xfs_buf_set_ref(
-+	struct xfs_buf	*bp,
-+	int		lru_ref)
-+{
-+	atomic_set(&bp->b_lru_ref, lru_ref);
-+}
-+#define XFS_BUF_SET_VTYPE_REF(bp, type, ref)	xfs_buf_set_ref(bp, ref)
- #define XFS_BUF_SET_VTYPE(bp, type)		do { } while (0)
--#define XFS_BUF_SET_REF(bp, ref)		do { } while (0)
- 
- #define XFS_BUF_ISPINNED(bp)	atomic_read(&((bp)->b_pin_count))
- 
-diff --git a/fs/xfs/xfs_btree.c b/fs/xfs/xfs_btree.c
-index 04f9cca..2f9e97c 100644
---- a/fs/xfs/xfs_btree.c
-+++ b/fs/xfs/xfs_btree.c
-@@ -634,9 +634,8 @@ xfs_btree_read_bufl(
- 		return error;
- 	}
- 	ASSERT(!bp || !XFS_BUF_GETERROR(bp));
--	if (bp != NULL) {
-+	if (bp)
- 		XFS_BUF_SET_VTYPE_REF(bp, B_FS_MAP, refval);
+ static void
+-xlog_grant_sub_space(struct log *log, int bytes)
+-{
+-	log->l_grant_write_bytes -= bytes;
+-	if (log->l_grant_write_bytes < 0) {
+-		log->l_grant_write_bytes += log->l_logsize;
+-		log->l_grant_write_cycle--;
 -	}
- 	*bpp = bp;
- 	return 0;
+-
+-	log->l_grant_reserve_bytes -= bytes;
+-	if ((log)->l_grant_reserve_bytes < 0) {
+-		log->l_grant_reserve_bytes += log->l_logsize;
+-		log->l_grant_reserve_cycle--;
+-	}
+-
+-}
+-
+-static void
+-xlog_grant_add_space_write(struct log *log, int bytes)
++xlog_grant_sub_space(
++	struct log	*log,
++	int		*cycle,
++	int		*space,
++	int		bytes)
+ {
+-	int tmp = log->l_logsize - log->l_grant_write_bytes;
+-	if (tmp > bytes)
+-		log->l_grant_write_bytes += bytes;
+-	else {
+-		log->l_grant_write_cycle++;
+-		log->l_grant_write_bytes = bytes - tmp;
++	*space -= bytes;
++	if (*space < 0) {
++		*space += log->l_logsize;
++		(*cycle)--;
+ 	}
  }
-@@ -944,13 +943,13 @@ xfs_btree_set_refs(
- 	switch (cur->bc_btnum) {
- 	case XFS_BTNUM_BNO:
- 	case XFS_BTNUM_CNT:
--		XFS_BUF_SET_VTYPE_REF(*bpp, B_FS_MAP, XFS_ALLOC_BTREE_REF);
-+		XFS_BUF_SET_VTYPE_REF(bp, B_FS_MAP, XFS_ALLOC_BTREE_REF);
- 		break;
- 	case XFS_BTNUM_INO:
--		XFS_BUF_SET_VTYPE_REF(*bpp, B_FS_INOMAP, XFS_INO_BTREE_REF);
-+		XFS_BUF_SET_VTYPE_REF(bp, B_FS_INOMAP, XFS_INO_BTREE_REF);
- 		break;
- 	case XFS_BTNUM_BMAP:
--		XFS_BUF_SET_VTYPE_REF(*bpp, B_FS_MAP, XFS_BMAP_BTREE_REF);
-+		XFS_BUF_SET_VTYPE_REF(bp, B_FS_MAP, XFS_BMAP_BTREE_REF);
- 		break;
- 	default:
- 		ASSERT(0);
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 43ffd90..be7cf62 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -887,7 +887,7 @@ xfs_iread(
- 	 * around for a while.  This helps to keep recently accessed
- 	 * meta-data in-core longer.
+ 
+ static void
+-xlog_grant_add_space_reserve(struct log *log, int bytes)
++xlog_grant_add_space(
++	struct log	*log,
++	int		*cycle,
++	int		*space,
++	int		bytes)
+ {
+-	int tmp = log->l_logsize - log->l_grant_reserve_bytes;
++	int tmp = log->l_logsize - *space;
+ 	if (tmp > bytes)
+-		log->l_grant_reserve_bytes += bytes;
++		*space += bytes;
+ 	else {
+-		log->l_grant_reserve_cycle++;
+-		log->l_grant_reserve_bytes = bytes - tmp;
++		*space = bytes - tmp;
++		(*cycle)++;
+ 	}
+ }
+-
+-static inline void
+-xlog_grant_add_space(struct log *log, int bytes)
+-{
+-	xlog_grant_add_space_write(log, bytes);
+-	xlog_grant_add_space_reserve(log, bytes);
+-}
+-
+ static void
+ xlog_tic_reset_res(xlog_ticket_t *tic)
+ {
+@@ -1344,7 +1325,10 @@ xlog_sync(xlog_t		*log,
+ 
+ 	/* move grant heads by roundoff in sync */
+ 	spin_lock(&log->l_grant_lock);
+-	xlog_grant_add_space(log, roundoff);
++	xlog_grant_add_space(log, &log->l_grant_reserve_cycle,
++				&log->l_grant_reserve_bytes, roundoff);
++	xlog_grant_add_space(log, &log->l_grant_write_cycle,
++				&log->l_grant_write_bytes, roundoff);
+ 	spin_unlock(&log->l_grant_lock);
+ 
+ 	/* put cycle number in every block */
+@@ -2574,7 +2558,10 @@ redo:
+ 	list_del_init(&tic->t_queue);
+ 
+ 	/* we've got enough space */
+-	xlog_grant_add_space(log, need_bytes);
++	xlog_grant_add_space(log, &log->l_grant_reserve_cycle,
++				&log->l_grant_reserve_bytes, need_bytes);
++	xlog_grant_add_space(log, &log->l_grant_write_cycle,
++				&log->l_grant_write_bytes, need_bytes);
+ 	trace_xfs_log_grant_exit(log, tic);
+ 	xlog_verify_grant_head(log, 1);
+ 	xlog_verify_grant_tail(log);
+@@ -2701,7 +2688,8 @@ redo:
+ 	list_del_init(&tic->t_queue);
+ 
+ 	/* we've got enough space */
+-	xlog_grant_add_space_write(log, need_bytes);
++	xlog_grant_add_space(log, &log->l_grant_write_cycle,
++				&log->l_grant_write_bytes, need_bytes);
+ 	trace_xfs_log_regrant_write_exit(log, tic);
+ 	xlog_verify_grant_head(log, 1);
+ 	xlog_verify_grant_tail(log);
+@@ -2742,7 +2730,12 @@ xlog_regrant_reserve_log_space(xlog_t	     *log,
+ 		ticket->t_cnt--;
+ 
+ 	spin_lock(&log->l_grant_lock);
+-	xlog_grant_sub_space(log, ticket->t_curr_res);
++	xlog_grant_sub_space(log, &log->l_grant_reserve_cycle,
++				&log->l_grant_reserve_bytes,
++				ticket->t_curr_res);
++	xlog_grant_sub_space(log, &log->l_grant_write_cycle,
++				&log->l_grant_write_bytes,
++				ticket->t_curr_res);
+ 	ticket->t_curr_res = ticket->t_unit_res;
+ 	xlog_tic_reset_res(ticket);
+ 
+@@ -2756,7 +2749,9 @@ xlog_regrant_reserve_log_space(xlog_t	     *log,
+ 		return;
+ 	}
+ 
+-	xlog_grant_add_space_reserve(log, ticket->t_unit_res);
++	xlog_grant_add_space(log, &log->l_grant_reserve_cycle,
++				&log->l_grant_reserve_bytes,
++				ticket->t_unit_res);
+ 
+ 	trace_xfs_log_regrant_reserve_exit(log, ticket);
+ 
+@@ -2785,24 +2780,30 @@ STATIC void
+ xlog_ungrant_log_space(xlog_t	     *log,
+ 		       xlog_ticket_t *ticket)
+ {
++	int	bytes;
++
+ 	if (ticket->t_cnt > 0)
+ 		ticket->t_cnt--;
+ 
+ 	spin_lock(&log->l_grant_lock);
+ 	trace_xfs_log_ungrant_enter(log, ticket);
+-
+-	xlog_grant_sub_space(log, ticket->t_curr_res);
+-
+ 	trace_xfs_log_ungrant_sub(log, ticket);
+ 
+-	/* If this is a permanent reservation ticket, we may be able to free
++	/*
++	 * If this is a permanent reservation ticket, we may be able to free
+ 	 * up more space based on the remaining count.
  	 */
--	XFS_BUF_SET_REF(bp, XFS_INO_REF);
-+	xfs_buf_set_ref(bp, XFS_INO_REF);
++	bytes = ticket->t_curr_res;
+ 	if (ticket->t_cnt > 0) {
+ 		ASSERT(ticket->t_flags & XLOG_TIC_PERM_RESERV);
+-		xlog_grant_sub_space(log, ticket->t_unit_res*ticket->t_cnt);
++		bytes += ticket->t_unit_res*ticket->t_cnt;
+ 	}
  
- 	/*
- 	 * Use xfs_trans_brelse() to release the buffer containing the
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index 246286b..c2042b7 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -294,8 +294,8 @@ struct xfs_log_item_desc {
- #define	XFS_ALLOC_BTREE_REF	2
- #define	XFS_BMAP_BTREE_REF	2
- #define	XFS_DIR_BTREE_REF	2
-+#define	XFS_INO_REF		2
- #define	XFS_ATTR_BTREE_REF	1
--#define	XFS_INO_REF		1
- #define	XFS_DQUOT_REF		1
++	xlog_grant_sub_space(log, &log->l_grant_reserve_cycle,
++				&log->l_grant_reserve_bytes, bytes);
++	xlog_grant_sub_space(log, &log->l_grant_write_cycle,
++				&log->l_grant_write_bytes, bytes);
++
+ 	trace_xfs_log_ungrant_exit(log, ticket);
  
- #ifdef __KERNEL__
+ 	xlog_verify_grant_head(log, 1);
 -- 
 1.7.2.3
 
