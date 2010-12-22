@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBMGsESZ259435 for <xfs@oss.sgi.com>; Wed, 22 Dec 2010 10:54:14 -0600
-Received: from smtp4-g21.free.fr (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E8AB31473E1D
-	for <xfs@oss.sgi.com>; Wed, 22 Dec 2010 08:56:10 -0800 (PST)
-Received: from smtp4-g21.free.fr (smtp4-g21.free.fr [212.27.42.4]) by
-	cuda.sgi.com with ESMTP id ZHWu91bBfFb5txxD for
-	<xfs@oss.sgi.com>; Wed, 22 Dec 2010 08:56:10 -0800 (PST)
-Date: Wed, 22 Dec 2010 17:56:11 +0100
-From: Emmanuel Florac <eflorac@intellique.com>
+	oBMHUB7H004615 for <xfs@oss.sgi.com>; Wed, 22 Dec 2010 11:30:12 -0600
+Received: from parsec.stupidest.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 631572184E8
+	for <xfs@oss.sgi.com>; Wed, 22 Dec 2010 09:32:09 -0800 (PST)
+Received: from parsec.stupidest.org (parsec.stupidest.org [71.6.196.126]) by
+	cuda.sgi.com with ESMTP id dTijd9R5YEx8tAPT for
+	<xfs@oss.sgi.com>; Wed, 22 Dec 2010 09:32:09 -0800 (PST)
+Date: Wed, 22 Dec 2010 09:32:09 -0800
+From: Chris Wedgwood <cw@f00f.org>
 Subject: Re: Anyone using XFS in production on > 20TiB volumes?
-Message-ID: <20101222175611.1c7d5190@harpe.intellique.com>
-In-Reply-To: <alpine.DEB.2.00.1012221128440.5245@p34.internal.lan>
+Message-ID: <20101222173209.GA29291@puku.stupidest.org>
 References: <alpine.DEB.2.00.1012221128440.5245@p34.internal.lan>
-Mime-Version: 1.0
+	<20101222170620.GA29117@puku.stupidest.org>
+	<alpine.DEB.2.00.1012221209150.5245@p34.internal.lan>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.00.1012221209150.5245@p34.internal.lan>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,48 +26,49 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Justin Piszcz <jpiszcz@lucidpixels.com>
 Cc: xfs@oss.sgi.com
 
-Le Wed, 22 Dec 2010 11:30:05 -0500 (EST)
-Justin Piszcz <jpiszcz@lucidpixels.com> =E9crivait:
+On Wed, Dec 22, 2010 at 12:10:06PM -0500, Justin Piszcz wrote:
 
-> Is there anyone currently using this in production?
+> Do you have an example/of what you found?
 
-Yup, lots of people do. Currently supporting 28 such systems (from 20
-to 76 TiB, most are 39.7 TiB).
+i don't have the numbers anymore, they are with a previous employer.
 
-> How much ram is needed when you fsck with a many files on such a
-> volume? Dave Chinner reported 5.5g or so is needed for ~43TB with no
-> inodes. Any recent issues/bugs one needs to be aware of?
+basically using dbench (there were cifs NAS machines, so dbench seemed
+as good or bad as anything to test with) the performance was about 3x
+better between 'old' and 'new' with a small number of workers and
+about 10x better with a large number
 
-I never had any trouble running xfs_repair on 39.7 TB+ systems with 8 GB
-of RAM.
-
-> Is inode64 recommended on a 64-bit system?
-
-Sure, however 32 bits clients may scoff sometimes, though it's limited
-to some weird programs.
-
-> Any specific 64-bit tweaks/etc for a large 43TiB FS?
-> =
+i don't know how much difference each of inode64 and getting the geom
+right made each, but bother were quite measurable in the graphs i made
+at the time
 
 
-Nothing unusual (inode64,noatime, mkfs with lazy-count enabled, etc). It
-should just works.
+from memory the machines are raid50 (4x (5+1)) with 2TB drives, so
+about 38TB usable on each one
 
--- =
+initially these machines were 3ware controllers and later on LSI (the
+two products lines have since merged so it's not clear how much
+difference that makes now)
 
-------------------------------------------------------------------------
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
-------------------------------------------------------------------------
+in testing 16GB for xfs_repair wasn't enough, so they were upped to
+64GB, that's likely largely a result of the fact there were 100s of
+millions of small files (as well as some large ones)
+
+> Is it dependent on the RAID card?
+
+perhaps, do you have a BBU and enable WC?  certainly we found the LSI
+cards to be faster in most cases than the (now old) 3ware
+
+
+where i am now i use larger chassis and no hw raid cards, using sw
+raid on these works spectacularly well with the exception of burst of
+small seeky writes (which a BBU + wc soaks up quite well)
 
 _______________________________________________
 xfs mailing list
