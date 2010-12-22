@@ -1,16 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBM2Ysk1148332 for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 20:34:54 -0600
-Subject: Re: [PATCH 06/34] xfs: dynamic speculative EOF preallocation
+	oBM2K6m2145538 for <xfs@oss.sgi.com>; Tue, 21 Dec 2010 20:20:06 -0600
+Subject: Re: [PATCH 20/34] xfs: remove all the inodes on a buffer from the
+	AIL in bulk
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20101221234412.GC4907@dastard>
+In-Reply-To: <1292916570-25015-21-git-send-email-david@fromorbit.com>
 References: <1292916570-25015-1-git-send-email-david@fromorbit.com>
-	<1292916570-25015-7-git-send-email-david@fromorbit.com>
-	<20101221151511.GA26127@infradead.org> <20101221214240.GB4907@dastard>
-	<20101221234412.GC4907@dastard>
-Date: Tue, 21 Dec 2010 20:29:37 -0600
-Message-ID: <1292984977.2408.359.camel@doink>
+	<1292916570-25015-21-git-send-email-david@fromorbit.com>
+Date: Tue, 21 Dec 2010 20:20:46 -0600
+Message-ID: <1292984446.2408.358.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -26,50 +25,43 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-On Wed, 2010-12-22 at 10:44 +1100, Dave Chinner wrote:
-> On Wed, Dec 22, 2010 at 08:42:40AM +1100, Dave Chinner wrote:
-> > On Tue, Dec 21, 2010 at 10:15:11AM -0500, Christoph Hellwig wrote:
-> > > This patch causes tesr 014 to take ~ 870 seconds instead of 6, thus
-> > > beeing almost 150 times slower on mt 32-bit test VM, so I'll have to NAK
-> > > it for now.
-> > 
-> > It's not the speculative preallocation changes - ithey are just
-> > exposing some other regression. That is, using MOUNT_OPTIONS="-o
-> > allocsize=4k" gives the previous behaviour, while allocsize=512m
-> > gives the same behaviour as the dynamic preallocation.
-> > 
-> > The dynamic behaviour is resulting in megabyte sized IOs being
-> > issued for random 512 byte writes (which is wrong), so I'm tending
-> > towards it being a regression caused by the reecent writeback path
-> > changes. I'll dig deeper today.
-> 
-> Ok, it's not a recent regression - it's the fact that the test is 
-> writing and truncating to random offsets so the file size is
-> constantly changing resulting in xfs_zero_eof() writing huge amounts
-> of zeros into preallocated extents beyond EOF. The patch below
-> explains the situation and the change to the test to avoid
-> the extended runtime.
-> 
-> Ultimately, we probably need to change xfs_zero_eof() to allocate
-> unwritten extents rather than write megabytes of zero for
-> speculative allocation beyond EOF. However, I'm going to worry about
-> that when (if) we come across applications that trigger this issue.
-
-Your change to test 014 looks good to me, and makes
-the test take about the same time it did previously.
-
-Reviewed-by: Alex Elder <aelder@sgi.com>
-
-> --
-> 
-> xfstests: 014 takes forever with large preallocation sizes
-> 
+On Tue, 2010-12-21 at 18:29 +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
+> When inode buffer IO completes, usually all of the inodes are removed from the
+> AIL. This involves processing them one at a time and taking the AIL lock once
+> for every inode. When all CPUs are processing inode IO completions, this causes
+> excessive amount sof contention on the AIL lock.
+> 
+> Instead, change the way we process inode IO completion in the buffer
+> IO done callback. Allow the inode IO done callback to walk the list
+> of IO done callbacks and pull all the inodes off the buffer in one
+> go and then process them as a batch.
+> 
+> Once all the inodes for removal are collected, take the AIL lock
+> once and do a bulk removal operation to minimise traffic on the AIL
+> lock.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+
+One question, below.		-Alex
 
 . . .
+
+> @@ -861,28 +910,37 @@ xfs_iflush_done(
+>  	 * the lock since it's cheaper, and then we recheck while
+>  	 * holding the lock before removing the inode from the AIL.
+>  	 */
+> -	if (iip->ili_logged && lip->li_lsn == iip->ili_flush_lsn) {
+> +	if (need_ail) {
+> +		struct xfs_log_item *log_items[need_ail];
+
+What's the worst-case value of need_ail we might see here?
+
+
 
 _______________________________________________
 xfs mailing list
