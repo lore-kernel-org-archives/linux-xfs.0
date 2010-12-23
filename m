@@ -1,29 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBNJRRL5231393 for <xfs@oss.sgi.com>; Thu, 23 Dec 2010 13:27:27 -0600
-Received: from lucidpixels.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 95F251CF5273
-	for <xfs@oss.sgi.com>; Thu, 23 Dec 2010 11:29:26 -0800 (PST)
-Received: from lucidpixels.com (lucidpixels.com [75.144.35.66]) by
-	cuda.sgi.com with ESMTP id Eb9gdCCkrQOL0pym for
-	<xfs@oss.sgi.com>; Thu, 23 Dec 2010 11:29:26 -0800 (PST)
-Date: Thu, 23 Dec 2010 14:29:26 -0500 (EST)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Anyone using XFS in production on > 20TiB volumes?
-In-Reply-To: <20101223195544.53d45f0b@galadriel.home>
-Message-ID: <alpine.DEB.2.00.1012231427430.6569@p34.internal.lan>
-References: <alpine.DEB.2.00.1012221128440.5245@p34.internal.lan>
-	<20101222175611.1c7d5190@harpe.intellique.com>
-	<4D124B71.9030401@sandeen.net>
-	<20101223012655.2681c596@galadriel.home>
-	<alpine.DEB.2.00.1012221928050.7452@p34.internal.lan>
-	<20101223005630.GJ4907@dastard>
-	<alpine.DEB.2.00.1012230442150.7452@p34.internal.lan>
-	<alpine.DEB.2.00.1012231304130.12482@p34.internal.lan>
-	<20101223195544.53d45f0b@galadriel.home>
+	oBNJRGEq231359 for <xfs@oss.sgi.com>; Thu, 23 Dec 2010 13:27:17 -0600
+Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id AC846147E486
+	for <xfs@oss.sgi.com>; Thu, 23 Dec 2010 11:29:14 -0800 (PST)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id buFa7pOr05MtX5CE
+	for <xfs@oss.sgi.com>; Thu, 23 Dec 2010 11:29:14 -0800 (PST)
+Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
+	by greer.hardwarefreak.com (Postfix) with ESMTP id 1331E6C0B8
+	for <xfs@oss.sgi.com>; Thu, 23 Dec 2010 13:29:14 -0600 (CST)
+Message-ID: <4D13A30A.3090600@hardwarefreak.com>
+Date: Thu, 23 Dec 2010 13:29:14 -0600
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="655872-795982373-1293132566=:6569"
+Subject: Re: xfssyncd and disk spin down
+References: <20101223165532.GA23813@peter.simplex.ro>
+In-Reply-To: <20101223165532.GA23813@peter.simplex.ro>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,47 +26,87 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Emmanuel Florac <eflorac@intellique.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+Petre Rodan put forth on 12/23/2010 10:55 AM:
 
---655872-795982373-1293132566=:6569
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+> this hard drive has exceeded it's 300k load/unload maximum from the specs in only 140 days, which means it was woken up every 30s or so. not willingly.
 
-On Thu, 23 Dec 2010, Emmanuel Florac wrote:
+Contact WD and request a warranty replacement for the drive due to
+exceeding the spec'd cycle max in less than 6 months.  They may not
+honor your request.  Whether they do or not, I'd replace the drive as
+the mechanism obviously has too much wear on it already, and within one
+year of use will have well over double the spec'd cycles.  If you
+replace it with another 20EARS, replace the firmware immediately as
+mentioned below to decrease the load/unload rate.  (It would be nice if
+they offered the ability to disable the sleep mode totally, but then it
+wouldn't be "green" pfft).
 
-> Le Thu, 23 Dec 2010 13:06:10 -0500 (EST) vous =E9criviez:
->
->> http://home.comcast.net/~jpiszcz/20101223/final.html
->>
+Modern drives consume so little power compared to CPUs and GPUs I can't
+understand the big power save quest the HD industry has embarked upon,
+especially with potential consequences to drive life you and others are
+seeing.  I can understand the need WRT huge drive count enterprise near
+line disk arrays, but not the average desktop or server.  And the EARS
+series drives are anything but enterprise caliber.  Note the power specs
+for the WD20EARS:
 
-Please check the updated page:
-http://home.comcast.net/~jpiszcz/20101223/final.html
+Current Requirements
+	12 VDC
+	Read/Write	296 mA
+	Idle		243 mA
+	Standby		3 mA
+	Sleep		3 mA
+	5 VDC
+	Read/Write	503 mA
+	Idle		172 mA
+	Standby		160 mA
+	Sleep		160 mA
+	Power Dissipation
+	Read/Write	6.00 Watts
+	Idle		3.70 Watts
+	Standby		0.80 Watts
+	Sleep		0.80 Watts
 
-Using a partition shows a slight degredation in the re-write speed but
-an increase in performance for sequential output and input with the mode
-set to perform.  Looks like this is what I will be using as it is the faste=
-st
-speeds overall except for the rewrite.
+6 watts maximum draw for read/write and 3.7 watts idle.  Sure, the sleep
+mode consumes 10x less power, but when you're already at less than 4
+watts idle it doesn't matter except in huge disk arrays.  For
+comparison, your average dual core cpu today consumes an average of
+20-50 watts or more.  Power supplies burn more wasted juice than
+anything, so get a 90% efficiency PSU and disable all the power save
+features of your disk drives to prolong their lifespan.
 
-Thanks!
+To replace the 20EARS firmware:
 
-Justin.
+From:
+http://community.wdc.com/t5/Desktop/Green-Caviar-High-Load-Cycle-Cout-after-short-operation-time/td-p/15731/page/2
 
---655872-795982373-1293132566=:6569
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+
+Re: Green Caviar: High Load Cycle Count after short operation time
+
+04-08-2010 04:03 PM
+
+Sorry, but our agent didn't know that this policy was just changed.
+Current WDIDLE3 works with the RE and GP drives listed below.
+
+RE Drives - WD1000FYPS-01ZKB0, WD7500AYPS-01ZKB0, WD7501AYPS-01ZKB0
+
+GP Drives - WD20EADS, WD20EARS, WD15EADS, WD15EARS, WD10EADS, WD10EARS,
+WD8000AARS, WD7500AADS, WD7500AARS, WD6400AADS, WD6400AARS, WD5000AADS,
+WD5000AARS
+
+WDIDLE3
+
+http://support.wdc.com/product/download.asp?groupid=609&sid=113&lang=en
+
+
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---655872-795982373-1293132566=:6569--
