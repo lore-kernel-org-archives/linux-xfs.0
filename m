@@ -1,26 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBNC1SYt162553 for <xfs@oss.sgi.com>; Thu, 23 Dec 2010 06:01:28 -0600
-Received: from smtp4-g21.free.fr (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0DD03147AEF6
-	for <xfs@oss.sgi.com>; Thu, 23 Dec 2010 04:03:24 -0800 (PST)
-Received: from smtp4-g21.free.fr (smtp4-g21.free.fr [212.27.42.4]) by
-	cuda.sgi.com with ESMTP id t7HClqhBJbZoRnzx for
-	<xfs@oss.sgi.com>; Thu, 23 Dec 2010 04:03:24 -0800 (PST)
-Date: Thu, 23 Dec 2010 13:03:22 +0100
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: Anyone using XFS in production on > 20TiB volumes?
-Message-ID: <20101223130322.28644309@harpe.intellique.com>
-In-Reply-To: <alpine.DEB.2.00.1012230442150.7452@p34.internal.lan>
-References: <alpine.DEB.2.00.1012221128440.5245@p34.internal.lan>
-	<20101222175611.1c7d5190@harpe.intellique.com>
-	<4D124B71.9030401@sandeen.net>
-	<20101223012655.2681c596@galadriel.home>
-	<alpine.DEB.2.00.1012221928050.7452@p34.internal.lan>
-	<20101223005630.GJ4907@dastard>
-	<alpine.DEB.2.00.1012230442150.7452@p34.internal.lan>
-Mime-Version: 1.0
+	oBNCUfDm167342 for <xfs@oss.sgi.com>; Thu, 23 Dec 2010 06:30:42 -0600
+Received: from mail-iy0-f181.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1153C21B337
+	for <xfs@oss.sgi.com>; Thu, 23 Dec 2010 04:32:40 -0800 (PST)
+Received: from mail-iy0-f181.google.com (mail-iy0-f181.google.com
+	[209.85.210.181]) by cuda.sgi.com with ESMTP id
+	UH0phAaObmCemkGp for <xfs@oss.sgi.com>;
+	Thu, 23 Dec 2010 04:32:40 -0800 (PST)
+Received: by iyj18 with SMTP id 18so5669007iyj.26
+	for <xfs@oss.sgi.com>; Thu, 23 Dec 2010 04:32:40 -0800 (PST)
+MIME-Version: 1.0
+Date: Thu, 23 Dec 2010 13:32:40 +0100
+Message-ID: <AANLkTi=Xes02L3XfZvUu6Yh2yi2FR8GtpVdOGzngVjJk@mail.gmail.com>
+Subject: no rw xfs file systems in mtab: /proc/mounts
+From: Honza Fikar <j.fikar@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,35 +24,42 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Le Thu, 23 Dec 2010 04:43:26 -0500 (EST)
-Justin Piszcz <jpiszcz@lucidpixels.com> =E9crivait:
+Hi guys,
 
-> So for an 18 disk raid-6 with 256k stripe you would recommend:
-> =
+when I try "xfs_fsr -v -d" on my two computers, it says now:
 
-> mkfs.xfs with su=3D256k,sw=3D16 for optimal performance with inode64
-> mount option?
-> =
+no rw xfs file systems in mtab: /proc/mounts
 
+while actually there is the LUKS encrypted root:
+...
+/dev/mapper/root / xfs
+rw,noatime,attr2,inode64,logbufs=8,logbsize=256k,noquota 0 0
+...
 
-Yes that should be the best setting. =
+on the third computer it works as expected, there are two xfs file
+systems, one of them LUKS encrypted:
+...
+/dev/root / xfs
+rw,noatime,attr2,delaylog,inode64,logbufs=8,logbsize=256k,noquota 0 0
+/dev/mapper/encrypted /home xfs
+rw,noatime,attr2,delaylog,inode64,logbufs=8,logbsize=256k,sunit=512,swidth=1536,noquota
+0 0
+...
 
+and it was working some time ago on all the three computers
 
--- =
+distribution gentoo
+xfsprogs 3.1.4, but I just tried git version and it's the same
+kernel 2.6.32, on the third machine 2.6.35
 
-------------------------------------------------------------------------
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
-------------------------------------------------------------------------
+Best regards,
+Honza
 
 _______________________________________________
 xfs mailing list
