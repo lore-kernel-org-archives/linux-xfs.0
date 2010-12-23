@@ -1,27 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBNLAwLA250142 for <xfs@oss.sgi.com>; Thu, 23 Dec 2010 15:10:58 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 453381CF5AA7
-	for <xfs@oss.sgi.com>; Thu, 23 Dec 2010 13:12:56 -0800 (PST)
-Received: from mail.sandeen.net (64-131-28-21.usfamily.net [64.131.28.21]) by
-	cuda.sgi.com with ESMTP id 2rMHkOA0kQuli0WE for
-	<xfs@oss.sgi.com>; Thu, 23 Dec 2010 13:12:56 -0800 (PST)
-Message-ID: <4D13BB57.80309@sandeen.net>
-Date: Thu, 23 Dec 2010 15:12:55 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	oBNLGVZI250834 for <xfs@oss.sgi.com>; Thu, 23 Dec 2010 15:16:32 -0600
+Received: from passage.avira.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 56A6E147E9AF
+	for <xfs@oss.sgi.com>; Thu, 23 Dec 2010 13:18:29 -0800 (PST)
+Received: from passage.avira.com (passage.avira.com [89.238.222.20]) by
+	cuda.sgi.com with ESMTP id R6YjUHWHRaC0jQ05 for
+	<xfs@oss.sgi.com>; Thu, 23 Dec 2010 13:18:29 -0800 (PST)
+Received: from localhost (localhost [127.0.0.1])
+	by passage.avira.com (Postfix/AVIRA) with ESMTP id 2740C1249F9
+	for <xfs@oss.sgi.com>; Thu, 23 Dec 2010 23:18:28 +0200 (EET)
+Received: from naliboat.bu.avira.com (dasapass.avira.com [89.238.222.18])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client CN "mail.bu.avira.com",
+	Issuer "Avira Intermediate Certificate Authority 2010-2020" (not
+	verified))
+	by passage.avira.com (Postfix/AVIRA) with ESMTPS id 18B1B1249F9
+	for <xfs@oss.sgi.com>; Thu, 23 Dec 2010 23:18:28 +0200 (EET)
+Date: Thu, 23 Dec 2010 23:16:50 +0200
+From: Petre Rodan <petre.rodan@simplex.ro>
+Subject: Re: xfssyncd and disk spin down
+Message-ID: <20101223211650.GA19694@peter.simplex.ro>
+References: <20101223165532.GA23813@peter.simplex.ro>
+	<4D13A30A.3090600@hardwarefreak.com>
 MIME-Version: 1.0
-Subject: Re: Anyone using XFS in production on > 20TiB volumes?
-References: <alpine.DEB.2.00.1012221128440.5245@p34.internal.lan>
-	<20101222175611.1c7d5190@harpe.intellique.com>
-	<4D124B71.9030401@sandeen.net>
-	<20101223012655.2681c596@galadriel.home>
-	<alpine.DEB.2.00.1012221928050.7452@p34.internal.lan>
-	<20101223005630.GJ4907@dastard>
-	<alpine.DEB.2.00.1012230442150.7452@p34.internal.lan>
-	<alpine.DEB.2.00.1012231304130.12482@p34.internal.lan>
-In-Reply-To: <alpine.DEB.2.00.1012231304130.12482@p34.internal.lan>
+Content-Disposition: inline
+In-Reply-To: <4D13A30A.3090600@hardwarefreak.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,37 +39,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 12/23/10 12:06 PM, Justin Piszcz wrote:
-> 
-> On Thu, 23 Dec 2010, Justin Piszcz wrote:
-> 
-> 
-> Hi,
-> 
-> How come parted using (optimal at 1mb alignment is slower than no
-> partition?  
 
-because parted got it wrong, sounds like.
+Hello,
 
-> In addition, sunit and swidth set properly as mentioned
-> earlier appears to be _slower_ than defaults with no partitions.
-
-stripe unit over an incorrectly aligned partition won't help
-and I suppose could make it worse.
-
-align your partitions, using sector units, to a stripe width unit.
-Set the stripe width properly on the fs on top of that.
-
--Eric
- 
+On Thu, Dec 23, 2010 at 01:29:14PM -0600, Stan Hoeppner wrote:
+> Petre Rodan put forth on 12/23/2010 10:55 AM:
 > 
-> http://home.comcast.net/~jpiszcz/20101223/final.html
+> > this hard drive has exceeded it's 300k load/unload maximum from the specs in only 140 days, which means it was woken up every 30s or so. not willingly.
 > 
-> Justin.
-> 
+> Contact WD and request a warranty replacement for the drive due to
+> exceeding the spec'd cycle max in less than 6 months.  They may not
+> honor your request.  Whether they do or not, I'd replace the drive as
+> the mechanism obviously has too much wear on it already, and within one
+> year of use will have well over double the spec'd cycles.  If you
+> replace it with another 20EARS, replace the firmware immediately as
+> mentioned below to decrease the load/unload rate.  (It would be nice if
+> they offered the ability to disable the sleep mode totally, but then it
+> wouldn't be "green" pfft).
+
+thanks for your input. I did run wdidle3 on that drive two days ago stopping the nonsense.
+
+but my original mail had a different target really. I have to recognize that I don't know much about the inner-workings of a filesystem, but I find it odd that once there is no input from the outside, a process keeps writing to the drive indefinitely. in my very narrow thinking the fact that these writes dissapear after a remount would prove their redundance.
+
+to wrap it up, I see no logic to the above and this is why I ask the list to tell me if this is 
+
+ a. something that can easily be fixed via an option I failed to find
+ b. a critical part of xfs's internals that cannot be 'disabled' (with a short explanation)
+ c. simply a bug
+
+with the little side-story with the WD 20EARS i was just portraying where this default behaviour can get to. 
+I don't usually read marketing material, but WD acknowledges that their green drives are wrecked in Linux and they simply encourage customers to change their OS. I just have to ask why have we got to get to this point.
+
+the drive I was trying to get into standby in the first half of my mail is a different one, an enterprise ST31000340NS placed on an otherwise low power ProLiant MicroServer. Having 8W*12h*30 = 2880 Wh less to pay per hdd per month would be easily achievable if the standby mode would be reached when possible.
+
+cheers,
+peter
 
 _______________________________________________
 xfs mailing list
