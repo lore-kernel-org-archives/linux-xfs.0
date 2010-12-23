@@ -1,22 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBN1gH0l067811 for <xfs@oss.sgi.com>; Wed, 22 Dec 2010 19:42:18 -0600
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 186ED1478819
-	for <xfs@oss.sgi.com>; Wed, 22 Dec 2010 17:44:14 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail20.adl6.internode.on.net
-	[150.101.137.105]) by cuda.sgi.com with ESMTP id
-	5opt0qGBGz5pskFp for <xfs@oss.sgi.com>;
-	Wed, 22 Dec 2010 17:44:14 -0800 (PST)
-Date: Thu, 23 Dec 2010 12:44:09 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs: add FITRIM support
-Message-ID: <20101223014409.GL4907@dastard>
-References: <20101125112304.GA4195@infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20101125112304.GA4195@infradead.org>
+	oBN3u3ve087055 for <xfs@oss.sgi.com>; Wed, 22 Dec 2010 21:56:03 -0600
+Received: from cf--amer001e--3.americas.sgi.com
+	(cf--amer001e--3.americas.sgi.com [137.38.100.5])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 26FFDAC016
+	for <xfs@oss.sgi.com>; Wed, 22 Dec 2010 19:58:02 -0800 (PST)
+Subject: [PATCH 3/5] percpu_counter: fix error bound used in add_unless_lt
+	function
+From: Alex Elder <aelder@sgi.com>
+Date: Wed, 22 Dec 2010 21:56:21 -0600
+Message-ID: <1293076581.2408.430.camel@doink>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,165 +25,93 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, Nov 25, 2010 at 06:23:04AM -0500, Christoph Hellwig wrote:
-> Allow manual discards from userspace using the FITRIM ioctl.  This is not
-> intended to be run during normal workloads, as the freepsace btree walks
-> can cause large performance degradation.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-.....
+The __percpu_counter_add_unless_lt() function is designed to safely
+implement a conditional add operation on a percpu_counter,
+succeeding only if the result of the addition would produce a
+non-negative result.  It goes to great lengths to avoid the need to
+take a spinlock(), but it currently is much more conservative than
+it has to be.
 
-> +STATIC int
-> +xfs_trim_extents(
-> +	struct xfs_mount	*mp,
-> +	xfs_agnumber_t		agno,
-> +	xfs_fsblock_t		start,
-> +	xfs_fsblock_t		len,
-> +	xfs_fsblock_t		minlen)
-> +{
-> +	struct block_device	*bdev = mp->m_ddev_targp->bt_bdev;
-> +	struct xfs_btree_cur	*cur;
-> +	struct xfs_buf		*agbp;
-> +	struct xfs_perag	*pag;
-> +	int			error;
-> +	int			i;
-> +
-> +	pag = xfs_perag_get(mp, agno);
-> +
-> +	error = xfs_alloc_read_agf(mp, NULL, agno,
-> +				   XFS_ALLOC_FLAG_TRYLOCK, &agbp);
-> +	if (error || !agbp) {
-> +		if (error == EAGAIN)
-> +			error = 0;
-> +		goto out_put_perag;
-> +	}
-> +
-> +	cur = xfs_allocbt_init_cursor(mp, NULL, agbp, agno, XFS_BTNUM_CNT);
-> +
-> +	/*
-> +	 * Force out the log.  This means any transactions that might have freed
-> +	 * space before we took the AGF buffer lock are now on disk, and the
-> +	 * volatile disk cache is flushed.
-> +	 */
-> +	xfs_log_force(mp, XFS_LOG_SYNC);
-> +
-> +	/*
-> +	 * Look up the longest btree in the AGF and start with it.
-> +	 */
-> +	error = xfs_alloc_lookup_le(cur, 0,
-> +				    XFS_BUF_TO_AGF(agbp)->agf_longest, &i);
-> +	if (error)
-> +		goto out_del_cursor;
-> +
-> +	/*
-> +	 * Loop until we are done with all extents that are large
-> +	 * enough to be worth discarding.
-> +	 */
-> +	while (i) {
-> +		xfs_agblock_t fbno;
-> +		xfs_extlen_t flen;
-> +
-> +		error = xfs_alloc_get_rec(cur, &fbno, &flen, &i);
-> +		if (error)
-> +			goto out_del_cursor;
-> +		XFS_WANT_CORRUPTED_GOTO(i == 1, out_del_cursor);
-> +		ASSERT(flen <= XFS_BUF_TO_AGF(agbp)->agf_longest);
-> +
-> +		/*
-> +		 * Too small?  Give up.
-> +		 */
-> +		if (flen < minlen) {
-> +			trace_xfs_discard_toosmall(mp, agno, fbno, flen);
-> +			goto out_del_cursor;
-> +		}
-> +
-> +		/*
-> +		 * If the extent is entirely outside of the range we are
-> +		 * supposed to discard skip it.  Do not bother to trim
-> +		 * down partially overlapping ranges for now.
-> +		 */
-> +		if (XFS_AGB_TO_FSB(mp, agno, fbno) + flen < start ||
-> +		    XFS_AGB_TO_FSB(mp, agno, fbno) > start + len) {
-> +			trace_xfs_discard_exclude(mp, agno, fbno, flen);
-> +			goto next_extent;
-> +		}
+The change below is simple, but I feel I need to provide a
+foundation of some background to argue that it is correct.
 
-Hmmmm - if we are given a range to trim, wouldn't we do better to
-walk the by-bno btree instead?  i.e, we have two different cases
-here - trim an entire AG, and trim part of an AG given by {start, end}. 
+The instantaneous "correct" value of a percpu_counter is the sum of
+its "aggregate" count value and all of its per-cpu "delta" counter
+values.  This sum, as well as all the counts that comprise it, are
+all signed values.  A global batch size, percpu_counter_batch,
+is maintained and used to limit how out-of-date the aggregate
+value is with the correct value of the percpu_counter.
 
-We only need these range checks on the AGs that are only partially
-trimmed, and it would seem more efficient to me to walk the by-bno
-tree for those rather than walk the by-size tree trying to find
-range matches.
 
-> +
-> +		/*
-> +		 * If any blocks in the range are still busy, skip the
-> +		 * discard and try again the next time.
-> +		 */
-> +		if (xfs_alloc_busy_search(mp, agno, fbno, flen)) {
-> +			trace_xfs_discard_busy(mp, agno, fbno, flen);
-> +			goto next_extent;
-> +		}
-> +
-> +		trace_xfs_discard_extent(mp, agno, fbno, flen);
-> +		error = -blkdev_issue_discard(bdev,
-> +				XFS_AGB_TO_DADDR(mp, agno, fbno),
-> +				XFS_FSB_TO_BB(mp, flen),
-> +				GFP_NOFS, 0);
-> +		if (error)
-> +			goto out_del_cursor;
-> +
-> +next_extent:
-> +		error = xfs_btree_decrement(cur, 0, &i);
-> +		if (error)
-> +			goto out_del_cursor;
-> +	}
+The aggregate count value is only updated under protection of a
+spinlock, and in several places taking the spinlock is avoided
+by understanding something about the bounds of what the per-cpu
+deltas could contribute to the percpu_counter's value.
 
-Hmmm - so we hold the agf locked for the entire trim? That's a bit
-ugly. Given this is best effort, we could avoid this by changing it
-to something like:
+The possible range of the correct value of a percpu_counter
+can be represented as:
+    percpu_counter->count +/- error
+where "error" is the current sum of all per-cpu deltas.
 
-	longest = 0;
-	do {
-		lock agf
-		force log
-		if (!longest)
-			longest = agf->longest
-		init cursor
-		do {
-			xfs_alloc_lookup_le(longest)
-			alloc_get_rec(&fbno, &flen)
-			check flen
-			busy search
-			discard
-			decrement cursor
-		} while (flen == longest)
-		destroy cursor
-		unlock agf
-		longest = flen;
-	} while(1)
+The per-cpu delta values are only ever modified in two ways: they
+are either zeroed (in percpu_counter_set(), __percpu_counter_add(),
+and percpu_counter_hotcpu_callback()), or they are assigned a value
+whose absolute value is no more than the batch size (in
+__percpu_counter_add()).  Therefore, each per-cpu delta value
+contributes no more than +/- the batch size to the value
+of the percpu_counter.
 
-This way we walk the tree in a manner that does not hold the agf for
-extended periods of time, but still catches all the extents of the
-same size and, when idle, will catch all the extents longer than the
-given length to discard. If the filesystem is busy, it will have
-much less impact on it due to the much short AGF hold times.
+And since at most num_online_cpus() deltas are maintained, the
+maximum (absolute) value of "error" is:
+    num_online_cpus() * percpu_counter_batch
 
-And perhaps the inner loop could simply be terminated on the number
-of discards issued or a timer to keep the number of log forces down
-to a sane number (e.g. one every 50ms).
+In other words, the correct value of a percpu_counter can be
+described as within this range:
 
-Cheers,
+    percpu_counter->count +/- num_online_cpus() * percpu_counter_batch
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+In __percpu_counter_add_unless_lt(), error is computed to
+be twice the size it needs to be, and this change fixes that.
+
+While we're at it, tweak percpu_counter_compare() so it uses
+a local variable "error" that serves the same purpose as its
+counterpart in __percpu_counter_add_unless_lt().
+
+Signed-off-by: Alex Elder <aelder@sgi.com>
+
+---
+ lib/percpu_counter.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+Index: b/lib/percpu_counter.c
+===================================================================
+--- a/lib/percpu_counter.c
++++ b/lib/percpu_counter.c
+@@ -192,10 +192,11 @@ static int __cpuinit percpu_counter_hotc
+ int percpu_counter_compare(struct percpu_counter *fbc, s64 rhs)
+ {
+ 	s64	count;
++	s64	error = percpu_counter_batch * num_online_cpus();
+ 
+ 	count = percpu_counter_read(fbc);
+ 	/* Check to see if rough count will be sufficient for comparison */
+-	if (abs(count - rhs) > percpu_counter_batch * num_online_cpus()) {
++	if (abs(count - rhs) > error) {
+ 		if (count > rhs)
+ 			return 1;
+ 		return -1;
+@@ -227,7 +228,7 @@ int __percpu_counter_add_unless_lt(struc
+ 						s64 threshold, s32 batch)
+ {
+ 	s64	count;
+-	s64	error = 2 * batch * num_online_cpus();
++	s64	error = batch * num_online_cpus();
+ 	int	cpu;
+ 	int	ret = -1;
+ 
+
 
 _______________________________________________
 xfs mailing list
