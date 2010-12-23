@@ -1,20 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBN42rYT088423 for <xfs@oss.sgi.com>; Wed, 22 Dec 2010 22:02:54 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 253AC1CEE682
-	for <xfs@oss.sgi.com>; Wed, 22 Dec 2010 20:04:51 -0800 (PST)
-Received: from mail.sandeen.net (64-131-28-21.usfamily.net [64.131.28.21]) by
-	cuda.sgi.com with ESMTP id asBUDujRDirKSz3h for
-	<xfs@oss.sgi.com>; Wed, 22 Dec 2010 20:04:51 -0800 (PST)
-Message-ID: <4D12CA62.20902@sandeen.net>
-Date: Wed, 22 Dec 2010 22:04:50 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: able to mount a fs, unable to repair it
-References: <87r5d9uuez.fsf@ezri.u-picardie.fr>
-In-Reply-To: <87r5d9uuez.fsf@ezri.u-picardie.fr>
+	oBN3u323087057 for <xfs@oss.sgi.com>; Wed, 22 Dec 2010 21:56:03 -0600
+Received: from cf--amer001e--3.americas.sgi.com
+	(cf--amer001e--3.americas.sgi.com [137.38.100.5])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 77582AC017
+	for <xfs@oss.sgi.com>; Wed, 22 Dec 2010 19:58:02 -0800 (PST)
+Subject: [PATCH 2/5] percpu_counter: avoid potential underflow in add_unless_lt
+From: Alex Elder <aelder@sgi.com>
+Date: Wed, 22 Dec 2010 21:56:27 -0600
+Message-ID: <1293076587.2408.431.camel@doink>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,52 +24,60 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: laurent+xfs@u-picardie.fr
-Cc: xfs@oss.sgi.com
+To: XFS Mailing List <xfs@oss.sgi.com>
 
-On 12/22/10 7:53 PM, laurent+xfs@u-picardie.fr wrote:
-> 
-> Hi !
-> 
-> For a reason all my xfs FS got corrupted at the same time.
-> My setup is: xen host using lvm on top of soft raid6 on top of jbod
-> 3ware connected sata disks.
-> Both the host and the VM fs got corrupted.
-> 
-> ATM host is using 2.6.32 (debian/squeeze), xfsprogs are 3.1.4
-> 
-> I've had 2 kinds of corruptions:
-> 1) unable to mount the FS, been able to xfs_repair -L
-> 2) able to mount the FS, xfs_check was reporting errors, unable to
-> xfs_repair the fs
-> 
-> For most of the FS, i've managed to either mkfs.xfs or xfs_repair then
-> rsync from the backup.
-> 
-> I'm left with my 1.5TB fs for which i also have a full backup, i'm
-> able to mount it (no kernel error or anything when
-> mounting it). xfs_check on this unmounted FS gives errors. xfs_repair
-> (after a long long time) is unable to find a suitable thingie to
-> repair the FS.
-> 
-> https://gist.github.com/752411 xfs_{db,check,repair,metadump} results.
-> (haven't checked the memory/disk usage when doing the metadump)
-> 
-> I can't really tell why all this happened in the first place.
-> Been having power supply issues some weeks ago, been upgrading from
-> lenny to squeeze, been playing with xen & lxc at the same, been doing
-> my xmas shopping a bit late ! :-)
-> 
-> I'd be curious to know how to repair the 1.5TB FS, any idea on what i
-> could do ?
-> 
-> TIA
-> 
+In __percpu_counter_add_unless_lt(), an assumption is made that
+under certain conditions it's possible to determine that an amount
+can be safely added to a counter, possibly without having to acquire
+the lock.  This assumption is not valid, however.
 
-for the image that segfaults, I'd say make an xfs_metadump and provide it
-for analysis, if the latest xfsprogs xfs_repair still segfaults.
+These lines encode the assumption:
+	if (count + amount > threshold + error) {
+		__percpu_counter_add(fbc, amount, batch);
 
--Eric
+Inside __percpu_counter_add(), the addition is performed
+without acquiring the lock if the *sum* of the batch size
+and the CPU-local delta is within the batch size.  Otherwise
+it does the addition after acquiring the lock.
+
+The problem is that *that* sum may actually end up being greater
+than the batch size, forcing the addition to be performed under
+protection of the lock.  And by the time the lock is acquired, the
+value of fbc->count may have been updated such that adding the given
+amount allows the result to go negative.
+
+Fix this by open-coding the portion of the __percpu_counter_add()
+that avoids the lock.
+
+Signed-off-by: Alex Elder <aelder@sgi.com>
+
+---
+ lib/percpu_counter.c |   11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
+
+Index: b/lib/percpu_counter.c
+===================================================================
+--- a/lib/percpu_counter.c
++++ b/lib/percpu_counter.c
+@@ -243,9 +243,14 @@ int __percpu_counter_add_unless_lt(struc
+ 	 * we can safely add, and might be able to avoid locking.
+ 	 */
+ 	if (count + amount > threshold + error) {
+-		__percpu_counter_add(fbc, amount, batch);
+-		ret = 1;
+-		goto out;
++		s32 *pcount = this_cpu_ptr(fbc->counters);
++
++		count = *pcount + amount;
++		if (abs(count) < batch) {
++			*pcount = count;
++			ret = 1;
++			goto out;
++		}
+ 	}
+ 
+ 	/*
+
 
 _______________________________________________
 xfs mailing list
