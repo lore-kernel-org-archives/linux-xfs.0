@@ -1,32 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBNLGVZI250834 for <xfs@oss.sgi.com>; Thu, 23 Dec 2010 15:16:32 -0600
-Received: from passage.avira.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 56A6E147E9AF
-	for <xfs@oss.sgi.com>; Thu, 23 Dec 2010 13:18:29 -0800 (PST)
-Received: from passage.avira.com (passage.avira.com [89.238.222.20]) by
-	cuda.sgi.com with ESMTP id R6YjUHWHRaC0jQ05 for
-	<xfs@oss.sgi.com>; Thu, 23 Dec 2010 13:18:29 -0800 (PST)
-Received: from localhost (localhost [127.0.0.1])
-	by passage.avira.com (Postfix/AVIRA) with ESMTP id 2740C1249F9
-	for <xfs@oss.sgi.com>; Thu, 23 Dec 2010 23:18:28 +0200 (EET)
-Received: from naliboat.bu.avira.com (dasapass.avira.com [89.238.222.18])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client CN "mail.bu.avira.com",
-	Issuer "Avira Intermediate Certificate Authority 2010-2020" (not
-	verified))
-	by passage.avira.com (Postfix/AVIRA) with ESMTPS id 18B1B1249F9
-	for <xfs@oss.sgi.com>; Thu, 23 Dec 2010 23:18:28 +0200 (EET)
-Date: Thu, 23 Dec 2010 23:16:50 +0200
-From: Petre Rodan <petre.rodan@simplex.ro>
-Subject: Re: xfssyncd and disk spin down
-Message-ID: <20101223211650.GA19694@peter.simplex.ro>
-References: <20101223165532.GA23813@peter.simplex.ro>
-	<4D13A30A.3090600@hardwarefreak.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4D13A30A.3090600@hardwarefreak.com>
+	oBNLkfxU256535 for <xfs@oss.sgi.com>; Thu, 23 Dec 2010 15:46:41 -0600
+Received: from smtp3-g21.free.fr (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A28A621CB8D
+	for <xfs@oss.sgi.com>; Thu, 23 Dec 2010 13:48:38 -0800 (PST)
+Received: from smtp3-g21.free.fr (smtp3-g21.free.fr [212.27.42.3]) by
+	cuda.sgi.com with ESMTP id gi33l2AmBxyETspj for
+	<xfs@oss.sgi.com>; Thu, 23 Dec 2010 13:48:38 -0800 (PST)
+Date: Thu, 23 Dec 2010 22:48:32 +0100
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: Anyone using XFS in production on > 20TiB volumes?
+Message-ID: <20101223224832.1abb3cb8@galadriel.home>
+In-Reply-To: <4D13A8E6.7090606@hardwarefreak.com>
+References: <alpine.DEB.2.00.1012221128440.5245@p34.internal.lan>
+	<20101222175611.1c7d5190@harpe.intellique.com>
+	<4D124B71.9030401@sandeen.net>
+	<20101223012655.2681c596@galadriel.home>
+	<alpine.DEB.2.00.1012221928050.7452@p34.internal.lan>
+	<20101223005630.GJ4907@dastard>
+	<alpine.DEB.2.00.1012230442150.7452@p34.internal.lan>
+	<alpine.DEB.2.00.1012231304130.12482@p34.internal.lan>
+	<20101223195544.53d45f0b@galadriel.home>
+	<alpine.DEB.2.00.1012231403440.5924@p34.internal.lan>
+	<4D13A8E6.7090606@hardwarefreak.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,47 +33,30 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: xfs@oss.sgi.com
+
+Le Thu, 23 Dec 2010 13:54:14 -0600 vous =E9criviez:
+
+> Best guess?  Those 3TB Hitachi drives use 512 byte translated native
+> 4KB sectors. =
 
 
-Hello,
+Yes, I'm sure that no new drive model comes with true 512B sectors
+anymore...
 
-On Thu, Dec 23, 2010 at 01:29:14PM -0600, Stan Hoeppner wrote:
-> Petre Rodan put forth on 12/23/2010 10:55 AM:
-> 
-> > this hard drive has exceeded it's 300k load/unload maximum from the specs in only 140 days, which means it was woken up every 30s or so. not willingly.
-> 
-> Contact WD and request a warranty replacement for the drive due to
-> exceeding the spec'd cycle max in less than 6 months.  They may not
-> honor your request.  Whether they do or not, I'd replace the drive as
-> the mechanism obviously has too much wear on it already, and within one
-> year of use will have well over double the spec'd cycles.  If you
-> replace it with another 20EARS, replace the firmware immediately as
-> mentioned below to decrease the load/unload rate.  (It would be nice if
-> they offered the ability to disable the sleep mode totally, but then it
-> wouldn't be "green" pfft).
+-- =
 
-thanks for your input. I did run wdidle3 on that drive two days ago stopping the nonsense.
-
-but my original mail had a different target really. I have to recognize that I don't know much about the inner-workings of a filesystem, but I find it odd that once there is no input from the outside, a process keeps writing to the drive indefinitely. in my very narrow thinking the fact that these writes dissapear after a remount would prove their redundance.
-
-to wrap it up, I see no logic to the above and this is why I ask the list to tell me if this is 
-
- a. something that can easily be fixed via an option I failed to find
- b. a critical part of xfs's internals that cannot be 'disabled' (with a short explanation)
- c. simply a bug
-
-with the little side-story with the WD 20EARS i was just portraying where this default behaviour can get to. 
-I don't usually read marketing material, but WD acknowledges that their green drives are wrecked in Linux and they simply encourage customers to change their OS. I just have to ask why have we got to get to this point.
-
-the drive I was trying to get into standby in the first half of my mail is a different one, an enterprise ST31000340NS placed on an otherwise low power ProLiant MicroServer. Having 8W*12h*30 = 2880 Wh less to pay per hdd per month would be easily achievable if the standby mode would be reached when possible.
-
-cheers,
-peter
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
 
 _______________________________________________
 xfs mailing list
