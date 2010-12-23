@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBNLh16j255800 for <xfs@oss.sgi.com>; Thu, 23 Dec 2010 15:43:02 -0600
-Received: from smtp3-g21.free.fr (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E12AC147E73F
-	for <xfs@oss.sgi.com>; Thu, 23 Dec 2010 13:44:58 -0800 (PST)
-Received: from smtp3-g21.free.fr (smtp3-g21.free.fr [212.27.42.3]) by
-	cuda.sgi.com with ESMTP id RxnWSPTniNGpidmG for
-	<xfs@oss.sgi.com>; Thu, 23 Dec 2010 13:44:58 -0800 (PST)
-Date: Thu, 23 Dec 2010 22:44:45 +0100
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: able to mount a fs, unable to repair it
-Message-ID: <20101223224445.12ce6dde@galadriel.home>
-In-Reply-To: <87zkrws2pa.fsf@ezri.u-picardie.fr>
-References: <87r5d9uuez.fsf@ezri.u-picardie.fr>
-	<20101223183531.19464601@galadriel.home>
-	<87zkrws2pa.fsf@ezri.u-picardie.fr>
-Mime-Version: 1.0
+	oBNNJ7Nb010291 for <xfs@oss.sgi.com>; Thu, 23 Dec 2010 17:19:07 -0600
+Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CA5D321CB9A
+	for <xfs@oss.sgi.com>; Thu, 23 Dec 2010 15:21:06 -0800 (PST)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id NCy022x1DondhYeH
+	for <xfs@oss.sgi.com>; Thu, 23 Dec 2010 15:21:06 -0800 (PST)
+Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
+	by greer.hardwarefreak.com (Postfix) with ESMTP id 25F496C14F
+	for <xfs@oss.sgi.com>; Thu, 23 Dec 2010 17:21:06 -0600 (CST)
+Message-ID: <4D13D962.5060809@hardwarefreak.com>
+Date: Thu, 23 Dec 2010 17:21:06 -0600
+From: Stan Hoeppner <stan@hardwarefreak.com>
+MIME-Version: 1.0
+Subject: Re: Anyone using XFS in production on > 20TiB volumes?
+References: <alpine.DEB.2.00.1012221128440.5245@p34.internal.lan>	<20101222175611.1c7d5190@harpe.intellique.com>	<4D124B71.9030401@sandeen.net>	<20101223012655.2681c596@galadriel.home>	<alpine.DEB.2.00.1012221928050.7452@p34.internal.lan>	<20101223005630.GJ4907@dastard>	<alpine.DEB.2.00.1012230442150.7452@p34.internal.lan>	<alpine.DEB.2.00.1012231304130.12482@p34.internal.lan>	<20101223195544.53d45f0b@galadriel.home>	<alpine.DEB.2.00.1012231403440.5924@p34.internal.lan>	<4D13A8E6.7090606@hardwarefreak.com>
+	<20101223224832.1abb3cb8@galadriel.home>
+In-Reply-To: <20101223224832.1abb3cb8@galadriel.home>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,35 +31,34 @@ Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: laurent+xfs@u-picardie.fr
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Le Thu, 23 Dec 2010 20:34:41 +0100 vous =E9criviez:
+Emmanuel Florac put forth on 12/23/2010 3:48 PM:
+> Le Thu, 23 Dec 2010 13:54:14 -0600 vous =E9criviez:
+> =
 
-> > My advice : software RAID stinks under high CPU load/ high IO. Use
-> > hardware RAID whenever possible because it provides more predictable
-> > performance and remove many weird software interactions from the
-> > picture.  =
+>> Best guess?  Those 3TB Hitachi drives use 512 byte translated native
+>> 4KB sectors. =
 
 > =
 
-> The 3w9550sx doesn't raid6, but I admit I've been thinking of using
-> its raid5 instead of the slow soft raid6.
+> Yes, I'm sure that no new drive model comes with true 512B sectors
+> anymore...
 
-Ah that's a valid reason :) RAID-5 is reasonable with disks under 1TB
-and arrays up to 6 TB. Further it's a bet against the law of physics :)
+I believe most/all shipping drives of 1TB and smaller still have native
+512 byte sectors, dependent on specific vendor/model line of course.
+It's mainly the 1.5TB and up drives with the hybrid 512/4096 byte sector
+abomination.
 
-However, a reliable RAID-5 is probably safer than an experimental
-RAID-6 overall :)
+It would be far more optimal if they'd just ship native 4K sector drives
+wouldn't it?  Isn't most of Linux already patched for pure 4k sector
+drives?  Is XFS ready for such native 4k sector drives?  Are the various
+RAID cards/SAN array controllers?
 
 -- =
 
-------------------------------------------------------------------------
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
-------------------------------------------------------------------------
+Stan
+
 
 _______________________________________________
 xfs mailing list
