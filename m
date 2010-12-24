@@ -1,34 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBO62SVU075305 for <xfs@oss.sgi.com>; Fri, 24 Dec 2010 00:02:28 -0600
-Received: from passage.avira.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 778DD147F28B
-	for <xfs@oss.sgi.com>; Thu, 23 Dec 2010 22:04:26 -0800 (PST)
-Received: from passage.avira.com (passage.avira.com [89.238.222.20]) by
-	cuda.sgi.com with ESMTP id ZTaoxvujhQ1F73Em for
-	<xfs@oss.sgi.com>; Thu, 23 Dec 2010 22:04:26 -0800 (PST)
-Received: from localhost (localhost [127.0.0.1])
-	by passage.avira.com (Postfix/AVIRA) with ESMTP id 45964124A05
-	for <xfs@oss.sgi.com>; Fri, 24 Dec 2010 08:04:24 +0200 (EET)
-Received: from naliboat.bu.avira.com (dasapass.avira.com [89.238.222.18])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client CN "mail.bu.avira.com",
-	Issuer "Avira Intermediate Certificate Authority 2010-2020" (not
-	verified))
-	by passage.avira.com (Postfix/AVIRA) with ESMTPS id 3673B124A05
-	for <xfs@oss.sgi.com>; Fri, 24 Dec 2010 08:04:24 +0200 (EET)
-Date: Fri, 24 Dec 2010 08:02:46 +0200
-From: Petre Rodan <petre.rodan@simplex.ro>
-Subject: Re: xfssyncd and disk spin down
-Message-ID: <20101224060246.GA2308@peter.simplex.ro>
-References: <20101223165532.GA23813@peter.simplex.ro>
-	<4D13A30A.3090600@hardwarefreak.com>
-	<20101223211650.GA19694@peter.simplex.ro>
-	<4D13EF3B.2050401@hardwarefreak.com>
+	oBOIFu49141805 for <xfs@oss.sgi.com>; Fri, 24 Dec 2010 12:15:56 -0600
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EC36AF76005
+	for <xfs@oss.sgi.com>; Fri, 24 Dec 2010 10:17:55 -0800 (PST)
+Received: from mail.sandeen.net (64-131-28-21.usfamily.net [64.131.28.21]) by
+	cuda.sgi.com with ESMTP id ULrDTNbdZKDaWbK4 for
+	<xfs@oss.sgi.com>; Fri, 24 Dec 2010 10:17:55 -0800 (PST)
+Message-ID: <4D14E3D2.4000505@sandeen.net>
+Date: Fri, 24 Dec 2010 12:17:54 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4D13EF3B.2050401@hardwarefreak.com>
+Subject: Re: xfssyncd and disk spin down
+References: <20101223165532.GA23813@peter.simplex.ro>
+In-Reply-To: <20101223165532.GA23813@peter.simplex.ro>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -41,43 +27,112 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Petre Rodan <petre.rodan@simplex.ro>
+Cc: xfs@oss.sgi.com
 
-
-Hello Stan,
-
-On Thu, Dec 23, 2010 at 06:54:19PM -0600, Stan Hoeppner wrote:
-> Petre Rodan put forth on 12/23/2010 3:16 PM:
+On 12/23/10 10:55 AM, Petre Rodan wrote:
 > 
-> > but my original mail had a different target really. I have to recognize that I don't know much about the inner-workings of a filesystem, but I find it odd that once there is no input from the outside, a process keeps writing to the drive indefinitely. in my very narrow thinking the fact that these writes dissapear after a remount would prove their redundance.
+> Hello,
 > 
-> Ahh, quite right.  Sorry Petre.  This might shed some light on your
-> issue.  Old background thread:
+> I have a problem with a hard drive that never managed to spin down.
+> this drive is a storage space, not a system disk, the only thing that
+> generated writes is the nfs server that exports its contents. it has
+> only one large xfs partition on it.
 > 
-> http://oss.sgi.com/archives/xfs/2003-09/msg00674.html
+> upon closer inspection it turns out that after the first Write action
+> to that partition, an xfssyncd process continues to write to that
+> partition each 36 seconds and it doesn't stop doing that, even if
+> there are no more Writes from the exterior. this keeps the drive busy
+> with varying consequences. more about that later.
+
+Doesn't seem like that should happen.
+
+> I found that the only easy way to stop the xfssyncd process poking
+> the drive is to run a `mount -o remount /mnt/space`. this will
+> silence any internal xfs process to acessing the drive, thus allowing
+> it to spin down and only be woken up by a NFS access.
 > 
-> Current documentation on this turnable knob:
+> here are some simple steps to replicate the problem:
 > 
-> http://www.mjmwired.net/kernel/Documentation/filesystems/xfs.txt
+> # echo 3 > /proc/sys/vm/drop_caches # free cached fs entities 
+> # ( blktrace -d /dev/sdb -o - | blkparse -i - ) &
+> # mount -o remount /mnt/space
+> # find /mnt/space/ -type f > /dev/null  # generate some non-cached Read requests
+> # # absolutely no writes have been performed to the drive, 
+> # # it could spin down now if enough time would pass
+> # touch /mnt/space/foo
+> # # process 1352 will start writing to the drive at a 35-36s interval,
+> # # even if there has been no other write request.
+> 
+>   8,16   1    36591  6306.873151576  1352  A WBS 976985862 + 2 <- (8,17) 976985799
+>   8,16   1    36592  6306.873152998  1352  Q WBS 976985862 + 2 [xfssyncd/sdb1]
+> [..]
+>   8,16   1    36600  6342.875151286  1352  A WBS 976985864 + 2 <- (8,17) 976985801
+>   8,16   1    36601  6342.875152938  1352  Q WBS 976985864 + 2 [xfssyncd/sdb1]
+> [..]
+>   8,16   1    36609  6378.877225211  1352  A WBS 976985866 + 2 <- (8,17) 976985803
+>   8,16   1    36610  6378.877226935  1352  Q WBS 976985866 + 2 [xfssyncd/sdb1]
+> 
+> there was no file at or near the 976985799 inode (I presume that's an
+> inode?)
 
-I appreciate your quick replies, but rest assured that I did search the archives and the documentation that came with the kernel.
+Nope that's a sector on the drive.
 
-I would be delighted to know the underlying reason why internal xfs processes need to flush things to the drive more than once. can't it be as easy as 
+> A WBS 976985862 + 2 <- (8,17) 976985799
 
-accept write command -> cache -> actual write to the hardware -> clean cache/log/dirty metadata -> sleep until next command comes (and not touch the drive in any way until then)
+976985799 is the sector on sdb1, mapped to 976985862 on sdb
+(63 sectors in, yay dos partition tables!)
 
-what am I missing in this picture? if anything needs to be flushed, why do it over and over again, once is not enough ?
+A means remapped (from sdb1 to sdb), Q means Queued.
 
-what I found (see first mail from thread) is that a write to an xfs partition triggers an xfssyncd process to continually write to the drive for no apparent reason. and keeps writing at regulated intervals long after any other read or write request has been made from the outside. I left the drive untouched for 12 hours and xfssyncd was still pinging the drive. and there is no xfssyncd process pinging if I do not do initiate a write to the disk after the partition is mounted, so to me that means that xfs would function without constant writing to the underlying device.
+WBS means Write/Barrier/Synchronous.
 
-> fs.xfs.xfssyncd_centisecs	(Min: 100  Default: 3000  Max: 720000)
-> fs.xfs.age_buffer_centisecs	(Min: 100  Default: 1500  Max: 720000)
+Also, you're stepping through, it looks like -
+976985799, 976985801, 976985803, ....
 
-just increasing the delay until an inevitable and seemingly redundant disk write is not what I want.
-I was searching for an option to make internal xfs processes not touch the drive after the buffers/log/dirty metadata have been flushed (once).
+> I found that the only way to stop it is to remount the partition. I
+> also tried sync(1), but to no avail.
+> 
+> so is there an XFS option somewhere that would make the filesystem be
+> more forgiving with the hardware beneath it? without loosing the
+> journal of course.
 
-thanks,
-peter
+I think we just need to figure out what's causing the writes, and
+what's being written.
+ 
+> I'm using a vanilla 2.6.36.2 kernel patched with grsecurity, default
+> mkfs.xfs options, rw,nosuid,nodev,noexec,noatime,attr2,noquota mount
+> options, and xfs_info looks like this:> 
+> meta-data=/dev/sdb1              isize=256    agcount=4, agsize=61047500 blks
+>          =                       sectsz=512   attr=2
+> data     =                       bsize=4096   blocks=244190000, imaxpct=25
+>          =                       sunit=0      swidth=0 blks
+> naming   =version 2              bsize=4096   ascii-ci=0
+> log      =internal               bsize=4096   blocks=32768, version=2
+>          =                       sectsz=512   sunit=0 blks, lazy-count=0
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+so what is sector 976985799 on the filesystem...
+
+An AG is 61047500 blocks long, or 488380000 sectors long.  There are 4 of them,
+and the log is at the front of an AG in the middle of the fs.
+
+So the 1st AG starts at 0, 2nd at 488380000 sectors, 3rd at 976760000 sectors.
+
+Your writes are at 976985799-ish sectors, or 225799 sectors into the
+3rd AG.  The log is 262144 sectors long.  So this looks like log writes.
+Makes sense with the WBS data too.
+
+xfssyncd forces the log, reclaims inodes, and logs a dummy transaction if needed.
+
+On an idle fs though I wouldn't expect that we need any of this, so probably
+need to dig a little to see what's going on.  I don't think you need a mount
+option, I think we need an explanation and maybe a bugfix.  :)
+
+I'll try to find time to look into it unless someone else knows what's going
+on off the top of their heads.
+
+-Eric
 
 _______________________________________________
 xfs mailing list
