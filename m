@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBP3Yp1u223014 for <xfs@oss.sgi.com>; Fri, 24 Dec 2010 21:34:52 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8CE75147EE25
-	for <xfs@oss.sgi.com>; Fri, 24 Dec 2010 19:36:50 -0800 (PST)
-Received: from mail.sandeen.net (64-131-28-21.usfamily.net [64.131.28.21]) by
-	cuda.sgi.com with ESMTP id Son7AeEReIlD3sXq for
-	<xfs@oss.sgi.com>; Fri, 24 Dec 2010 19:36:50 -0800 (PST)
-Message-ID: <4D1566D1.6090506@sandeen.net>
-Date: Fri, 24 Dec 2010 21:36:49 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	oBP4Uivj231884 for <xfs@oss.sgi.com>; Fri, 24 Dec 2010 22:30:45 -0600
+Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 31BA421E938
+	for <xfs@oss.sgi.com>; Fri, 24 Dec 2010 20:32:44 -0800 (PST)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id FvA28SIY8GFUqPAm
+	for <xfs@oss.sgi.com>; Fri, 24 Dec 2010 20:32:44 -0800 (PST)
+Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
+	by greer.hardwarefreak.com (Postfix) with ESMTP id 532346C0B2
+	for <xfs@oss.sgi.com>; Fri, 24 Dec 2010 22:32:44 -0600 (CST)
+Message-ID: <4D1573EC.9070603@hardwarefreak.com>
+Date: Fri, 24 Dec 2010 22:32:44 -0600
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
 Subject: Re: xfssyncd and disk spin down
-References: <20101223165532.GA23813@peter.simplex.ro>	<4D13A30A.3090600@hardwarefreak.com>	<20101223211650.GA19694@peter.simplex.ro>	<4D13EF3B.2050401@hardwarefreak.com>	<20101224060246.GA2308@peter.simplex.ro>
-	<4D1525FB.1010605@hardwarefreak.com>
-In-Reply-To: <4D1525FB.1010605@hardwarefreak.com>
+References: <20101223165532.GA23813@peter.simplex.ro>	<4D13A30A.3090600@hardwarefreak.com>	<20101223211650.GA19694@peter.simplex.ro>	<4D13EF3B.2050401@hardwarefreak.com>	<20101224060246.GA2308@peter.simplex.ro>	<4D1525FB.1010605@hardwarefreak.com>
+	<4D1566D1.6090506@sandeen.net>
+In-Reply-To: <4D1566D1.6090506@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,36 +31,44 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 12/24/10 5:00 PM, Stan Hoeppner wrote:
-> Petre Rodan put forth on 12/24/2010 12:02 AM:
-> 
->>> fs.xfs.xfssyncd_centisecs	(Min: 100  Default: 3000  Max: 720000)
->>> fs.xfs.age_buffer_centisecs	(Min: 100  Default: 1500  Max: 720000)
+Eric Sandeen put forth on 12/24/2010 9:36 PM:
+> On 12/24/10 5:00 PM, Stan Hoeppner wrote:
+>> Petre Rodan put forth on 12/24/2010 12:02 AM:
 >>
->> just increasing the delay until an inevitable and seemingly redundant disk write is not what I want.
->> I was searching for an option to make internal xfs processes not touch the drive after the buffers/log/dirty metadata have been flushed (once).
+>>>> fs.xfs.xfssyncd_centisecs	(Min: 100  Default: 3000  Max: 720000)
+>>>> fs.xfs.age_buffer_centisecs	(Min: 100  Default: 1500  Max: 720000)
+>>>
+>>> just increasing the delay until an inevitable and seemingly redundant disk write is not what I want.
+>>> I was searching for an option to make internal xfs processes not touch the drive after the buffers/log/dirty metadata have been flushed (once).
+>>
+>> I'm not a dev Petre but just another XFS user.  This is the best
+>> "solution" I could come up with for your issue.  I assumed this
+>> "unnecessary" regularly scheduled activity was a house cleaning measure
+>> and done intentionally; didn't dawn on me that it may be a bug.
+>>
+>> Sorry I wasn't able to fully address your issue.  If/until there is a
+>> permanent fix for this you may want to bump this to 720000 anyway as an
+>> interim measure, if you haven't already, as it should yield a
+>> significantly better situation than what you have now.  You'll at least
+>> get something like ~1400 minutes of sleep per day instead of none,
+>> decreasing your load/unload cycles from ~2880/day to ~120/day, if my
+>> math is correct.
 > 
-> I'm not a dev Petre but just another XFS user.  This is the best
-> "solution" I could come up with for your issue.  I assumed this
-> "unnecessary" regularly scheduled activity was a house cleaning measure
-> and done intentionally; didn't dawn on me that it may be a bug.
-> 
-> Sorry I wasn't able to fully address your issue.  If/until there is a
-> permanent fix for this you may want to bump this to 720000 anyway as an
-> interim measure, if you haven't already, as it should yield a
-> significantly better situation than what you have now.  You'll at least
-> get something like ~1400 minutes of sleep per day instead of none,
-> decreasing your load/unload cycles from ~2880/day to ~120/day, if my
-> math is correct.
+> Of course, then xfssyncd will not be doing its proper duty regularly ;)
 
-Of course, then xfssyncd will not be doing its proper duty regularly ;)
+Sure it will.  Just not *as regularly*.  You, Dave, Alex, Christoph, or
+someone made the regularity configurable didn't you? ;)
 
-We just need to see why it's always finding work to do when idle.
+> We just need to see why it's always finding work to do when idle.
 
--Eric
+Seems like my grandmother must have been involved with the current code.
+ She was always telling me "Idle hands are the Devil's work." ;)  Or,
+whoever wrote the code was somehow influenced by my grandmother (his own).
+
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
