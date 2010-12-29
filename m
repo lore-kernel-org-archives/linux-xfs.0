@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBTCpvMa064481 for <xfs@oss.sgi.com>; Wed, 29 Dec 2010 06:51:57 -0600
+	oBTCoLZr064384 for <xfs@oss.sgi.com>; Wed, 29 Dec 2010 06:50:24 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 07DBD1D01529
-	for <xfs@oss.sgi.com>; Wed, 29 Dec 2010 04:54:00 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 925281D0151D
+	for <xfs@oss.sgi.com>; Wed, 29 Dec 2010 04:52:25 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id EgoCCs7dQ72xzGrn for
-	<xfs@oss.sgi.com>; Wed, 29 Dec 2010 04:54:00 -0800 (PST)
-Date: Wed, 29 Dec 2010 07:54:00 -0500
+	by cuda.sgi.com with ESMTP id 0sLT2UedMmsc5lY4 for
+	<xfs@oss.sgi.com>; Wed, 29 Dec 2010 04:52:25 -0800 (PST)
+Date: Wed, 29 Dec 2010 07:52:22 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: use KM_NOFS for allocations during attribute list
-	operations
-Message-ID: <20101229125400.GB1035@infradead.org>
-References: <1292892993-12424-1-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH 30/34] xfs: convert l_tail_lsn to an atomic variable.
+Message-ID: <20101229125221.GA1035@infradead.org>
+References: <1292916570-25015-1-git-send-email-david@fromorbit.com>
+	<1292916570-25015-31-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1292892993-12424-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <1292916570-25015-31-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,22 +32,44 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Dec 21, 2010 at 11:56:33AM +1100, Dave Chinner wrote:
+On Tue, Dec 21, 2010 at 06:29:26PM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> When listing attributes, we are doiing memory allocations under the
-> inode ilock using only KM_SLEEP. This allows memory allocation to
-> recurse back into the filesystem and do writeback, which may the
-> ilock we already hold on the current inode. THis will deadlock.
-> Hence use KM_NOFS for such allocations outside of transaction
-> context to ensure that reclaim recursion does not occur.
+> log->l_tail_lsn is currently protected by the log grant lock. The
+> lock is only needed for serialising readers against writers, so we
+> don't really need the lock if we make the l_tail_lsn variable an
+> atomic. Converting the l_tail_lsn variable to an atomic64_t means we
+> can start to peel back the grant lock from various operations.
 > 
-> Reported-by: Nick Piggin <npiggin@gmail.com>
+> Also, provide functions to safely crack an atomic LSN variable into
+> it's component pieces and to recombined the components into an
+> atomic variable. Use them where appropriate.
+> 
+> This also removes the need for explicitly holding a spinlock to read
+> the l_tail_lsn on 32 bit platforms.
+> 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
 Looks good,
 
+
 Reviewed-by: Christoph Hellwig <hch@lst.de>
+
+>  	/* log->l_tail_lsn = 0x100000000LL; cycle = 1; current block = 0 */
+> -	log->l_tail_lsn	   = xlog_assign_lsn(1, 0);
+> -	atomic64_set(&log->l_last_sync_lsn, xlog_assign_lsn(1, 0));
+> +	xlog_assign_atomic_lsn(&log->l_tail_lsn, 1, 0);
+> +	xlog_assign_atomic_lsn(&log->l_last_sync_lsn, 1, 0);
+
+It might be worth to remove the rather pointless comment above.
+
+>  	BTOBB(XLOG_MAX_ICLOGS << (xfs_sb_version_haslogv2(&log->l_mp->m_sb) ? \
+>  	 XLOG_MAX_RECORD_BSHIFT : XLOG_BIG_RECORD_BSHIFT))
+>  
+> -
+>  static inline xfs_lsn_t xlog_assign_lsn(uint cycle, uint block)
+
+spurious whitespace change
 
 _______________________________________________
 xfs mailing list
