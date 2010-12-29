@@ -1,16 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBSG7e9g174465 for <xfs@oss.sgi.com>; Tue, 28 Dec 2010 10:07:42 -0600
-Date: Tue, 28 Dec 2010 11:09:40 -0500
+	oBTD71WQ067289 for <xfs@oss.sgi.com>; Wed, 29 Dec 2010 07:07:01 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 84F401D017AC
+	for <xfs@oss.sgi.com>; Wed, 29 Dec 2010 05:09:05 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id mtxRgbTwy2XEYIVa for
+	<xfs@oss.sgi.com>; Wed, 29 Dec 2010 05:09:05 -0800 (PST)
+Date: Wed, 29 Dec 2010 08:09:03 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: xfs: add FITRIM support
-Message-ID: <20101228160940.GA28295@infradead.org>
-References: <20101125112304.GA4195@infradead.org>
-	<1293054073.2408.374.camel@doink>
+Subject: Re: no rw xfs file systems in mtab: /proc/mounts
+Message-ID: <20101229130903.GD1035@infradead.org>
+References: <AANLkTi=Xes02L3XfZvUu6Yh2yi2FR8GtpVdOGzngVjJk@mail.gmail.com>
+	<4D13648B.8000105@sandeen.net> <4D138457.8020008@gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1293054073.2408.374.camel@doink>
+In-Reply-To: <4D138457.8020008@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,53 +29,47 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
-Cc: lczerner@redhat.com, xfs@oss.sgi.com
+To: Honza Fikar <j.fikar@gmail.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-On Wed, Dec 22, 2010 at 03:41:13PM -0600, Alex Elder wrote:
-> > +	error = xfs_alloc_read_agf(mp, NULL, agno,
-> > +				   XFS_ALLOC_FLAG_TRYLOCK, &agbp);
-> > +	if (error || !agbp) {
-> > +		if (error == EAGAIN)
-> > +			error = 0;
-> 
-> EAGAIN is ignored because it's an advisory interface, right?
-> How hard are we expected to try?  What I really mean is,
-> is the benefit of FITRIM enough that we should try again
-> later when we can get a buffer or lock on it?
+Can you please apply the debug patch below and see what output fsr gives
+with it?
 
-That was the idea when I wrote this code.  But back then we called it
-regularly from a kernel thread.  For FITRIM it makes more sense to just
-remove the trylock.
 
-> I don't know where (or if) FITRIM is precisely documented.
-> But I question whether truncating down the start offset is
-> the correct thing to do.  If the starting byte offset given
-> were not block-aligned, it seems like you should not assume
-> that the caller wanted the bytes below unmapped.  (This is
-> a broader question, not related directly to your change.)
-> 
-> Similarly, on the length it is probably best to truncate
-> it, because it avoids any bytes beyond the specified range
-> getting unmapped.  (I.e., in my mind what you did is the
-> right way to do it.)  But these interpretations are
-> dependent on the specific interpretation of FITRIM...
-
-Good question.  Adding Lukas to the Cc.  I tried to talk him into
-writing a manpage to document the interface better, but that's only
-been a few days before the holidays.  This is something we should
-documented.  I don't quite understand the need for the range interface
-anyway.
-
-> You don't update range anywhere, so the copyout below
-> is not really doing anything useful.  However I think
-> it should stay, and the number of bytes actually
-> trimmed should be updated and returned to the user.
-> That seems to be what ext4 does (the only reference
-> I found at the moment for what FITRIM is supposed
-> to return).
-
-Yes, I guess I should update the range.
+Index: xfsprogs-dev/fsr/xfs_fsr.c
+===================================================================
+--- xfsprogs-dev.orig/fsr/xfs_fsr.c	2010-12-29 14:02:59.618003862 +0100
++++ xfsprogs-dev/fsr/xfs_fsr.c	2010-12-29 14:04:32.795004496 +0100
+@@ -405,10 +405,16 @@ initallfs(char *mtab)
+ 	while ((mp = getmntent(fp))) {
+ 		int rw = 0;
+ 
+-		if (strcmp(mp->mnt_type, MNTTYPE_XFS ) != 0 ||
+-		    stat64(mp->mnt_fsname, &sb) == -1 ||
+-		    !S_ISBLK(sb.st_mode))
++		if (strcmp(mp->mnt_type, MNTTYPE_XFS ) != 0)
+ 			continue;
++		if (stat64(mp->mnt_fsname, &sb) == -1) {
++			printf("fsr: cannot stat %s\n", mp->mnt_fsname);
++			continue;
++		}
++		if (!S_ISBLK(sb.st_mode)) {
++			printf("fsr: %s is not a block device\n", mp->mnt_fsname);
++			continue;
++		}
+ 
+ 		cp = strtok(mp->mnt_opts,",");
+ 		do {
+@@ -416,8 +422,7 @@ initallfs(char *mtab)
+ 				rw++;
+ 		} while ((cp = strtok(NULL, ",")) != NULL);
+ 		if (rw == 0) {
+-			if (dflag)
+-				fsrprintf(_("Skipping %s: not mounted rw\n"),
++			printf(_("Skipping %s: not mounted rw\n"),
+ 					mp->mnt_fsname);
+ 			continue;
+ 		}
 
 _______________________________________________
 xfs mailing list
