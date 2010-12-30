@@ -1,17 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBTLlKBh131643 for <xfs@oss.sgi.com>; Wed, 29 Dec 2010 15:47:20 -0600
-Subject: Re: [PATCH 1/5] percpu_counter: fix test in
-	__percpu_counter_add_unless_lt()
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1293656188.1961.470.camel@doink>
-References: <1293076575.2408.425.camel@doink>
-	<20101223060652.GE18264@dastard>  <1293656188.1961.470.camel@doink>
-Date: Wed, 29 Dec 2010 15:49:20 -0600
-Message-ID: <1293659360.1961.474.camel@doink>
-Mime-Version: 1.0
-Reply-To: aelder@sgi.com
+	oBUBdRv3240569 for <xfs@oss.sgi.com>; Thu, 30 Dec 2010 05:39:30 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3D9F211072BC
+	for <xfs@oss.sgi.com>; Thu, 30 Dec 2010 03:41:31 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id DTiSnRqkK02p6XWQ for
+	<xfs@oss.sgi.com>; Thu, 30 Dec 2010 03:41:31 -0800 (PST)
+Date: Thu, 30 Dec 2010 06:41:29 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: xfs: add FITRIM support
+Message-ID: <20101230114129.GA4321@infradead.org>
+References: <20101125112304.GA4195@infradead.org>
+	<20101223014409.GL4907@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20101223014409.GL4907@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,27 +30,58 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: XFS Mailing List <xfs@oss.sgi.com>
+Cc: Lukas Czerner <lczerner@redhat.com>, xfs@oss.sgi.com
 
-On Wed, 2010-12-29 at 14:56 -0600, Alex Elder wrote:
->         if (new_count >= threshold) {
->                 ret = new_count > threshold;
->                 fbc->count = fbc_count + amount;
->         } 
->         spin_unlock(&fbc->lock);
+On Thu, Dec 23, 2010 at 12:44:09PM +1100, Dave Chinner wrote:
+> Hmmmm - if we are given a range to trim, wouldn't we do better to
+> walk the by-bno btree instead?  i.e, we have two different cases
+> here - trim an entire AG, and trim part of an AG given by {start, end}. 
 > 
->         return ret;
-> } 
+> We only need these range checks on the AGs that are only partially
+> trimmed, and it would seem more efficient to me to walk the by-bno
+> tree for those rather than walk the by-size tree trying to find
+> range matches.
 
-I obviously didn't test the code I sent, but
-you get what I mean...  Here is the way one of
-the lines above should look:
-                fbc->count = fbc->count + amount;
+It might be, but I'm not sure it's really worth the complexity.  I can't
+really find any good use case for a partially trim anyway.
 
-Or even better:
-                fbc->count += amount;
+Ccing Lukas to figure out what his intent with this was.
 
-					-Alex
+> Hmmm - so we hold the agf locked for the entire trim? That's a bit
+> ugly. Given this is best effort, we could avoid this by changing it
+> to something like:
+> 
+> 	longest = 0;
+> 	do {
+> 		lock agf
+> 		force log
+> 		if (!longest)
+> 			longest = agf->longest
+> 		init cursor
+> 		do {
+> 			xfs_alloc_lookup_le(longest)
+> 			alloc_get_rec(&fbno, &flen)
+> 			check flen
+> 			busy search
+> 			discard
+> 			decrement cursor
+> 		} while (flen == longest)
+> 		destroy cursor
+> 		unlock agf
+> 		longest = flen;
+> 	} while(1)
+
+This doesn't seem overly efficient.  Unless we have lots of extents
+with same size we keep having to allocate new cursors all the time.
+
+I'm not too worried about busy systems - FITRIM is explicitly called and
+we should expect admins not to call it during the most busy time of the
+day.  And even in it's current form it's already much better than
+wiper.sh in that respect.
+
+I think adding a periodical break using a modified scheme is fine, but
+I'd really like to get the code out into some more testers hands for
+now.
 
 _______________________________________________
 xfs mailing list
