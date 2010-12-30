@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBUKdfi7029057 for <xfs@oss.sgi.com>; Thu, 30 Dec 2010 14:39:41 -0600
+	oBUKeQ0d029252 for <xfs@oss.sgi.com>; Thu, 30 Dec 2010 14:40:26 -0600
 Received: from cf--amer001e--3.americas.sgi.com
 	(cf--amer001e--3.americas.sgi.com [137.38.100.5])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id CE5F6AC011
-	for <xfs@oss.sgi.com>; Thu, 30 Dec 2010 12:41:45 -0800 (PST)
-Subject: [PATCH 08/12] xfsprogs: ensure dup table always has entry for
-	obfuscated name
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 47B12304053
+	for <xfs@oss.sgi.com>; Thu, 30 Dec 2010 12:42:31 -0800 (PST)
+Subject: [PATCH 10/12] xfsprogs: use printable characters for obfuscated
+	filenames
 From: Alex Elder <aelder@sgi.com>
-Date: Thu, 30 Dec 2010 14:41:45 -0600
-Message-ID: <1293741705.2294.367.camel@doink>
+Date: Thu, 30 Dec 2010 14:42:30 -0600
+Message-ID: <1293741750.2294.372.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -27,49 +27,43 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-We need to ensure the name table has a copy of all the names in
-a directory in order to avoid creating duplicate entries when
-obfuscating names.  Currently there is an (unlikely) case where
-the name is passed back without such an entry being created.
-Reorder things so that won't happen.
+There is probably not much need for an extreme amount of randomness
+in the obfuscated names produced in metadumps.  Limit the character
+set used for (most of) these filenames to printable characters
+rather than every permitted byte.  The result makes metadumps
+a bit more natural to work with.
+
+I chose the set of all upper- and lower-case letters, digits, and
+the dash and underscore for the alphabet.  It could easily be
+expanded to include others.
 
 Signed-off-by: Alex Elder <aelder@sgi.com>
 
 ---
- db/metadump.c |   12 ++++++++----
- 1 file changed, 8 insertions(+), 4 deletions(-)
+ db/metadump.c |    9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
 Index: b/db/metadump.c
 ===================================================================
 --- a/db/metadump.c
 +++ b/db/metadump.c
-@@ -519,18 +519,22 @@ generate_obfuscated_name(
- 		}
- 	} while (dup);
+@@ -377,12 +377,11 @@ clear_nametable(void)
+ static inline uchar_t
+ random_filename_char(void)
+ {
+-	uchar_t			c;
++	static uchar_t filename_alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
++						"abcdefghijklmnopqrstuvwxyz"
++						"0123456789-_";
  
--	memcpy(name, newname, namelen);
-+	/* Create an entry for the name in the name table */
- 
- 	p = malloc(sizeof(name_ent_t) + namelen);
- 	if (p == NULL)
- 		return;
- 
--	p->next = nametable[hash % NAME_TABLE_SIZE];
--	p->hash = hash;
- 	p->namelen = namelen;
--	memcpy(p->name, name, namelen);
-+	memcpy(p->name, newname, namelen);
-+	p->hash = hash;
-+	p->next = nametable[hash % NAME_TABLE_SIZE];
- 
- 	nametable[hash % NAME_TABLE_SIZE] = p;
-+
-+	/* Update the caller's copy with the obfuscated name */
-+
-+	memcpy(name, newname, namelen);
+-	do {
+-		c = random() % 127 + 1;
+-	} while (c == '/');
+-	return c;
++	return filename_alphabet[random() % (sizeof filename_alphabet - 1)];
  }
  
- static void
+ /*
 
 
 _______________________________________________
