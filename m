@@ -1,17 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBUKehA5029316 for <xfs@oss.sgi.com>; Thu, 30 Dec 2010 14:40:43 -0600
-Received: from cf--amer001e--3.americas.sgi.com
-	(cf--amer001e--3.americas.sgi.com [137.38.100.5])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 29853304053
-	for <xfs@oss.sgi.com>; Thu, 30 Dec 2010 12:42:48 -0800 (PST)
-Subject: [PATCH 11/12] xfsprogs: fix up the nametable code in db/metadump.c
-From: Alex Elder <aelder@sgi.com>
-Date: Thu, 30 Dec 2010 14:42:47 -0600
-Message-ID: <1293741767.2294.373.camel@doink>
-Mime-Version: 1.0
-Reply-To: aelder@sgi.com
+	oBUMXPSG041223 for <xfs@oss.sgi.com>; Thu, 30 Dec 2010 16:33:25 -0600
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E8C4AF920B4
+	for <xfs@oss.sgi.com>; Thu, 30 Dec 2010 14:35:20 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
+	[150.101.137.102]) by cuda.sgi.com with ESMTP id
+	t0XeCVCqPqkc4CCC for <xfs@oss.sgi.com>;
+	Thu, 30 Dec 2010 14:35:20 -0800 (PST)
+Date: Fri, 31 Dec 2010 09:35:16 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/5] percpu_counter: fix test in
+	__percpu_counter_add_unless_lt()
+Message-ID: <20101230223516.GB15179@dastard>
+References: <1293076575.2408.425.camel@doink> <20101223060652.GE18264@dastard>
+	<1293656188.1961.470.camel@doink>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1293656188.1961.470.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,228 +31,205 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Alex Elder <aelder@sgi.com>
+Cc: XFS Mailing List <xfs@oss.sgi.com>
 
-The name table used to find duplicates in metadump.c is allocated
-dynamically, but there's no real need to do so.  Just make it a BSS
-global array and drop the initialization call.
+On Wed, Dec 29, 2010 at 02:56:28PM -0600, Alex Elder wrote:
+> On Thu, 2010-12-23 at 17:06 +1100, Dave Chinner wrote:
+> > On Wed, Dec 22, 2010 at 09:56:15PM -0600, Alex Elder wrote:
+> > > In __percpu_counter_add_unless_lt(), there is a test to see if
+> > > a call to __percpu_counter_add() can be made, knowing the result
+> > > will not be less than the given threshhold and the called function
+> > > will do the addition without taking a lock.
+> 
+> . . .
+> 
+> > > ===================================================================
+> > > --- a/lib/percpu_counter.c
+> > > +++ b/lib/percpu_counter.c
+> > > @@ -239,10 +239,10 @@ int __percpu_counter_add_unless_lt(struc
+> > >  		goto out;
+> > >  
+> > >  	/*
+> > > -	 * If the counter is over the threshold and the change is less than the
+> > > -	 * batch size, we might be able to avoid locking.
+> > > +	 * If the updated counter will be over the threshold we know
+> > > +	 * we can safely add, and might be able to avoid locking.
+> > >  	 */
+> > > -	if (count > threshold + error && abs(amount) < batch) {
+> > > +	if (count + amount > threshold + error) {
+> > >  		__percpu_counter_add(fbc, amount, batch);
+> > >  		ret = 1;
+> > >  		goto out;
+> > 
+> > What you have is what I first implemented following your exact
+> > logic. However, after having several assert failures n the XFS code,
+> > I realised that the logic fails when there are concurrent modifications
+> > with abs(amount) > batch. To demonstrate, take the initial conditions:
+> 
+> I think we're both wrong.  First I'll point out a think-o
+> you did, then I'll lay out a counterexample to your approach.
 
-Meanwhile, encapsulate the code that add entries to and look up
-entries in the table into their own functions.  Use the lookup
-function to detect a duplicate name in a case not previously
-checked.
+Argh, you're right. However, if you change amount to -49 and the initial
+fbc->count to 306, we get 226, 146, 66, -14, so the problem I was
+pointing out still stands.
 
-Change the naming scheme to use "nametable" as a prefix rather than
-a suffix.
+> > And we've just blown through the threshold. We modified the counter
+> > and pushed the result less than the threshold which we are not
+> > supposed to be, and worst yet is the fact we returning a positive
+> > number indicating that we _didn't_ bust the threshold.
+> 
+> Now here's an example that will fail with your version, which is:
+> 
+>      if (count > threshold + error && abs(amount) < batch) {
+>                __percpu_counter_add(fbc, amount, batch);
+> 
+> My example is not symmetric like yours is.
+> 
+> threshold = 0
+> batch = 32
+> 4 cpus, so (your) error = 2 * 4 * 32 = 256
+> 
+> We'll start with 0 for all per-cpu counter values
+> for simplicity, but we'll not assume that the
+> amount being added by all CPU's is the same.  So
+> here are both the current per-cpu counter values and
+> the amount each racing CPU is going to try to add.
+> 
+> fbc->count = 257
+> CPU	 0	 1	 2	 3
+> value	  0	 0	 0	 0
+> amount	-31	-76	-76	-76
 
-Signed-off-by: Alex Elder <aelder@sgi.com>
+Granted, that is a possible state that can occur at the sampling
+point, but it assumes that the race condition of CPUs 1, 2 and 3
+complete the fbc->count modification before seeing the CPU 0
+modification of the local CPU value can occur.
 
----
- db/metadump.c |  118 ++++++++++++++++++++++++++++++++--------------------------
- 1 file changed, 66 insertions(+), 52 deletions(-)
+I don't think that race condition can occur, because CPUs 1, 2 and 3
+will take the slow path because abs(amount) >= batch and serialise
+on the fbc->lock, whilst CPU 0 will not be serialised, is running
+under preempt_disable() and so should complete first....
 
-Index: b/db/metadump.c
-===================================================================
---- a/db/metadump.c
-+++ b/db/metadump.c
-@@ -346,30 +346,61 @@ typedef struct name_ent {
- 
- #define NAME_TABLE_SIZE		4096
- 
--static name_ent_t 		**nametable;
--
--static int
--create_nametable(void)
--{
--	nametable = calloc(NAME_TABLE_SIZE, sizeof(name_ent_t));
--	return nametable != NULL;
--}
-+static struct name_ent 	*nametable[NAME_TABLE_SIZE];
- 
- static void
--clear_nametable(void)
-+nametable_clear(void)
- {
--	int			i;
--	name_ent_t		*p;
-+	int		i;
-+	name_ent_t	*ent;
- 
- 	for (i = 0; i < NAME_TABLE_SIZE; i++) {
--		while (nametable[i]) {
--			p = nametable[i];
--			nametable[i] = p->next;
--			free(p);
-+		while ((ent = nametable[i])) {
-+			nametable[i] = ent->next;
-+			free(ent);
- 		}
- 	}
- }
- 
-+/*
-+ * See if the given name is already in the name table.  If so,
-+ * return a pointer to its entry, otherwise return a null pointer.
-+ */
-+static struct name_ent *
-+nametable_find(xfs_dahash_t hash, int namelen, uchar_t *name)
-+{
-+	struct name_ent	*ent;
-+
-+	for (ent = nametable[hash % NAME_TABLE_SIZE]; ent; ent = ent->next) {
-+		if (ent->hash == hash && ent->namelen == namelen &&
-+				!memcmp(ent->name, name, namelen))
-+			return ent;
-+	}
-+	return NULL;
-+}
-+
-+/*
-+ * Add the given name to the name table.  Returns a pointer to the
-+ * name's new entry, or a null pointer if an error occurs.
-+ */
-+static struct name_ent *
-+nametable_add(xfs_dahash_t hash, int namelen, uchar_t *name)
-+{
-+	struct name_ent	*ent;
-+
-+	ent = malloc(sizeof *ent + namelen);
-+	if (!ent)
-+		return NULL;
-+
-+	ent->namelen = namelen;
-+	memcpy(ent->name, name, namelen);
-+	ent->hash = hash;
-+	ent->next = nametable[hash % NAME_TABLE_SIZE];
-+
-+	nametable[hash % NAME_TABLE_SIZE] = ent;
-+
-+	return ent;
-+}
- 
- #define is_invalid_char(c)	((c) == '/' || (c) == '\0')
- #define rol32(x,y)		(((x) << (y)) | ((x) >> (32 - (y))))
-@@ -421,7 +452,6 @@ generate_obfuscated_name(
- 	uchar_t			*name)
- {
- 	xfs_dahash_t		hash;
--	name_ent_t		*p;
- 	int			dup = 0;
- 	uchar_t			newname[NAME_MAX];
- 
-@@ -519,38 +549,31 @@ generate_obfuscated_name(
- 		 * Search the name table to be sure we don't produce
- 		 * a name that's already been used.
- 		 */
--		for (p = nametable[hash % NAME_TABLE_SIZE]; p; p = p->next) {
--			if (p->hash == hash && p->namelen == namelen &&
--					!memcmp(p->name, newname, namelen))
--				break;
--		}
--		if (p)
-+		if (nametable_find(hash, namelen, newname))
- 		    	dup++;
- 		else
- 		    	dup = 0;
- 	} while (dup && dup < DUP_MAX);
- 
--	/* Use the original name if we got too many dups. */
--
--	newp = dup ? name : newname;
--
--	/* Create an entry for the name in the name table */
--
--	p = malloc(sizeof(name_ent_t) + namelen);
--	if (p == NULL)
-+	/*
-+	 * Create an entry for the name in the name table.  Use the
-+	 * original name if we got too many dups.
-+	 */
-+	if (! nametable_add(hash, namelen, dup ? name : newname))
- 		return;
- 
--	p->namelen = namelen;
--	memcpy(p->name, newp, namelen);
--	p->hash = hash;
--	p->next = nametable[hash % NAME_TABLE_SIZE];
--
--	nametable[hash % NAME_TABLE_SIZE] = p;
--
--	/* Update the caller's copy with the obfuscated name */
--
--	if (newp != name)
--		memcpy(name, newp, namelen);
-+	/*
-+	 * Update the caller's copy with the obfuscated name.
-+	 * Warn if we previously managed to create an obfuscated
-+	 * name that matches the one we're working on.
-+	 */
-+	if (! dup)
-+		memcpy(name, newname, namelen);
-+	else if (nametable_find(hash, namelen, newname))
-+		print_warning("duplicate name \"%s\" for inode %llu "
-+				"in dir inode %llu\n",
-+			name, (unsigned long long) ino,
-+			(unsigned long long) cur_ino);
- }
- 
- static void
-@@ -1253,7 +1276,7 @@ process_inode(
- 			break;
- 		default: ;
- 	}
--	clear_nametable();
-+	nametable_clear();
- 
- 	/* copy extended attributes if they exist and forkoff is valid */
- 	if (success && XFS_DFORK_DSIZE(dip, mp) < XFS_LITINO(mp)) {
-@@ -1272,7 +1295,7 @@ process_inode(
- 				success = process_btinode(dip, TYP_ATTR);
- 				break;
- 		}
--		clear_nametable();
-+		nametable_clear();
- 	}
- 	return success;
- }
-@@ -1675,12 +1698,6 @@ metadump_f(
- 	metablock->mb_blocklog = BBSHIFT;
- 	metablock->mb_magic = cpu_to_be32(XFS_MD_MAGIC);
- 
--	if (!create_nametable()) {
--		print_warning("memory allocation failure");
--		free(metablock);
--		return 0;
--	}
--
- 	block_index = (__be64 *)((char *)metablock + sizeof(xfs_metablock_t));
- 	block_buffer = (char *)metablock + BBSIZE;
- 	num_indicies = (BBSIZE - sizeof(xfs_metablock_t)) / sizeof(__be64);
-@@ -1690,7 +1707,6 @@ metadump_f(
- 	if (strcmp(argv[optind], "-") == 0) {
- 		if (isatty(fileno(stdout))) {
- 			print_warning("cannot write to a terminal");
--			free(nametable);
- 			free(metablock);
- 			return 0;
- 		}
-@@ -1699,7 +1715,6 @@ metadump_f(
- 		outf = fopen(argv[optind], "wb");
- 		if (outf == NULL) {
- 			print_warning("cannot create dump file");
--			free(nametable);
- 			free(metablock);
- 			return 0;
- 		}
-@@ -1736,7 +1751,6 @@ metadump_f(
- 	while (iocur_sp > start_iocur_sp)
- 		pop_cur();
- 
--	free(nametable);
- 	free(metablock);
- 
- 	return 0;
+> The real problem is that we're caching the value of
+> fbc->count, and as soon as we've done that it
+> could be out of date.  To get around it we need
+> to examine it under lock--preferably a reader/writer
+> lock I suppose.
 
+No, new locks are not an option. The point of percpu counters is to
+avoid locking where possible. memory barriers, OTOH....
+
+> You'll notice that fbc->count is
+> only ever read under the protection of the spinlock
+> everywhere else in the file.
+
+It isn't, in fact. percpu_counter_read(), for example.
+
+> Locking is avoided
+> only when checking whether it is possible to add to
+> a per-cpu value, and that is done with preemption
+> disabled.
+
+Sure, that's the rules for using per-cpu data structures (i.e.
+preemption needs to be disabled). That doesn't mean we can't avoid
+locking where possible....
+
+> I have a little more below.
+> 
+> > Analysis of the failures lead me to this lead me to this logic
+> > for the unlocked check in my proposed patch:
+> > 
+> > We can do unlocked modifications concurrently on all CPUs IFF
+> > 
+> > 	1. the code cannot be preempted between sampling fbc->count
+> > 	and calling __percpu_counter_add()
+> 
+> This I agree with (you convinced me in your response
+> to my patch 5/5).
+> 
+> > 	2. -batch < amount < batch
+> 
+> This isn't right, or maybe just isn't relevant.  The
+> reason is that it neither takes into account this CPU's
+> counter value, nor what a concurrent call on the other
+> CPU's might be adding to the net value.
+
+It is supposed to take into account whether the local addition
+will transgress the error bound for this CPU....
+
+> > 	3. the error bound is set to 2 * batch * nr_cpus
+> 
+> I think this assumes that all the CPU's are adding a limited
+> amount to the counter.  And I still think you're doubling
+> the error bound unnecessarily (but that may reflect the
+> implied limit).
+
+It is the limit that is supposed to take into account the current
+counter and the amount being added. I think this the the cause of
+the issue - the error doesn't correctly take into account amount -
+it assumes that -batch < amount < batch is always true. We can
+change the error bound to take amount into account, but that still
+doesn't work if another CPU is adding a larger abs(amount).  So for
+it to work in all cases we need to set a maximum bound on amount,
+which is impractical.
+
+However, I think this error bound is still valid if we modify the
+lockless code to detect if fbc->count has changed before we make the
+modification. It's only when fbc->count changes that the error bound
+is invalidated if abs(amount) < batch, so checking that it hasn't
+changed before applying the modification seems to solve the problem
+to me.  And rather than using locking, we can use memory barriers to
+ensure that we pick up any racing changes to fbc->count. i.e
+something like:
+
+restart:
+	smp_mb();
+	count = fbc->count;
+	if (count > threshold + error && abs(amount) < batch) {
+		s64 lcount;
+
+		pcount = this_cpu_ptr(fbc->counters);
+		lcount = *pcount + amount;
+		if (lcount >= batch || lcount <= -batch) {
+			spin_lock(&fbc->lock);
+			if (fbc->count != count) {
+				/* raced with other modifications */
+				spin_unlock(&fbc->lock);
+				goto restart;
+			}
+			fbc->count += lcount;
+			*pcount = 0;
+			spin_unlock(&fbc->lock);
+		} else {
+			smp_mb();
+			if (fbc->count != count)
+				goto restart;
+			*pcount = lcount;
+		}
+		ret = 1;
+		got out;
+	}
+
+This means that in your example (and indeed any example where
+fbc->count is modified directly on another CPU), we will detect
+it and redo the unlocked checks.
+
+> Below I have a version of the code that I think would work,
+> but it unfortunately requires a lock in the (presumably)
+> normal case.
+
+Which, unfortunately, defeats the primary purpose of using a percpu
+counter in the first place (i.e. to reduce lock contention on a
+global counter) and so if that is the best that can be done, there
+is no point making any change.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
