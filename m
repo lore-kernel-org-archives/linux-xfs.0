@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBUKcNmZ028907 for <xfs@oss.sgi.com>; Thu, 30 Dec 2010 14:38:23 -0600
+	oBUKbvev028852 for <xfs@oss.sgi.com>; Thu, 30 Dec 2010 14:37:57 -0600
 Received: from cf--amer001e--3.americas.sgi.com
 	(cf--amer001e--3.americas.sgi.com [137.38.100.5])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 25700304053
-	for <xfs@oss.sgi.com>; Thu, 30 Dec 2010 12:40:25 -0800 (PST)
-Subject: [PATCH 03/12] xfsprogs: drop unneeded use of a random character
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 9B6E58F80D2
+	for <xfs@oss.sgi.com>; Thu, 30 Dec 2010 12:39:59 -0800 (PST)
+Subject: [PATCH 01/12] xfsprogs: some things aren't all that special
 From: Alex Elder <aelder@sgi.com>
-Date: Thu, 30 Dec 2010 14:40:24 -0600
-Message-ID: <1293741624.2294.355.camel@doink>
+Date: Thu, 30 Dec 2010 14:39:59 -0600
+Message-ID: <1293741599.2294.342.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -26,64 +26,125 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-With the exception of the last five bytes, an obfuscated filename is
-simply a random string of (filesystem-acceptable) characters.  The
-last five bytes are chosen, based on the random portion before them,
-such that the resulting obfuscated name has the same hash value as
-the original filename.
+Move the check for short file names out of is_special_dirent() and
+into generate_obfuscated_name().  That way the check is more
+directly associated with the algorithm that requires it.
 
-This is done by essentially working backwards from the difference
-between the original hash and the hash value computed for the
-obfuscated name so far, picking final bytes based on how that
-difference gets manipulated by completing the hash computation.
+Similarly, move the check for inode == 0, since that case has to do
+with storing extended attributes (not files) in the name table.
 
-Of those last 5 bytes, all but the upper half of the first one are
-completely determined by this process.  The upper part of the first
-one is currently computed as 4 random bits, just like the entire
-first part of the obfuscated name.
+As a result, is_special_dirent() is really only focused on whether a
+given file is in the lost+found directory.
 
-But the lower nibble of that byte is already effectively random,
-resulting from the hash computation (or the difference between two
-of them).  We can choose to use 0's for that upper nibble and it
-will have no significant effect on the randomoness of the result.
+Rename is_special_dirent() to reflect its more specific purpose.
 
-Doing this simplifies the generation of two of the final five
-characters, and makes all five of them get computed in a consistent
-way.
-
-Add the use of a mask in the one case it wasn't used to be even more
-consistent.
+And use a cast to elminate a compile warning in calls to
+libxfs_da_hashname().
 
 Signed-off-by: Alex Elder <aelder@sgi.com>
 
 ---
- db/metadump.c |    6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ db/metadump.c |   51 +++++++++++++++++++++++++++++----------------------
+ 1 file changed, 29 insertions(+), 22 deletions(-)
 
 Index: b/db/metadump.c
 ===================================================================
 --- a/db/metadump.c
 +++ b/db/metadump.c
-@@ -472,8 +472,7 @@ generate_obfuscated_name(
- 			 */
- 			newhash = rol32(newhash, 3) ^ hash;
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2007 Silicon Graphics, Inc.
++ * Copyright (c) 2007,2010 SGI
+  * All Rights Reserved.
+  *
+  * This program is free software; you can redistribute it and/or
+@@ -377,8 +377,15 @@ random_filename_char(void)
+ 	return c;
+ }
  
--			newp[namelen - 5] = (newhash >> 28) |
--					(random_filename_char() & 0xf0);
-+			newp[namelen - 5] = (newhash >> 28) & 0x7f;
- 			if (is_invalid_char(newp[namelen - 5]))
- 				continue;
- 			newp[namelen - 4] = (newhash >> 21) & 0x7f;
-@@ -485,8 +484,7 @@ generate_obfuscated_name(
- 			newp[namelen - 2] = (newhash >> 7) & 0x7f;
- 			if (is_invalid_char(newp[namelen - 2]))
- 				continue;
--			newp[namelen - 1] = ((newhash >> 0) ^
--					(newp[namelen - 5] >> 4)) & 0x7f;
-+			newp[namelen - 1] = (newhash >> 0) & 0x7f;
- 			if (is_invalid_char(newp[namelen - 1]))
- 				continue;
++/*
++ * We won't obfuscate "lost+found" nor any inodes within it.
++ *
++ * Record the "lost+found" directory's inode number when it's found.
++ * While processing that directory, any file whose name matches
++ * its inode number is left as-is (no obfuscation).
++ */
+ static int
+-is_special_dirent(
++in_lost_found(
+ 	xfs_ino_t		ino,
+ 	int			namelen,
+ 	uchar_t			*name)
+@@ -387,22 +394,8 @@ is_special_dirent(
+ 	char			s[32];
+ 	int			slen;
+ 
+-	/*
+-	 * due to the XFS name hashing algorithm, we cannot obfuscate
+-	 * names with 4 chars or less.
+-	 */
+-	if (namelen <= 4)
+-		return 1;
+-
+-	if (ino == 0)
+-		return 0;
+-
+-	/*
+-	 * don't obfuscate lost+found nor any inodes within lost+found with
+-	 * the inode number
+-	 */
+-	if (cur_ino == mp->m_sb.sb_rootino && namelen == 10 &&
+-			memcmp(name, "lost+found", 10) == 0) {
++	if (!orphanage_ino && cur_ino == mp->m_sb.sb_rootino &&
++			namelen == 10 && !memcmp(name, "lost+found", 10)) {
+ 		orphanage_ino = ino;
+ 		return 1;
+ 	}
+@@ -410,7 +403,8 @@ is_special_dirent(
+ 		return 0;
+ 
+ 	slen = sprintf(s, "%lld", (long long)ino);
+-	return (slen == namelen && memcmp(name, s, namelen) == 0);
++
++	return slen == namelen && !memcmp(name, s, namelen);
+ }
+ 
+ static void
+@@ -426,10 +420,23 @@ generate_obfuscated_name(
+ 	xfs_dahash_t		newhash;
+ 	uchar_t			newname[NAME_MAX];
+ 
+-	if (is_special_dirent(ino, namelen, name))
++	/*
++	 * Our obfuscation algorithm requires at least 5-character
++	 * names, so don't bother if the name is too short.
++	 */
++	if (namelen < 5)
++	    	return;
++
++	/*
++	 * We don't obfuscate "lost+found" or any of the files
++	 * therein.  When the name table is used for extended
++	 * attributes, the inode number provided is 0, in which
++	 * case we don't need to make this check.
++	 */
++	if (ino && in_lost_found(ino, namelen, name))
+ 		return;
+ 
+-	hash = libxfs_da_hashname(name, namelen);
++	hash = libxfs_da_hashname((char *) name, namelen);
+ 
+ 	/* create a random name with the same hash value */
+ 
+@@ -468,7 +475,7 @@ generate_obfuscated_name(
  			break;
+ 		}
+ 
+-		ASSERT(libxfs_da_hashname(newname, namelen) == hash);
++		ASSERT(libxfs_da_hashname((char *) newname, namelen) == hash);
+ 
+ 		for (p = nametable[hash % NAME_TABLE_SIZE]; p; p = p->next) {
+ 			if (p->hash == hash && p->namelen == namelen &&
 
 
 _______________________________________________
