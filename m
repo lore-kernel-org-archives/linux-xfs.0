@@ -1,15 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBUKbgJf028821 for <xfs@oss.sgi.com>; Thu, 30 Dec 2010 14:37:43 -0600
+	oBUKdfi7029057 for <xfs@oss.sgi.com>; Thu, 30 Dec 2010 14:39:41 -0600
 Received: from cf--amer001e--3.americas.sgi.com
 	(cf--amer001e--3.americas.sgi.com [137.38.100.5])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 6AC81AC012
-	for <xfs@oss.sgi.com>; Thu, 30 Dec 2010 12:39:44 -0800 (PST)
-Subject: [PATCH 00/12] xfsprogs: fixup generate_obfuscated_name()
+	by relay3.corp.sgi.com (Postfix) with ESMTP id CE5F6AC011
+	for <xfs@oss.sgi.com>; Thu, 30 Dec 2010 12:41:45 -0800 (PST)
+Subject: [PATCH 08/12] xfsprogs: ensure dup table always has entry for
+	obfuscated name
 From: Alex Elder <aelder@sgi.com>
-Date: Thu, 30 Dec 2010 14:39:43 -0600
-Message-ID: <1293741583.2294.341.camel@doink>
+Date: Thu, 30 Dec 2010 14:41:45 -0600
+Message-ID: <1293741705.2294.367.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -20,78 +21,58 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-VGhpcyBzZXJpZXMgaGFzIGV4cGFuZGVkIHNvbWUgc2luY2UgSSBmaXJzdCBwb3N0ZWQgYQp2ZXJz
-aW9uIG9mIGl0IGJhY2sgaW4gT2N0b2Jlci4KCk15IG9yaWdpbmFsIHB1cnBvc2Ugd2FzIHRvIGZp
-eCBhIGJ1ZyBpbiB0aGUgZnVuY3Rpb24KdXNlZCBieSB4ZnNfbWV0YWR1bXAgdG8gb2JmdXNjYXRl
-IGZpbGUgYW5kIGV4dGVuZGVkCmF0dHJpYnV0ZSBuYW1lcy4gIEFya2FkaXVzeiBNacWba2lld2lj
-eiBmb3VuZCBvdXQgdGhhdAp3aGVuIGhlIGF0dGVtcHRlZCB0byBwZXJmb3JtIGEgbWV0YWR1bXAg
-b24gYSBmaWxlc3lzdGVtCndoaWNoIGhhZCBzb21lIGZpbGVzIHdob3NlIG5hbWVzIHVzZWQgOC1i
-aXQgY2hhcmFjdGVycywKaXQgbmV2ZXIgY29tcGxldGVkLiAgVGhlIGNhdXNlIHdhcyBhIGZsYXcg
-aW4gdGhlCmFsZ29yaXRobSB1c2VkIHRvIG9iZnVzY2F0ZSBuYW1lcyB3aGljaCBjYXVzZWQKYW4g
-aW5maW5pdGUgbG9vcCB3aGVuIGNlcnRhaW4gbmFtZXMgZ290IG9iZnVzY2F0ZWQuCgpJIGhhdmUg
-Zml4ZWQgdGhhdCBidWcgKGluIHBhdGNoIDQgb2YgdGhpcyBzZXJpZXMpLCBidXQKd2hpbGUgSSB3
-YXMgYXQgaXQgSSByZWFycmFuZ2VkIHRoZSBjb2RlIGEgYml0IGFuZApkaWQgc29tZSBvdGhlciBj
-bGVhbnVwcy4gIFRoZSBmaXJzdCA3IHBhdGNoZXMgaW4KdGhlIHNlcmllcyBhcmUgcmVhbGx5IHBy
-ZXR0eSBkaXJlY3RseSByZWxhdGVkIHRvIHRoYXQKaXNzdWUuCgpCdXQgd2hpbGUgaW4gdGhlcmUg
-SSBub3RpY2VkIHNvbWUgb3RoZXIgc29tZXdoYXQKc3VidGxlIGlzc3VlcyBhbmQgaGF2ZSBhZGRy
-ZXNzZWQgdGhvc2UgaW4gdGhpcwpzZXJpZXMgYXMgd2VsbDoKLSBUaGVyZSBpcyBhIHRhYmxlIHRo
-YXQgdHJhY2tzIG5hbWVzIHRvIGVuc3VyZQogIGR1cGxpY2F0ZXMgYXJlbid0IHByb2R1Y2VkIGFz
-IGEgcmVzdWx0IG9mCiAgb2JmdXNjYXRpb24uICBUaGVyZSB3YXMgYSBjYXNlIHdoZXJlIGEgZmFp
-bHVyZQogIHRvIHVwZGF0ZSB0aGUgdGFibGUgd2FzIHNpbGVudGx5IGlnbm9yZWQuCi0gVGhlcmUg
-d2FzIHN0aWxsIGEgY2hhbmNlIHRoYXQgcGF0aG9sb2dpY2FsCiAgY2FzZXMgY291bGQgZW5kIHVw
-IHJlcGVhdGluZyBkdWUgdG8gZmluZGluZwogIGR1cGxpY2F0ZXMuICBJIGNoYW5nZWQgaXQgc28g
-aXQgd291bGQgZ2l2ZQogIHVwIGFmdGVyIGEgZml4ZWQgbnVtYmVyIG9mIGF0dGVtcHRzLgotIE9i
-ZnVzY2F0ZWQgbmFtZXMgaGFkIGJlZW4gY2hvc2VuIGZyb20gYW4KICBhbHBoYWJldCBvZiBhbGwg
-YWxsb3dhYmxlIGNoYXJhY3RlcnMuICBUaGlzCiAgd2FzIG1vcmUgdGhhbiBuZWVkZWQsIHNvIEkg
-bWFkZSBpdCBjcmVhdGUKICBuYW1lcyB0aGF0IHdlcmUgKG1vc3RseSkgcHJpbnRhYmxlcy4KLSBJ
-dCB3YXMgcHJldmlvdXNseSBwb3NzaWJsZSBmb3IgYW4gb2JmdXNjYXRlZAogIG5hbWUgdG8gZW5k
-IHVwIGJlaW5nIGEgZHVwbGljYXRlIG9mIGEgcmVhbAogIG5hbWUsIGJlY2F1c2Ugbm9uLW9iZnVz
-Y2F0ZWQgbmFtZXMgd2VyZSBub3QKICBwbGFjZWQgaW4gdGhlIG5hbWUgdGFibGUuCgpBbmQgZmlu
-YWxseSBJIGRpZCBhIGxpdHRsZSB0aWR5aW5nIG9mIHRoZQpjb2RlIHRoYXQgbWFuYWdlcyB0aGUg
-bmFtZSB0YWJsZS4KCkJlbG93IGlzIGEgc3VtbWFyeSBvZiB0aGUgcGF0Y2hlcywgaW4gb3JkZXIu
-CgoJCQkJCS1BbGV4Cgp4ZnNwcm9nczogc29tZSB0aGluZ3MgYXJlbid0IGFsbCB0aGF0IHNwZWNp
-YWwKICAgIFNvbWUgc2ltcGxlIGNvZGUgcmVmYWN0b3JpbmcgdG8gbWFrZSB0aGUgcHVycG9zZQog
-ICAgb2Ygb25lIGhlbHAgZnVuY3Rpb24gbW9yZSBmb2N1c2VkLgp4ZnNwcm9nczogc2ltcGxpZnkg
-bGVhZGluZyAnLycgaGFuZGxpbmcgaW4gZ2VuZXJhdGVfb2JmdXNjYXRlZF9uYW1lKCkKICAgIEFu
-b3RoZXIgY2xlYW51cCwgdG8gc2ltcGxpZnkgc29tZSBvdGhlciBjaGFuZ2VzIHRvIGNvbWUuCnhm
-c3Byb2dzOiBkcm9wIHVubmVlZGVkIHVzZSBvZiBhIHJhbmRvbSBjaGFyYWN0ZXIKICAgIFRoaXMg
-dHdlYWtzIHRoZSBvYmZ1c2NhdGVkIGZpbGVuYW1lIGFsZ29yaXRobSBzbGlnaHRseQogICAgdG8g
-c2ltcGxpZnkgaXQsIHdoaWxlIHByZXNlcnZpbmcgaXRzIG9yaWdpbmFsIHByb3BlcnRpZXMuCnhm
-c3Byb2dzOiBhZGp1c3QgcmF0aGVyIHRoYW4gc3RhcnQgb3ZlciB3aGVuIGludmFsaWQgYnl0ZSBm
-b3VuZAogICAgVGhpcyBjb250YWlucyB0aGUgcmVhbCBmaXggdG8gdGhlIG9yaWdpbmFsIHByb2Js
-ZW0uICBUaGlzCiAgICBwYXRjaCBjb250YWlucyBhIHZlcnkgbG9uZyBkZXNjcmlwdGlvbiB0byBl
-eHBsYWluIHdoYXQncwogICAgaGFwcGVuaW5nLiAgQnV0IGJhc2ljYWxseSBpdCBjaGFuZ2VzIHRo
-ZSBhbGdvcml0aG0gc28gdGhhdAogICAgd2hlbiBhIGJhZCAocmFuZG9tKSBjaGFyYWN0ZXIgaXMg
-cHJvZHVjZWQsIHdlIGRvbid0IHN0YXJ0CiAgICBvdmVyLCBidXQgaW5zdGVhZCBtb2RpZnkgdGhl
-IGNoYXJhY3RlciAoYnkgZmxpcHBpbmcgYSBiaXQpLAogICAgcmVzdWx0aW5nIGluIGEgZ29vZCBj
-aGFyYWN0ZXIgdGhhdCB3aWxsIGJlIHVzZWQuCnhmc3Byb2dzOiBlbGltaW5hdGUgYSBwb2ludGxl
-c3MgbG9vcCBpbiBnZW5lcmF0ZV9vYmZ1c2NhdGVkX25hbWUoKQogICAgVGhlIHByZXZpb3VzIGNo
-YW5nZSBtYWRlIGEgbG9vcCBpbiB0aGUgY29kZSBubyBsb25nZXIgbmVlZGVkLgp4ZnNwcm9nczog
-UmVwbGFjZSByZXBlYXRlZCBibG9ja3Mgd2l0aCBhIGxvb3AKICAgIFRoZSBjb2RlIGlzIG5vdyBz
-dHJ1Y3R1cmVkIHNvIGFsbCBvZiB0aGUgbGFzdCA1IGNoYXJhY3RlcnMKICAgIGluIGFuIG9iZnVz
-Y2F0ZWQgbmFtZSBhcmUgaGFuZGxlZCBpZGVudGljYWxseS4gIFRoaXMganVzdAogICAgdGFrZXMg
-YWR2YW50YWdlIG9mIHRoYXQgYnkgdXNpbmcgYSBsb29wIG92ZXIgdGhlbS4KeGZzcHJvZ3M6IHVz
-ZSBwb2ludGVycyBpbiBnZW5lcmF0ZV9vYmZ1c2NhdGVkX25hbWUoKQogICAgU29ydCBvZiBhIGNs
-ZWFudXAsIHJlcGxhY2luZyBhcnJheSByZWZlcmVuY2VzIHdpdGggcG9pbnRlcnMuCnhmc3Byb2dz
-OiBlbnN1cmUgZHVwIHRhYmxlIGFsd2F5cyBoYXMgZW50cnkgZm9yIG9iZnVzY2F0ZWQgbmFtZQog
-ICAgVGhpcyBqdXN0IG1ha2VzIHN1cmUgd2UgY3JlYXRlIGFuIGVudHJ5IGluIHRoZSBuYW1lIHRh
-YmxlCiAgICBiZWZvcmUgd2UgcGFzcyBiYWNrIGFuIG9iZnVzY2F0ZWQgbmFtZS4KeGZzcHJvZ3M6
-IGRvbid0IGxvb3Agb24gdG9vIG1hbnkgZHVwcwogICAgVGhpcyBlbnN1cmVzIHdlIGRvbid0IGxv
-b3AgZm9yZXZlciAob3IgZXZlbiBmb3IgdmVyeSBsb25nKQogICAgaWYgd2UgcmVwZWF0ZWRseSBj
-b21lIHVwIHdpdGggZHVwbGljYXRlIGVudHJpZXMgd2hlbgogICAgb2JmdXNjYXRpbmcgbmFtZXMu
-Cnhmc3Byb2dzOiB1c2UgcHJpbnRhYmxlIGNoYXJhY3RlcnMgZm9yIG9iZnVzY2F0ZWQgZmlsZW5h
-bWVzCiAgICBUaGlzIHJlc3RyaWN0cyB0aGUgY2hhcmFjdGVycyB1c2VkIGZvciBhbGwgYnV0IHRo
-ZQogICAgbGFzdCBmaXZlIGxldHRlcnMgb2Ygb2JmdXNjYXRlZCBmaWxlIG5hbWVzIHRvIGp1c3Qg
-YQogICAgc2V0IG9mIHByaW50YWJsZXMuCnhmc3Byb2dzOiBmaXggdXAgdGhlIG5hbWV0YWJsZSBj
-b2RlIGluIGRiL21ldGFkdW1wLmMKICAgIFRoaXMgZW5jYXBzdWxhdGVzIHNvbWUgY29kZSB0aGF0
-IHdvcmtzIHdpdGggdGhlCiAgICBuYW1lIHRhYmxlIHVzZWQgaW4gdHJhY2tpbmcgZHVwbGljYXRl
-cy4KeGZzcHJvZ3M6IERyb3AgYSB0eXBlZGVmIGluIGRiL21ldGFkdW1wLmMKICAgIFRoaXMganVz
-dCBnZXRzIHJpZCBvZiBhbiB1bm5lY2Vzc2FyeSB0eXBlZGVmLgoKX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNn
-aS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+We need to ensure the name table has a copy of all the names in
+a directory in order to avoid creating duplicate entries when
+obfuscating names.  Currently there is an (unlikely) case where
+the name is passed back without such an entry being created.
+Reorder things so that won't happen.
+
+Signed-off-by: Alex Elder <aelder@sgi.com>
+
+---
+ db/metadump.c |   12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
+
+Index: b/db/metadump.c
+===================================================================
+--- a/db/metadump.c
++++ b/db/metadump.c
+@@ -519,18 +519,22 @@ generate_obfuscated_name(
+ 		}
+ 	} while (dup);
+ 
+-	memcpy(name, newname, namelen);
++	/* Create an entry for the name in the name table */
+ 
+ 	p = malloc(sizeof(name_ent_t) + namelen);
+ 	if (p == NULL)
+ 		return;
+ 
+-	p->next = nametable[hash % NAME_TABLE_SIZE];
+-	p->hash = hash;
+ 	p->namelen = namelen;
+-	memcpy(p->name, name, namelen);
++	memcpy(p->name, newname, namelen);
++	p->hash = hash;
++	p->next = nametable[hash % NAME_TABLE_SIZE];
+ 
+ 	nametable[hash % NAME_TABLE_SIZE] = p;
++
++	/* Update the caller's copy with the obfuscated name */
++
++	memcpy(name, newname, namelen);
+ }
+ 
+ static void
+
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
