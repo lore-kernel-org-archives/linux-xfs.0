@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBUKckYm028965 for <xfs@oss.sgi.com>; Thu, 30 Dec 2010 14:38:46 -0600
+	oBUKcX57028933 for <xfs@oss.sgi.com>; Thu, 30 Dec 2010 14:38:33 -0600
 Received: from cf--amer001e--3.americas.sgi.com
 	(cf--amer001e--3.americas.sgi.com [137.38.100.5])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id BB2CAAC011
-	for <xfs@oss.sgi.com>; Thu, 30 Dec 2010 12:40:50 -0800 (PST)
-Subject: [PATCH 05/12] xfsprogs: eliminate a pointless loop in
-	generate_obfuscated_name()
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0BF738F80D2
+	for <xfs@oss.sgi.com>; Thu, 30 Dec 2010 12:40:37 -0800 (PST)
+Subject: [PATCH 04/12] xfsprogs: adjust rather than start over when invalid
+	byte found
 From: Alex Elder <aelder@sgi.com>
-Date: Thu, 30 Dec 2010 14:40:49 -0600
-Message-ID: <1293741649.2294.357.camel@doink>
+Date: Thu, 30 Dec 2010 14:40:37 -0600
+Message-ID: <1293741637.2294.356.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -21,189 +21,135 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Eliminate a now pointless loop.  Done as a separate patch to
-make the effects of upcoming changes more clear.
-
-Signed-off-by: Alex Elder <aelder@sgi.com>
-
----
- db/metadump.c |  146 ++++++++++++++++++++++++++++------------------------------
- 1 file changed, 71 insertions(+), 75 deletions(-)
-
-Index: b/db/metadump.c
-===================================================================
---- a/db/metadump.c
-+++ b/db/metadump.c
-@@ -450,89 +450,85 @@ generate_obfuscated_name(
- 	if (*name == '/')
- 	    	name++;
- 	do {
-+		uchar_t	high_bit;
-+
- 		dup = 0;
--		for (;;) {
--			uchar_t	high_bit;
- 
--		    	/*
--			 * The beginning of the obfuscated name can
--			 * be pretty much anything, so fill it in
--			 * with random characters.  Accumulate its
--			 * new hash value as we go.
--			 */
--			newhash = 0;
--			for (i = 0; i < namelen - 5; i++) {
--				newp[i] = random_filename_char();
--				newhash = newp[i] ^ rol32(newhash, 7);
--			}
-+		/*
-+		 * The beginning of the obfuscated name can be
-+		 * pretty much anything, so fill it in with random
-+		 * characters.  Accumulate its new hash value as we
-+		 * go.
-+		 */
-+		newhash = 0;
-+		for (i = 0; i < namelen - 5; i++) {
-+			newp[i] = random_filename_char();
-+			newhash = newp[i] ^ rol32(newhash, 7);
-+		}
- 
--			/*
--			 * Compute which five bytes need to be used
--			 * at the end of the name so the hash of the
--			 * obfuscated name is the same as the hash
--			 * of the original.  If any result in an
--			 * invalid character, flip a bit and arrange
--			 * for a corresponding bit in a neighboring
--			 * byte to be flipped as well.  For the last
--			 * byte, the "neighbor" to change is the
--			 * first byte we're computing here.
--			 */
--			newhash = rol32(newhash, 3) ^ hash;
-+		/*
-+		 * Compute which five bytes need to be used at the
-+		 * end of the name so the hash of the obfuscated
-+		 * name is the same as the hash of the original.  If
-+		 * any result in an invalid character, flip a bit
-+		 * and arrange for a corresponding bit in a
-+		 * neighboring byte to be flipped as well.  For the
-+		 * last byte, the "neighbor" to change is the first
-+		 * byte we're computing here.
-+		 */
-+		newhash = rol32(newhash, 3) ^ hash;
- 
-+		high_bit = 0;
-+
-+		newp[namelen - 5] = ((newhash >> 28) & 0x7f) ^ high_bit;
-+		if (is_invalid_char(newp[namelen - 5])) {
-+			newp[namelen - 5] ^= 1;
-+			high_bit = 0x80;
-+		} else
- 			high_bit = 0;
- 
--			newp[namelen - 5] = ((newhash >> 28) & 0x7f) ^ high_bit;
--			if (is_invalid_char(newp[namelen - 5])) {
--				newp[namelen - 5] ^= 1;
--				high_bit = 0x80;
--			} else
--				high_bit = 0;
--
--			newp[namelen - 4] = ((newhash >> 21) & 0x7f) ^ high_bit;
--			if (is_invalid_char(newp[namelen - 4])) {
--				newp[namelen - 4] ^= 1;
--				high_bit = 0x80;
--			} else
--				high_bit = 0;
--
--			newp[namelen - 3] = ((newhash >> 14) & 0x7f) ^ high_bit;
--			if (is_invalid_char(newp[namelen - 3])) {
--				newp[namelen - 3] ^= 1;
--				high_bit = 0x80;
--			} else
--				high_bit = 0;
--
--			newp[namelen - 2] = ((newhash >> 7) & 0x7f) ^ high_bit;
--			if (is_invalid_char(newp[namelen - 2])) {
--				newp[namelen - 2] ^= 1;
--				high_bit = 0x80;
--			} else
--				high_bit = 0;
--
--			newp[namelen - 1] = ((newhash >> 0) & 0x7f) ^ high_bit;
--			if (is_invalid_char(newp[namelen - 1])) {
--				newp[namelen - 1] ^= 1;
--				high_bit = 0x80;
--			} else
--				high_bit = 0;
-+		newp[namelen - 4] = ((newhash >> 21) & 0x7f) ^ high_bit;
-+		if (is_invalid_char(newp[namelen - 4])) {
-+			newp[namelen - 4] ^= 1;
-+			high_bit = 0x80;
-+		} else
-+			high_bit = 0;
- 
--			/*
--			 * If we flipped a bit on the last byte, we
--			 * need to fix up the first one we computed.
--			 * That could make that first character
--			 * invalid, in which case we flip one more
--			 * bit in both bytes.
--			 */
--			if (high_bit) {
--			    	newp[namelen - 5] ^= 0x10;
--			    	if (is_invalid_char(newp[namelen - 5])) {
--					newp[namelen - 1] ^= 2;
--					newp[namelen - 5] ^= 0x20;
--					ASSERT(!is_invalid_char(newp[namelen - 1]));
--					ASSERT(!is_invalid_char(newp[namelen - 5]));
--				}
-+		newp[namelen - 3] = ((newhash >> 14) & 0x7f) ^ high_bit;
-+		if (is_invalid_char(newp[namelen - 3])) {
-+			newp[namelen - 3] ^= 1;
-+			high_bit = 0x80;
-+		} else
-+			high_bit = 0;
-+
-+		newp[namelen - 2] = ((newhash >> 7) & 0x7f) ^ high_bit;
-+		if (is_invalid_char(newp[namelen - 2])) {
-+			newp[namelen - 2] ^= 1;
-+			high_bit = 0x80;
-+		} else
-+			high_bit = 0;
-+
-+		newp[namelen - 1] = ((newhash >> 0) & 0x7f) ^ high_bit;
-+		if (is_invalid_char(newp[namelen - 1])) {
-+			newp[namelen - 1] ^= 1;
-+			high_bit = 0x80;
-+		} else
-+			high_bit = 0;
-+
-+		/*
-+		 * If we flipped a bit on the last byte, we need to
-+		 * fix up the first one we computed.  That could
-+		 * make that first character invalid, in which case
-+		 * we flip one more bit in both bytes.
-+		 */
-+		if (high_bit) {
-+			newp[namelen - 5] ^= 0x10;
-+			if (is_invalid_char(newp[namelen - 5])) {
-+				newp[namelen - 1] ^= 2;
-+				newp[namelen - 5] ^= 0x20;
-+				ASSERT(!is_invalid_char(newp[namelen - 1]));
-+				ASSERT(!is_invalid_char(newp[namelen - 5]));
- 			}
--			break;
- 		}
- 
- 		ASSERT(libxfs_da_hashname((char *) newname, namelen) == hash);
-
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+VGhlIGxhc3QgNSBieXRlcyBvZiBhIGZpbGVuYW1lIGdlbmVyYXRlZCBieSBnZW5lcmF0ZV9vYmZ1
+c2NhdGVkX25hbWUoKQpjYW4gYmUgc2VsZWN0ZWQgc3VjaCB0aGF0IHRoZXkgKGFsb25nIHdpdGgg
+YWxsIG9mIHRoZSBwcmVjZWRpbmcKY2hhcmFjdGVycyBpbiB0aGUgZmlsZW5hbWUpIHByb2R1Y2Ug
+YW55IGRlc2lyZWQgdmFsdWUgd2hlbiBoYXNoZWQuCgpUaGV5IGFyZSBzZWxlY3RlZCBiYXNlZCBv
+biBob3cgdGhlaXIgdmFsdWUgYWZmZWN0cyB0aGUgb3V0Y29tZSBvZgp0aGUgaGFzaCBjYWxjdWxh
+dGlvbiBmb3IgdGhlIG9iZnVzY2F0ZWQgbmFtZS4gIEVhY2ggYnl0ZSBpcyBYT1InZAppbnRvIHRo
+ZSBoYXNoIGF0IGEgY2VydGFpbiBwb3NpdGlvbi4gIFRoZSBwb3J0aW9uIG9mIHRoZSBoYXNoCmFm
+ZmVjdGVkIGJ5IGVhY2ggb2YgdGhlc2UgbGFzdCBmaXZlIGJ5dGVzIGNhbiBiZSBzZWVuIHZpc3Vh
+bGx5CmJlbG93OgoKCSstKy0rLSstKy0rLSstKy18LSstKy0rLSstKy0rLSstfC0rLSstKy0rLSst
+Ky0rLXwtKy0rLSstKy0rLSstKy0rCmhhc2g6CXwgfCB8IHwgfCB8IHwgfCB8IHwgfCB8IHwgfCB8
+IHwgfCB8IHwgfCB8IHwgfCB8IHwgfCB8IHwgfCB8IHwgfCB8CgkrLSstKy0rLSstKy0rLSstfC0r
+LSstKy0rLSstKy0rLXwtKy0rLSstKy0rLSstKy18LSstKy0rLSstKy0rLSstKwogICAgICAgbGFz
+dC00IC0+fCAgICAgICAgICAgfDwtLSBsYXN0LTIgLS0tPnwgICAgICAgICAgIHw8LS0tIGxhc3Qg
+LS0tLT58CiAgICAgICAgICAgICAgfDwtLSBsYXN0LTMgLS0tPnwgICAgICAgICAgIHw8LS0gbGFz
+dC0xIC0tLT58ICAgICB8PC0gbGFzdC00CgooTm90ZSBieXRlIChsYXN0IC0gNCkgd3JhcHMgYXJv
+dW5kLiAgVGhlIHByZXZpb3VzIHBhdGNoIGluIHRoaXMKc2VyaWVzIGVsaW1pbmF0ZWQgdGhlIGVm
+ZmVjdCBvZiB0aGUgdXBwZXIgNCBiaXRzIG9mIHRoYXQgYnl0ZQpieSBmb3JjaW5nIHRoZW0gdG8g
+YmUgYWxsIGJlIDAgYml0cy4pCgpVc2luZyB0aGUgKFhPUikgZGlmZmVyZW5jZSBiZXR3ZWVuIHRo
+ZSBoYXNoIGNvbXB1dGVkIGZvciB0aGUKYmVnaW5uaW5nIG9mIHRoZSBvYmZ1c2NhdGVkIG5hbWUg
+YW5kIHRoZSBoYXNoIGZyb20gdGhlIG9yaWdpbmFsCnZhbHVlLCB3ZSBjYW4gZGlyZWN0bHkgZGV0
+ZXJtaW5lIHRoZSByZXF1aXJlZCBmaW5hbCBmaXZlIGJ5dGVzIHRvCm1ha2UgdGhlIGhhc2hlcyBm
+b3IgdGhlIHR3byBjb21wbGV0ZSBmaWxlbmFtZXMgbWF0Y2guICBUaGUgbG93ZXIKYnl0ZSAoYml0
+cyAwLTcpIG9mIHRoYXQgZGlmZmVyZW5jZSBpcyB1c2VkIGZvciB0aGUgbGFzdCBjaGFyYWN0ZXIg
+aW4KdGhlIG9iZnVzY2F0ZWQgbmFtZSwgYml0cyA3LTE0IGZvciB0aGUgc2Vjb25kLXRvLWxhc3Qs
+IGFuZCBzbyBvbi4KCkl0J3MgcG9zc2libGUgZm9yIHRob3NlIHBvcnRpb25zIHRvIHJlc3VsdCBp
+biBjaGFyYWN0ZXJzICgnXDAnIGFuZAonLycpIHRoYXQgYXJlIG5vdCBhbGxvd2VkIGluIHZhbGlk
+IGZpbGUgbmFtZXMuICBJZiB0aGlzIG9jY3VycywgdGhlCmV4aXN0aW5nIGNvZGUgYWJhbmRvbnMg
+dGhlIGN1cnJlbnQgb2JmdXNjYXRlZCBmaWxlIG5hbWUgYW5kIHN0YXJ0cwphZ2FpbiBmcm9tIHRo
+ZSBiZWdpbm5pbmcuICBCdXQgdGhlcmUgZXhpc3QgY2FzZXMgd2hlcmUgdGhpcyBjYW4gbGVhZAp0
+byBhIG5ldmVyLWVuZGluZyBsb29wLiAgQXJrYWRpdXN6IE1pxZtraWV3aWN6IGVuY291bnRlcmVk
+IGp1c3Qgc3VjaAphIG5hbWUsICJSXDMyM1wyNTdORSIuICBUaGF0IGZpbGVuYW1lIHByb2R1Y2Vz
+IGhhc2ggdmFsdWUKMHgzYTRiZTc0MCwgd2hpY2ggcmVxdWlyZXMgdGhhdCB0aGUgb2JmdXNjYXRl
+ZCBuYW1lIHVzZXMgJy8nIGF0CnBvc2l0aW9uIGxhc3QtMi4gIFRoZSBjdXJyZW50IGFsZ29yaXRo
+bSBzdGFydHMgb3ZlciwgYnV0IHNpbmNlIHRoZXJlCmFyZSBubyByYW5kb20gY2hhcmFjdGVycyBp
+biB0aGlzIGxlbmd0aC01IG9iZnVzY2F0ZWQgbmFtZSwgbm8gb3RoZXIKcG9zc2liaWxpdHkgd2ls
+bCBiZSBmb3VuZCBhbmQgdGhlIHByb2Nlc3MgcmVwZWF0cyBmb3JldmVyLgoKClRoaXMgY2hhbmdl
+IG1vZGlmaWVzIHRoZSBhbGdvcml0aG0gdXNlZCBzbyB0aGF0IGlmIGEgbm9uLWFsbG93ZWQKY2hh
+cmFjdGVyIGFyaXNlcywgd2UgZmxpcCBhIGJpdCBpbiB0aGF0IGNoYXJhY3RlciAod2hpY2ggcmVz
+dWx0cwppbiBhbiBhbGxvd2VkIGNoYXJhY3RlciksIGFsb25nIHdpdGggYW5vdGhlciAibWF0Y2hp
+bmciIGJpdCBpbgphbm90aGVyIGJ5dGUgc3VjaCB0aGF0IHRoZSByZXN1bHRpbmcgaGFzaCBpcyB1
+bmNoYW5nZWQuCgpUaGUgdHdvIHVuLWFsbG93ZWQgY2hhcmFjdGVycyBpbiBhIHBhdGhuYW1lIGNv
+bXBvbmVudCBhcmUgJ1wwJwooMHgwMCkgYW5kICcvJyAoMHgyZikuICBGbGlwcGluZyBhbnkgb25l
+IGJpdCBpbiBlaXRoZXIgb25lIG9mIHRob3NlCmNoYXJhY3RlcnMgY29udmVydHMgaXQgdG8gYW4g
+YWxsb3dlZCBjaGFyYWN0ZXIuICBGbGlwcGluZyB0d28KZGlzdGluY3QgYml0cyBhbHNvIHJlc3Vs
+dHMgaW4gYW4gYWxsb3dlZCBjaGFyYWN0ZXIuICBBcyBzZWVuIGluIHRoZQpkaWFncmFtIGFib3Zl
+LCB0aGUgZWZmZWN0IG9mIGVhY2ggY2hhcmFjdGVyIG9uIHRoZSBoYXNoIG92ZXJsYXBzIHR3bwpv
+dGhlciBjaGFyYWN0ZXJzLiAgV2UgY2FuIGNob29zZSB0byBmbGlwIG9uZSBvZiB0aGUgb3Zlcmxh
+cHBpbmcgYml0cwppbiBhICJiYWQiIGNoYXJhY3RlciwgdGhlbiBmbGlwIHRoZSBvdmVybGFwcGlu
+ZyBiaXQgaW4gdGhlIG5leHQKYnl0ZSwgYW5kIHRoZSByZXN1bHQgd2lsbCBwcm9kdWNlIHRoZSBz
+YW1lIGhhc2guCgpTbywgc3RhcnRpbmcgd2l0aCB0aGUgZmlyc3Qgb2YgdGhlc2UgbGFzdCA1IGJ5
+dGVzIChsYXN0LTQpLCBpZiBpdHMKIm5vcm1hbCIgdmFsdWUgaXMgb25lIG9mIHRoZSBpbnZhbGlk
+IG9uZXMsIHdlIGZsaXAgaXRzIGxvdyBiaXQgYW5kCmFycmFuZ2UgdG8gZmxpcCB0aGUgaGlnaCBi
+aXQgb2YgaXRzIHN1Y2Nlc3NvciBieXRlLgoKVGhlIHZlcnkgbGFzdCBieXRlIGhhcyBhIGxpdHRs
+ZSBkaWZmZXJlbnQgdHJlYXRtZW50LiAgV2UgY2FuIGZsaXAKaXRzIGxvdyBiaXQsIGJ1dCBpdCBo
+YXMgbm8gc3VjY2Vzc29yIGJ5dGUgcGVyIHNlLiAgSXRzIGVmZmVjdCBvbiB0aGUKaGFzaCBkb2Vz
+IG92ZXJsYXAgdGhlIGZpcnN0IGJ5dGUgb2YgdGhlIDUtYnl0ZSBzZXJpZXMgdGhvdWdoLCBzbyB3
+ZQpjYW4gZmxpcCB0aGUgY29ycmVzcG9uZGluZyBiaXQgaW4gdGhhdCAoYXQgcG9zaXRpb24gMHgx
+MCkuCgoKVGhlcmUgaXMgb25lIG1vcmUgY2FzZSB0byBjb25zaWRlci4gIEl0J3MgcG9zc2libGUg
+aW4gdGhhdCBsYXN0CmNhc2UgdGhhdCBieSBmbGlwcGluZyBhIGJpdCBpbiBieXRlIChsYXN0LTQp
+LCB3ZSBoYXZlIGNvbnZlcnRlZAp0aGF0IGJ5dGUgdG8gb25lIHRoYXQncyBub3QgYWxsb3dlZC4g
+IEZvcnR1bmF0ZWx5LCB3ZSBoYXZlIGZvdXIKYml0cyBvZiBvdmVybGFwIGhlcmUsIHNvIHdlIGNh
+biBjaG9vc2UgdG8gZmxpcCBhIHNlY29uZCBiaXQgaW4KYm90aCB0aGUgbGFzdCBieXRlIGFuZCBp
+dHMgY29ycmVzcG9uZGluZyBiaXQgYXQgKGxhc3QtNCkuICBTaW5jZQpmbGlwcGluZyB0d28gYml0
+cyBhbHNvIHJlc3VsdHMgaW4gYW4gYWxsb3dlZCBjaGFyYWN0ZXIsIHRoaXMKcmVzb2x2ZXMgdGhl
+IGlzc3VlLgoKCldpdGggdGhlc2UgY2hhbmdlcyB0byB0aGUgZmlsZW5hbWUgZ2VuZXJhdGlvbiBh
+bGdvcml0aG0sIHdlIGF2b2lkCmFueSBvZiB0aGUgY2FzZXMgaW4gd2hpY2ggbm8gYWx0ZXJuYXRl
+IG5hbWUgY2FuIGJlIGZvdW5kIHdpdGhvdXQKdXNpbmcgYW4gaWxsZWdhbCBjaGFyYWN0ZXIuICBX
+ZSBhbHNvIGF2b2lkIGFsbCBsb29waW5nIGR1ZSB0byBiYWQKY2hhcmFjdGVycy4KClJlcG9ydGVk
+LWJ5OiBBcmthZGl1c3ogTWnFm2tpZXdpY3ogPGFyZWttQG1hdmVuLnBsPgpTaWduZWQtb2ZmLWJ5
+OiBBbGV4IEVsZGVyIDxhZWxkZXJAc2dpLmNvbT4KCi0tLQogZGIvbWV0YWR1bXAuYyB8ICAgNzcg
+KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrLS0tLS0tLS0tLS0t
+LQogMSBmaWxlIGNoYW5nZWQsIDYxIGluc2VydGlvbnMoKyksIDE2IGRlbGV0aW9ucygtKQoKSW5k
+ZXg6IGIvZGIvbWV0YWR1bXAuYwo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBhL2RiL21ldGFkdW1wLmMKKysrIGIv
+ZGIvbWV0YWR1bXAuYwpAQCAtNDUyLDYgKzQ1Miw4IEBAIGdlbmVyYXRlX29iZnVzY2F0ZWRfbmFt
+ZSgKIAlkbyB7CiAJCWR1cCA9IDA7CiAJCWZvciAoOzspIHsKKwkJCXVjaGFyX3QJaGlnaF9iaXQ7
+CisKIAkJICAgIAkvKgogCQkJICogVGhlIGJlZ2lubmluZyBvZiB0aGUgb2JmdXNjYXRlZCBuYW1l
+IGNhbgogCQkJICogYmUgcHJldHR5IG11Y2ggYW55dGhpbmcsIHNvIGZpbGwgaXQgaW4KQEAgLTQ2
+OCwyNSArNDcwLDY4IEBAIGdlbmVyYXRlX29iZnVzY2F0ZWRfbmFtZSgKIAkJCSAqIENvbXB1dGUg
+d2hpY2ggZml2ZSBieXRlcyBuZWVkIHRvIGJlIHVzZWQKIAkJCSAqIGF0IHRoZSBlbmQgb2YgdGhl
+IG5hbWUgc28gdGhlIGhhc2ggb2YgdGhlCiAJCQkgKiBvYmZ1c2NhdGVkIG5hbWUgaXMgdGhlIHNh
+bWUgYXMgdGhlIGhhc2gKLQkJCSAqIG9mIHRoZSBvcmlnaW5hbC4KKwkJCSAqIG9mIHRoZSBvcmln
+aW5hbC4gIElmIGFueSByZXN1bHQgaW4gYW4KKwkJCSAqIGludmFsaWQgY2hhcmFjdGVyLCBmbGlw
+IGEgYml0IGFuZCBhcnJhbmdlCisJCQkgKiBmb3IgYSBjb3JyZXNwb25kaW5nIGJpdCBpbiBhIG5l
+aWdoYm9yaW5nCisJCQkgKiBieXRlIHRvIGJlIGZsaXBwZWQgYXMgd2VsbC4gIEZvciB0aGUgbGFz
+dAorCQkJICogYnl0ZSwgdGhlICJuZWlnaGJvciIgdG8gY2hhbmdlIGlzIHRoZQorCQkJICogZmly
+c3QgYnl0ZSB3ZSdyZSBjb21wdXRpbmcgaGVyZS4KIAkJCSAqLwogCQkJbmV3aGFzaCA9IHJvbDMy
+KG5ld2hhc2gsIDMpIF4gaGFzaDsKIAotCQkJbmV3cFtuYW1lbGVuIC0gNV0gPSAobmV3aGFzaCA+
+PiAyOCkgJiAweDdmOwotCQkJaWYgKGlzX2ludmFsaWRfY2hhcihuZXdwW25hbWVsZW4gLSA1XSkp
+Ci0JCQkJY29udGludWU7Ci0JCQluZXdwW25hbWVsZW4gLSA0XSA9IChuZXdoYXNoID4+IDIxKSAm
+IDB4N2Y7Ci0JCQlpZiAoaXNfaW52YWxpZF9jaGFyKG5ld3BbbmFtZWxlbiAtIDRdKSkKLQkJCQlj
+b250aW51ZTsKLQkJCW5ld3BbbmFtZWxlbiAtIDNdID0gKG5ld2hhc2ggPj4gMTQpICYgMHg3ZjsK
+LQkJCWlmIChpc19pbnZhbGlkX2NoYXIobmV3cFtuYW1lbGVuIC0gM10pKQotCQkJCWNvbnRpbnVl
+OwotCQkJbmV3cFtuYW1lbGVuIC0gMl0gPSAobmV3aGFzaCA+PiA3KSAmIDB4N2Y7Ci0JCQlpZiAo
+aXNfaW52YWxpZF9jaGFyKG5ld3BbbmFtZWxlbiAtIDJdKSkKLQkJCQljb250aW51ZTsKLQkJCW5l
+d3BbbmFtZWxlbiAtIDFdID0gKG5ld2hhc2ggPj4gMCkgJiAweDdmOwotCQkJaWYgKGlzX2ludmFs
+aWRfY2hhcihuZXdwW25hbWVsZW4gLSAxXSkpCi0JCQkJY29udGludWU7CisJCQloaWdoX2JpdCA9
+IDA7CisKKwkJCW5ld3BbbmFtZWxlbiAtIDVdID0gKChuZXdoYXNoID4+IDI4KSAmIDB4N2YpIF4g
+aGlnaF9iaXQ7CisJCQlpZiAoaXNfaW52YWxpZF9jaGFyKG5ld3BbbmFtZWxlbiAtIDVdKSkgewor
+CQkJCW5ld3BbbmFtZWxlbiAtIDVdIF49IDE7CisJCQkJaGlnaF9iaXQgPSAweDgwOworCQkJfSBl
+bHNlCisJCQkJaGlnaF9iaXQgPSAwOworCisJCQluZXdwW25hbWVsZW4gLSA0XSA9ICgobmV3aGFz
+aCA+PiAyMSkgJiAweDdmKSBeIGhpZ2hfYml0OworCQkJaWYgKGlzX2ludmFsaWRfY2hhcihuZXdw
+W25hbWVsZW4gLSA0XSkpIHsKKwkJCQluZXdwW25hbWVsZW4gLSA0XSBePSAxOworCQkJCWhpZ2hf
+Yml0ID0gMHg4MDsKKwkJCX0gZWxzZQorCQkJCWhpZ2hfYml0ID0gMDsKKworCQkJbmV3cFtuYW1l
+bGVuIC0gM10gPSAoKG5ld2hhc2ggPj4gMTQpICYgMHg3ZikgXiBoaWdoX2JpdDsKKwkJCWlmIChp
+c19pbnZhbGlkX2NoYXIobmV3cFtuYW1lbGVuIC0gM10pKSB7CisJCQkJbmV3cFtuYW1lbGVuIC0g
+M10gXj0gMTsKKwkJCQloaWdoX2JpdCA9IDB4ODA7CisJCQl9IGVsc2UKKwkJCQloaWdoX2JpdCA9
+IDA7CisKKwkJCW5ld3BbbmFtZWxlbiAtIDJdID0gKChuZXdoYXNoID4+IDcpICYgMHg3ZikgXiBo
+aWdoX2JpdDsKKwkJCWlmIChpc19pbnZhbGlkX2NoYXIobmV3cFtuYW1lbGVuIC0gMl0pKSB7CisJ
+CQkJbmV3cFtuYW1lbGVuIC0gMl0gXj0gMTsKKwkJCQloaWdoX2JpdCA9IDB4ODA7CisJCQl9IGVs
+c2UKKwkJCQloaWdoX2JpdCA9IDA7CisKKwkJCW5ld3BbbmFtZWxlbiAtIDFdID0gKChuZXdoYXNo
+ID4+IDApICYgMHg3ZikgXiBoaWdoX2JpdDsKKwkJCWlmIChpc19pbnZhbGlkX2NoYXIobmV3cFtu
+YW1lbGVuIC0gMV0pKSB7CisJCQkJbmV3cFtuYW1lbGVuIC0gMV0gXj0gMTsKKwkJCQloaWdoX2Jp
+dCA9IDB4ODA7CisJCQl9IGVsc2UKKwkJCQloaWdoX2JpdCA9IDA7CisKKwkJCS8qCisJCQkgKiBJ
+ZiB3ZSBmbGlwcGVkIGEgYml0IG9uIHRoZSBsYXN0IGJ5dGUsIHdlCisJCQkgKiBuZWVkIHRvIGZp
+eCB1cCB0aGUgZmlyc3Qgb25lIHdlIGNvbXB1dGVkLgorCQkJICogVGhhdCBjb3VsZCBtYWtlIHRo
+YXQgZmlyc3QgY2hhcmFjdGVyCisJCQkgKiBpbnZhbGlkLCBpbiB3aGljaCBjYXNlIHdlIGZsaXAg
+b25lIG1vcmUKKwkJCSAqIGJpdCBpbiBib3RoIGJ5dGVzLgorCQkJICovCisJCQlpZiAoaGlnaF9i
+aXQpIHsKKwkJCSAgICAJbmV3cFtuYW1lbGVuIC0gNV0gXj0gMHgxMDsKKwkJCSAgICAJaWYgKGlz
+X2ludmFsaWRfY2hhcihuZXdwW25hbWVsZW4gLSA1XSkpIHsKKwkJCQkJbmV3cFtuYW1lbGVuIC0g
+MV0gXj0gMjsKKwkJCQkJbmV3cFtuYW1lbGVuIC0gNV0gXj0gMHgyMDsKKwkJCQkJQVNTRVJUKCFp
+c19pbnZhbGlkX2NoYXIobmV3cFtuYW1lbGVuIC0gMV0pKTsKKwkJCQkJQVNTRVJUKCFpc19pbnZh
+bGlkX2NoYXIobmV3cFtuYW1lbGVuIC0gNV0pKTsKKwkJCQl9CisJCQl9CiAJCQlicmVhazsKIAkJ
+fQogCgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZz
+IG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4v
+bGlzdGluZm8veGZzCg==
