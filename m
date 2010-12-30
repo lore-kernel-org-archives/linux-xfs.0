@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	oBUKbvev028852 for <xfs@oss.sgi.com>; Thu, 30 Dec 2010 14:37:57 -0600
+	oBUKe246029146 for <xfs@oss.sgi.com>; Thu, 30 Dec 2010 14:40:02 -0600
 Received: from cf--amer001e--3.americas.sgi.com
 	(cf--amer001e--3.americas.sgi.com [137.38.100.5])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 9B6E58F80D2
-	for <xfs@oss.sgi.com>; Thu, 30 Dec 2010 12:39:59 -0800 (PST)
-Subject: [PATCH 01/12] xfsprogs: some things aren't all that special
+	by relay3.corp.sgi.com (Postfix) with ESMTP id DDEE9AC011
+	for <xfs@oss.sgi.com>; Thu, 30 Dec 2010 12:42:06 -0800 (PST)
+Subject: [PATCH 09/12] xfsprogs: don't loop on too many dups
 From: Alex Elder <aelder@sgi.com>
-Date: Thu, 30 Dec 2010 14:39:59 -0600
-Message-ID: <1293741599.2294.342.camel@doink>
+Date: Thu, 30 Dec 2010 14:42:06 -0600
+Message-ID: <1293741726.2294.368.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -26,125 +26,103 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Move the check for short file names out of is_special_dirent() and
-into generate_obfuscated_name().  That way the check is more
-directly associated with the algorithm that requires it.
-
-Similarly, move the check for inode == 0, since that case has to do
-with storing extended attributes (not files) in the name table.
-
-As a result, is_special_dirent() is really only focused on whether a
-given file is in the lost+found directory.
-
-Rename is_special_dirent() to reflect its more specific purpose.
-
-And use a cast to elminate a compile warning in calls to
-libxfs_da_hashname().
+Don't just loop indefinitely when an obfuscated name comes
+up as a duplicate.  Count the number of times we've found
+a duplicate, and if it gets excessive just give up and use
+the original name without obfuscation.
 
 Signed-off-by: Alex Elder <aelder@sgi.com>
 
 ---
- db/metadump.c |   51 +++++++++++++++++++++++++++++----------------------
- 1 file changed, 29 insertions(+), 22 deletions(-)
+ db/metadump.c |   35 ++++++++++++++++++++++++++---------
+ 1 file changed, 26 insertions(+), 9 deletions(-)
+
 
 Index: b/db/metadump.c
 ===================================================================
 --- a/db/metadump.c
 +++ b/db/metadump.c
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2007 Silicon Graphics, Inc.
-+ * Copyright (c) 2007,2010 SGI
-  * All Rights Reserved.
-  *
-  * This program is free software; you can redistribute it and/or
-@@ -377,8 +377,15 @@ random_filename_char(void)
- 	return c;
- }
+@@ -29,6 +29,14 @@
+ 
+ #define DEFAULT_MAX_EXT_SIZE	1000
  
 +/*
-+ * We won't obfuscate "lost+found" nor any inodes within it.
-+ *
-+ * Record the "lost+found" directory's inode number when it's found.
-+ * While processing that directory, any file whose name matches
-+ * its inode number is left as-is (no obfuscation).
++ * It's possible that more than one file in a directory produce the
++ * same obfuscated name.  If that happens, we try to create another
++ * one.  After several rounds of this though, we just give up and
++ * leave the original name as-is.
 + */
- static int
--is_special_dirent(
-+in_lost_found(
- 	xfs_ino_t		ino,
- 	int			namelen,
- 	uchar_t			*name)
-@@ -387,22 +394,8 @@ is_special_dirent(
- 	char			s[32];
- 	int			slen;
- 
--	/*
--	 * due to the XFS name hashing algorithm, we cannot obfuscate
--	 * names with 4 chars or less.
--	 */
--	if (namelen <= 4)
--		return 1;
--
--	if (ino == 0)
--		return 0;
--
--	/*
--	 * don't obfuscate lost+found nor any inodes within lost+found with
--	 * the inode number
--	 */
--	if (cur_ino == mp->m_sb.sb_rootino && namelen == 10 &&
--			memcmp(name, "lost+found", 10) == 0) {
-+	if (!orphanage_ino && cur_ino == mp->m_sb.sb_rootino &&
-+			namelen == 10 && !memcmp(name, "lost+found", 10)) {
- 		orphanage_ino = ino;
- 		return 1;
- 	}
-@@ -410,7 +403,8 @@ is_special_dirent(
- 		return 0;
- 
- 	slen = sprintf(s, "%lld", (long long)ino);
--	return (slen == namelen && memcmp(name, s, namelen) == 0);
++#define	DUP_MAX		5	/* Max duplicates before we give up */
 +
-+	return slen == namelen && !memcmp(name, s, namelen);
+ /* copy all metadata structures to/from a file */
+ 
+ static int	metadump_f(int argc, char **argv);
+@@ -415,7 +423,7 @@ generate_obfuscated_name(
+ {
+        xfs_dahash_t            hash;
+        name_ent_t              *p;
+-       int                     dup;
++       int                     dup = 0;
+        uchar_t                 newname[NAME_MAX];
+
+        /*
+@@ -454,8 +462,6 @@ generate_obfuscated_name(
+ 		uchar_t		high_bit;
+ 		int		shift;
+ 
+-		dup = 0;
+-
+ 		/*
+ 		 * The beginning of the obfuscated name can be
+ 		 * pretty much anything, so fill it in with random
+@@ -510,14 +516,24 @@ generate_obfuscated_name(
+ 
+ 		ASSERT(libxfs_da_hashname((char *) newname, namelen) == hash);
+ 
++		/*
++		 * Search the name table to be sure we don't produce
++		 * a name that's already been used.
++		 */
+ 		for (p = nametable[hash % NAME_TABLE_SIZE]; p; p = p->next) {
+ 			if (p->hash == hash && p->namelen == namelen &&
+-					!memcmp(p->name, newname, namelen)) {
+-				dup = 1;
++					!memcmp(p->name, newname, namelen))
+ 				break;
+-			}
+ 		}
+-	} while (dup);
++		if (p)
++		    	dup++;
++		else
++		    	dup = 0;
++	} while (dup && dup < DUP_MAX);
++
++	/* Use the original name if we got too many dups. */
++
++	newp = dup ? name : newname;
+ 
+ 	/* Create an entry for the name in the name table */
+ 
+@@ -526,7 +542,7 @@ generate_obfuscated_name(
+ 		return;
+ 
+ 	p->namelen = namelen;
+-	memcpy(p->name, newname, namelen);
++	memcpy(p->name, newp, namelen);
+ 	p->hash = hash;
+ 	p->next = nametable[hash % NAME_TABLE_SIZE];
+ 
+@@ -534,7 +550,8 @@ generate_obfuscated_name(
+ 
+ 	/* Update the caller's copy with the obfuscated name */
+ 
+-	memcpy(name, newname, namelen);
++	if (newp != name)
++		memcpy(name, newp, namelen);
  }
  
  static void
-@@ -426,10 +420,23 @@ generate_obfuscated_name(
- 	xfs_dahash_t		newhash;
- 	uchar_t			newname[NAME_MAX];
- 
--	if (is_special_dirent(ino, namelen, name))
-+	/*
-+	 * Our obfuscation algorithm requires at least 5-character
-+	 * names, so don't bother if the name is too short.
-+	 */
-+	if (namelen < 5)
-+	    	return;
-+
-+	/*
-+	 * We don't obfuscate "lost+found" or any of the files
-+	 * therein.  When the name table is used for extended
-+	 * attributes, the inode number provided is 0, in which
-+	 * case we don't need to make this check.
-+	 */
-+	if (ino && in_lost_found(ino, namelen, name))
- 		return;
- 
--	hash = libxfs_da_hashname(name, namelen);
-+	hash = libxfs_da_hashname((char *) name, namelen);
- 
- 	/* create a random name with the same hash value */
- 
-@@ -468,7 +475,7 @@ generate_obfuscated_name(
- 			break;
- 		}
- 
--		ASSERT(libxfs_da_hashname(newname, namelen) == hash);
-+		ASSERT(libxfs_da_hashname((char *) newname, namelen) == hash);
- 
- 		for (p = nametable[hash % NAME_TABLE_SIZE]; p; p = p->next) {
- 			if (p->hash == hash && p->namelen == namelen &&
 
 
 _______________________________________________
