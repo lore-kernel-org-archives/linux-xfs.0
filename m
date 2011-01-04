@@ -1,16 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p04JkdWe033643 for <xfs@oss.sgi.com>; Tue, 4 Jan 2011 13:46:39 -0600
-Subject: Re: My current xfs-for-2.6.38 tree....
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110104064612.GK15179@dastard>
-References: <20110104050259.GH15179@dastard>
-	<20110104055441.GA9870@infradead.org> <20110104064612.GK15179@dastard>
-Date: Tue, 04 Jan 2011 13:48:44 -0600
-Message-ID: <1294170524.2485.6.camel@doink>
+	p04LoaTW046291 for <xfs@oss.sgi.com>; Tue, 4 Jan 2011 15:50:36 -0600
+Received: from smtp3-g21.free.fr (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0C1FF1D0C6D8
+	for <xfs@oss.sgi.com>; Tue,  4 Jan 2011 13:52:42 -0800 (PST)
+Received: from smtp3-g21.free.fr (smtp3-g21.free.fr [212.27.42.3]) by
+	cuda.sgi.com with ESMTP id 6TwX8drZo8zJsBg1 for
+	<xfs@oss.sgi.com>; Tue, 04 Jan 2011 13:52:42 -0800 (PST)
+Date: Tue, 4 Jan 2011 22:52:29 +0100
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: Simultaneously mounting one XFS partition on multiple machines
+Message-ID: <20110104225229.6aa47710@galadriel.home>
+In-Reply-To: <AANLkTi=B_zhQG9P22gXcb40JZT=VnEUedTW9xxcuN4cP@mail.gmail.com>
+References: <AANLkTi=B_zhQG9P22gXcb40JZT=VnEUedTW9xxcuN4cP@mail.gmail.com>
 Mime-Version: 1.0
-Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,46 +23,33 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: "Patrick J. LoPresti" <lopresti@gmail.com>
+Cc: xfs@oss.sgi.com
 
-On Tue, 2011-01-04 at 17:46 +1100, Dave Chinner wrote:
-> On Tue, Jan 04, 2011 at 12:54:41AM -0500, Christoph Hellwig wrote:
-> > On Tue, Jan 04, 2011 at 04:02:59PM +1100, Dave Chinner wrote:
-> > > Folks,
-> > > 
-> > > FYI, my current xfs-for-2.6.38 tree has just been updated. Changes
-> > > since last update:
-> > > 
-> > > 	- dropped the per-cpu superblock counter cleanup patches
-> > > 	  from it so we can get it right before merging.
-> > > 	- added unaligned aio/dio write fix series (needs review)
-> > > 	- added log covering idle fix (needs review)
-> > > 	- added superblock write error hang fix (needs review)
-> > > 
-> > > The tree can be found here (when the rsync updates git.kernel.org):
-> > 
-> > I'll try to get to review the new patches, but can we please get the
-> > metadata scalability patches into the xfs tree and thus linux-next ASAP?
-> > The merge window is about to open, and we really need to get that stuff
-> > in now.
-> 
-> That's all first in the branch and reviewed, so Alex should be able
-> to simply merge up to the last commit in that part of the series from
-> the branch I posted.
-> 
-> Alex, if you want I can set up a separate branch for the metadata
-> scalability series....
+Le Tue, 4 Jan 2011 09:46:39 -0800 vous =E9criviez:
 
-No that's OK, I'll take in everything that's reviewed
-and ready to go and leave the rest for later.  I've been
-waiting for a pull request but this is fine with me.
+> If your answer is "Please do not do this; get a clustered filesystem",
+> then trust me, you are preaching to the choir. =
 
-					-Alex
+
+Just as a side note : OCFS2 works well, is present in all major
+distros, is extremely fast to setup and install, and is only slightly
+slower than xfs. There is absolutely no valid reason not to use it (GFS
+OTOH is a complete PITA to setup).
+
+Yeah I know, I know...
+-- =
+
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
 
 _______________________________________________
 xfs mailing list
