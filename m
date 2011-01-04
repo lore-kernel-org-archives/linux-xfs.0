@@ -1,22 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p04Lp42I046356 for <xfs@oss.sgi.com>; Tue, 4 Jan 2011 15:51:04 -0600
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B84F61D0C6E5
-	for <xfs@oss.sgi.com>; Tue,  4 Jan 2011 13:53:10 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
-	[150.101.137.100]) by cuda.sgi.com with ESMTP id
-	DiTsuVoltC2D86Tn for <xfs@oss.sgi.com>;
-	Tue, 04 Jan 2011 13:53:10 -0800 (PST)
-Date: Wed, 5 Jan 2011 08:53:06 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Simultaneously mounting one XFS partition on multiple machines
-Message-ID: <20110104215306.GM15179@dastard>
-References: <AANLkTi=B_zhQG9P22gXcb40JZT=VnEUedTW9xxcuN4cP@mail.gmail.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <AANLkTi=B_zhQG9P22gXcb40JZT=VnEUedTW9xxcuN4cP@mail.gmail.com>
+	p04LrB93046531 for <xfs@oss.sgi.com>; Tue, 4 Jan 2011 15:53:11 -0600
+Subject: Re: [PATCH] xfs: add FITRIM support
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <20110102072202.GA26488@infradead.org>
+References: <20110102072202.GA26488@infradead.org>
+Date: Tue, 04 Jan 2011 15:55:15 -0600
+Message-ID: <1294178115.2485.19.camel@doink>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,114 +22,108 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: "Patrick J. LoPresti" <lopresti@gmail.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Tue, Jan 04, 2011 at 09:46:39AM -0800, Patrick J. LoPresti wrote:
-> Hey, what's the worst that could happen?
-
-That's just asking for trouble. ;)
-
-> I recently learned that some of my colleagues have configured two
-> Linux systems to simultaneously mount a single XFS partition residing
-> on shared storage.  Specifically, "system R" has the partition mounted
-> read-only while "system W" has it mounted read/write.
+On Sun, 2011-01-02 at 02:22 -0500, Christoph Hellwig wrote:
+> Allow manual discards from userspace using the FITRIM ioctl.  This is not
+> intended to be run during normal workloads, as the freepsace btree walks
+> can cause large performance degradation.
 > 
-> I told them that this sounds like a very bad idea because XFS is not a
-> clustered file system.  But they are skeptical because "it seems to be
-> working fine".  I need to know what the actual risks are and whether
-> they can be mitigated.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Ok, so it will appear to work fine most of the time...
+This looks good, but I mention three things below.
+Correct them as you see fit, either way:
 
-> This partition holds large amounts of essentially archival data; that
-> is, it is read frequently but written rarely.  When they do want to
-> write to it, they do so via system W and then reboot system R.
+Reviewed-by: Alex Elder <aelder@sgi.com>
 
-You could probably just run "echo 3 > /proc/sys/vm/drop_caches" or
-just umount/mount the device again to get the same effect as
-rebooting.
 
-> I am no expert on XFS, but there are essentially two risks that I can see:
+> ---
 > 
-> Risk 1: When making changes via system W, the view of the file system
-> from system R can become corrupted or inconsistent.  My colleagues are
-> aware of this and believe they can live with it, as long as the
-> underlying file system is not being damaged ("we can just reboot").
-
-Yup, so long as system R does not cache anything, or the caches are
-dropped after system W writes, you should be fine. However, there is a
-window between system W starting to write and system R
-being rebooted that system R could read inconsistent metadata and/or
-data. There's not much you can do about that apart from take system
-R offline while system W is writing.
-
-> Risk 2: Any time the file system is mounted, even read-only, it will
-> replay the journal if it is non-empty.  (At least, I believe this is
-> true.  Could one of you please confirm or deny?)  So if machine R
-> should reboot while the journal is non-empty, it will replay it,
-> causing fairly unpredictable on-disk corruption.
-
-Yup.
-
-> Here are my questions.
+> V1 -> V2
+>  
+>  - added __user annotations as noted by Alex
+>  - removed non-blocking agf read as noted by Alex
+>  - update range->len as noted by Alex
 > 
-> 1) When can a read-only XFS mount write to the disk, exactly?
+> This does not implement the by-bno search or lock break suggestions from
+> Dave.  Given that the 2.6.38 window is about to close those seem a bit
+> risky to me.  I'll look into these later.
 
-Log recovery only. Use mount -o ro,norecovery to avoid that.
+. . .
 
-> 2) If I do a "sync" on machine W (and perform no further writes), will
-> that truncate the journal?
+> 				   xfs_fs_subr.o \
+> Index: xfs/fs/xfs/linux-2.6/xfs_discard.c
+> ===================================================================
+> --- /dev/null	1970-01-01 00:00:00.000000000 +0000
+> +++ xfs/fs/xfs/linux-2.6/xfs_discard.c	2011-01-02 08:06:15.828014477 +0100
+> @@ -0,0 +1,191 @@
+> +/*
+> + * Copyright (C) 2010 Red Hat, Inc.
 
-FYI, the journal cannot be truncated - it is a fixed size circular
-log.
+Maybe 2011 now...
 
-To get the log clean, I'd freeze the filesystem on system W while
-system R mounts. e.g:
+> + * All Rights Reserved.
+> + * This program is free software; you can redistribute it and/or
+> + * modify it under the terms of the GNU General Public License as
+> + * published by the Free Software Foundation.
+> + *
+> + * This program is distributed in the hope that it would be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * along with this program; if not, write the Free Software Foundation,
+> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> + */
+> +#include "xfs.h"
+> +#include "xfs_sb.h"
 
-	system W		system R
-				unmount <fs>
-	write data
-	freeze fs
-				mount -o ro,norecovery <fs>
-	unfreeze fs
+. . .
 
-> 3) What am I missing?
+> +
+> +STATIC int
+> +xfs_trim_extents(
+> +	struct xfs_mount	*mp,
+. . .
+> +
+> +		/*
+> +		 * If the extent is entirely outside of the range we are
+> +		 * supposed to discard skip it.  Do not bother to trim
+> +		 * down partially overlapping ranges for now.
+> +		 */
+> +		if (XFS_AGB_TO_FSB(mp, agno, fbno) + flen < start ||
+> +		    XFS_AGB_TO_FSB(mp, agno, fbno) > start + len) {
 
-1. NFS/CIFS. No need for shared access to the block device. NFs
-works pretty well for read only access, especially if you put a
-dedicated 10GbE link between the two machines...
+                                                    ^
+                                          I think this should be >=
 
-2. Snapshots. If you must share the block device, snapshot the
-active filesystem and mount that readonly on system R - the snapshot
-will be unchanging. When system W knows a snapshot is unmounted and
-finished with, it can delete it.  That is:
+> +			trace_xfs_discard_exclude(mp, agno, fbno, flen);
+> +			goto next_extent;
+> +		}
 
+. . .
 
-	system W		system R
-	write data
-	....
-	write data
-	snapshot <fs.ss2>
-				umount <fs.ss1>
-				mount -o ro,norecovery <fs.ss2>
-	delete snapshot <fs.ss1>
-	....
-	write data
-	.....
-	write data
-	snapshot <fs.ss3>
-				umount <fs.ss2>
-				mount -o ro,norecovery <fs.ss3>
-	delete snapshot <fs.ss2>
-	....
+> Index: xfs/fs/xfs/linux-2.6/xfs_discard.h
+> ===================================================================
+> --- /dev/null	1970-01-01 00:00:00.000000000 +0000
+> +++ xfs/fs/xfs/linux-2.6/xfs_discard.h	2011-01-02 07:11:43.693026629 +0100
 
-Cheers,
+Do you want to add a boilerplate copyright header here?
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> @@ -0,0 +1,8 @@
+> +#ifndef XFS_DISCARD_H
+> +#define XFS_DISCARD_H 1
+> +
+> +struct fstrim_range;
+> +
+> +extern int	xfs_ioc_trim(struct xfs_mount *, struct fstrim_range __user *);
+> +
+> +#endif /* XFS_DISCARD_H */
+
+. . .
+
 
 _______________________________________________
 xfs mailing list
