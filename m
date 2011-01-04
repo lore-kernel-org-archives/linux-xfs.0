@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p04BwkP8238154 for <xfs@oss.sgi.com>; Tue, 4 Jan 2011 05:58:47 -0600
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C63641D057AE
-	for <xfs@oss.sgi.com>; Tue,  4 Jan 2011 04:00:52 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
-	[150.101.137.99]) by cuda.sgi.com with ESMTP id
-	tTAmTNrd027qfGyU for <xfs@oss.sgi.com>;
-	Tue, 04 Jan 2011 04:00:52 -0800 (PST)
-Date: Tue, 4 Jan 2011 23:00:49 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs_repair: multithread phase 2
-Message-ID: <20110104120048.GL15179@dastard>
-References: <1294121588-17233-1-git-send-email-david@fromorbit.com>
-	<20110104100240.GB26885@infradead.org>
+	p04HiXgL021411 for <xfs@oss.sgi.com>; Tue, 4 Jan 2011 11:44:33 -0600
+Received: from mail-gw0-f53.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 039591D0B27A
+	for <xfs@oss.sgi.com>; Tue,  4 Jan 2011 09:46:40 -0800 (PST)
+Received: from mail-gw0-f53.google.com (mail-gw0-f53.google.com
+	[74.125.83.53]) by cuda.sgi.com with ESMTP id dvLOiRcs6qJeRvf2
+	for <xfs@oss.sgi.com>; Tue, 04 Jan 2011 09:46:40 -0800 (PST)
+Received: by gwb10 with SMTP id 10so4419169gwb.26
+	for <xfs@oss.sgi.com>; Tue, 04 Jan 2011 09:46:40 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110104100240.GB26885@infradead.org>
+Date: Tue, 4 Jan 2011 09:46:39 -0800
+Message-ID: <AANLkTi=B_zhQG9P22gXcb40JZT=VnEUedTW9xxcuN4cP@mail.gmail.com>
+Subject: Simultaneously mounting one XFS partition on multiple machines
+From: "Patrick J. LoPresti" <lopresti@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,83 +27,57 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Jan 04, 2011 at 05:02:40AM -0500, Christoph Hellwig wrote:
-> > This patch uses 32-way threading which results in no noticable
-> > slowdown on single SATA drives with NCQ, but results in ~10x
-> > reduction in runtime on a 12 disk RAID-0 array.
-> 
-> Shouldn't we have at least an option to allow tuning this value,
-> similar to the ag_stride?  In fact I wonder why phase 3/4 should
-> use different values for it than phase2.
+Hey, what's the worst that could happen?
 
-Phase 3/4/5 use agressive prefetch to try to maximise throughput,
-while phase 2 has no prefetch and uses synchronous reads.
-Effectively the use of lots of parallelism simply keeps multiple IOs
-in flight rather than reading them one at a time, hence reducing the
-effective IO latency.
+I recently learned that some of my colleagues have configured two
+Linux systems to simultaneously mount a single XFS partition residing
+on shared storage.  Specifically, "system R" has the partition mounted
+read-only while "system W" has it mounted read/write.
 
-> 
-> > @@ -75,8 +80,10 @@ scan_sbtree(
-> >  				xfs_agblock_t		bno,
-> >  				xfs_agnumber_t		agno,
-> >  				int			suspect,
-> > -				int			isroot),
-> > -	int		isroot)
-> > +				int			isroot,
-> > +				struct aghdr_cnts	*agcnts),
-> > +	int		isroot,
-> > +	struct aghdr_cnts *agcnts)
-> 
-> Please make this a
-> 
-> 	void *priv
-> 
-> to keep scan_sbtree generic.
+I told them that this sounds like a very bad idea because XFS is not a
+clustered file system.  But they are skeptical because "it seems to be
+working fine".  I need to know what the actual risks are and whether
+they can be mitigated.
 
-OK.
+This partition holds large amounts of essentially archival data; that
+is, it is read frequently but written rarely.  When they do want to
+write to it, they do so via system W and then reboot system R.
 
-> >   * Scan an AG for obvious corruption.
-> >   *
-> >   * Note: This code is not reentrant due to the use of global variables.
-> 
-> That's not true any more I think.
+I am no expert on XFS, but there are essentially two risks that I can see:
 
-Good point.
+Risk 1: When making changes via system W, the view of the file system
+from system R can become corrupted or inconsistent.  My colleagues are
+aware of this and believe they can live with it, as long as the
+underlying file system is not being damaged ("we can just reboot").
 
-> > +#define SCAN_THREADS 32
-> > +
-> > +void
-> > +scan_ags(
-> > +	struct xfs_mount	*mp)
-> > +{
-> > +	struct aghdr_cnts agcnts[mp->m_sb.sb_agcount];
-> > +	pthread_t	thr[SCAN_THREADS];
-> > +	__uint64_t	fdblocks = 0;
-> > +	__uint64_t	icount = 0;
-> > +	__uint64_t	ifreecount = 0;
-> > +	int		i, j, err;
-> > +
-> > +	/*
-> > +	 * scan a few AGs in parallel. The scan is IO latency bound,
-> > +	 * so running a few at a time will speed it up significantly.
-> > +	 */
-> > +	for (i = 0; i < mp->m_sb.sb_agcount; i += SCAN_THREADS) {
-> 
-> I think this should use the workqueues from repair/threads.c.  Just
-> create a workqueue with 32 threads, and then enqueue all the AGs.
+Risk 2: Any time the file system is mounted, even read-only, it will
+replay the journal if it is non-empty.  (At least, I believe this is
+true.  Could one of you please confirm or deny?)  So if machine R
+should reboot while the journal is non-empty, it will replay it,
+causing fairly unpredictable on-disk corruption.
 
-Ok. I just used an API I'm familiar with and didn't have to think
-about.
 
-Cheers,
+Here are my questions.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+1) When can a read-only XFS mount write to the disk, exactly?
+
+2) If I do a "sync" on machine W (and perform no further writes), will
+that truncate the journal?
+
+3) What am I missing?
+
+
+If your answer is "Please do not do this; get a clustered filesystem",
+then trust me, you are preaching to the choir.  But these systems are
+already in use and unlikely to be replaced soon, so at this point my
+job is to find out what the exact risks are.  Any information will be
+appreciated.
+
+Thanks!
+
+ - Pat
 
 _______________________________________________
 xfs mailing list
