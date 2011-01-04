@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p046i8HW195185 for <xfs@oss.sgi.com>; Tue, 4 Jan 2011 00:44:08 -0600
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DF1C31D08471
-	for <xfs@oss.sgi.com>; Mon,  3 Jan 2011 22:46:14 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
-	[150.101.137.100]) by cuda.sgi.com with ESMTP id
-	JZAIw8uJCBUPguyW for <xfs@oss.sgi.com>;
-	Mon, 03 Jan 2011 22:46:14 -0800 (PST)
-Date: Tue, 4 Jan 2011 17:46:12 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: My current xfs-for-2.6.38 tree....
-Message-ID: <20110104064612.GK15179@dastard>
-References: <20110104050259.GH15179@dastard>
-	<20110104055441.GA9870@infradead.org>
+	p048JQrm207440 for <xfs@oss.sgi.com>; Tue, 4 Jan 2011 02:19:28 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id F11EE161AE0E
+	for <xfs@oss.sgi.com>; Tue,  4 Jan 2011 00:21:33 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id cEhvrDiRnBPGg9Nv for
+	<xfs@oss.sgi.com>; Tue, 04 Jan 2011 00:21:33 -0800 (PST)
+Date: Tue, 4 Jan 2011 03:21:30 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfs: ensure log covering transactions are synchronous
+Message-ID: <20110104082130.GA29016@infradead.org>
+References: <1294116569-15052-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110104055441.GA9870@infradead.org>
+In-Reply-To: <1294116569-15052-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,42 +28,21 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Jan 04, 2011 at 12:54:41AM -0500, Christoph Hellwig wrote:
-> On Tue, Jan 04, 2011 at 04:02:59PM +1100, Dave Chinner wrote:
-> > Folks,
-> > 
-> > FYI, my current xfs-for-2.6.38 tree has just been updated. Changes
-> > since last update:
-> > 
-> > 	- dropped the per-cpu superblock counter cleanup patches
-> > 	  from it so we can get it right before merging.
-> > 	- added unaligned aio/dio write fix series (needs review)
-> > 	- added log covering idle fix (needs review)
-> > 	- added superblock write error hang fix (needs review)
-> > 
-> > The tree can be found here (when the rsync updates git.kernel.org):
-> 
-> I'll try to get to review the new patches, but can we please get the
-> metadata scalability patches into the xfs tree and thus linux-next ASAP?
-> The merge window is about to open, and we really need to get that stuff
-> in now.
+Ok, my fault for asking to avoid stalling xfssyncd.
 
-That's all first in the branch and reviewed, so Alex should be able
-to simply merge up to the last commit in that part of the series from
-the branch I posted.
+> Fix this by making the log covering transaction synchronous. To
+> avoid additional log force from xfssyncd, make the log covering
+> transaction take the place of the existing log force in the xfssyncd
+> background sync process.
 
-Alex, if you want I can set up a separate branch for the metadata
-scalability series....
+This also looks correct to me.  We replace a force with a lsn-force, but
+given that we just started the transaction those should be equivalent.
 
-Cheers,
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
