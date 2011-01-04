@@ -1,29 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p044kn61175991 for <xfs@oss.sgi.com>; Mon, 3 Jan 2011 22:46:49 -0600
+	p04516BJ177070 for <xfs@oss.sgi.com>; Mon, 3 Jan 2011 23:01:07 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EC6171D0824D
-	for <xfs@oss.sgi.com>; Mon,  3 Jan 2011 20:48:55 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
-	[150.101.137.99]) by cuda.sgi.com with ESMTP id
-	dqhfONTWNOpQaDmr for <xfs@oss.sgi.com>;
-	Mon, 03 Jan 2011 20:48:55 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E76971D083ED
+	for <xfs@oss.sgi.com>; Mon,  3 Jan 2011 21:03:12 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
+	[150.101.137.104]) by cuda.sgi.com with ESMTP id
+	O2Hp1fTGnjmjVdAh for <xfs@oss.sgi.com>;
+	Mon, 03 Jan 2011 21:03:12 -0800 (PST)
 Received: from dastard (unverified [121.44.135.206])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	52194422-1927428
-	for <xfs@oss.sgi.com>; Tue, 04 Jan 2011 15:18:54 +1030 (CDT)
-Received: from chute ([192.168.1.1] helo=disappointment)
-	by dastard with esmtp (Exim 4.72)
-	(envelope-from <dave@fromorbit.com>) id 1PZyp9-0000Su-3V
-	for xfs@oss.sgi.com; Tue, 04 Jan 2011 15:48:43 +1100
-Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1PZyp7-0003tW-B3
-	for xfs@oss.sgi.com; Tue, 04 Jan 2011 15:48:41 +1100
+	51170817-1927428
+	for <xfs@oss.sgi.com>; Tue, 04 Jan 2011 15:33:11 +1030 (CDT)
+Received: from dave by dastard with local (Exim 4.72)
+	(envelope-from <david@fromorbit.com>) id 1PZz2x-0000VY-5R
+	for xfs@oss.sgi.com; Tue, 04 Jan 2011 16:02:59 +1100
+Date: Tue, 4 Jan 2011 16:02:59 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 0/8] xfs: prevent corruption due to overlapping AIO DIO V2
-Date: Tue,  4 Jan 2011 15:48:30 +1100
-Message-Id: <1294116518-14908-1-git-send-email-david@fromorbit.com>
+Subject: My current xfs-for-2.6.38 tree....
+Message-ID: <20110104050259.GH15179@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,54 +30,114 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-This series aims to serialise unaligned direct IOs to an inode to
-avoid corruption caused by sub-block zeroing races. The previous
-approaches at the direct IO layer fail because for !DIO_LOCKING
-filesystems like XFS, there is no way we can track and serialise all
-the direct IOs to a given inode in a race free manner. While we can
-track them, we cannot close the races between mapping blocks and
-tracked IO completion occuring before subsequent tracking lookups
-without adding some kind of locking to the DIO layer. Hence for
-!DIO_LOCKING users, unaligned direct IO needs to be serialised at a
-higher layer.
+Folks,
 
-Because the xfs_file_aio_write() path is so twisted and difficult to
-follow, adding new locking cases to the code is difficult to verify
-that it is correct in all cases. Hence the series starts by cleaning
-up the code and splitting apart the direct IO and buffered IO paths
-before adding the unaligned direct IO detection and serialisation.
+FYI, my current xfs-for-2.6.38 tree has just been updated. Changes
+since last update:
 
-The first patch fixes a sync write error handling bug - we should
-consider pushing that to .38. The next patches factor code that is
-common to write and splice into helpers. The direct and buffered IO
-paths are then separated out and the common write checks and bounds
-limiting is factored out into a helper.
+	- dropped the per-cpu superblock counter cleanup patches
+	  from it so we can get it right before merging.
+	- added unaligned aio/dio write fix series (needs review)
+	- added log covering idle fix (needs review)
+	- added superblock write error hang fix (needs review)
 
-Finally, the serialisation of unaligned direct IOs is added by a
-big-hammer approach. That is, we take the i_mutex and
-XFS_IOLOCK_EXCL and hold them across the unaligned IO submission.
-This means that unaligned direct IO submission is serialised, and
-non-AIO DIO is serialised completely.
+The tree can be found here (when the rsync updates git.kernel.org):
 
-For unaligned AIO DIO, this would only serialise the submission of
-the DIO, leaving the sub-block zeroing races open for unaligned
-writes into unwritten extents. To avoid this problem, we use
-xfs_ioend_wait() to ensure all AIO writes have completed before we
-submit the unaligned write. We do this wait holding the i_mutex so
-we serialise against other unaligned AIO as there is no need to
-serialise against aligned DIO.
+The following changes since commit 489a150f6454e2cd93d9e0ee6d7c5a361844f62a:
 
-Version 2:
-- fix initial sync write error return fixup
-- add new patch to abstract locking from read/write path and remove
-  the need for the need_i_mutex variable.
+  xfs: factor duplicate code in xfs_alloc_ag_vextent_near into a helper (2010-12-16 16:06:15 -0600)
+
+are available in the git repository at:
+  git://git.kernel.org/pub/scm/linux/dgc/xfsdev.git xfs-for-2.6.38
+
+Dave Chinner (40):
+      xfs: provide a inode iolock lockdep class
+      xfs: use KM_NOFS for allocations during attribute list operations
+      xfs: dynamic speculative EOF preallocation
+      xfs: don't truncate prealloc from frequently accessed inodes
+      xfs: rcu free inodes
+      xfs: convert inode cache lookups to use RCU locking
+      xfs: convert pag_ici_lock to a spin lock
+      xfs: convert xfsbud shrinker to a per-buftarg shrinker.
+      xfs: add a lru to the XFS buffer cache
+      xfs: connect up buffer reclaim priority hooks
+      xfs: fix EFI transaction cancellation.
+      xfs: Pull EFI/EFD handling out from under the AIL lock
+      xfs: clean up xfs_ail_delete()
+      xfs: bulk AIL insertion during transaction commit
+      xfs: reduce the number of AIL push wakeups
+      xfs: consume iodone callback items on buffers as they are processed
+      xfs: remove all the inodes on a buffer from the AIL in bulk
+      xfs: use AIL bulk update function to implement single updates
+      xfs: use AIL bulk delete function to implement single delete
+      xfs: convert log grant ticket queues to list heads
+      xfs: fact out common grant head/log tail verification code
+      xfs: rework log grant space calculations
+      xfs: combine grant heads into a single 64 bit integer
+      xfs: use wait queues directly for the log wait queues
+      xfs: make AIL tail pushing independent of the grant lock
+      xfs: convert l_last_sync_lsn to an atomic variable
+      xfs: convert l_tail_lsn to an atomic variable.
+      xfs: convert log grant heads to atomic variables
+      xfs: introduce new locks for the log grant ticket wait queues
+      xfs: convert grant head manipulations to lockless algorithm
+      xfs: ensure sync write errors are returned
+      xfs: factor common post-write isize handling code
+      xfs: factor post-write newsize updates
+      xfs: introduce xfs_rw_lock() helpers for locking the inode
+      xfs: split direct IO write path from xfs_file_aio_write
+      xfs: split buffered IO write path from xfs_file_aio_write
+      xfs: factor common write setup code
+      xfs: serialise unaligned direct IOs
+      xfs: ensure log covering transactions are synchronous
+      xfs: errors on sync superblock writes leave it locked
+
+ fs/xfs/linux-2.6/sv.h        |   59 ----
+ fs/xfs/linux-2.6/xfs_buf.c   |  248 ++++++++++-----
+ fs/xfs/linux-2.6/xfs_buf.h   |   22 +-
+ fs/xfs/linux-2.6/xfs_file.c  |  528 +++++++++++++++++-------------
+ fs/xfs/linux-2.6/xfs_linux.h |    1 -
+ fs/xfs/linux-2.6/xfs_super.c |   24 ++-
+ fs/xfs/linux-2.6/xfs_sync.c  |  103 +++++--
+ fs/xfs/linux-2.6/xfs_trace.h |   30 +-
+ fs/xfs/quota/xfs_dquot.c     |    1 -
+ fs/xfs/xfs_ag.h              |    2 +-
+ fs/xfs/xfs_attr_leaf.c       |    4 +-
+ fs/xfs/xfs_btree.c           |    9 +-
+ fs/xfs/xfs_buf_item.c        |   32 ++-
+ fs/xfs/xfs_extfree_item.c    |   97 +++---
+ fs/xfs/xfs_extfree_item.h    |   11 +-
+ fs/xfs/xfs_fsops.c           |   11 +-
+ fs/xfs/xfs_fsops.h           |    2 +-
+ fs/xfs/xfs_iget.c            |   90 ++++-
+ fs/xfs/xfs_inode.c           |   54 +++-
+ fs/xfs/xfs_inode.h           |   15 +-
+ fs/xfs/xfs_inode_item.c      |   92 +++++-
+ fs/xfs/xfs_iomap.c           |   84 +++++-
+ fs/xfs/xfs_log.c             |  739 +++++++++++++++++++-----------------------
+ fs/xfs/xfs_log_cil.c         |   17 +-
+ fs/xfs/xfs_log_priv.h        |  121 ++++++--
+ fs/xfs/xfs_log_recover.c     |   35 +--
+ fs/xfs/xfs_mount.c           |   23 ++-
+ fs/xfs/xfs_mount.h           |   14 +
+ fs/xfs/xfs_trans.c           |   79 +++++-
+ fs/xfs/xfs_trans.h           |    2 +-
+ fs/xfs/xfs_trans_ail.c       |  232 +++++++-------
+ fs/xfs/xfs_trans_extfree.c   |    8 +-
+ fs/xfs/xfs_trans_priv.h      |   35 ++-
+ fs/xfs/xfs_vnodeops.c        |   61 +++--
+ 34 files changed, 1723 insertions(+), 1162 deletions(-)
+ delete mode 100644 fs/xfs/linux-2.6/sv.h
+
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
