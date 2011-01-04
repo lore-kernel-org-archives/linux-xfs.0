@@ -1,31 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p044kf7b175955 for <xfs@oss.sgi.com>; Mon, 3 Jan 2011 22:46:41 -0600
+	p044kn61175991 for <xfs@oss.sgi.com>; Mon, 3 Jan 2011 22:46:49 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A86B3153626C
-	for <xfs@oss.sgi.com>; Mon,  3 Jan 2011 20:48:45 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
-	[150.101.137.101]) by cuda.sgi.com with ESMTP id
-	4P3k0qh9AURfMOG9 for <xfs@oss.sgi.com>;
-	Mon, 03 Jan 2011 20:48:45 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EC6171D0824D
+	for <xfs@oss.sgi.com>; Mon,  3 Jan 2011 20:48:55 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
+	[150.101.137.99]) by cuda.sgi.com with ESMTP id
+	dqhfONTWNOpQaDmr for <xfs@oss.sgi.com>;
+	Mon, 03 Jan 2011 20:48:55 -0800 (PST)
 Received: from dastard (unverified [121.44.135.206])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	51671903-1927428
-	for <xfs@oss.sgi.com>; Tue, 04 Jan 2011 15:18:44 +1030 (CDT)
+	52194422-1927428
+	for <xfs@oss.sgi.com>; Tue, 04 Jan 2011 15:18:54 +1030 (CDT)
 Received: from chute ([192.168.1.1] helo=disappointment)
 	by dastard with esmtp (Exim 4.72)
-	(envelope-from <dave@fromorbit.com>) id 1PZyp9-0000Sw-63
+	(envelope-from <dave@fromorbit.com>) id 1PZyp9-0000Su-3V
 	for xfs@oss.sgi.com; Tue, 04 Jan 2011 15:48:43 +1100
 Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1PZyp7-0003ta-FI
+	(envelope-from <dave@disappointment.disaster>) id 1PZyp7-0003tW-B3
 	for xfs@oss.sgi.com; Tue, 04 Jan 2011 15:48:41 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/8] xfs: factor common post-write isize handling code
-Date: Tue,  4 Jan 2011 15:48:32 +1100
-Message-Id: <1294116518-14908-3-git-send-email-david@fromorbit.com>
-In-Reply-To: <1294116518-14908-1-git-send-email-david@fromorbit.com>
-References: <1294116518-14908-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 0/8] xfs: prevent corruption due to overlapping AIO DIO V2
+Date: Tue,  4 Jan 2011 15:48:30 +1100
+Message-Id: <1294116518-14908-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -41,107 +39,47 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+This series aims to serialise unaligned direct IOs to an inode to
+avoid corruption caused by sub-block zeroing races. The previous
+approaches at the direct IO layer fail because for !DIO_LOCKING
+filesystems like XFS, there is no way we can track and serialise all
+the direct IOs to a given inode in a race free manner. While we can
+track them, we cannot close the races between mapping blocks and
+tracked IO completion occuring before subsequent tracking lookups
+without adding some kind of locking to the DIO layer. Hence for
+!DIO_LOCKING users, unaligned direct IO needs to be serialised at a
+higher layer.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/linux-2.6/xfs_file.c |   52 +++++++++++++++++++++++-------------------
- 1 files changed, 28 insertions(+), 24 deletions(-)
+Because the xfs_file_aio_write() path is so twisted and difficult to
+follow, adding new locking cases to the code is difficult to verify
+that it is correct in all cases. Hence the series starts by cleaning
+up the code and splitting apart the direct IO and buffered IO paths
+before adding the unaligned direct IO detection and serialisation.
 
-diff --git a/fs/xfs/linux-2.6/xfs_file.c b/fs/xfs/linux-2.6/xfs_file.c
-index de71a84..841529e 100644
---- a/fs/xfs/linux-2.6/xfs_file.c
-+++ b/fs/xfs/linux-2.6/xfs_file.c
-@@ -321,6 +321,30 @@ xfs_file_splice_read(
- 	return ret;
- }
- 
-+STATIC void
-+xfs_aio_write_isize_update(
-+	struct inode	*inode,
-+	loff_t		*ppos,
-+	ssize_t		bytes_written)
-+{
-+	struct xfs_inode	*ip = XFS_I(inode);
-+	xfs_fsize_t		isize = i_size_read(inode);
-+
-+	if (bytes_written > 0)
-+		XFS_STATS_ADD(xs_write_bytes, bytes_written);
-+
-+	if (unlikely(bytes_written < 0 && bytes_written != -EFAULT &&
-+					*ppos > isize))
-+		*ppos = isize;
-+
-+	if (*ppos > ip->i_size) {
-+		xfs_ilock(ip, XFS_ILOCK_EXCL);
-+		if (*ppos > ip->i_size)
-+			ip->i_size = *ppos;
-+		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+	}
-+}
-+
- STATIC ssize_t
- xfs_file_splice_write(
- 	struct pipe_inode_info	*pipe,
-@@ -331,7 +355,7 @@ xfs_file_splice_write(
- {
- 	struct inode		*inode = outfilp->f_mapping->host;
- 	struct xfs_inode	*ip = XFS_I(inode);
--	xfs_fsize_t		isize, new_size;
-+	xfs_fsize_t		new_size;
- 	int			ioflags = 0;
- 	ssize_t			ret;
- 
-@@ -355,19 +379,8 @@ xfs_file_splice_write(
- 	trace_xfs_file_splice_write(ip, count, *ppos, ioflags);
- 
- 	ret = generic_file_splice_write(pipe, outfilp, ppos, count, flags);
--	if (ret > 0)
--		XFS_STATS_ADD(xs_write_bytes, ret);
--
--	isize = i_size_read(inode);
--	if (unlikely(ret < 0 && ret != -EFAULT && *ppos > isize))
--		*ppos = isize;
- 
--	if (*ppos > ip->i_size) {
--		xfs_ilock(ip, XFS_ILOCK_EXCL);
--		if (*ppos > ip->i_size)
--			ip->i_size = *ppos;
--		xfs_iunlock(ip, XFS_ILOCK_EXCL);
--	}
-+	xfs_aio_write_isize_update(inode, ppos, ret);
- 
- 	if (ip->i_new_size) {
- 		xfs_ilock(ip, XFS_ILOCK_EXCL);
-@@ -576,7 +589,7 @@ xfs_file_aio_write(
- 	struct xfs_mount	*mp = ip->i_mount;
- 	ssize_t			ret = 0;
- 	int			ioflags = 0;
--	xfs_fsize_t		isize, new_size;
-+	xfs_fsize_t		new_size;
- 	int			iolock;
- 	size_t			ocount = 0, count;
- 	int			need_i_mutex;
-@@ -742,16 +755,7 @@ write_retry:
- 
- 	current->backing_dev_info = NULL;
- 
--	isize = i_size_read(inode);
--	if (unlikely(ret < 0 && ret != -EFAULT && iocb->ki_pos > isize))
--		iocb->ki_pos = isize;
--
--	if (iocb->ki_pos > ip->i_size) {
--		xfs_ilock(ip, XFS_ILOCK_EXCL);
--		if (iocb->ki_pos > ip->i_size)
--			ip->i_size = iocb->ki_pos;
--		xfs_iunlock(ip, XFS_ILOCK_EXCL);
--	}
-+	xfs_aio_write_isize_update(inode, &iocb->ki_pos, ret);
- 
- 	if (ret <= 0)
- 		goto out_unlock_internal;
--- 
-1.7.2.3
+The first patch fixes a sync write error handling bug - we should
+consider pushing that to .38. The next patches factor code that is
+common to write and splice into helpers. The direct and buffered IO
+paths are then separated out and the common write checks and bounds
+limiting is factored out into a helper.
+
+Finally, the serialisation of unaligned direct IOs is added by a
+big-hammer approach. That is, we take the i_mutex and
+XFS_IOLOCK_EXCL and hold them across the unaligned IO submission.
+This means that unaligned direct IO submission is serialised, and
+non-AIO DIO is serialised completely.
+
+For unaligned AIO DIO, this would only serialise the submission of
+the DIO, leaving the sub-block zeroing races open for unaligned
+writes into unwritten extents. To avoid this problem, we use
+xfs_ioend_wait() to ensure all AIO writes have completed before we
+submit the unaligned write. We do this wait holding the i_mutex so
+we serialise against other unaligned AIO as there is no need to
+serialise against aligned DIO.
+
+Version 2:
+- fix initial sync write error return fixup
+- add new patch to abstract locking from read/write path and remove
+  the need for the need_i_mutex variable.
 
 _______________________________________________
 xfs mailing list
