@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p051r7Hq074519 for <xfs@oss.sgi.com>; Tue, 4 Jan 2011 19:53:08 -0600
-Subject: Re: [PATCH 8/8] xfs: serialise unaligned direct IOs
+	p051prJk074278 for <xfs@oss.sgi.com>; Tue, 4 Jan 2011 19:51:53 -0600
+Subject: Re: [PATCH 1/8] xfs: ensure sync write errors are returned
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1294116518-14908-9-git-send-email-david@fromorbit.com>
+In-Reply-To: <1294116518-14908-2-git-send-email-david@fromorbit.com>
 References: <1294116518-14908-1-git-send-email-david@fromorbit.com>
-	<1294116518-14908-9-git-send-email-david@fromorbit.com>
-Date: Tue, 04 Jan 2011 19:55:15 -0600
-Message-ID: <1294192515.2485.729.camel@doink>
+	<1294116518-14908-2-git-send-email-david@fromorbit.com>
+Date: Tue, 04 Jan 2011 19:53:58 -0600
+Message-ID: <1294192438.2485.718.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -29,33 +29,24 @@ Cc: xfs@oss.sgi.com
 On Tue, 2011-01-04 at 15:48 +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> When two concurrent unaligned, non-overlapping direct IOs are issued
-> to the same block, the direct Io layer will race to zero the block.
-> The result is that one of the concurrent IOs will overwrite data
-> written by the other IO with zeros. This is demonstrated by the
-> xfsqa test 240.
+> xfs_file_aio_write() only returns the error from synchronous
+> flushing of the data and inode if error == 0. At the point where
+> error is being checked, it is guaranteed to be > 0. Therefore any
+> errors returned by the data or fsync flush will never be returned.
+> Fix the checks so we overwrite the current error once and only if an
+> error really occurred.
 > 
-> To avoid this problem, serialise all unaligned direct IOs to an
-> inode with a big hammer. We need a big hammer approach as we need to
-> serialise AIO as well, so we can't just block writes on locks.
-> Hence, the big hammer is calling xfs_ioend_wait() while holding out
-> other unaligned direct IOs from starting.
-> 
-> We don't bother trying to serialised aligned vs unaligned IOs as
-> they are overlapping IO and the result of concurrent overlapping IOs
-> is undefined - the result of either IO is a valid result so we let
-> them race. Hence we only penalise unaligned IO, which already has a
-> major overhead compared to aligned IO so this isn't a major problem.
 
-Wow, after the rest of this series it gets easy!
-Looks good.
+This looks good.  You improved it a lot by
+fixing up the bizarre "error" logic.
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
->  fs/xfs/linux-2.6/xfs_file.c |   28 ++++++++++++++++++++++++----
->  1 files changed, 24 insertions(+), 4 deletions(-)
+>  fs/xfs/linux-2.6/xfs_file.c |   51 +++++++++++++++++++++----------------------
+>  1 files changed, 25 insertions(+), 26 deletions(-)
+
 
 
 _______________________________________________
