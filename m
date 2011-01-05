@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p057r63o125791 for <xfs@oss.sgi.com>; Wed, 5 Jan 2011 01:53:06 -0600
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5931AFA361A
-	for <xfs@oss.sgi.com>; Tue,  4 Jan 2011 23:55:13 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
-	[150.101.137.98]) by cuda.sgi.com with ESMTP id
-	3ghTA5AYYzI2eEsV for <xfs@oss.sgi.com>;
-	Tue, 04 Jan 2011 23:55:13 -0800 (PST)
-Date: Wed, 5 Jan 2011 18:55:10 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 4/8] xfs: introduce xfs_rw_lock() helpers for locking
-	the inode
-Message-ID: <20110105075510.GB8322@dastard>
-References: <1294116518-14908-1-git-send-email-david@fromorbit.com>
-	<1294116518-14908-5-git-send-email-david@fromorbit.com>
-	<1294192481.2485.721.camel@doink>
+	p058OPcx129580 for <xfs@oss.sgi.com>; Wed, 5 Jan 2011 02:24:25 -0600
+Received: from mail-qy0-f181.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5B37DFA479E
+	for <xfs@oss.sgi.com>; Wed,  5 Jan 2011 00:26:32 -0800 (PST)
+Received: from mail-qy0-f181.google.com (mail-qy0-f181.google.com
+	[209.85.216.181]) by cuda.sgi.com with ESMTP id
+	jLyNsbcGCFQgkCpy for <xfs@oss.sgi.com>;
+	Wed, 05 Jan 2011 00:26:32 -0800 (PST)
+Received: by qyk12 with SMTP id 12so16985830qyk.5
+	for <xfs@oss.sgi.com>; Wed, 05 Jan 2011 00:26:31 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1294192481.2485.721.camel@doink>
+In-Reply-To: <20110104051947.GI15179@dastard>
+References: <AANLkTi=Tmh9m_Rwy-bUZQEzcZ3M+6X9tZxFMO-J2Rvec@mail.gmail.com>
+	<20101230231353.GC15179@dastard>
+	<AANLkTi=OK4uGx5476ro8W47icu685gvQea43rNHozPKS@mail.gmail.com>
+	<20110104051947.GI15179@dastard>
+Date: Wed, 5 Jan 2011 17:26:31 +0900
+Message-ID: <AANLkTing_nBZXQXN=9Dph10vuHx+MMMZkqqmGiZZe73j@mail.gmail.com>
+Subject: Re: XFS handling of synchronous buffers in case of EIO error
+From: Ajeet Yadav <ajeet.yadav.77@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,186 +29,195 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============0013131223730584769=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Jan 04, 2011 at 07:54:41PM -0600, Alex Elder wrote:
-> On Tue, 2011-01-04 at 15:48 +1100, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > We need to obtain the i_mutex, i_iolock and i_ilock during the read
-> > and write paths. Add a set of wrapper functions to neatly
-> > encapsulate the lock ordering and shared/exclusive semantics to make
-> > the locking easier to follow and get right.
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> 
-> I like this change, but I think you missed a lock call.
-> I also notice there are some locking differences, and
-> I don't really question them but I wonder if you can
-> offer a little more explanation.
-> 
-> > ---
-> >  fs/xfs/linux-2.6/xfs_file.c |  123 ++++++++++++++++++++++++-------------------
-> >  1 files changed, 68 insertions(+), 55 deletions(-)
-> > 
-> > diff --git a/fs/xfs/linux-2.6/xfs_file.c b/fs/xfs/linux-2.6/xfs_file.c
-> > index 33a688c..0d6111e 100644
-> > --- a/fs/xfs/linux-2.6/xfs_file.c
-> > +++ b/fs/xfs/linux-2.6/xfs_file.c
-> 
-> . . .
-> 
-> > @@ -262,22 +296,21 @@ xfs_file_aio_read(
-> >  	if (XFS_FORCED_SHUTDOWN(mp))
-> >  		return -EIO;
-> >  
-> > -	if (unlikely(ioflags & IO_ISDIRECT))
-> > -		mutex_lock(&inode->i_mutex);
-> > -	xfs_ilock(ip, XFS_IOLOCK_SHARED);
-> > -
-> >  	if (unlikely(ioflags & IO_ISDIRECT)) {
-> > +		xfs_rw_ilock(ip, XFS_IOLOCK_EXCL);
+--===============0013131223730584769==
+Content-Type: multipart/alternative; boundary=0016367f985e71d4e704991524b0
+
+--0016367f985e71d4e704991524b0
+Content-Type: text/plain; charset=ISO-8859-1
+
+Thanks, I think its better to end this mail by rerering to your patch.
+
+http://oss.sgi.com/archives/xfs/2011-01/msg00020.html
+
+
+
+On Tue, Jan 4, 2011 at 2:19 PM, Dave Chinner <david@fromorbit.com> wrote:
+
+>  On Fri, Dec 31, 2010 at 12:17:12PM +0530, Ajeet Yadav wrote:
+> > Dear Dave,
+> >
+> > Our Kernel is 2.6.30.9 but XFS is backported from 2.6.34.
+> > But I have seen similar behaviour in another post related to process ls
+> hang
+> > in 2.6.35.9
+> > *
+> >
+> > http://oss.sgi.com/pipermail/xfs/2010-December/048691.html
+> >
+> > *I have always seen the hang problem comes only if comes when b_relse !=
+> > NULL, and b_hold > 2
+> >
+> > I have made below workaround it solved the problem in our case because
+> when
+> > USB is removed we know we get EIO error.
+> >
+> > But I think we need to review xfs_buf_error_relse() and xfs_buf_relse()
+> > considering  XBF_LOCK flow path.
+> >
+> > @@ -1047,9 +1047,19 @@ xfs_buf_iodone_callbacks(
+> >                         /* We actually overwrite the existing b-relse
+> >                            function at times, but we're gonna be shutting
+> > down
+> >                            anyway. */
+> > -                       XFS_BUF_SET_BRELSE_FUNC(bp,xfs_buf_error_relse);
+> > -                       XFS_BUF_DONE(bp);
+> > -                       XFS_BUF_FINISH_IOWAIT(bp);
+> > +                       if (XFS_BUF_GETERROR(bp) == EIO){
+> > +                               ASSERT(XFS_BUF_TARGET(bp) ==
+> > mp->m_ddev_targp);
+> > +                               XFS_BUF_SUPER_STALE(bp);
+> > +                               trace_xfs_buf_item_iodone(bp, _RET_IP_);
+> > +                               xfs_buf_do_callbacks(bp, lip);
+> > +                               XFS_BUF_SET_FSPRIVATE(bp, NULL);
+> > +                               XFS_BUF_CLR_IODONE_FUNC(bp);
+> > +                               xfs_biodone(bp);
+> > +                       } else {
 > > +
-> 
-> Previously only XFS_IOLOCK_SHARED was used here.
-> I understand that using the IOLOCK_EXCL now gets
-> the desired mutex_lock() call.  Is the previous
-> code in error here though?
+> > XFS_BUF_SET_BRELSE_FUNC(bp,xfs_buf_error_relse);
+> > +                               XFS_BUF_DONE(bp);
+> > +                               XFS_BUF_FINISH_IOWAIT(bp);
+> > +                       }
+> >                 }
+> >                 return;
+> >         }
+>
+> This won't work reliably because it only handles one specific type
+> of error. We can get more than just EIO back from the lower layers,
+> and so if the superblock write gets a different error then we'll
+> still get the same hang.
+>
+> Effectively what you are doing here is running the
+> xfs_buf_error_relse() callback directly in line. This will result in
+> the buffer being unlocked before the error is pulled off the buffer
+> after xfs_buf_iowait() completes. Essentially that means that some
+> other thread can reuse the buffer and clear the error before the
+> waiter has received the error.
+>
+> I think the correct fix is to call the bp->b_relse function when the
+> waiter is woken to clear the error and unlock the buffer. I've just
+> posted a patch to do this for 2.6.38, but it won't trivially backport
+> to 2.6.34 or 2.6.30 as the synchronous write interfaces into the
+> buffer cache have been cleaned up and simplified recently. It should
+> still be relatively easy to handle, though.
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
+>
 
-No, it isn't wrong.  However, the new code takes advantage of the
-demote process to drop back to IOLOCK_SHARED before the i_mutex is
-dropped so there's no externally visible change in behaviour.
+--0016367f985e71d4e704991524b0
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-This means that the locking heirarchy is much easier to maintain and
-understand as all operations use the same wrappers.  i.e. there is
-no real need for a i_mutex + IOLOCK_SHARED state because i_mutex
-means exclusive access and is the outer lock. Hence the
-IOLOCK_SHARED vs IOLOCK_EXCL is pretty much irrelevant so I picked
-the simpler one to implement and understand.
+<div>Thanks, I think its better to end this mail by rerering to your patch.=
+</div>
+<div>=A0</div>
+<div><a href=3D"http://oss.sgi.com/archives/xfs/2011-01/msg00020.html">http=
+://oss.sgi.com/archives/xfs/2011-01/msg00020.html</a></div>
+<div><br><br>=A0</div>
+<div class=3D"gmail_quote">On Tue, Jan 4, 2011 at 2:19 PM, Dave Chinner <sp=
+an dir=3D"ltr">&lt;<a href=3D"mailto:david@fromorbit.com">david@fromorbit.c=
+om</a>&gt;</span> wrote:<br>
+<blockquote style=3D"BORDER-LEFT: #ccc 1px solid; MARGIN: 0px 0px 0px 0.8ex=
+; PADDING-LEFT: 1ex" class=3D"gmail_quote">
+<div>
+<div></div>
+<div class=3D"h5">On Fri, Dec 31, 2010 at 12:17:12PM +0530, Ajeet Yadav wro=
+te:<br>&gt; Dear Dave,<br>&gt;<br>&gt; Our Kernel is 2.6.30.9 but XFS is ba=
+ckported from 2.6.34.<br>&gt; But I have seen similar behaviour in another =
+post related to process ls hang<br>
+&gt; in 2.6.35.9<br>&gt; *<br>&gt;<br>&gt; <a href=3D"http://oss.sgi.com/pi=
+permail/xfs/2010-December/048691.html" target=3D"_blank">http://oss.sgi.com=
+/pipermail/xfs/2010-December/048691.html</a><br>&gt;<br>&gt; *I have always=
+ seen the hang problem comes only if comes when b_relse !=3D<br>
+&gt; NULL, and b_hold &gt; 2<br>&gt;<br>&gt; I have made below workaround i=
+t solved the problem in our case because when<br>&gt; USB is removed we kno=
+w we get EIO error.<br>&gt;<br>&gt; But I think we need to review xfs_buf_e=
+rror_relse() and xfs_buf_relse()<br>
+&gt; considering =A0XBF_LOCK flow path.<br>&gt;<br>&gt; @@ -1047,9 +1047,19=
+ @@ xfs_buf_iodone_callbacks(<br>&gt; =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =
+=A0 =A0 =A0 /* We actually overwrite the existing b-relse<br>&gt; =A0 =A0 =
+=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0function at times, but we&#3=
+9;re gonna be shutting<br>
+&gt; down<br>&gt; =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0an=
+yway. */<br>&gt; - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 XFS_BUF_SET_=
+BRELSE_FUNC(bp,xfs_buf_error_relse);<br>&gt; - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =
+=A0 =A0 =A0 =A0 XFS_BUF_DONE(bp);<br>&gt; - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0 =A0 =A0 XFS_BUF_FINISH_IOWAIT(bp);<br>
+&gt; + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (XFS_BUF_GETERROR(bp)=
+ =3D=3D EIO){<br>&gt; + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0 =A0 ASSERT(XFS_BUF_TARGET(bp) =3D=3D<br>&gt; mp-&gt;m_ddev_targp);<br>=
+&gt; + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 XFS_BUF_=
+SUPER_STALE(bp);<br>
+&gt; + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 trace_xf=
+s_buf_item_iodone(bp, _RET_IP_);<br>&gt; + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =
+=A0 =A0 =A0 =A0 =A0 =A0 =A0 xfs_buf_do_callbacks(bp, lip);<br>&gt; + =A0 =
+=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 XFS_BUF_SET_FSPRIVA=
+TE(bp, NULL);<br>
+&gt; + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 XFS_BUF_=
+CLR_IODONE_FUNC(bp);<br>&gt; + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =
+=A0 =A0 =A0 =A0 xfs_biodone(bp);<br>&gt; + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =
+=A0 =A0 =A0 } else {<br>&gt; +<br>&gt; XFS_BUF_SET_BRELSE_FUNC(bp,xfs_buf_e=
+rror_relse);<br>
+&gt; + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 XFS_BUF_=
+DONE(bp);<br>&gt; + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0 XFS_BUF_FINISH_IOWAIT(bp);<br>&gt; + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =
+=A0 =A0 =A0 }<br>&gt; =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 }<br>&gt; =A0 =A0 =A0=
+ =A0 =A0 =A0 =A0 =A0 return;<br>&gt; =A0 =A0 =A0 =A0 }<br>
+<br></div></div>This won&#39;t work reliably because it only handles one sp=
+ecific type<br>of error. We can get more than just EIO back from the lower =
+layers,<br>and so if the superblock write gets a different error then we&#3=
+9;ll<br>
+still get the same hang.<br><br>Effectively what you are doing here is runn=
+ing the<br>xfs_buf_error_relse() callback directly in line. This will resul=
+t in<br>the buffer being unlocked before the error is pulled off the buffer=
+<br>
+after xfs_buf_iowait() completes. Essentially that means that some<br>other=
+ thread can reuse the buffer and clear the error before the<br>waiter has r=
+eceived the error.<br><br>I think the correct fix is to call the bp-&gt;b_r=
+else function when the<br>
+waiter is woken to clear the error and unlock the buffer. I&#39;ve just<br>=
+posted a patch to do this for 2.6.38, but it won&#39;t trivially backport<b=
+r>to 2.6.34 or 2.6.30 as the synchronous write interfaces into the<br>buffe=
+r cache have been cleaned up and simplified recently. It should<br>
+still be relatively easy to handle, though.<br>
+<div>
+<div></div>
+<div class=3D"h5"><br>Cheers,<br><br>Dave.<br>--<br>Dave Chinner<br><a href=
+=3D"mailto:david@fromorbit.com">david@fromorbit.com</a><br></div></div></bl=
+ockquote></div><br>
 
-> Can you anticipate
-> any different behavior because of this lock change?
+--0016367f985e71d4e704991524b0--
 
-None that I can think of, because we are supposed to hold the
-i_mutex over page cache flushes and it is the outermost lock.
 
-> Does this specific change justify separating it
-> into a small patch just before this one?
-
-IMO, not really, but I can if you want. It'll just churn the patch
-series, though...
-
-> >  		if (inode->i_mapping->nrpages) {
-> >  			ret = -xfs_flushinval_pages(ip,
-> >  					(iocb->ki_pos & PAGE_CACHE_MASK),
-> >  					-1, FI_REMAPF_LOCKED);
-> > +			if (ret) {
-> > +				xfs_rw_iunlock(ip, XFS_IOLOCK_EXCL);
-> > +				return ret;
-> > +			}
-> >  		}
-> > -		mutex_unlock(&inode->i_mutex);
-> > -		if (ret) {
-> > -			xfs_iunlock(ip, XFS_IOLOCK_SHARED);
-> > -			return ret;
-> > -		}
-> > -	}
-> > +		xfs_rw_ilock_demote(ip, XFS_IOLOCK_EXCL);
-> > +	} else
-> > +		xfs_rw_ilock(ip, XFS_IOLOCK_SHARED);
-> >  
-> >  	trace_xfs_file_read(ip, size, iocb->ki_pos, ioflags);
-> >  
-> 
-> . . .
-> 
-> > @@ -386,14 +419,13 @@ xfs_file_splice_write(
-> >  	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
-> >  		return -EIO;
-> >  
-> > -	xfs_ilock(ip, XFS_IOLOCK_EXCL);
-> > +	xfs_rw_ilock(ip, XFS_ILOCK_EXCL|XFS_IOLOCK_EXCL);
-> 
-> Similar sentiments here.  We will now be acquiring i_mutex
-> here where previously we did not.  Is that OK?
-
-It should be because it will have exactly the same serialisation
-effect as the current XFS_IOLOCK_EXCL has - exclusive access across
-the write.
-
-> > @@ -631,21 +662,16 @@ xfs_file_aio_write(
-> >  relock:
-> >  	if (ioflags & IO_ISDIRECT) {
-> >  		iolock = XFS_IOLOCK_SHARED;
-> > -		need_i_mutex = 0;
-> >  	} else {
-> >  		iolock = XFS_IOLOCK_EXCL;
-> > -		need_i_mutex = 1;
-> > -		mutex_lock(&inode->i_mutex);
-> >  	}
-> >  
-> > -	xfs_ilock(ip, XFS_ILOCK_EXCL|iolock);
-> > -
-> 
-> Maybe I'm missing something, but I think you want to
-> insert this here:
-> 	xfs_rw_ilock(ip, XFS_ILOCK_EXCL|iolock);
-> ...because (for starters) if generic_write_checks()
-> returns an error below you're going to be calling
-> the unlock routine.
-
-Yes, good catch. I didn't notice that because I didn't test the
-series patch by patch - just the end result. Will fix.
-
-> 
-> >  start:
-> >  	ret = generic_write_checks(file, &pos, &count,
-> >  					S_ISBLK(inode->i_mode));
-> >  	if (ret) {
-> > -		xfs_iunlock(ip, XFS_ILOCK_EXCL|iolock);
-> > -		goto out_unlock_mutex;
-> > +		xfs_rw_iunlock(ip, XFS_ILOCK_EXCL|iolock);
-> > +		return ret;
-> >  	}
-> >  
-> >  	if (ioflags & IO_ISDIRECT) {
-> > @@ -654,16 +680,14 @@ start:
-> >  				mp->m_rtdev_targp : mp->m_ddev_targp;
-> >  
-> >  		if ((pos & target->bt_smask) || (count & target->bt_smask)) {
-> > -			xfs_iunlock(ip, XFS_ILOCK_EXCL|iolock);
-> > +			xfs_rw_iunlock(ip, XFS_ILOCK_EXCL|iolock);
-> >  			return XFS_ERROR(-EINVAL);
-> >  		}
-> >  
-> 
-> One can get a little lost in this code.  I don't know if
-> this comment is exactly right, but something like it might
-> be helpful (while you're in here).
-> 
-> 		/*
-> 		 * For direct I/O, if there are cached pages or
-> 		 * we're extending the file, we need IOLOCK_EXCL
-> 		 * until we're sure the bytes at the new EOF have
-> 		 * been zeroed and/or the cached pages are flushed
-> 		 * out.  Upgrade the I/O lock and start again.
-> 		 */
-
-Probably a good idea. I'll add something there.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+--===============0013131223730584769==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============0013131223730584769==--
