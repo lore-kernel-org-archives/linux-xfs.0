@@ -1,15 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p05MN1ZE239875 for <xfs@oss.sgi.com>; Wed, 5 Jan 2011 16:23:02 -0600
-Subject: Re: [PATCH] repair: warn if running in low memory mode
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1294121563-17150-1-git-send-email-david@fromorbit.com>
-References: <1294121563-17150-1-git-send-email-david@fromorbit.com>
-Date: Wed, 05 Jan 2011 16:25:07 -0600
-Message-ID: <1294266307.2312.87.camel@doink>
-Mime-Version: 1.0
-Reply-To: aelder@sgi.com
+	p05MnFiU242194 for <xfs@oss.sgi.com>; Wed, 5 Jan 2011 16:49:16 -0600
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EF02D2385E3
+	for <xfs@oss.sgi.com>; Wed,  5 Jan 2011 14:51:22 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
+	[150.101.137.100]) by cuda.sgi.com with ESMTP id
+	h9iduD2kN6dTbqam for <xfs@oss.sgi.com>;
+	Wed, 05 Jan 2011 14:51:22 -0800 (PST)
+Date: Thu, 6 Jan 2011 09:50:39 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfs: add FITRIM support
+Message-ID: <20110105225039.GD8322@dastard>
+References: <20101125112304.GA4195@infradead.org>
+	<20110103232514.GF15179@dastard>
+	<alpine.LFD.2.00.1101051105120.3095@dhcp-lab-213.englab.brq.redhat.com>
+	<201101052307.38379@zmi.at>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <201101052307.38379@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,70 +32,67 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Michael Monnerie <michael.monnerie@is.it-management.at>
+Cc: Christoph Hellwig <hch@infradead.org>, Lukas Czerner <lczerner@redhat.com>, xfs@oss.sgi.com
 
-On Tue, 2011-01-04 at 17:12 +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Wed, Jan 05, 2011 at 11:07:35PM +0100, Michael Monnerie wrote:
+> On Mittwoch, 5. Januar 2011 Lukas Czerner wrote:
+> > If we
+> > notice that we are running out of space in advance (how much in
+> > advance?), we can start trimming smaller chunks, until we reach
+> > reasonable a reasonable pool of reclaimed space, or until we trim
+> > the whole device.
 > 
-> When checking large filesystems, xfs_repair makes an estimate of how
-> much RAM it will need to execute effectively. If the amount of RAM
-> is less than this, it reduces the bhash size and turns of
-> prefetching, which will substantially slow down the repair process.
-> Add a warning that indicates this is happening, along with a
-> recommendation of how much RAM repair calculates it needs to run
-> with prefetching enabled.
+> Would it be possible that all blocks that have been in use since the 
+> last FITRIM run can be logged? Like this, we would only need to clean 
+> those. If you have a 2TB volume, probably only 25% of it have been 
+> rewritten (=500GB) since the last run, and of that maybe 80% are still 
+> in use at the time we run FITRIM, so only 100GB would need the cleanup.
+> Maybe each AG could store a bitmap of written blocks, that are reset by 
+> a FITRIM run. That could be an asynchronous written bitmap and shouldn't 
+> disturb performance too much. Maybe it's even only needed to store a bit 
+> per sunit*swidth blocks, to keep that table small. A mount option could 
+> be used to enable that feature, so only those which use thin 
+> provisioning or SSDs or similar devices enable it at wish.
 
-This looks good.
+Not easily. It would need a second set of free space btrees for
+tracking freed but untrimmed extents. The idea of the background
+trim is that it doesn't need all that complexity because all the
+status information on where the trim process is up to can be kept
+in userspace.
 
-If someone specifies a maximum memory amount using -m,
-but that amount exceeds the memory available and/or the
-process' address space rlimit, it is silently reduced
-to the maximum possible.  That may then be followed by
-the "...please increase it..." message, which might be
-confusing and possibly annoying.  Maybe a single message
-that was a bit more informative would suffice, whether
-or not max_mem was specified.
+This is basically the same mode of functioning as the period
+background xfs_fsr defragmentation mode - run it for an hour every
+couple of nights,and it will slowly work it way through the entire
+filesystem over a period of weeks. No state or additional on-disk
+structures are needed for xfs_fsr to do it's work....
 
-Just a thought.  Your change looks fine.
+The background trim is intended to enable even the slowest of
+devices to be trimmed over time, while introducing as little runtime
+overhead and complexity as possible. Hence adding complexity and
+runtime overhead to optimise background trimming tends to defeat the
+primary design goal....
 
-Reviewed-by: Alex Elder <aelder@sgi.com>
+> Especially for 100TB size devices that seems like something that should 
+> be thought of, as maybe if you run FITRIM once a week there, only <10TB 
+> have been rewritten, if at all, and such a table would boost a FITRIM 
+> run a lot.
 
+If we want optimised, only-trim-what-we-free behaviour, we need to
+hook into the transaction subsystem and issue TRIM commands at the
+time extents are actually freed. That is much more complex to
+implement but much easier to optimise because it doesn't require
+persistent state on disk. However, most devices are simply not ready
+to handle the flood of TRIM commands this generates, with
+performance degrading by ~10-20% for the best of devices and
+_10-100x_ for the worst...
 
+Cheers,
 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  repair/xfs_repair.c |   10 +++++++++-
->  1 files changed, 9 insertions(+), 1 deletions(-)
-> 
-> diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-> index e36eeae..eea1b34 100644
-> --- a/repair/xfs_repair.c
-> +++ b/repair/xfs_repair.c
-> @@ -650,12 +650,20 @@ main(int argc, char **argv)
->  			 * Turn off prefetch and minimise libxfs cache if
->  			 * physical memory is deemed insufficient
->  			 */
-> -			if (max_mem_specified)
-> +			if (max_mem_specified) {
->  				do_abort(_("Required memory for repair is "
->  					"greater that the maximum specified "
->  					"with the -m option. Please increase "
->  					"it to at least %lu.\n"),
->  					mem_used / 1024);
-> +			} else {
-> +				do_warn(_("Not enough RAM available for repair "
-> +					"to enable prefetching. This will be "
-> +					"_slow_.\n"
-> +					"You need at least %luMB RAM to run "
-> +					"with prefetching enabled."),
-> +					mem_used * 1280 / (1024 * 1024));
-> +			}
->  			do_prefetch = 0;
->  			libxfs_bhash_size = 64;
->  		} else {
-
-
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
