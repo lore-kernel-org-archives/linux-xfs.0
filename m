@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p057YLUb123401 for <xfs@oss.sgi.com>; Wed, 5 Jan 2011 01:34:22 -0600
+	p057r63o125791 for <xfs@oss.sgi.com>; Wed, 5 Jan 2011 01:53:06 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8BC541D0E628
-	for <xfs@oss.sgi.com>; Tue,  4 Jan 2011 23:36:28 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
-	[150.101.137.97]) by cuda.sgi.com with ESMTP id
-	aCRkiiyMzyFn4bRV for <xfs@oss.sgi.com>;
-	Tue, 04 Jan 2011 23:36:28 -0800 (PST)
-Date: Wed, 5 Jan 2011 18:36:25 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5931AFA361A
+	for <xfs@oss.sgi.com>; Tue,  4 Jan 2011 23:55:13 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
+	[150.101.137.98]) by cuda.sgi.com with ESMTP id
+	3ghTA5AYYzI2eEsV for <xfs@oss.sgi.com>;
+	Tue, 04 Jan 2011 23:55:13 -0800 (PST)
+Date: Wed, 5 Jan 2011 18:55:10 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 5/8] xfs: split direct IO write path from
-	xfs_file_aio_write
-Message-ID: <20110105073625.GA8322@dastard>
+Subject: Re: [PATCH 4/8] xfs: introduce xfs_rw_lock() helpers for locking
+	the inode
+Message-ID: <20110105075510.GB8322@dastard>
 References: <1294116518-14908-1-git-send-email-david@fromorbit.com>
-	<1294116518-14908-6-git-send-email-david@fromorbit.com>
-	<1294192495.2485.726.camel@doink>
+	<1294116518-14908-5-git-send-email-david@fromorbit.com>
+	<1294192481.2485.721.camel@doink>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1294192495.2485.726.camel@doink>
+In-Reply-To: <1294192481.2485.721.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,27 +35,170 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Alex Elder <aelder@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Jan 04, 2011 at 07:54:55PM -0600, Alex Elder wrote:
+On Tue, Jan 04, 2011 at 07:54:41PM -0600, Alex Elder wrote:
 > On Tue, 2011-01-04 at 15:48 +1100, Dave Chinner wrote:
 > > From: Dave Chinner <dchinner@redhat.com>
 > > 
-> > The current xfs_file_aio_write code is a mess of locking shenanigans
-> > to handle the different locking requirements of buffered and direct
-> > IO. Start to clean this up by disentangling the direct IO path from
-> > the mess.
+> > We need to obtain the i_mutex, i_iolock and i_ilock during the read
+> > and write paths. Add a set of wrapper functions to neatly
+> > encapsulate the lock ordering and shared/exclusive semantics to make
+> > the locking easier to follow and get right.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > 
-> All good, very good.  But I'm not sure why you cut
-> out the code that backed off to buffered I/O if
-> generic_file_direct_write() returns an error.
-> (You gave no explanation.)
+> I like this change, but I think you missed a lock call.
+> I also notice there are some locking differences, and
+> I don't really question them but I wonder if you can
+> offer a little more explanation.
+> 
+> > ---
+> >  fs/xfs/linux-2.6/xfs_file.c |  123 ++++++++++++++++++++++++-------------------
+> >  1 files changed, 68 insertions(+), 55 deletions(-)
+> > 
+> > diff --git a/fs/xfs/linux-2.6/xfs_file.c b/fs/xfs/linux-2.6/xfs_file.c
+> > index 33a688c..0d6111e 100644
+> > --- a/fs/xfs/linux-2.6/xfs_file.c
+> > +++ b/fs/xfs/linux-2.6/xfs_file.c
+> 
+> . . .
+> 
+> > @@ -262,22 +296,21 @@ xfs_file_aio_read(
+> >  	if (XFS_FORCED_SHUTDOWN(mp))
+> >  		return -EIO;
+> >  
+> > -	if (unlikely(ioflags & IO_ISDIRECT))
+> > -		mutex_lock(&inode->i_mutex);
+> > -	xfs_ilock(ip, XFS_IOLOCK_SHARED);
+> > -
+> >  	if (unlikely(ioflags & IO_ISDIRECT)) {
+> > +		xfs_rw_ilock(ip, XFS_IOLOCK_EXCL);
+> > +
+> 
+> Previously only XFS_IOLOCK_SHARED was used here.
+> I understand that using the IOLOCK_EXCL now gets
+> the desired mutex_lock() call.  Is the previous
+> code in error here though?
 
-Oh, I thought I put one in there. It's simple, though - XFS handles
-all allocation cases in the direct IO code and never returns a
-result that will require falling back to the buffered IO path.  It
-is basically a code path that has been unused for years and all it
-does is make the logic much more complex to understand.
+No, it isn't wrong.  However, the new code takes advantage of the
+demote process to drop back to IOLOCK_SHARED before the i_mutex is
+dropped so there's no externally visible change in behaviour.
 
-I'll add that to the commit message....
+This means that the locking heirarchy is much easier to maintain and
+understand as all operations use the same wrappers.  i.e. there is
+no real need for a i_mutex + IOLOCK_SHARED state because i_mutex
+means exclusive access and is the outer lock. Hence the
+IOLOCK_SHARED vs IOLOCK_EXCL is pretty much irrelevant so I picked
+the simpler one to implement and understand.
+
+> Can you anticipate
+> any different behavior because of this lock change?
+
+None that I can think of, because we are supposed to hold the
+i_mutex over page cache flushes and it is the outermost lock.
+
+> Does this specific change justify separating it
+> into a small patch just before this one?
+
+IMO, not really, but I can if you want. It'll just churn the patch
+series, though...
+
+> >  		if (inode->i_mapping->nrpages) {
+> >  			ret = -xfs_flushinval_pages(ip,
+> >  					(iocb->ki_pos & PAGE_CACHE_MASK),
+> >  					-1, FI_REMAPF_LOCKED);
+> > +			if (ret) {
+> > +				xfs_rw_iunlock(ip, XFS_IOLOCK_EXCL);
+> > +				return ret;
+> > +			}
+> >  		}
+> > -		mutex_unlock(&inode->i_mutex);
+> > -		if (ret) {
+> > -			xfs_iunlock(ip, XFS_IOLOCK_SHARED);
+> > -			return ret;
+> > -		}
+> > -	}
+> > +		xfs_rw_ilock_demote(ip, XFS_IOLOCK_EXCL);
+> > +	} else
+> > +		xfs_rw_ilock(ip, XFS_IOLOCK_SHARED);
+> >  
+> >  	trace_xfs_file_read(ip, size, iocb->ki_pos, ioflags);
+> >  
+> 
+> . . .
+> 
+> > @@ -386,14 +419,13 @@ xfs_file_splice_write(
+> >  	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
+> >  		return -EIO;
+> >  
+> > -	xfs_ilock(ip, XFS_IOLOCK_EXCL);
+> > +	xfs_rw_ilock(ip, XFS_ILOCK_EXCL|XFS_IOLOCK_EXCL);
+> 
+> Similar sentiments here.  We will now be acquiring i_mutex
+> here where previously we did not.  Is that OK?
+
+It should be because it will have exactly the same serialisation
+effect as the current XFS_IOLOCK_EXCL has - exclusive access across
+the write.
+
+> > @@ -631,21 +662,16 @@ xfs_file_aio_write(
+> >  relock:
+> >  	if (ioflags & IO_ISDIRECT) {
+> >  		iolock = XFS_IOLOCK_SHARED;
+> > -		need_i_mutex = 0;
+> >  	} else {
+> >  		iolock = XFS_IOLOCK_EXCL;
+> > -		need_i_mutex = 1;
+> > -		mutex_lock(&inode->i_mutex);
+> >  	}
+> >  
+> > -	xfs_ilock(ip, XFS_ILOCK_EXCL|iolock);
+> > -
+> 
+> Maybe I'm missing something, but I think you want to
+> insert this here:
+> 	xfs_rw_ilock(ip, XFS_ILOCK_EXCL|iolock);
+> ...because (for starters) if generic_write_checks()
+> returns an error below you're going to be calling
+> the unlock routine.
+
+Yes, good catch. I didn't notice that because I didn't test the
+series patch by patch - just the end result. Will fix.
+
+> 
+> >  start:
+> >  	ret = generic_write_checks(file, &pos, &count,
+> >  					S_ISBLK(inode->i_mode));
+> >  	if (ret) {
+> > -		xfs_iunlock(ip, XFS_ILOCK_EXCL|iolock);
+> > -		goto out_unlock_mutex;
+> > +		xfs_rw_iunlock(ip, XFS_ILOCK_EXCL|iolock);
+> > +		return ret;
+> >  	}
+> >  
+> >  	if (ioflags & IO_ISDIRECT) {
+> > @@ -654,16 +680,14 @@ start:
+> >  				mp->m_rtdev_targp : mp->m_ddev_targp;
+> >  
+> >  		if ((pos & target->bt_smask) || (count & target->bt_smask)) {
+> > -			xfs_iunlock(ip, XFS_ILOCK_EXCL|iolock);
+> > +			xfs_rw_iunlock(ip, XFS_ILOCK_EXCL|iolock);
+> >  			return XFS_ERROR(-EINVAL);
+> >  		}
+> >  
+> 
+> One can get a little lost in this code.  I don't know if
+> this comment is exactly right, but something like it might
+> be helpful (while you're in here).
+> 
+> 		/*
+> 		 * For direct I/O, if there are cached pages or
+> 		 * we're extending the file, we need IOLOCK_EXCL
+> 		 * until we're sure the bytes at the new EOF have
+> 		 * been zeroed and/or the cached pages are flushed
+> 		 * out.  Upgrade the I/O lock and start again.
+> 		 */
+
+Probably a good idea. I'll add something there.
 
 Cheers,
 
