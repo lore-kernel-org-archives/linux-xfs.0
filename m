@@ -1,25 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p05MnFiU242194 for <xfs@oss.sgi.com>; Wed, 5 Jan 2011 16:49:16 -0600
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EF02D2385E3
-	for <xfs@oss.sgi.com>; Wed,  5 Jan 2011 14:51:22 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
-	[150.101.137.100]) by cuda.sgi.com with ESMTP id
-	h9iduD2kN6dTbqam for <xfs@oss.sgi.com>;
-	Wed, 05 Jan 2011 14:51:22 -0800 (PST)
-Date: Thu, 6 Jan 2011 09:50:39 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs: add FITRIM support
-Message-ID: <20110105225039.GD8322@dastard>
-References: <20101125112304.GA4195@infradead.org>
-	<20110103232514.GF15179@dastard>
-	<alpine.LFD.2.00.1101051105120.3095@dhcp-lab-213.englab.brq.redhat.com>
-	<201101052307.38379@zmi.at>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <201101052307.38379@zmi.at>
+	p05Ne9Vx248372 for <xfs@oss.sgi.com>; Wed, 5 Jan 2011 17:40:09 -0600
+Subject: Re: [PATCH] xfs_repair: multithread phase 2
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <1294121588-17233-1-git-send-email-david@fromorbit.com>
+References: <1294121588-17233-1-git-send-email-david@fromorbit.com>
+Date: Wed, 05 Jan 2011 17:42:14 -0600
+Message-ID: <1294270934.2312.105.camel@doink>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,67 +22,164 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Michael Monnerie <michael.monnerie@is.it-management.at>
-Cc: Christoph Hellwig <hch@infradead.org>, Lukas Czerner <lczerner@redhat.com>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Wed, Jan 05, 2011 at 11:07:35PM +0100, Michael Monnerie wrote:
-> On Mittwoch, 5. Januar 2011 Lukas Czerner wrote:
-> > If we
-> > notice that we are running out of space in advance (how much in
-> > advance?), we can start trimming smaller chunks, until we reach
-> > reasonable a reasonable pool of reclaimed space, or until we trim
-> > the whole device.
+On Tue, 2011-01-04 at 17:13 +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Would it be possible that all blocks that have been in use since the 
-> last FITRIM run can be logged? Like this, we would only need to clean 
-> those. If you have a 2TB volume, probably only 25% of it have been 
-> rewritten (=500GB) since the last run, and of that maybe 80% are still 
-> in use at the time we run FITRIM, so only 100GB would need the cleanup.
-> Maybe each AG could store a bitmap of written blocks, that are reset by 
-> a FITRIM run. That could be an asynchronous written bitmap and shouldn't 
-> disturb performance too much. Maybe it's even only needed to store a bit 
-> per sunit*swidth blocks, to keep that table small. A mount option could 
-> be used to enable that feature, so only those which use thin 
-> provisioning or SSDs or similar devices enable it at wish.
+> Running some recent repair tests on broken filesystem meant running
+> phase 1 and 2 repeatedly to reproduce an issue at the start of phase
+> 3. Phase 2 was taking approximately 10 minutes to run as it
+> processes each AG serially.
+> 
+> Phase 2 can be trivially parallelised - it is simply scanning the
+> per AG trees to calculate free block counts and free and used inodes
+> counts. This can be done safely in parallel by giving each AG it's
+> own structure to aggregate counts into, then once the AG scan is
+> complete adding them all together.
+> 
+> This patch uses 32-way threading which results in no noticable
+> slowdown on single SATA drives with NCQ, but results in ~10x
+> reduction in runtime on a 12 disk RAID-0 array.
 
-Not easily. It would need a second set of free space btrees for
-tracking freed but untrimmed extents. The idea of the background
-trim is that it doesn't need all that complexity because all the
-status information on where the trim process is up to can be kept
-in userspace.
+This is great.  And evidently not very hard at all.  It should
+have been done a long time ago...
 
-This is basically the same mode of functioning as the period
-background xfs_fsr defragmentation mode - run it for an hour every
-couple of nights,and it will slowly work it way through the entire
-filesystem over a period of weeks. No state or additional on-disk
-structures are needed for xfs_fsr to do it's work....
+I had a few of the same comments Christoph had (though
+I didn't know about the the workqueues).  I'll reiterate
+one, that SCAN_THREADS should be a command line option.
+32 is a fine default, but there's no sense in restricting
+it to that.
 
-The background trim is intended to enable even the slowest of
-devices to be trimmed over time, while introducing as little runtime
-overhead and complexity as possible. Hence adding complexity and
-runtime overhead to optimise background trimming tends to defeat the
-primary design goal....
+A few other things, below, but this looks good to me.
 
-> Especially for 100TB size devices that seems like something that should 
-> be thought of, as maybe if you run FITRIM once a week there, only <10TB 
-> have been rewritten, if at all, and such a table would boost a FITRIM 
-> run a lot.
+Reviewed-by: Alex Elder <aelder@sgi.com>
 
-If we want optimised, only-trim-what-we-free behaviour, we need to
-hook into the transaction subsystem and issue TRIM commands at the
-time extents are actually freed. That is much more complex to
-implement but much easier to optimise because it doesn't require
-persistent state on disk. However, most devices are simply not ready
-to handle the flood of TRIM commands this generates, with
-performance degrading by ~10-20% for the best of devices and
-_10-100x_ for the worst...
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  repair/phase2.c |   16 +---
+>  repair/scan.c   |  303 +++++++++++++++++++++++++++++++-----------------------
+>  repair/scan.h   |   37 -------
+>  3 files changed, 176 insertions(+), 180 deletions(-)
 
-Cheers,
+. . .
+ 
+> diff --git a/repair/scan.c b/repair/scan.c
+> index 85017ff..dd62776 100644
+> --- a/repair/scan.c
+> +++ b/repair/scan.c
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+. . .
+ 
+> @@ -469,6 +477,34 @@ _("out-of-order bmap key (file offset) in inode %llu, %s fork, fsbno %llu\n"),
+>  }
+>  
+
+Can this (and scanfunc_cnt() and scanfunc_ino()) be given
+static scope now?
+
+>  void
+> +scanfunc_bno(
+> +	struct xfs_btree_block	*block,
+> +	int			level,
+> +	xfs_agblock_t		bno,
+> +	xfs_agnumber_t		agno,
+> +	int			suspect,
+> +	int			isroot,
+> +	struct aghdr_cnts	*agcnts)
+> +{
+> +	return scanfunc_allocbt(block, level, bno, agno,
+> +				suspect, isroot, XFS_ABTB_MAGIC, agcnts);
+> +}
+> +
+
+. . .
+
+> @@ -1155,42 +1169,15 @@ validate_agi(
+>  }
+. . .
+> -void
+> -scan_ag(
+> -	xfs_agnumber_t	agno)
+> +void *
+> +scan_ag(void *args)
+
+Maybe arg (singular)
+
+>  {
+> +	struct aghdr_cnts *agcnts = args;
+> +	xfs_agnumber_t	agno = agcnts->agno;
+>  	xfs_agf_t	*agf;
+>  	xfs_buf_t	*agfbuf;
+>  	int		agf_dirty = 0;
+
+. . .
+
+> @@ -1331,4 +1308,72 @@ scan_ag(
+>  		libxfs_putbuf(sbbuf);
+>  	free(sb);
+>  	PROG_RPT_INC(prog_rpt_done[agno], 1);
+> +
+> +#ifdef XR_INODE_TRACE
+> +	print_inode_list(i);
+
+I know this is only under XR_INODE_TRACE, but
+now that you're multi-threading these, the
+output can get interleaved and therefore
+somewhat useless.  Maybe you could adjust
+print_inode_list() so it includes the AG
+number with each line output rather than
+just prior to printing all of them.
+
+> +#endif
+> +	return NULL;
+> +}
+> +
+> +#define SCAN_THREADS 32
+
+Make this configurable at runtime.
+
+> +
+> +void
+> +scan_ags(
+> +	struct xfs_mount	*mp)
+> +{
+> +	struct aghdr_cnts agcnts[mp->m_sb.sb_agcount];
+
+There is some mention about the per-thread stack size
+getting set at the time the program starts in the pthread
+documentation.  I don't expect this will be a problem in
+practice, but maybe this should be allocated dynamically.
+
+> +	pthread_t	thr[SCAN_THREADS];
+> +	__uint64_t	fdblocks = 0;
+> +	__uint64_t	icount = 0;
+> +	__uint64_t	ifreecount = 0;
+> +	int		i, j, err;
+> +
+> +	/*
+> +	 * scan a few AGs in parallel. The scan is IO latency bound,
+> +	 * so running a few at a time will speed it up significantly.
+> +	 */
+> +	for (i = 0; i < mp->m_sb.sb_agcount; i += SCAN_THREADS) {
+> +		for (j = 0; j < SCAN_THREADS; j++) {
+			xfs_agnumber_t agno = i + j;
+
+> +			if (i + j >= mp->m_sb.sb_agcount)
+
+			if (agno >= mp->m_sb.sg_agcount)
+				(and so on, throughout this section)
+
+> +				break;
+> +			memset(&agcnts[i + j], 0, sizeof(agcnts[i]));
+							agcnts[i + j]
+
+> +			agcnts[i + j].agno = i + j;
+> +			err = pthread_create(&thr[j], NULL, scan_ag,
+> +							&agcnts[i + j]);
+> +			if (err)
+
 
 _______________________________________________
 xfs mailing list
