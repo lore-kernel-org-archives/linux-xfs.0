@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p06I6GoY099293 for <xfs@oss.sgi.com>; Thu, 6 Jan 2011 12:06:16 -0600
+	p06I86EP099798 for <xfs@oss.sgi.com>; Thu, 6 Jan 2011 12:08:11 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BC5F71D13A66
-	for <xfs@oss.sgi.com>; Thu,  6 Jan 2011 10:08:20 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C869DFAE710
+	for <xfs@oss.sgi.com>; Thu,  6 Jan 2011 10:10:15 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id 7XWaDa4BnuAmGrIW for
-	<xfs@oss.sgi.com>; Thu, 06 Jan 2011 10:08:20 -0800 (PST)
-Date: Thu, 6 Jan 2011 13:08:18 -0500
+	by cuda.sgi.com with ESMTP id J6zxK4XmRD7lFldw for
+	<xfs@oss.sgi.com>; Thu, 06 Jan 2011 10:10:15 -0800 (PST)
+Date: Thu, 6 Jan 2011 13:10:15 -0500
 From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: xfs: add FITRIM support
-Message-ID: <20110106180818.GC32670@infradead.org>
-References: <20101125112304.GA4195@infradead.org>
-	<20110103232514.GF15179@dastard>
-	<alpine.LFD.2.00.1101051105120.3095@dhcp-lab-213.englab.brq.redhat.com>
-	<201101052307.38379@zmi.at> <20110105225039.GD8322@dastard>
+Message-ID: <20110106181014.GD32670@infradead.org>
+References: <20101125112304.GA4195@infradead.org> <201101060910.34534@zmi.at>
+	<20110106091707.GH8322@dastard> <201101061750.43556@zmi.at>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110105225039.GD8322@dastard>
+In-Reply-To: <201101061750.43556@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,26 +29,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Michael Monnerie <michael.monnerie@is.it-management.at>, Lukas Czerner <lczerner@redhat.com>, Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Michael Monnerie <michael.monnerie@is.it-management.at>
+Cc: Christoph Hellwig <hch@infradead.org>, Lukas Czerner <lczerner@redhat.com>, xfs@oss.sgi.com
 
-On Thu, Jan 06, 2011 at 09:50:39AM +1100, Dave Chinner wrote:
-> If we want optimised, only-trim-what-we-free behaviour, we need to
-> hook into the transaction subsystem and issue TRIM commands at the
-> time extents are actually freed. That is much more complex to
-> implement but much easier to optimise because it doesn't require
-> persistent state on disk. However, most devices are simply not ready
-> to handle the flood of TRIM commands this generates, with
-> performance degrading by ~10-20% for the best of devices and
-> _10-100x_ for the worst...
+On Thu, Jan 06, 2011 at 05:50:42PM +0100, Michael Monnerie wrote:
+> On Donnerstag, 6. Januar 2011 Dave Chinner wrote:
+> > Realistically, we have
+> > to design for how we expect devices to behave in 2-3 years time, not
+> > waste time trying to optimise for fundamentally broken devices that
+> > nobody will be using in 2-3 years time...
+> 
+> I see, thanks for the explanation. I hope that there will be a solution 
+> that allows us to FITRIM on Saturday "in the background", so the thin 
+> provisioned VMs are smaller and faster to back up. That's my immediate 
+> wish, as we currently don't use SSDs.
 
-I tested a few devices that have zero to 1% degradation, but those
-were arrays, which allow for queued WRITE SAME/UNMAP commands instead
-of the unqueued TRIM in ATA.  But I'm gettig close to finishing the
-online discard and will start another benchmark session soon.  With
-PCI-E flash devices that aren't limited by the ATA protocol, and the
-proposed queueable TRIM command this looks like what we need for the
-future.
+That's what you can do with my FITRIM patches.  Right now the only
+discard support known to me is my impementation that requires XFS as
+backing store for the images.  And a hole punch of an existing hole
+is very cheap in XFS, so trimming things multiple times is not an issue.
 
 _______________________________________________
 xfs mailing list
