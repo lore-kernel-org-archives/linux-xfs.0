@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p079FNpF021857 for <xfs@oss.sgi.com>; Fri, 7 Jan 2011 03:15:23 -0600
-Received: from enyo.dsw2k3.info (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3415C1D15E26
-	for <xfs@oss.sgi.com>; Fri,  7 Jan 2011 01:17:32 -0800 (PST)
-Received: from enyo.dsw2k3.info (enyo.dsw2k3.info [195.71.86.239]) by
-	cuda.sgi.com with ESMTP id 5vzJjJVycc07rQyI for
-	<xfs@oss.sgi.com>; Fri, 07 Jan 2011 01:17:32 -0800 (PST)
-Date: Fri, 7 Jan 2011 10:17:20 +0100
-From: Matthias Schniedermeyer <ms@citd.de>
-Subject: Re: TRIM details
-Message-ID: <20110107091720.GA6921@citd.de>
-References: <4D2686ED.7000304@philkarn.net> <20110107091120.GA6634@citd.de>
+	p079IuWh022055 for <xfs@oss.sgi.com>; Fri, 7 Jan 2011 03:18:56 -0600
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 74C9815396B6
+	for <xfs@oss.sgi.com>; Fri,  7 Jan 2011 01:21:04 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
+	[150.101.137.100]) by cuda.sgi.com with ESMTP id
+	rgCAuRqH6JBoCeLf for <xfs@oss.sgi.com>;
+	Fri, 07 Jan 2011 01:21:04 -0800 (PST)
+Date: Fri, 7 Jan 2011 20:20:58 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 7/8] xfs: factor common write setup code
+Message-ID: <20110107092058.GL8322@dastard>
+References: <1294116518-14908-1-git-send-email-david@fromorbit.com>
+	<1294116518-14908-8-git-send-email-david@fromorbit.com>
+	<20110107085357.GB10829@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110107091120.GA6634@citd.de>
+In-Reply-To: <20110107085357.GB10829@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,35 +31,46 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: karn@ka9q.net
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On 07.01.2011 10:11, Matthias Schniedermeyer wrote:
-> On 06.01.2011 19:22, Phil Karn wrote:
+On Fri, Jan 07, 2011 at 03:53:57AM -0500, Christoph Hellwig wrote:
+> On Tue, Jan 04, 2011 at 03:48:37PM +1100, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > The buffered IO and direct Io write paths share a common set of
+> > checks and limiting code prior to issuing the write. Factor that
+> > into a common helper function.
 > 
-> > Just have the drive interpret an ordinary write of all 0's to any LBA as
-> > an implicit "unmap" indication for that LBA. As long as the drive
+> Wouldn't it be better to create the helper before duplicating the code,
+> aka move it before the buffer/direct splits in the series?
+
+Maybe, but at this I'd prefer not to move it as it would mean having
+to rework several other patches in the series as well.  Moving it
+doesn't change the end result at all, so unless you feel really
+strongly about this I'm going to say no this time because we're
+now under time pressure to get this tested and finished for 2.6.38.
+
+> > +	/*
+> > +	 * If we're writing the file then make sure to clear the setuid and
+> > +	 * setgid bits if the process is not being run by root.  This keeps
+> > +	 * people from modifying setuid and setgid binaries.
+> > +	 */
+> > +	error = file_remove_suid(file);
+> > +	return error;
 > 
-> The drive would have to look into each written sector in the off chance 
-> that it might be 0, that's a lot of electrons you have to burn for not 
-> much gain. And that's ignoring the performance side, doing such a check 
-> on each incoming write would be expensive at best.
+> just
+> 
+> 	return file_remove_suid(file);
 
-Altough, after thinking about it a little more. Doing a Population count 
-in the controller while the data comes in over the wire can't be that 
-expensive.
+Yup, will fix.
 
+Cheers,
 
-
-
-
-Bis denn
-
+Dave.
 -- 
-Real Programmers consider "what you see is what you get" to be just as 
-bad a concept in Text Editors as it is in women. No, the Real Programmer
-wants a "you asked for it, you got it" text editor -- complicated, 
-cryptic, powerful, unforgiving, dangerous.
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
