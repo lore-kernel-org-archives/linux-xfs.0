@@ -1,23 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p07Awpq9036094 for <xfs@oss.sgi.com>; Fri, 7 Jan 2011 04:58:51 -0600
-Received: from zns001-0m9003.yokogawa.co.jp (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D1009240289
-	for <xfs@oss.sgi.com>; Fri,  7 Jan 2011 03:00:59 -0800 (PST)
-Received: from zns001-0m9003.yokogawa.co.jp (zns001-0m9003.yokogawa.co.jp
-	[203.174.79.161]) by cuda.sgi.com with ESMTP id
-	B7RZFlNC5digPW3a for <xfs@oss.sgi.com>;
-	Fri, 07 Jan 2011 03:00:59 -0800 (PST)
-From: <yuji_touya@yokogawa-digital.com>
-Date: Fri, 7 Jan 2011 20:00:38 +0900
-Subject: RE: 2.6.27.30 fc10, some processes stuck in D state
-Message-ID: <8529A87D856C184491994079B5F87B68C1A828A388@EXMAIL03.jp.ykgw.net>
-References: <8529A87D856C184491994079B5F87B68C1A8289FCC@EXMAIL03.jp.ykgw.net>
-	<20110106050057.GF8322@dastard>
-In-Reply-To: <20110106050057.GF8322@dastard>
-Content-Language: ja-JP
-MIME-Version: 1.0
+	p07AjHoD034118
+	for <linux-xfs@oss.sgi.com>; Fri, 7 Jan 2011 04:45:18 -0600
+Received: from szcnarts.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EA6E11D161B4
+	for <linux-xfs@oss.sgi.com>; Fri,  7 Jan 2011 02:47:18 -0800 (PST)
+Received: from szcnarts.com ([183.13.88.156]) by cuda.sgi.com with ESMTP id
+	w1Y7eEFACgT7AZAm for <linux-xfs@oss.sgi.com>;
+	Fri, 07 Jan 2011 02:47:18 -0800 (PST)
+From: "jessen" <jessen@szcnarts.com>
+Subject: Re: Updated Quotation Shipping
+Date: Fri, 7 Jan 2011 18:47:18 +0800
+Message-Id: <20110107104718.EA6E11D161B4@cuda.sgi.com>
+Reply-To: jessen@szcnarts.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,50 +22,81 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: david@fromorbit.com
-Cc: xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-Dave,
+DEAR ALL:
+For any concerns issue please feel free to discuss with me,thanks for your supports!
 
-Thank you for your replying.
+EUR-1     Yantian 2/4 
+CMA CGM AQUILA FL710W(CY:11-Jan) 
+Southampton/Hamburg/Rotterdam/Zeebrugge/Antwerp/Le Havre
+USD1400/2625/2725
 
-> -----Original Message-----
-> From: Dave Chinner [mailto:david@fromorbit.com] 
-> Sent: Thursday, January 06, 2011 2:01 PM
+EUR-3    Chiwan (4/5) /Nansha (5/6) /Yantian (6/7)
+CC OTELLO FM322W(CWN:13-JAN,NSA:14-JAN, YTN:15-JAN,)
+Le Havre/Dunkerque/Dunkerque/Antwerp/Zeebrugger/Hamburg/Rotterdam/Southampton
+USD1375/2525/2625
 
-> Everything is waiting for log space to be freed. Typically a sign
-> that metadata has not been flushed or that IO completion has not occurred
-> so the tail is not moving forward.
+EUR-5     Yantian 3/5
+MAERSK EINDHOVEN VA055W (YTN: 12-Jan)
+Le Havre/Rotterdam/Hamburg/Zeebrugge/Antwerp
+USD1325/2375/2475
 
-Nice to know it! It will help us.
+Remark: 
+1.Above rates are further subject to ORC:USD141/269/269, DOC:USD25 per set, SEAL Fee:USD4 per container, OWS: On/Above 18 tons USD150,include tare weight.
+2.Also can accept PRD shipment.
 
-> What did you change 3 months ago? Or did this always happen?
 
-This always happens.
+MED-1   Nansha:6/7  Chiwan 7/1
+CMA CGM PUCCINI ME708W (NSA: 15-JAN; CWN: 16-JAN)
+Valencia/Barcelona/Fos/Genoa/Naples
+USD1150/2125/2225
 
-> So doing new read IOs starts stuff moving again? That sounds like an IO
-> completion has not arrived from the lower layers until a new IO is
-> issued and completes. Perhaps the hardware RAID is not issuing an
-> interrupt when it should?
+MED-3   Chiwan 4/5 , Yantian 5/6
+CMA CGM MUSSET BX711W(CWN/YTN:14-JAN)
+Port Said (East)/Damietta/Izmit/Ambarli/Ilyichevsk/Constanza/Odessa
+USD1325/2325/2425
 
-Yes, new read IOs seem to wake up them.
-Are there any tools/ways to examine whether expected interrupt occurred or not?
+Remark: 
+1.Above rates are further subject to ORC:USD141/269/269, DOC:USD25 per set, SEAL Fee:USD4 per container,ISPS:USD10/container; OWS: On/Above 18 tons USD150,include tare weight.
+2.Also can accept PRD shipment.
 
-> What type of RAID controller/storage hardware are you using? Is it
-> all running the latest firmware, appropriate drivers, etc?
+ISC-1   Shekou 6/1
+GE465W (CY: 10-Jan)
+Jebel Ali/Bandar Abbas
+USD925/1425/1425
+Doha
+USD1275/2100/2100
+Khorramshr/Bushehr
+USD1925/3025/3025
 
-PCI Express adapter and an external RAID system, connected with fiber channel each other.
-The BIOS, PCI Express adapter and RAID system's firmware are not up to date.
-We will try to update these softwares and check if the same problem occur.
-It would be nice to reproduce this problem as easy as posible.
-If there is suitable application(benchmark or test program etc), please let me know.
+Remark: 
+1.Above rates are further subject to THC:RMB470/755, DOC, ISPS, SEAL Fee, OWS: On/Above 18 tons USD150,include tare weight.
+2.Also can accept PRD shipment.
 
-Thanks.
-Yuji
+2011-01-07 
+
+---------------------------------------------------
+
+Tks & best rgds.
+If you have any question, pls contact with me!
+Mr.Jason Zhang
+SHENZHEN LUCKY TRANS INTERNATIONAL LOGISTICS CO.,LTD. (Shenzhen Office)
+Tel:+86 755 25172492/25172493/25712494-604
+Fax:+86 755 25172748
+Mob:13418553654/15118845670(24'HR)
+Msn:cargo_shenzhen@hotmail.com
+QQ:154887788
+Skype:jasonzhang0428
+E-mail:jason@lucky-trans.com
+Wed: http://www.lucky-trans.com/
+Add: Room 407A,Suhao Bidg.,Nanxin Road,
+     Nanshan Dist.,Shenzhen,China
 
 _______________________________________________
 xfs mailing list
