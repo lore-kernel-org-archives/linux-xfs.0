@@ -1,19 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p07AjHoD034118
-	for <linux-xfs@oss.sgi.com>; Fri, 7 Jan 2011 04:45:18 -0600
-Received: from szcnarts.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EA6E11D161B4
-	for <linux-xfs@oss.sgi.com>; Fri,  7 Jan 2011 02:47:18 -0800 (PST)
-Received: from szcnarts.com ([183.13.88.156]) by cuda.sgi.com with ESMTP id
-	w1Y7eEFACgT7AZAm for <linux-xfs@oss.sgi.com>;
-	Fri, 07 Jan 2011 02:47:18 -0800 (PST)
-From: "jessen" <jessen@szcnarts.com>
-Subject: Re: Updated Quotation Shipping
-Date: Fri, 7 Jan 2011 18:47:18 +0800
-Message-Id: <20110107104718.EA6E11D161B4@cuda.sgi.com>
-Reply-To: jessen@szcnarts.com
+	p07BT5Q5039078 for <xfs@oss.sgi.com>; Fri, 7 Jan 2011 05:29:05 -0600
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1E62D1539BB5
+	for <xfs@oss.sgi.com>; Fri,  7 Jan 2011 03:31:13 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
+	[150.101.137.97]) by cuda.sgi.com with ESMTP id
+	wbdqJbU5MBAid75a for <xfs@oss.sgi.com>;
+	Fri, 07 Jan 2011 03:31:13 -0800 (PST)
+Received: from dastard (unverified [121.44.135.206])
+	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
+	52125626-1927428
+	for <xfs@oss.sgi.com>; Fri, 07 Jan 2011 22:01:12 +1030 (CDT)
+Received: from chute ([192.168.1.1] helo=disappointment)
+	by dastard with esmtp (Exim 4.72)
+	(envelope-from <dave@fromorbit.com>) id 1PbAXG-0007hn-T5
+	for xfs@oss.sgi.com; Fri, 07 Jan 2011 22:31:10 +1100
+Received: from dave by disappointment with local (Exim 4.72)
+	(envelope-from <dave@disappointment.disaster>) id 1PbAWm-0000JQ-35
+	for xfs@oss.sgi.com; Fri, 07 Jan 2011 22:30:40 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 2/8] xfs: factor common post-write isize handling code
+Date: Fri,  7 Jan 2011 22:30:19 +1100
+Message-Id: <1294399825-1157-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1294399825-1157-1-git-send-email-david@fromorbit.com>
+References: <1294399825-1157-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,76 +39,116 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-DEAR ALL:
-For any concerns issue please feel free to discuss with me,thanks for your supports!
+From: Dave Chinner <dchinner@redhat.com>
 
-EUR-1     Yantian 2/4 
-CMA CGM AQUILA FL710W(CY:11-Jan) 
-Southampton/Hamburg/Rotterdam/Zeebrugge/Antwerp/Le Havre
-USD1400/2625/2725
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Alex Elder <aelder@sgi.com>
+---
+ fs/xfs/linux-2.6/xfs_file.c |   54 ++++++++++++++++++++++--------------------
+ 1 files changed, 28 insertions(+), 26 deletions(-)
 
-EUR-3    Chiwan (4/5) /Nansha (5/6) /Yantian (6/7)
-CC OTELLO FM322W(CWN:13-JAN,NSA:14-JAN, YTN:15-JAN,)
-Le Havre/Dunkerque/Dunkerque/Antwerp/Zeebrugger/Hamburg/Rotterdam/Southampton
-USD1375/2525/2625
-
-EUR-5     Yantian 3/5
-MAERSK EINDHOVEN VA055W (YTN: 12-Jan)
-Le Havre/Rotterdam/Hamburg/Zeebrugge/Antwerp
-USD1325/2375/2475
-
-Remark: 
-1.Above rates are further subject to ORC:USD141/269/269, DOC:USD25 per set, SEAL Fee:USD4 per container, OWS: On/Above 18 tons USD150,include tare weight.
-2.Also can accept PRD shipment.
-
-
-MED-1   Nansha:6/7  Chiwan 7/1
-CMA CGM PUCCINI ME708W (NSA: 15-JAN; CWN: 16-JAN)
-Valencia/Barcelona/Fos/Genoa/Naples
-USD1150/2125/2225
-
-MED-3   Chiwan 4/5 , Yantian 5/6
-CMA CGM MUSSET BX711W(CWN/YTN:14-JAN)
-Port Said (East)/Damietta/Izmit/Ambarli/Ilyichevsk/Constanza/Odessa
-USD1325/2325/2425
-
-Remark: 
-1.Above rates are further subject to ORC:USD141/269/269, DOC:USD25 per set, SEAL Fee:USD4 per container,ISPS:USD10/container; OWS: On/Above 18 tons USD150,include tare weight.
-2.Also can accept PRD shipment.
-
-ISC-1   Shekou 6/1
-GE465W (CY: 10-Jan)
-Jebel Ali/Bandar Abbas
-USD925/1425/1425
-Doha
-USD1275/2100/2100
-Khorramshr/Bushehr
-USD1925/3025/3025
-
-Remark: 
-1.Above rates are further subject to THC:RMB470/755, DOC, ISPS, SEAL Fee, OWS: On/Above 18 tons USD150,include tare weight.
-2.Also can accept PRD shipment.
-
-2011-01-07 
-
----------------------------------------------------
-
-Tks & best rgds.
-If you have any question, pls contact with me!
-Mr.Jason Zhang
-SHENZHEN LUCKY TRANS INTERNATIONAL LOGISTICS CO.,LTD. (Shenzhen Office)
-Tel:+86 755 25172492/25172493/25712494-604
-Fax:+86 755 25172748
-Mob:13418553654/15118845670(24'HR)
-Msn:cargo_shenzhen@hotmail.com
-QQ:154887788
-Skype:jasonzhang0428
-E-mail:jason@lucky-trans.com
-Wed: http://www.lucky-trans.com/
-Add: Room 407A,Suhao Bidg.,Nanxin Road,
-     Nanshan Dist.,Shenzhen,China
+diff --git a/fs/xfs/linux-2.6/xfs_file.c b/fs/xfs/linux-2.6/xfs_file.c
+index 10b7fb4..b3915bf 100644
+--- a/fs/xfs/linux-2.6/xfs_file.c
++++ b/fs/xfs/linux-2.6/xfs_file.c
+@@ -321,6 +321,30 @@ xfs_file_splice_read(
+ 	return ret;
+ }
+ 
++STATIC void
++xfs_aio_write_isize_update(
++	struct inode	*inode,
++	loff_t		*ppos,
++	ssize_t		bytes_written)
++{
++	struct xfs_inode	*ip = XFS_I(inode);
++	xfs_fsize_t		isize = i_size_read(inode);
++
++	if (bytes_written > 0)
++		XFS_STATS_ADD(xs_write_bytes, bytes_written);
++
++	if (unlikely(bytes_written < 0 && bytes_written != -EFAULT &&
++					*ppos > isize))
++		*ppos = isize;
++
++	if (*ppos > ip->i_size) {
++		xfs_ilock(ip, XFS_ILOCK_EXCL);
++		if (*ppos > ip->i_size)
++			ip->i_size = *ppos;
++		xfs_iunlock(ip, XFS_ILOCK_EXCL);
++	}
++}
++
+ STATIC ssize_t
+ xfs_file_splice_write(
+ 	struct pipe_inode_info	*pipe,
+@@ -331,7 +355,7 @@ xfs_file_splice_write(
+ {
+ 	struct inode		*inode = outfilp->f_mapping->host;
+ 	struct xfs_inode	*ip = XFS_I(inode);
+-	xfs_fsize_t		isize, new_size;
++	xfs_fsize_t		new_size;
+ 	int			ioflags = 0;
+ 	ssize_t			ret;
+ 
+@@ -355,19 +379,8 @@ xfs_file_splice_write(
+ 	trace_xfs_file_splice_write(ip, count, *ppos, ioflags);
+ 
+ 	ret = generic_file_splice_write(pipe, outfilp, ppos, count, flags);
+-	if (ret > 0)
+-		XFS_STATS_ADD(xs_write_bytes, ret);
+-
+-	isize = i_size_read(inode);
+-	if (unlikely(ret < 0 && ret != -EFAULT && *ppos > isize))
+-		*ppos = isize;
+ 
+-	if (*ppos > ip->i_size) {
+-		xfs_ilock(ip, XFS_ILOCK_EXCL);
+-		if (*ppos > ip->i_size)
+-			ip->i_size = *ppos;
+-		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-	}
++	xfs_aio_write_isize_update(inode, ppos, ret);
+ 
+ 	if (ip->i_new_size) {
+ 		xfs_ilock(ip, XFS_ILOCK_EXCL);
+@@ -576,7 +589,7 @@ xfs_file_aio_write(
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	ssize_t			ret = 0;
+ 	int			ioflags = 0;
+-	xfs_fsize_t		isize, new_size;
++	xfs_fsize_t		new_size;
+ 	int			iolock;
+ 	size_t			ocount = 0, count;
+ 	int			need_i_mutex;
+@@ -740,22 +753,11 @@ write_retry:
+ 
+ 	current->backing_dev_info = NULL;
+ 
+-	isize = i_size_read(inode);
+-	if (unlikely(ret < 0 && ret != -EFAULT && iocb->ki_pos > isize))
+-		iocb->ki_pos = isize;
+-
+-	if (iocb->ki_pos > ip->i_size) {
+-		xfs_ilock(ip, XFS_ILOCK_EXCL);
+-		if (iocb->ki_pos > ip->i_size)
+-			ip->i_size = iocb->ki_pos;
+-		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-	}
++	xfs_aio_write_isize_update(inode, &iocb->ki_pos, ret);
+ 
+ 	if (ret <= 0)
+ 		goto out_unlock_internal;
+ 
+-	XFS_STATS_ADD(xs_write_bytes, ret);
+-
+ 	/* Handle various SYNC-type writes */
+ 	if ((file->f_flags & O_DSYNC) || IS_SYNC(inode)) {
+ 		loff_t end = pos + ret - 1;
+-- 
+1.7.2.3
 
 _______________________________________________
 xfs mailing list
