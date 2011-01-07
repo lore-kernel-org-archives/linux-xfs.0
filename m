@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p079IuWh022055 for <xfs@oss.sgi.com>; Fri, 7 Jan 2011 03:18:56 -0600
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 74C9815396B6
-	for <xfs@oss.sgi.com>; Fri,  7 Jan 2011 01:21:04 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
-	[150.101.137.100]) by cuda.sgi.com with ESMTP id
-	rgCAuRqH6JBoCeLf for <xfs@oss.sgi.com>;
-	Fri, 07 Jan 2011 01:21:04 -0800 (PST)
-Date: Fri, 7 Jan 2011 20:20:58 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 7/8] xfs: factor common write setup code
-Message-ID: <20110107092058.GL8322@dastard>
-References: <1294116518-14908-1-git-send-email-david@fromorbit.com>
-	<1294116518-14908-8-git-send-email-david@fromorbit.com>
-	<20110107085357.GB10829@infradead.org>
+	p07Awpq9036094 for <xfs@oss.sgi.com>; Fri, 7 Jan 2011 04:58:51 -0600
+Received: from zns001-0m9003.yokogawa.co.jp (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D1009240289
+	for <xfs@oss.sgi.com>; Fri,  7 Jan 2011 03:00:59 -0800 (PST)
+Received: from zns001-0m9003.yokogawa.co.jp (zns001-0m9003.yokogawa.co.jp
+	[203.174.79.161]) by cuda.sgi.com with ESMTP id
+	B7RZFlNC5digPW3a for <xfs@oss.sgi.com>;
+	Fri, 07 Jan 2011 03:00:59 -0800 (PST)
+From: <yuji_touya@yokogawa-digital.com>
+Date: Fri, 7 Jan 2011 20:00:38 +0900
+Subject: RE: 2.6.27.30 fc10, some processes stuck in D state
+Message-ID: <8529A87D856C184491994079B5F87B68C1A828A388@EXMAIL03.jp.ykgw.net>
+References: <8529A87D856C184491994079B5F87B68C1A8289FCC@EXMAIL03.jp.ykgw.net>
+	<20110106050057.GF8322@dastard>
+In-Reply-To: <20110106050057.GF8322@dastard>
+Content-Language: ja-JP
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110107085357.GB10829@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,46 +30,46 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: david@fromorbit.com
 Cc: xfs@oss.sgi.com
 
-On Fri, Jan 07, 2011 at 03:53:57AM -0500, Christoph Hellwig wrote:
-> On Tue, Jan 04, 2011 at 03:48:37PM +1100, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > The buffered IO and direct Io write paths share a common set of
-> > checks and limiting code prior to issuing the write. Factor that
-> > into a common helper function.
-> 
-> Wouldn't it be better to create the helper before duplicating the code,
-> aka move it before the buffer/direct splits in the series?
+Dave,
 
-Maybe, but at this I'd prefer not to move it as it would mean having
-to rework several other patches in the series as well.  Moving it
-doesn't change the end result at all, so unless you feel really
-strongly about this I'm going to say no this time because we're
-now under time pressure to get this tested and finished for 2.6.38.
+Thank you for your replying.
 
-> > +	/*
-> > +	 * If we're writing the file then make sure to clear the setuid and
-> > +	 * setgid bits if the process is not being run by root.  This keeps
-> > +	 * people from modifying setuid and setgid binaries.
-> > +	 */
-> > +	error = file_remove_suid(file);
-> > +	return error;
-> 
-> just
-> 
-> 	return file_remove_suid(file);
+> -----Original Message-----
+> From: Dave Chinner [mailto:david@fromorbit.com] 
+> Sent: Thursday, January 06, 2011 2:01 PM
 
-Yup, will fix.
+> Everything is waiting for log space to be freed. Typically a sign
+> that metadata has not been flushed or that IO completion has not occurred
+> so the tail is not moving forward.
 
-Cheers,
+Nice to know it! It will help us.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> What did you change 3 months ago? Or did this always happen?
+
+This always happens.
+
+> So doing new read IOs starts stuff moving again? That sounds like an IO
+> completion has not arrived from the lower layers until a new IO is
+> issued and completes. Perhaps the hardware RAID is not issuing an
+> interrupt when it should?
+
+Yes, new read IOs seem to wake up them.
+Are there any tools/ways to examine whether expected interrupt occurred or not?
+
+> What type of RAID controller/storage hardware are you using? Is it
+> all running the latest firmware, appropriate drivers, etc?
+
+PCI Express adapter and an external RAID system, connected with fiber channel each other.
+The BIOS, PCI Express adapter and RAID system's firmware are not up to date.
+We will try to update these softwares and check if the same problem occur.
+It would be nice to reproduce this problem as easy as posible.
+If there is suitable application(benchmark or test program etc), please let me know.
+
+Thanks.
+Yuji
 
 _______________________________________________
 xfs mailing list
