@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p074ZMRB233627 for <xfs@oss.sgi.com>; Thu, 6 Jan 2011 22:35:22 -0600
-Received: from rcsinet10.oracle.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3F0C9236FCC
-	for <xfs@oss.sgi.com>; Thu,  6 Jan 2011 20:37:32 -0800 (PST)
-Received: from rcsinet10.oracle.com (rcsinet10.oracle.com [148.87.113.121]) by
-	cuda.sgi.com with ESMTP id UDxe77WXA4Kfao7S for
-	<xfs@oss.sgi.com>; Thu, 06 Jan 2011 20:37:32 -0800 (PST)
-Subject: Re: TRIM details
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-References: <4D2686ED.7000304@philkarn.net>
-Date: Thu, 06 Jan 2011 23:35:57 -0500
-In-Reply-To: <4D2686ED.7000304@philkarn.net> (Phil Karn's message of "Thu, 06
-	Jan 2011 19:22:21 -0800")
-Message-ID: <yq1mxndnxea.fsf@sermon.lab.mkp.net>
+	p0769LEg247586 for <xfs@oss.sgi.com>; Fri, 7 Jan 2011 00:09:21 -0600
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 78DA71D00837
+	for <xfs@oss.sgi.com>; Thu,  6 Jan 2011 22:11:28 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
+	[150.101.137.97]) by cuda.sgi.com with ESMTP id
+	foiVeSpIOdTZLKos for <xfs@oss.sgi.com>;
+	Thu, 06 Jan 2011 22:11:28 -0800 (PST)
+Date: Fri, 7 Jan 2011 17:11:25 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: errors on sync superblock writes leave it locked
+Message-ID: <20110107061125.GI8322@dastard>
+References: <1294116609-15138-1-git-send-email-david@fromorbit.com>
+	<20110104094336.GA19193@infradead.org>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20110104094336.GA19193@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,101 +30,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: karn@ka9q.net
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
->>>>> "Phil" == Phil Karn <karn@philkarn.net> writes:
+On Tue, Jan 04, 2011 at 04:43:36AM -0500, Christoph Hellwig wrote:
+> I don't think the patch is quite correct.  In the old code xfs_buf_rele
+> incremented the buffer reference count before calling ->b_relse,
+> expecting it do decrement it again.
+> 
+> I think the best fix is to kill ->b_relse entirely.  We can simply
+> do the buffer callback processing and b_flags updates in
+> xfs_buf_iodone_callbacks.  The important thing is to not clear the
+> buffer error there, so that it actually get propagated to the caller.
+> As the buffer remains locked until xfs_bwrite calls xfs_buf_relse it
+> can get the error reliably that way.
+> 
+> Patch below, but it's still running xfqa so far:
 
-Phil> I'd like to know exactly how the drives implement TRIM but I've
-Phil> only found bits and pieces. Can anyone suggest a current and
-Phil> complete reference for the complete SATA command set that includes
-Phil> all the TRIM related stuff?
+Looks sane. can i get a signed-off-by for it from you and I'll
+include it in my remaining -for-2.6.38 series?
 
-You kind-of have to be T13 member to get it. But try googling ATA
-ACS-2...
+Cheers,
 
-
-Phil> As I understand it, there's a SATA (and SCSI?) command that will
-Phil> repeatedly write a fixed block of data to some number of
-Phil> consecutive LBAs (WRITE SAME), and an "unmap" bit in the write
-Phil> command can be set to indicate that instead of actually writing
-Phil> the blocks, they can be marked for erasure and placed in the free
-Phil> pool.
-
-There are several commands and variations...
-
-For ATA there's the DSM TRIM command which allows you to indicate ranges
-of blocks to discard. The ranges are stored in the data blocks and not
-the command itself. A device can indicate how many blocks of payload it
-supports. Many don't. Some of those that do blow up if you actually send
-more than one block.
-
-In SCSI there are three ways:
-
-1. WRITE SAME with a zeroed payload
-2. WRITE SAME with the UNMAP bit set
-3. UNMAP command
-
-UNMAP, like ATA DSM, takes a set of ranges in the data payload. Just to
-make things more interesting they are not the same format and don't have
-a 1:1 mapping with the ATA ranges.
-
-There is no official support for (1) at the protocol level. You have to
-know via means outside the standard whether the device supports logical
-block provisioning with zero detection. There are a few storage arrays
-out there that do.
-
-Whether the device supports (2) or (3) is indicated in a set of VPD
-pages that also indicate preferred granularity, alignment, etc. That
-didn't use to be the case so for a while you just had to guess. We have
-some heuristics in place that pick the right command depending on the
-device.
-
-Furthermore, in Linux, ATA sits underneath SCSI. So we translate WRITE
-SAME(16) with the UNMAP bit set to DSM TRIM in our SCSI-ATA Translation
-Layer.
-
-Finally, there are a set of bits in both ATA and SCSI that indicate
-whether read after a discard will return zeroes or garbage. Some devices
-report that they return zeroes but don't in all cases.
-
-The kernel goes through a lot of blah to make sure we're doing the right
-thing. I really don't think that's a headache that's worth repeating.
-
-Thankfully, at the top of the stack we have a generic block device ioctl
-that hides all the complexity from the user. If you want to tinker
-that's a much better place to start.
-
-If you check the archives you'll also see that the filesystem-specific
-FITRIM ioctl is being worked on. Plus some filesystems have the option
-of doing discards in realtime.
-
-
-Phil> Just have the drive interpret an ordinary write of all 0's to any
-Phil> LBA as an implicit "unmap" indication for that LBA. As long as the
-Phil> drive returns all 0's when an unmapped LBA is read (and I believe
-Phil> this is already a requirement) then were an application to write a
-Phil> block of real data that just happens to contain all 0's, it would
-Phil> still get back what it wrote.
-
-See above.
-
-
-Phil> Then you could manually trim a drive with something like
-
-Phil> dd if=/dev/zero of=foobar bs=1024k count=10240k rm foobar
-
-But if the device does not detect zeroes then you'll end up:
-
- - transferring a bunch of useless data across the bus which will slow
-   things to a grinding halt
-
-and
-
- - if it's an SSD, wear out a lot of flash cells for no reason
-
+Dave.
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
