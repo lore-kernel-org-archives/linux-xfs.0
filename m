@@ -1,29 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0ANZsGY052921 for <xfs@oss.sgi.com>; Mon, 10 Jan 2011 17:35:55 -0600
+	p0ANa7aa052993 for <xfs@oss.sgi.com>; Mon, 10 Jan 2011 17:36:07 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5D2F5153CFFF
-	for <xfs@oss.sgi.com>; Mon, 10 Jan 2011 15:38:02 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
-	[150.101.137.102]) by cuda.sgi.com with ESMTP id
-	HOmWpwANNMgiAbZW for <xfs@oss.sgi.com>;
-	Mon, 10 Jan 2011 15:38:02 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id AF5791D20AF5
+	for <xfs@oss.sgi.com>; Mon, 10 Jan 2011 15:38:18 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
+	[150.101.137.99]) by cuda.sgi.com with ESMTP id
+	ZJqIGRMJQMxNRriK for <xfs@oss.sgi.com>;
+	Mon, 10 Jan 2011 15:38:18 -0800 (PST)
 Received: from dastard (unverified [121.44.222.102])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	52135506-1927428
-	for <xfs@oss.sgi.com>; Tue, 11 Jan 2011 10:08:01 +1030 (CDT)
+	52810391-1927428
+	for <xfs@oss.sgi.com>; Tue, 11 Jan 2011 10:08:17 +1030 (CDT)
 Received: from chute ([192.168.1.1] helo=disappointment)
 	by dastard with esmtp (Exim 4.72)
-	(envelope-from <dave@fromorbit.com>) id 1PcRJH-0006VL-Ue
-	for xfs@oss.sgi.com; Tue, 11 Jan 2011 10:37:59 +1100
+	(envelope-from <dave@fromorbit.com>) id 1PcRJS-0006Vg-A3
+	for xfs@oss.sgi.com; Tue, 11 Jan 2011 10:38:10 +1100
 Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1PcRJ9-0003yM-N5
-	for xfs@oss.sgi.com; Tue, 11 Jan 2011 10:37:51 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1PcRJK-0003yk-36
+	for xfs@oss.sgi.com; Tue, 11 Jan 2011 10:38:02 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/8] xfs: ensure sync write errors are returned
-Date: Tue, 11 Jan 2011 10:37:41 +1100
-Message-Id: <1294702668-15216-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH 8/8] xfs: serialise unaligned direct IOs
+Date: Tue, 11 Jan 2011 10:37:48 +1100
+Message-Id: <1294702668-15216-9-git-send-email-david@fromorbit.com>
 In-Reply-To: <1294702668-15216-1-git-send-email-david@fromorbit.com>
 References: <1294702668-15216-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -43,169 +43,103 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-xfs_file_aio_write() only returns the error from synchronous
-flushing of the data and inode if error == 0. At the point where
-error is being checked, it is guaranteed to be > 0. Therefore any
-errors returned by the data or fsync flush will never be returned.
-Fix the checks so we overwrite the current error once and only if an
-error really occurred.
+When two concurrent unaligned, non-overlapping direct IOs are issued
+to the same block, the direct Io layer will race to zero the block.
+The result is that one of the concurrent IOs will overwrite data
+written by the other IO with zeros. This is demonstrated by the
+xfsqa test 240.
+
+To avoid this problem, serialise all unaligned direct IOs to an
+inode with a big hammer. We need a big hammer approach as we need to
+serialise AIO as well, so we can't just block writes on locks.
+Hence, the big hammer is calling xfs_ioend_wait() while holding out
+other unaligned direct IOs from starting.
+
+We don't bother trying to serialised aligned vs unaligned IOs as
+they are overlapping IO and the result of concurrent overlapping IOs
+is undefined - the result of either IO is a valid result so we let
+them race. Hence we only penalise unaligned IO, which already has a
+major overhead compared to aligned IO so this isn't a major problem.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Alex Elder <aelder@sgi.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/linux-2.6/xfs_file.c |   49 ++++++++++++++++++++----------------------
- 1 files changed, 23 insertions(+), 26 deletions(-)
+ fs/xfs/linux-2.6/xfs_file.c |   38 ++++++++++++++++++++++++++++----------
+ 1 files changed, 28 insertions(+), 10 deletions(-)
 
 diff --git a/fs/xfs/linux-2.6/xfs_file.c b/fs/xfs/linux-2.6/xfs_file.c
-index ba8ad42..10b7fb4 100644
+index 41f3ceb..bdb35c4b 100644
 --- a/fs/xfs/linux-2.6/xfs_file.c
 +++ b/fs/xfs/linux-2.6/xfs_file.c
-@@ -574,7 +574,7 @@ xfs_file_aio_write(
- 	struct inode		*inode = mapping->host;
- 	struct xfs_inode	*ip = XFS_I(inode);
+@@ -683,9 +683,24 @@ xfs_file_aio_write_checks(
+  * xfs_file_dio_aio_write - handle direct IO writes
+  *
+  * Lock the inode appropriately to prepare for and issue a direct IO write.
+- * By spearating it from the buffered write path we remove all the tricky to
++ * By separating it from the buffered write path we remove all the tricky to
+  * follow locking changes and looping.
+  *
++ * If there are cached pages or we're extending the file, we need IOLOCK_EXCL
++ * until we're sure the bytes at the new EOF have been zeroed and/or the cached
++ * pages are flushed out.
++ *
++ * In most cases the direct IO writes will be done holding IOLOCK_SHARED
++ * allowing them to be done in parallel with reads and other direct IO writes.
++ * However, if the IO is not aligned to filesystem blocks, the direct IO layer
++ * needs to do sub-block zeroing and that requires serialisation against other
++ * direct IOs to the same block. In this case we need to serialise the
++ * submission of the unaligned IOs so that we don't get racing block zeroing in
++ * the dio layer.  To avoid the problem with aio, we also need to wait for
++ * outstanding IOs to complete so that unwritten extent conversion is completed
++ * before we try to map the overlapping block. This is currently implemented by
++ * hitting it with a big hammer (i.e. xfs_ioend_wait()).
++ *
+  * Returns with locks held indicated by @iolock and errors indicated by
+  * negative return values.
+  */
+@@ -705,6 +720,7 @@ xfs_file_dio_aio_write(
  	struct xfs_mount	*mp = ip->i_mount;
--	ssize_t			ret = 0, error = 0;
-+	ssize_t			ret = 0;
- 	int			ioflags = 0;
- 	xfs_fsize_t		isize, new_size;
- 	int			iolock;
-@@ -590,9 +590,9 @@ xfs_file_aio_write(
- 	if (file->f_mode & FMODE_NOCMTIME)
- 		ioflags |= IO_INVIS;
+ 	ssize_t			ret = 0;
+ 	size_t			count = ocount;
++	int			unaligned_io = 0;
+ 	struct xfs_buftarg	*target = XFS_IS_REALTIME_INODE(ip) ?
+ 					mp->m_rtdev_targp : mp->m_ddev_targp;
  
--	error = generic_segment_checks(iovp, &nr_segs, &ocount, VERIFY_READ);
--	if (error)
--		return error;
-+	ret = generic_segment_checks(iovp, &nr_segs, &ocount, VERIFY_READ);
-+	if (ret)
-+		return ret;
+@@ -712,13 +728,10 @@ xfs_file_dio_aio_write(
+ 	if ((pos & target->bt_smask) || (count & target->bt_smask))
+ 		return -XFS_ERROR(EINVAL);
  
- 	count = ocount;
- 	if (count == 0)
-@@ -616,9 +616,9 @@ relock:
- 	xfs_ilock(ip, XFS_ILOCK_EXCL|iolock);
- 
- start:
--	error = -generic_write_checks(file, &pos, &count,
-+	ret = generic_write_checks(file, &pos, &count,
- 					S_ISBLK(inode->i_mode));
--	if (error) {
-+	if (ret) {
- 		xfs_iunlock(ip, XFS_ILOCK_EXCL|iolock);
- 		goto out_unlock_mutex;
- 	}
-@@ -660,8 +660,8 @@ start:
- 	 */
- 
- 	if (pos > ip->i_size) {
--		error = xfs_zero_eof(ip, pos, ip->i_size);
--		if (error) {
-+		ret = -xfs_zero_eof(ip, pos, ip->i_size);
-+		if (ret) {
- 			xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 			goto out_unlock_internal;
- 		}
-@@ -674,8 +674,8 @@ start:
- 	 * by root.  This keeps people from modifying setuid and
- 	 * setgid binaries.
- 	 */
--	error = -file_remove_suid(file);
--	if (unlikely(error))
-+	ret = file_remove_suid(file);
-+	if (unlikely(ret))
- 		goto out_unlock_internal;
- 
- 	/* We can write back this queue in page reclaim */
-@@ -684,10 +684,10 @@ start:
- 	if ((ioflags & IO_ISDIRECT)) {
- 		if (mapping->nrpages) {
- 			WARN_ON(need_i_mutex == 0);
--			error = xfs_flushinval_pages(ip,
-+			ret = -xfs_flushinval_pages(ip,
- 					(pos & PAGE_CACHE_MASK),
- 					-1, FI_REMAPF_LOCKED);
--			if (error)
-+			if (ret)
- 				goto out_unlock_internal;
- 		}
- 
-@@ -720,24 +720,22 @@ start:
- 		}
- 	} else {
- 		int enospc = 0;
--		ssize_t ret2 = 0;
- 
- write_retry:
- 		trace_xfs_file_buffered_write(ip, count, iocb->ki_pos, ioflags);
--		ret2 = generic_file_buffered_write(iocb, iovp, nr_segs,
-+		ret = generic_file_buffered_write(iocb, iovp, nr_segs,
- 				pos, &iocb->ki_pos, count, ret);
- 		/*
- 		 * if we just got an ENOSPC, flush the inode now we
- 		 * aren't holding any page locks and retry *once*
- 		 */
--		if (ret2 == -ENOSPC && !enospc) {
--			error = xfs_flush_pages(ip, 0, -1, 0, FI_NONE);
--			if (error)
-+		if (ret == -ENOSPC && !enospc) {
-+			ret = xfs_flush_pages(ip, 0, -1, 0, FI_NONE);
-+			if (ret)
- 				goto out_unlock_internal;
- 			enospc = 1;
- 			goto write_retry;
- 		}
--		ret = ret2;
+-	/*
+-	 * For direct I/O, if there are cached pages or we're extending
+-	 * the file, we need IOLOCK_EXCL until we're sure the bytes at
+-	 * the new EOF have been zeroed and/or the cached pages are
+-	 * flushed out.
+-	 */
+-	if (mapping->nrpages || pos > ip->i_size)
++	if ((pos & mp->m_blockmask) || ((pos + count) & mp->m_blockmask))
++		unaligned_io = 1;
++
++	if (unaligned_io || mapping->nrpages || pos > ip->i_size)
+ 		*iolock = XFS_IOLOCK_EXCL;
+ 	else
+ 		*iolock = XFS_IOLOCK_SHARED;
+@@ -736,8 +749,13 @@ xfs_file_dio_aio_write(
+ 			return ret;
  	}
  
- 	current->backing_dev_info = NULL;
-@@ -753,7 +751,6 @@ write_retry:
- 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-	if (*iolock == XFS_IOLOCK_EXCL) {
+-		/* demote the lock now the cached pages are gone */
++	/*
++	 * If we are doing unaligned IO, wait for all other IO to drain,
++	 * otherwise demote the lock if we had to flush cached pages
++	 */
++	if (unaligned_io)
++		xfs_ioend_wait(ip);
++	else if (*iolock == XFS_IOLOCK_EXCL) {
+ 		xfs_rw_ilock_demote(ip, XFS_IOLOCK_EXCL);
+ 		*iolock = XFS_IOLOCK_SHARED;
  	}
- 
--	error = -ret;
- 	if (ret <= 0)
- 		goto out_unlock_internal;
- 
-@@ -762,23 +759,23 @@ write_retry:
- 	/* Handle various SYNC-type writes */
- 	if ((file->f_flags & O_DSYNC) || IS_SYNC(inode)) {
- 		loff_t end = pos + ret - 1;
--		int error2;
-+		int error, error2;
- 
- 		xfs_iunlock(ip, iolock);
- 		if (need_i_mutex)
- 			mutex_unlock(&inode->i_mutex);
- 
--		error2 = filemap_write_and_wait_range(mapping, pos, end);
--		if (!error)
--			error = error2;
-+		error = filemap_write_and_wait_range(mapping, pos, end);
- 		if (need_i_mutex)
- 			mutex_lock(&inode->i_mutex);
- 		xfs_ilock(ip, iolock);
- 
- 		error2 = -xfs_file_fsync(file,
- 					 (file->f_flags & __O_SYNC) ? 0 : 1);
--		if (!error)
--			error = error2;
-+		if (error)
-+			ret = error;
-+		else if (error2)
-+			ret = error2;
- 	}
- 
-  out_unlock_internal:
-@@ -800,7 +797,7 @@ write_retry:
-  out_unlock_mutex:
- 	if (need_i_mutex)
- 		mutex_unlock(&inode->i_mutex);
--	return -error;
-+	return ret;
- }
- 
- STATIC int
 -- 
 1.7.2.3
 
