@@ -1,14 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0AKKV1u038486 for <xfs@oss.sgi.com>; Mon, 10 Jan 2011 14:20:31 -0600
-Subject: Re: [PATCH 01/12] xfsprogs: some things aren't all that special
+	p0AKMXCE038591 for <xfs@oss.sgi.com>; Mon, 10 Jan 2011 14:22:33 -0600
+Subject: Re: [PATCH 02/12] xfsprogs: simplify leading '/' handling in
+	generate_obfuscated_name()
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110110201137.GA27277@infradead.org>
-References: <1293741599.2294.342.camel@doink>
-	<20110110201137.GA27277@infradead.org>
-Date: Mon, 10 Jan 2011 14:22:36 -0600
-Message-ID: <1294690956.5374.48.camel@doink>
+In-Reply-To: <20110110201335.GB27277@infradead.org>
+References: <1293741612.2294.354.camel@doink>
+	<20110110201335.GB27277@infradead.org>
+Date: Mon, 10 Jan 2011 14:23:57 -0600
+Message-ID: <1294691037.5374.49.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -26,18 +27,22 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Mon, 2011-01-10 at 15:11 -0500, Christoph Hellwig wrote:
-> Also you've stopped overwriting orphanage_ino if it already exists.
+On Mon, 2011-01-10 at 15:13 -0500, Christoph Hellwig wrote:
+> On Thu, Dec 30, 2010 at 02:40:12PM -0600, Alex Elder wrote:
+> > In generate_obfuscated_name(), the incoming file name is allowed to
+> > start with a '/' character, in which case it is copied over to the
+> > new file name and ignored for the remainder of the hash calculation.
+> > Simplify the affected code by processing the '/' right away, and
+> > using a pointer thereafter for the start of the new file name.
+> 
+> The actual change looks good to me, but why would we ever have a /
+> in the filename, and if we do why would we treat it special?
+> 
 
-Actually, I had noticed I did more (or worse) than
-just that.  Once orphanage_ino has been saved, my
-change no longer says it should avoid obfuscating
-it.  (Or is that what you mean by "overwriting"?)
-
-Anyway, I noticed that problem the other day and
-thought I'd fix it if I had a chance to re-post.
-
-Thanks.
+This change was preserving the behavior that was there before.
+I didn't ask that question...  It may well be that there's no
+need to even handle a filename starting with '/', but I didn't
+follow it back to see.
 
 					-Alex
 
