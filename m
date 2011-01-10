@@ -1,17 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0AKMXCE038591 for <xfs@oss.sgi.com>; Mon, 10 Jan 2011 14:22:33 -0600
-Subject: Re: [PATCH 02/12] xfsprogs: simplify leading '/' handling in
-	generate_obfuscated_name()
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110110201335.GB27277@infradead.org>
-References: <1293741612.2294.354.camel@doink>
-	<20110110201335.GB27277@infradead.org>
-Date: Mon, 10 Jan 2011 14:23:57 -0600
-Message-ID: <1294691037.5374.49.camel@doink>
-Mime-Version: 1.0
-Reply-To: aelder@sgi.com
+	p0ALpxGW046742 for <xfs@oss.sgi.com>; Mon, 10 Jan 2011 15:52:00 -0600
+Received: from enyo.dsw2k3.info (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 676C32509E3
+	for <xfs@oss.sgi.com>; Mon, 10 Jan 2011 13:54:11 -0800 (PST)
+Received: from enyo.dsw2k3.info (enyo.dsw2k3.info [195.71.86.239]) by
+	cuda.sgi.com with ESMTP id a6OjR5HZvpDc7E8X for
+	<xfs@oss.sgi.com>; Mon, 10 Jan 2011 13:54:11 -0800 (PST)
+Date: Mon, 10 Jan 2011 22:53:51 +0100
+From: Matthias Schniedermeyer <ms@citd.de>
+Subject: Re: [PATCH] xfs_repair: multithread phase 2
+Message-ID: <20110110215351.GA26675@citd.de>
+References: <1294620248-17098-1-git-send-email-david@fromorbit.com>
+	<201101100857.53421@zmi.at> <20110110084122.GF28803@dastard>
+	<20110110191757.GA25029@infradead.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20110110191757.GA25029@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,26 +31,45 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+Cc: Michael Monnerie <michael.monnerie@is.it-management.at>, xfs@oss.sgi.com
 
-On Mon, 2011-01-10 at 15:13 -0500, Christoph Hellwig wrote:
-> On Thu, Dec 30, 2010 at 02:40:12PM -0600, Alex Elder wrote:
-> > In generate_obfuscated_name(), the incoming file name is allowed to
-> > start with a '/' character, in which case it is copied over to the
-> > new file name and ignored for the remainder of the hash calculation.
-> > Simplify the affected code by processing the '/' right away, and
-> > using a pointer thereafter for the start of the new file name.
+On 10.01.2011 14:17, Christoph Hellwig wrote:
+> On Mon, Jan 10, 2011 at 07:41:22PM +1100, Dave Chinner wrote:
+> > On Mon, Jan 10, 2011 at 08:57:52AM +0100, Michael Monnerie wrote:
+> > > On Montag, 10. Januar 2011 Dave Chinner wrote:
+> > > > This patch uses 32-way threading which results in no noticable
+> > > > slowdown on single SATA drives with NCQ, but results in ~10x
+> > > > reduction in runtime on a 12 disk RAID-0 array.
+> > > 
+> > > Is the fixed 32-way number reasonable, or shouldn't that be "number of 
+> > > available cpu cores"-way? Why threading when you have a single core cpu?
+> > 
+> > Sure, 32-way is reasonable on a single disk and CPU. Pretty much
+> > every sata disk supports NCQ these days, and default to a depth of
+> > 32, which means we can have 32 concurrent reads in progress at once.
+> > Phase 2 is all synchronous IO, so the only way to hide the IO
+> > latency is to queue work to multiple threads and switch between the
+> > threadsto work on another queue when the current one blocks waiting
+> > for IO.
 > 
-> The actual change looks good to me, but why would we ever have a /
-> in the filename, and if we do why would we treat it special?
-> 
+> The default queue depth for ATA NCQ actually is 31, not 32 for some odd
+> reason.
 
-This change was preserving the behavior that was there before.
-I didn't ask that question...  It may well be that there's no
-need to even handle a filename starting with '/', but I didn't
-follow it back to see.
+AFAIR the original discussion it's because Depth 0 and 32 use the same 
+value. And the knowledge that (HDD-)firmware tends to be buggy, so it 
+was decided to stay on the safe side and not use "0/32".
 
-					-Alex
+
+
+
+
+Bis denn
+
+-- 
+Real Programmers consider "what you see is what you get" to be just as 
+bad a concept in Text Editors as it is in women. No, the Real Programmer
+wants a "you asked for it, you got it" text editor -- complicated, 
+cryptic, powerful, unforgiving, dangerous.
 
 _______________________________________________
 xfs mailing list
