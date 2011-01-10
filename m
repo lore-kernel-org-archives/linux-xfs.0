@@ -1,25 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0AFrpHL007358 for <xfs@oss.sgi.com>; Mon, 10 Jan 2011 09:53:52 -0600
-Received: from mail-wy0-f181.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1DB43161DE4C
-	for <xfs@oss.sgi.com>; Mon, 10 Jan 2011 07:56:02 -0800 (PST)
-Received: from mail-wy0-f181.google.com (mail-wy0-f181.google.com
-	[74.125.82.181]) by cuda.sgi.com with ESMTP id eC0GACapXP6UnplK
-	for <xfs@oss.sgi.com>; Mon, 10 Jan 2011 07:56:02 -0800 (PST)
-Received: by wyf22 with SMTP id 22so21411666wyf.26
-	for <xfs@oss.sgi.com>; Mon, 10 Jan 2011 07:56:01 -0800 (PST)
-Message-ID: <4D2B2BD6.60800@gmail.com>
-Date: Mon, 10 Jan 2011 16:55:02 +0100
-From: Honza Fikar <j.fikar@gmail.com>
+	p0AGgHlJ012345 for <xfs@oss.sgi.com>; Mon, 10 Jan 2011 10:42:17 -0600
+Date: Mon, 10 Jan 2011 10:40:58 -0600
+From: Geoffrey Wehrman <gwehrman@sgi.com>
+Subject: Re: RedHat, Novell and SGI xfs kernel module api
+Message-ID: <20110110164058.GC19571@sgi.com>
+References: <CFFC47E79E870F4EBAD0CA24D8CD7652ED34D5BABE@CRW-EXM01.int.cggveritas.com>
 MIME-Version: 1.0
-Subject: Re: no rw xfs file systems in mtab: /proc/mounts
-References: <AANLkTi=Xes02L3XfZvUu6Yh2yi2FR8GtpVdOGzngVjJk@mail.gmail.com>
-	<4D13648B.8000105@sandeen.net> <4D138457.8020008@gmail.com>
-	<20101229130903.GD1035@infradead.org>
-In-Reply-To: <20101229130903.GD1035@infradead.org>
-Reply-To: j.fikar@gmail.com
+Content-Disposition: inline
+In-Reply-To: <CFFC47E79E870F4EBAD0CA24D8CD7652ED34D5BABE@CRW-EXM01.int.cggveritas.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,73 +18,59 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============6993854702867664038=="
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: =?iso-8859-1?Q?Larsen=2C_Tore_H=F8ivaag?= <tore.hoivaag.larsen@cggveritas.com>
+Cc: Alexis Cousein <al@sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---===============6993854702867664038==
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enigB2BE0D89FCF0AFFD73513E1A"
+On Mon, Jan 10, 2011 at 08:35:44AM +0000, Larsen, Tore H=F8ivaag wrote:
+| Hi,
+| =
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enigB2BE0D89FCF0AFFD73513E1A
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+|     currently we are purchasing Redhat's ScaleFS, SGI's cxfs, and Novell =
+SLES xfs.
+| =
 
-On 12/29/2010 02:09 PM, Christoph Hellwig wrote:
-> Can you please apply the debug patch below and see what output fsr give=
-s
-> with it?
+|     Having e.g. Redhat XFS play nicely with cxfs client is not trivial. U=
+sually, I have to choose ScaleFS w/lvm2 volumes og RHEL, but if I want cxfs=
+, But I can't have local xvm volumes on 3rd party hw. =
 
-the output is:
+| =
 
-#fsr/xfs_fsr -v -d
-fsr: cannot stat /dev/mapper/root
-no rw xfs file systems in mtab: /etc/mtab
-
-/dev/mapper/root is really missing, even though mount shows:
-
-/dev/mapper/root on / type xfs
-(rw,noatime,attr2,inode64,logbufs=3D8,logbsize=3D256k,noquota)
-
-maybe it gets lost during initrd?
-
-easy and dirty fix is ln -s /dev/root /dev/mapper/root
-
-but how to fix it for real?
-
-Honza
+|     Is there plans to make an effort to making sure the xfs api is common=
+ from the vendors and play nicely with each other ?    Comments? =
 
 
---------------enigB2BE0D89FCF0AFFD73513E1A
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
+The community version of XFS is considered the defacto standard.  I must
+compliment the community on doing an excellent job of maintaining
+on-disk compatibiltiy within XFS as it has evolved.  On disk
+compatibility is really the most critical API to maintain for a
+filesystem.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.16 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+Novell (and Red Hat) XFS will tend to lag the community top-of-tree XFS
+some, as they are long life releases based on a fixed kernel version.
+This somewhat restricts how much code can be backported from
+top-of-tree XFS.
 
-iEYEARECAAYFAk0rK9oACgkQp4S3GwoQQ3sTlACfdTjgcUYmr9rw7+QtP9x1KU8l
-racAoOFvHJE01keMiSe2vZu2RmAgyfI0
-=O5Pb
------END PGP SIGNATURE-----
+At SGI, we are always working on CXFS to maintain full compatibility
+with community XFS.  CXFS is really just a distributed layer on top of
+XFS, but we have to ship our own version of XFS with CXFS to provide all
+of the interfaces requried by CXFS.  These interfaces have been removed
+from community XFS as they have no purpose outside of CXFS which is SGI
+proprietary software.
 
---------------enigB2BE0D89FCF0AFFD73513E1A--
 
+-- =
 
---===============6993854702867664038==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Geoffrey Wehrman
+SGI Building 10                             Office: (651)683-5496
+2750 Blue Water Road                           Fax: (651)683-5098
+Eagan, MN 55121                             E-mail: gwehrman@sgi.com
+	  http://www.sgi.com/products/storage/software/
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============6993854702867664038==--
