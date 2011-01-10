@@ -1,29 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0ANa7aa052993 for <xfs@oss.sgi.com>; Mon, 10 Jan 2011 17:36:07 -0600
+	p0ANaC4s053025 for <xfs@oss.sgi.com>; Mon, 10 Jan 2011 17:36:12 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AF5791D20AF5
-	for <xfs@oss.sgi.com>; Mon, 10 Jan 2011 15:38:18 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1539C153D011
+	for <xfs@oss.sgi.com>; Mon, 10 Jan 2011 15:38:22 -0800 (PST)
 Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
 	[150.101.137.99]) by cuda.sgi.com with ESMTP id
-	ZJqIGRMJQMxNRriK for <xfs@oss.sgi.com>;
-	Mon, 10 Jan 2011 15:38:18 -0800 (PST)
+	MLRNdMPcScneI8B3 for <xfs@oss.sgi.com>;
+	Mon, 10 Jan 2011 15:38:22 -0800 (PST)
 Received: from dastard (unverified [121.44.222.102])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	52810391-1927428
-	for <xfs@oss.sgi.com>; Tue, 11 Jan 2011 10:08:17 +1030 (CDT)
-Received: from chute ([192.168.1.1] helo=disappointment)
+	52810403-1927428
+	for <xfs@oss.sgi.com>; Tue, 11 Jan 2011 10:08:21 +1030 (CDT)
+Received: from [192.168.1.1] (helo=disappointment)
 	by dastard with esmtp (Exim 4.72)
-	(envelope-from <dave@fromorbit.com>) id 1PcRJS-0006Vg-A3
-	for xfs@oss.sgi.com; Tue, 11 Jan 2011 10:38:10 +1100
+	(envelope-from <dave@fromorbit.com>) id 1PcRJc-0006VZ-2h
+	for xfs@oss.sgi.com; Tue, 11 Jan 2011 10:38:20 +1100
 Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1PcRJK-0003yk-36
-	for xfs@oss.sgi.com; Tue, 11 Jan 2011 10:38:02 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1PcRJJ-0003yb-UL
+	for xfs@oss.sgi.com; Tue, 11 Jan 2011 10:38:01 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 8/8] xfs: serialise unaligned direct IOs
-Date: Tue, 11 Jan 2011 10:37:48 +1100
-Message-Id: <1294702668-15216-9-git-send-email-david@fromorbit.com>
+Subject: [PATCH 5/8] xfs: split direct IO write path from xfs_file_aio_write
+Date: Tue, 11 Jan 2011 10:37:45 +1100
+Message-Id: <1294702668-15216-6-git-send-email-david@fromorbit.com>
 In-Reply-To: <1294702668-15216-1-git-send-email-david@fromorbit.com>
 References: <1294702668-15216-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -43,103 +43,242 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-When two concurrent unaligned, non-overlapping direct IOs are issued
-to the same block, the direct Io layer will race to zero the block.
-The result is that one of the concurrent IOs will overwrite data
-written by the other IO with zeros. This is demonstrated by the
-xfsqa test 240.
+The current xfs_file_aio_write code is a mess of locking shenanigans
+to handle the different locking requirements of buffered and direct
+IO. Start to clean this up by disentangling the direct IO path from
+the mess.
 
-To avoid this problem, serialise all unaligned direct IOs to an
-inode with a big hammer. We need a big hammer approach as we need to
-serialise AIO as well, so we can't just block writes on locks.
-Hence, the big hammer is calling xfs_ioend_wait() while holding out
-other unaligned direct IOs from starting.
-
-We don't bother trying to serialised aligned vs unaligned IOs as
-they are overlapping IO and the result of concurrent overlapping IOs
-is undefined - the result of either IO is a valid result so we let
-them race. Hence we only penalise unaligned IO, which already has a
-major overhead compared to aligned IO so this isn't a major problem.
+This also removes the failed direct IO fallback path to buffered IO.
+XFS handles all direct IO cases without needing to fall back to
+buffered IO, so we can safely remove this unused path. This greatly
+simplifies the logic and locking needed in the write path.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Alex Elder <aelder@sgi.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/linux-2.6/xfs_file.c |   38 ++++++++++++++++++++++++++++----------
- 1 files changed, 28 insertions(+), 10 deletions(-)
+ fs/xfs/linux-2.6/xfs_file.c |  179 ++++++++++++++++++++++++++++---------------
+ 1 files changed, 116 insertions(+), 63 deletions(-)
 
 diff --git a/fs/xfs/linux-2.6/xfs_file.c b/fs/xfs/linux-2.6/xfs_file.c
-index 41f3ceb..bdb35c4b 100644
+index 941d7c2..07ab0b6 100644
 --- a/fs/xfs/linux-2.6/xfs_file.c
 +++ b/fs/xfs/linux-2.6/xfs_file.c
-@@ -683,9 +683,24 @@ xfs_file_aio_write_checks(
-  * xfs_file_dio_aio_write - handle direct IO writes
-  *
-  * Lock the inode appropriately to prepare for and issue a direct IO write.
-- * By spearating it from the buffered write path we remove all the tricky to
-+ * By separating it from the buffered write path we remove all the tricky to
-  * follow locking changes and looping.
-  *
-+ * If there are cached pages or we're extending the file, we need IOLOCK_EXCL
-+ * until we're sure the bytes at the new EOF have been zeroed and/or the cached
-+ * pages are flushed out.
-+ *
-+ * In most cases the direct IO writes will be done holding IOLOCK_SHARED
-+ * allowing them to be done in parallel with reads and other direct IO writes.
-+ * However, if the IO is not aligned to filesystem blocks, the direct IO layer
-+ * needs to do sub-block zeroing and that requires serialisation against other
-+ * direct IOs to the same block. In this case we need to serialise the
-+ * submission of the unaligned IOs so that we don't get racing block zeroing in
-+ * the dio layer.  To avoid the problem with aio, we also need to wait for
-+ * outstanding IOs to complete so that unwritten extent conversion is completed
-+ * before we try to map the overlapping block. This is currently implemented by
-+ * hitting it with a big hammer (i.e. xfs_ioend_wait()).
-+ *
-  * Returns with locks held indicated by @iolock and errors indicated by
-  * negative return values.
-  */
-@@ -705,6 +720,7 @@ xfs_file_dio_aio_write(
- 	struct xfs_mount	*mp = ip->i_mount;
- 	ssize_t			ret = 0;
- 	size_t			count = ocount;
-+	int			unaligned_io = 0;
- 	struct xfs_buftarg	*target = XFS_IS_REALTIME_INODE(ip) ?
- 					mp->m_rtdev_targp : mp->m_ddev_targp;
+@@ -627,6 +627,116 @@ out_lock:
+ 	return error;
+ }
  
-@@ -712,13 +728,10 @@ xfs_file_dio_aio_write(
- 	if ((pos & target->bt_smask) || (count & target->bt_smask))
- 		return -XFS_ERROR(EINVAL);
- 
--	/*
--	 * For direct I/O, if there are cached pages or we're extending
--	 * the file, we need IOLOCK_EXCL until we're sure the bytes at
--	 * the new EOF have been zeroed and/or the cached pages are
--	 * flushed out.
--	 */
--	if (mapping->nrpages || pos > ip->i_size)
-+	if ((pos & mp->m_blockmask) || ((pos + count) & mp->m_blockmask))
-+		unaligned_io = 1;
++/*
++ * xfs_file_dio_aio_write - handle direct IO writes
++ *
++ * Lock the inode appropriately to prepare for and issue a direct IO write.
++ * By spearating it from the buffered write path we remove all the tricky to
++ * follow locking changes and looping.
++ *
++ * Returns with locks held indicated by @iolock and errors indicated by
++ * negative return values.
++ */
++STATIC ssize_t
++xfs_file_dio_aio_write(
++	struct kiocb		*iocb,
++	const struct iovec	*iovp,
++	unsigned long		nr_segs,
++	loff_t			pos,
++	size_t			ocount,
++	int			*iolock)
++{
++	struct file		*file = iocb->ki_filp;
++	struct address_space	*mapping = file->f_mapping;
++	struct inode		*inode = mapping->host;
++	struct xfs_inode	*ip = XFS_I(inode);
++	struct xfs_mount	*mp = ip->i_mount;
++	ssize_t			ret = 0;
++	xfs_fsize_t		new_size;
++	size_t			count = ocount;
++	struct xfs_buftarg	*target = XFS_IS_REALTIME_INODE(ip) ?
++					mp->m_rtdev_targp : mp->m_ddev_targp;
 +
-+	if (unaligned_io || mapping->nrpages || pos > ip->i_size)
- 		*iolock = XFS_IOLOCK_EXCL;
- 	else
- 		*iolock = XFS_IOLOCK_SHARED;
-@@ -736,8 +749,13 @@ xfs_file_dio_aio_write(
- 			return ret;
++	*iolock = 0;
++	if ((pos & target->bt_smask) || (count & target->bt_smask))
++		return -XFS_ERROR(EINVAL);
++
++	/*
++	 * For direct I/O, if there are cached pages or we're extending
++	 * the file, we need IOLOCK_EXCL until we're sure the bytes at
++	 * the new EOF have been zeroed and/or the cached pages are
++	 * flushed out.
++	 */
++	if (mapping->nrpages || pos > ip->i_size)
++		*iolock = XFS_IOLOCK_EXCL;
++	else
++		*iolock = XFS_IOLOCK_SHARED;
++	xfs_rw_ilock(ip, XFS_ILOCK_EXCL | *iolock);
++
++	ret = generic_write_checks(file, &pos, &count,
++					S_ISBLK(inode->i_mode));
++	if (ret) {
++		xfs_rw_iunlock(ip, XFS_ILOCK_EXCL | *iolock);
++		*iolock = 0;
++		return ret;
++	}
++
++	new_size = pos + count;
++	if (new_size > ip->i_size)
++		ip->i_new_size = new_size;
++
++	if (likely(!(file->f_mode & FMODE_NOCMTIME)))
++		file_update_time(file);
++
++	/*
++	 * If the offset is beyond the size of the file, we have a couple of
++	 * things to do. First, if there is already space allocated we need to
++	 * either create holes or zero the disk or ...
++	 *
++	 * If there is a page where the previous size lands, we need to zero it
++	 * out up to the new size.
++	 */
++	if (pos > ip->i_size) {
++		ret = -xfs_zero_eof(ip, pos, ip->i_size);
++		if (ret) {
++			xfs_rw_iunlock(ip, XFS_ILOCK_EXCL);
++			return ret;
++		}
++	}
++	xfs_rw_iunlock(ip, XFS_ILOCK_EXCL);
++
++	/*
++	 * If we're writing the file then make sure to clear the setuid and
++	 * setgid bits if the process is not being run by root.  This keeps
++	 * people from modifying setuid and setgid binaries.
++	 */
++	ret = file_remove_suid(file);
++	if (unlikely(ret))
++		return ret;
++
++	if (mapping->nrpages) {
++		WARN_ON(*iolock != XFS_IOLOCK_EXCL);
++		ret = -xfs_flushinval_pages(ip, (pos & PAGE_CACHE_MASK), -1,
++							FI_REMAPF_LOCKED);
++		if (ret)
++			return ret;
++	}
++
++	if (*iolock == XFS_IOLOCK_EXCL) {
++		/* demote the lock now the cached pages are gone */
++		xfs_rw_ilock_demote(ip, XFS_IOLOCK_EXCL);
++		*iolock = XFS_IOLOCK_SHARED;
++	}
++
++	trace_xfs_file_direct_write(ip, count, iocb->ki_pos, 0);
++	ret = generic_file_direct_write(iocb, iovp,
++			&nr_segs, pos, &iocb->ki_pos, count, ocount);
++
++	/* No fallback to buffered IO on errors for XFS. */
++	ASSERT(ret < 0 || ret == count);
++	return ret;
++}
++
+ STATIC ssize_t
+ xfs_file_aio_write(
+ 	struct kiocb		*iocb,
+@@ -669,12 +779,12 @@ xfs_file_aio_write(
+ 
+ relock:
+ 	if (ioflags & IO_ISDIRECT) {
+-		iolock = XFS_IOLOCK_SHARED;
+-	} else {
+-		iolock = XFS_IOLOCK_EXCL;
++		ret = xfs_file_dio_aio_write(iocb, iovp, nr_segs, pos,
++						ocount, &iolock);
++		goto done_io;
+ 	}
++	iolock = XFS_IOLOCK_EXCL;
+ 
+-start:
+ 	xfs_rw_ilock(ip, XFS_ILOCK_EXCL|iolock);
+ 	ret = generic_write_checks(file, &pos, &count,
+ 					S_ISBLK(inode->i_mode));
+@@ -683,30 +793,6 @@ start:
+ 		return ret;
  	}
  
--	if (*iolock == XFS_IOLOCK_EXCL) {
--		/* demote the lock now the cached pages are gone */
-+	/*
-+	 * If we are doing unaligned IO, wait for all other IO to drain,
-+	 * otherwise demote the lock if we had to flush cached pages
-+	 */
-+	if (unaligned_io)
-+		xfs_ioend_wait(ip);
-+	else if (*iolock == XFS_IOLOCK_EXCL) {
- 		xfs_rw_ilock_demote(ip, XFS_IOLOCK_EXCL);
- 		*iolock = XFS_IOLOCK_SHARED;
- 	}
+-	if (ioflags & IO_ISDIRECT) {
+-		xfs_buftarg_t	*target =
+-			XFS_IS_REALTIME_INODE(ip) ?
+-				mp->m_rtdev_targp : mp->m_ddev_targp;
+-
+-		if ((pos & target->bt_smask) || (count & target->bt_smask)) {
+-			xfs_rw_iunlock(ip, XFS_ILOCK_EXCL|iolock);
+-			return XFS_ERROR(-EINVAL);
+-		}
+-
+-		/*
+-		 * For direct I/O, if there are cached pages or we're extending
+-		 * the file, we need IOLOCK_EXCL until we're sure the bytes at
+-		 * the new EOF have been zeroed and/or the cached pages are
+-		 * flushed out.  Upgrade the I/O lock and start again.
+-		 */
+-		if (iolock != XFS_IOLOCK_EXCL &&
+-		    (mapping->nrpages || pos > ip->i_size)) {
+-			xfs_rw_iunlock(ip, XFS_ILOCK_EXCL|iolock);
+-			iolock = XFS_IOLOCK_EXCL;
+-			goto start;
+-		}
+-	}
+-
+ 	new_size = pos + count;
+ 	if (new_size > ip->i_size)
+ 		ip->i_new_size = new_size;
+@@ -745,41 +831,7 @@ start:
+ 	/* We can write back this queue in page reclaim */
+ 	current->backing_dev_info = mapping->backing_dev_info;
+ 
+-	if ((ioflags & IO_ISDIRECT)) {
+-		if (mapping->nrpages) {
+-			WARN_ON(iolock != XFS_IOLOCK_EXCL);
+-			ret = -xfs_flushinval_pages(ip,
+-					(pos & PAGE_CACHE_MASK),
+-					-1, FI_REMAPF_LOCKED);
+-			if (ret)
+-				goto out_unlock_internal;
+-		}
+-
+-		if (iolock == XFS_IOLOCK_EXCL) {
+-			/* demote the lock now the cached pages are gone */
+-			xfs_rw_ilock_demote(ip, XFS_IOLOCK_EXCL);
+-			iolock = XFS_IOLOCK_SHARED;
+-		}
+-
+-		trace_xfs_file_direct_write(ip, count, iocb->ki_pos, ioflags);
+-		ret = generic_file_direct_write(iocb, iovp,
+-				&nr_segs, pos, &iocb->ki_pos, count, ocount);
+-
+-		/*
+-		 * direct-io write to a hole: fall through to buffered I/O
+-		 * for completing the rest of the request.
+-		 */
+-		if (ret >= 0 && ret != count) {
+-			XFS_STATS_ADD(xs_write_bytes, ret);
+-
+-			pos += ret;
+-			count -= ret;
+-
+-			ioflags &= ~IO_ISDIRECT;
+-			xfs_rw_iunlock(ip, iolock);
+-			goto relock;
+-		}
+-	} else {
++	if (!(ioflags & IO_ISDIRECT)) {
+ 		int enospc = 0;
+ 
+ write_retry:
+@@ -801,6 +853,7 @@ write_retry:
+ 
+ 	current->backing_dev_info = NULL;
+ 
++done_io:
+ 	xfs_aio_write_isize_update(inode, &iocb->ki_pos, ret);
+ 
+ 	if (ret <= 0)
 -- 
 1.7.2.3
 
