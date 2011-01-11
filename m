@@ -1,32 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0BLBXHI112985 for <xfs@oss.sgi.com>; Tue, 11 Jan 2011 15:11:33 -0600
-Received: from smtp-out.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4DF89FDC6E3
-	for <xfs@oss.sgi.com>; Tue, 11 Jan 2011 13:13:45 -0800 (PST)
-Received: from smtp-out.google.com (smtp-out.google.com [216.239.44.51]) by
-	cuda.sgi.com with ESMTP id 08cS8NDnZYqTTqOf for
-	<xfs@oss.sgi.com>; Tue, 11 Jan 2011 13:13:45 -0800 (PST)
-Received: from wpaz24.hot.corp.google.com (wpaz24.hot.corp.google.com
-	[172.24.198.88]) by smtp-out.google.com with ESMTP id p0BLDild018055
-	for <xfs@oss.sgi.com>; Tue, 11 Jan 2011 13:13:44 -0800
-Received: from qyk10 (qyk10.prod.google.com [10.241.83.138])
-	by wpaz24.hot.corp.google.com with ESMTP id p0BLBuPb022800
-	(version=TLSv1/SSLv3 cipher=RC4-MD5 bits=128 verify=NOT)
-	for <xfs@oss.sgi.com>; Tue, 11 Jan 2011 13:13:43 -0800
-Received: by qyk10 with SMTP id 10so3044167qyk.1
-	for <xfs@oss.sgi.com>; Tue, 11 Jan 2011 13:13:43 -0800 (PST)
+	p0BKmZKA111870 for <xfs@oss.sgi.com>; Tue, 11 Jan 2011 14:48:35 -0600
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B4A621D255E3
+	for <xfs@oss.sgi.com>; Tue, 11 Jan 2011 12:50:46 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
+	[150.101.137.101]) by cuda.sgi.com with ESMTP id
+	lqBSyMaEFoynOQke for <xfs@oss.sgi.com>;
+	Tue, 11 Jan 2011 12:50:46 -0800 (PST)
+Date: Wed, 12 Jan 2011 07:50:42 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfstests: add simple splice test
+Message-ID: <20110111205042.GK28803@dastard>
+References: <1294702344-15035-1-git-send-email-david@fromorbit.com>
+	<20110111173845.GC24025@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <20101109234049.GQ2715@dastard>
-References: <1289248327-16308-1-git-send-email-josef@redhat.com>
-	<20101109011222.GD2715@dastard> <20101109033038.GF3099@thunk.org>
-	<20101109044242.GH2715@dastard> <20101109214147.GK3099@thunk.org>
-	<20101109234049.GQ2715@dastard>
-Date: Tue, 11 Jan 2011 16:13:42 -0500
-Message-ID: <AANLkTimwmJ_ZoE9oAuA1WGhCgK585jDznqnc6k0=9Ntb@mail.gmail.com>
-Subject: Re: [PATCH 1/6] fs: add hole punching to fallocate
-From: Lawrence Greenfield <leg@google.com>
+Content-Disposition: inline
+In-Reply-To: <20110111173845.GC24025@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,76 +26,43 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Ted Ts'o <tytso@mit.edu>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, cluster-devel@redhat.com, cmm@us.ibm.com, Josef Bacik <josef@redhat.com>, joel.becker@oracle.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-T24gVHVlLCBOb3YgOSwgMjAxMCBhdCA2OjQwIFBNLCBEYXZlIENoaW5uZXIgPGRhdmlkQGZyb21v
-cmJpdC5jb20+IHdyb3RlOgo+IE9uIFR1ZSwgTm92IDA5LCAyMDEwIGF0IDA0OjQxOjQ3UE0gLTA1
-MDAsIFRlZCBUcydvIHdyb3RlOgo+PiBPbiBUdWUsIE5vdiAwOSwgMjAxMCBhdCAwMzo0Mjo0MlBN
-ICsxMTAwLCBEYXZlIENoaW5uZXIgd3JvdGU6Cj4+ID4gSW1wbGVtZW50YXRpb24gaXMgdXAgdG8g
-dGhlIGZpbGVzeXN0ZW0uIEhvd2V2ZXIsIFhGUyBkb2VzIChiKQo+PiA+IGJlY2F1c2U6Cj4+ID4K
-Pj4gPiDCoCDCoCAxKSBpdCB3YXMgZXh0cmVtZWx5IHNpbXBsZSB0byBpbXBsZW1lbnQgKG9uZSBv
-ZiB0aGUKPj4gPiDCoCDCoCDCoCDCoGFkdmFudGFnZXMgb2YgaGF2aW5nIGFuIGV4Y2VlZGluZ2x5
-IGNvbXBsZXggYWxsb2NhdGlvbgo+PiA+IMKgIMKgIMKgIMKgaW50ZXJmYWNlIHRvIGJlZ2luIHdp
-dGggOlApCj4+ID4gwqAgwqAgMikgY29udmVyc2lvbiBpcyBhdG9taWMsIGZhc3QgYW5kIHJlbGlh
-YmxlCj4+ID4gwqAgwqAgMykgaXQgaXMgaW5kZXBlbmRlbnQgb2YgdGhlIHVuZGVybHlpbmcgc3Rv
-cmFnZTsgYW5kCj4+ID4gwqAgwqAgNCkgcmVhZHMgb2YgdW53cml0dGVuIGV4dGVudHMgb3BlcmF0
-ZSBhdCBtZW1vcnkgc3BlZWQsCj4+ID4gwqAgwqAgwqAgwqBub3QgZGlzayBzcGVlZC4KPj4KPj4g
-WWVhaCwgSSB3YXMgdGhpbmtpbmcgdGhhdCB1c2luZyBhIGRldmljZS1zdHlsZSBUUklNIG1pZ2h0
-IGJlIGJldHRlcgo+PiBzaW5jZSBmdXR1cmUgYXR0ZW1wdHMgdG8gd3JpdGUgdG8gaXQgd29uJ3Qg
-cmVxdWlyZSBhIHNlcGFyYXRlIHNlZWsgdG8KPj4gbW9kaWZ5IHRoZSBleHRlbnQgdHJlZS4gwqBC
-dXQgeWVhaCwgdGhlcmUgYXJlIGEgYnVuY2ggb2YgYWR2YW50YWdlcyBvZgo+PiBzaW1wbHkgbXV0
-YXRpbmcgdGhlIGV4dGVudCB0cmVlLgo+Pgo+PiBXaGlsZSB3ZSdyZSBvbiB0aGUgc3ViamVjdCBv
-ZiBjaGFuZ2VzIHRvIGZhbGxvY2F0ZSwgd2hhdCBkbyBwZW9wbGUKPj4gdGhpbmsgb2YgRkFMTE9D
-X0ZMX0VYUE9TRV9PTERfREFUQSwgd2hpY2ggcmVxdWlyZXMgZWl0aGVyIHJvb3QKPj4gcHJpdmls
-ZWdlcyBvciAoaWYgY2FwYWJpbGl0aWVzIGFyZSBpbiB1c2UpIENBUF9EQUNfT1ZFUlJJREUgJiYK
-Pj4gQ0FQX01BQ19PVkVSUklERSAmJiBDQVBfU1lTX0FETUlOLiDCoFRoaXMgd291bGQgYWxsb3cg
-YSB0cnVzdGVkIHByb2Nlc3MKPj4gdG8gZmFsbG9jYXRlIGJsb2NrcyB3aXRoIHRoZSBleHRlbnQg
-YWxyZWFkeSBtYXJrZWQgaW5pdGlhbGl6ZWQuIMKgSSd2ZQo+PiBoYWQgdHdvIHJlcXVlc3RzIGZv
-ciBzdWNoIGZ1bmN0aW9uYWxpdHkgZm9yIGV4dDQgYWxyZWFkeS4KPgo+IFdlIHJlbW92ZWQgdGhh
-dCBhYmlsaXR5IGZyb20gWEZTIGFib3V0IHRocmVlIHllYXJzIGFnbyBiZWNhdXNlIGl0J3MKPiBh
-IG1hc3NpdmUgc2VjdXJpdHkgaG9sZS4gZS5nLiB3aGF0IGhhcHBlbnMgaWYgdGhlIGZpbGUgaXMg
-d29ybGQKPiByZWFkYWJsZSwgZXZlbiB0aG91Z2ggdGhlIHByb2Nlc3MgdGhhdCBjYWxsZWQKPiBG
-QUxMT0NfRkxfRVhQT1NFX09MRF9EQVRBIHdhcyBwcml2aWxlZ2VkIGFuZCB3YXMgYWxsb3dlZCB0
-byBleHBvc2UKPiBzdWNoIGRhdGE/IE9yIHRoZSBmaWxlIGlzIGNobW9kIDc3NyBhZnRlciBiZWlu
-ZyBleHBvc2VkPwo+Cj4gVGhlIGhpc3RvcmljYWwgcmVhc29uIGZvciBzdWNoIGJlaGF2aW91ciBl
-eGlzdGluZyBpbiBYRlMgd2FzIHRoYXQgaW4KPiAxOTk3IHRoZSBDUFUgYW5kIElPIGxhdGVuY3kg
-Y29zdCBvZiB1bndyaXR0ZW4gZXh0ZW50IGNvbnZlcnNpb24gd2FzCj4gc2lnbmlmaWNhbnQsIHNv
-IHVzZXJzIHdpdGggcmVhbCBwaHlzaWNhbCBzZWN1cml0eSAoaS5lLiBtYXJpbmVzIHdpdGgKPiBn
-dW5zKSB3ZXJlIGFibGUgdG8gbWFrZSB1c2Ugb2YgZmFzdCBwcmVhbGxvY2F0aW9uIHdpdGggbm8g
-Y29udmVyc2lvbgo+IG92ZXJoZWFkIHdpdGhvdXQgY2FyaW5nIGFib3V0IHRoZSBzZWN1cml0eSBp
-bXBsaWNhdGlvbnMuIFRoZXNlIGRheXMsCj4gdGhlIHBlcmZvcm1hbmNlIG92ZXJoZWFkIG9mIHVu
-d3JpdHRlbiBleHRlbnQgY29udmVyc2lvbiBpcyBtaW5pbWFsIC0KPiBJIGdlbmVyYWxseSBjYW4n
-dCBtZWFzdXJlIGEgZGlmZmVyZW5jZSBpbiBJTyBwZXJmb3JtYW5jZSBhcyBhIHJlc3VsdAo+IG9m
-IGl0IC0gc28gdGhlcmUgaXMgc2ltcGx5IG5vIGdvb2QgcmVh0ZVvbiBmb3IgbGVhdmluZyBzdWNo
-IGEgZ2FwaW5nCj4gc2VjdXJpdHkgaG9sZSBpbiB0aGUgc3lzdGVtLgo+Cj4gSWYgYW55b25lIHdh
-bnRzIHRvIHJlYWQgdGhlIHVuZGVybHlpbmcgZGF0YSwgdGhlbiB1c2UgZmllbWFwIHRvIG1hcAo+
-IHRoZSBwaHlzaWNhbCBibG9ja3MgYW5kIHJlYWQgaXQgZGlyZWN0bHkgZnJvbSB0aGUgYmxvY2sg
-ZGV2aWNlLiBUaGF0Cj4gcmVxdWlyZXMgcm9vdCBwcml2aWxlZ2VzIGJ1dCBkb2VzIG5vdCBvcGVu
-IGFueSBuZXcgc3RhbGUgZGF0YQo+IGV4cG9zdXJlIHByb2JsZW1zLi4uLgo+Cj4+IChUYWtlIGZv
-ciBleGFtcGxlIGEgdHJ1c3RlZCBjbHVzdGVyIGZpbGVzeXN0ZW0gYmFja2VuZCB0aGF0IGNoZWNr
-cyB0aGUKPj4gb2JqZWN0IGNoZWNrc3VtIGJlZm9yZSByZXR1cm5pbmcgYW55IGRhdGEgdG8gdGhl
-IHVzZXI7IGFuZCBpZiB0aGUKPj4gY2hlY2sgZmFpbHMgdGhlIGNsdXN0ZXIgZmlsZSBzeXN0ZW0g
-d2lsbCB0cnkgdG8gdXNlIHNvbWUgb3RoZXIgcmVwbGljYQo+PiBzdG9yZWQgb24gc29tZSBvdGhl
-ciBzZXJ2ZXIuKQo+Cj4gSU9XcywgYWxsIHRoZXkgd2FudCB0byBkbyBpcyBhdm9pZCB0aGUgdW53
-cml0dGVuIGV4dGVudCBjb252ZXJzaW9uCj4gb3ZlcmhlYWQuIFRpbWUgaGFzIHNob3duIHRoYXQg
-YSBiYWQgc2VjdXJpdHkvcGVyZm9ybWFuY2UgdHJhZGVvZmYKPiBkZWNpc2lvbiB3YXMgbWFkZSAx
-MyB5ZWFycyBhZ28gaW4gWEZTLCBzbyBJIHNlZSBsaXR0bGUgcmVhc29uIHRvCj4gcmVwZWF0IGl0
-IGZvciBleHQ0IHRvZGF5Li4uLgoKSSdkIG1ha2UgdXNlIG9mIEZBTExPQ19GTF9FWFBPU0VfT0xE
-X0RBVEEuIEl0J3Mgbm90IHRoZSBDUFUgb3ZlcmhlYWQKb2YgZXh0ZW50IGNvbnZlcnNpb24uIEl0
-J3MgdGhhdCBleHRlbnQgY29udmVyc2lvbiBjYXVzZXMgbW9yZSBtZXRhZGF0YQpvcGVyYXRpb25z
-IHRoYW4gd2hhdCB5b3UnZCBoYXZlIG90aGVyd2lzZSwgd2hpY2ggbWVhbnMgc3lzdGVtcyB0aGF0
-CndhbnQgdG8gdXNlIE9fRElSRUNUIGFuZCBtYWtlIHN1cmUgdGhlIGRhdGEgZG9lc24ndCBnbyBh
-d2F5IGVpdGhlcgpoYXZlIHRvIHdyaXRlIE9fRElSRUNUfE9fRFNZTkMgb3IgbmVlZCB0byBjYWxs
-IGZkYXRhc3luYygpLgoKY2x1c3RlciBmaWxlIHN5c3RlbSBpbXBsZW1lbnRvciwKTGFycnkKCj4K
-PiBDaGVlcnMsCj4KPiBEYXZlLgo+IC0tCj4gRGF2ZSBDaGlubmVyCj4gZGF2aWRAZnJvbW9yYml0
-LmNvbQo+IC0tCj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUg
-InVuc3Vic2NyaWJlIGxpbnV4LWV4dDQiIGluCj4gdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1h
-am9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcKPiBNb3JlIG1ham9yZG9tbyBpbmZvIGF0IMKgaHR0cDov
-L3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1sCj4KCl9fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5z
-Z2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On Tue, Jan 11, 2011 at 12:38:45PM -0500, Christoph Hellwig wrote:
+> > +echo "Feel the serenity."
+> > +
+> > +SRC=$TEST_DIR/$seq.src
+> > +DST=$TEST_DIR/$seq.dst
+> > +
+> > +$XFS_IO_PROG -f -c "pwrite -S 0xa5a55a5a 0 32768k" -c fsync $SRC > /dev/null 2>&1
+> > +$XFS_IO_PROG -f -c "sendfile -i $SRC 0 32768k" -c fsync $DST > /dev/null 2>&1
+> > +
+> > +diff $SRC $DST
+> 
+> I think this should removfe the two files to make sure the test is
+> reproducible and doesn't overwrite an existing file during the second
+> run.
+
+It removes them in the cleanup function.
+
+> Also I'd recomment not to redirect the output to /dev/null but use
+> our normal xfs_io filters and make the output part of the golden output.
+
+Ok.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
