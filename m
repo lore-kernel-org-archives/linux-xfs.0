@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0B2IiGL060108 for <xfs@oss.sgi.com>; Mon, 10 Jan 2011 20:18:44 -0600
-Received: from mail-qw0-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D88451D1FB7C
-	for <xfs@oss.sgi.com>; Mon, 10 Jan 2011 18:20:56 -0800 (PST)
-Received: from mail-qw0-f53.google.com (mail-qw0-f53.google.com
-	[209.85.216.53]) by cuda.sgi.com with ESMTP id 89icIR9wxUe8QpLc
-	for <xfs@oss.sgi.com>; Mon, 10 Jan 2011 18:20:56 -0800 (PST)
-Received: by qwe5 with SMTP id 5so22579198qwe.26
-	for <xfs@oss.sgi.com>; Mon, 10 Jan 2011 18:20:56 -0800 (PST)
+	p0B4mR4M066792 for <xfs@oss.sgi.com>; Mon, 10 Jan 2011 22:48:28 -0600
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A5638FCFDC1
+	for <xfs@oss.sgi.com>; Mon, 10 Jan 2011 20:50:37 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
+	[150.101.137.100]) by cuda.sgi.com with ESMTP id
+	0l6Y13JLf4NDCY5w for <xfs@oss.sgi.com>;
+	Mon, 10 Jan 2011 20:50:37 -0800 (PST)
+Date: Tue, 11 Jan 2011 15:50:32 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Help: Download xfstests and xfsqa
+Message-ID: <20110111045032.GI28803@dastard>
+References: <AANLkTinSn3jqyG9idH854Xngy0Wnh8TDvK48m0hJW=LY@mail.gmail.com>
 MIME-Version: 1.0
-Date: Tue, 11 Jan 2011 11:20:56 +0900
-Message-ID: <AANLkTinSn3jqyG9idH854Xngy0Wnh8TDvK48m0hJW=LY@mail.gmail.com>
-Subject: Help: Download xfstests and xfsqa
-From: Ajeet Yadav <ajeet.yadav.77@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <AANLkTinSn3jqyG9idH854Xngy0Wnh8TDvK48m0hJW=LY@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,50 +25,39 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============7244717723463099718=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Ajeet Yadav <ajeet.yadav.77@gmail.com>
+Cc: xfs@oss.sgi.com
 
---===============7244717723463099718==
-Content-Type: multipart/alternative; boundary=0015175cb2c20b169f049988bcf6
+On Tue, Jan 11, 2011 at 11:20:56AM +0900, Ajeet Yadav wrote:
+> What is xfsqa ?
 
---0015175cb2c20b169f049988bcf6
-Content-Type: text/plain; charset=ISO-8859-1
+A shorthand name for the xfstests test suite.
+> 
+> What is difference between xfstests and xfsqa ?
 
-What is xfsqa ?
+None - they are the same thing.
 
-What is difference between xfstests and xfsqa ?
+> Where I can find xfstests and xfsqa ?
 
-Where I can find xfstests and xfsqa ?
+http://xfs.org/index.php/Getting_the_latest_source_code
 
-Do we already have precompiled xfstests and xfsqa for ARM and MIPS ?
+> Do we already have precompiled xfstests and xfsqa for ARM and MIPS ?
 
---0015175cb2c20b169f049988bcf6
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+No, you download the source and compile it on your target
+platform.
 
-<div>What is xfsqa ?</div>
-<div>=A0</div>
-<div>What is difference between xfstests and xfsqa ?</div>
-<div>=A0</div>
-<div>Where I can find xfstests and xfsqa ?</div>
-<div>=A0</div>
-<div>Do we already have precompiled xfstests and xfsqa for ARM and MIPS ?</=
-div>
+Cheers,
 
---0015175cb2c20b169f049988bcf6--
-
-
---===============7244717723463099718==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============7244717723463099718==--
