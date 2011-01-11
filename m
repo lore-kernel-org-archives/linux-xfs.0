@@ -1,31 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0ANa1CP052949 for <xfs@oss.sgi.com>; Mon, 10 Jan 2011 17:36:02 -0600
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0F812153D00F
-	for <xfs@oss.sgi.com>; Mon, 10 Jan 2011 15:38:12 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
-	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	Dgka04SGbUBfzr92 for <xfs@oss.sgi.com>;
-	Mon, 10 Jan 2011 15:38:12 -0800 (PST)
-Received: from dastard (unverified [121.44.222.102])
-	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	51786238-1927428
-	for <xfs@oss.sgi.com>; Tue, 11 Jan 2011 10:08:11 +1030 (CDT)
-Received: from chute ([192.168.1.1] helo=disappointment)
-	by dastard with esmtp (Exim 4.72)
-	(envelope-from <dave@fromorbit.com>) id 1PcRJS-0006Vd-8B
-	for xfs@oss.sgi.com; Tue, 11 Jan 2011 10:38:10 +1100
-Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1PcRJK-0003yh-1M
-	for xfs@oss.sgi.com; Tue, 11 Jan 2011 10:38:02 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 7/8] xfs: factor common write setup code
-Date: Tue, 11 Jan 2011 10:37:47 +1100
-Message-Id: <1294702668-15216-8-git-send-email-david@fromorbit.com>
-In-Reply-To: <1294702668-15216-1-git-send-email-david@fromorbit.com>
-References: <1294702668-15216-1-git-send-email-david@fromorbit.com>
+	p0B2IiGL060108 for <xfs@oss.sgi.com>; Mon, 10 Jan 2011 20:18:44 -0600
+Received: from mail-qw0-f53.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D88451D1FB7C
+	for <xfs@oss.sgi.com>; Mon, 10 Jan 2011 18:20:56 -0800 (PST)
+Received: from mail-qw0-f53.google.com (mail-qw0-f53.google.com
+	[209.85.216.53]) by cuda.sgi.com with ESMTP id 89icIR9wxUe8QpLc
+	for <xfs@oss.sgi.com>; Mon, 10 Jan 2011 18:20:56 -0800 (PST)
+Received: by qwe5 with SMTP id 5so22579198qwe.26
+	for <xfs@oss.sgi.com>; Mon, 10 Jan 2011 18:20:56 -0800 (PST)
+MIME-Version: 1.0
+Date: Tue, 11 Jan 2011 11:20:56 +0900
+Message-ID: <AANLkTinSn3jqyG9idH854Xngy0Wnh8TDvK48m0hJW=LY@mail.gmail.com>
+Subject: Help: Download xfstests and xfsqa
+From: Ajeet Yadav <ajeet.yadav.77@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,190 +23,50 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============7244717723463099718=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+--===============7244717723463099718==
+Content-Type: multipart/alternative; boundary=0015175cb2c20b169f049988bcf6
 
-The buffered IO and direct IO write paths share a common set of
-checks and limiting code prior to issuing the write. Factor that
-into a common helper function.
+--0015175cb2c20b169f049988bcf6
+Content-Type: text/plain; charset=ISO-8859-1
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Alex Elder <aelder@sgi.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/linux-2.6/xfs_file.c |  123 +++++++++++++++++++-----------------------
- 1 files changed, 56 insertions(+), 67 deletions(-)
+What is xfsqa ?
 
-diff --git a/fs/xfs/linux-2.6/xfs_file.c b/fs/xfs/linux-2.6/xfs_file.c
-index ccd2959..41f3ceb 100644
---- a/fs/xfs/linux-2.6/xfs_file.c
-+++ b/fs/xfs/linux-2.6/xfs_file.c
-@@ -628,6 +628,58 @@ out_lock:
- }
- 
- /*
-+ * Common pre-write limit and setup checks.
-+ *
-+ * Returns with iolock held according to @iolock.
-+ */
-+STATIC ssize_t
-+xfs_file_aio_write_checks(
-+	struct file		*file,
-+	loff_t			*pos,
-+	size_t			*count,
-+	int			*iolock)
-+{
-+	struct inode		*inode = file->f_mapping->host;
-+	struct xfs_inode	*ip = XFS_I(inode);
-+	xfs_fsize_t		new_size;
-+	int			error = 0;
-+
-+	error = generic_write_checks(file, pos, count, S_ISBLK(inode->i_mode));
-+	if (error) {
-+		xfs_rw_iunlock(ip, XFS_ILOCK_EXCL | *iolock);
-+		*iolock = 0;
-+		return error;
-+	}
-+
-+	new_size = *pos + *count;
-+	if (new_size > ip->i_size)
-+		ip->i_new_size = new_size;
-+
-+	if (likely(!(file->f_mode & FMODE_NOCMTIME)))
-+		file_update_time(file);
-+
-+	/*
-+	 * If the offset is beyond the size of the file, we need to zero any
-+	 * blocks that fall between the existing EOF and the start of this
-+	 * write.
-+	 */
-+	if (*pos > ip->i_size)
-+		error = -xfs_zero_eof(ip, *pos, ip->i_size);
-+
-+	xfs_rw_iunlock(ip, XFS_ILOCK_EXCL);
-+	if (error)
-+		return error;
-+
-+	/*
-+	 * If we're writing the file then make sure to clear the setuid and
-+	 * setgid bits if the process is not being run by root.  This keeps
-+	 * people from modifying setuid and setgid binaries.
-+	 */
-+	return file_remove_suid(file);
-+
-+}
-+
-+/*
-  * xfs_file_dio_aio_write - handle direct IO writes
-  *
-  * Lock the inode appropriately to prepare for and issue a direct IO write.
-@@ -652,7 +704,6 @@ xfs_file_dio_aio_write(
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	struct xfs_mount	*mp = ip->i_mount;
- 	ssize_t			ret = 0;
--	xfs_fsize_t		new_size;
- 	size_t			count = ocount;
- 	struct xfs_buftarg	*target = XFS_IS_REALTIME_INODE(ip) ?
- 					mp->m_rtdev_targp : mp->m_ddev_targp;
-@@ -673,45 +724,8 @@ xfs_file_dio_aio_write(
- 		*iolock = XFS_IOLOCK_SHARED;
- 	xfs_rw_ilock(ip, XFS_ILOCK_EXCL | *iolock);
- 
--	ret = generic_write_checks(file, &pos, &count,
--					S_ISBLK(inode->i_mode));
--	if (ret) {
--		xfs_rw_iunlock(ip, XFS_ILOCK_EXCL | *iolock);
--		*iolock = 0;
--		return ret;
--	}
--
--	new_size = pos + count;
--	if (new_size > ip->i_size)
--		ip->i_new_size = new_size;
--
--	if (likely(!(file->f_mode & FMODE_NOCMTIME)))
--		file_update_time(file);
--
--	/*
--	 * If the offset is beyond the size of the file, we have a couple of
--	 * things to do. First, if there is already space allocated we need to
--	 * either create holes or zero the disk or ...
--	 *
--	 * If there is a page where the previous size lands, we need to zero it
--	 * out up to the new size.
--	 */
--	if (pos > ip->i_size) {
--		ret = -xfs_zero_eof(ip, pos, ip->i_size);
--		if (ret) {
--			xfs_rw_iunlock(ip, XFS_ILOCK_EXCL);
--			return ret;
--		}
--	}
--	xfs_rw_iunlock(ip, XFS_ILOCK_EXCL);
--
--	/*
--	 * If we're writing the file then make sure to clear the setuid and
--	 * setgid bits if the process is not being run by root.  This keeps
--	 * people from modifying setuid and setgid binaries.
--	 */
--	ret = file_remove_suid(file);
--	if (unlikely(ret))
-+	ret = xfs_file_aio_write_checks(file, &pos, &count, iolock);
-+	if (ret)
- 		return ret;
- 
- 	if (mapping->nrpages) {
-@@ -752,38 +766,13 @@ xfs_file_buffered_aio_write(
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	ssize_t			ret;
- 	int			enospc = 0;
--	xfs_fsize_t		new_size;
- 	size_t			count = ocount;
- 
- 	*iolock = XFS_IOLOCK_EXCL;
- 	xfs_rw_ilock(ip, XFS_ILOCK_EXCL | *iolock);
- 
--	ret = generic_write_checks(file, &pos, &count,
--					S_ISBLK(inode->i_mode));
--	if (ret) {
--		xfs_rw_iunlock(ip, XFS_ILOCK_EXCL | *iolock);
--		*iolock = 0;
--		return ret;
--	}
--
--	new_size = pos + count;
--	if (new_size > ip->i_size)
--		ip->i_new_size = new_size;
--
--	if (likely(!(file->f_mode & FMODE_NOCMTIME)))
--		file_update_time(file);
--
--	if (pos > ip->i_size) {
--		ret = -xfs_zero_eof(ip, pos, ip->i_size);
--		if (ret) {
--			xfs_rw_iunlock(ip, XFS_ILOCK_EXCL);
--			return ret;
--		}
--	}
--	xfs_rw_iunlock(ip, XFS_ILOCK_EXCL);
--
--	ret = file_remove_suid(file);
--	if (unlikely(ret))
-+	ret = xfs_file_aio_write_checks(file, &pos, &count, iolock);
-+	if (ret)
- 		return ret;
- 
- 	/* We can write back this queue in page reclaim */
--- 
-1.7.2.3
+What is difference between xfstests and xfsqa ?
+
+Where I can find xfstests and xfsqa ?
+
+Do we already have precompiled xfstests and xfsqa for ARM and MIPS ?
+
+--0015175cb2c20b169f049988bcf6
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+
+<div>What is xfsqa ?</div>
+<div>=A0</div>
+<div>What is difference between xfstests and xfsqa ?</div>
+<div>=A0</div>
+<div>Where I can find xfstests and xfsqa ?</div>
+<div>=A0</div>
+<div>Do we already have precompiled xfstests and xfsqa for ARM and MIPS ?</=
+div>
+
+--0015175cb2c20b169f049988bcf6--
+
+
+--===============7244717723463099718==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============7244717723463099718==--
