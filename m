@@ -1,22 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0B4mR4M066792 for <xfs@oss.sgi.com>; Mon, 10 Jan 2011 22:48:28 -0600
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A5638FCFDC1
-	for <xfs@oss.sgi.com>; Mon, 10 Jan 2011 20:50:37 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail15.adl6.internode.on.net
-	[150.101.137.100]) by cuda.sgi.com with ESMTP id
-	0l6Y13JLf4NDCY5w for <xfs@oss.sgi.com>;
-	Mon, 10 Jan 2011 20:50:37 -0800 (PST)
-Date: Tue, 11 Jan 2011 15:50:32 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Help: Download xfstests and xfsqa
-Message-ID: <20110111045032.GI28803@dastard>
-References: <AANLkTinSn3jqyG9idH854Xngy0Wnh8TDvK48m0hJW=LY@mail.gmail.com>
-MIME-Version: 1.0
+	p0B8AG0Q076714 for <xfs@oss.sgi.com>; Tue, 11 Jan 2011 02:10:17 -0600
+Received: from bork.lsof.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D4477FD07AB
+	for <xfs@oss.sgi.com>; Tue, 11 Jan 2011 00:12:27 -0800 (PST)
+Received: from bork.lsof.org (bork.lsof.org [87.253.148.42]) by cuda.sgi.com
+	with ESMTP id SWHXhVK1cLqL4HLS for <xfs@oss.sgi.com>;
+	Tue, 11 Jan 2011 00:12:27 -0800 (PST)
+Received: from localhost (localhost [127.0.0.1])
+	by bork.lsof.org (Postfix) with ESMTP id BB251BB1E
+	for <xfs@oss.sgi.com>; Tue, 11 Jan 2011 09:12:26 +0100 (CET)
+Received: from bork.lsof.org ([127.0.0.1])
+	by localhost (bork.lsof.org [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id rIuABDFXxAep for <xfs@oss.sgi.com>;
+	Tue, 11 Jan 2011 09:12:24 +0100 (CET)
+Received: from bork.lsof.org (localhost [127.0.0.1])
+	by bork.lsof.org (Postfix) with ESMTP id BBB1FB8D0
+	for <xfs@oss.sgi.com>; Tue, 11 Jan 2011 09:12:24 +0100 (CET)
+Message-ID: <cone.1294733544.730446.31666.1001@bork.lsof.org>
+From: Roel van Meer <roel.vanmeer@bokxing.nl>
+Subject: XFS defaults in FAQ on kernel.org
+Date: Tue, 11 Jan 2011 09:12:24 +0100
+Mime-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <AANLkTinSn3jqyG9idH854Xngy0Wnh8TDvK48m0hJW=LY@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,37 +32,28 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ajeet Yadav <ajeet.yadav.77@gmail.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Jan 11, 2011 at 11:20:56AM +0900, Ajeet Yadav wrote:
-> What is xfsqa ?
+Hi list,
 
-A shorthand name for the xfstests test suite.
-> 
-> What is difference between xfstests and xfsqa ?
+Seeing how many people are using unnecessary defaults for xfs, perhaps 
+someone can mail the kernel.org guys to fix their FAQ item on XFS:
 
-None - they are the same thing.
+Filesystem: xfs, mounted with "rw,noatime,nodiratime,nobarrier,logbsize=256k".
 
-> Where I can find xfstests and xfsqa ?
+(Found here: http://www.kernel.org/faq/#howdoesitwork )
 
-http://xfs.org/index.php/Getting_the_latest_source_code
+I'm not sure how many people will look there for XFS info, but kernel.org 
+might seem trustworthy enough for some people to blindly use this info, so 
+we better make sure it's correct.
 
-> Do we already have precompiled xfstests and xfsqa for ARM and MIPS ?
+Regards,
 
-No, you download the source and compile it on your target
-platform.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Roel (helping Dave running a sed script across the internet)
 
 _______________________________________________
 xfs mailing list
