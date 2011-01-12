@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0C4DBGn137255 for <xfs@oss.sgi.com>; Tue, 11 Jan 2011 22:13:11 -0600
-Subject: Re: [PATCH 01/12] xfs: prevent NMI timeouts in cmn_err
+	p0C4DBeg137256 for <xfs@oss.sgi.com>; Tue, 11 Jan 2011 22:13:11 -0600
+Subject: Re: [PATCH 04/12] xfs: Convert xlog_warn to new logging interface
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1294792553-8378-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1294792553-8378-5-git-send-email-david@fromorbit.com>
 References: <1294792553-8378-1-git-send-email-david@fromorbit.com>
-	<1294792553-8378-2-git-send-email-david@fromorbit.com>
-Date: Tue, 11 Jan 2011 22:13:23 -0600
-Message-ID: <1294805603.3115.127.camel@doink>
+	<1294792553-8378-5-git-send-email-david@fromorbit.com>
+Date: Tue, 11 Jan 2011 22:13:32 -0600
+Message-ID: <1294805612.3115.128.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -29,52 +29,100 @@ Cc: xfs@oss.sgi.com
 On Wed, 2011-01-12 at 11:35 +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> We currently have a global error message buffer in cmn_err that is
-> protected by a spin lock that disables interrupts.  Recently there
-> have been reports of NMI timeouts occurring when the console is
-> being flooded by SCSI error reports due to cmn_err() getting stuck
-> trying to print to the console while holding this lock (i.e. with
-> interrupts disabled). The NMI watchdog is seeing this CPU as
-> non-responding and so is triggering a panic.  While the trigger for
-> the reported case is SCSI errors, pretty much anything that spams
-> the kernel log could cause this to occur.
+> Convert the xfs log operations to use the new error logging
+> interfaces. This removes the xlog_{warn,panic} wrappers and makes
+> almost all errors emit the device they belong to instead of just
+> refering to "XFS".
 > 
-> Realistically the only reason that we have the intemediate message
-> buffer is to prepend the correct kernel log level prefix to the log
-> message. The only reason we have the lock is to protect the global
-> message buffer and the only reason the message buffer is global is
-> to keep it off the stack. Hence if we can avoid needing a global
-> message buffer we avoid needing the lock, and we can do this with a
-> small amount of cleanup and some preprocessor tricks:
-> 
-> 	1. clean up xfs_cmn_err() panic mask functionality to avoid
-> 	   needing debug code in xfs_cmn_err()
-> 	2. remove the couple of "!" message prefixes that still exist that
-> 	   the existing cmn_err() code steps over.
-> 	3. redefine CE_* levels directly to KERN_*
-> 	4. redefine cmn_err() and friends to use printk() directly
-> 	   via variable argument length macros.
-> 
-> By doing this, we can completely remove the cmn_err() code and the
-> lock that is causing the problems, and rely solely on printk()
-> serialisation to ensure that we don't get garbled messages.
-> 
-> A series of followup patches is really needed to clean up all the
-> cmn_err() calls and related messages properly, but that results in a
-> series that is not easily back portable to enterprise kernels. Hence
-> this initial fix is only to address the direct problem in the lowest
-> impact way possible.
 
-I had two trivial remarks but, well, what you have is just fine...
+One mistake noted below, otherwise:
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
->  fs/xfs/linux-2.6/xfs_sysctl.c |   23 ++++++++-
->  fs/xfs/support/debug.c        |  109 +++++++++++++++++++----------------------
->  fs/xfs/support/debug.h        |   25 ++++++---
+>  fs/xfs/quota/xfs_dquot.c |   10 ++-
+>  fs/xfs/quota/xfs_qm.c    |    2 +-
+>  fs/xfs/xfs_log.c         |  124 ++++++++++++-------------
+>  fs/xfs/xfs_log_priv.h    |    4 -
+>  fs/xfs/xfs_log_recover.c |  223 ++++++++++++++++++++++-----------------------
+
+. . .
+
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index ae6fef1..d645f09 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+
+. . .
+
+> @@ -1563,38 +1561,36 @@ xlog_print_tic_res(
+>  	    "SWAPEXT"
+>  	};
 >  
+> -	xfs_fs_cmn_err(CE_WARN, mp,
+> -			"xfs_log_write: reservation summary:\n"
+> -			"  trans type  = %s (%u)\n"
+> -			"  unit res    = %d bytes\n"
+> -			"  current res = %d bytes\n"
+> -			"  total reg   = %u bytes (o/flow = %u bytes)\n"
+> -			"  ophdrs      = %u (ophdr space = %u bytes)\n"
+> -			"  ophdr + reg = %u bytes\n"
+> -			"  num regions = %u\n",
+> -			((ticket->t_trans_type <= 0 ||
+> -			  ticket->t_trans_type > XFS_TRANS_TYPE_MAX) ?
+> -			  "bad-trans-type" : trans_type_str[ticket->t_trans_type-1]),
+> -			ticket->t_trans_type,
+> -			ticket->t_unit_res,
+> -			ticket->t_curr_res,
+> -			ticket->t_res_arr_sum, ticket->t_res_o_flow,
+> -			ticket->t_res_num_ophdrs, ophdr_spc,
+> -			ticket->t_res_arr_sum + 
+> -			ticket->t_res_o_flow + ophdr_spc,
+> -			ticket->t_res_num);
+> +	xfs_alert(mp,
+
+	xfs_warn(mp,
+
+> +		"xfs_log_write: reservation summary:\n"
+> +		"  trans type  = %s (%u)\n"
+> +		"  unit res    = %d bytes\n"
+> +		"  current res = %d bytes\n"
+> +		"  total reg   = %u bytes (o/flow = %u bytes)\n"
+> +		"  ophdrs      = %u (ophdr space = %u bytes)\n"
+> +		"  ophdr + reg = %u bytes\n"
+> +		"  num regions = %u\n",
+> +		((ticket->t_trans_type <= 0 ||
+> +		  ticket->t_trans_type > XFS_TRANS_TYPE_MAX) ?
+> +		  "bad-trans-type" : trans_type_str[ticket->t_trans_type-1]),
+> +		ticket->t_trans_type,
+> +		ticket->t_unit_res,
+> +		ticket->t_curr_res,
+> +		ticket->t_res_arr_sum, ticket->t_res_o_flow,
+> +		ticket->t_res_num_ophdrs, ophdr_spc,
+> +		ticket->t_res_arr_sum +
+> +		ticket->t_res_o_flow + ophdr_spc,
+> +		ticket->t_res_num);
+>  
+>  	for (i = 0; i < ticket->t_res_num; i++) {
+> -		uint r_type = ticket->t_res_arr[i].r_type; 
+> -		cmn_err(CE_WARN,
+> -			    "region[%u]: %s - %u bytes\n",
+> -			    i, 
+> +		uint r_type = ticket->t_res_arr[i].r_type;
+> +		xfs_warn(mp, "region[%u]: %s - %u bytes\n", i,
+>  			    ((r_type <= 0 || r_type > XLOG_REG_TYPE_MAX) ?
+>  			    "bad-rtype" : res_type_str[r_type-1]),
+>  			    ticket->t_res_arr[i].r_len);
+>  	}
+>  
+> -	xfs_cmn_err(XFS_PTAG_LOGRES, CE_ALERT, mp,
+> +	xfs_alert_tag(mp, XFS_PTAG_LOGRES,
+>  		"xfs_log_write: reservation ran out. Need to up reservation");
+>  	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+>  }
+
+. . .
 
 _______________________________________________
 xfs mailing list
