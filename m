@@ -1,29 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0C0YIhi124058 for <xfs@oss.sgi.com>; Tue, 11 Jan 2011 18:34:19 -0600
+	p0C0Y8ea123998 for <xfs@oss.sgi.com>; Tue, 11 Jan 2011 18:34:09 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 60BD01D2641E
-	for <xfs@oss.sgi.com>; Tue, 11 Jan 2011 16:36:28 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
-	[150.101.137.102]) by cuda.sgi.com with ESMTP id
-	PuQcMrFtoHpqumnN for <xfs@oss.sgi.com>;
-	Tue, 11 Jan 2011 16:36:28 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1987F1D2641A
+	for <xfs@oss.sgi.com>; Tue, 11 Jan 2011 16:36:18 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail12.adl6.internode.on.net
+	[150.101.137.97]) by cuda.sgi.com with ESMTP id
+	UMgQTqhUWuHB2IX5 for <xfs@oss.sgi.com>;
+	Tue, 11 Jan 2011 16:36:18 -0800 (PST)
 Received: from dastard (unverified [121.44.222.102])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	52263213-1927428
-	for <xfs@oss.sgi.com>; Wed, 12 Jan 2011 11:06:26 +1030 (CDT)
+	52533577-1927428
+	for <xfs@oss.sgi.com>; Wed, 12 Jan 2011 11:06:16 +1030 (CDT)
 Received: from chute ([192.168.1.1] helo=disappointment)
 	by dastard with esmtp (Exim 4.72)
-	(envelope-from <dave@fromorbit.com>) id 1PcohM-0000V3-I5
-	for xfs@oss.sgi.com; Wed, 12 Jan 2011 11:36:24 +1100
+	(envelope-from <dave@fromorbit.com>) id 1PcohC-0000UT-6A
+	for xfs@oss.sgi.com; Wed, 12 Jan 2011 11:36:14 +1100
 Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1Pcogv-0002GT-49
-	for xfs@oss.sgi.com; Wed, 12 Jan 2011 11:35:57 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1Pcogu-0002G9-NR
+	for xfs@oss.sgi.com; Wed, 12 Jan 2011 11:35:56 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 11/12] xfs: Convert remaining cmn_err() callers to new API
-Date: Wed, 12 Jan 2011 11:35:52 +1100
-Message-Id: <1294792553-8378-12-git-send-email-david@fromorbit.com>
+Subject: [PATCH 04/12] xfs: Convert xlog_warn to new logging interface
+Date: Wed, 12 Jan 2011 11:35:45 +1100
+Message-Id: <1294792553-8378-5-git-send-email-david@fromorbit.com>
 In-Reply-To: <1294792553-8378-1-git-send-email-david@fromorbit.com>
 References: <1294792553-8378-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -43,1112 +43,988 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Once converted, kill the remainder of the cmn_err() interface.
+Convert the xfs log operations to use the new error logging
+interfaces. This removes the xlog_{warn,panic} wrappers and makes
+almost all errors emit the device they belong to instead of just
+refering to "XFS".
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/quota/xfs_dquot.c       |   34 ++++++++++++----------
- fs/xfs/quota/xfs_qm.c          |   27 ++++++++----------
- fs/xfs/quota/xfs_qm_bhv.c      |    3 +-
- fs/xfs/quota/xfs_qm_syscalls.c |   58 ++++++++++++++++++++------------------
- fs/xfs/quota/xfs_trans_dquot.c |    5 ++-
- fs/xfs/support/debug.c         |   26 -----------------
- fs/xfs/support/debug.h         |   12 --------
- fs/xfs/xfs_bmap.c              |    6 ++--
- fs/xfs/xfs_buf_item.c          |   15 +++++----
- fs/xfs/xfs_da_btree.c          |    9 ++---
- fs/xfs/xfs_dir2_node.c         |   25 ++++++----------
- fs/xfs/xfs_error.c             |   16 ++++------
- fs/xfs/xfs_ialloc.c            |   43 +++++++++++-----------------
- fs/xfs/xfs_inode.c             |   30 ++++++++-----------
- fs/xfs/xfs_mount.c             |   60 ++++++++++++++++------------------------
- fs/xfs/xfs_rtalloc.c           |    8 ++--
- fs/xfs/xfs_rtalloc.h           |    2 +-
- fs/xfs/xfs_rw.c                |   17 +++++------
- fs/xfs/xfs_trans_buf.c         |    6 ++--
- fs/xfs/xfs_vnodeops.c          |    5 +--
- 20 files changed, 169 insertions(+), 238 deletions(-)
+ fs/xfs/quota/xfs_dquot.c |   10 ++-
+ fs/xfs/quota/xfs_qm.c    |    2 +-
+ fs/xfs/xfs_log.c         |  124 ++++++++++++-------------
+ fs/xfs/xfs_log_priv.h    |    4 -
+ fs/xfs/xfs_log_recover.c |  223 ++++++++++++++++++++++-----------------------
+ fs/xfs/xfs_quota.h       |    3 +-
+ 6 files changed, 177 insertions(+), 189 deletions(-)
 
 diff --git a/fs/xfs/quota/xfs_dquot.c b/fs/xfs/quota/xfs_dquot.c
-index e1ff7e5..7e24164 100644
+index d22aa31..773adc8 100644
 --- a/fs/xfs/quota/xfs_dquot.c
 +++ b/fs/xfs/quota/xfs_dquot.c
-@@ -828,7 +828,7 @@ xfs_qm_dqget(
- 	if (xfs_do_dqerror) {
- 		if ((xfs_dqerror_target == mp->m_ddev_targp) &&
- 		    (xfs_dqreq_num++ % xfs_dqerror_mod) == 0) {
--			cmn_err(CE_DEBUG, "Returning error in dqget");
-+			xfs_debug(mp, "Returning error in dqget");
- 			return (EIO);
- 		}
- 	}
-@@ -1427,36 +1427,38 @@ xfs_qm_dqpurge(
- void
- xfs_qm_dqprint(xfs_dquot_t *dqp)
- {
--	cmn_err(CE_DEBUG, "-----------KERNEL DQUOT----------------");
--	cmn_err(CE_DEBUG, "---- dquotID =  %d",
-+	struct xfs_mount	*mp = dqp->q_mount;
-+
-+	xfs_debug(mp, "-----------KERNEL DQUOT----------------");
-+	xfs_debug(mp, "---- dquotID =  %d",
- 		(int)be32_to_cpu(dqp->q_core.d_id));
--	cmn_err(CE_DEBUG, "---- type    =  %s", DQFLAGTO_TYPESTR(dqp));
--	cmn_err(CE_DEBUG, "---- fs      =  0x%p", dqp->q_mount);
--	cmn_err(CE_DEBUG, "---- blkno   =  0x%x", (int) dqp->q_blkno);
--	cmn_err(CE_DEBUG, "---- boffset =  0x%x", (int) dqp->q_bufoffset);
--	cmn_err(CE_DEBUG, "---- blkhlimit =  %Lu (0x%x)",
-+	xfs_debug(mp, "---- type    =  %s", DQFLAGTO_TYPESTR(dqp));
-+	xfs_debug(mp, "---- fs      =  0x%p", dqp->q_mount);
-+	xfs_debug(mp, "---- blkno   =  0x%x", (int) dqp->q_blkno);
-+	xfs_debug(mp, "---- boffset =  0x%x", (int) dqp->q_bufoffset);
-+	xfs_debug(mp, "---- blkhlimit =  %Lu (0x%x)",
- 		be64_to_cpu(dqp->q_core.d_blk_hardlimit),
- 		(int)be64_to_cpu(dqp->q_core.d_blk_hardlimit));
--	cmn_err(CE_DEBUG, "---- blkslimit =  %Lu (0x%x)",
-+	xfs_debug(mp, "---- blkslimit =  %Lu (0x%x)",
- 		be64_to_cpu(dqp->q_core.d_blk_softlimit),
- 		(int)be64_to_cpu(dqp->q_core.d_blk_softlimit));
--	cmn_err(CE_DEBUG, "---- inohlimit =  %Lu (0x%x)",
-+	xfs_debug(mp, "---- inohlimit =  %Lu (0x%x)",
- 		be64_to_cpu(dqp->q_core.d_ino_hardlimit),
- 		(int)be64_to_cpu(dqp->q_core.d_ino_hardlimit));
--	cmn_err(CE_DEBUG, "---- inoslimit =  %Lu (0x%x)",
-+	xfs_debug(mp, "---- inoslimit =  %Lu (0x%x)",
- 		be64_to_cpu(dqp->q_core.d_ino_softlimit),
- 		(int)be64_to_cpu(dqp->q_core.d_ino_softlimit));
--	cmn_err(CE_DEBUG, "---- bcount  =  %Lu (0x%x)",
-+	xfs_debug(mp, "---- bcount  =  %Lu (0x%x)",
- 		be64_to_cpu(dqp->q_core.d_bcount),
- 		(int)be64_to_cpu(dqp->q_core.d_bcount));
--	cmn_err(CE_DEBUG, "---- icount  =  %Lu (0x%x)",
-+	xfs_debug(mp, "---- icount  =  %Lu (0x%x)",
- 		be64_to_cpu(dqp->q_core.d_icount),
- 		(int)be64_to_cpu(dqp->q_core.d_icount));
--	cmn_err(CE_DEBUG, "---- btimer  =  %d",
-+	xfs_debug(mp, "---- btimer  =  %d",
- 		(int)be32_to_cpu(dqp->q_core.d_btimer));
--	cmn_err(CE_DEBUG, "---- itimer  =  %d",
-+	xfs_debug(mp, "---- itimer  =  %d",
- 		(int)be32_to_cpu(dqp->q_core.d_itimer));
--	cmn_err(CE_DEBUG, "---------------------------");
-+	xfs_debug(mp, "---------------------------");
- }
- #endif
- 
+@@ -544,9 +544,10 @@ xfs_qm_dqtobp(
+ 	/*
+ 	 * A simple sanity check in case we got a corrupted dquot...
+ 	 */
+-	if (xfs_qm_dqcheck(ddq, id, dqp->dq_flags & XFS_DQ_ALLTYPES,
++	error = xfs_qm_dqcheck(mp, ddq, id, dqp->dq_flags & XFS_DQ_ALLTYPES,
+ 			   flags & (XFS_QMOPT_DQREPAIR|XFS_QMOPT_DOWARN),
+-			   "dqtobp")) {
++			   "dqtobp");
++	if (error) {
+ 		if (!(flags & XFS_QMOPT_DQREPAIR)) {
+ 			xfs_trans_brelse(tp, bp);
+ 			return XFS_ERROR(EIO);
+@@ -1207,8 +1208,9 @@ xfs_qm_dqflush(
+ 	/*
+ 	 * A simple sanity check in case we got a corrupted dquot..
+ 	 */
+-	if (xfs_qm_dqcheck(&dqp->q_core, be32_to_cpu(ddqp->d_id), 0,
+-			   XFS_QMOPT_DOWARN, "dqflush (incore copy)")) {
++	error = xfs_qm_dqcheck(mp, &dqp->q_core, be32_to_cpu(ddqp->d_id), 0,
++			   XFS_QMOPT_DOWARN, "dqflush (incore copy)");
++	if (error) {
+ 		xfs_buf_relse(bp);
+ 		xfs_dqfunlock(dqp);
+ 		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
 diff --git a/fs/xfs/quota/xfs_qm.c b/fs/xfs/quota/xfs_qm.c
-index 2488e2f..3dede6a 100644
+index f8e854b..d87c4a3 100644
 --- a/fs/xfs/quota/xfs_qm.c
 +++ b/fs/xfs/quota/xfs_qm.c
-@@ -80,7 +80,7 @@ xfs_qm_dquot_list_print(
- 	int		i = 0;
- 
- 	list_for_each_entry(dqp, &mp->m_quotainfo->qi_dqlist_lock, qi_mplist) {
--		cmn_err(CE_DEBUG, "   %d. \"%d (%s)\"   "
-+		xfs_debug(mp, "   %d. \"%d (%s)\"   "
- 				  "bcnt = %lld, icnt = %lld, refs = %d",
- 			i++, be32_to_cpu(dqp->q_core.d_id),
- 			DQFLAGTO_TYPESTR(dqp),
-@@ -205,7 +205,7 @@ xfs_qm_destroy(
- 	list_for_each_entry_safe(dqp, n, &xqm->qm_dqfrlist, q_freelist) {
- 		xfs_dqlock(dqp);
- #ifdef QUOTADEBUG
--		cmn_err(CE_DEBUG, "FREELIST destroy 0x%p", dqp);
-+		xfs_debug(dqp->q_mount, "FREELIST destroy 0x%p", dqp);
- #endif
- 		list_del_init(&dqp->q_freelist);
- 		xfs_Gqm->qm_dqfrlist_cnt--;
-@@ -341,9 +341,7 @@ xfs_qm_mount_quotas(
- 	 * quotas immediately.
- 	 */
- 	if (mp->m_sb.sb_rextents) {
--		cmn_err(CE_NOTE,
--			"Cannot turn on quotas for realtime filesystem %s",
--			mp->m_fsname);
-+		xfs_notice(mp, "Cannot turn on quotas for realtime filesystem");
- 		mp->m_qflags = 0;
- 		goto write_changes;
- 	}
-@@ -1675,7 +1673,7 @@ xfs_qm_quotacheck(
- 	 */
- 	ASSERT(list_empty(&mp->m_quotainfo->qi_dqlist));
- 
--	cmn_err(CE_NOTE, "XFS quotacheck %s: Please wait.", mp->m_fsname);
-+	xfs_notice(mp, "Quotacheck needed: Please wait.");
- 
- 	/*
- 	 * First we go thru all the dquots on disk, USR and GRP/PRJ, and reset
-@@ -1753,9 +1751,9 @@ xfs_qm_quotacheck(
- 
-  error_return:
- 	if (error) {
--		cmn_err(CE_WARN, "XFS quotacheck %s: Unsuccessful (Error %d): "
--			"Disabling quotas.",
--			mp->m_fsname, error);
-+		xfs_warn(mp,
-+	"Quotacheck: Unsuccessful (Error %d): Disabling quotas.",
-+			error);
- 		/*
- 		 * We must turn off quotas.
+@@ -1299,7 +1299,7 @@ xfs_qm_reset_dqcounts(
+ 		 * output any warnings because it's perfectly possible to
+ 		 * find uninitialised dquot blks. See comment in xfs_qm_dqcheck.
  		 */
-@@ -1763,12 +1761,11 @@ xfs_qm_quotacheck(
- 		ASSERT(xfs_Gqm != NULL);
- 		xfs_qm_destroy_quotainfo(mp);
- 		if (xfs_mount_reset_sbqflags(mp)) {
--			cmn_err(CE_WARN, "XFS quotacheck %s: "
--				"Failed to reset quota flags.", mp->m_fsname);
-+			xfs_warn(mp,
-+				"Quotacheck: Failed to reset quota flags.");
- 		}
--	} else {
--		cmn_err(CE_NOTE, "XFS quotacheck %s: Done.", mp->m_fsname);
--	}
-+	} else
-+		xfs_notice(mp, "Quotacheck: Done.");
- 	return (error);
- }
- 
-@@ -2118,7 +2115,7 @@ xfs_qm_write_sb_changes(
+-		(void) xfs_qm_dqcheck(ddq, id+j, type, XFS_QMOPT_DQREPAIR,
++		(void) xfs_qm_dqcheck(mp, ddq, id+j, type, XFS_QMOPT_DQREPAIR,
+ 				      "xfs_quotacheck");
+ 		ddq->d_bcount = 0;
+ 		ddq->d_icount = 0;
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index ae6fef1..d645f09 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -374,11 +374,10 @@ xfs_log_mount(
  	int		error;
  
- #ifdef QUOTADEBUG
--	cmn_err(CE_NOTE, "Writing superblock quota changes :%s", mp->m_fsname);
-+	xfs_notice(mp, "Writing superblock quota changes");
- #endif
- 	tp = xfs_trans_alloc(mp, XFS_TRANS_QM_SBCHANGE);
- 	if ((error = xfs_trans_reserve(tp, 0,
-diff --git a/fs/xfs/quota/xfs_qm_bhv.c b/fs/xfs/quota/xfs_qm_bhv.c
-index 45b5cb1..774d7ec 100644
---- a/fs/xfs/quota/xfs_qm_bhv.c
-+++ b/fs/xfs/quota/xfs_qm_bhv.c
-@@ -119,8 +119,7 @@ xfs_qm_newmount(
- 	     (gquotaondisk && !XFS_IS_GQUOTA_ON(mp)) ||
- 	    (!gquotaondisk &&  XFS_IS_OQUOTA_ON(mp)))  &&
- 	    xfs_dev_is_read_only(mp, "changing quota state")) {
--		cmn_err(CE_WARN,
--			"XFS: please mount with%s%s%s%s.",
-+		xfs_warn(mp, "please mount with%s%s%s%s.",
- 			(!quotaondisk ? "out quota" : ""),
- 			(uquotaondisk ? " usrquota" : ""),
- 			(pquotaondisk ? " prjquota" : ""),
-diff --git a/fs/xfs/quota/xfs_qm_syscalls.c b/fs/xfs/quota/xfs_qm_syscalls.c
-index 603ab86..c82f067 100644
---- a/fs/xfs/quota/xfs_qm_syscalls.c
-+++ b/fs/xfs/quota/xfs_qm_syscalls.c
-@@ -936,10 +936,11 @@ struct mutex  qcheck_lock;
- #define DQTEST_LIST_PRINT(l, NXT, title) \
- { \
- 	  xfs_dqtest_t	*dqp; int i = 0;\
--	  cmn_err(CE_DEBUG, "%s (#%d)", title, (int) (l)->qh_nelems); \
-+	  xfs_debug(NULL, "%s (#%d)", title, (int) (l)->qh_nelems); \
- 	  for (dqp = (xfs_dqtest_t *)(l)->qh_next; dqp != NULL; \
- 	       dqp = (xfs_dqtest_t *)dqp->NXT) { \
--		cmn_err(CE_DEBUG, "  %d. \"%d (%s)\"  bcnt = %d, icnt = %d", \
-+		xfs_debug(dqp->q_mount,		\
-+			"  %d. \"%d (%s)\"  bcnt = %d, icnt = %d", \
- 			 ++i, dqp->d_id, DQFLAGTO_TYPESTR(dqp),	     \
- 			 dqp->d_bcount, dqp->d_icount); } \
- }
-@@ -963,16 +964,17 @@ xfs_qm_hashinsert(xfs_dqhash_t *h, xfs_dqtest_t *dqp)
- }
- STATIC void
- xfs_qm_dqtest_print(
--	xfs_dqtest_t	*d)
-+	struct xfs_mount	*mp,
-+	struct dqtest		*d)
- {
--	cmn_err(CE_DEBUG, "-----------DQTEST DQUOT----------------");
--	cmn_err(CE_DEBUG, "---- dquot ID = %d", d->d_id);
--	cmn_err(CE_DEBUG, "---- fs       = 0x%p", d->q_mount);
--	cmn_err(CE_DEBUG, "---- bcount   = %Lu (0x%x)",
-+	xfs_debug(mp, "-----------DQTEST DQUOT----------------");
-+	xfs_debug(mp, "---- dquot ID = %d", d->d_id);
-+	xfs_debug(mp, "---- fs       = 0x%p", d->q_mount);
-+	xfs_debug(mp, "---- bcount   = %Lu (0x%x)",
- 		d->d_bcount, (int)d->d_bcount);
--	cmn_err(CE_DEBUG, "---- icount   = %Lu (0x%x)",
-+	xfs_debug(mp, "---- icount   = %Lu (0x%x)",
- 		d->d_icount, (int)d->d_icount);
--	cmn_err(CE_DEBUG, "---------------------------");
-+	xfs_debug(mp, "---------------------------");
- }
+ 	if (!(mp->m_flags & XFS_MOUNT_NORECOVERY))
+-		cmn_err(CE_NOTE, "XFS mounting filesystem %s", mp->m_fsname);
++		xfs_notice(mp, "Mounting Filesystem");
+ 	else {
+-		cmn_err(CE_NOTE,
+-			"Mounting filesystem \"%s\" in no-recovery mode.  Filesystem will be inconsistent.",
+-			mp->m_fsname);
++		xfs_notice(mp,
++"Mounting filesystem in no-recovery mode.  Filesystem will be inconsistent.");
+ 		ASSERT(mp->m_flags & XFS_MOUNT_RDONLY);
+ 	}
  
- STATIC void
-@@ -986,12 +988,14 @@ xfs_qm_dqtest_failed(
- {
- 	qmtest_nfails++;
- 	if (error)
--		cmn_err(CE_DEBUG, "quotacheck failed id=%d, err=%d\nreason: %s",
--		       d->d_id, error, reason);
-+		xfs_debug(dqp->q_mount,
-+			"quotacheck failed id=%d, err=%d\nreason: %s",
-+			d->d_id, error, reason);
- 	else
--		cmn_err(CE_DEBUG, "quotacheck failed id=%d (%s) [%d != %d]",
--		       d->d_id, reason, (int)a, (int)b);
--	xfs_qm_dqtest_print(d);
-+		xfs_debug(dqp->q_mount,
-+			"quotacheck failed id=%d (%s) [%d != %d]",
-+			d->d_id, reason, (int)a, (int)b);
-+	xfs_qm_dqtest_print(dqp->q_mount, d);
- 	if (dqp)
- 		xfs_qm_dqprint(dqp);
- }
-@@ -1018,9 +1022,9 @@ xfs_dqtest_cmp2(
- 	    be64_to_cpu(dqp->q_core.d_bcount) >=
- 	    be64_to_cpu(dqp->q_core.d_blk_softlimit)) {
- 		if (!dqp->q_core.d_btimer && dqp->q_core.d_id) {
--			cmn_err(CE_DEBUG,
--				"%d [%s] [0x%p] BLK TIMER NOT STARTED",
--				d->d_id, DQFLAGTO_TYPESTR(d), d->q_mount);
-+			xfs_debug(dqp->q_mount,
-+				"%d [%s] BLK TIMER NOT STARTED",
-+				d->d_id, DQFLAGTO_TYPESTR(d));
- 			err++;
- 		}
+@@ -393,7 +392,7 @@ xfs_log_mount(
+ 	 */
+ 	error = xfs_trans_ail_init(mp);
+ 	if (error) {
+-		cmn_err(CE_WARN, "XFS: AIL initialisation failed: error %d", error);
++		xfs_warn(mp, "AIL initialisation failed: error %d", error);
+ 		goto out_free_log;
  	}
-@@ -1028,16 +1032,16 @@ xfs_dqtest_cmp2(
- 	    be64_to_cpu(dqp->q_core.d_icount) >=
- 	    be64_to_cpu(dqp->q_core.d_ino_softlimit)) {
- 		if (!dqp->q_core.d_itimer && dqp->q_core.d_id) {
--			cmn_err(CE_DEBUG,
--				"%d [%s] [0x%p] INO TIMER NOT STARTED",
--				d->d_id, DQFLAGTO_TYPESTR(d), d->q_mount);
-+			xfs_debug(dqp->q_mount,
-+				"%d [%s] INO TIMER NOT STARTED",
-+				d->d_id, DQFLAGTO_TYPESTR(d));
- 			err++;
- 		}
- 	}
- #ifdef QUOTADEBUG
- 	if (!err) {
--		cmn_err(CE_DEBUG, "%d [%s] [0x%p] qchecked",
--			d->d_id, DQFLAGTO_TYPESTR(d), d->q_mount);
-+		xfs_debug(dqp->q_mount, "%d [%s] qchecked",
-+			d->d_id, DQFLAGTO_TYPESTR(d));
- 	}
- #endif
- 	return (err);
-@@ -1220,12 +1224,12 @@ xfs_qm_internalqcheck(
- 				 xfs_qm_internalqcheck_adjust,
- 				 0, NULL, &done);
+ 	mp->m_log->l_ailp = mp->m_ail;
+@@ -413,7 +412,8 @@ xfs_log_mount(
+ 		if (readonly)
+ 			mp->m_flags |= XFS_MOUNT_RDONLY;
  		if (error) {
--			cmn_err(CE_DEBUG, "Bulkstat returned error 0x%x", error);
-+			xfs_debug(mp, "Bulkstat returned error 0x%x", error);
- 			break;
+-			cmn_err(CE_WARN, "XFS: log mount/recovery failed: error %d", error);
++			xfs_warn(mp, "log mount/recovery failed: error %d",
++				error);
+ 			goto out_destroy_ail;
  		}
- 	} while (!done);
+ 	}
+@@ -542,10 +542,8 @@ xfs_log_unmount_write(xfs_mount_t *mp)
+ 			 */
+ 		}
  
--	cmn_err(CE_DEBUG, "Checking results against system dquots");
-+	xfs_debug(mp, "Checking results against system dquots");
- 	for (i = 0; i < qmtest_hashmask; i++) {
- 		xfs_dqtest_t	*d, *n;
- 		xfs_dqhash_t	*h;
-@@ -1243,10 +1247,10 @@ xfs_qm_internalqcheck(
+-		if (error) {
+-			xfs_fs_cmn_err(CE_ALERT, mp,
+-				"xfs_log_unmount: unmount record failed");
+-		}
++		if (error)
++			xfs_alert(mp, "%s: unmount record failed", __func__);
+ 
+ 
+ 		spin_lock(&log->l_icloglock);
+@@ -852,7 +850,7 @@ xlog_space_left(
+ 		 * In this case we just want to return the size of the
+ 		 * log as the amount of space left.
+ 		 */
+-		xfs_fs_cmn_err(CE_ALERT, log->l_mp,
++		xfs_alert(log->l_mp,
+ 			"xlog_space_left: head behind tail\n"
+ 			"  tail_cycle = %d, tail_bytes = %d\n"
+ 			"  GH   cycle = %d, GH   bytes = %d",
+@@ -1001,7 +999,7 @@ xlog_alloc_log(xfs_mount_t	*mp,
+ 
+ 	log = kmem_zalloc(sizeof(xlog_t), KM_MAYFAIL);
+ 	if (!log) {
+-		xlog_warn("XFS: Log allocation failed: No memory!");
++		xfs_warn(mp, "Log allocation failed: No memory!");
+ 		goto out;
  	}
  
- 	if (qmtest_nfails) {
--		cmn_err(CE_DEBUG, "******** quotacheck failed  ********");
--		cmn_err(CE_DEBUG, "failures = %d", qmtest_nfails);
-+		xfs_debug(mp, "******** quotacheck failed  ********");
-+		xfs_debug(mp, "failures = %d", qmtest_nfails);
- 	} else {
--		cmn_err(CE_DEBUG, "******** quotacheck successful! ********");
-+		xfs_debug(mp, "******** quotacheck successful! ********");
- 	}
- 	kmem_free(qmtest_udqtab);
- 	kmem_free(qmtest_gdqtab);
-diff --git a/fs/xfs/quota/xfs_trans_dquot.c b/fs/xfs/quota/xfs_trans_dquot.c
-index 7de91d1..2a36487 100644
---- a/fs/xfs/quota/xfs_trans_dquot.c
-+++ b/fs/xfs/quota/xfs_trans_dquot.c
-@@ -643,8 +643,9 @@ xfs_trans_dqresv(
- 	     (XFS_IS_OQUOTA_ENFORCED(dqp->q_mount) &&
- 	      (XFS_QM_ISPDQ(dqp) || XFS_QM_ISGDQ(dqp))))) {
- #ifdef QUOTADEBUG
--		cmn_err(CE_DEBUG, "BLK Res: nblks=%ld + resbcount=%Ld"
--			  " > hardlimit=%Ld?", nblks, *resbcountp, hardlimit);
-+		xfs_debug(mp,
-+			"BLK Res: nblks=%ld + resbcount=%Ld > hardlimit=%Ld?",
-+			nblks, *resbcountp, hardlimit);
- #endif
- 		if (nblks > 0) {
- 			/*
-diff --git a/fs/xfs/support/debug.c b/fs/xfs/support/debug.c
-index 98daab6..c9020ae 100644
---- a/fs/xfs/support/debug.c
-+++ b/fs/xfs/support/debug.c
-@@ -18,32 +18,6 @@
- #include <xfs.h>
- #include "debug.h"
+@@ -1029,24 +1027,24 @@ xlog_alloc_log(xfs_mount_t	*mp,
+ 	if (xfs_sb_version_hassector(&mp->m_sb)) {
+ 	        log2_size = mp->m_sb.sb_logsectlog;
+ 		if (log2_size < BBSHIFT) {
+-			xlog_warn("XFS: Log sector size too small "
+-				"(0x%x < 0x%x)", log2_size, BBSHIFT);
++			xfs_warn(mp, "Log sector size too small (0x%x < 0x%x)",
++				log2_size, BBSHIFT);
+ 			goto out_free_log;
+ 		}
  
--/* xfs_mount.h drags a lot of crap in, sorry.. */
--#include "xfs_sb.h"
--#include "xfs_inum.h"
--#include "xfs_ag.h"
--#include "xfs_mount.h"
--#include "xfs_error.h"
+ 	        log2_size -= BBSHIFT;
+ 		if (log2_size > mp->m_sectbb_log) {
+-			xlog_warn("XFS: Log sector size too large "
+-				"(0x%x > 0x%x)", log2_size, mp->m_sectbb_log);
++			xfs_warn(mp, "Log sector size too large (0x%x > 0x%x)",
++				log2_size, mp->m_sectbb_log);
+ 			goto out_free_log;
+ 		}
+ 
+ 		/* for larger sector sizes, must have v2 or external log */
+ 		if (log2_size && log->l_logBBstart > 0 &&
+ 			    !xfs_sb_version_haslogv2(&mp->m_sb)) {
 -
--void
--cmn_err(
--	const char	*lvl,
--	const char	*fmt,
--	...)
--{
--	struct va_format vaf;
--	va_list		args;
+-			xlog_warn("XFS: log sector size (0x%x) invalid "
+-				  "for configuration.", log2_size);
++			xfs_warn(mp,
++		"log sector size (0x%x) invalid for configuration.",
++				log2_size);
+ 			goto out_free_log;
+ 		}
+ 	}
+@@ -1563,38 +1561,36 @@ xlog_print_tic_res(
+ 	    "SWAPEXT"
+ 	};
+ 
+-	xfs_fs_cmn_err(CE_WARN, mp,
+-			"xfs_log_write: reservation summary:\n"
+-			"  trans type  = %s (%u)\n"
+-			"  unit res    = %d bytes\n"
+-			"  current res = %d bytes\n"
+-			"  total reg   = %u bytes (o/flow = %u bytes)\n"
+-			"  ophdrs      = %u (ophdr space = %u bytes)\n"
+-			"  ophdr + reg = %u bytes\n"
+-			"  num regions = %u\n",
+-			((ticket->t_trans_type <= 0 ||
+-			  ticket->t_trans_type > XFS_TRANS_TYPE_MAX) ?
+-			  "bad-trans-type" : trans_type_str[ticket->t_trans_type-1]),
+-			ticket->t_trans_type,
+-			ticket->t_unit_res,
+-			ticket->t_curr_res,
+-			ticket->t_res_arr_sum, ticket->t_res_o_flow,
+-			ticket->t_res_num_ophdrs, ophdr_spc,
+-			ticket->t_res_arr_sum + 
+-			ticket->t_res_o_flow + ophdr_spc,
+-			ticket->t_res_num);
++	xfs_alert(mp,
++		"xfs_log_write: reservation summary:\n"
++		"  trans type  = %s (%u)\n"
++		"  unit res    = %d bytes\n"
++		"  current res = %d bytes\n"
++		"  total reg   = %u bytes (o/flow = %u bytes)\n"
++		"  ophdrs      = %u (ophdr space = %u bytes)\n"
++		"  ophdr + reg = %u bytes\n"
++		"  num regions = %u\n",
++		((ticket->t_trans_type <= 0 ||
++		  ticket->t_trans_type > XFS_TRANS_TYPE_MAX) ?
++		  "bad-trans-type" : trans_type_str[ticket->t_trans_type-1]),
++		ticket->t_trans_type,
++		ticket->t_unit_res,
++		ticket->t_curr_res,
++		ticket->t_res_arr_sum, ticket->t_res_o_flow,
++		ticket->t_res_num_ophdrs, ophdr_spc,
++		ticket->t_res_arr_sum +
++		ticket->t_res_o_flow + ophdr_spc,
++		ticket->t_res_num);
+ 
+ 	for (i = 0; i < ticket->t_res_num; i++) {
+-		uint r_type = ticket->t_res_arr[i].r_type; 
+-		cmn_err(CE_WARN,
+-			    "region[%u]: %s - %u bytes\n",
+-			    i, 
++		uint r_type = ticket->t_res_arr[i].r_type;
++		xfs_warn(mp, "region[%u]: %s - %u bytes\n", i,
+ 			    ((r_type <= 0 || r_type > XLOG_REG_TYPE_MAX) ?
+ 			    "bad-rtype" : res_type_str[r_type-1]),
+ 			    ticket->t_res_arr[i].r_len);
+ 	}
+ 
+-	xfs_cmn_err(XFS_PTAG_LOGRES, CE_ALERT, mp,
++	xfs_alert_tag(mp, XFS_PTAG_LOGRES,
+ 		"xfs_log_write: reservation ran out. Need to up reservation");
+ 	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+ }
+@@ -1682,7 +1678,7 @@ xlog_write_setup_ophdr(
+ 	case XFS_LOG:
+ 		break;
+ 	default:
+-		xfs_fs_cmn_err(CE_WARN, log->l_mp,
++		xfs_warn(log->l_mp,
+ 			"Bad XFS transaction clientid 0x%x in ticket 0x%p",
+ 			ophdr->oh_clientid, ticket);
+ 		return NULL;
+@@ -2264,7 +2260,7 @@ xlog_state_do_callback(
+ 		if (repeats > 5000) {
+ 			flushcnt += repeats;
+ 			repeats = 0;
+-			xfs_fs_cmn_err(CE_WARN, log->l_mp,
++			xfs_warn(log->l_mp,
+ 				"%s: possible infinite loop (%d iterations)",
+ 				__func__, flushcnt);
+ 		}
+@@ -3052,10 +3048,8 @@ xfs_log_force(
+ 	int	error;
+ 
+ 	error = _xfs_log_force(mp, flags, NULL);
+-	if (error) {
+-		xfs_fs_cmn_err(CE_WARN, mp, "xfs_log_force: "
+-			"error %d returned.", error);
+-	}
++	if (error)
++		xfs_warn(mp, "%s: error %d returned.", __func__, error);
+ }
+ 
+ /*
+@@ -3204,10 +3198,8 @@ xfs_log_force_lsn(
+ 	int	error;
+ 
+ 	error = _xfs_log_force_lsn(mp, lsn, flags, NULL);
+-	if (error) {
+-		xfs_fs_cmn_err(CE_WARN, mp, "xfs_log_force: "
+-			"error %d returned.", error);
+-	}
++	if (error)
++		xfs_warn(mp, "%s: error %d returned.", __func__, error);
+ }
+ 
+ /*
+@@ -3412,7 +3404,7 @@ xlog_verify_dest_ptr(
+ 	}
+ 
+ 	if (!good_ptr)
+-		xlog_panic("xlog_verify_dest_ptr: invalid ptr");
++		xfs_emerg(log->l_mp, "%s: invalid ptr", __func__);
+ }
+ 
+ STATIC void
+@@ -3448,16 +3440,16 @@ xlog_verify_tail_lsn(xlog_t	    *log,
+ 	blocks =
+ 	    log->l_logBBsize - (log->l_prev_block - BLOCK_LSN(tail_lsn));
+ 	if (blocks < BTOBB(iclog->ic_offset)+BTOBB(log->l_iclog_hsize))
+-	    xlog_panic("xlog_verify_tail_lsn: ran out of log space");
++		xfs_emerg(log->l_mp, "%s: ran out of log space", __func__);
+     } else {
+ 	ASSERT(CYCLE_LSN(tail_lsn)+1 == log->l_prev_cycle);
+ 
+ 	if (BLOCK_LSN(tail_lsn) == log->l_prev_block)
+-	    xlog_panic("xlog_verify_tail_lsn: tail wrapped");
++		xfs_emerg(log->l_mp, "%s: tail wrapped", __func__);
+ 
+ 	blocks = BLOCK_LSN(tail_lsn) - log->l_prev_block;
+ 	if (blocks < BTOBB(iclog->ic_offset) + 1)
+-	    xlog_panic("xlog_verify_tail_lsn: ran out of log space");
++		xfs_emerg(log->l_mp, "%s: ran out of log space", __func__);
+     }
+ }	/* xlog_verify_tail_lsn */
+ 
+@@ -3497,22 +3489,23 @@ xlog_verify_iclog(xlog_t	 *log,
+ 	icptr = log->l_iclog;
+ 	for (i=0; i < log->l_iclog_bufs; i++) {
+ 		if (icptr == NULL)
+-			xlog_panic("xlog_verify_iclog: invalid ptr");
++			xfs_emerg(log->l_mp, "%s: invalid ptr", __func__);
+ 		icptr = icptr->ic_next;
+ 	}
+ 	if (icptr != log->l_iclog)
+-		xlog_panic("xlog_verify_iclog: corrupt iclog ring");
++		xfs_emerg(log->l_mp, "%s: corrupt iclog ring", __func__);
+ 	spin_unlock(&log->l_icloglock);
+ 
+ 	/* check log magic numbers */
+ 	if (be32_to_cpu(iclog->ic_header.h_magicno) != XLOG_HEADER_MAGIC_NUM)
+-		xlog_panic("xlog_verify_iclog: invalid magic num");
++		xfs_emerg(log->l_mp, "%s: invalid magic num", __func__);
+ 
+ 	ptr = (xfs_caddr_t) &iclog->ic_header;
+ 	for (ptr += BBSIZE; ptr < ((xfs_caddr_t)&iclog->ic_header) + count;
+ 	     ptr += BBSIZE) {
+ 		if (be32_to_cpu(*(__be32 *)ptr) == XLOG_HEADER_MAGIC_NUM)
+-			xlog_panic("xlog_verify_iclog: unexpected magic num");
++			xfs_emerg(log->l_mp, "%s: unexpected magic num",
++				__func__);
+ 	}
+ 
+ 	/* check fields */
+@@ -3542,9 +3535,10 @@ xlog_verify_iclog(xlog_t	 *log,
+ 			}
+ 		}
+ 		if (clientid != XFS_TRANSACTION && clientid != XFS_LOG)
+-			cmn_err(CE_WARN, "xlog_verify_iclog: "
+-				"invalid clientid %d op 0x%p offset 0x%lx",
+-				clientid, ophead, (unsigned long)field_offset);
++			xfs_warn(log->l_mp,
++				"%s: invalid clientid %d op 0x%p offset 0x%lx",
++				__func__, clientid, ophead,
++				(unsigned long)field_offset);
+ 
+ 		/* check length */
+ 		field_offset = (__psint_t)
+diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+index d5f8be8..15dbf1f 100644
+--- a/fs/xfs/xfs_log_priv.h
++++ b/fs/xfs/xfs_log_priv.h
+@@ -87,10 +87,6 @@ static inline uint xlog_get_client_id(__be32 i)
+ 	return be32_to_cpu(i) >> 24;
+ }
+ 
+-#define xlog_panic(args...)	cmn_err(CE_PANIC, ## args)
+-#define xlog_exit(args...)	cmn_err(CE_PANIC, ## args)
+-#define xlog_warn(args...)	cmn_err(CE_WARN, ## args)
 -
--	va_start(args, fmt);
--	vaf.fmt = fmt;
--	vaf.va = &args;
--
--	printk("%s%pV", lvl, &vaf);
--	va_end(args);
--
--	BUG_ON(strncmp(lvl, KERN_EMERG, strlen(KERN_EMERG)) == 0);
--}
--
- void
- assfail(char *expr, char *file, int line)
+ /*
+  * In core log state
+  */
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index aa0ebb7..0c4a561 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -92,7 +92,7 @@ xlog_get_bp(
+ 	int		nbblks)
  {
-diff --git a/fs/xfs/support/debug.h b/fs/xfs/support/debug.h
-index 4a082b9..db36be4 100644
---- a/fs/xfs/support/debug.h
-+++ b/fs/xfs/support/debug.h
-@@ -20,18 +20,6 @@
+ 	if (!xlog_buf_bbcount_valid(log, nbblks)) {
+-		xlog_warn("XFS: Invalid block length (0x%x) given for buffer",
++		xfs_warn(log->l_mp, "Invalid block length (0x%x) for buffer",
+ 			nbblks);
+ 		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_HIGH, log->l_mp);
+ 		return NULL;
+@@ -160,7 +160,7 @@ xlog_bread_noalign(
+ 	int		error;
  
- #include <stdarg.h>
+ 	if (!xlog_buf_bbcount_valid(log, nbblks)) {
+-		xlog_warn("XFS: Invalid block length (0x%x) given for buffer",
++		xfs_warn(log->l_mp, "Invalid block length (0x%x) for buffer",
+ 			nbblks);
+ 		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_HIGH, log->l_mp);
+ 		return EFSCORRUPTED;
+@@ -219,7 +219,7 @@ xlog_bwrite(
+ 	int		error;
  
--struct xfs_mount;
--
--#define CE_DEBUG        KERN_DEBUG
--#define CE_CONT         KERN_INFO
--#define CE_NOTE         KERN_NOTICE
--#define CE_WARN         KERN_WARNING
--#define CE_ALERT        KERN_ALERT
--#define CE_PANIC        KERN_EMERG
--
--void cmn_err(const char *lvl, const char *fmt, ...)
--		__attribute__ ((format (printf, 2, 3)));
--
- extern void assfail(char *expr, char *f, int l);
- 
- #define ASSERT_ALWAYS(expr)	\
-diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
-index 922b793..e6d23a2 100644
---- a/fs/xfs/xfs_bmap.c
-+++ b/fs/xfs/xfs_bmap.c
-@@ -5742,7 +5742,7 @@ xfs_check_block(
- 			else
- 				thispa = XFS_BMBT_PTR_ADDR(mp, block, j, dmxr);
- 			if (*thispa == *pp) {
--				cmn_err(CE_WARN, "%s: thispa(%d) == pp(%d) %Ld",
-+				xfs_warn(mp, "%s: thispa(%d) == pp(%d) %Ld",
- 					__func__, j, i,
- 					(unsigned long long)be64_to_cpu(*thispa));
- 				panic("%s: ptrs are equal in node\n",
-@@ -5907,11 +5907,11 @@ xfs_bmap_check_leaf_extents(
- 	return;
- 
- error0:
--	cmn_err(CE_WARN, "%s: at error0", __func__);
-+	xfs_warn(mp, "%s: at error0", __func__);
- 	if (bp_release)
- 		xfs_trans_brelse(NULL, bp);
- error_norelse:
--	cmn_err(CE_WARN, "%s: BAD after btree leaves for %d extents",
-+	xfs_warn(mp, "%s: BAD after btree leaves for %d extents",
- 		__func__, i);
- 	panic("%s: CORRUPTED BTREE OR SOMETHING", __func__);
- 	return;
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index 98c6f73..169a380 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -130,10 +130,12 @@ xfs_buf_item_log_check(
- 	orig = bip->bli_orig;
- 	buffer = XFS_BUF_PTR(bp);
- 	for (x = 0; x < XFS_BUF_COUNT(bp); x++) {
--		if (orig[x] != buffer[x] && !btst(bip->bli_logged, x))
--			cmn_err(CE_PANIC,
--	"xfs_buf_item_log_check bip %x buffer %x orig %x index %d",
--				bip, bp, orig, x);
-+		if (orig[x] != buffer[x] && !btst(bip->bli_logged, x)) {
-+			xfs_emerg(bp->b_mount,
-+				"%s: bip %x buffer %x orig %x index %d",
-+				__func__, bip, bp, orig, x);
-+			ASSERT(0);
-+		}
- 	}
+ 	if (!xlog_buf_bbcount_valid(log, nbblks)) {
+-		xlog_warn("XFS: Invalid block length (0x%x) given for buffer",
++		xfs_warn(log->l_mp, "Invalid block length (0x%x) for buffer",
+ 			nbblks);
+ 		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_HIGH, log->l_mp);
+ 		return EFSCORRUPTED;
+@@ -254,9 +254,9 @@ xlog_header_check_dump(
+ 	xfs_mount_t		*mp,
+ 	xlog_rec_header_t	*head)
+ {
+-	cmn_err(CE_DEBUG, "%s:  SB : uuid = %pU, fmt = %d\n",
++	xfs_debug(mp, "%s:  SB : uuid = %pU, fmt = %d\n",
+ 		__func__, &mp->m_sb.sb_uuid, XLOG_FMT);
+-	cmn_err(CE_DEBUG, "    log : uuid = %pU, fmt = %d\n",
++	xfs_debug(mp, "    log : uuid = %pU, fmt = %d\n",
+ 		&head->h_fs_uuid, be32_to_cpu(head->h_fmt));
  }
  #else
-@@ -981,10 +983,9 @@ xfs_buf_iodone_callbacks(
- 	if (XFS_BUF_TARGET(bp) != lasttarg ||
- 	    time_after(jiffies, (lasttime + 5*HZ))) {
- 		lasttime = jiffies;
--		cmn_err(CE_ALERT, "Device %s, XFS metadata write error"
--				" block 0x%llx in %s",
-+		xfs_alert(mp, "Device %s: metadata write error block 0x%llx",
- 			XFS_BUFTARG_NAME(XFS_BUF_TARGET(bp)),
--		      (__uint64_t)XFS_BUF_ADDR(bp), mp->m_fsname);
-+		      (__uint64_t)XFS_BUF_ADDR(bp));
- 	}
- 	lasttarg = XFS_BUF_TARGET(bp);
- 
-diff --git a/fs/xfs/xfs_da_btree.c b/fs/xfs/xfs_da_btree.c
-index 1c00bed..6102ac6 100644
---- a/fs/xfs/xfs_da_btree.c
-+++ b/fs/xfs/xfs_da_btree.c
-@@ -1995,13 +1995,12 @@ xfs_da_do_buf(
- 		error = mappedbno == -2 ? 0 : XFS_ERROR(EFSCORRUPTED);
- 		if (unlikely(error == EFSCORRUPTED)) {
- 			if (xfs_error_level >= XFS_ERRLEVEL_LOW) {
--				cmn_err(CE_ALERT, "xfs_da_do_buf: bno %lld\n",
--					(long long)bno);
--				cmn_err(CE_ALERT, "dir: inode %lld\n",
-+				xfs_alert(mp, "%s: bno %lld dir: inode %lld",
-+					__func__, (long long)bno,
- 					(long long)dp->i_ino);
- 				for (i = 0; i < nmap; i++) {
--					cmn_err(CE_ALERT,
--						"[%02d] br_startoff %lld br_startblock %lld br_blockcount %lld br_state %d\n",
-+					xfs_alert(mp,
-+"[%02d] br_startoff %lld br_startblock %lld br_blockcount %lld br_state %d",
- 						i,
- 						(long long)mapp[i].br_startoff,
- 						(long long)mapp[i].br_startblock,
-diff --git a/fs/xfs/xfs_dir2_node.c b/fs/xfs/xfs_dir2_node.c
-index f9a0864..a0aab7d 100644
---- a/fs/xfs/xfs_dir2_node.c
-+++ b/fs/xfs/xfs_dir2_node.c
-@@ -899,10 +899,9 @@ xfs_dir2_leafn_rebalance(
- 	if(blk2->index < 0) {
- 		state->inleaf = 1;
- 		blk2->index = 0;
--		cmn_err(CE_ALERT,
--			"xfs_dir2_leafn_rebalance: picked the wrong leaf? reverting original leaf: "
--			"blk1->index %d\n",
--			blk1->index);
-+		xfs_alert(args->dp->i_mount,
-+	"%s: picked the wrong leaf? reverting original leaf: blk1->index %d\n",
-+			__func__, blk1->index);
- 	}
- }
- 
-@@ -1641,26 +1640,22 @@ xfs_dir2_node_addname_int(
- 			}
- 
- 			if (unlikely(xfs_dir2_db_to_fdb(mp, dbno) != fbno)) {
--				cmn_err(CE_ALERT,
--					"xfs_dir2_node_addname_int: dir ino "
--					"%llu needed freesp block %lld for\n"
--					"  data block %lld, got %lld\n"
--					"  ifbno %llu lastfbno %d\n",
--					(unsigned long long)dp->i_ino,
-+				xfs_alert(mp,
-+			"%s: dir ino " "%llu needed freesp block %lld for\n"
-+			"  data block %lld, got %lld ifbno %llu lastfbno %d",
-+					__func__, (unsigned long long)dp->i_ino,
- 					(long long)xfs_dir2_db_to_fdb(mp, dbno),
- 					(long long)dbno, (long long)fbno,
- 					(unsigned long long)ifbno, lastfbno);
- 				if (fblk) {
--					cmn_err(CE_ALERT,
--						" fblk 0x%p blkno %llu "
--						"index %d magic 0x%x\n",
-+					xfs_alert(mp,
-+				" fblk 0x%p blkno %llu index %d magic 0x%x",
- 						fblk,
- 						(unsigned long long)fblk->blkno,
- 						fblk->index,
- 						fblk->magic);
- 				} else {
--					cmn_err(CE_ALERT,
--						" ... fblk is NULL\n");
-+					xfs_alert(mp, " ... fblk is NULL");
- 				}
- 				XFS_ERROR_REPORT("xfs_dir2_node_addname_int",
- 						 XFS_ERRLEVEL_LOW, mp);
-diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-index 0302890..39f0633 100644
---- a/fs/xfs/xfs_error.c
-+++ b/fs/xfs/xfs_error.c
-@@ -48,7 +48,7 @@ xfs_error_trap(int e)
- 			break;
- 		if (e != xfs_etrap[i])
- 			continue;
--		cmn_err(CE_NOTE, "xfs_error_trap: error %d", e);
-+		xfs_notice(NULL, "%s: error %d", __func__, e);
- 		BUG();
- 		break;
- 	}
-@@ -74,7 +74,7 @@ xfs_error_test(int error_tag, int *fsidp, char *expression,
- 
- 	for (i = 0; i < XFS_NUM_INJECT_ERROR; i++)  {
- 		if (xfs_etest[i] == error_tag && xfs_etest_fsid[i] == fsid) {
--			cmn_err(CE_WARN,
-+			xfs_warn(NULL,
- 	"Injecting error (%s) at file %s, line %d, on filesystem \"%s\"",
- 				expression, file, line, xfs_etest_fsname[i]);
- 			return 1;
-@@ -95,14 +95,14 @@ xfs_errortag_add(int error_tag, xfs_mount_t *mp)
- 
- 	for (i = 0; i < XFS_NUM_INJECT_ERROR; i++)  {
- 		if (xfs_etest_fsid[i] == fsid && xfs_etest[i] == error_tag) {
--			cmn_err(CE_WARN, "XFS error tag #%d on", error_tag);
-+			xfs_warn(mp, "error tag #%d on", error_tag);
- 			return 0;
- 		}
- 	}
- 
- 	for (i = 0; i < XFS_NUM_INJECT_ERROR; i++)  {
- 		if (xfs_etest[i] == 0) {
--			cmn_err(CE_WARN, "Turned on XFS error tag #%d",
-+			xfs_warn(mp, "Turned on XFS error tag #%d",
- 				error_tag);
- 			xfs_etest[i] = error_tag;
- 			xfs_etest_fsid[i] = fsid;
-@@ -114,7 +114,7 @@ xfs_errortag_add(int error_tag, xfs_mount_t *mp)
- 		}
- 	}
- 
--	cmn_err(CE_WARN, "error tag overflow, too many turned on");
-+	xfs_warn(mp, "error tag overflow, too many turned on");
- 
- 	return 1;
- }
-@@ -133,7 +133,7 @@ xfs_errortag_clearall(xfs_mount_t *mp, int loud)
- 		if ((fsid == 0LL || xfs_etest_fsid[i] == fsid) &&
- 		     xfs_etest[i] != 0) {
- 			cleared = 1;
--			cmn_err(CE_WARN, "Clearing XFS error tag #%d",
-+			xfs_warn(mp, "Clearing XFS error tag #%d",
- 				xfs_etest[i]);
- 			xfs_etest[i] = 0;
- 			xfs_etest_fsid[i] = 0LL;
-@@ -144,9 +144,7 @@ xfs_errortag_clearall(xfs_mount_t *mp, int loud)
- 	}
- 
- 	if (loud || cleared)
--		cmn_err(CE_WARN,
--			"Cleared all XFS error tags for filesystem \"%s\"",
--			mp->m_fsname);
-+		xfs_warn(mp, "Cleared all XFS error tags for filesystem");
- 
- 	return 0;
- }
-diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
-index fc3a2cb..84ebeec 100644
---- a/fs/xfs/xfs_ialloc.c
-+++ b/fs/xfs/xfs_ialloc.c
-@@ -1055,28 +1055,23 @@ xfs_difree(
+@@ -279,15 +279,15 @@ xlog_header_check_recover(
+ 	 * a dirty log created in IRIX.
  	 */
- 	agno = XFS_INO_TO_AGNO(mp, inode);
- 	if (agno >= mp->m_sb.sb_agcount)  {
--		cmn_err(CE_WARN,
--			"xfs_difree: agno >= mp->m_sb.sb_agcount (%d >= %d) on %s.  Returning EINVAL.",
--			agno, mp->m_sb.sb_agcount, mp->m_fsname);
-+		xfs_warn(mp, "%s: agno >= mp->m_sb.sb_agcount (%d >= %d).",
-+			__func__, agno, mp->m_sb.sb_agcount);
- 		ASSERT(0);
- 		return XFS_ERROR(EINVAL);
- 	}
- 	agino = XFS_INO_TO_AGINO(mp, inode);
- 	if (inode != XFS_AGINO_TO_INO(mp, agno, agino))  {
--		cmn_err(CE_WARN,
--			"xfs_difree: inode != XFS_AGINO_TO_INO() "
--			"(%llu != %llu) on %s.  Returning EINVAL.",
--			(unsigned long long)inode,
--			(unsigned long long)XFS_AGINO_TO_INO(mp, agno, agino),
--			mp->m_fsname);
-+		xfs_warn(mp, "%s: inode != XFS_AGINO_TO_INO() (%llu != %llu).",
-+			__func__, (unsigned long long)inode,
-+			(unsigned long long)XFS_AGINO_TO_INO(mp, agno, agino));
- 		ASSERT(0);
- 		return XFS_ERROR(EINVAL);
- 	}
- 	agbno = XFS_AGINO_TO_AGBNO(mp, agino);
- 	if (agbno >= mp->m_sb.sb_agblocks)  {
--		cmn_err(CE_WARN,
--			"xfs_difree: agbno >= mp->m_sb.sb_agblocks (%d >= %d) on %s.  Returning EINVAL.",
--			agbno, mp->m_sb.sb_agblocks, mp->m_fsname);
-+		xfs_warn(mp, "%s: agbno >= mp->m_sb.sb_agblocks (%d >= %d).",
-+			__func__, agbno, mp->m_sb.sb_agblocks);
- 		ASSERT(0);
- 		return XFS_ERROR(EINVAL);
- 	}
-@@ -1085,9 +1080,8 @@ xfs_difree(
- 	 */
- 	error = xfs_ialloc_read_agi(mp, tp, agno, &agbp);
- 	if (error) {
--		cmn_err(CE_WARN,
--			"xfs_difree: xfs_ialloc_read_agi() returned an error %d on %s.  Returning error.",
--			error, mp->m_fsname);
-+		xfs_warn(mp, "%s: xfs_ialloc_read_agi() returned error %d.",
-+			__func__, error);
+ 	if (unlikely(be32_to_cpu(head->h_fmt) != XLOG_FMT)) {
+-		xlog_warn(
+-	"XFS: dirty log written in incompatible format - can't recover");
++		xfs_warn(mp,
++	"dirty log written in incompatible format - can't recover");
+ 		xlog_header_check_dump(mp, head);
+ 		XFS_ERROR_REPORT("xlog_header_check_recover(1)",
+ 				 XFS_ERRLEVEL_HIGH, mp);
+ 		return XFS_ERROR(EFSCORRUPTED);
+ 	} else if (unlikely(!uuid_equal(&mp->m_sb.sb_uuid, &head->h_fs_uuid))) {
+-		xlog_warn(
+-	"XFS: dirty log entry has mismatched uuid - can't recover");
++		xfs_warn(mp,
++	"dirty log entry has mismatched uuid - can't recover");
+ 		xlog_header_check_dump(mp, head);
+ 		XFS_ERROR_REPORT("xlog_header_check_recover(2)",
+ 				 XFS_ERRLEVEL_HIGH, mp);
+@@ -312,9 +312,9 @@ xlog_header_check_mount(
+ 		 * h_fs_uuid is nil, we assume this log was last mounted
+ 		 * by IRIX and continue.
+ 		 */
+-		xlog_warn("XFS: nil uuid in log - IRIX style log");
++		xfs_warn(mp, "nil uuid in log - IRIX style log");
+ 	} else if (unlikely(!uuid_equal(&mp->m_sb.sb_uuid, &head->h_fs_uuid))) {
+-		xlog_warn("XFS: log has mismatched uuid - can't recover");
++		xfs_warn(mp, "log has mismatched uuid - can't recover");
+ 		xlog_header_check_dump(mp, head);
+ 		XFS_ERROR_REPORT("xlog_header_check_mount",
+ 				 XFS_ERRLEVEL_HIGH, mp);
+@@ -490,8 +490,8 @@ xlog_find_verify_log_record(
+ 	for (i = (*last_blk) - 1; i >= 0; i--) {
+ 		if (i < start_blk) {
+ 			/* valid log record not found */
+-			xlog_warn(
+-		"XFS: Log inconsistent (didn't find previous header)");
++			xfs_warn(log->l_mp,
++		"Log inconsistent (didn't find previous header)");
+ 			ASSERT(0);
+ 			error = XFS_ERROR(EIO);
+ 			goto out;
+@@ -591,12 +591,12 @@ xlog_find_head(
+ 			 * mkfs etc write a dummy unmount record to a fresh
+ 			 * log so we can store the uuid in there
+ 			 */
+-			xlog_warn("XFS: totally zeroed log");
++			xfs_warn(log->l_mp, "totally zeroed log");
+ 		}
+ 
+ 		return 0;
+ 	} else if (error) {
+-		xlog_warn("XFS: empty log check failed");
++		xfs_warn(log->l_mp, "empty log check failed");
  		return error;
  	}
- 	agi = XFS_BUF_TO_AGI(agbp);
-@@ -1106,17 +1100,15 @@ xfs_difree(
- 	 * Look for the entry describing this inode.
- 	 */
- 	if ((error = xfs_inobt_lookup(cur, agino, XFS_LOOKUP_LE, &i))) {
--		cmn_err(CE_WARN,
--			"xfs_difree: xfs_inobt_lookup returned()  an error %d on %s.  Returning error.",
--			error, mp->m_fsname);
-+		xfs_warn(mp, "%s: xfs_inobt_lookup() returned error %d.",
-+			__func__, error);
- 		goto error0;
+ 
+@@ -819,7 +819,7 @@ validate_head:
+ 	xlog_put_bp(bp);
+ 
+ 	if (error)
+-	    xlog_warn("XFS: failed to find log head");
++		xfs_warn(log->l_mp, "failed to find log head");
+ 	return error;
+ }
+ 
+@@ -912,7 +912,7 @@ xlog_find_tail(
+ 		}
  	}
- 	XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
- 	error = xfs_inobt_get_rec(cur, &rec, &i);
- 	if (error) {
--		cmn_err(CE_WARN,
--			"xfs_difree: xfs_inobt_get_rec()  returned an error %d on %s.  Returning error.",
--			error, mp->m_fsname);
-+		xfs_warn(mp, "%s: xfs_inobt_get_rec() returned error %d.",
-+			__func__, error);
- 		goto error0;
+ 	if (!found) {
+-		xlog_warn("XFS: xlog_find_tail: couldn't find sync record");
++		xfs_warn(log->l_mp, "%s: couldn't find sync record", __func__);
+ 		ASSERT(0);
+ 		return XFS_ERROR(EIO);
  	}
- 	XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
-@@ -1157,8 +1149,8 @@ xfs_difree(
- 		xfs_trans_mod_sb(tp, XFS_TRANS_SB_IFREE, -(ilen - 1));
+@@ -1028,7 +1028,7 @@ done:
+ 	xlog_put_bp(bp);
  
- 		if ((error = xfs_btree_delete(cur, &i))) {
--			cmn_err(CE_WARN, "xfs_difree: xfs_btree_delete returned an error %d on %s.\n",
--				error, mp->m_fsname);
-+			xfs_warn(mp, "%s: xfs_btree_delete returned error %d.",
-+				__func__, error);
- 			goto error0;
- 		}
+ 	if (error)
+-		xlog_warn("XFS: failed to locate log tail");
++		xfs_warn(log->l_mp, "failed to locate log tail");
+ 	return error;
+ }
  
-@@ -1170,9 +1162,8 @@ xfs_difree(
- 
- 		error = xfs_inobt_update(cur, &rec);
- 		if (error) {
--			cmn_err(CE_WARN,
--	"xfs_difree: xfs_inobt_update returned an error %d on %s.",
--				error, mp->m_fsname);
-+			xfs_warn(mp, "%s: xfs_inobt_update returned error %d.",
-+				__func__, error);
- 			goto error0;
- 		}
- 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 60f2dd5..6b3424b 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -142,10 +142,9 @@ xfs_imap_to_bp(
- 				   (int)imap->im_len, buf_flags, &bp);
- 	if (error) {
- 		if (error != EAGAIN) {
--			cmn_err(CE_WARN,
--				"xfs_imap_to_bp: xfs_trans_read_buf()returned "
--				"an error %d on %s.  Returning error.",
--				error, mp->m_fsname);
-+			xfs_warn(mp,
-+				"%s: xfs_trans_read_buf() returned error %d.",
-+				__func__, error);
- 		} else {
- 			ASSERT(buf_flags & XBF_TRYLOCK);
- 		}
-@@ -180,12 +179,11 @@ xfs_imap_to_bp(
- 			XFS_CORRUPTION_ERROR("xfs_imap_to_bp",
- 						XFS_ERRLEVEL_HIGH, mp, dip);
- #ifdef DEBUG
--			cmn_err(CE_PANIC,
--					"Device %s - bad inode magic/vsn "
--					"daddr %lld #%d (magic=%x)",
--				XFS_BUFTARG_NAME(mp->m_ddev_targp),
-+			xfs_emerg(mp,
-+				"bad inode magic/vsn daddr %lld #%d (magic=%x)",
- 				(unsigned long long)imap->im_blkno, i,
- 				be16_to_cpu(dip->di_magic));
-+			ASSERT(0);
- #endif
- 			xfs_trans_brelse(tp, bp);
- 			return XFS_ERROR(EFSCORRUPTED);
-@@ -1810,9 +1808,8 @@ xfs_iunlink_remove(
+@@ -1092,7 +1092,8 @@ xlog_find_zeroed(
+ 		 * the first block must be 1. If it's not, maybe we're
+ 		 * not looking at a log... Bail out.
  		 */
- 		error = xfs_itobp(mp, tp, ip, &dip, &ibp, XBF_LOCK);
- 		if (error) {
--			cmn_err(CE_WARN,
--				"xfs_iunlink_remove: xfs_itobp()  returned an error %d on %s.  Returning error.",
--				error, mp->m_fsname);
-+			xfs_warn(mp, "%s: xfs_itobp() returned error %d.",
-+				__func__, error);
- 			return error;
- 		}
- 		next_agino = be32_to_cpu(dip->di_next_unlinked);
-@@ -1857,9 +1854,9 @@ xfs_iunlink_remove(
- 			error = xfs_inotobp(mp, tp, next_ino, &last_dip,
- 					    &last_ibp, &last_offset, 0);
- 			if (error) {
--				cmn_err(CE_WARN,
--			"xfs_iunlink_remove: xfs_inotobp()  returned an error %d on %s.  Returning error.",
--					error, mp->m_fsname);
-+				xfs_warn(mp,
-+					"%s: xfs_inotobp() returned error %d.",
-+					__func__, error);
- 				return error;
- 			}
- 			next_agino = be32_to_cpu(last_dip->di_next_unlinked);
-@@ -1872,9 +1869,8 @@ xfs_iunlink_remove(
- 		 */
- 		error = xfs_itobp(mp, tp, ip, &dip, &ibp, XBF_LOCK);
- 		if (error) {
--			cmn_err(CE_WARN,
--				"xfs_iunlink_remove: xfs_itobp()  returned an error %d on %s.  Returning error.",
--				error, mp->m_fsname);
-+			xfs_warn(mp, "%s: xfs_itobp(2) returned error %d.",
-+				__func__, error);
- 			return error;
- 		}
- 		next_agino = be32_to_cpu(dip->di_next_unlinked);
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index e39b082..bb3f9a7 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -133,9 +133,7 @@ xfs_uuid_mount(
- 		return 0;
- 
- 	if (uuid_is_nil(uuid)) {
--		cmn_err(CE_WARN,
--			"XFS: Filesystem %s has nil UUID - can't mount",
--			mp->m_fsname);
-+		xfs_warn(mp, "Filesystem has nil UUID - can't mount");
+-		xlog_warn("XFS: Log inconsistent or not a log (last==0, first!=1)");
++		xfs_warn(log->l_mp,
++			"Log inconsistent or not a log (last==0, first!=1)");
  		return XFS_ERROR(EINVAL);
  	}
  
-@@ -163,8 +161,7 @@ xfs_uuid_mount(
- 
-  out_duplicate:
- 	mutex_unlock(&xfs_uuid_table_mutex);
--	cmn_err(CE_WARN, "XFS: Filesystem %s has duplicate UUID - can't mount",
--			 mp->m_fsname);
-+	xfs_warn(mp, "Filesystem has duplicate UUID - can't mount");
- 	return XFS_ERROR(EINVAL);
- }
- 
-@@ -867,8 +864,7 @@ xfs_update_alignment(xfs_mount_t *mp)
- 		if ((BBTOB(mp->m_dalign) & mp->m_blockmask) ||
- 		    (BBTOB(mp->m_swidth) & mp->m_blockmask)) {
- 			if (mp->m_flags & XFS_MOUNT_RETERR) {
--				cmn_err(CE_WARN,
--					"XFS: alignment check 1 failed");
-+				xfs_warn(mp, "alignment check 1 failed");
- 				return XFS_ERROR(EINVAL);
+@@ -1506,8 +1507,8 @@ xlog_recover_add_to_trans(
+ 	if (list_empty(&trans->r_itemq)) {
+ 		/* we need to catch log corruptions here */
+ 		if (*(uint *)dp != XFS_TRANS_HEADER_MAGIC) {
+-			xlog_warn("XFS: xlog_recover_add_to_trans: "
+-				  "bad header magic number");
++			xfs_warn(log->l_mp, "%s: bad header magic number",
++				__func__);
+ 			ASSERT(0);
+ 			return XFS_ERROR(EIO);
+ 		}
+@@ -1534,8 +1535,8 @@ xlog_recover_add_to_trans(
+ 	if (item->ri_total == 0) {		/* first region to be added */
+ 		if (in_f->ilf_size == 0 ||
+ 		    in_f->ilf_size > XLOG_MAX_REGIONS_IN_ITEM) {
+-			xlog_warn(
+-	"XFS: bad number of regions (%d) in inode log format",
++			xfs_warn(log->l_mp,
++		"bad number of regions (%d) in inode log format",
+ 				  in_f->ilf_size);
+ 			ASSERT(0);
+ 			return XFS_ERROR(EIO);
+@@ -1592,8 +1593,9 @@ xlog_recover_reorder_trans(
+ 			list_move_tail(&item->ri_list, &trans->r_itemq);
+ 			break;
+ 		default:
+-			xlog_warn(
+-	"XFS: xlog_recover_reorder_trans: unrecognized type of log operation");
++			xfs_warn(log->l_mp,
++				"%s: unrecognized type of log operation",
++				__func__);
+ 			ASSERT(0);
+ 			return XFS_ERROR(EIO);
+ 		}
+@@ -1803,8 +1805,9 @@ xlog_recover_do_inode_buffer(
+ 		logged_nextp = item->ri_buf[item_index].i_addr +
+ 				next_unlinked_offset - reg_buf_offset;
+ 		if (unlikely(*logged_nextp == 0)) {
+-			xfs_fs_cmn_err(CE_ALERT, mp,
+-				"bad inode buffer log record (ptr = 0x%p, bp = 0x%p).  XFS trying to replay bad (0) inode di_next_unlinked field",
++			xfs_alert(mp,
++		"Bad inode buffer log record (ptr = 0x%p, bp = 0x%p). "
++		"Trying to replay bad (0) inode di_next_unlinked field.",
+ 				item, bp);
+ 			XFS_ERROR_REPORT("xlog_recover_do_inode_buf",
+ 					 XFS_ERRLEVEL_LOW, mp);
+@@ -1863,17 +1866,17 @@ xlog_recover_do_reg_buffer(
+ 		if (buf_f->blf_flags &
+ 		   (XFS_BLF_UDQUOT_BUF|XFS_BLF_PDQUOT_BUF|XFS_BLF_GDQUOT_BUF)) {
+ 			if (item->ri_buf[i].i_addr == NULL) {
+-				cmn_err(CE_ALERT,
++				xfs_alert(mp,
+ 					"XFS: NULL dquot in %s.", __func__);
+ 				goto next;
  			}
- 			mp->m_dalign = mp->m_swidth = 0;
-@@ -1041,14 +1037,14 @@ xfs_check_sizes(xfs_mount_t *mp)
- 
- 	d = (xfs_daddr_t)XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks);
- 	if (XFS_BB_TO_FSB(mp, d) != mp->m_sb.sb_dblocks) {
--		cmn_err(CE_WARN, "XFS: filesystem size mismatch detected");
-+		xfs_warn(mp, "filesystem size mismatch detected");
- 		return XFS_ERROR(EFBIG);
- 	}
- 	bp = xfs_buf_read_uncached(mp, mp->m_ddev_targp,
- 					d - XFS_FSS_TO_BB(mp, 1),
- 					BBTOB(XFS_FSS_TO_BB(mp, 1)), 0);
- 	if (!bp) {
--		cmn_err(CE_WARN, "XFS: last sector read failed");
-+		xfs_warn(mp, "last sector read failed");
- 		return EIO;
- 	}
- 	xfs_buf_relse(bp);
-@@ -1056,14 +1052,14 @@ xfs_check_sizes(xfs_mount_t *mp)
- 	if (mp->m_logdev_targp != mp->m_ddev_targp) {
- 		d = (xfs_daddr_t)XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks);
- 		if (XFS_BB_TO_FSB(mp, d) != mp->m_sb.sb_logblocks) {
--			cmn_err(CE_WARN, "XFS: log size mismatch detected");
-+			xfs_warn(mp, "log size mismatch detected");
- 			return XFS_ERROR(EFBIG);
- 		}
- 		bp = xfs_buf_read_uncached(mp, mp->m_logdev_targp,
- 					d - XFS_FSB_TO_BB(mp, 1),
- 					XFS_FSB_TO_B(mp, 1), 0);
- 		if (!bp) {
--			cmn_err(CE_WARN, "XFS: log device read failed");
-+			xfs_warn(mp, "log device read failed");
- 			return EIO;
- 		}
- 		xfs_buf_relse(bp);
-@@ -1175,8 +1171,7 @@ xfs_mountfs(
- 	 * transaction subsystem is online.
- 	 */
- 	if (xfs_sb_has_mismatched_features2(sbp)) {
--		cmn_err(CE_WARN,
--			"XFS: correcting sb_features alignment problem");
-+		xfs_warn(mp, "correcting sb_features alignment problem");
- 		sbp->sb_features2 |= sbp->sb_bad_features2;
- 		sbp->sb_bad_features2 = sbp->sb_features2;
- 		mp->m_update_flags |= XFS_SB_FEATURES2 | XFS_SB_BAD_FEATURES2;
-@@ -1255,7 +1250,7 @@ xfs_mountfs(
- 	 */
- 	error = xfs_rtmount_init(mp);
- 	if (error) {
--		cmn_err(CE_WARN, "XFS: RT mount failed");
-+		xfs_warn(mp, "RT mount failed");
- 		goto out_remove_uuid;
- 	}
- 
-@@ -1286,12 +1281,12 @@ xfs_mountfs(
- 	INIT_RADIX_TREE(&mp->m_perag_tree, GFP_ATOMIC);
- 	error = xfs_initialize_perag(mp, sbp->sb_agcount, &mp->m_maxagi);
- 	if (error) {
--		cmn_err(CE_WARN, "XFS: Failed per-ag init: %d", error);
-+		xfs_warn(mp, "Failed per-ag init: %d", error);
- 		goto out_remove_uuid;
- 	}
- 
- 	if (!sbp->sb_logblocks) {
--		cmn_err(CE_WARN, "XFS: no log defined");
-+		xfs_warn(mp, "no log defined");
- 		XFS_ERROR_REPORT("xfs_mountfs", XFS_ERRLEVEL_LOW, mp);
- 		error = XFS_ERROR(EFSCORRUPTED);
- 		goto out_free_perag;
-@@ -1304,7 +1299,7 @@ xfs_mountfs(
- 			      XFS_FSB_TO_DADDR(mp, sbp->sb_logstart),
- 			      XFS_FSB_TO_BB(mp, sbp->sb_logblocks));
- 	if (error) {
--		cmn_err(CE_WARN, "XFS: log mount failed");
-+		xfs_warn(mp, "log mount failed");
- 		goto out_free_perag;
- 	}
- 
-@@ -1341,16 +1336,14 @@ xfs_mountfs(
- 	 */
- 	error = xfs_iget(mp, NULL, sbp->sb_rootino, 0, XFS_ILOCK_EXCL, &rip);
- 	if (error) {
--		cmn_err(CE_WARN, "XFS: failed to read root inode");
-+		xfs_warn(mp, "failed to read root inode");
- 		goto out_log_dealloc;
- 	}
- 
- 	ASSERT(rip != NULL);
- 
- 	if (unlikely((rip->i_d.di_mode & S_IFMT) != S_IFDIR)) {
--		cmn_err(CE_WARN, "XFS: corrupted root inode");
--		cmn_err(CE_WARN, "Device %s - root %llu is not a directory",
--			XFS_BUFTARG_NAME(mp->m_ddev_targp),
-+		xfs_warn(mp, "corrupted root inode %llu: not a directory",
- 			(unsigned long long)rip->i_ino);
- 		xfs_iunlock(rip, XFS_ILOCK_EXCL);
- 		XFS_ERROR_REPORT("xfs_mountfs_int(2)", XFS_ERRLEVEL_LOW,
-@@ -1370,7 +1363,7 @@ xfs_mountfs(
- 		/*
- 		 * Free up the root inode.
- 		 */
--		cmn_err(CE_WARN, "XFS: failed to read RT inodes");
-+		xfs_warn(mp, "failed to read RT inodes");
- 		goto out_rele_rip;
- 	}
- 
-@@ -1382,7 +1375,7 @@ xfs_mountfs(
- 	if (mp->m_update_flags && !(mp->m_flags & XFS_MOUNT_RDONLY)) {
- 		error = xfs_mount_log_sb(mp, mp->m_update_flags);
- 		if (error) {
--			cmn_err(CE_WARN, "XFS: failed to write sb changes");
-+			xfs_warn(mp, "failed to write sb changes");
- 			goto out_rtunmount;
- 		}
- 	}
-@@ -1403,10 +1396,7 @@ xfs_mountfs(
- 		 * quotachecked license.
- 		 */
- 		if (mp->m_sb.sb_qflags & XFS_ALL_QUOTA_ACCT) {
--			cmn_err(CE_NOTE,
--				"XFS: resetting qflags for filesystem %s",
--				mp->m_fsname);
--
-+			xfs_notice(mp, "resetting quota flags");
- 			error = xfs_mount_reset_sbqflags(mp);
+ 			if (item->ri_buf[i].i_len < sizeof(xfs_disk_dquot_t)) {
+-				cmn_err(CE_ALERT,
++				xfs_alert(mp,
+ 					"XFS: dquot too small (%d) in %s.",
+ 					item->ri_buf[i].i_len, __func__);
+ 				goto next;
+ 			}
+-			error = xfs_qm_dqcheck(item->ri_buf[i].i_addr,
++			error = xfs_qm_dqcheck(mp, item->ri_buf[i].i_addr,
+ 					       -1, 0, XFS_QMOPT_DOWARN,
+ 					       "dquot_buf_recover");
  			if (error)
- 				return error;
-@@ -1420,7 +1410,7 @@ xfs_mountfs(
+@@ -1898,6 +1901,7 @@ xlog_recover_do_reg_buffer(
+  */
+ int
+ xfs_qm_dqcheck(
++	struct xfs_mount *mp,
+ 	xfs_disk_dquot_t *ddq,
+ 	xfs_dqid_t	 id,
+ 	uint		 type,	  /* used only when IO_dorepair is true */
+@@ -1924,14 +1928,14 @@ xfs_qm_dqcheck(
  	 */
- 	error = xfs_log_mount_finish(mp);
- 	if (error) {
--		cmn_err(CE_WARN, "XFS: log mount finish failed");
-+		xfs_warn(mp, "log mount finish failed");
- 		goto out_rtunmount;
+ 	if (be16_to_cpu(ddq->d_magic) != XFS_DQUOT_MAGIC) {
+ 		if (flags & XFS_QMOPT_DOWARN)
+-			cmn_err(CE_ALERT,
++			xfs_alert(mp,
+ 			"%s : XFS dquot ID 0x%x, magic 0x%x != 0x%x",
+ 			str, id, be16_to_cpu(ddq->d_magic), XFS_DQUOT_MAGIC);
+ 		errs++;
  	}
+ 	if (ddq->d_version != XFS_DQUOT_VERSION) {
+ 		if (flags & XFS_QMOPT_DOWARN)
+-			cmn_err(CE_ALERT,
++			xfs_alert(mp,
+ 			"%s : XFS dquot ID 0x%x, version 0x%x != 0x%x",
+ 			str, id, ddq->d_version, XFS_DQUOT_VERSION);
+ 		errs++;
+@@ -1941,7 +1945,7 @@ xfs_qm_dqcheck(
+ 	    ddq->d_flags != XFS_DQ_PROJ &&
+ 	    ddq->d_flags != XFS_DQ_GROUP) {
+ 		if (flags & XFS_QMOPT_DOWARN)
+-			cmn_err(CE_ALERT,
++			xfs_alert(mp,
+ 			"%s : XFS dquot ID 0x%x, unknown flags 0x%x",
+ 			str, id, ddq->d_flags);
+ 		errs++;
+@@ -1949,7 +1953,7 @@ xfs_qm_dqcheck(
  
-@@ -1449,8 +1439,8 @@ xfs_mountfs(
- 		resblks = xfs_default_resblks(mp);
- 		error = xfs_reserve_blocks(mp, &resblks, NULL);
- 		if (error)
--			cmn_err(CE_WARN, "XFS: Unable to allocate reserve "
--				"blocks. Continuing without a reserve pool.");
-+			xfs_warn(mp,
-+	"Unable to allocate reserve blocks. Continuing without reserve pool.");
- 	}
+ 	if (id != -1 && id != be32_to_cpu(ddq->d_id)) {
+ 		if (flags & XFS_QMOPT_DOWARN)
+-			cmn_err(CE_ALERT,
++			xfs_alert(mp,
+ 			"%s : ondisk-dquot 0x%p, ID mismatch: "
+ 			"0x%x expected, found id 0x%x",
+ 			str, ddq, id, be32_to_cpu(ddq->d_id));
+@@ -1962,9 +1966,8 @@ xfs_qm_dqcheck(
+ 				be64_to_cpu(ddq->d_blk_softlimit)) {
+ 			if (!ddq->d_btimer) {
+ 				if (flags & XFS_QMOPT_DOWARN)
+-					cmn_err(CE_ALERT,
+-					"%s : Dquot ID 0x%x (0x%p) "
+-					"BLK TIMER NOT STARTED",
++					xfs_alert(mp,
++			"%s : Dquot ID 0x%x (0x%p) BLK TIMER NOT STARTED",
+ 					str, (int)be32_to_cpu(ddq->d_id), ddq);
+ 				errs++;
+ 			}
+@@ -1974,9 +1977,8 @@ xfs_qm_dqcheck(
+ 				be64_to_cpu(ddq->d_ino_softlimit)) {
+ 			if (!ddq->d_itimer) {
+ 				if (flags & XFS_QMOPT_DOWARN)
+-					cmn_err(CE_ALERT,
+-					"%s : Dquot ID 0x%x (0x%p) "
+-					"INODE TIMER NOT STARTED",
++					xfs_alert(mp,
++			"%s : Dquot ID 0x%x (0x%p) INODE TIMER NOT STARTED",
+ 					str, (int)be32_to_cpu(ddq->d_id), ddq);
+ 				errs++;
+ 			}
+@@ -1986,9 +1988,8 @@ xfs_qm_dqcheck(
+ 				be64_to_cpu(ddq->d_rtb_softlimit)) {
+ 			if (!ddq->d_rtbtimer) {
+ 				if (flags & XFS_QMOPT_DOWARN)
+-					cmn_err(CE_ALERT,
+-					"%s : Dquot ID 0x%x (0x%p) "
+-					"RTBLK TIMER NOT STARTED",
++					xfs_alert(mp,
++			"%s : Dquot ID 0x%x (0x%p) RTBLK TIMER NOT STARTED",
+ 					str, (int)be32_to_cpu(ddq->d_id), ddq);
+ 				errs++;
+ 			}
+@@ -1999,7 +2000,7 @@ xfs_qm_dqcheck(
+ 		return errs;
  
- 	return 0;
-@@ -1539,12 +1529,12 @@ xfs_unmountfs(
- 	resblks = 0;
- 	error = xfs_reserve_blocks(mp, &resblks, NULL);
- 	if (error)
--		cmn_err(CE_WARN, "XFS: Unable to free reserved block pool. "
-+		xfs_warn(mp, "Unable to free reserved block pool. "
- 				"Freespace may not be correct on next mount.");
+ 	if (flags & XFS_QMOPT_DOWARN)
+-		cmn_err(CE_NOTE, "Re-initializing dquot ID 0x%x", id);
++		xfs_notice(mp, "Re-initializing dquot ID 0x%x", id);
  
- 	error = xfs_log_sbcount(mp, 1);
- 	if (error)
--		cmn_err(CE_WARN, "XFS: Unable to update superblock counters. "
-+		xfs_warn(mp, "Unable to update superblock counters. "
- 				"Freespace may not be correct on next mount.");
- 	xfs_unmountfs_writesb(mp);
- 	xfs_unmountfs_wait(mp); 		/* wait for async bufs */
-@@ -2027,10 +2017,8 @@ xfs_dev_is_read_only(
- 	if (xfs_readonly_buftarg(mp->m_ddev_targp) ||
- 	    xfs_readonly_buftarg(mp->m_logdev_targp) ||
- 	    (mp->m_rtdev_targp && xfs_readonly_buftarg(mp->m_rtdev_targp))) {
--		cmn_err(CE_NOTE,
--			"XFS: %s required on read-only device.", message);
--		cmn_err(CE_NOTE,
--			"XFS: write access unavailable, cannot proceed.");
-+		xfs_notice(mp, "%s required on read-only device.", message);
-+		xfs_notice(mp, "write access unavailable, cannot proceed.");
- 		return EROFS;
- 	}
- 	return 0;
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index 12a1913..7cf9bbb 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -2222,8 +2222,8 @@ xfs_rtmount_init(
- 	if (sbp->sb_rblocks == 0)
- 		return 0;
- 	if (mp->m_rtdev_targp == NULL) {
--		cmn_err(CE_WARN,
--	"XFS: This filesystem has a realtime volume, use rtdev=device option");
-+		xfs_warn(mp,
-+	"Filesystem has a realtime volume, use rtdev=device option");
- 		return XFS_ERROR(ENODEV);
- 	}
- 	mp->m_rsumlevels = sbp->sb_rextslog + 1;
-@@ -2237,7 +2237,7 @@ xfs_rtmount_init(
- 	 */
- 	d = (xfs_daddr_t)XFS_FSB_TO_BB(mp, mp->m_sb.sb_rblocks);
- 	if (XFS_BB_TO_FSB(mp, d) != mp->m_sb.sb_rblocks) {
--		cmn_err(CE_WARN, "XFS: realtime mount -- %llu != %llu",
-+		xfs_warn(mp, "realtime mount -- %llu != %llu",
- 			(unsigned long long) XFS_BB_TO_FSB(mp, d),
- 			(unsigned long long) mp->m_sb.sb_rblocks);
- 		return XFS_ERROR(EFBIG);
-@@ -2246,7 +2246,7 @@ xfs_rtmount_init(
- 					d - XFS_FSB_TO_BB(mp, 1),
- 					XFS_FSB_TO_B(mp, 1), 0);
- 	if (!bp) {
--		cmn_err(CE_WARN, "XFS: realtime device size check failed");
-+		xfs_warn(mp, "realtime device size check failed");
- 		return EIO;
- 	}
- 	xfs_buf_relse(bp);
-diff --git a/fs/xfs/xfs_rtalloc.h b/fs/xfs/xfs_rtalloc.h
-index ff614c2..09e1f4f 100644
---- a/fs/xfs/xfs_rtalloc.h
-+++ b/fs/xfs/xfs_rtalloc.h
-@@ -154,7 +154,7 @@ xfs_rtmount_init(
- 	if (mp->m_sb.sb_rblocks == 0)
- 		return 0;
- 
--	cmn_err(CE_WARN, "XFS: Not built with CONFIG_XFS_RT");
-+	xfs_warn(mp, "Not built with CONFIG_XFS_RT");
- 	return ENOSYS;
- }
- # define xfs_rtmount_inodes(m)  (((mp)->m_sb.sb_rblocks == 0)? 0 : (ENOSYS))
-diff --git a/fs/xfs/xfs_rw.c b/fs/xfs/xfs_rw.c
-index c3ef00d..e587401 100644
---- a/fs/xfs/xfs_rw.c
-+++ b/fs/xfs/xfs_rw.c
-@@ -49,9 +49,9 @@ xfs_do_force_shutdown(
- 	logerror = flags & SHUTDOWN_LOG_IO_ERROR;
- 
- 	if (!(flags & SHUTDOWN_FORCE_UMOUNT)) {
--		cmn_err(CE_NOTE, "xfs_force_shutdown(%s,0x%x) called from "
--				 "line %d of file %s.  Return address = 0x%p",
--			mp->m_fsname, flags, lnnum, fname, __return_address);
-+		xfs_notice(mp,
-+	"%s(0x%x) called from line %d of file %s.  Return address = 0x%p",
-+			__func__, flags, lnnum, fname, __return_address);
- 	}
  	/*
- 	 * No need to duplicate efforts.
-@@ -86,8 +86,8 @@ xfs_do_force_shutdown(
- 		}
- 	}
- 	if (!(flags & SHUTDOWN_FORCE_UMOUNT)) {
--		cmn_err(CE_ALERT, "Please umount the filesystem, "
--				  "and rectify the problem(s)");
+ 	 * Typically, a repair is only requested by quotacheck.
+@@ -2218,9 +2219,9 @@ xlog_recover_inode_pass2(
+ 	 */
+ 	if (unlikely(be16_to_cpu(dip->di_magic) != XFS_DINODE_MAGIC)) {
+ 		xfs_buf_relse(bp);
+-		xfs_fs_cmn_err(CE_ALERT, mp,
+-			"xfs_inode_recover: Bad inode magic number, dino ptr = 0x%p, dino bp = 0x%p, ino = %Ld",
+-			dip, bp, in_f->ilf_ino);
 +		xfs_alert(mp,
-+	"Please umount the filesystem and rectify the problem(s)");
++	"%s: Bad inode magic number, dip = 0x%p, dino bp = 0x%p, ino = %Ld",
++			__func__, dip, bp, in_f->ilf_ino);
+ 		XFS_ERROR_REPORT("xlog_recover_inode_pass2(1)",
+ 				 XFS_ERRLEVEL_LOW, mp);
+ 		error = EFSCORRUPTED;
+@@ -2229,9 +2230,9 @@ xlog_recover_inode_pass2(
+ 	dicp = item->ri_buf[1].i_addr;
+ 	if (unlikely(dicp->di_magic != XFS_DINODE_MAGIC)) {
+ 		xfs_buf_relse(bp);
+-		xfs_fs_cmn_err(CE_ALERT, mp,
+-			"xfs_inode_recover: Bad inode log record, rec ptr 0x%p, ino %Ld",
+-			item, in_f->ilf_ino);
++		xfs_alert(mp,
++			"%s: Bad inode log record, rec ptr 0x%p, ino %Ld",
++			__func__, item, in_f->ilf_ino);
+ 		XFS_ERROR_REPORT("xlog_recover_inode_pass2(2)",
+ 				 XFS_ERRLEVEL_LOW, mp);
+ 		error = EFSCORRUPTED;
+@@ -2263,9 +2264,10 @@ xlog_recover_inode_pass2(
+ 			XFS_CORRUPTION_ERROR("xlog_recover_inode_pass2(3)",
+ 					 XFS_ERRLEVEL_LOW, mp, dicp);
+ 			xfs_buf_relse(bp);
+-			xfs_fs_cmn_err(CE_ALERT, mp,
+-				"xfs_inode_recover: Bad regular inode log record, rec ptr 0x%p, ino ptr = 0x%p, ino bp = 0x%p, ino %Ld",
+-				item, dip, bp, in_f->ilf_ino);
++			xfs_alert(mp,
++		"%s: Bad regular inode log record, rec ptr 0x%p, "
++		"ino ptr = 0x%p, ino bp = 0x%p, ino %Ld",
++				__func__, item, dip, bp, in_f->ilf_ino);
+ 			error = EFSCORRUPTED;
+ 			goto error;
+ 		}
+@@ -2276,9 +2278,10 @@ xlog_recover_inode_pass2(
+ 			XFS_CORRUPTION_ERROR("xlog_recover_inode_pass2(4)",
+ 					     XFS_ERRLEVEL_LOW, mp, dicp);
+ 			xfs_buf_relse(bp);
+-			xfs_fs_cmn_err(CE_ALERT, mp,
+-				"xfs_inode_recover: Bad dir inode log record, rec ptr 0x%p, ino ptr = 0x%p, ino bp = 0x%p, ino %Ld",
+-				item, dip, bp, in_f->ilf_ino);
++			xfs_alert(mp,
++		"%s: Bad dir inode log record, rec ptr 0x%p, "
++		"ino ptr = 0x%p, ino bp = 0x%p, ino %Ld",
++				__func__, item, dip, bp, in_f->ilf_ino);
+ 			error = EFSCORRUPTED;
+ 			goto error;
+ 		}
+@@ -2287,9 +2290,10 @@ xlog_recover_inode_pass2(
+ 		XFS_CORRUPTION_ERROR("xlog_recover_inode_pass2(5)",
+ 				     XFS_ERRLEVEL_LOW, mp, dicp);
+ 		xfs_buf_relse(bp);
+-		xfs_fs_cmn_err(CE_ALERT, mp,
+-			"xfs_inode_recover: Bad inode log record, rec ptr 0x%p, dino ptr 0x%p, dino bp 0x%p, ino %Ld, total extents = %d, nblocks = %Ld",
+-			item, dip, bp, in_f->ilf_ino,
++		xfs_alert(mp,
++	"%s: Bad inode log record, rec ptr 0x%p, dino ptr 0x%p, "
++	"dino bp 0x%p, ino %Ld, total extents = %d, nblocks = %Ld",
++			__func__, item, dip, bp, in_f->ilf_ino,
+ 			dicp->di_nextents + dicp->di_anextents,
+ 			dicp->di_nblocks);
+ 		error = EFSCORRUPTED;
+@@ -2299,8 +2303,9 @@ xlog_recover_inode_pass2(
+ 		XFS_CORRUPTION_ERROR("xlog_recover_inode_pass2(6)",
+ 				     XFS_ERRLEVEL_LOW, mp, dicp);
+ 		xfs_buf_relse(bp);
+-		xfs_fs_cmn_err(CE_ALERT, mp,
+-			"xfs_inode_recover: Bad inode log rec ptr 0x%p, dino ptr 0x%p, dino bp 0x%p, ino %Ld, forkoff 0x%x",
++		xfs_alert(mp,
++	"%s: Bad inode log record, rec ptr 0x%p, dino ptr 0x%p, "
++	"dino bp 0x%p, ino %Ld, forkoff 0x%x", __func__,
+ 			item, dip, bp, in_f->ilf_ino, dicp->di_forkoff);
+ 		error = EFSCORRUPTED;
+ 		goto error;
+@@ -2309,9 +2314,9 @@ xlog_recover_inode_pass2(
+ 		XFS_CORRUPTION_ERROR("xlog_recover_inode_pass2(7)",
+ 				     XFS_ERRLEVEL_LOW, mp, dicp);
+ 		xfs_buf_relse(bp);
+-		xfs_fs_cmn_err(CE_ALERT, mp,
+-			"xfs_inode_recover: Bad inode log record length %d, rec ptr 0x%p",
+-			item->ri_buf[1].i_len, item);
++		xfs_alert(mp,
++			"%s: Bad inode log record length %d, rec ptr 0x%p",
++			__func__, item->ri_buf[1].i_len, item);
+ 		error = EFSCORRUPTED;
+ 		goto error;
  	}
+@@ -2398,7 +2403,7 @@ xlog_recover_inode_pass2(
+ 			break;
+ 
+ 		default:
+-			xlog_warn("XFS: xlog_recover_inode_pass2: Invalid flag");
++			xfs_warn(log->l_mp, "%s: Invalid flag", __func__);
+ 			ASSERT(0);
+ 			xfs_buf_relse(bp);
+ 			error = EIO;
+@@ -2467,13 +2472,11 @@ xlog_recover_dquot_pass2(
+ 
+ 	recddq = item->ri_buf[1].i_addr;
+ 	if (recddq == NULL) {
+-		cmn_err(CE_ALERT,
+-			"XFS: NULL dquot in %s.", __func__);
++		xfs_alert(log->l_mp, "NULL dquot in %s.", __func__);
+ 		return XFS_ERROR(EIO);
+ 	}
+ 	if (item->ri_buf[1].i_len < sizeof(xfs_disk_dquot_t)) {
+-		cmn_err(CE_ALERT,
+-			"XFS: dquot too small (%d) in %s.",
++		xfs_alert(log->l_mp, "dquot too small (%d) in %s.",
+ 			item->ri_buf[1].i_len, __func__);
+ 		return XFS_ERROR(EIO);
+ 	}
+@@ -2498,12 +2501,10 @@ xlog_recover_dquot_pass2(
+ 	 */
+ 	dq_f = item->ri_buf[0].i_addr;
+ 	ASSERT(dq_f);
+-	if ((error = xfs_qm_dqcheck(recddq,
+-			   dq_f->qlf_id,
+-			   0, XFS_QMOPT_DOWARN,
+-			   "xlog_recover_dquot_pass2 (log copy)"))) {
++	error = xfs_qm_dqcheck(mp, recddq, dq_f->qlf_id, 0, XFS_QMOPT_DOWARN,
++			   "xlog_recover_dquot_pass2 (log copy)");
++	if (error)
+ 		return XFS_ERROR(EIO);
+-	}
+ 	ASSERT(dq_f->qlf_len == 1);
+ 
+ 	error = xfs_read_buf(mp, mp->m_ddev_targp,
+@@ -2523,8 +2524,9 @@ xlog_recover_dquot_pass2(
+ 	 * was among a chunk of dquots created earlier, and we did some
+ 	 * minimal initialization then.
+ 	 */
+-	if (xfs_qm_dqcheck(ddq, dq_f->qlf_id, 0, XFS_QMOPT_DOWARN,
+-			   "xlog_recover_dquot_pass2")) {
++	error = xfs_qm_dqcheck(mp, ddq, dq_f->qlf_id, 0, XFS_QMOPT_DOWARN,
++			   "xlog_recover_dquot_pass2");
++	if (error) {
+ 		xfs_buf_relse(bp);
+ 		return XFS_ERROR(EIO);
+ 	}
+@@ -2676,9 +2678,8 @@ xlog_recover_commit_pass1(
+ 		/* nothing to do in pass 1 */
+ 		return 0;
+ 	default:
+-		xlog_warn(
+-	"XFS: invalid item type (%d) xlog_recover_commit_pass1",
+-			ITEM_TYPE(item));
++		xfs_warn(log->l_mp, "%s: invalid item type (%d)",
++			__func__, ITEM_TYPE(item));
+ 		ASSERT(0);
+ 		return XFS_ERROR(EIO);
+ 	}
+@@ -2707,9 +2708,8 @@ xlog_recover_commit_pass2(
+ 		/* nothing to do in pass2 */
+ 		return 0;
+ 	default:
+-		xlog_warn(
+-	"XFS: invalid item type (%d) xlog_recover_commit_pass2",
+-			ITEM_TYPE(item));
++		xfs_warn(log->l_mp, "%s: invalid item type (%d)",
++			__func__, ITEM_TYPE(item));
+ 		ASSERT(0);
+ 		return XFS_ERROR(EIO);
+ 	}
+@@ -2751,10 +2751,11 @@ xlog_recover_commit_trans(
+ 
+ STATIC int
+ xlog_recover_unmount_trans(
++	struct log		*log,
+ 	xlog_recover_t		*trans)
+ {
+ 	/* Do nothing now */
+-	xlog_warn("XFS: xlog_recover_unmount_trans: Unmount LR");
++	xfs_warn(log->l_mp, "%s: Unmount LR", __func__);
+ 	return 0;
  }
  
-@@ -101,10 +101,9 @@ xfs_ioerror_alert(
- 	xfs_buf_t		*bp,
- 	xfs_daddr_t		blkno)
- {
--	cmn_err(CE_ALERT,
-- "I/O error in filesystem (\"%s\") meta-data dev %s block 0x%llx"
-- "       (\"%s\") error %d buf count %zd",
--		(!mp || !mp->m_fsname) ? "(fs name not set)" : mp->m_fsname,
-+	xfs_alert(mp,
-+		 "I/O error occurred: meta-data dev %s block 0x%llx"
-+		 "       (\"%s\") error %d buf count %zd",
- 		XFS_BUFTARG_NAME(XFS_BUF_TARGET(bp)),
- 		(__uint64_t)blkno, func,
- 		XFS_BUF_GETERROR(bp), XFS_BUF_COUNT(bp));
-diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
-index c47918c..3bea661 100644
---- a/fs/xfs/xfs_trans_buf.c
-+++ b/fs/xfs/xfs_trans_buf.c
-@@ -305,7 +305,7 @@ xfs_trans_read_buf(
- 			if (xfs_error_target == target) {
- 				if (((xfs_req_num++) % xfs_error_mod) == 0) {
- 					xfs_buf_relse(bp);
--					cmn_err(CE_DEBUG, "Returning error!\n");
-+					xfs_debug(mp, "Returning error!");
- 					return XFS_ERROR(EIO);
- 				}
- 			}
-@@ -403,7 +403,7 @@ xfs_trans_read_buf(
- 				xfs_force_shutdown(tp->t_mountp,
- 						   SHUTDOWN_META_IO_ERROR);
- 				xfs_buf_relse(bp);
--				cmn_err(CE_DEBUG, "Returning trans error!\n");
-+				xfs_debug(mp, "Returning trans error!");
- 				return XFS_ERROR(EIO);
- 			}
+@@ -2797,8 +2798,8 @@ xlog_recover_process_data(
+ 		dp += sizeof(xlog_op_header_t);
+ 		if (ohead->oh_clientid != XFS_TRANSACTION &&
+ 		    ohead->oh_clientid != XFS_LOG) {
+-			xlog_warn(
+-		"XFS: xlog_recover_process_data: bad clientid");
++			xfs_warn(log->l_mp, "%s: bad clientid 0x%x",
++					__func__, ohead->oh_clientid);
+ 			ASSERT(0);
+ 			return (XFS_ERROR(EIO));
  		}
-@@ -427,7 +427,7 @@ shutdown_abort:
- 	 */
- #if defined(DEBUG)
- 	if (XFS_BUF_ISSTALE(bp) && XFS_BUF_ISDELAYWRITE(bp))
--		cmn_err(CE_NOTE, "about to pop assert, bp == 0x%p", bp);
-+		xfs_notice(mp, "about to pop assert, bp == 0x%p", bp);
- #endif
- 	ASSERT((XFS_BUF_BFLAGS(bp) & (XBF_STALE|XBF_DELWRI)) !=
- 				     (XBF_STALE|XBF_DELWRI));
-diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
-index d34533d..6848b2f 100644
---- a/fs/xfs/xfs_vnodeops.c
-+++ b/fs/xfs/xfs_vnodeops.c
-@@ -1189,9 +1189,8 @@ xfs_inactive(
- 		 * inode might be lost for a long time or forever.
- 		 */
- 		if (!XFS_FORCED_SHUTDOWN(mp)) {
--			cmn_err(CE_NOTE,
--		"xfs_inactive:	xfs_ifree() returned an error = %d on %s",
--				error, mp->m_fsname);
-+			xfs_notice(mp, "%s: xfs_ifree returned error %d",
-+				__func__, error);
- 			xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
+@@ -2811,8 +2812,8 @@ xlog_recover_process_data(
+ 					be64_to_cpu(rhead->h_lsn));
+ 		} else {
+ 			if (dp + be32_to_cpu(ohead->oh_len) > lp) {
+-				xlog_warn(
+-			"XFS: xlog_recover_process_data: bad length");
++				xfs_warn(log->l_mp, "%s: bad length 0x%x",
++					__func__, be32_to_cpu(ohead->oh_len));
+ 				WARN_ON(1);
+ 				return (XFS_ERROR(EIO));
+ 			}
+@@ -2825,7 +2826,7 @@ xlog_recover_process_data(
+ 								trans, pass);
+ 				break;
+ 			case XLOG_UNMOUNT_TRANS:
+-				error = xlog_recover_unmount_trans(trans);
++				error = xlog_recover_unmount_trans(log, trans);
+ 				break;
+ 			case XLOG_WAS_CONT_TRANS:
+ 				error = xlog_recover_add_to_cont_trans(log,
+@@ -2833,8 +2834,8 @@ xlog_recover_process_data(
+ 						be32_to_cpu(ohead->oh_len));
+ 				break;
+ 			case XLOG_START_TRANS:
+-				xlog_warn(
+-			"XFS: xlog_recover_process_data: bad transaction");
++				xfs_warn(log->l_mp, "%s: bad transaction",
++					__func__);
+ 				ASSERT(0);
+ 				error = XFS_ERROR(EIO);
+ 				break;
+@@ -2844,8 +2845,8 @@ xlog_recover_process_data(
+ 						dp, be32_to_cpu(ohead->oh_len));
+ 				break;
+ 			default:
+-				xlog_warn(
+-			"XFS: xlog_recover_process_data: bad flag");
++				xfs_warn(log->l_mp, "%s: bad flag 0x%x",
++					__func__, flags);
+ 				ASSERT(0);
+ 				error = XFS_ERROR(EIO);
+ 				break;
+@@ -3030,8 +3031,7 @@ xlog_recover_clear_agi_bucket(
+ out_abort:
+ 	xfs_trans_cancel(tp, XFS_TRANS_ABORT);
+ out_error:
+-	xfs_fs_cmn_err(CE_WARN, mp, "xlog_recover_clear_agi_bucket: "
+-			"failed to clear agi %d. Continuing.", agno);
++	xfs_warn(mp, "%s: failed to clear agi %d. Continuing.", __func__, agno);
+ 	return;
+ }
+ 
+@@ -3282,7 +3282,7 @@ xlog_valid_rec_header(
+ 	if (unlikely(
+ 	    (!rhead->h_version ||
+ 	    (be32_to_cpu(rhead->h_version) & (~XLOG_VERSION_OKBITS))))) {
+-		xlog_warn("XFS: %s: unrecognised log version (%d).",
++		xfs_warn(log->l_mp, "%s: unrecognised log version (%d).",
+ 			__func__, be32_to_cpu(rhead->h_version));
+ 		return XFS_ERROR(EIO);
+ 	}
+@@ -3740,10 +3740,9 @@ xlog_recover(
+ 			return error;
  		}
- 		xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_ABORT);
+ 
+-		cmn_err(CE_NOTE,
+-			"Starting XFS recovery on filesystem: %s (logdev: %s)",
+-			log->l_mp->m_fsname, log->l_mp->m_logname ?
+-			log->l_mp->m_logname : "internal");
++		xfs_notice(log->l_mp, "Starting recovery (logdev: %s)",
++				log->l_mp->m_logname ? log->l_mp->m_logname
++						     : "internal");
+ 
+ 		error = xlog_do_recover(log, head_blk, tail_blk);
+ 		log->l_flags |= XLOG_RECOVERY_NEEDED;
+@@ -3776,9 +3775,7 @@ xlog_recover_finish(
+ 		int	error;
+ 		error = xlog_recover_process_efis(log);
+ 		if (error) {
+-			cmn_err(CE_ALERT,
+-				"Failed to recover EFIs on filesystem: %s",
+-				log->l_mp->m_fsname);
++			xfs_alert(log->l_mp, "Failed to recover EFIs");
+ 			return error;
+ 		}
+ 		/*
+@@ -3793,15 +3790,12 @@ xlog_recover_finish(
+ 
+ 		xlog_recover_check_summary(log);
+ 
+-		cmn_err(CE_NOTE,
+-			"Ending XFS recovery on filesystem: %s (logdev: %s)",
+-			log->l_mp->m_fsname, log->l_mp->m_logname ?
+-			log->l_mp->m_logname : "internal");
++		xfs_notice(log->l_mp, "Ending recovery (logdev: %s)",
++				log->l_mp->m_logname ? log->l_mp->m_logname
++						     : "internal");
+ 		log->l_flags &= ~XLOG_RECOVERY_NEEDED;
+ 	} else {
+-		cmn_err(CE_DEBUG,
+-			"Ending clean XFS mount for filesystem: %s\n",
+-			log->l_mp->m_fsname);
++		xfs_info(log->l_mp, "Ending clean mount");
+ 	}
+ 	return 0;
+ }
+@@ -3834,10 +3828,8 @@ xlog_recover_check_summary(
+ 	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
+ 		error = xfs_read_agf(mp, NULL, agno, 0, &agfbp);
+ 		if (error) {
+-			xfs_fs_cmn_err(CE_ALERT, mp,
+-					"xlog_recover_check_summary(agf)"
+-					"agf read failed agno %d error %d",
+-							agno, error);
++			xfs_alert(mp, "%s agf read failed agno %d error %d",
++						__func__, agno, error);
+ 		} else {
+ 			agfp = XFS_BUF_TO_AGF(agfbp);
+ 			freeblks += be32_to_cpu(agfp->agf_freeblks) +
+@@ -3846,7 +3838,10 @@ xlog_recover_check_summary(
+ 		}
+ 
+ 		error = xfs_read_agi(mp, NULL, agno, &agibp);
+-		if (!error) {
++		if (error) {
++			xfs_alert(mp, "%s agi read failed agno %d error %d",
++						__func__, agno, error);
++		} else {
+ 			struct xfs_agi	*agi = XFS_BUF_TO_AGI(agibp);
+ 
+ 			itotal += be32_to_cpu(agi->agi_count);
+diff --git a/fs/xfs/xfs_quota.h b/fs/xfs/xfs_quota.h
+index 9bb6eda..a595f29 100644
+--- a/fs/xfs/xfs_quota.h
++++ b/fs/xfs/xfs_quota.h
+@@ -382,7 +382,8 @@ static inline int xfs_qm_sync(struct xfs_mount *mp, int flags)
+ 	xfs_trans_reserve_quota_bydquots(tp, mp, ud, gd, nb, ni, \
+ 				f | XFS_QMOPT_RES_REGBLKS)
+ 
+-extern int xfs_qm_dqcheck(xfs_disk_dquot_t *, xfs_dqid_t, uint, uint, char *);
++extern int xfs_qm_dqcheck(struct xfs_mount *, xfs_disk_dquot_t *,
++				xfs_dqid_t, uint, uint, char *);
+ extern int xfs_mount_reset_sbqflags(struct xfs_mount *);
+ 
+ #endif	/* __KERNEL__ */
 -- 
 1.7.2.3
 
