@@ -1,13 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0C4FH9H137393 for <xfs@oss.sgi.com>; Tue, 11 Jan 2011 22:15:17 -0600
-Subject: Re: [RFC, PATCH 0/12] xfs: rework error logging infrastructure
+	p0C4kiYU140409 for <xfs@oss.sgi.com>; Tue, 11 Jan 2011 22:46:44 -0600
+Subject: Re: [PATCH 12/12] xfs: kill support/debug.[ch]
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1294792553-8378-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <1294792553-8378-13-git-send-email-david@fromorbit.com>
 References: <1294792553-8378-1-git-send-email-david@fromorbit.com>
-Date: Tue, 11 Jan 2011 22:16:29 -0600
-Message-ID: <1294805789.3115.131.camel@doink>
+	<1294792553-8378-13-git-send-email-david@fromorbit.com>
+Date: Tue, 11 Jan 2011 22:48:53 -0600
+Message-ID: <1294807733.3115.137.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -26,27 +27,25 @@ To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
 On Wed, 2011-01-12 at 11:35 +1100, Dave Chinner wrote:
-> This series completely reworks the cmn_err logging infrastructure
-> by replacing it with a simple, consistent API that can be used everwhere.
-> IOWs, this series replaces the various cmn_err APIs:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> The remaining functionality in debug.[ch] is effectively just assert
+> handling, conditional debug definitions and hex dumping. The hex
+> dumping and assert function can be moved into the new printk module,
+> while the rest can be moved into top-level header files. This allows
+> fs/xfs/support/debug.[ch] to be completely removed from the
+> codebase.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/Makefile               |    1 -
+>  fs/xfs/linux-2.6/xfs_linux.h  |   21 +++++++++++++++++++
 
-. . .
+You need to delete the #include <support/debug.h>
+that remains in linux-2.6/xfs_linux.h too.
 
-I reviewed the whole series, and offered a correction
-on just one thing.  I might quibble with the indentation
-of some of the format strings here or there, but I
-didn't bother, there sometimes is no nice way to
-do those.
+					-Alex
 
-I personally like the result a lot, it's a lot cleaner
-and easier on the eyes.
-
-In any case, you say it's an RFC but I'm OK with it.
-
-I'm just starting to test with it but you can consider
-the whole series reviewed by me.
-
-Reviewed-by: Alex Elder <aelder@sgi.com>
 
 
 _______________________________________________
