@@ -1,26 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0CCi1jd190844 for <xfs@oss.sgi.com>; Wed, 12 Jan 2011 06:44:01 -0600
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 955B325DDBD
-	for <xfs@oss.sgi.com>; Wed, 12 Jan 2011 04:46:13 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
-	[150.101.137.99]) by cuda.sgi.com with ESMTP id
-	qDyf0EuUBznz1u2i for <xfs@oss.sgi.com>;
-	Wed, 12 Jan 2011 04:46:13 -0800 (PST)
-Date: Wed, 12 Jan 2011 23:44:31 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/6] fs: add hole punching to fallocate
-Message-ID: <20110112124431.GP28803@dastard>
-References: <1289248327-16308-1-git-send-email-josef@redhat.com>
-	<20101109011222.GD2715@dastard> <20101109033038.GF3099@thunk.org>
-	<20101109044242.GH2715@dastard> <20101109214147.GK3099@thunk.org>
-	<20101109234049.GQ2715@dastard>
-	<AANLkTimwmJ_ZoE9oAuA1WGhCgK585jDznqnc6k0=9Ntb@mail.gmail.com>
+	p0CDDwpK194444 for <xfs@oss.sgi.com>; Wed, 12 Jan 2011 07:14:01 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 50A62153ECA2
+	for <xfs@oss.sgi.com>; Wed, 12 Jan 2011 05:16:12 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id BlL4jzbbMhei9C7V for
+	<xfs@oss.sgi.com>; Wed, 12 Jan 2011 05:16:12 -0800 (PST)
+Date: Wed, 12 Jan 2011 08:16:05 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] [RFC] xfs: stop using the page cache to back the buffer
+	cache
+Message-ID: <20110112131604.GA28675@infradead.org>
+References: <1294817201-18670-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <AANLkTimwmJ_ZoE9oAuA1WGhCgK585jDznqnc6k0=9Ntb@mail.gmail.com>
+In-Reply-To: <1294817201-18670-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,62 +29,105 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Lawrence Greenfield <leg@google.com>
-Cc: Ted Ts'o <tytso@mit.edu>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, cluster-devel@redhat.com, cmm@us.ibm.com, Josef Bacik <josef@redhat.com>, joel.becker@oracle.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Tue, Jan 11, 2011 at 04:13:42PM -0500, Lawrence Greenfield wrote:
-> On Tue, Nov 9, 2010 at 6:40 PM, Dave Chinner <david@fromorbit.com> wrote:
-> > The historical reason for such behaviour existing in XFS was that in
-> > 1997 the CPU and IO latency cost of unwritten extent conversion was
-> > significant,
+> -	if (bp->b_pages != bp->b_page_array) {
+> +	if (bp->b_pages && bp->b_pages != bp->b_page_array) {
 
-.....
+If bp->p_ages is NULL it's per defintion different from b_page_array.
 
-> >> (Take for example a trusted cluster filesystem backend that checks the
-> >> object checksum before returning any data to the user; and if the
-> >> check fails the cluster file system will try to use some other replica
-> >> stored on some other server.)
-> >
-> > IOWs, all they want to do is avoid the unwritten extent conversion
-> > overhead. Time has shown that a bad security/performance tradeoff
-> > decision was made 13 years ago in XFS, so I see little reason to
-> > repeat it for ext4 today....
-> 
-> I'd make use of FALLOC_FL_EXPOSE_OLD_DATA. It's not the CPU overhead
-> of extent conversion. It's that extent conversion causes more metadata
-> operations than what you'd have otherwise,
+>  STATIC int
+> -_xfs_buf_lookup_pages(
+> +xfs_buf_allocate_buffer(
 
-Yes, that's the "IO latency" part of the cost I mentioned above.
+This is a bit misnamed and rather confusing vs xfs_buf_allocate.
 
-> which means systems that
-> want to use O_DIRECT and make sure the data doesn't go away either
-> have to write O_DIRECT|O_DSYNC or need to call fdatasync().
+Maybe call it xfs_buf_allocate_memory?
 
-Seriously, we tell application writers _all the time_ that they
-*must* use fsync/fdatasync to guarantee their data is on stable
-storage and that they cannot rely on side-effects of filesystem or
-storage specific behaviours (like ext3 ordered mode) to do that job
-for them.
+> +	/*
+> +	 * for buffers that are contained within a single page, just allocate
+> +	 * the memory from the heap - there's no need for the complexity of
+> +	 * page arrays to keep allocation down to order 0.
+> +	 */
+> +	if (bp->b_buffer_length <= PAGE_SIZE) {
 
-You're suggesting that by introducing FALLOC_FL_EXPOSE_OLD_DATA,
-applications can rely on filesystem/storage specific behaviour to
-guarantee data is on stable storage without the use of
-fdatasync/fsync. Wht you describe is definitely storage specific,
-because volatile write caches still needs the fdatasync to issue a
-cache flush.
+I think this should be a <, not <= - for page sized buffers avoiding
+the slab overhead should be much more efficient.
 
-Do you see the same conflict here that I do?
+> +		page_count = 1;
+> +	} else {
+> +		end = bp->b_file_offset + bp->b_buffer_length;
+> +		page_count = xfs_buf_btoc(end) -
+> +					xfs_buf_btoct(bp->b_file_offset);
+> +	}
+>  
+>  	error = _xfs_buf_get_pages(bp, page_count, flags);
+>  	if (unlikely(error))
+>  		return error;
+> +
+> +	if (bp->b_page_count == 1) {
 
-> cluster file system implementor
+I'd just duplicate the _xfs_buf_get_pages inside the branches to make
+this a lot cleaner.  The page_count calculation in the else clause can
+never end up as 1 anyway.  Maybe even make it two different functions
+and let the only caller decide which one to use.
 
-Which one?
+> +		unsigned long	pageaddr;
+> +
+> +		bp->b_addr = kmem_alloc(bp->b_buffer_length, xb_to_km(flags));
+> +		if (!bp->b_addr)
+> +			return ENOMEM;
+> +
+> +		pageaddr = (unsigned long)bp->b_addr & PAGE_MASK;
+> +		ASSERT(((unsigned long)(bp->b_addr + bp->b_buffer_length - 1) & PAGE_MASK) == pageaddr);
+> +
+> +		bp->b_offset = (unsigned long)bp->b_addr - pageaddr;
 
-Cheers,
+This can just be
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+		bp->b_offset = offset_in_page(bp->b_addr);
+
+> +		bp->b_pages[0] = virt_to_page((void *)pageaddr);
+
+and this
+
+		bp->b_pages[0] = virt_to_page(bp->b_addr);
+
+with that the above assert can be changed to not need a local variable
+and imho be slightly cleaner:
+
+		ASSERT(((unsigned long)bp->b_addr + bp->b_buffer_length - 1) &
+			PAGE_MASK) ==
+		       (unsigned long)bp->b_addr & PAGE_MASK);
+
+although I'm not sure it's actually correct.  slub is a pretty
+aggressive in using high order pages and might give us back memory that
+goes across multiple pages.  Adding a loop here to assign multiple pages
+if needed seems safer.
+		
+
+> +		bp->b_flags |= XBF_MAPPED|_XBF_KMEM;
+
+Space around the | operator, please.
+
+> +		bp->b_flags &= XBF_MAPPED|_XBF_KMEM|_XBF_PAGES;
+
+here, too.
+
+
+Additional comments:
+
+ - the _XBF_PAGE_CACHE and _XBF_PAGE_LOCKED flags are now unused and can
+   be removed.
+ - the comment describing xfs_buf_t around line 141 in xfs_buf.h is now
+   incorrect.  It's not overly useful so I'd suggest removing it
+   completely.
+ - the comments above the buffer locking functions in xfs_buf.c
+   (including the meta-comment) are now incorrect and should be
+   fixed/removed.
+ - the call to mark_page_accessed in xfs_buf_get is now superflous,
+   as it only has a meaning for pagecache pages.
 
 _______________________________________________
 xfs mailing list
