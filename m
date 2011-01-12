@@ -1,29 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0C0YFDc124016 for <xfs@oss.sgi.com>; Tue, 11 Jan 2011 18:34:15 -0600
+	p0C0YQIV124098 for <xfs@oss.sgi.com>; Tue, 11 Jan 2011 18:34:26 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BA10A1D2641A
-	for <xfs@oss.sgi.com>; Tue, 11 Jan 2011 16:36:27 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
-	[150.101.137.99]) by cuda.sgi.com with ESMTP id
-	9ky3Vb59DAFEHN8m for <xfs@oss.sgi.com>;
-	Tue, 11 Jan 2011 16:36:27 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C49E71D26420
+	for <xfs@oss.sgi.com>; Tue, 11 Jan 2011 16:36:37 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
+	[150.101.137.101]) by cuda.sgi.com with ESMTP id
+	gn0luySehMtgHVjD for <xfs@oss.sgi.com>;
+	Tue, 11 Jan 2011 16:36:37 -0800 (PST)
 Received: from dastard (unverified [121.44.222.102])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	52939874-1927428
-	for <xfs@oss.sgi.com>; Wed, 12 Jan 2011 11:06:26 +1030 (CDT)
+	52410144-1927428
+	for <xfs@oss.sgi.com>; Wed, 12 Jan 2011 11:06:36 +1030 (CDT)
 Received: from chute ([192.168.1.1] helo=disappointment)
 	by dastard with esmtp (Exim 4.72)
-	(envelope-from <dave@fromorbit.com>) id 1PcohC-0000Uk-HK
-	for xfs@oss.sgi.com; Wed, 12 Jan 2011 11:36:14 +1100
+	(envelope-from <dave@fromorbit.com>) id 1PcohM-0000Uc-Ab
+	for xfs@oss.sgi.com; Wed, 12 Jan 2011 11:36:24 +1100
 Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1Pcogv-0002GR-2E
-	for xfs@oss.sgi.com; Wed, 12 Jan 2011 11:35:57 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1Pcogu-0002GI-Sh
+	for xfs@oss.sgi.com; Wed, 12 Jan 2011 11:35:56 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 10/12] xfs: convert the quota debug prints to new API
-Date: Wed, 12 Jan 2011 11:35:51 +1100
-Message-Id: <1294792553-8378-11-git-send-email-david@fromorbit.com>
+Subject: [PATCH 07/12] xfs: kill xfs_fs_mount_cmn_err() macro
+Date: Wed, 12 Jan 2011 11:35:48 +1100
+Message-Id: <1294792553-8378-8-git-send-email-david@fromorbit.com>
 In-Reply-To: <1294792553-8378-1-git-send-email-david@fromorbit.com>
 References: <1294792553-8378-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -43,98 +43,207 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
+The xfs_fs_mount_cmn_err() hide a simple check as to whether the
+mount path should output an error or not. Remove the macro and open
+code the check.
+
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/quota/xfs_qm_syscalls.c |   27 ++++++++++++---------------
- 1 files changed, 12 insertions(+), 15 deletions(-)
+ fs/xfs/xfs_error.h |    6 ----
+ fs/xfs/xfs_mount.c |   72 +++++++++++++++++++++++++++++++---------------------
+ 2 files changed, 43 insertions(+), 35 deletions(-)
 
-diff --git a/fs/xfs/quota/xfs_qm_syscalls.c b/fs/xfs/quota/xfs_qm_syscalls.c
-index bdebc18..603ab86 100644
---- a/fs/xfs/quota/xfs_qm_syscalls.c
-+++ b/fs/xfs/quota/xfs_qm_syscalls.c
-@@ -41,12 +41,6 @@
- #include "xfs_qm.h"
- #include "xfs_trace.h"
+diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
+index 4c8b500..e836051 100644
+--- a/fs/xfs/xfs_error.h
++++ b/fs/xfs/xfs_error.h
+@@ -162,10 +162,4 @@ struct xfs_mount;
  
--#ifdef DEBUG
--# define qdprintk(s, args...)	cmn_err(CE_DEBUG, s, ## args)
--#else
--# define qdprintk(s, args...)	do { } while (0)
--#endif
+ extern void xfs_hex_dump(void *p, int length);
+ 
+-#define xfs_fs_mount_cmn_err(f, fmt, args...) \
+-	do { \
+-		if (!(f & XFS_MFSI_QUIET)) 	\
+-			cmn_err(CE_WARN, "XFS: " fmt, ## args); \
+-	} while (0)
 -
- STATIC int	xfs_qm_log_quotaoff(xfs_mount_t *, xfs_qoff_logitem_t **, uint);
- STATIC int	xfs_qm_log_quotaoff_end(xfs_mount_t *, xfs_qoff_logitem_t *,
- 					uint);
-@@ -294,7 +288,8 @@ xfs_qm_scall_trunc_qfiles(
- 	int		error = 0, error2 = 0;
- 
- 	if (!xfs_sb_version_hasquota(&mp->m_sb) || flags == 0) {
--		qdprintk("qtrunc flags=%x m_qflags=%x\n", flags, mp->m_qflags);
-+		xfs_debug(mp, "%s: flags=%x m_qflags=%x\n",
-+			__func__, flags, mp->m_qflags);
- 		return XFS_ERROR(EINVAL);
- 	}
- 
-@@ -331,7 +326,8 @@ xfs_qm_scall_quotaon(
- 	sbflags = 0;
- 
- 	if (flags == 0) {
--		qdprintk("quotaon: zero flags, m_qflags=%x\n", mp->m_qflags);
-+		xfs_debug(mp, "%s: zero flags, m_qflags=%x\n",
-+			__func__, mp->m_qflags);
- 		return XFS_ERROR(EINVAL);
- 	}
- 
-@@ -352,8 +348,9 @@ xfs_qm_scall_quotaon(
- 	    (flags & XFS_GQUOTA_ACCT) == 0 &&
- 	    (mp->m_sb.sb_qflags & XFS_GQUOTA_ACCT) == 0 &&
- 	    (flags & XFS_OQUOTA_ENFD))) {
--		qdprintk("Can't enforce without acct, flags=%x sbflags=%x\n",
--			flags, mp->m_sb.sb_qflags);
-+		xfs_debug(mp,
-+			"%s: Can't enforce without acct, flags=%x sbflags=%x\n",
-+			__func__, flags, mp->m_sb.sb_qflags);
- 		return XFS_ERROR(EINVAL);
- 	}
+ #endif	/* __XFS_ERROR_H__ */
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index d447aef..1b43ad3 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -311,6 +311,8 @@ xfs_mount_validate_sb(
+ 	xfs_sb_t	*sbp,
+ 	int		flags)
+ {
++	int		loud = !(flags & XFS_MFSI_QUIET);
++
  	/*
-@@ -541,7 +538,7 @@ xfs_qm_scall_setqlim(
- 			q->qi_bsoftlimit = soft;
- 		}
- 	} else {
--		qdprintk("blkhard %Ld < blksoft %Ld\n", hard, soft);
-+		xfs_debug(mp, "blkhard %Ld < blksoft %Ld\n", hard, soft);
- 	}
- 	hard = (newlim->d_fieldmask & FS_DQ_RTBHARD) ?
- 		(xfs_qcnt_t) XFS_BB_TO_FSB(mp, newlim->d_rtb_hardlimit) :
-@@ -557,7 +554,7 @@ xfs_qm_scall_setqlim(
- 			q->qi_rtbsoftlimit = soft;
- 		}
- 	} else {
--		qdprintk("rtbhard %Ld < rtbsoft %Ld\n", hard, soft);
-+		xfs_debug(mp, "rtbhard %Ld < rtbsoft %Ld\n", hard, soft);
+ 	 * If the log device and data device have the
+ 	 * same device number, the log is internal.
+@@ -319,28 +321,32 @@ xfs_mount_validate_sb(
+ 	 * a volume filesystem in a non-volume manner.
+ 	 */
+ 	if (sbp->sb_magicnum != XFS_SB_MAGIC) {
+-		xfs_fs_mount_cmn_err(flags, "bad magic number");
++		if (loud)
++			xfs_warn(mp, "bad magic number");
+ 		return XFS_ERROR(EWRONGFS);
  	}
  
- 	hard = (newlim->d_fieldmask & FS_DQ_IHARD) ?
-@@ -574,7 +571,7 @@ xfs_qm_scall_setqlim(
- 			q->qi_isoftlimit = soft;
- 		}
- 	} else {
--		qdprintk("ihard %Ld < isoft %Ld\n", hard, soft);
-+		xfs_debug(mp, "ihard %Ld < isoft %Ld\n", hard, soft);
+ 	if (!xfs_sb_good_version(sbp)) {
+-		xfs_fs_mount_cmn_err(flags, "bad version");
++		if (loud)
++			xfs_warn(mp, "bad version");
+ 		return XFS_ERROR(EWRONGFS);
  	}
  
- 	/*
-@@ -1137,8 +1134,8 @@ xfs_qm_internalqcheck_adjust(
- 
- 	if (ino == mp->m_sb.sb_uquotino || ino == mp->m_sb.sb_gquotino) {
- 		*res = BULKSTAT_RV_NOTHING;
--		qdprintk("internalqcheck: ino=%llu, uqino=%llu, gqino=%llu\n",
--			(unsigned long long) ino,
-+		xfs_debug(mp, "%s: ino=%llu, uqino=%llu, gqino=%llu\n",
-+			__func__, (unsigned long long) ino,
- 			(unsigned long long) mp->m_sb.sb_uquotino,
- 			(unsigned long long) mp->m_sb.sb_gquotino);
+ 	if (unlikely(
+ 	    sbp->sb_logstart == 0 && mp->m_logdev_targp == mp->m_ddev_targp)) {
+-		xfs_fs_mount_cmn_err(flags,
+-			"filesystem is marked as having an external log; "
+-			"specify logdev on the\nmount command line.");
++		if (loud)
++			xfs_warn(mp,
++		"filesystem is marked as having an external log; "
++		"specify logdev on the mount command line.");
  		return XFS_ERROR(EINVAL);
+ 	}
+ 
+ 	if (unlikely(
+ 	    sbp->sb_logstart != 0 && mp->m_logdev_targp != mp->m_ddev_targp)) {
+-		xfs_fs_mount_cmn_err(flags,
+-			"filesystem is marked as having an internal log; "
+-			"do not specify logdev on\nthe mount command line.");
++		if (loud)
++			xfs_warn(mp,
++		"filesystem is marked as having an internal log; "
++		"do not specify logdev on the mount command line.");
+ 		return XFS_ERROR(EINVAL);
+ 	}
+ 
+@@ -369,7 +375,8 @@ xfs_mount_validate_sb(
+ 	    (sbp->sb_rextsize * sbp->sb_blocksize > XFS_MAX_RTEXTSIZE)	||
+ 	    (sbp->sb_rextsize * sbp->sb_blocksize < XFS_MIN_RTEXTSIZE)	||
+ 	    (sbp->sb_imax_pct > 100 /* zero sb_imax_pct is valid */))) {
+-		xfs_fs_mount_cmn_err(flags, "SB sanity check 1 failed");
++		if (loud)
++			xfs_warn(mp, "SB sanity check 1 failed");
+ 		return XFS_ERROR(EFSCORRUPTED);
+ 	}
+ 
+@@ -382,7 +389,8 @@ xfs_mount_validate_sb(
+ 	     (xfs_drfsbno_t)sbp->sb_agcount * sbp->sb_agblocks ||
+ 	    sbp->sb_dblocks < (xfs_drfsbno_t)(sbp->sb_agcount - 1) *
+ 			      sbp->sb_agblocks + XFS_MIN_AG_BLOCKS)) {
+-		xfs_fs_mount_cmn_err(flags, "SB sanity check 2 failed");
++		if (loud)
++			xfs_warn(mp, "SB sanity check 2 failed");
+ 		return XFS_ERROR(EFSCORRUPTED);
+ 	}
+ 
+@@ -390,12 +398,12 @@ xfs_mount_validate_sb(
+ 	 * Until this is fixed only page-sized or smaller data blocks work.
+ 	 */
+ 	if (unlikely(sbp->sb_blocksize > PAGE_SIZE)) {
+-		xfs_fs_mount_cmn_err(flags,
+-			"file system with blocksize %d bytes",
+-			sbp->sb_blocksize);
+-		xfs_fs_mount_cmn_err(flags,
+-			"only pagesize (%ld) or less will currently work.",
+-			PAGE_SIZE);
++		if (loud) {
++			xfs_warn(mp,
++		"File system with blocksize %d bytes. "
++		"Only pagesize (%ld) or less will currently work.",
++				sbp->sb_blocksize, PAGE_SIZE);
++		}
+ 		return XFS_ERROR(ENOSYS);
+ 	}
+ 
+@@ -409,21 +417,23 @@ xfs_mount_validate_sb(
+ 	case 2048:
+ 		break;
+ 	default:
+-		xfs_fs_mount_cmn_err(flags,
+-			"inode size of %d bytes not supported",
+-			sbp->sb_inodesize);
++		if (loud)
++			xfs_warn(mp, "inode size of %d bytes not supported",
++				sbp->sb_inodesize);
+ 		return XFS_ERROR(ENOSYS);
+ 	}
+ 
+ 	if (xfs_sb_validate_fsb_count(sbp, sbp->sb_dblocks) ||
+ 	    xfs_sb_validate_fsb_count(sbp, sbp->sb_rblocks)) {
+-		xfs_fs_mount_cmn_err(flags,
+-			"file system too large to be mounted on this system.");
++		if (loud)
++			xfs_warn(mp,
++		"file system too large to be mounted on this system.");
+ 		return XFS_ERROR(EFBIG);
+ 	}
+ 
+ 	if (unlikely(sbp->sb_inprogress)) {
+-		xfs_fs_mount_cmn_err(flags, "file system busy");
++		if (loud)
++			xfs_warn(mp, "file system busy");
+ 		return XFS_ERROR(EFSCORRUPTED);
+ 	}
+ 
+@@ -431,8 +441,9 @@ xfs_mount_validate_sb(
+ 	 * Version 1 directory format has never worked on Linux.
+ 	 */
+ 	if (unlikely(!xfs_sb_version_hasdirv2(sbp))) {
+-		xfs_fs_mount_cmn_err(flags,
+-			"file system using version 1 directory format");
++		if (loud)
++			xfs_warn(mp,
++				"file system using version 1 directory format");
+ 		return XFS_ERROR(ENOSYS);
+ 	}
+ 
+@@ -673,6 +684,7 @@ xfs_readsb(xfs_mount_t *mp, int flags)
+ 	unsigned int	sector_size;
+ 	xfs_buf_t	*bp;
+ 	int		error;
++	int		loud = !(flags & XFS_MFSI_QUIET);
+ 
+ 	ASSERT(mp->m_sb_bp == NULL);
+ 	ASSERT(mp->m_ddev_targp != NULL);
+@@ -688,7 +700,8 @@ reread:
+ 	bp = xfs_buf_read_uncached(mp, mp->m_ddev_targp,
+ 					XFS_SB_DADDR, sector_size, 0);
+ 	if (!bp) {
+-		xfs_fs_mount_cmn_err(flags, "SB buffer read failed");
++		if (loud)
++			xfs_warn(mp, "SB buffer read failed");
+ 		return EIO;
+ 	}
+ 
+@@ -699,7 +712,8 @@ reread:
+ 	xfs_sb_from_disk(&mp->m_sb, XFS_BUF_TO_SBP(bp));
+ 	error = xfs_mount_validate_sb(mp, &(mp->m_sb), flags);
+ 	if (error) {
+-		xfs_fs_mount_cmn_err(flags, "SB validate failed");
++		if (loud)
++			xfs_warn(mp, "SB validate failed");
+ 		goto release_buf;
+ 	}
+ 
+@@ -707,9 +721,9 @@ reread:
+ 	 * We must be able to do sector-sized and sector-aligned IO.
+ 	 */
+ 	if (sector_size > mp->m_sb.sb_sectsize) {
+-		xfs_fs_mount_cmn_err(flags,
+-			"device supports only %u byte sectors (not %u)",
+-			sector_size, mp->m_sb.sb_sectsize);
++		if (loud)
++			xfs_warn(mp, "device supports %u byte sectors (not %u)",
++				sector_size, mp->m_sb.sb_sectsize);
+ 		error = ENOSYS;
+ 		goto release_buf;
+ 	}
 -- 
 1.7.2.3
 
