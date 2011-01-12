@@ -1,24 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0CCHbJM187879 for <xfs@oss.sgi.com>; Wed, 12 Jan 2011 06:17:37 -0600
+	p0CCi1jd190844 for <xfs@oss.sgi.com>; Wed, 12 Jan 2011 06:44:01 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 93C3E1256C14
-	for <xfs@oss.sgi.com>; Wed, 12 Jan 2011 04:19:48 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail20.adl6.internode.on.net
-	[150.101.137.105]) by cuda.sgi.com with ESMTP id
-	H5yyR5Qfz0kEMnRq for <xfs@oss.sgi.com>;
-	Wed, 12 Jan 2011 04:19:48 -0800 (PST)
-Date: Wed, 12 Jan 2011 23:19:46 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 955B325DDBD
+	for <xfs@oss.sgi.com>; Wed, 12 Jan 2011 04:46:13 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
+	[150.101.137.99]) by cuda.sgi.com with ESMTP id
+	qDyf0EuUBznz1u2i for <xfs@oss.sgi.com>;
+	Wed, 12 Jan 2011 04:46:13 -0800 (PST)
+Date: Wed, 12 Jan 2011 23:44:31 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 01/12] xfs: prevent NMI timeouts in cmn_err
-Message-ID: <20110112121946.GD16267@dastard>
-References: <1294792553-8378-1-git-send-email-david@fromorbit.com>
-	<1294792553-8378-2-git-send-email-david@fromorbit.com>
-	<20110112121010.GA32321@infradead.org>
+Subject: Re: [PATCH 1/6] fs: add hole punching to fallocate
+Message-ID: <20110112124431.GP28803@dastard>
+References: <1289248327-16308-1-git-send-email-josef@redhat.com>
+	<20101109011222.GD2715@dastard> <20101109033038.GF3099@thunk.org>
+	<20101109044242.GH2715@dastard> <20101109214147.GK3099@thunk.org>
+	<20101109234049.GQ2715@dastard>
+	<AANLkTimwmJ_ZoE9oAuA1WGhCgK585jDznqnc6k0=9Ntb@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110112121010.GA32321@infradead.org>
+In-Reply-To: <AANLkTimwmJ_ZoE9oAuA1WGhCgK585jDznqnc6k0=9Ntb@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,14 +33,55 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Lawrence Greenfield <leg@google.com>
+Cc: Ted Ts'o <tytso@mit.edu>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, cluster-devel@redhat.com, cmm@us.ibm.com, Josef Bacik <josef@redhat.com>, joel.becker@oracle.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
 
-On Wed, Jan 12, 2011 at 07:10:10AM -0500, Christoph Hellwig wrote:
-> Looks good.  I think this patch also still is a candidate for 2.6.38,
-> while the rest looks more like 2.6.39 material.
+On Tue, Jan 11, 2011 at 04:13:42PM -0500, Lawrence Greenfield wrote:
+> On Tue, Nov 9, 2010 at 6:40 PM, Dave Chinner <david@fromorbit.com> wrote:
+> > The historical reason for such behaviour existing in XFS was that in
+> > 1997 the CPU and IO latency cost of unwritten extent conversion was
+> > significant,
 
-Agreed.
+.....
+
+> >> (Take for example a trusted cluster filesystem backend that checks the
+> >> object checksum before returning any data to the user; and if the
+> >> check fails the cluster file system will try to use some other replica
+> >> stored on some other server.)
+> >
+> > IOWs, all they want to do is avoid the unwritten extent conversion
+> > overhead. Time has shown that a bad security/performance tradeoff
+> > decision was made 13 years ago in XFS, so I see little reason to
+> > repeat it for ext4 today....
+> 
+> I'd make use of FALLOC_FL_EXPOSE_OLD_DATA. It's not the CPU overhead
+> of extent conversion. It's that extent conversion causes more metadata
+> operations than what you'd have otherwise,
+
+Yes, that's the "IO latency" part of the cost I mentioned above.
+
+> which means systems that
+> want to use O_DIRECT and make sure the data doesn't go away either
+> have to write O_DIRECT|O_DSYNC or need to call fdatasync().
+
+Seriously, we tell application writers _all the time_ that they
+*must* use fsync/fdatasync to guarantee their data is on stable
+storage and that they cannot rely on side-effects of filesystem or
+storage specific behaviours (like ext3 ordered mode) to do that job
+for them.
+
+You're suggesting that by introducing FALLOC_FL_EXPOSE_OLD_DATA,
+applications can rely on filesystem/storage specific behaviour to
+guarantee data is on stable storage without the use of
+fdatasync/fsync. Wht you describe is definitely storage specific,
+because volatile write caches still needs the fdatasync to issue a
+cache flush.
+
+Do you see the same conflict here that I do?
+
+> cluster file system implementor
+
+Which one?
 
 Cheers,
 
