@@ -1,23 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0C7etEM154868 for <xfs@oss.sgi.com>; Wed, 12 Jan 2011 01:40:55 -0600
+	p0C7OsBJ153807 for <xfs@oss.sgi.com>; Wed, 12 Jan 2011 01:24:54 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6F2F7257567
-	for <xfs@oss.sgi.com>; Tue, 11 Jan 2011 23:43:07 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail20.adl6.internode.on.net
-	[150.101.137.105]) by cuda.sgi.com with ESMTP id
-	SWvA7hvCpeoEAVaO for <xfs@oss.sgi.com>;
-	Tue, 11 Jan 2011 23:43:07 -0800 (PST)
-Date: Wed, 12 Jan 2011 18:43:04 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 61C97FE053F
+	for <xfs@oss.sgi.com>; Tue, 11 Jan 2011 23:27:04 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
+	[150.101.137.104]) by cuda.sgi.com with ESMTP id
+	xEEJX3TTlVMdg3KA for <xfs@oss.sgi.com>;
+	Tue, 11 Jan 2011 23:27:04 -0800 (PST)
+Received: from dastard (unverified [121.44.222.102])
+	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
+	51960598-1927428
+	for <xfs@oss.sgi.com>; Wed, 12 Jan 2011 17:57:03 +1030 (CDT)
+Received: from chute ([192.168.1.1] helo=disappointment)
+	by dastard with esmtp (Exim 4.72)
+	(envelope-from <dave@fromorbit.com>) id 1Pcv6j-00017Y-OG
+	for xfs@oss.sgi.com; Wed, 12 Jan 2011 18:27:01 +1100
+Received: from dave by disappointment with local (Exim 4.72)
+	(envelope-from <dave@disappointment.disaster>) id 1Pcv6P-0004rf-Hp
+	for xfs@oss.sgi.com; Wed, 12 Jan 2011 18:26:41 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC, PATCH 0/12] xfs: rework error logging infrastructure
-Message-ID: <20110112074304.GN28803@dastard>
-References: <1294792553-8378-1-git-send-email-david@fromorbit.com>
-	<1294805789.3115.131.camel@doink>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1294805789.3115.131.camel@doink>
+Subject: [PATCH] [RFC] xfs: stop using the page cache to back the buffer cache
+Date: Wed, 12 Jan 2011 18:26:41 +1100
+Message-Id: <1294817201-18670-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,53 +32,652 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Jan 11, 2011 at 10:16:29PM -0600, Alex Elder wrote:
-> On Wed, 2011-01-12 at 11:35 +1100, Dave Chinner wrote:
-> > This series completely reworks the cmn_err logging infrastructure
-> > by replacing it with a simple, consistent API that can be used everwhere.
-> > IOWs, this series replaces the various cmn_err APIs:
-> 
-> . . .
-> 
-> I reviewed the whole series, and offered a correction
-> on just one thing.  I might quibble with the indentation
-> of some of the format strings here or there, but I
-> didn't bother, there sometimes is no nice way to
-> do those.
+From: Dave Chinner <dchinner@redhat.com>
 
-Yeah, I tried to make them a bit more consistent - one line if
-possible, even if the indenting was not "pretty". In some places it
-made a major improvement, in other places I wasn't quite so happy
-with the result.
+Now that the buffer cache has it's own LRU, we do not need to use
+the page cache to provide persistent caching and reclaim
+infrastructure. Convert the buffer cache to use alloc_pages()
+instead of the page cache. This will remove all the overhead of page
+cache management from setup and teardown of the buffers, as well as
+needing to mark pages accessed as we find buffers in the buffer
+cache.
 
-> I personally like the result a lot, it's a lot cleaner
-> and easier on the eyes.
->
-> In any case, you say it's an RFC but I'm OK with it.
+By avoiding the page cache, we also remove the need to keep state in
+the page_private(page) field so that it persists across buffer
+free/buffer rebuild, and so all that code can be removed. This also
+fixes the long-standing problem of not having enough bits in the
+page_private field to track all the state needed for a 512
+sector/64k page setup.
 
-It was an RFC because I wasn't sure whether people would like the
-interface I proposed and converted to. I know I mentioned it
-previously, but no-one commented in reply with a yay or nay, so
-I just went an did it and this is the result.
+It also removes the need for page locking during reads as the pages
+are unique to the buffer and nobody else will be attempting to
+access them.
 
-> I'm just starting to test with it but you can consider
-> the whole series reviewed by me.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/linux-2.6/xfs_buf.c |  310 ++++++++++----------------------------------
+ fs/xfs/linux-2.6/xfs_buf.h |    4 +-
+ 2 files changed, 73 insertions(+), 241 deletions(-)
 
-Great, thanks. I'll push it out into a topic branch tomorrow...
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
+index 3cc671c..e74e5d2 100644
+--- a/fs/xfs/linux-2.6/xfs_buf.c
++++ b/fs/xfs/linux-2.6/xfs_buf.c
+@@ -94,75 +94,6 @@ xfs_buf_vmap_len(
+ }
+ 
+ /*
+- *	Page Region interfaces.
+- *
+- *	For pages in filesystems where the blocksize is smaller than the
+- *	pagesize, we use the page->private field (long) to hold a bitmap
+- * 	of uptodate regions within the page.
+- *
+- *	Each such region is "bytes per page / bits per long" bytes long.
+- *
+- *	NBPPR == number-of-bytes-per-page-region
+- *	BTOPR == bytes-to-page-region (rounded up)
+- *	BTOPRT == bytes-to-page-region-truncated (rounded down)
+- */
+-#if (BITS_PER_LONG == 32)
+-#define PRSHIFT		(PAGE_CACHE_SHIFT - 5)	/* (32 == 1<<5) */
+-#elif (BITS_PER_LONG == 64)
+-#define PRSHIFT		(PAGE_CACHE_SHIFT - 6)	/* (64 == 1<<6) */
+-#else
+-#error BITS_PER_LONG must be 32 or 64
+-#endif
+-#define NBPPR		(PAGE_CACHE_SIZE/BITS_PER_LONG)
+-#define BTOPR(b)	(((unsigned int)(b) + (NBPPR - 1)) >> PRSHIFT)
+-#define BTOPRT(b)	(((unsigned int)(b) >> PRSHIFT))
+-
+-STATIC unsigned long
+-page_region_mask(
+-	size_t		offset,
+-	size_t		length)
+-{
+-	unsigned long	mask;
+-	int		first, final;
+-
+-	first = BTOPR(offset);
+-	final = BTOPRT(offset + length - 1);
+-	first = min(first, final);
+-
+-	mask = ~0UL;
+-	mask <<= BITS_PER_LONG - (final - first);
+-	mask >>= BITS_PER_LONG - (final);
+-
+-	ASSERT(offset + length <= PAGE_CACHE_SIZE);
+-	ASSERT((final - first) < BITS_PER_LONG && (final - first) >= 0);
+-
+-	return mask;
+-}
+-
+-STATIC void
+-set_page_region(
+-	struct page	*page,
+-	size_t		offset,
+-	size_t		length)
+-{
+-	set_page_private(page,
+-		page_private(page) | page_region_mask(offset, length));
+-	if (page_private(page) == ~0UL)
+-		SetPageUptodate(page);
+-}
+-
+-STATIC int
+-test_page_region(
+-	struct page	*page,
+-	size_t		offset,
+-	size_t		length)
+-{
+-	unsigned long	mask = page_region_mask(offset, length);
+-
+-	return (mask && (page_private(page) & mask) == mask);
+-}
+-
+-/*
+  * xfs_buf_lru_add - add a buffer to the LRU.
+  *
+  * The LRU takes a new reference to the buffer so that it will only be freed
+@@ -311,7 +242,7 @@ STATIC void
+ _xfs_buf_free_pages(
+ 	xfs_buf_t	*bp)
+ {
+-	if (bp->b_pages != bp->b_page_array) {
++	if (bp->b_pages && bp->b_pages != bp->b_page_array) {
+ 		kmem_free(bp->b_pages);
+ 		bp->b_pages = NULL;
+ 	}
+@@ -332,7 +263,7 @@ xfs_buf_free(
+ 
+ 	ASSERT(list_empty(&bp->b_lru));
+ 
+-	if (bp->b_flags & (_XBF_PAGE_CACHE|_XBF_PAGES)) {
++	if (bp->b_flags & _XBF_PAGES) {
+ 		uint		i;
+ 
+ 		if (xfs_buf_is_vmapped(bp))
+@@ -342,25 +273,22 @@ xfs_buf_free(
+ 		for (i = 0; i < bp->b_page_count; i++) {
+ 			struct page	*page = bp->b_pages[i];
+ 
+-			if (bp->b_flags & _XBF_PAGE_CACHE)
+-				ASSERT(!PagePrivate(page));
+-			page_cache_release(page);
++			__free_page(page);
+ 		}
+-	}
++	} else if (bp->b_flags & _XBF_KMEM)
++		kmem_free(bp->b_addr);
+ 	_xfs_buf_free_pages(bp);
+ 	xfs_buf_deallocate(bp);
+ }
+ 
+ /*
+- *	Finds all pages for buffer in question and builds it's page list.
++ * Allocates all the pages for buffer in question and builds it's page list.
+  */
+ STATIC int
+-_xfs_buf_lookup_pages(
++xfs_buf_allocate_buffer(
+ 	xfs_buf_t		*bp,
+ 	uint			flags)
+ {
+-	struct address_space	*mapping = bp->b_target->bt_mapping;
+-	size_t			blocksize = bp->b_target->bt_bsize;
+ 	size_t			size = bp->b_count_desired;
+ 	size_t			nbytes, offset;
+ 	gfp_t			gfp_mask = xb_to_gfp(flags);
+@@ -369,29 +297,54 @@ _xfs_buf_lookup_pages(
+ 	xfs_off_t		end;
+ 	int			error;
+ 
+-	end = bp->b_file_offset + bp->b_buffer_length;
+-	page_count = xfs_buf_btoc(end) - xfs_buf_btoct(bp->b_file_offset);
++	/*
++	 * for buffers that are contained within a single page, just allocate
++	 * the memory from the heap - there's no need for the complexity of
++	 * page arrays to keep allocation down to order 0.
++	 */
++	if (bp->b_buffer_length <= PAGE_SIZE) {
++		page_count = 1;
++	} else {
++		end = bp->b_file_offset + bp->b_buffer_length;
++		page_count = xfs_buf_btoc(end) -
++					xfs_buf_btoct(bp->b_file_offset);
++	}
+ 
+ 	error = _xfs_buf_get_pages(bp, page_count, flags);
+ 	if (unlikely(error))
+ 		return error;
+-	bp->b_flags |= _XBF_PAGE_CACHE;
++
++	if (bp->b_page_count == 1) {
++		unsigned long	pageaddr;
++
++		bp->b_addr = kmem_alloc(bp->b_buffer_length, xb_to_km(flags));
++		if (!bp->b_addr)
++			return ENOMEM;
++
++		pageaddr = (unsigned long)bp->b_addr & PAGE_MASK;
++		ASSERT(((unsigned long)(bp->b_addr + bp->b_buffer_length - 1) & PAGE_MASK) == pageaddr);
++
++		bp->b_offset = (unsigned long)bp->b_addr - pageaddr;
++		bp->b_pages[0] = virt_to_page((void *)pageaddr);
++
++		bp->b_flags |= XBF_MAPPED|_XBF_KMEM;
++		return 0;
++	}
+ 
+ 	offset = bp->b_offset;
+-	first = bp->b_file_offset >> PAGE_CACHE_SHIFT;
++	first = bp->b_file_offset >> PAGE_SHIFT;
++	bp->b_flags |= _XBF_PAGES;
+ 
+ 	for (i = 0; i < bp->b_page_count; i++) {
+ 		struct page	*page;
+ 		uint		retries = 0;
+-
+-	      retry:
+-		page = find_or_create_page(mapping, first + i, gfp_mask);
++retry:
++		page = alloc_page(gfp_mask);
+ 		if (unlikely(page == NULL)) {
+ 			if (flags & XBF_READ_AHEAD) {
+ 				bp->b_page_count = i;
+-				for (i = 0; i < bp->b_page_count; i++)
+-					unlock_page(bp->b_pages[i]);
+-				return -ENOMEM;
++				error = ENOMEM;
++				goto out_free_pages;
+ 			}
+ 
+ 			/*
+@@ -412,33 +365,16 @@ _xfs_buf_lookup_pages(
+ 
+ 		XFS_STATS_INC(xb_page_found);
+ 
+-		nbytes = min_t(size_t, size, PAGE_CACHE_SIZE - offset);
++		nbytes = min_t(size_t, size, PAGE_SIZE - offset);
+ 		size -= nbytes;
+-
+-		ASSERT(!PagePrivate(page));
+-		if (!PageUptodate(page)) {
+-			page_count--;
+-			if (blocksize >= PAGE_CACHE_SIZE) {
+-				if (flags & XBF_READ)
+-					bp->b_flags |= _XBF_PAGE_LOCKED;
+-			} else if (!PagePrivate(page)) {
+-				if (test_page_region(page, offset, nbytes))
+-					page_count++;
+-			}
+-		}
+-
+ 		bp->b_pages[i] = page;
+ 		offset = 0;
+ 	}
++	return 0;
+ 
+-	if (!(bp->b_flags & _XBF_PAGE_LOCKED)) {
+-		for (i = 0; i < bp->b_page_count; i++)
+-			unlock_page(bp->b_pages[i]);
+-	}
+-
+-	if (page_count == bp->b_page_count)
+-		bp->b_flags |= XBF_DONE;
+-
++out_free_pages:
++	for (i = 0; i < bp->b_page_count; i++)
++		__free_page(bp->b_pages[i]);
+ 	return error;
+ }
+ 
+@@ -450,8 +386,9 @@ _xfs_buf_map_pages(
+ 	xfs_buf_t		*bp,
+ 	uint			flags)
+ {
+-	/* A single page buffer is always mappable */
++	ASSERT(bp->b_flags & _XBF_PAGES);
+ 	if (bp->b_page_count == 1) {
++		/* A single page buffer is always mappable */
+ 		bp->b_addr = page_address(bp->b_pages[0]) + bp->b_offset;
+ 		bp->b_flags |= XBF_MAPPED;
+ 	} else if (flags & XBF_MAPPED) {
+@@ -570,7 +507,7 @@ found:
+ 
+ 	if (bp->b_flags & XBF_STALE) {
+ 		ASSERT((bp->b_flags & _XBF_DELWRI_Q) == 0);
+-		bp->b_flags &= XBF_MAPPED;
++		bp->b_flags &= XBF_MAPPED|_XBF_KMEM|_XBF_PAGES;
+ 	}
+ 
+ 	trace_xfs_buf_find(bp, flags, _RET_IP_);
+@@ -599,7 +536,7 @@ xfs_buf_get(
+ 
+ 	bp = _xfs_buf_find(target, ioff, isize, flags, new_bp);
+ 	if (bp == new_bp) {
+-		error = _xfs_buf_lookup_pages(bp, flags);
++		error = xfs_buf_allocate_buffer(bp, flags);
+ 		if (error)
+ 			goto no_buffer;
+ 	} else {
+@@ -711,7 +648,7 @@ xfs_buf_readahead(
+ {
+ 	struct backing_dev_info *bdi;
+ 
+-	bdi = target->bt_mapping->backing_dev_info;
++	bdi = blk_get_backing_dev_info(target->bt_bdev);
+ 	if (bdi_read_congested(bdi))
+ 		return;
+ 
+@@ -790,10 +727,10 @@ xfs_buf_associate_memory(
+ 	size_t			buflen;
+ 	int			page_count;
+ 
+-	pageaddr = (unsigned long)mem & PAGE_CACHE_MASK;
++	pageaddr = (unsigned long)mem & PAGE_MASK;
+ 	offset = (unsigned long)mem - pageaddr;
+-	buflen = PAGE_CACHE_ALIGN(len + offset);
+-	page_count = buflen >> PAGE_CACHE_SHIFT;
++	buflen = PAGE_ALIGN(len + offset);
++	page_count = buflen >> PAGE_SHIFT;
+ 
+ 	/* Free any previous set of page pointers */
+ 	if (bp->b_pages)
+@@ -810,13 +747,12 @@ xfs_buf_associate_memory(
+ 
+ 	for (i = 0; i < bp->b_page_count; i++) {
+ 		bp->b_pages[i] = mem_to_page((void *)pageaddr);
+-		pageaddr += PAGE_CACHE_SIZE;
++		pageaddr += PAGE_SIZE;
+ 	}
+ 
+ 	bp->b_count_desired = len;
+ 	bp->b_buffer_length = buflen;
+ 	bp->b_flags |= XBF_MAPPED;
+-	bp->b_flags &= ~_XBF_PAGE_LOCKED;
+ 
+ 	return 0;
+ }
+@@ -990,7 +926,7 @@ xfs_buf_lock(
+ 	if (atomic_read(&bp->b_pin_count) && (bp->b_flags & XBF_STALE))
+ 		xfs_log_force(bp->b_target->bt_mount, 0);
+ 	if (atomic_read(&bp->b_io_remaining))
+-		blk_run_address_space(bp->b_target->bt_mapping);
++		blk_run_backing_dev(bp->b_target->bt_bdi, NULL);
+ 	down(&bp->b_sema);
+ 	XB_SET_OWNER(bp);
+ 
+@@ -1035,7 +971,7 @@ xfs_buf_wait_unpin(
+ 		if (atomic_read(&bp->b_pin_count) == 0)
+ 			break;
+ 		if (atomic_read(&bp->b_io_remaining))
+-			blk_run_address_space(bp->b_target->bt_mapping);
++			blk_run_backing_dev(bp->b_target->bt_bdi, NULL);
+ 		schedule();
+ 	}
+ 	remove_wait_queue(&bp->b_waiters, &wait);
+@@ -1248,10 +1184,8 @@ _xfs_buf_ioend(
+ 	xfs_buf_t		*bp,
+ 	int			schedule)
+ {
+-	if (atomic_dec_and_test(&bp->b_io_remaining) == 1) {
+-		bp->b_flags &= ~_XBF_PAGE_LOCKED;
++	if (atomic_dec_and_test(&bp->b_io_remaining) == 1)
+ 		xfs_buf_ioend(bp, schedule);
+-	}
+ }
+ 
+ STATIC void
+@@ -1260,35 +1194,12 @@ xfs_buf_bio_end_io(
+ 	int			error)
+ {
+ 	xfs_buf_t		*bp = (xfs_buf_t *)bio->bi_private;
+-	unsigned int		blocksize = bp->b_target->bt_bsize;
+-	struct bio_vec		*bvec = bio->bi_io_vec + bio->bi_vcnt - 1;
+ 
+ 	xfs_buf_ioerror(bp, -error);
+ 
+ 	if (!error && xfs_buf_is_vmapped(bp) && (bp->b_flags & XBF_READ))
+ 		invalidate_kernel_vmap_range(bp->b_addr, xfs_buf_vmap_len(bp));
+ 
+-	do {
+-		struct page	*page = bvec->bv_page;
+-
+-		ASSERT(!PagePrivate(page));
+-		if (unlikely(bp->b_error)) {
+-			if (bp->b_flags & XBF_READ)
+-				ClearPageUptodate(page);
+-		} else if (blocksize >= PAGE_CACHE_SIZE) {
+-			SetPageUptodate(page);
+-		} else if (!PagePrivate(page) &&
+-				(bp->b_flags & _XBF_PAGE_CACHE)) {
+-			set_page_region(page, bvec->bv_offset, bvec->bv_len);
+-		}
+-
+-		if (--bvec >= bio->bi_io_vec)
+-			prefetchw(&bvec->bv_page->flags);
+-
+-		if (bp->b_flags & _XBF_PAGE_LOCKED)
+-			unlock_page(page);
+-	} while (bvec >= bio->bi_io_vec);
+-
+ 	_xfs_buf_ioend(bp, 1);
+ 	bio_put(bio);
+ }
+@@ -1302,7 +1213,6 @@ _xfs_buf_ioapply(
+ 	int			offset = bp->b_offset;
+ 	int			size = bp->b_count_desired;
+ 	sector_t		sector = bp->b_bn;
+-	unsigned int		blocksize = bp->b_target->bt_bsize;
+ 
+ 	total_nr_pages = bp->b_page_count;
+ 	map_i = 0;
+@@ -1323,29 +1233,6 @@ _xfs_buf_ioapply(
+ 		     (bp->b_flags & XBF_READ_AHEAD) ? READA : READ;
+ 	}
+ 
+-	/* Special code path for reading a sub page size buffer in --
+-	 * we populate up the whole page, and hence the other metadata
+-	 * in the same page.  This optimization is only valid when the
+-	 * filesystem block size is not smaller than the page size.
+-	 */
+-	if ((bp->b_buffer_length < PAGE_CACHE_SIZE) &&
+-	    ((bp->b_flags & (XBF_READ|_XBF_PAGE_LOCKED)) ==
+-	      (XBF_READ|_XBF_PAGE_LOCKED)) &&
+-	    (blocksize >= PAGE_CACHE_SIZE)) {
+-		bio = bio_alloc(GFP_NOIO, 1);
+-
+-		bio->bi_bdev = bp->b_target->bt_bdev;
+-		bio->bi_sector = sector - (offset >> BBSHIFT);
+-		bio->bi_end_io = xfs_buf_bio_end_io;
+-		bio->bi_private = bp;
+-
+-		bio_add_page(bio, bp->b_pages[0], PAGE_CACHE_SIZE, 0);
+-		size = 0;
+-
+-		atomic_inc(&bp->b_io_remaining);
+-
+-		goto submit_io;
+-	}
+ 
+ next_chunk:
+ 	atomic_inc(&bp->b_io_remaining);
+@@ -1359,8 +1246,9 @@ next_chunk:
+ 	bio->bi_end_io = xfs_buf_bio_end_io;
+ 	bio->bi_private = bp;
+ 
++
+ 	for (; size && nr_pages; nr_pages--, map_i++) {
+-		int	rbytes, nbytes = PAGE_CACHE_SIZE - offset;
++		int	rbytes, nbytes = PAGE_SIZE - offset;
+ 
+ 		if (nbytes > size)
+ 			nbytes = size;
+@@ -1375,7 +1263,6 @@ next_chunk:
+ 		total_nr_pages--;
+ 	}
+ 
+-submit_io:
+ 	if (likely(bio->bi_size)) {
+ 		if (xfs_buf_is_vmapped(bp)) {
+ 			flush_kernel_vmap_range(bp->b_addr,
+@@ -1385,18 +1272,7 @@ submit_io:
+ 		if (size)
+ 			goto next_chunk;
+ 	} else {
+-		/*
+-		 * if we get here, no pages were added to the bio. However,
+-		 * we can't just error out here - if the pages are locked then
+-		 * we have to unlock them otherwise we can hang on a later
+-		 * access to the page.
+-		 */
+ 		xfs_buf_ioerror(bp, EIO);
+-		if (bp->b_flags & _XBF_PAGE_LOCKED) {
+-			int i;
+-			for (i = 0; i < bp->b_page_count; i++)
+-				unlock_page(bp->b_pages[i]);
+-		}
+ 		bio_put(bio);
+ 	}
+ }
+@@ -1442,7 +1318,7 @@ xfs_buf_iowait(
+ 	trace_xfs_buf_iowait(bp, _RET_IP_);
+ 
+ 	if (atomic_read(&bp->b_io_remaining))
+-		blk_run_address_space(bp->b_target->bt_mapping);
++		blk_run_backing_dev(bp->b_target->bt_bdi, NULL);
+ 	wait_for_completion(&bp->b_iowait);
+ 
+ 	trace_xfs_buf_iowait_done(bp, _RET_IP_);
+@@ -1460,8 +1336,8 @@ xfs_buf_offset(
+ 		return XFS_BUF_PTR(bp) + offset;
+ 
+ 	offset += bp->b_offset;
+-	page = bp->b_pages[offset >> PAGE_CACHE_SHIFT];
+-	return (xfs_caddr_t)page_address(page) + (offset & (PAGE_CACHE_SIZE-1));
++	page = bp->b_pages[offset >> PAGE_SHIFT];
++	return (xfs_caddr_t)page_address(page) + (offset & (PAGE_SIZE-1));
+ }
+ 
+ /*
+@@ -1483,9 +1359,9 @@ xfs_buf_iomove(
+ 		page = bp->b_pages[xfs_buf_btoct(boff + bp->b_offset)];
+ 		cpoff = xfs_buf_poff(boff + bp->b_offset);
+ 		csize = min_t(size_t,
+-			      PAGE_CACHE_SIZE-cpoff, bp->b_count_desired-boff);
++			      PAGE_SIZE-cpoff, bp->b_count_desired-boff);
+ 
+-		ASSERT(((csize + cpoff) <= PAGE_CACHE_SIZE));
++		ASSERT(((csize + cpoff) <= PAGE_SIZE));
+ 
+ 		switch (mode) {
+ 		case XBRW_ZERO:
+@@ -1598,7 +1474,6 @@ xfs_free_buftarg(
+ 	xfs_flush_buftarg(btp, 1);
+ 	if (mp->m_flags & XFS_MOUNT_BARRIER)
+ 		xfs_blkdev_issue_flush(btp);
+-	iput(btp->bt_mapping->host);
+ 
+ 	kthread_stop(btp->bt_task);
+ 	kmem_free(btp);
+@@ -1622,15 +1497,6 @@ xfs_setsize_buftarg_flags(
+ 		return EINVAL;
+ 	}
+ 
+-	if (verbose &&
+-	    (PAGE_CACHE_SIZE / BITS_PER_LONG) > sectorsize) {
+-		printk(KERN_WARNING
+-			"XFS: %u byte sectors in use on device %s.  "
+-			"This is suboptimal; %u or greater is ideal.\n",
+-			sectorsize, XFS_BUFTARG_NAME(btp),
+-			(unsigned int)PAGE_CACHE_SIZE / BITS_PER_LONG);
+-	}
+-
+ 	return 0;
+ }
+ 
+@@ -1645,7 +1511,7 @@ xfs_setsize_buftarg_early(
+ 	struct block_device	*bdev)
+ {
+ 	return xfs_setsize_buftarg_flags(btp,
+-			PAGE_CACHE_SIZE, bdev_logical_block_size(bdev), 0);
++			PAGE_SIZE, bdev_logical_block_size(bdev), 0);
+ }
+ 
+ int
+@@ -1658,41 +1524,6 @@ xfs_setsize_buftarg(
+ }
+ 
+ STATIC int
+-xfs_mapping_buftarg(
+-	xfs_buftarg_t		*btp,
+-	struct block_device	*bdev)
+-{
+-	struct backing_dev_info	*bdi;
+-	struct inode		*inode;
+-	struct address_space	*mapping;
+-	static const struct address_space_operations mapping_aops = {
+-		.sync_page = block_sync_page,
+-		.migratepage = fail_migrate_page,
+-	};
+-
+-	inode = new_inode(bdev->bd_inode->i_sb);
+-	if (!inode) {
+-		printk(KERN_WARNING
+-			"XFS: Cannot allocate mapping inode for device %s\n",
+-			XFS_BUFTARG_NAME(btp));
+-		return ENOMEM;
+-	}
+-	inode->i_ino = get_next_ino();
+-	inode->i_mode = S_IFBLK;
+-	inode->i_bdev = bdev;
+-	inode->i_rdev = bdev->bd_dev;
+-	bdi = blk_get_backing_dev_info(bdev);
+-	if (!bdi)
+-		bdi = &default_backing_dev_info;
+-	mapping = &inode->i_data;
+-	mapping->a_ops = &mapping_aops;
+-	mapping->backing_dev_info = bdi;
+-	mapping_set_gfp_mask(mapping, GFP_NOFS);
+-	btp->bt_mapping = mapping;
+-	return 0;
+-}
+-
+-STATIC int
+ xfs_alloc_delwrite_queue(
+ 	xfs_buftarg_t		*btp,
+ 	const char		*fsname)
+@@ -1720,12 +1551,11 @@ xfs_alloc_buftarg(
+ 	btp->bt_mount = mp;
+ 	btp->bt_dev =  bdev->bd_dev;
+ 	btp->bt_bdev = bdev;
++	btp->bt_bdi = blk_get_backing_dev_info(bdev);
+ 	INIT_LIST_HEAD(&btp->bt_lru);
+ 	spin_lock_init(&btp->bt_lru_lock);
+ 	if (xfs_setsize_buftarg_early(btp, bdev))
+ 		goto error;
+-	if (xfs_mapping_buftarg(btp, bdev))
+-		goto error;
+ 	if (xfs_alloc_delwrite_queue(btp, fsname))
+ 		goto error;
+ 	btp->bt_shrinker.shrink = xfs_buftarg_shrink;
+@@ -1947,7 +1777,7 @@ xfsbufd(
+ 			count++;
+ 		}
+ 		if (count)
+-			blk_run_address_space(target->bt_mapping);
++			blk_run_backing_dev(target->bt_bdi, NULL);
+ 
+ 	} while (!kthread_should_stop());
+ 
+@@ -1995,7 +1825,7 @@ xfs_flush_buftarg(
+ 
+ 	if (wait) {
+ 		/* Expedite and wait for IO to complete. */
+-		blk_run_address_space(target->bt_mapping);
++		blk_run_backing_dev(target->bt_bdi, NULL);
+ 		while (!list_empty(&wait_list)) {
+ 			bp = list_first_entry(&wait_list, struct xfs_buf, b_list);
+ 
+diff --git a/fs/xfs/linux-2.6/xfs_buf.h b/fs/xfs/linux-2.6/xfs_buf.h
+index cbe6595..121f431 100644
+--- a/fs/xfs/linux-2.6/xfs_buf.h
++++ b/fs/xfs/linux-2.6/xfs_buf.h
+@@ -64,6 +64,7 @@ typedef enum {
+ #define _XBF_PAGE_CACHE	(1 << 17)/* backed by pagecache */
+ #define _XBF_PAGES	(1 << 18)/* backed by refcounted pages */
+ #define	_XBF_RUN_QUEUES	(1 << 19)/* run block device task queue	*/
++#define	_XBF_KMEM	(1 << 20)/* backed by heap memory */
+ #define _XBF_DELWRI_Q	(1 << 21)/* buffer on delwri queue */
+ 
+ /*
+@@ -103,6 +104,7 @@ typedef unsigned int xfs_buf_flags_t;
+ 	{ _XBF_PAGE_CACHE,	"PAGE_CACHE" }, \
+ 	{ _XBF_PAGES,		"PAGES" }, \
+ 	{ _XBF_RUN_QUEUES,	"RUN_QUEUES" }, \
++	{ _XBF_KMEM,		"KMEM" }, \
+ 	{ _XBF_DELWRI_Q,	"DELWRI_Q" }, \
+ 	{ _XBF_PAGE_LOCKED,	"PAGE_LOCKED" }
+ 
+@@ -120,7 +122,7 @@ typedef struct xfs_bufhash {
+ typedef struct xfs_buftarg {
+ 	dev_t			bt_dev;
+ 	struct block_device	*bt_bdev;
+-	struct address_space	*bt_mapping;
++	struct backing_dev_info	*bt_bdi;
+ 	struct xfs_mount	*bt_mount;
+ 	unsigned int		bt_bsize;
+ 	unsigned int		bt_sshift;
 -- 
-Dave Chinner
-david@fromorbit.com
+1.7.2.3
 
 _______________________________________________
 xfs mailing list
