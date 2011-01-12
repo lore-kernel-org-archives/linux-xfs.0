@@ -1,32 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0C0i9Sb124899 for <xfs@oss.sgi.com>; Tue, 11 Jan 2011 18:44:09 -0600
+	p0C0iAqT124929 for <xfs@oss.sgi.com>; Tue, 11 Jan 2011 18:44:10 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A4224256226
-	for <xfs@oss.sgi.com>; Tue, 11 Jan 2011 16:36:37 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
-	[150.101.137.99]) by cuda.sgi.com with ESMTP id
-	l1jjowIw1SjpIU3o for <xfs@oss.sgi.com>;
-	Tue, 11 Jan 2011 16:36:37 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4012D256228
+	for <xfs@oss.sgi.com>; Tue, 11 Jan 2011 16:36:47 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
+	[150.101.137.104]) by cuda.sgi.com with ESMTP id
+	IcVUQImqy9J3taY6 for <xfs@oss.sgi.com>;
+	Tue, 11 Jan 2011 16:36:47 -0800 (PST)
 Received: from dastard (unverified [121.44.222.102])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	52939888-1927428
-	for <xfs@oss.sgi.com>; Wed, 12 Jan 2011 11:06:36 +1030 (CDT)
+	51913617-1927428
+	for <xfs@oss.sgi.com>; Wed, 12 Jan 2011 11:06:46 +1030 (CDT)
 Received: from chute ([192.168.1.1] helo=disappointment)
 	by dastard with esmtp (Exim 4.72)
-	(envelope-from <dave@fromorbit.com>) id 1PcohC-0000UX-9e
-	for xfs@oss.sgi.com; Wed, 12 Jan 2011 11:36:14 +1100
+	(envelope-from <dave@fromorbit.com>) id 1PcohM-0000US-3E
+	for xfs@oss.sgi.com; Wed, 12 Jan 2011 11:36:24 +1100
 Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1Pcogu-0002GF-Qx
+	(envelope-from <dave@disappointment.disaster>) id 1Pcogu-0002G6-Le
 	for xfs@oss.sgi.com; Wed, 12 Jan 2011 11:35:56 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 06/12] xfs: kill xfs_fs_repair_cmn_err() macro
-Date: Wed, 12 Jan 2011 11:35:47 +1100
-Message-Id: <1294792553-8378-7-git-send-email-david@fromorbit.com>
+Subject: [PATCH 03/12] xfs: Convert linux-2.6/ files to new logging interface
+Date: Wed, 12 Jan 2011 11:35:44 +1100
+Message-Id: <1294792553-8378-4-git-send-email-david@fromorbit.com>
 In-Reply-To: <1294792553-8378-1-git-send-email-david@fromorbit.com>
 References: <1294792553-8378-1-git-send-email-david@fromorbit.com>
-MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,128 +34,514 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-RnJvbTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgoKSW4gY2VydGFpbiBjYXNl
-cyBvZiBpbm9kZSBjb3JydXB0aW9uLCB0aGUgeGZzX2ZzX3JlcGFpcl9jbW5fZXJyKCkKbWFjcm8g
-aXMgdXNlZCB0byBvdXRwdXQgYW4gZXh0cmEgbWVzc2FnZSBpbiB0aGUgY29ycnVwdGlvbiByZXBv
-cnQuClRoYXQgZXh0cmEgbWVzc2FnZSBpcyAidW5tb3VudCBhbmQgcnVuIHhmc19yZXBhaXIiLCB3
-aGljaCByZWFsbHkKYXBwbGllcyB0byBhbnkgY29ycnVwdGlvbiByZXBvcnQuIEVhY2ggY2FzZSB0
-aGF0IHRoaXMgbWFjcm8gaXMKY2FsbGVkIChleGNlcHQgb25lKSB0aGVuIGNhbGxzIHhmc19jb3Jy
-dXB0aW9uX2Vycm9yKCkgdG8gb3B0aW9uYWxseQpkdW1wIG1vcmUgaW5mb3JtYXRpb24gYWJvdXQg
-dGhlIGVycm9yLgoKSGVuY2UsIG1vdmUgdGhlIG91dHB1dCBvZiAicnVuIHhmc19yZXBhaXIiIHRv
-IHhmc19jb3JydXB0aW9uX2Vycm9yKCkKc28gdGhhdCBpdCBpcyBvdXRwdXQgb24gYWxsIGNvcnJ1
-cHRpb24gcmVwb3J0cyBhcyBpdCBpcyByZWxldmFudCB0bwphbGwgY29ycnVwdGlvbiBpbmNpZGVu
-dHMuIEFsc28sIGNvbnZlcnQgdGhlIG9uZSBjYWxsZXIgb2YgdGhlCmZzX3JlcGFpciBtYWNybyB0
-aGF0IGRvZXNuJ3QgY2FsbCB4ZnNfY29ycnVwdGlvbl9lcnJvcigpIHRvIGNhbGwgaXQsCmhlbmNl
-IHByb3ZpZGUgY29uc2nRlXRlbnQgZXJyb3IgcmVwb3J0aW5nIGZvciBhbGwgY2FzZXMgd2hlcmUK
-eGZzX2ZzX3JlcGFpcl9jbW5fZXJyKCkgdXNlZCB0byBiZSBjYWxsZWQuCgpTaWduZWQtb2ZmLWJ5
-OiBEYXZlIENoaW5uZXIgPGRjaGlubmVyQHJlZGhhdC5jb20+Ci0tLQogZnMveGZzL3hmc19ibWFw
-LmMgIHwgICAgNyArKystLS0tCiBmcy94ZnMveGZzX2Vycm9yLmMgfCAgICAxICsKIGZzL3hmcy94
-ZnNfZXJyb3IuaCB8ICAgIDMgLS0tCiBmcy94ZnMveGZzX2lub2RlLmMgfCAgIDM3ICsrKysrKysr
-KysrKysrKy0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KIDQgZmlsZXMgY2hhbmdlZCwgMTkgaW5zZXJ0
-aW9ucygrKSwgMjkgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvZnMveGZzL3hmc19ibWFwLmMg
-Yi9mcy94ZnMveGZzX2JtYXAuYwppbmRleCA1MDBjNWM3Li44NzkxOWUxIDEwMDY0NAotLS0gYS9m
-cy94ZnMveGZzX2JtYXAuYworKysgYi9mcy94ZnMveGZzX2JtYXAuYwpAQCAtNDE3NCwxMiArNDE3
-NCwxMSBAQCB4ZnNfYm1hcF9yZWFkX2V4dGVudHMoCiAJCW51bV9yZWNzID0geGZzX2J0cmVlX2dl
-dF9udW1yZWNzKGJsb2NrKTsKIAkJaWYgKHVubGlrZWx5KGkgKyBudW1fcmVjcyA+IHJvb20pKSB7
-CiAJCQlBU1NFUlQoaSArIG51bV9yZWNzIDw9IHJvb20pOwotCQkJeGZzX2ZzX3JlcGFpcl9jbW5f
-ZXJyKENFX1dBUk4sIGlwLT5pX21vdW50LAorCQkJeGZzX3dhcm4oaXAtPmlfbW91bnQsCiAJCQkJ
-ImNvcnJ1cHQgZGlub2RlICVMdSwgKGJ0cmVlIGV4dGVudHMpLiIsCiAJCQkJKHVuc2lnbmVkIGxv
-bmcgbG9uZykgaXAtPmlfaW5vKTsKLQkJCVhGU19FUlJPUl9SRVBPUlQoInhmc19ibWFwX3JlYWRf
-ZXh0ZW50cygxKSIsCi0JCQkJCSBYRlNfRVJSTEVWRUxfTE9XLAotCQkJCQlpcC0+aV9tb3VudCk7
-CisJCQlYRlNfQ09SUlVQVElPTl9FUlJPUigieGZzX2JtYXBfcmVhZF9leHRlbnRzKDEpIiwKKwkJ
-CQlYRlNfRVJSTEVWRUxfTE9XLCBpcC0+aV9tb3VudCwgYmxvY2spOwogCQkJZ290byBlcnJvcjA7
-CiAJCX0KIAkJWEZTX1dBTlRfQ09SUlVQVEVEX0dPVE8oCmRpZmYgLS1naXQgYS9mcy94ZnMveGZz
-X2Vycm9yLmMgYi9mcy94ZnMveGZzX2Vycm9yLmMKaW5kZXggMzRmMGUyZC4uMDMwMjg5MCAxMDA2
-NDQKLS0tIGEvZnMveGZzL3hmc19lcnJvci5jCisrKyBiL2ZzL3hmcy94ZnNfZXJyb3IuYwpAQCAt
-MTgzLDQgKzE4Myw1IEBAIHhmc19jb3JydXB0aW9uX2Vycm9yKAogCWlmIChsZXZlbCA8PSB4ZnNf
-ZXJyb3JfbGV2ZWwpCiAJCXhmc19oZXhfZHVtcChwLCAxNik7CiAJeGZzX2Vycm9yX3JlcG9ydCh0
-YWcsIGxldmVsLCBtcCwgZmlsZW5hbWUsIGxpbmVudW0sIHJhKTsKKwl4ZnNfYWxlcnQobXAsICJD
-b3JydXB0aW9uIGRldGVjdGVkLiBVbm1vdW50IGFuZCBydW4geGZzX3JlcGFpciIpOwogfQpkaWZm
-IC0tZ2l0IGEvZnMveGZzL3hmc19lcnJvci5oIGIvZnMveGZzL3hmc19lcnJvci5oCmluZGV4IGUx
-YmEyZDIuLjRjOGI1MDAgMTAwNjQ0Ci0tLSBhL2ZzL3hmcy94ZnNfZXJyb3IuaAorKysgYi9mcy94
-ZnMveGZzX2Vycm9yLmgKQEAgLTE2Miw5ICsxNjIsNiBAQCBzdHJ1Y3QgeGZzX21vdW50OwogCiBl
-eHRlcm4gdm9pZCB4ZnNfaGV4X2R1bXAodm9pZCAqcCwgaW50IGxlbmd0aCk7CiAKLSNkZWZpbmUg
-eGZzX2ZzX3JlcGFpcl9jbW5fZXJyKGxldmVsLCBtcCwgZm10LCBhcmdzLi4uKSBcCi0JeGZzX2Zz
-X2Ntbl9lcnIobGV2ZWwsIG1wLCBmbXQgIiAgVW5tb3VudCBhbmQgcnVuIHhmc19yZXBhaXIuIiwg
-IyMgYXJncykKLQogI2RlZmluZSB4ZnNfZnNfbW91bnRfY21uX2VycihmLCBmbXQsIGFyZ3MuLi4p
-IFwKIAlkbyB7IFwKIAkJaWYgKCEoZiAmIFhGU19NRlNJX1FVSUVUKSkgCVwKZGlmZiAtLWdpdCBh
-L2ZzL3hmcy94ZnNfaW5vZGUuYyBiL2ZzL3hmcy94ZnNfaW5vZGUuYwppbmRleCBhMDM1ZmE4Li44
-NWM1NDEwIDEwMDY0NAotLS0gYS9mcy94ZnMveGZzX2lub2RlLmMKKysrIGIvZnMveGZzL3hmc19p
-bm9kZS5jCkBAIC0zMTcsNyArMzE3LDcgQEAgeGZzX2lmb3JtYXQoCiAJaWYgKHVubGlrZWx5KGJl
-MzJfdG9fY3B1KGRpcC0+ZGlfbmV4dGVudHMpICsKIAkJICAgICBiZTE2X3RvX2NwdShkaXAtPmRp
-X2FuZXh0ZW50cykgPgogCQkgICAgIGJlNjRfdG9fY3B1KGRpcC0+ZGlfbmJsb2NrcykpKSB7Ci0J
-CXhmc19mc19yZXBhaXJfY21uX2VycihDRV9XQVJOLCBpcC0+aV9tb3VudCwKKwkJeGZzX3dhcm4o
-aXAtPmlfbW91bnQsCiAJCQkiY29ycnVwdCBkaW5vZGUgJUx1LCBleHRlbnQgdG90YWwgPSAlZCwg
-bmJsb2NrcyA9ICVMdS4iLAogCQkJKHVuc2lnbmVkIGxvbmcgbG9uZylpcC0+aV9pbm8sCiAJCQko
-aW50KShiZTMyX3RvX2NwdShkaXAtPmRpX25leHRlbnRzKSArCkBAIC0zMzAsOCArMzMwLDcgQEAg
-eGZzX2lmb3JtYXQoCiAJfQogCiAJaWYgKHVubGlrZWx5KGRpcC0+ZGlfZm9ya29mZiA+IGlwLT5p
-X21vdW50LT5tX3NiLnNiX2lub2Rlc2l6ZSkpIHsKLQkJeGZzX2ZzX3JlcGFpcl9jbW5fZXJyKENF
-X1dBUk4sIGlwLT5pX21vdW50LAotCQkJImNvcnJ1cHQgZGlub2RlICVMdSwgZm9ya29mZiA9IDB4
-JXguIiwKKwkJeGZzX3dhcm4oaXAtPmlfbW91bnQsICJjb3JydXB0IGRpbm9kZSAlTHUsIGZvcmtv
-ZmYgPSAweCV4LiIsCiAJCQkodW5zaWduZWQgbG9uZyBsb25nKWlwLT5pX2lubywKIAkJCWRpcC0+
-ZGlfZm9ya29mZik7CiAJCVhGU19DT1JSVVBUSU9OX0VSUk9SKCJ4ZnNfaWZvcm1hdCgyKSIsIFhG
-U19FUlJMRVZFTF9MT1csCkBAIC0zNDEsNyArMzQwLDcgQEAgeGZzX2lmb3JtYXQoCiAKIAlpZiAo
-dW5saWtlbHkoKGlwLT5pX2QuZGlfZmxhZ3MgJiBYRlNfRElGTEFHX1JFQUxUSU1FKSAmJgogCQkg
-ICAgICFpcC0+aV9tb3VudC0+bV9ydGRldl90YXJncCkpIHsKLQkJeGZzX2ZzX3JlcGFpcl9jbW5f
-ZXJyKENFX1dBUk4sIGlwLT5pX21vdW50LAorCQl4ZnNfd2FybihpcC0+aV9tb3VudCwKIAkJCSJj
-b3JydXB0IGRpbm9kZSAlTHUsIGhhcyByZWFsdGltZSBmbGFnIHNldC4iLAogCQkJaXAtPmlfaW5v
-KTsKIAkJWEZTX0NPUlJVUFRJT05fRVJST1IoInhmc19pZm9ybWF0KHJlYWx0aW1lKSIsCkBAIC0z
-NzMsOSArMzcyLDggQEAgeGZzX2lmb3JtYXQoCiAJCQkgKiBubyBsb2NhbCByZWd1bGFyIGZpbGVz
-IHlldAogCQkJICovCiAJCQlpZiAodW5saWtlbHkoKGJlMTZfdG9fY3B1KGRpcC0+ZGlfbW9kZSkg
-JiBTX0lGTVQpID09IFNfSUZSRUcpKSB7Ci0JCQkJeGZzX2ZzX3JlcGFpcl9jbW5fZXJyKENFX1dB
-Uk4sIGlwLT5pX21vdW50LAotCQkJCQkiY29ycnVwdCBpbm9kZSAlTHUgIgotCQkJCQkiKGxvY2Fs
-IGZvcm1hdCBmb3IgcmVndWxhciBmaWxlKS4iLAorCQkJCXhmc193YXJuKGlwLT5pX21vdW50LAor
-CQkJImNvcnJ1cHQgaW5vZGUgJUx1IChsb2NhbCBmb3JtYXQgZm9yIHJlZ3VsYXIgZmlsZSkuIiwK
-IAkJCQkJKHVuc2lnbmVkIGxvbmcgbG9uZykgaXAtPmlfaW5vKTsKIAkJCQlYRlNfQ09SUlVQVElP
-Tl9FUlJPUigieGZzX2lmb3JtYXQoNCkiLAogCQkJCQkJICAgICBYRlNfRVJSTEVWRUxfTE9XLApA
-QCAtMzg1LDkgKzM4Myw4IEBAIHhmc19pZm9ybWF0KAogCiAJCQlkaV9zaXplID0gYmU2NF90b19j
-cHUoZGlwLT5kaV9zaXplKTsKIAkJCWlmICh1bmxpa2VseShkaV9zaXplID4gWEZTX0RGT1JLX0RT
-SVpFKGRpcCwgaXAtPmlfbW91bnQpKSkgewotCQkJCXhmc19mc19yZXBhaXJfY21uX2VycihDRV9X
-QVJOLCBpcC0+aV9tb3VudCwKLQkJCQkJImNvcnJ1cHQgaW5vZGUgJUx1ICIKLQkJCQkJIihiYWQg
-c2l6ZSAlTGQgZm9yIGxvY2FsIGlub2RlKS4iLAorCQkJCXhmc193YXJuKGlwLT5pX21vdW50LAor
-CQkJImNvcnJ1cHQgaW5vZGUgJUx1IChiYWQgc2l6ZSAlTGQgZm9yIGxvY2FsIGlub2RlKS4iLAog
-CQkJCQkodW5zaWduZWQgbG9uZyBsb25nKSBpcC0+aV9pbm8sCiAJCQkJCShsb25nIGxvbmcpIGRp
-X3NpemUpOwogCQkJCVhGU19DT1JSVVBUSU9OX0VSUk9SKCJ4ZnNfaWZvcm1hdCg1KSIsCkBAIC00
-MzEsOSArNDI4LDggQEAgeGZzX2lmb3JtYXQoCiAJCXNpemUgPSBiZTE2X3RvX2NwdShhdHAtPmhk
-ci50b3RzaXplKTsKIAogCQlpZiAodW5saWtlbHkoc2l6ZSA8IHNpemVvZihzdHJ1Y3QgeGZzX2F0
-dHJfc2ZfaGRyKSkpIHsKLQkJCXhmc19mc19yZXBhaXJfY21uX2VycihDRV9XQVJOLCBpcC0+aV9t
-b3VudCwKLQkJCQkiY29ycnVwdCBpbm9kZSAlTHUgIgotCQkJCSIoYmFkIGF0dHIgZm9yayBzaXpl
-ICVMZCkuIiwKKwkJCXhmc193YXJuKGlwLT5pX21vdW50LAorCQkJCSJjb3JydXB0IGlub2RlICVM
-dSAoYmFkIGF0dHIgZm9yayBzaXplICVMZCkuIiwKIAkJCQkodW5zaWduZWQgbG9uZyBsb25nKSBp
-cC0+aV9pbm8sCiAJCQkJKGxvbmcgbG9uZykgc2l6ZSk7CiAJCQlYRlNfQ09SUlVQVElPTl9FUlJP
-UigieGZzX2lmb3JtYXQoOCkiLApAQCAtNDg4LDkgKzQ4NCw4IEBAIHhmc19pZm9ybWF0X2xvY2Fs
-KAogCSAqIGttZW1fYWxsb2MoKSBvciBtZW1jcHkoKSBiZWxvdy4KIAkgKi8KIAlpZiAodW5saWtl
-bHkoc2l6ZSA+IFhGU19ERk9SS19TSVpFKGRpcCwgaXAtPmlfbW91bnQsIHdoaWNoZm9yaykpKSB7
-Ci0JCXhmc19mc19yZXBhaXJfY21uX2VycihDRV9XQVJOLCBpcC0+aV9tb3VudCwKLQkJCSJjb3Jy
-dXB0IGlub2RlICVMdSAiCi0JCQkiKGJhZCBzaXplICVkIGZvciBsb2NhbCBmb3JrLCBzaXplID0g
-JWQpLiIsCisJCXhmc193YXJuKGlwLT5pX21vdW50LAorCSJjb3JydXB0IGlub2RlICVMdSAoYmFk
-IHNpemUgJWQgZm9yIGxvY2FsIGZvcmssIHNpemUgPSAlZCkuIiwKIAkJCSh1bnNpZ25lZCBsb25n
-IGxvbmcpIGlwLT5pX2lubywgc2l6ZSwKIAkJCVhGU19ERk9SS19TSVpFKGRpcCwgaXAtPmlfbW91
-bnQsIHdoaWNoZm9yaykpOwogCQlYRlNfQ09SUlVQVElPTl9FUlJPUigieGZzX2lmb3JtYXRfbG9j
-YWwiLCBYRlNfRVJSTEVWRUxfTE9XLApAQCAtNTQ3LDggKzU0Miw3IEBAIHhmc19pZm9ybWF0X2V4
-dGVudHMoCiAJICoga21lbV9hbGxvYygpIG9yIG1lbWNweSgpIGJlbG93LgogCSAqLwogCWlmICh1
-bmxpa2VseShzaXplIDwgMCB8fCBzaXplID4gWEZTX0RGT1JLX1NJWkUoZGlwLCBpcC0+aV9tb3Vu
-dCwgd2hpY2hmb3JrKSkpIHsKLQkJeGZzX2ZzX3JlcGFpcl9jbW5fZXJyKENFX1dBUk4sIGlwLT5p
-X21vdW50LAotCQkJImNvcnJ1cHQgaW5vZGUgJUx1ICgoYSlleHRlbnRzID0gJWQpLiIsCisJCXhm
-c193YXJuKGlwLT5pX21vdW50LCAiY29ycnVwdCBpbm9kZSAlTHUgKChhKWV4dGVudHMgPSAlZCku
-IiwKIAkJCSh1bnNpZ25lZCBsb25nIGxvbmcpIGlwLT5pX2lubywgbmV4KTsKIAkJWEZTX0NPUlJV
-UFRJT05fRVJST1IoInhmc19pZm9ybWF0X2V4dGVudHMoMSkiLCBYRlNfRVJSTEVWRUxfTE9XLAog
-CQkJCSAgICAgaXAtPmlfbW91bnQsIGRpcCk7CkBAIC02MjMsMTEgKzYxNywxMCBAQCB4ZnNfaWZv
-cm1hdF9idHJlZSgKIAkgICAgfHwgWEZTX0JNRFJfU1BBQ0VfQ0FMQyhucmVjcykgPgogCQkJWEZT
-X0RGT1JLX1NJWkUoZGlwLCBpcC0+aV9tb3VudCwgd2hpY2hmb3JrKQogCSAgICB8fCBYRlNfSUZP
-UktfTkVYVEVOVFMoaXAsIHdoaWNoZm9yaykgPiBpcC0+aV9kLmRpX25ibG9ja3MpKSB7Ci0JCXhm
-c19mc19yZXBhaXJfY21uX2VycihDRV9XQVJOLCBpcC0+aV9tb3VudCwKLQkJCSJjb3JydXB0IGlu
-b2RlICVMdSAoYnRyZWUpLiIsCisJCXhmc193YXJuKGlwLT5pX21vdW50LCAiY29ycnVwdCBpbm9k
-ZSAlTHUgKGJ0cmVlKS4iLAogCQkJKHVuc2lnbmVkIGxvbmcgbG9uZykgaXAtPmlfaW5vKTsKLQkJ
-WEZTX0VSUk9SX1JFUE9SVCgieGZzX2lmb3JtYXRfYnRyZWUiLCBYRlNfRVJSTEVWRUxfTE9XLAot
-CQkJCSBpcC0+aV9tb3VudCk7CisJCVhGU19DT1JSVVBUSU9OX0VSUk9SKCJ4ZnNfaWZvcm1hdF9i
-dHJlZSIsIFhGU19FUlJMRVZFTF9MT1csCisJCQkJIGlwLT5pX21vdW50LCBkaXApOwogCQlyZXR1
-cm4gWEZTX0VSUk9SKEVGU0NPUlJVUFRFRCk7CiAJfQogCi0tIAoxLjcuMi4zCgpfX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhm
-c0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+From: Dave Chinner <dchinner@redhat.com>
+
+Convert the files in fs/xfs/linux-2.6/ to use the new xfs_<level>
+logging format that replaces the old irix inherited cmn_err()
+interfaces. While there, also convert naked printk calls to use the
+relevant xfs logging function to standardise output format.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/linux-2.6/kmem.c       |    9 ++-
+ fs/xfs/linux-2.6/xfs_aops.c   |    6 +-
+ fs/xfs/linux-2.6/xfs_buf.c    |   17 +++---
+ fs/xfs/linux-2.6/xfs_super.c  |  127 ++++++++++++++++++----------------------
+ fs/xfs/linux-2.6/xfs_sync.c   |    5 +-
+ fs/xfs/linux-2.6/xfs_sysctl.c |    2 +-
+ 6 files changed, 76 insertions(+), 90 deletions(-)
+
+diff --git a/fs/xfs/linux-2.6/kmem.c b/fs/xfs/linux-2.6/kmem.c
+index 666c9db..f91ea9c 100644
+--- a/fs/xfs/linux-2.6/kmem.c
++++ b/fs/xfs/linux-2.6/kmem.c
+@@ -23,6 +23,7 @@
+ #include <linux/backing-dev.h>
+ #include "time.h"
+ #include "kmem.h"
++#include "xfs_printk.h"
+ 
+ /*
+  * Greedy allocation.  May fail and may return vmalloced memory.
+@@ -56,8 +57,8 @@ kmem_alloc(size_t size, unsigned int __nocast flags)
+ 		if (ptr || (flags & (KM_MAYFAIL|KM_NOSLEEP)))
+ 			return ptr;
+ 		if (!(++retries % 100))
+-			printk(KERN_ERR "XFS: possible memory allocation "
+-					"deadlock in %s (mode:0x%x)\n",
++			xfs_err(NULL,
++		"possible memory allocation deadlock in %s (mode:0x%x)",
+ 					__func__, lflags);
+ 		congestion_wait(BLK_RW_ASYNC, HZ/50);
+ 	} while (1);
+@@ -112,8 +113,8 @@ kmem_zone_alloc(kmem_zone_t *zone, unsigned int __nocast flags)
+ 		if (ptr || (flags & (KM_MAYFAIL|KM_NOSLEEP)))
+ 			return ptr;
+ 		if (!(++retries % 100))
+-			printk(KERN_ERR "XFS: possible memory allocation "
+-					"deadlock in %s (mode:0x%x)\n",
++			xfs_err(NULL,
++		"possible memory allocation deadlock in %s (mode:0x%x)",
+ 					__func__, lflags);
+ 		congestion_wait(BLK_RW_ASYNC, HZ/50);
+ 	} while (1);
+diff --git a/fs/xfs/linux-2.6/xfs_aops.c b/fs/xfs/linux-2.6/xfs_aops.c
+index ec7bbb5..8c5c872 100644
+--- a/fs/xfs/linux-2.6/xfs_aops.c
++++ b/fs/xfs/linux-2.6/xfs_aops.c
+@@ -854,7 +854,7 @@ xfs_aops_discard_page(
+ 	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
+ 		goto out_invalidate;
+ 
+-	xfs_fs_cmn_err(CE_ALERT, ip->i_mount,
++	xfs_alert(ip->i_mount,
+ 		"page discard on page %p, inode 0x%llx, offset %llu.",
+ 			page, ip->i_ino, offset);
+ 
+@@ -872,7 +872,7 @@ xfs_aops_discard_page(
+ 		if (error) {
+ 			/* something screwed, just bail */
+ 			if (!XFS_FORCED_SHUTDOWN(ip->i_mount)) {
+-				xfs_fs_cmn_err(CE_ALERT, ip->i_mount,
++				xfs_alert(ip->i_mount,
+ 			"page discard unable to remove delalloc mapping.");
+ 			}
+ 			break;
+@@ -1411,7 +1411,7 @@ xfs_vm_write_failed(
+ 		if (error) {
+ 			/* something screwed, just bail */
+ 			if (!XFS_FORCED_SHUTDOWN(ip->i_mount)) {
+-				xfs_fs_cmn_err(CE_ALERT, ip->i_mount,
++				xfs_alert(ip->i_mount,
+ 			"xfs_vm_write_failed: unable to clean up ino %lld",
+ 						ip->i_ino);
+ 			}
+diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
+index ac1c7e8..3cc671c 100644
+--- a/fs/xfs/linux-2.6/xfs_buf.c
++++ b/fs/xfs/linux-2.6/xfs_buf.c
+@@ -401,9 +401,8 @@ _xfs_buf_lookup_pages(
+ 			 * handle buffer allocation failures we can't do much.
+ 			 */
+ 			if (!(++retries % 100))
+-				printk(KERN_ERR
+-					"XFS: possible memory allocation "
+-					"deadlock in %s (mode:0x%x)\n",
++				xfs_err(NULL,
++		"possible memory allocation deadlock in %s (mode:0x%x)",
+ 					__func__, gfp_mask);
+ 
+ 			XFS_STATS_INC(xb_page_retries);
+@@ -615,8 +614,8 @@ xfs_buf_get(
+ 	if (!(bp->b_flags & XBF_MAPPED)) {
+ 		error = _xfs_buf_map_pages(bp, flags);
+ 		if (unlikely(error)) {
+-			printk(KERN_WARNING "%s: failed to map pages\n",
+-					__func__);
++			xfs_warn(target->bt_mount,
++				"%s: failed to map pages\n", __func__);
+ 			goto no_buffer;
+ 		}
+ 	}
+@@ -850,8 +849,8 @@ xfs_buf_get_uncached(
+ 
+ 	error = _xfs_buf_map_pages(bp, XBF_MAPPED);
+ 	if (unlikely(error)) {
+-		printk(KERN_WARNING "%s: failed to map pages\n",
+-				__func__);
++		xfs_warn(target->bt_mount,
++			"%s: failed to map pages\n", __func__);
+ 		goto fail_free_mem;
+ 	}
+ 
+@@ -1617,8 +1616,8 @@ xfs_setsize_buftarg_flags(
+ 	btp->bt_smask = sectorsize - 1;
+ 
+ 	if (set_blocksize(btp->bt_bdev, sectorsize)) {
+-		printk(KERN_WARNING
+-			"XFS: Cannot set_blocksize to %u on device %s\n",
++		xfs_warn(btp->bt_mount,
++			"Cannot set_blocksize to %u on device %s\n",
+ 			sectorsize, XFS_BUFTARG_NAME(btp));
+ 		return EINVAL;
+ 	}
+diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
+index af32f37..78248b7 100644
+--- a/fs/xfs/linux-2.6/xfs_super.c
++++ b/fs/xfs/linux-2.6/xfs_super.c
+@@ -173,6 +173,15 @@ xfs_parseargs(
+ 	__uint8_t		iosizelog = 0;
+ 
+ 	/*
++	 * set up the mount name first so all the errors will refer to the
++	 * correct device.
++	 */
++	mp->m_fsname = kstrndup(sb->s_id, MAXNAMELEN, GFP_KERNEL);
++	if (!mp->m_fsname)
++		return ENOMEM;
++	mp->m_fsname_len = strlen(mp->m_fsname) + 1;
++
++	/*
+ 	 * Copy binary VFS mount flags we are interested in.
+ 	 */
+ 	if (sb->s_flags & MS_RDONLY)
+@@ -207,24 +216,21 @@ xfs_parseargs(
+ 
+ 		if (!strcmp(this_char, MNTOPT_LOGBUFS)) {
+ 			if (!value || !*value) {
+-				cmn_err(CE_WARN,
+-					"XFS: %s option requires an argument",
++				xfs_warn(mp, "%s option requires an argument",
+ 					this_char);
+ 				return EINVAL;
+ 			}
+ 			mp->m_logbufs = simple_strtoul(value, &eov, 10);
+ 		} else if (!strcmp(this_char, MNTOPT_LOGBSIZE)) {
+ 			if (!value || !*value) {
+-				cmn_err(CE_WARN,
+-					"XFS: %s option requires an argument",
++				xfs_warn(mp, "%s option requires an argument",
+ 					this_char);
+ 				return EINVAL;
+ 			}
+ 			mp->m_logbsize = suffix_strtoul(value, &eov, 10);
+ 		} else if (!strcmp(this_char, MNTOPT_LOGDEV)) {
+ 			if (!value || !*value) {
+-				cmn_err(CE_WARN,
+-					"XFS: %s option requires an argument",
++				xfs_warn(mp, "%s option requires an argument",
+ 					this_char);
+ 				return EINVAL;
+ 			}
+@@ -232,14 +238,12 @@ xfs_parseargs(
+ 			if (!mp->m_logname)
+ 				return ENOMEM;
+ 		} else if (!strcmp(this_char, MNTOPT_MTPT)) {
+-			cmn_err(CE_WARN,
+-				"XFS: %s option not allowed on this system",
++			xfs_warn(mp, "%s option not allowed on this system",
+ 				this_char);
+ 			return EINVAL;
+ 		} else if (!strcmp(this_char, MNTOPT_RTDEV)) {
+ 			if (!value || !*value) {
+-				cmn_err(CE_WARN,
+-					"XFS: %s option requires an argument",
++				xfs_warn(mp, "%s option requires an argument",
+ 					this_char);
+ 				return EINVAL;
+ 			}
+@@ -248,8 +252,7 @@ xfs_parseargs(
+ 				return ENOMEM;
+ 		} else if (!strcmp(this_char, MNTOPT_BIOSIZE)) {
+ 			if (!value || !*value) {
+-				cmn_err(CE_WARN,
+-					"XFS: %s option requires an argument",
++				xfs_warn(mp, "%s option requires an argument",
+ 					this_char);
+ 				return EINVAL;
+ 			}
+@@ -257,8 +260,7 @@ xfs_parseargs(
+ 			iosizelog = ffs(iosize) - 1;
+ 		} else if (!strcmp(this_char, MNTOPT_ALLOCSIZE)) {
+ 			if (!value || !*value) {
+-				cmn_err(CE_WARN,
+-					"XFS: %s option requires an argument",
++				xfs_warn(mp, "%s option requires an argument",
+ 					this_char);
+ 				return EINVAL;
+ 			}
+@@ -280,16 +282,14 @@ xfs_parseargs(
+ 			mp->m_flags |= XFS_MOUNT_SWALLOC;
+ 		} else if (!strcmp(this_char, MNTOPT_SUNIT)) {
+ 			if (!value || !*value) {
+-				cmn_err(CE_WARN,
+-					"XFS: %s option requires an argument",
++				xfs_warn(mp, "%s option requires an argument",
+ 					this_char);
+ 				return EINVAL;
+ 			}
+ 			dsunit = simple_strtoul(value, &eov, 10);
+ 		} else if (!strcmp(this_char, MNTOPT_SWIDTH)) {
+ 			if (!value || !*value) {
+-				cmn_err(CE_WARN,
+-					"XFS: %s option requires an argument",
++				xfs_warn(mp, "%s option requires an argument",
+ 					this_char);
+ 				return EINVAL;
+ 			}
+@@ -297,8 +297,7 @@ xfs_parseargs(
+ 		} else if (!strcmp(this_char, MNTOPT_64BITINODE)) {
+ 			mp->m_flags &= ~XFS_MOUNT_SMALL_INUMS;
+ #if !XFS_BIG_INUMS
+-			cmn_err(CE_WARN,
+-				"XFS: %s option not allowed on this system",
++			xfs_warn(mp, "%s option not allowed on this system",
+ 				this_char);
+ 			return EINVAL;
+ #endif
+@@ -356,20 +355,19 @@ xfs_parseargs(
+ 		} else if (!strcmp(this_char, MNTOPT_NODELAYLOG)) {
+ 			mp->m_flags &= ~XFS_MOUNT_DELAYLOG;
+ 		} else if (!strcmp(this_char, "ihashsize")) {
+-			cmn_err(CE_WARN,
+-	"XFS: ihashsize no longer used, option is deprecated.");
++			xfs_warn(mp,
++	"ihashsize no longer used, option is deprecated.");
+ 		} else if (!strcmp(this_char, "osyncisdsync")) {
+-			cmn_err(CE_WARN,
+-	"XFS: osyncisdsync has no effect, option is deprecated.");
++			xfs_warn(mp,
++	"osyncisdsync has no effect, option is deprecated.");
+ 		} else if (!strcmp(this_char, "osyncisosync")) {
+-			cmn_err(CE_WARN,
+-	"XFS: osyncisosync has no effect, option is deprecated.");
++			xfs_warn(mp,
++	"osyncisosync has no effect, option is deprecated.");
+ 		} else if (!strcmp(this_char, "irixsgid")) {
+-			cmn_err(CE_WARN,
+-	"XFS: irixsgid is now a sysctl(2) variable, option is deprecated.");
++			xfs_warn(mp,
++	"irixsgid is now a sysctl(2) variable, option is deprecated.");
+ 		} else {
+-			cmn_err(CE_WARN,
+-				"XFS: unknown mount option [%s].", this_char);
++			xfs_warn(mp, "unknown mount option [%s].", this_char);
+ 			return EINVAL;
+ 		}
+ 	}
+@@ -379,40 +377,37 @@ xfs_parseargs(
+ 	 */
+ 	if ((mp->m_flags & XFS_MOUNT_NORECOVERY) &&
+ 	    !(mp->m_flags & XFS_MOUNT_RDONLY)) {
+-		cmn_err(CE_WARN, "XFS: no-recovery mounts must be read-only.");
++		xfs_warn(mp, "no-recovery mounts must be read-only.");
+ 		return EINVAL;
+ 	}
+ 
+ 	if ((mp->m_flags & XFS_MOUNT_NOALIGN) && (dsunit || dswidth)) {
+-		cmn_err(CE_WARN,
+-	"XFS: sunit and swidth options incompatible with the noalign option");
++		xfs_warn(mp,
++	"sunit and swidth options incompatible with the noalign option");
+ 		return EINVAL;
+ 	}
+ 
+ #ifndef CONFIG_XFS_QUOTA
+ 	if (XFS_IS_QUOTA_RUNNING(mp)) {
+-		cmn_err(CE_WARN,
+-			"XFS: quota support not available in this kernel.");
++		xfs_warn(mp, "quota support not available in this kernel.");
+ 		return EINVAL;
+ 	}
+ #endif
+ 
+ 	if ((mp->m_qflags & (XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE)) &&
+ 	    (mp->m_qflags & (XFS_PQUOTA_ACCT | XFS_PQUOTA_ACTIVE))) {
+-		cmn_err(CE_WARN,
+-			"XFS: cannot mount with both project and group quota");
++		xfs_warn(mp, "cannot mount with both project and group quota");
+ 		return EINVAL;
+ 	}
+ 
+ 	if ((dsunit && !dswidth) || (!dsunit && dswidth)) {
+-		cmn_err(CE_WARN,
+-			"XFS: sunit and swidth must be specified together");
++		xfs_warn(mp, "sunit and swidth must be specified together");
+ 		return EINVAL;
+ 	}
+ 
+ 	if (dsunit && (dswidth % dsunit != 0)) {
+-		cmn_err(CE_WARN,
+-	"XFS: stripe width (%d) must be a multiple of the stripe unit (%d)",
++		xfs_warn(mp,
++	"stripe width (%d) must be a multiple of the stripe unit (%d)",
+ 			dswidth, dsunit);
+ 		return EINVAL;
+ 	}
+@@ -438,8 +433,7 @@ done:
+ 	    mp->m_logbufs != 0 &&
+ 	    (mp->m_logbufs < XLOG_MIN_ICLOGS ||
+ 	     mp->m_logbufs > XLOG_MAX_ICLOGS)) {
+-		cmn_err(CE_WARN,
+-			"XFS: invalid logbufs value: %d [not %d-%d]",
++		xfs_warn(mp, "invalid logbufs value: %d [not %d-%d]",
+ 			mp->m_logbufs, XLOG_MIN_ICLOGS, XLOG_MAX_ICLOGS);
+ 		return XFS_ERROR(EINVAL);
+ 	}
+@@ -448,22 +442,16 @@ done:
+ 	    (mp->m_logbsize < XLOG_MIN_RECORD_BSIZE ||
+ 	     mp->m_logbsize > XLOG_MAX_RECORD_BSIZE ||
+ 	     !is_power_of_2(mp->m_logbsize))) {
+-		cmn_err(CE_WARN,
+-	"XFS: invalid logbufsize: %d [not 16k,32k,64k,128k or 256k]",
++		xfs_warn(mp,
++			"invalid logbufsize: %d [not 16k,32k,64k,128k or 256k]",
+ 			mp->m_logbsize);
+ 		return XFS_ERROR(EINVAL);
+ 	}
+ 
+-	mp->m_fsname = kstrndup(sb->s_id, MAXNAMELEN, GFP_KERNEL);
+-	if (!mp->m_fsname)
+-		return ENOMEM;
+-	mp->m_fsname_len = strlen(mp->m_fsname) + 1;
+-
+ 	if (iosizelog) {
+ 		if (iosizelog > XFS_MAX_IO_LOG ||
+ 		    iosizelog < XFS_MIN_IO_LOG) {
+-			cmn_err(CE_WARN,
+-		"XFS: invalid log iosize: %d [not %d-%d]",
++			xfs_warn(mp, "invalid log iosize: %d [not %d-%d]",
+ 				iosizelog, XFS_MIN_IO_LOG,
+ 				XFS_MAX_IO_LOG);
+ 			return XFS_ERROR(EINVAL);
+@@ -609,7 +597,7 @@ xfs_blkdev_get(
+ 	*bdevp = open_bdev_exclusive(name, FMODE_READ|FMODE_WRITE, mp);
+ 	if (IS_ERR(*bdevp)) {
+ 		error = PTR_ERR(*bdevp);
+-		printk("XFS: Invalid device [%s], error=%d\n", name, error);
++		xfs_warn(mp, "Invalid device [%s], error=%d\n", name, error);
+ 	}
+ 
+ 	return -error;
+@@ -663,23 +651,23 @@ xfs_mountfs_check_barriers(xfs_mount_t *mp)
+ 	int error;
+ 
+ 	if (mp->m_logdev_targp != mp->m_ddev_targp) {
+-		xfs_fs_cmn_err(CE_NOTE, mp,
++		xfs_notice(mp,
+ 		  "Disabling barriers, not supported with external log device");
+ 		mp->m_flags &= ~XFS_MOUNT_BARRIER;
+ 		return;
+ 	}
+ 
+ 	if (xfs_readonly_buftarg(mp->m_ddev_targp)) {
+-		xfs_fs_cmn_err(CE_NOTE, mp,
+-		  "Disabling barriers, underlying device is readonly");
++		xfs_notice(mp,
++			"Disabling barriers, underlying device is readonly");
+ 		mp->m_flags &= ~XFS_MOUNT_BARRIER;
+ 		return;
+ 	}
+ 
+ 	error = xfs_barrier_test(mp);
+ 	if (error) {
+-		xfs_fs_cmn_err(CE_NOTE, mp,
+-		  "Disabling barriers, trial barrier write failed");
++		xfs_notice(mp,
++			"Disabling barriers, trial barrier write failed");
+ 		mp->m_flags &= ~XFS_MOUNT_BARRIER;
+ 		return;
+ 	}
+@@ -742,8 +730,8 @@ xfs_open_devices(
+ 			goto out_close_logdev;
+ 
+ 		if (rtdev == ddev || rtdev == logdev) {
+-			cmn_err(CE_WARN,
+-	"XFS: Cannot mount filesystem with identical rtdev and ddev/logdev.");
++			xfs_warn(mp,
++	"Cannot mount filesystem with identical rtdev and ddev/logdev.");
+ 			error = EINVAL;
+ 			goto out_close_rtdev;
+ 		}
+@@ -1344,8 +1332,8 @@ xfs_fs_remount(
+ 			 * options that we can't actually change.
+ 			 */
+ #if 0
+-			printk(KERN_INFO
+-	"XFS: mount option \"%s\" not supported for remount\n", p);
++			xfs_info(mp,
++		"mount option \"%s\" not supported for remount\n", p);
+ 			return -EINVAL;
+ #else
+ 			break;
+@@ -1366,8 +1354,7 @@ xfs_fs_remount(
+ 		if (mp->m_update_flags) {
+ 			error = xfs_mount_log_sb(mp, mp->m_update_flags);
+ 			if (error) {
+-				cmn_err(CE_WARN,
+-					"XFS: failed to write sb changes");
++				xfs_warn(mp, "failed to write sb changes");
+ 				return error;
+ 			}
+ 			mp->m_update_flags = 0;
+@@ -1451,15 +1438,15 @@ xfs_finish_flags(
+ 			mp->m_logbsize = mp->m_sb.sb_logsunit;
+ 		} else if (mp->m_logbsize > 0 &&
+ 			   mp->m_logbsize < mp->m_sb.sb_logsunit) {
+-			cmn_err(CE_WARN,
+-	"XFS: logbuf size must be greater than or equal to log stripe size");
++			xfs_warn(mp,
++		"logbuf size must be greater than or equal to log stripe size");
+ 			return XFS_ERROR(EINVAL);
+ 		}
+ 	} else {
+ 		/* Fail a mount if the logbuf is larger than 32K */
+ 		if (mp->m_logbsize > XLOG_BIG_RECORD_BSIZE) {
+-			cmn_err(CE_WARN,
+-	"XFS: logbuf size for version 1 logs must be 16K or 32K");
++			xfs_warn(mp,
++		"logbuf size for version 1 logs must be 16K or 32K");
+ 			return XFS_ERROR(EINVAL);
+ 		}
+ 	}
+@@ -1476,8 +1463,8 @@ xfs_finish_flags(
+ 	 * prohibit r/w mounts of read-only filesystems
+ 	 */
+ 	if ((mp->m_sb.sb_flags & XFS_SBF_READONLY) && !ronly) {
+-		cmn_err(CE_WARN,
+-	"XFS: cannot mount a read-only filesystem as read-write");
++		xfs_warn(mp,
++			"cannot mount a read-only filesystem as read-write");
+ 		return XFS_ERROR(EROFS);
+ 	}
+ 
+diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
+index e22f005..6c10f1d 100644
+--- a/fs/xfs/linux-2.6/xfs_sync.c
++++ b/fs/xfs/linux-2.6/xfs_sync.c
+@@ -425,8 +425,7 @@ xfs_quiesce_attr(
+ 	/* Push the superblock and write an unmount record */
+ 	error = xfs_log_sbcount(mp, 1);
+ 	if (error)
+-		xfs_fs_cmn_err(CE_WARN, mp,
+-				"xfs_attr_quiesce: failed to log sb changes. "
++		xfs_warn(mp, "xfs_attr_quiesce: failed to log sb changes. "
+ 				"Frozen image may not be consistent.");
+ 	xfs_log_unmount_write(mp);
+ 	xfs_unmountfs_writesb(mp);
+@@ -806,7 +805,7 @@ xfs_reclaim_inode(
+ 	 * pass on the error.
+ 	 */
+ 	if (error && error != EAGAIN && !XFS_FORCED_SHUTDOWN(ip->i_mount)) {
+-		xfs_fs_cmn_err(CE_WARN, ip->i_mount,
++		xfs_warn(ip->i_mount,
+ 			"inode 0x%llx background reclaim flush failed with %d",
+ 			(long long)ip->i_ino, error);
+ 	}
+diff --git a/fs/xfs/linux-2.6/xfs_sysctl.c b/fs/xfs/linux-2.6/xfs_sysctl.c
+index ee3cee0..ee2d2ad 100644
+--- a/fs/xfs/linux-2.6/xfs_sysctl.c
++++ b/fs/xfs/linux-2.6/xfs_sysctl.c
+@@ -37,7 +37,7 @@ xfs_stats_clear_proc_handler(
+ 	ret = proc_dointvec_minmax(ctl, write, buffer, lenp, ppos);
+ 
+ 	if (!ret && write && *valp) {
+-		printk("XFS Clearing xfsstats\n");
++		xfs_notice(NULL, "Clearing xfsstats");
+ 		for_each_possible_cpu(c) {
+ 			preempt_disable();
+ 			/* save vn_active, it's a universal truth! */
+-- 
+1.7.2.3
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
