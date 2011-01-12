@@ -1,29 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0C0YFbx124021 for <xfs@oss.sgi.com>; Tue, 11 Jan 2011 18:34:16 -0600
+	p0C0YFDc124016 for <xfs@oss.sgi.com>; Tue, 11 Jan 2011 18:34:15 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8A41EFD41CC
-	for <xfs@oss.sgi.com>; Tue, 11 Jan 2011 16:36:26 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
-	[150.101.137.103]) by cuda.sgi.com with ESMTP id
-	imQcysQP9DWjnrIO for <xfs@oss.sgi.com>;
-	Tue, 11 Jan 2011 16:36:26 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BA10A1D2641A
+	for <xfs@oss.sgi.com>; Tue, 11 Jan 2011 16:36:27 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
+	[150.101.137.99]) by cuda.sgi.com with ESMTP id
+	9ky3Vb59DAFEHN8m for <xfs@oss.sgi.com>;
+	Tue, 11 Jan 2011 16:36:27 -0800 (PST)
 Received: from dastard (unverified [121.44.222.102])
 	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
-	52231989-1927428
-	for <xfs@oss.sgi.com>; Wed, 12 Jan 2011 11:06:25 +1030 (CDT)
+	52939874-1927428
+	for <xfs@oss.sgi.com>; Wed, 12 Jan 2011 11:06:26 +1030 (CDT)
 Received: from chute ([192.168.1.1] helo=disappointment)
 	by dastard with esmtp (Exim 4.72)
-	(envelope-from <dave@fromorbit.com>) id 1PcohM-0000UR-1e
-	for xfs@oss.sgi.com; Wed, 12 Jan 2011 11:36:24 +1100
+	(envelope-from <dave@fromorbit.com>) id 1PcohC-0000Uk-HK
+	for xfs@oss.sgi.com; Wed, 12 Jan 2011 11:36:14 +1100
 Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1Pcogu-0002G3-Ju
-	for xfs@oss.sgi.com; Wed, 12 Jan 2011 11:35:56 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1Pcogv-0002GR-2E
+	for xfs@oss.sgi.com; Wed, 12 Jan 2011 11:35:57 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 02/12] xfs: introduce new logging API.
-Date: Wed, 12 Jan 2011 11:35:43 +1100
-Message-Id: <1294792553-8378-3-git-send-email-david@fromorbit.com>
+Subject: [PATCH 10/12] xfs: convert the quota debug prints to new API
+Date: Wed, 12 Jan 2011 11:35:51 +1100
+Message-Id: <1294792553-8378-11-git-send-email-david@fromorbit.com>
 In-Reply-To: <1294792553-8378-1-git-send-email-david@fromorbit.com>
 References: <1294792553-8378-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -43,212 +43,98 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Most of the logging infrastructurein XFS is unneccessary and
-designed around the infrastructure supplied  by Irix rather than
-Linux. To start rationalising all the logging interfaces, start by
-introducing simple printk wrappers similar to the dev_printk()
-infrastructure. later patches will convert code to use this new
-interface.
-
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/Makefile               |    1 +
- fs/xfs/linux-2.6/xfs_linux.h  |    1 +
- fs/xfs/linux-2.6/xfs_printk.c |  119 +++++++++++++++++++++++++++++++++++++++++
- fs/xfs/linux-2.6/xfs_printk.h |   34 ++++++++++++
- 4 files changed, 155 insertions(+), 0 deletions(-)
- create mode 100644 fs/xfs/linux-2.6/xfs_printk.c
- create mode 100644 fs/xfs/linux-2.6/xfs_printk.h
+ fs/xfs/quota/xfs_qm_syscalls.c |   27 ++++++++++++---------------
+ 1 files changed, 12 insertions(+), 15 deletions(-)
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index 0dce969..3060407 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -104,6 +104,7 @@ xfs-y				+= $(addprefix $(XFS_LINUX)/, \
- 				   xfs_globals.o \
- 				   xfs_ioctl.o \
- 				   xfs_iops.o \
-+				   xfs_printk.o \
- 				   xfs_super.o \
- 				   xfs_sync.o \
- 				   xfs_xattr.o)
-diff --git a/fs/xfs/linux-2.6/xfs_linux.h b/fs/xfs/linux-2.6/xfs_linux.h
-index 0964949..9549023 100644
---- a/fs/xfs/linux-2.6/xfs_linux.h
-+++ b/fs/xfs/linux-2.6/xfs_linux.h
-@@ -86,6 +86,7 @@
- #include <xfs_aops.h>
- #include <xfs_super.h>
- #include <xfs_buf.h>
-+#include <xfs_printk.h>
+diff --git a/fs/xfs/quota/xfs_qm_syscalls.c b/fs/xfs/quota/xfs_qm_syscalls.c
+index bdebc18..603ab86 100644
+--- a/fs/xfs/quota/xfs_qm_syscalls.c
++++ b/fs/xfs/quota/xfs_qm_syscalls.c
+@@ -41,12 +41,6 @@
+ #include "xfs_qm.h"
+ #include "xfs_trace.h"
  
- /*
-  * Feature macros (disable/enable)
-diff --git a/fs/xfs/linux-2.6/xfs_printk.c b/fs/xfs/linux-2.6/xfs_printk.c
-new file mode 100644
-index 0000000..6f3368e
---- /dev/null
-+++ b/fs/xfs/linux-2.6/xfs_printk.c
-@@ -0,0 +1,119 @@
-+/*
-+ * Copyright (c) 2011 Red Hat, Inc.  All Rights Reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ */
-+
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_types.h"
-+#include "xfs_log.h"
-+#include "xfs_inum.h"
-+#include "xfs_trans.h"
-+#include "xfs_sb.h"
-+#include "xfs_ag.h"
-+#include "xfs_mount.h"
-+
-+/*
-+ * XFS logging functions
-+ */
-+static int
-+__xfs_printk(
-+	const char		*level,
-+	const struct xfs_mount	*mp,
-+	struct va_format	*vaf)
-+{
-+	if (mp && mp->m_fsname)
-+		return printk("%sXFS (%s): %pV\n", level, mp->m_fsname, vaf);
-+	return printk("%sXFS: %pV\n", level, vaf);
-+}
-+
-+int xfs_printk(
-+	const char		*level,
-+	const struct xfs_mount	*mp,
-+	const char		*fmt, ...)
-+{
-+	struct va_format	vaf;
-+	va_list			args;
-+	int			 r;
-+
-+	va_start(args, fmt);
-+
-+	vaf.fmt = fmt;
-+	vaf.va = &args;
-+
-+	r = __xfs_printk(level, mp, &vaf);
-+	va_end(args);
-+
-+	return r;
-+}
-+
-+#define define_xfs_printk_level(func, kern_level)		\
-+int func(const struct xfs_mount *mp, const char *fmt, ...)	\
-+{								\
-+	struct va_format	vaf;				\
-+	va_list			args;				\
-+	int			r;				\
-+								\
-+	va_start(args, fmt);					\
-+								\
-+	vaf.fmt = fmt;						\
-+	vaf.va = &args;						\
-+								\
-+	r = __xfs_printk(kern_level, mp, &vaf);			\
-+	va_end(args);						\
-+								\
-+	return r;						\
-+}								\
-+
-+define_xfs_printk_level(xfs_emerg, KERN_EMERG);
-+define_xfs_printk_level(xfs_alert, KERN_ALERT);
-+define_xfs_printk_level(xfs_crit, KERN_CRIT);
-+define_xfs_printk_level(xfs_err, KERN_ERR);
-+define_xfs_printk_level(xfs_warn, KERN_WARNING);
-+define_xfs_printk_level(xfs_notice, KERN_NOTICE);
-+define_xfs_printk_level(xfs_info, KERN_INFO);
-+#ifdef DEBUG
-+define_xfs_printk_level(xfs_debug, KERN_DEBUG);
-+#endif
-+
-+int
-+xfs_alert_tag(
-+	const struct xfs_mount	*mp,
-+	int			panic_tag,
-+	const char		*fmt, ...)
-+{
-+	struct va_format	vaf;
-+	va_list			args;
-+	int			panic = 0;
-+	int			 r;
-+
-+	if (xfs_panic_mask && (xfs_panic_mask & panic_tag)) {
-+		xfs_printk(KERN_ALERT, mp,
-+			"XFS: Transforming an alert into a BUG.");
-+		panic = 1;
-+	}
-+
-+	va_start(args, fmt);
-+
-+	vaf.fmt = fmt;
-+	vaf.va = &args;
-+
-+	r = __xfs_printk(KERN_ALERT, mp, &vaf);
-+	va_end(args);
-+
-+	BUG_ON(panic);
-+
-+	return r;
-+}
-diff --git a/fs/xfs/linux-2.6/xfs_printk.h b/fs/xfs/linux-2.6/xfs_printk.h
-new file mode 100644
-index 0000000..579367f
---- /dev/null
-+++ b/fs/xfs/linux-2.6/xfs_printk.h
-@@ -0,0 +1,34 @@
-+#ifndef __XFS_PRINTK_H
-+#define __XFS_PRINTK_H 1
-+
-+struct xfs_mount;
-+
-+extern int xfs_printk(const char *level, const struct xfs_mount *mp,
-+                      const char *fmt, ...)
-+        __attribute__ ((format (printf, 3, 4)));
-+extern int xfs_emerg(const struct xfs_mount *mp, const char *fmt, ...)
-+        __attribute__ ((format (printf, 2, 3)));
-+extern int xfs_alert(const struct xfs_mount *mp, const char *fmt, ...)
-+        __attribute__ ((format (printf, 2, 3)));
-+extern int xfs_alert_tag(const struct xfs_mount *mp, int tag,
-+			 const char *fmt, ...)
-+        __attribute__ ((format (printf, 3, 4)));
-+extern int xfs_crit(const struct xfs_mount *mp, const char *fmt, ...)
-+        __attribute__ ((format (printf, 2, 3)));
-+extern int xfs_err(const struct xfs_mount *mp, const char *fmt, ...)
-+        __attribute__ ((format (printf, 2, 3)));
-+extern int xfs_warn(const struct xfs_mount *mp, const char *fmt, ...)
-+        __attribute__ ((format (printf, 2, 3)));
-+extern int xfs_notice(const struct xfs_mount *mp, const char *fmt, ...)
-+        __attribute__ ((format (printf, 2, 3)));
-+extern int xfs_info(const struct xfs_mount *mp, const char *fmt, ...)
-+        __attribute__ ((format (printf, 2, 3)));
-+
-+#ifdef DEBUG
-+extern int xfs_debug(const struct xfs_mount *mp, const char *fmt, ...)
-+        __attribute__ ((format (printf, 2, 3)));
-+#else
-+#define xfs_debug(mp, fmt, ...)	(0)
-+#endif
-+
-+#endif	/* __XFS_PRINTK_H */
+-#ifdef DEBUG
+-# define qdprintk(s, args...)	cmn_err(CE_DEBUG, s, ## args)
+-#else
+-# define qdprintk(s, args...)	do { } while (0)
+-#endif
+-
+ STATIC int	xfs_qm_log_quotaoff(xfs_mount_t *, xfs_qoff_logitem_t **, uint);
+ STATIC int	xfs_qm_log_quotaoff_end(xfs_mount_t *, xfs_qoff_logitem_t *,
+ 					uint);
+@@ -294,7 +288,8 @@ xfs_qm_scall_trunc_qfiles(
+ 	int		error = 0, error2 = 0;
+ 
+ 	if (!xfs_sb_version_hasquota(&mp->m_sb) || flags == 0) {
+-		qdprintk("qtrunc flags=%x m_qflags=%x\n", flags, mp->m_qflags);
++		xfs_debug(mp, "%s: flags=%x m_qflags=%x\n",
++			__func__, flags, mp->m_qflags);
+ 		return XFS_ERROR(EINVAL);
+ 	}
+ 
+@@ -331,7 +326,8 @@ xfs_qm_scall_quotaon(
+ 	sbflags = 0;
+ 
+ 	if (flags == 0) {
+-		qdprintk("quotaon: zero flags, m_qflags=%x\n", mp->m_qflags);
++		xfs_debug(mp, "%s: zero flags, m_qflags=%x\n",
++			__func__, mp->m_qflags);
+ 		return XFS_ERROR(EINVAL);
+ 	}
+ 
+@@ -352,8 +348,9 @@ xfs_qm_scall_quotaon(
+ 	    (flags & XFS_GQUOTA_ACCT) == 0 &&
+ 	    (mp->m_sb.sb_qflags & XFS_GQUOTA_ACCT) == 0 &&
+ 	    (flags & XFS_OQUOTA_ENFD))) {
+-		qdprintk("Can't enforce without acct, flags=%x sbflags=%x\n",
+-			flags, mp->m_sb.sb_qflags);
++		xfs_debug(mp,
++			"%s: Can't enforce without acct, flags=%x sbflags=%x\n",
++			__func__, flags, mp->m_sb.sb_qflags);
+ 		return XFS_ERROR(EINVAL);
+ 	}
+ 	/*
+@@ -541,7 +538,7 @@ xfs_qm_scall_setqlim(
+ 			q->qi_bsoftlimit = soft;
+ 		}
+ 	} else {
+-		qdprintk("blkhard %Ld < blksoft %Ld\n", hard, soft);
++		xfs_debug(mp, "blkhard %Ld < blksoft %Ld\n", hard, soft);
+ 	}
+ 	hard = (newlim->d_fieldmask & FS_DQ_RTBHARD) ?
+ 		(xfs_qcnt_t) XFS_BB_TO_FSB(mp, newlim->d_rtb_hardlimit) :
+@@ -557,7 +554,7 @@ xfs_qm_scall_setqlim(
+ 			q->qi_rtbsoftlimit = soft;
+ 		}
+ 	} else {
+-		qdprintk("rtbhard %Ld < rtbsoft %Ld\n", hard, soft);
++		xfs_debug(mp, "rtbhard %Ld < rtbsoft %Ld\n", hard, soft);
+ 	}
+ 
+ 	hard = (newlim->d_fieldmask & FS_DQ_IHARD) ?
+@@ -574,7 +571,7 @@ xfs_qm_scall_setqlim(
+ 			q->qi_isoftlimit = soft;
+ 		}
+ 	} else {
+-		qdprintk("ihard %Ld < isoft %Ld\n", hard, soft);
++		xfs_debug(mp, "ihard %Ld < isoft %Ld\n", hard, soft);
+ 	}
+ 
+ 	/*
+@@ -1137,8 +1134,8 @@ xfs_qm_internalqcheck_adjust(
+ 
+ 	if (ino == mp->m_sb.sb_uquotino || ino == mp->m_sb.sb_gquotino) {
+ 		*res = BULKSTAT_RV_NOTHING;
+-		qdprintk("internalqcheck: ino=%llu, uqino=%llu, gqino=%llu\n",
+-			(unsigned long long) ino,
++		xfs_debug(mp, "%s: ino=%llu, uqino=%llu, gqino=%llu\n",
++			__func__, (unsigned long long) ino,
+ 			(unsigned long long) mp->m_sb.sb_uquotino,
+ 			(unsigned long long) mp->m_sb.sb_gquotino);
+ 		return XFS_ERROR(EINVAL);
 -- 
 1.7.2.3
 
