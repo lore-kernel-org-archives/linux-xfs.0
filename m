@@ -1,17 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0CFsh1m215340 for <xfs@oss.sgi.com>; Wed, 12 Jan 2011 09:54:43 -0600
-Subject: XFS master branch update
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110112121946.GD16267@dastard>
-References: <1294792553-8378-1-git-send-email-david@fromorbit.com>
-	<1294792553-8378-2-git-send-email-david@fromorbit.com>
-	<20110112121010.GA32321@infradead.org> <20110112121946.GD16267@dastard>
-Date: Wed, 12 Jan 2011 09:56:31 -0600
-Message-ID: <1294847791.4269.31.camel@doink>
-Mime-Version: 1.0
-Reply-To: aelder@sgi.com
+	p0CJcoXu242625 for <xfs@oss.sgi.com>; Wed, 12 Jan 2011 13:38:50 -0600
+Subject: [PATCH] xfs_bmap_add_extent_delay_real should set br_startoff
+From: Ben Myers <bpm@sgi.com>
+Date: Wed, 12 Jan 2011 13:42:28 -0600
+Message-ID: <20110112194228.8449.41844.stgit@lady3jane.americas.sgi.com>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,44 +19,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: aelder@sgi.com
+Cc: xfs@oss.sgi.com
 
-I just pushed an update to the master branch on oss.
-It includes:
-- Dave's fixes to address corruption due to overlapping
-  concurrent async direct I/O (and associated code
-  cleanup).
-- Dave's patch to avoid repeated log covering transactions
-  while idle.
-- Christoph's patch to add FITRIM support to XFS.
-- Christoph's change (with credit to others) to
-  rework the buffer I/O completion code, fixing
-  problems that occur should a sync I/O fail.
-- Three more, described below.
+When filling in the middle of a previous delayed allocation, set
+br_startoff of the new delay extent to the right to NULLSTARTBLOCK so that
+it is ignored by xfs_bmap_extent_to_btree.  This prevents a forced shutdown
+when that in-core extent is converted from delay to real and is found to be
+already in the btree.  The value is overwritten below.
 
-I plan to send this stuff to Linus in another pull
-request for 2.6.38--probably next week sometime--after
-it's spent some time in the -next tree.
+SGI-PV: 1013221
 
-Dave, you're going to want to pay particular note
-to the last three of these.  They affect patch
-series you have but which have not been accepted
-yet:
-- xfs: prevent NMI timeouts in cmn_err
-    This was the first in your recent log API series
-- xfs: Add log level to assertion printk
-    This one gets eliminated by the log API series,
-    but the last one in your series won't apply
-    cleanly because one is in place.  (Trivial fix.)
-- xfs: fix an assignment within an ASSERT()
-    This one was proposed by Anton Blanchard but
-    you said it had already been covered by a
-    patch you had.  But that patch was held back
-    with the percpu counters stuff, and I wanted
-    to include the fix now.  Again, easy to fix
-    but I just wanted to call your attention to it.
+Signed-off-by: Ben Myers <bpm@sgi.com>
+---
+ fs/xfs/xfs_bmap.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-					-Alex
+diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
+index 4111cd3..cd75c77 100644
+--- a/fs/xfs/xfs_bmap.c
++++ b/fs/xfs/xfs_bmap.c
+@@ -1040,13 +1040,14 @@ xfs_bmap_add_extent_delay_real(
+ 		 * This case is avoided almost all the time.
+ 		 */
+ 		temp = new->br_startoff - PREV.br_startoff;
++		temp2 = PREV.br_startoff + PREV.br_blockcount - new_endoff;
+ 		trace_xfs_bmap_pre_update(ip, idx, 0, _THIS_IP_);
+ 		xfs_bmbt_set_blockcount(ep, temp);
+ 		r[0] = *new;
+ 		r[1].br_state = PREV.br_state;
+-		r[1].br_startblock = 0;
++		r[1].br_startblock = nullstartblock(
++				(int)xfs_bmap_worst_indlen(ip, temp2));
+ 		r[1].br_startoff = new_endoff;
+-		temp2 = PREV.br_startoff + PREV.br_blockcount - new_endoff;
+ 		r[1].br_blockcount = temp2;
+ 		xfs_iext_insert(ip, idx + 1, 2, &r[0], state);
+ 		ip->i_df.if_lastex = idx + 1;
 
 _______________________________________________
 xfs mailing list
