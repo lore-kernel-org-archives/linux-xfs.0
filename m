@@ -1,18 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0DLoHAu188728 for <xfs@oss.sgi.com>; Thu, 13 Jan 2011 15:50:17 -0600
-Date: Thu, 13 Jan 2011 15:52:28 -0600
-From: Geoffrey Wehrman <gwehrman@sgi.com>
-Subject: Re: Problem with XFS on USB 2TB HD
-Message-ID: <20110113215228.GB15881@sgi.com>
-References: <4D0C9A4F.4040108@pzystorm.de> <20101220001024.GH5193@dastard>
-	<4D0EC5C5.2070407@pzystorm.de> <20101220045126.GK5193@dastard>
-	<20101220105547.4f9e7218@galadriel.home>
-	<4D2E3B38.6010506@pzystorm.de>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4D2E3B38.6010506@pzystorm.de>
+	p0DMXP4K190634 for <xfs@oss.sgi.com>; Thu, 13 Jan 2011 16:33:25 -0600
+Received: from smtp3-g21.free.fr (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D2F2626344E
+	for <xfs@oss.sgi.com>; Thu, 13 Jan 2011 14:35:37 -0800 (PST)
+Received: from smtp3-g21.free.fr (smtp3-g21.free.fr [212.27.42.3]) by
+	cuda.sgi.com with ESMTP id BZDOeeLqXwt5Sdfr for
+	<xfs@oss.sgi.com>; Thu, 13 Jan 2011 14:35:37 -0800 (PST)
+Date: Thu, 13 Jan 2011 23:35:27 +0100
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: extremely slow write performance plaintext
+Message-ID: <20110113233527.6dca104d@galadriel.home>
+In-Reply-To: <3205_1294953756_4D2F6D1C_3205_1943_1_4D2F6D1C.2060409@davisvision.com>
+References: <3205_1294953756_4D2F6D1C_3205_1943_1_4D2F6D1C.2060409@davisvision.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,39 +23,39 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Kevin Richter <xfs@pzystorm.de>
+To: Cory Coager <ccoager@davisvision.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Jan 13, 2011 at 12:37:28AM +0100, Kevin Richter wrote:
-| > That's because you had the misfortune of garbling the root directory
-| > inode along with the superblock. That's a very specific corruption,
-| > but if the corruption occurred a few blocks away in a data extent
-| > you wouldn't even know about it until you restore from backup and
-| > realised the file content in the backup are corrupted. Indeed - you
-| > should consider that entire backup as corrupted and redo it from
-| > scratch.
-| 
-| I am wondering if there is a simple solution to backup/restore the inode
-| table (the relation "inode <-> filename").
-| 
-| With "ls -aliR" I get a list which I am now saving every few days.
-| The parameter "-i" displays the inode, that I can reconstruct the
-| filename from the inode, if this garbling error occurs a second time.
-| 
-| The reconstruction process probably would be a simple "grep | cut" thing.
-| 
-| Is there perhaps a finished script doing exactly this? Or any other ideas?
+Le Thu, 13 Jan 2011 16:22:36 -0500 vous =E9criviez:
 
-xfs_ncheck(8) will generate the patname/inode mapping, but does not
-provide a restore service.
+>  I am getting over =
+
+> 180MB/s read speeds and 40MB/s write speeds on all the LV's except
+> one. =
 
 
--- 
-Geoffrey Wehrman
+This is pretty bad. My last 14 SAS drives RAID-6 array achieved 500
+MB/s write, 1GB/s read sustained. What is the SAS controller? the RAID
+controller? Please provide more details about the =
+
+enclosure/drives/cabling too.
+
+What is the kernel/distro? Did you striped your LVs across multiple
+physical volumes except the last one? What's the output for pvdisplay,
+vgdisplay, lvdisplay?
+
+-- =
+
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
 
 _______________________________________________
 xfs mailing list
