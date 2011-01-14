@@ -1,25 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0E4nH3w225163 for <xfs@oss.sgi.com>; Thu, 13 Jan 2011 22:49:18 -0600
+	p0ED5qm2024135 for <xfs@oss.sgi.com>; Fri, 14 Jan 2011 07:05:52 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6268B12FC066
-	for <xfs@oss.sgi.com>; Thu, 13 Jan 2011 20:51:29 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail16.adl2.internode.on.net
-	[150.101.137.101]) by cuda.sgi.com with ESMTP id
-	8LczK6AfB4k8rWMg for <xfs@oss.sgi.com>;
-	Thu, 13 Jan 2011 20:51:29 -0800 (PST)
-Date: Fri, 14 Jan 2011 15:51:26 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A57C11D32770
+	for <xfs@oss.sgi.com>; Fri, 14 Jan 2011 05:08:06 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
+	[150.101.137.99]) by cuda.sgi.com with ESMTP id
+	NWedOtG6sGKHvM04 for <xfs@oss.sgi.com>;
+	Fri, 14 Jan 2011 05:08:06 -0800 (PST)
+Received: from dastard (unverified [121.44.222.102])
+	by mail.internode.on.net (SurgeMail 3.8f2) with ESMTP id
+	53265601-1927428
+	for <xfs@oss.sgi.com>; Fri, 14 Jan 2011 23:38:05 +1030 (CDT)
+Received: from chute ([192.168.1.1] helo=disappointment)
+	by dastard with esmtp (Exim 4.72)
+	(envelope-from <dave@fromorbit.com>) id 1PdjNh-00065t-Ay
+	for xfs@oss.sgi.com; Sat, 15 Jan 2011 00:07:53 +1100
+Received: from dave by disappointment with local (Exim 4.72)
+	(envelope-from <dave@disappointment.disaster>) id 1PdjN2-0003GA-W2
+	for xfs@oss.sgi.com; Sat, 15 Jan 2011 00:07:12 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Extreme fragmentation when backing up via NFS
-Message-ID: <20110114045126.GG16267@dastard>
-References: <4D0C9A4F.4040108@pzystorm.de> <20101220001024.GH5193@dastard>
-	<4D0EC5C5.2070407@pzystorm.de> <20101220045126.GK5193@dastard>
-	<20101220105547.4f9e7218@galadriel.home>
-	<4D2E3B38.6010506@pzystorm.de> <4D2EFB08.90502@philkarn.net>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4D2EFB08.90502@philkarn.net>
+Subject: [PATCH 1/2] xfs: fix log ticket leak on forced shutdown.
+Date: Sat, 15 Jan 2011 00:07:09 +1100
+Message-Id: <1295010430-12495-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1295010430-12495-1-git-send-email-david@fromorbit.com>
+References: <1295010430-12495-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,140 +34,86 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: karn@ka9q.net
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-T24gVGh1LCBKYW4gMTMsIDIwMTEgYXQgMDU6MTU6NTJBTSAtMDgwMCwgUGhpbCBLYXJuIHdyb3Rl
-Ogo+IEkgaGF2ZSBiZWVuIGJhY2tpbmcgdXAgbXkgbWFpbiBMaW51eCBzZXJ2ZXIgb250byBhIHNl
-Y29uZGFyeSBtYWNoaW5lIHZpYQo+IE5GUy4gSSB1c2UgeGZzZHVtcCBsaWtlIHRoaXM6Cj4gCj4g
-eGZzZHVtcCAtbCA5IC1mIC9tYWNoaW5lL2JhY2t1cHMvZnMuOS54ZnNkdW1wIC8KPiAKPiBPdmVy
-IG9uIHRoZSBzZXJ2ZXIgbWFjaGluZSwgeGZzX2JtYXAgc2hvd3MgYW4gKmV4dHJlbWUqIGFtb3Vu
-dCBvZgo+IGZyYWdtZW50YXRpb24gaW4gdGhlIGJhY2t1cCBmaWxlLiAyMCwwMDArIGV4dGVudHMg
-YXJlIG5vdCB1bmNvbW1vbiwgd2l0aAo+IG1hbnkgZXh0ZW50cyBjb25zaXN0aW5nIG9mIGEgc2lu
-Z2xlIGFsbG9jYXRpb24gYmxvY2sgKDh4IDUxMkIgc2VjdG9ycyBvcgo+IDRLQikuCj4gCj4gSSBk
-byBub3RpY2Ugd2hpbGUgdGhlIGJhY2t1cCBmaWxlIGlzIGJlaW5nIHdyaXR0ZW4gdGhhdCBob2xl
-cyBvZnRlbgo+IGFwcGVhciBpbiB0aGUgZXh0ZW50IG1hcCB0b3dhcmRzIHRoZSBlbmQgb2YgdGhl
-IGZpbGUuIEkgdGhlb3JpemUgdGhhdAo+IHNvbWVob3cgdGhlIGluZGl2aWR1YWwgd3JpdGVzIGFy
-ZSBnb2luZyB0byB0aGUgZmlsZSBzeXN0ZW0gb3V0IG9mIG9yZGVyLAo+IGFuZCB0aGlzIGNhdXNl
-cyBib3RoIHRoZSB0ZW1wb3JhcnkgaG9sZXMgYW5kIHRoZSBleHRyZW1lIGZyYWdtZW50YXRpb24u
-Cj4gCj4gSSdtIGFibGUgdG8gd29yayBhcm91bmQgdGhlIGZyYWdtZW50YXRpb24gbWFudWFsbHkg
-YnkgbG9va2luZyBhdCB0aGUKPiBlc3RpbWF0ZSBmcm9tIHhmc2R1bXAgb2YgdGhlIHNpemUgb2Yg
-dGhlIGJhY2t1cCBhbmQgdGhlbiB1c2luZyB0aGUKPiBmYWxsb2NhdGUgY29tbWFuZCBsb2NhbGx5
-IG9uIHRoZSBmaWxlIHNlcnZlciB0byBhbGxvY2F0ZSBtb3JlIHRoYW4gdGhhdAo+IGFtb3VudCBv
-ZiBzcGFjZSB0byB0aGUgYmFja3VwIGZpbGUuIFdoZW4gdGhlIGJhY2t1cCBpcyBkb25lLCBJIGxv
-b2sgYXQKPiB4ZnNkdW1wJ3MgcmVwb3J0IG9mIHRoZSBhY3R1YWwgc2l6ZSBvZiB0aGUgYmFja3Vw
-IGZpbGUgYW5kIHVzZSB0aGUKPiB0cnVuY2F0ZSBjb21tYW5kIGxvY2FsbHkgb24gdGhlIHNlcnZl
-ciB0byB0cmltIG9mZiB0aGUgZXhjZXNzLgo+IAo+IElzIGZyYWdtZW50YXRpb24gb24gWEZTIHZp
-YSBORlMgYSBrbm93biBwcm9ibGVtPwoKWWVzLCBhbmQgaXQncyBjYXVzZWQgYnkgdGhlIHdheSB0
-aGUgTkZTIHNlcnZlciB1c2VzIHRoZSBWRlMuIFRoZXNlCmNvbW1pdHMgdGhhdCBoYXZlIGp1c3Qg
-aGl0IG1haW5saW5lIGluIHRoZSAyLjYuMzgtcmMxIG1lcmdlIHdpbmRvdzoKCjZlODU3NTYgeGZz
-OiBkb24ndCB0cnVuY2F0ZSBwcmVhbGxvYyBmcm9tIGZyZXF1ZW50bHkgYWNjZXNzZWQgaW5vZGVz
-CjA1NTM4OGEgeGZzOiBkeW5hbWljIHNwZWN1bGF0aXZlIEVPRiBwcmVhbGxvY2F0aW9uCgpTaG91
-bGQgbW9zdGx5IGZpeCB0aGUgcHJvYmxlbS4gSXQgd291bGQgYmUgZ29vZCB0byBrbm93IGlmIHRo
-ZXkKcmVhbGx5IGRvIGZpeCB5b3VyIHByb2JsZW0gb3Igbm90LCBiZWNhdXNlIHlvdSBhcmUgc3Vm
-ZmVyaW5nIGZyb20KZXhhY3RseSB0aGUgcHJvYmxlbSB0aGV5IGFyZSBzdXBwb3NlZCB0byBmaXgu
-IEkndmUgY29waWVkIHRoZQpjb21taXQgbWVzc2FnZXMgYmVsb3cgc28gSSBkb24ndCBoYXZlIHRv
-IHNwZW5kIHRpbWUgZXhwbGFpbmluZyB0aGUKcHJvYmxlbSBvciB0aGUgZml4LiA6KQoKQ2hlZXJz
-LAoKRGF2ZS4KLS0gCkRhdmUgQ2hpbm5lcgpkYXZpZEBmcm9tb3JiaXQuY29tCgpjb21taXQgNmU4
-NTc1NjdkYmJmZTE0ZGQ2Y2MzZjc0MTQ2NzFiMDQ3YjFmZjVjNwpBdXRob3I6IERhdmUgQ2hpbm5l
-ciA8ZGNoaW5uZXJAcmVkaGF0LmNvbT4KRGF0ZTogICBUaHUgRGVjIDIzIDEyOjAyOjMxIDIwMTAg
-KzExMDAKCiAgICB4ZnM6IGRvbid0IHRydW5jYXRlIHByZWFsbG9jIGZyb20gZnJlcXVlbnRseSBh
-Y2Nlc3NlZCBpbm9kZXMKICAgIAogICAgQSBsb25nIHN0YW5kaW5nIHByb2JsZW0gZm9yIHN0cmVh
-bWluZyB3cml0ZdGVIHRocm91Z2ggdGhlIE5GUyBzZXJ2ZXIKICAgIGhhcyBiZWVuIHRoYXQgdGhl
-IE5GUyBzZXJ2ZXIgb3BlbnMgYW5kIGNsb3NlcyBmaWxlIGRlc2NyaXB0b3JzIG9uIGFuCiAgICBp
-bm9kZSBmb3IgZXZlcnkgd3JpdGUuIFRoZSByZXN1bHQgb2YgdGhpcyBiZWhhdmlvdXIgaXMgdGhh
-dCB0aGUKICAgIC0+cmVsZWFzZSgpIGZ1bmN0aW9uIGlzIGNhbGxlZCBvbiBldmVyeSBjbG9zZSBh
-bmQgdGhhdCByZXN1bHRzIGluCiAgICBYRlMgdHJ1bmNhdGluZyBzcGVjdWxhdGl2ZSBwcmVhbGxv
-Y2F0aW9uIGJleW9uZCB0aGUgRU9GLiAgVGhpcyBoYXMKICAgIGFuIGFkdmVyc2UgZWZmZWN0IG9u
-IGZpbGUgbGF5b3V0IHdoZW4gbXVsdGlwbGUgZmlsZXMgYXJlIGJlaW5nCiAgICB3cml0dGVuIGF0
-IHRoZSBzYW1lIHRpbWUgLSB0aGV5IGludGVybGVhdmUgdGhlaXIgZXh0ZW50cyBhbmQgY2FuCiAg
-ICByZXN1bHQgaW4gc2V2ZXJlIGZyYWdtZW50YXRpb24uCiAgICAKICAgIFRvIGF2b2lkIHRoaXMg
-cHJvYmxlbSwga2VlcCB0cmFjayBvZiAtPnJlbGVhc2UgY2FsbHMgbWFkZSBvbiBhIGRpcnR5CiAg
-ICBpbm9kZS4gRm9yIG1vc3QgY2FzZXMsIGFuIGlub2RlIGlzIG9ubHkgZ29pbmcgdG8gYmUgb3Bl
-bmVkIG9uY2UgZm9yCiAgICB3cml0aW5nIGFuZCB0aGVuIGNsb3NlZCBhZ2FpbiBkdXJpbmcgaXQn
-cyBsaWZldGltZSBpbiBjYWNoZS4gSGVuY2UKICAgIGlmIHRoZXJlIGFyZSBtdWx0aXBsZSAtPnJl
-bGVhc2UgY2FsbHMgd2hlbiB0aGUgaW5vZGUgaXMgZGlydHksIHRoZXJlCiAgICBpcyBhIGdvb2Qg
-Y2hhbmNlIHRoYXQgdGhlIGlub2RlIGlzIGJlaW5nIGFjY2Vzc2VkIGJ5IHRoZSBORlMgc2VydmVy
-LgogICAgSGVuY2Ugc2V0IGEgZmxhZyB0aGUgZmlyc3QgdGltZSAtPnJlbGVhc2UgaXMgY2FsbGVk
-IHdoaWxlIHRoZXJlIGFyZQogICAgZGVsYWxsb2MgYmxvY2tzIHN0aWxsIG91dHN0YW5kaW5nIG9u
-IHRoZSBpbm9kZS4KCiAgICBJZiB0aGlzIGZsYWcgaXMgc2V0IHdoZW4gLT5yZWxlYXNlIGlzIG5l
-eHQgY2FsbGVkLCB0aGVuIGRvIG5vCiAgICB0cnVuY2F0ZSBhd2F5IHRoZSBzcGVjdWxhdGl2ZSBw
-cmVhbGxvY2F0aW9uIC0gbGVhdmUgaXQgdGhlcmUgc28gdGhhdAogICAgc3Vic2VxdWVudCB3cml0
-ZXMgZG8gbm90IG5lZWQgdG8gcmVhbGxvY2F0ZSB0aGUgZGVsYWxsb2Mgc3BhY2UuIFRoaXMKICAg
-IHdpbGwgcHJldmVudCBpbnRlcmxlYXZpbmcgb2YgZXh0ZW50cyBvZiBkaWZmZXJlbnQgaW5vZGVz
-IHdyaXR0ZW4KICAgIGNvbmN1cnJlbnRseSB0byB0aGUgc2FtZSBBRy4KICAgIAogICAgSWYgd2Ug
-Z2V0IHRoaXMgd3JvbmcsIGl0IGlzIG5vdCBhIGJpZyBkZWFsIGFzIHdlIHRydW5jYXRlCiAgICBz
-cGVjdWxhdGl2ZSBhbGxvY2F0aW9uIGJleW9uZCBFT0YgYW55d2F5IGluIHhmc19pbmFjdGl2ZSgp
-IHdoZW4gdGhlCiAgICBpbm9kZSBpcyB0aHJvd24gb3V0IG9mIHRoZSBjYWNoZS4KICAgIAogICAg
-U2lnbmVkLW9mZi1ieTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgogICAgUmV2
-aWV3ZWQtYnk6IENocmlzdG9waCBIZWxsd2lnIDxoY2hAbHN0LmRlPgoKCmNvbW1pdCAwNTUzODhh
-MzE4OGY1NjY3NmMyMWU5Mjk2MmZjMzY2YWM4YjVjYjcyCkF1dGhvcjogRGF2ZSBDaGlubmVyIDxk
-Y2hpbm5lckByZWRoYXQuY29tPgpEYXRlOiAgIFR1ZSBKYW4gNCAxMTozNTowMyAyMDExICsxMTAw
-CgogICAgeGZzOiBkeW5hbWljIHNwZWN1bGF0aXZlIEVPRiBwcmVhbGxvY2F0aW9uCiAgICAKICAg
-IEN1cnJlbnRseSB0aGUgc2l6ZSBvZiB0aGUgc3BlY3VsYXRpdmUgcHJlYWxsb2NhdGlvbiBkdXJp
-bmcgZGVsYXllZAogICAgYWxsb2NhdGlvbiBpcyBmaXhlZCBieSBlaXRoZXIgdGhlIGFsbG9jc2l6
-ZSBtb3VudCBvcHRpb24gb2YgYQogICAgZGVmYXVsdCBzaXplLiBXZSBhcmUgc2VlaW5nIGEgbG90
-IG9mIGNhc2VzIHdoZXJlIHdlIG5lZWQgdG8KICAgIHJlY29tbWVuZCB1c2luZyB0aGUgYWxsb2Nz
-aXplIG1vdW50IG9wdGlvbiB0byBwcmV2ZW50IGZyYWdtZW50YXRpb24KICAgIHdoZW4gYnVmZmVy
-ZWQgd3JpdGVzIGxhbmQgaW4gdGhlIHNhbWUgQUcuCiAgICAKICAgIFJhdGhlciB0aGFuIHVzaW5n
-IGEgZml4ZWQgcHJlYWxsb2NhdGlvbiBzaXplIGJ5IGRlZmF1bHQgKHVwIHRvIDY0ayksCiAgICBt
-YWtlIGl0IGR5bmFtaWMgYnkgYmFzaW5nIGl0IG9uIHRoZSBjdXJyZW50IGlub2RlIHNpemUuIFRo
-YXQgd2F5IHRoZQogICAgRU9GIHByZWFsbG9jYXRpb24gd2lsbCBpbmNyZWFzZSBhcyB0aGUgZmls
-ZSBzaXplIGluY3JlYXNlcy4gIEhlbmNlCiAgICBmb3Igc3RyZWFtaW5nIHdyaXRlcyB3ZSBhcmUg
-bXVjaCBtb3JlIGxpa2VseSB0byBnZXQgbGFyZ2UKICAgIHByZWFsbG9jYXRpb25zIGV4YWN0bHkg
-d2hlbiB3ZSBuZWVkIGl0IHRvIHJlZHVjZSBmcmFnZW1lbnRhdGlvbi4KICAgIAogICAgRm9yIGRl
-ZmF1bHQgc2V0dGluZ3MsIHRoZSBzaXplIG9mIHRoZSBpbml0aWFsIGV4dGVudHMgaXMgZGV0ZXJt
-aW5lZAogICAgYnkgdGhlIG51bWJlciBvZiBwYXJhbGxlbCB3cml0ZXJzIGFuZCB0aGUgYW1vdW50
-IG9mIG1lbW9yeSBpbiB0aGUKICAgIG1hY2hpbmUuIEZvciA0R0IgUkFNIGFuZCA0IGNvbmN1cnJl
-bnQgMzJHQiBmaWxlIHdyaXRlczoKICAgIAogICAgRVhUOiBGSUxFLU9GRlNFVCAgICAgICAgICAg
-QkxPQ0stUkFOR0UgICAgICAgICAgQUcgQUctT0ZGU0VUICAgICAgICAgICAgICAgICBUT1RBTAog
-ICAgICAgMDogWzAuLjEwNDg1NzVdOiAgICAgICAgIDEwNDg2NzIuLjIwOTcyNDcgICAgICAwICgx
-MDQ4NjcyLi4yMDk3MjQ3KSAgICAgIDEwNDg1NzYKICAgICAgIDE6IFsxMDQ4NTc2Li4yMDk3MTUx
-XTogICA1MjQyOTc2Li42MjkxNTUxICAgICAgMCAoNTI0Mjk3Ni4uNjI5MTU1MSkgICAgICAxMDQ4
-NTc2CiAgICAgICAyOiBbMjA5NzE1Mi4uNDE5NDMwM106ICAgMTI1ODMwMDguLjE0NjgwMTU5ICAg
-IDAgKDEyNTgzMDA4Li4xNDY4MDE1OSkgICAgMjA5NzE1MgogICAgICAgMzogWzQxOTQzMDQuLjgz
-ODg2MDddOiAgIDI1MTY1OTIwLi4yOTM2MDIyMyAgICAwICgyNTE2NTkyMC4uMjkzNjAyMjMpICAg
-IDQxOTQzMDQKICAgICAgIDQ6IFs4Mzg4NjA4Li4xNjc3NzIxNV06ICA1ODcyMDM1Mi4uNjcxMDg5
-NTkgICAgMCAoNTg3MjAzNTIuLjY3MTA4OTU5KSAgICA4Mzg4NjA4CiAgICAgICA1OiBbMTY3Nzcy
-MTYuLjMzNTU0NDIzXTogMTE3NDQwNTg0Li4xMzQyMTc3OTEgIDAgKDExNzQ0MDU4NC4uMTM0MjE3
-NzkxKSAxNjc3NzIwOAogICAgICAgNjogWzMzNTU0NDI0Li41MDMzMTUxMV06IDE4NDU0OTA1Ni4u
-MjAxMzI2MTQzICAwICgxODQ1NDkwNTYuLjIwMTMyNjE0MykgMTY3NzcwODgKICAgICAgIDc6IFs1
-MDMzMTUxMi4uNjcxMDg1OTldOiAyNTE2NTc0MDguLjI2ODQzNDQ5NSAgMCAoMjUxNjU3NDA4Li4y
-Njg0MzQ0OTUpIDE2Nzc3MDg4CiAgICAKICAgIGFuZCBmb3IgMTYgY29uY3VycmVudCAxNkdCIGZp
-bGUgd3JpdGVzOgogICAgCiAgICAgRVhUOiBGSUxFLU9GRlNFVCAgICAgICAgICAgQkxPQ0stUkFO
-R0UgICAgICAgICAgQUcgQUctT0ZGU0VUICAgICAgICAgICAgICAgICBUT1RBTAogICAgICAgMDog
-WzAuLjI2MjE0M106ICAgICAgICAgIDI0OTA0NzIuLjI3NTI2MTUgICAgICAwICgyNDkwNDcyLi4y
-NzUyNjE1KSAgICAgICAyNjIxNDQKICAgICAgIDE6IFsyNjIxNDQuLjUyNDI4N106ICAgICA2Mjkx
-NTYwLi42NTUzNzAzICAgICAgMCAoNjI5MTU2MC4uNjU1MzcwMykgICAgICAgMjYyMTQ0CiAgICAg
-ICAyOiBbNTI0Mjg4Li4xMDQ4NTc1XTogICAgMTM2MzE1OTIuLjE0MTU1ODc5ICAgIDAgKDEzNjMx
-NTkyLi4xNDE1NTg3OSkgICAgIDUyNDI4OAogICAgICAgMzogWzEwNDg1NzYuLjIwOTcxNTFdOiAg
-IDMwNDA4ODA4Li4zMTQ1NzM4MyAgICAwICgzMDQwODgwOC4uMzE0NTczODMpICAgIDEwNDg1NzYK
-ICAgICAgIDQ6IFsyMDk3MTUyLi40MTk0MzAzXTogICA1MjQyODkwNC4uNTQ1MjYwNTUgICAgMCAo
-NTI0Mjg5MDQuLjU0NTI2MDU1KSAgICAyMDk3MTUyCiAgICAgICA1OiBbNDE5NDMwNC4uODM4ODYw
-N106ICAgMTA0ODU3NzA0Li4xMDkwNTIwMDcgIDAgKDEwNDg1NzcwNC4uMTA5MDUyMDA3KSAgNDE5
-NDMwNAogICAgICAgNjogWzgzODg2MDguLjE2Nzc3MjE1XTogIDIwOTcxNTMwNC4uMjE4MTAzOTEx
-ICAwICgyMDk3MTUzMDQuLjIxODEwMzkxMSkgIDgzODg2MDgKICAgICAgIDc6IFsxNjc3NzIxNi4u
-MzM1NTQ0MjNdOiA0NTI5ODQ4NDguLjQ2OTc2MjA1NSAgMCAoNDUyOTg0ODQ4Li40Njk3NjIwNTUp
-IDE2Nzc3MjA4CiAgICAKICAgIEJlY2F1c2UgaXQgaXMgaGFyZCB0byB0YWtlIGJhY2sgc3BlY3Vh
-bHRpdmUgcHJlYWxsb2NhdGlvbiwgY2FzZXMKICAgIHdoZXJlIHRoZXJlIGFyZSBsYXJnZSBzbG93
-IGdyb3dpbmcgbG9nIGZpbGVzIG9uIGEgbmVhcmx5IGZ1bGwKICAgIGZpbGVzeXN0ZW0gbWF5IGNh
-dXNlIHByZW1hdHVyZSBFTk9TUEMuIEhlbmNlIGFzIHRoZSBmaWxlc3lzdGVtIG5lYXJzCiAgICBm
-dWxsLCB0aGUgbWF4aW11bSBkeW5hbWljIHByZWFsbG9jIHNpemUg0ZZzIHJlZHVjZWQgYWNjb3Jk
-aW5nIHRvIHRoaXMKICAgIHRhYmxlIChiYXNlZCBvbiA0ayBibG9jayBzaXplKToKICAgIAogICAg
-ZnJlZXNwYWNlICAgICAgIG1heCBwcmVhbGxvYyBzaXplCiAgICAgID41JSAgICAgICAgICAgICBm
-dWxsIGV4dGVudCAoOEdCKQogICAgICA0LTUlICAgICAgICAgICAgIDJHQiAoOEdCID4+IDIpCiAg
-ICAgIDMtNCUgICAgICAgICAgICAgMUdCICg4R0IgPj4gMykKICAgICAgMi0zJSAgICAgICAgICAg
-NTEyTUIgKDhHQiA+PiA0KQogICAgICAxLTIlICAgICAgICAgICAyNTZNQiAoOEdCID4+IDUpCiAg
-ICAgIDwxJSAgICAgICAgICAgIDEyOE1CICg4R0IgPj4gNikKICAgIAogICAgVGhpcyBzaG91bGQg
-cmVkdWNlIHRoZSBhbW91bnQgb2Ygc3BhY2UgaGVsZCBpbiBzcGVjdWxhdGl2ZQogICAgcHJlYWxs
-b2NhdGlvbiBmb3Igc3VjaCBjYXNlcy4KICAgIAogICAgVGhlIGFsbG9jc2l6ZSBtb3VudCBvcHRp
-b24gdHVybnMgb2ZmIHRoZSBkeW5hbWljIGJlaGF2aW91ciBhbmQgZml4ZXMKICAgIHRoZSBwcmVh
-bGxvYyBzaXplIHRvIHdoYXRldmVyIHRoZSBtb3VudCBvcHRpb24gc3BlY2lmaWVzLiBpLmUuIHRo
-ZQogICAgYmVoYXZpb3VyIGlzIHVuY2hhbmdlZC4KICAgIAogICAgU2lnbmVkLW9mZi1ieTogRGF2
-ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgoKX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20K
-aHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+From: Dave Chinner <dchinner@redhat.com>
+
+The kmemleak detector shows this after test 139:
+
+unreferenced object 0xffff880079b88bb0 (size 264):
+  comm "xfs_io", pid 4904, jiffies 4294909382 (age 276.824s)
+  hex dump (first 32 bytes):
+    00 00 00 00 ad 4e ad de ff ff ff ff 00 00 00 00  .....N..........
+    ff ff ff ff ff ff ff ff 48 7b c9 82 ff ff ff ff  ........H{......
+  backtrace:
+    [<ffffffff81afb04d>] kmemleak_alloc+0x2d/0x60
+    [<ffffffff8115c6cf>] kmem_cache_alloc+0x13f/0x2b0
+    [<ffffffff814aaa97>] kmem_zone_alloc+0x77/0xf0
+    [<ffffffff814aab2e>] kmem_zone_zalloc+0x1e/0x50
+    [<ffffffff8148f394>] xlog_ticket_alloc+0x34/0x170
+    [<ffffffff81494444>] xlog_cil_push+0xa4/0x3f0
+    [<ffffffff81494eca>] xlog_cil_force_lsn+0x15a/0x160
+    [<ffffffff814933a5>] _xfs_log_force_lsn+0x75/0x2d0
+    [<ffffffff814a264d>] _xfs_trans_commit+0x2bd/0x2f0
+    [<ffffffff8148bfdd>] xfs_iomap_write_allocate+0x1ad/0x350
+    [<ffffffff814ac17f>] xfs_map_blocks+0x21f/0x370
+    [<ffffffff814ad1b7>] xfs_vm_writepage+0x1c7/0x550
+    [<ffffffff8112200a>] __writepage+0x1a/0x50
+    [<ffffffff81122df2>] write_cache_pages+0x1c2/0x4c0
+    [<ffffffff81123117>] generic_writepages+0x27/0x30
+    [<ffffffff814aba5d>] xfs_vm_writepages+0x5d/0x80
+
+By inspection, the leak occurs when xlog_write() returns and error
+and we jump to the abort path without dropping the reference on the
+active ticket.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_log_cil.c |    7 +++++--
+ 1 files changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index 9dc8125..c7eac5a 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -543,7 +543,7 @@ xlog_cil_push(
+ 
+ 	error = xlog_write(log, &lvhdr, tic, &ctx->start_lsn, NULL, 0);
+ 	if (error)
+-		goto out_abort;
++		goto out_abort_free_ticket;
+ 
+ 	/*
+ 	 * now that we've written the checkpoint into the log, strictly
+@@ -569,8 +569,9 @@ restart:
+ 	}
+ 	spin_unlock(&cil->xc_cil_lock);
+ 
++	/* xfs_log_done always frees the ticket on error. */
+ 	commit_lsn = xfs_log_done(log->l_mp, tic, &commit_iclog, 0);
+-	if (error || commit_lsn == -1)
++	if (commit_lsn == -1)
+ 		goto out_abort;
+ 
+ 	/* attach all the transactions w/ busy extents to iclog */
+@@ -600,6 +601,8 @@ out_free_ticket:
+ 	kmem_free(new_ctx);
+ 	return 0;
+ 
++out_abort_free_ticket:
++	xfs_log_ticket_put(tic);
+ out_abort:
+ 	xlog_cil_committed(ctx, XFS_LI_ABORTED);
+ 	return XFS_ERROR(EIO);
+-- 
+1.7.2.3
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
