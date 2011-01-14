@@ -1,25 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0EKkIvn085886 for <xfs@oss.sgi.com>; Fri, 14 Jan 2011 14:46:18 -0600
-Received: from zixvpm02.zixvpm.davisvision.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5476410006F8
-	for <xfs@oss.sgi.com>; Fri, 14 Jan 2011 12:48:32 -0800 (PST)
-Received: from zixvpm02.zixvpm.davisvision.com
-	(zixvpm02.zixvpm.davisvision.com [65.213.99.45]) by
-	cuda.sgi.com with ESMTP id y4iQHfXtInvETaMw for
-	<xfs@oss.sgi.com>; Fri, 14 Jan 2011 12:48:32 -0800 (PST)
-Received: from zixvpm02.zixvpm.davisvision.com (ZixVPM [127.0.0.1])
-	by Outbound.davisvision.com (Proprietary) with ESMTP id 700255DC022
-	for <xfs@oss.sgi.com>; Fri, 14 Jan 2011 15:48:31 -0500 (EST)
-Message-ID: <27616_1295038110_4D30B69E_27616_233_1_4D30B69E.4020506@davisvision.com>
-Date: Fri, 14 Jan 2011 15:48:30 -0500
-From: Cory Coager <ccoager@davisvision.com>
+	p0ELg515093544 for <xfs@oss.sgi.com>; Fri, 14 Jan 2011 15:42:05 -0600
+Date: Fri, 14 Jan 2011 15:43:34 -0600
+From: bpm@sgi.com
+Subject: Re: Issues with delalloc->real extent allocation
+Message-ID: <20110114214334.GN28274@sgi.com>
+References: <20110114002900.GF16267@dastard>
 MIME-Version: 1.0
-Subject: Re: extremely slow write performance plaintext
-References: <3205_1294953756_4D2F6D1C_3205_1943_1_4D2F6D1C.2060409@davisvision.com>	<20110113233527.6dca104d@galadriel.home>	<18993_1294964274_4D2F9632_18993_1387_1_F79CF9ADB27B2646B59221B7355263830CC143B1@NYL-EXCH1.HVHCVision.com>
-	<4D30A945.4060000@hardwarefreak.com>
-In-Reply-To: <4D30A945.4060000@hardwarefreak.com>
+Content-Disposition: inline
+In-Reply-To: <20110114002900.GF16267@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,43 +18,72 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Stan Hoeppner <stan@hardwarefreak.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On 01/14/2011 02:51 PM, Stan Hoeppner wrote:
-> Make sure the write cache on the P600 (what size is it BTW?) is enabled and that
-> the BBU is in working order.  Also make sure the P600 is disabling the write
-> caches on the drives themselves.  Then...
+Hi Dave,
+
+On Fri, Jan 14, 2011 at 11:29:00AM +1100, Dave Chinner wrote:
+> I've noticed a few suspicious things trying to reproduce the
+> allocate-in-the-middle-of-a-delalloc-extent,
+...
+> Secondly, I think we have the same expose-the-entire-delalloc-extent
+> -to-stale-data-exposure problem in ->writepage. This onnne, however,
+> is due to using BMAPI_ENTIRE to allocate the entire delalloc extent
+> the first time any part of it is written to. Even if we are only
+> writing a single page (i.e. wbc->nr_to_write = 1) and the delalloc
+> extent covers gigabytes. So, same problem when we crash.
 >
-Write cache is enabled on the controller, the size is 512MB, BBU is in 
-good conditioned (checked with the HP utility).  How do I check the 
-write cache on the drives?
-> Mount with 'nobarrier' so XFS isn't interfering with the hardware cache
-> performance of the P600.  With barriers enabled (the default) XFS will
-> periodically flush the cache on the RAID card causing write performance problems.
->
-Already using nobarrier.
+> Finally, I think the extsize based problem exposed by test 229 is a
+> also a result of allocating space we have no pages covering in the
+> page cache (triggered by BMAPI_ENTIRE allocation) so the allocated
+> space is never zeroed and hence exposes stale data.
 
+This is precisely the bug I was going after when I hit the
+allocate-in-the-middle-of-a-delalloc-extent bug.  This is a race between
+block_prepare_write/__xfs_get_blocks and writepage/xfs_page_state
+convert.  When xfs_page_state_convert allocates a real extent for a page
+toward the beginning of a delalloc extent, XFS_BMAPI converts the entire
+delalloc extent.  Any subsequent writes into the page cache toward the
+end of this freshly allocated extent will see a written extent instead
+of delalloc and read the block from disk into the page before writing
+over it.  If the write does not cover the entire page garbage from disk
+will be exposed into the page cache.
 
+<snip>
 
-------------------------------------------------------------------------
-The information contained in this communication is intended
-only for the use of the recipient(s) named above. It may
-contain information that is privileged or confidential, and
-may be protected by State and/or Federal Regulations. If
-the reader of this message is not the intended recipient,
-you are hereby notified that any dissemination,
-distribution, or copying of this communication, or any of
-its contents, is strictly prohibited. If you have received
-this communication in error, please return it to the sender
-immediately and delete the original message and any copy
-of it from your computer system. If you have any questions
-concerning this message, please contact the sender.
-------------------------------------------------------------------------
+> I'm sure there are other ways to solve these problems, but these two
+> are the ones that come to mind for me.  I'm open to other solutions
+> or ways to improve on these ones, especially if they are simpler. ;)
+> Anyone got any ideas or improvements?
+
+The direction I've been taking is to use XFS_BMAPI_EXACT in
+*xfs_iomap_write_allocate to ensure that an extent covering exactly the
+pages we're prepared to write out immediately is allocated and the rest
+of the delalloc extent is left as is.  This exercises some of the btree
+code more heavily and led to the discovery of the
+allocate-in-the-middle-of-a-delalloc-extent bug.  It also presents a
+performance issue which I've tried to resolve by extending
+xfs_probe_cluster to probe delalloc extents-- lock up all of the pages
+to be converted before performing the allocation and hold those locks
+until they are submitted for writeback.  It's not very pretty but it
+resolves the corruption.
+
+There is still the issue of crashes...  This could be solved by
+converting from delalloc to unwritten in xfs_page_state_convert in this
+very exact way and then to written in the io completion handler.  Never
+go delalloc->written directly.
+
+I have not had luck reproducing this on TOT xfs and have come to realize
+that this is because it doesn't do speculative preallocation of larger
+delalloc extents unless you are using extsize... which I haven't tried.
+
+Regards,
+	Ben
 
 _______________________________________________
 xfs mailing list
