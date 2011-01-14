@@ -1,15 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0ELg515093544 for <xfs@oss.sgi.com>; Fri, 14 Jan 2011 15:42:05 -0600
-Date: Fri, 14 Jan 2011 15:43:34 -0600
-From: bpm@sgi.com
-Subject: Re: Issues with delalloc->real extent allocation
-Message-ID: <20110114214334.GN28274@sgi.com>
-References: <20110114002900.GF16267@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110114002900.GF16267@dastard>
+	p0ELuLiu096059 for <xfs@oss.sgi.com>; Fri, 14 Jan 2011 15:56:21 -0600
+Date: Fri, 14 Jan 2011 15:58:26 -0600
+From: Alex Elder <aelder@americas.sgi.com>
+Message-Id: <201101142158.p0ELwQG3010869@alcatraz.americas.sgi.com>
+Subject: [GIT PULL] XFS update 2 for 2.6.38-rc1
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,72 +14,75 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-Hi Dave,
+Linus, please pull the following additional changes to XFS for
+2.6.38-rc1.  Thanks.
 
-On Fri, Jan 14, 2011 at 11:29:00AM +1100, Dave Chinner wrote:
-> I've noticed a few suspicious things trying to reproduce the
-> allocate-in-the-middle-of-a-delalloc-extent,
-...
-> Secondly, I think we have the same expose-the-entire-delalloc-extent
-> -to-stale-data-exposure problem in ->writepage. This onnne, however,
-> is due to using BMAPI_ENTIRE to allocate the entire delalloc extent
-> the first time any part of it is written to. Even if we are only
-> writing a single page (i.e. wbc->nr_to_write = 1) and the delalloc
-> extent covers gigabytes. So, same problem when we crash.
->
-> Finally, I think the extsize based problem exposed by test 229 is a
-> also a result of allocating space we have no pages covering in the
-> page cache (triggered by BMAPI_ENTIRE allocation) so the allocated
-> space is never zeroed and hence exposes stale data.
+					-Alex
 
-This is precisely the bug I was going after when I hit the
-allocate-in-the-middle-of-a-delalloc-extent bug.  This is a race between
-block_prepare_write/__xfs_get_blocks and writepage/xfs_page_state
-convert.  When xfs_page_state_convert allocates a real extent for a page
-toward the beginning of a delalloc extent, XFS_BMAPI converts the entire
-delalloc extent.  Any subsequent writes into the page cache toward the
-end of this freshly allocated extent will see a written extent instead
-of delalloc and read the block from disk into the page before writing
-over it.  If the write does not cover the entire page garbage from disk
-will be exposed into the page cache.
+The following changes since commit 52cfd503ad7176d23a5dd7af3981744feb60622f:
 
-<snip>
+  Merge branch 'release' of git://git.kernel.org/pub/scm/linux/kernel/git/lenb/linux-acpi-2.6 (2011-01-13 20:15:35 -0800)
 
-> I'm sure there are other ways to solve these problems, but these two
-> are the ones that come to mind for me.  I'm open to other solutions
-> or ways to improve on these ones, especially if they are simpler. ;)
-> Anyone got any ideas or improvements?
+are available in the git repository at:
 
-The direction I've been taking is to use XFS_BMAPI_EXACT in
-*xfs_iomap_write_allocate to ensure that an extent covering exactly the
-pages we're prepared to write out immediately is allocated and the rest
-of the delalloc extent is left as is.  This exercises some of the btree
-code more heavily and led to the discovery of the
-allocate-in-the-middle-of-a-delalloc-extent bug.  It also presents a
-performance issue which I've tried to resolve by extending
-xfs_probe_cluster to probe delalloc extents-- lock up all of the pages
-to be converted before performing the allocation and hold those locks
-until they are submitted for writeback.  It's not very pretty but it
-resolves the corruption.
+  git://oss.sgi.com/xfs/xfs for-linus
 
-There is still the issue of crashes...  This could be solved by
-converting from delalloc to unwritten in xfs_page_state_convert in this
-very exact way and then to written in the io completion handler.  Never
-go delalloc->written directly.
+Anton Blanchard (1):
+      xfs: Add log level to assertion printk
 
-I have not had luck reproducing this on TOT xfs and have come to realize
-that this is because it doesn't do speculative preallocation of larger
-delalloc extents unless you are using extsize... which I haven't tried.
+Christoph Hellwig (2):
+      xfs: add FITRIM support
+      xfs: fix error handling for synchronous writes
 
-Regards,
-	Ben
+Dave Chinner (10):
+      xfs: ensure sync write errors are returned
+      xfs: factor common post-write isize handling code
+      xfs: factor post-write newsize updates
+      xfs: introduce xfs_rw_lock() helpers for locking the inode
+      xfs: split direct IO write path from xfs_file_aio_write
+      xfs: split buffered IO write path from xfs_file_aio_write
+      xfs: factor common write setup code
+      xfs: serialise unaligned direct IOs
+      xfs: ensure log covering transactions are synchronous
+      xfs: prevent NMI timeouts in cmn_err
+
+Jesper Juhl (1):
+      xfs: fix an assignment within an ASSERT()
+
+ fs/xfs/Makefile                |    1 +
+ fs/xfs/linux-2.6/xfs_buf.c     |    7 +-
+ fs/xfs/linux-2.6/xfs_buf.h     |    7 +-
+ fs/xfs/linux-2.6/xfs_discard.c |  191 ++++++++++++++
+ fs/xfs/linux-2.6/xfs_discard.h |    8 +
+ fs/xfs/linux-2.6/xfs_file.c    |  535 +++++++++++++++++++++++-----------------
+ fs/xfs/linux-2.6/xfs_ioctl.c   |    3 +
+ fs/xfs/linux-2.6/xfs_super.c   |    2 +-
+ fs/xfs/linux-2.6/xfs_sync.c    |   11 +-
+ fs/xfs/linux-2.6/xfs_sysctl.c  |   23 ++-
+ fs/xfs/linux-2.6/xfs_trace.h   |   33 +++
+ fs/xfs/support/debug.c         |  112 ++++-----
+ fs/xfs/support/debug.h         |   25 ++-
+ fs/xfs/xfs_alloc.c             |   10 +-
+ fs/xfs/xfs_alloc.h             |   25 ++-
+ fs/xfs/xfs_buf_item.c          |  151 ++++--------
+ fs/xfs/xfs_error.c             |   31 ---
+ fs/xfs/xfs_error.h             |   18 +-
+ fs/xfs/xfs_fsops.c             |   10 +-
+ fs/xfs/xfs_fsops.h             |    2 +-
+ fs/xfs/xfs_log.c               |    2 +-
+ fs/xfs/xfs_log_recover.c       |    2 +-
+ fs/xfs/xfs_trans.c             |    2 +-
+ 23 files changed, 729 insertions(+), 482 deletions(-)
+ create mode 100644 fs/xfs/linux-2.6/xfs_discard.c
+ create mode 100644 fs/xfs/linux-2.6/xfs_discard.h
 
 _______________________________________________
 xfs mailing list
