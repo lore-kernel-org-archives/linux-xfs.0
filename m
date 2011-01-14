@@ -1,15 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0EGc49i052201 for <xfs@oss.sgi.com>; Fri, 14 Jan 2011 10:38:04 -0600
-Date: Fri, 14 Jan 2011 10:40:16 -0600
-From: Geoffrey Wehrman <gwehrman@sgi.com>
-Subject: Re: Issues with delalloc->real extent allocation
-Message-ID: <20110114164016.GB30134@sgi.com>
-References: <20110114002900.GF16267@dastard>
+	p0EIGllr066121 for <xfs@oss.sgi.com>; Fri, 14 Jan 2011 12:16:48 -0600
+Received: from mail-pz0-f53.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 87CA712FF1E8
+	for <xfs@oss.sgi.com>; Fri, 14 Jan 2011 10:19:01 -0800 (PST)
+Received: from mail-pz0-f53.google.com (mail-pz0-f53.google.com
+	[209.85.210.53]) by cuda.sgi.com with ESMTP id QGkwjwB0qVcMPa2d
+	for <xfs@oss.sgi.com>; Fri, 14 Jan 2011 10:19:01 -0800 (PST)
+Received: by pzk37 with SMTP id 37so625190pzk.26
+	for <xfs@oss.sgi.com>; Fri, 14 Jan 2011 10:19:01 -0800 (PST)
+Message-ID: <4D309390.4060009@philkarn.net>
+Date: Fri, 14 Jan 2011 10:18:56 -0800
+From: Phil Karn <karn@philkarn.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110114002900.GF16267@dastard>
+Subject: fallocate everywhere?
+Reply-To: karn@ka9q.net
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,47 +28,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Fri, Jan 14, 2011 at 11:29:00AM +1100, Dave Chinner wrote:
-| This seems to be incorrect to me - a "wasdelay" extent has not yet
-| been initialised - there's data in memory, but there is nothing on
-| disk and we may not write it for some time. If we crash after this
-| transaction is written but before any data is written, we expose
-| stale data.
-| 
-| Not only that, it allocates the _entire_ delalloc extent that spans
-| the preallocation range, even when the preallocation range is only 1
-| block and the delalloc extent covers gigabytes. hence we actually
-| expose a much greater range of the file to stale data exposure
-| during a crash than just eh preallocated range. Not good.
-| 
-| Secondly, I think we have the same expose-the-entire-delalloc-extent
-| -to-stale-data-exposure problem in ->writepage. This onnne, however,
-| is due to using BMAPI_ENTIRE to allocate the entire delalloc extent
-| the first time any part of it is written to. Even if we are only
-| writing a single page (i.e. wbc->nr_to_write = 1) and the delalloc
-| extent covers gigabytes. So, same problem when we crash.
-| 
-| Finally, I think the extsize based problem exposed by test 229 is a
-| also a result of allocating space we have no pages covering in the
-| page cache (triggered by BMAPI_ENTIRE allocation) so the allocated
-| space is never zeroed and hence exposes stale data.
+Can anyone think of a good reason *not* to sprinkle fallocate() calls
+through as many Linux utilities as possible? E.g., programs like rsync,
+tar, cpio, pax, ftp, mv, cp -- anything and everything that creates a
+file with a size known in advance.
 
-There used to be an XFS_BMAPI_EXACT flag that wasn't ever used.  What
-would be the effects of re-creating this flag and using it in writepage
-to prevent the expose-the-entire-delalloc-extent-to-stale-data-exposure
-problem?  This wouldn't solve the exposure of stale data for a crash
-that occurs after the extent conversion but before the data is written
-out.  The quantity of data exposed is potentially much smaller however.
+As far as I can tell, calling fallocate() when it's not supported
+quickly returns an error and does no harm. So I can't even think of a
+reason to only make it optional. If it's implemented as an
+off-by-default option, most people would probably not know about it so
+it would rarely get used. Those who do know about it would frequently
+forget to use it, and choosing and learning a separate option for every
+command would be painful.
 
-Also, I'm not saying using XFS_BMAPI_EXACT is feasable.  I have a very
-minimal understanding of the writepage code path.
+Besides xfs, ext4 supports fallocate so I expect that most Linux systems
+will be able to benefit from it fairly soon.
 
-
--- 
-Geoffrey Wehrman  651-683-5496  gwehrman@sgi.com
 
 _______________________________________________
 xfs mailing list
