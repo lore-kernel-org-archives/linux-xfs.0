@@ -1,18 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0ENrdQI114875 for <xfs@oss.sgi.com>; Fri, 14 Jan 2011 17:53:39 -0600
-Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 411E4154159D
-	for <xfs@oss.sgi.com>; Fri, 14 Jan 2011 15:55:53 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
-	[150.101.137.104]) by cuda.sgi.com with ESMTP id
-	DMMcYUMEnopHlezJ for <xfs@oss.sgi.com>;
-	Fri, 14 Jan 2011 15:55:53 -0800 (PST)
-Date: Sat, 15 Jan 2011 10:55:49 +1100
-From: Dave Chinner <david@fromorbit.com>
+	p0ENnUVO114021 for <xfs@oss.sgi.com>; Fri, 14 Jan 2011 17:49:30 -0600
+Date: Fri, 14 Jan 2011 17:50:56 -0600
+From: bpm@sgi.com
 Subject: Re: Issues with delalloc->real extent allocation
-Message-ID: <20110114235549.GI16267@dastard>
+Message-ID: <20110114235056.GP28274@sgi.com>
 References: <20110114002900.GF16267@dastard> <20110114214334.GN28274@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
@@ -29,12 +22,10 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: bpm@sgi.com
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
 On Fri, Jan 14, 2011 at 03:43:34PM -0600, bpm@sgi.com wrote:
-> Hi Dave,
-> 
 > On Fri, Jan 14, 2011 at 11:29:00AM +1100, Dave Chinner wrote:
 > > I've noticed a few suspicious things trying to reproduce the
 > > allocate-in-the-middle-of-a-delalloc-extent,
@@ -62,73 +53,111 @@ On Fri, Jan 14, 2011 at 03:43:34PM -0600, bpm@sgi.com wrote:
 > over it.  If the write does not cover the entire page garbage from disk
 > will be exposed into the page cache.
 
-I see from later on you are getting this state fom using a large
-extsize. Perhaps this comes back to my comment about extsize
-alignment might be better handled at the .aio_write level rather
-than hiding inside the get_block() callback and attempting to handle
-the mismatch at the .writepage level.
+Here is a test case to reproduce the corruption.  I have only been able
+to reproduce it by writing the file on an nfs client served from xfs
+that is allocating large delalloc extents.
 
-Worth noting, though, is that DIO handles extsize unaligned writes
-by allocating unwritten extsize sized/aligned extents an then doing
-conversion at IO completion time. So perhaps we should be following
-this example for delalloc conversion....
+-Ben
 
-I think, however, if we use delalloc->unwritten allocation, we will
-need to stop trusting the state of buffer heads in .writepage.  That
-is because we'd then have blocks marked as buffer_delay() that
-really cover unwritten extents and would need remapping. We're
-already moving in the direction of not using the state in buffer
-heads in ->writepage, so perhaps we need to speed up that
-conversion as the first. Christoph, what are you plans here?
+*** the writer
 
-> <snip>
-> 
-> > I'm sure there are other ways to solve these problems, but these two
-> > are the ones that come to mind for me.  I'm open to other solutions
-> > or ways to improve on these ones, especially if they are simpler. ;)
-> > Anyone got any ideas or improvements?
-> 
-> The direction I've been taking is to use XFS_BMAPI_EXACT in
-> *xfs_iomap_write_allocate to ensure that an extent covering exactly the
-> pages we're prepared to write out immediately is allocated and the rest
-> of the delalloc extent is left as is.  This exercises some of the btree
-> code more heavily and led to the discovery of the
-> allocate-in-the-middle-of-a-delalloc-extent bug.
+#include <stdio.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <unistd.h>
 
-Yup, that explains it ;)
+int
+main(int argc, char *argv[]) {
 
-> It also presents a
-> performance issue which I've tried to resolve by extending
-> xfs_probe_cluster to probe delalloc extents-- lock up all of the pages
-> to be converted before performing the allocation and hold those locks
-> until they are submitted for writeback.  It's not very pretty but it
-> resolves the corruption.
+	char *filename = argv[1];
+	off_t	seekdist = 3071;	/* less than a page, nice and odd */
+	off_t	max_offset = 1024 * 1024 * 1024; /* 1 gig */
+	off_t 	current_offset = 0;
+	char	buf[] = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n";
+	int	fd;
 
-If we zero the relevant range in the page cache at .aio_write level
-like we do with xfs_zero_eof or allocate unwritten extents instead,
-then I don't think that you need to make changes like this. 
+	printf("writing to %s\n", filename);
+	printf("strlen is %d\n", strlen(buf));
 
-> There is still the issue of crashes...  This could be solved by
-> converting from delalloc to unwritten in xfs_page_state_convert in this
-> very exact way and then to written in the io completion handler.  Never
-> go delalloc->written directly.
-> 
-> I have not had luck reproducing this on TOT xfs and have come to realize
-> that this is because it doesn't do speculative preallocation of larger
-> delalloc extents unless you are using extsize... which I haven't tried.
+	fd = open(filename, O_RDWR|O_CREAT, 0644);
+	if (fd == -1) {
+		perror(filename);
+		return -1;
+	}
 
-Have a look at the dynamic speculative allocation patches that just
-went into 2.6.38 - I'm very interested to know whether your tests
-expose stale data now that it can do up to an entire extent (8GB on
-4k block size) of speculative delalloc for writes that are extending
-the file.
+	while ((current_offset = lseek(fd, seekdist, SEEK_END)) > 0
+			&& current_offset < max_offset) {
+		if (write(fd, &buf, strlen(buf)) < strlen(buf)) {
+			perror("write 'a'");
+			return -1;
+		}
+	}
 
-Cheers,
+	close(fd);
+}
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+*** the reader
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+int
+main(int argc, char *argv[]) {
+
+	char *filename = argv[1];
+	off_t	seekdist = 3071;	/* less than a page, nice and odd */
+	off_t	max_offset = 1024 * 1024 * 1024; /* 1 gig */
+	off_t 	current_offset = 0;
+	char	buf[] = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n";
+	char	readbuf[4096];
+	int	fd, i;
+
+	printf("reading from %s\n", filename);
+
+	fd = open(filename, O_RDONLY, 0644);
+	if (fd == -1) {
+		perror(filename);
+		return -1;
+	}
+	
+	while (current_offset < max_offset) {
+		ssize_t nread = read(fd, &readbuf, seekdist);
+		if (nread != seekdist) {
+			perror("read nulls");
+			return -1;
+		}
+		for (i=0; i < seekdist; i++) {
+			if (readbuf[i] != '\0') {
+				printf("foudn non-null at %d\n%s\n",
+						current_offset + i,
+						&readbuf[i]);
+				break;
+//				return -1;
+			}
+		}
+		
+		current_offset += nread;
+
+		nread = read(fd, &readbuf, strlen(buf));
+		if (nread != strlen(buf)) {
+			perror("read a");
+			return -1;
+		}
+
+		if (strncmp(readbuf, buf, strlen(buf))) {
+			printf("didn't match at %d\n%s\n",
+					current_offset + nread,
+					readbuf);
+//			return -1;
+		}
+
+		current_offset += nread;
+	}	
+
+	close(fd);
+}
 
 _______________________________________________
 xfs mailing list
