@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0H4ZY5c231609 for <xfs@oss.sgi.com>; Sun, 16 Jan 2011 22:35:34 -0600
+	p0H5GFZL235733 for <xfs@oss.sgi.com>; Sun, 16 Jan 2011 23:16:16 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C24F71005D65
-	for <xfs@oss.sgi.com>; Sun, 16 Jan 2011 20:37:49 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail13.adl6.internode.on.net
-	[150.101.137.98]) by cuda.sgi.com with ESMTP id
-	WmqkfJyqyMmktYWO for <xfs@oss.sgi.com>;
-	Sun, 16 Jan 2011 20:37:49 -0800 (PST)
-Date: Mon, 17 Jan 2011 15:37:40 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C9F234D4024
+	for <xfs@oss.sgi.com>; Sun, 16 Jan 2011 21:18:31 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
+	[150.101.137.103]) by cuda.sgi.com with ESMTP id
+	usfGqDRzKXpntPbE for <xfs@oss.sgi.com>;
+	Sun, 16 Jan 2011 21:18:31 -0800 (PST)
+Date: Mon, 17 Jan 2011 16:18:28 +1100
 From: Dave Chinner <david@fromorbit.com>
 Subject: Re: Issues with delalloc->real extent allocation
-Message-ID: <20110117043740.GK16267@dastard>
-References: <20110114214334.GN28274@sgi.com>
-	<1414867864.5452.1295224107104.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
+Message-ID: <20110117051827.GL16267@dastard>
+References: <20110114002900.GF16267@dastard> <20110114164016.GB30134@sgi.com>
+	<20110114225907.GH16267@dastard> <20110115041629.GC11968@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1414867864.5452.1295224107104.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
+In-Reply-To: <20110115041629.GC11968@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,104 +30,40 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Lachlan McIlroy <lmcilroy@redhat.com>
-Cc: bpm@sgi.com, xfs@oss.sgi.com
+To: Geoffrey Wehrman <gwehrman@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Sun, Jan 16, 2011 at 07:28:27PM -0500, Lachlan McIlroy wrote:
-> ----- Original Message -----
-> > Hi Dave,
-> > 
-> > On Fri, Jan 14, 2011 at 11:29:00AM +1100, Dave Chinner wrote:
-> > > I've noticed a few suspicious things trying to reproduce the
-> > > allocate-in-the-middle-of-a-delalloc-extent,
-> > ...
-> > > Secondly, I think we have the same expose-the-entire-delalloc-extent
-> > > -to-stale-data-exposure problem in ->writepage. This onnne, however,
-> > > is due to using BMAPI_ENTIRE to allocate the entire delalloc extent
-> > > the first time any part of it is written to. Even if we are only
-> > > writing a single page (i.e. wbc->nr_to_write = 1) and the delalloc
-> > > extent covers gigabytes. So, same problem when we crash.
-> > >
-> > > Finally, I think the extsize based problem exposed by test 229 is a
-> > > also a result of allocating space we have no pages covering in the
-> > > page cache (triggered by BMAPI_ENTIRE allocation) so the allocated
-> > > space is never zeroed and hence exposes stale data.
-> > 
-> > This is precisely the bug I was going after when I hit the
-> > allocate-in-the-middle-of-a-delalloc-extent bug. This is a race
-> > between
-> > block_prepare_write/__xfs_get_blocks and writepage/xfs_page_state
-> > convert. When xfs_page_state_convert allocates a real extent for a
-> > page
-> > toward the beginning of a delalloc extent, XFS_BMAPI converts the
-> > entire
-> > delalloc extent. Any subsequent writes into the page cache toward the
-> > end of this freshly allocated extent will see a written extent instead
-> > of delalloc and read the block from disk into the page before writing
-> > over it. If the write does not cover the entire page garbage from disk
-> > will be exposed into the page cache.
+On Fri, Jan 14, 2011 at 10:16:29PM -0600, Geoffrey Wehrman wrote:
+> On Sat, Jan 15, 2011 at 09:59:07AM +1100, Dave Chinner wrote:
+> | On Fri, Jan 14, 2011 at 10:40:16AM -0600, Geoffrey Wehrman wrote:
+> | > Also, I'm not saying using XFS_BMAPI_EXACT is feasible.  I have a very
+> | > minimal understanding of the writepage code path.
+> | 
+> | I think there are situations where this does make sense, but given
+> | the potential issues I'm not sure it is a solution that can be
+> | extended to the general case. A good discussion point on a different
+> | angle, though. ;)
 > 
-> Ben, take a look at the XFS gap list code in IRIX - this code was
-> designed specifically to handle this problem.  It's also implemented in
-> several of the cxfs clients too.  On entry to a write() it will create a
-> list of all the holes that exist in the write range before any delayed
-> allocations are created.  The first call to xfs_bmapi() sets up the delayed
-> allocation for the entire write (even if the bmaps returned don't cover the
-> full write range).  If the write results in a fault from disk then it checks
-> the gap list to see if any sections of the buffer used to cover a hole and
-> if so it ignores the state of the extent and zeroes those region(s) in the
-> buffer that match the pre-existing holes.  If the buffer has multiple
-> non-hole sections that need to be read from disk the whole buffer will be
-> read from disk and the zeroing of the holes is done post I/O - this reduces
-> the number of I/Os to be done.  The whole delayed allocation can be safely
-> converted at any time without risk of reading exposed data (assuming no
-> crash that is). 
-
-IMO, that caveat exposes the problem with this approach - it is not
-persistent. It adds a lot of complexity but doesn't solve the
-underlying problem: that we are exposing real extents via allocation
-without having written any data to them.
-
-> As the write progresses through the range it removes
-> sections from the front of the gap list so by the time the write is complete
-> the gap list is empty.  The gap list does not have a dedicated lock to
-> protect it but instead relies on the iolock to ensure that only one write
-> operation occurs at once (so it's not appropriate for direct I/O).
+> You've convinced me that XFS_BMAPI_EXACT is not the optimal solution.
 > 
-> > 
-> > <snip>
-> > 
-> > > I'm sure there are other ways to solve these problems, but these two
-> > > are the ones that come to mind for me. I'm open to other solutions
-> > > or ways to improve on these ones, especially if they are simpler. ;)
-> > > Anyone got any ideas or improvements?
-> > 
-> > The direction I've been taking is to use XFS_BMAPI_EXACT in
-> > *xfs_iomap_write_allocate to ensure that an extent covering exactly
-> > the
-> > pages we're prepared to write out immediately is allocated and the
-> > rest
-> > of the delalloc extent is left as is. This exercises some of the btree
-> > code more heavily and led to the discovery of the
-> > allocate-in-the-middle-of-a-delalloc-extent bug. It also presents a
-> > performance issue which I've tried to resolve by extending
-> > xfs_probe_cluster to probe delalloc extents-- lock up all of the pages
-> > to be converted before performing the allocation and hold those locks
-> > until they are submitted for writeback. It's not very pretty but it
-> > resolves the corruption.
-> > 
-> > There is still the issue of crashes... This could be solved by
-> > converting from delalloc to unwritten in xfs_page_state_convert in
-> > this
-> > very exact way and then to written in the io completion handler. Never
-> > go delalloc->written directly.
-> 
-> That solution would probably make the gap list redundant too.
+> Upon further consideration, I do like your proposal to make delalloc
+> allocation more like an intent/done type operation.  The compatibility
+> issues aren't all that bad.  As long as the filesystem is unmounted
+> clean, there is no need for the next mount do log recovery and therefore
+> no need to have any knowledge of the new transactions.
 
-Yes, I think you are right. The "gaps" would get mapped as unwritten
-rather than as normal extents and hence get zereod appropriately. It
-would also preventing exposure after a crash due to being
-persistent.
+That is a good observation. If there is agreement that this a strong
+enough backwards compatibility guarantee (it's good enough for me),
+then I think that I will start to prototype this approach.
+
+However, this does not solve the extsize allocation issues where we
+don't have dirty pages in the page cache covering parts of the
+delayed allocation extent so we still need a solution for that. I'm
+tending towards zeroing in .aio_write as the simplest solution
+because it doesn't cause buffer head/extent tree mapping mismatches,
+and it would use the above intent/done operations for crash
+resilience so there's no additional, rarely used code path to test
+through .writepage. Does that sound reasonable?
 
 Cheers,
 
