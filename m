@@ -1,18 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0GDCDcE129778 for <xfs@oss.sgi.com>; Sun, 16 Jan 2011 07:12:13 -0600
-Received: from gerard.telenet-ops.be (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 174FA26B5BC
-	for <xfs@oss.sgi.com>; Sun, 16 Jan 2011 05:14:28 -0800 (PST)
-Received: from gerard.telenet-ops.be (gerard.telenet-ops.be [195.130.132.48])
-	by cuda.sgi.com with ESMTP id XU1dODrH8YuToCB1 for
-	<xfs@oss.sgi.com>; Sun, 16 Jan 2011 05:14:28 -0800 (PST)
-Date: Sun, 16 Jan 2011 14:14:25 +0100 (CET)
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: [PATCH] xfs: Do not name variables "panic"
-Message-ID: <alpine.DEB.2.00.1101161409150.24311@ayla.of.borg>
+	p0H0QIZt205336 for <xfs@oss.sgi.com>; Sun, 16 Jan 2011 18:26:18 -0600
+Date: Sun, 16 Jan 2011 19:28:27 -0500 (EST)
+From: Lachlan McIlroy <lmcilroy@redhat.com>
+Message-ID: <1414867864.5452.1295224107104.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
+In-Reply-To: <20110114214334.GN28274@sgi.com>
+Subject: Re: Issues with delalloc->real extent allocation
 MIME-Version: 1.0
+Reply-To: Lachlan McIlroy <lmcilroy@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,42 +17,112 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-7"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <dchinner@redhat.com>, Alex Elder <aelder@sgi.com>, Christoph Hellwig <hch@lst.de>
-Cc: linux-arch@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+To: bpm@sgi.com
+Cc: xfs@oss.sgi.com
 
-T24gcGxhdGZvcm1zIHRoYXQgY2FsbCBwYW5pYygpIGluc2lkZSB0aGVpciBCVUcoKSBtYWNybyAo
-bTY4ay9zdW4zLCBhbmQKYWxsIHBsYXRmb3JtcyB0aGF0IGRvbid0IHNldCBIQVZFX0FSQ0hfQlVH
-KSwgY29tcGlsYXRpb24gZmFpbHMgd2l0aDoKCnwgZnMveGZzL3N1cHBvcnQvZGVidWcuYzogSW4g
-ZnVuY3Rpb24goXhmc19jbW5fZXJyojoKfCBmcy94ZnMvc3VwcG9ydC9kZWJ1Zy5jOjkyOiBlcnJv
-cjogY2FsbGVkIG9iamVjdCChcGFuaWOiIGlzIG5vdCBhIGZ1bmN0aW9uCgphcyB0aGUgbG9jYWwg
-dmFyaWFibGUgInBhbmljIiBjb25mbGljdHMgd2l0aCB0aGUgInBhbmljKCkiIGZ1bmN0aW9uLgpS
-ZW5hbWUgdGhlIGxvY2FsIHZhcmlhYmxlIHRvIHJlc29sdmUgdGhpcy4KClNpZ25lZC1vZmYtYnk6
-IEdlZXJ0IFV5dHRlcmhvZXZlbiA8Z2VlcnRAbGludXgtbTY4ay5vcmc+Ci0tLQptNjhrL3N1bjM6
-IGh0dHA6Ly9raXNza2IuZWxsZXJtYW4uaWQuYXUva2lzc2tiL2J1aWxkcmVzdWx0LzM3NzkwMDYv
-Ck5vbmUgb2YgdGhlICFIQVZFX0FSQ0hfQlVHIGFyY2hzIChoODMwMCwgbTMyciwgbTY4a25vbW11
-LCBtaWNyb2JsYXplLCBzY29yZSwKdGlsZSwgeHRlbnNhKSBzZWVtcyB0byBiZSBjb3ZlcmVkIGJ5
-IGxpbnV4LW5leHQKCiBmcy94ZnMvc3VwcG9ydC9kZWJ1Zy5jIHwgICAgNiArKystLS0KIDEgZmls
-ZXMgY2hhbmdlZCwgMyBpbnNlcnRpb25zKCspLCAzIGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBh
-L2ZzL3hmcy9zdXBwb3J0L2RlYnVnLmMgYi9mcy94ZnMvc3VwcG9ydC9kZWJ1Zy5jCmluZGV4IGU2
-Y2Y5NTUuLjBkZjg4ODkgMTAwNjQ0Ci0tLSBhL2ZzL3hmcy9zdXBwb3J0L2RlYnVnLmMKKysrIGIv
-ZnMveGZzL3N1cHBvcnQvZGVidWcuYwpAQCAtNzUsMTEgKzc1LDExIEBAIHhmc19jbW5fZXJyKAog
-ewogCXN0cnVjdCB2YV9mb3JtYXQJdmFmOwogCXZhX2xpc3QJCQlhcmdzOwotCWludAkJCXBhbmlj
-ID0gMDsKKwlpbnQJCQlkb19wYW5pYyA9IDA7CiAKIAlpZiAoeGZzX3BhbmljX21hc2sgJiYgKHhm
-c19wYW5pY19tYXNrICYgcGFuaWNfdGFnKSkgewogCQlwcmludGsoS0VSTl9BTEVSVCAiWEZTOiBU
-cmFuc2Zvcm1pbmcgYW4gYWxlcnQgaW50byBhIEJVRy4iKTsKLQkJcGFuaWMgPSAxOworCQlkb19w
-YW5pYyA9IDE7CiAJfQogCiAJdmFfc3RhcnQoYXJncywgZm10KTsKQEAgLTg5LDcgKzg5LDcgQEAg
-eGZzX2Ntbl9lcnIoCiAJcHJpbnRrKEtFUk5fQUxFUlQgIkZpbGVzeXN0ZW0gJXM6ICVwViIsIG1w
-LT5tX2ZzbmFtZSwgJnZhZik7CiAJdmFfZW5kKGFyZ3MpOwogCi0JQlVHX09OKHBhbmljKTsKKwlC
-VUdfT04oZG9fcGFuaWMpOwogfQogCiB2b2lkCi0tIAoxLjcuMC40CgpHcntvZXRqZSxlZXRpbmd9
-cywKCgkJCQkJCUdlZXJ0CgotLQpHZWVydCBVeXR0ZXJob2V2ZW4gLS0gVGhlcmUncyBsb3RzIG9m
-IExpbnV4IGJleW9uZCBpYTMyIC0tIGdlZXJ0QGxpbnV4LW02OGsub3JnCgpJbiBwZXJzb25hbCBj
-b252ZXJzYXRpb25zIHdpdGggdGVjaG5pY2FsIHBlb3BsZSwgSSBjYWxsIG15c2VsZiBhIGhhY2tl
-ci4gQnV0CndoZW4gSSdtIHRhbGtpbmcgdG8gam91cm5hbGlzdHMgSSBqdXN0IHNheSAicHJvZ3Jh
-bW1lciIgb3Igc29tZXRoaW5nIGxpa2UgdGhhdC4KCQkJCQkJCSAgICAtLSBMaW51cyBUb3J2YWxk
-cwoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1h
-aWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlz
-dGluZm8veGZzCg==
+----- Original Message -----
+> Hi Dave,
+> 
+> On Fri, Jan 14, 2011 at 11:29:00AM +1100, Dave Chinner wrote:
+> > I've noticed a few suspicious things trying to reproduce the
+> > allocate-in-the-middle-of-a-delalloc-extent,
+> ...
+> > Secondly, I think we have the same expose-the-entire-delalloc-extent
+> > -to-stale-data-exposure problem in ->writepage. This onnne, however,
+> > is due to using BMAPI_ENTIRE to allocate the entire delalloc extent
+> > the first time any part of it is written to. Even if we are only
+> > writing a single page (i.e. wbc->nr_to_write = 1) and the delalloc
+> > extent covers gigabytes. So, same problem when we crash.
+> >
+> > Finally, I think the extsize based problem exposed by test 229 is a
+> > also a result of allocating space we have no pages covering in the
+> > page cache (triggered by BMAPI_ENTIRE allocation) so the allocated
+> > space is never zeroed and hence exposes stale data.
+> 
+> This is precisely the bug I was going after when I hit the
+> allocate-in-the-middle-of-a-delalloc-extent bug. This is a race
+> between
+> block_prepare_write/__xfs_get_blocks and writepage/xfs_page_state
+> convert. When xfs_page_state_convert allocates a real extent for a
+> page
+> toward the beginning of a delalloc extent, XFS_BMAPI converts the
+> entire
+> delalloc extent. Any subsequent writes into the page cache toward the
+> end of this freshly allocated extent will see a written extent instead
+> of delalloc and read the block from disk into the page before writing
+> over it. If the write does not cover the entire page garbage from disk
+> will be exposed into the page cache.
+
+Ben, take a look at the XFS gap list code in IRIX - this code was
+designed specifically to handle this problem.  It's also implemented in
+several of the cxfs clients too.  On entry to a write() it will create a
+list of all the holes that exist in the write range before any delayed
+allocations are created.  The first call to xfs_bmapi() sets up the delayed
+allocation for the entire write (even if the bmaps returned don't cover the
+full write range).  If the write results in a fault from disk then it checks
+the gap list to see if any sections of the buffer used to cover a hole and
+if so it ignores the state of the extent and zeroes those region(s) in the
+buffer that match the pre-existing holes.  If the buffer has multiple
+non-hole sections that need to be read from disk the whole buffer will be
+read from disk and the zeroing of the holes is done post I/O - this reduces
+the number of I/Os to be done.  The whole delayed allocation can be safely
+converted at any time without risk of reading exposed data (assuming no
+crash that is).  As the write progresses through the range it removes
+sections from the front of the gap list so by the time the write is complete
+the gap list is empty.  The gap list does not have a dedicated lock to
+protect it but instead relies on the iolock to ensure that only one write
+operation occurs at once (so it's not appropriate for direct I/O).
+
+> 
+> <snip>
+> 
+> > I'm sure there are other ways to solve these problems, but these two
+> > are the ones that come to mind for me. I'm open to other solutions
+> > or ways to improve on these ones, especially if they are simpler. ;)
+> > Anyone got any ideas or improvements?
+> 
+> The direction I've been taking is to use XFS_BMAPI_EXACT in
+> *xfs_iomap_write_allocate to ensure that an extent covering exactly
+> the
+> pages we're prepared to write out immediately is allocated and the
+> rest
+> of the delalloc extent is left as is. This exercises some of the btree
+> code more heavily and led to the discovery of the
+> allocate-in-the-middle-of-a-delalloc-extent bug. It also presents a
+> performance issue which I've tried to resolve by extending
+> xfs_probe_cluster to probe delalloc extents-- lock up all of the pages
+> to be converted before performing the allocation and hold those locks
+> until they are submitted for writeback. It's not very pretty but it
+> resolves the corruption.
+> 
+> There is still the issue of crashes... This could be solved by
+> converting from delalloc to unwritten in xfs_page_state_convert in
+> this
+> very exact way and then to written in the io completion handler. Never
+> go delalloc->written directly.
+
+That solution would probably make the gap list redundant too.
+
+> 
+> I have not had luck reproducing this on TOT xfs and have come to
+> realize
+> that this is because it doesn't do speculative preallocation of larger
+> delalloc extents unless you are using extsize... which I haven't
+> tried.
+> 
+> Regards,
+> Ben
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
