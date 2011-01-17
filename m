@@ -1,17 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0HEYsf0028442 for <xfs@oss.sgi.com>; Mon, 17 Jan 2011 08:34:54 -0600
-Date: Mon, 17 Jan 2011 08:37:08 -0600
-From: Geoffrey Wehrman <gwehrman@sgi.com>
+	p0HKBApa056236 for <xfs@oss.sgi.com>; Mon, 17 Jan 2011 14:11:10 -0600
+Date: Mon, 17 Jan 2011 14:12:40 -0600
+From: bpm@sgi.com
 Subject: Re: Issues with delalloc->real extent allocation
-Message-ID: <20110117143708.GE11968@sgi.com>
-References: <20110114002900.GF16267@dastard> <20110114164016.GB30134@sgi.com>
-	<20110114225907.GH16267@dastard> <20110115041629.GC11968@sgi.com>
-	<20110117051827.GL16267@dastard>
+Message-ID: <20110117201240.GW28274@sgi.com>
+References: <20110114002900.GF16267@dastard> <20110114214334.GN28274@sgi.com>
+	<20110114235549.GI16267@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110117051827.GL16267@dastard>
+In-Reply-To: <20110114235549.GI16267@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,51 +26,53 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, Jan 17, 2011 at 04:18:28PM +1100, Dave Chinner wrote:
-| On Fri, Jan 14, 2011 at 10:16:29PM -0600, Geoffrey Wehrman wrote:
-| > On Sat, Jan 15, 2011 at 09:59:07AM +1100, Dave Chinner wrote:
-| > | On Fri, Jan 14, 2011 at 10:40:16AM -0600, Geoffrey Wehrman wrote:
-| > | > Also, I'm not saying using XFS_BMAPI_EXACT is feasible.  I have a very
-| > | > minimal understanding of the writepage code path.
-| > | 
-| > | I think there are situations where this does make sense, but given
-| > | the potential issues I'm not sure it is a solution that can be
-| > | extended to the general case. A good discussion point on a different
-| > | angle, though. ;)
-| > 
-| > You've convinced me that XFS_BMAPI_EXACT is not the optimal solution.
-| > 
-| > Upon further consideration, I do like your proposal to make delalloc
-| > allocation more like an intent/done type operation.  The compatibility
-| > issues aren't all that bad.  As long as the filesystem is unmounted
-| > clean, there is no need for the next mount do log recovery and therefore
-| > no need to have any knowledge of the new transactions.
-| 
-| That is a good observation. If there is agreement that this a strong
-| enough backwards compatibility guarantee (it's good enough for me),
-| then I think that I will start to prototype this approach.
+Hey Dave,
 
-I'm not sure how a version of XFS without the new log recovery code will
-behave if it encounters a log with the new transactions.  I assume it
-will gracefully abort log recovery and fail the mount with the report of
-a corrupt log.  I have no objection with this compatibility guarantee.
+On Sat, Jan 15, 2011 at 10:55:49AM +1100, Dave Chinner wrote:
+> On Fri, Jan 14, 2011 at 03:43:34PM -0600, bpm@sgi.com wrote:
+> > It also presents a
+> > performance issue which I've tried to resolve by extending
+> > xfs_probe_cluster to probe delalloc extents-- lock up all of the pages
+> > to be converted before performing the allocation and hold those locks
+> > until they are submitted for writeback.  It's not very pretty but it
+> > resolves the corruption.
+> 
+> If we zero the relevant range in the page cache at .aio_write level
+> like we do with xfs_zero_eof or allocate unwritten extents instead,
+> then I don't think that you need to make changes like this. 
 
-| However, this does not solve the extsize allocation issues where we
-| don't have dirty pages in the page cache covering parts of the
-| delayed allocation extent so we still need a solution for that. I'm
-| tending towards zeroing in .aio_write as the simplest solution
-| because it doesn't cause buffer head/extent tree mapping mismatches,
-| and it would use the above intent/done operations for crash
-| resilience so there's no additional, rarely used code path to test
-| through .writepage. Does that sound reasonable?
+Ganging up pages under lock in xfs_page_state_convert (along with
+exactness in xfs_iomap_write_allocate) was needed to provide exclusion
+with block_prepare_write because zeroing isn't done in the case of
+written extents.
 
-Zeroing in .aio_write will create zeroed pages covering the entire
-allocation, correct?  This seems like a reasonable and straightforward
-approach.  I wish I had thought of it myself!
+Converting from delalloc->unwritten has the advantage of
+__xfs_get_blocks setting each buffer 'new' when you write into the page,
+so the zeroing is done properly even if you convert the entire extent to
+unwritten in xfs_vm_writepage instead of just the part you're going to
+write out.  However, when converting from unwritten->written in the
+completion handler you still need to convert only the part of the extent
+that was actually written.  That might be a lot of transactions in
+xfs_end_io.
 
+> > There is still the issue of crashes...  This could be solved by
+> > converting from delalloc to unwritten in xfs_page_state_convert in this
+> > very exact way and then to written in the io completion handler.  Never
+> > go delalloc->written directly.
+> > 
+> > I have not had luck reproducing this on TOT xfs and have come to realize
+> > that this is because it doesn't do speculative preallocation of larger
+> > delalloc extents unless you are using extsize... which I haven't tried.
+> 
+> Have a look at the dynamic speculative allocation patches that just
+> went into 2.6.38 - I'm very interested to know whether your tests
+> expose stale data now that it can do up to an entire extent (8GB on
+> 4k block size) of speculative delalloc for writes that are extending
+> the file.
 
--- 
-Geoffrey Wehrman  651-683-5496  gwehrman@sgi.com
+8GB, Eek!
+
+-Ben
 
 _______________________________________________
 xfs mailing list
