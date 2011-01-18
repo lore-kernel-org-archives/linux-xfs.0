@@ -1,16 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0IKjYG1157043 for <xfs@oss.sgi.com>; Tue, 18 Jan 2011 14:45:34 -0600
-Date: Tue, 18 Jan 2011 15:47:52 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Issues with delalloc->real extent allocation
-Message-ID: <20110118204752.GB28791@infradead.org>
-References: <20110114002900.GF16267@dastard> <20110114214334.GN28274@sgi.com>
-	<20110114235549.GI16267@dastard>
+	p0ILKnEF159300 for <xfs@oss.sgi.com>; Tue, 18 Jan 2011 15:20:49 -0600
+Received: from mail.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A069327392F
+	for <xfs@oss.sgi.com>; Tue, 18 Jan 2011 13:23:06 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail19.adl2.internode.on.net
+	[150.101.137.104]) by cuda.sgi.com with ESMTP id
+	vizUaQ7E7iFTEXbr for <xfs@oss.sgi.com>;
+	Tue, 18 Jan 2011 13:23:06 -0800 (PST)
+Date: Wed, 19 Jan 2011 08:23:03 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfsprogs: add fpunch command for hole punching via
+	fallocate
+Message-ID: <20110118212303.GV28803@dastard>
+References: <1295009545-17839-1-git-send-email-josef@redhat.com>
+	<20110118125112.GB21440@infradead.org>
+	<20110118130603.GA23491@dhcp231-156.rdu.redhat.com>
+	<20110118131203.GA4349@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110114235549.GI16267@dastard>
+In-Reply-To: <20110118131203.GA4349@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,45 +33,39 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: bpm@sgi.com, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Josef Bacik <josef@redhat.com>, xfs@oss.sgi.com
 
-On Sat, Jan 15, 2011 at 10:55:49AM +1100, Dave Chinner wrote:
-> I see from later on you are getting this state fom using a large
-> extsize. Perhaps this comes back to my comment about extsize
-> alignment might be better handled at the .aio_write level rather
-> than hiding inside the get_block() callback and attempting to handle
-> the mismatch at the .writepage level.
->
-> Worth noting, though, is that DIO handles extsize unaligned writes
-> by allocating unwritten extsize sized/aligned extents an then doing
-> conversion at IO completion time. So perhaps we should be following
-> this example for delalloc conversion....
-
-That's the other option for zeroing.  In many ways this makes a lot
-more sense, also for the thin provisioned virtualization image file
-use case I'm looking into right now.
-
+On Tue, Jan 18, 2011 at 08:12:03AM -0500, Christoph Hellwig wrote:
+> On Tue, Jan 18, 2011 at 08:06:03AM -0500, Josef Bacik wrote:
+> > Sounds good.  So which do we want, a new command or a new flag?  Thanks,
 > 
-> I think, however, if we use delalloc->unwritten allocation, we will
-> need to stop trusting the state of buffer heads in .writepage.  That
-> is because we'd then have blocks marked as buffer_delay() that
-> really cover unwritten extents and would need remapping. We're
-> already moving in the direction of not using the state in buffer
-> heads in ->writepage, so perhaps we need to speed up that
-> conversion as the first. Christoph, what are you plans here?
+> I'll wait for dave to chime in.  I think we should absolutely expose
+> it as a fallocate flag, but if there's a good reason we can also expose
+> it as a separate command.
 
-We really don't do much with the flags anymore.  We already treat
-overwritten (just buffer_uptodate) and delayed buffers are already
-exactly the same.   Unwritten buffers are still slightly different,
-in that we add XFS_BMAPI_IGSTATE to the bmapi flags.  This is just
-a leftover from the old code, and finding out why exactly we add
-it is still on my todo list.  The page clustering code checks if
-the buffer still matches the type in xfs_convert_page, though.
-And I'm not quite sure yet how we can remove that - the easiest
-option would be to keep holding the ilock until the whole clustered
-writeout is done, but we'd need to investigate what effect that
-has on performance.
+My reasoning was that:
+
+	a) it is consistent with other xfs_io allocation manipulation
+	   command structures such as resvsp/unresvsp
+	b) "punch" is less to type than "fallocate -p"
+	c) self documenting in scripts e.g. -c "punch 4k 4k" is much
+	   more obvious than -c "fallocate -p 4k 4k" and saves a man
+	   page lookup when reading the script.
+	d) punch as a top level command will show up in the "xfs_io
+	   -c help", not require you to know it is a suboption of the
+	   "falloc" command to find out how to use it.
+	e) the xfs_io command does not have to have the same name
+	   and structure as the underlying API that implements the
+	   functionality the commands execute.
+
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
