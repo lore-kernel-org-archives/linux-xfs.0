@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0INVWhF165169 for <xfs@oss.sgi.com>; Tue, 18 Jan 2011 17:31:32 -0600
+	p0INGITR164643 for <xfs@oss.sgi.com>; Tue, 18 Jan 2011 17:16:19 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 98F412700F2
-	for <xfs@oss.sgi.com>; Tue, 18 Jan 2011 15:33:49 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
-	[150.101.137.99]) by cuda.sgi.com with ESMTP id
-	lQPtHBLexDDKYy9S for <xfs@oss.sgi.com>;
-	Tue, 18 Jan 2011 15:33:49 -0800 (PST)
-Date: Wed, 19 Jan 2011 10:33:46 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7B57CE61C09
+	for <xfs@oss.sgi.com>; Tue, 18 Jan 2011 15:18:35 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail17.adl2.internode.on.net
+	[150.101.137.102]) by cuda.sgi.com with ESMTP id
+	VQ3wTD4hJAbx3AfO for <xfs@oss.sgi.com>;
+	Tue, 18 Jan 2011 15:18:35 -0800 (PST)
+Date: Wed, 19 Jan 2011 10:18:32 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/2] xfs: fix efi item leak on forced shutdown
-Message-ID: <20110118233346.GA28803@dastard>
-References: <1295010430-12495-1-git-send-email-david@fromorbit.com>
-	<1295010430-12495-3-git-send-email-david@fromorbit.com>
-	<20110118124625.GB12516@infradead.org>
+Subject: Re: Issues with delalloc->real extent allocation
+Message-ID: <20110118231831.GZ28803@dastard>
+References: <20110114002900.GF16267@dastard> <20110114214334.GN28274@sgi.com>
+	<20110114235549.GI16267@dastard>
+	<20110118204752.GB28791@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110118124625.GB12516@infradead.org>
+In-Reply-To: <20110118204752.GB28791@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,65 +32,103 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+Cc: bpm@sgi.com, xfs@oss.sgi.com
 
-On Tue, Jan 18, 2011 at 07:46:25AM -0500, Christoph Hellwig wrote:
-> On Sat, Jan 15, 2011 at 12:07:10AM +1100, Dave Chinner wrote:
-> > The cause of the leak is that the "remove" parameter of IOP_UNPIN()
-> > is never set when a CIL push is aborted. This means that the EFI
-> > item is never freed if it was in the push being cancelled. The
-> > problem is specific to delayed logging.
+On Tue, Jan 18, 2011 at 03:47:52PM -0500, Christoph Hellwig wrote:
+> On Sat, Jan 15, 2011 at 10:55:49AM +1100, Dave Chinner wrote:
+> > I see from later on you are getting this state fom using a large
+> > extsize. Perhaps this comes back to my comment about extsize
+> > alignment might be better handled at the .aio_write level rather
+> > than hiding inside the get_block() callback and attempting to handle
+> > the mismatch at the .writepage level.
+> >
+> > Worth noting, though, is that DIO handles extsize unaligned writes
+> > by allocating unwritten extsize sized/aligned extents an then doing
+> > conversion at IO completion time. So perhaps we should be following
+> > this example for delalloc conversion....
+> 
+> That's the other option for zeroing.  In many ways this makes a lot
+> more sense, also for the thin provisioned virtualization image file
+> use case I'm looking into right now.
+> 
 > > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > ---
-> >  fs/xfs/xfs_trans.c |   10 ++++++++++
-> >  1 files changed, 10 insertions(+), 0 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-> > index f80a067..e66ce5e 100644
-> > --- a/fs/xfs/xfs_trans.c
-> > +++ b/fs/xfs/xfs_trans.c
-> > @@ -1472,6 +1472,16 @@ xfs_trans_committed_bulk(
-> >  		if (XFS_LSN_CMP(item_lsn, (xfs_lsn_t)-1) == 0)
-> >  			continue;
-> >  
-> > +		/*
-> > +		 * if we are aborting the operation, no point in inserting the
-> > +		 * object into the AIL as we areee in a shutdown situation.
+> > I think, however, if we use delalloc->unwritten allocation, we will
+> > need to stop trusting the state of buffer heads in .writepage.  That
+> > is because we'd then have blocks marked as buffer_delay() that
+> > really cover unwritten extents and would need remapping. We're
+> > already moving in the direction of not using the state in buffer
+> > heads in ->writepage, so perhaps we need to speed up that
+> > conversion as the first. Christoph, what are you plans here?
 > 
-> that's a few 'e' too much.
-> 
-> > +		 */
-> > +		if (aborted) {
-> > +			ASSERT(XFS_FORCED_SHUTDOWN(ailp->xa_mount));
-> > +			IOP_UNPIN(lip, aborted);
-> > +			continue;
-> > +		}
-> 
-> Hmm, this is not symmetric with the non-delaylog path.
-> xfs_trans_item_committed never sets the remove flag to IOP_UNPIN,
-> even if the transaction commit was aborted.
+> We really don't do much with the flags anymore.  We already treat
+> overwritten (just buffer_uptodate) and delayed buffers are already
+> exactly the same.
 
-Right, because the delaylog and non-delaylog paths are not symmetric
-w.r.t. log write failures.
+Except for the fact we use the delalloc state from the buffer to
+trigger allocation after mapping. We could probably just use
+isnullstartblock() for this - only a mapping from a buffer over a
+delalloc range should return a null startblock.
 
-> It seems like the CIL code is missing an equivalent to
-> xfs_trans_uncommit for the case that xfs_log_write or xfs_log_done
-> fail.
+> Unwritten buffers are still slightly different,
+> in that we add XFS_BMAPI_IGSTATE to the bmapi flags.  This is just
+> a leftover from the old code, and finding out why exactly we add
+> it is still on my todo list.
 
-There isn't an equivalent. In the delaylog case, we don't have a
-transaction to "uncommit" when a log write failure occurs - we are
-aborting the checkpoint of the CIL, not a transaction. As the items
-have already gone through IOP_COMMITTING and IOP_UNLOCK, we have to
-treat the failures like they came from the log IO completion
-handler.
+XFS_BMAPI_IGSTATE does a couple of things. Firstly, It prevents
+xfs_bmapi() from allocating new extents (turns off write mode).
+This isn't an issue where it is used because neither of the call
+sites set XFS_BMAPI_WRITE.
 
-In the case of non-delaylog, neither IOP_COMMITTING or IOP_UNLOCK
-has been called on the items when the xfs_log_write() fails. They
-are still linked into the xfs_trans structure, so they can be
-handled by xfs_trans_uncommit() which simply needs to walk the items
-in the transaction and  IOP_UNPIN(lip, abort), IOP_UNLOCK and free
-the items.
+Secondly, it allows xfs_bmapi() to consider adjacent written
+and unwritten extents as contiguous but has no effect on delalloc
+extents. That is, if we have:
+
+	A               B                 C
+	+---------------+-----------------+
+	    unwritten          written
+
+And we ask to map the range A-C with a single map, we'll get back
+A-B.  If we add XFS_BMAPI_IGSTATE, we'll get back A-C instead. This
+means that when we map the range A-C for IO, we'll do it as a single
+IO. The unwritten extent conversion code handles ranges like this
+correctly - it will only convert the unwritten part of the range to
+written. It is arguable that this is unnecessary because the
+elevator will merge the two adjacent IOs anyway, but it does reduce
+the number of mapping calls and IOs issued...
+
+Hence it is effectively mechanism for optimising IO mappings where
+we have contiguous extents with mixed written/unwritten state.
+
+In fact, we probably should be setting this for normal written
+extents as well, so that the case:
+
+	A               B                 C
+	+---------------+-----------------+
+	    written          unwritten
+
+is also handled with the same optimisation. That makes handling
+unwritten and overwrites identical, with only delalloc being
+different. If we assume delalloc when we get a null startblock,
+then we don't need to look at the buffer state at all for the
+initial mapping.
+
+> The page clustering code checks if
+> the buffer still matches the type in xfs_convert_page, though.
+> And I'm not quite sure yet how we can remove that - the easiest
+> option would be to keep holding the ilock until the whole clustered
+> writeout is done, but we'd need to investigate what effect that
+> has on performance.
+
+Holding the ilock doesn't protect against page cache truncation, but
+we can still check for that via page->mapping. Otherwise this seems
+like it would work to me - I trust the extent list to reflect the
+correct state a lot more than I do the buffer heads.
+
+It seems to me that with such modifications, the only thing that we
+are using the bufferhead for is the buffer_uptodate() flag to
+determine if we should write the block or not. If we can find some
+other way of holding this state then we don't need bufferheads in
+the write path at all, right?
 
 Cheers,
 
