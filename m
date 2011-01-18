@@ -1,26 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0IM1LAT161585 for <xfs@oss.sgi.com>; Tue, 18 Jan 2011 16:01:22 -0600
+	p0INVWhF165169 for <xfs@oss.sgi.com>; Tue, 18 Jan 2011 17:31:32 -0600
 Received: from mail.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0954614883B7
-	for <xfs@oss.sgi.com>; Tue, 18 Jan 2011 14:03:38 -0800 (PST)
-Received: from mail.internode.on.net (bld-mail18.adl2.internode.on.net
-	[150.101.137.103]) by cuda.sgi.com with ESMTP id
-	3CndWdwlLLYM9fdk for <xfs@oss.sgi.com>;
-	Tue, 18 Jan 2011 14:03:38 -0800 (PST)
-Date: Wed, 19 Jan 2011 09:03:35 +1100
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 98F412700F2
+	for <xfs@oss.sgi.com>; Tue, 18 Jan 2011 15:33:49 -0800 (PST)
+Received: from mail.internode.on.net (bld-mail14.adl6.internode.on.net
+	[150.101.137.99]) by cuda.sgi.com with ESMTP id
+	lQPtHBLexDDKYy9S for <xfs@oss.sgi.com>;
+	Tue, 18 Jan 2011 15:33:49 -0800 (PST)
+Date: Wed, 19 Jan 2011 10:33:46 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Issues with delalloc->real extent allocation
-Message-ID: <20110118220335.GY28803@dastard>
-References: <20110114002900.GF16267@dastard> <20110114164016.GB30134@sgi.com>
-	<20110114225907.GH16267@dastard> <20110115041629.GC11968@sgi.com>
-	<20110117051827.GL16267@dastard> <20110117143708.GE11968@sgi.com>
-	<20110118002437.GS28803@dastard> <20110118143000.GB8803@sgi.com>
-	<20110118204008.GA28791@infradead.org>
+Subject: Re: [PATCH 2/2] xfs: fix efi item leak on forced shutdown
+Message-ID: <20110118233346.GA28803@dastard>
+References: <1295010430-12495-1-git-send-email-david@fromorbit.com>
+	<1295010430-12495-3-git-send-email-david@fromorbit.com>
+	<20110118124625.GB12516@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110118204008.GA28791@infradead.org>
+In-Reply-To: <20110118124625.GB12516@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,31 +34,63 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Tue, Jan 18, 2011 at 03:40:09PM -0500, Christoph Hellwig wrote:
-> On Tue, Jan 18, 2011 at 08:30:00AM -0600, Geoffrey Wehrman wrote:
-> > Glad you were able to understand what I meant.  Something I didn't think
-> > of earlier though:  What happens when I try to use an 8 GB on a system
-> > with only 4 GB of memory?  I'm not really worried about this pathological
-> > case, but I do wonder what the effects will be of allocating what could
-> > be significant quantities of memory in .aio_write.
+On Tue, Jan 18, 2011 at 07:46:25AM -0500, Christoph Hellwig wrote:
+> On Sat, Jan 15, 2011 at 12:07:10AM +1100, Dave Chinner wrote:
+> > The cause of the leak is that the "remove" parameter of IOP_UNPIN()
+> > is never set when a CIL push is aborted. This means that the EFI
+> > item is never freed if it was in the push being cancelled. The
+> > problem is specific to delayed logging.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > ---
+> >  fs/xfs/xfs_trans.c |   10 ++++++++++
+> >  1 files changed, 10 insertions(+), 0 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+> > index f80a067..e66ce5e 100644
+> > --- a/fs/xfs/xfs_trans.c
+> > +++ b/fs/xfs/xfs_trans.c
+> > @@ -1472,6 +1472,16 @@ xfs_trans_committed_bulk(
+> >  		if (XFS_LSN_CMP(item_lsn, (xfs_lsn_t)-1) == 0)
+> >  			continue;
+> >  
+> > +		/*
+> > +		 * if we are aborting the operation, no point in inserting the
+> > +		 * object into the AIL as we areee in a shutdown situation.
 > 
-> I think for large regions we'd be much better off to only zero the
-> blocks on disk, not in-memory - for example like the code in
-> xfs_zero_remaining_bytes does.
+> that's a few 'e' too much.
+> 
+> > +		 */
+> > +		if (aborted) {
+> > +			ASSERT(XFS_FORCED_SHUTDOWN(ailp->xa_mount));
+> > +			IOP_UNPIN(lip, aborted);
+> > +			continue;
+> > +		}
+> 
+> Hmm, this is not symmetric with the non-delaylog path.
+> xfs_trans_item_committed never sets the remove flag to IOP_UNPIN,
+> even if the transaction commit was aborted.
 
-That doesn't help us, because the .writepage allocation code will
-still allocate extsize aligned extents and expose the problem that
-we have blocks on disk with no data in the page cache covering
-them. The point of zeroing at .aio_write is that it avoids the
-problem of .writepage allocating blocks we don't have dirty pages
-for.
+Right, because the delaylog and non-delaylog paths are not symmetric
+w.r.t. log write failures.
 
-My preferred optimisation for this problem is that once we get above
-a certain extsize threshold we simply preallocate extsized and
-aligned chunks that cover the entire range for the write instead of
-writing zeros. That preserves the extsize allocation alignment, and
-unaligned writes and future IO see the space as unwritten and hence
-get zeroed correctly...
+> It seems like the CIL code is missing an equivalent to
+> xfs_trans_uncommit for the case that xfs_log_write or xfs_log_done
+> fail.
+
+There isn't an equivalent. In the delaylog case, we don't have a
+transaction to "uncommit" when a log write failure occurs - we are
+aborting the checkpoint of the CIL, not a transaction. As the items
+have already gone through IOP_COMMITTING and IOP_UNLOCK, we have to
+treat the failures like they came from the log IO completion
+handler.
+
+In the case of non-delaylog, neither IOP_COMMITTING or IOP_UNLOCK
+has been called on the items when the xfs_log_write() fails. They
+are still linked into the xfs_trans structure, so they can be
+handled by xfs_trans_uncommit() which simply needs to walk the items
+in the transaction and  IOP_UNPIN(lip, abort), IOP_UNLOCK and free
+the items.
 
 Cheers,
 
