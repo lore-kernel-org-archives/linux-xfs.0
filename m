@@ -1,28 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0J4TC4x179241 for <xfs@oss.sgi.com>; Tue, 18 Jan 2011 22:29:12 -0600
-Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 737121621761
-	for <xfs@oss.sgi.com>; Tue, 18 Jan 2011 20:31:29 -0800 (PST)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	5Wujxv2t1CDTX5oZ for <xfs@oss.sgi.com>;
-	Tue, 18 Jan 2011 20:31:29 -0800 (PST)
-Received: from chute ([192.168.1.1] helo=disappointment)
-	by dastard with esmtp (Exim 4.72)
-	(envelope-from <dave@fromorbit.com>) id 1PfPhc-0007Ep-HM
-	for xfs@oss.sgi.com; Wed, 19 Jan 2011 15:31:24 +1100
-Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1PfPgJ-000450-91
-	for xfs@oss.sgi.com; Wed, 19 Jan 2011 15:30:03 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 3/5] xfs: prevent extsize alignment from exceeding maximum
-	extent size
-Date: Wed, 19 Jan 2011 15:29:58 +1100
-Message-Id: <1295411400-15614-4-git-send-email-david@fromorbit.com>
-In-Reply-To: <1295411400-15614-1-git-send-email-david@fromorbit.com>
-References: <1295411400-15614-1-git-send-email-david@fromorbit.com>
+	p0J9uoNp198879 for <xfs@oss.sgi.com>; Wed, 19 Jan 2011 03:56:50 -0600
+Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A84B71621E2C
+	for <xfs@oss.sgi.com>; Wed, 19 Jan 2011 01:59:07 -0800 (PST)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id nEn1XbIOtHHLAl9A
+	for <xfs@oss.sgi.com>; Wed, 19 Jan 2011 01:59:07 -0800 (PST)
+Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
+	by greer.hardwarefreak.com (Postfix) with ESMTP id 08A286C106
+	for <xfs@oss.sgi.com>; Wed, 19 Jan 2011 03:59:07 -0600 (CST)
+Message-ID: <4D36B5EA.6040603@hardwarefreak.com>
+Date: Wed, 19 Jan 2011 03:59:06 -0600
+From: Stan Hoeppner <stan@hardwarefreak.com>
+MIME-Version: 1.0
+Subject: Re: extremely slow write performance plaintext
+References: <3205_1294953756_4D2F6D1C_3205_1943_1_4D2F6D1C.2060409@davisvision.com>	<20110113233527.6dca104d@galadriel.home>	<18993_1294964274_4D2F9632_18993_1387_1_F79CF9ADB27B2646B59221B7355263830CC143B1@NYL-EXCH1.HVHCVision.com>	<4D30A945.4060000@hardwarefreak.com>	<27616_1295038110_4D30B69E_27616_233_1_4D30B69E.4020506@davisvision.com>	<4D30C7F3.3040105@hardwarefreak.com>
+	<1779_1295360207_4D35A0CF_1779_747_1_4D35A0CF.9050503@davisvision.com>
+In-Reply-To: <1779_1295360207_4D35A0CF_1779_747_1_4D35A0CF.9050503@davisvision.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,54 +27,57 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Cory Coager put forth on 1/18/2011 8:16 AM:
 
-When doing delayed allocation, if the allocation size is for a
-maximally sized extent, extent size alignment can push it over this
-limit. This results in an assert failure in xfs_bmbt_set_allf() as
-the extent length is too large to find in the extent record.
+> No, it has never worked properly.  Also, I want to stress that I am only having
+> performance issues with one logical volume, the others seem fine.
 
-Fix this by ensuring that we allow for space that extent size
-alignment requires (up to 2 * (extsize -1) blocks as we have to
-handle both head and tail alignment) when limiting the maximum size
-of the extent.
+Then, logically, there is something different about this logical volume than the
+others.  All of them reside atop the same volume group, atop the same two
+physical RAID6 arrays, correct?  Since I'm not quite tired of playing dentist (yet):
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_bmap.c |   11 +++++++++++
- 1 files changed, 11 insertions(+), 0 deletions(-)
+1. Were all of the LVs created with the same parameters?  If so, can you
+demonstrate verification of this to us?
 
-diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
-index 2ad1daf..4901355 100644
---- a/fs/xfs/xfs_bmap.c
-+++ b/fs/xfs/xfs_bmap.c
-@@ -4492,6 +4492,17 @@ xfs_bmapi(
- 				/* Figure out the extent size, adjust alen */
- 				extsz = xfs_get_extsz_hint(ip);
- 				if (extsz) {
-+					/*
-+					 * make sure we don't exceed a single
-+					 * extent length when we align the
-+					 * extent by reducing length we are
-+					 * going to allocate by the maximum
-+					 * amount extent size aligment may
-+					 * require.
-+					alen = (xfs_extlen_t)XFS_FILBLKS_MIN(
-+							len,
-+						MAXEXTLEN - (2 * extsz - 1));
-+					 */
- 					error = xfs_bmap_extsize_align(mp,
- 							&got, &prev, extsz,
- 							rt, eof,
+2. Are all of them formatted with XFS?  Were all formatted with the same XFS
+parameters?  If so, can you demonstrate verification of this to us?
+
+3. Are you encrypting, at some level, the one LV that is showing low performance?
+
+Cory:  "The two arrays were added to a volume group and multiple logical volumes
+were created."
+
+4. Was this volume group preexisting?  Are there other storage devices in this
+volume group, or _only_ the RAID6 arrays?
+
+5. Have you attempted deleting and recreating the LV with the performance issue?
+
+6. How many total logical volumes are in this volume group?
+
+7. What Linux distribution are you using?  What kernel version?
+
+
+We are not magicians here Cory.  We need as much data from you as possible or we
+can't help you.  I thought I made this clear earlier.  You need to gather as
+much relevant data from that box as you can and present it here if you're
+serious about solving this issue.
+
+I get the feeling you just don't really care.  In which case, why did you even
+ask for help in the first place?  Troubleshooting this issue requires your
+_full_ participation and effort.
+
+In these situations, it is most often the OP who solves his/her own issue, after
+providing enough information here that we can point the OP in the right
+direction.  The key here is "providing enough information".
+
 -- 
-1.7.2.3
+Stan
 
 _______________________________________________
 xfs mailing list
