@@ -1,23 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0J4e3sM180619 for <xfs@oss.sgi.com>; Tue, 18 Jan 2011 22:40:03 -0600
+	p0J4TIfC179266 for <xfs@oss.sgi.com>; Tue, 18 Jan 2011 22:29:18 -0600
 Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C5A791621634
-	for <xfs@oss.sgi.com>; Tue, 18 Jan 2011 20:42:20 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 652481621768
+	for <xfs@oss.sgi.com>; Tue, 18 Jan 2011 20:31:35 -0800 (PST)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	IROxgYaGHLn77IrH for <xfs@oss.sgi.com>;
-	Tue, 18 Jan 2011 20:42:20 -0800 (PST)
-Date: Wed, 19 Jan 2011 15:42:18 +1100
+	TtLK4PDqQ9xWX5Ra for <xfs@oss.sgi.com>;
+	Tue, 18 Jan 2011 20:31:35 -0800 (PST)
+Received: from chute ([192.168.1.1] helo=disappointment)
+	by dastard with esmtp (Exim 4.72)
+	(envelope-from <dave@fromorbit.com>) id 1PfPhm-0007Eo-Ef
+	for xfs@oss.sgi.com; Wed, 19 Jan 2011 15:31:34 +1100
+Received: from dave by disappointment with local (Exim 4.72)
+	(envelope-from <dave@disappointment.disaster>) id 1PfPgJ-00044x-76
+	for xfs@oss.sgi.com; Wed, 19 Jan 2011 15:30:03 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs_bmap_add_extent_delay_real should set
-	br_startblock to nullstartblock
-Message-ID: <20110119044218.GM16267@dastard>
-References: <20110118203629.5531.1390.stgit@lady3jane.americas.sgi.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110118203629.5531.1390.stgit@lady3jane.americas.sgi.com>
+Subject: [PATCH 2/5] xfs: limit extent length for allocation to AG size
+Date: Wed, 19 Jan 2011 15:29:57 +1100
+Message-Id: <1295411400-15614-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1295411400-15614-1-git-send-email-david@fromorbit.com>
+References: <1295411400-15614-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,118 +30,110 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: xfs@oss.sgi.com, aelder@sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Jan 18, 2011 at 02:36:29PM -0600, Ben Myers wrote:
-> When filling in the middle of a previous delayed allocation in
-> xfs_bmap_add_extent_delay_real, set br_startblock of the new delay extent to
-> the right to nullstartblock instead of 0 before inserting the extent into the
-> ifork (xfs_iext_insert), rather than setting br_startblock afterward.
-> 
-> Adding the extent into the ifork with br_startblock=0 can lead to the extent
-> being copied into the btree by xfs_bmap_extent_to_btree if we happen to convert
-> from extents format to btree format before updating br_startblock with the
-> correct value.  The unexpected addition of this delay extent to the btree can
-> cause subsequent XFS_WANT_CORRUPTED_GOTO filesystem shutdown in several
-> xfs_bmap_add_extent_delay_real cases where we are converting a delay extent to
-> real and unexpectedly find an extent already inserted.  For example:
-> 
-> 911         case BMAP_LEFT_FILLING:
-> 912                 /*
-> 913                  * Filling in the first part of a previous delayed allocation.
-> 914                  * The left neighbor is not contiguous.
-> 915                  */
-> 916                 trace_xfs_bmap_pre_update(ip, idx, state, _THIS_IP_);
-> 917                 xfs_bmbt_set_startoff(ep, new_endoff);
-> 918                 temp = PREV.br_blockcount - new->br_blockcount;
-> 919                 xfs_bmbt_set_blockcount(ep, temp);
-> 920                 xfs_iext_insert(ip, idx, 1, new, state);
-> 921                 ip->i_df.if_lastex = idx;
-> 922                 ip->i_d.di_nextents++;
-> 923                 if (cur == NULL)
-> 924                         rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
-> 925                 else {
-> 926                         rval = XFS_ILOG_CORE;
-> 927                         if ((error = xfs_bmbt_lookup_eq(cur, new->br_startoff,
-> 928                                         new->br_startblock, new->br_blockcount,
-> 929                                         &i)))
-> 930                                 goto done;
-> 931                         XFS_WANT_CORRUPTED_GOTO(i == 0, done);
-> 
-> With the bogus extent in the btree we shutdown the filesystem at 931.  The
-> conversion from extents to btree format happens when the number of extents in
-> the inode increases above ip->i_df.if_ext_max.  xfs_bmap_extent_to_btree copies
-> extents from the ifork into the btree, ignoring all delalloc extents which are
-> denoted by br_startblock having some value of nullstartblock.
-> 
-> SGI-PV: 1013221
-> 
-> Signed-off-by: Ben Myers <bpm@sgi.com>
-> ---
->  fs/xfs/xfs_bmap.c |   11 ++++++-----
->  1 files changed, 6 insertions(+), 5 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
-> index 4111cd3..754259f 100644
-> --- a/fs/xfs/xfs_bmap.c
-> +++ b/fs/xfs/xfs_bmap.c
-> @@ -1040,13 +1040,14 @@ xfs_bmap_add_extent_delay_real(
->  		 * This case is avoided almost all the time.
->  		 */
->  		temp = new->br_startoff - PREV.br_startoff;
-> +		temp2 = PREV.br_startoff + PREV.br_blockcount - new_endoff;
->  		trace_xfs_bmap_pre_update(ip, idx, 0, _THIS_IP_);
-> -		xfs_bmbt_set_blockcount(ep, temp);
-> -		r[0] = *new;
-> -		r[1].br_state = PREV.br_state;
-> -		r[1].br_startblock = 0;
-> +		xfs_bmbt_set_blockcount(ep, temp); /* PREV becomes LEFT */
-> +		r[0] = *new;			   /* r[0] becomes MIDDLE */
-> +		r[1].br_state = PREV.br_state;     /* r[1] is RIGHT */
-> +		r[1].br_startblock = nullstartblock(
-> +				(int)xfs_bmap_worst_indlen(ip, temp2));
->  		r[1].br_startoff = new_endoff;
-> -		temp2 = PREV.br_startoff + PREV.br_blockcount - new_endoff;
->  		r[1].br_blockcount = temp2;
->  		xfs_iext_insert(ip, idx + 1, 2, &r[0], state);
->  		ip->i_df.if_lastex = idx + 1;
+From: Dave Chinner <dchinner@redhat.com>
 
-I'd still prefer that you replace r[?] with PREV/LEFT/RIGHT rather
-than the array notation to be consistent with the rest of the code,
-and add a comment something like this:
+Delayed allocation extents can be larger than AGs, so when trying to
+convert a large range we may scan every AG inside
+xfs_bmap_alloc_nullfb() trying to find an AG with a size larger than
+an AG. We should stop when we find the first AG with a maximum
+possible allocation size. This causes excessive CPU usage when there
+are lots of AGs.
 
-		/*
-		 * We start with:
-		 *
-		 * +ddddddddddddddddddddddddddddddddddddddddddddddddd+
-		 *         PREV @ idx
-		 *
-		 * and we are allocating:
-		 *                         +rrrrrrrrrrrrrrr+
-		 *                                new
-		 *
-		 * and we set it up for insertion as:
-		 *
-		 *     +ddddddddddddddddddd+rrrrrrrrrrrrrrr+ddddddddddddd+
-		 *                                new
-		 *         PREV @ idx        LEFT              RIGHT
-		 *                         inserted @ idx + 1
-		 */
+The same problem occurs when doing preallocation of a range larger
+than an AG.
 
-So that there is no ambiguity about the case being handled and how
-it is executed....
+Fix the problem by limiting real allocation lengths to the maximum
+that an AG can support. This means if we have empty AGs, we'll stop
+the search at the first of them. If there are no empty AGs, we'll
+still scan them all, but that is a different problem....
 
-Cheers,
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_bmap.c |   21 ++++++++++++++-------
+ 1 files changed, 14 insertions(+), 7 deletions(-)
 
-Dave.
+diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
+index 4111cd3..2ad1daf 100644
+--- a/fs/xfs/xfs_bmap.c
++++ b/fs/xfs/xfs_bmap.c
+@@ -2430,7 +2430,7 @@ xfs_bmap_btalloc_nullfb(
+ 		startag = ag = 0;
+ 
+ 	pag = xfs_perag_get(mp, ag);
+-	while (*blen < ap->alen) {
++	while (*blen < args->maxlen) {
+ 		if (!pag->pagf_init) {
+ 			error = xfs_alloc_pagf_init(mp, args->tp, ag,
+ 						    XFS_ALLOC_FLAG_TRYLOCK);
+@@ -2452,7 +2452,7 @@ xfs_bmap_btalloc_nullfb(
+ 			notinit = 1;
+ 
+ 		if (xfs_inode_is_filestream(ap->ip)) {
+-			if (*blen >= ap->alen)
++			if (*blen >= args->maxlen)
+ 				break;
+ 
+ 			if (ap->userdata) {
+@@ -2498,14 +2498,14 @@ xfs_bmap_btalloc_nullfb(
+ 	 * If the best seen length is less than the request
+ 	 * length, use the best as the minimum.
+ 	 */
+-	else if (*blen < ap->alen)
++	else if (*blen < args->maxlen)
+ 		args->minlen = *blen;
+ 	/*
+ 	 * Otherwise we've seen an extent as big as alen,
+ 	 * use that as the minimum.
+ 	 */
+ 	else
+-		args->minlen = ap->alen;
++		args->minlen = args->maxlen;
+ 
+ 	/*
+ 	 * set the failure fallback case to look in the selected
+@@ -2573,7 +2573,14 @@ xfs_bmap_btalloc(
+ 	args.tp = ap->tp;
+ 	args.mp = mp;
+ 	args.fsbno = ap->rval;
+-	args.maxlen = MIN(ap->alen, mp->m_sb.sb_agblocks);
++
++	/*
++	 * The requested extent can be larger than an AG, so trim the block
++	 * count back to the maximum sized extent in an AG. A typical empty AG
++	 * consumes 1 block for headers, 1 block for each btree root (3) and 4
++	 * blocks for the free list.
++	 */
++	args.maxlen = MIN(ap->alen, mp->m_sb.sb_agblocks - 8);
+ 	args.firstblock = ap->firstblock;
+ 	blen = 0;
+ 	if (nullfb) {
+@@ -2621,7 +2628,7 @@ xfs_bmap_btalloc(
+ 			/*
+ 			 * Adjust for alignment
+ 			 */
+-			if (blen > args.alignment && blen <= ap->alen)
++			if (blen > args.alignment && blen <= args.maxlen)
+ 				args.minlen = blen - args.alignment;
+ 			args.minalignslop = 0;
+ 		} else {
+@@ -2640,7 +2647,7 @@ xfs_bmap_btalloc(
+ 			 * of minlen+alignment+slop doesn't go up
+ 			 * between the calls.
+ 			 */
+-			if (blen > mp->m_dalign && blen <= ap->alen)
++			if (blen > mp->m_dalign && blen <= args.maxlen)
+ 				nextminlen = blen - mp->m_dalign;
+ 			else
+ 				nextminlen = args.minlen;
 -- 
-Dave Chinner
-david@fromorbit.com
+1.7.2.3
 
 _______________________________________________
 xfs mailing list
