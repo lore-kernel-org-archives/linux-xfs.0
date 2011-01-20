@@ -1,13 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0JHci9V242901 for <xfs@oss.sgi.com>; Wed, 19 Jan 2011 11:38:44 -0600
-Subject: [PATCH] xfs_bmap_add_extent_delay_real should set br_startblock to
-	nullstartblock
-From: Ben Myers <bpm@sgi.com>
-Date: Wed, 19 Jan 2011 11:41:58 -0600
-Message-ID: <20110119174158.28574.63968.stgit@lady3jane.americas.sgi.com>
+	p0K1VYg9008856 for <xfs@oss.sgi.com>; Wed, 19 Jan 2011 19:31:35 -0600
+Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 27B201623F9D
+	for <xfs@oss.sgi.com>; Wed, 19 Jan 2011 17:33:51 -0800 (PST)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	Z6DACADHxC5gmOo1 for <xfs@oss.sgi.com>;
+	Wed, 19 Jan 2011 17:33:51 -0800 (PST)
+Date: Thu, 20 Jan 2011 12:33:46 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Issues with delalloc->real extent allocation
+Message-ID: <20110120013346.GO16267@dastard>
+References: <20110114002900.GF16267@dastard> <20110114214334.GN28274@sgi.com>
+	<20110114235549.GI16267@dastard>
+	<20110118204752.GB28791@infradead.org>
+	<20110118231831.GZ28803@dastard>
+	<20110119120321.GC12941@infradead.org>
+	<20110119133147.GN16267@dastard>
+	<20110119135548.GA11502@infradead.org>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20110119135548.GA11502@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,104 +35,61 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: aelder@sgi.com
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: bpm@sgi.com, xfs@oss.sgi.com
 
-When filling in the middle of a previous delayed allocation in
-xfs_bmap_add_extent_delay_real, set br_startblock of the new delay extent to
-the right to nullstartblock instead of 0 before inserting the extent into the
-ifork (xfs_iext_insert), rather than setting br_startblock afterward.
+On Wed, Jan 19, 2011 at 08:55:48AM -0500, Christoph Hellwig wrote:
+> On Thu, Jan 20, 2011 at 12:31:47AM +1100, Dave Chinner wrote:
+> > > If we want to completely get rid of buffers heads things are a bit
+> > > more complicated.  It's doable as shown by the _nobh aops, but we'll
+> > > use quite a bit of per-block state that needs to be replaced by per-page
+> > > state,
+> > 
+> > Sure, or use a similar method to btrfs which stores dirty state bits
+> > in a separate extent tree. Worst case memory usage is still much
+> > less than a bufferhead per block...
+> 
+> I'm not sure need to track sub-page dirty state.  It only matters if we:
+> 
+>  a) have a file fragmented enough that it has multiple extents allocated
+>     inside a single page
+>  b) have enough small writes that just dirty parts of a page
+> 
+> with a good enough persistant preallocation a) should happen almost
+> never, while b) might be an issue, specially with setups of 64k
+> page size and 4k blocks (e.g. ppc64 enterprise distro configs)
 
-Adding the extent into the ifork with br_startblock=0 can lead to the extent
-being copied into the btree by xfs_bmap_extent_to_btree if we happen to convert
-from extents format to btree format before updating br_startblock with the
-correct value.  The unexpected addition of this delay extent to the btree can
-cause subsequent XFS_WANT_CORRUPTED_GOTO filesystem shutdown in several
-xfs_bmap_add_extent_delay_real cases where we are converting a delay extent to
-real and unexpectedly find an extent already inserted.  For example:
+Right - case a) could probably be handled by making the page size
+an implicit extsize hint so we always try to minimise sub-page
+fragmentation during allocation.
 
-911         case BMAP_LEFT_FILLING:
-912                 /*
-913                  * Filling in the first part of a previous delayed allocation.
-914                  * The left neighbor is not contiguous.
-915                  */
-916                 trace_xfs_bmap_pre_update(ip, idx, state, _THIS_IP_);
-917                 xfs_bmbt_set_startoff(ep, new_endoff);
-918                 temp = PREV.br_blockcount - new->br_blockcount;
-919                 xfs_bmbt_set_blockcount(ep, temp);
-920                 xfs_iext_insert(ip, idx, 1, new, state);
-921                 ip->i_df.if_lastex = idx;
-922                 ip->i_d.di_nextents++;
-923                 if (cur == NULL)
-924                         rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
-925                 else {
-926                         rval = XFS_ILOG_CORE;
-927                         if ((error = xfs_bmbt_lookup_eq(cur, new->br_startoff,
-928                                         new->br_startblock, new->br_blockcount,
-929                                         &i)))
-930                                 goto done;
-931                         XFS_WANT_CORRUPTED_GOTO(i == 0, done);
+It's case b) that I'm mainly worried about, esp. w.r.t the 64k page
+size on ia64/ppc. If we only track a single dirty bit in the page,
+then every sub-page, non-appending write to an uncached region of a
+file becomes a RMW cycle to initialise the areas around the write
+correctly. The question is whether we care about this enough given
+that we return at least PAGE_SIZE in stat() to tell applications the
+optimal IO size to avoid RMW cycles.
 
-With the bogus extent in the btree we shutdown the filesystem at 931.  The
-conversion from extents to btree format happens when the number of extents in
-the inode increases above ip->i_df.if_ext_max.  xfs_bmap_extent_to_btree copies
-extents from the ifork into the btree, ignoring all delalloc extents which are
-denoted by br_startblock having some value of nullstartblock.
+Given that XFS is aimed towards optimising for the large file/large
+IO/high throughput type of application, I'm comfortable with saying
+that avoiding sub-page writes for optimal throughput IO is an
+application problem and going from there. Especially considering
+that stuff like rsync and untarring kernel tarballs are all
+appending writes so won't take any performance hit at all...
 
-SGI-PV: 1013221
+And if we only do IO on whole pages (i.e regardless of block size)
+.writepage suddenly becomes a lot simpler, as well as being trivial
+to implement our own .readpage/.readpages....
 
-Signed-off-by: Ben Myers <bpm@sgi.com>
----
- fs/xfs/xfs_bmap.c |   33 +++++++++++++++++++++++++--------
- 1 files changed, 25 insertions(+), 8 deletions(-)
+What do people think about this?
 
-diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
-index 4111cd3..c1db779 100644
---- a/fs/xfs/xfs_bmap.c
-+++ b/fs/xfs/xfs_bmap.c
-@@ -1038,17 +1038,34 @@ xfs_bmap_add_extent_delay_real(
- 		 * Filling in the middle part of a previous delayed allocation.
- 		 * Contiguity is impossible here.
- 		 * This case is avoided almost all the time.
-+		 *
-+		 * We start with a delayed allocation:
-+		 *
-+		 * +ddddddddddddddddddddddddddddddddddddddddddddddddddddddd+
-+		 *  PREV @ idx
-+		 *
-+	         * and we are allocating:
-+		 *                     +rrrrrrrrrrrrrrrrr+	 
-+		 *			      new
-+		 *
-+		 * and we set it up for insertion as:
-+		 * +ddddddddddddddddddd+rrrrrrrrrrrrrrrrr+ddddddddddddddddd+
-+		 *                            new
-+		 *  PREV @ idx          LEFT              RIGHT
-+		 *                      inserted at idx + 1 
- 		 */
- 		temp = new->br_startoff - PREV.br_startoff;
--		trace_xfs_bmap_pre_update(ip, idx, 0, _THIS_IP_);
--		xfs_bmbt_set_blockcount(ep, temp);
--		r[0] = *new;
--		r[1].br_state = PREV.br_state;
--		r[1].br_startblock = 0;
--		r[1].br_startoff = new_endoff;
- 		temp2 = PREV.br_startoff + PREV.br_blockcount - new_endoff;
--		r[1].br_blockcount = temp2;
--		xfs_iext_insert(ip, idx + 1, 2, &r[0], state);
-+		trace_xfs_bmap_pre_update(ip, idx, 0, _THIS_IP_);
-+		xfs_bmbt_set_blockcount(ep, temp);	/* truncate PREV */
-+		LEFT = *new;
-+		RIGHT.br_state = PREV.br_state;	
-+		RIGHT.br_startblock = nullstartblock(
-+				(int)xfs_bmap_worst_indlen(ip, temp2));
-+		RIGHT.br_startoff = new_endoff;
-+		RIGHT.br_blockcount = temp2;
-+		/* insert LEFT (r[0]) and RIGHT (r[1]) at the same time */
-+		xfs_iext_insert(ip, idx + 1, 2, &LEFT, state);
- 		ip->i_df.if_lastex = idx + 1;
- 		ip->i_d.di_nextents++;
- 		if (cur == NULL)
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
