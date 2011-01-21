@@ -1,22 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0L0k19x178394 for <xfs@oss.sgi.com>; Thu, 20 Jan 2011 18:46:02 -0600
+	p0L1vYc1188746 for <xfs@oss.sgi.com>; Thu, 20 Jan 2011 19:57:34 -0600
 Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 444771036FCF
-	for <xfs@oss.sgi.com>; Thu, 20 Jan 2011 16:48:19 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A101727534F
+	for <xfs@oss.sgi.com>; Thu, 20 Jan 2011 17:59:53 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	w88lc86WbFPDkl85 for <xfs@oss.sgi.com>;
-	Thu, 20 Jan 2011 16:48:19 -0800 (PST)
-Date: Fri, 21 Jan 2011 11:48:16 +1100
+	q7G9CJinnGqhcZ6U for <xfs@oss.sgi.com>;
+	Thu, 20 Jan 2011 17:59:53 -0800 (PST)
+Date: Fri, 21 Jan 2011 12:59:40 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: allocsize mount option
-Message-ID: <20110121004816.GW16267@dastard>
-References: <3F5ACD12257C714E9C0535D0A83917180288FB@SC-MBX02-2.TheFacebook.com>
+Subject: Re: Issues with delalloc->real extent allocation
+Message-ID: <20110121015940.GX16267@dastard>
+References: <20110114002900.GF16267@dastard> <20110114214334.GN28274@sgi.com>
+	<20110114235549.GI16267@dastard>
+	<20110118204752.GB28791@infradead.org>
+	<20110118231831.GZ28803@dastard>
+	<20110119120321.GC12941@infradead.org>
+	<20110119133147.GN16267@dastard>
+	<20110119135548.GA11502@infradead.org>
+	<20110120013346.GO16267@dastard>
+	<20110120111612.GA14571@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <3F5ACD12257C714E9C0535D0A83917180288FB@SC-MBX02-2.TheFacebook.com>
+In-Reply-To: <20110120111612.GA14571@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,96 +33,62 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Peter Vajgel <pv@fb.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: bpm@sgi.com, xfs@oss.sgi.com
 
-T24gVGh1LCBKYW4gMjAsIDIwMTEgYXQgMDg6NDE6MTlQTSArMDAwMCwgUGV0ZXIgVmFqZ2VsIHdy
-b3RlOgo+IFdlIHdyaXRlIGFib3V0IDEwMCAxMDBHQiBmaWxlcyBpbnRvIGEgc2luZ2xlIDEwVEIg
-dm9sdW1lIHdpdGggeGZzLgo+IFdlIGFyZSB1c2luZyBhbGxvY3NpemU9MWcgdG8gbGltaXQgdGhl
-IGZyYWdtZW50YXRpb24gd2l0aCBhIGdyZWF0Cj4gc3VjY2Vzcy4gV2UgYWxzbyBuZWVkIHRvIHJl
-c2VydmUgc29tZSBzcGFjZSAofjIwMEdCKSBvbiBlYWNoCj4gZmlsZXN5c3RlbSBmb3IgcHJvY2Vz
-c2luZyB0aGUgZmlsZXMgYW5kIHdyaXRpbmcgbmV3IHZlcnNpb25zIG9mCj4gdGhlIGZpbGVzLiBP
-bmNlIHdlIGhhdmUgb25seSAyMDBHQiBhdmFpbGFibGUgd2Ugc3RvcCB3cml0aW5nIHRvCj4gdGhl
-IGZpbGVzLiBIb3dldmVyIHdpdGggYWxsb2NzaXplIGl0J3Mgbm90IHRoYXQgZWFzeSAtIHdlIHNl
-ZSArLy0KPiAxMDBHQiBhZGRlZCBvciB0YWtlbiBkZXBlbmRpbmcgaWYgdGhlcmUgYXJlIHN0aWxs
-IHdyaXRlcyBnb2luZyBhbmQKPiBpZiB0aGUgZmlsZSB3YXMgcmVvcGVuZWQgLi4uIElzIHRoZXJl
-IGEgd2F5IHRvIHByb2dyYW1tYXRpY2FsbHkKPiBkaXNhYmxlIGFsbG9jc2l6ZSBzcGVjdWxhdGl2
-ZSBwcmVhbGxvY2F0aW9uIG9uY2Ugd2UgZXhjZWVkIGNlcnRhaW4KPiB0aHJlc2hvbGQgYW5kIGFs
-c28gcmV0dXJuIHRoZSBjdXJyZW50IHNwZWN1bGF0aXZlIHByZWFsbG9jYXRpb24KPiBiYWNrIHRv
-IHRoZSBmcmVlIHNwYWNlICh3aXRob3V0IGNsb3NpbmcgdGhlIGZpbGUpPwoKTm8gYW5kIG5vLgoK
-SG93ZXZlciwgaWYgeW91IHRha2UgYSBsb29rIGF0IHRoZSBuZXcgZHluYW1pYyBzcGVjdWFsdGl2
-ZQphbGxvY2F0aW9uIGNvZGUgaW4gMi42LjM4LXJjMSwgaXQgc2NhbGVzIGJhY2sgdGhlIHByZWFs
-bG9jYXRpb24gYXMKRU5PU1BDIGlzIGFwcHJvYWNoZWQgYnV0IGRvZXNuJ3QgZG8gYW55IHJlY2xh
-aW1pbmcgb2YgZXhpc3RpbmcKcHJlYWxsb2NhdGlvbi4gSXQgd2lsbCBhbHNvIHByZWFsbG9jYXRl
-cyBtdWNoIGxhcmdlciBleHRlbnRzIHNvIGl0Cm1heSBub3QgYmUgaWRlYWwgZm9yIHlvdSwgZWl0
-aGVyLiBJJ3ZlIGFwcGVuZGVkIHRoZSBjb21taXQgbWVzc2FnZQpiZWxvdy4KCkNoZWVycywKCkRh
-dmUuCi0tIApEYXZlIENoaW5uZXIKZGF2aWRAZnJvbW9yYml0LmNvbQoKY29tbWl0IDA1NTM4OGEz
-MTg4ZjU2Njc2YzIxZTkyOTYyZmMzNjZhYzhiNWNiNzIKQXV0aG9yOiBEYXZlIENoaW5uZXIgPGRj
-aGlubmVyQHJlZGhhdC5jb20+CkRhdGU6ICAgVHVlIEphbiA0IDExOjM1OjAzIDIwMTEgKzExMDAK
-CiAgICB4ZnM6IGR5bmFtaWMgc3BlY3VsYXRpdmUgRU9GIHByZWFsbG9jYXRpb24KICAgIAogICAg
-Q3VycmVudGx5IHRoZSBzaXplIG9mIHRoZSBzcGVjdWxhdGl2ZSBwcmVhbGxvY2F0aW9uIGR1cmlu
-ZyBkZWxheWVkCiAgICBhbGxvY2F0aW9uIGlzIGZpeGVkIGJ5IGVpdGhlciB0aGUgYWxsb2NzaXpl
-IG1vdW50IG9wdGlvbiBvZiBhCiAgICBkZWZhdWx0IHNpemUuIFdlIGFyZSBzZWVpbmcgYSBsb3Qg
-b2YgY2FzZXMgd2hlcmUgd2UgbmVlZCB0bwogICAgcmVjb21tZW5kIHVzaW5nIHRoZSBhbGxvY3Np
-emUgbW91bnQgb3B0aW9uIHRvIHByZXZlbnQgZnJhZ21lbnRhdGlvbgogICAgd2hlbiBidWZmZXJl
-ZCB3cml0ZXMgbGFuZCBpbiB0aGUgc2FtZSBBRy4KICAgIAogICAgUmF0aGVyIHRoYW4gdXNpbmcg
-YSBmaXhlZCBwcmVhbGxvY2F0aW9uIHNpemUgYnkgZGVmYXVsdCAodXAgdG8gNjRrKSwKICAgIG1h
-a2UgaXQgZHluYW1pYyBieSBiYXNpbmcgaXQgb24gdGhlIGN1cnJlbnQgaW5vZGUgc2l6ZS4gVGhh
-dCB3YXkgdGhlCiAgICBFT0YgcHJlYWxsb2NhdGlvbiB3aWxsIGluY3JlYXNlIGFzIHRoZSBmaWxl
-IHNpemUgaW5jcmVhc2VzLiAgSGVuY2UKICAgIGZvciBzdHJlYW1pbmcgd3JpdGVzIHdlIGFyZSBt
-dWNoIG1vcmUgbGlrZWx5IHRvIGdldCBsYXJnZQogICAgcHJlYWxsb2NhdGlvbnMgZXhhY3RseSB3
-aGVuIHdlIG5lZWQgaXQgdG8gcmVkdWNlIGZyYWdlbWVudGF0aW9uLgogICAgCiAgICBGb3IgZGVm
-YXVsdCBzZXR0aW5ncywgdGhlIHNpemUgb2YgdGhlIGluaXRpYWwgZXh0ZW50cyBpcyBkZXRlcm1p
-bmVkCiAgICBieSB0aGUgbnVtYmVyIG9mIHBhcmFsbGVsIHdyaXRlcnMgYW5kIHRoZSBhbW91bnQg
-b2YgbWVtb3J5IGluIHRoZQogICAgbWFjaGluZS4gRm9yIDRHQiBSQU0gYW5kIDQgY29uY3VycmVu
-dCAzMkdCIGZpbGUgd3JpdGVzOgogICAgCiAgICBFWFQ6IEZJTEUtT0ZGU0VUICAgICAgICAgICBC
-TE9DSy1SQU5HRSAgICAgICAgICBBRyBBRy1PRkZTRVQgICAgICAgICAgICAgICAgIFQKICAgICAg
-IDA6IFswLi4xMDQ4NTc1XTogICAgICAgICAxMDQ4NjcyLi4yMDk3MjQ3ICAgICAgMCAoMTA0ODY3
-Mi4uMjA5NzI0NykgICAgICAxMAogICAgICAgMTogWzEwNDg1NzYuLjIwOTcxNTFdOiAgIDUyNDI5
-NzYuLjYyOTE1NTEgICAgICAwICg1MjQyOTc2Li42MjkxNTUxKSAgICAgIDEwCiAgICAgICAyOiBb
-MjA5NzE1Mi4uNDE5NDMwM106ICAgMTI1ODMwMDguLjE0NjgwMTU5ICAgIDAgKDEyNTgzMDA4Li4x
-NDY4MDE1OSkgICAgMjAKICAgICAgIDM6IFs0MTk0MzA0Li44Mzg4NjA3XTogICAyNTE2NTkyMC4u
-MjkzNjAyMjMgICAgMCAoMjUxNjU5MjAuLjI5MzYwMjIzKSAgICA0MQogICAgICAgNDogWzgzODg2
-MDguLjE2Nzc3MjE1XTogIDU4NzIwMzUyLi42NzEwODk1OSAgICAwICg1ODcyMDM1Mi4uNjcxMDg5
-NTkpICAgIDgzCiAgICAgICA1OiBbMTY3NzcyMTYuLjMzNTU0NDIzXTogMTE3NDQwNTg0Li4xMzQy
-MTc3OTEgIDAgKDExNzQ0MDU4NC4uMTM0MjE3NzkxKSAxNjcKICAgICAgIDY6IFszMzU1NDQyNC4u
-NTAzMzE1MTFdOiAxODQ1NDkwNTYuLjIwMTMyNjE0MyAgMCAoMTg0NTQ5MDU2Li4yMDEzMjYxNDMp
-IDE2NwogICAgICAgNzogWzUwMzMxNTEyLi42NzEwODU5OV06IDI1MTY1NzQwOC4uMjY4NDM0NDk1
-ICAwICgyNTE2NTc0MDguLjI2ODQzNDQ5NSkgMTY3CiAgICAKICAgIGFuZCBmb3IgMTYgY29uY3Vy
-cmVudCAxNkdCIGZpbGUgd3JpdGVzOgogICAgCiAgICAgRVhUOiBGSUxFLU9GRlNFVCAgICAgICAg
-ICAgQkxPQ0stUkFOR0UgICAgICAgICAgQUcgQUctT0ZGU0VUICAgICAgICAgICAgICAgICAKICAg
-ICAgIDA6IFswLi4yNjIxNDNdOiAgICAgICAgICAyNDkwNDcyLi4yNzUyNjE1ICAgICAgMCAoMjQ5
-MDQ3Mi4uMjc1MjYxNSkgICAgICAgMgogICAgICAgMTogWzI2MjE0NC4uNTI0Mjg3XTogICAgIDYy
-OTE1NjAuLjY1NTM3MDMgICAgICAwICg2MjkxNTYwLi42NTUzNzAzKSAgICAgICAyCiAgICAgICAy
-OiBbNTI0Mjg4Li4xMDQ4NTc1XTogICAgMTM2MzE1OTIuLjE0MTU1ODc5ICAgIDAgKDEzNjMxNTky
-Li4xNDE1NTg3OSkgICAgIDUKICAgICAgIDM6IFsxMDQ4NTc2Li4yMDk3MTUxXTogICAzMDQwODgw
-OC4uMzE0NTczODMgICAgMCAoMzA0MDg4MDguLjMxNDU3MzgzKSAgICAxMAogICAgICAgNDogWzIw
-OTcxNTIuLjQxOTQzMDNdOiAgIDUyNDI4OTA0Li41NDUyNjA1NSAgICAwICg1MjQyODkwNC4uNTQ1
-MjYwNTUpICAgIDIwCiAgICAgICA1OiBbNDE5NDMwNC4uODM4ODYwN106ICAgMTA0ODU3NzA0Li4x
-MDkwNTIwMDcgIDAgKDEwNDg1NzcwNC4uMTA5MDUyMDA3KSAgNDEKICAgICAgIDY6IFs4Mzg4NjA4
-Li4xNjc3NzIxNV06ICAyMDk3MTUzMDQuLjIxODEwMzkxMSAgMCAoMjA5NzE1MzA0Li4yMTgxMDM5
-MTEpICA4MwogICAgICAgNzogWzE2Nzc3MjE2Li4zMzU1NDQyM106IDQ1Mjk4NDg0OC4uNDY5NzYy
-MDU1ICAwICg0NTI5ODQ4NDguLjQ2OTc2MjA1NSkgMTY3CiAgICAKICAgIEJlY2F1c2UgaXQgaXMg
-aGFyZCB0byB0YWtlIGJhY2sgc3BlY3VhbHRpdmUgcHJlYWxsb2NhdGlvbiwgY2FzZXMKICAgIHdo
-ZXJlIHRoZXJlIGFyZSBsYXJnZSBzbG93IGdyb3dpbmcgbG9nIGZpbGVzIG9uIGEgbmVhcmx5IGZ1
-bGwKICAgIGZpbGVzeXN0ZW0gbWF5IGNhdXNlIHByZW1hdHVyZSBFTk9TUEMuIEhlbmNlIGFzIHRo
-ZSBmaWxlc3lzdGVtIG5lYXJzCiAgICBmdWxsLCB0aGUgbWF4aW11bSBkeW5hbWljIHByZWFsbG9j
-IHNpemUg0ZZzIHJlZHVjZWQgYWNjb3JkaW5nIHRvIHRoaXMKICAgIHRhYmxlIChiYXNlZCBvbiA0
-ayBibG9jayBzaXplKToKICAgIAogICAgZnJlZXNwYWNlICAgICAgIG1heCBwcmVhbGxvYyBzaXpl
-CiAgICAgID41JSAgICAgICAgICAgICBmdWxsIGV4dGVudCAoOEdCKQogICAgICA0LTUlICAgICAg
-ICAgICAgIDJHQiAoOEdCID4+IDIpCiAgICAgIDMtNCUgICAgICAgICAgICAgMUdCICg4R0IgPj4g
-MykKICAgICAgMi0zJSAgICAgICAgICAgNTEyTUIgKDhHQiA+PiA0KQogICAgICAxLTIlICAgICAg
-ICAgICAyNTZNQiAoOEdCID4+IDUpCiAgICAgIDwxJSAgICAgICAgICAgIDEyOE1CICg4R0IgPj4g
-NikKICAgIAogICAgVGhpcyBzaG91bGQgcmVkdWNlIHRoZSBhbW91bnQgb2Ygc3BhY2UgaGVsZCBp
-biBzcGVjdWxhdGl2ZQogICAgcHJlYWxsb2NhdGlvbiBmb3Igc3VjaCBjYXNlcy4KICAgIAogICAg
-VGhlIGFsbG9jc2l6ZSBtb3VudCBvcHRpb24gdHVybnMgb2ZmIHRoZSBkeW5hbWljIGJlaGF2aW91
-ciBhbmQgZml4ZXMKICAgIHRoZSBwcmVhbGxvYyBzaXplIHRvIHdoYXRldmVyIHRoZSBtb3VudCBv
-cHRpb24gc3BlY2lmaWVzLiBpLmUuIHRoZQogICAgYmVoYXZpb3VyIGlzIHVuY2hhbmdlZC4KICAg
-IAogICAgU2lnbmVkLW9mZi1ieTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgoK
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxp
-bmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGlu
-Zm8veGZzCg==
+On Thu, Jan 20, 2011 at 06:16:12AM -0500, Christoph Hellwig wrote:
+> On Thu, Jan 20, 2011 at 12:33:46PM +1100, Dave Chinner wrote:
+> > It's case b) that I'm mainly worried about, esp. w.r.t the 64k page
+> > size on ia64/ppc. If we only track a single dirty bit in the page,
+> > then every sub-page, non-appending write to an uncached region of a
+> > file becomes a RMW cycle to initialise the areas around the write
+> > correctly. The question is whether we care about this enough given
+> > that we return at least PAGE_SIZE in stat() to tell applications the
+> > optimal IO size to avoid RMW cycles.
+> 
+> Note that this generally is only true for the first write into the
+> region - after that we'll have the rest read into the cache.  But
+> we also have the same issue for appending writes if they aren't
+> page aligned.
+
+True - I kind of implied that by saying RMW cycles are limited to
+"uncached regions", but you've stated in a much clearer and easier
+to understand way. ;)
+
+> > And if we only do IO on whole pages (i.e regardless of block size)
+> > .writepage suddenly becomes a lot simpler, as well as being trivial
+> > to implement our own .readpage/.readpages....
+> 
+> I don't think it simplifies writepage a lot.  All the buffer head
+> handling goes away, but we'll still need to do xfs_bmapi calls at
+> block size granularity.  Why would you want to replaced the
+> readpage/readpages code?  The generic mpage helpers for it do just fine.
+
+When I went through the mpage code I found there were cases that it
+would attached bufferheads to pages or assume PagePrivate() contains
+a bufferhead list. e.g. If there are multiple holes in the page, it
+will fall through to block_read_full_page() which makes this
+assumption.  If we want/need to keep any of our own state on
+PagePrivate(), we cannot use any function that assumes PagePrivate()
+is used to hold bufferheads for the page.
+
+Quite frankly, a simple extent mapping loop like we do for
+.writepage is far simpler than what mpage_readpages does. This is
+what btrfs does (extent_readpages/__extent_read_full_page), and that
+is far easier to follow and understand than mpage_do_readpage()....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
