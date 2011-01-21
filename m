@@ -1,29 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0L2nOZn196658 for <xfs@oss.sgi.com>; Thu, 20 Jan 2011 20:49:24 -0600
+	p0L5Ps5e221614 for <xfs@oss.sgi.com>; Thu, 20 Jan 2011 23:25:55 -0600
 Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1D37719FAFAD
-	for <xfs@oss.sgi.com>; Thu, 20 Jan 2011 18:51:43 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2734B148BB33
+	for <xfs@oss.sgi.com>; Thu, 20 Jan 2011 21:28:13 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	MJd6Xy2luF8hlaPv for <xfs@oss.sgi.com>;
-	Thu, 20 Jan 2011 18:51:43 -0800 (PST)
-Date: Fri, 21 Jan 2011 13:51:40 +1100
+	AAG8DmchX09D8Cum for <xfs@oss.sgi.com>;
+	Thu, 20 Jan 2011 21:28:13 -0800 (PST)
+Date: Fri, 21 Jan 2011 16:28:02 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Issues with delalloc->real extent allocation
-Message-ID: <20110121025140.GY16267@dastard>
-References: <20110114002900.GF16267@dastard> <20110114214334.GN28274@sgi.com>
-	<20110114235549.GI16267@dastard>
-	<20110118204752.GB28791@infradead.org>
-	<20110118231831.GZ28803@dastard>
-	<20110119120321.GC12941@infradead.org>
-	<20110119133147.GN16267@dastard>
-	<20110119135548.GA11502@infradead.org>
-	<20110120013346.GO16267@dastard> <20110120144503.GA7225@sgi.com>
+Subject: [PATCH] Re: XFS deadlock in 2.6.37
+Message-ID: <20110121052802.GA16267@dastard>
+References: <alpine.DEB.2.00.1101201702260.29071@callisto.malc.org.uk>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110120144503.GA7225@sgi.com>
+In-Reply-To: <alpine.DEB.2.00.1101201702260.29071@callisto.malc.org.uk>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,73 +25,92 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Geoffrey Wehrman <gwehrman@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, bpm@sgi.com, xfs@oss.sgi.com
+To: Malcolm Scott <lkml@malc.org.uk>
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-T24gVGh1LCBKYW4gMjAsIDIwMTEgYXQgMDg6NDU6MDNBTSAtMDYwMCwgR2VvZmZyZXkgV2Vocm1h
-biB3cm90ZToKPiBPbiBUaHUsIEphbiAyMCwgMjAxMSBhdCAxMjozMzo0NlBNICsxMTAwLCBEYXZl
-IENoaW5uZXIgd3JvdGU6Cj4gfCBHaXZlbiB0aGF0IFhGUyBpcyBhaW1lZCB0b3dhcmRzIG9wdGlt
-aXNpbmcgZm9yIHRoZSBsYXJnZSBmaWxlL2xhcmdlCj4gfCBJTy9oaWdoIHRocm91Z2hwdXQgdHlw
-ZSBvZiBhcHBsaWNhdGlvbiwgSSdtIGNvbWZvcnRhYmxlIHdpdGggc2F5aW5nCj4gfCB0aGF0IGF2
-b2lkaW5nIHN1Yi1wYWdlIHdyaXRlcyBmb3Igb3B0aW1hbCB0aHJvdWdocHV0IElPIGlzIGFuCj4g
-fCBhcHBsaWNhdGlvbiBwcm9ibGVtIGFuZCBnb2luZyBmcm9tIHRoZXJlLiBFc3BlY2lhbGx5IGNv
-bnNpZGVyaW5nCj4gfCB0aGF0IHN0dWZmIGxpa2UgcnN5bmMgYW5kIHVudGFycmluZyBrZXJuZWwg
-dGFyYmFsbHMgYXJlIGFsbAo+IHwgYXBwZW5kaW5nIHdyaXRlcyBzbyB3b24ndCB0YWtlIGFueSBw
-ZXJmb3JtYW5jZSBoaXQgYXQgYWxsLi4uCj4gCj4gSSBhZ3JlZS4gIEkgZG8gbm90IGV4cGVjdCBz
-eXN0ZW1zIHdpdGggNjRLIHBhZ2VzIHRvIGJlIHVzZWQgZm9yIHNpbmdsZQo+IGJpdCBtYW5pcHVs
-YXRpb25zLiAgSG93ZXZlciwgSSBkbyBzZWUgYSBjb3VwbGUgb2YgcG90ZW50aWFsIHByb2JsZW1z
-Lgo+IAo+IFRoZSBvbmUgcGxhY2Ugd2hlcmUgcGFnZSBzaXplIEkvTyBtYXkgbm90IHdvcmsgdGhv
-dWdoIGlzIGZvciBhbiBETUFQSS9IU00KPiAoRE1GKSBtYW5hZ2VkIGZpbGVzeXN0ZW0gd2hlcmUg
-c29tZSBibG9ja3MgYXJlIG1hbmFnZWQgb24gbmVhci1saW5lIG1lZGlhLgo+IFRoZSBETUFQSSBu
-ZWVkcyB0byBiZSBhYmxlIHRvIHJlbW92ZSBhbmQgcmVzdG9yZSBleHRlbnRzIG9uIGEgZmlsZXN5
-c3RlbQo+IGJsb2NrIGJvdW5kYXJ5LCBub3QgYSBwYWdlIGJvdW5kYXJ5LgoKRE1BUEkgaXMgc3Rp
-bGwgZnJlZSB0byByZW1vdmUgZXh0ZW50cyBhdCB3aGF0ZXZlciBib3VuZGFyeSBpdCB3YW50cy4K
-VGhlIG9ubHkgZGlmZmVyZW5jZSBpcyB0aGF0IGl0IHdvdWxkIGJlIGFza2VkIHRvIHJlc3RvcmUg
-ZXh0ZW50cyB0bwp0aGUgcGFnZSBib3VuZGFyeSB0aGUgd3JpdGUgY292ZXJzIHJhdGhlciB0aGFu
-IGEgYmxvY2sgYm91bmRhcnkuIFRoZQphbGxvY2F0aW9uIGFuZCBkaXJlY3QgSU8gYm91bmRhcmll
-cyBkbyBub3QgY2hhbmdlLCBzbyB0aGUgb25seSB0aGluZwp0aGF0IG5lZWRzIHRvIGNoYW5nZSBp
-cyB0aGUgcmFuZ2UgdGhhdCBETUFQSSBpcyB0b2xkIHRoYXQgdGhlCnJlYWQvd3JpdGUgaXMgZ29p
-bmcgdG8gY292ZXIuLi4uCgo+IFRoZSBvdGhlciBkb3duc2lkZSBpcyB0aGF0IGZvciBzcGFyc2Ug
-ZmlsZXMsIHdlIGNvdWxkIGVuZCB1cCBhbGxvY2F0aW5nCj4gc3BhY2UgZm9yIHplcm8gZmlsbGVk
-IGJsb2Nrcy4gIFRoZXJlIG1heSBiZSBzb21lIHdvcmtsb2FkcyB3aGVyZQo+IHNpZ25pZmljYW50
-IHF1YW50aXRpZXMgb2Ygc3BhY2UgYXJlIHdhc3RlZC4KClllcywgdGhhdCBpcyBwb3NzaWJsZSwg
-dGhvdWdoIG9uIHRoZSBvdGhlciBoYW5kIGlzIHdpbGwgcmVkdWNlIHdvcnN0CmNhc2UgZnJhZ21l
-bnRhdGlvbiBvZiBwYXRob2xvZ2ljYWwgc3BhcnNlIGZpbGUgZmlsbGluZyBhcHBsaWNhdGlvbnMu
-CmUuZy4gb3V0LW9mLWNvcmUgc29sdmVycyB0aGF0IGRvIHN0cmlkZWQgd3JpdGVzIGFjcm9zcyB0
-aGUgZmlsZSB0bwp3cml0ZSB0aGUgZmlyc3QgY29sdW1uIGluIHRoZSByZXN1bHQgbWF0cml4IGFz
-IGl0IGlzIGNhbGN1bGF0ZWQsCnRoZW4gdGhlIHNlY29uZCBjb2x1bW4sIHRoZW4gdGhlIHRoaXJk
-IC4uLiAgdW50aWwgYWxsIGNvbHVtbnMgYXJlCndyaXR0ZW4uCgotLS0tCgpSZWFsaXN0aWNhbGx5
-LCBmb3IgZXZlcnkgZGlzYWR2YW50YWdlIG9yIGFkdmFudGFnZSB3ZSBjYW4gZW51bWVyYXRlCmZv
-ciBzcGVjaWZpYyB3b3JrbG9hZHMsIEkgdGhpbmsgb25lIG9mIHVzIHdpbGwgYmUgYWJsZSB0byBj
-b21lIHVwCndpdGggYSBjb3VudGVyIGV4YW1wbGUgdGhhdCBzaG93cyB0aGUgb3Bwb3NpdGUgb2Yg
-dGhlIG9yaWdpbmFsCnBvaW50LiBJIGRvbid0IHRoaW5rIHRoaXMgc29ydCBvZiBhcmd1bWVudCBp
-cyBwYXJ0aWN1bGFybHkKcHJvZHVjdGl2ZS4gOi8KCkluc3RlYWQsIEkgbG9vayBhdCBpdCBmcm9t
-IHRoZSBwb2ludCBvZiB2aWV3IHRoYXQgYSA2NGsgSU8gaXMgbGl0dGxlCnNsb3dlciB0aGFuIGEg
-NGsgSU8gc28gc3VjaCBhIGNoYW5nZSB3b3VsZCBub3QgbWFrZSBtdWNoIGRpZmZlcmVuY2UKdG8g
-cGVyZm9ybWFuY2UuIEFuZCBnaXZlbiB0aGF0IHRlcmFieXRlcyBvZiBzdG9yYWdlIGNhcGFjaXR5
-IGlzCl9jaGVhcF8gdGhlc2UgZGF5cyAoYW5kIGdldHRpbmcgY2hlYXBlciBhbGwgdGhlIHRpbWUp
-LCB0aGUgZXh0cmEKc3BhY2Ugb2YgdXNpbmcgNjRrIGluc3RlYWQgb2YgNGsgZm9yIHNwYXJzZSBi
-bG9ja3MgaXNuJ3QgYSBiaWcgZGVhbC4KCldoZW4gSSBjb21iaW5lIHRoYXQgd2l0aCBteSBleHBl
-cmllbmNlIGZyb20gU0dJIHdoZXJlIHdlIGFsd2F5cwpyZWNvbW1lbmRlZCB1c2luZyBmaWxlc3lz
-dGVtcyBibG9jayBzaXplID09IHBhZ2Ugc2l6ZSBmb3IgYmVzdCBJTwpwZXJmb3JtYW5jZSBvbiBI
-UEMgc2V0dXBzLCB0aGVyZSdzIGEgZmFpciBhcmd1bWVudCB0aGF0IHVzaW5nIHBhZ2UKc2l6ZSBl
-eHRlbnRzIGZvciBzbWFsbCBzcGFyc2Ugd3JpdGVzIGlzbid0IGEgcHJvYmxlbSB3ZSByZWFsbHkg
-bmVlZAp0byBjYXJlIGFib3V0LgoK0IYnZCBwcmVmZXIgdG8gZGVzaWduIGZvciB3aGVyZSB3ZSBl
-eHBlY3Qgc3RvcmFnZSB0byBiZSBpbiB0aGUgbmV4dApmZXcgeWVhcnMgZS5nLiAxMFRCIHNwaW5k
-bGVzLiBNaW5pbWlzaW5nIHNwYWNlIHVzYWdlIGlzIG5vdCBhIGJpZwpwcmlvcml0eSB3aGVuIHdl
-IGNvbnNpZGVyIHRoYXQgaW4gMi0zIHllYXJzIDEwMFRCIG9mIHN0b3JhZ2Ugd2lsbApjb3N0IGxl
-c3MgdGhhbiAkNTAwMCAoaXQncyBhYm91dCAkMTUtMjBrIHJpZ2h0IG5vdykuICBFdmVuIG9uCmRl
-c2t0b3BzIHdlJ3JlIGdvaW5nIHRvIGhhdmUgbW9yZSBjYXBhY2l0eSB0aGF0IHdlIGtub3cgd2hh
-dCB0byBkbwp3aXRoLCBzbyB0cmFkaW5nIG9mZiBzdG9yYWdlIHNwYWNlIGZvciBsb3dlciBtZW1v
-cnkgb3ZlcmhlYWQsIGxvd2VyCm1ldGFkYXRhIElPIG92ZXJoZWFkIGFuZCBsb3dlciBwb3RlbnRp
-YWwgZnJhZ21lbnRhdGlvbiBzZWVtcyBsaWtlCnRoZSByaWdodCB3YXkgdG8gbW92ZSBmb3J3YXJk
-IHRvIG1lLgoKRG9lcyB0aGF0IHNlZW0gbGlrZSBhIHJlYXNvbmFibGUgcG9zaXRpb24gdG8gdGFr
-ZSwgb3IgYXJlIHRoZXJlCm90aGVyIGZhY3RvcnMgdGhhdCB5b3UgdGhpbmsgSSBzaG91bGQgYmUg
-Y29uc2lkZXJpbmc/CgpDaGVlcnMsCgpEYXZlLgotLSAKRGF2ZSBDaGlubmVyCmRhdmlkQGZyb21v
-cmJpdC5jb20KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-CnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWls
-bWFuL2xpc3RpbmZvL3hmcwo=
+[cc xfs@os.sgi.com]
+
+On Thu, Jan 20, 2011 at 05:08:45PM +0000, Malcolm Scott wrote:
+> Hi all,
+> 
+> I've had the following deadlock happen twice on a 2.6.37 system with
+> several XFS filesystems (including root) and no swap (may be
+> relevant, considering that kswapd is one task involved here).  Some
+> minor filesystem corruption resulted (but maybe only because the
+> root fs couldn't be synced/umounted).
+> 
+> If you need any more info, please let me know.
+> 
+> --- first crash ---
+> 
+> [504603.250208] INFO: task kswapd0:37 blocked for more than 120 seconds.
+> [504603.261107] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> [504603.273465] kswapd0       D 0000000000000003     0    37      2 0x00000000
+> [504603.273473]  ffff88034428bc10 0000000000000046 ffff88034428bfd8 ffff88034428a000
+> [504603.273479]  0000000000013a80 ffff8803442903a0 ffff88034428bfd8 0000000000013a80
+> [504603.273483]  ffff88034572ad80 ffff880344290000 ffffffffffffff10 ffff880343a51e28
+> [504603.273488] Call Trace:
+> [504603.273500]  [<ffffffff815ce917>] __mutex_lock_slowpath+0xf7/0x180
+> [504603.273504]  [<ffffffff815ce303>] mutex_lock+0x23/0x50
+> [504603.273541]  [<ffffffffa00cf709>] xfs_qm_dqreclaim_one+0x29/0x350 [xfs]
+> [504603.273554]  [<ffffffffa00cfaed>] xfs_qm_shake_freelist+0x1d/0x40 [xfs]
+> [504603.273567]  [<ffffffffa00cfb69>] xfs_qm_shake+0x59/0x70 [xfs]
+> [504603.273573]  [<ffffffff8111d619>] shrink_slab+0x89/0x180
+> [504603.273577]  [<ffffffff81120420>] balance_pgdat+0x2b0/0x530
+> [504603.273580]  [<ffffffff811207df>] kswapd+0x13f/0x2b0
+> [504603.273585]  [<ffffffff81087d30>] ? autoremove_wake_function+0x0/0x40
+> [504603.273588]  [<ffffffff811206a0>] ? kswapd+0x0/0x2b0
+> [504603.273591]  [<ffffffff81087606>] kthread+0x96/0xa0
+> [504603.273596]  [<ffffffff8100cea4>] kernel_thread_helper+0x4/0x10
+> [504603.273599]  [<ffffffff81087570>] ? kthread+0x0/0xa0
+> [504603.273603]  [<ffffffff8100cea0>] ? kernel_thread_helper+0x0/0x10
+
+[snip]
+
+Looks like everything is hung up on the freelist lock. Can you
+test the patch below?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+xfs: fix dquot shaker deadlock
+
+From: Dave Chinner <dchinner@redhat.com>
+
+Commit 368e136 ("xfs: remove duplicate code from dquot reclaim") fails
+to unlock the dquot freelist when the number of loop restarts is
+exceeded in xfs_qm_dqreclaim_one(). This causes hangs in memory
+reclaim. Remove the bogus loop exit check that causes the problem.
+
+Reported-by: Malcolm Scott <lkml@malc.org.uk>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/quota/xfs_qm.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
+
+diff --git a/fs/xfs/quota/xfs_qm.c b/fs/xfs/quota/xfs_qm.c
+index f8e854b..9431c56 100644
+--- a/fs/xfs/quota/xfs_qm.c
++++ b/fs/xfs/quota/xfs_qm.c
+@@ -1992,8 +1992,6 @@ dqfunlock:
+ 		xfs_dqunlock(dqp);
+ 		if (dqpout)
+ 			break;
+-		if (restarts >= XFS_QM_RECLAIM_MAX_RESTARTS)
+-			return NULL;
+ 	}
+ 	mutex_unlock(&xfs_Gqm->qm_dqfrlist_lock);
+ 	return dqpout;
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
