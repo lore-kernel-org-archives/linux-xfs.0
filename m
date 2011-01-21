@@ -1,30 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0L1vYc1188746 for <xfs@oss.sgi.com>; Thu, 20 Jan 2011 19:57:34 -0600
+	p0L3dqNu204585 for <xfs@oss.sgi.com>; Thu, 20 Jan 2011 21:39:52 -0600
 Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A101727534F
-	for <xfs@oss.sgi.com>; Thu, 20 Jan 2011 17:59:53 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DB94027B601
+	for <xfs@oss.sgi.com>; Thu, 20 Jan 2011 19:42:11 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	q7G9CJinnGqhcZ6U for <xfs@oss.sgi.com>;
-	Thu, 20 Jan 2011 17:59:53 -0800 (PST)
-Date: Fri, 21 Jan 2011 12:59:40 +1100
+	gLuAwjcNLdmM8ThF for <xfs@oss.sgi.com>;
+	Thu, 20 Jan 2011 19:42:11 -0800 (PST)
+Date: Fri, 21 Jan 2011 14:42:08 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Issues with delalloc->real extent allocation
-Message-ID: <20110121015940.GX16267@dastard>
-References: <20110114002900.GF16267@dastard> <20110114214334.GN28274@sgi.com>
-	<20110114235549.GI16267@dastard>
-	<20110118204752.GB28791@infradead.org>
-	<20110118231831.GZ28803@dastard>
-	<20110119120321.GC12941@infradead.org>
-	<20110119133147.GN16267@dastard>
-	<20110119135548.GA11502@infradead.org>
-	<20110120013346.GO16267@dastard>
-	<20110120111612.GA14571@infradead.org>
+Subject: Re: xfs used disk space bug in 2.6.38-rc1 (commit
+	6e857567dbbfe14dd6cc3f7414671b047b1ff5c7)
+Message-ID: <20110121034208.GZ16267@dastard>
+References: <87zkqvtet2.fsf@sycorax.lbl.gov>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110120111612.GA14571@infradead.org>
+In-Reply-To: <87zkqvtet2.fsf@sycorax.lbl.gov>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,49 +30,37 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: bpm@sgi.com, xfs@oss.sgi.com
+To: Alex Romosan <romosan@sycorax.lbl.gov>
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Thu, Jan 20, 2011 at 06:16:12AM -0500, Christoph Hellwig wrote:
-> On Thu, Jan 20, 2011 at 12:33:46PM +1100, Dave Chinner wrote:
-> > It's case b) that I'm mainly worried about, esp. w.r.t the 64k page
-> > size on ia64/ppc. If we only track a single dirty bit in the page,
-> > then every sub-page, non-appending write to an uncached region of a
-> > file becomes a RMW cycle to initialise the areas around the write
-> > correctly. The question is whether we care about this enough given
-> > that we return at least PAGE_SIZE in stat() to tell applications the
-> > optimal IO size to avoid RMW cycles.
-> 
-> Note that this generally is only true for the first write into the
-> region - after that we'll have the rest read into the cache.  But
-> we also have the same issue for appending writes if they aren't
-> page aligned.
+On Thu, Jan 20, 2011 at 02:01:45PM -0800, Alex Romosan wrote:
+> my home directory is using xfs and i noticed that when i try to compile
+> a program or do any kind of disk access (like git pull, etc) the amount
+> of space used jumps by tens of gigabytes causing the disk to seemingly
+> become full (eventually). on reboot the used disk space goes back to the
+> correct value. i did a 'git bisect start -- fs/xfs' and i tracked it
+> down to commit 6e857567dbbfe14dd6cc3f7414671b047b1ff5c7. if i revert
 
-True - I kind of implied that by saying RMW cycles are limited to
-"uncached regions", but you've stated in a much clearer and easier
-to understand way. ;)
+When you quote a commit, can you please include the name of the
+commit. e.g:
 
-> > And if we only do IO on whole pages (i.e regardless of block size)
-> > .writepage suddenly becomes a lot simpler, as well as being trivial
-> > to implement our own .readpage/.readpages....
-> 
-> I don't think it simplifies writepage a lot.  All the buffer head
-> handling goes away, but we'll still need to do xfs_bmapi calls at
-> block size granularity.  Why would you want to replaced the
-> readpage/readpages code?  The generic mpage helpers for it do just fine.
+6e85756 ("xfs: don't truncate prealloc from frequently accessed inodes")
 
-When I went through the mpage code I found there were cases that it
-would attached bufferheads to pages or assume PagePrivate() contains
-a bufferhead list. e.g. If there are multiple holes in the page, it
-will fall through to block_read_full_page() which makes this
-assumption.  If we want/need to keep any of our own state on
-PagePrivate(), we cannot use any function that assumes PagePrivate()
-is used to hold bufferheads for the page.
+> this patch then disk usage doesn't increase unexpectedly (i have 270GB
+> free and the disk became full by simply trying to compile wine). i can
+> try patches if somebody comes up with one.
 
-Quite frankly, a simple extent mapping loop like we do for
-.writepage is far simpler than what mpage_readpages does. This is
-what btrfs does (extent_readpages/__extent_read_full_page), and that
-is far easier to follow and understand than mpage_do_readpage()....
+I don't think you tracked the problem down to the correct commit.
+The previous commit:
+
+055388a xfs: dynamic speculative EOF preallocation
+
+Is the one with the known bug that causes excessive preallocation
+when files are zero sized. The candidate fix is here:
+
+http://oss.sgi.com/archives/xfs/2011-01/msg00281.html
+
+Can you see if that solves your problem?
 
 Cheers,
 
