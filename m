@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0LEdZ7o049328 for <xfs@oss.sgi.com>; Fri, 21 Jan 2011 08:39:35 -0600
-Date: Fri, 21 Jan 2011 08:41:52 -0600
-From: Geoffrey Wehrman <gwehrman@sgi.com>
-Subject: Re: Issues with delalloc->real extent allocation
-Message-ID: <20110121144152.GD10729@sgi.com>
-References: <20110114214334.GN28274@sgi.com> <20110114235549.GI16267@dastard>
-	<20110118204752.GB28791@infradead.org>
-	<20110118231831.GZ28803@dastard>
-	<20110119120321.GC12941@infradead.org>
-	<20110119133147.GN16267@dastard>
-	<20110119135548.GA11502@infradead.org>
-	<20110120013346.GO16267@dastard> <20110120144503.GA7225@sgi.com>
-	<20110121025140.GY16267@dastard>
+	p0LG3Bhn063103 for <xfs@oss.sgi.com>; Fri, 21 Jan 2011 10:03:11 -0600
+Received: from sycorax.lbl.gov (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3E3F9148D05A
+	for <xfs@oss.sgi.com>; Fri, 21 Jan 2011 08:05:24 -0800 (PST)
+Received: from sycorax.lbl.gov (sycorax.lbl.gov [128.3.11.121]) by
+	cuda.sgi.com with ESMTP id D9kPMigTp6CHTtG7 for
+	<xfs@oss.sgi.com>; Fri, 21 Jan 2011 08:05:24 -0800 (PST)
+From: Alex Romosan <romosan@sycorax.lbl.gov>
+Subject: Re: xfs used disk space bug in 2.6.38-rc1 (commit
+	6e857567dbbfe14dd6cc3f7414671b047b1ff5c7)
+References: <87zkqvtet2.fsf@sycorax.lbl.gov> <20110121034208.GZ16267@dastard>
+Date: Fri, 21 Jan 2011 08:05:16 -0800
+In-Reply-To: <20110121034208.GZ16267@dastard> (message from Dave Chinner on
+	Fri, 21 Jan 2011 14:42:08 +1100)
+Message-ID: <87bp3a8coz.fsf@sycorax.lbl.gov>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110121025140.GY16267@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,51 +25,41 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, bpm@sgi.com, xfs@oss.sgi.com
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-T24gRnJpLCBKYW4gMjEsIDIwMTEgYXQgMDE6NTE6NDBQTSArMTEwMCwgRGF2ZSBDaGlubmVyIHdy
-b3RlOgp8IFJlYWxpc3RpY2FsbHksIGZvciBldmVyeSBkaXNhZHZhbnRhZ2Ugb3IgYWR2YW50YWdl
-IHdlIGNhbiBlbnVtZXJhdGUKfCBmb3Igc3BlY2lmaWMgd29ya2xvYWRzLCBJIHRoaW5rIG9uZSBv
-ZiB1cyB3aWxsIGJlIGFibGUgdG8gY29tZSB1cAp8IHdpdGggYSBjb3VudGVyIGV4YW1wbGUgdGhh
-dCBzaG93cyB0aGUgb3Bwb3NpdGUgb2YgdGhlIG9yaWdpbmFsCnwgcG9pbnQuIEkgZG9uJ3QgdGhp
-bmsgdGhpcyBzb3J0IG9mIGFyZ3VtZW50IGlzIHBhcnRpY3VsYXJseQp8IHByb2R1Y3RpdmUuIDov
-CgpTb3JyeSwgSSB3YXNuJ3QgdHJ5aW5nIHRvIGJlIGFyZ3VtZW50YXRpdmUuICBSYXRoZXIgSSB3
-YXMganVzdCBkb2N1bWVudGluZwp3aGF0IEkgc2F3IGFzIHBvdGVudGlhbCBpc3N1ZXMuICBJJ20g
-bm90IGFyZ3VpbmcgYWdhaW5zdCB5b3VyIHByb3Bvc2VkCmNoYW5nZS4gIElmIHlvdSBkb24ndCBm
-aW5kIG15IHNoYXJpbmcgb2Ygb2JzZXJ2YXRpb25zIHByb2R1Y3RpdmUsIEknbQpoYXBweSB0byBr
-ZWVwIG15IHRob3VnaHRzIHRvIG15IHNlbGYgaW4gdGhlIGZ1dHVyZS4KCnwgSW5zdGVhZCwgSSBs
-b29rIGF0IGl0IGZyb20gdGhlIHBvaW50IG9mIHZpZXcgdGhhdCBhIDY0ayBJTyBpcyBsaXR0bGUK
-fCBzbG93ZXIgdGhhbiBhIDRrIElPIHNvIHN1Y2ggYSBjaGFuZ2Ugd291bGQgbm90IG1ha2UgbXVj
-aCBkaWZmZXJlbmNlCnwgdG8gcGVyZm9ybWFuY2UuIEFuZCBnaXZlbiB0aGF0IHRlcmFieXRlcyBv
-ZiBzdG9yYWdlIGNhcGFjaXR5IGlzCnwgX2NoZWFwXyB0aGVzZSBkYXlzIChhbmQgZ2V0dGluZyBj
-aGVhcGVyIGFsbCB0aGUgdGltZSksIHRoZSBleHRyYQp8IHNwYWNlIG9mIHVzaW5nIDY0ayBpbnN0
-ZWFkIG9mIDRrIGZvciBzcGFyc2UgYmxvY2tzIGlzbid0IGEgYmlnIGRlYWwuCnwgCnwgV2hlbiBJ
-IGNvbWJpbmUgdGhhdCB3aXRoIG15IGV4cGVyaWVuY2UgZnJvbSBTR0kgd2hlcmUgd2UgYWx3YXlz
-CnwgcmVjb21tZW5kZWQgdXNpbmcgZmlsZXN5c3RlbXMgYmxvY2sgc2l6ZSA9PSBwYWdlIHNpemUg
-Zm9yIGJlc3QgSU8KfCBwZXJmb3JtYW5jZSBvbiBIUEMgc2V0dXBzLCB0aGVyZSdzIGEgZmFpciBh
-cmd1bWVudCB0aGF0IHVzaW5nIHBhZ2UKfCBzaXplIGV4dGVudHMgZm9yIHNtYWxsIHNwYXJzZSB3
-cml0ZXMgaXNuJ3QgYSBwcm9ibGVtIHdlIHJlYWxseSBuZWVkCnwgdG8gY2FyZSBhYm91dC4KfCAK
-fCDQhidkIHByZWZlciB0byBkZXNpZ24gZm9yIHdoZXJlIHdlIGV4cGVjdCBzdG9yYWdlIHRvIGJl
-IGluIHRoZSBuZXh0CnwgZmV3IHllYXJzIGUuZy4gMTBUQiBzcGluZGxlcy4gTWluaW1pc2luZyBz
-cGFjZSB1c2FnZSBpcyBub3QgYSBiaWcKfCBwcmlvcml0eSB3aGVuIHdlIGNvbnNpZGVyIHRoYXQg
-aW4gMi0zIHllYXJzIDEwMFRCIG9mIHN0b3JhZ2Ugd2lsbAp8IGNvc3QgbGVzcyB0aGFuICQ1MDAw
-IChpdCdzIGFib3V0ICQxNS0yMGsgcmlnaHQgbm93KS4gIEV2ZW4gb24KfCBkZXNrdG9wcyB3ZSdy
-ZSBnb2luZyB0byBoYXZlIG1vcmUgY2FwYWNpdHkgdGhhdCB3ZSBrbm93IHdoYXQgdG8gZG8KfCB3
-aXRoLCBzbyB0cmFkaW5nIG9mZiBzdG9yYWdlIHNwYWNlIGZvciBsb3dlciBtZW1vcnkgb3Zlcmhl
-YWQsIGxvd2VyCnwgbWV0YWRhdGEgSU8gb3ZlcmhlYWQgYW5kIGxvd2VyIHBvdGVudGlhbCBmcmFn
-bWVudGF0aW9uIHNlZW1zIGxpa2UKfCB0aGUgcmlnaHQgd2F5IHRvIG1vdmUgZm9yd2FyZCB0byBt
-ZS4KfCAKfCBEb2VzIHRoYXQgc2VlbSBsaWtlIGEgcmVhc29uYWJsZSBwb3NpdGlvbiB0byB0YWtl
-LCBvciBhcmUgdGhlcmUKfCBvdGhlciBmYWN0b3JzIHRoYXQgeW91IHRoaW5rIEkgc2hvdWxkIGJl
-IGNvbnNpZGVyaW5nPwoKS2VlcCBpbiBtaW5kIHRoYXQgc3RvcmFnZSBvZiB0aGUgZnV0dXJlIG1h
-eSBub3QgYmUgb24gc3BpbmRsZXMsIGFuZApmcmFnbWVudGF0aW9uIG1heSBub3QgYmUgYW4gaXNz
-dWUuICBFdmVuIHNvLCB3aXRoIFNTRCA2NEsgSS9PIGlzIHZlcnkKcmVhc29uYWJsZSBhcyBtb3N0
-IGZsYXNoIG1lbW9yeSBpbXBsZW1lbnRzIGF0IGEgbWluaW11bSA2NEsgcGFnZS4gIEknbQpmdWxs
-eSBpbiBmYXZvciB5b3VyIHByb3Bvc2FsIHRvIHJlcXVpcmUgcGFnZSBzaXplZCBJL08uCgoKLS0g
-Ckdlb2ZmcmV5IFdlaHJtYW4KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dp
-LmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+Dave Chinner <david@fromorbit.com> writes:
+
+> When you quote a commit, can you please include the name of the
+> commit. e.g:
+>
+> 6e85756 ("xfs: don't truncate prealloc from frequently accessed inodes")
+>
+
+sorry.
+
+> Is the one with the known bug that causes excessive preallocation
+> when files are zero sized. The candidate fix is here:
+>
+> http://oss.sgi.com/archives/xfs/2011-01/msg00281.html
+>
+> Can you see if that solves your problem?
+
+i've tried it and disk usage is back to normal. thanks.
+
+--alex--
+
+-- 
+| I believe the moment is at hand when, by a paranoiac and active |
+|  advance of the mind, it will be possible (simultaneously with  |
+|  automatism and other passive states) to systematize confusion  |
+|  and thus to help to discredit completely the world of reality. |
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
