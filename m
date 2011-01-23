@@ -1,22 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0LG3Bhn063103 for <xfs@oss.sgi.com>; Fri, 21 Jan 2011 10:03:11 -0600
-Received: from sycorax.lbl.gov (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3E3F9148D05A
-	for <xfs@oss.sgi.com>; Fri, 21 Jan 2011 08:05:24 -0800 (PST)
-Received: from sycorax.lbl.gov (sycorax.lbl.gov [128.3.11.121]) by
-	cuda.sgi.com with ESMTP id D9kPMigTp6CHTtG7 for
-	<xfs@oss.sgi.com>; Fri, 21 Jan 2011 08:05:24 -0800 (PST)
-From: Alex Romosan <romosan@sycorax.lbl.gov>
-Subject: Re: xfs used disk space bug in 2.6.38-rc1 (commit
-	6e857567dbbfe14dd6cc3f7414671b047b1ff5c7)
-References: <87zkqvtet2.fsf@sycorax.lbl.gov> <20110121034208.GZ16267@dastard>
-Date: Fri, 21 Jan 2011 08:05:16 -0800
-In-Reply-To: <20110121034208.GZ16267@dastard> (message from Dave Chinner on
-	Fri, 21 Jan 2011 14:42:08 +1100)
-Message-ID: <87bp3a8coz.fsf@sycorax.lbl.gov>
+	p0NNOK7K040356 for <xfs@oss.sgi.com>; Sun, 23 Jan 2011 17:24:21 -0600
+Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1324A1A0C7B9
+	for <xfs@oss.sgi.com>; Sun, 23 Jan 2011 15:26:41 -0800 (PST)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	bqdakEIHnQfQOrvK for <xfs@oss.sgi.com>;
+	Sun, 23 Jan 2011 15:26:41 -0800 (PST)
+Date: Mon, 24 Jan 2011 10:26:37 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Issues with delalloc->real extent allocation
+Message-ID: <20110123232637.GB16267@dastard>
+References: <20110114235549.GI16267@dastard>
+	<20110118204752.GB28791@infradead.org>
+	<20110118231831.GZ28803@dastard>
+	<20110119120321.GC12941@infradead.org>
+	<20110119133147.GN16267@dastard>
+	<20110119135548.GA11502@infradead.org>
+	<20110120013346.GO16267@dastard> <20110120144503.GA7225@sgi.com>
+	<20110121025140.GY16267@dastard> <20110121144152.GD10729@sgi.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20110121144152.GD10729@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,41 +32,70 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Geoffrey Wehrman <gwehrman@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, bpm@sgi.com, xfs@oss.sgi.com
 
-Dave Chinner <david@fromorbit.com> writes:
-
-> When you quote a commit, can you please include the name of the
-> commit. e.g:
->
-> 6e85756 ("xfs: don't truncate prealloc from frequently accessed inodes")
->
-
-sorry.
-
-> Is the one with the known bug that causes excessive preallocation
-> when files are zero sized. The candidate fix is here:
->
-> http://oss.sgi.com/archives/xfs/2011-01/msg00281.html
->
-> Can you see if that solves your problem?
-
-i've tried it and disk usage is back to normal. thanks.
-
---alex--
-
--- 
-| I believe the moment is at hand when, by a paranoiac and active |
-|  advance of the mind, it will be possible (simultaneously with  |
-|  automatism and other passive states) to systematize confusion  |
-|  and thus to help to discredit completely the world of reality. |
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gRnJpLCBKYW4gMjEsIDIwMTEgYXQgMDg6NDE6NTJBTSAtMDYwMCwgR2VvZmZyZXkgV2Vocm1h
+biB3cm90ZToKPiBPbiBGcmksIEphbiAyMSwgMjAxMSBhdCAwMTo1MTo0MFBNICsxMTAwLCBEYXZl
+IENoaW5uZXIgd3JvdGU6Cj4gfCBSZWFsaXN0aWNhbGx5LCBmb3IgZXZlcnkgZGlzYWR2YW50YWdl
+IG9yIGFkdmFudGFnZSB3ZSBjYW4gZW51bWVyYXRlCj4gfCBmb3Igc3BlY2lmaWMgd29ya2xvYWRz
+LCBJIHRoaW5rIG9uZSBvZiB1cyB3aWxsIGJlIGFibGUgdG8gY29tZSB1cAo+IHwgd2l0aCBhIGNv
+dW50ZXIgZXhhbXBsZSB0aGF0IHNob3dzIHRoZSBvcHBvc2l0ZSBvZiB0aGUgb3JpZ2luYWwKPiB8
+IHBvaW50LiBJIGRvbid0IHRoaW5rIHRoaXMgc29ydCBvZiBhcmd1bWVudCBpcyBwYXJ0aWN1bGFy
+bHkKPiB8IHByb2R1Y3RpdmUuIDovCj4gCj4gU29ycnksIEkgd2Fzbid0IHRyeWluZyB0byBiZSBh
+cmd1bWVudGF0aXZlLiAgUmF0aGVyIEkgd2FzIGp1c3QgZG9jdW1lbnRpbmcKPiB3aGF0IEkgc2F3
+IGFzIHBvdGVudGlhbCBpc3N1ZXMuICBJJ20gbm90IGFyZ3VpbmcgYWdhaW5zdCB5b3VyIHByb3Bv
+c2VkCj4gY2hhbmdlLiAgSWYgeW91IGRvbid0IGZpbmQgbXkgc2hhcmluZyBvZiBvYnNlcnZhdGlv
+bnMgcHJvZHVjdGl2ZSwgSSdtCj4gaGFwcHkgdG8ga2VlcCBteSB0aG91Z2h0cyB0byBteSBzZWxm
+IGluIHRoZSBmdXR1cmUuCgpBaCwgdGhhdCdzIG5vdCB3aGF0IEkgbWVhbnQsIEdlb2ZmcmV5LiBS
+ZWFkaW5nIGl0IGJhY2ssIEkgcHJvYmFibHkKc2hvdWxkIGhhdmUgc2FpZCAiZGlyZWN0aW9uIG9m
+IGRpc2N1c3Npb24iIHJhdGhlciB0aGFuICJzb3J0IG9mCmFyZ3VtZW50IiB0byBtYWtlIGl0IG1v
+cmUgb2J2aW91cyBJIHRyeWluZyBub3QgdG8gZ2V0IHN0dWNrIHdpdGggdXMKZ29pZ24gcm91bmQg
+YW5kIHJvdW5kIHRyeWluZyB0byBkZW1vbnN0cmF0ZSB0aGUgcHJvcyBhbmQgY29ucyBvZgpkaWZm
+ZXJlbnQgYXBwcm9hY2hlcyBvbiBhIHdvcmtsb2FkLWJ5LXdvcmtsb2FkIGJhc2lzLgoKQmFzaWNh
+bGx5IGFsbCBJIHdhcyB0cnlpbmcgdG8gZG8gaXMgbW92ZSB0aGUgZGlzY3VzaW9uIHBhc3QgYQpw
+b3RlbnRpYWwgc3RpY2tpbmcgcG9pbnQgLSBJIGRlZmluaXRlbHkgdmFsdWUgdGhlIGlucHV0IGFu
+ZCBpbnNpZ2h0CnlvdSBwcm92aWRlLCBhbmQgSSdsbCB0cnkgdG8gd3JpdGUgbW9yZSBjbGVhcmx5
+IHRvIGhvcGVmdWxseSBhdm9pZApzdWNoIG1pc3VuZGVyc3RhbmRpbmdzIGluIGZ1dHVyZSBkaXNj
+dXNzaW9ucy4KCj4gfCBJbnN0ZWFkLCBJIGxvb2sgYXQgaXQgZnJvbSB0aGUgcG9pbnQgb2Ygdmll
+dyB0aGF0IGEgNjRrIElPIGlzIGxpdHRsZQo+IHwgc2xvd2VyIHRoYW4gYSA0ayBJTyBzbyBzdWNo
+IGEgY2hhbmdlIHdvdWxkIG5vdCBtYWtlIG11Y2ggZGlmZmVyZW5jZQo+IHwgdG8gcGVyZm9ybWFu
+Y2UuIEFuZCBnaXZlbiB0aGF0IHRlcmFieXRlcyBvZiBzdG9yYWdlIGNhcGFjaXR5IGlzCj4gfCBf
+Y2hlYXBfIHRoZXNlIGRheXMgKGFuZCBnZXR0aW5nIGNoZWFwZXIgYWxsIHRoZSB0aW1lKSwgdGhl
+IGV4dHJhCj4gfCBzcGFjZSBvZiB1c2luZyA2NGsgaW5zdGVhZCBvZiA0ayBmb3Igc3BhcnNlIGJs
+b2NrcyBpc24ndCBhIGJpZyBkZWFsLgo+IHwgCj4gfCBXaGVuIEkgY29tYmluZSB0aGF0IHdpdGgg
+bXkgZXhwZXJpZW5jZSBmcm9tIFNHSSB3aGVyZSB3ZSBhbHdheXMKPiB8IHJlY29tbWVuZGVkIHVz
+aW5nIGZpbGVzeXN0ZW1zIGJsb2NrIHNpemUgPT0gcGFnZSBzaXplIGZvciBiZXN0IElPCj4gfCBw
+ZXJmb3JtYW5jZSBvbiBIUEMgc2V0dXBzLCB0aGVyZSdzIGEgZmFpciBhcmd1bWVudCB0aGF0IHVz
+aW5nIHBhZ2UKPiB8IHNpemUgZXh0ZW50cyBmb3Igc21hbGwgc3BhcnNlIHdyaXRlcyBpc24ndCBh
+IHByb2JsZW0gd2UgcmVhbGx5IG5lZWQKPiB8IHRvIGNhcmUgYWJvdXQuCj4gfCAKPiB8INCGJ2Qg
+cHJlZmVyIHRvIGRlc2lnbiBmb3Igd2hlcmUgd2UgZXhwZWN0IHN0b3JhZ2UgdG8gYmUgaW4gdGhl
+IG5leHQKPiB8IGZldyB5ZWFycyBlLmcuIDEwVEIgc3BpbmRsZXMuIE1pbmltaXNpbmcgc3BhY2Ug
+dXNhZ2UgaXMgbm90IGEgYmlnCj4gfCBwcmlvcml0eSB3aGVuIHdlIGNvbnNpZGVyIHRoYXQgaW4g
+Mi0zIHllYXJzIDEwMFRCIG9mIHN0b3JhZ2Ugd2lsbAo+IHwgY29zdCBsZXNzIHRoYW4gJDUwMDAg
+KGl0J3MgYWJvdXQgJDE1LTIwayByaWdodCBub3cpLiAgRXZlbiBvbgo+IHwgZGVza3RvcHMgd2Un
+cmUgZ29pbmcgdG8gaGF2ZSBtb3JlIGNhcGFjaXR5IHRoYXQgd2Uga25vdyB3aGF0IHRvIGRvCj4g
+fCB3aXRoLCBzbyB0cmFkaW5nIG9mZiBzdG9yYWdlIHNwYWNlIGZvciBsb3dlciBtZW1vcnkgb3Zl
+cmhlYWQsIGxvd2VyCj4gfCBtZXRhZGF0YSBJTyBvdmVyaGVhZCBhbmQgbG93ZXIgcG90ZW50aWFs
+IGZyYWdtZW50YXRpb24gc2VlbXMgbGlrZQo+IHwgdGhlIHJpZ2h0IHdheSB0byBtb3ZlIGZvcndh
+cmQgdG8gbWUuCj4gfCAKPiB8IERvZXMgdGhhdCBzZWVtIGxpa2UgYSByZWFzb25hYmxlIHBvc2l0
+aW9uIHRvIHRha2UsIG9yIGFyZSB0aGVyZQo+IHwgb3RoZXIgZmFjdG9ycyB0aGF0IHlvdSB0aGlu
+ayBJIHNob3VsZCBiZSBjb25zaWRlcmluZz8KPiAKPiBLZWVwIGluIG1pbmQgdGhhdCBzdG9yYWdl
+IG9mIHRoZSBmdXR1cmUgbWF5IG5vdCBiZSBvbiBzcGluZGxlcywgYW5kCj4gZnJhZ21lbnRhdGlv
+biBtYXkgbm90IGJlIGFuIGlzc3VlLiAgRXZlbiBzbywgd2l0aCBTU0QgNjRLIEkvTyBpcyB2ZXJ5
+Cj4gcmVhc29uYWJsZSBhcyBtb3N0IGZsYXNoIG1lbW9yeSBpbXBsZW1lbnRzIGF0IGEgbWluaW11
+bSA2NEsgcGFnZS4gIEknbQo+IGZ1bGx5IGluIGZhdm9yIHlvdXIgcHJvcG9zYWwgdG8gcmVxdWly
+ZSBwYWdlIHNpemVkIEkvTy4KCldpdGggZmxhc2ggbWVtb3J5IHRoZXJlIGlzIHRoZSBwb3RlbnRp
+YWwgdGhhdCB3ZSBkb24ndCBldmVuIG5lZWQgdG8KY2FyZS4gVGhlIHRyZW5kIGlzIHRvd2FyZHMg
+b24tZGV2aWNlIGNvbXByZXNzaW9uIChlLmcuIFNhbmRmb3JjZQpjb250cm9sbGVycyBhbHJlYWR5
+IGRvIHRoaXMpIHRvIHJlZHVjZSB3cml0ZSBhbXBsaWZpY2F0aW9uIHRvIHZhbHVlcwpsb3dlciB0
+aGFuIG9uZS4gSGVuY2UgYSA0ayB3cml0ZSBzdXJyb3VuZGVkIGJ5IDYwayBvZiB6ZXJvcyBpcwp1
+bmxpa2VseSB0byBiZSBhIG1ham9yIGlzc3VlIGFzIGl0IHdpbGwgY29tcHJlc3MgcmVhbGx5IHdl
+bGwuLi4uIDopCgpDaGVlcnMsCgpEYXZlLgotLSAKRGF2ZSBDaGlubmVyCmRhdmlkQGZyb21vcmJp
+dC5jb20KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhm
+cyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFu
+L2xpc3RpbmZvL3hmcwo=
