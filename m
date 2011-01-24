@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0OLstKt121655 for <xfs@oss.sgi.com>; Mon, 24 Jan 2011 15:54:56 -0600
-Received: from mail-out.m-online.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 762F528CE07
-	for <xfs@oss.sgi.com>; Mon, 24 Jan 2011 13:57:16 -0800 (PST)
-Received: from mail-out.m-online.net (mail-out.m-online.net [212.18.0.9]) by
-	cuda.sgi.com with ESMTP id FL2zDxFDlZFUKwlD for
-	<xfs@oss.sgi.com>; Mon, 24 Jan 2011 13:57:16 -0800 (PST)
-From: Wolfgang Denk <wd@denx.de>
-Subject: Re: Optimize RAID0 for max IOPS?
+	p0OM2PJf122626 for <xfs@oss.sgi.com>; Mon, 24 Jan 2011 16:02:26 -0600
+Received: from ipmail07.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3512B1052DB4
+	for <xfs@oss.sgi.com>; Mon, 24 Jan 2011 14:04:47 -0800 (PST)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	VXO50Mv7Zzth25Zv for <xfs@oss.sgi.com>;
+	Mon, 24 Jan 2011 14:04:47 -0800 (PST)
+Date: Tue, 25 Jan 2011 09:04:44 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs_bmap_add_extent_delay_real should set
+	br_startblock to nullstartblock
+Message-ID: <20110124220444.GE16267@dastard>
+References: <20110119174158.28574.63968.stgit@lady3jane.americas.sgi.com>
 MIME-Version: 1.0
-In-reply-to: <alpine.DEB.2.00.1101241024230.14640@p34.internal.lan>
-References: <20110118210112.D13A236C@gemini.denx.de>
-	<4D361F26.3060507@stud.tu-ilmenau.de>
-	<20110119192104.1FA92D30267@gemini.denx.de>
-	<AANLkTikx4g99-Cf_09kEGfF2mmf4Dnuh2A5gTrtKweDy@mail.gmail.com>
-	<alpine.DEB.2.00.1101241024230.14640@p34.internal.lan>
-Date: Mon, 24 Jan 2011 22:57:13 +0100
-Message-Id: <20110124215713.82D75B187@gemini.denx.de>
+Content-Disposition: inline
+In-Reply-To: <20110119174158.28574.63968.stgit@lady3jane.americas.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,134 +30,112 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-raid@vger.kernel.org, xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>
+Cc: xfs@oss.sgi.com, aelder@sgi.com
 
-Dear Justin,
-
-In message <alpine.DEB.2.00.1101241024230.14640@p34.internal.lan> you wrote:
+On Wed, Jan 19, 2011 at 11:41:58AM -0600, Ben Myers wrote:
+> When filling in the middle of a previous delayed allocation in
+> xfs_bmap_add_extent_delay_real, set br_startblock of the new delay extent to
+> the right to nullstartblock instead of 0 before inserting the extent into the
+> ifork (xfs_iext_insert), rather than setting br_startblock afterward.
 > 
-> Some info on XFS benchmark with delaylog here:
-> http://comments.gmane.org/gmane.comp.file-systems.xfs.general/34379
+> Adding the extent into the ifork with br_startblock=0 can lead to the extent
+> being copied into the btree by xfs_bmap_extent_to_btree if we happen to convert
+> from extents format to btree format before updating br_startblock with the
+> correct value.  The unexpected addition of this delay extent to the btree can
+> cause subsequent XFS_WANT_CORRUPTED_GOTO filesystem shutdown in several
+> xfs_bmap_add_extent_delay_real cases where we are converting a delay extent to
+> real and unexpectedly find an extent already inserted.  For example:
+> 
+> 911         case BMAP_LEFT_FILLING:
+> 912                 /*
+> 913                  * Filling in the first part of a previous delayed allocation.
+> 914                  * The left neighbor is not contiguous.
+> 915                  */
+> 916                 trace_xfs_bmap_pre_update(ip, idx, state, _THIS_IP_);
+> 917                 xfs_bmbt_set_startoff(ep, new_endoff);
+> 918                 temp = PREV.br_blockcount - new->br_blockcount;
+> 919                 xfs_bmbt_set_blockcount(ep, temp);
+> 920                 xfs_iext_insert(ip, idx, 1, new, state);
+> 921                 ip->i_df.if_lastex = idx;
+> 922                 ip->i_d.di_nextents++;
+> 923                 if (cur == NULL)
+> 924                         rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
+> 925                 else {
+> 926                         rval = XFS_ILOG_CORE;
+> 927                         if ((error = xfs_bmbt_lookup_eq(cur, new->br_startoff,
+> 928                                         new->br_startblock, new->br_blockcount,
+> 929                                         &i)))
+> 930                                 goto done;
+> 931                         XFS_WANT_CORRUPTED_GOTO(i == 0, done);
+> 
+> With the bogus extent in the btree we shutdown the filesystem at 931.  The
+> conversion from extents to btree format happens when the number of extents in
+> the inode increases above ip->i_df.if_ext_max.  xfs_bmap_extent_to_btree copies
+> extents from the ifork into the btree, ignoring all delalloc extents which are
+> denoted by br_startblock having some value of nullstartblock.
+> 
+> SGI-PV: 1013221
+> 
+> Signed-off-by: Ben Myers <bpm@sgi.com>
+> ---
+>  fs/xfs/xfs_bmap.c |   33 +++++++++++++++++++++++++--------
+>  1 files changed, 25 insertions(+), 8 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
+> index 4111cd3..c1db779 100644
+> --- a/fs/xfs/xfs_bmap.c
+> +++ b/fs/xfs/xfs_bmap.c
+> @@ -1038,17 +1038,34 @@ xfs_bmap_add_extent_delay_real(
+>  		 * Filling in the middle part of a previous delayed allocation.
+>  		 * Contiguity is impossible here.
+>  		 * This case is avoided almost all the time.
+> +		 *
+> +		 * We start with a delayed allocation:
+> +		 *
+> +		 * +ddddddddddddddddddddddddddddddddddddddddddddddddddddddd+
+> +		 *  PREV @ idx
+> +		 *
+> +	         * and we are allocating:
+> +		 *                     +rrrrrrrrrrrrrrrrr+	 
+> +		 *			      new
+> +		 *
+> +		 * and we set it up for insertion as:
+> +		 * +ddddddddddddddddddd+rrrrrrrrrrrrrrrrr+ddddddddddddddddd+
+> +		 *                            new
+> +		 *  PREV @ idx          LEFT              RIGHT
+> +		 *                      inserted at idx + 1 
+>  		 */
+>  		temp = new->br_startoff - PREV.br_startoff;
+> -		trace_xfs_bmap_pre_update(ip, idx, 0, _THIS_IP_);
+> -		xfs_bmbt_set_blockcount(ep, temp);
+> -		r[0] = *new;
+> -		r[1].br_state = PREV.br_state;
+> -		r[1].br_startblock = 0;
+> -		r[1].br_startoff = new_endoff;
+>  		temp2 = PREV.br_startoff + PREV.br_blockcount - new_endoff;
+> -		r[1].br_blockcount = temp2;
+> -		xfs_iext_insert(ip, idx + 1, 2, &r[0], state);
+> +		trace_xfs_bmap_pre_update(ip, idx, 0, _THIS_IP_);
+> +		xfs_bmbt_set_blockcount(ep, temp);	/* truncate PREV */
+> +		LEFT = *new;
+> +		RIGHT.br_state = PREV.br_state;	
+> +		RIGHT.br_startblock = nullstartblock(
+> +				(int)xfs_bmap_worst_indlen(ip, temp2));
+> +		RIGHT.br_startoff = new_endoff;
+> +		RIGHT.br_blockcount = temp2;
+> +		/* insert LEFT (r[0]) and RIGHT (r[1]) at the same time */
+> +		xfs_iext_insert(ip, idx + 1, 2, &LEFT, state);
+>  		ip->i_df.if_lastex = idx + 1;
+>  		ip->i_d.di_nextents++;
+>  		if (cur == NULL)
 
-For the record: I tested both the "delaylog" and "logbsize=262144" on
-two systems running Fedora 14 x86_64 (kernel version
-2.6.35.10-74.fc14.x86_64).
+Looks good.
 
-
-Test No.	Mount options
-1		rw,noatime
-2		rw,noatime,delaylog
-3		rw,noatime,delaylog,logbsize=262144
-
-
-System A: Gigabyte EP35C-DS3R Mainbord, Core 2 Quad CPU Q9550 @ 2.83GHz, 4 GB RAM
---------- software RAID 5 using 4 x old Maxtor 7Y250M0 S-ATA I disks
-	  (chunk size 16 kB, using S-ATA ports on main board), XFS
-
-Test 1:
-
-Version  1.96       ------Sequential Output------ --Sequential Input- --Random-
-Concurrency   1     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
-Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
-A1               8G   844  96 153107  19 56427  11  2006  98 127174  15 369.4   6
-Latency             13686us    1480ms    1128ms   14986us     136ms   74911us
-Version  1.96       ------Sequential Create------ --------Random Create--------
-A1                  -Create-- --Read--- -Delete-- -Create-- --Read--- -Delete--
-              files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP
-                 16   104   0 +++++ +++   115   0    89   0 +++++ +++   111   0
-Latency               326ms     171us     277ms     343ms       9us     360ms
-1.96,1.96,A1,1,1295714835,8G,,844,96,153107,19,56427,11,2006,98,127174,15,369.4,6,16,,,,,104,0,+++++,+++,115,0,89,0,+++++,+++,111,0,13686us,1480ms,1128ms,14986us,136ms,74911us,326ms,171us,277ms,343ms,9us,360ms
-
-Test 2:
-
-Version  1.96       ------Sequential Output------ --Sequential Input- --Random-
-Concurrency   1     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
-Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
-A2               8G   417  46 67526   8 28251   5  1338  63 53780   5 236.0   4
-Latency             38626us    1859ms     508ms   26689us     258ms     188ms
-Version  1.96       ------Sequential Create------ --------Random Create--------
-A2                  -Create-- --Read--- -Delete-- -Create-- --Read--- -Delete--
-              files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP
-                 16    51   0 +++++ +++   128   0   102   0 +++++ +++   125   0
-Latency              1526ms     169us     277ms     363ms       8us     324ms
-1.96,1.96,A2,1,1295901138,8G,,417,46,67526,8,28251,5,1338,63,53780,5,236.0,4,16,,,,,51,0,+++++,+++,128,0,102,0,+++++,+++,125,0,38626us,1859ms,508ms,26689us,258ms,188ms,1526ms,169us,277ms,363ms,8us,324ms
-
-Test 3:
-
-Version  1.96       ------Sequential Output------ --Sequential Input- --Random-
-Concurrency   1     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
-Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
-A3               8G   417  46 67526   8 28251   5  1338  63 53780   5 236.0   4
-Latency             38626us    1859ms     508ms   26689us     258ms     188ms
-Version  1.96       ------Sequential Create------ --------Random Create--------
-A3                  -Create-- --Read--- -Delete-- -Create-- --Read--- -Delete--
-              files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP
-                 16    51   0 +++++ +++   128   0   102   0 +++++ +++   125   0
-Latency              1526ms     169us     277ms     363ms       8us     324ms
-1.96,1.96,A3,1,1295901138,8G,,417,46,67526,8,28251,5,1338,63,53780,5,236.0,4,16,,,,,51,0,+++++,+++,128,0,102,0,+++++,+++,125,0,38626us,1859ms,508ms,26689us,258ms,188ms,1526ms,169us,277ms,363ms,8us,324ms
-
-System B: Supermicro H8DM8-2 Mainbord, Dual-Core AMD Opteron 2216 @ 2.4 GHz, 8 GB RAM
-          software RAID 6 using 6 x Seagate ST31000524NS S-ATA II disks
-          (chunk size 16 kB, using a Marvell MV88SX6081 8-port SATA II PCI-X Controller)
-          XFS
-
-Test 1:
-
-Version  1.96       ------Sequential Output------ --Sequential Input- --Random-
-Concurrency   1     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
-Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
-B1              16G   403  98 198720  66 53287  49  1013  99 228076  91 545.0  31
-Latency             43022us     127ms     126ms   29328us     105ms   66395us
-Version  1.96       ------Sequential Create------ --------Random Create--------
-B1                  -Create-- --Read--- -Delete-- -Create-- --Read--- -Delete--
-              files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP
-                 16    97   1 +++++ +++    96   1    96   1 +++++ +++    95   1
-Latency               326ms     349us     351ms     355ms      49us     363ms
-1.96,1.96,B1,1,1295784794,16G,,403,98,198720,66,53287,49,1013,99,228076,91,545.0,31,16,,,,,97,1,+++++,+++,96,1,96,1,+++++,+++,95,1,43022us,127ms,126ms,29328us,105ms,66395us,326ms,349us,351ms,355ms,49us,363ms
-
-Test 2:
-
-Version  1.96       ------Sequential Output------ --Sequential Input- --Random-
-Concurrency   1     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
-Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
-B2              16G   380  98 197319  68 54835  48   983  99 216812  89 527.8  31
-Latency             47456us     227ms     280ms   24696us   38233us   80147us
-Version  1.96       ------Sequential Create------ --------Random Create--------
-B2                  -Create-- --Read--- -Delete-- -Create-- --Read--- -Delete--
-              files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP
-                 16    91   1 +++++ +++   115   1    73   1 +++++ +++    96   1
-Latency               355ms    2274us     833ms     750ms    1079us     400ms
-1.96,1.96,B2,1,1295884032,16G,,380,98,197319,68,54835,48,983,99,216812,89,527.8,31,16,,,,,91,1,+++++,+++,115,1,73,1,+++++,+++,96,1,47456us,227ms,280ms,24696us,38233us,80147us,355ms,2274us,833ms,750ms,1079us,400ms
-
-Test 3:
-
-Version  1.96       ------Sequential Output------ --Sequential Input- --Random-
-Concurrency   1     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
-Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
-B3              16G   402  99 175802  64 55639  48  1006  99 232748  87 543.7  32
-Latency             43160us     426ms     164ms   13306us   40857us   65114us
-Version  1.96       ------Sequential Create------ --------Random Create--------
-B3                  -Create-- --Read--- -Delete-- -Create-- --Read--- -Delete--
-              files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP
-                 16    93   1 +++++ +++   101   1    95   1 +++++ +++    95   1
-Latency               479ms    2281us     383ms     366ms      22us     402ms
-1.96,1.96,B3,1,1295880202,16G,,402,99,175802,64,55639,48,1006,99,232748,87,543.7,32,16,,,,,93,1,+++++,+++,101,1,95,1,+++++,+++,95,1,43160us,426ms,164ms,13306us,40857us,65114us,479ms,2281us,383ms,366ms,22us,402ms
-
-
-I do not see any significant improvement in any of the parameters -
-especially when compared to the serious performance degradation (down
-to 44% for block write, 42% for block read) on system A.
-
-Best regards,
-
-Wolfgang Denk
-
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 -- 
-DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
-HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
-Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
-A supercomputer is a machine that runs an endless loop in 2 seconds.
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
