@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0ONUASR136068 for <xfs@oss.sgi.com>; Mon, 24 Jan 2011 17:30:10 -0600
+	p0ONrCPt139608 for <xfs@oss.sgi.com>; Mon, 24 Jan 2011 17:53:13 -0600
 Received: from ipmail07.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8BCD91546F46
-	for <xfs@oss.sgi.com>; Mon, 24 Jan 2011 15:32:31 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 456B61056542
+	for <xfs@oss.sgi.com>; Mon, 24 Jan 2011 15:55:34 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	3wQNCQmPb0vDitDJ for <xfs@oss.sgi.com>;
-	Mon, 24 Jan 2011 15:32:31 -0800 (PST)
-Date: Tue, 25 Jan 2011 10:32:18 +1100
+	dZBzBtySor6FspXP for <xfs@oss.sgi.com>;
+	Mon, 24 Jan 2011 15:55:34 -0800 (PST)
+Date: Tue, 25 Jan 2011 10:55:32 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 3/5] xfs: prevent extsize alignment from exceeding
-	maximum extent size
-Message-ID: <20110124233218.GC11040@dastard>
-References: <1295411400-15614-1-git-send-email-david@fromorbit.com>
-	<1295411400-15614-4-git-send-email-david@fromorbit.com>
-	<20110124090458.GD26744@infradead.org>
+Subject: Re: [PATCH 3/3] libxfs: sync files with 2.6.38 kernel code
+Message-ID: <20110124235532.GG11040@dastard>
+References: <1294649091-27174-1-git-send-email-david@fromorbit.com>
+	<1294649091-27174-4-git-send-email-david@fromorbit.com>
+	<20110124085751.GB4378@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110124090458.GD26744@infradead.org>
+In-Reply-To: <20110124085751.GB4378@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,27 +34,45 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Mon, Jan 24, 2011 at 04:04:59AM -0500, Christoph Hellwig wrote:
-> > +					/*
-> > +					 * make sure we don't exceed a single
-> > +					 * extent length when we align the
-> > +					 * extent by reducing length we are
-> > +					 * going to allocate by the maximum
-> > +					 * amount extent size aligment may
-> > +					 * require.
-> > +					alen = (xfs_extlen_t)XFS_FILBLKS_MIN(
-> > +							len,
-> > +						MAXEXTLEN - (2 * extsz - 1));
-> > +					 */
+On Mon, Jan 24, 2011 at 03:57:51AM -0500, Christoph Hellwig wrote:
+> > +/* XXX: fix this up! */
+> >  #define	OFF(f)	bitize(offsetof(xfs_dinode_t, di_ ## f))
+> >  const field_t	inode_flds[] = {
+> > -	{ "core", FLDT_DINODE_CORE, OI(OFF(core)), C1, 0, TYP_NONE },
+> > -	{ "next_unlinked", FLDT_AGINO, OI(OFF(next_unlinked)), C1, 0,
+> > -	  TYP_INODE },
+> > -	{ "u", FLDT_DINODE_U, OI(OFF(u)), C1, 0, TYP_NONE },
+> > +	{ "core", FLDT_DINODE_CORE, OI(OFF(magic)), C1, 0, TYP_NONE },
+> > +	{ "u", FLDT_DINODE_U, inode_u_offset, C1, FLD_OFFSET, TYP_NONE },
 > 
-> This essentially just adds a comment, given that the new code is inside
-> the bracing.  Also the xfs_extlen_t cast seems pointless.  The C type
-> promotion rules do just fine for going down from a 64bit type to a 32bit
-> one, as long as the results fit into the latter - which they always do
-> here.
+> I think the right way to fix this is to copy over all fields from
+> the dinode core, and keep a "virtual" core field and the inode_core
+> table for backwards compatiblity.
 
-Argh, forgot to refresh the patch after doing some bug hunting.
-I'll fix it and retest before I repost it.
+OK. By "virtual" core field, do you mean something like what I have
+about, or something different?
+
+> > +	{ "next_unlinked", FLDT_AGINO, OI(OFF(next_unlinked)), C1, 0,
+> > +	  TYP_INODE },
+> 
+> I think this one should only be added to the real dinode, not the core.
+
+Good catch. I mixed up what was in xfs_icdinode and xfs_dinode
+there.
+
+> 
+> >  #define XFS_BUF_LOCK			0
+> >  #define XFS_BUF_TRYLOCK			0
+> > +#define XBF_LOCK			XFS_BUF_LOCK
+> > +#define XBF_TRYLOCK			XFS_BUF_TRYLOCK
+> > +#define XBF_DONT_BLOCK			0
+> 
+> Please kill off the XFS_BUF_* flags, just like in kernelspace.
+
+Will do.
+
+Thanks for spending the time to look over these huge patches,
+Christoph.
 
 Cheers,
 
