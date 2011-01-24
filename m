@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0OFMh5s092750 for <xfs@oss.sgi.com>; Mon, 24 Jan 2011 09:22:43 -0600
-Received: from lucidpixels.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4D3521A1807F
-	for <xfs@oss.sgi.com>; Mon, 24 Jan 2011 07:25:03 -0800 (PST)
-Received: from lucidpixels.com (lucidpixels.com [75.144.35.66]) by
-	cuda.sgi.com with ESMTP id rLLrRaiTOb2ERqKx for
-	<xfs@oss.sgi.com>; Mon, 24 Jan 2011 07:25:03 -0800 (PST)
-Date: Mon, 24 Jan 2011 10:25:02 -0500 (EST)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
+	p0OKk8ur114961 for <xfs@oss.sgi.com>; Mon, 24 Jan 2011 14:46:09 -0600
+Received: from mail-out.m-online.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A18DD88CDD6
+	for <xfs@oss.sgi.com>; Mon, 24 Jan 2011 12:48:29 -0800 (PST)
+Received: from mail-out.m-online.net (mail-out.m-online.net [212.18.0.10]) by
+	cuda.sgi.com with ESMTP id kYdlATRwdCUqihrN for
+	<xfs@oss.sgi.com>; Mon, 24 Jan 2011 12:48:29 -0800 (PST)
+From: Wolfgang Denk <wd@denx.de>
 Subject: Re: Optimize RAID0 for max IOPS?
-In-Reply-To: <AANLkTikx4g99-Cf_09kEGfF2mmf4Dnuh2A5gTrtKweDy@mail.gmail.com>
-Message-ID: <alpine.DEB.2.00.1101241024230.14640@p34.internal.lan>
+MIME-Version: 1.0
+In-reply-to: <alpine.DEB.2.00.1101241024230.14640@p34.internal.lan>
 References: <20110118210112.D13A236C@gemini.denx.de>
 	<4D361F26.3060507@stud.tu-ilmenau.de>
 	<20110119192104.1FA92D30267@gemini.denx.de>
 	<AANLkTikx4g99-Cf_09kEGfF2mmf4Dnuh2A5gTrtKweDy@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="655872-1146966783-1295882702=:14640"
+	<alpine.DEB.2.00.1101241024230.14640@p34.internal.lan>
+Date: Mon, 24 Jan 2011 21:48:27 +0100
+Message-Id: <20110124204827.B707FB187@gemini.denx.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,51 +27,35 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: CoolCold <coolthecold@gmail.com>
-Cc: linux-raid@vger.kernel.org, stefan.huebner@stud.tu-ilmenau.de, Wolfgang Denk <wd@denx.de>, xfs@oss.sgi.com
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-raid@vger.kernel.org, xfs@oss.sgi.com
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+Dear Justin Piszcz,
 
---655872-1146966783-1295882702=:14640
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-
-
-
-On Mon, 24 Jan 2011, CoolCold wrote:
-
->> So can anybody help answering these questions:
->>
->> - are there any special options when creating the RAID0 to make it
->> =A0perform faster for such a use case?
->> - are there other tunables, any special MD / LVM / file system /
->> =A0read ahead / buffer cache / ... parameters to look for?
-> XFS is known for it's slow speed on metadata operations like updating
-> file attributes/removing files..but things gonna change after 2.6.35
-> where delaylog is used. Citating Dave Chinner :
-> < dchinner> Indeed, the biggest concurrency limitation has
-> traditionally been the transaction commit/journalling code, but that's
-> a lot more scalable now with delayed logging....
+In message <alpine.DEB.2.00.1101241024230.14640@p34.internal.lan> you wrote:
 >
-> So, you may need to benchmark fs part.
+> > So, you may need to benchmark fs part.
+> 
+> Some info on XFS benchmark with delaylog here:
+> http://comments.gmane.org/gmane.comp.file-systems.xfs.general/34379
 
-Some info on XFS benchmark with delaylog here:
-http://comments.gmane.org/gmane.comp.file-systems.xfs.general/34379
+Thanks a lot for the pointer. I will try this out.
 
-Justin.
+Best regards,
 
---655872-1146966783-1295882702=:14640
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Wolfgang Denk
+
+-- 
+DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
+HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
+Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
+Madness takes its toll. Please have exact change.
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---655872-1146966783-1295882702=:14640--
