@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0O94YN5073824 for <xfs@oss.sgi.com>; Mon, 24 Jan 2011 03:04:34 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0A20728A933
-	for <xfs@oss.sgi.com>; Mon, 24 Jan 2011 01:06:56 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id bBjk9XWNnZiaMegB for
-	<xfs@oss.sgi.com>; Mon, 24 Jan 2011 01:06:56 -0800 (PST)
-Date: Mon, 24 Jan 2011 04:06:56 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 4/5] xfs: limit extsize to size of AGs and/or MAXEXTLEN
-Message-ID: <20110124090656.GE26744@infradead.org>
-References: <1295411400-15614-1-git-send-email-david@fromorbit.com>
-	<1295411400-15614-5-git-send-email-david@fromorbit.com>
+	p0OFMh5s092750 for <xfs@oss.sgi.com>; Mon, 24 Jan 2011 09:22:43 -0600
+Received: from lucidpixels.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4D3521A1807F
+	for <xfs@oss.sgi.com>; Mon, 24 Jan 2011 07:25:03 -0800 (PST)
+Received: from lucidpixels.com (lucidpixels.com [75.144.35.66]) by
+	cuda.sgi.com with ESMTP id rLLrRaiTOb2ERqKx for
+	<xfs@oss.sgi.com>; Mon, 24 Jan 2011 07:25:03 -0800 (PST)
+Date: Mon, 24 Jan 2011 10:25:02 -0500 (EST)
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: Optimize RAID0 for max IOPS?
+In-Reply-To: <AANLkTikx4g99-Cf_09kEGfF2mmf4Dnuh2A5gTrtKweDy@mail.gmail.com>
+Message-ID: <alpine.DEB.2.00.1101241024230.14640@p34.internal.lan>
+References: <20110118210112.D13A236C@gemini.denx.de>
+	<4D361F26.3060507@stud.tu-ilmenau.de>
+	<20110119192104.1FA92D30267@gemini.denx.de>
+	<AANLkTikx4g99-Cf_09kEGfF2mmf4Dnuh2A5gTrtKweDy@mail.gmail.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1295411400-15614-5-git-send-email-david@fromorbit.com>
+Content-Type: MULTIPART/MIXED; BOUNDARY="655872-1146966783-1295882702=:14640"
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,26 +27,51 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: CoolCold <coolthecold@gmail.com>
+Cc: linux-raid@vger.kernel.org, stefan.huebner@stud.tu-ilmenau.de, Wolfgang Denk <wd@denx.de>, xfs@oss.sgi.com
 
-On Wed, Jan 19, 2011 at 03:29:59PM +1100, Dave Chinner wrote:
-> +		 * Also, for non-realtime files, limit the extent size hint to
-> +		 * half the size of the AGs in the filesystem so alignment
-> +		 * doesn't result in extents larger than an AG.
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-What do we do about the last AG, which potentionally is smaller than the
-others?
+--655872-1146966783-1295882702=:14640
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 
-Otherwise looks good,
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+
+On Mon, 24 Jan 2011, CoolCold wrote:
+
+>> So can anybody help answering these questions:
+>>
+>> - are there any special options when creating the RAID0 to make it
+>> =A0perform faster for such a use case?
+>> - are there other tunables, any special MD / LVM / file system /
+>> =A0read ahead / buffer cache / ... parameters to look for?
+> XFS is known for it's slow speed on metadata operations like updating
+> file attributes/removing files..but things gonna change after 2.6.35
+> where delaylog is used. Citating Dave Chinner :
+> < dchinner> Indeed, the biggest concurrency limitation has
+> traditionally been the transaction commit/journalling code, but that's
+> a lot more scalable now with delayed logging....
+>
+> So, you may need to benchmark fs part.
+
+Some info on XFS benchmark with delaylog here:
+http://comments.gmane.org/gmane.comp.file-systems.xfs.general/34379
+
+Justin.
+
+--655872-1146966783-1295882702=:14640
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--655872-1146966783-1295882702=:14640--
