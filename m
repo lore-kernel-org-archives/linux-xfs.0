@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0P6Iwk9201315 for <xfs@oss.sgi.com>; Tue, 25 Jan 2011 00:18:58 -0600
-Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7B4698AA2F5
-	for <xfs@oss.sgi.com>; Mon, 24 Jan 2011 22:21:18 -0800 (PST)
-Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
-	cuda.sgi.com with ESMTP id 31RFdW9nQDNOGvBv for
-	<xfs@oss.sgi.com>; Mon, 24 Jan 2011 22:21:18 -0800 (PST)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: Re: extremely slow write performance plaintext
-Date: Tue, 25 Jan 2011 07:21:09 +0100
-References: <3205_1294953756_4D2F6D1C_3205_1943_1_4D2F6D1C.2060409@davisvision.com>
-	<4D30C7F3.3040105@hardwarefreak.com>
-	<1779_1295360207_4D35A0CF_1779_747_1_4D35A0CF.9050503@davisvision.com>
-In-Reply-To: <1779_1295360207_4D35A0CF_1779_747_1_4D35A0CF.9050503@davisvision.com>
-MIME-Version: 1.0
-Message-Id: <201101250721.14716@zmi.at>
+	p0P7bFIs213199 for <xfs@oss.sgi.com>; Tue, 25 Jan 2011 01:37:15 -0600
+Received: from smtp3-g21.free.fr (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4D57E1A1DA09
+	for <xfs@oss.sgi.com>; Mon, 24 Jan 2011 23:39:36 -0800 (PST)
+Received: from smtp3-g21.free.fr (smtp3-g21.free.fr [212.27.42.3]) by
+	cuda.sgi.com with ESMTP id gKtN8Lvm2mAWF4bm for
+	<xfs@oss.sgi.com>; Mon, 24 Jan 2011 23:39:36 -0800 (PST)
+Date: Tue, 25 Jan 2011 08:39:00 +0100
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: Optimize RAID0 for max IOPS?
+Message-ID: <20110125083900.4dd65bf2@galadriel2.home>
+In-Reply-To: <20110124230314.GA11040@dastard>
+References: <20110118210112.D13A236C@gemini.denx.de>
+	<4D361F26.3060507@stud.tu-ilmenau.de>
+	<20110119192104.1FA92D30267@gemini.denx.de>
+	<AANLkTikx4g99-Cf_09kEGfF2mmf4Dnuh2A5gTrtKweDy@mail.gmail.com>
+	<alpine.DEB.2.00.1101241024230.14640@p34.internal.lan>
+	<20110124215713.82D75B187@gemini.denx.de>
+	<20110124230314.GA11040@dastard>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,84 +29,21 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============5875782278610784779=="
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Cory Coager <ccoager@davisvision.com>, Stan Hoeppner <stan@hardwarefreak.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-raid@vger.kernel.org, xfs@oss.sgi.com, Wolfgang Denk <wd@denx.de>, Justin Piszcz <jpiszcz@lucidpixels.com>
 
---===============5875782278610784779==
-Content-Type: multipart/signed;
-  boundary="nextPart2800498.z8KdFmrLEf";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
-
---nextPart2800498.z8KdFmrLEf
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-
-On Dienstag, 18. Januar 2011 Cory Coager wrote:
-> Also, I want to stress that I am only having performance issues with
-> one logical volume, the others seem fine.
-
-You're getting 40MB/s write speed and says that's fine? I get more=20
-performance from a single SATA desktop drive. Your setup seems to suck=20
-extremely somewhere.
-
-It already starts with your dd speed. I started it on a virtualized VM=20
-on an old, overloaded server and get:
-
-# dd if=3D/dev/zero of=3Dtest.dd bs=3D1k count=3D1M
-1048576+0 Datens=E4tze ein
-1048576+0 Datens=E4tze aus
-1073741824 Bytes (1,1 GB) kopiert, 10,9992 s, 97,6 MB/s
-
-This is a hardware RAID 6 with just 8x 10krpm WD SATA drives. Try to=20
-look into general I/O problems. Maybe you can try to boot from an actual=20
-linux CD with kernel >2.6.30 to see if that helps performance.
-
-Maybe one or more disks in your array are dead and the controller is=20
-crying for replacement?
-
-=2D-=20
-mit freundlichen Gr=FCssen,
-Michael Monnerie, Ing. BSc
-
-it-management Internet Services: Prot=E9ger
-http://proteger.at [gesprochen: Prot-e-schee]
-Tel: +43 660 / 415 6531
-
-// ****** Radiointerview zum Thema Spam ******
-// http://www.it-podcast.at/archiv.html#podcast-100716
-//=20
-// Haus zu verkaufen: http://zmi.at/langegg/
-
---nextPart2800498.z8KdFmrLEf
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.15 (GNU/Linux)
-
-iEYEABECAAYFAk0+a9oACgkQzhSR9xwSCbSMLwCgq2/V3O81NfYnOnUhlmdd9E/P
-a4AAoKp/QzcB/KbtDN1VgHx0QPAffdX2
-=aX+8
------END PGP SIGNATURE-----
-
---nextPart2800498.z8KdFmrLEf--
-
-
---===============5875782278610784779==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
-
---===============5875782278610784779==--
+TGUgVHVlLCAyNSBKYW4gMjAxMSAxMDowMzoxNCArMTEwMCB2b3VzIMOpY3JpdmllejoKCj4gT25s
+eSAxNiBmaWxlcz8KCklJUkMgdGhpcyBpcyAxNiB0aG91c2FuZHMgb2YgZmlsZXMuIFRob3VnaCB0
+aGlzIGlzIG5vdCBlbm91Z2gsIEkKZ2VuZXJhbGx5IHVzZSA4MCB0byAxNjAgZm9yIHRlc3RzLgoK
+LS0gCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLQpFbW1hbnVlbCBGbG9yYWMgICAgIHwgICBEaXJlY3Rpb24gdGVj
+aG5pcXVlCiAgICAgICAgICAgICAgICAgICAgfCAgIEludGVsbGlxdWUKICAgICAgICAgICAgICAg
+ICAgICB8CTxlZmxvcmFjQGludGVsbGlxdWUuY29tPgogICAgICAgICAgICAgICAgICAgIHwgICAr
+MzMgMSA3OCA5NCA4NCAwMgotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KCl9fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29t
+Cmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
