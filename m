@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0P8p5JT224567 for <xfs@oss.sgi.com>; Tue, 25 Jan 2011 02:51:05 -0600
+	p0P8osJl224455 for <xfs@oss.sgi.com>; Tue, 25 Jan 2011 02:50:55 -0600
 Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8C5771DC15C8
-	for <xfs@oss.sgi.com>; Tue, 25 Jan 2011 00:53:27 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A750F1DC15C0
+	for <xfs@oss.sgi.com>; Tue, 25 Jan 2011 00:53:16 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	DHpcILpViGr2eLeO for <xfs@oss.sgi.com>;
-	Tue, 25 Jan 2011 00:53:27 -0800 (PST)
-Received: from [192.168.1.1] (helo=disappointment)
+	YfQzB466hetJ5irj for <xfs@oss.sgi.com>;
+	Tue, 25 Jan 2011 00:53:16 -0800 (PST)
+Received: from chute ([192.168.1.1] helo=disappointment)
 	by dastard with esmtp (Exim 4.72)
-	(envelope-from <dave@fromorbit.com>) id 1PheeI-0003xT-Rt
+	(envelope-from <dave@fromorbit.com>) id 1PheeI-0003xc-Oe
 	for xfs@oss.sgi.com; Tue, 25 Jan 2011 19:53:14 +1100
 Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1Phebw-0007gQ-M9
+	(envelope-from <dave@disappointment.disaster>) id 1Phebw-0007gI-GE
 	for xfs@oss.sgi.com; Tue, 25 Jan 2011 19:50:48 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 4/8] xfs: limit extent length for allocation to AG size
-Date: Tue, 25 Jan 2011 19:50:40 +1100
-Message-Id: <1295945444-29488-5-git-send-email-david@fromorbit.com>
+Subject: [PATCH 1/8] xfs: fix log ticket leak on forced shutdown.
+Date: Tue, 25 Jan 2011 19:50:37 +1100
+Message-Id: <1295945444-29488-2-git-send-email-david@fromorbit.com>
 In-Reply-To: <1295945444-29488-1-git-send-email-david@fromorbit.com>
 References: <1295945444-29488-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,123 +39,74 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Delayed allocation extents can be larger than AGs, so when trying to
-convert a large range we may scan every AG inside
-xfs_bmap_alloc_nullfb() trying to find an AG with a size larger than
-an AG. We should stop when we find the first AG with a maximum
-possible allocation size. This causes excessive CPU usage when there
-are lots of AGs.
+The kmemleak detector shows this after test 139:
 
-The same problem occurs when doing preallocation of a range larger
-than an AG.
+unreferenced object 0xffff880079b88bb0 (size 264):
+  comm "xfs_io", pid 4904, jiffies 4294909382 (age 276.824s)
+  hex dump (first 32 bytes):
+    00 00 00 00 ad 4e ad de ff ff ff ff 00 00 00 00  .....N..........
+    ff ff ff ff ff ff ff ff 48 7b c9 82 ff ff ff ff  ........H{......
+  backtrace:
+    [<ffffffff81afb04d>] kmemleak_alloc+0x2d/0x60
+    [<ffffffff8115c6cf>] kmem_cache_alloc+0x13f/0x2b0
+    [<ffffffff814aaa97>] kmem_zone_alloc+0x77/0xf0
+    [<ffffffff814aab2e>] kmem_zone_zalloc+0x1e/0x50
+    [<ffffffff8148f394>] xlog_ticket_alloc+0x34/0x170
+    [<ffffffff81494444>] xlog_cil_push+0xa4/0x3f0
+    [<ffffffff81494eca>] xlog_cil_force_lsn+0x15a/0x160
+    [<ffffffff814933a5>] _xfs_log_force_lsn+0x75/0x2d0
+    [<ffffffff814a264d>] _xfs_trans_commit+0x2bd/0x2f0
+    [<ffffffff8148bfdd>] xfs_iomap_write_allocate+0x1ad/0x350
+    [<ffffffff814ac17f>] xfs_map_blocks+0x21f/0x370
+    [<ffffffff814ad1b7>] xfs_vm_writepage+0x1c7/0x550
+    [<ffffffff8112200a>] __writepage+0x1a/0x50
+    [<ffffffff81122df2>] write_cache_pages+0x1c2/0x4c0
+    [<ffffffff81123117>] generic_writepages+0x27/0x30
+    [<ffffffff814aba5d>] xfs_vm_writepages+0x5d/0x80
 
-Fix the problem by limiting real allocation lengths to the maximum
-that an AG can support. This means if we have empty AGs, we'll stop
-the search at the first of them. If there are no empty AGs, we'll
-still scan them all, but that is a different problem....
+By inspection, the leak occurs when xlog_write() returns and error
+and we jump to the abort path without dropping the reference on the
+active ticket.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_alloc.h |   16 ++++++++++++++++
- fs/xfs/xfs_bmap.c  |   16 +++++++++-------
- 2 files changed, 25 insertions(+), 7 deletions(-)
+ fs/xfs/xfs_log_cil.c |    7 +++++--
+ 1 files changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_alloc.h b/fs/xfs/xfs_alloc.h
-index 0ab56b3..6ad45b9 100644
---- a/fs/xfs/xfs_alloc.h
-+++ b/fs/xfs/xfs_alloc.h
-@@ -75,6 +75,22 @@ typedef unsigned int xfs_alloctype_t;
- #define XFS_ALLOC_SET_ASIDE(mp)  (4 + ((mp)->m_sb.sb_agcount * 4))
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index 9dc8125..c7eac5a 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -543,7 +543,7 @@ xlog_cil_push(
  
- /*
-+ * When deciding how much space to allocate out of an AG, we limit the
-+ * allocation maximum size to the size the AG. However, we cannot use all the
-+ * blocks in the AG - some are permanently used by metadata. These
-+ * blocks are generally:
-+ *	- the AG superblock, AGF, AGI and AGFL
-+ *	- the AGF (bno and cnt) and AGI btree root blocks
-+ *	- 4 blocks on the AGFL according to XFS_ALLOC_SET_ASIDE() limits
-+ *
-+ * The AG headers are sector sized, so the amount of space they take up is
-+ * dependent on filesystem geometry. The others are all single blocks.
-+ */
-+#define XFS_ALLOC_AG_MAX_USABLE(mp)	\
-+	((mp)->m_sb.sb_agblocks - XFS_BB_TO_FSB(mp, XFS_FSS_TO_BB(mp, 4)) + 7)
-+
-+
-+/*
-  * Argument structure for xfs_alloc routines.
-  * This is turned into a structure to avoid having 20 arguments passed
-  * down several levels of the stack.
-diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
-index 4111cd3..74861c6 100644
---- a/fs/xfs/xfs_bmap.c
-+++ b/fs/xfs/xfs_bmap.c
-@@ -2430,7 +2430,7 @@ xfs_bmap_btalloc_nullfb(
- 		startag = ag = 0;
- 
- 	pag = xfs_perag_get(mp, ag);
--	while (*blen < ap->alen) {
-+	while (*blen < args->maxlen) {
- 		if (!pag->pagf_init) {
- 			error = xfs_alloc_pagf_init(mp, args->tp, ag,
- 						    XFS_ALLOC_FLAG_TRYLOCK);
-@@ -2452,7 +2452,7 @@ xfs_bmap_btalloc_nullfb(
- 			notinit = 1;
- 
- 		if (xfs_inode_is_filestream(ap->ip)) {
--			if (*blen >= ap->alen)
-+			if (*blen >= args->maxlen)
- 				break;
- 
- 			if (ap->userdata) {
-@@ -2498,14 +2498,14 @@ xfs_bmap_btalloc_nullfb(
- 	 * If the best seen length is less than the request
- 	 * length, use the best as the minimum.
- 	 */
--	else if (*blen < ap->alen)
-+	else if (*blen < args->maxlen)
- 		args->minlen = *blen;
- 	/*
- 	 * Otherwise we've seen an extent as big as alen,
- 	 * use that as the minimum.
- 	 */
- 	else
--		args->minlen = ap->alen;
-+		args->minlen = args->maxlen;
+ 	error = xlog_write(log, &lvhdr, tic, &ctx->start_lsn, NULL, 0);
+ 	if (error)
+-		goto out_abort;
++		goto out_abort_free_ticket;
  
  	/*
- 	 * set the failure fallback case to look in the selected
-@@ -2573,7 +2573,9 @@ xfs_bmap_btalloc(
- 	args.tp = ap->tp;
- 	args.mp = mp;
- 	args.fsbno = ap->rval;
--	args.maxlen = MIN(ap->alen, mp->m_sb.sb_agblocks);
-+
-+	/* Trim the allocation back to the maximum an AG can fit. */
-+	args.maxlen = MIN(ap->alen, XFS_ALLOC_AG_MAX_USABLE(mp));
- 	args.firstblock = ap->firstblock;
- 	blen = 0;
- 	if (nullfb) {
-@@ -2621,7 +2623,7 @@ xfs_bmap_btalloc(
- 			/*
- 			 * Adjust for alignment
- 			 */
--			if (blen > args.alignment && blen <= ap->alen)
-+			if (blen > args.alignment && blen <= args.maxlen)
- 				args.minlen = blen - args.alignment;
- 			args.minalignslop = 0;
- 		} else {
-@@ -2640,7 +2642,7 @@ xfs_bmap_btalloc(
- 			 * of minlen+alignment+slop doesn't go up
- 			 * between the calls.
- 			 */
--			if (blen > mp->m_dalign && blen <= ap->alen)
-+			if (blen > mp->m_dalign && blen <= args.maxlen)
- 				nextminlen = blen - mp->m_dalign;
- 			else
- 				nextminlen = args.minlen;
+ 	 * now that we've written the checkpoint into the log, strictly
+@@ -569,8 +569,9 @@ restart:
+ 	}
+ 	spin_unlock(&cil->xc_cil_lock);
+ 
++	/* xfs_log_done always frees the ticket on error. */
+ 	commit_lsn = xfs_log_done(log->l_mp, tic, &commit_iclog, 0);
+-	if (error || commit_lsn == -1)
++	if (commit_lsn == -1)
+ 		goto out_abort;
+ 
+ 	/* attach all the transactions w/ busy extents to iclog */
+@@ -600,6 +601,8 @@ out_free_ticket:
+ 	kmem_free(new_ctx);
+ 	return 0;
+ 
++out_abort_free_ticket:
++	xfs_log_ticket_put(tic);
+ out_abort:
+ 	xlog_cil_committed(ctx, XFS_LI_ABORTED);
+ 	return XFS_ERROR(EIO);
 -- 
 1.7.2.3
 
