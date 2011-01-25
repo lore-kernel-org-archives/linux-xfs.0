@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0P3x5NL176143 for <xfs@oss.sgi.com>; Mon, 24 Jan 2011 21:59:05 -0600
+	p0P3ww7C176100 for <xfs@oss.sgi.com>; Mon, 24 Jan 2011 21:58:59 -0600
 Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D588128D51D
-	for <xfs@oss.sgi.com>; Mon, 24 Jan 2011 20:01:27 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A62FA28D519
+	for <xfs@oss.sgi.com>; Mon, 24 Jan 2011 20:01:20 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	t1UgAF4EEYfXKLe3 for <xfs@oss.sgi.com>;
-	Mon, 24 Jan 2011 20:01:27 -0800 (PST)
+	siP592DjpzcsHJFO for <xfs@oss.sgi.com>;
+	Mon, 24 Jan 2011 20:01:20 -0800 (PST)
 Received: from chute ([192.168.1.1] helo=disappointment)
 	by dastard with esmtp (Exim 4.72)
-	(envelope-from <dave@fromorbit.com>) id 1Pha5j-0003Tp-65
+	(envelope-from <dave@fromorbit.com>) id 1Pha5j-0003Tq-7t
 	for xfs@oss.sgi.com; Tue, 25 Jan 2011 15:01:15 +1100
 Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1Pha3Y-0005Nc-OK
+	(envelope-from <dave@disappointment.disaster>) id 1Pha3Y-0005Ne-Qa
 	for xfs@oss.sgi.com; Tue, 25 Jan 2011 14:59:00 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/4] xfstests: add simple splice test
-Date: Tue, 25 Jan 2011 14:58:54 +1100
-Message-Id: <1295927937-20634-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH 2/4] xfstests: add test to reproduce bmap btree corruption.
+Date: Tue, 25 Jan 2011 14:58:55 +1100
+Message-Id: <1295927937-20634-3-git-send-email-david@fromorbit.com>
 In-Reply-To: <1295927937-20634-1-git-send-email-david@fromorbit.com>
 References: <1295927937-20634-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,30 +39,36 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-We don't have any coverage of the splice functionality provided by
-the kernel in xfstests. Add a simple test that uses the sendfile
-operation built into xfs_io to copy a file ensure we at least
-execute the code path in xfstests.
+The problem was reprted here:
+
+https://bugzilla.redhat.com/show_bug.cgi?id=626244
+
+With the simple test case:
+
+# mkfs.xfs -f -d agsize=16m,size=50g <dev>
+# mount <dev> /mnt
+# xfs_io -f -c 'resvsp 0 40G' /mnt/foo
+
+Triggering the problem. Turn this into a new xfsqa test so that we
+exercise the problem code and prevent future regressions.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- 249     |   62 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 249.out |    2 ++
- group   |    1 +
- 3 files changed, 65 insertions(+), 0 deletions(-)
- create mode 100644 249
- create mode 100644 249.out
+ 250   |   97 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ group |    1 +
+ 2 files changed, 98 insertions(+), 0 deletions(-)
+ create mode 100644 250
 
-diff --git a/249 b/249
+diff --git a/250 b/250
 new file mode 100644
-index 0000000..6fc972e
+index 0000000..cb0fa9c
 --- /dev/null
-+++ b/249
-@@ -0,0 +1,62 @@
++++ b/250
+@@ -0,0 +1,97 @@
 +#! /bin/bash
-+# FS QA Test No. 249
++# FS QA Test No. 250
 +#
-+# simple splice(2) test.
++# Bmap btree corruption regression test
 +#
 +#-----------------------------------------------------------------------
 +# Copyright (c) 2011 Red Hat, Inc.  All Rights Reserved.
@@ -95,8 +101,9 @@ index 0000000..6fc972e
 +_cleanup()
 +{
 +	cd /
-+	rm -f $tmp.*
-+	rm -f $SRC $DST
++	umount $LOOP_MNT 2>/dev/null
++	rm -f $LOOP_DEV
++	rmdir $LOOP_MNT
 +	_cleanup_testdir
 +}
 +
@@ -105,39 +112,65 @@ index 0000000..6fc972e
 +. ./common.filter
 +
 +# real QA test starts here
-+_supported_fs generic
++_supported_fs xfs
 +_supported_os Linux
-+_setup_testdir
++_require_loop
 +
-+echo "Feel the serenity."
++LOOP_DEV=$TEST_DIR/$seq.fs
++LOOP_MNT=$TEST_DIR/$seq.mnt
 +
-+SRC=$TEST_DIR/$seq.src
-+DST=$TEST_DIR/$seq.dst
++_filter_io()
++{
++	sed -e '/.* ops; /d'
++}
 +
-+$XFS_IO_PROG -f -c "pwrite -S 0xa5a55a5a 0 32768k" -c fsync $SRC > /dev/null 2>&1
-+$XFS_IO_PROG -f -c "sendfile -i $SRC 0 32768k" -c fsync $DST > /dev/null 2>&1
++# real QA test starts here
 +
-+diff $SRC $DST
++echo "*** create loop mount point"
++rmdir $LOOP_MNT 2>/dev/null
++mkdir -p $LOOP_MNT || _fail "cannot create loopback mount point"
 +
-+status=$?
++_test_loop()
++{
++	size=$1
++	agsize=$2
++	fsize=$3
++
++	dparam="file,name=$LOOP_DEV,size=$size"
++	if [ -n "$agsize" ]; then
++		dparam="$dparam,agsize=$agsize"
++	fi
++
++	echo "*** mkfs loop file (size=$size)"
++	$MKFS_XFS_PROG -d $dparam \
++		| _filter_mkfs # 2>/dev/null
++
++	echo "*** mount loop filesystem"
++	mount -t xfs -o loop $LOOP_DEV $LOOP_MNT
++
++	echo "*** preallocate large file"
++	xfs_io -f -c "resvsp 0 $fsize" $LOOP_MNT/foo | _filter_io
++
++	echo "*** unmount loop filesystem"
++	umount $LOOP_MNT
++
++	echo "*** check loop filesystem"
++	 _check_xfs_filesystem $LOOP_DEV none none
++}
++
++_test_loop 50g 16m 40G
++echo "*** done"
++status=0
 +exit
-diff --git a/249.out b/249.out
-new file mode 100644
-index 0000000..592696f
---- /dev/null
-+++ b/249.out
-@@ -0,0 +1,2 @@
-+QA output created by 249
-+Feel the serenity.
 diff --git a/group b/group
-index a40c98f..b94f543 100644
+index b94f543..b18f2e6 100644
 --- a/group
 +++ b/group
-@@ -362,3 +362,4 @@ deprecated
- 246 auto quick rw
+@@ -363,3 +363,4 @@ deprecated
  247 auto quick rw
  248 auto quick rw 
-+249 auto quick rw 
+ 249 auto quick rw 
++250 auto quick rw prealloc metadata
 -- 
 1.7.2.3
 
