@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0P7bFIs213199 for <xfs@oss.sgi.com>; Tue, 25 Jan 2011 01:37:15 -0600
-Received: from smtp3-g21.free.fr (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4D57E1A1DA09
-	for <xfs@oss.sgi.com>; Mon, 24 Jan 2011 23:39:36 -0800 (PST)
-Received: from smtp3-g21.free.fr (smtp3-g21.free.fr [212.27.42.3]) by
-	cuda.sgi.com with ESMTP id gKtN8Lvm2mAWF4bm for
-	<xfs@oss.sgi.com>; Mon, 24 Jan 2011 23:39:36 -0800 (PST)
-Date: Tue, 25 Jan 2011 08:39:00 +0100
-From: Emmanuel Florac <eflorac@intellique.com>
+	p0P8YOSr221541 for <xfs@oss.sgi.com>; Tue, 25 Jan 2011 02:34:25 -0600
+Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7F5188AA020
+	for <xfs@oss.sgi.com>; Tue, 25 Jan 2011 00:36:46 -0800 (PST)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	9QHD63HP1CiejvB1 for <xfs@oss.sgi.com>;
+	Tue, 25 Jan 2011 00:36:46 -0800 (PST)
+Date: Tue, 25 Jan 2011 19:36:43 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: Optimize RAID0 for max IOPS?
-Message-ID: <20110125083900.4dd65bf2@galadriel2.home>
-In-Reply-To: <20110124230314.GA11040@dastard>
+Message-ID: <20110125083643.GE28803@dastard>
 References: <20110118210112.D13A236C@gemini.denx.de>
 	<4D361F26.3060507@stud.tu-ilmenau.de>
 	<20110119192104.1FA92D30267@gemini.denx.de>
@@ -20,7 +20,10 @@ References: <20110118210112.D13A236C@gemini.denx.de>
 	<alpine.DEB.2.00.1101241024230.14640@p34.internal.lan>
 	<20110124215713.82D75B187@gemini.denx.de>
 	<20110124230314.GA11040@dastard>
-Mime-Version: 1.0
+	<20110125083900.4dd65bf2@galadriel2.home>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20110125083900.4dd65bf2@galadriel2.home>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,21 +32,79 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Emmanuel Florac <eflorac@intellique.com>
 Cc: linux-raid@vger.kernel.org, xfs@oss.sgi.com, Wolfgang Denk <wd@denx.de>, Justin Piszcz <jpiszcz@lucidpixels.com>
 
-TGUgVHVlLCAyNSBKYW4gMjAxMSAxMDowMzoxNCArMTEwMCB2b3VzIMOpY3JpdmllejoKCj4gT25s
-eSAxNiBmaWxlcz8KCklJUkMgdGhpcyBpcyAxNiB0aG91c2FuZHMgb2YgZmlsZXMuIFRob3VnaCB0
-aGlzIGlzIG5vdCBlbm91Z2gsIEkKZ2VuZXJhbGx5IHVzZSA4MCB0byAxNjAgZm9yIHRlc3RzLgoK
-LS0gCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLQpFbW1hbnVlbCBGbG9yYWMgICAgIHwgICBEaXJlY3Rpb24gdGVj
-aG5pcXVlCiAgICAgICAgICAgICAgICAgICAgfCAgIEludGVsbGlxdWUKICAgICAgICAgICAgICAg
-ICAgICB8CTxlZmxvcmFjQGludGVsbGlxdWUuY29tPgogICAgICAgICAgICAgICAgICAgIHwgICAr
-MzMgMSA3OCA5NCA4NCAwMgotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KCl9fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29t
-Cmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+[ As a small note - if you are going to comment on the results table
+from a previous message, please don't cut it from your response.
+Context is important. I pasted the relevant part back in so i can
+refer back to it in my response. ]
+
+On Tue, Jan 25, 2011 at 08:39:00AM +0100, Emmanuel Florac wrote:
+> Le Tue, 25 Jan 2011 10:03:14 +1100 vous =E9criviez:
+> > > Version  1.96       ------Sequential Create------ --------Random Crea=
+te--------
+> > > A1                  -Create-- --Read--- -Delete-- -Create-- --Read---=
+ -Delete--
+> > >               files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP=
+  /sec %CP
+> > >                  16   104   0 +++++ +++   115   0    89   0 +++++ +++=
+   111   0
+> > =
+
+> > Only 16 files?
+> =
+
+> IIRC this is 16 thousands of files. Though this is not enough, I
+> generally use 80 to 160 for tests.
+
+Yes, you're right, the bonnie++ man page states that it is in units
+of 1024 files. Be nice if there was a "k" to signify that so people
+who aren't intimately familiar with it's output format can see
+exactly what was tested....
+
+As it is, a create rate of 104 files/s (note the consistency of
+units between 2 adjacent numbers!) indicates something else is
+screwed, because my local test VM on RAID0 gets numbers like this:
+
+Version  1.96       ------Sequential Create------ --------Random Create----=
+----
+test-4              -Create-- --Read--- -Delete-- -Create-- --Read--- -Dele=
+te--
+              files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec=
+ %CP
+                 16 25507  90 +++++ +++ 30472  97 25281  93 +++++ +++ 29077=
+  97
+Latency             23864us     204us   21092us   18855us      82us     121=
+us
+
+IOWs, create rates of 25k/s and unlink of 30k/s and it is clearly
+CPU bound.
+
+Therein lies the difference: the original numbers have 0% CPU usage,
+which indicates that the test is blocking.  Something is causing the
+reported test system to be blocked almost all the time.
+
+/me looks closer.
+
+Oh, despite $subject being "RAID0" the filesystems being tested are
+on RAID5 and RAID6 with very small chunk sizes on slow SATA drives.
+This is smelling like a case of barrier IOs on software raid on
+cheap storage....
+
+Cheers,
+
+Dave.
+-- =
+
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
