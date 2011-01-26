@@ -1,14 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0QLK2A8165769 for <xfs@oss.sgi.com>; Wed, 26 Jan 2011 15:20:02 -0600
-Subject: Re: [PATCH 1/8] xfs: fix log ticket leak on forced shutdown.
+	p0QLL48q165925 for <xfs@oss.sgi.com>; Wed, 26 Jan 2011 15:21:04 -0600
+Subject: Re: [PATCH 0/8] xfs: 2.6.38-rc candidate fixes V2
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1295945444-29488-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1295945444-29488-1-git-send-email-david@fromorbit.com>
 References: <1295945444-29488-1-git-send-email-david@fromorbit.com>
-	<1295945444-29488-2-git-send-email-david@fromorbit.com>
-Date: Wed, 26 Jan 2011 15:22:22 -0600
-Message-ID: <1296076942.1980.930.camel@doink>
+Date: Wed, 26 Jan 2011 15:23:28 -0600
+Message-ID: <1296077008.1980.947.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -27,25 +26,38 @@ To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
 On Tue, 2011-01-25 at 19:50 +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> The kmemleak detector shows this after test 139:
-> 
-> unreferenced object 0xffff880079b88bb0 (size 264):
+> These are all the pending 2.6.38-rc candidate fixes I have in my queue.
 
-. . .
+After looking this latest series over I think these
+are ready to go:
 
->     [<ffffffff81123117>] generic_writepages+0x27/0x30
->     [<ffffffff814aba5d>] xfs_vm_writepages+0x5d/0x80
-> 
-> By inspection, the leak occurs when xlog_write() returns and error
-> and we jump to the abort path without dropping the reference on the
-> active ticket.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+[1/8] xfs: fix log ticket leak on forced shutdown
+[3/8] xfs: speculative delayed allocation uses rounddown_power_of_2
+badly
+[6/8] xfs: limit extsize to size of AGs and/or MAXEXTLEN
+[7/8] xfs: handle CIl transaction commit failures correctly
 
-Reviewed-by: Alex Elder <aelder@sgi.com>
+The next two are marked reviewed by Christoph, but I have
+made a few minor suggestions for you to consider.  One is
+ready to go, the other may be but you need to verify it.
+Changes--if any--would be minor, to make them ready:
+
+[4/8] xfs: limit extent length for allocation to AG size 
+[5/8] xfs: prevent extsize alignment from exceeding maximum extent size 
+
+These last two appear to need a small bit of work.
+[2/8] xfs: fix efi item leak on forced shutdown
+[8/8] xfs: fix dquot shaker deadlock
+
+I don't expect it will take much time to fix these, but
+if you want I could take the ones that are ready right
+away, without waiting for the rest to get completed.
+
+Let me know how you want me to handle it.  Unless I
+hear otherwise I'm awaiting pull requests from you
+on reviewed patches.
+
+					-Alex
 
 _______________________________________________
 xfs mailing list
