@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0Q4YK4O114092 for <xfs@oss.sgi.com>; Tue, 25 Jan 2011 22:34:21 -0600
-Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 21E891A2B3DE
-	for <xfs@oss.sgi.com>; Tue, 25 Jan 2011 20:36:43 -0800 (PST)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	RaEIQbfjWUDhaJaE for <xfs@oss.sgi.com>;
-	Tue, 25 Jan 2011 20:36:43 -0800 (PST)
-Date: Wed, 26 Jan 2011 15:36:40 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: version dependency question
-Message-ID: <20110126043640.GA21311@dastard>
-References: <4D3F5DA4.3070809@hardwarefreak.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4D3F5DA4.3070809@hardwarefreak.com>
+	p0QEDXK6145209 for <xfs@oss.sgi.com>; Wed, 26 Jan 2011 08:13:33 -0600
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id ACAF48C485E
+	for <xfs@oss.sgi.com>; Wed, 26 Jan 2011 06:15:57 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id sufmeDO8D7Hyr9Bo for
+	<xfs@oss.sgi.com>; Wed, 26 Jan 2011 06:15:57 -0800 (PST)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id p0QEFuue010380
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Wed, 26 Jan 2011 09:15:56 -0500
+Received: from localhost.localdomain (test1244.test.redhat.com [10.10.10.244])
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with
+	ESMTP id p0QEFupv004930
+	for <xfs@oss.sgi.com>; Wed, 26 Jan 2011 09:15:56 -0500
+From: Josef Bacik <josef@redhat.com>
+Subject: [PATCH] Xfstests: make 014 only run on xfs
+Date: Wed, 26 Jan 2011 09:05:29 -0500
+Message-Id: <1296050729-17316-1-git-send-email-josef@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,26 +29,36 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Jan 25, 2011 at 05:32:52PM -0600, Stan Hoeppner wrote:
-> Is the delaylog fstab mount option dependent on anything external to the kernel,
-> such as the mount command, or xfsprogs?  Do these need to be updated to take
-> advantage of '-o delaylog'?
+This test relies on mounting with -o allocsize, which is an xfs specific mount
+option, so make the test only work on xfs.  Thanks,
 
-No, it's purely a kernel thing...
+Signed-off-by: Josef Bacik <josef@redhat.com>
+---
+ 014 |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Cheers,
-
-Dave.
+diff --git a/014 b/014
+index e6e0a6f..c6be9bd 100755
+--- a/014
++++ b/014
+@@ -44,7 +44,7 @@ _cleanup()
+ . ./common.rc
+ . ./common.filter
+ 
+-_supported_fs generic
++_supported_fs xfs
+ _supported_os IRIX Linux
+ 
+ _require_sparse_files
 -- 
-Dave Chinner
-david@fromorbit.com
+1.6.6.1
 
 _______________________________________________
 xfs mailing list
