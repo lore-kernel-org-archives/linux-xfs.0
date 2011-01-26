@@ -1,13 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0QLL48q165925 for <xfs@oss.sgi.com>; Wed, 26 Jan 2011 15:21:04 -0600
-Subject: Re: [PATCH 0/8] xfs: 2.6.38-rc candidate fixes V2
+	p0QLKYR5165849 for <xfs@oss.sgi.com>; Wed, 26 Jan 2011 15:20:34 -0600
+Subject: Re: [PATCH 5/8] xfs: prevent extsize alignment from exceeding
+	maximum extent size
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1295945444-29488-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <1295945444-29488-6-git-send-email-david@fromorbit.com>
 References: <1295945444-29488-1-git-send-email-david@fromorbit.com>
-Date: Wed, 26 Jan 2011 15:23:28 -0600
-Message-ID: <1296077008.1980.947.camel@doink>
+	<1295945444-29488-6-git-send-email-david@fromorbit.com>
+Date: Wed, 26 Jan 2011 15:22:55 -0600
+Message-ID: <1296076975.1980.942.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -26,38 +28,37 @@ To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
 On Tue, 2011-01-25 at 19:50 +1100, Dave Chinner wrote:
-> These are all the pending 2.6.38-rc candidate fixes I have in my queue.
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> When doing delayed allocation, if the allocation size is for a
+> maximally sized extent, extent size alignment can push it over this
+> limit. This results in an assert failure in xfs_bmbt_set_allf() as
+> the extent length is too large to find in the extent record.
+> 
+> Fix this by ensuring that we allow for space that extent size
+> alignment requires (up to 2 * (extsize -1) blocks as we have to
+> handle both head and tail alignment) when limiting the maximum size
+> of the extent.
 
-After looking this latest series over I think these
-are ready to go:
+I think this is OK, however...
 
-[1/8] xfs: fix log ticket leak on forced shutdown
-[3/8] xfs: speculative delayed allocation uses rounddown_power_of_2
-badly
-[6/8] xfs: limit extsize to size of AGs and/or MAXEXTLEN
-[7/8] xfs: handle CIl transaction commit failures correctly
+It seems to me that the XFS_FILBLKS_MIN() call you're making is
+sort of magical because it pre-supposes exactly what the following
+xfs_bmap_extsize_align() actually does.  And because of that, I
+would rather see that logic built into xfs_bmap_extsize_align()
+itself.  I haven't looked at it closely, but I presume the other
+two spots that call xfs_bmap_extsize_align() would be subject to
+the same MAXEXTLEN limit.
 
-The next two are marked reviewed by Christoph, but I have
-made a few minor suggestions for you to consider.  One is
-ready to go, the other may be but you need to verify it.
-Changes--if any--would be minor, to make them ready:
+OK with me if you disagree though.
 
-[4/8] xfs: limit extent length for allocation to AG size 
-[5/8] xfs: prevent extsize alignment from exceeding maximum extent size 
+Reviewed-by: Alex Elder <aelder@sgi.com>
 
-These last two appear to need a small bit of work.
-[2/8] xfs: fix efi item leak on forced shutdown
-[8/8] xfs: fix dquot shaker deadlock
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_bmap.c |   10 ++++++++++
+>  1 files changed, 10 insertions(+), 0 deletions(-)
 
-I don't expect it will take much time to fix these, but
-if you want I could take the ones that are ready right
-away, without waiting for the rest to get completed.
-
-Let me know how you want me to handle it.  Unless I
-hear otherwise I'm awaiting pull requests from you
-on reviewed patches.
-
-					-Alex
 
 _______________________________________________
 xfs mailing list
