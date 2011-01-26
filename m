@@ -1,15 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0QLKKT9165808 for <xfs@oss.sgi.com>; Wed, 26 Jan 2011 15:20:20 -0600
-Subject: Re: [PATCH 3/8] xfs: speculative delayed allocation uses
-	rounddown_power_of_2 badly
+	p0QLK2A8165769 for <xfs@oss.sgi.com>; Wed, 26 Jan 2011 15:20:02 -0600
+Subject: Re: [PATCH 1/8] xfs: fix log ticket leak on forced shutdown.
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1295945444-29488-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1295945444-29488-2-git-send-email-david@fromorbit.com>
 References: <1295945444-29488-1-git-send-email-david@fromorbit.com>
-	<1295945444-29488-4-git-send-email-david@fromorbit.com>
-Date: Wed, 26 Jan 2011 15:22:41 -0600
-Message-ID: <1296076961.1980.940.camel@doink>
+	<1295945444-29488-2-git-send-email-david@fromorbit.com>
+Date: Wed, 26 Jan 2011 15:22:22 -0600
+Message-ID: <1296076942.1980.930.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -30,21 +29,23 @@ Cc: xfs@oss.sgi.com
 On Tue, 2011-01-25 at 19:50 +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> rounddown_power_of_2() returns an undefined result when passed a
-> value of zero. The specualtive delayed allocation code is doing this
-> when the inode is zero length. Hence occasionally the preallocation
-> is much, much larger than is necessary (e.g. 8GB for a 270 _byte_
-> file). Ensure we don't even pass a zero value to this function so
-> the result of preallocation is always the desired size.
+> The kmemleak detector shows this after test 139:
+> 
+> unreferenced object 0xffff880079b88bb0 (size 264):
+
+. . .
+
+>     [<ffffffff81123117>] generic_writepages+0x27/0x30
+>     [<ffffffff814aba5d>] xfs_vm_writepages+0x5d/0x80
+> 
+> By inspection, the leak occurs when xlog_write() returns and error
+> and we jump to the abort path without dropping the reference on the
+> active ticket.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-Looks good.
-
 Reviewed-by: Alex Elder <aelder@sgi.com>
-
-
 
 _______________________________________________
 xfs mailing list
