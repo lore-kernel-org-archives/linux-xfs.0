@@ -1,22 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0R3orgM184346 for <xfs@oss.sgi.com>; Wed, 26 Jan 2011 21:50:54 -0600
-Received: from ironport2-out.pppoe.ca (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4B44C1A2AB4F
-	for <xfs@oss.sgi.com>; Wed, 26 Jan 2011 19:53:18 -0800 (PST)
-Received: from ironport2-out.pppoe.ca (ironport2-out.teksavvy.com
-	[206.248.154.181]) by cuda.sgi.com with ESMTP id
-	jrbanKVwZ3ydWzFx for <xfs@oss.sgi.com>;
-	Wed, 26 Jan 2011 19:53:18 -0800 (PST)
-Message-ID: <4D40EC2D.5020507@teksavvy.com>
-Date: Wed, 26 Jan 2011 22:53:17 -0500
-From: Mark Lord <kernel@teksavvy.com>
-MIME-Version: 1.0
-Subject: Re: xfs: very slow after mount, very slow at umount
-References: <4D40C8D1.8090202@teksavvy.com> <4D40CDCF.4010301@teksavvy.com>
-	<20110127034314.GI21311@dastard>
-In-Reply-To: <20110127034314.GI21311@dastard>
+	p0R3rqZN184635 for <xfs@oss.sgi.com>; Wed, 26 Jan 2011 21:53:52 -0600
+Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6FEE02922D5
+	for <xfs@oss.sgi.com>; Wed, 26 Jan 2011 19:56:15 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	2ABq0MVi2YB3iXSo for <xfs@oss.sgi.com>;
+	Wed, 26 Jan 2011 19:56:15 -0800 (PST)
+Received: from chute ([192.168.1.1] helo=disappointment)
+	by dastard with esmtp (Exim 4.72)
+	(envelope-from <dave@fromorbit.com>) id 1PiIxi-0008FH-0D
+	for xfs@oss.sgi.com; Thu, 27 Jan 2011 14:55:58 +1100
+Received: from dave by disappointment with local (Exim 4.72)
+	(envelope-from <dave@disappointment.disaster>) id 1PiIvF-0004T9-Bi
+	for xfs@oss.sgi.com; Thu, 27 Jan 2011 14:53:25 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 4/8] xfs: limit extent length for allocation to AG size
+Date: Thu, 27 Jan 2011 14:53:17 +1100
+Message-Id: <1296100401-17135-5-git-send-email-david@fromorbit.com>
+In-Reply-To: <1296100401-17135-1-git-send-email-david@fromorbit.com>
+References: <1296100401-17135-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,59 +30,136 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com, Linux Kernel <linux-kernel@vger.kernel.org>, Alex Elder <aelder@sgi.com>
+To: xfs@oss.sgi.com
 
-On 11-01-26 10:43 PM, Dave Chinner wrote:
-> On Wed, Jan 26, 2011 at 08:43:43PM -0500, Mark Lord wrote:
->> On 11-01-26 08:22 PM, Mark Lord wrote:
-..
->> Thinking about it some more:  the first problem very much appears as if
->> it is due to a filesystem check happening on the already-mounted filesystem,
->> if that makes any kind of sense (?).
-> 
-> Not to me.  You can check this simply by looking at the output of
-> top while the problem is occurring...
+From: Dave Chinner <dchinner@redhat.com>
 
-Top doesn't show anything interesting, since disk I/O uses practically zero CPU.
+Delayed allocation extents can be larger than AGs, so when trying to
+convert a large range we may scan every AG inside
+xfs_bmap_alloc_nullfb() trying to find an AG with a size larger than
+an AG. We should stop when we find the first AG with a maximum
+possible allocation size. This causes excessive CPU usage when there
+are lots of AGs.
 
->> running xfs_check on the umounted drive takes about the same 30-60 seconds,
->> with the disk activity light fully "on".
-> 
-> Well, yeah - XFS check reads all the metadata in the filesystem, so
-> of course it's going to thrash your disk when it is run. The fact it
-> takes the same length of time as whatever problem you are having is
-> likely to be coincidental.
+The same problem occurs when doing preallocation of a range larger
+than an AG.
 
-I find it interesting that the mount takes zero-time,
-as if it never actually reads much from the filesystem.
-Something has to eventually read the metadata etc.
+Fix the problem by limiting real allocation lengths to the maximum
+that an AG can support. This means if we have empty AGs, we'll stop
+the search at the first of them. If there are no empty AGs, we'll
+still scan them all, but that is a different problem....
 
->> The other thought that came to mind:  this behaviour has only been
->> noticed recently, probably because I have recently added about
->> 1000 new files (hundreds of MB each) to the videos/ directory on
->> that filesystem.  Whereas before, it had fewer than 500 (multi-GB)
->> files in total.
->>
->> So if it really is doing some kind of internal filesystem check,
->> then the time required has only recently become 3X larger than
->> before.. so the behaviour may not be new/recent, but now is very
->> noticeable.
-> 
-> Where does that 3x figure come from?
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Alex Elder <aelder@sgi.com>
+---
+ fs/xfs/xfs_alloc.h |   16 ++++++++++++++++
+ fs/xfs/xfs_bmap.c  |   18 ++++++++++--------
+ 2 files changed, 26 insertions(+), 8 deletions(-)
 
-Well, it used to have about 500 files/subdirs on it,
-and now it has somewhat over 1500 files/subdirs.
-That's a ballpark estimate of 3X the amount of meta data.
-
-All of these files are at least large (hundreds of MB),
-and a lot are huge (many GB) in size.
-
-Cheers
+diff --git a/fs/xfs/xfs_alloc.h b/fs/xfs/xfs_alloc.h
+index 0ab56b3..d0b3bc7 100644
+--- a/fs/xfs/xfs_alloc.h
++++ b/fs/xfs/xfs_alloc.h
+@@ -75,6 +75,22 @@ typedef unsigned int xfs_alloctype_t;
+ #define XFS_ALLOC_SET_ASIDE(mp)  (4 + ((mp)->m_sb.sb_agcount * 4))
+ 
+ /*
++ * When deciding how much space to allocate out of an AG, we limit the
++ * allocation maximum size to the size the AG. However, we cannot use all the
++ * blocks in the AG - some are permanently used by metadata. These
++ * blocks are generally:
++ *	- the AG superblock, AGF, AGI and AGFL
++ *	- the AGF (bno and cnt) and AGI btree root blocks
++ *	- 4 blocks on the AGFL according to XFS_ALLOC_SET_ASIDE() limits
++ *
++ * The AG headers are sector sized, so the amount of space they take up is
++ * dependent on filesystem geometry. The others are all single blocks.
++ */
++#define XFS_ALLOC_AG_MAX_USABLE(mp)	\
++	((mp)->m_sb.sb_agblocks - XFS_BB_TO_FSB(mp, XFS_FSS_TO_BB(mp, 4)) - 7)
++
++
++/*
+  * Argument structure for xfs_alloc routines.
+  * This is turned into a structure to avoid having 20 arguments passed
+  * down several levels of the stack.
+diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
+index 4111cd3..f3a3768 100644
+--- a/fs/xfs/xfs_bmap.c
++++ b/fs/xfs/xfs_bmap.c
+@@ -2430,7 +2430,7 @@ xfs_bmap_btalloc_nullfb(
+ 		startag = ag = 0;
+ 
+ 	pag = xfs_perag_get(mp, ag);
+-	while (*blen < ap->alen) {
++	while (*blen < args->maxlen) {
+ 		if (!pag->pagf_init) {
+ 			error = xfs_alloc_pagf_init(mp, args->tp, ag,
+ 						    XFS_ALLOC_FLAG_TRYLOCK);
+@@ -2452,7 +2452,7 @@ xfs_bmap_btalloc_nullfb(
+ 			notinit = 1;
+ 
+ 		if (xfs_inode_is_filestream(ap->ip)) {
+-			if (*blen >= ap->alen)
++			if (*blen >= args->maxlen)
+ 				break;
+ 
+ 			if (ap->userdata) {
+@@ -2498,14 +2498,14 @@ xfs_bmap_btalloc_nullfb(
+ 	 * If the best seen length is less than the request
+ 	 * length, use the best as the minimum.
+ 	 */
+-	else if (*blen < ap->alen)
++	else if (*blen < args->maxlen)
+ 		args->minlen = *blen;
+ 	/*
+-	 * Otherwise we've seen an extent as big as alen,
++	 * Otherwise we've seen an extent as big as maxlen,
+ 	 * use that as the minimum.
+ 	 */
+ 	else
+-		args->minlen = ap->alen;
++		args->minlen = args->maxlen;
+ 
+ 	/*
+ 	 * set the failure fallback case to look in the selected
+@@ -2573,7 +2573,9 @@ xfs_bmap_btalloc(
+ 	args.tp = ap->tp;
+ 	args.mp = mp;
+ 	args.fsbno = ap->rval;
+-	args.maxlen = MIN(ap->alen, mp->m_sb.sb_agblocks);
++
++	/* Trim the allocation back to the maximum an AG can fit. */
++	args.maxlen = MIN(ap->alen, XFS_ALLOC_AG_MAX_USABLE(mp));
+ 	args.firstblock = ap->firstblock;
+ 	blen = 0;
+ 	if (nullfb) {
+@@ -2621,7 +2623,7 @@ xfs_bmap_btalloc(
+ 			/*
+ 			 * Adjust for alignment
+ 			 */
+-			if (blen > args.alignment && blen <= ap->alen)
++			if (blen > args.alignment && blen <= args.maxlen)
+ 				args.minlen = blen - args.alignment;
+ 			args.minalignslop = 0;
+ 		} else {
+@@ -2640,7 +2642,7 @@ xfs_bmap_btalloc(
+ 			 * of minlen+alignment+slop doesn't go up
+ 			 * between the calls.
+ 			 */
+-			if (blen > mp->m_dalign && blen <= ap->alen)
++			if (blen > mp->m_dalign && blen <= args.maxlen)
+ 				nextminlen = blen - mp->m_dalign;
+ 			else
+ 				nextminlen = args.minlen;
+-- 
+1.7.2.3
 
 _______________________________________________
 xfs mailing list
