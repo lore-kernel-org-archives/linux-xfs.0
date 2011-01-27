@@ -1,21 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0R3kfdG184031 for <xfs@oss.sgi.com>; Wed, 26 Jan 2011 21:46:41 -0600
-Received: from ironport2-out.pppoe.ca (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5B1BE105D30D
-	for <xfs@oss.sgi.com>; Wed, 26 Jan 2011 19:49:04 -0800 (PST)
-Received: from ironport2-out.pppoe.ca (ironport2-out.teksavvy.com
-	[206.248.154.181]) by cuda.sgi.com with ESMTP id
-	9EoXuXJaHE93GvzL for <xfs@oss.sgi.com>;
-	Wed, 26 Jan 2011 19:49:04 -0800 (PST)
-Message-ID: <4D40EB2F.2050809@teksavvy.com>
-Date: Wed, 26 Jan 2011 22:49:03 -0500
-From: Mark Lord <kernel@teksavvy.com>
-MIME-Version: 1.0
-Subject: Re: xfs: very slow after mount, very slow at umount
-References: <4D40C8D1.8090202@teksavvy.com> <20110127033011.GH21311@dastard>
-In-Reply-To: <20110127033011.GH21311@dastard>
+	p0R3roLM184616 for <xfs@oss.sgi.com>; Wed, 26 Jan 2011 21:53:50 -0600
+Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 832482922D3
+	for <xfs@oss.sgi.com>; Wed, 26 Jan 2011 19:56:13 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	F5GHQo0UyDTnvknW for <xfs@oss.sgi.com>;
+	Wed, 26 Jan 2011 19:56:13 -0800 (PST)
+Received: from chute ([192.168.1.1] helo=disappointment)
+	by dastard with esmtp (Exim 4.72)
+	(envelope-from <dave@fromorbit.com>) id 1PiIxi-0008FL-37
+	for xfs@oss.sgi.com; Thu, 27 Jan 2011 14:55:58 +1100
+Received: from dave by disappointment with local (Exim 4.72)
+	(envelope-from <dave@disappointment.disaster>) id 1PiIvF-0004TC-Gk
+	for xfs@oss.sgi.com; Thu, 27 Jan 2011 14:53:25 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 5/8] xfs: prevent extsize alignment from exceeding maximum
+	extent size
+Date: Thu, 27 Jan 2011 14:53:18 +1100
+Message-Id: <1296100401-17135-6-git-send-email-david@fromorbit.com>
+In-Reply-To: <1296100401-17135-1-git-send-email-david@fromorbit.com>
+References: <1296100401-17135-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,81 +31,55 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com, Linux Kernel <linux-kernel@vger.kernel.org>, Alex Elder <aelder@sgi.com>
+To: xfs@oss.sgi.com
 
-On 11-01-26 10:30 PM, Dave Chinner wrote:
-> [Please cc xfs@oss.sgi.com on XFS bug reports. Added.]
->
-> On Wed, Jan 26, 2011 at 08:22:25PM -0500, Mark Lord wrote:
->> Alex / Christoph,
->>
->> My mythtv box here uses XFS on a 2TB drive for storing recordings and videos.
->> It is behaving rather strangely though, and has gotten worse recently.
->> Here is what I see happening:
->>
->> The drive mounts fine at boot, but the very first attempt to write a new file
->> to the filesystem suffers from a very very long pause, 30-60 seconds, during which
->> time the disk activity light is fully "on".
->
-> Please post the output of xfs_info <mtpt> so we can see what you
-> filesystem configuration is.
+From: Dave Chinner <dchinner@redhat.com>
 
-   /dev/sdb1 on /var/lib/mythtv type xfs
-(rw,noatime,allocsize=64M,logbufs=8,largeio)
+When doing delayed allocation, if the allocation size is for a
+maximally sized extent, extent size alignment can push it over this
+limit. This results in an assert failure in xfs_bmbt_set_allf() as
+the extent length is too large to find in the extent record.
 
-   [~] xfs_info /var/lib/mythtv
-   meta-data=/dev/sdb1              isize=256    agcount=7453, agsize=65536 blks
-            =                       sectsz=512   attr=2
-   data     =                       bsize=4096   blocks=488378638, imaxpct=5
-            =                       sunit=0      swidth=0 blks
-   naming   =version 2              bsize=4096   ascii-ci=0
-   log      =internal               bsize=4096   blocks=32768, version=2
-            =                       sectsz=512   sunit=0 blks, lazy-count=0
-   realtime =none                   extsz=4096   blocks=0, rtextents=0
+Fix this by ensuring that we allow for space that extent size
+alignment requires (up to 2 * (extsize -1) blocks as we have to
+handle both head and tail alignment) when limiting the maximum size
+of the extent.
 
->> This happens only on the first new file write after mounting.
->> From then on, the filesystem is fast and responsive as expected.
->> If I umount the filesystem, and then mount it again,
->> the exact same behaviour can be observed.
->
-> I can't say I've seen this. Can you capture a blktrace of the IO so
-> we can see what IO is actually being done, and perhaps also record
-> an XFS event trace as well (i.e. of all the events in
-> /sys/kernel/debug/tracing/events/xfs).
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Alex Elder <aelder@sgi.com>
+---
+ fs/xfs/xfs_bmap.c |   10 ++++++++++
+ 1 files changed, 10 insertions(+), 0 deletions(-)
 
-I'll have to reconfig/rebuild the kernel to include support for blktrace first.
-Can you specify the exact commands/args you'd like for running blktrace etc?
-
->> This of course screws up mythtv, as it causes me to lose the first 30-60
->> seconds of the first recording it attempts after booting.  So as a workaround
->> I now have a startup script to create, sync, and delete a 64MB file before
->> starting mythtv.  This still takes 30-60 seconds, but it all happens and
->> finishes before mythtv has a real-time need to write to the filesystem.
->>
->> The 2TB drive is fine -- zero errors, no events in the SMART logs,
->> and I've disabled the silly WD head-unload logic on it.
->>
->> What's happening here?  Why the big long burst of activity?
->> I've only just noticed this behaviour in the past few weeks,
->> running 2.6.35 and more recently 2.6.37.
->
-> Can you be a bit more precise? what were you running before 2.6.35
-> when you didn't notice this?
-
-Those details are in my earlier follow-up posting.
-
->> The other issue is something I notice at umount time.
-
-I'm going to let that issue rest for now,
-until we figure out the first issue.
-Heck, they might even be the exact same thing.. :)
-
-Thanks!
+diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
+index f3a3768..3e9c278 100644
+--- a/fs/xfs/xfs_bmap.c
++++ b/fs/xfs/xfs_bmap.c
+@@ -4487,6 +4487,16 @@ xfs_bmapi(
+ 				/* Figure out the extent size, adjust alen */
+ 				extsz = xfs_get_extsz_hint(ip);
+ 				if (extsz) {
++					/*
++					 * make sure we don't exceed a single
++					 * extent length when we align the
++					 * extent by reducing length we are
++					 * going to allocate by the maximum
++					 * amount extent size aligment may
++					 * require.
++					 */
++					alen = XFS_FILBLKS_MIN(len,
++						   MAXEXTLEN - (2 * extsz - 1));
+ 					error = xfs_bmap_extsize_align(mp,
+ 							&got, &prev, extsz,
+ 							rt, eof,
+-- 
+1.7.2.3
 
 _______________________________________________
 xfs mailing list
