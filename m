@@ -1,16 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0RIo0bK005274 for <xfs@oss.sgi.com>; Thu, 27 Jan 2011 12:50:01 -0600
-Subject: Re: [PATCH] xfs_bmap_add_extent_delay_real should set
-	br_startblock to nullstartblock
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110119174158.28574.63968.stgit@lady3jane.americas.sgi.com>
-References: <20110119174158.28574.63968.stgit@lady3jane.americas.sgi.com>
-Date: Thu, 27 Jan 2011 12:52:21 -0600
-Message-ID: <1296154341.1973.138.camel@doink>
-Mime-Version: 1.0
-Reply-To: aelder@sgi.com
+	p0RJbhg4012263 for <xfs@oss.sgi.com>; Thu, 27 Jan 2011 13:37:43 -0600
+Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 09E3829701F
+	for <xfs@oss.sgi.com>; Thu, 27 Jan 2011 11:40:07 -0800 (PST)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id 392FbHnkI3mSWBBD
+	for <xfs@oss.sgi.com>; Thu, 27 Jan 2011 11:40:07 -0800 (PST)
+Message-ID: <4D41CA16.8070001@hardwarefreak.com>
+Date: Thu, 27 Jan 2011 13:40:06 -0600
+From: Stan Hoeppner <stan@hardwarefreak.com>
+MIME-Version: 1.0
+Subject: Re: xfs: very slow after mount, very slow at umount
+References: <4D40C8D1.8090202@teksavvy.com>
+	<20110127033011.GH21311@dastard>	<4D40EB2F.2050809@teksavvy.com>
+	<4D418B57.1000501@teksavvy.com>	<alpine.DEB.2.00.1101271040000.31246@p34.internal.lan>
+	<4D419765.4070805@teksavvy.com>
+In-Reply-To: <4D419765.4070805@teksavvy.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,139 +30,72 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Mark Lord <kernel@teksavvy.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Linux Kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Justin Piszcz <jpiszcz@lucidpixels.com>, Alex Elder <aelder@sgi.com>
 
-On Wed, 2011-01-19 at 11:41 -0600, Ben Myers wrote:
-> When filling in the middle of a previous delayed allocation in
-> xfs_bmap_add_extent_delay_real, set br_startblock of the new delay extent to
-> the right to nullstartblock instead of 0 before inserting the extent into the
-> ifork (xfs_iext_insert), rather than setting br_startblock afterward.
+Mark Lord put forth on 1/27/2011 10:03 AM:
+> On 11-01-27 10:40 AM, Justin Piszcz wrote:
+>>
+>>
+>> On Thu, 27 Jan 2011, Mark Lord wrote:
+> ..
+>>> Can you recommend a good set of mkfs.xfs parameters to suit the characteristics
+>>> of this system?  Eg. Only a few thousand active inodes, and nearly all files are
+>>> in the 600MB -> 20GB size range.  The usage pattern it must handle is up to
+>>> six concurrent streaming writes at the same time as up to three streaming reads,
+>>> with no significant delays permitted on the reads.
+>>>
+>>> That's the kind of workload that I find XFS handles nicely,
+>>> and EXT4 has given me trouble with in the past.
+> ..
+>> I did a load of benchmarks a long time ago testing every mkfs.xfs option there
+>> was, and I found that most of the time (if not all), the defaults were the best.
+> ..
 > 
-> Adding the extent into the ifork with br_startblock=0 can lead to the extent
-> being copied into the btree by xfs_bmap_extent_to_btree if we happen to convert
-> from extents format to btree format before updating br_startblock with the
-> correct value.  The unexpected addition of this delay extent to the btree can
-> cause subsequent XFS_WANT_CORRUPTED_GOTO filesystem shutdown in several
-> xfs_bmap_add_extent_delay_real cases where we are converting a delay extent to
-> real and unexpectedly find an extent already inserted.  For example:
+> I am concerned with fragmentation on the very special workload in this case.
+> I'd really like the 20GB files, written over a 1-2 hour period, to consist
+> of a very few very large extents, as much as possible.
 
-. . .
+For XFS that's actually not a special case workload but an average one.  XFS was
+conceived at SGI for use on large supercomputers where typical single file
+datasets are extremely large, i.e. hundreds of GB.  Also note that the real time
+sub volume feature was created for almost exactly your purpose:  streaming
+record/playback of raw A/V data for broadcast (i.e. television).  In your case
+it's compressed, not raw A/V data.  I'm not recommending you use the real time
+feature however, as it's overkill for MythTV and not necessary.
 
-> SGI-PV: 1013221
-> 
-> Signed-off-by: Ben Myers <bpm@sgi.com>
-> ---
->  fs/xfs/xfs_bmap.c |   33 +++++++++++++++++++++++++--------
->  1 files changed, 25 insertions(+), 8 deletions(-)
+> Rather than hundreds or thousands of "tiny" MB sized extents.
+> I wonder what the best mkfs.xfs parameters might be to encourage that?
 
-This looks OK, but I want to point something out.
-I'm not sure whether it's a significant problem
-or not, but I think it could screw up some
-reservation counts.
+You need to use the mkfs.xfs defaults for any single drive filesystem, and trust
+the allocator to do the right thing.  XFS uses variable size extents and the
+size is chosen dynamically--you don't have direct or indirect control of the
+extent size chosen for a given file or set of files AFAIK.
 
-First though, it may be that the LEFT, RIGHT,
-etc. were not used here because the xfs_bmbt_irec_t
-array was not being used in the same way as it  was
-being used elsewhere in this function.  Instead,
-they are being overwritten with new extent data.
-Same thing happens in xfs_bmap_add_extent_unwritten_real().
-Nevertheless, I find that the symbolic names make
-the result more readable, so I like the change.
+As Dave Chinner is fond of pointing out, it's those who don't know enough about
+XFS and choose custom settings that most often get themselves into trouble (as
+you've already done once).  :)
 
+The defaults exist for a reason, and they weren't chosen willy nilly.  The vast
+bulk of XFS' configurability exists for tuning maximum performance on large to
+very large RAID arrays.  There isn't much, if any, additional performance to be
+gained with parameter tweaks on a single drive XFS filesystem.
 
-Here's the thing I wanted to point out.  This
-change fixes it so the delalloc space after the
-new extent has the correct NULL start block address
-(encoding the worst case indirect block count in it).
+A brief explanation of agcount:  the filesystem is divided into agcount regions
+called allocation groups, or AGs.  The allocator writes to all AGs in parallel
+to increase performance.  With extremely fast storage (SSD, large high RPM RAID)
+this increases throughput as the storage can often sink writes faster than a
+serial writer can push data.  In your case, you have a single slow spindle with
+over 7,000 AGs.  Thus, the allocator is writing to over 7,000 locations on that
+single disk simultaneously, or, at least, it's trying to.  Thus, the poor head
+on that drive is being whipped all over the place without actually getting much
+writing done.  To add insults to injury, this is one of these low RPM low head
+performance "green" drives correct?
 
-Meanwhile, it does not update the NULL start block
-address of PREV (and of course, this is how the
-existing code works too).  That means that the
-indirect block count encoded therein may be
-wrong as a result of the update.
+Trust the defaults.  If they give you problems (unlikely) then we can't talk. ;)
 
-I.e., in addition to:
-		xfs_bmbt_set_blockcount(ep, temp);
-I think we ought to do:
-		int indlen;
-
-		indlen = (int) xfs_bmap_worst_indlen(ip, temp);
-		PREV.br_startblock = nullstartblock(indlen);
-and then somehow update the in-core extent map with the
-new information.  (I don't know if there's an interface
-to do that right now.)
-
-Maybe the in-core map doesn't have to accurately reflect
-the encoded indirect block reservation, I don't know.
-
-If it does though, the code here (and likely elsewhere)
-should probably be rearranged a bit so we can update all
-three extents (PREV, LEFT (new), and RIGHT) with one call
-to xfs_iext_update().
-
-Note (again) that this doesn't say anything wrong
-with this change, just that in looking at it I
-noticed something else that might need to be fixed.
-
-					-Alex
-
-
-> diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
-> index 4111cd3..c1db779 100644
-> --- a/fs/xfs/xfs_bmap.c
-> +++ b/fs/xfs/xfs_bmap.c
-> @@ -1038,17 +1038,34 @@ xfs_bmap_add_extent_delay_real(
->  		 * Filling in the middle part of a previous delayed allocation.
->  		 * Contiguity is impossible here.
->  		 * This case is avoided almost all the time.
-> +		 *
-> +		 * We start with a delayed allocation:
-> +		 *
-> +		 * +ddddddddddddddddddddddddddddddddddddddddddddddddddddddd+
-> +		 *  PREV @ idx
-> +		 *
-> +	         * and we are allocating:
-> +		 *                     +rrrrrrrrrrrrrrrrr+	 
-> +		 *			      new
-> +		 *
-> +		 * and we set it up for insertion as:
-> +		 * +ddddddddddddddddddd+rrrrrrrrrrrrrrrrr+ddddddddddddddddd+
-> +		 *                            new
-> +		 *  PREV @ idx          LEFT              RIGHT
-> +		 *                      inserted at idx + 1 
->  		 */
->  		temp = new->br_startoff - PREV.br_startoff;
-> -		trace_xfs_bmap_pre_update(ip, idx, 0, _THIS_IP_);
-> -		xfs_bmbt_set_blockcount(ep, temp);
-> -		r[0] = *new;
-> -		r[1].br_state = PREV.br_state;
-> -		r[1].br_startblock = 0;
-> -		r[1].br_startoff = new_endoff;
->  		temp2 = PREV.br_startoff + PREV.br_blockcount - new_endoff;
-> -		r[1].br_blockcount = temp2;
-> -		xfs_iext_insert(ip, idx + 1, 2, &r[0], state);
-
-Somehow I think this call, which inserts *two* extents, is
-the reason this problem was a bit difficult to spot.  Almost
-all the other calls to this function insert just one.
-
-> +		trace_xfs_bmap_pre_update(ip, idx, 0, _THIS_IP_);
-> +		xfs_bmbt_set_blockcount(ep, temp);	/* truncate PREV */
-> +		LEFT = *new;
-> +		RIGHT.br_state = PREV.br_state;	
-> +		RIGHT.br_startblock = nullstartblock(
-> +				(int)xfs_bmap_worst_indlen(ip, temp2));
-> +		RIGHT.br_startoff = new_endoff;
-> +		RIGHT.br_blockcount = temp2;
-> +		/* insert LEFT (r[0]) and RIGHT (r[1]) at the same time */
-> +		xfs_iext_insert(ip, idx + 1, 2, &LEFT, state);
->  		ip->i_df.if_lastex = idx + 1;
->  		ip->i_d.di_nextents++;
->  		if (cur == NULL)
-> 
-
-
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
