@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0R2LhSb179980 for <xfs@oss.sgi.com>; Wed, 26 Jan 2011 20:21:43 -0600
+	p0R3RqcW183358 for <xfs@oss.sgi.com>; Wed, 26 Jan 2011 21:27:53 -0600
 Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BBA201A386E3
-	for <xfs@oss.sgi.com>; Wed, 26 Jan 2011 18:24:06 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E1058148F393
+	for <xfs@oss.sgi.com>; Wed, 26 Jan 2011 19:30:14 -0800 (PST)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	molWRzVFCx191dA8 for <xfs@oss.sgi.com>;
-	Wed, 26 Jan 2011 18:24:06 -0800 (PST)
-Date: Thu, 27 Jan 2011 13:24:04 +1100
+	6N625qkLrTfpkOe2 for <xfs@oss.sgi.com>;
+	Wed, 26 Jan 2011 19:30:14 -0800 (PST)
+Date: Thu, 27 Jan 2011 14:30:11 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 8/8] xfs: fix dquot shaker deadlock
-Message-ID: <20110127022404.GG21311@dastard>
-References: <1295945444-29488-1-git-send-email-david@fromorbit.com>
-	<1295945444-29488-9-git-send-email-david@fromorbit.com>
-	<20110125095242.GB23990@infradead.org>
-	<20110127015420.GF21311@dastard>
+Subject: Re: xfs: very slow after mount, very slow at umount
+Message-ID: <20110127033011.GH21311@dastard>
+References: <4D40C8D1.8090202@teksavvy.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110127015420.GF21311@dastard>
+In-Reply-To: <4D40C8D1.8090202@teksavvy.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,45 +29,72 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Mark Lord <kernel@teksavvy.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com, Linux Kernel <linux-kernel@vger.kernel.org>, Alex Elder <aelder@sgi.com>
 
-On Thu, Jan 27, 2011 at 12:54:20PM +1100, Dave Chinner wrote:
-> On Tue, Jan 25, 2011 at 04:52:42AM -0500, Christoph Hellwig wrote:
-> > On Tue, Jan 25, 2011 at 07:50:44PM +1100, Dave Chinner wrote:
-> > > From: Dave Chinner <dchinner@redhat.com>
-> > > 
-> > > Commit 368e136 ("xfs: remove duplicate code from dquot reclaim") fails
-> > > to unlock the dquot freelist when the number of loop restarts is
-> > > exceeded in xfs_qm_dqreclaim_one(). This causes hangs in memory
-> > > reclaim. Remove the bogus loop exit check that causes the problem.
-> > 
-> > The fix looks correct, but it's a bit inconsequential about when
-> > to adhere the retry limit and when not.  Shouldn't we just turn the
-> > exit condition into:
-> > 
-> > 	if (dqout || restarts >= XFS_QM_RECLAIM_MAX_RESTARTS)
-> > 		break;
-> 
-> I'm guessing that you are suggesting changing the code increments
-> and checks restarts to:
-> 
-> 	restarts++;
-> 	goto startagain;
-> 
-> otherwise this doesn't make sense as restarts will never go above
-> XFS_QM_RECLAIM_MAX_RESTARTS at this point in the loop.
+[Please cc xfs@oss.sgi.com on XFS bug reports. Added.]
 
-Argh, there's one loop case where it does increment restarts without
-jumping to startagain. I'm going to change this loop to stack the
-loop exit cases rather than do them all individually and making it
-difficult to work out what is going on.
+On Wed, Jan 26, 2011 at 08:22:25PM -0500, Mark Lord wrote:
+> Alex / Christoph,
+> 
+> My mythtv box here uses XFS on a 2TB drive for storing recordings and videos.
+> It is behaving rather strangely though, and has gotten worse recently.
+> Here is what I see happening:
+> 
+> The drive mounts fine at boot, but the very first attempt to write a new file
+> to the filesystem suffers from a very very long pause, 30-60 seconds, during which
+> time the disk activity light is fully "on".
 
-So each case will increment restarts itself as necessary, set a
-"startagain" flag if a loop restart is required, and set dqpout if a
-successful reclaim occurred. That way each case can then jump to the
-correctly stacked unlock point and all the loop exit logic is in one
-place.
+Please post the output of xfs_info <mtpt> so we can see what you
+filesystem configuration is.
+
+> This happens only on the first new file write after mounting.
+> From then on, the filesystem is fast and responsive as expected.
+> If I umount the filesystem, and then mount it again,
+> the exact same behaviour can be observed.
+
+I can't say I've seen this. Can you capture a blktrace of the IO so
+we can see what IO is actually being done, and perhaps also record
+an XFS event trace as well (i.e. of all the events in
+/sys/kernel/debug/tracing/events/xfs).
+
+> This of course screws up mythtv, as it causes me to lose the first 30-60
+> seconds of the first recording it attempts after booting.  So as a workaround
+> I now have a startup script to create, sync, and delete a 64MB file before
+> starting mythtv.  This still takes 30-60 seconds, but it all happens and
+> finishes before mythtv has a real-time need to write to the filesystem.
+> 
+> The 2TB drive is fine -- zero errors, no events in the SMART logs,
+> and I've disabled the silly WD head-unload logic on it.
+> 
+> What's happening here?  Why the big long burst of activity?
+> I've only just noticed this behaviour in the past few weeks,
+> running 2.6.35 and more recently 2.6.37.
+
+Can you be a bit more precise? what were you running before 2.6.35
+when you didn't notice this?
+
+> * * *
+> 
+> The other issue is something I notice at umount time.
+> I have a second big drive used as a backup device for the drive discussed above.
+> I use "mirrordir" (similar to rsync) to clone directories/files from the main
+> drive to the backup drive.  After mirrordir finishes, I then "umount /backup".
+> The umount promptly hangs, disk light on solid, for 30-60 seconds, then finishes.
+
+Same again - blktrace and event traces for the different cases.
+
+Also, how many files are you syncing? how much data, number of
+inodes, etc...
+
+> If I type "sync" just before doing the umount, sync takes about 1 second,
+> and the umount finishes instantly.
+> 
+> Huh? What's happening there?
+
+Sounds like something is broken w.r.t. writeback during unmount.
+Perhaps also adding the writeback events to the trace would help
+understand what is happening here....
 
 Cheers,
 
