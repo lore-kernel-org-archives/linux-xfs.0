@@ -1,15 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0RFShbM237331 for <xfs@oss.sgi.com>; Thu, 27 Jan 2011 09:28:43 -0600
-Subject: Re: [PATCH 0/8] xfs: candidate 2.6.38-rc fixes V3
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1296100401-17135-1-git-send-email-david@fromorbit.com>
-References: <1296100401-17135-1-git-send-email-david@fromorbit.com>
-Date: Thu, 27 Jan 2011 09:31:05 -0600
-Message-ID: <1296142265.1973.67.camel@doink>
-Mime-Version: 1.0
-Reply-To: aelder@sgi.com
+	p0RG1Rei242695 for <xfs@oss.sgi.com>; Thu, 27 Jan 2011 10:01:27 -0600
+Received: from ironport2-out.pppoe.ca (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E5E59295FA7
+	for <xfs@oss.sgi.com>; Thu, 27 Jan 2011 08:03:51 -0800 (PST)
+Received: from ironport2-out.pppoe.ca (ironport2-out.teksavvy.com
+	[206.248.154.183]) by cuda.sgi.com with ESMTP id
+	mfkGiD1rN8zdzBxU for <xfs@oss.sgi.com>;
+	Thu, 27 Jan 2011 08:03:51 -0800 (PST)
+Message-ID: <4D419765.4070805@teksavvy.com>
+Date: Thu, 27 Jan 2011 11:03:49 -0500
+From: Mark Lord <kernel@teksavvy.com>
+MIME-Version: 1.0
+Subject: Re: xfs: very slow after mount, very slow at umount
+References: <4D40C8D1.8090202@teksavvy.com> <20110127033011.GH21311@dastard>
+	<4D40EB2F.2050809@teksavvy.com> <4D418B57.1000501@teksavvy.com>
+	<alpine.DEB.2.00.1101271040000.31246@p34.internal.lan>
+In-Reply-To: <alpine.DEB.2.00.1101271040000.31246@p34.internal.lan>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,21 +30,35 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Alex Elder <aelder@sgi.com>, Linux Kernel <linux-kernel@vger.kernel.org>, Stan Hoeppner <stan@hardwarefreak.com>, xfs@oss.sgi.com
 
-On Thu, 2011-01-27 at 14:53 +1100, Dave Chinner wrote:
-> Fixed the various issues found during review and added all the
-> reviewed-by tags to the fully reviewed commits.
+On 11-01-27 10:40 AM, Justin Piszcz wrote:
+> 
+> 
+> On Thu, 27 Jan 2011, Mark Lord wrote:
+..
+>> Can you recommend a good set of mkfs.xfs parameters to suit the characteristics
+>> of this system?  Eg. Only a few thousand active inodes, and nearly all files are
+>> in the 600MB -> 20GB size range.  The usage pattern it must handle is up to
+>> six concurrent streaming writes at the same time as up to three streaming reads,
+>> with no significant delays permitted on the reads.
+>>
+>> That's the kind of workload that I find XFS handles nicely,
+>> and EXT4 has given me trouble with in the past.
+..
+> I did a load of benchmarks a long time ago testing every mkfs.xfs option there
+> was, and I found that most of the time (if not all), the defaults were the best.
+..
 
-I'll be testing with this today.  Barring any unforseen
-problems I'm just waiting for a pull request from you
-(or the go-ahead to just use the patches as posted).
+I am concerned with fragmentation on the very special workload in this case.
+I'd really like the 20GB files, written over a 1-2 hour period, to consist
+of a very few very large extents, as much as possible.
 
-I plan to push the result to oss.sgi.com tonight so it
-can be used in -next before sending it to Linus.
+Rather than hundreds or thousands of "tiny" MB sized extents.
+I wonder what the best mkfs.xfs parameters might be to encourage that?
 
-					-Alex
+Cheers
 
 _______________________________________________
 xfs mailing list
