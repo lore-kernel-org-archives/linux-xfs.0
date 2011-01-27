@@ -1,14 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0RFQeJf236954 for <xfs@oss.sgi.com>; Thu, 27 Jan 2011 09:26:40 -0600
-Subject: Re: [PATCH 8/8] xfs: fix dquot shaker deadlock
+	p0RFShbM237331 for <xfs@oss.sgi.com>; Thu, 27 Jan 2011 09:28:43 -0600
+Subject: Re: [PATCH 0/8] xfs: candidate 2.6.38-rc fixes V3
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1296100401-17135-9-git-send-email-david@fromorbit.com>
+In-Reply-To: <1296100401-17135-1-git-send-email-david@fromorbit.com>
 References: <1296100401-17135-1-git-send-email-david@fromorbit.com>
-	<1296100401-17135-9-git-send-email-david@fromorbit.com>
-Date: Thu, 27 Jan 2011 09:29:01 -0600
-Message-ID: <1296142141.1973.62.camel@doink>
+Date: Thu, 27 Jan 2011 09:31:05 -0600
+Message-ID: <1296142265.1973.67.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -27,26 +26,17 @@ To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
 On Thu, 2011-01-27 at 14:53 +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Commit 368e136 ("xfs: remove duplicate code from dquot reclaim") fails
-> to unlock the dquot freelist when the number of loop restarts is
-> exceeded in xfs_qm_dqreclaim_one(). This causes hangs in memory
-> reclaim. Remove the bogus loop exit check that causes the problem.
-> 
-> Reported-by: Malcolm Scott <lkml@malc.org.uk>
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Fixed the various issues found during review and added all the
+> reviewed-by tags to the fully reviewed commits.
 
-Still not a pretty loop (and I have no suggestions
-to improve it).  But it looks correct.
+I'll be testing with this today.  Barring any unforseen
+problems I'm just waiting for a pull request from you
+(or the go-ahead to just use the patches as posted).
 
-Please add a mention in the description that the
-double-increment issue in the qi_dqlist_lock case
-has been fixed.
+I plan to push the result to oss.sgi.com tonight so it
+can be used in -next before sending it to Linus.
 
-Reviewed-by: Alex Elder <aelder@sgi.com>
-
-
+					-Alex
 
 _______________________________________________
 xfs mailing list
