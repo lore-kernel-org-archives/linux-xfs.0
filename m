@@ -1,28 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0R3roLM184616 for <xfs@oss.sgi.com>; Wed, 26 Jan 2011 21:53:50 -0600
-Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 832482922D3
-	for <xfs@oss.sgi.com>; Wed, 26 Jan 2011 19:56:13 -0800 (PST)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	F5GHQo0UyDTnvknW for <xfs@oss.sgi.com>;
-	Wed, 26 Jan 2011 19:56:13 -0800 (PST)
-Received: from chute ([192.168.1.1] helo=disappointment)
-	by dastard with esmtp (Exim 4.72)
-	(envelope-from <dave@fromorbit.com>) id 1PiIxi-0008FL-37
-	for xfs@oss.sgi.com; Thu, 27 Jan 2011 14:55:58 +1100
-Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1PiIvF-0004TC-Gk
-	for xfs@oss.sgi.com; Thu, 27 Jan 2011 14:53:25 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 5/8] xfs: prevent extsize alignment from exceeding maximum
-	extent size
-Date: Thu, 27 Jan 2011 14:53:18 +1100
-Message-Id: <1296100401-17135-6-git-send-email-david@fromorbit.com>
-In-Reply-To: <1296100401-17135-1-git-send-email-david@fromorbit.com>
-References: <1296100401-17135-1-git-send-email-david@fromorbit.com>
+	p0R4pfim189556 for <xfs@oss.sgi.com>; Wed, 26 Jan 2011 22:51:41 -0600
+Received: from ironport2-out.pppoe.ca (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B355D1A3610D
+	for <xfs@oss.sgi.com>; Wed, 26 Jan 2011 20:54:05 -0800 (PST)
+Received: from ironport2-out.pppoe.ca (ironport2-out.teksavvy.com
+	[206.248.154.183]) by cuda.sgi.com with ESMTP id
+	uEwJaOuEOcOr5VCA for <xfs@oss.sgi.com>;
+	Wed, 26 Jan 2011 20:54:05 -0800 (PST)
+Message-ID: <4D40FA69.2040608@teksavvy.com>
+Date: Wed, 26 Jan 2011 23:54:01 -0500
+From: Mark Lord <kernel@teksavvy.com>
+MIME-Version: 1.0
+Subject: Re: xfs: very slow after mount, very slow at umount
+References: <4D40C8D1.8090202@teksavvy.com> <4D40CDCF.4010301@teksavvy.com>
+	<20110127034314.GI21311@dastard> <4D40EC2D.5020507@teksavvy.com>
+In-Reply-To: <4D40EC2D.5020507@teksavvy.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,55 +25,74 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com, Linux Kernel <linux-kernel@vger.kernel.org>, Alex Elder <aelder@sgi.com>
 
-From: Dave Chinner <dchinner@redhat.com>
+On 11-01-26 10:53 PM, Mark Lord wrote:
+> On 11-01-26 10:43 PM, Dave Chinner wrote:
+>> On Wed, Jan 26, 2011 at 08:43:43PM -0500, Mark Lord wrote:
+>>> On 11-01-26 08:22 PM, Mark Lord wrote:
+> ..
+>>> Thinking about it some more:  the first problem very much appears as if
+>>> it is due to a filesystem check happening on the already-mounted filesystem,
+>>> if that makes any kind of sense (?).
+>>
+>> Not to me.  You can check this simply by looking at the output of
+>> top while the problem is occurring...
+> 
+> Top doesn't show anything interesting, since disk I/O uses practically zero CPU.
+> 
+>>> running xfs_check on the umounted drive takes about the same 30-60 seconds,
+>>> with the disk activity light fully "on".
+>>
+>> Well, yeah - XFS check reads all the metadata in the filesystem, so
+>> of course it's going to thrash your disk when it is run. The fact it
+>> takes the same length of time as whatever problem you are having is
+>> likely to be coincidental.
+> 
+> I find it interesting that the mount takes zero-time,
+> as if it never actually reads much from the filesystem.
+> Something has to eventually read the metadata etc.
+> 
+>>> The other thought that came to mind:  this behaviour has only been
+>>> noticed recently, probably because I have recently added about
+>>> 1000 new files (hundreds of MB each) to the videos/ directory on
+>>> that filesystem.  Whereas before, it had fewer than 500 (multi-GB)
+>>> files in total.
+>>>
+>>> So if it really is doing some kind of internal filesystem check,
+>>> then the time required has only recently become 3X larger than
+>>> before.. so the behaviour may not be new/recent, but now is very
+>>> noticeable.
+>>
+>> Where does that 3x figure come from?
+> 
+> Well, it used to have about 500 files/subdirs on it,
+> and now it has somewhat over 1500 files/subdirs.
+> That's a ballpark estimate of 3X the amount of meta data.
+> 
+> All of these files are at least large (hundreds of MB),
+> and a lot are huge (many GB) in size.
 
-When doing delayed allocation, if the allocation size is for a
-maximally sized extent, extent size alignment can push it over this
-limit. This results in an assert failure in xfs_bmbt_set_allf() as
-the extent length is too large to find in the extent record.
+I've rebuilt the kernel with the various config options to enable blktrace
+and XFS_DEBUG, but in the meanwhile we have also watched and deleted
+a few GB of recordings.
 
-Fix this by ensuring that we allow for space that extent size
-alignment requires (up to 2 * (extsize -1) blocks as we have to
-handle both head and tail alignment) when limiting the maximum size
-of the extent.
+The result is that the mysterious first-write delay has vanished, for now,
+so there's nothing to trace.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Alex Elder <aelder@sgi.com>
----
- fs/xfs/xfs_bmap.c |   10 ++++++++++
- 1 files changed, 10 insertions(+), 0 deletions(-)
+I think I'll pick up an extra 2TB drive, so that next time
+it surfaces I can simply bit-clone the filesystem or something,
+to preserve the buggered state for further examination.
 
-diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
-index f3a3768..3e9c278 100644
---- a/fs/xfs/xfs_bmap.c
-+++ b/fs/xfs/xfs_bmap.c
-@@ -4487,6 +4487,16 @@ xfs_bmapi(
- 				/* Figure out the extent size, adjust alen */
- 				extsz = xfs_get_extsz_hint(ip);
- 				if (extsz) {
-+					/*
-+					 * make sure we don't exceed a single
-+					 * extent length when we align the
-+					 * extent by reducing length we are
-+					 * going to allocate by the maximum
-+					 * amount extent size aligment may
-+					 * require.
-+					 */
-+					alen = XFS_FILBLKS_MIN(len,
-+						   MAXEXTLEN - (2 * extsz - 1));
- 					error = xfs_bmap_extsize_align(mp,
- 							&got, &prev, extsz,
- 							rt, eof,
--- 
-1.7.2.3
+The second issue is probably still there, and I'll blktrace that instead.
+But it will have to wait a spell -- I've run out of time here right now.
+
+Cheers
 
 _______________________________________________
 xfs mailing list
