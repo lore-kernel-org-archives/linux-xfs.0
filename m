@@ -1,19 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0S239g0075603 for <xfs@oss.sgi.com>; Thu, 27 Jan 2011 20:03:10 -0600
-Received: from mail1.ad.kinetx.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6C662297489
-	for <xfs@oss.sgi.com>; Thu, 27 Jan 2011 18:05:34 -0800 (PST)
-Received: from mail1.ad.kinetx.com (mail1.ad.kinetx.com [74.202.133.147]) by
-	cuda.sgi.com with ESMTP id 2bsCLg4n3MsphmEL for
-	<xfs@oss.sgi.com>; Thu, 27 Jan 2011 18:05:34 -0800 (PST)
-Content-class: urn:content-classes:message
+	p0S2883r076429 for <xfs@oss.sgi.com>; Thu, 27 Jan 2011 20:08:08 -0600
+Date: Thu, 27 Jan 2011 18:09:58 -0800 (PST)
+From: david@lang.hm
+Subject: Re: xfs: very slow after mount, very slow at umount
+In-Reply-To: <4D42056E.2050505@hardwarefreak.com>
+Message-ID: <alpine.DEB.2.00.1101271730030.17579@asgard.lang.hm>
+References: <4D40C8D1.8090202@teksavvy.com> <20110127033011.GH21311@dastard>
+	<4D40EB2F.2050809@teksavvy.com> <4D418B57.1000501@teksavvy.com>
+	<alpine.DEB.2.00.1101271040000.31246@p34.internal.lan>
+	<4D419765.4070805@teksavvy.com>
+	<4D41CA16.8070001@hardwarefreak.com>
+	<alpine.DEB.2.00.1101271209370.17579@asgard.lang.hm>
+	<4D42056E.2050505@hardwarefreak.com>
 MIME-Version: 1.0
-Subject: XFS Preallocation
-Date: Thu, 27 Jan 2011 19:05:33 -0700
-Message-ID: <155CAEA5D902E7429569DD197567724A01534D42@mail1.ad.kinetx.com>
-From: "Jef Fox" <jef.fox@kinetx.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,138 +23,88 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============3067735271007890970=="
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Justin Piszcz <jpiszcz@lucidpixels.com>, Alex Elder <aelder@sgi.com>, Mark Lord <kernel@teksavvy.com>
 
-This is a multi-part message in MIME format.
+On Thu, 27 Jan 2011, Stan Hoeppner wrote:
 
---===============3067735271007890970==
-Content-class: urn:content-classes:message
-Content-Type: multipart/alternative;
-	boundary="----_=_NextPart_001_01CBBE8F.D89A50EA"
+> david@lang.hm put forth on 1/27/2011 2:11 PM:
+>
+>> how do I understand how to setup things on multi-disk systems? the documentation
+>> I've found online is not that helpful, and in some ways contradictory.
+>
+> Visit http://xfs.org  There you will find:
+>
+> Users guide:
+> http://xfs.org/docs/xfsdocs-xml-dev/XFS_User_Guide//tmp/en-US/html/index.html
+>
+> File system structure:
+> http://xfs.org/docs/xfsdocs-xml-dev/XFS_Filesystem_Structure//tmp/en-US/html/index.html
+>
+> Training labs:
+> http://xfs.org/docs/xfsdocs-xml-dev/XFS_Labs/tmp/en-US/html/index.html
 
-This is a multi-part message in MIME format.
+thanks for the pointers.
 
-------_=_NextPart_001_01CBBE8F.D89A50EA
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: quoted-printable
+>> If there really are good rules for how to do this, it would be very helpful if
+>> you could just give mkfs.xfs the information about your system (this partition
+>> is on a 16 drive raid6 array) and have it do the right thing.
+>
+> If your disk array is built upon Linux mdraid, recent versions of mkfs.xfs will
+> read the parameters and automatically make the filesystem accordingly, properly.
+>
+> mxfs.fxs will not do this for PCIe/x hardware RAID arrays or external FC/iSCSI
+> based SAN arrays as there is no standard place to acquire the RAID configuration
+> information for such systems.  For these you will need to configure mkfs.xfs
+> manually.
+>
+> At minimum you will want to specify stripe width (sw) which needs to match the
+> hardware stripe width.  For RAID0 sw=[#of_disks].  For RAID 10, sw=[#disks/2].
+> For RAID5 sw=[#disks-1].  For RAID6 sw=[#disks-2].
+>
+> You'll want at minimum agcount=16 for striped hardware arrays.  Depending on the
+> number and spindle speed of the disks, the total size of the array, the
+> characteristics of the RAID controller (big or small cache), you may want to
+> increase agcount.  Experimentation may be required to find the optimum
+> parameters for a given hardware RAID array.  Typically all other parameters may
+> be left at defaults.
 
-We are having some problems with preallocation of large files.  We have
-found that we can preallocate about 500 1GB files on a volume using the
-resvsp and truncate commands, but the extents are still showing up as
-preallocated.  Is this a problem?  The OS appears to think the files are
-allocated and correctly sized.=20
+does this value change depending on the number of disks in the array?
 
-=20
+> Picking the perfect mkfs.xfs parameters for a hardware RAID array can be
+> somewhat of a black art, mainly because no two vendor arrays act or perform
+> identically.
 
-For reference, we are trying to create files for an external piece of
-equipment to write to a SSD with.  The SSD would then be mounted in RHEL
-and the data pulled off in the 1G chunks.  Because of the nature of the
-data, we need to constantly erase and recreate the files and
-preallocation seems to be the fastest option.  We don't really care if
-the data gets 0'ed out.  Is there another method - allocsp takes too
-long for this application?  Or, does it matter if XFS thinks the extents
-are preallocated but unwritten if no other files are written to the
-disk?
+if mkfs.xfs can figure out how to do the 'right thing' for md raid arrays, 
+can there be a mode where it asks the users for the same information that 
+it gets from the kernel?
 
-=20
+> Systems of a caliber requiring XFS should be thoroughly tested before going into
+> production.  Testing _with your workload_ of multiple parameters should be
+> performed to identify those yielding best performance.
 
-Thanks
+<rant>
+the problem with this is that for large arrays, formatting the array and 
+loading it with data can take a day or more, even before you start running 
+the test. This is made even worse if you are scaling up an existing system 
+a couple orders of magnatude, because you may not have the full workload 
+available to you. Saying that you should test out every option before 
+going into production is a cop-out. The better you can test it, the better 
+off you are, but without knowing what the knobs do, just doing a test and 
+twiddling the knobs to do another test isn't very useful. If there is a 
+way to set the knobs in the general ballpark, then you can test and see if 
+the performance seems adaquate, if not you can try teaking one of the 
+knobs a little bit and see if it helps or hurts. but if the knobs aren't 
+even in the ballpark when you start, this doesn't help much.
+</rant>
 
-Jef
-
-=20
-
-=20
-
-
-------_=_NextPart_001_01CBBE8F.D89A50EA
-Content-Type: text/html;
-	charset="US-ASCII"
-Content-Transfer-Encoding: quoted-printable
-
-<html xmlns:v=3D"urn:schemas-microsoft-com:vml" =
-xmlns:o=3D"urn:schemas-microsoft-com:office:office" =
-xmlns:w=3D"urn:schemas-microsoft-com:office:word" =
-xmlns:m=3D"http://schemas.microsoft.com/office/2004/12/omml" =
-xmlns=3D"http://www.w3.org/TR/REC-html40"><head><meta =
-http-equiv=3DContent-Type content=3D"text/html; =
-charset=3Dus-ascii"><meta name=3DGenerator content=3D"Microsoft Word 12 =
-(filtered medium)"><style><!--
-/* Font Definitions */
-@font-face
-	{font-family:"Cambria Math";
-	panose-1:2 4 5 3 5 4 6 3 2 4;}
-@font-face
-	{font-family:Calibri;
-	panose-1:2 15 5 2 2 2 4 3 2 4;}
-/* Style Definitions */
-p.MsoNormal, li.MsoNormal, div.MsoNormal
-	{margin:0in;
-	margin-bottom:.0001pt;
-	font-size:11.0pt;
-	font-family:"Calibri","sans-serif";}
-a:link, span.MsoHyperlink
-	{mso-style-priority:99;
-	color:blue;
-	text-decoration:underline;}
-a:visited, span.MsoHyperlinkFollowed
-	{mso-style-priority:99;
-	color:purple;
-	text-decoration:underline;}
-span.EmailStyle17
-	{mso-style-type:personal-compose;
-	font-family:"Calibri","sans-serif";
-	color:windowtext;}
-.MsoChpDefault
-	{mso-style-type:export-only;}
-@page WordSection1
-	{size:8.5in 11.0in;
-	margin:1.0in 1.0in 1.0in 1.0in;}
-div.WordSection1
-	{page:WordSection1;}
---></style><!--[if gte mso 9]><xml>
-<o:shapedefaults v:ext=3D"edit" spidmax=3D"1026" />
-</xml><![endif]--><!--[if gte mso 9]><xml>
-<o:shapelayout v:ext=3D"edit">
-<o:idmap v:ext=3D"edit" data=3D"1" />
-</o:shapelayout></xml><![endif]--></head><body lang=3DEN-US link=3Dblue =
-vlink=3Dpurple><div class=3DWordSection1><p class=3DMsoNormal>We are =
-having some problems with preallocation of large files.&nbsp; We have =
-found that we can preallocate about 500 1GB files on a volume using the =
-resvsp and truncate commands, but the extents are still showing up as =
-preallocated.&nbsp; Is this a problem?&nbsp; The OS appears to think the =
-files are allocated and correctly sized. <o:p></o:p></p><p =
-class=3DMsoNormal><o:p>&nbsp;</o:p></p><p class=3DMsoNormal>For =
-reference, we are trying to create files for an external piece of =
-equipment to write to a SSD with.&nbsp; The SSD would then be mounted in =
-RHEL and the data pulled off in the 1G chunks.&nbsp; Because of the =
-nature of the data, we need to constantly erase and recreate the files =
-and preallocation seems to be the fastest option.&nbsp; We don&#8217;t =
-really care if the data gets 0&#8217;ed out.&nbsp; Is there another =
-method &#8211; allocsp takes too long for this application?&nbsp; Or, =
-does it matter if XFS thinks the extents are preallocated but unwritten =
-if no other files are written to the disk?<o:p></o:p></p><p =
-class=3DMsoNormal><o:p>&nbsp;</o:p></p><p =
-class=3DMsoNormal>Thanks<o:p></o:p></p><p =
-class=3DMsoNormal>Jef<o:p></o:p></p><p =
-class=3DMsoNormal><o:p>&nbsp;</o:p></p><p =
-class=3DMsoNormal><o:p>&nbsp;</o:p></p></div></body></html>
-------_=_NextPart_001_01CBBE8F.D89A50EA--
-
-
---===============3067735271007890970==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+David Lang
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============3067735271007890970==--
