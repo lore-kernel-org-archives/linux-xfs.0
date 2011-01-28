@@ -1,22 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0SJOnJp170046 for <xfs@oss.sgi.com>; Fri, 28 Jan 2011 13:24:49 -0600
-Date: Fri, 28 Jan 2011 11:26:00 -0800 (PST)
-From: david@lang.hm
-Subject: Re: xfs: very slow after mount, very slow at umount
-In-Reply-To: <20110128135629.GX21311@dastard>
-Message-ID: <alpine.DEB.2.00.1101281119250.17579@asgard.lang.hm>
-References: <4D40C8D1.8090202@teksavvy.com> <20110127033011.GH21311@dastard>
-	<4D40EB2F.2050809@teksavvy.com> <4D418B57.1000501@teksavvy.com>
-	<alpine.DEB.2.00.1101271040000.31246@p34.internal.lan>
-	<4D419765.4070805@teksavvy.com>
-	<4D41CA16.8070001@hardwarefreak.com>
-	<alpine.DEB.2.00.1101271209370.17579@asgard.lang.hm>
-	<4D42056E.2050505@hardwarefreak.com>
-	<alpine.DEB.2.00.1101271730030.17579@asgard.lang.hm>
-	<20110128135629.GX21311@dastard>
-MIME-Version: 1.0
+	p0SMFVxF176283 for <xfs@oss.sgi.com>; Fri, 28 Jan 2011 16:15:31 -0600
+Subject: Re: [PATCH 5/6] xfs: do not classify freed allocation btree blocks
+	as busy
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <20110121092551.402449845@bombadil.infradead.org>
+References: <20110121092227.115815324@bombadil.infradead.org>
+	<20110121092551.402449845@bombadil.infradead.org>
+Date: Fri, 28 Jan 2011 16:17:56 -0600
+Message-ID: <1296253076.2342.284.camel@doink>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,52 +20,65 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Justin Piszcz <jpiszcz@lucidpixels.com>, Alex Elder <aelder@sgi.com>, Mark Lord <kernel@teksavvy.com>, Stan Hoeppner <stan@hardwarefreak.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Sat, 29 Jan 2011, Dave Chinner wrote:
+On Fri, 2011-01-21 at 04:22 -0500, Christoph Hellwig wrote:
+> During an allocation or freeing of an extent, we occasionally have an
+> interesting situation happen during a btree update.  We may merge a block
+> as part of a record delete, then allocate it again immediately afterwards
+> when inserting a modified extent.  xfs_alloc_fixup_trees() does this sort
+> of manipulation to the btrees, and so can merge then immediately split
+> the tree resulting the in the same busy block being used from the
+> freelist.
 
-> On Thu, Jan 27, 2011 at 06:09:58PM -0800, david@lang.hm wrote:
->> On Thu, 27 Jan 2011, Stan Hoeppner wrote:
->>> david@lang.hm put forth on 1/27/2011 2:11 PM:
->>>
->>> Picking the perfect mkfs.xfs parameters for a hardware RAID array can be
->>> somewhat of a black art, mainly because no two vendor arrays act or perform
->>> identically.
->>
->> if mkfs.xfs can figure out how to do the 'right thing' for md raid
->> arrays, can there be a mode where it asks the users for the same
->> information that it gets from the kernel?
->
-> mkfs.xfs can get the information it needs directly from dm and md
-> devices. However, when hardware RAID luns present themselves to the
-> OS in an identical manner to single drives, how does mkfs tell the
-> difference between a 2TB hardware RAID lun made up of 30x73GB drives
-> and a single 2TB SATA drive? The person running mkfs should already
-> know this little detail....
+Methinks someone must have observed this stuff by tracing...
 
-that's my point, the person running mkfs knows this information, and can 
-easily answer questions that mkfs asks (or provide this information on the 
-command line). but mkfs doesn't ask for this infomation, instead it asks 
-the user to define a whole bunch of parameters that are not well 
-understood. An XFS guru can tell you how to configure these parameters 
-based on different hardware layouts, but as long as it remains a 'back 
-art' getting new people up to speed is really hard. If this can be reduced 
-down to
+> Previously, this would trigger a synchronous log force of the entire log
+> (as the current transaction had a lsn of 0 until committed), but continue
+> to allow the extent to be used because if it is not on disk now then it
+> must have been freed and marked busy in this transaction.
 
-is this a hardware raid device
-   if yes
-     how many drives are there
-     what raid type is used (linear, raid 0, 1, 5, 6, 10)
+This could explain a mysterious slowdown I was looking at
+a while ago.
 
-and whatever questions are needed, it would _greatly_ improve the quality 
-of the settings that non-guru people end up using.
+> In the case of allocbt blocks, we log the fact that they get moved to the
+> freelist and we also log them when the move off the free list back into
+> the free space trees.  When we move the blocks off the freelist back to
+> the trees, we mark the extent busy at that point so that it doesn't get
+> reused until the transaction is committed.
+> 
+> This means that as long as the block is on the AGFL and is only used
+> for allocbt blocks, we don't have to force the log to ensure prior
+> manipulating transactions are on disk as the process of log recovery
+> will replay the transactions in the correct order.
+> 
+> However, we still need to protect against the fact that as we approach
+> ENOSPC in an AG we can allocate data and metadata blocks direct from the
+> AGFL. In this case, we need to treat btree blocks just like any other
+> busy extent. Hence we still need to track btree blocks in the busy extent
+> tree, but we need to distinguish them from normal extents so we can apply
+> the necessary exceptions for btree block allocation.
+> 
+> Signed-off-by: Dave Chinner <david@fromorbit.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-David  Lang
+Sorry, this ended up being a pretty pointless note...
+I see what you're doing here but have not completed
+my detailed review.  I also have read Dave's comments
+and I think he's right that what the block is being
+allocated *for* (metadata or data) determines whether
+the log force is required.
+
+Anyway, I need to go now unfortunately.  I'll try to
+finish reviewing this and the last one by Monday.
+
+					-Alex
+
 
 _______________________________________________
 xfs mailing list
