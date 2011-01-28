@@ -1,28 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0S4Ck6b096828 for <xfs@oss.sgi.com>; Thu, 27 Jan 2011 22:12:46 -0600
-Received: from mail-vx0-f181.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 64901298238
-	for <xfs@oss.sgi.com>; Thu, 27 Jan 2011 20:15:10 -0800 (PST)
-Received: from mail-vx0-f181.google.com (mail-vx0-f181.google.com
-	[209.85.220.181]) by cuda.sgi.com with ESMTP id
-	oV3QJTNZaetx3xdf for <xfs@oss.sgi.com>;
-	Thu, 27 Jan 2011 20:15:10 -0800 (PST)
-Received: by vxc38 with SMTP id 38so163439vxc.26
-	for <xfs@oss.sgi.com>; Thu, 27 Jan 2011 20:15:10 -0800 (PST)
+	p0S4nikx103884 for <xfs@oss.sgi.com>; Thu, 27 Jan 2011 22:49:45 -0600
+Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4FE698D8096
+	for <xfs@oss.sgi.com>; Thu, 27 Jan 2011 20:52:08 -0800 (PST)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	6lHfw5tgpDqNAFbP for <xfs@oss.sgi.com>;
+	Thu, 27 Jan 2011 20:52:08 -0800 (PST)
+Date: Fri, 28 Jan 2011 15:52:05 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: XFS Preallocation
+Message-ID: <20110128045205.GR21311@dastard>
+References: <155CAEA5D902E7429569DD197567724A01534D42@mail1.ad.kinetx.com>
 MIME-Version: 1.0
-In-Reply-To: <4D421A68.9000607@teksavvy.com>
-References: <4D40C8D1.8090202@teksavvy.com> <20110127033011.GH21311@dastard>
-	<4D40EB2F.2050809@teksavvy.com> <4D418B57.1000501@teksavvy.com>
-	<alpine.DEB.2.00.1101271040000.31246@p34.internal.lan>
-	<4D419765.4070805@teksavvy.com>
-	<4D41CA16.8070001@hardwarefreak.com> <4D41EA04.7010506@teksavvy.com>
-	<20110128001735.GO21311@dastard> <4D421A68.9000607@teksavvy.com>
-From: David Rees <drees76@gmail.com>
-Date: Thu, 27 Jan 2011 20:14:50 -0800
-Message-ID: <AANLkTinO1JsX_3NDHS=ew5u2C7VcCHT1Y1Yabnz=RQLO@mail.gmail.com>
-Subject: Re: xfs: very slow after mount, very slow at umount
+Content-Disposition: inline
+In-Reply-To: <155CAEA5D902E7429569DD197567724A01534D42@mail1.ad.kinetx.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,43 +25,58 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mark Lord <kernel@teksavvy.com>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Justin Piszcz <jpiszcz@lucidpixels.com>, Alex Elder <aelder@sgi.com>, Stan Hoeppner <stan@hardwarefreak.com>
+To: Jef Fox <jef.fox@kinetx.com>
+Cc: xfs@oss.sgi.com
 
-On Thu, Jan 27, 2011 at 5:22 PM, Mark Lord <kernel@teksavvy.com> wrote:
-> But I just don't know. =A0My working theory, likely entirely wrong,
-> is that if I have N streams active, odds are that each of those
-> streams might get assigned to different AGs, given sufficient AGs >=3D N.
->
-> Since the box often has 3-7 recording streams active,
-> I'm trying it out with 8 AGs now.
+On Thu, Jan 27, 2011 at 07:05:33PM -0700, Jef Fox wrote:
+> We are having some problems with preallocation of large files.  We have
+> found that we can preallocate about 500 1GB files on a volume using the
+> resvsp and truncate commands, but the extents are still showing up as
+> preallocated.  Is this a problem?  The OS appears to think the files are
+> allocated and correctly sized. 
 
-As suggested before - why are you messing with AGs instead of allocsize?
+That's the way it's supposed to work. Preallocated space stays
+preallocated (i.e reads as zeros) until it is written to, regardless
+of whether you change the file size via truncate commands.
 
-I suspect that with the default configuration, XFS was trying to
-maximize throughput by reducing seeks with multiple processes writing
-streams.
+> For reference, we are trying to create files for an external piece of
+> equipment to write to a SSD with.  The SSD would then be mounted in RHEL
+> and the data pulled off in the 1G chunks.  Because of the nature of the
+> data, we need to constantly erase and recreate the files and
+> preallocation seems to be the fastest option.
 
-But now, you're telling XFS that it's OK to write in up to 8 different
-locations on the disk without worrying about seek performance.
+What do you mean by "erase and recreate"? Do you mean you rm the
+files, then preallocate them again?
 
-I think this is likely to result in overall worse performance at the
-worst time - under write load.
+If you were running 2.6.37+ and a TOT xfsprogs, there's also the
+"zero" command that converts allocated space back to the
+preallocated (zeroed) state without doing any IO. It's the
+equivalent unresvsp + resvsp in a single operation.
 
-If you are trying to optimize single thread read performance by
-minimizing file fragments, why don't you simply figure out at what
-point increasing allocsize stops increasing read performance?
+> We don't really care if
+> the data gets 0'ed out.  Is there another method - allocsp takes too
+> long for this application?
 
-I suspect that the the defaults do good job because even if your file
-are fragmented in 64MB chunks because you have multiple streams
-writing, those chunks are very likely to be very close together so
-there isn't much of a seek penalty.
+allocsp is historical interface, pretty much useless and should
+probably be removed. I can't think of any situation where allocsp
+would be better than resvsp or zero....
 
--Dave
+> Or, does it matter if XFS thinks the extents
+> are preallocated but unwritten if no other files are written to the
+> disk?
+
+I'm not sure what you are asking there...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
