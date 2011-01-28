@@ -1,16 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0RNHjhF047580 for <xfs@oss.sgi.com>; Thu, 27 Jan 2011 17:17:45 -0600
-Subject: Re: [PATCH 3/6] xfs: do not immediately reuse busy extent ranges
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110121092550.933551564@bombadil.infradead.org>
-References: <20110121092227.115815324@bombadil.infradead.org>
-	<20110121092550.933551564@bombadil.infradead.org>
-Date: Thu, 27 Jan 2011 17:20:06 -0600
-Message-ID: <1296170406.7651.523.camel@doink>
-Mime-Version: 1.0
-Reply-To: aelder@sgi.com
+	p0S0FFux057298 for <xfs@oss.sgi.com>; Thu, 27 Jan 2011 18:15:15 -0600
+Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6574A29586B
+	for <xfs@oss.sgi.com>; Thu, 27 Jan 2011 16:17:39 -0800 (PST)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	5gAIwIKAIHFRlHwb for <xfs@oss.sgi.com>;
+	Thu, 27 Jan 2011 16:17:39 -0800 (PST)
+Date: Fri, 28 Jan 2011 11:17:35 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfs: very slow after mount, very slow at umount
+Message-ID: <20110128001735.GO21311@dastard>
+References: <4D40C8D1.8090202@teksavvy.com> <20110127033011.GH21311@dastard>
+	<4D40EB2F.2050809@teksavvy.com> <4D418B57.1000501@teksavvy.com>
+	<alpine.DEB.2.00.1101271040000.31246@p34.internal.lan>
+	<4D419765.4070805@teksavvy.com>
+	<4D41CA16.8070001@hardwarefreak.com>
+	<4D41EA04.7010506@teksavvy.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4D41EA04.7010506@teksavvy.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,180 +34,74 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Mark Lord <kernel@teksavvy.com>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Justin Piszcz <jpiszcz@lucidpixels.com>, Alex Elder <aelder@sgi.com>, Stan Hoeppner <stan@hardwarefreak.com>
 
-On Fri, 2011-01-21 at 04:22 -0500, Christoph Hellwig wrote:
-> Every time we reallocate a busy extent, we cause a synchronous log force
-> to occur to ensure the freeing transaction is on disk before we continue
-> and use the newly allocated extent.  This is extremely sub-optimal as we
-> have to mark every transaction with blocks that get reused as synchronous.
+On Thu, Jan 27, 2011 at 04:56:20PM -0500, Mark Lord wrote:
+> On 11-01-27 02:40 PM, Stan Hoeppner wrote:
+> ..
+> > You need to use the mkfs.xfs defaults for any single drive filesystem, and trust
+> > the allocator to do the right thing.
 > 
-> Instead of searching the busy extent list after deciding on the extent to
-> allocate, check each candidate extent during the allocation decisions as
-> to whether they are in the busy list.  If they are in the busy list, we
-> trim the busy range out of the extent we have found and determine if that
-> trimmed range is still OK for allocation. In many cases, this check can
-> be incorporated into the allocation extent alignment code which already
-> does trimming of the found extent before determining if it is a valid
-> candidate for allocation.
+> But it did not do the right thing when I used the defaults.
+> Big files ended up with tons of (exactly) 64MB extents, ISTR.
+
+Because your AG size is 64MB. An extent can't be larger than an AG.
+Hence you are fragmenting your large files unnecessarily, as extents
+can be up to 8GB in size on a 4k block size filesystem.
+
+> With the increased number of ags, I saw much less fragmentation,
+> and the drive was still very light on I/O despite multiple simultaneous
+> recordings, commflaggers, and playback at once.
+
+The allocsize mount option is the prefered method of keeping
+fragemntation down for dvr style workloads.
+
+> > Trust the defaults.
 > 
-> [hch: merged two earlier patches from Dave and fixed various bugs]
-> 
-> Signed-off-by: Dave Chinner <david@fromorbit.com>
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> I imagine the defaults are designed to handle a typical Linux install,
+> with 100,000 to 1,000,000 files varying from a few bytes to a few megabytes.
 
-You know, I must really not be looking at this right, because
-the way I am interpreting your xfs_alloc_busy_search_trim(),
-it's just plain wrong.  Perhaps it arrives at an OK result
-anyway, but please take a look to see if I'm just confused.
+Why would we optimise a filesystem designed for use on high end
+storage and large amounts of IO concurrency for what a typical Linux
+desktop needs? For such storage (i.e. single spindle) mkfs optimises
+the layout for minimal seeks and relatively low amounts of
+concurrency. This gives _adequate_ performance on desktop machines
+without compromising scalbility on high end storage.
 
-I have a few other comments, not as important.
+In my experience with XFS, most people who tweak mkfs parameters end
+up with some kind of problem they can't explain and don't know how
+to solve. And they are typically problems that would not have
+occurred had they simply used the defaults in the first place. What
+you've done is a perfect example of this.
 
-Generally the rest of it looks good.
+Yes, I know we are taking the fun out of tweaking knobs so you can
+say it's 1% faster than the default, but that's our job: to
+determine the right default settings so the filesystem works as well
+as possible out of the box with no tweaking for most workloads on a
+wide range of storage....
 
-I'll pick up with the rest of the series tomorrow.
+> That's not what this filesystem will have. It will have only a few thousand
+> (max) inodes at any given time, but each file will be HUGE.
 
-					-Alex
+Which is exactly the use case XFS was designed for, and....
 
+> XFS is fantastic at adapting to the workload, but I'd like to try and have
+> it tuned more closely for the known workload this system is throwing at it.
 
-> Index: xfs/fs/xfs/xfs_alloc.c
-> ===================================================================
-> --- xfs.orig/fs/xfs/xfs_alloc.c	2011-01-17 22:05:27.146004341 +0100
-> +++ xfs/fs/xfs/xfs_alloc.c	2011-01-18 13:04:30.239023407 +0100
+.... as such the mkfs defaults are already tuned as well as they can
+be for such usage.
 
-. . .
+> I'm now trying again, but with 8 ags instead of 8000+.
 
-> @@ -2654,6 +2730,71 @@ xfs_alloc_busy_search(
->  	return match;
->  }
->  
-> +/*
-> + * For a given extent [fbno, flen], search the busy extent list
-> + * to find a subset of the extent that is not busy.
-> + */
-> +void
-> +xfs_alloc_busy_search_trim(
-> +	struct xfs_mount	*mp,
-> +	struct xfs_perag	*pag,
-> +	xfs_agblock_t		fbno,
-> +	xfs_extlen_t		flen,
-> +	xfs_agblock_t		*rbno,
-> +	xfs_extlen_t		*rlen)
-> +{
-> +	struct rb_node		*rbp;
-> +	xfs_agblock_t           bno = fbno;
-> +	xfs_extlen_t            len = flen;
-> +
+Why 8 AGs and not the default?
 
-I don't know if it's important, but you could ASSERT(flen > 0) here.
+Cheers,
 
-> +	spin_lock(&pag->pagb_lock);
-> +	rbp = pag->pagb_tree.rb_node;
-> +	while (rbp) {
-
-	while (rbp && len) {
-
-> +		struct xfs_busy_extent *busyp =
-> +			rb_entry(rbp, struct xfs_busy_extent, rb_node);
-> +		xfs_agblock_t	end = bno + len;
-> +		xfs_agblock_t	bend = busyp->bno + busyp->length;
-> +
-> +		if (bno + len <= busyp->bno) {
-> +			rbp = rbp->rb_left;
-> +			continue;
-> +		} else if (bno >= busyp->bno + busyp->length) {
-> +			rbp = rbp->rb_right;
-> +			continue;
-> +		}
-> +
-> +		if (busyp->bno < bno) {
-> +			/* start overlap */
-> +			ASSERT(bend >= bno);
-			ASSERT(bend > bno);
-
-> +			ASSERT(bend <= end);
-> +			len -= bno - bend;
-       NO:		len -= bend - bno;
-
-> +			bno = bend;
-> +		} else if (bend > end) {
-> +			/* end overlap */
-> +			ASSERT(busyp->bno >= bno);
-> +			ASSERT(busyp->bno < end);
-> +			len -= bend - end;
-       NO:		len -= end - busyp->bn;
-
-> +		} else {
-> +			/* middle overlap - return larger segment */
-> +			ASSERT(busyp->bno >= bno);
-> +			ASSERT(bend <= end);
-> +			len = busyp->bno - bno;
-> +			if (len >= end - bend) {
-> +				/* use first segment */
-> +				len = len;
-> +			} else {
-> +				/* use last segment */
-> +				bno = bend;
-> +				len = end - bend;
-> +			}
-
- 			/* Use the first segment... */
-			len = busp->bno - bno;
-			if (len < end - bend) {
-				/* unless the second is larger */
-				bno = bend;
-				len = end - bend;
-			}
-
-
-> +		}
-> +	}
-> +	spin_unlock(&pag->pagb_lock);
-> +
-> +	*rbno = bno;
-> +	*rlen = len;
-> +}
-> +
->  void
->  xfs_alloc_busy_clear(
->  	struct xfs_mount	*mp,
-
-. . .
- 
-> Index: xfs/fs/xfs/linux-2.6/xfs_discard.c
-> ===================================================================
-> --- xfs.orig/fs/xfs/linux-2.6/xfs_discard.c	2011-01-17 22:06:13.004005040 +0100
-> +++ xfs/fs/xfs/linux-2.6/xfs_discard.c	2011-01-17 22:14:09.133005668 +0100
-> @@ -77,8 +77,8 @@ xfs_trim_extents(
->  	 * enough to be worth discarding.
->  	 */
->  	while (i) {
-> -		xfs_agblock_t fbno;
-> -		xfs_extlen_t flen;
-> +		xfs_agblock_t	fbno, tbno;
-> +		xfs_extlen_t	flen, tlen;
-
-Does "f" represent "found" and "t" represent "trimmed" here?
-(Just curious--it's fine.)
-
->  
->  		error = xfs_alloc_get_rec(cur, &fbno, &flen, &i);
->  		if (error)
-> @@ -90,7 +90,7 @@ xfs_trim_extents(
->  		 * Too small?  Give up.
->  		 */
->  		if (flen < minlen) {
-> -			trace_xfs_discard_toosmall(mp, agno, fbno, flen);
-> +			trace_xfs_discard_toosmall(mp, agno, tbno, flen);
-"tbno" appears to be possibly used before set here.  At this point
-don't you actually want the found block number anyway?
-
->  			goto out_del_cursor;
->  		}
->  
-
-. . .
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
