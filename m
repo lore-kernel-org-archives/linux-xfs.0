@@ -1,27 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0S0FFux057298 for <xfs@oss.sgi.com>; Thu, 27 Jan 2011 18:15:15 -0600
+	p0S0eEW3061479 for <xfs@oss.sgi.com>; Thu, 27 Jan 2011 18:40:15 -0600
 Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6574A29586B
-	for <xfs@oss.sgi.com>; Thu, 27 Jan 2011 16:17:39 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2F2B2126A922
+	for <xfs@oss.sgi.com>; Thu, 27 Jan 2011 16:42:38 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	5gAIwIKAIHFRlHwb for <xfs@oss.sgi.com>;
-	Thu, 27 Jan 2011 16:17:39 -0800 (PST)
-Date: Fri, 28 Jan 2011 11:17:35 +1100
+	9XNOaX3fAwJj2zIg for <xfs@oss.sgi.com>;
+	Thu, 27 Jan 2011 16:42:38 -0800 (PST)
+Date: Fri, 28 Jan 2011 11:42:36 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs: very slow after mount, very slow at umount
-Message-ID: <20110128001735.GO21311@dastard>
-References: <4D40C8D1.8090202@teksavvy.com> <20110127033011.GH21311@dastard>
-	<4D40EB2F.2050809@teksavvy.com> <4D418B57.1000501@teksavvy.com>
-	<alpine.DEB.2.00.1101271040000.31246@p34.internal.lan>
-	<4D419765.4070805@teksavvy.com>
-	<4D41CA16.8070001@hardwarefreak.com>
-	<4D41EA04.7010506@teksavvy.com>
+Subject: Re: [PATCH 0/8] xfs: candidate 2.6.38-rc fixes V3
+Message-ID: <20110128004236.GP21311@dastard>
+References: <1296100401-17135-1-git-send-email-david@fromorbit.com>
+	<1296142265.1973.67.camel@doink>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4D41EA04.7010506@teksavvy.com>
+In-Reply-To: <1296142265.1973.67.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,67 +30,20 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mark Lord <kernel@teksavvy.com>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Justin Piszcz <jpiszcz@lucidpixels.com>, Alex Elder <aelder@sgi.com>, Stan Hoeppner <stan@hardwarefreak.com>
+To: Alex Elder <aelder@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Thu, Jan 27, 2011 at 04:56:20PM -0500, Mark Lord wrote:
-> On 11-01-27 02:40 PM, Stan Hoeppner wrote:
-> ..
-> > You need to use the mkfs.xfs defaults for any single drive filesystem, and trust
-> > the allocator to do the right thing.
+On Thu, Jan 27, 2011 at 09:31:05AM -0600, Alex Elder wrote:
+> On Thu, 2011-01-27 at 14:53 +1100, Dave Chinner wrote:
+> > Fixed the various issues found during review and added all the
+> > reviewed-by tags to the fully reviewed commits.
 > 
-> But it did not do the right thing when I used the defaults.
-> Big files ended up with tons of (exactly) 64MB extents, ISTR.
+> I'll be testing with this today.  Barring any unforseen
+> problems I'm just waiting for a pull request from you
+> (or the go-ahead to just use the patches as posted).
 
-Because your AG size is 64MB. An extent can't be larger than an AG.
-Hence you are fragmenting your large files unnecessarily, as extents
-can be up to 8GB in size on a 4k block size filesystem.
-
-> With the increased number of ags, I saw much less fragmentation,
-> and the drive was still very light on I/O despite multiple simultaneous
-> recordings, commflaggers, and playback at once.
-
-The allocsize mount option is the prefered method of keeping
-fragemntation down for dvr style workloads.
-
-> > Trust the defaults.
-> 
-> I imagine the defaults are designed to handle a typical Linux install,
-> with 100,000 to 1,000,000 files varying from a few bytes to a few megabytes.
-
-Why would we optimise a filesystem designed for use on high end
-storage and large amounts of IO concurrency for what a typical Linux
-desktop needs? For such storage (i.e. single spindle) mkfs optimises
-the layout for minimal seeks and relatively low amounts of
-concurrency. This gives _adequate_ performance on desktop machines
-without compromising scalbility on high end storage.
-
-In my experience with XFS, most people who tweak mkfs parameters end
-up with some kind of problem they can't explain and don't know how
-to solve. And they are typically problems that would not have
-occurred had they simply used the defaults in the first place. What
-you've done is a perfect example of this.
-
-Yes, I know we are taking the fun out of tweaking knobs so you can
-say it's 1% faster than the default, but that's our job: to
-determine the right default settings so the filesystem works as well
-as possible out of the box with no tweaking for most workloads on a
-wide range of storage....
-
-> That's not what this filesystem will have. It will have only a few thousand
-> (max) inodes at any given time, but each file will be HUGE.
-
-Which is exactly the use case XFS was designed for, and....
-
-> XFS is fantastic at adapting to the workload, but I'd like to try and have
-> it tuned more closely for the known workload this system is throwing at it.
-
-.... as such the mkfs defaults are already tuned as well as they can
-be for such usage.
-
-> I'm now trying again, but with 8 ags instead of 8000+.
-
-Why 8 AGs and not the default?
+Ok, still need a review on patch 2/8 (efi item leak) before I'll
+send a pull request...
 
 Cheers,
 
