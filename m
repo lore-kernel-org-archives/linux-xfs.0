@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0S6K84h121640 for <xfs@oss.sgi.com>; Fri, 28 Jan 2011 00:20:08 -0600
-Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1AD9F1548AA6
-	for <xfs@oss.sgi.com>; Thu, 27 Jan 2011 22:22:31 -0800 (PST)
-Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
-	cuda.sgi.com with ESMTP id ODkfZiy0cwSOHEeN for
-	<xfs@oss.sgi.com>; Thu, 27 Jan 2011 22:22:31 -0800 (PST)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: Re: extremely slow write performance plaintext
-Date: Fri, 28 Jan 2011 07:22:20 +0100
-References: <3205_1294953756_4D2F6D1C_3205_1943_1_4D2F6D1C.2060409@davisvision.com>
-	<4D3E9C73.6090508@opencubetech.com>
-	<20047_1295965512_4D3EDD47_20047_8804_1_4D3EDD47.304@davisvision.com>
-In-Reply-To: <20047_1295965512_4D3EDD47_20047_8804_1_4D3EDD47.304@davisvision.com>
+	p0S6V0Wt123419 for <xfs@oss.sgi.com>; Fri, 28 Jan 2011 00:31:01 -0600
+Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 64548154A148
+	for <xfs@oss.sgi.com>; Thu, 27 Jan 2011 22:33:23 -0800 (PST)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	qx5ErwGSHfqzekFt for <xfs@oss.sgi.com>;
+	Thu, 27 Jan 2011 22:33:23 -0800 (PST)
+Date: Fri, 28 Jan 2011 17:33:20 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 5/6] xfs: do not classify freed allocation btree blocks
+	as busy
+Message-ID: <20110128063320.GU21311@dastard>
+References: <20110121092227.115815324@bombadil.infradead.org>
+	<20110121092551.402449845@bombadil.infradead.org>
 MIME-Version: 1.0
-Message-Id: <201101280722.28648@zmi.at>
+Content-Disposition: inline
+In-Reply-To: <20110121092551.402449845@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,72 +27,93 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============6392981215794884587=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Cory Coager <ccoager@davisvision.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
---===============6392981215794884587==
-Content-Type: multipart/signed;
-  boundary="nextPart1566001.9hRy6ottlK";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+On Fri, Jan 21, 2011 at 04:22:32AM -0500, Christoph Hellwig wrote:
+> During an allocation or freeing of an extent, we occasionally have an
+> interesting situation happen during a btree update.  We may merge a block
+> as part of a record delete, then allocate it again immediately afterwards
+> when inserting a modified extent.  xfs_alloc_fixup_trees() does this sort
+> of manipulation to the btrees, and so can merge then immediately split
+> the tree resulting the in the same busy block being used from the
+> freelist.
+> 
+> Previously, this would trigger a synchronous log force of the entire log
+> (as the current transaction had a lsn of 0 until committed), but continue
+> to allow the extent to be used because if it is not on disk now then it
+> must have been freed and marked busy in this transaction.
+> 
+> In the case of allocbt blocks, we log the fact that they get moved to the
+> freelist and we also log them when the move off the free list back into
+> the free space trees.  When we move the blocks off the freelist back to
+> the trees, we mark the extent busy at that point so that it doesn't get
+> reused until the transaction is committed.
 
---nextPart1566001.9hRy6ottlK
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+I'm not sure this is correct - it's when they are put on the
+freelist that they are marked busy (xfs_allocbt_free_block), and
+with the previous patch they now don't get marked busy when freed
+back to the trees.
 
-On Dienstag, 25. Januar 2011 Cory Coager wrote:
-> It is a ProLiant DL385 G1.
+> This means that as long as the block is on the AGFL and is only used
+> for allocbt blocks, we don't have to force the log to ensure prior
+> manipulating transactions are on disk as the process of log recovery
+> will replay the transactions in the correct order.
 
-OK, so the speed you get could be just normal. You got a box that still=20
-says "Compaq" on it, right? Just after Christmas I virtualized a=20
-DL380 G1 to a DL 385 G6, and it's much faster now, even when=20
-virtualized.
+I think that as long as the busy extent is reallocated as metadata
+of any kind, it does not require us to force the log/mark the
+transaction synchronous. That is, the metadata modifications will
+not be written to the extent until the allocation transaction has
+hit the disk regardless of whether we force the log here or not.
+Hence log recovery will always do the right thing here.
 
-It's not really needed to talk about performance when you use such old=20
-hardware. Be happy when it works without problems ;-)
+It's the metadata -> data extent re-allocation that we need the
+protecion for, as we cannot serialise data extent writes against log
+recovery requirements. That is, we have no idea if the data extent
+contents have been written or not when we run log recovery, so we
+cannot allow data to be written until we are certain that that the
+data extent allocation overrides all the recorded metadata changes
+in the log.
 
-=2D-=20
-mit freundlichen Gr=FCssen,
-Michael Monnerie, Ing. BSc
+For data -> metadata reallocation, this is not a problem as we know
+the metadata writes will not be done (and therefore overwrite the
+data on disk) until the transactions are on disk and the metadata
+buffers unpinned. The same goes for metadata->metadata reallocation.
 
-it-management Internet Services: Prot=E9ger
-http://proteger.at [gesprochen: Prot-e-schee]
-Tel: +43 660 / 415 6531
+Hence I don't think we specifically need to track allocbt blocks in
+the busy list - we track all freed blocks like we currently do, but
+we only need to search the busy block list and mark transactions
+synchronous for data extent allocations.
 
-// ****** Radiointerview zum Thema Spam ******
-// http://www.it-podcast.at/archiv.html#podcast-100716
-//=20
-// Haus zu verkaufen: http://zmi.at/langegg/
+This removes the complexity of removing busy allocbt blocks from the
+busy tree when they get reused - if they remain allocated they will
+be removed from the tree as transactions/checkpoints are committed
+to disk just like they currently are. That also avoids the problem
+of a transaction commit trying to remove a busy extent from the
+tree that isn't in there anymore or potential races based around
+transactions adding and removing busy blocks that log IO completion
+will be trying to remove.
 
---nextPart1566001.9hRy6ottlK
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+Does this make sense? I understand this code a lot better than I did
+when I originally wrote these patches, and to tell the truth I can't
+remember exactly why I took this approach. Looking over the patches
+makes me think that I was trying to do the minimum possible semantic
+change to solve the specific problem I was seeing, rather than
+understanding the entire workings of the busy extent list and how to
+optimise from there...
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.15 (GNU/Linux)
+Cheers,
 
-iEYEABECAAYFAk1CYKQACgkQzhSR9xwSCbS0wQCg3pSKU6ovQ95Zgw2QFQPVz103
-u5UAmwYhI0yBdbfFurxLzfzxpxU0nfa+
-=Qe+g
------END PGP SIGNATURE-----
-
---nextPart1566001.9hRy6ottlK--
-
-
---===============6392981215794884587==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============6392981215794884587==--
