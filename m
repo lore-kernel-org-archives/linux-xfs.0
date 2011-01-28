@@ -1,24 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0S6V0Wt123419 for <xfs@oss.sgi.com>; Fri, 28 Jan 2011 00:31:01 -0600
+	p0S7T8vl133309 for <xfs@oss.sgi.com>; Fri, 28 Jan 2011 01:29:08 -0600
 Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 64548154A148
-	for <xfs@oss.sgi.com>; Thu, 27 Jan 2011 22:33:23 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E6E4C1490AC4
+	for <xfs@oss.sgi.com>; Thu, 27 Jan 2011 23:31:31 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	qx5ErwGSHfqzekFt for <xfs@oss.sgi.com>;
-	Thu, 27 Jan 2011 22:33:23 -0800 (PST)
-Date: Fri, 28 Jan 2011 17:33:20 +1100
+	iYGYpFEISnhqMMCL for <xfs@oss.sgi.com>;
+	Thu, 27 Jan 2011 23:31:31 -0800 (PST)
+Date: Fri, 28 Jan 2011 18:31:19 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 5/6] xfs: do not classify freed allocation btree blocks
-	as busy
-Message-ID: <20110128063320.GU21311@dastard>
-References: <20110121092227.115815324@bombadil.infradead.org>
-	<20110121092551.402449845@bombadil.infradead.org>
+Subject: Re: xfs: very slow after mount, very slow at umount
+Message-ID: <20110128073119.GV21311@dastard>
+References: <4D40C8D1.8090202@teksavvy.com> <20110127033011.GH21311@dastard>
+	<4D40EB2F.2050809@teksavvy.com> <4D418B57.1000501@teksavvy.com>
+	<alpine.DEB.2.00.1101271040000.31246@p34.internal.lan>
+	<4D419765.4070805@teksavvy.com>
+	<4D41CA16.8070001@hardwarefreak.com>
+	<4D41EA04.7010506@teksavvy.com> <20110128001735.GO21311@dastard>
+	<4D421A68.9000607@teksavvy.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110121092551.402449845@bombadil.infradead.org>
+In-Reply-To: <4D421A68.9000607@teksavvy.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,84 +35,88 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Mark Lord <kernel@teksavvy.com>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Justin Piszcz <jpiszcz@lucidpixels.com>, Alex Elder <aelder@sgi.com>, Stan Hoeppner <stan@hardwarefreak.com>
 
-On Fri, Jan 21, 2011 at 04:22:32AM -0500, Christoph Hellwig wrote:
-> During an allocation or freeing of an extent, we occasionally have an
-> interesting situation happen during a btree update.  We may merge a block
-> as part of a record delete, then allocate it again immediately afterwards
-> when inserting a modified extent.  xfs_alloc_fixup_trees() does this sort
-> of manipulation to the btrees, and so can merge then immediately split
-> the tree resulting the in the same busy block being used from the
-> freelist.
+On Thu, Jan 27, 2011 at 08:22:48PM -0500, Mark Lord wrote:
+> On 11-01-27 07:17 PM, Dave Chinner wrote:
+> >
+> > In my experience with XFS, most people who tweak mkfs parameters end
+> > up with some kind of problem they can't explain and don't know how
+> > to solve. And they are typically problems that would not have
+> > occurred had they simply used the defaults in the first place. What
+> > you've done is a perfect example of this.
 > 
-> Previously, this would trigger a synchronous log force of the entire log
-> (as the current transaction had a lsn of 0 until committed), but continue
-> to allow the extent to be used because if it is not on disk now then it
-> must have been freed and marked busy in this transaction.
+> Maybe.  But what I read from the paragraph above,
+> is that the documentation could perhaps explain things better,
+> and then people other than the coders might understand how
+> best to tweak it.
+
+A simple google search turns up discussions like this:
+
+http://oss.sgi.com/archives/xfs/2009-01/msg01161.html
+
+Where someone reads the docco and asks questions to fill in gaps in
+their knowledge that the docco didn't explain fully before they
+try to twiddle knobs.
+
+Configuring XFS filesystems for optimal performance has always been
+a black art because it requires you to understand your storage, your
+application workload(s) and XFS from the ground up.  Most people
+can't even tick one of those boxes, let alone all three....
+
+> > Why 8 AGs and not the default?
 > 
-> In the case of allocbt blocks, we log the fact that they get moved to the
-> freelist and we also log them when the move off the free list back into
-> the free space trees.  When we move the blocks off the freelist back to
-> the trees, we mark the extent busy at that point so that it doesn't get
-> reused until the transaction is committed.
+> How AGs are used is not really explained anywhere I've looked,
+> so I am guessing at what they do and how the system might respond
+> to different values there (that documentation thing again).
 
-I'm not sure this is correct - it's when they are put on the
-freelist that they are marked busy (xfs_allocbt_free_block), and
-with the previous patch they now don't get marked busy when freed
-back to the trees.
+Section 5.1 of this 1996 whitepaper tells you what allocation groups
+are and the general allocation strategy around them:
 
-> This means that as long as the block is on the AGFL and is only used
-> for allocbt blocks, we don't have to force the log to ensure prior
-> manipulating transactions are on disk as the process of log recovery
-> will replay the transactions in the correct order.
+http://oss.sgi.com/projects/xfs/papers/xfs_usenix/index.html
 
-I think that as long as the busy extent is reallocated as metadata
-of any kind, it does not require us to force the log/mark the
-transaction synchronous. That is, the metadata modifications will
-not be written to the extent until the allocation transaction has
-hit the disk regardless of whether we force the log here or not.
-Hence log recovery will always do the right thing here.
+> Lacking documentation, my earlier experiences suggest that more AGs
+> gives me less fragmentation when multiple simultaneous recording streams
+> are active.  I got higher fragmentation with the defaults than with
+> the tweaked value.
 
-It's the metadata -> data extent re-allocation that we need the
-protecion for, as we cannot serialise data extent writes against log
-recovery requirements. That is, we have no idea if the data extent
-contents have been written or not when we run log recovery, so we
-cannot allow data to be written until we are certain that that the
-data extent allocation overrides all the recorded metadata changes
-in the log.
+Fragmentation is not a big problem if you've got extents larger than
+a typical IO. Once extents get to a few megabytes in size, it just
+doesn't matter if they are any bigger for small DVR workloads
+because the seek cost between streams is sufficiently amortised with
+a few MB of sequential access per stream....
 
-For data -> metadata reallocation, this is not a problem as we know
-the metadata writes will not be done (and therefore overwrite the
-data on disk) until the transactions are on disk and the metadata
-buffers unpinned. The same goes for metadata->metadata reallocation.
+> Now, that might be due to differences in kernel versions too,
+> as things in XFS are continuously getting even better (thanks!),
+> and the original "defaults" assessment was with the kernel-of-the-day
+> back in early 2010 (2.6.34?), and now the system is using 2.6.37.
+> 
+> But I just don't know.  My working theory, likely entirely wrong,
+> is that if I have N streams active, odds are that each of those
+> streams might get assigned to different AGs, given sufficient AGs >= N.
 
-Hence I don't think we specifically need to track allocbt blocks in
-the busy list - we track all freed blocks like we currently do, but
-we only need to search the busy block list and mark transactions
-synchronous for data extent allocations.
+Streaming into different AGs is not necessarily the right solution;
+it causes seeks between every streami, and the stream in AG0 will be
+able to read/write faster than the stream in AG 7 because of their
+locations on disk.
 
-This removes the complexity of removing busy allocbt blocks from the
-busy tree when they get reused - if they remain allocated they will
-be removed from the tree as transactions/checkpoints are committed
-to disk just like they currently are. That also avoids the problem
-of a transaction commit trying to remove a busy extent from the
-tree that isn't in there anymore or potential races based around
-transactions adding and removing busy blocks that log IO completion
-will be trying to remove.
+IOWs, interleaving streams within an AG might give better IO
+patterns, lower latency and better throughput. Of course, it depends
+on the storage subsystem, the application, etc. And yes, you can
+change this sort of allocation behaviour by fiddling with XFS knobs
+in the right way - start to see what I mean about tuning XFS really
+being a "black art"?
 
-Does this make sense? I understand this code a lot better than I did
-when I originally wrote these patches, and to tell the truth I can't
-remember exactly why I took this approach. Looking over the patches
-makes me think that I was trying to do the minimum possible semantic
-change to solve the specific problem I was seeing, rather than
-understanding the entire workings of the busy extent list and how to
-optimise from there...
+> Since the box often has 3-7 recording streams active,
+> I'm trying it out with 8 AGs now.
 
-Cheers,
+Seems like a reasonable decsion. Good luck.
+> 
+> Cheers
+> 
+> 
 
-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
