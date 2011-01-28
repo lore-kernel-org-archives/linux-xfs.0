@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0S4nikx103884 for <xfs@oss.sgi.com>; Thu, 27 Jan 2011 22:49:45 -0600
+	p0S5YWLU111642 for <xfs@oss.sgi.com>; Thu, 27 Jan 2011 23:34:33 -0600
 Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4FE698D8096
-	for <xfs@oss.sgi.com>; Thu, 27 Jan 2011 20:52:08 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 687001A46532
+	for <xfs@oss.sgi.com>; Thu, 27 Jan 2011 21:36:55 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	6lHfw5tgpDqNAFbP for <xfs@oss.sgi.com>;
-	Thu, 27 Jan 2011 20:52:08 -0800 (PST)
-Date: Fri, 28 Jan 2011 15:52:05 +1100
+	Zh9tWO4q9lRvfCk2 for <xfs@oss.sgi.com>;
+	Thu, 27 Jan 2011 21:36:55 -0800 (PST)
+Date: Fri, 28 Jan 2011 16:36:53 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS Preallocation
-Message-ID: <20110128045205.GR21311@dastard>
-References: <155CAEA5D902E7429569DD197567724A01534D42@mail1.ad.kinetx.com>
+Subject: Re: [PATCH 4/6] xfs: optimize xfs_alloc_fix_freelist
+Message-ID: <20110128053653.GS21311@dastard>
+References: <20110121092227.115815324@bombadil.infradead.org>
+	<20110121092551.185804716@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <155CAEA5D902E7429569DD197567724A01534D42@mail1.ad.kinetx.com>
+In-Reply-To: <20110121092551.185804716@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,47 +30,89 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jef Fox <jef.fox@kinetx.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Thu, Jan 27, 2011 at 07:05:33PM -0700, Jef Fox wrote:
-> We are having some problems with preallocation of large files.  We have
-> found that we can preallocate about 500 1GB files on a volume using the
-> resvsp and truncate commands, but the extents are still showing up as
-> preallocated.  Is this a problem?  The OS appears to think the files are
-> allocated and correctly sized. 
+On Fri, Jan 21, 2011 at 04:22:31AM -0500, Christoph Hellwig wrote:
+> If we shorten the freelist in xfs_alloc_fix_freelist there is no need
+> to wait for busy blocks as they will be marked busy again when we call
+> xfs_free_ag_extent.  Avoid this by not marking blocks coming from the
+> freelist as busy in xfs_free_ag_extent, and not marking transactions
+> with busy extents as synchronous in xfs_alloc_get_freelist.  Unlike
+> xfs_free_ag_extent which already has the isfl argument,
+> xfs_alloc_get_freelist needs to be told about the usage of the blocks
+> it returns.  For this we extend the btreeblk flag to a type argument
+> which specifies in detail what the block is going to be used for.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-That's the way it's supposed to work. Preallocated space stays
-preallocated (i.e reads as zeros) until it is written to, regardless
-of whether you change the file size via truncate commands.
+(This is mostly notes I wrote as I analysed the change)
 
-> For reference, we are trying to create files for an external piece of
-> equipment to write to a SSD with.  The SSD would then be mounted in RHEL
-> and the data pulled off in the 1G chunks.  Because of the nature of the
-> data, we need to constantly erase and recreate the files and
-> preallocation seems to be the fastest option.
+Ok, so prior to this change we added extents to the busy list:
 
-What do you mean by "erase and recreate"? Do you mean you rm the
-files, then preallocate them again?
+	- unconditionally in xfs_free_ag_extent(). i.e. freeing an
+	  extent back into the freespace btree
+	- unconditionally in xfs_allocbt_free_block() when freeing a
+	  btree block back to the freelist
 
-If you were running 2.6.37+ and a TOT xfsprogs, there's also the
-"zero" command that converts allocated space back to the
-preallocated (zeroed) state without doing any IO. It's the
-equivalent unresvsp + resvsp in a single operation.
+And we search for busy extents in:
 
-> We don't really care if
-> the data gets 0'ed out.  Is there another method - allocsp takes too
-> long for this application?
+	- unconditionally in xfs_alloc_get_freelist()
+	- unconditionally in xfs_alloc_ag_vextent()
+	- unconditionally in xfs_trim_extents()
 
-allocsp is historical interface, pretty much useless and should
-probably be removed. I can't think of any situation where allocsp
-would be better than resvsp or zero....
+So, for blocks on the freelist, they may or may not be in the busy
+list depending on whether they were placed there via
+xfs_alloc_fix_freelist() or xfs_allocbt_free_block().
 
-> Or, does it matter if XFS thinks the extents
-> are preallocated but unwritten if no other files are written to the
-> disk?
+In the case they were put there via xfs_alloc_fix_freelist(), the
+extent will not be in the busy list so this change should be a
+no-op.
 
-I'm not sure what you are asking there...
+In the case they were put there via xfs_allocbt_free_block(), they
+will already be in the busy list when we call
+xfs_alloc_get_freelist() and hence the transaction will always be
+marked synchronous. The change here is to avoid marking transactions
+which "allocate" blocks via xfs_alloc_get_freelist() synchronous if
+possible.
+
+So, if we get a block via xfs_alloc_ag_vextent_small(), it is tagged
+XFS_FREELIST_ALLOC. If we get a block via xfs_alloc_fix_freelist, it
+is tagged XFS_FREELIST_BALANCE, and if we are allocating a block for
+the alloc btree, it is tagged XFS_FREELIST_BTREE. If the tag is
+XFS_FREELIST_BALANCE, we do not do a busy list search as we are not
+actually allocating the block for use, otherwise we do the search.
+
+Then, in xfs_free_ag_extent() itself, when the block is coming from
+the freelist, we do not add it to the busy extent list as it is
+already in the busy list if it is necessary for it to be there. i.e.
+if a block goes freespace -> freelist -> freespace, then there is no
+need for it to be marked busy.
+
+----
+
+Ok, I've convinced myself that the changes are sane, though I think
+it could do with a bit more explaination in the changelog and a
+description of what the XFS_FREELIST_* tags do where they are
+declared.
+
+Thinking through this a bit more - we don't need to do a busy search
+for metadata allocations - it's only necessary for metadata -> data
+extent transistions. Metadata modifications are all logged, so there
+is no need to force out the busy extent transaction if the next
+allocation is for metadata. If the new transaction hits the disk,
+then it will only be replayed if the previous transaction to free
+the extent is on the disk and has already been replayed.
+
+Hence I think we only need to do a busy search in these cases for
+XFS_FREELIST_ALLOC when args->userdata == 0. The XFS_FREELIST_BTREE
+case is definitely a metadata allocation, so it seems to me that
+there is further scope for optimisation here. i.e. that allocbt ->
+freelist -> allocbt doesn't require a sync transaction to be issued.
+
+The code as it stands looks good; the question is should we take
+this next step as well? Have I missed anything that makes this a bad
+thing to do, Christoph?
 
 Cheers,
 
