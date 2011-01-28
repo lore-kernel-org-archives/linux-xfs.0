@@ -1,16 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0SMFQSC176264 for <xfs@oss.sgi.com>; Fri, 28 Jan 2011 16:15:26 -0600
-Subject: Re: [PATCH 4/6] xfs: optimize xfs_alloc_fix_freelist
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110121092551.185804716@bombadil.infradead.org>
-References: <20110121092227.115815324@bombadil.infradead.org>
-	<20110121092551.185804716@bombadil.infradead.org>
-Date: Fri, 28 Jan 2011 16:17:48 -0600
-Message-ID: <1296253068.2342.282.camel@doink>
-Mime-Version: 1.0
-Reply-To: aelder@sgi.com
+	p0SNuZN1180140 for <xfs@oss.sgi.com>; Fri, 28 Jan 2011 17:56:37 -0600
+Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1479229A8B8
+	for <xfs@oss.sgi.com>; Fri, 28 Jan 2011 15:58:55 -0800 (PST)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	MBwA4ClpGsC2HFZD for <xfs@oss.sgi.com>;
+	Fri, 28 Jan 2011 15:58:55 -0800 (PST)
+Date: Sat, 29 Jan 2011 10:58:47 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfs: very slow after mount, very slow at umount
+Message-ID: <20110128235847.GY21311@dastard>
+References: <4D40EB2F.2050809@teksavvy.com> <4D418B57.1000501@teksavvy.com>
+	<alpine.DEB.2.00.1101271040000.31246@p34.internal.lan>
+	<4D419765.4070805@teksavvy.com>
+	<4D41CA16.8070001@hardwarefreak.com>
+	<4D41EA04.7010506@teksavvy.com> <20110128001735.GO21311@dastard>
+	<4D421A68.9000607@teksavvy.com> <20110128073119.GV21311@dastard>
+	<4D42D39E.4080304@teksavvy.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4D42D39E.4080304@teksavvy.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,39 +35,93 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Mark Lord <kernel@teksavvy.com>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Justin Piszcz <jpiszcz@lucidpixels.com>, Alex Elder <aelder@sgi.com>, Stan Hoeppner <stan@hardwarefreak.com>
 
-On Fri, 2011-01-21 at 04:22 -0500, Christoph Hellwig wrote:
-> plain text document attachment
-> (xfs-avoid-sync-transaction-for-freelist-refill)
-> If we shorten the freelist in xfs_alloc_fix_freelist there is no need
-> to wait for busy blocks as they will be marked busy again when we call
-> xfs_free_ag_extent.  Avoid this by not marking blocks coming from the
-> freelist as busy in xfs_free_ag_extent, and not marking transactions
-> with busy extents as synchronous in xfs_alloc_get_freelist.  Unlike
-> xfs_free_ag_extent which already has the isfl argument,
-> xfs_alloc_get_freelist needs to be told about the usage of the blocks
-> it returns.  For this we extend the btreeblk flag to a type argument
-> which specifies in detail what the block is going to be used for.
+On Fri, Jan 28, 2011 at 09:33:02AM -0500, Mark Lord wrote:
+> On 11-01-28 02:31 AM, Dave Chinner wrote:
+> >
+> > A simple google search turns up discussions like this:
+> > 
+> > http://oss.sgi.com/archives/xfs/2009-01/msg01161.html
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> "in the long term we still expect fragmentation to degrade the performance of
+> XFS file systems"
 
-Now that I've found my way through the paths that this
-code touches (Dave's analysis helped a lot), I understand
-what you're doing and I think it looks good.
+"so we intend to add an on-line file system defragmentation utility
+to optimize the file system in the future"
 
-I agree that the XFS_FREELIST_* symbols need a little
-explanation.
+You are quoting from the wrong link - that's from the 1996
+whitepaper.  And sure, at the time that was written, nobody had any
+real experience with long term aging of XFS filesystems so it was
+still a guess at that point. XFS has had that online defragmentation
+utility since 1998, IIRC, even though in most cases it is
+unnecessary to use it.
 
-And on a broader subject, it might be nice if the sort
-of lifecycle of this kind of thing was documented
-somewhere (maybe it is).  It would be really cool if
-certain changes could point to a Wiki page with a
-diagram of what's going on or something.  Nah...
+> Other than that, no hints there about how changing agcount affects things.
 
-Reviewed-by: Alex Elder <aelder@sgi.com>
+If the reason given in the whitepaper for multiple AGs (i.e. they
+are for increasing the concurrency of allocation) doesn't help you
+understand why you'd want to increase the number of AGs in the
+filesystem, then you haven't really thought about what you read.
 
+As it is, from the same google search that found the above link
+as #1 hit, this was #6:
+
+http://oss.sgi.com/archives/xfs/2010-11/msg00497.html
+
+| > AG count has a
+| > direct relationship to the storage hardware, not the number of CPUs
+| >  (cores) in the system
+|
+| Actually, I used 16 AGs because it's twice the number of CPU cores
+| and I want to make sure that CPU parallel workloads (e.g. make -j 8)
+| don't serialise on AG locks during allocation. IOWs, I laid it out
+| that way precisely because of the number of CPUs in the system...
+| 
+| And to point out the not-so-obvious, this is the _default layout_
+| that mkfs.xfs in the debian squeeze installer came up with. IOWs,
+| mkfs.xfs did exactly what I wanted without me having to tweak
+| _anything_."
+| 
+[...]
+| 
+| In that case, you are right. Single spindle SRDs go backwards in
+| performance pretty quickly once you go over 4 AGs...
+
+It seems to me that you haven't really done much looking for
+information; there's lots of relevant advice in xfs mailing list
+archives...
+
+(and before you ask - SRD == Spinning Rust Disk)
+
+> > Configuring XFS filesystems for optimal performance has always been
+> > a black art because it requires you to understand your storage, your
+> > application workload(s) and XFS from the ground up.  Most people
+> > can't even tick one of those boxes, let alone all three....
+> 
+> Well, I've got 2/3 of those down just fine, thanks.
+> But it's the "XFS" part that is still the "black art" part,
+> because so little is written about *how* it works
+> (as opposed to how it is laid out on disk).
+
+If you want to know exactly how it works, there plenty of code to
+read. I know, you're going to call that a cop out, but I've got more
+important things to do than document 20,000 lines of allocation
+code just for you.
+
+In a world of infinite resources then everything would be documented
+just the way you want, but we don't have infinite resources so it
+remains documented by the code that implements it.  However, if you
+want to go and understand it and document it all for us, then we'll
+happily take the patches. :)
+
+Cheers,,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
