@@ -1,17 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0SGHTuY164064 for <xfs@oss.sgi.com>; Fri, 28 Jan 2011 10:17:29 -0600
-Subject: Re: [PATCH 3/6] xfs: do not immediately reuse busy extent ranges
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110128015835.GQ21311@dastard>
-References: <20110121092227.115815324@bombadil.infradead.org>
-	<20110121092550.933551564@bombadil.infradead.org>
-	<20110128015835.GQ21311@dastard>
-Date: Fri, 28 Jan 2011 10:19:51 -0600
-Message-ID: <1296231591.2342.47.camel@doink>
-Mime-Version: 1.0
-Reply-To: aelder@sgi.com
+	p0SHUeoE166580 for <xfs@oss.sgi.com>; Fri, 28 Jan 2011 11:30:40 -0600
+Received: from mail1.ad.kinetx.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 677E9154D427
+	for <xfs@oss.sgi.com>; Fri, 28 Jan 2011 09:33:04 -0800 (PST)
+Received: from mail1.ad.kinetx.com (mail1.ad.kinetx.com [74.202.133.147]) by
+	cuda.sgi.com with ESMTP id wqc3WTwUWcNZAK2o for
+	<xfs@oss.sgi.com>; Fri, 28 Jan 2011 09:33:04 -0800 (PST)
+Content-class: urn:content-classes:message
+MIME-Version: 1.0
+Subject: RE: XFS Preallocation
+Date: Fri, 28 Jan 2011 10:33:03 -0700
+Message-ID: <155CAEA5D902E7429569DD197567724A01534D60@mail1.ad.kinetx.com>
+References: <155CAEA5D902E7429569DD197567724A01534D42@mail1.ad.kinetx.com>
+	<20110128045205.GR21311@dastard>
+From: "Jef Fox" <jef.fox@kinetx.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,190 +29,77 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-On Fri, 2011-01-28 at 12:58 +1100, Dave Chinner wrote:
-> On Fri, Jan 21, 2011 at 04:22:30AM -0500, Christoph Hellwig wrote:
-> > Every time we reallocate a busy extent, we cause a synchronous log force
-> > to occur to ensure the freeing transaction is on disk before we continue
-. . .
-> > +
-> > +	spin_lock(&pag->pagb_lock);
-> > +	rbp = pag->pagb_tree.rb_node;
-> > +	while (rbp) {
+I guess, disregard my previous message.  After some further testing of
+examining the hard disk blocks, we see what you are saying - the file is
+presented at 0s to the user even if the blocks are changed on the hard
+disk.  So, we will always see 0s until we write to the extent.
 
-I will amend the loop termination condition I suggested
-before to be this:
+So, I think our only question now is if there is a way to force the
+extents to be marked as allocated without writing all of the data?  That
+is, is there a fast way to lay down a file(s) of 1G size without
+actually writing 1G of info.
 
-	while (rbp && len >= args->minlen) {
-
-> > +		struct xfs_busy_extent *busyp =
-> > +			rb_entry(rbp, struct xfs_busy_extent, rb_node);
-> > +		xfs_agblock_t	end = bno + len;
-> > +		xfs_agblock_t	bend = busyp->bno + busyp->length;
-> > +
-> > +		if (bno + len <= busyp->bno) {
-> > +			rbp = rbp->rb_left;
-> > +			continue;
-> > +		} else if (bno >= busyp->bno + busyp->length) {
-> > +			rbp = rbp->rb_right;
-> > +			continue;
-> > +		}
+> -----Original Message-----
+> From: Dave Chinner [mailto:david@fromorbit.com]
+> Sent: Thursday, January 27, 2011 9:52 PM
+> To: Jef Fox
+> Cc: xfs@oss.sgi.com
+> Subject: Re: XFS Preallocation
 > 
-> 		if (end <= bbno)
-> 			left;
-> 		else if (bno > bend)
-> 			right;
-
-I think the original code is right in this case.
-The value of "bend" is the offset *following* the
-end of the range.  So if "bno" equals that, we
-want to move Right.  (Same reason <= is correct
-for the first condition here.)
-
-> 		/* overlap */
+> On Thu, Jan 27, 2011 at 07:05:33PM -0700, Jef Fox wrote:
+> > We are having some problems with preallocation of large files.  We
+have
+> > found that we can preallocate about 500 1GB files on a volume using
+the
+> > resvsp and truncate commands, but the extents are still showing up
+as
+> > preallocated.  Is this a problem?  The OS appears to think the files
+are
+> > allocated and correctly sized.
 > 
-> > +
-> > +		if (busyp->bno < bno) {
-> > +			/* start overlap */
-> > +			ASSERT(bend >= bno);
-> > +			ASSERT(bend <= end);
-> > +			len -= bno - bend;
-> > +			bno = bend;
+> That's the way it's supposed to work. Preallocated space stays
+> preallocated (i.e reads as zeros) until it is written to, regardless
+> of whether you change the file size via truncate commands.
 > 
-> 		if (bbno < bno) {
+> > For reference, we are trying to create files for an external piece
+of
+> > equipment to write to a SSD with.  The SSD would then be mounted in
+RHEL
+> > and the data pulled off in the 1G chunks.  Because of the nature of
+the
+> > data, we need to constantly erase and recreate the files and
+> > preallocation seems to be the fastest option.
 > 
-> 		bbno           bend
-> 		+-----------------+
-> Case 1:
-> 		   +---------+
-> 		   bno     end
+> What do you mean by "erase and recreate"? Do you mean you rm the
+> files, then preallocate them again?
 > 
-> 		   No unbusy region in extent, return failure
-
-Yes, that's right, I missed that.  My suggestion goes
-negative in this case.
-
-> Case 2:
-> 		   +------------------------+
-> 		   bno                    end
+> If you were running 2.6.37+ and a TOT xfsprogs, there's also the
+> "zero" command that converts allocated space back to the
+> preallocated (zeroed) state without doing any IO. It's the
+> equivalent unresvsp + resvsp in a single operation.
 > 
-> 		   Needs to be trimmed to:
-> 		                    +-------+
-> 		                    bno   end
-> 		   bno = bend;
-> 		   len = end - bno;
-
-I like defining len in terms of the updated bno as
-you have suggested here.
-
-> > +		} else if (bend > end) {
-> > +			/* end overlap */
-> > +			ASSERT(busyp->bno >= bno);
-> > +			ASSERT(busyp->bno < end);
-> > +			len -= bend - end;
+> > We don't really care if
+> > the data gets 0'ed out.  Is there another method - allocsp takes too
+> > long for this application?
 > 
-. . .
-
-
-> So, it looks to me like the "overlap found" algorithm shoul dbe
-> something like:
-
-For this algorithm, updating the value of len can be done
-once, at the bottom (or top) of the loop, based simply on
-the (updated) value of end and bno:
-
-	len = end - bno;
-
-You could rearrange things a bit so this gets done at
-the top--instead of computing the value of end based
-on bno and len.
-
-
-> 		if (bbno <= bno) {
-> 			if (end <= bend) {
-> 				/* case 1, 3, 5 */
-> 				return failure;
-> 			}
-> 			/* case 2, 6 */
-> 			bno = bend;
-> 			len = end - bno;
-> 		} else if (bend >= end) {
-> 			ASSERT(bbno > bno);
-> 			/* case 4, 7 */
-> 			end = bbno;
-> 			len = end - bno;
-> 		} else {
-> 			ASSERT(bbno > bno);
-> 			ASSERT(bend < end);
-> 			/* case 8 */
-> 			if (bbno - bno >= args->minlen) {
-> 				/* left candidate OK */
-> 				left = 1;
-> 			}
-> 			if (end - bend >= args->maxlen * 4) {
-
-The "4" here I understand, but it's arbitrary (based
-on an educated guess) so it needs to at least be explained
-here with a comment.  Making it symbolic might make it
-something one could search for at some future date.
-
-> 				/* right candidate OK */
-> 				right = 1;
-> 			}
-> 			if (left && right) {
-> 				/* take right if left is not a
-> 				 * maximal allocation */
-> 				if (bbno - bno < args->maxlen)
-> 					left = 0;
-> 			}
-> 			if (left) {
-> 				end = bbno;
-> 				len = end - bno;
-> 			} else if (right) {
-> 				bno = bend;
-> 				len = end - bno;
-> 			} else {
-> 				return failure;
-> 			}
-> 		}
+> allocsp is historical interface, pretty much useless and should
+> probably be removed. I can't think of any situation where allocsp
+> would be better than resvsp or zero....
 > 
-> > @@ -109,19 +109,16 @@ xfs_trim_extents(
-> >  		 * If any blocks in the range are still busy, skip the
-> >  		 * discard and try again the next time.
-> >  		 */
-> > -		if (xfs_alloc_busy_search(mp, agno, fbno, flen)) {
-> > -			trace_xfs_discard_busy(mp, agno, fbno, flen);
-> > -			goto next_extent;
-> > -		}
-> > +		xfs_alloc_busy_search_trim(mp, pag, fbno, flen, &tbno, &tlen);
-> >  
-> > -		trace_xfs_discard_extent(mp, agno, fbno, flen);
-> > +		trace_xfs_discard_extent(mp, agno, tbno, tlen);
-> >  		error = -blkdev_issue_discard(bdev,
-> > -				XFS_AGB_TO_DADDR(mp, agno, fbno),
-> > -				XFS_FSB_TO_BB(mp, flen),
-> > +				XFS_AGB_TO_DADDR(mp, agno, tbno),
-> > +				XFS_FSB_TO_BB(mp, tlen),
-> >  				GFP_NOFS, 0);
-> >  		if (error)
-> >  			goto out_del_cursor;
-> > -		*blocks_trimmed += flen;
-> > +		*blocks_trimmed += tlen;
+> > Or, does it matter if XFS thinks the extents
+> > are preallocated but unwritten if no other files are written to the
+> > disk?
 > 
-> Hmmm - that means if we get a case 8 overlap, we'll only trim one
-> side of the extent. That's probably not a big deal. However, perhaps
-> this should check the size of the trimmed extent before issuing the
-> discard against it in case we've reduced it to something smaller
-> thanthe minimum requested trim size....
-
-I think all of the places that (ultimately) call this function
-need to be looked at to make sure they handle the "error" case
-properly--either checking for a returned error or verifying the
-returned length is at least the minimum.
-
-					-Alex
-
+> I'm not sure what you are asking there...
+> 
+> Cheers,
+> 
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
