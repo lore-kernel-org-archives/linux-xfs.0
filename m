@@ -1,16 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0SEplWo161321 for <xfs@oss.sgi.com>; Fri, 28 Jan 2011 08:51:47 -0600
-Subject: Re: [PATCH 2/8] xfs: fix efi item leak on forced shutdown
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1296100401-17135-3-git-send-email-david@fromorbit.com>
-References: <1296100401-17135-1-git-send-email-david@fromorbit.com>
-	<1296100401-17135-3-git-send-email-david@fromorbit.com>
-Date: Fri, 28 Jan 2011 08:54:10 -0600
-Message-ID: <1296226450.2342.5.camel@doink>
-Mime-Version: 1.0
-Reply-To: aelder@sgi.com
+	p0SFDYW1162072 for <xfs@oss.sgi.com>; Fri, 28 Jan 2011 09:13:34 -0600
+Received: from mail1.ad.kinetx.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 59701299200
+	for <xfs@oss.sgi.com>; Fri, 28 Jan 2011 07:15:58 -0800 (PST)
+Received: from mail1.ad.kinetx.com (mail1.ad.kinetx.com [74.202.133.147]) by
+	cuda.sgi.com with ESMTP id GR9XsmfElzmeHi0H for
+	<xfs@oss.sgi.com>; Fri, 28 Jan 2011 07:15:58 -0800 (PST)
+Content-class: urn:content-classes:message
+MIME-Version: 1.0
+Subject: RE: XFS Preallocation
+Date: Fri, 28 Jan 2011 08:15:56 -0700
+Message-ID: <155CAEA5D902E7429569DD197567724A01534D44@mail1.ad.kinetx.com>
+References: <155CAEA5D902E7429569DD197567724A01534D42@mail1.ad.kinetx.com>
+	<20110128045205.GR21311@dastard>
+From: "Jef Fox" <jef.fox@kinetx.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,57 +31,83 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, 2011-01-27 at 14:53 +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+ 
+> On Thu, Jan 27, 2011 at 07:05:33PM -0700, Jef Fox wrote:
+> > We are having some problems with preallocation of large files.  We
+have
+> > found that we can preallocate about 500 1GB files on a volume using
+the
+> > resvsp and truncate commands, but the extents are still showing up
+as
+> > preallocated.  Is this a problem?  The OS appears to think the files
+are
+> > allocated and correctly sized.
 > 
-> After test 139, kmemleak shows:
-> 
-> unreferenced object 0xffff880078b405d8 (size 400):
->   comm "xfs_io", pid 4904, jiffies 4294909383 (age 1186.728s)
->   hex dump (first 32 bytes):
->     60 c1 17 79 00 88 ff ff 60 c1 17 79 00 88 ff ff  `..y....`..y....
->     00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
->   backtrace:
->     [<ffffffff81afb04d>] kmemleak_alloc+0x2d/0x60
->     [<ffffffff8115c6cf>] kmem_cache_alloc+0x13f/0x2b0
->     [<ffffffff814aaa97>] kmem_zone_alloc+0x77/0xf0
->     [<ffffffff814aab2e>] kmem_zone_zalloc+0x1e/0x50
->     [<ffffffff8147cd6b>] xfs_efi_init+0x4b/0xb0
->     [<ffffffff814a4ee8>] xfs_trans_get_efi+0x58/0x90
->     [<ffffffff81455fab>] xfs_bmap_finish+0x8b/0x1d0
->     [<ffffffff814851b4>] xfs_itruncate_finish+0x2c4/0x5d0
->     [<ffffffff814a970f>] xfs_setattr+0x8df/0xa70
->     [<ffffffff814b5c7b>] xfs_vn_setattr+0x1b/0x20
->     [<ffffffff8117dc00>] notify_change+0x170/0x2e0
->     [<ffffffff81163bf6>] do_truncate+0x66/0xa0
->     [<ffffffff81163d0b>] sys_ftruncate+0xdb/0xe0
->     [<ffffffff8103a002>] system_call_fastpath+0x16/0x1b
->     [<ffffffffffffffff>] 0xffffffffffffffff
-> 
-> The cause of the leak is that the "remove" parameter of IOP_UNPIN()
-> is never set when a CIL push is aborted. This means that the EFI
-> item is never freed if it was in the push being cancelled. The
-> problem is specific to delayed logging, but has uncovered a couple
-> of problems with the handling of IOP_UNPIN(remove).
-> 
-> Firstly, we cannot safely call xfs_trans_del_item() from IOP_UNPIN()
-> in the CIL commit failure path or the iclog write failure path
-> because for delayed loging we have no transaction context. Hence we
-> must only call xfs_trans_del_item() if the log item being unpinned
-> has an active log item descriptor.
-> 
-> Secondly, xfs_trans_uncommit() does not handle log item descriptor
-> freeing during the traversal of log items on a transaction. It can
-> reference a freed log item descriptor when unpinning an EFI item.
-> Hence it needs to use a safe list traversal method to allow items to
-> be removed from the transaction during IOP_UNPIN().
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> That's the way it's supposed to work. Preallocated space stays
+> preallocated (i.e reads as zeros) until it is written to, regardless
+> of whether you change the file size via truncate commands.
 
-OK, this looks good.
+I guess my main question is whether we (or the OS) care if the space
+still shows "preallocated".  If we write to the files/drive/data blocks
+outside of RHEL (and the filesystem), does XFS care that the extents
+still show preallocated if we never write to them again - but only read
+from them?  
+ 
+> > For reference, we are trying to create files for an external piece
+of
+> > equipment to write to a SSD with.  The SSD would then be mounted in
+RHEL
+> > and the data pulled off in the 1G chunks.  Because of the nature of
+the
+> > data, we need to constantly erase and recreate the files and
+> > preallocation seems to be the fastest option.
+> 
+> What do you mean by "erase and recreate"? Do you mean you rm the
+> files, then preallocate them again?
 
-Reviewed-by: Alex Elder <aelder@sgi.com>
+We were planning to TRIM/RESET out the SSD (partial or whole) and lay
+down the filesystem again.
 
+> If you were running 2.6.37+ and a TOT xfsprogs, there's also the
+> "zero" command that converts allocated space back to the
+> preallocated (zeroed) state without doing any IO. It's the
+> equivalent unresvsp + resvsp in a single operation.
+> 
+> > We don't really care if
+> > the data gets 0'ed out.  Is there another method - allocsp takes too
+> > long for this application?
+> 
+> allocsp is historical interface, pretty much useless and should
+> probably be removed. I can't think of any situation where allocsp
+> would be better than resvsp or zero....
+> 
+> > Or, does it matter if XFS thinks the extents
+> > are preallocated but unwritten if no other files are written to the
+> > disk?
+
+So, we setup the SSDs using preallocation for speed and truncate the
+files so that the OS thinks the files are of a set size.  We pull the
+drives from the system, and put them in an external device that writes
+to our given block offsets (staying within the files and blocks we have
+preallocated and defined).  We then put the device back into our system
+to read the data back off via NFS/FTP/etc.  Will it matter that XFS will
+still show unwritten but preallocated extents when the files actually
+have data?  XFS/RHEL/etc will not know that the files were ever written
+to, but using truncate appears to give us the necessary "trick" (for
+lack of a better term) to get RH to think that the files are a certain
+size and can be read from.  If we aren't adding files or reallocating
+data on those drives, will it matter that everything shows preallocated
+and not written?
+
+ 
+> I'm not sure what you are asking there...
+> 
+> Cheers,
+> 
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
