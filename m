@@ -1,28 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0S7T8vl133309 for <xfs@oss.sgi.com>; Fri, 28 Jan 2011 01:29:08 -0600
-Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E6E4C1490AC4
-	for <xfs@oss.sgi.com>; Thu, 27 Jan 2011 23:31:31 -0800 (PST)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	iYGYpFEISnhqMMCL for <xfs@oss.sgi.com>;
-	Thu, 27 Jan 2011 23:31:31 -0800 (PST)
-Date: Fri, 28 Jan 2011 18:31:19 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs: very slow after mount, very slow at umount
-Message-ID: <20110128073119.GV21311@dastard>
-References: <4D40C8D1.8090202@teksavvy.com> <20110127033011.GH21311@dastard>
-	<4D40EB2F.2050809@teksavvy.com> <4D418B57.1000501@teksavvy.com>
-	<alpine.DEB.2.00.1101271040000.31246@p34.internal.lan>
-	<4D419765.4070805@teksavvy.com>
-	<4D41CA16.8070001@hardwarefreak.com>
-	<4D41EA04.7010506@teksavvy.com> <20110128001735.GO21311@dastard>
-	<4D421A68.9000607@teksavvy.com>
+	p0SBAe0O154881 for <xfs@oss.sgi.com>; Fri, 28 Jan 2011 05:10:40 -0600
+Received: from mail-qy0-f181.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7AAD61DC49A6
+	for <xfs@oss.sgi.com>; Fri, 28 Jan 2011 03:13:05 -0800 (PST)
+Received: from mail-qy0-f181.google.com (mail-qy0-f181.google.com
+	[209.85.216.181]) by cuda.sgi.com with ESMTP id
+	IiCI7BMcxMVDyoDn for <xfs@oss.sgi.com>;
+	Fri, 28 Jan 2011 03:13:05 -0800 (PST)
+Received: by qyk12 with SMTP id 12so3489257qyk.5
+	for <xfs@oss.sgi.com>; Fri, 28 Jan 2011 03:13:04 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4D421A68.9000607@teksavvy.com>
+Date: Fri, 28 Jan 2011 20:13:04 +0900
+Message-ID: <AANLkTiktigbHHHsYrxRBja6LxQ3N_gAq_KAoLNYGRB=r@mail.gmail.com>
+Subject: [patch] xfsprogs: repair pagefault due to missed out sanity NULL check
+From: Ajeet Yadav <ajeet.yadav.77@gmail.com>
+Content-Type: multipart/mixed; boundary=0016363b86f06d9a5d049ae626f5
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,97 +25,160 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mark Lord <kernel@teksavvy.com>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Justin Piszcz <jpiszcz@lucidpixels.com>, Alex Elder <aelder@sgi.com>, Stan Hoeppner <stan@hardwarefreak.com>
+To: xfs@oss.sgi.com
 
-On Thu, Jan 27, 2011 at 08:22:48PM -0500, Mark Lord wrote:
-> On 11-01-27 07:17 PM, Dave Chinner wrote:
-> >
-> > In my experience with XFS, most people who tweak mkfs parameters end
-> > up with some kind of problem they can't explain and don't know how
-> > to solve. And they are typically problems that would not have
-> > occurred had they simply used the defaults in the first place. What
-> > you've done is a perfect example of this.
-> 
-> Maybe.  But what I read from the paragraph above,
-> is that the documentation could perhaps explain things better,
-> and then people other than the coders might understand how
-> best to tweak it.
+--0016363b86f06d9a5d049ae626f5
+Content-Type: multipart/alternative; boundary=0016363b86f06d9a4c049ae626f3
 
-A simple google search turns up discussions like this:
+--0016363b86f06d9a4c049ae626f3
+Content-Type: text/plain; charset=ISO-8859-1
 
-http://oss.sgi.com/archives/xfs/2009-01/msg01161.html
+libxfs_putbuf() is called with bp = NULL, resulting in pagefault in
+libpthread.
 
-Where someone reads the docco and asks questions to fill in gaps in
-their knowledge that the docco didn't explain fully before they
-try to twiddle knobs.
+Function da_read_buf() allocate array of xfs_buf_t *
 
-Configuring XFS filesystems for optimal performance has always been
-a black art because it requires you to understand your storage, your
-application workload(s) and XFS from the ground up.  Most people
-can't even tick one of those boxes, let alone all three....
+   * xfs_buf_t       **bplist;*
 
-> > Why 8 AGs and not the default?
-> 
-> How AGs are used is not really explained anywhere I've looked,
-> so I am guessing at what they do and how the system might respond
-> to different values there (that documentation thing again).
+*    bplist = calloc(nex, sizeof(*bplist));*
 
-Section 5.1 of this 1996 whitepaper tells you what allocation groups
-are and the general allocation strategy around them:
+Read and fill it using
 
-http://oss.sgi.com/projects/xfs/papers/xfs_usenix/index.html
+*for (i = 0; i < nex; i++) {
+    bplist[i] = libxfs_readbuf()*
 
-> Lacking documentation, my earlier experiences suggest that more AGs
-> gives me less fragmentation when multiple simultaneous recording streams
-> are active.  I got higher fragmentation with the defaults than with
-> the tweaked value.
+*    if (!bplist[i]){
+        goto failed;
+    }  *
 
-Fragmentation is not a big problem if you've got extents larger than
-a typical IO. Once extents get to a few megabytes in size, it just
-doesn't matter if they are any bigger for small DVR workloads
-because the seek cost between streams is sufficiently amortised with
-a few MB of sequential access per stream....
+*}*
 
-> Now, that might be due to differences in kernel versions too,
-> as things in XFS are continuously getting even better (thanks!),
-> and the original "defaults" assessment was with the kernel-of-the-day
-> back in early 2010 (2.6.34?), and now the system is using 2.6.37.
-> 
-> But I just don't know.  My working theory, likely entirely wrong,
-> is that if I have N streams active, odds are that each of those
-> streams might get assigned to different AGs, given sufficient AGs >= N.
+*failed:
+        for (i = 0; i < nex; i++)
+                libxfs_putbuf(bplist[i]);*
 
-Streaming into different AGs is not necessarily the right solution;
-it causes seeks between every streami, and the stream in AG0 will be
-able to read/write faster than the stream in AG 7 because of their
-locations on disk.
+Now assume nex = 10,
 
-IOWs, interleaving streams within an AG might give better IO
-patterns, lower latency and better throughput. Of course, it depends
-on the storage subsystem, the application, etc. And yes, you can
-change this sort of allocation behaviour by fiddling with XFS knobs
-in the right way - start to see what I mean about tuning XFS really
-being a "black art"?
+1. Will create bplist for 10 array elements.
 
-> Since the box often has 3-7 recording streams active,
-> I'm trying it out with 8 AGs now.
+3. Reading from disk 0,1, 2, 3
 
-Seems like a reasonable decsion. Good luck.
-> 
-> Cheers
-> 
-> 
+4. When reading from disk 4, USB is removed
 
--- 
-Dave Chinner
-david@fromorbit.com
+5. libxfs_readbuf() will at fail, pblist[4] = NULL, goto failed.
+
+6. Since only 4 buffers were read successfully, so only 4 are in lock state.
+
+7.  Error handling will unlock buffer from 1-10
+
+8. Buffer 0-3 were read successfully, hence will have valid pdlist[i]
+
+9. Access pblist[4] == NULL, therefore unlocking will set bp == NULL in
+libxfs_putbuf(bp);
+10. Page fault in libpthread
+
+
+Solution patch attached with mail
+
+--0016363b86f06d9a4c049ae626f3
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+
+<div><font face=3D"Bookman Old Style"><span style=3D"FONT-FAMILY: Arial; FO=
+NT-SIZE: 9pt">libxfs_putbuf() is called with=A0bp =3D NULL, resulting in pa=
+gefault in libpthread.</span></font></div>
+<div><font face=3D"Bookman Old Style"><span style=3D"FONT-FAMILY: Arial; FO=
+NT-SIZE: 9pt"></span></font>=A0</div>
+<div><font face=3D"Bookman Old Style"><span style=3D"FONT-FAMILY: Arial; FO=
+NT-SIZE: 9pt">Function da_read_buf() allocate array of=A0xfs_buf_t *</span>=
+</font></div>
+<p><font face=3D"Bookman Old Style"><span style=3D"FONT-FAMILY: Arial; FONT=
+-SIZE: 9pt">=A0=A0=A0<strong>=A0xfs_buf_t=A0=A0=A0=A0=A0=A0 **bplist;</stro=
+ng></span></font></p>
+<p><font face=3D"Bookman Old Style"><span style=3D"FONT-FAMILY: Arial; FONT=
+-SIZE: 9pt"><strong>=A0=A0=A0=A0bplist =3D calloc(nex, sizeof(*bplist));</s=
+trong></span></font></p>
+<p><font face=3D"Bookman Old Style"><span style=3D"FONT-FAMILY: Arial; FONT=
+-SIZE: 9pt">Read and fill it using =A0</span></font></p>
+<p><font face=3D"Bookman Old Style"><span style=3D"FONT-FAMILY: Arial; FONT=
+-SIZE: 9pt"><strong>for (i =3D 0; i &lt; nex; i++) {<br>=A0=A0=A0=A0bplist[=
+i] =3D libxfs_readbuf()</strong></span></font></p>
+<p><font face=3D"Bookman Old Style"><span style=3D"FONT-FAMILY: Arial; FONT=
+-SIZE: 9pt"><strong>=A0=A0=A0=A0if (!bplist[i]){<br>=A0=A0=A0=A0=A0=A0=A0=
+=A0goto failed;<br>=A0=A0=A0=A0}=A0=A0</strong></span></font></p>
+<p><font face=3D"Bookman Old Style"><span style=3D"FONT-FAMILY: Arial; FONT=
+-SIZE: 9pt"><strong>}</strong></span></font></p>
+<p><font face=3D"Bookman Old Style"><span style=3D"FONT-FAMILY: Arial; FONT=
+-SIZE: 9pt"><strong>failed:<br>=A0=A0=A0=A0=A0=A0=A0 for (i =3D 0; i &lt; n=
+ex; i++)<br>=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 libxfs_putbuf(bpl=
+ist[i]);</strong></span></font></p>
+<p><font face=3D"Bookman Old Style"><span style=3D"FONT-FAMILY: Arial; FONT=
+-SIZE: 9pt">Now assume nex =3D 10,</span></font></p>
+<p><font face=3D"Bookman Old Style"><span style=3D"FONT-FAMILY: Arial; FONT=
+-SIZE: 9pt">1. Will create bplist for 10 array elements.</span></font></p>
+<p><font face=3D"Bookman Old Style"><span style=3D"FONT-FAMILY: Arial; FONT=
+-SIZE: 9pt">3. Reading from disk 0,1, 2, 3</span></font></p>
+<p><font face=3D"Bookman Old Style"><span style=3D"FONT-FAMILY: Arial; FONT=
+-SIZE: 9pt">4. When reading from disk 4, USB is removed</span></font></p>
+<p><font face=3D"Bookman Old Style"><span style=3D"FONT-FAMILY: Arial; FONT=
+-SIZE: 9pt">5. libxfs_readbuf() will at fail,=A0pblist[4] =3D NULL, goto fa=
+iled.</span></font></p>
+<p><font face=3D"Bookman Old Style"><span style=3D"FONT-FAMILY: Arial; FONT=
+-SIZE: 9pt">6. Since only 4 buffers were read successfully, so only 4 are i=
+n lock state.</span></font></p>
+<p><font face=3D"Bookman Old Style"><span style=3D"FONT-FAMILY: Arial; FONT=
+-SIZE: 9pt">7. =A0Error handling=A0will unlock buffer from 1-10</span></fon=
+t></p>
+<p><font face=3D"Bookman Old Style"><span style=3D"FONT-FAMILY: Arial; FONT=
+-SIZE: 9pt">8. Buffer 0-3 were read successfully, hence will have valid pdl=
+ist[i]</span></font></p>
+<p><font face=3D"Bookman Old Style"><span style=3D"FONT-FAMILY: Arial; FONT=
+-SIZE: 9pt">9. Access=A0pblist[4] =3D=3D NULL, therefore unlocking will set=
+ bp =3D=3D NULL in libxfs_putbuf(bp);</span></font></p>
+<div><font face=3D"Bookman Old Style"><span style=3D"FONT-FAMILY: Arial; FO=
+NT-SIZE: 9pt">10. Page fault in libpthread</span></font></div>
+<div><font face=3D"Bookman Old Style"><span style=3D"FONT-FAMILY: Arial; FO=
+NT-SIZE: 9pt"></span></font>=A0</div>
+<div>=A0</div>
+<div><font face=3D"Bookman Old Style"><span style=3D"FONT-FAMILY: Arial; FO=
+NT-SIZE: 9pt">Solution patch attached with mail</span></font></div>
+<div><font face=3D"Bookman Old Style"><span style=3D"FONT-FAMILY: Arial; FO=
+NT-SIZE: 9pt"></span></font>=A0</div>
+<div><font face=3D"Bookman Old Style"><span style=3D"FONT-FAMILY: Arial; FO=
+NT-SIZE: 9pt"></span></font>=A0</div>
+
+--0016363b86f06d9a4c049ae626f3--
+
+--0016363b86f06d9a5d049ae626f5
+Content-Type: application/octet-stream;
+	name="xfs_repair_da_read_buf_failed_unlock_fix.patch"
+Content-Disposition: attachment;
+	filename="xfs_repair_da_read_buf_failed_unlock_fix.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_gjgzulym0
+
+ZGlmZiAtTnVycCB4ZnNwcm9ncy0zLjAuNS9yZXBhaXIvZGlyMi5jIHhmc3Byb2dzLTMuMC41LWRp
+cnR5L3JlcGFpci9kaXIyLmMKLS0tIHhmc3Byb2dzLTMuMC41L3JlcGFpci9kaXIyLmMJMjAxMC0w
+Ny0xNiAxMzowNzowOS4wMDAwMDAwMDAgKzA5MDAKKysrIHhmc3Byb2dzLTMuMC41LWRpcnR5L3Jl
+cGFpci9kaXIyLmMJMjAxMS0wMS0yOCAxODo0OToyMS4wMDAwMDAwMDAgKzA5MDAKQEAgLTExMCw5
+ICsxMTAsMTAgQEAgZGFfcmVhZF9idWYoCiAJCWJwbGlzdFtpXSA9IGxpYnhmc19yZWFkYnVmKG1w
+LT5tX2RldiwKIAkJCQlYRlNfRlNCX1RPX0RBRERSKG1wLCBibXBbaV0uc3RhcnRibG9jayksCiAJ
+CQkJWEZTX0ZTQl9UT19CQihtcCwgYm1wW2ldLmJsb2NrY291bnQpLCAwKTsKLQkJaWYgKCFicGxp
+c3RbaV0pCisJCWlmICghYnBsaXN0W2ldKXsKKwkJCW5leCA9IGk7CiAJCQlnb3RvIGZhaWxlZDsK
+LQorCQl9CiAJCXBmdHJhY2UoInJlYWRidWYgJXAgKCVsbHUsICVkKSIsIGJwbGlzdFtpXSwKIAkJ
+CShsb25nIGxvbmcpWEZTX0JVRl9BRERSKGJwbGlzdFtpXSksCiAJCQlYRlNfQlVGX0NPVU5UKGJw
+bGlzdFtpXSkpOwo=
+--0016363b86f06d9a5d049ae626f5
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--0016363b86f06d9a5d049ae626f5--
