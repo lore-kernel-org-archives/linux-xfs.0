@@ -1,28 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0SNuZN1180140 for <xfs@oss.sgi.com>; Fri, 28 Jan 2011 17:56:37 -0600
+	p0T0NSQi181324 for <xfs@oss.sgi.com>; Fri, 28 Jan 2011 18:23:29 -0600
 Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1479229A8B8
-	for <xfs@oss.sgi.com>; Fri, 28 Jan 2011 15:58:55 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5F0841A47120
+	for <xfs@oss.sgi.com>; Fri, 28 Jan 2011 16:25:53 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	MBwA4ClpGsC2HFZD for <xfs@oss.sgi.com>;
-	Fri, 28 Jan 2011 15:58:55 -0800 (PST)
-Date: Sat, 29 Jan 2011 10:58:47 +1100
+	AF3tXlLVerWU9Bwq for <xfs@oss.sgi.com>;
+	Fri, 28 Jan 2011 16:25:53 -0800 (PST)
+Date: Sat, 29 Jan 2011 11:25:50 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs: very slow after mount, very slow at umount
-Message-ID: <20110128235847.GY21311@dastard>
-References: <4D40EB2F.2050809@teksavvy.com> <4D418B57.1000501@teksavvy.com>
-	<alpine.DEB.2.00.1101271040000.31246@p34.internal.lan>
-	<4D419765.4070805@teksavvy.com>
-	<4D41CA16.8070001@hardwarefreak.com>
-	<4D41EA04.7010506@teksavvy.com> <20110128001735.GO21311@dastard>
-	<4D421A68.9000607@teksavvy.com> <20110128073119.GV21311@dastard>
-	<4D42D39E.4080304@teksavvy.com>
+Subject: Re: [PATCH 3/6] xfs: do not immediately reuse busy extent ranges
+Message-ID: <20110129002550.GA21311@dastard>
+References: <20110121092227.115815324@bombadil.infradead.org>
+	<20110121092550.933551564@bombadil.infradead.org>
+	<20110128015835.GQ21311@dastard> <1296231591.2342.47.camel@doink>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4D42D39E.4080304@teksavvy.com>
+In-Reply-To: <1296231591.2342.47.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,88 +31,184 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mark Lord <kernel@teksavvy.com>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Justin Piszcz <jpiszcz@lucidpixels.com>, Alex Elder <aelder@sgi.com>, Stan Hoeppner <stan@hardwarefreak.com>
+To: Alex Elder <aelder@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Fri, Jan 28, 2011 at 09:33:02AM -0500, Mark Lord wrote:
-> On 11-01-28 02:31 AM, Dave Chinner wrote:
-> >
-> > A simple google search turns up discussions like this:
+On Fri, Jan 28, 2011 at 10:19:51AM -0600, Alex Elder wrote:
+> On Fri, 2011-01-28 at 12:58 +1100, Dave Chinner wrote:
+> > On Fri, Jan 21, 2011 at 04:22:30AM -0500, Christoph Hellwig wrote:
+> > > Every time we reallocate a busy extent, we cause a synchronous log force
+> > > to occur to ensure the freeing transaction is on disk before we continue
+> . . .
+> > > +
+> > > +	spin_lock(&pag->pagb_lock);
+> > > +	rbp = pag->pagb_tree.rb_node;
+> > > +	while (rbp) {
+> 
+> I will amend the loop termination condition I suggested
+> before to be this:
+> 
+> 	while (rbp && len >= args->minlen) {
+
+Makes sense.
+
+> > > +		struct xfs_busy_extent *busyp =
+> > > +			rb_entry(rbp, struct xfs_busy_extent, rb_node);
+> > > +		xfs_agblock_t	end = bno + len;
+> > > +		xfs_agblock_t	bend = busyp->bno + busyp->length;
+> > > +
+> > > +		if (bno + len <= busyp->bno) {
+> > > +			rbp = rbp->rb_left;
+> > > +			continue;
+> > > +		} else if (bno >= busyp->bno + busyp->length) {
+> > > +			rbp = rbp->rb_right;
+> > > +			continue;
+> > > +		}
 > > 
-> > http://oss.sgi.com/archives/xfs/2009-01/msg01161.html
+> > 		if (end <= bbno)
+> > 			left;
+> > 		else if (bno > bend)
+> > 			right;
 > 
-> "in the long term we still expect fragmentation to degrade the performance of
-> XFS file systems"
+> I think the original code is right in this case.
+> The value of "bend" is the offset *following* the
+> end of the range.  So if "bno" equals that, we
+> want to move Right.  (Same reason <= is correct
+> for the first condition here.)
 
-"so we intend to add an on-line file system defragmentation utility
-to optimize the file system in the future"
+Oops, yes, you are right. Good catch - I failed to copy that code
+into psuedo code correctly.
 
-You are quoting from the wrong link - that's from the 1996
-whitepaper.  And sure, at the time that was written, nobody had any
-real experience with long term aging of XFS filesystems so it was
-still a guess at that point. XFS has had that online defragmentation
-utility since 1998, IIRC, even though in most cases it is
-unnecessary to use it.
-
-> Other than that, no hints there about how changing agcount affects things.
-
-If the reason given in the whitepaper for multiple AGs (i.e. they
-are for increasing the concurrency of allocation) doesn't help you
-understand why you'd want to increase the number of AGs in the
-filesystem, then you haven't really thought about what you read.
-
-As it is, from the same google search that found the above link
-as #1 hit, this was #6:
-
-http://oss.sgi.com/archives/xfs/2010-11/msg00497.html
-
-| > AG count has a
-| > direct relationship to the storage hardware, not the number of CPUs
-| >  (cores) in the system
-|
-| Actually, I used 16 AGs because it's twice the number of CPU cores
-| and I want to make sure that CPU parallel workloads (e.g. make -j 8)
-| don't serialise on AG locks during allocation. IOWs, I laid it out
-| that way precisely because of the number of CPUs in the system...
-| 
-| And to point out the not-so-obvious, this is the _default layout_
-| that mkfs.xfs in the debian squeeze installer came up with. IOWs,
-| mkfs.xfs did exactly what I wanted without me having to tweak
-| _anything_."
-| 
-[...]
-| 
-| In that case, you are right. Single spindle SRDs go backwards in
-| performance pretty quickly once you go over 4 AGs...
-
-It seems to me that you haven't really done much looking for
-information; there's lots of relevant advice in xfs mailing list
-archives...
-
-(and before you ask - SRD == Spinning Rust Disk)
-
-> > Configuring XFS filesystems for optimal performance has always been
-> > a black art because it requires you to understand your storage, your
-> > application workload(s) and XFS from the ground up.  Most people
-> > can't even tick one of those boxes, let alone all three....
 > 
-> Well, I've got 2/3 of those down just fine, thanks.
-> But it's the "XFS" part that is still the "black art" part,
-> because so little is written about *how* it works
-> (as opposed to how it is laid out on disk).
+> > 		/* overlap */
+> > 
+> > > +
+> > > +		if (busyp->bno < bno) {
+> > > +			/* start overlap */
+> > > +			ASSERT(bend >= bno);
+> > > +			ASSERT(bend <= end);
+> > > +			len -= bno - bend;
+> > > +			bno = bend;
+> > 
+> > 		if (bbno < bno) {
+> > 
+> > 		bbno           bend
+> > 		+-----------------+
+> > Case 1:
+> > 		   +---------+
+> > 		   bno     end
+> > 
+> > 		   No unbusy region in extent, return failure
+> 
+> Yes, that's right, I missed that.  My suggestion goes
+> negative in this case.
+> 
+> > Case 2:
+> > 		   +------------------------+
+> > 		   bno                    end
+> > 
+> > 		   Needs to be trimmed to:
+> > 		                    +-------+
+> > 		                    bno   end
+> > 		   bno = bend;
+> > 		   len = end - bno;
+> 
+> I like defining len in terms of the updated bno as
+> you have suggested here.
+> 
+> > > +		} else if (bend > end) {
+> > > +			/* end overlap */
+> > > +			ASSERT(busyp->bno >= bno);
+> > > +			ASSERT(busyp->bno < end);
+> > > +			len -= bend - end;
+> > 
+> . . .
+> 
+> 
+> > So, it looks to me like the "overlap found" algorithm shoul dbe
+> > something like:
+> 
+> For this algorithm, updating the value of len can be done
+> once, at the bottom (or top) of the loop, based simply on
+> the (updated) value of end and bno:
+> 
+> 	len = end - bno;
+> 
+> You could rearrange things a bit so this gets done at
+> the top--instead of computing the value of end based
+> on bno and len.
 
-If you want to know exactly how it works, there plenty of code to
-read. I know, you're going to call that a cop out, but I've got more
-important things to do than document 20,000 lines of allocation
-code just for you.
+Quite possibly - I just wanted to enumerate what I though the code
+should do rather than present a optimal, completed function ;)
 
-In a world of infinite resources then everything would be documented
-just the way you want, but we don't have infinite resources so it
-remains documented by the code that implements it.  However, if you
-want to go and understand it and document it all for us, then we'll
-happily take the patches. :)
+> > 		if (bbno <= bno) {
+> > 			if (end <= bend) {
+> > 				/* case 1, 3, 5 */
+> > 				return failure;
+> > 			}
+> > 			/* case 2, 6 */
+> > 			bno = bend;
+> > 			len = end - bno;
+> > 		} else if (bend >= end) {
+> > 			ASSERT(bbno > bno);
+> > 			/* case 4, 7 */
+> > 			end = bbno;
+> > 			len = end - bno;
+> > 		} else {
+> > 			ASSERT(bbno > bno);
+> > 			ASSERT(bend < end);
+> > 			/* case 8 */
+> > 			if (bbno - bno >= args->minlen) {
+> > 				/* left candidate OK */
+> > 				left = 1;
+> > 			}
+> > 			if (end - bend >= args->maxlen * 4) {
+> 
+> The "4" here I understand, but it's arbitrary (based
+> on an educated guess) so it needs to at least be explained
+> here with a comment.  Making it symbolic might make it
+> something one could search for at some future date.
 
-Cheers,,
+Yup. That value of "4" was simply a SWAG - I haven't really thought
+about the best way to determine if the "remaining free space is much
+larger than the allocation request" reliably, but I needed
+something there to demonstrate what I was thinking....
+
+....
+
+> > > -		if (xfs_alloc_busy_search(mp, agno, fbno, flen)) {
+> > > -			trace_xfs_discard_busy(mp, agno, fbno, flen);
+> > > -			goto next_extent;
+> > > -		}
+> > > +		xfs_alloc_busy_search_trim(mp, pag, fbno, flen, &tbno, &tlen);
+> > >  
+> > > -		trace_xfs_discard_extent(mp, agno, fbno, flen);
+> > > +		trace_xfs_discard_extent(mp, agno, tbno, tlen);
+> > >  		error = -blkdev_issue_discard(bdev,
+> > > -				XFS_AGB_TO_DADDR(mp, agno, fbno),
+> > > -				XFS_FSB_TO_BB(mp, flen),
+> > > +				XFS_AGB_TO_DADDR(mp, agno, tbno),
+> > > +				XFS_FSB_TO_BB(mp, tlen),
+> > >  				GFP_NOFS, 0);
+> > >  		if (error)
+> > >  			goto out_del_cursor;
+> > > -		*blocks_trimmed += flen;
+> > > +		*blocks_trimmed += tlen;
+> > 
+> > Hmmm - that means if we get a case 8 overlap, we'll only trim one
+> > side of the extent. That's probably not a big deal. However, perhaps
+> > this should check the size of the trimmed extent before issuing the
+> > discard against it in case we've reduced it to something smaller
+> > thanthe minimum requested trim size....
+> 
+> I think all of the places that (ultimately) call this function
+> need to be looked at to make sure they handle the "error" case
+> properly--either checking for a returned error or verifying the
+> returned length is at least the minimum.
+
+*nods vigorously*
+
+Cheers,
 
 Dave.
 -- 
