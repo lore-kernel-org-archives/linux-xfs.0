@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0U0re4O240570 for <xfs@oss.sgi.com>; Sat, 29 Jan 2011 18:53:40 -0600
-Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F06021EA5F79
-	for <xfs@oss.sgi.com>; Sat, 29 Jan 2011 16:56:06 -0800 (PST)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id uAFF79oKHdcDBad1
-	for <xfs@oss.sgi.com>; Sat, 29 Jan 2011 16:56:06 -0800 (PST)
-Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
-	by greer.hardwarefreak.com (Postfix) with ESMTP id 498CA6C0C3
-	for <xfs@oss.sgi.com>; Sat, 29 Jan 2011 18:56:06 -0600 (CST)
-Message-ID: <4D44B726.8090409@hardwarefreak.com>
-Date: Sat, 29 Jan 2011 18:56:06 -0600
-From: Stan Hoeppner <stan@hardwarefreak.com>
-MIME-Version: 1.0
+	p0U7E8Pp256225 for <xfs@oss.sgi.com>; Sun, 30 Jan 2011 01:14:08 -0600
+Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A5B9B29BB4C
+	for <xfs@oss.sgi.com>; Sat, 29 Jan 2011 23:16:33 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	ILVHLlWpYLMpRTyd for <xfs@oss.sgi.com>;
+	Sat, 29 Jan 2011 23:16:33 -0800 (PST)
+Date: Sun, 30 Jan 2011 18:16:30 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: how to decode metadump info produced by xfs_db, and superblock
 	error
+Message-ID: <20110130071630.GE21311@dastard>
 References: <SNT130-w5507ED619ADEE5A0761FA4DAE30@phx.gbl>
+MIME-Version: 1.0
+Content-Disposition: inline
 In-Reply-To: <SNT130-w5507ED619ADEE5A0761FA4DAE30@phx.gbl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -31,26 +30,26 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: lord worm <cryptopsy@live.com>
+Cc: xfs@oss.sgi.com
 
-lord worm put forth on 1/29/2011 6:25 PM:
+On Sat, Jan 29, 2011 at 07:25:10PM -0500, lord worm wrote:
 > 
 > What kind of information is in this file produced by metadump, is it worth reading it somehow?
 > 
-> I'm trying to first understand what's causing a 'superblock cannot be read' error in my XFS after a succesfully dd of the partition (dd succeeds in copying to a file, and also restoring, but after restoring it cannot mount).
-> 
-> xfs_repair fails to fix it, how should I attach the 55M metadata file to this email (do we have an upload location for this?), max size on hotmail is 25M ...
-> 
-> Does the superblock error refer to primary or secondary superblocks? Does xfs_repair attempt to clone the broken superblock from the others?
+> I'm trying to first understand what's causing a 'superblock cannot
+> be read' error in my XFS after a succesfully dd of the partition
+> (dd succeeds in copying to a file, and also restoring, but after
+> restoring it cannot mount).
 
+dmesg output when the mount fails?
 
-dd is not a proper XFS filesystem backup/restore utility.  Instead use xfsdump
-and xfsrestore, or any file level backup/restore solution.
+Cheers,
 
-You obviously now know why you shouldn't use dd for this purpose with XFS. ;)
-
+Dave.
 -- 
-Stan
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
