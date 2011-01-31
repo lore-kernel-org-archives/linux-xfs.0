@@ -1,12 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0VGe9JP113738 for <xfs@oss.sgi.com>; Mon, 31 Jan 2011 10:40:09 -0600
-From: Alex Elder <aelder@sgi.com>
-Message-Id: <201101311642.p0VGgXTS018851@stout.americas.sgi.com>
-Date: Mon, 31 Jan 2011 10:42:33 -0600
-Subject: [GIT PULL] XFS update for 2.6.38-rc3
+	p0VISk8O119747 for <xfs@oss.sgi.com>; Mon, 31 Jan 2011 12:28:46 -0600
+Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D0F3A29FD04
+	for <xfs@oss.sgi.com>; Mon, 31 Jan 2011 10:31:13 -0800 (PST)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id EhqEL4pIvmESCDig
+	for <xfs@oss.sgi.com>; Mon, 31 Jan 2011 10:31:13 -0800 (PST)
+Message-ID: <4D46FFF0.5090405@hardwarefreak.com>
+Date: Mon, 31 Jan 2011 12:31:12 -0600
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
+Subject: Re: xfs Digest, Vol 29, Issue 102
+References: <mailman.1364.1296445754.4020.xfs@oss.sgi.com>
+	<SNT130-w323D725C89EB3F13E94A3BDAE20@phx.gbl>
+In-Reply-To: <SNT130-w323D725C89EB3F13E94A3BDAE20@phx.gbl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,61 +28,37 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: lord worm <cryptopsy@live.com>
+Cc: xfs@oss.sgi.com
 
-Linus, please accept the following updates for XFS, for 2.6.38-rc3
-(if it's not too late) or 2.6.38-rc4.
+lord worm put forth on 1/30/2011 10:41 PM:
 
-They are all fixes for bugs that have some pretty undesirable
-consequences.  They address:
-- One spot in which a hang can occur due to neglecting to drop a
-  lock
-- A bug which in some cases a bogus block number can be recorded in
-  a block map btree, resulting in a subsequent BUG_ON().
-- Two memory leaks
-- Three places in which extent sizes are allowed to exceed various
-  size limits
-- One place where code depends on behavior that is not well-defined
-  by the C standard
-- One problem in handling transaction commit errors
+> Stan, do you check dates on links before you paste them here? I don't care if its the 1st results of the google search 'meaning of life', its irrelevant and oudated.
 
-Thank you.
+At the time I sent that reply, you had posted no log information, nothing
+concrete to allow us to focus our troubleshooting efforts.  At that time, the
+information in the link I provided could have been as relevant as any other.  At
+that time I had not seen the off list back-n-forth between you and Dave that
+contained a little bit more information from you.  Note that I said "might be
+relevant", not "this is your answer".
 
-					-Alex
+Note that Dave recently pointed an OP to a 1996 XFS paper.  Some information in
+that 15 year old paper is still relevant today.  You cannot simply discard
+information because it appears "old" to you.  Some aspects of XFS haven't
+changed in 16 years.
 
-The following changes since commit 70d1f365568e0cdbc9f4ab92428e1830fdb09ab0:
+As I said in my first response, xfsdump/xfsrestore would have avoided your
+current problem, as well as xfs_copy, as Dave pointed out.
 
-  Merge branch 'for-linus' of git://git.infradead.org/ubi-2.6 (2011-01-31 13:04:51 +1000)
+There is nothing set in stone that prevents dd from working with XFS
+filesystems.  However, it is obviously less forgiving of error, user or
+otherwise, than the 'equivalent' XFS utilities.
 
-are available in the git repository at:
+Lastly, getting testy with those attempting to assist you isn't going to further
+your efforts in fixing your problem.
 
-  git://oss.sgi.com/xfs/xfs for-linus
-
-Dave Chinner (8):
-      xfs: fix log ticket leak on forced shutdown.
-      xfs: fix efi item leak on forced shutdown
-      xfs: speculative delayed allocation uses rounddown_power_of_2 badly
-      xfs: limit extent length for allocation to AG size
-      xfs: prevent extsize alignment from exceeding maximum extent size
-      xfs: limit extsize to size of AGs and/or MAXEXTLEN
-      xfs: handle CIl transaction commit failures correctly
-      xfs: fix dquot shaker deadlock
-
-bpm@sgi.com (1):
-      xfs: xfs_bmap_add_extent_delay_real should init br_startblock
-
- fs/xfs/linux-2.6/xfs_ioctl.c |   20 ++++++++++++-
- fs/xfs/quota/xfs_qm.c        |   46 ++++++++++++++-----------------
- fs/xfs/xfs_alloc.h           |   16 +++++++++++
- fs/xfs/xfs_bmap.c            |   61 +++++++++++++++++++++++++++++++-----------
- fs/xfs/xfs_buf_item.c        |   12 +++++---
- fs/xfs/xfs_extfree_item.c    |    3 +-
- fs/xfs/xfs_iomap.c           |    7 ++++-
- fs/xfs/xfs_log.h             |    2 +-
- fs/xfs/xfs_log_cil.c         |   15 ++++------
- fs/xfs/xfs_trans.c           |   41 ++++++++++++++++++++-------
- 10 files changed, 152 insertions(+), 71 deletions(-)
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
