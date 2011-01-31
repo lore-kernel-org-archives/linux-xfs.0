@@ -1,22 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0V5qIDN073649 for <xfs@oss.sgi.com>; Sun, 30 Jan 2011 23:52:19 -0600
-Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1730129D70C
-	for <xfs@oss.sgi.com>; Sun, 30 Jan 2011 21:54:44 -0800 (PST)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	9A1aA96YtFpusl2X for <xfs@oss.sgi.com>;
-	Sun, 30 Jan 2011 21:54:44 -0800 (PST)
-Date: Mon, 31 Jan 2011 16:54:29 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: reordering file operations for performance
-Message-ID: <20110131055429.GK21311@dastard>
-References: <AANLkTim0h1Ez8f8YprUqUv=4OvAfDPStS8yM8Kdq5bCc@mail.gmail.com>
+	p0VGe9JP113738 for <xfs@oss.sgi.com>; Mon, 31 Jan 2011 10:40:09 -0600
+From: Alex Elder <aelder@sgi.com>
+Message-Id: <201101311642.p0VGgXTS018851@stout.americas.sgi.com>
+Date: Mon, 31 Jan 2011 10:42:33 -0600
+Subject: [GIT PULL] XFS update for 2.6.38-rc3
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <AANLkTim0h1Ez8f8YprUqUv=4OvAfDPStS8yM8Kdq5bCc@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,42 +19,61 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: karn@ka9q.net
-Cc: xfs@oss.sgi.com
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Sun, Jan 30, 2011 at 08:47:03PM -0800, Phil Karn wrote:
-> I have written a file deduplicator, dupmerge, that walks through a file
-> system (or reads a list of files from stdin), sorts them by size, and
-> compares each pair of the same size looking for duplicates. When it finds
-> two distinct files with identical contents on the same file system, it
-> deletes the newer copy and recreates its path name as a hard link to the
-> older version.
-> 
-> For performance it actually compares SHA1 hashes, not the actual file
-> contents. To avoid unnecessary full-file reads, it first compares the hashes
-> of the first pages (4kiB) of each file. Only if they match will I compute
-> and compare the full file hashes. Each file is fully read at most once and
-> sequentially, so if the file occupies a single extent it can be read in a
-> single large contiguous transfer. This is noticeably faster than doing a
-> direct compare, seeking between two files at opposite ends of the disk.
-> 
-> I am looking for additional performance enhancements, and I don't mind using
-> fs-specific features. E.g., I am now stashing the file hashes into xfs
-> extended file attributes.
-> 
-> I regularly run xfs_fsr and have added fallocate() calls to the major file
-> copy utilities, so all of my files are in single extents. Is there an easy
-> way to ask xfs where those extents are located so that I could sort a set of
-> files by location and then access them in a more efficient order?
+Linus, please accept the following updates for XFS, for 2.6.38-rc3
+(if it's not too late) or 2.6.38-rc4.
 
-ioctl(FS_IOC_FIEMAP) is what you want.
+They are all fixes for bugs that have some pretty undesirable
+consequences.  They address:
+- One spot in which a hang can occur due to neglecting to drop a
+  lock
+- A bug which in some cases a bogus block number can be recorded in
+  a block map btree, resulting in a subsequent BUG_ON().
+- Two memory leaks
+- Three places in which extent sizes are allowed to exceed various
+  size limits
+- One place where code depends on behavior that is not well-defined
+  by the C standard
+- One problem in handling transaction commit errors
 
-Cheers,
+Thank you.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+					-Alex
+
+The following changes since commit 70d1f365568e0cdbc9f4ab92428e1830fdb09ab0:
+
+  Merge branch 'for-linus' of git://git.infradead.org/ubi-2.6 (2011-01-31 13:04:51 +1000)
+
+are available in the git repository at:
+
+  git://oss.sgi.com/xfs/xfs for-linus
+
+Dave Chinner (8):
+      xfs: fix log ticket leak on forced shutdown.
+      xfs: fix efi item leak on forced shutdown
+      xfs: speculative delayed allocation uses rounddown_power_of_2 badly
+      xfs: limit extent length for allocation to AG size
+      xfs: prevent extsize alignment from exceeding maximum extent size
+      xfs: limit extsize to size of AGs and/or MAXEXTLEN
+      xfs: handle CIl transaction commit failures correctly
+      xfs: fix dquot shaker deadlock
+
+bpm@sgi.com (1):
+      xfs: xfs_bmap_add_extent_delay_real should init br_startblock
+
+ fs/xfs/linux-2.6/xfs_ioctl.c |   20 ++++++++++++-
+ fs/xfs/quota/xfs_qm.c        |   46 ++++++++++++++-----------------
+ fs/xfs/xfs_alloc.h           |   16 +++++++++++
+ fs/xfs/xfs_bmap.c            |   61 +++++++++++++++++++++++++++++++-----------
+ fs/xfs/xfs_buf_item.c        |   12 +++++---
+ fs/xfs/xfs_extfree_item.c    |    3 +-
+ fs/xfs/xfs_iomap.c           |    7 ++++-
+ fs/xfs/xfs_log.h             |    2 +-
+ fs/xfs/xfs_log_cil.c         |   15 ++++------
+ fs/xfs/xfs_trans.c           |   41 ++++++++++++++++++++-------
+ 10 files changed, 152 insertions(+), 71 deletions(-)
 
 _______________________________________________
 xfs mailing list
