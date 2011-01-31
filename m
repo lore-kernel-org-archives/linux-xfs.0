@@ -1,23 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0V4F5Ix067013 for <xfs@oss.sgi.com>; Sun, 30 Jan 2011 22:15:06 -0600
+	p0V3n9aL065052 for <xfs@oss.sgi.com>; Sun, 30 Jan 2011 21:49:09 -0600
 Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5290229D56D
-	for <xfs@oss.sgi.com>; Sun, 30 Jan 2011 20:17:32 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7743429D216
+	for <xfs@oss.sgi.com>; Sun, 30 Jan 2011 19:51:34 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	nW7K1qpBuz5aWcRy for <xfs@oss.sgi.com>;
-	Sun, 30 Jan 2011 20:17:32 -0800 (PST)
-Date: Mon, 31 Jan 2011 15:17:29 +1100
+	U021ZVZzo9vMNCAc for <xfs@oss.sgi.com>;
+	Sun, 30 Jan 2011 19:51:34 -0800 (PST)
+Date: Mon, 31 Jan 2011 14:51:31 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [patch] xfsprogs: repair pagefault due to missed out sanity
-	NULL check
-Message-ID: <20110131041729.GJ21311@dastard>
-References: <AANLkTiktigbHHHsYrxRBja6LxQ3N_gAq_KAoLNYGRB=r@mail.gmail.com>
+Subject: Re: how to decode metadump info produced by xfs_db, and superblock
+	error
+Message-ID: <20110131035131.GI21311@dastard>
+References: <SNT130-w5507ED619ADEE5A0761FA4DAE30@phx.gbl>
+	<20110130071630.GE21311@dastard>
+	<SNT130-w23319C8BC652352929903ADAE30@phx.gbl>
+	<20110130214026.GF21311@dastard>
+	<SNT130-w32CA503F4940DD51CBE1A3DAE20@phx.gbl>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <AANLkTiktigbHHHsYrxRBja6LxQ3N_gAq_KAoLNYGRB=r@mail.gmail.com>
+In-Reply-To: <SNT130-w32CA503F4940DD51CBE1A3DAE20@phx.gbl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,61 +30,96 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ajeet Yadav <ajeet.yadav.77@gmail.com>
+To: lord worm <cryptopsy@live.com>
 Cc: xfs@oss.sgi.com
 
-T24gRnJpLCBKYW4gMjgsIDIwMTEgYXQgMDg6MTM6MDRQTSArMDkwMCwgQWplZXQgWWFkYXYgd3Jv
-dGU6Cj4gbGlieGZzX3B1dGJ1ZigpIGlzIGNhbGxlZCB3aXRoIGJwID0gTlVMTCwgcmVzdWx0aW5n
-IGluIHBhZ2VmYXVsdCBpbgo+IGxpYnB0aHJlYWQuCj4gCj4gRnVuY3Rpb24gZGFfcmVhZF9idWYo
-KSBhbGxvY2F0ZSBhcnJheSBvZiB4ZnNfYnVmX3QgKgo+IAo+ICAgICogeGZzX2J1Zl90ICAgICAg
-ICoqYnBsaXN0OyoKPiAKPiAqICAgIGJwbGlzdCA9IGNhbGxvYyhuZXgsIHNpemVvZigqYnBsaXN0
-KSk7Kgo+IAo+IFJlYWQgYW5kIGZpbGwgaXQgdXNpbmcKPiAKPiAqZm9yIChpID0gMDsgaSA8IG5l
-eDsgaSsrKSB7Cj4gICAgIGJwbGlzdFtpXSA9IGxpYnhmc19yZWFkYnVmKCkqCj4gCj4gKiAgICBp
-ZiAoIWJwbGlzdFtpXSl7Cj4gICAgICAgICBnb3RvIGZhaWxlZDsKPiAgICAgfSAgKgo+IAo+ICp9
-Kgo+IAo+ICpmYWlsZWQ6Cj4gICAgICAgICBmb3IgKGkgPSAwOyBpIDwgbmV4OyBpKyspCj4gICAg
-ICAgICAgICAgICAgIGxpYnhmc19wdXRidWYoYnBsaXN0W2ldKTsqCj4gCj4gTm93IGFzc3VtZSBu
-ZXggPSAxMCwKPiAKPiAxLiBXaWxsIGNyZWF0ZSBicGxpc3QgZm9yIDEwIGFycmF5IGVsZW1lbnRz
-Lgo+IAo+IDMuIFJlYWRpbmcgZnJvbSBkaXNrIDAsMSwgMiwgMwo+IAo+IDQuIFdoZW4gcmVhZGlu
-ZyBmcm9tIGRpc2sgNCwgVVNCIGlzIHJlbW92ZWQKPiAKPiA1LiBsaWJ4ZnNfcmVhZGJ1ZigpIHdp
-bGwgYXQgZmFpbCwgcGJsaXN0WzRdID0gTlVMTCwgZ290byBmYWlsZWQuCj4gCj4gNi4gU2luY2Ug
-b25seSA0IGJ1ZmZlcnMgd2VyZSByZWFkIHN1Y2Nlc3NmdWxseSwgc28gb25seSA0IGFyZSBpbiBs
-b2NrIHN0YXRlLgo+IAo+IDcuICBFcnJvciBoYW5kbGluZyB3aWxsIHVubG9jayBidWZmZXIgZnJv
-bSAxLTEwCj4gCj4gOC4gQnVmZmVyIDAtMyB3ZXJlIHJlYWQgc3VjY2Vzc2Z1bGx5LCBoZW5jZSB3
-aWxsIGhhdmUgdmFsaWQgcGRsaXN0W2ldCj4gCj4gOS4gQWNjZXNzIHBibGlzdFs0XSA9PSBOVUxM
-LCB0aGVyZWZvcmUgdW5sb2NraW5nIHdpbGwgc2V0IGJwID09IE5VTEwgaW4KPiBsaWJ4ZnNfcHV0
-YnVmKGJwKTsKPiAxMC4gUGFnZSBmYXVsdCBpbiBsaWJwdGhyZWFkCj4gCj4gCj4gU29sdXRpb24g
-cGF0Y2ggYXR0YWNoZWQgd2l0aCBtYWlsCgpDYW4geW91IHBsZWFzZSBpbmNsdWRlIHRoZSBwYXRj
-aGVzIGluLWxpbmUgaW4geW91ciBlbWFpbCByYXRoZXIgdGhhbgphcyBiYXNlNjQgZW5jb2RlZCBh
-dHRhY2htZW50cz8gRXZlbiB0aG91Z2ggaXQgaXMgZm9yIHhmc3Byb2dzLCB3ZQphc2sgdGhhdCB0
-aGUgc2FtZSBwcm9jZXNzIGlzIGZvbGxvd2VkIGFzIHBlciBrZXJuZWwgcGF0Y2hlcy4gVGhhdApp
-bmNsdWRlcyBhZGTRlm5nIFNpZ25lZC1vZmYtYnkgdGFncyB0byB0aGUgcGF0Y2hlcy4uLgoKU2Vl
-IERvY3VtZW50YXRpb24vU3VibWl0dGluZ1BhdGNoZXM6Cgp8IDcpIE5vIE1JTUUsIG5vIGxpbmtz
-LCBubyBjb21wcmVzc2lvbiwgbm8gYXR0YWNobWVudHMuICBKdXN0IHBsYWluIHRleHQuCnwgCnwg
-TGludXMgYW5kIG90aGVyIGtlcm5lbCBkZXZlbG9wZXJzIG5lZWQgdG8gYmUgYWJsZSB0byByZWFk
-IGFuZCBjb21tZW50Cnwgb24gdGhlIGNoYW5nZXMgeW91IGFyZSBzdWJtaXR0aW5nLiAgSXQgaXMg
-aW1wb3J0YW50IGZvciBhIGtlcm5lbAp8IGRldmVsb3BlciB0byBiZSBhYmxlIHRvICJxdW90ZSIg
-eW91ciBjaGFuZ2VzLCB1c2luZyBzdGFuZGFyZCBlLW1haWwKfCB0b29scywgc28gdGhhdCB0aGV5
-IG1heSBjb21tZW50IG9uIHNwZWNpZmljIHBvcnRpb25zIG9mIHlvdXIgY29kZS4KfCAKfCBGb3Ig
-dGhpcyByZWFzb24sIGFsbCBwYXRjaGVzIHNob3VsZCBiZSBzdWJtaXR0aW5nIGUtbWFpbCAiaW5s
-aW5lIi4KfCBXQVJOSU5HOiAgQmUgd2FyeSBvZiB5b3VyIGVkaXRvcidzIHdvcmQtd3JhcCBjb3Jy
-dXB0aW5nIHlvdXIgcGF0Y2gsCnwgaWYgeW91IGNob29zZSB0byBjdXQtbi1wYXN0ZSB5b3VyIHBh
-dGNoLgp8IAp8IERvIG5vdCBhdHRhY2ggdGhlIHBhdGNoIGFzIGEgTUlNRSBhdHRhY2htZW50LCBj
-b21wcmVzc2VkIG9yIG5vdC4KfCBNYW55IHBvcHVsYXIgZS1tYWlsIGFwcGxpY2F0aW9ucyB3aWxs
-IG5vdCBhbHdheXMgdHJhbnNtaXQgYSBNSU1FCnwgYXR0YWNobWVudCBhcyBwbGFpbiB0ZXh0LCBt
-YWtpbmcgaXQgaW1wb3NzaWJsZSB0byBjb21tZW50IG9uIHlvdXIKfCBjb2RlLiAgQSBNSU1FIGF0
-dGFjaG1lbnQgYWxzbyB0YWtlcyBMaW51cyBhIGJpdCBtb3JlIHRpbWUgdG8gcHJvY2VzcywKfCBk
-ZWNyZWFzaW5nIHRoZSBsaWtlbGlob29kIG9mIHlvdXIgTUlNRS1hdHRhY2hlZCBjaGFuZ2UgYmVp
-bmcgYWNjZXB0ZWQuCnwgCnwgRXhjZXB0aW9uOiAgSWYgeW91ciBtYWlsZXIgaXMgbWFuZ2xpbmcg
-cGF0Y2hlcyB0aGVuIHNvbWVvbmUgbWF5IGFzawp8IHlvdSB0byByZS1zZW5kIHRoZW0gdXNpbmcg
-TUlNRS4KfCAKfCBTZWUgRG9jdW1lbnRhdGlvbi9lbWFpbC1jbGllbnRzLnR4dCBmb3IgaGludHMg
-YWJvdXQgY29uZmlndXJpbmcKfCB5b3VyIGUtbWFpbCBjbGllbnQgc28gdGhhdCBpdCBzZW5kcyB5
-b3VyIHBhdGNoZXMgdW50b3VjaGVkLgoKQW5kIGFzIGl0IHN1Z2dlc3RzLCByZWFkIERvY3VtZW50
-YXRpb24vZW1haWwtY2xpZW50cy50eHQgb24gaG93IHRvCmRvIHRoaXMgd2l0aCB2YXJpb3VzIG1h
-aWwgY2xpZW50cy4KCkNoZWVycywKCkRhdmUuCi0tIApEYXZlIENoaW5uZXIKZGF2aWRAZnJvbW9y
-Yml0LmNvbQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18K
-eGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxt
-YW4vbGlzdGluZm8veGZzCg==
+On Sun, Jan 30, 2011 at 08:21:19PM -0500, lord worm wrote:
+> > Date: Mon, 31 Jan 2011 08:40:26 +1100
+> > From: david@fromorbit.com
+> > To: cryptopsy@live.com
+> > Subject: Re: how to decode metadump info produced by xfs_db, and superblock error
+> > 
+> > On Sun, Jan 30, 2011 at 11:33:53AM -0500, lord worm wrote:
+> > > > Date: Sun, 30 Jan 2011 18:16:30 +1100
+> > > > From: david@fromorbit.com
+> > > > To: cryptopsy@live.com
+> > > > CC: xfs@oss.sgi.com
+> > > > Subject: Re: how to decode metadump info produced by xfs_db, and superblock error
+> > > > 
+> > > > On Sat, Jan 29, 2011 at 07:25:10PM -0500, lord worm wrote:
+> > > > > 
+> > > > > What kind of information is in this file produced by metadump, is it worth reading it somehow?
+> > > > > 
+> > > > > I'm trying to first understand what's causing a 'superblock cannot
+> > > > > be read' error in my XFS after a succesfully dd of the partition
+> > > > > (dd succeeds in copying to a file, and also restoring, but after
+> > > > > restoring it cannot mount).
+> > > > 
+> > > > dmesg output when the mount fails?
+> > > 
+> > > Could you email the mailing list next time as well, so that my
+> > > forwards are directed towards everyone, please?
+> > 
+> > I did:
+> > 
+> > http://oss.sgi.com/archives/xfs/2011-01/msg00486.html
+> > 
+> > As for list ettiquette - please don't top post and wrap all you text
+> > except for code and pasted log messages at 72 columns.....
+
+Fixed that for you again.
+
+> > > Here's dmesg from the backup file, but I don't have it from the original disk after restoring it:
+> > > 
+> > > [  362.685464] attempt to access beyond end of device
+> > > [  362.685468] loop5: rw=0, want=15662872, limit=15661056
+> > > [  362.685473] I/O error in filesystem ("loop5") meta-data dev loop5 block 0xeeff17       ("xfs_read_buf") error 5 buf count 512
+> > > [  362.685478] XFS: size check 2 failed
+> > 
+> > Simple problem - you copied the filesystem back onto a device that
+> > is too small for the filesystem.
+> 
+> When I reply to this email, it defaults to david@fromorbit.com, so
+> how will the others see it?
+
+Reply to all. It's common courtesy to reply to everyone on the
+cc-list for mailing list traffic as it often contains people not
+subscribed to the mailing list (e.g. a person reporting a bug).
+
+I've added the xfs list back onto the cc-list.
+
+> I can't mount the direct dd image of the drive as a loop device
+> either by the same error.
+
+Which means you probably didn't copy the entire drive in the first
+place.
+
+> The error persists even when its not
+> the filesystem that was copied back onto the device. Additionally,
+> its the exact same device with the exact same partition type
+> created by the exact same version of disk.
+
+partition type doesn't matter - the size does. The above error
+indicates that the loop device is 1816 sectors (908kiB) shorter than
+it needs to be, so maybe you aren't recreating the partition as
+large as it needs to be, too....
+
+As it is, the question I have at this point is why are you trying to
+copy the filesystem via dd? if all you want is an image, xfs_copy is
+probably what you want....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
