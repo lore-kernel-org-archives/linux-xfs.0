@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p0VISk8O119747 for <xfs@oss.sgi.com>; Mon, 31 Jan 2011 12:28:46 -0600
-Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D0F3A29FD04
-	for <xfs@oss.sgi.com>; Mon, 31 Jan 2011 10:31:13 -0800 (PST)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id EhqEL4pIvmESCDig
-	for <xfs@oss.sgi.com>; Mon, 31 Jan 2011 10:31:13 -0800 (PST)
-Message-ID: <4D46FFF0.5090405@hardwarefreak.com>
-Date: Mon, 31 Jan 2011 12:31:12 -0600
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	p0VJF2bI121859 for <xfs@oss.sgi.com>; Mon, 31 Jan 2011 13:15:02 -0600
+Date: Mon, 31 Jan 2011 14:17:20 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: xfs: very slow after mount, very slow at umount
+Message-ID: <20110131191720.GA2327@infradead.org>
+References: <4D419765.4070805@teksavvy.com>
+	<4D41CA16.8070001@hardwarefreak.com>
+	<alpine.DEB.2.00.1101271209370.17579@asgard.lang.hm>
+	<4D42056E.2050505@hardwarefreak.com>
+	<alpine.DEB.2.00.1101271730030.17579@asgard.lang.hm>
+	<20110128135629.GX21311@dastard>
+	<alpine.DEB.2.00.1101281119250.17579@asgard.lang.hm>
+	<20110129054021.GB21311@dastard>
+	<alpine.DEB.2.00.1101282201260.29659@asgard.lang.hm>
+	<20110129073554.GC21311@dastard>
 MIME-Version: 1.0
-Subject: Re: xfs Digest, Vol 29, Issue 102
-References: <mailman.1364.1296445754.4020.xfs@oss.sgi.com>
-	<SNT130-w323D725C89EB3F13E94A3BDAE20@phx.gbl>
-In-Reply-To: <SNT130-w323D725C89EB3F13E94A3BDAE20@phx.gbl>
+Content-Disposition: inline
+In-Reply-To: <20110129073554.GC21311@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,37 +31,19 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: lord worm <cryptopsy@live.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: david@lang.hm, Linux Kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Justin Piszcz <jpiszcz@lucidpixels.com>, Alex Elder <aelder@sgi.com>, Mark Lord <kernel@teksavvy.com>, Stan Hoeppner <stan@hardwarefreak.com>
 
-lord worm put forth on 1/30/2011 10:41 PM:
+On Sat, Jan 29, 2011 at 06:35:54PM +1100, Dave Chinner wrote:
+> Just because we can't do it right now doesn't mean it is not
+> possible. Array/raid controller vendors need to implement the SCSI
+> block limit VPD page, and if they do then stripe unit/stripe width
+> may be exposed for the device in sysfs. However, I haven't seen any
+> devices except for md and dm that actually export values that
+> reflect sunit/swidth in the files:
 
-> Stan, do you check dates on links before you paste them here? I don't care if its the 1st results of the google search 'meaning of life', its irrelevant and oudated.
-
-At the time I sent that reply, you had posted no log information, nothing
-concrete to allow us to focus our troubleshooting efforts.  At that time, the
-information in the link I provided could have been as relevant as any other.  At
-that time I had not seen the off list back-n-forth between you and Dave that
-contained a little bit more information from you.  Note that I said "might be
-relevant", not "this is your answer".
-
-Note that Dave recently pointed an OP to a 1996 XFS paper.  Some information in
-that 15 year old paper is still relevant today.  You cannot simply discard
-information because it appears "old" to you.  Some aspects of XFS haven't
-changed in 16 years.
-
-As I said in my first response, xfsdump/xfsrestore would have avoided your
-current problem, as well as xfs_copy, as Dave pointed out.
-
-There is nothing set in stone that prevents dd from working with XFS
-filesystems.  However, it is obviously less forgiving of error, user or
-otherwise, than the 'equivalent' XFS utilities.
-
-Lastly, getting testy with those attempting to assist you isn't going to further
-your efforts in fixing your problem.
-
--- 
-Stan
+I have access to a few big vendor arrays that export it, but I think
+they are still running beta firmware versions.
 
 _______________________________________________
 xfs mailing list
