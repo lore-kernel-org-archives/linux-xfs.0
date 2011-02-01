@@ -1,29 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p11MjFAu248938 for <xfs@oss.sgi.com>; Tue, 1 Feb 2011 16:45:15 -0600
-Received: from mx-out.facebook.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 455911A618DC
-	for <xfs@oss.sgi.com>; Tue,  1 Feb 2011 14:47:42 -0800 (PST)
-Received: from mx-out.facebook.com (outmail017.snc4.facebook.com
-	[66.220.144.149]) by cuda.sgi.com with ESMTP id
-	2HlR2kGWqoof7tli for <xfs@oss.sgi.com>;
-	Tue, 01 Feb 2011 14:47:42 -0800 (PST)
-From: Peter Vajgel <pv@fb.com>
-Subject: RE: XFS Preallocation
-Date: Tue, 1 Feb 2011 22:47:41 +0000
-Message-ID: <3F5ACD12257C714E9C0535D0A839171802AC21@SC-MBX02-2.TheFacebook.com>
-References: <155CAEA5D902E7429569DD197567724A01534D42@mail1.ad.kinetx.com>
-	<20110128045205.GR21311@dastard>
-	<155CAEA5D902E7429569DD197567724A01534D60@mail1.ad.kinetx.com>
-	<20110129001700.GZ21311@dastard>
-	<3F5ACD12257C714E9C0535D0A839171802A9B4@SC-MBX02-2.TheFacebook.com>
-	<20110201080354.GM11040@dastard>
-	<3F5ACD12257C714E9C0535D0A839171802AB01@SC-MBX02-2.TheFacebook.com>
-	<4D48691C.8000006@hardwarefreak.com>
-In-Reply-To: <4D48691C.8000006@hardwarefreak.com>
-Content-Language: en-US
+	p11N1nEs249545 for <xfs@oss.sgi.com>; Tue, 1 Feb 2011 17:01:49 -0600
+Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 87E4F4D91D5
+	for <xfs@oss.sgi.com>; Tue,  1 Feb 2011 15:04:16 -0800 (PST)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	HeRMejZiufQlMBe3 for <xfs@oss.sgi.com>;
+	Tue, 01 Feb 2011 15:04:16 -0800 (PST)
+Date: Wed, 2 Feb 2011 10:04:13 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: XFS internal error xfs_iformat(realtime) even after xfs_repair.
+Message-ID: <20110201230413.GN11040@dastard>
+References: <AANLkTin=nqXCVJRgqBuTDx6nxMx1GLiG2DortJG+pz2L@mail.gmail.com>
+	<20110118045730.GU28803@dastard>
+	<AANLkTikc-_dZvpu6Yb-FNJVVWqhmsC4OgVZ8gj0mRx-y@mail.gmail.com>
+	<AANLkTimuB71cTrW3gsSPq=HhFgHC=5xCZAMMxNE97F06@mail.gmail.com>
+	<20110201041202.GL11040@dastard>
+	<20110201212832.GA1836@infradead.org>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20110201212832.GA1836@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,39 +34,34 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: Jef Fox <jef.fox@kinetx.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Ajeet Yadav <ajeet.yadav.77@gmail.com>, xfs@oss.sgi.com
 
-Correct. But I've been using similar methods for evaluation and benchmarking purposes at my previous employers as well. I guess it's hard to part with the tools you learn to use. It's not a secret that we use xfs at Facebook. Xfs is the filesystem of choice for the media infrastructure group at the moment. Different projects are free to pick anything they want but I think database tier uses xfs as well. Our usage tends to create large files (databases, haystacks) so limited fragmentation, preallocation and as-close-to-raw performance are important features for us - all aspects where xfs excels. When I am talking about multiple variables which affect the testing it's RAID level, RAID stripe size (same stripe size sometimes produces different results from different controller vendors), IO scheduler, memory available, number of threads, readahead size and other external and application tuning variables.
+On Tue, Feb 01, 2011 at 04:28:32PM -0500, Christoph Hellwig wrote:
+> > It will be in the next release, whenever we make that.
+> > 
+> > I've got to finish of the sync of the userspace/kernel code, there's
+> > a few fixes already in the -dev branch as well, we need to pick up
+> > the FIEMAP changes to xfs_io, and so on. We probably should get t???is
+> > all done and plan for a new release in the next few weeks...
+> 
+> I'm a bit concerned about the coverage of the libxfs resync.  My
+> preference would be to get out a minor release focusses at the repair
+> fixes, then merge the resync to master directly after release and make
+> sure it gets into all the test setups for a while before it gets
+> released.
 
-Peter
+Sure, I have no problem with that - this is the first mention of a
+new release and I was just mentioning everything that is happening
+at the moment. Doing a point release with all the known
+fixes before the large sync makes sense...
 
-> -----Original Message-----
-> From: Stan Hoeppner [mailto:stan@hardwarefreak.com]
-> Sent: Tuesday, February 01, 2011 12:12 PM
-> To: Peter Vajgel
-> Cc: Dave Chinner; Jef Fox; xfs@oss.sgi.com
-> Subject: Re: XFS Preallocation
-> 
-> Peter Vajgel put forth on 2/1/2011 1:20 PM:
-> 
-> > At the scale we operate it does. We have multiple variables so the number of
-> combinations is large. We have hit every single possible hardware and software
-> problem and problem resolution can take months if it takes days to reproduce the
-> problem. Hardware vendors (disk, controller, motherboard manufacturers) are much
-> more responsive when you can reproduce a problem on the fly in seconds (especially
-> in comparative benchmarking). The tests usually run only couple of minutes. With
-> 12x3TB (possibly multiplied by a factor of X with our new platform) it would be
-> unacceptable to wait for writes to finish.
-> 
-> Hi Peter,
-> 
-> When you mention scale, you're referring to the storage back end at facebook.com,
-> your employer, correct?
-> 
-> --
-> Stan
-> 
+Cheers,
+
+dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
