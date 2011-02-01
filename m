@@ -1,13 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p11Nag3Q251660 for <xfs@oss.sgi.com>; Tue, 1 Feb 2011 17:36:43 -0600
-Subject: Re: [PATCH] xfs_repair: multithread phase 2
+	p11NkWFL252052 for <xfs@oss.sgi.com>; Tue, 1 Feb 2011 17:46:32 -0600
+Subject: Re: [PATCH] Xfstests: make 014 only run on xfs
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1294620248-17098-1-git-send-email-david@fromorbit.com>
-References: <1294620248-17098-1-git-send-email-david@fromorbit.com>
-Date: Tue, 01 Feb 2011 17:39:10 -0600
-Message-ID: <1296603550.2350.134.camel@doink>
+In-Reply-To: <20110127005945.GE21311@dastard>
+References: <1296050729-17316-1-git-send-email-josef@redhat.com>
+	<20110127005945.GE21311@dastard>
+Date: Tue, 01 Feb 2011 17:48:57 -0600
+Message-ID: <1296604137.2350.138.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -23,33 +24,26 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+Cc: Josef Bacik <josef@redhat.com>, xfs@oss.sgi.com
 
-On Mon, 2011-01-10 at 11:44 +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Thu, 2011-01-27 at 11:59 +1100, Dave Chinner wrote:
+> On Wed, Jan 26, 2011 at 09:05:29AM -0500, Josef Bacik wrote:
+> > This test relies on mounting with -o allocsize, which is an xfs specific mount
+> > option, so make the test only work on xfs.  Thanks,
 > 
-> Running some recent repair tests on broken filesystem meant running
-> phase 1 and 2 repeatedly to reproduce an issue at the start of phase
-> 3. Phase 2 was taking approximately 10 minutes to run as it
-> processes each AG serially.
-> 
-> Phase 2 can be trivially parallelised - it is simply scanning the
-> per AG trees to calculate free block counts and free and used inodes
-> counts. This can be done safely in parallel by giving each AG it's
-> own structure to aggregate counts into, then once the AG scan is
-> complete adding them all together.
-> 
-> This patch uses 32-way threading which results in no noticable
-> slowdown on single SATA drives with NCQ, but results in ~10x
-> reduction in runtime on a 12 disk RAID-0 array.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Oh, sorry, my fault. Perhaps something like this instead?
 
-This looks good.  Sorry I didn't say so earlier (I signed
-off on your first one).
+Since test 014 reportedly works on other filesystem
+types provided the allocsize option isn't provided,
+Dave's version looks better.
 
-Reviewed-by: Alex Elder <aelder@sgi.com>
+Josef will you please take a look over--and preferably
+test--what Dave proposed, and if you agree offer your
+signoff?
 
+Thanks.
+
+					-Alex
 
 _______________________________________________
 xfs mailing list
