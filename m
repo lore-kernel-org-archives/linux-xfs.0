@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p11B42E2182435 for <xfs@oss.sgi.com>; Tue, 1 Feb 2011 05:04:02 -0600
-Received: from mail-qy0-f181.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5A1682A25F2
-	for <xfs@oss.sgi.com>; Tue,  1 Feb 2011 03:06:29 -0800 (PST)
-Received: from mail-qy0-f181.google.com (mail-qy0-f181.google.com
-	[209.85.216.181]) by cuda.sgi.com with ESMTP id
-	W2dIHOPzCyNSVZxI for <xfs@oss.sgi.com>;
-	Tue, 01 Feb 2011 03:06:29 -0800 (PST)
-Received: by qyk12 with SMTP id 12so7341435qyk.5
-	for <xfs@oss.sgi.com>; Tue, 01 Feb 2011 03:06:29 -0800 (PST)
+	p11Fw8CU216766 for <xfs@oss.sgi.com>; Tue, 1 Feb 2011 09:58:08 -0600
+Received: from ironport2-out.pppoe.ca (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9D5471EA99DB
+	for <xfs@oss.sgi.com>; Tue,  1 Feb 2011 08:00:35 -0800 (PST)
+Received: from ironport2-out.pppoe.ca (ironport2-out.teksavvy.com
+	[206.248.154.183]) by cuda.sgi.com with ESMTP id
+	PyLrvKJgVbd8byd0 for <xfs@oss.sgi.com>;
+	Tue, 01 Feb 2011 08:00:35 -0800 (PST)
+Message-ID: <4D482E21.5040803@teksavvy.com>
+Date: Tue, 01 Feb 2011 11:00:33 -0500
+From: Mark Lord <kernel@teksavvy.com>
 MIME-Version: 1.0
-Date: Tue, 1 Feb 2011 20:06:29 +0900
-Message-ID: <AANLkTi=wi_Fhr5v1J4wopvFTY=hC2EA_QmJu4Uc_XgGs@mail.gmail.com>
-Subject: mkfs.xfs pagefault when removed storage during operation
-From: Ajeet Yadav <ajeet.yadav.77@gmail.com>
+Subject: Re: [GIT PULL] XFS update for 2.6.38-rc3
+References: <201101311642.p0VGgXTS018851@stout.americas.sgi.com>
+In-Reply-To: <201101311642.p0VGgXTS018851@stout.americas.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,42 +28,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Alex Elder <aelder@sgi.com>
+Cc: akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-We are testing mkfs.xfs and xfs_repair stability to look for crashes
-and other issues specially with removable devices.
-And unfortunately crashes does occur.
-Code inspection shows in most cases the caller does not handle
-libxfs_readbuf() for error cases i.e when return value = NULL.
+On 11-01-31 11:42 AM, Alex Elder wrote:
+> Linus, please accept the following updates for XFS, for 2.6.38-rc3
+> (if it's not too late) or 2.6.38-rc4.
+> 
+> They are all fixes for bugs that have some pretty undesirable
+> consequences.  They address:
+> - One spot in which a hang can occur due to neglecting to drop a
+>   lock
+> - A bug which in some cases a bogus block number can be recorded in
+>   a block map btree, resulting in a subsequent BUG_ON().
+> - Two memory leaks
+> - Three places in which extent sizes are allowed to exceed various
+>   size limits
+> - One place where code depends on behavior that is not well-defined
+>   by the C standard
+> - One problem in handling transaction commit errors
 
-Now I need your suggestion.
-We should fix all such cases or the simplest way is to exit... if
-read() or write() fails with EIO errorno in libxfs_readbufr() and
-libxfs_writebufr().
-Fortunately these function already support exit, if we use flag
-LIBXFS_EXIT_ON_FAILURE, LIBXFS_B_EXIT but they are used selectively.
 
-The current problem is related to function libxfs_trans_read_buf()
+Are these bugs all new in 2.6.38, or should some of these fixes
+also go out to -stable for earlier revisions?
 
-       bp = libxfs_readbuf(dev, blkno, len, flags);
-#ifdef XACT_DEBUG
-        fprintf(stderr, "trans_read_buf buffer %p, transaction %p\n", bp, tp);
-#endif
-        xfs_buf_item_init(bp, tp->t_mountp);
-        bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t *);
-        bip->bli_recur = 0;
-        xfs_trans_add_item(tp, (xfs_log_item_t *)bip);
 
-        /* initialise b_fsprivate2 so we can find it incore */
-        XFS_BUF_SET_FSPRIVATE2(bp, tp);
-        *bpp = bp;
-        return 0;
-
-if  libxfs_readbuf() fails due to device removal or other error, bp = NULL.
-In function xfs_buf_item_init(bp, tp->t_mountp) as soon as bp is
-dereferenced occurs
-
-mkfs.xfs: unhandled page fault (11) at 0x00000070, code 0x017
+> Dave Chinner (8):
+>       xfs: fix log ticket leak on forced shutdown.
+>       xfs: fix efi item leak on forced shutdown
+>       xfs: speculative delayed allocation uses rounddown_power_of_2 badly
+>       xfs: limit extent length for allocation to AG size
+>       xfs: prevent extsize alignment from exceeding maximum extent size
+>       xfs: limit extsize to size of AGs and/or MAXEXTLEN
+>       xfs: handle CIl transaction commit failures correctly
+>       xfs: fix dquot shaker deadlock
+> 
+> bpm@sgi.com (1):
+>       xfs: xfs_bmap_add_extent_delay_real should init br_startblock
 
 _______________________________________________
 xfs mailing list
