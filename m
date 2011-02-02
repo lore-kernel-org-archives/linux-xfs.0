@@ -1,24 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p122FG1T259188 for <xfs@oss.sgi.com>; Tue, 1 Feb 2011 20:15:16 -0600
-Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1C01F1A64715
-	for <xfs@oss.sgi.com>; Tue,  1 Feb 2011 18:17:44 -0800 (PST)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	mLGC5uriZyU74FUm for <xfs@oss.sgi.com>;
-	Tue, 01 Feb 2011 18:17:44 -0800 (PST)
-Date: Wed, 2 Feb 2011 13:17:41 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/4] xfstests: add test to reproduce bmap btree corruption.
-Message-ID: <20110202021741.GQ11040@dastard>
-References: <1295927937-20634-1-git-send-email-david@fromorbit.com>
-	<1295927937-20634-3-git-send-email-david@fromorbit.com>
-	<1296610194.2350.159.camel@doink>
+	p122YKo3260211 for <xfs@oss.sgi.com>; Tue, 1 Feb 2011 20:34:20 -0600
+Received: from straum.hexapodia.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5E3991A64A6C
+	for <xfs@oss.sgi.com>; Tue,  1 Feb 2011 18:36:47 -0800 (PST)
+Received: from straum.hexapodia.org (straum.hexapodia.org [207.7.131.186]) by
+	cuda.sgi.com with ESMTP id molAFjaFGjEEwUc4 for
+	<xfs@oss.sgi.com>; Tue, 01 Feb 2011 18:36:47 -0800 (PST)
+Date: Tue, 1 Feb 2011 18:36:44 -0800
+From: Andy Isaacson <adi@hexapodia.org>
+Subject: XFS stat/statvfs problems with 2.6.38-rc2-00175-g6fb1b30
+Message-ID: <20110202023644.GA25214@hexapodia.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1296610194.2350.159.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,51 +26,51 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
-Cc: xfs@oss.sgi.com
+To: linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Tue, Feb 01, 2011 at 07:29:54PM -0600, Alex Elder wrote:
-> On Tue, 2011-01-25 at 14:58 +1100, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > The problem was reprted here:
-> > 
-> > https://bugzilla.redhat.com/show_bug.cgi?id=626244
-> > 
-> > With the simple test case:
-> > 
-> > # mkfs.xfs -f -d agsize=16m,size=50g <dev>
-> > # mount <dev> /mnt
-> > # xfs_io -f -c 'resvsp 0 40G' /mnt/foo
-> > 
-> > Triggering the problem. Turn this into a new xfsqa test so that we
-> > exercise the problem code and prevent future regressions.
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> 
-> This looks good, HOWEVER, since the test crashes
-> the target system please remove it from (at least)
-> the "auto" group before you commit.
+Since updating past 2.6.37, I'm seeing du(1) sometimes report files
+taking up 8GB even though ls(1) reports the correct size (hundreds of
+bytes).  At the same time, df reports that the filesystem is 95% or 100%
+full (although I can still write to the filesystem).  Repeated du calls
+show persistent results (once st_blocks is wrong, it stays wrong).
+Rebooting clears the problem for a few hours, then it seems to come
+back, although the exact files affected seems to change.  xfs_check
+doesn't find any errors, and rebooting into 2.6.37 clears up the problem
+entirely.
 
-If causes an assert failure on a DEBUG kernel, a shutdown on a
-non-debug kernel. Either way, I'd prefer to leave it enabled as a
-good reminder that we need to fix the damn bug (*) sooner rather
-than later...
+There's nothing in dmesg indicating a problem:
 
-(*) This patch prevents the assert failure, but, like Lachlan, I'm
-not sure it is the right fix.
+Jan 27 08:04:37 pyron kernel: [    0.000000] Linux version 2.6.38-rc2-00175-g6fb1b30 (adi@pyron) (gcc version 4.4.5 (Debian 4.4.5-10) ) #75 SMP Thu Jan 27 00:39:11 PST 2011
+Jan 27 08:04:37 pyron kernel: [    8.420170] SGI XFS with ACLs, security attributes, large block/inode numbers, no debug enabled
+Jan 27 08:04:37 pyron kernel: [    8.434527] XFS mounting filesystem dm-8
+Jan 27 08:04:37 pyron kernel: [    8.676644] Starting XFS recovery on filesystem: dm-8 (logdev: internal)
+Jan 27 08:04:37 pyron kernel: [    8.734279] Ending XFS recovery on filesystem: dm-8 (logdev: internal)
+Jan 27 08:04:37 pyron kernel: [    8.762724] XFS mounting filesystem dm-9
+Jan 27 08:04:37 pyron kernel: [    8.957986] Ending clean XFS mount for filesystem: dm-9
+Jan 27 08:04:37 pyron kernel: [    8.985909] XFS mounting filesystem dm-10
+Jan 27 08:04:37 pyron kernel: [    9.098404] Starting XFS recovery on filesystem: dm-10 (logdev: internal)
+Jan 27 08:04:37 pyron kernel: [    9.205018] Ending XFS recovery on filesystem: dm-10 (logdev: internal)
 
-http://oss.sgi.com/archives/xfs/2010-09/msg00337.html
 
-I'm working on it at the moment, along with all the other allocation
-things...
+/d1 is a 200GB XFS on DM on AHCI SATA on a Core i7 desktop board.
+The erroneous statvfs reports are visible in this munin graph:
+http://web.hexapodia.org/~adi/tmp/20110201-df-pyron.png
+(the filesystem is actually 72% full currently, and should be linearly
+filling as is visible around Jan 26.)
 
-Cheers,
+% sudo xfs_info /d1
+meta-data=/dev/mapper/vg0-d1     isize=256    agcount=4, agsize=13107200 blks
+         =                       sectsz=512   attr=2
+data     =                       bsize=4096   blocks=52428800, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0
+log      =internal               bsize=4096   blocks=25600, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+I'm back on 2.6.37 right now, I'll try a new git tip tonight.
+
+-andy
 
 _______________________________________________
 xfs mailing list
