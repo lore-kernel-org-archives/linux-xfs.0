@@ -1,19 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p12IUXCS052147
-	for <linux-xfs@oss.sgi.com>; Wed, 2 Feb 2011 12:30:34 -0600
-Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 485D6AC014
-	for <linux-xfs@oss.sgi.com>; Wed,  2 Feb 2011 10:33:00 -0800 (PST)
-Message-ID: <4D49A35B.6030009@sgi.com>
-Date: Wed, 02 Feb 2011 12:32:59 -0600
-From: Bill Kendall <wkendall@sgi.com>
+	p12MGYs0071252 for <xfs@oss.sgi.com>; Wed, 2 Feb 2011 16:16:35 -0600
+Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3D3DB120DF45
+	for <xfs@oss.sgi.com>; Wed,  2 Feb 2011 14:19:00 -0800 (PST)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	PaFBLB6eikY4lMKn for <xfs@oss.sgi.com>;
+	Wed, 02 Feb 2011 14:19:00 -0800 (PST)
+Date: Thu, 3 Feb 2011 09:18:58 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: XFS stat/statvfs problems with 2.6.38-rc2-00175-g6fb1b30
+Message-ID: <20110202221858.GS11040@dastard>
+References: <20110202023644.GA25214@hexapodia.org>
 MIME-Version: 1.0
-Subject: Re: xfsdump SGI_FS_BULKSTAT errno = 22, how could this IRIX bug get
-	into	Ubuntu 10.04 Lucid between kernels 2.6.32-27 and 2.6.32-26?
-References: <iibmah$dlp$1@dough.gmane.org>
-In-Reply-To: <iibmah$dlp$1@dough.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20110202023644.GA25214@hexapodia.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,100 +25,53 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: mlueck@lueckdatasystems.com
-Cc: linux-xfs@oss.sgi.com
+To: Andy Isaacson <adi@hexapodia.org>
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On 02/02/2011 07:30 AM, Michael Lueck wrote:
-> Greetings,
->
-> Somehow a reported IRIX bug with XFS got into Ubuntu 10.04 (Lucid) starting with kernel 2.6.32-27.
->
-> I am cross posting to this list in order to receive details as to what bug got in Ubuntu which has
-> been solved in IRIX, hoping with more details Ubuntu might make the same fix.
+On Tue, Feb 01, 2011 at 06:36:44PM -0800, Andy Isaacson wrote:
+> Since updating past 2.6.37, I'm seeing du(1) sometimes report files
+> taking up 8GB even though ls(1) reports the correct size (hundreds of
+> bytes).  At the same time, df reports that the filesystem is 95% or 100%
+> full (although I can still write to the filesystem).  Repeated du calls
+> show persistent results (once st_blocks is wrong, it stays wrong).
+> Rebooting clears the problem for a few hours, then it seems to come
+> back, although the exact files affected seems to change.  xfs_check
+> doesn't find any errors, and rebooting into 2.6.37 clears up the problem
+> entirely.
+> 
+> There's nothing in dmesg indicating a problem:
+> 
+> Jan 27 08:04:37 pyron kernel: [    0.000000] Linux version 2.6.38-rc2-00175-g6fb1b30 (adi@pyron) (gcc version 4.4.5 (Debian 4.4.5-10) ) #75 SMP Thu Jan 27 00:39:11 PST 2011
+> Jan 27 08:04:37 pyron kernel: [    8.420170] SGI XFS with ACLs, security attributes, large block/inode numbers, no debug enabled
+> Jan 27 08:04:37 pyron kernel: [    8.434527] XFS mounting filesystem dm-8
+> Jan 27 08:04:37 pyron kernel: [    8.676644] Starting XFS recovery on filesystem: dm-8 (logdev: internal)
+> Jan 27 08:04:37 pyron kernel: [    8.734279] Ending XFS recovery on filesystem: dm-8 (logdev: internal)
+> Jan 27 08:04:37 pyron kernel: [    8.762724] XFS mounting filesystem dm-9
+> Jan 27 08:04:37 pyron kernel: [    8.957986] Ending clean XFS mount for filesystem: dm-9
+> Jan 27 08:04:37 pyron kernel: [    8.985909] XFS mounting filesystem dm-10
+> Jan 27 08:04:37 pyron kernel: [    9.098404] Starting XFS recovery on filesystem: dm-10 (logdev: internal)
+> Jan 27 08:04:37 pyron kernel: [    9.205018] Ending XFS recovery on filesystem: dm-10 (logdev: internal)
+> 
+> 
+> /d1 is a 200GB XFS on DM on AHCI SATA on a Core i7 desktop board.
+> The erroneous statvfs reports are visible in this munin graph:
+> http://web.hexapodia.org/~adi/tmp/20110201-df-pyron.png
+> (the filesystem is actually 72% full currently, and should be linearly
+> filling as is visible around Jan 26.)
 
-Aside from the fact that the errno is the same, there's nothing to suggest
-that the Ubuntu problem is the the same bug. The IRIX bug is quite old.
+It'll be the excessive specualtive preallocation bug introduced in
+.38-rc1  which is fixed in .38-rc3.
 
->
-> Ubuntu has since updated their kernel to 2.6.32-28 and someone already verified at the bug report
-> that the problem persists with that kernel version.
->
-> "Regression between 2.6.32-27 and 2.6.32-26 xfsdump SGI_FS_BULKSTAT errno = 22"
-> https://bugs.launchpad.net/bugs/692848
+Cheers,
 
-Between 2.6.32-26 and 2.6.32-27, Ubuntu backported 4 XFS commits from
-2.6.35/2.6.36. All are part of a bulkstat security fix.
-
-% git log Ubuntu-2.6.32-26.48..Ubuntu-2.6.32-27.49 -- fs/xfs | grep commit
-commit 52d2a4cfbc852da8c3d3b9fa0cac2a07b12f5cfd
-     (cherry picked from commit 4536f2ad8b330453d7ebec0746c4374eadd649b1)
-commit eb5ab28c8a5e4bb3f1ce05eba166c12175f6c701
-     (backported from commit 7b6259e7a83647948fa33a736cc832310c8d85aa)
-commit 5f8e8c6ab416bbd58d4f5df512c119a888ff923c
-     (cherry picked from commit 1920779e67cbf5ea8afef317777c5bf2b8096188)
-commit 52e0d703745f7110f1ecbe83c02cf06a83da82e8
-     (backported from commit 7124fe0a5b619d65b739477b3b55a20bf805b06d)
-
-I'm not aware of a similar problem upstream, so it would appear
-to be a problem with Ubuntu's backport of these commits.
-
-Bill
-
->
-> On our Ubuntu 10.04 LTS server running x86 code, this evening a kernel
-> update was ready for installation. I updated the kernel, rebooted
-> (IPL'ed), and proceeded with the backup which utilized xfsdump as we use
-> the xfs filesystem. Four of the xfsdump received a never before seen
-> error: SGI_FS_BULKSTAT errno = 22
->
-> Output as follows:
-> using file dump (drive_simple) strategy
-> version 3.0.4 (dump format 3.0) - Running single-threaded
-> level 0 dump of ldslnx01:/srv
-> dump date: Mon Dec 20 21:59:33 2010
-> session id: f98f8cc0-963f-41a6-9a19-a89192502bf0
-> session label: "data"
-> ino map phase 1: constructing initial dump list
-> ino map phase 2: skipping (no pruning necessary)
-> ino map phase 3: skipping (only one dump stream)
-> ino map construction complete
-> estimated dump size: 100739707392 bytes
-> WARNING: no media label specified
-> creating dump session media file 0 (media 0, file 0)
-> dumping ino map
-> dumping directories
-> SGI_FS_BULKSTAT failed: Invalid argument (22)
-> dump size (non-dir files) : 0 bytes
-> NOTE: dump interrupted: 79 seconds elapsed: may resume later using -R option
-> Dump Status: INTERRUPT
->
-> This backup file did have some size to it. The other three, backing up
-> smaller amounts of data, were all zero (0) length dump files.
->
-> I rebooted to the prior kernel: $ uname -a
-> Linux ldslnx01 2.6.32-26-generic-pae #48-Ubuntu SMP Wed Nov 24 10:31:20 UTC 2010 i686 GNU/Linux
->
-> And the same backup gets to 100% success.
->
-> Reboot to the new kernel, same failure.
->
-> I think that fairly well illustrates that the problem exists only with
-> the kernel update installed this evening.
->
-> <><><><>
->
-> I did come across a reference to this problem on the SGI website:
->
-> http://techpubs.sgi.com/library/tpl/cgi-bin/getdoc.cgi?coll=0650&db=relnotes&fname=/usr/relnotes/eoe
-> 1.6.17 Bugs fixed in IRIX 6.5.13
-> + 816457: xfsdump SGI_FS_BULKSTAT errno = 22 cxfs
->
-> So evidently it is something that has been seen and corrected in IRIX.
->
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
