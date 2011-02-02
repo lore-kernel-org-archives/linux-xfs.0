@@ -1,17 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p12FY9bd041917 for <xfs@oss.sgi.com>; Wed, 2 Feb 2011 09:34:10 -0600
+	p12FofbW042935 for <xfs@oss.sgi.com>; Wed, 2 Feb 2011 09:50:42 -0600
 Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6502D2A51AC
-	for <xfs@oss.sgi.com>; Wed,  2 Feb 2011 07:36:38 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 622BA2A4E8C
+	for <xfs@oss.sgi.com>; Wed,  2 Feb 2011 07:53:10 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id PGKzhCIJzGLVC9Ih for
-	<xfs@oss.sgi.com>; Wed, 02 Feb 2011 07:36:38 -0800 (PST)
+	cuda.sgi.com with ESMTP id rd3oCJxBLHWkVuHc for
+	<xfs@oss.sgi.com>; Wed, 02 Feb 2011 07:53:10 -0800 (PST)
 From: Lukas Czerner <lczerner@redhat.com>
-Subject: [PATCH] 089: fix error caused by weird stdout buffer handling
-Date: Wed,  2 Feb 2011 16:36:06 +0100
-Message-Id: <1296660966-691-1-git-send-email-lczerner@redhat.com>
+Subject: [PATCH v2] 089: fix error caused by weird stdout buffer handling
+Date: Wed,  2 Feb 2011 16:52:59 +0100
+Message-Id: <1296661979-1731-1-git-send-email-lczerner@redhat.com>
+In-Reply-To: <1296660966-691-1-git-send-email-lczerner@redhat.com>
+References: <1296660966-691-1-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,15 +30,15 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: hch@infradead.org, lczerner@redhat.com, esandeen@redhat.com
 
+(v2: Get rid of the diff mambo-jambo in the commit description)
+
 We have hit the error while running 089.
 
 FSTYP         -- ext3
 PLATFORM      -- Linux/x86_64 localhost 2.6.32-109.el6.x86_64
 
-089 4s ... - output mismatch (see 089.out.bad)
---- 089.out     2011-02-01 13:32:13.350865206 -0500
-+++ 089.out.bad 2011-02-01 15:46:50.998864578 -0500
-@@ -43,7 +43,6 @@
+...
+...
  completed 50 iterations
  completed 50 iterations
  completed 50 iterations
