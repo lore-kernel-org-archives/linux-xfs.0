@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p1364tXF124993 for <xfs@oss.sgi.com>; Thu, 3 Feb 2011 00:04:55 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3995A1BC85FF
-	for <xfs@oss.sgi.com>; Wed,  2 Feb 2011 22:07:22 -0800 (PST)
-Received: from mail.sandeen.net (64-131-28-21.usfamily.net [64.131.28.21]) by
-	cuda.sgi.com with ESMTP id dy3g9mkJfwy2ccVy for
-	<xfs@oss.sgi.com>; Wed, 02 Feb 2011 22:07:22 -0800 (PST)
-Message-ID: <4D4A461A.2080503@sandeen.net>
-Date: Thu, 03 Feb 2011 00:07:22 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	p1361Opo124807 for <xfs@oss.sgi.com>; Thu, 3 Feb 2011 00:01:24 -0600
+Received: from mail-vx0-f181.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DC9F6902F8E
+	for <xfs@oss.sgi.com>; Wed,  2 Feb 2011 22:03:49 -0800 (PST)
+Received: from mail-vx0-f181.google.com (mail-vx0-f181.google.com
+	[209.85.220.181]) by cuda.sgi.com with ESMTP id
+	EWwpb2DZL0wr6zNA for <xfs@oss.sgi.com>;
+	Wed, 02 Feb 2011 22:03:49 -0800 (PST)
+Received: by vxc38 with SMTP id 38so216756vxc.26
+	for <xfs@oss.sgi.com>; Wed, 02 Feb 2011 22:03:49 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <4D4A2A9B.6090803@sandeen.net>
+References: <AANLkTi=wi_Fhr5v1J4wopvFTY=hC2EA_QmJu4Uc_XgGs@mail.gmail.com>
+	<4D4A2A9B.6090803@sandeen.net>
+Date: Thu, 3 Feb 2011 15:03:47 +0900
+Message-ID: <AANLkTi=aL89d3vUN2jq7w-_j7gcSrkiJk=fGyi4SJv5R@mail.gmail.com>
 Subject: Re: mkfs.xfs pagefault when removed storage during operation
-References: <AANLkTi=wi_Fhr5v1J4wopvFTY=hC2EA_QmJu4Uc_XgGs@mail.gmail.com>	<4D4A2A9B.6090803@sandeen.net>
-	<AANLkTi=aL89d3vUN2jq7w-_j7gcSrkiJk=fGyi4SJv5R@mail.gmail.com>
-In-Reply-To: <AANLkTi=aL89d3vUN2jq7w-_j7gcSrkiJk=fGyi4SJv5R@mail.gmail.com>
+From: Ajeet Yadav <ajeet.yadav.77@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,104 +27,68 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ajeet Yadav <ajeet.yadav.77@gmail.com>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs@oss.sgi.com
 
-On 2/3/11 12:03 AM, Ajeet Yadav wrote:
-> Sorry I do not agree, we have a bug so we cannot ignore it.
-> Solving at first place can save a lot of time if same problem create a
-> side effect that may sometime be very hard to catch.
-> 
-> Now lets consider the current problem
-> 1. Its related to libxfs in xfsprogs, so its not mkfs issue anymore
-> 2. If we come across any critical problem in libxfs we can cross
-> verify kernel xfs implementation to find if there also a logical
-> issue.
->     One learning and be used in other part.
-> 3. Yes I agree that if mkfs.xfs fails we have to re-run it anyways,
-> but then what is the difference between a novice code and professional
-> product.
->      If you cscope libxfs_trans_read_buf() in xfsprogs, its caller
-> always checks the return value, and its used extensively in xfsprogs.
-> But this function always return 0. Infact there is no error handding
-> at all, lets not consider EIO error only.
-> 4. We are here in open community out of need, at the same time to make
-> it better.
-> 
-> I was wondering why I am not getting any reply, I think mail subject
-> was wrong......mkfs ;)
-
-I may have jumped at that too quickly, yes ;)
-
-> I will release the patch, please take out time to review it.
-
-Well, that's fair enough, that's how it works - if it's important to you,
-and you want to fix it, then you can!  And if properly done it gets
-merged.
-
--Eric
-
-> On Thu, Feb 3, 2011 at 1:10 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
->> On 2/1/11 5:06 AM, Ajeet Yadav wrote:
->>> We are testing mkfs.xfs and xfs_repair stability to look for crashes
->>> and other issues specially with removable devices.
->>> And unfortunately crashes does occur.
->>> Code inspection shows in most cases the caller does not handle
->>> libxfs_readbuf() for error cases i.e when return value = NULL.
->>>
->>> Now I need your suggestion.
->>> We should fix all such cases or the simplest way is to exit... if
->>> read() or write() fails with EIO errorno in libxfs_readbufr() and
->>> libxfs_writebufr().
->>
->> I see very little reason to gracefully handle all error cases
->> during mkfs. It would be prettier, yes, but if mkfs fails, with
->> or without an error, with or without a segfault, you have to
->> just start it over anyway, right?
->>
->> I think there are better places to focus effort.
->>
->> -Eric
->>
->>> Fortunately these function already support exit, if we use flag
->>> LIBXFS_EXIT_ON_FAILURE, LIBXFS_B_EXIT but they are used selectively.
->>>
->>> The current problem is related to function libxfs_trans_read_buf()
->>>
->>>        bp = libxfs_readbuf(dev, blkno, len, flags);
->>> #ifdef XACT_DEBUG
->>>         fprintf(stderr, "trans_read_buf buffer %p, transaction %p\n", bp, tp);
->>> #endif
->>>         xfs_buf_item_init(bp, tp->t_mountp);
->>>         bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t *);
->>>         bip->bli_recur = 0;
->>>         xfs_trans_add_item(tp, (xfs_log_item_t *)bip);
->>>
->>>         /* initialise b_fsprivate2 so we can find it incore */
->>>         XFS_BUF_SET_FSPRIVATE2(bp, tp);
->>>         *bpp = bp;
->>>         return 0;
->>>
->>> if  libxfs_readbuf() fails due to device removal or other error, bp = NULL.
->>> In function xfs_buf_item_init(bp, tp->t_mountp) as soon as bp is
->>> dereferenced occurs
->>>
->>> mkfs.xfs: unhandled page fault (11) at 0x00000070, code 0x017
->>>
->>> _______________________________________________
->>> xfs mailing list
->>> xfs@oss.sgi.com
->>> http://oss.sgi.com/mailman/listinfo/xfs
->>>
->>
->>
-> 
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+U29ycnkgSSBkbyBub3QgYWdyZWUsIHdlIGhhdmUgYSBidWcgc28gd2UgY2Fubm90IGlnbm9yZSBp
+dC4KU29sdmluZyBhdCBmaXJzdCBwbGFjZSBjYW4gc2F2ZSBhIGxvdCBvZiB0aW1lIGlmIHNhbWUg
+cHJvYmxlbSBjcmVhdGUgYQpzaWRlIGVmZmVjdCB0aGF0IG1heSBzb21ldGltZSBiZSB2ZXJ5IGhh
+cmQgdG8gY2F0Y2guCgpOb3cgbGV0cyBjb25zaWRlciB0aGUgY3VycmVudCBwcm9ibGVtCjEuIEl0
+cyByZWxhdGVkIHRvIGxpYnhmcyBpbiB4ZnNwcm9ncywgc28gaXRzIG5vdCBta2ZzIGlzc3VlIGFu
+eW1vcmUKMi4gSWYgd2UgY29tZSBhY3Jvc3MgYW55IGNyaXRpY2FsIHByb2JsZW0gaW4gbGlieGZz
+IHdlIGNhbiBjcm9zcwp2ZXJpZnkga2VybmVsIHhmcyBpbXBsZW1lbnRhdGlvbiB0byBmaW5kIGlm
+IHRoZXJlIGFsc28gYSBsb2dpY2FsCmlzc3VlLgogICAgT25lIGxlYXJuaW5nIGFuZCBiZSB1c2Vk
+IGluIG90aGVyIHBhcnQuCjMuIFllcyBJIGFncmVlIHRoYXQgaWYgbWtmcy54ZnMgZmFpbHMgd2Ug
+aGF2ZSB0byByZS1ydW4gaXQgYW55d2F5cywKYnV0IHRoZW4gd2hhdCBpcyB0aGUgZGlmZmVyZW5j
+ZSBiZXR3ZWVuIGEgbm92aWNlIGNvZGUgYW5kIHByb2Zlc3Npb25hbApwcm9kdWN0LgogICAgIElm
+IHlvdSBjc2NvcGUgbGlieGZzX3RyYW5zX3JlYWRfYnVmKCkgaW4geGZzcHJvZ3MsIGl0cyBjYWxs
+ZXIKYWx3YXlzIGNoZWNrcyB0aGUgcmV0dXJuIHZhbHVlLCBhbmQgaXRzIHVzZWQgZXh0ZW5zaXZl
+bHkgaW4geGZzcHJvZ3MuCkJ1dCB0aGlzIGZ1bmN0aW9uIGFsd2F5cyByZXR1cm4gMC4gSW5mYWN0
+IHRoZXJlIGlzIG5vIGVycm9yIGhhbmRkaW5nCmF0IGFsbCwgbGV0cyBub3QgY29uc2lkZXIgRUlP
+IGVycm9yIG9ubHkuCjQuIFdlIGFyZSBoZXJlIGluIG9wZW4gY29tbXVuaXR5IG91dCBvZiBuZWVk
+LCBhdCB0aGUgc2FtZSB0aW1lIHRvIG1ha2UKaXQgYmV0dGVyLgoKSSB3YXMgd29uZGVyaW5nIHdo
+eSBJIGFtIG5vdCBnZXR0aW5nIGFueSByZXBseSwgSSB0aGluayBtYWlsIHN1YmplY3QKd2FzIHdy
+b25nLi4uLi4ubWtmcyA7KQpJIHdpbGwgcmVsZWFzZSB0aGUgcGF0Y2gsIHBsZWFzZSB0YWtlIG91
+dCB0aW1lIHRvIHJldmlldyBpdC4KCk9uIFRodSwgRmViIDMsIDIwMTEgYXQgMToxMCBQTSwgRXJp
+YyBTYW5kZWVuIDxzYW5kZWVuQHNhbmRlZW4ubmV0PiB3cm90ZToKPiBPbiAyLzEvMTEgNTowNiBB
+TSwgQWplZXQgWWFkYXYgd3JvdGU6Cj4+IFdlIGFyZSB0ZXN0aW5nIG1rZnMueGZzIGFuZCB4ZnNf
+cmVwYWlyIHN0YWJpbGl0eSB0byBsb29rIGZvciBjcmFzaGVzCj4+IGFuZCBvdGhlciBpc3N1ZXMg
+c3BlY2lhbGx5IHdpdGggcmVtb3ZhYmxlIGRldmljZXMuCj4+IEFuZCB1bmZvcnR1bmF0ZWx5IGNy
+YXNoZXMgZG9lcyBvY2N1ci4KPj4gQ29kZSBpbnNwZWN0aW9uIHNob3dzIGluIG1vc3QgY2FzZXMg
+dGhlIGNhbGxlciBkb2VzIG5vdCBoYW5kbGUKPj4gbGlieGZzX3JlYWRidWYoKSBmb3IgZXJyb3Ig
+Y2FzZXMgaS5lIHdoZW4gcmV0dXJuIHZhbHVlID0gTlVMTC4KPj4KPj4gTm93IEkgbmVlZCB5b3Vy
+IHN1Z2dlc3Rpb24uCj4+IFdlIHNob3VsZCBmaXggYWxsIHN1Y2ggY2FzZXMgb3IgdGhlIHNpbXBs
+ZXN0IHdheSBpcyB0byBleGl0Li4uIGlmCj4+IHJlYWQoKSBvciB3cml0ZSgpIGZhaWxzIHdpdGgg
+RUlPIGVycm9ybm8gaW4gbGlieGZzX3JlYWRidWZyKCkgYW5kCj4+IGxpYnhmc193cml0ZWJ1ZnIo
+KS4KPgo+IEkgc2VlIHZlcnkgbGl0dGxlIHJlYXNvbiB0byBncmFjZWZ1bGx5IGhhbmRsZSBhbGwg
+ZXJyb3IgY2FzZXMKPiBkdXJpbmcgbWtmcy4gSXQgd291bGQgYmUgcHJldHRpZXIsIHllcywgYnV0
+IGlmIG1rZnMgZmFpbHMsIHdpdGgKPiBvciB3aXRob3V0IGFuIGVycm9yLCB3aXRoIG9yIHdpdGhv
+dXQgYSBzZWdmYXVsdCwgeW91IGhhdmUgdG8KPiBqdXN0IHN0YXJ0IGl0IG92ZXIgYW55d2F5LCBy
+aWdodD8KPgo+IEkgdGhpbmsgdGhlcmUgYXJlIGJldHRlciBwbGFjZXMgdG8gZm9jdXMgZWZmb3J0
+Lgo+Cj4gLUVyaWMKPgo+PiBGb3J0dW5hdGVseSB0aGVzZSBmdW5jdGlvbiBhbHJlYWR5IHN1cHBv
+cnQgZXhpdCwgaWYgd2UgdXNlIGZsYWcKPj4gTElCWEZTX0VYSVRfT05fRkFJTFVSRSwgTElCWEZT
+X0JfRVhJVCBidXQgdGhleSBhcmUgdXNlZCBzZWxlY3RpdmVseS4KPj4KPj4gVGhlIGN1cnJlbnQg
+cHJvYmxlbSBpcyByZWxhdGVkIHRvIGZ1bmN0aW9uIGxpYnhmc190cmFuc19yZWFkX2J1ZigpCj4+
+Cj4+IMKgIMKgIMKgIMKgYnAgPSBsaWJ4ZnNfcmVhZGJ1ZihkZXYsIGJsa25vLCBsZW4sIGZsYWdz
+KTsKPj4gI2lmZGVmIFhBQ1RfREVCVUcKPj4gwqAgwqAgwqAgwqAgZnByaW50ZihzdGRlcnIsICJ0
+cmFuc19yZWFkX2J1ZiBidWZmZXIgJXAsIHRyYW5zYWN0aW9uICVwXG4iLCBicCwgdHApOwo+PiAj
+ZW5kaWYKPj4gwqAgwqAgwqAgwqAgeGZzX2J1Zl9pdGVtX2luaXQoYnAsIHRwLT50X21vdW50cCk7
+Cj4+IMKgIMKgIMKgIMKgIGJpcCA9IFhGU19CVUZfRlNQUklWQVRFKGJwLCB4ZnNfYnVmX2xvZ19p
+dGVtX3QgKik7Cj4+IMKgIMKgIMKgIMKgIGJpcC0+YmxpX3JlY3VyID0gMDsKPj4gwqAgwqAgwqAg
+wqAgeGZzX3RyYW5zX2FkZF9pdGVtKHRwLCAoeGZzX2xvZ19pdGVtX3QgKiliaXApOwo+Pgo+PiDC
+oCDCoCDCoCDCoCAvKiBpbml0aWFsaXNlIGJfZnNwcml2YXRlMiBzbyB3ZSBjYW4gZmluZCBpdCBp
+bmNvcmUgKi8KPj4gwqAgwqAgwqAgwqAgWEZTX0JVRl9TRVRfRlNQUklWQVRFMihicCwgdHApOwo+
+PiDCoCDCoCDCoCDCoCAqYnBwID0gYnA7Cj4+IMKgIMKgIMKgIMKgIHJldHVybiAwOwo+Pgo+PiBp
+ZiDCoGxpYnhmc19yZWFkYnVmKCkgZmFpbHMgZHVlIHRvIGRldmljZSByZW1vdmFsIG9yIG90aGVy
+IGVycm9yLCBicCA9IE5VTEwuCj4+IEluIGZ1bmN0aW9uIHhmc19idWZfaXRlbV9pbml0KGJwLCB0
+cC0+dF9tb3VudHApIGFzIHNvb24gYXMgYnAgaXMKPj4gZGVyZWZlcmVuY2VkIG9jY3Vycwo+Pgo+
+PiBta2ZzLnhmczogdW5oYW5kbGVkIHBhZ2UgZmF1bHQgKDExKSBhdCAweDAwMDAwMDcwLCBjb2Rl
+IDB4MDE3Cj4+Cj4+IF9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fCj4+IHhmcyBtYWlsaW5nIGxpc3QKPj4geGZzQG9zcy5zZ2kuY29tCj4+IGh0dHA6Ly9vc3Mu
+c2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo+Pgo+Cj4KCl9fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2ku
+Y29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
