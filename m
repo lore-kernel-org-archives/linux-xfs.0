@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p136Eu8b125809 for <xfs@oss.sgi.com>; Thu, 3 Feb 2011 00:14:56 -0600
-Received: from mail-vw0-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 84F852A9887
-	for <xfs@oss.sgi.com>; Wed,  2 Feb 2011 22:17:24 -0800 (PST)
-Received: from mail-vw0-f53.google.com (mail-vw0-f53.google.com
-	[209.85.212.53]) by cuda.sgi.com with ESMTP id 1NGuMfNuHtOq3Q4L
-	for <xfs@oss.sgi.com>; Wed, 02 Feb 2011 22:17:24 -0800 (PST)
-Received: by vws8 with SMTP id 8so463088vws.26
-	for <xfs@oss.sgi.com>; Wed, 02 Feb 2011 22:17:24 -0800 (PST)
+	p13Eel61186678
+	for <linux-xfs@oss.sgi.com>; Thu, 3 Feb 2011 08:40:47 -0600
+Received: from mout.perfora.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 549884FDDD8
+	for <linux-xfs@oss.sgi.com>; Thu,  3 Feb 2011 06:43:17 -0800 (PST)
+Received: from mout.perfora.net (mout.perfora.net [74.208.4.194]) by
+	cuda.sgi.com with ESMTP id ye7tjEn8gVfhVBl3 for
+	<linux-xfs@oss.sgi.com>; Thu, 03 Feb 2011 06:43:17 -0800 (PST)
+Message-ID: <4D4ABEF7.7000400@lueckdatasystems.com>
+Date: Thu, 03 Feb 2011 09:43:03 -0500
+From: Michael Lueck <mlueck@lueckdatasystems.com>
 MIME-Version: 1.0
-Date: Thu, 3 Feb 2011 15:17:24 +0900
-Message-ID: <AANLkTim2nm9SXPmpRUmK8eWxXYFkPcrzc-gw2ceJ-m2-@mail.gmail.com>
-Subject: [patch] xfsprogs: unhandled error check in libxfs_trans_read_buf
-From: Ajeet Yadav <ajeet.yadav.77@gmail.com>
+Subject: Re: xfsdump SGI_FS_BULKSTAT errno = 22, how could this IRIX bug get
+	into	Ubuntu 10.04 Lucid between kernels 2.6.32-27 and 2.6.32-26?
+References: <iibmah$dlp$1@dough.gmane.org> <4D49A35B.6030009@sgi.com>
+	<20110203045836.GV11040@dastard>
+In-Reply-To: <20110203045836.GV11040@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,66 +26,34 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, Eric Sandeen <sandeen@sandeen.net>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@oss.sgi.com, Dann Frazier <dannf@debian.org>
 
-xfsprogs: unhandled error check in libxfs_trans_read_buf
+Dave Chinner wrote:
+> So bulkstat got EINVAL returned for and inode that it was looking
+> up. That implies that it was racing with an unlink, which is
+> what the above commits catch and prevent. Can you run xfsdump with
+> full debug output (-v 5) so we can see what inode is being operated
+> on when this failure occurs?
 
-libxfs_trans_read_buf() is used in both mkfs.xfs & xfs_repair.
-During stability testing we found some time occur pagefault in mkfs.xfs,
-code inspection shows that if libxfs_readbuf() fails then occurs a
-page fault in xfs_buf_item_init() called in libxfs_trans_read_buf().
+Thank you so much Dave!
 
-mkfs.xfs: unhandled page fault (11) at 0x00000070, code 0x017
+Please find the trace output here in zipped format:
 
-Added NULL check and errno handling.
+http://www.lueckdatasystems.com/pub/ldsbackup.trace.log.zip
 
-Signed-off-by: Ajeet Yadav <ajeet.yadav.77@gmail.com>
+I chose to trace the "data" backup that actually had some size to it.
 
-diff -Nurp xfsprogs/libxfs/rdwr.c xfsprogs-dirty/libxfs/rdwr.c
---- xfsprogs/libxfs/rdwr.c      2011-01-28 20:22:11.000000000 +0900
-+++ xfsprogs-dirty/libxfs/rdwr.c        2011-02-02 16:59:16.000000000 +0900
-@@ -207,10 +207,11 @@ libxfs_trace_readbuf(const char *func, c
- {
-        xfs_buf_t       *bp = libxfs_readbuf(dev, blkno, len, flags);
+Sincerely,
 
--       bp->b_func = func;
--       bp->b_file = file;
--       bp->b_line = line;
--
-+       if (bp){
-+               bp->b_func = func;
-+               bp->b_file = file;
-+               bp->b_line = line;
-+       }
-        return bp;
- }
-
-@@ -485,6 +486,7 @@ libxfs_readbuf(dev_t dev, xfs_daddr_t bl
-                error = libxfs_readbufr(dev, blkno, bp, len, flags);
-                if (error) {
-                        libxfs_putbuf(bp);
-+                       errno = error;
-                        return NULL;
-                }
-        }
-diff -Nurp xfsprogs/libxfs/trans.c xfsprogs-dirty/libxfs/trans.c
---- xfsprogs/libxfs/trans.c     2011-01-28 20:22:11.000000000 +0900
-+++ xfsprogs-dirty/libxfs/trans.c       2011-02-02 17:00:42.000000000 +0900
-@@ -508,6 +508,10 @@ libxfs_trans_read_buf(
-        }
-
-        bp = libxfs_readbuf(dev, blkno, len, flags);
-+       if (!bp){
-+               *bpp = NULL;
-+               return errno;
-+       }
- #ifdef XACT_DEBUG
-        fprintf(stderr, "trans_read_buf buffer %p, transaction %p\n", bp, tp);
- #endif
+-- 
+Michael Lueck
+Lueck Data Systems
+http://www.lueckdatasystems.com/
 
 _______________________________________________
 xfs mailing list
