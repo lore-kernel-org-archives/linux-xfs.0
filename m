@@ -1,23 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p1361Opo124807 for <xfs@oss.sgi.com>; Thu, 3 Feb 2011 00:01:24 -0600
-Received: from mail-vx0-f181.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DC9F6902F8E
-	for <xfs@oss.sgi.com>; Wed,  2 Feb 2011 22:03:49 -0800 (PST)
-Received: from mail-vx0-f181.google.com (mail-vx0-f181.google.com
-	[209.85.220.181]) by cuda.sgi.com with ESMTP id
-	EWwpb2DZL0wr6zNA for <xfs@oss.sgi.com>;
-	Wed, 02 Feb 2011 22:03:49 -0800 (PST)
-Received: by vxc38 with SMTP id 38so216756vxc.26
-	for <xfs@oss.sgi.com>; Wed, 02 Feb 2011 22:03:49 -0800 (PST)
+	p136Eu8b125809 for <xfs@oss.sgi.com>; Thu, 3 Feb 2011 00:14:56 -0600
+Received: from mail-vw0-f53.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 84F852A9887
+	for <xfs@oss.sgi.com>; Wed,  2 Feb 2011 22:17:24 -0800 (PST)
+Received: from mail-vw0-f53.google.com (mail-vw0-f53.google.com
+	[209.85.212.53]) by cuda.sgi.com with ESMTP id 1NGuMfNuHtOq3Q4L
+	for <xfs@oss.sgi.com>; Wed, 02 Feb 2011 22:17:24 -0800 (PST)
+Received: by vws8 with SMTP id 8so463088vws.26
+	for <xfs@oss.sgi.com>; Wed, 02 Feb 2011 22:17:24 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <4D4A2A9B.6090803@sandeen.net>
-References: <AANLkTi=wi_Fhr5v1J4wopvFTY=hC2EA_QmJu4Uc_XgGs@mail.gmail.com>
-	<4D4A2A9B.6090803@sandeen.net>
-Date: Thu, 3 Feb 2011 15:03:47 +0900
-Message-ID: <AANLkTi=aL89d3vUN2jq7w-_j7gcSrkiJk=fGyi4SJv5R@mail.gmail.com>
-Subject: Re: mkfs.xfs pagefault when removed storage during operation
+Date: Thu, 3 Feb 2011 15:17:24 +0900
+Message-ID: <AANLkTim2nm9SXPmpRUmK8eWxXYFkPcrzc-gw2ceJ-m2-@mail.gmail.com>
+Subject: [patch] xfsprogs: unhandled error check in libxfs_trans_read_buf
 From: Ajeet Yadav <ajeet.yadav.77@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -27,68 +23,68 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com, Eric Sandeen <sandeen@sandeen.net>
 
-U29ycnkgSSBkbyBub3QgYWdyZWUsIHdlIGhhdmUgYSBidWcgc28gd2UgY2Fubm90IGlnbm9yZSBp
-dC4KU29sdmluZyBhdCBmaXJzdCBwbGFjZSBjYW4gc2F2ZSBhIGxvdCBvZiB0aW1lIGlmIHNhbWUg
-cHJvYmxlbSBjcmVhdGUgYQpzaWRlIGVmZmVjdCB0aGF0IG1heSBzb21ldGltZSBiZSB2ZXJ5IGhh
-cmQgdG8gY2F0Y2guCgpOb3cgbGV0cyBjb25zaWRlciB0aGUgY3VycmVudCBwcm9ibGVtCjEuIEl0
-cyByZWxhdGVkIHRvIGxpYnhmcyBpbiB4ZnNwcm9ncywgc28gaXRzIG5vdCBta2ZzIGlzc3VlIGFu
-eW1vcmUKMi4gSWYgd2UgY29tZSBhY3Jvc3MgYW55IGNyaXRpY2FsIHByb2JsZW0gaW4gbGlieGZz
-IHdlIGNhbiBjcm9zcwp2ZXJpZnkga2VybmVsIHhmcyBpbXBsZW1lbnRhdGlvbiB0byBmaW5kIGlm
-IHRoZXJlIGFsc28gYSBsb2dpY2FsCmlzc3VlLgogICAgT25lIGxlYXJuaW5nIGFuZCBiZSB1c2Vk
-IGluIG90aGVyIHBhcnQuCjMuIFllcyBJIGFncmVlIHRoYXQgaWYgbWtmcy54ZnMgZmFpbHMgd2Ug
-aGF2ZSB0byByZS1ydW4gaXQgYW55d2F5cywKYnV0IHRoZW4gd2hhdCBpcyB0aGUgZGlmZmVyZW5j
-ZSBiZXR3ZWVuIGEgbm92aWNlIGNvZGUgYW5kIHByb2Zlc3Npb25hbApwcm9kdWN0LgogICAgIElm
-IHlvdSBjc2NvcGUgbGlieGZzX3RyYW5zX3JlYWRfYnVmKCkgaW4geGZzcHJvZ3MsIGl0cyBjYWxs
-ZXIKYWx3YXlzIGNoZWNrcyB0aGUgcmV0dXJuIHZhbHVlLCBhbmQgaXRzIHVzZWQgZXh0ZW5zaXZl
-bHkgaW4geGZzcHJvZ3MuCkJ1dCB0aGlzIGZ1bmN0aW9uIGFsd2F5cyByZXR1cm4gMC4gSW5mYWN0
-IHRoZXJlIGlzIG5vIGVycm9yIGhhbmRkaW5nCmF0IGFsbCwgbGV0cyBub3QgY29uc2lkZXIgRUlP
-IGVycm9yIG9ubHkuCjQuIFdlIGFyZSBoZXJlIGluIG9wZW4gY29tbXVuaXR5IG91dCBvZiBuZWVk
-LCBhdCB0aGUgc2FtZSB0aW1lIHRvIG1ha2UKaXQgYmV0dGVyLgoKSSB3YXMgd29uZGVyaW5nIHdo
-eSBJIGFtIG5vdCBnZXR0aW5nIGFueSByZXBseSwgSSB0aGluayBtYWlsIHN1YmplY3QKd2FzIHdy
-b25nLi4uLi4ubWtmcyA7KQpJIHdpbGwgcmVsZWFzZSB0aGUgcGF0Y2gsIHBsZWFzZSB0YWtlIG91
-dCB0aW1lIHRvIHJldmlldyBpdC4KCk9uIFRodSwgRmViIDMsIDIwMTEgYXQgMToxMCBQTSwgRXJp
-YyBTYW5kZWVuIDxzYW5kZWVuQHNhbmRlZW4ubmV0PiB3cm90ZToKPiBPbiAyLzEvMTEgNTowNiBB
-TSwgQWplZXQgWWFkYXYgd3JvdGU6Cj4+IFdlIGFyZSB0ZXN0aW5nIG1rZnMueGZzIGFuZCB4ZnNf
-cmVwYWlyIHN0YWJpbGl0eSB0byBsb29rIGZvciBjcmFzaGVzCj4+IGFuZCBvdGhlciBpc3N1ZXMg
-c3BlY2lhbGx5IHdpdGggcmVtb3ZhYmxlIGRldmljZXMuCj4+IEFuZCB1bmZvcnR1bmF0ZWx5IGNy
-YXNoZXMgZG9lcyBvY2N1ci4KPj4gQ29kZSBpbnNwZWN0aW9uIHNob3dzIGluIG1vc3QgY2FzZXMg
-dGhlIGNhbGxlciBkb2VzIG5vdCBoYW5kbGUKPj4gbGlieGZzX3JlYWRidWYoKSBmb3IgZXJyb3Ig
-Y2FzZXMgaS5lIHdoZW4gcmV0dXJuIHZhbHVlID0gTlVMTC4KPj4KPj4gTm93IEkgbmVlZCB5b3Vy
-IHN1Z2dlc3Rpb24uCj4+IFdlIHNob3VsZCBmaXggYWxsIHN1Y2ggY2FzZXMgb3IgdGhlIHNpbXBs
-ZXN0IHdheSBpcyB0byBleGl0Li4uIGlmCj4+IHJlYWQoKSBvciB3cml0ZSgpIGZhaWxzIHdpdGgg
-RUlPIGVycm9ybm8gaW4gbGlieGZzX3JlYWRidWZyKCkgYW5kCj4+IGxpYnhmc193cml0ZWJ1ZnIo
-KS4KPgo+IEkgc2VlIHZlcnkgbGl0dGxlIHJlYXNvbiB0byBncmFjZWZ1bGx5IGhhbmRsZSBhbGwg
-ZXJyb3IgY2FzZXMKPiBkdXJpbmcgbWtmcy4gSXQgd291bGQgYmUgcHJldHRpZXIsIHllcywgYnV0
-IGlmIG1rZnMgZmFpbHMsIHdpdGgKPiBvciB3aXRob3V0IGFuIGVycm9yLCB3aXRoIG9yIHdpdGhv
-dXQgYSBzZWdmYXVsdCwgeW91IGhhdmUgdG8KPiBqdXN0IHN0YXJ0IGl0IG92ZXIgYW55d2F5LCBy
-aWdodD8KPgo+IEkgdGhpbmsgdGhlcmUgYXJlIGJldHRlciBwbGFjZXMgdG8gZm9jdXMgZWZmb3J0
-Lgo+Cj4gLUVyaWMKPgo+PiBGb3J0dW5hdGVseSB0aGVzZSBmdW5jdGlvbiBhbHJlYWR5IHN1cHBv
-cnQgZXhpdCwgaWYgd2UgdXNlIGZsYWcKPj4gTElCWEZTX0VYSVRfT05fRkFJTFVSRSwgTElCWEZT
-X0JfRVhJVCBidXQgdGhleSBhcmUgdXNlZCBzZWxlY3RpdmVseS4KPj4KPj4gVGhlIGN1cnJlbnQg
-cHJvYmxlbSBpcyByZWxhdGVkIHRvIGZ1bmN0aW9uIGxpYnhmc190cmFuc19yZWFkX2J1ZigpCj4+
-Cj4+IMKgIMKgIMKgIMKgYnAgPSBsaWJ4ZnNfcmVhZGJ1ZihkZXYsIGJsa25vLCBsZW4sIGZsYWdz
-KTsKPj4gI2lmZGVmIFhBQ1RfREVCVUcKPj4gwqAgwqAgwqAgwqAgZnByaW50ZihzdGRlcnIsICJ0
-cmFuc19yZWFkX2J1ZiBidWZmZXIgJXAsIHRyYW5zYWN0aW9uICVwXG4iLCBicCwgdHApOwo+PiAj
-ZW5kaWYKPj4gwqAgwqAgwqAgwqAgeGZzX2J1Zl9pdGVtX2luaXQoYnAsIHRwLT50X21vdW50cCk7
-Cj4+IMKgIMKgIMKgIMKgIGJpcCA9IFhGU19CVUZfRlNQUklWQVRFKGJwLCB4ZnNfYnVmX2xvZ19p
-dGVtX3QgKik7Cj4+IMKgIMKgIMKgIMKgIGJpcC0+YmxpX3JlY3VyID0gMDsKPj4gwqAgwqAgwqAg
-wqAgeGZzX3RyYW5zX2FkZF9pdGVtKHRwLCAoeGZzX2xvZ19pdGVtX3QgKiliaXApOwo+Pgo+PiDC
-oCDCoCDCoCDCoCAvKiBpbml0aWFsaXNlIGJfZnNwcml2YXRlMiBzbyB3ZSBjYW4gZmluZCBpdCBp
-bmNvcmUgKi8KPj4gwqAgwqAgwqAgwqAgWEZTX0JVRl9TRVRfRlNQUklWQVRFMihicCwgdHApOwo+
-PiDCoCDCoCDCoCDCoCAqYnBwID0gYnA7Cj4+IMKgIMKgIMKgIMKgIHJldHVybiAwOwo+Pgo+PiBp
-ZiDCoGxpYnhmc19yZWFkYnVmKCkgZmFpbHMgZHVlIHRvIGRldmljZSByZW1vdmFsIG9yIG90aGVy
-IGVycm9yLCBicCA9IE5VTEwuCj4+IEluIGZ1bmN0aW9uIHhmc19idWZfaXRlbV9pbml0KGJwLCB0
-cC0+dF9tb3VudHApIGFzIHNvb24gYXMgYnAgaXMKPj4gZGVyZWZlcmVuY2VkIG9jY3Vycwo+Pgo+
-PiBta2ZzLnhmczogdW5oYW5kbGVkIHBhZ2UgZmF1bHQgKDExKSBhdCAweDAwMDAwMDcwLCBjb2Rl
-IDB4MDE3Cj4+Cj4+IF9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fCj4+IHhmcyBtYWlsaW5nIGxpc3QKPj4geGZzQG9zcy5zZ2kuY29tCj4+IGh0dHA6Ly9vc3Mu
-c2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo+Pgo+Cj4KCl9fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2ku
-Y29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+xfsprogs: unhandled error check in libxfs_trans_read_buf
+
+libxfs_trans_read_buf() is used in both mkfs.xfs & xfs_repair.
+During stability testing we found some time occur pagefault in mkfs.xfs,
+code inspection shows that if libxfs_readbuf() fails then occurs a
+page fault in xfs_buf_item_init() called in libxfs_trans_read_buf().
+
+mkfs.xfs: unhandled page fault (11) at 0x00000070, code 0x017
+
+Added NULL check and errno handling.
+
+Signed-off-by: Ajeet Yadav <ajeet.yadav.77@gmail.com>
+
+diff -Nurp xfsprogs/libxfs/rdwr.c xfsprogs-dirty/libxfs/rdwr.c
+--- xfsprogs/libxfs/rdwr.c      2011-01-28 20:22:11.000000000 +0900
++++ xfsprogs-dirty/libxfs/rdwr.c        2011-02-02 16:59:16.000000000 +0900
+@@ -207,10 +207,11 @@ libxfs_trace_readbuf(const char *func, c
+ {
+        xfs_buf_t       *bp = libxfs_readbuf(dev, blkno, len, flags);
+
+-       bp->b_func = func;
+-       bp->b_file = file;
+-       bp->b_line = line;
+-
++       if (bp){
++               bp->b_func = func;
++               bp->b_file = file;
++               bp->b_line = line;
++       }
+        return bp;
+ }
+
+@@ -485,6 +486,7 @@ libxfs_readbuf(dev_t dev, xfs_daddr_t bl
+                error = libxfs_readbufr(dev, blkno, bp, len, flags);
+                if (error) {
+                        libxfs_putbuf(bp);
++                       errno = error;
+                        return NULL;
+                }
+        }
+diff -Nurp xfsprogs/libxfs/trans.c xfsprogs-dirty/libxfs/trans.c
+--- xfsprogs/libxfs/trans.c     2011-01-28 20:22:11.000000000 +0900
++++ xfsprogs-dirty/libxfs/trans.c       2011-02-02 17:00:42.000000000 +0900
+@@ -508,6 +508,10 @@ libxfs_trans_read_buf(
+        }
+
+        bp = libxfs_readbuf(dev, blkno, len, flags);
++       if (!bp){
++               *bpp = NULL;
++               return errno;
++       }
+ #ifdef XACT_DEBUG
+        fprintf(stderr, "trans_read_buf buffer %p, transaction %p\n", bp, tp);
+ #endif
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
