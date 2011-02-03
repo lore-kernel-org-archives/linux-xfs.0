@@ -1,17 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p13JfDYZ214628 for <xfs@oss.sgi.com>; Thu, 3 Feb 2011 13:41:14 -0600
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 142D21A6C0FF
-	for <xfs@oss.sgi.com>; Thu,  3 Feb 2011 11:43:43 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id pUSMSlHYBTCro5H3 for
-	<xfs@oss.sgi.com>; Thu, 03 Feb 2011 11:43:43 -0800 (PST)
-From: Lukas Czerner <lczerner@redhat.com>
-Subject: [PATCH v3] Add test 249: Check filesystem FITRIM implementation
-Date: Thu,  3 Feb 2011 20:43:27 +0100
-Message-Id: <1296762207-17265-1-git-send-email-lczerner@redhat.com>
+	p13M0INk219564 for <xfs@oss.sgi.com>; Thu, 3 Feb 2011 16:00:18 -0600
+Received: from mail-ey0-f181.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A4E83162EE08
+	for <xfs@oss.sgi.com>; Thu,  3 Feb 2011 14:02:43 -0800 (PST)
+Received: from mail-ey0-f181.google.com (mail-ey0-f181.google.com
+	[209.85.215.181]) by cuda.sgi.com with ESMTP id
+	oyL03qhO6afvHtEu for <xfs@oss.sgi.com>;
+	Thu, 03 Feb 2011 14:02:43 -0800 (PST)
+Received: by eyh6 with SMTP id 6so1066978eyh.26
+	for <xfs@oss.sgi.com>; Thu, 03 Feb 2011 14:02:42 -0800 (PST)
+From: Arkadiusz Miskiewicz <a.miskiewicz@gmail.com>
+Subject: Re: [GIT PULL] XFS update for 2.6.38-rc3
+Date: Thu, 3 Feb 2011 23:02:31 +0100
+References: <201101311642.p0VGgXTS018851@stout.americas.sgi.com>
+	<4D482E21.5040803@teksavvy.com> <20110203000757.GT11040@dastard>
+In-Reply-To: <20110203000757.GT11040@dastard>
+MIME-Version: 1.0
+Message-Id: <201102032302.31780.a.miskiewicz@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,522 +27,43 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: hch@infradead.org, lczerner@redhat.com, esandeen@redhat.com
+To: xfs@oss.sgi.com, linux-kernel@vger.kernel.org
+Cc: Mark Lord <kernel@teksavvy.com>, stable@kernel.org, Alex Elder <aelder@sgi.com>
 
-FITRIM ioctl  is used on a mounted filesystem to discard (or "trim")
-blocks which are not in use by the filesystem.  This is useful for
-solid-state drives (SSDs) and thinly-provi-sioned storage. This test
-helps to verify filesystem FITRIM implementation to assure that it
-does not corrupts data.
-
-This test creates checksums of all files in xfstests directory and
-run several processes which clear its working directory on SCRATCH_MNT,
-then copy everything from xfstests into its working directory, create
-list of files in working directory and its checksums and compare it with the
-original list of checksums. Every process works in the loop so it repeat
-remove->copy->check, while fstrim tool is running simultaneously.
-
-Fstrim is just a helper tool which uses FITRIM ioctl to actually do the
-filesystem discard.
-
-I found this very useful because when the FITRIM is really buggy (thus
-data-destroying) the 249 test will notice, because checksums will most
-likely change.
-
-Signed-off-by: Lukas Czerner <lczerner@redhat.com>
----
- 249          |  170 ++++++++++++++++++++++++++++++++++++++
- 249.out      |    3 +
- group        |    3 +-
- src/Makefile |    2 +-
- src/fstrim.c |  257 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 5 files changed, 433 insertions(+), 2 deletions(-)
- create mode 100644 249
- create mode 100644 249.out
- create mode 100644 src/fstrim.c
-
-diff --git a/249 b/249
-new file mode 100644
-index 0000000..9943176
---- /dev/null
-+++ b/249
-@@ -0,0 +1,170 @@
-+#!/bin/bash
-+# FS QA Test No. 248
-+#
-+# This test was created in order to verify filesystem FITRIM implementation.
-+# By many concurrent copy and remove operations and checking that files
-+# does not change after copied into SCRATCH_MNT test if FITRIM implementation
-+# corrupts the filesystem (data/metadata).
-+#
-+#-----------------------------------------------------------------------
-+# Copyright 2010 (C) Red Hat, Inc., Lukas Czerner <lczerner@redhat.com>
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+
-+owner=lczerner@redhat.com
-+
-+seq=`basename $0`
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=`mktemp -d`
-+status=1    # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 3
-+trap "_destroy; exit \$status" 2 15
-+chpid=0
-+mypid=$$
-+
-+# get standard environment, filters and checks
-+. ./common.rc
-+. ./common.filter
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
-+_require_scratch
-+_scratch_mkfs >/dev/null 2>&1
-+_scratch_mount
-+
-+_cleanup()
-+{
-+	rm -rf $tmp
-+}
-+
-+_destroy()
-+{
-+	kill $pids $fstrim_pid
-+	wait $pids $fstrim_pid
-+	rm -rf $tmp
-+}
-+
-+_destroy_fstrim()
-+{
-+	kill $fpid
-+	wait $fpid
-+}
-+
-+_fail()
-+{
-+	echo "$1"
-+	kill $mypid
-+}
-+
-+##
-+# Background FSTRIM loop. We are trimming the device in the loop and for
-+# test coverage, we are doing whole device trim followed by several smaller
-+# trims.
-+##
-+fstrim_loop()
-+{
-+	trap "_destroy_fstrim; exit \$status" 2 15
-+	fsize=$(df | grep $SCRATCH_MNT | grep $SCRATCH_DEV  | awk '{print $2}')
-+
-+	while true ; do
-+		step=1048576
-+		start=0
-+		$here/src/fstrim $SCRATCH_MNT &
-+		fpid=$!
-+		wait $fpid
-+		while [ $start -lt $fsize ] ; do
-+			$here/src/fstrim -s ${start}k -l ${step}k $SCRATCH_MNT &
-+			fpid=$!
-+			wait $fpid
-+			start=$(( $start + $step ))
-+		done
-+	done
-+}
-+
-+function check_sums() {
-+	(
-+	cd $SCRATCH_MNT/$p
-+	find -P . -xdev -type f -print0 | xargs -0 md5sum | sort -o $tmp/stress.$$.$p
-+	)
-+
-+	diff $tmp/content.sums $tmp/stress.$$.$p
-+	if [ $? -ne 0 ]; then
-+		_fail "!!!Checksums has changed - Filesystem possibly corrupted!!!\n"
-+	fi
-+	rm -f $tmp/stress.$$.$p
-+}
-+
-+function run_process() {
-+	local p=$1
-+	repeat=10
-+
-+	sleep $((5*$p))s &
-+	export chpid=$! && wait $chpid &> /dev/null
-+	chpid=0
-+
-+	while [ $repeat -gt 0 ]; do
-+
-+		# Remove old directories.
-+		rm -rf $SCRATCH_MNT/$p
-+		export chpid=$! && wait $chpid &> /dev/null
-+
-+		# Copy content -> partition.
-+		mkdir $SCRATCH_MNT/$p
-+		cp -axT $content $SCRATCH_MNT/$p
-+		export chpid=$! && wait $chpid &> /dev/null
-+
-+		check_sums
-+		repeat=$(( $repeat - 1 ))
-+	done
-+}
-+
-+nproc=20
-+content=$here
-+
-+# Check for FITRIM support
-+echo -n "Checking FITRIM support: "
-+$here/src/fstrim -l 10M $SCRATCH_MNT &> /dev/null
-+[ $? -ne 0 ] && exit
-+echo "done."
-+
-+mkdir -p $tmp
-+
-+(
-+cd $content
-+find -P . -xdev -type f -print0 | xargs -0 md5sum | sort -o $tmp/content.sums
-+)
-+
-+echo -n "Running the test: "
-+pids=""
-+fstrim_loop &
-+fstrim_pid=$!
-+p=1
-+while [ $p -le $nproc ]; do
-+	run_process $p &
-+	pids="$pids $!"
-+	p=$(($p+1))
-+done
-+echo "done."
-+
-+wait $pids
-+kill $fstrim_pid
-+wait $fstrim_pid
-+
-+status=0
-+
-+exit
-diff --git a/249.out b/249.out
-new file mode 100644
-index 0000000..880d9c7
---- /dev/null
-+++ b/249.out
-@@ -0,0 +1,3 @@
-+QA output created by 248
-+Checking FITRIM support: done.
-+Running the test: done.
-diff --git a/group b/group
-index a40c98f..04c45b5 100644
---- a/group
-+++ b/group
-@@ -361,4 +361,5 @@ deprecated
- 245 auto quick dir
- 246 auto quick rw
- 247 auto quick rw
--248 auto quick rw 
-+248 auto quick rw
-+249 ioctl trim
-diff --git a/src/Makefile b/src/Makefile
-index 47d7334..3d35e26 100644
---- a/src/Makefile
-+++ b/src/Makefile
-@@ -17,7 +17,7 @@ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
- 	preallo_rw_pattern_writer ftrunc trunc fs_perms testx looptest \
- 	locktest unwritten_mmap bulkstat_unlink_test t_stripealign \
- 	bulkstat_unlink_test_modified t_dir_offset t_futimens t_immutable \
--	stale_handle pwrite_mmap_blocked
-+	stale_handle pwrite_mmap_blocked fstrim
- 
- SUBDIRS =
- 
-diff --git a/src/fstrim.c b/src/fstrim.c
-new file mode 100644
-index 0000000..a93a6f3
---- /dev/null
-+++ b/src/fstrim.c
-@@ -0,0 +1,257 @@
-+/*
-+ * fstrim.c -- discard the part (or whole) of mounted filesystem.
-+ *
-+ * Copyright (C) 2009 Red Hat, Inc., Lukas Czerner <lczerner@redhat.com>
-+ *
-+ * This program is free software: you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation, either version 2 of the License, or
-+ * (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-+ *
-+ * This program uses FITRIM ioctl to discard parts or the whole filesystem
-+ * online (mounted). You can specify range (start and lenght) to be
-+ * discarded, or simply discard while filesystem.
-+ *
-+ * Usage: fstrim [options] <mount point>
-+ */
-+
-+#include <string.h>
-+#include <unistd.h>
-+#include <stdlib.h>
-+#include <errno.h>
-+#include <stdio.h>
-+#include <stdint.h>
-+#include <fcntl.h>
-+#include <limits.h>
-+#include <stdarg.h>
-+#include <getopt.h>
-+
-+#include <sys/ioctl.h>
-+#include <sys/stat.h>
-+#include <linux/fs.h>
-+
-+#ifndef FITRIM
-+struct fstrim_range {
-+	uint64_t start;
-+	uint64_t len;
-+	uint64_t minlen;
-+};
-+#define FITRIM		_IOWR('X', 121, struct fstrim_range)
-+#endif
-+
-+const char *program_name = "fstrim";
-+
-+struct options {
-+	struct fstrim_range *range;
-+	char mpoint[PATH_MAX];
-+	char verbose;
-+};
-+
-+static void usage(void)
-+{
-+	fprintf(stderr,
-+		"Usage: %s [-s start] [-l length] [-m minimum-extent]"
-+		" [-v] {mountpoint}\n\t"
-+		"-s Starting Byte to discard from\n\t"
-+		"-l Number of Bytes to discard from the start\n\t"
-+		"-m Minimum extent length to discard\n\t"
-+		"-v Verbose - number of discarded bytes\n",
-+		program_name);
-+}
-+
-+static void err_exit(const char *fmt, ...)
-+{
-+	va_list pvar;
-+	va_start(pvar, fmt);
-+	vfprintf(stderr, fmt, pvar);
-+	va_end(pvar);
-+	usage();
-+	exit(EXIT_FAILURE);
-+}
-+
-+/**
-+ * Get the number from argument. It can be number followed by
-+ * units: k|K, m|M, g|G, t|T
-+ */
-+static unsigned long long get_number(char **optarg)
-+{
-+	char *opt, *end;
-+	unsigned long long number, max;
-+
-+	/* get the max to avoid overflow */
-+	max = ULLONG_MAX / 1024;
-+	number = 0;
-+	opt = *optarg;
-+
-+	if (*opt == '-') {
-+		err_exit("%s: %s (%s)\n", program_name,
-+			 strerror(ERANGE), *optarg);
-+	}
-+
-+	errno = 0;
-+	number = strtoul(opt, &end , 0);
-+	if (errno)
-+		err_exit("%s: %s (%s)\n", program_name,
-+			 strerror(errno), *optarg);
-+
-+	/*
-+	 * Convert units to numbers. Fall-through stack is used for units
-+	 * so absence of breaks is intentional.
-+	 */
-+	switch (*end) {
-+	case 'T': /* terabytes */
-+	case 't':
-+		if (number > max)
-+			err_exit("%s: %s (%s)\n", program_name,
-+				 strerror(ERANGE), *optarg);
-+		number *= 1024;
-+	case 'G': /* gigabytes */
-+	case 'g':
-+		if (number > max)
-+			err_exit("%s: %s (%s)\n", program_name,
-+				 strerror(ERANGE), *optarg);
-+		number *= 1024;
-+	case 'M': /* megabytes */
-+	case 'm':
-+		if (number > max)
-+			err_exit("%s: %s (%s)\n", program_name,
-+				 strerror(ERANGE), *optarg);
-+		number *= 1024;
-+	case 'K': /* kilobytes */
-+	case 'k':
-+		if (number > max)
-+			err_exit("%s: %s (%s)\n", program_name,
-+				 strerror(ERANGE), *optarg);
-+		number *= 1024;
-+		end++;
-+	case '\0': /* end of the string */
-+		break;
-+	default:
-+		err_exit("%s: %s (%s)\n", program_name,
-+			 strerror(EINVAL), *optarg);
-+		return 0;
-+	}
-+
-+	if (*end != '\0') {
-+		err_exit("%s: %s (%s)\n", program_name,
-+			 strerror(EINVAL), *optarg);
-+	}
-+
-+	return number;
-+}
-+
-+static int parse_opts(int argc, char **argv, struct options *opts)
-+{
-+	int c;
-+
-+	while ((c = getopt(argc, argv, "s:l:m:v")) != EOF) {
-+		switch (c) {
-+		case 's': /* starting point */
-+			opts->range->start = get_number(&optarg);
-+			break;
-+		case 'l': /* length */
-+			opts->range->len = get_number(&optarg);
-+			break;
-+		case 'm': /* minlen */
-+			opts->range->minlen = get_number(&optarg);
-+			break;
-+		case 'v': /* verbose */
-+			opts->verbose = 1;
-+			break;
-+		default:
-+			return EXIT_FAILURE;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+int main(int argc, char **argv)
-+{
-+	struct options *opts;
-+	struct stat sb;
-+	int fd, err = 0, ret = EXIT_FAILURE;
-+
-+	opts = malloc(sizeof(struct options));
-+	if (!opts)
-+		err_exit("%s: malloc(): %s\n", program_name, strerror(errno));
-+
-+	opts->range = NULL;
-+	opts->verbose = 0;
-+
-+	if (argc > 1)
-+		strncpy(opts->mpoint, argv[argc - 1], sizeof(opts->mpoint));
-+
-+	opts->range = calloc(1, sizeof(struct fstrim_range));
-+	if (!opts->range) {
-+		fprintf(stderr, "%s: calloc(): %s\n", program_name,
-+			strerror(errno));
-+		goto free_opts;
-+	}
-+
-+	opts->range->len = ULLONG_MAX;
-+
-+	if (argc > 2)
-+		err = parse_opts(argc, argv, opts);
-+
-+	if (err) {
-+		usage();
-+		goto free_opts;
-+	}
-+
-+	if (strnlen(opts->mpoint, 1) < 1) {
-+		fprintf(stderr, "%s: You have to specify mount point.\n",
-+			program_name);
-+		usage();
-+		goto free_opts;
-+	}
-+
-+	if (stat(opts->mpoint, &sb) == -1) {
-+		fprintf(stderr, "%s: %s: %s\n", program_name,
-+			opts->mpoint, strerror(errno));
-+		usage();
-+		goto free_opts;
-+	}
-+
-+	if (!S_ISDIR(sb.st_mode)) {
-+		fprintf(stderr, "%s: %s: (%s)\n", program_name,
-+			opts->mpoint, strerror(ENOTDIR));
-+		usage();
-+		goto free_opts;
-+	}
-+
-+	fd = open(opts->mpoint, O_RDONLY);
-+	if (fd < 0) {
-+		fprintf(stderr, "%s: open(%s): %s\n", program_name,
-+			opts->mpoint, strerror(errno));
-+		goto free_opts;
-+	}
-+
-+	if (ioctl(fd, FITRIM, opts->range)) {
-+		fprintf(stderr, "%s: FSTRIM: %s\n", program_name,
-+			strerror(errno));
-+		goto free_opts;
-+	}
-+
-+	if ((opts->verbose) && (opts->range))
-+		fprintf(stdout, "%llu Bytes were trimmed\n", (unsigned long long)opts->range->len);
-+
-+	ret = EXIT_SUCCESS;
-+
-+free_opts:
-+	if (opts) {
-+		if (opts->range)
-+			free(opts->range);
-+		free(opts);
-+	}
-+
-+	return ret;
-+}
--- 
-1.7.4
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVGh1cnNkYXkgMDMgb2YgRmVicnVhcnkgMjAxMSwgRGF2ZSBDaGlubmVyIHdyb3RlOgo+IE9u
+IFR1ZSwgRmViIDAxLCAyMDExIGF0IDExOjAwOjMzQU0gLTA1MDAsIE1hcmsgTG9yZCB3cm90ZToK
+PiA+IE9uIDExLTAxLTMxIDExOjQyIEFNLCBBbGV4IEVsZGVyIHdyb3RlOgo+ID4gPiBMaW51cywg
+cGxlYXNlIGFjY2VwdCB0aGUgZm9sbG93aW5nIHVwZGF0ZXMgZm9yIFhGUywgZm9yIDIuNi4zOC1y
+YzMKPiA+ID4gKGlmIGl0J3Mgbm90IHRvbyBsYXRlKSBvciAyLjYuMzgtcmM0Lgo+ID4gPiAKPiA+
+ID4gVGhleSBhcmUgYWxsIGZpeGVzIGZvciBidWdzIHRoYXQgaGF2ZSBzb21lIHByZXR0eSB1bmRl
+c2lyYWJsZQo+ID4gPiBjb25zZXF1ZW5jZXMuIAoKWy4uLl0KCj4gPiBBcmUgdGhlc2UgYnVncyBh
+bGwgbmV3IGluIDIuNi4zOCwgb3Igc2hvdWxkIHNvbWUgb2YgdGhlc2UgZml4ZXMKPiA+IGFsc28g
+Z28gb3V0IHRvIC1zdGFibGUgZm9yIGVhcmxpZXIgcmV2aXNpb25zPwo+ID4gPiAgICAgICB4ZnM6
+IGZpeCBkcXVvdCBzaGFrZXIgZGVhZGxvY2sKPiAKPiBUaGF0J3MgYSByZWdyZXNzaW9uLCBzbyBt
+YXliZS4KCkRlZmluaXRlbHksIHhmc19mc3IgY2FuIGhpdCB0aGlzIGV2ZW4gZmV3IHRpbWVzIGEg
+ZGF5IChoYXBwZW5lZCBhbHJlYWR5KS4KClN0YWJsZSB0ZWFtLCBwbGVhc2UgaW5jbHVkZSB0aGlz
+IG9uZSBmb3IgMi42LjM3LjE6Cgpjb21taXQgMGZiY2E0ZDFjMzkzMmMyN2M0Nzk0YmY1YzJiNWZj
+OTYxY2Y1YTU0ZgpBdXRob3I6IERhdmUgQ2hpbm5lciA8ZGNoaW5uZXJAcmVkaGF0LmNvbT4KRGF0
+ZTogICBGcmkgSmFuIDI4IDExOjIwOjQ2IDIwMTEgKzExMDAKCiAgICB4ZnM6IGZpeCBkcXVvdCBz
+aGFrZXIgZGVhZGxvY2sKCiAgICBDb21taXQgMzY4ZTEzNiAoInhmczogcmVtb3ZlIGR1cGxpY2F0
+ZSBjb2RlIGZyb20gZHF1b3QgcmVjbGFpbSIpIGZhaWxzCiAgICB0byB1bmxvY2sgdGhlIGRxdW90
+IGZyZWVsaXN0IHdoZW4gdGhlIG51bWJlciBvZiBsb29wIHJlc3RhcnRzIGlzCiAgICBleGNlZWRl
+ZCBpbiB4ZnNfcW1fZHFyZWNsYWltX29uZSgpLiBUaGlzIGNhdXNlcyBoYW5ncyBpbiBtZW1vcnkK
+ICAgIHJlY2xhaW0uCgogICAgUmV3b3JrIHRoZSBsb29wIGNvbnRyb2wgbG9naWMgaW50byBhbiB1
+bndpbmQgc3RhY2sgdGhhdCBhbGwgdGhlCiAgICBkaWZmZXJlbnQgY2FzZXMganVtcCBpbnRvLiBU
+aGlzIG1lYW5zIHRoZXJlIGlzIG9ubHkgb25lIHNldCBvZiBjb2RlCiAgICB0aGF0IHByb2Nlc3Nl
+cyB0aGUgbG9vcCBleGl0IGNyaXRlcmlhLCBhbmQgc2ltcGxpZmllcyB0aGUgdW5sb2NraW5nCiAg
+ICBvZiBhbGwgdGhlIGl0ZW1zIGZyb20gZGlmZmVyZW50IHBvaW50cyBpbiB0aGUgbG9vcC4gSXQg
+YWxzbyBmaXhlcyBhCiAgICBkb3VibGUgaW5jcmVtZW50IG9mIHRoZSByZXN0YXJ0IGNvdW50ZXIg
+ZnJvbSB0aGUgcWlfZHFsaXN0X2xvY2sKICAgIGNhc2UuCgogICAgUmVwb3J0ZWQtYnk6IE1hbGNv
+bG0gU2NvdHQgPGxrbWxAbWFsYy5vcmcudWs+CiAgICBTaWduZWQtb2ZmLWJ5OiBEYXZlIENoaW5u
+ZXIgPGRjaGlubmVyQHJlZGhhdC5jb20+CiAgICBSZXZpZXdlZC1ieTogQWxleCBFbGRlciA8YWVs
+ZGVyQHNnaS5jb20+CgoKPiBDaGVlcnMsCj4gCj4gRGF2ZS4KCgotLSAKQXJrYWRpdXN6IE1pxZtr
+aWV3aWN6ICAgICAgICBQTEQvTGludXggVGVhbQphcmVrbSAvIG1hdmVuLnBsICAgICAgICAgICAg
+aHR0cDovL2Z0cC5wbGQtbGludXgub3JnLwoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDov
+L29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
