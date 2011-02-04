@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p14AsM3e008870
-	for <linux-xfs@oss.sgi.com>; Fri, 4 Feb 2011 04:54:23 -0600
-Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E9D7A155122F
-	for <linux-xfs@oss.sgi.com>; Fri,  4 Feb 2011 02:56:51 -0800 (PST)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	23wwebG85OXtLvdz for <linux-xfs@oss.sgi.com>;
-	Fri, 04 Feb 2011 02:56:51 -0800 (PST)
-Date: Fri, 4 Feb 2011 21:56:46 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Oops while running xfstests on Power architecture
-Message-ID: <20110204105646.GY11040@dastard>
-References: <1296778668.32230.18.camel@chandra-lucid.beaverton.ibm.com>
+	p14CNSID011869 for <xfs@oss.sgi.com>; Fri, 4 Feb 2011 06:23:29 -0600
+Received: from wydra.ncac.torun.pl (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 48C91155178B
+	for <xfs@oss.sgi.com>; Fri,  4 Feb 2011 04:25:57 -0800 (PST)
+Received: from wydra.ncac.torun.pl (wydra.ncac.torun.pl [158.75.101.26]) by
+	cuda.sgi.com with ESMTP id DB4vRKeYS4DHSwmJ for
+	<xfs@oss.sgi.com>; Fri, 04 Feb 2011 04:25:57 -0800 (PST)
+Received: from [158.75.101.16] (jb.ncac.torun.pl [158.75.101.16])
+	(authenticated bits=0)
+	by wydra.ncac.torun.pl (8.14.4/jb.29.V.2010) with ESMTP id
+	p14CPr0H015496
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256
+	verify=NOT) for <xfs@oss.sgi.com>; Fri, 4 Feb 2011 13:25:54 +0100
+Message-ID: <4D4BF051.9000608@ncac.torun.pl>
+Date: Fri, 04 Feb 2011 13:25:53 +0100
+From: Jerzy Borkowski <jubork@ncac.torun.pl>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1296778668.32230.18.camel@chandra-lucid.beaverton.ibm.com>
+Subject: project quota: df/reservations
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,50 +31,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Chandra Seetharaman <sekharan@us.ibm.com>
-Cc: linux-xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, Feb 03, 2011 at 04:17:48PM -0800, Chandra Seetharaman wrote:
-> Hello All,
-> 
-> I see the following Oops when I run the test 070 on power Architecture.
-> Looking at the code, I do not see anything that is popping out as a
-> problem.
-> 
-> I do not see the same failures in x86_64, so, I thought it may be due to
-> the pagesize, so changed the pagesize to be 4k, but that didn't help.
-> 
-> Is this assertion a false-positive ?
-> 
-> If not, Any suggestions on where to start looking at the code.
-> 
-> I see the same Oops with 2.6.37, 2.6.38-rc2 and 2.6.38-rc3.
+Hello,
 
-It's an assert failure, not an oops:
+1) Fancy a project with quota set to 10GB, and filled
+with 5GB of data. When I type
 
-> Feb  3 14:01:30 mytestmachine kernel: Assertion failed: args->op_flags & XFS_DA_OP_OKNOENT, file: fs/xfs/xfs_da_btree.c, line: 1428
+  df /path/to/project/tree
 
-XFS_DA_OP_OKNOENT is set when an operation on the
-directory/attribute can be expected to get an ENOENT error.
-If it is not set, then the attribute/dirent is expected to be
-present in the tree, and there's something wrong if it is not.
+it shows 5GB free space. Now, the root user
+fills up the disk (outside project tree), so the
+XFS filesystem is really 100% full. The df command
+still shows 5GB free space. I guess, this is
+intentional. I propose to add some switch/flag
+(either during mount or project creation),
+which would tell XFS to report in statfs() calls
+the free space as: min(project_free_space, filesystem_free_space).
 
-e.g. if you are removing an attribute, it is expected to be in the
-tree.
+2) is there any way to have space reservations for projects (like in ZFS) ?
+For instance, a project with 10GB quota and 7GB of preallocated
+space, so even root, writing outside the project tree, cannot
+completely fill up the disk.
 
-PowerPC used to get regular QA coverage but hasn't for the past
-couple of years, so it probably is a relatively recent problem.
-I'd suggest the first thing to do is to try older kernels to
-determine if the problem is specific to newer kernels, and if so, a
-git bisect is probably your best bet to finding the commit that
-introduced the problem.
+Thanks,
 
-Cheers,
+Jurek
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
