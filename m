@@ -1,35 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p14IrCZq030479
-	for <linux-xfs@oss.sgi.com>; Fri, 4 Feb 2011 12:53:13 -0600
-Received: from e34.co.us.ibm.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 522212B1711
-	for <linux-xfs@oss.sgi.com>; Fri,  4 Feb 2011 10:55:42 -0800 (PST)
-Received: from e34.co.us.ibm.com (e34.co.us.ibm.com [32.97.110.152]) by
-	cuda.sgi.com with ESMTP id 2HnzD5x8ZHWHSja1 for
-	<linux-xfs@oss.sgi.com>; Fri, 04 Feb 2011 10:55:42 -0800 (PST)
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com
-	[9.17.195.106])
-	by e34.co.us.ibm.com (8.14.4/8.13.1) with ESMTP id p14IiLi8022093
-	for <linux-xfs@oss.sgi.com>; Fri, 4 Feb 2011 11:44:21 -0700
-Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	p14Itad3118510
-	for <linux-xfs@oss.sgi.com>; Fri, 4 Feb 2011 11:55:36 -0700
-Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av04.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
-	id p14Itadw017650
-	for <linux-xfs@oss.sgi.com>; Fri, 4 Feb 2011 11:55:36 -0700
-Subject: Re: Oops while running xfstests on Power architecture
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-In-Reply-To: <20110204105646.GY11040@dastard>
-References: <1296778668.32230.18.camel@chandra-lucid.beaverton.ibm.com>
-	<20110204105646.GY11040@dastard>
-Date: Fri, 04 Feb 2011 10:56:03 -0800
-Message-ID: <1296845763.32230.20.camel@chandra-lucid.beaverton.ibm.com>
-Mime-Version: 1.0
-Reply-To: sekharan@us.ibm.com
+	p14KlATI034676
+	for <linux-xfs@oss.sgi.com>; Fri, 4 Feb 2011 14:47:11 -0600
+Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 44BBF2B29C8
+	for <linux-xfs@oss.sgi.com>; Fri,  4 Feb 2011 12:49:40 -0800 (PST)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	fNQsZHAvFHgSNUrb for <linux-xfs@oss.sgi.com>;
+	Fri, 04 Feb 2011 12:49:40 -0800 (PST)
+Date: Sat, 5 Feb 2011 07:49:27 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfsdump SGI_FS_BULKSTAT errno = 22, how could this IRIX bug
+	get into Ubuntu 10.04 Lucid between kernels 2.6.32-27 and 2.6.32-26?
+Message-ID: <20110204204927.GZ11040@dastard>
+References: <iibmah$dlp$1@dough.gmane.org> <4D49A35B.6030009@sgi.com>
+	<20110203045836.GV11040@dastard>
+	<4D4ABEF7.7000400@lueckdatasystems.com>
+	<20110204000823.GW11040@dastard>
+	<4D4C0965.9010905@lueckdatasystems.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4D4C0965.9010905@lueckdatasystems.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -42,53 +35,48 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@oss.sgi.com
+To: Michael Lueck <mlueck@lueckdatasystems.com>
+Cc: linux-xfs@oss.sgi.com, Dann Frazier <dannf@debian.org>
 
-On Fri, 2011-02-04 at 21:56 +1100, Dave Chinner wrote:
-> On Thu, Feb 03, 2011 at 04:17:48PM -0800, Chandra Seetharaman wrote:
-> > Hello All,
-> > 
-> > I see the following Oops when I run the test 070 on power Architecture.
-> > Looking at the code, I do not see anything that is popping out as a
-> > problem.
-> > 
-> > I do not see the same failures in x86_64, so, I thought it may be due to
-> > the pagesize, so changed the pagesize to be 4k, but that didn't help.
-> > 
-> > Is this assertion a false-positive ?
-> > 
-> > If not, Any suggestions on where to start looking at the code.
-> > 
-> > I see the same Oops with 2.6.37, 2.6.38-rc2 and 2.6.38-rc3.
+On Fri, Feb 04, 2011 at 09:12:53AM -0500, Michael Lueck wrote:
+> Dave Chinner wrote:
+> >Ok, so xfsdump i seeing a short bulkstat, then an EINVAL returned
+> >from the next bulkstat. That's not a race condition, and makes me
+> >think you have some kind of on-disk corruption.
 > 
-> It's an assert failure, not an oops:
+> Very odd that some kind of on-disk corruption is suddenly causing
+> xfsdump problems starting with Ubuntu 10.04 (Lucid) kernel
+> 2.6.32-27 and persisting in 2.6.32-28.
 
-Sorry for the misfiling :) (it does print an oops thouth)..
-> 
-> > Feb  3 14:01:30 mytestmachine kernel: Assertion failed: args->op_flags & XFS_DA_OP_OKNOENT, file: fs/xfs/xfs_da_btree.c, line: 1428
-> 
-> XFS_DA_OP_OKNOENT is set when an operation on the
-> directory/attribute can be expected to get an ENOENT error.
-> If it is not set, then the attribute/dirent is expected to be
-> present in the tree, and there's something wrong if it is not.
-> 
-> e.g. if you are removing an attribute, it is expected to be in the
-> tree.
-> 
-> PowerPC used to get regular QA coverage but hasn't for the past
-> couple of years, so it probably is a relatively recent problem.
-> I'd suggest the first thing to do is to try older kernels to
-> determine if the problem is specific to newer kernels, and if so, a
-> git bisect is probably your best bet to finding the commit that
-> introduced the problem.
+Not really. The newer kernels have code in them that does more
+validity checks than previous kernels, so older kernels would have
+erroneously and silently returned unlinked files to xfsdump and have
+them backed up. IOWs, you'd never notice such a corruption with
+xfsdump. On the new kernel, xfsdump gets an EINVAL error to such
+occurrences, which it should have in the first place.
 
-Thanks for the suggestion. I will follow through.
+> And there is one other person who confirmed this xfsdump problem
+> running Lucid with kernel 2.6.32-28. They reported their "me too"
+> in the Ubuntu bug tracker.
 > 
-> Cheers,
-> 
-> Dave.
+> Could it be that 2.6.32-26 and prior managed to write something to
+> disk corrupted, and the newer code is tripping on it?
 
+That's what I'm trying to find out. Or it could be something as
+simple as your disk has had an undetected bit error that has flipped
+a bit in the inode allocation btree.
+
+> I shall reboot the server to the 2.6.32-28 kernel and perform the
+> tests you requested.
+
+No need to change kernels to run xfs_repair....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
