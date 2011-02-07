@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p14LPOGp036692 for <xfs@oss.sgi.com>; Fri, 4 Feb 2011 15:25:24 -0600
-Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A6829918D41
-	for <xfs@oss.sgi.com>; Fri,  4 Feb 2011 13:27:53 -0800 (PST)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	ctR4SSu0QwWMAeWh for <xfs@oss.sgi.com>;
-	Fri, 04 Feb 2011 13:27:53 -0800 (PST)
-Date: Sat, 5 Feb 2011 08:27:50 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: project quota: df/reservations
-Message-ID: <20110204212750.GA11040@dastard>
-References: <4D4BF051.9000608@ncac.torun.pl>
+	p1716GEw010129 for <xfs@oss.sgi.com>; Sun, 6 Feb 2011 19:06:16 -0600
+Received: from mail-vw0-f53.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D4BEC122CA93
+	for <xfs@oss.sgi.com>; Sun,  6 Feb 2011 17:08:48 -0800 (PST)
+Received: from mail-vw0-f53.google.com (mail-vw0-f53.google.com
+	[209.85.212.53]) by cuda.sgi.com with ESMTP id mcowSsRAXr6f8pKj
+	for <xfs@oss.sgi.com>; Sun, 06 Feb 2011 17:08:48 -0800 (PST)
+Received: by vws8 with SMTP id 8so2791971vws.26
+	for <xfs@oss.sgi.com>; Sun, 06 Feb 2011 17:08:48 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4D4BF051.9000608@ncac.torun.pl>
+In-Reply-To: <AANLkTim2nm9SXPmpRUmK8eWxXYFkPcrzc-gw2ceJ-m2-@mail.gmail.com>
+References: <AANLkTim2nm9SXPmpRUmK8eWxXYFkPcrzc-gw2ceJ-m2-@mail.gmail.com>
+Date: Mon, 7 Feb 2011 10:08:47 +0900
+Message-ID: <AANLkTi=N20Wiup-wFRcJwOPzFeKPZmZuFi67aMNjK2ea@mail.gmail.com>
+Subject: Re: [patch] xfsprogs: unhandled error check in libxfs_trans_read_buf
+From: Ajeet Yadav <ajeet.yadav.77@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,54 +25,54 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jerzy Borkowski <jubork@ncac.torun.pl>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Fri, Feb 04, 2011 at 01:25:53PM +0100, Jerzy Borkowski wrote:
-> Hello,
-> 
-> 1) Fancy a project with quota set to 10GB, and filled
-> with 5GB of data. When I type
-> 
->   df /path/to/project/tree
-> 
-> it shows 5GB free space. Now, the root user
-> fills up the disk (outside project tree), so the
-> XFS filesystem is really 100% full. The df command
-> still shows 5GB free space. I guess, this is
-> intentional. I propose to add some switch/flag
-> (either during mount or project creation),
-> which would tell XFS to report in statfs() calls
-> the free space as: min(project_free_space, filesystem_free_space).
-
-If you just run "df" or "df /path/to/mtpt" rather than asking
-specifically for the project tree path, you should see the real
-filesystem usage.
-
-Think of project quotas like thin provisioned filesystems - they can
-still have space available when the underlying storage runs out and
-it is up to the admin to manage this situation.
-
-> 2) is there any way to have space reservations for projects (like in ZFS) ?
-> For instance, a project with 10GB quota and 7GB of preallocated
-> space, so even root, writing outside the project tree, cannot
-> completely fill up the disk.
-
-No. Quotas can only be used to limit space usage, not reserve it.
-It could probably be done, but it's not a simple retrofit...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+RGVhciBDb21tdW5pdHksCk91ciB0ZXN0aW5nIHRlYW0gcmVwb3J0ZWQgb25lIGlzc3VlLCB3ZSBm
+b3VuZCBpdCB3YXMgcmVsYXRlZCB0byBsaWJ4ZnMKYW5kIHJlc29sdmVkIGl0LgpJIHRob3VnaHQg
+dG8gc2hhcmUgbXkgZXhwZXJpZW5jZSB3aXRoIHlvdSwgYnV0IGRpZCBub3QgcmVjZWl2ZSBhbnkg
+Y29tbWVudC4KCk9uIFRodSwgRmViIDMsIDIwMTEgYXQgMzoxNyBQTSwgQWplZXQgWWFkYXYgPGFq
+ZWV0LnlhZGF2Ljc3QGdtYWlsLmNvbT4gd3JvdGU6Cj4geGZzcHJvZ3M6IHVuaGFuZGxlZCBlcnJv
+ciBjaGVjayBpbiBsaWJ4ZnNfdHJhbnNfcmVhZF9idWYKPgo+IGxpYnhmc190cmFuc19yZWFkX2J1
+ZigpIGlzIHVzZWQgaW4gYm90aCBta2ZzLnhmcyAmIHhmc19yZXBhaXIuCj4gRHVyaW5nIHN0YWJp
+bGl0eSB0ZXN0aW5nIHdlIGZvdW5kIHNvbWUgdGltZSBvY2N1ciBwYWdlZmF1bHQgaW4gbWtmcy54
+ZnMsCj4gY29kZSBpbnNwZWN0aW9uIHNob3dzIHRoYXQgaWYgbGlieGZzX3JlYWRidWYoKSBmYWls
+cyB0aGVuIG9jY3VycyBhCj4gcGFnZSBmYXVsdCBpbiB4ZnNfYnVmX2l0ZW1faW5pdCgpIGNhbGxl
+ZCBpbiBsaWJ4ZnNfdHJhbnNfcmVhZF9idWYoKS4KPgo+IG1rZnMueGZzOiB1bmhhbmRsZWQgcGFn
+ZSBmYXVsdCAoMTEpIGF0IDB4MDAwMDAwNzAsIGNvZGUgMHgwMTcKPgo+IEFkZGVkIE5VTEwgY2hl
+Y2sgYW5kIGVycm5vIGhhbmRsaW5nLgo+Cj4gU2lnbmVkLW9mZi1ieTogQWplZXQgWWFkYXYgPGFq
+ZWV0LnlhZGF2Ljc3QGdtYWlsLmNvbT4KPgo+IGRpZmYgLU51cnAgeGZzcHJvZ3MvbGlieGZzL3Jk
+d3IuYyB4ZnNwcm9ncy1kaXJ0eS9saWJ4ZnMvcmR3ci5jCj4gLS0tIHhmc3Byb2dzL2xpYnhmcy9y
+ZHdyLmMgwqAgwqAgwqAyMDExLTAxLTI4IDIwOjIyOjExLjAwMDAwMDAwMCArMDkwMAo+ICsrKyB4
+ZnNwcm9ncy1kaXJ0eS9saWJ4ZnMvcmR3ci5jIMKgIMKgIMKgIMKgMjAxMS0wMi0wMiAxNjo1OTox
+Ni4wMDAwMDAwMDAgKzA5MDAKPiBAQCAtMjA3LDEwICsyMDcsMTEgQEAgbGlieGZzX3RyYWNlX3Jl
+YWRidWYoY29uc3QgY2hhciAqZnVuYywgYwo+IMKgewo+IMKgIMKgIMKgIMKgeGZzX2J1Zl90IMKg
+IMKgIMKgICpicCA9IGxpYnhmc19yZWFkYnVmKGRldiwgYmxrbm8sIGxlbiwgZmxhZ3MpOwo+Cj4g
+LSDCoCDCoCDCoCBicC0+Yl9mdW5jID0gZnVuYzsKPiAtIMKgIMKgIMKgIGJwLT5iX2ZpbGUgPSBm
+aWxlOwo+IC0gwqAgwqAgwqAgYnAtPmJfbGluZSA9IGxpbmU7Cj4gLQo+ICsgwqAgwqAgwqAgaWYg
+KGJwKXsKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGJwLT5iX2Z1bmMgPSBmdW5jOwo+ICsgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgYnAtPmJfZmlsZSA9IGZpbGU7Cj4gKyDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCBicC0+Yl9saW5lID0gbGluZTsKPiArIMKgIMKgIMKgIH0KPiDCoCDCoCDCoCDCoHJldHVy
+biBicDsKPiDCoH0KPgo+IEBAIC00ODUsNiArNDg2LDcgQEAgbGlieGZzX3JlYWRidWYoZGV2X3Qg
+ZGV2LCB4ZnNfZGFkZHJfdCBibAo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgZXJyb3IgPSBsaWJ4
+ZnNfcmVhZGJ1ZnIoZGV2LCBibGtubywgYnAsIGxlbiwgZmxhZ3MpOwo+IMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgaWYgKGVycm9yKSB7Cj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqBsaWJ4ZnNfcHV0YnVmKGJwKTsKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IGVycm5vID0gZXJyb3I7Cj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqByZXR1
+cm4gTlVMTDsKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoH0KPiDCoCDCoCDCoCDCoH0KPiBkaWZm
+IC1OdXJwIHhmc3Byb2dzL2xpYnhmcy90cmFucy5jIHhmc3Byb2dzLWRpcnR5L2xpYnhmcy90cmFu
+cy5jCj4gLS0tIHhmc3Byb2dzL2xpYnhmcy90cmFucy5jIMKgIMKgIDIwMTEtMDEtMjggMjA6MjI6
+MTEuMDAwMDAwMDAwICswOTAwCj4gKysrIHhmc3Byb2dzLWRpcnR5L2xpYnhmcy90cmFucy5jIMKg
+IMKgIMKgIDIwMTEtMDItMDIgMTc6MDA6NDIuMDAwMDAwMDAwICswOTAwCj4gQEAgLTUwOCw2ICs1
+MDgsMTAgQEAgbGlieGZzX3RyYW5zX3JlYWRfYnVmKAo+IMKgIMKgIMKgIMKgfQo+Cj4gwqAgwqAg
+wqAgwqBicCA9IGxpYnhmc19yZWFkYnVmKGRldiwgYmxrbm8sIGxlbiwgZmxhZ3MpOwo+ICsgwqAg
+wqAgwqAgaWYgKCFicCl7Cj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCAqYnBwID0gTlVMTDsKPiAr
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIHJldHVybiBlcnJubzsKPiArIMKgIMKgIMKgIH0KPiDCoCNp
+ZmRlZiBYQUNUX0RFQlVHCj4gwqAgwqAgwqAgwqBmcHJpbnRmKHN0ZGVyciwgInRyYW5zX3JlYWRf
+YnVmIGJ1ZmZlciAlcCwgdHJhbnNhY3Rpb24gJXBcbiIsIGJwLCB0cCk7Cj4gwqAjZW5kaWYKPgoK
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxp
+bmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGlu
+Zm8veGZzCg==
