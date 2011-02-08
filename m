@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p18HbHJ7133391
-	for <linux-xfs@oss.sgi.com>; Tue, 8 Feb 2011 11:37:17 -0600
+	p18HbNw7133413
+	for <linux-xfs@oss.sgi.com>; Tue, 8 Feb 2011 11:37:23 -0600
 Received: from mout.perfora.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 91B071559265
-	for <linux-xfs@oss.sgi.com>; Tue,  8 Feb 2011 09:39:49 -0800 (PST)
-Received: from mout.perfora.net (mout.perfora.net [74.208.4.194]) by
-	cuda.sgi.com with ESMTP id rGj9ZHCkWAojcx14 for
-	<linux-xfs@oss.sgi.com>; Tue, 08 Feb 2011 09:39:49 -0800 (PST)
-Message-ID: <4D517FD2.5040509@lueckdatasystems.com>
-Date: Tue, 08 Feb 2011 12:39:30 -0500
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4AF261EAD9B0
+	for <linux-xfs@oss.sgi.com>; Tue,  8 Feb 2011 09:39:57 -0800 (PST)
+Received: from mout.perfora.net (mout.perfora.net [74.208.4.195]) by
+	cuda.sgi.com with ESMTP id UyheKt2pZaF5juqA for
+	<linux-xfs@oss.sgi.com>; Tue, 08 Feb 2011 09:39:57 -0800 (PST)
+Message-ID: <4D517FDB.1080402@lueckdatasystems.com>
+Date: Tue, 08 Feb 2011 12:39:39 -0500
 From: Michael Lueck <mlueck@lueckdatasystems.com>
 MIME-Version: 1.0
 Subject: Re: xfsdump SGI_FS_BULKSTAT errno = 22, how could this IRIX bug get
-	into	Ubuntu 10.04 Lucid between kernels 2.6.32-27 and 2.6.32-26?
+	into Ubuntu 10.04 Lucid between kernels 2.6.32-27 and 2.6.32-26?
 References: <iibmah$dlp$1@dough.gmane.org> <4D49A35B.6030009@sgi.com>
 	<20110203045836.GV11040@dastard>
 	<4D4ABEF7.7000400@lueckdatasystems.com>
