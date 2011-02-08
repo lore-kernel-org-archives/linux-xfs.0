@@ -1,15 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p18CIbvt115622 for <xfs@oss.sgi.com>; Tue, 8 Feb 2011 06:18:37 -0600
-Subject: Re: [PATCH v3] Add test 249: Check filesystem FITRIM implementation
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1296762207-17265-1-git-send-email-lczerner@redhat.com>
-References: <1296762207-17265-1-git-send-email-lczerner@redhat.com>
-Date: Tue, 08 Feb 2011 06:20:19 -0600
-Message-ID: <1297167619.7351.29.camel@doink>
-Mime-Version: 1.0
-Reply-To: aelder@sgi.com
+	p18EwLZV122065 for <xfs@oss.sgi.com>; Tue, 8 Feb 2011 08:58:22 -0600
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 09F0F1240E5D
+	for <xfs@oss.sgi.com>; Tue,  8 Feb 2011 07:00:54 -0800 (PST)
+Received: from mail.sandeen.net (64-131-28-21.usfamily.net [64.131.28.21]) by
+	cuda.sgi.com with ESMTP id udRGKdVe7GGY7AEQ for
+	<xfs@oss.sgi.com>; Tue, 08 Feb 2011 07:00:54 -0800 (PST)
+Message-ID: <4D515AA5.4060300@sandeen.net>
+Date: Tue, 08 Feb 2011 09:00:53 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: segmentation fault during mount
+References: <02b401cbc6b6$5b7ac0b0$12704210$@samsung.com>	<4D50CA45.8070807@sandeen.net>	<030701cbc74e$b7f25680$27d70380$@samsung.com>	<4D50D748.1090406@sandeen.net>
+	<030f01cbc756$52a08ec0$f7e1ac40$@samsung.com>
+In-Reply-To: <030f01cbc756$52a08ec0$f7e1ac40$@samsung.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,218 +28,191 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Lukas Czerner <lczerner@redhat.com>
-Cc: hch@infradead.org, esandeen@redhat.com, xfs@oss.sgi.com
+To: Ryan Roh <unisist.roh@samsung.com>
+Cc: xfs@oss.sgi.com
 
-On Thu, 2011-02-03 at 20:43 +0100, Lukas Czerner wrote:
-> FITRIM ioctl  is used on a mounted filesystem to discard (or "trim")
-> blocks which are not in use by the filesystem.  This is useful for
-> solid-state drives (SSDs) and thinly-provi-sioned storage. This test
-> helps to verify filesystem FITRIM implementation to assure that it
-> does not corrupts data.
+On 2/8/11 12:06 AM, Ryan Roh wrote:
+> Dear Eric,
 > 
-> This test creates checksums of all files in xfstests directory and
-> run several processes which clear its working directory on SCRATCH_MNT,
-> then copy everything from xfstests into its working directory, create
-> list of files in working directory and its checksums and compare it with the
-> original list of checksums. Every process works in the loop so it repeat
-> remove->copy->check, while fstrim tool is running simultaneously.
+> Thank you for kind reply.
 > 
-> Fstrim is just a helper tool which uses FITRIM ioctl to actually do the
-> filesystem discard.
+> The XFS partition can be mounted after xfs_repair with -L option. 
+
+Ok.
+
+> Actually, the debug option was turned off. So the assert is not called.
+> Anyway the level was equal to root level of b-tree. So if I change the code
+> like in the below then XFS mount display the message to repair partition
+> with xfs_repair.
 > 
-> I found this very useful because when the FITRIM is really buggy (thus
-> data-destroying) the 249 test will notice, because checksums will most
-> likely change.
-
-This sounds like a good test.  I ran it and it failed, but I
-couldn't really tell why.  Turns out the ioctl() returned
-ENOTSUP, which is fine.  But the test shouldn't work quite
-that way.
-
-Based on this very small experience, I have a few comments,
-below.  I glanced at the C code also, and have a few suggestions
-but they're not that important.
-
-					-Alex
-
-> Signed-off-by: Lukas Czerner <lczerner@redhat.com>
-> ---
->  249          |  170 ++++++++++++++++++++++++++++++++++++++
->  249.out      |    3 +
->  group        |    3 +-
->  src/Makefile |    2 +-
->  src/fstrim.c |  257 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  5 files changed, 433 insertions(+), 2 deletions(-)
->  create mode 100644 249
->  create mode 100644 249.out
->  create mode 100644 src/fstrim.c
+>    /*
+>      * If we went off the root then we are seriously confused.
+>      */
+>     If (lev < cur->bc_nlevels)
+>         return EFSCORRUPT;
+>     //ASSERT(lev < cur->bc_nlevels);
 > 
-> diff --git a/249 b/249
-> new file mode 100644
-> index 0000000..9943176
-> --- /dev/null
-> +++ b/249
-> @@ -0,0 +1,170 @@
-> +#!/bin/bash
-> +# FS QA Test No. 248
+> 
+> Kernel oops can be replayed with metadump and restored image. But when I
+> tested it with 2.6.33.6 (FC13) then mount failed with " mount: Structure
+> needs cleaning" message.
 
-Unfortunately for you, you'll need to change the number yet again.
-(When the time comes to commit it I'll update the number for you
-if needed.)  I made it number 252 for my own testing.  Remember
-to change the name as well as the content of the test and its
-output file.
+Ok, as it should.  So this has been fixed upstream, as part of Christoph's
+btree rework.  These 2 commits were part of a larger series, but they
+put this particular error handling in place:
 
-> +#
-> +# This test was created in order to verify filesystem FITRIM implementation.
-> +# By many concurrent copy and remove operations and checking that files
-> +# does not change after copied into SCRATCH_MNT test if FITRIM implementation
-> +# corrupts the filesystem (data/metadata).
-> +#
+8df4da4a0a642d3a016028c0d922bcb4d5a4a6d7 [XFS] implement generic xfs_btree_decrement
+637aa50f461b8ea6b1e8bf9877b0d13d00085043 [XFS] implement generic xfs_btree_increment
 
-. . .
+> And Would you please let me know how I can share the metadump file with
+> others? It is too big to send through the e-mail. Can I use the FTP server
+> to share it?
 
-> +
-> +function run_process() {
-> +	local p=$1
-> +	repeat=10
-> +
-> +	sleep $((5*$p))s &
-> +	export chpid=$! && wait $chpid &> /dev/null
-> +	chpid=0
-> +
-> +	while [ $repeat -gt 0 ]; do
-> +
-> +		# Remove old directories.
-> +		rm -rf $SCRATCH_MNT/$p
-> +		export chpid=$! && wait $chpid &> /dev/null
-> +
-> +		# Copy content -> partition.
-> +		mkdir $SCRATCH_MNT/$p
-> +		cp -axT $content $SCRATCH_MNT/$p
-> +		export chpid=$! && wait $chpid &> /dev/null
-> +
-> +		check_sums
-> +		repeat=$(( $repeat - 1 ))
-> +	done
-> +}
-> +
-> +nproc=20
-> +content=$here
-> +
-
-Here (below), you are checking for support and including
-that check in the test itself.  Instead, you should check
-for support and if support isn't found, call something like:
-
-_notrun "fstrim support not available"
-
-Even better, you should encapsulate the check for support
-in a shell function, so the call would look like:
-
-_check_fstrim_support || _notrun "fstrim support not available"
-
-I don't think there's a need for a "common.fstrim" file,
-but you can look at some other examples (like filestreams)
-for examples of this pattern.
-
-> +# Check for FITRIM support
-> +echo -n "Checking FITRIM support: "
-> +$here/src/fstrim -l 10M $SCRATCH_MNT &> /dev/null
-
-Redirecting both stdout and stderr is very unhelpful
-for diagnosing why the command failed.
-
-I also think you should have an explicit command line
-option to the src/fstrim command to check for support,
-silently, rather than specifying a length to trim.
-(If it had been supported in my case, would this have
-actually done the TRIM?  That is not desirable in a
-feature check.)
+I think there is no need, since you have shown that the bug is fixed upstream;
+I should have suggested that myself, but thanks for testing it.
  
-> +[ $? -ne 0 ] && exit
-> +echo "done."
-> +
-> +mkdir -p $tmp
-. . .
+It's always a good idea to test upstream before reporting bugs to the list for
+old kernels; if bugs are fixed already there is no need to report them here or
+in bugzilla.
 
->  
-> diff --git a/src/fstrim.c b/src/fstrim.c
-> new file mode 100644
-> index 0000000..a93a6f3
-> --- /dev/null
-> +++ b/src/fstrim.c
-> @@ -0,0 +1,257 @@
-> +/*
-> + * fstrim.c -- discard the part (or whole) of mounted filesystem.
-> + *
-> + * Copyright (C) 2009 Red Hat, Inc., Lukas Czerner <lczerner@redhat.com>
+-Eric
 
-Is this the right copyright date?  I don't care, just thought
-I'd call this to your attention in case it's wrong.
-
-. . .
-
-> +
-> +int main(int argc, char **argv)
-> +{
-> +	struct options *opts;
-> +	struct stat sb;
-> +	int fd, err = 0, ret = EXIT_FAILURE;
-> +
-> +	opts = malloc(sizeof(struct options));
-
-No real need to malloc the options structure here, just define
-it as a struct rather than pointer and avoid this failure.
-
-> +	if (!opts)
-> +		err_exit("%s: malloc(): %s\n", program_name, strerror(errno));
-> +
-> +	opts->range = NULL;
-> +	opts->verbose = 0;
-> +
-> +	if (argc > 1)
-> +		strncpy(opts->mpoint, argv[argc - 1], sizeof(opts->mpoint));
-> +
-> +	opts->range = calloc(1, sizeof(struct fstrim_range));
-
-Same thing here--just make the range be a struct component
-of the options structure and you won't have to allocate
-it (and will avoid the need to check for and handle the
-failure).
-
-> +	if (!opts->range) {
-> +		fprintf(stderr, "%s: calloc(): %s\n", program_name,
-> +			strerror(errno));
-> +		goto free_opts;
-> +	}
-> +
-> +	opts->range->len = ULLONG_MAX;
-> +
-> +	if (argc > 2)
-> +		err = parse_opts(argc, argv, opts);
-> +
-> +	if (err) {
-> +		usage();
-> +		goto free_opts;
-> +	}
-> +
-
-This is more of a style comment...  I think I prefer
-seeing both initializing default values (such as how
-you set opts->range->len) and checking for their
-validity after they've been parsed inside the argument
-parsing routine itself.  That leaves the top-level
-code simpler--just parse the options and go.
-
-> +	if (strnlen(opts->mpoint, 1) < 1) {
-> +		fprintf(stderr, "%s: You have to specify mount point.\n",
-> +			program_name);
-> +		usage();
-> +		goto free_opts;
-> +	}
-
-. . .
+> And I got the hint about the patch for vmap cache aliasing issue from Dave
+> Chinner and I trying to apply it. 
+> "[GIT PATCH] Fix XFS to work with Virtually indexed architectures" :
+> http://linux.derkeiler.com/Mailing-Lists/Kernel/2010-02/msg10227.html
+> 
+> Thanks,
+> Ryan.
+> 
+> 
+> -----Original Message-----
+> From: Eric Sandeen [mailto:sandeen@sandeen.net] 
+> Sent: Tuesday, February 08, 2011 2:40 PM
+> To: Ryan Roh
+> Cc: xfs@oss.sgi.com
+> Subject: Re: segmentation fault during mount
+> 
+> On 2/7/11 11:12 PM, Ryan Roh wrote:
+>> Dear Eric,
+>>
+>> I don't know how I can make correct form to answer for this thread 
+>> because I'm newbie here. Sorry.
+>>
+>> Anyway, this issue was happened from returned HDD from customer which 
+>> was used our PVR STB. And our STB has toggle power switch so I think 
+>> user turned off the power during recording something.
+> 
+> Ok, so you're not sure what happened to the hard drive before this, then.
+> 
+> Other Samsung folks have reported problems after intentionally testing the
+> filesystem under harsh conditions such as poweroff or USB unplugs, so I just
+> wondered...
+> 
+> It seems plausible to me that this could be corruption from lack of proper
+> barrier support, and a poweroff or usb unplug (without barrier support)
+> could cause that.
+> 
+> Mounting a corrupted filesystem should never oops the kernel though, so that
+> is a bug.  If you can provide an xfs_metadump image of the filesystem,
+> someone might be able to investigate further.
+> 
+> Does the mount failure persist after an xfs_repair (without using -n?)
+> 
+> If you wish to keep the original filesystem intact, you can make an
+> xfs_metadump image of the filesystem, run xfs_mdrestore to create a new
+> metadata image from that dump, run xfs_repair against that, and try to mount
+> the result.
+> 
+> Does samsung run with CONFIG_XFS_DEBUG enabled?  Otherwise, this:
+> 
+>     /*
+>      * If we went off the root then we are seriously confused.
+>      */
+> 
+>     ASSERT(lev < cur->bc_nlevels);
+> 
+> would be a no-op:
+> 
+> #ifndef DEBUG
+> #define ASSERT(expr)    ((void)0)
+> ...
+> 
+> (As a side note, running with CONFIG_XFS_DEBUG in production is not
+> recommended.)
+> 
+> However, I'm not quite sure that's what you are hitting, if you tripped an
+> ASSERT you should have seen "Assertion failed" in the messages.  This
+> appears to be a null pointer dereference in xfs_free_ag_extent().
+> 
+> -Eric
+> 
+> 
+>> Thanks,
+>> Ryan.
+>>   
+>>
+>> -----Original Message-----
+>> From: Eric Sandeen [mailto:sandeen@sandeen.net]
+>> Sent: Tuesday, February 08, 2011 1:45 PM
+>> To: Ryan Roh
+>> Cc: xfs@oss.sgi.com
+>> Subject: Re: segmentation fault during mount
+>>
+>> On 2/7/11 5:01 AM, Ryan Roh wrote:
+>>> Dear Members,
+>>>
+>>> I'm using XFS based on STMicro SH4 based chip (STi7105).
+>>>
+>>> and I have some issue on xfs log mounting.
+>>>
+>>
+>> Were the errors after any sort of harsh testing of the filesystem, 
+>> such as usb disconnects or power off?
+>>
+>> Or was this after a clean unmount?
+>>
+>> -Eric
+>>
+>>>
+>>> 1. chip : sh4 STi7105
+>>>
+>>> 2. HDD : 320GB USB HDD USB 2.0 port.
+>>>
+>>> 3. OS : Linux 2.6.23.17 + patch for fixing cache aliasing issue.
+>>>
+>>> 4. XFSProgs version : 3.1.1
+>>>
+>>>  
+>>>
+>>> mounting and repairing log in the below. This segmentation fault is 
+>>> caused by
+>>>
+>>> the assert in xfs_alloc_increment function of xfs_alloc_btree.c file. 
+>>> The btree
+>>>
+>>> level is equal to root level in the below code.
+>>>
+>>>  
+>>>
+>>>     /*
+>>>
+>>>      * If we went off the root then we are seriously confused.
+>>>
+>>>      */
+>>>
+>>>     ASSERT(lev < cur->bc_nlevels);
+>>>
+>>>  
+>>
+>> ...
+>>
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
