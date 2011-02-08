@@ -1,16 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p181Wwvw081848 for <xfs@oss.sgi.com>; Mon, 7 Feb 2011 19:32:59 -0600
-Subject: Re: mkfs.xfs pagefault when removed storage during operation
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <AANLkTi=7dw1-r8BSdv7y51LzmWekxKjLrCv_Rky7EYx9@mail.gmail.com>
-References: <AANLkTi=wi_Fhr5v1J4wopvFTY=hC2EA_QmJu4Uc_XgGs@mail.gmail.com>
-	<AANLkTi=7dw1-r8BSdv7y51LzmWekxKjLrCv_Rky7EYx9@mail.gmail.com>
-Date: Mon, 07 Feb 2011 19:35:31 -0600
-Message-ID: <1297128931.2078.32.camel@doink>
-Mime-Version: 1.0
-Reply-To: aelder@sgi.com
+	p182JuAR084161 for <xfs@oss.sgi.com>; Mon, 7 Feb 2011 20:19:57 -0600
+Received: from mail-vx0-f181.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E5F872BB2AC
+	for <xfs@oss.sgi.com>; Mon,  7 Feb 2011 18:22:29 -0800 (PST)
+Received: from mail-vx0-f181.google.com (mail-vx0-f181.google.com
+	[209.85.220.181]) by cuda.sgi.com with ESMTP id
+	pJDYpnwr3UFT17Wm for <xfs@oss.sgi.com>;
+	Mon, 07 Feb 2011 18:22:29 -0800 (PST)
+Received: by vxc38 with SMTP id 38so2217943vxc.26
+	for <xfs@oss.sgi.com>; Mon, 07 Feb 2011 18:22:29 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1297127823.2078.24.camel@doink>
+References: <AANLkTim2nm9SXPmpRUmK8eWxXYFkPcrzc-gw2ceJ-m2-@mail.gmail.com>
+	<1297127823.2078.24.camel@doink>
+Date: Tue, 8 Feb 2011 11:22:27 +0900
+Message-ID: <AANLkTi=FMmJEipcJPa--y3Pmg+K9W8e3JVyhgSpBP-qu@mail.gmail.com>
+Subject: Re: [patch] xfsprogs: unhandled error check in libxfs_trans_read_buf
+From: Ajeet Yadav <ajeet.yadav.77@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,45 +27,70 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ajeet Yadav <ajeet.yadav.77@gmail.com>
-Cc: xfs@oss.sgi.com
+To: aelder@sgi.com
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-On Wed, 2011-02-02 at 17:09 +0900, Ajeet Yadav wrote:
-> If I see the current sigfault, its easy to fix adding one more patch
-> to xfsprogs.
-. . .
-> 
-> But when I start reviewing the complete project w.r.t read() /
-> read64() / write() / write64() more importantly libxfs_readbufr() /
-> libxfs_writebufr().
-> I find error handing is broken at may places and I get my self lost in
-> m^n complexity also errno is lost.. therefore caller cannot examine
-> the exact error,
-> 
-> Back again I think, What if I exit on error ? Does xfsprogs uses
-> read() / write() error as a part of its functionality, for example
-> does xfs_repair uses these errors as a part of repair funtionality.
-. . .
-
-I think these are good observations and questions.
-
-This doesn't answer your questions, but I want to mention to
-you that libxfs is just about to have a major update that
-affects lots of files.  I expect the update will *not*
-address the issues you point out here, but I guess what I'd
-like to do is get us moved to the updated code before trying
-to address problems that might be widespread like this.
-
-I hope to complete this update process soon, but I expect
-it will be a week or more before that happens.
-
-					-Alex
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+VGhhbmsgeW91IGZvciBwcm92aWRpbmcgcmV2aWV3IGNvbW1lbnQuCgpPbiBUdWUsIEZlYiA4LCAy
+MDExIGF0IDEwOjE3IEFNLCBBbGV4IEVsZGVyIDxhZWxkZXJAc2dpLmNvbT4gd3JvdGU6Cj4gT24g
+VGh1LCAyMDExLTAyLTAzIGF0IDE1OjE3ICswOTAwLCBBamVldCBZYWRhdiB3cm90ZToKPj4geGZz
+cHJvZ3M6IHVuaGFuZGxlZCBlcnJvciBjaGVjayBpbiBsaWJ4ZnNfdHJhbnNfcmVhZF9idWYKPgo+
+IFNvcnJ5IHlvdSBkaWRuJ3QgZ2V0IGEgcmVzcG9uc2UgZWFybGllci4gwqBSZXBvcnRpbmcKPiBw
+cm9ibGVtcyBsaWtlIHRoaXMtLWVzcGVjaWFsbHkgaWYgdGhleSBjb21lIHdpdGggYQo+IHByb3Bv
+c2VkIGZpeC0taXMgYWx3YXlzIGFwcHJlY2lhdGVkLgo+Cj4+IGxpYnhmc190cmFuc19yZWFkX2J1
+ZigpIGlzIHVzZWQgaW4gYm90aCBta2ZzLnhmcyAmIHhmc19yZXBhaXIuCj4+IER1cmluZyBzdGFi
+aWxpdHkgdGVzdGluZyB3ZSBmb3VuZCBzb21lIHRpbWUgb2NjdXIgcGFnZWZhdWx0IGluIG1rZnMu
+eGZzLAo+PiBjb2RlIGluc3BlY3Rpb24gc2hvd3MgdGhhdCBpZiBsaWJ4ZnNfcmVhZGJ1ZigpIGZh
+aWxzIHRoZW4gb2NjdXJzIGEKPj4gcGFnZSBmYXVsdCBpbiB4ZnNfYnVmX2l0ZW1faW5pdCgpIGNh
+bGxlZCBpbiBsaWJ4ZnNfdHJhbnNfcmVhZF9idWYoKS4KPj4KPj4gbWtmcy54ZnM6IHVuaGFuZGxl
+ZCBwYWdlIGZhdWx0ICgxMSkgYXQgMHgwMDAwMDA3MCwgY29kZSAweDAxNwo+Pgo+PiBBZGRlZCBO
+VUxMIGNoZWNrIGFuZCBlcnJubyBoYW5kbGluZy4KPgo+IEkgZXhwZWN0IHRoZXJlIGFyZSBvdGhl
+ciBzaW1pbGFyIHByb2JsZW1zIGx1cmtpbmcgaW4KPiB0aGUgbGlieGZzIGNvZGUuCj4KPiBJIHRo
+aW5rIHlvdXIgY2hhbmdlIGxvb2tzIGdvb2QsIHdpdGggb25lIGV4Y2VwdGlvbiwKPiBub3RlZCBi
+ZWxvdy4gwqBJIHdpbGwgZ2xhZGx5IGFkanVzdCB5b3VyIHBhdGNoIGZvcgo+IHlvdSBpZiB5b3Ug
+Y29uc2VudCB0byB0aGUgY2hhbmdlIEkgc3VnZ2VzdC4KPgo+IMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgLUFsZXgKPgo+PiBTaWduZWQt
+b2ZmLWJ5OiBBamVldCBZYWRhdiA8YWplZXQueWFkYXYuNzdAZ21haWwuY29tPgo+Pgo+PiBkaWZm
+IC1OdXJwIHhmc3Byb2dzL2xpYnhmcy9yZHdyLmMgeGZzcHJvZ3MtZGlydHkvbGlieGZzL3Jkd3Iu
+Ywo+PiAtLS0geGZzcHJvZ3MvbGlieGZzL3Jkd3IuYyDCoCDCoCDCoDIwMTEtMDEtMjggMjA6MjI6
+MTEuMDAwMDAwMDAwICswOTAwCj4+ICsrKyB4ZnNwcm9ncy1kaXJ0eS9saWJ4ZnMvcmR3ci5jIMKg
+IMKgIMKgIMKgMjAxMS0wMi0wMiAxNjo1OToxNi4wMDAwMDAwMDAgKzA5MDAKPj4gQEAgLTIwNywx
+MCArMjA3LDExIEBAIGxpYnhmc190cmFjZV9yZWFkYnVmKGNvbnN0IGNoYXIgKmZ1bmMsIGMKPj4g
+wqB7Cj4+IMKgIMKgIMKgIMKgIHhmc19idWZfdCDCoCDCoCDCoCAqYnAgPSBsaWJ4ZnNfcmVhZGJ1
+ZihkZXYsIGJsa25vLCBsZW4sIGZsYWdzKTsKPj4KPj4gLSDCoCDCoCDCoCBicC0+Yl9mdW5jID0g
+ZnVuYzsKPj4gLSDCoCDCoCDCoCBicC0+Yl9maWxlID0gZmlsZTsKPj4gLSDCoCDCoCDCoCBicC0+
+Yl9saW5lID0gbGluZTsKPj4gLQo+PiArIMKgIMKgIMKgIGlmIChicCl7Cj4+ICsgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgYnAtPmJfZnVuYyA9IGZ1bmM7Cj4+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+YnAtPmJfZmlsZSA9IGZpbGU7Cj4+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgYnAtPmJfbGluZSA9
+IGxpbmU7Cj4+ICsgwqAgwqAgwqAgfQo+PiDCoCDCoCDCoCDCoCByZXR1cm4gYnA7Cj4+IMKgfQo+
+Pgo+PiBAQCAtNDg1LDYgKzQ4Niw3IEBAIGxpYnhmc19yZWFkYnVmKGRldl90IGRldiwgeGZzX2Rh
+ZGRyX3QgYmwKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgZXJyb3IgPSBsaWJ4ZnNfcmVhZGJ1
+ZnIoZGV2LCBibGtubywgYnAsIGxlbiwgZmxhZ3MpOwo+PiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCBpZiAoZXJyb3IpIHsKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgbGli
+eGZzX3B1dGJ1ZihicCk7Cj4+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgZXJy
+bm8gPSBlcnJvcjsKPgo+IEkgdGhpbmsgdGhhdCBsaWJ4ZnNfcmVhZGJ1ZigpIHNpbXBseSByZXR1
+cm5zIHRoZQo+IHZhbHVlIG9mIHRoZSBzcGVjaWFsIGdsb2JhbCAiZXJybm8iIGlmIHRoZXJlIGlz
+Cj4gYW4gZXJyb3IuIMKgQW5kIEkgYmVsaWV2ZSB0aGF0IGF0IHRoaXMgcG9pbnQgaXQKPiB3aWxs
+IG5vdCBoYXZlIGJlZW4gY2hhbmdlZCwgc28gdGhlcmUncyBubyBuZWVkCj4gdG8gYXNzaWduIGl0
+IGhlcmUuCj4KPiBJbiBvdGhlciB3b3JkcywgSSdkIGxpa2UgdG8gcmVtb3ZlIHRoaXMgb25lIHBp
+ZWNlCj4gb2YgeW91ciBwYXRjaC4KPgo+PiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCByZXR1cm4gTlVMTDsKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgfQo+PiDCoCDCoCDC
+oCDCoCB9Cj4+IGRpZmYgLU51cnAgeGZzcHJvZ3MvbGlieGZzL3RyYW5zLmMgeGZzcHJvZ3MtZGly
+dHkvbGlieGZzL3RyYW5zLmMKPj4gLS0tIHhmc3Byb2dzL2xpYnhmcy90cmFucy5jIMKgIMKgIDIw
+MTEtMDEtMjggMjA6MjI6MTEuMDAwMDAwMDAwICswOTAwCj4+ICsrKyB4ZnNwcm9ncy1kaXJ0eS9s
+aWJ4ZnMvdHJhbnMuYyDCoCDCoCDCoCAyMDExLTAyLTAyIDE3OjAwOjQyLjAwMDAwMDAwMCArMDkw
+MAo+PiBAQCAtNTA4LDYgKzUwOCwxMCBAQCBsaWJ4ZnNfdHJhbnNfcmVhZF9idWYoCj4+IMKgIMKg
+IMKgIMKgIH0KPj4KPj4gwqAgwqAgwqAgwqAgYnAgPSBsaWJ4ZnNfcmVhZGJ1ZihkZXYsIGJsa25v
+LCBsZW4sIGZsYWdzKTsKPj4gKyDCoCDCoCDCoCBpZiAoIWJwKXsKPj4gKyDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCAqYnBwID0gTlVMTDsKPj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCByZXR1cm4gZXJy
+bm87Cj4+ICsgwqAgwqAgwqAgfQo+PiDCoCNpZmRlZiBYQUNUX0RFQlVHCj4+IMKgIMKgIMKgIMKg
+IGZwcmludGYoc3RkZXJyLCAidHJhbnNfcmVhZF9idWYgYnVmZmVyICVwLCB0cmFuc2FjdGlvbiAl
+cFxuIiwgYnAsIHRwKTsKPj4gwqAjZW5kaWYKPj4KPj4gX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX18KPj4geGZzIG1haWxpbmcgbGlzdAo+PiB4ZnNAb3NzLnNn
+aS5jb20KPj4gaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCj4KPgo+Cj4K
+Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWls
+aW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3Rp
+bmZvL3hmcwo=
