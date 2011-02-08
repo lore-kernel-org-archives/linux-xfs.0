@@ -1,13 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p181EbJU080953 for <xfs@oss.sgi.com>; Mon, 7 Feb 2011 19:14:37 -0600
-Subject: Re: [patch] xfsprogs: unhandled error check in libxfs_trans_read_buf
+	p181Wwvw081848 for <xfs@oss.sgi.com>; Mon, 7 Feb 2011 19:32:59 -0600
+Subject: Re: mkfs.xfs pagefault when removed storage during operation
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <AANLkTim2nm9SXPmpRUmK8eWxXYFkPcrzc-gw2ceJ-m2-@mail.gmail.com>
-References: <AANLkTim2nm9SXPmpRUmK8eWxXYFkPcrzc-gw2ceJ-m2-@mail.gmail.com>
-Date: Mon, 07 Feb 2011 19:17:03 -0600
-Message-ID: <1297127823.2078.24.camel@doink>
+In-Reply-To: <AANLkTi=7dw1-r8BSdv7y51LzmWekxKjLrCv_Rky7EYx9@mail.gmail.com>
+References: <AANLkTi=wi_Fhr5v1J4wopvFTY=hC2EA_QmJu4Uc_XgGs@mail.gmail.com>
+	<AANLkTi=7dw1-r8BSdv7y51LzmWekxKjLrCv_Rky7EYx9@mail.gmail.com>
+Date: Mon, 07 Feb 2011 19:35:31 -0600
+Message-ID: <1297128931.2078.32.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -23,93 +24,38 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Ajeet Yadav <ajeet.yadav.77@gmail.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-On Thu, 2011-02-03 at 15:17 +0900, Ajeet Yadav wrote:
-> xfsprogs: unhandled error check in libxfs_trans_read_buf
-
-Sorry you didn't get a response earlier.  Reporting
-problems like this--especially if they come with a
-proposed fix--is always appreciated.
-
-> libxfs_trans_read_buf() is used in both mkfs.xfs & xfs_repair.
-> During stability testing we found some time occur pagefault in mkfs.xfs,
-> code inspection shows that if libxfs_readbuf() fails then occurs a
-> page fault in xfs_buf_item_init() called in libxfs_trans_read_buf().
+On Wed, 2011-02-02 at 17:09 +0900, Ajeet Yadav wrote:
+> If I see the current sigfault, its easy to fix adding one more patch
+> to xfsprogs.
+. . .
 > 
-> mkfs.xfs: unhandled page fault (11) at 0x00000070, code 0x017
+> But when I start reviewing the complete project w.r.t read() /
+> read64() / write() / write64() more importantly libxfs_readbufr() /
+> libxfs_writebufr().
+> I find error handing is broken at may places and I get my self lost in
+> m^n complexity also errno is lost.. therefore caller cannot examine
+> the exact error,
 > 
-> Added NULL check and errno handling.
+> Back again I think, What if I exit on error ? Does xfsprogs uses
+> read() / write() error as a part of its functionality, for example
+> does xfs_repair uses these errors as a part of repair funtionality.
+. . .
 
-I expect there are other similar problems lurking in
-the libxfs code.
+I think these are good observations and questions.
 
-I think your change looks good, with one exception,
-noted below.  I will gladly adjust your patch for
-you if you consent to the change I suggest.
+This doesn't answer your questions, but I want to mention to
+you that libxfs is just about to have a major update that
+affects lots of files.  I expect the update will *not*
+address the issues you point out here, but I guess what I'd
+like to do is get us moved to the updated code before trying
+to address problems that might be widespread like this.
+
+I hope to complete this update process soon, but I expect
+it will be a week or more before that happens.
 
 					-Alex
-
-> Signed-off-by: Ajeet Yadav <ajeet.yadav.77@gmail.com>
-> 
-> diff -Nurp xfsprogs/libxfs/rdwr.c xfsprogs-dirty/libxfs/rdwr.c
-> --- xfsprogs/libxfs/rdwr.c      2011-01-28 20:22:11.000000000 +0900
-> +++ xfsprogs-dirty/libxfs/rdwr.c        2011-02-02 16:59:16.000000000 +0900
-> @@ -207,10 +207,11 @@ libxfs_trace_readbuf(const char *func, c
->  {
->         xfs_buf_t       *bp = libxfs_readbuf(dev, blkno, len, flags);
-> 
-> -       bp->b_func = func;
-> -       bp->b_file = file;
-> -       bp->b_line = line;
-> -
-> +       if (bp){
-> +               bp->b_func = func;
-> +               bp->b_file = file;
-> +               bp->b_line = line;
-> +       }
->         return bp;
->  }
-> 
-> @@ -485,6 +486,7 @@ libxfs_readbuf(dev_t dev, xfs_daddr_t bl
->                 error = libxfs_readbufr(dev, blkno, bp, len, flags);
->                 if (error) {
->                         libxfs_putbuf(bp);
-> +                       errno = error;
-
-I think that libxfs_readbuf() simply returns the
-value of the special global "errno" if there is
-an error.  And I believe that at this point it
-will not have been changed, so there's no need
-to assign it here.
-
-In other words, I'd like to remove this one piece
-of your patch.
-
->                         return NULL;
->                 }
->         }
-> diff -Nurp xfsprogs/libxfs/trans.c xfsprogs-dirty/libxfs/trans.c
-> --- xfsprogs/libxfs/trans.c     2011-01-28 20:22:11.000000000 +0900
-> +++ xfsprogs-dirty/libxfs/trans.c       2011-02-02 17:00:42.000000000 +0900
-> @@ -508,6 +508,10 @@ libxfs_trans_read_buf(
->         }
-> 
->         bp = libxfs_readbuf(dev, blkno, len, flags);
-> +       if (!bp){
-> +               *bpp = NULL;
-> +               return errno;
-> +       }
->  #ifdef XACT_DEBUG
->         fprintf(stderr, "trans_read_buf buffer %p, transaction %p\n", bp, tp);
->  #endif
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-
-
 
 _______________________________________________
 xfs mailing list
