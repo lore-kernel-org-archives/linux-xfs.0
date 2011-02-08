@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p18KMQlW147077
-	for <linux-xfs@oss.sgi.com>; Tue, 8 Feb 2011 14:22:27 -0600
-Received: from mout.perfora.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 47B35123518D
-	for <linux-xfs@oss.sgi.com>; Tue,  8 Feb 2011 12:25:00 -0800 (PST)
-Received: from mout.perfora.net (mout.perfora.net [74.208.4.195]) by
-	cuda.sgi.com with ESMTP id GIJXJHII2FW60pMA for
-	<linux-xfs@oss.sgi.com>; Tue, 08 Feb 2011 12:25:00 -0800 (PST)
-Message-ID: <4D51A695.6060700@lueckdatasystems.com>
-Date: Tue, 08 Feb 2011 15:24:53 -0500
-From: Michael Lueck <mlueck@lueckdatasystems.com>
-MIME-Version: 1.0
-Subject: Re: xfsdump SGI_FS_BULKSTAT errno = 22, how could this IRIX bug get
-	into Ubuntu 10.04 Lucid between kernels 2.6.32-27 and 2.6.32-26?
+	p18Mibjn155197
+	for <linux-xfs@oss.sgi.com>; Tue, 8 Feb 2011 16:44:38 -0600
+Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6ADBD945402
+	for <linux-xfs@oss.sgi.com>; Tue,  8 Feb 2011 14:47:09 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	UJ5Q8OBgv9UaE52A for <linux-xfs@oss.sgi.com>;
+	Tue, 08 Feb 2011 14:47:09 -0800 (PST)
+Date: Wed, 9 Feb 2011 09:47:07 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfsdump SGI_FS_BULKSTAT errno = 22, how could this IRIX bug
+	get into Ubuntu 10.04 Lucid between kernels 2.6.32-27 and 2.6.32-26?
+Message-ID: <20110208224707.GF2559@dastard>
 References: <iibmah$dlp$1@dough.gmane.org> <4D49A35B.6030009@sgi.com>
 	<20110203045836.GV11040@dastard>
 	<4D4ABEF7.7000400@lueckdatasystems.com>
@@ -22,8 +22,10 @@ References: <iibmah$dlp$1@dough.gmane.org> <4D49A35B.6030009@sgi.com>
 	<4D517FD2.5040509@lueckdatasystems.com>
 	<20110208195256.GA25601@dastard>
 	<4D51A0BC.6070201@lueckdatasystems.com>
-In-Reply-To: <4D51A0BC.6070201@lueckdatasystems.com>
-Content-Type: multipart/mixed; boundary="------------080905090907010703040206"
+	<4D51A695.6060700@lueckdatasystems.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4D51A695.6060700@lueckdatasystems.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,124 +34,59 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Michael Lueck <mlueck@lueckdatasystems.com>
 Cc: linux-xfs@oss.sgi.com, Dann Frazier <dannf@debian.org>
 
-This is a multi-part message in MIME format.
---------------080905090907010703040206
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-
-Michael Lueck wrote:
-> I will IPL the server to the latest kernel and run the tests immediately.
-
-Here they are attached...
-
-Sincerely,
-
--- 
-Michael Lueck
-Lueck Data Systems
-http://www.lueckdatasystems.com/
-
---------------080905090907010703040206
-Content-Type: text/x-log;
- name="xfs_db-inode_80508397.log"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="xfs_db-inode_80508397.log"
-
-# sudo xfs_db -c "inode 80508397" -c p /dev/sda9 2>&1 | tee xfs_db-inode_80508397.log
-core.magic = 0x494e
-core.mode = 040777
-core.version = 2
-core.format = 2 (extents)
-core.nlinkv2 = 2
-core.onlink = 0
-core.projid = 0
-core.uid = 1000
-core.gid = 1000
-core.flushiter = 10
-core.atime.sec = Sun Feb  6 16:59:44 2011
-core.atime.nsec = 088915516
-core.mtime.sec = Tue Jan 11 13:50:51 2011
-core.mtime.nsec = 950662167
-core.ctime.sec = Tue Jan 11 13:50:51 2011
-core.ctime.nsec = 950662167
-core.size = 4096
-core.nblocks = 1
-core.extsize = 0
-core.nextents = 1
-core.naextents = 0
-core.forkoff = 0
-core.aformat = 2 (extents)
-core.dmevmask = 0
-core.dmstate = 0
-core.newrtbm = 0
-core.prealloc = 0
-core.realtime = 0
-core.immutable = 0
-core.append = 0
-core.sync = 0
-core.noatime = 0
-core.nodump = 0
-core.rtinherit = 0
-core.projinherit = 0
-core.nosymlinks = 0
-core.extsz = 0
-core.extszinherit = 0
-core.nodefrag = 0
-core.filestream = 0
-core.gen = 3978985788
-next_unlinked = null
-u.bmx[0] = [startoff,startblock,blockcount,extentflag] 0:[0,5052169,1,0]
-
---------------080905090907010703040206
-Content-Type: text/x-log;
- name="xfs_repair-srv.log"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="xfs_repair-srv.log"
-
-# sudo xfs_repair -n /dev/sda9 2>&1 | tee xfs_repair-srv.log
-Phase 1 - find and verify superblock...
-Phase 2 - using internal log
-        - scan filesystem freespace and inode maps...
-        - found root inode chunk
-Phase 3 - for each AG...
-        - scan (but don't clear) agi unlinked lists...
-        - process known inodes and perform inode discovery...
-        - agno = 0
-        - agno = 1
-        - agno = 2
-        - agno = 3
-        - process newly discovered inodes...
-Phase 4 - check for duplicate blocks...
-        - setting up duplicate extent list...
-        - check for inodes claiming duplicate blocks...
-        - agno = 0
-        - agno = 1
-        - agno = 2
-        - agno = 3
-No modify flag set, skipping phase 5
-Phase 6 - check inode connectivity...
-        - traversing filesystem ...
-        - traversal finished ...
-        - moving disconnected inodes to lost+found ...
-Phase 7 - verify link counts...
-No modify flag set, skipping filesystem flush and exiting.
-
---------------080905090907010703040206
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
-
---------------080905090907010703040206--
+T24gVHVlLCBGZWIgMDgsIDIwMTEgYXQgMDM6MjQ6NTNQTSAtMDUwMCwgTWljaGFlbCBMdWVjayB3
+cm90ZToKPiBNaWNoYWVsIEx1ZWNrIHdyb3RlOgo+ID5JIHdpbGwgSVBMIHRoZSBzZXJ2ZXIgdG8g
+dGhlIGxhdGVzdCBrZXJuZWwgYW5kIHJ1biB0aGUgdGVzdHMgaW1tZWRpYXRlbHkuCj4gCj4gSGVy
+ZSB0aGV5IGFyZSBhdHRhY2hlZC4uLgo+Cj4gIyBzdWRvIHhmc19kYiAtYyAiaW5vZGUgODA1MDgz
+OTciIC1jIHAgL2Rldi9zZGE5IDI+JjEgfCB0ZWUgeGZzX2RiLWlub2RlXzgwNTA4Mzk3LmxvZwo+
+IGNvcmUubWFnaWMgPSAweDQ5NGUKPiBjb3JlLm1vZGUgPSAwNDA3NzcKPiBjb3JlLnZlcnNpb24g
+PSAyCj4gY29yZS5mb3JtYXQgPSAyIChleHRlbnRzKQo+IGNvcmUubmxpbmt2MiA9IDIKPiBjb3Jl
+Lm9ubGluayA9IDAKPiBjb3JlLnByb2ppZCA9IDAKPiBjb3JlLnVpZCA9IDEwMDAKPiBjb3JlLmdp
+ZCA9IDEwMDAKPiBjb3JlLmZsdXNoaXRlciA9IDEwCj4gY29yZS5hdGltZS5zZWMgPSBTdW4gRmVi
+ICA2IDE2OjU5OjQ0IDIwMTEKPiBjb3JlLmF0aW1lLm5zZWMgPSAwODg5MTU1MTYKPiBjb3JlLm10
+aW1lLnNlYyA9IFR1ZSBKYW4gMTEgMTM6NTA6NTEgMjAxMQo+IGNvcmUubXRpbWUubnNlYyA9IDk1
+MDY2MjE2Nwo+IGNvcmUuY3RpbWUuc2VjID0gVHVlIEphbiAxMSAxMzo1MDo1MSAyMDExCj4gY29y
+ZS5jdGltZS5uc2VjID0gOTUwNjYyMTY3Cj4gY29yZS5zaXplID0gNDA5Ngo+IGNvcmUubmJsb2Nr
+cyA9IDEKPiBjb3JlLmV4dHNpemUgPSAwCj4gY29yZS5uZXh0ZW50cyA9IDEKPiBjb3JlLm5hZXh0
+ZW50cyA9IDAKPiBjb3JlLmZvcmtvZmYgPSAwCj4gY29yZS5hZm9ybWF0ID0gMiAoZXh0ZW50cykK
+PiBjb3JlLmRtZXZtYXNrID0gMAo+IGNvcmUuZG1zdGF0ZSA9IDAKPiBjb3JlLm5ld3J0Ym0gPSAw
+Cj4gY29yZS5wcmVhbGxvYyA9IDAKPiBjb3JlLnJlYWx0aW1lID0gMAo+IGNvcmUuaW1tdXRhYmxl
+ID0gMAo+IGNvcmUuYXBwZW5kID0gMAo+IGNvcmUuc3luYyA9IDAKPiBjb3JlLm5vYXRpbWUgPSAw
+Cj4gY29yZS5ub2R1bXAgPSAwCj4gY29yZS5ydGluaGVyaXQgPSAwCj4gY29yZS5wcm9qaW5oZXJp
+dCA9IDAKPiBjb3JlLm5vc3ltbGlua3MgPSAwCj4gY29yZS5leHRzeiA9IDAKPiBjb3JlLmV4dHN6
+aW5oZXJpdCA9IDAKPiBjb3JlLm5vZGVmcmFnID0gMAo+IGNvcmUuZmlsZXN0cmVhbSA9IDAKPiBj
+b3JlLmdlbiA9IDM5Nzg5ODU3ODgKPiBuZXh0X3VubGlua2VkID0gbnVsbAo+IHUuYm14WzBdID0g
+W3N0YXJ0b2ZmLHN0YXJ0YmxvY2ssYmxvY2tjb3VudCxleHRlbnRmbGFnXSAwOlswLDUwNTIxNjks
+MSwwXQoKTm90aGluZyB3cm9uZyB3aXRoIHRoYXQgaW5vZGUuLi4uCgo+ICMgc3VkbyB4ZnNfcmVw
+YWlyIC1uIC9kZXYvc2RhOSAyPiYxIHwgdGVlIHhmc19yZXBhaXItc3J2LmxvZwo+IFBoYXNlIDEg
+LSBmaW5kIGFuZCB2ZXJpZnkgc3VwZXJibG9jay4uLgo+IFBoYXNlIDIgLSB1c2luZyBpbnRlcm5h
+bCBsb2cKPiAgICAgICAgIC0gc2NhbiBmaWxlc3lzdGVtIGZyZWVzcGFjZSBhbmQgaW5vZGUgbWFw
+cy4uLgo+ICAgICAgICAgLSBmb3VuZCByb290IGlub2RlIGNodW5rCj4gUGhhc2UgMyAtIGZvciBl
+YWNoIEFHLi4uCj4gICAgICAgICAtIHNjYW4gKGJ1dCBkb24ndCBjbGVhcikgYWdpIHVubGlua2Vk
+IGxpc3RzLi4uCj4gICAgICAgICAtIHByb2Nlc3Mga25vd24gaW5vZGVzIGFuZCBwZXJmb3JtIGlu
+b2RlIGRpc2NvdmVyeS4uLgo+ICAgICAgICAgLSBhZ25vID0gMAo+ICAgICAgICAgLSBhZ25vID0g
+MQo+ICAgICAgICAgLSBhZ25vID0gMgo+ICAgICAgICAgLSBhZ25vID0gMwo+ICAgICAgICAgLSBw
+cm9jZXNzIG5ld2x5IGRpc2NvdmVyZWQgaW5vZGVzLi4uCj4gUGhhc2UgNCAtIGNoZWNrIGZvciBk
+dXBsaWNhdGUgYmxvY2tzLi4uCj4gICAgICAgICAtIHNldHRpbmcgdXAgZHVwbGljYXRlIGV4dGVu
+dCBsaXN0Li4uCj4gICAgICAgICAtIGNoZWNrIGZvciBpbm9kZXMgY2xhaW1pbmcgZHVwbGljYXRl
+IGJsb2Nrcy4uLgo+ICAgICAgICAgLSBhZ25vID0gMAo+ICAgICAgICAgLSBhZ25vID0gMQo+ICAg
+ICAgICAgLSBhZ25vID0gMgo+ICAgICAgICAgLSBhZ25vID0gMwo+IE5vIG1vZGlmeSBmbGFnIHNl
+dCwgc2tpcHBpbmcgcGhhc2UgNQo+IFBoYXNlIDYgLSBjaGVjayBpbm9kZSBjb25uZWN0aXZpdHku
+Li4KPiAgICAgICAgIC0gdHJhdmVyc2luZyBmaWxlc3lzdGVtIC4uLgo+ICAgICAgICAgLSB0cmF2
+ZXJzYWwgZmluaXNoZWQgLi4uCj4gICAgICAgICAtIG1vdmluZyBkaXNjb25uZWN0ZWQgaW5vZGVz
+IHRvIGxvc3QrZm91bmQgLi4uCj4gUGhhc2UgNyAtIHZlcmlmeSBsaW5rIGNvdW50cy4uLgo+IE5v
+IG1vZGlmeSBmbGFnIHNldCwgc2tpcHBpbmcgZmlsZXN5c3RlbSBmbHVzaCBhbmQgZXhpdGluZy4K
+CkFuZCBubyBlcnJvcnMgZGV0ZWN0ZWQgaW4gdGhlIGZpbGVzeXN0ZW0uIENhbiB5b3UgcnVuIHRo
+ZSB4ZnNkdW1wCmFnYWluIHRvIGNvbmZpcm0gdGhhdCBpdCBmYWlscyBvbiB0aGUgc2FtZSBpbm9k
+ZT8gSWYgaXQgZG9lc8WGIHRoZW4KaXQgZGVmaW5pdGVseSBzZWVtcyBsaWtlIGFuIGFsaWdubWVu
+dCBwcm9ibGVtIGluIHRoZSB1bnRydXN0ZWQgaW5vZGUKbG9va3VwIHBhdGNoZXMuLi4uCgpDaGVl
+cnMsCgpEYXZlLgotLSAKRGF2ZSBDaGlubmVyCmRhdmlkQGZyb21vcmJpdC5jb20KCl9fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QK
+eGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
