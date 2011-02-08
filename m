@@ -1,25 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p182PBKC084399 for <xfs@oss.sgi.com>; Mon, 7 Feb 2011 20:25:11 -0600
-Received: from mail-vx0-f181.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B25251234C99
-	for <xfs@oss.sgi.com>; Mon,  7 Feb 2011 18:27:44 -0800 (PST)
-Received: from mail-vx0-f181.google.com (mail-vx0-f181.google.com
-	[209.85.220.181]) by cuda.sgi.com with ESMTP id
-	Ob9M4Iot2gF5Y28H for <xfs@oss.sgi.com>;
-	Mon, 07 Feb 2011 18:27:44 -0800 (PST)
-Received: by vxc38 with SMTP id 38so2221147vxc.26
-	for <xfs@oss.sgi.com>; Mon, 07 Feb 2011 18:27:43 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1297128931.2078.32.camel@doink>
-References: <AANLkTi=wi_Fhr5v1J4wopvFTY=hC2EA_QmJu4Uc_XgGs@mail.gmail.com>
-	<AANLkTi=7dw1-r8BSdv7y51LzmWekxKjLrCv_Rky7EYx9@mail.gmail.com>
-	<1297128931.2078.32.camel@doink>
-Date: Tue, 8 Feb 2011 11:27:43 +0900
-Message-ID: <AANLkTi=q1eh2zU26PRfSUt0sf1Spbui2VhB1ehCa4Ay8@mail.gmail.com>
-Subject: Re: mkfs.xfs pagefault when removed storage during operation
-From: Ajeet Yadav <ajeet.yadav.77@gmail.com>
+	p1859V32094247 for <xfs@oss.sgi.com>; Mon, 7 Feb 2011 23:09:32 -0600
+Received: from mailout3.samsung.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A0AF412358CA
+	for <xfs@oss.sgi.com>; Mon,  7 Feb 2011 21:12:03 -0800 (PST)
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33]) by
+	cuda.sgi.com with ESMTP id UwkokWB83VZaDDCI for
+	<xfs@oss.sgi.com>; Mon, 07 Feb 2011 21:12:03 -0800 (PST)
+Received: from epmmp2 (mailout3.samsung.com [203.254.224.33])
+	by mailout3.samsung.com
+	(Oracle Communications Messaging Exchange Server 7u4-19.01 64bit (built
+	Sep 7
+	2010)) with ESMTP id <0LGA00F5Y942NS80@mailout3.samsung.com> for
+	xfs@oss.sgi.com; Tue, 08 Feb 2011 14:12:02 +0900 (KST)
+Received: from unisistPC ([165.213.110.204])
+	by mmp2.samsung.com (iPlanet Messaging Server 5.2 Patch 2 (built Jul 14
+	2004))
+	with ESMTPA id <0LGA003FS9428X@mmp2.samsung.com> for xfs@oss.sgi.com;
+	Tue, 08 Feb 2011 14:12:02 +0900 (KST)
+Date: Tue, 08 Feb 2011 14:12:01 +0900
+From: Ryan Roh <unisist.roh@samsung.com>
+Subject: RE: segmentation fault during mount
+In-reply-to: <4D50CA45.8070807@sandeen.net>
+Message-id: <030701cbc74e$b7f25680$27d70380$@samsung.com>
+MIME-version: 1.0
+Content-language: en-us
+References: <02b401cbc6b6$5b7ac0b0$12704210$@samsung.com>
+	<4D50CA45.8070807@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,38 +36,82 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: aelder@sgi.com
+To: 'Eric Sandeen' <sandeen@sandeen.net>
 Cc: xfs@oss.sgi.com
 
-T24gVHVlLCBGZWIgOCwgMjAxMSBhdCAxMDozNSBBTSwgQWxleCBFbGRlciA8YWVsZGVyQHNnaS5j
-b20+IHdyb3RlOgo+IE9uIFdlZCwgMjAxMS0wMi0wMiBhdCAxNzowOSArMDkwMCwgQWplZXQgWWFk
-YXYgd3JvdGU6Cj4+IElmIEkgc2VlIHRoZSBjdXJyZW50IHNpZ2ZhdWx0LCBpdHMgZWFzeSB0byBm
-aXggYWRkaW5nIG9uZSBtb3JlIHBhdGNoCj4+IHRvIHhmc3Byb2dzLgo+IC4gLiAuCj4+Cj4+IEJ1
-dCB3aGVuIEkgc3RhcnQgcmV2aWV3aW5nIHRoZSBjb21wbGV0ZSBwcm9qZWN0IHcuci50IHJlYWQo
-KSAvCj4+IHJlYWQ2NCgpIC8gd3JpdGUoKSAvIHdyaXRlNjQoKSBtb3JlIGltcG9ydGFudGx5IGxp
-Ynhmc19yZWFkYnVmcigpIC8KPj4gbGlieGZzX3dyaXRlYnVmcigpLgo+PiBJIGZpbmQgZXJyb3Ig
-aGFuZGluZyBpcyBicm9rZW4gYXQgbWF5IHBsYWNlcyBhbmQgSSBnZXQgbXkgc2VsZiBsb3N0IGlu
-Cj4+IG1ebiBjb21wbGV4aXR5IGFsc28gZXJybm8gaXMgbG9zdC4uIHRoZXJlZm9yZSBjYWxsZXIg
-Y2Fubm90IGV4YW1pbmUKPj4gdGhlIGV4YWN0IGVycm9yLAo+Pgo+PiBCYWNrIGFnYWluIEkgdGhp
-bmssIFdoYXQgaWYgSSBleGl0IG9uIGVycm9yID8gRG9lcyB4ZnNwcm9ncyB1c2VzCj4+IHJlYWQo
-KSAvIHdyaXRlKCkgZXJyb3IgYXMgYSBwYXJ0IG9mIGl0cyBmdW5jdGlvbmFsaXR5LCBmb3IgZXhh
-bXBsZQo+PiBkb2VzIHhmc19yZXBhaXIgdXNlcyB0aGVzZSBlcnJvcnMgYXMgYSBwYXJ0IG9mIHJl
-cGFpciBmdW50aW9uYWxpdHkuCj4gLiAuIC4KPgo+IEkgdGhpbmsgdGhlc2UgYXJlIGdvb2Qgb2Jz
-ZXJ2YXRpb25zIGFuZCBxdWVzdGlvbnMuCj4KPiBUaGlzIGRvZXNuJ3QgYW5zd2VyIHlvdXIgcXVl
-c3Rpb25zLCBidXQgSSB3YW50IHRvIG1lbnRpb24gdG8KPiB5b3UgdGhhdCBsaWJ4ZnMgaXMganVz
-dCBhYm91dCB0byBoYXZlIGEgbWFqb3IgdXBkYXRlIHRoYXQKPiBhZmZlY3RzIGxvdHMgb2YgZmls
-ZXMuIMKgSSBleHBlY3QgdGhlIHVwZGF0ZSB3aWxsICpub3QqCj4gYWRkcmVzcyB0aGUgaXNzdWVz
-IHlvdSBwb2ludCBvdXQgaGVyZSwgYnV0IEkgZ3Vlc3Mgd2hhdCBJJ2QKPiBsaWtlIHRvIGRvIGlz
-IGdldCB1cyBtb3ZlZCB0byB0aGUgdXBkYXRlZCBjb2RlIGJlZm9yZSB0cnlpbmcKPiB0byBhZGRy
-ZXNzIHByb2JsZW1zIHRoYXQgbWlnaHQgYmUgd2lkZXNwcmVhZCBsaWtlIHRoaXMuCj4KPiBJIGhv
-cGUgdG8gY29tcGxldGUgdGhpcyB1cGRhdGUgcHJvY2VzcyBzb29uLCBidXQgSSBleHBlY3QKPiBp
-dCB3aWxsIGJlIGEgd2VlayBvciBtb3JlIGJlZm9yZSB0aGF0IGhhcHBlbnMuCj4KPiDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoC1BbGV4
-Cj4KPgpUaGFua3MsIEkgYW0gd2FpdGluZyBmb3IgdGhlIG5leHQgcmVsZWFzZSBvZiB4ZnNwcm9n
-cy4KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBt
-YWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xp
-c3RpbmZvL3hmcwo=
+Dear Eric,
+
+I don't know how I can make correct form to answer for this thread because
+I'm newbie here. Sorry.
+
+Anyway, this issue was happened from returned HDD from customer which was
+used our PVR STB. And our STB has toggle power switch so I think user turned
+off the power during recording something.
+
+Thanks,
+Ryan.
+  
+
+-----Original Message-----
+From: Eric Sandeen [mailto:sandeen@sandeen.net] 
+Sent: Tuesday, February 08, 2011 1:45 PM
+To: Ryan Roh
+Cc: xfs@oss.sgi.com
+Subject: Re: segmentation fault during mount
+
+On 2/7/11 5:01 AM, Ryan Roh wrote:
+> Dear Members,
+> 
+> I'm using XFS based on STMicro SH4 based chip (STi7105).
+> 
+> and I have some issue on xfs log mounting.
+> 
+
+Were the errors after any sort of harsh testing of the filesystem, such as
+usb disconnects or power off?
+
+Or was this after a clean unmount?
+
+-Eric
+
+> 
+> 1. chip : sh4 STi7105
+> 
+> 2. HDD : 320GB USB HDD USB 2.0 port.
+> 
+> 3. OS : Linux 2.6.23.17 + patch for fixing cache aliasing issue.
+> 
+> 4. XFSProgs version : 3.1.1
+> 
+>  
+> 
+> mounting and repairing log in the below. This segmentation fault is 
+> caused by
+> 
+> the assert in xfs_alloc_increment function of xfs_alloc_btree.c file. 
+> The btree
+> 
+> level is equal to root level in the below code.
+> 
+>  
+> 
+>     /*
+> 
+>      * If we went off the root then we are seriously confused.
+> 
+>      */
+> 
+>     ASSERT(lev < cur->bc_nlevels);
+> 
+>  
+
+...
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
