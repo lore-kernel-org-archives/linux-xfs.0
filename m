@@ -1,31 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p18Mibjn155197
-	for <linux-xfs@oss.sgi.com>; Tue, 8 Feb 2011 16:44:38 -0600
-Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6ADBD945402
-	for <linux-xfs@oss.sgi.com>; Tue,  8 Feb 2011 14:47:09 -0800 (PST)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	UJ5Q8OBgv9UaE52A for <linux-xfs@oss.sgi.com>;
-	Tue, 08 Feb 2011 14:47:09 -0800 (PST)
-Date: Wed, 9 Feb 2011 09:47:07 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfsdump SGI_FS_BULKSTAT errno = 22, how could this IRIX bug
-	get into Ubuntu 10.04 Lucid between kernels 2.6.32-27 and 2.6.32-26?
-Message-ID: <20110208224707.GF2559@dastard>
+	p191MEkj167289
+	for <linux-xfs@oss.sgi.com>; Tue, 8 Feb 2011 19:22:15 -0600
+Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 4A2DD304089
+	for <linux-xfs@oss.sgi.com>; Tue,  8 Feb 2011 17:24:46 -0800 (PST)
+Message-ID: <4D51ECDD.1030606@sgi.com>
+Date: Tue, 08 Feb 2011 19:24:45 -0600
+From: Bill Kendall <wkendall@sgi.com>
+MIME-Version: 1.0
+Subject: Re: xfsdump SGI_FS_BULKSTAT errno = 22, how could this IRIX bug get
+	into Ubuntu 10.04 Lucid between kernels 2.6.32-27 and 2.6.32-26?
 References: <iibmah$dlp$1@dough.gmane.org> <4D49A35B.6030009@sgi.com>
 	<20110203045836.GV11040@dastard>
 	<4D4ABEF7.7000400@lueckdatasystems.com>
 	<20110204000823.GW11040@dastard>
-	<4D517FD2.5040509@lueckdatasystems.com>
-	<20110208195256.GA25601@dastard>
-	<4D51A0BC.6070201@lueckdatasystems.com>
-	<4D51A695.6060700@lueckdatasystems.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4D51A695.6060700@lueckdatasystems.com>
+	<4D4C0965.9010905@lueckdatasystems.com>
+	<20110204204927.GZ11040@dastard> <4D505C48.8050203@sgi.com>
+	<20110207212320.GC2559@dastard> <4D506744.9010303@sgi.com>
+	<20110207220421.GD2559@dastard>
+In-Reply-To: <20110207220421.GD2559@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,59 +29,96 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Michael Lueck <mlueck@lueckdatasystems.com>
-Cc: linux-xfs@oss.sgi.com, Dann Frazier <dannf@debian.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@oss.sgi.com, Dann Frazier <dannf@debian.org>, Michael Lueck <mlueck@lueckdatasystems.com>
 
-T24gVHVlLCBGZWIgMDgsIDIwMTEgYXQgMDM6MjQ6NTNQTSAtMDUwMCwgTWljaGFlbCBMdWVjayB3
-cm90ZToKPiBNaWNoYWVsIEx1ZWNrIHdyb3RlOgo+ID5JIHdpbGwgSVBMIHRoZSBzZXJ2ZXIgdG8g
-dGhlIGxhdGVzdCBrZXJuZWwgYW5kIHJ1biB0aGUgdGVzdHMgaW1tZWRpYXRlbHkuCj4gCj4gSGVy
-ZSB0aGV5IGFyZSBhdHRhY2hlZC4uLgo+Cj4gIyBzdWRvIHhmc19kYiAtYyAiaW5vZGUgODA1MDgz
-OTciIC1jIHAgL2Rldi9zZGE5IDI+JjEgfCB0ZWUgeGZzX2RiLWlub2RlXzgwNTA4Mzk3LmxvZwo+
-IGNvcmUubWFnaWMgPSAweDQ5NGUKPiBjb3JlLm1vZGUgPSAwNDA3NzcKPiBjb3JlLnZlcnNpb24g
-PSAyCj4gY29yZS5mb3JtYXQgPSAyIChleHRlbnRzKQo+IGNvcmUubmxpbmt2MiA9IDIKPiBjb3Jl
-Lm9ubGluayA9IDAKPiBjb3JlLnByb2ppZCA9IDAKPiBjb3JlLnVpZCA9IDEwMDAKPiBjb3JlLmdp
-ZCA9IDEwMDAKPiBjb3JlLmZsdXNoaXRlciA9IDEwCj4gY29yZS5hdGltZS5zZWMgPSBTdW4gRmVi
-ICA2IDE2OjU5OjQ0IDIwMTEKPiBjb3JlLmF0aW1lLm5zZWMgPSAwODg5MTU1MTYKPiBjb3JlLm10
-aW1lLnNlYyA9IFR1ZSBKYW4gMTEgMTM6NTA6NTEgMjAxMQo+IGNvcmUubXRpbWUubnNlYyA9IDk1
-MDY2MjE2Nwo+IGNvcmUuY3RpbWUuc2VjID0gVHVlIEphbiAxMSAxMzo1MDo1MSAyMDExCj4gY29y
-ZS5jdGltZS5uc2VjID0gOTUwNjYyMTY3Cj4gY29yZS5zaXplID0gNDA5Ngo+IGNvcmUubmJsb2Nr
-cyA9IDEKPiBjb3JlLmV4dHNpemUgPSAwCj4gY29yZS5uZXh0ZW50cyA9IDEKPiBjb3JlLm5hZXh0
-ZW50cyA9IDAKPiBjb3JlLmZvcmtvZmYgPSAwCj4gY29yZS5hZm9ybWF0ID0gMiAoZXh0ZW50cykK
-PiBjb3JlLmRtZXZtYXNrID0gMAo+IGNvcmUuZG1zdGF0ZSA9IDAKPiBjb3JlLm5ld3J0Ym0gPSAw
-Cj4gY29yZS5wcmVhbGxvYyA9IDAKPiBjb3JlLnJlYWx0aW1lID0gMAo+IGNvcmUuaW1tdXRhYmxl
-ID0gMAo+IGNvcmUuYXBwZW5kID0gMAo+IGNvcmUuc3luYyA9IDAKPiBjb3JlLm5vYXRpbWUgPSAw
-Cj4gY29yZS5ub2R1bXAgPSAwCj4gY29yZS5ydGluaGVyaXQgPSAwCj4gY29yZS5wcm9qaW5oZXJp
-dCA9IDAKPiBjb3JlLm5vc3ltbGlua3MgPSAwCj4gY29yZS5leHRzeiA9IDAKPiBjb3JlLmV4dHN6
-aW5oZXJpdCA9IDAKPiBjb3JlLm5vZGVmcmFnID0gMAo+IGNvcmUuZmlsZXN0cmVhbSA9IDAKPiBj
-b3JlLmdlbiA9IDM5Nzg5ODU3ODgKPiBuZXh0X3VubGlua2VkID0gbnVsbAo+IHUuYm14WzBdID0g
-W3N0YXJ0b2ZmLHN0YXJ0YmxvY2ssYmxvY2tjb3VudCxleHRlbnRmbGFnXSAwOlswLDUwNTIxNjks
-MSwwXQoKTm90aGluZyB3cm9uZyB3aXRoIHRoYXQgaW5vZGUuLi4uCgo+ICMgc3VkbyB4ZnNfcmVw
-YWlyIC1uIC9kZXYvc2RhOSAyPiYxIHwgdGVlIHhmc19yZXBhaXItc3J2LmxvZwo+IFBoYXNlIDEg
-LSBmaW5kIGFuZCB2ZXJpZnkgc3VwZXJibG9jay4uLgo+IFBoYXNlIDIgLSB1c2luZyBpbnRlcm5h
-bCBsb2cKPiAgICAgICAgIC0gc2NhbiBmaWxlc3lzdGVtIGZyZWVzcGFjZSBhbmQgaW5vZGUgbWFw
-cy4uLgo+ICAgICAgICAgLSBmb3VuZCByb290IGlub2RlIGNodW5rCj4gUGhhc2UgMyAtIGZvciBl
-YWNoIEFHLi4uCj4gICAgICAgICAtIHNjYW4gKGJ1dCBkb24ndCBjbGVhcikgYWdpIHVubGlua2Vk
-IGxpc3RzLi4uCj4gICAgICAgICAtIHByb2Nlc3Mga25vd24gaW5vZGVzIGFuZCBwZXJmb3JtIGlu
-b2RlIGRpc2NvdmVyeS4uLgo+ICAgICAgICAgLSBhZ25vID0gMAo+ICAgICAgICAgLSBhZ25vID0g
-MQo+ICAgICAgICAgLSBhZ25vID0gMgo+ICAgICAgICAgLSBhZ25vID0gMwo+ICAgICAgICAgLSBw
-cm9jZXNzIG5ld2x5IGRpc2NvdmVyZWQgaW5vZGVzLi4uCj4gUGhhc2UgNCAtIGNoZWNrIGZvciBk
-dXBsaWNhdGUgYmxvY2tzLi4uCj4gICAgICAgICAtIHNldHRpbmcgdXAgZHVwbGljYXRlIGV4dGVu
-dCBsaXN0Li4uCj4gICAgICAgICAtIGNoZWNrIGZvciBpbm9kZXMgY2xhaW1pbmcgZHVwbGljYXRl
-IGJsb2Nrcy4uLgo+ICAgICAgICAgLSBhZ25vID0gMAo+ICAgICAgICAgLSBhZ25vID0gMQo+ICAg
-ICAgICAgLSBhZ25vID0gMgo+ICAgICAgICAgLSBhZ25vID0gMwo+IE5vIG1vZGlmeSBmbGFnIHNl
-dCwgc2tpcHBpbmcgcGhhc2UgNQo+IFBoYXNlIDYgLSBjaGVjayBpbm9kZSBjb25uZWN0aXZpdHku
-Li4KPiAgICAgICAgIC0gdHJhdmVyc2luZyBmaWxlc3lzdGVtIC4uLgo+ICAgICAgICAgLSB0cmF2
-ZXJzYWwgZmluaXNoZWQgLi4uCj4gICAgICAgICAtIG1vdmluZyBkaXNjb25uZWN0ZWQgaW5vZGVz
-IHRvIGxvc3QrZm91bmQgLi4uCj4gUGhhc2UgNyAtIHZlcmlmeSBsaW5rIGNvdW50cy4uLgo+IE5v
-IG1vZGlmeSBmbGFnIHNldCwgc2tpcHBpbmcgZmlsZXN5c3RlbSBmbHVzaCBhbmQgZXhpdGluZy4K
-CkFuZCBubyBlcnJvcnMgZGV0ZWN0ZWQgaW4gdGhlIGZpbGVzeXN0ZW0uIENhbiB5b3UgcnVuIHRo
-ZSB4ZnNkdW1wCmFnYWluIHRvIGNvbmZpcm0gdGhhdCBpdCBmYWlscyBvbiB0aGUgc2FtZSBpbm9k
-ZT8gSWYgaXQgZG9lc8WGIHRoZW4KaXQgZGVmaW5pdGVseSBzZWVtcyBsaWtlIGFuIGFsaWdubWVu
-dCBwcm9ibGVtIGluIHRoZSB1bnRydXN0ZWQgaW5vZGUKbG9va3VwIHBhdGNoZXMuLi4uCgpDaGVl
-cnMsCgpEYXZlLgotLSAKRGF2ZSBDaGlubmVyCmRhdmlkQGZyb21vcmJpdC5jb20KCl9fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QK
-eGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On 02/07/2011 04:04 PM, Dave Chinner wrote:
+> On Mon, Feb 07, 2011 at 03:42:28PM -0600, Bill Kendall wrote:
+>> On 02/07/2011 03:23 PM, Dave Chinner wrote:
+>>> On Mon, Feb 07, 2011 at 02:55:36PM -0600, Bill Kendall wrote:
+>>>> On 02/04/2011 02:49 PM, Dave Chinner wrote:
+>>>>> On Fri, Feb 04, 2011 at 09:12:53AM -0500, Michael Lueck wrote:
+>>>>>> Dave Chinner wrote:
+>>>>>>> Ok, so xfsdump i seeing a short bulkstat, then an EINVAL returned
+>>>>>> >from the next bulkstat. That's not a race condition, and makes me
+>>>>>>> think you have some kind of on-disk corruption.
+>>>>>>
+>>>>>> Very odd that some kind of on-disk corruption is suddenly causing
+>>>>>> xfsdump problems starting with Ubuntu 10.04 (Lucid) kernel
+>>>>>> 2.6.32-27 and persisting in 2.6.32-28.
+>>>>>
+>>>>> Not really. The newer kernels have code in them that does more
+>>>>> validity checks than previous kernels, so older kernels would have
+>>>>> erroneously and silently returned unlinked files to xfsdump and have
+>>>>> them backed up. IOWs, you'd never notice such a corruption with
+>>>>> xfsdump. On the new kernel, xfsdump gets an EINVAL error to such
+>>>>> occurrences, which it should have in the first place.
+>>>>>
+>>>>>> And there is one other person who confirmed this xfsdump problem
+>>>>>> running Lucid with kernel 2.6.32-28. They reported their "me too"
+>>>>>> in the Ubuntu bug tracker.
+>>>>>>
+>>>>>> Could it be that 2.6.32-26 and prior managed to write something to
+>>>>>> disk corrupted, and the newer code is tripping on it?
+>>>>>
+>>>>> That's what I'm trying to find out. Or it could be something as
+>>>>> simple as your disk has had an undetected bit error that has flipped
+>>>>> a bit in the inode allocation btree.
+>>>>>
+>>>>
+>>>> Hi Dave,
+>>>>
+>>>> I am able to reproduce this on a system running Ubuntu 10.4
+>>>> (2.6.32-28). I took a metadump of the filesystem and moved it to
+>>>> a system running 10.10 (2.6.35-25), and was able to successfully
+>>>> dump it there. Likewise it dumps fine on 2.6.38-rc1. So this
+>>>> suggests an issue with the Ubuntu 10.4 kernel.
+>>>
+>>> 2.6.35 hasn't had the untrusted inode lookup patches back ported to
+>>> it, so it's no surprise that it isn't having problems - it's just
+>>> like the older 2.6.32 kernels.
+>>
+>> I thought it landed in 2.6.35 and then a regression was fixed in
+>> 2.6.36. The untrusted inode lookup changes are referenced here:
+>> http://www.kernel.org/pub/linux/kernel/v2.6/ChangeLog-2.6.35
+>
+> My bad, I just checked the regression fix. I have no idea if it got
+> back ported to 2.6.35-stable or not - it probably didn't judging by
+> your results.....
+>
+>>> Hmmm, can you find out if there is any specific pattern to the inode
+>>> numbers that are returning EINVAL? Maybe the inode allocbt freespace
+>>> record checks aren't quite correct in the backport (like the
+>>> original bogus alignment assumption I made).
+>>
+>> I'll take a look.
+
+The failing bulkstats, at least the ones I've checked so far, are 
+hitting this path in xfs_bulkstat():
+
+/*
+  * Skip if this inode is free.
+  */
+if (XFS_INOBT_MASK(chunkidx) & irbp->ir_free) {
+	lastino = ino;
+	continue;
+}
+
+The backport of the 4 untrusted inode lookup commits looks okay to
+me, however I think they depend on commit
+7dce11dbac54fce777eea0f5fb25b2694ccd7900 (xfs: always use iget in
+bulkstat), which was checked in shortly before the untrusted
+inode lookup changes. When that commit is added to the Ubuntu
+2.6.32-28 kernel, xfsdump runs fine on the 2 filesystems of mine
+that were exhibiting the problem.
+
+Bill
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
