@@ -1,15 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p19GNF3J006444 for <xfs@oss.sgi.com>; Wed, 9 Feb 2011 10:23:16 -0600
-Subject: Re: [PATCH v3] Add test 249: Check filesystem FITRIM implementation
+	p19I3JSr018250 for <xfs@oss.sgi.com>; Wed, 9 Feb 2011 12:03:20 -0600
+Subject: Re: [PATCH 1/3] libxfs: reintroduce old xfs_repair radix-tree code
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <alpine.LFD.2.00.1102091309560.32212@dhcp-27-109.brq.redhat.com>
-References: <1296762207-17265-1-git-send-email-lczerner@redhat.com>
-	<1297167619.7351.29.camel@doink>
-	<alpine.LFD.2.00.1102091309560.32212@dhcp-27-109.brq.redhat.com>
-Date: Wed, 09 Feb 2011 10:24:00 -0600
-Message-ID: <1297268640.2513.0.camel@doink>
+In-Reply-To: <1294649091-27174-2-git-send-email-david@fromorbit.com>
+References: <1294649091-27174-1-git-send-email-david@fromorbit.com>
+	<1294649091-27174-2-git-send-email-david@fromorbit.com>
+Date: Wed, 09 Feb 2011 12:05:13 -0600
+Message-ID: <1297274713.2513.27.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -24,25 +23,51 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Lukas Czerner <lczerner@redhat.com>
-Cc: hch@infradead.org, esandeen@redhat.com, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Wed, 2011-02-09 at 13:13 +0100, Lukas Czerner wrote:
+On Mon, 2011-01-10 at 19:44 +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> One more thing though. Where did you get the number 252 ? This patch
-> still apply cleanly on the top of the master branch. I am using this
-> repo: 
+> The current kernel code uses radix trees more widely than the
+> previous code, so for the next sync we need radix tree support in
+> libxfs. Pull the old radix tree code out the xfs_repair git history
+> and move it into libxfs to simplify the kernel code sync.
 > 
-> git://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git
-> 
-> Shall I use a different one ? Which one is the most up-to-date ? 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-Like I said, use what works for you, and when the time
-comes to commit it I will update all the numbers for you
-to match what's current.  I've been testing with some
-other tests not yet committed.
+OK, I actually reviewed this code, even though it had
+already been present in the source tree prior to commit:
+379397bf9... ("repair: use a btree instead of a radix tree
+for the prefetch queue").
 
-					-Alex
+And I have some suggestions, and I have at least one
+thing that I think is a bug.
+
+I also notice that this code apparently formed the
+basis of the kernel's implementation.  That's good.
+It's probably worth reviewing the kernel version's
+history to see if there are any bug fixes that ought
+to be brought back into this code (and vice-versa).
+
+
+All that being said, I think the right thing to do
+is to include this change as-is as a commit.  It
+includes both "radix-tree.c" and "radix-tree.h" as
+identical copies of what was removed (though each
+now resides in a different directory from before),
+thereby preserving the provenance of the code.
+
+Then, after it's committed, I can offer my suggested
+changes, or even just implement and propose them
+myself.
+
+So unless you disagree with this approach I think
+it's fine to commit it as you originally posted it.
+
+Reviewed-by: Alex Elder <aelder@sgi.com>
+
+
 
 _______________________________________________
 xfs mailing list
