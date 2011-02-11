@@ -1,30 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p1AMGKMo159476 for <xfs@oss.sgi.com>; Thu, 10 Feb 2011 16:16:20 -0600
-Received: from ipmail07.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D410F1AAE571
-	for <xfs@oss.sgi.com>; Thu, 10 Feb 2011 14:18:54 -0800 (PST)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	kGKEtZIZGDv6PyJt for <xfs@oss.sgi.com>;
-	Thu, 10 Feb 2011 14:18:54 -0800 (PST)
-Date: Fri, 11 Feb 2011 09:18:51 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfssyncd and disk spin down
-Message-ID: <20110210221851.GG2559@dastard>
-References: <20101223165532.GA23813@peter.simplex.ro>
-	<20101227021904.GA24828@dastard>
-	<20101227061629.GA2275@pandora.simplex.ro>
-	<20101227140750.GB24828@dastard>
-	<20101227171939.GA7759@pandora.simplex.ro>
-	<20101231001323.GD15179@dastard>
-	<20110120100143.GA2007@peter.simplex.ro>
-	<20110120234310.GV16267@dastard>
-	<20110210204254.GA10451@peter.simplex.ro>
+	p1BJ5asQ206866 for <xfs@oss.sgi.com>; Fri, 11 Feb 2011 13:05:36 -0600
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EC8EB12888A2
+	for <xfs@oss.sgi.com>; Fri, 11 Feb 2011 11:08:10 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 4cWxUEcZFp3h3iqY for
+	<xfs@oss.sgi.com>; Fri, 11 Feb 2011 11:08:10 -0800 (PST)
+Received: from int-mx01.intmail.prod.int.phx2.redhat.com
+	(int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id p1BJ8Aoj026278
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Fri, 11 Feb 2011 14:08:10 -0500
+Received: from segfault.boston.devel.redhat.com
+	(segfault.boston.devel.redhat.com [10.16.60.26])
+	by int-mx01.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
+	id p1BJ89VE022328
+	for <xfs@oss.sgi.com>; Fri, 11 Feb 2011 14:08:09 -0500
+From: Jeff Moyer <jmoyer@redhat.com>
+Subject: [patch][xfstests-dev] aiodio_sparse2: fix up alignment for 4k logical
+	block sized devices
+Date: Fri, 11 Feb 2011 14:08:09 -0500
+Message-ID: <x49y65m8k4m.fsf@segfault.boston.devel.redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110210204254.GA10451@peter.simplex.ro>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,64 +36,77 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Petre Rodan <petre.rodan@simplex.ro>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, Feb 10, 2011 at 10:42:54PM +0200, Petre Rodan wrote:
-> 
-> Hello Dave,
-> 
-> On Fri, Jan 21, 2011 at 10:43:10AM +1100, Dave Chinner wrote:
-> > .....
-> > > in other words xfsyncd and xfsbufd now alternate at 18s intervals
-> > > keeping the drive busy with nothing constructive hours after the
-> > > last write to the drive.
-> > 
-> > This is a different problem, and not one I've seen before. Looking
-> > at the traces, it appears that we have not empties the AIL. At
-> > least, that's what I'm assuming at this point because log IO
-> > completion is not updating log tail. When we start a log IO, we set
-> > the log header lsn to the current head:
-> > 
-> > >    xfssyncd/sdc1-1413  [000]  3356.093456: xfs_log_reserve: dev 8:33 type DUMMY1 t_ocnt 1 t_cnt 1 t_curr_res 2740 t_unit_res 2740 t_flags XLOG_TIC_INITED reserveq empty writeq empty grant_reserve_cycle 2 grant_reserve_bytes 428523008 grant_write_cycle 2 grant_write_bytes 428523008 curr_cycle 2 curr_block 836959 tail_cycle 2 tail_block 810683
-> > 
-> > Which in this case is: curr_cycle 2 curr_block 836959
-> > 
-> > When the log IO completes, that value gets written to the
-> > l_last_sync_lsn. When the AIL tail is removed, the tail lsn is
-> > updated to the new tail item. If the AIL is empty, then the
-> > l_last_sync_lsn is used. That means then next dummy transaction
-> > made to cover the log should have the cycle/block of the above
-> > current cycle.
-> > 
-> > Instead, what I see is that the next dummmy transaction shows:
-> > 
-> > >    xfssyncd/sdc1-1413  [000]  3392.067122: xfs_log_reserve: dev 8:33 type DUMMY1 t_ocnt 1 t_cnt 1 t_curr_res 2740 t_unit_res 2740 t_flags XLOG_TIC_INITED reserveq empty writeq empty grant_reserve_cycle 2 grant_reserve_bytes 428524032 grant_write_cycle 2 grant_write_bytes 428524032 curr_cycle 2 curr_block 836961 tail_cycle 2 tail_block 810683
-> > 
-> > The current head has moved: curr_cycle 2 curr_block 836961
-> > 
-> > But the tail hasn't: tail_cycle 2 tail_block 810683
-> > 
-> > So effectively we've got some item on the AIL that we haven't
-> > flushed and isn't being flushed by xfssyncd. That's the problem I
-> > need to get to the bottom of and it also explains why it's an
-> > intermitten problem...
-> 
-> I have been watching the stream of patches that go into 2.6.38,
-> but I probably missed the one that might be the answer to the
-> problem above. can you please tell me which one to try, or can I
-> help with anything?
+Hi,
 
-I know what the problem is, but I haven't had time to work out of
-code a fix. Been spending my time trying to work out the cause bugs
-that are triggering hangs, crashes or corruptions here...
+When running xfstests on a 4k logical sector device, I ran into a test
+failure in test 198.  The errors were all due to trying to do 512 byte
+aligned I/O on a 4k logical sector device.  The attached patch tries to
+auto-detect the proper block size if no alignment is specified.  If it
+fails for one reason or another, it defaults to 4k alignment.  This
+seems to work fine in my test rig.
 
 Cheers,
+Jeff
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
+
+diff --git a/src/aio-dio-regress/aiodio_sparse2.c b/src/aio-dio-regress/aiodio_sparse2.c
+index f1225dd..0a96479 100644
+--- a/src/aio-dio-regress/aiodio_sparse2.c
++++ b/src/aio-dio-regress/aiodio_sparse2.c
+@@ -19,6 +19,8 @@
+ #include <limits.h>
+ #include <sys/mman.h>
+ #include <sys/wait.h>
++#include <sys/ioctl.h>
++#include <sys/mount.h> // for BLKSSZGET
+ 
+ #include <libaio.h>
+ 
+@@ -274,6 +276,23 @@ void dirty_freeblocks(char *filename, int size)
+ 	unlink(filename2);
+ }
+ 
++static long get_logical_block_size(char *filename)
++{
++	int fd;
++	int ret;
++	int logical_block_size;
++
++	fd = open(filename, O_RDONLY);
++	if (fd < 0)
++		return 4096;
++
++	ret = ioctl(fd, BLKSSZGET, &logical_block_size);
++	close(fd);
++	if (ret < 0)
++		return 4096;
++	return logical_block_size;
++}
++
+ void usage()
+ {
+ 	fprintf(stderr, "usage: dio_sparse [-n step] [-s filesize]"
+@@ -314,7 +333,7 @@ long long scale_by_kmg(long long value, char scale)
+ int main(int argc, char **argv)
+ {
+ 	char filename[PATH_MAX];
+-	long alignment = 512;
++	long alignment = 0;
+ 	int readsize = 65536;
+ 	int writesize = 65536;
+ 	int startoffset = 0;
+@@ -376,6 +395,8 @@ int main(int argc, char **argv)
+ 
+ 	strncpy(filename, argv[argc-1], PATH_MAX);
+ 
++	if (alignment == 0)
++		alignment = get_logical_block_size(filename);
+ 	/*
+ 	 * Create some dirty free blocks by allocating, writing, syncing,
+ 	 * and then unlinking and freeing.
 
 _______________________________________________
 xfs mailing list
