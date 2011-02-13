@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p1DDMsId051990 for <xfs@oss.sgi.com>; Sun, 13 Feb 2011 07:22:57 -0600
+	p1DDO5rA052092 for <xfs@oss.sgi.com>; Sun, 13 Feb 2011 07:24:05 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 07637986570
-	for <xfs@oss.sgi.com>; Sun, 13 Feb 2011 05:25:31 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 054A22CC613
+	for <xfs@oss.sgi.com>; Sun, 13 Feb 2011 05:26:42 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id ALlXpiDedaDuDDr6 for
-	<xfs@oss.sgi.com>; Sun, 13 Feb 2011 05:25:31 -0800 (PST)
+	by cuda.sgi.com with ESMTP id wOCKeH9dzIrwC8Li for
+	<xfs@oss.sgi.com>; Sun, 13 Feb 2011 05:26:42 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.72 #1 (Red Hat
-	Linux)) id 1PobxD-0004kt-8f
-	for xfs@oss.sgi.com; Sun, 13 Feb 2011 13:25:31 +0000
-Date: Sun, 13 Feb 2011 08:25:31 -0500
+	Linux)) id 1PobyM-0004mf-5Z
+	for xfs@oss.sgi.com; Sun, 13 Feb 2011 13:26:42 +0000
+Date: Sun, 13 Feb 2011 08:26:42 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 1/2] xfs: stop using xfs_trans_iget in the RT allocator
-Message-ID: <20110213132531.GA18279@infradead.org>
+Subject: [PATCH 2/2] xfs: more sensible inode refcounting for ialloc
+Message-ID: <20110213132642.GB18279@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,176 +31,227 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-During mount we establish references to the RT inodes, which we keep for
-the lifetime of the filesystem.  Instead of using xfs_trans_iget to grab
-additional references when adding RT inodes to transactions use the
-combination of xfs_ilock and xfs_trans_ijoin_ref, which archives the same
-end result with less overhead.
+Currently we return iodes from xfs_ialloc with just a single reference held.
+But we need two references, as one is dropped during transaction commit and
+the second needs to be transfered to the VFS.  Change xfs_ialloc to use
+xfs_iget plus xfs_trans_ijoin_ref to grab two references to the inode,
+and remove the now superflous IHOLD calls from all callers.  This also
+greatly simplifies the error handling in xfs_create and also allow to remove
+xfs_trans_iget as no other callers are left.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: xfs/fs/xfs/xfs_bmap.c
+Index: xfs/fs/xfs/quota/xfs_qm.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_bmap.c	2011-02-12 08:01:36.000000000 +0100
-+++ xfs/fs/xfs/xfs_bmap.c	2011-02-13 13:02:19.790270331 +0100
-@@ -2333,7 +2333,6 @@ xfs_bmap_rtalloc(
- 	xfs_extlen_t	prod = 0;	/* product factor for allocators */
- 	xfs_extlen_t	ralen = 0;	/* realtime allocation length */
- 	xfs_extlen_t	align;		/* minimum allocation alignment */
--	xfs_inode_t	*ip;		/* bitmap incore inode */
- 	xfs_rtblock_t	rtb;
- 
- 	mp = ap->ip->i_mount;
-@@ -2370,11 +2369,8 @@ xfs_bmap_rtalloc(
- 	/*
- 	 * Lock out other modifications to the RT bitmap inode.
- 	 */
--	error = xfs_trans_iget(mp, ap->tp, mp->m_sb.sb_rbmino, 0,
--			       XFS_ILOCK_EXCL | XFS_ILOCK_RTBITMAP, &ip);
--	if (error)
--		return error;
--	ASSERT(ip == mp->m_rbmip);
-+	xfs_ilock(mp->m_rbmip, XFS_ILOCK_EXCL);
-+	xfs_trans_ijoin_ref(ap->tp, mp->m_rbmip, XFS_ILOCK_EXCL);
- 
- 	/*
- 	 * If it's an allocation to an empty file at offset 0,
-Index: xfs/fs/xfs/xfs_rtalloc.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_rtalloc.c	2011-02-12 08:01:36.000000000 +0100
-+++ xfs/fs/xfs/xfs_rtalloc.c	2011-02-13 13:02:19.794270078 +0100
-@@ -76,7 +76,7 @@ xfs_growfs_rt_alloc(
- 	xfs_mount_t	*mp,		/* file system mount point */
- 	xfs_extlen_t	oblocks,	/* old count of blocks */
- 	xfs_extlen_t	nblocks,	/* new count of blocks */
--	xfs_ino_t	ino)		/* inode number (bitmap/summary) */
-+	xfs_inode_t	*ip)		/* inode (bitmap/summary) */
- {
- 	xfs_fileoff_t	bno;		/* block number in file */
- 	xfs_buf_t	*bp;		/* temporary buffer for zeroing */
-@@ -86,7 +86,6 @@ xfs_growfs_rt_alloc(
- 	xfs_fsblock_t	firstblock;	/* first block allocated in xaction */
- 	xfs_bmap_free_t	flist;		/* list of freed blocks */
- 	xfs_fsblock_t	fsbno;		/* filesystem block for bno */
--	xfs_inode_t	*ip;		/* pointer to incore inode */
- 	xfs_bmbt_irec_t	map;		/* block map output */
- 	int		nmap;		/* number of block maps */
- 	int		resblks;	/* space reservation */
-@@ -112,9 +111,9 @@ xfs_growfs_rt_alloc(
- 		/*
- 		 * Lock the inode.
- 		 */
--		if ((error = xfs_trans_iget(mp, tp, ino, 0,
--						XFS_ILOCK_EXCL, &ip)))
--			goto error_cancel;
-+		xfs_ilock(ip, XFS_ILOCK_EXCL);
-+		xfs_trans_ijoin_ref(tp, ip, XFS_ILOCK_EXCL);
-+
- 		xfs_bmap_init(&flist, &firstblock);
- 		/*
- 		 * Allocate blocks to the bitmap file.
-@@ -155,9 +154,8 @@ xfs_growfs_rt_alloc(
- 			/*
- 			 * Lock the bitmap inode.
- 			 */
--			if ((error = xfs_trans_iget(mp, tp, ino, 0,
--							XFS_ILOCK_EXCL, &ip)))
--				goto error_cancel;
-+			xfs_ilock(ip, XFS_ILOCK_EXCL);
-+			xfs_trans_ijoin_ref(tp, ip, XFS_ILOCK_EXCL);
- 			/*
- 			 * Get a buffer for the block.
- 			 */
-@@ -1854,7 +1852,6 @@ xfs_growfs_rt(
- 	xfs_rtblock_t	bmbno;		/* bitmap block number */
- 	xfs_buf_t	*bp;		/* temporary buffer */
- 	int		error;		/* error return value */
--	xfs_inode_t	*ip;		/* bitmap inode, used as lock */
- 	xfs_mount_t	*nmp;		/* new (fake) mount structure */
- 	xfs_drfsbno_t	nrblocks;	/* new number of realtime blocks */
- 	xfs_extlen_t	nrbmblocks;	/* new number of rt bitmap blocks */
-@@ -1918,11 +1915,11 @@ xfs_growfs_rt(
- 	/*
- 	 * Allocate space to the bitmap and summary files, as necessary.
- 	 */
--	if ((error = xfs_growfs_rt_alloc(mp, rbmblocks, nrbmblocks,
--			mp->m_sb.sb_rbmino)))
-+	error = xfs_growfs_rt_alloc(mp, rbmblocks, nrbmblocks, mp->m_rbmip);
-+	if (error)
- 		return error;
--	if ((error = xfs_growfs_rt_alloc(mp, rsumblocks, nrsumblocks,
--			mp->m_sb.sb_rsumino)))
-+	error = xfs_growfs_rt_alloc(mp, rsumblocks, nrsumblocks, mp->m_rsumip);
-+	if (error)
- 		return error;
- 	/*
- 	 * Allocate a new (fake) mount/sb.
-@@ -1972,12 +1969,8 @@ xfs_growfs_rt(
- 		/*
- 		 * Lock out other callers by grabbing the bitmap inode lock.
- 		 */
--		error = xfs_trans_iget(mp, tp, mp->m_sb.sb_rbmino, 0,
--				       XFS_ILOCK_EXCL | XFS_ILOCK_RTBITMAP,
--				       &ip);
--		if (error)
--			goto error_cancel;
--		ASSERT(ip == mp->m_rbmip);
-+		xfs_ilock(mp->m_rbmip, XFS_ILOCK_EXCL);
-+		xfs_trans_ijoin_ref(tp, mp->m_rbmip, XFS_ILOCK_EXCL);
- 		/*
- 		 * Update the bitmap inode's size.
- 		 */
-@@ -1988,11 +1981,8 @@ xfs_growfs_rt(
- 		/*
- 		 * Get the summary inode into the transaction.
- 		 */
--		error = xfs_trans_iget(mp, tp, mp->m_sb.sb_rsumino, 0,
--				       XFS_ILOCK_EXCL | XFS_ILOCK_RTSUM, &ip);
--		if (error)
--			goto error_cancel;
--		ASSERT(ip == mp->m_rsumip);
-+		xfs_ilock(mp->m_rsumip, XFS_ILOCK_EXCL);
-+		xfs_trans_ijoin_ref(tp, mp->m_rsumip, XFS_ILOCK_EXCL);
- 		/*
- 		 * Update the summary inode's size.
- 		 */
-@@ -2154,7 +2144,6 @@ xfs_rtfree_extent(
- 	xfs_extlen_t	len)		/* length of extent freed */
- {
- 	int		error;		/* error value */
--	xfs_inode_t	*ip;		/* bitmap file inode */
- 	xfs_mount_t	*mp;		/* file system mount structure */
- 	xfs_fsblock_t	sb;		/* summary file block number */
- 	xfs_buf_t	*sumbp;		/* summary file block buffer */
-@@ -2163,10 +2152,9 @@ xfs_rtfree_extent(
- 	/*
- 	 * Synchronize by locking the bitmap inode.
- 	 */
--	error = xfs_trans_iget(mp, tp, mp->m_sb.sb_rbmino, 0,
--			       XFS_ILOCK_EXCL | XFS_ILOCK_RTBITMAP, &ip);
--	if (error)
--		return error;
-+	xfs_ilock(mp->m_rbmip, XFS_ILOCK_EXCL);
-+	xfs_trans_ijoin_ref(tp, mp->m_rbmip, XFS_ILOCK_EXCL);
-+
- #if defined(__KERNEL__) && defined(DEBUG)
- 	/*
- 	 * Check to see that this whole range is currently allocated.
-@@ -2199,10 +2187,10 @@ xfs_rtfree_extent(
- 	 */
- 	if (tp->t_frextents_delta + mp->m_sb.sb_frextents ==
- 	    mp->m_sb.sb_rextents) {
--		if (!(ip->i_d.di_flags & XFS_DIFLAG_NEWRTBM))
--			ip->i_d.di_flags |= XFS_DIFLAG_NEWRTBM;
--		*(__uint64_t *)&ip->i_d.di_atime = 0;
--		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-+		if (!(mp->m_rbmip->i_d.di_flags & XFS_DIFLAG_NEWRTBM))
-+			mp->m_rbmip->i_d.di_flags |= XFS_DIFLAG_NEWRTBM;
-+		*(__uint64_t *)&mp->m_rbmip->i_d.di_atime = 0;
-+		xfs_trans_log_inode(tp, mp->m_rbmip, XFS_ILOG_CORE);
+--- xfs.orig/fs/xfs/quota/xfs_qm.c	2011-01-26 19:36:57.859840167 +0100
++++ xfs/fs/xfs/quota/xfs_qm.c	2011-01-26 19:39:26.000000000 +0100
+@@ -1230,13 +1230,6 @@ xfs_qm_qino_alloc(
  	}
- 	return 0;
+ 
+ 	/*
+-	 * Keep an extra reference to this quota inode. This inode is
+-	 * locked exclusively and joined to the transaction already.
+-	 */
+-	ASSERT(xfs_isilocked(*ip, XFS_ILOCK_EXCL));
+-	IHOLD(*ip);
+-
+-	/*
+ 	 * Make the changes in the superblock, and log those too.
+ 	 * sbfields arg may contain fields other than *QUOTINO;
+ 	 * VERSIONNUM for example.
+Index: xfs/fs/xfs/xfs_inode.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_inode.c	2011-01-26 19:36:57.895840318 +0100
++++ xfs/fs/xfs/xfs_inode.c	2011-01-26 19:39:26.267840406 +0100
+@@ -1016,8 +1016,8 @@ xfs_ialloc(
+ 	 * This is because we're setting fields here we need
+ 	 * to prevent others from looking at until we're done.
+ 	 */
+-	error = xfs_trans_iget(tp->t_mountp, tp, ino,
+-				XFS_IGET_CREATE, XFS_ILOCK_EXCL, &ip);
++	error = xfs_iget(tp->t_mountp, tp, ino, XFS_IGET_CREATE,
++			 XFS_ILOCK_EXCL, &ip);
+ 	if (error)
+ 		return error;
+ 	ASSERT(ip != NULL);
+@@ -1166,6 +1166,7 @@ xfs_ialloc(
+ 	/*
+ 	 * Log the new values stuffed into the inode.
+ 	 */
++	xfs_trans_ijoin_ref(tp, ip, XFS_ILOCK_EXCL);
+ 	xfs_trans_log_inode(tp, ip, flags);
+ 
+ 	/* now that we have an i_mode we can setup inode ops and unlock */
+Index: xfs/fs/xfs/xfs_vnodeops.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_vnodeops.c	2011-01-26 19:36:57.907840533 +0100
++++ xfs/fs/xfs/xfs_vnodeops.c	2011-01-26 19:41:49.491839927 +0100
+@@ -1310,7 +1310,7 @@ xfs_create(
+ 	error = xfs_qm_vop_dqalloc(dp, current_fsuid(), current_fsgid(), prid,
+ 			XFS_QMOPT_QUOTALL | XFS_QMOPT_INHERIT, &udqp, &gdqp);
+ 	if (error)
+-		goto std_return;
++		return error;
+ 
+ 	if (is_dir) {
+ 		rdev = 0;
+@@ -1390,12 +1390,6 @@ xfs_create(
+ 	}
+ 
+ 	/*
+-	 * At this point, we've gotten a newly allocated inode.
+-	 * It is locked (and joined to the transaction).
+-	 */
+-	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+-
+-	/*
+ 	 * Now we join the directory inode to the transaction.  We do not do it
+ 	 * earlier because xfs_dir_ialloc might commit the previous transaction
+ 	 * (and release all the locks).  An error from here on will result in
+@@ -1440,22 +1434,13 @@ xfs_create(
+ 	 */
+ 	xfs_qm_vop_create_dqattach(tp, ip, udqp, gdqp);
+ 
+-	/*
+-	 * xfs_trans_commit normally decrements the vnode ref count
+-	 * when it unlocks the inode. Since we want to return the
+-	 * vnode to the caller, we bump the vnode ref count now.
+-	 */
+-	IHOLD(ip);
+-
+ 	error = xfs_bmap_finish(&tp, &free_list, &committed);
+ 	if (error)
+-		goto out_abort_rele;
++		goto out_bmap_cancel;
+ 
+ 	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
+-	if (error) {
+-		IRELE(ip);
+-		goto out_dqrele;
+-	}
++	if (error)
++		goto out_release_inode;
+ 
+ 	xfs_qm_dqrele(udqp);
+ 	xfs_qm_dqrele(gdqp);
+@@ -1469,27 +1454,21 @@ xfs_create(
+ 	cancel_flags |= XFS_TRANS_ABORT;
+  out_trans_cancel:
+ 	xfs_trans_cancel(tp, cancel_flags);
+- out_dqrele:
++ out_release_inode:
++	/*
++	 * Wait until after the current transaction is aborted to
++	 * release the inode.  This prevents recursive transactions
++	 * and deadlocks from xfs_inactive.
++	 */
++	if (ip)
++		IRELE(ip);
++
+ 	xfs_qm_dqrele(udqp);
+ 	xfs_qm_dqrele(gdqp);
+ 
+ 	if (unlock_dp_on_error)
+ 		xfs_iunlock(dp, XFS_ILOCK_EXCL);
+- std_return:
+ 	return error;
+-
+- out_abort_rele:
+-	/*
+-	 * Wait until after the current transaction is aborted to
+-	 * release the inode.  This prevents recursive transactions
+-	 * and deadlocks from xfs_inactive.
+-	 */
+-	xfs_bmap_cancel(&free_list);
+-	cancel_flags |= XFS_TRANS_ABORT;
+-	xfs_trans_cancel(tp, cancel_flags);
+-	IRELE(ip);
+-	unlock_dp_on_error = B_FALSE;
+-	goto out_dqrele;
  }
+ 
+ #ifdef DEBUG
+@@ -2114,9 +2093,8 @@ xfs_symlink(
+ 				  XFS_BMAPI_WRITE | XFS_BMAPI_METADATA,
+ 				  &first_block, resblks, mval, &nmaps,
+ 				  &free_list);
+-		if (error) {
+-			goto error1;
+-		}
++		if (error)
++			goto error2;
+ 
+ 		if (resblks)
+ 			resblks -= fs_blocks;
+@@ -2148,7 +2126,7 @@ xfs_symlink(
+ 	error = xfs_dir_createname(tp, dp, link_name, ip->i_ino,
+ 					&first_block, &free_list, resblks);
+ 	if (error)
+-		goto error1;
++		goto error2;
+ 	xfs_trans_ichgtime(tp, dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+ 	xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
+ 
+@@ -2161,13 +2139,6 @@ xfs_symlink(
+ 		xfs_trans_set_sync(tp);
+ 	}
+ 
+-	/*
+-	 * xfs_trans_commit normally decrements the vnode ref count
+-	 * when it unlocks the inode. Since we want to return the
+-	 * vnode to the caller, we bump the vnode ref count now.
+-	 */
+-	IHOLD(ip);
+-
+ 	error = xfs_bmap_finish(&tp, &free_list, &committed);
+ 	if (error) {
+ 		goto error2;
+Index: xfs/fs/xfs/xfs_trans.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_trans.h	2011-01-26 19:39:37.362840058 +0100
++++ xfs/fs/xfs/xfs_trans.h	2011-01-26 19:41:49.503840367 +0100
+@@ -469,8 +469,6 @@ void		xfs_trans_inode_buf(xfs_trans_t *,
+ void		xfs_trans_stale_inode_buf(xfs_trans_t *, struct xfs_buf *);
+ void		xfs_trans_dquot_buf(xfs_trans_t *, struct xfs_buf *, uint);
+ void		xfs_trans_inode_alloc_buf(xfs_trans_t *, struct xfs_buf *);
+-int		xfs_trans_iget(struct xfs_mount *, xfs_trans_t *,
+-			       xfs_ino_t , uint, uint, struct xfs_inode **);
+ void		xfs_trans_ichgtime(struct xfs_trans *, struct xfs_inode *, int);
+ void		xfs_trans_ijoin_ref(struct xfs_trans *, struct xfs_inode *, uint);
+ void		xfs_trans_ijoin(struct xfs_trans *, struct xfs_inode *);
+Index: xfs/fs/xfs/xfs_trans_inode.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_trans_inode.c	2011-01-26 19:39:46.683841024 +0100
++++ xfs/fs/xfs/xfs_trans_inode.c	2011-01-26 19:41:49.515840543 +0100
+@@ -44,28 +44,6 @@ xfs_trans_inode_broot_debug(
+ #endif
+ 
+ /*
+- * Get an inode and join it to the transaction.
+- */
+-int
+-xfs_trans_iget(
+-	xfs_mount_t	*mp,
+-	xfs_trans_t	*tp,
+-	xfs_ino_t	ino,
+-	uint		flags,
+-	uint		lock_flags,
+-	xfs_inode_t	**ipp)
+-{
+-	int			error;
+-
+-	error = xfs_iget(mp, tp, ino, flags, lock_flags, ipp);
+-	if (!error && tp) {
+-		xfs_trans_ijoin(tp, *ipp);
+-		(*ipp)->i_itemp->ili_lock_flags = lock_flags;
+-	}
+-	return error;
+-}
+-
+-/*
+  * Add a locked inode to the transaction.
+  *
+  * The inode must be locked, and it cannot be associated with any transaction.
 
 _______________________________________________
 xfs mailing list
