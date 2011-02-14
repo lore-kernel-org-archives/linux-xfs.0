@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p1E5Sl5g102015 for <xfs@oss.sgi.com>; Sun, 13 Feb 2011 23:28:47 -0600
+	p1E5hlCh102769 for <xfs@oss.sgi.com>; Sun, 13 Feb 2011 23:43:47 -0600
 Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0573899A4E1
-	for <xfs@oss.sgi.com>; Sun, 13 Feb 2011 21:31:24 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 713F5918626
+	for <xfs@oss.sgi.com>; Sun, 13 Feb 2011 21:46:24 -0800 (PST)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	CEsCGineJg8sXXOD for <xfs@oss.sgi.com>;
-	Sun, 13 Feb 2011 21:31:24 -0800 (PST)
-Date: Mon, 14 Feb 2011 16:31:22 +1100
+	cpGWKkfxlzA6ECmg for <xfs@oss.sgi.com>;
+	Sun, 13 Feb 2011 21:46:24 -0800 (PST)
+Date: Mon, 14 Feb 2011 16:46:22 +1100
 From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH 2/3] libxlog: sync up with 2.6.38 kernel code
-Message-ID: <20110214053122.GJ2559@dastard>
+Message-ID: <20110214054622.GK2559@dastard>
 References: <1294649091-27174-1-git-send-email-david@fromorbit.com>
 	<1294649091-27174-3-git-send-email-david@fromorbit.com>
 	<1297288144.2513.228.camel@doink> <20110214051005.GI2559@dastard>
@@ -43,43 +43,27 @@ On Mon, Feb 14, 2011 at 04:10:05PM +1100, Dave Chinner wrote:
 > > > updating the necessary parts of libxfs and variaous header files to
 > > > ensure that it compiles correctly.
 
-.....
-
-> xfsprogs. As the code has changed, I'm sure there's bits that are
-> now unused by userspace and should be cleaned up. We also need to
-> make another pass over the kernel headers to refine what is in
-> #idef__KERNEL__ regions as there is some problems in that area as
-> well.  That doesn't have to be done right now, though...
-
 ....
 
-> > > diff --git a/libxfs/trans.c b/libxfs/trans.c
-> > > index 1c60f38..c5dd2ca 100644
-> > > --- a/libxfs/trans.c
-> > > +++ b/libxfs/trans.c
-> > > @@ -36,8 +36,7 @@ libxfs_trans_alloc(
-> > >  	}
-> > >  	ptr->t_mountp = mp;
-> > >  	ptr->t_type = type;
-> > > -	ptr->t_items_free = XFS_LIC_NUM_SLOTS;
+> > > diff --git a/libxfs/xfs_mount.c b/libxfs/xfs_mount.c
+> > > index 02bff42..dde9678 100644
+> > > --- a/libxfs/xfs_mount.c
+> > > +++ b/libxfs/xfs_mount.c
+> > > @@ -270,7 +270,6 @@ xfs_mount_common(xfs_mount_t *mp, xfs_sb_t *sbp)
+> > >  	mp->m_blockmask = sbp->sb_blocksize - 1;
+> > >  	mp->m_blockwsize = sbp->sb_blocksize >> XFS_WORDLOG;
+> > >  	mp->m_blockwmask = mp->m_blockwsize - 1;
+> > > -	INIT_LIST_HEAD(&mp->m_del_inodes);
 > > 
-> > t_items_free is removed from the xfs_trans structure
-> > in "include/xfs_trans.h" but it remains in the version
-> > of that structure defined in "include/libxfs.h".
+> > This hunk belongs in the next patch, not this one.
 > > 
-> > I believe the latter is the one we want to keep,
-> > but if that's the case you'd better delete the
-> > field definition there.  (The compiler isn't
-> > warning you that you neglected to initialize a
-> > field.)
 > 
-> Nor is it warning about a duplicate definition by the sound of it.
-> I'll fix it up.
+> OK.
 
-There are two declarations of struct xfs_trans in userspace but only
-the one in libxfs.h is used because the one in include/xfs_trans.h
-is surrounded bu #ifdef __KERNEL__. Just an example of the sort of
-cleanup I mentioned above that is needed...
+Actually, it has to be in this patch, because the only reason it
+compiled prior to this patch was that INIT_LIST_HEAD() was defined
+to a null macro. It is actually implemented in this patch, so this
+does need to be removed here or the patch won't compile....
 
 Cheers,
 
