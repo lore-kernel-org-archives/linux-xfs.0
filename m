@@ -1,16 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p1EBhtac128611 for <xfs@oss.sgi.com>; Mon, 14 Feb 2011 05:43:56 -0600
-Date: Mon, 14 Feb 2011 22:46:29 +1100
+	p1EC03Xq129436 for <xfs@oss.sgi.com>; Mon, 14 Feb 2011 06:00:03 -0600
+Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 178661561C4A
+	for <xfs@oss.sgi.com>; Mon, 14 Feb 2011 04:02:39 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	2skleApmx5FMyRwL for <xfs@oss.sgi.com>;
+	Mon, 14 Feb 2011 04:02:39 -0800 (PST)
+Date: Mon, 14 Feb 2011 23:02:37 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: prevent leaking uninitialized stack memory in
-	FSGEOMETRY_V1
-Message-ID: <20110214114629.GA13052@dastard>
-References: <1297347904.13370.9.camel@dan>
+Subject: Re: XFS status update for January 2011
+Message-ID: <20110214120237.GB13052@dastard>
+References: <20110213184219.GA22792@infradead.org>
+ <4D5890B6.2090105@tao.ma>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1297347904.13370.9.camel@dan>
+In-Reply-To: <4D5890B6.2090105@tao.ma>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,27 +30,35 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dan Rosenberg <drosenberg@vsecurity.com>
-Cc: security@kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, xfs-masters@oss.sgi.com, aelder@sgi.com, stable@kernel.org
+To: Tao Ma <tm@tao.ma>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Thu, Feb 10, 2011 at 09:25:04AM -0500, Dan Rosenberg wrote:
-> The FSGEOMETRY_V1 ioctl (and its compat equivalent) calls out to
-> xfs_fs_geometry() with a version number of 3.  This code path does not
-> fill in the logsunit member of the passed xfs_fsop_geom_t, leading to
-> the leaking of four bytes of uninitialized stack data to potentially
-> unprivileged callers.  Since all other members are filled in all code
-> paths and there are no padding bytes in this structure, it's safe to
-> avoid an expensive memset() in favor of just clearing this one field.
+On Mon, Feb 14, 2011 at 10:17:26AM +0800, Tao Ma wrote:
+> Hi Christoph,
+> On 02/14/2011 02:42 AM, Christoph Hellwig wrote:
+> >On the 4th of January we saw the release of Linux 2.6.37, which contains a
+> >large XFS update:
+> >
+> >     67 files changed, 1424 insertions(+), 1524 deletions(-)
+> >
+> >User visible changes are the new XFS_IOC_ZERO_RANGE ioctl which allows
+> >to convert already allocated space into unwritten extents that return
+> >zeros on a read,
+> would you mind describing some scenario that this ioctl can be used. I am
+> just wondering whether ocfs2 can implement it as well.
 
-If this really is a security problem, then it should use a memset.
-This is not a performance critical path and there are differences in
-the padding of the structure between 32 bit and 64 bit ioctl
-variants (it has a compat ioctl handler) and that can only be
-correctly handled by memset().
+Zeroing a file without doing IO or having to punch out the blocks
+already allocated to the file.
 
-Also, using a memset means we won't have the problem of introducing
-new uninitialised fields or padding if we ever rev the structure
-again...
+In this case, we had a couple of different people in cloud storage
+land asking for such functionality to optimise record deletion
+be avoiding disruption of their preallocated file layouts as a
+punch-then-preallocate operation does.
+
+If you you have some kind of use for it in ocfs2, then implementing
+the XFS ioctl is not the correct thing to do - using the fallocate
+patch I've had sitting around (since about 15min after creating the
+XFS ioctl) is most likely the right way to proceed....
 
 Cheers,
 
