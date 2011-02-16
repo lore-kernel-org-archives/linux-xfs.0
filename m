@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p1GAbgFV023905 for <xfs@oss.sgi.com>; Wed, 16 Feb 2011 04:37:42 -0600
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A7AD21ADACA9
-	for <xfs@oss.sgi.com>; Wed, 16 Feb 2011 02:40:21 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id mMeMeZ87szblRz8J for
-	<xfs@oss.sgi.com>; Wed, 16 Feb 2011 02:40:21 -0800 (PST)
-Date: Wed, 16 Feb 2011 11:40:13 +0100 (CET)
-From: Lukas Czerner <lczerner@redhat.com>
-Subject: Re: [PATCH v2] 089: fix error caused by weird stdout buffer handling
-In-Reply-To: <1296661979-1731-1-git-send-email-lczerner@redhat.com>
-Message-ID: <alpine.LFD.2.00.1102161140030.4744@dhcp-27-109.brq.redhat.com>
-References: <1296660966-691-1-git-send-email-lczerner@redhat.com>
-	<1296661979-1731-1-git-send-email-lczerner@redhat.com>
+	p1GAh3Ym024334 for <xfs@oss.sgi.com>; Wed, 16 Feb 2011 04:43:04 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 94E271C5087A
+	for <xfs@oss.sgi.com>; Wed, 16 Feb 2011 02:45:43 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id CA0nyvmyluDIoyor for
+	<xfs@oss.sgi.com>; Wed, 16 Feb 2011 02:45:43 -0800 (PST)
+Date: Wed, 16 Feb 2011 05:45:41 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [patch][xfstests-dev] 091: fix up output when pagesize ==
+	sectorsize
+Message-ID: <20110216104541.GA22329@infradead.org>
+References: <x49ipwmlg5y.fsf@segfault.boston.devel.redhat.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <x49ipwmlg5y.fsf@segfault.boston.devel.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,107 +29,10 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Lukas Czerner <lczerner@redhat.com>
-Cc: hch@infradead.org, esandeen@redhat.com, xfs@oss.sgi.com
+To: Jeff Moyer <jmoyer@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On Wed, 2 Feb 2011, Lukas Czerner wrote:
-
-> (v2: Get rid of the diff mambo-jambo in the commit description)
-> 
-> We have hit the error while running 089.
-> 
-> FSTYP         -- ext3
-> PLATFORM      -- Linux/x86_64 localhost 2.6.32-109.el6.x86_64
-> 
-> ...
-> ...
->  completed 50 iterations
->  completed 50 iterations
->  completed 50 iterations
-> -completed 50 iterations
->  completed 10000 iterations
->  directory entries:
->  t_mtab
-> Ran: 089
-> Failures: 089
-> Failed 1 of 1 tests
-> 
-> This is not very easily reproducible, however one can hit it
-> eventually when running 089 in the loop. The problem is apparently, that
-> the output might get lost, probably due to some stdio buffer weirdness.
-> 
-> This commit workaround the issue by adding an optional argument to the
-> t_mtab to specify output file. The t_mtab output is then appended to a
-> file which content is then printed to the stdout as it would if no
-> output file is used.
-> 
-> With this commit applied the problem is no longer reproducible.
-
-ping
-
-> 
-> Signed-off-by: Lukas Czerner <lczerner@redhat.com>
-> ---
->  089          |    9 ++++++---
->  src/t_mtab.c |    8 +++++++-
->  2 files changed, 13 insertions(+), 4 deletions(-)
-> 
-> diff --git a/089 b/089
-> index e28e099..1714bec 100755
-> --- a/089
-> +++ b/089
-> @@ -28,6 +28,7 @@ owner=nathans@sgi.com
->  seq=`basename $0`
->  echo "QA output created by $seq"
->  
-> +mtab_output=$TEST_DIR/mtab_output
->  here=`pwd`
->  tmp=/tmp/$$
->  status=1	# failure is the default!
-> @@ -62,10 +63,12 @@ mount > t_mtab
->  
->  mtab()
->  {
-> -	$here/src/t_mtab 50 &
-> -	$here/src/t_mtab 50 &
-> -	$here/src/t_mtab 50 &
-> +	rm -f $mtab_output
-> +	$here/src/t_mtab 50 $mtab_output &
-> +	$here/src/t_mtab 50 $mtab_output &
-> +	$here/src/t_mtab 50 $mtab_output &
->  	wait
-> +	cat $mtab_output
->  
->  	$here/src/t_mtab 10000
->  
-> diff --git a/src/t_mtab.c b/src/t_mtab.c
-> index 2931887..9bca954 100644
-> --- a/src/t_mtab.c
-> +++ b/src/t_mtab.c
-> @@ -263,6 +263,7 @@ update_mtab (void)
->  int main(int argc, char **argv)
->  {
->  	int i, stop = 100000;
-> +	FILE *fout = NULL;
->  
->  	if (argc > 1)
->  		stop = atoi(argv[1]);
-> @@ -270,6 +271,11 @@ int main(int argc, char **argv)
->  	for (i = 0; i < stop; i++) {
->  		update_mtab();
->  	}
-> -	printf("completed %d iterations\n", stop);
-> +
-> +	if (argc > 2)
-> +		fout = fopen(argv[2],"a");
-> +	if (!fout)
-> +		fout = stdout;
-> +	fprintf(fout, "completed %d iterations\n", stop);
->  	return 0;
->  }
-> 
-
--- 
+Thanks, applied both patches.
 
 _______________________________________________
 xfs mailing list
