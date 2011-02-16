@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p1GMBvYa080656 for <xfs@oss.sgi.com>; Wed, 16 Feb 2011 16:11:58 -0600
-Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 154BC1D40DEC
-	for <xfs@oss.sgi.com>; Wed, 16 Feb 2011 14:14:36 -0800 (PST)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	9lkGDVuX7xERazKY for <xfs@oss.sgi.com>;
-	Wed, 16 Feb 2011 14:14:36 -0800 (PST)
-Date: Thu, 17 Feb 2011 09:14:33 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs_force_shutdown() called when running xfstests on 2.6.38-rc4
-Message-ID: <20110216221433.GG13052@dastard>
-References: <1297798863.32230.222.camel@chandra-lucid.beaverton.ibm.com>
-	<20110215223022.GE13052@dastard>
-	<1297886433.32230.224.camel@chandra-lucid.beaverton.ibm.com>
+	p1GLvXb3079666 for <xfs@oss.sgi.com>; Wed, 16 Feb 2011 15:57:33 -0600
+Received: from coco.kroah.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 26B722E1310
+	for <xfs@oss.sgi.com>; Wed, 16 Feb 2011 14:00:12 -0800 (PST)
+Received: from coco.kroah.org (kroah.org [198.145.64.141]) by cuda.sgi.com
+	with ESMTP id a6EP8x7kg3ZOPJGM for <xfs@oss.sgi.com>;
+	Wed, 16 Feb 2011 14:00:12 -0800 (PST)
+Date: Wed, 16 Feb 2011 13:50:02 -0800
+From: Greg KH <greg@kroah.com>
+Subject: Re: [stable] [GIT PULL] XFS update for 2.6.38-rc3
+Message-ID: <20110216215002.GJ5027@kroah.com>
+References: <201101311642.p0VGgXTS018851@stout.americas.sgi.com>
+	<4D482E21.5040803@teksavvy.com> <20110203000757.GT11040@dastard>
+	<201102032302.31780.a.miskiewicz@gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1297886433.32230.224.camel@chandra-lucid.beaverton.ibm.com>
+In-Reply-To: <201102032302.31780.a.miskiewicz@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,73 +30,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Chandra Seetharaman <sekharan@us.ibm.com>
-Cc: xfs@oss.sgi.com
+To: Arkadiusz Miskiewicz <a.miskiewicz@gmail.com>
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Alex Elder <aelder@sgi.com>, Mark Lord <kernel@teksavvy.com>, stable@kernel.org
 
-On Wed, Feb 16, 2011 at 12:00:33PM -0800, Chandra Seetharaman wrote:
-> Hi Dave,
+On Thu, Feb 03, 2011 at 11:02:31PM +0100, Arkadiusz Miskiewicz wrote:
+> On Thursday 03 of February 2011, Dave Chinner wrote:
+> > On Tue, Feb 01, 2011 at 11:00:33AM -0500, Mark Lord wrote:
+> > > On 11-01-31 11:42 AM, Alex Elder wrote:
+> > > > Linus, please accept the following updates for XFS, for 2.6.38-rc3
+> > > > (if it's not too late) or 2.6.38-rc4.
+> > > > 
+> > > > They are all fixes for bugs that have some pretty undesirable
+> > > > consequences. 
 > 
-> These are the failures. Please, let me know if anything need
-> investigating.
+> [...]
 > 
-> In some test cases there were more than one, but for simplicity I
-> removed all but one in this email.
+> > > Are these bugs all new in 2.6.38, or should some of these fixes
+> > > also go out to -stable for earlier revisions?
+> > > >       xfs: fix dquot shaker deadlock
+> > 
+> > That's a regression, so maybe.
 > 
-> Thanks
+> Definitely, xfs_fsr can hit this even few times a day (happened already).
 > 
-> chandra
-> -----------------------------------
-> Feb 16 09:26:04 test35 root: ======== starting XFS test 085 2.6.38-rc4 ========
-> Feb 16 09:26:06 test35 kernel: xfs_force_shutdown(sda5,0x1) called from line 1111 of file fs/xfs/linux-2.6/xfs_buf.c.  Return address = 0xd0000000098dd3a0
-> Feb 16 09:26:09 test35 root: ======== starting XFS test 086 2.6.38-rc4 ========
-> Feb 16 09:26:16 test35 kernel: xfs_force_shutdown(sda5,0x1) called from line 1111 of file fs/xfs/linux-2.6/xfs_buf.c.  Return address = 0xd0000000098dd3a0
-> Feb 16 09:27:21 test35 root: ======== starting XFS test 087 2.6.38-rc4 ========
-> Feb 16 09:27:25 test35 kernel: xfs_force_shutdown(sda5,0x1) called from line 1111 of file fs/xfs/linux-2.6/xfs_buf.c.  Return address = 0xd0000000098dd3a0
-> Feb 16 09:38:38 test35 root: ======== starting XFS test 121 2.6.38-rc4 ========
-> Feb 16 09:38:46 test35 kernel: xfs_force_shutdown(sda5,0x1) called from line 1111 of file fs/xfs/linux-2.6/xfs_buf.c.  Return address = 0xd0000000098dd3a0
-> Feb 16 10:33:16 test35 root: ======== starting XFS test 137 2.6.38-rc4 ========
-> Feb 16 10:33:32 test35 kernel: xfs_force_shutdown(sda5,0x1) called from line 1111 of file fs/xfs/linux-2.6/xfs_buf.c.  Return address = 0xd0000000098dd3a0
-> Feb 16 10:33:48 test35 root: ======== starting XFS test 138 2.6.38-rc4 ========
-> Feb 16 10:34:13 test35 kernel: xfs_force_shutdown(sda5,0x1) called from line 1111 of file fs/xfs/linux-2.6/xfs_buf.c.  Return address = 0xd0000000098dd3a0
-> Feb 16 10:34:45 test35 root: ======== starting XFS test 139 2.6.38-rc4 ========
-> Feb 16 10:35:12 test35 kernel: xfs_force_shutdown(sda5,0x1) called from line 1111 of file fs/xfs/linux-2.6/xfs_buf.c.  Return address = 0xd0000000098dd3a0
-> Feb 16 10:35:31 test35 root: ======== starting XFS test 140 2.6.38-rc4 ========
-> Feb 16 10:35:56 test35 kernel: xfs_force_shutdown(sda5,0x1) called from line 1111 of file fs/xfs/linux-2.6/xfs_buf.c.  Return address = 0xd0000000098dd3a0
-> Feb 16 10:43:58 test35 root: ======== starting XFS test 179 2.6.38-rc4 ========
-> Feb 16 10:44:16 test35 kernel: xfs_force_shutdown(sda5,0x1) called from line 1111 of file fs/xfs/linux-2.6/xfs_buf.c.  Return address = 0xd0000000098dd3a0
-> Feb 16 10:44:36 test35 root: ======== starting XFS test 181 2.6.38-rc4 ========
-> Feb 16 10:44:49 test35 kernel: xfs_force_shutdown(sda5,0x1) called from line 1111 of file fs/xfs/linux-2.6/xfs_buf.c.  Return address = 0xd0000000098dd3a0
-> Feb 16 10:44:53 test35 root: ======== starting XFS test 182 2.6.38-rc4 ========
-> Feb 16 10:44:59 test35 kernel: xfs_force_shutdown(sda5,0x1) called from line 1111 of file fs/xfs/linux-2.6/xfs_buf.c.  Return address = 0xd0000000098dd3a0
-> Feb 16 10:48:32 test35 root: ======== starting XFS test 200 2.6.38-rc4 ========
-> Feb 16 10:48:35 test35 kernel: xfs_force_shutdown(sda5,0x1) called from line 1111 of file fs/xfs/linux-2.6/xfs_buf.c.  Return address = 0xd0000000098dd3a0
-> ----------------------------
+> Stable team, please include this one for 2.6.37.1:
 
-No, they aren't test failures. All these tests trigger a forced
-shutdown as part of the test, so this is expected output and not an
-indication of a problem.
+Now queued up (it will make .2, sorry, not .1)
 
-$ grep -l godown [0-2]*[0-9]
-085
-086
-087
-121
-137
-138
-139
-140
-179
-180
-181
-182
-200
+thanks,
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+greg k-h
 
 _______________________________________________
 xfs mailing list
