@@ -1,35 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p1GNatp0087617 for <xfs@oss.sgi.com>; Wed, 16 Feb 2011 17:36:55 -0600
-Received: from e35.co.us.ibm.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2A7CF1280502
-	for <xfs@oss.sgi.com>; Wed, 16 Feb 2011 15:39:33 -0800 (PST)
-Received: from e35.co.us.ibm.com (e35.co.us.ibm.com [32.97.110.153]) by
-	cuda.sgi.com with ESMTP id qxj2w5zrUxgeuy7h for
-	<xfs@oss.sgi.com>; Wed, 16 Feb 2011 15:39:33 -0800 (PST)
-Received: from d03relay01.boulder.ibm.com (d03relay01.boulder.ibm.com
-	[9.17.195.226])
-	by e35.co.us.ibm.com (8.14.4/8.13.1) with ESMTP id p1GNP79s008262
-	for <xfs@oss.sgi.com>; Wed, 16 Feb 2011 16:25:07 -0700
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay01.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	p1GNdUvH086464 for <xfs@oss.sgi.com>; Wed, 16 Feb 2011 16:39:30 -0700
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
-	id p1GNdT3k017838
-	for <xfs@oss.sgi.com>; Wed, 16 Feb 2011 16:39:30 -0700
-Subject: Re: xfs_force_shutdown() called when running xfstests on 2.6.38-rc4
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-In-Reply-To: <20110216221433.GG13052@dastard>
-References: <1297798863.32230.222.camel@chandra-lucid.beaverton.ibm.com>
-	<20110215223022.GE13052@dastard>
-	<1297886433.32230.224.camel@chandra-lucid.beaverton.ibm.com>
-	<20110216221433.GG13052@dastard>
-Date: Wed, 16 Feb 2011 15:42:08 -0800
-Message-ID: <1297899728.32230.225.camel@chandra-lucid.beaverton.ibm.com>
-Mime-Version: 1.0
-Reply-To: sekharan@us.ibm.com
+	p1H0TwLl091556 for <xfs@oss.sgi.com>; Wed, 16 Feb 2011 18:29:58 -0600
+Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4AFF31ADB966
+	for <xfs@oss.sgi.com>; Wed, 16 Feb 2011 16:32:36 -0800 (PST)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	6X8XNd7ZYALTJ3JO for <xfs@oss.sgi.com>;
+	Wed, 16 Feb 2011 16:32:36 -0800 (PST)
+Date: Thu, 17 Feb 2011 11:32:33 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: External log size limitations
+Message-ID: <20110217003233.GH13052@dastard>
+References: <4D5C1D77.1060000@spinpro.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4D5C1D77.1060000@spinpro.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -42,77 +29,65 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Andrew Klaassen <ak@spinpro.com>
 Cc: xfs@oss.sgi.com
 
-Thanks for the response Dave.
+On Wed, Feb 16, 2011 at 01:54:47PM -0500, Andrew Klaassen wrote:
+> Hi all,
+> 
+> I found some this document:
+> 
+> http://techpubs.sgi.com/library/tpl/cgi-bin/getdoc.cgi?coll=linux&db=bks&fname=/SGI_Admin/LX_XFS_AG/ch02.html
+> 
+> ...which says that an XFS external log is limited to 128MB.
+> 
+> Is there any way to make that larger?
 
-That matches exactly, except for test 180.
+The limit is just under 2GB now - that document is a couple of years
+out of date - so if you are running on anything more recent that a
+~2.6.27 kernel 2GB logs should work fine.
 
-chandra
-On Thu, 2011-02-17 at 09:14 +1100, Dave Chinner wrote:
-> On Wed, Feb 16, 2011 at 12:00:33PM -0800, Chandra Seetharaman wrote:
-> > Hi Dave,
-> > 
-> > These are the failures. Please, let me know if anything need
-> > investigating.
-> > 
-> > In some test cases there were more than one, but for simplicity I
-> > removed all but one in this email.
-> > 
-> > Thanks
-> > 
-> > chandra
-> > -----------------------------------
-> > Feb 16 09:26:04 test35 root: ======== starting XFS test 085 2.6.38-rc4 ========
-> > Feb 16 09:26:06 test35 kernel: xfs_force_shutdown(sda5,0x1) called from line 1111 of file fs/xfs/linux-2.6/xfs_buf.c.  Return address = 0xd0000000098dd3a0
-> > Feb 16 09:26:09 test35 root: ======== starting XFS test 086 2.6.38-rc4 ========
-> > Feb 16 09:26:16 test35 kernel: xfs_force_shutdown(sda5,0x1) called from line 1111 of file fs/xfs/linux-2.6/xfs_buf.c.  Return address = 0xd0000000098dd3a0
-> > Feb 16 09:27:21 test35 root: ======== starting XFS test 087 2.6.38-rc4 ========
-> > Feb 16 09:27:25 test35 kernel: xfs_force_shutdown(sda5,0x1) called from line 1111 of file fs/xfs/linux-2.6/xfs_buf.c.  Return address = 0xd0000000098dd3a0
-> > Feb 16 09:38:38 test35 root: ======== starting XFS test 121 2.6.38-rc4 ========
-> > Feb 16 09:38:46 test35 kernel: xfs_force_shutdown(sda5,0x1) called from line 1111 of file fs/xfs/linux-2.6/xfs_buf.c.  Return address = 0xd0000000098dd3a0
-> > Feb 16 10:33:16 test35 root: ======== starting XFS test 137 2.6.38-rc4 ========
-> > Feb 16 10:33:32 test35 kernel: xfs_force_shutdown(sda5,0x1) called from line 1111 of file fs/xfs/linux-2.6/xfs_buf.c.  Return address = 0xd0000000098dd3a0
-> > Feb 16 10:33:48 test35 root: ======== starting XFS test 138 2.6.38-rc4 ========
-> > Feb 16 10:34:13 test35 kernel: xfs_force_shutdown(sda5,0x1) called from line 1111 of file fs/xfs/linux-2.6/xfs_buf.c.  Return address = 0xd0000000098dd3a0
-> > Feb 16 10:34:45 test35 root: ======== starting XFS test 139 2.6.38-rc4 ========
-> > Feb 16 10:35:12 test35 kernel: xfs_force_shutdown(sda5,0x1) called from line 1111 of file fs/xfs/linux-2.6/xfs_buf.c.  Return address = 0xd0000000098dd3a0
-> > Feb 16 10:35:31 test35 root: ======== starting XFS test 140 2.6.38-rc4 ========
-> > Feb 16 10:35:56 test35 kernel: xfs_force_shutdown(sda5,0x1) called from line 1111 of file fs/xfs/linux-2.6/xfs_buf.c.  Return address = 0xd0000000098dd3a0
-> > Feb 16 10:43:58 test35 root: ======== starting XFS test 179 2.6.38-rc4 ========
-> > Feb 16 10:44:16 test35 kernel: xfs_force_shutdown(sda5,0x1) called from line 1111 of file fs/xfs/linux-2.6/xfs_buf.c.  Return address = 0xd0000000098dd3a0
-> > Feb 16 10:44:36 test35 root: ======== starting XFS test 181 2.6.38-rc4 ========
-> > Feb 16 10:44:49 test35 kernel: xfs_force_shutdown(sda5,0x1) called from line 1111 of file fs/xfs/linux-2.6/xfs_buf.c.  Return address = 0xd0000000098dd3a0
-> > Feb 16 10:44:53 test35 root: ======== starting XFS test 182 2.6.38-rc4 ========
-> > Feb 16 10:44:59 test35 kernel: xfs_force_shutdown(sda5,0x1) called from line 1111 of file fs/xfs/linux-2.6/xfs_buf.c.  Return address = 0xd0000000098dd3a0
-> > Feb 16 10:48:32 test35 root: ======== starting XFS test 200 2.6.38-rc4 ========
-> > Feb 16 10:48:35 test35 kernel: xfs_force_shutdown(sda5,0x1) called from line 1111 of file fs/xfs/linux-2.6/xfs_buf.c.  Return address = 0xd0000000098dd3a0
-> > ----------------------------
-> 
-> No, they aren't test failures. All these tests trigger a forced
-> shutdown as part of the test, so this is expected output and not an
-> indication of a problem.
-> 
-> $ grep -l godown [0-2]*[0-9]
-> 085
-> 086
-> 087
-> 121
-> 137
-> 138
-> 139
-> 140
-> 179
-> 180
-> 181
-> 182
-> 200
-> 
-> Cheers,
-> 
-> Dave.
+> Goal:  I'd love to try putting the external log on an SSD that could
+> sustain two or three minutes of steady full-throttle writing.  128MB
+> gives me less than a second worth of writes before my write speed
+> slows down to the underlying storage speed.
 
+Data write speed or metadata write speed? What sort of write
+patterns? Also, don't forget that data is not logged so increasing
+the log size won't change the speed of data writeback.
+
+As it is, 2GB is still not enough for preventing metadata writeback
+for minutes if that is what you are trying to do.  Even if you use
+the new delaylog mount option - which reduces log traffic by an
+order of magnitude for most non-synchronous workloads - log write
+rates can be upwards of 30MB/s under concurrent metadata intensive
+workloads....
+
+> I'll do lots of benchmarks before rolling it out to make sure it
+> actually does help, of course.  I just want to know if it's
+> possible, and how to do it if it is.
+
+If you want a log larger than 2GB, then there is a lot of code
+changes in both kernel an userspace as the log arithmetic is all
+done via 32 bit integers and a lot of it is byte based.
+
+As it is, there are significant scaling issues with logs of even 2GB
+in size - log replay can take tens of minutes when a log full of
+inode changes have to be replayed, filling a 2GB log means you'll
+probably have ten of gigabytes of dirty metadata in memory, so
+response to memory shortages can cause IO storms and severe
+interactivity problems, etc.
+
+In general, I'm finding that a log size of around 512MB w/ delaylog
+gives the best tradeoff between scalability, performance, memory
+usage and relatively sane recovery times...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
