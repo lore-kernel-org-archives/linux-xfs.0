@@ -1,11 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p1ILILIS238228 for <xfs@oss.sgi.com>; Fri, 18 Feb 2011 15:18:21 -0600
+	p1ILIN4V238281 for <xfs@oss.sgi.com>; Fri, 18 Feb 2011 15:18:23 -0600
 From: Alex Elder <aelder@sgi.com>
-Message-Id: <201102182121.p1ILL22a029207@stout.americas.sgi.com>
-Date: Fri, 18 Feb 2011 15:21:02 -0600
-Subject: [PATCH v3, 16/16] xfsprogs: metadump: drop a typedef in db/metadump.c
+Message-Id: <201102182121.p1ILL1Df029040@stout.americas.sgi.com>
+Date: Fri, 18 Feb 2011 15:21:01 -0600
+Subject: [PATCH v3, 02/16] xfsprogs: metadump: simplify '/' handling in
+	generate_obfuscated_name()
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -21,45 +22,124 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Use struct name_ent rather than its typedef, and just drop the
-typedef entirely.
+In generate_obfuscated_name(), the incoming name is allowed to start
+with a '/' character, in which case it is copied over to the new
+name and ignored for the remainder of the hash calculation.  A '/'
+character is needlessly included at the beginning of each name
+stashed in the duplicates table (regardless of whether one was
+present in the name provided).
+
+Simplify the affected code by processing the '/' right away, and
+using a pointer thereafter for the start of the new name.  Stop
+including a leading '/' in the name used for duplicate detection.
+
+Note:  It is not clear a leading '/' character is ever even present
+in a name presented for obfuscation.  I have not investigated this
+question; this change merely adjusts the code while preserving its
+original functionality.
 
 Signed-off-by: Alex Elder <aelder@sgi.com>
 
-No significant changes in this version from the last version posted.
+No significant changes in this version from the last one posted.
 
 ---
- db/metadump.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ db/metadump.c |   66 ++++++++++++++++++++++++++++++++++++----------------------
+ 1 file changed, 42 insertions(+), 24 deletions(-)
 
 Index: b/db/metadump.c
 ===================================================================
 --- a/db/metadump.c
 +++ b/db/metadump.c
-@@ -341,12 +341,12 @@ copy_free_cnt_btree(
+@@ -441,6 +441,7 @@ generate_obfuscated_name(
+ 	int			dup;
+ 	xfs_dahash_t		newhash;
+ 	uchar_t			newname[NAME_MAX];
++	uchar_t			*newp = &newname[0];
  
- /* filename and extended attribute obfuscation routines */
+ 	/*
+ 	 * Our obfuscation algorithm requires at least 5-character
+@@ -458,40 +459,57 @@ generate_obfuscated_name(
+ 	if (ino && in_lost_found(ino, namelen, name))
+ 		return;
  
--typedef struct name_ent {
-+struct name_ent {
- 	struct name_ent		*next;
- 	xfs_dahash_t		hash;
- 	int	  	    	namelen;
- 	uchar_t    	    	name[1];
--} name_ent_t;
-+};
+-	/* create a random name with the same hash value */
++	/*
++	 * If the name starts with a slash, just skip over it.  We
++	 * will copy our obfuscated name back into space following
++	 * the slash when we're done.  Our new name will not have
++	 * the '/', and that's the version we'll keep in our
++	 * duplicates table.  Note that the namelen value passed in
++	 * does not include the leading slash (if any).
++	 */
++	if (*name == '/')
++	    	name++;
  
- #define NAME_TABLE_SIZE		4096
- 
-@@ -356,7 +356,7 @@ static void
- nametable_clear(void)
- {
- 	int		i;
--	name_ent_t	*ent;
-+	struct name_ent	*ent;
- 
- 	for (i = 0; i < NAME_TABLE_SIZE; i++) {
- 		while ((ent = nametable[i])) {
+ 	hash = libxfs_da_hashname(name, namelen);
+ 	do {
+ 		dup = 0;
+-		newname[0] = '/';
+-
+ 		for (;;) {
+-			/* if the first char is a "/", preserve it */
+-			i = (name[0] == '/');
+-
+-			for (newhash = 0; i < namelen - 5; i++) {
+-				newname[i] = random_filename_char();
+-				newhash = newname[i] ^ rol32(newhash, 7);
++		    	/*
++			 * The beginning of the obfuscated name can
++			 * be pretty much anything, so fill it in
++			 * with random characters.  Accumulate its
++			 * new hash value as we go.
++			 */
++			newhash = 0;
++			for (i = 0; i < namelen - 5; i++) {
++				newp[i] = random_filename_char();
++				newhash = newp[i] ^ rol32(newhash, 7);
+ 			}
++
++			/*
++			 * Compute which five bytes need to be used
++			 * at the end of the name so the hash of the
++			 * obfuscated name is the same as the hash
++			 * of the original.
++			 */
+ 			newhash = rol32(newhash, 3) ^ hash;
+-			if (name[0] != '/' || namelen > 5) {
+-				newname[namelen - 5] = (newhash >> 28) |
+-						(random_filename_char() & 0xf0);
+-				if (is_invalid_char(newname[namelen - 5]))
+-					continue;
+-			}
+-			newname[namelen - 4] = (newhash >> 21) & 0x7f;
+-			if (is_invalid_char(newname[namelen - 4]))
++
++			newp[namelen - 5] = (newhash >> 28) |
++					(random_filename_char() & 0xf0);
++			if (is_invalid_char(newp[namelen - 5]))
++				continue;
++			newp[namelen - 4] = (newhash >> 21) & 0x7f;
++			if (is_invalid_char(newp[namelen - 4]))
+ 				continue;
+-			newname[namelen - 3] = (newhash >> 14) & 0x7f;
+-			if (is_invalid_char(newname[namelen - 3]))
++			newp[namelen - 3] = (newhash >> 14) & 0x7f;
++			if (is_invalid_char(newp[namelen - 3]))
+ 				continue;
+-			newname[namelen - 2] = (newhash >> 7) & 0x7f;
+-			if (is_invalid_char(newname[namelen - 2]))
++			newp[namelen - 2] = (newhash >> 7) & 0x7f;
++			if (is_invalid_char(newp[namelen - 2]))
+ 				continue;
+-			newname[namelen - 1] = ((newhash >> 0) ^
+-					(newname[namelen - 5] >> 4)) & 0x7f;
+-			if (is_invalid_char(newname[namelen - 1]))
++			newp[namelen - 1] = ((newhash >> 0) ^
++					(newp[namelen - 5] >> 4)) & 0x7f;
++			if (is_invalid_char(newp[namelen - 1]))
+ 				continue;
+ 			break;
+ 		}
 
 _______________________________________________
 xfs mailing list
