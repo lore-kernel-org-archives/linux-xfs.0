@@ -1,12 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p1ILINqV238296 for <xfs@oss.sgi.com>; Fri, 18 Feb 2011 15:18:24 -0600
+	p1ILIMrh238241 for <xfs@oss.sgi.com>; Fri, 18 Feb 2011 15:18:22 -0600
 From: Alex Elder <aelder@sgi.com>
-Message-Id: <201102182121.p1ILL1x7029051@stout.americas.sgi.com>
-Date: Fri, 18 Feb 2011 15:21:01 -0600
-Subject: [PATCH v3, 03/16] xfsprogs: metadump: drop unneeded use of a
-	random character
+Message-Id: <201102182121.p1ILL2XC029147@stout.americas.sgi.com>
+Date: Fri, 18 Feb 2011 15:21:02 -0600
+Subject: [PATCH v3, 11/16] xfsprogs: metadump: move obfuscation algorithm
+	into its own function
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -22,85 +22,189 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-With the exception of the last five bytes, an obfuscated name is
-simply a random string of (acceptable) characters.  The last five
-bytes are chosen, based on the random portion before them, such that
-the resulting obfuscated name has the same hash value as the
-original name.
-
-This is done by essentially working backwards from the difference
-between the original hash and the hash value computed for the
-obfuscated name so far, picking final bytes based on how that
-difference gets manipulated by completing the hash computation.
-
-Of those last 5 bytes, all but the upper half of the first one are
-completely determined by this process.  The upper part of the first
-one is currently computed as four random bits, just like all the
-earlier bytes in the obfuscated name.
-
-It is not actually necessary to randomize these four upper bits,
-and we can simply make them 0.
-
-Here's why:
-- The final bytes are pulled directly from the hash difference
-  mentioned above, with the lowest-order byte of the hash
-  determining the last character used in the name.
-- The upper nibble of the 5th-to-last byte in a name will affect the
-  lowest 4 bits of hash value and therefore the last byte of the
-  name.  Those four bits are combined with the hash computed from
-  the random characters generated earlier.
-- Because those earlier bytes were random, their hash value will
-  also be random, and in particular, the lowest-order four bits of
-  the hash will be random.
-- So it doesn't matter whether we choose all 0 bits or some other
-  random value for that upper nibble of the byte at offset
-  (namelen - 5).  When it's combined with the hash, the last byte of
-  the name will be random either way.
-
-Therefore we will choose to use all 0's for that upper nibble.
-
-Doing this simplifies the generation of two of the final five
-characters, and makes all five of them get computed in a consistent
-way.  We'll still get some small bit of obfuscation for even
-5-character names, since the upper bits of the first character will
-generally be cleared and likely different from the original.
-
-Add the use of a mask in the one case it wasn't used to be even more
-consistent.
+Pull the name obfuscation algorithm into a separate function.
+This separates it from the checking for duplicates and recording
+of names that are found to be acceptable.
 
 Signed-off-by: Alex Elder <aelder@sgi.com>
 
-Other than expanding the description, this has no signficant changes
-from the last version posted.
+This is a new change, not posted with this series previously.
 
 ---
- db/metadump.c |    6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ db/metadump.c |  146 +++++++++++++++++++++++++++++++---------------------------
+ 1 file changed, 80 insertions(+), 66 deletions(-)
 
 Index: b/db/metadump.c
 ===================================================================
 --- a/db/metadump.c
 +++ b/db/metadump.c
-@@ -494,8 +494,7 @@ generate_obfuscated_name(
- 			 */
- 			newhash = rol32(newhash, 3) ^ hash;
+@@ -468,6 +468,85 @@ in_lost_found(
+ 	return slen == namelen && !memcmp(name, s, namelen);
+ }
  
--			newp[namelen - 5] = (newhash >> 28) |
--					(random_filename_char() & 0xf0);
-+			newp[namelen - 5] = (newhash >> 28) & 0x7f;
- 			if (is_invalid_char(newp[namelen - 5]))
- 				continue;
- 			newp[namelen - 4] = (newhash >> 21) & 0x7f;
-@@ -507,8 +506,7 @@ generate_obfuscated_name(
- 			newp[namelen - 2] = (newhash >> 7) & 0x7f;
- 			if (is_invalid_char(newp[namelen - 2]))
- 				continue;
--			newp[namelen - 1] = ((newhash >> 0) ^
--					(newp[namelen - 5] >> 4)) & 0x7f;
-+			newp[namelen - 1] = (newhash >> 0) & 0x7f;
- 			if (is_invalid_char(newp[namelen - 1]))
- 				continue;
- 			break;
++/*
++ * Given a name and its hash value, massage the name in such a way
++ * that the result is another name of equal length which shares the
++ * same hash value.
++ */
++static void
++obfuscate_name(
++	xfs_dahash_t	hash,
++	size_t		name_len,
++	uchar_t		*name)
++{
++	uchar_t		newname[NAME_MAX];
++	uchar_t		*newp = newname;
++	int		i;
++	xfs_dahash_t	new_hash = 0;
++	uchar_t		*first;
++	uchar_t		high_bit;
++	int		shift;
++
++	/*
++	 * Our obfuscation algorithm requires at least 5-character
++	 * names, so don't bother if the name is too short.
++	 */
++	if (name_len < 5)
++	    	return;
++
++	/*
++	 * The beginning of the obfuscated name can be pretty much
++	 * anything, so fill it in with random characters.
++	 * Accumulate its new hash value as we go.
++	 */
++	for (i = 0; i < name_len - 5; i++) {
++		*newp = random_filename_char();
++		new_hash = *newp ^ rol32(new_hash, 7);
++		newp++;
++	}
++
++	/*
++	 * Compute which five bytes need to be used at the end of
++	 * the name so the hash of the obfuscated name is the same
++	 * as the hash of the original.  If any result in an invalid
++	 * character, flip a bit and arrange for a corresponding bit
++	 * in a neighboring byte to be flipped as well.  For the
++	 * last byte, the "neighbor" to change is the first byte
++	 * we're computing here.
++	 */
++	new_hash = rol32(new_hash, 3) ^ hash;
++
++	first = newp;
++	high_bit = 0;
++	for (shift = 28; shift >= 0; shift -= 7) {
++		*newp = (new_hash >> shift & 0x7f) ^ high_bit;
++		if (is_invalid_char(*newp)) {
++			*newp ^= 1;
++			high_bit = 0x80;
++		} else
++			high_bit = 0;
++		ASSERT(!is_invalid_char(*newp));
++		newp++;
++	}
++
++	/*
++	 * If we flipped a bit on the last byte, we need to fix up
++	 * the matching bit in the first byte.  The result will
++	 * be a valid character, because we know that first byte
++	 * has 0's in its upper four bits (it was produced by a
++	 * 28-bit right-shift of a 32-bit unsigned value).
++	 */
++	if (high_bit) {
++		*first ^= 0x10;
++		ASSERT(!is_invalid_char(*first));
++	}
++	ASSERT(libxfs_da_hashname(newname, name_len) == hash);
++
++	/* Copy the fully obfuscated name back to the caller's buffer */
++
++	memcpy(name, newname, name_len);
++}
++
+ static void
+ generate_obfuscated_name(
+ 	xfs_ino_t		ino,
+@@ -480,13 +559,6 @@ generate_obfuscated_name(
+ 	uchar_t			*newp;
+ 
+ 	/*
+-	 * Our obfuscation algorithm requires at least 5-character
+-	 * names, so don't bother if the name is too short.
+-	 */
+-	if (namelen < 5)
+-	    	return;
+-
+-	/*
+ 	 * We don't obfuscate "lost+found" or any orphan files
+ 	 * therein.  When the name table is used for extended
+ 	 * attributes, the inode number provided is 0, in which
+@@ -508,65 +580,7 @@ generate_obfuscated_name(
+ 
+ 	hash = libxfs_da_hashname(name, namelen);
+ 	do {
+-		int		i;
+-		xfs_dahash_t	newhash = 0;
+-		uchar_t		*first;
+-		uchar_t		high_bit;
+-		int		shift;
+-
+-		/*
+-		 * The beginning of the obfuscated name can be
+-		 * pretty much anything, so fill it in with random
+-		 * characters.  Accumulate its new hash value as we
+-		 * go.
+-		 */
+-		newp = &newname[0];
+-		for (i = 0; i < namelen - 5; i++) {
+-			*newp = random_filename_char();
+-			newhash = *newp ^ rol32(newhash, 7);
+-			newp++;
+-		}
+-
+-		/*
+-		 * Compute which five bytes need to be used at the
+-		 * end of the name so the hash of the obfuscated
+-		 * name is the same as the hash of the original.  If
+-		 * any result in an invalid character, flip a bit
+-		 * and arrange for a corresponding bit in a
+-		 * neighboring byte to be flipped as well.  For the
+-		 * last byte, the "neighbor" to change is the first
+-		 * byte we're computing here.
+-		 */
+-		newhash = rol32(newhash, 3) ^ hash;
+-
+-		first = newp;
+-		high_bit = 0;
+-		for (shift = 28; shift >= 0; shift -= 7) {
+-			*newp = (newhash >> shift & 0x7f) ^ high_bit;
+-			if (is_invalid_char(*newp)) {
+-				*newp ^= 1;
+-				high_bit = 0x80;
+-			} else
+-				high_bit = 0;
+-			ASSERT(!is_invalid_char(*newp));
+-			newp++;
+-		}
+-
+-		/*
+-		 * If we flipped a bit on the last byte, we need to
+-		 * fix up the first one we computed.
+-		 *
+-		 * That first byte had 0's in its upper four bits
+-		 * (it's the result of shifting a 32-bit unsigned
+-		 * value Right by 28 bits), so we don't need to
+-		 * worry about it becoming invalid as a result.
+-		 */
+-		if (high_bit) {
+-			*first ^= 0x10;
+-			ASSERT(!is_invalid_char(*first));
+-		}
+-
+-		ASSERT(libxfs_da_hashname(newname, namelen) == hash);
++		obfuscate_name(hash, namelen, newname);
+ 
+ 		/*
+ 		 * Search the name table to be sure we don't produce
 
 _______________________________________________
 xfs mailing list
