@@ -1,31 +1,39 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p1IHqT35228837 for <xfs@oss.sgi.com>; Fri, 18 Feb 2011 11:52:29 -0600
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D4E2C129F487
-	for <xfs@oss.sgi.com>; Fri, 18 Feb 2011 09:55:10 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id PrgnFOHIq6NLOGmU for
-	<xfs@oss.sgi.com>; Fri, 18 Feb 2011 09:55:10 -0800 (PST)
-Received: from int-mx12.intmail.prod.int.phx2.redhat.com
-	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id p1IHt9gq031323
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Fri, 18 Feb 2011 12:55:09 -0500
-Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id p1IHt8cv000741
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Fri, 18 Feb 2011 12:55:09 -0500
-Message-ID: <4D5EB27C.3070306@redhat.com>
-Date: Fri, 18 Feb 2011 11:55:08 -0600
-From: Eric Sandeen <sandeen@redhat.com>
-MIME-Version: 1.0
-Subject: [PATCH V2] xfs_quota: don't try to report quotas which aren't there.
-References: <4D5EB09A.3030605@redhat.com>
-In-Reply-To: <4D5EB09A.3030605@redhat.com>
+	p1IJq4tZ234481 for <xfs@oss.sgi.com>; Fri, 18 Feb 2011 13:52:04 -0600
+Received: from e9.ny.us.ibm.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7553E4DA7EA
+	for <xfs@oss.sgi.com>; Fri, 18 Feb 2011 11:54:43 -0800 (PST)
+Received: from e9.ny.us.ibm.com (e9.ny.us.ibm.com [32.97.182.139]) by
+	cuda.sgi.com with ESMTP id kPg9fXJmO9y39V2l for
+	<xfs@oss.sgi.com>; Fri, 18 Feb 2011 11:54:43 -0800 (PST)
+Received: from d01relay05.pok.ibm.com (d01relay05.pok.ibm.com [9.56.227.237])
+	by e9.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p1IJT8M0005934
+	for <xfs@oss.sgi.com>; Fri, 18 Feb 2011 14:29:08 -0500
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay05.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	p1IJshWd222584 for <xfs@oss.sgi.com>; Fri, 18 Feb 2011 14:54:43 -0500
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
+	p1IJsgTn008230 for <xfs@oss.sgi.com>; Fri, 18 Feb 2011 17:54:42 -0200
+Subject: Re: xfs_force_shutdown() called when running xfstests on 2.6.38-rc4
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+In-Reply-To: <20110218033030.GL13052@dastard>
+References: <1297798863.32230.222.camel@chandra-lucid.beaverton.ibm.com>
+	<20110215223022.GE13052@dastard>
+	<1297886433.32230.224.camel@chandra-lucid.beaverton.ibm.com>
+	<20110216221433.GG13052@dastard>
+	<1297899728.32230.225.camel@chandra-lucid.beaverton.ibm.com>
+	<4D5C8F4D.1060804@sandeen.net>
+	<1297968550.32230.307.camel@chandra-lucid.beaverton.ibm.com>
+	<20110217225209.GI13052@dastard>
+	<1297994980.32230.309.camel@chandra-lucid.beaverton.ibm.com>
+	<20110218033030.GL13052@dastard>
+Date: Fri, 18 Feb 2011 11:57:39 -0800
+Message-ID: <1298059059.32230.318.camel@chandra-lucid.beaverton.ibm.com>
+Mime-Version: 1.0
+Reply-To: sekharan@us.ibm.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,136 +42,71 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============2252218025988210774=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-This is a multi-part message in MIME format.
---===============2252218025988210774==
-Content-Type: multipart/alternative;
- boundary="------------030609000009030408040603"
+On Fri, 2011-02-18 at 14:30 +1100, Dave Chinner wrote:
+> On Thu, Feb 17, 2011 at 06:09:40PM -0800, Chandra Seetharaman wrote:
+> > On Fri, 2011-02-18 at 09:52 +1100, Dave Chinner wrote:
+> > > On Thu, Feb 17, 2011 at 10:49:10AM -0800, Chandra Seetharaman wrote:
+> > > > Thanks for that info, Eric.
+> > > > 
+> > > > Now I increased the filesystem size and I see the following failure
+> > > > --------------------------------
+> > > > QA output created by 180
+> > > > file /mnt/xfsScratchMntPt/456 has incorrect size - sync failed
+> > > > file /mnt/xfsScratchMntPt/525 has incorrect size - sync failed
+> > > > file /mnt/xfsScratchMntPt/624 has incorrect size - sync failed
+> > > > ---------------------------------
+> > > > 
+> > > > I guess that is not good :)
+> > > 
+> > > No, not good. It passes here on x86_64 and a couple of different
+> > > configurations storage back ends (1/2p on h/w raid1 writing
+> > > @~90MB/s, 8p + s/w RAID0 @ ~700MB/s), so it doesn't seem like there
+> > > is a generic problem.
+> > > 
+> > > what is the hardware you are testing on? 
+> > PPC64
+> 
+> Yes, I know you are running on PPC64, but that doesn't tell me
 
-This is a multi-part message in MIME format.
---------------030609000009030408040603
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+It is a 4 processor quad-core, which gets 16 procs. 32G RAM.
 
-Red Hat bug #669333 - xfs_quota generates "XFS_GETQUOTA: No such process" errors
-shows that if you do this for a filesystem w/o group quota enabled:
+Storage is a ipr RAID0 of 2 500G sas disks.
 
-# xfs_quota -x -c ' report -h ' /xfsquota"
+Filesystem size is 20G.
 
-You'll get this output:
+> anything about the hardware you are running on.  How many CPUs, how
+> much RAM, what storage you are using, how it is configured, etc, is
+> the sort of infomration relevant to understanding the circumstances
+> around the failures you are seeing...
+> 
+> > > Does it happen on every run?
+> > 
+> > No, it is not consistent. It happened as this
+> > 
+> > +file /mnt/xfsScratchMntPt/993 has incorrect size - sync failed
+> > 
+> > and ran 10+ times, didn't fail at all.
+> 
+> OK. So it's a relatively rare failure, then?
 
-User quota on /xfsquota (/dev/vdb)
-                        Blocks              
-User ID      Used   Soft   Hard Warn/Grace   
----------- --------------------------------- 
-root            0      0      0  00 [------]
+Very rare. I ran it more than 20 times yesterday night, and it didn't
+fail.
 
-XFS_GETQUOTA: No such process
-XFS_GETQUOTA: No such process
-...
+chandra
+> 
+> Cheers,
+> 
+> Dave.
 
-because we're calling XFS_GETQUOTA for types which aren't enabled.
-
-The below patch fixes it for me, just ignoring types that aren't
-there.  Thanks to Arkadiusz Miskiewicz for pointing out the simpler
-fix.  :)
-
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-
-diff --git a/quota/report.c b/quota/report.c
-index 0e005c3..7d391c6 100644
---- a/quota/report.c
-+++ b/quota/report.c
-@@ -302,7 +302,7 @@ report_mount(
- 	int		count;
- 
- 	if (xfsquotactl(XFS_GETQUOTA, dev, type, id, (void *)&d) < 0) {
--		if (errno != ENOENT && errno != ENOSYS)
-+		if (errno != ENOENT && errno != ENOSYS && errno != ESRCH)
- 			perror("XFS_GETQUOTA");
- 		return 0;
- 	}
-
-
-
---------------030609000009030408040603
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-  <head>
-    <meta content="text/html; charset=ISO-8859-1"
-      http-equiv="Content-Type">
-    <title></title>
-  </head>
-  <body bgcolor="#ffffff" text="#000000">
-    <pre wrap="">Red Hat bug #669333 - xfs_quota generates "XFS_GETQUOTA: No such process" errors
-shows that if you do this for a filesystem w/o group quota enabled:
-
-# xfs_quota -x -c ' report -h ' /xfsquota"
-
-You'll get this output:
-
-User quota on /xfsquota (/dev/vdb)
-                        Blocks              
-User ID      Used   Soft   Hard Warn/Grace   
----------- --------------------------------- 
-root            0      0      0  00 [------]
-
-XFS_GETQUOTA: No such process
-XFS_GETQUOTA: No such process
-...
-
-because we're calling XFS_GETQUOTA for types which aren't enabled.
-
-The below patch fixes it for me, just ignoring types that aren't
-there.  Thanks to Arkadiusz Miskiewicz for pointing out the simpler
-fix.  :)
-
-Signed-off-by: Eric Sandeen <a class="moz-txt-link-rfc2396E" href="mailto:sandeen@redhat.com">&lt;sandeen@redhat.com&gt;</a>
----
-
-</pre>
-    <div class="moz-text-plain" wrap="true" style="font-family:
-      -moz-fixed; font-size: 12px;" lang="x-western">
-      <pre wrap="">diff --git a/quota/report.c b/quota/report.c
-index 0e005c3..7d391c6 100644
---- a/quota/report.c
-+++ b/quota/report.c
-@@ -302,7 +302,7 @@ report_mount(
- 	int		count;
- 
- 	if (xfsquotactl(XFS_GETQUOTA, dev, type, id, (void *)&amp;d) &lt; 0) {
--		if (errno != ENOENT &amp;&amp; errno != ENOSYS)
-+		if (errno != ENOENT &amp;&amp; errno != ENOSYS &amp;&amp; errno != ESRCH)
- 			perror("XFS_GETQUOTA");
- 		return 0;
- 	}
-</pre>
-    </div>
-    <br>
-  </body>
-</html>
-
---------------030609000009030408040603--
-
-
---===============2252218025988210774==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============2252218025988210774==--
