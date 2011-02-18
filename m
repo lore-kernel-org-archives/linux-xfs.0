@@ -1,13 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p1ILIKrH238181 for <xfs@oss.sgi.com>; Fri, 18 Feb 2011 15:18:21 -0600
+	p1ILINNF238283 for <xfs@oss.sgi.com>; Fri, 18 Feb 2011 15:18:23 -0600
 From: Alex Elder <aelder@sgi.com>
-Message-Id: <201102182121.p1ILL103029109@stout.americas.sgi.com>
+Message-Id: <201102182121.p1ILL11u029023@stout.americas.sgi.com>
 Date: Fri, 18 Feb 2011 15:21:01 -0600
-Subject: [PATCH v3,
-	08/16] xfsprogs: metadump: ensure dup table always has entry for
-	obfuscated name
+Subject: [PATCH v3, 00/16] xfsprogs: fix obfuscation problems in metadump
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -17,59 +15,71 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-We need to ensure the nametable has a copy of all the names in a
-directory (or attribute fork) in order to avoid creating duplicate
-entries when obfuscating names.  Currently there is an (unlikely)
-case where the name is passed back without such an entry being
-created.  Reorder things so that won't happen.
-
-Signed-off-by: Alex Elder <aelder@sgi.com>
-
-No significant changes in this version from the last one posted.
-
----
- db/metadump.c |   12 ++++++++----
- 1 file changed, 8 insertions(+), 4 deletions(-)
-
-Index: b/db/metadump.c
-===================================================================
---- a/db/metadump.c
-+++ b/db/metadump.c
-@@ -540,18 +540,22 @@ generate_obfuscated_name(
- 		}
- 	} while (dup);
- 
--	memcpy(name, newname, namelen);
-+	/* Create an entry for the name in the name table */
- 
- 	p = malloc(sizeof(name_ent_t) + namelen);
- 	if (p == NULL)
- 		return;
- 
--	p->next = nametable[hash % NAME_TABLE_SIZE];
--	p->hash = hash;
- 	p->namelen = namelen;
--	memcpy(p->name, name, namelen);
-+	memcpy(p->name, newname, namelen);
-+	p->hash = hash;
-+	p->next = nametable[hash % NAME_TABLE_SIZE];
- 
- 	nametable[hash % NAME_TABLE_SIZE] = p;
-+
-+	/* Update the caller's copy with the obfuscated name */
-+
-+	memcpy(name, newname, namelen);
- }
- 
- static void
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+VGhpcyBzZXJpZXMgaGFzIGV4cGFuZGVkIHlldCBhZ2FpbiwgYnV0IEkgaG9wZSBJJ20gbm93IGRv
+bmUgd2l0aAppdC4gIEknZCByZWFsbHkgbGlrZSB0byBnZXQgaXQgcmV2aWV3ZWQgdGhpcyB0aW1l
+IGFyb3VuZC4gIEkndmUKc2VudCBvdXQgYSB0ZXN0IGZvciB4ZnN0ZXN0cyB0byB2ZXJpZnkgaXQg
+dGhpcyB0aW1lIGFyb3VuZC4uLgoKVGhlIG1haW4gY2hhbmdlIHRoaXMgdGltZSBpcyB0aGF0IEkn
+dmUgcmVhcnJhbmdlZCB0aGUgd2F5IGR1cGxpY2F0ZQpuYW1lcyBhcmUgaGFuZGxlZCBvbmNlIHRo
+ZXkgaGF2ZSBiZWVuIG9iZnVzY2F0ZWQuICBUaGVyZSBpcyBhIGNoYW5jZQp0aGF0IHRoZSByZXN1
+bHQgb2YgYW4gb2JmdXNjYXRpb24gd291bGQgYmUgYSBuYW1lIHRoYXQgYWxyZWFkeSBoYWQKYmVl
+biBzdG9yZWQgaW4gdGhlIG5hbWVzIHRhYmxlLiAgSXQgdXNlZCB0byBiZSBpbiB0aGF0IGNhc2Ug
+YW5vdGhlcgpvYmZ1c2NhdGlvbiBhdHRlbXB0IHdhcyBtYWRlLCBidXQgZHVlIHRvIGxpbWl0YXRp
+b25zIGluIHRoZQphbGdvcml0aG0gdGhlcmUgd2FzIGEgc21hbGwgcG9zc2liaWxpdHkgdGhhdCBu
+byBhbHRlcm5hdGl2ZSB3b3VsZApiZSBhdmFpbGFibGUuICBJbiB0aGF0IGNhc2UsIGEgZHVwbGlj
+YXRlIG5hbWUgd291bGQgYmUgcHJvZHVjZWQKaW4gdGhlIG1ldGFkdW1wIGZpbGU7IHRoZSBkdXBs
+aWNhdGVzIHdvdWxkIHNob3cgdXAgaW4gdGhlCnJlaW5jYXJuYXRlZCBmaWxlc3lzdGVtIHByb2R1
+Y2VkIGJ5IHhmc19tZHJlc3RvcmUsIGFuZCB3b3VsZCBiZQppZGVudGlmaWVkIGFzIHByb2JsZW1z
+IGJ5IHhmc19yZXBhaXIuCgpTbyB0aGVyZSBhcmUgYSBmZXcgbmV3IHBhdGNoZXMgdGhhdCBhZGRy
+ZXNzIHRoaXMsIHdpdGggc29tZSBvZgp0aGVtIGp1c3QgcHJlcGFyYXRvcnkgd29yayBpbiBzdXBw
+b3J0IG9mIHRoZSBvbmUgdGhhdCBjb250YWlucwp0aGUgcmVhbCBjaGFuZ2VzLgoKU2luY2UgdGhl
+IGxhc3QgdGltZSBpdCBnb3QgcG9zdGVkLCB0aGVzZSBjaGFuZ2VzIGhhdmUgYmVlbiBtYWRlOgot
+IEkndmUgZ29uZSBvdmVyIHZhcmlvdXMgZGVzY3JpcHRpb25zIGluIHRoZSBwYXRjaGVzIGFuZCBp
+biB0aGUKICBjb21tZW50cyBpbiB0aGUgY29kZSwgYW5kIGhhdmUgcmVmaW5lZCB0aGVtIGluIGhv
+cGVzIGl0IHdpbGwKICBtYWtlIHRoZSB3aG9sZSB0aGluZyBhIGxvdCBjbGVhcmVyLiAgU29tZSBv
+ZiB0aGlzIHN0dWZmIGlzCiAgaGFyZCB0byBkZXNjcmliZS4KLSBGaXhlZCBhIHByb2JsZW0gd2l0
+aCB0cmVhdG1lbnQgb2YgdGhlICJsb3N0K2ZvdW5kIiBkaXJlY3RvcnkKICB0aGF0IGNyb3BwZWQg
+dXAgaW4gdGhlIGxhc3QgcG9zdGluZy4KLSBEcm9wcGVkIGEgY2hhbmdlIHRoYXQgZml4ZWQgYSBj
+b21waWxlIHdhcm5pbmcuCi0gUGFydHMgb2YgdGhlIGNvZGUgaGF2ZSBiZWVuIHJlYXJyYW5nZWQs
+IHNlcGFyYXRpbmcgdGhlIG9iZnVzY2F0aW9uCiAgc3RlcCBmcm9tIHRoZSBwcm9jZXNzIG9mIGlk
+ZW50aWZ5aW5nIGFuIGFsdGVybmF0ZSBuYW1lIGlmIGEKICBkdXBsaWNhdGUgaXMgZm91bmQuCi0g
+QWx0ZXJuYXRlIG5hbWVzIGFyZSBub3cgZ2VuZXJhdGVkIHVzaW5nIGEgbWV0aG9kaWNhbCBwcm9j
+ZXNzIHRoYXQKICB3aWxsIHByb2R1Y2UgYSBsYXJnZSBudW1iZXIgb2YgcG9zc2liaWxpdGllcywg
+bWFueSBtb3JlIHRoYW4gd2VyZQogIGFsbG93ZWQgYmVmb3JlLiAgVGhpcyBzaG91bGQgYXZvaWQg
+ZXZlciBydW5uaW5nIGludG8gdGhlIGNhc2UKICB3aGVyZSBkdXBsaWNhdGVzIGV2ZXIgd2luZCB1
+cCBpbiBhIG1ldGFkdW1wIGZpbGUuCgpCZWxvdyBpcyBzb21lIG9mIHRoZSB0ZXh0IEkgc2VudCBs
+YXN0IHRpbWUgSSBwb3N0ZWQgdGhpcyBzZXJpZXMuCgoJCQkJCS1BbGV4CgpNeSBvcmlnaW5hbCBw
+dXJwb3NlIHdhcyB0byBmaXggYSBidWcgaW4gdGhlIGZ1bmN0aW9uIHVzZWQgYnkKeGZzX21ldGFk
+dW1wIHRvIG9iZnVzY2F0ZSBmaWxlIGFuZCBleHRlbmRlZCBhdHRyaWJ1dGUgbmFtZXMuCkFya2Fk
+aXVzeiBNacWba2lld2ljeiBmb3VuZCBvdXQgdGhhdCB3aGVuIGhlIGF0dGVtcHRlZCB0byBwZXJm
+b3JtIGEKbWV0YWR1bXAgb24gYSBmaWxlc3lzdGVtIHdoaWNoIGhhZCBzb21lIGZpbGVzIHdob3Nl
+IG5hbWVzIHVzZWQgOC1iaXQKY2hhcmFjdGVycywgaXQgbmV2ZXIgY29tcGxldGVkLiAgVGhlIGNh
+dXNlIHdhcyBhIGZsYXcgaW4gdGhlCmFsZ29yaXRobSB1c2VkIHRvIG9iZnVzY2F0ZSBuYW1lcyB3
+aGljaCBjYXVzZWQgYW4gaW5maW5pdGUgbG9vcCB3aGVuCmNlcnRhaW4gbmFtZXMgZ290IG9iZnVz
+Y2F0ZWQuCgpJIGhhdmUgZml4ZWQgdGhhdCBidWcgKGluIHBhdGNoIDQgb2YgdGhpcyBzZXJpZXMp
+LCBidXQgd2hpbGUgSSB3YXMKYXQgaXQgSSByZWFycmFuZ2VkIHRoZSBjb2RlIGEgYml0IGFuZCBk
+aWQgc29tZSBvdGhlciBjbGVhbnVwcy4gIFRoZQpmaXJzdCA3IHBhdGNoZXMgaW4gdGhlIHNlcmll
+cyBhcmUgcmVhbGx5IHByZXR0eSBkaXJlY3RseSByZWxhdGVkIHRvCnRoYXQgaXNzdWUuCgpCdXQg
+d2hpbGUgaW4gdGhlcmUgSSBub3RpY2VkIHNvbWUgb3RoZXIgc29tZXdoYXQgc3VidGxlIGlzc3Vl
+cyBhbmQKaGF2ZSBhZGRyZXNzZWQgdGhvc2UgaW4gdGhpcyBzZXJpZXMgYXMgd2VsbDoKLSBUaGVy
+ZSBpcyBhIHRhYmxlIHRoYXQgdHJhY2tzIG5hbWVzIHRvIGVuc3VyZSBkdXBsaWNhdGVzIGFyZW4n
+dAogIHByb2R1Y2VkIGFzIGEgcmVzdWx0IG9mIG9iZnVzY2F0aW9uLiAgVGhlcmUgd2FzIGEgY2Fz
+ZSB3aGVyZSBhCiAgZmFpbHVyZSB0byB1cGRhdGUgdGhlIHRhYmxlIHdhcyBzaWxlbnRseSBpZ25v
+cmVkLgotIFRoZXJlIHdhcyBzdGlsbCBhIGNoYW5jZSB0aGF0IHBhdGhvbG9naWNhbCBjYXNlcyBj
+b3VsZCBlbmQgdXAKICByZXBlYXRpbmcgZHVlIHRvIGZpbmRpbmcgZHVwbGljYXRlcy4gIEkgY2hh
+bmdlZCBpdCBzbyBpdCB3b3VsZAogIGdpdmUgdXAgYWZ0ZXIgYSBmaXhlZCBudW1iZXIgb2YgYXR0
+ZW1wdHMuCi0gT2JmdXNjYXRlZCBuYW1lcyBoYWQgYmVlbiBjaG9zZW4gZnJvbSBhbiBhbHBoYWJl
+dCBvZiBhbGwgYWxsb3dhYmxlCiAgY2hhcmFjdGVycy4gIFRoaXMgd2FzIG1vcmUgdGhhbiBuZWVk
+ZWQsIHNvIEkgbWFkZSBpdCBjcmVhdGUgbmFtZXMKICB0aGF0IHdlcmUgKG1vc3RseSkgcHJpbnRh
+Ymxlcy4KLSBJdCB3YXMgcHJldmlvdXNseSBwb3NzaWJsZSBmb3IgYW4gb2JmdXNjYXRlZCBuYW1l
+IHRvIGVuZCB1cCBiZWluZwogIGEgZHVwbGljYXRlIG9mIGEgcmVhbCBuYW1lLCBiZWNhdXNlIG5v
+bi1vYmZ1c2NhdGVkIG5hbWVzIHdlcmUgbm90CiAgcGxhY2VkIGluIHRoZSBuYW1lIHRhYmxlLgoK
+QW5kIGZpbmFsbHkgSSBkaWQgYSBsaXR0bGUgdGlkeWluZyBvZiB0aGUgY29kZSB0aGF0IG1hbmFn
+ZXMgdGhlIG5hbWUKdGFibGUuCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNn
+aS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
