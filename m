@@ -1,11 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p1ILINNF238283 for <xfs@oss.sgi.com>; Fri, 18 Feb 2011 15:18:23 -0600
+	p1ILINqV238296 for <xfs@oss.sgi.com>; Fri, 18 Feb 2011 15:18:24 -0600
 From: Alex Elder <aelder@sgi.com>
-Message-Id: <201102182121.p1ILL11u029023@stout.americas.sgi.com>
+Message-Id: <201102182121.p1ILL1x7029051@stout.americas.sgi.com>
 Date: Fri, 18 Feb 2011 15:21:01 -0600
-Subject: [PATCH v3, 00/16] xfsprogs: fix obfuscation problems in metadump
+Subject: [PATCH v3, 03/16] xfsprogs: metadump: drop unneeded use of a
+	random character
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -15,71 +16,93 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-VGhpcyBzZXJpZXMgaGFzIGV4cGFuZGVkIHlldCBhZ2FpbiwgYnV0IEkgaG9wZSBJJ20gbm93IGRv
-bmUgd2l0aAppdC4gIEknZCByZWFsbHkgbGlrZSB0byBnZXQgaXQgcmV2aWV3ZWQgdGhpcyB0aW1l
-IGFyb3VuZC4gIEkndmUKc2VudCBvdXQgYSB0ZXN0IGZvciB4ZnN0ZXN0cyB0byB2ZXJpZnkgaXQg
-dGhpcyB0aW1lIGFyb3VuZC4uLgoKVGhlIG1haW4gY2hhbmdlIHRoaXMgdGltZSBpcyB0aGF0IEkn
-dmUgcmVhcnJhbmdlZCB0aGUgd2F5IGR1cGxpY2F0ZQpuYW1lcyBhcmUgaGFuZGxlZCBvbmNlIHRo
-ZXkgaGF2ZSBiZWVuIG9iZnVzY2F0ZWQuICBUaGVyZSBpcyBhIGNoYW5jZQp0aGF0IHRoZSByZXN1
-bHQgb2YgYW4gb2JmdXNjYXRpb24gd291bGQgYmUgYSBuYW1lIHRoYXQgYWxyZWFkeSBoYWQKYmVl
-biBzdG9yZWQgaW4gdGhlIG5hbWVzIHRhYmxlLiAgSXQgdXNlZCB0byBiZSBpbiB0aGF0IGNhc2Ug
-YW5vdGhlcgpvYmZ1c2NhdGlvbiBhdHRlbXB0IHdhcyBtYWRlLCBidXQgZHVlIHRvIGxpbWl0YXRp
-b25zIGluIHRoZQphbGdvcml0aG0gdGhlcmUgd2FzIGEgc21hbGwgcG9zc2liaWxpdHkgdGhhdCBu
-byBhbHRlcm5hdGl2ZSB3b3VsZApiZSBhdmFpbGFibGUuICBJbiB0aGF0IGNhc2UsIGEgZHVwbGlj
-YXRlIG5hbWUgd291bGQgYmUgcHJvZHVjZWQKaW4gdGhlIG1ldGFkdW1wIGZpbGU7IHRoZSBkdXBs
-aWNhdGVzIHdvdWxkIHNob3cgdXAgaW4gdGhlCnJlaW5jYXJuYXRlZCBmaWxlc3lzdGVtIHByb2R1
-Y2VkIGJ5IHhmc19tZHJlc3RvcmUsIGFuZCB3b3VsZCBiZQppZGVudGlmaWVkIGFzIHByb2JsZW1z
-IGJ5IHhmc19yZXBhaXIuCgpTbyB0aGVyZSBhcmUgYSBmZXcgbmV3IHBhdGNoZXMgdGhhdCBhZGRy
-ZXNzIHRoaXMsIHdpdGggc29tZSBvZgp0aGVtIGp1c3QgcHJlcGFyYXRvcnkgd29yayBpbiBzdXBw
-b3J0IG9mIHRoZSBvbmUgdGhhdCBjb250YWlucwp0aGUgcmVhbCBjaGFuZ2VzLgoKU2luY2UgdGhl
-IGxhc3QgdGltZSBpdCBnb3QgcG9zdGVkLCB0aGVzZSBjaGFuZ2VzIGhhdmUgYmVlbiBtYWRlOgot
-IEkndmUgZ29uZSBvdmVyIHZhcmlvdXMgZGVzY3JpcHRpb25zIGluIHRoZSBwYXRjaGVzIGFuZCBp
-biB0aGUKICBjb21tZW50cyBpbiB0aGUgY29kZSwgYW5kIGhhdmUgcmVmaW5lZCB0aGVtIGluIGhv
-cGVzIGl0IHdpbGwKICBtYWtlIHRoZSB3aG9sZSB0aGluZyBhIGxvdCBjbGVhcmVyLiAgU29tZSBv
-ZiB0aGlzIHN0dWZmIGlzCiAgaGFyZCB0byBkZXNjcmliZS4KLSBGaXhlZCBhIHByb2JsZW0gd2l0
-aCB0cmVhdG1lbnQgb2YgdGhlICJsb3N0K2ZvdW5kIiBkaXJlY3RvcnkKICB0aGF0IGNyb3BwZWQg
-dXAgaW4gdGhlIGxhc3QgcG9zdGluZy4KLSBEcm9wcGVkIGEgY2hhbmdlIHRoYXQgZml4ZWQgYSBj
-b21waWxlIHdhcm5pbmcuCi0gUGFydHMgb2YgdGhlIGNvZGUgaGF2ZSBiZWVuIHJlYXJyYW5nZWQs
-IHNlcGFyYXRpbmcgdGhlIG9iZnVzY2F0aW9uCiAgc3RlcCBmcm9tIHRoZSBwcm9jZXNzIG9mIGlk
-ZW50aWZ5aW5nIGFuIGFsdGVybmF0ZSBuYW1lIGlmIGEKICBkdXBsaWNhdGUgaXMgZm91bmQuCi0g
-QWx0ZXJuYXRlIG5hbWVzIGFyZSBub3cgZ2VuZXJhdGVkIHVzaW5nIGEgbWV0aG9kaWNhbCBwcm9j
-ZXNzIHRoYXQKICB3aWxsIHByb2R1Y2UgYSBsYXJnZSBudW1iZXIgb2YgcG9zc2liaWxpdGllcywg
-bWFueSBtb3JlIHRoYW4gd2VyZQogIGFsbG93ZWQgYmVmb3JlLiAgVGhpcyBzaG91bGQgYXZvaWQg
-ZXZlciBydW5uaW5nIGludG8gdGhlIGNhc2UKICB3aGVyZSBkdXBsaWNhdGVzIGV2ZXIgd2luZCB1
-cCBpbiBhIG1ldGFkdW1wIGZpbGUuCgpCZWxvdyBpcyBzb21lIG9mIHRoZSB0ZXh0IEkgc2VudCBs
-YXN0IHRpbWUgSSBwb3N0ZWQgdGhpcyBzZXJpZXMuCgoJCQkJCS1BbGV4CgpNeSBvcmlnaW5hbCBw
-dXJwb3NlIHdhcyB0byBmaXggYSBidWcgaW4gdGhlIGZ1bmN0aW9uIHVzZWQgYnkKeGZzX21ldGFk
-dW1wIHRvIG9iZnVzY2F0ZSBmaWxlIGFuZCBleHRlbmRlZCBhdHRyaWJ1dGUgbmFtZXMuCkFya2Fk
-aXVzeiBNacWba2lld2ljeiBmb3VuZCBvdXQgdGhhdCB3aGVuIGhlIGF0dGVtcHRlZCB0byBwZXJm
-b3JtIGEKbWV0YWR1bXAgb24gYSBmaWxlc3lzdGVtIHdoaWNoIGhhZCBzb21lIGZpbGVzIHdob3Nl
-IG5hbWVzIHVzZWQgOC1iaXQKY2hhcmFjdGVycywgaXQgbmV2ZXIgY29tcGxldGVkLiAgVGhlIGNh
-dXNlIHdhcyBhIGZsYXcgaW4gdGhlCmFsZ29yaXRobSB1c2VkIHRvIG9iZnVzY2F0ZSBuYW1lcyB3
-aGljaCBjYXVzZWQgYW4gaW5maW5pdGUgbG9vcCB3aGVuCmNlcnRhaW4gbmFtZXMgZ290IG9iZnVz
-Y2F0ZWQuCgpJIGhhdmUgZml4ZWQgdGhhdCBidWcgKGluIHBhdGNoIDQgb2YgdGhpcyBzZXJpZXMp
-LCBidXQgd2hpbGUgSSB3YXMKYXQgaXQgSSByZWFycmFuZ2VkIHRoZSBjb2RlIGEgYml0IGFuZCBk
-aWQgc29tZSBvdGhlciBjbGVhbnVwcy4gIFRoZQpmaXJzdCA3IHBhdGNoZXMgaW4gdGhlIHNlcmll
-cyBhcmUgcmVhbGx5IHByZXR0eSBkaXJlY3RseSByZWxhdGVkIHRvCnRoYXQgaXNzdWUuCgpCdXQg
-d2hpbGUgaW4gdGhlcmUgSSBub3RpY2VkIHNvbWUgb3RoZXIgc29tZXdoYXQgc3VidGxlIGlzc3Vl
-cyBhbmQKaGF2ZSBhZGRyZXNzZWQgdGhvc2UgaW4gdGhpcyBzZXJpZXMgYXMgd2VsbDoKLSBUaGVy
-ZSBpcyBhIHRhYmxlIHRoYXQgdHJhY2tzIG5hbWVzIHRvIGVuc3VyZSBkdXBsaWNhdGVzIGFyZW4n
-dAogIHByb2R1Y2VkIGFzIGEgcmVzdWx0IG9mIG9iZnVzY2F0aW9uLiAgVGhlcmUgd2FzIGEgY2Fz
-ZSB3aGVyZSBhCiAgZmFpbHVyZSB0byB1cGRhdGUgdGhlIHRhYmxlIHdhcyBzaWxlbnRseSBpZ25v
-cmVkLgotIFRoZXJlIHdhcyBzdGlsbCBhIGNoYW5jZSB0aGF0IHBhdGhvbG9naWNhbCBjYXNlcyBj
-b3VsZCBlbmQgdXAKICByZXBlYXRpbmcgZHVlIHRvIGZpbmRpbmcgZHVwbGljYXRlcy4gIEkgY2hh
-bmdlZCBpdCBzbyBpdCB3b3VsZAogIGdpdmUgdXAgYWZ0ZXIgYSBmaXhlZCBudW1iZXIgb2YgYXR0
-ZW1wdHMuCi0gT2JmdXNjYXRlZCBuYW1lcyBoYWQgYmVlbiBjaG9zZW4gZnJvbSBhbiBhbHBoYWJl
-dCBvZiBhbGwgYWxsb3dhYmxlCiAgY2hhcmFjdGVycy4gIFRoaXMgd2FzIG1vcmUgdGhhbiBuZWVk
-ZWQsIHNvIEkgbWFkZSBpdCBjcmVhdGUgbmFtZXMKICB0aGF0IHdlcmUgKG1vc3RseSkgcHJpbnRh
-Ymxlcy4KLSBJdCB3YXMgcHJldmlvdXNseSBwb3NzaWJsZSBmb3IgYW4gb2JmdXNjYXRlZCBuYW1l
-IHRvIGVuZCB1cCBiZWluZwogIGEgZHVwbGljYXRlIG9mIGEgcmVhbCBuYW1lLCBiZWNhdXNlIG5v
-bi1vYmZ1c2NhdGVkIG5hbWVzIHdlcmUgbm90CiAgcGxhY2VkIGluIHRoZSBuYW1lIHRhYmxlLgoK
-QW5kIGZpbmFsbHkgSSBkaWQgYSBsaXR0bGUgdGlkeWluZyBvZiB0aGUgY29kZSB0aGF0IG1hbmFn
-ZXMgdGhlIG5hbWUKdGFibGUuCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNn
-aS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+With the exception of the last five bytes, an obfuscated name is
+simply a random string of (acceptable) characters.  The last five
+bytes are chosen, based on the random portion before them, such that
+the resulting obfuscated name has the same hash value as the
+original name.
+
+This is done by essentially working backwards from the difference
+between the original hash and the hash value computed for the
+obfuscated name so far, picking final bytes based on how that
+difference gets manipulated by completing the hash computation.
+
+Of those last 5 bytes, all but the upper half of the first one are
+completely determined by this process.  The upper part of the first
+one is currently computed as four random bits, just like all the
+earlier bytes in the obfuscated name.
+
+It is not actually necessary to randomize these four upper bits,
+and we can simply make them 0.
+
+Here's why:
+- The final bytes are pulled directly from the hash difference
+  mentioned above, with the lowest-order byte of the hash
+  determining the last character used in the name.
+- The upper nibble of the 5th-to-last byte in a name will affect the
+  lowest 4 bits of hash value and therefore the last byte of the
+  name.  Those four bits are combined with the hash computed from
+  the random characters generated earlier.
+- Because those earlier bytes were random, their hash value will
+  also be random, and in particular, the lowest-order four bits of
+  the hash will be random.
+- So it doesn't matter whether we choose all 0 bits or some other
+  random value for that upper nibble of the byte at offset
+  (namelen - 5).  When it's combined with the hash, the last byte of
+  the name will be random either way.
+
+Therefore we will choose to use all 0's for that upper nibble.
+
+Doing this simplifies the generation of two of the final five
+characters, and makes all five of them get computed in a consistent
+way.  We'll still get some small bit of obfuscation for even
+5-character names, since the upper bits of the first character will
+generally be cleared and likely different from the original.
+
+Add the use of a mask in the one case it wasn't used to be even more
+consistent.
+
+Signed-off-by: Alex Elder <aelder@sgi.com>
+
+Other than expanding the description, this has no signficant changes
+from the last version posted.
+
+---
+ db/metadump.c |    6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+Index: b/db/metadump.c
+===================================================================
+--- a/db/metadump.c
++++ b/db/metadump.c
+@@ -494,8 +494,7 @@ generate_obfuscated_name(
+ 			 */
+ 			newhash = rol32(newhash, 3) ^ hash;
+ 
+-			newp[namelen - 5] = (newhash >> 28) |
+-					(random_filename_char() & 0xf0);
++			newp[namelen - 5] = (newhash >> 28) & 0x7f;
+ 			if (is_invalid_char(newp[namelen - 5]))
+ 				continue;
+ 			newp[namelen - 4] = (newhash >> 21) & 0x7f;
+@@ -507,8 +506,7 @@ generate_obfuscated_name(
+ 			newp[namelen - 2] = (newhash >> 7) & 0x7f;
+ 			if (is_invalid_char(newp[namelen - 2]))
+ 				continue;
+-			newp[namelen - 1] = ((newhash >> 0) ^
+-					(newp[namelen - 5] >> 4)) & 0x7f;
++			newp[namelen - 1] = (newhash >> 0) & 0x7f;
+ 			if (is_invalid_char(newp[namelen - 1]))
+ 				continue;
+ 			break;
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
