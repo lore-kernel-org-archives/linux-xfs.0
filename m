@@ -1,11 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p1ILILbk238192 for <xfs@oss.sgi.com>; Fri, 18 Feb 2011 15:18:21 -0600
+	p1ILINfv238280 for <xfs@oss.sgi.com>; Fri, 18 Feb 2011 15:18:23 -0600
 From: Alex Elder <aelder@sgi.com>
-Message-Id: <201102182121.p1ILL2oE029134@stout.americas.sgi.com>
+Message-Id: <201102182121.p1ILL1T8029031@stout.americas.sgi.com>
 Date: Fri, 18 Feb 2011 15:21:01 -0600
-Subject: [PATCH v3, 10/16] xfsprogs: metadump: encapsulate the nametable code
+Subject: [PATCH v3, 01/16] xfsprogs: metadump: some names aren't all that
+	special
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -21,240 +22,149 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-The name table used to find duplicates in metadump.c is allocated
-dynamically, but there's no real need to do so.  Just make it a BSS
-global array and drop the initialization call.
+Move the check for short names out of is_special_dirent() and into
+generate_obfuscated_name().  That way the check is more directly
+associated with the algorithm that requires it.
 
-Meanwhile, encapsulate the code that adds entries to and looks up
-entries in the table into their own functions.  Use the lookup
-function to detect a duplicate name in a case not previously
-checked.
+Similarly, move the check for inode == 0, since that case has to do
+with storing extended attributes (not files) in the name table.
 
-Change the naming scheme to use "nametable" as a prefix rather than
-a suffix.
-
-Finally, now that it's easy to do so, issue a warning if we find
-that we're falling back to not obfuscating the name, but that name
-has already been used in the current directory.  (This can happen if
-a obfuscated earlier happens to match a subsequently found "real"
-name.)
+As a result, is_special_dirent() is really only focused on whether a
+given file is in the lost+found directory.  Rename the function to
+reflect its more specific purpose.
 
 Signed-off-by: Alex Elder <aelder@sgi.com>
 
-The only change worth mentioning from the last version posted is
-that the the name is copied into a local buffer to ensure it's
-NUL-terminated before printing it, in the event a duplicate name is
-found.
+Updated:
+- The previous version did not properly skip the "lost+found"
+  directory itself; this one does.
+- Created a new definition representing the name of the orphanage
+  directory.  Encapsulate recognizing that directory into a new
+  macro, is_lost_found().
+- Removed casts that eliminate a compile warning in calls to
+  libxfs_da_hashname(); will do them separately later if needed.
 
 ---
- db/metadump.c |  120 ++++++++++++++++++++++++++++++++++------------------------
- 1 file changed, 72 insertions(+), 48 deletions(-)
+ db/metadump.c |   76 +++++++++++++++++++++++++++++++++++++++-------------------
+ 1 file changed, 52 insertions(+), 24 deletions(-)
 
 Index: b/db/metadump.c
 ===================================================================
 --- a/db/metadump.c
 +++ b/db/metadump.c
-@@ -346,30 +346,61 @@ typedef struct name_ent {
- 
- #define NAME_TABLE_SIZE		4096
- 
--static name_ent_t 		**nametable;
--
--static int
--create_nametable(void)
--{
--	nametable = calloc(NAME_TABLE_SIZE, sizeof(name_ent_t));
--	return nametable != NULL;
--}
-+static struct name_ent 	*nametable[NAME_TABLE_SIZE];
- 
- static void
--clear_nametable(void)
-+nametable_clear(void)
- {
--	int			i;
--	name_ent_t		*p;
-+	int		i;
-+	name_ent_t	*ent;
- 
- 	for (i = 0; i < NAME_TABLE_SIZE; i++) {
--		while (nametable[i]) {
--			p = nametable[i];
--			nametable[i] = p->next;
--			free(p);
-+		while ((ent = nametable[i])) {
-+			nametable[i] = ent->next;
-+			free(ent);
- 		}
- 	}
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2007 Silicon Graphics, Inc.
++ * Copyright (c) 2007, 2011 SGI
+  * All Rights Reserved.
+  *
+  * This program is free software; you can redistribute it and/or
+@@ -377,40 +377,56 @@ random_filename_char(void)
+ 	return c;
  }
  
 +/*
-+ * See if the given name is already in the name table.  If so,
-+ * return a pointer to its entry, otherwise return a null pointer.
++ * Determine whether a name is one we shouldn't obfuscate because
++ * it's an orphan (or the "lost+found" directory itself).  Note
++ * "cur_ino" is the inode for the directory currently being
++ * processed.
++ *
++ * Returns 1 if the name should NOT be obfuscated or 0 otherwise.
 + */
-+static struct name_ent *
-+nametable_find(xfs_dahash_t hash, int namelen, uchar_t *name)
-+{
-+	struct name_ent	*ent;
++#define	is_lost_found(mnt, dir_ino, nmlen, nm)			\
++		((dir_ino) == (mnt)->m_sb.sb_rootino &&		\
++			(nmlen) == ORPHANAGE_LEN &&		\
++			!memcmp((nm), ORPHANAGE, ORPHANAGE_LEN))
 +
-+	for (ent = nametable[hash % NAME_TABLE_SIZE]; ent; ent = ent->next) {
-+		if (ent->hash == hash && ent->namelen == namelen &&
-+				!memcmp(ent->name, name, namelen))
-+			return ent;
-+	}
-+	return NULL;
-+}
++#define	ORPHANAGE	"lost+found"
++#define	ORPHANAGE_LEN	(sizeof ORPHANAGE - 1)
 +
-+/*
-+ * Add the given name to the name table.  Returns a pointer to the
-+ * name's new entry, or a null pointer if an error occurs.
-+ */
-+static struct name_ent *
-+nametable_add(xfs_dahash_t hash, int namelen, uchar_t *name)
-+{
-+	struct name_ent	*ent;
-+
-+	ent = malloc(sizeof *ent + namelen);
-+	if (!ent)
-+		return NULL;
-+
-+	ent->namelen = namelen;
-+	memcpy(ent->name, name, namelen);
-+	ent->hash = hash;
-+	ent->next = nametable[hash % NAME_TABLE_SIZE];
-+
-+	nametable[hash % NAME_TABLE_SIZE] = ent;
-+
-+	return ent;
-+}
- 
- #define is_invalid_char(c)	((c) == '/' || (c) == '\0')
- #define rol32(x,y)		(((x) << (y)) | ((x) >> (32 - (y))))
-@@ -444,7 +475,6 @@ generate_obfuscated_name(
+ static int
+-is_special_dirent(
++in_lost_found(
+ 	xfs_ino_t		ino,
+ 	int			namelen,
  	uchar_t			*name)
  {
- 	xfs_dahash_t		hash;
--	name_ent_t		*p;
- 	int			dup = 0;
- 	uchar_t			newname[NAME_MAX];
- 	uchar_t			*newp;
-@@ -542,36 +572,39 @@ generate_obfuscated_name(
- 		 * Search the name table to be sure we don't produce
- 		 * a name that's already been used.
- 		 */
--		for (p = nametable[hash % NAME_TABLE_SIZE]; p; p = p->next) {
--			if (p->hash == hash && p->namelen == namelen &&
--					!memcmp(p->name, newname, namelen)) {
--				dup++;
--				break;
--			}
--		}
--	} while (dup && dup < DUP_MAX);
-+		if (!nametable_find(hash, namelen, newname))
-+			break;
-+	} while (++dup < DUP_MAX);
+ 	static xfs_ino_t	orphanage_ino = 0;
+-	char			s[32];
++	char			s[24];	/* 21 is enough */
+ 	int			slen;
  
- 	/* Use the original name if we got too many dups. */
+-	/*
+-	 * due to the XFS name hashing algorithm, we cannot obfuscate
+-	 * names with 4 chars or less.
+-	 */
+-	if (namelen <= 4)
+-		return 1;
++	/* Record the "lost+found" inode if we haven't done so already */
  
- 	newp = dup < DUP_MAX ? newname : name;
+-	if (ino == 0)
++	ASSERT(ino != 0);
++	if (!orphanage_ino && is_lost_found(mp, cur_ino, namelen, name))
++		orphanage_ino = ino;
++
++	/* We don't obfuscate the "lost+found" directory itself */
++
++	if (ino == orphanage_ino)
++	    	return 1;
++
++	/* Most files aren't in "lost+found" at all */
++
++	if (cur_ino != orphanage_ino)
+ 		return 0;
  
--	/* Create an entry for the name in the name table */
--
--	p = malloc(sizeof(name_ent_t) + namelen);
--	if (p == NULL)
-+	/*
-+	 * Create an entry for the name in the name table.  Use the
-+	 * original name if we got too many dups.
-+	 */
-+	if (!nametable_add(hash, namelen, newp))
- 		return;
+ 	/*
+-	 * don't obfuscate lost+found nor any inodes within lost+found with
+-	 * the inode number
++	 * Within "lost+found", we don't obfuscate any file whose
++	 * name is the same as its inode number.  Any others are
++	 * stray files and can be obfuscated.
+ 	 */
+-	if (cur_ino == mp->m_sb.sb_rootino && namelen == 10 &&
+-			memcmp(name, "lost+found", 10) == 0) {
+-		orphanage_ino = ino;
+-		return 1;
+-	}
+-	if (cur_ino != orphanage_ino)
+-		return 0;
++	slen = snprintf(s, sizeof s, "%llu", (unsigned long long) ino);
  
--	p->namelen = namelen;
--	memcpy(p->name, newp, namelen);
--	p->hash = hash;
--	p->next = nametable[hash % NAME_TABLE_SIZE];
--
--	nametable[hash % NAME_TABLE_SIZE] = p;
--
--	/* Update the caller's copy with the obfuscated name */
--
-+	/*
-+	 * Update the caller's copy with the obfuscated name.
-+	 *
-+	 * If we couldn't come up with one, warn if we managed to
-+	 * previously create an obfuscated name that matches the one
-+	 * we're working on now.
-+	 */
- 	if (newp != name)
- 		memcpy(name, newp, namelen);
-+	else if (nametable_find(hash, namelen, name)) {
-+		/* Ensure the name we report is NUL-terminated. */
-+	    	memcpy(newname, name, namelen);
-+	    	newname[namelen] = '\0';
-+		print_warning("duplicate name \"%s\" for inode %llu "
-+				"in dir inode %llu\n",
-+			newname, (unsigned long long) ino,
-+			(unsigned long long) cur_ino);
-+	}
+-	slen = sprintf(s, "%lld", (long long)ino);
+-	return (slen == namelen && memcmp(name, s, namelen) == 0);
++	return slen == namelen && !memcmp(name, s, namelen);
  }
  
  static void
-@@ -1276,7 +1309,7 @@ process_inode(
- 			break;
- 		default: ;
- 	}
--	clear_nametable();
-+	nametable_clear();
+@@ -426,13 +442,25 @@ generate_obfuscated_name(
+ 	xfs_dahash_t		newhash;
+ 	uchar_t			newname[NAME_MAX];
  
- 	/* copy extended attributes if they exist and forkoff is valid */
- 	if (success && XFS_DFORK_DSIZE(dip, mp) < XFS_LITINO(mp)) {
-@@ -1295,7 +1328,7 @@ process_inode(
- 				success = process_btinode(dip, TYP_ATTR);
- 				break;
- 		}
--		clear_nametable();
-+		nametable_clear();
- 	}
- 	return success;
- }
-@@ -1698,12 +1731,6 @@ metadump_f(
- 	metablock->mb_blocklog = BBSHIFT;
- 	metablock->mb_magic = cpu_to_be32(XFS_MD_MAGIC);
+-	if (is_special_dirent(ino, namelen, name))
+-		return;
++	/*
++	 * Our obfuscation algorithm requires at least 5-character
++	 * names, so don't bother if the name is too short.
++	 */
++	if (namelen < 5)
++	    	return;
  
--	if (!create_nametable()) {
--		print_warning("memory allocation failure");
--		free(metablock);
--		return 0;
--	}
--
- 	block_index = (__be64 *)((char *)metablock + sizeof(xfs_metablock_t));
- 	block_buffer = (char *)metablock + BBSIZE;
- 	num_indicies = (BBSIZE - sizeof(xfs_metablock_t)) / sizeof(__be64);
-@@ -1713,7 +1740,6 @@ metadump_f(
- 	if (strcmp(argv[optind], "-") == 0) {
- 		if (isatty(fileno(stdout))) {
- 			print_warning("cannot write to a terminal");
--			free(nametable);
- 			free(metablock);
- 			return 0;
- 		}
-@@ -1722,7 +1748,6 @@ metadump_f(
- 		outf = fopen(argv[optind], "wb");
- 		if (outf == NULL) {
- 			print_warning("cannot create dump file");
--			free(nametable);
- 			free(metablock);
- 			return 0;
- 		}
-@@ -1759,7 +1784,6 @@ metadump_f(
- 	while (iocur_sp > start_iocur_sp)
- 		pop_cur();
+-	hash = libxfs_da_hashname(name, namelen);
++	/*
++	 * We don't obfuscate "lost+found" or any orphan files
++	 * therein.  When the name table is used for extended
++	 * attributes, the inode number provided is 0, in which
++	 * case we don't need to make this check.
++	 */
++	if (ino && in_lost_found(ino, namelen, name))
++		return;
  
--	free(nametable);
- 	free(metablock);
+ 	/* create a random name with the same hash value */
  
- 	return 0;
++	hash = libxfs_da_hashname(name, namelen);
+ 	do {
+ 		dup = 0;
+ 		newname[0] = '/';
 
 _______________________________________________
 xfs mailing list
