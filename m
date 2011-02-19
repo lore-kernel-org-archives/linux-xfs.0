@@ -1,13 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p1ILIOQs238298 for <xfs@oss.sgi.com>; Fri, 18 Feb 2011 15:18:24 -0600
-From: Alex Elder <aelder@sgi.com>
-Message-Id: <201102182121.p1ILL1kR029061@stout.americas.sgi.com>
-Date: Fri, 18 Feb 2011 15:21:01 -0600
-Subject: [PATCH v3, 04/16] xfsprogs: metadump: adjust rather than start
-	over when invalid byte found
-MIME-Version: 1.0
+	p1J1JTMM249804 for <xfs@oss.sgi.com>; Fri, 18 Feb 2011 19:19:30 -0600
+Received: from e7.ny.us.ibm.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 97B942EA8E8
+	for <xfs@oss.sgi.com>; Fri, 18 Feb 2011 17:22:10 -0800 (PST)
+Received: from e7.ny.us.ibm.com (e7.ny.us.ibm.com [32.97.182.137]) by
+	cuda.sgi.com with ESMTP id 6D3AT29h42gG7NjF for
+	<xfs@oss.sgi.com>; Fri, 18 Feb 2011 17:22:10 -0800 (PST)
+Received: from d01relay07.pok.ibm.com (d01relay07.pok.ibm.com [9.56.227.147])
+	by e7.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p1J11wQs025831
+	for <xfs@oss.sgi.com>; Fri, 18 Feb 2011 20:01:58 -0500
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by d01relay07.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	p1J1LreF2539658
+	for <xfs@oss.sgi.com>; Fri, 18 Feb 2011 20:21:53 -0500
+Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
+	by d01av04.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
+	p1J1LrC7002253 for <xfs@oss.sgi.com>; Fri, 18 Feb 2011 20:21:53 -0500
+Received: from [9.47.24.164] (chandra-lucid.beaverton.ibm.com [9.47.24.164])
+	by d01av04.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVin) with ESMTP id
+	p1J1LqvD002209 for <xfs@oss.sgi.com>; Fri, 18 Feb 2011 20:21:52 -0500
+Subject: xfstests 071 trips an ASSERT due to commit
+	055388a3188f56676c21e92962fc366ac8b5cb72
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Date: Fri, 18 Feb 2011 17:24:53 -0800
+Message-ID: <1298078693.32230.398.camel@chandra-lucid.beaverton.ibm.com>
+Mime-Version: 1.0
+Reply-To: sekharan@us.ibm.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -16,141 +36,131 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-VGhlIGxhc3QgNSBieXRlcyBvZiBhIG5hbWUgZ2VuZXJhdGVkIGJ5IGdlbmVyYXRlX29iZnVzY2F0
-ZWRfbmFtZSgpCmNhbiBiZSBzZWxlY3RlZCBzdWNoIHRoYXQgdGhleSAoYWxvbmcgd2l0aCBhbGwg
-b2YgdGhlIHByZWNlZGluZwpjaGFyYWN0ZXJzIGluIHRoZSBuYW1lKSBwcm9kdWNlIGFueSBkZXNp
-cmVkIHZhbHVlIHdoZW4gaGFzaGVkLgoKVGhleSBhcmUgc2VsZWN0ZWQgYmFzZWQgb24gaG93IHRo
-ZWlyIHZhbHVlIGFmZmVjdHMgdGhlIG91dGNvbWUgb2YKdGhlIGhhc2ggY2FsY3VsYXRpb24gZm9y
-IHRoZSBvYmZ1c2NhdGVkIG5hbWUuICBFYWNoIGJ5dGUgaXMgWE9SJ2QKaW50byB0aGUgaGFzaCBh
-dCBhIGNlcnRhaW4gcG9zaXRpb24uICBUaGUgcG9ydGlvbiBvZiB0aGUgaGFzaAphZmZlY3RlZCBi
-eSBlYWNoIG9mIHRoZXNlIGxhc3QgZml2ZSBieXRlcyBjYW4gYmUgc2VlbiB2aXN1YWxseSBiZWxv
-dwood2hlcmUgImxhc3QtMyIgbWVhbnMgdGhlIGJ5dGUgMyBwb3NpdGlvbnMgYmVmb3JlIHRoZSBs
-YXN0IGJ5dGUgaW4KdGhlIG5hbWUpOgoKCSstKy0rLSstKy0rLSstKy18LSstKy0rLSstKy0rLSst
-fC0rLSstKy0rLSstKy0rLXwtKy0rLSstKy0rLSstKy0rCmhhc2g6CXwgfCB8IHwgfCB8IHwgfCB8
-IHwgfCB8IHwgfCB8IHwgfCB8IHwgfCB8IHwgfCB8IHwgfCB8IHwgfCB8IHwgfCB8CgkrLSstKy0r
-LSstKy0rLSstfC0rLSstKy0rLSstKy0rLXwtKy0rLSstKy0rLSstKy18LSstKy0rLSstKy0rLSst
-KwogICAgICAgbGFzdC00IC0+fCAgICAgICAgICAgfDwtLSBsYXN0LTIgLS0tPnwgICAgICAgICAg
-IHw8LS0tIGxhc3QgLS0tLT58CiAgICAgICAgICAgICAgfDwtLSBsYXN0LTMgLS0tPnwgICAgICAg
-ICAgIHw8LS0gbGFzdC0xIC0tLT58ICAgICB8PC0gbGFzdC00CgooTm90ZSB0aGF0IGJ5dGUgKGxh
-c3QtNCkgd3JhcHMgYXJvdW5kLiAgVGhlIHByZXZpb3VzIHBhdGNoIGluIHRoaXMKc2VyaWVzIGVs
-aW1pbmF0ZWQgdGhlIGVmZmVjdCBvZiB0aGUgdXBwZXIgNCBiaXRzIG9mIHRoYXQgYnl0ZSBieQpm
-b3JjaW5nIHRoZW0gdG8gYmUgYWxsIGJlIDAgYml0cy4pCgpVc2luZyB0aGUgKFhPUikgZGlmZmVy
-ZW5jZSBiZXR3ZWVuIHRoZSBoYXNoIGNvbXB1dGVkIGZvciB0aGUKYmVnaW5uaW5nIG9mIHRoZSBv
-YmZ1c2NhdGVkIG5hbWUgYW5kIHRoZSBoYXNoIGZyb20gdGhlIG9yaWdpbmFsCm5hbWUsIHdlIGRp
-cmVjdGx5IGRldGVybWluZSB0aGUgcmVxdWlyZWQgZmluYWwgZml2ZSBieXRlcyB0byBtYWtlCnRo
-ZSBoYXNoZXMgZm9yIHRoZSB0d28gY29tcGxldGUgbmFtZXMgbWF0Y2guICBUaGUgbG93ZXIgYnl0
-ZSAoYml0cwowLTcpIG9mIHRoYXQgZGlmZmVyZW5jZSBpcyB1c2VkIGZvciB0aGUgbGFzdCBjaGFy
-YWN0ZXIgaW4gdGhlCm9iZnVzY2F0ZWQgbmFtZSwgYml0cyA3LTE0IGZvciB0aGUgc2Vjb25kLXRv
-LWxhc3QsIGFuZCBzbyBvbi4KClNvIHdlIHN0YXJ0IHdpdGggdGhlIGRpZmZlcmVuY2UgYmV0d2Vl
-biB0aGUgaGFzaCBmcm9tIHRoZSBjb21wbGV0ZQpvcmlnaW5hbCBuYW1lIGFuZCB0aGUgaGFzaCAo
-c28gZmFyKSBmb3IgYSByYW5kb20gc3RyaW5nIGNvbnN0aXR1dGluZwp0aGUgZmlyc3QgcGFydCBv
-ZiB0aGUgb2JmdXNjYXRlZCBuYW1lLiAgV2UgZXh0cmFjdCBmaXZlIHNldHMgb2YgOApiaXRzIGZy
-b20gdGhlIHJlc3VsdCBhdCB0aGUgcG9zaXRpb25zIGluZGljYXRlZCBhYm92ZSwgYW5kIHRob3Nl
-CjgtYml0IHZhbHVlcyB3aWxsIGJlY29tZSB0aGUgZmluYWwgZml2ZSBieXRlcyBvZiB0aGUgb2Jm
-dXNjYXRlZApuYW1lLiAgQnkgYXNzdW1pbmcgKG9yIGZvcmNpbmcpIHRoZSB0b3AgYml0IG9mIGVh
-Y2ggb2YgdGhlc2UKZXh0cmFjdGVkIHZhbHVlcyB0byBiZSAwIChieSBtYXNraW5nIG9mZiB0aGUg
-dG9wIGJpdCksIHdlIGNhbiBpZ25vcmUKdGhlIG92ZXJsYXBwaW5nIHBvcnRpb25zIHdoZW4gZGV0
-ZXJtaW5pbmcgdGhlIGJ5dGVzIHRvIHVzZS4KCgpJdCdzIHBvc3NpYmxlIGZvciB0aGlzIHByb2Nl
-c3MgdG8gcHJvZHVjZSBjaGFyYWN0ZXJzICgnXDAnIGFuZCAnLycpCnRoYXQgYXJlIG5vdCBhbGxv
-d2VkIGluIHZhbGlkIG5hbWVzLiAgSWYgdGhpcyBvY2N1cnMsIHRoZSBleGlzdGluZwpjb2RlIGFi
-YW5kb25zIHRoZSBjdXJyZW50IG9iZnVzY2F0ZWQgbmFtZSBhbmQgc3RhcnRzIGFnYWluIGZyb20g
-dGhlCmJlZ2lubmluZy4gIEJ1dCB0aGVyZSBleGlzdCBjYXNlcyB3aGVyZSB0aGlzIGNhbiBsZWFk
-IHRvIGEKbmV2ZXItZW5kaW5nIGxvb3AuCgpBcmthZGl1c3ogTWnFm2tpZXdpY3ogZW5jb3VudGVy
-ZWQganVzdCBzdWNoIGEgbmFtZSwgIlJcMzIzXDI1N05FIi4KVGhhdCBuYW1lIHByb2R1Y2VzIGhh
-c2ggdmFsdWUgMHgzYTRiZTc0MCwgd2hpY2ggcmVxdWlyZXMgdGhhdCB0aGUKb2JmdXNjYXRlZCBu
-YW1lIHVzZXMgJy8nIGF0IHBvc2l0aW9uIGxhc3QtMi4gIFRoZSBjdXJyZW50IGFsZ29yaXRobQpz
-dGFydHMgb3ZlciwgYnV0IHNpbmNlIHRoZXJlIGFyZSBubyByYW5kb20gY2hhcmFjdGVycyBpbiB0
-aGlzCmxlbmd0aC01IG9iZnVzY2F0ZWQgbmFtZSwgbm8gb3RoZXIgcG9zc2liaWxpdHkgd2lsbCBi
-ZSBmb3VuZCwgYW5kCnRoZSBwcm9jZXNzIHJlcGVhdHMgZm9yZXZlci4KCgpUaGlzIGNoYW5nZSBt
-b2RpZmllcyB0aGUgYWxnb3JpdGhtIHVzZWQgc28gdGhhdCBpZiBhIHVuYWxsb3dlZApjaGFyYWN0
-ZXIgYXJpc2VzLCB3ZSBmbGlwIGEgYml0IGluIHRoYXQgY2hhcmFjdGVyLCBhbG9uZyB3aXRoCmFu
-b3RoZXIgIm1hdGNoaW5nIiBiaXQgaW4gYW5vdGhlciAob3ZlcmxhcHBpbmcpIGNoYXJhY3RlciBz
-dWNoIHRoYXQKdGhlIHJlc3VsdGluZyBoYXNoIGlzIHVuY2hhbmdlZC4gIFRoZSB0d28gdW5hbGxv
-d2VkIGNoYXJhY3RlcnMgaW4gYQpuYW1lIGFyZSAnXDAnICgweDAwKSBhbmQgJy8nICgweDJmKSwg
-YW5kIGZsaXBwaW5nIGFueSBvbmUgYml0IGluCmVpdGhlciBvZiB0aG9zZSBjaGFyYWN0ZXJzIHJl
-c3VsdHMgaW4gYW4gYWxsb3dlZCBjaGFyYWN0ZXIuCgoKU28sIHN0YXJ0aW5nIHdpdGggdGhlIGZp
-cnN0IG9mIHRoZXNlIGxhc3QgNSBieXRlcyAobGFzdC00KSwgaWYgaXRzCiJub3JtYWwiIHZhbHVl
-IGlzIG9uZSBvZiB0aGUgdW5hbGxvd2VkIGNoYXJhY3RlcnMsIHdlIGZsaXAgaXRzIGxvdwpiaXQg
-YW5kIGFycmFuZ2UgdG8gZmxpcCB0aGUgaGlnaCBiaXQgb2YgaXRzIHN1Y2Nlc3NvciBieXRlLiAg
-VGhlCnJlbWFpbmluZyBieXRlcyBhcmUgdHJlYXRlZCBzaW1pbGFybHkuCgpUaGUgdmVyeSBsYXN0
-IGJ5dGUgaGFzIGEgbGl0dGxlIGRpZmZlcmVudCB0cmVhdG1lbnQuICBXZSBjYW4gZmxpcAppdHMg
-bG93IGJpdCwgYnV0IGl0IGhhcyBubyBzdWNjZXNzb3IgYnl0ZSBwZXIgc2UuICBJdHMgZWZmZWN0
-IG9uCnRoZSBoYXNoIGRvZXMsIGhvd2V2ZXIgb3ZlcmxhcCB0aGUgdXBwZXIgZm91ciBiaXRzIGZy
-b20gYnl0ZQoobGFzdC00KS4gIFdlIGNhbiB0aGVyZWZvcmUgZmxpcCB0aGUgY29ycmVzcG9uZGlu
-ZyBiaXQgaW4gdGhhdCAoYXQKcG9zaXRpb24gMHgxMCkuCgoKVGhlcmUgaXMgb25lIG1vcmUgY2Fz
-ZSB0byBjb25zaWRlci4gIEl0J3MgcG9zc2libGUgaW4gdGhhdCBsYXN0CmNhc2UgdGhhdCBieSBm
-bGlwcGluZyBhIGJpdCBpbiBieXRlIChsYXN0LTQpLCB3ZSBoYXZlIGNvbnZlcnRlZAp0aGF0IGJ5
-dGUgdG8gb25lIHRoYXQncyBub3QgYWxsb3dlZC4gIEl0IHR1cm5zIG91dCB0aGlzIHdvbid0IGV2
-ZXIKaGFwcGVuLCBiZWNhdXNlIHdlIGtub3cgdGhhdCBieXRlIHdhcyBpbml0aWFsbHkgYXNzaWdu
-ZWQgYSB2YWx1ZQp3aXRoIGl0cyB1cHBlciBmb3VyIGJpdHMgY2xlYXIuICBGbGlwcGluZyB0aGUg
-Yml0IGF0IDB4MTAgY2Fubm90CnRoZXJlZm9yZSBwcm9kdWNlIGVpdGhlciAweDAwIG9yIDB4MmYs
-IHNvIHdlIGRvbid0IG5lZWQgdG8gdHJlYXQKdGhpcyBjYXNlLgoKCldpdGggdGhlc2UgY2hhbmdl
-cyB0byB0aGUgbmFtZSBnZW5lcmF0aW9uIGFsZ29yaXRobSwgd2UgYXZvaWQKYW55IG9mIHRoZSBj
-YXNlcyBpbiB3aGljaCBubyBhbHRlcm5hdGUgbmFtZSBjYW4gYmUgZm91bmQgd2l0aG91dAp1c2lu
-ZyBhbiBpbGxlZ2FsIGNoYXJhY3Rlci4gIFdlIGFsc28gYXZvaWQgYWxsIGxvb3BpbmcgZHVlIHRv
-IGJhZApjaGFyYWN0ZXJzLgoKUmVwb3J0ZWQtYnk6IEFya2FkaXVzeiBNacWba2lld2ljeiA8YXJl
-a21AbWF2ZW4ucGw+ClNpZ25lZC1vZmYtYnk6IEFsZXggRWxkZXIgPGFlbGRlckBzZ2kuY29tPgoK
-VGhlIG9ubHkgbm90YWJsZSB1cGRhdGUgc2luY2UgdGhlIGxhc3QgdmVyc2lvbiBwb3N0ZWQgaXMg
-dGhhdCB0aGUKc2Vjb25kIGJpdC1mbGlwIGluIHRoZSBsYXN0IGJ5dGUgaXMgbm8gbG9uZ2VyIGRv
-bmUgKGJlY2F1c2UgSQpyZWFsaXplZCBpdCB3YXMgbm90IG5lY2Vzc2FyeSkuCgotLS0KIGRiL21l
-dGFkdW1wLmMgfCAgIDc1ICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
-KysrKy0tLS0tLS0tLS0tLS0KIDEgZmlsZSBjaGFuZ2VkLCA1OSBpbnNlcnRpb25zKCspLCAxNiBk
-ZWxldGlvbnMoLSkKCkluZGV4OiBiL2RiL21ldGFkdW1wLmMKPT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gYS9kYi9t
-ZXRhZHVtcC5jCisrKyBiL2RiL21ldGFkdW1wLmMKQEAgLTQ3NCw2ICs0NzQsOCBAQCBnZW5lcmF0
-ZV9vYmZ1c2NhdGVkX25hbWUoCiAJZG8gewogCQlkdXAgPSAwOwogCQlmb3IgKDs7KSB7CisJCQl1
-Y2hhcl90CWhpZ2hfYml0OworCiAJCSAgICAJLyoKIAkJCSAqIFRoZSBiZWdpbm5pbmcgb2YgdGhl
-IG9iZnVzY2F0ZWQgbmFtZSBjYW4KIAkJCSAqIGJlIHByZXR0eSBtdWNoIGFueXRoaW5nLCBzbyBm
-aWxsIGl0IGluCkBAIC00OTAsMjUgKzQ5Miw2NiBAQCBnZW5lcmF0ZV9vYmZ1c2NhdGVkX25hbWUo
-CiAJCQkgKiBDb21wdXRlIHdoaWNoIGZpdmUgYnl0ZXMgbmVlZCB0byBiZSB1c2VkCiAJCQkgKiBh
-dCB0aGUgZW5kIG9mIHRoZSBuYW1lIHNvIHRoZSBoYXNoIG9mIHRoZQogCQkJICogb2JmdXNjYXRl
-ZCBuYW1lIGlzIHRoZSBzYW1lIGFzIHRoZSBoYXNoCi0JCQkgKiBvZiB0aGUgb3JpZ2luYWwuCisJ
-CQkgKiBvZiB0aGUgb3JpZ2luYWwuICBJZiBhbnkgcmVzdWx0IGluIGFuCisJCQkgKiBpbnZhbGlk
-IGNoYXJhY3RlciwgZmxpcCBhIGJpdCBhbmQgYXJyYW5nZQorCQkJICogZm9yIGEgY29ycmVzcG9u
-ZGluZyBiaXQgaW4gYSBuZWlnaGJvcmluZworCQkJICogYnl0ZSB0byBiZSBmbGlwcGVkIGFzIHdl
-bGwuICBGb3IgdGhlIGxhc3QKKwkJCSAqIGJ5dGUsIHRoZSAibmVpZ2hib3IiIHRvIGNoYW5nZSBp
-cyB0aGUKKwkJCSAqIGZpcnN0IGJ5dGUgd2UncmUgY29tcHV0aW5nIGhlcmUuCiAJCQkgKi8KIAkJ
-CW5ld2hhc2ggPSByb2wzMihuZXdoYXNoLCAzKSBeIGhhc2g7CiAKLQkJCW5ld3BbbmFtZWxlbiAt
-IDVdID0gKG5ld2hhc2ggPj4gMjgpICYgMHg3ZjsKLQkJCWlmIChpc19pbnZhbGlkX2NoYXIobmV3
-cFtuYW1lbGVuIC0gNV0pKQotCQkJCWNvbnRpbnVlOwotCQkJbmV3cFtuYW1lbGVuIC0gNF0gPSAo
-bmV3aGFzaCA+PiAyMSkgJiAweDdmOwotCQkJaWYgKGlzX2ludmFsaWRfY2hhcihuZXdwW25hbWVs
-ZW4gLSA0XSkpCi0JCQkJY29udGludWU7Ci0JCQluZXdwW25hbWVsZW4gLSAzXSA9IChuZXdoYXNo
-ID4+IDE0KSAmIDB4N2Y7Ci0JCQlpZiAoaXNfaW52YWxpZF9jaGFyKG5ld3BbbmFtZWxlbiAtIDNd
-KSkKLQkJCQljb250aW51ZTsKLQkJCW5ld3BbbmFtZWxlbiAtIDJdID0gKG5ld2hhc2ggPj4gNykg
-JiAweDdmOwotCQkJaWYgKGlzX2ludmFsaWRfY2hhcihuZXdwW25hbWVsZW4gLSAyXSkpCi0JCQkJ
-Y29udGludWU7Ci0JCQluZXdwW25hbWVsZW4gLSAxXSA9IChuZXdoYXNoID4+IDApICYgMHg3ZjsK
-LQkJCWlmIChpc19pbnZhbGlkX2NoYXIobmV3cFtuYW1lbGVuIC0gMV0pKQotCQkJCWNvbnRpbnVl
-OworCQkJaGlnaF9iaXQgPSAwOworCisJCQluZXdwW25hbWVsZW4gLSA1XSA9ICgobmV3aGFzaCA+
-PiAyOCkgJiAweDdmKSBeIGhpZ2hfYml0OworCQkJaWYgKGlzX2ludmFsaWRfY2hhcihuZXdwW25h
-bWVsZW4gLSA1XSkpIHsKKwkJCQluZXdwW25hbWVsZW4gLSA1XSBePSAxOworCQkJCWhpZ2hfYml0
-ID0gMHg4MDsKKwkJCX0gZWxzZQorCQkJCWhpZ2hfYml0ID0gMDsKKworCQkJbmV3cFtuYW1lbGVu
-IC0gNF0gPSAoKG5ld2hhc2ggPj4gMjEpICYgMHg3ZikgXiBoaWdoX2JpdDsKKwkJCWlmIChpc19p
-bnZhbGlkX2NoYXIobmV3cFtuYW1lbGVuIC0gNF0pKSB7CisJCQkJbmV3cFtuYW1lbGVuIC0gNF0g
-Xj0gMTsKKwkJCQloaWdoX2JpdCA9IDB4ODA7CisJCQl9IGVsc2UKKwkJCQloaWdoX2JpdCA9IDA7
-CisKKwkJCW5ld3BbbmFtZWxlbiAtIDNdID0gKChuZXdoYXNoID4+IDE0KSAmIDB4N2YpIF4gaGln
-aF9iaXQ7CisJCQlpZiAoaXNfaW52YWxpZF9jaGFyKG5ld3BbbmFtZWxlbiAtIDNdKSkgeworCQkJ
-CW5ld3BbbmFtZWxlbiAtIDNdIF49IDE7CisJCQkJaGlnaF9iaXQgPSAweDgwOworCQkJfSBlbHNl
-CisJCQkJaGlnaF9iaXQgPSAwOworCisJCQluZXdwW25hbWVsZW4gLSAyXSA9ICgobmV3aGFzaCA+
-PiA3KSAmIDB4N2YpIF4gaGlnaF9iaXQ7CisJCQlpZiAoaXNfaW52YWxpZF9jaGFyKG5ld3BbbmFt
-ZWxlbiAtIDJdKSkgeworCQkJCW5ld3BbbmFtZWxlbiAtIDJdIF49IDE7CisJCQkJaGlnaF9iaXQg
-PSAweDgwOworCQkJfSBlbHNlCisJCQkJaGlnaF9iaXQgPSAwOworCisJCQluZXdwW25hbWVsZW4g
-LSAxXSA9ICgobmV3aGFzaCA+PiAwKSAmIDB4N2YpIF4gaGlnaF9iaXQ7CisJCQlpZiAoaXNfaW52
-YWxpZF9jaGFyKG5ld3BbbmFtZWxlbiAtIDFdKSkgeworCQkJCW5ld3BbbmFtZWxlbiAtIDFdIF49
-IDE7CisJCQkJaGlnaF9iaXQgPSAweDgwOworCQkJfSBlbHNlCisJCQkJaGlnaF9iaXQgPSAwOwor
-CisJCQkvKgorCQkJICogSWYgd2UgZmxpcHBlZCBhIGJpdCBvbiB0aGUgbGFzdCBieXRlLCB3ZQor
-CQkJICogbmVlZCB0byBmaXggdXAgdGhlIGZpcnN0IG9uZSB3ZSBjb21wdXRlZC4KKwkJCSAqCisJ
-CQkgKiBUaGF0IGZpcnN0IGJ5dGUgaGFkIDAncyBpbiBpdHMgdXBwZXIgZm91cgorCQkJICogYml0
-cyAoaXQncyB0aGUgcmVzdWx0IG9mIHNoaWZ0aW5nIGEKKwkJCSAqIDMyLWJpdCB1bnNpZ25lZCB2
-YWx1ZSBSaWdodCBieSAyOCBiaXRzKSwKKwkJCSAqIHNvIHdlIGRvbid0IG5lZWQgdG8gd29ycnkg
-YWJvdXQgaXQKKwkJCSAqIGJlY29taW5nIGludmFsaWQgYXMgYSByZXN1bHQuCisJCQkgKi8KKwkJ
-CWlmIChoaWdoX2JpdCkgeworCQkJICAgIAluZXdwW25hbWVsZW4gLSA1XSBePSAweDEwOworCQkJ
-CUFTU0VSVCghaXNfaW52YWxpZF9jaGFyKG5ld3BbbmFtZWxlbiAtIDVdKSk7CisJCQl9CiAJCQli
-cmVhazsKIAkJfQogCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20v
-bWFpbG1hbi9saXN0aW5mby94ZnMK
+Hello,
+
+In My POWER system, I saw 2 new ASSERTs when I ran the xfstests (071 and
+087) on 2.6.38-rc4 that I did not see in 2.6.37.
+
+I did a git bisect and the following commit is the one causes the ASSERT
+when 071 was run (still working on git-bisect of 087).
+
+Note that the 512 byte sectors warning is printed when the pagesize is
+64K. That message is not printed when I change the pagesize to 4K, but
+the ASSERT still trips.
+
+-----------------------------------------
+commit 055388a3188f56676c21e92962fc366ac8b5cb72
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Tue Jan 4 11:35:03 2011 +1100
+
+    xfs: dynamic speculative EOF preallocation
+    
+    Currently the size of the speculative preallocation during delayed
+    allocation is fixed by either the allocsize mount option of a
+    default size. We are seeing a lot of cases where we need to
+    recommend using the allocsize mount option to prevent fragmentation
+    when buffered writes land in the same AG.
+------------------------------------------
+
+and here is the log
+-------------------------------------------
+
+Feb 18 16:25:40 test135 root: ======== starting XFS test 071 2.6.37-bad+ ========
+Feb 18 16:25:41 test135 kernel: SGI XFS with ACLs, security attributes, realtime, large block/inode numbers, debug enabled
+Feb 18 16:25:41 test135 kernel: SGI XFS Quota Management subsystem
+Feb 18 16:25:41 test135 kernel: XFS: 512 byte sectors in use on device sda6.  This is suboptimal; 1024 or greater is ideal.
+Feb 18 16:25:41 test135 kernel: XFS mounting filesystem sda6
+Feb 18 16:25:42 test135 kernel: XFS: 512 byte sectors in use on device sda5.  This is suboptimal; 1024 or greater is ideal.
+Feb 18 16:25:42 test135 kernel: XFS mounting filesystem sda5
+Feb 18 16:25:42 test135 kernel: XFS: 512 byte sectors in use on device sda6.  This is suboptimal; 1024 or greater is ideal.
+Feb 18 16:25:42 test135 kernel: XFS mounting filesystem sda6
+Feb 18 16:25:43 test135 kernel: XFS: 512 byte sectors in use on device sda5.  This is suboptimal; 1024 or greater is ideal.
+Feb 18 16:25:43 test135 kernel: XFS mounting filesystem sda5
+Feb 18 16:25:44 test135 kernel: Assertion failed: XFS_FORCED_SHUTDOWN(ip->i_mount) || ip->i_delayed_blks == 0, file: fs/xfs/linux-2.6/xfs_super.c, line: 915
+Feb 18 16:25:44 test135 kernel: ------------[ cut here ]------------
+Feb 18 16:25:44 test135 kernel: kernel BUG at fs/xfs/support/debug.c:108!
+Feb 18 16:25:44 test135 kernel: Oops: Exception in kernel mode, sig: 5 [#1]
+Feb 18 16:25:44 test135 kernel: SMP NR_CPUS=1024 NUMA pSeries
+Feb 18 16:25:44 test135 kernel: last sysfs file: /sys/devices/pci0000:00/0000:00:01.0/host0/target0:255:0/0:255:0:0/block/sda/dev
+Feb 18 16:25:44 test135 kernel: Modules linked in: xfs exportfs autofs4 sunrpc ipt_REJECT nf_conntrack_ipv4 nf_defrag_ipv4 iptable_filter ip_tables ip6t_REJECT nf_conntrack_ipv6 nf_defrag_ipv6 xt_state nf_conntrack ip6table_filter ip6_tables ipv6 dm_mirror dm_region_hash dm_log ses enclosure sg ehea ext4 jbd2 mbcache sd_mod crc_t10dif qla2xxx scsi_transport_fc scsi_tgt ipr dm_mod [last unloaded: scsi_wait_scan]
+Feb 18 16:25:44 test135 kernel: NIP: d00000000bc8fa24 LR: d00000000bc8fa20 CTR: 0000000000000001
+Feb 18 16:25:44 test135 kernel: REGS: c0000007aaea7550 TRAP: 0700   Not tainted  (2.6.37-bad+)
+Feb 18 16:25:44 test135 kernel: MSR: 8000000000029032 <EE,ME,CE,IR,DR>  CR: 28004484  XER: 20000000
+Feb 18 16:25:44 test135 kernel: TASK = c0000007a9199b70[2795] 'umount' THREAD: c0000007aaea4000 CPU: 9
+Feb 18 16:25:44 test135 kernel: GPR00: d00000000bc8fa20 c0000007aaea77d0 d00000000bce18b8 0000000000000080 
+Feb 18 16:25:44 test135 kernel: GPR04: 0000000000000000 ffffffffffffffff 0000000000000004 0000000000080000 
+Feb 18 16:25:44 test135 kernel: GPR08: 00000000000050bc c0000000008753b8 0000000000005041 0000000000c20000 
+Feb 18 16:25:44 test135 kernel: GPR12: 0000000028004482 c00000000f2a1680 000000004196e380 000000004196e388 
+Feb 18 16:25:44 test135 kernel: GPR16: 000000004196e320 000000004196e390 000000004196e398 000000004196e3a8 
+Feb 18 16:25:44 test135 kernel: GPR20: 000000004196e190 c0000007b10904b0 c000000001268848 c0000007b0b1db40 
+Feb 18 16:25:44 test135 kernel: GPR24: 0000000000000000 0000000000000000 c0000000012685fc c0000000012685f8 
+Feb 18 16:25:44 test135 kernel: GPR28: 0000000000000000 c0000007b0b1db20 d00000000bcdb830 c0000007b0b1d980 
+Feb 18 16:25:44 test135 kernel: NIP [d00000000bc8fa24] .assfail+0x34/0x40 [xfs]
+Feb 18 16:25:44 test135 kernel: LR [d00000000bc8fa20] .assfail+0x30/0x40 [xfs]
+Feb 18 16:25:44 test135 kernel: Call Trace:
+Feb 18 16:25:44 test135 kernel: [c0000007aaea77d0] [d00000000bc8fa20] .assfail+0x30/0x40 [xfs] (unreliable)
+Feb 18 16:25:44 test135 kernel: [c0000007aaea7850] [d00000000bc8b208] .xfs_fs_destroy_inode+0xd8/0x200 [xfs]
+Feb 18 16:25:44 test135 kernel: [c0000007aaea78e0] [c0000000001c9108] .destroy_inode+0x68/0xc0
+Feb 18 16:25:44 test135 kernel: [c0000007aaea7960] [c0000000001c9264] .dispose_list+0x104/0x150
+Feb 18 16:25:44 test135 kernel: [c0000007aaea7a20] [c0000000001c95d0] .evict_inodes+0x160/0x1b0
+Feb 18 16:25:44 test135 kernel: [c0000007aaea7ae0] [c0000000001af048] .generic_shutdown_super+0x88/0x170
+Feb 18 16:25:44 test135 kernel: [c0000007aaea7b70] [c0000000001af158] .kill_block_super+0x28/0x60
+Feb 18 16:25:44 test135 kernel: [c0000007aaea7c00] [c0000000001adbfc] .deactivate_locked_super+0x8c/0xc0
+Feb 18 16:25:44 test135 kernel: [c0000007aaea7c90] [c0000000001cf7b0] .mntput_no_expire+0x140/0x1f0
+Feb 18 16:25:44 test135 kernel: [c0000007aaea7d30] [c0000000001d0f48] .SyS_umount+0xe8/0x440
+Feb 18 16:25:44 test135 kernel: [c0000007aaea7e30] [c000000000008564] syscall_exit+0x0/0x40
+Feb 18 16:25:44 test135 kernel: Instruction dump:
+Feb 18 16:25:44 test135 kernel: fbc1fff0 ebc28220 7c691b78 7ca62b78 f8010010 f821ff81 7c802378 e87e8010 
+Feb 18 16:25:44 test135 kernel: 7d244b78 7c050378 48001295 e8410028 <0fe00000> 48000000 60000000 7c0802a6 
+Feb 18 16:25:44 test135 kernel: ---[ end trace 11fadf36d83e70cb ]---
+Feb 18 16:25:44 test135 kernel: ------------[ cut here ]------------
+Feb 18 16:25:44 test135 kernel: WARNING: at kernel/exit.c:910
+Feb 18 16:25:44 test135 kernel: Modules linked in: xfs exportfs autofs4 sunrpc ipt_REJECT nf_conntrack_ipv4 nf_defrag_ipv4 iptable_filter ip_tables ip6t_REJECT nf_conntrack_ipv6 nf_defrag_ipv6 xt_state nf_conntrack ip6table_filter ip6_tables ipv6 dm_mirror dm_region_hash dm_log ses enclosure sg ehea ext4 jbd2 mbcache sd_mod crc_t10dif qla2xxx scsi_transport_fc scsi_tgt ipr dm_mod [last unloaded: scsi_wait_scan]
+Feb 18 16:25:44 test135 kernel: NIP: c00000000008eb78 LR: c00000000008eb60 CTR: c0000000000609c0
+Feb 18 16:25:44 test135 kernel: REGS: c0000007aaea6f00 TRAP: 0700   Tainted: G      D      (2.6.37-bad+)
+Feb 18 16:25:44 test135 kernel: MSR: 8000000000029032 <EE,ME,CE,IR,DR>  CR: 28004482  XER: 00000006
+Feb 18 16:25:44 test135 kernel: TASK = c0000007a9199b70[2795] 'umount' THREAD: c0000007aaea4000 CPU: 9
+Feb 18 16:25:44 test135 kernel: GPR00: 0000000000000001 c0000007aaea7180 c000000000d709a0 0000000000000000 
+Feb 18 16:25:44 test135 kernel: GPR04: 0000000000000000 c0000007a9199b70 ffffffffffffffff 0000000000000000 
+Feb 18 16:25:44 test135 kernel: GPR08: 0000000000005b2d 0000000000000001 000000000000f908 0000000000000000 
+Feb 18 16:25:44 test135 kernel: GPR12: 0000000028004484 c00000000f2a1680 000000004196e380 000000004196e388 
+Feb 18 16:25:44 test135 kernel: GPR16: 000000004196e320 000000004196e390 000000004196e398 000000004196e3a8 
+Feb 18 16:25:44 test135 kernel: GPR20: 000000004196e190 c0000007b10904b0 c000000001268848 c0000007b0b1db40 
+Feb 18 16:25:44 test135 kernel: GPR24: 0000000000000000 c0000007aaea73d4 c00000000072ef38 0000000000000001 
+Feb 18 16:25:44 test135 kernel: GPR28: c000000000c92ca0 0000000000000005 c000000000d05508 c0000007a9199b70 
+Feb 18 16:25:44 test135 kernel: NIP [c00000000008eb78] .do_exit+0x78/0x870
+Feb 18 16:25:44 test135 kernel: LR [c00000000008eb60] .do_exit+0x60/0x870
+Feb 18 16:25:44 test135 kernel: Call Trace:
+Feb 18 16:25:44 test135 kernel: [c0000007aaea7180] [c00000000008eb60] .do_exit+0x60/0x870 (unreliable)
+Feb 18 16:25:44 test135 kernel: [c0000007aaea7280] [c00000000002eb64] .die+0x164/0x2c0
+Feb 18 16:25:44 test135 kernel: [c0000007aaea7320] [c00000000002f060] ._exception+0x100/0x1c0
+Feb 18 16:25:44 test135 kernel: [c0000007aaea74e0] [c000000000004b9c] program_check_common+0x11c/0x180
+Feb 18 16:25:44 test135 kernel: --- Exception: 700 at .assfail+0x34/0x40 [xfs]
+Feb 18 16:25:44 test135 kernel:    LR = .assfail+0x30/0x40 [xfs]
+Feb 18 16:25:44 test135 kernel: [c0000007aaea7850] [d00000000bc8b208] .xfs_fs_destroy_inode+0xd8/0x200 [xfs]
+Feb 18 16:25:44 test135 kernel: [c0000007aaea78e0] [c0000000001c9108] .destroy_inode+0x68/0xc0
+Feb 18 16:25:44 test135 kernel: [c0000007aaea7960] [c0000000001c9264] .dispose_list+0x104/0x150
+Feb 18 16:25:44 test135 kernel: [c0000007aaea7a20] [c0000000001c95d0] .evict_inodes+0x160/0x1b0
+Feb 18 16:25:44 test135 kernel: [c0000007aaea7ae0] [c0000000001af048] .generic_shutdown_super+0x88/0x170
+Feb 18 16:25:44 test135 kernel: [c0000007aaea7b70] [c0000000001af158] .kill_block_super+0x28/0x60
+Feb 18 16:25:44 test135 kernel: [c0000007aaea7c00] [c0000000001adbfc] .deactivate_locked_super+0x8c/0xc0
+Feb 18 16:25:44 test135 kernel: [c0000007aaea7c90] [c0000000001cf7b0] .mntput_no_expire+0x140/0x1f0
+Feb 18 16:25:44 test135 kernel: [c0000007aaea7d30] [c0000000001d0f48] .SyS_umount+0xe8/0x440
+Feb 18 16:25:44 test135 kernel: [c0000007aaea7e30] [c000000000008564] syscall_exit+0x0/0x40
+Feb 18 16:25:44 test135 kernel: Instruction dump:
+Feb 18 16:25:44 test135 kernel: ebc2b218 f821ff01 7c7d1b78 ebed01e8 7fe3fb78 48032675 60000000 813f0b5c 
+Feb 18 16:25:44 test135 kernel: 7d2bfe70 7d604a78 7c005850 54000ffe <0b000000> 783c0464 801c0014 5409016f 
+Feb 18 16:25:44 test135 kernel: ---[ end trace 11fadf36d83e70cc ]---
+
+---------------
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
