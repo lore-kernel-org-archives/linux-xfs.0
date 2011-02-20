@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p1KLTP7T105694 for <xfs@oss.sgi.com>; Sun, 20 Feb 2011 15:29:25 -0600
+	p1KLDqHY105073 for <xfs@oss.sgi.com>; Sun, 20 Feb 2011 15:13:52 -0600
 Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 730982EC265
-	for <xfs@oss.sgi.com>; Sun, 20 Feb 2011 13:32:07 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DEE79156ADA7
+	for <xfs@oss.sgi.com>; Sun, 20 Feb 2011 13:16:33 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	n3EGpk5rdeQPNrNG for <xfs@oss.sgi.com>;
-	Sun, 20 Feb 2011 13:32:07 -0800 (PST)
-Date: Mon, 21 Feb 2011 08:32:05 +1100
+	SASGjgloqoFY7Qno for <xfs@oss.sgi.com>;
+	Sun, 20 Feb 2011 13:16:33 -0800 (PST)
+Date: Mon, 21 Feb 2011 08:16:31 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: First 128KB of XFS partition is NULL.
-Message-ID: <20110220213205.GD3166@dastard>
-References: <AANLkTindiB_D7shZKkrdkePM=xaAXCe1HAX5tPy87SCy@mail.gmail.com>
+Subject: Re: [PATCH V3] xfs_quota: don't try to report quotas which aren't
+	there.
+Message-ID: <20110220211631.GB3166@dastard>
+References: <4D5EB09A.3030605@redhat.com> <4D5EB27C.3070306@redhat.com>
+	<4D5EB423.9040009@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <AANLkTindiB_D7shZKkrdkePM=xaAXCe1HAX5tPy87SCy@mail.gmail.com>
+In-Reply-To: <4D5EB423.9040009@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,29 +31,40 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ajeet Yadav <ajeet.yadav.77@gmail.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Sun, Feb 20, 2011 at 11:22:34AM +0900, Ajeet Yadav wrote:
-> Dear All,
-> I have received a corrupted disk from team testing XFS, when I look
-> hexdump of partiton. Its 0000 in first 128KB.
-> Our kernel is 2.6.30.9 however we have backported XFS from 2.6.34,
-> Arch MIP with VIPT cache.
-> This arch previously had many issues but after properly implementing
-> "xfs: fix xfs to work with Virtually Indexed architectures " most
-> problem resolved.
+On Fri, Feb 18, 2011 at 12:02:11PM -0600, Eric Sandeen wrote:
+> Red Hat bug #669333 - xfs_quota generates "XFS_GETQUOTA: No such process" errors
+> shows that if you do this for a filesystem w/o group quota enabled:
 > 
-> Can anyone make guess in what case first 128KB may become NULL, I seem
-> to be impossible because file system does not modify all 128KB at the
-> begining of partition at once.
+> # xfs_quota -x -c ' report -h ' /xfsquota"
+> 
+> You'll get this output:
+> 
+> User quota on /xfsquota (/dev/vdb)
+>                         Blocks              
+> User ID      Used   Soft   Hard Warn/Grace   
+> ---------- --------------------------------- 
+> root            0      0      0  00 [------]
+> 
+> XFS_GETQUOTA: No such process
+> XFS_GETQUOTA: No such process
+> ...
+> 
+> because we're calling XFS_GETQUOTA for types which aren't enabled.
+> 
+> The below patch fixes it for me, just ignoring types that aren't
+> there.
+> 
+> V2: Thanks to Arkadiusz Miskiewicz for pointing out the simpler fix.
+> V3: Thanks again to Arkadiusz for suggesting fixing dump as well
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Something else wrote to the block device. Maybe a partitioning
-program, a boot loader or possibly something else entirely...
+Looks sane.
 
-Cheers,
-
-Dave.
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 -- 
 Dave Chinner
 david@fromorbit.com
