@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p1KLC7rY104900 for <xfs@oss.sgi.com>; Sun, 20 Feb 2011 15:12:07 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E644D2EC1F0
-	for <xfs@oss.sgi.com>; Sun, 20 Feb 2011 13:14:48 -0800 (PST)
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id S6zei36s3HBrlEyK for <xfs@oss.sgi.com>;
-	Sun, 20 Feb 2011 13:14:48 -0800 (PST)
-Message-ID: <4D618447.20101@sandeen.net>
-Date: Sun, 20 Feb 2011 15:14:47 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
+	p1KLTP7T105694 for <xfs@oss.sgi.com>; Sun, 20 Feb 2011 15:29:25 -0600
+Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 730982EC265
+	for <xfs@oss.sgi.com>; Sun, 20 Feb 2011 13:32:07 -0800 (PST)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	n3EGpk5rdeQPNrNG for <xfs@oss.sgi.com>;
+	Sun, 20 Feb 2011 13:32:07 -0800 (PST)
+Date: Mon, 21 Feb 2011 08:32:05 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: First 128KB of XFS partition is NULL.
+Message-ID: <20110220213205.GD3166@dastard>
 References: <AANLkTindiB_D7shZKkrdkePM=xaAXCe1HAX5tPy87SCy@mail.gmail.com>
-	<AANLkTi=YJVGXrY=Jy7p1_AdPnNKWqtmbdkTXy32QP3vt@mail.gmail.com>
-In-Reply-To: <AANLkTi=YJVGXrY=Jy7p1_AdPnNKWqtmbdkTXy32QP3vt@mail.gmail.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <AANLkTindiB_D7shZKkrdkePM=xaAXCe1HAX5tPy87SCy@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,19 +32,29 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Ajeet Yadav <ajeet.yadav.77@gmail.com>
 Cc: xfs@oss.sgi.com
 
-On 2/19/11 8:45 PM, Ajeet Yadav wrote:
-> Testing team provides a very little information, but after checking
-> all possiblity I cam to conclusion that he may have removed the USB
-> during formating when mkfs.xfs just finished "Zero out the beginning
-> of the device, to obliterate any old filesystem signatures out there"
+On Sun, Feb 20, 2011 at 11:22:34AM +0900, Ajeet Yadav wrote:
+> Dear All,
+> I have received a corrupted disk from team testing XFS, when I look
+> hexdump of partiton. Its 0000 in first 128KB.
+> Our kernel is 2.6.30.9 however we have backported XFS from 2.6.34,
+> Arch MIP with VIPT cache.
+> This arch previously had many issues but after properly implementing
+> "xfs: fix xfs to work with Virtually Indexed architectures " most
+> problem resolved.
+> 
+> Can anyone make guess in what case first 128KB may become NULL, I seem
+> to be impossible because file system does not modify all 128KB at the
+> begining of partition at once.
 
-That sounds plausible...
+Something else wrote to the block device. Maybe a partitioning
+program, a boot loader or possibly something else entirely...
 
-Just for reference, there are runtime checks to be sure we don't overwrite
-block zero due to bad mappings; see "Access to block zero" message in
-xfs_cmn_err_fsblock_zero() and xfs_bmap_search_extents()
+Cheers,
 
--Eric
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
