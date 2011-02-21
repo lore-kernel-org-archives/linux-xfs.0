@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p1KLQx9I105582 for <xfs@oss.sgi.com>; Sun, 20 Feb 2011 15:26:59 -0600
-Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C8F882EC263
-	for <xfs@oss.sgi.com>; Sun, 20 Feb 2011 13:29:40 -0800 (PST)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	UTwP253FGYn6xMxx for <xfs@oss.sgi.com>;
-	Sun, 20 Feb 2011 13:29:40 -0800 (PST)
-Date: Mon, 21 Feb 2011 08:29:38 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfstests 071 trips an ASSERT due to commit
-	055388a3188f56676c21e92962fc366ac8b5cb72
-Message-ID: <20110220212937.GC3166@dastard>
-References: <1298078693.32230.398.camel@chandra-lucid.beaverton.ibm.com>
+	p1L8SlhZ136819 for <xfs@oss.sgi.com>; Mon, 21 Feb 2011 02:28:47 -0600
+Received: from mail-ww0-f41.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8C9102EDD5E
+	for <xfs@oss.sgi.com>; Mon, 21 Feb 2011 00:31:29 -0800 (PST)
+Received: from mail-ww0-f41.google.com (mail-ww0-f41.google.com
+	[74.125.82.41]) by cuda.sgi.com with ESMTP id VRdW1qFhrS4FeSuu
+	for <xfs@oss.sgi.com>; Mon, 21 Feb 2011 00:31:29 -0800 (PST)
+Received: by wwi18 with SMTP id 18so2744746wwi.2
+	for <xfs@oss.sgi.com>; Mon, 21 Feb 2011 00:31:29 -0800 (PST)
+Message-ID: <4D6221B8.9040303@gmail.com>
+Date: Mon, 21 Feb 2011 09:26:32 +0100
+From: Marco Stornelli <marco.stornelli@gmail.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1298078693.32230.398.camel@chandra-lucid.beaverton.ibm.com>
+Subject: [PATCH] Check for immutable flag in fallocate path
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,81 +27,80 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Chandra Seetharaman <sekharan@us.ibm.com>
-Cc: xfs@oss.sgi.com
+To: Linux Kernel <linux-kernel@vger.kernel.org>
+Cc: cluster-devel@redhat.com, Linux FS Devel <linux-fsdevel@vger.kernel.org>, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Fri, Feb 18, 2011 at 05:24:53PM -0800, Chandra Seetharaman wrote:
-> Hello,
-> 
-> In My POWER system, I saw 2 new ASSERTs when I ran the xfstests (071 and
-> 087) on 2.6.38-rc4 that I did not see in 2.6.37.
-> 
-> I did a git bisect and the following commit is the one causes the ASSERT
-> when 071 was run (still working on git-bisect of 087).
-> 
-> Note that the 512 byte sectors warning is printed when the pagesize is
-> 64K. That message is not printed when I change the pagesize to 4K, but
-> the ASSERT still trips.
-> 
-> -----------------------------------------
-> commit 055388a3188f56676c21e92962fc366ac8b5cb72
-> Author: Dave Chinner <dchinner@redhat.com>
-> Date:   Tue Jan 4 11:35:03 2011 +1100
-> 
->     xfs: dynamic speculative EOF preallocation
->     
->     Currently the size of the speculative preallocation during delayed
->     allocation is fixed by either the allocsize mount option of a
->     default size. We are seeing a lot of cases where we need to
->     recommend using the allocsize mount option to prevent fragmentation
->     when buffered writes land in the same AG.
-> ------------------------------------------
-> 
-> and here is the log
-> -------------------------------------------
-> 
-> Feb 18 16:25:40 test135 root: ======== starting XFS test 071 2.6.37-bad+ ========
-> Feb 18 16:25:41 test135 kernel: SGI XFS with ACLs, security attributes, realtime, large block/inode numbers, debug enabled
-> Feb 18 16:25:41 test135 kernel: SGI XFS Quota Management subsystem
-> Feb 18 16:25:41 test135 kernel: XFS: 512 byte sectors in use on device sda6.  This is suboptimal; 1024 or greater is ideal.
-> Feb 18 16:25:41 test135 kernel: XFS mounting filesystem sda6
-> Feb 18 16:25:42 test135 kernel: XFS: 512 byte sectors in use on device sda5.  This is suboptimal; 1024 or greater is ideal.
-> Feb 18 16:25:42 test135 kernel: XFS mounting filesystem sda5
-> Feb 18 16:25:42 test135 kernel: XFS: 512 byte sectors in use on device sda6.  This is suboptimal; 1024 or greater is ideal.
-> Feb 18 16:25:42 test135 kernel: XFS mounting filesystem sda6
-> Feb 18 16:25:43 test135 kernel: XFS: 512 byte sectors in use on device sda5.  This is suboptimal; 1024 or greater is ideal.
-> Feb 18 16:25:43 test135 kernel: XFS mounting filesystem sda5
-> Feb 18 16:25:44 test135 kernel: Assertion failed: XFS_FORCED_SHUTDOWN(ip->i_mount) || ip->i_delayed_blks == 0, file: fs/xfs/linux-2.6/xfs_super.c, line: 915
+From: Marco Stornelli <marco.stornelli@gmail.com>
 
-Yes, that is the assert failure I've spent the best part of the last
-two weeks trying to track down. I'm getting test 083 and 104 hitting
-this every so often (1 in 5 test runs). I think this is an existing
-problem and the above commit has simply made them easier to hit, as
-I've had these tests fail occasionallywith this assert prior to that
-commit existing....
+All fs must check for the immutable flag in their fallocate callback.
+It's possible to have a race condition in this scenario: an application
+open a file in read/write and it does something, meanwhile root set the
+immutable flag on the file, the application at that point can call
+fallocate with success. Only Ocfs2 check for the immutable flag at the
+moment.
 
-There seems to be a couple of different symptoms - the first appears
-to be triggered by EOF zeroing and a sub-page block adjacent to the
-EOF zeroing remaining in delalloc state after writeback. I haven't
-been able to narrow this down further yet. The other case which I
-haven't yet got any real idea on the cause is leaving large regions
-of sequential blocks (I've seen up to ~150 blocks) in the delalloc
-state.
+Signed-off-by: Marco Stornelli <marco.stornelli@gmail.com>
+---
+Patch is against 2.6.38-rc5
 
-In both cases, punching the delalloc blocks out just before the
-assert makes the assert go away - I did this to walk all the
-delalloc blocks remaining and print them out. Combining this with
-the event tracing and a bunch of printk has got me the above
-information, but I'm stil haven't isolated the code that exposes the
-problem.
-
-Cheers,
-
-Dave.
-
--- 
-Dave Chinner
-david@fromorbit.com
+--- linux-2.6.38-rc5-orig/fs/ext4/extents.c	2011-02-16 04:23:45.000000000 +0100
++++ linux-2.6.38-rc5/fs/ext4/extents.c	2011-02-21 08:43:37.000000000 +0100
+@@ -3670,6 +3670,12 @@ long ext4_fallocate(struct file *file, i
+ 	 */
+ 	credits = ext4_chunk_trans_blocks(inode, max_blocks);
+ 	mutex_lock(&inode->i_mutex);
++
++	if (IS_IMMUTABLE(inode)) {
++		mutex_unlock(&inode->i_mutex);
++		return -EPERM;
++	}
++
+ 	ret = inode_newsize_ok(inode, (len + offset));
+ 	if (ret) {
+ 		mutex_unlock(&inode->i_mutex);
+--- linux-2.6.38-rc5-orig/fs/btrfs/file.c	2011-02-16 04:23:45.000000000 +0100
++++ linux-2.6.38-rc5/fs/btrfs/file.c	2011-02-21 08:55:58.000000000 +0100
+@@ -1289,6 +1289,12 @@ static long btrfs_fallocate(struct file
+ 	btrfs_wait_ordered_range(inode, alloc_start, alloc_end - alloc_start);
+ 
+ 	mutex_lock(&inode->i_mutex);
++
++	if (IS_IMMUTABLE(inode)) {
++		ret = -EPERM;
++		goto out;
++	}
++
+ 	ret = inode_newsize_ok(inode, alloc_end);
+ 	if (ret)
+ 		goto out;
+--- linux-2.6.38-rc5-orig/fs/xfs/linux-2.6/xfs_file.c	2011-02-16 04:23:45.000000000 +0100
++++ linux-2.6.38-rc5/fs/xfs/linux-2.6/xfs_file.c	2011-02-21 09:07:46.000000000 +0100
+@@ -909,6 +909,11 @@ xfs_file_fallocate(
+ 	if (mode & FALLOC_FL_PUNCH_HOLE)
+ 		cmd = XFS_IOC_UNRESVSP;
+ 
++	if (IS_IMMUTABLE(inode)) {
++		error = -EPERM;
++		goto out_unlock;
++	}
++
+ 	/* check the new inode size is valid before allocating */
+ 	if (!(mode & FALLOC_FL_KEEP_SIZE) &&
+ 	    offset + len > i_size_read(inode)) {
+--- linux-2.6.38-rc5-orig/fs/gfs2/file.c	2011-02-16 04:23:45.000000000 +0100
++++ linux-2.6.38-rc5/fs/gfs2/file.c	2011-02-21 09:09:17.000000000 +0100
+@@ -797,6 +797,11 @@ static long gfs2_fallocate(struct file *
+ 	if (unlikely(error))
+ 		goto out_uninit;
+ 
++	if (IS_IMMUTABLE(inode)) {
++		error = -EPERM;
++		goto out_unlock;
++	}
++
+ 	if (!gfs2_write_alloc_required(ip, offset, len))
+ 		goto out_unlock;
+ 
 
 _______________________________________________
 xfs mailing list
