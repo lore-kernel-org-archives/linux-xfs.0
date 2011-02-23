@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p1NGs56C072270 for <xfs@oss.sgi.com>; Wed, 23 Feb 2011 10:54:06 -0600
-Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A6B10149AFC5
-	for <xfs@oss.sgi.com>; Wed, 23 Feb 2011 08:56:50 -0800 (PST)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id 4GzhJNy6GDSw4W53
-	for <xfs@oss.sgi.com>; Wed, 23 Feb 2011 08:56:50 -0800 (PST)
-Message-ID: <4D653C51.3080209@hardwarefreak.com>
-Date: Wed, 23 Feb 2011 10:56:49 -0600
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	p1NI23IU075300 for <xfs@oss.sgi.com>; Wed, 23 Feb 2011 12:02:04 -0600
+Received: from Ishtar.sc.tlinx.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 834B29F9D3F
+	for <xfs@oss.sgi.com>; Wed, 23 Feb 2011 10:04:47 -0800 (PST)
+Received: from Ishtar.sc.tlinx.org (ishtar.tlinx.org [173.164.175.65]) by
+	cuda.sgi.com with ESMTP id H3qOi7QeCY37RSrU for
+	<xfs@oss.sgi.com>; Wed, 23 Feb 2011 10:04:47 -0800 (PST)
+Message-ID: <4D654C2E.2000703@tlinx.org>
+Date: Wed, 23 Feb 2011 10:04:30 -0800
+From: "Linda A. Walsh" <lkml@tlinx.org>
 MIME-Version: 1.0
-Subject: Re: XFS corruption on 3ware RAID6-volume
-References: <AANLkTinWByYooMnPL7BryPowDexBeiHJdh3aVh+fdm-a@mail.gmail.com>
-In-Reply-To: <AANLkTinWByYooMnPL7BryPowDexBeiHJdh3aVh+fdm-a@mail.gmail.com>
+Subject: Re: write 'O_DIRECT' file w/odd amount of data: desirable result?
+References: <4D648D7D.7040500@tlinx.org> <4D64E2BB.7010000@draigBrady.com>
+In-Reply-To: <4D64E2BB.7010000@draigBrady.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,44 +23,95 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Erik Gulliksson <erik@gulliksson.org>
-Cc: xfs@oss.sgi.com
+To: Padraig Brady <PadraigBrady.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
 
-Erik Gulliksson put forth on 2/23/2011 7:27 AM:
-> Dear XFS people,
-> 
-> I have bumped in to a corruption problem with one a XFS filesystems.
-> The filesystem lives on a RAID6-volume on a 3ware 9650SE-24M8 with
-> battery backup and writecache enabled. RAID6-configuration is 11 2.0TB
-> WD15EARS disks and the volume is reported as OK by the RAID-card.
-
-There is a reason WD has an enterprise line of drives for use in RAID
-applications.  The EARS series, along with the entire WD desktop drive
-series, are not suitable for use with hardware RAID controllers, mainly
-because they don't support TLER.  The 2TB low RPM WD Green at Newegg is
-$90.  The 2TB 7.2k RPM Enterprise RE4 is $270, exactly 3 times the
-price.  Is your data, and reliable fast access to it, worth the extra
-$1,980?
-
-I think too many folks are blinded by low acquisition cost and thus
-can't see the overall life cycle cost, or TCO, of their storage
-infrastructure.
-
-Please Google the XFS list archives for the horror story at UC Santa
-Cruz WRT hardware arrays using the WD 2TB Green drives.  The sysop lost
-12TB of a 60TB XFS filesystem, and damn near lost the entire 60TB, if
-not for luck.  The lost 12TB of data was Ph. D. students' research data.
- That kind of data is definitely worth the extra $$ for the right type
-of drives which would have avoided the problem.
-
--- 
-Stan
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+CgpGV0lXIC0tIHhmcy1vc3MsIGluY2x1ZGVkIGFzICdsYXN0IGxpbmUnIHdhcyBvZiBtaW5vciBp
+bnRlcmVzdDsga25vd24gYnVnIG9uCnRoaXMga2VybmVsPzoKTGludXggSXNodGFyIDIuNi4zNS43
+LVQ2MTAtVmFuaWxsYS0xICMyIFNNUCBQUkVFTVBUIE1vbiBPY3QgMTEgMTc6MTk6NDEgClBEVCAy
+MDEwIHg4Nl82NCB4ODZfNjQgeDg2XzY0IEdOVS9MaW51eAoKUMOhZHJhaWcgQnJhZHkgd3JvdGU6
+Cj4gT24gMjMvMDIvMTEgMDQ6MzAsIExpbmRhIFdhbHNoIHdyb3RlOgo+ICAgCj4+IEkgdW5kZXJz
+dGFuZCwgc29tZXdoYXQsIHdoYXQgaXMgaGFwcGVuaW5nLiBJIGhhdmUgdHdvIGRpZmZlcmVudCB1
+dGlscywgCj4+ICdkZCcgYW5kIG1idWZmZXIgYm90aCBvZiB3aGljaCBoYXZlIGEgJ2RpcmVjdCcg
+b3B0aW9uIHRvIHdyaXRlIHRvIGRpc2suIAo+PiBtYnVmZmVyIHdhcyBmcm9tIG15IGRpc3RybyB3
+aXRoIGEgZGlyZWN0IGFkZGVkLCB3aGljaCBpcwo+Pgo+PiBJJ20gbm90IHN1cmUgaWYgaXQncyB0
+cnVuY2F0aW5nIHRoZSB3cml0ZSB0byB0aGUgbG93ZXIgYm91bmQgb2YgdGhlIAo+PiBzZWN0b3Ig
+c2l6ZSBvciB0aGUgZmlsZS1hbGxvY2F0aW9uLXVuaXQgc2l6ZSBidXQgZnJvbSBhIHtkdW1wfGNh
+dH0sCj4+IHBpcGVkIGludG8ge2NhdCwgZGQgbWJ1ZmZlcn0sIHRoZSBvdXRwdXQgc2l6ZXMgYXJl
+Ogo+PiBmaWxlICAgICAgICAgICAgICBzaXplICAgICAgIGRlbHRhCj4+IC0tLS0tLS0tLS0tLS0g
+ICAtLS0tLS0tLS0tICAgLS0tLQo+PiBkdW1wdGVzdC5jYXQgICAgNTc3NjQxOTY5Ngo+PiBkdW1w
+dGVzdC5kZCAgICAgNTc3NjM0MzA0MCAgIDc2NjU2ICAgCj4+IGR1bXB0ZXN0Lm1idWZmICA1MzY4
+NzA5MTIwICAgNDA3NzEwNTc2Cj4+IC0gcGFyYW1zOgo+PiBkZCBvZj1kdW1wdGVzdC5kZCBicz01
+MTJNIG9mbGFnPWRpcmVjdAo+PiBtYnVmZmVyIC1iIDUgLXMgNTEybSAtZGlyZWN0IC1mIC1vIGR1
+bXB0ZXN0Lm1idWZmCj4+IC0tLS0KPj4gSSdtIG5vdCBhd2FyZSBvZiB3aGF0IGVpdGhlciBkaWQs
+IGJ1dCBubyBkb3VidCBuZWl0aGVyIGV4cGVjdGVkIGFuCj4+IGVycm9yIGluIHRoZSBmaW5hbCB3
+cml0ZSBhbmQgZGlkbid0IGhhbmRsZSB0aGUgcmVzdWx0cyBwcm9wZXJseS4KPj4gVmFuaWxsYSBr
+ZXJuZWwgMi42LjM1LTcgeDg2XzY0IChTTVAgUFJFTVBUKQo+PiAgICAgCj4gTm90ZSBkZCB3aWxs
+IHR1cm4gb2ZmIE9fRElSRUNUIGZvciB0aGUgbGFzdCB3cml0ZQo+IGlmIGl0J3MgbGVzcyB0aGFu
+IHRoZSBibG9jayBzaXplLgo+IGh0dHA6Ly9naXQuc2F2YW5uYWguZ251Lm9yZy9naXR3ZWIvP3A9
+Y29yZXV0aWxzLmdpdDthPWNvbW1pdGRpZmY7aD01OTI5MzIyYwo+ICAgCi0tLS0tLQoKRldJVywg
+J2RkJyBpcyBmcm9tICdjb3JldXRpbHMtNy4xLTMuMi54ODZfNjQnIChmcm9tIHRoZSBzdXNlIDEx
+LjIgcmVsZWFzZSk6CgpXaGlsZSBJIHVzZWQgZHVtcCAoeGZzZHVtcCB0byBiZSBwcmVjaXNlKSB0
+byBwcm9kdWNlIG15IGluaXRpYWwgb3V0cHV0CnRvIG1idWZmZXIsIGl0IHdhcyB0aGUgZXJyb3Ig
+bWVzc2FnZSBhdCB0aGUgZW5kIHdoaWNoIGNhdWdodCBteSBhdHRlbnRpb24uClByaW9yIEkgaGFk
+IGEgdHJpZWQgYSBzZXJpZXMgb2YgZmlsdGVycyBhZnRlciB0aGUgaW5pdGlhbCBtZW0tdG8tbWVt
+CmJ1ZmZlciBwZXJmb3JtZWQgYnkgJ2RkJywgdGhlbiBsYXRlciAnbWJ1ZmZlcicuICBUaGUgZmls
+dGVycyB3ZXJlCnN1Y2Nlc3NpdmVseSBsb3dlci1pbyBjb21wcmVzcyBvcHRpb25zIG92ZXIgdGhl
+IHllYXJzIGFzIGRpc2sgYW5kCm5ldHdvcmsgc3BlZWRzIHJvc2UgYW5kIGNwdS1jb21wcmVzc2lv
+biBiZWNhbWUgdGhlIGNob2tlLXBvaW50LgoKKHhmc2R1bXAgLWIgNTEybSApfChpbml0aWFsbHkg
+J2RkJywgbGF0ZXIsICdtYnVmZmVyJyApfCBcCiAgICAgICAgIChzdSAtZiAtbSBiYWNrdXAgLWMg
+IiR1bWFzayAkdW07JHtDb21wcmVzczotfSAke0NvbXByZXNzX29wczotfSBcCiAgICAgICAgICAg
+ICAgICA+JHtEbXBmaWxlfSR7Q29tcHJlc3NfZXh0fSIgKQotLS0KRXZlbnR1YWxseSBJIHdhbnRl
+ZCB0byBnZXQgcmlkIG9mIHRoZSBmaW5hbCBmaWx0ZXIgc3RlcCBhbHRvZ2V0aGVyIGFuZApoYXZl
+IHRoYXQgJ2J1ZmZlcicgc3RhdGVtZW50IGFmdGVyIHRoZSAnZHVtcCcgZ28gZGlyZWN0IHRvIGRp
+c2ssIHRoZW4KbGF0ZXIgIi0tZGlyZWN0IiB0byBkaXNrLi4uCgogICAgSXQgd2FzIGFkZGluZyB0
+aGUgJ0RJUkVDVCcgZmxhZyB0aGVuIHRoYXQgSSBub3RpY2VkIG1idWZmZXIncyBlcnJvci4KCiAg
+ICBNeSBmaXJzdCBkZWJ1ZyBzdGVwIHdhcyB0byBnbyBmb3IgYSBzaG9ydGVyIGR1bXAgZmlsZSAo
+dGhlIG9uZSB0aGF0CmZhaWxlZCBvbiB3YXMgb3ZlciAzVEIgYW5kIHRvb2sgb3ZlciAzaCB0byBy
+ZXByb2R1Y2UpLiAgVGhlbiBJIHN1YnN0aXR1dGVkCidjYXQnIGFzIHRoYXQgZmluYWwgZmlsdGVy
+IGFuZCBlbmRlZCB1cCB3aXRoIG15ICd0ZXN0ZmlsZScgSSB1c2VkIGZvciBsYXRlcgp0ZXN0cyBm
+b3IgJ21idWZmZXInIGFuZCAnZGQnLgoKTk9URToKCkkgdHJpZWQgdXNpbmcgdGhlICdpZmxhZz1m
+dWxsYmxvY2snIGFzIHlvdSByZWNvbW1lbmQgYW5kIGl0IG1hZGUgdGhlIHByb2JsZW0KJ2NvbnNp
+c3RlbnQnIHdpdGggdGhlIG91dHB1dCBvZiAnbWJ1ZmZlcicsIGkuZS4gaXQgdHJhbnNmZXJlZCBs
+ZXNzIGRhdGEKYW5kIHRoZSB0cnVuY2F0aW9uIHdhcyBjb25zaXN0ZW50IHdpdGggYSA1MTJNIGRp
+dmlzb3IsIGluZGljYXRpbmcgaXQgd2FzCidjYXQnIGRlZmF1bHQgcmVjb3JkIG91dHB1dCBzaXpl
+IHRoYXQgd2FzIGNhdXNpbmcgdGhlIGRpZmZlcmVuY2UuIApJZiBJIHVzZSAnZGQnIHRvIHJlYWQg
+dGhlIGJhc2UgZmlsZSAobm8gZGlyZWN0IGkvbykgSSBnZXQgY29uc2lzdGVudCByZXN1bHRzCndp
+dGggJ21idWZmZXInIGFuZCAnZGQnOgoKCklucHV0OiBEdW1wVGVzdC5vdXQ6IDU3NzY0MTk2OTYK
+Ck91dHB1dCBmaWxlIHNpemVzIGFyZSBhcyByZXBvcnRlZCBieSAnZGQnLCB3aXRoICd0ZXN0MScg
+Z2l2aW5nIHRoZSBjbG9zZXN0CmFuc3dlciAoc2hvcnQgcmVjb3JkIGxpbmUgY29uY2F0ZW5hdGVk
+IHdpdGggJyAmICcpOgoKdGVzdDE+IGNhdCBEdW1wVGVzdC5vdXQgfGRkIG9mPWR1bXB0ZXN0LmRk
+LWZiIG9mbGFnPWRpcmVjdCAKYnM9NTEyTSAgICAgICAgICAKZGQ6IHdyaXRpbmcgYGR1bXB0ZXN0
+LmRkLWZiJzogSW52YWxpZCBhcmd1bWVudAowKzczNDYgcmVjb3JkcyBpbiAmIDArNzM0NSByZWNv
+cmRzIG91dAo1Nzc2MzQzMDQwIGJ5dGVzICg1LjggR0IpIGNvcGllZCwgMTIuNDM2MSBzLCA0NjQg
+TUIvcwoKCnRlc3QyPiBjYXQgRHVtcFRlc3Qub3V0IHxkZCBvZj1kdW1wdGVzdC5kZCtmYiBvZmxh
+Zz1kaXJlY3QgYnM9NTEyTSAKaWZsYWc9ZnVsbGJsb2NrCmRkOiB3cml0aW5nIGBkdW1wdGVzdC5k
+ZCtmYic6IEludmFsaWQgYXJndW1lbnQKMTArMSByZWNvcmRzIGluICYgMTArMCByZWNvcmRzIG91
+dAo1MzY4NzA5MTIwIGJ5dGVzICg1LjQgR0IpIGNvcGllZCwgMTIuNTgxIHMsIDQyNyBNQi9zCgp0
+ZXN0Mz4gZGQgaWY9RHVtcFRlc3Qub3V0IGJzPTUxMk0gfGRkIG9mPWR1bXB0ZXN0Mi5kZCtmYiBv
+ZmxhZz1kaXJlY3QgCmJzPTUxMk0gaWZsYWc9ZnVsbGJsb2NrICAgICAgICAgICAgICAgCjEwKzEg
+cmVjb3JkcyBpbiAmIDEwKzEgcmVjb3JkcyBvdXQKNTc3NjQxOTY5NiBieXRlcyAoNS44IEdCKSBj
+b3BpZWRkZDogd3JpdGluZyBgZHVtcHRlc3QyLmRkK2ZiJywgMTEuNjQ5MyAKcywgNDk2IE1CL3MK
+OiBJbnZhbGlkIGFyZ3VtZW50CjEwKzEgcmVjb3JkcyBpbiAmIDEwKzAgcmVjb3JkcyBvdXQKNTM2
+ODcwOTEyMCBieXRlcyAoNS40IEdCKSBjb3BpZWQsIDExLjY1MTMgcywgNDYxIE1CL3MKCnRlc3Q0
+PiBkZCBpZj1EdW1wVGVzdC5vdXQgYnM9NTEyTSB8ZGQgb2Y9ZHVtcHRlc3QyLmRkLWZiIG9mbGFn
+PWRpcmVjdCAKYnM9NTEyTQoxMCsxIHJlY29yZHMgaW4gJiAxMCsxIHJlY29yZHMgb3V0CmRkOiB3
+cml0aW5nIGBkdW1wdGVzdDIuZGQtZmInNTc3NjQxOTY5NiBieXRlcyAoNS44IEdCKSBjb3BpZWQs
+IDExLjQ1MDMgCnMsIDUwNCBNQi9zCjogSW52YWxpZCBhcmd1bWVudAoxMCsxIHJlY29yZHMgaW4g
+JiAxMCswIHJlY29yZHMgb3V0CjUzNjg3MDkxMjAgYnl0ZXMgKDUuNCBHQikgY29waWVkLCAxMS40
+NTAzIHMsIDQ2OSBNQi9zCgotLS0KSSd2ZSB0cmllZCBzaWduaWZpY2FudGx5IHNob3J0ZXIgZmls
+ZXMgYW5kIE5PVCBoYWQgdGhpcyBwcm9ibGVtCihyZWNvcmQgc2l6ZT02NGssIGFuZCAyIGZpbGVz
+IG9uZSBAIDU3ayBhbmQgb25lIGF0IDY0KzU3aykuIEJvdGggY29waWVkIApmaW5lLgpTb21ldGhp
+bmcgdG8gZG8gd2l0aCBsYXJnZSBmaWxlIGJ1ZmZlcnMuCgpPZiAqU0lHTklGSUNBTlQqIG5vdGUu
+ICBJbiB0cnlpbmcgdG8gY3JlYXRlIGFuIGVtcHR5IGZpbGUgb2YgdGhlIHNpemUKdXNlZCwgZnJv
+bSBzY3JhdGNoLCB1c2luZyAneGZzX21rZmlsZScsIEkgZ290IGFuIGVycm9yOgoKPiAgeGZzX21r
+ZmlsZSA1Nzc2NDE5Njk2IHRlc3RmaWxlCnB3cml0ZTY0OiBJbnZhbGlkIGFyZ3VtZW50CgotLS0K
+SSdtIGhhdmluZyBwcm9ibGVtcyBnZW5lcmF0aW5nIG5ldyBrZXJuZWxzICh3aWxsIGFzayBpbiBz
+ZXBhcmF0ZQptZXNzYWdlKSBzbyB3aWxsIGhhdmUgdG8gZml4IHRob3NlIGJlZm9yZSBtb3Zpbmcg
+YWhlYWQuLi4KCgoKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9t
+YWlsbWFuL2xpc3RpbmZvL3hmcwo=
