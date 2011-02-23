@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p1NFKYo0067441 for <xfs@oss.sgi.com>; Wed, 23 Feb 2011 09:20:34 -0600
-Received: from smtp4-g21.free.fr (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DBACC156F513
-	for <xfs@oss.sgi.com>; Wed, 23 Feb 2011 07:23:16 -0800 (PST)
-Received: from smtp4-g21.free.fr (smtp4-g21.free.fr [212.27.42.4]) by
-	cuda.sgi.com with ESMTP id 2KAUunZTlsHKxniJ for
-	<xfs@oss.sgi.com>; Wed, 23 Feb 2011 07:23:16 -0800 (PST)
-Date: Wed, 23 Feb 2011 16:23:16 +0100
-From: Emmanuel Florac <eflorac@intellique.com>
+	p1NFdXTP068381 for <xfs@oss.sgi.com>; Wed, 23 Feb 2011 09:39:33 -0600
+Received: from lucidpixels.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7198812DAE47
+	for <xfs@oss.sgi.com>; Wed, 23 Feb 2011 07:42:18 -0800 (PST)
+Received: from lucidpixels.com (lucidpixels.com [75.144.35.66]) by
+	cuda.sgi.com with ESMTP id fRYgpNsHmQDdW9vz for
+	<xfs@oss.sgi.com>; Wed, 23 Feb 2011 07:42:18 -0800 (PST)
+Date: Wed, 23 Feb 2011 10:42:17 -0500 (EST)
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
 Subject: Re: XFS corruption on 3ware RAID6-volume
-Message-ID: <20110223162316.45a49880@harpe.intellique.com>
-In-Reply-To: <AANLkTinsfwr5E7KkffwWOweWJLCmaLnLdtYA4g_m--b0@mail.gmail.com>
+In-Reply-To: <20110223163737.3c2fcd0b@harpe.intellique.com>
+Message-ID: <alpine.DEB.2.02.1102231041120.15181@p34.internal.lan>
 References: <AANLkTinWByYooMnPL7BryPowDexBeiHJdh3aVh+fdm-a@mail.gmail.com>
 	<20110223154651.54f0a8dc@harpe.intellique.com>
 	<AANLkTinsfwr5E7KkffwWOweWJLCmaLnLdtYA4g_m--b0@mail.gmail.com>
-Mime-Version: 1.0
+	<alpine.DEB.2.02.1102231022470.15181@p34.internal.lan>
+	<20110223163737.3c2fcd0b@harpe.intellique.com>
+MIME-Version: 1.0
+Content-Type: MULTIPART/MIXED; BOUNDARY="655872-532890823-1298475737=:15181"
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,106 +28,73 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Erik Gulliksson <erik@gulliksson.org>
-Cc: xfs@oss.sgi.com
+To: Emmanuel Florac <eflorac@intellique.com>
+Cc: Erik Gulliksson <erik@gulliksson.org>, xfs@oss.sgi.com
 
-Le Wed, 23 Feb 2011 16:01:09 +0100
-Erik Gulliksson <erik@gulliksson.org> =E9crivait:
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-> Hi Emmanuel,
-> =
-
-> Thanks for your prompt reply.
-> =
-
-> On Wed, Feb 23, 2011 at 3:46 PM, Emmanuel Florac
-> <eflorac@intellique.com> wrote:
-> >
-> > What firmware version are you using?
-> >
-> > ( tw_cli /cX show firmware )
-> =
-
-> # tw_cli /c0 show firmware
-> /c0 Firmware Version =3D FE9X 4.10.00.007
-> =
+--655872-532890823-1298475737=:15181
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 
 
-OK so this is the latest, or close.
 
-> =
+On Wed, 23 Feb 2011, Emmanuel Florac wrote:
 
-> >
-> > Augh. That sounds pretty bad. What does " tw_cli /cX/uY show all"
-> > look like?
-> =
+> Le Wed, 23 Feb 2011 10:29:15 -0500 (EST)
+> Justin Piszcz <jpiszcz@lucidpixels.com> =E9crivait:
+>
+>>> /c0 Firmware Version =3D FE9X 4.10.00.007
+>> The latest is:
+>>
+>> 9.5.1-9650-Upgrade.zip
+>> 9.5.2-9650-Upgrade.zip
+>> 9.5.3-9650-Upgrade.zip
+>> 9650SE_9690SA_firmware_beta_fw4.10.00.016.zip
+>> 9650SE_9690SA_firmware_beta_fw_4.10.00.019.zip <- latest
+>
+> Hum well, this is beta, I'd rather stick to released firmware :) His
+> firmware is actually the latest stable version for the 9650.
 
-> Yes, it is bad - a decision has been made to replace these disks with
-> "enterprise"-versions (without TLER/ERC problems etc).
-
-Typical error, alas. Save a couple hundred euros with cheap drives, to
-store terabytes of data worth a lot.
-
-> Tw_cli produces
-> this output for the volume:
-> =
-
-> # tw_cli /c0/u0 show all
-> /c0/u0 status =3D OK
-> /c0/u0 is not rebuilding, its current state is OK
-> /c0/u0 is not verifying, its current state is OK
-> /c0/u0 is initialized.
-> /c0/u0 Write Cache =3D on
-> /c0/u0 Read Cache =3D Intelligent
-> /c0/u0 volume(s) =3D 1
-> /c0/u0 name =3D xxx
-> /c0/u0 serial number =3D yyy
-> /c0/u0 Ignore ECC policy =3D off
-> /c0/u0 Auto Verify Policy =3D off
-> /c0/u0 Storsave Policy =3D protection
-> /c0/u0 Command Queuing Policy =3D on
-> /c0/u0 Rapid RAID Recovery setting =3D all
-> /c0/u0 Parity Number =3D 2
-> =
-
-> Unit     UnitType  Status         %RCmpl  %V/I/M  Port  Stripe
-> Size(GB)
-> ------------------------------------------------------------------------
-> u0       RAID-6    OK             -       -       -     256K
-> 12572.8 =
+Yes, but it specifically addresses issue with resets:
 
 
-So the RAID array looks OK, the RAID controller doesn't report any
-particular problem. You said it was reported as 0 K. Where did you see
-0 K reported?
+019:
+  SCR FIRM03219 Pchip reset interrupt not handled
+  SCR FIRM03220 Put parity segment to free state completely when deallocate=
+ unused parity segment
 
-What gives "dmesg | grep 3w-9xxx" ? and "tw_cli alarms" ? Was the
-filesystem under heavy write when the problem occured ?
+016:
+SCR 2196:  Unexpected controller soft resets
+Fixed an issue with regards to  deferral of write and read commands to help=
+ eliminate unexpected soft resets.
 
-I'd start with launching a RAID verify, to detect and correct possible
-on-disk coherency problems (it can't hurt anyway):
+SCR 2217: Incomplete unit after multiple power failures when a RAID 1 unit =
+is initializing after a rebuild.
+This issue is fixed in this firmware version.
 
-tw_cli /c0/u0 start verify
+SCR 819: Controller may assert when cache is disabled in a RAID5/RAID6 conf=
+iguration under heavy I/O load.
+This issue is fixed in this firmware version.
 
-Then "tail -f /var/log/messages | grep 3w-9xxx" ...
+SCR 2214: Performance drops during SES polling.
+Fixed the issue where performance drops when a Storage Enclosure Processor =
+(SEP) takes up to 700-800 msec to respond to SES polling.
 
-I suppose that there are no problems to be discovered. Most probably
-IOs to the array were lost because of the bus reset.
+Justin.
 
--- =
-
-------------------------------------------------------------------------
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
-------------------------------------------------------------------------
+--655872-532890823-1298475737=:15181
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--655872-532890823-1298475737=:15181--
