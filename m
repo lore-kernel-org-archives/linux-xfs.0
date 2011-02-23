@@ -1,13 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p1N1pYxU011452 for <xfs@oss.sgi.com>; Tue, 22 Feb 2011 19:51:34 -0600
-Subject: Re: [PATCH 1/2] xfs: stop using xfs_trans_iget in the RT allocator
+	p1N1pYxX011453 for <xfs@oss.sgi.com>; Tue, 22 Feb 2011 19:51:34 -0600
+Subject: Re: [PATCH 2/2] xfs: more sensible inode refcounting for ialloc
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110213132531.GA18279@infradead.org>
-References: <20110213132531.GA18279@infradead.org>
-Date: Tue, 22 Feb 2011 19:52:38 -0600
-Message-ID: <1298425958.1960.115.camel@doink>
+In-Reply-To: <20110213132642.GB18279@infradead.org>
+References: <20110213132642.GB18279@infradead.org>
+Date: Tue, 22 Feb 2011 19:52:40 -0600
+Message-ID: <1298425960.1960.116.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -25,16 +25,22 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Sun, 2011-02-13 at 08:25 -0500, Christoph Hellwig wrote:
-> During mount we establish references to the RT inodes, which we keep for
-> the lifetime of the filesystem.  Instead of using xfs_trans_iget to grab
-> additional references when adding RT inodes to transactions use the
-> combination of xfs_ilock and xfs_trans_ijoin_ref, which archives the same
-> end result with less overhead.
+On Sun, 2011-02-13 at 08:26 -0500, Christoph Hellwig wrote:
+> Currently we return iodes from xfs_ialloc with just a single reference held.
+> But we need two references, as one is dropped during transaction commit and
+> the second needs to be transfered to the VFS.  Change xfs_ialloc to use
+> xfs_iget plus xfs_trans_ijoin_ref to grab two references to the inode,
+> and remove the now superflous IHOLD calls from all callers.  This also
+> greatly simplifies the error handling in xfs_create and also allow to remove
+> xfs_trans_iget as no other callers are left.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Looks good.
+So the first inode reference we get is the one that
+gets handed back to the VFS.  The second reference is
+for the transaction, and it's now added precisely
+at the point at which the inode is joined to the
+transaction.  Nice.
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
 
