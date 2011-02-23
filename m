@@ -1,12 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p1NFvCkI069361 for <xfs@oss.sgi.com>; Wed, 23 Feb 2011 09:57:12 -0600
-From: Alex Elder <aelder@sgi.com>
-Message-Id: <201102231559.p1NFxrcj011362@stout.americas.sgi.com>
-Date: Wed, 23 Feb 2011 09:59:53 -0600
-Subject: [GIT PULL] XFS update for 2.6.38-rc7
+	p1NGU7wE071135 for <xfs@oss.sgi.com>; Wed, 23 Feb 2011 10:30:07 -0600
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7472F129B5A6
+	for <xfs@oss.sgi.com>; Wed, 23 Feb 2011 08:32:50 -0800 (PST)
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id 6TVNjBx9b266arqA for <xfs@oss.sgi.com>;
+	Wed, 23 Feb 2011 08:32:50 -0800 (PST)
+Message-ID: <4D6536B1.80303@sandeen.net>
+Date: Wed, 23 Feb 2011 10:32:49 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
+Subject: Re: Input/Output error
+References: <4D63D9D8.3060204@storegrid.com> <4D641AB1.7010101@sandeen.net>
+	<4D64AA28.9050207@storegrid.com>
+In-Reply-To: <4D64AA28.9050207@storegrid.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,33 +28,49 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Srinivasan T <srinivasan@storegrid.com>
+Cc: xfs@oss.sgi.com
 
-Linus, please pull the following two minor changes for XFS.  One
-fixes a security problem (kernel stack leak to user space) and the
-other ensures an unsupported operation can be distinguished from a 
-supported but not operative one.  Thanks.
+On 2/23/11 12:33 AM, Srinivasan T wrote:
+> Hi Eric,
+> 
+> There is enough disk space in the fs.
+> 
+> [root@domU-12-31-39-07-81-36 StoreGrid]# df -lh
+> Filesystem            Size  Used Avail Use% Mounted on
+> /dev/sda1             9.9G  2.9G  6.6G  31% /
+> /dev/sdb              147G  188M  140G   1% /mnt
+> none                  854M     0  854M   0% /dev/shm
+> /dev/sdh              5.0G   25M  5.0G   1% /mymountpoint
+> 
+> Also, the output of modinfo is as follows,
+> 
+> [root@domU-12-31-39-07-81-36 StoreGrid]# modinfo xfs
+> filename:       /lib/modules/2.6.21.7-2.fc8xen/kernel/fs/xfs/xfs.ko
 
-					-Alex
+so a fedora 8 xen kernel on a centos 5.4 machine... you are pretty far
+from the supported realm here, I'm afraid.
 
-The following changes since commit 4a508dd259f5995b8d31c576b894263f5947d654:
+Can you check your logs for IO errors as dave suggested; otherwise, try
+upstream or at -least- an official RHEL5 install.
 
-  Merge branch 'for-2639-rc4/i2c-fixes' of git://git.fluff.org/bjdooks/linux (2011-02-22 17:13:16 -0800)
+-Eric
 
-are available in the git repository at:
-
-  git://oss.sgi.com/xfs/xfs for-linus
-
-Dan Rosenberg (1):
-      xfs: prevent leaking uninitialized stack memory in FSGEOMETRY_V1
-
-Lukas Czerner (1):
-      xfs: check if device support discard in xfs_ioc_trim()
-
- fs/xfs/linux-2.6/xfs_discard.c |    2 ++
- fs/xfs/xfs_fsops.c             |    3 +++
- 2 files changed, 5 insertions(+), 0 deletions(-)
+> license:        GPL
+> description:    SGI XFS with ACLs, security attributes, large block numbers, no debug enabled
+> author:         Silicon Graphics, Inc.
+> srcversion:     C7114C18263E3067C64F2BC
+> depends:
+> vermagic:       2.6.21-2952.fc8xen SMP mod_unload 686 4KSTACKS
+> 
+> I have installed xfs with yum by using the following command,
+> 
+> yum install xfsprogs
+> 
+> I think I have installed the kernel rpm xfs ko. Can you confirm if this is correct.
+> 
+> Regards,
+> Srinivasan
 
 _______________________________________________
 xfs mailing list
