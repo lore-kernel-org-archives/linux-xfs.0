@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p1O1YY5s097203 for <xfs@oss.sgi.com>; Wed, 23 Feb 2011 19:34:34 -0600
+	p1O1xgIv098758 for <xfs@oss.sgi.com>; Wed, 23 Feb 2011 19:59:43 -0600
 Received: from ipmail07.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DB4D412E0B3E
-	for <xfs@oss.sgi.com>; Wed, 23 Feb 2011 17:37:18 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0ABE012E18FD
+	for <xfs@oss.sgi.com>; Wed, 23 Feb 2011 18:02:26 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	GA9hfu8bG1vwq7ff for <xfs@oss.sgi.com>;
-	Wed, 23 Feb 2011 17:37:18 -0800 (PST)
-Date: Thu, 24 Feb 2011 12:37:15 +1100
+	tE0TbPf94jRrfuso for <xfs@oss.sgi.com>;
+	Wed, 23 Feb 2011 18:02:26 -0800 (PST)
+Date: Thu, 24 Feb 2011 13:02:25 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v3, 04/16] xfsprogs: metadump: adjust rather than start
-	over when invalid byte found
-Message-ID: <20110224013715.GR3166@dastard>
-References: <201102182121.p1ILL1kR029061@stout.americas.sgi.com>
+Subject: Re: [PATCH v3, 11/16] xfsprogs: metadump: move obfuscation
+	algorithm into its own function
+Message-ID: <20110224020225.GY3166@dastard>
+References: <201102182121.p1ILL2XC029147@stout.americas.sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <201102182121.p1ILL1kR029061@stout.americas.sgi.com>
+In-Reply-To: <201102182121.p1ILL2XC029147@stout.americas.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,92 +26,27 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Alex Elder <aelder@sgi.com>
 Cc: xfs@oss.sgi.com
 
-T24gRnJpLCBGZWIgMTgsIDIwMTEgYXQgMDM6MjE6MDFQTSAtMDYwMCwgQWxleCBFbGRlciB3cm90
-ZToKPiBUaGUgbGFzdCA1IGJ5dGVzIG9mIGEgbmFtZSBnZW5lcmF0ZWQgYnkgZ2VuZXJhdGVfb2Jm
-dXNjYXRlZF9uYW1lKCkKPiBjYW4gYmUgc2VsZWN0ZWQgc3VjaCB0aGF0IHRoZXkgKGFsb25nIHdp
-dGggYWxsIG9mIHRoZSBwcmVjZWRpbmcKPiBjaGFyYWN0ZXJzIGluIHRoZSBuYW1lKSBwcm9kdWNl
-IGFueSBkZXNpcmVkIHZhbHVlIHdoZW4gaGFzaGVkLgo+IAo+IFRoZXkgYXJlIHNlbGVjdGVkIGJh
-c2VkIG9uIGhvdyB0aGVpciB2YWx1ZSBhZmZlY3RzIHRoZSBvdXRjb21lIG9mCj4gdGhlIGhhc2gg
-Y2FsY3VsYXRpb24gZm9yIHRoZSBvYmZ1c2NhdGVkIG5hbWUuICBFYWNoIGJ5dGUgaXMgWE9SJ2QK
-PiBpbnRvIHRoZSBoYXNoIGF0IGEgY2VydGFpbiBwb3NpdGlvbi4gIFRoZSBwb3J0aW9uIG9mIHRo
-ZSBoYXNoCj4gYWZmZWN0ZWQgYnkgZWFjaCBvZiB0aGVzZSBsYXN0IGZpdmUgYnl0ZXMgY2FuIGJl
-IHNlZW4gdmlzdWFsbHkgYmVsb3cKPiAod2hlcmUgImxhc3QtMyIgbWVhbnMgdGhlIGJ5dGUgMyBw
-b3NpdGlvbnMgYmVmb3JlIHRoZSBsYXN0IGJ5dGUgaW4KPiB0aGUgbmFtZSk6Cj4gCj4gCSstKy0r
-LSstKy0rLSstKy18LSstKy0rLSstKy0rLSstfC0rLSstKy0rLSstKy0rLXwtKy0rLSstKy0rLSst
-Ky0rCj4gaGFzaDoJfCB8IHwgfCB8IHwgfCB8IHwgfCB8IHwgfCB8IHwgfCB8IHwgfCB8IHwgfCB8
-IHwgfCB8IHwgfCB8IHwgfCB8IHwKPiAJKy0rLSstKy0rLSstKy0rLXwtKy0rLSstKy0rLSstKy18
-LSstKy0rLSstKy0rLSstfC0rLSstKy0rLSstKy0rLSsKPiAgICAgICAgbGFzdC00IC0+fCAgICAg
-ICAgICAgfDwtLSBsYXN0LTIgLS0tPnwgICAgICAgICAgIHw8LS0tIGxhc3QgLS0tLT58Cj4gICAg
-ICAgICAgICAgICB8PC0tIGxhc3QtMyAtLS0+fCAgICAgICAgICAgfDwtLSBsYXN0LTEgLS0tPnwg
-ICAgIHw8LSBsYXN0LTQKPiAKPiAoTm90ZSB0aGF0IGJ5dGUgKGxhc3QtNCkgd3JhcHMgYXJvdW5k
-LiAgVGhlIHByZXZpb3VzIHBhdGNoIGluIHRoaXMKPiBzZXJpZXMgZWxpbWluYXRlZCB0aGUgZWZm
-ZWN0IG9mIHRoZSB1cHBlciA0IGJpdHMgb2YgdGhhdCBieXRlIGJ5Cj4gZm9yY2luZyB0aGVtIHRv
-IGJlIGFsbCBiZSAwIGJpdHMuKQo+IAo+IFVzaW5nIHRoZSAoWE9SKSBkaWZmZXJlbmNlIGJldHdl
-ZW4gdGhlIGhhc2ggY29tcHV0ZWQgZm9yIHRoZQo+IGJlZ2lubmluZyBvZiB0aGUgb2JmdXNjYXRl
-ZCBuYW1lIGFuZCB0aGUgaGFzaCBmcm9tIHRoZSBvcmlnaW5hbAo+IG5hbWUsIHdlIGRpcmVjdGx5
-IGRldGVybWluZSB0aGUgcmVxdWlyZWQgZmluYWwgZml2ZSBieXRlcyB0byBtYWtlCj4gdGhlIGhh
-c2hlcyBmb3IgdGhlIHR3byBjb21wbGV0ZSBuYW1lcyBtYXRjaC4gIFRoZSBsb3dlciBieXRlIChi
-aXRzCj4gMC03KSBvZiB0aGF0IGRpZmZlcmVuY2UgaXMgdXNlZCBmb3IgdGhlIGxhc3QgY2hhcmFj
-dGVyIGluIHRoZQo+IG9iZnVzY2F0ZWQgbmFtZSwgYml0cyA3LTE0IGZvciB0aGUgc2Vjb25kLXRv
-LWxhc3QsIGFuZCBzbyBvbi4KPiAKPiBTbyB3ZSBzdGFydCB3aXRoIHRoZSBkaWZmZXJlbmNlIGJl
-dHdlZW4gdGhlIGhhc2ggZnJvbSB0aGUgY29tcGxldGUKPiBvcmlnaW5hbCBuYW1lIGFuZCB0aGUg
-aGFzaCAoc28gZmFyKSBmb3IgYSByYW5kb20gc3RyaW5nIGNvbnN0aXR1dGluZwo+IHRoZSBmaXJz
-dCBwYXJ0IG9mIHRoZSBvYmZ1c2NhdGVkIG5hbWUuICBXZSBleHRyYWN0IGZpdmUgc2V0cyBvZiA4
-Cj4gYml0cyBmcm9tIHRoZSByZXN1bHQgYXQgdGhlIHBvc2l0aW9ucyBpbmRpY2F0ZWQgYWJvdmUs
-IGFuZCB0aG9zZQo+IDgtYml0IHZhbHVlcyB3aWxsIGJlY29tZSB0aGUgZmluYWwgZml2ZSBieXRl
-cyBvZiB0aGUgb2JmdXNjYXRlZAo+IG5hbWUuICBCeSBhc3N1bWluZyAob3IgZm9yY2luZykgdGhl
-IHRvcCBiaXQgb2YgZWFjaCBvZiB0aGVzZQo+IGV4dHJhY3RlZCB2YWx1ZXMgdG8gYmUgMCAoYnkg
-bWFza2luZyBvZmYgdGhlIHRvcCBiaXQpLCB3ZSBjYW4gaWdub3JlCj4gdGhlIG92ZXJsYXBwaW5n
-IHBvcnRpb25zIHdoZW4gZGV0ZXJtaW5pbmcgdGhlIGJ5dGVzIHRvIHVzZS4KPiAKPiAKPiBJdCdz
-IHBvc3NpYmxlIGZvciB0aGlzIHByb2Nlc3MgdG8gcHJvZHVjZSBjaGFyYWN0ZXJzICgnXDAnIGFu
-ZCAnLycpCj4gdGhhdCBhcmUgbm90IGFsbG93ZWQgaW4gdmFsaWQgbmFtZXMuICBJZiB0aGlzIG9j
-Y3VycywgdGhlIGV4aXN0aW5nCj4gY29kZSBhYmFuZG9ucyB0aGUgY3VycmVudCBvYmZ1c2NhdGVk
-IG5hbWUgYW5kIHN0YXJ0cyBhZ2FpbiBmcm9tIHRoZQo+IGJlZ2lubmluZy4gIEJ1dCB0aGVyZSBl
-eGlzdCBjYXNlcyB3aGVyZSB0aGlzIGNhbiBsZWFkIHRvIGEKPiBuZXZlci1lbmRpbmcgbG9vcC4K
-PiAKPiBBcmthZGl1c3ogTWnFm2tpZXdpY3ogZW5jb3VudGVyZWQganVzdCBzdWNoIGEgbmFtZSwg
-IlJcMzIzXDI1N05FIi4KPiBUaGF0IG5hbWUgcHJvZHVjZXMgaGFzaCB2YWx1ZSAweDNhNGJlNzQw
-LCB3aGljaCByZXF1aXJlcyB0aGF0IHRoZQo+IG9iZnVzY2F0ZWQgbmFtZSB1c2VzICcvJyBhdCBw
-b3NpdGlvbiBsYXN0LTIuICBUaGUgY3VycmVudCBhbGdvcml0aG0KPiBzdGFydHMgb3ZlciwgYnV0
-IHNpbmNlIHRoZXJlIGFyZSBubyByYW5kb20gY2hhcmFjdGVycyBpbiB0aGlzCj4gbGVuZ3RoLTUg
-b2JmdXNjYXRlZCBuYW1lLCBubyBvdGhlciBwb3NzaWJpbGl0eSB3aWxsIGJlIGZvdW5kLCBhbmQK
-PiB0aGUgcHJvY2VzcyByZXBlYXRzIGZvcmV2ZXIuCj4gCj4gCj4gVGhpcyBjaGFuZ2UgbW9kaWZp
-ZXMgdGhlIGFsZ29yaXRobSB1c2VkIHNvIHRoYXQgaWYgYSB1bmFsbG93ZWQKPiBjaGFyYWN0ZXIg
-YXJpc2VzLCB3ZSBmbGlwIGEgYml0IGluIHRoYXQgY2hhcmFjdGVyLCBhbG9uZyB3aXRoCj4gYW5v
-dGhlciAibWF0Y2hpbmciIGJpdCBpbiBhbm90aGVyIChvdmVybGFwcGluZykgY2hhcmFjdGVyIHN1
-Y2ggdGhhdAo+IHRoZSByZXN1bHRpbmcgaGFzaCBpcyB1bmNoYW5nZWQuICBUaGUgdHdvIHVuYWxs
-b3dlZCBjaGFyYWN0ZXJzIGluIGEKPiBuYW1lIGFyZSAnXDAnICgweDAwKSBhbmQgJy8nICgweDJm
-KSwgYW5kIGZsaXBwaW5nIGFueSBvbmUgYml0IGluCj4gZWl0aGVyIG9mIHRob3NlIGNoYXJhY3Rl
-cnMgcmVzdWx0cyBpbiBhbiBhbGxvd2VkIGNoYXJhY3Rlci4KPiAKPiAKPiBTbywgc3RhcnRpbmcg
-d2l0aCB0aGUgZmlyc3Qgb2YgdGhlc2UgbGFzdCA1IGJ5dGVzIChsYXN0LTQpLCBpZiBpdHMKPiAi
-bm9ybWFsIiB2YWx1ZSBpcyBvbmUgb2YgdGhlIHVuYWxsb3dlZCBjaGFyYWN0ZXJzLCB3ZSBmbGlw
-IGl0cyBsb3cKPiBiaXQgYW5kIGFycmFuZ2UgdG8gZmxpcCB0aGUgaGlnaCBiaXQgb2YgaXRzIHN1
-Y2Nlc3NvciBieXRlLiAgVGhlCj4gcmVtYWluaW5nIGJ5dGVzIGFyZSB0cmVhdGVkIHNpbWlsYXJs
-eS4KPiAKPiBUaGUgdmVyeSBsYXN0IGJ5dGUgaGFzIGEgbGl0dGxlIGRpZmZlcmVudCB0cmVhdG1l
-bnQuICBXZSBjYW4gZmxpcAo+IGl0cyBsb3cgYml0LCBidXQgaXQgaGFzIG5vIHN1Y2Nlc3NvciBi
-eXRlIHBlciBzZS4gIEl0cyBlZmZlY3Qgb24KPiB0aGUgaGFzaCBkb2VzLCBob3dldmVyIG92ZXJs
-YXAgdGhlIHVwcGVyIGZvdXIgYml0cyBmcm9tIGJ5dGUKPiAobGFzdC00KS4gIFdlIGNhbiB0aGVy
-ZWZvcmUgZmxpcCB0aGUgY29ycmVzcG9uZGluZyBiaXQgaW4gdGhhdCAoYXQKPiBwb3NpdGlvbiAw
-eDEwKS4KPiAKPiAKPiBUaGVyZSBpcyBvbmUgbW9yZSBjYXNlIHRvIGNvbnNpZGVyLiAgSXQncyBw
-b3NzaWJsZSBpbiB0aGF0IGxhc3QKPiBjYXNlIHRoYXQgYnkgZmxpcHBpbmcgYSBiaXQgaW4gYnl0
-ZSAobGFzdC00KSwgd2UgaGF2ZSBjb252ZXJ0ZWQKPiB0aGF0IGJ5dGUgdG8gb25lIHRoYXQncyBu
-b3QgYWxsb3dlZC4gIEl0IHR1cm5zIG91dCB0aGlzIHdvbid0IGV2ZXIKPiBoYXBwZW4sIGJlY2F1
-c2Ugd2Uga25vdyB0aGF0IGJ5dGUgd2FzIGluaXRpYWxseSBhc3NpZ25lZCBhIHZhbHVlCj4gd2l0
-aCBpdHMgdXBwZXIgZm91ciBiaXRzIGNsZWFyLiAgRmxpcHBpbmcgdGhlIGJpdCBhdCAweDEwIGNh
-bm5vdAo+IHRoZXJlZm9yZSBwcm9kdWNlIGVpdGhlciAweDAwIG9yIDB4MmYsIHNvIHdlIGRvbid0
-IG5lZWQgdG8gdHJlYXQKPiB0aGlzIGNhc2UuCj4gCj4gCj4gV2l0aCB0aGVzZSBjaGFuZ2VzIHRv
-IHRoZSBuYW1lIGdlbmVyYXRpb24gYWxnb3JpdGhtLCB3ZSBhdm9pZAo+IGFueSBvZiB0aGUgY2Fz
-ZXMgaW4gd2hpY2ggbm8gYWx0ZXJuYXRlIG5hbWUgY2FuIGJlIGZvdW5kIHdpdGhvdXQKPiB1c2lu
-ZyBhbiBpbGxlZ2FsIGNoYXJhY3Rlci4gIFdlIGFsc28gYXZvaWQgYWxsIGxvb3BpbmcgZHVlIHRv
-IGJhZAo+IGNoYXJhY3RlcnMuCj4gCj4gUmVwb3J0ZWQtYnk6IEFya2FkaXVzeiBNacWba2lld2lj
-eiA8YXJla21AbWF2ZW4ucGw+Cj4gU2lnbmVkLW9mZi1ieTogQWxleCBFbGRlciA8YWVsZGVyQHNn
-aS5jb20+CgpSZXZpZXdlZC1ieTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgoK
-LS0gCkRhdmUgQ2hpbm5lcgpkYXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dp
-LmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+On Fri, Feb 18, 2011 at 03:21:02PM -0600, Alex Elder wrote:
+> Pull the name obfuscation algorithm into a separate function.
+> This separates it from the checking for duplicates and recording
+> of names that are found to be acceptable.
+> 
+> Signed-off-by: Alex Elder <aelder@sgi.com>
+
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
