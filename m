@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p1OLxNEo162459 for <xfs@oss.sgi.com>; Thu, 24 Feb 2011 15:59:23 -0600
+	p1OM1Roa162567 for <xfs@oss.sgi.com>; Thu, 24 Feb 2011 16:01:27 -0600
 Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4A44E2FABD1
-	for <xfs@oss.sgi.com>; Thu, 24 Feb 2011 14:02:08 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 39843A17ADE
+	for <xfs@oss.sgi.com>; Thu, 24 Feb 2011 14:04:12 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 5Nj0SZGXRKHjwZOB for
-	<xfs@oss.sgi.com>; Thu, 24 Feb 2011 14:02:08 -0800 (PST)
+	cuda.sgi.com with ESMTP id ki1g4F40PtfAwnmG for
+	<xfs@oss.sgi.com>; Thu, 24 Feb 2011 14:04:12 -0800 (PST)
 Received: from int-mx02.intmail.prod.int.phx2.redhat.com
 	(int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id p1OM28YN029164
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id p1OM4Br0029644
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Thu, 24 Feb 2011 17:02:08 -0500
-Message-ID: <4D66D55E.8070209@redhat.com>
-Date: Thu, 24 Feb 2011 16:02:06 -0600
+	for <xfs@oss.sgi.com>; Thu, 24 Feb 2011 17:04:11 -0500
+Message-ID: <4D66D5DB.5090203@redhat.com>
+Date: Thu, 24 Feb 2011 16:04:11 -0600
 From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Subject: [PATCH 1/2] xfstests: fix fiemap-tester for fewer extents returned
+Subject: [PATCH 2/2] xfstests 225: add additional fiemap-tester run without
+	sync
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,35 +31,103 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs mailing list <xfs@oss.sgi.com>
-Cc: Josef Bacik <jbacik@redhat.com>
+To: xfs mailing list <xfs@oss.sgi.com>, Josef Bacik <jbacik@redhat.com>
 
-If the fiemap call returns fewer extents than asked for,
-the fiemap tester gets confused.  If this happens, advance,
-and call fiemap again for the next offset.
+Chris Mason pointed out that some filesystems were not doing
+the right thing on fiemap, in the face of delalloc extents.
 
-XFS exposed this because if a file is all-delalloc, it was
-only returning 1 mapped extent (this is probably also a buglet).
+Because test 225 ran with FIEMAP_FLAG_SYNC only, this didn't
+get caught.  Add a runtime option, and run it both ways.
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
 
+diff --git a/225 b/225
+index 6e879a4..6b203e6 100755
+--- a/225
++++ b/225
+@@ -60,7 +60,10 @@ _cleanup()
+ }
+ trap "_cleanup; exit \$status" 0 1 2 3 15
+ 
+-echo "fiemap run without preallocation"
++echo "fiemap run without preallocation, with sync"
++$here/src/fiemap-tester -q -p 0 -r 200 $fiemapfile 2>&1 | tee $fiemaplog
++
++echo "fiemap run without preallocation or sync"
+ $here/src/fiemap-tester -q -p 0 -r 200 $fiemapfile 2>&1 | tee $fiemaplog
+ 
+ if grep -q "Operation not supported" $fiemaplog; then
+diff --git a/225.out b/225.out
+index 7bc9312..b4f6477 100644
+--- a/225.out
++++ b/225.out
+@@ -1,2 +1,3 @@
+ QA output created by 225
+-fiemap run without preallocation
++fiemap run without preallocation, with sync
++fiemap run without preallocation or sync
 diff --git a/src/fiemap-tester.c b/src/fiemap-tester.c
-index f6875af..53d7a64 100644
+index 53d7a64..6320580 100644
 --- a/src/fiemap-tester.c
 +++ b/src/fiemap-tester.c
-@@ -467,8 +467,10 @@ compare_fiemap_and_map(int fd, char *map, int blocks, int blocksize)
- 		for (i = cur_extent, c = 1; i < blocks; i++, c++) {
- 			__u64 logical_offset = i * blocksize;
+@@ -418,7 +418,7 @@ static int query_fiemap_count(int fd, int blocks, int blocksize)
+ }
  
--			if (c > blocks_to_map)
-+			if (c > fiemap->fm_mapped_extents) {
-+				i++;
- 				break;
-+			}
+ static int
+-compare_fiemap_and_map(int fd, char *map, int blocks, int blocksize)
++compare_fiemap_and_map(int fd, char *map, int blocks, int blocksize, int syncfile)
+ {
+ 	struct fiemap *fiemap;
+ 	char *fiebuf;
+@@ -446,7 +446,7 @@ compare_fiemap_and_map(int fd, char *map, int blocks, int blocksize)
+ 			last_data = i;
+ 	}
  
- 			switch (map[i]) {
- 			case 'D':
+-	fiemap->fm_flags = FIEMAP_FLAG_SYNC;
++	fiemap->fm_flags = syncfile ? FIEMAP_FLAG_SYNC : 0;
+ 	fiemap->fm_extent_count = blocks_to_map;
+ 	fiemap->fm_mapped_extents = 0;
+ 
+@@ -519,9 +519,10 @@ main(int argc, char **argv)
+ 	int	blocks = 0;	/* the number of blocks to generate */
+ 	int	maxblocks = 0;	/* max # of blocks to create */
+ 	int	prealloc = 1;	/* whether or not to do preallocation */
++	int	syncfile = 0;	/* whether fiemap should  sync file first */
+ 	int	seed = 1;
+ 
+-	while ((opt = getopt(argc, argv, "m:r:s:p:q")) != -1) {
++	while ((opt = getopt(argc, argv, "m:r:s:p:qS")) != -1) {
+ 		switch(opt) {
+ 		case 'm':
+ 			map = strdup(optarg);
+@@ -538,13 +539,16 @@ main(int argc, char **argv)
+ 		case 'q':
+ 			quiet = 1;
+ 			break;
+-		/* sync file before mapping */
+ 		case 'r':
+ 			runs = atoi(optarg);
+ 			break;
+ 		case 's':
+ 			seed = atoi(optarg);
+ 			break;
++		/* sync file before mapping */
++		case 'S':
++			syncfile = 1;
++			break;
+ 		default:
+ 			usage();
+ 		}
+@@ -623,7 +627,7 @@ main(int argc, char **argv)
+ 			exit(1);
+ 		}
+ 
+-		rc = compare_fiemap_and_map(fd, map, blocks, blocksize);
++		rc = compare_fiemap_and_map(fd, map, blocks, blocksize, syncfile);
+ 		if (rc) {
+ 			printf("Problem comparing fiemap and map\n");
+ 			free(map);
 
 _______________________________________________
 xfs mailing list
