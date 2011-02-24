@@ -1,23 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p1O9NhpT125788 for <xfs@oss.sgi.com>; Thu, 24 Feb 2011 03:23:43 -0600
-Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2E3062F8E46
-	for <xfs@oss.sgi.com>; Thu, 24 Feb 2011 01:26:27 -0800 (PST)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	uC0A4bHoVyJDDxrB for <xfs@oss.sgi.com>;
-	Thu, 24 Feb 2011 01:26:27 -0800 (PST)
-Date: Thu, 24 Feb 2011 20:26:25 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: write 'O_DIRECT' file w/odd amount of data: desirable result?
-Message-ID: <20110224092625.GA3087@dastard>
-References: <4D648D7D.7040500@tlinx.org> <4D64E2BB.7010000@draigBrady.com>
-	<4D654C2E.2000703@tlinx.org>
+	p1OAWkNP129672 for <xfs@oss.sgi.com>; Thu, 24 Feb 2011 04:32:46 -0600
+Received: from mail-gx0-f181.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5310512E4759
+	for <xfs@oss.sgi.com>; Thu, 24 Feb 2011 02:35:30 -0800 (PST)
+Received: from mail-gx0-f181.google.com (mail-gx0-f181.google.com
+	[209.85.161.181]) by cuda.sgi.com with ESMTP id
+	68LCm46I9RFHQqlV for <xfs@oss.sgi.com>;
+	Thu, 24 Feb 2011 02:35:30 -0800 (PST)
+Received: by gxk3 with SMTP id 3so231972gxk.26
+	for <xfs@oss.sgi.com>; Thu, 24 Feb 2011 02:35:30 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4D654C2E.2000703@tlinx.org>
+In-Reply-To: <alpine.DEB.2.02.1102231022470.15181@p34.internal.lan>
+References: <AANLkTinWByYooMnPL7BryPowDexBeiHJdh3aVh+fdm-a@mail.gmail.com>
+	<20110223154651.54f0a8dc@harpe.intellique.com>
+	<AANLkTinsfwr5E7KkffwWOweWJLCmaLnLdtYA4g_m--b0@mail.gmail.com>
+	<alpine.DEB.2.02.1102231022470.15181@p34.internal.lan>
+Date: Thu, 24 Feb 2011 11:35:30 +0100
+Message-ID: <AANLkTi=ERpJLUUGWO_0xjecTPV3=w1GmXKBk0-uCch1L@mail.gmail.com>
+Subject: Re: XFS corruption on 3ware RAID6-volume
+From: Erik Gulliksson <erik@gulliksson.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,48 +29,42 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: "Linda A. Walsh" <lkml@tlinx.org>
-Cc: PXXdraig Brady <P@draigBrady.com>, LKML <linux-kernel@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: xfs@oss.sgi.com
 
-On Wed, Feb 23, 2011 at 10:04:30AM -0800, Linda A. Walsh wrote:
-> 
-> 
-> FWIW -- xfs-oss, included as 'last line' was of minor interest; known bug on
-> this kernel?:
-> Linux Ishtar 2.6.35.7-T610-Vanilla-1 #2 SMP PREEMPT Mon Oct 11
-> 17:19:41 PDT 2010 x86_64 x86_64 x86_64 GNU/Linux
-....
-> Of *SIGNIFICANT* note.  In trying to create an empty file of the size
-> used, from scratch, using 'xfs_mkfile', I got an error:
-> 
-> > xfs_mkfile 5776419696 testfile
-> pwrite64: Invalid argument
+Hi again Justin,
 
-xfs_mkfile does not create an "empty" file. It creates a file that
-is full of zeros.
+> This would seem to be the problem, you should go with Hiatchi next time.
+> You can use regular non-enterprise drives (Hiatchi) and they just work.
+> Seagate is a question
+> Samsung is a question
+> WD needs TLER.
 
-iAnd you're getting that erro because:
+This is valuable information, we might consider Hitatchi-disks next
+time if we want to play cheap again.
 
-5776419696 / 512 = 11,282,069.7188
 
-the last write is not a multiple of the sector size and xfs_mkfile
-uses direct IO. It has always failed when you try to do this. If you
-want to create allocated, zeroed files of abitrary size, then use:
+> As far as the problem at hand, I do not know of a good way to fix it unle=
+ss
+> you had ls -lRi /raid_array output so you could map the inodes to their
+> original locations. =A0Sorry don't have a better answer..
 
-xfs_io -f -c "truncate $size" -c "resvsp 0 $size" $filename
+No, I don't have full filename-inode mappings from before the
+corruption. I guess such a list from the filesystem mounted with -o
+"ro,norecovery" won't help here?
 
-to preallocate it. it'll be much, much faster than xfs_mkfile.
+If the journal is corrupt, is there anyway to salvage only that part
+so that the log replay will proceed further (ie "xfs_log_repair")? I'm
+not nearly expert enough to parse the stacktrace triggered by mounting
+the filesystem, but it seems some calls to xlog_recover_-functions are
+involved, which make me think that the log is corrupt.
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Best regards
+Erik Gulliksson
 
 _______________________________________________
 xfs mailing list
