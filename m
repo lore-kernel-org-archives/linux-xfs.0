@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p1O1Y9UW097166 for <xfs@oss.sgi.com>; Wed, 23 Feb 2011 19:34:09 -0600
+	p1O1FuUP096311 for <xfs@oss.sgi.com>; Wed, 23 Feb 2011 19:15:57 -0600
 Received: from ipmail07.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2C9A42F7FEB
-	for <xfs@oss.sgi.com>; Wed, 23 Feb 2011 17:31:53 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 96AE62F7EC7
+	for <xfs@oss.sgi.com>; Wed, 23 Feb 2011 17:18:40 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	agEZRquw6XB5n0os for <xfs@oss.sgi.com>;
-	Wed, 23 Feb 2011 17:31:53 -0800 (PST)
-Date: Thu, 24 Feb 2011 12:31:35 +1100
+	Oi4iqXGvtGIOom4c for <xfs@oss.sgi.com>;
+	Wed, 23 Feb 2011 17:18:40 -0800 (PST)
+Date: Thu, 24 Feb 2011 12:18:37 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v3, 03/16] xfsprogs: metadump: drop unneeded use of a
-	random character
-Message-ID: <20110224013135.GQ3166@dastard>
-References: <201102182121.p1ILL1x7029051@stout.americas.sgi.com>
+Subject: Re: [PATCH v3, 01/16] xfsprogs: metadump: some names aren't all
+	that special
+Message-ID: <20110224011837.GO3166@dastard>
+References: <201102182121.p1ILL1T8029031@stout.americas.sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <201102182121.p1ILL1x7029051@stout.americas.sgi.com>
+In-Reply-To: <201102182121.p1ILL1T8029031@stout.americas.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,55 +34,178 @@ To: Alex Elder <aelder@sgi.com>
 Cc: xfs@oss.sgi.com
 
 On Fri, Feb 18, 2011 at 03:21:01PM -0600, Alex Elder wrote:
-> With the exception of the last five bytes, an obfuscated name is
-> simply a random string of (acceptable) characters.  The last five
-> bytes are chosen, based on the random portion before them, such that
-> the resulting obfuscated name has the same hash value as the
-> original name.
+> Move the check for short names out of is_special_dirent() and into
+> generate_obfuscated_name().  That way the check is more directly
+> associated with the algorithm that requires it.
 > 
-> This is done by essentially working backwards from the difference
-> between the original hash and the hash value computed for the
-> obfuscated name so far, picking final bytes based on how that
-> difference gets manipulated by completing the hash computation.
+> Similarly, move the check for inode == 0, since that case has to do
+> with storing extended attributes (not files) in the name table.
 > 
-> Of those last 5 bytes, all but the upper half of the first one are
-> completely determined by this process.  The upper part of the first
-> one is currently computed as four random bits, just like all the
-> earlier bytes in the obfuscated name.
-> 
-> It is not actually necessary to randomize these four upper bits,
-> and we can simply make them 0.
-> 
-> Here's why:
-> - The final bytes are pulled directly from the hash difference
->   mentioned above, with the lowest-order byte of the hash
->   determining the last character used in the name.
-> - The upper nibble of the 5th-to-last byte in a name will affect the
->   lowest 4 bits of hash value and therefore the last byte of the
->   name.  Those four bits are combined with the hash computed from
->   the random characters generated earlier.
-> - Because those earlier bytes were random, their hash value will
->   also be random, and in particular, the lowest-order four bits of
->   the hash will be random.
-> - So it doesn't matter whether we choose all 0 bits or some other
->   random value for that upper nibble of the byte at offset
->   (namelen - 5).  When it's combined with the hash, the last byte of
->   the name will be random either way.
-> 
-> Therefore we will choose to use all 0's for that upper nibble.
-> 
-> Doing this simplifies the generation of two of the final five
-> characters, and makes all five of them get computed in a consistent
-> way.  We'll still get some small bit of obfuscation for even
-> 5-character names, since the upper bits of the first character will
-> generally be cleared and likely different from the original.
-> 
-> Add the use of a mask in the one case it wasn't used to be even more
-> consistent.
+> As a result, is_special_dirent() is really only focused on whether a
+> given file is in the lost+found directory.  Rename the function to
+> reflect its more specific purpose.
 > 
 > Signed-off-by: Alex Elder <aelder@sgi.com>
+> 
+> Updated:
+> - The previous version did not properly skip the "lost+found"
+>   directory itself; this one does.
+> - Created a new definition representing the name of the orphanage
+>   directory.  Encapsulate recognizing that directory into a new
+>   macro, is_lost_found().
+> - Removed casts that eliminate a compile warning in calls to
+>   libxfs_da_hashname(); will do them separately later if needed.
+> 
+> ---
+>  db/metadump.c |   76 +++++++++++++++++++++++++++++++++++++++-------------------
+>  1 file changed, 52 insertions(+), 24 deletions(-)
+> 
+> Index: b/db/metadump.c
+> ===================================================================
+> --- a/db/metadump.c
+> +++ b/db/metadump.c
+> @@ -1,5 +1,5 @@
+>  /*
+> - * Copyright (c) 2007 Silicon Graphics, Inc.
+> + * Copyright (c) 2007, 2011 SGI
+>   * All Rights Reserved.
+>   *
+>   * This program is free software; you can redistribute it and/or
+> @@ -377,40 +377,56 @@ random_filename_char(void)
+>  	return c;
+>  }
+>  
+> +/*
+> + * Determine whether a name is one we shouldn't obfuscate because
+> + * it's an orphan (or the "lost+found" directory itself).  Note
+> + * "cur_ino" is the inode for the directory currently being
+> + * processed.
+> + *
+> + * Returns 1 if the name should NOT be obfuscated or 0 otherwise.
+> + */
+> +#define	is_lost_found(mnt, dir_ino, nmlen, nm)			\
+> +		((dir_ino) == (mnt)->m_sb.sb_rootino &&		\
+> +			(nmlen) == ORPHANAGE_LEN &&		\
+> +			!memcmp((nm), ORPHANAGE, ORPHANAGE_LEN))
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Perhaps a static inline function?
+
+> +
+> +#define	ORPHANAGE	"lost+found"
+> +#define	ORPHANAGE_LEN	(sizeof ORPHANAGE - 1)
+
+sizeof works without ()? Even it is does, it is unusual to do so,
+and a little ambiguous....
+
+> +
+>  static int
+> -is_special_dirent(
+> +in_lost_found(
+
+Oh, that confused me for a second - in_lost_found and is_lost_found
+are very similar in name, hence easily confused when scanning the
+code. Not sure how better to name them, maybe you've got a better
+idea, Alex?
+
+>  	xfs_ino_t		ino,
+>  	int			namelen,
+>  	uchar_t			*name)
+>  {
+>  	static xfs_ino_t	orphanage_ino = 0;
+> -	char			s[32];
+> +	char			s[24];	/* 21 is enough */
+
+Why is 21 enough?
+
+>  	int			slen;
+>  
+> -	/*
+> -	 * due to the XFS name hashing algorithm, we cannot obfuscate
+> -	 * names with 4 chars or less.
+> -	 */
+> -	if (namelen <= 4)
+> -		return 1;
+> +	/* Record the "lost+found" inode if we haven't done so already */
+>  
+> -	if (ino == 0)
+> +	ASSERT(ino != 0);
+> +	if (!orphanage_ino && is_lost_found(mp, cur_ino, namelen, name))
+> +		orphanage_ino = ino;
+> +
+> +	/* We don't obfuscate the "lost+found" directory itself */
+> +
+> +	if (ino == orphanage_ino)
+> +	    	return 1;
+> +
+> +	/* Most files aren't in "lost+found" at all */
+> +
+> +	if (cur_ino != orphanage_ino)
+>  		return 0;
+
+I'm judging by this that if a directory tree is attached to
+lost+found we are obfuscating anything in that subdirectory?
+
+>  
+>  	/*
+> -	 * don't obfuscate lost+found nor any inodes within lost+found with
+> -	 * the inode number
+> +	 * Within "lost+found", we don't obfuscate any file whose
+> +	 * name is the same as its inode number.  Any others are
+> +	 * stray files and can be obfuscated.
+>  	 */
+> -	if (cur_ino == mp->m_sb.sb_rootino && namelen == 10 &&
+> -			memcmp(name, "lost+found", 10) == 0) {
+> -		orphanage_ino = ino;
+> -		return 1;
+> -	}
+> -	if (cur_ino != orphanage_ino)
+> -		return 0;
+> +	slen = snprintf(s, sizeof s, "%llu", (unsigned long long) ino);
+>  
+> -	slen = sprintf(s, "%lld", (long long)ino);
+> -	return (slen == namelen && memcmp(name, s, namelen) == 0);
+> +	return slen == namelen && !memcmp(name, s, namelen);
+>  }
+>  
+>  static void
+> @@ -426,13 +442,25 @@ generate_obfuscated_name(
+>  	xfs_dahash_t		newhash;
+>  	uchar_t			newname[NAME_MAX];
+>  
+> -	if (is_special_dirent(ino, namelen, name))
+> -		return;
+> +	/*
+> +	 * Our obfuscation algorithm requires at least 5-character
+> +	 * names, so don't bother if the name is too short.
+> +	 */
+> +	if (namelen < 5)
+> +	    	return;
+
+Please make usre you include the reason for this - that this is a
+property of the name hashing algorithm.
+
+> -	hash = libxfs_da_hashname(name, namelen);
+> +	/*
+> +	 * We don't obfuscate "lost+found" or any orphan files
+> +	 * therein.  When the name table is used for extended
+> +	 * attributes, the inode number provided is 0, in which
+> +	 * case we don't need to make this check.
+> +	 */
+> +	if (ino && in_lost_found(ino, namelen, name))
+> +		return;
+>  
+>  	/* create a random name with the same hash value */
+>  
+> +	hash = libxfs_da_hashname(name, namelen);
+>  	do {
+>  		dup = 0;
+>  		newname[0] = '/';
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 -- 
 Dave Chinner
