@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p1NNhHbx091050 for <xfs@oss.sgi.com>; Wed, 23 Feb 2011 17:43:17 -0600
+	p1O1Q3bn096749 for <xfs@oss.sgi.com>; Wed, 23 Feb 2011 19:26:04 -0600
 Received: from ipmail07.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 586F272D11D
-	for <xfs@oss.sgi.com>; Wed, 23 Feb 2011 15:46:00 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C4DD2120B1F4
+	for <xfs@oss.sgi.com>; Wed, 23 Feb 2011 17:28:47 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	9Efb5M0XWVueAKwQ for <xfs@oss.sgi.com>;
-	Wed, 23 Feb 2011 15:46:00 -0800 (PST)
-Date: Thu, 24 Feb 2011 10:45:58 +1100
+	P8PUjRaWRnoTqATu for <xfs@oss.sgi.com>;
+	Wed, 23 Feb 2011 17:28:47 -0800 (PST)
+Date: Thu, 24 Feb 2011 12:28:43 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs_repair: inode flags check should use flags
-Message-ID: <20110223234558.GL3166@dastard>
-References: <1298500151-27017-1-git-send-email-david@fromorbit.com>
-	<1298500306.2453.28.camel@doink>
+Subject: Re: [PATCH v3, 02/16] xfsprogs: metadump: simplify '/' handling in
+	generate_obfuscated_name()
+Message-ID: <20110224012843.GP3166@dastard>
+References: <201102182121.p1ILL1Df029040@stout.americas.sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1298500306.2453.28.camel@doink>
+In-Reply-To: <201102182121.p1ILL1Df029040@stout.americas.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,25 +33,31 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Alex Elder <aelder@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, Feb 23, 2011 at 04:31:46PM -0600, Alex Elder wrote:
-> On Thu, 2011-02-24 at 09:29 +1100, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > The RT bitmap inode format flag check should use the flag, not the
-> > bit definition. As a result, it is incorrectly detecting inodes with
-> > the prealloc flag set as has having an invalid bit set.
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com> 
+On Fri, Feb 18, 2011 at 03:21:01PM -0600, Alex Elder wrote:
+> In generate_obfuscated_name(), the incoming name is allowed to start
+> with a '/' character, in which case it is copied over to the new
+> name and ignored for the remainder of the hash calculation.  A '/'
+> character is needlessly included at the beginning of each name
+> stashed in the duplicates table (regardless of whether one was
+> present in the name provided).
 > 
-> Looks good.
+> Simplify the affected code by processing the '/' right away, and
+> using a pointer thereafter for the start of the new name.  Stop
+> including a leading '/' in the name used for duplicate detection.
 > 
-> Reviewed-by: Alex Elder <aelder@sgi.com>
+> Note:  It is not clear a leading '/' character is ever even present
+> in a name presented for obfuscation.  I have not investigated this
+> question; this change merely adjusts the code while preserving its
+> original functionality.
+> 
+> Signed-off-by: Alex Elder <aelder@sgi.com>
+> 
+> No significant changes in this version from the last one posted.
 
-pushed.
+Looks sane.
 
-Cheers,
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
