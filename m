@@ -1,13 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p1PJOkwG218478 for <xfs@oss.sgi.com>; Fri, 25 Feb 2011 13:24:46 -0600
-Subject: Re: [PATCH] xfsdump: prune inventory sessions by session id
+	p1PJOpL9218491 for <xfs@oss.sgi.com>; Fri, 25 Feb 2011 13:24:51 -0600
+Subject: Re: [PATCH] xfsdump: fix bug restricting -f pathname length
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1298564720-11447-1-git-send-email-wkendall@sgi.com>
-References: <1298564720-11447-1-git-send-email-wkendall@sgi.com>
-Date: Fri, 25 Feb 2011 13:27:29 -0600
-Message-ID: <1298662049.1990.7053.camel@doink>
+In-Reply-To: <1298572850-15408-1-git-send-email-wkendall@sgi.com>
+References: <1298572850-15408-1-git-send-email-wkendall@sgi.com>
+Date: Fri, 25 Feb 2011 13:27:37 -0600
+Message-ID: <1298662057.1990.7054.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -25,63 +25,70 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Bill Kendall <wkendall@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, 2011-02-24 at 10:25 -0600, Bill Kendall wrote:
-> Allow xfsinvutil to prune inventory sessions by their ID
-> instead of only by filesystem and cutoff date.
+On Thu, 2011-02-24 at 12:40 -0600, Bill Kendall wrote:
+> A temporary buffer storing the dump filename (-f) is smaller than
+> the otherwise allowed pathname length. This buffer is used to
+> extract the pathname from additional parameters specified as part
+> of the -f argument. As these parameters are an undocumented and
+> unused extension of the -f argument, simply remove this code.
+> Note that drive_alloc() always dups the given pathname, so
+> 'optarg' is passed directly.
 
-This would have been a bit nicer with a little more
-explanation.  I.e.:
-- You specify the session id using the new "-s <sessid>"
-  command line option.
-- The "-s" option is mutually exclusive with "-u <UUID>"
-  and "-M <mount_point> <mm/dd/yy>".  It also cannot be
-  used together with the "-i" (interactive) or "-C"
-  (consistency check) options.
-- The change is implemented by adding a session id argument
-  to CheckAndPruneFstab(), CheckAndPruneInvIndexFile(), and
-  CheckAndPruneStObjFile().  That session becomes a third
-  way of identifying entries to be pruned (in addition
-  to mount point and UUID).
+If someone happens to put something starting with a comma
+after the device path name, will it simply fail because
+a device by that name (comma included) won't exist?
 
-Anyway, this looks good to me.  I have one question
-below, but regardless of your answer...
+Either way, this looks good.  I'll hold off a bit before
+taking this in, in case someone else wants a chance to
+review.
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
 
 > Signed-off-by: Bill Kendall <wkendall@sgi.com>
-> 
 > ---
-. . .
-
-> diff --git a/invutil/invutil.c b/invutil/invutil.c
-> index af6836b..37489c0 100644
-> --- a/invutil/invutil.c
-> +++ b/invutil/invutil.c
-
-. . .
-
-> @@ -594,14 +648,8 @@ CheckAndPruneInvIndexFile( bool_t checkonly,
->  	    removeflag = BOOL_TRUE;
->  	}    
+>  common/drive.c |   18 +-----------------
+>  1 files changed, 1 insertions(+), 17 deletions(-)
+> 
+> diff --git a/common/drive.c b/common/drive.c
+> index f184afa..227fecd 100644
+> --- a/common/drive.c
+> +++ b/common/drive.c
+> @@ -137,10 +137,6 @@ drive_init1( int argc, char *argv[ ], bool_t singlethreaded )
+>  	opterr = 0;
+>  	driveix = 0;
+>  	while ( ( c = getopt( argc, argv, GETOPT_CMDSTRING )) != EOF ) {
+> -		char optarray[100];
+> -		char *devname;
+> -		char *token;
+> -
+>  		switch ( c ) {
+>  		case GETOPT_DUMPDEST:
+>  			if ( ! optarg || optarg[ 0 ] == '-' ) {
+> @@ -151,21 +147,9 @@ drive_init1( int argc, char *argv[ ], bool_t singlethreaded )
+>  				return BOOL_FALSE;
+>  			}
 >  
-> -	if (( !removeflag ) && (checkonly == BOOL_FALSE) && 
-> -		( invIndexEntry[i].ie_timeperiod.tp_start < prunetime))
-> -	{
-> -	    IdxCheckOnly = BOOL_FALSE;
-> -	    printf("          Mount point match\n");
-> -	}
+> -			/* remove the device name from the rest of the
+> -			 * parameter string. note that strdup malloc()s
+> -			 * a string; important since optarray is an auto.
+> -			 */
+> -			ASSERT( strlen( optarg ) < sizeof( optarray ));
+> -			strncpy( optarray, optarg, sizeof( optarray ));
+> -			optarray[ sizeof( optarray ) - 1 ] = 0;
+> -			if ( ( token = strtok( optarray, "," )) == NULL ) {
+> -				token = optarray;
+> -			}
+> -			devname = strdup( token );
+> -
+>  			/* allocate a drive descriptor
+>  			 */
+> -			drivepp[ driveix ] = drive_alloc( devname, driveix );
+> +			drivepp[ driveix ] = drive_alloc( optarg, driveix );
+>  			driveix++;
+>  			break;
+>  		}
 
-Why do you no longer print this in this case?
 
-> -	if (CheckAndPruneStObjFile(IdxCheckOnly, invIndexEntry[i].ie_filename,
-> -		    prunetime, r_mf_label) == -1) {
-> +	if (CheckAndPruneStObjFile(checkonly, invIndexEntry[i].ie_filename,
-> +		    sessionp, prunetime, r_mf_label) == -1) {
->  	    removeflag = BOOL_TRUE; /* The StObj is gone */
->  	}
->  
-
-. . .
 
 _______________________________________________
 xfs mailing list
