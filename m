@@ -1,26 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p1OMEdFv163305 for <xfs@oss.sgi.com>; Thu, 24 Feb 2011 16:14:39 -0600
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1AB792FAC8E
-	for <xfs@oss.sgi.com>; Thu, 24 Feb 2011 14:17:24 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id DBw19wP4us86nbau for
-	<xfs@oss.sgi.com>; Thu, 24 Feb 2011 14:17:24 -0800 (PST)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id p1OMHNTC029073
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Thu, 24 Feb 2011 17:17:23 -0500
-Message-ID: <4D66D8F2.10501@sandeen.net>
-Date: Thu, 24 Feb 2011 16:17:22 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	p1P24NhH173288 for <xfs@oss.sgi.com>; Thu, 24 Feb 2011 20:04:24 -0600
+Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CCDF62FB8AF
+	for <xfs@oss.sgi.com>; Thu, 24 Feb 2011 18:07:07 -0800 (PST)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	vKOymDem3sFWjAgk for <xfs@oss.sgi.com>;
+	Thu, 24 Feb 2011 18:07:07 -0800 (PST)
+Date: Fri, 25 Feb 2011 13:06:49 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfstests 011 trips an ASSERT
+Message-ID: <20110225020649.GB3087@dastard>
+References: <1298584480.32230.416.camel@chandra-lucid.beaverton.ibm.com>
 MIME-Version: 1.0
-Subject: [PATCH 2/2 V2] xfstests 225: add additional fiemap-tester run without
-	sync
-References: <4D66D5DB.5090203@redhat.com>
-In-Reply-To: <4D66D5DB.5090203@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <1298584480.32230.416.camel@chandra-lucid.beaverton.ibm.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,107 +29,76 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: Josef Bacik <jbacik@redhat.com>, xfs mailing list <xfs@oss.sgi.com>
+To: Chandra Seetharaman <sekharan@us.ibm.com>
+Cc: XFS Mailing List <xfs@oss.sgi.com>
 
-Chris Mason pointed out that some filesystems were not doing
-the right thing on fiemap, in the face of delalloc extents.
+On Thu, Feb 24, 2011 at 01:54:40PM -0800, Chandra Seetharaman wrote:
+> Hello,
+> 
+> I ran the xfs tests on my POWER box and was tripped by an ASSERT while
+> running test 011. I have not seen it before in 2.6.37, so started with a
+> git-bisect from 2.6.37 to 2.6.38-rc6 and ended at this commit:
+> --------------------
+> Author  Linus Torvalds <torvalds@linux-foundation.org>
+>         Tue, 11 Jan 2011 19:42:06 +0000 (11:42 -0800)   
+> committer       Linus Torvalds <torvalds@linux-foundation.org>
+>         Tue, 11 Jan 2011 19:42:06 +0000 (11:42 -0800)   
+> commit  7bc4a4ce68f8c6d064ea949446852e996526f692        
+> Merge branch 'for-linus-merged' of git://oss.sgi.com/xfs/xfs
+> 
+> * 'for-linus-merged' of git://oss.sgi.com/xfs/xfs: (47 commits)
+>   xfs: convert grant head manipulations to lockless algorithm
+>   xfs: introduce new locks for the log grant ticket wait queues
+>   xfs: convert log grant heads to atomic variables
+>   xfs: convert l_tail_lsn to an atomic variable.
+>   xfs: convert l_last_sync_lsn to an atomic variable
+>   xfs: make AIL tail pushing independent of the grant lock
+>   xfs: use wait queues directly for the log wait queues
+>   xfs: combine grant heads into a single 64 bit integer
+>   xfs: rework log grant space calculations
+>   xfs: fact out common grant head/log tail verification code
+>   xfs: convert log grant ticket queues to list heads
+>   xfs: use AIL bulk delete function to implement single delete
+>   xfs: use AIL bulk update function to implement single updates
+>   xfs: remove all the inodes on a buffer from the AIL in bulk
+>   xfs: consume iodone callback items on buffers as they are processed
+>   xfs: reduce the number of AIL push wakeups
+>   xfs: bulk AIL insertion during transaction commit
+>   xfs: clean up xfs_ail_delete()
+>   xfs: Pull EFI/EFD handling out from under the AIL lock
+>   xfs: fix EFI transaction cancellation.
+>   ...
+> -----------------------------
+> 
+> Since it included so many patches, I thought i will start a git-bisect
+> on xfs git tree at git://oss.sgi.com/xfs/xfs, and ended up at
+> 92f1c008ae79e32b83c0607d184b194f302bb3ee, which is the same commit as
+> above.
 
-Because test 225 ran with FIEMAP_FLAG_SYNC only, this didn't
-get caught.  Add a runtime option, and run it both ways.
+you landed on the the merge commit. mark that commit as bad, and the
+bisect should continue down the merged branch. Otherwise you could
+try skipping the merge commit and again the bisect should continue
+down the branch.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+> Two questions:
+> 1. Has anybody seen this problem ? I see this ASSERT has been added in
+> that patch set, is it a false-positive ?
 
-Whoops, V2: actually call w/ the sync flag.
+The ASSERT() being triggered is racy. We are comparing the state of
+two different atomic variables that are updated without
+synchronisation. Hence after sampling the first, the second could be
+changed before it is sampled and hence cause the assert to fail.
 
-diff --git a/225 b/225
-index 6e879a4..6b203e6 100755
---- a/225
-+++ b/225
-@@ -60,7 +60,10 @@ _cleanup()
- }
- trap "_cleanup; exit \$status" 0 1 2 3 15
- 
--echo "fiemap run without preallocation"
-+echo "fiemap run without preallocation, with sync"
-+$here/src/fiemap-tester -q -S -p 0 -r 200 $fiemapfile 2>&1 | tee $fiemaplog
-+
-+echo "fiemap run without preallocation or sync"
- $here/src/fiemap-tester -q -p 0 -r 200 $fiemapfile 2>&1 | tee $fiemaplog
- 
- if grep -q "Operation not supported" $fiemaplog; then
-diff --git a/225.out b/225.out
-index 7bc9312..b4f6477 100644
---- a/225.out
-+++ b/225.out
-@@ -1,2 +1,3 @@
- QA output created by 225
--fiemap run without preallocation
-+fiemap run without preallocation, with sync
-+fiemap run without preallocation or sync
-diff --git a/src/fiemap-tester.c b/src/fiemap-tester.c
-index 53d7a64..6320580 100644
---- a/src/fiemap-tester.c
-+++ b/src/fiemap-tester.c
-@@ -418,7 +418,7 @@ static int query_fiemap_count(int fd, int blocks, int blocksize)
- }
- 
- static int
--compare_fiemap_and_map(int fd, char *map, int blocks, int blocksize)
-+compare_fiemap_and_map(int fd, char *map, int blocks, int blocksize, int syncfile)
- {
- 	struct fiemap *fiemap;
- 	char *fiebuf;
-@@ -446,7 +446,7 @@ compare_fiemap_and_map(int fd, char *map, int blocks, int blocksize)
- 			last_data = i;
- 	}
- 
--	fiemap->fm_flags = FIEMAP_FLAG_SYNC;
-+	fiemap->fm_flags = syncfile ? FIEMAP_FLAG_SYNC : 0;
- 	fiemap->fm_extent_count = blocks_to_map;
- 	fiemap->fm_mapped_extents = 0;
- 
-@@ -519,9 +519,10 @@ main(int argc, char **argv)
- 	int	blocks = 0;	/* the number of blocks to generate */
- 	int	maxblocks = 0;	/* max # of blocks to create */
- 	int	prealloc = 1;	/* whether or not to do preallocation */
-+	int	syncfile = 0;	/* whether fiemap should  sync file first */
- 	int	seed = 1;
- 
--	while ((opt = getopt(argc, argv, "m:r:s:p:q")) != -1) {
-+	while ((opt = getopt(argc, argv, "m:r:s:p:qS")) != -1) {
- 		switch(opt) {
- 		case 'm':
- 			map = strdup(optarg);
-@@ -538,13 +539,16 @@ main(int argc, char **argv)
- 		case 'q':
- 			quiet = 1;
- 			break;
--		/* sync file before mapping */
- 		case 'r':
- 			runs = atoi(optarg);
- 			break;
- 		case 's':
- 			seed = atoi(optarg);
- 			break;
-+		/* sync file before mapping */
-+		case 'S':
-+			syncfile = 1;
-+			break;
- 		default:
- 			usage();
- 		}
-@@ -623,7 +627,7 @@ main(int argc, char **argv)
- 			exit(1);
- 		}
- 
--		rc = compare_fiemap_and_map(fd, map, blocks, blocksize);
-+		rc = compare_fiemap_and_map(fd, map, blocks, blocksize, syncfile);
- 		if (rc) {
- 			printf("Problem comparing fiemap and map\n");
- 			free(map);
+I've never seen it be triggered, so I'm interested to know if this
+is reproducable (i.e. a real problem) or whether it is a false
+trigger (i.e. update race).
 
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
