@@ -1,35 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p1PHEqqG213265 for <xfs@oss.sgi.com>; Fri, 25 Feb 2011 11:14:53 -0600
-Received: from e6.ny.us.ibm.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F0D021302136
-	for <xfs@oss.sgi.com>; Fri, 25 Feb 2011 09:17:38 -0800 (PST)
-Received: from e6.ny.us.ibm.com (e6.ny.us.ibm.com [32.97.182.146]) by
-	cuda.sgi.com with ESMTP id IeJEUKf6IHYpm0IS for
-	<xfs@oss.sgi.com>; Fri, 25 Feb 2011 09:17:38 -0800 (PST)
-Received: from d01dlp01.pok.ibm.com (d01dlp01.pok.ibm.com [9.56.224.56])
-	by e6.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p1PGrFPV023442
-	for <xfs@oss.sgi.com>; Fri, 25 Feb 2011 11:53:21 -0500
-Received: from d01relay06.pok.ibm.com (d01relay06.pok.ibm.com [9.56.227.116])
-	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id 7920638C8042
-	for <xfs@oss.sgi.com>; Fri, 25 Feb 2011 12:17:37 -0500 (EST)
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay06.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	p1PHHHGi2515186
-	for <xfs@oss.sgi.com>; Fri, 25 Feb 2011 12:17:18 -0500
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
-	p1PHHHiU018195 for <xfs@oss.sgi.com>; Fri, 25 Feb 2011 12:17:17 -0500
-Subject: Re: xfstests 011 trips an ASSERT
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-In-Reply-To: <20110225020649.GB3087@dastard>
-References: <1298584480.32230.416.camel@chandra-lucid.beaverton.ibm.com>
-	<20110225020649.GB3087@dastard>
-Date: Fri, 25 Feb 2011 09:16:55 -0800
-Message-ID: <1298654215.32230.419.camel@chandra-lucid.beaverton.ibm.com>
+	p1PIB26S215358 for <xfs@oss.sgi.com>; Fri, 25 Feb 2011 12:11:02 -0600
+Subject: [PATCH v4, 13/16] xfsprogs: metadump: move duplicate name handling
+	into its own function
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <20110224021239.GA3166@dastard>
+References: <201102182121.p1ILL2pI029171@stout.americas.sgi.com>
+	<20110224021239.GA3166@dastard>
+Date: Fri, 25 Feb 2011 12:13:48 -0600
+Message-ID: <1298657628.1990.6987.camel@doink>
 Mime-Version: 1.0
-Reply-To: sekharan@us.ibm.com
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -43,80 +25,144 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: XFS Mailing List <xfs@oss.sgi.com>
+Cc: xfs@oss.sgi.com
 
-Thanks for the response Dave.
+Move the handling of duplicate names into its own function.  As a
+result, all names other than "lost+found" files (not just those that
+get obfuscated) will be checked to avoid duplication.
 
-On Fri, 2011-02-25 at 13:06 +1100, Dave Chinner wrote:
-> On Thu, Feb 24, 2011 at 01:54:40PM -0800, Chandra Seetharaman wrote:
-> > Hello,
-> > 
-> > I ran the xfs tests on my POWER box and was tripped by an ASSERT while
-> > running test 011. I have not seen it before in 2.6.37, so started with a
-> > git-bisect from 2.6.37 to 2.6.38-rc6 and ended at this commit:
-> > --------------------
-> > Author  Linus Torvalds <torvalds@linux-foundation.org>
-> >         Tue, 11 Jan 2011 19:42:06 +0000 (11:42 -0800)   
-> > committer       Linus Torvalds <torvalds@linux-foundation.org>
-> >         Tue, 11 Jan 2011 19:42:06 +0000 (11:42 -0800)   
-> > commit  7bc4a4ce68f8c6d064ea949446852e996526f692        
-> > Merge branch 'for-linus-merged' of git://oss.sgi.com/xfs/xfs
-> > 
-> > * 'for-linus-merged' of git://oss.sgi.com/xfs/xfs: (47 commits)
-> >   xfs: convert grant head manipulations to lockless algorithm
-> >   xfs: introduce new locks for the log grant ticket wait queues
-> >   xfs: convert log grant heads to atomic variables
-> >   xfs: convert l_tail_lsn to an atomic variable.
-> >   xfs: convert l_last_sync_lsn to an atomic variable
-> >   xfs: make AIL tail pushing independent of the grant lock
-> >   xfs: use wait queues directly for the log wait queues
-> >   xfs: combine grant heads into a single 64 bit integer
-> >   xfs: rework log grant space calculations
-> >   xfs: fact out common grant head/log tail verification code
-> >   xfs: convert log grant ticket queues to list heads
-> >   xfs: use AIL bulk delete function to implement single delete
-> >   xfs: use AIL bulk update function to implement single updates
-> >   xfs: remove all the inodes on a buffer from the AIL in bulk
-> >   xfs: consume iodone callback items on buffers as they are processed
-> >   xfs: reduce the number of AIL push wakeups
-> >   xfs: bulk AIL insertion during transaction commit
-> >   xfs: clean up xfs_ail_delete()
-> >   xfs: Pull EFI/EFD handling out from under the AIL lock
-> >   xfs: fix EFI transaction cancellation.
-> >   ...
-> > -----------------------------
-> > 
-> > Since it included so many patches, I thought i will start a git-bisect
-> > on xfs git tree at git://oss.sgi.com/xfs/xfs, and ended up at
-> > 92f1c008ae79e32b83c0607d184b194f302bb3ee, which is the same commit as
-> > above.
-> 
-> you landed on the the merge commit. mark that commit as bad, and the
-> bisect should continue down the merged branch. Otherwise you could
-> try skipping the merge commit and again the bisect should continue
-> down the branch.
+This makes the local buffer newname[] in generate_obfuscated_name()
+unnecessary, so just drop it and use the passed-in name.
 
-I will try that route and see.
+Signed-off-by: Alex Elder <aelder@sgi.com>
 
-> > Two questions:
-> > 1. Has anybody seen this problem ? I see this ASSERT has been added in
-> > that patch set, is it a false-positive ?
-> 
-> The ASSERT() being triggered is racy. We are comparing the state of
-> two different atomic variables that are updated without
-> synchronisation. Hence after sampling the first, the second could be
-> changed before it is sampled and hence cause the assert to fail.
-> 
-> I've never seen it be triggered, so I'm interested to know if this
-> is reproducable (i.e. a real problem) or whether it is a false
-> trigger (i.e. update race).
+Updates:
+- A comment about handling of a leading '/' character is now modified
+  to match the updated code, rather than being deleted altogether.
+- Renamed handle_duplicates() to be handle_duplicate_name().
 
-It is consistently reproducible. it _always_ fails with that commit in
-my POWER hardware.
-> 
-> Cheers,
-> 
-> Dave.
+---
+ db/metadump.c |   78
+++++++++++++++++++++++++++++++++++------------------------
+ 1 file changed, 47 insertions(+), 31 deletions(-)
+
+Index: b/db/metadump.c
+===================================================================
+--- a/db/metadump.c
++++ b/db/metadump.c
+@@ -552,6 +552,37 @@ obfuscate_name(
+ 	ASSERT(libxfs_da_hashname(name, name_len) == hash);
+ }
+ 
++/*
++ * Look up the given name in the name table.  If it is already
++ * present, find an alternate and attempt to use that name instead.
++ *
++ * Returns 1 if the (possibly modified) name is not present in the
++ * name table.  Returns 0 otherwise.
++ */
++static int
++handle_duplicate_name(xfs_dahash_t hash, size_t name_len, uchar_t
+*name)
++{
++	int	dup = 0;
++
++	if (!nametable_find(hash, name_len, name))
++	    	return 1;	/* Not already in table */
++
++	/* Name is already in use.  Need to find an alternate. */
++
++	do {
++		obfuscate_name(hash, name_len, name);
++
++		/*
++		 * Search the name table to be sure we don't produce
++		 * a name that's already been used.
++		 */
++		if (!nametable_find(hash, name_len, name))
++			break;
++	} while (++dup < DUP_MAX);
++
++	return dup < DUP_MAX ? 1 : 0;
++}
++
+ static void
+ generate_obfuscated_name(
+ 	xfs_ino_t		ino,
+@@ -559,8 +590,6 @@ generate_obfuscated_name(
+ 	uchar_t			*name)
+ {
+ 	xfs_dahash_t		hash;
+-	int			dup = 0;
+-	uchar_t			newname[NAME_MAX];
+ 
+ 	/*
+ 	 * We don't obfuscate "lost+found" or any orphan files
+@@ -572,48 +601,35 @@ generate_obfuscated_name(
+ 		return;
+ 
+ 	/*
+-	 * If the name starts with a slash, just skip over it.  We
+-	 * will copy our obfuscated name back into space following
+-	 * the slash when we're done.  Our new name will not have
+-	 * the '/', and that's the version we'll keep in our
+-	 * duplicates table.  Note that the namelen value passed in
+-	 * does not include the leading slash (if any).
++	 * If the name starts with a slash, just skip over it.  It
++	 * isn't included in the hash and we don't record it in the
++	 * name table.  Note that the namelen value passed in does
++	 * not count the leading slash (if one is present).
+ 	 */
+ 	if (*name == '/')
+ 	    	name++;
+ 
+-	hash = libxfs_da_hashname(name, namelen);
+-	do {
+-		obfuscate_name(hash, namelen, newname);
++	/* Obfuscate the name (if possible) */
+ 
+-		/*
+-		 * Search the name table to be sure we don't produce
+-		 * a name that's already been used.
+-		 */
+-		if (!nametable_find(hash, namelen, newname))
+-			break;
+-	} while (++dup < DUP_MAX);
++	hash = libxfs_da_hashname(name, namelen);
++	obfuscate_name(hash, namelen, name);
+ 
+ 	/*
+-	 * Update the caller's copy with the obfuscated name.
+-	 *
+-	 * If we couldn't come up with one, just use the original
+-	 * name without obfuscation.  Issue a warning if we managed
+-	 * to previously create an obfuscated name that matches the
+-	 * one we're working on now.
++	 * Make sure the name is not something already seen.  If we
++	 * fail to find a suitable alternate, we're dealing with a
++	 * very pathological situation, and we may end up creating
++	 * a duplicate name in the metadump, so issue a warning.
+ 	 */
+-	if (dup < DUP_MAX)
+-		memcpy(name, newname, namelen);
+-	else if (nametable_find(hash, namelen, name))
++	if (!handle_duplicate_name(hash, namelen, name)) {
+ 		print_warning("duplicate name for inode %llu "
+ 				"in dir inode %llu\n",
+ 			(unsigned long long) ino,
+ 			(unsigned long long) cur_ino);
++		return;
++	}
++
++	/* Create an entry for the new name in the name table. */
+ 
+-	/*
+-	 * Create an entry for the name in the name table.  Use the
+-	 * original name if we got too many dups.
+-	 */
+ 	if (!nametable_add(hash, namelen, name))
+ 		print_warning("unable to record name for inode %llu "
+ 				"in dir inode %llu\n",
 
 
 _______________________________________________
