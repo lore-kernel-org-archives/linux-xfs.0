@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p1SLOB9h159043 for <xfs@oss.sgi.com>; Mon, 28 Feb 2011 15:24:11 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D3C61304BCB
-	for <xfs@oss.sgi.com>; Mon, 28 Feb 2011 13:26:59 -0800 (PST)
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id VEvZCJOTLaTUOWWw for <xfs@oss.sgi.com>;
-	Mon, 28 Feb 2011 13:26:59 -0800 (PST)
-Message-ID: <4D6C1322.10102@sandeen.net>
-Date: Mon, 28 Feb 2011 15:26:58 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	p1SMu0RX162581 for <xfs@oss.sgi.com>; Mon, 28 Feb 2011 16:56:00 -0600
+Received: from mail.mnsu.edu (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A78B7305113
+	for <xfs@oss.sgi.com>; Mon, 28 Feb 2011 14:58:48 -0800 (PST)
+Received: from mail.mnsu.edu (Mail.MNSU.EDU [134.29.1.12]) by cuda.sgi.com
+	with ESMTP id dOtw6lbChMwTSbU2 for <xfs@oss.sgi.com>;
+	Mon, 28 Feb 2011 14:58:48 -0800 (PST)
+Received: from [134.29.32.1] (j3gum-3.ITS.MNSU.EDU [134.29.32.1])
+	by mail.mnsu.edu (8.13.7/8.13.7) with ESMTP id p1SMwkKH004810
+	(version=TLSv1/SSLv3 cipher=AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Mon, 28 Feb 2011 16:58:47 -0600
+Message-ID: <4D6C28A5.60905@mnsu.edu>
+Date: Mon, 28 Feb 2011 16:58:45 -0600
+From: Jeffrey Hundstad <jeffrey.hundstad@mnsu.edu>
 MIME-Version: 1.0
-Subject: [PATCH V2] libxcmd: return error from cvtnum() on overflow
-References: <4D6C075F.1010509@redhat.com>
-In-Reply-To: <4D6C075F.1010509@redhat.com>
+Subject: kernel panic - stack-protector: kernel stack is corrupted in: f87aca93
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,53 +25,58 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-Test 071 was failing in weird ways, partly because it was trying
-to pass in offsets larger than strtoll() could accept, which then
-silently returned LLONG_MAX instead.  For DIO tests, this was
-unaligned, so we got unexpected (to me, anyay) alignment errors.
+Hello,
 
-At least printing out the perror() makes this more obvious,
-but unfortunately we then get the somewhat odd output:
+I'm compiling the main Linux branch commit 
+493f3358cb289ccf716c5a14fa5bb52ab75943e5 with no other patches.  It 
+boots and seems to operate fine.  When I do an xfs_fsr it Kernel 
+panics.  I can easily reproduce it
 
-# xfs_io -f -d -c "pwrite 9223373136366403584  4096" /mnt/test/grrr
-cvtnum: Numerical result out of range
-non-numeric offset argument -- 9223373136366403584
+Kernel Panic: (hand copied, photo available)
 
-Test 071 still fails, but at least it's a bit more obvious as to why.
+Kernel panic - not syncing: stack-protector: Kernel stack is corrupted 
+in: f87aca93
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+Pid: 262, comm: xfs_fsr Not tainted 2.6.38-rc6-493f3358cb2+ #1
+Call Trace:
 
-V2: zero errno first so we don't pick up a stale errno.
+[<c12991ac>] ? panic+0x50/0x150
+[<c102ed71>] ? __stack_chk_fail+0x10/0x18
+[<f87aca93>] ? xfs_ioc_fsgeometry_v1+0x56/0x5d [xfs]
+[<f87aca93>] ? xfs_ioc_fsgeometry_v1+0x56/0x5d [xfs]
+[<f87ae062>] ? xfs_file_ioctl+0x33c/0x6fe [xfs]
+[<c1047f1a>] ? sched_clock_cpu+0x130/0x140
+[<c1050f41>] ? trace_hardirqs_off+0xb/0xd
+[<c1047f57>] ? local_clock+0x2d/0x4e
+[<c1050f6e>] ? lock_release_holdtime+0x2b/0xcd
+[<c10a925a>] ? check_valid_pointer+0x1c/0x48
+[<c10a99c8>] ? check_object+0x122/0x156
+[<f87add26>] ? xfs_file_ioctl+0x0/0x6fe [xfs]
+[<c10bf5c9>] ? do_vfs_ioctl+0x483/0x4c8
+[<c10aab72>] ? kmeme_chache_free+0x8f/0x9b
+[<c10b41b4>] ? fcheck_files+0xa1/0xd0
+[<c10bf64f>] ? sys_ioctl+0x41/0x61
+[<c1002893>] ? sysenter_do_call+0x12/0x32
 
-Note:
-... should I change all callsites from "non-numeric" to "invalid" perhaps?
 
-diff --git a/libxcmd/input.c b/libxcmd/input.c
-index d7f29c1..c2bc4a0 100644
---- a/libxcmd/input.c
-+++ b/libxcmd/input.c
-@@ -152,7 +152,12 @@ cvtnum(
- 	char		*sp;
- 	int		c;
- 
-+	errno = 0;
- 	i = strtoll(s, &sp, 0);
-+	if (errno == ERANGE) {
-+		perror("cvtnum");
-+		return -1LL;
-+	}
- 	if (i == 0 && sp == s)
- 		return -1LL;
- 	if (*sp == '\0')
 
+You can find the config, initrd.img, vmlinuz and crash screen at:
+http://krypton.mnsu.edu/~j3gum/linux-error-20110228/
+
+- gcc (Debian 4.4.5-13) 4.4.5
+- xfs_fsr version 3.1.4
+
+
+Please let know if you'd like more info.
+
+-- 
+Jeffrey Hundstad
 
 _______________________________________________
 xfs mailing list
