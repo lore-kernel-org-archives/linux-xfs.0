@@ -1,24 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p212siGa170991 for <xfs@oss.sgi.com>; Mon, 28 Feb 2011 20:54:44 -0600
-Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4D35C1579DC6
-	for <xfs@oss.sgi.com>; Mon, 28 Feb 2011 18:57:31 -0800 (PST)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	c9pTugpHn6CsiTHo for <xfs@oss.sgi.com>;
-	Mon, 28 Feb 2011 18:57:31 -0800 (PST)
-Date: Tue, 1 Mar 2011 13:57:26 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: kernel panic - stack-protector: kernel stack is corrupted in:
-	f87aca93
-Message-ID: <20110301025726.GF3087@dastard>
-References: <4D6C28A5.60905@mnsu.edu> <4D6C372E.6030105@sandeen.net>
-	<4D6C45EE.80203@mnsu.edu> <4D6C4CC5.5030909@sandeen.net>
+	p212wJAq171190 for <xfs@oss.sgi.com>; Mon, 28 Feb 2011 20:58:19 -0600
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 45DBE1DDC1A4
+	for <xfs@oss.sgi.com>; Mon, 28 Feb 2011 19:01:06 -0800 (PST)
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id ooEJx6KKEf9GfECE for <xfs@oss.sgi.com>;
+	Mon, 28 Feb 2011 19:01:06 -0800 (PST)
+Message-ID: <4D6C6171.8070105@sandeen.net>
+Date: Mon, 28 Feb 2011 21:01:05 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4D6C4CC5.5030909@sandeen.net>
+Subject: Re: [PATCH] xfs: zero proper structure size for geometry calls
+References: <4D6C28A5.60905@mnsu.edu> <4D6C4DEE.6020902@sandeen.net>
+	<20110301025944.GG3087@dastard>
+In-Reply-To: <20110301025944.GG3087@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,59 +28,60 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Jeffrey Hundstad <jeffrey.hundstad@mnsu.edu>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Jeffrey Hundstad <jeffrey.hundstad@mnsu.edu>, Dan Rosenberg <drosenberg@vsecurity.com>, Eugene Teo <eugeneteo@kernel.org>, xfs@oss.sgi.com
 
-On Mon, Feb 28, 2011 at 07:32:53PM -0600, Eric Sandeen wrote:
-> On 2/28/11 7:03 PM, Jeffrey Hundstad wrote:
-> > Sadly, I didn't have the vmlinux file around anymore.  I'll be glad to recreate it when I get in tomorrow.  However, I have revered commit 3a3675b7f23f83ca8c67c9c2b6edf707fd28d1ba and the problem seems to have vanished.  I'm guessing the stack at this point is a little to fragile for a memset.  The patch is:
+On 2/28/11 8:59 PM, Dave Chinner wrote:
+> On Mon, Feb 28, 2011 at 07:37:50PM -0600, Eric Sandeen wrote:
+>> commit 493f3358cb289ccf716c5a14fa5bb52ab75943e5 added:
+>>
+>> +       memset(geo, 0, sizeof(*geo)); 
+>>
+>> but unfortunately we're dealing with a cast pointer here, and
+>> the caller may actually have a smaller structure on the stack.
+>> Zeroing out more leads to stack corruption traps:
+>>
+>> Kernel panic - not syncing: stack-protector: Kernel stack is corrupted in: f87aca93
+>>
+>> Pid: 262, comm: xfs_fsr Not tainted 2.6.38-rc6-493f3358cb2+ #1
+>> Call Trace:
+>>
+>> [<c12991ac>] ? panic+0x50/0x150
+>> [<c102ed71>] ? __stack_chk_fail+0x10/0x18
+>> [<f87aca93>] ? xfs_ioc_fsgeometry_v1+0x56/0x5d [xfs] 
+>>
+>> Fix this by zeroing out the structure in the callers, where we know
+>> the actual size.
+>>
+>> Reported-by: Jeffrey Hundstad <jeffrey.hundstad@mnsu.edu>
+>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+>> ---
+>>
+>> diff --git a/fs/xfs/linux-2.6/xfs_ioctl.c b/fs/xfs/linux-2.6/xfs_ioctl.c
+>> index f5e2a19..34e401f 100644
+>> --- a/fs/xfs/linux-2.6/xfs_ioctl.c
+>> +++ b/fs/xfs/linux-2.6/xfs_ioctl.c
+>> @@ -698,6 +698,7 @@ xfs_ioc_fsgeometry_v1(
+>>  	xfs_fsop_geom_v1_t	fsgeo;
+>>  	int			error;
+>>  
+>> +	memset(&fsgeo, 0, sizeof(xfs_fsop_geom_v1_t));
 > 
-> Ok, no worries, if the below commit is the culprit for sure, that's enough...
+> I'd prefer that sizeof(fsgeo) is used here. That means if the type
+> is changed, then memset doesn't need to be. Same for all the rest
+> of the memset calls.
 > 
-> So, whoopsies.
+> Otherwise,
 > 
-> STATIC int
-> xfs_ioc_fsgeometry_v1(
->         xfs_mount_t             *mp,
->         void                    __user *arg)
-> {
->         xfs_fsop_geom_v1_t      fsgeo;
->         int                     error;
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
 > 
->         error = xfs_fs_geometry(mp, (xfs_fsop_geom_t *)&fsgeo, 3);
+> Cheers,
 > 
-> what we really have is an xfs_fsop_geom_v1_t, but cast to a xfs_fsop_geom_t.
-> 
-> xfs_fs_geometry() zeroes it out to the tune of sizeof (xfs_fsop_geom_t)
-> 
-> the latter is bigger, with the addition of
-> 
-> 	__u32           logsunit;
-> 
-> so we overwrite memory that's not ours.  :(  Seems like we should zero
-> in the callers, when we know how much is really on the stack.  I'll follow
-> up with a patch; pity this one was fast-tracked for security, I think :(
+> Dave.
 
-Fmeh - the differences in structure size, alignment and padding on
-different platforms was why I suggested that memset() is a
-preferable fix to just setting a single field. I didn't look any
-further at the patch before it was committed so I didn't catch the
-fact that it was busted in the first place...
+Ok, I can resend, I was going to do that but most of xfs uses the other style so wasn't sure.
 
-Just another example of Occam's Eraser(*) in action, I'd say.
-
-Cheers,
-
-Dave
-
-(*) From the Fortune Cookie database:
-
-OCCAM'S ERASER:
-  The philosophical principle that even the simplest solution is
-  bound to have something wrong with it.
--- 
-Dave Chinner
-david@fromorbit.com
+-Eric
 
 _______________________________________________
 xfs mailing list
