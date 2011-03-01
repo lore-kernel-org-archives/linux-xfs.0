@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p211Z3A3168442 for <xfs@oss.sgi.com>; Mon, 28 Feb 2011 19:35:03 -0600
+	p211U75Z168241 for <xfs@oss.sgi.com>; Mon, 28 Feb 2011 19:30:07 -0600
 Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1A0E2305912
-	for <xfs@oss.sgi.com>; Mon, 28 Feb 2011 17:37:51 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9ECB81579D5A
+	for <xfs@oss.sgi.com>; Mon, 28 Feb 2011 17:32:54 -0800 (PST)
 Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id zpAgh39AHSZ7nibI for <xfs@oss.sgi.com>;
-	Mon, 28 Feb 2011 17:37:51 -0800 (PST)
-Message-ID: <4D6C4DEE.6020902@sandeen.net>
-Date: Mon, 28 Feb 2011 19:37:50 -0600
+	with ESMTP id FKaX6TfhUCw28cps for <xfs@oss.sgi.com>;
+	Mon, 28 Feb 2011 17:32:54 -0800 (PST)
+Message-ID: <4D6C4CC5.5030909@sandeen.net>
+Date: Mon, 28 Feb 2011 19:32:53 -0600
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH] xfs: zero proper structure size for geometry calls
-References: <4D6C28A5.60905@mnsu.edu>
-In-Reply-To: <4D6C28A5.60905@mnsu.edu>
+Subject: Re: kernel panic - stack-protector: kernel stack is corrupted in:
+	f87aca93
+References: <4D6C28A5.60905@mnsu.edu> <4D6C372E.6030105@sandeen.net>
+	<4D6C45EE.80203@mnsu.edu>
+In-Reply-To: <4D6C45EE.80203@mnsu.edu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,78 +30,75 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Jeffrey Hundstad <jeffrey.hundstad@mnsu.edu>
-Cc: Dan Rosenberg <drosenberg@vsecurity.com>, Eugene Teo <eugeneteo@kernel.org>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-commit 493f3358cb289ccf716c5a14fa5bb52ab75943e5 added:
+On 2/28/11 7:03 PM, Jeffrey Hundstad wrote:
+> Sadly, I didn't have the vmlinux file around anymore.  I'll be glad to recreate it when I get in tomorrow.  However, I have revered commit 3a3675b7f23f83ca8c67c9c2b6edf707fd28d1ba and the problem seems to have vanished.  I'm guessing the stack at this point is a little to fragile for a memset.  The patch is:
 
-+       memset(geo, 0, sizeof(*geo)); 
+Ok, no worries, if the below commit is the culprit for sure, that's enough...
 
-but unfortunately we're dealing with a cast pointer here, and
-the caller may actually have a smaller structure on the stack.
-Zeroing out more leads to stack corruption traps:
+So, whoopsies.
 
-Kernel panic - not syncing: stack-protector: Kernel stack is corrupted in: f87aca93
+STATIC int
+xfs_ioc_fsgeometry_v1(
+        xfs_mount_t             *mp,
+        void                    __user *arg)
+{
+        xfs_fsop_geom_v1_t      fsgeo;
+        int                     error;
 
-Pid: 262, comm: xfs_fsr Not tainted 2.6.38-rc6-493f3358cb2+ #1
-Call Trace:
+        error = xfs_fs_geometry(mp, (xfs_fsop_geom_t *)&fsgeo, 3);
 
-[<c12991ac>] ? panic+0x50/0x150
-[<c102ed71>] ? __stack_chk_fail+0x10/0x18
-[<f87aca93>] ? xfs_ioc_fsgeometry_v1+0x56/0x5d [xfs] 
+what we really have is an xfs_fsop_geom_v1_t, but cast to a xfs_fsop_geom_t.
 
-Fix this by zeroing out the structure in the callers, where we know
-the actual size.
+xfs_fs_geometry() zeroes it out to the tune of sizeof (xfs_fsop_geom_t)
 
-Reported-by: Jeffrey Hundstad <jeffrey.hundstad@mnsu.edu>
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+the latter is bigger, with the addition of
 
-diff --git a/fs/xfs/linux-2.6/xfs_ioctl.c b/fs/xfs/linux-2.6/xfs_ioctl.c
-index f5e2a19..34e401f 100644
---- a/fs/xfs/linux-2.6/xfs_ioctl.c
-+++ b/fs/xfs/linux-2.6/xfs_ioctl.c
-@@ -698,6 +698,7 @@ xfs_ioc_fsgeometry_v1(
- 	xfs_fsop_geom_v1_t	fsgeo;
- 	int			error;
- 
-+	memset(&fsgeo, 0, sizeof(xfs_fsop_geom_v1_t));
- 	error = xfs_fs_geometry(mp, (xfs_fsop_geom_t *)&fsgeo, 3);
- 	if (error)
- 		return -error;
-@@ -715,6 +716,7 @@ xfs_ioc_fsgeometry(
- 	xfs_fsop_geom_t		fsgeo;
- 	int			error;
- 
-+	memset(&fsgeo, 0, sizeof(xfs_fsop_geom_t));
- 	error = xfs_fs_geometry(mp, &fsgeo, 4);
- 	if (error)
- 		return -error;
-diff --git a/fs/xfs/linux-2.6/xfs_ioctl32.c b/fs/xfs/linux-2.6/xfs_ioctl32.c
-index b3486df..de11e90 100644
---- a/fs/xfs/linux-2.6/xfs_ioctl32.c
-+++ b/fs/xfs/linux-2.6/xfs_ioctl32.c
-@@ -73,6 +73,7 @@ xfs_compat_ioc_fsgeometry_v1(
- 	xfs_fsop_geom_t		  fsgeo;
- 	int			  error;
- 
-+	memset(&fsgeo, 0, sizeof(xfs_fsop_geom_t));
- 	error = xfs_fs_geometry(mp, &fsgeo, 3);
- 	if (error)
- 		return -error;
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 85668ef..cec89dd 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -53,9 +53,6 @@ xfs_fs_geometry(
- 	xfs_fsop_geom_t		*geo,
- 	int			new_version)
- {
--
--	memset(geo, 0, sizeof(*geo));
--
- 	geo->blocksize = mp->m_sb.sb_blocksize;
- 	geo->rtextsize = mp->m_sb.sb_rextsize;
- 	geo->agblocks = mp->m_sb.sb_agblocks;
+	__u32           logsunit;
+
+so we overwrite memory that's not ours.  :(  Seems like we should zero
+in the callers, when we know how much is really on the stack.  I'll follow
+up with a patch; pity this one was fast-tracked for security, I think :(
+
+-Eric
+
+
+
+> 
+> commit 3a3675b7f23f83ca8c67c9c2b6edf707fd28d1ba
+> Author: Dan Rosenberg <drosenberg@vsecurity.com>
+> Date:   Mon Feb 14 13:45:28 2011 +0000
+> 
+>     xfs: prevent leaking uninitialized stack memory in FSGEOMETRY_V1
+> 
+>     The FSGEOMETRY_V1 ioctl (and its compat equivalent) calls out to
+>     xfs_fs_geometry() with a version number of 3.  This code path does not
+>     fill in the logsunit member of the passed xfs_fsop_geom_t, leading to
+>     the leaking of four bytes of uninitialized stack data to potentially
+>     unprivileged callers.
+> 
+>     v2 switches to memset() to avoid future issues if structure members
+>     change, on suggestion of Dave Chinner.
+> 
+>     Signed-off-by: Dan Rosenberg <drosenberg@vsecurity.com>
+>     Reviewed-by: Eugene Teo <eugeneteo@kernel.org>
+>     Signed-off-by: Alex Elder <aelder@sgi.com>
+> 
+> diff --git b/fs/xfs/xfs_fsops.c a/fs/xfs/xfs_fsops.c
+> index cec89dd..85668ef 100644
+> --- b/fs/xfs/xfs_fsops.c
+> +++ a/fs/xfs/xfs_fsops.c
+> @@ -53,6 +53,9 @@ xfs_fs_geometry(
+>         xfs_fsop_geom_t         *geo,
+>         int                     new_version)
+>  {
+> +
+> +       memset(geo, 0, sizeof(*geo));
+> +
+>         geo->blocksize = mp->m_sb.sb_blocksize;
+>         geo->rtextsize = mp->m_sb.sb_rextsize;
+>         geo->agblocks = mp->m_sb.sb_agblocks;
 
 _______________________________________________
 xfs mailing list
