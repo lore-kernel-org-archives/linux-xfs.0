@@ -1,24 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p21IGB7L213239 for <xfs@oss.sgi.com>; Tue, 1 Mar 2011 12:16:11 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E99A41633E5E
-	for <xfs@oss.sgi.com>; Tue,  1 Mar 2011 10:18:58 -0800 (PST)
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id uMcMiKSxA1khIwMP for <xfs@oss.sgi.com>;
-	Tue, 01 Mar 2011 10:18:58 -0800 (PST)
-Message-ID: <4D6D3891.5060908@sandeen.net>
-Date: Tue, 01 Mar 2011 12:18:57 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: [PATCH, V3 (sort of)] xfs: zero proper structure size for geometry
-	calls
-References: <4D6C28A5.60905@mnsu.edu> <4D6C4DEE.6020902@sandeen.net>	
-	<4D6C9958.2040607@sandeen.net> <1298984132.32568.3.camel@dan>	
-	<4D6D128C.6010503@mnsu.edu> <4D6D157B.9070800@sandeen.net>
-	<1299001800.2381.10.camel@doink>
-In-Reply-To: <1299001800.2381.10.camel@doink>
+	p21KvpEI218930 for <xfs@oss.sgi.com>; Tue, 1 Mar 2011 14:57:51 -0600
+Subject: Re: [PATCH V2] libxcmd: return error from cvtnum() on overflow
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <4D6C1322.10102@sandeen.net>
+References: <4D6C075F.1010509@redhat.com>  <4D6C1322.10102@sandeen.net>
+Date: Tue, 01 Mar 2011 15:00:37 -0600
+Message-ID: <1299013237.2727.12.camel@doink>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,92 +22,53 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: aelder@sgi.com
-Cc: Jeffrey Hundstad <jeffrey.hundstad@mnsu.edu>, Dan Rosenberg <drosenberg@vsecurity.com>, Eugene Teo <eugeneteo@kernel.org>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-On 3/1/11 11:50 AM, Alex Elder wrote:
-> I'm sorry to muddy the waters with this.  But I think the
-> proposed patch fixes the wrong problem.  Having xfs_fs_geometry()
-> zero its argument is fine--it defines an interface and honors
-> it.  The real problem lies in xfs_ioc_fsgeometry_v1(), which
-> violates that interface by passing the address of an object
-> that's not the right size.  So below is an alternative to
-> Eric's solution which just fixes this one caller instead.
+On Mon, 2011-02-28 at 15:26 -0600, Eric Sandeen wrote:
+> Test 071 was failing in weird ways, partly because it was trying
+> to pass in offsets larger than strtoll() could accept, which then
+> silently returned LLONG_MAX instead.  For DIO tests, this was
+> unaligned, so we got unexpected (to me, anyay) alignment errors.
 > 
-> Eric has already told me this makes more sense.  It would
-> be nice if Jeffrey would re-test this fix, and Dan would
-> sign off on it as well.
+> At least printing out the perror() makes this more obvious,
+> but unfortunately we then get the somewhat odd output:
+> 
+> # xfs_io -f -d -c "pwrite 9223373136366403584  4096" /mnt/test/grrr
+> cvtnum: Numerical result out of range
+> non-numeric offset argument -- 9223373136366403584
+> 
+> Test 071 still fails, but at least it's a bit more obvious as to why.
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Your change looks good.  But here are a few more general questions
+(for anyone who cares to respond--not just you):
+- Do you plan to get test 071 working?  (Just curious.)
+- mkfs/xfs_mkfs.c and extimate/xfs_estimate.c each define their
+  own version of the same function.  Do you know why?  Is there
+  any reason we couldn't just have one?
+- The three version of cvtnum() are each a bit different.  Two
+  of them (the other two) return -1 for an empty string, while
+  this one returns 0.
+- I'm not sure what you meant by "non-numeric" versus "invalid"
+  in call sites.
+- Call sites seem to be a bit varied on how (or whether) they
+  look for errors.  Kind of a mess...
 
-thanks,
--Eric
+Regardless, you can consider this one reviewed.  We should
+fix all three instances of the function to fix this problem
+though--either the same as this (and in the same commit)
+or separeately.
 
-> 					-Alex
-> 
-> Commit 493f3358cb289ccf716c5a14fa5bb52ab75943e5 added this call to
-> xfs_fs_geometry() in order to avoid passing kernel stack data back
-> to user space:
-> 
-> +       memset(geo, 0, sizeof(*geo)); 
-> 
-> Unfortunately, one of the callers of that function passes the
-> address of a smaller data type, cast to fit the type that
-> xfs_fs_geometry() requires.  As a result, this can happen:
-> 
-> Kernel panic - not syncing: stack-protector: Kernel stack is corrupted
-> in: f87aca93
-> 
-> Pid: 262, comm: xfs_fsr Not tainted 2.6.38-rc6-493f3358cb2+ #1
-> Call Trace:
-> 
-> [<c12991ac>] ? panic+0x50/0x150
-> [<c102ed71>] ? __stack_chk_fail+0x10/0x18
-> [<f87aca93>] ? xfs_ioc_fsgeometry_v1+0x56/0x5d [xfs]
-> 
-> 
-> Fix this by fixing that one caller to pass the right type and then
-> copy out the subset it is interested in.
-> 
-> Note: This patch is an alternative to one originally proposed by
-> Eric Sandeen.
-> 
-> Reported-by: Jeffrey Hundstad <jeffrey.hundstad@mnsu.edu>
-> Signed-off-by: Alex Elder <aelder@sgi.com>
-> 
+Reviewed-by: Alex Elder <aelder@sgi.com>
+
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 > ---
->  fs/xfs/linux-2.6/xfs_ioctl.c |   11 ++++++++---
->  1 file changed, 8 insertions(+), 3 deletions(-)
 > 
-> Index: b/fs/xfs/linux-2.6/xfs_ioctl.c
-> ===================================================================
-> --- a/fs/xfs/linux-2.6/xfs_ioctl.c
-> +++ b/fs/xfs/linux-2.6/xfs_ioctl.c
-> @@ -695,14 +695,19 @@ xfs_ioc_fsgeometry_v1(
->         xfs_mount_t             *mp,
->         void                    __user *arg)
->  {
-> -       xfs_fsop_geom_v1_t      fsgeo;
-> +       xfs_fsop_geom_t         fsgeo;
->         int                     error;
+> V2: zero errno first so we don't pick up a stale errno.
 > 
-> -       error = xfs_fs_geometry(mp, (xfs_fsop_geom_t *)&fsgeo, 3);
-> +       error = xfs_fs_geometry(mp, &fsgeo, 3);
->         if (error)
->                 return -error;
-> 
-> -       if (copy_to_user(arg, &fsgeo, sizeof(fsgeo)))
-> +       /*
-> +        * Caller should have passed an argument of type
-> +        * xfs_fsop_geom_v1_t.  This is a proper subset of the
-> +        * xfs_fsop_geom_t that xfs_fs_geometry() fills in.
-> +        */
-> +       if (copy_to_user(arg, &fsgeo, sizeof (xfs_fsop_geom_v1_t)))
->                 return -XFS_ERROR(EFAULT);
->         return 0;
->  }
-> 
-> 
+> Note:
+> ... should I change all callsites from "non-numeric" to "invalid" perhaps?
+
 
 _______________________________________________
 xfs mailing list
