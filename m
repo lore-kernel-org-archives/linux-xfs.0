@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p22K9xPg042447
-	for <linux-xfs@oss.sgi.com>; Wed, 2 Mar 2011 14:10:00 -0600
-Received: from mail-bw0-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B185AA5C02D
-	for <linux-xfs@oss.sgi.com>; Wed,  2 Mar 2011 12:12:48 -0800 (PST)
-Received: from mail-bw0-f53.google.com (mail-bw0-f53.google.com
-	[209.85.214.53]) by cuda.sgi.com with ESMTP id mKZFJRJ2ro3LL0yM
-	for <linux-xfs@oss.sgi.com>; Wed, 02 Mar 2011 12:12:48 -0800 (PST)
-Received: by bwg12 with SMTP id 12so604080bwg.26
-	for <linux-xfs@oss.sgi.com>; Wed, 02 Mar 2011 12:12:48 -0800 (PST)
-Message-ID: <4D6EA4BB.5050703@gmail.com>
-Date: Wed, 02 Mar 2011 21:12:43 +0100
-From: Zdenek Kaspar <zkaspar82@gmail.com>
-MIME-Version: 1.0
-Subject: Re: xfs 14TB - check
-References: <31051172.post@talk.nabble.com>
-In-Reply-To: <31051172.post@talk.nabble.com>
+	p22Lf0sP046722 for <xfs@oss.sgi.com>; Wed, 2 Mar 2011 15:41:00 -0600
+Received: from smtp3-g21.free.fr (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0333D10A343E
+	for <xfs@oss.sgi.com>; Wed,  2 Mar 2011 13:43:48 -0800 (PST)
+Received: from smtp3-g21.free.fr (smtp3-g21.free.fr [212.27.42.3]) by
+	cuda.sgi.com with ESMTP id YUxm6JaVzdzwHNtK for
+	<xfs@oss.sgi.com>; Wed, 02 Mar 2011 13:43:48 -0800 (PST)
+Date: Wed, 2 Mar 2011 22:43:29 +0100
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: corruption, xfs_repair 3.1.4 segfaults
+Message-ID: <20110302224329.3f62c172@galadriel2.home>
+In-Reply-To: <20110302175818.GA8290@schmorp.de>
+References: <20110302175818.GA8290@schmorp.de>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,38 +23,22 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: tramper <michael.weingartner@tuwien.ac.at>
-Cc: linux-xfs@oss.sgi.com
+To: Marc Lehmann <schmorp@schmorp.de>
+Cc: xfs@oss.sgi.com
 
-Dne 2.3.2011 17:57, tramper napsal(a):
-> 
-> Hallo Forum,
-> 
-> i formated a storage with 16 disks (Raid5  and sparedrive) with xfs. The
-> volume is 14TB big. There where circuit Problems and we had several server
-> shutdowns and Problems.
-> Now I want to check my xfs Partition.
-> 
-> i used xfs_repair /dev/cciss/c0...p1 and got the following error message:
-> 
-> fatal error -- couldn't allocate block map, size XXXXXXX
-> 
-> I have 2 GB of Ram in the machine.
-> 
-> What should I do and how to check my volume?
-> 
-> with kind regards
-> traper
-
-Try big temporary swap for this purpose..
-
-HTH, Z.
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+TGUgV2VkLCAyIE1hciAyMDExIDE4OjU4OjE4ICswMTAwIHZvdXMgw6ljcml2aWV6OgoKPiBJIGhh
+ZCBhIGNhc2Ugb2YgZmlsZXN5c3RlbSBjb3JydXB0aW9uIGEgZGF5IGFnbzoKPiAKCldoYXQncyB0
+aGUga2VybmVsIHZlcnNpb24/IEl0J3MgYXBwYXJlbnRseSBhIGxvb3BiYWNrIGRldmljZSwgd2hh
+dCBpcwptb3VudGVkIGFuZCBob3c/IFlvdXIgbG9nIGxvb2tzIHF1aXRlIGhvcGVsZXNzIGF0IGZp
+cnN0IGdsYW5jZS4uLgoKLS0gCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQpFbW1hbnVlbCBGbG9yYWMgICAgIHwg
+ICBEaXJlY3Rpb24gdGVjaG5pcXVlCiAgICAgICAgICAgICAgICAgICAgfCAgIEludGVsbGlxdWUK
+ICAgICAgICAgICAgICAgICAgICB8CTxlZmxvcmFjQGludGVsbGlxdWUuY29tPgogICAgICAgICAg
+ICAgICAgICAgIHwgICArMzMgMSA3OCA5NCA4NCAwMgotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KCl9fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QK
+eGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
