@@ -1,28 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p22HtB7F036242 for <xfs@oss.sgi.com>; Wed, 2 Mar 2011 11:55:12 -0600
+	p22HtWHm036262 for <xfs@oss.sgi.com>; Wed, 2 Mar 2011 11:55:32 -0600
 Received: from mail.nethype.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 243AC30B86F
-	for <xfs@oss.sgi.com>; Wed,  2 Mar 2011 09:57:59 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DA29830B87E
+	for <xfs@oss.sgi.com>; Wed,  2 Mar 2011 09:58:20 -0800 (PST)
 Received: from mail.nethype.de (mail.nethype.de [78.47.73.129]) by
-	cuda.sgi.com with ESMTP id vbJrRlRiNK4DZ4tt for
-	<xfs@oss.sgi.com>; Wed, 02 Mar 2011 09:57:59 -0800 (PST)
+	cuda.sgi.com with ESMTP id w8NF6hWlXERsWt2T for
+	<xfs@oss.sgi.com>; Wed, 02 Mar 2011 09:58:20 -0800 (PST)
 Received: from [10.0.0.5] (helo=doom.schmorp.de)
 	by mail.nethype.de with esmtp (Exim 4.72)
-	(envelope-from <schmorp@schmorp.de>) id 1PuqJC-0007Xg-7b
-	for xfs@oss.sgi.com; Wed, 02 Mar 2011 17:57:58 +0000
+	(envelope-from <schmorp@schmorp.de>) id 1PuqJX-0007Xz-Pt
+	for xfs@oss.sgi.com; Wed, 02 Mar 2011 17:58:19 +0000
 Received: from [10.0.0.20] (helo=yama)
 	by doom.schmorp.de with esmtp (Exim 4.72)
-	(envelope-from <schmorp@schmorp.de>) id 1PuqJB-0001eO-W3
-	for xfs@oss.sgi.com; Wed, 02 Mar 2011 17:57:58 +0000
+	(envelope-from <schmorp@schmorp.de>) id 1PuqJX-0001h8-JQ
+	for xfs@oss.sgi.com; Wed, 02 Mar 2011 17:58:19 +0000
 Received: from root by yama with local (Exim 4.72)
-	(envelope-from <root@schmorp.de>) id 1PuqJA-00029c-Ux
-	for xfs@oss.sgi.com; Wed, 02 Mar 2011 18:57:57 +0100
-Date: Wed, 2 Mar 2011 18:57:56 +0100
+	(envelope-from <root@schmorp.de>) id 1PuqJW-00029p-Rz
+	for xfs@oss.sgi.com; Wed, 02 Mar 2011 18:58:18 +0100
+Date: Wed, 2 Mar 2011 18:58:18 +0100
 From: Marc Lehmann <schmorp@schmorp.de>
 Subject: corruption, xfs_repair 3.1.4 segfaults
-Message-ID: <20110302175756.GA8279@schmorp.de>
+Message-ID: <20110302175818.GA8290@schmorp.de>
 MIME-Version: 1.0
 Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
