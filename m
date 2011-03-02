@@ -1,29 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p22Jiknt041265 for <xfs@OSS.SGI.com>; Wed, 2 Mar 2011 13:44:47 -0600
+	p22JilEq041269
+	for <linux-xfs@oss.sgi.com>; Wed, 2 Mar 2011 13:44:53 -0600
 Received: from hermes1.dur.ac.uk (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 902BB30C8C2
-	for <xfs@OSS.SGI.com>; Wed,  2 Mar 2011 11:47:36 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A6729A6B78C
+	for <linux-xfs@oss.sgi.com>; Wed,  2 Mar 2011 11:47:36 -0800 (PST)
 Received: from hermes1.dur.ac.uk (hermes1.dur.ac.uk [129.234.248.1]) by
-	cuda.sgi.com with ESMTP id 3LDABahy93H9xo75 for
-	<xfs@OSS.SGI.com>; Wed, 02 Mar 2011 11:47:36 -0800 (PST)
-Received: from smtphost3.dur.ac.uk (smtphost3.dur.ac.uk [129.234.252.3])
-	by hermes1.dur.ac.uk (8.13.8/8.13.7) with ESMTP id p22JlMoT017238
-	for <xfs@OSS.SGI.com>; Wed, 2 Mar 2011 19:47:26 GMT
+	cuda.sgi.com with ESMTP id BguHIP5lNCOApHEy for
+	<linux-xfs@oss.sgi.com>; Wed, 02 Mar 2011 11:47:36 -0800 (PST)
+Received: from smtphost2.dur.ac.uk (smtphost2.dur.ac.uk [129.234.252.2])
+	by hermes1.dur.ac.uk (8.13.8/8.13.7) with ESMTP id p22JlNeS017239
+	for <linux-xfs@oss.sgi.com>; Wed, 2 Mar 2011 19:47:27 GMT
 Received: from ty.sabi.co.UK (o1.phyip3.dur.ac.uk [129.234.186.1])
-	by smtphost3.dur.ac.uk (8.13.8/8.13.7) with ESMTP id p22JlAgW003549
+	by smtphost2.dur.ac.uk (8.13.8/8.13.7) with ESMTP id p22JlAFM019521
 	(version=TLSv1/SSLv3 cipher=AES256-SHA bits=256 verify=NO)
-	for <xfs@OSS.SGI.com>; Wed, 2 Mar 2011 19:47:10 GMT
+	for <linux-xfs@oss.sgi.com>; Wed, 2 Mar 2011 19:47:10 GMT
 Received: from from [127.0.0.1] (helo=tree.ty.sabi.co.UK)
-	by ty.sabi.co.UK with esmtp(Exim 4.71 #1) id 1Pus0n-00085q-JR
-	for <xfs@OSS.SGI.com>; Wed, 02 Mar 2011 19:47:05 +0000
+	by ty.sabi.co.UK with esmtp(Exim 4.71 #1) id 1Puqc4-0007VF-2h
+	for <linux-xfs@oss.sgi.com>; Wed, 02 Mar 2011 18:17:28 +0000
 MIME-Version: 1.0
-Message-ID: <19822.40630.799564.336178@tree.ty.sabi.co.UK>
-Date: Wed, 2 Mar 2011 19:47:02 +0000
-Subject: Re: xfs_repair in traversing filesystem
-In-Reply-To: <AANLkTimJ0tdvSy+7MSykNm4mW1XoO8PQ_-G9UBonFh8V@mail.gmail.com>
-References: <AANLkTimJ0tdvSy+7MSykNm4mW1XoO8PQ_-G9UBonFh8V@mail.gmail.com>
+Message-ID: <19822.35253.758862.662542@tree.ty.sabi.co.UK>
+Date: Wed, 2 Mar 2011 18:17:25 +0000
+Subject: Re: xfs 14TB - check
+In-Reply-To: <31051172.post@talk.nabble.com>
+References: <31051172.post@talk.nabble.com>
 From: pg_xf2@xf2.to.sabi.co.UK (Peter Grandi)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -37,28 +38,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Linux XFS <xfs@oss.sgi.com>
+To: Linux XFS <linux-xfs@oss.sgi.com>
 
-> Our 35TB XFS filesystem developed some problems and was
-> throwing these: [ ... ]
 
-How many drives support that filesystem?
-How many inodes does it have?
+xfs> i formated a storage with 16 disks (Raid5  and sparedrive)
+xfs> with xfs.
 
-> so we're running xfs_repair on this filesystem.  It finds this
-> inode and everything looks good, but then it hangs at [ ... ]
-> - traversing filesystem ...  previous posts suggest running
-> xfs_repair -P -o bhash=1024 [ ... ]
+One of the many wonderful ideas that get published in this list! :-)
 
-It depends on how fast you expect that to happen and how much
-memory you have. 'man xfs_repair' says that "The default size is
-set to use up the remainder of 75% of the system's physical RAM
-size" which seems pretty good to me. You may want to increase
-the '-o ihash' value too, or '-m'. Also check the '-P' option.
+xfs> i used xfs_repair /dev/cciss/c0...p1 and got the following
+xfs> error message: fatal error -- couldn't allocate block map,
+xfs> size XXXXXXX
 
-BTW I just noticed in the same 'man xfs_repair' the option that
-"can significantly reduce repair times on concat based filesystems"
-which is so amusing...
+xfs> I have 2 GB of Ram in the machine. What should I do and how
+xfs> to check my volume?
+
+You probably need a 64 bit systems with a lot more RAM:
+
+  http://groups.google.com/group/comp.arch.storage/browse_thread/thread/f7b8cd324bed34f9/95b96de52dfe321f
+  http://groups.google.com/group/linux.debian.ports.x86-64/browse_thread/thread/e9d37880252c1ac5/fd2b4d46a4c294b5
+
+Things have improved a bit with later releases of 'xfsprogs',
+but it still takes a lot of space and time. This mailing list
+has some post with an estimate of how much RAM and is neeeded
+currently. Time depends very much on what is inside the
+filesystem and how damaged it is, 14TB could take many hours or
+many weeks.
 
 _______________________________________________
 xfs mailing list
