@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p23FtTkn101468 for <xfs@oss.sgi.com>; Thu, 3 Mar 2011 09:55:30 -0600
+	p23Fqjxi101132 for <xfs@oss.sgi.com>; Thu, 3 Mar 2011 09:52:45 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CF7681AECA0D
-	for <xfs@oss.sgi.com>; Thu,  3 Mar 2011 07:58:20 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 690341AEC9D6
+	for <xfs@oss.sgi.com>; Thu,  3 Mar 2011 07:55:36 -0800 (PST)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id uIvgyLBwPFjVgIQa for
-	<xfs@oss.sgi.com>; Thu, 03 Mar 2011 07:58:20 -0800 (PST)
-Date: Thu, 3 Mar 2011 10:58:20 -0500
+	by cuda.sgi.com with ESMTP id J8yluQKzbQUKLmUI for
+	<xfs@oss.sgi.com>; Thu, 03 Mar 2011 07:55:36 -0800 (PST)
+Date: Thu, 3 Mar 2011 10:55:35 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: help: xfstests building error.
-Message-ID: <20110303155820.GA16797@infradead.org>
-References: <AANLkTi=22hZYrWGq_iTt_CesPuJmpn03SEt-QDj=ufAL@mail.gmail.com>
+Subject: Re: [PATCH 1/5] xfs: introduce inode cluster buffer trylocks for
+	xfs_iflush
+Message-ID: <20110303155535.GA12670@infradead.org>
+References: <1298412969-14389-1-git-send-email-david@fromorbit.com>
+	<1298412969-14389-2-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <AANLkTi=22hZYrWGq_iTt_CesPuJmpn03SEt-QDj=ufAL@mail.gmail.com>
+In-Reply-To: <1298412969-14389-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,20 +30,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Yongqiang Yang <xiaoqiangnk@gmail.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: chris.mason@oracle.com, xfs@oss.sgi.com
 
-On Fri, Feb 25, 2011 at 11:25:47AM +0800, Yongqiang Yang wrote:
-> Hi everyone,
-> 
-> Is this the right mailing list???
-> 
-> When I build xfstests, I get errors as follows.
-> autoheader
-> autoconf
+> +	 * pass through will see the stale flag set on the inode.
+> +	 */
+> +	error = xfs_iflush(ip, SYNC_TRYLOCK | sync_mode);
+>  	if (sync_mode & SYNC_WAIT) {
+> +		if (error == EAGAIN) {
+> +			xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> +			/* backoff longer than in xfs_ifree_cluster */
+> +			delay(2);
 
-You shouldn't need to run these manually.  A simple make on a pristine
-source tree calls the right auto tools.  
+Do we really need the delay here?  It seems like we'd rather want to
+keep going with scanning the next inode cluster and return here from
+xfs_reclaim_inodes.
+
+> diff --git a/fs/xfs/linux-2.6/xfs_sync.h b/fs/xfs/linux-2.6/xfs_sync.h
+> index 32ba662..0ae48ff 100644
+> --- a/fs/xfs/linux-2.6/xfs_sync.h
+> +++ b/fs/xfs/linux-2.6/xfs_sync.h
+> @@ -34,6 +34,7 @@ typedef struct xfs_sync_work {
+>  
+>  int xfs_syncd_init(struct xfs_mount *mp);
+>  void xfs_syncd_stop(struct xfs_mount *mp);
+> +void xfs_syncd_queue_sync(struct xfs_mount *mp, int flags);
+
+This hunk belongs into a different patch.
 
 _______________________________________________
 xfs mailing list
