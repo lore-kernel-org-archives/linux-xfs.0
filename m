@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p236AJ2h072359
-	for <linux-xfs@oss.sgi.com>; Thu, 3 Mar 2011 00:10:20 -0600
-Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1705E1DDE355
-	for <linux-xfs@oss.sgi.com>; Wed,  2 Mar 2011 22:13:07 -0800 (PST)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	MaCydzOzhXFnnjpg for <linux-xfs@oss.sgi.com>;
-	Wed, 02 Mar 2011 22:13:07 -0800 (PST)
-Date: Thu, 3 Mar 2011 17:13:05 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs 14TB - check
-Message-ID: <20110303061305.GK15097@dastard>
-References: <31051172.post@talk.nabble.com>
+	p238ilQ6080313 for <xfs@oss.sgi.com>; Thu, 3 Mar 2011 02:44:47 -0600
+Received: from mail-wy0-f181.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E4DC5A33837
+	for <xfs@oss.sgi.com>; Thu,  3 Mar 2011 00:47:37 -0800 (PST)
+Received: from mail-wy0-f181.google.com (mail-wy0-f181.google.com
+	[74.125.82.181]) by cuda.sgi.com with ESMTP id SoQ48UShRPexSfFR
+	for <xfs@oss.sgi.com>; Thu, 03 Mar 2011 00:47:37 -0800 (PST)
+Received: by wyb42 with SMTP id 42so827122wyb.26
+	for <xfs@oss.sgi.com>; Thu, 03 Mar 2011 00:47:36 -0800 (PST)
+Message-ID: <4D6F5473.2070709@gmail.com>
+Date: Thu, 03 Mar 2011 09:42:27 +0100
+From: Marco Stornelli <marco.stornelli@gmail.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <31051172.post@talk.nabble.com>
+Subject: [PATCH v2] Check for immutable flag in fallocate path
+References: <4D6221B8.9040303@gmail.com>
+In-Reply-To: <4D6221B8.9040303@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,52 +29,92 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: tramper <michael.weingartner@tuwien.ac.at>
-Cc: linux-xfs@oss.sgi.com
+To: Linux Kernel <linux-kernel@vger.kernel.org>
+Cc: cluster-devel@redhat.com, Linux FS Devel <linux-fsdevel@vger.kernel.org>, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Wed, Mar 02, 2011 at 08:57:40AM -0800, tramper wrote:
-> 
-> Hallo Forum,
-> 
-> i formated a storage with 16 disks (Raid5  and sparedrive) with xfs. The
-> volume is 14TB big. There where circuit Problems and we had several server
-> shutdowns and Problems.
-> The Server is a ubuntu 8.04 32bit.
-                              ^^^^^ There's your problem.
+From: Marco Stornelli <marco.stornelli@gmail.com>
 
-> 
-> Now I want to check my xfs Partition.
-> 
-> i used xfs_repair /dev/cciss/c0...p1 and got the following error message:
-> 
-> fatal error -- couldn't allocate block map, size XXXXXXX
-> 
-> I have 2 GB of Ram in the machine.
+All fs must check for the immutable flag in their fallocate callback.
+It's possible to have a race condition in this scenario: an application
+open a file in read/write and it does something, meanwhile root set the
+immutable flag on the file, the application at that point can call
+fallocate with success. Only Ocfs2 check for the immutable flag at the
+moment.
 
-Even if you put more in it, the 32-bit address space limit will be
-the limiting factor.
+Signed-off-by: Marco Stornelli <marco.stornelli@gmail.com>
+---
+Patch is against 2.6.38-rc5
 
-> What should I do and how to check my volume?
+ChangeLog
+v2: Added the check for append-only file for XFS
+v1: First draft
 
-You almost certainly need a 64-bit machine. Even with the latest
-xfs_repair, you need about 2GB of RAM for the free space checking on
-a 14TB filesystem.
-
-Try running:
-
-# xfs_repair -m 1 -vv <device>
-
-And it will tell you how much memory you need to repair the
-filesystem. Note that this is only a rough estimate - it may be
-quite a bit more than the amount specified depending on the state
-and contents of the filesystem...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+--- linux-2.6.38-rc5-orig/fs/ext4/extents.c	2011-02-16 04:23:45.000000000 +0100
++++ linux-2.6.38-rc5/fs/ext4/extents.c	2011-02-21 08:43:37.000000000 +0100
+@@ -3670,6 +3670,12 @@ long ext4_fallocate(struct file *file, i
+ 	 */
+ 	credits = ext4_chunk_trans_blocks(inode, max_blocks);
+ 	mutex_lock(&inode->i_mutex);
++
++	if (IS_IMMUTABLE(inode)) {
++		mutex_unlock(&inode->i_mutex);
++		return -EPERM;
++	}
++
+ 	ret = inode_newsize_ok(inode, (len + offset));
+ 	if (ret) {
+ 		mutex_unlock(&inode->i_mutex);
+--- linux-2.6.38-rc5-orig/fs/btrfs/file.c	2011-02-16 04:23:45.000000000 +0100
++++ linux-2.6.38-rc5/fs/btrfs/file.c	2011-02-21 08:55:58.000000000 +0100
+@@ -1289,6 +1289,12 @@ static long btrfs_fallocate(struct file
+ 	btrfs_wait_ordered_range(inode, alloc_start, alloc_end - alloc_start);
+ 
+ 	mutex_lock(&inode->i_mutex);
++
++	if (IS_IMMUTABLE(inode)) {
++		ret = -EPERM;
++		goto out;
++	}
++
+ 	ret = inode_newsize_ok(inode, alloc_end);
+ 	if (ret)
+ 		goto out;
+--- linux-2.6.38-rc5-orig/fs/gfs2/file.c	2011-02-16 04:23:45.000000000 +0100
++++ linux-2.6.38-rc5/fs/gfs2/file.c	2011-02-21 09:09:17.000000000 +0100
+@@ -797,6 +797,11 @@ static long gfs2_fallocate(struct file *
+ 	if (unlikely(error))
+ 		goto out_uninit;
+ 
++	if (IS_IMMUTABLE(inode)) {
++		error = -EPERM;
++		goto out_unlock;
++	}
++
+ 	if (!gfs2_write_alloc_required(ip, offset, len))
+ 		goto out_unlock;
+ 
+--- ./linux-2.6.38-rc5/fs/xfs/linux-2.6/xfs_file.c	2011-02-16 04:23:45.000000000 +0100
++++ ./linux-2.6.38-rc5/fs/xfs/linux-2.6/xfs_file.c	2011-03-03 09:25:32.000000000 +0100
+@@ -906,8 +906,18 @@ xfs_file_fallocate(
+ 
+ 	xfs_ilock(ip, XFS_IOLOCK_EXCL);
+ 
+-	if (mode & FALLOC_FL_PUNCH_HOLE)
++	if (mode & FALLOC_FL_PUNCH_HOLE) {
+ 		cmd = XFS_IOC_UNRESVSP;
++		if (IS_APPEND(inode)) {
++			error = -EPERM;
++			goto out_unlock;
++		}
++	}
++
++	if (IS_IMMUTABLE(inode)) {
++		error = -EPERM;
++		goto out_unlock;
++	}
+ 
+ 	/* check the new inode size is valid before allocating */
+ 	if (!(mode & FALLOC_FL_KEEP_SIZE) &&
 
 _______________________________________________
 xfs mailing list
