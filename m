@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p247nMux147326 for <xfs@oss.sgi.com>; Fri, 4 Mar 2011 01:49:23 -0600
-Received: from smtp3-g21.free.fr (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AC5A2A93591
-	for <xfs@oss.sgi.com>; Thu,  3 Mar 2011 23:52:10 -0800 (PST)
-Received: from smtp3-g21.free.fr (smtp3-g21.free.fr [212.27.42.3]) by
-	cuda.sgi.com with ESMTP id xSPFnAI82Fq4Yam7 for
-	<xfs@oss.sgi.com>; Thu, 03 Mar 2011 23:52:10 -0800 (PST)
-Date: Fri, 4 Mar 2011 08:51:46 +0100
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: corruption, xfs_repair 3.1.4 segfaults
-Message-ID: <20110304085146.368046e7@galadriel2.home>
-In-Reply-To: <20110304071123.GC2316@schmorp.de>
-References: <20110302175818.GA8290@schmorp.de>
-	<20110302224329.3f62c172@galadriel2.home>
-	<20110304071123.GC2316@schmorp.de>
-Mime-Version: 1.0
+	p248JJiE148767 for <xfs@oss.sgi.com>; Fri, 4 Mar 2011 02:19:19 -0600
+Received: from mail-ww0-f51.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D98D2312384
+	for <xfs@oss.sgi.com>; Fri,  4 Mar 2011 00:22:10 -0800 (PST)
+Received: from mail-ww0-f51.google.com (mail-ww0-f51.google.com
+	[74.125.82.51]) by cuda.sgi.com with ESMTP id lgfrV86CC7mbzj8l
+	for <xfs@oss.sgi.com>; Fri, 04 Mar 2011 00:22:10 -0800 (PST)
+Received: by wwf26 with SMTP id 26so1824455wwf.32
+	for <xfs@oss.sgi.com>; Fri, 04 Mar 2011 00:22:09 -0800 (PST)
+Message-ID: <4D709FFC.6000107@gmail.com>
+Date: Fri, 04 Mar 2011 09:17:00 +0100
+From: Marco Stornelli <marco.stornelli@gmail.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH v2] Check for immutable flag in fallocate path
+References: <4D6221B8.9040303@gmail.com> <4D6F5473.2070709@gmail.com>
+	<20110303213903.GL15097@dastard>
+In-Reply-To: <20110303213903.GL15097@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,24 +26,55 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Marc Lehmann <schmorp@schmorp.de>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, cluster-devel@redhat.com, Linux FS Devel <linux-fsdevel@vger.kernel.org>, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
 
-TGUgRnJpLCA0IE1hciAyMDExIDA4OjExOjIzICswMTAwIHZvdXMgw6ljcml2aWV6OgoKPiBJIGhv
-cGUgbm90IDopIEkgY2FuIG1vdW50IHRoZSB2b2x1bWUgcmVhZC1vbmx5LCBhbmQgYXBwYXJlbnRs
-eSByZWFkIGEKPiBsb3Qgb2YgZmlsZXMgb24gaXQuIE15IG1haW4gcHJvYmxlbSBzZWVtcyB0byBi
-ZSB0aGUgY3Jhc2hpbmcKPiB4ZnNfcmVwYWlyLgo+IAoKQWgsIEkgdGhpbmsgdGhlIHByb2JsZW0g
-bWF5IGxpZSBpbiB0aGUgbG9vcCBkZXZpY2UuIFRyeSB0byBydW4KCnhmc19yZXBhaXIgLWYgL2Zp
-bGUvcGF0aCAKCihub3QgdXNpbmcgdGhlIGxvb3AgZGV2aWNlKS4KLS0gCi0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LQpFbW1hbnVlbCBGbG9yYWMgICAgIHwgICBEaXJlY3Rpb24gdGVjaG5pcXVlCiAgICAgICAgICAg
-ICAgICAgICAgfCAgIEludGVsbGlxdWUKICAgICAgICAgICAgICAgICAgICB8CTxlZmxvcmFjQGlu
-dGVsbGlxdWUuY29tPgogICAgICAgICAgICAgICAgICAgIHwgICArMzMgMSA3OCA5NCA4NCAwMgot
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNv
-bS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+Hi Dave,
+
+Il 03/03/2011 22:39, Dave Chinner ha scritto:
+> WTF?  Why does append mode have any effect on whether we can punch
+> holes in a file or not? There's no justification for adding this in
+> the commit message. Why is it even in a patch that is for checking
+> immutable inodes? What is the point of adding it, when all that will
+> happen is people will switch to XFS_IOC_UNRESVSP which has never had
+> this limitation?
+
+So according to you, it's legal to do an "unreserve" operation on an
+append-only file. It's not the same for me, but if the community said
+that this is the right behavior then ok.
+
+> 
+> And this asks bigger questions - why would you allow preallocate
+> anywhere but at or beyond EOF on an append mode inode? You can only
+> append to the file, so if you're going to add limitations based on
+> the append flag, you need to think this through a bit more....
+> 
+
+I don't understand this point. The theory of operation was:
+
+1) we don't allow any operation (reserve/unreserve) on a immutable file;
+2) we don't allow *unreserve* operation on an append-only file (this
+check makes sense only for fs that support the unreserve operation).
+
+> 
+> Also, like Christoph said, these checks belong in the generic code,
+> not in every filesystem. The same checks have to be made for every
+> filesystem, so they should be done before calling out the
+> filesystems regardless of what functionality the filesystem actually
+> supports.
+> 
+
+This was related to the first point, if we remove it then it's ok to
+check in a common code. Even if I think we should do the check under the
+inode lock to avoid race between fallocate and setattr, isn't it?
+
+Marco
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
