@@ -1,24 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p24DGrth166749 for <xfs@oss.sgi.com>; Fri, 4 Mar 2011 07:16:53 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DBC6710A7C2E
-	for <xfs@oss.sgi.com>; Fri,  4 Mar 2011 05:19:44 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id pzrNV78xZMUfa62J for
-	<xfs@oss.sgi.com>; Fri, 04 Mar 2011 05:19:44 -0800 (PST)
-Received: from hch by bombadil.infradead.org with local (Exim 4.72 #1 (Red Hat
-	Linux)) id 1PvUv2-0008MX-8I
-	for xfs@oss.sgi.com; Fri, 04 Mar 2011 13:19:44 +0000
-Date: Fri, 4 Mar 2011 08:19:44 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 0/3] avoid busy extents during user data allocations
-Message-ID: <20110304131944.GA31536@infradead.org>
-References: <20110304125953.650347660@bombadil.infradead.org>
+	p24F4KEj171923 for <xfs@oss.sgi.com>; Fri, 4 Mar 2011 09:04:20 -0600
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6986E157FF8B
+	for <xfs@oss.sgi.com>; Fri,  4 Mar 2011 07:07:10 -0800 (PST)
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id Vv9SznrQMl1XWBQ2 for <xfs@oss.sgi.com>;
+	Fri, 04 Mar 2011 07:07:10 -0800 (PST)
+Message-ID: <4D71001D.2040506@sandeen.net>
+Date: Fri, 04 Mar 2011 09:07:09 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110304125953.650347660@bombadil.infradead.org>
+Subject: Re: corruption, xfs_repair 3.1.4 segfaults
+References: <20110302175818.GA8290@schmorp.de>
+In-Reply-To: <20110302175818.GA8290@schmorp.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,40 +27,34 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Marc Lehmann <schmorp@schmorp.de>
+Cc: xfs@oss.sgi.com
 
-On Fri, Mar 04, 2011 at 07:59:53AM -0500, Christoph Hellwig wrote:
-> This patchset adds support to trim down extents
-
-Sorry, sent this out before finishing up the introduction.
-
-This patchset adds support for trimming down allocations of user data
-to avoid busy extents.  I'm actually not quite sure it's overly useful
-in this form, as we're much better off allowing free reallocation
-between data extents, and only avoid busy extents coming from freed
-metadata.  Neverless I'd like to get a review of the new search
-algorithm in patch 3, especially for the nice comments explaining it
-all, based on a mail from Dave.
-
-Patches 1 and 2 on the other hand are simple cleanups which I think
-should go into the tree ASAP.
-
-The other patches from the previous submitting are back to the drawing
-board - implementing Dave's suggestion of skipping busy extents for
-metadata to user data reallocation promises to give a lot of speedups,
-but making it work with the requirement to track freed extents for
-discard purposes isn't quite trivial as we might have to remove extents
-from the busy list during reallocations, which requires additional
-infrastructure to lock the list of busy extents in the transaction / cil
-context which isn't there yet, and additional exclusion of allocations
-from ongoing discards.
-
+On 3/2/11 11:58 AM, Marc Lehmann wrote:
+> Hi!
 > 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
----end quoted text---
+> I had a case of filesystem corruption a day ago:
+> 
+
+...
+
+> I tried to use xfs_repair on it, but it crashes (and, as I may grudgingly
+> add, as usual it crashes because thats what xfsrepair does almost always).
+ 
+
+If you provide an xfs_metadump image of the filesystem, I'd be
+happy to look into the cause of the segfault.
+
+In my experience xfs_repair does not almost always crash, if you
+encounter this, please do send mail/file bugs/provide images.
+
+> Any idea on where to go from here? I tried to build the git xfsprogs, but
+> they don't build due to missing -fPIC - and as usual, thanks for any help :)
+
+Bug reports on build problems are welcome as well.
+
+Thanks,
+-Eric
 
 _______________________________________________
 xfs mailing list
