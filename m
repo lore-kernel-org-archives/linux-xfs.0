@@ -1,12 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p24JYhTR184490 for <xfs@oss.sgi.com>; Fri, 4 Mar 2011 13:34:43 -0600
-From: Alex Elder <aelder@sgi.com>
-Message-Id: <201103041937.p24JbVtP004804@stout.americas.sgi.com>
-Date: Fri, 04 Mar 2011 13:37:31 -0600
-Subject: [PATCH] xfstests: fix a few build warnings
+	p24JFSof183637 for <xfs@oss.sgi.com>; Fri, 4 Mar 2011 13:15:29 -0600
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BC6EE10A795C
+	for <xfs@oss.sgi.com>; Fri,  4 Mar 2011 11:18:18 -0800 (PST)
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id D0kKW70az8uVcJfd for <xfs@oss.sgi.com>;
+	Fri, 04 Mar 2011 11:18:18 -0800 (PST)
+Message-ID: <4D713AF9.4050101@sandeen.net>
+Date: Fri, 04 Mar 2011 13:18:17 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
+Subject: Re: corruption, xfs_repair 3.1.4 segfaults
+References: <20110304163157.GA2030@schmorp.de>
+In-Reply-To: <20110304163157.GA2030@schmorp.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,93 +27,71 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Marc Lehmann <schmorp@schmorp.de>
+Cc: xfs@oss.sgi.com
 
-This patch fixes a few build warnings.  I have built the code using
-i386, x86_64, and ia64 architectures and each has ends up with
-complaints of one sort or anther.  This gets rid of all of them
-*except* those reported by files under the "ltp" (Linux Test
-Project) sub-tree.
+On 3/4/11 10:31 AM, Marc Lehmann wrote:
 
-Signed-off-by: Alex Elder <aelder@sgi.com>
+> On Fri, Mar 04, 2011 at 09:07:09AM -0600, Eric Sandeen <sandeen@sandeen.net> wrote:
+>>> I had a case of filesystem corruption a day ago:
+>>
+>> If you provide an xfs_metadump image of the filesystem, I'd be
+>> happy to look into the cause of the segfault.
+> 
+> That is the second thing that came to my mind, but this disk contains
+> sensitive data, and as long as the anonymise/obfuscate option of xfs_metadump
+> is broken (a simple hexdump reveals most of the filenames it's supposed to
+> obfuscate), I unfortunately cannot.
 
----
- lib/tlibio.c                         |    2 +-
- src/aio-dio-regress/aiodio_sparse2.c |    3 ++-
- src/pwrite_mmap_blocked.c            |    3 ++-
- src/unwritten_sync.c                 |    4 +++-
- src/xfsctl.c                         |    2 ++
- 5 files changed, 10 insertions(+), 4 deletions(-)
+Do you have a lot of short names?  It should be obfuscating the others
+just fine.  Otherwise, Alex has been working on the obfuscation, maybe
+he can give you some pointers.
 
-Index: b/lib/tlibio.c
-===================================================================
---- a/lib/tlibio.c
-+++ b/lib/tlibio.c
-@@ -453,7 +453,7 @@ int
- lio_random_methods(long curr_mask)
- {
-     int mask=0;
--    long random_bit();
-+    long random_bit(long);
- 
-     /* remove random select, io type, and wait method bits from curr_mask */
-     mask = curr_mask & (~(LIO_IO_TYPES | LIO_WAIT_TYPES | LIO_RANDOM));
-Index: b/src/aio-dio-regress/aiodio_sparse2.c
-===================================================================
---- a/src/aio-dio-regress/aiodio_sparse2.c
-+++ b/src/aio-dio-regress/aiodio_sparse2.c
-@@ -227,7 +227,8 @@ void aiodio_sparse(char *filename, int a
- 		unsigned char *badbuf;
- 
- 		if (debug)
--			fprintf(stderr, "seek to %ld and read %d\n", offset, writesize);
-+			fprintf(stderr, "seek to %lld and read %d\n",
-+				(long long) offset, writesize);
- 		lseek(fd, offset, SEEK_SET);
- 		if (read(fd, bufptr, writesize) < writesize) {
- 			fprintf(stderr, "short read() at offset %lld\n",
-Index: b/src/pwrite_mmap_blocked.c
-===================================================================
---- a/src/pwrite_mmap_blocked.c
-+++ b/src/pwrite_mmap_blocked.c
-@@ -59,7 +59,8 @@ int main(int argc, char *argv[])
- 		perror("mmap");
- 		exit(1);
- 	}
--	printf("pwrite %Ld bytes from %Ld to %Ld\n", amount, from, to);
-+	printf("pwrite %Ld bytes from %Ld to %Ld\n",
-+		(long long) amount, (long long) from, (long long) to);
- 
- 	ret = pwrite(fd, (char *)mapped_mem + from, amount, to);
- 	if (ret != amount) {
-Index: b/src/unwritten_sync.c
-===================================================================
---- a/src/unwritten_sync.c
-+++ b/src/unwritten_sync.c
-@@ -136,7 +136,9 @@ again:
- 		}
- 		if (bmapx[x].bmv_oflags & 1) {
- 			fprintf(stderr, "FOUND ONE %lld %lld %x\n",
--				bmapx[x].bmv_offset, bmapx[x].bmv_length,bmapx[x].bmv_oflags);
-+				(long long) bmapx[x].bmv_offset,
-+				(long long) bmapx[x].bmv_length,
-+				bmapx[x].bmv_oflags);
- 			foundone = 1;
- 			foundany = 1;
- 		}
-Index: b/src/xfsctl.c
-===================================================================
---- a/src/xfsctl.c
-+++ b/src/xfsctl.c
-@@ -16,6 +16,8 @@
-  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-  */
- 
-+#include <sys/stat.h>
-+
- #include <xfs/xfs.h>
- #include <xfs/jdm.h>
- 
+BTW no need to run hexdump; you can xfs_mdrestore the dump, and loopback
+mount it, and do a find to see what filenames are there.
+
+(unless you mean the clear names are seen in hexdump but not on the
+mounted, restored fs?  If so that's a new and interesting problem).
+
+> (the xfs_metadump -o bug has been reported in the past btw., if it's fixed
+> in git I could give thta another try).
+
+well... "-o" DISABLEs obfuscation.  If you use it and see all filenames,
+that is exactly as it should be working ;)  Don't use -o if you want
+obfuscation (I know, it seems a little backwards to me too).
+
+>> In my experience xfs_repair does not almost always crash, if you
+>> encounter this, please do send mail/file bugs/provide images.
+> 
+> Well, I did (as well as other people did), in the past, and the bugs
+> that were reported wree fixed (For example, I stumbled over the problem
+> of the xfs_repair livelock with threads, I stumbled over the problem of
+> it not being able to repair corruption a number of times despite saying
+> everything is ok and so on).
+> 
+> So "crash" was indeed badly worded - "does not fix things or does not run to
+> completion" is more correct.
+
+well, keep reporting them, and with metadumps when possible.
+
+> The fact remains that of reiserfs, ext2/3/4 and jfs, xfs has by far the
+> lowest quality fsck, at least for me - each time I have some problem with an
+> xfs filesystem, xfs_repair fails to repair it.
+
+I think that's unique to you ;)  but it also depends on your definition
+of "quality."
+
+Of course, properly completing repair is a fair definition!  Really, these
+things need to be reported, triaged, and fixed.  If the confusion over
+metadump was the proper usage of "-o" then perhaps you will be able
+to submit some of your unfixable corruptions.
+
+-Eric
+
+> It fortunately doesn't happen often, and is not necessarily a problem with
+> xfs itself, but I am using reiserfs and ext2/3/4 and xfs all for a very
+> long time, and of these, it's quite obvious that xfs_repair is much worse
+> then the fsck tools of the others.
 
 _______________________________________________
 xfs mailing list
