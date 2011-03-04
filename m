@@ -1,11 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p24JZ3Hf184560 for <xfs@oss.sgi.com>; Fri, 4 Mar 2011 13:35:03 -0600
+	p24JYmFB184510 for <xfs@oss.sgi.com>; Fri, 4 Mar 2011 13:34:48 -0600
 From: Alex Elder <aelder@sgi.com>
-Message-Id: <201103041937.p24Jbpgh004834@stout.americas.sgi.com>
-Date: Fri, 04 Mar 2011 13:37:51 -0600
-Subject: [PATCH 0/5] xfstests: eliminate build warnings in the "dmapi" subtree
+Message-Id: <201103041937.p24JbaaN004813@stout.americas.sgi.com>
+Date: Fri, 04 Mar 2011 13:37:36 -0600
+Subject: [PATCH 1/2] xfstests: a few fixes to Makefile
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -21,59 +21,72 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Now that we're building the "dmapi" subtree the same way as the rest
-of the code in "xfstests", a lot of warnings are showing up in the
-build.  This series eliminates them all, at least for three build
-architectures I have used so far (i386, x86_64, and ia64).
+A few changes to the Makefile:
+- Separate the rules for "configure" and "include/builddefs" into
+  two parts, each of which generate one of the files
+- Get rid of the rule for include/config.h, and group it with the
+  one for include/builddefs (the same command creates both files)
+- Use the $(Q) convention in a few missed spots
+- Stop a DMAPI-only comment from getting echoed on default build
 
-Because of the sheer number of changes, I've broken it into
-a small series, each focused on files under a certain portion
-of the tree under "dmapi".
+Signed-off-by: Alex Elder <aelder@sgi.com>
 
-Below are the types of warnings, and how they were generally fixed.
-In all cases I scanned the affected code to be reasonably sure the
-warning was harmless and the fix did not obscure a real problem.
-- Variables possibly used before set.  Fixed by initializing such
-  variables to 0 or NULL, or some appropriate symbolic value if
-  available.
-- "Bald" assignments used as conditional values; GCC suggests adding
-  an extra set of parentheses.  Fixed by pulling the assignments out
-  as a previous line of code, and using the assigned value alone in
-  the conditional.
-- Variables used in scanf() functions having types that differ from
-  what the format string indicates.  Fixed by creating and using new
-  variables of the type needed for scanf(), and then assigning the
-  result to the original variable with a cast.
-- Variables used in printf() functions having types that differ from
-  what the format string indicates.  Fixed by casting the variable
-  to the type indicated in the format string.  In a few cases I
-  changed "%lld" formats to "%llu" to be consistent with other usage
-  for printing the same variable.  (But I did not do this
-  consistently.)
-    - A lot of these cases involved using "%zd" in place of just
-      "%d" for printing size_t objects.
-- In one case, replaced a call to tmpnam() with an equivalent call
-  to mkstmp() using a local variable.
+---
+ Makefile |   21 +++++++++------------
+ 1 file changed, 9 insertions(+), 12 deletions(-)
 
-Patch 1 covers files under:
-    dmapi/src/common/cmd/
-    dmapi/src/common/lib/
-    dmapi/src/sample_hsm/
-    dmapi/src/simple/
-
-Patch 2 covers:
-    dmapi/src/suite1/cmd/ (part 1)
-
-Patch 3 covers:
-    dmapi/src/suite1/cmd/ (part 2)
-
-Patch 4 covers:
-    dmapi/src/suite1/cmd/ (part 3)
-
-Patch 5 covers:
-    dmapi/src/suite2/
-
-					-Alex
+Index: b/Makefile
+===================================================================
+--- a/Makefile
++++ b/Makefile
+@@ -44,9 +44,9 @@ ifeq ($(HAVE_BUILDDEFS), no)
+ 	$(Q)$(MAKE) $(MAKEOPTS) $@
+ else
+ 	$(Q)$(MAKE) $(MAKEOPTS) $(SUBDIRS)
++ifeq ($(HAVE_DMAPI), true)
+ 	# automake doesn't always support "default" target 
+ 	# so do dmapi make explicitly with "all"
+-ifeq ($(HAVE_DMAPI), true)
+ 	$(Q)$(MAKE) $(MAKEOPTS) -C $(TOPDIR)/dmapi all
+ endif
+ endif
+@@ -60,22 +60,19 @@ else
+ clean:  # if configure hasn't run, nothing to clean
+ endif
+ 
+-configure include/builddefs:
++configure: configure.in
+ 	autoheader
+ 	autoconf
++
++include/builddefs include/config.h: configure
+ 	./configure \
+                 --libexecdir=/usr/lib \
+                 --enable-lib64=yes
+ 
+-include/config.h: include/builddefs
+-## Recover from the removal of $@
+-	@if test -f $@; then :; else \
+-		rm -f include/builddefs; \
+-		$(MAKE) $(AM_MAKEFLAGS) include/builddefs; \
+-	fi
+-
++ifeq ($(HAVE_DMAPI), true)
+ $(DMAPI_MAKEFILE):
+-	cd $(TOPDIR)/dmapi/ ; ./configure
++	$(Q)cd $(TOPDIR)/dmapi && ./configure
++endif
+ 
+ aclocal.m4::
+ 	aclocal --acdir=`pwd`/m4 --output=$@
+@@ -97,5 +94,5 @@ install-dev install-lib:
+ 	$(MAKE) $(MAKEOPTS) -C $* install
+ 
+ realclean distclean: clean
+-	rm -f $(LDIRT) $(CONFIGURE)
+-	rm -rf autom4te.cache Logs
++	$(Q)rm -f $(LDIRT) $(CONFIGURE)
++	$(Q)rm -rf autom4te.cache Logs
 
 _______________________________________________
 xfs mailing list
