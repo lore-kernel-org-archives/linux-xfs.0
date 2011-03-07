@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p27ILfvF172418 for <xfs@oss.sgi.com>; Mon, 7 Mar 2011 12:21:42 -0600
-Date: Mon, 7 Mar 2011 13:24:31 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 0/3] xfsprogs: sync up with 2.6.38 kernel code V2
-Message-ID: <20110307182431.GA3527@infradead.org>
-References: <1294649091-27174-1-git-send-email-david@fromorbit.com>
-	<20110214063042.GL2559@dastard> <1299521684.2578.457.camel@doink>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1299521684.2578.457.camel@doink>
+	p27KIGPY176696 for <xfs@oss.sgi.com>; Mon, 7 Mar 2011 14:18:16 -0600
+Subject: Re: [PATCH 1/3] xfs_io: add fiemap command to xfs_io
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <20110305002453.434915100@bombadil.infradead.org>
+References: <20110305002222.395571492@bombadil.infradead.org>
+	<20110305002453.434915100@bombadil.infradead.org>
+Date: Mon, 07 Mar 2011 14:19:36 -0600
+Message-ID: <1299529176.2578.846.camel@doink>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,25 +23,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: josef@redhat.com, xfs@oss.sgi.com
 
-On Mon, Mar 07, 2011 at 12:14:44PM -0600, Alex Elder wrote:
-> 3) Why are you dropping the use of the symbols
->    XFS_DINODE_VERSION_1 and XFS_DINODE_VERSION_2 in
->   favor of just using 1 and 2?  (I guess I'm OK with
->   it, but wanted to call it out anyway.)
+On Fri, 2011-03-04 at 19:22 -0500, Christoph Hellwig wrote:
+> plain text document attachment (add-fiemap-command)
+> Add a fiemap command that works almost exactly like bmap, but works on all
+> filesystem supporting the FIEMAP ioctl.  It is formatted similarly and
+> takes similar flags, the only thing thats different is obviously it doesn't
+> pit out AG info and it doesn't make finding prealloc space optional.
+> 
+> Signed-off-by: Josef Bacik <josef@redhat.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Because we dropped them from the kernel a while ago.  The removal
-in kernel land was my patch and the reason is that it simply doesn't buy
-anything over using the numerical constants.
+Looks good.
 
-> - XFS_IOC_FREEZE and XFS_IOC_THAW are still defined in
->   this version.  The code that uses it here could possibly
->   be converted to use the Linux generic FIFREEZE and FITHAW
->   instead.
+Reviewed-by: Alex Elder <aelder@sgi.com>
 
-That would require all users to include <linux/fs.h> first.  
+
 
 _______________________________________________
 xfs mailing list
