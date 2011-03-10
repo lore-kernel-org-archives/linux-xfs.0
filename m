@@ -1,23 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p2AHWwDM114030 for <xfs@oss.sgi.com>; Thu, 10 Mar 2011 11:33:09 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 262E633825D
-	for <xfs@oss.sgi.com>; Thu, 10 Mar 2011 09:35:50 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id prdJwaMidXX881P1 for
-	<xfs@oss.sgi.com>; Thu, 10 Mar 2011 09:35:50 -0800 (PST)
-Date: Thu, 10 Mar 2011 12:35:49 -0500
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
+	p2AHO5gb113568 for <xfs@oss.sgi.com>; Thu, 10 Mar 2011 11:24:15 -0600
+Date: Thu, 10 Mar 2011 12:26:45 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/6] xfs: convert ENOSPC inode flushing to use new syncd
-	workqueue
-Message-ID: <20110310173549.GC19609@infradead.org>
-References: <1299715529-11026-1-git-send-email-david@fromorbit.com>
-	<1299715529-11026-4-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH 2/2] xfstests: some refinements on "make depend"
+Message-ID: <20110310172644.GC13390@infradead.org>
+References: <201103041937.p24Jbfh5004820@stout.americas.sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1299715529-11026-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <201103041937.p24Jbfh5004820@stout.americas.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,26 +22,35 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Alex Elder <aelder@sgi.com>
 Cc: xfs@oss.sgi.com
 
-Looks good,
+On Fri, Mar 04, 2011 at 01:37:41PM -0600, Alex Elder wrote:
+> Make it so "make depend" is a generic target, like "make clean".
+> 
+> Each Makefile has a "depend" target that indicates whether making
+> dependencies means creating ".dep" or creating ".ltdep" (or, I
+> suppose, both, though none do that right now).  Both files get
+> created even if there are no CFILES to scan (to ensure the target
+> up-to-date).  The "default" target now depends on "depend" (there is
+> no "ltdepend" any more).
+> 
+> Remove the "depend" and "ltdepend" definitions from the "buildrules"
+> file; only the actual generated files (".dep" and ".ltdep") remain
+> as generic targets.  The "depend' target is still defined as phony.
+>  
+> Do a shell trick when expanding the value of CFILES, to avoid a
+> problem that occurs if it is created by "make" by concatentating two
+> empty strings.  The problem was that in that case CFILES will
+> contain a space, and that wasn't getting treated as empty as
+> desired.
+> 
+> Make the rule for tool/lib dependencies more generic, to reflect the
+> general desire that "lib" subdirectories need to be built before
+> things in the "tool" subdirectories.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-
-> +STATIC void
-> +xfs_flush_worker(
-> +	struct work_struct *work)
-> +{
-> +	struct xfs_mount *mp = container_of(work,
-> +					struct xfs_mount, m_flush_work);
-> +
-> +	xfs_sync_data(mp, SYNC_TRYLOCK);
-> +	xfs_sync_data(mp, SYNC_TRYLOCK | SYNC_WAIT);
-> +	xfs_log_force(mp, XFS_LOG_SYNC);
-
-No actually new in this patch: but what's the point of the log force
-here?  xfs_sync_data just did one before returning.
+Can we instead port over the generic dependency generation from
+xfsprogs/xfsdump?
 
 _______________________________________________
 xfs mailing list
