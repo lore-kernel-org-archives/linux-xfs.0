@@ -1,18 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p2AM6uNc124709 for <xfs@oss.sgi.com>; Thu, 10 Mar 2011 16:07:02 -0600
-Received: from cf--amer001e--3.americas.sgi.com
-	(cf--amer001e--3.americas.sgi.com [137.38.100.5])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A3B97304084
-	for <xfs@oss.sgi.com>; Thu, 10 Mar 2011 14:09:42 -0800 (PST)
-Subject: Re: [PATCH 2/2] xfstests: some refinements on "make depend"
+	p2AMDSqj124954 for <xfs@oss.sgi.com>; Thu, 10 Mar 2011 16:13:33 -0600
+Subject: Re: [PATCH] xfstests: rework "dmapi" subtree build mechanism
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110310172644.GC13390@infradead.org>
-References: <201103041937.p24Jbfh5004820@stout.americas.sgi.com>
-	<20110310172644.GC13390@infradead.org>
-Date: Thu, 10 Mar 2011 16:09:36 -0600
-Message-ID: <1299794976.2573.72.camel@doink>
+In-Reply-To: <20110310172943.GD13390@infradead.org>
+References: <201103041937.p24Jbk5W004828@stout.americas.sgi.com>
+	<20110310172943.GD13390@infradead.org>
+Date: Thu, 10 Mar 2011 16:16:12 -0600
+Message-ID: <1299795372.2573.79.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -30,47 +26,46 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Thu, 2011-03-10 at 12:26 -0500, Christoph Hellwig wrote:
-> On Fri, Mar 04, 2011 at 01:37:41PM -0600, Alex Elder wrote:
-> > Make it so "make depend" is a generic target, like "make clean".
-> > 
-> > Each Makefile has a "depend" target that indicates whether making
-> > dependencies means creating ".dep" or creating ".ltdep" (or, I
-> > suppose, both, though none do that right now).  Both files get
-> > created even if there are no CFILES to scan (to ensure the target
-> > up-to-date).  The "default" target now depends on "depend" (there is
-> > no "ltdepend" any more).
-> > 
-> > Remove the "depend" and "ltdepend" definitions from the "buildrules"
-> > file; only the actual generated files (".dep" and ".ltdep") remain
-> > as generic targets.  The "depend' target is still defined as phony.
-> >  
-> > Do a shell trick when expanding the value of CFILES, to avoid a
-> > problem that occurs if it is created by "make" by concatentating two
-> > empty strings.  The problem was that in that case CFILES will
-> > contain a space, and that wasn't getting treated as empty as
-> > desired.
-> > 
-> > Make the rule for tool/lib dependencies more generic, to reflect the
-> > general desire that "lib" subdirectories need to be built before
-> > things in the "tool" subdirectories.
+On Thu, 2011-03-10 at 12:29 -0500, Christoph Hellwig wrote:
+> >  LIB_SUBDIRS = include lib
+> >  TOOL_SUBDIRS = ltp src m4
+> > +ifeq ($(HAVE_DMAPI), true)
+> > +TOOL_SUBDIRS += dmapi
+> > +endif
 > 
-> Can we instead port over the generic dependency generation from
-> xfsprogs/xfsdump?
+> Does this work with the way we generate source tarballs on make dist?
+> In xfsprogs we have special variables for source files that don't get
+> build.
 
-My intention was to work toward unifying all the user space
-stuff, basically in line with what you suggest.
+Right now, xfstests has no "make dist".  I'm trying
+now to straighten things out a bit in preparation for
+making xfstests follow the same model used for xfsprogs
+(and the rest).  So, I guess the answer is "no" but
+ultimately it should be "yes," though more changes
+will be needed to get there.
 
-This is part of a flurry of changes related to the xfstests
-dmapi subtree.  One of the things I needed to do was populate
-a set of new Makefiles there, and I guess in looking into
-that I found I didn't like the way the dependencies were done,
-and the changes I made to address that ended up in this patch.
+> 
+> > @@ -0,0 +1,30 @@
+> > +#
+> > +# Copyright (c) 2011 SGI  All Rights Reserved.
+> > +#
+> 
+> I think a license would be more useful than all rights reserved here.
+> 
+> Except for that the patch looks sane to me, and having a consistent
+> build system is a good thing.
 
-I'll hold off on this patch and will reconsider it once
-I get the more substantive dmapi changes in.
+I'll add a boilerplate GPL statement in these new files.
+What I used was simply mimicing what was present in the
+other Makefiles.
+
+In order to avoid re-sending this big patch, may I get
+your signoff/reviewed-by on that plan?
+
+Thanks.
 
 					-Alex
+
 
 _______________________________________________
 xfs mailing list
