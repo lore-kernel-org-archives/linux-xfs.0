@@ -1,25 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p2A02dmm068752 for <xfs@oss.sgi.com>; Wed, 9 Mar 2011 18:02:44 -0600
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
+	p2A03kVs068888 for <xfs@oss.sgi.com>; Wed, 9 Mar 2011 18:03:51 -0600
 Received: from ipmail07.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 73D121BD3520
-	for <xfs@oss.sgi.com>; Wed,  9 Mar 2011 16:05:28 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 741D110B7DC6
+	for <xfs@oss.sgi.com>; Wed,  9 Mar 2011 16:06:24 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	jECpTE4gAMap52JS for <xfs@oss.sgi.com>;
-	Wed, 09 Mar 2011 16:05:28 -0800 (PST)
+	kuT5RophBMPqB9w4 for <xfs@oss.sgi.com>;
+	Wed, 09 Mar 2011 16:06:24 -0800 (PST)
 Received: from chute ([192.168.1.1] helo=disappointment)
 	by dastard with esmtp (Exim 4.72)
-	(envelope-from <dave@fromorbit.com>) id 1PxTNc-0002vN-R3
-	for xfs@oss.sgi.com; Thu, 10 Mar 2011 11:05:24 +1100
+	(envelope-from <dave@fromorbit.com>) id 1PxTNd-0002vd-76
+	for xfs@oss.sgi.com; Thu, 10 Mar 2011 11:05:25 +1100
 Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1PxTNk-0002t2-O2
-	for xfs@oss.sgi.com; Thu, 10 Mar 2011 11:05:32 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1PxTNl-0002tI-3D
+	for xfs@oss.sgi.com; Thu, 10 Mar 2011 11:05:33 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 0/6] xfs: Reduce OOM kill problems under heavy load V2
-Date: Thu, 10 Mar 2011 11:05:23 +1100
-Message-Id: <1299715529-11026-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 6/6] xfs: push the AIL from memory reclaim and periodic sync
+Date: Thu, 10 Mar 2011 11:05:29 +1100
+Message-Id: <1299715529-11026-7-git-send-email-david@fromorbit.com>
+In-Reply-To: <1299715529-11026-1-git-send-email-david@fromorbit.com>
+References: <1299715529-11026-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,69 +37,336 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Chris Mason reported recently that a concurent stress test
-(basically copying the linux kernel tree 20 times, verifying md5sums
-and deleting it in a loop concurrently) under low memory conditions
-was triggering the OOM killer muchmore easily than for btrfs.
+From: Dave Chinner <dchinner@redhat.com>
 
-Turns out there are two main problems. The first is that unlinked
-inodes were not being reclaimed fast enough, leading to the OOM
-being declared when there are large numbers of reclaimable inodes
-still around. The second was that atime updates due to the verify
-step were creating large numbers of dirty inodes at the VFS level
-that were not being written back and hence made reclaimable before
-the system declared OOM and killed stuff.
+When we are short on memory, we want to expedite the cleaning of
+dirty objects.  Hence when we run short on memory, we need to kick
+the AIL flushing into action to clean as many dirty objects as
+quickly as possible.  To implement this, sample the lsn of the log
+item at the head of the AIL and use that as the push target for the
+AIL flush.
 
-The first problem is fixed by making background inode reclaim more
-frequent and faster, kicking background reclaim from the inode cache
-shrinker so that when memory is low we always have background inode
-reclaim in progress, and finally making the shrinker reclaim scan
-block waiting on inodes to reclaim. This last step throttles memory
-reclaim to the speed at which we can reclaim inodes, a key step
-needed to prevent inodes from reclaim declaring OOM while there are
-still reclaimable inodes around. The background inode reclaim
-prevents this synchronous flush from finding dirty inodes and block
-on them in most cases and hence prevents performance regressions in
-more common workloads due to reclaim stalls.
+Further, we keep items in the AIL that are dirty that are not
+tracked any other way, so we can get objects sitting in the AIL that
+don't get written back until the AIL is pushed. Hence to get the
+filesystem to the idle state, we might need to push the AIL to flush
+out any remaining dirty objects sitting in the AIL. This requires
+the same push mechanism as the reclaim push.
 
-To enable this new functionality, the xfssyncd thread is replaced
-with a workqueue and the existing xfssyncd work replaced with a
-global workqueue.  Hence all filesystems will share the same
-workqueue and we remove allt eh xfssyncd threads from the system.
-The ENOSPC inode flush is converted to use the workqueue, and
-optimised to only allow a single flush at a time. This significant
-speeds up ENOSPC processing under concurrent workloads as it removes
-all the unnecessary scanning that every single ENOSPC event
-currently queues to the xfssyncd. Finally, a new reinode reclaim
-worker is added to the workqueue that runs 5x more frequently that
-the xfssyncd to do the background inode reclaim scan.
+This patch rearranges the location of functions in xfs_trans_ail.c
+to remove the need for forward declarations of those functions and
+new functions added in this commit.
 
-The second problem is could be fixed by making the XFS inode cache
-shrinker kick the bdi flusher to write back inodes if the bdi
-flusher is not already active.  This, however, causes deadlocks when
-the bdi-flusher thread needs to be forked under memory pressure, so
-these patches have been dropped for now.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/linux-2.6/xfs_sync.c |    7 ++-
+ fs/xfs/xfs_trans_ail.c      |  206 +++++++++++++++++++++++++------------------
+ fs/xfs/xfs_trans_priv.h     |    1 +
+ 3 files changed, 129 insertions(+), 85 deletions(-)
 
-An addition to the series is to push the AIL when we are under
-memory stress to speed up the cleaning of dirty metadata. While this
-does not avoid the problems with VFS level dirty objects, it does
-ensure we don't keep lots of dirty objects that the VFS knows
-nothing about pinned in memory when there is a shortage.
-
-By also pushing the AIL doing the periodic syncd work, we ensure
-that we always clear out dirty objects from the AIL regularly and
-hence allow the filesytem to idle correctly. Conversion of the
-xfsaild thread to a workqueue also simplifies the push trigger
-mechanism for cleaning the AIL and removes the need for a thread per
-filesystem for this work.
-
-Version 2:
-- drop writeback_inodes_sb_nr_if_idle() patch
-- no need for work_pending checks before queueing - the queuing
-  already does this atomically.
-- remove xfs_syncd_lock as it is not necessary anymore
-- simplify inode reclaim trigger
-- add AIL pushing patches.
+diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
+index 3f39d83..7ab79671 100644
+--- a/fs/xfs/linux-2.6/xfs_sync.c
++++ b/fs/xfs/linux-2.6/xfs_sync.c
+@@ -22,6 +22,7 @@
+ #include "xfs_log.h"
+ #include "xfs_inum.h"
+ #include "xfs_trans.h"
++#include "xfs_trans_priv.h"
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+ #include "xfs_mount.h"
+@@ -463,6 +464,9 @@ xfs_sync_worker(
+ 			xfs_log_force(mp, 0);
+ 		xfs_reclaim_inodes(mp, 0);
+ 		error = xfs_qm_sync(mp, SYNC_TRYLOCK);
++
++		/* start pushing all the metadata that is currently dirty */
++		xfs_trans_ail_push_all(mp->m_ail);
+ 	}
+ 
+ 	/* queue us up again */
+@@ -1017,8 +1021,9 @@ xfs_reclaim_inode_shrink(
+ 
+ 	mp = container_of(shrink, struct xfs_mount, m_inode_shrink);
+ 	if (nr_to_scan) {
+-		/* kick background reclaimer */
++		/* kick background reclaimer and push the AIL */
+ 		xfs_syncd_queue_reclaim(mp);
++		xfs_trans_ail_push_all(mp->m_ail);
+ 
+ 		if (!(gfp_mask & __GFP_FS))
+ 			return -1;
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index 8b68679..62da328 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -30,17 +30,55 @@
+ 
+ struct workqueue_struct	*xfs_ail_wq;	/* AIL workqueue */
+ 
+-STATIC void xfs_ail_splice(struct xfs_ail *, struct list_head *, xfs_lsn_t);
+-STATIC void xfs_ail_delete(struct xfs_ail *, xfs_log_item_t *);
+-STATIC xfs_log_item_t * xfs_ail_min(struct xfs_ail *);
+-STATIC xfs_log_item_t * xfs_ail_next(struct xfs_ail *, xfs_log_item_t *);
+-
+ #ifdef DEBUG
+ STATIC void xfs_ail_check(struct xfs_ail *, xfs_log_item_t *);
+ #else
+ #define	xfs_ail_check(a,l)
+ #endif /* DEBUG */
+ 
++/*
++ * Return a pointer to the first item in the AIL.
++ * If the AIL is empty, then return NULL.
++ */
++static xfs_log_item_t *
++xfs_ail_min(
++	struct xfs_ail  *ailp)
++{
++	if (list_empty(&ailp->xa_ail))
++		return NULL;
++
++	return list_first_entry(&ailp->xa_ail, xfs_log_item_t, li_ail);
++}
++
++/*
++ * Return a pointer to the last item in the AIL.
++ * If the AIL is empty, then return NULL.
++ */
++static xfs_log_item_t *
++xfs_ail_max(
++	struct xfs_ail  *ailp)
++{
++	if (list_empty(&ailp->xa_ail))
++		return NULL;
++
++	return list_entry(ailp->xa_ail.prev, xfs_log_item_t, li_ail);
++}
++
++/*
++ * Return a pointer to the item which follows
++ * the given item in the AIL.  If the given item
++ * is the last item in the list, then return NULL.
++ */
++static xfs_log_item_t *
++xfs_ail_next(
++	struct xfs_ail  *ailp,
++	xfs_log_item_t  *lip)
++{
++	if (lip->li_ail.next == &ailp->xa_ail)
++		return NULL;
++
++	return list_first_entry(&lip->li_ail, xfs_log_item_t, li_ail);
++}
+ 
+ /*
+  * This is called by the log manager code to determine the LSN
+@@ -55,16 +93,32 @@ xfs_lsn_t
+ xfs_trans_ail_tail(
+ 	struct xfs_ail	*ailp)
+ {
+-	xfs_lsn_t	lsn;
++	xfs_lsn_t	lsn = 0;
+ 	xfs_log_item_t	*lip;
+ 
+ 	spin_lock(&ailp->xa_lock);
+ 	lip = xfs_ail_min(ailp);
+-	if (lip == NULL) {
+-		lsn = (xfs_lsn_t)0;
+-	} else {
++	if (lip)
++		lsn = lip->li_lsn;
++	spin_unlock(&ailp->xa_lock);
++
++	return lsn;
++}
++
++/*
++ * Return the maximum lsn held in the AIL, or zero if the AIl is empty.
++ */
++static xfs_lsn_t
++xfs_ail_max_lsn(
++	struct xfs_ail  *ailp)
++{
++	xfs_lsn_t       lsn = 0;
++	xfs_log_item_t  *lip;
++
++	spin_lock(&ailp->xa_lock);
++	lip = xfs_ail_max(ailp);
++	if (lip)
+ 		lsn = lip->li_lsn;
+-	}
+ 	spin_unlock(&ailp->xa_lock);
+ 
+ 	return lsn;
+@@ -208,6 +262,50 @@ out:
+ }
+ 
+ /*
++ * splice the log item list into the AIL at the given LSN.
++ */
++static void
++xfs_ail_splice(
++	struct xfs_ail  *ailp,
++	struct list_head *list,
++	xfs_lsn_t       lsn)
++{
++	xfs_log_item_t  *next_lip;
++
++	/*
++	 * If the list is empty, just insert the item.
++	 */
++	if (list_empty(&ailp->xa_ail)) {
++		list_splice(list, &ailp->xa_ail);
++		return;
++	}
++
++	list_for_each_entry_reverse(next_lip, &ailp->xa_ail, li_ail) {
++		if (XFS_LSN_CMP(next_lip->li_lsn, lsn) <= 0)
++			break;
++	}
++
++	ASSERT((&next_lip->li_ail == &ailp->xa_ail) ||
++	       (XFS_LSN_CMP(next_lip->li_lsn, lsn) <= 0));
++
++	list_splice_init(list, &next_lip->li_ail);
++	return;
++}
++
++/*
++ * Delete the given item from the AIL.  Return a pointer to the item.
++ */
++static void
++xfs_ail_delete(
++	struct xfs_ail  *ailp,
++	xfs_log_item_t  *lip)
++{
++	xfs_ail_check(ailp, lip);
++	list_del(&lip->li_ail);
++	xfs_trans_ail_cursor_clear(ailp, lip);
++}
++
++/*
+  * xfs_ail_worker does the work of pushing on the AIL. It will requeue itself
+  * to run at a later time if there is more work to do to complete the push.
+  */
+@@ -431,6 +529,20 @@ xfs_trans_ail_push(
+ }
+ 
+ /*
++ * similar to xfs_trans_push_ail(), except we are trying to push out all items
++ * in the AIL immediately
++ */
++void
++xfs_trans_ail_push_all(
++	struct xfs_ail  *ailp)
++{
++	xfs_lsn_t       threshold_lsn = xfs_ail_max_lsn(ailp);
++
++	if (threshold_lsn && !XFS_FORCED_SHUTDOWN(ailp->xa_mount))
++		xfs_ail_push_queue(ailp, threshold_lsn, 0);
++}
++
++/*
+  * This is to be called when an item is unlocked that may have
+  * been in the AIL.  It will wake up the first member of the AIL
+  * wait list if this item's unlocking might allow it to progress.
+@@ -663,80 +775,6 @@ xfs_trans_ail_destroy(
+ 	kmem_free(ailp);
+ }
+ 
+-/*
+- * splice the log item list into the AIL at the given LSN.
+- */
+-STATIC void
+-xfs_ail_splice(
+-	struct xfs_ail	*ailp,
+-	struct list_head *list,
+-	xfs_lsn_t	lsn)
+-{
+-	xfs_log_item_t	*next_lip;
+-
+-	/*
+-	 * If the list is empty, just insert the item.
+-	 */
+-	if (list_empty(&ailp->xa_ail)) {
+-		list_splice(list, &ailp->xa_ail);
+-		return;
+-	}
+-
+-	list_for_each_entry_reverse(next_lip, &ailp->xa_ail, li_ail) {
+-		if (XFS_LSN_CMP(next_lip->li_lsn, lsn) <= 0)
+-			break;
+-	}
+-
+-	ASSERT((&next_lip->li_ail == &ailp->xa_ail) ||
+-	       (XFS_LSN_CMP(next_lip->li_lsn, lsn) <= 0));
+-
+-	list_splice_init(list, &next_lip->li_ail);
+-	return;
+-}
+-
+-/*
+- * Delete the given item from the AIL.  Return a pointer to the item.
+- */
+-STATIC void
+-xfs_ail_delete(
+-	struct xfs_ail	*ailp,
+-	xfs_log_item_t	*lip)
+-{
+-	xfs_ail_check(ailp, lip);
+-	list_del(&lip->li_ail);
+-	xfs_trans_ail_cursor_clear(ailp, lip);
+-}
+-
+-/*
+- * Return a pointer to the first item in the AIL.
+- * If the AIL is empty, then return NULL.
+- */
+-STATIC xfs_log_item_t *
+-xfs_ail_min(
+-	struct xfs_ail	*ailp)
+-{
+-	if (list_empty(&ailp->xa_ail))
+-		return NULL;
+-
+-	return list_first_entry(&ailp->xa_ail, xfs_log_item_t, li_ail);
+-}
+-
+-/*
+- * Return a pointer to the item which follows
+- * the given item in the AIL.  If the given item
+- * is the last item in the list, then return NULL.
+- */
+-STATIC xfs_log_item_t *
+-xfs_ail_next(
+-	struct xfs_ail	*ailp,
+-	xfs_log_item_t	*lip)
+-{
+-	if (lip->li_ail.next == &ailp->xa_ail)
+-		return NULL;
+-
+-	return list_first_entry(&lip->li_ail, xfs_log_item_t, li_ail);
+-}
+-
+ #ifdef DEBUG
+ /*
+  * Check that the list is sorted as it should be.
+diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
+index 2410da4..dbd93e6 100644
+--- a/fs/xfs/xfs_trans_priv.h
++++ b/fs/xfs/xfs_trans_priv.h
+@@ -103,6 +103,7 @@ xfs_trans_ail_delete(
+ }
+ 
+ void			xfs_trans_ail_push(struct xfs_ail *, xfs_lsn_t);
++void			xfs_trans_ail_push_all(struct xfs_ail *);
+ void			xfs_trans_unlocked_item(struct xfs_ail *,
+ 					xfs_log_item_t *);
+ 
+-- 
+1.7.2.3
 
 _______________________________________________
 xfs mailing list
