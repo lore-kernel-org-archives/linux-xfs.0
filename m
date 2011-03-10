@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p2A02c5U068750 for <xfs@oss.sgi.com>; Wed, 9 Mar 2011 18:02:43 -0600
+	p2A02eNf068755 for <xfs@oss.sgi.com>; Wed, 9 Mar 2011 18:02:45 -0600
 Received: from ipmail07.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 40A0A1BD3520
-	for <xfs@oss.sgi.com>; Wed,  9 Mar 2011 16:05:27 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C0351327A10
+	for <xfs@oss.sgi.com>; Wed,  9 Mar 2011 16:05:29 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	qFvQnzUyDz0nm3vQ for <xfs@oss.sgi.com>;
-	Wed, 09 Mar 2011 16:05:27 -0800 (PST)
+	afIhDhgjz55ihTKa for <xfs@oss.sgi.com>;
+	Wed, 09 Mar 2011 16:05:29 -0800 (PST)
 Received: from chute ([192.168.1.1] helo=disappointment)
 	by dastard with esmtp (Exim 4.72)
-	(envelope-from <dave@fromorbit.com>) id 1PxTNc-0002vO-T1
-	for xfs@oss.sgi.com; Thu, 10 Mar 2011 11:05:24 +1100
+	(envelope-from <dave@fromorbit.com>) id 1PxTNc-0002vR-W8
+	for xfs@oss.sgi.com; Thu, 10 Mar 2011 11:05:25 +1100
 Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1PxTNk-0002t4-Q1
+	(envelope-from <dave@disappointment.disaster>) id 1PxTNk-0002t9-Ty
 	for xfs@oss.sgi.com; Thu, 10 Mar 2011 11:05:32 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/6] xfs: introduce inode cluster buffer trylocks for
-	xfs_iflush
-Date: Thu, 10 Mar 2011 11:05:24 +1100
-Message-Id: <1299715529-11026-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH 3/6] xfs: convert ENOSPC inode flushing to use new syncd
+	workqueue
+Date: Thu, 10 Mar 2011 11:05:26 +1100
+Message-Id: <1299715529-11026-4-git-send-email-david@fromorbit.com>
 In-Reply-To: <1299715529-11026-1-git-send-email-david@fromorbit.com>
 References: <1299715529-11026-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -40,129 +40,227 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-There is an ABBA deadlock between synchronous inode flushing in
-xfs_reclaim_inode and xfs_icluster_free. xfs_icluster_free locks the
-buffer, then takes inode ilocks, whilst synchronous reclaim takes
-the ilock followed by the buffer lock in xfs_iflush().
+On of the problems with the current inode flush at ENOSPC is that we
+queue a flush per ENOSPC event, regardless of how many are already
+queued. Thi can result in    hundreds of queued flushes, most of
+which simply burn CPU scanned and do no real work. This simply slows
+down allocation at ENOSPC.
 
-To avoid this deadlock, separate the inode cluster buffer locking
-semantics from the synchronous inode flush semantics, allowing
-callers to attempt to lock the buffer but still issue synchronous IO
-if it can get the buffer. This requires xfs_iflush() calls that
-currently use non-blocking semantics to pass SYNC_TRYLOCK rather
-than 0 as the flags parameter.
+We really only need one active flush at a time, and we can easily
+implement that via the new xfs_syncd_wq. All we need to do is queue
+a flush if one is not already active, then block waiting for the
+currently active flush to complete. The result is that we only ever
+have a single ENOSPC inode flush active at a time and this greatly
+reduces the overhead of ENOSPC processing.
 
-This allows xfs_reclaim_inode to avoid the deadlock on the buffer
-lock and detect the failure so that it can drop the inode ilock and
-restart the reclaim attempt on the inode. This allows
-xfs_ifree_cluster to obtain the inode lock, mark the inode stale and
-release it and hence defuse the deadlock situation. It also has the
-pleasant side effect of avoiding IO in xfs_reclaim_inode when it
-tries to next reclaim the inode as it is now marked stale.
+On my 2p test machine, this results in tests exercising ENOSPC
+conditions running significantly faster - 042 halves execution time,
+083 drops from 60s to 5s, etc - while not introducing test
+regressions.
+
+This allows us to remove the old xfssyncd threads and infrastructure
+as they are no longer used.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/linux-2.6/xfs_super.c |    2 +-
- fs/xfs/linux-2.6/xfs_sync.c  |   30 +++++++++++++++++++++++++++---
- fs/xfs/xfs_inode.c           |    2 +-
- fs/xfs/xfs_inode_item.c      |    6 +++---
- 4 files changed, 32 insertions(+), 8 deletions(-)
+ fs/xfs/linux-2.6/xfs_super.c |    2 -
+ fs/xfs/linux-2.6/xfs_sync.c  |  133 +++++++++++------------------------------
+ fs/xfs/xfs_mount.h           |    4 +-
+ 3 files changed, 37 insertions(+), 102 deletions(-)
 
 diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
-index 818c4cf..8a70b2a 100644
+index 768894b..1cbee9c 100644
 --- a/fs/xfs/linux-2.6/xfs_super.c
 +++ b/fs/xfs/linux-2.6/xfs_super.c
-@@ -1078,7 +1078,7 @@ xfs_fs_write_inode(
- 			error = 0;
- 			goto out_unlock;
- 		}
--		error = xfs_iflush(ip, 0);
-+		error = xfs_iflush(ip, SYNC_TRYLOCK);
- 	}
+@@ -1480,8 +1480,6 @@ xfs_fs_fill_super(
+ 	spin_lock_init(&mp->m_sb_lock);
+ 	mutex_init(&mp->m_growlock);
+ 	atomic_set(&mp->m_active_trans, 0);
+-	INIT_LIST_HEAD(&mp->m_sync_list);
+-	spin_lock_init(&mp->m_sync_lock);
  
-  out_unlock:
+ 	mp->m_super = sb;
+ 	sb->s_fs_info = mp;
 diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
-index 6c10f1d..594cd82 100644
+index 91c513b..62e1f09 100644
 --- a/fs/xfs/linux-2.6/xfs_sync.c
 +++ b/fs/xfs/linux-2.6/xfs_sync.c
-@@ -761,8 +761,10 @@ xfs_reclaim_inode(
- 	struct xfs_perag	*pag,
- 	int			sync_mode)
- {
--	int	error = 0;
-+	int	error;
- 
-+restart:
-+	error = 0;
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 	if (!xfs_iflock_nowait(ip)) {
- 		if (!(sync_mode & SYNC_WAIT))
-@@ -788,9 +790,31 @@ xfs_reclaim_inode(
- 	if (xfs_inode_clean(ip))
- 		goto reclaim;
- 
--	/* Now we have an inode that needs flushing */
--	error = xfs_iflush(ip, sync_mode);
-+	/*
-+	 * Now we have an inode that needs flushing.
-+	 *
-+	 * We do a nonblocking flush here even if we are doing a SYNC_WAIT
-+	 * reclaim as we can deadlock with inode cluster removal.
-+	 * xfs_ifree_cluster() can lock the inode buffer before it locks the
-+	 * ip->i_lock, and we are doing the exact opposite here. As a result,
-+	 * doing a blocking xfs_itobp() to get the cluster buffer will result
-+	 * in an ABBA deadlock with xfs_ifree_cluster().
-+	 *
-+	 * As xfs_ifree_cluser() must gather all inodes that are active in the
-+	 * cache to mark them stale, if we hit this case we don't actually want
-+	 * to do IO here - we want the inode marked stale so we can simply
-+	 * reclaim it. Hence if we get an EAGAIN error on a SYNC_WAIT flush,
-+	 * just unlock the inode, back off and try again. Hopefully the next
-+	 * pass through will see the stale flag set on the inode.
-+	 */
-+	error = xfs_iflush(ip, SYNC_TRYLOCK | sync_mode);
- 	if (sync_mode & SYNC_WAIT) {
-+		if (error == EAGAIN) {
-+			xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+			/* backoff longer than in xfs_ifree_cluster */
-+			delay(2);
-+			goto restart;
-+		}
- 		xfs_iflock(ip);
- 		goto reclaim;
- 	}
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index da871f5..742c833 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2835,7 +2835,7 @@ xfs_iflush(
- 	 * Get the buffer containing the on-disk inode.
- 	 */
- 	error = xfs_itobp(mp, NULL, ip, &dip, &bp,
--				(flags & SYNC_WAIT) ? XBF_LOCK : XBF_TRYLOCK);
-+				(flags & SYNC_TRYLOCK) ? XBF_TRYLOCK : XBF_LOCK);
- 	if (error || !bp) {
- 		xfs_ifunlock(ip);
- 		return error;
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index fd4f398..46cc401 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -760,11 +760,11 @@ xfs_inode_item_push(
- 	 * Push the inode to it's backing buffer. This will not remove the
- 	 * inode from the AIL - a further push will be required to trigger a
- 	 * buffer push. However, this allows all the dirty inodes to be pushed
--	 * to the buffer before it is pushed to disk. THe buffer IO completion
--	 * will pull th einode from the AIL, mark it clean and unlock the flush
-+	 * to the buffer before it is pushed to disk. The buffer IO completion
-+	 * will pull the inode from the AIL, mark it clean and unlock the flush
- 	 * lock.
- 	 */
--	(void) xfs_iflush(ip, 0);
-+	(void) xfs_iflush(ip, SYNC_TRYLOCK);
- 	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+@@ -433,99 +433,6 @@ xfs_quiesce_attr(
+ 	xfs_unmountfs_writesb(mp);
  }
  
+-/*
+- * Enqueue a work item to be picked up by the vfs xfssyncd thread.
+- * Doing this has two advantages:
+- * - It saves on stack space, which is tight in certain situations
+- * - It can be used (with care) as a mechanism to avoid deadlocks.
+- * Flushing while allocating in a full filesystem requires both.
+- */
+-STATIC void
+-xfs_syncd_queue_work(
+-	struct xfs_mount *mp,
+-	void		*data,
+-	void		(*syncer)(struct xfs_mount *, void *),
+-	struct completion *completion)
+-{
+-	struct xfs_sync_work *work;
+-
+-	work = kmem_alloc(sizeof(struct xfs_sync_work), KM_SLEEP);
+-	INIT_LIST_HEAD(&work->w_list);
+-	work->w_syncer = syncer;
+-	work->w_data = data;
+-	work->w_mount = mp;
+-	work->w_completion = completion;
+-	spin_lock(&mp->m_sync_lock);
+-	list_add_tail(&work->w_list, &mp->m_sync_list);
+-	spin_unlock(&mp->m_sync_lock);
+-	wake_up_process(mp->m_sync_task);
+-}
+-
+-/*
+- * Flush delayed allocate data, attempting to free up reserved space
+- * from existing allocations.  At this point a new allocation attempt
+- * has failed with ENOSPC and we are in the process of scratching our
+- * heads, looking about for more room...
+- */
+-STATIC void
+-xfs_flush_inodes_work(
+-	struct xfs_mount *mp,
+-	void		*arg)
+-{
+-	struct inode	*inode = arg;
+-	xfs_sync_data(mp, SYNC_TRYLOCK);
+-	xfs_sync_data(mp, SYNC_TRYLOCK | SYNC_WAIT);
+-	iput(inode);
+-}
+-
+-void
+-xfs_flush_inodes(
+-	xfs_inode_t	*ip)
+-{
+-	struct inode	*inode = VFS_I(ip);
+-	DECLARE_COMPLETION_ONSTACK(completion);
+-
+-	igrab(inode);
+-	xfs_syncd_queue_work(ip->i_mount, inode, xfs_flush_inodes_work, &completion);
+-	wait_for_completion(&completion);
+-	xfs_log_force(ip->i_mount, XFS_LOG_SYNC);
+-}
+-
+-STATIC int
+-xfssyncd(
+-	void			*arg)
+-{
+-	struct xfs_mount	*mp = arg;
+-	long			timeleft;
+-	xfs_sync_work_t		*work, *n;
+-	LIST_HEAD		(tmp);
+-
+-	set_freezable();
+-	timeleft = xfs_syncd_centisecs * msecs_to_jiffies(10);
+-	for (;;) {
+-		if (list_empty(&mp->m_sync_list))
+-			timeleft = schedule_timeout_interruptible(timeleft);
+-		/* swsusp */
+-		try_to_freeze();
+-		if (kthread_should_stop() && list_empty(&mp->m_sync_list))
+-			break;
+-
+-		spin_lock(&mp->m_sync_lock);
+-		list_splice_init(&mp->m_sync_list, &tmp);
+-		spin_unlock(&mp->m_sync_lock);
+-
+-		list_for_each_entry_safe(work, n, &tmp, w_list) {
+-			(*work->w_syncer)(mp, work->w_data);
+-			list_del(&work->w_list);
+-			if (work->w_completion)
+-				complete(work->w_completion);
+-			kmem_free(work);
+-		}
+-	}
+-
+-	return 0;
+-}
+-
+ static void
+ xfs_syncd_queue_sync(
+ 	struct xfs_mount        *mp)
+@@ -562,16 +469,48 @@ xfs_sync_worker(
+ 	xfs_syncd_queue_sync(mp);
+ }
+ 
++/*
++ * Flush delayed allocate data, attempting to free up reserved space
++ * from existing allocations.  At this point a new allocation attempt
++ * has failed with ENOSPC and we are in the process of scratching our
++ * heads, looking about for more room.
++ *
++ * Queue a new data flush if there isn't one already in progress and
++ * wait for completion of the flush. This means that we only ever have one
++ * inode flush in progress no matter how many ENOSPC events are occurring and
++ * so will prevent the system from bogging down due to every concurrent
++ * ENOSPC event scanning all the active inodes in the system for writeback.
++ */
++void
++xfs_flush_inodes(
++	struct xfs_inode	*ip)
++{
++	struct xfs_mount	*mp = ip->i_mount;
++
++	queue_work(xfs_syncd_wq, &mp->m_flush_work);
++	flush_work_sync(&mp->m_flush_work);
++}
++
++STATIC void
++xfs_flush_worker(
++	struct work_struct *work)
++{
++	struct xfs_mount *mp = container_of(work,
++					struct xfs_mount, m_flush_work);
++
++	xfs_sync_data(mp, SYNC_TRYLOCK);
++	xfs_sync_data(mp, SYNC_TRYLOCK | SYNC_WAIT);
++	xfs_log_force(mp, XFS_LOG_SYNC);
++}
++
+ int
+ xfs_syncd_init(
+ 	struct xfs_mount	*mp)
+ {
++	INIT_WORK(&mp->m_flush_work, xfs_flush_worker);
+ 	INIT_DELAYED_WORK(&mp->m_sync_work, xfs_sync_worker);
+ 	xfs_syncd_queue_sync(mp);
+ 
+-	mp->m_sync_task = kthread_run(xfssyncd, mp, "xfssyncd/%s", mp->m_fsname);
+-	if (IS_ERR(mp->m_sync_task))
+-		return -PTR_ERR(mp->m_sync_task);
+ 	return 0;
+ }
+ 
+@@ -580,7 +519,7 @@ xfs_syncd_stop(
+ 	struct xfs_mount	*mp)
+ {
+ 	cancel_delayed_work_sync(&mp->m_sync_work);
+-	kthread_stop(mp->m_sync_task);
++	cancel_work_sync(&mp->m_flush_work);
+ }
+ 
+ void
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 2c11e62..a0ad90e 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -204,9 +204,7 @@ typedef struct xfs_mount {
+ #endif
+ 	struct xfs_mru_cache	*m_filestream;  /* per-mount filestream data */
+ 	struct delayed_work	m_sync_work;	/* background sync work */
+-	struct task_struct	*m_sync_task;	/* generalised sync thread */
+-	struct list_head	m_sync_list;	/* sync thread work item list */
+-	spinlock_t		m_sync_lock;	/* work item list lock */
++	struct work_struct	m_flush_work;	/* background inode flush */
+ 	__int64_t		m_update_flags;	/* sb flags we need to update
+ 						   on the next remount,rw */
+ 	struct shrinker		m_inode_shrink;	/* inode reclaim shrinker */
 -- 
 1.7.2.3
 
