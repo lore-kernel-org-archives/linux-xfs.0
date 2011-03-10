@@ -1,14 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p2AMDSqj124954 for <xfs@oss.sgi.com>; Thu, 10 Mar 2011 16:13:33 -0600
-Subject: Re: [PATCH] xfstests: rework "dmapi" subtree build mechanism
+	p2AMDSOb124956 for <xfs@oss.sgi.com>; Thu, 10 Mar 2011 16:13:34 -0600
+Received: from cf--amer001e--3.americas.sgi.com
+	(cf--amer001e--3.americas.sgi.com [137.38.100.5])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 43A9FAC00E
+	for <xfs@oss.sgi.com>; Thu, 10 Mar 2011 14:16:20 -0800 (PST)
+Subject: Re: [PATCH 1/2] xfstests: a few fixes to Makefile
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110310172943.GD13390@infradead.org>
-References: <201103041937.p24Jbk5W004828@stout.americas.sgi.com>
-	<20110310172943.GD13390@infradead.org>
-Date: Thu, 10 Mar 2011 16:16:12 -0600
-Message-ID: <1299795372.2573.79.camel@doink>
+In-Reply-To: <20110310172537.GB13390@infradead.org>
+References: <201103041937.p24JbaaN004813@stout.americas.sgi.com>
+	<20110310172537.GB13390@infradead.org>
+Date: Thu, 10 Mar 2011 16:16:06 -0600
+Message-ID: <1299795366.2573.78.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -26,46 +30,23 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Thu, 2011-03-10 at 12:29 -0500, Christoph Hellwig wrote:
-> >  LIB_SUBDIRS = include lib
-> >  TOOL_SUBDIRS = ltp src m4
+On Thu, 2011-03-10 at 12:25 -0500, Christoph Hellwig wrote:
 > > +ifeq ($(HAVE_DMAPI), true)
-> > +TOOL_SUBDIRS += dmapi
-> > +endif
+> >  	# automake doesn't always support "default" target 
+> >  	# so do dmapi make explicitly with "all"
+> > -ifeq ($(HAVE_DMAPI), true)
 > 
-> Does this work with the way we generate source tarballs on make dist?
-> In xfsprogs we have special variables for source files that don't get
-> build.
-
-Right now, xfstests has no "make dist".  I'm trying
-now to straighten things out a bit in preparation for
-making xfstests follow the same model used for xfsprogs
-(and the rest).  So, I guess the answer is "no" but
-ultimately it should be "yes," though more changes
-will be needed to get there.
-
+> What about moving the # signs to the first line so that it never gets
+> echoed at all?
 > 
-> > @@ -0,0 +1,30 @@
-> > +#
-> > +# Copyright (c) 2011 SGI  All Rights Reserved.
-> > +#
-> 
-> I think a license would be more useful than all rights reserved here.
-> 
-> Except for that the patch looks sane to me, and having a consistent
-> build system is a good thing.
+> Otherwise looks good to me.
 
-I'll add a boilerplate GPL statement in these new files.
-What I used was simply mimicing what was present in the
-other Makefiles.
-
-In order to avoid re-sending this big patch, may I get
-your signoff/reviewed-by on that plan?
-
-Thanks.
+That would work too.  A later patch makes the
+whole thing go away though, so it's sort of moot.
+(And I already committed it after some discussion
+with Eric yesterday...)
 
 					-Alex
-
 
 _______________________________________________
 xfs mailing list
