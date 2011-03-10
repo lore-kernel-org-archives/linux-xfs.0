@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p2AMEFMT125004 for <xfs@oss.sgi.com>; Thu, 10 Mar 2011 16:14:20 -0600
-Received: from cf--amer001e--3.americas.sgi.com
-	(cf--amer001e--3.americas.sgi.com [137.38.100.5])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id CA76D8F8074
-	for <xfs@oss.sgi.com>; Thu, 10 Mar 2011 14:17:00 -0800 (PST)
-Subject: Re: [PATCH] xfstests: fix a few build warnings
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110310172418.GA13390@infradead.org>
-References: <201103041937.p24JbVtP004804@stout.americas.sgi.com>
-	<20110310172418.GA13390@infradead.org>
-Date: Thu, 10 Mar 2011 16:16:53 -0600
-Message-ID: <1299795413.2573.80.camel@doink>
-Mime-Version: 1.0
-Reply-To: aelder@sgi.com
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
+	p2AMl9tp126237 for <xfs@oss.sgi.com>; Thu, 10 Mar 2011 16:47:15 -0600
+Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 701381363CC2
+	for <xfs@oss.sgi.com>; Thu, 10 Mar 2011 14:49:49 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	xEFcuBXo8LSwXwDG for <xfs@oss.sgi.com>;
+	Thu, 10 Mar 2011 14:49:49 -0800 (PST)
+Date: Fri, 11 Mar 2011 09:49:45 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: flush vmap aliases when mapping fails
+Message-ID: <20110310224945.GA15097@dastard>
+References: <1299713876-7747-1-git-send-email-david@fromorbit.com>
+	<20110310073751.GB25374@infradead.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20110310073751.GB25374@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,24 +31,46 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+Cc: linux-mm@kvack.org, npiggin@kernel.dk, xfs@oss.sgi.com
 
-On Thu, 2011-03-10 at 12:24 -0500, Christoph Hellwig wrote:
-> >  lio_random_methods(long curr_mask)
-> >  {
-> >      int mask=0;
-> > -    long random_bit();
-> > +    long random_bit(long);
+On Thu, Mar 10, 2011 at 02:37:51AM -0500, Christoph Hellwig wrote:
+> On Thu, Mar 10, 2011 at 10:37:56AM +1100, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > On 32 bit systems, vmalloc space is limited and XFS can chew through
+> > it quickly as the vmalloc space is lazily freed. This can result in
+> > failure to map buffers, even when there is apparently large amounts
+> > of vmalloc space available. Hence, if we fail to map a buffer, purge
+> > the aliases that have not yet been freed to hopefuly free up enough
+> > vmalloc space to allow a retry to succeed.
 > 
-> This should use the prototype from include/random_range.h instead.
-> 
-> Otherwise looks good to me,
-> 
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> IMHO this should be done by vm_map_ram internally.  If we can't get the
+> core code fixes we can put this in as a last resort.
 
-I should have done that.  Already committed though.
+OK. The patch was done as part of the triage for this bug:
 
+https://bugzilla.kernel.org/show_bug.cgi?id=27492
+
+where the vmalloc space on 32 bit systems is getting exhausted. I
+can easily move this flush-and-retry into the vmap code.
+
+FWIW, while the VM folk might be paying attention about vmap realted
+stuff, this vmap BUG() also needs triage:
+
+https://bugzilla.kernel.org/show_bug.cgi?id=27002
+
+And, finally, the mm-vmap-area-cache.patch in the current mmotm also
+needs to be pushed forward because we've been getting reports of
+excessive CPU time being spent walking the vmap area rbtree during
+vm_map_ram operations and this patch supposedly fixes that
+problem....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
