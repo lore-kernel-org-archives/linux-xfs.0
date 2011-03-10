@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p2ALStOX123294 for <xfs@oss.sgi.com>; Thu, 10 Mar 2011 15:29:06 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D3D8E1DE5D38
-	for <xfs@oss.sgi.com>; Thu, 10 Mar 2011 13:31:46 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id BDQ3iq0V1J80WGLl for
-	<xfs@oss.sgi.com>; Thu, 10 Mar 2011 13:31:46 -0800 (PST)
-Date: Thu, 10 Mar 2011 16:31:44 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 6/6] xfs: push the AIL from memory reclaim and periodic
-	sync
-Message-ID: <20110310213144.GA9371@infradead.org>
-References: <1299715529-11026-1-git-send-email-david@fromorbit.com>
-	<1299715529-11026-7-git-send-email-david@fromorbit.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1299715529-11026-7-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
+	p2AM6uNc124709 for <xfs@oss.sgi.com>; Thu, 10 Mar 2011 16:07:02 -0600
+Received: from cf--amer001e--3.americas.sgi.com
+	(cf--amer001e--3.americas.sgi.com [137.38.100.5])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A3B97304084
+	for <xfs@oss.sgi.com>; Thu, 10 Mar 2011 14:09:42 -0800 (PST)
+Subject: Re: [PATCH 2/2] xfstests: some refinements on "make depend"
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <20110310172644.GC13390@infradead.org>
+References: <201103041937.p24Jbfh5004820@stout.americas.sgi.com>
+	<20110310172644.GC13390@infradead.org>
+Date: Thu, 10 Mar 2011 16:09:36 -0600
+Message-ID: <1299794976.2573.72.camel@doink>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,55 +27,50 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-> -STATIC void xfs_ail_splice(struct xfs_ail *, struct list_head *, xfs_lsn_t);
-> -STATIC void xfs_ail_delete(struct xfs_ail *, xfs_log_item_t *);
-> -STATIC xfs_log_item_t * xfs_ail_min(struct xfs_ail *);
-> -STATIC xfs_log_item_t * xfs_ail_next(struct xfs_ail *, xfs_log_item_t *);
-> -
+On Thu, 2011-03-10 at 12:26 -0500, Christoph Hellwig wrote:
+> On Fri, Mar 04, 2011 at 01:37:41PM -0600, Alex Elder wrote:
+> > Make it so "make depend" is a generic target, like "make clean".
+> > 
+> > Each Makefile has a "depend" target that indicates whether making
+> > dependencies means creating ".dep" or creating ".ltdep" (or, I
+> > suppose, both, though none do that right now).  Both files get
+> > created even if there are no CFILES to scan (to ensure the target
+> > up-to-date).  The "default" target now depends on "depend" (there is
+> > no "ltdepend" any more).
+> > 
+> > Remove the "depend" and "ltdepend" definitions from the "buildrules"
+> > file; only the actual generated files (".dep" and ".ltdep") remain
+> > as generic targets.  The "depend' target is still defined as phony.
+> >  
+> > Do a shell trick when expanding the value of CFILES, to avoid a
+> > problem that occurs if it is created by "make" by concatentating two
+> > empty strings.  The problem was that in that case CFILES will
+> > contain a space, and that wasn't getting treated as empty as
+> > desired.
+> > 
+> > Make the rule for tool/lib dependencies more generic, to reflect the
+> > general desire that "lib" subdirectories need to be built before
+> > things in the "tool" subdirectories.
+> 
+> Can we instead port over the generic dependency generation from
+> xfsprogs/xfsdump?
 
-Reordering and cleanup of unrelated existing functions should be in a
-separate patch.
+My intention was to work toward unifying all the user space
+stuff, basically in line with what you suggest.
 
-> @@ -55,16 +93,32 @@ xfs_lsn_t
->  xfs_trans_ail_tail(
->  	struct xfs_ail	*ailp)
->  {
-> -	xfs_lsn_t	lsn;
-> +	xfs_lsn_t	lsn = 0;
->  	xfs_log_item_t	*lip;
->  
->  	spin_lock(&ailp->xa_lock);
->  	lip = xfs_ail_min(ailp);
-> -	if (lip == NULL) {
-> -		lsn = (xfs_lsn_t)0;
-> -	} else {
-> +	if (lip)
-> +		lsn = lip->li_lsn;
-> +	spin_unlock(&ailp->xa_lock);
-> +
-> +	return lsn;
-> +}
-> +
-> +/*
-> + * Return the maximum lsn held in the AIL, or zero if the AIl is empty.
-> + */
-> +static xfs_lsn_t
-> +xfs_ail_max_lsn(
-> +	struct xfs_ail  *ailp)
-> +{
-> +	xfs_lsn_t       lsn = 0;
-> +	xfs_log_item_t  *lip;
-> +
-> +	spin_lock(&ailp->xa_lock);
-> +	lip = xfs_ail_max(ailp);
-> +	if (lip)
+This is part of a flurry of changes related to the xfstests
+dmapi subtree.  One of the things I needed to do was populate
+a set of new Makefiles there, and I guess in looking into
+that I found I didn't like the way the dependencies were done,
+and the changes I made to address that ended up in this patch.
 
-As this is the counterpart to xfs_trans_ail_tail the naming for both
-should be similar.  I much prefer the descriptive _lsn naming over the
-random trans in xfs_trans_ail_tail.
+I'll hold off on this patch and will reconsider it once
+I get the more substantive dmapi changes in.
+
+					-Alex
 
 _______________________________________________
 xfs mailing list
