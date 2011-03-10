@@ -1,18 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p2AMDSOb124956 for <xfs@oss.sgi.com>; Thu, 10 Mar 2011 16:13:34 -0600
-Received: from cf--amer001e--3.americas.sgi.com
-	(cf--amer001e--3.americas.sgi.com [137.38.100.5])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 43A9FAC00E
-	for <xfs@oss.sgi.com>; Thu, 10 Mar 2011 14:16:20 -0800 (PST)
-Subject: Re: [PATCH 1/2] xfstests: a few fixes to Makefile
+	p2AMV5SP125600 for <xfs@oss.sgi.com>; Thu, 10 Mar 2011 16:31:11 -0600
+Subject: Re: [PATCH] xfstests: rework "dmapi" subtree build mechanism
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110310172537.GB13390@infradead.org>
-References: <201103041937.p24JbaaN004813@stout.americas.sgi.com>
-	<20110310172537.GB13390@infradead.org>
-Date: Thu, 10 Mar 2011 16:16:06 -0600
-Message-ID: <1299795366.2573.78.camel@doink>
+In-Reply-To: <20110310172943.GD13390@infradead.org>
+References: <201103041937.p24Jbk5W004828@stout.americas.sgi.com>
+	<20110310172943.GD13390@infradead.org>
+Date: Thu, 10 Mar 2011 16:33:56 -0600
+Message-ID: <1299796436.10040.0.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -30,23 +26,47 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Thu, 2011-03-10 at 12:25 -0500, Christoph Hellwig wrote:
+On Thu, 2011-03-10 at 12:29 -0500, Christoph Hellwig wrote:
+> >  LIB_SUBDIRS = include lib
+> >  TOOL_SUBDIRS = ltp src m4
 > > +ifeq ($(HAVE_DMAPI), true)
-> >  	# automake doesn't always support "default" target 
-> >  	# so do dmapi make explicitly with "all"
-> > -ifeq ($(HAVE_DMAPI), true)
+> > +TOOL_SUBDIRS += dmapi
+> > +endif
 > 
-> What about moving the # signs to the first line so that it never gets
-> echoed at all?
+> Does this work with the way we generate source tarballs on make dist?
+> In xfsprogs we have special variables for source files that don't get
+> build.
 > 
-> Otherwise looks good to me.
+> > @@ -0,0 +1,30 @@
+> > +#
+> > +# Copyright (c) 2011 SGI  All Rights Reserved.
+> > +#
+> 
+> I think a license would be more useful than all rights reserved here.
+> 
+> Except for that the patch looks sane to me, and having a consistent
+> build system is a good thing.
 
-That would work too.  A later patch makes the
-whole thing go away though, so it's sort of moot.
-(And I already committed it after some discussion
-with Eric yesterday...)
+Here's the text I'm using, FYI.
 
-					-Alex
+#
+# Copyright (C) 2011 SGI  All Rights Reserved.
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation; either version 2 of the
+# License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301, USA.
+#
 
 _______________________________________________
 xfs mailing list
