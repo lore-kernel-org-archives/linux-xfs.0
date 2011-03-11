@@ -1,23 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p2B7qVLS147994 for <xfs@oss.sgi.com>; Fri, 11 Mar 2011 01:52:37 -0600
-Received: from iport-c2-out.ucsd.edu (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C5E221215811
-	for <xfs@oss.sgi.com>; Thu, 10 Mar 2011 23:55:22 -0800 (PST)
-Received: from iport-c2-out.ucsd.edu (iport-c2-out.ucsd.edu [132.239.0.119])
-	by cuda.sgi.com with ESMTP id RjZQEx26fvB59QVI for
-	<xfs@oss.sgi.com>; Thu, 10 Mar 2011 23:55:22 -0800 (PST)
-Received: from [128.54.20.156] (unknown [128.54.20.156])
-	(using TLSv1 with cipher AES128-SHA (128/128 bits))
-	(No client certificate requested)
-	by cse-smtp.ucsd.edu (Postfix) with ESMTP id ECE5250047
-	for <xfs@oss.sgi.com>; Thu, 10 Mar 2011 23:55:21 -0800 (PST)
-From: Steven Swanson <swanson@cs.ucsd.edu>
-Subject: Does XFS ever relocate extents after they are on disk?
-Date: Thu, 10 Mar 2011 23:55:21 -0800
-Message-Id: <903E14DC-D9EA-4BDC-8D43-FBB9AB4127BC@cs.ucsd.edu>
-Mime-Version: 1.0 (Apple Message framework v1082)
+	p2BA7Ube154559 for <xfs@oss.sgi.com>; Fri, 11 Mar 2011 04:07:40 -0600
+Date: Fri, 11 Mar 2011 05:10:20 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/2] xfstests: a few fixes to Makefile
+Message-ID: <20110311101020.GC11879@infradead.org>
+References: <201103041937.p24JbaaN004813@stout.americas.sgi.com>
+	<20110310172537.GB13390@infradead.org>
+	<1299795366.2573.78.camel@doink>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1299795366.2573.78.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,17 +24,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Alex Elder <aelder@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-I have simple question that I'm having trouble finding a concrete answer for:
+On Thu, Mar 10, 2011 at 04:16:06PM -0600, Alex Elder wrote:
+> On Thu, 2011-03-10 at 12:25 -0500, Christoph Hellwig wrote:
+> > > +ifeq ($(HAVE_DMAPI), true)
+> > >  	# automake doesn't always support "default" target 
+> > >  	# so do dmapi make explicitly with "all"
+> > > -ifeq ($(HAVE_DMAPI), true)
+> > 
+> > What about moving the # signs to the first line so that it never gets
+> > echoed at all?
+> > 
+> > Otherwise looks good to me.
+> 
+> That would work too.  A later patch makes the
+> whole thing go away though, so it's sort of moot.
+> (And I already committed it after some discussion
+> with Eric yesterday...)
 
-Does XFS ever relocate a file or one of its extents once it's been written to disk?  For instance, does the file system ever decide to reorganize extents to reduce fragmentation.
-
-I've read through all the documentation I can find, and everything points to using an external de-fragmentation tool, which suggests that XFS won't do it autonomously, but for the project we are working on it would be useful to know for certain when and under what conditions XFS might decide to move an extent that's already been written.
-
-Thanks!
-
--steve
+Ok.
 
 _______________________________________________
 xfs mailing list
