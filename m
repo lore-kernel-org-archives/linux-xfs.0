@@ -1,17 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p2BA7Tva154558 for <xfs@oss.sgi.com>; Fri, 11 Mar 2011 04:07:39 -0600
-Date: Fri, 11 Mar 2011 05:10:09 -0500
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
+	p2BADr4s154985 for <xfs@oss.sgi.com>; Fri, 11 Mar 2011 04:14:03 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E3B0D33B7B2
+	for <xfs@oss.sgi.com>; Fri, 11 Mar 2011 02:16:44 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id iBAZzEgDFKtOiX3u for
+	<xfs@oss.sgi.com>; Fri, 11 Mar 2011 02:16:44 -0800 (PST)
+Date: Fri, 11 Mar 2011 05:16:42 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/2] xfstests: some refinements on "make depend"
-Message-ID: <20110311101009.GB11879@infradead.org>
-References: <201103041937.p24Jbfh5004820@stout.americas.sgi.com>
-	<20110310172644.GC13390@infradead.org>
-	<1299794976.2573.72.camel@doink>
+Subject: Re: [PATCH] xfs: stop using the page cache to back the buffer cache
+Message-ID: <20110311101642.GA15786@infradead.org>
+References: <1299719104-11961-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1299794976.2573.72.camel@doink>
+In-Reply-To: <1299719104-11961-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,23 +28,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: chris.mason@oracle.com, xfs@oss.sgi.com
 
-On Thu, Mar 10, 2011 at 04:09:36PM -0600, Alex Elder wrote:
-> My intention was to work toward unifying all the user space
-> stuff, basically in line with what you suggest.
-> 
-> This is part of a flurry of changes related to the xfstests
-> dmapi subtree.  One of the things I needed to do was populate
-> a set of new Makefiles there, and I guess in looking into
-> that I found I didn't like the way the dependencies were done,
-> and the changes I made to address that ended up in this patch.
-> 
-> I'll hold off on this patch and will reconsider it once
-> I get the more substantive dmapi changes in.
+> +		if (((unsigned long)(bp->b_addr + bp->b_buffer_length - 1) &
+> +								PAGE_MASK) !=
+> +		    ((unsigned long)bp->b_addr & PAGE_MASK)) {
+> +			/* b_addr spans two pages - use alloc_page instead */
+> +			kmem_free(bp->b_addr);
+> +			bp->b_addr = NULL;
+> +			goto use_alloc_page;
+> +		}
 
-Feel free to put it in for now as a transition step.
+Did you manage to hit this case?  If it happens with any frequency under
+real workloads we really need to find a wayto avoid the allocation to
+start with.
+
+
+Otherwise looks good,
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 
