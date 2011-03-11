@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p2AMl9tp126237 for <xfs@oss.sgi.com>; Thu, 10 Mar 2011 16:47:15 -0600
+	p2B17mbf131138 for <xfs@oss.sgi.com>; Thu, 10 Mar 2011 19:07:53 -0600
 Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 701381363CC2
-	for <xfs@oss.sgi.com>; Thu, 10 Mar 2011 14:49:49 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5536433B0E4
+	for <xfs@oss.sgi.com>; Thu, 10 Mar 2011 17:10:27 -0800 (PST)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	xEFcuBXo8LSwXwDG for <xfs@oss.sgi.com>;
-	Thu, 10 Mar 2011 14:49:49 -0800 (PST)
-Date: Fri, 11 Mar 2011 09:49:45 +1100
+	9qB3OuCxJxXKWcF5 for <xfs@oss.sgi.com>;
+	Thu, 10 Mar 2011 17:10:27 -0800 (PST)
+Date: Fri, 11 Mar 2011 12:10:24 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: flush vmap aliases when mapping fails
-Message-ID: <20110310224945.GA15097@dastard>
-References: <1299713876-7747-1-git-send-email-david@fromorbit.com>
-	<20110310073751.GB25374@infradead.org>
+Subject: Re: Many-metadata performance still at a loss
+Message-ID: <20110311011024.GB15097@dastard>
+References: <alpine.LNX.2.01.1103101507120.5379@obet.zrqbmnf.qr>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110310073751.GB25374@infradead.org>
+In-Reply-To: <alpine.LNX.2.01.1103101507120.5379@obet.zrqbmnf.qr>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,40 +29,52 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-mm@kvack.org, npiggin@kernel.dk, xfs@oss.sgi.com
+To: Jan Engelhardt <jengelh@medozas.de>
+Cc: xfs@oss.sgi.com
 
-On Thu, Mar 10, 2011 at 02:37:51AM -0500, Christoph Hellwig wrote:
-> On Thu, Mar 10, 2011 at 10:37:56AM +1100, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > On 32 bit systems, vmalloc space is limited and XFS can chew through
-> > it quickly as the vmalloc space is lazily freed. This can result in
-> > failure to map buffers, even when there is apparently large amounts
-> > of vmalloc space available. Hence, if we fail to map a buffer, purge
-> > the aliases that have not yet been freed to hopefuly free up enough
-> > vmalloc space to allow a retry to succeed.
+On Thu, Mar 10, 2011 at 03:14:34PM +0100, Jan Engelhardt wrote:
+> Hi,
 > 
-> IMHO this should be done by vm_map_ram internally.  If we can't get the
-> core code fixes we can put this in as a last resort.
+> 
+> Between 2.6.33 and 2.6.37 there was a lot of interesting announcements 
+> with regards to XFS performance. However, now that I booted into 
+> 2.6.37.2, I still see the metadata slowness from earlier.
+> (Basically `time (tar -xf linux-2.6.37.tar.gz; sync)` - ext4 gets the 
+> job done in like 15-20 seconds, xfs is still syncing after 11 minutes.)
+> 
+> Was there something I missed?
+> 
+> # xfs_info /
+> meta-data=/dev/md3               isize=256    agcount=32, 
+> agsize=11429117 blks
+>          =                       sectsz=512   attr=2
+> data     =                       bsize=4096   blocks=365731739, 
+> imaxpct=5
+>          =                       sunit=0      swidth=0 blks
+> naming   =version 2              bsize=4096   ascii-ci=0
+> log      =internal               bsize=4096   blocks=32768, version=2
+>          =                       sectsz=512   sunit=0 blks, lazy-count=0
+                                                              ^^^^^^^^^^^^
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
 
-OK. The patch was done as part of the triage for this bug:
+You're using an old mkfs? At minimum, this should have lazy-count=1.
+I'm also wondering about the fact this is a MD device but there is
+no sunit/swidth set, and the agcount of 32 is not a default value,
+either. Seems like you handrolled your mkfs parameters - it is
+better to just use the defaults a recent mkfs sets....
 
-https://bugzilla.kernel.org/show_bug.cgi?id=27492
+Further - what is your storage configuration (e.g. what type of MD
+raid are you using) and is the filesystem correctly aligned to the
+storage? If you get these wrong, then nothing else you do will
+improve performance.
 
-where the vmalloc space on 32 bit systems is getting exhausted. I
-can easily move this flush-and-retry into the vmap code.
-
-FWIW, while the VM folk might be paying attention about vmap realted
-stuff, this vmap BUG() also needs triage:
-
-https://bugzilla.kernel.org/show_bug.cgi?id=27002
-
-And, finally, the mm-vmap-area-cache.patch in the current mmotm also
-needs to be pushed forward because we've been getting reports of
-excessive CPU time being spent walking the vmap area rbtree during
-vm_map_ram operations and this patch supposedly fixes that
-problem....
+What are your mount options - perhaps you've missed the fact that
+the new functionality requires the "delaylog" mount option to be
+added.  Mind you, that is not a magic bullet - if the operation is
+single threaded and CPU bound, delaylog makes  no difference to
+performance, and with lazy-count=0 then the superblock will still be
+a major contention point and probably nullify any improvement
+delaylog could provide..
 
 Cheers,
 
