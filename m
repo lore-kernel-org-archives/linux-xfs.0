@@ -1,21 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p2BADr4s154985 for <xfs@oss.sgi.com>; Fri, 11 Mar 2011 04:14:03 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E3B0D33B7B2
-	for <xfs@oss.sgi.com>; Fri, 11 Mar 2011 02:16:44 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id iBAZzEgDFKtOiX3u for
-	<xfs@oss.sgi.com>; Fri, 11 Mar 2011 02:16:44 -0800 (PST)
-Date: Fri, 11 Mar 2011 05:16:42 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: stop using the page cache to back the buffer cache
-Message-ID: <20110311101642.GA15786@infradead.org>
-References: <1299719104-11961-1-git-send-email-david@fromorbit.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1299719104-11961-1-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
+	p2BCbCde159949 for <xfs@oss.sgi.com>; Fri, 11 Mar 2011 06:37:17 -0600
+Received: from cf--amer001e--3.americas.sgi.com
+	(cf--amer001e--3.americas.sgi.com [137.38.100.5])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 584828F80EA
+	for <xfs@oss.sgi.com>; Fri, 11 Mar 2011 04:39:58 -0800 (PST)
+Subject: [PATCH] xfs: don't name variables "panic"
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <AANLkTi=Hg4s5kEMQZu_KGePf4W_7jAFm0_WifM9W3PR6@mail.gmail.com>
+References: <AANLkTi=Hg4s5kEMQZu_KGePf4W_7jAFm0_WifM9W3PR6@mail.gmail.com>
+Date: Fri, 11 Mar 2011 06:39:51 -0600
+Message-ID: <1299847191.3462.1.camel@doink>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,26 +26,48 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: chris.mason@oracle.com, xfs@oss.sgi.com
+To: XFS Mailing List <xfs@oss.sgi.com>
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>
 
-> +		if (((unsigned long)(bp->b_addr + bp->b_buffer_length - 1) &
-> +								PAGE_MASK) !=
-> +		    ((unsigned long)bp->b_addr & PAGE_MASK)) {
-> +			/* b_addr spans two pages - use alloc_page instead */
-> +			kmem_free(bp->b_addr);
-> +			bp->b_addr = NULL;
-> +			goto use_alloc_page;
-> +		}
+The new xfs_alert_tag() used a variable named "panic",
+and that is to be avoided.  Rename it.
 
-Did you manage to hit this case?  If it happens with any frequency under
-real workloads we really need to find a wayto avoid the allocation to
-start with.
+Signed-off-by: Alex Elder <aelder@sgi.com>
 
+---
+ fs/xfs/linux-2.6/xfs_message.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Otherwise looks good,
+Index: b/fs/xfs/linux-2.6/xfs_message.c
+===================================================================
+--- a/fs/xfs/linux-2.6/xfs_message.c
++++ b/fs/xfs/linux-2.6/xfs_message.c
+@@ -96,13 +96,13 @@ xfs_alert_tag(
+ {
+        struct va_format        vaf;
+        va_list                 args;
+-       int                     panic = 0;
++       int                     do_panic = 0;
+        int                      r;
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+        if (xfs_panic_mask && (xfs_panic_mask & panic_tag)) {
+                xfs_printk(KERN_ALERT, mp,
+                        "XFS: Transforming an alert into a BUG.");
+-               panic = 1;
++               do_panic = 1;
+        }
+
+        va_start(args, fmt);
+@@ -113,7 +113,7 @@ xfs_alert_tag(
+        r = __xfs_printk(KERN_ALERT, mp, &vaf);
+        va_end(args);
+
+-       BUG_ON(panic);
++       BUG_ON(do_panic);
+
+        return r;
+ }
+
 
 _______________________________________________
 xfs mailing list
