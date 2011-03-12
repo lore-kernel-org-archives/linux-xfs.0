@@ -1,34 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p2C31DRB195805 for <xfs@oss.sgi.com>; Fri, 11 Mar 2011 21:01:24 -0600
-Received: from e31.co.us.ibm.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B58B61B09519
-	for <xfs@oss.sgi.com>; Fri, 11 Mar 2011 19:03:53 -0800 (PST)
-Received: from e31.co.us.ibm.com (e31.co.us.ibm.com [32.97.110.149]) by
-	cuda.sgi.com with ESMTP id la01pQjpWOlSZgEK for
-	<xfs@oss.sgi.com>; Fri, 11 Mar 2011 19:03:53 -0800 (PST)
-Received: from d03relay05.boulder.ibm.com (d03relay05.boulder.ibm.com
-	[9.17.195.107])
-	by e31.co.us.ibm.com (8.14.4/8.13.1) with ESMTP id p2C2mjhD003958
-	for <xfs@oss.sgi.com>; Fri, 11 Mar 2011 19:48:45 -0700
-Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
-	by d03relay05.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	p2C33rft104130 for <xfs@oss.sgi.com>; Fri, 11 Mar 2011 20:03:53 -0700
-Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av01.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
-	id p2C33r9M028039
-	for <xfs@oss.sgi.com>; Fri, 11 Mar 2011 20:03:53 -0700
-Received: from [9.47.24.164] (chandra-lucid.beaverton.ibm.com [9.47.24.164])
-	by d03av01.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVin) with ESMTP id
-	p2C33qBl028015 for <xfs@oss.sgi.com>; Fri, 11 Mar 2011 20:03:52 -0700
-Subject: testcase 011 trips and ASSERT in x86_64 too
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-Content-Type: multipart/mixed; boundary="=-+dWvLbSMxQrWvDwVyQrJ"
-Date: Fri, 11 Mar 2011 19:06:06 -0800
-Message-ID: <1299899166.32230.629.camel@chandra-lucid.beaverton.ibm.com>
-Mime-Version: 1.0
-Reply-To: sekharan@us.ibm.com
+	p2C6n4YV206368 for <xfs@oss.sgi.com>; Sat, 12 Mar 2011 00:49:09 -0600
+Received: from smtp-relay.maven.pl (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 158BF1DE7DBE
+	for <xfs@oss.sgi.com>; Fri, 11 Mar 2011 22:51:43 -0800 (PST)
+Received: from smtp-relay.maven.pl (smtp-relay.maven.pl [193.239.45.138]) by
+	cuda.sgi.com with ESMTP id gPcBt2XBkD2GwFDd for
+	<xfs@oss.sgi.com>; Fri, 11 Mar 2011 22:51:43 -0800 (PST)
+Received: from 87-207-113-141.dynamic.chello.pl ([87.207.113.141]:46749
+	helo=tarm.maven.pl)
+	by smtp-relay.maven.pl with esmtpsa (TLSv1:DHE-RSA-AES256-SHA:256)
+	(Exim 4.73) (envelope-from <arekm@maven.pl>) id 1PyIfu-0003Vu-AO
+	for xfs@oss.sgi.com; Sat, 12 Mar 2011 07:51:42 +0100
+Received: from arekm by tarm.maven.pl with local (Exim 4.74)
+	(envelope-from <arekm@maven.pl>) id 1PyIft-00054l-Oc
+	for xfs@oss.sgi.com; Sat, 12 Mar 2011 07:51:41 +0100
+From: Arkadiusz Miskiewicz <arekm@maven.pl>
+Subject: Re: 2.6.37: mount with quota eats all available memory
+Date: Sat, 12 Mar 2011 07:51:41 +0100
+References: <201103112258.48742.arekm@maven.pl>
+	<201103112302.57445.arekm@maven.pl>
+In-Reply-To: <201103112302.57445.arekm@maven.pl>
+MIME-Version: 1.0
+Message-Id: <201103120751.41704.arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,238 +32,41 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: XFS Mailing List <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-
---=-+dWvLbSMxQrWvDwVyQrJ
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-
-Hello,
-
-A while back I reported that the test case 011 trips an ASSERT on POWER
-architecture, but not in x86_64.
-
-I started comparing the code and quickly realized that the problem is
-_not_ arch specific, but could make the test case 011 fail, with reduced
-log on x86_64. But, I could make the POWER not fail by simply increasing
-the file system size to 100G (from 20G).
-
-After some debug I found that I get into this racy situation when the
-free threshold drops and we flush the log buffer to the disk.
-i.e in function xlog_grant_push_ail(), if we return at
-
-       if (free_blocks >= free_threshold)
-                return;
-we do not get into the race that trips the ASSERT.
-
-Then I started comparing the behavioral difference bet the two ARCHs,
-and I found that in POWER I see more number of threads at a time (max of
-4 threads) in the function xlog_grant_log_space(), whereas in x86_64 I
-see max of only two and mostly it is only one.
-
-I also noted that in POWER test case 011 takes about 8 seconds whereas
-in x86_64, it takes about 165 seconds.
-
-So, I ventured into the core of test case 011, dirstress, and found that
-simply creating 1000s of files under a directory takes very long time in
-x86_64 compare to POWER(1 min 15s Vs 2s)
-Note: Attached is the source file (stripped version of dirstress.c) for
-the program b.
-------------------POWER----------------------------------
-root@test135 chandra]# uname -a 
-Linux test135.beaverton.ibm.com 2.6.38-rc7 #1 SMP Fri Mar 4 09:36:14 PST
-2011 ppc64 ppc64 ppc64 GNU/Linux
-[root@test135 chandra]# grep -e xfs -e home /proc/mounts
-none /selinux selinuxfs rw,relatime 0 0
-/dev/mapper/vg_test135-lv_home /home ext4
-rw,seclabel,relatime,barrier=1,data=ordered 0 0
-/dev/sda8 /mnt/xfsMntPt xfs rw,seclabel,relatime,attr2,noquota 0 0
-[root@test135 chandra]# ###### Run test on XFS filesystem
-[root@test135 chandra]# time ./b /mnt/xfsMntPt/dir 10000 1
-i 0
-
-real    0m2.055s
-user    0m0.011s
-sys     0m0.732s
-[root@test135 chandra]# ###### Run test of ext4 filesystem
-[root@test135 chandra]# time ./b /home/dir 10000 1
-i 0
-
-real    0m0.355s
-user    0m0.009s
-sys     0m0.304s
---------------------x86_64----------------------------------------
-[root@test27 chandra]# uname -a
-Linux test27 2.6.38-rc7 #4 SMP Wed Mar 9 08:37:32 PST 2011 x86_64 x86_64
-x86_64 GNU/Linux
-[root@test27 chandra]# grep -e xfs -e home /proc/mounts
-none /selinux selinuxfs rw,relatime 0 0
-/dev/sdc3 /home ext4 rw,seclabel,relatime,barrier=1,data=ordered 0 0
-/dev/sdb1 /mnt/xfsMntPt xfs rw,seclabel,relatime,attr2,noquota 0 0
-[root@test27 chandra]# ###### Run test on XFS filesystem
-[root@test27 chandra]# time ./b /mnt/xfsMntPt/dir 10000 1
-i 0
-
-real    1m15.700s
-user    0m0.030s
-sys     0m1.679s
-[root@test27 chandra]# ###### Run test of ext4 filesystem
-[root@test27 chandra]# time ./b /home/dir 10000 1
-i 0
-
-real    0m0.317s
-user    0m0.010s
-sys     0m0.306s
--------------------------------------------------------------------
-
-After quite an amount of debug I found that I can make it trip the
-ASSERT in x86_64 also, if I start sufficient of threads accessing the
-file system. Basically, "./b /mnt/xfsMntPt/dir 100 100" trips the
-ASSERT.
-
-I have two questions:
-
-1. Does anybody have any explanation why x86_64 is so slow, compared
-with POWER ?
-
-2. Any suggestions on how to debug and fix the race condition ? 
-
-Thanks & Regards,
-
-chandra
-
---=-+dWvLbSMxQrWvDwVyQrJ
-Content-Disposition: attachment; filename="b.c"
-Content-Type: text/x-csrc; name="b.c"; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-
-#include <unistd.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/time.h>
-
-#define MKNOD_DEV 0
-
-int
-dirstress(char *dir, int num_files, int prefix)
-{
-	int i, err, fd;
-	char buf[128];
-
-	err = chdir(dir);
-	if (err) {
-		perror("cannot chdir to directory");
-		return 1;
-	}
-
-	sprintf(buf, "dir%d", prefix);
-	err = mkdir(buf, 0777);
-	if (err) {
-		perror("mkdir");
-		return 1;
-	}
-	err = chdir(buf);
-	if (err) {
-		perror("cannot chdir to prefix");
-		return 1;
-	}
-
-	for (i = 0; i < num_files; i++) {
-		sprintf(buf, "XXXXXXXXXXXX.%d.%d", prefix, i);
-		switch (i % 4) {
-		case 0:
-			/*
-			 * Create a file
-			 */
-			fd = creat(buf, 0666);
-			if (fd > 0) {
-				close(fd);
-			} else {
-                                fprintf(stderr,"!! close %s failed\n", buf);
-                                perror("close");
-                        }
-                        
-			break;
-		case 1:
-			/*
-			 * Make a directory.
-			 */
-			if (mkdir(buf, 0777)) {
-                            fprintf(stderr,"!! mkdir %s 0777 failed\n", buf);
-                            perror("mkdir");
-                        }
-                        
-			break;
-		case 2:
-			/*
-			 * Make a symlink
-			 */
-			if (symlink(buf, buf)) {
-                            fprintf(stderr,"!! symlink %s %s failed\n", buf, buf);
-                            perror("symlink");
-                        }
-                        
-			break;
-		case 3:
-			/*
-			 * Make a dev node
-			 */
-			if (mknod(buf, S_IFCHR | 0666, MKNOD_DEV)) {
-                            fprintf(stderr,"!! mknod %s 0x%x failed\n", buf, MKNOD_DEV);
-                            perror("mknod");
-                        }
-                        
-			break;
-		default:
-			break;
-		}
-	}
-	return 0;
-}
-
-main(int argc, char *argv[])
-{
-	pid_t pid;
-	int i, count;
-
-	if (argc != 4) {
-		printf("Usage: %s directory num_files numprocs\n", argv[0]);
-		exit(1);
-	}
-#if 0
-	exit(dirstress(argv[1], atoi(argv[2])));
-#else
-	for (i = 0; i < atoi(argv[3]); i++) {
-		printf("i %d\n", i);
-		pid = fork();
-		if (pid < 0) {
-			perror("fork");
-			goto done;
-		}
-		if (pid == 0) {
-			exit(dirstress(argv[1], atoi(argv[2]), i));
-		}
-	}
-done:
-	while (wait(&count) != -1)
-		;
-	exit(0);
-#endif
-}
-
---=-+dWvLbSMxQrWvDwVyQrJ
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
-
---=-+dWvLbSMxQrWvDwVyQrJ--
+T24gRnJpZGF5IDExIG9mIE1hcmNoIDIwMTEsIEFya2FkaXVzeiBNaXNraWV3aWN6IHdyb3RlOgo+
+IE9uIEZyaWRheSAxMSBvZiBNYXJjaCAyMDExLCBBcmthZGl1c3ogTWlza2lld2ljeiB3cm90ZToK
+PiA+IEkgaGF2ZSBhIG1hY2hpbmUgd2l0aCA0R0IsIHJ1bm5pbmcgNjRiaXQgMi42LjM3LCB4ZnMg
+b24gdG9wIG9mIHNvZnQKPiA+IHJhaWQ1Lgo+ID4gCj4gPiBSZWNlbnRseSBhZnRlciB1c2luZyB4
+ZnNfZnNyIChhbmQgZ2V0dGluZyBhIG9vcHMpIGhhZCB0byBkbyB4ZnNfcmVwYWlyCj4gPiBhbmQg
+bm93IEknbSBubyBsb25nZXIgYWJsZSB0byBtb3VudCB0aGlzIGZpbGVzeXN0ZW0gd2l0aCB1c3Jx
+dW90YSBhbmQKPiA+IGdycHF1b3RhLgo+IAo+IFNvbWUgZGF0YSBhYm91dCBmczoKPiAjIExDX0FM
+TD1DIHhmc19pbmZvIC9ob21lCj4gbWV0YS1kYXRhPS9kZXYvbWQzICAgICAgICAgICAgICAgaXNp
+emU9MjU2ICAgIGFnY291bnQ9MzIsIGFnc2l6ZT02NTY0MTI4Cj4gYmxrcyA9ICAgICAgICAgICAg
+ICAgICAgICAgICBzZWN0c3o9NDA5NiAgYXR0cj0wCj4gZGF0YSAgICAgPSAgICAgICAgICAgICAg
+ICAgICAgICAgYnNpemU9NDA5NiAgIGJsb2Nrcz0yMTAwNTE3NzYsIGltYXhwY3Q9MjUKPiAgICAg
+ICAgICA9ICAgICAgICAgICAgICAgICAgICAgICBzdW5pdD0xNiAgICAgc3dpZHRoPTQ4IGJsa3MK
+PiBuYW1pbmcgICA9dmVyc2lvbiAyICAgICAgICAgICAgICBic2l6ZT00MDk2ICAgYXNjaWktY2k9
+MAo+IGxvZyAgICAgID1pbnRlcm5hbCAgICAgICAgICAgICAgIGJzaXplPTQwOTYgICBibG9ja3M9
+MzI3NjgsIHZlcnNpb249Mgo+ICAgICAgICAgID0gICAgICAgICAgICAgICAgICAgICAgIHNlY3Rz
+ej00MDk2ICBzdW5pdD0xIGJsa3MsIGxhenktY291bnQ9MAo+IHJlYWx0aW1lID1ub25lICAgICAg
+ICAgICAgICAgICAgIGV4dHN6PTE5NjYwOCBibG9ja3M9MCwgcnRleHRlbnRzPTAKPiAjIGNhdCAv
+cHJvYy9tZHN0YXQKPiBQZXJzb25hbGl0aWVzIDogW3JhaWQxMF0gW3JhaWQxXSBbcmFpZDZdIFty
+YWlkNV0gW3JhaWQ0XQo+IG1kMyA6IGFjdGl2ZSByYWlkNSBzZGE0WzBdIHNkZDRbM10gc2RjNFsy
+XSBzZGI0WzFdCj4gICAgICAgODQwMjA3MTY4IGJsb2NrcyBsZXZlbCA1LCA2NGsgY2h1bmssIGFs
+Z29yaXRobSAyIFs0LzRdIFtVVVVVXQo+ICAgICAgIGJpdG1hcDogMi8zIHBhZ2VzIFs4S0JdLCA2
+NTUzNktCIGNodW5rCgpNb3JlIGluZm8sIHRlc3RlZCBjdXJyZW50IGxpbnVzIDIuNi4zOGdpdCBp
+bmNsdWRpbmcgInhmczogUmVkdWNlIE9PTSBraWxsIApwcm9ibGVtcyB1bmRlciBoZWF2eSBsb2Fk
+IFYyIiBwYXRjaHNldCBidXQgdGhlIHJlc3VsdCB3YXNuJ3QgbXVjaCBiZXR0ZXI6CgozNTQ5OTIx
+IDM1NDk5MjEgMTAwJSAgICAxLjA2SyAxMzI3OTEgICAgICAgMzAgICA0MjQ5MzEySyB4ZnNfaW5v
+ZGUKKGZyb20gc2xhYnRvcCksIG1hY2hpbmUgYmVjYW1lIHVucmVzcG9uc2libGUgYW5kIHJlYm9v
+dGVkLgoKSSB3b25kZXIgaWYgOEdCIG9mIHJhbSB3b3VsZCBiZSBlbm91Z2ggZm9yIHRoaXMgODAw
+R0IgZnMgdG8gbW91bnQuCi0tIApBcmthZGl1c3ogTWnFm2tpZXdpY3ogICAgICAgIFBMRC9MaW51
+eCBUZWFtCmFyZWttIC8gbWF2ZW4ucGwgICAgICAgICAgICBodHRwOi8vZnRwLnBsZC1saW51eC5v
+cmcvCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMg
+bWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9s
+aXN0aW5mby94ZnMK
