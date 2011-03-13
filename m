@@ -1,29 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p2C6n4YV206368 for <xfs@oss.sgi.com>; Sat, 12 Mar 2011 00:49:09 -0600
-Received: from smtp-relay.maven.pl (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 158BF1DE7DBE
-	for <xfs@oss.sgi.com>; Fri, 11 Mar 2011 22:51:43 -0800 (PST)
-Received: from smtp-relay.maven.pl (smtp-relay.maven.pl [193.239.45.138]) by
-	cuda.sgi.com with ESMTP id gPcBt2XBkD2GwFDd for
-	<xfs@oss.sgi.com>; Fri, 11 Mar 2011 22:51:43 -0800 (PST)
-Received: from 87-207-113-141.dynamic.chello.pl ([87.207.113.141]:46749
-	helo=tarm.maven.pl)
-	by smtp-relay.maven.pl with esmtpsa (TLSv1:DHE-RSA-AES256-SHA:256)
-	(Exim 4.73) (envelope-from <arekm@maven.pl>) id 1PyIfu-0003Vu-AO
-	for xfs@oss.sgi.com; Sat, 12 Mar 2011 07:51:42 +0100
-Received: from arekm by tarm.maven.pl with local (Exim 4.74)
-	(envelope-from <arekm@maven.pl>) id 1PyIft-00054l-Oc
-	for xfs@oss.sgi.com; Sat, 12 Mar 2011 07:51:41 +0100
-From: Arkadiusz Miskiewicz <arekm@maven.pl>
+	p2D2FwIZ253310 for <xfs@oss.sgi.com>; Sat, 12 Mar 2011 20:16:04 -0600
+Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A25021380436
+	for <xfs@oss.sgi.com>; Sat, 12 Mar 2011 18:18:39 -0800 (PST)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	vLAsqJY5BvHDyW3L for <xfs@oss.sgi.com>;
+	Sat, 12 Mar 2011 18:18:39 -0800 (PST)
+Date: Sun, 13 Mar 2011 11:55:06 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: 2.6.37: mount with quota eats all available memory
-Date: Sat, 12 Mar 2011 07:51:41 +0100
+Message-ID: <20110313005506.GG15097@dastard>
 References: <201103112258.48742.arekm@maven.pl>
-	<201103112302.57445.arekm@maven.pl>
-In-Reply-To: <201103112302.57445.arekm@maven.pl>
 MIME-Version: 1.0
-Message-Id: <201103120751.41704.arekm@maven.pl>
+Content-Disposition: inline
+In-Reply-To: <201103112258.48742.arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,41 +25,61 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Arkadiusz Miskiewicz <arekm@maven.pl>
+Cc: xfs@oss.sgi.com
 
-T24gRnJpZGF5IDExIG9mIE1hcmNoIDIwMTEsIEFya2FkaXVzeiBNaXNraWV3aWN6IHdyb3RlOgo+
-IE9uIEZyaWRheSAxMSBvZiBNYXJjaCAyMDExLCBBcmthZGl1c3ogTWlza2lld2ljeiB3cm90ZToK
-PiA+IEkgaGF2ZSBhIG1hY2hpbmUgd2l0aCA0R0IsIHJ1bm5pbmcgNjRiaXQgMi42LjM3LCB4ZnMg
-b24gdG9wIG9mIHNvZnQKPiA+IHJhaWQ1Lgo+ID4gCj4gPiBSZWNlbnRseSBhZnRlciB1c2luZyB4
-ZnNfZnNyIChhbmQgZ2V0dGluZyBhIG9vcHMpIGhhZCB0byBkbyB4ZnNfcmVwYWlyCj4gPiBhbmQg
-bm93IEknbSBubyBsb25nZXIgYWJsZSB0byBtb3VudCB0aGlzIGZpbGVzeXN0ZW0gd2l0aCB1c3Jx
-dW90YSBhbmQKPiA+IGdycHF1b3RhLgo+IAo+IFNvbWUgZGF0YSBhYm91dCBmczoKPiAjIExDX0FM
-TD1DIHhmc19pbmZvIC9ob21lCj4gbWV0YS1kYXRhPS9kZXYvbWQzICAgICAgICAgICAgICAgaXNp
-emU9MjU2ICAgIGFnY291bnQ9MzIsIGFnc2l6ZT02NTY0MTI4Cj4gYmxrcyA9ICAgICAgICAgICAg
-ICAgICAgICAgICBzZWN0c3o9NDA5NiAgYXR0cj0wCj4gZGF0YSAgICAgPSAgICAgICAgICAgICAg
-ICAgICAgICAgYnNpemU9NDA5NiAgIGJsb2Nrcz0yMTAwNTE3NzYsIGltYXhwY3Q9MjUKPiAgICAg
-ICAgICA9ICAgICAgICAgICAgICAgICAgICAgICBzdW5pdD0xNiAgICAgc3dpZHRoPTQ4IGJsa3MK
-PiBuYW1pbmcgICA9dmVyc2lvbiAyICAgICAgICAgICAgICBic2l6ZT00MDk2ICAgYXNjaWktY2k9
-MAo+IGxvZyAgICAgID1pbnRlcm5hbCAgICAgICAgICAgICAgIGJzaXplPTQwOTYgICBibG9ja3M9
-MzI3NjgsIHZlcnNpb249Mgo+ICAgICAgICAgID0gICAgICAgICAgICAgICAgICAgICAgIHNlY3Rz
-ej00MDk2ICBzdW5pdD0xIGJsa3MsIGxhenktY291bnQ9MAo+IHJlYWx0aW1lID1ub25lICAgICAg
-ICAgICAgICAgICAgIGV4dHN6PTE5NjYwOCBibG9ja3M9MCwgcnRleHRlbnRzPTAKPiAjIGNhdCAv
-cHJvYy9tZHN0YXQKPiBQZXJzb25hbGl0aWVzIDogW3JhaWQxMF0gW3JhaWQxXSBbcmFpZDZdIFty
-YWlkNV0gW3JhaWQ0XQo+IG1kMyA6IGFjdGl2ZSByYWlkNSBzZGE0WzBdIHNkZDRbM10gc2RjNFsy
-XSBzZGI0WzFdCj4gICAgICAgODQwMjA3MTY4IGJsb2NrcyBsZXZlbCA1LCA2NGsgY2h1bmssIGFs
-Z29yaXRobSAyIFs0LzRdIFtVVVVVXQo+ICAgICAgIGJpdG1hcDogMi8zIHBhZ2VzIFs4S0JdLCA2
-NTUzNktCIGNodW5rCgpNb3JlIGluZm8sIHRlc3RlZCBjdXJyZW50IGxpbnVzIDIuNi4zOGdpdCBp
-bmNsdWRpbmcgInhmczogUmVkdWNlIE9PTSBraWxsIApwcm9ibGVtcyB1bmRlciBoZWF2eSBsb2Fk
-IFYyIiBwYXRjaHNldCBidXQgdGhlIHJlc3VsdCB3YXNuJ3QgbXVjaCBiZXR0ZXI6CgozNTQ5OTIx
-IDM1NDk5MjEgMTAwJSAgICAxLjA2SyAxMzI3OTEgICAgICAgMzAgICA0MjQ5MzEySyB4ZnNfaW5v
-ZGUKKGZyb20gc2xhYnRvcCksIG1hY2hpbmUgYmVjYW1lIHVucmVzcG9uc2libGUgYW5kIHJlYm9v
-dGVkLgoKSSB3b25kZXIgaWYgOEdCIG9mIHJhbSB3b3VsZCBiZSBlbm91Z2ggZm9yIHRoaXMgODAw
-R0IgZnMgdG8gbW91bnQuCi0tIApBcmthZGl1c3ogTWnFm2tpZXdpY3ogICAgICAgIFBMRC9MaW51
-eCBUZWFtCmFyZWttIC8gbWF2ZW4ucGwgICAgICAgICAgICBodHRwOi8vZnRwLnBsZC1saW51eC5v
-cmcvCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMg
-bWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9s
-aXN0aW5mby94ZnMK
+On Fri, Mar 11, 2011 at 10:58:48PM +0100, Arkadiusz Miskiewicz wrote:
+> 
+> I have a machine with 4GB, running 64bit 2.6.37, xfs on top of soft raid5.
+> 
+> Recently after using xfs_fsr (and getting a oops) had to do xfs_repair and now 
+> I'm no longer able to mount this filesystem with usrquota and grpquota.
+> 
+> xfs eats all ram, from slabtop:
+> 3756380 3756380 100%    1.00K 244655       16   3914480K xfs_inode
+> 251712 251711  99%    0.06K   3933       64     15732K kmalloc-64
+> 118482 114287  96%    0.55K   4233       28     67728K radix_tree_node
+>  88768  88711  99%    0.12K   2774       32     11096K kmalloc-128
+>  28713  28713 100%    0.08K    563       51      2252K sysfs_dir_cache
+>  22974  22973  99%    0.09K    547       42      2188K kmalloc-96
+>   9776   9776 100%    0.25K    611       16      2444K kmalloc-256
+>   7791   7791 100%    0.19K    371       21      1484K kmalloc-192
+>   7168   7097  99%    0.01K     14      512        56K kmalloc-8
+> 
+> machine is not responsible anymore, xfs ate all ram
+> 
+> If I don't use usr/grp quota then filesystem mounts without a problem.
+> 
+> What are my options now? I need this system running again with quota but 
+> loosing all quota information is not a problem (I can set it again).
+
+I can reproduce it. There's some difference between the way
+userspace operates with bulkstat vs the way the kernel quotacheck
+operates with it.
+
+Essentially the problem appears to be related to the inodes not
+being reclaimed and the kernel declaring OOM with about 50 pages in
+the page cache but still having millions of reclaimable inodes.
+Whether it is a result of the kernel not attempting to reclaim them
+or something else, I don't know yet.
+
+However, there's definitely something fishy going on because
+quotacheck inodes aren't showing up as VFS inodes even though
+they probably should because they are fully instantiated. I'll look
+at it further tomorrow.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
