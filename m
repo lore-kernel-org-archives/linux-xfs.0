@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p2I44cOv012021 for <xfs@oss.sgi.com>; Thu, 17 Mar 2011 23:04:43 -0500
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
+	p2I3vDl0011696 for <xfs@oss.sgi.com>; Thu, 17 Mar 2011 22:57:18 -0500
 Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D580710EE80D
-	for <xfs@oss.sgi.com>; Thu, 17 Mar 2011 21:07:34 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DC9CB35F41E
+	for <xfs@oss.sgi.com>; Thu, 17 Mar 2011 21:00:09 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	XvcBfyTftIl9Xzgy for <xfs@oss.sgi.com>;
-	Thu, 17 Mar 2011 21:07:34 -0700 (PDT)
-Date: Fri, 18 Mar 2011 15:07:22 +1100
+	fISve0W2euvQuBkO for <xfs@oss.sgi.com>;
+	Thu, 17 Mar 2011 21:00:09 -0700 (PDT)
+Date: Fri, 18 Mar 2011 15:00:06 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 6/6] xfs: push the AIL from memory reclaim and periodic
-	sync
-Message-ID: <20110318040722.GH30195@dastard>
+Subject: Re: [PATCH 4/6] xfs: introduce background inode reclaim work
+Message-ID: <20110318040006.GF30195@dastard>
 References: <1299715529-11026-1-git-send-email-david@fromorbit.com>
-	<1299715529-11026-7-git-send-email-david@fromorbit.com>
-	<20110310213144.GA9371@infradead.org>
+	<1299715529-11026-5-git-send-email-david@fromorbit.com>
+	<20110310174054.GD19609@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110310213144.GA9371@infradead.org>
+In-Reply-To: <20110310174054.GD19609@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,58 +34,59 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Thu, Mar 10, 2011 at 04:31:44PM -0500, Christoph Hellwig wrote:
-> > -STATIC void xfs_ail_splice(struct xfs_ail *, struct list_head *, xfs_lsn_t);
-> > -STATIC void xfs_ail_delete(struct xfs_ail *, xfs_log_item_t *);
-> > -STATIC xfs_log_item_t * xfs_ail_min(struct xfs_ail *);
-> > -STATIC xfs_log_item_t * xfs_ail_next(struct xfs_ail *, xfs_log_item_t *);
-> > -
-> 
-> Reordering and cleanup of unrelated existing functions should be in a
-> separate patch.
+On Thu, Mar 10, 2011 at 12:40:54PM -0500, Christoph Hellwig wrote:
+> Why do we still keep the inode reclaim in the syncer work?  If we
+> already have this one doing it I don't think we need it there as well.
 
-OK.
+Ok. Removed.
 
+> >  /*
+> > + * Queue a new inode reclaim pass if there isn't one already in progress.
+> > + * Wait for completion of the flush if necessary.
 > 
-> > @@ -55,16 +93,32 @@ xfs_lsn_t
-> >  xfs_trans_ail_tail(
-> >  	struct xfs_ail	*ailp)
-> >  {
-> > -	xfs_lsn_t	lsn;
-> > +	xfs_lsn_t	lsn = 0;
-> >  	xfs_log_item_t	*lip;
-> >  
-> >  	spin_lock(&ailp->xa_lock);
-> >  	lip = xfs_ail_min(ailp);
-> > -	if (lip == NULL) {
-> > -		lsn = (xfs_lsn_t)0;
-> > -	} else {
-> > +	if (lip)
-> > +		lsn = lip->li_lsn;
-> > +	spin_unlock(&ailp->xa_lock);
-> > +
-> > +	return lsn;
-> > +}
-> > +
-> > +/*
-> > + * Return the maximum lsn held in the AIL, or zero if the AIl is empty.
+> No, it doesn't wait ever.
+
+Removed.
+
 > > + */
-> > +static xfs_lsn_t
-> > +xfs_ail_max_lsn(
-> > +	struct xfs_ail  *ailp)
+> > +static void
+> > +xfs_syncd_queue_reclaim(
+> > +	struct xfs_mount        *mp)
 > > +{
-> > +	xfs_lsn_t       lsn = 0;
-> > +	xfs_log_item_t  *lip;
-> > +
-> > +	spin_lock(&ailp->xa_lock);
-> > +	lip = xfs_ail_max(ailp);
-> > +	if (lip)
+> > +	queue_delayed_work(xfs_syncd_wq, &mp->m_reclaim_work,
+> > +			xfs_syncd_centisecs / 5 * msecs_to_jiffies(10));
 > 
-> As this is the counterpart to xfs_trans_ail_tail the naming for both
-> should be similar.  I much prefer the descriptive _lsn naming over the
-> random trans in xfs_trans_ail_tail.
+> What explanation is there for the magic 5?  E.g. why do we neeed to run
+> it exactly 5 times as often as the normal sync work?
 
-Ok, will change.
+It doesn't have to be exactly 5x more frequent, just that it needs
+to run quite a bit more often than the normal sync work. tens times
+more often seems like overkill and a lot of overhead given the scan
+reclaim does, while two times more often isn't sufficient to avoid
+significant build up of dirty reclaimable inodes that need to be
+written before they can be reclaimed..
+
+> Should it have it's
+> own tunable?
+
+Perhaps. I'm not convinced it is necessary, though.
+
+> And isn't ever 6 seconds by default a little often on
+> systems trying to saver power, especiall if there aren't any inodes to
+> reclaim?  Should we trigger starting this work off having reclaimable
+> inodes tagged in the radix tree?
+
+Yes, probably should. I'll see if I can do that easily.
+
+
+> > +	/* first unpin all the dirty and stale inodes. */
+> > +	xfs_log_force(mp, XFS_LOG_SYNC);
+> 
+> So we force out the log every 6 seconds.  That's a lot more often than
+> most other filesystem and might have adverse performance impact.
+
+I'll remove that and leave it for the sync inode reclaim to force
+out the log...
 
 Cheers,
 
