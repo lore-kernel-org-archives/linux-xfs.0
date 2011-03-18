@@ -1,30 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p2IJRUL4051696 for <xfs@oss.sgi.com>; Fri, 18 Mar 2011 14:27:35 -0500
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6697813DA1AA
-	for <xfs@oss.sgi.com>; Fri, 18 Mar 2011 12:30:26 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id tOYZoqMr3nfrETIl for
-	<xfs@oss.sgi.com>; Fri, 18 Mar 2011 12:30:26 -0700 (PDT)
-Received: from int-mx02.intmail.prod.int.phx2.redhat.com
-	(int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id p2IJUPwh026585
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Fri, 18 Mar 2011 15:30:26 -0400
-Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx02.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
-	id p2IJUOSE013501
-	(version=TLSv1/SSLv3 cipher=AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Fri, 18 Mar 2011 15:30:25 -0400
-Message-ID: <4D83B2D0.1030607@redhat.com>
-Date: Fri, 18 Mar 2011 14:30:24 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+	p2IJO7vf051552 for <xfs@oss.sgi.com>; Fri, 18 Mar 2011 14:24:12 -0500
+Received: from netrider.rowland.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with SMTP id 8BB035065C0
+	for <xfs@oss.sgi.com>; Fri, 18 Mar 2011 12:26:53 -0700 (PDT)
+Received: from netrider.rowland.org (netrider.rowland.org [192.131.102.5]) by
+	cuda.sgi.com with SMTP id jDwRbKmRgzPUmhrO for
+	<xfs@oss.sgi.com>; Fri, 18 Mar 2011 12:26:53 -0700 (PDT)
+Date: Fri, 18 Mar 2011 15:26:52 -0400 (EDT)
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: 2.6.38: XFS/USB/HW issue, or failing USB stick?
+In-Reply-To: <alpine.DEB.2.02.1103181346340.21715@p34.internal.lan>
+Message-ID: <Pine.LNX.4.44L0.1103181523500.14876-100000@netrider.rowland.org>
 MIME-Version: 1.0
-Subject: [PATCH] xfstests: ensure selinux xattrs don't interfere with quota
-	tests
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,53 +26,45 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Alan Piszcz <ap@solarrain.com>, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-219 and 235 were failing on ext3 with selinux, because the extra
-xattrs upped the quota usage.
+On Fri, 18 Mar 2011, Justin Piszcz wrote:
 
-Do the same trick we've used in the past to mount with an selinux
-global context when doing quota tests.
+> > The stick didn't "fail" in any obvious way, but for some reason it was
+> > disconnected from the USB bus.  (If it initiated that disconnect by
+> > itself, I guess you could consider that a failure.)  Maybe it was
+> > something as simple as overheating causing a loss of electrical contact
+> > between the connector and the pins in the USB port.
+> 
+> It is possible, but the box is kept cool:
 
-Note the gross hack for remount,ro, though.
+Then something else caused the disconnection.  Maybe a bug in the USB 
+stick's firmware.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+> >> Mar 18 08:33:06 atom [ 2283.963059] usb 1-1: new high speed USB device using ehci_hcd and address 4
+> >> Mar 18 08:33:06 atom [ 2284.080647] usb 1-1: New USB device found, idVendor=0325, idProduct=ac02
+> >> Mar 18 08:33:06 atom [ 2284.080707] usb 1-1: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+> >> Mar 18 08:33:06 atom [ 2284.080752] usb 1-1: Product: R2_TURBO
+> >> Mar 18 08:33:06 atom [ 2284.080794] usb 1-1: Manufacturer: OCZ Technology
+> >> Mar 18 08:33:06 atom [ 2284.080831] usb 1-1: SerialNumber: (removed)
+> >
+> > And then 22 seconds later it reconnected.
+> >
+> > Alan Stern
+> >
+> 
+> Very strange, could some USB option cause this?
 
-diff --git a/235 b/235
-index 5d9c7c0..de0d0fc 100755
---- a/235
-+++ b/235
-@@ -61,6 +61,11 @@ chown $qa_user:$qa_user $SCRATCH_MNT/testfile
- 
- repquota -u -g $SCRATCH_MNT  | grep -v "^root" | _filter_scratch
- 
-+# XXX This is a nasty hack.  remount doesn't work on a fileystem
-+# with a context; see https://bugzilla.redhat.com/show_bug.cgi?id=563267
-+#
-+# We work around it by editing the context out of mtab.  Sigh.
-+sed -i "s#^$SCRATCH_DEV\(.*\),context=\"system_u:object_r:nfs_t:s0\"#$SCRATCH_DEV\1#" /etc/mtab
- mount -o remount,ro $SCRATCH_DEV 2>&1 | tee -a $seq.full | _filter_scratch
- touch $SCRATCH_MNT/failed 2>&1 | tee -a $seq.full | _filter_scratch
- mount -o remount,rw $SCRATCH_DEV 2>&1 | tee -a $seq.full | _filter_scratch
-diff --git a/common.quota b/common.quota
-index 96a36a6..3c87ce1 100644
---- a/common.quota
-+++ b/common.quota
-@@ -45,6 +45,13 @@ _require_quota()
- 	_notrun "disk quotas not supported by this filesystem type: $FSTYP"
- 	;;
-     esac
-+
-+    # SELinux adds extra xattrs which can mess up our expected output.
-+    # So, mount with a context, and they won't be created
-+    # nfs_t is a "liberal" context so we can use it.
-+    if [ -x /usr/sbin/selinuxenabled ] && /usr/sbin/selinuxenabled; then
-+        export SELINUX_MOUNT_OPTIONS="-o context=system_u:object_r:nfs_t:s0"
-+    fi
- }
- 
- #
+No.
+
+>  I guess next step is use
+> ext2 and a different stick in the same port to see if I can get it to recur.
+> Then if it happens again, try a different port.
+
+Okay, go ahead and see what happens.
+
+Alan Stern
 
 _______________________________________________
 xfs mailing list
