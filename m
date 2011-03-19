@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p2IJn1Z9052881 for <xfs@oss.sgi.com>; Fri, 18 Mar 2011 14:49:07 -0500
-Received: from lucidpixels.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C643B14A4727
-	for <xfs@oss.sgi.com>; Fri, 18 Mar 2011 12:51:47 -0700 (PDT)
-Received: from lucidpixels.com (lucidpixels.com [75.144.35.66]) by
-	cuda.sgi.com with ESMTP id HL5dPWAKQVetnNuB for
-	<xfs@oss.sgi.com>; Fri, 18 Mar 2011 12:51:47 -0700 (PDT)
-Date: Fri, 18 Mar 2011 15:51:47 -0400 (EDT)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: 2.6.38: XFS/USB/HW issue, or failing USB stick?
-In-Reply-To: <201103182033.02793.arnd@arndb.de>
-Message-ID: <alpine.DEB.2.02.1103181547590.21715@p34.internal.lan>
-References: <alpine.DEB.2.02.1103181104020.30018@p34.internal.lan>
-	<201103182010.37455.arnd@arndb.de>
-	<alpine.DEB.2.02.1103181524400.21715@p34.internal.lan>
-	<201103182033.02793.arnd@arndb.de>
+	p2JDg7Vc097067 for <xfs@oss.sgi.com>; Sat, 19 Mar 2011 08:42:17 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DD597159A030
+	for <xfs@oss.sgi.com>; Sat, 19 Mar 2011 06:45:04 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id L04SqhDXnurEacwa for
+	<xfs@oss.sgi.com>; Sat, 19 Mar 2011 06:45:04 -0700 (PDT)
+Date: Sat, 19 Mar 2011 09:45:00 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 5/6] xfs: convert the xfsaild threads to a workqueue
+Message-ID: <20110319134500.GB10056@infradead.org>
+References: <1299715529-11026-1-git-send-email-david@fromorbit.com>
+	<1299715529-11026-6-git-send-email-david@fromorbit.com>
+	<20110310174818.GE19609@infradead.org>
+	<20110318040648.GG30195@dastard>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20110318040648.GG30195@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,60 +27,28 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Tim Soderstrom <tim@moocowproductions.org>, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, flashbench-results@lists.linaro.org, Alan Piszcz <ap@solarrain.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-
-
-On Fri, 18 Mar 2011, Arnd Bergmann wrote:
-
-> On Friday 18 March 2011 20:26:46 Justin Piszcz wrote:
->>> The numbers are jumping around a bit with the incorrectly guessed erasesize.
->>> These values should be more like the ones in the first test. Can you rerun
->>> with --erasesize=$[4 * 1024 * 1024]?
->> Hi, I put the box back into production with ext2, if it fails again I can
->> re-run.
+On Fri, Mar 18, 2011 at 03:06:48PM +1100, Dave Chinner wrote:
+> It gets used by a second caller in the next patch that uses a
+> timeout of zero. The idea of adding a delay to a normal push is to
+> rate limit the number of times we do work so we always work on
+> batches rather a few items at a time in multiple executions of the
+> work.
 >
-> Ok. Did you make sure to get the partition table right? It's
-> rather tricky with fdisk, since it normally doesn't align
-> to 4 MB. You can see this using 'fdisk -l -u /dev/sda'.
+> I'll see if it's simpler to just do this work directly in teh
+> callers, though.
 
-Erm, probably not right then..
-
-Disk /dev/sda: 8220 MB, 8220835840 bytes
-154 heads, 56 sectors/track, 1861 cylinders, total 16056320 sectors
-Units = sectors of 1 * 512 = 512 bytes
-Sector size (logical/physical): 512 bytes / 512 bytes
-I/O size (minimum/optimal): 512 bytes / 512 bytes
-Disk identifier: 0x99df019d
-
-    Device Boot      Start         End      Blocks   Id  System
-/dev/sda1            2048    16056319     8027136   83  Linux
-
->
->>> Also, what is the output of 'lsusb' for this stick? I'd like to add the
->>> data to https://wiki.linaro.org/WorkingGroups/KernelConsolidation/Projects/FlashCardSurvey
->> Sure,
->> Bus 001 Device 002: ID 0325:ac02 OCZ Technology Inc ATV Turbo / Rally2 Dual Channel USB 2.0 Flash Drive
->>
->
-> Added now, thanks!
->
-> Do you also have the product name for this?
-10007937 OCZ OCZUSBR2TDC-8GB 8GB Rally2 Turbo USB 2.0 Flash Drive Retail
-Was $116.99 on 01-05-2009.
-
-Was purported (at the time) to be one of the fastest USB sticks available,
-according to benchmarks.
-
-
->
-> 	Arnd
->
+I don't think hiding this delay (uncommented) in the workqueue use is
+a good idea.  xlog_grant_push_ail has all the logics about when to push
+the AIL, so any batching should be grouped with that logic, and
+documented there.  It in fact already has some comments static that
+a min/max watermark scheme would be useful.
 
 _______________________________________________
 xfs mailing list
