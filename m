@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p2M5B8bN261076
-	for <linux-xfs@oss.sgi.com>; Tue, 22 Mar 2011 00:11:13 -0500
-Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8D33714A6BCE
-	for <linux-xfs@oss.sgi.com>; Mon, 21 Mar 2011 22:13:56 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	O5LENJN8b6cQfAoi for <linux-xfs@oss.sgi.com>;
-	Mon, 21 Mar 2011 22:13:56 -0700 (PDT)
-Date: Tue, 22 Mar 2011 16:13:53 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: umount fails with device is busy
-Message-ID: <20110322051353.GA15270@dastard>
-References: <31199414.post@talk.nabble.com>
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
+	p2M8iu9Q007512 for <xfs@oss.sgi.com>; Tue, 22 Mar 2011 03:45:07 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7BDB613EBFBC
+	for <xfs@oss.sgi.com>; Tue, 22 Mar 2011 01:47:56 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id uOpBi85dk9UbZbR7 for
+	<xfs@oss.sgi.com>; Tue, 22 Mar 2011 01:47:56 -0700 (PDT)
+Date: Tue, 22 Mar 2011 04:47:55 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: 2.6.39-rc0: xfs: kernel BUG at mm/page_alloc.c:738
+Message-ID: <20110322084755.GA14129@infradead.org>
+References: <AANLkTincs+MyYf+2tt2Y3LMQdmF8PUAxKMxMXuKB72hZ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <31199414.post@talk.nabble.com>
+In-Reply-To: <AANLkTincs+MyYf+2tt2Y3LMQdmF8PUAxKMxMXuKB72hZ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,37 +28,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: stress_buster <leo1783@yahoo.com>
-Cc: linux-xfs@oss.sgi.com
+To: Alexander Beregalov <a.beregalov@gmail.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-On Mon, Mar 21, 2011 at 03:53:04AM -0700, stress_buster wrote:
+On Mon, Mar 21, 2011 at 04:34:46AM +0300, Alexander Beregalov wrote:
+> Hi
 > 
-> I'm trying to run xfs_repair on my filesystem:
-
-Why do you need to do this?
-
-> Firstly to unmount the fs
+> Steps to reproduce:
+> run xfs_fsr on xfs device
 > 
-> Quote:
-> umount /myfs
-> umount: /myfs: device is busy
-> umount: /myfs: device is busy  
+> arch is x86 UP, kernel is 2.6.38-06507-ga952baa
 > 
-> Quote:
-> lsof /dev/sda  
-> 
-> -show none ie nothing seems to be 'touching' the disk.
-> confused why its still showing device is busy
+> kernel BUG at mm/page_alloc.c:738!
+> invalid opcode: 0000 [#1]
+> last sysfs file: /sys/devices/system/cpu/cpu0/cpufreq/scaling_setspeed
+> Modules linked in: hwmon_vid sata_sil i2c_nforce2
 
-Did you have an oops or a filesystem shutdown? i.e. anything in
-syslog of note?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+I don't really see anything XFS-specific in here.  The page allocator
+is unhappy, and we get there through the generic read code, which just
+has a tiny xfs wrapper.
 
 _______________________________________________
 xfs mailing list
