@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p2MNS7lx055165 for <xfs@oss.sgi.com>; Tue, 22 Mar 2011 18:28:12 -0500
+	p2MNigrB055897 for <xfs@oss.sgi.com>; Tue, 22 Mar 2011 18:44:48 -0500
 Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8617D1401391
-	for <xfs@oss.sgi.com>; Tue, 22 Mar 2011 16:30:56 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id F285A36BC4A
+	for <xfs@oss.sgi.com>; Tue, 22 Mar 2011 16:47:31 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	kUlFC0DFXTiJ076d for <xfs@oss.sgi.com>;
-	Tue, 22 Mar 2011 16:30:56 -0700 (PDT)
-Date: Wed, 23 Mar 2011 10:30:54 +1100
+	Dvy7vFJFadE6Iz2e for <xfs@oss.sgi.com>;
+	Tue, 22 Mar 2011 16:47:31 -0700 (PDT)
+Date: Wed, 23 Mar 2011 10:47:28 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/6] xfs: optimize AGFL refills
-Message-ID: <20110322233054.GD15270@dastard>
+Subject: Re: [PATCH 3/6] xfs: exact busy extent tracking
+Message-ID: <20110322234728.GE15270@dastard>
 References: <20110322195550.260682574@bombadil.infradead.org>
-	<20110322200137.280301318@bombadil.infradead.org>
+	<20110322200137.657110761@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110322200137.280301318@bombadil.infradead.org>
+In-Reply-To: <20110322200137.657110761@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,80 +33,288 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Tue, Mar 22, 2011 at 03:55:51PM -0400, Christoph Hellwig wrote:
-> Avoid forcing out busy extent when moving blocks from/to the AGFL.  We
-> archive this my moving the busy search out of xfs_alloc_get_freelist into
-> the callers that need it, and by moving the busy list insert from
-> xfs_free_ag_extent extent which is used both by AGFL refills and real
-> allocation to xfs_free_extent, which is only used by the latter.
+On Tue, Mar 22, 2011 at 03:55:53PM -0400, Christoph Hellwig wrote:
+> Update the extent tree in case we have to reuse a busy extent, so that it
+> always is kept uptodate.  This is done by replacing the busy list searches
+> with a new xfs_alloc_busy_reuse helper, which updates the busy extent tree
+> in case of a reuse.   Also replace setting transactions to sync with forcing
+> the log out in case we found a busy extent to reuse.  This makes the code a
+> lot more simple, and is required for discard support later on.  While it
+> will cause performance regressios with just this patch applied, the impact
+> is more than mitigated by the next patch in the series.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > 
 > Index: xfs/fs/xfs/xfs_alloc.c
 > ===================================================================
-> --- xfs.orig/fs/xfs/xfs_alloc.c	2011-03-19 16:49:23.774797370 +0100
-> +++ xfs/fs/xfs/xfs_alloc.c	2011-03-19 16:49:38.882797272 +0100
-> @@ -1326,6 +1326,8 @@ xfs_alloc_ag_vextent_small(
->  		if (error)
->  			goto error0;
->  		if (fbno != NULLAGBLOCK) {
-> +			if (xfs_alloc_busy_search(args->mp, args->agno, fbno, 1))
-> +				xfs_trans_set_sync(args->tp);
->  			if (args->userdata) {
->  				xfs_buf_t	*bp;
+> --- xfs.orig/fs/xfs/xfs_alloc.c	2011-03-20 19:41:55.835479390 +0100
+> +++ xfs/fs/xfs/xfs_alloc.c	2011-03-21 14:49:14.157973188 +0100
+.....
+> -	new->tid = xfs_log_get_trans_ident(tp);
+> -
+>  	INIT_LIST_HEAD(&new->list);
 >  
-> @@ -1617,18 +1619,6 @@ xfs_free_ag_extent(
+>  	/* trace before insert to be able to see failed inserts */
+>  	trace_xfs_alloc_busy(tp, agno, bno, len, 0);
 >  
->  	trace_xfs_free_extent(mp, agno, bno, len, isfl, haveleft, haveright);
+>  	pag = xfs_perag_get(tp->t_mountp, new->agno);
+> -restart:
+>  	spin_lock(&pag->pagb_lock);
+>  	rbp = &pag->pagb_tree.rb_node;
+> -	parent = NULL;
+> -	busyp = NULL;
+> -	match = 0;
+> -	while (*rbp && match >= 0) {
+> +	while (*rbp) {
+>  		parent = *rbp;
+>  		busyp = rb_entry(parent, struct xfs_busy_extent, rb_node);
 >  
-> -	/*
-> -	 * Since blocks move to the free list without the coordination
-> -	 * used in xfs_bmap_finish, we can't allow block to be available
-> -	 * for reallocation and non-transaction writing (user data)
-> -	 * until we know that the transaction that moved it to the free
-> -	 * list is permanently on disk.  We track the blocks by declaring
-> -	 * these blocks as "busy"; the busy list is maintained on a per-ag
-> -	 * basis and each transaction records which entries should be removed
-> -	 * when the iclog commits to disk.  If a busy block is allocated,
-> -	 * the iclog is pushed up to the LSN that freed the block.
-> -	 */
-> -	xfs_alloc_busy_insert(tp, agno, bno, len);
->  	return 0;
+>  		if (new->bno < busyp->bno) {
+>  			/* may overlap, but exact start block is lower */
+>  			rbp = &(*rbp)->rb_left;
+> -			if (new->bno + new->length > busyp->bno)
+> -				match = busyp->tid == new->tid ? 1 : -1;
+> +			BUG_ON(new->bno + new->length > busyp->bno);
+
+BUG_ON() inside a spinlock will effectively lock up the machine as
+other CPUs try to take the spinlock that was held by the thread that
+went bad. It causes the machine to die a horrible, undebuggable death
+rather than just kill the thread that caused the oops and leaving
+everything else still functional.
+
+If it were an ASSERT(), that's probably OK because it is only debug
+systems that woul dhave this problem, but the use of BUG(_ON) means
+it will cause production systems to die as well.
+
+>  		} else if (new->bno > busyp->bno) {
+>  			/* may overlap, but exact start block is higher */
+>  			rbp = &(*rbp)->rb_right;
+> -			if (bno < busyp->bno + busyp->length)
+> -				match = busyp->tid == new->tid ? 1 : -1;
+> +			BUG_ON(bno < busyp->bno + busyp->length);
+>  		} else {
+> -			match = busyp->tid == new->tid ? 1 : -1;
+> -			break;
+> +			BUG();
+>  		}
+>  	}
+> -	if (match < 0) {
+> -		/* overlap marked busy in different transaction */
+> -		spin_unlock(&pag->pagb_lock);
+> -		xfs_log_force(tp->t_mountp, XFS_LOG_SYNC);
+> -		goto restart;
+> -	}
+> -	if (match > 0) {
+> -		/*
+> -		 * overlap marked busy in same transaction. Update if exact
+> -		 * start block match, otherwise combine the busy extents into
+> -		 * a single range.
+> -		 */
+> -		if (busyp->bno == new->bno) {
+> -			busyp->length = max(busyp->length, new->length);
+> -			spin_unlock(&pag->pagb_lock);
+> -			ASSERT(tp->t_flags & XFS_TRANS_SYNC);
+> -			xfs_perag_put(pag);
+> -			kmem_free(new);
+> -			return;
+> -		}
+> -		rb_erase(&busyp->rb_node, &pag->pagb_tree);
+> -		new->length = max(busyp->bno + busyp->length,
+> -					new->bno + new->length) -
+> -				min(busyp->bno, new->bno);
+> -		new->bno = min(busyp->bno, new->bno);
+> -	} else
+> -		busyp = NULL;
 >  
->   error0:
-> @@ -1923,21 +1913,6 @@ xfs_alloc_get_freelist(
->  	xfs_alloc_log_agf(tp, agbp, logflags);
->  	*bnop = bno;
->  
-> -	/*
-> -	 * As blocks are freed, they are added to the per-ag busy list and
-> -	 * remain there until the freeing transaction is committed to disk.
-> -	 * Now that we have allocated blocks, this list must be searched to see
-> -	 * if a block is being reused.  If one is, then the freeing transaction
-> -	 * must be pushed to disk before this transaction.
-> -	 *
-> -	 * We do this by setting the current transaction to a sync transaction
-> -	 * which guarantees that the freeing transaction is on disk before this
-> -	 * transaction. This is done instead of a synchronous log force here so
-> -	 * that we don't sit and wait with the AGF locked in the transaction
-> -	 * during the log force.
-> -	 */
-> -	if (xfs_alloc_busy_search(mp, be32_to_cpu(agf->agf_seqno), bno, 1))
-> -		xfs_trans_set_sync(tp);
->  	return 0;
+>  	rb_link_node(&new->rb_node, parent, rbp);
+>  	rb_insert_color(&new->rb_node, &pag->pagb_tree);
+> @@ -2650,7 +2518,6 @@ restart:
+>  	list_add(&new->list, &tp->t_busy);
+>  	spin_unlock(&pag->pagb_lock);
+>  	xfs_perag_put(pag);
+> -	kmem_free(busyp);
 >  }
 >  
-> @@ -2407,6 +2382,8 @@ xfs_free_extent(
->  		be32_to_cpu(XFS_BUF_TO_AGF(args.agbp)->agf_length));
->  #endif
->  	error = xfs_free_ag_extent(tp, args.agbp, args.agno, args.agbno, len, 0);
-> +	if (error)
-> +		xfs_alloc_busy_insert(tp, args.agno, args.agbno, len);
+>  /*
+> @@ -2704,6 +2571,173 @@ xfs_alloc_busy_search(
+>  	return match;
+>  }
+>  
+> +STATIC int
+> +xfs_alloc_busy_try_reuse(
+> +	struct xfs_perag	*pag,
+> +	struct xfs_busy_extent	*busyp,
+> +	xfs_agblock_t		fbno,
+> +	xfs_agblock_t		fend)
+> +{
+> +	xfs_agblock_t	bbno = busyp->bno;
+> +	xfs_agblock_t	bend = bbno + busyp->length;
+> +
+> +	if (bbno < fbno && bend > fend) {
+> +		/*
+> +		 * Case 1:
+> +		 *    bbno           bend
+> +		 *    +BBBBBBBBBBBBBBBBB+
+> +		 *        +---------+
+> +		 *        fbno   fend
+> +		 */
+> +
+> +		/*
+> +		 * We would have to split the busy extent to be able
+> +		 * to track it correct, which we cannot do because we
+> +		 * would have to modify the list of busy extents
+> +		 * attached to the transaction/CIL context, which
+> +		 * is mutable.
 
-Shouldn't that be "if (!error)"?  i.e. if we freed the extent
-successfully we need to insert it in the busy list. This current
-code has the effect of never inserting freed data extents in the
-busy list....
+		      immutable?
+
+> +		 *
+> +		 * Force out the log to clear the busy extents
+> +		 * and retry the search.
+> +		 */
+
+BTW, these comments appear to wrap at 68 columns - any particular
+reason?
+
+> +		return -1;
+> +	} else if (bbno >= fbno && bend <= fend) {
+> +		/*
+> +		 * Case 2:
+> +		 *    bbno           bend
+> +		 *    +BBBBBBBBBBBBBBBBB+
+> +		 *    +-----------------+
+> +		 *    fbno           fend
+> +		 *
+> +		 * Case 3:
+> +		 *    bbno           bend
+> +		 *    +BBBBBBBBBBBBBBBBB+
+> +		 *    +--------------------------+
+> +		 *    fbno                    fend
+> +		 *
+> +		 * Case 4:
+> +		 *             bbno           bend
+> +		 *             +BBBBBBBBBBBBBBBBB+
+> +		 *    +--------------------------+
+> +		 *    fbno                    fend
+> +		 *
+> +		 * Case 5:
+> +		 *             bbno           bend
+> +		 *             +BBBBBBBBBBBBBBBBB+
+> +		 *    +-----------------------------------+
+> +		 *    fbno                             fend
+> +		 *
+> +		 */
+> +
+> +		/*
+> +		 * The busy extent is fully covered by the extent
+> +		 * we are allocating, and can simply be removed from
+> +		 * the rbtree.  However we cannot remove it from the
+> +		 * immutable list tracking busy extents in the
+> +		 * transaction or CIL context, so set the length
+> +		 * to zero to mark it invalid.
+> +		 */
+> +		rb_erase(&busyp->rb_node, &pag->pagb_tree);
+> +		busyp->length = 0;
+> +	} else if (bbno == fbno) {
+> +		/*
+> +		 * Case 6:
+> +		 *              bbno           bend
+> +		 *             +BBBBBBBBBBBBBBBBB+
+> +		 *             +---------+
+> +		 *             fbno   fend
+> +		 *
+> +		 * Case 7:
+> +		 *             bbno           bend
+> +		 *             +BBBBBBBBBBBBBBBBB+
+> +		 *    +------------------+
+> +		 *    fbno            fend
+> +		 *
+> +		 */
+> +
+> +		busyp->bno = fend;
+> +	} else if (bend == fend) {
+> +		/*
+> +		 * Case 8:
+> +		 *    bbno           bend
+> +		 *    +BBBBBBBBBBBBBBBBB+
+> +		 *        +-------------+
+> +		 *        fbno       fend
+> +		 *
+> +		 * Case 9:
+> +		 *    bbno           bend
+> +		 *    +BBBBBBBBBBBBBBBBB+
+> +		 *        +----------------------+
+> +		 *        fbno                fend
+> +		 */
+> +
+> +		busyp->length = fbno - busyp->bno;
+> +	} else {
+> +		BUG();
+> +	}
+> +
+> +	return 1;
+> +}
+> +
+> +
+> +/*
+> + * For a given extent [fbno, flen], make sure we can reuse it safely.
+> + */
+> +void
+> +xfs_alloc_busy_reuse(
+> +	struct xfs_trans	*tp,
+> +	xfs_agnumber_t		agno,
+> +	xfs_agblock_t		fbno,
+> +	xfs_extlen_t		flen)
+> +{
+> +	struct xfs_perag	*pag;
+> +	struct rb_node		*rbp;
+> +
+> +	ASSERT(flen > 0);
+> +
+> +	pag = xfs_perag_get(tp->t_mountp, agno);
+> +restart:
+> +	spin_lock(&pag->pagb_lock);
+> +	rbp = pag->pagb_tree.rb_node;
+> +	while (rbp) {
+> +		struct xfs_busy_extent *busyp =
+> +			rb_entry(rbp, struct xfs_busy_extent, rb_node);
+> +		xfs_agblock_t	fend = fbno + flen;
+> +		xfs_agblock_t	bbno = busyp->bno;
+> +		xfs_agblock_t	bend = bbno + busyp->length;
+> +		int		overlap;
+> +
+> +		if (fend <= bbno) {
+> +			rbp = rbp->rb_left;
+> +			continue;
+> +		} else if (fbno >= bend) {
+> +			rbp = rbp->rb_right;
+> +			continue;
+> +		}
+> +
+> +		overlap = xfs_alloc_busy_try_reuse(pag, busyp,
+> +						   fbno, fbno + flen);
+> +		if (overlap) {
+> +			spin_unlock(&pag->pagb_lock);
+> +			xfs_log_force(tp->t_mountp, XFS_LOG_SYNC);
+> +			goto restart;
+> +		}
+
+xfs_alloc_busy_try_reuse() only ever returns -1 or 1, which means
+this will always trigger a log force on overlap....
+
+> +
+> +		/*
+> +		 * No more busy extents to search.
+> +		 */
+> +		if (bbno <= fbno && bend >= fend)
+> +			break;
+> +
+> +		if (fbno < bbno)
+> +			rbp = rbp->rb_left;
+> +		else
+> +			rbp = rbp->rb_right;
+
+and this code is never executed.
 
 Cheers,
 
