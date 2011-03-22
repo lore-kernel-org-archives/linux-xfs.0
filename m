@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p2MHY5Zk033715 for <xfs@oss.sgi.com>; Tue, 22 Mar 2011 12:34:10 -0500
+	p2MHY597033716 for <xfs@oss.sgi.com>; Tue, 22 Mar 2011 12:34:10 -0500
 Received: from cf--amer001e--3.americas.sgi.com
 	(cf--amer001e--3.americas.sgi.com [137.38.100.5])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2CFA98F80C6
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 42C878F80C7
 	for <xfs@oss.sgi.com>; Tue, 22 Mar 2011 10:37:06 -0700 (PDT)
-Subject: Re: [PATCH, v2] xfstests: drop "Mount point match" from 028 and
-	047 golden output
+Subject: Re: [PATCH 0/5] xfstests: eliminate build warnings in the "dmapi"
+	subtree
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <201103020449.p224nRbO024369@stout.americas.sgi.com>
-References: <201103020449.p224nRbO024369@stout.americas.sgi.com>
-Date: Tue, 22 Mar 2011 12:35:48 -0500
-Message-ID: <1300815348.2875.11.camel@doink>
+In-Reply-To: <201103041937.p24Jbpgh004834@stout.americas.sgi.com>
+References: <201103041937.p24Jbpgh004834@stout.americas.sgi.com>
+Date: Tue, 22 Mar 2011 12:35:50 -0500
+Message-ID: <1300815350.2875.12.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,59 +31,60 @@ To: xfs@oss.sgi.com
 
 Ping?
 
-On Tue, 2011-03-01 at 22:49 -0600, Alex Elder wrote:
-> Bill's latest update to xfsdump dropped a line of output that served
-> no real purpose.  This change updates the golden output for the two
-> tests that included that line of output.
+On Fri, 2011-03-04 at 13:37 -0600, Alex Elder wrote:
+> Now that we're building the "dmapi" subtree the same way as the rest
+> of the code in "xfstests", a lot of warnings are showing up in the
+> build.  This series eliminates them all, at least for three build
+> architectures I have used so far (i386, x86_64, and ia64).
 > 
-> Updated to filter out that line from dump output also, so old
-> versions of the code will still produce the same output (suggested
-> by Dave Chinner).
+> Because of the sheer number of changes, I've broken it into
+> a small series, each focused on files under a certain portion
+> of the tree under "dmapi".
 > 
-> Signed-off-by: Alex Elder <aelder@sgi.com>
+> Below are the types of warnings, and how they were generally fixed.
+> In all cases I scanned the affected code to be reasonably sure the
+> warning was harmless and the fix did not obscure a real problem.
+> - Variables possibly used before set.  Fixed by initializing such
+>   variables to 0 or NULL, or some appropriate symbolic value if
+>   available.
+> - "Bald" assignments used as conditional values; GCC suggests adding
+>   an extra set of parentheses.  Fixed by pulling the assignments out
+>   as a previous line of code, and using the assigned value alone in
+>   the conditional.
+> - Variables used in scanf() functions having types that differ from
+>   what the format string indicates.  Fixed by creating and using new
+>   variables of the type needed for scanf(), and then assigning the
+>   result to the original variable with a cast.
+> - Variables used in printf() functions having types that differ from
+>   what the format string indicates.  Fixed by casting the variable
+>   to the type indicated in the format string.  In a few cases I
+>   changed "%lld" formats to "%llu" to be consistent with other usage
+>   for printing the same variable.  (But I did not do this
+>   consistently.)
+>     - A lot of these cases involved using "%zd" in place of just
+>       "%d" for printing size_t objects.
+> - In one case, replaced a call to tmpnam() with an equivalent call
+>   to mkstmp() using a local variable.
 > 
-> ---
->  028.out     |    1 -
->  047.out     |    1 -
->  common.dump |    1 +
->  3 files changed, 1 insertion(+), 2 deletions(-)
+> Patch 1 covers files under:
+>     dmapi/src/common/cmd/
+>     dmapi/src/common/lib/
+>     dmapi/src/sample_hsm/
+>     dmapi/src/simple/
 > 
-> Index: b/028.out
-> ===================================================================
-> --- a/028.out
-> +++ b/028.out
-> @@ -225,7 +225,6 @@ Processing file /var/xfsdump/inventory/U
->         /var/xfsdump/inventory/UUID.InvIndex
->           Checking access for
->            /var/xfsdump/inventory/UUID.StObj
-> -          Mount point match
->              Session 0: HOSTNAME:SCRATCH_MNT
->  -------------------------------------------------
->  Pruning this matching entry:
-> Index: b/047.out
-> ===================================================================
-> --- a/047.out
-> +++ b/047.out
-> @@ -225,7 +225,6 @@ Processing file /var/xfsdump/inventory/U
->         /var/xfsdump/inventory/UUID.InvIndex
->           Checking access for
->            /var/xfsdump/inventory/UUID.StObj
-> -          Mount point match
->              Session 0: HOSTNAME:SCRATCH_MNT
->  -------------------------------------------------
->  An entry matching the mount point/time is :
-> Index: b/common.dump
-> ===================================================================
-> --- a/common.dump
-> +++ b/common.dump
-> @@ -814,6 +814,7 @@ _dump_filter_main()
->        -e '/\/dev\/tty/d'				\
->        -e '/inventory session uuid/d'			\
->        -e '/ - Running single-threaded/d'		\
-> +      -e '/Mount point match/d'				\
->        -e '/^.*I\/O metrics: .*$/d'			\
->        -e 's/1048576/BLOCKSZ/'				\
->        -e 's/2097152/BLOCKSZ/'				\
+> Patch 2 covers:
+>     dmapi/src/suite1/cmd/ (part 1)
+> 
+> Patch 3 covers:
+>     dmapi/src/suite1/cmd/ (part 2)
+> 
+> Patch 4 covers:
+>     dmapi/src/suite1/cmd/ (part 3)
+> 
+> Patch 5 covers:
+>     dmapi/src/suite2/
+> 
+> 					-Alex
 
 
 
