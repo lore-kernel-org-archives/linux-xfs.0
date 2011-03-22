@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p2MJwlKB046897 for <xfs@oss.sgi.com>; Tue, 22 Mar 2011 14:58:57 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F3F8313FE44E
-	for <xfs@oss.sgi.com>; Tue, 22 Mar 2011 13:01:37 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id qB7iPqELO0GjDOhF for
-	<xfs@oss.sgi.com>; Tue, 22 Mar 2011 13:01:37 -0700 (PDT)
-Received: from hch by bombadil.infradead.org with local (Exim 4.72 #1 (Red Hat
-	Linux)) id 1Q27lp-0000qK-A5
-	for xfs@oss.sgi.com; Tue, 22 Mar 2011 20:01:37 +0000
-Message-Id: <20110322200137.280301318@bombadil.infradead.org>
-Date: Tue, 22 Mar 2011 15:55:51 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 1/6] xfs: optimize AGFL refills
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
+	p2MMS4AB052855 for <xfs@oss.sgi.com>; Tue, 22 Mar 2011 17:28:09 -0500
+Received: from cf--amer001e--3.americas.sgi.com
+	(cf--amer001e--3.americas.sgi.com [137.38.100.5])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id ED922AC00F
+	for <xfs@oss.sgi.com>; Tue, 22 Mar 2011 15:30:58 -0700 (PDT)
+Subject: Re: [PATCH 1/6] xfs: optimize AGFL refills
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <20110322200137.280301318@bombadil.infradead.org>
 References: <20110322195550.260682574@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-optimize-freelist-refills
+	<20110322200137.280301318@bombadil.infradead.org>
+Date: Tue, 22 Mar 2011 17:30:51 -0500
+Message-ID: <1300833051.2875.275.camel@doink>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,97 +23,39 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-Avoid forcing out busy extent when moving blocks from/to the AGFL.  We
-archive this my moving the busy search out of xfs_alloc_get_freelist into
-the callers that need it, and by moving the busy list insert from
-xfs_free_ag_extent extent which is used both by AGFL refills and real
-allocation to xfs_free_extent, which is only used by the latter.
+On Tue, 2011-03-22 at 15:55 -0400, Christoph Hellwig wrote:
+> Avoid forcing out busy extent when moving blocks from/to the AGFL.  We
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Without thinking a bit about it, it wasn't clear why doing
+this was OK to do.  It would be nice to record a one-sentence
+justification of why we don't need to force busy extents out
+in this case.
 
-Index: xfs/fs/xfs/xfs_alloc.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_alloc.c	2011-03-19 16:49:23.774797370 +0100
-+++ xfs/fs/xfs/xfs_alloc.c	2011-03-19 16:49:38.882797272 +0100
-@@ -1326,6 +1326,8 @@ xfs_alloc_ag_vextent_small(
- 		if (error)
- 			goto error0;
- 		if (fbno != NULLAGBLOCK) {
-+			if (xfs_alloc_busy_search(args->mp, args->agno, fbno, 1))
-+				xfs_trans_set_sync(args->tp);
- 			if (args->userdata) {
- 				xfs_buf_t	*bp;
- 
-@@ -1617,18 +1619,6 @@ xfs_free_ag_extent(
- 
- 	trace_xfs_free_extent(mp, agno, bno, len, isfl, haveleft, haveright);
- 
--	/*
--	 * Since blocks move to the free list without the coordination
--	 * used in xfs_bmap_finish, we can't allow block to be available
--	 * for reallocation and non-transaction writing (user data)
--	 * until we know that the transaction that moved it to the free
--	 * list is permanently on disk.  We track the blocks by declaring
--	 * these blocks as "busy"; the busy list is maintained on a per-ag
--	 * basis and each transaction records which entries should be removed
--	 * when the iclog commits to disk.  If a busy block is allocated,
--	 * the iclog is pushed up to the LSN that freed the block.
--	 */
--	xfs_alloc_busy_insert(tp, agno, bno, len);
- 	return 0;
- 
-  error0:
-@@ -1923,21 +1913,6 @@ xfs_alloc_get_freelist(
- 	xfs_alloc_log_agf(tp, agbp, logflags);
- 	*bnop = bno;
- 
--	/*
--	 * As blocks are freed, they are added to the per-ag busy list and
--	 * remain there until the freeing transaction is committed to disk.
--	 * Now that we have allocated blocks, this list must be searched to see
--	 * if a block is being reused.  If one is, then the freeing transaction
--	 * must be pushed to disk before this transaction.
--	 *
--	 * We do this by setting the current transaction to a sync transaction
--	 * which guarantees that the freeing transaction is on disk before this
--	 * transaction. This is done instead of a synchronous log force here so
--	 * that we don't sit and wait with the AGF locked in the transaction
--	 * during the log force.
--	 */
--	if (xfs_alloc_busy_search(mp, be32_to_cpu(agf->agf_seqno), bno, 1))
--		xfs_trans_set_sync(tp);
- 	return 0;
- }
- 
-@@ -2407,6 +2382,8 @@ xfs_free_extent(
- 		be32_to_cpu(XFS_BUF_TO_AGF(args.agbp)->agf_length));
- #endif
- 	error = xfs_free_ag_extent(tp, args.agbp, args.agno, args.agbno, len, 0);
-+	if (error)
-+		xfs_alloc_busy_insert(tp, args.agno, args.agbno, len);
- error0:
- 	xfs_perag_put(args.pag);
- 	return error;
-Index: xfs/fs/xfs/xfs_alloc_btree.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_alloc_btree.c	2011-03-19 16:49:22.929299332 +0100
-+++ xfs/fs/xfs/xfs_alloc_btree.c	2011-03-19 16:49:30.382841378 +0100
-@@ -94,6 +94,8 @@ xfs_allocbt_alloc_block(
- 		*stat = 0;
- 		return 0;
- 	}
-+	if (xfs_alloc_busy_search(cur->bc_mp, cur->bc_private.a.agno, bno, 1))
-+		xfs_trans_set_sync(cur->bc_tp);
- 
- 	xfs_trans_agbtree_delta(cur->bc_tp, 1);
- 	new->s = cpu_to_be32(bno);
+> archive this my moving the busy search out of xfs_alloc_get_freelist into
+
+ achieve this
+
+> the callers that need it, and by moving the busy list insert from
+> xfs_free_ag_extent extent which is used both by AGFL refills and real
+                     ^^^^^ drop this word
+
+> allocation to xfs_free_extent, which is only used by the latter.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Otherwise the change itself looks good.
+
+Reviewed-by: Alex Elder <aelder@sgi.com>
+
+
+. . .
 
 _______________________________________________
 xfs mailing list
