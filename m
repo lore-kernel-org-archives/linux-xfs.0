@@ -1,16 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p2MMS4iB052856 for <xfs@oss.sgi.com>; Tue, 22 Mar 2011 17:28:10 -0500
-Subject: Re: [PATCH 2/6] xfs: do not immediately reuse busy extent ranges
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110322200137.474878707@bombadil.infradead.org>
-References: <20110322195550.260682574@bombadil.infradead.org>
-	<20110322200137.474878707@bombadil.infradead.org>
-Date: Tue, 22 Mar 2011 17:30:59 -0500
-Message-ID: <1300833059.2875.276.camel@doink>
-Mime-Version: 1.0
-Reply-To: aelder@sgi.com
+	p2MNMIlW054921
+	for <linux-xfs@oss.sgi.com>; Tue, 22 Mar 2011 18:22:23 -0500
+Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 20C1B159D8AD
+	for <linux-xfs@oss.sgi.com>; Tue, 22 Mar 2011 16:25:17 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	nakgdQThY6bnHUKx for <linux-xfs@oss.sgi.com>;
+	Tue, 22 Mar 2011 16:25:17 -0700 (PDT)
+Date: Wed, 23 Mar 2011 10:25:04 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: XFS memory allocation deadlock in 2.6.38
+Message-ID: <20110322232504.GC15270@dastard>
+References: <081DDE43F61F3D43929A181B477DCA95639B52E8@MSXAOA6.twosigma.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <081DDE43F61F3D43929A181B477DCA95639B52E8@MSXAOA6.twosigma.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,41 +30,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Sean Noonan <Sean.Noonan@twosigma.com>
+Cc: "'linux-xfs@oss.sgi.com'" <linux-xfs@oss.sgi.com>, Martin Bligh <Martin.Bligh@twosigma.com>, Trammell Hudson <Trammell.Hudson@twosigma.com>
 
-On Tue, 2011-03-22 at 15:55 -0400, Christoph Hellwig wrote:
-> plain text document attachment (xfs-skip-busy-extents)
-> Every time we reallocate a busy extent, we cause a synchronous log force
-> to occur to ensure the freeing transaction is on disk before we continue
-> and use the newly allocated extent.  This is extremely sub-optimal as we
-> have to mark every transaction with blocks that get reused as synchronous.
-> 
-> Instead of searching the busy extent list after deciding on the extent to
-> allocate, check each candidate extent during the allocation decisions as
-> to whether they are in the busy list.  If they are in the busy list, we
-> trim the busy range out of the extent we have found and determine if that
-> trimmed range is still OK for allocation. In many cases, this check can
-> be incorporated into the allocation extent alignment code which already
-> does trimming of the found extent before determining if it is a valid
-> candidate for allocation.
-> 
-> Based on two earlier patches from Dave Chinner.
+On Fri, Mar 18, 2011 at 11:46:04AM -0400, Sean Noonan wrote:
+> Using the attached program, we are able to reproduce this bug reliably.
+> $ make vmtest
+> $ ./vmtest /xfs/hugefile.dat $(( 16 * 1024 * 1024 * 1024 )) # vmtest <path_to_file> <size_in_bytes>
+> /xfs/hugefile.dat: mapped 17179869184 bytes in 33822066943 ticks
+> 749660: avg 13339 max 234667 ticks
+> 371945: avg 26885 max 281616 ticks
+> ---
+> At this point, we see the following on the console:
+> [593492.694806] XFS: possible memory allocation deadlock in kmem_alloc (mode:0x250)
+> [593506.724367] XFS: possible memory allocation deadlock in kmem_alloc (mode:0x250)
+> [593524.837717] XFS: possible memory allocation deadlock in kmem_alloc (mode:0x250)
+> [593556.742386] XFS: possible memory allocation deadlock in kmem_alloc (mode:0x250)
 
-Again, this looks nearly identical to your last version.
-On that one, I suggested rewording a comment, and you
-said "ok."  You did not do so in this version, which I
-guess is fine.  I just want to know whether you intended
-to.  If so I'll give you a chance to post an update; if
-not I can take this one as-is.
+What is the configuration of the machine you are testing on? I can't
+reproduce this on a current 2.6.39-tot tree on a 2p/2GB RAM VM that
+has it's blockdev images on a single SATA drive....
 
-(I think I'll have the rest of the series reviewed tomorrow.)
+Cheers,
 
-Reviewed-by: Alex Elder <aelder@sgi.com>
-
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-. . .
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
