@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p2M9vSRG011487
-	for <linux-xfs@oss.sgi.com>; Tue, 22 Mar 2011 04:57:40 -0500
+	p2M9w3vo011517 for <xfs@oss.sgi.com>; Tue, 22 Mar 2011 04:58:13 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id ED42E13EC162
-	for <linux-xfs@oss.sgi.com>; Tue, 22 Mar 2011 03:00:18 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 48E7313F678A
+	for <xfs@oss.sgi.com>; Tue, 22 Mar 2011 03:01:03 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id z1YXD3TCXyE93GWX for
-	<linux-xfs@oss.sgi.com>; Tue, 22 Mar 2011 03:00:18 -0700 (PDT)
-Date: Tue, 22 Mar 2011 06:00:17 -0400
+	by cuda.sgi.com with ESMTP id obik49uVo4smuBSK for
+	<xfs@oss.sgi.com>; Tue, 22 Mar 2011 03:01:03 -0700 (PDT)
+Date: Tue, 22 Mar 2011 06:01:02 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: XFS memory allocation deadlock in 2.6.38
-Message-ID: <20110322100017.GA3532@infradead.org>
-References: <081DDE43F61F3D43929A181B477DCA95639B52E8@MSXAOA6.twosigma.com>
+Subject: Re: [PATCH] xfstests: ensure selinux xattrs don't interfere with
+	quota tests
+Message-ID: <20110322100102.GB3532@infradead.org>
+References: <4D83B2D0.1030607@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <081DDE43F61F3D43929A181B477DCA95639B52E8@MSXAOA6.twosigma.com>
+In-Reply-To: <4D83B2D0.1030607@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,13 +29,23 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Sean Noonan <Sean.Noonan@twosigma.com>
-Cc: "'linux-xfs@oss.sgi.com'" <linux-xfs@oss.sgi.com>, Martin Bligh <Martin.Bligh@twosigma.com>, Trammell Hudson <Trammell.Hudson@twosigma.com>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-> We started testing with 2.6.38-rc7 and have seen this bug through to the .0 release.  This does not appear to be present in 2.6.33, but we have not done testing in between.  We have tested with ext4 and do not encounter this bug.
+On Fri, Mar 18, 2011 at 02:30:24PM -0500, Eric Sandeen wrote:
+> 219 and 235 were failing on ext3 with selinux, because the extra
+> xattrs upped the quota usage.
+> 
+> Do the same trick we've used in the past to mount with an selinux
+> global context when doing quota tests.
+> 
+> Note the gross hack for remount,ro, though.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Does reverting commit aea1b9532143218f8599ecedbbd6bfbf812385e1 fix the
-issue for you?
+Looks good to me,
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
