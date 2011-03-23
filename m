@@ -1,23 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p2NBZPCX089311 for <xfs@oss.sgi.com>; Wed, 23 Mar 2011 06:35:31 -0500
-Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4F2C136D1CA
-	for <xfs@oss.sgi.com>; Wed, 23 Mar 2011 04:38:25 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	nBLLE4lQlz5S0koT for <xfs@oss.sgi.com>;
-	Wed, 23 Mar 2011 04:38:25 -0700 (PDT)
-Date: Wed, 23 Mar 2011 22:38:03 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs: outstanding patches for 2.6.39
-Message-ID: <20110323113803.GB26611@dastard>
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
+	p2NBoLGe090075 for <xfs@oss.sgi.com>; Wed, 23 Mar 2011 06:50:31 -0500
+Date: Wed, 23 Mar 2011 07:53:21 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 4/6] xfs: xfs_trans_read_buf() should return an error on
+	failure
+Message-ID: <20110323115321.GA11612@infradead.org>
 References: <1300860870-15471-1-git-send-email-david@fromorbit.com>
-	<m24o6u48xu.fsf@firstfloor.org>
+	<1300860870-15471-5-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <m24o6u48xu.fsf@firstfloor.org>
+In-Reply-To: <1300860870-15471-5-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,42 +24,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Andi Kleen <andi@firstfloor.org>
+To: Dave Chinner <david@fromorbit.com>
 Cc: aelder@sgi.com, xfs@oss.sgi.com
 
-On Wed, Mar 23, 2011 at 12:01:17AM -0700, Andi Kleen wrote:
-> Dave Chinner <david@fromorbit.com> writes:
+On Wed, Mar 23, 2011 at 05:14:28PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> > Of course, the major patch in this series is the conversion of the
-> > buffer cache to using kmalloc and get_free_page() directly rather
-> > than using the page cache. This has many benefits and I haven't
-> > found any regressions due to making that change yet.
+> When inside a transaction and we fail to read a buffer,
+> xfs_trans_read_buf returns a null buffer pointer and no error.
+> xfs_do_da_buf() checks the error return, but not the buffer, and as
+> a result this read failure condition causes a panic when it attempts
+> to dereference the non-existant buffer.
 > 
-> One (somewhat obscure) regression will be that you won't be able to
-> recover from uncorrected memory errors in the buffer cache anymore.
+> Make xfs_trans_read_buf() return the same error for this situation
+> regardless of whether it is in a transaction or not. This means
+> every caller does not need to check both the error return and the
+> buffer before proceeding to use the buffer.
 
-We can't do that right now, anyway.
+Most callers seem to fine because they always pass 0 as flags,
+or handle a NULL bp return.
 
-> Previously memory_failure() could just drop it transparently when that
-> happens and the page is currently not used.
-
-If the page is not in use, we don't care about it after this patch
-set is applied - the page is either active in a buffer or it has been
-freed. If it is in use, then we'll shut the filesystem down if we
-detect the memory corruption just like we currently do. Hence I
-don't see any regression here.
-
-As it is, there is no way for the filesytem to be notified about
-such failures on active pages in buffers, so in reality we can't
-reliably detect them so there is little point in trying to recover
-from such errors.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+The exception is xfs_imap_to_bp, which can get a trylock flag via
+xfs_itobp and xfs_iflush, which needs a fix for this.
 
 _______________________________________________
 xfs mailing list
