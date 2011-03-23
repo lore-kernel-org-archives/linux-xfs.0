@@ -1,23 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p2NCNXgi091565 for <xfs@oss.sgi.com>; Wed, 23 Mar 2011 07:23:44 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DE19436D99A
-	for <xfs@oss.sgi.com>; Wed, 23 Mar 2011 05:26:34 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id othbR1CKY4QlfKW1 for
-	<xfs@oss.sgi.com>; Wed, 23 Mar 2011 05:26:34 -0700 (PDT)
-Date: Wed, 23 Mar 2011 08:26:34 -0400
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
+	p2NCDDrY091073 for <xfs@oss.sgi.com>; Wed, 23 Mar 2011 07:13:23 -0500
+Date: Wed, 23 Mar 2011 08:16:13 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 4/6] xfs: allow reusing busy extents where safe
-Message-ID: <20110323122634.GE468@infradead.org>
+Subject: Re: [PATCH 1/6] xfs: optimize AGFL refills
+Message-ID: <20110323121613.GA468@infradead.org>
 References: <20110322195550.260682574@bombadil.infradead.org>
-	<20110322200137.837735220@bombadil.infradead.org>
-	<20110323002024.GF15270@dastard>
+	<20110322200137.280301318@bombadil.infradead.org>
+	<1300833051.2875.275.camel@doink>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110323002024.GF15270@dastard>
+In-Reply-To: <1300833051.2875.275.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,61 +24,29 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Alex Elder <aelder@sgi.com>
 Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Wed, Mar 23, 2011 at 11:20:24AM +1100, Dave Chinner wrote:
-> >  		overlap = xfs_alloc_busy_try_reuse(pag, busyp,
-> >  						   fbno, fbno + flen);
-> > -		if (overlap) {
-> > +		if (overlap == -1 || (overlap && userdata)) {
-> >  			spin_unlock(&pag->pagb_lock);
-> >  			xfs_log_force(tp->t_mountp, XFS_LOG_SYNC);
-> >  			goto restart;
+On Tue, Mar 22, 2011 at 05:30:51PM -0500, Alex Elder wrote:
+> On Tue, 2011-03-22 at 15:55 -0400, Christoph Hellwig wrote:
+> > Avoid forcing out busy extent when moving blocks from/to the AGFL.  We
 > 
-> Ok, so the only time we'll do a log force now is on an complete
-> overlap or a partial userdata overlap?
+> Without thinking a bit about it, it wasn't clear why doing
+> this was OK to do.  It would be nice to record a one-sentence
+> justification of why we don't need to force busy extents out
+> in this case.
 
-We do it if we would have to split the busy extent, or reallocate
-metadata to userdata.
+I've added a sentence, but it seems rather pointless.
 
-> > +		if (!args->userdata ||
-> > +		    (busyp->flags & XFS_ALLOC_BUSY_USERDATA)) {
-> > +			int overlap;
-> > +
-> > +			overlap = xfs_alloc_busy_try_reuse(args->pag, busyp,
-> > +							   fbno, fbno + flen);
-> > +			if (unlikely(overlap == -1)) {
-> > +				spin_unlock(&args->pag->pagb_lock);
-> > +				xfs_log_force(args->mp, XFS_LOG_SYNC);
-> > +				goto restart;
-> > +			}
-> 
-> Hmmmm - I'm not so sure we can reuse overlapped data extents for
-> data allocations without a log force at all as there is no guarantee
-> that the data will not be overwritten before the original free
-> transaction is on disk.
-> 
-> That is, recovery may not replay the original data extent free
-> transaction or the new allocation transaction, but there is nothing
-> stopping us from having written the new data into the extent before
-> the crash occurred, especially as delayed allocation places the
-> allocation very close the data IO issue. e.g.:
-> 
-> 	thread X		thread Y
-> 	free data extent ABC
-> 				allocate data extent BCD
-> 				partial overlap, no log force
-> 				issue data IO
-> 				.....
-> 
-> 		 <crash>
-> 
-> That leads to corruption of the data in the original file because
-> neither transaction is written to disk, but new data is....
+>  achieve this
 
-You're right.  It's fine from the transaction point of view, but
-it could leave wrong data in a file.  I'll disallow this case, too.
+fixed.
+
+> > the callers that need it, and by moving the busy list insert from
+> > xfs_free_ag_extent extent which is used both by AGFL refills and real
+>                      ^^^^^ drop this word
+
+fixed.
 
 _______________________________________________
 xfs mailing list
