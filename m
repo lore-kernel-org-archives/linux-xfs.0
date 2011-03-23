@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p2N6CfW4074525 for <xfs@oss.sgi.com>; Wed, 23 Mar 2011 01:12:46 -0500
+	p2N6CeBA074522 for <xfs@oss.sgi.com>; Wed, 23 Mar 2011 01:12:45 -0500
 Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5FA7613FA515
-	for <xfs@oss.sgi.com>; Tue, 22 Mar 2011 23:15:40 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3E7811405D5A
+	for <xfs@oss.sgi.com>; Tue, 22 Mar 2011 23:15:39 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	XJu0fd0nqu8esZ2B for <xfs@oss.sgi.com>;
-	Tue, 22 Mar 2011 23:15:40 -0700 (PDT)
+	fad6BtfSYlmC9yyn for <xfs@oss.sgi.com>;
+	Tue, 22 Mar 2011 23:15:39 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 5/6] xfs: register the inode cache shrinker before quotachecks
-Date: Wed, 23 Mar 2011 17:14:29 +1100
-Message-Id: <1300860870-15471-6-git-send-email-david@fromorbit.com>
+Subject: [PATCH 3/6] xfs: introduce inode cluster buffer trylocks for
+	xfs_iflush
+Date: Wed, 23 Mar 2011 17:14:27 +1100
+Message-Id: <1300860870-15471-4-git-send-email-david@fromorbit.com>
 In-Reply-To: <1300860870-15471-1-git-send-email-david@fromorbit.com>
 References: <1300860870-15471-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,98 +34,130 @@ Cc: aelder@sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-During mount, we can do a quotacheck that involves a bulkstat pass
-on all inodes. If there are more inodes in the filesystem than can
-be held in memory, we require the inode cache shrinker to run to
-ensure that we don't run out of memory.
+There is an ABBA deadlock between synchronous inode flushing in
+xfs_reclaim_inode and xfs_icluster_free. xfs_icluster_free locks the
+buffer, then takes inode ilocks, whilst synchronous reclaim takes
+the ilock followed by the buffer lock in xfs_iflush().
 
-Unfortunately, the inode cache shrinker is not registered until we
-get to the end of the superblock setup process, which is after a
-quotacheck is run if it is needed. Hence we need to register the
-inode cache shrinker earlier in the mount process so that we don't
-OOM during mount. This requires that we also initialise the syncd
-work before we register the shrinker, so we nee dto juggle that
-around as well.
+To avoid this deadlock, separate the inode cluster buffer locking
+semantics from the synchronous inode flush semantics, allowing
+callers to attempt to lock the buffer but still issue synchronous IO
+if it can get the buffer. This requires xfs_iflush() calls that
+currently use non-blocking semantics to pass SYNC_TRYLOCK rather
+than 0 as the flags parameter.
 
-While there, make sure that we have set up the block sizes in the
-VFS superblock correctly before the quotacheck is run so that any
-inodes that are cached as a result of the quotacheck have their
-block size fields set up correctly.
+This allows xfs_reclaim_inode to avoid the deadlock on the buffer
+lock and detect the failure so that it can drop the inode ilock and
+restart the reclaim attempt on the inode. This allows
+xfs_ifree_cluster to obtain the inode lock, mark the inode stale and
+release it and hence defuse the deadlock situation. It also has the
+pleasant side effect of avoiding IO in xfs_reclaim_inode when it
+tries to next reclaim the inode as it is now marked stale.
 
-Cc: stable@kernel.org
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/linux-2.6/xfs_super.c |   34 ++++++++++++++++++++++++----------
- 1 files changed, 24 insertions(+), 10 deletions(-)
+ fs/xfs/linux-2.6/xfs_super.c |    2 +-
+ fs/xfs/linux-2.6/xfs_sync.c  |   30 +++++++++++++++++++++++++++---
+ fs/xfs/xfs_inode.c           |    2 +-
+ fs/xfs/xfs_inode_item.c      |    6 +++---
+ 4 files changed, 32 insertions(+), 8 deletions(-)
 
 diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
-index 8a70b2a..1ba5c45 100644
+index 818c4cf..8a70b2a 100644
 --- a/fs/xfs/linux-2.6/xfs_super.c
 +++ b/fs/xfs/linux-2.6/xfs_super.c
-@@ -1539,10 +1539,14 @@ xfs_fs_fill_super(
- 	if (error)
- 		goto out_free_sb;
+@@ -1078,7 +1078,7 @@ xfs_fs_write_inode(
+ 			error = 0;
+ 			goto out_unlock;
+ 		}
+-		error = xfs_iflush(ip, 0);
++		error = xfs_iflush(ip, SYNC_TRYLOCK);
+ 	}
  
--	error = xfs_mountfs(mp);
--	if (error)
--		goto out_filestream_unmount;
--
+  out_unlock:
+diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
+index 6c10f1d..594cd82 100644
+--- a/fs/xfs/linux-2.6/xfs_sync.c
++++ b/fs/xfs/linux-2.6/xfs_sync.c
+@@ -761,8 +761,10 @@ xfs_reclaim_inode(
+ 	struct xfs_perag	*pag,
+ 	int			sync_mode)
+ {
+-	int	error = 0;
++	int	error;
+ 
++restart:
++	error = 0;
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 	if (!xfs_iflock_nowait(ip)) {
+ 		if (!(sync_mode & SYNC_WAIT))
+@@ -788,9 +790,31 @@ xfs_reclaim_inode(
+ 	if (xfs_inode_clean(ip))
+ 		goto reclaim;
+ 
+-	/* Now we have an inode that needs flushing */
+-	error = xfs_iflush(ip, sync_mode);
 +	/*
-+	 * we must configure the block size in the superblock before we run the
-+	 * full mount process as the mount process can lookup and cache inodes.
-+	 * For the same reason we must also initialise the syncd and register
-+	 * the inode cache shrinker so that inodes can be reclaimed during
-+	 * operations like a quotacheck that iterate all inodes in the
-+	 * filesystem.
++	 * Now we have an inode that needs flushing.
++	 *
++	 * We do a nonblocking flush here even if we are doing a SYNC_WAIT
++	 * reclaim as we can deadlock with inode cluster removal.
++	 * xfs_ifree_cluster() can lock the inode buffer before it locks the
++	 * ip->i_lock, and we are doing the exact opposite here. As a result,
++	 * doing a blocking xfs_itobp() to get the cluster buffer will result
++	 * in an ABBA deadlock with xfs_ifree_cluster().
++	 *
++	 * As xfs_ifree_cluser() must gather all inodes that are active in the
++	 * cache to mark them stale, if we hit this case we don't actually want
++	 * to do IO here - we want the inode marked stale so we can simply
++	 * reclaim it. Hence if we get an EAGAIN error on a SYNC_WAIT flush,
++	 * just unlock the inode, back off and try again. Hopefully the next
++	 * pass through will see the stale flag set on the inode.
 +	 */
- 	sb->s_magic = XFS_SB_MAGIC;
- 	sb->s_blocksize = mp->m_sb.sb_blocksize;
- 	sb->s_blocksize_bits = ffs(sb->s_blocksize) - 1;
-@@ -1550,6 +1554,16 @@ xfs_fs_fill_super(
- 	sb->s_time_gran = 1;
- 	set_posix_acl_flag(sb);
- 
-+	error = xfs_syncd_init(mp);
-+	if (error)
-+		goto out_filestream_unmount;
-+
-+	xfs_inode_shrinker_register(mp);
-+
-+	error = xfs_mountfs(mp);
-+	if (error)
-+		goto out_syncd_stop;
-+
- 	root = igrab(VFS_I(mp->m_rootip));
- 	if (!root) {
- 		error = ENOENT;
-@@ -1565,14 +1579,11 @@ xfs_fs_fill_super(
- 		goto fail_vnrele;
++	error = xfs_iflush(ip, SYNC_TRYLOCK | sync_mode);
+ 	if (sync_mode & SYNC_WAIT) {
++		if (error == EAGAIN) {
++			xfs_iunlock(ip, XFS_ILOCK_EXCL);
++			/* backoff longer than in xfs_ifree_cluster */
++			delay(2);
++			goto restart;
++		}
+ 		xfs_iflock(ip);
+ 		goto reclaim;
  	}
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index da871f5..742c833 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -2835,7 +2835,7 @@ xfs_iflush(
+ 	 * Get the buffer containing the on-disk inode.
+ 	 */
+ 	error = xfs_itobp(mp, NULL, ip, &dip, &bp,
+-				(flags & SYNC_WAIT) ? XBF_LOCK : XBF_TRYLOCK);
++				(flags & SYNC_TRYLOCK) ? XBF_TRYLOCK : XBF_LOCK);
+ 	if (error || !bp) {
+ 		xfs_ifunlock(ip);
+ 		return error;
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index fd4f398..46cc401 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -760,11 +760,11 @@ xfs_inode_item_push(
+ 	 * Push the inode to it's backing buffer. This will not remove the
+ 	 * inode from the AIL - a further push will be required to trigger a
+ 	 * buffer push. However, this allows all the dirty inodes to be pushed
+-	 * to the buffer before it is pushed to disk. THe buffer IO completion
+-	 * will pull th einode from the AIL, mark it clean and unlock the flush
++	 * to the buffer before it is pushed to disk. The buffer IO completion
++	 * will pull the inode from the AIL, mark it clean and unlock the flush
+ 	 * lock.
+ 	 */
+-	(void) xfs_iflush(ip, 0);
++	(void) xfs_iflush(ip, SYNC_TRYLOCK);
+ 	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+ }
  
--	error = xfs_syncd_init(mp);
--	if (error)
--		goto fail_vnrele;
--
--	xfs_inode_shrinker_register(mp);
--
- 	return 0;
- 
-+ out_syncd_stop:
-+	xfs_inode_shrinker_unregister(mp);
-+	xfs_syncd_stop(mp);
-  out_filestream_unmount:
- 	xfs_filestream_unmount(mp);
-  out_free_sb:
-@@ -1596,6 +1607,9 @@ xfs_fs_fill_super(
- 	}
- 
-  fail_unmount:
-+	xfs_inode_shrinker_unregister(mp);
-+	xfs_syncd_stop(mp);
-+
- 	/*
- 	 * Blow away any referenced inode in the filestreams cache.
- 	 * This can and will cause log traffic as inodes go inactive
 -- 
 1.7.2.3
 
