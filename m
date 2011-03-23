@@ -1,23 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p2NCDcdi091104 for <xfs@oss.sgi.com>; Wed, 23 Mar 2011 07:13:48 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 817C2B14B3E
-	for <xfs@oss.sgi.com>; Wed, 23 Mar 2011 05:16:39 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id 1oBR1RwhQUNRasJq for
-	<xfs@oss.sgi.com>; Wed, 23 Mar 2011 05:16:39 -0700 (PDT)
-Date: Wed, 23 Mar 2011 08:16:38 -0400
+	p2NCEXQI091163 for <xfs@oss.sgi.com>; Wed, 23 Mar 2011 07:14:43 -0500
+Date: Wed, 23 Mar 2011 08:17:33 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/6] xfs: optimize AGFL refills
-Message-ID: <20110323121638.GB468@infradead.org>
+Subject: Re: [PATCH 2/6] xfs: do not immediately reuse busy extent ranges
+Message-ID: <20110323121733.GC468@infradead.org>
 References: <20110322195550.260682574@bombadil.infradead.org>
-	<20110322200137.280301318@bombadil.infradead.org>
-	<20110322233054.GD15270@dastard>
+	<20110322200137.474878707@bombadil.infradead.org>
+	<1300833059.2875.276.camel@doink>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110322233054.GD15270@dastard>
+In-Reply-To: <1300833059.2875.276.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,20 +24,21 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Alex Elder <aelder@sgi.com>
 Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Wed, Mar 23, 2011 at 10:30:54AM +1100, Dave Chinner wrote:
-> > +	if (error)
-> > +		xfs_alloc_busy_insert(tp, args.agno, args.agbno, len);
-> 
-> Shouldn't that be "if (!error)"?  i.e. if we freed the extent
-> successfully we need to insert it in the busy list. This current
-> code has the effect of never inserting freed data extents in the
-> busy list....
+On Tue, Mar 22, 2011 at 05:30:59PM -0500, Alex Elder wrote:
+> Again, this looks nearly identical to your last version.
+> On that one, I suggested rewording a comment, and you
+> said "ok."  You did not do so in this version, which I
+> guess is fine.  I just want to know whether you intended
+> to.  If so I'll give you a chance to post an update; if
+> not I can take this one as-is.
 
-Yes, it should.  This got messed up at some point during reshuffling
-the series.
+Sorry, I fixe half of what you pointed out and postponed the
+comment rewrite.  I've taken your version of the comments
+for the next spin.  Still not sure what to do about the magic 4,
+though.
 
 _______________________________________________
 xfs mailing list
