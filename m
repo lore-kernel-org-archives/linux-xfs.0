@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p2NFgREP101833 for <xfs@oss.sgi.com>; Wed, 23 Mar 2011 10:42:32 -0500
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 79DEB1400831
-	for <xfs@oss.sgi.com>; Wed, 23 Mar 2011 08:45:27 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id qj79vZR8R9GXFV0o for
-	<xfs@oss.sgi.com>; Wed, 23 Mar 2011 08:45:27 -0700 (PDT)
-Message-ID: <4D8A1594.5060505@redhat.com>
-Date: Wed, 23 Mar 2011 10:45:24 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+	p2NJaJA0112391
+	for <linux-xfs@oss.sgi.com>; Wed, 23 Mar 2011 14:36:24 -0500
+Received: from mx5.twosigma.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with SMTP id B04D3370FE2
+	for <linux-xfs@oss.sgi.com>; Wed, 23 Mar 2011 12:39:09 -0700 (PDT)
+Received: from mx5.twosigma.com (mx5.twosigma.com [208.77.212.35]) by
+	cuda.sgi.com with SMTP id 2LqAa035k41aIXuM for
+	<linux-xfs@oss.sgi.com>; Wed, 23 Mar 2011 12:39:09 -0700 (PDT)
+From: Sean Noonan <Sean.Noonan@twosigma.com>
+Date: Wed, 23 Mar 2011 15:39:05 -0400
+Subject: RE: XFS memory allocation deadlock in 2.6.38
+Message-ID: <081DDE43F61F3D43929A181B477DCA95639B5327@MSXAOA6.twosigma.com>
+References: <081DDE43F61F3D43929A181B477DCA95639B52FD@MSXAOA6.twosigma.com>
+In-Reply-To: <081DDE43F61F3D43929A181B477DCA95639B52FD@MSXAOA6.twosigma.com>
+Content-Language: en-US
 MIME-Version: 1.0
-Subject: Re: xfstests: failure to umount ext4
-References: <AANLkTi=NKxmvJx_oEpdeMtfU9ePv4ofG5PjCuh23RJ+A@mail.gmail.com>	<4D8A0A70.9030201@redhat.com>
-	<AANLkTi=JvL6LoL=VOrHoiQKheqzDrVwOQtWAkumzaBk5@mail.gmail.com>
-In-Reply-To: <AANLkTi=JvL6LoL=VOrHoiQKheqzDrVwOQtWAkumzaBk5@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,72 +29,115 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Ext4 Developers List <linux-ext4@vger.kernel.org>, XFS <xfs@oss.sgi.com>
+To: Sean Noonan <Sean.Noonan@twosigma.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>
+Cc: Martin Bligh <Martin.Bligh@twosigma.com>, Trammell Hudson <Trammell.Hudson@twosigma.com>, Christos Zoulas <Christos.Zoulas@twosigma.com>, "'linux-xfs@oss.sgi.com'" <linux-xfs@oss.sgi.com>, Stephen Degler <Stephen.Degler@twosigma.com>
 
-On 3/23/11 10:33 AM, Amir Goldstein wrote:
-> On Wed, Mar 23, 2011 at 4:57 PM, Eric Sandeen <sandeen@redhat.com> wrote:
->> On 3/23/11 9:36 AM, Amir Goldstein wrote:
->>> On Wed, Mar 23, 2011 at 4:03 PM, Amir Goldstein <amir73il@gmail.com> wrote:
->>>>
->>>> I've been running xfstests on ext4 and I always get annoying failures to umount:
->>>>
->>>> 213 8s ... 31s
->>>> umount: /mnt/test/ext4: device is busy.
->>>>        (In some cases useful info about processes that use
->>>>         the device is found by lsof(8) or fuser(1))
->>>>
->>>> post 198 mostly fails to umount as well.
->>>> and post 124 always fails to umount.
->>>>
->>>> My server is Ubuntu 10.10, running kernel 2.6.38.
->>>>
->>>> Is there any known issue about this? because I could find it on google
->>>> or on the XFS list.
->>>>
->>>
->>> Hi All,
->>>
->>> Has anyone seen these failures when running xfstests on ext4?
->>> My test and scratch partitions are dedicated for xfstests.
->>
->> I've not seen it, can you investigate with lsof etc?
-> 
-> OK. I have not given complete information.
-> It does not fail indefinably. I can umount the fs immediately after the failure.
-> Only the test fails because fsck sees a mounted fs.
-> There must be a bit of a delay in the umount that causes the problem.
-> 
->>
->> They both work for me on a quick test, anyway, on a .38
->> kernel.
-> 
-> Problem existed for me in .37 as well. I don't think it is kernel (or
-> fs) related.
-> I think it is a system problem, but I fall short of ideas how to fix it.
-> 
->>
->> What are you using for your partitions under test?
->>
-> 
-> Currently, I have /dev/sda5,6,7,8.
-> I used to work with LVM, but lstat64 didn't like the /dev/mapper links,
-> so I switched to raw partitions.
-> Although I was puzzled that xfstests could not work over LVM partitions
-> It could when I changed lstat64 to stat64, but then I changed it back
-> thinking it was causing my problems.
+I believe this patch fixes the behavior:
+diff --git a/mm/memory.c b/mm/memory.c
+index e48945a..740d5ab 100644
+--- a/mm/memory.c
++++ b/mm/memory.c
+@@ -3461,7 +3461,9 @@ int make_pages_present(unsigned long addr, unsigned long end)
+         * to break COW, except for shared mappings because these don't COW
+         * and we would not want to dirty them for nothing.
+         */
+-       write = (vma->vm_flags & (VM_WRITE | VM_SHARED)) == VM_WRITE;
++       write = (vma->vm_flags & VM_WRITE) != 0;
++       if (write && ((vma->vm_flags & VM_SHARED) !=0) && (vma->vm_file == NULL))
++               write = 0;
+        BUG_ON(addr >= end);
+        BUG_ON(end > vma->vm_end);
+        len = DIV_ROUND_UP(end, PAGE_SIZE) - addr/PAGE_SIZE;
 
-I tried to fix lvm, once, but all the dev symlinks vs. mtab vs.
-/proc/mounts was a rat's nest, and I gave up... :)
 
--Eric
- 
->> -Eric
->>
->>> Thanks,
->>> Amir.
->>
->>
+This was traced to the following commit:
+5ecfda041e4b4bd858d25bbf5a16c2a6c06d7272 is the first bad commit
+commit 5ecfda041e4b4bd858d25bbf5a16c2a6c06d7272
+Author: Michel Lespinasse <walken@google.com>
+Date:   Thu Jan 13 15:46:09 2011 -0800
+
+    mlock: avoid dirtying pages and triggering writeback
+    
+    When faulting in pages for mlock(), we want to break COW for anonymous or
+    file pages within VM_WRITABLE, non-VM_SHARED vmas.  However, there is no
+    need to write-fault into VM_SHARED vmas since shared file pages can be
+    mlocked first and dirtied later, when/if they actually get written to.
+    Skipping the write fault is desirable, as we don't want to unnecessarily
+    cause these pages to be dirtied and queued for writeback.
+    
+    Signed-off-by: Michel Lespinasse <walken@google.com>
+    Cc: Hugh Dickins <hughd@google.com>
+    Cc: Rik van Riel <riel@redhat.com>
+    Cc: Kosaki Motohiro <kosaki.motohiro@jp.fujitsu.com>
+    Cc: Peter Zijlstra <peterz@infradead.org>
+    Cc: Nick Piggin <npiggin@kernel.dk>
+    Cc: Theodore Tso <tytso@google.com>
+    Cc: Michael Rubin <mrubin@google.com>
+    Cc: Suleiman Souhlal <suleiman@google.com>
+    Cc: Dave Chinner <david@fromorbit.com>
+    Cc: Christoph Hellwig <hch@infradead.org>
+    Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+    Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
+
+:040000 040000 604eede2f45b7e5276ce9725b715ed15a868861d 3c175eadf4cf33d4f78d4d455c9a04f3df2c199e M	mm
+
+
+-----Original Message-----
+From: Sean Noonan 
+Sent: Monday, March 21, 2011 12:20
+To: 'linux-kernel@vger.kernel.org'
+Cc: Trammell Hudson; Martin Bligh; Stephen Degler; Christos Zoulas
+Subject: XFS memory allocation deadlock in 2.6.38
+
+This message was originally posted to the XFS mailing list, but received no responses.  Thus, I am sending it to LKML on the advice of Martin.
+
+Using the attached program, we are able to reproduce this bug reliably.
+$ make vmtest
+$ ./vmtest /xfs/hugefile.dat $(( 16 * 1024 * 1024 * 1024 )) # vmtest <path_to_file> <size_in_bytes>
+/xfs/hugefile.dat: mapped 17179869184 bytes in 33822066943 ticks
+749660: avg 13339 max 234667 ticks
+371945: avg 26885 max 281616 ticks
+---
+At this point, we see the following on the console:
+[593492.694806] XFS: possible memory allocation deadlock in kmem_alloc (mode:0x250)
+[593506.724367] XFS: possible memory allocation deadlock in kmem_alloc (mode:0x250)
+[593524.837717] XFS: possible memory allocation deadlock in kmem_alloc (mode:0x250)
+[593556.742386] XFS: possible memory allocation deadlock in kmem_alloc (mode:0x250)
+
+This is the same message presented in
+http://oss.sgi.com/bugzilla/show_bug.cgi?id=410
+
+We started testing with 2.6.38-rc7 and have seen this bug through to the .0 release.  This does not appear to be present in 2.6.33, but we have not done testing in between.  We have tested with ext4 and do not encounter this bug.
+CONFIG_XFS_FS=y
+CONFIG_XFS_QUOTA=y
+CONFIG_XFS_POSIX_ACL=y
+CONFIG_XFS_RT=y
+# CONFIG_XFS_DEBUG is not set
+# CONFIG_VXFS_FS is not set
+
+Here is the stack from the process:
+[<ffffffff81357553>] call_rwsem_down_write_failed+0x13/0x20
+[<ffffffff812ddf1e>] xfs_ilock+0x7e/0x110
+[<ffffffff8130132f>] __xfs_get_blocks+0x8f/0x4e0
+[<ffffffff813017b1>] xfs_get_blocks+0x11/0x20
+[<ffffffff8114ba3e>] __block_write_begin+0x1ee/0x5b0
+[<ffffffff8114be9d>] block_page_mkwrite+0x9d/0xf0
+[<ffffffff81307e05>] xfs_vm_page_mkwrite+0x15/0x20
+[<ffffffff810f2ddb>] do_wp_page+0x54b/0x820
+[<ffffffff810f347c>] handle_pte_fault+0x3cc/0x820
+[<ffffffff810f5145>] handle_mm_fault+0x175/0x2f0
+[<ffffffff8102e399>] do_page_fault+0x159/0x470
+[<ffffffff816cf6cf>] page_fault+0x1f/0x30
+[<ffffffffffffffff>] 0xffffffffffffffff
+
+# uname -a
+Linux testhost 2.6.38 #2 SMP PREEMPT Fri Mar 18 15:00:59 GMT 2011 x86_64 GNU/Linux
+
+Please let me know if additional information is required.
+
+Thanks!
+
+Sean
 
 _______________________________________________
 xfs mailing list
