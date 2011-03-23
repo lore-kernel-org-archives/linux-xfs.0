@@ -1,17 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p2NCDDrY091073 for <xfs@oss.sgi.com>; Wed, 23 Mar 2011 07:13:23 -0500
-Date: Wed, 23 Mar 2011 08:16:13 -0400
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
+	p2NCLdx0091473 for <xfs@oss.sgi.com>; Wed, 23 Mar 2011 07:21:50 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1550436D409
+	for <xfs@oss.sgi.com>; Wed, 23 Mar 2011 05:24:39 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id CkJpvFhvqRo8jVJC for
+	<xfs@oss.sgi.com>; Wed, 23 Mar 2011 05:24:39 -0700 (PDT)
+Date: Wed, 23 Mar 2011 08:24:38 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/6] xfs: optimize AGFL refills
-Message-ID: <20110323121613.GA468@infradead.org>
+Subject: Re: [PATCH 3/6] xfs: exact busy extent tracking
+Message-ID: <20110323122438.GD468@infradead.org>
 References: <20110322195550.260682574@bombadil.infradead.org>
-	<20110322200137.280301318@bombadil.infradead.org>
-	<1300833051.2875.275.camel@doink>
+	<20110322200137.657110761@bombadil.infradead.org>
+	<20110322234728.GE15270@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1300833051.2875.275.camel@doink>
+In-Reply-To: <20110322234728.GE15270@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,29 +30,57 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Tue, Mar 22, 2011 at 05:30:51PM -0500, Alex Elder wrote:
-> On Tue, 2011-03-22 at 15:55 -0400, Christoph Hellwig wrote:
-> > Avoid forcing out busy extent when moving blocks from/to the AGFL.  We
+On Wed, Mar 23, 2011 at 10:47:28AM +1100, Dave Chinner wrote:
+> BUG_ON() inside a spinlock will effectively lock up the machine as
+> other CPUs try to take the spinlock that was held by the thread that
+> went bad. It causes the machine to die a horrible, undebuggable death
+> rather than just kill the thread that caused the oops and leaving
+> everything else still functional.
 > 
-> Without thinking a bit about it, it wasn't clear why doing
-> this was OK to do.  It would be nice to record a one-sentence
-> justification of why we don't need to force busy extents out
-> in this case.
+> If it were an ASSERT(), that's probably OK because it is only debug
+> systems that woul dhave this problem, but the use of BUG(_ON) means
+> it will cause production systems to die as well.
 
-I've added a sentence, but it seems rather pointless.
+I've changed it to asserts.
 
->  achieve this
+> > +		 * We would have to split the busy extent to be able
+> > +		 * to track it correct, which we cannot do because we
+> > +		 * would have to modify the list of busy extents
+> > +		 * attached to the transaction/CIL context, which
+> > +		 * is mutable.
+> 
+> 		      immutable?
 
-fixed.
+Yes.
 
-> > the callers that need it, and by moving the busy list insert from
-> > xfs_free_ag_extent extent which is used both by AGFL refills and real
->                      ^^^^^ drop this word
+> > +		 *
+> > +		 * Force out the log to clear the busy extents
+> > +		 * and retry the search.
+> > +		 */
+> 
+> BTW, these comments appear to wrap at 68 columns - any particular
+> reason?
 
-fixed.
+They used to sit one more tab to the right and I didn't fix them up
+when splitting the function.  I've rewrapped them now.
+
+> > +		overlap = xfs_alloc_busy_try_reuse(pag, busyp,
+> > +						   fbno, fbno + flen);
+> > +		if (overlap) {
+> > +			spin_unlock(&pag->pagb_lock);
+> > +			xfs_log_force(tp->t_mountp, XFS_LOG_SYNC);
+> > +			goto restart;
+> > +		}
+> 
+> xfs_alloc_busy_try_reuse() only ever returns -1 or 1, which means
+> this will always trigger a log force on overlap....
+
+At least for now, yes.  In the next patch we will treat -1 vs 1
+differently.  Maybe it should be changed to 0 vs 1, but even that
+isn't quite intuitive.  I'll think about it a bit more.
 
 _______________________________________________
 xfs mailing list
