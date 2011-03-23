@@ -1,24 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p2NFULQO101321 for <xfs@oss.sgi.com>; Wed, 23 Mar 2011 10:30:26 -0500
-Received: from mail-qy0-f181.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CAEFC159E45D
-	for <xfs@oss.sgi.com>; Wed, 23 Mar 2011 08:33:20 -0700 (PDT)
-Received: from mail-qy0-f181.google.com (mail-qy0-f181.google.com
-	[209.85.216.181]) by cuda.sgi.com with ESMTP id
-	3mjJlxsW8HcQsO6x for <xfs@oss.sgi.com>;
-	Wed, 23 Mar 2011 08:33:20 -0700 (PDT)
-Received: by qyg14 with SMTP id 14so7282346qyg.5
-	for <xfs@oss.sgi.com>; Wed, 23 Mar 2011 08:33:20 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
+	p2NG0Z4H102795 for <xfs@oss.sgi.com>; Wed, 23 Mar 2011 11:00:41 -0500
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id AA09336C7D8
+	for <xfs@oss.sgi.com>; Wed, 23 Mar 2011 09:03:35 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 7KGkNdfMJp4hpVHx for
+	<xfs@oss.sgi.com>; Wed, 23 Mar 2011 09:03:35 -0700 (PDT)
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id p2NG3YL3026503
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Wed, 23 Mar 2011 12:03:34 -0400
+Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
+	[10.5.9.1])
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id p2NG3W0F031759
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Wed, 23 Mar 2011 12:03:33 -0400
+Message-ID: <4D8A19D4.3080807@redhat.com>
+Date: Wed, 23 Mar 2011 11:03:32 -0500
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <4D8A0A70.9030201@redhat.com>
-References: <AANLkTi=NKxmvJx_oEpdeMtfU9ePv4ofG5PjCuh23RJ+A@mail.gmail.com>
-	<4D8A0A70.9030201@redhat.com>
-Date: Wed, 23 Mar 2011 17:33:19 +0200
-Message-ID: <AANLkTi=JvL6LoL=VOrHoiQKheqzDrVwOQtWAkumzaBk5@mail.gmail.com>
-Subject: Re: xfstests: failure to umount ext4
-From: Amir Goldstein <amir73il@gmail.com>
+Subject: [PATCH V2] xfstests 249: use -F option for xfs_io
+References: <4D8A1795.3080401@redhat.com>
+In-Reply-To: <4D8A1795.3080401@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,73 +34,56 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: Ext4 Developers List <linux-ext4@vger.kernel.org>, XFS <xfs@oss.sgi.com>
+To: xfs-oss <xfs@oss.sgi.com>
 
-On Wed, Mar 23, 2011 at 4:57 PM, Eric Sandeen <sandeen@redhat.com> wrote:
-> On 3/23/11 9:36 AM, Amir Goldstein wrote:
->> On Wed, Mar 23, 2011 at 4:03 PM, Amir Goldstein <amir73il@gmail.com> wro=
-te:
->>>
->>> I've been running xfstests on ext4 and I always get annoying failures t=
-o umount:
->>>
->>> 213 8s ... 31s
->>> umount: /mnt/test/ext4: device is busy.
->>> =A0 =A0 =A0 =A0(In some cases useful info about processes that use
->>> =A0 =A0 =A0 =A0 the device is found by lsof(8) or fuser(1))
->>>
->>> post 198 mostly fails to umount as well.
->>> and post 124 always fails to umount.
->>>
->>> My server is Ubuntu 10.10, running kernel 2.6.38.
->>>
->>> Is there any known issue about this? because I could find it on google
->>> or on the XFS list.
->>>
->>
->> Hi All,
->>
->> Has anyone seen these failures when running xfstests on ext4?
->> My test and scratch partitions are dedicated for xfstests.
->
-> I've not seen it, can you investigate with lsof etc?
+Test 249 was appearing to pass on ext4, but it wasn't really
+exercising the test due to lack of "-F" in the xfs_io arguments.
 
-OK. I have not given complete information.
-It does not fail indefinably. I can umount the fs immediately after the fai=
-lure.
-Only the test fails because fsck sees a mounted fs.
-There must be a bit of a delay in the umount that causes the problem.
+Without -F the files were created (oddly enough); neither pwrite
+nor sendfile were executed, and the diff of the two (empty)
+files passed, resulting in a passed test without testing anything.
 
->
-> They both work for me on a quick test, anyway, on a .38
-> kernel.
+So add the -F, capture the output, and test the result of each
+xfs_io invocation.
 
-Problem existed for me in .37 as well. I don't think it is kernel (or
-fs) related.
-I think it is a system problem, but I fall short of ideas how to fix it.
+Also, when it fails, the diff output is huge.  Make diff silent,
+but describe the diff failure and exit.
 
->
-> What are you using for your partitions under test?
->
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-Currently, I have /dev/sda5,6,7,8.
-I used to work with LVM, but lstat64 didn't like the /dev/mapper links,
-so I switched to raw partitions.
-Although I was puzzled that xfstests could not work over LVM partitions
-It could when I changed lstat64 to stat64, but then I changed it back
-thinking it was causing my problems.
+V2: change diff to diff -q
 
-> -Eric
->
->> Thanks,
->> Amir.
->
->
+diff --git a/249 b/249
+old mode 100644
+new mode 100755
+index 6fc972e..100cd4c
+--- a/249
++++ b/249
+@@ -52,11 +52,15 @@ echo "Feel the serenity."
+ 
+ SRC=$TEST_DIR/$seq.src
+ DST=$TEST_DIR/$seq.dst
++rm -f $seq.full
+ 
+-$XFS_IO_PROG -f -c "pwrite -S 0xa5a55a5a 0 32768k" -c fsync $SRC > /dev/null 2>&1
+-$XFS_IO_PROG -f -c "sendfile -i $SRC 0 32768k" -c fsync $DST > /dev/null 2>&1
+-
+-diff $SRC $DST
++$XFS_IO_PROG -F -f -c "pwrite -S 0xa5a55a5a 0 32768k" -c fsync $SRC >> $seq.full 2>&1
++[ $? -ne 0 ] && _fail "xfs_io pwrite failed"
++$XFS_IO_PROG -F -f -c "sendfile -i $SRC 0 32768k" -c fsync $DST >> $seq.full 2>&1
++[ $? -ne 0 ] && _fail "xfs_io sendfile failed"
+ 
++diff -q $SRC $DST
+ status=$?
++[ $status -ne 0 ] && _fail "$SRC and $DST differ"
++
+ exit
 
 _______________________________________________
 xfs mailing list
