@@ -1,29 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p2NFpCtD102214 for <xfs@oss.sgi.com>; Wed, 23 Mar 2011 10:51:17 -0500
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 404C61B5CB42
-	for <xfs@oss.sgi.com>; Wed, 23 Mar 2011 08:54:12 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id jUCseEQVBXX2Sw9b for
-	<xfs@oss.sgi.com>; Wed, 23 Mar 2011 08:54:12 -0700 (PDT)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id p2NFsCnK018611
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Wed, 23 Mar 2011 11:54:12 -0400
-Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id p2NFrvvV024096
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Wed, 23 Mar 2011 11:54:05 -0400
-Message-ID: <4D8A1795.3080401@redhat.com>
-Date: Wed, 23 Mar 2011 10:53:57 -0500
-From: Eric Sandeen <sandeen@redhat.com>
-MIME-Version: 1.0
-Subject: [PATCH] xfstests 249: use -F option for xfs_io
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
+	p2NG2HWY102869 for <xfs@oss.sgi.com>; Wed, 23 Mar 2011 11:02:23 -0500
+Received: from one.firstfloor.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 53FEF1313FA8
+	for <xfs@oss.sgi.com>; Wed, 23 Mar 2011 09:05:17 -0700 (PDT)
+Received: from one.firstfloor.org (one.firstfloor.org [213.235.205.2]) by
+	cuda.sgi.com with ESMTP id jZkk2xM422GCSUcX for
+	<xfs@oss.sgi.com>; Wed, 23 Mar 2011 09:05:17 -0700 (PDT)
+Date: Wed, 23 Mar 2011 17:05:15 +0100
+From: Andi Kleen <andi@firstfloor.org>
+Subject: Re: xfs: outstanding patches for 2.6.39
+Message-ID: <20110323160515.GF21838@one.firstfloor.org>
+References: <1300860870-15471-1-git-send-email-david@fromorbit.com>
+	<m24o6u48xu.fsf@firstfloor.org> <20110323113803.GB26611@dastard>
+Mime-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20110323113803.GB26611@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,40 +29,38 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: aelder@sgi.com, Andi Kleen <andi@firstfloor.org>, xfs@oss.sgi.com
 
-Test 249 was appearing to pass on ext4, but it wasn't really
-exercising the test due to lack of "-F" in the xfs_io arguments.
+> We can't do that right now, anyway.
 
-Without -F the files were created (oddly enough); neither pwrite
-nor sendfile were executed, and the diff of the two (empty)
-files passed, resulting in a passed test without testing anything.
+It seemed to work on XFS when we tested it. Undoutedly after your
+patch it won't work anymore.
 
-So add the -F, capture the output, and test the result of each
-xfs_io invocation.
+> If the page is not in use, we don't care about it after this patch
+> set is applied - the page is either active in a buffer or it has been
+> freed. If it is in use, then we'll shut the filesystem down if we
+> detect the memory corruption just like we currently do. Hence I
+> don't see any regression here.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+I think you're confusing the memory_failure() HWPoison path with some XFS
+internal checking. I don't think XFS has any HWPoison checking on its own.
 
-diff --git a/249 b/249
-index 6fc972e..3b3a64d
---- a/249
-+++ b/249
-@@ -52,9 +52,12 @@ echo "Feel the serenity."
- 
- SRC=$TEST_DIR/$seq.src
- DST=$TEST_DIR/$seq.dst
-+rm -f $seq.full
- 
--$XFS_IO_PROG -f -c "pwrite -S 0xa5a55a5a 0 32768k" -c fsync $SRC > /dev/null 2>&1
--$XFS_IO_PROG -f -c "sendfile -i $SRC 0 32768k" -c fsync $DST > /dev/null 2>&1
-+$XFS_IO_PROG -F -f -c "pwrite -S 0xa5a55a5a 0 32768k" -c fsync $SRC >> $seq.full 2>&1
-+[ $? -ne 0 ] && _fail "xfs_io pwrite failed"
-+$XFS_IO_PROG -F -f -c "sendfile -i $SRC 0 32768k" -c fsync $DST >> $seq.full 2>&1
-+[ $? -ne 0 ] && _fail "xfs_io sendfile failed"
- 
- diff $SRC $DST
- 
+> As it is, there is no way for the filesytem to be notified about
+> such failures on active pages in buffers, so in reality we can't
+> reliably detect them so there is little point in trying to recover
+> from such errors.
+
+Well it works today if the page is in pagecache. memory-failure will
+just remove it transparently.
+
+In principle you can check for HWPoison manually yourself, but I'm not sure
+that is a good way to do it.
+
+
+-Andi
+-- 
+ak@linux.intel.com -- Speaking for myself only.
 
 _______________________________________________
 xfs mailing list
