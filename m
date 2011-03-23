@@ -1,16 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p2NLLNuc116946 for <xfs@oss.sgi.com>; Wed, 23 Mar 2011 16:21:30 -0500
-From: Arkadiusz Miskiewicz <arekm@maven.pl>
-Subject: Re: [PATCH 5/6] xfs: register the inode cache shrinker before
-	quotachecks
-Date: Wed, 23 Mar 2011 22:24:03 +0100
-References: <1300860870-15471-1-git-send-email-david@fromorbit.com>
-	<1300860870-15471-6-git-send-email-david@fromorbit.com>
-In-Reply-To: <1300860870-15471-6-git-send-email-david@fromorbit.com>
+	p2NM10qU118563
+	for <linux-xfs@oss.sgi.com>; Wed, 23 Mar 2011 17:01:05 -0500
+Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CCE1C159F692
+	for <linux-xfs@oss.sgi.com>; Wed, 23 Mar 2011 15:03:49 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	bIYegvyu23J8uSJ8 for <linux-xfs@oss.sgi.com>;
+	Wed, 23 Mar 2011 15:03:49 -0700 (PDT)
+Date: Thu, 24 Mar 2011 09:03:45 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: XFS memory allocation deadlock in 2.6.38
+Message-ID: <20110323220345.GD26611@dastard>
+References: <081DDE43F61F3D43929A181B477DCA95639B52E8@MSXAOA6.twosigma.com>
+	<20110322232504.GC15270@dastard>
+	<081DDE43F61F3D43929A181B477DCA95639B532C@MSXAOA6.twosigma.com>
 MIME-Version: 1.0
-Message-Id: <201103232224.03501.arekm@maven.pl>
+Content-Disposition: inline
+In-Reply-To: <081DDE43F61F3D43929A181B477DCA95639B532C@MSXAOA6.twosigma.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,75 +28,41 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: aelder@sgi.com
+To: Sean Noonan <Sean.Noonan@twosigma.com>
+Cc: "'linux-xfs@oss.sgi.com'" <linux-xfs@oss.sgi.com>, Martin Bligh <Martin.Bligh@twosigma.com>, Trammell Hudson <Trammell.Hudson@twosigma.com>
 
-T24gV2VkbmVzZGF5IDIzIG9mIE1hcmNoIDIwMTEsIERhdmUgQ2hpbm5lciB3cm90ZToKPiBGcm9t
-OiBEYXZlIENoaW5uZXIgPGRjaGlubmVyQHJlZGhhdC5jb20+CgpUaGFua3MgYSBsb3QgZm9yIHRo
-aXMgcGF0Y2guIEkgd2FzIGFibGUgdG8gbW91bnQgbXkgdHdvIH44MDBHQiBmaWxlc3lzdGVtcyAK
-d2l0aCBxdW90YSBlbmFibGVkIHdpdGhvdXQgb3V0IG9mIG1lbW9yeS9tYWNoaW5lIHJlYm9vdCBz
-dXByaXNlcyAod2hpY2ggd2VyZSAKaGFwcGVuaW5nIHdpdGhvdXQgdGhpcyBwYXRjaCBldmVyeSB0
-aW1lIEkgdHJpZWQgbW91bnQgd2l0aCBxdW90YSkuCgpTbwoKVGVzdGVkLWJ5OiBBcmthZGl1c3og
-TWnFm2tpZXdpY3ogPGFyZWttQG1hdmVuLnBsPgoKYW5kIGhvcGUgdG8gc2VlIGl0IGluIDIuNi4z
-OSAuIFRlc3Qgd2FzIGRvbmUgb24gcGF0Y2hlZCAyLjYuMzcuCgo+IAo+IER1cmluZyBtb3VudCwg
-d2UgY2FuIGRvIGEgcXVvdGFjaGVjayB0aGF0IGludm9sdmVzIGEgYnVsa3N0YXQgcGFzcwo+IG9u
-IGFsbCBpbm9kZXMuIElmIHRoZXJlIGFyZSBtb3JlIGlub2RlcyBpbiB0aGUgZmlsZXN5c3RlbSB0
-aGFuIGNhbgo+IGJlIGhlbGQgaW4gbWVtb3J5LCB3ZSByZXF1aXJlIHRoZSBpbm9kZSBjYWNoZSBz
-aHJpbmtlciB0byBydW4gdG8KPiBlbnN1cmUgdGhhdCB3ZSBkb24ndCBydW4gb3V0IG9mIG1lbW9y
-eS4KPiAKPiBVbmZvcnR1bmF0ZWx5LCB0aGUgaW5vZGUgY2FjaGUgc2hyaW5rZXIgaXMgbm90IHJl
-Z2lzdGVyZWQgdW50aWwgd2UKPiBnZXQgdG8gdGhlIGVuZCBvZiB0aGUgc3VwZXJibG9jayBzZXR1
-cCBwcm9jZXNzLCB3aGljaCBpcyBhZnRlciBhCj4gcXVvdGFjaGVjayBpcyBydW4gaWYgaXQgaXMg
-bmVlZGVkLiBIZW5jZSB3ZSBuZWVkIHRvIHJlZ2lzdGVyIHRoZQo+IGlub2RlIGNhY2hlIHNocmlu
-a2VyIGVhcmxpZXIgaW4gdGhlIG1vdW50IHByb2Nlc3Mgc28gdGhhdCB3ZSBkb24ndAo+IE9PTSBk
-dXJpbmcgbW91bnQuIFRoaXMgcmVxdWlyZXMgdGhhdCB3ZSBhbHNvIGluaXRpYWxpc2UgdGhlIHN5
-bmNkCj4gd29yayBiZWZvcmUgd2UgcmVnaXN0ZXIgdGhlIHNocmlua2VyLCBzbyB3ZSBuZWUgZHRv
-IGp1Z2dsZSB0aGF0Cj4gYXJvdW5kIGFzIHdlbGwuCj4gCj4gV2hpbGUgdGhlcmUsIG1ha2Ugc3Vy
-ZSB0aGF0IHdlIGhhdmUgc2V0IHVwIHRoZSBibG9jayBzaXplcyBpbiB0aGUKPiBWRlMgc3VwZXJi
-bG9jayBjb3JyZWN0bHkgYmVmb3JlIHRoZSBxdW90YWNoZWNrIGlzIHJ1biBzbyB0aGF0IGFueQo+
-IGlub2RlcyB0aGF0IGFyZSBjYWNoZWQgYXMgYSByZXN1bHQgb2YgdGhlIHF1b3RhY2hlY2sgaGF2
-ZSB0aGVpcgo+IGJsb2NrIHNpemUgZmllbGRzIHNldCB1cCBjb3JyZWN0bHkuCj4gCj4gQ2M6IHN0
-YWJsZUBrZXJuZWwub3JnCj4gU2lnbmVkLW9mZi1ieTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckBy
-ZWRoYXQuY29tPgo+IC0tLQo+ICBmcy94ZnMvbGludXgtMi42L3hmc19zdXBlci5jIHwgICAzNCAr
-KysrKysrKysrKysrKysrKysrKysrKystLS0tLS0tLS0tCj4gIDEgZmlsZXMgY2hhbmdlZCwgMjQg
-aW5zZXJ0aW9ucygrKSwgMTAgZGVsZXRpb25zKC0pCj4gCj4gZGlmZiAtLWdpdCBhL2ZzL3hmcy9s
-aW51eC0yLjYveGZzX3N1cGVyLmMgYi9mcy94ZnMvbGludXgtMi42L3hmc19zdXBlci5jCj4gaW5k
-ZXggOGE3MGIyYS4uMWJhNWM0NSAxMDA2NDQKPiAtLS0gYS9mcy94ZnMvbGludXgtMi42L3hmc19z
-dXBlci5jCj4gKysrIGIvZnMveGZzL2xpbnV4LTIuNi94ZnNfc3VwZXIuYwo+IEBAIC0xNTM5LDEw
-ICsxNTM5LDE0IEBAIHhmc19mc19maWxsX3N1cGVyKAo+ICAJaWYgKGVycm9yKQo+ICAJCWdvdG8g
-b3V0X2ZyZWVfc2I7Cj4gCj4gLQllcnJvciA9IHhmc19tb3VudGZzKG1wKTsKPiAtCWlmIChlcnJv
-cikKPiAtCQlnb3RvIG91dF9maWxlc3RyZWFtX3VubW91bnQ7Cj4gLQo+ICsJLyoKPiArCSAqIHdl
-IG11c3QgY29uZmlndXJlIHRoZSBibG9jayBzaXplIGluIHRoZSBzdXBlcmJsb2NrIGJlZm9yZSB3
-ZSBydW4gdGhlCj4gKwkgKiBmdWxsIG1vdW50IHByb2Nlc3MgYXMgdGhlIG1vdW50IHByb2Nlc3Mg
-Y2FuIGxvb2t1cCBhbmQgY2FjaGUgaW5vZGVzLgo+ICsJICogRm9yIHRoZSBzYW1lIHJlYXNvbiB3
-ZSBtdXN0IGFsc28gaW5pdGlhbGlzZSB0aGUgc3luY2QgYW5kIHJlZ2lzdGVyCj4gKwkgKiB0aGUg
-aW5vZGUgY2FjaGUgc2hyaW5rZXIgc28gdGhhdCBpbm9kZXMgY2FuIGJlIHJlY2xhaW1lZCBkdXJp
-bmcKPiArCSAqIG9wZXJhdGlvbnMgbGlrZSBhIHF1b3RhY2hlY2sgdGhhdCBpdGVyYXRlIGFsbCBp
-bm9kZXMgaW4gdGhlCj4gKwkgKiBmaWxlc3lzdGVtLgo+ICsJICovCj4gIAlzYi0+c19tYWdpYyA9
-IFhGU19TQl9NQUdJQzsKPiAgCXNiLT5zX2Jsb2Nrc2l6ZSA9IG1wLT5tX3NiLnNiX2Jsb2Nrc2l6
-ZTsKPiAgCXNiLT5zX2Jsb2Nrc2l6ZV9iaXRzID0gZmZzKHNiLT5zX2Jsb2Nrc2l6ZSkgLSAxOwo+
-IEBAIC0xNTUwLDYgKzE1NTQsMTYgQEAgeGZzX2ZzX2ZpbGxfc3VwZXIoCj4gIAlzYi0+c190aW1l
-X2dyYW4gPSAxOwo+ICAJc2V0X3Bvc2l4X2FjbF9mbGFnKHNiKTsKPiAKPiArCWVycm9yID0geGZz
-X3N5bmNkX2luaXQobXApOwo+ICsJaWYgKGVycm9yKQo+ICsJCWdvdG8gb3V0X2ZpbGVzdHJlYW1f
-dW5tb3VudDsKPiArCj4gKwl4ZnNfaW5vZGVfc2hyaW5rZXJfcmVnaXN0ZXIobXApOwo+ICsKPiAr
-CWVycm9yID0geGZzX21vdW50ZnMobXApOwo+ICsJaWYgKGVycm9yKQo+ICsJCWdvdG8gb3V0X3N5
-bmNkX3N0b3A7Cj4gKwo+ICAJcm9vdCA9IGlncmFiKFZGU19JKG1wLT5tX3Jvb3RpcCkpOwo+ICAJ
-aWYgKCFyb290KSB7Cj4gIAkJZXJyb3IgPSBFTk9FTlQ7Cj4gQEAgLTE1NjUsMTQgKzE1NzksMTEg
-QEAgeGZzX2ZzX2ZpbGxfc3VwZXIoCj4gIAkJZ290byBmYWlsX3ZucmVsZTsKPiAgCX0KPiAKPiAt
-CWVycm9yID0geGZzX3N5bmNkX2luaXQobXApOwo+IC0JaWYgKGVycm9yKQo+IC0JCWdvdG8gZmFp
-bF92bnJlbGU7Cj4gLQo+IC0JeGZzX2lub2RlX3Nocmlua2VyX3JlZ2lzdGVyKG1wKTsKPiAtCj4g
-IAlyZXR1cm4gMDsKPiAKPiArIG91dF9zeW5jZF9zdG9wOgo+ICsJeGZzX2lub2RlX3Nocmlua2Vy
-X3VucmVnaXN0ZXIobXApOwo+ICsJeGZzX3N5bmNkX3N0b3AobXApOwo+ICAgb3V0X2ZpbGVzdHJl
-YW1fdW5tb3VudDoKPiAgCXhmc19maWxlc3RyZWFtX3VubW91bnQobXApOwo+ICAgb3V0X2ZyZWVf
-c2I6Cj4gQEAgLTE1OTYsNiArMTYwNyw5IEBAIHhmc19mc19maWxsX3N1cGVyKAo+ICAJfQo+IAo+
-ICAgZmFpbF91bm1vdW50Ogo+ICsJeGZzX2lub2RlX3Nocmlua2VyX3VucmVnaXN0ZXIobXApOwo+
-ICsJeGZzX3N5bmNkX3N0b3AobXApOwo+ICsKPiAgCS8qCj4gIAkgKiBCbG93IGF3YXkgYW55IHJl
-ZmVyZW5jZWQgaW5vZGUgaW4gdGhlIGZpbGVzdHJlYW1zIGNhY2hlLgo+ICAJICogVGhpcyBjYW4g
-YW5kIHdpbGwgY2F1c2UgbG9nIHRyYWZmaWMgYXMgaW5vZGVzIGdvIGluYWN0aXZlCgoKLS0gCkFy
-a2FkaXVzeiBNacWba2lld2ljeiAgICAgICAgUExEL0xpbnV4IFRlYW0KYXJla20gLyBtYXZlbi5w
-bCAgICAgICAgICAgIGh0dHA6Ly9mdHAucGxkLWxpbnV4Lm9yZy8KCl9fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5z
-Z2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On Wed, Mar 23, 2011 at 05:33:36PM -0400, Sean Noonan wrote:
+> > What is the configuration of the machine you are testing on? I can't
+> > reproduce this on a current 2.6.39-tot tree on a 2p/2GB RAM VM that
+> > has it's blockdev images on a single SATA drive....
+> 
+> The machine we are testing with has 12 cores, 12 hyperthreaded
+> siblings, and 48GB of RAM.  The filesystem is backed by a
+> partition on one large hardware RAID.  There is a second bug we've
+> run into that I'll report tomorrow.
+
+So why would creating a 16GB file cause and OOM condition if you
+have 48GB RAM? That doesn't make a whole lot of sense to me. Is
+that memory free, of are other things running and consuming memory?
+
+> Could you point me to the current tree you are working with?
+> 2.6.39-tot doesn't mean anything to me.
+
+tot = Top of Tree. IOWs, 2.6.39-tot means the latest development
+kernel Linus has released.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
