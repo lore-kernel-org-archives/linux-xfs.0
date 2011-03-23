@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p2N6xbDk076672 for <xfs@oss.sgi.com>; Wed, 23 Mar 2011 01:59:43 -0500
-Received: from mga01.intel.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BF26114056E1
-	for <xfs@oss.sgi.com>; Wed, 23 Mar 2011 00:02:38 -0700 (PDT)
-Received: from mga01.intel.com (mga01.intel.com [192.55.52.88]) by
-	cuda.sgi.com with ESMTP id 4yLtDWyWDVq6WvFK for
-	<xfs@oss.sgi.com>; Wed, 23 Mar 2011 00:02:38 -0700 (PDT)
-From: Andi Kleen <andi@firstfloor.org>
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
+	p2NBa62t089358 for <xfs@oss.sgi.com>; Wed, 23 Mar 2011 06:36:11 -0500
+Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E45FBB29371
+	for <xfs@oss.sgi.com>; Wed, 23 Mar 2011 04:38:55 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	Q8iUTHgnri807SOM for <xfs@oss.sgi.com>;
+	Wed, 23 Mar 2011 04:38:55 -0700 (PDT)
+Date: Wed, 23 Mar 2011 22:38:48 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: xfs: outstanding patches for 2.6.39
+Message-ID: <20110323113848.GC26611@dastard>
 References: <1300860870-15471-1-git-send-email-david@fromorbit.com>
-Date: Wed, 23 Mar 2011 00:01:17 -0700
-In-Reply-To: <1300860870-15471-1-git-send-email-david@fromorbit.com> (Dave
-	Chinner's message of "Wed, 23 Mar 2011 17:14:24 +1100")
-Message-ID: <m24o6u48xu.fsf@firstfloor.org>
+	<20110323111842.GA18267@infradead.org>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20110323111842.GA18267@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,25 +30,22 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: aelder@sgi.com, xfs@oss.sgi.com
 
-Dave Chinner <david@fromorbit.com> writes:
+On Wed, Mar 23, 2011 at 07:18:42AM -0400, Christoph Hellwig wrote:
+> I think we'll need the inode OOM fixes for .39, too.  But if you need
+> some more time for them it's fine to wait for them for a while.
 
-> Of course, the major patch in this series is the conversion of the
-> buffer cache to using kmalloc and get_free_page() directly rather
-> than using the page cache. This has many benefits and I haven't
-> found any regressions due to making that change yet.
+They are not ready yet. When i have them sorted out, I'll post them
+as 2.6.39 candidates.
 
-One (somewhat obscure) regression will be that you won't be able to
-recover from uncorrected memory errors in the buffer cache anymore.
-Previously memory_failure() could just drop it transparently when that
-happens and the page is currently not used.  This is usually only a
-problem if there's significant memory tied up in it.
+Cheers,
 
--Andi
+Dave.
 -- 
-ak@linux.intel.com -- Speaking for myself only
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
