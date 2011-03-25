@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p2PMYEmf260088 for <xfs@oss.sgi.com>; Fri, 25 Mar 2011 17:34:14 -0500
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
+	p2PN54Js261470 for <xfs@oss.sgi.com>; Fri, 25 Mar 2011 18:05:05 -0500
 Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D1E8837D686
-	for <xfs@oss.sgi.com>; Fri, 25 Mar 2011 15:37:20 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 140CF15A2D5B
+	for <xfs@oss.sgi.com>; Fri, 25 Mar 2011 16:08:07 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	TsYP3YJfeOcsdXeR for <xfs@oss.sgi.com>;
-	Fri, 25 Mar 2011 15:37:20 -0700 (PDT)
-Received: from dave by dastard with local (Exim 4.72)
-	(envelope-from <david@fromorbit.com>) id 1Q3Fd8-0004eN-Ls
-	for xfs@oss.sgi.com; Sat, 26 Mar 2011 09:37:18 +1100
-Date: Sat, 26 Mar 2011 09:37:18 +1100
+	odO1lC6hww8kwFE0 for <xfs@oss.sgi.com>;
+	Fri, 25 Mar 2011 16:08:07 -0700 (PDT)
+Date: Sat, 26 Mar 2011 10:08:05 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [GIT PULL] xfs: more fixes for 2.6.39
-Message-ID: <20110325223718.GP26611@dastard>
+Subject: Re: [PATCH 5/6] xfs: register the inode cache shrinker before
+	quotachecks
+Message-ID: <20110325230805.GS26611@dastard>
+References: <1300860870-15471-1-git-send-email-david@fromorbit.com>
+	<1300860870-15471-6-git-send-email-david@fromorbit.com>
+	<201103232224.03501.arekm@maven.pl> <4D8C90F6.7050500@dermichi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <4D8C90F6.7050500@dermichi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,46 +32,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Michael Weissenbacher <mw@dermichi.com>
+Cc: xfs@oss.sgi.com, aelder@sgi.com
 
+On Fri, Mar 25, 2011 at 01:56:22PM +0100, Michael Weissenbacher wrote:
+> > From: Arkadiusz Miskiewicz <arekm@maven.pl>
+> > On Wednesday 23 of March 2011, Dave Chinner wrote:
+> >> From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Thanks a lot for this patch. I was able to mount my two ~800GB filesystems 
+> > with quota enabled without out of memory/machine reboot suprises (which were 
+> > happening without this patch every time I tried mount with quota).
+> Seconded, this also solved my long-standing problems with a Quota mounts
+> on some 32-bit i686 and low-mem x64 machines.
+> 
+> I tested the patch with Kernel 2.6.38.1-i686 on a ~500GB fs which
+> refused to mount with quotas for some time now.
+> 
+> Is there any chance that this patch will be integrated/backparted to
+> older kernels like 2.6.32.x, 2.6.35.x?
 
-Hi Alex,
-
-Here is the latest round of commits for 2.6.39 rady for you to pull.
-It's based on the current xfs-oss master branch.
+The patch will be committed with a CC to stable@kernel.org, so that
+should happen magically once this is in mainline.
 
 Cheers,
 
 Dave.
-
-
-The following changes since commit 0c9ba97318fc9a905bcc1419b6966de061203a70:
-
-  xfs: don't name variables "panic" (2011-03-11 16:34:51 -0600)
-
-are available in the git repository at:
-  git://git.kernel.org/pub/scm/linux/kernel/git/dgc/xfsdev.git xfs-for-2.6.39
-
-Dave Chinner (6):
-      xfs: preallocation transactions do not need to be synchronous
-      vmap: flush vmap aliases when mapping fails
-      xfs: introduce inode cluster buffer trylocks for xfs_iflush
-      xfs: xfs_trans_read_buf() should return an error on failure
-      xfs: register the inode cache shrinker before quotachecks
-      xfs: stop using the page cache to back the buffer cache
-
- fs/xfs/linux-2.6/xfs_buf.c   |  355 +++++++++++-------------------------------
- fs/xfs/linux-2.6/xfs_buf.h   |   40 +-----
- fs/xfs/linux-2.6/xfs_file.c  |    6 +-
- fs/xfs/linux-2.6/xfs_ioctl.c |    4 +
- fs/xfs/linux-2.6/xfs_super.c |   36 +++--
- fs/xfs/linux-2.6/xfs_sync.c  |   30 ++++-
- fs/xfs/xfs_inode.c           |    2 +-
- fs/xfs/xfs_inode_item.c      |    6 +-
- fs/xfs/xfs_trans_buf.c       |    3 +-
- fs/xfs/xfs_vnodeops.c        |    3 +-
- fs/xfs/xfs_vnodeops.h        |    1 +
- 11 files changed, 165 insertions(+), 321 deletions(-)
 -- 
 Dave Chinner
 david@fromorbit.com
