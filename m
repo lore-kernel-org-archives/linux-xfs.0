@@ -1,14 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p2PL1m10247238 for <xfs@oss.sgi.com>; Fri, 25 Mar 2011 16:01:48 -0500
-Subject: Re: [PATCH 6/6] xfs: make discard operations asynchronous
+	p2PKxt10246414 for <xfs@oss.sgi.com>; Fri, 25 Mar 2011 15:59:55 -0500
+Subject: Re: [PATCH 1/6] xfs: optimize AGFL refills
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110322200138.216042448@bombadil.infradead.org>
+In-Reply-To: <20110323121613.GA468@infradead.org>
 References: <20110322195550.260682574@bombadil.infradead.org>
-	<20110322200138.216042448@bombadil.infradead.org>
-Date: Fri, 25 Mar 2011 16:04:55 -0500
-Message-ID: <1301087095.2537.692.camel@doink>
+	<20110322200137.280301318@bombadil.infradead.org>
+	<1300833051.2875.275.camel@doink> <20110323121613.GA468@infradead.org>
+Date: Fri, 25 Mar 2011 16:03:01 -0500
+Message-ID: <1301086981.2537.687.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -26,21 +27,42 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Tue, 2011-03-22 at 15:55 -0400, Christoph Hellwig wrote:
-> Instead of waiting for each discard request keep the CIL context alive
-> until all of them are done, at which point we can tear it down completly
-> and remove the busy extents from the rbtree.
+On Wed, 2011-03-23 at 08:16 -0400, Christoph Hellwig wrote: 
+> On Tue, Mar 22, 2011 at 05:30:51PM -0500, Alex Elder wrote:
+> > On Tue, 2011-03-22 at 15:55 -0400, Christoph Hellwig wrote:
+> > > Avoid forcing out busy extent when moving blocks from/to the AGFL.  We
+> > 
+> > Without thinking a bit about it, it wasn't clear why doing
+> > this was OK to do.  It would be nice to record a one-sentence
+> > justification of why we don't need to force busy extents out
+> > in this case.
 > 
-> At this point I'm doing the I/O completion from IRQ context for simplicity,
-> but I'll benchmark it against a version that uses a workqueue.
+> I've added a sentence, but it seems rather pointless.
+
+The reason it was not obvious is because the case you're
+treating is specifically when moving extents (blocks,
+really) between the free list and the free btrees, in
+xfs_alloc_fix_freelist().  You still need to force it
+out when allocating and freeing "actually used" blocks,
+which could also be considered "moving blocks from/to
+the AGFL."
+
+					-Alex
+
+
+> >  achieve this
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> fixed.
+> 
+> > > the callers that need it, and by moving the busy list insert from
+> > > xfs_free_ag_extent extent which is used both by AGFL refills and real
+> >                      ^^^^^ drop this word
+> 
+> fixed.
+> 
 
-This looks good.
 
-Reviewed-by: Alex Elder <aelder@sgi.com>
 
-. . .
 
 _______________________________________________
 xfs mailing list
