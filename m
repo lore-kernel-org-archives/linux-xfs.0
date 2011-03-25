@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p2PCrL1K223210 for <xfs@oss.sgi.com>; Fri, 25 Mar 2011 07:53:22 -0500
-Message-ID: <4D8C90F6.7050500@dermichi.com>
-Date: Fri, 25 Mar 2011 13:56:22 +0100
-From: Michael Weissenbacher <mw@dermichi.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH 5/6] xfs: register the inode cache shrinker
-	before	quotachecks
-References: <1300860870-15471-1-git-send-email-david@fromorbit.com>	<1300860870-15471-6-git-send-email-david@fromorbit.com>
-	<201103232224.03501.arekm@maven.pl>
-In-Reply-To: <201103232224.03501.arekm@maven.pl>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
+	p2PKvd4V245783 for <xfs@oss.sgi.com>; Fri, 25 Mar 2011 15:57:40 -0500
+Subject: Re: [PATCH 2/6] vmap: flush vmap aliases when mapping fails
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <1300860870-15471-3-git-send-email-david@fromorbit.com>
+References: <1300860870-15471-1-git-send-email-david@fromorbit.com>
+	<1300860870-15471-3-git-send-email-david@fromorbit.com>
+Date: Fri, 25 Mar 2011 16:00:43 -0500
+Message-ID: <1301086843.2537.680.camel@doink>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,27 +23,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Arkadiusz Miskiewicz <arekm@maven.pl>
-Cc: aelder@sgi.com, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-> From: Arkadiusz Miskiewicz <arekm@maven.pl>
-> On Wednesday 23 of March 2011, Dave Chinner wrote:
->> From: Dave Chinner <dchinner@redhat.com>
+On Wed, 2011-03-23 at 17:14 +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Thanks a lot for this patch. I was able to mount my two ~800GB filesystems 
-> with quota enabled without out of memory/machine reboot suprises (which were 
-> happening without this patch every time I tried mount with quota).
-Seconded, this also solved my long-standing problems with a Quota mounts
-on some 32-bit i686 and low-mem x64 machines.
+> On 32 bit systems, vmalloc space is limited and XFS can chew through
+> it quickly as the vmalloc space is lazily freed. This can result in
+> failure to map buffers, even when there is apparently large amounts
+> of vmalloc space available. Hence, if we fail to map a buffer, purge
+> the aliases that have not yet been freed to hopefuly free up enough
+> vmalloc space to allow a retry to succeed.
 
-I tested the patch with Kernel 2.6.38.1-i686 on a ~500GB fs which
-refused to mount with quotas for some time now.
+Looks good.
 
-Is there any chance that this patch will be integrated/backparted to
-older kernels like 2.6.32.x, 2.6.35.x?
+Reviewed-by: Alex Elder <aelder@sgi.com>
 
-thanks,
-Michael
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+
+. . .
 
 _______________________________________________
 xfs mailing list
