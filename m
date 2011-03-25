@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p2PKvvK9245902 for <xfs@oss.sgi.com>; Fri, 25 Mar 2011 15:57:57 -0500
-Subject: Re: [PATCH 4/6] xfs: xfs_trans_read_buf() should return an error
-	on failure
+	p2PKw48L245947 for <xfs@oss.sgi.com>; Fri, 25 Mar 2011 15:58:04 -0500
+Subject: Re: [PATCH 5/6] xfs: register the inode cache shrinker before
+	quotachecks
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1300860870-15471-5-git-send-email-david@fromorbit.com>
+In-Reply-To: <1300860870-15471-6-git-send-email-david@fromorbit.com>
 References: <1300860870-15471-1-git-send-email-david@fromorbit.com>
-	<1300860870-15471-5-git-send-email-david@fromorbit.com>
-Date: Fri, 25 Mar 2011 16:01:01 -0500
-Message-ID: <1301086861.2537.682.camel@doink>
+	<1300860870-15471-6-git-send-email-david@fromorbit.com>
+Date: Fri, 25 Mar 2011 16:01:08 -0500
+Message-ID: <1301086868.2537.684.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -30,25 +30,32 @@ Cc: xfs@oss.sgi.com
 On Wed, 2011-03-23 at 17:14 +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> When inside a transaction and we fail to read a buffer,
-> xfs_trans_read_buf returns a null buffer pointer and no error.
-> xfs_do_da_buf() checks the error return, but not the buffer, and as
-> a result this read failure condition causes a panic when it attempts
-> to dereference the non-existant buffer.
+> During mount, we can do a quotacheck that involves a bulkstat pass
+> on all inodes. If there are more inodes in the filesystem than can
+> be held in memory, we require the inode cache shrinker to run to
+> ensure that we don't run out of memory.
 > 
-> Make xfs_trans_read_buf() return the same error for this situation
-> regardless of whether it is in a transaction or not. This means
-> every caller does not need to check both the error return and the
-> buffer before proceeding to use the buffer.
+> Unfortunately, the inode cache shrinker is not registered until we
+> get to the end of the superblock setup process, which is after a
+> quotacheck is run if it is needed. Hence we need to register the
+> inode cache shrinker earlier in the mount process so that we don't
+> OOM during mount. This requires that we also initialise the syncd
+> work before we register the shrinker, so we nee dto juggle that
+> around as well.
+> 
+> While there, make sure that we have set up the block sizes in the
+> VFS superblock correctly before the quotacheck is run so that any
+> inodes that are cached as a result of the quotacheck have their
+> block size fields set up correctly.
+> 
+> Cc: stable@kernel.org
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-Good idea.  Later we can clean up callers.  I see that not
-all callers currently check for a null buffer return...
+Looks good.
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/xfs_trans_buf.c |    3 ++-
+. . .
 
 _______________________________________________
 xfs mailing list
