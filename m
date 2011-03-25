@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p2PKvWru245735 for <xfs@oss.sgi.com>; Fri, 25 Mar 2011 15:57:32 -0500
-Subject: Re: [PATCH 1/6] xfs: preallocation transactions do not need to be
-	synchronous
+	p2PKvvK9245902 for <xfs@oss.sgi.com>; Fri, 25 Mar 2011 15:57:57 -0500
+Subject: Re: [PATCH 4/6] xfs: xfs_trans_read_buf() should return an error
+	on failure
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1300860870-15471-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1300860870-15471-5-git-send-email-david@fromorbit.com>
 References: <1300860870-15471-1-git-send-email-david@fromorbit.com>
-	<1300860870-15471-2-git-send-email-david@fromorbit.com>
-Date: Fri, 25 Mar 2011 16:00:36 -0500
-Message-ID: <1301086836.2537.679.camel@doink>
+	<1300860870-15471-5-git-send-email-david@fromorbit.com>
+Date: Fri, 25 Mar 2011 16:01:01 -0500
+Message-ID: <1301086861.2537.682.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -30,55 +30,25 @@ Cc: xfs@oss.sgi.com
 On Wed, 2011-03-23 at 17:14 +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> Preallocation and hole punch transactions are currently synchronous
-> and this is causing performance problems in some cases. The
-> transactions don't need to be synchronous as we don't need to
-> guarantee the preallocation is persistent on disk until a
-> fdatasync, fsync, sync operation occurs. If the file is opened
-> O_SYNC or O_DATASYNC, only then should the transaction be issued
-> synchronously.
+> When inside a transaction and we fail to read a buffer,
+> xfs_trans_read_buf returns a null buffer pointer and no error.
+> xfs_do_da_buf() checks the error return, but not the buffer, and as
+> a result this read failure condition causes a panic when it attempts
+> to dereference the non-existant buffer.
+> 
+> Make xfs_trans_read_buf() return the same error for this situation
+> regardless of whether it is in a transaction or not. This means
+> every caller does not need to check both the error return and the
+> buffer before proceeding to use the buffer.
 
-There's a minor (but important) bug in this.  Other than that
-this looks good.
+Good idea.  Later we can clean up callers.  I see that not
+all callers currently check for a null buffer return...
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
 > ---
->  fs/xfs/linux-2.6/xfs_file.c  |    4 ++++
->  fs/xfs/linux-2.6/xfs_ioctl.c |    4 ++++
->  fs/xfs/xfs_vnodeops.c        |    3 ++-
->  fs/xfs/xfs_vnodeops.h        |    1 +
->  4 files changed, 11 insertions(+), 1 deletions(-)
-> 
-> diff --git a/fs/xfs/linux-2.6/xfs_file.c b/fs/xfs/linux-2.6/xfs_file.c
-> index ae59865..baa2cb3 100644
-> --- a/fs/xfs/linux-2.6/xfs_file.c
-> +++ b/fs/xfs/linux-2.6/xfs_file.c
-> @@ -896,6 +896,7 @@ xfs_file_fallocate(
->  	xfs_flock64_t	bf;
->  	xfs_inode_t	*ip = XFS_I(inode);
->  	int		cmd = XFS_IOC_RESVSP;
-> +	int		attr_flags = XFS_ATTR_NOLOCK;
->  
->  	if (mode & ~(FALLOC_FL_KEEP_SIZE |
->  		     FALLOC_FL_PUNCH_HOLE |
-> @@ -922,6 +923,9 @@ xfs_file_fallocate(
->  			goto out_unlock;
->  	}
->  
-> +	if (file->f_flags & O_DSYNC)
-> +		attr_flags |= XFS_ATTR_SYNC;
-> +
->  	error = -xfs_change_file_space(ip, cmd, &bf, 0, XFS_ATTR_NOLOCK);
-
-You need to pass attr_flags as the last argument here.
-
->  	if (error)
->  		goto out_unlock;
-
-. . .
+>  fs/xfs/xfs_trans_buf.c |    3 ++-
 
 _______________________________________________
 xfs mailing list
