@@ -1,24 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p2SKlJuL184662 for <xfs@oss.sgi.com>; Mon, 28 Mar 2011 15:47:19 -0500
-Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D7B98383BF3
-	for <xfs@oss.sgi.com>; Mon, 28 Mar 2011 13:50:27 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	NMaUmGSP9gPLX1T3 for <xfs@oss.sgi.com>;
-	Mon, 28 Mar 2011 13:50:27 -0700 (PDT)
-Date: Tue, 29 Mar 2011 07:50:24 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: 2.6.38.1: CPU#0 stuck for 67s! / xfs_ail_splice
-Message-ID: <20110328205024.GB3008@dastard>
-References: <alpine.DEB.2.02.1103260927500.21571@p34.internal.lan>
-	<20110327232543.GU26611@dastard>
-	<alpine.DEB.2.02.1103280406300.25113@p34.internal.lan>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.02.1103280406300.25113@p34.internal.lan>
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
+	p2SL65Co185400 for <xfs@oss.sgi.com>; Mon, 28 Mar 2011 16:06:06 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8963015A5E7F
+	for <xfs@oss.sgi.com>; Mon, 28 Mar 2011 14:09:14 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id UzQ995rlkblrQcz4 for
+	<xfs@oss.sgi.com>; Mon, 28 Mar 2011 14:09:14 -0700 (PDT)
+Received: from hch by bombadil.infradead.org with local (Exim 4.72 #1 (Red Hat
+	Linux)) id 1Q4JgY-0001qe-EJ
+	for xfs@oss.sgi.com; Mon, 28 Mar 2011 21:09:14 +0000
+Message-Id: <20110328210614.832613417@bombadil.infradead.org>
+Date: Mon, 28 Mar 2011 17:06:14 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH 0/5] improved busy extent handling
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,81 +23,24 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mon, Mar 28, 2011 at 04:10:11AM -0400, Justin Piszcz wrote:
-> 
-> 
-> On Mon, 28 Mar 2011, Dave Chinner wrote:
-> 
-> >On Sat, Mar 26, 2011 at 09:29:36AM -0400, Justin Piszcz wrote:
-> >>Hi,
-> >>
-> >>When I rm -rf a directory of a few hundred thousand
-> >>files/directories on XFS under 2.6.38.1, I see the following, is
-> >>this normal?
-> >
-> >No. What is you filesystem config (xfs_info) and your mount options?
-> >Is it repeatable? I? the system otherwise stalled or is it still
-> >operating normally? Does it recover and work normally after such a
-> >stall?
-> 
-> Hi Dave, default mkfs.xfs options:
-> 
-> >What is you filesystem config (xfs_info) and your mount options?
-> 
-> # xfs_info /dev/sda1
-> meta-data=/dev/sda1              isize=256    agcount=44, agsize=268435455 blks
->          =                       sectsz=512   attr=2
-> data     =                       bsize=4096   blocks=11718704640, imaxpct=5
->          =                       sunit=0      swidth=0 blks
-> naming   =version 2              bsize=4096   ascii-ci=0
-> log      =internal               bsize=4096   blocks=521728, version=2
->          =                       sectsz=512   sunit=0 blks, lazy-count=1
-> realtime =none                   extsz=4096   blocks=0, rtextents=0
+This series optimizes how XFS deals with busy extents.  It starts to
+track them exactly, and allows reuses where possible (metadata to metadata)
+or else tries to avoid busy extents during allocations.  This means
+we don't have a single log force due to busy extents during either
+xfstests, compilebench or postmark on my testsystem, which can easily
+be tracked using the new tracepoints added in the last patch.
 
-A 44TB filesystem with a 2GB log, right?
-
-> /dev/sda1 on /r1 type xfs (rw,noatime,nobarrier,logbufs=8,logbsize=262144,delaylog,inode64)
-> 
-> >Is it repeatable?
-> I've not tried to repeat it as is spews messages over all of my consoles but
-> it has happened more than once.
-
-OK.
-
-> >the system otherwise stalled or is it still operating normally?
-> The console/xterm/ssh etc that is performing the removal does lockup but
-> you are able to access the machine via a separate ssh connection.
-> 
-> >Does it recover and work normally after such a stall?
-> Yes, eventually, I believe I started seeing this problem when I added
-> 'delaylog' option to the mount options..
-
-OK, that is what I suspected.
-
-What it sounds like is that there is a checkpoint completing with an
-out-of-order log sequence number so the items in the checkpoint are
-not being inserted at the end of the AIL and that is where the CPU
-usage is coming from. Without delaylog, a single transaction being
-inserted out-of-order is unnoticeable as it's only a few items. A
-delaylog checkpoint can be tens of thousands of items which is where
-the CPU usage would come from.
-
-I'll have to reproduce this locally to confirm this theory (and test
-the fix).
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+This is a repost of the previous series and should address all review
+comments.  The discard support, which relies on the exact busy extent
+tracking has been dropped temporarily until I can fix up some issues
+that I found during testing.
 
 _______________________________________________
 xfs mailing list
