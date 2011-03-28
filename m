@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p2SL65Lq185395 for <xfs@oss.sgi.com>; Mon, 28 Mar 2011 16:06:06 -0500
+	p2SL66Z1185405 for <xfs@oss.sgi.com>; Mon, 28 Mar 2011 16:06:06 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1DAC01DEB003
-	for <xfs@oss.sgi.com>; Mon, 28 Mar 2011 14:09:14 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1067F1DEB003
+	for <xfs@oss.sgi.com>; Mon, 28 Mar 2011 14:09:15 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id Gc3k8HSuGX1jz6v2 for
-	<xfs@oss.sgi.com>; Mon, 28 Mar 2011 14:09:14 -0700 (PDT)
+	by cuda.sgi.com with ESMTP id 3q9GSW3VDscPmUtD for
+	<xfs@oss.sgi.com>; Mon, 28 Mar 2011 14:09:15 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.72 #1 (Red Hat
-	Linux)) id 1Q4JgY-0001rE-KR
-	for xfs@oss.sgi.com; Mon, 28 Mar 2011 21:09:14 +0000
-Message-Id: <20110328210914.594997356@bombadil.infradead.org>
-Date: Mon, 28 Mar 2011 17:06:15 -0400
+	Linux)) id 1Q4JgZ-0001tI-Dr
+	for xfs@oss.sgi.com; Mon, 28 Mar 2011 21:09:15 +0000
+Message-Id: <20110328210915.396135841@bombadil.infradead.org>
+Date: Mon, 28 Mar 2011 17:06:19 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 1/5] xfs: optimize AGFL refills
+Subject: [PATCH 5/5] xfs: update busy extent tracing
 References: <20110328210614.832613417@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-optimize-freelist-refills
+Content-Disposition: inline; filename=xfs-busy-trace-update
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,94 +32,205 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-While we need to make sure we do not reuse busy extents, there is no need
-to force out busy extents when moving them between the AGFL and the
-freespace btree as we still take care of that when doing the real allocation.
-
-To avoid the log force when just moving extents from the different free
-space tracking structures, move the busy search out of
-xfs_alloc_get_freelist into the callers that need it, and move the busy
-list insert from xfs_free_ag_extent which is used both by AGFL refills
-and real allocation to xfs_free_extent, which is only used by the latter.
+Add new tracepoint for the new busy extent handling helpers, and update the
+existing ones to use a common class.  Also drop the busysearch tracepoint
+now that a plain busylist search only happens in a debug assert and the
+FITRIM handler.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
+Index: xfs/fs/xfs/linux-2.6/xfs_trace.h
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_trace.h	2011-03-28 16:02:55.000000000 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_trace.h	2011-03-28 16:46:51.373340927 +0200
+@@ -1151,44 +1151,7 @@ TRACE_EVENT(xfs_bunmap,
+ 
+ );
+ 
+-#define XFS_BUSY_SYNC \
+-	{ 0,	"async" }, \
+-	{ 1,	"sync" }
+-
+-TRACE_EVENT(xfs_alloc_busy,
+-	TP_PROTO(struct xfs_trans *trans, xfs_agnumber_t agno,
+-		 xfs_agblock_t agbno, xfs_extlen_t len, int sync),
+-	TP_ARGS(trans, agno, agbno, len, sync),
+-	TP_STRUCT__entry(
+-		__field(dev_t, dev)
+-		__field(struct xfs_trans *, tp)
+-		__field(int, tid)
+-		__field(xfs_agnumber_t, agno)
+-		__field(xfs_agblock_t, agbno)
+-		__field(xfs_extlen_t, len)
+-		__field(int, sync)
+-	),
+-	TP_fast_assign(
+-		__entry->dev = trans->t_mountp->m_super->s_dev;
+-		__entry->tp = trans;
+-		__entry->tid = trans->t_ticket->t_tid;
+-		__entry->agno = agno;
+-		__entry->agbno = agbno;
+-		__entry->len = len;
+-		__entry->sync = sync;
+-	),
+-	TP_printk("dev %d:%d trans 0x%p tid 0x%x agno %u agbno %u len %u %s",
+-		  MAJOR(__entry->dev), MINOR(__entry->dev),
+-		  __entry->tp,
+-		  __entry->tid,
+-		  __entry->agno,
+-		  __entry->agbno,
+-		  __entry->len,
+-		  __print_symbolic(__entry->sync, XFS_BUSY_SYNC))
+-
+-);
+-
+-TRACE_EVENT(xfs_alloc_unbusy,
++DECLARE_EVENT_CLASS(xfs_busy_class,
+ 	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
+ 		 xfs_agblock_t agbno, xfs_extlen_t len),
+ 	TP_ARGS(mp, agno, agbno, len),
+@@ -1210,35 +1173,45 @@ TRACE_EVENT(xfs_alloc_unbusy,
+ 		  __entry->agbno,
+ 		  __entry->len)
+ );
++#define DEFINE_BUSY_EVENT(name) \
++DEFINE_EVENT(xfs_busy_class, name, \
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
++		 xfs_agblock_t agbno, xfs_extlen_t len), \
++	TP_ARGS(mp, agno, agbno, len))
++DEFINE_BUSY_EVENT(xfs_alloc_busy);
++DEFINE_BUSY_EVENT(xfs_alloc_busy_enomem);
++DEFINE_BUSY_EVENT(xfs_alloc_busy_force);
++DEFINE_BUSY_EVENT(xfs_alloc_busy_reuse);
++DEFINE_BUSY_EVENT(xfs_alloc_busy_clear);
+ 
+-#define XFS_BUSY_STATES \
+-	{ 0,	"missing" }, \
+-	{ 1,	"found" }
+-
+-TRACE_EVENT(xfs_alloc_busysearch,
++TRACE_EVENT(xfs_alloc_busy_trim,
+ 	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
+-		 xfs_agblock_t agbno, xfs_extlen_t len, int found),
+-	TP_ARGS(mp, agno, agbno, len, found),
++		 xfs_agblock_t agbno, xfs_extlen_t len,
++		 xfs_agblock_t tbno, xfs_extlen_t tlen),
++	TP_ARGS(mp, agno, agbno, len, tbno, tlen),
+ 	TP_STRUCT__entry(
+ 		__field(dev_t, dev)
+ 		__field(xfs_agnumber_t, agno)
+ 		__field(xfs_agblock_t, agbno)
+ 		__field(xfs_extlen_t, len)
+-		__field(int, found)
++		__field(xfs_agblock_t, tbno)
++		__field(xfs_extlen_t, tlen)
+ 	),
+ 	TP_fast_assign(
+ 		__entry->dev = mp->m_super->s_dev;
+ 		__entry->agno = agno;
+ 		__entry->agbno = agbno;
+ 		__entry->len = len;
+-		__entry->found = found;
++		__entry->tbno = tbno;
++		__entry->tlen = tlen;
+ 	),
+-	TP_printk("dev %d:%d agno %u agbno %u len %u %s",
++	TP_printk("dev %d:%d agno %u agbno %u len %u tbno %u tlen %u",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __entry->agno,
+ 		  __entry->agbno,
+ 		  __entry->len,
+-		  __print_symbolic(__entry->found, XFS_BUSY_STATES))
++		  __entry->tbno,
++		  __entry->tlen)
+ );
+ 
+ TRACE_EVENT(xfs_trans_commit_lsn,
 Index: xfs/fs/xfs/xfs_alloc.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_alloc.c	2011-03-27 23:52:29.004480044 +0200
-+++ xfs/fs/xfs/xfs_alloc.c	2011-03-28 13:42:50.682839138 +0200
-@@ -1326,6 +1326,8 @@ xfs_alloc_ag_vextent_small(
- 		if (error)
- 			goto error0;
- 		if (fbno != NULLAGBLOCK) {
-+			if (xfs_alloc_busy_search(args->mp, args->agno, fbno, 1))
-+				xfs_trans_set_sync(args->tp);
- 			if (args->userdata) {
- 				xfs_buf_t	*bp;
- 
-@@ -1617,18 +1619,6 @@ xfs_free_ag_extent(
- 
- 	trace_xfs_free_extent(mp, agno, bno, len, isfl, haveleft, haveright);
- 
--	/*
--	 * Since blocks move to the free list without the coordination
--	 * used in xfs_bmap_finish, we can't allow block to be available
--	 * for reallocation and non-transaction writing (user data)
--	 * until we know that the transaction that moved it to the free
--	 * list is permanently on disk.  We track the blocks by declaring
--	 * these blocks as "busy"; the busy list is maintained on a per-ag
--	 * basis and each transaction records which entries should be removed
--	 * when the iclog commits to disk.  If a busy block is allocated,
--	 * the iclog is pushed up to the LSN that freed the block.
--	 */
--	xfs_alloc_busy_insert(tp, agno, bno, len);
- 	return 0;
- 
-  error0:
-@@ -1923,21 +1913,6 @@ xfs_alloc_get_freelist(
- 	xfs_alloc_log_agf(tp, agbp, logflags);
- 	*bnop = bno;
- 
--	/*
--	 * As blocks are freed, they are added to the per-ag busy list and
--	 * remain there until the freeing transaction is committed to disk.
--	 * Now that we have allocated blocks, this list must be searched to see
--	 * if a block is being reused.  If one is, then the freeing transaction
--	 * must be pushed to disk before this transaction.
--	 *
--	 * We do this by setting the current transaction to a sync transaction
--	 * which guarantees that the freeing transaction is on disk before this
--	 * transaction. This is done instead of a synchronous log force here so
--	 * that we don't sit and wait with the AGF locked in the transaction
--	 * during the log force.
--	 */
--	if (xfs_alloc_busy_search(mp, be32_to_cpu(agf->agf_seqno), bno, 1))
--		xfs_trans_set_sync(tp);
- 	return 0;
- }
- 
-@@ -2407,6 +2382,8 @@ xfs_free_extent(
- 		be32_to_cpu(XFS_BUF_TO_AGF(args.agbp)->agf_length));
- #endif
- 	error = xfs_free_ag_extent(tp, args.agbp, args.agno, args.agbno, len, 0);
-+	if (!error)
-+		xfs_alloc_busy_insert(tp, args.agno, args.agbno, len);
- error0:
- 	xfs_perag_put(args.pag);
- 	return error;
-Index: xfs/fs/xfs/xfs_alloc_btree.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_alloc_btree.c	2011-03-27 23:52:29.008480632 +0200
-+++ xfs/fs/xfs/xfs_alloc_btree.c	2011-03-28 13:42:49.462839006 +0200
-@@ -94,6 +94,8 @@ xfs_allocbt_alloc_block(
- 		*stat = 0;
- 		return 0;
+--- xfs.orig/fs/xfs/xfs_alloc.c	2011-03-28 16:14:49.000000000 +0200
++++ xfs/fs/xfs/xfs_alloc.c	2011-03-28 16:46:51.397342798 +0200
+@@ -2483,7 +2483,7 @@ xfs_alloc_busy_insert(
+ 		 * block, make this a synchronous transaction to insure that
+ 		 * the block is not reused before this transaction commits.
+ 		 */
+-		trace_xfs_alloc_busy(tp, agno, bno, len, 1);
++		trace_xfs_alloc_busy_enomem(tp->t_mountp, agno, bno, len);
+ 		xfs_trans_set_sync(tp);
+ 		return;
  	}
-+	if (xfs_alloc_busy_search(cur->bc_mp, cur->bc_private.a.agno, bno, 1))
-+		xfs_trans_set_sync(cur->bc_tp);
+@@ -2495,7 +2495,7 @@ xfs_alloc_busy_insert(
+ 	INIT_LIST_HEAD(&new->list);
  
- 	xfs_trans_agbtree_delta(cur->bc_tp, 1);
- 	new->s = cpu_to_be32(bno);
+ 	/* trace before insert to be able to see failed inserts */
+-	trace_xfs_alloc_busy(tp, agno, bno, len, 0);
++	trace_xfs_alloc_busy(tp->t_mountp, agno, bno, len);
+ 
+ 	pag = xfs_perag_get(tp->t_mountp, new->agno);
+ 	spin_lock(&pag->pagb_lock);
+@@ -2569,7 +2569,6 @@ xfs_alloc_busy_search(
+ 		}
+ 	}
+ 	spin_unlock(&pag->pagb_lock);
+-	trace_xfs_alloc_busysearch(mp, agno, bno, len, !!match);
+ 	xfs_perag_put(pag);
+ 	return match;
+ }
+@@ -2738,10 +2737,16 @@ restart:
+ 						   fbno, fbno + flen);
+ 		if (ret != XFS_BUSY_REUSE_OK || userdata) {
+ 			spin_unlock(&pag->pagb_lock);
+-			if (ret == XFS_BUSY_LOG_FORCE)
++			if (ret == XFS_BUSY_LOG_FORCE) {
++				trace_xfs_alloc_busy_force(tp->t_mountp, agno,
++							   fbno, flen);
+ 				xfs_log_force(tp->t_mountp, XFS_LOG_SYNC);
++			}
+  			goto restart;
+ 		}
++
++		trace_xfs_alloc_busy_reuse(tp->t_mountp, agno, fbno, flen);
++
+ #if 0
+ 		/*
+ 		 * No more busy extents to search.
+@@ -2918,6 +2923,8 @@ xfs_alloc_busy_trim(
+ 	}
+ 	spin_unlock(&args->pag->pagb_lock);
+ out:
++	if (fbno != bno || flen != len)
++		trace_xfs_alloc_busy_trim(args->mp, args->agno, bno, len, fbno, flen);
+ 	*rbno = fbno;
+ 	*rlen = flen;
+ 	return;
+@@ -2927,6 +2934,7 @@ fail:
+ 	 * re-check if the trimmed extent satisfies the minlen requirement.
+ 	 */
+ 	spin_unlock(&args->pag->pagb_lock);
++	trace_xfs_alloc_busy_trim(args->mp, args->agno, bno, len, fbno, 0);
+ 	*rbno = fbno;
+ 	*rlen = 0;
+ }
+@@ -2938,15 +2946,15 @@ xfs_alloc_busy_clear(
+ {
+ 	struct xfs_perag	*pag;
+ 
+-	trace_xfs_alloc_unbusy(mp, busyp->agno, busyp->bno,
+-						busyp->length);
+-
+ 	list_del_init(&busyp->list);
+ 
+ 	pag = xfs_perag_get(mp, busyp->agno);
+ 	spin_lock(&pag->pagb_lock);
+-	if (busyp->length)
++	if (busyp->length) {
++		trace_xfs_alloc_busy_clear(mp, busyp->agno, busyp->bno,
++						busyp->length);
+ 		rb_erase(&busyp->rb_node, &pag->pagb_tree);
++	}
+ 	spin_unlock(&pag->pagb_lock);
+ 	xfs_perag_put(pag);
+ 
 
 _______________________________________________
 xfs mailing list
