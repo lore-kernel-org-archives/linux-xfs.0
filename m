@@ -1,25 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p2SEtlEN171345
-	for <linux-xfs@oss.sgi.com>; Mon, 28 Mar 2011 09:55:48 -0500
-Received: from mx5.twosigma.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EF2E71131976
-	for <linux-xfs@oss.sgi.com>; Mon, 28 Mar 2011 07:58:56 -0700 (PDT)
-Received: from mx5.twosigma.com (mx5.twosigma.com [208.77.212.35]) by
-	cuda.sgi.com with ESMTP id bEFM3kZIhx2rvwf2 for
-	<linux-xfs@oss.sgi.com>; Mon, 28 Mar 2011 07:58:56 -0700 (PDT)
-From: Sean Noonan <Sean.Noonan@twosigma.com>
-Date: Mon, 28 Mar 2011 10:58:53 -0400
-Subject: RE: XFS memory allocation deadlock in 2.6.38
-Message-ID: <081DDE43F61F3D43929A181B477DCA95639B5349@MSXAOA6.twosigma.com>
-References: <081DDE43F61F3D43929A181B477DCA95639B52FD@MSXAOA6.twosigma.com>
-	<081DDE43F61F3D43929A181B477DCA95639B5327@MSXAOA6.twosigma.com>
-	<20110324174311.GA31576@infradead.org>
-	<AANLkTikwwRm6FHFtEdUg54NvmKdswQw-NPH5dtq1mXBK@mail.gmail.com>
-In-Reply-To: <AANLkTikwwRm6FHFtEdUg54NvmKdswQw-NPH5dtq1mXBK@mail.gmail.com>
-Content-Language: en-US
-MIME-Version: 1.0
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
+	p2SH9rfW175910 for <xfs@oss.sgi.com>; Mon, 28 Mar 2011 12:09:53 -0500
+Received: from mx1.suse.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with SMTP id C1497382BC6
+	for <xfs@oss.sgi.com>; Mon, 28 Mar 2011 10:13:03 -0700 (PDT)
+Received: from mx1.suse.de (cantor.suse.de [195.135.220.2]) by cuda.sgi.com
+	with SMTP id NfMVL1EPLWmMdGLo for <xfs@oss.sgi.com>;
+	Mon, 28 Mar 2011 10:13:03 -0700 (PDT)
+From: David Sterba <dsterba@suse.cz>
+Subject: [PATCH] xfs: cleanup duplicate initializations
+Date: Mon, 28 Mar 2011 19:12:53 +0200
+Message-Id: <1301332373-24914-1-git-send-email-dsterba@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,23 +20,82 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: 'Michel Lespinasse' <walken@google.com>, Christoph Hellwig <hch@infradead.org>
-Cc: Trammell Hudson <Trammell.Hudson@twosigma.com>, Christos Zoulas <Christos.Zoulas@twosigma.com>, Bligh <Martin.Bligh@twosigma.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Stephen Degler <Stephen.Degler@twosigma.com>, "linux-xfs@oss.sgi.com" <linux-xfs@oss.sgi.com>, "linux-mm@kvack.org" <linux-mm@kvack.org>, Martin@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: David Sterba <dsterba@suse.cz>, aelder@sgi.com
 
-> Regarding the deadlock: I am curious to see if it could be made to
-> happen before 5ecfda041e4b4bd858d25bbf5a16c2a6c06d7272. Could you test
-> what happens if you remove the MAP_POPULATE flag from your mmap call,
-> and instead read all pages from userspace right after the mmap ? I
-> expect you would then be able to trigger the deadlock before
-> 5ecfda041e4b4bd858d25bbf5a16c2a6c06d7272.
+follow these guidelines:
+- leave initialization in the declaration block if it fits the line
+- move to the code where it's more suitable ('for' init block)
 
-I still see the deadlock without MAP_POPULATE
+Signed-off-by: David Sterba <dsterba@suse.cz>
+---
+ fs/xfs/xfs_dfrag.c      |    6 +-----
+ fs/xfs/xfs_inode_item.c |    1 -
+ fs/xfs/xfs_mount.c      |    2 +-
+ 3 files changed, 2 insertions(+), 7 deletions(-)
 
-Sean
+diff --git a/fs/xfs/xfs_dfrag.c b/fs/xfs/xfs_dfrag.c
+index be62867..9a84a85 100644
+--- a/fs/xfs/xfs_dfrag.c
++++ b/fs/xfs/xfs_dfrag.c
+@@ -202,7 +202,7 @@ xfs_swap_extents(
+ 	xfs_inode_t	*tip,	/* tmp inode */
+ 	xfs_swapext_t	*sxp)
+ {
+-	xfs_mount_t	*mp;
++	xfs_mount_t	*mp = ip->i_mount;
+ 	xfs_trans_t	*tp;
+ 	xfs_bstat_t	*sbp = &sxp->sx_stat;
+ 	xfs_ifork_t	*tempifp, *ifp, *tifp;
+@@ -212,16 +212,12 @@ xfs_swap_extents(
+ 	int		taforkblks = 0;
+ 	__uint64_t	tmp;
+ 
+-	mp = ip->i_mount;
+-
+ 	tempifp = kmem_alloc(sizeof(xfs_ifork_t), KM_MAYFAIL);
+ 	if (!tempifp) {
+ 		error = XFS_ERROR(ENOMEM);
+ 		goto out;
+ 	}
+ 
+-	sbp = &sxp->sx_stat;
+-
+ 	/*
+ 	 * we have to do two separate lock calls here to keep lockdep
+ 	 * happy. If we try to get all the locks in one call, lock will
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index 46cc401..c64458b 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -957,7 +957,6 @@ xfs_iflush_abort(
+ {
+ 	xfs_inode_log_item_t	*iip = ip->i_itemp;
+ 
+-	iip = ip->i_itemp;
+ 	if (iip) {
+ 		struct xfs_ail	*ailp = iip->ili_item.li_ailp;
+ 		if (iip->ili_item.li_flags & XFS_LI_IN_AIL) {
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index bb3f9a7..08de13d 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -1900,7 +1900,7 @@ xfs_mod_incore_sb_batch(
+ 	uint			nmsb,
+ 	int			rsvd)
+ {
+-	xfs_mod_sb_t		*msbp = &msb[0];
++	xfs_mod_sb_t		*msbp;
+ 	int			error = 0;
+ 
+ 	/*
+-- 
+1.7.4.1.176.g501cc
 
 _______________________________________________
 xfs mailing list
