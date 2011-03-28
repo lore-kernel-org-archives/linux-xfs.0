@@ -1,27 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p2SLv7UY187655
-	for <linux-xfs@oss.sgi.com>; Mon, 28 Mar 2011 16:57:08 -0500
-Received: from mx3.twosigma.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 260451142355
-	for <linux-xfs@oss.sgi.com>; Mon, 28 Mar 2011 15:00:12 -0700 (PDT)
-Received: from mx3.twosigma.com (mx3.twosigma.com [208.77.213.34]) by
-	cuda.sgi.com with ESMTP id uLFRnCjCH8p3XYlt for
-	<linux-xfs@oss.sgi.com>; Mon, 28 Mar 2011 15:00:12 -0700 (PDT)
-From: Sean Noonan <Sean.Noonan@twosigma.com>
-Date: Mon, 28 Mar 2011 17:34:09 -0400
-Subject: RE: XFS memory allocation deadlock in 2.6.38
-Message-ID: <081DDE43F61F3D43929A181B477DCA95639B534E@MSXAOA6.twosigma.com>
-References: <081DDE43F61F3D43929A181B477DCA95639B52FD@MSXAOA6.twosigma.com>
-	<081DDE43F61F3D43929A181B477DCA95639B5327@MSXAOA6.twosigma.com>
-	<20110324174311.GA31576@infradead.org>
-	<AANLkTikwwRm6FHFtEdUg54NvmKdswQw-NPH5dtq1mXBK@mail.gmail.com>
-	<081DDE43F61F3D43929A181B477DCA95639B5349@MSXAOA6.twosigma.com>
-	<BANLkTin0jJevStg5P2hqsLbqMzo3o30sYg@mail.gmail.com>
-In-Reply-To: <BANLkTin0jJevStg5P2hqsLbqMzo3o30sYg@mail.gmail.com>
-Content-Language: en-US
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
+	p2SMn7dt189902 for <xfs@oss.sgi.com>; Mon, 28 Mar 2011 17:49:07 -0500
+Received: from mail-iy0-f181.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CC6A1384542
+	for <xfs@oss.sgi.com>; Mon, 28 Mar 2011 15:52:16 -0700 (PDT)
+Received: from mail-iy0-f181.google.com (mail-iy0-f181.google.com
+	[209.85.210.181]) by cuda.sgi.com with ESMTP id
+	SDEbQSGiSbcwyT94 for <xfs@oss.sgi.com>;
+	Mon, 28 Mar 2011 15:52:16 -0700 (PDT)
+Received: by iyb26 with SMTP id 26so4461927iyb.26
+	for <xfs@oss.sgi.com>; Mon, 28 Mar 2011 15:52:16 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <20110328215344.GC3008@dastard>
+References: <AANLkTinFqqmE+fTMTLVU-_CwPE+LQv7CpXSQ5+CdAKLK@mail.gmail.com>
+	<20110328215344.GC3008@dastard>
+Date: Tue, 29 Mar 2011 07:52:14 +0900
+Message-ID: <BANLkTimHPFMUOCFAruF5J4OMHSkZsMsAgA@mail.gmail.com>
+Subject: Re: Very aggressive memory reclaim
+From: Minchan Kim <minchan.kim@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,48 +31,76 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: 'Michel Lespinasse' <walken@google.com>
-Cc: "linux-xfs@oss.sgi.com" <linux-xfs@oss.sgi.com>, Christos Zoulas <Christos.Zoulas@twosigma.com>, Trammell Hudson <Trammell.Hudson@twosigma.com>, Martin Bligh <Martin.Bligh@twosigma.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Stephen Degler <Stephen.Degler@twosigma.com>, Christoph Hellwig <hch@infradead.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-mm@kvack.org, John Lepikhin <johnlepikhin@gmail.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-> Could you test if you see the deadlock before
-> 5ecfda041e4b4bd858d25bbf5a16c2a6c06d7272 without MAP_POPULATE ?
+On Tue, Mar 29, 2011 at 6:53 AM, Dave Chinner <david@fromorbit.com> wrote:
+> [cc xfs and mm lists]
+>
+> On Mon, Mar 28, 2011 at 08:39:29PM +0400, John Lepikhin wrote:
+>> Hello,
+>>
+>> I use high-loaded machine with 10M+ inodes inside XFS, 50+ GB of
+>> memory, intensive HDD traffic and 20..50 forks per second. Vanilla
+>> kernel 2.6.37.4. The problem is that kernel frees memory very
+>> aggressively.
+>>
+>> For example:
+>>
+>> 25% of memory is used by processes
+>> 50% for page caches
+>> 7% for slabs, etc.
+>> 18% free.
+>>
+>> That's bad but works. After few hours:
+>>
+>> 25% of memory is used by processes
+>> 62% for page caches
+>> 7% for slabs, etc.
+>> 5% free.
+>>
+>> Most of files are cached, works perfectly. This is the moment when
+>> kernel decides to free some memory. After memory reclaim:
+>>
+>> 25% of memory is used by processes
+>> 25% for page caches(!)
+>> 7% for slabs, etc.
+>> 43% free(!)
+>>
+>> Page cache is dropped, server becomes too slow. This is the beginning
+>> of new cycle.
+>>
+>> I didn't found any huge mallocs at that moment. Looks like because of
+>> large number of small mallocs (forks) kernel have pessimistic forecast
+>> about future memory usage and frees too much memory. Is there any
+>> options of tuning this? Any other variants?
+>
+> First it would be useful to determine why the VM is reclaiming so
+> much memory. If it is somewhat predictable when the excessive
+> reclaim is going to happen, it might be worth capturing an event
+> trace from the VM so we can see more precisely what it is doiing
+> during this event. In that case, recording the kmem/* and vmscan/*
+> events is probably sufficient to tell us what memory allocations
+> triggered reclaim and how much reclaim was done on each event.
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
+>
 
-Built and tested 72ddc8f72270758951ccefb7d190f364d20215ab.
-Confirmed that the original bug does not present in this version.
-Confirmed that removing MAP_POPULATE does cause the deadlock to occur.
+Recently, We had a similar issue.
+http://www.spinics.net/lists/linux-mm/msg12243.html
+But it seems to not merge. I don't know why since I didn't follow up the thread.
+Maybe Cced guys can help you.
 
-Here is the stack of the test:
-# cat /proc/3846/stack
-[<ffffffff812e8a64>] call_rwsem_down_read_failed+0x14/0x30
-[<ffffffff81271c1d>] xfs_ilock+0x9d/0x110
-[<ffffffff81271cae>] xfs_ilock_map_shared+0x1e/0x50
-[<ffffffff81294985>] __xfs_get_blocks+0xc5/0x4e0
-[<ffffffff81294dcc>] xfs_get_blocks+0xc/0x10
-[<ffffffff811322c2>] do_mpage_readpage+0x462/0x660
-[<ffffffff8113250a>] mpage_readpage+0x4a/0x60
-[<ffffffff81295433>] xfs_vm_readpage+0x13/0x20
-[<ffffffff810bb850>] filemap_fault+0x2d0/0x4e0
-[<ffffffff810d8680>] __do_fault+0x50/0x510
-[<ffffffff810da542>] handle_mm_fault+0x1a2/0xe60
-[<ffffffff8102a466>] do_page_fault+0x146/0x440
-[<ffffffff8164e6cf>] page_fault+0x1f/0x30
-[<ffffffffffffffff>] 0xffffffffffffffff
+Is it a sudden big cache drop at the moment or accumulated small cache
+drop for long time?
+What's your zones' size?
 
-xfssyncd is stuck in D state.
-# cat /proc/2484/stack
-[<ffffffff8106ee1c>] down+0x3c/0x50
-[<ffffffff81297802>] xfs_buf_lock+0x72/0x170
-[<ffffffff8128762d>] xfs_getsb+0x1d/0x50
-[<ffffffff8128e6af>] xfs_trans_getsb+0x5f/0x150
-[<ffffffff8128821e>] xfs_mod_sb+0x4e/0xe0
-[<ffffffff8126e4ea>] xfs_fs_log_dummy+0x5a/0xb0
-[<ffffffff812a2a13>] xfs_sync_worker+0x83/0x90
-[<ffffffff812a28e2>] xfssyncd+0x172/0x220
-[<ffffffff81069576>] kthread+0x96/0xa0
-[<ffffffff81003354>] kernel_thread_helper+0x4/0x10
-[<ffffffffffffffff>] 0xffffffffffffffff
-
-Sean
+Please attach the result of cat /proc/zoneinfo for others.
 
 _______________________________________________
 xfs mailing list
