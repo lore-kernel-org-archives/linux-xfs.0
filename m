@@ -1,21 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p2S8746x157102 for <xfs@oss.sgi.com>; Mon, 28 Mar 2011 03:07:04 -0500
-Received: from lucidpixels.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with SMTP id 44361380ACD
-	for <xfs@oss.sgi.com>; Mon, 28 Mar 2011 01:10:12 -0700 (PDT)
-Received: from lucidpixels.com (lucidpixels.com [75.144.35.66]) by
-	cuda.sgi.com with SMTP id xj3M6dQuwxnp28cT for
-	<xfs@oss.sgi.com>; Mon, 28 Mar 2011 01:10:12 -0700 (PDT)
-Date: Mon, 28 Mar 2011 04:10:11 -0400 (EDT)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: 2.6.38.1: CPU#0 stuck for 67s! / xfs_ail_splice
-In-Reply-To: <20110327232543.GU26611@dastard>
-Message-ID: <alpine.DEB.2.02.1103280406300.25113@p34.internal.lan>
-References: <alpine.DEB.2.02.1103260927500.21571@p34.internal.lan>
-	<20110327232543.GU26611@dastard>
+	p2SC4mkp165424 for <xfs@oss.sgi.com>; Mon, 28 Mar 2011 07:04:48 -0500
+Date: Mon, 28 Mar 2011 08:07:57 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 2/6] xfs: do not immediately reuse busy extent ranges
+Message-ID: <20110328120757.GB18346@infradead.org>
+References: <20110322195550.260682574@bombadil.infradead.org>
+	<20110322200137.474878707@bombadil.infradead.org>
+	<1301086999.2537.688.camel@doink>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1301086999.2537.688.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,58 +20,26 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Alex Elder <aelder@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
+On Fri, Mar 25, 2011 at 04:03:19PM -0500, Alex Elder wrote:
+> > +			 * Can be trimmed to:
+> > +			 *    +-------+        OR         +-------+
+> > +			 *    fbno fend                   fbno fend
+> > +			 *
+> > +			 * We prefer the lower bno extent because the next
+> > +			 * allocation for this inode will use "end" as the
+> > +			 * target for first block.  If the busy segment has
+> 
+> ...will use the updated value of fend as the target...
 
-
-On Mon, 28 Mar 2011, Dave Chinner wrote:
-
-> On Sat, Mar 26, 2011 at 09:29:36AM -0400, Justin Piszcz wrote:
->> Hi,
->>
->> When I rm -rf a directory of a few hundred thousand
->> files/directories on XFS under 2.6.38.1, I see the following, is
->> this normal?
->
-> No. What is you filesystem config (xfs_info) and your mount options?
-> Is it repeatable? I? the system otherwise stalled or is it still
-> operating normally? Does it recover and work normally after such a
-> stall?
-
-Hi Dave, default mkfs.xfs options:
-
-> What is you filesystem config (xfs_info) and your mount options?
-
-# xfs_info /dev/sda1
-meta-data=/dev/sda1              isize=256    agcount=44, agsize=268435455 blks
-          =                       sectsz=512   attr=2
-data     =                       bsize=4096   blocks=11718704640, imaxpct=5
-          =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0
-log      =internal               bsize=4096   blocks=521728, version=2
-          =                       sectsz=512   sunit=0 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-
-/dev/sda1 on /r1 type xfs (rw,noatime,nobarrier,logbufs=8,logbsize=262144,delaylog,inode64)
-
-> Is it repeatable?
-I've not tried to repeat it as is spews messages over all of my consoles but
-it has happened more than once.
-
-> the system otherwise stalled or is it still operating normally?
-The console/xterm/ssh etc that is performing the removal does lockup but
-you are able to access the machine via a separate ssh connection.
-
-> Does it recover and work normally after such a stall?
-Yes, eventually, I believe I started seeing this problem when I added
-'delaylog' option to the mount options..
-
-Justin.
+I've replaced all these comments based on the text you replied to the
+last round (finally..)
 
 _______________________________________________
 xfs mailing list
