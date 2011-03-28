@@ -1,22 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p2SLonK8187372 for <xfs@oss.sgi.com>; Mon, 28 Mar 2011 16:50:49 -0500
-Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DD3731DFA1F2
-	for <xfs@oss.sgi.com>; Mon, 28 Mar 2011 14:53:57 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	exDg58ag0M7i5Bvl for <xfs@oss.sgi.com>;
-	Mon, 28 Mar 2011 14:53:57 -0700 (PDT)
-Date: Tue, 29 Mar 2011 08:53:44 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Very aggressive memory reclaim
-Message-ID: <20110328215344.GC3008@dastard>
-References: <AANLkTinFqqmE+fTMTLVU-_CwPE+LQv7CpXSQ5+CdAKLK@mail.gmail.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <AANLkTinFqqmE+fTMTLVU-_CwPE+LQv7CpXSQ5+CdAKLK@mail.gmail.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
+	p2SLkZ7I187202 for <xfs@oss.sgi.com>; Mon, 28 Mar 2011 16:46:35 -0500
+Date: Mon, 28 Mar 2011 16:49:40 -0500
+From: Alex Elder <aelder@americas.sgi.com>
+Message-Id: <201103282149.p2SLneQ1020631@alcatraz.americas.sgi.com>
+Subject: [GIT PULL] XFS 2nd update for 2.6.39-rc1
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,67 +14,63 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: John Lepikhin <johnlepikhin@gmail.com>
-Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-[cc xfs and mm lists]
+Linus, please pull the following XFS updates for 2.6.39.  I have two
+branches for you to choose from:
 
-On Mon, Mar 28, 2011 at 08:39:29PM +0400, John Lepikhin wrote:
-> Hello,
-> 
-> I use high-loaded machine with 10M+ inodes inside XFS, 50+ GB of
-> memory, intensive HDD traffic and 20..50 forks per second. Vanilla
-> kernel 2.6.37.4. The problem is that kernel frees memory very
-> aggressively.
-> 
-> For example:
-> 
-> 25% of memory is used by processes
-> 50% for page caches
-> 7% for slabs, etc.
-> 18% free.
-> 
-> That's bad but works. After few hours:
-> 
-> 25% of memory is used by processes
-> 62% for page caches
-> 7% for slabs, etc.
-> 5% free.
-> 
-> Most of files are cached, works perfectly. This is the moment when
-> kernel decides to free some memory. After memory reclaim:
-> 
-> 25% of memory is used by processes
-> 25% for page caches(!)
-> 7% for slabs, etc.
-> 43% free(!)
-> 
-> Page cache is dropped, server becomes too slow. This is the beginning
-> of new cycle.
-> 
-> I didn't found any huge mallocs at that moment. Looks like because of
-> large number of small mallocs (forks) kernel have pessimistic forecast
-> about future memory usage and frees too much memory. Is there any
-> options of tuning this? Any other variants?
+    git://oss.sgi.com/xfs/xfs for-linus-merged  (recommended)
+	This version includes one additional commit--a manual merge
+	I completed to fix a merge conflict.  The conflict was
+	between Jens Axboe's queue plugging work that you pulled in
+	over the weekend, and a change by Dave Chinner to manage XFS
+	internal buffers without involvement of the page cache.
 
-First it would be useful to determine why the VM is reclaiming so
-much memory. If it is somewhat predictable when the excessive
-reclaim is going to happen, it might be worth capturing an event
-trace from the VM so we can see more precisely what it is doiing
-during this event. In that case, recording the kmem/* and vmscan/*
-events is probably sufficient to tell us what memory allocations
-triggered reclaim and how much reclaim was done on each event.
+    git://oss.sgi.com/xfs/xfs for-linus
+	This version contains the XFS changes only, in case you want
+	to do the merge yourself.
 
-Cheers,
+Thank you.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+					-Alex
+
+The following changes since commit 1788c208aab15f9d9d1d24cff0d0c64b5c73bbee:
+
+  Merge branch 'bugfixes' of git://git.linux-nfs.org/projects/trondmy/nfs-2.6 (2011-03-28 07:52:58 -0700)
+
+are available in the git repository at:
+
+  git://oss.sgi.com/xfs/xfs for-linus-merged
+
+Alex Elder (1):
+      Merge branch 'master' of git://oss.sgi.com/xfs/xfs into for-linus-merged
+
+Dave Chinner (6):
+      xfs: preallocation transactions do not need to be synchronous
+      vmap: flush vmap aliases when mapping fails
+      xfs: introduce inode cluster buffer trylocks for xfs_iflush
+      xfs: xfs_trans_read_buf() should return an error on failure
+      xfs: register the inode cache shrinker before quotachecks
+      xfs: stop using the page cache to back the buffer cache
+
+ fs/xfs/linux-2.6/xfs_buf.c   |  344 +++++++++++-------------------------------
+ fs/xfs/linux-2.6/xfs_buf.h   |   40 +-----
+ fs/xfs/linux-2.6/xfs_file.c  |    6 +-
+ fs/xfs/linux-2.6/xfs_ioctl.c |    4 +
+ fs/xfs/linux-2.6/xfs_super.c |   36 +++--
+ fs/xfs/linux-2.6/xfs_sync.c  |   30 ++++-
+ fs/xfs/xfs_inode.c           |    2 +-
+ fs/xfs/xfs_inode_item.c      |    6 +-
+ fs/xfs/xfs_trans_buf.c       |    3 +-
+ fs/xfs/xfs_vnodeops.c        |    3 +-
+ fs/xfs/xfs_vnodeops.h        |    1 +
+ 11 files changed, 160 insertions(+), 315 deletions(-)
 
 _______________________________________________
 xfs mailing list
