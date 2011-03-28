@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p2SL655x185396 for <xfs@oss.sgi.com>; Mon, 28 Mar 2011 16:06:07 -0500
+	p2SL65D0185399 for <xfs@oss.sgi.com>; Mon, 28 Mar 2011 16:06:06 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4DC03383CEE
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 844801DEB003
 	for <xfs@oss.sgi.com>; Mon, 28 Mar 2011 14:09:15 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id 9qcJAO2UZZR3xBaP for
+	by cuda.sgi.com with ESMTP id Wn1rEQHB9DZxJPBd for
 	<xfs@oss.sgi.com>; Mon, 28 Mar 2011 14:09:15 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.72 #1 (Red Hat
-	Linux)) id 1Q4JgY-0001rk-Qt
-	for xfs@oss.sgi.com; Mon, 28 Mar 2011 21:09:14 +0000
-Message-Id: <20110328210914.791205854@bombadil.infradead.org>
-Date: Mon, 28 Mar 2011 17:06:16 -0400
+	Linux)) id 1Q4JgZ-0001sG-15
+	for xfs@oss.sgi.com; Mon, 28 Mar 2011 21:09:15 +0000
+Message-Id: <20110328210914.996696705@bombadil.infradead.org>
+Date: Mon, 28 Mar 2011 17:06:17 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 2/5] xfs: do not immediately reuse busy extent ranges
+Subject: [PATCH 3/5] xfs: exact busy extent tracking
 References: <20110328210614.832613417@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-skip-busy-extents
+Content-Disposition: inline; filename=xfs-better-busy-extent-tracking
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,511 +32,359 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Every time we reallocate a busy extent, we cause a synchronous log force
-to occur to ensure the freeing transaction is on disk before we continue
-and use the newly allocated extent.  This is extremely sub-optimal as we
-have to mark every transaction with blocks that get reused as synchronous.
-
-Instead of searching the busy extent list after deciding on the extent to
-allocate, check each candidate extent during the allocation decisions as
-to whether they are in the busy list.  If they are in the busy list, we
-trim the busy range out of the extent we have found and determine if that
-trimmed range is still OK for allocation. In many cases, this check can
-be incorporated into the allocation extent alignment code which already
-does trimming of the found extent before determining if it is a valid
-candidate for allocation.
-
-Based on two earlier patches from Dave Chinner.
+Update the extent tree in case we have to reuse a busy extent, so that it
+always is kept uptodate.  This is done by replacing the busy list searches
+with a new xfs_alloc_busy_reuse helper, which updates the busy extent tree
+in case of a reuse.   Also replace setting transactions to sync with forcing
+the log out in case we found a busy extent to reuse.  This makes the code a
+lot more simple, and is required for discard support later on.  While it
+will cause performance regressios with just this patch applied, the impact
+is more than mitigated by the next patch in the series.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 Index: xfs/fs/xfs/xfs_alloc.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_alloc.c	2011-03-28 14:17:43.358838528 +0200
-+++ xfs/fs/xfs/xfs_alloc.c	2011-03-28 16:02:05.469343820 +0200
-@@ -41,19 +41,13 @@
- #define	XFSA_FIXUP_BNO_OK	1
- #define	XFSA_FIXUP_CNT_OK	2
- 
--/*
-- * Prototypes for per-ag allocation routines
-- */
--
- STATIC int xfs_alloc_ag_vextent_exact(xfs_alloc_arg_t *);
- STATIC int xfs_alloc_ag_vextent_near(xfs_alloc_arg_t *);
- STATIC int xfs_alloc_ag_vextent_size(xfs_alloc_arg_t *);
- STATIC int xfs_alloc_ag_vextent_small(xfs_alloc_arg_t *,
--	xfs_btree_cur_t *, xfs_agblock_t *, xfs_extlen_t *, int *);
--
--/*
-- * Internal functions.
-- */
-+		xfs_btree_cur_t *, xfs_agblock_t *, xfs_extlen_t *, int *);
-+STATIC void xfs_alloc_busy_trim(struct xfs_alloc_arg *,
-+		xfs_agblock_t, xfs_extlen_t, xfs_agblock_t *, xfs_extlen_t *);
- 
- /*
-  * Lookup the record equal to [bno, len] in the btree given by cur.
-@@ -154,19 +148,21 @@ xfs_alloc_compute_aligned(
- 	xfs_extlen_t	*reslen)	/* result length */
- {
- 	xfs_agblock_t	bno;
--	xfs_extlen_t	diff;
- 	xfs_extlen_t	len;
- 
--	if (args->alignment > 1 && foundlen >= args->minlen) {
--		bno = roundup(foundbno, args->alignment);
--		diff = bno - foundbno;
--		len = diff >= foundlen ? 0 : foundlen - diff;
-+	/* Trim busy sections out of found extent */
-+	xfs_alloc_busy_trim(args, foundbno, foundlen, &bno, &len);
-+
-+	if (args->alignment > 1 && len >= args->minlen) {
-+		xfs_agblock_t	aligned_bno = roundup(bno, args->alignment);
-+		xfs_extlen_t	diff = aligned_bno - bno;
-+
-+		*resbno = aligned_bno;
-+		*reslen = diff >= len ? 0 : len - diff;
- 	} else {
--		bno = foundbno;
--		len = foundlen;
-+		*resbno = bno;
-+		*reslen = len;
- 	}
--	*resbno = bno;
--	*reslen = len;
- }
- 
- /*
-@@ -541,16 +537,8 @@ xfs_alloc_ag_vextent(
- 		if (error)
- 			return error;
- 
--		/*
--		 * Search the busylist for these blocks and mark the
--		 * transaction as synchronous if blocks are found. This
--		 * avoids the need to block due to a synchronous log
--		 * force to ensure correct ordering as the synchronous
--		 * transaction will guarantee that for us.
--		 */
--		if (xfs_alloc_busy_search(args->mp, args->agno,
--					args->agbno, args->len))
--			xfs_trans_set_sync(args->tp);
-+		ASSERT(!xfs_alloc_busy_search(args->mp, args->agno,
-+					      args->agbno, args->len));
- 	}
- 
- 	if (!args->isfl) {
-@@ -577,14 +565,14 @@ xfs_alloc_ag_vextent_exact(
- {
- 	xfs_btree_cur_t	*bno_cur;/* by block-number btree cursor */
- 	xfs_btree_cur_t	*cnt_cur;/* by count btree cursor */
--	xfs_agblock_t	end;	/* end of allocated extent */
- 	int		error;
- 	xfs_agblock_t	fbno;	/* start block of found extent */
--	xfs_agblock_t	fend;	/* end block of found extent */
- 	xfs_extlen_t	flen;	/* length of found extent */
-+	xfs_agblock_t	tbno;	/* start block of trimmed extent */
-+	xfs_extlen_t	tlen;	/* length of trimmed extent */
-+	xfs_agblock_t	tend;	/* end block of trimmed extent */
-+	xfs_agblock_t	end;	/* end of allocated extent */
- 	int		i;	/* success/failure of operation */
--	xfs_agblock_t	maxend;	/* end of maximal extent */
--	xfs_agblock_t	minend;	/* end of minimal extent */
- 	xfs_extlen_t	rlen;	/* length of returned extent */
- 
- 	ASSERT(args->alignment == 1);
-@@ -614,14 +602,22 @@ xfs_alloc_ag_vextent_exact(
- 		goto error0;
- 	XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
- 	ASSERT(fbno <= args->agbno);
--	minend = args->agbno + args->minlen;
--	maxend = args->agbno + args->maxlen;
--	fend = fbno + flen;
- 
- 	/*
--	 * Give up if the freespace isn't long enough for the minimum request.
-+	 * Check for overlapping busy extents.
-+	 */
-+	xfs_alloc_busy_trim(args, fbno, flen, &tbno, &tlen);
-+
-+	/*
-+	 * Give up if the start of the extent is busy, or the freespace isn't
-+	 * long enough for the minimum request.
- 	 */
--	if (fend < minend)
-+	if (tbno > args->agbno)
-+		goto not_found;
-+	if (tlen < args->minlen)
-+		goto not_found;
-+	tend = tbno + tlen;
-+	if (tend < args->agbno + args->minlen)
- 		goto not_found;
- 
- 	/*
-@@ -630,14 +626,14 @@ xfs_alloc_ag_vextent_exact(
- 	 *
- 	 * Fix the length according to mod and prod if given.
- 	 */
--	end = XFS_AGBLOCK_MIN(fend, maxend);
-+	end = XFS_AGBLOCK_MIN(tend, args->agbno + args->maxlen);
- 	args->len = end - args->agbno;
- 	xfs_alloc_fix_len(args);
- 	if (!xfs_alloc_fix_minleft(args))
- 		goto not_found;
- 
- 	rlen = args->len;
--	ASSERT(args->agbno + rlen <= fend);
-+	ASSERT(args->agbno + rlen <= tend);
- 	end = args->agbno + rlen;
- 
- 	/*
-@@ -686,11 +682,11 @@ xfs_alloc_find_best_extent(
- 	struct xfs_btree_cur	**scur,	/* searching cursor */
- 	xfs_agblock_t		gdiff,	/* difference for search comparison */
- 	xfs_agblock_t		*sbno,	/* extent found by search */
--	xfs_extlen_t		*slen,
--	xfs_extlen_t		*slena,	/* aligned length */
-+	xfs_extlen_t		*slen,	/* extent length */
-+	xfs_agblock_t		*sbnoa,	/* aligned extent found by search */
-+	xfs_extlen_t		*slena,	/* aligned extent length */
- 	int			dir)	/* 0 = search right, 1 = search left */
- {
--	xfs_agblock_t		bno;
- 	xfs_agblock_t		new;
- 	xfs_agblock_t		sdiff;
- 	int			error;
-@@ -708,16 +704,16 @@ xfs_alloc_find_best_extent(
+--- xfs.orig/fs/xfs/xfs_alloc.c	2011-03-28 16:06:17.806838570 +0200
++++ xfs/fs/xfs/xfs_alloc.c	2011-03-28 16:09:32.489839705 +0200
+@@ -1396,8 +1396,8 @@ xfs_alloc_ag_vextent_small(
  		if (error)
  			goto error0;
- 		XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
--		xfs_alloc_compute_aligned(args, *sbno, *slen, &bno, slena);
-+		xfs_alloc_compute_aligned(args, *sbno, *slen, sbnoa, slena);
+ 		if (fbno != NULLAGBLOCK) {
+-			if (xfs_alloc_busy_search(args->mp, args->agno, fbno, 1))
+-				xfs_trans_set_sync(args->tp);
++			xfs_alloc_busy_reuse(args->tp, args->agno, fbno, 1);
++
+ 			if (args->userdata) {
+ 				xfs_buf_t	*bp;
  
- 		/*
- 		 * The good extent is closer than this one.
- 		 */
- 		if (!dir) {
--			if (bno >= args->agbno + gdiff)
-+			if (*sbnoa >= args->agbno + gdiff)
- 				goto out_use_good;
- 		} else {
--			if (bno <= args->agbno - gdiff)
-+			if (*sbnoa <= args->agbno - gdiff)
- 				goto out_use_good;
- 		}
- 
-@@ -729,8 +725,8 @@ xfs_alloc_find_best_extent(
- 			xfs_alloc_fix_len(args);
- 
- 			sdiff = xfs_alloc_compute_diff(args->agbno, args->len,
--						       args->alignment, *sbno,
--						       *slen, &new);
-+						       args->alignment, *sbnoa,
-+						       *slena, &new);
- 
- 			/*
- 			 * Choose closer size and invalidate other cursor.
-@@ -780,7 +776,7 @@ xfs_alloc_ag_vextent_near(
- 	xfs_agblock_t	gtbnoa;		/* aligned ... */
- 	xfs_extlen_t	gtdiff;		/* difference to right side entry */
- 	xfs_extlen_t	gtlen;		/* length of right side entry */
--	xfs_extlen_t	gtlena = 0;	/* aligned ... */
-+	xfs_extlen_t	gtlena;		/* aligned ... */
- 	xfs_agblock_t	gtnew;		/* useful start bno of right side */
- 	int		error;		/* error code */
- 	int		i;		/* result code, temporary */
-@@ -789,9 +785,10 @@ xfs_alloc_ag_vextent_near(
- 	xfs_agblock_t	ltbnoa;		/* aligned ... */
- 	xfs_extlen_t	ltdiff;		/* difference to left side entry */
- 	xfs_extlen_t	ltlen;		/* length of left side entry */
--	xfs_extlen_t	ltlena = 0;	/* aligned ... */
-+	xfs_extlen_t	ltlena;		/* aligned ... */
- 	xfs_agblock_t	ltnew;		/* useful start bno of left side */
- 	xfs_extlen_t	rlen;		/* length of returned extent */
-+	int		forced = 0;
- #if defined(DEBUG) && defined(__KERNEL__)
- 	/*
- 	 * Randomly don't execute the first algorithm.
-@@ -800,13 +797,20 @@ xfs_alloc_ag_vextent_near(
- 
- 	dofirst = random32() & 1;
- #endif
-+
-+restart:
-+	bno_cur_lt = NULL;
-+	bno_cur_gt = NULL;
-+	ltlen = 0;
-+	gtlena = 0;
-+	ltlena = 0;
-+
- 	/*
- 	 * Get a cursor for the by-size btree.
- 	 */
- 	cnt_cur = xfs_allocbt_init_cursor(args->mp, args->tp, args->agbp,
- 		args->agno, XFS_BTNUM_CNT);
--	ltlen = 0;
--	bno_cur_lt = bno_cur_gt = NULL;
-+
- 	/*
- 	 * See if there are any free extents as big as maxlen.
- 	 */
-@@ -822,11 +826,13 @@ xfs_alloc_ag_vextent_near(
- 			goto error0;
- 		if (i == 0 || ltlen == 0) {
- 			xfs_btree_del_cursor(cnt_cur, XFS_BTREE_NOERROR);
-+			trace_xfs_alloc_near_noentry(args);
- 			return 0;
- 		}
- 		ASSERT(i == 1);
- 	}
- 	args->wasfromfl = 0;
-+
- 	/*
- 	 * First algorithm.
- 	 * If the requested extent is large wrt the freespaces available
-@@ -890,7 +896,7 @@ xfs_alloc_ag_vextent_near(
- 			if (args->len < blen)
- 				continue;
- 			ltdiff = xfs_alloc_compute_diff(args->agbno, args->len,
--				args->alignment, ltbno, ltlen, &ltnew);
-+				args->alignment, ltbnoa, ltlena, &ltnew);
- 			if (ltnew != NULLAGBLOCK &&
- 			    (args->len > blen || ltdiff < bdiff)) {
- 				bdiff = ltdiff;
-@@ -1042,11 +1048,12 @@ xfs_alloc_ag_vextent_near(
- 			args->len = XFS_EXTLEN_MIN(ltlena, args->maxlen);
- 			xfs_alloc_fix_len(args);
- 			ltdiff = xfs_alloc_compute_diff(args->agbno, args->len,
--				args->alignment, ltbno, ltlen, &ltnew);
-+				args->alignment, ltbnoa, ltlena, &ltnew);
- 
- 			error = xfs_alloc_find_best_extent(args,
- 						&bno_cur_lt, &bno_cur_gt,
--						ltdiff, &gtbno, &gtlen, &gtlena,
-+						ltdiff, &gtbno, &gtlen,
-+						&gtbnoa, &gtlena,
- 						0 /* search right */);
- 		} else {
- 			ASSERT(gtlena >= args->minlen);
-@@ -1057,11 +1064,12 @@ xfs_alloc_ag_vextent_near(
- 			args->len = XFS_EXTLEN_MIN(gtlena, args->maxlen);
- 			xfs_alloc_fix_len(args);
- 			gtdiff = xfs_alloc_compute_diff(args->agbno, args->len,
--				args->alignment, gtbno, gtlen, &gtnew);
-+				args->alignment, gtbnoa, gtlena, &gtnew);
- 
- 			error = xfs_alloc_find_best_extent(args,
- 						&bno_cur_gt, &bno_cur_lt,
--						gtdiff, &ltbno, &ltlen, &ltlena,
-+						gtdiff, &ltbno, &ltlen,
-+						&ltbnoa, &ltlena,
- 						1 /* search left */);
- 		}
- 
-@@ -1073,6 +1081,12 @@ xfs_alloc_ag_vextent_near(
- 	 * If we couldn't get anything, give up.
- 	 */
- 	if (bno_cur_lt == NULL && bno_cur_gt == NULL) {
-+		if (!forced++) {
-+			trace_xfs_alloc_near_busy(args);
-+			xfs_log_force(args->mp, XFS_LOG_SYNC);
-+			goto restart;
-+		}
-+
- 		trace_xfs_alloc_size_neither(args);
- 		args->agbno = NULLAGBLOCK;
- 		return 0;
-@@ -1107,12 +1121,13 @@ xfs_alloc_ag_vextent_near(
- 		return 0;
- 	}
- 	rlen = args->len;
--	(void)xfs_alloc_compute_diff(args->agbno, rlen, args->alignment, ltbno,
--		ltlen, &ltnew);
-+	(void)xfs_alloc_compute_diff(args->agbno, rlen, args->alignment,
-+				     ltbnoa, ltlena, &ltnew);
- 	ASSERT(ltnew >= ltbno);
--	ASSERT(ltnew + rlen <= ltbno + ltlen);
-+	ASSERT(ltnew + rlen <= ltbnoa + ltlena);
- 	ASSERT(ltnew + rlen <= be32_to_cpu(XFS_BUF_TO_AGF(args->agbp)->agf_length));
- 	args->agbno = ltnew;
-+
- 	if ((error = xfs_alloc_fixup_trees(cnt_cur, bno_cur_lt, ltbno, ltlen,
- 			ltnew, rlen, XFSA_FIXUP_BNO_OK)))
- 		goto error0;
-@@ -1155,26 +1170,35 @@ xfs_alloc_ag_vextent_size(
- 	int		i;		/* temp status variable */
- 	xfs_agblock_t	rbno;		/* returned block number */
- 	xfs_extlen_t	rlen;		/* length of returned extent */
-+	int		forced = 0;
- 
-+restart:
- 	/*
- 	 * Allocate and initialize a cursor for the by-size btree.
- 	 */
- 	cnt_cur = xfs_allocbt_init_cursor(args->mp, args->tp, args->agbp,
- 		args->agno, XFS_BTNUM_CNT);
- 	bno_cur = NULL;
-+
- 	/*
- 	 * Look for an entry >= maxlen+alignment-1 blocks.
- 	 */
- 	if ((error = xfs_alloc_lookup_ge(cnt_cur, 0,
- 			args->maxlen + args->alignment - 1, &i)))
- 		goto error0;
-+
- 	/*
--	 * If none, then pick up the last entry in the tree unless the
--	 * tree is empty.
--	 */
--	if (!i) {
--		if ((error = xfs_alloc_ag_vextent_small(args, cnt_cur, &fbno,
--				&flen, &i)))
-+	 * If none or we have busy extents that we cannot allocate from, then
-+	 * we have to settle for a smaller extent. In the case that there are
-+	 * no large extents, this will return the last entry in the tree unless
-+	 * the tree is empty. In the case that there are only busy large
-+	 * extents, this will return the largest small extent unless there
-+	 * are no smaller extents available.
-+	 */
-+	if (!i || forced > 1) {
-+		error = xfs_alloc_ag_vextent_small(args, cnt_cur,
-+						   &fbno, &flen, &i);
-+		if (error)
- 			goto error0;
- 		if (i == 0 || flen == 0) {
- 			xfs_btree_del_cursor(cnt_cur, XFS_BTREE_NOERROR);
-@@ -1182,22 +1206,56 @@ xfs_alloc_ag_vextent_size(
- 			return 0;
- 		}
- 		ASSERT(i == 1);
--	}
--	/*
--	 * There's a freespace as big as maxlen+alignment-1, get it.
--	 */
--	else {
--		if ((error = xfs_alloc_get_rec(cnt_cur, &fbno, &flen, &i)))
--			goto error0;
--		XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
--	}
-+		xfs_alloc_compute_aligned(args, fbno, flen, &rbno, &rlen);
-+	} else {
-+		/*
-+		 * Search for a non-busy extent that is large enough.
-+		 * If we are at low space, don't check, or if we fall of
-+		 * the end of the btree, turn off the busy check and
-+		 * restart.
-+		 */
-+		for (;;) {
-+			error = xfs_alloc_get_rec(cnt_cur, &fbno, &flen, &i);
-+			if (error)
-+				goto error0;
-+			XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
-+
-+			xfs_alloc_compute_aligned(args, fbno, flen,
-+						  &rbno, &rlen);
-+
-+			if (rlen >= args->maxlen)
-+				break;
-+
-+			error = xfs_btree_increment(cnt_cur, 0, &i);
-+			if (error)
-+				goto error0;
-+			if (i == 0) {
-+				/*
-+				 * Our only valid extents must have been busy.
-+				 * Make it unbusy by forcing the log out and
-+				 * retrying. If we've been here before, forcing
-+				 * the log isn't making the extents available,
-+				 * which means they have probably been freed in
-+				 * this transaction.  In that case, we have to
-+				 * give up on them and we'll attempt a minlen
-+				 * allocation the next time around.
-+				 */
-+				xfs_btree_del_cursor(cnt_cur,
-+						     XFS_BTREE_NOERROR);
-+				trace_xfs_alloc_size_busy(args);
-+				if (!forced++)
-+					xfs_log_force(args->mp, XFS_LOG_SYNC);
-+				goto restart;
-+			}
-+		}
-+ 	}
-+
- 	/*
- 	 * In the first case above, we got the last entry in the
- 	 * by-size btree.  Now we check to see if the space hits maxlen
- 	 * once aligned; if not, we search left for something better.
- 	 * This can't happen in the second case above.
- 	 */
--	xfs_alloc_compute_aligned(args, fbno, flen, &rbno, &rlen);
- 	rlen = XFS_EXTLEN_MIN(args->maxlen, rlen);
- 	XFS_WANT_CORRUPTED_GOTO(rlen == 0 ||
- 			(rlen <= flen && rbno + rlen <= fbno + flen), error0);
-@@ -1251,13 +1309,19 @@ xfs_alloc_ag_vextent_size(
- 	 * Fix up the length.
- 	 */
- 	args->len = rlen;
--	xfs_alloc_fix_len(args);
--	if (rlen < args->minlen || !xfs_alloc_fix_minleft(args)) {
--		xfs_btree_del_cursor(cnt_cur, XFS_BTREE_NOERROR);
--		trace_xfs_alloc_size_nominleft(args);
--		args->agbno = NULLAGBLOCK;
--		return 0;
-+	if (rlen < args->minlen) {
-+		if (!forced++) {
-+			xfs_btree_del_cursor(cnt_cur, XFS_BTREE_NOERROR);
-+			trace_xfs_alloc_size_busy(args);
-+			xfs_log_force(args->mp, XFS_LOG_SYNC);
-+			goto restart;
-+		}
-+		goto out_nominleft;
- 	}
-+	xfs_alloc_fix_len(args);
-+
-+	if (!xfs_alloc_fix_minleft(args))
-+		goto out_nominleft;
- 	rlen = args->len;
- 	XFS_WANT_CORRUPTED_GOTO(rlen <= flen, error0);
- 	/*
-@@ -1287,6 +1351,12 @@ error0:
- 	if (bno_cur)
- 		xfs_btree_del_cursor(bno_cur, XFS_BTREE_ERROR);
+@@ -2459,100 +2459,6 @@ error0:
  	return error;
-+
-+out_nominleft:
-+	xfs_btree_del_cursor(cnt_cur, XFS_BTREE_NOERROR);
-+	trace_xfs_alloc_size_nominleft(args);
-+	args->agbno = NULLAGBLOCK;
-+	return 0;
+ }
+ 
+-
+-/*
+- * AG Busy list management
+- * The busy list contains block ranges that have been freed but whose
+- * transactions have not yet hit disk.  If any block listed in a busy
+- * list is reused, the transaction that freed it must be forced to disk
+- * before continuing to use the block.
+- *
+- * xfs_alloc_busy_insert - add to the per-ag busy list
+- * xfs_alloc_busy_clear - remove an item from the per-ag busy list
+- * xfs_alloc_busy_search - search for a busy extent
+- */
+-
+-/*
+- * Insert a new extent into the busy tree.
+- *
+- * The busy extent tree is indexed by the start block of the busy extent.
+- * there can be multiple overlapping ranges in the busy extent tree but only
+- * ever one entry at a given start block. The reason for this is that
+- * multi-block extents can be freed, then smaller chunks of that extent
+- * allocated and freed again before the first transaction commit is on disk.
+- * If the exact same start block is freed a second time, we have to wait for
+- * that busy extent to pass out of the tree before the new extent is inserted.
+- * There are two main cases we have to handle here.
+- *
+- * The first case is a transaction that triggers a "free - allocate - free"
+- * cycle. This can occur during btree manipulations as a btree block is freed
+- * to the freelist, then allocated from the free list, then freed again. In
+- * this case, the second extxpnet free is what triggers the duplicate and as
+- * such the transaction IDs should match. Because the extent was allocated in
+- * this transaction, the transaction must be marked as synchronous. This is
+- * true for all cases where the free/alloc/free occurs in the one transaction,
+- * hence the addition of the ASSERT(tp->t_flags & XFS_TRANS_SYNC) to this case.
+- * This serves to catch violations of the second case quite effectively.
+- *
+- * The second case is where the free/alloc/free occur in different
+- * transactions. In this case, the thread freeing the extent the second time
+- * can't mark the extent busy immediately because it is already tracked in a
+- * transaction that may be committing.  When the log commit for the existing
+- * busy extent completes, the busy extent will be removed from the tree. If we
+- * allow the second busy insert to continue using that busy extent structure,
+- * it can be freed before this transaction is safely in the log.  Hence our
+- * only option in this case is to force the log to remove the existing busy
+- * extent from the list before we insert the new one with the current
+- * transaction ID.
+- *
+- * The problem we are trying to avoid in the free-alloc-free in separate
+- * transactions is most easily described with a timeline:
+- *
+- *      Thread 1	Thread 2	Thread 3	xfslogd
+- *	xact alloc
+- *	free X
+- *	mark busy
+- *	commit xact
+- *	free xact
+- *			xact alloc
+- *			alloc X
+- *			busy search
+- *			mark xact sync
+- *			commit xact
+- *			free xact
+- *			force log
+- *			checkpoint starts
+- *			....
+- *					xact alloc
+- *					free X
+- *					mark busy
+- *					finds match
+- *					*** KABOOM! ***
+- *					....
+- *							log IO completes
+- *							unbusy X
+- *			checkpoint completes
+- *
+- * By issuing a log force in thread 3 @ "KABOOM", the thread will block until
+- * the checkpoint completes, and the busy extent it matched will have been
+- * removed from the tree when it is woken. Hence it can then continue safely.
+- *
+- * However, to ensure this matching process is robust, we need to use the
+- * transaction ID for identifying transaction, as delayed logging results in
+- * the busy extent and transaction lifecycles being different. i.e. the busy
+- * extent is active for a lot longer than the transaction.  Hence the
+- * transaction structure can be freed and reallocated, then mark the same
+- * extent busy again in the new transaction. In this case the new transaction
+- * will have a different tid but can have the same address, and hence we need
+- * to check against the tid.
+- *
+- * Future: for delayed logging, we could avoid the log force if the extent was
+- * first freed in the current checkpoint sequence. This, however, requires the
+- * ability to pin the current checkpoint in memory until this transaction
+- * commits to ensure that both the original free and the current one combine
+- * logically into the one checkpoint. If the checkpoint sequences are
+- * different, however, we still need to wait on a log force.
+- */
+ void
+ xfs_alloc_busy_insert(
+ 	struct xfs_trans	*tp,
+@@ -2564,9 +2470,7 @@ xfs_alloc_busy_insert(
+ 	struct xfs_busy_extent	*busyp;
+ 	struct xfs_perag	*pag;
+ 	struct rb_node		**rbp;
+-	struct rb_node		*parent;
+-	int			match;
+-
++	struct rb_node		*parent = NULL;
+ 
+ 	new = kmem_zalloc(sizeof(struct xfs_busy_extent), KM_MAYFAIL);
+ 	if (!new) {
+@@ -2583,66 +2487,28 @@ xfs_alloc_busy_insert(
+ 	new->agno = agno;
+ 	new->bno = bno;
+ 	new->length = len;
+-	new->tid = xfs_log_get_trans_ident(tp);
+-
+ 	INIT_LIST_HEAD(&new->list);
+ 
+ 	/* trace before insert to be able to see failed inserts */
+ 	trace_xfs_alloc_busy(tp, agno, bno, len, 0);
+ 
+ 	pag = xfs_perag_get(tp->t_mountp, new->agno);
+-restart:
+ 	spin_lock(&pag->pagb_lock);
+ 	rbp = &pag->pagb_tree.rb_node;
+-	parent = NULL;
+-	busyp = NULL;
+-	match = 0;
+-	while (*rbp && match >= 0) {
++	while (*rbp) {
+ 		parent = *rbp;
+ 		busyp = rb_entry(parent, struct xfs_busy_extent, rb_node);
+ 
+ 		if (new->bno < busyp->bno) {
+-			/* may overlap, but exact start block is lower */
+ 			rbp = &(*rbp)->rb_left;
+-			if (new->bno + new->length > busyp->bno)
+-				match = busyp->tid == new->tid ? 1 : -1;
++			ASSERT(new->bno + new->length <= busyp->bno);
+ 		} else if (new->bno > busyp->bno) {
+-			/* may overlap, but exact start block is higher */
+ 			rbp = &(*rbp)->rb_right;
+-			if (bno < busyp->bno + busyp->length)
+-				match = busyp->tid == new->tid ? 1 : -1;
++			ASSERT(bno >= busyp->bno + busyp->length);
+ 		} else {
+-			match = busyp->tid == new->tid ? 1 : -1;
+-			break;
++			ASSERT(0);
+ 		}
+ 	}
+-	if (match < 0) {
+-		/* overlap marked busy in different transaction */
+-		spin_unlock(&pag->pagb_lock);
+-		xfs_log_force(tp->t_mountp, XFS_LOG_SYNC);
+-		goto restart;
+-	}
+-	if (match > 0) {
+-		/*
+-		 * overlap marked busy in same transaction. Update if exact
+-		 * start block match, otherwise combine the busy extents into
+-		 * a single range.
+-		 */
+-		if (busyp->bno == new->bno) {
+-			busyp->length = max(busyp->length, new->length);
+-			spin_unlock(&pag->pagb_lock);
+-			ASSERT(tp->t_flags & XFS_TRANS_SYNC);
+-			xfs_perag_put(pag);
+-			kmem_free(new);
+-			return;
+-		}
+-		rb_erase(&busyp->rb_node, &pag->pagb_tree);
+-		new->length = max(busyp->bno + busyp->length,
+-					new->bno + new->length) -
+-				min(busyp->bno, new->bno);
+-		new->bno = min(busyp->bno, new->bno);
+-	} else
+-		busyp = NULL;
+ 
+ 	rb_link_node(&new->rb_node, parent, rbp);
+ 	rb_insert_color(&new->rb_node, &pag->pagb_tree);
+@@ -2650,7 +2516,6 @@ restart:
+ 	list_add(&new->list, &tp->t_busy);
+ 	spin_unlock(&pag->pagb_lock);
+ 	xfs_perag_put(pag);
+-	kmem_free(busyp);
  }
  
  /*
-@@ -2634,6 +2704,178 @@ xfs_alloc_busy_search(
- 	return match;
+@@ -2705,6 +2570,162 @@ xfs_alloc_busy_search(
  }
  
-+/*
-+ * For a given extent [fbno, flen], search the busy extent list
-+ * to find a subset of the extent that is not busy.
+ /*
++ * The found free extent [fbno, fend] overlaps part or all of the given busy
++ * extent.  If the overlap covers the beginning, the end, or all of the busy
++ * extent, the overlapping portion can be made unbusy and used for the
++ * allocation.  We can't split a busy extent because we can't modify a
++ * transaction/CIL context busy list, but we can update an entries block
++ * number or length.
++ *
++ * The caller will force the log and re-check the busy list after returning
++ * from this function.
 + */
 +STATIC void
-+xfs_alloc_busy_trim(
-+	struct xfs_alloc_arg	*args,
-+	xfs_agblock_t		bno,
-+	xfs_extlen_t		len,
-+	xfs_agblock_t		*rbno,
-+	xfs_extlen_t		*rlen)
++xfs_alloc_busy_update_extent(
++	struct xfs_perag	*pag,
++	struct xfs_busy_extent	*busyp,
++	xfs_agblock_t		fbno,
++	xfs_agblock_t		fend)
 +{
-+	xfs_agblock_t		fbno = bno;
-+	xfs_extlen_t		flen = len;
++	xfs_agblock_t	bbno = busyp->bno;
++	xfs_agblock_t	bend = bbno + busyp->length;
++
++	if (bbno < fbno && bend > fend) {
++		/*
++		 * Case 1:
++		 *    bbno           bend
++		 *    +BBBBBBBBBBBBBBBBB+
++		 *        +---------+
++		 *        fbno   fend
++		 */
++
++		/*
++		 * We would have to split the busy extent to be able to track
++		 * it correct, which we cannot do because we would have to
++		 * modify the list of busy extents attached to the transaction
++		 * or CIL context, which is immutable.
++		 *
++		 * Let the caller force out the log to clear the busy extents
++		 * and retry the search.
++		 */
++	} else if (bbno >= fbno && bend <= fend) {
++		/*
++		 * Case 2:
++		 *    bbno           bend
++		 *    +BBBBBBBBBBBBBBBBB+
++		 *    +-----------------+
++		 *    fbno           fend
++		 *
++		 * Case 3:
++		 *    bbno           bend
++		 *    +BBBBBBBBBBBBBBBBB+
++		 *    +--------------------------+
++		 *    fbno                    fend
++		 *
++		 * Case 4:
++		 *             bbno           bend
++		 *             +BBBBBBBBBBBBBBBBB+
++		 *    +--------------------------+
++		 *    fbno                    fend
++		 *
++		 * Case 5:
++		 *             bbno           bend
++		 *             +BBBBBBBBBBBBBBBBB+
++		 *    +-----------------------------------+
++		 *    fbno                             fend
++		 *
++		 */
++
++		/*
++		 * The busy extent is fully covered by the extent we are
++		 * allocating, and can simply be removed from the rbtree.
++		 * However we cannot remove it from the immutable list
++		 * tracking busy extents in the transaction or CIL context,
++		 * so set the length to zero to mark it invalid.
++		 */
++		rb_erase(&busyp->rb_node, &pag->pagb_tree);
++		busyp->length = 0;
++	} else if (bbno == fbno) {
++		/*
++		 * Case 6:
++		 *              bbno           bend
++		 *             +BBBBBBBBBBBBBBBBB+
++		 *             +---------+
++		 *             fbno   fend
++		 *
++		 * Case 7:
++		 *             bbno           bend
++		 *             +BBBBBBBBBBBBBBBBB+
++		 *    +------------------+
++		 *    fbno            fend
++		 *
++		 */
++		busyp->bno = fend;
++	} else if (bend == fend) {
++		/*
++		 * Case 8:
++		 *    bbno           bend
++		 *    +BBBBBBBBBBBBBBBBB+
++		 *        +-------------+
++		 *        fbno       fend
++		 *
++		 * Case 9:
++		 *    bbno           bend
++		 *    +BBBBBBBBBBBBBBBBB+
++		 *        +----------------------+
++		 *        fbno                fend
++		 */
++
++		busyp->length = fbno - busyp->bno;
++	} else {
++		ASSERT(0);
++	}
++}
++
++
++/*
++ * For a given extent [fbno, flen], make sure we can reuse it safely.
++ */
++void
++xfs_alloc_busy_reuse(
++	struct xfs_trans	*tp,
++	xfs_agnumber_t		agno,
++	xfs_agblock_t		fbno,
++	xfs_extlen_t		flen)
++{
++	struct xfs_perag	*pag;
 +	struct rb_node		*rbp;
 +
 +	ASSERT(flen > 0);
 +
-+	spin_lock(&args->pag->pagb_lock);
-+	rbp = args->pag->pagb_tree.rb_node;
-+	while (rbp && flen >= args->minlen) {
++	pag = xfs_perag_get(tp->t_mountp, agno);
++	spin_lock(&pag->pagb_lock);
++	rbp = pag->pagb_tree.rb_node;
++	while (rbp) {
 +		struct xfs_busy_extent *busyp =
 +			rb_entry(rbp, struct xfs_busy_extent, rb_node);
 +		xfs_agblock_t	fend = fbno + flen;
@@ -551,165 +399,135 @@ Index: xfs/fs/xfs/xfs_alloc.c
 +			continue;
 +		}
 +
-+		if (bbno <= fbno) {
-+			/* start overlap */
++		xfs_alloc_busy_update_extent(pag, busyp, fbno, fbno + flen);
 +
-+			/*
-+			 * Case 1:
-+			 *    bbno           bend
-+			 *    +BBBBBBBBBBBBBBBBB+
-+			 *        +---------+
-+			 *        fbno   fend
-+			 *
-+			 * Case 2:
-+			 *    bbno           bend
-+			 *    +BBBBBBBBBBBBBBBBB+
-+			 *    +-------------+
-+			 *    fbno       fend
-+			 *
-+			 * Case 3:
-+			 *    bbno           bend
-+			 *    +BBBBBBBBBBBBBBBBB+
-+			 *        +-------------+
-+			 *        fbno       fend
-+			 *
-+			 * Case 4:
-+			 *    bbno           bend
-+			 *    +BBBBBBBBBBBBBBBBB+
-+			 *    +-----------------+
-+			 *    fbno           fend
-+			 *
-+			 * No unbusy region in extent, return failure.
-+			 */
-+			if (fend <= bend)
-+				goto fail;
-+
-+			/*
-+			 * Case 5:
-+			 *    bbno           bend
-+			 *    +BBBBBBBBBBBBBBBBB+
-+			 *        +----------------------+
-+			 *        fbno                fend
-+			 *
-+			 * Case 6:
-+			 *    bbno           bend
-+			 *    +BBBBBBBBBBBBBBBBB+
-+			 *    +--------------------------+
-+			 *    fbno                    fend
-+			 *
-+			 * Needs to be trimmed to:
-+			 *                       +-------+
-+			 *                       fbno fend
-+			 */
-+			fbno = bend;
-+		} else if (bend >= fend) {
-+			/* end overlap */
-+
-+			/*
-+			 * Case 7:
-+			 *             bbno           bend
-+			 *             +BBBBBBBBBBBBBBBBB+
-+			 *    +------------------+
-+			 *    fbno            fend
-+			 *
-+			 * Case 8:
-+			 *             bbno           bend
-+			 *             +BBBBBBBBBBBBBBBBB+
-+			 *    +--------------------------+
-+			 *    fbno                    fend
-+			 *
-+			 * Needs to be trimmed to:
-+			 *    +-------+
-+			 *    fbno fend
-+			 */
-+			fend = bbno;
-+		} else {
-+			/* middle overlap */
-+
-+			/*
-+			 * Case 9:
-+			 *             bbno           bend
-+			 *             +BBBBBBBBBBBBBBBBB+
-+			 *    +-----------------------------------+
-+			 *    fbno                             fend
-+			 *
-+			 * Can be trimmed to:
-+			 *    +-------+        OR         +-------+
-+			 *    fbno fend                   fbno fend
-+			 *
-+			 * Backward allocation leads to significant
-+			 * fragmentation of directories, which degrades
-+			 * directory performance, therefore we always want to
-+			 * choose the option that produces forward allocation
-+			 * patterns.
-+			 * Preferring the lower bno extent will make the next
-+			 * request use "fend" as the start of the next
-+			 * allocation;  if the segment is no longer busy at
-+			 * that point, we'll get a contiguous allocation, but
-+			 * even if it is still busy, we will get a forward
-+			 * allocation.
-+			 * We try to avoid choosing the segment at "bend",
-+			 * because that can lead to the next allocation
-+			 * taking the segment at "fbno", which would be a
-+			 * backward allocation.  We only use the segment at
-+			 * "fbno" if it is much larger than the current
-+			 * requested size, because in that case there's a
-+			 * good chance subsequent allocations will be
-+			 * contiguous.
-+			 */
-+			if (bbno - fbno >= args->maxlen) {
-+				/* left candidate fits perfect */
-+				fend = bbno;
-+			} else if (fend - bend >= args->maxlen * 4) {
-+				/* right candidate has enough free space */
-+				fbno = bend;
-+			} else if (bbno - fbno >= args->minlen) {
-+				/* left candidate fits minimum requirement */
-+				fend = bbno;
-+			} else {
-+				goto fail;
-+			}
-+		}
-+
-+		flen = fend - fbno;
++		spin_unlock(&pag->pagb_lock);
++		xfs_log_force(tp->t_mountp, XFS_LOG_SYNC);
 +	}
-+	spin_unlock(&args->pag->pagb_lock);
-+
-+	*rbno = fbno;
-+	*rlen = flen;
-+	return;
-+fail:
-+	/*
-+	 * Return a zero extent length as failure indications.  All callers
-+	 * re-check if the trimmed extent satisfies the minlen requirement.
-+	 */
-+	spin_unlock(&args->pag->pagb_lock);
-+	*rbno = fbno;
-+	*rlen = 0;
++	spin_unlock(&pag->pagb_lock);
++	xfs_perag_put(pag);
 +}
 +
- void
- xfs_alloc_busy_clear(
- 	struct xfs_mount	*mp,
-Index: xfs/fs/xfs/linux-2.6/xfs_trace.h
++/*
+  * For a given extent [fbno, flen], search the busy extent list
+  * to find a subset of the extent that is not busy.
+  */
+@@ -2886,14 +2907,12 @@ xfs_alloc_busy_clear(
+ 	trace_xfs_alloc_unbusy(mp, busyp->agno, busyp->bno,
+ 						busyp->length);
+ 
+-	ASSERT(xfs_alloc_busy_search(mp, busyp->agno, busyp->bno,
+-						busyp->length) == 1);
+-
+ 	list_del_init(&busyp->list);
+ 
+ 	pag = xfs_perag_get(mp, busyp->agno);
+ 	spin_lock(&pag->pagb_lock);
+-	rb_erase(&busyp->rb_node, &pag->pagb_tree);
++	if (busyp->length)
++		rb_erase(&busyp->rb_node, &pag->pagb_tree);
+ 	spin_unlock(&pag->pagb_lock);
+ 	xfs_perag_put(pag);
+ 
+Index: xfs/fs/xfs/xfs_alloc.h
 ===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_trace.h	2011-03-28 14:11:07.546838286 +0200
-+++ xfs/fs/xfs/linux-2.6/xfs_trace.h	2011-03-28 16:01:54.018838901 +0200
-@@ -1433,11 +1433,14 @@ DEFINE_ALLOC_EVENT(xfs_alloc_near_first)
- DEFINE_ALLOC_EVENT(xfs_alloc_near_greater);
- DEFINE_ALLOC_EVENT(xfs_alloc_near_lesser);
- DEFINE_ALLOC_EVENT(xfs_alloc_near_error);
-+DEFINE_ALLOC_EVENT(xfs_alloc_near_noentry);
-+DEFINE_ALLOC_EVENT(xfs_alloc_near_busy);
- DEFINE_ALLOC_EVENT(xfs_alloc_size_neither);
- DEFINE_ALLOC_EVENT(xfs_alloc_size_noentry);
- DEFINE_ALLOC_EVENT(xfs_alloc_size_nominleft);
- DEFINE_ALLOC_EVENT(xfs_alloc_size_done);
- DEFINE_ALLOC_EVENT(xfs_alloc_size_error);
-+DEFINE_ALLOC_EVENT(xfs_alloc_size_busy);
- DEFINE_ALLOC_EVENT(xfs_alloc_small_freelist);
- DEFINE_ALLOC_EVENT(xfs_alloc_small_notenough);
- DEFINE_ALLOC_EVENT(xfs_alloc_small_done);
+--- xfs.orig/fs/xfs/xfs_alloc.h	2011-03-28 16:06:17.822840017 +0200
++++ xfs/fs/xfs/xfs_alloc.h	2011-03-28 16:06:23.013344460 +0200
+@@ -145,6 +145,10 @@ xfs_alloc_busy_clear(struct xfs_mount *m
+ int
+ xfs_alloc_busy_search(struct xfs_mount *mp, xfs_agnumber_t agno,
+ 	xfs_agblock_t bno, xfs_extlen_t len);
++
++void
++xfs_alloc_busy_reuse(struct xfs_trans *tp, xfs_agnumber_t agno,
++	xfs_agblock_t fbno, xfs_extlen_t flen);
+ #endif	/* __KERNEL__ */
+ 
+ /*
+Index: xfs/fs/xfs/xfs_alloc_btree.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_alloc_btree.c	2011-03-28 16:06:17.830839717 +0200
++++ xfs/fs/xfs/xfs_alloc_btree.c	2011-03-28 16:06:23.025342125 +0200
+@@ -94,8 +94,8 @@ xfs_allocbt_alloc_block(
+ 		*stat = 0;
+ 		return 0;
+ 	}
+-	if (xfs_alloc_busy_search(cur->bc_mp, cur->bc_private.a.agno, bno, 1))
+-		xfs_trans_set_sync(cur->bc_tp);
++
++	xfs_alloc_busy_reuse(cur->bc_tp, cur->bc_private.a.agno, bno, 1);
+ 
+ 	xfs_trans_agbtree_delta(cur->bc_tp, 1);
+ 	new->s = cpu_to_be32(bno);
+Index: xfs/fs/xfs/xfs_ag.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_ag.h	2011-03-28 16:06:17.842839071 +0200
++++ xfs/fs/xfs/xfs_ag.h	2011-03-28 16:06:23.037341448 +0200
+@@ -187,7 +187,6 @@ struct xfs_busy_extent {
+ 	xfs_agnumber_t	agno;
+ 	xfs_agblock_t	bno;
+ 	xfs_extlen_t	length;
+-	xlog_tid_t	tid;		/* transaction that created this */
+ };
+ 
+ /*
+Index: xfs/fs/xfs/xfs_log.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_log.c	2011-03-28 16:06:17.854837887 +0200
++++ xfs/fs/xfs/xfs_log.c	2011-03-28 16:06:20.390839609 +0200
+@@ -3248,13 +3248,6 @@ xfs_log_ticket_get(
+ 	return ticket;
+ }
+ 
+-xlog_tid_t
+-xfs_log_get_trans_ident(
+-	struct xfs_trans	*tp)
+-{
+-	return tp->t_ticket->t_tid;
+-}
+-
+ /*
+  * Allocate and initialise a new log ticket.
+  */
+Index: xfs/fs/xfs/xfs_log.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_log.h	2011-03-28 16:06:17.866839600 +0200
++++ xfs/fs/xfs/xfs_log.h	2011-03-28 16:06:20.394838660 +0200
+@@ -189,8 +189,6 @@ void	  xlog_iodone(struct xfs_buf *);
+ struct xlog_ticket *xfs_log_ticket_get(struct xlog_ticket *ticket);
+ void	  xfs_log_ticket_put(struct xlog_ticket *ticket);
+ 
+-xlog_tid_t xfs_log_get_trans_ident(struct xfs_trans *tp);
+-
+ void	xfs_log_commit_cil(struct xfs_mount *mp, struct xfs_trans *tp,
+ 				struct xfs_log_vec *log_vector,
+ 				xfs_lsn_t *commit_lsn, int flags);
+Index: xfs/fs/xfs/xfs_log_priv.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_log_priv.h	2011-03-28 16:06:17.878839137 +0200
++++ xfs/fs/xfs/xfs_log_priv.h	2011-03-28 16:06:20.398888649 +0200
+@@ -144,6 +144,8 @@ static inline uint xlog_get_client_id(__
+ #define	XLOG_RECOVERY_NEEDED	0x4	/* log was recovered */
+ #define XLOG_IO_ERROR		0x8	/* log hit an I/O error, and being
+ 					   shutdown */
++typedef __uint32_t xlog_tid_t;
++
+ 
+ #ifdef __KERNEL__
+ /*
+Index: xfs/fs/xfs/xfs_types.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_types.h	2011-03-28 16:06:17.894838713 +0200
++++ xfs/fs/xfs/xfs_types.h	2011-03-28 16:06:20.402904478 +0200
+@@ -73,8 +73,6 @@ typedef	__int32_t	xfs_tid_t;	/* transact
+ typedef	__uint32_t	xfs_dablk_t;	/* dir/attr block number (in file) */
+ typedef	__uint32_t	xfs_dahash_t;	/* dir/attr hash value */
+ 
+-typedef __uint32_t	xlog_tid_t;	/* transaction ID type */
+-
+ /*
+  * These types are 64 bits on disk but are either 32 or 64 bits in memory.
+  * Disk based types:
 
 _______________________________________________
 xfs mailing list
