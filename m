@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p2T7UNOs214218 for <xfs@oss.sgi.com>; Tue, 29 Mar 2011 02:30:23 -0500
-Received: from mail-ww0-f51.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BDB351B60C6F
-	for <xfs@oss.sgi.com>; Tue, 29 Mar 2011 00:33:33 -0700 (PDT)
-Received: from mail-ww0-f51.google.com (mail-ww0-f51.google.com
-	[74.125.82.51]) by cuda.sgi.com with ESMTP id FnVi5WrfNxUJ7P6H
-	for <xfs@oss.sgi.com>; Tue, 29 Mar 2011 00:33:33 -0700 (PDT)
-Received: by wwf26 with SMTP id 26so3199117wwf.32
-	for <xfs@oss.sgi.com>; Tue, 29 Mar 2011 00:33:32 -0700 (PDT)
+	p2T8vpDJ218746 for <xfs@oss.sgi.com>; Tue, 29 Mar 2011 03:57:52 -0500
+Received: from mail-qw0-f53.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3BB23387C2F
+	for <xfs@oss.sgi.com>; Tue, 29 Mar 2011 02:01:01 -0700 (PDT)
+Received: from mail-qw0-f53.google.com (mail-qw0-f53.google.com
+	[209.85.216.53]) by cuda.sgi.com with ESMTP id XWAsFKSiEYYDzJEg
+	for <xfs@oss.sgi.com>; Tue, 29 Mar 2011 02:01:01 -0700 (PDT)
+Received: by qwb7 with SMTP id 7so2393257qwb.26
+	for <xfs@oss.sgi.com>; Tue, 29 Mar 2011 02:01:01 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20110329115546.C08C.A69D9226@jp.fujitsu.com>
-References: <20110328215344.GC3008@dastard>
-	<BANLkTimHPFMUOCFAruF5J4OMHSkZsMsAgA@mail.gmail.com>
-	<20110329115546.C08C.A69D9226@jp.fujitsu.com>
-Date: Tue, 29 Mar 2011 11:33:32 +0400
-Message-ID: <AANLkTinvo6tZo8GtWohHpu5a0=EQvGz85zU55X5RTUxQ@mail.gmail.com>
-Subject: Re: Very aggressive memory reclaim
-From: John Lepikhin <johnlepikhin@gmail.com>
+In-Reply-To: <4D8A1594.5060505@redhat.com>
+References: <AANLkTi=NKxmvJx_oEpdeMtfU9ePv4ofG5PjCuh23RJ+A@mail.gmail.com>
+	<4D8A0A70.9030201@redhat.com>
+	<AANLkTi=JvL6LoL=VOrHoiQKheqzDrVwOQtWAkumzaBk5@mail.gmail.com>
+	<4D8A1594.5060505@redhat.com>
+Date: Tue, 29 Mar 2011 11:01:01 +0200
+Message-ID: <AANLkTik9irNe5QnNdKAsU88KyJ1bNHTNZBV4iYdzxUun@mail.gmail.com>
+Subject: Re: xfstests: failure to umount ext4
+From: Amir Goldstein <amir73il@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,25 +28,35 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>
-Cc: linux-mm@kvack.org, xfs@oss.sgi.com, Minchan Kim <minchan.kim@gmail.com>, linux-kernel@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: Ext4 Developers List <linux-ext4@vger.kernel.org>, XFS <xfs@oss.sgi.com>
 
-2011/3/29 KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>:
+On Wed, Mar 23, 2011 at 5:45 PM, Eric Sandeen <sandeen@redhat.com> wrote:
+> On 3/23/11 10:33 AM, Amir Goldstein wrote:
+>> On Wed, Mar 23, 2011 at 4:57 PM, Eric Sandeen <sandeen@redhat.com> wrote:
+>>> On 3/23/11 9:36 AM, Amir Goldstein wrote:
+>>>> On Wed, Mar 23, 2011 at 4:03 PM, Amir Goldstein <amir73il@gmail.com> w=
+rote:
+>>>>>
+>>>>> I've been running xfstests on ext4 and I always get annoying failures=
+ to umount:
+>>>>>
+>>>>> 213 8s ... 31s
+>>>>> umount: /mnt/test/ext4: device is busy.
+>>>>> =A0 =A0 =A0 =A0(In some cases useful info about processes that use
+>>>>> =A0 =A0 =A0 =A0 the device is found by lsof(8) or fuser(1))
+>>>>>
+>>>>> post 198 mostly fails to umount as well.
+>>>>> and post 124 always fails to umount.
 
-> If my remember is correct, 2.6.38 is included Mel's anti agressive
-> reclaim patch. And original report seems to be using 2.6.37.x.
->
-> John, can you try 2.6.38?
+USE_REMOUNT=3D1 fixes (bypasses) the problem for non scratch tests, so
+I'm good with it for now :-)
 
-I'll ask my boss about it. Unfortunately we found opposite issue with
-memory management + XFS (100M of inodes) on 2.6.38: some objects in
-xfs_inode and dentry slabs are seems to be never cleared (at least
-without "sync && echo 2 >.../drop_caches"). But this is not a
-production machine working 24x7, so we don't care about it right now.
+Amir.
 
 _______________________________________________
 xfs mailing list
