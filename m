@@ -1,25 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p2T8vpDJ218746 for <xfs@oss.sgi.com>; Tue, 29 Mar 2011 03:57:52 -0500
-Received: from mail-qw0-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3BB23387C2F
-	for <xfs@oss.sgi.com>; Tue, 29 Mar 2011 02:01:01 -0700 (PDT)
-Received: from mail-qw0-f53.google.com (mail-qw0-f53.google.com
-	[209.85.216.53]) by cuda.sgi.com with ESMTP id XWAsFKSiEYYDzJEg
-	for <xfs@oss.sgi.com>; Tue, 29 Mar 2011 02:01:01 -0700 (PDT)
-Received: by qwb7 with SMTP id 7so2393257qwb.26
-	for <xfs@oss.sgi.com>; Tue, 29 Mar 2011 02:01:01 -0700 (PDT)
+	p2T8ua5o218685 for <xfs@oss.sgi.com>; Tue, 29 Mar 2011 03:56:37 -0500
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 41206387C24
+	for <xfs@oss.sgi.com>; Tue, 29 Mar 2011 01:59:46 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id XZNK1DSGAq9u8o8H for
+	<xfs@oss.sgi.com>; Tue, 29 Mar 2011 01:59:46 -0700 (PDT)
+Message-ID: <4D919F75.5070601@redhat.com>
+Date: Tue, 29 Mar 2011 10:59:33 +0200
+From: Avi Kivity <avi@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <4D8A1594.5060505@redhat.com>
-References: <AANLkTi=NKxmvJx_oEpdeMtfU9ePv4ofG5PjCuh23RJ+A@mail.gmail.com>
-	<4D8A0A70.9030201@redhat.com>
-	<AANLkTi=JvL6LoL=VOrHoiQKheqzDrVwOQtWAkumzaBk5@mail.gmail.com>
-	<4D8A1594.5060505@redhat.com>
-Date: Tue, 29 Mar 2011 11:01:01 +0200
-Message-ID: <AANLkTik9irNe5QnNdKAsU88KyJ1bNHTNZBV4iYdzxUun@mail.gmail.com>
-Subject: Re: xfstests: failure to umount ext4
-From: Amir Goldstein <amir73il@gmail.com>
+Subject: Re: Very aggressive memory reclaim
+References: <AANLkTinFqqmE+fTMTLVU-_CwPE+LQv7CpXSQ5+CdAKLK@mail.gmail.com>	<20110328215344.GC3008@dastard>
+	<AANLkTi==vw7Dy-oK31PxHadwUaDRUUk+TM0ECSZ=chfv@mail.gmail.com>
+In-Reply-To: <AANLkTi==vw7Dy-oK31PxHadwUaDRUUk+TM0ECSZ=chfv@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,35 +24,37 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: Ext4 Developers List <linux-ext4@vger.kernel.org>, XFS <xfs@oss.sgi.com>
+To: John Lepikhin <johnlepikhin@gmail.com>
+Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Wed, Mar 23, 2011 at 5:45 PM, Eric Sandeen <sandeen@redhat.com> wrote:
-> On 3/23/11 10:33 AM, Amir Goldstein wrote:
->> On Wed, Mar 23, 2011 at 4:57 PM, Eric Sandeen <sandeen@redhat.com> wrote:
->>> On 3/23/11 9:36 AM, Amir Goldstein wrote:
->>>> On Wed, Mar 23, 2011 at 4:03 PM, Amir Goldstein <amir73il@gmail.com> w=
-rote:
->>>>>
->>>>> I've been running xfstests on ext4 and I always get annoying failures=
- to umount:
->>>>>
->>>>> 213 8s ... 31s
->>>>> umount: /mnt/test/ext4: device is busy.
->>>>> =A0 =A0 =A0 =A0(In some cases useful info about processes that use
->>>>> =A0 =A0 =A0 =A0 the device is found by lsof(8) or fuser(1))
->>>>>
->>>>> post 198 mostly fails to umount as well.
->>>>> and post 124 always fails to umount.
+On 03/29/2011 09:26 AM, John Lepikhin wrote:
+> 2011/3/29 Dave Chinner<david@fromorbit.com>:
+>
+> >  First it would be useful to determine why the VM is reclaiming so
+> >  much memory. If it is somewhat predictable when the excessive
+> >  reclaim is going to happen, it might be worth capturing an event
+> >  trace from the VM so we can see more precisely what it is doiing
+> >  during this event. In that case, recording the kmem/* and vmscan/*
+> >  events is probably sufficient to tell us what memory allocations
+> >  triggered reclaim and how much reclaim was done on each event.
+>
+> Do you mean I must add some debug to mm functions? I don't know any
+> other way to catch such events.
 
-USE_REMOUNT=3D1 fixes (bypasses) the problem for non scratch tests, so
-I'm good with it for now :-)
+Download and build trace-cmd 
+(git://git.kernel.org/pub/scm/linux/kernel/git/rostedt/trace-cmd.git), 
+and do
 
-Amir.
+$ trace-cmd record -e kmem -e vmscan -b 30000
+
+Hit ctrl-C when done and post the output file generated in cwd.
+
+-- 
+error compiling committee.c: too many arguments to function
 
 _______________________________________________
 xfs mailing list
