@@ -1,36 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p2T0MIaJ193879
-	for <linux-xfs@oss.sgi.com>; Mon, 28 Mar 2011 19:22:19 -0500
-Received: from smtp-out.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E1E2A1142E99
-	for <linux-xfs@oss.sgi.com>; Mon, 28 Mar 2011 17:25:27 -0700 (PDT)
-Received: from smtp-out.google.com (smtp-out.google.com [74.125.121.67]) by
-	cuda.sgi.com with ESMTP id rDJFsvZqe2ysnOD2 for
-	<linux-xfs@oss.sgi.com>; Mon, 28 Mar 2011 17:25:27 -0700 (PDT)
-Received: from wpaz13.hot.corp.google.com (wpaz13.hot.corp.google.com
-	[172.24.198.77]) by smtp-out.google.com with ESMTP id p2T0PP8S031467
-	for <linux-xfs@oss.sgi.com>; Mon, 28 Mar 2011 17:25:26 -0700
-Received: from ywo32 (ywo32.prod.google.com [10.192.15.32])
-	by wpaz13.hot.corp.google.com with ESMTP id p2T0PGZT016275
-	(version=TLSv1/SSLv3 cipher=RC4-SHA bits=128 verify=NOT)
-	for <linux-xfs@oss.sgi.com>; Mon, 28 Mar 2011 17:25:24 -0700
-Received: by ywo32 with SMTP id 32so1779935ywo.35
-	for <linux-xfs@oss.sgi.com>; Mon, 28 Mar 2011 17:25:24 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
+	p2T1sLCU197697 for <xfs@oss.sgi.com>; Mon, 28 Mar 2011 20:54:21 -0500
+Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DCC8A384D9C
+	for <xfs@oss.sgi.com>; Mon, 28 Mar 2011 18:57:30 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	7roT2tST1J1NUvzT for <xfs@oss.sgi.com>;
+	Mon, 28 Mar 2011 18:57:30 -0700 (PDT)
+Date: Tue, 29 Mar 2011 12:57:27 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Very aggressive memory reclaim
+Message-ID: <20110329015727.GE3008@dastard>
+References: <AANLkTinFqqmE+fTMTLVU-_CwPE+LQv7CpXSQ5+CdAKLK@mail.gmail.com>
+	<20110328215344.GC3008@dastard> <m2bp0u23wl.fsf@firstfloor.org>
 MIME-Version: 1.0
-In-Reply-To: <081DDE43F61F3D43929A181B477DCA95639B534E@MSXAOA6.twosigma.com>
-References: <081DDE43F61F3D43929A181B477DCA95639B52FD@MSXAOA6.twosigma.com>
-	<081DDE43F61F3D43929A181B477DCA95639B5327@MSXAOA6.twosigma.com>
-	<20110324174311.GA31576@infradead.org>
-	<AANLkTikwwRm6FHFtEdUg54NvmKdswQw-NPH5dtq1mXBK@mail.gmail.com>
-	<081DDE43F61F3D43929A181B477DCA95639B5349@MSXAOA6.twosigma.com>
-	<BANLkTin0jJevStg5P2hqsLbqMzo3o30sYg@mail.gmail.com>
-	<081DDE43F61F3D43929A181B477DCA95639B534E@MSXAOA6.twosigma.com>
-Date: Mon, 28 Mar 2011 17:25:24 -0700
-Message-ID: <BANLkTikzpC9DdaoWaUTvO98jnjFdJOomwQ@mail.gmail.com>
-Subject: Re: XFS memory allocation deadlock in 2.6.38
-From: Michel Lespinasse <walken@google.com>
+Content-Disposition: inline
+In-Reply-To: <m2bp0u23wl.fsf@firstfloor.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -43,27 +30,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Sean Noonan <Sean.Noonan@twosigma.com>
-Cc: "linux-xfs@oss.sgi.com" <linux-xfs@oss.sgi.com>, Christos Zoulas <Christos.Zoulas@twosigma.com>, Trammell Hudson <Trammell.Hudson@twosigma.com>, Martin Bligh <Martin.Bligh@twosigma.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Stephen Degler <Stephen.Degler@twosigma.com>, Christoph Hellwig <hch@infradead.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>
+To: Andi Kleen <andi@firstfloor.org>
+Cc: linux-mm@kvack.org, John Lepikhin <johnlepikhin@gmail.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Mon, Mar 28, 2011 at 2:34 PM, Sean Noonan <Sean.Noonan@twosigma.com> wrote:
->> Could you test if you see the deadlock before
->> 5ecfda041e4b4bd858d25bbf5a16c2a6c06d7272 without MAP_POPULATE ?
->
-> Built and tested 72ddc8f72270758951ccefb7d190f364d20215ab.
-> Confirmed that the original bug does not present in this version.
-> Confirmed that removing MAP_POPULATE does cause the deadlock to occur.
+On Mon, Mar 28, 2011 at 04:58:50PM -0700, Andi Kleen wrote:
+> Dave Chinner <david@fromorbit.com> writes:
+> >
+> > First it would be useful to determine why the VM is reclaiming so
+> > much memory. If it is somewhat predictable when the excessive
+> > reclaim is going to happen, it might be worth capturing an event
+> 
+> Often it's to get pages of a higher order. Just tracing alloc_pages
+> should tell you that.
 
-It seems that the test (without MAP_POPULATE) reveals that the root
-cause is an xfs bug, which had been hidden up to now by MAP_POPULATE
-preallocating disk blocks (but could always be triggered by the same
-test without the MAP_POPULATE flag). I'm not sure how to go about
-debugging the xfs deadlock; it would probably be best if an xfs person
-could have a look ?
+Yes, the kmem/mm_page_alloc tracepoint gives us that. But in case
+that is not the cause, grabbing all the trace points I suggested is
+more likely to indicate where the problem is. I'd prefer to get more
+data than needed the first time around than have to do multiple
+round trips because a single trace point doesn't tell us the cause...
 
+Cheers,
+
+Dave.
 -- 
-Michel "Walken" Lespinasse
-A program is never fully debugged until the last user dies.
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
