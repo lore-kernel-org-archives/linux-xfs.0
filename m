@@ -1,20 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p2TKJtqS248100
-	for <linux-xfs@oss.sgi.com>; Tue, 29 Mar 2011 15:19:55 -0500
-Received: from mx3.twosigma.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with SMTP id BE0EB38A779
-	for <linux-xfs@oss.sgi.com>; Tue, 29 Mar 2011 13:23:05 -0700 (PDT)
-Received: from mx3.twosigma.com (mx3.twosigma.com [208.77.213.34]) by
-	cuda.sgi.com with SMTP id LT3jOIPsoURDAJrD for
-	<linux-xfs@oss.sgi.com>; Tue, 29 Mar 2011 13:23:05 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
+	p2TMg7gP254326
+	for <linux-xfs@oss.sgi.com>; Tue, 29 Mar 2011 17:42:07 -0500
+Received: from mx5.twosigma.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E741B1141C28
+	for <linux-xfs@oss.sgi.com>; Tue, 29 Mar 2011 15:45:17 -0700 (PDT)
+Received: from mx5.twosigma.com (mx5.twosigma.com [208.77.212.35]) by
+	cuda.sgi.com with ESMTP id Y9GUIeotBxPyGrBq for
+	<linux-xfs@oss.sgi.com>; Tue, 29 Mar 2011 15:45:17 -0700 (PDT)
 From: Sean Noonan <Sean.Noonan@twosigma.com>
-Date: Tue, 29 Mar 2011 16:23:03 -0400
+Date: Tue, 29 Mar 2011 18:45:15 -0400
 Subject: RE: XFS memory allocation deadlock in 2.6.38
-Message-ID: <081DDE43F61F3D43929A181B477DCA95639B535E@MSXAOA6.twosigma.com>
-References: <081DDE43F61F3D43929A181B477DCA95639B52FD@MSXAOA6.twosigma.com>
-	<081DDE43F61F3D43929A181B477DCA95639B5327@MSXAOA6.twosigma.com>
+Message-ID: <081DDE43F61F3D43929A181B477DCA95639B5361@MSXAOA6.twosigma.com>
+References: <081DDE43F61F3D43929A181B477DCA95639B5327@MSXAOA6.twosigma.com>
 	<20110324174311.GA31576@infradead.org>
 	<AANLkTikwwRm6FHFtEdUg54NvmKdswQw-NPH5dtq1mXBK@mail.gmail.com>
 	<081DDE43F61F3D43929A181B477DCA95639B5349@MSXAOA6.twosigma.com>
@@ -23,8 +22,8 @@ References: <081DDE43F61F3D43929A181B477DCA95639B52FD@MSXAOA6.twosigma.com>
 	<081DDE43F61F3D43929A181B477DCA95639B5359@MSXAOA6.twosigma.com>
 	<20110329192434.GA10536@infradead.org>
 	<081DDE43F61F3D43929A181B477DCA95639B535C@MSXAOA6.twosigma.com>
-	<20110329200256.GA6019@infradead.org>
-In-Reply-To: <20110329200256.GA6019@infradead.org>
+	<20110329200256.GA6019@infradead.org> <20110329224230.GH3008@dastard>
+In-Reply-To: <20110329224230.GH3008@dastard>
 Content-Language: en-US
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,14 +38,14 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: 'Christoph Hellwig' <hch@infradead.org>
-Cc: Trammell Hudson <Trammell.Hudson@twosigma.com>, Christos Zoulas <Christos.Zoulas@twosigma.com>, Martin Bligh <Martin.Bligh@twosigma.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, Stephen Degler <Stephen.Degler@twosigma.com>, "'linux-xfs@oss.sgi.com'" <linux-xfs@oss.sgi.com>, "'linux-mm@kvack.org'" <linux-mm@kvack.org>, 'Michel Lespinasse' <walken@google.com>
+To: 'Dave Chinner' <david@fromorbit.com>, 'Christoph Hellwig' <hch@infradead.org>
+Cc: Trammell Hudson <Trammell.Hudson@twosigma.com>, Christos Zoulas <Christos.Zoulas@twosigma.com>, Martin Bligh <Martin.Bligh@twosigma.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, Degler <Stephen.Degler@twosigma.com>, "'linux-xfs@oss.sgi.com'" <linux-xfs@oss.sgi.com>, "'linux-mm@kvack.org'" <linux-mm@kvack.org>, Stephen@oss.sgi.com, 'Michel Lespinasse' <walken@google.com>
 
-> mind either, so to narrow this down does reverting the patch on
-> 2.6.38 also fix it?  The revert isn't quite trivial due to changes
-> since then, so here's the patch I came up with:
+> Need to keep the if (!irbuf) check as KM_MAYFAIL is passed.
 
-This patch does fix the problem.
+It wasn't in before the bug presented, so leaving it in wouldn't be a true test as to whether the bug has been tracked to the correct place.  I'll test again with the if (!irbuf).
+
+Sean
 
 _______________________________________________
 xfs mailing list
