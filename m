@@ -1,29 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p2TJLRtl244742
-	for <linux-xfs@oss.sgi.com>; Tue, 29 Mar 2011 14:21:27 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 20C7338A4C8
-	for <linux-xfs@oss.sgi.com>; Tue, 29 Mar 2011 12:24:37 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id h3gXWUWikVgpRyxV for
-	<linux-xfs@oss.sgi.com>; Tue, 29 Mar 2011 12:24:37 -0700 (PDT)
-Date: Tue, 29 Mar 2011 15:24:34 -0400
-From: "'Christoph Hellwig'" <hch@infradead.org>
-Subject: Re: XFS memory allocation deadlock in 2.6.38
-Message-ID: <20110329192434.GA10536@infradead.org>
-References: <081DDE43F61F3D43929A181B477DCA95639B52FD@MSXAOA6.twosigma.com>
-	<081DDE43F61F3D43929A181B477DCA95639B5327@MSXAOA6.twosigma.com>
-	<20110324174311.GA31576@infradead.org>
-	<AANLkTikwwRm6FHFtEdUg54NvmKdswQw-NPH5dtq1mXBK@mail.gmail.com>
-	<081DDE43F61F3D43929A181B477DCA95639B5349@MSXAOA6.twosigma.com>
-	<BANLkTin0jJevStg5P2hqsLbqMzo3o30sYg@mail.gmail.com>
-	<081DDE43F61F3D43929A181B477DCA95639B534E@MSXAOA6.twosigma.com>
-	<081DDE43F61F3D43929A181B477DCA95639B5359@MSXAOA6.twosigma.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <081DDE43F61F3D43929A181B477DCA95639B5359@MSXAOA6.twosigma.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
+	p2TJ1Onv243773 for <xfs@oss.sgi.com>; Tue, 29 Mar 2011 14:01:24 -0500
+Subject: Re: [PATCH 2/5] xfs: do not immediately reuse busy extent ranges
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <20110328210914.791205854@bombadil.infradead.org>
+References: <20110328210614.832613417@bombadil.infradead.org>
+	<20110328210914.791205854@bombadil.infradead.org>
+Date: Tue, 29 Mar 2011 14:04:16 -0500
+Message-ID: <1301425456.3026.244.camel@doink>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,30 +23,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Sean Noonan <Sean.Noonan@twosigma.com>
-Cc: Trammell Hudson <Trammell.Hudson@twosigma.com>, Christos Zoulas <Christos.Zoulas@twosigma.com>, Martin Bligh <Martin.Bligh@twosigma.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, Stephen Degler <Stephen.Degler@twosigma.com>, 'Christoph Hellwig' <hch@infradead.org>, "'linux-mm@kvack.org'" <linux-mm@kvack.org>, "'linux-xfs@oss.sgi.com'" <linux-xfs@oss.sgi.com>, 'Michel Lespinasse' <walken@google.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-Can you check if the brute force patch below helps?  If it does I
-still need to refine it a bit, but it could be that we are doing
-an allocation under an xfs lock that could recurse back into the
-filesystem.  We have a per-process flag to disable that for normal
-kmalloc allocation, but we lost it for vmalloc in the commit you
-bisected the regression to.
+On Mon, 2011-03-28 at 17:06 -0400, Christoph Hellwig wrote:
+> Every time we reallocate a busy extent, we cause a synchronous log force
+> to occur to ensure the freeing transaction is on disk before we continue
+> and use the newly allocated extent.  This is extremely sub-optimal as we
+> have to mark every transaction with blocks that get reused as synchronous.
+> 
+> Instead of searching the busy extent list after deciding on the extent to
+> allocate, check each candidate extent during the allocation decisions as
+> to whether they are in the busy list.  If they are in the busy list, we
+> trim the busy range out of the extent we have found and determine if that
+> trimmed range is still OK for allocation. In many cases, this check can
+> be incorporated into the allocation extent alignment code which already
+> does trimming of the found extent before determining if it is a valid
+> candidate for allocation.
+> 
+> Based on two earlier patches from Dave Chinner.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
+Looks good.
 
-Index: xfs/fs/xfs/linux-2.6/kmem.h
-===================================================================
---- xfs.orig/fs/xfs/linux-2.6/kmem.h	2011-03-29 21:16:58.039224236 +0200
-+++ xfs/fs/xfs/linux-2.6/kmem.h	2011-03-29 21:17:08.368223598 +0200
-@@ -63,7 +63,7 @@ static inline void *kmem_zalloc_large(si
- {
- 	void *ptr;
- 
--	ptr = vmalloc(size);
-+	ptr = __vmalloc(size, GFP_NOFS | __GFP_HIGHMEM, PAGE_KERNEL);
- 	if (ptr)
- 		memset(ptr, 0, size);
- 	return ptr;
+Reviewed-by: Alex Elder <aelder@sgi.com>
+
 
 _______________________________________________
 xfs mailing list
