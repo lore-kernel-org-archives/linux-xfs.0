@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p2TJ1SJa243815 for <xfs@oss.sgi.com>; Tue, 29 Mar 2011 14:01:28 -0500
-Subject: Re: [PATCH 5/5] xfs: update busy extent tracing
+	p2TJ1Oln243776 for <xfs@oss.sgi.com>; Tue, 29 Mar 2011 14:01:25 -0500
+Subject: Re: [PATCH 4/5] xfs: allow reusing busy extents where safe
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110328210915.396135841@bombadil.infradead.org>
+In-Reply-To: <20110328210915.214513168@bombadil.infradead.org>
 References: <20110328210614.832613417@bombadil.infradead.org>
-	<20110328210915.396135841@bombadil.infradead.org>
-Date: Tue, 29 Mar 2011 14:04:31 -0500
-Message-ID: <1301425471.3026.250.camel@doink>
+	<20110328210915.214513168@bombadil.infradead.org>
+Date: Tue, 29 Mar 2011 14:04:28 -0500
+Message-ID: <1301425468.3026.249.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -27,14 +27,26 @@ To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
 On Mon, 2011-03-28 at 17:06 -0400, Christoph Hellwig wrote:
-> Add new tracepoint for the new busy extent handling helpers, and update the
-> existing ones to use a common class.  Also drop the busysearch tracepoint
-> now that a plain busylist search only happens in a debug assert and the
-> FITRIM handler.
+> Allow reusing any busy extent for metadata allocations, and reusing busy
+> userdata extents for userdata allocations.  Most of the complexity is
+> propagating the userdata information from the XFS_BMAPI_METADATA flag
+> to xfs_bunmapi into the low-level extent freeing routines.  After that
+> we can just track what type of busy extent we have and treat it accordingly.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Looks good.
+The use of an enum value returned from
+xfs_alloc_busy_update_extent() is a good improvement.
+
+I'll issue the caveat here that I did not look through
+it this time as carefully as the first time.  My main
+concern was about the validity of reusing busy user data
+extents for user data, and as before I'll say I accept
+that it's OK, but I haven't worked through in my own
+mind that it is indeed safe.  If I find the time to do
+it I'll look this one over again to for reassurance...
+
+But aside from that, it looks good to me.
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
 
