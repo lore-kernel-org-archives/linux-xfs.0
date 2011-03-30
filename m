@@ -1,17 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p2UJXrHH073711 for <xfs@oss.sgi.com>; Wed, 30 Mar 2011 14:33:53 -0500
-Received: from cf--amer001e--3.americas.sgi.com
-	(cf--amer001e--3.americas.sgi.com [137.38.100.5])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 9B10CAC006
-	for <xfs@oss.sgi.com>; Wed, 30 Mar 2011 12:37:01 -0700 (PDT)
-Subject: [PATCH v2] xfsprogs: update CHANGES file for release
+	p2UKJlnf077419 for <xfs@oss.sgi.com>; Wed, 30 Mar 2011 15:19:47 -0500
+Subject: [PATCH] xfsdump: update CHANGES file for release
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1301507600.2953.13.camel@doink>
-References: <1301507600.2953.13.camel@doink>
-Date: Wed, 30 Mar 2011 14:37:00 -0500
-Message-ID: <1301513820.2953.23.camel@doink>
+Date: Wed, 30 Mar 2011 15:22:55 -0500
+Message-ID: <1301516575.2953.29.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -22,61 +16,52 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: nathans <nathans@debian.org>
 
-Update the CHANGES file, in preparation for releasing xfsprogs
-3.1.5.  Updated to modify debian/changelog, and to give appropriate
-credit to contributors.
-
-Signed-off-by: Alex Elder <aelder@sgi.com>
-
----
- debian/changelog |    4 ++++
- doc/CHANGES      |   15 +++++++++++++++
- 2 files changed, 19 insertions(+)
-
-Index: b/debian/changelog
-===================================================================
---- a/debian/changelog
-+++ b/debian/changelog
-@@ -1,3 +1,7 @@
-+xfsprogs (3.1.5) unstable; urgency=low
-+  * New upstream release
-+  * No more xfsquota error message for non-quota mounts (closes:
-#618730)
-+
- xfsprogs (3.1.4) unstable; urgency=low
- 
-   * New upstream release (32 projid resolution, fsr uses /proc/mounts)
-Index: b/doc/CHANGES
-===================================================================
---- a/doc/CHANGES
-+++ b/doc/CHANGES
-@@ -1,3 +1,18 @@
-+xfsprogs-3.1.5 (11 March 2011)
-+       - Polish translation update, provided by Jakub Bogusz
-+       - xfs_repair now warns if running in low memory mode
-+       - Phase 2 of xfs_repair is now multithreaded
-+       - xfs_quota no longer attempts to get quota information if
-+         not enabled
-+       - Inode flags are now properly validated by xfs_repair
-+       - Metadump now obfuscates all file names reliably
-+       - xfs_io now supports the "fiemap" command, a more generic
-+         form of the "bmap" command
-+       - xfs_io now supports the "fpunch" command, as well as a
-+         "-p" flag to the "fallocate command.  Both implement hole
-+         punching.  Provided by Josef Bacik
-+       - A number of other bug fixes provided by Ajeet Yadav
-+
- xfsprogs-3.1.4 (9 November 2010)
-        - Add projid32bit handling to userspace, resolving type
-          sizing issues when dealing with 32 bit project ids.
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+VXBkYXRlIHRoZSBDSEFOR0VTIGZpbGUgaW4gcHJlcGFyYXRpb24gZm9yIHJlbGVhc2luZyB4ZnNk
+dW1wIDMuMC41LgoKU2lnbmVkLW9mZi1ieTogQWxleCBFbGRlciA8YWVsZGVyQHNnaS5jb20+Cgot
+LS0KIGRlYmlhbi9jaGFuZ2Vsb2cgfCAgICA2ICsrKysrKwogZG9jL0NIQU5HRVMgICAgICB8ICAg
+MjcgKysrKysrKysrKysrKysrKysrKysrKysrKysrCiAyIGZpbGVzIGNoYW5nZWQsIDMzIGluc2Vy
+dGlvbnMoKykKCkluZGV4OiBiL2RlYmlhbi9jaGFuZ2Vsb2cKPT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gYS9kZWJp
+YW4vY2hhbmdlbG9nCisrKyBiL2RlYmlhbi9jaGFuZ2Vsb2cKQEAgLTEsMyArMSw5IEBACit4ZnNk
+dW1wICgzLjAuNSkgdW5zdGFibGU7IHVyZ2VuY3k9bG93CisKKyAgKiBOZXcgdXBzdHJlYW0gcmVs
+ZWFzZQorCisgLS0gTmF0aGFuIFNjb3R0IDxuYXRoYW5zQGRlYmlhbi5vcmc+ICBXZWQsIDMxIE1h
+ciAyMDExIDA3OjMwOjAwICsxMTAwCisKIHhmc2R1bXAgKDMuMC40KSB1bnN0YWJsZTsgdXJnZW5j
+eT1sb3cKIAogICAqIE5ldyBidWdmaXggcmVsZWFzZQpJbmRleDogYi9kb2MvQ0hBTkdFUwo9PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09Ci0tLSBhL2RvYy9DSEFOR0VTCisrKyBiL2RvYy9DSEFOR0VTCkBAIC0xLDMgKzEsMzAg
+QEAKK3hmc2R1bXAtMy4wLjUgKDMwIE1hcmNoIDIwMTEpCisJLSBSZWxlYXNlIHRhZ3Mgd2lsbCBu
+b3cgYmUgZGlnaXRhbGx5IHNpZ25lZAorCS0gUXVvdGEgZmlsZXMgd2lsbCBub3cgYmUgZHVtcGVk
+LCByZWdhcmRsZXNzIG9mIHRoZSBtYXhzaXplCisJICBzZXR0aW5nCisJLSBUaGUgbmV3ICItcyBz
+ZXNzaWQiIGZsYWcgYWxsb3dzIGludmVudG9yeSBzZXNzaW9ucyB0byBiZQorCSAgcHJ1bmVkIGJ5
+IHRoZWlyIHNlc3Npb24gSUQuCisJLSBGaXhlZCBhIGJ1ZyBpbiBoYW5kbGluZyBsb25nIGR1bXAg
+ZmlsZW5hbWVzLCBhbmQgZHJvcHBlZAorCSAgKHVuZG9jdW1lbnRlZCkgc3VwcG9ydCBmb3IgZW5j
+b2RpbmcgY2VydGFpbiBwYXJhbWV0ZXJzCisJICB3aXRoaW4gdGhlIGR1bXAgZmlsZW5hbWUKKwkt
+IE5PREVDSEsgaXMgbm93IG9mZiBieSBkZWZhdWx0LCBtZWFuaW5nIHhmc3Jlc3RvcmUgd2lsbCBu
+b3cKKwkgIHN1cHBvcnQgMTYgdGltZXMgbW9yZSBkaXJlY3RvcnkgZW50cmllcyAoNCBiaWxsaW9u
+KQorCS0gbnJoX3QgaXMgbm93IDY0IGJpdHMgd2lkZSwgYWxsb3dpbmcgeGZzcmVzdG9yZSB0byBz
+dXBwb3J0CisJICBkdW1wcyB3aXRoIHVwIHRvIDQgYmlsbGlvbiBkaXJlY3RvcnkgZW50cmllcwor
+CS0gbml4X3QgaXMgbm8gbG9uZ2VyIHVzZWZ1bCwgYW5kIGhhcyBiZWVuIGVsaW1pbmF0ZWQKKwkt
+IE1lbW9yeSB1c2UgaW4geGZzcmVzdG9yZSBpcyBiZXR0ZXIgbWFuYWdlZCBub3cuICBTZWdtZW50
+cworCSAgb2Ygbm9kZXMgYXJlIG5vdyBwb3dlci1vZi0yIHNpemVkLCBhbmQgYWxsb2NhdGVkIG5v
+ZGVzIGFyZQorCSAgbm8gbG9uZ2VyIG5lZWRsZXNzbHkgemVyb2VkIGFuZCBsaW5rZWQgaW50byB0
+aGUgZnJlZSBsaXN0LgorCS0gUGF0aG5hbWUgcmVzb2x1dGlvbiBpbiB4ZnNyZXN0b3JlIGhhcyBh
+IG51bWJlciBvZgorCSAgcGVyZm9ybWFuY2UgaW1wcm92ZW1lbnRzCisJLSBCZXR0ZXIgY2hlY2tp
+bmcgaGFzIGJlZW4gaW1wbGVtZW50ZWQgZm9yIGNvbXBhdGliaWxpdHkKKwkgIHdoZW4gcmVzdW1p
+bmcgYSBjdW11bGF0aXZlIHJlc3RvcmUKKwktIEJ1aWxkIHN5c3RlbSBvdXRwdXQgaGFzIGJlZW4g
+Y2xlYW5lZCB1cCBjb25zaWRlcmFibHkKKwktIERlYWQgIm5hbXJlZyIgY29kZSBoYXMgYmVlbiBy
+ZW1vdmVkCisJLSBCdWlsZCBkZXBlbmRlbmNpZXMgYXJlIG5vdyBkZXRlcm1pbmVkIGF1dG9tYXRp
+Y2FsbHkKKwktIE90aGVyIG1pc2NlbGxhbmVvdXMgYnVpbGQgc3lzdGVtIGltcHJvdmVtZW50cywg
+YXMgd2VsbCBidWcKKwkgIGZpeGVzIHRoYW5rcyB0byBNaWtlIEZyeXNpbmdlciBhbmQgQXJrYWRp
+dXN6IE1pxZtraWV3aWN6LgorCiB4ZnNkdW1wLTMuMC40ICgxMyBKYW51YXJ5IDIwMTApCiAJLSBJ
+bXByb3ZlIHhmc2ludnV0aWwgbWFuIHBhZ2UgYW5kIGFyZ3VtZW50IHByb2Nlc3NpbmcuCiAJLSBG
+aXggdGltZXN0YW1wIGhhbmRsaW5nIG9uIDY0LWJpdCBhcmNoaXRlY3R1cmVzIGluIHhmc2ludnV0
+aWwuCgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZz
+IG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4v
+bGlzdGluZm8veGZzCg==
