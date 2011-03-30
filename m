@@ -1,12 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p2U3Nxvo005812 for <xfs@oss.sgi.com>; Tue, 29 Mar 2011 22:23:59 -0500
-From: Pan Weiping <panweiping3@gmail.com>
-Subject: [PATCH] delete a warning in function xfs_buf_readahead
-Date: Wed, 30 Mar 2011 11:28:06 +0800
-Message-Id: <1301455686-21517-1-git-send-email-panweiping3@gmail.com>
-MIME-Version: 1.0
+Subject: Re: [PATCH] delete a warning in function xfs_buf_readahead
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <1301455686-21517-1-git-send-email-panweiping3@gmail.com>
+References: <1301455686-21517-1-git-send-email-panweiping3@gmail.com>
+Date: Tue, 29 Mar 2011 22:44:54 -0500
+Message-ID: <1301456694.3026.274.camel@doink>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,21 +19,18 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: aelder@sgi.com, xfs-masters@oss.sgi.com, dchinner@redhat.com, hch@lst.de, tj@kernel.org, jaxboe@fusionio.com
-Cc: Pan Weiping <panweiping3@gmail.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Pan Weiping <panweiping3@gmail.com>
+Cc: jaxboe@fusionio.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, xfs-masters@oss.sgi.com, dchinner@redhat.com, tj@kernel.org, hch@lst.de
 
-L2hvbWUvcHdwL215c3ZuL2xpbnV4L2xpbnV4LTIuNi9mcy94ZnMvbGludXgtMi42L3hmc19idWYu
-YzogSW4gZnVuY3Rpb24K4oCYeGZzX2J1Zl9yZWFkYWhlYWTigJk6Ci9ob21lL3B3cC9teXN2bi9s
-aW51eC9saW51eC0yLjYvZnMveGZzL2xpbnV4LTIuNi94ZnNfYnVmLmM6NjYwOjI3OiB3YXJuaW5n
-Ogp1bnVzZWQgdmFyaWFibGUg4oCYYmRp4oCZClNpZ25lZC1vZmYtYnk6IFBhbiBXZWlwaW5nIDxw
-YW53ZWlwaW5nM0BnbWFpbC5jb20+Ci0tLQogZnMveGZzL2xpbnV4LTIuNi94ZnNfYnVmLmMgfCAg
-ICAyIC0tCiAxIGZpbGVzIGNoYW5nZWQsIDAgaW5zZXJ0aW9ucygrKSwgMiBkZWxldGlvbnMoLSkK
-CmRpZmYgLS1naXQgYS9mcy94ZnMvbGludXgtMi42L3hmc19idWYuYyBiL2ZzL3hmcy9saW51eC0y
-LjYveGZzX2J1Zi5jCmluZGV4IDU5NmJiMmMuLmQ5MTcxNDYgMTAwNjQ0Ci0tLSBhL2ZzL3hmcy9s
-aW51eC0yLjYveGZzX2J1Zi5jCisrKyBiL2ZzL3hmcy9saW51eC0yLjYveGZzX2J1Zi5jCkBAIC02
-NTcsOCArNjU3LDYgQEAgeGZzX2J1Zl9yZWFkYWhlYWQoCiAJeGZzX29mZl90CQlpb2ZmLAogCXNp
-emVfdAkJCWlzaXplKQogewotCXN0cnVjdCBiYWNraW5nX2Rldl9pbmZvICpiZGk7Ci0KIAlpZiAo
-YmRpX3JlYWRfY29uZ2VzdGVkKHRhcmdldC0+YnRfYmRpKSkKIAkJcmV0dXJuOwogCi0tIAoxLjcu
-NAoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1h
-aWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlz
-dGluZm8veGZzCg==
+T24gV2VkLCAyMDExLTAzLTMwIGF0IDExOjI4ICswODAwLCBQYW4gV2VpcGluZyB3cm90ZToKPiAv
+aG9tZS9wd3AvbXlzdm4vbGludXgvbGludXgtMi42L2ZzL3hmcy9saW51eC0yLjYveGZzX2J1Zi5j
+OiBJbiBmdW5jdGlvbgo+IOKAmHhmc19idWZfcmVhZGFoZWFk4oCZOgo+IC9ob21lL3B3cC9teXN2
+bi9saW51eC9saW51eC0yLjYvZnMveGZzL2xpbnV4LTIuNi94ZnNfYnVmLmM6NjYwOjI3OiB3YXJu
+aW5nOgo+IHVudXNlZCB2YXJpYWJsZSDigJhiZGnigJkKPiBTaWduZWQtb2ZmLWJ5OiBQYW4gV2Vp
+cGluZyA8cGFud2VpcGluZzNAZ21haWwuY29tPgo+IC0tLQo+ICBmcy94ZnMvbGludXgtMi42L3hm
+c19idWYuYyB8ICAgIDIgLS0KPiAgMSBmaWxlcyBjaGFuZ2VkLCAwIGluc2VydGlvbnMoKyksIDIg
+ZGVsZXRpb25zKC0pCgpUaGFua3MgZm9yIHNlbmRpbmcgdGhpcy4gIEkgYWxyZWFkeSBoYXZlIGEg
+Zml4CmluIHBsYWNlLiAgSSBoYXZlIG5vdCB5ZXQgc2VudCBpdCB0byBMaW51cyB5ZXQKYnV0IHdp
+bGwgc29vbi4KCgkJCQkJLUFsZXgKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Mu
+c2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
