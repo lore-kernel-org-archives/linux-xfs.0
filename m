@@ -1,19 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p2ULbJwV083708 for <xfs@oss.sgi.com>; Wed, 30 Mar 2011 16:37:20 -0500
-Received: from postoffice2.aconex.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with SMTP id E02BB1DFCEE1
-	for <xfs@oss.sgi.com>; Wed, 30 Mar 2011 14:40:29 -0700 (PDT)
-Received: from postoffice2.aconex.com (mail.aconex.com [203.166.49.3]) by
-	cuda.sgi.com with SMTP id Y1tki8lmUo6GuWZh for
-	<xfs@oss.sgi.com>; Wed, 30 Mar 2011 14:40:29 -0700 (PDT)
-Date: Thu, 31 Mar 2011 08:40:26 +1100 (EST)
-From: Nathan Scott <nathans@aconex.com>
-Message-ID: <962663761.15158.1301521226508.JavaMail.root@acxmail-au2.aconex.com>
-In-Reply-To: <1301513820.2953.23.camel@doink>
-Subject: Re: [PATCH v2] xfsprogs: update CHANGES file for release
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
+	p2ULgX53084085 for <xfs@oss.sgi.com>; Wed, 30 Mar 2011 16:42:33 -0500
+Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id EFCCC30408D
+	for <xfs@oss.sgi.com>; Wed, 30 Mar 2011 14:45:41 -0700 (PDT)
+Message-ID: <4D93A485.7030509@sgi.com>
+Date: Wed, 30 Mar 2011 16:45:41 -0500
+From: Bill Kendall <wkendall@sgi.com>
 MIME-Version: 1.0
+Subject: Re: [PATCH] xfsdump: update CHANGES file for release
+References: <1301516575.2953.29.camel@doink>
+In-Reply-To: <1301516575.2953.29.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,47 +20,56 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: aelder@sgi.com
 Cc: xfs@oss.sgi.com
 
-
------ Original Message -----
-> Update the CHANGES file, in preparation for releasing xfsprogs
-> 3.1.5. Updated to modify debian/changelog, and to give appropriate
-> credit to contributors.
-> 
-> Signed-off-by: Alex Elder <aelder@sgi.com>
-> 
-> ---
-> debian/changelog | 4 ++++
-> doc/CHANGES | 15 +++++++++++++++
-> 2 files changed, 19 insertions(+)
-> 
-> Index: b/debian/changelog
-> ===================================================================
-> --- a/debian/changelog
-> +++ b/debian/changelog
-> @@ -1,3 +1,7 @@
-> +xfsprogs (3.1.5) unstable; urgency=low
-> + * New upstream release
-> + * No more xfsquota error message for non-quota mounts (closes:
-> #618730)
-> +
-> xfsprogs (3.1.4) unstable; urgency=low
-
-Are we missing the timestamp line there?  (previous version had it, I think)
-Otherwise looks good, thanks!
-
-cheers.
-
--- 
-Nathan
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gMDMvMzAvMjAxMSAwMzoyMiBQTSwgQWxleCBFbGRlciB3cm90ZToKPiBVcGRhdGUgdGhlIENI
+QU5HRVMgZmlsZSBpbiBwcmVwYXJhdGlvbiBmb3IgcmVsZWFzaW5nIHhmc2R1bXAgMy4wLjUuCj4K
+PiBTaWduZWQtb2ZmLWJ5OiBBbGV4IEVsZGVyPGFlbGRlckBzZ2kuY29tPgoKTG9va3MgZ29vZC4K
+ClJldmlld2VkLWJ5OiBCaWxsIEtlbmRhbGwgPHdrZW5kYWxsQHNnaS5jb20+Cgo+Cj4gLS0tCj4g
+ICBkZWJpYW4vY2hhbmdlbG9nIHwgICAgNiArKysrKysKPiAgIGRvYy9DSEFOR0VTICAgICAgfCAg
+IDI3ICsrKysrKysrKysrKysrKysrKysrKysrKysrKwo+ICAgMiBmaWxlcyBjaGFuZ2VkLCAzMyBp
+bnNlcnRpb25zKCspCj4KPiBJbmRleDogYi9kZWJpYW4vY2hhbmdlbG9nCj4gPT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQo+
+IC0tLSBhL2RlYmlhbi9jaGFuZ2Vsb2cKPiArKysgYi9kZWJpYW4vY2hhbmdlbG9nCj4gQEAgLTEs
+MyArMSw5IEBACj4gK3hmc2R1bXAgKDMuMC41KSB1bnN0YWJsZTsgdXJnZW5jeT1sb3cKPiArCj4g
+KyAgKiBOZXcgdXBzdHJlYW0gcmVsZWFzZQo+ICsKPiArIC0tIE5hdGhhbiBTY290dDxuYXRoYW5z
+QGRlYmlhbi5vcmc+ICAgV2VkLCAzMSBNYXIgMjAxMSAwNzozMDowMCArMTEwMAo+ICsKPiAgIHhm
+c2R1bXAgKDMuMC40KSB1bnN0YWJsZTsgdXJnZW5jeT1sb3cKPgo+ICAgICAqIE5ldyBidWdmaXgg
+cmVsZWFzZQo+IEluZGV4OiBiL2RvYy9DSEFOR0VTCj4gPT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQo+IC0tLSBhL2RvYy9D
+SEFOR0VTCj4gKysrIGIvZG9jL0NIQU5HRVMKPiBAQCAtMSwzICsxLDMwIEBACj4gK3hmc2R1bXAt
+My4wLjUgKDMwIE1hcmNoIDIwMTEpCj4gKwktIFJlbGVhc2UgdGFncyB3aWxsIG5vdyBiZSBkaWdp
+dGFsbHkgc2lnbmVkCj4gKwktIFF1b3RhIGZpbGVzIHdpbGwgbm93IGJlIGR1bXBlZCwgcmVnYXJk
+bGVzcyBvZiB0aGUgbWF4c2l6ZQo+ICsJICBzZXR0aW5nCj4gKwktIFRoZSBuZXcgIi1zIHNlc3Np
+ZCIgZmxhZyBhbGxvd3MgaW52ZW50b3J5IHNlc3Npb25zIHRvIGJlCj4gKwkgIHBydW5lZCBieSB0
+aGVpciBzZXNzaW9uIElELgo+ICsJLSBGaXhlZCBhIGJ1ZyBpbiBoYW5kbGluZyBsb25nIGR1bXAg
+ZmlsZW5hbWVzLCBhbmQgZHJvcHBlZAo+ICsJICAodW5kb2N1bWVudGVkKSBzdXBwb3J0IGZvciBl
+bmNvZGluZyBjZXJ0YWluIHBhcmFtZXRlcnMKPiArCSAgd2l0aGluIHRoZSBkdW1wIGZpbGVuYW1l
+Cj4gKwktIE5PREVDSEsgaXMgbm93IG9mZiBieSBkZWZhdWx0LCBtZWFuaW5nIHhmc3Jlc3RvcmUg
+d2lsbCBub3cKPiArCSAgc3VwcG9ydCAxNiB0aW1lcyBtb3JlIGRpcmVjdG9yeSBlbnRyaWVzICg0
+IGJpbGxpb24pCj4gKwktIG5yaF90IGlzIG5vdyA2NCBiaXRzIHdpZGUsIGFsbG93aW5nIHhmc3Jl
+c3RvcmUgdG8gc3VwcG9ydAo+ICsJICBkdW1wcyB3aXRoIHVwIHRvIDQgYmlsbGlvbiBkaXJlY3Rv
+cnkgZW50cmllcwo+ICsJLSBuaXhfdCBpcyBubyBsb25nZXIgdXNlZnVsLCBhbmQgaGFzIGJlZW4g
+ZWxpbWluYXRlZAo+ICsJLSBNZW1vcnkgdXNlIGluIHhmc3Jlc3RvcmUgaXMgYmV0dGVyIG1hbmFn
+ZWQgbm93LiAgU2VnbWVudHMKPiArCSAgb2Ygbm9kZXMgYXJlIG5vdyBwb3dlci1vZi0yIHNpemVk
+LCBhbmQgYWxsb2NhdGVkIG5vZGVzIGFyZQo+ICsJICBubyBsb25nZXIgbmVlZGxlc3NseSB6ZXJv
+ZWQgYW5kIGxpbmtlZCBpbnRvIHRoZSBmcmVlIGxpc3QuCj4gKwktIFBhdGhuYW1lIHJlc29sdXRp
+b24gaW4geGZzcmVzdG9yZSBoYXMgYSBudW1iZXIgb2YKPiArCSAgcGVyZm9ybWFuY2UgaW1wcm92
+ZW1lbnRzCj4gKwktIEJldHRlciBjaGVja2luZyBoYXMgYmVlbiBpbXBsZW1lbnRlZCBmb3IgY29t
+cGF0aWJpbGl0eQo+ICsJICB3aGVuIHJlc3VtaW5nIGEgY3VtdWxhdGl2ZSByZXN0b3JlCj4gKwkt
+IEJ1aWxkIHN5c3RlbSBvdXRwdXQgaGFzIGJlZW4gY2xlYW5lZCB1cCBjb25zaWRlcmFibHkKPiAr
+CS0gRGVhZCAibmFtcmVnIiBjb2RlIGhhcyBiZWVuIHJlbW92ZWQKPiArCS0gQnVpbGQgZGVwZW5k
+ZW5jaWVzIGFyZSBub3cgZGV0ZXJtaW5lZCBhdXRvbWF0aWNhbGx5Cj4gKwktIE90aGVyIG1pc2Nl
+bGxhbmVvdXMgYnVpbGQgc3lzdGVtIGltcHJvdmVtZW50cywgYXMgd2VsbCBidWcKPiArCSAgZml4
+ZXMgdGhhbmtzIHRvIE1pa2UgRnJ5c2luZ2VyIGFuZCBBcmthZGl1c3ogTWnFm2tpZXdpY3ouCj4g
+Kwo+ICAgeGZzZHVtcC0zLjAuNCAoMTMgSmFudWFyeSAyMDEwKQo+ICAgCS0gSW1wcm92ZSB4ZnNp
+bnZ1dGlsIG1hbiBwYWdlIGFuZCBhcmd1bWVudCBwcm9jZXNzaW5nLgo+ICAgCS0gRml4IHRpbWVz
+dGFtcCBoYW5kbGluZyBvbiA2NC1iaXQgYXJjaGl0ZWN0dXJlcyBpbiB4ZnNpbnZ1dGlsLgo+Cgpf
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGlu
+ZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5m
+by94ZnMK
