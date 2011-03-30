@@ -1,20 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p2UBEb7J034381 for <xfs@oss.sgi.com>; Wed, 30 Mar 2011 06:14:37 -0500
-Received: from mx1.fusionio.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DF6D015A879A
-	for <xfs@oss.sgi.com>; Wed, 30 Mar 2011 04:17:48 -0700 (PDT)
-Received: from mx1.fusionio.com (mx1.fusionio.com [64.244.102.30]) by
-	cuda.sgi.com with ESMTP id SefZ1ogg7DHy3mZA for
-	<xfs@oss.sgi.com>; Wed, 30 Mar 2011 04:17:48 -0700 (PDT)
-Message-ID: <4D93115A.4040908@fusionio.com>
-Date: Wed, 30 Mar 2011 13:17:46 +0200
-From: Jens Axboe <jaxboe@fusionio.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: use proper interfaces for on-stack plugging
-References: <20110330110509.GA9507@infradead.org>
-In-Reply-To: <20110330110509.GA9507@infradead.org>
+	p2UHoCvr063944 for <xfs@oss.sgi.com>; Wed, 30 Mar 2011 12:50:12 -0500
+Received: from cf--amer001e--3.americas.sgi.com
+	(cf--amer001e--3.americas.sgi.com [137.38.100.5])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 620DD8F809B
+	for <xfs@oss.sgi.com>; Wed, 30 Mar 2011 10:53:21 -0700 (PDT)
+Subject: xfsprogs: update CHANGES file for release
+From: Alex Elder <aelder@sgi.com>
+Date: Wed, 30 Mar 2011 12:53:20 -0500
+Message-ID: <1301507600.2953.13.camel@doink>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,22 +24,40 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On 2011-03-30 13:05, Christoph Hellwig wrote:
-> Add proper blk_start_plug/blk_finish_plug pairs for the two places where
-> we issue buffer I/O, and remove the blk_flush_plug in xfs_buf_lock and
-> xfs_buf_iowait, given that context switches already flush the per-process
-> plugging lists.
+Update the CHANGES file, in preparation for releasing xfsprogs 3.1.5.
 
-Looks much better, thanks for doing that.
+Signed-off-by: Alex Elder <aelder@sgi.com>
 
-Acked-by: Jens Axboe <jaxboe@fusionio.com>
+---
+ doc/CHANGES |   15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
+Index: b/doc/CHANGES
+===================================================================
+--- a/doc/CHANGES
++++ b/doc/CHANGES
+@@ -1,3 +1,18 @@
++xfsprogs-3.1.5 (30 March 2011)
++	- Polish translation update
++	- xfs_repair now warns if running in low memory mode
++	- Phase 2 of xfs_repair is now multithreaded
++	- xfs_quota no longer attempts to get quota information if
++	  not enabled
++	- Inode flags are now properly validated by xfs_repair
++	- Metadump now obfuscates all file names reliably
++	- xfs_io now supports the "fiemap" command, a more generic
++	  form of the "bmap" command
++	- xfs_io now supports the "fpunch" command, as well as a
++	  "-p" flag to the "fallocate command.  Both implement hole
++	  punching.
++	- A number of other bug fixes
++
+ xfsprogs-3.1.4 (9 November 2010)
+ 	- Add projid32bit handling to userspace, resolving type
+ 	  sizing issues when dealing with 32 bit project ids.
 
--- 
-Jens Axboe
 
 _______________________________________________
 xfs mailing list
