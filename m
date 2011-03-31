@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p2V3wOt0108759 for <xfs@oss.sgi.com>; Wed, 30 Mar 2011 22:58:24 -0500
+	p2V4QA6P110603 for <xfs@oss.sgi.com>; Wed, 30 Mar 2011 23:26:10 -0500
 Received: from cf--amer001e--3.americas.sgi.com
 	(cf--amer001e--3.americas.sgi.com [137.38.100.5])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 5DEF28F809E
-	for <xfs@oss.sgi.com>; Wed, 30 Mar 2011 21:01:33 -0700 (PDT)
-Subject: [ANNOUNCE] xfsdump v3.0.5
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E2FC5AC005
+	for <xfs@oss.sgi.com>; Wed, 30 Mar 2011 21:29:18 -0700 (PDT)
+Subject: [ANNOUNCE] xfsprogs v3.1.5
 From: Alex Elder <aelder@sgi.com>
-Date: Wed, 30 Mar 2011 23:01:32 -0500
-Message-ID: <1301544092.2824.10.camel@doink>
+Date: Wed, 30 Mar 2011 23:29:17 -0500
+Message-ID: <1301545757.2824.11.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -20,41 +20,44 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-VmVyc2lvbiAzLjAuNSBvZiB4ZnNkdW1wIGhhcyBiZWVuIHJlbGVhc2VkLgoKQSBnemlwcGVkIHRh
-ciBhcmNoaXZlIG9mIHRoZSBzb3VyY2UgY29kZSBpcyBhdmFpbGFibGUgaGVyZToKCiAgICBmdHA6
-Ly9vc3Muc2dpLmNvbS9wcm9qZWN0cy94ZnMvY21kX3RhcnMveGZzZHVtcC0zLjAuNS50YXIuZ3oK
-ClRoZSBzb3VyY2UgY29kZSBjYW4gYmUgYWNjZXNzZWQgdmlhIGdpdCB1c2luZyB0aGlzIFVSTDoK
-CiAgICBnaXQ6Ly9vc3Muc2dpLmNvbS94ZnMvY21kcy94ZnNkdW1wLmdpdAoKQmVsb3cgaXMgYSBz
-dW1tYXJ5IChmcm9tIHRoZSBkb2MvQ0hBTkdFUyBmaWxlKSBvZiBjaGFuZ2VzCnNpbmNlIHJlbGVh
-c2UgMy4wLjQ6Cgp4ZnNkdW1wLTMuMC41ICgzMCBNYXJjaCAyMDExKQoJLSBSZWxlYXNlIHRhZ3Mg
-d2lsbCBub3cgYmUgZGlnaXRhbGx5IHNpZ25lZAoJLSBRdW90YSBmaWxlcyB3aWxsIG5vdyBiZSBk
-dW1wZWQsIHJlZ2FyZGxlc3Mgb2YgdGhlIG1heHNpemUKCSAgc2V0dGluZwoJLSBUaGUgbmV3ICIt
-cyBzZXNzaWQiIGZsYWcgYWxsb3dzIGludmVudG9yeSBzZXNzaW9ucyB0byBiZQoJICBwcnVuZWQg
-YnkgdGhlaXIgc2Vzc2lvbiBJRC4KCS0gRml4ZWQgYSBidWcgaW4gaGFuZGxpbmcgbG9uZyBkdW1w
-IGZpbGVuYW1lcywgYW5kIGRyb3BwZWQKCSAgKHVuZG9jdW1lbnRlZCkgc3VwcG9ydCBmb3IgZW5j
-b2RpbmcgY2VydGFpbiBwYXJhbWV0ZXJzCgkgIHdpdGhpbiB0aGUgZHVtcCBmaWxlbmFtZQoJLSBO
-T0RFQ0hLIGlzIG5vdyBvZmYgYnkgZGVmYXVsdCwgbWVhbmluZyB4ZnNyZXN0b3JlIHdpbGwgbm93
-CgkgIHN1cHBvcnQgMTYgdGltZXMgbW9yZSBkaXJlY3RvcnkgZW50cmllcyAoNCBiaWxsaW9uKQoJ
-LSBucmhfdCBpcyBub3cgNjQgYml0cyB3aWRlLCBhbGxvd2luZyB4ZnNyZXN0b3JlIHRvIHN1cHBv
-cnQKCSAgZHVtcHMgd2l0aCB1cCB0byA0IGJpbGxpb24gZGlyZWN0b3J5IGVudHJpZXMKCS0gbml4
-X3QgaXMgbm8gbG9uZ2VyIHVzZWZ1bCwgYW5kIGhhcyBiZWVuIGVsaW1pbmF0ZWQKCS0gTWVtb3J5
-IHVzZSBpbiB4ZnNyZXN0b3JlIGlzIGJldHRlciBtYW5hZ2VkIG5vdy4gIFNlZ21lbnRzCgkgIG9m
-IG5vZGVzIGFyZSBub3cgcG93ZXItb2YtMiBzaXplZCwgYW5kIGFsbG9jYXRlZCBub2RlcyBhcmUK
-CSAgbm8gbG9uZ2VyIG5lZWRsZXNzbHkgemVyb2VkIGFuZCBsaW5rZWQgaW50byB0aGUgZnJlZSBs
-aXN0LgoJLSBQYXRobmFtZSByZXNvbHV0aW9uIGluIHhmc3Jlc3RvcmUgaGFzIGEgbnVtYmVyIG9m
-CgkgIHBlcmZvcm1hbmNlIGltcHJvdmVtZW50cwoJLSBCZXR0ZXIgY2hlY2tpbmcgaGFzIGJlZW4g
-aW1wbGVtZW50ZWQgZm9yIGNvbXBhdGliaWxpdHkKCSAgd2hlbiByZXN1bWluZyBhIGN1bXVsYXRp
-dmUgcmVzdG9yZQoJLSBCdWlsZCBzeXN0ZW0gb3V0cHV0IGhhcyBiZWVuIGNsZWFuZWQgdXAgY29u
-c2lkZXJhYmx5CgktIERlYWQgIm5hbXJlZyIgY29kZSBoYXMgYmVlbiByZW1vdmVkCgktIEJ1aWxk
-IGRlcGVuZGVuY2llcyBhcmUgbm93IGRldGVybWluZWQgYXV0b21hdGljYWxseQoJLSBPdGhlciBt
-aXNjZWxsYW5lb3VzIGJ1aWxkIHN5c3RlbSBpbXByb3ZlbWVudHMsIGFzIHdlbGwgYnVnCgkgIGZp
-eGVzIHRoYW5rcyB0byBNaWtlIEZyeXNpbmdlciBhbmQgQXJrYWRpdXN6IE1pxZtraWV3aWN6LgoK
-Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWls
-aW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3Rp
-bmZvL3hmcwo=
+Version 3.1.5 of xfsprogs has been released.
+
+A gzipped tar archive of the source code is available here:
+
+    ftp://oss.sgi.com/projects/xfs/cmd_tars/xfsprogs-3.1.5.tar.gz
+
+The source code can be accessed via git using this URL:
+
+    git://oss.sgi.com/xfs/cmds/xfsprogs.git
+
+Below is a summary (from the doc/CHANGES file) of changes
+since release 3.1.4:
+
+xfsprogs-3.1.5 (30 March 2011)
+	- Polish translation update, thanks to Jakub Bogusz
+	- xfs_repair now warns if running in low memory mode
+	- Phase 2 of xfs_repair is now multithreaded
+	- xfs_quota no longer attempts to get quota information if
+	  not enabled
+	- Inode flags are now properly validated by xfs_repair
+	- Metadump now obfuscates all file names reliably
+	- xfs_io now supports the "fiemap" command, a more generic
+	  form of the "bmap" command
+	- xfs_io now supports the "fpunch" command, as well as a
+	  "-p" flag to the "fallocate command.  Both implement hole
+	  punching.  Thanks to Josef Bacik
+	- A number of other bug fixes thanks to Ajeet Yadav
+
+
+
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
