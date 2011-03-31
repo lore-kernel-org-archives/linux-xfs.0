@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p2VBPWls137676 for <xfs@oss.sgi.com>; Thu, 31 Mar 2011 06:25:32 -0500
+	p2VBQfbQ137801 for <xfs@oss.sgi.com>; Thu, 31 Mar 2011 06:26:41 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9EB971D5349D
-	for <xfs@oss.sgi.com>; Thu, 31 Mar 2011 04:28:44 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 61C01391846
+	for <xfs@oss.sgi.com>; Thu, 31 Mar 2011 04:29:53 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id ZRYkr6tbMgobTORY for
-	<xfs@oss.sgi.com>; Thu, 31 Mar 2011 04:28:44 -0700 (PDT)
+	by cuda.sgi.com with ESMTP id 89CNkz0kCTEHHj52 for
+	<xfs@oss.sgi.com>; Thu, 31 Mar 2011 04:29:53 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.72 #1 (Red Hat
-	Linux)) id 1Q5G3Q-00066E-8N
-	for xfs@oss.sgi.com; Thu, 31 Mar 2011 11:28:44 +0000
-Message-Id: <20110331112844.210469333@bombadil.infradead.org>
-Date: Thu, 31 Mar 2011 07:27:01 -0400
+	Linux)) id 1Q5G4W-0006R9-SZ
+	for xfs@oss.sgi.com; Thu, 31 Mar 2011 11:29:52 +0000
+Message-Id: <20110331112952.831804157@bombadil.infradead.org>
+Date: Thu, 31 Mar 2011 07:28:54 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 1/3] xfs: optimize AGFL refills
-References: <20110331112700.735969269@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-optimize-freelist-refills
+Subject: [PATCH 4/5] xfs: make discard operations asynchronous
+References: <20110331112850.980290062@bombadil.infradead.org>
+Content-Disposition: inline; filename=xfs-async-discard-workqueue
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,95 +32,266 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-While we need to make sure we do not reuse busy extents, there is no need
-to force out busy extents when moving them between the AGFL and the
-freespace btree as we still take care of that when doing the real allocation.
-
-To avoid the log force when just moving extents from the different free
-space tracking structures, move the busy search out of
-xfs_alloc_get_freelist into the callers that need it, and move the busy
-list insert from xfs_free_ag_extent which is used both by AGFL refills
-and real allocation to xfs_free_extent, which is only used by the latter.
+Instead of waiting for each discard request keep the CIL context alive
+until all of them are done, at which point we can tear it down completly
+and remove the busy extents from the rbtree.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Alex Elder <aelder@sgi.com>
 
-Index: xfs/fs/xfs/xfs_alloc.c
+Index: xfs/fs/xfs/linux-2.6/xfs_discard.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_alloc.c	2011-03-27 23:52:29.004480044 +0200
-+++ xfs/fs/xfs/xfs_alloc.c	2011-03-28 13:42:50.682839138 +0200
-@@ -1326,6 +1326,8 @@ xfs_alloc_ag_vextent_small(
- 		if (error)
- 			goto error0;
- 		if (fbno != NULLAGBLOCK) {
-+			if (xfs_alloc_busy_search(args->mp, args->agno, fbno, 1))
-+				xfs_trans_set_sync(args->tp);
- 			if (args->userdata) {
- 				xfs_buf_t	*bp;
+--- xfs.orig/fs/xfs/linux-2.6/xfs_discard.c	2011-03-31 12:30:32.058591119 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_discard.c	2011-03-31 12:30:54.387590320 +0200
+@@ -30,6 +30,7 @@
+ #include "xfs_inode.h"
+ #include "xfs_alloc.h"
+ #include "xfs_error.h"
++#include "xfs_log_priv.h"
+ #include "xfs_discard.h"
+ #include "xfs_trace.h"
  
-@@ -1617,18 +1619,6 @@ xfs_free_ag_extent(
- 
- 	trace_xfs_free_extent(mp, agno, bno, len, isfl, haveleft, haveright);
- 
--	/*
--	 * Since blocks move to the free list without the coordination
--	 * used in xfs_bmap_finish, we can't allow block to be available
--	 * for reallocation and non-transaction writing (user data)
--	 * until we know that the transaction that moved it to the free
--	 * list is permanently on disk.  We track the blocks by declaring
--	 * these blocks as "busy"; the busy list is maintained on a per-ag
--	 * basis and each transaction records which entries should be removed
--	 * when the iclog commits to disk.  If a busy block is allocated,
--	 * the iclog is pushed up to the LSN that freed the block.
--	 */
--	xfs_alloc_busy_insert(tp, agno, bno, len);
- 	return 0;
- 
-  error0:
-@@ -1923,21 +1913,6 @@ xfs_alloc_get_freelist(
- 	xfs_alloc_log_agf(tp, agbp, logflags);
- 	*bnop = bno;
- 
--	/*
--	 * As blocks are freed, they are added to the per-ag busy list and
--	 * remain there until the freeing transaction is committed to disk.
--	 * Now that we have allocated blocks, this list must be searched to see
--	 * if a block is being reused.  If one is, then the freeing transaction
--	 * must be pushed to disk before this transaction.
--	 *
--	 * We do this by setting the current transaction to a sync transaction
--	 * which guarantees that the freeing transaction is on disk before this
--	 * transaction. This is done instead of a synchronous log force here so
--	 * that we don't sit and wait with the AGF locked in the transaction
--	 * during the log force.
--	 */
--	if (xfs_alloc_busy_search(mp, be32_to_cpu(agf->agf_seqno), bno, 1))
--		xfs_trans_set_sync(tp);
+@@ -192,29 +193,80 @@ xfs_ioc_trim(
  	return 0;
  }
  
-@@ -2407,6 +2382,8 @@ xfs_free_extent(
- 		be32_to_cpu(XFS_BUF_TO_AGF(args.agbp)->agf_length));
- #endif
- 	error = xfs_free_ag_extent(tp, args.agbp, args.agno, args.agbno, len, 0);
-+	if (!error)
-+		xfs_alloc_busy_insert(tp, args.agno, args.agbno, len);
- error0:
- 	xfs_perag_put(args.pag);
- 	return error;
-Index: xfs/fs/xfs/xfs_alloc_btree.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_alloc_btree.c	2011-03-27 23:52:29.008480632 +0200
-+++ xfs/fs/xfs/xfs_alloc_btree.c	2011-03-28 13:42:49.462839006 +0200
-@@ -94,6 +94,8 @@ xfs_allocbt_alloc_block(
- 		*stat = 0;
- 		return 0;
- 	}
-+	if (xfs_alloc_busy_search(cur->bc_mp, cur->bc_private.a.agno, bno, 1))
-+		xfs_trans_set_sync(cur->bc_tp);
++STATIC void
++xfs_discard_end_io(
++	struct bio		*bio,
++	int			err)
++{
++	struct xfs_cil_ctx	*ctx = bio->bi_private;
++
++	if (err && err != EOPNOTSUPP) {
++		xfs_info(ctx->cil->xc_log->l_mp,
++			 "discard failed at sector 0x%llu, error %d",
++			 (unsigned long long)bio->bi_sector, err);
++	}
++
++	if (atomic_dec_and_test(&ctx->ref))
++		queue_work(xfs_discard_workqueue, &ctx->work);
++	bio_put(bio);
++}
++
+ int
+ xfs_discard_extent(
+-	struct xfs_mount	*mp,
++	struct xfs_cil_ctx	*ctx,
+ 	struct xfs_busy_extent	*busyp)
+ {
+-	int			error = 0;
++	struct xfs_mount	*mp = ctx->cil->xc_log->l_mp;
++	struct block_device	*bdev = mp->m_ddev_targp->bt_bdev;
++	struct request_queue	*q = bdev_get_queue(bdev);
++	unsigned int		max_discard_sectors;
++	struct bio		*bio;
++	sector_t		sector;
++	sector_t		nr_sects;
  
- 	xfs_trans_agbtree_delta(cur->bc_tp, 1);
- 	new->s = cpu_to_be32(bno);
++	if (!blk_queue_discard(q))
++		return -EOPNOTSUPP;
+ 	if (!xfs_alloc_busy_prepare_discard(mp, busyp))
+ 		return 0;
+ 
+ 	trace_xfs_discard_extent(mp, busyp->agno, busyp->bno, busyp->length);
+ 
+-	error = -blkdev_issue_discard(mp->m_ddev_targp->bt_bdev,
+-			XFS_AGB_TO_DADDR(mp, busyp->agno, busyp->bno),
+-			XFS_FSB_TO_BB(mp, busyp->length),
+-			GFP_NOFS, 0);
+-	if (error && error != EOPNOTSUPP) {
+-		xfs_info(mp,
+-			 "discard failed for extent [0x%llu,%u], error %d",
+-			 (unsigned long long)busyp->bno,
+-			 busyp->length,
+-			 error);
++	sector = XFS_AGB_TO_DADDR(mp, busyp->agno, busyp->bno);
++	nr_sects = XFS_FSB_TO_BB(mp, busyp->length);
++
++	/*
++	 * Ensure that max_discard_sectors is of the proper
++	 * granularity
++	 */
++	max_discard_sectors = min(q->limits.max_discard_sectors, UINT_MAX >> 9);
++	if (q->limits.discard_granularity) {
++		unsigned int disc_sects = q->limits.discard_granularity >> 9;
++
++		max_discard_sectors &= ~(disc_sects - 1);
+ 	}
+ 
+-	return error;
++	while (nr_sects) {
++		bio = bio_alloc(GFP_NOFS, 1);
++		if (!bio)
++			return -ENOMEM;
++
++		bio->bi_sector = sector;
++		bio->bi_end_io = xfs_discard_end_io;
++		bio->bi_bdev = bdev;
++		bio->bi_private = ctx;
++
++		if (nr_sects > max_discard_sectors) {
++			bio->bi_size = max_discard_sectors << 9;
++			nr_sects -= max_discard_sectors;
++			sector += max_discard_sectors;
++		} else {
++			bio->bi_size = nr_sects << 9;
++			nr_sects = 0;
++		}
++
++		atomic_inc(&ctx->ref);
++		submit_bio(REQ_WRITE | REQ_DISCARD, bio);
++	}
++
++	return 0;
+ }
+Index: xfs/fs/xfs/linux-2.6/xfs_discard.h
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_discard.h	2011-03-31 12:30:32.062592936 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_discard.h	2011-03-31 12:30:54.387590320 +0200
+@@ -3,10 +3,11 @@
+ 
+ struct fstrim_range;
+ struct xfs_busy_extent;
++struct xfs_cil_ctx;
+ 
+ extern int	xfs_ioc_trim(struct xfs_mount *, struct fstrim_range __user *);
+ 
+-extern int	xfs_discard_extent(struct xfs_mount *,
++extern int	xfs_discard_extent(struct xfs_cil_ctx *,
+ 				   struct xfs_busy_extent *);
+ 
+ #endif /* XFS_DISCARD_H */
+Index: xfs/fs/xfs/xfs_log_cil.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_log_cil.c	2011-03-31 12:30:32.098591587 +0200
++++ xfs/fs/xfs/xfs_log_cil.c	2011-03-31 12:30:54.391590741 +0200
+@@ -397,16 +397,15 @@ xlog_cil_committed(
+ 	int	abort)
+ {
+ 	struct xfs_cil_ctx	*ctx = args;
+-	struct xfs_mount	*mp = ctx->cil->xc_log->l_mp;
+ 
+ 	xfs_trans_committed_bulk(ctx->cil->xc_log->l_ailp, ctx->lv_chain,
+ 					ctx->start_lsn, abort);
+ 
+-	if ((mp->m_flags & XFS_MOUNT_DISCARD) && !abort) {
++	if ((ctx->cil->xc_log->l_mp->m_flags & XFS_MOUNT_DISCARD) && !abort) {
+ 		struct xfs_busy_extent *busyp;
+ 
+ 		list_for_each_entry(busyp, &ctx->busy_extents, list)
+-			xfs_discard_extent(mp, busyp);
++			xfs_discard_extent(ctx, busyp);
+ 	}
+ 
+ 	spin_lock(&ctx->cil->xc_cil_lock);
+Index: xfs/fs/xfs/linux-2.6/xfs_buf.c
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_buf.c	2011-03-31 12:30:32.074593507 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_buf.c	2011-03-31 12:30:54.399590326 +0200
+@@ -49,6 +49,7 @@ STATIC void xfs_buf_delwri_queue(xfs_buf
+ static struct workqueue_struct *xfslogd_workqueue;
+ struct workqueue_struct *xfsdatad_workqueue;
+ struct workqueue_struct *xfsconvertd_workqueue;
++struct workqueue_struct *xfs_discard_workqueue;
+ 
+ #ifdef XFS_BUF_LOCK_TRACKING
+ # define XB_SET_OWNER(bp)	((bp)->b_last_holder = current->pid)
+@@ -1790,6 +1791,7 @@ xfs_flush_buftarg(
+ 	LIST_HEAD(wait_list);
+ 	struct blk_plug plug;
+ 
++	xfs_buf_runall_queues(xfs_discard_workqueue);
+ 	xfs_buf_runall_queues(xfsconvertd_workqueue);
+ 	xfs_buf_runall_queues(xfsdatad_workqueue);
+ 	xfs_buf_runall_queues(xfslogd_workqueue);
+@@ -1853,8 +1855,15 @@ xfs_buf_init(void)
+ 	if (!xfsconvertd_workqueue)
+ 		goto out_destroy_xfsdatad_workqueue;
+ 
++	xfs_discard_workqueue = alloc_workqueue("xfs_discard",
++					WQ_MEM_RECLAIM | WQ_HIGHPRI, 1);
++	if (!xfs_discard_workqueue)
++		goto out_destroy_xfsconvertd_workqueue;
++
+ 	return 0;
+ 
++ out_destroy_xfsconvertd_workqueue:
++	destroy_workqueue(xfsconvertd_workqueue);
+  out_destroy_xfsdatad_workqueue:
+ 	destroy_workqueue(xfsdatad_workqueue);
+  out_destroy_xfslogd_workqueue:
+@@ -1868,6 +1877,7 @@ xfs_buf_init(void)
+ void
+ xfs_buf_terminate(void)
+ {
++	destroy_workqueue(xfs_discard_workqueue);
+ 	destroy_workqueue(xfsconvertd_workqueue);
+ 	destroy_workqueue(xfsdatad_workqueue);
+ 	destroy_workqueue(xfslogd_workqueue);
+Index: xfs/fs/xfs/linux-2.6/xfs_buf.h
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_buf.h	2011-03-31 12:30:32.082590570 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_buf.h	2011-03-31 12:30:54.407636028 +0200
+@@ -348,4 +348,6 @@ extern struct list_head *xfs_get_buftarg
+ #define xfs_binval(buftarg)		xfs_flush_buftarg(buftarg, 1)
+ #define XFS_bflush(buftarg)		xfs_flush_buftarg(buftarg, 1)
+ 
++extern struct workqueue_struct *xfs_discard_workqueue;
++
+ #endif	/* __XFS_BUF_H__ */
+Index: xfs/fs/xfs/xfs_alloc.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_alloc.c	2011-03-31 12:30:32.110593226 +0200
++++ xfs/fs/xfs/xfs_alloc.c	2011-03-31 12:30:54.407636028 +0200
+@@ -1084,6 +1084,7 @@ restart:
+ 		if (!forced++) {
+ 			trace_xfs_alloc_near_busy(args);
+ 			xfs_log_force(args->mp, XFS_LOG_SYNC);
++			flush_workqueue(xfs_discard_workqueue);
+ 			goto restart;
+ 		}
+ 
+@@ -1243,8 +1244,10 @@ restart:
+ 				xfs_btree_del_cursor(cnt_cur,
+ 						     XFS_BTREE_NOERROR);
+ 				trace_xfs_alloc_size_busy(args);
+-				if (!forced++)
++				if (!forced++) {
+ 					xfs_log_force(args->mp, XFS_LOG_SYNC);
++					flush_workqueue(xfs_discard_workqueue);
++				}
+ 				goto restart;
+ 			}
+ 		}
+@@ -1314,6 +1317,7 @@ restart:
+ 			xfs_btree_del_cursor(cnt_cur, XFS_BTREE_NOERROR);
+ 			trace_xfs_alloc_size_busy(args);
+ 			xfs_log_force(args->mp, XFS_LOG_SYNC);
++			flush_workqueue(xfs_discard_workqueue);
+ 			goto restart;
+ 		}
+ 		goto out_nominleft;
+@@ -2599,6 +2603,8 @@ xfs_alloc_busy_update_extent(
+ 	 */
+ 	if (busyp->flags & XFS_ALLOC_BUSY_DISCARDED) {
+ 		spin_unlock(&pag->pagb_lock);
++		flush_workqueue(xfs_discard_workqueue);
++		trace_xfs_alloc_busy_discarded(mp, pag->pag_agno, fbno, flen);
+ 		return false;
+ 	}
+ 
+Index: xfs/fs/xfs/linux-2.6/xfs_trace.h
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_trace.h	2011-03-31 12:30:32.094589662 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_trace.h	2011-03-31 12:30:54.411589615 +0200
+@@ -1183,6 +1183,7 @@ DEFINE_BUSY_EVENT(xfs_alloc_busy_enomem)
+ DEFINE_BUSY_EVENT(xfs_alloc_busy_force);
+ DEFINE_BUSY_EVENT(xfs_alloc_busy_reuse);
+ DEFINE_BUSY_EVENT(xfs_alloc_busy_clear);
++DEFINE_BUSY_EVENT(xfs_alloc_busy_discarded);
+ 
+ TRACE_EVENT(xfs_alloc_busy_trim,
+ 	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
 
 _______________________________________________
 xfs mailing list
