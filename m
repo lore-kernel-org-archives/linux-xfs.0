@@ -1,20 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p2ULbMcD083724 for <xfs@oss.sgi.com>; Wed, 30 Mar 2011 16:37:23 -0500
-Received: from postoffice2.aconex.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 113B915AA67F
-	for <xfs@oss.sgi.com>; Wed, 30 Mar 2011 14:40:32 -0700 (PDT)
-Received: from postoffice2.aconex.com (mail.aconex.com [203.166.49.3]) by
-	cuda.sgi.com with ESMTP id vVriTSn6NdhLbztJ for
-	<xfs@oss.sgi.com>; Wed, 30 Mar 2011 14:40:32 -0700 (PDT)
-Date: Thu, 31 Mar 2011 08:40:30 +1100 (EST)
-From: nathans@debian.org
-Message-ID: <1411209746.15160.1301521230565.JavaMail.root@acxmail-au2.aconex.com>
-In-Reply-To: <1301516575.2953.29.camel@doink>
-Subject: Re: [PATCH] xfsdump: update CHANGES file for release
-MIME-Version: 1.0
-Reply-To: Nathan Scott <nathans@debian.org>
+	p2V3wOt0108759 for <xfs@oss.sgi.com>; Wed, 30 Mar 2011 22:58:24 -0500
+Received: from cf--amer001e--3.americas.sgi.com
+	(cf--amer001e--3.americas.sgi.com [137.38.100.5])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5DEF28F809E
+	for <xfs@oss.sgi.com>; Wed, 30 Mar 2011 21:01:33 -0700 (PDT)
+Subject: [ANNOUNCE] xfsdump v3.0.5
+From: Alex Elder <aelder@sgi.com>
+Date: Wed, 30 Mar 2011 23:01:32 -0500
+Message-ID: <1301544092.2824.10.camel@doink>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,27 +20,41 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: aelder@sgi.com
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-
-
------ Original Message -----
-> Update the CHANGES file in preparation for releasing xfsdump 3.0.5.
-> 
-> Signed-off-by: Alex Elder <aelder@sgi.com>
-> 
-
-Looks good to me, thanks!
-
---
-Nathan
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+VmVyc2lvbiAzLjAuNSBvZiB4ZnNkdW1wIGhhcyBiZWVuIHJlbGVhc2VkLgoKQSBnemlwcGVkIHRh
+ciBhcmNoaXZlIG9mIHRoZSBzb3VyY2UgY29kZSBpcyBhdmFpbGFibGUgaGVyZToKCiAgICBmdHA6
+Ly9vc3Muc2dpLmNvbS9wcm9qZWN0cy94ZnMvY21kX3RhcnMveGZzZHVtcC0zLjAuNS50YXIuZ3oK
+ClRoZSBzb3VyY2UgY29kZSBjYW4gYmUgYWNjZXNzZWQgdmlhIGdpdCB1c2luZyB0aGlzIFVSTDoK
+CiAgICBnaXQ6Ly9vc3Muc2dpLmNvbS94ZnMvY21kcy94ZnNkdW1wLmdpdAoKQmVsb3cgaXMgYSBz
+dW1tYXJ5IChmcm9tIHRoZSBkb2MvQ0hBTkdFUyBmaWxlKSBvZiBjaGFuZ2VzCnNpbmNlIHJlbGVh
+c2UgMy4wLjQ6Cgp4ZnNkdW1wLTMuMC41ICgzMCBNYXJjaCAyMDExKQoJLSBSZWxlYXNlIHRhZ3Mg
+d2lsbCBub3cgYmUgZGlnaXRhbGx5IHNpZ25lZAoJLSBRdW90YSBmaWxlcyB3aWxsIG5vdyBiZSBk
+dW1wZWQsIHJlZ2FyZGxlc3Mgb2YgdGhlIG1heHNpemUKCSAgc2V0dGluZwoJLSBUaGUgbmV3ICIt
+cyBzZXNzaWQiIGZsYWcgYWxsb3dzIGludmVudG9yeSBzZXNzaW9ucyB0byBiZQoJICBwcnVuZWQg
+YnkgdGhlaXIgc2Vzc2lvbiBJRC4KCS0gRml4ZWQgYSBidWcgaW4gaGFuZGxpbmcgbG9uZyBkdW1w
+IGZpbGVuYW1lcywgYW5kIGRyb3BwZWQKCSAgKHVuZG9jdW1lbnRlZCkgc3VwcG9ydCBmb3IgZW5j
+b2RpbmcgY2VydGFpbiBwYXJhbWV0ZXJzCgkgIHdpdGhpbiB0aGUgZHVtcCBmaWxlbmFtZQoJLSBO
+T0RFQ0hLIGlzIG5vdyBvZmYgYnkgZGVmYXVsdCwgbWVhbmluZyB4ZnNyZXN0b3JlIHdpbGwgbm93
+CgkgIHN1cHBvcnQgMTYgdGltZXMgbW9yZSBkaXJlY3RvcnkgZW50cmllcyAoNCBiaWxsaW9uKQoJ
+LSBucmhfdCBpcyBub3cgNjQgYml0cyB3aWRlLCBhbGxvd2luZyB4ZnNyZXN0b3JlIHRvIHN1cHBv
+cnQKCSAgZHVtcHMgd2l0aCB1cCB0byA0IGJpbGxpb24gZGlyZWN0b3J5IGVudHJpZXMKCS0gbml4
+X3QgaXMgbm8gbG9uZ2VyIHVzZWZ1bCwgYW5kIGhhcyBiZWVuIGVsaW1pbmF0ZWQKCS0gTWVtb3J5
+IHVzZSBpbiB4ZnNyZXN0b3JlIGlzIGJldHRlciBtYW5hZ2VkIG5vdy4gIFNlZ21lbnRzCgkgIG9m
+IG5vZGVzIGFyZSBub3cgcG93ZXItb2YtMiBzaXplZCwgYW5kIGFsbG9jYXRlZCBub2RlcyBhcmUK
+CSAgbm8gbG9uZ2VyIG5lZWRsZXNzbHkgemVyb2VkIGFuZCBsaW5rZWQgaW50byB0aGUgZnJlZSBs
+aXN0LgoJLSBQYXRobmFtZSByZXNvbHV0aW9uIGluIHhmc3Jlc3RvcmUgaGFzIGEgbnVtYmVyIG9m
+CgkgIHBlcmZvcm1hbmNlIGltcHJvdmVtZW50cwoJLSBCZXR0ZXIgY2hlY2tpbmcgaGFzIGJlZW4g
+aW1wbGVtZW50ZWQgZm9yIGNvbXBhdGliaWxpdHkKCSAgd2hlbiByZXN1bWluZyBhIGN1bXVsYXRp
+dmUgcmVzdG9yZQoJLSBCdWlsZCBzeXN0ZW0gb3V0cHV0IGhhcyBiZWVuIGNsZWFuZWQgdXAgY29u
+c2lkZXJhYmx5CgktIERlYWQgIm5hbXJlZyIgY29kZSBoYXMgYmVlbiByZW1vdmVkCgktIEJ1aWxk
+IGRlcGVuZGVuY2llcyBhcmUgbm93IGRldGVybWluZWQgYXV0b21hdGljYWxseQoJLSBPdGhlciBt
+aXNjZWxsYW5lb3VzIGJ1aWxkIHN5c3RlbSBpbXByb3ZlbWVudHMsIGFzIHdlbGwgYnVnCgkgIGZp
+eGVzIHRoYW5rcyB0byBNaWtlIEZyeXNpbmdlciBhbmQgQXJrYWRpdXN6IE1pxZtraWV3aWN6LgoK
+Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWls
+aW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3Rp
+bmZvL3hmcwo=
