@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p2VBQeU1137789 for <xfs@oss.sgi.com>; Thu, 31 Mar 2011 06:26:40 -0500
+	p2VBPWls137676 for <xfs@oss.sgi.com>; Thu, 31 Mar 2011 06:25:32 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E1EC3391846
-	for <xfs@oss.sgi.com>; Thu, 31 Mar 2011 04:29:52 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9EB971D5349D
+	for <xfs@oss.sgi.com>; Thu, 31 Mar 2011 04:28:44 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id GFWpXbCDYyoZk7dT for
-	<xfs@oss.sgi.com>; Thu, 31 Mar 2011 04:29:52 -0700 (PDT)
+	by cuda.sgi.com with ESMTP id ZRYkr6tbMgobTORY for
+	<xfs@oss.sgi.com>; Thu, 31 Mar 2011 04:28:44 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.72 #1 (Red Hat
-	Linux)) id 1Q5G4W-0006Pr-Bt
-	for xfs@oss.sgi.com; Thu, 31 Mar 2011 11:29:52 +0000
-Message-Id: <20110331112952.333209372@bombadil.infradead.org>
-Date: Thu, 31 Mar 2011 07:28:52 -0400
+	Linux)) id 1Q5G3Q-00066E-8N
+	for xfs@oss.sgi.com; Thu, 31 Mar 2011 11:28:44 +0000
+Message-Id: <20110331112844.210469333@bombadil.infradead.org>
+Date: Thu, 31 Mar 2011 07:27:01 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 2/5] xfs: add a reference count to the CIL context
-References: <20110331112850.980290062@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-cil-ctx-refcounting
+Subject: [PATCH 1/3] xfs: optimize AGFL refills
+References: <20110331112700.735969269@bombadil.infradead.org>
+Content-Disposition: inline; filename=xfs-optimize-freelist-refills
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,139 +32,95 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-For the upcoming asynchronoyus discard support we need to be able to delay
-freeing the CIL context until the last discard request that reference it
-has completed.  Add a reference count to the CIL context, and only clear
-the busy extents and free the CIL context structure when it reaches zero,
-and a work item to allow freeing it from irq context.
+While we need to make sure we do not reuse busy extents, there is no need
+to force out busy extents when moving them between the AGFL and the
+freespace btree as we still take care of that when doing the real allocation.
 
-Note that this means delaying the clearing of the busy extents for a little
-bit even on non-discard mounts, but with the new busy extent trim/reuse
-code there is no real life impact of this change.
+To avoid the log force when just moving extents from the different free
+space tracking structures, move the busy search out of
+xfs_alloc_get_freelist into the callers that need it, and move the busy
+list insert from xfs_free_ag_extent which is used both by AGFL refills
+and real allocation to xfs_free_extent, which is only used by the latter.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Alex Elder <aelder@sgi.com>
 
-Index: xfs/fs/xfs/xfs_log_cil.c
+Index: xfs/fs/xfs/xfs_alloc.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_log_cil.c	2011-03-28 15:41:39.062838900 +0200
-+++ xfs/fs/xfs/xfs_log_cil.c	2011-03-28 16:47:04.658839185 +0200
-@@ -30,6 +30,46 @@
- #include "xfs_error.h"
- #include "xfs_alloc.h"
+--- xfs.orig/fs/xfs/xfs_alloc.c	2011-03-27 23:52:29.004480044 +0200
++++ xfs/fs/xfs/xfs_alloc.c	2011-03-28 13:42:50.682839138 +0200
+@@ -1326,6 +1326,8 @@ xfs_alloc_ag_vextent_small(
+ 		if (error)
+ 			goto error0;
+ 		if (fbno != NULLAGBLOCK) {
++			if (xfs_alloc_busy_search(args->mp, args->agno, fbno, 1))
++				xfs_trans_set_sync(args->tp);
+ 			if (args->userdata) {
+ 				xfs_buf_t	*bp;
  
-+static void
-+xlog_cil_ctx_free(
-+	struct xfs_cil_ctx	*ctx)
-+{
-+	struct xfs_busy_extent	*busyp, *n;
-+
-+	list_for_each_entry_safe(busyp, n, &ctx->busy_extents, list)
-+		xfs_alloc_busy_clear(ctx->cil->xc_log->l_mp, busyp);
-+	kmem_free(ctx);
-+}
-+
-+static void
-+xlog_cil_ctx_free_work(
-+	struct work_struct	*work)
-+{
-+	xlog_cil_ctx_free(container_of(work, struct xfs_cil_ctx, work));
-+}
-+
-+static void
-+xlog_cil_ctx_init(
-+	struct xfs_cil_ctx	*ctx,
-+	struct xfs_cil		*cil,
-+	xfs_lsn_t		sequence)
-+{
-+	INIT_LIST_HEAD(&ctx->committing);
-+	INIT_LIST_HEAD(&ctx->busy_extents);
-+	ctx->sequence = sequence;
-+	ctx->cil = cil;
-+	atomic_set(&ctx->ref, 1);
-+	INIT_WORK(&ctx->work, xlog_cil_ctx_free_work);
-+	cil->xc_ctx = ctx;
-+
-+	/*
-+	 * Mirror the sequence into the cil structure so that we can do
-+	 * unlocked checks against the current sequence in log forces without
-+	 * risking deferencing a freed context pointer.
-+	 */
-+	cil->xc_current_sequence = ctx->sequence;
-+}
-+
- /*
-  * Perform initial CIL structure initialisation. If the CIL is not
-  * enabled in this filesystem, ensure the log->l_cilp is null so
-@@ -63,12 +103,7 @@ xlog_cil_init(
- 	init_rwsem(&cil->xc_ctx_lock);
- 	init_waitqueue_head(&cil->xc_commit_wait);
+@@ -1617,18 +1619,6 @@ xfs_free_ag_extent(
  
--	INIT_LIST_HEAD(&ctx->committing);
--	INIT_LIST_HEAD(&ctx->busy_extents);
--	ctx->sequence = 1;
--	ctx->cil = cil;
--	cil->xc_ctx = ctx;
--	cil->xc_current_sequence = ctx->sequence;
-+	xlog_cil_ctx_init(ctx, cil, 1);
+ 	trace_xfs_free_extent(mp, agno, bno, len, isfl, haveleft, haveright);
  
- 	cil->xc_log = log;
- 	log->l_cilp = cil;
-@@ -361,20 +396,17 @@ xlog_cil_committed(
- 	int	abort)
- {
- 	struct xfs_cil_ctx	*ctx = args;
--	struct xfs_busy_extent	*busyp, *n;
+-	/*
+-	 * Since blocks move to the free list without the coordination
+-	 * used in xfs_bmap_finish, we can't allow block to be available
+-	 * for reallocation and non-transaction writing (user data)
+-	 * until we know that the transaction that moved it to the free
+-	 * list is permanently on disk.  We track the blocks by declaring
+-	 * these blocks as "busy"; the busy list is maintained on a per-ag
+-	 * basis and each transaction records which entries should be removed
+-	 * when the iclog commits to disk.  If a busy block is allocated,
+-	 * the iclog is pushed up to the LSN that freed the block.
+-	 */
+-	xfs_alloc_busy_insert(tp, agno, bno, len);
+ 	return 0;
  
- 	xfs_trans_committed_bulk(ctx->cil->xc_log->l_ailp, ctx->lv_chain,
- 					ctx->start_lsn, abort);
+  error0:
+@@ -1923,21 +1913,6 @@ xfs_alloc_get_freelist(
+ 	xfs_alloc_log_agf(tp, agbp, logflags);
+ 	*bnop = bno;
  
--	list_for_each_entry_safe(busyp, n, &ctx->busy_extents, list)
--		xfs_alloc_busy_clear(ctx->cil->xc_log->l_mp, busyp);
--
- 	spin_lock(&ctx->cil->xc_cil_lock);
- 	list_del(&ctx->committing);
- 	spin_unlock(&ctx->cil->xc_cil_lock);
- 
- 	xlog_cil_free_logvec(ctx->lv_chain);
--	kmem_free(ctx);
-+	if (atomic_dec_and_test(&ctx->ref))
-+		xlog_cil_ctx_free(ctx);
+-	/*
+-	 * As blocks are freed, they are added to the per-ag busy list and
+-	 * remain there until the freeing transaction is committed to disk.
+-	 * Now that we have allocated blocks, this list must be searched to see
+-	 * if a block is being reused.  If one is, then the freeing transaction
+-	 * must be pushed to disk before this transaction.
+-	 *
+-	 * We do this by setting the current transaction to a sync transaction
+-	 * which guarantees that the freeing transaction is on disk before this
+-	 * transaction. This is done instead of a synchronous log force here so
+-	 * that we don't sit and wait with the AGF locked in the transaction
+-	 * during the log force.
+-	 */
+-	if (xfs_alloc_busy_search(mp, be32_to_cpu(agf->agf_seqno), bno, 1))
+-		xfs_trans_set_sync(tp);
+ 	return 0;
  }
  
- /*
-@@ -481,18 +513,7 @@ xlog_cil_push(
- 	 * during log forces to extract the commit lsn of the sequence that
- 	 * needs to be forced.
- 	 */
--	INIT_LIST_HEAD(&new_ctx->committing);
--	INIT_LIST_HEAD(&new_ctx->busy_extents);
--	new_ctx->sequence = ctx->sequence + 1;
--	new_ctx->cil = cil;
--	cil->xc_ctx = new_ctx;
--
--	/*
--	 * mirror the new sequence into the cil structure so that we can do
--	 * unlocked checks against the current sequence in log forces without
--	 * risking deferencing a freed context pointer.
--	 */
--	cil->xc_current_sequence = new_ctx->sequence;
-+	xlog_cil_ctx_init(new_ctx, cil, ctx->sequence + 1);
- 
- 	/*
- 	 * The switch is now done, so we can drop the context lock and move out
-Index: xfs/fs/xfs/xfs_log_priv.h
+@@ -2407,6 +2382,8 @@ xfs_free_extent(
+ 		be32_to_cpu(XFS_BUF_TO_AGF(args.agbp)->agf_length));
+ #endif
+ 	error = xfs_free_ag_extent(tp, args.agbp, args.agno, args.agbno, len, 0);
++	if (!error)
++		xfs_alloc_busy_insert(tp, args.agno, args.agbno, len);
+ error0:
+ 	xfs_perag_put(args.pag);
+ 	return error;
+Index: xfs/fs/xfs/xfs_alloc_btree.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_log_priv.h	2011-03-28 16:06:20.398888649 +0200
-+++ xfs/fs/xfs/xfs_log_priv.h	2011-03-28 16:47:04.662839297 +0200
-@@ -389,6 +389,8 @@ struct xfs_cil_ctx {
- 	struct xfs_log_vec	*lv_chain;	/* logvecs being pushed */
- 	xfs_log_callback_t	log_cb;		/* completion callback hook. */
- 	struct list_head	committing;	/* ctx committing list */
-+	atomic_t		ref;		/* reference count */
-+	struct work_struct	work;		/* for deferred freeing */
- };
+--- xfs.orig/fs/xfs/xfs_alloc_btree.c	2011-03-27 23:52:29.008480632 +0200
++++ xfs/fs/xfs/xfs_alloc_btree.c	2011-03-28 13:42:49.462839006 +0200
+@@ -94,6 +94,8 @@ xfs_allocbt_alloc_block(
+ 		*stat = 0;
+ 		return 0;
+ 	}
++	if (xfs_alloc_busy_search(cur->bc_mp, cur->bc_private.a.agno, bno, 1))
++		xfs_trans_set_sync(cur->bc_tp);
  
- /*
+ 	xfs_trans_agbtree_delta(cur->bc_tp, 1);
+ 	new->s = cpu_to_be32(bno);
 
 _______________________________________________
 xfs mailing list
