@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p2VBPXMR137682 for <xfs@oss.sgi.com>; Thu, 31 Mar 2011 06:25:33 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1EA071D5349D
-	for <xfs@oss.sgi.com>; Thu, 31 Mar 2011 04:28:44 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id lxa7nT0G2tAYW1AW for
-	<xfs@oss.sgi.com>; Thu, 31 Mar 2011 04:28:44 -0700 (PDT)
-Received: from hch by bombadil.infradead.org with local (Exim 4.72 #1 (Red Hat
-	Linux)) id 1Q5G3Q-00067I-KF
-	for xfs@oss.sgi.com; Thu, 31 Mar 2011 11:28:44 +0000
-Message-Id: <20110331112844.596870320@bombadil.infradead.org>
-Date: Thu, 31 Mar 2011 07:27:03 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 3/3] xfs: exact busy extent tracking
-References: <20110331112700.735969269@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-better-busy-extent-tracking
+	p2VEFkXJ149061 for <xfs@oss.sgi.com>; Thu, 31 Mar 2011 09:15:46 -0500
+Received: from eyas.biff.org.uk (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 020EA392C63
+	for <xfs@oss.sgi.com>; Thu, 31 Mar 2011 07:18:57 -0700 (PDT)
+Received: from eyas.biff.org.uk (eyas.biff.org.uk [80.68.92.121]) by
+	cuda.sgi.com with ESMTP id KFGMDvAfGKxcjanW for
+	<xfs@oss.sgi.com>; Thu, 31 Mar 2011 07:18:57 -0700 (PDT)
+Received: from cpc1-cmbg12-0-0-cust836.5-4.cable.virginmedia.com
+	([86.9.119.69]:1618 helo=thekelleys.org.uk)
+	by eyas.biff.org.uk with esmtpa (Exim 4.72)
+	(envelope-from <simon@thekelleys.org.uk>) id 1Q5Ii8-0006Vq-32
+	for xfs@oss.sgi.com; Thu, 31 Mar 2011 15:18:56 +0100
+Received: from spike.thekelleys.org.uk ([192.168.0.193] helo=thekelleys.org.uk)
+	by thekelleys.org.uk with asmtp (Exim 3.36 #1 (Debian))
+	id 1Q5Ii7-0008Bn-00
+	for <xfs@oss.sgi.com>; Thu, 31 Mar 2011 15:18:55 +0100
+Subject: XFS stack overflow?
+Date: Thu, 31 Mar 2011 15:18:55 +0100
+Message-Id: <1301581135.748149.10230.nullmailer@thekelleys.org.uk>
+From: <simon@thekelleys.org.uk>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,717 +36,315 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Update the extent tree in case we have to reuse a busy extent, so that it
-always is kept uptodate.  This is done by replacing the busy list searches
-with a new xfs_alloc_busy_reuse helper, which updates the busy extent tree
-in case of a reuse.  This allows us to allow reusing metadata extents
-unconditionally, and thus avoid log forces especially for allocation btree
-blocks.
+I have a set of machines which each act solely as an 
+NFS server exporting a single 60Tb XFS filesystem. These machines have
+suffered from infrequent mysterious crashes since new, but recently a 
+new workload has upped the frequency from monthly to less than a day, 
+enabling me to chase the problem harder. Below is a log, captured by 
+netconsole as the machine was going down hard. I think the crucial line 
+is:
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+[93662.200355] Thread overran stack, or stack corrupted.
 
-Index: xfs/fs/xfs/xfs_alloc.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_alloc.c	2011-03-31 12:19:35.078088911 +0200
-+++ xfs/fs/xfs/xfs_alloc.c	2011-03-31 12:24:16.758203747 +0200
-@@ -1396,8 +1396,9 @@ xfs_alloc_ag_vextent_small(
- 		if (error)
- 			goto error0;
- 		if (fbno != NULLAGBLOCK) {
--			if (xfs_alloc_busy_search(args->mp, args->agno, fbno, 1))
--				xfs_trans_set_sync(args->tp);
-+			xfs_alloc_busy_reuse(args->mp, args->agno, fbno, 1,
-+					     args->userdata);
-+
- 			if (args->userdata) {
- 				xfs_buf_t	*bp;
+Based on that I compiled up a kernel patched to set THREAD_ORDER in  
+arch/x86/include/asm/page_64_types.h to 2 (ie 16k kernel stacks.)
+A machine running that kernel has been sat at load average 130 
+(128 nfsd threads) for 60 hours now and not seen any problems, without 
+the patch the same load would bring it down in less than a day.
+
+I'm fairly convinced that I've fixed my problem, but I guess it's 
+worth posting here as the call trace might enable the devs to find and 
+fix the stack hogs. (And then I won't have to run patched kernels 
+in the future.)
+
+More information that might help.
+
+x86_64
+Storage is fibrechannel attached and the filesystem is hosted on a 
+LVM block device that concatentates four partitions, so the block access
+is going via a stack of LVM, multipath and Q-logic drivers.
+Network is Intel 10G ethernet (gxbe driver)
+Kernel is 2.6.32 with Debian patches. (both kernels)
+
+Any other information needed, just let me know.
+
+Cheers,
+
+Simon.
+
+
+ [93662.195788] BUG: scheduling while atomic: nfsd/3686/0xffff8800
+ [93662.195842] Modules linked in:
+ ioatdma
+ netconsole
+ configfs
+ cpufreq_userspace
+ cpufreq_stats
+ cpufreq_powersave
+ cpufreq_conservative
+ 8021q
+ garp
+ stp
+ nfsd
+ nfs
+ lockd
+ fscache
+ nfs_acl
+ auth_rpcgss
+ sunrpc
+ ext3
+ jbd
+ mbcache
+ fuse
+ dm_round_robin
+ dm_multipath
+ scsi_dh
+ autofs4
+ ohci_hcd
+ sd_mod
+ crc_t10dif
+ usbhid
+ hid
+ snd_pcm_oss
+ snd_mixer_oss
+ snd_pcm
+ snd_timer
+ snd
+ ipmi_si
+ ixgbe
+ soundcore
+ psmouse
+ ipmi_msghandler
+ ehci_hcd
+ dca
+ snd_page_alloc
+ uhci_hcd
+ hpilo
+ evdev
+ serio_raw
+ container
+ mdio
+ bnx2
+ usbcore
+ pcspkr
+ nls_base
+ power_meter
+ qla2xxx
+ scsi_transport_fc
+ scsi_tgt
+ processor
+ button
+ xfs
+ exportfs
+ dm_mirror
+ dm_region_hash
+ dm_log
+ dm_snapshot
+ dm_mod
+ thermal
+ fan
+ thermal_sys
+ cciss
+ scsi_mod
  
-@@ -2459,100 +2460,6 @@ error0:
- 	return error;
- }
+ [93662.196418] Pid: 3686, comm: nfsd Not tainted 2.6.32-bpo.5-amd64 #1
+ [93662.196758] Call Trace:
+ [93662.196799] [<ffffffff812fa0a9>] ? schedule+0xce/0x7da
+ [93662.196837] [<ffffffff81176ae4>] ? elv_insert+0xad/0x260
+ [93662.196871] [<ffffffff812fabeb>] ? schedule_timeout+0x2e/0xdd
+ [93662.196915] [<ffffffffa0058af7>] ? dm_unplug_all+0x3b/0x4c [dm_mod]
+ [93662.196953] [<ffffffff812fb4cf>] ? __down_common+0x8d/0xde
+ [93662.196992] [<ffffffff81068533>] ? down+0x27/0x38
+ [93662.197053] [<ffffffffa00e2f58>] ? _xfs_buf_find+0x162/0x1e0 [xfs]
+ [93662.197107] [<ffffffffa00e3030>] ? xfs_buf_get_flags+0x5a/0x13b [xfs]
+ [93662.197162] [<ffffffffa00e3123>] ? xfs_buf_read_flags+0x12/0x7a [xfs]
+ [93662.197220] [<ffffffffa00da819>] ? xfs_trans_read_buf+0x189/0x27e [xfs]
+ [93662.197272] [<ffffffffa00a1c09>] ? xfs_read_agf+0x5a/0x149 [xfs]
+ [93662.197322] [<ffffffffa00a1d1a>] ? xfs_alloc_read_agf+0x22/0xa4 [xfs]
+ [93662.197374] [<ffffffffa00a38cf>] ? xfs_alloc_fix_freelist+0x11b/0x3dd [xfs]
+ [93662.197427] [<ffffffffa00a3d57>] ? xfs_alloc_vextent+0x10e/0x3e3 [xfs]
+ [93662.197479] [<ffffffffa00aea39>] ? xfs_bmap_btalloc+0x54f/0x732 [xfs]
+ [93662.197537] [<ffffffffa00b0f4f>] ? xfs_bmapi+0x876/0x104d [xfs]
+ [93662.197594] [<ffffffffa00c6e67>] ? xfs_iext_get_ext+0x34/0x5a [xfs]
+ [93662.197652] [<ffffffffa00cbf3d>] ? xfs_iomap_write_allocate+0x245/0x387 [xfs]
+ [93662.197725] [<ffffffffa00cc9b2>] ? xfs_iomap+0x213/0x285 [xfs]
+ [93662.197763] [<ffffffff8119b5e8>] ? swiotlb_map_sg_attrs+0xeb/0x107
+ [93662.197817] [<ffffffffa00e012c>] ? xfs_map_blocks+0x25/0x2c [xfs]
+ [93662.197855] [<ffffffff81191960>] ? radix_tree_delete+0xbf/0x1ba
+ [93662.197908] [<ffffffffa00e0d53>] ? xfs_page_state_convert+0x299/0x565 [xfs]
+ [93662.197950] [<ffffffffa005a3bb>] ? dm_table_any_congested+0x66/0xe6 [dm_mod]
+ [93662.198010] [<ffffffffa00e10b7>] ? xfs_vm_releasepage+0x98/0xa5 [xfs]
+ [93662.198065] [<ffffffffa00e129a>] ? xfs_vm_writepage+0xb0/0xe6 [xfs]
+ [93662.198105] [<ffffffff810bdfd5>] ? shrink_page_list+0x375/0x623
+ [93662.198140] [<ffffffff810be9b8>] ? shrink_list+0x45c/0x767
+ [93662.198192] [<ffffffffa00b5249>] ? xfs_btree_lookup_get_block+0x9d/0xac [xfs]
+ [93662.198262] [<ffffffffa00b275f>] ? xfs_bmbt_init_key_from_rec+0xc/0x14 [xfs]
+ [93662.198314] [<ffffffffa00b2e1c>] ? xfs_lookup_get_search_key+0x29/0x3c [xfs]
+ [93662.198349] [<ffffffff810bef43>] ? shrink_zone+0x280/0x342
+ [93662.198381] [<ffffffff810c000a>] ? try_to_free_pages+0x232/0x38e
+ [93662.198413] [<ffffffff810bcfff>] ? isolate_pages_global+0x0/0x20f
+ [93662.198450] [<ffffffff810ba098>] ? __alloc_pages_nodemask+0x3cd/0x5f5
+ [93662.198486] [<ffffffff810e6535>] ? new_slab+0x42/0x1ca
+ [93662.198516] [<ffffffff810e68ad>] ? __slab_alloc+0x1f0/0x39b
+ [93662.198560] [<ffffffffa00df806>] ? kmem_zone_alloc+0x5e/0xa4 [xfs]
+ [93662.198605] [<ffffffffa00df806>] ? kmem_zone_alloc+0x5e/0xa4 [xfs]
+ [93662.198637] [<ffffffff810e6d88>] ? kmem_cache_alloc+0x7f/0xf0
+ [93662.198697] [<ffffffffa00df806>] ? kmem_zone_alloc+0x5e/0xa4 [xfs]
+ [93662.198746] [<ffffffffa00df85a>] ? kmem_zone_zalloc+0xe/0x2e [xfs]
+ [93662.198792] [<ffffffffa00d9979>] ? _xfs_trans_alloc+0x29/0x64 [xfs]
+ [93662.198842] [<ffffffffa00d9bb4>] ? xfs_trans_alloc+0x95/0xa1 [xfs]
+ [93662.198888] [<ffffffffa00d9d57>] ? xfs_trans_unlocked_item+0x20/0x3a [xfs]
+ [93662.198931] [<ffffffffa009ab39>] ? xfs_qm_dqattach+0x32/0x3b [xfs]
+ [93662.198978] [<ffffffffa00cbdab>] ? xfs_iomap_write_allocate+0xb3/0x387 [xfs]
+ [93662.199031] [<ffffffffa00cc9b2>] ? xfs_iomap+0x213/0x285 [xfs]
+ [93662.199076] [<ffffffffa00e012c>] ? xfs_map_blocks+0x25/0x2c [xfs]
+ [93662.199122] [<ffffffffa00cca0f>] ? xfs_iomap+0x270/0x285 [xfs]
+ [93662.199169] [<ffffffffa00e0d53>] ? xfs_page_state_convert+0x299/0x565 [xfs]
+ [93662.199218] [<ffffffffa00e129a>] ? xfs_vm_writepage+0xb0/0xe6 [xfs]
+ [93662.199251] [<ffffffff810ba2ca>] ? __writepage+0xa/0x25
+ [93662.199283] [<ffffffff810ba951>] ? write_cache_pages+0x20b/0x327
+ [93662.199314] [<ffffffff810ba2c0>] ? __writepage+0x0/0x25
+ [93662.199347] [<ffffffff810b4925>] ? __filemap_fdatawrite_range+0x4b/0x54
+ [93662.199381] [<ffffffff810b4954>] ? filemap_write_and_wait_range+0x26/0x52
+ [93662.199426] [<ffffffffa00e6d82>] ? xfs_write+0x63b/0x6ea [xfs]
+ [93662.199458] [<ffffffff812fb3f5>] ? down_read+0x9/0x19
+ [93662.199503] [<ffffffffa00c6c36>] ? xfs_iget+0x401/0x45b [xfs]
+ [93662.199550] [<ffffffffa00e36ad>] ? xfs_file_aio_write+0x0/0x5d [xfs]
+ [93662.199584] [<ffffffff810ee511>] ? do_sync_readv_writev+0xc0/0x107
+ [93662.199630] [<ffffffffa00d9d57>] ? xfs_trans_unlocked_item+0x20/0x3a [xfs]
+ [93662.199666] [<ffffffff81064d16>] ? autoremove_wake_function+0x0/0x2e
+ [93662.199698] [<ffffffff810ee39d>] ? rw_copy_check_uvector+0x6d/0xe4
+ [93662.199733] [<ffffffff810eebad>] ? do_readv_writev+0xb2/0x115
+ [93662.199788] [<ffffffffa0387f5c>] ? nfsd_setuser_and_check_port+0x62/0x7c [nfsd]
+ [93662.199843] [<ffffffffa038987d>] ? nfsd_vfs_write+0x11a/0x329 [nfsd]
+ [93662.199880] [<ffffffffa038a022>] ? nfsd_open+0x137/0x16c [nfsd]
+ [93662.199915] [<ffffffffa038a34b>] ? nfsd_write+0xc5/0xe2 [nfsd]
+ [93662.199952] [<ffffffffa0390784>] ? nfsd3_proc_write+0xc7/0xe5 [nfsd]
+ [93662.199987] [<ffffffffa0385329>] ? nfsd_dispatch+0xdd/0x1b9 [nfsd]
+ [93662.200027] [<ffffffffa02c2513>] ? svc_process+0x403/0x627 [sunrpc]
+ [93662.200067] [<ffffffffa0385772>] ? nfsd+0x0/0x12e [nfsd]
+ [93662.200100] [<ffffffffa0385857>] ? nfsd+0xe5/0x12e [nfsd]
+ [93662.200130] [<ffffffff81064a49>] ? kthread+0x79/0x81
+ [93662.200162] [<ffffffff81011baa>] ? child_rip+0xa/0x20
+ [93662.200191] [<ffffffff810649d0>] ? kthread+0x0/0x81
+ [93662.200220] [<ffffffff81011ba0>] ? child_rip+0x0/0x20
+ [93662.200256] BUG: unable to handle kernel paging request at 000000006eab11a0
+ [93662.200294] IP: [<ffffffff8103fd9b>] update_curr+0xf9/0x147
+ [93662.200331] PGD 0 
  
--
--/*
-- * AG Busy list management
-- * The busy list contains block ranges that have been freed but whose
-- * transactions have not yet hit disk.  If any block listed in a busy
-- * list is reused, the transaction that freed it must be forced to disk
-- * before continuing to use the block.
-- *
-- * xfs_alloc_busy_insert - add to the per-ag busy list
-- * xfs_alloc_busy_clear - remove an item from the per-ag busy list
-- * xfs_alloc_busy_search - search for a busy extent
-- */
--
--/*
-- * Insert a new extent into the busy tree.
-- *
-- * The busy extent tree is indexed by the start block of the busy extent.
-- * there can be multiple overlapping ranges in the busy extent tree but only
-- * ever one entry at a given start block. The reason for this is that
-- * multi-block extents can be freed, then smaller chunks of that extent
-- * allocated and freed again before the first transaction commit is on disk.
-- * If the exact same start block is freed a second time, we have to wait for
-- * that busy extent to pass out of the tree before the new extent is inserted.
-- * There are two main cases we have to handle here.
-- *
-- * The first case is a transaction that triggers a "free - allocate - free"
-- * cycle. This can occur during btree manipulations as a btree block is freed
-- * to the freelist, then allocated from the free list, then freed again. In
-- * this case, the second extxpnet free is what triggers the duplicate and as
-- * such the transaction IDs should match. Because the extent was allocated in
-- * this transaction, the transaction must be marked as synchronous. This is
-- * true for all cases where the free/alloc/free occurs in the one transaction,
-- * hence the addition of the ASSERT(tp->t_flags & XFS_TRANS_SYNC) to this case.
-- * This serves to catch violations of the second case quite effectively.
-- *
-- * The second case is where the free/alloc/free occur in different
-- * transactions. In this case, the thread freeing the extent the second time
-- * can't mark the extent busy immediately because it is already tracked in a
-- * transaction that may be committing.  When the log commit for the existing
-- * busy extent completes, the busy extent will be removed from the tree. If we
-- * allow the second busy insert to continue using that busy extent structure,
-- * it can be freed before this transaction is safely in the log.  Hence our
-- * only option in this case is to force the log to remove the existing busy
-- * extent from the list before we insert the new one with the current
-- * transaction ID.
-- *
-- * The problem we are trying to avoid in the free-alloc-free in separate
-- * transactions is most easily described with a timeline:
-- *
-- *      Thread 1	Thread 2	Thread 3	xfslogd
-- *	xact alloc
-- *	free X
-- *	mark busy
-- *	commit xact
-- *	free xact
-- *			xact alloc
-- *			alloc X
-- *			busy search
-- *			mark xact sync
-- *			commit xact
-- *			free xact
-- *			force log
-- *			checkpoint starts
-- *			....
-- *					xact alloc
-- *					free X
-- *					mark busy
-- *					finds match
-- *					*** KABOOM! ***
-- *					....
-- *							log IO completes
-- *							unbusy X
-- *			checkpoint completes
-- *
-- * By issuing a log force in thread 3 @ "KABOOM", the thread will block until
-- * the checkpoint completes, and the busy extent it matched will have been
-- * removed from the tree when it is woken. Hence it can then continue safely.
-- *
-- * However, to ensure this matching process is robust, we need to use the
-- * transaction ID for identifying transaction, as delayed logging results in
-- * the busy extent and transaction lifecycles being different. i.e. the busy
-- * extent is active for a lot longer than the transaction.  Hence the
-- * transaction structure can be freed and reallocated, then mark the same
-- * extent busy again in the new transaction. In this case the new transaction
-- * will have a different tid but can have the same address, and hence we need
-- * to check against the tid.
-- *
-- * Future: for delayed logging, we could avoid the log force if the extent was
-- * first freed in the current checkpoint sequence. This, however, requires the
-- * ability to pin the current checkpoint in memory until this transaction
-- * commits to ensure that both the original free and the current one combine
-- * logically into the one checkpoint. If the checkpoint sequences are
-- * different, however, we still need to wait on a log force.
-- */
- void
- xfs_alloc_busy_insert(
- 	struct xfs_trans	*tp,
-@@ -2564,9 +2471,7 @@ xfs_alloc_busy_insert(
- 	struct xfs_busy_extent	*busyp;
- 	struct xfs_perag	*pag;
- 	struct rb_node		**rbp;
--	struct rb_node		*parent;
--	int			match;
--
-+	struct rb_node		*parent = NULL;
+ [93662.200355] Thread overran stack, or stack corrupted
+ [93662.200383] Oops: 0000 [#1] SMP
  
- 	new = kmem_zalloc(sizeof(struct xfs_busy_extent), KM_MAYFAIL);
- 	if (!new) {
-@@ -2575,7 +2480,7 @@ xfs_alloc_busy_insert(
- 		 * block, make this a synchronous transaction to insure that
- 		 * the block is not reused before this transaction commits.
- 		 */
--		trace_xfs_alloc_busy(tp, agno, bno, len, 1);
-+		trace_xfs_alloc_busy_enomem(tp->t_mountp, agno, bno, len);
- 		xfs_trans_set_sync(tp);
- 		return;
- 	}
-@@ -2583,66 +2488,28 @@ xfs_alloc_busy_insert(
- 	new->agno = agno;
- 	new->bno = bno;
- 	new->length = len;
--	new->tid = xfs_log_get_trans_ident(tp);
--
- 	INIT_LIST_HEAD(&new->list);
+ [93662.200414] last sysfs file: /sys/devices/pci0000:00/0000:00:09.0/0000:07:00.1/irq
+ [93662.200461] CPU 1 
  
- 	/* trace before insert to be able to see failed inserts */
--	trace_xfs_alloc_busy(tp, agno, bno, len, 0);
-+	trace_xfs_alloc_busy(tp->t_mountp, agno, bno, len);
- 
- 	pag = xfs_perag_get(tp->t_mountp, new->agno);
--restart:
- 	spin_lock(&pag->pagb_lock);
- 	rbp = &pag->pagb_tree.rb_node;
--	parent = NULL;
--	busyp = NULL;
--	match = 0;
--	while (*rbp && match >= 0) {
-+	while (*rbp) {
- 		parent = *rbp;
- 		busyp = rb_entry(parent, struct xfs_busy_extent, rb_node);
- 
- 		if (new->bno < busyp->bno) {
--			/* may overlap, but exact start block is lower */
- 			rbp = &(*rbp)->rb_left;
--			if (new->bno + new->length > busyp->bno)
--				match = busyp->tid == new->tid ? 1 : -1;
-+			ASSERT(new->bno + new->length <= busyp->bno);
- 		} else if (new->bno > busyp->bno) {
--			/* may overlap, but exact start block is higher */
- 			rbp = &(*rbp)->rb_right;
--			if (bno < busyp->bno + busyp->length)
--				match = busyp->tid == new->tid ? 1 : -1;
-+			ASSERT(bno >= busyp->bno + busyp->length);
- 		} else {
--			match = busyp->tid == new->tid ? 1 : -1;
--			break;
-+			ASSERT(0);
- 		}
- 	}
--	if (match < 0) {
--		/* overlap marked busy in different transaction */
--		spin_unlock(&pag->pagb_lock);
--		xfs_log_force(tp->t_mountp, XFS_LOG_SYNC);
--		goto restart;
--	}
--	if (match > 0) {
--		/*
--		 * overlap marked busy in same transaction. Update if exact
--		 * start block match, otherwise combine the busy extents into
--		 * a single range.
--		 */
--		if (busyp->bno == new->bno) {
--			busyp->length = max(busyp->length, new->length);
--			spin_unlock(&pag->pagb_lock);
--			ASSERT(tp->t_flags & XFS_TRANS_SYNC);
--			xfs_perag_put(pag);
--			kmem_free(new);
--			return;
--		}
--		rb_erase(&busyp->rb_node, &pag->pagb_tree);
--		new->length = max(busyp->bno + busyp->length,
--					new->bno + new->length) -
--				min(busyp->bno, new->bno);
--		new->bno = min(busyp->bno, new->bno);
--	} else
--		busyp = NULL;
- 
- 	rb_link_node(&new->rb_node, parent, rbp);
- 	rb_insert_color(&new->rb_node, &pag->pagb_tree);
-@@ -2650,7 +2517,6 @@ restart:
- 	list_add(&new->list, &tp->t_busy);
- 	spin_unlock(&pag->pagb_lock);
- 	xfs_perag_put(pag);
--	kmem_free(busyp);
- }
- 
- /*
-@@ -2699,12 +2565,196 @@ xfs_alloc_busy_search(
- 		}
- 	}
- 	spin_unlock(&pag->pagb_lock);
--	trace_xfs_alloc_busysearch(mp, agno, bno, len, !!match);
- 	xfs_perag_put(pag);
- 	return match;
- }
- 
- /*
-+ * The found free extent [fbno, fend] overlaps part or all of the given busy
-+ * extent.  If the overlap covers the beginning, the end, or all of the busy
-+ * extent, the overlapping portion can be made unbusy and used for the
-+ * allocation.  We can't split a busy extent because we can't modify a
-+ * transaction/CIL context busy list, but we can update an entries block
-+ * number or length.
-+ *
-+ * Returns true if the extent can safely be reused, or false if the search
-+ * needs to be restarted.  Releases pagb_lock in the failure case.
-+ */
-+STATIC bool
-+xfs_alloc_busy_update_extent(
-+	struct xfs_mount	*mp,
-+	struct xfs_perag	*pag,
-+	struct xfs_busy_extent	*busyp,
-+	xfs_agblock_t		fbno,
-+	xfs_extlen_t		flen,
-+	bool			userdata)
-+{
-+	xfs_agblock_t		fend = fbno + flen;
-+	xfs_agblock_t		bbno = busyp->bno;
-+	xfs_agblock_t		bend = bbno + busyp->length;
-+
-+	/*
-+	 * If there is a busy extent verlapping a user allocation, we have
-+	 * no chance but to force the log and retry the search.
-+	 *
-+	 * Fortunately this does not happen during normal operation, but
-+	 * only if the filesystem is very low on space and has to dip into
-+	 * the AGFL for normal allocations.
-+	 */
-+	if (userdata)
-+		goto out_force_log;
-+
-+	if (bbno < fbno && bend > fend) {
-+		/*
-+		 * Case 1:
-+		 *    bbno           bend
-+		 *    +BBBBBBBBBBBBBBBBB+
-+		 *        +---------+
-+		 *        fbno   fend
-+		 */
-+
-+		/*
-+		 * We would have to split the busy extent to be able to track
-+		 * it correct, which we cannot do because we would have to
-+		 * modify the list of busy extents attached to the transaction
-+		 * or CIL context, which is immutable.
-+		 *
-+		 * Force out the log to clear the busy extent and retry the
-+		 * search.
-+		 */
-+		goto out_force_log;
-+	} else if (bbno >= fbno && bend <= fend) {
-+		/*
-+		 * Case 2:
-+		 *    bbno           bend
-+		 *    +BBBBBBBBBBBBBBBBB+
-+		 *    +-----------------+
-+		 *    fbno           fend
-+		 *
-+		 * Case 3:
-+		 *    bbno           bend
-+		 *    +BBBBBBBBBBBBBBBBB+
-+		 *    +--------------------------+
-+		 *    fbno                    fend
-+		 *
-+		 * Case 4:
-+		 *             bbno           bend
-+		 *             +BBBBBBBBBBBBBBBBB+
-+		 *    +--------------------------+
-+		 *    fbno                    fend
-+		 *
-+		 * Case 5:
-+		 *             bbno           bend
-+		 *             +BBBBBBBBBBBBBBBBB+
-+		 *    +-----------------------------------+
-+		 *    fbno                             fend
-+		 *
-+		 */
-+
-+		/*
-+		 * The busy extent is fully covered by the extent we are
-+		 * allocating, and can simply be removed from the rbtree.
-+		 * However we cannot remove it from the immutable list
-+		 * tracking busy extents in the transaction or CIL context,
-+		 * so set the length to zero to mark it invalid.
-+		 *
-+		 * We also need to restart the busy extent search from the
-+		 * tree root, as we just delete the rbtree node and thus cannot
-+		 * continue the search for other busy extents.
-+		 */
-+		rb_erase(&busyp->rb_node, &pag->pagb_tree);
-+		busyp->length = 0;
-+		spin_unlock(&pag->pagb_lock);
-+		return false;
-+	} else if (bbno == fbno) {
-+		/*
-+		 * Case 6:
-+		 *              bbno           bend
-+		 *             +BBBBBBBBBBBBBBBBB+
-+		 *             +---------+
-+		 *             fbno   fend
-+		 *
-+		 * Case 7:
-+		 *             bbno           bend
-+		 *             +BBBBBBBBBBBBBBBBB+
-+		 *    +------------------+
-+		 *    fbno            fend
-+		 *
-+		 */
-+		busyp->bno = fend;
-+	} else if (bend == fend) {
-+		/*
-+		 * Case 8:
-+		 *    bbno           bend
-+		 *    +BBBBBBBBBBBBBBBBB+
-+		 *        +-------------+
-+		 *        fbno       fend
-+		 *
-+		 * Case 9:
-+		 *    bbno           bend
-+		 *    +BBBBBBBBBBBBBBBBB+
-+		 *        +----------------------+
-+		 *        fbno                fend
-+		 */
-+		busyp->length = fbno - busyp->bno;
-+	} else {
-+		ASSERT(0);
-+	}
-+
-+	trace_xfs_alloc_busy_reuse(mp, pag->pag_agno, fbno, flen);
-+	return true;
-+
-+out_force_log:
-+	spin_unlock(&pag->pagb_lock);
-+	xfs_log_force(mp, XFS_LOG_SYNC);
-+	trace_xfs_alloc_busy_force(mp, pag->pag_agno, fbno, flen);
-+	return false;
-+}
-+
-+
-+/*
-+ * For a given extent [fbno, flen], make sure we can reuse it safely.
-+ */
-+void
-+xfs_alloc_busy_reuse(
-+	struct xfs_mount	*mp,
-+	xfs_agnumber_t		agno,
-+	xfs_agblock_t		fbno,
-+	xfs_extlen_t		flen,
-+	bool			userdata)
-+{
-+	struct xfs_perag	*pag;
-+	struct rb_node		*rbp;
-+
-+	ASSERT(flen > 0);
-+
-+	pag = xfs_perag_get(mp, agno);
-+restart:
-+	spin_lock(&pag->pagb_lock);
-+	rbp = pag->pagb_tree.rb_node;
-+	while (rbp) {
-+		struct xfs_busy_extent *busyp =
-+			rb_entry(rbp, struct xfs_busy_extent, rb_node);
-+		xfs_agblock_t	bbno = busyp->bno;
-+		xfs_agblock_t	bend = bbno + busyp->length;
-+
-+		if (fbno + flen <= bbno) {
-+			rbp = rbp->rb_left;
-+			continue;
-+		} else if (fbno >= bend) {
-+			rbp = rbp->rb_right;
-+			continue;
-+		}
-+
-+		if (!xfs_alloc_busy_update_extent(mp, pag, busyp, fbno, flen,
-+						  userdata))
-+			goto restart;
-+	}
-+	spin_unlock(&pag->pagb_lock);
-+	xfs_perag_put(pag);
-+}
-+
-+/*
-  * For a given extent [fbno, flen], search the busy extent list to find a
-  * subset of the extent that is not busy.  If *rlen is smaller than
-  * args->minlen no suitable extent could be found, and the higher level
-@@ -2718,12 +2768,15 @@ xfs_alloc_busy_trim(
- 	xfs_agblock_t		*rbno,
- 	xfs_extlen_t		*rlen)
- {
--	xfs_agblock_t		fbno = bno;
--	xfs_extlen_t		flen = len;
-+	xfs_agblock_t		fbno;
-+	xfs_extlen_t		flen;
- 	struct rb_node		*rbp;
- 
--	ASSERT(flen > 0);
-+	ASSERT(len > 0);
- 
-+restart:
-+	fbno = bno;
-+	flen = len;
- 	spin_lock(&args->pag->pagb_lock);
- 	rbp = args->pag->pagb_tree.rb_node;
- 	while (rbp && flen >= args->minlen) {
-@@ -2741,6 +2794,18 @@ xfs_alloc_busy_trim(
- 			continue;
- 		}
- 
-+		/*
-+		 * If this is a metadata allocation, try to reuse the busy
-+		 * extent instead of trimming the allocation.
-+		 */
-+		if (!args->userdata) {
-+			if (!xfs_alloc_busy_update_extent(args->mp, args->pag,
-+							  busyp, fbno, flen,
-+							  false))
-+				goto restart;
-+			continue;
-+		}
-+
- 		if (bbno <= fbno) {
- 			/* start overlap */
- 
-@@ -2878,6 +2943,11 @@ fail:
- 	 * re-check if the trimmed extent satisfies the minlen requirement.
- 	 */
- 	spin_unlock(&args->pag->pagb_lock);
-+	if (fbno != bno || flen != len) {
-+		trace_xfs_alloc_busy_trim(args->mp, args->agno, bno, len,
-+					  fbno, flen);
-+	}
-+	trace_xfs_alloc_busy_trim(args->mp, args->agno, bno, len, fbno, 0);
- 	*rbno = fbno;
- 	*rlen = 0;
- }
-@@ -2889,17 +2959,15 @@ xfs_alloc_busy_clear(
- {
- 	struct xfs_perag	*pag;
- 
--	trace_xfs_alloc_unbusy(mp, busyp->agno, busyp->bno,
--						busyp->length);
--
--	ASSERT(xfs_alloc_busy_search(mp, busyp->agno, busyp->bno,
--						busyp->length) == 1);
--
- 	list_del_init(&busyp->list);
- 
- 	pag = xfs_perag_get(mp, busyp->agno);
- 	spin_lock(&pag->pagb_lock);
--	rb_erase(&busyp->rb_node, &pag->pagb_tree);
-+	if (busyp->length) {
-+		trace_xfs_alloc_busy_clear(mp, busyp->agno, busyp->bno,
-+						busyp->length);
-+		rb_erase(&busyp->rb_node, &pag->pagb_tree);
-+	}
- 	spin_unlock(&pag->pagb_lock);
- 	xfs_perag_put(pag);
- 
-Index: xfs/fs/xfs/xfs_alloc.h
-===================================================================
---- xfs.orig/fs/xfs/xfs_alloc.h	2011-03-31 12:19:07.000000000 +0200
-+++ xfs/fs/xfs/xfs_alloc.h	2011-03-31 12:22:56.000000000 +0200
-@@ -145,6 +145,10 @@ xfs_alloc_busy_clear(struct xfs_mount *m
- int
- xfs_alloc_busy_search(struct xfs_mount *mp, xfs_agnumber_t agno,
- 	xfs_agblock_t bno, xfs_extlen_t len);
-+
-+void
-+xfs_alloc_busy_reuse(struct xfs_mount *mp, xfs_agnumber_t agno,
-+	xfs_agblock_t fbno, xfs_extlen_t flen, bool userdata);
- #endif	/* __KERNEL__ */
- 
- /*
-Index: xfs/fs/xfs/xfs_alloc_btree.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_alloc_btree.c	2011-03-31 12:19:07.000000000 +0200
-+++ xfs/fs/xfs/xfs_alloc_btree.c	2011-03-31 12:22:56.000000000 +0200
-@@ -94,8 +94,8 @@ xfs_allocbt_alloc_block(
- 		*stat = 0;
- 		return 0;
- 	}
--	if (xfs_alloc_busy_search(cur->bc_mp, cur->bc_private.a.agno, bno, 1))
--		xfs_trans_set_sync(cur->bc_tp);
-+
-+	xfs_alloc_busy_reuse(cur->bc_mp, cur->bc_private.a.agno, bno, 1, false);
- 
- 	xfs_trans_agbtree_delta(cur->bc_tp, 1);
- 	new->s = cpu_to_be32(bno);
-@@ -120,17 +120,6 @@ xfs_allocbt_free_block(
- 	if (error)
- 		return error;
- 
--	/*
--	 * Since blocks move to the free list without the coordination used in
--	 * xfs_bmap_finish, we can't allow block to be available for
--	 * reallocation and non-transaction writing (user data) until we know
--	 * that the transaction that moved it to the free list is permanently
--	 * on disk. We track the blocks by declaring these blocks as "busy";
--	 * the busy list is maintained on a per-ag basis and each transaction
--	 * records which entries should be removed when the iclog commits to
--	 * disk. If a busy block is allocated, the iclog is pushed up to the
--	 * LSN that freed the block.
--	 */
- 	xfs_alloc_busy_insert(cur->bc_tp, be32_to_cpu(agf->agf_seqno), bno, 1);
- 	xfs_trans_agbtree_delta(cur->bc_tp, -1);
- 	return 0;
-Index: xfs/fs/xfs/xfs_ag.h
-===================================================================
---- xfs.orig/fs/xfs/xfs_ag.h	2011-03-31 12:19:07.000000000 +0200
-+++ xfs/fs/xfs/xfs_ag.h	2011-03-31 12:22:56.000000000 +0200
-@@ -187,7 +187,6 @@ struct xfs_busy_extent {
- 	xfs_agnumber_t	agno;
- 	xfs_agblock_t	bno;
- 	xfs_extlen_t	length;
--	xlog_tid_t	tid;		/* transaction that created this */
- };
- 
- /*
-Index: xfs/fs/xfs/xfs_log.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_log.c	2011-03-31 12:19:07.127590865 +0200
-+++ xfs/fs/xfs/xfs_log.c	2011-03-31 12:22:56.000000000 +0200
-@@ -3248,13 +3248,6 @@ xfs_log_ticket_get(
- 	return ticket;
- }
- 
--xlog_tid_t
--xfs_log_get_trans_ident(
--	struct xfs_trans	*tp)
--{
--	return tp->t_ticket->t_tid;
--}
--
- /*
-  * Allocate and initialise a new log ticket.
-  */
-Index: xfs/fs/xfs/xfs_log.h
-===================================================================
---- xfs.orig/fs/xfs/xfs_log.h	2011-03-31 12:19:07.139592252 +0200
-+++ xfs/fs/xfs/xfs_log.h	2011-03-31 12:22:56.000000000 +0200
-@@ -189,8 +189,6 @@ void	  xlog_iodone(struct xfs_buf *);
- struct xlog_ticket *xfs_log_ticket_get(struct xlog_ticket *ticket);
- void	  xfs_log_ticket_put(struct xlog_ticket *ticket);
- 
--xlog_tid_t xfs_log_get_trans_ident(struct xfs_trans *tp);
--
- void	xfs_log_commit_cil(struct xfs_mount *mp, struct xfs_trans *tp,
- 				struct xfs_log_vec *log_vector,
- 				xfs_lsn_t *commit_lsn, int flags);
-Index: xfs/fs/xfs/xfs_log_priv.h
-===================================================================
---- xfs.orig/fs/xfs/xfs_log_priv.h	2011-03-31 12:19:07.000000000 +0200
-+++ xfs/fs/xfs/xfs_log_priv.h	2011-03-31 12:22:56.000000000 +0200
-@@ -144,6 +144,8 @@ static inline uint xlog_get_client_id(__
- #define	XLOG_RECOVERY_NEEDED	0x4	/* log was recovered */
- #define XLOG_IO_ERROR		0x8	/* log hit an I/O error, and being
- 					   shutdown */
-+typedef __uint32_t xlog_tid_t;
-+
- 
- #ifdef __KERNEL__
- /*
-Index: xfs/fs/xfs/xfs_types.h
-===================================================================
---- xfs.orig/fs/xfs/xfs_types.h	2011-03-31 12:19:07.167591472 +0200
-+++ xfs/fs/xfs/xfs_types.h	2011-03-31 12:22:56.000000000 +0200
-@@ -73,8 +73,6 @@ typedef	__int32_t	xfs_tid_t;	/* transact
- typedef	__uint32_t	xfs_dablk_t;	/* dir/attr block number (in file) */
- typedef	__uint32_t	xfs_dahash_t;	/* dir/attr hash value */
- 
--typedef __uint32_t	xlog_tid_t;	/* transaction ID type */
--
- /*
-  * These types are 64 bits on disk but are either 32 or 64 bits in memory.
-  * Disk based types:
-Index: xfs/fs/xfs/linux-2.6/xfs_trace.h
-===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_trace.h	2011-03-31 12:23:38.030091634 +0200
-+++ xfs/fs/xfs/linux-2.6/xfs_trace.h	2011-03-31 12:24:16.758203747 +0200
-@@ -1151,44 +1151,7 @@ TRACE_EVENT(xfs_bunmap,
- 
- );
- 
--#define XFS_BUSY_SYNC \
--	{ 0,	"async" }, \
--	{ 1,	"sync" }
--
--TRACE_EVENT(xfs_alloc_busy,
--	TP_PROTO(struct xfs_trans *trans, xfs_agnumber_t agno,
--		 xfs_agblock_t agbno, xfs_extlen_t len, int sync),
--	TP_ARGS(trans, agno, agbno, len, sync),
--	TP_STRUCT__entry(
--		__field(dev_t, dev)
--		__field(struct xfs_trans *, tp)
--		__field(int, tid)
--		__field(xfs_agnumber_t, agno)
--		__field(xfs_agblock_t, agbno)
--		__field(xfs_extlen_t, len)
--		__field(int, sync)
--	),
--	TP_fast_assign(
--		__entry->dev = trans->t_mountp->m_super->s_dev;
--		__entry->tp = trans;
--		__entry->tid = trans->t_ticket->t_tid;
--		__entry->agno = agno;
--		__entry->agbno = agbno;
--		__entry->len = len;
--		__entry->sync = sync;
--	),
--	TP_printk("dev %d:%d trans 0x%p tid 0x%x agno %u agbno %u len %u %s",
--		  MAJOR(__entry->dev), MINOR(__entry->dev),
--		  __entry->tp,
--		  __entry->tid,
--		  __entry->agno,
--		  __entry->agbno,
--		  __entry->len,
--		  __print_symbolic(__entry->sync, XFS_BUSY_SYNC))
--
--);
--
--TRACE_EVENT(xfs_alloc_unbusy,
-+DECLARE_EVENT_CLASS(xfs_busy_class,
- 	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
- 		 xfs_agblock_t agbno, xfs_extlen_t len),
- 	TP_ARGS(mp, agno, agbno, len),
-@@ -1210,36 +1173,16 @@ TRACE_EVENT(xfs_alloc_unbusy,
- 		  __entry->agbno,
- 		  __entry->len)
- );
--
--#define XFS_BUSY_STATES \
--	{ 0,	"missing" }, \
--	{ 1,	"found" }
--
--TRACE_EVENT(xfs_alloc_busysearch,
--	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
--		 xfs_agblock_t agbno, xfs_extlen_t len, int found),
--	TP_ARGS(mp, agno, agbno, len, found),
--	TP_STRUCT__entry(
--		__field(dev_t, dev)
--		__field(xfs_agnumber_t, agno)
--		__field(xfs_agblock_t, agbno)
--		__field(xfs_extlen_t, len)
--		__field(int, found)
--	),
--	TP_fast_assign(
--		__entry->dev = mp->m_super->s_dev;
--		__entry->agno = agno;
--		__entry->agbno = agbno;
--		__entry->len = len;
--		__entry->found = found;
--	),
--	TP_printk("dev %d:%d agno %u agbno %u len %u %s",
--		  MAJOR(__entry->dev), MINOR(__entry->dev),
--		  __entry->agno,
--		  __entry->agbno,
--		  __entry->len,
--		  __print_symbolic(__entry->found, XFS_BUSY_STATES))
--);
-+#define DEFINE_BUSY_EVENT(name) \
-+DEFINE_EVENT(xfs_busy_class, name, \
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
-+		 xfs_agblock_t agbno, xfs_extlen_t len), \
-+	TP_ARGS(mp, agno, agbno, len))
-+DEFINE_BUSY_EVENT(xfs_alloc_busy);
-+DEFINE_BUSY_EVENT(xfs_alloc_busy_enomem);
-+DEFINE_BUSY_EVENT(xfs_alloc_busy_force);
-+DEFINE_BUSY_EVENT(xfs_alloc_busy_reuse);
-+DEFINE_BUSY_EVENT(xfs_alloc_busy_clear);
- 
- TRACE_EVENT(xfs_alloc_busy_trim,
- 	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
+ [93662.200486] Modules linked in:
+ ioatdma
+ netconsole
+ configfs
+ cpufreq_userspace
+ cpufreq_stats
+ cpufreq_powersave
+ cpufreq_conservative
+ 8021q
+ garp
+ stp
+ nfsd
+ nfs
+ lockd
+ fscache
+ nfs_acl
+ auth_rpcgss
+ sunrpc
+ ext3
+ jbd
+ mbcache
+ fuse
+ dm_round_robin
+ dm_multipath
+ scsi_dh
+ autofs4
+ ohci_hcd
+ sd_mod
+ crc_t10dif
+ usbhid
+ hid
+ snd_pcm_oss
+ snd_mixer_oss
+ snd_pcm
+ snd_timer
+ snd
+ ipmi_si
+ ixgbe
+ soundcore
+ psmouse
+ ipmi_msghandler
+ ehci_hcd
+ dca
+ snd_page_alloc
+ uhci_hcd
+ hpilo
+ evdev
+ serio_raw
+ container
+ mdio
+ bnx2
+ usbcore
+ pcspkr
+ nls_base
+ power_meter
+ qla2xxx
+ scsi_transport_fc
+ scsi_tgt
+ processor
+ button
+ xfs
+ exportfs
+ dm_mirror
+ dm_region_hash
+ dm_log
+ dm_snapshot
+ dm_mod
+ [93662.201420] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+ [93662.201888] [<ffffffff812fb4cf>] ? __down_common+0x8d/0xde
+ [93662.208496] [<ffffffff81068533>] ? down+0x27/0x38
+ [93662.208539] [<ffffffffa00e2f58>] ? _xfs_buf_find+0x162/0x1e0 [xfs]
+ [93662.208584] [<ffffffffa00e3030>] ? xfs_buf_get_flags+0x5a/0x13b [xfs]
+ [93662.208629] [<ffffffffa00e3123>] ? xfs_buf_read_flags+0x12/0x7a [xfs]
+ [93662.208675] [<ffffffffa00da819>] ? xfs_trans_read_buf+0x189/0x27e [xfs]
+ [93662.208720] [<ffffffffa00a1c09>] ? xfs_read_agf+0x5a/0x149 [xfs]
+ [93662.208762] [<ffffffffa00a1d1a>] ? xfs_alloc_read_agf+0x22/0xa4 [xfs]
+ [93662.208806] [<ffffffffa00a38cf>] ? xfs_alloc_fix_freelist+0x11b/0x3dd [xfs]
+ [93662.208851] [<ffffffffa00a3d57>] ? xfs_alloc_vextent+0x10e/0x3e3 [xfs]
+ [93662.208896] [<ffffffffa00aea39>] ? xfs_bmap_btalloc+0x54f/0x732 [xfs]
+ [93662.208945] [<ffffffffa00b0f4f>] ? xfs_bmapi+0x876/0x104d [xfs]
+ [93662.208995] [<ffffffffa00c6e67>] ? xfs_iext_get_ext+0x34/0x5a [xfs]
+ [93662.209042] [<ffffffffa00cbf3d>] ? xfs_iomap_write_allocate+0x245/0x387 [xfs]
+ [93662.209108] [<ffffffffa00cc9b2>] ? xfs_iomap+0x213/0x285 [xfs]
+ [93662.209424] [<ffffffff810bdfd5>] ? shrink_page_list+0x375/0x623
+ [93662.209757] [<ffffffff810ba098>] ? __alloc_pages_nodemask+0x3cd/0x5f5
+ [93662.210078] [<ffffffffa00d9979>] ? _xfs_trans_alloc+0x29/0x64 [xfs]
+ [93662.210575] [<ffffffff810ba951>] ? write_cache_pages+0x20b/0x327
+ [93662.211100] [<ffffffffa038987d>] ? nfsd_vfs_write+0x11a/0x329 [nfsd]
+ 48
+ [93662.211857] CR2: 000000006eab11a0
+ [93662.212189] Kernel panic - not syncing: Fatal exception in interrupt
+ [93662.212497] [<ffffffff8104e387>] ? release_console_sem+0x17e/0x1af
+ [93662.212818] [<ffffffff81011ba0>] ? child_rip+0x0/0x20
+ [93662.213328] [<ffffffffa0058af7>] ? dm_unplug_all+0x3b/0x4c [dm_mod]
+ [93662.213841] [<ffffffffa00a1c09>] ? xfs_read_agf+0x5a/0x149 [xfs]
+ [93662.214384] [<ffffffffa00cbf3d>] ? xfs_iomap_write_allocate+0x245/0x387 [xfs]
+ [93662.214831] [<ffffffffa005a3bb>] ? dm_table_any_congested+0x66/0xe6 [dm_mod]
+ [93662.215447] [<ffffffff810bef43>] ? shrink_zone+0x280/0x342
+ [93662.215703] [<ffffffff810e6535>] ? new_slab+0x42/0x1ca
+ [93662.216138] [<ffffffffa00df85a>] ? kmem_zone_zalloc+0xe/0x2e [xfs]
+ [93662.216448] [<ffffffffa009ab39>] ? xfs_qm_dqattach+0x32/0x3b [xfs]
+ [93662.217403] [<ffffffff812fb3f5>] ? down_read+0x9/0x19
+ [93662.217698] [<ffffffffa00d9d57>] ? xfs_trans_unlocked_item+0x20/0x3a [xfs]
+ [93662.218208] [<ffffffffa038a34b>] ? nfsd_write+0xc5/0xe2 [nfsd]
+ [93662.218482] [<ffffffffa0385772>] ? nfsd+0x0/0x12e [nfsd]
+ [93662.218732] [<ffffffff810649d0>] ? kthread+0x0/0x81
+ [93662.225424] [<ffffffff81011ba0>] ? child_rip+0x0/0x20
 
 _______________________________________________
 xfs mailing list
