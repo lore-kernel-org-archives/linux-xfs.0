@@ -1,23 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p2V6QAvj120685 for <xfs@oss.sgi.com>; Thu, 31 Mar 2011 01:26:11 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B760E131CAD6
-	for <xfs@oss.sgi.com>; Wed, 30 Mar 2011 23:29:21 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id 14oWu4r6fD5UJYxO for
-	<xfs@oss.sgi.com>; Wed, 30 Mar 2011 23:29:21 -0700 (PDT)
-Date: Thu, 31 Mar 2011 02:29:20 -0400
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
+	p2V8RGI8127968 for <xfs@oss.sgi.com>; Thu, 31 Mar 2011 03:27:17 -0500
+Date: Thu, 31 Mar 2011 04:30:24 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: fix extent format buffer allocation size
-Message-ID: <20110331062920.GA32336@infradead.org>
-References: <1301453521-5614-1-git-send-email-david@fromorbit.com>
-	<20110330093333.GA32582@infradead.org>
-	<20110331055114.GC30279@dastard>
+Subject: Re: [PATCH 4/5] xfs: allow reusing busy extents where safe
+Message-ID: <20110331083024.GA12865@infradead.org>
+References: <20110328210614.832613417@bombadil.infradead.org>
+	<20110328210915.214513168@bombadil.infradead.org>
+	<1301425468.3026.249.camel@doink>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110331055114.GC30279@dastard>
+In-Reply-To: <1301425468.3026.249.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,26 +24,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Alex Elder <aelder@sgi.com>
 Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Thu, Mar 31, 2011 at 04:51:14PM +1100, Dave Chinner wrote:
-> On Wed, Mar 30, 2011 at 05:33:34AM -0400, Christoph Hellwig wrote:
-> > > +	xfs_bmbt_rec_t		*ext_buffer;
-> > > +
-> > > +	ext_buffer = kmem_alloc(XFS_IFORK_SIZE(ip, whichfork),
+On Tue, Mar 29, 2011 at 02:04:28PM -0500, Alex Elder wrote:
+> On Mon, 2011-03-28 at 17:06 -0400, Christoph Hellwig wrote:
+> > Allow reusing any busy extent for metadata allocations, and reusing busy
+> > userdata extents for userdata allocations.  Most of the complexity is
+> > propagating the userdata information from the XFS_BMAPI_METADATA flag
+> > to xfs_bunmapi into the low-level extent freeing routines.  After that
+> > we can just track what type of busy extent we have and treat it accordingly.
 > > 
-> > If the fork size be the minimum of XFS_IFORK_SIZE and the if_bytes
-> > value?
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > 
-> I thought about that, but I don't think it makes any difference. If
-> there are no delalloc extents, then XFS_IFORK_SIZE and ifp->if_bytes
-> are identical when the fork is in extent format. If there are
-> delalloc extents, then XFS_IFORK_SIZE() is the one we want. Hence I
-> don't think we need to even consider the value of ifp->if_bytes at
-> all here....
+> The use of an enum value returned from
+> xfs_alloc_busy_update_extent() is a good improvement.
+> 
+> I'll issue the caveat here that I did not look through
+> it this time as carefully as the first time.  My main
+> concern was about the validity of reusing busy user data
+> extents for user data, and as before I'll say I accept
+> that it's OK, but I haven't worked through in my own
+> mind that it is indeed safe.  If I find the time to do
+> it I'll look this one over again to for reassurance...
 
-You're right.
+This version doesn't actually allow userdata reallocations anymore,
+I just forgot to update the patch description.
 
 _______________________________________________
 xfs mailing list
