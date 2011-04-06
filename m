@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p36I9fsf047660 for <xfs@oss.sgi.com>; Wed, 6 Apr 2011 13:09:42 -0500
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
+	p36IBAgI047720 for <xfs@oss.sgi.com>; Wed, 6 Apr 2011 13:11:10 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4AAA11488E49
-	for <xfs@oss.sgi.com>; Wed,  6 Apr 2011 11:12:57 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 20C9315B6E43
+	for <xfs@oss.sgi.com>; Wed,  6 Apr 2011 11:14:26 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id eYZQBDNhDpcTlTKy for
-	<xfs@oss.sgi.com>; Wed, 06 Apr 2011 11:12:57 -0700 (PDT)
-Date: Wed, 6 Apr 2011 14:12:56 -0400
+	by cuda.sgi.com with ESMTP id vy06lGqxDP6F2jmE for
+	<xfs@oss.sgi.com>; Wed, 06 Apr 2011 11:14:26 -0700 (PDT)
+Date: Wed, 6 Apr 2011 14:14:26 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 5/9] xfs: convert the xfsaild threads to a workqueue
-Message-ID: <20110406181256.GA4356@infradead.org>
+Subject: Re: [PATCH 4/9] xfs: introduce background inode reclaim work
+Message-ID: <20110406181426.GB4356@infradead.org>
 References: <1302070758-17312-1-git-send-email-david@fromorbit.com>
-	<1302070758-17312-6-git-send-email-david@fromorbit.com>
+	<1302070758-17312-5-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1302070758-17312-6-git-send-email-david@fromorbit.com>
+In-Reply-To: <1302070758-17312-5-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,64 +32,22 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, Apr 06, 2011 at 04:19:14PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Similar to the xfssyncd, the per-filesystem xfsaild threads can be
-> converted to a global workqueue and run periodically by delayed
-> works. This makes sense for the AIL pushing because it uses
-> variable timeouts depending on the work that needs to be done.
-> 
-> By removing the xfsaild, we simplify the AIL pushing code and
-> remove the need to spread the code to implement the threading
-> and pushing across multiple files.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/linux-2.6/xfs_super.c |  115 ++++++++++++------------------------
->  fs/xfs/xfs_trans_ail.c       |  133 ++++++++++++++++++++++++------------------
->  fs/xfs/xfs_trans_priv.h      |   15 +++--
->  3 files changed, 121 insertions(+), 142 deletions(-)
+> + * We can have inodes enter reclaim after we've shut down the syncd workqueue
+> + * during unmount, so don't allow reclaim work to be queued during unmount.
 
+Nipick: this part of the comment would be better just above the
+MS_ACTIVE check.  I just tried to figure out what it was for, and it
+took me a while to realize the explanation was in the block comment
+above the function.
 
+> +static void
+> +xfs_syncd_queue_reclaim(
+> +	struct xfs_mount        *mp)
+> +{
+> +	if (!(mp->m_super->s_flags & MS_ACTIVE))
+> +		return;
 
-
-> +	tout = 0;
->  	if (!count) {
->  		/* We're past our target or empty, so idle */
-> -		last_pushed_lsn = 0;
-> +		ailp->xa_last_pushed_lsn = 0;
-> +
-> +		/*
-> +		 * Check for an updated push target before clearing the
-> +		 * XFS_AIL_PUSHING_BIT. If the target changed, we've got more
-> +		 * work to do.
-> +		 */
-> +		smp_rmb();
-> +		if (ailp->xa_target == target)
-> +			clear_bit(XFS_AIL_PUSHING_BIT, &ailp->xa_flags);
-> +		else
-> +			tout = 50;
-
-I thjink this could be simplified a bit by just returning here if we
-have matched the target, and then making the queueing up of work later
-on unconditional.
-
-> +/*
-> + * xfs_trans_ail_push
-> + *
-
-Wha'ts the point of mentioning the function name like this in comments?
-
-> +	/*
-> +	 * En??ure that the new target is noticed in push code before it clears
-
-There's some weird character here which my mailer can't display.
-
-
-Except for that looks fine to me,
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Otherwise looks good.
 
 _______________________________________________
 xfs mailing list
