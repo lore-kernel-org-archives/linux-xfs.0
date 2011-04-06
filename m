@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p366GfGA019753 for <xfs@oss.sgi.com>; Wed, 6 Apr 2011 01:16:41 -0500
+	p366GfEx019756 for <xfs@oss.sgi.com>; Wed, 6 Apr 2011 01:16:41 -0500
 Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 16D6014874BD
-	for <xfs@oss.sgi.com>; Tue,  5 Apr 2011 23:19:32 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E05DA14874BA
+	for <xfs@oss.sgi.com>; Tue,  5 Apr 2011 23:19:31 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	POBgetv9jx582RWZ for <xfs@oss.sgi.com>;
-	Tue, 05 Apr 2011 23:19:32 -0700 (PDT)
+	G8o8gciSCFG5yc2z for <xfs@oss.sgi.com>;
+	Tue, 05 Apr 2011 23:19:31 -0700 (PDT)
 Received: from chute ([192.168.1.1] helo=disappointment)
 	by dastard with esmtp (Exim 4.72)
-	(envelope-from <dave@fromorbit.com>) id 1Q7M5H-00040b-3M
-	for xfs@oss.sgi.com; Wed, 06 Apr 2011 16:19:19 +1000
+	(envelope-from <dave@fromorbit.com>) id 1Q7M5Q-00040m-RB
+	for xfs@oss.sgi.com; Wed, 06 Apr 2011 16:19:28 +1000
 Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1Q7M5I-0004WV-Tm
+	(envelope-from <dave@disappointment.disaster>) id 1Q7M5I-0004WL-MU
 	for xfs@oss.sgi.com; Wed, 06 Apr 2011 16:19:20 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 8/9] xfs: catch bad block numbers freeing extents.
-Date: Wed,  6 Apr 2011 16:19:17 +1000
-Message-Id: <1302070758-17312-9-git-send-email-david@fromorbit.com>
+Subject: [PATCH 4/9] xfs: introduce background inode reclaim work
+Date: Wed,  6 Apr 2011 16:19:13 +1000
+Message-Id: <1302070758-17312-5-git-send-email-david@fromorbit.com>
 In-Reply-To: <1302070758-17312-1-git-send-email-david@fromorbit.com>
 References: <1302070758-17312-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,67 +39,182 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-A fuzzed filesystem crashed a kernel when freeing an extent with a
-block number beyond the end of the filesystem. Convert all the debug
-asserts in xfs_free_extent() to active checks so that we catch bad
-extents and return that the filesytsem is corrupted rather than
-crashing.
+Background inode reclaim needs to run more frequently that the XFS
+syncd work is run as 30s is too long between optimal reclaim runs.
+Add a new periodic work item to the xfs syncd workqueue to run a
+fast, non-blocking inode reclaim scan.
+
+Background inode reclaim is kicked by the act of marking inodes for
+reclaim.  When an AG is first marked as having reclaimable inodes,
+the background reclaim work is kicked. It will continue to run
+periodically untill it detects that there are no more reclaimable
+inodes. It will be kicked again when the first inode is queued for
+reclaim.
+
+To ensure shrinker based inode reclaim throttles to the inode
+cleaning and reclaim rate but still reclaim inodes efficiently, make it kick the
+background inode reclaim so that when we are low on memory we are
+trying to reclaim inodes as efficiently as possible. This kick shoul
+d not be necessary, but it will protect against failures to kick the
+background reclaim when inodes are first dirtied.
+
+To provide the rate throttling, make the shrinker pass do
+synchronous inode reclaim so that it blocks on inodes under IO. This
+means that the shrinker will reclaim inodes rather than just
+skipping over them, but it does not adversely affect the rate of
+reclaim because most dirty inodes are already under IO due to the
+background reclaim work the shrinker kicked.
+
+These two modifications solve one of the two OOM killer invocations
+Chris Mason reported recently when running a stress testing script.
+The particular workload trigger for the OOM killer invocation is
+where there are more threads than CPUs all unlinking files in an
+extremely memory constrained environment. Unlike other solutions,
+this one does not have a performance impact on performance when
+memory is not constrained or the number of concurrent threads
+operating is <= to the number of CPUs.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_alloc.c |   35 ++++++++++++++++++++++++++++-------
- 1 files changed, 28 insertions(+), 7 deletions(-)
+ fs/xfs/linux-2.6/xfs_sync.c |   66 +++++++++++++++++++++++++++++++++++++++++--
+ fs/xfs/xfs_mount.h          |    1 +
+ 2 files changed, 64 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/xfs_alloc.c b/fs/xfs/xfs_alloc.c
-index 4bc3c64..c71e21a 100644
---- a/fs/xfs/xfs_alloc.c
-+++ b/fs/xfs/xfs_alloc.c
-@@ -2395,17 +2395,38 @@ xfs_free_extent(
- 	memset(&args, 0, sizeof(xfs_alloc_arg_t));
- 	args.tp = tp;
- 	args.mp = tp->t_mountp;
+diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
+index af32759..011dbac 100644
+--- a/fs/xfs/linux-2.6/xfs_sync.c
++++ b/fs/xfs/linux-2.6/xfs_sync.c
+@@ -461,7 +461,6 @@ xfs_sync_worker(
+ 			error = xfs_fs_log_dummy(mp);
+ 		else
+ 			xfs_log_force(mp, 0);
+-		xfs_reclaim_inodes(mp, 0);
+ 		error = xfs_qm_sync(mp, SYNC_TRYLOCK);
+ 	}
+ 
+@@ -470,6 +469,49 @@ xfs_sync_worker(
+ }
+ 
+ /*
++ * Queue a new inode reclaim pass if there are reclaimable inodes and there
++ * isn't a reclaim pass already in progress. By default it runs every 5s based
++ * on the xfs syncd work default of 30s. Perhaps this should have it's own
++ * tunable, but that can be done if this method proves to be ineffective or too
++ * aggressive.
++ *
++ * We can have inodes enter reclaim after we've shut down the syncd workqueue
++ * during unmount, so don't allow reclaim work to be queued during unmount.
++ */
++static void
++xfs_syncd_queue_reclaim(
++	struct xfs_mount        *mp)
++{
++	if (!(mp->m_super->s_flags & MS_ACTIVE))
++		return;
 +
-+	/*
-+	 * validate that the block number is legal - the enables us to detect
-+	 * and handle a silent filesystem corruption rather than crashing.
-+	 */
- 	args.agno = XFS_FSB_TO_AGNO(args.mp, bno);
--	ASSERT(args.agno < args.mp->m_sb.sb_agcount);
-+	if (args.agno >= args.mp->m_sb.sb_agcount)
-+		return EFSCORRUPTED;
-+
- 	args.agbno = XFS_FSB_TO_AGBNO(args.mp, bno);
-+	if (args.agbno >= args.mp->m_sb.sb_agblocks)
-+		return EFSCORRUPTED;
-+
- 	args.pag = xfs_perag_get(args.mp, args.agno);
--	if ((error = xfs_alloc_fix_freelist(&args, XFS_ALLOC_FLAG_FREEING)))
-+	ASSERT(args.pag);
-+
-+	error = xfs_alloc_fix_freelist(&args, XFS_ALLOC_FLAG_FREEING);
-+	if (error)
- 		goto error0;
--#ifdef DEBUG
--	ASSERT(args.agbp != NULL);
--	ASSERT((args.agbno + len) <=
--		be32_to_cpu(XFS_BUF_TO_AGF(args.agbp)->agf_length));
--#endif
-+
-+	/* validate the extent size is legal now we have the agf locked */
-+	if (!args.agbp) {
-+		error = EFSCORRUPTED;
-+		goto error0;
++	rcu_read_lock();
++	if (radix_tree_tagged(&mp->m_perag_tree, XFS_ICI_RECLAIM_TAG)) {
++		queue_delayed_work(xfs_syncd_wq, &mp->m_reclaim_work,
++			msecs_to_jiffies(xfs_syncd_centisecs / 6 * 10));
 +	}
++	rcu_read_unlock();
++}
 +
-+	if (args.agbno + len >
-+			be32_to_cpu(XFS_BUF_TO_AGF(args.agbp)->agf_length)) {
-+		error = EFSCORRUPTED;
-+		goto error0;
-+	}
++/*
++ * This is a fast pass over the inode cache to try to get reclaim moving on as
++ * many inodes as possible in a short period of time. It kicks itself every few
++ * seconds, as well as being kicked by the inode cache shrinker when memory
++ * goes low. It scans as quickly as possible avoiding locked inodes or those
++ * already being flushed, and once done schedules a future pass.
++ */
++STATIC void
++xfs_reclaim_worker(
++	struct work_struct *work)
++{
++	struct xfs_mount *mp = container_of(to_delayed_work(work),
++					struct xfs_mount, m_reclaim_work);
 +
- 	error = xfs_free_ag_extent(tp, args.agbp, args.agno, args.agbno, len, 0);
- error0:
- 	xfs_perag_put(args.pag);
++	xfs_reclaim_inodes(mp, SYNC_TRYLOCK);
++	xfs_syncd_queue_reclaim(mp);
++}
++
++/*
+  * Flush delayed allocate data, attempting to free up reserved space
+  * from existing allocations.  At this point a new allocation attempt
+  * has failed with ENOSPC and we are in the process of scratching our
+@@ -508,7 +550,10 @@ xfs_syncd_init(
+ {
+ 	INIT_WORK(&mp->m_flush_work, xfs_flush_worker);
+ 	INIT_DELAYED_WORK(&mp->m_sync_work, xfs_sync_worker);
++	INIT_DELAYED_WORK(&mp->m_reclaim_work, xfs_reclaim_worker);
++
+ 	xfs_syncd_queue_sync(mp);
++	xfs_syncd_queue_reclaim(mp);
+ 
+ 	return 0;
+ }
+@@ -518,6 +563,7 @@ xfs_syncd_stop(
+ 	struct xfs_mount	*mp)
+ {
+ 	cancel_delayed_work_sync(&mp->m_sync_work);
++	cancel_delayed_work_sync(&mp->m_reclaim_work);
+ 	cancel_work_sync(&mp->m_flush_work);
+ }
+ 
+@@ -537,6 +583,10 @@ __xfs_inode_set_reclaim_tag(
+ 				XFS_INO_TO_AGNO(ip->i_mount, ip->i_ino),
+ 				XFS_ICI_RECLAIM_TAG);
+ 		spin_unlock(&ip->i_mount->m_perag_lock);
++
++		/* schedule periodic background inode reclaim */
++		xfs_syncd_queue_reclaim(ip->i_mount);
++
+ 		trace_xfs_perag_set_reclaim(ip->i_mount, pag->pag_agno,
+ 							-1, _RET_IP_);
+ 	}
+@@ -953,7 +1003,13 @@ xfs_reclaim_inodes(
+ }
+ 
+ /*
+- * Shrinker infrastructure.
++ * Inode cache shrinker.
++ *
++ * When called we make sure that there is a background (fast) inode reclaim in
++ * progress, while we will throttle the speed of reclaim via doiing synchronous
++ * reclaim of inodes. That means if we come across dirty inodes, we wait for
++ * them to be cleaned, which we hope will not be very long due to the
++ * background walker having already kicked the IO off on those dirty inodes.
+  */
+ static int
+ xfs_reclaim_inode_shrink(
+@@ -968,10 +1024,14 @@ xfs_reclaim_inode_shrink(
+ 
+ 	mp = container_of(shrink, struct xfs_mount, m_inode_shrink);
+ 	if (nr_to_scan) {
++		/* kick background reclaimer */
++		xfs_syncd_queue_reclaim(mp);
++
+ 		if (!(gfp_mask & __GFP_FS))
+ 			return -1;
+ 
+-		xfs_reclaim_inodes_ag(mp, SYNC_TRYLOCK, &nr_to_scan);
++		xfs_reclaim_inodes_ag(mp, SYNC_TRYLOCK | SYNC_WAIT,
++					&nr_to_scan);
+ 		/* terminate if we don't exhaust the scan */
+ 		if (nr_to_scan > 0)
+ 			return -1;
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index a0ad90e..19af0ab 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -204,6 +204,7 @@ typedef struct xfs_mount {
+ #endif
+ 	struct xfs_mru_cache	*m_filestream;  /* per-mount filestream data */
+ 	struct delayed_work	m_sync_work;	/* background sync work */
++	struct delayed_work	m_reclaim_work;	/* background inode reclaim */
+ 	struct work_struct	m_flush_work;	/* background inode flush */
+ 	__int64_t		m_update_flags;	/* sb flags we need to update
+ 						   on the next remount,rw */
 -- 
 1.7.2.3
 
