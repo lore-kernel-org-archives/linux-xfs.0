@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p36HGlg2045468 for <xfs@oss.sgi.com>; Wed, 6 Apr 2011 12:16:47 -0500
-Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B340515B6391
-	for <xfs@oss.sgi.com>; Wed,  6 Apr 2011 10:20:02 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id x9257iKPGTZUd2Qo
-	for <xfs@oss.sgi.com>; Wed, 06 Apr 2011 10:20:02 -0700 (PDT)
-Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
-	by greer.hardwarefreak.com (Postfix) with ESMTP id F3EF66C143
-	for <xfs@oss.sgi.com>; Wed,  6 Apr 2011 12:19:59 -0500 (CDT)
-Message-ID: <4D9CA0BF.9010706@hardwarefreak.com>
-Date: Wed, 06 Apr 2011 12:19:59 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
+	p36IEWQE047831 for <xfs@oss.sgi.com>; Wed, 6 Apr 2011 13:14:33 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D5919148858F
+	for <xfs@oss.sgi.com>; Wed,  6 Apr 2011 11:17:49 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id iCZiz8jjYlTBPxvg for
+	<xfs@oss.sgi.com>; Wed, 06 Apr 2011 11:17:49 -0700 (PDT)
+Date: Wed, 6 Apr 2011 14:17:49 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 6/9] xfs: clean up code layout in xfs_trans_ail.c
+Message-ID: <20110406181749.GC4356@infradead.org>
+References: <1302070758-17312-1-git-send-email-david@fromorbit.com>
+	<1302070758-17312-7-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-Subject: Re: SL's kickstart corrupting XFS by "repairing" GPT labels?
-References: <4D9C3E14.6030009@fzu.cz> <20110406114146.GF31057@dastard>
-In-Reply-To: <20110406114146.GF31057@dastard>
+Content-Disposition: inline
+In-Reply-To: <1302070758-17312-7-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,49 +25,39 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Dave Chinner put forth on 4/6/2011 6:41 AM:
-> On Wed, Apr 06, 2011 at 12:19:00PM +0200, Jan Kundr=E1t wrote:
+> +/*
+> + * Return a pointer to the first item in the AIL.
+> + * If the AIL is empty, then return NULL.
+> + */
 
->> zerombr yes
->> clearpart --all --initlabel
->> part swap --size=3D1024 --asprimary
->> part / --fstype ext3 --size=3D0 --grow --asprimary
-> =
+> +/*
+> + * Return a pointer to the item which follows
+> + * the given item in the AIL.  If the given item
+> + * is the last item in the list, then return NULL.
+> + */
 
-> There your problem - hello random crap....
+These comment seem to line break strangely early.
 
-Yep, most likely.
+> +	ASSERT((&next_lip->li_ail == &ailp->xa_ail) ||
+> +	       (XFS_LSN_CMP(next_lip->li_lsn, lsn) <= 0));
 
-> Given the nature of the problem, I have to assume you aren't using
-> FC zoning to prevent hosts from seeing disks that don't belong to
-> them?
+no need for the inner braces here.
 
-Switch soft zoning isn't even required to avoid this kind of mess.  The
-Nexsan arrays (as with many/most others) have built in LUN security,
-allowing you to unmask a LUN to only specific WWNs of specific HBAs.
-With Nexsan products, by default, no LUNs are unmasked after creating a
-virtual disk and assigning a LUN to it.  One must then manually unmask a
-LUN to one or more HBA WWNs.
+> +	list_splice_init(list, &next_lip->li_ail);
+> +	return;
 
-Their are basically only 3 scenarios when you would assign more than one
-HBA WWN to a given LUN:
+and no need for the return.
 
-1.  multi-pathing between two (or more) FC ports on one host
-2.  shared disk cluster filesystem such as CXFS, GFS2, or OCFS.
-3.  passive fail over high availability
 
-Some folks assign "everything to everything" on their FC SAN for various
-not so well considered reasons, without realizing the consequences.
-
--- =
-
-Stan
+I know it's all nitpicking about pre-existing code, but when you touch
+it anyway it might make sense to tidy it up.
 
 _______________________________________________
 xfs mailing list
