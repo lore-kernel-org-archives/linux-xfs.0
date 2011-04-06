@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p366GfEx019756 for <xfs@oss.sgi.com>; Wed, 6 Apr 2011 01:16:41 -0500
+	p366Gggn019763 for <xfs@oss.sgi.com>; Wed, 6 Apr 2011 01:16:42 -0500
 Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E05DA14874BA
-	for <xfs@oss.sgi.com>; Tue,  5 Apr 2011 23:19:31 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 79895148766C
+	for <xfs@oss.sgi.com>; Tue,  5 Apr 2011 23:19:33 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	G8o8gciSCFG5yc2z for <xfs@oss.sgi.com>;
-	Tue, 05 Apr 2011 23:19:31 -0700 (PDT)
+	nLBiSWyREI8vVskm for <xfs@oss.sgi.com>;
+	Tue, 05 Apr 2011 23:19:33 -0700 (PDT)
 Received: from chute ([192.168.1.1] helo=disappointment)
 	by dastard with esmtp (Exim 4.72)
-	(envelope-from <dave@fromorbit.com>) id 1Q7M5Q-00040m-RB
-	for xfs@oss.sgi.com; Wed, 06 Apr 2011 16:19:28 +1000
+	(envelope-from <dave@fromorbit.com>) id 1Q7M5H-00040W-04
+	for xfs@oss.sgi.com; Wed, 06 Apr 2011 16:19:19 +1000
 Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1Q7M5I-0004WL-MU
+	(envelope-from <dave@disappointment.disaster>) id 1Q7M5I-0004WR-Q4
 	for xfs@oss.sgi.com; Wed, 06 Apr 2011 16:19:20 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 4/9] xfs: introduce background inode reclaim work
-Date: Wed,  6 Apr 2011 16:19:13 +1000
-Message-Id: <1302070758-17312-5-git-send-email-david@fromorbit.com>
+Subject: [PATCH 6/9] xfs: clean up code layout in xfs_trans_ail.c
+Date: Wed,  6 Apr 2011 16:19:15 +1000
+Message-Id: <1302070758-17312-7-git-send-email-david@fromorbit.com>
 In-Reply-To: <1302070758-17312-1-git-send-email-david@fromorbit.com>
 References: <1302070758-17312-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,182 +39,301 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Background inode reclaim needs to run more frequently that the XFS
-syncd work is run as 30s is too long between optimal reclaim runs.
-Add a new periodic work item to the xfs syncd workqueue to run a
-fast, non-blocking inode reclaim scan.
-
-Background inode reclaim is kicked by the act of marking inodes for
-reclaim.  When an AG is first marked as having reclaimable inodes,
-the background reclaim work is kicked. It will continue to run
-periodically untill it detects that there are no more reclaimable
-inodes. It will be kicked again when the first inode is queued for
-reclaim.
-
-To ensure shrinker based inode reclaim throttles to the inode
-cleaning and reclaim rate but still reclaim inodes efficiently, make it kick the
-background inode reclaim so that when we are low on memory we are
-trying to reclaim inodes as efficiently as possible. This kick shoul
-d not be necessary, but it will protect against failures to kick the
-background reclaim when inodes are first dirtied.
-
-To provide the rate throttling, make the shrinker pass do
-synchronous inode reclaim so that it blocks on inodes under IO. This
-means that the shrinker will reclaim inodes rather than just
-skipping over them, but it does not adversely affect the rate of
-reclaim because most dirty inodes are already under IO due to the
-background reclaim work the shrinker kicked.
-
-These two modifications solve one of the two OOM killer invocations
-Chris Mason reported recently when running a stress testing script.
-The particular workload trigger for the OOM killer invocation is
-where there are more threads than CPUs all unlinking files in an
-extremely memory constrained environment. Unlike other solutions,
-this one does not have a performance impact on performance when
-memory is not constrained or the number of concurrent threads
-operating is <= to the number of CPUs.
+This patch rearranges the location of functions in xfs_trans_ail.c
+to remove the need for forward declarations of those functions in
+preparation for adding new functions without the need for forward
+declarations.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/linux-2.6/xfs_sync.c |   66 +++++++++++++++++++++++++++++++++++++++++--
- fs/xfs/xfs_mount.h          |    1 +
- 2 files changed, 64 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_trans_ail.c |  247 +++++++++++++++++++++++-------------------------
+ 1 files changed, 117 insertions(+), 130 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
-index af32759..011dbac 100644
---- a/fs/xfs/linux-2.6/xfs_sync.c
-+++ b/fs/xfs/linux-2.6/xfs_sync.c
-@@ -461,7 +461,6 @@ xfs_sync_worker(
- 			error = xfs_fs_log_dummy(mp);
- 		else
- 			xfs_log_force(mp, 0);
--		xfs_reclaim_inodes(mp, 0);
- 		error = xfs_qm_sync(mp, SYNC_TRYLOCK);
- 	}
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index b252009..cfbb6c6 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -30,17 +30,81 @@
  
-@@ -470,6 +469,49 @@ xfs_sync_worker(
- }
+ struct workqueue_struct	*xfs_ail_wq;	/* AIL workqueue */
  
- /*
-+ * Queue a new inode reclaim pass if there are reclaimable inodes and there
-+ * isn't a reclaim pass already in progress. By default it runs every 5s based
-+ * on the xfs syncd work default of 30s. Perhaps this should have it's own
-+ * tunable, but that can be done if this method proves to be ineffective or too
-+ * aggressive.
-+ *
-+ * We can have inodes enter reclaim after we've shut down the syncd workqueue
-+ * during unmount, so don't allow reclaim work to be queued during unmount.
-+ */
-+static void
-+xfs_syncd_queue_reclaim(
-+	struct xfs_mount        *mp)
-+{
-+	if (!(mp->m_super->s_flags & MS_ACTIVE))
-+		return;
-+
-+	rcu_read_lock();
-+	if (radix_tree_tagged(&mp->m_perag_tree, XFS_ICI_RECLAIM_TAG)) {
-+		queue_delayed_work(xfs_syncd_wq, &mp->m_reclaim_work,
-+			msecs_to_jiffies(xfs_syncd_centisecs / 6 * 10));
-+	}
-+	rcu_read_unlock();
-+}
-+
+-STATIC void xfs_ail_splice(struct xfs_ail *, struct list_head *, xfs_lsn_t);
+-STATIC void xfs_ail_delete(struct xfs_ail *, xfs_log_item_t *);
+-STATIC xfs_log_item_t * xfs_ail_min(struct xfs_ail *);
+-STATIC xfs_log_item_t * xfs_ail_next(struct xfs_ail *, xfs_log_item_t *);
+-
+ #ifdef DEBUG
+-STATIC void xfs_ail_check(struct xfs_ail *, xfs_log_item_t *);
+-#else
 +/*
-+ * This is a fast pass over the inode cache to try to get reclaim moving on as
-+ * many inodes as possible in a short period of time. It kicks itself every few
-+ * seconds, as well as being kicked by the inode cache shrinker when memory
-+ * goes low. It scans as quickly as possible avoiding locked inodes or those
-+ * already being flushed, and once done schedules a future pass.
++ * Check that the list is sorted as it should be.
 + */
 +STATIC void
-+xfs_reclaim_worker(
-+	struct work_struct *work)
++xfs_ail_check(
++	struct xfs_ail	*ailp,
++	xfs_log_item_t	*lip)
 +{
-+	struct xfs_mount *mp = container_of(to_delayed_work(work),
-+					struct xfs_mount, m_reclaim_work);
++	xfs_log_item_t	*prev_lip;
 +
-+	xfs_reclaim_inodes(mp, SYNC_TRYLOCK);
-+	xfs_syncd_queue_reclaim(mp);
++	if (list_empty(&ailp->xa_ail))
++		return;
++
++	/*
++	 * Check the next and previous entries are valid.
++	 */
++	ASSERT((lip->li_flags & XFS_LI_IN_AIL) != 0);
++	prev_lip = list_entry(lip->li_ail.prev, xfs_log_item_t, li_ail);
++	if (&prev_lip->li_ail != &ailp->xa_ail)
++		ASSERT(XFS_LSN_CMP(prev_lip->li_lsn, lip->li_lsn) <= 0);
++
++	prev_lip = list_entry(lip->li_ail.next, xfs_log_item_t, li_ail);
++	if (&prev_lip->li_ail != &ailp->xa_ail)
++		ASSERT(XFS_LSN_CMP(prev_lip->li_lsn, lip->li_lsn) >= 0);
++
++
++#ifdef XFS_TRANS_DEBUG
++	/*
++	 * Walk the list checking lsn ordering, and that every entry has the
++	 * XFS_LI_IN_AIL flag set. This is really expensive, so only do it
++	 * when specifically debugging the transaction subsystem.
++	 */
++	prev_lip = list_entry(&ailp->xa_ail, xfs_log_item_t, li_ail);
++	list_for_each_entry(lip, &ailp->xa_ail, li_ail) {
++		if (&prev_lip->li_ail != &ailp->xa_ail)
++			ASSERT(XFS_LSN_CMP(prev_lip->li_lsn, lip->li_lsn) <= 0);
++		ASSERT((lip->li_flags & XFS_LI_IN_AIL) != 0);
++		prev_lip = lip;
++	}
++#endif /* XFS_TRANS_DEBUG */
++}
++#else /* !DEBUG */
+ #define	xfs_ail_check(a,l)
+ #endif /* DEBUG */
+ 
++/*
++ * Return a pointer to the first item in the AIL.
++ * If the AIL is empty, then return NULL.
++ */
++static xfs_log_item_t *
++xfs_ail_min(
++	struct xfs_ail  *ailp)
++{
++	if (list_empty(&ailp->xa_ail))
++		return NULL;
++
++	return list_first_entry(&ailp->xa_ail, xfs_log_item_t, li_ail);
 +}
 +
 +/*
-  * Flush delayed allocate data, attempting to free up reserved space
-  * from existing allocations.  At this point a new allocation attempt
-  * has failed with ENOSPC and we are in the process of scratching our
-@@ -508,7 +550,10 @@ xfs_syncd_init(
- {
- 	INIT_WORK(&mp->m_flush_work, xfs_flush_worker);
- 	INIT_DELAYED_WORK(&mp->m_sync_work, xfs_sync_worker);
-+	INIT_DELAYED_WORK(&mp->m_reclaim_work, xfs_reclaim_worker);
++ * Return a pointer to the item which follows
++ * the given item in the AIL.  If the given item
++ * is the last item in the list, then return NULL.
++ */
++static xfs_log_item_t *
++xfs_ail_next(
++	struct xfs_ail  *ailp,
++	xfs_log_item_t  *lip)
++{
++	if (lip->li_ail.next == &ailp->xa_ail)
++		return NULL;
 +
- 	xfs_syncd_queue_sync(mp);
-+	xfs_syncd_queue_reclaim(mp);
++	return list_first_entry(&lip->li_ail, xfs_log_item_t, li_ail);
++}
  
- 	return 0;
- }
-@@ -518,6 +563,7 @@ xfs_syncd_stop(
- 	struct xfs_mount	*mp)
+ /*
+  * This is called by the log manager code to determine the LSN
+@@ -55,16 +119,13 @@ xfs_lsn_t
+ xfs_trans_ail_tail(
+ 	struct xfs_ail	*ailp)
  {
- 	cancel_delayed_work_sync(&mp->m_sync_work);
-+	cancel_delayed_work_sync(&mp->m_reclaim_work);
- 	cancel_work_sync(&mp->m_flush_work);
- }
+-	xfs_lsn_t	lsn;
++	xfs_lsn_t	lsn = 0;
+ 	xfs_log_item_t	*lip;
  
-@@ -537,6 +583,10 @@ __xfs_inode_set_reclaim_tag(
- 				XFS_INO_TO_AGNO(ip->i_mount, ip->i_ino),
- 				XFS_ICI_RECLAIM_TAG);
- 		spin_unlock(&ip->i_mount->m_perag_lock);
-+
-+		/* schedule periodic background inode reclaim */
-+		xfs_syncd_queue_reclaim(ip->i_mount);
-+
- 		trace_xfs_perag_set_reclaim(ip->i_mount, pag->pag_agno,
- 							-1, _RET_IP_);
- 	}
-@@ -953,7 +1003,13 @@ xfs_reclaim_inodes(
+ 	spin_lock(&ailp->xa_lock);
+ 	lip = xfs_ail_min(ailp);
+-	if (lip == NULL) {
+-		lsn = (xfs_lsn_t)0;
+-	} else {
++	if (lip)
+ 		lsn = lip->li_lsn;
+-	}
+ 	spin_unlock(&ailp->xa_lock);
+ 
+ 	return lsn;
+@@ -208,6 +269,50 @@ out:
  }
  
  /*
-- * Shrinker infrastructure.
-+ * Inode cache shrinker.
-+ *
-+ * When called we make sure that there is a background (fast) inode reclaim in
-+ * progress, while we will throttle the speed of reclaim via doiing synchronous
-+ * reclaim of inodes. That means if we come across dirty inodes, we wait for
-+ * them to be cleaned, which we hope will not be very long due to the
-+ * background walker having already kicked the IO off on those dirty inodes.
-  */
- static int
- xfs_reclaim_inode_shrink(
-@@ -968,10 +1024,14 @@ xfs_reclaim_inode_shrink(
- 
- 	mp = container_of(shrink, struct xfs_mount, m_inode_shrink);
- 	if (nr_to_scan) {
-+		/* kick background reclaimer */
-+		xfs_syncd_queue_reclaim(mp);
++ * splice the log item list into the AIL at the given LSN.
++ */
++static void
++xfs_ail_splice(
++	struct xfs_ail  *ailp,
++	struct list_head *list,
++	xfs_lsn_t       lsn)
++{
++	xfs_log_item_t  *next_lip;
 +
- 		if (!(gfp_mask & __GFP_FS))
- 			return -1;
- 
--		xfs_reclaim_inodes_ag(mp, SYNC_TRYLOCK, &nr_to_scan);
-+		xfs_reclaim_inodes_ag(mp, SYNC_TRYLOCK | SYNC_WAIT,
-+					&nr_to_scan);
- 		/* terminate if we don't exhaust the scan */
- 		if (nr_to_scan > 0)
- 			return -1;
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index a0ad90e..19af0ab 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -204,6 +204,7 @@ typedef struct xfs_mount {
- #endif
- 	struct xfs_mru_cache	*m_filestream;  /* per-mount filestream data */
- 	struct delayed_work	m_sync_work;	/* background sync work */
-+	struct delayed_work	m_reclaim_work;	/* background inode reclaim */
- 	struct work_struct	m_flush_work;	/* background inode flush */
- 	__int64_t		m_update_flags;	/* sb flags we need to update
- 						   on the next remount,rw */
++	/*
++	 * If the list is empty, just insert the item.
++	 */
++	if (list_empty(&ailp->xa_ail)) {
++		list_splice(list, &ailp->xa_ail);
++		return;
++	}
++
++	list_for_each_entry_reverse(next_lip, &ailp->xa_ail, li_ail) {
++		if (XFS_LSN_CMP(next_lip->li_lsn, lsn) <= 0)
++			break;
++	}
++
++	ASSERT((&next_lip->li_ail == &ailp->xa_ail) ||
++	       (XFS_LSN_CMP(next_lip->li_lsn, lsn) <= 0));
++
++	list_splice_init(list, &next_lip->li_ail);
++	return;
++}
++
++/*
++ * Delete the given item from the AIL.  Return a pointer to the item.
++ */
++static void
++xfs_ail_delete(
++	struct xfs_ail  *ailp,
++	xfs_log_item_t  *lip)
++{
++	xfs_ail_check(ailp, lip);
++	list_del(&lip->li_ail);
++	xfs_trans_ail_cursor_clear(ailp, lip);
++}
++
++/*
+  * xfs_ail_worker does the work of pushing on the AIL. It will requeue itself
+  * to run at a later time if there is more work to do to complete the push.
+  */
+@@ -663,121 +768,3 @@ xfs_trans_ail_destroy(
+ 	cancel_delayed_work_sync(&ailp->xa_work);
+ 	kmem_free(ailp);
+ }
+-
+-/*
+- * splice the log item list into the AIL at the given LSN.
+- */
+-STATIC void
+-xfs_ail_splice(
+-	struct xfs_ail	*ailp,
+-	struct list_head *list,
+-	xfs_lsn_t	lsn)
+-{
+-	xfs_log_item_t	*next_lip;
+-
+-	/*
+-	 * If the list is empty, just insert the item.
+-	 */
+-	if (list_empty(&ailp->xa_ail)) {
+-		list_splice(list, &ailp->xa_ail);
+-		return;
+-	}
+-
+-	list_for_each_entry_reverse(next_lip, &ailp->xa_ail, li_ail) {
+-		if (XFS_LSN_CMP(next_lip->li_lsn, lsn) <= 0)
+-			break;
+-	}
+-
+-	ASSERT((&next_lip->li_ail == &ailp->xa_ail) ||
+-	       (XFS_LSN_CMP(next_lip->li_lsn, lsn) <= 0));
+-
+-	list_splice_init(list, &next_lip->li_ail);
+-	return;
+-}
+-
+-/*
+- * Delete the given item from the AIL.  Return a pointer to the item.
+- */
+-STATIC void
+-xfs_ail_delete(
+-	struct xfs_ail	*ailp,
+-	xfs_log_item_t	*lip)
+-{
+-	xfs_ail_check(ailp, lip);
+-	list_del(&lip->li_ail);
+-	xfs_trans_ail_cursor_clear(ailp, lip);
+-}
+-
+-/*
+- * Return a pointer to the first item in the AIL.
+- * If the AIL is empty, then return NULL.
+- */
+-STATIC xfs_log_item_t *
+-xfs_ail_min(
+-	struct xfs_ail	*ailp)
+-{
+-	if (list_empty(&ailp->xa_ail))
+-		return NULL;
+-
+-	return list_first_entry(&ailp->xa_ail, xfs_log_item_t, li_ail);
+-}
+-
+-/*
+- * Return a pointer to the item which follows
+- * the given item in the AIL.  If the given item
+- * is the last item in the list, then return NULL.
+- */
+-STATIC xfs_log_item_t *
+-xfs_ail_next(
+-	struct xfs_ail	*ailp,
+-	xfs_log_item_t	*lip)
+-{
+-	if (lip->li_ail.next == &ailp->xa_ail)
+-		return NULL;
+-
+-	return list_first_entry(&lip->li_ail, xfs_log_item_t, li_ail);
+-}
+-
+-#ifdef DEBUG
+-/*
+- * Check that the list is sorted as it should be.
+- */
+-STATIC void
+-xfs_ail_check(
+-	struct xfs_ail	*ailp,
+-	xfs_log_item_t	*lip)
+-{
+-	xfs_log_item_t	*prev_lip;
+-
+-	if (list_empty(&ailp->xa_ail))
+-		return;
+-
+-	/*
+-	 * Check the next and previous entries are valid.
+-	 */
+-	ASSERT((lip->li_flags & XFS_LI_IN_AIL) != 0);
+-	prev_lip = list_entry(lip->li_ail.prev, xfs_log_item_t, li_ail);
+-	if (&prev_lip->li_ail != &ailp->xa_ail)
+-		ASSERT(XFS_LSN_CMP(prev_lip->li_lsn, lip->li_lsn) <= 0);
+-
+-	prev_lip = list_entry(lip->li_ail.next, xfs_log_item_t, li_ail);
+-	if (&prev_lip->li_ail != &ailp->xa_ail)
+-		ASSERT(XFS_LSN_CMP(prev_lip->li_lsn, lip->li_lsn) >= 0);
+-
+-
+-#ifdef XFS_TRANS_DEBUG
+-	/*
+-	 * Walk the list checking lsn ordering, and that every entry has the
+-	 * XFS_LI_IN_AIL flag set. This is really expensive, so only do it
+-	 * when specifically debugging the transaction subsystem.
+-	 */
+-	prev_lip = list_entry(&ailp->xa_ail, xfs_log_item_t, li_ail);
+-	list_for_each_entry(lip, &ailp->xa_ail, li_ail) {
+-		if (&prev_lip->li_ail != &ailp->xa_ail)
+-			ASSERT(XFS_LSN_CMP(prev_lip->li_lsn, lip->li_lsn) <= 0);
+-		ASSERT((lip->li_flags & XFS_LI_IN_AIL) != 0);
+-		prev_lip = lip;
+-	}
+-#endif /* XFS_TRANS_DEBUG */
+-}
+-#endif /* DEBUG */
 -- 
 1.7.2.3
 
