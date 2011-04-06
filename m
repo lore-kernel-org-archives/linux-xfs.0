@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p366GIXx019695 for <xfs@oss.sgi.com>; Wed, 6 Apr 2011 01:16:19 -0500
+	p366G8Zw019665 for <xfs@oss.sgi.com>; Wed, 6 Apr 2011 01:16:09 -0500
 Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A9E513A8A9A
-	for <xfs@oss.sgi.com>; Tue,  5 Apr 2011 23:19:33 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D1EF014874B7
+	for <xfs@oss.sgi.com>; Tue,  5 Apr 2011 23:19:22 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	jU3cswq0eEUF5mxr for <xfs@oss.sgi.com>;
-	Tue, 05 Apr 2011 23:19:33 -0700 (PDT)
+	KhBz8DHxZE4NRRZK for <xfs@oss.sgi.com>;
+	Tue, 05 Apr 2011 23:19:22 -0700 (PDT)
 Received: from chute ([192.168.1.1] helo=disappointment)
 	by dastard with esmtp (Exim 4.72)
-	(envelope-from <dave@fromorbit.com>) id 1Q7M5H-00040a-1a
-	for xfs@oss.sgi.com; Wed, 06 Apr 2011 16:19:19 +1000
+	(envelope-from <dave@fromorbit.com>) id 1Q7M5G-00040R-Om
+	for xfs@oss.sgi.com; Wed, 06 Apr 2011 16:19:18 +1000
 Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1Q7M5I-0004WT-SD
+	(envelope-from <dave@disappointment.disaster>) id 1Q7M5I-0004WG-J0
 	for xfs@oss.sgi.com; Wed, 06 Apr 2011 16:19:20 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 7/9] xfs: push the AIL from memory reclaim and periodic sync
-Date: Wed,  6 Apr 2011 16:19:16 +1000
-Message-Id: <1302070758-17312-8-git-send-email-david@fromorbit.com>
+Subject: [PATCH 2/9] xfs: introduce a xfssyncd workqueue
+Date: Wed,  6 Apr 2011 16:19:11 +1000
+Message-Id: <1302070758-17312-3-git-send-email-david@fromorbit.com>
 In-Reply-To: <1302070758-17312-1-git-send-email-david@fromorbit.com>
 References: <1302070758-17312-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,215 +39,267 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-When we are short on memory, we want to expedite the cleaning of
-dirty objects.  Hence when we run short on memory, we need to kick
-the AIL flushing into action to clean as many dirty objects as
-quickly as possible.  To implement this, sample the lsn of the log
-item at the head of the AIL and use that as the push target for the
-AIL flush.
+All of the work xfssyncd does is background functionality. There is
+no need for a thread per filesystem to do this work - it can al be
+managed by a global workqueue now they manage concurrency
+effectively.
 
-Further, we keep items in the AIL that are dirty that are not
-tracked any other way, so we can get objects sitting in the AIL that
-don't get written back until the AIL is pushed. Hence to get the
-filesystem to the idle state, we might need to push the AIL to flush
-out any remaining dirty objects sitting in the AIL. This requires
-the same push mechanism as the reclaim push.
+Introduce a new gglobal xfssyncd workqueue, and convert the periodic
+work to use this new functionality. To do this, use a delayed work
+construct to schedule the next running of the periodic sync work
+for the filesystem. When the sync work is complete, queue a new
+delayed work for the next running of the sync work.
 
-This patch also renames xfs_trans_ail_tail() to xfs_ail_min_lsn() to
-match the new xfs_ail_max_lsn() function introduced in this patch.
-Similarly for xfs_trans_ail_push -> xfs_ail_push.
+For laptop mode, we wait on completion for the sync works, so ensure
+that the sync work queuing interface can flush and wait for work to
+complete to enable the work queue infrastructure to replace the
+current sequence number and wakeup that is used.
+
+Because the sync work does non-trivial amounts of work, mark the
+new work queue as CPU intensive.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/linux-2.6/xfs_sync.c |    7 +++++-
- fs/xfs/xfs_log.c            |    6 ++--
- fs/xfs/xfs_trans_ail.c      |   52 ++++++++++++++++++++++++++++++++++++++++--
- fs/xfs/xfs_trans_priv.h     |    7 +++--
- 4 files changed, 62 insertions(+), 10 deletions(-)
+ fs/xfs/linux-2.6/xfs_super.c |   24 +++++------
+ fs/xfs/linux-2.6/xfs_sync.c  |   86 ++++++++++++++++++++---------------------
+ fs/xfs/linux-2.6/xfs_sync.h  |    2 +
+ fs/xfs/xfs_mount.h           |    4 +-
+ 4 files changed, 56 insertions(+), 60 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
-index 011dbac..36be592 100644
---- a/fs/xfs/linux-2.6/xfs_sync.c
-+++ b/fs/xfs/linux-2.6/xfs_sync.c
-@@ -22,6 +22,7 @@
- #include "xfs_log.h"
- #include "xfs_inum.h"
- #include "xfs_trans.h"
-+#include "xfs_trans_priv.h"
- #include "xfs_sb.h"
- #include "xfs_ag.h"
- #include "xfs_mount.h"
-@@ -462,6 +463,9 @@ xfs_sync_worker(
- 		else
- 			xfs_log_force(mp, 0);
- 		error = xfs_qm_sync(mp, SYNC_TRYLOCK);
-+
-+		/* start pushing all the metadata that is currently dirty */
-+		xfs_ail_push_all(mp->m_ail);
+diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
+index 1ba5c45..99dded9 100644
+--- a/fs/xfs/linux-2.6/xfs_super.c
++++ b/fs/xfs/linux-2.6/xfs_super.c
+@@ -1191,22 +1191,12 @@ xfs_fs_sync_fs(
+ 		return -error;
+ 
+ 	if (laptop_mode) {
+-		int	prev_sync_seq = mp->m_sync_seq;
+-
+ 		/*
+ 		 * The disk must be active because we're syncing.
+ 		 * We schedule xfssyncd now (now that the disk is
+ 		 * active) instead of later (when it might not be).
+ 		 */
+-		wake_up_process(mp->m_sync_task);
+-		/*
+-		 * We have to wait for the sync iteration to complete.
+-		 * If we don't, the disk activity caused by the sync
+-		 * will come after the sync is completed, and that
+-		 * triggers another sync from laptop mode.
+-		 */
+-		wait_event(mp->m_wait_single_sync_task,
+-				mp->m_sync_seq != prev_sync_seq);
++		flush_delayed_work_sync(&mp->m_sync_work);
  	}
  
- 	/* queue us up again */
-@@ -1024,8 +1028,9 @@ xfs_reclaim_inode_shrink(
+ 	return 0;
+@@ -1492,7 +1482,6 @@ xfs_fs_fill_super(
+ 	atomic_set(&mp->m_active_trans, 0);
+ 	INIT_LIST_HEAD(&mp->m_sync_list);
+ 	spin_lock_init(&mp->m_sync_lock);
+-	init_waitqueue_head(&mp->m_wait_single_sync_task);
  
- 	mp = container_of(shrink, struct xfs_mount, m_inode_shrink);
- 	if (nr_to_scan) {
--		/* kick background reclaimer */
-+		/* kick background reclaimer and push the AIL */
- 		xfs_syncd_queue_reclaim(mp);
-+		xfs_ail_push_all(mp->m_ail);
+ 	mp->m_super = sb;
+ 	sb->s_fs_info = mp;
+@@ -1833,13 +1822,21 @@ init_xfs_fs(void)
+ 	if (error)
+ 		goto out_cleanup_procfs;
  
- 		if (!(gfp_mask & __GFP_FS))
- 			return -1;
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 25efa9b..2464316 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -761,7 +761,7 @@ xfs_log_need_covered(xfs_mount_t *mp)
- 		break;
- 	case XLOG_STATE_COVER_NEED:
- 	case XLOG_STATE_COVER_NEED2:
--		if (!xfs_trans_ail_tail(log->l_ailp) &&
-+		if (!xfs_ail_min_lsn(log->l_ailp) &&
- 		    xlog_iclogs_empty(log)) {
- 			if (log->l_covered_state == XLOG_STATE_COVER_NEED)
- 				log->l_covered_state = XLOG_STATE_COVER_DONE;
-@@ -801,7 +801,7 @@ xlog_assign_tail_lsn(
- 	xfs_lsn_t		tail_lsn;
- 	struct log		*log = mp->m_log;
- 
--	tail_lsn = xfs_trans_ail_tail(mp->m_ail);
-+	tail_lsn = xfs_ail_min_lsn(mp->m_ail);
- 	if (!tail_lsn)
- 		tail_lsn = atomic64_read(&log->l_last_sync_lsn);
- 
-@@ -1239,7 +1239,7 @@ xlog_grant_push_ail(
- 	 * the filesystem is shutting down.
- 	 */
- 	if (!XLOG_FORCED_SHUTDOWN(log))
--		xfs_trans_ail_push(log->l_ailp, threshold_lsn);
-+		xfs_ail_push(log->l_ailp, threshold_lsn);
- }
- 
- /*
-diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-index cfbb6c6..ad6fd69 100644
---- a/fs/xfs/xfs_trans_ail.c
-+++ b/fs/xfs/xfs_trans_ail.c
-@@ -91,6 +91,20 @@ xfs_ail_min(
- }
- 
- /*
-+ * Return a pointer to the last item in the AIL.
-+ * If the AIL is empty, then return NULL.
-+ */
-+static xfs_log_item_t *
-+xfs_ail_max(
-+	struct xfs_ail  *ailp)
-+{
-+	if (list_empty(&ailp->xa_ail))
-+		return NULL;
++	xfs_syncd_wq = alloc_workqueue("xfssyncd", WQ_CPU_INTENSIVE, 8);
++	if (!xfs_syncd_wq) {
++		error = -ENOMEM;
++		goto out_sysctl_unregister;
++	}
 +
-+	return list_entry(ailp->xa_ail.prev, xfs_log_item_t, li_ail);
-+}
-+
-+/*
-  * Return a pointer to the item which follows
-  * the given item in the AIL.  If the given item
-  * is the last item in the list, then return NULL.
-@@ -116,7 +130,7 @@ xfs_ail_next(
-  * lsn of the last item in the AIL.
-  */
- xfs_lsn_t
--xfs_trans_ail_tail(
-+xfs_ail_min_lsn(
- 	struct xfs_ail	*ailp)
+ 	vfs_initquota();
+ 
+ 	error = register_filesystem(&xfs_fs_type);
+ 	if (error)
+-		goto out_sysctl_unregister;
++		goto out_destroy_xfs_syncd;
+ 	return 0;
+ 
++ out_destroy_xfs_syncd:
++	destroy_workqueue(xfs_syncd_wq);
+  out_sysctl_unregister:
+ 	xfs_sysctl_unregister();
+  out_cleanup_procfs:
+@@ -1861,6 +1858,7 @@ exit_xfs_fs(void)
  {
- 	xfs_lsn_t	lsn = 0;
-@@ -132,6 +146,25 @@ xfs_trans_ail_tail(
- }
+ 	vfs_exitquota();
+ 	unregister_filesystem(&xfs_fs_type);
++	destroy_workqueue(xfs_syncd_wq);
+ 	xfs_sysctl_unregister();
+ 	xfs_cleanup_procfs();
+ 	xfs_buf_terminate();
+diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
+index 594cd82..ee9a6c3 100644
+--- a/fs/xfs/linux-2.6/xfs_sync.c
++++ b/fs/xfs/linux-2.6/xfs_sync.c
+@@ -39,6 +39,8 @@
+ #include <linux/kthread.h>
+ #include <linux/freezer.h>
  
++struct workqueue_struct	*xfs_syncd_wq;	/* sync workqueue */
++
  /*
-+ * Return the maximum lsn held in the AIL, or zero if the AIL is empty.
-+ */
-+static xfs_lsn_t
-+xfs_ail_max_lsn(
-+	struct xfs_ail  *ailp)
-+{
-+	xfs_lsn_t       lsn = 0;
-+	xfs_log_item_t  *lip;
-+
-+	spin_lock(&ailp->xa_lock);
-+	lip = xfs_ail_max(ailp);
-+	if (lip)
-+		lsn = lip->li_lsn;
-+	spin_unlock(&ailp->xa_lock);
-+
-+	return lsn;
-+}
-+
-+/*
-  * AIL traversal cursor initialisation.
-  *
-  * The cursor keeps track of where our current traversal is up
-@@ -499,7 +532,7 @@ xfs_ail_worker(
+  * The inode lookup is done in batches to keep the amount of lock traffic and
+  * radix tree lookups to a minimum. The batch size is a trade off between
+@@ -489,32 +491,6 @@ xfs_flush_inodes(
+ 	xfs_log_force(ip->i_mount, XFS_LOG_SYNC);
  }
  
- /*
-- * xfs_trans_ail_push
-+ * xfs_ail_push
-  *
-  * This routine is called to move the tail of the AIL forward.  It does this by
-  * trying to flush items in the AIL whose lsns are below the given
-@@ -515,7 +548,7 @@ xfs_ail_worker(
-  * any of the objects, so the lock is not needed.
-  */
- void
--xfs_trans_ail_push(
-+xfs_ail_push(
- 	struct xfs_ail	*ailp,
- 	xfs_lsn_t	threshold_lsn)
- {
-@@ -537,6 +570,19 @@ xfs_trans_ail_push(
- }
- 
- /*
-+ * Push out all items in the AIL immediately
-+ */
-+void
-+xfs_ail_push_all(
-+	struct xfs_ail  *ailp)
-+{
-+	xfs_lsn_t       threshold_lsn = xfs_ail_max_lsn(ailp);
-+
-+	if (threshold_lsn)
-+		xfs_ail_push(ailp, threshold_lsn);
-+}
-+
-+/*
-  * This is to be called when an item is unlocked that may have
-  * been in the AIL.  It will wake up the first member of the AIL
-  * wait list if this item's unlocking might allow it to progress.
-diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
-index 6ebd322..6b164e9 100644
---- a/fs/xfs/xfs_trans_priv.h
-+++ b/fs/xfs/xfs_trans_priv.h
-@@ -104,12 +104,13 @@ xfs_trans_ail_delete(
- 	xfs_trans_ail_delete_bulk(ailp, &lip, 1);
- }
- 
--void			xfs_trans_ail_push(struct xfs_ail *, xfs_lsn_t);
-+void			xfs_ail_push(struct xfs_ail *, xfs_lsn_t);
-+void			xfs_ail_push_all(struct xfs_ail *);
-+xfs_lsn_t		xfs_ail_min_lsn(struct xfs_ail *ailp);
-+
- void			xfs_trans_unlocked_item(struct xfs_ail *,
- 					xfs_log_item_t *);
- 
--xfs_lsn_t		xfs_trans_ail_tail(struct xfs_ail *ailp);
+-/*
+- * Every sync period we need to unpin all items, reclaim inodes and sync
+- * disk quotas.  We might need to cover the log to indicate that the
+- * filesystem is idle and not frozen.
+- */
+-STATIC void
+-xfs_sync_worker(
+-	struct xfs_mount *mp,
+-	void		*unused)
+-{
+-	int		error;
 -
- struct xfs_log_item	*xfs_trans_ail_cursor_first(struct xfs_ail *ailp,
- 					struct xfs_ail_cursor *cur,
- 					xfs_lsn_t lsn);
+-	if (!(mp->m_flags & XFS_MOUNT_RDONLY)) {
+-		/* dgc: errors ignored here */
+-		if (mp->m_super->s_frozen == SB_UNFROZEN &&
+-		    xfs_log_need_covered(mp))
+-			error = xfs_fs_log_dummy(mp);
+-		else
+-			xfs_log_force(mp, 0);
+-		xfs_reclaim_inodes(mp, 0);
+-		error = xfs_qm_sync(mp, SYNC_TRYLOCK);
+-	}
+-	mp->m_sync_seq++;
+-	wake_up(&mp->m_wait_single_sync_task);
+-}
+-
+ STATIC int
+ xfssyncd(
+ 	void			*arg)
+@@ -535,27 +511,12 @@ xfssyncd(
+ 			break;
+ 
+ 		spin_lock(&mp->m_sync_lock);
+-		/*
+-		 * We can get woken by laptop mode, to do a sync -
+-		 * that's the (only!) case where the list would be
+-		 * empty with time remaining.
+-		 */
+-		if (!timeleft || list_empty(&mp->m_sync_list)) {
+-			if (!timeleft)
+-				timeleft = xfs_syncd_centisecs *
+-							msecs_to_jiffies(10);
+-			INIT_LIST_HEAD(&mp->m_sync_work.w_list);
+-			list_add_tail(&mp->m_sync_work.w_list,
+-					&mp->m_sync_list);
+-		}
+ 		list_splice_init(&mp->m_sync_list, &tmp);
+ 		spin_unlock(&mp->m_sync_lock);
+ 
+ 		list_for_each_entry_safe(work, n, &tmp, w_list) {
+ 			(*work->w_syncer)(mp, work->w_data);
+ 			list_del(&work->w_list);
+-			if (work == &mp->m_sync_work)
+-				continue;
+ 			if (work->w_completion)
+ 				complete(work->w_completion);
+ 			kmem_free(work);
+@@ -565,13 +526,49 @@ xfssyncd(
+ 	return 0;
+ }
+ 
++static void
++xfs_syncd_queue_sync(
++	struct xfs_mount        *mp)
++{
++	queue_delayed_work(xfs_syncd_wq, &mp->m_sync_work,
++				msecs_to_jiffies(xfs_syncd_centisecs * 10));
++}
++
++/*
++ * Every sync period we need to unpin all items, reclaim inodes and sync
++ * disk quotas.  We might need to cover the log to indicate that the
++ * filesystem is idle and not frozen.
++ */
++STATIC void
++xfs_sync_worker(
++	struct work_struct *work)
++{
++	struct xfs_mount *mp = container_of(to_delayed_work(work),
++					struct xfs_mount, m_sync_work);
++	int		error;
++
++	if (!(mp->m_flags & XFS_MOUNT_RDONLY)) {
++		/* dgc: errors ignored here */
++		if (mp->m_super->s_frozen == SB_UNFROZEN &&
++		    xfs_log_need_covered(mp))
++			error = xfs_fs_log_dummy(mp);
++		else
++			xfs_log_force(mp, 0);
++		xfs_reclaim_inodes(mp, 0);
++		error = xfs_qm_sync(mp, SYNC_TRYLOCK);
++	}
++
++	/* queue us up again */
++	xfs_syncd_queue_sync(mp);
++}
++
+ int
+ xfs_syncd_init(
+ 	struct xfs_mount	*mp)
+ {
+-	mp->m_sync_work.w_syncer = xfs_sync_worker;
+-	mp->m_sync_work.w_mount = mp;
+-	mp->m_sync_work.w_completion = NULL;
++	INIT_DELAYED_WORK(&mp->m_sync_work, xfs_sync_worker);
++	xfs_syncd_queue_sync(mp);
++
+ 	mp->m_sync_task = kthread_run(xfssyncd, mp, "xfssyncd/%s", mp->m_fsname);
+ 	if (IS_ERR(mp->m_sync_task))
+ 		return -PTR_ERR(mp->m_sync_task);
+@@ -582,6 +579,7 @@ void
+ xfs_syncd_stop(
+ 	struct xfs_mount	*mp)
+ {
++	cancel_delayed_work_sync(&mp->m_sync_work);
+ 	kthread_stop(mp->m_sync_task);
+ }
+ 
+diff --git a/fs/xfs/linux-2.6/xfs_sync.h b/fs/xfs/linux-2.6/xfs_sync.h
+index 32ba662..e3a6ad2 100644
+--- a/fs/xfs/linux-2.6/xfs_sync.h
++++ b/fs/xfs/linux-2.6/xfs_sync.h
+@@ -32,6 +32,8 @@ typedef struct xfs_sync_work {
+ #define SYNC_WAIT		0x0001	/* wait for i/o to complete */
+ #define SYNC_TRYLOCK		0x0002  /* only try to lock inodes */
+ 
++extern struct workqueue_struct	*xfs_syncd_wq;	/* sync workqueue */
++
+ int xfs_syncd_init(struct xfs_mount *mp);
+ void xfs_syncd_stop(struct xfs_mount *mp);
+ 
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index a62e897..2c11e62 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -203,12 +203,10 @@ typedef struct xfs_mount {
+ 	struct mutex		m_icsb_mutex;	/* balancer sync lock */
+ #endif
+ 	struct xfs_mru_cache	*m_filestream;  /* per-mount filestream data */
++	struct delayed_work	m_sync_work;	/* background sync work */
+ 	struct task_struct	*m_sync_task;	/* generalised sync thread */
+-	xfs_sync_work_t		m_sync_work;	/* work item for VFS_SYNC */
+ 	struct list_head	m_sync_list;	/* sync thread work item list */
+ 	spinlock_t		m_sync_lock;	/* work item list lock */
+-	int			m_sync_seq;	/* sync thread generation no. */
+-	wait_queue_head_t	m_wait_single_sync_task;
+ 	__int64_t		m_update_flags;	/* sb flags we need to update
+ 						   on the next remount,rw */
+ 	struct shrinker		m_inode_shrink;	/* inode reclaim shrinker */
 -- 
 1.7.2.3
 
