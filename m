@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p371sVVD067105 for <xfs@oss.sgi.com>; Wed, 6 Apr 2011 20:54:31 -0500
+	p371sXrI067131 for <xfs@oss.sgi.com>; Wed, 6 Apr 2011 20:54:33 -0500
 Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 58D491493631
-	for <xfs@oss.sgi.com>; Wed,  6 Apr 2011 18:57:46 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D38921493633
+	for <xfs@oss.sgi.com>; Wed,  6 Apr 2011 18:57:48 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	OteZCx69A8daCvK2 for <xfs@oss.sgi.com>;
-	Wed, 06 Apr 2011 18:57:46 -0700 (PDT)
+	Rp9lC2FxGFhAhH11 for <xfs@oss.sgi.com>;
+	Wed, 06 Apr 2011 18:57:48 -0700 (PDT)
 Received: from chute ([192.168.1.1] helo=disappointment)
 	by dastard with esmtp (Exim 4.72)
-	(envelope-from <dave@fromorbit.com>) id 1Q7eTN-00063I-RJ
-	for xfs@oss.sgi.com; Thu, 07 Apr 2011 11:57:25 +1000
+	(envelope-from <dave@fromorbit.com>) id 1Q7eTY-00063a-0P
+	for xfs@oss.sgi.com; Thu, 07 Apr 2011 11:57:36 +1000
 Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1Q7eTQ-00079g-Fr
+	(envelope-from <dave@disappointment.disaster>) id 1Q7eTQ-00079p-L2
 	for xfs@oss.sgi.com; Thu, 07 Apr 2011 11:57:28 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 3/9] xfs: convert ENOSPC inode flushing to use new syncd
-	workqueue
-Date: Thu,  7 Apr 2011 11:57:19 +1000
-Message-Id: <1302141445-27457-4-git-send-email-david@fromorbit.com>
+Subject: [PATCH 6/9] xfs: clean up code layout in xfs_trans_ail.c
+Date: Thu,  7 Apr 2011 11:57:22 +1000
+Message-Id: <1302141445-27457-7-git-send-email-david@fromorbit.com>
 In-Reply-To: <1302141445-27457-1-git-send-email-david@fromorbit.com>
 References: <1302141445-27457-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -40,227 +39,309 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-On of the problems with the current inode flush at ENOSPC is that we
-queue a flush per ENOSPC event, regardless of how many are already
-queued. Thi can result in    hundreds of queued flushes, most of
-which simply burn CPU scanned and do no real work. This simply slows
-down allocation at ENOSPC.
-
-We really only need one active flush at a time, and we can easily
-implement that via the new xfs_syncd_wq. All we need to do is queue
-a flush if one is not already active, then block waiting for the
-currently active flush to complete. The result is that we only ever
-have a single ENOSPC inode flush active at a time and this greatly
-reduces the overhead of ENOSPC processing.
-
-On my 2p test machine, this results in tests exercising ENOSPC
-conditions running significantly faster - 042 halves execution time,
-083 drops from 60s to 5s, etc - while not introducing test
-regressions.
-
-This allows us to remove the old xfssyncd threads and infrastructure
-as they are no longer used.
+This patch rearranges the location of functions in xfs_trans_ail.c
+to remove the need for forward declarations of those functions in
+preparation for adding new functions without the need for forward
+declarations.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/linux-2.6/xfs_super.c |    2 -
- fs/xfs/linux-2.6/xfs_sync.c  |  132 +++++++++++-------------------------------
- fs/xfs/xfs_mount.h           |    4 +-
- 3 files changed, 36 insertions(+), 102 deletions(-)
+ fs/xfs/xfs_trans_ail.c |  254 ++++++++++++++++++++++--------------------------
+ 1 files changed, 118 insertions(+), 136 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
-index 99dded9..a20071f 100644
---- a/fs/xfs/linux-2.6/xfs_super.c
-+++ b/fs/xfs/linux-2.6/xfs_super.c
-@@ -1480,8 +1480,6 @@ xfs_fs_fill_super(
- 	spin_lock_init(&mp->m_sb_lock);
- 	mutex_init(&mp->m_growlock);
- 	atomic_set(&mp->m_active_trans, 0);
--	INIT_LIST_HEAD(&mp->m_sync_list);
--	spin_lock_init(&mp->m_sync_lock);
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index cb3aeac..8012bfb 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -30,41 +30,100 @@
  
- 	mp->m_super = sb;
- 	sb->s_fs_info = mp;
-diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
-index ee9a6c3..af32759 100644
---- a/fs/xfs/linux-2.6/xfs_sync.c
-+++ b/fs/xfs/linux-2.6/xfs_sync.c
-@@ -433,99 +433,6 @@ xfs_quiesce_attr(
- 	xfs_unmountfs_writesb(mp);
- }
+ struct workqueue_struct	*xfs_ail_wq;	/* AIL workqueue */
  
--/*
-- * Enqueue a work item to be picked up by the vfs xfssyncd thread.
-- * Doing this has two advantages:
-- * - It saves on stack space, which is tight in certain situations
-- * - It can be used (with care) as a mechanism to avoid deadlocks.
-- * Flushing while allocating in a full filesystem requires both.
-- */
--STATIC void
--xfs_syncd_queue_work(
--	struct xfs_mount *mp,
--	void		*data,
--	void		(*syncer)(struct xfs_mount *, void *),
--	struct completion *completion)
--{
--	struct xfs_sync_work *work;
+-STATIC void xfs_ail_splice(struct xfs_ail *, struct list_head *, xfs_lsn_t);
+-STATIC void xfs_ail_delete(struct xfs_ail *, xfs_log_item_t *);
+-STATIC xfs_log_item_t * xfs_ail_min(struct xfs_ail *);
+-STATIC xfs_log_item_t * xfs_ail_next(struct xfs_ail *, xfs_log_item_t *);
 -
--	work = kmem_alloc(sizeof(struct xfs_sync_work), KM_SLEEP);
--	INIT_LIST_HEAD(&work->w_list);
--	work->w_syncer = syncer;
--	work->w_data = data;
--	work->w_mount = mp;
--	work->w_completion = completion;
--	spin_lock(&mp->m_sync_lock);
--	list_add_tail(&work->w_list, &mp->m_sync_list);
--	spin_unlock(&mp->m_sync_lock);
--	wake_up_process(mp->m_sync_task);
--}
--
--/*
-- * Flush delayed allocate data, attempting to free up reserved space
-- * from existing allocations.  At this point a new allocation attempt
-- * has failed with ENOSPC and we are in the process of scratching our
-- * heads, looking about for more room...
-- */
--STATIC void
--xfs_flush_inodes_work(
--	struct xfs_mount *mp,
--	void		*arg)
--{
--	struct inode	*inode = arg;
--	xfs_sync_data(mp, SYNC_TRYLOCK);
--	xfs_sync_data(mp, SYNC_TRYLOCK | SYNC_WAIT);
--	iput(inode);
--}
--
--void
--xfs_flush_inodes(
--	xfs_inode_t	*ip)
--{
--	struct inode	*inode = VFS_I(ip);
--	DECLARE_COMPLETION_ONSTACK(completion);
--
--	igrab(inode);
--	xfs_syncd_queue_work(ip->i_mount, inode, xfs_flush_inodes_work, &completion);
--	wait_for_completion(&completion);
--	xfs_log_force(ip->i_mount, XFS_LOG_SYNC);
--}
--
--STATIC int
--xfssyncd(
--	void			*arg)
--{
--	struct xfs_mount	*mp = arg;
--	long			timeleft;
--	xfs_sync_work_t		*work, *n;
--	LIST_HEAD		(tmp);
--
--	set_freezable();
--	timeleft = xfs_syncd_centisecs * msecs_to_jiffies(10);
--	for (;;) {
--		if (list_empty(&mp->m_sync_list))
--			timeleft = schedule_timeout_interruptible(timeleft);
--		/* swsusp */
--		try_to_freeze();
--		if (kthread_should_stop() && list_empty(&mp->m_sync_list))
--			break;
--
--		spin_lock(&mp->m_sync_lock);
--		list_splice_init(&mp->m_sync_list, &tmp);
--		spin_unlock(&mp->m_sync_lock);
--
--		list_for_each_entry_safe(work, n, &tmp, w_list) {
--			(*work->w_syncer)(mp, work->w_data);
--			list_del(&work->w_list);
--			if (work->w_completion)
--				complete(work->w_completion);
--			kmem_free(work);
--		}
--	}
--
--	return 0;
--}
--
- static void
- xfs_syncd_queue_sync(
- 	struct xfs_mount        *mp)
-@@ -562,16 +469,47 @@ xfs_sync_worker(
- 	xfs_syncd_queue_sync(mp);
- }
+ #ifdef DEBUG
+-STATIC void xfs_ail_check(struct xfs_ail *, xfs_log_item_t *);
+-#else
++/*
++ * Check that the list is sorted as it should be.
++ */
++STATIC void
++xfs_ail_check(
++	struct xfs_ail	*ailp,
++	xfs_log_item_t	*lip)
++{
++	xfs_log_item_t	*prev_lip;
++
++	if (list_empty(&ailp->xa_ail))
++		return;
++
++	/*
++	 * Check the next and previous entries are valid.
++	 */
++	ASSERT((lip->li_flags & XFS_LI_IN_AIL) != 0);
++	prev_lip = list_entry(lip->li_ail.prev, xfs_log_item_t, li_ail);
++	if (&prev_lip->li_ail != &ailp->xa_ail)
++		ASSERT(XFS_LSN_CMP(prev_lip->li_lsn, lip->li_lsn) <= 0);
++
++	prev_lip = list_entry(lip->li_ail.next, xfs_log_item_t, li_ail);
++	if (&prev_lip->li_ail != &ailp->xa_ail)
++		ASSERT(XFS_LSN_CMP(prev_lip->li_lsn, lip->li_lsn) >= 0);
++
++
++#ifdef XFS_TRANS_DEBUG
++	/*
++	 * Walk the list checking lsn ordering, and that every entry has the
++	 * XFS_LI_IN_AIL flag set. This is really expensive, so only do it
++	 * when specifically debugging the transaction subsystem.
++	 */
++	prev_lip = list_entry(&ailp->xa_ail, xfs_log_item_t, li_ail);
++	list_for_each_entry(lip, &ailp->xa_ail, li_ail) {
++		if (&prev_lip->li_ail != &ailp->xa_ail)
++			ASSERT(XFS_LSN_CMP(prev_lip->li_lsn, lip->li_lsn) <= 0);
++		ASSERT((lip->li_flags & XFS_LI_IN_AIL) != 0);
++		prev_lip = lip;
++	}
++#endif /* XFS_TRANS_DEBUG */
++}
++#else /* !DEBUG */
+ #define	xfs_ail_check(a,l)
+ #endif /* DEBUG */
  
 +/*
-+ * Flush delayed allocate data, attempting to free up reserved space
-+ * from existing allocations.  At this point a new allocation attempt
-+ * has failed with ENOSPC and we are in the process of scratching our
-+ * heads, looking about for more room.
-+ *
-+ * Queue a new data flush if there isn't one already in progress and
-+ * wait for completion of the flush. This means that we only ever have one
-+ * inode flush in progress no matter how many ENOSPC events are occurring and
-+ * so will prevent the system from bogging down due to every concurrent
-+ * ENOSPC event scanning all the active inodes in the system for writeback.
++ * Return a pointer to the first item in the AIL.  If the AIL is empty, then
++ * return NULL.
 + */
-+void
-+xfs_flush_inodes(
-+	struct xfs_inode	*ip)
++static xfs_log_item_t *
++xfs_ail_min(
++	struct xfs_ail  *ailp)
 +{
-+	struct xfs_mount	*mp = ip->i_mount;
++	if (list_empty(&ailp->xa_ail))
++		return NULL;
 +
-+	queue_work(xfs_syncd_wq, &mp->m_flush_work);
-+	flush_work_sync(&mp->m_flush_work);
++	return list_first_entry(&ailp->xa_ail, xfs_log_item_t, li_ail);
 +}
 +
-+STATIC void
-+xfs_flush_worker(
-+	struct work_struct *work)
++/*
++ * Return a pointer to the item which follows the given item in the AIL.  If
++ * the given item is the last item in the list, then return NULL.
++ */
++static xfs_log_item_t *
++xfs_ail_next(
++	struct xfs_ail  *ailp,
++	xfs_log_item_t  *lip)
 +{
-+	struct xfs_mount *mp = container_of(work,
-+					struct xfs_mount, m_flush_work);
++	if (lip->li_ail.next == &ailp->xa_ail)
++		return NULL;
 +
-+	xfs_sync_data(mp, SYNC_TRYLOCK);
-+	xfs_sync_data(mp, SYNC_TRYLOCK | SYNC_WAIT);
++	return list_first_entry(&lip->li_ail, xfs_log_item_t, li_ail);
++}
+ 
+ /*
+- * This is called by the log manager code to determine the LSN
+- * of the tail of the log.  This is exactly the LSN of the first
+- * item in the AIL.  If the AIL is empty, then this function
+- * returns 0.
++ * This is called by the log manager code to determine the LSN of the tail of
++ * the log.  This is exactly the LSN of the first item in the AIL.  If the AIL
++ * is empty, then this function returns 0.
+  *
+- * We need the AIL lock in order to get a coherent read of the
+- * lsn of the last item in the AIL.
++ * We need the AIL lock in order to get a coherent read of the lsn of the last
++ * item in the AIL.
+  */
+ xfs_lsn_t
+ xfs_trans_ail_tail(
+ 	struct xfs_ail	*ailp)
+ {
+-	xfs_lsn_t	lsn;
++	xfs_lsn_t	lsn = 0;
+ 	xfs_log_item_t	*lip;
+ 
+ 	spin_lock(&ailp->xa_lock);
+ 	lip = xfs_ail_min(ailp);
+-	if (lip == NULL) {
+-		lsn = (xfs_lsn_t)0;
+-	} else {
++	if (lip)
+ 		lsn = lip->li_lsn;
+-	}
+ 	spin_unlock(&ailp->xa_lock);
+ 
+ 	return lsn;
+@@ -208,6 +267,47 @@ out:
+ }
+ 
+ /*
++ * splice the log item list into the AIL at the given LSN.
++ */
++static void
++xfs_ail_splice(
++	struct xfs_ail  *ailp,
++	struct list_head *list,
++	xfs_lsn_t       lsn)
++{
++	xfs_log_item_t  *next_lip;
++
++	/* If the list is empty, just insert the item.  */
++	if (list_empty(&ailp->xa_ail)) {
++		list_splice(list, &ailp->xa_ail);
++		return;
++	}
++
++	list_for_each_entry_reverse(next_lip, &ailp->xa_ail, li_ail) {
++		if (XFS_LSN_CMP(next_lip->li_lsn, lsn) <= 0)
++			break;
++	}
++
++	ASSERT(&next_lip->li_ail == &ailp->xa_ail ||
++	       XFS_LSN_CMP(next_lip->li_lsn, lsn) <= 0);
++
++	list_splice_init(list, &next_lip->li_ail);
 +}
 +
- int
- xfs_syncd_init(
- 	struct xfs_mount	*mp)
- {
-+	INIT_WORK(&mp->m_flush_work, xfs_flush_worker);
- 	INIT_DELAYED_WORK(&mp->m_sync_work, xfs_sync_worker);
- 	xfs_syncd_queue_sync(mp);
- 
--	mp->m_sync_task = kthread_run(xfssyncd, mp, "xfssyncd/%s", mp->m_fsname);
--	if (IS_ERR(mp->m_sync_task))
--		return -PTR_ERR(mp->m_sync_task);
- 	return 0;
++/*
++ * Delete the given item from the AIL.  Return a pointer to the item.
++ */
++static void
++xfs_ail_delete(
++	struct xfs_ail  *ailp,
++	xfs_log_item_t  *lip)
++{
++	xfs_ail_check(ailp, lip);
++	list_del(&lip->li_ail);
++	xfs_trans_ail_cursor_clear(ailp, lip);
++}
++
++/*
+  * xfs_ail_worker does the work of pushing on the AIL. It will requeue itself
+  * to run at a later time if there is more work to do to complete the push.
+  */
+@@ -657,121 +757,3 @@ xfs_trans_ail_destroy(
+ 	cancel_delayed_work_sync(&ailp->xa_work);
+ 	kmem_free(ailp);
  }
- 
-@@ -580,7 +518,7 @@ xfs_syncd_stop(
- 	struct xfs_mount	*mp)
- {
- 	cancel_delayed_work_sync(&mp->m_sync_work);
--	kthread_stop(mp->m_sync_task);
-+	cancel_work_sync(&mp->m_flush_work);
- }
- 
- void
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 2c11e62..a0ad90e 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -204,9 +204,7 @@ typedef struct xfs_mount {
- #endif
- 	struct xfs_mru_cache	*m_filestream;  /* per-mount filestream data */
- 	struct delayed_work	m_sync_work;	/* background sync work */
--	struct task_struct	*m_sync_task;	/* generalised sync thread */
--	struct list_head	m_sync_list;	/* sync thread work item list */
--	spinlock_t		m_sync_lock;	/* work item list lock */
-+	struct work_struct	m_flush_work;	/* background inode flush */
- 	__int64_t		m_update_flags;	/* sb flags we need to update
- 						   on the next remount,rw */
- 	struct shrinker		m_inode_shrink;	/* inode reclaim shrinker */
+-
+-/*
+- * splice the log item list into the AIL at the given LSN.
+- */
+-STATIC void
+-xfs_ail_splice(
+-	struct xfs_ail	*ailp,
+-	struct list_head *list,
+-	xfs_lsn_t	lsn)
+-{
+-	xfs_log_item_t	*next_lip;
+-
+-	/*
+-	 * If the list is empty, just insert the item.
+-	 */
+-	if (list_empty(&ailp->xa_ail)) {
+-		list_splice(list, &ailp->xa_ail);
+-		return;
+-	}
+-
+-	list_for_each_entry_reverse(next_lip, &ailp->xa_ail, li_ail) {
+-		if (XFS_LSN_CMP(next_lip->li_lsn, lsn) <= 0)
+-			break;
+-	}
+-
+-	ASSERT((&next_lip->li_ail == &ailp->xa_ail) ||
+-	       (XFS_LSN_CMP(next_lip->li_lsn, lsn) <= 0));
+-
+-	list_splice_init(list, &next_lip->li_ail);
+-	return;
+-}
+-
+-/*
+- * Delete the given item from the AIL.  Return a pointer to the item.
+- */
+-STATIC void
+-xfs_ail_delete(
+-	struct xfs_ail	*ailp,
+-	xfs_log_item_t	*lip)
+-{
+-	xfs_ail_check(ailp, lip);
+-	list_del(&lip->li_ail);
+-	xfs_trans_ail_cursor_clear(ailp, lip);
+-}
+-
+-/*
+- * Return a pointer to the first item in the AIL.
+- * If the AIL is empty, then return NULL.
+- */
+-STATIC xfs_log_item_t *
+-xfs_ail_min(
+-	struct xfs_ail	*ailp)
+-{
+-	if (list_empty(&ailp->xa_ail))
+-		return NULL;
+-
+-	return list_first_entry(&ailp->xa_ail, xfs_log_item_t, li_ail);
+-}
+-
+-/*
+- * Return a pointer to the item which follows
+- * the given item in the AIL.  If the given item
+- * is the last item in the list, then return NULL.
+- */
+-STATIC xfs_log_item_t *
+-xfs_ail_next(
+-	struct xfs_ail	*ailp,
+-	xfs_log_item_t	*lip)
+-{
+-	if (lip->li_ail.next == &ailp->xa_ail)
+-		return NULL;
+-
+-	return list_first_entry(&lip->li_ail, xfs_log_item_t, li_ail);
+-}
+-
+-#ifdef DEBUG
+-/*
+- * Check that the list is sorted as it should be.
+- */
+-STATIC void
+-xfs_ail_check(
+-	struct xfs_ail	*ailp,
+-	xfs_log_item_t	*lip)
+-{
+-	xfs_log_item_t	*prev_lip;
+-
+-	if (list_empty(&ailp->xa_ail))
+-		return;
+-
+-	/*
+-	 * Check the next and previous entries are valid.
+-	 */
+-	ASSERT((lip->li_flags & XFS_LI_IN_AIL) != 0);
+-	prev_lip = list_entry(lip->li_ail.prev, xfs_log_item_t, li_ail);
+-	if (&prev_lip->li_ail != &ailp->xa_ail)
+-		ASSERT(XFS_LSN_CMP(prev_lip->li_lsn, lip->li_lsn) <= 0);
+-
+-	prev_lip = list_entry(lip->li_ail.next, xfs_log_item_t, li_ail);
+-	if (&prev_lip->li_ail != &ailp->xa_ail)
+-		ASSERT(XFS_LSN_CMP(prev_lip->li_lsn, lip->li_lsn) >= 0);
+-
+-
+-#ifdef XFS_TRANS_DEBUG
+-	/*
+-	 * Walk the list checking lsn ordering, and that every entry has the
+-	 * XFS_LI_IN_AIL flag set. This is really expensive, so only do it
+-	 * when specifically debugging the transaction subsystem.
+-	 */
+-	prev_lip = list_entry(&ailp->xa_ail, xfs_log_item_t, li_ail);
+-	list_for_each_entry(lip, &ailp->xa_ail, li_ail) {
+-		if (&prev_lip->li_ail != &ailp->xa_ail)
+-			ASSERT(XFS_LSN_CMP(prev_lip->li_lsn, lip->li_lsn) <= 0);
+-		ASSERT((lip->li_flags & XFS_LI_IN_AIL) != 0);
+-		prev_lip = lip;
+-	}
+-#endif /* XFS_TRANS_DEBUG */
+-}
+-#endif /* DEBUG */
 -- 
 1.7.2.3
 
