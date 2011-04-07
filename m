@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p370LxQX063447 for <xfs@oss.sgi.com>; Wed, 6 Apr 2011 19:21:59 -0500
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
+	p3701std062598 for <xfs@oss.sgi.com>; Wed, 6 Apr 2011 19:01:54 -0500
 Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7FA643AF3A6
-	for <xfs@oss.sgi.com>; Wed,  6 Apr 2011 17:25:15 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 92B3812B6C34
+	for <xfs@oss.sgi.com>; Wed,  6 Apr 2011 17:05:08 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	Tz7pVW62pA0Wm1Rw for <xfs@oss.sgi.com>;
-	Wed, 06 Apr 2011 17:25:15 -0700 (PDT)
-Date: Thu, 7 Apr 2011 10:25:12 +1000
+	dG2WhURnukq9I7vH for <xfs@oss.sgi.com>;
+	Wed, 06 Apr 2011 17:05:08 -0700 (PDT)
+Date: Thu, 7 Apr 2011 10:05:05 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 9/9] xfs: convert log tail checking to a warning
-Message-ID: <20110407002512.GS31057@dastard>
+Subject: Re: [PATCH 1/9] xfs: fix extent format buffer allocation size
+Message-ID: <20110407000505.GM31057@dastard>
 References: <1302070758-17312-1-git-send-email-david@fromorbit.com>
-	<1302070758-17312-10-git-send-email-david@fromorbit.com>
-	<20110406140257.GB24618@infradead.org>
+	<1302070758-17312-2-git-send-email-david@fromorbit.com>
+	<20110406133816.GA16276@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110406140257.GB24618@infradead.org>
+In-Reply-To: <20110406133816.GA16276@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,34 +34,24 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Wed, Apr 06, 2011 at 10:02:57AM -0400, Christoph Hellwig wrote:
-> On Wed, Apr 06, 2011 at 04:19:18PM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > On the Power platform, the log tail debug checks fire excessively
-> > causing the system to panic early in testing. The debug checks are
-> > known to be racy, though on x86_64 there is no evidence that they
-> > trigger at all.
-> > 
-> > We want to keep the checks active on debug systems to alert us to
-> > problems with log space accounting, but we need to reduce the impact
-> > of a racy check on testing on the Power platform.
-> > 
-> > As a result, convert the ASSERT conditions to warnings, and
-> > allow them to fire only once per filesystem mount. This will prevent
-> > false positives from interfering with testing, whilst still
-> > providing us with the indication that they may be a problem with log
-> > space accounting should that occur.
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+On Wed, Apr 06, 2011 at 09:38:17AM -0400, Christoph Hellwig wrote:
+> On Wed, Apr 06, 2011 at 04:19:10PM +1000, Dave Chinner wrote:
+> > +	ext_buffer = kmem_alloc(XFS_IFORK_SIZE(ip, whichfork),
+> > +							KM_SLEEP | KM_NOFS);
 > 
-> Keeping a potentially racy debug check around still seems somewhat
-> fishy to me.  But you've done all the recent log work, so if it's
-> going to help you spot problems I'm fine with keeping it in this way,
+> As mentioned before the KM_NOFS is a change from the previous version
+> and really should not be needed.
 
-It was invaluable when testing the modifications to make the log
-grant accounting lockless, so I really don't want to get rid of it
-altogether.  This seemed like the least-worst compromise....
+Ok. If you feel strongly enough to point it out a second time, I'll
+fix it ;)
+
+> Also the feedback that the new helper needs to be under the
+> !XFS_NATIVE_ENDIAN ifdef wasn't picked up either.
+
+The function is needed regardless of XFS_NATIVE_HOST due to the fact
+it is needed to pick the real extents out of the n-core data fork
+when delayed allocation extents are present. This is endian
+independent.
 
 Cheers,
 
