@@ -1,20 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p376Glbi080934 for <xfs@oss.sgi.com>; Thu, 7 Apr 2011 01:16:47 -0500
+	p376P0MP081263 for <xfs@oss.sgi.com>; Thu, 7 Apr 2011 01:25:00 -0500
 Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 041371E06539
-	for <xfs@oss.sgi.com>; Wed,  6 Apr 2011 23:20:01 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3B4EA1494E43
+	for <xfs@oss.sgi.com>; Wed,  6 Apr 2011 23:28:16 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	1u5a4erkhNUv7Q96 for <xfs@oss.sgi.com>;
-	Wed, 06 Apr 2011 23:20:01 -0700 (PDT)
+	hUXGU0IQY4CyDVuE for <xfs@oss.sgi.com>;
+	Wed, 06 Apr 2011 23:28:16 -0700 (PDT)
+Received: from chute ([192.168.1.1] helo=disappointment)
+	by dastard with esmtp (Exim 4.72)
+	(envelope-from <dave@fromorbit.com>) id 1Q7ihH-0006SF-36
+	for xfs@oss.sgi.com; Thu, 07 Apr 2011 16:28:03 +1000
+Received: from dave by disappointment with local (Exim 4.72)
+	(envelope-from <dave@disappointment.disaster>) id 1Q7ihJ-00012U-Os
+	for xfs@oss.sgi.com; Thu, 07 Apr 2011 16:28:05 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/2] xfs: kick inode writeback when low on memory
-Date: Thu,  7 Apr 2011 16:19:56 +1000
-Message-Id: <1302157196-1988-3-git-send-email-david@fromorbit.com>
-In-Reply-To: <1302157196-1988-1-git-send-email-david@fromorbit.com>
-References: <1302157196-1988-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH] xfs: don't look forever in xfs_inode_ag_walk during async
+	inode flushes
+Date: Thu,  7 Apr 2011 16:28:05 +1000
+Message-Id: <1302157685-3966-1-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,81 +30,35 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: linux-fsdevel@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
-
-When the inode cache shrinker runs, we may have lots of dirty inodes queued up
-in the VFS dirty queues that have not been expired. The typical case for this
-with XFS is atime updates. The result is that a highly concurrent workload that
-copies files and then later reads them (say to verify checksums) dirties all
-the inodes again, even when relatime is used.
-
-In a constrained memory environment, this results in a large number of dirty
-inodes using all of available memory and memory reclaim being unable to free
-them as dirty inodes areconsidered active. This problem was uncovered by Chris
-Mason during recent low memory stress testing.
-
-The fix is to trigger VFS level writeback from the XFS inode cache shrinker if
-there isn't already writeback in progress. This ensures that when we enter a
-low memory situation we start cleaning inodes (via the flusher thread) on the
-filesystem immediately, thereby making it more likely that we will be able to
-evict those dirty inodes from the VFS in the near future.
-
-The mechanism is not perfect - it only acts on the current filesystem, so if
-all the dirty inodes are on a different filesystem it won't help. However, it
-seems to be a valid assumption is that the filesystem with lots of dirty inodes
-is going to have the shrinker called very soon after the memory shortage
-begins, so this shouldn't be an issue.
-
-The other flaw is that there is no guarantee that the flusher thread will make
-progress fast enough to clean the dirty inodes so they can be reclaimed in the
-near future. However, this mechanism does improve the resilience of the
-filesystem under the test conditions - instead of reliably triggering the OOM
-killer 20 minutes into the stress test, it took more than 6 hours before it
-happened.
-
-This small addition definitely improves the low memory resilience of XFS on
-this type of workload, and best of all it has no impact on performance when
-memory is not constrained.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/linux-2.6/xfs_sync.c |   11 +++++++++++
- 1 files changed, 11 insertions(+), 0 deletions(-)
-
-diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
-index 9ad9560..c240d46 100644
---- a/fs/xfs/linux-2.6/xfs_sync.c
-+++ b/fs/xfs/linux-2.6/xfs_sync.c
-@@ -1038,6 +1038,17 @@ xfs_reclaim_inode_shrink(
- 		if (!(gfp_mask & __GFP_FS))
- 			return -1;
- 
-+		/*
-+		 * make sure VFS is cleaning inodes so they can be pruned
-+		 * and marked for reclaim in the XFS inode cache. If we don't
-+		 * do this the VFS can accumulate dirty inodes and we can OOM
-+		 * before they are cleaned by the periodic VFS writeback.
-+		 *
-+		 * This takes VFS level locks, so we can only do this after
-+		 * the __GFP_FS checks otherwise lockdep gets really unhappy.
-+		 */
-+		writeback_inodes_sb_nr_if_idle(mp->m_super, nr_to_scan);
-+
- 		xfs_reclaim_inodes_ag(mp, SYNC_TRYLOCK | SYNC_WAIT,
- 					&nr_to_scan);
- 		/* terminate if we don't exhaust the scan */
--- 
-1.7.2.3
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+RnJvbTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgoKV2hlbiB0aGUgdW5kZXJs
+eWluZyBpbm9kZSBidWZmZXIgaXMgbG9ja2VkIGFuZCB4ZnNfc3luY19pbm9kZV9hdHRyKCkKaXMg
+ZG9pbmcgYSBub24tYmxvY2tpbmcgZmx1c2gsIHhmc19pZmx1c2goKSBjYW4gcmV0dXJuIEVBR0FJ
+Ti4gV2hlbgp0aGlzIGhhcHBlbtGVLCBjbGVhciB0aGUgZXJyb3IgcmF0aGVyIHRoYW4gcmV0dXJu
+aW5nIGl0IHRvCnhmc19pbm9kZV9hZ193YWxrKCksIGFzIHJldHVybmluZyBFQUdBSU4gd2lsbCBy
+ZXN1bHQgaW4gdGhlIEFHIHdhbGsKZGVsYXlpbmcgZm9yIGEgc2hvcnQgd2hpbGUgYW5kIHRyeWlu
+ZyBhZ2Fpbi4gVGhpcyBjYW4gcmVzdWx0IGluCmJhY2tncm91bmQgd2Fsa3MgZ2V0dGluZyBzdHVj
+ayBvbiB0aGUgb25lIEFHIHVudGlsIGlub2RlIGJ1ZmZlciBpcwp1bmxvY2tlZCBieSBzb21lIG90
+aGVyIG1lYW5zLgoKVGhpcyBiZWhhdmlvdXIgd2FzIG5vdGljZWQgd2hlbiBhbmFseXNpbmcgZXZl
+bnQgdHJhY2VzIGZvbGxvd2VkIGJ5CmNvZGUgaW5zcGVjdGlvbiBhbmQgdmVyaWZpY2F0aW9uIG9m
+IHRoZSBmaXggdmlhIGZ1cnRoZXIgdHJhY2VzLgoKU2lnbmVkLW9mZi1ieTogRGF2ZSBDaGlubmVy
+IDxkY2hpbm5lckByZWRoYXQuY29tPgotLS0KIGZzL3hmcy9saW51eC0yLjYveGZzX3N5bmMuYyB8
+ICAgMTAgKysrKysrKysrKwogMSBmaWxlcyBjaGFuZ2VkLCAxMCBpbnNlcnRpb25zKCspLCAwIGRl
+bGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2ZzL3hmcy9saW51eC0yLjYveGZzX3N5bmMuYyBiL2Zz
+L3hmcy9saW51eC0yLjYveGZzX3N5bmMuYwppbmRleCBjMjQwZDQ2Li40NTZiYzMxIDEwMDY0NAot
+LS0gYS9mcy94ZnMvbGludXgtMi42L3hmc19zeW5jLmMKKysrIGIvZnMveGZzL2xpbnV4LTIuNi94
+ZnNfc3luYy5jCkBAIC0yNjcsNiArMjY3LDE2IEBAIHhmc19zeW5jX2lub2RlX2F0dHIoCiAKIAll
+cnJvciA9IHhmc19pZmx1c2goaXAsIGZsYWdzKTsKIAorCS8qCisJICogV2UgZG9uJ3Qgd2FudCB0
+byB0cnkgYWdhaW4gb24gbm9uLWJsb2NraW5nIGZsdXNoZXMgdGhhdCBjYW4ndCBydW4KKwkgKiBh
+Z2FpbiBpbW1lZGlhdGVseS4gSWYgYW4gaW5vZGUgcmVhbGx5IG11c3QgYmUgd3JpdHRlbiwgdGhl
+biB0aGF0J3MKKwkgKiB3aGF0IHRoZSBTWU5DX1dBSVQgZmxhZyBpcyBmb3IuCisJICovCisJaWYg
+KGVycm9yID09IEVBR0FJTikgeworCQlBU1NFUlQoIShmbGFncyAmIFNZTkNfV0FJVCkpOworCQll
+cnJvciA9IDA7CisJfQorCiAgb3V0X3VubG9jazoKIAl4ZnNfaXVubG9jayhpcCwgWEZTX0lMT0NL
+X1NIQVJFRCk7CiAJcmV0dXJuIGVycm9yOwotLSAKMS43LjIuMwoKX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNn
+aS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
