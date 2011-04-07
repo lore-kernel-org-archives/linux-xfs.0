@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p37G1J97105005
-	for <linux-xfs@oss.sgi.com>; Thu, 7 Apr 2011 11:01:19 -0500
-Received: from sam.nabble.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EE7FA50B3E5
-	for <linux-xfs@oss.sgi.com>; Thu,  7 Apr 2011 09:04:35 -0700 (PDT)
-Received: from sam.nabble.com (sam.nabble.com [216.139.236.26]) by
-	cuda.sgi.com with ESMTP id FL3d8Y1D5gmT2ahg for
-	<linux-xfs@oss.sgi.com>; Thu, 07 Apr 2011 09:04:35 -0700 (PDT)
-Received: from isper.nabble.com ([192.168.236.156])
-	by sam.nabble.com with esmtp (Exim 4.69)
-	(envelope-from <lists@nabble.com>) id 1Q7rhD-0001Qx-7Z
-	for linux-xfs@oss.sgi.com; Thu, 07 Apr 2011 09:04:35 -0700
-Message-ID: <31342497.post@talk.nabble.com>
-Date: Thu, 7 Apr 2011 09:04:35 -0700 (PDT)
-From: stress_buster <leo1783@yahoo.com>
-Subject: xfsprogs
+	p37HJ5rB120310
+	for <linux-xfs@oss.sgi.com>; Thu, 7 Apr 2011 12:19:05 -0500
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with SMTP id 759BB1E0786D
+	for <linux-xfs@oss.sgi.com>; Thu,  7 Apr 2011 10:22:21 -0700 (PDT)
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with SMTP id gnuESEHwtjxJr3ZU for <linux-xfs@oss.sgi.com>;
+	Thu, 07 Apr 2011 10:22:21 -0700 (PDT)
+Message-ID: <4D9DF2CB.1020503@sandeen.net>
+Date: Thu, 07 Apr 2011 10:22:19 -0700
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
+Subject: Re: xfsprogs
+References: <31342497.post@talk.nabble.com>
+In-Reply-To: <31342497.post@talk.nabble.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,27 +28,34 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: stress_buster <leo1783@yahoo.com>
+Cc: linux-xfs@oss.sgi.com
 
+On 4/7/11 9:04 AM, stress_buster wrote:
+> 
+> Hi,
+> 
+> My xfs_repair is bit old- 2.9. version.
+> I'm considering installing latest available. But just worried because this
+> is my production server and has some custom apps built into my OS. 
+> 
+> Is upgrading xfs_repair a high risk?
 
-Hi,
+No.
 
-My xfs_repair is bit old- 2.9. version.
-I'm considering installing latest available. But just worried because this
-is my production server and has some custom apps built into my OS. 
+> Also do I need to install latest xfsprogs or anyway only to upgrade
+> xfs_repair from the package?
+> I'm only would need xfs_repair mostly, so doesnt matter to me leaving
+> others-mkfs.xfs etc in xfsprogs at the old version if that minimises the
+> risk...
 
-Is upgrading xfs_repair a high risk?
+if you really want to try newer xfs_repair only, just build an xfsprogs tree and run from inside the tree.
 
-Also do I need to install latest xfsprogs or anyway only to upgrade
-xfs_repair from the package?
-I'm only would need xfs_repair mostly, so doesnt matter to me leaving
-others-mkfs.xfs etc in xfsprogs at the old version if that minimises the
-risk...
+> Any thoughts?
 
-Any thoughts?
--- 
-View this message in context: http://old.nabble.com/xfsprogs-tp31342497p31342497.html
-Sent from the linux-xfs mailing list archive at Nabble.com.
+Just upgrade.  ;)
+
+-Eric
 
 _______________________________________________
 xfs mailing list
