@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p370CZHq063090 for <xfs@oss.sgi.com>; Wed, 6 Apr 2011 19:12:35 -0500
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
+	p370F8SB063203 for <xfs@oss.sgi.com>; Wed, 6 Apr 2011 19:15:09 -0500
 Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0DCB03AF5AF
-	for <xfs@oss.sgi.com>; Wed,  6 Apr 2011 17:15:51 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 91DE8B90B03
+	for <xfs@oss.sgi.com>; Wed,  6 Apr 2011 17:18:24 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	Nt8B9bkEPNnIZ9h1 for <xfs@oss.sgi.com>;
-	Wed, 06 Apr 2011 17:15:51 -0700 (PDT)
-Date: Thu, 7 Apr 2011 10:15:48 +1000
+	e4F5UBIrVHZeYdVg for <xfs@oss.sgi.com>;
+	Wed, 06 Apr 2011 17:18:24 -0700 (PDT)
+Date: Thu, 7 Apr 2011 10:18:22 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 7/9] xfs: push the AIL from memory reclaim and periodic
-	sync
-Message-ID: <20110407001548.GQ31057@dastard>
+Subject: Re: [PATCH 8/9] xfs: catch bad block numbers freeing extents.
+Message-ID: <20110407001822.GR31057@dastard>
 References: <1302070758-17312-1-git-send-email-david@fromorbit.com>
-	<1302070758-17312-8-git-send-email-david@fromorbit.com>
-	<20110406183356.GA23275@infradead.org>
+	<1302070758-17312-9-git-send-email-david@fromorbit.com>
+	<20110406135951.GA24618@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110406183356.GA23275@infradead.org>
+In-Reply-To: <20110406135951.GA24618@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,24 +34,22 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Wed, Apr 06, 2011 at 02:33:56PM -0400, Christoph Hellwig wrote:
-> The patch looks correct, but I wonder what the performance implications
-> of flushing the AIL every 30 seconds are.  Did you benchmark the
-> patchset to see what it does to performance numbers for metadata
-> intensive workloads?
+On Wed, Apr 06, 2011 at 09:59:51AM -0400, Christoph Hellwig wrote:
+> > +	/* validate the extent size is legal now we have the agf locked */
+> > +	if (!args.agbp) {
+> > +		error = EFSCORRUPTED;
+> > +		goto error0;
+> > +	}
+> 
+> This is not a corruption case, but would require someone changing
+> xfs_fix_freelist and messing up.  I think the check can be removed
+> given that the potentially added bug would trivially trip up as
+> a NULL pointer dereference.
 
-In my measurements it's made no difference.
-
-If the workload is being sustained for more than a few seconds, then
-memory reclaim typically becomes active and the push from there
-becomes the dominating factor. This effectively makes the syncd work
-trigger a no-op.
-
-If the push from the syncd work does trigger work to be done, it's
-generally because the filesystem has gone to idle or only has a low
-level of modifications being done. In either case, it doesn't affect
-performance, especially with delaylog pinning the working set of
-metadata in memory...
+Well, I figured the only way we wouldn't get the agbp is if it was
+corrupted somehow (e.g. it gets re-read from disk), but that should
+return an error from xfs_alloc_fix_freelist() anyway. So i think you
+are right - the check can be dropped.
 
 Cheers,
 
