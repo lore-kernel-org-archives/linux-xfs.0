@@ -1,20 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p3858Q7K154558 for <xfs@oss.sgi.com>; Fri, 8 Apr 2011 00:08:26 -0500
-Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C41C23BCF16
-	for <xfs@oss.sgi.com>; Thu,  7 Apr 2011 22:11:41 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	ip7IB4eMXhq4l2ed for <xfs@oss.sgi.com>;
-	Thu, 07 Apr 2011 22:11:41 -0700 (PDT)
-Date: Fri, 8 Apr 2011 15:11:37 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [GIT PULL] xfs: fixes for 2.6.39
-Message-ID: <20110408051137.GW31057@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
+	p38DlYBv179125 for <xfs@oss.sgi.com>; Fri, 8 Apr 2011 08:47:34 -0500
+Subject: Re: [PATCH 4/9] xfs: introduce background inode reclaim work
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <20110408001918.GH30279@dastard>
+References: <1302141445-27457-1-git-send-email-david@fromorbit.com>
+	<1302141445-27457-5-git-send-email-david@fromorbit.com>
+	<1302210982.2576.600.camel@doink>  <20110408001918.GH30279@dastard>
+Date: Fri, 08 Apr 2011 08:49:56 -0500
+Message-ID: <1302270596.2468.16.camel@doink>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,51 +24,65 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: aelder@sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Hi Alex,
+On Fri, 2011-04-08 at 10:19 +1000, Dave Chinner wrote:
+> On Thu, Apr 07, 2011 at 04:16:22PM -0500, Alex Elder wrote:
+> > On Thu, 2011-04-07 at 11:57 +1000, Dave Chinner wrote:
+> > > +	if (!(mp->m_super->s_flags & MS_ACTIVE))
+> > > +		return;
+> > > +
+> > > +	rcu_read_lock();
+> > > +	if (radix_tree_tagged(&mp->m_perag_tree, XFS_ICI_RECLAIM_TAG)) {
+> > > +		queue_delayed_work(xfs_syncd_wq, &mp->m_reclaim_work,
+> > > +			msecs_to_jiffies(xfs_syncd_centisecs / 6 * 10));
+> > 
+> > Probably better to do the multiply before the divide here.
+> > (But whatever... it's heuristic.)
+> 
+> I always tend to divide before multiply to prevent the multiple from
+> overflowing before the divide is done. In this case the granularity
+> of xfs_syncd_centisecs is sufficient that the rounding error of the
+> divide is meaningless. ie. 30s = 3000.
 
-The series of reviewed fixes for 2.6.39 can be found in the git tree
-below. Please pull.
+Funny, I normally do the same, but in this case
+I was thinking about getting better accuracy.
+The numbers involved (msecs / jiffies and the
+number of msec) are not likely to be even close
+to sqrt(INT32_MAX) (let alone sqrt(UINT64_MAX)).
+Putting the calculation inside the parenthesis
+is much better though, and I did notice that
+change.
 
-Cheers,
+					-Alex
 
-Dave.
+> FWIW, I changed this from:
+> 
+> 	xfs_syncd_centisecs / 6 * msecs_to_jiffies(10)
+> 
+> because msecs_to_jiffies() has larger rounding problems. e.g. @
+> CONFIG_HZ=250, msecs_to_jiffies(10) = 3 which is actually 12ms. That
+> is, we want to sleep for 5s at a time, and the two different
+> calculations give:
+> 
+> New:
+> 	msecs_to_jiffies(3000 / 6 * 10) = 5000 / 4 jiffies
+> 					= 1250 jiffies
+> 					= 5s
+> Old:
+> 	3000 / 6 * msecs_to_jiffies(10) = 500 * 3 jiffies
+> 					= 1500 jiffies
+> 					= 6s
+> 
+> This 20% rounding error is the reason we've recently noticed xfssyncd
+> running every 36s rather than every 30s....
+> 
+> Cheers,
+> 
+> Dave.
 
 
-The following changes since commit 89b3600ccfb01aed6873bc499442fc0bed00bbdd:
-
-  xfs: fix unreferenced var error in xfs_buf.c (2011-03-30 23:34:20 -0500)
-
-are available in the git repository at:
-  git://git.kernel.org/pub/scm/linux/kernel/git/dgc/xfsdev.git xfs-for-2.6.39
-
-Dave Chinner (9):
-      xfs: fix extent format buffer allocation size
-      xfs: introduce a xfssyncd workqueue
-      xfs: convert ENOSPC inode flushing to use new syncd workqueue
-      xfs: introduce background inode reclaim work
-      xfs: convert the xfsaild threads to a workqueue
-      xfs: clean up code layout in xfs_trans_ail.c
-      xfs: push the AIL from memory reclaim and periodic sync
-      xfs: catch bad block numbers freeing extents.
-      xfs: convert log tail checking to a warning
-
- fs/xfs/linux-2.6/xfs_super.c |  129 +++++---------
- fs/xfs/linux-2.6/xfs_sync.c  |  228 ++++++++++++-----------
- fs/xfs/linux-2.6/xfs_sync.h  |    2 +
- fs/xfs/xfs_alloc.c           |   30 +++-
- fs/xfs/xfs_inode_item.c      |   67 ++++---
- fs/xfs/xfs_log.c             |   38 +++-
- fs/xfs/xfs_log_priv.h        |    1 +
- fs/xfs/xfs_mount.h           |    9 +-
- fs/xfs/xfs_trans_ail.c       |  421 +++++++++++++++++++++++-------------------
- fs/xfs/xfs_trans_priv.h      |   22 ++-
- 10 files changed, 500 insertions(+), 447 deletions(-)
--- 
-Dave Chinner
-david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
