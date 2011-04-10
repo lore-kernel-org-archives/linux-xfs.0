@@ -1,19 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p39HVXx1260098 for <xfs@oss.sgi.com>; Sat, 9 Apr 2011 12:31:33 -0500
-Received: from FoxValley.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with SMTP id 1C46B1E09EB9
-	for <xfs@oss.sgi.com>; Sat,  9 Apr 2011 10:34:51 -0700 (PDT)
-Received: from FoxValley.net (Marengo.FoxValley.net [64.135.192.25]) by
-	cuda.sgi.com with SMTP id EnaIogZ4j3iBVBjl for
-	<xfs@oss.sgi.com>; Sat, 09 Apr 2011 10:34:51 -0700 (PDT)
-Date: 9 Apr 2011 12:26:54 -0500
-Message-ID: <20110409172654.14639.qmail@FoxValley.net>
-Subject: Booking Request
-From: Peter Robinson <cravendunnillcoltd001@gmail.com>
+	p3AK0Gsp052107 for <xfs@oss.sgi.com>; Sun, 10 Apr 2011 15:00:19 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 09B2A14AAEF0
+	for <xfs@oss.sgi.com>; Sun, 10 Apr 2011 13:03:35 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id 7RqBtGdsb3Oz1HJ6 for
+	<xfs@oss.sgi.com>; Sun, 10 Apr 2011 13:03:35 -0700 (PDT)
+Received: from hch by bombadil.infradead.org with local (Exim 4.72 #1 (Red Hat
+	Linux)) id 1Q90r7-0007iT-08
+	for xfs@oss.sgi.com; Sun, 10 Apr 2011 20:03:33 +0000
+Date: Sun, 10 Apr 2011 16:03:32 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH] xfstests: allow deeper symlink recursion in 005
+Message-ID: <20110410200332.GA29662@infradead.org>
 MIME-Version: 1.0
-Reply-To: cravendunnillcoltd001@gmail.com
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,39 +31,42 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
+Recent kernels allow more than 40 nested symlinks, so up the limit
+to still reproduce a failure.
 
-Good Day Sir/MA,
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-I'm  Robinson Peter from Craven Dunnill & Co Ltd  in United Kingdom,we have three (3) of our Guest are coming to your country for a board meeting hosted by thier company and i want you to make 3 rooms for the 3 guest or any available room that can sleep 3 people.
-
-Mr Robert Williams
-Mr Andrew Yerandy
-Mrs Anna Periskova
-
-DURATION OF STAY:
-
-5NIGHT CHECK IN  : 20TH OF MAY 2011
-
-CHECK OUT : 25TH 20TH OF MAY 2011
-
-So, the above names you are to reserve and get back to me with the full
-total cost in GBP/Euro/usd,so as to send you my card details to charge the
-full payment before the arrival of my guest.
-
-Regards
-
-Thank you....
-Yours Sincerely,
-General Manager
-Robinson Peter
-Craven Dunnill & Co Ltd
-Head Office: Stourbridge Road,
-Bridgnorth, Shropshire WV15 6AS
-Registered No. 6028
-VAT REGISTRATION No. 274 1421 76
-PHONE:+447024012630
-
-
+Index: xfstests-dev/005
+===================================================================
+--- xfstests-dev.orig/005	2011-03-16 13:10:39.000000000 +0000
++++ xfstests-dev/005	2011-03-16 13:11:00.000000000 +0000
+@@ -45,7 +45,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 1
+ _cleanup()
+ {
+     cd $testdir
+-    rm -f symlink_{0,1,2,3}{0,1,2,3,4,5,6,7,8,9} symlink_self empty_file
++    rm -f symlink_{0,1,2,3,4}{0,1,2,3,4,5,6,7,8,9} symlink_self empty_file
+     cd /
+     _cleanup_testdir
+ }
+@@ -82,7 +82,7 @@ cd $testdir
+ 
+ o=empty_file
+ touch $o
+-for f in symlink_{0,1,2,3}{0,1,2,3,4,5,6,7,8,9}
++for f in symlink_{0,1,2,3,4}{0,1,2,3,4,5,6,7,8,9}
+ do
+     ln -s $o $f
+     o=$f
+@@ -92,7 +92,7 @@ ln -s symlink_self symlink_self
+ 
+ echo "*** touch deep symlinks"
+ echo ""
+-_touch symlink_{0,1,2,3}{0,1,2,3,4,5,6,7,8,9}
++_touch symlink_{0,1,2,3,4}{0,1,2,3,4,5,6,7,8,9}
+ echo ""
+ echo "*** touch recusive symlinks"
+ echo ""
 
 _______________________________________________
 xfs mailing list
