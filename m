@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p3BKXu91111473
-	for <linux-xfs@oss.sgi.com>; Mon, 11 Apr 2011 15:33:56 -0500
-Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with SMTP id 5958F1B6A8E8
-	for <linux-xfs@oss.sgi.com>; Mon, 11 Apr 2011 13:37:16 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with SMTP id UBhUOBY3I3DJvnRE
-	for <linux-xfs@oss.sgi.com>; Mon, 11 Apr 2011 13:37:16 -0700 (PDT)
-Message-ID: <4DA36676.1070206@hardwarefreak.com>
-Date: Mon, 11 Apr 2011 15:37:10 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	p3BLBVTd112646 for <xfs@oss.sgi.com>; Mon, 11 Apr 2011 16:11:31 -0500
+Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D112B3C4BF0
+	for <xfs@oss.sgi.com>; Mon, 11 Apr 2011 14:14:49 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	sarSdOdnPaumt0EA for <xfs@oss.sgi.com>;
+	Mon, 11 Apr 2011 14:14:49 -0700 (PDT)
+Date: Tue, 12 Apr 2011 07:14:46 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/2] xfs: kick inode writeback when low on memory
+Message-ID: <20110411211446.GD21395@dastard>
+References: <1302157196-1988-1-git-send-email-david@fromorbit.com>
+	<1302157196-1988-3-git-send-email-david@fromorbit.com>
+	<20110411183653.GD32346@infradead.org>
 MIME-Version: 1.0
-Subject: Re: 2 question about XFS fragmentation and _fsr
-References: <DFA094D472104424BEA7AA9060DE0D6F@myXP>
-In-Reply-To: <DFA094D472104424BEA7AA9060DE0D6F@myXP>
+Content-Disposition: inline
+In-Reply-To: <20110411183653.GD32346@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,48 +31,64 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Janos Haar <janos.haar@netcenter.hu>
-Cc: linux-xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-Janos Haar put forth on 4/11/2011 12:39 PM:
+On Mon, Apr 11, 2011 at 02:36:53PM -0400, Christoph Hellwig wrote:
+> How do you produce so many atime-dirty inodes?  With relatime we
+> should have cut down on the requirement for those a lot.
 
-> In the result, actually we have >6TB images on the 3TB disk, wich is
-> 97.9% fragmented.
+Copy a bunch of files, then md5sum them.
 
-How much free space does the filesystem have?  How big is each image
-file?  For xfs_fsr to work properly it must have sufficient free space
-in the filesystem.
+The copy modifies c/mtime, the md5sum modifies atime, sees mtime is
+younger than atime, updates atime and dirties the inode. i.e.:
 
-> Basically the sparse RAW disk images should be more faster accessible
-> than the original drive, because this is 4disk raid, instead of one, AND
-> the head don't need to travel through the empty space of the drive...
+$ touch foo
+$ stat foo
+  File: `foo'
+  Size: 0               Blocks: 0          IO Block: 4096   regular empty file
+Device: fe02h/65026d    Inode: 150756489   Links: 1
+Access: (0644/-rw-r--r--)  Uid: ( 1000/    dave)   Gid: ( 1000/    dave)
+Access: 2011-04-12 07:08:24.668542636 +1000
+Modify: 2011-04-12 07:08:24.668542636 +1000
+Change: 2011-04-12 07:08:24.668542636 +1000
+$ cp README foo
+cp: overwrite `foo'? y
+$ stat foo
+  File: `foo'
+  Size: 17525           Blocks: 40         IO Block: 4096   regular file
+Device: fe02h/65026d    Inode: 150756489   Links: 1
+Access: (0644/-rw-r--r--)  Uid: ( 1000/    dave)   Gid: ( 1000/    dave)
+Access: 2011-04-12 07:08:24.668542636 +1000
+Modify: 2011-04-12 07:08:44.676108103 +1000
+Change: 2011-04-12 07:08:44.676108103 +1000
+$ md5sum foo
+9eb709847626f3663ea66121f10a27d7  foo
+$ stat foo
+  File: `foo'
+  Size: 17525           Blocks: 40         IO Block: 4096   regular file
+Device: fe02h/65026d    Inode: 150756489   Links: 1
+Access: (0644/-rw-r--r--)  Uid: ( 1000/    dave)   Gid: ( 1000/    dave)
+Access: 2011-04-12 07:09:00.223770431 +1000
+Modify: 2011-04-12 07:08:44.676108103 +1000
+Change: 2011-04-12 07:08:44.676108103 +1000
+$
 
-It sounds like you may have some other issues besides filesystem
-fragmentation.
+> Do you have traces that show if we're kicking off additional data
+> writeback this way too, or just pushing timestamp updates into
+> the AIL?
 
-> The XFS_FSR can be good for me or not?
+For the test workload, it just pushes timestamp updates into the AIL
+as that is the only thing that is dirtying the inodes when the OOM
+occurs. In other situations, I have no evidence either way, but
+I have not noticed any performance changes from a high level.
 
-If you have plenty of free space.
+Cheers,
 
-> Question 2:
-> One of our customers have one storage wich is exactly the same like the
-> one wich is described on the Q1, but only used for samba storage for
-> storing media files (big files.)
-
-Writing large files sequentially shouldn't cause fragmentation.
-
-> I am sure, there is no torrent or similar, and i have told to the
-> customers on the beginning "don't write more files parallel, to avoid
-> fragmentation", but today the storage is >95% fragmented.
-> The customer sad, he only does file write one by one, and nothing more.
-> How can this be?
-
-What were the mkfs.xfs arguments you used when creating these
-filesystem?  Please share xfs_info output for the filesystems in
-question, and details of the underlying hardware RAID storage.
-
+Dave.
 -- 
-Stan
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
