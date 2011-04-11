@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3B2Ux11062686 for <xfs@oss.sgi.com>; Sun, 10 Apr 2011 21:31:00 -0500
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
+	p3B36iRG063910 for <xfs@oss.sgi.com>; Sun, 10 Apr 2011 22:06:44 -0500
 Received: from ipmail07.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6A7D415BC18B
-	for <xfs@oss.sgi.com>; Sun, 10 Apr 2011 19:34:18 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 269023C164A
+	for <xfs@oss.sgi.com>; Sun, 10 Apr 2011 20:10:02 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	ZABErdEOI0uqczy4 for <xfs@oss.sgi.com>;
-	Sun, 10 Apr 2011 19:34:18 -0700 (PDT)
+	uUmfMqlNeajoAdAZ for <xfs@oss.sgi.com>;
+	Sun, 10 Apr 2011 20:10:02 -0700 (PDT)
 Received: from chute ([192.168.1.1] helo=disappointment)
 	by dastard with esmtp (Exim 4.72)
-	(envelope-from <dave@fromorbit.com>) id 1Q96xD-0005aK-DD
-	for xfs@oss.sgi.com; Mon, 11 Apr 2011 12:34:15 +1000
+	(envelope-from <dave@fromorbit.com>) id 1Q97Vn-0005dG-13
+	for xfs@oss.sgi.com; Mon, 11 Apr 2011 13:09:59 +1000
 Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1Q96x9-0000Oz-Vt
-	for xfs@oss.sgi.com; Mon, 11 Apr 2011 12:34:11 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1Q97Vt-0000bT-Ja
+	for xfs@oss.sgi.com; Mon, 11 Apr 2011 13:10:05 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfs: fix bmbt block allocation failures
-Date: Mon, 11 Apr 2011 12:34:11 +1000
-Message-Id: <1302489251-1512-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH] xfs: reset buffer pointers before freeing them
+Date: Mon, 11 Apr 2011 13:10:05 +1000
+Message-Id: <1302491405-2290-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,98 +37,183 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-When a multilevel bmbt split occurs, we can be asked to allocate
-blocks from an AG that has no space left available. In the case of
-an extent just being allocated, the first bmbt block allocation sees
-the firstblock parameter is set and does not set a minleft parameter
-for the allocation. The allocation also does not set the total
-number of blocks required by the allocation, either.
+When we free a vmapped buffer, we need to ensure the vmap address
+and length we free is the same as when it was allocated. In various
+places in the log code we change the memory the buffer is pointing
+to before issuing IO, but we never reset the buffer to point back to
+it's original memory (or no memory, if that is the case for the
+buffer).
 
-If the extent allocation used all the free space in the AG, the lack
-of a total allocation size results in a block being reserved for the
-AG freespace btree manipulations being used incorrectly.
+As a result, when we free the buffer it points to memory that is
+owned by something else and attempts to unmap and free it. Because
+the range does not match any known mapped range, it can trigger
+BUG_ON() traps in the vmap code, and potentially corrupt the vmap
+area tracking.
 
-Secondly, the allocation is only allowed to be allocated in the
-current AG (NEAR_BNO) because the low space algorithm has not been
-activated. As a result of this, the second block allocation in the
-split fails to find sufficient space in the current AG and fails,
-resulting in a dirty transaction cancellation and a filesytem
-shutdown.
-
-There are two problems here - both pointed out by Lachlan McIlroy
-when we were first discussing a proposed fix for the problem (See
-http://oss.sgi.com/archives/xfs/2010-09/msg00438.html).  Firstly,
-the missing args->total was causing the initial block to be
-allocated from the freespace reserve. Secondly that the NEAR_BNO
-allocation should probably be a START_BNO allocation to allow blocks
-to be taken from a higher numbered AG.
-
-With these changes, the allocation failure goes away, but we trigger
-asserts in xfs_bmapi() that try to ensure that bmbt block
-allocations only occur in the same AG as the extent allocated,
-except if the low space algorithm is active. In this case, we don't
-need to activate the low space algorithm - if a START_BNO allocation
-fails with minleft = 0, then there is no space we can allocate at
-all, and hence the low space algorithm is no help. Therefore the
-asserts need modification reflect the new state of affairs.
-
-This commit fixes the problem demonstrated by the test case in
-xfstests 250.
+Fix this by always resetting these buffers to their original state
+before freeing them.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_bmap.c       |    8 ++------
- fs/xfs/xfs_bmap_btree.c |    7 ++-----
- 2 files changed, 4 insertions(+), 11 deletions(-)
+ fs/xfs/linux-2.6/xfs_buf.c |   21 +++++++++++++++++++++
+ fs/xfs/linux-2.6/xfs_buf.h |    1 +
+ fs/xfs/xfs_log.c           |    8 +++++++-
+ fs/xfs/xfs_log_recover.c   |   31 ++++++++++++++++++++-----------
+ 4 files changed, 49 insertions(+), 12 deletions(-)
 
-diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
-index fa00788..50eed97 100644
---- a/fs/xfs/xfs_bmap.c
-+++ b/fs/xfs/xfs_bmap.c
-@@ -4917,13 +4917,9 @@ error0:
- 	if (cur) {
- 		if (!error) {
- 			ASSERT(*firstblock == NULLFSBLOCK ||
--			       XFS_FSB_TO_AGNO(mp, *firstblock) ==
-+			       XFS_FSB_TO_AGNO(mp, *firstblock) <=
- 			       XFS_FSB_TO_AGNO(mp,
--				       cur->bc_private.b.firstblock) ||
--			       (flist->xbf_low &&
--				XFS_FSB_TO_AGNO(mp, *firstblock) <
--				XFS_FSB_TO_AGNO(mp,
--					cur->bc_private.b.firstblock)));
-+				       cur->bc_private.b.firstblock));
- 			*firstblock = cur->bc_private.b.firstblock;
- 		}
- 		xfs_btree_del_cursor(cur,
-diff --git a/fs/xfs/xfs_bmap_btree.c b/fs/xfs/xfs_bmap_btree.c
-index 87d3c10..b2cdbfe 100644
---- a/fs/xfs/xfs_bmap_btree.c
-+++ b/fs/xfs/xfs_bmap_btree.c
-@@ -518,10 +518,11 @@ xfs_bmbt_alloc_block(
- 	args.mp = cur->bc_mp;
- 	args.fsbno = cur->bc_private.b.firstblock;
- 	args.firstblock = args.fsbno;
-+	args.total = 1;
-+	args.type = XFS_ALLOCTYPE_START_BNO;
+diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
+index d917146..2e8b759 100644
+--- a/fs/xfs/linux-2.6/xfs_buf.c
++++ b/fs/xfs/linux-2.6/xfs_buf.c
+@@ -711,6 +711,27 @@ xfs_buf_get_empty(
+ 	return bp;
+ }
  
- 	if (args.fsbno == NULLFSBLOCK) {
- 		args.fsbno = be64_to_cpu(start->l);
--		args.type = XFS_ALLOCTYPE_START_BNO;
- 		/*
- 		 * Make sure there is sufficient room left in the AG to
- 		 * complete a full tree split for an extent insert.  If
-@@ -534,10 +535,6 @@ xfs_bmbt_alloc_block(
- 		 * block allocation here and corrupt the filesystem.
- 		 */
- 		args.minleft = xfs_trans_get_block_res(args.tp);
--	} else if (cur->bc_private.b.flist->xbf_low) {
--		args.type = XFS_ALLOCTYPE_START_BNO;
--	} else {
--		args.type = XFS_ALLOCTYPE_NEAR_BNO;
++/*
++ * Return a buffer allocated as an empty buffer and associated to external
++ * memory via xfs_buf_associate_memory() back to it's empty state.
++ */
++void
++xfs_buf_set_empty(
++	struct xfs_buf		*bp,
++	size_t			len)
++{
++	if (bp->b_pages)
++		_xfs_buf_free_pages(bp);
++
++	bp->b_pages = NULL;
++	bp->b_page_count = 0;
++	bp->b_addr = NULL;
++	bp->b_file_offset = 0;
++	bp->b_buffer_length = bp->b_count_desired = len;
++	bp->b_bn = XFS_BUF_DADDR_NULL;
++	bp->b_flags &= ~XBF_MAPPED;
++}
++
+ static inline struct page *
+ mem_to_page(
+ 	void			*addr)
+diff --git a/fs/xfs/linux-2.6/xfs_buf.h b/fs/xfs/linux-2.6/xfs_buf.h
+index a9a1c45..50a7d5f 100644
+--- a/fs/xfs/linux-2.6/xfs_buf.h
++++ b/fs/xfs/linux-2.6/xfs_buf.h
+@@ -178,6 +178,7 @@ extern xfs_buf_t *xfs_buf_read(xfs_buftarg_t *, xfs_off_t, size_t,
+ 				xfs_buf_flags_t);
+ 
+ extern xfs_buf_t *xfs_buf_get_empty(size_t, xfs_buftarg_t *);
++extern void xfs_buf_set_empty(struct xfs_buf *bp, size_t len);
+ extern xfs_buf_t *xfs_buf_get_uncached(struct xfs_buftarg *, size_t, int);
+ extern int xfs_buf_associate_memory(xfs_buf_t *, void *, size_t);
+ extern void xfs_buf_hold(xfs_buf_t *);
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index b612ce4..3850a91 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -1449,6 +1449,13 @@ xlog_dealloc_log(xlog_t *log)
+ 
+ 	xlog_cil_destroy(log);
+ 
++	/*
++	 * always need to ensure that the extra buffer does not point to memory
++	 * owned by another log buffer before we free it.
++	 */
++	xfs_buf_set_empty(log->l_xbuf, log->l_iclog_size);
++	xfs_buf_free(log->l_xbuf);
++
+ 	iclog = log->l_iclog;
+ 	for (i=0; i<log->l_iclog_bufs; i++) {
+ 		xfs_buf_free(iclog->ic_bp);
+@@ -1458,7 +1465,6 @@ xlog_dealloc_log(xlog_t *log)
  	}
+ 	spinlock_destroy(&log->l_icloglock);
  
- 	args.minlen = args.maxlen = args.prod = 1;
+-	xfs_buf_free(log->l_xbuf);
+ 	log->l_mp->m_log = NULL;
+ 	kmem_free(log);
+ }	/* xlog_dealloc_log */
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 0c4a561..c467e38 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -1229,6 +1229,8 @@ xlog_write_log_records(
+ 		 */
+ 		ealign = round_down(end_block, sectbb);
+ 		if (j == 0 && (start_block + endcount > ealign)) {
++			int error2;
++
+ 			offset = XFS_BUF_PTR(bp);
+ 			balign = BBTOB(ealign - start_block);
+ 			error = XFS_BUF_SET_PTR(bp, offset + balign,
+@@ -1237,12 +1239,14 @@ xlog_write_log_records(
+ 				break;
+ 
+ 			error = xlog_bread_noalign(log, ealign, sectbb, bp);
+-			if (error)
+-				break;
+ 
+-			error = XFS_BUF_SET_PTR(bp, offset, bufblks);
++			/* must reset buffer pointer even on error */
++			error2 = XFS_BUF_SET_PTR(bp, offset, bufblks);
++			if (error2 && !error)
++				error = error2;
+ 			if (error)
+ 				break;
++
+ 		}
+ 
+ 		offset = xlog_align(log, start_block, endcount, bp);
+@@ -3422,6 +3426,8 @@ xlog_do_recovery_pass(
+ 				if (error)
+ 					goto bread_err2;
+ 			} else {
++				int error2;
++
+ 				/* This LR is split across physical log end */
+ 				if (blk_no != log->l_logBBsize) {
+ 					/* some data before physical log end */
+@@ -3456,11 +3462,12 @@ xlog_do_recovery_pass(
+ 
+ 				error = xlog_bread_noalign(log, 0,
+ 							   wrapped_hblks, hbp);
+-				if (error)
+-					goto bread_err2;
+ 
+-				error = XFS_BUF_SET_PTR(hbp, offset,
++				/* must reset buffer pointer even on error */
++				error2 = XFS_BUF_SET_PTR(hbp, offset,
+ 							BBTOB(hblks));
++				if (error2 && !error)
++					error = error2;
+ 				if (error)
+ 					goto bread_err2;
+ 			}
+@@ -3480,6 +3487,8 @@ xlog_do_recovery_pass(
+ 				if (error)
+ 					goto bread_err2;
+ 			} else {
++				int error2;
++
+ 				/* This log record is split across the
+ 				 * physical end of log */
+ 				offset = XFS_BUF_PTR(dbp);
+@@ -3518,12 +3527,12 @@ xlog_do_recovery_pass(
+ 					goto bread_err2;
+ 
+ 				error = xlog_bread_noalign(log, wrapped_hblks,
+-						bblks - split_bblks,
+-						dbp);
+-				if (error)
+-					goto bread_err2;
++						bblks - split_bblks, dbp);
+ 
+-				error = XFS_BUF_SET_PTR(dbp, offset, h_size);
++				/* must reset buffer pointer even on error */
++				error2 = XFS_BUF_SET_PTR(dbp, offset, h_size);
++				if (error2 && !error)
++					error = error2;
+ 				if (error)
+ 					goto bread_err2;
+ 			}
 -- 
 1.7.2.3
 
