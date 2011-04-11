@@ -1,11 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3BEa0be095241 for <xfs@oss.sgi.com>; Mon, 11 Apr 2011 09:36:00 -0500
-From: Alex Elder <aelder@sgi.com>
-Message-Id: <201104111439.p3BEdGTc005062@stout.americas.sgi.com>
-Date: Mon, 11 Apr 2011 09:39:16 -0500
-Subject: [GIT PULL] XFS 2nd update for 2.6.39-rc1
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
+	p3BHZgbJ103218
+	for <linux-xfs@oss.sgi.com>; Mon, 11 Apr 2011 12:35:42 -0500
+Received: from mail.1-click.hu (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with SMTP id EEDB03C4276
+	for <linux-xfs@oss.sgi.com>; Mon, 11 Apr 2011 10:39:01 -0700 (PDT)
+Received: from mail.1-click.hu (ns2.netcenter.hu [195.228.155.139]) by
+	cuda.sgi.com with SMTP id gKFWNf6ENKJpW2AL for
+	<linux-xfs@oss.sgi.com>; Mon, 11 Apr 2011 10:39:01 -0700 (PDT)
+Received: from myXP (unknown [195.228.155.202])
+	by mail.1-click.hu (Postfix) with ESMTP id EE4B71FCD3D
+	for <linux-xfs@oss.sgi.com>; Mon, 11 Apr 2011 19:34:37 +0200 (CEST)
+Message-ID: <DFA094D472104424BEA7AA9060DE0D6F@myXP>
+From: "Janos Haar" <janos.haar@netcenter.hu>
+Subject: 2 question about XFS fragmentation and _fsr
+Date: Mon, 11 Apr 2011 19:39:07 +0200
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -15,74 +25,54 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-Linus, please pull the following XFS changes for 2.6.39-rc3.
+Hello list,
 
-They fall into these categories:
-- switching XFS daemons over to use workqueues, taking advantage of
-  the recent global workqueue improvements
-- improving how the new per-process device plugging is used in XFS
-- alleviating some OOM issues reported by Chris Mason
-- reducing memory use in some log code (where it could needlessly
-  allocate much more than required)
-- checking for and reporting bad extents when they are found during
-  free (instead of using ASSERT())
-- eliminating warnings (some of which have begun to show up with
-  newer gcc)
+First, please CC me because i am not on the list.
 
-Thank you.
+Question 1:
+I am working in a data recovery company, and we are using one 3TB RAID 
+storage with XFS to store the recovery cases in image files.
+For spare a lot of space, usually we are imaging only the used spaces of the 
+filesystems. (for example 1TB system drive wich have only 80GB data inside 
+but needs to be bootable, the image is similar like Ghost images)
+But this makes a lot of sparse files, wich right should be this way.
+Some cases are done and we are closed (image can be deleted), and some needs 
+to store for long time.
+In the result, actually we have >6TB images on the 3TB disk, wich is 97.9% 
+fragmented.
+Basically the sparse RAW disk images should be more faster accessible than 
+the original drive, because this is 4disk raid, instead of one, AND the head 
+don't need to travel through the empty space of the drive...
+But actually we are proud if we can read or write in 8-10MB/s! :-D
+I have started to read about xfs_fsr but there is almost none information, 
+how it is _really_ working, and i am doubt about this will try to fill up 
+all of my images, and therefore fail to do any improvement, or this will do 
+the right job and will re-organize the sparse files again.
+The XFS_FSR can be good for me or not?
+If not, i suggest to implement an option to do sparse fles on the result or 
+not in the next releases...
+I will say a huge thanks in the end. :-)
 
-					-Alex
+Question 2:
+One of our customers have one storage wich is exactly the same like the one 
+wich is described on the Q1, but only used for samba storage for storing 
+media files (big files.)
+I am sure, there is no torrent or similar, and i have told to the customers 
+on the beginning "don't write more files parallel, to avoid fragmentation", 
+but today the storage is >95% fragmented.
+The customer sad, he only does file write one by one, and nothing more.
+How can this be?
 
-The following changes since commit 4263a2f1dad8c8e7ce2352a0cbc882c2b0c044a9:
+Thanks for your attention,
 
-  Merge branch 'for-linus' of git://git.kernel.org/pub/scm/linux/kernel/git/tiwai/sound-2.6 (2011-04-10 09:56:10 -0700)
-
-are available in the git repository at:
-
-  git://oss.sgi.com/xfs/xfs for-linus
-
-Christoph Hellwig (3):
-      xfs: fix variable set but not used warnings
-      xfs: fix xfs_debug warnings
-      xfs: use proper interfaces for on-stack plugging
-
-Dave Chinner (10):
-      xfs: fix unreferenced var error in xfs_buf.c
-      xfs: fix extent format buffer allocation size
-      xfs: introduce a xfssyncd workqueue
-      xfs: convert ENOSPC inode flushing to use new syncd workqueue
-      xfs: introduce background inode reclaim work
-      xfs: convert the xfsaild threads to a workqueue
-      xfs: clean up code layout in xfs_trans_ail.c
-      xfs: push the AIL from memory reclaim and periodic sync
-      xfs: catch bad block numbers freeing extents.
-      xfs: convert log tail checking to a warning
-
- fs/xfs/linux-2.6/xfs_buf.c     |   24 +--
- fs/xfs/linux-2.6/xfs_message.c |   27 +--
- fs/xfs/linux-2.6/xfs_message.h |   24 ++-
- fs/xfs/linux-2.6/xfs_super.c   |  129 +++++--------
- fs/xfs/linux-2.6/xfs_sync.c    |  228 +++++++++++-----------
- fs/xfs/linux-2.6/xfs_sync.h    |    2 +
- fs/xfs/quota/xfs_qm.c          |    7 -
- fs/xfs/quota/xfs_qm.h          |    5 -
- fs/xfs/quota/xfs_qm_syscalls.c |    2 -
- fs/xfs/xfs_alloc.c             |   30 +++-
- fs/xfs/xfs_inode_item.c        |   67 ++++---
- fs/xfs/xfs_itable.c            |    2 -
- fs/xfs/xfs_log.c               |   38 +++-
- fs/xfs/xfs_log_priv.h          |    1 +
- fs/xfs/xfs_mount.h             |    9 +-
- fs/xfs/xfs_trans_ail.c         |  421 ++++++++++++++++++++++------------------
- fs/xfs/xfs_trans_priv.h        |   22 ++-
- 17 files changed, 531 insertions(+), 507 deletions(-)
+Best regards,
+Janos Haar 
 
 _______________________________________________
 xfs mailing list
