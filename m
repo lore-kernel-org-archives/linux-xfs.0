@@ -1,23 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p3BLdM0c113414
-	for <linux-xfs@oss.sgi.com>; Mon, 11 Apr 2011 16:39:23 -0500
-Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 460471E0B37C
-	for <linux-xfs@oss.sgi.com>; Mon, 11 Apr 2011 14:42:42 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	Oa69WOJExzAg0QjP for <linux-xfs@oss.sgi.com>;
-	Mon, 11 Apr 2011 14:42:42 -0700 (PDT)
-Date: Tue, 12 Apr 2011 07:42:38 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: 2 question about XFS fragmentation and _fsr
-Message-ID: <20110411214238.GE21395@dastard>
-References: <DFA094D472104424BEA7AA9060DE0D6F@myXP>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <DFA094D472104424BEA7AA9060DE0D6F@myXP>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
+	p3BLjqjC113619 for <xfs@oss.sgi.com>; Mon, 11 Apr 2011 16:45:52 -0500
+Subject: [PATCH] xfs_destroy_workqueues() should not be tagged with __exit
+From: Alex Elder <aelder@sgi.com>
+Date: Mon, 11 Apr 2011 16:48:19 -0500
+Message-ID: <1302558499.2580.96.camel@doink>
+Mime-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,76 +20,51 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Janos Haar <janos.haar@netcenter.hu>
-Cc: linux-xfs@oss.sgi.com
+To: torvalds <torvalds@linux-foundation.org>
+Cc: akpm <akpm@linux-foundation.org>, "Luck, Tony" <tony.luck@intel.com>, linux-kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-On Mon, Apr 11, 2011 at 07:39:07PM +0200, Janos Haar wrote:
-> Hello list,
-> 
-> First, please CC me because i am not on the list.
-> 
-> Question 1:
-> I am working in a data recovery company, and we are using one 3TB
-> RAID storage with XFS to store the recovery cases in image files.
-> For spare a lot of space, usually we are imaging only the used
-> spaces of the filesystems. (for example 1TB system drive wich have
-> only 80GB data inside but needs to be bootable, the image is similar
-> like Ghost images)
-> But this makes a lot of sparse files, wich right should be this way.
-> Some cases are done and we are closed (image can be deleted), and
-> some needs to store for long time.
-> In the result, actually we have >6TB images on the 3TB disk, wich is
-> 97.9% fragmented.
+Linus, please apply the following patch, which fixes
+a problem with ia64 builds that is present in the XFS
+pull request I sent you this morning.  Thank you.
 
-How are you determining that figure?
+					-Alex
 
-> Basically the sparse RAW disk images should be more faster
-> accessible than the original drive, because this is 4disk raid,
-> instead of one, AND the head don't need to travel through the empty
-> space of the drive...
-> But actually we are proud if we can read or write in 8-10MB/s! :-D
-> I have started to read about xfs_fsr but there is almost none
-> information, how it is _really_ working, and i am doubt about this
-> will try to fill up all of my images, and therefore fail to do any
-> improvement, or this will do the right job and will re-organize the
-> sparse files again.
-> The XFS_FSR can be good for me or not?
+-------- Forwarded Message --------
+From: Luck, Tony <tony.luck@intel.com>
+To: xfs-masters@oss.sgi.com
+Cc: hch@lst.de, dchinner@redhat.com, aelder@sgi.com
+Subject: [PATCH] xfs_destroy_workqueues() should not be tagged with
+__exit
+Date: Mon, 11 Apr 2011 12:06:12 -0700
 
-xfs_fsr preserves the layout of sparse files, so it is unlikely to
-help you at all here. Remember, sparse files only reduce the amount
-of space used by a file - they don't magically reduce the number of
-seeks needed to read data from the files...
+ia64 throws away .exit sections for the built-in CONFIG case, so routines
+that are used in other circumstances should not be tagged as __exit.
 
-> If not, i suggest to implement an option to do sparse fles on the
-> result or not in the next releases...
-> I will say a huge thanks in the end. :-)
-> 
-> Question 2:
-> One of our customers have one storage wich is exactly the same like
-> the one wich is described on the Q1, but only used for samba storage
-> for storing media files (big files.)
-> I am sure, there is no torrent or similar, and i have told to the
-> customers on the beginning "don't write more files parallel, to
-> avoid fragmentation", but today the storage is >95% fragmented.
+Signed-off-by: Tony Luck <tony.luck@intel.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Alex Elder <aelder@sgi.com>
 
-Once again, what does 95% fragmented mean?
+---
 
-> The customer sad, he only does file write one by one, and nothing more.
-> How can this be?
+Should be applied after (or merged into) Dave Chinner's patch
+	xfs: convert the xfsaild threads to a workqueue
+which appeared as commit 0bf6a5bd4b55b466964ead6fa566d8f346a828ee in
+next-20110411
 
-Depends on your samba configuration to how it does writes. If it is
-conigured to do sync writes then it will have all sorts of
-fragmentation problems. So without more details about the workload,
-the kernel that is being used, the fragmentation occurring (xfs_bmap
-is your friend) and the samba config, there's little that can be
-suggested here.
+diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
+index 67d5b2c..b38e58d 100644
+--- a/fs/xfs/linux-2.6/xfs_super.c
++++ b/fs/xfs/linux-2.6/xfs_super.c
+@@ -1741,7 +1741,7 @@ out:
+ 	return -ENOMEM;
+ }
+ 
+-STATIC void __exit
++STATIC void
+ xfs_destroy_workqueues(void)
+ {
+ 	destroy_workqueue(xfs_ail_wq);
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
