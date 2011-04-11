@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p3BITMED105532 for <xfs@oss.sgi.com>; Mon, 11 Apr 2011 13:29:22 -0500
+	p3BIUq7m105774 for <xfs@oss.sgi.com>; Mon, 11 Apr 2011 13:30:52 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 15DE01E0B5DD
-	for <xfs@oss.sgi.com>; Mon, 11 Apr 2011 11:32:42 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 548E53C3DB5
+	for <xfs@oss.sgi.com>; Mon, 11 Apr 2011 11:34:12 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id vzO85zALrxOGp35u for
-	<xfs@oss.sgi.com>; Mon, 11 Apr 2011 11:32:42 -0700 (PDT)
-Date: Mon, 11 Apr 2011 14:32:42 -0400
+	by cuda.sgi.com with ESMTP id ViKHpVhXZGAkBplc for
+	<xfs@oss.sgi.com>; Mon, 11 Apr 2011 11:34:12 -0700 (PDT)
+Date: Mon, 11 Apr 2011 14:34:12 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: don't look forever in xfs_inode_ag_walk during
-	async inode flushes
-Message-ID: <20110411183242.GB32346@infradead.org>
-References: <1302157685-3966-1-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH 1/2] bdi: mark the bdi flusher busy when being forked
+Message-ID: <20110411183412.GC32346@infradead.org>
+References: <1302157196-1988-1-git-send-email-david@fromorbit.com>
+	<1302157196-1988-2-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1302157685-3966-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <1302157196-1988-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,27 +30,25 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-On Thu, Apr 07, 2011 at 04:28:05PM +1000, Dave Chinner wrote:
+On Thu, Apr 07, 2011 at 04:19:55PM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> When the underlying inode buffer is locked and xfs_sync_inode_attr()
-> is doing a non-blocking flush, xfs_iflush() can return EAGAIN. When
-> this happen??, clear the error rather than returning it to
-> xfs_inode_ag_walk(), as returning EAGAIN will result in the AG walk
-> delaying for a short while and trying again. This can result in
-> background walks getting stuck on the one AG until inode buffer is
-> unlocked by some other means.
+> Recetn attempts to use writeback_inode_sb_nr_if_idle() in XFs from
+> memory reclaim context have caused deadlocks because memory reclaim
+> call be called from a failed allocation during forking a flusher
+> thread. The shrinker then attempts to trigger writeback and the bdi
+> is considered idle because writeback is not in progress yet and then
+> deadlocks because bdi_queue_work() blocks waiting for the
+> BDI_Pending bit to clear which will never happen because it needs
+> the fork to complete.
 > 
-> This behaviour was noticed when analysing event traces followed by
-> code inspection and verification of the fix via further traces.
+> To avoid this deadlock, consider writeback to be in progress if the
+> flusher thread is being created. This prevents reclaim from blocking
+> waiting for it be forked and hence avoids the deadlock.
 
-It's a bit sad that we have two callers now that need to explicitly
-ignore the EAGAIN and only one that actually cares, but until we
-get rid of VFS-dirty inodes and ->write_inode it looks like we
-can't do anything about it.
-
+Looks good,
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 
