@@ -1,13 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3B2eCEk063012 for <xfs@oss.sgi.com>; Sun, 10 Apr 2011 21:40:13 -0500
-From: =?UTF-8?q?Weiping=20Pan=28=E6=BD=98=E5=8D=AB=E5=B9=B3=29?=
-	<panweiping3@gmail.com>
-Subject: [PATCH 2/2] xfs:remove a warning in xfs_buf_readahead()
-Date: Mon, 11 Apr 2011 10:44:53 +0800
-Message-Id: <1302489893-31676-1-git-send-email-panweiping3@gmail.com>
-MIME-Version: 1.0
+	p3B2Ux11062686 for <xfs@oss.sgi.com>; Sun, 10 Apr 2011 21:31:00 -0500
+Received: from ipmail07.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6A7D415BC18B
+	for <xfs@oss.sgi.com>; Sun, 10 Apr 2011 19:34:18 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	ZABErdEOI0uqczy4 for <xfs@oss.sgi.com>;
+	Sun, 10 Apr 2011 19:34:18 -0700 (PDT)
+Received: from chute ([192.168.1.1] helo=disappointment)
+	by dastard with esmtp (Exim 4.72)
+	(envelope-from <dave@fromorbit.com>) id 1Q96xD-0005aK-DD
+	for xfs@oss.sgi.com; Mon, 11 Apr 2011 12:34:15 +1000
+Received: from dave by disappointment with local (Exim 4.72)
+	(envelope-from <dave@disappointment.disaster>) id 1Q96x9-0000Oz-Vt
+	for xfs@oss.sgi.com; Mon, 11 Apr 2011 12:34:11 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH] xfs: fix bmbt block allocation failures
+Date: Mon, 11 Apr 2011 12:34:11 +1000
+Message-Id: <1302489251-1512-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -16,25 +28,111 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: aelder@sgi.com, xfs-masters@oss.sgi.com, dchinner@redhat.com, hch@lst.de, jaxboe@fusionio.com, tj@kernel.org, xfs@oss.sgi.com
-Cc: linux-kernel@vger.kernel.org, "=?UTF-8?q?Weiping=20Pan ?= (=E6=BD=98=E5=8D=AB=E5=B9=B3)" <panweiping3@gmail.com>
+To: xfs@oss.sgi.com
 
-L2hvbWUvcHdwL215c3ZuL2xpbnV4L2xpbnV4LTIuNi9mcy94ZnMvbGludXgtMi42L3hmc19idWYu
-YzogSW4gZnVuY3Rpb24K4oCYeGZzX2J1Zl9yZWFkYWhlYWTigJk6Ci9ob21lL3B3cC9teXN2bi9s
-aW51eC9saW51eC0yLjYvZnMveGZzL2xpbnV4LTIuNi94ZnNfYnVmLmM6NjYwOjI3OiB3YXJuaW5n
-Ogp1bnVzZWQgdmFyaWFibGUg4oCYYmRp4oCZCgpTaWduZWQtb2ZmLWJ5OiBXZWlwaW5nIFBhbijm
-vZjljavlubMpIDxwYW53ZWlwaW5nM0BnbWFpbC5jb20+Ci0tLQogZnMveGZzL2xpbnV4LTIuNi94
-ZnNfYnVmLmMgfCAgICAyIC0tCiAxIGZpbGVzIGNoYW5nZWQsIDAgaW5zZXJ0aW9ucygrKSwgMiBk
-ZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9mcy94ZnMvbGludXgtMi42L3hmc19idWYuYyBiL2Zz
-L3hmcy9saW51eC0yLjYveGZzX2J1Zi5jCmluZGV4IDVlYTQwMjAuLmExMjViMzIgMTAwNjQ0Ci0t
-LSBhL2ZzL3hmcy9saW51eC0yLjYveGZzX2J1Zi5jCisrKyBiL2ZzL3hmcy9saW51eC0yLjYveGZz
-X2J1Zi5jCkBAIC02NTcsOCArNjU3LDYgQEAgeGZzX2J1Zl9yZWFkYWhlYWQoCiAJeGZzX29mZl90
-CQlpb2ZmLAogCXNpemVfdAkJCWlzaXplKQogewotCXN0cnVjdCBiYWNraW5nX2Rldl9pbmZvICpi
-ZGk7Ci0KIAlpZiAoYmRpX3JlYWRfY29uZ2VzdGVkKHRhcmdldC0+YnRfYmRpKSkKIAkJcmV0dXJu
-OwogCi0tIAoxLjcuNAoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29t
-L21haWxtYW4vbGlzdGluZm8veGZzCg==
+From: Dave Chinner <dchinner@redhat.com>
+
+When a multilevel bmbt split occurs, we can be asked to allocate
+blocks from an AG that has no space left available. In the case of
+an extent just being allocated, the first bmbt block allocation sees
+the firstblock parameter is set and does not set a minleft parameter
+for the allocation. The allocation also does not set the total
+number of blocks required by the allocation, either.
+
+If the extent allocation used all the free space in the AG, the lack
+of a total allocation size results in a block being reserved for the
+AG freespace btree manipulations being used incorrectly.
+
+Secondly, the allocation is only allowed to be allocated in the
+current AG (NEAR_BNO) because the low space algorithm has not been
+activated. As a result of this, the second block allocation in the
+split fails to find sufficient space in the current AG and fails,
+resulting in a dirty transaction cancellation and a filesytem
+shutdown.
+
+There are two problems here - both pointed out by Lachlan McIlroy
+when we were first discussing a proposed fix for the problem (See
+http://oss.sgi.com/archives/xfs/2010-09/msg00438.html).  Firstly,
+the missing args->total was causing the initial block to be
+allocated from the freespace reserve. Secondly that the NEAR_BNO
+allocation should probably be a START_BNO allocation to allow blocks
+to be taken from a higher numbered AG.
+
+With these changes, the allocation failure goes away, but we trigger
+asserts in xfs_bmapi() that try to ensure that bmbt block
+allocations only occur in the same AG as the extent allocated,
+except if the low space algorithm is active. In this case, we don't
+need to activate the low space algorithm - if a START_BNO allocation
+fails with minleft = 0, then there is no space we can allocate at
+all, and hence the low space algorithm is no help. Therefore the
+asserts need modification reflect the new state of affairs.
+
+This commit fixes the problem demonstrated by the test case in
+xfstests 250.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_bmap.c       |    8 ++------
+ fs/xfs/xfs_bmap_btree.c |    7 ++-----
+ 2 files changed, 4 insertions(+), 11 deletions(-)
+
+diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
+index fa00788..50eed97 100644
+--- a/fs/xfs/xfs_bmap.c
++++ b/fs/xfs/xfs_bmap.c
+@@ -4917,13 +4917,9 @@ error0:
+ 	if (cur) {
+ 		if (!error) {
+ 			ASSERT(*firstblock == NULLFSBLOCK ||
+-			       XFS_FSB_TO_AGNO(mp, *firstblock) ==
++			       XFS_FSB_TO_AGNO(mp, *firstblock) <=
+ 			       XFS_FSB_TO_AGNO(mp,
+-				       cur->bc_private.b.firstblock) ||
+-			       (flist->xbf_low &&
+-				XFS_FSB_TO_AGNO(mp, *firstblock) <
+-				XFS_FSB_TO_AGNO(mp,
+-					cur->bc_private.b.firstblock)));
++				       cur->bc_private.b.firstblock));
+ 			*firstblock = cur->bc_private.b.firstblock;
+ 		}
+ 		xfs_btree_del_cursor(cur,
+diff --git a/fs/xfs/xfs_bmap_btree.c b/fs/xfs/xfs_bmap_btree.c
+index 87d3c10..b2cdbfe 100644
+--- a/fs/xfs/xfs_bmap_btree.c
++++ b/fs/xfs/xfs_bmap_btree.c
+@@ -518,10 +518,11 @@ xfs_bmbt_alloc_block(
+ 	args.mp = cur->bc_mp;
+ 	args.fsbno = cur->bc_private.b.firstblock;
+ 	args.firstblock = args.fsbno;
++	args.total = 1;
++	args.type = XFS_ALLOCTYPE_START_BNO;
+ 
+ 	if (args.fsbno == NULLFSBLOCK) {
+ 		args.fsbno = be64_to_cpu(start->l);
+-		args.type = XFS_ALLOCTYPE_START_BNO;
+ 		/*
+ 		 * Make sure there is sufficient room left in the AG to
+ 		 * complete a full tree split for an extent insert.  If
+@@ -534,10 +535,6 @@ xfs_bmbt_alloc_block(
+ 		 * block allocation here and corrupt the filesystem.
+ 		 */
+ 		args.minleft = xfs_trans_get_block_res(args.tp);
+-	} else if (cur->bc_private.b.flist->xbf_low) {
+-		args.type = XFS_ALLOCTYPE_START_BNO;
+-	} else {
+-		args.type = XFS_ALLOCTYPE_NEAR_BNO;
+ 	}
+ 
+ 	args.minlen = args.maxlen = args.prod = 1;
+-- 
+1.7.2.3
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
