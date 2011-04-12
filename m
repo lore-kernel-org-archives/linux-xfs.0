@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p3BNccud117508 for <xfs@oss.sgi.com>; Mon, 11 Apr 2011 18:38:38 -0500
+	p3C06KZb118682 for <xfs@oss.sgi.com>; Mon, 11 Apr 2011 19:06:21 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 163283C5398
-	for <xfs@oss.sgi.com>; Mon, 11 Apr 2011 16:41:58 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 022491B6D473
+	for <xfs@oss.sgi.com>; Mon, 11 Apr 2011 17:09:40 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id 5DNhOCUobhmxyGnl for
-	<xfs@oss.sgi.com>; Mon, 11 Apr 2011 16:41:58 -0700 (PDT)
-Date: Mon, 11 Apr 2011 19:41:58 -0400
+	by cuda.sgi.com with ESMTP id nZBBrJdXl3YHKnsN for
+	<xfs@oss.sgi.com>; Mon, 11 Apr 2011 17:09:40 -0700 (PDT)
+Date: Mon, 11 Apr 2011 20:09:39 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: fix bmbt block allocation failures
-Message-ID: <20110411234158.GB29358@infradead.org>
-References: <1302489251-1512-1-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH] xfs: reset buffer pointers before freeing them
+Message-ID: <20110412000939.GC29358@infradead.org>
+References: <1302491405-2290-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1302489251-1512-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <1302491405-2290-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,19 +31,34 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, Apr 11, 2011 at 12:34:11PM +1000, Dave Chinner wrote:
-> http://oss.sgi.com/archives/xfs/2010-09/msg00438.html).  Firstly,
-> the missing args->total was causing the initial block to be
-> allocated from the freespace reserve. Secondly that the NEAR_BNO
-> allocation should probably be a START_BNO allocation to allow blocks
-> to be taken from a higher numbered AG.
+>  			error = xlog_bread_noalign(log, ealign, sectbb, bp);
+> -			if (error)
+> -				break;
+>  
+> -			error = XFS_BUF_SET_PTR(bp, offset, bufblks);
+> +			/* must reset buffer pointer even on error */
+> +			error2 = XFS_BUF_SET_PTR(bp, offset, bufblks);
 
-Looking over the use of ->total, isn't the ialloc btree code also
-incorrect by setting ->total to 0?
+This seems to be incorrect both in the original and your version.
+>From all that I can see XFS_BUF_SET_PTR wants a byte count while bufblks
+is a sector count, e.g. this should be:
 
-The actual change looks good to me,
+			error2 = XFS_BUF_SET_PTR(bp, offset, BBTOB(bufblks);
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+While at I think this mess with the buffer virtual mapping, read into it
+and set it back mess needs to go into a single helper instead of beeing
+duplicated three times.  By having named arguments with proper types
+bugs like the existing one above should also be much more obvious to
+spot.
+
+As a follow on patch to that I think we could also get rid of all the
+vmap manipultions entirely, and just specify and I/O offset and length
+manually.  The only thing required for that is a number of pages
+to skip at the beggining of the buffer from the log recovery code to
+_xfs_buf_ioapply, either by passing it down procedurally, or by adding
+a new filed to struct xfs_buf.  In fact just relaxing the b_offset
+semantics to allow offsets larger than a page only in the I/O path would
+do it, but I'm not sure that version helps long-term maintenance.
 
 _______________________________________________
 xfs mailing list
