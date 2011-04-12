@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p3C8oOWZ141636 for <xfs@oss.sgi.com>; Tue, 12 Apr 2011 03:50:25 -0500
-Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 69CF314B06FC
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2011 01:53:44 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	9MeiaqBPVc5ieo4D for <xfs@oss.sgi.com>;
-	Tue, 12 Apr 2011 01:53:44 -0700 (PDT)
-Date: Tue, 12 Apr 2011 18:53:41 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: fix bmbt block allocation failures
-Message-ID: <20110412085341.GH21395@dastard>
-References: <1302489251-1512-1-git-send-email-david@fromorbit.com>
-	<1246357909.27528.1302569733170.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
-	<20110412065328.GG21395@dastard>
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
+	p3C9Tmtd142921 for <xfs@oss.sgi.com>; Tue, 12 Apr 2011 04:29:48 -0500
+Received: from sam.nabble.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8BB7114BCFBF
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2011 02:33:08 -0700 (PDT)
+Received: from sam.nabble.com (sam.nabble.com [216.139.236.26]) by
+	cuda.sgi.com with ESMTP id VBE1sYEELbu2DgpA for
+	<xfs@oss.sgi.com>; Tue, 12 Apr 2011 02:33:08 -0700 (PDT)
+Received: from isper.nabble.com ([192.168.236.156])
+	by sam.nabble.com with esmtp (Exim 4.69)
+	(envelope-from <lists@nabble.com>) id 1Q9Zy7-0001np-Kv
+	for xfs@oss.sgi.com; Tue, 12 Apr 2011 02:33:07 -0700
+Message-ID: <31377534.post@talk.nabble.com>
+Date: Tue, 12 Apr 2011 02:33:07 -0700 (PDT)
+From: stress_buster <leo1783@yahoo.com>
+Subject: fs corruption
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110412065328.GG21395@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,67 +25,57 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Lachlan McIlroy <lmcilroy@redhat.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-T24gVHVlLCBBcHIgMTIsIDIwMTEgYXQgMDQ6NTM6MjhQTSArMTAwMCwgRGF2ZSBDaGlubmVyIHdy
-b3RlOgo+IE9uIE1vbiwgQXByIDExLCAyMDExIGF0IDA4OjU1OjMzUE0gLTA0MDAsIExhY2hsYW4g
-TWNJbHJveSB3cm90ZToKPiA+IC0tLS0tIE9yaWdpbmFsIE1lc3NhZ2UgLS0tLS0KPiA+ID4gRnJv
-bTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgo+ID4gPiAKPiA+ID4gV2hlbiBh
-IG11bHRpbGV2ZWwgYm1idCBzcGxpdCBvY2N1cnMsIHdlIGNhbiBiZSBhc2tlZCB0byBhbGxvY2F0
-ZQo+ID4gPiBibG9ja3MgZnJvbSBhbiBBRyB0aGF0IGhhcyBubyBzcGFjZSBsZWZ0IGF2YWlsYWJs
-ZS4gSW4gdGhlIGNhc2Ugb2YKPiA+ID4gYW4gZXh0ZW50IGp1c3QgYmVpbmcgYWxsb2NhdGVkLCB0
-aGUgZmlyc3QgYm1idCBibG9jayBhbGxvY2F0aW9uIHNlZXMKPiA+ID4gdGhlIGZpcnN0YmxvY2sg
-cGFyYW1ldGVyIGlzIHNldCBhbmQgZG9lcyBub3Qgc2V0IGEgbWlubGVmdCBwYXJhbWV0ZXIKPiA+
-ID4gZm9yIHRoZSBhbGxvY2F0aW9uLiBUaGUgYWxsb2NhdGlvbiBhbHNvIGRvZXMgbm90IHNldCB0
-aGUgdG90YWwKPiA+ID4gbnVtYmVyIG9mIGJsb2NrcyByZXF1aXJlZCBieSB0aGUgYWxsb2NhdGlv
-biwgZWl0aGVyLgouLi4KPiBTbywgdGhlIHBhdGNoIGJlbG93IGZpeGVzIHRoZSB0ZXN0IDI1MCBh
-c3NlcnQgZmFpbHVyZSBhcyB3ZWxsLCBhbmQKPiB0byBtZSBzZWVtcyBtdWNoIG1vcmUgbGlrZWx5
-IGFzIHRoZSByb290IGNhdXNlIG9mIHRoZSBidWcuCgpGV0lXLCB0ZXN0IDI1MCBpcyBzaG93aW5n
-IHVwIGFub3RoZXIgdGhyZWUgYnVncywgYWxsIHVucmVsYXRlZCB0bwp0aGUgYnVnIGl0IHdyaXR0
-ZW4gdG8gZXhlcmNpc2UuIFR3byBhcmUgbWtmcyBidWdzIC0gdGhlIGZpcnN0IGJlaW5nCnRoYXQg
-bWtmcyBpcyB0ZXJtaW5hdGVkIGR1ZSB0byBmcmVlaW5nIGFuIGludmFsaWQgcG9pbnRlci4gVGhl
-CnNlY29uZCBiZWluZyB0aGF0IGl0IGlzIGxlYXZpbmcgYmVoaW5kIGEgY29ycnVwdGVkIGZyZWVz
-cGFjZSBidHJlZToKCl9jaGVja194ZnNfZmlsZXN5c3RlbTogZmlsZXN5c3RlbSBvbiAvbW50L3Rl
-c3QvMjUwLmZzIGlzIGluY29uc2lzdGVudAoqKiogeGZzX3JlcGFpciAtbiBvdXRwdXQgKioqClBo
-YXNlIDEgLSBmaW5kIGFuZCB2ZXJpZnkgc3VwZXJibG9jay4uLgpQaGFzZSAyIC0gdXNpbmcgaW50
-ZXJuYWwgbG9nCiAgICAgICAgLSBzY2FuIGZpbGVzeXN0ZW0gZnJlZXNwYWNlIGFuZCBpbm9kZSBt
-YXBzLi4uCmludmFsaWQgc3RhcnQgYmxvY2sgNDA5NiBpbiByZWNvcmQgMCBvZiA0NjM1MDQzIGJ0
-cmVlIGJsb2NrIDE2MDAvMQppbnZhbGlkIHN0YXJ0IGJsb2NrIDQwOTYgaW4gcmVjb3JkIDAgb2Yg
-NDYzNTAzOSBidHJlZSBibG9jayAxNjAwLzIKICAgICAgICAtIGZvdW5kIHJvb3QgaW5vZGUgY2h1
-bmsKUGhhc2UgMyAtIGZvciBlYWNoIEFHLi4uCi4uLi4KCnhmc19kYj4gY29udmVydCBhZ25vIDE2
-MDAgYWdibm8gMSBmc2IKMHg2NDAwMDEgKDY1NTM2MDEpCnhmc19kYj4gZnNiIDB4NjQwMDAxCnhm
-c19kYj4gdHlwZSBibm9idAp4ZnNfZGI+IHAKbWFnaWMgPSAweDQxNDI1NDQyCmxldmVsID0gMApu
-dW1yZWNzID0gMQpsZWZ0c2liID0gbnVsbApyaWdodHNpYiA9IG51bGwKcmVjc1sxXSA9IFtzdGFy
-dGJsb2NrLGJsb2NrY291bnRdIDE6WzQwOTYsMF0KeGZzX2RiPiBmc2IgMHg2NDAwMDIKeGZzX2Ri
-PiB0eXBlIGNudGJ0Cnhmc19kYj4gcAptYWdpYyA9IDB4NDE0MjU0NDMKbGV2ZWwgPSAwCm51bXJl
-Y3MgPSAxCmxlZnRzaWIgPSBudWxsCnJpZ2h0c2liID0gbnVsbApyZWNzWzFdID0gW3N0YXJ0Ymxv
-Y2ssYmxvY2tjb3VudF0gMTpbNDA5NiwwXQp4ZnNfZGI+IAoKU28gaW4gQUcgMTYwMCwgdGhlcmUg
-aXMgYSBmcmVlc3BhY2UgcmVjb3JkIGF0IGJsb2NrIDQwOTYgZm9yIGxlbmd0aAp6ZXJvLiBCb3Ro
-IGFyZSBpbmNvcnJlY3QgLSB0aGUgQUcgc2l6ZSBpcyBvbmx5IDQwOTYgYmxvY2tzLiBXb3J0aApu
-b3Rpbmc6Cgp4ZnNfZGI+IGFnZiAxNjAwCnhmc19kYj4gcAptYWdpY251bSA9IDB4NTg0MTQ3NDYK
-dmVyc2lvbm51bSA9IDEKc2Vxbm8gPSAxNjAwCmxlbmd0aCA9IDQwOTYKYm5vcm9vdCA9IDEKY250
-cm9vdCA9IDIKYm5vbGV2ZWwgPSAxCmNudGxldmVsID0gMQpmbGZpcnN0ID0gMApmbGxhc3QgPSAx
-MjcKZmxjb3VudCA9IDAKZnJlZWJsa3MgPSAwCmxvbmdlc3QgPSAwCmJ0cmVlYmxrcyA9IDAKCkFs
-bCB0aGUgZnJlZWxpc3QgYmxvY2tzIGhhdmUgYmVlbiBjb25zdW1lZCwgd2hpY2ggc2hvdWxkIG5v
-dCBoYXBwZW4KLSB0aGVyZSBzaG91bGQgYmUgNCBmcmVlbGlzdCBibG9ja3Mgd2hlbiB0aGUgQUcg
-aXMgZW1wdHkuIExvb2tpbmcgYQpiaXQgZGVlcGVyLCBBRyAxNjAwIGRvZXNuJ3QgY29udGFpbiBh
-bnkgZGF0YSBibG9ja3MgLSBpdCBjb250YWlucwp0aGUgbG9nLiBUaGUgbG9nIGlzIGFsbG9jYXRl
-ZCBieSBta2ZzLCBhbmQgaXMgNDA5MiBibG9ja3MgaW4gbGVuZ3RoLgrQhyBqdXN0IGNvbmZpcm1l
-ZCB0aGF0IHRoZSByZXBhaXIgZmFpbHVyZSBvY2N1cnMgb24gYSBmcmVzaGx5IG1hZGUKRlMsIHNv
-IHRoaXMgaXMgZGVmaW5pdGVseSBhIG1rZnMgYnVnIHRoYXQgaGFzbid0IGJlZW4gbm90aWNlZApi
-ZWNhdXNlIHRoZSB0ZXN0IGhhc24ndCBiZWVuIHJ1bm5pbmcgdG8gY29tcGxldGlvbiBhbmQgY2hl
-Y2tpbmcgdGhlCmZzLi4uLgoKQW5kIHRoZSB0aGlyZCBidWcgaXMgaW4gcmVwYWlyOgoKaW52YWxp
-ZCBzdGFydCBibG9jayA0MDk2IGluIHJlY29yZCAwIG9mIDQ2MzUwNDMgYnRyZWUgYmxvY2sgMTYw
-MC8xCmludmFsaWQgc3RhcnQgYmxvY2sgNDA5NiBpbiByZWNvcmQgMCBvZiA0NjM1MDM5IGJ0cmVl
-IGJsb2NrIDE2MDAvMgogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgXl5e
-Xl5eXgoKVGhlc2UgYXJlIHN1cHBvc2VkIHRvIHNheSAiYm5vIiBvciAiY250IiwgYnV0IGEgJWQg
-aW5zdGVhZCBvZiBhICVzCmlzIGluY29ycmVjdGx5IHVzZWQgaW4gZm9ybWF0IHN0cmluZyBzbyBp
-dCBnaXZlcyBhIHdhY2t5IHJlc3VsdC4KCkNoZWVycywKCkRhdmUuCi0tIApEYXZlIENoaW5uZXIK
-ZGF2aWRAZnJvbW9yYml0LmNvbQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5z
-Z2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+
+My dmesg output shows the below trace. It repeats over and over again.
+
+XFS internal error XFS_WANT_CORRUPTED_GOTO at line 1545 of file
+fs/xfs/xfs_alloc.c.  Caller 0xffffffff881a8961
+
+Call Trace:
+ [<ffffffff881a6e27>] :xfs:xfs_free_ag_extent+0x19e/0x67e
+ [<ffffffff881a8961>] :xfs:xfs_free_extent+0xa9/0xc9
+ [<ffffffff881d96cf>] :xfs:xlog_recover_process_efi+0x112/0x16c
+ [<ffffffff881f31b4>] :xfs:xfs_fs_fill_super+0x0/0x3e4
+ [<ffffffff881da8c2>] :xfs:xlog_recover_process_efis+0x4f/0x8d
+ [<ffffffff881da914>] :xfs:xlog_recover_finish+0x14/0xad
+ [<ffffffff881f31b4>] :xfs:xfs_fs_fill_super+0x0/0x3e4
+ [<ffffffff881df420>] :xfs:xfs_mountfs+0x498/0x5e2
+ [<ffffffff881dfb42>] :xfs:xfs_mru_cache_create+0x113/0x143
+ [<ffffffff881f33b7>] :xfs:xfs_fs_fill_super+0x203/0x3e4
+ [<ffffffff800e544f>] get_sb_bdev+0x10a/0x16c
+ [<ffffffff800e4dec>] vfs_kern_mount+0x93/0x11a
+ [<ffffffff800e4eb5>] do_kern_mount+0x36/0x4d
+ [<ffffffff800ef2ed>] do_mount+0x6a9/0x719
+ [<ffffffff80008d84>] __handle_mm_fault+0x5f2/0xfaa
+ [<ffffffff80022127>] __up_read+0x19/0x7f
+ [<ffffffff80067b88>] do_page_fault+0x4fe/0x874
+ [<ffffffff8012c580>] inode_doinit_with_dentry+0x86/0x47c
+ [<ffffffff800cd378>] zone_statistics+0x3e/0x6d
+ [<ffffffff8000f2ff>] __alloc_pages+0x78/0x308
+ [<ffffffff8004c9fd>] sys_mount+0x8a/0xcd
+ [<ffffffff8005e116>] system_call+0x7e/0x83
+
+Failed to recover EFIs on filesystem: cciss/c0d0
+XFS: log mount finish failed
+
+Can someone shed some light on what is happening here?
+
+Also what the next steps I need to take to repair the fs? (assuming my xfs
+fs is corrupted)
+Will running xfs_repair be good enough in this case?
+
+Thanks in advance
+-- 
+View this message in context: http://old.nabble.com/fs-corruption-tp31377534p31377534.html
+Sent from the Xfs - General mailing list archive at Nabble.com.
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
