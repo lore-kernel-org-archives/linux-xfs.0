@@ -1,20 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3C0qXq9120427 for <xfs@oss.sgi.com>; Mon, 11 Apr 2011 19:52:34 -0500
-Received: from mx4-phx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3149B14BBBD0
-	for <xfs@oss.sgi.com>; Mon, 11 Apr 2011 17:55:53 -0700 (PDT)
-Received: from mx4-phx2.redhat.com (mx4-phx2.redhat.com [209.132.183.25]) by
-	cuda.sgi.com with ESMTP id BOQQ6aRasqL7rAWQ for
-	<xfs@oss.sgi.com>; Mon, 11 Apr 2011 17:55:53 -0700 (PDT)
-Date: Mon, 11 Apr 2011 20:55:33 -0400 (EDT)
-From: Lachlan McIlroy <lmcilroy@redhat.com>
-Message-ID: <1246357909.27528.1302569733170.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
-In-Reply-To: <1302489251-1512-1-git-send-email-david@fromorbit.com>
-Subject: Re: [PATCH] xfs: fix bmbt block allocation failures
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
+	p3C12bBD120963 for <xfs@oss.sgi.com>; Mon, 11 Apr 2011 20:02:38 -0500
+Received: from cl-r027-342cl.privatedns.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BBEA43C388A
+	for <xfs@oss.sgi.com>; Mon, 11 Apr 2011 18:05:56 -0700 (PDT)
+Received: from cl-r027-342cl.privatedns.com (2virtualoffice.com
+	[67.205.111.173]) by cuda.sgi.com with ESMTP id
+	dlmMflIsKdBm2oxe for <xfs@oss.sgi.com>;
+	Mon, 11 Apr 2011 18:05:56 -0700 (PDT)
+Received: from mgstore by cl-r027-342cl.privatedns.com with local (Exim 4.69)
+	(envelope-from <mgstore@cl-r027-342cl.privatedns.com>)
+	id 1Q9S3J-00039p-KP
+	for xfs@oss.sgi.com; Mon, 11 Apr 2011 21:05:57 -0400
+Subject: Rob Benwell    recommends this site
 MIME-Version: 1.0
-Reply-To: Lachlan McIlroy <lmcilroy@redhat.com>
+From: "info@mobilegallerynyc.com" <info@mobilegallerynyc.com>
+Message-Id: <E1Q9S3J-00039p-KP@cl-r027-342cl.privatedns.com>
+Date: Mon, 11 Apr 2011 21:05:57 -0400
+Reply-To: "niceprofit@ymail.com" <niceprofit@ymail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,151 +31,101 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
------ Original Message -----
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> When a multilevel bmbt split occurs, we can be asked to allocate
-> blocks from an AG that has no space left available. In the case of
-> an extent just being allocated, the first bmbt block allocation sees
-> the firstblock parameter is set and does not set a minleft parameter
-> for the allocation. The allocation also does not set the total
-> number of blocks required by the allocation, either.
-> 
-> If the extent allocation used all the free space in the AG, the lack
-> of a total allocation size results in a block being reserved for the
-> AG freespace btree manipulations being used incorrectly.
-> 
-> Secondly, the allocation is only allowed to be allocated in the
-> current AG (NEAR_BNO) because the low space algorithm has not been
-> activated. As a result of this, the second block allocation in the
-> split fails to find sufficient space in the current AG and fails,
-> resulting in a dirty transaction cancellation and a filesytem
-> shutdown.
-> 
-> There are two problems here - both pointed out by Lachlan McIlroy
-> when we were first discussing a proposed fix for the problem (See
-> http://oss.sgi.com/archives/xfs/2010-09/msg00438.html). Firstly,
-> the missing args->total was causing the initial block to be
-> allocated from the freespace reserve. Secondly that the NEAR_BNO
-> allocation should probably be a START_BNO allocation to allow blocks
-> to be taken from a higher numbered AG.
-> 
-> With these changes, the allocation failure goes away, but we trigger
-> asserts in xfs_bmapi() that try to ensure that bmbt block
-> allocations only occur in the same AG as the extent allocated,
-> except if the low space algorithm is active. In this case, we don't
-> need to activate the low space algorithm - if a START_BNO allocation
-> fails with minleft = 0, then there is no space we can allocate at
-> all, and hence the low space algorithm is no help. Therefore the
-> asserts need modification reflect the new state of affairs.
-> 
-> This commit fixes the problem demonstrated by the test case in
-> xfstests 250.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
-> fs/xfs/xfs_bmap.c | 8 ++------
-> fs/xfs/xfs_bmap_btree.c | 7 ++-----
-> 2 files changed, 4 insertions(+), 11 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
-> index fa00788..50eed97 100644
-> --- a/fs/xfs/xfs_bmap.c
-> +++ b/fs/xfs/xfs_bmap.c
-> @@ -4917,13 +4917,9 @@ error0:
-> if (cur) {
-> if (!error) {
-> ASSERT(*firstblock == NULLFSBLOCK ||
-> - XFS_FSB_TO_AGNO(mp, *firstblock) ==
-> + XFS_FSB_TO_AGNO(mp, *firstblock) <=
-> XFS_FSB_TO_AGNO(mp,
-> - cur->bc_private.b.firstblock) ||
-> - (flist->xbf_low &&
-> - XFS_FSB_TO_AGNO(mp, *firstblock) <
-> - XFS_FSB_TO_AGNO(mp,
-> - cur->bc_private.b.firstblock)));
-> + cur->bc_private.b.firstblock));
-> *firstblock = cur->bc_private.b.firstblock;
-> }
-> xfs_btree_del_cursor(cur,
+Your friend  Rob Benwell    (niceprofit@ymail.com) has recommended this site to you, and sends you the following message:
+Hello Friend,
 
-There's another ASSERT like this earlier in xfs_bmapi() after the call
-to xfs_bmap_alloc() which may need the same attention.
+GUARANTEED!: Get your $778.83 instantprofit Commissions Now!!!
 
-> diff --git a/fs/xfs/xfs_bmap_btree.c b/fs/xfs/xfs_bmap_btree.c
-> index 87d3c10..b2cdbfe 100644
-> --- a/fs/xfs/xfs_bmap_btree.c
-> +++ b/fs/xfs/xfs_bmap_btree.c
-> @@ -518,10 +518,11 @@ xfs_bmbt_alloc_block(
-> args.mp = cur->bc_mp;
-> args.fsbno = cur->bc_private.b.firstblock;
-> args.firstblock = args.fsbno;
-> + args.total = 1;
-> + args.type = XFS_ALLOCTYPE_START_BNO;
-> 
-> if (args.fsbno == NULLFSBLOCK) {
-> args.fsbno = be64_to_cpu(start->l);
-> - args.type = XFS_ALLOCTYPE_START_BNO;
-> /*
-> * Make sure there is sufficient room left in the AG to
-> * complete a full tree split for an extent insert. If
-> @@ -534,10 +535,6 @@ xfs_bmbt_alloc_block(
-> * block allocation here and corrupt the filesystem.
-> */
-> args.minleft = xfs_trans_get_block_res(args.tp);
-> - } else if (cur->bc_private.b.flist->xbf_low) {
-> - args.type = XFS_ALLOCTYPE_START_BNO;
-> - } else {
-> - args.type = XFS_ALLOCTYPE_NEAR_BNO;
-> }
-> 
-> args.minlen = args.maxlen = args.prod = 1;
+Underground Automated Method Allows 19 Years Old Kid Blogger To Raid The   
+Market For $23.6 Million And Takes Complete Newbie To $37,730 In Just 30 Days
 
-I think that's exactly what I had in mind when we looked at this last
-time but now I'm not so sure.  I think I understand now why there is a
-requirement that all subsequent allocations must (read 'can') come from
-the same AG.
+It Doesn\'t Matter If You\'ve Never Even Earned A Single Cent Online Before...
+If A Total Beginner Can Make $37,730 In His First Month Then Anyone Can Do This...
 
-The first time we try to allocate blocks we look for an AG with all the
-space we need for the reservation to succeed.  If we don't find a single
-AG that will satisfy the full request then we use the low space algorithm
-and start from AG 0.  But if we do find such an AG with all the space we
-need it should be fine to use NEAR_BNO on subsequent allocations because
-the space is there, right?
+Imagine waking up at 10 in the morning.. doing your short workout routine.. opening 
+your computer..and finding out you made $100 up to $200 - while you were a sleep!
 
-If this logic fails to hold true then there are other problems we need to
-deal with including;
+It\'s Easy To Make Money Everyday Even If You\'re Starting From Scratch With
+Zero Knowledge, Experience Or Budget!I\'ll Show You Exactly How.
 
-If we've already allocated a block from AG N then all subsequent
-allocations must come from AGs >= N to prevent locking issues.  If the
-blocks we need are in AGs < N we're in trouble.  We need to fall back to
-the low space algorithm and start from AG 0 but we can't do this if we 
-have already allocated from AG N.
+We\'ve Start putting New 39 Members in YOUR TEAM for the April 6-12/2011
+commission  cycle... and  GROWING everyday earn by $100 up to $200 or more.
 
-Also if we pass START_BNO to xfs_alloc_vextent() then it will fall
-through to the ANY/START/FIRST_AG case and set flags to TRYLOCK.  It
-will then scan AGs from N to the last AG and skip any that are already
-locked.  It may skip AGs that have the space we need and we may get to
-the last AG without finding all required blocks.
+IMPORTANT: April 12, 2011 is the Cut-Off day to lock in your
+position then faster you act the higher commission you  will earn!!!
 
-Then xfs_alloc_vextent() will loop through the AGs a second time if we
-didn't get all we needed the first time but this time without the TRYLOCK.
-This could result in locking AGs out of order.
+Go Here To Secure not less than $778.83 commission Now and it still growing
+as  many people joining under you. if you secure your position right away:
 
-So why is the extent allocation using all of the remaining blocks in the
-AG and not leaving any for the split?  Are we not reserving the split
-space with the conversion transaction?  Is it because the space needed
-for splits is not accounted for when delayed allocations are reserved so
-we oversubscribe ourselves?  Or are we not activating the low space
-algorithm early enough?
+The $778.83 commission will Arrive Through your Paypal or Credit Card on May 20/2011   
+next month. Hurry\'this limited time, only 8 remaining Positions are available Now.
 
-I need to look at the code a bit more to understand all this.  The same
-allocation logic appears to be used in xfs_bmap_extents_to_btree(),
-xfs_bmap_local_to_extents() and xfs_bmap_btalloc() so maybe there's some
-logic in the logic.
+You will access your money in any ATM when you join early & follow the instructions you receive.
+ 
+Be Sure to Copy the link below & Paste into your browser and press enter:
+To Secure your $778.83 commission!
+
+https://www.plimus.com/jsp/redirect.jsp?contractId=2896494&referrer=alfredz
+
+TYPE   DATE & TIME --- NEW MEMBERS --- COUNTRY
+
+P -- APRIL.09  @ 2:38  AM-----Dianna---- Rosebilt----- United States
+P -- APRIL.09  @ 2:53  AM-----JOan------ Jacckson ---- United Kingdom
+P -- APRIL.09  @ 2:56  AM-----Mandene -- Jecob-------- Germany
+M -- APRIL.09  @ 4:19  AM-----Cristy---- Chan--------- Hungary
+P -- APRIL.09  @ 4:28  AM-----Carlo----- Wonder------- Italy
+M -- APRIL.09  @ 6:01  AM-----lalaine--- ferguson----- Australia
+P -- APRIL.09  @ 7:11  AM-----Rebecca--- Underwood---- Canada
+P -- APRIL.09  @ 7:39  AM-----Jericho--- Morales------ Mexico
+P -- APRIL.08  @ 9:42  AM-----Thomas---- Silva ------- California
+M -- APRIL.08  @ 9:58  PM-----Grace----- Taylor------- Singapore
+P -- APRIL.08  @ 10:21 PM-----Gina------ Henry-------- New Zealand
+P -- APRIL.08  @ 11:24 PM-----Mohammed-- Ahmen ------- Oman
+M -- APRIL.08  @ 11:33 PM-----Tracia---- Furlong------ Puerto Rico
+P -- APRIL.08  @ 11:41 PM-----Jane------ Mckay-------- Russia
+P -- APRIL.08  @ 9:42  AM-----Steve----- Scott ------- Netherlands
+M -- APRIL.08  @ 9:58  PM-----Greg------ Stanley------ Denmark
+P -- APRIL.07  @ 10:21 PM-----Jack------ Perkins------ Amsterdam
+P -- APRIL.07  @ 11:24 PM-----Arlene---- Tan --------- China
+M -- APRIL.07  @ 11:33 PM-----Andy------ Hopekins----- New York
+P -- APRIL.07  @ 11:41 PM-----Jhon------ Robinson----- United States
+M -- APRIL.07  @ 2:34  AM --- Kevin----- Hunt -------- Sweden
+P -- APRIL.07  @ 12:34 AM --- Delia----- Lane -------- New York
+P -- APRIL.07  @ 6:45  AM --- Mohamed--- Suhail------- Saudi Arabia
+M -- APRIL.07  @ 5:34  AM --- Aleks----- Gjuroski ---- Japan
+P -- APRIL.07  @ 12:34 PM --- Andrew---- Karim ------- England
+P -- APRIL.06  @ 8:23  AM --- Carla----- Pereira ----- South Korea
+P -- APRIL.06  @ 2:34  PM --- Carl------ Krause ------ India
+M -- APRIL.06  @ 9:14  AM --- David----- Cook -------- Denmark
+P -  APRIL.06  @ 7:46  AM --- Paul------ Amid -------- Taiwan
+P -- APRIL.06  @ 1:54  AM --- Dennis---- Wilkins ----- Findland
+P -- APRIL.06  @ 12:34 AM --- Jonathan-- Wangyu ------ Thailand
+P -- APRIL.06  @ 6:45  AM --- Mackie---- Anhui-------- Indonesia
+M -- APRIL.06  @ 5:34  AM --- Alexis---- Mathew ------ Jerosalim
+P -- APRIL.06  @ 8:23  AM --- Cheryl---- Moran ------- Philippines
+P -- APRIL.06  @ 2:34  PM --- Vergie---- Petter ------ Ingland
+M -- APRIL.06  @ 9:14  AM --- Tito------ Warren ------ Bangladish
+P -  APRIL.06  @ 7:46  AM --- Raul------ Strogher ---- United States
+
+Therefore, you have a GUARANTEED $778.83 CommissionS  every month from now on!.
+
+Earn $19.97 Per Process!Each $19.97 x 39 = $778.83 Commission  will be yours...!
+
+Be Sure to Copy the link below & Paste into your browser and press enter:
+To Secure your $778.83 commission!
+
+https://www.plimus.com/jsp/redirect.jsp?contractId=2896494&referrer=alfredz
+
+Big profitable year,Becuase $19.97 membership only and $778.83 automatic back to you,   
+And you can recieve commissions every month. 
+
+You must UPGRADE right away or before others do....
+
+Caring for Your Success, Rob Benwell
+
+http://www.mobileshopny.com/proddetail.php?prod=blackberry021
 
 _______________________________________________
 xfs mailing list
