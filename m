@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3CBY0Ab149395 for <xfs@oss.sgi.com>; Tue, 12 Apr 2011 06:34:00 -0500
-Received: from smtp4-g21.free.fr (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 738A214BD5D0
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2011 04:37:19 -0700 (PDT)
-Received: from smtp4-g21.free.fr (smtp4-g21.free.fr [212.27.42.4]) by
-	cuda.sgi.com with ESMTP id wAIiD66snH5fHCPx for
-	<xfs@oss.sgi.com>; Tue, 12 Apr 2011 04:37:19 -0700 (PDT)
-Date: Tue, 12 Apr 2011 13:37:18 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: fs corruption
-Message-ID: <20110412133718.6028abee@harpe.intellique.com>
-In-Reply-To: <20110412110532.GB31057@dastard>
-References: <31377534.post@talk.nabble.com> <20110412094917.GY31057@dastard>
-	<38287.10078.qm@web112901.mail.gq1.yahoo.com>
-	<20110412110532.GB31057@dastard>
-Mime-Version: 1.0
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
+	p3CDUt6x152883 for <xfs@oss.sgi.com>; Tue, 12 Apr 2011 08:30:55 -0500
+Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E58291E0575E
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2011 06:34:14 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	3lU12SpvG9GYDbpq for <xfs@oss.sgi.com>;
+	Tue, 12 Apr 2011 06:34:14 -0700 (PDT)
+Received: from chute ([192.168.1.1] helo=disappointment)
+	by dastard with esmtp (Exim 4.72)
+	(envelope-from <dave@fromorbit.com>) id 1Q9djQ-0000Jw-Gq
+	for xfs@oss.sgi.com; Tue, 12 Apr 2011 23:34:12 +1000
+Received: from dave by disappointment with local (Exim 4.72)
+	(envelope-from <dave@disappointment.disaster>) id 1Q9djY-0007fX-Fz
+	for xfs@oss.sgi.com; Tue, 12 Apr 2011 23:34:20 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH] xfs: fix duplicate message output
+Date: Tue, 12 Apr 2011 23:34:20 +1000
+Message-Id: <1302615260-29450-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,33 +28,43 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-Cc: xfs@oss.sgi.com, Leo Davis <leo1783@yahoo.com>
+To: xfs@oss.sgi.com
 
-Le Tue, 12 Apr 2011 21:05:32 +1000
-Dave Chinner <david@fromorbit.com> =E9crivait:
+From: Dave Chinner <dchinner@redhat.com>
 
-> it's possible that it took a couple of months to trip over a random
-> metadata corruption. I've seen that before in directory trees and
-> inode clusters where corruption is not detected until next time they
-> are read from disk....
-> =
+Commit 957935dc ("xfs: fix xfs_debug warnings" broke the logic in
+__xfs_printk(). Instead of only printing one of two possible output
+strings based on whether the fs has a name or not, it outputs both.
+Fix it to only output one message again.
 
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/linux-2.6/xfs_message.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
-That's why background scrubbing of RAID arrays is generally a good
-habit to contract :)
-
--- =
-
-------------------------------------------------------------------------
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
-------------------------------------------------------------------------
+diff --git a/fs/xfs/linux-2.6/xfs_message.c b/fs/xfs/linux-2.6/xfs_message.c
+index 3ca7956..9f76cce 100644
+--- a/fs/xfs/linux-2.6/xfs_message.c
++++ b/fs/xfs/linux-2.6/xfs_message.c
+@@ -34,8 +34,10 @@ __xfs_printk(
+ 	const struct xfs_mount	*mp,
+ 	struct va_format	*vaf)
+ {
+-	if (mp && mp->m_fsname)
++	if (mp && mp->m_fsname) {
+ 		printk("%sXFS (%s): %pV\n", level, mp->m_fsname, vaf);
++		return;
++	}
+ 	printk("%sXFS: %pV\n", level, vaf);
+ }
+ 
+-- 
+1.7.2.3
 
 _______________________________________________
 xfs mailing list
