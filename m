@@ -1,26 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3CDmqP9153395 for <xfs@oss.sgi.com>; Tue, 12 Apr 2011 08:48:52 -0500
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
+	p3CDgQ8Z153195 for <xfs@oss.sgi.com>; Tue, 12 Apr 2011 08:42:26 -0500
 Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E1276BBB95B
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2011 06:52:11 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 125503C6DEA
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2011 06:45:45 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	nS9bTHBj0YppTL9J for <xfs@oss.sgi.com>;
-	Tue, 12 Apr 2011 06:52:11 -0700 (PDT)
-Received: from chute ([192.168.1.1] helo=disappointment)
-	by dastard with esmtp (Exim 4.72)
-	(envelope-from <dave@fromorbit.com>) id 1Q9e0n-0000Mb-W3
-	for xfs@oss.sgi.com; Tue, 12 Apr 2011 23:52:10 +1000
-Received: from dave by disappointment with local (Exim 4.72)
-	(envelope-from <dave@disappointment.disaster>) id 1Q9e0v-0007mg-Va
-	for xfs@oss.sgi.com; Tue, 12 Apr 2011 23:52:17 +1000
+	Ftmj17HjKsNwnYKF for <xfs@oss.sgi.com>;
+	Tue, 12 Apr 2011 06:45:45 -0700 (PDT)
+Date: Tue, 12 Apr 2011 23:45:43 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] [RFC] xfs: introduce an allocation workqueue
-Date: Tue, 12 Apr 2011 23:52:17 +1000
-Message-Id: <1302616337-29894-1-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH] xfs: reset buffer pointers before freeing them
+Message-ID: <20110412134543.GG31057@dastard>
+References: <1302491405-2290-1-git-send-email-david@fromorbit.com>
+	<20110412000939.GC29358@infradead.org>
+	<20110412110028.GA31057@dastard>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20110412110028.GA31057@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,90 +27,270 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-RnJvbTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgoKV2UgY3VycmVudGx5IGhh
-dmUgc2lnbmlmaWNhbnQgaXNzdWVzIHdpdGggdGhlIGFtb3VudCBvZiBzdGFjayB0aGF0CmFsbG9j
-YXRpb24gaW4gWEZTIHVzZXMsIGVzcGVjaWFsbHkgaW4gdGhlIHdyaXRlYmFjayBwYXRoLiBXZSBj
-YW4KZWFzaWx5IGNvbnN1bWUgNGsgb2Ygc3RhY2sgYmV0d2VlbiBtYXBwaW5nIHRoZSBwYWdlLCBt
-YW5pcHVsYXRpbmcKdGhlIGJtYXAgYnRyZWUgYW5kIGFsbG9jYXRpbmcgYmxvY2tzIGZyb20gdGhl
-IGZyZWUgbGlzdC4gTm90IHRvCm1lbnRpb24gYnRyZWUgYmxvY2sgcmVhZGFoZWFkIGFuZCBvdGhl
-ciBmdW5jdGlvbmFsaXR5IHRoYXQgaXNzdWVzIElPCmluIHRoZSBhbGxvY2F0aW9uIHBhdGguCgpB
-cyBhIHJlc3VsdCwgd2UgY2FuIG5vIGxvbmdlciBmaXQgYWxsb2NhdGlvbiBpbiB0aGUgd3JpdGVi
-YWNrIHBhdGgKaW4gdGhlIHN0YWNrIHNwYWNlIHByb3ZpZGVkIG9uIHg4Nl82NC4gVG8gYWxsZXZp
-YXRlIHRoaXMgcHJvYmxlbSwKaW50cm9kdWNlIGFuIGFsbG9jYXRpb24gd29ya3F1ZXVlIGFuZCBt
-b3ZlIGFsbCBhbGxvY2F0aW9ucyB0byBhCnNlcGVyYXRlIGNvbnRleHQuIFRoaXMgY2FuIGJlIGVh
-c2lseSBhZGRlZCBhcyBhbiBpbnRlcnBvc2luZyBsYXllcgppbnRvIHhmc19hbGxvY192ZXh0ZW50
-KCksIHdoaWNoIHRha2VzIGEgc2luZ2xlIGFyZ3VtZW50IHN0cnVjdHVyZQphbmQgZG9lcyBub3Qg
-cmV0dXJuIHVudGlsIHRoZSBhbGxvY2F0aW9uIGlzIGNvbXBsZXRlIG9yIGhhcyBmYWlsZWQuCgpU
-byBkbyB0aGlzLCBhZGQgYSB3b3JrIHN0cnVjdHVyZSBhbmQgYSBjb21wbGV0aW9uIHRvIHRoZSBh
-bGxvY2F0aW9uCmFyZ3Mgc3RydWN0dXJlLiBUaGlzIGFsbG93cyB4ZnNfYWxsb2NfdmV4dGVudCB0
-byBxdWV1ZSB0aGUgYXJncyBvbnRvCnRoZSB3b3JrcXVldWUgYW5kIHdhaXQgZm9yIGl0IHRvIGJl
-IGNvbXBsZXRlZCBieSB0aGUgd29ya2VyLiBUaGlzCmNhbiBiZSBkb25lIGNvbXBsZXRlbHkgdHJh
-bnNwYXJlbnRseSB0byB0aGUgY2FsbGVyLgoKVGhlIHdvcmtlciBmdW5jdGlvbiBuZWVkcyB0byBl
-bnN1cmUgdGhhdCBpdCBzZXRzIGFuZCBjbGVhcnMgdGhlClBGX01FTUFMTE9DIGZsYWcgYXBwcm9w
-cmlhdGVseSBhcyBpdCBpcyBiZWluZyBydW4gaW4gYW4gYWN0aXZlCnRyYW7RlWFjdGlvbiBjb250
-ZXh0LiBXb3JrIGNhbiBhbHNvIGJlIHF1ZXVlZCBpbiBhIG1lbW9yeSByZWNsYWltCmNvbnRleHQs
-IHNvIGEgcmVzY3VlciBpcyBuZWVkZWQgZm9yIHRoZSB3b3JrcXVldWUuCgpTaWduZWQtb2ZmLWJ5
-OiBEYXZlIENoaW5uZXIgPGRjaGlubmVyQHJlZGhhdC5jb20+Ci0tLQogZnMveGZzL2xpbnV4LTIu
-Ni94ZnNfc3VwZXIuYyB8ICAgMTMgKysrKysrKysrKysrKwogZnMveGZzL3hmc19hbGxvYy5jICAg
-ICAgICAgICB8ICAgMzMgKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKystCiBmcy94ZnMv
-eGZzX2FsbG9jLmggICAgICAgICAgIHwgICAgNSArKysrKwogMyBmaWxlcyBjaGFuZ2VkLCA1MCBp
-bnNlcnRpb25zKCspLCAxIGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2ZzL3hmcy9saW51eC0y
-LjYveGZzX3N1cGVyLmMgYi9mcy94ZnMvbGludXgtMi42L3hmc19zdXBlci5jCmluZGV4IGIzOGU1
-OGQuLjg2NjlkZDIgMTAwNjQ0Ci0tLSBhL2ZzL3hmcy9saW51eC0yLjYveGZzX3N1cGVyLmMKKysr
-IGIvZnMveGZzL2xpbnV4LTIuNi94ZnNfc3VwZXIuYwpAQCAtMTczMyw4ICsxNzMzLDIxIEBAIHhm
-c19pbml0X3dvcmtxdWV1ZXModm9pZCkKIAlpZiAoIXhmc19haWxfd3EpCiAJCWdvdG8gb3V0X2Rl
-c3Ryb3lfc3luY2Q7CiAKKwkvKgorCSAqIFRoZSBhbGxvY2F0aW9uIHdvcmtxdWV1ZSBjYW4gYmUg
-dXNlZCBpbiBtZW1vcnkgcmVjbGFpbSBzaXR1YXRpb25zCisJICogKHdyaXRlcGFnZSBwYXRoKSwg
-YW5kIHBhcmFsbGVsaXNtIGlzIG9ubHkgbGltaXRlZCBieSB0aGUgbnVtYmVyIG9mCisJICogQUdz
-IGluIGFsbCB0aGUgZmlsZXN5c3RlbXMgbW91bnRlZC4gSGVuY2UgbWF4YWN0aXZlIGlzIHNldCB2
-ZXJ5CisJICogaGlnaC4KKwkgKi8KKwl4ZnNfYWxsb2Nfd3EgPSBhbGxvY193b3JrcXVldWUoInhm
-c2FsbG9jIiwKKwkJCQlXUV9DUFVfSU5URU5TSVZFIHwgV1FfTUVNX1JFQ0xBSU0sIDEyOCk7CisJ
-aWYgKCF4ZnNfYWxsb2Nfd3EpCisJCWdvdG8gb3V0X2Rlc3Ryb3lfYWlsOworCiAJcmV0dXJuIDA7
-CiAKK291dF9kZXN0cm95X2FpbDoKKwlkZXN0cm95X3dvcmtxdWV1ZSh4ZnNfYWlsX3dxKTsKIG91
-dF9kZXN0cm95X3N5bmNkOgogCWRlc3Ryb3lfd29ya3F1ZXVlKHhmc19zeW5jZF93cSk7CiBvdXQ6
-CmRpZmYgLS1naXQgYS9mcy94ZnMveGZzX2FsbG9jLmMgYi9mcy94ZnMveGZzX2FsbG9jLmMKaW5k
-ZXggODk0NjQ2NC4uODMzNGIwOCAxMDA2NDQKLS0tIGEvZnMveGZzL3hmc19hbGxvYy5jCisrKyBi
-L2ZzL3hmcy94ZnNfYWxsb2MuYwpAQCAtMzUsNiArMzUsNyBAQAogI2luY2x1ZGUgInhmc19lcnJv
-ci5oIgogI2luY2x1ZGUgInhmc190cmFjZS5oIgogCitzdHJ1Y3Qgd29ya3F1ZXVlX3N0cnVjdCAq
-eGZzX2FsbG9jX3dxOwogCiAjZGVmaW5lIFhGU19BQlNESUZGKGEsYikJKCgoYSkgPD0gKGIpKSA/
-ICgoYikgLSAoYSkpIDogKChhKSAtIChiKSkpCiAKQEAgLTIxNjYsNyArMjE2Nyw3IEBAIHhmc19h
-bGxvY19yZWFkX2FnZigKICAqIGdyb3VwIG9yIGxvb3Agb3ZlciB0aGUgYWxsb2NhdGlvbiBncm91
-cHMgdG8gZmluZCB0aGUgcmVzdWx0LgogICovCiBpbnQJCQkJLyogZXJyb3IgKi8KLXhmc19hbGxv
-Y192ZXh0ZW50KAorX194ZnNfYWxsb2NfdmV4dGVudCgKIAl4ZnNfYWxsb2NfYXJnX3QJKmFyZ3Mp
-CS8qIGFsbG9jYXRpb24gYXJndW1lbnQgc3RydWN0dXJlICovCiB7CiAJeGZzX2FnYmxvY2tfdAlh
-Z3NpemU7CS8qIGFsbG9jYXRpb24gZ3JvdXAgc2l6ZSAqLwpAQCAtMjM3Niw2ICsyMzc3LDM2IEBA
-IGVycm9yMDoKIAlyZXR1cm4gZXJyb3I7CiB9CiAKK3N0YXRpYyB2b2lkCit4ZnNfYWxsb2NfdmV4
-dGVudF93b3JrZXIoCisJc3RydWN0IHdvcmtfc3RydWN0CSp3b3JrKQoreworCXN0cnVjdCB4ZnNf
-YWxsb2NfYXJnCSphcmdzID0gY29udGFpbmVyX29mKHdvcmssCisJCQkJCQlzdHJ1Y3QgeGZzX2Fs
-bG9jX2FyZywgd29yayk7CisKKwkvKiB3ZSBhcmUgaW4gYSB0cmFuc2FjdGlvbiBjb250ZXh0IGhl
-cmUgKi8KKwljdXJyZW50X3NldF9mbGFnc19uZXN0ZWQoJnRwLT50X3BmbGFncywgUEZfRlNUUkFO
-Uyk7CisKKwlhcmdzLT5yZXN1bHQgPSBfX3hmc19hbGxvY192ZXh0ZW50KGFyZ3MpOworCWNvbXBs
-ZXRlKGFyZ3MtPmRvbmUpOworCisJY3VycmVudF9yZXN0b3JlX2ZsYWdzX25lc3RlZCgmdHAtPnRf
-cGZsYWdzLCBQRl9GU1RSQU5TKTsKK30KKworCitpbnQJCQkJLyogZXJyb3IgKi8KK3hmc19hbGxv
-Y192ZXh0ZW50KAorCXhmc19hbGxvY19hcmdfdAkqYXJncykJLyogYWxsb2NhdGlvbiBhcmd1bWVu
-dCBzdHJ1Y3R1cmUgKi8KK3sKKwlERUNMQVJFX0NPTVBMRVRJT05fT05TVEFDSyhkb25lKTsKKwor
-CWFyZ3MtPmRvbmUgPSAmZG9uZTsKKwlJTklUX1dPUksoJmFyZ3MtPndvcmssIHhmc19hbGxvY192
-ZXh0ZW50X3dvcmtlcik7CisJcXVldWVfd29yayh4ZnNfYWxsb2Nfd3EsICZhcmdzLT53b3JrKTsK
-Kwl3YWl0X2Zvcl9jb21wbGV0aW9uKCZkb25lKTsKKwlyZXR1cm4gYXJncy0+cmVzdWx0OworfQor
-CiAvKgogICogRnJlZSBhbiBleHRlbnQuCiAgKiBKdXN0IGJyZWFrIHVwIHRoZSBleHRlbnQgYWRk
-cmVzcyBhbmQgaGFuZCBvZmYgdG8geGZzX2ZyZWVfYWdfZXh0ZW50CmRpZmYgLS1naXQgYS9mcy94
-ZnMveGZzX2FsbG9jLmggYi9mcy94ZnMveGZzX2FsbG9jLmgKaW5kZXggZDBiM2JjNy4uNGI3MDhj
-OCAxMDA2NDQKLS0tIGEvZnMveGZzL3hmc19hbGxvYy5oCisrKyBiL2ZzL3hmcy94ZnNfYWxsb2Mu
-aApAQCAtMjUsNiArMjUsOCBAQCBzdHJ1Y3QgeGZzX3BlcmFnOwogc3RydWN0IHhmc190cmFuczsK
-IHN0cnVjdCB4ZnNfYnVzeV9leHRlbnQ7CiAKK2V4dGVybiBzdHJ1Y3Qgd29ya3F1ZXVlX3N0cnVj
-dCAqeGZzX2FsbG9jX3dxOworCiAvKgogICogRnJlZXNwYWNlIGFsbG9jYXRpb24gdHlwZXMuICBB
-cmd1bWVudCB0byB4ZnNfYWxsb2NfW3ZdZXh0ZW50LgogICovCkBAIC0xMTksNiArMTIxLDkgQEAg
-dHlwZWRlZiBzdHJ1Y3QgeGZzX2FsbG9jX2FyZyB7CiAJY2hhcgkJaXNmbDsJCS8qIHNldCBpZiBp
-cyBmcmVlbGlzdCBibG9ja3MgLSAhYWNjdGcgKi8KIAljaGFyCQl1c2VyZGF0YTsJLyogc2V0IGlm
-IHRoaXMgaXMgdXNlciBkYXRhICovCiAJeGZzX2ZzYmxvY2tfdAlmaXJzdGJsb2NrOwkvKiBpbyBm
-aXJzdCBibG9jayBhbGxvY2F0ZWQgKi8KKwlzdHJ1Y3QgY29tcGxldGlvbiAqZG9uZTsKKwlzdHJ1
-Y3Qgd29ya19zdHJ1Y3Qgd29yazsKKwlpbnQJCXJlc3VsdDsKIH0geGZzX2FsbG9jX2FyZ190Owog
-CiAvKgotLSAKMS43LjIuMwoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2ku
-Y29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+On Tue, Apr 12, 2011 at 09:00:28PM +1000, Dave Chinner wrote:
+> On Mon, Apr 11, 2011 at 08:09:39PM -0400, Christoph Hellwig wrote:
+> > >  			error = xlog_bread_noalign(log, ealign, sectbb, bp);
+> > > -			if (error)
+> > > -				break;
+> > >  
+> > > -			error = XFS_BUF_SET_PTR(bp, offset, bufblks);
+> > > +			/* must reset buffer pointer even on error */
+> > > +			error2 = XFS_BUF_SET_PTR(bp, offset, bufblks);
+> > 
+> > This seems to be incorrect both in the original and your version.
+> > From all that I can see XFS_BUF_SET_PTR wants a byte count while bufblks
+> > is a sector count, e.g. this should be:
+> > 
+> > 			error2 = XFS_BUF_SET_PTR(bp, offset, BBTOB(bufblks);
+> 
+> Yes, you are right. I missed that.
+> 
+> > While at I think this mess with the buffer virtual mapping, read into it
+> > and set it back mess needs to go into a single helper instead of beeing
+> > duplicated three times.  By having named arguments with proper types
+> > bugs like the existing one above should also be much more obvious to
+> > spot.
+> 
+> Ok, I'll try to come up with something sane.
+
+Something like this?
+
+
+xfs: reset buffer pointers before freeing them
+
+From: Dave Chinner <dchinner@redhat.com>
+
+When we free a vmapped buffer, we need to ensure the vmap address
+and length we free is the same as when it was allocated. In various
+places in the log code we change the memory the buffer is pointing
+to before issuing IO, but we never reset the buffer to point back to
+it's original memory (or no memory, if that is the case for the
+buffer).
+
+As a result, when we free the buffer it points to memory that is
+owned by something else and attempts to unmap and free it. Because
+the range does not match any known mapped range, it can trigger
+BUG_ON() traps in the vmap code, and potentially corrupt the vmap
+area tracking.
+
+Fix this by always resetting these buffers to their original state
+before freeing them.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/linux-2.6/xfs_buf.c |   21 ++++++++++++
+ fs/xfs/linux-2.6/xfs_buf.h |    1 +
+ fs/xfs/xfs_log.c           |    8 ++++-
+ fs/xfs/xfs_log_recover.c   |   79 +++++++++++++++++++++++---------------------
+ 4 files changed, 70 insertions(+), 39 deletions(-)
+
+diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
+index 9ef9ed2..ecf0db6 100644
+--- a/fs/xfs/linux-2.6/xfs_buf.c
++++ b/fs/xfs/linux-2.6/xfs_buf.c
+@@ -709,6 +709,27 @@ xfs_buf_get_empty(
+ 	return bp;
+ }
+ 
++/*
++ * Return a buffer allocated as an empty buffer and associated to external
++ * memory via xfs_buf_associate_memory() back to it's empty state.
++ */
++void
++xfs_buf_set_empty(
++	struct xfs_buf		*bp,
++	size_t			len)
++{
++	if (bp->b_pages)
++		_xfs_buf_free_pages(bp);
++
++	bp->b_pages = NULL;
++	bp->b_page_count = 0;
++	bp->b_addr = NULL;
++	bp->b_file_offset = 0;
++	bp->b_buffer_length = bp->b_count_desired = len;
++	bp->b_bn = XFS_BUF_DADDR_NULL;
++	bp->b_flags &= ~XBF_MAPPED;
++}
++
+ static inline struct page *
+ mem_to_page(
+ 	void			*addr)
+diff --git a/fs/xfs/linux-2.6/xfs_buf.h b/fs/xfs/linux-2.6/xfs_buf.h
+index a9a1c45..50a7d5f 100644
+--- a/fs/xfs/linux-2.6/xfs_buf.h
++++ b/fs/xfs/linux-2.6/xfs_buf.h
+@@ -178,6 +178,7 @@ extern xfs_buf_t *xfs_buf_read(xfs_buftarg_t *, xfs_off_t, size_t,
+ 				xfs_buf_flags_t);
+ 
+ extern xfs_buf_t *xfs_buf_get_empty(size_t, xfs_buftarg_t *);
++extern void xfs_buf_set_empty(struct xfs_buf *bp, size_t len);
+ extern xfs_buf_t *xfs_buf_get_uncached(struct xfs_buftarg *, size_t, int);
+ extern int xfs_buf_associate_memory(xfs_buf_t *, void *, size_t);
+ extern void xfs_buf_hold(xfs_buf_t *);
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index b612ce4..3850a91 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -1449,6 +1449,13 @@ xlog_dealloc_log(xlog_t *log)
+ 
+ 	xlog_cil_destroy(log);
+ 
++	/*
++	 * always need to ensure that the extra buffer does not point to memory
++	 * owned by another log buffer before we free it.
++	 */
++	xfs_buf_set_empty(log->l_xbuf, log->l_iclog_size);
++	xfs_buf_free(log->l_xbuf);
++
+ 	iclog = log->l_iclog;
+ 	for (i=0; i<log->l_iclog_bufs; i++) {
+ 		xfs_buf_free(iclog->ic_bp);
+@@ -1458,7 +1465,6 @@ xlog_dealloc_log(xlog_t *log)
+ 	}
+ 	spinlock_destroy(&log->l_icloglock);
+ 
+-	xfs_buf_free(log->l_xbuf);
+ 	log->l_mp->m_log = NULL;
+ 	kmem_free(log);
+ }	/* xlog_dealloc_log */
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 5cc464a..fe7fbc8 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -205,6 +205,36 @@ xlog_bread(
+ }
+ 
+ /*
++ * Read at an offset into the buffer. Returns with the buffer in it's original
++ * state regardless of the result of the read.
++ */
++STATIC int
++xlog_bread_offset(
++	xlog_t		*log,
++	int		buf_offset,	/* offset into buffer */
++	int		buf_blks,	/* original buffer size */
++	xfs_daddr_t	blk_no,		/* block to read from */
++	int		nbblks,		/* blocks to read */
++	xfs_buf_t	*bp,
++	xfs_caddr_t	offset)
++{
++	xfs_caddr_t	orig_offset = XFS_BUF_PTR(bp);
++	int		error, error2;
++
++	error = XFS_BUF_SET_PTR(bp, offset + BBTOB(buf_offset), BBTOB(nbblks));
++	if (error)
++		return error;
++
++	error = xlog_bread_noalign(log, blk_no, nbblks, bp);
++
++	/* must reset buffer pointer even on error */
++	error2 = XFS_BUF_SET_PTR(bp, orig_offset, BBTOB(buf_blks));
++	if (error)
++		return error;
++	return error2;
++}
++
++/*
+  * Write out the buffer at the given block for the given number of blocks.
+  * The buffer is kept locked across the write and is returned locked.
+  * This can only be used for synchronous log writes.
+@@ -1229,20 +1259,12 @@ xlog_write_log_records(
+ 		 */
+ 		ealign = round_down(end_block, sectbb);
+ 		if (j == 0 && (start_block + endcount > ealign)) {
+-			offset = XFS_BUF_PTR(bp);
+-			balign = BBTOB(ealign - start_block);
+-			error = XFS_BUF_SET_PTR(bp, offset + balign,
+-						BBTOB(sectbb));
++			balign = ealign - start_block;
++			error = xlog_bread_offset(log, balign, bufblks, ealign,
++						sectbb, bp, XFS_BUF_PTR(bp));
+ 			if (error)
+ 				break;
+ 
+-			error = xlog_bread_noalign(log, ealign, sectbb, bp);
+-			if (error)
+-				break;
+-
+-			error = XFS_BUF_SET_PTR(bp, offset, bufblks);
+-			if (error)
+-				break;
+ 		}
+ 
+ 		offset = xlog_align(log, start_block, endcount, bp);
+@@ -3322,7 +3344,7 @@ xlog_do_recovery_pass(
+ 	xfs_caddr_t		offset;
+ 	xfs_buf_t		*hbp, *dbp;
+ 	int			error = 0, h_size;
+-	int			bblks, split_bblks;
++	int			bblks, split_bblks, wrapped_bblks;
+ 	int			hblks, split_hblks, wrapped_hblks;
+ 	struct hlist_head	rhash[XLOG_RHASH_SIZE];
+ 
+@@ -3448,19 +3470,9 @@ xlog_do_recovery_pass(
+ 				 *   - order is important.
+ 				 */
+ 				wrapped_hblks = hblks - split_hblks;
+-				error = XFS_BUF_SET_PTR(hbp,
+-						offset + BBTOB(split_hblks),
+-						BBTOB(hblks - split_hblks));
+-				if (error)
+-					goto bread_err2;
+-
+-				error = xlog_bread_noalign(log, 0,
+-							   wrapped_hblks, hbp);
+-				if (error)
+-					goto bread_err2;
+-
+-				error = XFS_BUF_SET_PTR(hbp, offset,
+-							BBTOB(hblks));
++				error = xlog_bread_offset(log, split_hblks,
++							hblks, 0, wrapped_hblks,
++							hbp, offset);
+ 				if (error)
+ 					goto bread_err2;
+ 			}
+@@ -3511,19 +3523,10 @@ xlog_do_recovery_pass(
+ 				 *   _first_, then the log start (LR header end)
+ 				 *   - order is important.
+ 				 */
+-				error = XFS_BUF_SET_PTR(dbp,
+-						offset + BBTOB(split_bblks),
+-						BBTOB(bblks - split_bblks));
+-				if (error)
+-					goto bread_err2;
+-
+-				error = xlog_bread_noalign(log, wrapped_hblks,
+-						bblks - split_bblks,
+-						dbp);
+-				if (error)
+-					goto bread_err2;
+-
+-				error = XFS_BUF_SET_PTR(dbp, offset, h_size);
++				wrapped_bblks = bblks - split_bblks;
++				error = xlog_bread_offset(log, split_bblks,
++						BTOBB(h_size), 0,
++						wrapped_bblks, dbp, offset);
+ 				if (error)
+ 					goto bread_err2;
+ 			}
+
+Cheers,
+
+Dave
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
