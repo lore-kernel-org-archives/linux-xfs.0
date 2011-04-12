@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p3CB2ERH146592 for <xfs@oss.sgi.com>; Tue, 12 Apr 2011 06:02:14 -0500
-Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 39CA11B6DDC7
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2011 04:05:34 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	DhFaklWLUurTquWf for <xfs@oss.sgi.com>;
-	Tue, 12 Apr 2011 04:05:34 -0700 (PDT)
-Date: Tue, 12 Apr 2011 21:05:32 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: fs corruption
-Message-ID: <20110412110532.GB31057@dastard>
-References: <31377534.post@talk.nabble.com> <20110412094917.GY31057@dastard>
-	<38287.10078.qm@web112901.mail.gq1.yahoo.com>
+	p3CBGh7n147859 for <xfs@oss.sgi.com>; Tue, 12 Apr 2011 06:16:43 -0500
+Received: from mail-iy0-f181.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id AEB6E14B1266
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2011 04:20:03 -0700 (PDT)
+Received: from mail-iy0-f181.google.com (mail-iy0-f181.google.com
+	[209.85.210.181]) by cuda.sgi.com with ESMTP id
+	m8gwdB5Xecz0tD3t for <xfs@oss.sgi.com>;
+	Tue, 12 Apr 2011 04:20:03 -0700 (PDT)
+Received: by iyb26 with SMTP id 26so7438856iyb.26
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2011 04:20:03 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <38287.10078.qm@web112901.mail.gq1.yahoo.com>
+In-Reply-To: <20110412095233.GZ31057@dastard>
+References: <BANLkTinyBD7Zm3DvoYCVfYJkF36yXz6hOA@mail.gmail.com>
+	<20110412095233.GZ31057@dastard>
+From: Raz <raziebe@gmail.com>
+Date: Tue, 12 Apr 2011 14:19:43 +0300
+Message-ID: <BANLkTi=Hjp=FLZjUMnPm8CyxYFBtWdcvhw@mail.gmail.com>
+Subject: Re: HUGE XFS regression in 2.6.32 upto 2.6.38
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,46 +27,90 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Leo Davis <leo1783@yahoo.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Tue, Apr 12, 2011 at 03:51:20AM -0700, Leo Davis wrote:
-> You have a corrupted free space btree.
-> 
-> Err... apologies for my ignorance, but what is a free space btree?
+you are correct. man page says "..untill data has been physically
+written to the underlying storage".
+missed that one.
 
-A tree that indexes the free space in the filesystem. Every time you
-write a file or remove a file you are allocating or freeing space,
-and these tree keep track of that free space.
+thank you dave
 
-If you want to know - at a high level - how XFS is structured (good
-for understanding what a free space tree is), read this paper:
-
-http://oss.sgi.com/projects/xfs/papers/xfs_usenix/index.html
-
-It's from 1996, but still correct on all the major structural
-details.
-
-> I had serial trace from raid controller which i just checked and
-> it logged some 'Loose cabling', but this was months back.....  not
-> sure whether that can be the cause of this.. strange if that is
-> the case since it's been a long time
-
-it's possible that it took a couple of months to trip over a random
-metadata corruption. I've seen that before in directory trees and
-inode clusters where corruption is not detected until next time they
-are read from disk....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+On Tue, Apr 12, 2011 at 12:52 PM, Dave Chinner <david@fromorbit.com> wrote:
+> On Tue, Apr 12, 2011 at 10:58:53AM +0300, Raz wrote:
+>> Christoph Hello
+>> I am testing 2.6.38 with AIM benchmark.
+>> I compared 2.6.38 to 2.6.27 and I noticed that 2.6.27 is much better
+>> than 2.6.38 hwhen
+>> doing sync random writes test over an xfs regular file over native
+>> Linux partition on top common sata disk.
+>> I git bisected the problem and I reached this SHA1:
+>> commit 13e6d5cdde0e785aa943810f08b801cadd0935df
+>> Author: Christoph Hellwig <hch@lst.de>
+>> Date: =A0 Mon Aug 31 21:00:31 2009 -0300
+>>
+>> =A0 =A0xfs: merge fsync and O_SYNC handling
+>>
+>> =A0 =A0The guarantees for O_SYNC are exactly the same as the ones we nee=
+d to
+>> =A0 =A0make for an fsync call (and given that Linux O_SYNC is O_DSYNC the
+>> =A0 =A0equivalent is fdadatasync, but we treat both the same in XFS), ex=
+cept
+>> =A0 =A0with a range data writeout. =A0Jan Kara has started unifying thes=
+e two
+>> =A0 =A0path for filesystems using the generic helpers, and I've started =
+to
+>> =A0 =A0look at XFS.
+>> ...
+>>
+>>
+>> The bellow two tests presents the how different performance is before an=
+d patch:
+>> #test 16) bisect 11
+>> ------------------------------------------------------------------------=
+------------------------------------
+>> =A0Test =A0 =A0 =A0 =A0Test =A0 =A0 =A0 =A0Elapsed =A0Iteration =A0 =A0I=
+teration =A0 =A0 =A0 =A0 =A0Operation
+>> Number =A0 =A0 =A0 Name =A0 =A0 =A0Time (sec) =A0 Count =A0 Rate (loops/=
+sec) =A0 =A0Rate (ops/sec)
+>> ------------------------------------------------------------------------=
+------------------------------------
+>> =A0 =A0 1 sync_disk_rw =A0 =A0 =A0 =A030.71 =A0 =A0 =A0 =A0 19 =A0 =A00.=
+61869 =A0 =A0 =A0 =A0 1583.85
+>> Sync Random Disk Writes (K)/second
+>> ------------------------------------------------------------------------=
+------------------------------------
+>
+> That's clearly showing that your sync writes are not hitting the
+> disk. IOWs, the sync writes are not synchronous at all. There is
+> no way a single SATA drive can do >1500 writes to stable storage
+> per second.
+>
+> IOWs, before this fix, sync writes were broken on your hardware.
+>
+>> #test 17 ) bisect 12
+>> ------------------------------------------------------------------------=
+------------------------------------
+>> =A0 =A0 1 sync_disk_rw =A0 =A0 =A0 =A069.05 =A0 =A0 =A0 =A0 =A01 =A0 =A0=
+0.01448 =A0 =A0 =A0 =A0 =A0 37.07
+>> Sync Random Disk Writes (K)/second
+>> ------------------------------------------------------------------------=
+------------------------------------
+>
+> And that's pretty tpyical for a SATA drive where sync writes are
+> actually hitting the platter correctly.
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
+>
 
 _______________________________________________
 xfs mailing list
