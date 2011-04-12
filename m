@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3C9jxIt143524 for <xfs@oss.sgi.com>; Tue, 12 Apr 2011 04:45:59 -0500
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
+	p3CAvC4g146049 for <xfs@oss.sgi.com>; Tue, 12 Apr 2011 05:57:12 -0500
 Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2DAF914BCECD
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2011 02:49:19 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3A5B214B0DE3
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2011 04:00:32 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	Qc5VzvtgyEADwywB for <xfs@oss.sgi.com>;
-	Tue, 12 Apr 2011 02:49:19 -0700 (PDT)
-Date: Tue, 12 Apr 2011 19:49:17 +1000
+	mOeA1PtAT5wN5Krf for <xfs@oss.sgi.com>;
+	Tue, 12 Apr 2011 04:00:32 -0700 (PDT)
+Date: Tue, 12 Apr 2011 21:00:28 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: fs corruption
-Message-ID: <20110412094917.GY31057@dastard>
-References: <31377534.post@talk.nabble.com>
+Subject: Re: [PATCH] xfs: reset buffer pointers before freeing them
+Message-ID: <20110412110028.GA31057@dastard>
+References: <1302491405-2290-1-git-send-email-david@fromorbit.com>
+	<20110412000939.GC29358@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <31377534.post@talk.nabble.com>
+In-Reply-To: <20110412000939.GC29358@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,55 +30,48 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: stress_buster <leo1783@yahoo.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Tue, Apr 12, 2011 at 02:33:07AM -0700, stress_buster wrote:
+On Mon, Apr 11, 2011 at 08:09:39PM -0400, Christoph Hellwig wrote:
+> >  			error = xlog_bread_noalign(log, ealign, sectbb, bp);
+> > -			if (error)
+> > -				break;
+> >  
+> > -			error = XFS_BUF_SET_PTR(bp, offset, bufblks);
+> > +			/* must reset buffer pointer even on error */
+> > +			error2 = XFS_BUF_SET_PTR(bp, offset, bufblks);
 > 
-> My dmesg output shows the below trace. It repeats over and over again.
+> This seems to be incorrect both in the original and your version.
+> From all that I can see XFS_BUF_SET_PTR wants a byte count while bufblks
+> is a sector count, e.g. this should be:
 > 
-> XFS internal error XFS_WANT_CORRUPTED_GOTO at line 1545 of file
-> fs/xfs/xfs_alloc.c.  Caller 0xffffffff881a8961
-> 
-> Call Trace:
->  [<ffffffff881a6e27>] :xfs:xfs_free_ag_extent+0x19e/0x67e
->  [<ffffffff881a8961>] :xfs:xfs_free_extent+0xa9/0xc9
->  [<ffffffff881d96cf>] :xfs:xlog_recover_process_efi+0x112/0x16c
->  [<ffffffff881f31b4>] :xfs:xfs_fs_fill_super+0x0/0x3e4
->  [<ffffffff881da8c2>] :xfs:xlog_recover_process_efis+0x4f/0x8d
->  [<ffffffff881da914>] :xfs:xlog_recover_finish+0x14/0xad
->  [<ffffffff881f31b4>] :xfs:xfs_fs_fill_super+0x0/0x3e4
->  [<ffffffff881df420>] :xfs:xfs_mountfs+0x498/0x5e2
->  [<ffffffff881dfb42>] :xfs:xfs_mru_cache_create+0x113/0x143
->  [<ffffffff881f33b7>] :xfs:xfs_fs_fill_super+0x203/0x3e4
->  [<ffffffff800e544f>] get_sb_bdev+0x10a/0x16c
->  [<ffffffff800e4dec>] vfs_kern_mount+0x93/0x11a
->  [<ffffffff800e4eb5>] do_kern_mount+0x36/0x4d
->  [<ffffffff800ef2ed>] do_mount+0x6a9/0x719
->  [<ffffffff80008d84>] __handle_mm_fault+0x5f2/0xfaa
->  [<ffffffff80022127>] __up_read+0x19/0x7f
->  [<ffffffff80067b88>] do_page_fault+0x4fe/0x874
->  [<ffffffff8012c580>] inode_doinit_with_dentry+0x86/0x47c
->  [<ffffffff800cd378>] zone_statistics+0x3e/0x6d
->  [<ffffffff8000f2ff>] __alloc_pages+0x78/0x308
->  [<ffffffff8004c9fd>] sys_mount+0x8a/0xcd
->  [<ffffffff8005e116>] system_call+0x7e/0x83
-> 
-> Failed to recover EFIs on filesystem: cciss/c0d0
-> XFS: log mount finish failed
-> 
-> Can someone shed some light on what is happening here?
+> 			error2 = XFS_BUF_SET_PTR(bp, offset, BBTOB(bufblks);
 
-You have a corrupted free space btree. How it occurred, I have no
-idea.
+Yes, you are right. I missed that.
 
-> Also what the next steps I need to take to repair the fs? (assuming my xfs
-> fs is corrupted)
-> Will running xfs_repair be good enough in this case?
+> While at I think this mess with the buffer virtual mapping, read into it
+> and set it back mess needs to go into a single helper instead of beeing
+> duplicated three times.  By having named arguments with proper types
+> bugs like the existing one above should also be much more obvious to
+> spot.
 
-That's all you can do. If it's really important, and you don't have
-a backup, I'd suggest mounting with "-o ro,norecovery" and taking a
-backup first....
+Ok, I'll try to come up with something sane.
+
+> As a follow on patch to that I think we could also get rid of all the
+> vmap manipultions entirely, and just specify and I/O offset and length
+> manually.  The only thing required for that is a number of pages
+> to skip at the beggining of the buffer from the log recovery code to
+> _xfs_buf_ioapply, either by passing it down procedurally, or by adding
+> a new filed to struct xfs_buf.  In fact just relaxing the b_offset
+> semantics to allow offsets larger than a page only in the I/O path would
+> do it, but I'm not sure that version helps long-term maintenance.
+
+Passing the offset+len seems like the cleaner solution to me. I
+don't like the idea of overloading existing fields just for the IO
+path or adding new fields for one off uses, either. That can
+probably wait for another day, though, because we've still got the
+iclog buffer hackery to deal with.
 
 Cheers,
 
