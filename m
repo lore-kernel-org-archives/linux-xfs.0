@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p3C9NJxW142721
-	for <linux-xfs@oss.sgi.com>; Tue, 12 Apr 2011 04:23:19 -0500
-Received: from nm30-vm0.bullet.mail.sp2.yahoo.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with SMTP id CDBFE14B082E
-	for <linux-xfs@oss.sgi.com>; Tue, 12 Apr 2011 02:26:39 -0700 (PDT)
-Received: from nm30-vm0.bullet.mail.sp2.yahoo.com
-	(nm30-vm0.bullet.mail.sp2.yahoo.com [98.139.91.238]) by
-	cuda.sgi.com with SMTP id mNoakcLVmcdpp0B2 for
-	<linux-xfs@oss.sgi.com>; Tue, 12 Apr 2011 02:26:39 -0700 (PDT)
-Message-ID: <160150.13085.qm@web112913.mail.gq1.yahoo.com>
-References: <31342497.post@talk.nabble.com> <4D9DF2CB.1020503@sandeen.net>
-Date: Tue, 12 Apr 2011 02:26:38 -0700 (PDT)
-From: Leo Davis <leo1783@yahoo.com>
-Subject: Re: xfsprogs
-In-Reply-To: <4D9DF2CB.1020503@sandeen.net>
+	p3C9nFTY143607 for <xfs@oss.sgi.com>; Tue, 12 Apr 2011 04:49:15 -0500
+Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 59EE93C61A0
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2011 02:52:35 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	7eCAPMoMjnIwzXVa for <xfs@oss.sgi.com>;
+	Tue, 12 Apr 2011 02:52:35 -0700 (PDT)
+Date: Tue, 12 Apr 2011 19:52:33 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: HUGE XFS regression in 2.6.32 upto 2.6.38
+Message-ID: <20110412095233.GZ31057@dastard>
+References: <BANLkTinyBD7Zm3DvoYCVfYJkF36yXz6hOA@mail.gmail.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <BANLkTinyBD7Zm3DvoYCVfYJkF36yXz6hOA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,76 +25,88 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============2570512834971456981=="
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@oss.sgi.com
+To: Raz <raziebe@gmail.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
---===============2570512834971456981==
-Content-Type: multipart/alternative; boundary="0-1409823333-1302600398=:13085"
+On Tue, Apr 12, 2011 at 10:58:53AM +0300, Raz wrote:
+> Christoph Hello
+> I am testing 2.6.38 with AIM benchmark.
+> I compared 2.6.38 to 2.6.27 and I noticed that 2.6.27 is much better
+> than 2.6.38 when
+> doing sync random writes test over an xfs regular file over native
+> Linux partition on top common sata disk.
+> I git bisected the problem and I reached this SHA1:
+> commit 13e6d5cdde0e785aa943810f08b801cadd0935df
+> Author: Christoph Hellwig <hch@lst.de>
+> Date: =A0 Mon Aug 31 21:00:31 2009 -0300
+> =
 
---0-1409823333-1302600398=:13085
-Content-Type: text/plain; charset=us-ascii
+> =A0 =A0xfs: merge fsync and O_SYNC handling
+> =
 
-Thank you very much :)
+> =A0 =A0The guarantees for O_SYNC are exactly the same as the ones we need=
+ to
+> =A0 =A0make for an fsync call (and given that Linux O_SYNC is O_DSYNC the
+> =A0 =A0equivalent is fdadatasync, but we treat both the same in XFS), exc=
+ept
+> =A0 =A0with a range data writeout. =A0Jan Kara has started unifying these=
+ two
+> =A0 =A0path for filesystems using the generic helpers, and I've started to
+> =A0 =A0look at XFS.
+> ...
+> =
 
+> =
 
+> The bellow two tests presents the how different performance is before and=
+ patch:
+> #test 16) bisect 11
+> -------------------------------------------------------------------------=
+-----------------------------------
+> =A0Test =A0 =A0 =A0 =A0Test =A0 =A0 =A0 =A0Elapsed =A0Iteration =A0 =A0It=
+eration =A0 =A0 =A0 =A0 =A0Operation
+> Number =A0 =A0 =A0 Name =A0 =A0 =A0Time (sec) =A0 Count =A0 Rate (loops/s=
+ec) =A0 =A0Rate (ops/sec)
+> -------------------------------------------------------------------------=
+-----------------------------------
+> =A0 =A0 1 sync_disk_rw =A0 =A0 =A0 =A030.71 =A0 =A0 =A0 =A0 19 =A0 =A00.6=
+1869 =A0 =A0 =A0 =A0 1583.85
+> Sync Random Disk Writes (K)/second
+> -------------------------------------------------------------------------=
+-----------------------------------
 
+That's clearly showing that your sync writes are not hitting the
+disk. IOWs, the sync writes are not synchronous at all. There is
+no way a single SATA drive can do >1500 writes to stable storage
+per second.
 
+IOWs, before this fix, sync writes were broken on your hardware.
 
-________________________________
-From: Eric Sandeen <sandeen@sandeen.net>
-To: stress_buster <leo1783@yahoo.com>
-Cc: linux-xfs@oss.sgi.com
-Sent: Thu, April 7, 2011 10:52:19 PM
-Subject: Re: xfsprogs
+> #test 17 ) bisect 12
+> -------------------------------------------------------------------------=
+-----------------------------------
+> =A0 =A0 1 sync_disk_rw =A0 =A0 =A0 =A069.05 =A0 =A0 =A0 =A0 =A01 =A0 =A00=
+.01448 =A0 =A0 =A0 =A0 =A0 37.07
+> Sync Random Disk Writes (K)/second
+> -------------------------------------------------------------------------=
+-----------------------------------
 
-On 4/7/11 9:04 AM, stress_buster wrote:
-> 
-> Hi,
-> 
-> My xfs_repair is bit old- 2.9. version.
-> I'm considering installing latest available. But just worried because this
-> is my production server and has some custom apps built into my OS. 
-> 
-> Is upgrading xfs_repair a high risk?
+And that's pretty tpyical for a SATA drive where sync writes are
+actually hitting the platter correctly.
 
-No.
+Cheers,
 
-> Also do I need to install latest xfsprogs or anyway only to upgrade
-> xfs_repair from the package?
-> I'm only would need xfs_repair mostly, so doesnt matter to me leaving
-> others-mkfs.xfs etc in xfsprogs at the old version if that minimises the
-> risk...
+Dave.
+-- =
 
-if you really want to try newer xfs_repair only, just build an xfsprogs tree and 
-run from inside the tree.
-
-> Any thoughts?
-
-Just upgrade.  ;)
-
--Eric
-
---0-1409823333-1302600398=:13085
-Content-Type: text/html; charset=us-ascii
-
-<html><head><style type="text/css"><!-- DIV {margin:0px;} --></style></head><body><div style="font-family:times new roman,new york,times,serif;font-size:12pt">Thank you very much :)<br><div><br></div><div style="font-family: times new roman,new york,times,serif; font-size: 12pt;"><br><div style="font-family: arial,helvetica,sans-serif; font-size: 13px;"><font face="Tahoma" size="2"><hr size="1"><b><span style="font-weight: bold;">From:</span></b> Eric Sandeen &lt;sandeen@sandeen.net&gt;<br><b><span style="font-weight: bold;">To:</span></b> stress_buster &lt;leo1783@yahoo.com&gt;<br><b><span style="font-weight: bold;">Cc:</span></b> linux-xfs@oss.sgi.com<br><b><span style="font-weight: bold;">Sent:</span></b> Thu, April 7, 2011 10:52:19 PM<br><b><span style="font-weight: bold;">Subject:</span></b> Re: xfsprogs<br></font><br>
-On 4/7/11 9:04 AM, stress_buster wrote:<br>&gt; <br>&gt; Hi,<br>&gt; <br>&gt; My xfs_repair is bit old- 2.9. version.<br>&gt; I'm considering installing latest available. But just worried because this<br>&gt; is my production server and has some custom apps built into my OS. <br>&gt; <br>&gt; Is upgrading xfs_repair a high risk?<br><br>No.<br><br>&gt; Also do I need to install latest xfsprogs or anyway only to upgrade<br>&gt; xfs_repair from the package?<br>&gt; I'm only would need xfs_repair mostly, so doesnt matter to me leaving<br>&gt; others-mkfs.xfs etc in xfsprogs at the old version if that minimises the<br>&gt; risk...<br><br>if you really want to try newer xfs_repair only, just build an xfsprogs tree and run from inside the tree.<br><br>&gt; Any thoughts?<br><br>Just upgrade.&nbsp; ;)<br><br>-Eric<br></div></div>
-</div></body></html>
---0-1409823333-1302600398=:13085--
-
-
---===============2570512834971456981==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============2570512834971456981==--
