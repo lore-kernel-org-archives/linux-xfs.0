@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3FDPwfR069472 for <xfs@oss.sgi.com>; Fri, 15 Apr 2011 08:25:58 -0500
-Received: from degraw.mail.atl.earthlink.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0A4673E3BEA
-	for <xfs@oss.sgi.com>; Fri, 15 Apr 2011 06:29:20 -0700 (PDT)
-Received: from degraw.mail.atl.earthlink.net (degraw.mail.atl.earthlink.net
-	[207.69.200.237]) by cuda.sgi.com with ESMTP id
-	hHFo4lrPMmVGlz8m for <xfs@oss.sgi.com>;
-	Fri, 15 Apr 2011 06:29:20 -0700 (PDT)
-Received: from win.atl.earthlink.net ([64.82.0.228] helo=w3w27000)
-	by degraw.mail.atl.earthlink.net with smtp (Exim 3.36 #1)
-	id 1QAj5M-0006Z6-00
-	for xfs@oss.sgi.com; Fri, 15 Apr 2011 09:29:20 -0400
-From: <bestincome@gmail.com>
-Subject: I thought you would enjoy this page on villasitalia.com!
-Date: Fri, 15 Apr 2011 09:29:20 -0400
-Message-ID: <D593C6240CC94BD1A4EE82609C729A8C@g27.win.smewh.net>
+	p3FDUNSr069702 for <xfs@oss.sgi.com>; Fri, 15 Apr 2011 08:30:23 -0500
+Received: from mail.ud10.udmedia.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 556923E3C1E
+	for <xfs@oss.sgi.com>; Fri, 15 Apr 2011 06:33:45 -0700 (PDT)
+Received: from mail.ud10.udmedia.de (ud10.udmedia.de [194.117.254.50]) by
+	cuda.sgi.com with ESMTP id mo8AECDvtKW5BgTO for
+	<xfs@oss.sgi.com>; Fri, 15 Apr 2011 06:33:45 -0700 (PDT)
+Date: Thu, 14 Apr 2011 16:02:22 +0200
+From: Markus Trippelsdorf <markus@trippelsdorf.de>
+Subject: Re: Files full of zeros with coreutils-8.11 and xfs (FIEMAP related?)
+Message-ID: <20110414140222.GB1679@x4.trippels.de>
+References: <20110414102608.GA1678@x4.trippels.de>
+	<20110414120635.GB1678@x4.trippels.de>
 MIME-Version: 1.0
-Content-Class: urn:content-classes:message
+Content-Disposition: inline
+In-Reply-To: <20110414120635.GB1678@x4.trippels.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,130 +25,109 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: coreutils@gnu.org
+Cc: xfs@oss.sgi.com
 
-"bestincome@gmail.com" <bestincome@gmail.com> has recommended that you visit this page:
+On 2011.04.14 at 14:53 +0100, P=E1draig Brady wrote:
+> On 14/04/11 14:48, Markus Trippelsdorf wrote:
+> > On 2011.04.14 at 14:34 +0100, P=E1draig Brady wrote:
+> >> Hi Markus,
+> >>
+> >> I noticed your fiemap issues here:
+> >> http://oss.sgi.com/pipermail/xfs/2011-April/050102.html
+> >>
+> >> FAIL: cp/fiemap-empty (exit: 1)
+> >> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D
+> >> ...
+> >> + fallocate -l 10MiB -n unwritten.withdata
+> >> + dd count=3D10 if=3D/dev/urandom conv=3Dnotrunc iflag=3Dfullblock
+> >> of=3Dunwritten.withdata
+> >> 10+0 records in
+> >> 10+0 records out
+> >> 5120 bytes (5.1 kB) copied, 0.00219578 s, 2.3 MB/s
+> >> + cp unwritten.withdata cp.test
+> >> ++ stat -c %s unwritten.withdata
+> >> ++ stat -c %s cp.test
+> >> + test 5120 =3D 5120
+> >> + cmp unwritten.withdata cp.test
+> >> unwritten.withdata cp.test differ: char 1, line 1
+> >> + fail=3D1
+> >>
+> >> cp was changed in 8.11 to not bother reading
+> >> an extent if it is marked as UNWRITTEN.
+> >> The comment in fiemap.h says that this means that the
+> >> space is allocated, but zero.
+> >>
+> >> We tested on XFS, on F15 x86_64, which is earlier
+> >> than your 2.6.39-rc3 and didn't notice this issue.
+> >>
+> >> I'm guessing so that XFS is reporting the extent
+> >> as UNWRITTEN, even though there is data in it now,
+> >> and that it might sort itself out after a while,
+> >> or after a sync I suppose (note we also stopped
+> >> using sync before fiemap for 2.6.39).
+> >>
+> >> It would help a lot if you could insert this command
+> >> into the test above (just before the failing cp)
+> >> and show the test output again:
+> >>
+> >>   filefrag -v unwritten.withdata
+> > =
 
+> > Hi P=E1draig,
+> > =
 
+> > here you go:
+> > + filefrag -v unwritten.withdata                                       =
+                                                                           =
+   =
 
+> > Filesystem type is: ef53                                               =
+                                                                           =
+   =
 
+> > File size of unwritten.withdata is 5120 (2 blocks, blocksize 4096)     =
+                                                                           =
+   =
 
+> >  ext logical physical expected length flags                            =
+                                                                           =
+   =
 
-Hello Friend,
+> >    0       0   274432            2560 unwritten,eof                    =
+                                                                           =
+   =
 
-Bloggers PayDay Pro 2011 You Can Earn Anywhere In All Countrys!!!
+> > unwritten.withdata: 1 extent found
+> > =
 
-CONGRATULATIONS: Get your GUARANTEED $778.83 InstantCa$h Commissions Now!!!
+> > Please notice that this also happens with ext4 on the same kernel. =
 
-Underground Automated Method Allows 19 Years Old Kid Blogger To Raid The   
-Market For $23.6 Million And Takes Complete Newbie To $37,730 In Just 30 Days
+> > Btrfs is fine.
+> =
 
-It Doesn't Matter If You've Never Even Earned A Single Cent Online Before...
-If A Total Beginner Can Make $37,730 In His First Month Then Anyone Can Do This...
+> That looks like a bug in XFS :(
+> I presume if you change `filefrag -v` to `filefrag -vs` that
+> the output will change, and the test will pass.
+> I'm a bit surprised that ext4 shows the same thing
+> as there was supposedly a patch for this issue already
+> applied for 2.6.39.
+> =
 
-Imagine waking up at 10 in the morning.. doing your short workout routine.. opening 
-your computer..and finding out you made $100 up to $200 - while you were a sleep!
+> It would be great if we got these fixed up before
+> 2.6.29 was released, so that the checks in coreutils 8.11
+> were valid.
 
-It's Easy To Make Money Everyday Even If You're Starting From Scratch With
-Zero Knowledge, Experience Or Budget!I'll Show You Exactly How.
+You're right `filefrag -vs` fixes the issue on both xfs and ext4.
 
-We've Start putting New 39 Members in YOUR TEAM for the April 8-15/2011
-commission  cycle... and  GROWING everyday earn by $100 up to $200 or more.
+-- =
 
-IMPORTANT: April 15, 2011 is the Cut-Off day to lock in your
-position then faster you act the higher commission you  will earn!!!
-
-Go Here To Secure not less than $778.83 commission Now and it still growing
-as  many people joining under you. if you secure your position right away:
-
-The $778.83 commission will Arrive Through your Paypal or Credit Card on May 20/2011   
-next month. Hurry'this limited time, only 8 remaining Positions are available Now.
-
-You will access your money in any ATM when you join early & follow the instructions you receive.
- 
-Be Sure to Copy the link below & Paste into your browser and press enter:
-To Secure your $778.83 commission!
-
-https://www.plimus.com/jsp/redirect.jsp?contractId=2896494&referrer=alfredz
-
-TYPE   DATE & TIME --- NEW MEMBERS --- COUNTRY
-
-P -- APRIL.14  @ 2:38  AM-----Dianna---- Rosebilt----- United States
-P -- APRIL.14  @ 2:53  AM-----JOan------ Jacckson ---- United Kingdom
-P -- APRIL.14  @ 2:56  AM-----Mandene -- Jecob-------- Germany
-M -- APRIL.14  @ 4:19  AM-----Cristy---- Chan--------- Hungary
-P -- APRIL.13  @ 4:28  AM-----Carlo----- Wonder------- Italy
-M -- APRIL.13  @ 6:01  AM-----lalaine--- ferguson----- Australia
-P -- APRIL.13  @ 7:11  AM-----Rebecca--- Underwood---- Canada
-P -- APRIL.13  @ 7:39  AM-----Jericho--- De La Hoya--- Mexico
-P -- APRIL.13  @ 9:42  AM-----Thomas---- Silva ------- California
-M -- APRIL.12  @ 9:58  PM-----Grace----- Taylor------- Singapore
-P -- APRIL.12  @ 10:21 PM-----Gina------ Henry-------- New Zealand
-P -- APRIL.12  @ 11:24 PM-----Mohammed-- Ahmen ------- Oman
-M -- APRIL.12  @ 11:33 PM-----Tracia---- Furlong------ Puerto Rico
-P -- APRIL.11  @ 11:41 PM-----Jane------ Mckay-------- Russia
-P -- APRIL.11  @ 9:42  AM-----Steve----- Scott ------- Netherlands
-M -- APRIL.11  @ 9:58  PM-----Greg------ Stanley------ Denmark
-P -- APRIL.11  @ 10:21 PM-----Jack------ Perkins------ Amsterdam
-P -- APRIL.10  @ 11:24 PM-----Arlene---- Tan --------- China
-M -- APRIL.10  @ 11:33 PM-----Andy------ Hopekins----- New York
-P -- APRIL.10  @ 11:41 PM-----Jhon------ Robinson----- United States
-M -- APRIL.10  @ 2:34  AM --- Kevin----- Hunt -------- Sweden
-P -- APRIL.10  @ 12:34 AM --- Delia----- Lane -------- New York
-P -- APRIL.09  @ 6:45  AM --- Mohamed--- Suhail------- Saudi Arabia
-M -- APRIL.09  @ 5:34  AM --- Aleks----- Gjuroski ---- Japan
-P -- APRIL.09  @ 12:34 PM --- Andrew---- Karim ------- England
-P -- APRIL.09  @ 8:23  AM --- Carla----- Pereira ----- South Korea
-P -- APRIL.08  @ 2:34  PM --- Carl------ Krause ------ India
-M -- APRIL.08  @ 9:14  AM --- David----- Cook -------- Denmark
-P -  APRIL.08  @ 7:46  AM --- Paul------ Amid -------- Taiwan
-P -- APRIL.08  @ 1:54  AM --- Dennis---- Wilkins ----- Findland
-P -- APRIL.08  @ 12:34 AM --- Jonathan-- Wangyu ------ Thailand
-P -- APRIL.08  @ 6:45  AM --- Mackie---- Anhui-------- Indonesia
-M -- APRIL.08  @ 5:34  AM --- Alexis---- Mathew ------ Jerosalim
-P -- APRIL.08  @ 8:23  AM --- Cheryl---- Moran ------- Philippines
-P -- APRIL.08  @ 2:34  PM --- Vergie---- Petter ------ Ingland
-M -- APRIL.08  @ 9:14  AM --- Tito------ Warren ------ Bangladish
-P -  APRIL.08  @ 7:46  AM --- Raul------ Strogher ---- United States
-
-Therefore, you have a GUARANTEED $778.83 CommissionS  every month from now on!.
-
-Earn $19.97 Per Process!Each $19.97 x 39 = $778.83 Commission  will be yours...!
-
-Be Sure to Copy the link below & Paste into your browser and press enter:
-To Secure your $778.83 commission!
-
-https://www.plimus.com/jsp/redirect.jsp?contractId=2896494&referrer=alfredz
-
-Big profitable year,Becuase $19.97 membership only and $778.83 automatic back to you,   
-And you can recieve commissions every month. 
-
-You must UPGRADE right away or before others do....
-
-Caring for Your Success, Rob Benwell   
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Site privacy policy: This page was sent using the villasitalia.com send-to-a-friend link. Your email has not been added to any list and has not been recorded at our site.
+Markus
 
 _______________________________________________
 xfs mailing list
