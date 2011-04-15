@@ -1,32 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p3F7LtLm050416 for <xfs@oss.sgi.com>; Fri, 15 Apr 2011 02:21:56 -0500
-Received: from smtp-tls.univ-nantes.fr (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with SMTP id 9385C3E2E4F
-	for <xfs@oss.sgi.com>; Fri, 15 Apr 2011 00:25:17 -0700 (PDT)
-Received: from smtp-tls.univ-nantes.fr (smtp-tls2.univ-nantes.fr
-	[193.52.101.146]) by cuda.sgi.com with SMTP id BecfrJyyZRL5e15A
-	for <xfs@oss.sgi.com>; Fri, 15 Apr 2011 00:25:17 -0700 (PDT)
-Received: from localhost (debian [127.0.0.1])
-	by smtp-tls.univ-nantes.fr (Postfix) with ESMTP id 1BC9A40064D
-	for <xfs@oss.sgi.com>; Fri, 15 Apr 2011 09:25:17 +0200 (CEST)
-Received: from smtp-tls.univ-nantes.fr ([127.0.0.1])
-	by localhost (smtp-tls2.d101.univ-nantes.fr [127.0.0.1]) (amavisd-new,
-	port 10024) with LMTP id s5pDEU2PL81r for <xfs@oss.sgi.com>;
-	Fri, 15 Apr 2011 09:25:17 +0200 (CEST)
-Received: from [172.20.13.9] (tomintoul.cri.univ-nantes.prive [172.20.13.9])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by smtp-tls.univ-nantes.fr (Postfix) with ESMTPSA id 0263140064A
-	for <xfs@oss.sgi.com>; Fri, 15 Apr 2011 09:25:17 +0200 (CEST)
-Message-ID: <4DA7F286.8090905@univ-nantes.fr>
-Date: Fri, 15 Apr 2011 09:23:50 +0200
-From: Yann Dupont <Yann.Dupont@univ-nantes.fr>
+	p3F7PjTH050630 for <xfs@oss.sgi.com>; Fri, 15 Apr 2011 02:25:45 -0500
+Received: from mx4-phx2.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 917ED3E2E60
+	for <xfs@oss.sgi.com>; Fri, 15 Apr 2011 00:29:07 -0700 (PDT)
+Received: from mx4-phx2.redhat.com (mx4-phx2.redhat.com [209.132.183.25]) by
+	cuda.sgi.com with ESMTP id osCRU7aFQUcACIMZ for
+	<xfs@oss.sgi.com>; Fri, 15 Apr 2011 00:29:07 -0700 (PDT)
+Date: Fri, 15 Apr 2011 03:29:02 -0400 (EDT)
+From: Lachlan McIlroy <lmcilroy@redhat.com>
+Message-ID: <1329918989.88946.1302852542103.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
+In-Reply-To: <20110412065328.GG21395@dastard>
+Subject: Re: [PATCH] xfs: fix bmbt block allocation failures
 MIME-Version: 1.0
-Subject: Re: [PATCH 0/2] xfs: write back inodes during reclaim
-References: <1302157196-1988-1-git-send-email-david@fromorbit.com>
-In-Reply-To: <1302157196-1988-1-git-send-email-david@fromorbit.com>
+Reply-To: Lachlan McIlroy <lmcilroy@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,210 +23,378 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="iso-8859-1"; Format="flowed"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Le 07/04/2011 08:19, Dave Chinner a =E9crit :
-> This series fixes an OOM problem where VFS-only dirty inodes
-> accumulate on an XFS filesystem due to atime updates causing OOM to
-> occur.
->
-> The first patch fixes a deadlock triggering bdi-flusher writeback
-> from memory reclaim when a new bdi-flusher thread needs to be forked
-> and no memory is available.
->
-> the second adds a bdi-flusher kick from XFS's inode cache shrinker
-> so that when memory is low the VFS starts writing back dirty inodes
-> so they can be reclaimed as they get cleaned rather than remaining
-> dirty and pinning the inode cache in memory.
->
+----- Original Message -----
+> On Mon, Apr 11, 2011 at 08:55:33PM -0400, Lachlan McIlroy wrote:
+> > ----- Original Message -----
+> > > From: Dave Chinner <dchinner@redhat.com>
+> > >
+> > > When a multilevel bmbt split occurs, we can be asked to allocate
+> > > blocks from an AG that has no space left available. In the case of
+> > > an extent just being allocated, the first bmbt block allocation
+> > > sees
+> > > the firstblock parameter is set and does not set a minleft
+> > > parameter
+> > > for the allocation. The allocation also does not set the total
+> > > number of blocks required by the allocation, either.
+> > >
+> > > If the extent allocation used all the free space in the AG, the
+> > > lack
+> > > of a total allocation size results in a block being reserved for
+> > > the
+> > > AG freespace btree manipulations being used incorrectly.
+> > >
+> > > Secondly, the allocation is only allowed to be allocated in the
+> > > current AG (NEAR_BNO) because the low space algorithm has not been
+> > > activated. As a result of this, the second block allocation in the
+> > > split fails to find sufficient space in the current AG and fails,
+> > > resulting in a dirty transaction cancellation and a filesytem
+> > > shutdown.
+> > >
+> > > There are two problems here - both pointed out by Lachlan McIlroy
+> > > when we were first discussing a proposed fix for the problem (See
+> > > http://oss.sgi.com/archives/xfs/2010-09/msg00438.html). Firstly,
+> > > the missing args->total was causing the initial block to be
+> > > allocated from the freespace reserve. Secondly that the NEAR_BNO
+> > > allocation should probably be a START_BNO allocation to allow
+> > > blocks
+> > > to be taken from a higher numbered AG.
+> > >
+> > > With these changes, the allocation failure goes away, but we
+> > > trigger
+> > > asserts in xfs_bmapi() that try to ensure that bmbt block
+> > > allocations only occur in the same AG as the extent allocated,
+> > > except if the low space algorithm is active. In this case, we
+> > > don't
+> > > need to activate the low space algorithm - if a START_BNO
+> > > allocation
+> > > fails with minleft = 0, then there is no space we can allocate at
+> > > all, and hence the low space algorithm is no help. Therefore the
+> > > asserts need modification reflect the new state of affairs.
+> > >
+> > > This commit fixes the problem demonstrated by the test case in
+> > > xfstests 250.
+> > >
+> > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > > ---
+> > > fs/xfs/xfs_bmap.c | 8 ++------
+> > > fs/xfs/xfs_bmap_btree.c | 7 ++-----
+> > > 2 files changed, 4 insertions(+), 11 deletions(-)
+> > >
+> > > diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
+> > > index fa00788..50eed97 100644
+> > > --- a/fs/xfs/xfs_bmap.c
+> > > +++ b/fs/xfs/xfs_bmap.c
+> > > @@ -4917,13 +4917,9 @@ error0:
+> > > if (cur) {
+> > > if (!error) {
+> > > ASSERT(*firstblock == NULLFSBLOCK ||
+> > > - XFS_FSB_TO_AGNO(mp, *firstblock) ==
+> > > + XFS_FSB_TO_AGNO(mp, *firstblock) <=
+> > > XFS_FSB_TO_AGNO(mp,
+> > > - cur->bc_private.b.firstblock) ||
+> > > - (flist->xbf_low &&
+> > > - XFS_FSB_TO_AGNO(mp, *firstblock) <
+> > > - XFS_FSB_TO_AGNO(mp,
+> > > - cur->bc_private.b.firstblock)));
+> > > + cur->bc_private.b.firstblock));
+> > > *firstblock = cur->bc_private.b.firstblock;
+> > > }
+> > > xfs_btree_del_cursor(cur,
+> >
+> > There's another ASSERT like this earlier in xfs_bmapi() after the
+> > call
+> > to xfs_bmap_alloc() which may need the same attention.
+> 
+> No, it checks the allocated extent against any existing firstblock
+> and has nothing to do with the the bmbt allocations during extent
+> insertion.
+> >
+> > > diff --git a/fs/xfs/xfs_bmap_btree.c b/fs/xfs/xfs_bmap_btree.c
+> > > index 87d3c10..b2cdbfe 100644
+> > > --- a/fs/xfs/xfs_bmap_btree.c
+> > > +++ b/fs/xfs/xfs_bmap_btree.c
+> > > @@ -518,10 +518,11 @@ xfs_bmbt_alloc_block(
+> > > args.mp = cur->bc_mp;
+> > > args.fsbno = cur->bc_private.b.firstblock;
+> > > args.firstblock = args.fsbno;
+> > > + args.total = 1;
+> > > + args.type = XFS_ALLOCTYPE_START_BNO;
+> > >
+> > > if (args.fsbno == NULLFSBLOCK) {
+> > > args.fsbno = be64_to_cpu(start->l);
+> > > - args.type = XFS_ALLOCTYPE_START_BNO;
+> > > /*
+> > > * Make sure there is sufficient room left in the AG to
+> > > * complete a full tree split for an extent insert. If
+> > > @@ -534,10 +535,6 @@ xfs_bmbt_alloc_block(
+> > > * block allocation here and corrupt the filesystem.
+> > > */
+> > > args.minleft = xfs_trans_get_block_res(args.tp);
+> > > - } else if (cur->bc_private.b.flist->xbf_low) {
+> > > - args.type = XFS_ALLOCTYPE_START_BNO;
+> > > - } else {
+> > > - args.type = XFS_ALLOCTYPE_NEAR_BNO;
+> > > }
+> > >
+> > > args.minlen = args.maxlen = args.prod = 1;
+> >
+> > I think that's exactly what I had in mind when we looked at this
+> > last
+> > time but now I'm not so sure. I think I understand now why there is
+> > a
+> > requirement that all subsequent allocations must (read 'can') come
+> > from
+> > the same AG.
+> >
+> > The first time we try to allocate blocks we look for an AG with all
+> > the
+> > space we need for the reservation to succeed.
+> 
+> Of course, that explains the near bno allocation them. It's
+> basically saying "we only ever have a reservation for a freespace
+> btree split in a single AG". Ok, so it seems we need to retain that,
+> and the problem of not being able to allocate in the current AG is
+> elsewhere.
+> 
+> Thanks for pointing that out to me, Lachlan - I should have realised
+> that is what it was for in the first place.
+> 
+> > If we don't find a single
+> > AG that will satisfy the full request then we use the low space
+> > algorithm
+> > and start from AG 0. But if we do find such an AG with all the space
+> > we
+> > need it should be fine to use NEAR_BNO on subsequent allocations
+> > because
+> > the space is there, right?
+> 
+> But for the case we are dealing with here - bmbt insertion after an
+> allocation - we already have firstblock set and hence never traverse
+> the args.fsbno == NULLFSBLOCK case as the cursor firstblock is
+> always set to the block that has already been allocated. Hence we
+> never hit the low space algorithm unless it was triggered by the
+> extent allocation.
+> 
+> > If this logic fails to hold true then there are other problems we
+> > need to
+> > deal with including;
+> >
+> > If we've already allocated a block from AG N then all subsequent
+> > allocations must come from AGs >= N to prevent locking issues. If
+> > the
+> > blocks we need are in AGs < N we're in trouble.
+> 
+> Agreed - this is what minleft is trying to avoid from happening
+> ahead of the first allocations.
+> 
+> > We need to fall back to
+> > the low space algorithm and start from AG 0 but we can't do this if
+> > we
+> > have already allocated from AG N.
+> 
+> Right, even the low space algorithm cannot avoid the need to avoid
+> lock inversions in the AGs.
+> 
+> > Also if we pass START_BNO to xfs_alloc_vextent() then it will fall
+> > through to the ANY/START/FIRST_AG case and set flags to TRYLOCK. It
+> 
+> That's not a problem.
+> 
+> > will then scan AGs from N to the last AG and skip any that are
+> > already
+> > locked. It may skip AGs that have the space we need and we may get
+> > to
+> > the last AG without finding all required blocks.
+> 
+> Sure, but....
+> 
+> > Then xfs_alloc_vextent() will loop through the AGs a second time if
+> > we
+> > didn't get all we needed the first time but this time without the
+> > TRYLOCK.
+> > This could result in locking AGs out of order.
+> 
+> It loops the second time from the start AG, not AG zero so we should
+> not be locking AGs out of order.
+> 
+> > So why is the extent allocation using all of the remaining blocks in
+> > the
+> > AG and not leaving any for the split?
+> 
+> That's the big question, isn't it? I'll come back to this.
+> 
+> > Are we not reserving the split
+> > space with the conversion transaction?
+> 
+> I don't think this is relevant - the problem is allocation, not
+> extent conversion.
+> 
+> > Is it because the space needed
+> > for splits is not accounted for when delayed allocations are
+> > reserved so
+> > we oversubscribe ourselves?
+> 
+> This is preallocation into a hole, so delalloc is not involved
+> here.
+> 
+> > Or are we not activating the low space
+> > algorithm early enough?
+> 
+> There's plenty of free space, just not in the AG _after_ the extent
+> allocation, and so there's no reason to trigger the low space
+> algorithm.
+> 
+> > I need to look at the code a bit more to understand all this. The
+> > same
+> > allocation logic appears to be used in xfs_bmap_extents_to_btree(),
+> > xfs_bmap_local_to_extents() and xfs_bmap_btalloc() so maybe there's
+> > some
+> > logic in the logic.
+> 
+> I think they are all fine, now that I think I understand the reason
+> for the logic - that we only reserve enough blocks in the
+> transaction for freespace tree splits in a single AG. New blocks in
+> the bmbt can be triggered when:
+> 
+> 1. extent conversion splits a record into two (or three)
+> records.
+> 2. extent removal split a record into two (punch a hole in
+> the middle of an extent)
+> 3. extent allocation inserts a new record
+> 4. converting from extent to btree format
+> 
+> Note that the local to extent change is actually a data extent
+> allocation (same as xfs_bmap_btalloc), not a bmbt allocation.
+> 
+> So, in the cases of #1 and #2, it is unlikely that there has been a
+> previous allocation in the transaction, and so we take the first
+> case of args.fsbno == NULLFSBLOCK to chose an AG with enough space
+> for an entire bmbt split. Otherwise, it's the same case as #3 and
+> #4.
+> 
+> In the case of #3 and #4, the reason for the bmbt allocation is that
+> we have allocated a new extent, and as a result firstblock _will_ be
+> set. Hence we should have either space in the AG available for the
+> bmbt split _or_ the low space algorithm is active.
+> 
+> This problem case is that for #3/4 we can enter xfs_bmbt_alloc_block
+> with the initial condition of firstblock set, not enough space in
+> the current AG and the low space algorithm not active. For the test
+> case (250), we still have lots of free space in the filesystem so we
+> should not be activating the low space algorithm. That leaves the
+> fact we are not leaving enough space in the AG for the bmbt split
+> after the extent is allocated. AFAICT, this code in xfs_bmapi()
+> handles it:
+> 
+> 4452 if (wr && *firstblock == NULLFSBLOCK) {
+> 4453 if (XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_BTREE)
+> 4454 minleft = be16_to_cpu(ifp->if_broot->bb_level) + 1;
+> 4455 else
+> 4456 minleft = 1;
+> 4457 } else
+> 4458 minleft = 0;
+> 
+> So it seems to me that in all cases the setting of minleft is
+> correct, as are the fallbacks that clear minleft then set xbf_low in
+> xfs_bmap_btalloc(). So I don't think the bug actually resides at the
+> xfs-bmapi/bmbt level. The question I'm now trying to answer is how
+> we can allocate the entire AG if minleft is actually set.
+> 
+> The answer, it appears, is in xfs_alloc_fix_minleft(). If we've
+> allocated the largest extent possible, we'll have a situation where
+> the only free space remaining is on the freelist. To use numbers
+> relevant to the test case:
+> 
+> agsize = 4096 blocks (16MB)
+> max ext len = 4096 - 8 blocks
+> = 4088 blocks
+> AGF freeblks = 4088
+> AGF flcount = 4
+> minleft = 2;
+> 
+> extent allocation length = 4088
+> 
+> diff = 4088 + 4 - 4088 - 2
+> = 2
+> 
+> And because diff >= 0, xfs_alloc_fix_minleft() says that the extent
+> length is OK and does not trim it. Then when we go to allocate bmbt
+> blocks, args->total is not set so the first block is allocated from
+> the free list, and the second then fails at the
+> xfs_alloc_fix_freelist checks because we don't have space available
+> in the AG....
+> 
+> IOWs, we've set minleft appropriately, but xfs_alloc_fix_minleft()
+> assumes that the AGFL blocks are part of the space available for
+> the allocation. This, it seems, is wrong. If minleft is set, then we
+> are not allowing the allocation to dip into any reserves, so we
+> should not be considering the freelist blocks as available for
+> minleft reservations.
+> 
+> So, the patch below fixes the test 250 assert failure as well, and
+> to me seems much more likely as the root cause of the bug.
+> 
+> What do you think, Lachlan?
+
+I think you're onto something Dave and it makes a lot of sense.  It
+would appear that the checks in xfs_alloc_fix_freelist() really only
+apply when allocating extents and maybe should be skipped when
+allocating the minleft blocks.  Oh, unless the low space algorithm is
+being used.  I think args.total represents the full extent allocation
+request and doesn't apply to minleft allocations so I don't think we
+need that change to xfs_bmbt_alloc_block().  Is just the fix to
+xfs_alloc_fix_minleft() enough here?
+
+> 
+> Cheers,
+> 
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
+> 
+> 
+> ---
+> fs/xfs/xfs_alloc.c | 1 -
+> fs/xfs/xfs_bmap_btree.c | 1 +
+> 2 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_alloc.c b/fs/xfs/xfs_alloc.c
+> index 27d64d7..8946464 100644
+> --- a/fs/xfs/xfs_alloc.c
+> +++ b/fs/xfs/xfs_alloc.c
+> @@ -280,7 +280,6 @@ xfs_alloc_fix_minleft(
+> return 1;
+> agf = XFS_BUF_TO_AGF(args->agbp);
+> diff = be32_to_cpu(agf->agf_freeblks)
+> - + be32_to_cpu(agf->agf_flcount)
+> - args->len - args->minleft;
+> if (diff >= 0)
+> return 1;
+> diff --git a/fs/xfs/xfs_bmap_btree.c b/fs/xfs/xfs_bmap_btree.c
+> index 87d3c10..470047e 100644
+> --- a/fs/xfs/xfs_bmap_btree.c
+> +++ b/fs/xfs/xfs_bmap_btree.c
+> @@ -518,6 +518,7 @@ xfs_bmbt_alloc_block(
+> args.mp = cur->bc_mp;
+> args.fsbno = cur->bc_private.b.firstblock;
+> args.firstblock = args.fsbno;
+> + args.total = 1;
+> 
+> if (args.fsbno == NULLFSBLOCK) {
+> args.fsbno = be64_to_cpu(start->l);
+> 
 > _______________________________________________
 > xfs mailing list
 > xfs@oss.sgi.com
 > http://oss.sgi.com/mailman/listinfo/xfs
->
-Hello, we've been hit for some times by a bug (oom) which may been =
-
-related to this one. Our server contains lots of samba server (in =
-
-linux-vserver, this is NOT a vanilla kernel) and is also NFS kernel server.
-The oom generally happens after 1 month of uptime, and last week we also =
-
-had the problem after 1 week.
-
-for example this one :
-Feb 25 12:54:15 strathisla.u11.univ-nantes.prive kernel: =
-
-[2743591.087102] Node 0 Normal free:8840kB min:12968kB low:16208kB =
-
-high:19452kB active_anon:140168kB inactive_anon:21200kB =
-
-active_file:1446724kB inactive_file:10741224kB unevictable:4172kB =
-
-isolated(anon):0kB isolated(file):0kB present:13186560kB mlocked:4172kB =
-
-dirty:42924kB writeback:249420kB mapped:60296kB shmem:7028kB =
-
-slab_reclaimable:758752kB slab_unreclaimable:136528kB =
-
-kernel_stack:6784kB pagetables:8388kB unstable:0kB bounce:0kB =
-
-writeback_tmp:0kB pages_scanned:0 all_unreclaimable? no
-Feb 25 12:57:21 strathisla.u11.univ-nantes.prive kernel: =
-
-[2743777.877303] admind: page allocation failure. order:0, mode:0x4020
-Feb 25 12:57:22 strathisla.u11.univ-nantes.prive kernel: =
-
-[2743777.877340] Pid: 10121, comm: admind Not tainted =
-
-2.6.32-5-vserver-amd64 #1
-Feb 25 12:57:22 strathisla.u11.univ-nantes.prive kernel: =
-
-[2743777.877369] Call Trace:
-Feb 25 12:57:22 strathisla.u11.univ-nantes.prive kernel: =
-
-[2743777.877392] <IRQ>  [<ffffffff810c3f43>] ? =
-
-__alloc_pages_nodemask+0x592/0x5f3
-Feb 25 12:57:22 strathisla.u11.univ-nantes.prive kernel: =
-
-[2743777.877449]  [<ffffffff810f0d1e>] ? new_slab+0x5b/0x1ca
-Feb 25 12:57:22 strathisla.u11.univ-nantes.prive kernel: =
-
-[2743777.877477]  [<ffffffff810f107d>] ? __slab_alloc+0x1f0/0x39b
-Feb 25 12:57:22 strathisla.u11.univ-nantes.prive kernel: =
-
-[2743777.877507]  [<ffffffff812565c8>] ? __netdev_alloc_skb+0x29/0x45
-Feb 25 12:57:22 strathisla.u11.univ-nantes.prive kernel: =
-
-[2743777.877537]  [<ffffffff810f1aaf>] ? =
-
-__kmalloc_node_track_caller+0xbb/0x11b
-Feb 25 12:57:22 strathisla.u11.univ-nantes.prive kernel: =
-
-[2743777.877568]  [<ffffffff812565c8>] ? __netdev_alloc_skb+0x29/0x45
-Feb 25 12:57:22 strathisla.u11.univ-nantes.prive kernel: =
-
-[2743777.877598]  [<ffffffff812555f5>] ? __alloc_skb+0x69/0x15a
-Feb 25 12:57:22 strathisla.u11.univ-nantes.prive kernel: =
-
-[2743777.877627]  [<ffffffff812565c8>] ? __netdev_alloc_skb+0x29/0x45
-Feb 25 12:57:22 strathisla.u11.univ-nantes.prive kernel: =
-
-[2743777.877673]  [<ffffffffa00af52a>] ? bnx2_alloc_rx_skb+0x4c/0x1a3 [bnx2]
-Feb 25 12:57:22 strathisla.u11.univ-nantes.prive kernel: =
-
-[2743777.877706]  [<ffffffffa00b34fb>] ? bnx2_poll_work+0x4f3/0xa7e [bnx2]
-Feb 25 12:57:22 strathisla.u11.univ-nantes.prive kernel: =
-
-[2743777.877738]  [<ffffffffa00b3c47>] ? bnx2_poll+0x11b/0x229 [bnx2]
-Feb 25 12:57:22 strathisla.u11.univ-nantes.prive kernel: =
-
-[2743777.877768]  [<ffffffff8125c851>] ? net_rx_action+0xae/0x1c9
-Feb 25 12:57:22 strathisla.u11.univ-nantes.prive kernel: =
-
-[2743777.877799]  [<ffffffff8105430b>] ? __do_softirq+0xdd/0x1a2
-Feb 25 12:57:22 strathisla.u11.univ-nantes.prive kernel: =
-
-[2743777.877828]  [<ffffffff81011cac>] ? call_softirq+0x1c/0x30
-Feb 25 12:57:22 strathisla.u11.univ-nantes.prive kernel: =
-
-[2743777.877857]  [<ffffffff8101322b>] ? do_softirq+0x3f/0x7c
-Feb 25 12:57:22 strathisla.u11.univ-nantes.prive kernel: =
-
-[2743777.877885]  [<ffffffff8105417a>] ? irq_exit+0x36/0x76
-Feb 25 12:57:22 strathisla.u11.univ-nantes.prive kernel: =
-
-[2743777.877912]  [<ffffffff81012922>] ? do_IRQ+0xa0/0xb6
-Feb 25 12:57:22 strathisla.u11.univ-nantes.prive kernel: =
-
-[2743777.877939]  [<ffffffff810114d3>] ? ret_from_intr+0x0/0x11
-Feb 25 12:57:22 strathisla.u11.univ-nantes.prive kernel: =
-
-[2743777.877966] <EOI>  [<ffffffffa02304cf>] ? =
-
-xfs_reclaim_inode+0x0/0xe0 [xfs]
-Feb 25 12:57:22 strathisla.u11.univ-nantes.prive kernel: =
-
-[2743777.878019]  [<ffffffff8130a7c5>] ? _write_lock+0x7/0xf
-Feb 25 12:57:22 strathisla.u11.univ-nantes.prive kernel: =
-
-[2743777.878058]  [<ffffffffa0230e3d>] ? xfs_inode_ag_walk+0x4e/0xef [xfs]
-Feb 25 12:57:22 strathisla.u11.univ-nantes.prive kernel: =
-
-[2743777.878098]  [<ffffffffa02304cf>] ? xfs_reclaim_inode+0x0/0xe0 [xfs]
-Feb 25 12:57:22 strathisla.u11.univ-nantes.prive kernel: =
-
-[2743777.878138]  [<ffffffffa0230f4f>] ? xfs_inode_ag_iterator+0x71/0xb2 =
-
-[xfs]
-Feb 25 12:57:22 strathisla.u11.univ-nantes.prive kernel: =
-
-[2743777.878179]  [<ffffffffa02304cf>] ? xfs_reclaim_inode+0x0/0xe0 [xfs]
-Feb 25 12:57:22 strathisla.u11.univ-nantes.prive kernel: =
-
-[2743777.878219]  [<ffffffffa0230feb>] ? =
-
-xfs_reclaim_inode_shrink+0x5b/0x10d [xfs]
-Feb 25 12:57:22 strathisla.u11.univ-nantes.prive kernel: =
-
-[2743777.878265]  [<ffffffff810c8dd1>] ? shrink_slab+0xe0/0x153
-Feb 25 12:57:22 strathisla.u11.univ-nantes.prive kernel: =
-
-[2743777.878294]  [<ffffffff810c9d2e>] ? try_to_free_pages+0x26a/0x38e
-Feb 25 12:57:22 strathisla.u11.univ-nantes.prive kernel: =
-
-[2743777.878323]  [<ffffffff810c6ceb>] ? isolate_pages_global+0x0/0x20f
-Feb 25 12:57:22 strathisla.u11.univ-nantes.prive kernel: =
-
-[2743777.878353]  [<ffffffff810c3d7e>] ? __alloc_pages_nodemask+0x3cd/0x5f3
-Feb 25 12:57:22 strathisla.u11.univ-nantes.prive kernel: =
-
-[2743777.878383]  [<ffffffff810f0d05>] ? new_slab+0x42/0x1ca
-Feb 25 12:57:22 strathisla.u11.univ-nantes.prive kernel: =
-
-[2743777.878411]  [<ffffffff810f107d>] ? __slab_alloc+0x1f0/0x39b
-Feb 25 12:57:22 strathisla.u11.univ-nantes.prive kernel: =
-
-[2743777.878441]  [<ffffffff8110437f>] ? getname+0x23/0x1a0
-Feb 25 12:57:22 strathisla.u11.univ-nantes.prive kernel: =
-
-[2743777.878468]  [<ffffffff8110437f>] ? getname+0x23/0x1a0
-Feb 25 12:57:22 strathisla.u11.univ-nantes.prive kernel: =
-
-[2743777.878495]  [<ffffffff810f1558>] ? kmem_cache_alloc+0x7f/0xf0
-Feb 25 12:57:22 strathisla.u11.univ-nantes.prive kernel: =
-
-[2743777.878524]  [<ffffffff8110437f>] ? getname+0x23/0x1a0
-Feb 25 12:57:22 strathisla.u11.univ-nantes.prive kernel: =
-
-[2743777.878552]  [<ffffffff810f75b3>] ? do_sys_open+0x1d/0xfc
-Feb 25 12:57:22 strathisla.u11.univ-nantes.prive kernel: =
-
-[2743777.878580]  [<ffffffff81037623>] ? ia32_sysret+0x0/0x5
-
-
-I saw this on 2.6.32 kernels ; Since 2 days we're testing 2.6.38.2 =
-
-kernel on the very same machine.
-
-Some questions :
-
--What kernel versions are known to be impacted ?
--What is the plan for inclusion in kernel ? Is this considered =
-
-appropriate material for 2.6.38.4 and older stable kernels ?
-- Is mounting with noatime can alleviate the problem ?
-
-Regards,
-
--- =
-
-Yann Dupont - Service IRTS, DSI Universit=E9 de Nantes
-Tel : 02.53.48.49.20 - Mail/Jabber : Yann.Dupont@univ-nantes.fr
 
 _______________________________________________
 xfs mailing list
