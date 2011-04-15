@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p3F06Mig025122 for <xfs@oss.sgi.com>; Thu, 14 Apr 2011 19:06:22 -0500
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
+	p3F1k96W029036 for <xfs@oss.sgi.com>; Thu, 14 Apr 2011 20:46:10 -0500
 Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 787723D6A8B
-	for <xfs@oss.sgi.com>; Thu, 14 Apr 2011 17:09:43 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B94DC121FC2B
+	for <xfs@oss.sgi.com>; Thu, 14 Apr 2011 18:49:30 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	UCCuh2lzVkBXTveM for <xfs@oss.sgi.com>;
-	Thu, 14 Apr 2011 17:09:43 -0700 (PDT)
-Date: Fri, 15 Apr 2011 10:09:40 +1000
+	CkDdcrC1o16eU1CR for <xfs@oss.sgi.com>;
+	Thu, 14 Apr 2011 18:49:30 -0700 (PDT)
+Date: Fri, 15 Apr 2011 11:49:28 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Files full of zeros with coreutils-8.11 and xfs (FIEMAP related?)
-Message-ID: <20110415000940.GL21395@dastard>
-References: <20110414102608.GA1678@x4.trippels.de>
-	<20110414120635.GB1678@x4.trippels.de>
-	<20110414140222.GB1679@x4.trippels.de>
-	<4DA70BD3.1070409@draigBrady.com> <4DA717B2.3020305@sandeen.net>
-	<20110414225904.GK21395@dastard> <4DA7836A.5040604@draigBrady.com>
+Subject: Re: [PATCH] [RFC] xfs: introduce an allocation workqueue
+Message-ID: <20110415014928.GM21395@dastard>
+References: <1302616337-29894-1-git-send-email-david@fromorbit.com>
+	<1302809374.2608.73.camel@doink>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4DA7836A.5040604@draigBrady.com>
+In-Reply-To: <1302809374.2608.73.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,155 +26,64 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: =?iso-8859-1?Q?P=E1draig?= Brady <P@draigBrady.com>
-Cc: linux-ext4@vger.kernel.org, Eric Sandeen <sandeen@sandeen.net>, coreutils@gnu.org, Markus Trippelsdorf <markus@trippelsdorf.de>, xfs-oss <xfs@oss.sgi.com>
+To: Alex Elder <aelder@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Fri, Apr 15, 2011 at 12:29:46AM +0100, P=E1draig Brady wrote:
-> On 14/04/11 23:59, Dave Chinner wrote:
-> > On Thu, Apr 14, 2011 at 10:50:10AM -0500, Eric Sandeen wrote:
-> >> On 4/14/11 9:59 AM, P=E1draig Brady wrote:
-> >>> On 14/04/11 15:02, Markus Trippelsdorf wrote:
-> >>>>>> Hi P=E1draig,
-> >>>>>>
-> >>>>>> here you go:
-> >>>>>> + filefrag -v unwritten.withdata                                  =
-                                                                           =
-        =
-
-> >>>>>> Filesystem type is: ef53                                          =
-                                                                           =
-        =
-
-> >>>>>> File size of unwritten.withdata is 5120 (2 blocks, blocksize 4096)=
-                                                                           =
-        =
-
-> >>>>>>  ext logical physical expected length flags                       =
-                                                                           =
-        =
-
-> >>>>>>    0       0   274432            2560 unwritten,eof               =
-                                                                           =
-        =
-
-> >>>>>> unwritten.withdata: 1 extent found
-> >>>>>>
-> >>>>>> Please notice that this also happens with ext4 on the same kernel. =
-
-> >>>>>> Btrfs is fine.
-> >>>>>
-> >>>> `filefrag -vs` fixes the issue on both xfs and ext4.
-> >>>
-> >>> So in summary, currently on (2.6.39-rc3), the following
-> >>> will (usually?) report a single unwritten extent,
-> >>> on both ext4 and xfs
-> >>>
-> >>>   fallocate -l 10MiB -n k
-> >>>   dd count=3D10 if=3D/dev/urandom conv=3Dnotrunc iflag=3Dfullblock of=
-=3Dk
-> >>>   filefrag -v k # grep for an extent without unwritten || fail
-> >>
-> >> right, that's what I see too in testing.
-> >>
-> >> But would the coreutils install have done a preallocation of the desti=
-nation file?
-> >>
-> >> Otherwise this looks like a different bug...
-> >>
-> >>> This particular issue has been discussed so far at:
-> >>> http://debbugs.gnu.org/cgi/bugreport.cgi?bug=3D8411
-> >>> Note there it was stated there that ext4 had this
-> >>> fixed as of 2.6.39-rc1, so maybe there is something lurking?
-> >>
-> >> ext4 got a fix, but not xfs, I guess.  My poor brain can't remember, I=
- think I started looking into it, but it's clearly still broken.
-> >>
-> >> Still, I don't know for sure what happened to Markus - did something p=
-reallocate, in his case?
-> > =
-
-> > Unwritten extent mapping behaves in an unexpected way due to
-> > buffered writeback not occurring immediately. Extent conversion
-> > doesn't occur until the data is on disk, and for buffered IO you
-> > need an fdatasync to ensure that has occurred.
-> > =
-
-> > That is: =
-
-> > =
-
-> > $ xfs_io -f -c "resvsp 0 10m" -c "pwrite 0 5120" -c "bmap -vp" /mnt/tes=
-t/foo
-> > wrote 5120/5120 bytes at offset 0
-> > 5 KiB, 2 ops; 0.0000 sec (62.600 MiB/sec and 25641.0256 ops/sec)
-> > /mnt/test/foo:
-> >  EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL FLAGS
-> >    0: [0..20479]:      268984..289463    0 (268984..289463) 20480 10000
-> > =
-
-> > Data has not been written yet, so it is still unwritten. The same
-> > test with a fsync shows:
-> > =
-
-> > $ sudo xfs_io -f -c "resvsp 0 10m" -c "pwrite 0 5120" -c fsync -c "bmap=
- -vp" /mnt/test/foo
-> > wrote 5120/5120 bytes at offset 0
-> > 5 KiB, 2 ops; 0.0000 sec (87.193 MiB/sec and 35714.2857 ops/sec)
-> > /mnt/test/foo:
-> >  EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL FLAGS
-> >    0: [0..15]:         268984..268999    0 (268984..268999)    16 00000
-> >    1: [16..20479]:     269000..289463    0 (269000..289463) 20464 10000
-> > =
-
-> > Everything is fine.
-> > =
-
-> > So this seems like an application error to me. If you are going to
-> > use fiemap to determine what ranges to copy, then you have to
-> > fdatasync the source file first to guarantee that preallocated
-> > extents have been converted to written state before mapping the
-> > file....
-> =
-
-> Well IMHO there should be a difference between
-> knowing where you are going to write, and actually writing to disk.
-> I.E. one shouldn't need to write the whole way to the device
-> before returning a valid fiemap.  If a particular file system
-> implementation needs to sync to return a valid fiemap,
-> then it should be implicit.
-
-No, this was explicitly laid out in the fiemap interface discussions
-- it's up to the applicaiton to decide if it needs to do a sync
-first. That's what the FIEMAP_FLAG_SYNC control flag is for.
-This forces the fiemap call to do a fsync _before_ getting the
-mapping. If you want to know the exact layout of the file is, then
-you must use this flag.
-
-Even so, it is recognised that this is racy - any use of the block
-map has a time-of-read-to-time-of-use race condition that means you
-have to _verify_ the copy after it completes. FYI, that's what
-xfs_fsr does when copying based on extent maps - if the inode has
-changed in _any way_ during the copy, it aborts the copy of that
-file.
-
-i.e. using fiemap for copying is at best a *hint* about the regions
-that need copying, and it is in no way a guarantee that you'll get
-all the information you need to make accurate copy even if you do
-use the synchronous variant.
-
-Cheers,
-
-Dave.
--- =
-
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVGh1LCBBcHIgMTQsIDIwMTEgYXQgMDI6Mjk6MzRQTSAtMDUwMCwgQWxleCBFbGRlciB3cm90
+ZToKPiBPbiBUdWUsIDIwMTEtMDQtMTIgYXQgMjM6NTIgKzEwMDAsIERhdmUgQ2hpbm5lciB3cm90
+ZToKPiA+IEZyb206IERhdmUgQ2hpbm5lciA8ZGNoaW5uZXJAcmVkaGF0LmNvbT4KPiA+IAo+ID4g
+V2UgY3VycmVudGx5IGhhdmUgc2lnbmlmaWNhbnQgaXNzdWVzIHdpdGggdGhlIGFtb3VudCBvZiBz
+dGFjayB0aGF0Cj4gPiBhbGxvY2F0aW9uIGluIFhGUyB1c2VzLCBlc3BlY2lhbGx5IGluIHRoZSB3
+cml0ZWJhY2sgcGF0aC4gV2UgY2FuCj4gPiBlYXNpbHkgY29uc3VtZSA0ayBvZiBzdGFjayBiZXR3
+ZWVuIG1hcHBpbmcgdGhlIHBhZ2UsIG1hbmlwdWxhdGluZwo+ID4gdGhlIGJtYXAgYnRyZWUgYW5k
+IGFsbG9jYXRpbmcgYmxvY2tzIGZyb20gdGhlIGZyZWUgbGlzdC4gTm90IHRvCj4gPiBtZW50aW9u
+IGJ0cmVlIGJsb2NrIHJlYWRhaGVhZCBhbmQgb3RoZXIgZnVuY3Rpb25hbGl0eSB0aGF0IGlzc3Vl
+cyBJTwo+ID4gaW4gdGhlIGFsbG9jYXRpb24gcGF0aC4KPiA+IAo+ID4gQXMgYSByZXN1bHQsIHdl
+IGNhbiBubyBsb25nZXIgZml0IGFsbG9jYXRpb24gaW4gdGhlIHdyaXRlYmFjayBwYXRoCj4gPiBp
+biB0aGUgc3RhY2sgc3BhY2UgcHJvdmlkZWQgb24geDg2XzY0LiBUbyBhbGxldmlhdGUgdGhpcyBw
+cm9ibGVtLAo+ID4gaW50cm9kdWNlIGFuIGFsbG9jYXRpb24gd29ya3F1ZXVlIGFuZCBtb3ZlIGFs
+bCBhbGxvY2F0aW9ucyB0byBhCj4gPiBzZXBlcmF0ZSBjb250ZXh0LiBUaGlzIGNhbiBiZSBlYXNp
+bHkgYWRkZWQgYXMgYW4gaW50ZXJwb3NpbmcgbGF5ZXIKPiA+IGludG8geGZzX2FsbG9jX3ZleHRl
+bnQoKSwgd2hpY2ggdGFrZXMgYSBzaW5nbGUgYXJndW1lbnQgc3RydWN0dXJlCj4gPiBhbmQgZG9l
+cyBub3QgcmV0dXJuIHVudGlsIHRoZSBhbGxvY2F0aW9uIGlzIGNvbXBsZXRlIG9yIGhhcyBmYWls
+ZWQuCj4gPiAKPiA+IFRvIGRvIHRoaXMsIGFkZCBhIHdvcmsgc3RydWN0dXJlIGFuZCBhIGNvbXBs
+ZXRpb24gdG8gdGhlIGFsbG9jYXRpb24KPiA+IGFyZ3Mgc3RydWN0dXJlLiBUaGlzIGFsbG93cyB4
+ZnNfYWxsb2NfdmV4dGVudCB0byBxdWV1ZSB0aGUgYXJncyBvbnRvCj4gPiB0aGUgd29ya3F1ZXVl
+IGFuZCB3YWl0IGZvciBpdCB0byBiZSBjb21wbGV0ZWQgYnkgdGhlIHdvcmtlci4gVGhpcwo+ID4g
+Y2FuIGJlIGRvbmUgY29tcGxldGVseSB0cmFuc3BhcmVudGx5IHRvIHRoZSBjYWxsZXIuCj4gPiAK
+PiA+IFRoZSB3b3JrZXIgZnVuY3Rpb24gbmVlZHMgdG8gZW5zdXJlIHRoYXQgaXQgc2V0cyBhbmQg
+Y2xlYXJzIHRoZQo+ID4gUEZfTUVNQUxMT0MgZmxhZyBhcHByb3ByaWF0ZWx5IGFzIGl0IGlzIGJl
+aW5nIHJ1biBpbiBhbiBhY3RpdmUKPiA+IHRyYW7RlWFjdGlvbiBjb250ZXh0LiBXb3JrIGNhbiBh
+bHNvIGJlIHF1ZXVlZCBpbiBhIG1lbW9yeSByZWNsYWltCj4gPiBjb250ZXh0LCBzbyBhIHJlc2N1
+ZXIgaXMgbmVlZGVkIGZvciB0aGUgd29ya3F1ZXVlLgo+ID4gCj4gPiBTaWduZWQtb2ZmLWJ5OiBE
+YXZlIENoaW5uZXIgPGRjaGlubmVyQHJlZGhhdC5jb20+Cj4gCj4gSW50ZXJlc3RpbmcuCj4gCj4g
+SSBndWVzcyBJIGRvbid0IHNlZSBhbnl0aGluZyBpbmhlcmVudGx5IHdyb25nIHdpdGggdGhpcy4K
+PiBBdCBmaXJzdCBnbGFuY2UgaXQgc2VlbXMgbGlrZSB3b3JrcXVldWUgYWJ1c2UuICBCdXQgaXQn
+cwo+IGJldHRlciB0aGFuIHJvbGxpbmcgb3VyIG93biBkYWVtb24gdG8gZG8gdGhlIHNhbWUgdGhp
+bmcuCj4gKFRoZXJlJ3Mgbm90aGluZyB0byBzdG9wIHlvdSBmcm9tIGRvaW5nIHRoaXMgZ2VuZXJp
+Y2FsbHkKPiBlaXRoZXIuLi4pCj4gCj4gV2lsbCBpdCBzaGlmdCBzb21lIGFjY291bnRpbmcgb2Yg
+Q1BVIHRpbWUgZnJvbSB1c2VyIHRvCj4gc3lzdGVtPwoKU29tZSwgeWVzLiBGb3IgZGVsYXllZCBh
+bGxvY2F0aW9uIGluIHRoZSBiYWNrZ3JvdW5kIGZsdXNoIG9yIHN5bmMKcGF0aCwgdGhlcmUgaXMg
+bm8gZGlmZmVyZW5jZSBiZWNhdXNlIHRoYXQgaXNuJ3QgYWNjb3VudGVkIHRvIHRoZQp1c2VyIGFu
+eXdheS4gVGhlIG9ubHkgY2FzZXMgaXQgd2lsbCBtYWtlIGEgZGlmZmVyZW5jZSBhcmUgZm9yCmZv
+cmVncm91bmQgd3JpdGViYWNrIChlLmcuIGZzeW5jIG9yIHdyaXRlIHRocm90dGxpbmcpLCBhbmQg
+Zm9yIGlub2RlCmFuZCBkaXJlY3RvcnkgYWxsb2NhdGlvbi4KCj4gVGhlIGNvZGUgbG9va3MgT0sg
+dG8gbWUuIFRoZSBpZGVhIG9mIGl0IG1ha2VzIG1lIHBhdXNlCj4gYSBsaXR0bGUsIHRob3VnaCBJ
+IGRvbid0IG9iamVjdC4KCkl0J3MgZGVmaW5pdGVseSBhIGRpZmZlcmVudCB3YXkgb2YgdGhpbmtp
+bmcsIGJ1dCBJJ20gc2VyaW91c2x5CnN0YXJ0aW5nIHRvIGNvbnNpZGVyIHB1c2hpbmcgbW9yZSBv
+cGVyYXRpb25zIGludG8gYXN5Y2hyb25vdXMKYmFja2dyb3VuZCB0YXNrcyB0aGF0IHRoZSBjYWxs
+ZXIgY2FuIHdhaXQgb24gaWYgdGhleSBzbyBkZXNpcmUuCmUuZy4gRU9GIHRydW5jYXRpb24gZHVy
+aW5nIHhmc19pbmFjdGl2ZSBhbmQgeGZzX3JlbGVhc2UoKSwgZmx1c2hpbmcKYSByYW5nZSBvZiBh
+IGZpbGUsIGlub2RlIGNsdXN0ZXIgZnJlZWluZywgQ0lMIGZsdXNoZXMsIGV0Yy4KCldlJ3ZlIGdv
+dCBtdWx0aXBsZSBjb3JlcyBpbiBtb3N0IG1hY2hpbmVzIHRoZXNlIGRheXMgKGV2ZW4gdGhlIGxv
+dwplbmQgaXMgZ29pbmcgbXVsdGktY29yZSksIGNvbnRleHQgc3dpdGNoIG92ZXJoZWFkIGlzIHBy
+ZXR0eSBsb3cgYW5kCndlJ3ZlIGdvdCBjb25jdXJyZW5jeSBtYW5hZ2VkIHdvcmsgcXVldWVzIHNv
+IHdlIGRvbid0IG5lZWQgdGhyZWFkCnBvb2xzIC0gd2Ugc2hvdWxkIHRha2UgYWR2YW50YWdlIG9m
+IHdoYXQgdGhleSBwcm92aWRlLi4uLgoKQ2hlZXJzLAoKRGF2ZS4KLS0gCkRhdmUgQ2hpbm5lcgpk
+YXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNn
+aS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
