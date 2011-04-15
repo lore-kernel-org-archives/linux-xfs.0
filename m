@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3F1k96W029036 for <xfs@oss.sgi.com>; Thu, 14 Apr 2011 20:46:10 -0500
-Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B94DC121FC2B
-	for <xfs@oss.sgi.com>; Thu, 14 Apr 2011 18:49:30 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	CkDdcrC1o16eU1CR for <xfs@oss.sgi.com>;
-	Thu, 14 Apr 2011 18:49:30 -0700 (PDT)
-Date: Fri, 15 Apr 2011 11:49:28 +1000
+	p3F3SM6d034945 for <xfs@oss.sgi.com>; Thu, 14 Apr 2011 22:28:22 -0500
+Received: from ipmail07.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BD6AD12204C9
+	for <xfs@oss.sgi.com>; Thu, 14 Apr 2011 20:31:43 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	iQ3SdU6BXSbmteiB for <xfs@oss.sgi.com>;
+	Thu, 14 Apr 2011 20:31:43 -0700 (PDT)
+Received: from chute ([192.168.1.1] helo=disappointment)
+	by dastard with esmtp (Exim 4.72)
+	(envelope-from <dave@fromorbit.com>) id 1QAZky-0006lw-1h
+	for xfs@oss.sgi.com; Fri, 15 Apr 2011 13:31:40 +1000
+Received: from dave by disappointment with local (Exim 4.72)
+	(envelope-from <dave@disappointment.disaster>) id 1QAZl8-0007Jf-IR
+	for xfs@oss.sgi.com; Fri, 15 Apr 2011 13:31:50 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] [RFC] xfs: introduce an allocation workqueue
-Message-ID: <20110415014928.GM21395@dastard>
-References: <1302616337-29894-1-git-send-email-david@fromorbit.com>
-	<1302809374.2608.73.camel@doink>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1302809374.2608.73.camel@doink>
+Subject: [PATCH] xfsqa: reduce error output on 229
+Date: Fri, 15 Apr 2011 13:31:50 +1000
+Message-Id: <1302838310-28095-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,64 +28,44 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-T24gVGh1LCBBcHIgMTQsIDIwMTEgYXQgMDI6Mjk6MzRQTSAtMDUwMCwgQWxleCBFbGRlciB3cm90
-ZToKPiBPbiBUdWUsIDIwMTEtMDQtMTIgYXQgMjM6NTIgKzEwMDAsIERhdmUgQ2hpbm5lciB3cm90
-ZToKPiA+IEZyb206IERhdmUgQ2hpbm5lciA8ZGNoaW5uZXJAcmVkaGF0LmNvbT4KPiA+IAo+ID4g
-V2UgY3VycmVudGx5IGhhdmUgc2lnbmlmaWNhbnQgaXNzdWVzIHdpdGggdGhlIGFtb3VudCBvZiBz
-dGFjayB0aGF0Cj4gPiBhbGxvY2F0aW9uIGluIFhGUyB1c2VzLCBlc3BlY2lhbGx5IGluIHRoZSB3
-cml0ZWJhY2sgcGF0aC4gV2UgY2FuCj4gPiBlYXNpbHkgY29uc3VtZSA0ayBvZiBzdGFjayBiZXR3
-ZWVuIG1hcHBpbmcgdGhlIHBhZ2UsIG1hbmlwdWxhdGluZwo+ID4gdGhlIGJtYXAgYnRyZWUgYW5k
-IGFsbG9jYXRpbmcgYmxvY2tzIGZyb20gdGhlIGZyZWUgbGlzdC4gTm90IHRvCj4gPiBtZW50aW9u
-IGJ0cmVlIGJsb2NrIHJlYWRhaGVhZCBhbmQgb3RoZXIgZnVuY3Rpb25hbGl0eSB0aGF0IGlzc3Vl
-cyBJTwo+ID4gaW4gdGhlIGFsbG9jYXRpb24gcGF0aC4KPiA+IAo+ID4gQXMgYSByZXN1bHQsIHdl
-IGNhbiBubyBsb25nZXIgZml0IGFsbG9jYXRpb24gaW4gdGhlIHdyaXRlYmFjayBwYXRoCj4gPiBp
-biB0aGUgc3RhY2sgc3BhY2UgcHJvdmlkZWQgb24geDg2XzY0LiBUbyBhbGxldmlhdGUgdGhpcyBw
-cm9ibGVtLAo+ID4gaW50cm9kdWNlIGFuIGFsbG9jYXRpb24gd29ya3F1ZXVlIGFuZCBtb3ZlIGFs
-bCBhbGxvY2F0aW9ucyB0byBhCj4gPiBzZXBlcmF0ZSBjb250ZXh0LiBUaGlzIGNhbiBiZSBlYXNp
-bHkgYWRkZWQgYXMgYW4gaW50ZXJwb3NpbmcgbGF5ZXIKPiA+IGludG8geGZzX2FsbG9jX3ZleHRl
-bnQoKSwgd2hpY2ggdGFrZXMgYSBzaW5nbGUgYXJndW1lbnQgc3RydWN0dXJlCj4gPiBhbmQgZG9l
-cyBub3QgcmV0dXJuIHVudGlsIHRoZSBhbGxvY2F0aW9uIGlzIGNvbXBsZXRlIG9yIGhhcyBmYWls
-ZWQuCj4gPiAKPiA+IFRvIGRvIHRoaXMsIGFkZCBhIHdvcmsgc3RydWN0dXJlIGFuZCBhIGNvbXBs
-ZXRpb24gdG8gdGhlIGFsbG9jYXRpb24KPiA+IGFyZ3Mgc3RydWN0dXJlLiBUaGlzIGFsbG93cyB4
-ZnNfYWxsb2NfdmV4dGVudCB0byBxdWV1ZSB0aGUgYXJncyBvbnRvCj4gPiB0aGUgd29ya3F1ZXVl
-IGFuZCB3YWl0IGZvciBpdCB0byBiZSBjb21wbGV0ZWQgYnkgdGhlIHdvcmtlci4gVGhpcwo+ID4g
-Y2FuIGJlIGRvbmUgY29tcGxldGVseSB0cmFuc3BhcmVudGx5IHRvIHRoZSBjYWxsZXIuCj4gPiAK
-PiA+IFRoZSB3b3JrZXIgZnVuY3Rpb24gbmVlZHMgdG8gZW5zdXJlIHRoYXQgaXQgc2V0cyBhbmQg
-Y2xlYXJzIHRoZQo+ID4gUEZfTUVNQUxMT0MgZmxhZyBhcHByb3ByaWF0ZWx5IGFzIGl0IGlzIGJl
-aW5nIHJ1biBpbiBhbiBhY3RpdmUKPiA+IHRyYW7RlWFjdGlvbiBjb250ZXh0LiBXb3JrIGNhbiBh
-bHNvIGJlIHF1ZXVlZCBpbiBhIG1lbW9yeSByZWNsYWltCj4gPiBjb250ZXh0LCBzbyBhIHJlc2N1
-ZXIgaXMgbmVlZGVkIGZvciB0aGUgd29ya3F1ZXVlLgo+ID4gCj4gPiBTaWduZWQtb2ZmLWJ5OiBE
-YXZlIENoaW5uZXIgPGRjaGlubmVyQHJlZGhhdC5jb20+Cj4gCj4gSW50ZXJlc3RpbmcuCj4gCj4g
-SSBndWVzcyBJIGRvbid0IHNlZSBhbnl0aGluZyBpbmhlcmVudGx5IHdyb25nIHdpdGggdGhpcy4K
-PiBBdCBmaXJzdCBnbGFuY2UgaXQgc2VlbXMgbGlrZSB3b3JrcXVldWUgYWJ1c2UuICBCdXQgaXQn
-cwo+IGJldHRlciB0aGFuIHJvbGxpbmcgb3VyIG93biBkYWVtb24gdG8gZG8gdGhlIHNhbWUgdGhp
-bmcuCj4gKFRoZXJlJ3Mgbm90aGluZyB0byBzdG9wIHlvdSBmcm9tIGRvaW5nIHRoaXMgZ2VuZXJp
-Y2FsbHkKPiBlaXRoZXIuLi4pCj4gCj4gV2lsbCBpdCBzaGlmdCBzb21lIGFjY291bnRpbmcgb2Yg
-Q1BVIHRpbWUgZnJvbSB1c2VyIHRvCj4gc3lzdGVtPwoKU29tZSwgeWVzLiBGb3IgZGVsYXllZCBh
-bGxvY2F0aW9uIGluIHRoZSBiYWNrZ3JvdW5kIGZsdXNoIG9yIHN5bmMKcGF0aCwgdGhlcmUgaXMg
-bm8gZGlmZmVyZW5jZSBiZWNhdXNlIHRoYXQgaXNuJ3QgYWNjb3VudGVkIHRvIHRoZQp1c2VyIGFu
-eXdheS4gVGhlIG9ubHkgY2FzZXMgaXQgd2lsbCBtYWtlIGEgZGlmZmVyZW5jZSBhcmUgZm9yCmZv
-cmVncm91bmQgd3JpdGViYWNrIChlLmcuIGZzeW5jIG9yIHdyaXRlIHRocm90dGxpbmcpLCBhbmQg
-Zm9yIGlub2RlCmFuZCBkaXJlY3RvcnkgYWxsb2NhdGlvbi4KCj4gVGhlIGNvZGUgbG9va3MgT0sg
-dG8gbWUuIFRoZSBpZGVhIG9mIGl0IG1ha2VzIG1lIHBhdXNlCj4gYSBsaXR0bGUsIHRob3VnaCBJ
-IGRvbid0IG9iamVjdC4KCkl0J3MgZGVmaW5pdGVseSBhIGRpZmZlcmVudCB3YXkgb2YgdGhpbmtp
-bmcsIGJ1dCBJJ20gc2VyaW91c2x5CnN0YXJ0aW5nIHRvIGNvbnNpZGVyIHB1c2hpbmcgbW9yZSBv
-cGVyYXRpb25zIGludG8gYXN5Y2hyb25vdXMKYmFja2dyb3VuZCB0YXNrcyB0aGF0IHRoZSBjYWxs
-ZXIgY2FuIHdhaXQgb24gaWYgdGhleSBzbyBkZXNpcmUuCmUuZy4gRU9GIHRydW5jYXRpb24gZHVy
-aW5nIHhmc19pbmFjdGl2ZSBhbmQgeGZzX3JlbGVhc2UoKSwgZmx1c2hpbmcKYSByYW5nZSBvZiBh
-IGZpbGUsIGlub2RlIGNsdXN0ZXIgZnJlZWluZywgQ0lMIGZsdXNoZXMsIGV0Yy4KCldlJ3ZlIGdv
-dCBtdWx0aXBsZSBjb3JlcyBpbiBtb3N0IG1hY2hpbmVzIHRoZXNlIGRheXMgKGV2ZW4gdGhlIGxv
-dwplbmQgaXMgZ29pbmcgbXVsdGktY29yZSksIGNvbnRleHQgc3dpdGNoIG92ZXJoZWFkIGlzIHBy
-ZXR0eSBsb3cgYW5kCndlJ3ZlIGdvdCBjb25jdXJyZW5jeSBtYW5hZ2VkIHdvcmsgcXVldWVzIHNv
-IHdlIGRvbid0IG5lZWQgdGhyZWFkCnBvb2xzIC0gd2Ugc2hvdWxkIHRha2UgYWR2YW50YWdlIG9m
-IHdoYXQgdGhleSBwcm92aWRlLi4uLgoKQ2hlZXJzLAoKRGF2ZS4KLS0gCkRhdmUgQ2hpbm5lcgpk
-YXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNn
-aS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+From: Dave Chinner <dchinner@redhat.com>
+
+Once we get one short write, we know the test has failed. We don't
+ened to keep writing and getting more short writes and spewing
+thousands of errors to the console.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ src/t_holes.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
+
+diff --git a/src/t_holes.c b/src/t_holes.c
+index eba310a..b111baf 100644
+--- a/src/t_holes.c
++++ b/src/t_holes.c
+@@ -29,8 +29,10 @@ int main(int argc, char **argv)
+ 		for (j = 0; j < 1024; j++)
+ 			buf[j]  = i | i << 5;
+ 
+-		if (write(fd,buf,253*4*sizeof(int))!= 253*4*sizeof(int))
++		if (write(fd,buf,253*4*sizeof(int))!= 253*4*sizeof(int)) {
+ 			printf("Write did not return correct amount\n");
++			exit(EXIT_FAILURE);
++		}
+ 
+ 		if ((i % 9) == 0 && i < 9001)
+ 			lseek(fd, 4096 * 110,SEEK_CUR);
+-- 
+1.7.2.3
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
