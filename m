@@ -1,28 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with SMTP id
-	p3F4SKB3037816 for <xfs@oss.sgi.com>; Thu, 14 Apr 2011 23:28:20 -0500
-Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with SMTP id E62E53E29C1
-	for <xfs@oss.sgi.com>; Thu, 14 Apr 2011 21:31:41 -0700 (PDT)
-Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
-	cuda.sgi.com with SMTP id auJaU6p4LuHqy2S6 for
-	<xfs@oss.sgi.com>; Thu, 14 Apr 2011 21:31:41 -0700 (PDT)
-Received: from mailsrv.i.zmi.at (h081217106033.dyn.cm.kabsi.at [81.217.106.33])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
-	by mailsrv14.zmi.at (Postfix) with ESMTPSA id 6A253634
-	for <xfs@oss.sgi.com>; Fri, 15 Apr 2011 06:31:39 +0200 (CEST)
-Received: from saturn.localnet (saturn.i.zmi.at [10.72.27.2])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client did not present a certificate)
-	by mailsrv.i.zmi.at (Postfix) with ESMTPSA id 5EC9547EA03
-	for <xfs@oss.sgi.com>; Fri, 15 Apr 2011 06:31:38 +0200 (CEST)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: xfs stack overrun, unable to handle kernel paging request
-Date: Fri, 15 Apr 2011 06:31:29 +0200
-MIME-Version: 1.0
-Message-Id: <201104150631.38169@zmi.at>
+	p3F4vkvO040427 for <xfs@oss.sgi.com>; Thu, 14 Apr 2011 23:57:46 -0500
+Received: from mail.shawcable.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2025C14CE44E
+	for <xfs@oss.sgi.com>; Thu, 14 Apr 2011 22:01:08 -0700 (PDT)
+Received: from mail.shawcable.com (shawmail.shawcable.com [64.59.128.220]) by
+	cuda.sgi.com with ESMTP id 1ze20H2dj9iva0VK for
+	<xfs@oss.sgi.com>; Thu, 14 Apr 2011 22:01:08 -0700 (PDT)
+References: <20110414102608.GA1678@x4.trippels.de>
+	<20110414120635.GB1678@x4.trippels.de>
+	<20110414140222.GB1679@x4.trippels.de>
+	<4DA70BD3.1070409@draigBrady.com>
+	<4DA717B2.3020305@sandeen.net> <20110414225904.GK21395@dastard>
+	<4DA7836A.5040604@draigBrady.com> <20110415000940.GL21395@dastard>
+In-Reply-To: <20110415000940.GL21395@dastard>
+Mime-Version: 1.0 (iPhone Mail 8G4)
+Message-Id: <76FFF648-CA02-494B-A862-566C66A8CB82@dilger.ca>
+From: Andreas Dilger <adilger@dilger.ca>
+Subject: Re: Files full of zeros with coreutils-8.11 and xfs (FIEMAP related?)
+Date: Thu, 14 Apr 2011 23:01:04 -0600
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,155 +28,116 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============6525627112350292346=="
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>, "coreutils@gnu.org" <coreutils@gnu.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, =?utf-8?Q?P=C3=A1draig_Brady?= <P@draigBrady.com>, Markus Trippelsdorf <markus@trippelsdorf.de>
 
---===============6525627112350292346==
-Content-Type: multipart/signed;
-  boundary="nextPart2883514.3IY68XHezR";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
-
---nextPart2883514.3IY68XHezR
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-
-Not sure if I didn't already post a similar crash once. This ist kernel
-2.6.31.14-0.6-xen from openSUSE 11.2
-Machine was still running, but not anymore responding (except ping)
-
-[8080121.921527] BUG: unable to handle kernel paging request at 00000000f1b=
-a5f80
-[8080121.921555] IP: [<ffffffff80042334>] update_curr+0x134/0x1e0
-[8080121.921565] PGD 2423b067 PUD 0=20
-[8080121.921571] Thread overran stack, or stack corrupted
-[8080121.921574] Oops: 0000 [#1] SMP=20
-[8080121.921579] last sysfs file: /sys/devices/xen/vbd-51744/block/xvdc/stat
-[8080121.921584] CPU 3=20
-[8080121.921586] Modules linked in: ipt_REJECT ipt_LOG xt_multiport xt_tcpu=
-dp ipt_ECN iptable_mangle xt_state iptable_filter ip_tables nf_conntrack_sl=
-p nf_conntrack_sip nf_conntrack_netbios_ns nf_conntrack_proto_udplite nf_co=
-nntrack_proto_dccp nf_conntrack_irc nf_conntrack_ftp nf_conntrack_tftp=20
-nf_conntrack_netlink nfnetlink nf_conntrack_sane ts_kmp nf_conntrack_amanda=
- nf_conntrack_pptp nf_conntrack_proto_gre nf_conntrack_h323 xt_conntrack x_=
-tables nfs nf_conntrack_proto_sctp lockd bluetooth fscache nf_conntrack_ipv=
-4 nfs_acl rfkill nf_conntrack auth_rpcgss nf_defrag_ipv4 sunrpc ipv6 af_pac=
-ket ramzswap=20
-xvmalloc lzo_decompress lzo_compress fuse loop dm_mod xenblk cdrom xennet e=
-xt4 jbd2 crc16 xfs exportfs reiserfs
-[8080121.921586] Pid: 26557, comm: pdflush Not tainted 2.6.31.14-0.6-xen #1=
-=20
-[8080121.921586] RIP: e030:[<ffffffff80042334>]  [<ffffffff80042334>] updat=
-e_curr+0x134/0x1e0
-[8080121.921666] RSP: e02b:ffff88002e2845e0  EFLAGS: 00010086
-[8080121.921670] RAX: 000000000000ccf8 RBX: ffff88000f5ac4b8 RCX: 000000002=
-e2841c0
-[8080121.921674] RDX: ffff88005702f0c0 RSI: ffff88000f5ac480 RDI: ffffc9000=
-003a3e0
-[8080121.921677] RBP: ffff88002e284610 R08: 00000000ffffffff R09: ffffffff8=
-000d3ea
-[8080121.921681] R10: ffff88002e284488 R11: ffff88002e2841d0 R12: ffffc9000=
-003a3e0
-[8080121.921684] R13: 00000000001782e6 R14: 001cb4d3fcdfdf5e R15: 000000000=
-0000001
-[8080121.921691] FS:  00007fc3d51196f0(0000) GS:ffffc90000030000(0000) knlG=
-S:0000000000000000
-[8080121.921695] CS:  e033 DS: 0000 ES: 0000 CR0: 000000008005003b
-[8080121.921699] CR2: 00000000f1ba5f80 CR3: 00000000086e0000 CR4: 000000000=
-0000660
-[8080121.921704] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 000000000=
-0000000
-[8080121.921708] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 000000000=
-0000400
-[8080121.921712] Process pdflush (pid: 26557, threadinfo ffff88002e284000, =
-task
-ffff88000f5ac480)
-[8080121.921716] Stack:
-[8080121.921719]  ffffffff8073d627 00000000757f13c8 ffff88000f5ac4b8 ffffc9=
-000003a3e0
-[8080121.921725] <0> ffff88002e284c10 ffff88002e284950 ffff88002e284640 fff=
-fffff8004256c
-[8080121.921733] <0> ffffc9000003a380 00000000757f13c8 ffffc9000003a380 000=
-0000000000003
-[8080121.921742] Call Trace:
-[8080121.921742]  [<ffffffff8004256c>] put_prev_task_fair+0x8c/0xd0
-[8080121.921742]  [<ffffffff8046d447>] schedule+0x217/0x5f5
-[8080121.921742]  [<ffffffff8004bc7f>] __cond_resched+0x2f/0x80
-[8080121.921742]  [<ffffffff8046ddbd>] _cond_resched+0x4d/0x60
-[8080121.921742]  [<ffffffff800e50f8>] shrink_page_list+0xc8/0x650
-[8080121.921742]  [<ffffffff800e5953>] shrink_inactive_list+0x2d3/0x7c0
-[8080121.921742]  [<ffffffff800e5e9b>] shrink_list+0x5b/0x110
-[8080121.921742]  [<ffffffff800e60c1>] shrink_zone+0x171/0x250
-[8080121.921742]  [<ffffffff800e6223>] shrink_zones+0x83/0x120
-[8080121.921742]  [<ffffffff800e635e>] do_try_to_free_pages+0x9e/0x380
-[8080121.921742]  [<ffffffff800e6757>] try_to_free_pages+0x77/0xa0
-[8080121.921742]  [<ffffffff800dc0f3>] __alloc_pages_slowpath+0x2d3/0x5c0
-[8080121.921742]  [<ffffffff800dc531>] __alloc_pages_nodemask+0x151/0x160
-[8080121.921742]  [<ffffffff800d6ac3>] find_or_create_page+0x63/0xd0
-[8080121.921742]  [<ffffffffa00b9af0>] _xfs_buf_lookup_pages+0x150/0x390 [x=
-fs]
-[8080121.921742]  [<ffffffffa00bade1>] xfs_buf_get_flags+0x81/0x1a0 [xfs]
-[8080121.921742]  [<ffffffffa00baf26>] xfs_buf_read_flags+0x26/0xd0 [xfs]
-[8080121.921742]  [<ffffffffa00adab9>] xfs_trans_read_buf+0x1e9/0x320 [xfs]
-[8080121.921742]  [<ffffffffa0077278>] xfs_btree_read_buf_block+0x68/0xe0 [=
-xfs]
-[8080121.921742]  [<ffffffffa00773a8>] xfs_btree_lshift+0xb8/0x620 [xfs]
-
-mit freundlichen Gr=C3=BC=C3=9Fen
-Michael Monnerie, Ing. BSc
-
-it-management Internet Services
-http://proteger.at [gesprochen: Prot-e-schee]
-Tel: 0660 / 415 65 31
-
-// Haus zu verkaufen:
-// http://zmi.at/langegg/
-
-
-
-=2D------------------------------------------------------
-
-=2D-=20
-mit freundlichen Gr=C3=BCssen,
-Michael Monnerie, Ing. BSc
-
-it-management Internet Services: Prot=C3=A9ger
-http://proteger.at [gesprochen: Prot-e-schee]
-Tel: +43 660 / 415 6531
-
-// ****** Radiointerview zum Thema Spam ******
-// http://www.it-podcast.at/archiv.html#podcast-100716
-//=20
-// Haus zu verkaufen: http://zmi.at/langegg/
-
---nextPart2883514.3IY68XHezR
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.16 (GNU/Linux)
-
-iEYEABECAAYFAk2nyioACgkQzhSR9xwSCbRsTQCg8mZTFR11P9mkOJXMkQ1SbWVD
-vroAoMbFb4IWoSJ7ymYWg/QUnYTW3cV6
-=Hecl
------END PGP SIGNATURE-----
-
---nextPart2883514.3IY68XHezR--
-
-
---===============6525627112350292346==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
-
---===============6525627112350292346==--
+T24gMjAxMS0wNC0xNCwgYXQgNjowOSBQTSwgRGF2ZSBDaGlubmVyIDxkYXZpZEBmcm9tb3JiaXQu
+Y29tPiB3cm90ZToKPiBPbiBGcmksIEFwciAxNSwgMjAxMSBhdCAxMjoyOTo0NkFNICswMTAwLCBQ
+w6FkcmFpZyBCcmFkeSB3cm90ZToKPj4gT24gMTQvMDQvMTEgMjM6NTksIERhdmUgQ2hpbm5lciB3
+cm90ZToKPj4+IE9uIFRodSwgQXByIDE0LCAyMDExIGF0IDEwOjUwOjEwQU0gLTA1MDAsIEVyaWMg
+U2FuZGVlbiB3cm90ZToKPj4+PiBPbiA0LzE0LzExIDk6NTkgQU0sIFDDoWRyYWlnIEJyYWR5IHdy
+b3RlOgo+Pj4+PiBPbiAxNC8wNC8xMSAxNTowMiwgTWFya3VzIFRyaXBwZWxzZG9yZiB3cm90ZToK
+Pj4+Pj4+Pj4gSGkgUMOhZHJhaWcsCj4+Pj4+Pj4+IAo+Pj4+Pj4+PiBoZXJlIHlvdSBnbzoKPj4+
+Pj4+Pj4gKyBmaWxlZnJhZyAtdiB1bndyaXR0ZW4ud2l0aGRhdGEgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKPj4+Pj4+Pj4gRmlsZXN5
+c3RlbSB0eXBlIGlzOiBlZjUzICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKPj4+Pj4+Pj4gRmlsZSBzaXplIG9mIHVud3Jp
+dHRlbi53aXRoZGF0YSBpcyA1MTIwICgyIGJsb2NrcywgYmxvY2tzaXplIDQwOTYpICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAKPj4+Pj4+Pj4gZXh0IGxvZ2ljYWwgcGh5c2ljYWwgZXhwZWN0ZWQg
+bGVuZ3RoIGZsYWdzICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgIAo+Pj4+Pj4+PiAgIDAgICAgICAgMCAgIDI3NDQzMiAgICAgICAgICAgIDI1NjAgdW53cml0
+dGVuLGVvZiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCj4+Pj4+Pj4+
+IHVud3JpdHRlbi53aXRoZGF0YTogMSBleHRlbnQgZm91bmQKPj4+Pj4+Pj4gCj4+Pj4+Pj4+IFBs
+ZWFzZSBub3RpY2UgdGhhdCB0aGlzIGFsc28gaGFwcGVucyB3aXRoIGV4dDQgb24gdGhlIHNhbWUg
+a2VybmVsLiAKPj4+Pj4+Pj4gQnRyZnMgaXMgZmluZS4KPj4+Pj4+PiAKPj4+Pj4+IGBmaWxlZnJh
+ZyAtdnNgIGZpeGVzIHRoZSBpc3N1ZSBvbiBib3RoIHhmcyBhbmQgZXh0NC4KPj4+Pj4gCj4+Pj4+
+IFNvIGluIHN1bW1hcnksIGN1cnJlbnRseSBvbiAoMi42LjM5LXJjMyksIHRoZSBmb2xsb3dpbmcK
+Pj4+Pj4gd2lsbCAodXN1YWxseT8pIHJlcG9ydCBhIHNpbmdsZSB1bndyaXR0ZW4gZXh0ZW50LAo+
+Pj4+PiBvbiBib3RoIGV4dDQgYW5kIHhmcwo+Pj4+PiAKPj4+Pj4gIGZhbGxvY2F0ZSAtbCAxME1p
+QiAtbiBrCj4+Pj4+ICBkZCBjb3VudD0xMCBpZj0vZGV2L3VyYW5kb20gY29udj1ub3RydW5jIGlm
+bGFnPWZ1bGxibG9jayBvZj1rCj4+Pj4+ICBmaWxlZnJhZyAtdiBrICMgZ3JlcCBmb3IgYW4gZXh0
+ZW50IHdpdGhvdXQgdW53cml0dGVuIHx8IGZhaWwKPj4+PiAKPj4+PiByaWdodCwgdGhhdCdzIHdo
+YXQgSSBzZWUgdG9vIGluIHRlc3RpbmcuCj4+Pj4gCj4+Pj4gQnV0IHdvdWxkIHRoZSBjb3JldXRp
+bHMgaW5zdGFsbCBoYXZlIGRvbmUgYSBwcmVhbGxvY2F0aW9uIG9mIHRoZSBkZXN0aW5hdGlvbiBm
+aWxlPwo+Pj4+IAo+Pj4+IE90aGVyd2lzZSB0aGlzIGxvb2tzIGxpa2UgYSBkaWZmZXJlbnQgYnVn
+Li4uCj4+Pj4gCj4+Pj4+IFRoaXMgcGFydGljdWxhciBpc3N1ZSBoYXMgYmVlbiBkaXNjdXNzZWQg
+c28gZmFyIGF0Ogo+Pj4+PiBodHRwOi8vZGViYnVncy5nbnUub3JnL2NnaS9idWdyZXBvcnQuY2dp
+P2J1Zz04NDExCj4+Pj4+IE5vdGUgdGhlcmUgaXQgd2FzIHN0YXRlZCB0aGVyZSB0aGF0IGV4dDQg
+aGFkIHRoaXMKPj4+Pj4gZml4ZWQgYXMgb2YgMi42LjM5LXJjMSwgc28gbWF5YmUgdGhlcmUgaXMg
+c29tZXRoaW5nIGx1cmtpbmc/Cj4+Pj4gCj4+Pj4gZXh0NCBnb3QgYSBmaXgsIGJ1dCBub3QgeGZz
+LCBJIGd1ZXNzLiAgTXkgcG9vciBicmFpbiBjYW4ndCByZW1lbWJlciwgSSB0aGluayBJIHN0YXJ0
+ZWQgbG9va2luZyBpbnRvIGl0LCBidXQgaXQncyBjbGVhcmx5IHN0aWxsIGJyb2tlbi4KPj4+PiAK
+Pj4+PiBTdGlsbCwgSSBkb24ndCBrbm93IGZvciBzdXJlIHdoYXQgaGFwcGVuZWQgdG8gTWFya3Vz
+IC0gZGlkIHNvbWV0aGluZyBwcmVhbGxvY2F0ZSwgaW4gaGlzIGNhc2U/Cj4+PiAKPj4+IFVud3Jp
+dHRlbiBleHRlbnQgbWFwcGluZyBiZWhhdmVzIGluIGFuIHVuZXhwZWN0ZWQgd2F5IGR1ZSB0bwo+
+Pj4gYnVmZmVyZWQgd3JpdGViYWNrIG5vdCBvY2N1cnJpbmcgaW1tZWRpYXRlbHkuIEV4dGVudCBj
+b252ZXJzaW9uCj4+PiBkb2Vzbid0IG9jY3VyIHVudGlsIHRoZSBkYXRhIGlzIG9uIGRpc2ssIGFu
+ZCBmb3IgYnVmZmVyZWQgSU8geW91Cj4+PiBuZWVkIGFuIGZkYXRhc3luYyB0byBlbnN1cmUgdGhh
+dCBoYXMgb2NjdXJyZWQuCj4+PiAKPj4+IFRoYXQgaXM6IAo+Pj4gCj4+PiAkIHhmc19pbyAtZiAt
+YyAicmVzdnNwIDAgMTBtIiAtYyAicHdyaXRlIDAgNTEyMCIgLWMgImJtYXAgLXZwIiAvbW50L3Rl
+c3QvZm9vCj4+PiB3cm90ZSA1MTIwLzUxMjAgYnl0ZXMgYXQgb2Zmc2V0IDAKPj4+IDUgS2lCLCAy
+IG9wczsgMC4wMDAwIHNlYyAoNjIuNjAwIE1pQi9zZWMgYW5kIDI1NjQxLjAyNTYgb3BzL3NlYykK
+Pj4+IC9tbnQvdGVzdC9mb286Cj4+PiBFWFQ6IEZJTEUtT0ZGU0VUICAgICAgQkxPQ0stUkFOR0Ug
+ICAgICBBRyBBRy1PRkZTRVQgICAgICAgIFRPVEFMIEZMQUdTCj4+PiAgIDA6IFswLi4yMDQ3OV06
+ICAgICAgMjY4OTg0Li4yODk0NjMgICAgMCAoMjY4OTg0Li4yODk0NjMpIDIwNDgwIDEwMDAwCj4+
+PiAKPj4+IERhdGEgaGFzIG5vdCBiZWVuIHdyaXR0ZW4geWV0LCBzbyBpdCBpcyBzdGlsbCB1bndy
+aXR0ZW4uIFRoZSBzYW1lCj4+PiB0ZXN0IHdpdGggYSBmc3luYyBzaG93czoKPj4+IAo+Pj4gJCBz
+dWRvIHhmc19pbyAtZiAtYyAicmVzdnNwIDAgMTBtIiAtYyAicHdyaXRlIDAgNTEyMCIgLWMgZnN5
+bmMgLWMgImJtYXAgLXZwIiAvbW50L3Rlc3QvZm9vCj4+PiB3cm90ZSA1MTIwLzUxMjAgYnl0ZXMg
+YXQgb2Zmc2V0IDAKPj4+IDUgS2lCLCAyIG9wczsgMC4wMDAwIHNlYyAoODcuMTkzIE1pQi9zZWMg
+YW5kIDM1NzE0LjI4NTcgb3BzL3NlYykKPj4+IC9tbnQvdGVzdC9mb286Cj4+PiBFWFQ6IEZJTEUt
+T0ZGU0VUICAgICAgQkxPQ0stUkFOR0UgICAgICBBRyBBRy1PRkZTRVQgICAgICAgIFRPVEFMIEZM
+QUdTCj4+PiAgIDA6IFswLi4xNV06ICAgICAgICAgMjY4OTg0Li4yNjg5OTkgICAgMCAoMjY4OTg0
+Li4yNjg5OTkpICAgIDE2IDAwMDAwCj4+PiAgIDE6IFsxNi4uMjA0NzldOiAgICAgMjY5MDAwLi4y
+ODk0NjMgICAgMCAoMjY5MDAwLi4yODk0NjMpIDIwNDY0IDEwMDAwCj4+PiAKPj4+IEV2ZXJ5dGhp
+bmcgaXMgZmluZS4KPj4+IAo+Pj4gU28gdGhpcyBzZWVtcyBsaWtlIGFuIGFwcGxpY2F0aW9uIGVy
+cm9yIHRvIG1lLiBJZiB5b3UgYXJlIGdvaW5nIHRvCj4+PiB1c2UgZmllbWFwIHRvIGRldGVybWlu
+ZSB3aGF0IHJhbmdlcyB0byBjb3B5LCB0aGVuIHlvdSBoYXZlIHRvCj4+PiBmZGF0YXN5bmMgdGhl
+IHNvdXJjZSBmaWxlIGZpcnN0IHRvIGd1YXJhbnRlZSB0aGF0IHByZWFsbG9jYXRlZAo+Pj4gZXh0
+ZW50cyBoYXZlIGJlZW4gY29udmVydGVkIHRvIHdyaXR0ZW4gc3RhdGUgYmVmb3JlIG1hcHBpbmcg
+dGhlCj4+PiBmaWxlLi4uLgo+PiAKPj4gV2VsbCBJTUhPIHRoZXJlIHNob3VsZCBiZSBhIGRpZmZl
+cmVuY2UgYmV0d2Vlbgo+PiBrbm93aW5nIHdoZXJlIHlvdSBhcmUgZ29pbmcgdG8gd3JpdGUsIGFu
+ZCBhY3R1YWxseSB3cml0aW5nIHRvIGRpc2suCj4+IEkuRS4gb25lIHNob3VsZG4ndCBuZWVkIHRv
+IHdyaXRlIHRoZSB3aG9sZSB3YXkgdG8gdGhlIGRldmljZQo+PiBiZWZvcmUgcmV0dXJuaW5nIGEg
+dmFsaWQgZmllbWFwLiAgSWYgYSBwYXJ0aWN1bGFyIGZpbGUgc3lzdGVtCj4+IGltcGxlbWVudGF0
+aW9uIG5lZWRzIHRvIHN5bmMgdG8gcmV0dXJuIGEgdmFsaWQgZmllbWFwLAo+PiB0aGVuIGl0IHNo
+b3VsZCBiZSBpbXBsaWNpdC4KPiAKPiBObywgdGhpcyB3YXMgZXhwbGljaXRseSBsYWlkIG91dCBp
+biB0aGUgZmllbWFwIGludGVyZmFjZSBkaXNjdXNzaW9ucwo+IC0gaXQncyB1cCB0byB0aGUgYXBw
+bGljYWl0b24gdG8gZGVjaWRlIGlmIGl0IG5lZWRzIHRvIGRvIGEgc3luYwo+IGZpcnN0LiBUaGF0
+J3Mgd2hhdCB0aGUgRklFTUFQX0ZMQUdfU1lOQyBjb250cm9sIGZsYWcgaXMgZm9yLgo+IFRoaXMg
+Zm9yY2VzIHRoZSBmaWVtYXAgY2FsbCB0byBkbyBhIGZzeW5jIF9iZWZvcmVfIGdldHRpbmcgdGhl
+Cj4gbWFwcGluZy4gSWYgeW91IHdhbnQgdG8ga25vdyB0aGUgZXhhY3QgbGF5b3V0IG9mIHRoZSBm
+aWxlIGlzLCB0aGVuCj4geW91IG11c3QgdXNlIHRoaXMgZmxhZy4KPiAKPiBFdmVuIHNvLCBpdCBp
+cyByZWNvZ25pc2VkIHRoYXQgdGhpcyBpcyByYWN5IC0gYW55IHVzZSBvZiB0aGUgYmxvY2sKPiBt
+YXAgaGFzIGEgdGltZS1vZi1yZWFkLXRvLXRpbWUtb2YtdXNlIHJhY2UgY29uZGl0aW9uIHRoYXQg
+bWVhbnMgeW91Cj4gaGF2ZSB0byBfdmVyaWZ5XyB0aGUgY29weSBhZnRlciBpdCBjb21wbGV0ZXMu
+IEZZSSwgdGhhdCdzIHdoYXQKPiB4ZnNfZnNyIGRvZXMgd2hlbiBjb3B5aW5nIGJhc2VkIG9uIGV4
+dGVudCBtYXBzIC0gaWYgdGhlIGlub2RlIGhhcwo+IGNoYW5nZWQgaW4gX2FueSB3YXlfIGR1cmlu
+ZyB0aGUgY29weSwgaXQgYWJvcnRzIHRoZSBjb3B5IG9mIHRoYXQKPiBmaWxlLgo+IAo+IGkuZS4g
+dXNpbmcgZmllbWFwIGZvciBjb3B5aW5nIGlzIGF0IGJlc3QgYSAqaGludCogYWJvdXQgdGhlIHJl
+Z2lvbnMKPiB0aGF0IG5lZWQgY29weWluZywgYW5kIGl0IGlzIGluIG5vIHdheSBhIGd1YXJhbnRl
+ZSB0aGF0IHlvdSdsbCBnZXQKPiBhbGwgdGhlIGluZm9ybWF0aW9uIHlvdSBuZWVkIHRvIG1ha2Ug
+YWNjdXJhdGUgY29weSBldmVuIGlmIHlvdSBkbwo+IHVzZSB0aGUgc3luY2hyb25vdXMgdmFyaWFu
+dC4KCkkgd291bGQgdGVuZCB0byBhZ3JlZSB3aXRoIFDDoWRyYWlnLiBJZiB0aGVyZSBpcyBkYXRh
+IGluIHRoZSBtYXBwaW5nIChyZWdhcmRsZXNzIG9mIHdoZXRoZXIgaXQgaXMgb24gZGlzayBvciBu
+b3QpLCB0aGUgRklFTUFQIHNob3VsZCByZXR1cm4gdGhpcyB0byB0aGUgY2FsbGVyLiBUaGUgU1lO
+QyBmbGFnIGlzIG9ubHkgaW50ZW5kZWQgdG8gZmx1c2ggdGhlIGRhdGEgdG8gZGlzayBmb3IgdG9v
+bHMgdGhhdCBhcmUgZG9pbmcgZGlyZWN0LXRvLWRpc2sgb3BlcmF0aW9ucyBvbiB0aGUgZGF0YS4g
+CgpPdGhlcndpc2UgdGhlIFVOTUFQUEVEIGZsYWcgaXMgdXNlbGVzcywgc2luY2UgZXZlbiB3aXRo
+ICJjaGVjaywgY29weSwgY2hlY2siIHRoZXJlIGlzIG5vIGd1YXJhbnRlZSB0aGF0IHRoZSBpbm9k
+ZSBpcyBjaGFuZ2VkIF9kdXJpbmdfIHRoZSBjb3B5IG9wZXJhdGlvbi4gSXQgY291bGQgaGF2ZSBi
+ZWVuIHdyaXR0ZW4gaW50byB0aGUgY2FjaGUgX2JlZm9yZV8gdGhlIEZJRU1BUCBhbmQgcmVtYWlu
+IHVuY2hhbmdlZCBhbmQgaW4geW91ciBjYXNlIHRoZXJlIHdvdWxkIGJlIG5vIHdheSB0byBrbm93
+IGFueSBkYXRhIHdhcyBldmVyIHdyaXR0ZW4gdG8gdGhlIGZpbGUgd2l0aG91dCBTWU5DIG9uIGV2
+ZXIgc2luZ2xlIGZpbGUgYmVmb3JlIEZJRU1BUC4KCkNoZWVycywgQW5kcmVhcwpfX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhm
+c0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
