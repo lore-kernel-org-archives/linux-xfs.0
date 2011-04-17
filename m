@@ -1,24 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3GGZqmS146645 for <xfs@oss.sgi.com>; Sat, 16 Apr 2011 11:35:52 -0500
-Received: from powell.debian.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BFA6C3E68B5
-	for <xfs@oss.sgi.com>; Sat, 16 Apr 2011 09:39:16 -0700 (PDT)
-Received: from powell.debian.org (powell.debian.org [87.106.64.223]) by
-	cuda.sgi.com with ESMTP id 8JPVueSyEKle7EiT for
-	<xfs@oss.sgi.com>; Sat, 16 Apr 2011 09:39:16 -0700 (PDT)
-Received: from franck.debian.org ([128.148.34.3])
-	from C=NA, ST=NA, L=Ankh Morpork, O=Debian SMTP, OU=Debian SMTP CA,
-	CN=franck.debian.org, EMAIL=hostmaster@franck.debian.org (verified)
-	by powell.debian.org with esmtps (TLS1.0:RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.69) (envelope-from <noreply@release.debian.org>)
-	id 1QB8Wh-0004Ra-CS
-	for xfsprogs@packages.debian.org; Sat, 16 Apr 2011 16:39:15 +0000
-Date: Sat, 16 Apr 2011 16:39:14 +0000
-Message-Id: <E1QB8Wg-0005KF-7W@franck.debian.org>
-From: Debian testing watch <noreply@release.debian.org>
-Subject: xfsprogs 3.1.5 MIGRATED to testing
+	p3HJinU7212882 for <xfs@oss.sgi.com>; Sun, 17 Apr 2011 14:44:49 -0500
+Received: from anandashopping.be (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0C89314DFE80
+	for <xfs@oss.sgi.com>; Sun, 17 Apr 2011 12:48:09 -0700 (PDT)
+Received: from anandashopping.be (d5152C5DB.static.telenet.be [81.82.197.219])
+	by cuda.sgi.com with ESMTP id XoApnLHXzzuFN0Su for
+	<xfs@oss.sgi.com>; Sun, 17 Apr 2011 12:48:09 -0700 (PDT)
+From: <splendor.me09@gmail.com>
+Subject: Michelle: anandashopping
+Date: Sun, 17 Apr 2011 21:46:53 +0200
+Message-ID: <DC836B822529493BA7DF5F314D67A6CD@anandashopping>
+MIME-Version: 1.0
+Content-Class: urn:content-classes:message
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,24 +22,51 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfsprogs@packages.debian.org
+To: xfs@oss.sgi.com
 
-FYI: The status of the xfsprogs source package
-in Debian's testing distribution has changed.
 
-  Previous version: 3.1.4
-  Current version:  3.1.5
+Hi,
 
--- 
-This email is automatically generated once a day.  As the installation of
-new packages into testing happens multiple times a day you will receive
-later changes on the next day.
-See http://release.debian.org/testing-watch/ for more information.
+This new super affiliate tool
+can legally hack "the system"
+to the tune of $283,191.52
+per month:
+
+http://mylinksentry.com/ct77
+
+Check it out.
+
+Sincerely,
+Michelle
+
+
+Removal Instruction:
+
+If you wish to unsubscribe from this notification, please visit the link below:
+http://www.leadsleap.com/go/33600
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+  
+		 
+		                    
+
+http://www.amanvida.eu/E/Green-People/Hand-and-body-lotion-aloe-vera.htm?lang=E&lang=E&lang=E&lang=E&lang=E&merk=GRP&merk=GRP&merk=GRP&merk=GRP&merk=GRP&product_code=GP/B031&product_code=GP/B031&
 
 _______________________________________________
 xfs mailing list
