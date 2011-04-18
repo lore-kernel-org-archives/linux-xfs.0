@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3I6vK5f238907 for <xfs@oss.sgi.com>; Mon, 18 Apr 2011 01:57:20 -0500
+	p3I6vIeG238905 for <xfs@oss.sgi.com>; Mon, 18 Apr 2011 01:57:20 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 320AA15C4049
-	for <xfs@oss.sgi.com>; Mon, 18 Apr 2011 00:00:46 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A25241B750BF
+	for <xfs@oss.sgi.com>; Mon, 18 Apr 2011 00:00:44 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id uZgj5WehcqlED5b9 for
-	<xfs@oss.sgi.com>; Mon, 18 Apr 2011 00:00:46 -0700 (PDT)
+	by cuda.sgi.com with ESMTP id nU57CuBj7rikUxeD for
+	<xfs@oss.sgi.com>; Mon, 18 Apr 2011 00:00:44 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.72 #1 (Red Hat
-	Linux)) id 1QBiRv-0007UY-FM
-	for xfs@oss.sgi.com; Mon, 18 Apr 2011 07:00:43 +0000
-Message-Id: <20110418070043.438461229@bombadil.infradead.org>
-Date: Mon, 18 Apr 2011 02:59:37 -0400
+	Linux)) id 1QBiRw-0007Wc-7y
+	for xfs@oss.sgi.com; Mon, 18 Apr 2011 07:00:44 +0000
+Message-Id: <20110418070044.200963388@bombadil.infradead.org>
+Date: Mon, 18 Apr 2011 02:59:40 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 1/4] xfs: optimize AGFL refills
+Subject: [PATCH 4/4] xfs: reduce the number of pagb_lock roundtrips in
+	xfs_alloc_clear_busy
 References: <20110418065936.355024592@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-optimize-freelist-refills
+Content-Disposition: inline; filename=xfs-reduce-pagb_lock-roundtrips
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,95 +33,177 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-While we need to make sure we do not reuse busy extents, there is no need
-to force out busy extents when moving them between the AGFL and the
-freespace btree as we still take care of that when doing the real allocation.
-
-To avoid the log force when just moving extents from the different free
-space tracking structures, move the busy search out of
-xfs_alloc_get_freelist into the callers that need it, and move the busy
-list insert from xfs_free_ag_extent which is used both by AGFL refills
-and real allocation to xfs_free_extent, which is only used by the latter.
+Instead of finding the per-ag and then taking and releasing the pagb_lock
+for every single busy extent completed sort the list of busy extents and
+only switch betweens AGs where nessecary.  This becomes especially important
+with the online discard support which will hit this lock more often.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Alex Elder <aelder@sgi.com>
-
 Index: xfs/fs/xfs/xfs_alloc.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_alloc.c	2011-04-09 23:30:52.778449337 +0200
-+++ xfs/fs/xfs/xfs_alloc.c	2011-04-15 08:33:19.762528005 +0200
-@@ -1326,6 +1326,8 @@ xfs_alloc_ag_vextent_small(
- 		if (error)
- 			goto error0;
- 		if (fbno != NULLAGBLOCK) {
-+			if (xfs_alloc_busy_search(args->mp, args->agno, fbno, 1))
-+				xfs_trans_set_sync(args->tp);
- 			if (args->userdata) {
- 				xfs_buf_t	*bp;
- 
-@@ -1617,18 +1619,6 @@ xfs_free_ag_extent(
- 
- 	trace_xfs_free_extent(mp, agno, bno, len, isfl, haveleft, haveright);
- 
--	/*
--	 * Since blocks move to the free list without the coordination
--	 * used in xfs_bmap_finish, we can't allow block to be available
--	 * for reallocation and non-transaction writing (user data)
--	 * until we know that the transaction that moved it to the free
--	 * list is permanently on disk.  We track the blocks by declaring
--	 * these blocks as "busy"; the busy list is maintained on a per-ag
--	 * basis and each transaction records which entries should be removed
--	 * when the iclog commits to disk.  If a busy block is allocated,
--	 * the iclog is pushed up to the LSN that freed the block.
--	 */
--	xfs_alloc_busy_insert(tp, agno, bno, len);
- 	return 0;
- 
-  error0:
-@@ -1923,21 +1913,6 @@ xfs_alloc_get_freelist(
- 	xfs_alloc_log_agf(tp, agbp, logflags);
- 	*bnop = bno;
- 
--	/*
--	 * As blocks are freed, they are added to the per-ag busy list and
--	 * remain there until the freeing transaction is committed to disk.
--	 * Now that we have allocated blocks, this list must be searched to see
--	 * if a block is being reused.  If one is, then the freeing transaction
--	 * must be pushed to disk before this transaction.
--	 *
--	 * We do this by setting the current transaction to a sync transaction
--	 * which guarantees that the freeing transaction is on disk before this
--	 * transaction. This is done instead of a synchronous log force here so
--	 * that we don't sit and wait with the AGF locked in the transaction
--	 * during the log force.
--	 */
--	if (xfs_alloc_busy_search(mp, be32_to_cpu(agf->agf_seqno), bno, 1))
--		xfs_trans_set_sync(tp);
- 	return 0;
+--- xfs.orig/fs/xfs/xfs_alloc.c	2011-04-15 09:47:49.034982545 +0200
++++ xfs/fs/xfs/xfs_alloc.c	2011-04-15 11:56:01.049977986 +0200
+@@ -2968,24 +2968,60 @@ fail:
+ 	*rlen = 0;
  }
  
-@@ -2423,6 +2398,8 @@ xfs_free_extent(
+-void
+-xfs_alloc_busy_clear(
++static void
++xfs_alloc_busy_clear_one(
+ 	struct xfs_mount	*mp,
++	struct xfs_perag	*pag,
+ 	struct xfs_busy_extent	*busyp)
+ {
+-	struct xfs_perag	*pag;
+-
+-	list_del_init(&busyp->list);
+-
+-	pag = xfs_perag_get(mp, busyp->agno);
+-	spin_lock(&pag->pagb_lock);
+ 	if (busyp->length) {
+ 		trace_xfs_alloc_busy_clear(mp, busyp->agno, busyp->bno,
+ 						busyp->length);
+ 		rb_erase(&busyp->rb_node, &pag->pagb_tree);
  	}
+-	spin_unlock(&pag->pagb_lock);
+-	xfs_perag_put(pag);
  
- 	error = xfs_free_ag_extent(tp, args.agbp, args.agno, args.agbno, len, 0);
-+	if (!error)
-+		xfs_alloc_busy_insert(tp, args.agno, args.agbno, len);
- error0:
- 	xfs_perag_put(args.pag);
- 	return error;
-Index: xfs/fs/xfs/xfs_alloc_btree.c
++	list_del_init(&busyp->list);
+ 	kmem_free(busyp);
+ }
++
++void
++xfs_alloc_busy_clear(
++	struct xfs_mount	*mp,
++	struct list_head	*list)
++{
++	struct xfs_busy_extent	*busyp, *n;
++	struct xfs_perag	*pag = NULL;
++	xfs_agnumber_t		agno = NULLAGNUMBER;
++
++	list_for_each_entry_safe(busyp, n, list, list) {
++		if (busyp->agno != agno) {
++			if (pag) {
++				spin_unlock(&pag->pagb_lock);
++				xfs_perag_put(pag);
++			}
++			pag = xfs_perag_get(mp, busyp->agno);
++			spin_lock(&pag->pagb_lock);
++			agno = busyp->agno;
++		}
++
++		xfs_alloc_busy_clear_one(mp, pag, busyp);
++	}
++
++	if (pag) {
++		spin_unlock(&pag->pagb_lock);
++		xfs_perag_put(pag);
++	}
++}
++
++/*
++ * Callback for list_sort to sort busy extents by the AG they reside in.
++ */
++int
++xfs_busy_extent_ag_cmp(
++	void			*priv,
++	struct list_head	*a,
++	struct list_head	*b)
++{
++	return container_of(a, struct xfs_busy_extent, list)->agno -
++		container_of(b, struct xfs_busy_extent, list)->agno;
++}
+Index: xfs/fs/xfs/xfs_alloc.h
 ===================================================================
---- xfs.orig/fs/xfs/xfs_alloc_btree.c	2011-04-06 16:04:49.962413009 +0200
-+++ xfs/fs/xfs/xfs_alloc_btree.c	2011-04-15 08:33:19.762528005 +0200
-@@ -94,6 +94,8 @@ xfs_allocbt_alloc_block(
- 		*stat = 0;
- 		return 0;
- 	}
-+	if (xfs_alloc_busy_search(cur->bc_mp, cur->bc_private.a.agno, bno, 1))
-+		xfs_trans_set_sync(cur->bc_tp);
+--- xfs.orig/fs/xfs/xfs_alloc.h	2011-04-15 09:47:49.041649176 +0200
++++ xfs/fs/xfs/xfs_alloc.h	2011-04-15 11:56:05.426620946 +0200
+@@ -140,7 +140,7 @@ xfs_alloc_busy_insert(struct xfs_trans *
+ 	xfs_agblock_t bno, xfs_extlen_t len);
  
- 	xfs_trans_agbtree_delta(cur->bc_tp, 1);
- 	new->s = cpu_to_be32(bno);
+ void
+-xfs_alloc_busy_clear(struct xfs_mount *mp, struct xfs_busy_extent *busyp);
++xfs_alloc_busy_clear(struct xfs_mount *mp, struct list_head *list);
+ 
+ int
+ xfs_alloc_busy_search(struct xfs_mount *mp, xfs_agnumber_t agno,
+@@ -149,6 +149,15 @@ xfs_alloc_busy_search(struct xfs_mount *
+ void
+ xfs_alloc_busy_reuse(struct xfs_mount *mp, xfs_agnumber_t agno,
+ 	xfs_agblock_t fbno, xfs_extlen_t flen, bool userdata);
++
++int
++xfs_busy_extent_ag_cmp(void *priv, struct list_head *a, struct list_head *b);
++
++static inline void xfs_alloc_busy_sort(struct list_head *list)
++{
++	list_sort(NULL, list, xfs_busy_extent_ag_cmp);
++}
++
+ #endif	/* __KERNEL__ */
+ 
+ /*
+Index: xfs/fs/xfs/xfs_log_cil.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_log_cil.c	2011-04-15 09:47:49.048315806 +0200
++++ xfs/fs/xfs/xfs_log_cil.c	2011-04-15 11:53:09.594240178 +0200
+@@ -361,13 +361,12 @@ xlog_cil_committed(
+ 	int	abort)
+ {
+ 	struct xfs_cil_ctx	*ctx = args;
+-	struct xfs_busy_extent	*busyp, *n;
+ 
+ 	xfs_trans_committed_bulk(ctx->cil->xc_log->l_ailp, ctx->lv_chain,
+ 					ctx->start_lsn, abort);
+ 
+-	list_for_each_entry_safe(busyp, n, &ctx->busy_extents, list)
+-		xfs_alloc_busy_clear(ctx->cil->xc_log->l_mp, busyp);
++	xfs_alloc_busy_sort(&ctx->busy_extents);
++	xfs_alloc_busy_clear(ctx->cil->xc_log->l_mp, &ctx->busy_extents);
+ 
+ 	spin_lock(&ctx->cil->xc_cil_lock);
+ 	list_del(&ctx->committing);
+Index: xfs/fs/xfs/xfs_trans.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_trans.c	2011-04-15 09:47:49.054982436 +0200
++++ xfs/fs/xfs/xfs_trans.c	2011-04-15 11:53:24.300827172 +0200
+@@ -608,10 +608,8 @@ STATIC void
+ xfs_trans_free(
+ 	struct xfs_trans	*tp)
+ {
+-	struct xfs_busy_extent	*busyp, *n;
+-
+-	list_for_each_entry_safe(busyp, n, &tp->t_busy, list)
+-		xfs_alloc_busy_clear(tp->t_mountp, busyp);
++	xfs_alloc_busy_sort(&tp->t_busy);
++	xfs_alloc_busy_clear(tp->t_mountp, &tp->t_busy);
+ 
+ 	atomic_dec(&tp->t_mountp->m_active_trans);
+ 	xfs_trans_free_dqinfo(tp);
+Index: xfs/fs/xfs/linux-2.6/xfs_buf.c
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_buf.c	2011-04-15 11:53:44.480717849 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_buf.c	2011-04-15 11:53:47.934032472 +0200
+@@ -33,7 +33,6 @@
+ #include <linux/migrate.h>
+ #include <linux/backing-dev.h>
+ #include <linux/freezer.h>
+-#include <linux/list_sort.h>
+ 
+ #include "xfs_sb.h"
+ #include "xfs_inum.h"
+Index: xfs/fs/xfs/linux-2.6/xfs_linux.h
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_linux.h	2011-04-15 11:53:44.500717739 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_linux.h	2011-04-15 11:53:53.234003761 +0200
+@@ -70,6 +70,7 @@
+ #include <linux/ctype.h>
+ #include <linux/writeback.h>
+ #include <linux/capability.h>
++#include <linux/list_sort.h>
+ 
+ #include <asm/page.h>
+ #include <asm/div64.h>
 
 _______________________________________________
 xfs mailing list
