@@ -1,22 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3I1VnjT222933 for <xfs@oss.sgi.com>; Sun, 17 Apr 2011 20:31:49 -0500
-Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 48B943E5AC1
-	for <xfs@oss.sgi.com>; Sun, 17 Apr 2011 18:35:13 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	5fcez82zokJhvD52 for <xfs@oss.sgi.com>;
-	Sun, 17 Apr 2011 18:35:13 -0700 (PDT)
-Date: Mon, 18 Apr 2011 11:35:10 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs_perag_put NULL deference BUG
-Message-ID: <20110418013510.GA15763@dastard>
-References: <robbat2-20110416T163639-343099416Z@orbis-terrarum.net>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <robbat2-20110416T163639-343099416Z@orbis-terrarum.net>
+	p3I2gbQ3225145 for <xfs@oss.sgi.com>; Sun, 17 Apr 2011 21:42:38 -0500
+Received: from mail.shawcable.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id AD533BEBE0E
+	for <xfs@oss.sgi.com>; Sun, 17 Apr 2011 19:46:01 -0700 (PDT)
+Received: from mail.shawcable.com (shawmail.shawcable.com [64.59.128.220]) by
+	cuda.sgi.com with ESMTP id deGQN0vKJkwrYm40 for
+	<xfs@oss.sgi.com>; Sun, 17 Apr 2011 19:46:01 -0700 (PDT)
+References: <20110414140222.GB1679@x4.trippels.de>
+	<4DA70BD3.1070409@draigBrady.com>
+	<4DA717B2.3020305@sandeen.net> <20110414225904.GK21395@dastard>
+	<4DA7836A.5040604@draigBrady.com> <20110415000940.GL21395@dastard>
+	<76FFF648-CA02-494B-A862-566C66A8CB82@dilger.ca>
+	<20110416005040.GP21395@dastard>
+	<E7438588-5C5A-42B9-9B6C-FADF7CAC6D3A@dilger.ca>
+	<4EEEA16E-1FDB-4430-A372-8F8701196E4C@mit.edu>
+	<20110418004040.GS21395@dastard>
+In-Reply-To: <20110418004040.GS21395@dastard>
+Mime-Version: 1.0 (iPhone Mail 8G4)
+Message-Id: <6C89E159-A5F6-4A06-A3D2-273BE4CFB9B5@dilger.ca>
+From: Andreas Dilger <adilger@dilger.ca>
+Subject: Re: Files full of zeros with coreutils-8.11 and xfs (FIEMAP related?)
+Date: Sun, 17 Apr 2011 20:45:56 -0600
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,102 +31,150 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============6947604589307631993=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: "Robin H. Johnson" <robbat2@gentoo.org>
-Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
-
-On Sat, Apr 16, 2011 at 05:14:43PM +0000, Robin H. Johnson wrote:
-> (Please CC, not subscribed)
-> 
-> I have an archival setup that makes heavy use of hardlinks, and recently, it
-> started needing inode64 (refused to create any more files until I remounted w/
-> inode64), and shortly thereafter it went really bad and now after making some
-> new files, I get this OOPS and write access to any XFS filesystem on the
-> machine stops.
-
-Well, that is strange.
-
-> xfs_check and xfs_repair claim the filesystem is fine, so I wonder if I've just
-> run into some corner-case.
-
-No idea.
-
-> Filesystem stats:
-> Approx 120K inodes, 6M files.
-> Allocated space: 900GiB (on LVM, single volume)
-> Actual size: 787GiB
-> Apparent size: 23.5TiB
-  ^^^^^^^^^^^^^^^^^^^^^^
-
-Which means what?
-
-Can you post the output of 'xfs_info <mntpt>', your mount options,
-and spell out the details of your storage stack (assume I know know
-nothing about it). Also, what version of xfsprogs are you using?
-If it's not recent then there's the possibility that a more recent
-version could find something wrong with the fs.
-
-> Hardlink count per inode: mean 51, mode 116, median 33, max 595, min 1.
-> 
-> [ 5674.213688] BUG: unable to handle kernel NULL pointer dereference at 000000000000000c
-> [ 5674.214095] IP: [<ffffffff812391fc>] xfs_perag_put+0x14/0x6d
-> [ 5674.214305] PGD 229e7b000 
-> [ 5674.214506] Oops: 0002 [#1] SMP 
-> [ 5674.214708] last sysfs file: /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/net/eth0/broadcast
-> [ 5674.215108] CPU 0 
-> [ 5674.215113] Modules linked in: xt_comment sch_htb nf_conntrack_ipv4 nf_defrag_ipv4 xt_state iptable_filter ipt_addrtype xt_dscp xt_string xt_owner xt_multiport xt_iprange xt_hashlimit xt_conntrack xt_DSCP xt_NFQUEUE xt_mark xt_connmark nf_conntrack ip_tables ipv6 evdev tpm_tis i2c_i801 container tpm iTCO_wdt sg i2c_core tpm_bios processor thermal iTCO_vendor_support thermal_sys ghes hed i3200_edac hwmon button edac_core
-> [ 5674.216585] 
-> [ 5674.216782] Pid: 26699, comm: rsync Not tainted 2.6.36-hardened-r4-infra17 #3 X7SBi/X7SBi
-
-Ok, so you're running some weird patchset. If you run a vanilla
-kernel, does the problem occur?
-
-> [ 5674.217452]  [<ffffffff8120ef52>] xfs_bmap_btalloc_nullfb+0x20e/0x2b4
-> [ 5674.217452]  [<ffffffff810b77a5>] ? find_or_create_page+0x31/0x85
-> [ 5674.217452]  [<ffffffff8120f1e7>] xfs_bmap_btalloc+0x1ef/0x5b8
-> [ 5674.217452]  [<ffffffff8120abe5>] ? xfs_bmap_search_multi_extents+0x63/0xda
-> [ 5674.217452]  [<ffffffff8120f5b9>] xfs_bmap_alloc+0x9/0xb
-> [ 5674.217452]  [<ffffffff8121146f>] xfs_bmapi+0x6c2/0xd62
-> [ 5674.217452]  [<ffffffff812462b6>] ? xfs_buf_rele+0xe6/0xf2
-> [ 5674.217452]  [<ffffffff8121b965>] xfs_dir2_grow_inode+0x11d/0x32b
-> [ 5674.217452]  [<ffffffff8124d8f6>] ? xfs_setup_inode+0x244/0x24d
-> [ 5674.217452]  [<ffffffff81242a09>] ? kmem_free+0x26/0x2f
-> [ 5674.217452]  [<ffffffff812285ec>] ? xfs_idata_realloc+0x3f/0x109
-> [ 5674.217452]  [<ffffffff8121c538>] xfs_dir2_sf_to_block+0xda/0x5ae
-> [ 5674.217452]  [<ffffffff81613956>] ? _raw_spin_lock+0x9/0xd
-> [ 5674.217452]  [<ffffffff812234bb>] xfs_dir2_sf_addname+0x1d8/0x507
-> [ 5674.217452]  [<ffffffff810eb1cd>] ? kmem_cache_alloc+0x193/0x1fe
-> [ 5674.217452]  [<ffffffff8121c332>] xfs_dir_createname+0xee/0x15a
-> [ 5674.217452]  [<ffffffff81240203>] xfs_link+0x1f1/0x293
-> [ 5674.217452]  [<ffffffff8124d36f>] xfs_vn_link+0x3a/0x62
-> [ 5674.217452]  [<ffffffff810fce7f>] vfs_link+0xfd/0x186
-> [ 5674.217452]  [<ffffffff81100384>] sys_linkat+0x10a/0x183
-> [ 5674.217452]  [<ffffffff810f6b02>] ? sys_newlstat+0x2c/0x3b
-> [ 5674.217452]  [<ffffffff81100416>] sys_link+0x19/0x1b
-> [ 5674.217452]  [<ffffffff810035a7>] system_call_fastpath+0x16/0x1b
-
-To tell the truth, the only way I can see xfs_bmap_btalloc_nullfb
-failing in this way is if the allocation length being asked for is
-zero and that is definitely not the case for a directory inode grow.
-That's the only way you could get to xfs_perag_put() with a null
-parameter. Otherwise it would crash inside the loop dereferencing
-pag->pagf_init....
+To: Dave Chinner <david@fromorbit.com>
+Cc: Theodore Tso <tytso@MIT.EDU>, Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>, "coreutils@gnu.org" <coreutils@gnu.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, =?utf-8?Q?P=C3=A1draig_Brady?= <P@draigBrady.com>, Markus Trippelsdorf <markus@trippelsdorf.de>
 
 
-I think the first step is to to reproduce this on an unpatched
-mainline kernel, and we can go from there.
+--===============6947604589307631993==
+Content-Transfer-Encoding: 7bit
+Content-Type: multipart/alternative;
+	boundary=Apple-Mail-5-517528027
 
-Cheers,
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+--Apple-Mail-5-517528027
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;
+	charset=utf-8
+
+On 2011-04-17, at 6:40 PM, Dave Chinner <david@fromorbit.com> wrote:
+> On Sat, Apr 16, 2011 at 08:21:28AM -0400, Theodore Tso wrote:
+>>=20
+>> On Apr 16, 2011, at 1:11 AM, Andreas Dilger wrote:
+>>> In that case, it means cp should just always use FIEMAP_FLAG_SYNC, which=
+ is fine.=20
+>>=20
+>> Except that if someone is copying a large delay allocated file, it will c=
+ause=20
+>> the file to immediately snapped to disk, which might not be the greatest
+>> thing in the world.=20
+>=20
+> Obvious workaround - if the initial fiemap call shows unwritten
+> extents, redo it with the sync flag set. Though that assume=D1=95 that
+> you can trust things like delalloc extents to only cover the range
+> that valid data exists in. Which, of course, you can't assume,
+> either. :/
+
+Always passing FIEMAP_FLAG_SYNC is fine in this case. It should only do anyt=
+hing if there is unwritten data, which is the only case we are concerned wit=
+h at this point.  In any case, this is a simple solution for coreutils until=
+ such a time that a more complex solution is added in the kernel (if ever).
+
+>> Christoph is write, SEEK_HOLE and SEEK_DATA are
+>> a much better API for what cp woulld lke to do.  Unfortunately it hasn't
+>> been implemented yet in the VFS...
+>=20
+> Agreed, SEEK_HOLE/SEEK_DATA is the right way to solve this problem.
+
+I don't see how this will change the problem in any meaningful way. There wi=
+ll still need to be code that is traversing the on-disk mapping, and also ke=
+eping it coherent with unwritten data in the page cache.
+
+Since FIEMAP already exists for most Linux filesystems, it probably makes se=
+nse to implement SEEK_{HOLE,DATA} by calling FIEMAP to get the disk mapping i=
+n the first place.
+
+I agree that SEEK_{HOLE,DATA} is an easier programming interface, and probab=
+ly what cp, tar, etc should use, once it is implemented.=20
+
+Cheers, Andreas=
+
+--Apple-Mail-5-517528027
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/html;
+	charset=utf-8
+
+<html><body bgcolor=3D"#FFFFFF"><div><span class=3D"Apple-style-span" style=3D=
+"-webkit-tap-highlight-color: rgba(26, 26, 26, 0.296875); -webkit-compositio=
+n-fill-color: rgba(175, 192, 227, 0.230469); -webkit-composition-frame-color=
+: rgba(77, 128, 180, 0.230469); ">On 2011-04-17, at 6:40 PM, Dave Chinner &l=
+t;<a href=3D"mailto:david@fromorbit.com">david@fromorbit.com</a>&gt; wrote:<=
+/span></div><div></div><blockquote type=3D"cite"><div><span>On Sat, Apr 16, 2=
+011 at 08:21:28AM -0400, Theodore Tso wrote:</span><blockquote type=3D"cite"=
+><span>On Apr 16, 2011, at 1:11 AM, Andreas Dilger wrote:</span></blockquote=
+><blockquote type=3D"cite"><blockquote type=3D"cite"><span>In that case, it m=
+eans cp should just always use FIEMAP_FLAG_SYNC, which is fine. </span><br><=
+/blockquote></blockquote><blockquote type=3D"cite"><span></span><br></blockq=
+uote><blockquote type=3D"cite"><span>Except that if someone is copying a lar=
+ge delay allocated file, it will cause </span><br></blockquote><blockquote t=
+ype=3D"cite"><span>the file to immediately snapped to disk, which might not b=
+e the greatest</span><br></blockquote><blockquote type=3D"cite"><span>thing i=
+n the world. </span><br></blockquote><span></span><br><span>Obvious workarou=
+nd - if the initial fiemap call shows unwritten</span><br><span>extents, red=
+o it with the sync flag set. Though that assume=D1=95 that</span><br><span>y=
+ou can trust things like delalloc extents to only cover the range</span><br>=
+<span>that valid data exists in. Which, of course, you can't assume,</span><=
+br><span>either. :/</span><br></div></blockquote><div><br></div>Always passi=
+ng&nbsp;<span class=3D"Apple-style-span" style=3D"-webkit-tap-highlight-colo=
+r: rgba(26, 26, 26, 0.292969); -webkit-composition-fill-color: rgba(175, 192=
+, 227, 0.230469); -webkit-composition-frame-color: rgba(77, 128, 180, 0.2304=
+69); ">FIEMAP_FLAG_SYNC is fine in this case. It should only do anything if t=
+here is unwritten data, which is the only case we are concerned with at this=
+ point. &nbsp;In any case, this is a simple solution for coreutils until suc=
+h a time that a more complex solution is added in the kernel (if ever).</spa=
+n><div><span class=3D"Apple-style-span" style=3D"-webkit-tap-highlight-color=
+: rgba(26, 26, 26, 0.292969); -webkit-composition-fill-color: rgba(175, 192,=
+ 227, 0.230469); -webkit-composition-frame-color: rgba(77, 128, 180, 0.23046=
+9);"><br></span><blockquote type=3D"cite"><div><blockquote type=3D"cite"><sp=
+an>Christoph is write, SEEK_HOLE and SEEK_DATA are</span><br></blockquote><b=
+lockquote type=3D"cite"><span>a much better API for what cp woulld lke to do=
+. &nbsp;Unfortunately it hasn't</span><br></blockquote><blockquote type=3D"c=
+ite"><span>been implemented yet in the VFS...</span><br></blockquote><span><=
+/span><br><span>Agreed, SEEK_HOLE/SEEK_DATA is the right way to solve this p=
+roblem.</span><font class=3D"Apple-style-span" color=3D"#000000"><font class=
+=3D"Apple-style-span" color=3D"#0023A3"><br></font></font></div></blockquote=
+><br></div><div>I don't see how this will change the problem in any meaningf=
+ul way. There will still need to be code that is traversing the on-disk mapp=
+ing, and also keeping it coherent with unwritten data in the page cache.</di=
+v><div><br></div><div>Since FIEMAP already exists for most Linux filesystems=
+, it probably makes s<span class=3D"Apple-style-span" style=3D"-webkit-tap-h=
+ighlight-color: rgba(26, 26, 26, 0.296875); -webkit-composition-fill-color: r=
+gba(175, 192, 227, 0.230469); -webkit-composition-frame-color: rgba(77, 128,=
+ 180, 0.230469); ">ense to implement SEEK_{HOLE,DATA} by calling FIEMAP to g=
+et the disk mapping in the first place.</span></div><div><span class=3D"Appl=
+e-style-span" style=3D"-webkit-tap-highlight-color: rgba(26, 26, 26, 0.29687=
+5); -webkit-composition-fill-color: rgba(175, 192, 227, 0.230469); -webkit-c=
+omposition-frame-color: rgba(77, 128, 180, 0.230469); "><br></span></div><di=
+v><span class=3D"Apple-style-span" style=3D"-webkit-tap-highlight-color: rgb=
+a(26, 26, 26, 0.296875); -webkit-composition-fill-color: rgba(175, 192, 227,=
+ 0.230469); -webkit-composition-frame-color: rgba(77, 128, 180, 0.230469); "=
+>I agree that&nbsp;</span><span class=3D"Apple-style-span" style=3D"-webkit-=
+tap-highlight-color: rgba(26, 26, 26, 0.292969); -webkit-composition-fill-co=
+lor: rgba(175, 192, 227, 0.230469); -webkit-composition-frame-color: rgba(77=
+, 128, 180, 0.230469); ">SEEK_{HOLE,DATA} is an easier programming interface=
+, and probably what cp, tar, etc should use, once it is implemented.&nbsp;</=
+span></div><div><span class=3D"Apple-style-span" style=3D"-webkit-tap-highli=
+ght-color: rgba(26, 26, 26, 0.292969); -webkit-composition-fill-color: rgba(=
+175, 192, 227, 0.230469); -webkit-composition-frame-color: rgba(77, 128, 180=
+, 0.230469); "><br></span></div><div><span class=3D"Apple-style-span" style=3D=
+"-webkit-tap-highlight-color: rgba(26, 26, 26, 0.292969); -webkit-compositio=
+n-fill-color: rgba(175, 192, 227, 0.230469); -webkit-composition-frame-color=
+: rgba(77, 128, 180, 0.230469); ">Cheers, Andreas</span></div></body></html>=
+
+--Apple-Mail-5-517528027--
+
+
+--===============6947604589307631993==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============6947604589307631993==--
