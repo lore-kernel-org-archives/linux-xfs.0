@@ -1,29 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3I0WXE3221237 for <xfs@oss.sgi.com>; Sun, 17 Apr 2011 19:32:34 -0500
-Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 54384119C0F0
-	for <xfs@oss.sgi.com>; Sun, 17 Apr 2011 17:35:57 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	fSlTCCKyeAkPDuBP for <xfs@oss.sgi.com>;
-	Sun, 17 Apr 2011 17:35:57 -0700 (PDT)
-Date: Mon, 18 Apr 2011 10:35:53 +1000
+	p3I1VnjT222933 for <xfs@oss.sgi.com>; Sun, 17 Apr 2011 20:31:49 -0500
+Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 48B943E5AC1
+	for <xfs@oss.sgi.com>; Sun, 17 Apr 2011 18:35:13 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	5fcez82zokJhvD52 for <xfs@oss.sgi.com>;
+	Sun, 17 Apr 2011 18:35:13 -0700 (PDT)
+Date: Mon, 18 Apr 2011 11:35:10 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Files full of zeros with coreutils-8.11 and xfs (FIEMAP related?)
-Message-ID: <20110418003553.GR21395@dastard>
-References: <20110414120635.GB1678@x4.trippels.de>
-	<20110414140222.GB1679@x4.trippels.de>
-	<4DA70BD3.1070409@draigBrady.com> <4DA717B2.3020305@sandeen.net>
-	<20110414225904.GK21395@dastard> <4DA7836A.5040604@draigBrady.com>
-	<20110415000940.GL21395@dastard>
-	<76FFF648-CA02-494B-A862-566C66A8CB82@dilger.ca>
-	<20110416005040.GP21395@dastard>
-	<BANLkTikEeXcvjgREoRCgriWAhZfnxJVtKQ@mail.gmail.com>
+Subject: Re: xfs_perag_put NULL deference BUG
+Message-ID: <20110418013510.GA15763@dastard>
+References: <robbat2-20110416T163639-343099416Z@orbis-terrarum.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <BANLkTikEeXcvjgREoRCgriWAhZfnxJVtKQ@mail.gmail.com>
+In-Reply-To: <robbat2-20110416T163639-343099416Z@orbis-terrarum.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,79 +25,98 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Yongqiang Yang <xiaoqiangnk@gmail.com>
-Cc: Andreas Dilger <adilger@dilger.ca>, Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>, "coreutils@gnu.org" <coreutils@gnu.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, =?iso-8859-1?Q?P=E1draig?= Brady <P@draigbrady.com>, Markus Trippelsdorf <markus@trippelsdorf.de>
+To: "Robin H. Johnson" <robbat2@gentoo.org>
+Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-On Sat, Apr 16, 2011 at 02:05:51PM +0800, Yongqiang Yang wrote:
-> On Sat, Apr 16, 2011 at 8:50 AM, Dave Chinner <david@fromorbit.com> wrote:
-> > On Thu, Apr 14, 2011 at 11:01:04PM -0600, Andreas Dilger wrote:
-> >> On 2011-04-14, at 6:09 PM, Dave Chinner <david@fromorbit.com>
-> >> wrote:
-> >> > No, this was explicitly laid out in the fiemap interface
-> >> > discussions - it's up to the applicaiton to decide if it needs
-> >> > to do a sync first. That's what the FIEMAP_FLAG_SYNC control
-> >> > flag is for. =A0This forces the fiemap call to do a fsync _before_
-> >> > getting the mapping. If you want to know the exact layout of the
-> >> > file is, then you must use this flag.
-> >> >
-> >> > Even so, it is recognised that this is racy - any use of the
-> >> > block map has a time-of-read-to-time-of-use race condition that
-> >> > means you have to _verify_ the copy after it completes. FYI,
-> >> > that's what xfs_fsr does when copying based on extent maps - if
-> >> > the inode has changed in _any way_ during the copy, it aborts
-> >> > the copy of that file.
-> >> >
-> >> > i.e. using fiemap for copying is at best a *hint* about the
-> >> > regions that need copying, and it is in no way a guarantee that
-> >> > you'll get all the information you need to make accurate copy
-> >> > even if you do use the synchronous variant.
-> >>
-> >> I would tend to agree with P=E1draig. If there is data in the
-> >> mapping (regardless of whether it is on disk or not), the FIEMAP
-> >> should return this to the caller. =A0The SYNC flag is only intended
-> >> to flush the data to disk for tools that are doing
-> >> direct-to-disk operations on the data.
-> >
-> > What you are suggesting is that FIEMAP needs to be page cache
-> > coherent, and that is far, far away from the intended use of the
-> > interface. Even consiering that you need to looking for active pages
-> > in the page cache when mapping extents say to me that you are
-> > doing something very wrong.
-> >
-> > Unwritten extents remain unwritten until the data is physically
-> > written to them. Therefore, to change their state, you need to sync
-> No, buffered writes change their state without sync.
+On Sat, Apr 16, 2011 at 05:14:43PM +0000, Robin H. Johnson wrote:
+> (Please CC, not subscribed)
+> 
+> I have an archival setup that makes heavy use of hardlinks, and recently, it
+> started needing inode64 (refused to create any more files until I remounted w/
+> inode64), and shortly thereafter it went really bad and now after making some
+> new files, I get this OOPS and write access to any XFS filesystem on the
+> machine stops.
 
-They shouldn't.
+Well, that is strange.
 
-> > the data covering the range. =A0_Lying_ about whether an extent is in
-> > the unwritten state is a really bad precedence to set, especially as
-> > it is then guaranteed to change state when a crash occurs (Why did
-> > recovery zero out my file? FIEMAP said it contained data before my
-> > system crashed!).
-> =
+> xfs_check and xfs_repair claim the filesystem is fine, so I wonder if I've just
+> run into some corner-case.
 
-> All filesystems have metadata in memory which is not flushed to
-> permanent storage. e.g. if a extent exists in memory, but itself and
-> corresponding data are not flushed to permanent storage.
+No idea.
 
-Sure, but in the case of unwritten extents, XFS does not change the
-metadata state in memory until *after the physical IO is completed*.
-I'm pretty sure that btrfs is the same.
+> Filesystem stats:
+> Approx 120K inodes, 6M files.
+> Allocated space: 900GiB (on LVM, single volume)
+> Actual size: 787GiB
+> Apparent size: 23.5TiB
+  ^^^^^^^^^^^^^^^^^^^^^^
 
-IOWs, despite the fact that a buffered write has occurred, no
-metadata has changed state in memory, and the extents are still
-unwritten in both memory and on disk....
+Which means what?
+
+Can you post the output of 'xfs_info <mntpt>', your mount options,
+and spell out the details of your storage stack (assume I know know
+nothing about it). Also, what version of xfsprogs are you using?
+If it's not recent then there's the possibility that a more recent
+version could find something wrong with the fs.
+
+> Hardlink count per inode: mean 51, mode 116, median 33, max 595, min 1.
+> 
+> [ 5674.213688] BUG: unable to handle kernel NULL pointer dereference at 000000000000000c
+> [ 5674.214095] IP: [<ffffffff812391fc>] xfs_perag_put+0x14/0x6d
+> [ 5674.214305] PGD 229e7b000 
+> [ 5674.214506] Oops: 0002 [#1] SMP 
+> [ 5674.214708] last sysfs file: /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/net/eth0/broadcast
+> [ 5674.215108] CPU 0 
+> [ 5674.215113] Modules linked in: xt_comment sch_htb nf_conntrack_ipv4 nf_defrag_ipv4 xt_state iptable_filter ipt_addrtype xt_dscp xt_string xt_owner xt_multiport xt_iprange xt_hashlimit xt_conntrack xt_DSCP xt_NFQUEUE xt_mark xt_connmark nf_conntrack ip_tables ipv6 evdev tpm_tis i2c_i801 container tpm iTCO_wdt sg i2c_core tpm_bios processor thermal iTCO_vendor_support thermal_sys ghes hed i3200_edac hwmon button edac_core
+> [ 5674.216585] 
+> [ 5674.216782] Pid: 26699, comm: rsync Not tainted 2.6.36-hardened-r4-infra17 #3 X7SBi/X7SBi
+
+Ok, so you're running some weird patchset. If you run a vanilla
+kernel, does the problem occur?
+
+> [ 5674.217452]  [<ffffffff8120ef52>] xfs_bmap_btalloc_nullfb+0x20e/0x2b4
+> [ 5674.217452]  [<ffffffff810b77a5>] ? find_or_create_page+0x31/0x85
+> [ 5674.217452]  [<ffffffff8120f1e7>] xfs_bmap_btalloc+0x1ef/0x5b8
+> [ 5674.217452]  [<ffffffff8120abe5>] ? xfs_bmap_search_multi_extents+0x63/0xda
+> [ 5674.217452]  [<ffffffff8120f5b9>] xfs_bmap_alloc+0x9/0xb
+> [ 5674.217452]  [<ffffffff8121146f>] xfs_bmapi+0x6c2/0xd62
+> [ 5674.217452]  [<ffffffff812462b6>] ? xfs_buf_rele+0xe6/0xf2
+> [ 5674.217452]  [<ffffffff8121b965>] xfs_dir2_grow_inode+0x11d/0x32b
+> [ 5674.217452]  [<ffffffff8124d8f6>] ? xfs_setup_inode+0x244/0x24d
+> [ 5674.217452]  [<ffffffff81242a09>] ? kmem_free+0x26/0x2f
+> [ 5674.217452]  [<ffffffff812285ec>] ? xfs_idata_realloc+0x3f/0x109
+> [ 5674.217452]  [<ffffffff8121c538>] xfs_dir2_sf_to_block+0xda/0x5ae
+> [ 5674.217452]  [<ffffffff81613956>] ? _raw_spin_lock+0x9/0xd
+> [ 5674.217452]  [<ffffffff812234bb>] xfs_dir2_sf_addname+0x1d8/0x507
+> [ 5674.217452]  [<ffffffff810eb1cd>] ? kmem_cache_alloc+0x193/0x1fe
+> [ 5674.217452]  [<ffffffff8121c332>] xfs_dir_createname+0xee/0x15a
+> [ 5674.217452]  [<ffffffff81240203>] xfs_link+0x1f1/0x293
+> [ 5674.217452]  [<ffffffff8124d36f>] xfs_vn_link+0x3a/0x62
+> [ 5674.217452]  [<ffffffff810fce7f>] vfs_link+0xfd/0x186
+> [ 5674.217452]  [<ffffffff81100384>] sys_linkat+0x10a/0x183
+> [ 5674.217452]  [<ffffffff810f6b02>] ? sys_newlstat+0x2c/0x3b
+> [ 5674.217452]  [<ffffffff81100416>] sys_link+0x19/0x1b
+> [ 5674.217452]  [<ffffffff810035a7>] system_call_fastpath+0x16/0x1b
+
+To tell the truth, the only way I can see xfs_bmap_btalloc_nullfb
+failing in this way is if the allocation length being asked for is
+zero and that is definitely not the case for a directory inode grow.
+That's the only way you could get to xfs_perag_put() with a null
+parameter. Otherwise it would crash inside the loop dereferencing
+pag->pagf_init....
+
+
+I think the first step is to to reproduce this on an unpatched
+mainline kernel, and we can go from there.
 
 Cheers,
 
 Dave.
--- =
-
+-- 
 Dave Chinner
 david@fromorbit.com
 
