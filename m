@@ -1,15 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3JJKFm7049684 for <xfs@oss.sgi.com>; Tue, 19 Apr 2011 14:20:15 -0500
-Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C00B28F8040
-	for <xfs@oss.sgi.com>; Tue, 19 Apr 2011 12:23:39 -0700 (PDT)
-Subject: [PATCH] xfs: only SetPageUptodate if all buffers are uptodate
-From: Ben Myers <bpm@sgi.com>
-Date: Tue, 19 Apr 2011 06:40:28 -0500
-Message-ID: <20110419114028.7844.10303.stgit@nfs3>
+	p3JLFTEU053927 for <xfs@oss.sgi.com>; Tue, 19 Apr 2011 16:15:29 -0500
+Received: from ifup.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CDCB01EC0F2F
+	for <xfs@oss.sgi.com>; Tue, 19 Apr 2011 14:18:55 -0700 (PDT)
+Received: from ifup.org (ifup.org [198.145.64.140]) by cuda.sgi.com with ESMTP
+	id veoh4ldbxVRKrQBM for <xfs@oss.sgi.com>;
+	Tue, 19 Apr 2011 14:18:55 -0700 (PDT)
+Date: Tue, 19 Apr 2011 14:15:46 -0700
+From: Brandon Philips <brandon@ifup.org>
+Subject: [ANNOUNCE] acl: 2.2.51 release
+Message-ID: <20110419211546.GC4133@hanuman.home.ifup.org>
 MIME-Version: 1.0
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,90 +26,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: aelder@sgi.com
-Cc: xfs@oss.sgi.com
+To: acl-devel@nongnu.org
+Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-xfs_vm_writepage and xfs_page_convert set a page uptodate if it is determined
-that all of the buffer_heads attached to that page are uptodate.
+Hello-
 
-Currently we use the flag variable 'uptodate'.  The flag is initially set = 1
-and it is cleared if a !buffer_uptodate buffer is encountered.  In addition we
-check that bh == head in order to ensure that all of the buffer_heads have been
-checked.  However, it is possible to break out of the buffer_head loop early
-having processed only the first buffer.  This leaves uptodate == 1 and bh ==
-head, so the uptodate bit can be set on a page even if not all of the buffers
-have been checked.  This can lead to data corruption on platforms with > 1
-buffer per page.
+acl 2.2.51 is released. This release fixes a few make tests issues that
+were found. You can find it here:
 
-SGI-PV: 1014173
+ http://download.savannah.gnu.org/releases/acl/acl-2.2.51.src.tar.gz
+ (NOTE: not all mirrors are synced)
 
-Signed-off-by: Ben Myers <bpm@sgi.com>
----
- fs/xfs/linux-2.6/xfs_aops.c |   16 ++++++++--------
- 1 files changed, 8 insertions(+), 8 deletions(-)
+The git repo is here and the tag is v2.2.51:
+ http://git.savannah.gnu.org/cgit/acl.git/
 
-diff --git a/fs/xfs/linux-2.6/xfs_aops.c b/fs/xfs/linux-2.6/xfs_aops.c
-index 52dbd14..c961f35 100644
---- a/fs/xfs/linux-2.6/xfs_aops.c
-+++ b/fs/xfs/linux-2.6/xfs_aops.c
-@@ -686,7 +686,7 @@ xfs_convert_page(
- 	unsigned long		p_offset;
- 	unsigned int		type;
- 	int			len, page_dirty;
--	int			count = 0, done = 0, uptodate = 1;
-+	int			count = 0, done = 0, uptodate = 0;
-  	xfs_off_t		offset = page_offset(page);
- 
- 	if (page->index != tindex)
-@@ -727,8 +727,8 @@ xfs_convert_page(
- 	do {
- 		if (offset >= end_offset)
- 			break;
--		if (!buffer_uptodate(bh))
--			uptodate = 0;
-+		if (buffer_uptodate(bh))
-+			uptodate++;
- 		if (!(PageUptodate(page) || buffer_uptodate(bh))) {
- 			done = 1;
- 			continue;
-@@ -761,7 +761,7 @@ xfs_convert_page(
- 		}
- 	} while (offset += len, (bh = bh->b_this_page) != head);
- 
--	if (uptodate && bh == head)
-+	if (uptodate == (PAGE_CACHE_SIZE / len))
- 		SetPageUptodate(page);
- 
- 	if (count) {
-@@ -915,7 +915,7 @@ xfs_vm_writepage(
- 	__uint64_t              end_offset;
- 	pgoff_t                 end_index, last_index;
- 	ssize_t			len;
--	int			err, imap_valid = 0, uptodate = 1;
-+	int			err, imap_valid = 0, uptodate = 0;
- 	int			count = 0;
- 	int			nonblocking = 0;
- 
-@@ -978,8 +978,8 @@ xfs_vm_writepage(
- 
- 		if (offset >= end_offset)
- 			break;
--		if (!buffer_uptodate(bh))
--			uptodate = 0;
-+		if (buffer_uptodate(bh))
-+			uptodate++;
- 
- 		/*
- 		 * set_page_dirty dirties all buffers in a page, independent
-@@ -1047,7 +1047,7 @@ xfs_vm_writepage(
- 
- 	} while (offset += len, ((bh = bh->b_this_page) != head));
- 
--	if (uptodate && bh == head)
-+	if (uptodate == (PAGE_CACHE_SIZE / len))
- 		SetPageUptodate(page);
- 
- 	xfs_start_page_writeback(page, 1, count);
+Here comes the shortlog:
+
+Brandon Philips (3):
+      test/misc.test: rm f from the top of the test
+      test: Makefile remove directory prefix from malformed-restore-double-owner.acl
+      VERSION: v2.2.50 -> v2.2.51
+
+Thanks to Kamil for pointing out make test failures.
+
+Cheers,
+
+	Brandon
 
 _______________________________________________
 xfs mailing list
