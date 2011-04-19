@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3JLFTEU053927 for <xfs@oss.sgi.com>; Tue, 19 Apr 2011 16:15:29 -0500
+	p3JLFTih053929 for <xfs@oss.sgi.com>; Tue, 19 Apr 2011 16:15:29 -0500
 Received: from ifup.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CDCB01EC0F2F
-	for <xfs@oss.sgi.com>; Tue, 19 Apr 2011 14:18:55 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3052E3F8E9A
+	for <xfs@oss.sgi.com>; Tue, 19 Apr 2011 14:18:56 -0700 (PDT)
 Received: from ifup.org (ifup.org [198.145.64.140]) by cuda.sgi.com with ESMTP
-	id veoh4ldbxVRKrQBM for <xfs@oss.sgi.com>;
-	Tue, 19 Apr 2011 14:18:55 -0700 (PDT)
-Date: Tue, 19 Apr 2011 14:15:46 -0700
+	id F3F2kPZEc21KwCXD for <xfs@oss.sgi.com>;
+	Tue, 19 Apr 2011 14:18:56 -0700 (PDT)
+Date: Tue, 19 Apr 2011 14:16:54 -0700
 From: Brandon Philips <brandon@ifup.org>
-Subject: [ANNOUNCE] acl: 2.2.51 release
-Message-ID: <20110419211546.GC4133@hanuman.home.ifup.org>
+Subject: [ANNOUNCE] attr: 2.4.46 release
+Message-ID: <20110419211654.GD4133@hanuman.home.ifup.org>
 MIME-Version: 1.0
 Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,23 +31,20 @@ Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
 Hello-
 
-acl 2.2.51 is released. This release fixes a few make tests issues that
-were found. You can find it here:
+attr 2.4.46 is released. This release fixes a few make tests problems
+that were found. You can find it here:
 
- http://download.savannah.gnu.org/releases/acl/acl-2.2.51.src.tar.gz
- (NOTE: not all mirrors are synced)
+ http://download.savannah.gnu.org/releases/attr/attr-2.4.46.src.tar.gz
 
-The git repo is here and the tag is v2.2.51:
- http://git.savannah.gnu.org/cgit/acl.git/
+The git repo is here and the tag is v2.4.46:
+ http://git.savannah.gnu.org/cgit/attr.git/
 
 Here comes the shortlog:
 
 Brandon Philips (3):
-      test/misc.test: rm f from the top of the test
-      test: Makefile remove directory prefix from malformed-restore-double-owner.acl
-      VERSION: v2.2.50 -> v2.2.51
-
-Thanks to Kamil for pointing out make test failures.
+      test: Add sort-getfattr-output to source files
+      test: fix root tests with sorting
+      VERSION: 2.4.45 -> 2.4.46
 
 Cheers,
 
