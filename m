@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3J5OI25022998 for <xfs@oss.sgi.com>; Tue, 19 Apr 2011 00:24:20 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E20C61E0FF7A
-	for <xfs@oss.sgi.com>; Mon, 18 Apr 2011 22:27:44 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id RCpzW5O8jMOqTk3k for
-	<xfs@oss.sgi.com>; Mon, 18 Apr 2011 22:27:44 -0700 (PDT)
-Date: Tue, 19 Apr 2011 01:27:32 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Files full of zeros with coreutils-8.11 and xfs (FIEMAP related?)
-Message-ID: <20110419052732.GA19952@infradead.org>
-References: <4DA7836A.5040604@draigBrady.com> <20110415000940.GL21395@dastard>
+	p3J6ntaV025492 for <xfs@oss.sgi.com>; Tue, 19 Apr 2011 01:49:55 -0500
+Received: from mail-pv0-f181.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5F5663F5C15
+	for <xfs@oss.sgi.com>; Mon, 18 Apr 2011 23:53:20 -0700 (PDT)
+Received: from mail-pv0-f181.google.com (mail-pv0-f181.google.com
+	[74.125.83.181]) by cuda.sgi.com with ESMTP id Es6ZyuvJF0xBzdB7
+	for <xfs@oss.sgi.com>; Mon, 18 Apr 2011 23:53:20 -0700 (PDT)
+Received: by pvg13 with SMTP id 13so4564767pvg.26
+	for <xfs@oss.sgi.com>; Mon, 18 Apr 2011 23:53:20 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20110419034455.GB23985@dastard>
+References: <20110414225904.GK21395@dastard> <4DA7836A.5040604@draigBrady.com>
+	<20110415000940.GL21395@dastard>
 	<76FFF648-CA02-494B-A862-566C66A8CB82@dilger.ca>
 	<20110416005040.GP21395@dastard>
 	<E7438588-5C5A-42B9-9B6C-FADF7CAC6D3A@dilger.ca>
@@ -20,9 +21,11 @@ References: <4DA7836A.5040604@draigBrady.com> <20110415000940.GL21395@dastard>
 	<20110418004040.GS21395@dastard>
 	<6C89E159-A5F6-4A06-A3D2-273BE4CFB9B5@dilger.ca>
 	<BANLkTin=WEpSf6ddiOMNMOpCPP-wiEttSw@mail.gmail.com>
-	<20110419025949.GA3030@thunk.org>
-MIME-Version: 1.0
-In-Reply-To: <20110419025949.GA3030@thunk.org>
+	<20110419034455.GB23985@dastard>
+Date: Tue, 19 Apr 2011 14:53:20 +0800
+Message-ID: <BANLkTinjh968ECqAobQ677hnV5yzke1ncw@mail.gmail.com>
+Subject: Re: Files full of zeros with coreutils-8.11 and xfs (FIEMAP related?)
+From: Yongqiang Yang <xiaoqiangnk@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,51 +34,108 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============5770914219193217563=="
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ted Ts'o <tytso@mit.edu>
-Cc: Andreas Dilger <adilger@dilger.ca>, Eric Sandeen <sandeen@sandeen.net>, Yongqiang Yang <xiaoqiangnk@gmail.com>, xfs-oss <xfs@oss.sgi.com>, "coreutils@gnu.org" <coreutils@gnu.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, P?draig Brady <P@draigbrady.com>, Markus Trippelsdorf <markus@trippelsdorf.de>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Andreas Dilger <adilger@dilger.ca>, Theodore Tso <tytso@mit.edu>, Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>, "coreutils@gnu.org" <coreutils@gnu.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, =?ISO-8859-1?Q?P=E1draig_Brady?= <P@draigbrady.com>, Markus Trippelsdorf <markus@trippelsdorf.de>
 
---===============5770914219193217563==
-Content-Type: text/plain; charset=unknown-8bit
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-
-On Mon, Apr 18, 2011 at 10:59:49PM -0400, Ted Ts'o wrote:
-> Maybe coreutils will need to use FIEMAP_FLAG_SYNC initially, since
-> it's the only way to guarantee correct behaviour for XFS.  But I would
-> really rather that be the long-term way we leave things!
-
-As Eric pointed out both ext4 and XFS have the same behaviour when
-writing into unwritten extent.  I think you are a bit confused because
-ext4 also got basic handling of delalloc extents wrong before commit
-6d9c85eb700bd3ac59e63bb9de463dea1aca084c, which never was a problem with
-XFS.  It would be nice if ext4 developers had sent the included
-regression test for xfs so that everyone could verify this behaviour,
-btw.
-
-To report written to but not synced unwritten extents properly we'd
-need to move fiemap away from the onðdisk state reporting done so far
-and do something that is purely in-memory.  It would be doable by
-walking the pagecache and checking for the buffer unwritten flag
-in a loop over the pages, but I'm honestly not sure it's going to
-help much.  In fact given that unwritten extent were specifically
-allocated before it doesn't seem like an overly smart idea to skip
-them in a copy - yes it will save space but it also undoes the
-previous explicit preallocation.  If people want it they should rather
-add a new option to cp to turn zeroes into holes.
-
-
---===============5770914219193217563==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
-
---===============5770914219193217563==--
+T24gVHVlLCBBcHIgMTksIDIwMTEgYXQgMTE6NDQgQU0sIERhdmUgQ2hpbm5lciA8ZGF2aWRAZnJv
+bW9yYml0LmNvbT4gd3JvdGU6Cj4gT24gVHVlLCBBcHIgMTksIDIwMTEgYXQgMDk6NTg6MTVBTSAr
+MDgwMCwgWW9uZ3FpYW5nIFlhbmcgd3JvdGU6Cj4+IE9uIE1vbiwgQXByIDE4LCAyMDExIGF0IDEw
+OjQ1IEFNLCBBbmRyZWFzIERpbGdlciA8YWRpbGdlckBkaWxnZXIuY2E+IHdyb3RlOgo+PiA+IE9u
+IDIwMTEtMDQtMTcsIGF0IDY6NDAgUE0sIERhdmUgQ2hpbm5lciA8ZGF2aWRAZnJvbW9yYml0LmNv
+bT4gd3JvdGU6Cj4+ID4KPj4gPiBPbiBTYXQsIEFwciAxNiwgMjAxMSBhdCAwODoyMToyOEFNIC0w
+NDAwLCBUaGVvZG9yZSBUc28gd3JvdGU6Cj4+ID4KPj4gPiBPbiBBcHIgMTYsIDIwMTEsIGF0IDE6
+MTEgQU0sIEFuZHJlYXMgRGlsZ2VyIHdyb3RlOgo+PiA+Cj4+ID4gSW4gdGhhdCBjYXNlLCBpdCBt
+ZWFucyBjcCBzaG91bGQganVzdCBhbHdheXMgdXNlIEZJRU1BUF9GTEFHX1NZTkMsIHdoaWNoIGlz
+Cj4+ID4gZmluZS4KPj4gPgo+PiA+IEV4Y2VwdCB0aGF0IGlmIHNvbWVvbmUgaXMgY29weWluZyBh
+IGxhcmdlIGRlbGF5IGFsbG9jYXRlZCBmaWxlLCBpdCB3aWxsCj4+ID4gY2F1c2UKPj4gPgo+PiA+
+IHRoZSBmaWxlIHRvIGltbWVkaWF0ZWx5IHNuYXBwZWQgdG8gZGlzaywgd2hpY2ggbWlnaHQgbm90
+IGJlIHRoZSBncmVhdGVzdAo+PiA+Cj4+ID4gdGhpbmcgaW4gdGhlIHdvcmxkLgo+PiA+Cj4+ID4g
+T2J2aW91cyB3b3JrYXJvdW5kIC0gaWYgdGhlIGluaXRpYWwgZmllbWFwIGNhbGwgc2hvd3MgdW53
+cml0dGVuCj4+ID4gZXh0ZW50cywgcmVkbyBpdCB3aXRoIHRoZSBzeW5jIGZsYWcgc2V0LiBUaG91
+Z2ggdGhhdCBhc3N1bWXRlSB0aGF0Cj4+ID4geW91IGNhbiB0cnVzdCB0aGluZ3MgbGlrZSBkZWxh
+bGxvYyBleHRlbnRzIHRvIG9ubHkgY292ZXIgdGhlIHJhbmdlCj4+ID4gdGhhdCB2YWxpZCBkYXRh
+IGV4aXN0cyBpbi4gV2hpY2gsIG9mIGNvdXJzZSwgeW91IGNhbid0IGFzc3VtZSwKPj4gPiBlaXRo
+ZXIuIDovCj4+ID4KPj4gPiBBbHdheXMgcGFzc2luZ8KgRklFTUFQX0ZMQUdfU1lOQyBpcyBmaW5l
+IGluIHRoaXMgY2FzZS4gSXQgc2hvdWxkIG9ubHkgZG8KPj4gPiBhbnl0aGluZyBpZiB0aGVyZSBp
+cyB1bndyaXR0ZW4gZGF0YSwgd2hpY2ggaXMgdGhlIG9ubHkgY2FzZSB3ZSBhcmUgY29uY2VybmVk
+Cj4+ID4gd2l0aCBhdCB0aGlzIHBvaW50LiDCoEluIGFueSBjYXNlLCB0aGlzIGlzIGEgc2ltcGxl
+IHNvbHV0aW9uIGZvciBjb3JldXRpbHMKPj4gPiB1bnRpbCBzdWNoIGEgdGltZSB0aGF0IGEgbW9y
+ZSBjb21wbGV4IHNvbHV0aW9uIGlzIGFkZGVkIGluIHRoZSBrZXJuZWwgKGlmCj4+ID4gZXZlciku
+Cj4+ID4KPj4gPiBDaHJpc3RvcGggaXMgd3JpdGUsIFNFRUtfSE9MRSBhbmQgU0VFS19EQVRBIGFy
+ZQo+PiA+Cj4+ID4gYSBtdWNoIGJldHRlciBBUEkgZm9yIHdoYXQgY3Agd291bGxkIGxrZSB0byBk
+by4gwqBVbmZvcnR1bmF0ZWx5IGl0IGhhc24ndAo+PiA+Cj4+ID4gYmVlbiBpbXBsZW1lbnRlZCB5
+ZXQgaW4gdGhlIFZGUy4uLgo+PiA+Cj4+ID4gQWdyZWVkLCBTRUVLX0hPTEUvU0VFS19EQVRBIGlz
+IHRoZSByaWdodCB3YXkgdG8gc29sdmUgdGhpcyBwcm9ibGVtLgo+PiA+Cj4+ID4gSSBkb24ndCBz
+ZWUgaG93IHRoaXMgd2lsbCBjaGFuZ2UgdGhlIHByb2JsZW0gaW4gYW55IG1lYW5pbmdmdWwgd2F5
+LiBUaGVyZQo+PiA+IHdpbGwgc3RpbGwgbmVlZCB0byBiZSBjb2RlIHRoYXQgaXMgdHJhdmVyc2lu
+ZyB0aGUgb24tZGlzayBtYXBwaW5nLCBhbmQgYWxzbwo+PiA+IGtlZXBpbmcgaXQgY29oZXJlbnQg
+d2l0aCB1bndyaXR0ZW4gZGF0YSBpbiB0aGUgcGFnZSBjYWNoZS4KPj4KPj4gSXQgc2VlbXMgdGhh
+dCB3ZSBhcmUgYmVpbmcgbWVzc2VkIHVwIGJ5IHBhZ2UgY2FjaGUgYW5kIGRpc2suCj4+IFVud3Jp
+dHRlbiBmbGFnIHJldHVybmVkIGZyb20gRklFTUFQIGluZGljYXRlcyBibG9ja3Mgb24gZGlzayBh
+cmUgbm90Cj4+IHdyaXR0ZW4sIGJ1dCBpdCBkb2VzIG5vdCBzYXkgaWYgdGhlcmUgaXMgZGF0YSBp
+biBwYWdlIGNhY2hlLiDCoFNvCj4+IEZJRU1BUCBpdHNlbGYganVzdCB0ZWxscyB1c2VyIHRoZSBt
+YXAgb24gZGlzay4gwqBIb3dldmVyIHRoZXJlIGlzIGFuCj4+IGV4Y2VwdGlvbiBmb3IgZGVsYXll
+ZCBhbGxvY2F0aW9uLCDCoEZJRU1BUCB0ZWxscyB1c2VycyB0aGUgZGF0YSBpcyBpbgo+PiBwYWdl
+IGNhY2hlLgo+Cj4gTm8sIEZJRU1BUCBkb2VzIG5vdCB0ZWxsIHRoZSB1c2VyIHRoZXJlIGlzIGRh
+dGEgaW4gdGhlIHBhZ2UgY2FjaGUuCj4gSXQgdGVsbHMgdGhlcmUgdXNlciB0aGVyZSBpcyBhIGRl
+bGF5ZWQgYWxsb2NhdGlvbiBleHRlbnQuIEZvciBYRlMsIGEKPiBkZWxheWVkIGFsbG9jYXRpb24g
+ZXh0ZW50IGNhbiBjb3ZlciBhIHJhbmdlIF9ncmVhdGVyXyB0aGFuIHRoZXJlIGlzCj4gZGF0YSBp
+biB0aGUgcGFnZSBjYWNoZSAtIHdlIGRvIGFsbG9jYXRpb24gYWxsaWdubWVudCwgc3BlY3VsYXRp
+dmUKPiBhbGxvY2F0aW9uIGFuZCBvdGhlciB0cmlja3MgdG8gYXZvaWQgZnJhZ21lbnRhdGlvbiB2
+aWEKPiBkZWxheWVkIGFsbG9jYXRpb24uIFdoZW4gWEZTcyBzYXlzIHRoZXJlIGlzIGEgZGVsYWxs
+b2MgZXh0ZW50LCBpdCBpcwo+IHNpbXBseSBzaG93aW5nIHRoZSBpbi1tZW1vcnkgcmVwcmVzZW50
+YXRpb24gb2YgdGhlIGV4dGVudC4gaWYgeW91Cj4gd2FudCB0byBrbm93IHdoZXJlIHRoZSBkYXRh
+IGluIHRoZSBwYWdlIGNhY2hlIGFjdHVhbGx5IGlzLCB5b3UgbmVlZAo+IHRvIHN5bmMgdGhlIGZp
+bGUgdG8gZGlzayB0byBnZXQgdGhvc2UgcmFuZ2VzIGNvbnZlcnRlZCB0byByZWFsCj4gZXh0ZW50
+cy4gVGhpcyBpcyBob3cgeGZzX2JtYXAgaGFzIHdvcmtlZCBmb3IgMTUgeWVhcnMuLi4uCj4KPj4g
+TWF5YmUgRklFTUFQIHNob3VsZCByZXR1cm4gYWxsIGtub3duIG1lc3NhZ2VzIGZvciB1bndyaXR0
+ZW4gZXh0ZW50LCBpZgo+PiB1bndyaXR0ZW4gZGF0YSBleGlzdHMgaW4gcGFnZSBjYWNoZSwgRklF
+TUFQIHNob3VsZCBsZXQgdXNlcnMga25vdyB0aGF0Cj4+IGRhdGEgaXMgaW4gcGFnZSBjYWNoZSBh
+bmQgc3BhY2Ugb24gZGlzayBoYXMgYmVlbiBwcmVhbGxvY2F0ZWQsIGJ1dAo+PiBkYXRhIGhhcyBu
+b3QgYmVlbiBmbHVzaGVkIGludG8gZGlzay4gwqBBY3R1YWxseSwgZGVsYXllZCBhbGxvY2F0aW9u
+IGhhcwo+PiBkb25lIGxpa2UgdGhpcy4gVGhlbiB1c2VyLXNwYWNlIGFwcGxpY2F0aW9ucyBjYW4g
+ZGV0ZXJtaW5lIGhvdyB0byBkby4KPj4gVGFraW5nIGNwIGFzIGFuIGV4YW1wbGUsIGl0IHdpbGwg
+Y29weSBmcm9tIHBhZ2UgY2FjaGUgcmF0aGVyIGlnbm9yZQo+PiBpdC4KPgo+IE9uY2UgYWdhaW4s
+IEZJRU1BUCBpcyBmb3Igc2hvd2luZyB0aGUgZmlsZXN5c3RlbSdzIGN1cnJlbnQgZXh0ZW50Cj4g
+c3RhdGUsIG5vdCB0aGUgcGFnZSBjYWNoZSBzdGF0ZS4gRXh0NCBtYXkgaW1wbGVtZW50IEZJRU1B
+UCBieSBkb2luZwo+IHBhZ2UgY2FjaGUgd2Fsa3MsIGJ1dCB0aGF0IGlzIGEgZmlsZXN5c3RlbSBz
+cGVjaWZpYyBpbXBsZW1lbnRhdGlvbgo+IGRldGFpbC4KPgo+PiBXZSBuZWVkIGEgZGVmaW5pdGUg
+ZGVmaW5pdGlvbiBmb3IgRklFTUFQLCBpbiBvdGhlciB3b3JkcywgaXQgdGVsbHMKPj4gdXNlcnMg
+bWFwIG9uIGRpc2sgb3IgYm90aCBkaXNrIGFuZCBwYWdlIGNhY2hlLgo+Cj4gV2UgYWxyZWFkeSBo
+YXZlIGEgZGVmaW5pdGlvbiAtIGFuZCBpdCBoYXMgbm90aGluZyB0byBkbyB3aXRoIHRoZQo+IHBh
+Z2UgY2FjaGUgc3RhdGUuCj4KPj4gSWYgdGhlIGZvcm1lciBvbmUgaXMgdGFrZW4sIHRoZW4gRklF
+TUFQIHNob3VsZCBub3QgY29uc2lkZXIKPj4gZGVsYXllZCBhbGxvY2F0aW9uLgo+Cj4gTm90IGF0
+IGFsbC4gdGhlIGRlbGF5ZWQgYWxsb2NhdGlvbiBleHRlbnQgaXMgYSBmaXJzdCBjbGFzcyBleHRl
+bnQKPiB0eXBlIGluIFhGUyBhbmQgaXQgaXMgcmVwb3J0ZWQgZGlyZWN0bHkgZnJvbSB0aGUgZXh0
+ZW50IGxpc3QuIFlvdXIKPiB2aWV3cG9pbnQgaXMgdmVyeSBleHQ0LXNwZWNpZmljIGFuZCBpZ25v
+cmVzIHRoZSBmYWN0IHRoYXQgb3RoZXIKPiBmaWxlc3lzdGVtcyB3ZXJlIGRvaW5nIHRoaXMgc29y
+dCBvZiBtYXBwaW5nIGxvbmcgYmVmb3JlIGV2ZW4gZXh0Mwo+IChsZXQgYWxvbmUgZXh0NCkgd2Fz
+IGEgZ2xpbnQgaW4gdGhlIGRlc2lnbmVyJ3MgZXllLi4uLgo+Cj4+IG90aGVyd2lzZSwgRklFTUFQ
+IHNob3VsZCByZXR1cm4gYWxsIGtub3duIG1lc3NhZ2VzIGZvciB1bndyaXR0ZW4gY2FzZQo+PiBs
+aWtlIGRlbGF5ZWQgYWxsb2NhdGlvbi4KPgo+IFNlZSBteSBwcmV2aW91cyBjb21tZW50cyBhYm91
+dCBleHRlbnRzIGJlaW5nIHVud3JpdHRlbiB1bnRpbCBkYXRhIGlzCj4gcGh5c2ljYWxseSB3cml0
+dGVuIHRvIHRoZW0uClVuZGVyc3Rvb2QsIHRoYW5rIHlvdSBmb3IgeW91ciBleHBsYW5hdGlvbi4K
+Ck9rLiAgTGV0J3MgbG9vayBhdCBpdCBmcm9tIGEgaGlnaGVyIHZpZXcuICBXaGF0IHlvdSBkZXNj
+cmliZWQgYWJvdXQKZXh0ZW50IHN0YXRlIGlzIHNwZWNpZmljIHRvIHhmcy4KCkkgdGhpbmsgdGhl
+cmUgYXJlIDIgd2F5cyB0byBwcm92aWRlIGEgZGVmaW5pdGUgZGVmaW5pdGlvbiBmb3IgRklFTUFQ
+CmZvciBhbGwgZmlsZXN5c3RlbXM6CgoxLiBGSUVNQVAgcmV0dXJucyBleHRlbnQgc3RhdGUgb24g
+ZGlzay4KMi4gRklFTUFQIHJldHVybnMgZXh0ZW50IGJvdGggaW4gbWVtb3J5IGFuZCBvbiBkaXNr
+LgoKTm93LCB0aGUgcXVlc3Rpb24gY29tZXMgaW4gY2FzZSAyLiAgIEhvdyB0byBkZWZpbmUgZXh0
+ZW50J3Mgc3RhdGUgaW4KbWVtb3J5PyBFdmVyeSBmaWxlc3lzdGVtIGhhcyBpdHMgb3duIGltcGxl
+bWVudGF0aW9uIHJlZ2FyZGluZyBleHRlbnQKaW4gbWVtb3J5LCBlc3BlY2lhbGx5IGZvciBkZWxh
+eWVkIGFuZCB1bndyaXR0ZW4gZXh0ZW50cywgYW5kIEkgdGhpbmsKdGhleSBhcmUgYWxsIHJlYXNv
+bmFibGUuIEZvciBleGFtcGxlLCBleHQ0IHdpdGhvdXQgZGVsYXllZCBhbGxvY2F0aW9uCmNoYW5n
+ZSB1bndyaXR0ZW4gZXh0ZW50cyB0byB3cml0dGVuIG9uZXMgaW1tZWRpYXRlbHkgaW4gbWVtb3J5
+LCB3aGlsZQp0aGUgY2hhbmdpbmcgaXMgZGVsYXllZCB1bnRpbCBmbHVzaCB0aW1lIGluIGRlbGF5
+ZWQgYWxsb2NhdGlvbiBjYXNlLgoKSXQgc2VlbXMgdGhhdCB0aGVyZSBhcmUgb25seSAxIHdheSB0
+byBwcm92aWRlIGEgZGVmaW5pdGUgZGVmaW5pdGlvbiBvZgppbi1tZW1vcnktZXh0ZW50IC0gRklF
+TUFQIHNob3VsZCByZXR1cm4gd2hhdCBhbiB1c2VyIGhhcyB3cml0dGVuLgp0aGlzIHdvcmtzIGZv
+ciBhbGwgZmlsZXN5c3RlbXMuCgpZb25ncWlhbmcuCj4KPiBDaGVlcnMsCj4KPiBEYXZlLgo+IC0t
+Cj4gRGF2ZSBDaGlubmVyCj4gZGF2aWRAZnJvbW9yYml0LmNvbQo+CgoKCi0tIApCZXN0IFdpc2hl
+cwpZb25ncWlhbmcgWWFuZwoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2ku
+Y29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
