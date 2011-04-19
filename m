@@ -1,21 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3J1svX6013036 for <xfs@oss.sgi.com>; Mon, 18 Apr 2011 20:54:57 -0500
-Received: from mail-px0-f174.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 636C93F579B
-	for <xfs@oss.sgi.com>; Mon, 18 Apr 2011 18:58:22 -0700 (PDT)
-Received: from mail-px0-f174.google.com (mail-px0-f174.google.com
-	[209.85.212.174]) by cuda.sgi.com with ESMTP id
-	MmnVvhfrVLivNnGE for <xfs@oss.sgi.com>;
-	Mon, 18 Apr 2011 18:58:22 -0700 (PDT)
-Received: by pxi15 with SMTP id 15so3933492pxi.5
-	for <xfs@oss.sgi.com>; Mon, 18 Apr 2011 18:58:22 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <6C89E159-A5F6-4A06-A3D2-273BE4CFB9B5@dilger.ca>
-References: <20110414140222.GB1679@x4.trippels.de>
-	<4DA70BD3.1070409@draigBrady.com> <4DA717B2.3020305@sandeen.net>
-	<20110414225904.GK21395@dastard> <4DA7836A.5040604@draigBrady.com>
+	p3J2uZMX014953 for <xfs@oss.sgi.com>; Mon, 18 Apr 2011 21:56:35 -0500
+Received: from test.thunk.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 05478BF9B6A
+	for <xfs@oss.sgi.com>; Mon, 18 Apr 2011 20:00:00 -0700 (PDT)
+Received: from test.thunk.org (li9-11.members.linode.com [67.18.176.11]) by
+	cuda.sgi.com with ESMTP id sx5F8yCyCiCx6P6C for
+	<xfs@oss.sgi.com>; Mon, 18 Apr 2011 20:00:00 -0700 (PDT)
+Date: Mon, 18 Apr 2011 22:59:49 -0400
+From: "Ted Ts'o" <tytso@mit.edu>
+Subject: Re: Files full of zeros with coreutils-8.11 and xfs (FIEMAP related?)
+Message-ID: <20110419025949.GA3030@thunk.org>
+References: <20110414225904.GK21395@dastard> <4DA7836A.5040604@draigBrady.com>
 	<20110415000940.GL21395@dastard>
 	<76FFF648-CA02-494B-A862-566C66A8CB82@dilger.ca>
 	<20110416005040.GP21395@dastard>
@@ -23,10 +20,10 @@ References: <20110414140222.GB1679@x4.trippels.de>
 	<4EEEA16E-1FDB-4430-A372-8F8701196E4C@mit.edu>
 	<20110418004040.GS21395@dastard>
 	<6C89E159-A5F6-4A06-A3D2-273BE4CFB9B5@dilger.ca>
-Date: Tue, 19 Apr 2011 09:58:15 +0800
-Message-ID: <BANLkTin=WEpSf6ddiOMNMOpCPP-wiEttSw@mail.gmail.com>
-Subject: Re: Files full of zeros with coreutils-8.11 and xfs (FIEMAP related?)
-From: Yongqiang Yang <xiaoqiangnk@gmail.com>
+	<BANLkTin=WEpSf6ddiOMNMOpCPP-wiEttSw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <BANLkTin=WEpSf6ddiOMNMOpCPP-wiEttSw@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,68 +32,98 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Andreas Dilger <adilger@dilger.ca>
-Cc: Theodore Tso <tytso@mit.edu>, Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>, "coreutils@gnu.org" <coreutils@gnu.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, =?ISO-8859-1?Q?P=E1draig_Brady?= <P@draigbrady.com>, Markus Trippelsdorf <markus@trippelsdorf.de>
+To: Yongqiang Yang <xiaoqiangnk@gmail.com>
+Cc: Andreas Dilger <adilger@dilger.ca>, Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>, "coreutils@gnu.org" <coreutils@gnu.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, =?iso-8859-1?Q?P=E1draig?= Brady <P@draigbrady.com>, Markus Trippelsdorf <markus@trippelsdorf.de>
 
-T24gTW9uLCBBcHIgMTgsIDIwMTEgYXQgMTA6NDUgQU0sIEFuZHJlYXMgRGlsZ2VyIDxhZGlsZ2Vy
-QGRpbGdlci5jYT4gd3JvdGU6Cj4gT24gMjAxMS0wNC0xNywgYXQgNjo0MCBQTSwgRGF2ZSBDaGlu
-bmVyIDxkYXZpZEBmcm9tb3JiaXQuY29tPiB3cm90ZToKPgo+IE9uIFNhdCwgQXByIDE2LCAyMDEx
-IGF0IDA4OjIxOjI4QU0gLTA0MDAsIFRoZW9kb3JlIFRzbyB3cm90ZToKPgo+IE9uIEFwciAxNiwg
-MjAxMSwgYXQgMToxMSBBTSwgQW5kcmVhcyBEaWxnZXIgd3JvdGU6Cj4KPiBJbiB0aGF0IGNhc2Us
-IGl0IG1lYW5zIGNwIHNob3VsZCBqdXN0IGFsd2F5cyB1c2UgRklFTUFQX0ZMQUdfU1lOQywgd2hp
-Y2ggaXMKPiBmaW5lLgo+Cj4gRXhjZXB0IHRoYXQgaWYgc29tZW9uZSBpcyBjb3B5aW5nIGEgbGFy
-Z2UgZGVsYXkgYWxsb2NhdGVkIGZpbGUsIGl0IHdpbGwKPiBjYXVzZQo+Cj4gdGhlIGZpbGUgdG8g
-aW1tZWRpYXRlbHkgc25hcHBlZCB0byBkaXNrLCB3aGljaCBtaWdodCBub3QgYmUgdGhlIGdyZWF0
-ZXN0Cj4KPiB0aGluZyBpbiB0aGUgd29ybGQuCj4KPiBPYnZpb3VzIHdvcmthcm91bmQgLSBpZiB0
-aGUgaW5pdGlhbCBmaWVtYXAgY2FsbCBzaG93cyB1bndyaXR0ZW4KPiBleHRlbnRzLCByZWRvIGl0
-IHdpdGggdGhlIHN5bmMgZmxhZyBzZXQuIFRob3VnaCB0aGF0IGFzc3VtZdGVIHRoYXQKPiB5b3Ug
-Y2FuIHRydXN0IHRoaW5ncyBsaWtlIGRlbGFsbG9jIGV4dGVudHMgdG8gb25seSBjb3ZlciB0aGUg
-cmFuZ2UKPiB0aGF0IHZhbGlkIGRhdGEgZXhpc3RzIGluLiBXaGljaCwgb2YgY291cnNlLCB5b3Ug
-Y2FuJ3QgYXNzdW1lLAo+IGVpdGhlci4gOi8KPgo+IEFsd2F5cyBwYXNzaW5nwqBGSUVNQVBfRkxB
-R19TWU5DIGlzIGZpbmUgaW4gdGhpcyBjYXNlLiBJdCBzaG91bGQgb25seSBkbwo+IGFueXRoaW5n
-IGlmIHRoZXJlIGlzIHVud3JpdHRlbiBkYXRhLCB3aGljaCBpcyB0aGUgb25seSBjYXNlIHdlIGFy
-ZSBjb25jZXJuZWQKPiB3aXRoIGF0IHRoaXMgcG9pbnQuIMKgSW4gYW55IGNhc2UsIHRoaXMgaXMg
-YSBzaW1wbGUgc29sdXRpb24gZm9yIGNvcmV1dGlscwo+IHVudGlsIHN1Y2ggYSB0aW1lIHRoYXQg
-YSBtb3JlIGNvbXBsZXggc29sdXRpb24gaXMgYWRkZWQgaW4gdGhlIGtlcm5lbCAoaWYKPiBldmVy
-KS4KPgo+IENocmlzdG9waCBpcyB3cml0ZSwgU0VFS19IT0xFIGFuZCBTRUVLX0RBVEEgYXJlCj4K
-PiBhIG11Y2ggYmV0dGVyIEFQSSBmb3Igd2hhdCBjcCB3b3VsbGQgbGtlIHRvIGRvLiDCoFVuZm9y
-dHVuYXRlbHkgaXQgaGFzbid0Cj4KPiBiZWVuIGltcGxlbWVudGVkIHlldCBpbiB0aGUgVkZTLi4u
-Cj4KPiBBZ3JlZWQsIFNFRUtfSE9MRS9TRUVLX0RBVEEgaXMgdGhlIHJpZ2h0IHdheSB0byBzb2x2
-ZSB0aGlzIHByb2JsZW0uCj4KPiBJIGRvbid0IHNlZSBob3cgdGhpcyB3aWxsIGNoYW5nZSB0aGUg
-cHJvYmxlbSBpbiBhbnkgbWVhbmluZ2Z1bCB3YXkuIFRoZXJlCj4gd2lsbCBzdGlsbCBuZWVkIHRv
-IGJlIGNvZGUgdGhhdCBpcyB0cmF2ZXJzaW5nIHRoZSBvbi1kaXNrIG1hcHBpbmcsIGFuZCBhbHNv
-Cj4ga2VlcGluZyBpdCBjb2hlcmVudCB3aXRoIHVud3JpdHRlbiBkYXRhIGluIHRoZSBwYWdlIGNh
-Y2hlLgoKSXQgc2VlbXMgdGhhdCB3ZSBhcmUgYmVpbmcgbWVzc2VkIHVwIGJ5IHBhZ2UgY2FjaGUg
-YW5kIGRpc2suClVud3JpdHRlbiBmbGFnIHJldHVybmVkIGZyb20gRklFTUFQIGluZGljYXRlcyBi
-bG9ja3Mgb24gZGlzayBhcmUgbm90CndyaXR0ZW4sIGJ1dCBpdCBkb2VzIG5vdCBzYXkgaWYgdGhl
-cmUgaXMgZGF0YSBpbiBwYWdlIGNhY2hlLiAgU28KRklFTUFQIGl0c2VsZiBqdXN0IHRlbGxzIHVz
-ZXIgdGhlIG1hcCBvbiBkaXNrLiAgSG93ZXZlciB0aGVyZSBpcyBhbgpleGNlcHRpb24gZm9yIGRl
-bGF5ZWQgYWxsb2NhdGlvbiwgIEZJRU1BUCB0ZWxscyB1c2VycyB0aGUgZGF0YSBpcyBpbgpwYWdl
-IGNhY2hlLgoKTWF5YmUgRklFTUFQIHNob3VsZCByZXR1cm4gYWxsIGtub3duIG1lc3NhZ2VzIGZv
-ciB1bndyaXR0ZW4gZXh0ZW50LCBpZgp1bndyaXR0ZW4gZGF0YSBleGlzdHMgaW4gcGFnZSBjYWNo
-ZSwgRklFTUFQIHNob3VsZCBsZXQgdXNlcnMga25vdyB0aGF0CmRhdGEgaXMgaW4gcGFnZSBjYWNo
-ZSBhbmQgc3BhY2Ugb24gZGlzayBoYXMgYmVlbiBwcmVhbGxvY2F0ZWQsIGJ1dApkYXRhIGhhcyBu
-b3QgYmVlbiBmbHVzaGVkIGludG8gZGlzay4gIEFjdHVhbGx5LCBkZWxheWVkIGFsbG9jYXRpb24g
-aGFzCmRvbmUgbGlrZSB0aGlzLiBUaGVuIHVzZXItc3BhY2UgYXBwbGljYXRpb25zIGNhbiBkZXRl
-cm1pbmUgaG93IHRvIGRvLgpUYWtpbmcgY3AgYXMgYW4gZXhhbXBsZSwgaXQgd2lsbCBjb3B5IGZy
-b20gcGFnZSBjYWNoZSByYXRoZXIgaWdub3JlCml0LgoKCldlIG5lZWQgYSBkZWZpbml0ZSBkZWZp
-bml0aW9uIGZvciBGSUVNQVAsIGluIG90aGVyIHdvcmRzLCBpdCB0ZWxscwp1c2VycyBtYXAgb24g
-ZGlzayBvciBib3RoIGRpc2sgYW5kIHBhZ2UgY2FjaGUuCgpJZiB0aGUgZm9ybWVyIG9uZSBpcyB0
-YWtlbiwgdGhlbiBGSUVNQVAgc2hvdWxkIG5vdCBjb25zaWRlciBkZWxheWVkIGFsbG9jYXRpb24u
-Cm90aGVyd2lzZSwgRklFTUFQIHNob3VsZCByZXR1cm4gYWxsIGtub3duIG1lc3NhZ2VzIGZvciB1
-bndyaXR0ZW4gY2FzZQpsaWtlIGRlbGF5ZWQgYWxsb2NhdGlvbi4KCj4gU2luY2UgRklFTUFQIGFs
-cmVhZHkgZXhpc3RzIGZvciBtb3N0IExpbnV4IGZpbGVzeXN0ZW1zLCBpdCBwcm9iYWJseSBtYWtl
-cwo+IHNlbnNlIHRvIGltcGxlbWVudCBTRUVLX3tIT0xFLERBVEF9IGJ5IGNhbGxpbmcgRklFTUFQ
-IHRvIGdldCB0aGUgZGlzawo+IG1hcHBpbmcgaW4gdGhlIGZpcnN0IHBsYWNlLgo+IEkgYWdyZWUg
-dGhhdMKgU0VFS197SE9MRSxEQVRBfSBpcyBhbiBlYXNpZXIgcHJvZ3JhbW1pbmcgaW50ZXJmYWNl
-LCBhbmQKPiBwcm9iYWJseSB3aGF0IGNwLCB0YXIsIGV0YyBzaG91bGQgdXNlLCBvbmNlIGl0IGlz
-IGltcGxlbWVudGVkLgo+IENoZWVycywgQW5kcmVhcwo+IF9fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fCj4geGZzIG1haWxpbmcgbGlzdAo+IHhmc0Bvc3Muc2dp
-LmNvbQo+IGh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo+Cj4KCgoKLS0g
-CkJlc3QgV2lzaGVzCllvbmdxaWFuZyBZYW5nCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRw
-Oi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+On Tue, Apr 19, 2011 at 09:58:15AM +0800, Yongqiang Yang wrote:
+> On Mon, Apr 18, 2011 at 10:45 AM, Andreas Dilger <adilger@dilger.ca> wrote:
+> > Always passing FIEMAP_FLAG_SYNC is fine in this case. It should
+> > only do anything if there is unwritten data, which is the only
+> > case we are concerned with at this point.  In any case, this is a
+> > simple solution for coreutils until such a time that a more
+> > complex solution is added in the kernel (if ever).
+
+I would recommend that coreutils check i_blocks and i_size and only
+try using fiemap (with FIEMAP_FLAG_SYNC) if the file appears to be
+sparse.  That's because FIEMAP_FLAG_SYNC will do the effectively
+equivalent of an fsync() system call.  Otherwise, in the case of a
+freshly untar'ed directory hierarchy which is then copied using "cp
+-r", cp would end up calling fsync() for each file in the directory,
+with the disastrous performance result that one might expect.
+
+If cp only tries the fiemap optimization on files that appear to be
+sparse, it should avoid this problem.
+
+> > Agreed, SEEK_HOLE/SEEK_DATA is the right way to solve this problem.
+> >
+> > I don't see how this will change the problem in any meaningful way. There
+> > will still need to be code that is traversing the on-disk mapping, and also
+> > keeping it coherent with unwritten data in the page cache.
+
+The advantage of SEEK_HOLE/SEEK_DATA is that we don't need to force an
+fsync() of the data.
+
+> It seems that we are being messed up by page cache and disk.
+> Unwritten flag returned from FIEMAP indicates blocks on disk are not
+> written, but it does not say if there is data in page cache.  So
+> FIEMAP itself just tells user the map on disk.  However there is an
+> exception for delayed allocation,  FIEMAP tells users the data is in
+> page cache.
+> 
+> Maybe FIEMAP should return all known messages for unwritten extent, if
+> unwritten data exists in page cache, FIEMAP should let users know that
+> data is in page cache and space on disk has been preallocated, but
+> data has not been flushed into disk.  Actually, delayed allocation has
+> done like this. Then user-space applications can determine how to do.
+> Taking cp as an example, it will copy from page cache rather ignore
+> it.
+>
+> We need a definite definition for FIEMAP, in other words, it tells
+> users map on disk or both disk and page cache.
+> 
+> If the former one is taken, then FIEMAP should not consider delayed
+> allocation.  otherwise, FIEMAP should return all known messages for
+> unwritten case like delayed allocation.
+
+The fact that the FIEMAP interface deifnition includes an delayed
+allocation bit could be a strong indication that unlike the XFS's bmap
+interface, that this interface is supposed to return information
+taking into account both on-disk and page cache information.  If this
+is the case, then even though there might be a single on-disk
+(uninitialized) extent, if there are pages in the page cache that have
+not yet been written out yet, but which are described by that on-disk
+extent, then instead of returning a single struct fiemap_extent for
+that on-disk extent, the fiemap ioctl would need to return multiple
+struct fiemap_extents, where some would have the FIEMAP_UNWRITTEN bit,
+and others would not (since data has been written to the page cache,
+even if it hasn't been flushed to disk yet).
+
+But yes, if we're going to make the case that the FIEMAP interface is
+only intended to reflect the on-disk information, then the DELALLOC
+bit shouldn't be returned at all, and we should deprecate it.
+Anything else leads us to a inconsistent interface.
+
+> > Since FIEMAP already exists for most Linux filesystems, it probably makes
+> > sense to implement SEEK_{HOLE,DATA} by calling FIEMAP to get the disk
+> > mapping in the first place.
+
+Not if it means forcing an FIEMAP_FLAG_SYNC, which implies an fsync().
+If the only way to get consistent data across ext4, btrfs, xfs,
+etc. is to force userspace to issue a FIEMAP_FLAG_SYNC, then we need
+to have a separate interface of SEEK_HOLE/SEEK_DATA that doesn't
+require flushing data to the disk first.
+
+Maybe coreutils will need to use FIEMAP_FLAG_SYNC initially, since
+it's the only way to guarantee correct behaviour for XFS.  But I would
+really rather that be the long-term way we leave things!
+
+						- Ted
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
