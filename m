@@ -1,29 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3JFvv4d042794 for <xfs@oss.sgi.com>; Tue, 19 Apr 2011 10:57:58 -0500
-Received: from test.thunk.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 57A7BC02EF1
-	for <xfs@oss.sgi.com>; Tue, 19 Apr 2011 09:01:23 -0700 (PDT)
-Received: from test.thunk.org (li9-11.members.linode.com [67.18.176.11]) by
-	cuda.sgi.com with ESMTP id 5b8xFfvYkSbY0STm for
-	<xfs@oss.sgi.com>; Tue, 19 Apr 2011 09:01:23 -0700 (PDT)
-Date: Tue, 19 Apr 2011 12:01:14 -0400
-From: "Ted Ts'o" <tytso@mit.edu>
-Subject: Re: Files full of zeros with coreutils-8.11 and xfs (FIEMAP related?)
-Message-ID: <20110419160114.GE3030@thunk.org>
-References: <E7438588-5C5A-42B9-9B6C-FADF7CAC6D3A@dilger.ca>
-	<4EEEA16E-1FDB-4430-A372-8F8701196E4C@mit.edu>
-	<20110418004040.GS21395@dastard>
-	<6C89E159-A5F6-4A06-A3D2-273BE4CFB9B5@dilger.ca>
-	<BANLkTin=WEpSf6ddiOMNMOpCPP-wiEttSw@mail.gmail.com>
-	<20110419034455.GB23985@dastard>
-	<BANLkTinjh968ECqAobQ677hnV5yzke1ncw@mail.gmail.com>
-	<20110419074538.GG23985@dastard> <20110419140909.GD3030@thunk.org>
-	<4DAD987F.5000506@sandeen.net>
+	p3JJKFm7049684 for <xfs@oss.sgi.com>; Tue, 19 Apr 2011 14:20:15 -0500
+Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C00B28F8040
+	for <xfs@oss.sgi.com>; Tue, 19 Apr 2011 12:23:39 -0700 (PDT)
+Subject: [PATCH] xfs: only SetPageUptodate if all buffers are uptodate
+From: Ben Myers <bpm@sgi.com>
+Date: Tue, 19 Apr 2011 06:40:28 -0500
+Message-ID: <20110419114028.7844.10303.stgit@nfs3>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4DAD987F.5000506@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,43 +22,90 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Andreas Dilger <adilger@dilger.ca>, Yongqiang Yang <xiaoqiangnk@gmail.com>, xfs-oss <xfs@oss.sgi.com>, "coreutils@gnu.org" <coreutils@gnu.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, =?iso-8859-1?Q?P=E1draig?= Brady <P@draigbrady.com>, Markus Trippelsdorf <markus@trippelsdorf.de>
+To: aelder@sgi.com
+Cc: xfs@oss.sgi.com
 
-On Tue, Apr 19, 2011 at 09:13:19AM -0500, Eric Sandeen wrote:
-> 
-> But I too am confused about Dave's assertion that it only reflects ondisk state when we have that pesky delalloc flag.
-> 
-> Whose idea was that, anyway? ;)
-> 
-> I'd certainly buy the argument that it -should- only reflect ondisk state, and we should nuke the delalloc flag from orbit, if we could, though.
+xfs_vm_writepage and xfs_page_convert set a page uptodate if it is determined
+that all of the buffer_heads attached to that page are uptodate.
 
-I see three options of how we can clarify FIEMAP's semantics:
+Currently we use the flag variable 'uptodate'.  The flag is initially set = 1
+and it is cleared if a !buffer_uptodate buffer is encountered.  In addition we
+check that bh == head in order to ensure that all of the buffer_heads have been
+checked.  However, it is possible to break out of the buffer_head loop early
+having processed only the first buffer.  This leaves uptodate == 1 and bh ==
+head, so the uptodate bit can be set on a page even if not all of the buffers
+have been checked.  This can lead to data corruption on platforms with > 1
+buffer per page.
 
-1) We define it as only reflecting ondisk state, and nuke the delalloc
-flag from orbit.
+SGI-PV: 1014173
 
-2) We state that if the file is currently has unflushed pages in the
-page cache, and FIEMAP_FLAG_SYNC is not passed, whether or not extents
-return the DELALLOC flag or how they handle the UNWRITTEN flag is
-undefined.
+Signed-off-by: Ben Myers <bpm@sgi.com>
+---
+ fs/xfs/linux-2.6/xfs_aops.c |   16 ++++++++--------
+ 1 files changed, 8 insertions(+), 8 deletions(-)
 
-3) We state that FIEMAP is supposed to return information which
-reflects the union of the on-disk and page cache state, with all that
-this implies.
-
-All of these are internally consistent definitions --- we need to
-chose one, document, and then tell the shellutils folks what they
-should do.
-
-In the case of #1 and #2, we really need to implement support for
-SEEK_HOLE/SEEK_DATA for userspace programs like cp who want to know
-this information.
-
-Do we all agree on the problem statement, at least?  If so, then we
-can try to come consensus on what is the appropriate solution. 
-
-    	   		     	     - Ted
+diff --git a/fs/xfs/linux-2.6/xfs_aops.c b/fs/xfs/linux-2.6/xfs_aops.c
+index 52dbd14..c961f35 100644
+--- a/fs/xfs/linux-2.6/xfs_aops.c
++++ b/fs/xfs/linux-2.6/xfs_aops.c
+@@ -686,7 +686,7 @@ xfs_convert_page(
+ 	unsigned long		p_offset;
+ 	unsigned int		type;
+ 	int			len, page_dirty;
+-	int			count = 0, done = 0, uptodate = 1;
++	int			count = 0, done = 0, uptodate = 0;
+  	xfs_off_t		offset = page_offset(page);
+ 
+ 	if (page->index != tindex)
+@@ -727,8 +727,8 @@ xfs_convert_page(
+ 	do {
+ 		if (offset >= end_offset)
+ 			break;
+-		if (!buffer_uptodate(bh))
+-			uptodate = 0;
++		if (buffer_uptodate(bh))
++			uptodate++;
+ 		if (!(PageUptodate(page) || buffer_uptodate(bh))) {
+ 			done = 1;
+ 			continue;
+@@ -761,7 +761,7 @@ xfs_convert_page(
+ 		}
+ 	} while (offset += len, (bh = bh->b_this_page) != head);
+ 
+-	if (uptodate && bh == head)
++	if (uptodate == (PAGE_CACHE_SIZE / len))
+ 		SetPageUptodate(page);
+ 
+ 	if (count) {
+@@ -915,7 +915,7 @@ xfs_vm_writepage(
+ 	__uint64_t              end_offset;
+ 	pgoff_t                 end_index, last_index;
+ 	ssize_t			len;
+-	int			err, imap_valid = 0, uptodate = 1;
++	int			err, imap_valid = 0, uptodate = 0;
+ 	int			count = 0;
+ 	int			nonblocking = 0;
+ 
+@@ -978,8 +978,8 @@ xfs_vm_writepage(
+ 
+ 		if (offset >= end_offset)
+ 			break;
+-		if (!buffer_uptodate(bh))
+-			uptodate = 0;
++		if (buffer_uptodate(bh))
++			uptodate++;
+ 
+ 		/*
+ 		 * set_page_dirty dirties all buffers in a page, independent
+@@ -1047,7 +1047,7 @@ xfs_vm_writepage(
+ 
+ 	} while (offset += len, ((bh = bh->b_this_page) != head));
+ 
+-	if (uptodate && bh == head)
++	if (uptodate == (PAGE_CACHE_SIZE / len))
+ 		SetPageUptodate(page);
+ 
+ 	xfs_start_page_writeback(page, 1, count);
 
 _______________________________________________
 xfs mailing list
