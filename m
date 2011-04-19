@@ -1,23 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3JB4tof033851 for <xfs@oss.sgi.com>; Tue, 19 Apr 2011 06:04:56 -0500
-Received: from mail-wy0-f181.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 091EE3F63FE
-	for <xfs@oss.sgi.com>; Tue, 19 Apr 2011 04:08:21 -0700 (PDT)
-Received: from mail-wy0-f181.google.com (mail-wy0-f181.google.com
-	[74.125.82.181]) by cuda.sgi.com with ESMTP id Nb5qoiKsytAzw5Dd
-	for <xfs@oss.sgi.com>; Tue, 19 Apr 2011 04:08:21 -0700 (PDT)
-Received: by wyi11 with SMTP id 11so6629336wyi.26
-	for <xfs@oss.sgi.com>; Tue, 19 Apr 2011 04:08:20 -0700 (PDT)
-Date: Tue, 19 Apr 2011 13:07:37 +0200
-From: Anisse Astier <anisse@astier.eu>
-Subject: Re: xfs_repair crashing (versions 3.1.4 and 3.1.5)
-Message-ID: <20110419130737.45beb611@destiny.ordissimo>
-In-Reply-To: <20110419082705.GI23985@dastard>
-References: <BANLkTikh1i3aYgXNZut+AGT-1kz=aqv-Eg@mail.gmail.com>
-	<20110419082705.GI23985@dastard>
-Mime-Version: 1.0
+	p3JE9dLp039704 for <xfs@oss.sgi.com>; Tue, 19 Apr 2011 09:09:39 -0500
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 087231EC0A3B
+	for <xfs@oss.sgi.com>; Tue, 19 Apr 2011 07:13:05 -0700 (PDT)
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id zIOUiEIHUfQH1vCI for <xfs@oss.sgi.com>;
+	Tue, 19 Apr 2011 07:13:05 -0700 (PDT)
+Message-ID: <4DAD987F.5000506@sandeen.net>
+Date: Tue, 19 Apr 2011 09:13:19 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: Files full of zeros with coreutils-8.11 and xfs (FIEMAP related?)
+References: <76FFF648-CA02-494B-A862-566C66A8CB82@dilger.ca>
+	<20110416005040.GP21395@dastard>
+	<E7438588-5C5A-42B9-9B6C-FADF7CAC6D3A@dilger.ca>
+	<4EEEA16E-1FDB-4430-A372-8F8701196E4C@mit.edu>
+	<20110418004040.GS21395@dastard>
+	<6C89E159-A5F6-4A06-A3D2-273BE4CFB9B5@dilger.ca>
+	<BANLkTin=WEpSf6ddiOMNMOpCPP-wiEttSw@mail.gmail.com>
+	<20110419034455.GB23985@dastard>
+	<BANLkTinjh968ECqAobQ677hnV5yzke1ncw@mail.gmail.com>
+	<20110419074538.GG23985@dastard> <20110419140909.GD3030@thunk.org>
+In-Reply-To: <20110419140909.GD3030@thunk.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,47 +36,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Ted Ts'o <tytso@mit.edu>
+Cc: Andreas Dilger <adilger@dilger.ca>, Yongqiang Yang <xiaoqiangnk@gmail.com>, xfs-oss <xfs@oss.sgi.com>, "coreutils@gnu.org" <coreutils@gnu.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, =?ISO-8859-1?Q?P=E1draig_Brady?= <P@draigbrady.com>, Markus Trippelsdorf <markus@trippelsdorf.de>
 
-On Tue, 19 Apr 2011 18:27:05 +1000, Dave Chinner <david@fromorbit.com> wrote :
-
-> On Mon, Apr 18, 2011 at 09:24:22PM +0200, Anisse Astier wrote:
-> > directory flags set on non-directory inode 2283178100, would fix bad flags.
-> > bad key in bmbt root (is 73434, would reset to 74194) in inode
-> > 2283178100 data fork
-> > bad fwd (right) sibling pointer (saw 145202888 should be NULLDFSBNO)
-> > Segmentation fault
+On 4/19/11 9:09 AM, Ted Ts'o wrote:
+> On Tue, Apr 19, 2011 at 05:45:38PM +1000, Dave Chinner wrote:
+>> You are *not listening*. There is no #2. FIEMAP returns the extent
+>> state _on disk_ at the time of the call.
 > 
-> Hmmm. The very next line doesn't appear before the segfault, making
-> me think that it's the printf that is causing it to crash.
+> Dave, you're being rather strident about your insistence about what
+> FIEMAP's semantics are.  Part of the problem here is that it's *not*
+> clear or settled.
 > 
->         if (check_dups == 0 &&
->                 cursor.level[0].right_fsbno != NULLDFSBNO)  {
->                 do_warn(
->         _("bad fwd (right) sibling pointer (saw %llu should be NULLDFSBNO)\n"),
->                         cursor.level[0].right_fsbno);
+> If it really is the state _on_ _disk_, does XFS really have a DELALLOC
+> bit _on_ _disk_?
 > 
-> We get this line of output.
+> 					- Ted
 > 
->                 do_warn(
->         _("\tin inode %u (%s fork) bmap btree block %llu\n"),
->                         XFS_AGINO_TO_INO(mp, agno, ino), forkname,
->                         cursor.level[0].fsbno);
-> 
-> But not this one. I wonder if passing a 64bit number to a %u format
-> string (shoul dbe %llu) causes problems on ARM? All the variables
-> are valid as they are printed or accessed elsewhere in the function,
-> so that's the only thing I can think of without a stack trace to
-> tell me otherwise....
 
-I have no idea. I did not succeed in getting a stacktrace. CPU is an
-ARM9, and I used Debian armel squeeze & wheezy  xfsprogs binaries.
+no of course it doesn't....
 
+But I too am confused about Dave's assertion that it only reflects ondisk state when we have that pesky delalloc flag.
 
-Regards,
+Whose idea was that, anyway? ;)
 
-Anisse
+I'd certainly buy the argument that it -should- only reflect ondisk state, and we should nuke the delalloc flag from orbit, if we could, though.
+
+-Eric
 
 _______________________________________________
 xfs mailing list
