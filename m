@@ -1,33 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3J88CKI028638 for <xfs@oss.sgi.com>; Tue, 19 Apr 2011 03:08:13 -0500
-Received: from mail-px0-f174.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B86A815C4D4E
-	for <xfs@oss.sgi.com>; Tue, 19 Apr 2011 01:11:37 -0700 (PDT)
-Received: from mail-px0-f174.google.com (mail-px0-f174.google.com
-	[209.85.212.174]) by cuda.sgi.com with ESMTP id
-	XBPJdfh9kKDpHIMz for <xfs@oss.sgi.com>;
-	Tue, 19 Apr 2011 01:11:37 -0700 (PDT)
-Received: by pxi15 with SMTP id 15so4102321pxi.5
-	for <xfs@oss.sgi.com>; Tue, 19 Apr 2011 01:11:37 -0700 (PDT)
+	p3J8Nh7S029135 for <xfs@oss.sgi.com>; Tue, 19 Apr 2011 03:23:43 -0500
+Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 24B5B15C51D9
+	for <xfs@oss.sgi.com>; Tue, 19 Apr 2011 01:27:08 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	tODGaLhOQVL67ic3 for <xfs@oss.sgi.com>;
+	Tue, 19 Apr 2011 01:27:08 -0700 (PDT)
+Date: Tue, 19 Apr 2011 18:27:05 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfs_repair crashing (versions 3.1.4 and 3.1.5)
+Message-ID: <20110419082705.GI23985@dastard>
+References: <BANLkTikh1i3aYgXNZut+AGT-1kz=aqv-Eg@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20110419074538.GG23985@dastard>
-References: <20110415000940.GL21395@dastard>
-	<76FFF648-CA02-494B-A862-566C66A8CB82@dilger.ca>
-	<20110416005040.GP21395@dastard>
-	<E7438588-5C5A-42B9-9B6C-FADF7CAC6D3A@dilger.ca>
-	<4EEEA16E-1FDB-4430-A372-8F8701196E4C@mit.edu>
-	<20110418004040.GS21395@dastard>
-	<6C89E159-A5F6-4A06-A3D2-273BE4CFB9B5@dilger.ca>
-	<BANLkTin=WEpSf6ddiOMNMOpCPP-wiEttSw@mail.gmail.com>
-	<20110419034455.GB23985@dastard>
-	<BANLkTinjh968ECqAobQ677hnV5yzke1ncw@mail.gmail.com>
-	<20110419074538.GG23985@dastard>
-Date: Tue, 19 Apr 2011 16:11:37 +0800
-Message-ID: <BANLkTinozFL1Q5BmWr=7=Pua+0g_BciVvA@mail.gmail.com>
-Subject: Re: Files full of zeros with coreutils-8.11 and xfs (FIEMAP related?)
-From: Yongqiang Yang <xiaoqiangnk@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <BANLkTikh1i3aYgXNZut+AGT-1kz=aqv-Eg@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,113 +25,106 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Andreas Dilger <adilger@dilger.ca>, Theodore Tso <tytso@mit.edu>, Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>, "coreutils@gnu.org" <coreutils@gnu.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, =?ISO-8859-1?Q?P=E1draig_Brady?= <P@draigbrady.com>, Markus Trippelsdorf <markus@trippelsdorf.de>
+To: Anisse Astier <anisse@astier.eu>
+Cc: xfs@oss.sgi.com
 
-T24gVHVlLCBBcHIgMTksIDIwMTEgYXQgMzo0NSBQTSwgRGF2ZSBDaGlubmVyIDxkYXZpZEBmcm9t
-b3JiaXQuY29tPiB3cm90ZToKPiBPbiBUdWUsIEFwciAxOSwgMjAxMSBhdCAwMjo1MzoyMFBNICsw
-ODAwLCBZb25ncWlhbmcgWWFuZyB3cm90ZToKPj4gT24gVHVlLCBBcHIgMTksIDIwMTEgYXQgMTE6
-NDQgQU0sIERhdmUgQ2hpbm5lciA8ZGF2aWRAZnJvbW9yYml0LmNvbT4gd3JvdGU6Cj4+ID4gT24g
-VHVlLCBBcHIgMTksIDIwMTEgYXQgMDk6NTg6MTVBTSArMDgwMCwgWW9uZ3FpYW5nIFlhbmcgd3Jv
-dGU6Cj4+ID4+IE9uIE1vbiwgQXByIDE4LCAyMDExIGF0IDEwOjQ1IEFNLCBBbmRyZWFzIERpbGdl
-ciA8YWRpbGdlckBkaWxnZXIuY2E+IHdyb3RlOgo+PiA+PiA+IE9uIDIwMTEtMDQtMTcsIGF0IDY6
-NDAgUE0sIERhdmUgQ2hpbm5lciA8ZGF2aWRAZnJvbW9yYml0LmNvbT4gd3JvdGU6Cj4+ID4+ID4K
-Pj4gPj4gPiBPbiBTYXQsIEFwciAxNiwgMjAxMSBhdCAwODoyMToyOEFNIC0wNDAwLCBUaGVvZG9y
-ZSBUc28gd3JvdGU6Cj4+ID4+ID4KPj4gPj4gPiBPbiBBcHIgMTYsIDIwMTEsIGF0IDE6MTEgQU0s
-IEFuZHJlYXMgRGlsZ2VyIHdyb3RlOgo+PiA+PiA+Cj4+ID4+ID4gSW4gdGhhdCBjYXNlLCBpdCBt
-ZWFucyBjcCBzaG91bGQganVzdCBhbHdheXMgdXNlIEZJRU1BUF9GTEFHX1NZTkMsIHdoaWNoIGlz
-Cj4+ID4+ID4gZmluZS4KPj4gPj4gPgo+PiA+PiA+IEV4Y2VwdCB0aGF0IGlmIHNvbWVvbmUgaXMg
-Y29weWluZyBhIGxhcmdlIGRlbGF5IGFsbG9jYXRlZCBmaWxlLCBpdCB3aWxsCj4+ID4+ID4gY2F1
-c2UKPj4gPj4gPgo+PiA+PiA+IHRoZSBmaWxlIHRvIGltbWVkaWF0ZWx5IHNuYXBwZWQgdG8gZGlz
-aywgd2hpY2ggbWlnaHQgbm90IGJlIHRoZSBncmVhdGVzdAo+PiA+PiA+Cj4+ID4+ID4gdGhpbmcg
-aW4gdGhlIHdvcmxkLgo+PiA+PiA+Cj4+ID4+ID4gT2J2aW91cyB3b3JrYXJvdW5kIC0gaWYgdGhl
-IGluaXRpYWwgZmllbWFwIGNhbGwgc2hvd3MgdW53cml0dGVuCj4+ID4+ID4gZXh0ZW50cywgcmVk
-byBpdCB3aXRoIHRoZSBzeW5jIGZsYWcgc2V0LiBUaG91Z2ggdGhhdCBhc3N1bWXRlSB0aGF0Cj4+
-ID4+ID4geW91IGNhbiB0cnVzdCB0aGluZ3MgbGlrZSBkZWxhbGxvYyBleHRlbnRzIHRvIG9ubHkg
-Y292ZXIgdGhlIHJhbmdlCj4+ID4+ID4gdGhhdCB2YWxpZCBkYXRhIGV4aXN0cyBpbi4gV2hpY2gs
-IG9mIGNvdXJzZSwgeW91IGNhbid0IGFzc3VtZSwKPj4gPj4gPiBlaXRoZXIuIDovCj4+ID4+ID4K
-Pj4gPj4gPiBBbHdheXMgcGFzc2luZ8KgRklFTUFQX0ZMQUdfU1lOQyBpcyBmaW5lIGluIHRoaXMg
-Y2FzZS4gSXQgc2hvdWxkIG9ubHkgZG8KPj4gPj4gPiBhbnl0aGluZyBpZiB0aGVyZSBpcyB1bndy
-aXR0ZW4gZGF0YSwgd2hpY2ggaXMgdGhlIG9ubHkgY2FzZSB3ZSBhcmUgY29uY2VybmVkCj4+ID4+
-ID4gd2l0aCBhdCB0aGlzIHBvaW50LiDCoEluIGFueSBjYXNlLCB0aGlzIGlzIGEgc2ltcGxlIHNv
-bHV0aW9uIGZvciBjb3JldXRpbHMKPj4gPj4gPiB1bnRpbCBzdWNoIGEgdGltZSB0aGF0IGEgbW9y
-ZSBjb21wbGV4IHNvbHV0aW9uIGlzIGFkZGVkIGluIHRoZSBrZXJuZWwgKGlmCj4+ID4+ID4gZXZl
-cikuCj4+ID4+ID4KPj4gPj4gPiBDaHJpc3RvcGggaXMgd3JpdGUsIFNFRUtfSE9MRSBhbmQgU0VF
-S19EQVRBIGFyZQo+PiA+PiA+Cj4+ID4+ID4gYSBtdWNoIGJldHRlciBBUEkgZm9yIHdoYXQgY3Ag
-d291bGxkIGxrZSB0byBkby4gwqBVbmZvcnR1bmF0ZWx5IGl0IGhhc24ndAo+PiA+PiA+Cj4+ID4+
-ID4gYmVlbiBpbXBsZW1lbnRlZCB5ZXQgaW4gdGhlIFZGUy4uLgo+PiA+PiA+Cj4+ID4+ID4gQWdy
-ZWVkLCBTRUVLX0hPTEUvU0VFS19EQVRBIGlzIHRoZSByaWdodCB3YXkgdG8gc29sdmUgdGhpcyBw
-cm9ibGVtLgo+PiA+PiA+Cj4+ID4+ID4gSSBkb24ndCBzZWUgaG93IHRoaXMgd2lsbCBjaGFuZ2Ug
-dGhlIHByb2JsZW0gaW4gYW55IG1lYW5pbmdmdWwgd2F5LiBUaGVyZQo+PiA+PiA+IHdpbGwgc3Rp
-bGwgbmVlZCB0byBiZSBjb2RlIHRoYXQgaXMgdHJhdmVyc2luZyB0aGUgb24tZGlzayBtYXBwaW5n
-LCBhbmQgYWxzbwo+PiA+PiA+IGtlZXBpbmcgaXQgY29oZXJlbnQgd2l0aCB1bndyaXR0ZW4gZGF0
-YSBpbiB0aGUgcGFnZSBjYWNoZS4KPj4gPj4KPj4gPj4gSXQgc2VlbXMgdGhhdCB3ZSBhcmUgYmVp
-bmcgbWVzc2VkIHVwIGJ5IHBhZ2UgY2FjaGUgYW5kIGRpc2suCj4+ID4+IFVud3JpdHRlbiBmbGFn
-IHJldHVybmVkIGZyb20gRklFTUFQIGluZGljYXRlcyBibG9ja3Mgb24gZGlzayBhcmUgbm90Cj4+
-ID4+IHdyaXR0ZW4sIGJ1dCBpdCBkb2VzIG5vdCBzYXkgaWYgdGhlcmUgaXMgZGF0YSBpbiBwYWdl
-IGNhY2hlLiDCoFNvCj4+ID4+IEZJRU1BUCBpdHNlbGYganVzdCB0ZWxscyB1c2VyIHRoZSBtYXAg
-b24gZGlzay4gwqBIb3dldmVyIHRoZXJlIGlzIGFuCj4+ID4+IGV4Y2VwdGlvbiBmb3IgZGVsYXll
-ZCBhbGxvY2F0aW9uLCDCoEZJRU1BUCB0ZWxscyB1c2VycyB0aGUgZGF0YSBpcyBpbgo+PiA+PiBw
-YWdlIGNhY2hlLgo+PiA+Cj4+ID4gTm8sIEZJRU1BUCBkb2VzIG5vdCB0ZWxsIHRoZSB1c2VyIHRo
-ZXJlIGlzIGRhdGEgaW4gdGhlIHBhZ2UgY2FjaGUuCj4+ID4gSXQgdGVsbHMgdGhlcmUgdXNlciB0
-aGVyZSBpcyBhIGRlbGF5ZWQgYWxsb2NhdGlvbiBleHRlbnQuIEZvciBYRlMsIGEKPj4gPiBkZWxh
-eWVkIGFsbG9jYXRpb24gZXh0ZW50IGNhbiBjb3ZlciBhIHJhbmdlIF9ncmVhdGVyXyB0aGFuIHRo
-ZXJlIGlzCj4+ID4gZGF0YSBpbiB0aGUgcGFnZSBjYWNoZSAtIHdlIGRvIGFsbG9jYXRpb24gYWxs
-aWdubWVudCwgc3BlY3VsYXRpdmUKPj4gPiBhbGxvY2F0aW9uIGFuZCBvdGhlciB0cmlja3MgdG8g
-YXZvaWQgZnJhZ21lbnRhdGlvbiB2aWEKPj4gPiBkZWxheWVkIGFsbG9jYXRpb24uIFdoZW4gWEZT
-cyBzYXlzIHRoZXJlIGlzIGEgZGVsYWxsb2MgZXh0ZW50LCBpdCBpcwo+PiA+IHNpbXBseSBzaG93
-aW5nIHRoZSBpbi1tZW1vcnkgcmVwcmVzZW50YXRpb24gb2YgdGhlIGV4dGVudC4gaWYgeW91Cj4+
-ID4gd2FudCB0byBrbm93IHdoZXJlIHRoZSBkYXRhIGluIHRoZSBwYWdlIGNhY2hlIGFjdHVhbGx5
-IGlzLCB5b3UgbmVlZAo+PiA+IHRvIHN5bmMgdGhlIGZpbGUgdG8gZGlzayB0byBnZXQgdGhvc2Ug
-cmFuZ2VzIGNvbnZlcnRlZCB0byByZWFsCj4+ID4gZXh0ZW50cy4gVGhpcyBpcyBob3cgeGZzX2Jt
-YXAgaGFzIHdvcmtlZCBmb3IgMTUgeWVhcnMuLi4uCj4+ID4KPj4gPj4gTWF5YmUgRklFTUFQIHNo
-b3VsZCByZXR1cm4gYWxsIGtub3duIG1lc3NhZ2VzIGZvciB1bndyaXR0ZW4gZXh0ZW50LCBpZgo+
-PiA+PiB1bndyaXR0ZW4gZGF0YSBleGlzdHMgaW4gcGFnZSBjYWNoZSwgRklFTUFQIHNob3VsZCBs
-ZXQgdXNlcnMga25vdyB0aGF0Cj4+ID4+IGRhdGEgaXMgaW4gcGFnZSBjYWNoZSBhbmQgc3BhY2Ug
-b24gZGlzayBoYXMgYmVlbiBwcmVhbGxvY2F0ZWQsIGJ1dAo+PiA+PiBkYXRhIGhhcyBub3QgYmVl
-biBmbHVzaGVkIGludG8gZGlzay4gwqBBY3R1YWxseSwgZGVsYXllZCBhbGxvY2F0aW9uIGhhcwo+
-PiA+PiBkb25lIGxpa2UgdGhpcy4gVGhlbiB1c2VyLXNwYWNlIGFwcGxpY2F0aW9ucyBjYW4gZGV0
-ZXJtaW5lIGhvdyB0byBkby4KPj4gPj4gVGFraW5nIGNwIGFzIGFuIGV4YW1wbGUsIGl0IHdpbGwg
-Y29weSBmcm9tIHBhZ2UgY2FjaGUgcmF0aGVyIGlnbm9yZQo+PiA+PiBpdC4KPj4gPgo+PiA+IE9u
-Y2UgYWdhaW4sIEZJRU1BUCBpcyBmb3Igc2hvd2luZyB0aGUgZmlsZXN5c3RlbSdzIGN1cnJlbnQg
-ZXh0ZW50Cj4+ID4gc3RhdGUsIG5vdCB0aGUgcGFnZSBjYWNoZSBzdGF0ZS4gRXh0NCBtYXkgaW1w
-bGVtZW50IEZJRU1BUCBieSBkb2luZwo+PiA+IHBhZ2UgY2FjaGUgd2Fsa3MsIGJ1dCB0aGF0IGlz
-IGEgZmlsZXN5c3RlbSBzcGVjaWZpYyBpbXBsZW1lbnRhdGlvbgo+PiA+IGRldGFpbC4KPj4gPgo+
-PiA+PiBXZSBuZWVkIGEgZGVmaW5pdGUgZGVmaW5pdGlvbiBmb3IgRklFTUFQLCBpbiBvdGhlciB3
-b3JkcywgaXQgdGVsbHMKPj4gPj4gdXNlcnMgbWFwIG9uIGRpc2sgb3IgYm90aCBkaXNrIGFuZCBw
-YWdlIGNhY2hlLgo+PiA+Cj4+ID4gV2UgYWxyZWFkeSBoYXZlIGEgZGVmaW5pdGlvbiAtIGFuZCBp
-dCBoYXMgbm90aGluZyB0byBkbyB3aXRoIHRoZQo+PiA+IHBhZ2UgY2FjaGUgc3RhdGUuCj4+ID4K
-Pj4gPj4gSWYgdGhlIGZvcm1lciBvbmUgaXMgdGFrZW4sIHRoZW4gRklFTUFQIHNob3VsZCBub3Qg
-Y29uc2lkZXIKPj4gPj4gZGVsYXllZCBhbGxvY2F0aW9uLgo+PiA+Cj4+ID4gTm90IGF0IGFsbC4g
-dGhlIGRlbGF5ZWQgYWxsb2NhdGlvbiBleHRlbnQgaXMgYSBmaXJzdCBjbGFzcyBleHRlbnQKPj4g
-PiB0eXBlIGluIFhGUyBhbmQgaXQgaXMgcmVwb3J0ZWQgZGlyZWN0bHkgZnJvbSB0aGUgZXh0ZW50
-IGxpc3QuIFlvdXIKPj4gPiB2aWV3cG9pbnQgaXMgdmVyeSBleHQ0LXNwZWNpZmljIGFuZCBpZ25v
-cmVzIHRoZSBmYWN0IHRoYXQgb3RoZXIKPj4gPiBmaWxlc3lzdGVtcyB3ZXJlIGRvaW5nIHRoaXMg
-c29ydCBvZiBtYXBwaW5nIGxvbmcgYmVmb3JlIGV2ZW4gZXh0Mwo+PiA+IChsZXQgYWxvbmUgZXh0
-NCkgd2FzIGEgZ2xpbnQgaW4gdGhlIGRlc2lnbmVyJ3MgZXllLi4uLgo+PiA+Cj4+ID4+IG90aGVy
-d2lzZSwgRklFTUFQIHNob3VsZCByZXR1cm4gYWxsIGtub3duIG1lc3NhZ2VzIGZvciB1bndyaXR0
-ZW4gY2FzZQo+PiA+PiBsaWtlIGRlbGF5ZWQgYWxsb2NhdGlvbi4KPj4gPgo+PiA+IFNlZSBteSBw
-cmV2aW91cyBjb21tZW50cyBhYm91dCBleHRlbnRzIGJlaW5nIHVud3JpdHRlbiB1bnRpbCBkYXRh
-IGlzCj4+ID4gcGh5c2ljYWxseSB3cml0dGVuIHRvIHRoZW0uCj4+IFVuZGVyc3Rvb2QsIHRoYW5r
-IHlvdSBmb3IgeW91ciBleHBsYW5hdGlvbi4KPj4KPj4gT2suIMKgTGV0J3MgbG9vayBhdCBpdCBm
-cm9tIGEgaGlnaGVyIHZpZXcuIMKgV2hhdCB5b3UgZGVzY3JpYmVkIGFib3V0Cj4+IGV4dGVudCBz
-dGF0ZSBpcyBzcGVjaWZpYyB0byB4ZnMuCj4+Cj4+IEkgdGhpbmsgdGhlcmUgYXJlIDIgd2F5cyB0
-byBwcm92aWRlIGEgZGVmaW5pdGUgZGVmaW5pdGlvbiBmb3IgRklFTUFQCj4+IGZvciBhbGwgZmls
-ZXN5c3RlbXM6Cj4+Cj4+IDEuIEZJRU1BUCByZXR1cm5zIGV4dGVudCBzdGF0ZSBvbiBkaXNrLgo+
-PiAyLiBGSUVNQVAgcmV0dXJucyBleHRlbnQgYm90aCBpbiBtZW1vcnkgYW5kIG9uIGRpc2suCj4K
-PiBZb3UgYXJlICpub3QgbGlzdGVuaW5nKi4gVGhlcmUgaXMgbm8gIzIuIEZJRU1BUCByZXR1cm5z
-IHRoZSBleHRlbnQKPiBzdGF0ZSBfb24gZGlza18gYXQgdGhlIHRpbWUgb2YgdGhlIGNhbGwuIElm
-IHlvdSB3YW50IGl0IHRvIHJlZmxlY3QKPiB0aGUgaW4tbWVtb3J5IHN0YXRlIGF0IHRoZSB0aW1l
-IG9mIHRoZSBjYWxsIChmb3IgZGF0YSBvciBtZXRhZGF0YSksCj4geW91ICptdXN0KiB1c2UgdGhl
-IHRoZSBTWU5DIGZsYWcgdG8gY29udmVydCB0aGF0IGluLW1lbW9yeSBzdGF0ZSB0bwo+IG9uLWRp
-c2sgc3RhdGUsIHdoaWNoIEZJRU1BUCB0aGVuIHJlcG9ydHMganVzdCBmaW5lLgoKU29ycnkgZm9y
-IGJlaW5nIGRlbnNlLgoKSSB0aGluayBkZWxheWVkIGV4dGVudCBpcyBhbiBleGNlcHRpb24uIGJl
-Y2F1c2UgaXQgaXMgbm90IG9uIHRoZSBkaXNrLgoKWW9uZ3FpYW5nLgo+Cj4gQ2hlZXJzLAo+Cj4g
-RGF2ZS4KPiAtLQo+IERhdmUgQ2hpbm5lcgo+IGRhdmlkQGZyb21vcmJpdC5jb20KPgoKCgotLSAK
-QmVzdCBXaXNoZXMKWW9uZ3FpYW5nIFlhbmcKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6
-Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On Mon, Apr 18, 2011 at 09:24:22PM +0200, Anisse Astier wrote:
+> Hi,
+> 
+> (first of all, I'm not subscribed to the list, Please cc-me on all replies)
+> 
+> On an ARM NAS, using kernel 2.6.36.2 I managed to crash my root xfs partition.
+> 
+> xfs_repair cannot then repair this partition and is crashing itself.
+> 
+> # xfs_info  /dev/sda2
+> meta-data=/dev/sda2              isize=256    agcount=32, agsize=7615249 blks
+>          =                       sectsz=512   attr=1
+> data     =                       bsize=4096   blocks=243687968, imaxpct=25
+>          =                       sunit=0      swidth=0 blks
+> naming   =version 2              bsize=4096   ascii-ci=0
+> log      =internal               bsize=4096   blocks=32768, version=1
+>          =                       sectsz=512   sunit=0 blks, lazy-count=0
+> realtime =none                   extsz=65536  blocks=0, rtextents=0
+> 
+> 
+> 
+> I did a SMART test to ensure the disk didn't have any bad block:
+> SMART Error Log Version: 1
+> No Errors Logged
+> 
+> SMART Self-test log structure revision number 1
+> Num  Test_Description    Status                  Remaining
+> LifeTime(hours)  LBA_of_first_error
+> # 1  Extended offline    Completed without error       00%      8327         -
+> 
+> The dmesg log (on another recovery system with kernel 2.6.36-rc2) ; I
+> tried to mount the system :
+> [ 1003.257446] XFS mounting filesystem sda2
+> [ 1003.301519] Starting XFS recovery on filesystem: sda2 (logdev: internal)
+> [ 1003.303068] XFS: bad number of regions (28024) in inode log format
+> [ 1003.303142] XFS: log mount/recovery failed: error 5
+> [ 1003.303419] XFS: log mount failed
+
+Something has corrupted the log....
+
+> I then had no other choice than suppressing the log with xfs_repair -L.
+
+Yup.
+
+> xfs_repair crashed, but I was able to mount the filesystem(ro), but
+> once I tried accessing the corrupt files, xfs would go mad:
+> [13717.138896] UDF-fs: No partition found (1)
+> [13717.202112] XFS mounting filesystem sda2
+> [13717.274885] Ending clean XFS mount for filesystem: sda2
+> [43969.970648] sshd (1039): /proc/1039/oom_adj is deprecated, please
+> use /proc/1039/oom_score_adj instead.
+> [107180.252602] Filesystem "sda2": corrupt dinode 805341224, (btree
+> extents).  Unmount and run xfs_repair.
+
+Quite likely, zeroing the log effectively corrupts the filesystem.
+
+.....
+> directory flags set on non-directory inode 2283178100, would fix bad flags.
+> bad key in bmbt root (is 73434, would reset to 74194) in inode
+> 2283178100 data fork
+> bad fwd (right) sibling pointer (saw 145202888 should be NULLDFSBNO)
+> Segmentation fault
+
+Hmmm. The very next line doesn't appear before the segfault, making
+me think that it's the printf that is causing it to crash.
+
+        if (check_dups == 0 &&
+                cursor.level[0].right_fsbno != NULLDFSBNO)  {
+                do_warn(
+        _("bad fwd (right) sibling pointer (saw %llu should be NULLDFSBNO)\n"),
+                        cursor.level[0].right_fsbno);
+
+We get this line of output.
+
+                do_warn(
+        _("\tin inode %u (%s fork) bmap btree block %llu\n"),
+                        XFS_AGINO_TO_INO(mp, agno, ino), forkname,
+                        cursor.level[0].fsbno);
+
+But not this one. I wonder if passing a 64bit number to a %u format
+string (shoul dbe %llu) causes problems on ARM? All the variables
+are valid as they are printed or accessed elsewhere in the function,
+so that's the only thing I can think of without a stack trace to
+tell me otherwise....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
