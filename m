@@ -1,28 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3KHIFHR105723 for <xfs@oss.sgi.com>; Wed, 20 Apr 2011 12:18:15 -0500
-Received: from test.thunk.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 788B13FC0F9
-	for <xfs@oss.sgi.com>; Wed, 20 Apr 2011 10:21:42 -0700 (PDT)
-Received: from test.thunk.org (li9-11.members.linode.com [67.18.176.11]) by
-	cuda.sgi.com with ESMTP id mFnnz2F5GmkrQ59A for
-	<xfs@oss.sgi.com>; Wed, 20 Apr 2011 10:21:42 -0700 (PDT)
-Date: Wed, 20 Apr 2011 13:21:27 -0400
-From: "Ted Ts'o" <tytso@mit.edu>
-Subject: Re: Files full of zeros with coreutils-8.11 and xfs (FIEMAP related?)
-Message-ID: <20110420172127.GF3030@thunk.org>
-References: <20110418004040.GS21395@dastard>
-	<6C89E159-A5F6-4A06-A3D2-273BE4CFB9B5@dilger.ca>
-	<BANLkTin=WEpSf6ddiOMNMOpCPP-wiEttSw@mail.gmail.com>
-	<20110419034455.GB23985@dastard>
-	<BANLkTinjh968ECqAobQ677hnV5yzke1ncw@mail.gmail.com>
-	<20110419074538.GG23985@dastard> <20110419140909.GD3030@thunk.org>
-	<4DAD987F.5000506@sandeen.net> <20110419160114.GE3030@thunk.org>
-	<20110420152131.GA7123@infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110420152131.GA7123@infradead.org>
+	p3KILrN2108169 for <xfs@oss.sgi.com>; Wed, 20 Apr 2011 13:21:53 -0500
+Received: from rcsinet10.oracle.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D511112B955B
+	for <xfs@oss.sgi.com>; Wed, 20 Apr 2011 11:25:18 -0700 (PDT)
+Received: from rcsinet10.oracle.com (rcsinet10.oracle.com [148.87.113.121]) by
+	cuda.sgi.com with ESMTP id jTeqoh7VkAo6j9UW for
+	<xfs@oss.sgi.com>; Wed, 20 Apr 2011 11:25:18 -0700 (PDT)
+From: Chris Mason <chris.mason@oracle.com>
+Subject: buffered writeback torture program
+Date: Wed, 20 Apr 2011 14:23:29 -0400
+Message-Id: <1303322378-sup-1722@think>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,67 +20,234 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Andreas Dilger <adilger@dilger.ca>, Eric Sandeen <sandeen@sandeen.net>, Yongqiang Yang <xiaoqiangnk@gmail.com>, xfs-oss <xfs@oss.sgi.com>, "coreutils@gnu.org" <coreutils@gnu.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, P?draig Brady <P@draigbrady.com>, Markus Trippelsdorf <markus@trippelsdorf.de>
+To: linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, xfs@oss.sgi.com, jack@suse.cz
+Cc: axboe@kernel.dk
 
-On Wed, Apr 20, 2011 at 11:21:31AM -0400, Christoph Hellwig wrote:
-> 
-> How do you want to union the existance of an extent with a state
-> on disk, with a pending modification to it that is still in-memory
-> and not flushed out to disk yet?  This is looking into an uncertain
-> future, as the extent map might change in various other ways before
-> the transaction to conver the unwritten extents goes to disk.
+Hi everyone,
 
-So for example, suppose you have a single unwritten extent on disk,
-but there are 3 regions within that extent range's that have unwritten
-pages, you return 3 or 4 fiemap_extent structures, reflecting the
-state if the unwritten pages were pushed out to disk at the time of
-the fiemap ioctl --- but without actually doing the expensive sync
-operation.  The one case where you can't do that is in the case of
-delayed allocation blocks, since you won't know where on disk they
-would be going, necessarily --- but hey, conveniently we have a
-DELALLOC bit already defined....
+I dug out my old fsync latency tester to make sure Jens' new plugging
+code hadn't caused regressions.  This started off as a program Ted wrote
+during the firefox dark times, and I added some more code to saturate
+spindles with random IO.
 
-> And if we do this it would need to be a new option to FIEMAP, as
-> it changes the semantics from the existing one that returns the
-> actual state on disk (plus the magic delalloc bit).
+The basic idea is:
 
-Well, we seem to have inconsistent semantics right now, because we
-never defined the semantics clearly enough from the beginning.  So no
-matter which choice we choose, including "the on-disk extent state
-only, and nuke the delalloc bit", we will be changing semantics.  I'm
-not sure we can get around that.
+1) make a nice big sequential 8GB file
+2) fork a process doing random buffered writes inside that file
+3) overwrite a second 4K file in a loop, doing fsyncs as you go.
 
-> And even if you find semantics that take pending unwrittent extent
-> conversions into account and still make sense how do you plan to
-> implement them?  For buffered writes into unwritten extents it could
-> be done by walking the pagecache and buffers after adding a new
-> flag for an already converted unwritten extent to the buffer head
-> state.  But there's no easy way to do that for direct I/O.
+The test program times how long each write and fsync take in step three.
+The idea is that if we have problems with concurrent buffered writes and
+fsyncs, then all of our fsyncs will get stuck behind the random IO
+writeback and our latencies will be high.
 
-If the file is being actively modified (for example with direct I/O),
-there will be inevitably race conditions.  If only some of the pending
-conversions have been taken into account, that seems like it's
-reasonable result.  If a file is actively being modified by many DIO
-writes, even using FIEMAP_FLAG_SYNC isn't going to help you get a
-coherent view of the file, so this seems to be a previously unsolved
-problem....
+For a while, xfs, btrfs and ext4 did really well at this test.  Our
+fsync latencies were very small and we all sent down synchronous IO that
+the elevator dispatched straight to the drive.
 
-> > In the case of #1 and #2, we really need to implement support for
-> > SEEK_HOLE/SEEK_DATA for userspace programs like cp who want to know
-> > this information.
-> 
-> We need to do that anyway, as fiemap is a horrible interface for
-> tools that just want to skip holes.
+Things have changed though, both xfs and ext4 have grown code to do
+dramatically more IO than write_cache_pages has asked for (I'm pretty
+sure I told everyone this was a good idea at the time).  When doing
+sequential writes, this is a great idea.  When doing random IO, it leads
+to unbound stalls in balance_dirty_pages.
 
-I agree that implementing SEEK_HOLE/SEEK_DATA is a good thing
-regardless of which choice we end up choosing.
+Here's an example run on xfs:
 
-	      	    	      	     - Ted
+# fsync-tester
+setting up random write file
+done setting up random write file
+starting fsync run
+starting random io!
+write time 0.0009s fsync time: 2.0142s
+write time 128.9305s fsync time: 2.6046s
+run done 2 fsyncs total, killing random writer
+
+In this case the 128s spent in write was on a single 4K overwrite on a
+4K file.
+
+ext4 is doing a blanket increase on wbc->nr_to_write, while xfs is
+pushing down any other IO inside the same extent as the writepage it
+just serviced.  The test program ends up being a worst case for both of
+them.
+
+I honestly don't know what the right answer is here, but I'd say we
+should be backing off our nr_to_write bumps if we notice a lot of random
+IO.
+
+Btrfs does bump wbc->nr_to_write as well, but only as far as we have
+sequential IO to process.  We also end up throttling the random IO
+harder because it is a worst case for our delayed allocation reservation
+code.
+
+The test program is below, and can also be found at:
+
+http://oss.oracle.com/~mason/fsync-tester.c
+
+Usage: gcc -Wall -o fsync-tester fsync-tester.c
+
+mkfs.your_favorite /dev/xxx
+mount /dev/xxx /mnt
+cd /mnt
+fsync-tester
+
+It creates a single 8GB file and one 4K file, so your FS must be at
+least that big.
+
+-chris
+
+/*
+ * fsync-tester.c
+ *
+ * Written by Theodore Ts'o, 3/21/09.  Updated by Chris Mason to include
+ * the random writer thread
+ *
+ * This file may be redistributed under the terms of the GNU Public
+ * License, version 2.
+ */
+#define _FILE_OFFSET_BITS 64
+#define _XOPEN_SOURCE 500
+#include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/wait.h>
+#include <signal.h>
+#include <time.h>
+#include <fcntl.h>
+#include <string.h>
+
+#define SIZE (32768*32)
+static char bigbuf[4096];
+
+static float timeval_subtract(struct timeval *tv1, struct timeval *tv2)
+{
+	return ((tv1->tv_sec - tv2->tv_sec) +
+		((float) (tv1->tv_usec - tv2->tv_usec)) / 1000000);
+}
+
+static void random_io(int fd, loff_t total)
+{
+	loff_t cur = 0;
+	int ret;
+
+	/* just some constant so our runs are always the same */
+	srand(4096);
+	while(1) {
+		/*
+		 * we want a random offset into the file,
+		 * but rand only returns max in.  So we make
+		 * it a random block number instead, and multiply
+		 * by 4096.
+		 */
+		cur = rand();
+		cur = (cur * 4096) % (total - 4096);
+
+		/* align our offset  to 4k */
+		cur = cur / 4096;
+		cur = cur * 4096;
+		ret = pwrite(fd, bigbuf, 4096, cur);
+		if (ret < 4096) {
+			fprintf(stderr, "short write ret %d cur %llu\n",
+				ret, (unsigned long long)cur);
+			exit(1);
+		}
+	}
+}
+
+int main(int argc, char **argv)
+{
+	int	fd;
+	struct timeval tv, tv2, start;
+	char buf[SIZE];
+	pid_t pid;
+	loff_t total = ((loff_t)8) * 1024 * 1024 * 1024;
+	loff_t cur = 0;
+	int rand_fd;
+	int ret;
+	int i;
+	int status;
+	struct stat st;
+
+	memset(bigbuf, 0, 4096);
+
+	rand_fd = open("fsync-tester.rnd-file", O_WRONLY|O_CREAT);
+	if (rand_fd < 0) {
+		perror("open");
+		exit(1);
+	}
+
+	ret = fstat(rand_fd, &st);
+	if (ret < 0) {
+		perror("fstat");
+		exit(1);
+	}
+
+	if (st.st_size < total) {
+		printf("setting up random write file\n");
+		while(cur < total) {
+			ret = write(rand_fd, bigbuf, 4096);
+			if (ret <= 0) {
+				fprintf(stderr, "short write\n");
+				exit(1);
+			}
+			cur += ret;
+		}
+		printf("done setting up random write file\n");
+	}
+
+	fd = open("fsync-tester.tst-file", O_WRONLY|O_CREAT);
+	if (fd < 0) {
+		perror("open");
+		exit(1);
+	}
+	memset(buf, 'a', SIZE);
+
+	pid = fork();
+	if (pid == 0) {
+		printf("starting random io!\n");
+		random_io(rand_fd, total);
+		exit(0);
+	}
+
+	close(rand_fd);
+
+	gettimeofday(&start, NULL);
+	printf("starting fsync run\n");
+	for(i = 0; i < 60; i++) {
+		float pwrite_time;
+
+		gettimeofday(&tv2, NULL);
+		pwrite(fd, buf, SIZE, 0);
+		gettimeofday(&tv, NULL);
+
+		pwrite_time = timeval_subtract(&tv, &tv2);
+
+		fsync(fd);
+		gettimeofday(&tv2, NULL);
+
+		printf("write time: %5.4fs fsync time: %5.4fs\n", pwrite_time,
+		       timeval_subtract(&tv2, &tv));
+
+		if (timeval_subtract(&tv2, &start) > 60)
+			break;
+		sleep(4);
+	}
+	printf("run done %d fsyncs total, killing random writer\n", i + 1);
+	fflush(stdout);
+	kill(pid, SIGTERM);
+	wait(&status);
+
+	return 0;
+}
+
+
 
 _______________________________________________
 xfs mailing list
