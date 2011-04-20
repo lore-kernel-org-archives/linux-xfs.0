@@ -1,20 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3JL54lt053486 for <xfs@oss.sgi.com>; Tue, 19 Apr 2011 16:05:04 -0500
-Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 912AF3F8660
-	for <xfs@oss.sgi.com>; Tue, 19 Apr 2011 14:08:29 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	x3C9TgukPqsOPpI0 for <xfs@oss.sgi.com>;
-	Tue, 19 Apr 2011 14:08:29 -0700 (PDT)
-Date: Wed, 20 Apr 2011 07:08:25 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Files full of zeros with coreutils-8.11 and xfs (FIEMAP related?)
-Message-ID: <20110419210825.GJ23985@dastard>
-References: <20110416005040.GP21395@dastard>
-	<E7438588-5C5A-42B9-9B6C-FADF7CAC6D3A@dilger.ca>
+	p3K1ncUM064455 for <xfs@oss.sgi.com>; Tue, 19 Apr 2011 20:49:39 -0500
+Received: from mail-pv0-f181.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 94A0B3F46EC
+	for <xfs@oss.sgi.com>; Tue, 19 Apr 2011 18:53:05 -0700 (PDT)
+Received: from mail-pv0-f181.google.com (mail-pv0-f181.google.com
+	[74.125.83.181]) by cuda.sgi.com with ESMTP id TRm82P84HIz0Y8D4
+	for <xfs@oss.sgi.com>; Tue, 19 Apr 2011 18:53:05 -0700 (PDT)
+Received: by pvg13 with SMTP id 13so264770pvg.26
+	for <xfs@oss.sgi.com>; Tue, 19 Apr 2011 18:53:04 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20110419160114.GE3030@thunk.org>
+References: <E7438588-5C5A-42B9-9B6C-FADF7CAC6D3A@dilger.ca>
 	<4EEEA16E-1FDB-4430-A372-8F8701196E4C@mit.edu>
 	<20110418004040.GS21395@dastard>
 	<6C89E159-A5F6-4A06-A3D2-273BE4CFB9B5@dilger.ca>
@@ -22,9 +20,11 @@ References: <20110416005040.GP21395@dastard>
 	<20110419034455.GB23985@dastard>
 	<BANLkTinjh968ECqAobQ677hnV5yzke1ncw@mail.gmail.com>
 	<20110419074538.GG23985@dastard> <20110419140909.GD3030@thunk.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110419140909.GD3030@thunk.org>
+	<4DAD987F.5000506@sandeen.net> <20110419160114.GE3030@thunk.org>
+Date: Wed, 20 Apr 2011 09:53:04 +0800
+Message-ID: <BANLkTinHsYgLbGBTnjRD1cJ0HAJXdebW-w@mail.gmail.com>
+Subject: Re: Files full of zeros with coreutils-8.11 and xfs (FIEMAP related?)
+From: Yongqiang Yang <xiaoqiangnk@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,59 +33,72 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Ted Ts'o <tytso@mit.edu>
-Cc: Andreas Dilger <adilger@dilger.ca>, Eric Sandeen <sandeen@sandeen.net>, Yongqiang Yang <xiaoqiangnk@gmail.com>, xfs-oss <xfs@oss.sgi.com>, "coreutils@gnu.org" <coreutils@gnu.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, =?iso-8859-1?Q?P=E1draig?= Brady <P@draigbrady.com>, Markus Trippelsdorf <markus@trippelsdorf.de>
+Cc: Andreas Dilger <adilger@dilger.ca>, Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>, "coreutils@gnu.org" <coreutils@gnu.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, =?ISO-8859-1?Q?P=E1draig_Brady?= <P@draigbrady.com>, Markus Trippelsdorf <markus@trippelsdorf.de>
 
-On Tue, Apr 19, 2011 at 10:09:09AM -0400, Ted Ts'o wrote:
-> On Tue, Apr 19, 2011 at 05:45:38PM +1000, Dave Chinner wrote:
-> > You are *not listening*. There is no #2. FIEMAP returns the extent
-> > state _on disk_ at the time of the call.
-> 
-> Dave, you're being rather strident about your insistence about what
-> FIEMAP's semantics are. 
+On Wed, Apr 20, 2011 at 12:01 AM, Ted Ts'o <tytso@mit.edu> wrote:
+> On Tue, Apr 19, 2011 at 09:13:19AM -0500, Eric Sandeen wrote:
+>>
+>> But I too am confused about Dave's assertion that it only reflects ondis=
+k state when we have that pesky delalloc flag.
+>>
+>> Whose idea was that, anyway? ;)
+>>
+>> I'd certainly buy the argument that it -should- only reflect ondisk stat=
+e, and we should nuke the delalloc flag from orbit, if we could, though.
+>
+> I see three options of how we can clarify FIEMAP's semantics:
+>
+> 1) We define it as only reflecting ondisk state, and nuke the delalloc
+> flag from orbit.
+>
+> 2) We state that if the file is currently has unflushed pages in the
+> page cache, and FIEMAP_FLAG_SYNC is not passed, whether or not extents
+> return the DELALLOC flag or how they handle the UNWRITTEN flag is
+> undefined.
+>
+> 3) We state that FIEMAP is supposed to return information which
+> reflects the union of the on-disk and page cache state, with all that
+> this implies.
+>
+> All of these are internally consistent definitions --- we need to
+> chose one, document, and then tell the shellutils folks what they
+> should do.
+>
+> In the case of #1 and #2, we really need to implement support for
+> SEEK_HOLE/SEEK_DATA for userspace programs like cp who want to know
+> this information.
+>
+> Do we all agree on the problem statement, at least? =A0If so, then we
+> can try to come consensus on what is the appropriate solution.
 
-The bit about the page cache state being relevant? That's what I was
-refering to here.
+I agree on the problem statement.  Users need to know what FIEMAP
+returns definitely.
 
-> Part of the problem here is that it's *not*
-> clear or settled.
-> 
-> If it really is the state _on_ _disk_, does XFS really have a DELALLOC
-> bit _on_ _disk_?
+It seems that Dave is looking at the problem from a different view.
 
-Sigh. No.
+Dave thinks that FIEMAP returns where data exists on disk finally.
+Then there are 2 possibilities: unknown and known.  delayed extent is
+unknown and others are known.  Although we know where data in
+unwritten extent exist finally on disk, we cannot know whether or not
+it is being in memory.  However we know data in delayed extent is in
+memory. it sounds strange.
 
-This whole thing blew up because of unwritten extent behaviour when
-there is dirty page cache covering and unwritten extent. Delalloc
-was not the issue - what I said is absolutely true for unwritten
-extents.  Somewhere in the middle someone started talking about
-delalloc extents and conflating their behaviour with unwritten
-extents, but I continued to talk about unwritten extents and
-cached pages.
+>
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 -=
+ Ted
+>
 
-Even so, for delalloc extents the dirty page state in the page cache
-is irrelevant. I've said earlier that XFS delalloc extents can span
-regions that have no page cache state - they don't get reported as
-holes by FIEMAP because they are tracked as delalloc. IOWs, like
-unwritten extents, you can't rely on delalloc extents to tell you
-where the data is in the file.
 
-So, it logically follws that you need to use the SYNC flag for both
-unwritten extents and delalloc extents to find out where there data
-realy lies by converting them to real, written extents. i.e. the
-only extents you can trust contain data from FIEMAP are the real
-extents on disk....
 
-Cheers,
+-- =
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Best Wishes
+Yongqiang Yang
 
 _______________________________________________
 xfs mailing list
