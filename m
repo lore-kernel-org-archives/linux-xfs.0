@@ -1,23 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3KBNX0R091551 for <xfs@oss.sgi.com>; Wed, 20 Apr 2011 06:23:33 -0500
-Received: from mail-vx0-f181.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 803B93FAFA6
-	for <xfs@oss.sgi.com>; Wed, 20 Apr 2011 04:27:00 -0700 (PDT)
-Received: from mail-vx0-f181.google.com (mail-vx0-f181.google.com
-	[209.85.220.181]) by cuda.sgi.com with ESMTP id
-	Cf4cPUfvmPZew5nm for <xfs@oss.sgi.com>;
-	Wed, 20 Apr 2011 04:27:00 -0700 (PDT)
-Received: by vxb39 with SMTP id 39so601046vxb.26
-	for <xfs@oss.sgi.com>; Wed, 20 Apr 2011 04:26:59 -0700 (PDT)
+	p3KEt9c2099522 for <xfs@oss.sgi.com>; Wed, 20 Apr 2011 09:55:09 -0500
+Date: Wed, 20 Apr 2011 09:57:22 -0500
+From: bpm@sgi.com
+Subject: Re: [PATCH] xfs: only SetPageUptodate if all buffers are uptodate
+Message-ID: <20110420145722.GB29759@sgi.com>
+References: <20110419114028.7844.10303.stgit@nfs3>
+	<20110420103521.GA20510@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <BANLkTikBSadR7K2RfiS2k60nEOPncaDfyw@mail.gmail.com>
-References: <BANLkTikBSadR7K2RfiS2k60nEOPncaDfyw@mail.gmail.com>
-Date: Wed, 20 Apr 2011 16:56:59 +0530
-Message-ID: <BANLkTi=2yrp5poJzeHD+u=2zY0nRgxX21g@mail.gmail.com>
-Subject: Re: [patch] xfsprogs: fixes a regression hang in xfs_repair phase 4
-From: Ajeet Yadav <ajeet.yadav.77@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20110420103521.GA20510@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,11 +23,34 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com, aelder@sgi.com
 
-I guess the patch is not reviewed because of patch subject, but the
-problem is related to btree code.
-Can anyone please take out time to understand the problem
+Hey Christoph,
+
+On Wed, Apr 20, 2011 at 06:35:21AM -0400, Christoph Hellwig wrote:
+> On Tue, Apr 19, 2011 at 06:40:28AM -0500, Ben Myers wrote:
+> > xfs_vm_writepage and xfs_page_convert set a page uptodate if it is determined
+> > that all of the buffer_heads attached to that page are uptodate.
+> > 
+> > Currently we use the flag variable 'uptodate'.  The flag is initially set = 1
+> > and it is cleared if a !buffer_uptodate buffer is encountered.  In addition we
+> > check that bh == head in order to ensure that all of the buffer_heads have been
+> > checked.  However, it is possible to break out of the buffer_head loop early
+> > having processed only the first buffer.  This leaves uptodate == 1 and bh ==
+> > head, so the uptodate bit can be set on a page even if not all of the buffers
+> > have been checked.  This can lead to data corruption on platforms with > 1
+> > buffer per page.
+> 
+> Dou have a testcase to reproduce this issue?
+
+Wish I did.  The test case that discovered this only applies to CXFS.  I
+would have liked to post a test case for XFS but decided that this has
+been on my TODO list for too long already.  Looks to me like it has to
+be related to the inode size, so you quit probing buffers after the
+first.  Maybe some discussion will ring some bells for somebody.
+
+-Ben
 
 _______________________________________________
 xfs mailing list
