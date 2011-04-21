@@ -1,16 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3LJ81H4170688 for <xfs@oss.sgi.com>; Thu, 21 Apr 2011 14:08:02 -0500
-From: Alex Elder <aelder@sgi.com>
-Subject: [PATCH 3/5] xfstests: eliminate warnings under dmapi/src/suite1/cmd
-	(2)
-Date: Thu, 21 Apr 2011 14:11:11 -0500
-Message-Id: <24e71a00d24c1437a39bc1b0a6152013415e74cf.1303412549.git.aelder@sgi.com>
-In-Reply-To: <1303413073-24173-1-git-send-email-aelder@sgi.com>
-References: <1303413073-24173-1-git-send-email-aelder@sgi.com>
-In-Reply-To: <3b41615dd6b09fafeabe7cc8568c2feaa8792caa.1303412549.git.aelder@sgi.com>
-References: <3b41615dd6b09fafeabe7cc8568c2feaa8792caa.1303412549.git.aelder@sgi.com>
+	p3LJMdYQ171158 for <xfs@oss.sgi.com>; Thu, 21 Apr 2011 14:22:39 -0500
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 382EA15073BA
+	for <xfs@oss.sgi.com>; Thu, 21 Apr 2011 12:26:06 -0700 (PDT)
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id VXrox6wVXIjCwH1x for <xfs@oss.sgi.com>;
+	Thu, 21 Apr 2011 12:26:06 -0700 (PDT)
+Message-ID: <4DB084CE.8020600@sandeen.net>
+Date: Thu, 21 Apr 2011 14:26:06 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: xfs_repair crashing (versions 3.1.4 and 3.1.5)
+References: <BANLkTikh1i3aYgXNZut+AGT-1kz=aqv-Eg@mail.gmail.com>	<20110419082705.GI23985@dastard>
+	<20110419130737.45beb611@destiny.ordissimo>
+In-Reply-To: <20110419130737.45beb611@destiny.ordissimo>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,326 +24,51 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Alex Elder <aelder@sgi.com>
+To: Anisse Astier <anisse@astier.eu>
+Cc: xfs@oss.sgi.com
 
-Eliminate build warnings reported on files located under
-dmapi/src/suite1/cmd/ (second of three).
+On 4/19/11 6:07 AM, Anisse Astier wrote:
+> On Tue, 19 Apr 2011 18:27:05 +1000, Dave Chinner <david@fromorbit.com> wrote :
+> 
+>> On Mon, Apr 18, 2011 at 09:24:22PM +0200, Anisse Astier wrote:
+>>> directory flags set on non-directory inode 2283178100, would fix bad flags.
+>>> bad key in bmbt root (is 73434, would reset to 74194) in inode
+>>> 2283178100 data fork
+>>> bad fwd (right) sibling pointer (saw 145202888 should be NULLDFSBNO)
+>>> Segmentation fault
+>>
+>> Hmmm. The very next line doesn't appear before the segfault, making
+>> me think that it's the printf that is causing it to crash.
+>>
+>>         if (check_dups == 0 &&
+>>                 cursor.level[0].right_fsbno != NULLDFSBNO)  {
+>>                 do_warn(
+>>         _("bad fwd (right) sibling pointer (saw %llu should be NULLDFSBNO)\n"),
+>>                         cursor.level[0].right_fsbno);
+>>
+>> We get this line of output.
+>>
+>>                 do_warn(
+>>         _("\tin inode %u (%s fork) bmap btree block %llu\n"),
+>>                         XFS_AGINO_TO_INO(mp, agno, ino), forkname,
+>>                         cursor.level[0].fsbno);
+>>
+>> But not this one. I wonder if passing a 64bit number to a %u format
+>> string (shoul dbe %llu) causes problems on ARM? All the variables
+>> are valid as they are printed or accessed elsewhere in the function,
+>> so that's the only thing I can think of without a stack trace to
+>> tell me otherwise....
+> 
+> I have no idea. I did not succeed in getting a stacktrace. CPU is an
+> ARM9, and I used Debian armel squeeze & wheezy  xfsprogs binaries.
 
-Signed-off-by: Alex Elder <aelder@sgi.com>
----
- dmapi/src/suite1/cmd/getall_dmattr.c      |    7 ++-
- dmapi/src/suite1/cmd/handle_to_fshandle.c |    3 +-
- dmapi/src/suite1/cmd/handle_to_path.c     |   10 +++--
- dmapi/src/suite1/cmd/init_service.c       |    3 +-
- dmapi/src/suite1/cmd/link_test.c          |   69 ++++++++++++++++-------------
- dmapi/src/suite1/cmd/make_sparse.c        |    6 +-
- dmapi/src/suite1/cmd/obj_ref_hold.c       |    3 +-
- dmapi/src/suite1/cmd/obj_ref_query.c      |    3 +-
- dmapi/src/suite1/cmd/obj_ref_rele.c       |    3 +-
- dmapi/src/suite1/cmd/path_to_fshandle.c   |    3 +-
- dmapi/src/suite1/cmd/path_to_handle.c     |    3 +-
- dmapi/src/suite1/cmd/pending.c            |    3 +-
- 12 files changed, 67 insertions(+), 49 deletions(-)
+Perhaps you could try removing or fixing the printf Dave suspects, rebuild repair, and run it again?
 
-diff --git a/dmapi/src/suite1/cmd/getall_dmattr.c b/dmapi/src/suite1/cmd/getall_dmattr.c
-index 4637c27..56f2248 100644
---- a/dmapi/src/suite1/cmd/getall_dmattr.c
-+++ b/dmapi/src/suite1/cmd/getall_dmattr.c
-@@ -66,7 +66,8 @@ main(
- 	char		*name;
- 	int		opt;
- 
--	if (Progname = strrchr(argv[0], '/')) {
-+	Progname = strrchr(argv[0], '/');
-+	if (Progname) {
- 		Progname++;
- 	} else {
- 		Progname = argv[0];
-@@ -114,14 +115,14 @@ main(
- 	    bufp, &rlenp)) {
- 		if (errno == E2BIG) {
- 			fprintf(stderr, "dm_getall_dmattr buffer too small, "
--				"should be %d bytes\n", rlenp);
-+				"should be %zd bytes\n", rlenp);
- 		} else {
- 			fprintf(stderr, "dm_getall_dmattr failed, %s\n",
- 				strerror(errno));
- 		}
- 		exit(1);
- 	}
--	fprintf(stdout, "rlenp is %d\n", rlenp);
-+	fprintf(stdout, "rlenp is %zd\n", rlenp);
- 	if (rlenp > 0) {
- 		dm_attrlist_t	*attrlist;
- 
-diff --git a/dmapi/src/suite1/cmd/handle_to_fshandle.c b/dmapi/src/suite1/cmd/handle_to_fshandle.c
-index 8608c74..93f101d 100644
---- a/dmapi/src/suite1/cmd/handle_to_fshandle.c
-+++ b/dmapi/src/suite1/cmd/handle_to_fshandle.c
-@@ -56,7 +56,8 @@ main(
- 	char		buffer[100];
- 	int		error;
- 
--	if (Progname = strrchr(argv[0], '/')) {
-+	Progname = strrchr(argv[0], '/');
-+	if (Progname) {
- 		Progname++;
- 	} else {
- 		Progname = argv[0];
-diff --git a/dmapi/src/suite1/cmd/handle_to_path.c b/dmapi/src/suite1/cmd/handle_to_path.c
-index 3a4c226..b3759e1 100644
---- a/dmapi/src/suite1/cmd/handle_to_path.c
-+++ b/dmapi/src/suite1/cmd/handle_to_path.c
-@@ -22,6 +22,7 @@
- #include <string.h>
- 
- #include <lib/dmport.h>
-+#include <lib/hsm.h>
- 
- #include <getopt.h>
- #ifdef linux
-@@ -84,7 +85,8 @@ main(
- 	char		*name;
- 	int		opt;
- 
--	if (Progname = strrchr(argv[0], '/')) {
-+	Progname = strrchr(argv[0], '/');
-+	if (Progname) {
- 		Progname++;
- 	} else {
- 		Progname = argv[0];
-@@ -130,16 +132,16 @@ main(
- 	    buflen, pathbufp, &rlenp)) {
- 		if (errno == E2BIG) {
- 			fprintf(stderr, "dm_handle_to_path buffer too small, "
--				"should be %d bytes\n", rlenp);
-+				"should be %zd bytes\n", rlenp);
- 		} else {
- 			fprintf(stderr, "dm_handle_to_path failed, (%d) %s\n",
- 				errno, strerror(errno));
- 		}
- 		return(1);
- 	}
--	fprintf(stderr, "rlenp is %d, pathbufp is %s\n", rlenp, (char*)pathbufp);
-+	fprintf(stderr, "rlenp is %zd, pathbufp is %s\n", rlenp, (char*)pathbufp);
- 	if (strlen(pathbufp) + 1 != rlenp) {
--		fprintf(stderr, "rlenp is %d, should be %d\n", rlenp,
-+		fprintf(stderr, "rlenp is %zd, should be %zd\n", rlenp,
- 			strlen(pathbufp) + 1);
- 		return(1);
- 	}
-diff --git a/dmapi/src/suite1/cmd/init_service.c b/dmapi/src/suite1/cmd/init_service.c
-index 1673f4c..6c7afa4 100644
---- a/dmapi/src/suite1/cmd/init_service.c
-+++ b/dmapi/src/suite1/cmd/init_service.c
-@@ -47,7 +47,8 @@ main(
- {
- 	char		*name;
- 
--	if (Progname = strrchr(argv[0], '/')) {
-+	Progname = strrchr(argv[0], '/');
-+	if (Progname) {
- 		Progname++;
- 	} else {
- 		Progname = argv[0];
-diff --git a/dmapi/src/suite1/cmd/link_test.c b/dmapi/src/suite1/cmd/link_test.c
-index 3d18de8..2d35da8 100644
---- a/dmapi/src/suite1/cmd/link_test.c
-+++ b/dmapi/src/suite1/cmd/link_test.c
-@@ -36,37 +36,44 @@ main(
- 	int	argc,
- 	char	**argv)
- {
--	dm_sessid_t	sid, oldsid, targetsid, *newsidp, *sidbufp;
--	dm_token_t	token, *tokenp, *rtokenp, *tokenbufp;
--	dm_attrname_t	*attrnamep;
--	dm_off_t	off, *offp, *roffp;
--	dm_extent_t	*extentp;
--	dm_inherit_t	*inheritbufp;
--	dm_stat_t	*statp;
--	dm_size_t	len, *dmrlenp, *retvalp;
--	dm_attrloc_t	*locp;
--	dm_eventset_t	*eventsetp;
--	dm_config_t	flagname;
--	dm_region_t	*regbufp;
--	dm_response_t	response;
--	dm_right_t	right, *rightp;
--	dm_igen_t	igen, *igenp;
--	dm_msgtype_t	msgtype;
--	dm_fileattr_t	*attrp;
--	dm_boolean_t	enable, *exactflagp;
--	dm_timestruct_t	*delay;
--	mode_t		mode;
--	size_t		hlen, dirhlen, hlen1, hlen2, targhlen, *fshlenp, *hlenp;
--	size_t		msglen, buflen, *rlenp;
--	u_int		nelem, mask, maxmsgs, uflags, *nelemp, maxevent;
--	void		*hanp, *dirhanp, *hanp1, *hanp2, *targhanp;
--	void		*msgdatap, *bufp, **hanpp, *respbufp, **fshanpp;
--	dm_fsid_t	fsid, *fsidp;
--	dm_ino_t	ino, *inop;
--	char		*cname, *sessinfop, *path, *pathbufp, **versionstrpp;
--	int		flags, fd, setdtime, reterror;
--	u_int	urc;
--	int	rc;
-+	dm_sessid_t	sid = 0, oldsid = 0, targetsid = 0;
-+	dm_sessid_t	*newsidp = NULL, *sidbufp = NULL;
-+	dm_token_t	token = 0, *tokenp = NULL;
-+	dm_token_t	*rtokenp = NULL, *tokenbufp = NULL;
-+	dm_attrname_t	*attrnamep = NULL;
-+	dm_off_t	off = 0, *offp = NULL, *roffp = NULL;
-+	dm_extent_t	*extentp = NULL;
-+	dm_inherit_t	*inheritbufp = NULL;
-+	dm_stat_t	*statp = NULL;
-+	dm_size_t	len = 0, *dmrlenp = NULL, *retvalp = NULL;
-+	dm_attrloc_t	*locp = NULL;
-+	dm_eventset_t	*eventsetp = NULL;
-+	dm_config_t	flagname = DM_CONFIG_INVALID;
-+	dm_region_t	*regbufp = NULL;
-+	dm_response_t	response = DM_RESP_INVALID;
-+	dm_right_t	right = DM_RIGHT_NULL, *rightp = NULL;
-+	dm_igen_t	igen, *igenp = NULL;
-+	dm_msgtype_t	msgtype = DM_MSGTYPE_INVALID;
-+	dm_fileattr_t	*attrp = NULL;
-+	dm_boolean_t	enable = 0, *exactflagp = NULL;
-+	dm_timestruct_t	*delay = NULL;
-+	mode_t		mode = 0;
-+	size_t		hlen = 0, dirhlen = 0, hlen1 = 0, hlen2 = 0;
-+	size_t		targhlen = 0, *fshlenp = NULL, *hlenp = NULL;
-+	size_t		msglen = 0, buflen = 0, *rlenp = NULL;
-+	u_int		nelem = 0, mask = 0, maxmsgs = 0, uflags = 0;
-+	u_int		*nelemp = NULL, maxevent = 0;
-+	void		*hanp = NULL, *dirhanp = NULL;
-+	void		*hanp1 = NULL, *hanp2 = NULL, *targhanp = NULL;
-+	void		*msgdatap = NULL, *bufp = NULL, **hanpp = NULL;
-+	void		*respbufp = NULL, **fshanpp = NULL;
-+	dm_fsid_t	fsid, *fsidp = NULL;
-+	dm_ino_t	ino, *inop = NULL;
-+	char		*cname = NULL, *sessinfop = NULL;
-+	char		*path = NULL, *pathbufp = NULL, **versionstrpp = NULL;
-+	int		flags = 0, fd = 0, setdtime = 0, reterror = 0;
-+	u_int		urc;
-+	int		rc;
- 	dm_ssize_t	ssrc;
- 
- /* Definitions per the prototypes in dmport.h, in the same order. */
-diff --git a/dmapi/src/suite1/cmd/make_sparse.c b/dmapi/src/suite1/cmd/make_sparse.c
-index d16aeba..ead7390 100644
---- a/dmapi/src/suite1/cmd/make_sparse.c
-+++ b/dmapi/src/suite1/cmd/make_sparse.c
-@@ -82,18 +82,18 @@ main(
- 	for (i = 0; i < 200; i += 2) {
- 		offset = i * 65536;
- 		if (lseek(fd, offset, SEEK_SET) < 0) {
--			fprintf(stderr, "seek to %d failed, %s\n", offset,
-+			fprintf(stderr, "seek to %zd failed, %s\n", offset,
- 				strerror(errno));
- 			exit(1);
- 		}
- 		if ((count = write(fd, buf, buflen)) < 0) {
- 			fprintf(stderr, "write of %d bytes failed at offset "
--				"%d, , %s\n", buflen, offset, strerror(errno));
-+				"%zd, , %s\n", buflen, offset, strerror(errno));
- 			exit(1);
- 		}
- 		if (count != buflen) {
- 			fprintf(stderr, "expected to write %d bytes at offset "
--				"%d, actually wrote %d\n", buflen, offset,
-+				"%zd, actually wrote %zd\n", buflen, offset,
- 				count);
- 			exit(1);
- 		}
-diff --git a/dmapi/src/suite1/cmd/obj_ref_hold.c b/dmapi/src/suite1/cmd/obj_ref_hold.c
-index c099547..771deb4 100644
---- a/dmapi/src/suite1/cmd/obj_ref_hold.c
-+++ b/dmapi/src/suite1/cmd/obj_ref_hold.c
-@@ -76,7 +76,8 @@ main(
- 	char		*name;
- 	int		opt;
- 
--	if (Progname = strrchr(argv[0], '/')) {
-+	Progname = strrchr(argv[0], '/');
-+	if (Progname) {
- 		Progname++;
- 	} else {
- 		Progname = argv[0];
-diff --git a/dmapi/src/suite1/cmd/obj_ref_query.c b/dmapi/src/suite1/cmd/obj_ref_query.c
-index a2150e9..f85716f 100644
---- a/dmapi/src/suite1/cmd/obj_ref_query.c
-+++ b/dmapi/src/suite1/cmd/obj_ref_query.c
-@@ -77,7 +77,8 @@ main(
- 	int		error;
- 	int		opt;
- 
--	if (Progname = strrchr(argv[0], '/')) {
-+	Progname = strrchr(argv[0], '/');
-+	if (Progname) {
- 		Progname++;
- 	} else {
- 		Progname = argv[0];
-diff --git a/dmapi/src/suite1/cmd/obj_ref_rele.c b/dmapi/src/suite1/cmd/obj_ref_rele.c
-index cff486f..1c39b90 100644
---- a/dmapi/src/suite1/cmd/obj_ref_rele.c
-+++ b/dmapi/src/suite1/cmd/obj_ref_rele.c
-@@ -76,7 +76,8 @@ main(
- 	char		*name;
- 	int		opt;
- 
--	if (Progname = strrchr(argv[0], '/')) {
-+	Progname = strrchr(argv[0], '/');
-+	if (Progname) {
- 		Progname++;
- 	} else {
- 		Progname = argv[0];
-diff --git a/dmapi/src/suite1/cmd/path_to_fshandle.c b/dmapi/src/suite1/cmd/path_to_fshandle.c
-index 4c625ad..16563d9 100644
---- a/dmapi/src/suite1/cmd/path_to_fshandle.c
-+++ b/dmapi/src/suite1/cmd/path_to_fshandle.c
-@@ -55,7 +55,8 @@ main(
- 	size_t		fshlen;
- 	char		buffer[100];
- 
--	if (Progname = strrchr(argv[0], '/')) {
-+	Progname = strrchr(argv[0], '/');
-+	if (Progname) {
- 		Progname++;
- 	} else {
- 		Progname = argv[0];
-diff --git a/dmapi/src/suite1/cmd/path_to_handle.c b/dmapi/src/suite1/cmd/path_to_handle.c
-index 2263cb5..546415c 100644
---- a/dmapi/src/suite1/cmd/path_to_handle.c
-+++ b/dmapi/src/suite1/cmd/path_to_handle.c
-@@ -55,7 +55,8 @@ main(
- 	size_t		hlen;
- 	char		buffer[100];
- 
--	if (Progname = strrchr(argv[0], '/')) {
-+	Progname = strrchr(argv[0], '/');
-+	if (Progname) {
- 		Progname++;
- 	} else {
- 		Progname = argv[0];
-diff --git a/dmapi/src/suite1/cmd/pending.c b/dmapi/src/suite1/cmd/pending.c
-index 9a81500..827b61e 100644
---- a/dmapi/src/suite1/cmd/pending.c
-+++ b/dmapi/src/suite1/cmd/pending.c
-@@ -58,7 +58,8 @@ main(
- 	char		*name;
- 	dm_token_t	token;
- 
--	if (Progname = strrchr(argv[0], '/')) {
-+	Progname = strrchr(argv[0], '/');
-+	if (Progname) {
- 		Progname++;
- 	} else {
- 		Progname = argv[0];
--- 
-1.7.4.4
+-Eric
 
 _______________________________________________
 xfs mailing list
