@@ -1,16 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3LK6Nrr172925 for <xfs@oss.sgi.com>; Thu, 21 Apr 2011 15:06:24 -0500
-Received: from cf--amer001e--3.americas.sgi.com
-	(cf--amer001e--3.americas.sgi.com [137.38.100.5])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 4486EAC012
-	for <xfs@oss.sgi.com>; Thu, 21 Apr 2011 13:09:52 -0700 (PDT)
-Subject: [Fwd: Re: [PATCH 4/4] xfs: reduce the number of pagb_lock
-	roundtrips in xfs_alloc_clear_busy]
+	p3LKmtLU175959 for <xfs@oss.sgi.com>; Thu, 21 Apr 2011 15:48:55 -0500
+Subject: Re: [PATCH 0/4] xfs: candidate fixes for 2.6.39-rc4
 From: Alex Elder <aelder@sgi.com>
-Date: Thu, 21 Apr 2011 15:09:19 -0500
-Message-ID: <1303416559.2581.522.camel@doink>
+In-Reply-To: <1303360144-10632-1-git-send-email-david@fromorbit.com>
+References: <1303360144-10632-1-git-send-email-david@fromorbit.com>
+Date: Thu, 21 Apr 2011 15:48:50 -0500
+Message-ID: <1303418930.2581.546.camel@doink>
 Mime-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -25,35 +22,52 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Forgot to reply-all.  Sorry.	-Alex
+On Thu, 2011-04-21 at 14:29 +1000, Dave Chinner wrote:
+> This is my current bug fix stack. They are probably all candidates
+> for 2.6.39, though I don't mind if we put any of them off
+> until.40...
 
--------- Forwarded Message --------
-From: Alex Elder <aelder@sgi.com>
-Reply-to: aelder@sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 4/4] xfs: reduce the number of pagb_lock roundtrips
-in xfs_alloc_clear_busy
-Date: Thu, 21 Apr 2011 15:08:32 -0500
-
-On Mon, 2011-04-18 at 02:59 -0400, Christoph Hellwig wrote:
-> Instead of finding the per-ag and then taking and releasing the pagb_lock
-> for every single busy extent completed sort the list of busy extents and
-> only switch betweens AGs where nessecary.  This becomes especially important
-> with the online discard support which will hit this lock more often.
-
-Looks good.
-
-My only comment was going to be:
-    Is it better to sort before when committed, or sort at
-    insertion time?
-But I worked through it and concluded you are doing exactly
-the right thing.
+I thought I had said so before on the first three of
+these but I guess not.  They look good to me.
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
 
+As far as whether to send them to Linus for
+2.6.39--I think they'd all four be OK, but
+none of them are (recent) regressions and I'm
+on a pretty good long streak of not getting
+flamed by Linus.  So unless you feel strongly
+about it, I'm going to hold them for 2.6.40.
 
+
+The fourth one I have been following along on the
+sidelines without really looking closely at the
+code involved.  Now that you and Lachlan seem to
+have agreed on this tiny fix I'll take a much
+closer look, as I consider all your discussion
+along the way.
+
+However, without even doing that I'm OK with
+committing it, since I think the change is
+very small, it fixes the test 250 crash issue,
+and the worst it would do appears to be exhausting
+space just a little earlier when it's almost
+gone already.
+
+So I'm prepared to pull this series when you
+request it.  I'm testing with it right now and
+have seen no trouble.
+
+
+Oh, except that test 250 appears to have no
+saved golden output, and the test itself may
+need a little work to allow for that.  (Will
+you look into that?)
+
+					-Alex
 
 _______________________________________________
 xfs mailing list
