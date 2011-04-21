@@ -1,19 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3LHXIMr167317 for <xfs@oss.sgi.com>; Thu, 21 Apr 2011 12:33:18 -0500
-Received: from rcsinet10.oracle.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 14F2F400C68
-	for <xfs@oss.sgi.com>; Thu, 21 Apr 2011 10:36:45 -0700 (PDT)
-Received: from rcsinet10.oracle.com (rcsinet10.oracle.com [148.87.113.121]) by
-	cuda.sgi.com with ESMTP id SGwCbSicCfI1Ttlx for
-	<xfs@oss.sgi.com>; Thu, 21 Apr 2011 10:36:45 -0700 (PDT)
-From: Chris Mason <chris.mason@oracle.com>
+	p3LHuBaQ168042 for <xfs@oss.sgi.com>; Thu, 21 Apr 2011 12:56:11 -0500
+Received: from idcmail-mo1so.shaw.ca (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 35AA41510DA7
+	for <xfs@oss.sgi.com>; Thu, 21 Apr 2011 10:59:38 -0700 (PDT)
+Received: from idcmail-mo1so.shaw.ca (idcmail-mo1so.shaw.ca [24.71.223.10]) by
+	cuda.sgi.com with ESMTP id RFDwyGMWqcTpjVOY for
+	<xfs@oss.sgi.com>; Thu, 21 Apr 2011 10:59:38 -0700 (PDT)
 Subject: Re: buffered writeback torture program
-In-reply-to: <20110421083258.GA26784@infradead.org>
+Mime-Version: 1.0 (Apple Message framework v1082)
+From: Andreas Dilger <adilger@dilger.ca>
+In-Reply-To: <20110421174120.GA7267@infradead.org>
+Date: Thu, 21 Apr 2011 11:59:37 -0600
+Message-Id: <93CB867E-B908-4B38-A146-A9DC958ACF64@dilger.ca>
 References: <1303322378-sup-1722@think> <20110421083258.GA26784@infradead.org>
-Date: Thu, 21 Apr 2011 13:34:44 -0400
-Message-Id: <1303407205-sup-6141@think>
+	<1303407205-sup-6141@think> <20110421174120.GA7267@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,47 +24,33 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: axboe <axboe@kernel.dk>, jack <jack@suse.cz>, xfs <xfs@oss.sgi.com>, dchinner <dchinner@redhat.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>
+Cc: axboe <axboe@kernel.dk>, jack <jack@suse.cz>, xfs <xfs@oss.sgi.com>, dchinner <dchinner@redhat.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, Chris Mason <chris.mason@oracle.com>
 
-Excerpts from Christoph Hellwig's message of 2011-04-21 04:32:58 -0400:
-> On Wed, Apr 20, 2011 at 02:23:29PM -0400, Chris Mason wrote:
-> But given that you are able to reproduce it, does the following patch
-> help your latencies?  Currently XFS actually does stop I/O when
-> nr_to_write reaches zero, but only for non-blocking I/O. This behaviour
-> was introduced in commit efceab1d563153a2b1a6e7d35376241a48126989
+On 2011-04-21, at 11:41 AM, Christoph Hellwig wrote:
+> On Thu, Apr 21, 2011 at 01:34:44PM -0400, Chris Mason wrote:
+>> Sorry, this doesn't do it.  I think that given what a strange special
+>> case this is, we're best off waiting for the IO-less throttling, and
+>> maybe changing the code in xfs/ext4 to be a little more seek aware.  Or
+>> maybe not, it has to get written eventually either way.
 > 
->     "xfs: handle negative wbc->nr_to_write during sync writeback"
-> 
-> and works around issues in the generic writeback code.
-> 
-> 
-> Index: linux-2.6/fs/xfs/linux-2.6/xfs_aops.c
-> ===================================================================
-> --- linux-2.6.orig/fs/xfs/linux-2.6/xfs_aops.c    2011-04-21 10:20:48.303550404 +0200
-> +++ linux-2.6/fs/xfs/linux-2.6/xfs_aops.c    2011-04-21 10:20:58.203496773 +0200
-> @@ -765,8 +765,7 @@ xfs_convert_page(
->          SetPageUptodate(page);
->  
->      if (count) {
-> -        if (--wbc->nr_to_write <= 0 &&
-> -            wbc->sync_mode == WB_SYNC_NONE)
-> +        if (--wbc->nr_to_write <= 0)
->              done = 1;
->      }
->      xfs_start_page_writeback(page, !page_dirty, count);
+> I'm not sure what you mean with seek aware.  XFS only clusters
+> additional pages that are in the same extent, and in fact only does
+> so for asynchrononous writeback.  Not sure how this should be more
+> seek aware.
 
-Sorry, this doesn't do it.  I think that given what a strange special
-case this is, we're best off waiting for the IO-less throttling, and
-maybe changing the code in xfs/ext4 to be a little more seek aware.  Or
-maybe not, it has to get written eventually either way.
+But doesn't XFS have potentially very large extents, especially in the case of files that were fallocate()'d or linearly written?  If there is a single 8GB extent, and then random writes within that extent (seems very database like) grouping the all of the writes in the extent doesn't seem so great.
 
--chris
+
+Cheers, Andreas
+
+
+
+
 
 _______________________________________________
 xfs mailing list
