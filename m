@@ -1,16 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3LJ82vI170689 for <xfs@oss.sgi.com>; Thu, 21 Apr 2011 14:08:02 -0500
-From: Alex Elder <aelder@sgi.com>
-Subject: [PATCH 4/5] xfstests: eliminate warnings under dmapi/src/suite1/cmd
-	(3)
-Date: Thu, 21 Apr 2011 14:11:12 -0500
-Message-Id: <85f81c46195b4b16f8d9a361eb8e1892c00fc11b.1303412549.git.aelder@sgi.com>
-In-Reply-To: <1303413073-24173-1-git-send-email-aelder@sgi.com>
-References: <1303413073-24173-1-git-send-email-aelder@sgi.com>
-In-Reply-To: <3b41615dd6b09fafeabe7cc8568c2feaa8792caa.1303412549.git.aelder@sgi.com>
-References: <3b41615dd6b09fafeabe7cc8568c2feaa8792caa.1303412549.git.aelder@sgi.com>
+	p3LJwKBk172538 for <xfs@oss.sgi.com>; Thu, 21 Apr 2011 14:58:21 -0500
+Received: from mx.meyering.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0F94DC26FFB
+	for <xfs@oss.sgi.com>; Thu, 21 Apr 2011 13:01:46 -0700 (PDT)
+Received: from mx.meyering.net (mx.meyering.net [82.230.74.64]) by
+	cuda.sgi.com with ESMTP id 9vMIeQeyd6FZKo7E for
+	<xfs@oss.sgi.com>; Thu, 21 Apr 2011 13:01:46 -0700 (PDT)
+From: Jim Meyering <jim@meyering.net>
+Subject: Re: Files full of zeros with coreutils-8.11 and xfs (FIEMAP related?)
+In-Reply-To: <87d3khugv1.fsf@rho.meyering.net> (Jim Meyering's message of
+	"Wed, 20 Apr 2011 16:39:30 +0200")
+References: <20110414102608.GA1678@x4.trippels.de>
+	<87d3khugv1.fsf@rho.meyering.net>
+Date: Thu, 21 Apr 2011 22:01:43 +0200
+Message-ID: <87r58vqspk.fsf@rho.meyering.net>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,528 +25,411 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Alex Elder <aelder@sgi.com>
+To: Markus Trippelsdorf <markus@trippelsdorf.de>
+Cc: linux-ext4@vger.kernel.org, coreutils@gnu.org, xfs@oss.sgi.com
 
-Eliminate build warnings reported on files located under
-dmapi/src/suite1/cmd/ (third of three).
+Jim Meyering wrote:
+> Markus Trippelsdorf wrote:
+>> I trashed my system this morning when I installed coreutils-8.11.
+>>
+>> What happened is that coreutils compiles and links correctly, but then
+>> the following command (during the installation phase):
+>>
+>> ./ginstall chroot hostid nice who users pinky stty df stdbuf [ base64
+> ...
+>>
+>> apparently produces files which have the length of the originals but are
+>> full of zeros. (and these were then installed to my live system, thereby
+>> trashing it).
+> ...
+>
+> Thanks again for the report.
+> I believe that the following series addresses this problem
+> and have confirmed that tests pass with 2.6.39-rc3 on all
+> of ext3, ext4, btrfs and xfs -- though there was what appears
+> to be a spurious failure in tests/cp/sparse-fiemap when run on xfs.
+> On one iteration of this loop, with j=31, in these loops
+>
+>   for i in $(seq 1 2 21); do
+>     for j in 1 2 31 100; do
+>
+> [in http://git.savannah.gnu.org/cgit/coreutils.git/tree/tests/cp/sparse-fiemap]
+> the two files compared equal, yet their extents did not match,
+> even after merging.  I'm inclined to skip the extent-comparing check
+> at least for XFS, now.
+>
+> Here's the unusually-technical-for-NEWS summary:
 
-Signed-off-by: Alex Elder <aelder@sgi.com>
+[slightly updated and pushed, along with test-adjusting changes]
+
+** Changes in behavior
+
+  cp's extent-based (FIEMAP) copying code is more reliable in the face
+  of varying and undocumented file system semantics:
+  - it no longer treats unwritten extents specially
+  - a FIEMAP-based extent copy always uses the FIEMAP_FLAG_SYNC flag.
+      Before, it would incur the performance penalty of that sync only
+      for 2.6.38 and older kernels.  We thought all problems would be
+      resolved for 2.6.39.
+  - it now attempts a FIEMAP copy only on a file that appears sparse.
+      Sparse files are relatively unusual, and the copying code incurs
+      the performance penalty of the now-mandatory sync only for them.
+
+
+>From 9bcd045f812a75cf96ba392bc45529422f87c088 Mon Sep 17 00:00:00 2001
+From: Jim Meyering <meyering@redhat.com>
+Date: Wed, 20 Apr 2011 09:49:15 +0200
+Subject: [PATCH 1/6] copy: always use FIEMAP_FLAG_SYNC, for now
+
+* src/extent-scan.c (extent_need_sync): Always return true,
+to make the sole caller always use FIEMAP_FLAG_SYNC.
+This will doubtless have an undesirable performance impact,
+but we'll mitigate that shortly, by using extent_copy only on
+files with holes.
 ---
- dmapi/src/suite1/cmd/print_event.c             |   30 +++++++++++++----------
- dmapi/src/suite1/cmd/probe_hole.c              |    6 +++-
- dmapi/src/suite1/cmd/probe_punch_xfsctl_hole.c |    9 ++++--
- dmapi/src/suite1/cmd/punch_hole.c              |    3 +-
- dmapi/src/suite1/cmd/query_right.c             |    3 +-
- dmapi/src/suite1/cmd/randomize_file.c          |    4 +-
- dmapi/src/suite1/cmd/release_right.c           |    3 +-
- dmapi/src/suite1/cmd/remove_dmattr.c           |    3 +-
- dmapi/src/suite1/cmd/request_right.c           |    3 +-
- dmapi/src/suite1/cmd/respond_event.c           |    3 +-
- dmapi/src/suite1/cmd/rwt.c                     |   15 ++++++-----
- dmapi/src/suite1/cmd/security_hole.c           |    3 +-
- dmapi/src/suite1/cmd/security_hole2.c          |    3 +-
- dmapi/src/suite1/cmd/set_disp.c                |    3 +-
- dmapi/src/suite1/cmd/set_dmattr.c              |    5 ++-
- dmapi/src/suite1/cmd/set_eventlist.c           |    3 +-
- dmapi/src/suite1/cmd/set_fileattr.c            |    3 +-
- dmapi/src/suite1/cmd/struct_test.c             |    4 +-
- dmapi/src/suite1/cmd/sync_by_handle.c          |    3 +-
- dmapi/src/suite1/cmd/test_assumption.c         |    4 +-
- dmapi/src/suite1/cmd/upgrade_right.c           |    3 +-
- 21 files changed, 70 insertions(+), 46 deletions(-)
+ src/extent-scan.c |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
 
-diff --git a/dmapi/src/suite1/cmd/print_event.c b/dmapi/src/suite1/cmd/print_event.c
-index e34cafe..afe2c27 100644
---- a/dmapi/src/suite1/cmd/print_event.c
-+++ b/dmapi/src/suite1/cmd/print_event.c
-@@ -331,31 +331,31 @@ print_one_mount_event(
- 	if (hanp1 && hlen1) {
- 		hantoa(hanp1, hlen1, hans1);
- 	} else {
--		sprintf(hans1, "<BAD HANDLE, hlen %d>", hlen1);
-+		sprintf(hans1, "<BAD HANDLE, hlen %zd>", hlen1);
- 	}
- 	if (hanp2 && hlen2) {
- 		hantoa(hanp2, hlen2, hans2);
- 	} else {
--		sprintf(hans2, "<BAD HANDLE, hlen %d>", hlen2);
-+		sprintf(hans2, "<BAD HANDLE, hlen %zd>", hlen2);
- 	}
- 	if (hanp3 && hlen3) {
- 		hantoa(hanp3, hlen3, hans3);
- 	} else {
--		sprintf(hans3, "<BAD HANDLE, hlen %d>", hlen3);
-+		sprintf(hans3, "<BAD HANDLE, hlen %zd>", hlen3);
- 	}
- 	if (namp1 && nlen1) {
- 		strncpy(nams1, namp1, nlen1);
- 		if (nlen1 != sizeof(nams1))
- 			nams1[nlen1] = '\0';
- 	} else {
--		sprintf(nams1, "<BAD STRING, nlen %d>", nlen1);
-+		sprintf(nams1, "<BAD STRING, nlen %zd>", nlen1);
- 	}
- 	if (namp2 && nlen2) {
- 		strncpy(nams2, namp2, nlen2);
- 		if (nlen2 != sizeof(nams2))
- 			nams2[nlen2] = '\0';
- 	} else {
--		sprintf(nams2, "<BAD STRING, nlen %d>", nlen2);
-+		sprintf(nams2, "<BAD STRING, nlen %zd>", nlen2);
- 	}
- 
- 	printf(VALS VALS VALS VALS VALS VALD,
-@@ -475,6 +475,10 @@ handle_message(
- 		case DM_EVENT_TRUNCATE:
- 			rgflag = DM_REGION_TRUNCATE;
- 			break;
-+		default:
-+			err_msg("unexpected event type (%d)\n", msg->ev_type);
-+			rgflag = DM_REGION_NOEVENT;
-+			break;
- 	      }
- 	      clear_region_event(sid, rgflag, hanp1, hlen1, hans1);
-       }
-@@ -488,24 +492,24 @@ handle_message(
-       printf(HDR VALS VALLLD VALLLD,
- 	     "read", msg->ev_token, msg->ev_sequence,
- 	     "file handle",	hans1,
--	     "offset",		msg_de->de_offset,
--	     "length",		msg_de->de_length);
-+	     "offset",		(long long) msg_de->de_offset,
-+	     "length",		(long long) msg_de->de_length);
-       break;
- 
-     case DM_EVENT_WRITE:
-       printf(HDR VALS VALLLD VALLLD,
- 	     "write", msg->ev_token, msg->ev_sequence,
- 	     "file handle",	hans1,
--	     "offset",		msg_de->de_offset,
--	     "length",		msg_de->de_length);
-+	     "offset",		(long long) msg_de->de_offset,
-+	     "length",		(long long) msg_de->de_length);
-       break;
- 
-     case DM_EVENT_TRUNCATE:
-       printf(HDR VALS VALLLD VALLLD,
- 	     "truncate", msg->ev_token, msg->ev_sequence,
- 	     "file handle",	hans1,
--	     "offset",		msg_de->de_offset,
--	     "length",		msg_de->de_length);
-+	     "offset",		(long long) msg_de->de_offset,
-+	     "length",		(long long) msg_de->de_length);
-       break;
-     default: break;
-     }
-@@ -578,7 +582,7 @@ handle_message(
-   /***** NAMESPACE EVENTS *****/
- 
-   else {
--    char	*type;
-+    char	*type = NULL;
- 
-     msg_ne = DM_GET_VALUE(msg, ev_data, dm_namesp_event_t *);
-     hanp1  = DM_GET_VALUE(msg_ne, ne_handle1, void *);
-@@ -1150,7 +1154,7 @@ finish_responding(
-   int		error = 0;
-   u_int		nbytes, ntokens = 0, ret_ntokens, i;
-   dm_token_t	*tokenbuf = NULL, *tokenptr;
--  size_t	buflen, ret_buflen;
-+  size_t	buflen = 0, ret_buflen;
-   char		*msgbuf = NULL;
-   dm_eventmsg_t	*msg;
- 
-diff --git a/dmapi/src/suite1/cmd/probe_hole.c b/dmapi/src/suite1/cmd/probe_hole.c
-index e0e4a5b..c5f945a 100644
---- a/dmapi/src/suite1/cmd/probe_hole.c
-+++ b/dmapi/src/suite1/cmd/probe_hole.c
-@@ -70,7 +70,8 @@ main(
- 	char		*name;
- 	int		opt;
- 
--	if (Progname = strrchr(argv[0], '/')) {
-+	Progname = strrchr(argv[0], '/');
-+	if (Progname) {
- 		Progname++;
- 	} else {
- 		Progname = argv[0];
-@@ -117,7 +118,8 @@ main(
- 			strerror(errno));
- 		exit(1);
- 	}
--	fprintf(stdout, "roffp is %lld, rlenp is %lld\n", roffp, rlenp);
-+	fprintf(stdout, "roffp is %lld, rlenp is %llu\n",
-+		(long long) roffp, (unsigned long long) rlenp);
- 	dm_handle_free(hanp, hlen);
- 	exit(0);
- }
-diff --git a/dmapi/src/suite1/cmd/probe_punch_xfsctl_hole.c b/dmapi/src/suite1/cmd/probe_punch_xfsctl_hole.c
-index effa98a..6b4d0b6 100644
---- a/dmapi/src/suite1/cmd/probe_punch_xfsctl_hole.c
-+++ b/dmapi/src/suite1/cmd/probe_punch_xfsctl_hole.c
-@@ -108,7 +108,8 @@ main(
- 	int		opt;
- 	int		method = METHOD_DMAPI_PROBE;
- 
--	if (Progname = strrchr(argv[0], '/')) {
-+	Progname = strrchr(argv[0], '/');
-+	if (Progname) {
- 		Progname++;
- 	} else {
- 		Progname = argv[0];
-@@ -149,7 +150,8 @@ main(
- 		usage();
- 
- 	printf("Running %s on %s with settings:\n", methodmap[method], pathname);
--	printf("  offset = '%lld', length = '%lld', sid = '%lld'\n", offset, length, sid);
-+	printf("  offset = '%lld', length = '%lld', sid = '%lld'\n",
-+		(long long) offset, (unsigned long long) length, (long long) sid);
- 	
- 	if (method ==  METHOD_XFSCTL) 
- 		return xfsctl_punch_hole(pathname, offset, length);
-@@ -176,7 +178,8 @@ main(
- 				strerror(errno));
- 			exit(1);
- 		}
--		fprintf(stdout, "roffp is %lld, rlenp is %lld\n", roffp, rlenp);
-+		fprintf(stdout, "roffp is %lld, rlenp is %llu\n",
-+			(long long) roffp, (unsigned long long) rlenp);
- 		break;
- 	case METHOD_DMAPI_PUNCH:
- 		if (dm_punch_hole(sid, hanp, hlen, DM_NO_TOKEN, offset, length)) {
-diff --git a/dmapi/src/suite1/cmd/punch_hole.c b/dmapi/src/suite1/cmd/punch_hole.c
-index e1d1a67..68439a7 100644
---- a/dmapi/src/suite1/cmd/punch_hole.c
-+++ b/dmapi/src/suite1/cmd/punch_hole.c
-@@ -68,7 +68,8 @@ main(
- 	char		*name;
- 	int		opt;
- 
--	if (Progname = strrchr(argv[0], '/')) {
-+	Progname = strrchr(argv[0], '/');
-+	if (Progname) {
- 		Progname++;
- 	} else {
- 		Progname = argv[0];
-diff --git a/dmapi/src/suite1/cmd/query_right.c b/dmapi/src/suite1/cmd/query_right.c
-index a8e219a..aab4de5 100644
---- a/dmapi/src/suite1/cmd/query_right.c
-+++ b/dmapi/src/suite1/cmd/query_right.c
-@@ -77,7 +77,8 @@ main(
- 	char		*name;
- 	int		opt;
- 
--	if (Progname = strrchr(argv[0], '/')) {
-+	Progname = strrchr(argv[0], '/');
-+	if (Progname) {
- 		Progname++;
- 	} else {
- 		Progname = argv[0];
-diff --git a/dmapi/src/suite1/cmd/randomize_file.c b/dmapi/src/suite1/cmd/randomize_file.c
-index a45b2a3..0c272fe 100644
---- a/dmapi/src/suite1/cmd/randomize_file.c
-+++ b/dmapi/src/suite1/cmd/randomize_file.c
-@@ -43,7 +43,7 @@ main(
+diff --git a/src/extent-scan.c b/src/extent-scan.c
+index da7eb9d..596e7f7 100644
+--- a/src/extent-scan.c
++++ b/src/extent-scan.c
+@@ -36,6 +36,13 @@
+ static bool
+ extent_need_sync (void)
  {
- 	FILE	*infile;
- 	FILE	*tmpfile;
--	char	*path;
-+	char	path[] = "file_XXXXXX";
- 	int	line_count = 0;
- 	int	i;
- 	int	j;
-@@ -77,7 +77,7 @@ main(
- 	   to each line copied.
- 	*/
- 
--	path = tmpnam(NULL);
-+	(void) mkstemp(path);
- 	if ((tmpfile = fopen(path, "w")) == NULL) {
- 		fprintf(stderr, "error opening temp file %s\n", path);
- 		exit(1);
-diff --git a/dmapi/src/suite1/cmd/release_right.c b/dmapi/src/suite1/cmd/release_right.c
-index 648619c..e6a92d3 100644
---- a/dmapi/src/suite1/cmd/release_right.c
-+++ b/dmapi/src/suite1/cmd/release_right.c
-@@ -76,7 +76,8 @@ main(
- 	char		*name;
- 	int		opt;
- 
--	if (Progname = strrchr(argv[0], '/')) {
-+	Progname = strrchr(argv[0], '/');
-+	if (Progname) {
- 		Progname++;
- 	} else {
- 		Progname = argv[0];
-diff --git a/dmapi/src/suite1/cmd/remove_dmattr.c b/dmapi/src/suite1/cmd/remove_dmattr.c
-index 3a82b51..865898d 100644
---- a/dmapi/src/suite1/cmd/remove_dmattr.c
-+++ b/dmapi/src/suite1/cmd/remove_dmattr.c
-@@ -65,7 +65,8 @@ main(
- 	char		*name;
- 	int		opt;
- 
--	if (Progname = strrchr(argv[0], '/')) {
-+	Progname = strrchr(argv[0], '/');
-+	if (Progname) {
- 		Progname++;
- 	} else {
- 		Progname = argv[0];
-diff --git a/dmapi/src/suite1/cmd/request_right.c b/dmapi/src/suite1/cmd/request_right.c
-index 11ff944..fff3e78 100644
---- a/dmapi/src/suite1/cmd/request_right.c
-+++ b/dmapi/src/suite1/cmd/request_right.c
-@@ -91,7 +91,8 @@ main(
- 	char		*name;
- 	int		opt;
- 
--	if (Progname = strrchr(argv[0], '/')) {
-+	Progname = strrchr(argv[0], '/');
-+	if (Progname) {
- 		Progname++;
- 	} else {
- 		Progname = argv[0];
-diff --git a/dmapi/src/suite1/cmd/respond_event.c b/dmapi/src/suite1/cmd/respond_event.c
-index 9fd297c..bf1bb94 100644
---- a/dmapi/src/suite1/cmd/respond_event.c
-+++ b/dmapi/src/suite1/cmd/respond_event.c
-@@ -65,7 +65,8 @@ main(
- 	dm_response_t	response;
- 	int		reterror;
- 
--	if (Progname = strrchr(argv[0], '/')) {
-+	Progname = strrchr(argv[0], '/');
-+	if (Progname) {
- 		Progname++;
- 	} else {
- 		Progname = argv[0];
-diff --git a/dmapi/src/suite1/cmd/rwt.c b/dmapi/src/suite1/cmd/rwt.c
-index b5bd903..c1489bd 100644
---- a/dmapi/src/suite1/cmd/rwt.c
-+++ b/dmapi/src/suite1/cmd/rwt.c
-@@ -89,7 +89,8 @@ main(
- 	ssize_t		rc;
- 	int		opt;
- 
--	if (Progname = strrchr(argv[0], '/')) {
-+	Progname = strrchr(argv[0], '/');
-+	if (Progname) {
- 		Progname++;
- 	} else {
- 		Progname = argv[0];
-@@ -131,7 +132,7 @@ main(
- 	}
- 	if (length > 0) {
- 		if ((bufp = malloc(length)) == NULL) {
--			fprintf(stderr, "malloc of %d bytes failed\n", length);
-+			fprintf(stderr, "malloc of %zd bytes failed\n", length);
- 			exit(1);
- 		}
- 		if (wflag)
-@@ -147,7 +148,7 @@ main(
- 			fprintf(stderr,
- 				"seeked to offset %lld, actually "
- 				"arrived at %lld\n",
--				(int64_t)offset, (int64_t)seek_off);
-+				(long long) offset, (long long) seek_off);
- 			exit(1);
- 		}
- 	}
-@@ -158,8 +159,8 @@ main(
- 			exit(1);
- 		}
- 		if (rc != length) {
--			fprintf(stderr, "expected to write %d bytes, actually "
--				"wrote %d bytes\n", length, rc);
-+			fprintf(stderr, "expected to write %zd bytes, actually "
-+				"wrote %zd bytes\n", length, rc);
- 			exit(1);
- 		}
- 	} else if (tflag) {
-@@ -174,8 +175,8 @@ main(
- 			exit(1);
- 		}
- 		if (rc != length) {
--			fprintf(stderr, "expected to read %d bytes, actually "
--				"read %d bytes\n", length, rc);
-+			fprintf(stderr, "expected to read %zd bytes, actually "
-+				"read %zd bytes\n", length, rc);
- 			exit(1);
- 		}
- 	}
-diff --git a/dmapi/src/suite1/cmd/security_hole.c b/dmapi/src/suite1/cmd/security_hole.c
-index c7c3db3..d34026d 100644
---- a/dmapi/src/suite1/cmd/security_hole.c
-+++ b/dmapi/src/suite1/cmd/security_hole.c
-@@ -63,7 +63,8 @@ main(
- 	int	opt;
- 	int	fd;
- 
--	if (Progname = strrchr(argv[0], '/')) {
-+	Progname = strrchr(argv[0], '/');
-+	if (Progname) {
- 		Progname++;
- 	} else {
- 		Progname = argv[0];
-diff --git a/dmapi/src/suite1/cmd/security_hole2.c b/dmapi/src/suite1/cmd/security_hole2.c
-index c40801c..3af3395 100644
---- a/dmapi/src/suite1/cmd/security_hole2.c
-+++ b/dmapi/src/suite1/cmd/security_hole2.c
-@@ -59,7 +59,8 @@ main(
- 	int	opt;
- 	int	fd;
- 
--	if (Progname = strrchr(argv[0], '/')) {
-+	Progname = strrchr(argv[0], '/');
-+	if (Progname) {
- 		Progname++;
- 	} else {
- 		Progname = argv[0];
-diff --git a/dmapi/src/suite1/cmd/set_disp.c b/dmapi/src/suite1/cmd/set_disp.c
-index b04306d..fee1dce 100644
---- a/dmapi/src/suite1/cmd/set_disp.c
-+++ b/dmapi/src/suite1/cmd/set_disp.c
-@@ -89,7 +89,8 @@ main(
- 	char		*name;
- 	int		opt;
- 
--	if (Progname = strrchr(argv[0], '/')) {
-+	Progname = strrchr(argv[0], '/');
-+	if (Progname) {
- 		Progname++;
- 	} else {
- 		Progname = argv[0];
-diff --git a/dmapi/src/suite1/cmd/set_dmattr.c b/dmapi/src/suite1/cmd/set_dmattr.c
-index df4f080..4753cf4 100644
---- a/dmapi/src/suite1/cmd/set_dmattr.c
-+++ b/dmapi/src/suite1/cmd/set_dmattr.c
-@@ -63,7 +63,7 @@ main(
- 	char		*object;
- 	dm_attrname_t	*attrnamep;
- 	char		*bufp;
--	size_t		buflen;
-+	size_t		buflen = 0;
- 	int		bflag = 0;
- 	int		setdtime = 0;
- 	void		*hanp;
-@@ -71,7 +71,8 @@ main(
- 	char		*name;
- 	int		opt;
- 
--	if (Progname = strrchr(argv[0], '/')) {
-+	Progname = strrchr(argv[0], '/');
-+	if (Progname) {
- 		Progname++;
- 	} else {
- 		Progname = argv[0];
-diff --git a/dmapi/src/suite1/cmd/set_eventlist.c b/dmapi/src/suite1/cmd/set_eventlist.c
-index 44d62b3..857523d 100644
---- a/dmapi/src/suite1/cmd/set_eventlist.c
-+++ b/dmapi/src/suite1/cmd/set_eventlist.c
-@@ -85,7 +85,8 @@ main(
- 	char		*name;
- 	int		opt;
- 
--	if (Progname = strrchr(argv[0], '/')) {
-+	Progname = strrchr(argv[0], '/');
-+	if (Progname) {
- 		Progname++;
- 	} else {
- 		Progname = argv[0];
-diff --git a/dmapi/src/suite1/cmd/set_fileattr.c b/dmapi/src/suite1/cmd/set_fileattr.c
-index eabb826..70ae52f 100644
---- a/dmapi/src/suite1/cmd/set_fileattr.c
-+++ b/dmapi/src/suite1/cmd/set_fileattr.c
-@@ -323,7 +323,8 @@ main(
- 	char		*name;
- 	int		opt;
- 
--	if (Progname = strrchr(argv[0], '/')) {
-+	Progname = strrchr(argv[0], '/');
-+	if (Progname) {
- 		Progname++;
- 	} else {
- 		Progname = argv[0];
-diff --git a/dmapi/src/suite1/cmd/struct_test.c b/dmapi/src/suite1/cmd/struct_test.c
-index 4d0b31f..7a0dd35 100644
---- a/dmapi/src/suite1/cmd/struct_test.c
-+++ b/dmapi/src/suite1/cmd/struct_test.c
-@@ -51,7 +51,7 @@
- 	if (offsetof(struct_name, field_name) != offset) { \
- 		printf("ERROR: field %s should be %d\n", \
- 			#struct_name "." #field_name, \
--			offsetof(struct_name, field_name)); \
-+			(int) offsetof(struct_name, field_name)); \
- 	} \
- 	offset = offsetof(struct_name, field_name) + sizeof(X.field_name); \
++  /* For now always return true, to be on the safe side.
++     If/when FIEMAP semantics are well defined (before SEEK_HOLE support
++     is usable) and kernels implementing them are in use, we may relax
++     this once again.  */
++  return true;
++
++#if FIEMAP_BEHAVIOR_IS_DEFINED_AND_USABLE
+   static int need_sync = -1;
+
+   if (need_sync == -1)
+@@ -57,6 +64,7 @@ extent_need_sync (void)
+     }
+
+   return need_sync;
++#endif
  }
-@@ -60,7 +60,7 @@
- { \
- 	printf("struct %s size is %d\n", s_name, offset); \
- 	if (sizeof(struct_name) != offset) { \
--		printf("ERROR: struct %s should be %d\n", \
-+		printf("ERROR: struct %s should be %zd\n", \
- 			s_name, sizeof(struct_name)); \
- 	} \
+
+ /* Allocate space for struct extent_scan, initialize the entries if
+--
+1.7.5.rc3.291.g63e4e
+
+
+>From bef4fa1e1a20c636979db159647a93e5954bc542 Mon Sep 17 00:00:00 2001
+From: Jim Meyering <meyering@redhat.com>
+Date: Wed, 20 Apr 2011 10:15:15 +0200
+Subject: [PATCH 2/6] copy: do not treat unwritten extents specially: avoid
+ XFS/ext4 data loss
+
+* src/copy.c (extent_copy): Do not treat "unwritten extents" specially.
+Otherwise, with a release-candidate 2.6.39-rc3 kernel, XFS or ext4,
+when using gold as your linker, and if you forget to run "make check",
+you could end up installing files full of zeros instead of the expected
+binaries.  For a lot of discussion, see
+http://thread.gmane.org/gmane.comp.file-systems.xfs.general/37895
+* tests/cp/fiemap-empty: Disable this test.
+---
+ src/copy.c            |    5 ++++-
+ tests/cp/fiemap-empty |    5 +++++
+ 2 files changed, 9 insertions(+), 1 deletions(-)
+
+diff --git a/src/copy.c b/src/copy.c
+index 9b53127..f6f9ea6 100644
+--- a/src/copy.c
++++ b/src/copy.c
+@@ -398,7 +398,10 @@ extent_copy (int src_fd, int dest_fd, char *buf, size_t buf_size,
+           /* Treat an unwritten but allocated extent much like a hole.
+              I.E. don't read, but don't convert to a hole in the destination,
+              unless SPARSE_ALWAYS.  */
+-          if (scan.ext_info[i].ext_flags & FIEMAP_EXTENT_UNWRITTEN)
++          /* For now, do not treat FIEMAP_EXTENT_UNWRITTEN specially,
++             because that (in combination with no sync) would lead to data
++             loss at least on XFS and ext4 when using 2.6.39-rc3 kernels.  */
++          if (0 && (scan.ext_info[i].ext_flags & FIEMAP_EXTENT_UNWRITTEN))
+             {
+               empty_extent = true;
+               last_ext_len = 0;
+diff --git a/tests/cp/fiemap-empty b/tests/cp/fiemap-empty
+index 64c3254..836668e 100755
+--- a/tests/cp/fiemap-empty
++++ b/tests/cp/fiemap-empty
+@@ -19,6 +19,11 @@
+ . "${srcdir=.}/init.sh"; path_prepend_ ../src
+ print_ver_ cp
+
++# FIXME: enable any part of this test that is still relevant,
++# or, if none are relevant (now that cp does not handle unwritten
++# extents), just remove the test altogether.
++skip_test_ 'disabled for now'
++
+ touch fiemap_chk
+ fiemap_capable_ fiemap_chk ||
+   skip_test_ 'this file system lacks FIEMAP support'
+--
+1.7.5.rc3.291.g63e4e
+
+
+>From 846d826096fc8fb621d751f8b3db1da68a8bbd06 Mon Sep 17 00:00:00 2001
+From: Jim Meyering <meyering@redhat.com>
+Date: Wed, 20 Apr 2011 10:23:32 +0200
+Subject: [PATCH 3/6] copy: factor out a tiny sparse-testing function
+
+* src/copy.c (HAVE_STRUCT_STAT_ST_BLOCKS): Define to 0 if undefined,
+so we can use it in the return expression, here:
+(is_probably_sparse): New function, factored out of...
+(copy_reg): ...here.  Use the new function.
+---
+ src/copy.c |   23 +++++++++++++++++++----
+ 1 files changed, 19 insertions(+), 4 deletions(-)
+
+diff --git a/src/copy.c b/src/copy.c
+index f6f9ea6..3db07b5 100644
+--- a/src/copy.c
++++ b/src/copy.c
+@@ -764,6 +764,23 @@ fchmod_or_lchmod (int desc, char const *name, mode_t mode)
+   return lchmod (name, mode);
  }
-diff --git a/dmapi/src/suite1/cmd/sync_by_handle.c b/dmapi/src/suite1/cmd/sync_by_handle.c
-index a00ee0f..ee22767 100644
---- a/dmapi/src/suite1/cmd/sync_by_handle.c
-+++ b/dmapi/src/suite1/cmd/sync_by_handle.c
-@@ -65,7 +65,8 @@ main(
- 	char		*name;
- 	int		opt;
- 
--	if (Progname = strrchr(argv[0], '/')) {
-+	Progname = strrchr(argv[0], '/');
-+	if (Progname) {
- 		Progname++;
- 	} else {
- 		Progname = argv[0];
-diff --git a/dmapi/src/suite1/cmd/test_assumption.c b/dmapi/src/suite1/cmd/test_assumption.c
-index 6760f34..98dea4c 100644
---- a/dmapi/src/suite1/cmd/test_assumption.c
-+++ b/dmapi/src/suite1/cmd/test_assumption.c
-@@ -88,7 +88,7 @@ main(
-                 exit(1);
+
++#ifndef HAVE_STRUCT_STAT_ST_BLOCKS
++# define HAVE_STRUCT_STAT_ST_BLOCKS 0
++#endif
++
++/* Use a heuristic to determine whether stat buffer SB comes from a file
++   with sparse blocks.  If the file has fewer blocks than would normally
++   be needed for a file of its size, then at least one of the blocks in
++   the file is a hole.  In that case, return true.  */
++static bool
++is_probably_sparse (struct stat const *sb)
++{
++  return (HAVE_STRUCT_STAT_ST_BLOCKS
++          && S_ISREG (sb->st_mode)
++          && ST_NBLOCKS (*sb) < sb->st_size / ST_NBLOCKSIZE);
++}
++
++
+ /* Copy a regular file from SRC_NAME to DST_NAME.
+    If the source file contains holes, copies holes and blocks of zeros
+    in the source file as holes in the destination file.
+@@ -984,15 +1001,13 @@ copy_reg (char const *src_name, char const *dst_name,
+           if (x->sparse_mode == SPARSE_ALWAYS)
+             make_holes = true;
+
+-#if HAVE_STRUCT_STAT_ST_BLOCKS
+           /* Use a heuristic to determine whether SRC_NAME contains any sparse
+              blocks.  If the file has fewer blocks than would normally be
+              needed for a file of its size, then at least one of the blocks in
+              the file is a hole.  */
+-          if (x->sparse_mode == SPARSE_AUTO && S_ISREG (src_open_sb.st_mode)
+-              && ST_NBLOCKS (src_open_sb) < src_open_sb.st_size / ST_NBLOCKSIZE)
++          if (x->sparse_mode == SPARSE_AUTO
++              && is_probably_sparse (&src_open_sb))
+             make_holes = true;
+-#endif
          }
- 	fprintf(stdout, "Initial session ID: %d\n", sid);
--	fprintf(stdout, "Initial session message length: '%d'\n", rlen);
-+	fprintf(stdout, "Initial session message length: '%zd'\n", rlen);
- 	if (rlen > 0) {
- 		fprintf(stdout, "Initial session message: '%s'\n", buffer);
- 	}
-@@ -108,7 +108,7 @@ main(
-                 exit(1);
+
+       /* If not making a sparse file, try to use a more-efficient
+--
+1.7.5.rc3.291.g63e4e
+
+
+>From 18a474d755aa10d881243d9457d2c420c5e4ea77 Mon Sep 17 00:00:00 2001
+From: Jim Meyering <meyering@redhat.com>
+Date: Wed, 20 Apr 2011 11:21:09 +0200
+Subject: [PATCH 4/6] copy: use FIEMAP (extent_copy) only for
+ apparently-sparse files,
+
+to avoid the expense of extent_copy's unconditional use of
+FIEMAP_FLAG_SYNC.
+* src/copy.c (copy_reg): Do not attempt extent_copy on a file
+that appears to have no holes.
+* NEWS (Changes in behavior): Document this.  At first I labeled this
+as a bug fix, but that would be inaccurate, considering there is no
+documentation of FIEMAP semantics, nor even consensus among kernel
+FS developers.  Here's hoping SEEK_HOLE/SEEK_DATA support will soon
+make it into the linux kernel.
+---
+ NEWS       |   13 +++++++++++++
+ src/copy.c |   37 +++++++++++++++++++++----------------
+ 2 files changed, 34 insertions(+), 16 deletions(-)
+
+diff --git a/NEWS b/NEWS
+index 4873b5a..7bc2ef3 100644
+--- a/NEWS
++++ b/NEWS
+@@ -2,6 +2,19 @@ GNU coreutils NEWS                                    -*- outline -*-
+
+ * Noteworthy changes in release ?.? (????-??-??) [?]
+
++** Changes in behavior
++
++  cp's extent-based (FIEMAP) copying code is more reliable in the face
++  of varying and undocumented file system semantics:
++  - it no longer treats unwritten extents specially
++  - a FIEMAP-based extent copy always uses the FIEMAP_FLAG_SYNC flag.
++      Before, it would incur the performance penalty of that sync only
++      for 2.6.38 and older kernels.  We thought all problems would be
++      resolved for 2.6.39.
++  - it now attempts a FIEMAP copy only on a file that appears sparse.
++      Sparse files are relatively unusual, and the copying code incurs
++      the performance penalty of the now-mandatory sync only for them.
++
+
+ * Noteworthy changes in release 8.11 (2011-04-13) [stable]
+
+diff --git a/src/copy.c b/src/copy.c
+index 3db07b5..6edf52e 100644
+--- a/src/copy.c
++++ b/src/copy.c
+@@ -993,6 +993,7 @@ copy_reg (char const *src_name, char const *dst_name,
+
+       /* Deal with sparse files.  */
+       bool make_holes = false;
++      bool sparse_src = false;
+
+       if (S_ISREG (sb.st_mode))
+         {
+@@ -1005,8 +1006,8 @@ copy_reg (char const *src_name, char const *dst_name,
+              blocks.  If the file has fewer blocks than would normally be
+              needed for a file of its size, then at least one of the blocks in
+              the file is a hole.  */
+-          if (x->sparse_mode == SPARSE_AUTO
+-              && is_probably_sparse (&src_open_sb))
++          sparse_src = is_probably_sparse (&src_open_sb);
++          if (x->sparse_mode == SPARSE_AUTO && sparse_src)
+             make_holes = true;
          }
- 	fprintf(stdout, "Assumed session ID: %d\n", newsid);
--	fprintf(stdout, "Assumed session message length: '%d'\n", rlen);
-+	fprintf(stdout, "Assumed session message length: '%zd'\n", rlen);
- 	if (rlen > 0) {
- 		fprintf(stdout, "Assumed session message: '%s'\n", buffer);
- 	}
-diff --git a/dmapi/src/suite1/cmd/upgrade_right.c b/dmapi/src/suite1/cmd/upgrade_right.c
-index 5c4a50e..d249391 100644
---- a/dmapi/src/suite1/cmd/upgrade_right.c
-+++ b/dmapi/src/suite1/cmd/upgrade_right.c
-@@ -76,7 +76,8 @@ main(
- 	char		*name;
- 	int		opt;
- 
--	if (Progname = strrchr(argv[0], '/')) {
-+	Progname = strrchr(argv[0], '/');
-+	if (Progname) {
- 		Progname++;
- 	} else {
- 		Progname = argv[0];
--- 
-1.7.4.4
+
+@@ -1038,21 +1039,25 @@ copy_reg (char const *src_name, char const *dst_name,
+       buf_alloc = xmalloc (buf_size + buf_alignment_slop);
+       buf = ptr_align (buf_alloc, buf_alignment);
+
+-      bool normal_copy_required;
+-      /* Perform an efficient extent-based copy, falling back to the
+-         standard copy only if the initial extent scan fails.  If the
+-         '--sparse=never' option is specified, write all data but use
+-         any extents to read more efficiently.  */
+-      if (extent_copy (source_desc, dest_desc, buf, buf_size,
+-                       src_open_sb.st_size,
+-                       S_ISREG (sb.st_mode) ? x->sparse_mode : SPARSE_NEVER,
+-                       src_name, dst_name, &normal_copy_required))
+-        goto preserve_metadata;
+-
+-      if (! normal_copy_required)
++      if (sparse_src)
+         {
+-          return_val = false;
+-          goto close_src_and_dst_desc;
++          bool normal_copy_required;
++
++          /* Perform an efficient extent-based copy, falling back to the
++             standard copy only if the initial extent scan fails.  If the
++             '--sparse=never' option is specified, write all data but use
++             any extents to read more efficiently.  */
++          if (extent_copy (source_desc, dest_desc, buf, buf_size,
++                           src_open_sb.st_size,
++                           S_ISREG (sb.st_mode) ? x->sparse_mode : SPARSE_NEVER,
++                           src_name, dst_name, &normal_copy_required))
++            goto preserve_metadata;
++
++          if (! normal_copy_required)
++            {
++              return_val = false;
++              goto close_src_and_dst_desc;
++            }
+         }
+
+       off_t n_read;
+--
+1.7.5.rc3.291.g63e4e
+
+
+>From 223e3832eb5a9b1aadf0a69d076f40116389565c Mon Sep 17 00:00:00 2001
+From: Jim Meyering <meyering@redhat.com>
+Date: Thu, 21 Apr 2011 18:08:20 +0200
+Subject: [PATCH 5/6] tests: sparse-fiemap: report more detail upon failure;
+ ignore an FP
+
+* tests/cp/sparse-fiemap: Fail right away with details, when cmp fails.
+When extent maps are found to differ, display them and merely warn.
+---
+ tests/cp/sparse-fiemap |   10 +++++++---
+ 1 files changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/tests/cp/sparse-fiemap b/tests/cp/sparse-fiemap
+index 2c6a250..2e8c95b 100755
+--- a/tests/cp/sparse-fiemap
++++ b/tests/cp/sparse-fiemap
+@@ -75,7 +75,7 @@ for i in $(seq 1 2 21); do
+     # for the same reasons.
+     cp --sparse=always j1 j2 || fail=1
+
+-    cmp j1 j2 || fail=1
++    cmp j1 j2 || fail_ "data loss i=$i j=$j"
+     if ! filefrag -vs j1 | grep -F extent >/dev/null; then
+       test $skip != 1 && warn_ 'skipping part; you lack filefrag'
+       skip=1
+@@ -98,8 +98,12 @@ for i in $(seq 1 2 21); do
+       # exclude the physical block numbers; they always differ
+       filefrag -v j1 > ff1 || framework_failure
+       filefrag -vs j2 > ff2 || framework_failure
+-      { f ff1; f ff2; } | $PERL $abs_top_srcdir/tests/filefrag-extent-compare ||
+-        fail=1
++      { f ff1; f ff2; } | $PERL $abs_top_srcdir/tests/filefrag-extent-compare \
++        || {
++             warn_ ignoring filefrag-reported extent map differences
++             # Show the differing extent maps.
++             head -99 ff1 ff2
++           }
+     fi
+     test $fail = 1 && break 2
+   done
+--
+1.7.5.rc3.291.g63e4e
+
+
+>From 8c0b1de42c615a82ce7e32901ad1e4dca95b3657 Mon Sep 17 00:00:00 2001
+From: Jim Meyering <meyering@redhat.com>
+Date: Thu, 21 Apr 2011 21:01:13 +0200
+Subject: [PATCH 6/6] tests: sparse-fiemap: with root/ext3, do not create an
+ ext4 FS
+
+* tests/cp/sparse-fiemap: When this test was run as root on an ext3
+file system, (ext3 had known problems), it would trickily create and
+mount a loopback ext4 file system and use that instead.  However, due
+to a bug in 2.6.39-rc1..rc3, this loopback test (when run in another
+loopback FS) exposed a bug with 1k-blocksize ext4 whereby non-NUL
+data would be read from a hole.  For details, see this:
+http://thread.gmane.org/gmane.comp.file-systems.ext4/24495
+---
+ tests/cp/sparse-fiemap |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
+
+diff --git a/tests/cp/sparse-fiemap b/tests/cp/sparse-fiemap
+index 2e8c95b..1394060 100755
+--- a/tests/cp/sparse-fiemap
++++ b/tests/cp/sparse-fiemap
+@@ -26,6 +26,10 @@ touch fiemap_chk
+ if fiemap_capable_ fiemap_chk && ! df -t ext3 . >/dev/null; then
+   : # Current partition has working extents.  Good!
+ else
++  # FIXME: temporarily(?) skip this variant, at least until after this bug
++  # is fixed: http://thread.gmane.org/gmane.comp.file-systems.ext4/24495
++  skip_test_ "current file system has insufficient FIEMAP support"
++
+   # It's not;  we need to create one, hence we need root access.
+   require_root_
+
+--
+1.7.5.rc3.291.g63e4e
 
 _______________________________________________
 xfs mailing list
