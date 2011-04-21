@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3LGq5U7166061 for <xfs@oss.sgi.com>; Thu, 21 Apr 2011 11:52:06 -0500
-Received: from mx1.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DDC421510056
-	for <xfs@oss.sgi.com>; Thu, 21 Apr 2011 09:55:33 -0700 (PDT)
-Received: from mx1.suse.de (cantor.suse.de [195.135.220.2]) by cuda.sgi.com
-	with ESMTP id o3MwYasx5XQOgxWi for <xfs@oss.sgi.com>;
-	Thu, 21 Apr 2011 09:55:33 -0700 (PDT)
-Date: Thu, 21 Apr 2011 18:55:29 +0200
-From: Jan Kara <jack@suse.cz>
+	p3LHwlmK168125 for <xfs@oss.sgi.com>; Thu, 21 Apr 2011 12:58:47 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0A29A1510E51
+	for <xfs@oss.sgi.com>; Thu, 21 Apr 2011 11:02:15 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id PBZO5J7MevI4YRC1 for
+	<xfs@oss.sgi.com>; Thu, 21 Apr 2011 11:02:15 -0700 (PDT)
+Date: Thu, 21 Apr 2011 14:02:13 -0400
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: buffered writeback torture program
-Message-ID: <20110421165529.GE4476@quack.suse.cz>
-References: <1303322378-sup-1722@think> <20110420220626.GL29872@redhat.com>
-	<1303383609-sup-2330@think> <1303399343-sup-9292@think>
+Message-ID: <20110421180213.GA19255@infradead.org>
+References: <1303322378-sup-1722@think> <20110421083258.GA26784@infradead.org>
+	<1303407205-sup-6141@think> <20110421174120.GA7267@infradead.org>
+	<93CB867E-B908-4B38-A146-A9DC958ACF64@dilger.ca>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1303399343-sup-9292@think>
+In-Reply-To: <93CB867E-B908-4B38-A146-A9DC958ACF64@dilger.ca>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,93 +30,15 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Chris Mason <chris.mason@oracle.com>
-Cc: axboe <axboe@kernel.dk>, jack <jack@suse.cz>, xfs <xfs@oss.sgi.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, Vivek Goyal <vgoyal@redhat.com>
+To: Andreas Dilger <adilger@dilger.ca>
+Cc: axboe <axboe@kernel.dk>, jack <jack@suse.cz>, xfs <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, dchinner <dchinner@redhat.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, Chris Mason <chris.mason@oracle.com>
 
-On Thu 21-04-11 11:25:41, Chris Mason wrote:
-> Excerpts from Chris Mason's message of 2011-04-21 07:09:11 -0400:
-> > Excerpts from Vivek Goyal's message of 2011-04-20 18:06:26 -0400:
-> > > > 
-> > > > In this case the 128s spent in write was on a single 4K overwrite on a
-> > > > 4K file.
-> > > 
-> > > Chris, You seem to be doing 1MB (32768*32) writes on fsync file instead of 4K.
-> > > I changed the size to 4K still not much difference though.
-> > 
-> > Whoops, I had that change made locally but didn't get it copied out.
-> > 
-> > > 
-> > > Once the program has exited because of high write time, i restarted it and
-> > > this time I don't see high write times.
-> > 
-> > I see this for some of my runs as well.
-> > 
-> > > 
-> > > First run
-> > > ---------
-> > > # ./a.out 
-> > > setting up random write file
-> > > done setting up random write file
-> > > starting fsync run
-> > > starting random io!
-> > > write time: 0.0006s fsync time: 0.3400s
-> > > write time: 63.3270s fsync time: 0.3760s
-> > > run done 2 fsyncs total, killing random writer
-> > > 
-> > > Second run
-> > > ----------
-> > > # ./a.out 
-> > > starting fsync run
-> > > starting random io!
-> > > write time: 0.0006s fsync time: 0.5359s
-> > > write time: 0.0007s fsync time: 0.3559s
-> > > write time: 0.0009s fsync time: 0.3113s
-> > > write time: 0.0008s fsync time: 0.4336s
-> > > write time: 0.0009s fsync time: 0.3780s
-> > > write time: 0.0008s fsync time: 0.3114s
-> > > write time: 0.0009s fsync time: 0.3225s
-> > > write time: 0.0009s fsync time: 0.3891s
-> > > write time: 0.0009s fsync time: 0.4336s
-> > > write time: 0.0009s fsync time: 0.4225s
-> > > write time: 0.0009s fsync time: 0.4114s
-> > > write time: 0.0007s fsync time: 0.4004s
-> > > 
-> > > Not sure why would that happen.
-> > > 
-> > > I am wondering why pwrite/fsync process was throttled. It did not have any
-> > > pages in page cache and it shouldn't have hit the task dirty limits. Does that
-> > > mean per task dirty limit logic does not work or I am completely missing
-> > > the root cause of the problem.
-> > 
-> > I haven't traced it to see.  This test box only has 1GB of ram, so the
-> > dirty ratios can be very tight.
-> 
-> Oh, I see now.  The test program first creates the file with a big
-> streaming write.  So the task doing the streaming writes gets nailed
-> with the per-task dirty accounting because it is making a ton of dirty
-> data.
-> 
-> Then the task forks the random writer to do all the random IO.
-> 
-> Then the original pid goes back to do the fsyncs on the new file.
-> 
-> So, in the original run, we get stuffed into balance_dirty_pages because
-> the per-task limits show we've done a lot of dirties.
-> 
-> In all later runs, the file already exists, so our fsyncing process
-> hasn't done much dirtying at all.  Looks like the VM is doing something
-> sane, we just get nailed with big random IO.
-  Ok, so there isn't a problem with fsync() as such if I understand it
-right. We just block tasks in balance_dirty_pages() for a *long* time
-because it takes long time to write out that dirty IO and we make it even
-worse by trying to writeout more on behalf of the throttled task. Am I
-right? The IO-less throttling will solve this regardless of patchset we
-choose so I wouldn't be too worried about the problem now.
+On Thu, Apr 21, 2011 at 11:59:37AM -0600, Andreas Dilger wrote:
+> But doesn't XFS have potentially very large extents, especially in the case of files that were fallocate()'d or linearly written?  If there is a single 8GB extent, and then random writes within that extent (seems very database like) grouping the all of the writes in the extent doesn't seem so great.
 
-								Honza
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+It doesn't cluster any writes in an extent.  It only writes out
+additional dirty pages directly following that one we were asked to
+write out.  As soon as we hit a non-dirty page we give up.
 
 _______________________________________________
 xfs mailing list
