@@ -1,27 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3L4PdPV132818 for <xfs@oss.sgi.com>; Wed, 20 Apr 2011 23:25:39 -0500
+	p3L4PkdM132868 for <xfs@oss.sgi.com>; Wed, 20 Apr 2011 23:25:46 -0500
 Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BF55A1507397
-	for <xfs@oss.sgi.com>; Wed, 20 Apr 2011 21:29:05 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D5B543FE523
+	for <xfs@oss.sgi.com>; Wed, 20 Apr 2011 21:29:12 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	Veed2cYyQImXi0LP for <xfs@oss.sgi.com>;
-	Wed, 20 Apr 2011 21:29:05 -0700 (PDT)
+	gfWjX1nOYYkGBeam for <xfs@oss.sgi.com>;
+	Wed, 20 Apr 2011 21:29:12 -0700 (PDT)
 Received: from chute ([192.168.1.1] helo=disappointment)
 	by dastard with esmtp (Exim 4.72)
-	(envelope-from <dave@fromorbit.com>) id 1QClVk-00030t-KM
-	for xfs@oss.sgi.com; Thu, 21 Apr 2011 14:29:00 +1000
+	(envelope-from <dave@fromorbit.com>) id 1QClVu-00030r-AU
+	for xfs@oss.sgi.com; Thu, 21 Apr 2011 14:29:10 +1000
 Received: from dave by disappointment with local (Exim 4.75)
-	(envelope-from <dave@disappointment.disaster>) id 1QClVt-0002mE-4V
-	for xfs@oss.sgi.com; Thu, 21 Apr 2011 14:29:09 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1QClVs-0002m7-UZ
+	for xfs@oss.sgi.com; Thu, 21 Apr 2011 14:29:08 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 3/4] xfs: reset buffer pointers before freeing them
-Date: Thu, 21 Apr 2011 14:29:03 +1000
-Message-Id: <1303360144-10632-4-git-send-email-david@fromorbit.com>
-In-Reply-To: <1303360144-10632-1-git-send-email-david@fromorbit.com>
-References: <1303360144-10632-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 0/4] xfs: candidate fixes for 2.6.39-rc4
+Date: Thu, 21 Apr 2011 14:29:00 +1000
+Message-Id: <1303360144-10632-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,215 +35,9 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
-
-When we free a vmapped buffer, we need to ensure the vmap address
-and length we free is the same as when it was allocated. In various
-places in the log code we change the memory the buffer is pointing
-to before issuing IO, but we never reset the buffer to point back to
-it's original memory (or no memory, if that is the case for the
-buffer).
-
-As a result, when we free the buffer it points to memory that is
-owned by something else and attempts to unmap and free it. Because
-the range does not match any known mapped range, it can trigger
-BUG_ON() traps in the vmap code, and potentially corrupt the vmap
-area tracking.
-
-Fix this by always resetting these buffers to their original state
-before freeing them.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/linux-2.6/xfs_buf.c |   21 ++++++++++++
- fs/xfs/linux-2.6/xfs_buf.h |    1 +
- fs/xfs/xfs_log.c           |    8 ++++-
- fs/xfs/xfs_log_recover.c   |   76 ++++++++++++++++++++++---------------------
- 4 files changed, 68 insertions(+), 38 deletions(-)
-
-diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
-index 9ef9ed2..ecf0db6 100644
---- a/fs/xfs/linux-2.6/xfs_buf.c
-+++ b/fs/xfs/linux-2.6/xfs_buf.c
-@@ -709,6 +709,27 @@ xfs_buf_get_empty(
- 	return bp;
- }
- 
-+/*
-+ * Return a buffer allocated as an empty buffer and associated to external
-+ * memory via xfs_buf_associate_memory() back to it's empty state.
-+ */
-+void
-+xfs_buf_set_empty(
-+	struct xfs_buf		*bp,
-+	size_t			len)
-+{
-+	if (bp->b_pages)
-+		_xfs_buf_free_pages(bp);
-+
-+	bp->b_pages = NULL;
-+	bp->b_page_count = 0;
-+	bp->b_addr = NULL;
-+	bp->b_file_offset = 0;
-+	bp->b_buffer_length = bp->b_count_desired = len;
-+	bp->b_bn = XFS_BUF_DADDR_NULL;
-+	bp->b_flags &= ~XBF_MAPPED;
-+}
-+
- static inline struct page *
- mem_to_page(
- 	void			*addr)
-diff --git a/fs/xfs/linux-2.6/xfs_buf.h b/fs/xfs/linux-2.6/xfs_buf.h
-index a9a1c45..50a7d5f 100644
---- a/fs/xfs/linux-2.6/xfs_buf.h
-+++ b/fs/xfs/linux-2.6/xfs_buf.h
-@@ -178,6 +178,7 @@ extern xfs_buf_t *xfs_buf_read(xfs_buftarg_t *, xfs_off_t, size_t,
- 				xfs_buf_flags_t);
- 
- extern xfs_buf_t *xfs_buf_get_empty(size_t, xfs_buftarg_t *);
-+extern void xfs_buf_set_empty(struct xfs_buf *bp, size_t len);
- extern xfs_buf_t *xfs_buf_get_uncached(struct xfs_buftarg *, size_t, int);
- extern int xfs_buf_associate_memory(xfs_buf_t *, void *, size_t);
- extern void xfs_buf_hold(xfs_buf_t *);
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index b612ce4..3850a91 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -1449,6 +1449,13 @@ xlog_dealloc_log(xlog_t *log)
- 
- 	xlog_cil_destroy(log);
- 
-+	/*
-+	 * always need to ensure that the extra buffer does not point to memory
-+	 * owned by another log buffer before we free it.
-+	 */
-+	xfs_buf_set_empty(log->l_xbuf, log->l_iclog_size);
-+	xfs_buf_free(log->l_xbuf);
-+
- 	iclog = log->l_iclog;
- 	for (i=0; i<log->l_iclog_bufs; i++) {
- 		xfs_buf_free(iclog->ic_bp);
-@@ -1458,7 +1465,6 @@ xlog_dealloc_log(xlog_t *log)
- 	}
- 	spinlock_destroy(&log->l_icloglock);
- 
--	xfs_buf_free(log->l_xbuf);
- 	log->l_mp->m_log = NULL;
- 	kmem_free(log);
- }	/* xlog_dealloc_log */
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 5cc464a..3692c1a 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -205,6 +205,35 @@ xlog_bread(
- }
- 
- /*
-+ * Read at an offset into the buffer. Returns with the buffer in it's original
-+ * state regardless of the result of the read.
-+ */
-+STATIC int
-+xlog_bread_offset(
-+	xlog_t		*log,
-+	xfs_daddr_t	blk_no,		/* block to read from */
-+	int		nbblks,		/* blocks to read */
-+	xfs_buf_t	*bp,
-+	xfs_caddr_t	offset)
-+{
-+	xfs_caddr_t	orig_offset = XFS_BUF_PTR(bp);
-+	int		orig_len = bp->b_buffer_length;
-+	int		error, error2;
-+
-+	error = XFS_BUF_SET_PTR(bp, offset, BBTOB(nbblks));
-+	if (error)
-+		return error;
-+
-+	error = xlog_bread_noalign(log, blk_no, nbblks, bp);
-+
-+	/* must reset buffer pointer even on error */
-+	error2 = XFS_BUF_SET_PTR(bp, orig_offset, orig_len);
-+	if (error)
-+		return error;
-+	return error2;
-+}
-+
-+/*
-  * Write out the buffer at the given block for the given number of blocks.
-  * The buffer is kept locked across the write and is returned locked.
-  * This can only be used for synchronous log writes.
-@@ -1229,20 +1258,13 @@ xlog_write_log_records(
- 		 */
- 		ealign = round_down(end_block, sectbb);
- 		if (j == 0 && (start_block + endcount > ealign)) {
--			offset = XFS_BUF_PTR(bp);
--			balign = BBTOB(ealign - start_block);
--			error = XFS_BUF_SET_PTR(bp, offset + balign,
--						BBTOB(sectbb));
-+			balign = ealign - start_block;
-+			offset = XFS_BUF_PTR(bp) + BBTOB(balign);
-+			error = xlog_bread_offset(log, ealign, sectbb,
-+							bp, offset);
- 			if (error)
- 				break;
- 
--			error = xlog_bread_noalign(log, ealign, sectbb, bp);
--			if (error)
--				break;
--
--			error = XFS_BUF_SET_PTR(bp, offset, bufblks);
--			if (error)
--				break;
- 		}
- 
- 		offset = xlog_align(log, start_block, endcount, bp);
-@@ -3448,19 +3470,9 @@ xlog_do_recovery_pass(
- 				 *   - order is important.
- 				 */
- 				wrapped_hblks = hblks - split_hblks;
--				error = XFS_BUF_SET_PTR(hbp,
--						offset + BBTOB(split_hblks),
--						BBTOB(hblks - split_hblks));
--				if (error)
--					goto bread_err2;
--
--				error = xlog_bread_noalign(log, 0,
--							   wrapped_hblks, hbp);
--				if (error)
--					goto bread_err2;
--
--				error = XFS_BUF_SET_PTR(hbp, offset,
--							BBTOB(hblks));
-+				error = xlog_bread_offset(log, 0,
-+						wrapped_hblks, hbp,
-+						offset + BBTOB(split_hblks));
- 				if (error)
- 					goto bread_err2;
- 			}
-@@ -3511,19 +3523,9 @@ xlog_do_recovery_pass(
- 				 *   _first_, then the log start (LR header end)
- 				 *   - order is important.
- 				 */
--				error = XFS_BUF_SET_PTR(dbp,
--						offset + BBTOB(split_bblks),
--						BBTOB(bblks - split_bblks));
--				if (error)
--					goto bread_err2;
--
--				error = xlog_bread_noalign(log, wrapped_hblks,
--						bblks - split_bblks,
--						dbp);
--				if (error)
--					goto bread_err2;
--
--				error = XFS_BUF_SET_PTR(dbp, offset, h_size);
-+				error = xlog_bread_offset(log, 0,
-+						bblks - split_bblks, hbp,
-+						offset + BBTOB(split_bblks));
- 				if (error)
- 					goto bread_err2;
- 			}
--- 
-1.7.4.4
+This is my current bug fix stack. They are probably all candidates
+for 2.6.39, though I don't mind if we put any of them off
+until.40...
 
 _______________________________________________
 xfs mailing list
