@@ -1,21 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3LJMdYQ171158 for <xfs@oss.sgi.com>; Thu, 21 Apr 2011 14:22:39 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 382EA15073BA
-	for <xfs@oss.sgi.com>; Thu, 21 Apr 2011 12:26:06 -0700 (PDT)
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id VXrox6wVXIjCwH1x for <xfs@oss.sgi.com>;
-	Thu, 21 Apr 2011 12:26:06 -0700 (PDT)
-Message-ID: <4DB084CE.8020600@sandeen.net>
-Date: Thu, 21 Apr 2011 14:26:06 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: xfs_repair crashing (versions 3.1.4 and 3.1.5)
-References: <BANLkTikh1i3aYgXNZut+AGT-1kz=aqv-Eg@mail.gmail.com>	<20110419082705.GI23985@dastard>
-	<20110419130737.45beb611@destiny.ordissimo>
-In-Reply-To: <20110419130737.45beb611@destiny.ordissimo>
+	p3LJ806M170676 for <xfs@oss.sgi.com>; Thu, 21 Apr 2011 14:08:01 -0500
+From: Alex Elder <aelder@sgi.com>
+Subject: [PATCH 0/5] xfstests: dmapi: eliminate all build warnings
+Date: Thu, 21 Apr 2011 14:11:08 -0500
+Message-Id: <1303413073-24173-1-git-send-email-aelder@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,51 +14,24 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Anisse Astier <anisse@astier.eu>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 4/19/11 6:07 AM, Anisse Astier wrote:
-> On Tue, 19 Apr 2011 18:27:05 +1000, Dave Chinner <david@fromorbit.com> wrote :
-> 
->> On Mon, Apr 18, 2011 at 09:24:22PM +0200, Anisse Astier wrote:
->>> directory flags set on non-directory inode 2283178100, would fix bad flags.
->>> bad key in bmbt root (is 73434, would reset to 74194) in inode
->>> 2283178100 data fork
->>> bad fwd (right) sibling pointer (saw 145202888 should be NULLDFSBNO)
->>> Segmentation fault
->>
->> Hmmm. The very next line doesn't appear before the segfault, making
->> me think that it's the printf that is causing it to crash.
->>
->>         if (check_dups == 0 &&
->>                 cursor.level[0].right_fsbno != NULLDFSBNO)  {
->>                 do_warn(
->>         _("bad fwd (right) sibling pointer (saw %llu should be NULLDFSBNO)\n"),
->>                         cursor.level[0].right_fsbno);
->>
->> We get this line of output.
->>
->>                 do_warn(
->>         _("\tin inode %u (%s fork) bmap btree block %llu\n"),
->>                         XFS_AGINO_TO_INO(mp, agno, ino), forkname,
->>                         cursor.level[0].fsbno);
->>
->> But not this one. I wonder if passing a 64bit number to a %u format
->> string (shoul dbe %llu) causes problems on ARM? All the variables
->> are valid as they are printed or accessed elsewhere in the function,
->> so that's the only thing I can think of without a stack trace to
->> tell me otherwise....
-> 
-> I have no idea. I did not succeed in getting a stacktrace. CPU is an
-> ARM9, and I used Debian armel squeeze & wheezy  xfsprogs binaries.
+I'm hoping the Nth time is a charm...
 
-Perhaps you could try removing or fixing the printf Dave suspects, rebuild repair, and run it again?
+This series eliminates all build warnings that come out of building
+things under the dmapi/ subdirectory.  I'm using gcc 4.x (x < 6) on
+several platforms, including i386, x86_64, and ia64 architectures.
 
--Eric
+I have sent these a couple times before; they are unmodified from
+the last time I sent them out.  I am omitting the summary of the
+types of warnings and how they got resolved this time around.
+
+                                        -Alex
 
 _______________________________________________
 xfs mailing list
