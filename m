@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3LDjVJj160047 for <xfs@oss.sgi.com>; Thu, 21 Apr 2011 08:45:31 -0500
-Received: from mx3-phx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 60546150CD9B
-	for <xfs@oss.sgi.com>; Thu, 21 Apr 2011 06:48:58 -0700 (PDT)
-Received: from mx3-phx2.redhat.com (mx3-phx2.redhat.com [209.132.183.24]) by
-	cuda.sgi.com with ESMTP id PBKfBxjysk9kcHl0 for
-	<xfs@oss.sgi.com>; Thu, 21 Apr 2011 06:48:58 -0700 (PDT)
-Date: Thu, 21 Apr 2011 09:48:53 -0400 (EDT)
-From: Lachlan McIlroy <lmcilroy@redhat.com>
-Message-ID: <1979654581.175163.1303393733462.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
-In-Reply-To: <20110421065312.GI1814@dastard>
-Subject: Re: [PATCH 4/4] xfs: obey minleft values during extent allocation
-	correctly.
-MIME-Version: 1.0
-Reply-To: Lachlan McIlroy <lmcilroy@redhat.com>
+	p3LFOBXm163312 for <xfs@oss.sgi.com>; Thu, 21 Apr 2011 10:24:11 -0500
+Received: from rcsinet10.oracle.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E441A150D355
+	for <xfs@oss.sgi.com>; Thu, 21 Apr 2011 08:27:38 -0700 (PDT)
+Received: from rcsinet10.oracle.com (rcsinet10.oracle.com [148.87.113.121]) by
+	cuda.sgi.com with ESMTP id dSS4zAGwF9y1QI5Y for
+	<xfs@oss.sgi.com>; Thu, 21 Apr 2011 08:27:38 -0700 (PDT)
+From: Chris Mason <chris.mason@oracle.com>
+Subject: Re: buffered writeback torture program
+In-reply-to: <1303383609-sup-2330@think>
+References: <1303322378-sup-1722@think> <20110420220626.GL29872@redhat.com>
+	<1303383609-sup-2330@think>
+Date: Thu, 21 Apr 2011 11:25:41 -0400
+Message-Id: <1303399343-sup-9292@think>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,75 +23,88 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Chris Mason <chris.mason@oracle.com>
+Cc: axboe <axboe@kernel.dk>, jack <jack@suse.cz>, xfs <xfs@oss.sgi.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, Vivek Goyal <vgoyal@redhat.com>
 
------ Original Message -----
-> On Thu, Apr 21, 2011 at 01:05:18AM -0400, Lachlan McIlroy wrote:
-> > ----- Original Message -----
-> > > From: Dave Chinner <dchinner@redhat.com>
-> > >
-> > > When allocating an extent that is long enough to consume the
-> > > remaining free space in an AG, we need to ensure that the
-> > > allocation
-> > > leaves enough space in the AG for any subsequent bmap btree blocks
-> > > that are needed to track the new extent. These have to be
-> > > allocated
-> > > in the same AG as we only reserve enough blocks in an allocation
-> > > transaction for modification of the freespace trees in a single
-> > > AG.
-> > >
-> > > xfs_alloc_fix_minleft() has been considering blocks on the AGFL as
-> > > free blocks available for extent and bmbt block allocation, which
-> > > is
-> > > not correct - blocks on the AGFL are there exclusively for the use
-> > > of the free space btrees. As a result, when minleft is less than
-> > > the
-> > > number of blocks on the AGFL, xfs_alloc_fix_minleft() does not
-> > > trim
-> > > the given extent to leave minleft blocks available for bmbt
-> > > allocation, and hence we can fail allocation during bmbt record
-> > > insertion.
-> > >
-> > > A further problem is that bmbt block allocation doesn't set the
-> > > total number of blocks correctly for the allocation, thereby
-> > > allowing it to allocate a block from the AGFL before failing on
-> > > the
-> > > second block in xfs_alloc_fix_freelist(). The total needs to be
-> > > set
-> > > so that it skips AGs that only have the minimum reserved
-> > > amount of AGFL blocks free in them.
-> > >
-> > > Similarly, xfs_inobt_alloc_block() needs to set args->total as
-> > > well.
-> >
-> > Dave, you seem to have dropped the args->total changes?
+Excerpts from Chris Mason's message of 2011-04-21 07:09:11 -0400:
+> Excerpts from Vivek Goyal's message of 2011-04-20 18:06:26 -0400:
+> > > 
+> > > In this case the 128s spent in write was on a single 4K overwrite on a
+> > > 4K file.
+> > 
+> > Chris, You seem to be doing 1MB (32768*32) writes on fsync file instead of 4K.
+> > I changed the size to 4K still not much difference though.
 > 
-> yeah I did - I forgot to update the commit message. It passes test
-> 250 without the args.total changes, so I figured that the minimum
-> change needed was the best approach. I'll fix the commit message.
+> Whoops, I had that change made locally but didn't get it copied out.
+> 
+> > 
+> > Once the program has exited because of high write time, i restarted it and
+> > this time I don't see high write times.
+> 
+> I see this for some of my runs as well.
+> 
+> > 
+> > First run
+> > ---------
+> > # ./a.out 
+> > setting up random write file
+> > done setting up random write file
+> > starting fsync run
+> > starting random io!
+> > write time: 0.0006s fsync time: 0.3400s
+> > write time: 63.3270s fsync time: 0.3760s
+> > run done 2 fsyncs total, killing random writer
+> > 
+> > Second run
+> > ----------
+> > # ./a.out 
+> > starting fsync run
+> > starting random io!
+> > write time: 0.0006s fsync time: 0.5359s
+> > write time: 0.0007s fsync time: 0.3559s
+> > write time: 0.0009s fsync time: 0.3113s
+> > write time: 0.0008s fsync time: 0.4336s
+> > write time: 0.0009s fsync time: 0.3780s
+> > write time: 0.0008s fsync time: 0.3114s
+> > write time: 0.0009s fsync time: 0.3225s
+> > write time: 0.0009s fsync time: 0.3891s
+> > write time: 0.0009s fsync time: 0.4336s
+> > write time: 0.0009s fsync time: 0.4225s
+> > write time: 0.0009s fsync time: 0.4114s
+> > write time: 0.0007s fsync time: 0.4004s
+> > 
+> > Not sure why would that happen.
+> > 
+> > I am wondering why pwrite/fsync process was throttled. It did not have any
+> > pages in page cache and it shouldn't have hit the task dirty limits. Does that
+> > mean per task dirty limit logic does not work or I am completely missing
+> > the root cause of the problem.
+> 
+> I haven't traced it to see.  This test box only has 1GB of ram, so the
+> dirty ratios can be very tight.
 
-Yes I agree, best to keep the change to a minimum.  Perhaps we need
-another test case that exhausts almost all space in all AGs to
-demonstrate the need for the args->total change (and ensure that
-the low space algorithm gets triggered).
+Oh, I see now.  The test program first creates the file with a big
+streaming write.  So the task doing the streaming writes gets nailed
+with the per-task dirty accounting because it is making a ton of dirty
+data.
 
-> 
-> Cheers,
-> 
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Then the task forks the random writer to do all the random IO.
+
+Then the original pid goes back to do the fsyncs on the new file.
+
+So, in the original run, we get stuffed into balance_dirty_pages because
+the per-task limits show we've done a lot of dirties.
+
+In all later runs, the file already exists, so our fsyncing process
+hasn't done much dirtying at all.  Looks like the VM is doing something
+sane, we just get nailed with big random IO.
+
+-chris
 
 _______________________________________________
 xfs mailing list
