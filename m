@@ -1,12 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3LJ81Qr170685 for <xfs@oss.sgi.com>; Thu, 21 Apr 2011 14:08:02 -0500
+	p3LJ82vI170689 for <xfs@oss.sgi.com>; Thu, 21 Apr 2011 14:08:02 -0500
 From: Alex Elder <aelder@sgi.com>
-Subject: [PATCH 2/5] xfstests: eliminate warnings under dmapi/src/suite1/cmd
-	(1)
-Date: Thu, 21 Apr 2011 14:11:10 -0500
-Message-Id: <4a5c63f3e6794fd44865594d7f0220bcd82d2b6b.1303412549.git.aelder@sgi.com>
+Subject: [PATCH 4/5] xfstests: eliminate warnings under dmapi/src/suite1/cmd
+	(3)
+Date: Thu, 21 Apr 2011 14:11:12 -0500
+Message-Id: <85f81c46195b4b16f8d9a361eb8e1892c00fc11b.1303412549.git.aelder@sgi.com>
 In-Reply-To: <1303413073-24173-1-git-send-email-aelder@sgi.com>
 References: <1303413073-24173-1-git-send-email-aelder@sgi.com>
 In-Reply-To: <3b41615dd6b09fafeabe7cc8568c2feaa8792caa.1303412549.git.aelder@sgi.com>
@@ -28,189 +28,141 @@ To: xfs@oss.sgi.com
 Cc: Alex Elder <aelder@sgi.com>
 
 Eliminate build warnings reported on files located under
-dmapi/src/suite1/cmd/ (first of three).
+dmapi/src/suite1/cmd/ (third of three).
 
 Signed-off-by: Alex Elder <aelder@sgi.com>
 ---
- dmapi/src/suite1/cmd/create_userevent.c  |    3 ++-
- dmapi/src/suite1/cmd/dm_handle.c         |    3 ++-
- dmapi/src/suite1/cmd/downgrade_right.c   |    3 ++-
- dmapi/src/suite1/cmd/get_allocinfo.c     |   25 ++++++++++++++-----------
- dmapi/src/suite1/cmd/get_config_events.c |    5 +++--
- dmapi/src/suite1/cmd/get_dirattrs.c      |   10 ++++------
- dmapi/src/suite1/cmd/get_dmattr.c        |    9 +++++----
- dmapi/src/suite1/cmd/get_eventlist.c     |    9 +++------
- dmapi/src/suite1/cmd/get_events.c        |    9 +++++----
- dmapi/src/suite1/cmd/get_fileattr.c      |    3 ++-
- dmapi/src/suite1/cmd/get_mountinfo.c     |    9 +++++----
- dmapi/src/suite1/cmd/get_region.c        |   12 +++++-------
- dmapi/src/suite1/cmd/getall_disp.c       |   13 +++++++------
- 13 files changed, 59 insertions(+), 54 deletions(-)
+ dmapi/src/suite1/cmd/print_event.c             |   30 +++++++++++++----------
+ dmapi/src/suite1/cmd/probe_hole.c              |    6 +++-
+ dmapi/src/suite1/cmd/probe_punch_xfsctl_hole.c |    9 ++++--
+ dmapi/src/suite1/cmd/punch_hole.c              |    3 +-
+ dmapi/src/suite1/cmd/query_right.c             |    3 +-
+ dmapi/src/suite1/cmd/randomize_file.c          |    4 +-
+ dmapi/src/suite1/cmd/release_right.c           |    3 +-
+ dmapi/src/suite1/cmd/remove_dmattr.c           |    3 +-
+ dmapi/src/suite1/cmd/request_right.c           |    3 +-
+ dmapi/src/suite1/cmd/respond_event.c           |    3 +-
+ dmapi/src/suite1/cmd/rwt.c                     |   15 ++++++-----
+ dmapi/src/suite1/cmd/security_hole.c           |    3 +-
+ dmapi/src/suite1/cmd/security_hole2.c          |    3 +-
+ dmapi/src/suite1/cmd/set_disp.c                |    3 +-
+ dmapi/src/suite1/cmd/set_dmattr.c              |    5 ++-
+ dmapi/src/suite1/cmd/set_eventlist.c           |    3 +-
+ dmapi/src/suite1/cmd/set_fileattr.c            |    3 +-
+ dmapi/src/suite1/cmd/struct_test.c             |    4 +-
+ dmapi/src/suite1/cmd/sync_by_handle.c          |    3 +-
+ dmapi/src/suite1/cmd/test_assumption.c         |    4 +-
+ dmapi/src/suite1/cmd/upgrade_right.c           |    3 +-
+ 21 files changed, 70 insertions(+), 46 deletions(-)
 
-diff --git a/dmapi/src/suite1/cmd/create_userevent.c b/dmapi/src/suite1/cmd/create_userevent.c
-index 3edb083..35cb2f2 100644
---- a/dmapi/src/suite1/cmd/create_userevent.c
-+++ b/dmapi/src/suite1/cmd/create_userevent.c
-@@ -61,7 +61,8 @@ main(
- 	char		*name;
- 	int		opt;
- 
--	if (Progname = strrchr(argv[0], '/')) {
-+	Progname = strrchr(argv[0], '/');
-+	if (Progname) {
- 		Progname++;
+diff --git a/dmapi/src/suite1/cmd/print_event.c b/dmapi/src/suite1/cmd/print_event.c
+index e34cafe..afe2c27 100644
+--- a/dmapi/src/suite1/cmd/print_event.c
++++ b/dmapi/src/suite1/cmd/print_event.c
+@@ -331,31 +331,31 @@ print_one_mount_event(
+ 	if (hanp1 && hlen1) {
+ 		hantoa(hanp1, hlen1, hans1);
  	} else {
- 		Progname = argv[0];
-diff --git a/dmapi/src/suite1/cmd/dm_handle.c b/dmapi/src/suite1/cmd/dm_handle.c
-index ba177d1..6ad9a92 100644
---- a/dmapi/src/suite1/cmd/dm_handle.c
-+++ b/dmapi/src/suite1/cmd/dm_handle.c
-@@ -80,7 +80,8 @@ main(
- 	char		fsbuffer3[100];
- 	int		fd;
- 
--	if (Progname = strrchr(argv[0], '/')) {
-+	Progname = strrchr(argv[0], '/');
-+	if (Progname) {
- 		Progname++;
+-		sprintf(hans1, "<BAD HANDLE, hlen %d>", hlen1);
++		sprintf(hans1, "<BAD HANDLE, hlen %zd>", hlen1);
+ 	}
+ 	if (hanp2 && hlen2) {
+ 		hantoa(hanp2, hlen2, hans2);
  	} else {
- 		Progname = argv[0];
-diff --git a/dmapi/src/suite1/cmd/downgrade_right.c b/dmapi/src/suite1/cmd/downgrade_right.c
-index 840e797..96a4bb7 100644
---- a/dmapi/src/suite1/cmd/downgrade_right.c
-+++ b/dmapi/src/suite1/cmd/downgrade_right.c
-@@ -75,7 +75,8 @@ main(
- 	char		*name;
- 	int		opt;
- 
--	if (Progname = strrchr(argv[0], '/')) {
-+	Progname = strrchr(argv[0], '/');
-+	if (Progname) {
- 		Progname++;
+-		sprintf(hans2, "<BAD HANDLE, hlen %d>", hlen2);
++		sprintf(hans2, "<BAD HANDLE, hlen %zd>", hlen2);
+ 	}
+ 	if (hanp3 && hlen3) {
+ 		hantoa(hanp3, hlen3, hans3);
  	} else {
- 		Progname = argv[0];
-diff --git a/dmapi/src/suite1/cmd/get_allocinfo.c b/dmapi/src/suite1/cmd/get_allocinfo.c
-index c568e0e..3583964 100644
---- a/dmapi/src/suite1/cmd/get_allocinfo.c
-+++ b/dmapi/src/suite1/cmd/get_allocinfo.c
-@@ -155,7 +155,8 @@ main(
- 	char		*name;
- 	int		opt;
- 
--	if (Progname = strrchr(argv[0], '/')) {
-+	Progname = strrchr(argv[0], '/');
-+	if (Progname) {
- 		Progname++;
+-		sprintf(hans3, "<BAD HANDLE, hlen %d>", hlen3);
++		sprintf(hans3, "<BAD HANDLE, hlen %zd>", hlen3);
+ 	}
+ 	if (namp1 && nlen1) {
+ 		strncpy(nams1, namp1, nlen1);
+ 		if (nlen1 != sizeof(nams1))
+ 			nams1[nlen1] = '\0';
  	} else {
- 		Progname = argv[0];
-@@ -236,7 +237,8 @@ print_alloc(
- 	char		*type = NULL;
- 	int		rc;
- 
--	fprintf(stdout, "%s: starting offset %lld\n", pathname, startoff);
-+	fprintf(stdout, "%s: starting offset %lld\n", pathname,
-+		(long long) startoff);
- 
- 	/* Allocate space for the number of extents requested by the user. */
- 
-@@ -283,21 +285,21 @@ print_alloc(
- 
- 			if (!Dflag) {
- 				fprintf(stdout, "\t%d: [%lld..%lld]: %s", num,
--					extent[i].ex_offset / 512,
--					(extent[i].ex_offset +
-+					(long long) extent[i].ex_offset / 512,
-+					(long long) (extent[i].ex_offset +
- 					extent[i].ex_length - 1) / 512, type);
- 				if ((extent[i].ex_offset % 512 != 0) ||
- 				    (endoff % 512 != 0)) {
- 					fprintf(stdout, "\t[%lld..%lld]\n",
--						extent[i].ex_offset % 512,
--						(endoff-1) % 512);
-+						(long long) extent[i].ex_offset % 512,
-+						(long long) (endoff-1) % 512);
- 				} else {
- 					fprintf(stdout, "\n");
- 				}
- 			} else {
- 				fprintf(stdout, "%5s	%13lld	%13lld\n",
--					type, extent[i].ex_offset,
--					extent[i].ex_length);
-+					type, (long long) extent[i].ex_offset,
-+					(long long) extent[i].ex_length);
- 			}
- 
- 			/* The ex_offset of the first extent should match the
-@@ -310,13 +312,14 @@ print_alloc(
- 			if (extent[i].ex_offset != endoff) {
- 				fprintf(stderr, "new extent (%lld)is not "
- 					"adjacent to previous one (%lld)\n",
--					extent[i].ex_offset, endoff);
-+					(long long) extent[i].ex_offset,
-+					(long long) endoff);
- 				return(1);
- 			}
- 			if (num && (extent[i].ex_offset % 512) != 0) {
- 				fprintf(stderr, "non-initial ex_offset (%lld) "
- 					"is not a 512-byte multiple\n",
--					extent[i].ex_offset);
-+					(long long) extent[i].ex_offset);
- 				return(1);
- 			}
- 
-@@ -343,7 +346,7 @@ print_alloc(
- 
- 		if (rc && startoff != endoff) {
- 			fprintf(stderr, "startoff is %lld, should be %lld\n",
--				startoff, endoff);
-+				(long long) startoff, (long long) endoff);
- 			return(1);
- 		}
- 
-diff --git a/dmapi/src/suite1/cmd/get_config_events.c b/dmapi/src/suite1/cmd/get_config_events.c
-index cdaf7c2..d50eaa7 100644
---- a/dmapi/src/suite1/cmd/get_config_events.c
-+++ b/dmapi/src/suite1/cmd/get_config_events.c
-@@ -65,7 +65,8 @@ main(
- 	int		opt;
- 	int		i;
- 
--	if (Progname = strrchr(argv[0], '/')) {
-+	Progname = strrchr(argv[0], '/');
-+	if (Progname) {
- 		Progname++;
+-		sprintf(nams1, "<BAD STRING, nlen %d>", nlen1);
++		sprintf(nams1, "<BAD STRING, nlen %zd>", nlen1);
+ 	}
+ 	if (namp2 && nlen2) {
+ 		strncpy(nams2, namp2, nlen2);
+ 		if (nlen2 != sizeof(nams2))
+ 			nams2[nlen2] = '\0';
  	} else {
- 		Progname = argv[0];
-@@ -104,7 +105,7 @@ main(
+-		sprintf(nams2, "<BAD STRING, nlen %d>", nlen2);
++		sprintf(nams2, "<BAD STRING, nlen %zd>", nlen2);
  	}
  
- 	fprintf(stdout, "Events supported (0x%llx), nelemp %d:\n",
--		eventset, nelemp);
-+		(unsigned long long) eventset, nelemp);
+ 	printf(VALS VALS VALS VALS VALS VALD,
+@@ -475,6 +475,10 @@ handle_message(
+ 		case DM_EVENT_TRUNCATE:
+ 			rgflag = DM_REGION_TRUNCATE;
+ 			break;
++		default:
++			err_msg("unexpected event type (%d)\n", msg->ev_type);
++			rgflag = DM_REGION_NOEVENT;
++			break;
+ 	      }
+ 	      clear_region_event(sid, rgflag, hanp1, hlen1, hans1);
+       }
+@@ -488,24 +492,24 @@ handle_message(
+       printf(HDR VALS VALLLD VALLLD,
+ 	     "read", msg->ev_token, msg->ev_sequence,
+ 	     "file handle",	hans1,
+-	     "offset",		msg_de->de_offset,
+-	     "length",		msg_de->de_length);
++	     "offset",		(long long) msg_de->de_offset,
++	     "length",		(long long) msg_de->de_length);
+       break;
  
- 	for (i = 0; i < nelemp; i++) {
- 		if (!DMEV_ISSET(i, eventset))
-diff --git a/dmapi/src/suite1/cmd/get_dirattrs.c b/dmapi/src/suite1/cmd/get_dirattrs.c
-index 8e2f4cb..49ac356 100644
---- a/dmapi/src/suite1/cmd/get_dirattrs.c
-+++ b/dmapi/src/suite1/cmd/get_dirattrs.c
-@@ -43,8 +43,6 @@ char	*Progname;
- static void
- usage(void)
- {
--	int	i;
--
- 	fprintf(stderr, "usage:\t%s [-b buflen] [-l loc] [-s sid] [-1] [-q] dirpath\n",
- 		Progname);
- 	exit(1);
-@@ -68,12 +66,12 @@ main(
- 	size_t		hlen;
+     case DM_EVENT_WRITE:
+       printf(HDR VALS VALLLD VALLLD,
+ 	     "write", msg->ev_token, msg->ev_sequence,
+ 	     "file handle",	hans1,
+-	     "offset",		msg_de->de_offset,
+-	     "length",		msg_de->de_length);
++	     "offset",		(long long) msg_de->de_offset,
++	     "length",		(long long) msg_de->de_length);
+       break;
+ 
+     case DM_EVENT_TRUNCATE:
+       printf(HDR VALS VALLLD VALLLD,
+ 	     "truncate", msg->ev_token, msg->ev_sequence,
+ 	     "file handle",	hans1,
+-	     "offset",		msg_de->de_offset,
+-	     "length",		msg_de->de_length);
++	     "offset",		(long long) msg_de->de_offset,
++	     "length",		(long long) msg_de->de_length);
+       break;
+     default: break;
+     }
+@@ -578,7 +582,7 @@ handle_message(
+   /***** NAMESPACE EVENTS *****/
+ 
+   else {
+-    char	*type;
++    char	*type = NULL;
+ 
+     msg_ne = DM_GET_VALUE(msg, ev_data, dm_namesp_event_t *);
+     hanp1  = DM_GET_VALUE(msg_ne, ne_handle1, void *);
+@@ -1150,7 +1154,7 @@ finish_responding(
+   int		error = 0;
+   u_int		nbytes, ntokens = 0, ret_ntokens, i;
+   dm_token_t	*tokenbuf = NULL, *tokenptr;
+-  size_t	buflen, ret_buflen;
++  size_t	buflen = 0, ret_buflen;
+   char		*msgbuf = NULL;
+   dm_eventmsg_t	*msg;
+ 
+diff --git a/dmapi/src/suite1/cmd/probe_hole.c b/dmapi/src/suite1/cmd/probe_hole.c
+index e0e4a5b..c5f945a 100644
+--- a/dmapi/src/suite1/cmd/probe_hole.c
++++ b/dmapi/src/suite1/cmd/probe_hole.c
+@@ -70,7 +70,8 @@ main(
  	char		*name;
  	int		opt;
--	int		i;
- 	int		ret;
- 	int		oneline = 0;
- 	int		quiet = 0;
  
 -	if (Progname = strrchr(argv[0], '/')) {
 +	Progname = strrchr(argv[0], '/');
@@ -218,64 +170,23 @@ index 8e2f4cb..49ac356 100644
  		Progname++;
  	} else {
  		Progname = argv[0];
-@@ -137,8 +135,8 @@ main(
- 			exit(1);
- 		}
- 		if (!quiet) {
--			fprintf(stdout, "ret = %d, rlenp is %d, loc is %lld\n", ret,
--				rlenp, loc);
-+			fprintf(stdout, "ret = %d, rlenp is %zd, loc is %lld\n",
-+				ret, rlenp, (long long) loc);
- 		}
- 		if (rlenp > 0) {
- 			dm_stat_t	*statp;
-diff --git a/dmapi/src/suite1/cmd/get_dmattr.c b/dmapi/src/suite1/cmd/get_dmattr.c
-index 15fa6e2..9c7eabb 100644
---- a/dmapi/src/suite1/cmd/get_dmattr.c
-+++ b/dmapi/src/suite1/cmd/get_dmattr.c
-@@ -61,7 +61,7 @@ main(
- 	dm_token_t	token = DM_NO_TOKEN;
- 	char		*object;
- 	dm_attrname_t	*attrnamep;
--	void		*bufp;
-+	void		*bufp = NULL;
- 	size_t		buflen = 10000;
- 	size_t		rlenp;
- 	void		*hanp;
-@@ -69,7 +69,8 @@ main(
- 	char		*name;
- 	int		opt;
- 
--	if (Progname = strrchr(argv[0], '/')) {
-+	Progname = strrchr(argv[0], '/');
-+	if (Progname) {
- 		Progname++;
- 	} else {
- 		Progname = argv[0];
-@@ -122,14 +123,14 @@ main(
- 	    bufp, &rlenp)) {
- 		if (errno == E2BIG) {
- 			fprintf(stderr, "dm_get_dmattr buffer too small, "
--				"should be %d bytes\n", rlenp);
-+				"should be %zd bytes\n", rlenp);
- 		} else {
- 			fprintf(stderr, "dm_get_dmattr failed, %s\n",
- 				strerror(errno));
- 		}
+@@ -117,7 +118,8 @@ main(
+ 			strerror(errno));
  		exit(1);
  	}
--	fprintf(stdout, "rlenp is %d, value is '%s'\n", rlenp, (char*)bufp);
-+	fprintf(stdout, "rlenp is %zd, value is '%s'\n", rlenp, (char*)bufp);
- 
+-	fprintf(stdout, "roffp is %lld, rlenp is %lld\n", roffp, rlenp);
++	fprintf(stdout, "roffp is %lld, rlenp is %llu\n",
++		(long long) roffp, (unsigned long long) rlenp);
  	dm_handle_free(hanp, hlen);
  	exit(0);
-diff --git a/dmapi/src/suite1/cmd/get_eventlist.c b/dmapi/src/suite1/cmd/get_eventlist.c
-index 420024d..37ed8c4 100644
---- a/dmapi/src/suite1/cmd/get_eventlist.c
-+++ b/dmapi/src/suite1/cmd/get_eventlist.c
-@@ -80,7 +80,8 @@ main(
+ }
+diff --git a/dmapi/src/suite1/cmd/probe_punch_xfsctl_hole.c b/dmapi/src/suite1/cmd/probe_punch_xfsctl_hole.c
+index effa98a..6b4d0b6 100644
+--- a/dmapi/src/suite1/cmd/probe_punch_xfsctl_hole.c
++++ b/dmapi/src/suite1/cmd/probe_punch_xfsctl_hole.c
+@@ -108,7 +108,8 @@ main(
  	int		opt;
- 	int		i;
+ 	int		method = METHOD_DMAPI_PROBE;
  
 -	if (Progname = strrchr(argv[0], '/')) {
 +	Progname = strrchr(argv[0], '/');
@@ -283,33 +194,31 @@ index 420024d..37ed8c4 100644
  		Progname++;
  	} else {
  		Progname = argv[0];
-@@ -147,12 +148,8 @@ main(
- 		return(1);
- 	}
+@@ -149,7 +150,8 @@ main(
+ 		usage();
  
--#ifdef	VERITAS_21
--	fprintf(stdout, "Events on object %s (0x%x), nelemp %d:\n",
--#else
- 	fprintf(stdout, "Events on object %s (0x%llx), nelemp %d:\n",
--#endif
--		object, eventset, nelemp);
-+		object, (unsigned long long) eventset, nelemp);
- 
- 	for (i = 0; i < nelemp; i++) {
- 		if (!DMEV_ISSET(i, eventset))
-diff --git a/dmapi/src/suite1/cmd/get_events.c b/dmapi/src/suite1/cmd/get_events.c
-index e518e11..55ae09b 100644
---- a/dmapi/src/suite1/cmd/get_events.c
-+++ b/dmapi/src/suite1/cmd/get_events.c
-@@ -60,14 +60,15 @@ main(
- 	dm_eventmsg_t	*msg;
- 	dm_sessid_t	sid;
- 	u_int		flags = 0;
--	void		*bufp;
-+	void		*bufp = NULL;
- 	size_t		buflen = 10000;
- 	u_int		maxmsgs = 1;
- 	size_t		rlenp;
+ 	printf("Running %s on %s with settings:\n", methodmap[method], pathname);
+-	printf("  offset = '%lld', length = '%lld', sid = '%lld'\n", offset, length, sid);
++	printf("  offset = '%lld', length = '%lld', sid = '%lld'\n",
++		(long long) offset, (unsigned long long) length, (long long) sid);
+ 	
+ 	if (method ==  METHOD_XFSCTL) 
+ 		return xfsctl_punch_hole(pathname, offset, length);
+@@ -176,7 +178,8 @@ main(
+ 				strerror(errno));
+ 			exit(1);
+ 		}
+-		fprintf(stdout, "roffp is %lld, rlenp is %lld\n", roffp, rlenp);
++		fprintf(stdout, "roffp is %lld, rlenp is %llu\n",
++			(long long) roffp, (unsigned long long) rlenp);
+ 		break;
+ 	case METHOD_DMAPI_PUNCH:
+ 		if (dm_punch_hole(sid, hanp, hlen, DM_NO_TOKEN, offset, length)) {
+diff --git a/dmapi/src/suite1/cmd/punch_hole.c b/dmapi/src/suite1/cmd/punch_hole.c
+index e1d1a67..68439a7 100644
+--- a/dmapi/src/suite1/cmd/punch_hole.c
++++ b/dmapi/src/suite1/cmd/punch_hole.c
+@@ -68,7 +68,8 @@ main(
  	char		*name;
  	int		opt;
  
@@ -319,30 +228,173 @@ index e518e11..55ae09b 100644
  		Progname++;
  	} else {
  		Progname = argv[0];
-@@ -109,14 +110,14 @@ main(
- 	if (dm_get_events(sid, maxmsgs, flags, buflen, bufp, &rlenp)) {
- 		if (errno == E2BIG) {
- 			fprintf(stderr, "dm_get_events buffer too small, "
--				"should be %d bytes\n", rlenp);
-+				"should be %zd bytes\n", rlenp);
- 		} else {
- 			fprintf(stderr, "dm_get_events failed, (%d)%s\n",
- 				errno, strerror(errno));
- 		}
- 		exit(1);
- 	}
--	fprintf(stdout, "rlenp=%d\n", rlenp);
-+	fprintf(stdout, "rlenp=%zd\n", rlenp);
+diff --git a/dmapi/src/suite1/cmd/query_right.c b/dmapi/src/suite1/cmd/query_right.c
+index a8e219a..aab4de5 100644
+--- a/dmapi/src/suite1/cmd/query_right.c
++++ b/dmapi/src/suite1/cmd/query_right.c
+@@ -77,7 +77,8 @@ main(
+ 	char		*name;
+ 	int		opt;
  
- 	if (rlenp == 0)
- 		return(0);
-diff --git a/dmapi/src/suite1/cmd/get_fileattr.c b/dmapi/src/suite1/cmd/get_fileattr.c
-index ff03924..e3ab024 100644
---- a/dmapi/src/suite1/cmd/get_fileattr.c
-+++ b/dmapi/src/suite1/cmd/get_fileattr.c
+-	if (Progname = strrchr(argv[0], '/')) {
++	Progname = strrchr(argv[0], '/');
++	if (Progname) {
+ 		Progname++;
+ 	} else {
+ 		Progname = argv[0];
+diff --git a/dmapi/src/suite1/cmd/randomize_file.c b/dmapi/src/suite1/cmd/randomize_file.c
+index a45b2a3..0c272fe 100644
+--- a/dmapi/src/suite1/cmd/randomize_file.c
++++ b/dmapi/src/suite1/cmd/randomize_file.c
+@@ -43,7 +43,7 @@ main(
+ {
+ 	FILE	*infile;
+ 	FILE	*tmpfile;
+-	char	*path;
++	char	path[] = "file_XXXXXX";
+ 	int	line_count = 0;
+ 	int	i;
+ 	int	j;
+@@ -77,7 +77,7 @@ main(
+ 	   to each line copied.
+ 	*/
+ 
+-	path = tmpnam(NULL);
++	(void) mkstemp(path);
+ 	if ((tmpfile = fopen(path, "w")) == NULL) {
+ 		fprintf(stderr, "error opening temp file %s\n", path);
+ 		exit(1);
+diff --git a/dmapi/src/suite1/cmd/release_right.c b/dmapi/src/suite1/cmd/release_right.c
+index 648619c..e6a92d3 100644
+--- a/dmapi/src/suite1/cmd/release_right.c
++++ b/dmapi/src/suite1/cmd/release_right.c
+@@ -76,7 +76,8 @@ main(
+ 	char		*name;
+ 	int		opt;
+ 
+-	if (Progname = strrchr(argv[0], '/')) {
++	Progname = strrchr(argv[0], '/');
++	if (Progname) {
+ 		Progname++;
+ 	} else {
+ 		Progname = argv[0];
+diff --git a/dmapi/src/suite1/cmd/remove_dmattr.c b/dmapi/src/suite1/cmd/remove_dmattr.c
+index 3a82b51..865898d 100644
+--- a/dmapi/src/suite1/cmd/remove_dmattr.c
++++ b/dmapi/src/suite1/cmd/remove_dmattr.c
+@@ -65,7 +65,8 @@ main(
+ 	char		*name;
+ 	int		opt;
+ 
+-	if (Progname = strrchr(argv[0], '/')) {
++	Progname = strrchr(argv[0], '/');
++	if (Progname) {
+ 		Progname++;
+ 	} else {
+ 		Progname = argv[0];
+diff --git a/dmapi/src/suite1/cmd/request_right.c b/dmapi/src/suite1/cmd/request_right.c
+index 11ff944..fff3e78 100644
+--- a/dmapi/src/suite1/cmd/request_right.c
++++ b/dmapi/src/suite1/cmd/request_right.c
+@@ -91,7 +91,8 @@ main(
+ 	char		*name;
+ 	int		opt;
+ 
+-	if (Progname = strrchr(argv[0], '/')) {
++	Progname = strrchr(argv[0], '/');
++	if (Progname) {
+ 		Progname++;
+ 	} else {
+ 		Progname = argv[0];
+diff --git a/dmapi/src/suite1/cmd/respond_event.c b/dmapi/src/suite1/cmd/respond_event.c
+index 9fd297c..bf1bb94 100644
+--- a/dmapi/src/suite1/cmd/respond_event.c
++++ b/dmapi/src/suite1/cmd/respond_event.c
+@@ -65,7 +65,8 @@ main(
+ 	dm_response_t	response;
+ 	int		reterror;
+ 
+-	if (Progname = strrchr(argv[0], '/')) {
++	Progname = strrchr(argv[0], '/');
++	if (Progname) {
+ 		Progname++;
+ 	} else {
+ 		Progname = argv[0];
+diff --git a/dmapi/src/suite1/cmd/rwt.c b/dmapi/src/suite1/cmd/rwt.c
+index b5bd903..c1489bd 100644
+--- a/dmapi/src/suite1/cmd/rwt.c
++++ b/dmapi/src/suite1/cmd/rwt.c
+@@ -89,7 +89,8 @@ main(
+ 	ssize_t		rc;
+ 	int		opt;
+ 
+-	if (Progname = strrchr(argv[0], '/')) {
++	Progname = strrchr(argv[0], '/');
++	if (Progname) {
+ 		Progname++;
+ 	} else {
+ 		Progname = argv[0];
+@@ -131,7 +132,7 @@ main(
+ 	}
+ 	if (length > 0) {
+ 		if ((bufp = malloc(length)) == NULL) {
+-			fprintf(stderr, "malloc of %d bytes failed\n", length);
++			fprintf(stderr, "malloc of %zd bytes failed\n", length);
+ 			exit(1);
+ 		}
+ 		if (wflag)
+@@ -147,7 +148,7 @@ main(
+ 			fprintf(stderr,
+ 				"seeked to offset %lld, actually "
+ 				"arrived at %lld\n",
+-				(int64_t)offset, (int64_t)seek_off);
++				(long long) offset, (long long) seek_off);
+ 			exit(1);
+ 		}
+ 	}
+@@ -158,8 +159,8 @@ main(
+ 			exit(1);
+ 		}
+ 		if (rc != length) {
+-			fprintf(stderr, "expected to write %d bytes, actually "
+-				"wrote %d bytes\n", length, rc);
++			fprintf(stderr, "expected to write %zd bytes, actually "
++				"wrote %zd bytes\n", length, rc);
+ 			exit(1);
+ 		}
+ 	} else if (tflag) {
+@@ -174,8 +175,8 @@ main(
+ 			exit(1);
+ 		}
+ 		if (rc != length) {
+-			fprintf(stderr, "expected to read %d bytes, actually "
+-				"read %d bytes\n", length, rc);
++			fprintf(stderr, "expected to read %zd bytes, actually "
++				"read %zd bytes\n", length, rc);
+ 			exit(1);
+ 		}
+ 	}
+diff --git a/dmapi/src/suite1/cmd/security_hole.c b/dmapi/src/suite1/cmd/security_hole.c
+index c7c3db3..d34026d 100644
+--- a/dmapi/src/suite1/cmd/security_hole.c
++++ b/dmapi/src/suite1/cmd/security_hole.c
+@@ -63,7 +63,8 @@ main(
+ 	int	opt;
+ 	int	fd;
+ 
+-	if (Progname = strrchr(argv[0], '/')) {
++	Progname = strrchr(argv[0], '/');
++	if (Progname) {
+ 		Progname++;
+ 	} else {
+ 		Progname = argv[0];
+diff --git a/dmapi/src/suite1/cmd/security_hole2.c b/dmapi/src/suite1/cmd/security_hole2.c
+index c40801c..3af3395 100644
+--- a/dmapi/src/suite1/cmd/security_hole2.c
++++ b/dmapi/src/suite1/cmd/security_hole2.c
 @@ -59,7 +59,8 @@ main(
- 	int		opt;
- 	int		validate = 0;
+ 	int	opt;
+ 	int	fd;
  
 -	if (Progname = strrchr(argv[0], '/')) {
 +	Progname = strrchr(argv[0], '/');
@@ -350,20 +402,11 @@ index ff03924..e3ab024 100644
  		Progname++;
  	} else {
  		Progname = argv[0];
-diff --git a/dmapi/src/suite1/cmd/get_mountinfo.c b/dmapi/src/suite1/cmd/get_mountinfo.c
-index 052b6ea..bd0dc92 100644
---- a/dmapi/src/suite1/cmd/get_mountinfo.c
-+++ b/dmapi/src/suite1/cmd/get_mountinfo.c
-@@ -76,7 +76,7 @@ main(
- {
- 	dm_sessid_t	sid = DM_NO_SESSION;
- 	char		*pathname;
--	void		*bufp;
-+	void		*bufp = NULL;
- 	size_t		buflen = 10000;
- 	size_t		rlenp;
- 	void		*fshanp;
-@@ -84,7 +84,8 @@ main(
+diff --git a/dmapi/src/suite1/cmd/set_disp.c b/dmapi/src/suite1/cmd/set_disp.c
+index b04306d..fee1dce 100644
+--- a/dmapi/src/suite1/cmd/set_disp.c
++++ b/dmapi/src/suite1/cmd/set_disp.c
+@@ -89,7 +89,8 @@ main(
  	char		*name;
  	int		opt;
  
@@ -373,67 +416,20 @@ index 052b6ea..bd0dc92 100644
  		Progname++;
  	} else {
  		Progname = argv[0];
-@@ -134,14 +135,14 @@ main(
- 	    bufp, &rlenp)) {
- 		if (errno == E2BIG) {
- 			fprintf(stderr, "dm_get_mountinfo buffer too small, "
--				"should be %d bytes\n", rlenp);
-+				"should be %zd bytes\n", rlenp);
- 		} else {
- 			fprintf(stderr, "dm_get_mountinfo failed, %s\n",
- 				strerror(errno));
- 		}
- 		exit(1);
- 	}
--	fprintf(stdout, "rlenp is %d\n", rlenp);
-+	fprintf(stdout, "rlenp is %zd\n", rlenp);
- 	print_one_mount_event(bufp);
- 
- 	dm_handle_free(fshanp, fshlen);
-diff --git a/dmapi/src/suite1/cmd/get_region.c b/dmapi/src/suite1/cmd/get_region.c
-index 6cafbd1..997faab 100644
---- a/dmapi/src/suite1/cmd/get_region.c
-+++ b/dmapi/src/suite1/cmd/get_region.c
-@@ -67,7 +67,8 @@ main(
- 	int		opt;
- 	int		i;
- 
--	if (Progname = strrchr(argv[0], '/')) {
-+	Progname = strrchr(argv[0], '/');
-+	if (Progname) {
- 		Progname++;
- 	} else {
- 		Progname = argv[0];
-@@ -121,12 +122,9 @@ main(
- 	fprintf(stdout, "%d regions\n", nelemp);
- 
- 	for (i = 0; i < nelemp; i++) {
--#ifdef	VERITAS_21
--		fprintf(stdout, "offset %d, size %d, flags 0x%x\n",
--#else
--		fprintf(stdout, "offset %lld, size %lld, flags 0x%x\n",
--#endif
--			regbufp[i].rg_offset, regbufp[i].rg_size,
-+		fprintf(stdout, "offset %lld, size %llu, flags 0x%x\n",
-+			(long long) regbufp[i].rg_offset,
-+			(unsigned long long) regbufp[i].rg_size,
- 			regbufp[i].rg_flags);
- 	}
- 
-diff --git a/dmapi/src/suite1/cmd/getall_disp.c b/dmapi/src/suite1/cmd/getall_disp.c
-index a68fdfd..ef676b2 100644
---- a/dmapi/src/suite1/cmd/getall_disp.c
-+++ b/dmapi/src/suite1/cmd/getall_disp.c
-@@ -58,7 +58,7 @@ main(
- {
- 	dm_dispinfo_t	*disp;
- 	dm_sessid_t	sid;
--	void		*bufp;
-+	void		*bufp = NULL;
- 	size_t		buflen = 10000;
+diff --git a/dmapi/src/suite1/cmd/set_dmattr.c b/dmapi/src/suite1/cmd/set_dmattr.c
+index df4f080..4753cf4 100644
+--- a/dmapi/src/suite1/cmd/set_dmattr.c
++++ b/dmapi/src/suite1/cmd/set_dmattr.c
+@@ -63,7 +63,7 @@ main(
+ 	char		*object;
+ 	dm_attrname_t	*attrnamep;
+ 	char		*bufp;
+-	size_t		buflen;
++	size_t		buflen = 0;
+ 	int		bflag = 0;
+ 	int		setdtime = 0;
  	void		*hanp;
- 	size_t		hlen;
-@@ -67,7 +67,8 @@ main(
+@@ -71,7 +71,8 @@ main(
  	char		*name;
  	int		opt;
  
@@ -443,37 +439,106 @@ index a68fdfd..ef676b2 100644
  		Progname++;
  	} else {
  		Progname = argv[0];
-@@ -103,14 +104,14 @@ main(
- 	if (dm_getall_disp(sid, buflen, bufp, &rlenp)) {
- 		if (errno == E2BIG) {
- 			fprintf(stderr, "dm_getall_disp buffer too small, "
--				"should be %d bytes\n", rlenp);
-+				"should be %zd bytes\n", rlenp);
- 		} else {
- 			fprintf(stderr, "dm_getall_disp failed, %s\n",
- 				strerror(errno));
- 		}
- 		exit(1);
- 	}
--	fprintf(stdout, "rlenp is %d\n", rlenp);
-+	fprintf(stdout, "rlenp is %zd\n", rlenp);
- 	if (rlenp == 0)
- 		return(0);
+diff --git a/dmapi/src/suite1/cmd/set_eventlist.c b/dmapi/src/suite1/cmd/set_eventlist.c
+index 44d62b3..857523d 100644
+--- a/dmapi/src/suite1/cmd/set_eventlist.c
++++ b/dmapi/src/suite1/cmd/set_eventlist.c
+@@ -85,7 +85,8 @@ main(
+ 	char		*name;
+ 	int		opt;
  
-@@ -121,11 +122,11 @@ main(
- 		if (hanp && hlen) {
- 			hantoa(hanp, hlen, hans1);
- 		} else {
--			sprintf(hans1, "<BAD HANDLE, hlen %d>", hlen);
-+			sprintf(hans1, "<BAD HANDLE, hlen %zd>", hlen);
- 		}
- 		printf("%-15s %s dm_eventset_t 0%llo\n",
- 			"fshandle", hans1,
--			disp->di_eventset);
-+			(unsigned long long) disp->di_eventset);
+-	if (Progname = strrchr(argv[0], '/')) {
++	Progname = strrchr(argv[0], '/');
++	if (Progname) {
+ 		Progname++;
+ 	} else {
+ 		Progname = argv[0];
+diff --git a/dmapi/src/suite1/cmd/set_fileattr.c b/dmapi/src/suite1/cmd/set_fileattr.c
+index eabb826..70ae52f 100644
+--- a/dmapi/src/suite1/cmd/set_fileattr.c
++++ b/dmapi/src/suite1/cmd/set_fileattr.c
+@@ -323,7 +323,8 @@ main(
+ 	char		*name;
+ 	int		opt;
  
- 		disp = DM_STEP_TO_NEXT(disp, dm_dispinfo_t *);
+-	if (Progname = strrchr(argv[0], '/')) {
++	Progname = strrchr(argv[0], '/');
++	if (Progname) {
+ 		Progname++;
+ 	} else {
+ 		Progname = argv[0];
+diff --git a/dmapi/src/suite1/cmd/struct_test.c b/dmapi/src/suite1/cmd/struct_test.c
+index 4d0b31f..7a0dd35 100644
+--- a/dmapi/src/suite1/cmd/struct_test.c
++++ b/dmapi/src/suite1/cmd/struct_test.c
+@@ -51,7 +51,7 @@
+ 	if (offsetof(struct_name, field_name) != offset) { \
+ 		printf("ERROR: field %s should be %d\n", \
+ 			#struct_name "." #field_name, \
+-			offsetof(struct_name, field_name)); \
++			(int) offsetof(struct_name, field_name)); \
+ 	} \
+ 	offset = offsetof(struct_name, field_name) + sizeof(X.field_name); \
+ }
+@@ -60,7 +60,7 @@
+ { \
+ 	printf("struct %s size is %d\n", s_name, offset); \
+ 	if (sizeof(struct_name) != offset) { \
+-		printf("ERROR: struct %s should be %d\n", \
++		printf("ERROR: struct %s should be %zd\n", \
+ 			s_name, sizeof(struct_name)); \
+ 	} \
+ }
+diff --git a/dmapi/src/suite1/cmd/sync_by_handle.c b/dmapi/src/suite1/cmd/sync_by_handle.c
+index a00ee0f..ee22767 100644
+--- a/dmapi/src/suite1/cmd/sync_by_handle.c
++++ b/dmapi/src/suite1/cmd/sync_by_handle.c
+@@ -65,7 +65,8 @@ main(
+ 	char		*name;
+ 	int		opt;
+ 
+-	if (Progname = strrchr(argv[0], '/')) {
++	Progname = strrchr(argv[0], '/');
++	if (Progname) {
+ 		Progname++;
+ 	} else {
+ 		Progname = argv[0];
+diff --git a/dmapi/src/suite1/cmd/test_assumption.c b/dmapi/src/suite1/cmd/test_assumption.c
+index 6760f34..98dea4c 100644
+--- a/dmapi/src/suite1/cmd/test_assumption.c
++++ b/dmapi/src/suite1/cmd/test_assumption.c
+@@ -88,7 +88,7 @@ main(
+                 exit(1);
+         }
+ 	fprintf(stdout, "Initial session ID: %d\n", sid);
+-	fprintf(stdout, "Initial session message length: '%d'\n", rlen);
++	fprintf(stdout, "Initial session message length: '%zd'\n", rlen);
+ 	if (rlen > 0) {
+ 		fprintf(stdout, "Initial session message: '%s'\n", buffer);
  	}
+@@ -108,7 +108,7 @@ main(
+                 exit(1);
+         }
+ 	fprintf(stdout, "Assumed session ID: %d\n", newsid);
+-	fprintf(stdout, "Assumed session message length: '%d'\n", rlen);
++	fprintf(stdout, "Assumed session message length: '%zd'\n", rlen);
+ 	if (rlen > 0) {
+ 		fprintf(stdout, "Assumed session message: '%s'\n", buffer);
+ 	}
+diff --git a/dmapi/src/suite1/cmd/upgrade_right.c b/dmapi/src/suite1/cmd/upgrade_right.c
+index 5c4a50e..d249391 100644
+--- a/dmapi/src/suite1/cmd/upgrade_right.c
++++ b/dmapi/src/suite1/cmd/upgrade_right.c
+@@ -76,7 +76,8 @@ main(
+ 	char		*name;
+ 	int		opt;
+ 
+-	if (Progname = strrchr(argv[0], '/')) {
++	Progname = strrchr(argv[0], '/');
++	if (Progname) {
+ 		Progname++;
+ 	} else {
+ 		Progname = argv[0];
 -- 
 1.7.4.4
 
