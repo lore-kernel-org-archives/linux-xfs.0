@@ -1,11 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3LJ7xAE170668 for <xfs@oss.sgi.com>; Thu, 21 Apr 2011 14:07:59 -0500
+	p3LJ81H4170688 for <xfs@oss.sgi.com>; Thu, 21 Apr 2011 14:08:02 -0500
 From: Alex Elder <aelder@sgi.com>
-Subject: [PATCH 5/5] xfstests: eliminate warnings under dmapi/src/suite2/src
-Date: Thu, 21 Apr 2011 14:11:13 -0500
-Message-Id: <e1c05bd42d4d1efbaf22ada82d4813b2c982fb10.1303412550.git.aelder@sgi.com>
+Subject: [PATCH 3/5] xfstests: eliminate warnings under dmapi/src/suite1/cmd
+	(2)
+Date: Thu, 21 Apr 2011 14:11:11 -0500
+Message-Id: <24e71a00d24c1437a39bc1b0a6152013415e74cf.1303412549.git.aelder@sgi.com>
 In-Reply-To: <1303413073-24173-1-git-send-email-aelder@sgi.com>
 References: <1303413073-24173-1-git-send-email-aelder@sgi.com>
 In-Reply-To: <3b41615dd6b09fafeabe7cc8568c2feaa8792caa.1303412549.git.aelder@sgi.com>
@@ -27,135 +28,31 @@ To: xfs@oss.sgi.com
 Cc: Alex Elder <aelder@sgi.com>
 
 Eliminate build warnings reported on files located under
-dmapi/src/suite2/src/.
+dmapi/src/suite1/cmd/ (second of three).
 
 Signed-off-by: Alex Elder <aelder@sgi.com>
 ---
- dmapi/src/suite2/src/dm_test_daemon.c |   30 +++++++++++++++---------------
- dmapi/src/suite2/src/invis_test.c     |   32 +++++++++++++++++++++-----------
- dmapi/src/suite2/src/mmap.c           |    4 +++-
- dmapi/src/suite2/src/region_test.c    |    3 ++-
- dmapi/src/suite2/src/send_msg.c       |    3 ++-
- dmapi/src/suite2/src/test_bulkall.c   |    9 +++++----
- dmapi/src/suite2/src/test_bulkattr.c  |    7 ++++---
- dmapi/src/suite2/src/test_dmattr.c    |    5 +++--
- dmapi/src/suite2/src/test_efault.c    |    7 ++++---
- dmapi/src/suite2/src/test_eventlist.c |    3 ++-
- dmapi/src/suite2/src/test_fileattr.c  |   10 ++++++----
- dmapi/src/suite2/src/test_hole.c      |    3 ++-
- dmapi/src/suite2/src/test_invis.c     |   10 ++++++----
- dmapi/src/suite2/src/test_region.c    |    3 ++-
- dmapi/src/suite2/src/test_rights.c    |    3 ++-
- 15 files changed, 79 insertions(+), 53 deletions(-)
+ dmapi/src/suite1/cmd/getall_dmattr.c      |    7 ++-
+ dmapi/src/suite1/cmd/handle_to_fshandle.c |    3 +-
+ dmapi/src/suite1/cmd/handle_to_path.c     |   10 +++--
+ dmapi/src/suite1/cmd/init_service.c       |    3 +-
+ dmapi/src/suite1/cmd/link_test.c          |   69 ++++++++++++++++-------------
+ dmapi/src/suite1/cmd/make_sparse.c        |    6 +-
+ dmapi/src/suite1/cmd/obj_ref_hold.c       |    3 +-
+ dmapi/src/suite1/cmd/obj_ref_query.c      |    3 +-
+ dmapi/src/suite1/cmd/obj_ref_rele.c       |    3 +-
+ dmapi/src/suite1/cmd/path_to_fshandle.c   |    3 +-
+ dmapi/src/suite1/cmd/path_to_handle.c     |    3 +-
+ dmapi/src/suite1/cmd/pending.c            |    3 +-
+ 12 files changed, 67 insertions(+), 49 deletions(-)
 
-diff --git a/dmapi/src/suite2/src/dm_test_daemon.c b/dmapi/src/suite2/src/dm_test_daemon.c
-index 02f5d0e..c3ecf92 100644
---- a/dmapi/src/suite2/src/dm_test_daemon.c
-+++ b/dmapi/src/suite2/src/dm_test_daemon.c
-@@ -324,31 +324,31 @@ print_one_mount_event(
- 	if (hanp1 && hlen1) {
- 		hantoa(hanp1, hlen1, hans1);
- 	} else {
--		sprintf(hans1, "<BAD_HANDLE_hlen_%d>", hlen1);
-+		sprintf(hans1, "<BAD_HANDLE_hlen_%zd>", hlen1);
- 	}
- 	if (hanp2 && hlen2) {
- 		hantoa(hanp2, hlen2, hans2);
- 	} else {
--		sprintf(hans2, "<BAD_HANDLE_hlen_%d>", hlen2);
-+		sprintf(hans2, "<BAD_HANDLE_hlen_%zd>", hlen2);
- 	}
- 	if (hanp3 && hlen3) {
- 		hantoa(hanp3, hlen3, hans3);
- 	} else {
--		sprintf(hans3, "<BAD_HANDLE_hlen_%d>", hlen3);
-+		sprintf(hans3, "<BAD_HANDLE_hlen_%zd>", hlen3);
- 	}
- 	if (namp1 && nlen1) {
- 		strncpy(nams1, namp1, nlen1);
- 		if (nlen1 != sizeof(nams1))
- 			nams1[nlen1] = '\0';
- 	} else {
--		sprintf(nams1, "<BAD STRING_nlen_%d>", nlen1);
-+		sprintf(nams1, "<BAD STRING_nlen_%zd>", nlen1);
- 	}
- 	if (namp2 && nlen2) {
- 		strncpy(nams2, namp2, nlen2);
- 		if (nlen2 != sizeof(nams2))
- 			nams2[nlen2] = '\0';
- 	} else {
--		sprintf(nams2, "<BAD_STRING_nlen_%d>", nlen2);
-+		sprintf(nams2, "<BAD_STRING_nlen_%zd>", nlen2);
- 	}
- 
- 	printf(VALS VALS VALS VALS VALS VALD,
-@@ -373,8 +373,8 @@ handle_message(
- {
-   int			pkt_error = 0;
-   int			error;
--  dm_response_t		response;
--  int			respond, respcode;
-+  dm_response_t		response = DM_RESP_INVALID;
-+  int			respond, respcode = 0;
-   dm_namesp_event_t	*msg_ne;
- #if	!VERITAS
-     dm_mount_event_t	*msg_me;
-@@ -578,24 +578,24 @@ handle_message(
-       printf(HDR VALS VALLLD VALLLD,
- 	     "read", msg->ev_token, msg->ev_sequence,
- 	     "file handle",	hans1,
--	     "offset",		msg_de->de_offset,
--	     "length",		msg_de->de_length);
-+	     "offset",		(long long) msg_de->de_offset,
-+	     "length",		(long long) msg_de->de_length);
-       break;
- 
-     case DM_EVENT_WRITE:
-       printf(HDR VALS VALLLD VALLLD,
- 	     "write", msg->ev_token, msg->ev_sequence,
- 	     "file handle",	hans1,
--	     "offset",		msg_de->de_offset,
--	     "length",		msg_de->de_length);
-+	     "offset",		(long long) msg_de->de_offset,
-+	     "length",		(long long) msg_de->de_length);
-       break;
- 
-     case DM_EVENT_TRUNCATE:
-       printf(HDR VALS VALLLD VALLLD,
- 	     "truncate", msg->ev_token, msg->ev_sequence,
- 	     "file handle",	hans1,
--	     "offset",		msg_de->de_offset,
--	     "length",		msg_de->de_length);
-+	     "offset",		(long long) msg_de->de_offset,
-+	     "length",		(long long) msg_de->de_length);
-       break;
-     default: break;
-     }
-@@ -658,7 +658,7 @@ handle_message(
-   /***** NAMESPACE EVENTS *****/
- 
-   else {
--    char	*type;
-+    char	*type = NULL;
- 
-     msg_ne = DM_GET_VALUE(msg, ev_data, dm_namesp_event_t *);
-     hanp1  = DM_GET_VALUE(msg_ne, ne_handle1, void *);
-@@ -1168,7 +1168,7 @@ finish_responding(
-   int		error = 0;
-   u_int		nbytes, ntokens = 0, ret_ntokens, i;
-   dm_token_t	*tokenbuf = NULL, *tokenptr;
--  size_t	buflen, ret_buflen;
-+  size_t	buflen = 0, ret_buflen;
-   char		*msgbuf = NULL;
-   dm_eventmsg_t	*msg;
- 
-diff --git a/dmapi/src/suite2/src/invis_test.c b/dmapi/src/suite2/src/invis_test.c
-index 0cd8f81..6946b05 100644
---- a/dmapi/src/suite2/src/invis_test.c
-+++ b/dmapi/src/suite2/src/invis_test.c
-@@ -100,7 +100,8 @@ main(
- 	int		i;
- 	int		reuse_file = 0;
+diff --git a/dmapi/src/suite1/cmd/getall_dmattr.c b/dmapi/src/suite1/cmd/getall_dmattr.c
+index 4637c27..56f2248 100644
+--- a/dmapi/src/suite1/cmd/getall_dmattr.c
++++ b/dmapi/src/suite1/cmd/getall_dmattr.c
+@@ -66,7 +66,8 @@ main(
+ 	char		*name;
+ 	int		opt;
  
 -	if (Progname = strrchr(argv[0], '/')) {
 +	Progname = strrchr(argv[0], '/');
@@ -163,104 +60,86 @@ index 0cd8f81..6946b05 100644
  		Progname++;
  	} else {
  		Progname = argv[0];
-@@ -157,9 +158,10 @@ main(
- 	}
- 
- 	if( Vflag )
--		printf("using length = %llu\n", length );
-+		printf("using length = %llu\n", (unsigned long long) length);
- 	if( length > BUFSZ ){
--		fprintf(stderr, "length(%llu) > BUFSZ(%d)\n", length, BUFSZ);
-+		fprintf(stderr, "length(%llu) > BUFSZ(%d)\n",
-+			(unsigned long long) length, BUFSZ);
+@@ -114,14 +115,14 @@ main(
+ 	    bufp, &rlenp)) {
+ 		if (errno == E2BIG) {
+ 			fprintf(stderr, "dm_getall_dmattr buffer too small, "
+-				"should be %d bytes\n", rlenp);
++				"should be %zd bytes\n", rlenp);
+ 		} else {
+ 			fprintf(stderr, "dm_getall_dmattr failed, %s\n",
+ 				strerror(errno));
+ 		}
  		exit(1);
  	}
+-	fprintf(stdout, "rlenp is %d\n", rlenp);
++	fprintf(stdout, "rlenp is %zd\n", rlenp);
+ 	if (rlenp > 0) {
+ 		dm_attrlist_t	*attrlist;
  
-@@ -174,13 +176,15 @@ main(
- 			exit(1);
+diff --git a/dmapi/src/suite1/cmd/handle_to_fshandle.c b/dmapi/src/suite1/cmd/handle_to_fshandle.c
+index 8608c74..93f101d 100644
+--- a/dmapi/src/suite1/cmd/handle_to_fshandle.c
++++ b/dmapi/src/suite1/cmd/handle_to_fshandle.c
+@@ -56,7 +56,8 @@ main(
+ 	char		buffer[100];
+ 	int		error;
+ 
+-	if (Progname = strrchr(argv[0], '/')) {
++	Progname = strrchr(argv[0], '/');
++	if (Progname) {
+ 		Progname++;
+ 	} else {
+ 		Progname = argv[0];
+diff --git a/dmapi/src/suite1/cmd/handle_to_path.c b/dmapi/src/suite1/cmd/handle_to_path.c
+index 3a4c226..b3759e1 100644
+--- a/dmapi/src/suite1/cmd/handle_to_path.c
++++ b/dmapi/src/suite1/cmd/handle_to_path.c
+@@ -22,6 +22,7 @@
+ #include <string.h>
+ 
+ #include <lib/dmport.h>
++#include <lib/hsm.h>
+ 
+ #include <getopt.h>
+ #ifdef linux
+@@ -84,7 +85,8 @@ main(
+ 	char		*name;
+ 	int		opt;
+ 
+-	if (Progname = strrchr(argv[0], '/')) {
++	Progname = strrchr(argv[0], '/');
++	if (Progname) {
+ 		Progname++;
+ 	} else {
+ 		Progname = argv[0];
+@@ -130,16 +132,16 @@ main(
+ 	    buflen, pathbufp, &rlenp)) {
+ 		if (errno == E2BIG) {
+ 			fprintf(stderr, "dm_handle_to_path buffer too small, "
+-				"should be %d bytes\n", rlenp);
++				"should be %zd bytes\n", rlenp);
+ 		} else {
+ 			fprintf(stderr, "dm_handle_to_path failed, (%d) %s\n",
+ 				errno, strerror(errno));
  		}
- 		if( rc != length ){
--			fprintf(stderr, "dm_read_invis read %lld bytes, wanted to write %lld bytes\n",
--				rc, length );
-+			fprintf(stderr, "dm_read_invis read %llu bytes, "
-+				"wanted to write %lld bytes\n",
-+				(long long) rc, (unsigned long long) length);
- 			dm_handle_free(hanp, hlen);
- 			exitstat++;
- 		}
- 		else {
--			printf("dm_read_invis read %lld bytes\n", rc);
-+			printf("dm_read_invis read %lld bytes\n",
-+				(long long) rc);
- 		}
- 		
- 		in_err_block = 0;
-@@ -193,7 +197,10 @@ main(
- 				}
- 				else {
- 					/* end of bad block */
--					fprintf(stderr, "read err block: byte %lld to %lld\n", errblockstart, errblockend);
-+					fprintf(stderr, "read err block: "
-+						"byte %lld to %lld\n",
-+						(long long) errblockstart,
-+						(long long) errblockend);
- 					in_err_block = 0;
- 				}
- 			}
-@@ -205,7 +212,9 @@ main(
- 		}
- 		if( in_err_block ){
- 			/* end of bad block */
--			fprintf(stderr, "read err block: byte %lld to %lld\n", errblockstart, errblockend);
-+			fprintf(stderr, "read err block: byte %lld to %lld\n",
-+				(long long) errblockstart,
-+				(long long) errblockend);
- 			in_err_block = 0;
- 		}
+ 		return(1);
  	}
-@@ -221,12 +230,13 @@ main(
- 			exit(1);
- 		}
- 		if( rc != length ){
--			fprintf(stderr, "dm_write_invis wrote %lld bytes, wanted to write %lld bytes\n",
--				rc, length );
-+			fprintf(stderr, "dm_write_invis wrote %lld bytes, "
-+				"wanted to write %lld bytes\n",
-+				(long long) rc, (long long) length );
- 			dm_handle_free(hanp, hlen);
- 			exit(1);
- 		}
--		printf("dm_write_invis wrote %lld bytes\n", rc);
-+		printf("dm_write_invis wrote %lld bytes\n", (long long) rc);
+-	fprintf(stderr, "rlenp is %d, pathbufp is %s\n", rlenp, (char*)pathbufp);
++	fprintf(stderr, "rlenp is %zd, pathbufp is %s\n", rlenp, (char*)pathbufp);
+ 	if (strlen(pathbufp) + 1 != rlenp) {
+-		fprintf(stderr, "rlenp is %d, should be %d\n", rlenp,
++		fprintf(stderr, "rlenp is %zd, should be %zd\n", rlenp,
+ 			strlen(pathbufp) + 1);
+ 		return(1);
  	}
- 
- 	dm_handle_free(hanp, hlen);
-diff --git a/dmapi/src/suite2/src/mmap.c b/dmapi/src/suite2/src/mmap.c
-index 983fe7d..a0fc4cc 100644
---- a/dmapi/src/suite2/src/mmap.c
-+++ b/dmapi/src/suite2/src/mmap.c
-@@ -121,11 +121,13 @@ static int mfile_opt(char * s, mfile_t * f);
- static	void print_flags(char *s, mfile_t *f);
- static void Usage(void);
- 
-+int
- main(int argc, char * argv[])
+diff --git a/dmapi/src/suite1/cmd/init_service.c b/dmapi/src/suite1/cmd/init_service.c
+index 1673f4c..6c7afa4 100644
+--- a/dmapi/src/suite1/cmd/init_service.c
++++ b/dmapi/src/suite1/cmd/init_service.c
+@@ -47,7 +47,8 @@ main(
  {
- 	int	opt;
- 
--	if ((Progname = strrchr(argv[0], '/')) == NULL)
-+	Progname = strrchr(argv[0], '/');
-+	if (Progname == NULL)
- 		Progname = argv[0];
- 	else
- 		Progname++;
-diff --git a/dmapi/src/suite2/src/region_test.c b/dmapi/src/suite2/src/region_test.c
-index b6e94c8..f8b2868 100644
---- a/dmapi/src/suite2/src/region_test.c
-+++ b/dmapi/src/suite2/src/region_test.c
-@@ -83,7 +83,8 @@ main(
- 	size_t	 	 hlen;
- 	dm_boolean_t	exactflag;
+ 	char		*name;
  
 -	if (Progname = strrchr(argv[0], '/')) {
 +	Progname = strrchr(argv[0], '/');
@@ -268,113 +147,118 @@ index b6e94c8..f8b2868 100644
  		Progname++;
  	} else {
  		Progname = argv[0];
-diff --git a/dmapi/src/suite2/src/send_msg.c b/dmapi/src/suite2/src/send_msg.c
-index b853b44..3f07d06 100644
---- a/dmapi/src/suite2/src/send_msg.c
-+++ b/dmapi/src/suite2/src/send_msg.c
-@@ -70,7 +70,8 @@ main(
- 	int		opt;
- 	dm_msgtype_t    msgtype = DM_MSGTYPE_SYNC;
- 	
--	if (Progname = strrchr(argv[0], '/')) {
-+	Progname = strrchr(argv[0], '/');
-+	if (Progname) {
- 		Progname++;
- 	} else {
- 		Progname = argv[0];
-diff --git a/dmapi/src/suite2/src/test_bulkall.c b/dmapi/src/suite2/src/test_bulkall.c
-index 427eeb3..0055cdc 100644
---- a/dmapi/src/suite2/src/test_bulkall.c
-+++ b/dmapi/src/suite2/src/test_bulkall.c
-@@ -172,14 +172,14 @@ my_print_victim(
- 	else {
- 		char handle_str[HANDLE_STR];
- 		if (verbose & V_PRINT) {
--			printf("%d\t", hlen);
-+			printf("%zd\t", hlen);
- 			hantoa(hanp, hlen, handle_str);
- 			printf("%s ", handle_str);
- 			if (extras) {
- 				printf("size=%lld ",
--				       (int64_t)sbuf->dt_size);
-+				       (long long) sbuf->dt_size);
- 				printf("ino=%lld ",
--				       (int64_t)sbuf->dt_ino);
-+				       (long long) sbuf->dt_ino);
- 			}
- 		}
+diff --git a/dmapi/src/suite1/cmd/link_test.c b/dmapi/src/suite1/cmd/link_test.c
+index 3d18de8..2d35da8 100644
+--- a/dmapi/src/suite1/cmd/link_test.c
++++ b/dmapi/src/suite1/cmd/link_test.c
+@@ -36,37 +36,44 @@ main(
+ 	int	argc,
+ 	char	**argv)
+ {
+-	dm_sessid_t	sid, oldsid, targetsid, *newsidp, *sidbufp;
+-	dm_token_t	token, *tokenp, *rtokenp, *tokenbufp;
+-	dm_attrname_t	*attrnamep;
+-	dm_off_t	off, *offp, *roffp;
+-	dm_extent_t	*extentp;
+-	dm_inherit_t	*inheritbufp;
+-	dm_stat_t	*statp;
+-	dm_size_t	len, *dmrlenp, *retvalp;
+-	dm_attrloc_t	*locp;
+-	dm_eventset_t	*eventsetp;
+-	dm_config_t	flagname;
+-	dm_region_t	*regbufp;
+-	dm_response_t	response;
+-	dm_right_t	right, *rightp;
+-	dm_igen_t	igen, *igenp;
+-	dm_msgtype_t	msgtype;
+-	dm_fileattr_t	*attrp;
+-	dm_boolean_t	enable, *exactflagp;
+-	dm_timestruct_t	*delay;
+-	mode_t		mode;
+-	size_t		hlen, dirhlen, hlen1, hlen2, targhlen, *fshlenp, *hlenp;
+-	size_t		msglen, buflen, *rlenp;
+-	u_int		nelem, mask, maxmsgs, uflags, *nelemp, maxevent;
+-	void		*hanp, *dirhanp, *hanp1, *hanp2, *targhanp;
+-	void		*msgdatap, *bufp, **hanpp, *respbufp, **fshanpp;
+-	dm_fsid_t	fsid, *fsidp;
+-	dm_ino_t	ino, *inop;
+-	char		*cname, *sessinfop, *path, *pathbufp, **versionstrpp;
+-	int		flags, fd, setdtime, reterror;
+-	u_int	urc;
+-	int	rc;
++	dm_sessid_t	sid = 0, oldsid = 0, targetsid = 0;
++	dm_sessid_t	*newsidp = NULL, *sidbufp = NULL;
++	dm_token_t	token = 0, *tokenp = NULL;
++	dm_token_t	*rtokenp = NULL, *tokenbufp = NULL;
++	dm_attrname_t	*attrnamep = NULL;
++	dm_off_t	off = 0, *offp = NULL, *roffp = NULL;
++	dm_extent_t	*extentp = NULL;
++	dm_inherit_t	*inheritbufp = NULL;
++	dm_stat_t	*statp = NULL;
++	dm_size_t	len = 0, *dmrlenp = NULL, *retvalp = NULL;
++	dm_attrloc_t	*locp = NULL;
++	dm_eventset_t	*eventsetp = NULL;
++	dm_config_t	flagname = DM_CONFIG_INVALID;
++	dm_region_t	*regbufp = NULL;
++	dm_response_t	response = DM_RESP_INVALID;
++	dm_right_t	right = DM_RIGHT_NULL, *rightp = NULL;
++	dm_igen_t	igen, *igenp = NULL;
++	dm_msgtype_t	msgtype = DM_MSGTYPE_INVALID;
++	dm_fileattr_t	*attrp = NULL;
++	dm_boolean_t	enable = 0, *exactflagp = NULL;
++	dm_timestruct_t	*delay = NULL;
++	mode_t		mode = 0;
++	size_t		hlen = 0, dirhlen = 0, hlen1 = 0, hlen2 = 0;
++	size_t		targhlen = 0, *fshlenp = NULL, *hlenp = NULL;
++	size_t		msglen = 0, buflen = 0, *rlenp = NULL;
++	u_int		nelem = 0, mask = 0, maxmsgs = 0, uflags = 0;
++	u_int		*nelemp = NULL, maxevent = 0;
++	void		*hanp = NULL, *dirhanp = NULL;
++	void		*hanp1 = NULL, *hanp2 = NULL, *targhanp = NULL;
++	void		*msgdatap = NULL, *bufp = NULL, **hanpp = NULL;
++	void		*respbufp = NULL, **fshanpp = NULL;
++	dm_fsid_t	fsid, *fsidp = NULL;
++	dm_ino_t	ino, *inop = NULL;
++	char		*cname = NULL, *sessinfop = NULL;
++	char		*path = NULL, *pathbufp = NULL, **versionstrpp = NULL;
++	int		flags = 0, fd = 0, setdtime = 0, reterror = 0;
++	u_int		urc;
++	int		rc;
+ 	dm_ssize_t	ssrc;
  
-@@ -271,7 +271,8 @@ scan_fs(
- 				      mask, dmattr, &locp, buflen,
- 				      dm_xstatbuf, &rlenp);
- 		if (verbose & V_VERBOSE)
--			fprintf(stderr, "BULKALL more=%d, rlen=%d\n", more, rlenp);
-+			fprintf(stderr, "BULKALL more=%d, rlen=%zd\n",
-+				more, rlenp);
- 		if (more == -1) {
- 			errno_msg("%s/%d: Can't get bulkall for filesystem", __FILE__, __LINE__, errno);
- 			break;
-diff --git a/dmapi/src/suite2/src/test_bulkattr.c b/dmapi/src/suite2/src/test_bulkattr.c
-index 8b19d54..4ed5c64 100644
---- a/dmapi/src/suite2/src/test_bulkattr.c
-+++ b/dmapi/src/suite2/src/test_bulkattr.c
-@@ -164,7 +164,7 @@ my_print_victim(
- 	else {
- 		char handle_str[HANDLE_STR];
- 		if (verbose & V_PRINT) {
--			printf("%d\t", hlen);
-+			printf("%zd\t", hlen);
- 			hantoa(hanp, hlen, handle_str);
- 			printf("%s ", handle_str);
+ /* Definitions per the prototypes in dmport.h, in the same order. */
+diff --git a/dmapi/src/suite1/cmd/make_sparse.c b/dmapi/src/suite1/cmd/make_sparse.c
+index d16aeba..ead7390 100644
+--- a/dmapi/src/suite1/cmd/make_sparse.c
++++ b/dmapi/src/suite1/cmd/make_sparse.c
+@@ -82,18 +82,18 @@ main(
+ 	for (i = 0; i < 200; i += 2) {
+ 		offset = i * 65536;
+ 		if (lseek(fd, offset, SEEK_SET) < 0) {
+-			fprintf(stderr, "seek to %d failed, %s\n", offset,
++			fprintf(stderr, "seek to %zd failed, %s\n", offset,
+ 				strerror(errno));
+ 			exit(1);
  		}
-@@ -187,7 +187,7 @@ my_print_victim(
- 			if( isalpha(buf[0]) )
- 				printf("(%s)\n", buf);
- 			else
--				printf("<len=%d>\n",rlen);
-+				printf("<len=%zd>\n",rlen);
+ 		if ((count = write(fd, buf, buflen)) < 0) {
+ 			fprintf(stderr, "write of %d bytes failed at offset "
+-				"%d, , %s\n", buflen, offset, strerror(errno));
++				"%zd, , %s\n", buflen, offset, strerror(errno));
+ 			exit(1);
  		}
- 	}
- }
-@@ -251,7 +251,8 @@ scan_fs(
- 		more = dm_get_bulkattr(sid, fs_hanp, fs_hlen, DM_NO_TOKEN,
- 				       mask, &locp, buflen, dm_statbuf, &rlenp);
- 		if (verbose & V_VERBOSE)
--			fprintf(stderr, "BULKATTR more=%d, rlen=%d\n", more, rlenp);
-+			fprintf(stderr, "BULKATTR more=%d, rlen=%zd\n",
-+				more, rlenp);
- 		if (more == -1) {
- 			errno_msg("%s/%d: Can't get bulkattr for filesystem", __FILE__, __LINE__, errno);
- 			break;
-diff --git a/dmapi/src/suite2/src/test_dmattr.c b/dmapi/src/suite2/src/test_dmattr.c
-index 7609800..cf87077 100644
---- a/dmapi/src/suite2/src/test_dmattr.c
-+++ b/dmapi/src/suite2/src/test_dmattr.c
-@@ -101,7 +101,8 @@ main(
- 	struct stat    *statbuf;
- 	struct stat    *checkbuf;
- 
--        if (Progname = strrchr(argv[0], '/')) {
-+        Progname = strrchr(argv[0], '/');
-+        if (Progname) {
- 		Progname++;
- 	} else {
- 		Progname = argv[0];
-@@ -224,7 +225,7 @@ main(
- 			      bufp, &rlenp)) {
- 	      if (errno == E2BIG) {
- 		fprintf(stderr, "dm_get_dmattr buffer too small, "
--			"should be %d bytes\n", rlenp);
-+			"should be %zd bytes\n", rlenp);
- 	      } else {
- 		fprintf(stderr, "dm_get_dmattr failed (%s) for test file %d\n",
- 			ERR_NAME, i);
-diff --git a/dmapi/src/suite2/src/test_efault.c b/dmapi/src/suite2/src/test_efault.c
-index 19cb0a3..83f69b2 100644
---- a/dmapi/src/suite2/src/test_efault.c
-+++ b/dmapi/src/suite2/src/test_efault.c
-@@ -84,7 +84,8 @@ main(int argc, char **argv) {
- 	char            command[100];
+ 		if (count != buflen) {
+ 			fprintf(stderr, "expected to write %d bytes at offset "
+-				"%d, actually wrote %d\n", buflen, offset,
++				"%zd, actually wrote %zd\n", buflen, offset,
+ 				count);
+ 			exit(1);
+ 		}
+diff --git a/dmapi/src/suite1/cmd/obj_ref_hold.c b/dmapi/src/suite1/cmd/obj_ref_hold.c
+index c099547..771deb4 100644
+--- a/dmapi/src/suite1/cmd/obj_ref_hold.c
++++ b/dmapi/src/suite1/cmd/obj_ref_hold.c
+@@ -76,7 +76,8 @@ main(
+ 	char		*name;
  	int		opt;
  
 -	if (Progname = strrchr(argv[0], '/')) {
@@ -383,157 +267,69 @@ index 19cb0a3..83f69b2 100644
  		Progname++;
  	} else {
  		Progname = argv[0];
-@@ -170,7 +171,7 @@ main(int argc, char **argv) {
- 	 */
- 	{ 
- 	  u_int         nelem=5;
--	  u_int         *nelemp;
-+	  u_int         *nelemp = NULL;
- 	  dm_eventset_t *eventsetp;
- 	  eventsetp = (dm_eventset_t *)malloc(nelem*sizeof(dm_eventset_t));
- 	  if (eventsetp == NULL) {
-@@ -198,7 +199,7 @@ main(int argc, char **argv) {
- 	{ 
- 	  size_t buflen = 5;
- 	  void   *bufp  = (void *)malloc(buflen*sizeof(dm_attrlist_t));
--	  size_t *rlenp;
-+	  size_t *rlenp = NULL;
- 	  ERRTEST(EFAULT, "getall_dmattr (NULL handle)", 
- 		  dm_getall_dmattr(sid, NULL, hlen, DM_NO_TOKEN,
- 				   buflen, bufp, rlenp))
-diff --git a/dmapi/src/suite2/src/test_eventlist.c b/dmapi/src/suite2/src/test_eventlist.c
-index e633736..2257f44 100644
---- a/dmapi/src/suite2/src/test_eventlist.c
-+++ b/dmapi/src/suite2/src/test_eventlist.c
-@@ -93,7 +93,8 @@ main(
- 	void           *test_vp;
- 	u_int           nelemp;
- 
--	if (Progname = strrchr(argv[0], '/')) {
-+	Progname = strrchr(argv[0], '/');
-+	if (Progname) {
- 		Progname++;
- 	} else {
- 		Progname = argv[0];
-diff --git a/dmapi/src/suite2/src/test_fileattr.c b/dmapi/src/suite2/src/test_fileattr.c
-index 520fc8d..ff8da83 100644
---- a/dmapi/src/suite2/src/test_fileattr.c
-+++ b/dmapi/src/suite2/src/test_fileattr.c
-@@ -123,7 +123,7 @@ comp_stat ( dm_stat_t expected,
-    if (found.dt_size != expected.dt_size) {
-      fprintf(stderr, 
- 	     "ERROR: get #%d, expected size %lld, but found %lld\n",
--	     i, expected.dt_size, found.dt_size);
-+	     i, (long long) expected.dt_size, (long long) found.dt_size);
-    }
-    else good++;
-    if (Vflag){
-@@ -183,7 +183,8 @@ main(
- 	char            *chk_name_p;
- 	int             chk_num;
- 
--	if (Progname = strrchr(argv[0], '/')) {
-+	Progname = strrchr(argv[0], '/');
-+	if (Progname) {
- 		Progname++;
- 	} else {
- 		Progname = argv[0];
-@@ -405,7 +406,8 @@ main(
- 	    }
- 	    else {
- 	      /* Put JUST name (not path) from check_name into chk_name_p */
--	      if (chk_name_p = strrchr(check_name, '/')) chk_name_p++;
-+	      chk_name_p = strrchr(check_name, '/');
-+	      if (chk_name_p) chk_name_p++;
- 	      else chk_name_p = check_name;
- 	      /* Verify that check_name_p holds a testfile name */
- 	      if (strncmp(chk_name_p, "DMAPI_fileattr_test.",20)==0) {
-@@ -679,7 +681,7 @@ main(
- 	     ERRTEST(EFAULT, "get_bulk (bad rlenp)", 
- 		     dm_get_bulkattr(sid, fs_hanp, fs_hlen, DM_NO_TOKEN,
- 				     GET_MASK, &loc, buflen, bufp,
--				     (u_int*)(-1000)))
-+				     (size_t *) (-1000)))
- 	     ERRTEST(EFAULT, "get_bulk (bad bufp)",
- 		     dm_get_bulkattr(sid, fs_hanp, fs_hlen, DM_NO_TOKEN,
- 				     GET_MASK, &loc, buflen, p, &rlen))
-diff --git a/dmapi/src/suite2/src/test_hole.c b/dmapi/src/suite2/src/test_hole.c
-index a000f26..3c2c4fc 100644
---- a/dmapi/src/suite2/src/test_hole.c
-+++ b/dmapi/src/suite2/src/test_hole.c
-@@ -90,7 +90,8 @@ main(
- 	struct stat    checkbuf;
- 
- 
--	if (Progname = strrchr(argv[0], '/')) {
-+	Progname = strrchr(argv[0], '/');
-+	if (Progname) {
- 		Progname++;
- 	} else {
- 		Progname = argv[0];
-diff --git a/dmapi/src/suite2/src/test_invis.c b/dmapi/src/suite2/src/test_invis.c
-index 115ffb7..766d767 100644
---- a/dmapi/src/suite2/src/test_invis.c
-+++ b/dmapi/src/suite2/src/test_invis.c
-@@ -102,7 +102,8 @@ main(
- 	int		cont;
- 	int		error_reported;
- 
--	if (Progname = strrchr(argv[0], '/')) {
-+	Progname = strrchr(argv[0], '/');
-+	if (Progname) {
- 		Progname++;
- 	} else {
- 		Progname = argv[0];
-@@ -180,7 +181,8 @@ main(
- 	      if(curlength>0)
- 		free(bufp);
- 	      if ((bufp = malloc(length)) == NULL) {
--		fprintf(stderr, "malloc of %llu bytes failed\n", length);
-+		fprintf(stderr, "malloc of %llu bytes failed\n",
-+			(unsigned long long) length);
- 		continue;
- 	      }
- 	      curlength = length;
-@@ -195,7 +197,7 @@ main(
- 	      cont=1;
- 	    } else if (rc != length) {
- 	      fprintf(stderr, "expected to write %lld bytes, actually "
--		      "wrote %lld\n", length, rc);
-+		      "wrote %lld\n", (long long) length, (long long) rc);
- 	      cont=1;
- 	    }
- 	    if(cont)
-@@ -238,7 +240,7 @@ main(
- 	    } 
- 	    else if (rc != length) {
- 	      fprintf(stderr, "expected to read %lld bytes, actually "
--		      "wrote %lld\n", length, rc);
-+		      "wrote %lld\n", (long long) length, (long long) rc);
- 	      continue;
- 	    }
- 	    else {
-diff --git a/dmapi/src/suite2/src/test_region.c b/dmapi/src/suite2/src/test_region.c
-index 455fbb4..7bdb0bf 100644
---- a/dmapi/src/suite2/src/test_region.c
-+++ b/dmapi/src/suite2/src/test_region.c
-@@ -95,7 +95,8 @@ main(
- 	int             Vflag = 0;
- 	dm_token_t	test_token = DM_NO_TOKEN;
- 
--	if (Progname = strrchr(argv[0], '/')) {
-+	Progname = strrchr(argv[0], '/');
-+	if (Progname) {
- 		Progname++;
- 	} else {
- 		Progname = argv[0];
-diff --git a/dmapi/src/suite2/src/test_rights.c b/dmapi/src/suite2/src/test_rights.c
-index a245f65..1198e0a 100644
---- a/dmapi/src/suite2/src/test_rights.c
-+++ b/dmapi/src/suite2/src/test_rights.c
-@@ -91,7 +91,8 @@ main(int argc, char **argv) {
+diff --git a/dmapi/src/suite1/cmd/obj_ref_query.c b/dmapi/src/suite1/cmd/obj_ref_query.c
+index a2150e9..f85716f 100644
+--- a/dmapi/src/suite1/cmd/obj_ref_query.c
++++ b/dmapi/src/suite1/cmd/obj_ref_query.c
+@@ -77,7 +77,8 @@ main(
+ 	int		error;
  	int		opt;
- 	int             i=0;
+ 
+-	if (Progname = strrchr(argv[0], '/')) {
++	Progname = strrchr(argv[0], '/');
++	if (Progname) {
+ 		Progname++;
+ 	} else {
+ 		Progname = argv[0];
+diff --git a/dmapi/src/suite1/cmd/obj_ref_rele.c b/dmapi/src/suite1/cmd/obj_ref_rele.c
+index cff486f..1c39b90 100644
+--- a/dmapi/src/suite1/cmd/obj_ref_rele.c
++++ b/dmapi/src/suite1/cmd/obj_ref_rele.c
+@@ -76,7 +76,8 @@ main(
+ 	char		*name;
+ 	int		opt;
+ 
+-	if (Progname = strrchr(argv[0], '/')) {
++	Progname = strrchr(argv[0], '/');
++	if (Progname) {
+ 		Progname++;
+ 	} else {
+ 		Progname = argv[0];
+diff --git a/dmapi/src/suite1/cmd/path_to_fshandle.c b/dmapi/src/suite1/cmd/path_to_fshandle.c
+index 4c625ad..16563d9 100644
+--- a/dmapi/src/suite1/cmd/path_to_fshandle.c
++++ b/dmapi/src/suite1/cmd/path_to_fshandle.c
+@@ -55,7 +55,8 @@ main(
+ 	size_t		fshlen;
+ 	char		buffer[100];
+ 
+-	if (Progname = strrchr(argv[0], '/')) {
++	Progname = strrchr(argv[0], '/');
++	if (Progname) {
+ 		Progname++;
+ 	} else {
+ 		Progname = argv[0];
+diff --git a/dmapi/src/suite1/cmd/path_to_handle.c b/dmapi/src/suite1/cmd/path_to_handle.c
+index 2263cb5..546415c 100644
+--- a/dmapi/src/suite1/cmd/path_to_handle.c
++++ b/dmapi/src/suite1/cmd/path_to_handle.c
+@@ -55,7 +55,8 @@ main(
+ 	size_t		hlen;
+ 	char		buffer[100];
+ 
+-	if (Progname = strrchr(argv[0], '/')) {
++	Progname = strrchr(argv[0], '/');
++	if (Progname) {
+ 		Progname++;
+ 	} else {
+ 		Progname = argv[0];
+diff --git a/dmapi/src/suite1/cmd/pending.c b/dmapi/src/suite1/cmd/pending.c
+index 9a81500..827b61e 100644
+--- a/dmapi/src/suite1/cmd/pending.c
++++ b/dmapi/src/suite1/cmd/pending.c
+@@ -58,7 +58,8 @@ main(
+ 	char		*name;
+ 	dm_token_t	token;
  
 -	if (Progname = strrchr(argv[0], '/')) {
 +	Progname = strrchr(argv[0], '/');
