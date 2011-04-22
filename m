@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3M61Flp201170 for <xfs@oss.sgi.com>; Fri, 22 Apr 2011 01:01:17 -0500
+	p3M6lqMT202681 for <xfs@oss.sgi.com>; Fri, 22 Apr 2011 01:47:52 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A52C41514BEA
-	for <xfs@oss.sgi.com>; Thu, 21 Apr 2011 23:04:44 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D52EF1D5EDCC
+	for <xfs@oss.sgi.com>; Thu, 21 Apr 2011 23:51:20 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id 1pC0YnqCGiCKQRXc for
-	<xfs@oss.sgi.com>; Thu, 21 Apr 2011 23:04:44 -0700 (PDT)
-Date: Fri, 22 Apr 2011 02:04:44 -0400
+	by cuda.sgi.com with ESMTP id 6XoMZm4XLukBG3qZ for
+	<xfs@oss.sgi.com>; Thu, 21 Apr 2011 23:51:20 -0700 (PDT)
+Date: Fri, 22 Apr 2011 02:51:20 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: 2.6.39 delaylog default mount status
-Message-ID: <20110422060444.GA10765@infradead.org>
-References: <4DB117D7.4020307@hardwarefreak.com>
+Subject: Re: [patch] xfsprogs: fixes a regression hang in xfs_repair phase 4
+Message-ID: <20110422065120.GB14189@infradead.org>
+References: <BANLkTikBSadR7K2RfiS2k60nEOPncaDfyw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4DB117D7.4020307@hardwarefreak.com>
+In-Reply-To: <BANLkTikBSadR7K2RfiS2k60nEOPncaDfyw@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,15 +28,13 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Ajeet Yadav <ajeet.yadav.77@gmail.com>
+Cc: xfs@oss.sgi.com
 
-On Fri, Apr 22, 2011 at 12:53:27AM -0500, Stan Hoeppner wrote:
-> If already asked and answered, my apologies.
-> 
-> Is delaylog still on track to be the default in 2.6.39?
-
-Yes, it has been turned on by default since -rc1.
+The patch looks good to me.  But I'm a bit worried about the lack of
+test coverage.  As Eric said if you're able to get a metadump of
+a filesystem that shows this issue it would come in useful for
+regression testing.
 
 _______________________________________________
 xfs mailing list
