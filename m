@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3M2t82Y192006 for <xfs@oss.sgi.com>; Thu, 21 Apr 2011 21:55:08 -0500
-Received: from mail-iw0-f181.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E8FEC1513E8A
-	for <xfs@oss.sgi.com>; Thu, 21 Apr 2011 19:58:35 -0700 (PDT)
-Received: from mail-iw0-f181.google.com (mail-iw0-f181.google.com
-	[209.85.214.181]) by cuda.sgi.com with ESMTP id
-	WocNz6Szx1AxHMFI for <xfs@oss.sgi.com>;
-	Thu, 21 Apr 2011 19:58:35 -0700 (PDT)
-Received: by iwn2 with SMTP id 2so267432iwn.26
-	for <xfs@oss.sgi.com>; Thu, 21 Apr 2011 19:58:35 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <alpine.DEB.2.01.1104211841510.18728@trent.utfs.org>
-References: <alpine.DEB.2.01.1104211841510.18728@trent.utfs.org>
-Date: Fri, 22 Apr 2011 11:58:34 +0900
-Message-ID: <BANLkTi=P5z4iON+ULiUEAeuuCJCJ_nMxWw@mail.gmail.com>
+	p3M300lL192133 for <xfs@oss.sgi.com>; Thu, 21 Apr 2011 22:00:00 -0500
+Received: from trent.utfs.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 078BC1514469
+	for <xfs@oss.sgi.com>; Thu, 21 Apr 2011 20:03:28 -0700 (PDT)
+Received: from trent.utfs.org (trent.utfs.org [194.246.123.103]) by
+	cuda.sgi.com with ESMTP id eOwexVnNsE7lVwYY for
+	<xfs@oss.sgi.com>; Thu, 21 Apr 2011 20:03:28 -0700 (PDT)
+Date: Thu, 21 Apr 2011 20:03:27 -0700 (PDT)
+From: Christian Kujau <lists@nerdbynature.de>
 Subject: Re: 2.6.39-rc4+: oom-killer busy killing tasks
-From: Minchan Kim <minchan.kim@gmail.com>
+In-Reply-To: <BANLkTi=P5z4iON+ULiUEAeuuCJCJ_nMxWw@mail.gmail.com>
+Message-ID: <alpine.DEB.2.01.1104212000420.18728@trent.utfs.org>
+References: <alpine.DEB.2.01.1104211841510.18728@trent.utfs.org>
+	<BANLkTi=P5z4iON+ULiUEAeuuCJCJ_nMxWw@mail.gmail.com>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,55 +24,41 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christian Kujau <lists@nerdbynature.de>
+To: Minchan Kim <minchan.kim@gmail.com>
 Cc: LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-T24gRnJpLCBBcHIgMjIsIDIwMTEgYXQgMTA6NTcgQU0sIENocmlzdGlhbiBLdWphdSA8bGlzdHNA
-bmVyZGJ5bmF0dXJlLmRlPiB3cm90ZToKPiBIaSwKPgo+IGFmdGVyIHRoZSBibG9jayBsYXllciBy
-ZWdyZXNzaW9uWzBdIHNlZW1lZCB0byBiZSBmaXhlZCwgdGhlIG1hY2hpbmUKPiBhcHBlYXJlZCB0
-byBiZSBydW5uaW5nIGZpbmUuIEJ1dCBhZnRlciBwdXR0aW5nIHNvbWUgZGlzayBJL08gdG8gdGhl
-IHN5c3RlbQo+IChQb3dlckJvb2sgRzQpIGl0IGJlY2FtZSB1bnJlc3BvbnNpdmUsIEkvTyB3YWl0
-IHdlbnQgdXAgaGlnaCBhbmQgSSBjb3VsZAo+IHNlZSB0aGF0IHRoZSBPT00ga2lsbGVyIHdhcyBr
-aWxsaW5nIHByb2Nlc3Nlcy4gTG9nZ2luZyBpbiB2aWEgU1NIIHdhcwo+IHNvbWV0aW1lcyBwb3Nz
-aWJsZSwgYnV0IHRoZSBlYWNoIHNlc3Npb24gd2FzIGtpbGxlZCBzaG9ydGx5IGFmdGVyLCBzbyBJ
-Cj4gY291bGQgbm90IGRvIG11Y2guCj4KPiBUaGUgYm94IGZpbmFsbHkgcmVib290ZWQgaXRzZWxm
-LCB0aGUgbG9nZmlsZSByZWNvcmRlZCBzb21ldGhpbmcgeGZzCj4gcmVsYXRlZCBpbiB0aGUgZmly
-c3QgYmFja3RyYWNlLCBoZW5jZSBJJ20gY2MnaW5nIHRoZSB4ZnMgbGlzdCB0b286Cj4KPiBkdSBp
-bnZva2VkIG9vbS1raWxsZXI6IGdmcF9tYXNrPTB4ODQyZDAsIG9yZGVyPTAsIG9vbV9hZGo9MCwg
-b29tX3Njb3JlX2Fkaj0wCj4gQ2FsbCBUcmFjZToKPiBbYzAwMDljZTRdIHNob3dfc3RhY2srMHg3
-MC8weDFiYyAodW5yZWxpYWJsZSkKPiBbYzAwOGY1MDhdIFQuNTI4KzB4NzQvMHgxY2MKPiBbYzAw
-OGY3MzRdIFQuNTI2KzB4ZDQvMHgyYTAKPiBbYzAwOGZiN2NdIG91dF9vZl9tZW1vcnkrMHgyN2Mv
-MHgzNjAKPiBbYzAwOTNiM2NdIF9fYWxsb2NfcGFnZXNfbm9kZW1hc2srMHg2ZjgvMHg3MDgKPiBb
-YzAwYzAwYjRdIG5ld19zbGFiKzB4MjQ0LzB4MjdjCj4gW2MwMGMwNjIwXSBULjg3OSsweDFjYy8w
-eDM3Ywo+IFtjMDBjMDhkMF0ga21lbV9jYWNoZV9hbGxvYysweDEwMC8weDEwOAo+IFtjMDFjYjJi
-OF0ga21lbV96b25lX2FsbG9jKzB4YTQvMHgxMTQKPiBbYzAxYTdkNThdIHhmc19pbm9kZV9hbGxv
-YysweDQwLzB4MTNjCj4gW2MwMWE4MjE4XSB4ZnNfaWdldCsweDI1OC8weDVhMAo+IFtjMDFjOTIy
-Y10geGZzX2xvb2t1cCsweGY4LzB4MTE0Cj4gW2MwMWQ3MGIwXSB4ZnNfdm5fbG9va3VwKzB4NWMv
-MHhiMAo+IFtjMDBkMTRjOF0gZF9hbGxvY19hbmRfbG9va3VwKzB4NTQvMHg5MAo+IFtjMDBkMWQ0
-Y10gZG9fbG9va3VwKzB4MjQ4LzB4MmJjCj4gW2MwMGQzM2NjXSBwYXRoX2xvb2t1cGF0KzB4ZmMv
-MHg4ZjQKPiBbYzAwZDNiZjhdIGRvX3BhdGhfbG9va3VwKzB4MzQvMHhhYwo+IFtjMDBkNTNlMF0g
-dXNlcl9wYXRoX2F0KzB4NjQvMHhiNAo+IFtjMDBjYTYzOF0gdmZzX2ZzdGF0YXQrMHg1OC8weGJj
-Cj4gW2MwMGNhNmMwXSBzeXNfZnN0YXRhdDY0KzB4MjQvMHg1MAo+IFtjMDAxMjRmNF0gcmV0X2Zy
-b21fc3lzY2FsbCsweDAvMHgzOAo+IMKgLS0tIEV4Y2VwdGlvbjogYzAxIGF0IDB4ZmY0YjA1MAo+
-IMKgIExSID0gMHgxMDAwOGNmOAo+Cj4KPiBUaGlzIGlzIHdpaCB0b2RheSdzIGdpdCAoOTFlODU0
-OWJkZS4uLik7IGZ1bGwgbG9nICYgLmNvbmZpZyBvbjoKPgo+IMKgaHR0cDovL25lcmRieW5hdHVy
-ZS5kZS9iaXRzLzIuNi4zOS1yYzQvb29tLwoKWW91IHdvdWxkIHRyeSB0byBhbGxvY2F0ZSBhIHBh
-Z2UgZnJvbSBETUEgYXMgeW91IGRvbid0IGhhdmUgYSBub3JtYWwgem9uZS4KCkFsdGhvdWdoIGZy
-ZWUgcGFnZXMgaW4gRE1BIHpvbmUgaXMgYWJvdXQgM00sIGZyZWUgcGFnZXMgb2Ygem9uZSBpcwpi
-ZWxvdyBtaW4gb2YgRE1BIHpvbmUuIFNvIHpvbmVfd2F0ZXJtYXJrX29rIHdvdWxkIGJlIGZhaWxl
-ZC4KCkJ1dCBJIHdvbmRlciB3aHkgVk0gY2FuJ3QgcmVjbGFpbSB0aGUgcGFnZXMuIEFzIEkgc2Vl
-IHRoZSBsb2csIHRoZXJlCmFyZSBsb3RzIG9mIHNsYWIgcGFnZXMoNzEwTSkgaW4gRE1BIHpvbmUg
-d2hpbGUgTFJVIHBhZ2VzIGFyZSB2ZXJ5CnNtYWxsLiBTTEFCIHBhZ2VzIGFyZSB0aGluZ3MgVk0g
-aGFzIGEgdHJvdWJsZSB0byByZWNsYWltLiBJIGFtIG5vdApzdXJlIDcxME0gb2YgU0xBQiBpcyBy
-ZWFzb25hYmxlIHNpemUuIERvbid0IHlvdSBoYXZlIGV4cGVyaWVuY2Ugc2FtZQpwcm9ibGVtIGlu
-IG9sZCBrZXJuZWw/CklmIHlvdSBzZWUgdGhlIHByb2JsZW0gZmlyc3QgaW4gMi42LjM5LXJjNCwg
-bWF5YmUgaXQgd291bGQgYmUgYQpyZWdyZXNzaW9uKGV4LCBtaWdodCBiZSBzbGFiIG1lbW9yeSBs
-ZWFrKQpDb3VsZCB5b3UgZ2V0IHRoZSBpbmZvcm1hdGlvbiBhYm91dCBzbGFiaW5mbyhleCwgY2F0
-IC9wcm9jL3NsYWJpbmZvKQpyaWdodCBiZWZvcmUgT09NIGhhcHBlbnMuCkl0IGNvdWxkIHNheSBj
-dWxwcml0LgoKLS0gCktpbmQgcmVnYXJkcywKTWluY2hhbiBLaW0KCl9fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5z
-Z2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On Fri, 22 Apr 2011 at 11:58, Minchan Kim wrote:
+> But I wonder why VM can't reclaim the pages. As I see the log, there
+> are lots of slab pages(710M) in DMA zone while LRU pages are very
+> small. SLAB pages are things VM has a trouble to reclaim. I am not
+> sure 710M of SLAB is reasonable size. Don't you have experience same
+> problem in old kernel?
+
+No, I forgot to add 2.6.38 (and before) did not show that behaviour.
+
+> If you see the problem first in 2.6.39-rc4, maybe it would be a
+> regression(ex, might be slab memory leak)
+
+I would think so. I'll try to bisect, but with one compilation taking 
+~20min on this box, this might take a while.
+
+> Could you get the information about slabinfo(ex, cat /proc/slabinfo)
+> right before OOM happens.
+
+When it happens again, I'll try to get this.
+
+Thanks for replying,
+Christian.
+-- 
+BOFH excuse #73:
+
+Daemons did it
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
