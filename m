@@ -1,30 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3MJRdll229191 for <xfs@oss.sgi.com>; Fri, 22 Apr 2011 14:27:40 -0500
-Received: from fieldses.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AC2921A34CBD
-	for <xfs@oss.sgi.com>; Fri, 22 Apr 2011 12:31:08 -0700 (PDT)
-Received: from fieldses.org (fieldses.org [174.143.236.118]) by cuda.sgi.com
-	with ESMTP id QcptHFDjCIlY5qDo for <xfs@oss.sgi.com>;
-	Fri, 22 Apr 2011 12:31:08 -0700 (PDT)
-Date: Fri, 22 Apr 2011 15:31:03 -0400
-From: "J. Bruce Fields" <bfields@fieldses.org>
-Subject: Re: 2.6.38: Quota over NFS4
-Message-ID: <20110422193103.GB32290@fieldses.org>
-References: <20110321222301.GB472@fieldses.org>
-	<20110322221305.GA5857@os.inf.tu-dresden.de>
-	<20110323150328.GD23418@fieldses.org>
-	<20110323174052.GE5005@os.inf.tu-dresden.de>
-	<20110323190632.GA26306@fieldses.org>
-	<20110323223017.GA5177@os.inf.tu-dresden.de>
-	<20110324171704.GA1784@infradead.org>
-	<20110324175106.GB1886@fieldses.org>
-	<20110324222807.GC10821@os.inf.tu-dresden.de>
-	<20110325000310.GA5514@fieldses.org>
+	p3MMhhvs234852 for <xfs@oss.sgi.com>; Fri, 22 Apr 2011 17:43:43 -0500
+Received: from mail-vx0-f181.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6D7491D5F389
+	for <xfs@oss.sgi.com>; Fri, 22 Apr 2011 15:47:10 -0700 (PDT)
+Received: from mail-vx0-f181.google.com (mail-vx0-f181.google.com
+	[209.85.220.181]) by cuda.sgi.com with ESMTP id
+	fpXsdvdnpZFBi9c2 for <xfs@oss.sgi.com>;
+	Fri, 22 Apr 2011 15:47:10 -0700 (PDT)
+Received: by vxb39 with SMTP id 39so869948vxb.26
+	for <xfs@oss.sgi.com>; Fri, 22 Apr 2011 15:47:10 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110325000310.GA5514@fieldses.org>
+In-Reply-To: <alpine.DEB.2.01.1104221142150.18728@trent.utfs.org>
+References: <alpine.DEB.2.01.1104211841510.18728@trent.utfs.org>
+	<BANLkTi=P5z4iON+ULiUEAeuuCJCJ_nMxWw@mail.gmail.com>
+	<alpine.DEB.2.01.1104221033220.18728@trent.utfs.org>
+	<alpine.DEB.2.01.1104221142150.18728@trent.utfs.org>
+Date: Sat, 23 Apr 2011 07:47:10 +0900
+Message-ID: <BANLkTinvr+K0WEhDMshbMuU5aYuB0Ve6BA@mail.gmail.com>
+Subject: Re: 2.6.39-rc4+: oom-killer busy killing tasks
+From: Minchan Kim <minchan.kim@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,50 +29,91 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Adam Lackorzynski <adam@os.inf.tu-dresden.de>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-nfs@vger.kernel.org, xfs@oss.sgi.com
+To: Christian Kujau <lists@nerdbynature.de>
+Cc: rientjes@google.com, LKML <linux-kernel@vger.kernel.org>, Dave Chinner <dchinner@redhat.com>, xfs@oss.sgi.com
 
-On Thu, Mar 24, 2011 at 08:03:10PM -0400, J. Bruce Fields wrote:
-> On Thu, Mar 24, 2011 at 11:28:07PM +0100, Adam Lackorzynski wrote:
-> > 
-> > On Thu Mar 24, 2011 at 13:51:06 -0400, J. Bruce Fields wrote:
-> > > On Thu, Mar 24, 2011 at 01:17:05PM -0400, Christoph Hellwig wrote:
-> > > > On Wed, Mar 23, 2011 at 11:30:17PM +0100, Adam Lackorzynski wrote:
-> > > > > I probably mistyped something and thus bisected again:
-> > > > 
-> > > > maybe this is just a symptom.  When was the nfs4 code converted
-> > > > to just use a single open struct file, and what are the lifetime
-> > > > rules for it?  It would easily be that a long alive file might
-> > > > make XFS keep persistent preallocations longer or similar issues.
-> > > 
-> > > Definitely, the commit he's bisect to there seems much more likely to be
-> > > a culprit.  I'll take a closer look....
-> > > 
-> > > > Adam, can you create a loop filesystem with ext3 or something else
-> > > > on it and see if the problem is XFS-specific?
-> > > 
-> > > Originally it sounded like he was able to reproduce this only on one
-> > > specific filesystem so I wondered whether there was something particular
-> > > to that filesystem.
-> > 
-> > I just found out it happens also with a newly created xfs and also with
-> > ext3 and ext4. The reason that I did not see that initially is that the
-> > script I'm using needs to be on the same fs which wasn't the case when I
-> > initially tried it with a new fs. The sequence I'm using is:
-> 
-> Ah-hah, got it.  So the leak's probably of a delegation on the file
-> containing the script itself.  OK, I should be able to fix that, thanks!
-
-This should be fixed in the latest upstream (so, in 39-rc5, when that
-comes out) and soon in stable.  Let me know if not.
-
---b.
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gU2F0LCBBcHIgMjMsIDIwMTEgYXQgMzo0NiBBTSwgQ2hyaXN0aWFuIEt1amF1IDxsaXN0c0Bu
+ZXJkYnluYXR1cmUuZGU+IHdyb3RlOgo+IE9uIEZyaSwgMjIgQXByIDIwMTEgYXQgMTA6NDEsIENo
+cmlzdGlhbiBLdWphdSB3cm90ZToKPj4gSXQgaGFwcGVuZWQgYWdhaW4sIGFuZCBhZ2FpbiBpdCdz
+IGR1KDEpIGludm9raW5nIHRoZSBPT00ga2lsbGVyIChJJ20KPj4gcnVubmluZyBkdSgxKSBhY2Ny
+b3NzIGEgZmV3IGRpcmVjdG9yaWVzIGV2ZXJ5IDZocnMpLgo+Cj4gQnR3LCB4ZnMqIHNob3dlZCB1
+cCBhZ2FpbiBpbiB0aGUgZmlyc3QgYmFja3RyYWNlLiBUaGlzIG1pZ2h0IGJlIGp1c3QKPiBiZWNh
+dXNlIGR1KDEpIGNhbWUgYWNyb3NzIGFuIFhGUyBmaWxlc3lzdGVtICh+MVRCKSBvciBpdCdzIHNv
+bWV0aGluZyBlbHNlOgo+Cj4gWzIwNTQ2Ljc3NDQ4MF0gZHUgaW52b2tlZCBvb20ta2lsbGVyOiBn
+ZnBfbWFzaz0weDg0MmQwLCBvcmRlcj0wLCBvb21fYWRqPTAsIG9vbV9zY29yZV9hZGo9MAo+IFsy
+MDU0Ni43NzYxMzBdIENhbGwgVHJhY2U6Cj4gWzIwNTQ2Ljc3Nzc1NF0gW2VkNTNmOWUwXSBbYzAw
+MDljZTRdIHNob3dfc3RhY2srMHg3MC8weDFiYyAodW5yZWxpYWJsZSkKPiBbMjA1NDYuNzc5MzYz
+XSBbZWQ1M2ZhMjBdIFtjMDA4ZjUwOF0gVC41MjgrMHg3NC8weDFjYwo+IFsyMDU0Ni43ODA5NDVd
+IFtlZDUzZmE3MF0gW2MwMDhmNzM0XSBULjUyNisweGQ0LzB4MmEwCj4gWzIwNTQ2Ljc4MjQ4NF0g
+W2VkNTNmYWIwXSBbYzAwOGZiN2NdIG91dF9vZl9tZW1vcnkrMHgyN2MvMHgzNjAKPiBbMjA1NDYu
+Nzg0MDI4XSBbZWQ1M2ZiMDBdIFtjMDA5M2IzY10gX19hbGxvY19wYWdlc19ub2RlbWFzaysweDZm
+OC8weDcwOAo+IFsyMDU0Ni43ODU1OTRdIFtlZDUzZmJhMF0gW2MwMGMwMGI0XSBuZXdfc2xhYisw
+eDI0NC8weDI3Ywo+IFsyMDU0Ni43ODcxNDNdIFtlZDUzZmJkMF0gW2MwMGMwNjIwXSBULjg3OSsw
+eDFjYy8weDM3Ywo+IFsyMDU0Ni43ODg2ODddIFtlZDUzZmJmMF0gW2MwMGMwOGQwXSBrbWVtX2Nh
+Y2hlX2FsbG9jKzB4MTAwLzB4MTA4Cj4gWzIwNTQ2Ljc5MDI0NF0gW2VkNTNmYzEwXSBbYzAxY2Iy
+YjhdIGttZW1fem9uZV9hbGxvYysweGE0LzB4MTE0Cj4gWzIwNTQ2Ljc5MTc4MF0gW2VkNTNmYzQw
+XSBbYzAxYTdkNThdIHhmc19pbm9kZV9hbGxvYysweDQwLzB4MTNjCj4gWzIwNTQ2Ljc5MzI3M10g
+W2VkNTNmYzYwXSBbYzAxYTgyMThdIHhmc19pZ2V0KzB4MjU4LzB4NWEwCj4gWzIwNTQ2Ljc5NDcw
+MV0gW2VkNTNmY2MwXSBbYzAxYzkyMmNdIHhmc19sb29rdXArMHhmOC8weDExNAo+IFsyMDU0Ni43
+OTYxMTVdIFtlZDUzZmQwMF0gW2MwMWQ3MGIwXSB4ZnNfdm5fbG9va3VwKzB4NWMvMHhiMAo+IFsy
+MDU0Ni43OTc1MzFdIFtlZDUzZmQyMF0gW2MwMGQxNGM4XSBkX2FsbG9jX2FuZF9sb29rdXArMHg1
+NC8weDkwCj4gWzIwNTQ2Ljc5ODkxNF0gW2VkNTNmZDQwXSBbYzAwZDFkNGNdIGRvX2xvb2t1cCsw
+eDI0OC8weDJiYwo+IFsyMDU0Ni44MDAyODFdIFtlZDUzZmQ5MF0gW2MwMGQzM2NjXSBwYXRoX2xv
+b2t1cGF0KzB4ZmMvMHg4ZjQKPiBbMjA1NDYuODAxNjU2XSBbZWQ1M2ZlMTBdIFtjMDBkM2JmOF0g
+ZG9fcGF0aF9sb29rdXArMHgzNC8weGFjCj4gWzIwNTQ2LjgwMzAwNF0gW2VkNTNmZTMwXSBbYzAw
+ZDUzZTBdIHVzZXJfcGF0aF9hdCsweDY0LzB4YjQKPiBbMjA1NDYuODA0MzM2XSBbZWQ1M2ZlYjBd
+IFtjMDBjYTYzOF0gdmZzX2ZzdGF0YXQrMHg1OC8weGJjCj4gWzIwNTQ2LjgwNTY4Ml0gW2VkNTNm
+ZWUwXSBbYzAwY2E2YzBdIHN5c19mc3RhdGF0NjQrMHgyNC8weDUwCj4gWzIwNTQ2LjgwNzAyNl0g
+W2VkNTNmZjQwXSBbYzAwMTI0ZjRdIHJldF9mcm9tX3N5c2NhbGwrMHgwLzB4MzgKPiBbMjA1NDYu
+ODA4MzgwXSAtLS0gRXhjZXB0aW9uOiBjMDEgYXQgMHhmZjRiMDUwCj4gWzIwNTQ2LjgwODM4NF0g
+wqAgwqAgTFIgPSAweDEwMDA4Y2Y4Cj4gWzIwNTQ2LjgxMTA1MV0gTWVtLUluZm86Cj4gWzIwNTQ2
+LjgxMjMyNF0gRE1BIHBlci1jcHU6Cj4gWzIwNTQ2LjgxMzU2N10gQ1BVIMKgIMKgMDogaGk6IMKg
+MTg2LCBidGNoOiDCoDMxIHVzZDogMTA3Cj4gWzIwNTQ2LjgxNDgxOV0gSGlnaE1lbSBwZXItY3B1
+Ogo+IFsyMDU0Ni44MTYwNjVdIENQVSDCoCDCoDA6IGhpOiDCoDE4NiwgYnRjaDogwqAzMSB1c2Q6
+IMKgMzAKPiBbMjA1NDYuODE3MzI4XSBhY3RpdmVfYW5vbjo4ODEzIGluYWN0aXZlX2Fub246OTc0
+MCBpc29sYXRlZF9hbm9uOjAKPiBbMjA1NDYuODE3MzMyXSDCoGFjdGl2ZV9maWxlOjIyNTk3IGlu
+YWN0aXZlX2ZpbGU6MjA3ODQgaXNvbGF0ZWRfZmlsZTowCj4gWzIwNTQ2LjgxNzMzNl0gwqB1bmV2
+aWN0YWJsZTowIGRpcnR5OjAgd3JpdGViYWNrOjAgdW5zdGFibGU6MAo+IFsyMDU0Ni44MTczNDBd
+IMKgZnJlZTo2OTYyOSBzbGFiX3JlY2xhaW1hYmxlOjE4MTYzMyBzbGFiX3VucmVjbGFpbWFibGU6
+NDM5Mwo+IFsyMDU0Ni44MTczNDVdIMKgbWFwcGVkOjM4MTAgc2htZW06MTY5IHBhZ2V0YWJsZXM6
+Mzk1IGJvdW5jZTowCj4gWzIwNTQ2LjgyMzUyNV0gRE1BIGZyZWU6MzUzNmtCIG1pbjozNTMya0Ig
+bG93OjQ0MTJrQiBoaWdoOjUyOTZrQiBhY3RpdmVfYW5vbjowa0IgaW5hY3RpdmVfYW5vbjowa0Ig
+YWN0aXZlX2ZpbGU6MzJrQiBpbmFjdGl2ZV9maWxlOjI1NmtCIHVuZXZpY3RhYmxlOjBrQiBpc29s
+YXRlZChhbm9uKTowa0IgaXNvbGF0ZWQoZmlsZSk6MGtCIHByZXNlbnQ6NzgwMjg4a0IgbWxvY2tl
+ZDowa0IgZGlydHk6MGtCIHdyaXRlYmFjazowa0IgbWFwcGVkOjhrQiBzaG1lbTowa0Igc2xhYl9y
+ZWNsYWltYWJsZTo3MjY1MzJrQiBzbGFiX3VucmVjbGFpbWFibGU6MTc1NzJrQiBrZXJuZWxfc3Rh
+Y2s6MTA2NGtCIHBhZ2V0YWJsZXM6MTU4MGtCIHVuc3RhYmxlOjBrQiBib3VuY2U6MGtCIHdyaXRl
+YmFja190bXA6MGtCIHBhZ2VzX3NjYW5uZWQ6NDQ5IGFsbF91bnJlY2xhaW1hYmxlPyB5ZXMKPiBb
+MjA1NDYuODI4NjkwXSBsb3dtZW1fcmVzZXJ2ZVtdOiAwIDAgNTA4IDUwOAo+IFsyMDU0Ni44MzAw
+NTddIEhpZ2hNZW0gZnJlZToyNzQ5ODBrQiBtaW46NTA4a0IgbG93OjEwOTZrQiBoaWdoOjE2ODRr
+QiBhY3RpdmVfYW5vbjozNTI1MmtCIGluYWN0aXZlX2Fub246Mzg5NjBrQiBhY3RpdmVfZmlsZTo5
+MDM1NmtCIGluYWN0aXZlX2ZpbGU6ODI4ODBrQiB1bmV2aWN0YWJsZTowa0IgaXNvbGF0ZWQoYW5v
+bik6MGtCIGlzb2xhdGVkKGZpbGUpOjBrQiBwcmVzZW50OjUyMDE5MmtCIG1sb2NrZWQ6MGtCIGRp
+cnR5OjBrQiB3cml0ZWJhY2s6MGtCIG1hcHBlZDoxNTIzMmtCIHNobWVtOjY3NmtCIHNsYWJfcmVj
+bGFpbWFibGU6MGtCIHNsYWJfdW5yZWNsYWltYWJsZTowa0Iga2VybmVsX3N0YWNrOjBrQiBwYWdl
+dGFibGVzOjBrQiB1bnN0YWJsZTowa0IgYm91bmNlOjBrQiB3cml0ZWJhY2tfdG1wOjBrQiBwYWdl
+c19zY2FubmVkOjAgYWxsX3VucmVjbGFpbWFibGU/IG5vCj4gWzIwNTQ2LjgzNTY1Nl0gbG93bWVt
+X3Jlc2VydmVbXTogMCAwIDAgMAo+IFsyMDU0Ni44MzcwODFdIERNQTogNzAqNGtCIDI5NSo4a0Ig
+MCoxNmtCIDAqMzJrQiAwKjY0a0IgMSoxMjhrQiAxKjI1NmtCIDEqNTEya0IgMCoxMDI0a0IgMCoy
+MDQ4a0IgMCo0MDk2a0IgPSAzNTM2a0IKPiBbMjA1NDYuODM4NjI5XSBIaWdoTWVtOiA0MjQ1KjRr
+QiAzNjA0KjhrQiAyMTUxKjE2a0IgMTIzOCozMmtCIDczNio2NGtCIDI5NioxMjhrQiA5NioyNTZr
+QiA0Nyo1MTJrQiAxNyoxMDI0a0IgMioyMDQ4a0IgMCo0MDk2a0IgPSAyNzQ5ODBrQgo+IFsyMDU0
+Ni44NDE2NzhdIDQ0MTU0IHRvdGFsIHBhZ2VjYWNoZSBwYWdlcwo+IFsyMDU0Ni44NDMxNjBdIDYw
+NCBwYWdlcyBpbiBzd2FwIGNhY2hlCj4gWzIwNTQ2Ljg0NDYzMV0gU3dhcCBjYWNoZSBzdGF0czog
+YWRkIDI5MzIsIGRlbGV0ZSAyMzI4LCBmaW5kIDQxNy81NDUKPiBbMjA1NDYuODQ2MTQ1XSBGcmVl
+IHN3YXAgwqA9IDExNjQzMjBrQgo+IFsyMDU0Ni44NDc2NDddIFRvdGFsIHN3YXAgPSAxMTcxODY4
+a0IKPiBbMjA1NDYuODgyMzg0XSAzMjc2ODAgcGFnZXMgUkFNCj4gWzIwNTQ2Ljg4MzkyMV0gMTMx
+MDcyIHBhZ2VzIEhpZ2hNZW0KPiBbMjA1NDYuODg1NDM4XSA2NDY3IHBhZ2VzIHJlc2VydmVkCj4g
+WzIwNTQ2Ljg4NjkwM10gMTc2NTMgcGFnZXMgc2hhcmVkCj4gWzIwNTQ2Ljg4ODM2Ml0gMjQ2OTEy
+IHBhZ2VzIG5vbi1zaGFyZWQKPgo+IEFnYWluLCBmdWxsIGRtZXNnICYgY29uZmlnIG9uOiBodHRw
+Oi8vbmVyZGJ5bmF0dXJlLmRlL2JpdHMvMi42LjM5LXJjNC9vb20vCj4KCnhmc19pbm9kZSBzbGFi
+IGlzIHVzaW5nIGFib3V0IDIwME0uCkl0IHNlZW1zIHJhdGhlciBodWdlLiBMZXQncyBDY2VkIFhG
+UyBndXlzLgoKCj4gVGhhbmtzLAo+IENocmlzdGlhbi4KPiAtLQo+IEJPRkggZXhjdXNlICMxNTg6
+Cj4KPiBEZWZ1bmN0IHByb2Nlc3Nlcwo+CgoKCi0tIApLaW5kIHJlZ2FyZHMsCk1pbmNoYW4gS2lt
+CgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFp
+bGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0
+aW5mby94ZnMK
