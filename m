@@ -1,25 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3MB6kIg216085 for <xfs@oss.sgi.com>; Fri, 22 Apr 2011 06:06:47 -0500
-Received: from mail-wy0-f181.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B10B3151668F
-	for <xfs@oss.sgi.com>; Fri, 22 Apr 2011 04:10:13 -0700 (PDT)
-Received: from mail-wy0-f181.google.com (mail-wy0-f181.google.com
-	[74.125.82.181]) by cuda.sgi.com with ESMTP id HLXbEByBlk6r9lBm
-	for <xfs@oss.sgi.com>; Fri, 22 Apr 2011 04:10:13 -0700 (PDT)
-Received: by wyi11 with SMTP id 11so452295wyi.26
-	for <xfs@oss.sgi.com>; Fri, 22 Apr 2011 04:10:13 -0700 (PDT)
-Date: Fri, 22 Apr 2011 13:09:20 +0200
-From: Anisse Astier <anisse@astier.eu>
-Subject: Re: xfs_repair crashing (versions 3.1.4 and 3.1.5)
-Message-ID: <20110422130920.7be686c6@destiny.ordissimo>
-In-Reply-To: <4DB084CE.8020600@sandeen.net>
-References: <BANLkTikh1i3aYgXNZut+AGT-1kz=aqv-Eg@mail.gmail.com>
-	<20110419082705.GI23985@dastard>
-	<20110419130737.45beb611@destiny.ordissimo>
-	<4DB084CE.8020600@sandeen.net>
+	p3MCV5mX218292
+	for <linux-xfs@oss.sgi.com>; Fri, 22 Apr 2011 07:31:08 -0500
+Received: from lo.gmane.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BDDF413301ED
+	for <linux-xfs@oss.sgi.com>; Fri, 22 Apr 2011 05:34:33 -0700 (PDT)
+Received: from lo.gmane.org (lo.gmane.org [80.91.229.12]) by cuda.sgi.com with
+	ESMTP id DKczEE0blNUzapXM for <linux-xfs@oss.sgi.com>;
+	Fri, 22 Apr 2011 05:34:33 -0700 (PDT)
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1QDFZA-000810-5O
+	for linux-xfs@oss.sgi.com; Fri, 22 Apr 2011 14:34:32 +0200
+Received: from 24-176-21-160.dhcp.klmz.mi.charter.com ([24.176.21.160])
+	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+	id 1AlnuQ-0007hv-00
+	for <linux-xfs@oss.sgi.com>; Fri, 22 Apr 2011 14:34:32 +0200
+Received: from mlueck by 24-176-21-160.dhcp.klmz.mi.charter.com with local
+	(Gmexim 0.1 (Debian)) id 1AlnuQ-0007hv-00
+	for <linux-xfs@oss.sgi.com>; Fri, 22 Apr 2011 14:34:32 +0200
+From: Michael Lueck <mlueck@lueckdatasystems.com>
+Subject: Re: xfsdump SGI_FS_BULKSTAT errno = 22, how could this IRIX bug get
+	into Ubuntu 10.04 Lucid between kernels 2.6.32-27 and 2.6.32-26?
+Date: Fri, 22 Apr 2011 08:34:18 -0400
+Message-ID: <iorska$1po$1@dough.gmane.org>
+References: <iibmah$dlp$1@dough.gmane.org>
 Mime-Version: 1.0
+In-Reply-To: <iibmah$dlp$1@dough.gmane.org>
+Reply-To: mlueck@lueckdatasystems.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,59 +36,26 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-T24gVGh1LCAyMSBBcHIgMjAxMSAxNDoyNjowNiAtMDUwMCwgRXJpYyBTYW5kZWVuIDxzYW5kZWVu
-QHNhbmRlZW4ubmV0PiB3cm90ZSA6Cgo+IE9uIDQvMTkvMTEgNjowNyBBTSwgQW5pc3NlIEFzdGll
-ciB3cm90ZToKPiA+IE9uIFR1ZSwgMTkgQXByIDIwMTEgMTg6Mjc6MDUgKzEwMDAsIERhdmUgQ2hp
-bm5lciA8ZGF2aWRAZnJvbW9yYml0LmNvbT4gd3JvdGUgOgo+ID4gCj4gPj4gT24gTW9uLCBBcHIg
-MTgsIDIwMTEgYXQgMDk6MjQ6MjJQTSArMDIwMCwgQW5pc3NlIEFzdGllciB3cm90ZToKPiA+Pj4g
-ZGlyZWN0b3J5IGZsYWdzIHNldCBvbiBub24tZGlyZWN0b3J5IGlub2RlIDIyODMxNzgxMDAsIHdv
-dWxkIGZpeCBiYWQgZmxhZ3MuCj4gPj4+IGJhZCBrZXkgaW4gYm1idCByb290IChpcyA3MzQzNCwg
-d291bGQgcmVzZXQgdG8gNzQxOTQpIGluIGlub2RlCj4gPj4+IDIyODMxNzgxMDAgZGF0YSBmb3Jr
-Cj4gPj4+IGJhZCBmd2QgKHJpZ2h0KSBzaWJsaW5nIHBvaW50ZXIgKHNhdyAxNDUyMDI4ODggc2hv
-dWxkIGJlIE5VTExERlNCTk8pCj4gPj4+IFNlZ21lbnRhdGlvbiBmYXVsdAo+ID4+Cj4gPj4gSG1t
-bS4gVGhlIHZlcnkgbmV4dCBsaW5lIGRvZXNuJ3QgYXBwZWFyIGJlZm9yZSB0aGUgc2VnZmF1bHQs
-IG1ha2luZwo+ID4+IG1lIHRoaW5rIHRoYXQgaXQncyB0aGUgcHJpbnRmIHRoYXQgaXMgY2F1c2lu
-ZyBpdCB0byBjcmFzaC4KPiA+Pgo+ID4+ICAgICAgICAgaWYgKGNoZWNrX2R1cHMgPT0gMCAmJgo+
-ID4+ICAgICAgICAgICAgICAgICBjdXJzb3IubGV2ZWxbMF0ucmlnaHRfZnNibm8gIT0gTlVMTERG
-U0JOTykgIHsKPiA+PiAgICAgICAgICAgICAgICAgZG9fd2FybigKPiA+PiAgICAgICAgIF8oImJh
-ZCBmd2QgKHJpZ2h0KSBzaWJsaW5nIHBvaW50ZXIgKHNhdyAlbGx1IHNob3VsZCBiZSBOVUxMREZT
-Qk5PKVxuIiksCj4gPj4gICAgICAgICAgICAgICAgICAgICAgICAgY3Vyc29yLmxldmVsWzBdLnJp
-Z2h0X2ZzYm5vKTsKPiA+Pgo+ID4+IFdlIGdldCB0aGlzIGxpbmUgb2Ygb3V0cHV0Lgo+ID4+Cj4g
-Pj4gICAgICAgICAgICAgICAgIGRvX3dhcm4oCj4gPj4gICAgICAgICBfKCJcdGluIGlub2RlICV1
-ICglcyBmb3JrKSBibWFwIGJ0cmVlIGJsb2NrICVsbHVcbiIpLAo+ID4+ICAgICAgICAgICAgICAg
-ICAgICAgICAgIFhGU19BR0lOT19UT19JTk8obXAsIGFnbm8sIGlubyksIGZvcmtuYW1lLAo+ID4+
-ICAgICAgICAgICAgICAgICAgICAgICAgIGN1cnNvci5sZXZlbFswXS5mc2Jubyk7Cj4gPj4KPiA+
-PiBCdXQgbm90IHRoaXMgb25lLiBJIHdvbmRlciBpZiBwYXNzaW5nIGEgNjRiaXQgbnVtYmVyIHRv
-IGEgJXUgZm9ybWF0Cj4gPj4gc3RyaW5nIChzaG91bCBkYmUgJWxsdSkgY2F1c2VzIHByb2JsZW1z
-IG9uIEFSTT8gQWxsIHRoZSB2YXJpYWJsZXMKPiA+PiBhcmUgdmFsaWQgYXMgdGhleSBhcmUgcHJp
-bnRlZCBvciBhY2Nlc3NlZCBlbHNld2hlcmUgaW4gdGhlIGZ1bmN0aW9uLAo+ID4+IHNvIHRoYXQn
-cyB0aGUgb25seSB0aGluZyBJIGNhbiB0aGluayBvZiB3aXRob3V0IGEgc3RhY2sgdHJhY2UgdG8K
-PiA+PiB0ZWxsIG1lIG90aGVyd2lzZS4uLi4KPiA+IAo+ID4gSSBoYXZlIG5vIGlkZWEuIEkgZGlk
-IG5vdCBzdWNjZWVkIGluIGdldHRpbmcgYSBzdGFja3RyYWNlLiBDUFUgaXMgYW4KPiA+IEFSTTks
-IGFuZCBJIHVzZWQgRGViaWFuIGFybWVsIHNxdWVlemUgJiB3aGVlenkgIHhmc3Byb2dzIGJpbmFy
-aWVzLgo+IAo+IFBlcmhhcHMgeW91IGNvdWxkIHRyeSByZW1vdmluZyBvciBmaXhpbmcgdGhlIHBy
-aW50ZiBEYXZlIHN1c3BlY3RzLCByZWJ1aWxkIHJlcGFpciwgYW5kIHJ1biBpdCBhZ2Fpbj8KClll
-cCwgSSBmaWd1cmVkIHRoYXQgbXVjaCwgaXQganVzdCB0b29rIG1lIGEgd2hpbGUgdG8gZ2V0IHVw
-ICYgcnVubmluZwphbm90aGVyIHN5c3RlbSBjYXBhYmxlIG9mIGJ1aWxkaW5nIHhmc3Byb2dzLgoK
-Tm93IHRoYXQgSSBoYXZlIHRoYXQsIGFuZCB0aGF0IEkgY29tbWVudGVkIHRoZSBkb193YXJuLCB4
-ZnNfcmVwYWlyIGlzCnN0aWxsIHJ1bm5pbmcgYWZ0ZXIgdGhlIHByZXZpb3VzIGZhaWxpbmcgcG9p
-bnQ6ClvigKZdCiAgICAgICAgLSBhZ25vID0gMTcKYmFkIGtleSBpbiBibWJ0IHJvb3QgKGlzIDcz
-NDM0LCB3b3VsZCByZXNldCB0byA3NDE5NCkgaW4gaW5vZGUgMjI4MzE3ODEwMCBkYXRhIGZvcmsK
-YmFkIGZ3ZCAocmlnaHQpIHNpYmxpbmcgcG9pbnRlciAoc2F3IDE0NTIwMjg4OCBzaG91bGQgYmUg
-TlVMTERGU0JOTykKYmFkIGRhdGEgZm9yayBpbiBpbm9kZSAyMjgzMTc4MTAwCndvdWxkIGhhdmUg
-Y2xlYXJlZCBpbm9kZSAyMjgzMTc4MTAwCiAgICAgICAgLSBhZ25vID0gMTgKW+KApl0gKG9uZ29p
-bmcpCgpPbmNlIHRoaXMgaXMgZG9uZSwgSSdsbCB0ZXN0IHdpdGggJWxsdSBpbnN0ZWFkIG9mICV1
-LgoKQnV0IHBsZWFzZSBiZSBwYXRpZW50LCBpdCdzIGEgOTAwR0IgZmlsZXN5c3RlbSAoaGFsZi1m
-dWxsKSB3aXRoIGp1c3QgYW4gODAwCk1IeiBBUk05IHByb2Nlc3NvciBkb2luZyB0aGUgd29yaywg
-c28geGZzX3JlcGFpciB0YWtlcyBob3VycyB0byBjb21wbGV0ZS4KUGx1cyBJIHdvbid0IGhhdmUg
-dGltZSB0byBkbyBtYW55IHRlc3RzIGJlZm9yZSBuZXh0IHdlZWsuCgpUbyBiZSBjb250aW51ZWQu
-CgpBbmlzc2UKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-CnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWls
-bWFuL2xpc3RpbmZvL3hmcwo=
+Greetings,
+
+Yesterday I received via production Ubuntu 10.04 Lucid updates the new kernel addressing this issue.
+
+Thank you so much Bill, Dave, and Dann for your assistance in getting this diagnosed and resolved so quickly! I really appreciate it!
+
+Sincerely,
+
+-- 
+Michael Lueck
+Lueck Data Systems
+http://www.lueckdatasystems.com/
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
