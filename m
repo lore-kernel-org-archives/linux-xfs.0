@@ -1,18 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3M1rpob190192 for <xfs@oss.sgi.com>; Thu, 21 Apr 2011 20:53:52 -0500
-Received: from trent.utfs.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CAA441512A86
-	for <xfs@oss.sgi.com>; Thu, 21 Apr 2011 18:57:18 -0700 (PDT)
-Received: from trent.utfs.org (trent.utfs.org [194.246.123.103]) by
-	cuda.sgi.com with ESMTP id FgoDESigTZ3byUpE for
-	<xfs@oss.sgi.com>; Thu, 21 Apr 2011 18:57:18 -0700 (PDT)
-Date: Thu, 21 Apr 2011 18:57:16 -0700 (PDT)
-From: Christian Kujau <lists@nerdbynature.de>
-Subject: 2.6.39-rc4+: oom-killer busy killing tasks
-Message-ID: <alpine.DEB.2.01.1104211841510.18728@trent.utfs.org>
+	p3M2t82Y192006 for <xfs@oss.sgi.com>; Thu, 21 Apr 2011 21:55:08 -0500
+Received: from mail-iw0-f181.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E8FEC1513E8A
+	for <xfs@oss.sgi.com>; Thu, 21 Apr 2011 19:58:35 -0700 (PDT)
+Received: from mail-iw0-f181.google.com (mail-iw0-f181.google.com
+	[209.85.214.181]) by cuda.sgi.com with ESMTP id
+	WocNz6Szx1AxHMFI for <xfs@oss.sgi.com>;
+	Thu, 21 Apr 2011 19:58:35 -0700 (PDT)
+Received: by iwn2 with SMTP id 2so267432iwn.26
+	for <xfs@oss.sgi.com>; Thu, 21 Apr 2011 19:58:35 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <alpine.DEB.2.01.1104211841510.18728@trent.utfs.org>
+References: <alpine.DEB.2.01.1104211841510.18728@trent.utfs.org>
+Date: Fri, 22 Apr 2011 11:58:34 +0900
+Message-ID: <BANLkTi=P5z4iON+ULiUEAeuuCJCJ_nMxWw@mail.gmail.com>
+Subject: Re: 2.6.39-rc4+: oom-killer busy killing tasks
+From: Minchan Kim <minchan.kim@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,66 +26,55 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: LKML <linux-kernel@vger.kernel.org>
-Cc: xfs@oss.sgi.com
+To: Christian Kujau <lists@nerdbynature.de>
+Cc: LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-Hi,
-
-after the block layer regression[0] seemed to be fixed, the machine 
-appeared to be running fine. But after putting some disk I/O to the system 
-(PowerBook G4) it became unresponsive, I/O wait went up high and I could 
-see that the OOM killer was killing processes. Logging in via SSH was 
-sometimes possible, but the each session was killed shortly after, so I 
-could not do much.
-
-The box finally rebooted itself, the logfile recorded something xfs 
-related in the first backtrace, hence I'm cc'ing the xfs list too:
-
-du invoked oom-killer: gfp_mask=0x842d0, order=0, oom_adj=0, oom_score_adj=0
-Call Trace:
-[c0009ce4] show_stack+0x70/0x1bc (unreliable)
-[c008f508] T.528+0x74/0x1cc
-[c008f734] T.526+0xd4/0x2a0
-[c008fb7c] out_of_memory+0x27c/0x360
-[c0093b3c] __alloc_pages_nodemask+0x6f8/0x708
-[c00c00b4] new_slab+0x244/0x27c
-[c00c0620] T.879+0x1cc/0x37c
-[c00c08d0] kmem_cache_alloc+0x100/0x108
-[c01cb2b8] kmem_zone_alloc+0xa4/0x114
-[c01a7d58] xfs_inode_alloc+0x40/0x13c
-[c01a8218] xfs_iget+0x258/0x5a0
-[c01c922c] xfs_lookup+0xf8/0x114
-[c01d70b0] xfs_vn_lookup+0x5c/0xb0
-[c00d14c8] d_alloc_and_lookup+0x54/0x90
-[c00d1d4c] do_lookup+0x248/0x2bc
-[c00d33cc] path_lookupat+0xfc/0x8f4
-[c00d3bf8] do_path_lookup+0x34/0xac
-[c00d53e0] user_path_at+0x64/0xb4
-[c00ca638] vfs_fstatat+0x58/0xbc
-[c00ca6c0] sys_fstatat64+0x24/0x50
-[c00124f4] ret_from_syscall+0x0/0x38
- --- Exception: c01 at 0xff4b050
-   LR = 0x10008cf8
-
-
-This is wih today's git (91e8549bde...); full log & .config on: 
-
-  http://nerdbynature.de/bits/2.6.39-rc4/oom/
-
-Thanks,
-Christian.
-
-[0] https://lkml.org/lkml/2011/4/14/702
--- 
-BOFH excuse #117:
-
-the printer thinks its a router.
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gRnJpLCBBcHIgMjIsIDIwMTEgYXQgMTA6NTcgQU0sIENocmlzdGlhbiBLdWphdSA8bGlzdHNA
+bmVyZGJ5bmF0dXJlLmRlPiB3cm90ZToKPiBIaSwKPgo+IGFmdGVyIHRoZSBibG9jayBsYXllciBy
+ZWdyZXNzaW9uWzBdIHNlZW1lZCB0byBiZSBmaXhlZCwgdGhlIG1hY2hpbmUKPiBhcHBlYXJlZCB0
+byBiZSBydW5uaW5nIGZpbmUuIEJ1dCBhZnRlciBwdXR0aW5nIHNvbWUgZGlzayBJL08gdG8gdGhl
+IHN5c3RlbQo+IChQb3dlckJvb2sgRzQpIGl0IGJlY2FtZSB1bnJlc3BvbnNpdmUsIEkvTyB3YWl0
+IHdlbnQgdXAgaGlnaCBhbmQgSSBjb3VsZAo+IHNlZSB0aGF0IHRoZSBPT00ga2lsbGVyIHdhcyBr
+aWxsaW5nIHByb2Nlc3Nlcy4gTG9nZ2luZyBpbiB2aWEgU1NIIHdhcwo+IHNvbWV0aW1lcyBwb3Nz
+aWJsZSwgYnV0IHRoZSBlYWNoIHNlc3Npb24gd2FzIGtpbGxlZCBzaG9ydGx5IGFmdGVyLCBzbyBJ
+Cj4gY291bGQgbm90IGRvIG11Y2guCj4KPiBUaGUgYm94IGZpbmFsbHkgcmVib290ZWQgaXRzZWxm
+LCB0aGUgbG9nZmlsZSByZWNvcmRlZCBzb21ldGhpbmcgeGZzCj4gcmVsYXRlZCBpbiB0aGUgZmly
+c3QgYmFja3RyYWNlLCBoZW5jZSBJJ20gY2MnaW5nIHRoZSB4ZnMgbGlzdCB0b286Cj4KPiBkdSBp
+bnZva2VkIG9vbS1raWxsZXI6IGdmcF9tYXNrPTB4ODQyZDAsIG9yZGVyPTAsIG9vbV9hZGo9MCwg
+b29tX3Njb3JlX2Fkaj0wCj4gQ2FsbCBUcmFjZToKPiBbYzAwMDljZTRdIHNob3dfc3RhY2srMHg3
+MC8weDFiYyAodW5yZWxpYWJsZSkKPiBbYzAwOGY1MDhdIFQuNTI4KzB4NzQvMHgxY2MKPiBbYzAw
+OGY3MzRdIFQuNTI2KzB4ZDQvMHgyYTAKPiBbYzAwOGZiN2NdIG91dF9vZl9tZW1vcnkrMHgyN2Mv
+MHgzNjAKPiBbYzAwOTNiM2NdIF9fYWxsb2NfcGFnZXNfbm9kZW1hc2srMHg2ZjgvMHg3MDgKPiBb
+YzAwYzAwYjRdIG5ld19zbGFiKzB4MjQ0LzB4MjdjCj4gW2MwMGMwNjIwXSBULjg3OSsweDFjYy8w
+eDM3Ywo+IFtjMDBjMDhkMF0ga21lbV9jYWNoZV9hbGxvYysweDEwMC8weDEwOAo+IFtjMDFjYjJi
+OF0ga21lbV96b25lX2FsbG9jKzB4YTQvMHgxMTQKPiBbYzAxYTdkNThdIHhmc19pbm9kZV9hbGxv
+YysweDQwLzB4MTNjCj4gW2MwMWE4MjE4XSB4ZnNfaWdldCsweDI1OC8weDVhMAo+IFtjMDFjOTIy
+Y10geGZzX2xvb2t1cCsweGY4LzB4MTE0Cj4gW2MwMWQ3MGIwXSB4ZnNfdm5fbG9va3VwKzB4NWMv
+MHhiMAo+IFtjMDBkMTRjOF0gZF9hbGxvY19hbmRfbG9va3VwKzB4NTQvMHg5MAo+IFtjMDBkMWQ0
+Y10gZG9fbG9va3VwKzB4MjQ4LzB4MmJjCj4gW2MwMGQzM2NjXSBwYXRoX2xvb2t1cGF0KzB4ZmMv
+MHg4ZjQKPiBbYzAwZDNiZjhdIGRvX3BhdGhfbG9va3VwKzB4MzQvMHhhYwo+IFtjMDBkNTNlMF0g
+dXNlcl9wYXRoX2F0KzB4NjQvMHhiNAo+IFtjMDBjYTYzOF0gdmZzX2ZzdGF0YXQrMHg1OC8weGJj
+Cj4gW2MwMGNhNmMwXSBzeXNfZnN0YXRhdDY0KzB4MjQvMHg1MAo+IFtjMDAxMjRmNF0gcmV0X2Zy
+b21fc3lzY2FsbCsweDAvMHgzOAo+IMKgLS0tIEV4Y2VwdGlvbjogYzAxIGF0IDB4ZmY0YjA1MAo+
+IMKgIExSID0gMHgxMDAwOGNmOAo+Cj4KPiBUaGlzIGlzIHdpaCB0b2RheSdzIGdpdCAoOTFlODU0
+OWJkZS4uLik7IGZ1bGwgbG9nICYgLmNvbmZpZyBvbjoKPgo+IMKgaHR0cDovL25lcmRieW5hdHVy
+ZS5kZS9iaXRzLzIuNi4zOS1yYzQvb29tLwoKWW91IHdvdWxkIHRyeSB0byBhbGxvY2F0ZSBhIHBh
+Z2UgZnJvbSBETUEgYXMgeW91IGRvbid0IGhhdmUgYSBub3JtYWwgem9uZS4KCkFsdGhvdWdoIGZy
+ZWUgcGFnZXMgaW4gRE1BIHpvbmUgaXMgYWJvdXQgM00sIGZyZWUgcGFnZXMgb2Ygem9uZSBpcwpi
+ZWxvdyBtaW4gb2YgRE1BIHpvbmUuIFNvIHpvbmVfd2F0ZXJtYXJrX29rIHdvdWxkIGJlIGZhaWxl
+ZC4KCkJ1dCBJIHdvbmRlciB3aHkgVk0gY2FuJ3QgcmVjbGFpbSB0aGUgcGFnZXMuIEFzIEkgc2Vl
+IHRoZSBsb2csIHRoZXJlCmFyZSBsb3RzIG9mIHNsYWIgcGFnZXMoNzEwTSkgaW4gRE1BIHpvbmUg
+d2hpbGUgTFJVIHBhZ2VzIGFyZSB2ZXJ5CnNtYWxsLiBTTEFCIHBhZ2VzIGFyZSB0aGluZ3MgVk0g
+aGFzIGEgdHJvdWJsZSB0byByZWNsYWltLiBJIGFtIG5vdApzdXJlIDcxME0gb2YgU0xBQiBpcyBy
+ZWFzb25hYmxlIHNpemUuIERvbid0IHlvdSBoYXZlIGV4cGVyaWVuY2Ugc2FtZQpwcm9ibGVtIGlu
+IG9sZCBrZXJuZWw/CklmIHlvdSBzZWUgdGhlIHByb2JsZW0gZmlyc3QgaW4gMi42LjM5LXJjNCwg
+bWF5YmUgaXQgd291bGQgYmUgYQpyZWdyZXNzaW9uKGV4LCBtaWdodCBiZSBzbGFiIG1lbW9yeSBs
+ZWFrKQpDb3VsZCB5b3UgZ2V0IHRoZSBpbmZvcm1hdGlvbiBhYm91dCBzbGFiaW5mbyhleCwgY2F0
+IC9wcm9jL3NsYWJpbmZvKQpyaWdodCBiZWZvcmUgT09NIGhhcHBlbnMuCkl0IGNvdWxkIHNheSBj
+dWxwcml0LgoKLS0gCktpbmQgcmVnYXJkcywKTWluY2hhbiBLaW0KCl9fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5z
+Z2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
