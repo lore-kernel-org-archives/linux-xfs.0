@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3OJ3QGL075596 for <xfs@oss.sgi.com>; Sun, 24 Apr 2011 14:03:26 -0500
+	p3OJ3RKb075618 for <xfs@oss.sgi.com>; Sun, 24 Apr 2011 14:03:27 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F419B406A29
-	for <xfs@oss.sgi.com>; Sun, 24 Apr 2011 12:06:56 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1CB3616438D4
+	for <xfs@oss.sgi.com>; Sun, 24 Apr 2011 12:06:57 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id 0UqI48oqwyaBPzW9 for
-	<xfs@oss.sgi.com>; Sun, 24 Apr 2011 12:06:56 -0700 (PDT)
+	by cuda.sgi.com with ESMTP id yyvZJqZvBRXXco9t for
+	<xfs@oss.sgi.com>; Sun, 24 Apr 2011 12:06:57 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.72 #1 (Red Hat
-	Linux)) id 1QE4e0-0000hg-GG
+	Linux)) id 1QE4e0-0000iG-MN
 	for xfs@oss.sgi.com; Sun, 24 Apr 2011 19:06:56 +0000
-Message-Id: <20110424190613.404786382@bombadil.infradead.org>
-Date: Sun, 24 Apr 2011 15:06:13 -0400
+Message-Id: <20110424190656.644950888@bombadil.infradead.org>
+Date: Sun, 24 Apr 2011 15:06:14 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 0/4] improved busy extent handling V5
+Subject: [PATCH 1/4] xfs: optimize AGFL refills
+References: <20110424190613.404786382@bombadil.infradead.org>
+Content-Disposition: inline; filename=xfs-optimize-freelist-refills
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,24 +32,95 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
+While we need to make sure we do not reuse busy extents, there is no need
+to force out busy extents when moving them between the AGFL and the
+freespace btree as we still take care of that when doing the real allocation.
 
-This series optimizes how XFS deals with busy extents.  It starts to
-track them exactly, and allows reuses where possible (metadata to metadata)
-or else tries to avoid busy extents during allocations.  This means
-we don't have a single log force due to busy extents during either
-xfstests, compilebench or postmark on my testsystem, which can easily
-be tracked using the new tracepoints added in the last patch.
+To avoid the log force when just moving extents from the different free
+space tracking structures, move the busy search out of
+xfs_alloc_get_freelist into the callers that need it, and move the busy
+list insert from xfs_free_ag_extent which is used both by AGFL refills
+and real allocation to xfs_free_extent, which is only used by the latter.
 
-Changes from V4:
- - fix xfs_alloc_busy_trim tracing
-Changes from V3:
- - address review comments from Alex in patch 2
- - add a new patch to reduce pagb_lock roundtrips
-Changes from V2:
- - remove the bmapi userdata tracking now that is unused
- - restructure the busy extent reuse code to make it more suitable
-   for the discard support
- - reshuffle the patch boundaries
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Alex Elder <aelder@sgi.com>
+
+Index: xfs/fs/xfs/xfs_alloc.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_alloc.c	2011-04-09 23:30:52.778449337 +0200
++++ xfs/fs/xfs/xfs_alloc.c	2011-04-15 08:33:19.762528005 +0200
+@@ -1326,6 +1326,8 @@ xfs_alloc_ag_vextent_small(
+ 		if (error)
+ 			goto error0;
+ 		if (fbno != NULLAGBLOCK) {
++			if (xfs_alloc_busy_search(args->mp, args->agno, fbno, 1))
++				xfs_trans_set_sync(args->tp);
+ 			if (args->userdata) {
+ 				xfs_buf_t	*bp;
+ 
+@@ -1617,18 +1619,6 @@ xfs_free_ag_extent(
+ 
+ 	trace_xfs_free_extent(mp, agno, bno, len, isfl, haveleft, haveright);
+ 
+-	/*
+-	 * Since blocks move to the free list without the coordination
+-	 * used in xfs_bmap_finish, we can't allow block to be available
+-	 * for reallocation and non-transaction writing (user data)
+-	 * until we know that the transaction that moved it to the free
+-	 * list is permanently on disk.  We track the blocks by declaring
+-	 * these blocks as "busy"; the busy list is maintained on a per-ag
+-	 * basis and each transaction records which entries should be removed
+-	 * when the iclog commits to disk.  If a busy block is allocated,
+-	 * the iclog is pushed up to the LSN that freed the block.
+-	 */
+-	xfs_alloc_busy_insert(tp, agno, bno, len);
+ 	return 0;
+ 
+  error0:
+@@ -1923,21 +1913,6 @@ xfs_alloc_get_freelist(
+ 	xfs_alloc_log_agf(tp, agbp, logflags);
+ 	*bnop = bno;
+ 
+-	/*
+-	 * As blocks are freed, they are added to the per-ag busy list and
+-	 * remain there until the freeing transaction is committed to disk.
+-	 * Now that we have allocated blocks, this list must be searched to see
+-	 * if a block is being reused.  If one is, then the freeing transaction
+-	 * must be pushed to disk before this transaction.
+-	 *
+-	 * We do this by setting the current transaction to a sync transaction
+-	 * which guarantees that the freeing transaction is on disk before this
+-	 * transaction. This is done instead of a synchronous log force here so
+-	 * that we don't sit and wait with the AGF locked in the transaction
+-	 * during the log force.
+-	 */
+-	if (xfs_alloc_busy_search(mp, be32_to_cpu(agf->agf_seqno), bno, 1))
+-		xfs_trans_set_sync(tp);
+ 	return 0;
+ }
+ 
+@@ -2423,6 +2398,8 @@ xfs_free_extent(
+ 	}
+ 
+ 	error = xfs_free_ag_extent(tp, args.agbp, args.agno, args.agbno, len, 0);
++	if (!error)
++		xfs_alloc_busy_insert(tp, args.agno, args.agbno, len);
+ error0:
+ 	xfs_perag_put(args.pag);
+ 	return error;
+Index: xfs/fs/xfs/xfs_alloc_btree.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_alloc_btree.c	2011-04-06 16:04:49.962413009 +0200
++++ xfs/fs/xfs/xfs_alloc_btree.c	2011-04-15 08:33:19.762528005 +0200
+@@ -94,6 +94,8 @@ xfs_allocbt_alloc_block(
+ 		*stat = 0;
+ 		return 0;
+ 	}
++	if (xfs_alloc_busy_search(cur->bc_mp, cur->bc_private.a.agno, bno, 1))
++		xfs_trans_set_sync(cur->bc_tp);
+ 
+ 	xfs_trans_agbtree_delta(cur->bc_tp, 1);
+ 	new->s = cpu_to_be32(bno);
 
 _______________________________________________
 xfs mailing list
