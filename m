@@ -1,15 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3QKhHu5181869 for <xfs@oss.sgi.com>; Tue, 26 Apr 2011 15:43:17 -0500
-Subject: Re: [PATCH] xfs: Remove duplicate XFS from xfs_alert_tag, neatening
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <59d707d5d1bc37ef3a08fdd23c8e1fe72fa55fbb.1303419931.git.joe@perches.com>
-References: <59d707d5d1bc37ef3a08fdd23c8e1fe72fa55fbb.1303419931.git.joe@perches.com>
-Date: Tue, 26 Apr 2011 15:46:45 -0500
-Message-ID: <1303850805.2080.164.camel@doink>
+	p3QLQmaH183284
+	for <linux-xfs@oss.sgi.com>; Tue, 26 Apr 2011 16:26:49 -0500
+Received: from mail.1-click.hu (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1625B13C294F
+	for <linux-xfs@oss.sgi.com>; Tue, 26 Apr 2011 14:30:19 -0700 (PDT)
+Received: from mail.1-click.hu (ns2.netcenter.hu [195.228.155.139]) by
+	cuda.sgi.com with ESMTP id Fj0xZTAiMbAgl1ut for
+	<linux-xfs@oss.sgi.com>; Tue, 26 Apr 2011 14:30:19 -0700 (PDT)
+Message-ID: <1412F1CF7FB24EA68598F8A0483EDD40@myXP>
+From: "Janos Haar" <janos.haar@netcenter.hu>
+References: <DFA094D472104424BEA7AA9060DE0D6F@myXP>
+	<4DA36676.1070206@hardwarefreak.com>
+Subject: Re: 2 question about XFS fragmentation and _fsr: SPLITTED Q2:normal
+	files, samba share
+Date: Tue, 26 Apr 2011 23:21:22 +0200
 MIME-Version: 1.0
-Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,90 +25,62 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Joe Perches <joe@perches.com>
-Cc: xfs@oss.sgi.com
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: linux-xfs@oss.sgi.com
 
-On Thu, 2011-04-21 at 14:08 -0700, Joe Perches wrote:
-> The xfs_printk in xfs_alert_tag doesn't need an XFS: prefix
-> as it's added by xfs_printk.
-> 
-> Add format checking to the non-debug inline function xfs_debug.
-> Miscellaneous function prototype argument alignment.
-> 
-> Signed-off-by: Joe Perches <joe@perches.com>
+Note: I have splitted my previous letter for easyer discusion...
+This have only Question-2 the storage with only normal files and samba 
+share.
 
-This seems like three very minor changes, but I actually
-have something to say about each...
-
-> ---
->  fs/xfs/linux-2.6/xfs_message.c |    3 +--
->  fs/xfs/linux-2.6/xfs_message.h |    5 +++--
->  2 files changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/fs/xfs/linux-2.6/xfs_message.c b/fs/xfs/linux-2.6/xfs_message.c
-> index 9f76cce..e894ab2 100644
-> --- a/fs/xfs/linux-2.6/xfs_message.c
-> +++ b/fs/xfs/linux-2.6/xfs_message.c
-> @@ -95,8 +95,7 @@ xfs_alert_tag(
->  	int			do_panic = 0;
->  
->  	if (xfs_panic_mask && (xfs_panic_mask & panic_tag)) {
-> -		xfs_printk(KERN_ALERT, mp,
-> -			"XFS: Transforming an alert into a BUG.");
-> +		xfs_alert(mp, "Transforming an alert into a BUG.");
->  		do_panic = 1;
->  	}
->  
-
-I'll highlight the fact that this was the last caller of
-xfs_printk().  As such I think it should just be eliminated,
-and make the use of xfs_info() or xfs_debug() mandatory.
-They are clean, easy, and have meaningful enough names
-that this should be fine.  (What do others think?)
-
-> diff --git a/fs/xfs/linux-2.6/xfs_message.h b/fs/xfs/linux-2.6/xfs_message.h
-> index f1b3fc1..c11f415 100644
-> --- a/fs/xfs/linux-2.6/xfs_message.h
-> +++ b/fs/xfs/linux-2.6/xfs_message.h
-> @@ -11,7 +11,7 @@ extern void xfs_emerg(const struct xfs_mount *mp, const char *fmt, ...)
->  extern void xfs_alert(const struct xfs_mount *mp, const char *fmt, ...)
->          __attribute__ ((format (printf, 2, 3)));
->  extern void xfs_alert_tag(const struct xfs_mount *mp, int tag,
-> -			 const char *fmt, ...)
-> +			  const char *fmt, ...)
-
-This is a silly white space change, and I guess I don't care
-either way.  But I think much of the XFS code tab-aligns
-things that wrap to successive lines.
-
->          __attribute__ ((format (printf, 3, 4)));
->  extern void xfs_crit(const struct xfs_mount *mp, const char *fmt, ...)
->          __attribute__ ((format (printf, 2, 3)));
-> @@ -28,7 +28,8 @@ extern void xfs_info(const struct xfs_mount *mp, const char *fmt, ...)
->  extern void xfs_debug(const struct xfs_mount *mp, const char *fmt, ...)
->          __attribute__ ((format (printf, 2, 3)));
->  #else
-> -static inline void xfs_debug(const struct xfs_mount *mp, const char *fmt, ...)
-> +static inline __attribute__ ((format (printf, 2, 3)))
-> +void xfs_debug(const struct xfs_mount *mp, const char *fmt, ...)
->  {
->  }
->  #endif
-
-How about:
-
-static inline void
-__attribute__ ((format (printf, 2, 3)))
-xfs_debug(const struct xfs_mount *mp, const char *fmt, ...)
-{
-}
+----- Original Message ----- 
+From: "Stan Hoeppner" <stan@hardwarefreak.com>
+To: "Janos Haar" <janos.haar@netcenter.hu>
+Cc: <linux-xfs@oss.sgi.com>
+Sent: Monday, April 11, 2011 10:37 PM
+Subject: Re: 2 question about XFS fragmentation and _fsr
 
 
+> Janos Haar put forth on 4/11/2011 12:39 PM:
+>> Question 2:
+>> One of our customers have one storage wich is exactly the same like the
+>> one wich is described on the Q1, but only used for samba storage for
+>> storing media files (big files.)
+>
+> Writing large files sequentially shouldn't cause fragmentation.
+>
+>> I am sure, there is no torrent or similar, and i have told to the
+>> customers on the beginning "don't write more files parallel, to avoid
+>> fragmentation", but today the storage is >95% fragmented.
+>> The customer sad, he only does file write one by one, and nothing more.
+>> How can this be?
+>
+> What were the mkfs.xfs arguments you used when creating these
+> filesystem?  Please share xfs_info output for the filesystems in
+> question, and details of the underlying hardware RAID storage.
 
+This was the default.
+
+ xfs_info /dev/loop0
+meta-data=/dev/loop0             isize=256    agcount=32, agsize=114269833 
+blks
+         =                       sectsz=512   attr=0
+data     =                       bsize=4096   blocks=3656634656, imaxpct=25
+         =                       sunit=0      swidth=0 blks, unwritten=1
+naming   =version 2              bsize=4096
+log      =internal               bsize=4096   blocks=32768, version=1
+         =                       sectsz=512   sunit=0 blks
+realtime =none                   extsz=65536  blocks=0, rtextents=0
+
+>
+> -- 
+> Stan
+
+Thanks,
+Janos 
 
 _______________________________________________
 xfs mailing list
