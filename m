@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3QM8VxT184731 for <xfs@oss.sgi.com>; Tue, 26 Apr 2011 17:08:31 -0500
-Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 54A89153D66F
-	for <xfs@oss.sgi.com>; Tue, 26 Apr 2011 15:12:02 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id cBDEtylKWO6pSnnt
-	for <xfs@oss.sgi.com>; Tue, 26 Apr 2011 15:12:02 -0700 (PDT)
-Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
-	by greer.hardwarefreak.com (Postfix) with ESMTP id 196A36C032
-	for <xfs@oss.sgi.com>; Tue, 26 Apr 2011 17:12:02 -0500 (CDT)
-Message-ID: <4DB74331.3030804@hardwarefreak.com>
-Date: Tue, 26 Apr 2011 17:12:01 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	p3QNKfpB187191 for <xfs@oss.sgi.com>; Tue, 26 Apr 2011 18:20:41 -0500
+Received: from edge10.ethz.ch (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E7093153DAF1
+	for <xfs@oss.sgi.com>; Tue, 26 Apr 2011 16:24:12 -0700 (PDT)
+Received: from edge10.ethz.ch (edge10.ethz.ch [82.130.75.186]) by cuda.sgi.com
+	with ESMTP id u3vbhT36MT5A4TJz for <xfs@oss.sgi.com>;
+	Tue, 26 Apr 2011 16:24:12 -0700 (PDT)
+Message-ID: <4DB753EB.6080904@inf.ethz.ch>
+Date: Wed, 27 Apr 2011 01:23:23 +0200
+From: Benjamin Schindler <bschindler@inf.ethz.ch>
 MIME-Version: 1.0
 Subject: Re: xfs performance problem
-References: <4DB72084.8020205@inf.ethz.ch>
-In-Reply-To: <4DB72084.8020205@inf.ethz.ch>
+References: <4DB72084.8020205@inf.ethz.ch> <4DB74331.3030804@hardwarefreak.com>
+In-Reply-To: <4DB74331.3030804@hardwarefreak.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,35 +27,62 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: xfs@oss.sgi.com
 
-Benjamin Schindler put forth on 4/26/2011 2:44 PM:
-> Hi
+Hi
+
+On 27.04.2011 00:12, Stan Hoeppner wrote:
+> Benjamin Schindler put forth on 4/26/2011 2:44 PM:
+>> Hi
+>>
+>> Since upgrading to newer kernels I have serious problems with xfs
+>> performance on my root fs.
+>> It runs on a software raid 0 with 2 disks. On the same two disks, there
+>> are two more partitions running a software raid-1 with ext3. On the ext3
+>> system, I have no issue, so I assume the drives are fine.
+>> But on the xfs filesystem, extracting a linux kernel archive takes 5
+>> minutes or more, running ldconfig similarily long. The harddrives are
+>> sata-2.
+>> I'm running gentoo linux with kernel 2.6.38-gentoo-r1. I'm attaching the
+>> kernel config but I guess more info is needed - just let me know what is
+>> needed.
 > 
-> Since upgrading to newer kernels I have serious problems with xfs
-> performance on my root fs.
-> It runs on a software raid 0 with 2 disks. On the same two disks, there
-> are two more partitions running a software raid-1 with ext3. On the ext3
-> system, I have no issue, so I assume the drives are fine.
-> But on the xfs filesystem, extracting a linux kernel archive takes 5
-> minutes or more, running ldconfig similarily long. The harddrives are
-> sata-2.
-> I'm running gentoo linux with kernel 2.6.38-gentoo-r1. I'm attaching the
-> kernel config but I guess more info is needed - just let me know what is
-> needed.
+> The kernel config isn't the problem.  You haven't enabled the delayed
+> logging feature.  Add 'delaylog' to your fstab mount options for XFS
+> devices, remount (or reboot if necessary) and it should decrease the run
+> time of kernel tar extractions between 10x and 100x.
 
-The kernel config isn't the problem.  You haven't enabled the delayed
-logging feature.  Add 'delaylog' to your fstab mount options for XFS
-devices, remount (or reboot if necessary) and it should decrease the run
-time of kernel tar extractions between 10x and 100x.
+Thanks for the hint. I remounted the root filesystem with delaylog.
+Even though it improves the situation, it doesn't feel like the
+performance is where it used to be on may be 2.6.32 or so. Removing a
+lot of files for example is still slow. Removing a kernel source tree
+(partial extraction, aborted tar process after it took too long):
 
-Also, slap yourself in the forehead at least 3 times for running your
-root filesystem on RAID 0.  That's akin to riding a motorcycle, naked,
-in a blizzard, down a steep, winding, ice covered mountain road with no
-guard rails and a 3000 ft drop. ;)
+metis portage # time rm -rf sources
 
--- 
-Stan
+real    4m40.294s
+user    0m0.059s
+sys     0m1.468s
+
+That's abnormal right?
+
+metis portage # mount | grep root
+/dev/root on / type xfs (rw,noatime,delaylog)
+
+> 
+> Also, slap yourself in the forehead at least 3 times for running your
+> root filesystem on RAID 0.  That's akin to riding a motorcycle, naked,
+> in a blizzard, down a steep, winding, ice covered mountain road with no
+> guard rails and a 3000 ft drop. ;)
+> 
+
+I don't care if the system gets nuked as long as my user data is
+retained (raid 1) so I certainly won't slap myself. Systems can be
+reinstalled, user data cannot ;)
+
+Cheers
+Benjamin
 
 _______________________________________________
 xfs mailing list
