@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3QNKfpB187191 for <xfs@oss.sgi.com>; Tue, 26 Apr 2011 18:20:41 -0500
-Received: from edge10.ethz.ch (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E7093153DAF1
-	for <xfs@oss.sgi.com>; Tue, 26 Apr 2011 16:24:12 -0700 (PDT)
-Received: from edge10.ethz.ch (edge10.ethz.ch [82.130.75.186]) by cuda.sgi.com
-	with ESMTP id u3vbhT36MT5A4TJz for <xfs@oss.sgi.com>;
-	Tue, 26 Apr 2011 16:24:12 -0700 (PDT)
-Message-ID: <4DB753EB.6080904@inf.ethz.ch>
-Date: Wed, 27 Apr 2011 01:23:23 +0200
+	p3QNuxht188263 for <xfs@oss.sgi.com>; Tue, 26 Apr 2011 18:57:00 -0500
+Received: from edge20.ethz.ch (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 98D6F133290F
+	for <xfs@oss.sgi.com>; Tue, 26 Apr 2011 17:00:30 -0700 (PDT)
+Received: from edge20.ethz.ch (edge20.ethz.ch [82.130.99.26]) by cuda.sgi.com
+	with ESMTP id pCrOk8tV9OisFaUO for <xfs@oss.sgi.com>;
+	Tue, 26 Apr 2011 17:00:30 -0700 (PDT)
+Message-ID: <4DB75C6D.1080901@inf.ethz.ch>
+Date: Wed, 27 Apr 2011 01:59:41 +0200
 From: Benjamin Schindler <bschindler@inf.ethz.ch>
 MIME-Version: 1.0
 Subject: Re: xfs performance problem
@@ -32,6 +32,32 @@ Cc: xfs@oss.sgi.com
 
 Hi
 
+I thought I would do a real measurement to have some numbers.
+On my raid-1 ext3, extracting a kernel archive:
+
+benjamin@metis ~/software $ time tar xfj
+/usr/portage/distfiles/linux-2.6.38.tar.bz2
+
+real    0m21.769s
+user    0m13.905s
+sys     0m1.751s
+
+On my root xfs
+
+root@metis ~ $ time tar xfj /usr/portage/distfiles/linux-2.6.38.tar.bz2
+
+real    2m20.522s
+user    0m16.051s
+sys     0m3.147s
+
+This is of course with delaylog enabled. I don't think a difference  of
+a factor 7 is normal, given that writing to a raid-0 (xfs numbers) is
+supposed to be faster than writing to raid-1 (ext3 numbers)
+
+Cheers
+Benjamin
+
+
 On 27.04.2011 00:12, Stan Hoeppner wrote:
 > Benjamin Schindler put forth on 4/26/2011 2:44 PM:
 >> Hi
@@ -52,37 +78,12 @@ On 27.04.2011 00:12, Stan Hoeppner wrote:
 > logging feature.  Add 'delaylog' to your fstab mount options for XFS
 > devices, remount (or reboot if necessary) and it should decrease the run
 > time of kernel tar extractions between 10x and 100x.
-
-Thanks for the hint. I remounted the root filesystem with delaylog.
-Even though it improves the situation, it doesn't feel like the
-performance is where it used to be on may be 2.6.32 or so. Removing a
-lot of files for example is still slow. Removing a kernel source tree
-(partial extraction, aborted tar process after it took too long):
-
-metis portage # time rm -rf sources
-
-real    4m40.294s
-user    0m0.059s
-sys     0m1.468s
-
-That's abnormal right?
-
-metis portage # mount | grep root
-/dev/root on / type xfs (rw,noatime,delaylog)
-
 > 
 > Also, slap yourself in the forehead at least 3 times for running your
 > root filesystem on RAID 0.  That's akin to riding a motorcycle, naked,
 > in a blizzard, down a steep, winding, ice covered mountain road with no
 > guard rails and a 3000 ft drop. ;)
 > 
-
-I don't care if the system gets nuked as long as my user data is
-retained (raid 1) so I certainly won't slap myself. Systems can be
-reinstalled, user data cannot ;)
-
-Cheers
-Benjamin
 
 _______________________________________________
 xfs mailing list
