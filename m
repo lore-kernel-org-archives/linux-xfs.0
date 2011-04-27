@@ -1,15 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3R55ZZw199499 for <xfs@oss.sgi.com>; Wed, 27 Apr 2011 00:05:35 -0500
-Date: Wed, 27 Apr 2011 15:08:50 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: 2.6.39-rc3, 2.6.39-rc4: XFS lockup - regression since 2.6.38
-Message-ID: <20110427050850.GG12436@dastard>
-References: <20110423224403.5fd1136a@neptune.home>
+	p3R7HACU204289 for <xfs@oss.sgi.com>; Wed, 27 Apr 2011 02:17:10 -0500
+Received: from mail-vw0-f53.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 004E041750A
+	for <xfs@oss.sgi.com>; Wed, 27 Apr 2011 00:20:42 -0700 (PDT)
+Received: from mail-vw0-f53.google.com (mail-vw0-f53.google.com
+	[209.85.212.53]) by cuda.sgi.com with ESMTP id ktebPE1GtVWk4PCr
+	for <xfs@oss.sgi.com>; Wed, 27 Apr 2011 00:20:42 -0700 (PDT)
+Received: by vws13 with SMTP id 13so1169067vws.26
+	for <xfs@oss.sgi.com>; Wed, 27 Apr 2011 00:20:42 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110423224403.5fd1136a@neptune.home>
+Date: Wed, 27 Apr 2011 12:47:57 +0530
+Message-ID: <BANLkTimAXUtO=oxmLUaHLaRBnGafGP-9kg@mail.gmail.com>
+Subject: xfstests 013 - 2.6.35.11 - hang
+From: Ajeet Yadav <ajeet.yadav.77@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,78 +23,177 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Bruno =?iso-8859-1?Q?Pr=E9mont?= <bonbons@linux-vserver.org>
-Cc: Dave Chinner <dchinner@redhat.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, xfs-masters@oss.sgi.com, Alex Elder <aelder@sgi.com>
+To: xfs@oss.sgi.com
 
-On Sat, Apr 23, 2011 at 10:44:03PM +0200, Bruno Pr=E9mont wrote:
-> Hi,
-> =
+I have downloaded xfstests-fa83948599dd10078a62acab8b0c1f93c82ad807.tar.gz
+Build and run xfstests on MIPS target. This is my first try with
+xfstests but report is not good.
 
-> Running 2.6.39-rc3+ and now again on 2.6.39-rc4+ (I've not tested -rc1
-> or -rc2) I've hit a "dying machine" where processes writing to disk end
-> up in D state.
-> From occurrence with -rc3+ I don't have logs as those never hit the disk,
-> for -rc4+ I have the following (sysrq+t was too big, what I have of it
-> misses a dozen of kernel tasks - if needed, please ask):
-> =
+./check -xfs quick
+001, 004 have differences
+013 have hang
 
-> The -rc4 kernel is at commit 584f79046780e10cb24367a691f8c28398a00e84
-> (+ 1 patch of mine to stop disk on reboot),
-> full dmesg available if needed; kernel config attached (only selected
-> options). In case there is something I should do at next occurrence
-> please tell. Unfortunately I have no trigger for it and it does not
-> happen very often.
-> =
 
-> Thanks,
-> Bruno
-> =
+VDLinux#> ./check -xfs -g quick
+FSTYP         -- xfs (non-debug)
+PLATFORM      -- Linux/mips localhost 2.6.35.11
+MKFS_OPTIONS  -- -f -bsize=4096 /dev/sda4
+MOUNT_OPTIONS --     /dev/sda4 /dtv/usb/sda4
 
-> [    0.000000] Linux version 2.6.39-rc4-00120-g73b5b55 (kbuild@neptune) (=
-gcc version 4.4.5 (Gentoo 4.4.5 p1.2, pie-0.4.5) ) #12 Thu Apr 21 19:28:45 =
-CEST 2011
-> =
-
-> =
-
-> [32040.120055] INFO: task flush-8:0:1665 blocked for more than 120 second=
-s.
-> [32040.120068] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disable=
-s this message.
-> [32040.120077] flush-8:0       D 00000000  4908  1665      2 0x00000000
-> [32040.120099]  f55efb5c 00000046 00000000 00000000 00000000 00000001 e03=
-82924 00000000
-> [32040.120118]  f55efb0c f55efb5c 00000004 f629ba70 572f01a2 00001cfe f62=
-9ba70 ffffffc0
-> [32040.120135]  f55efc68 f55efb30 f889d7f8 f55efb20 00000000 f55efc68 e03=
-82900 f55efc94
-> [32040.120153] Call Trace:
-> [32040.120220]  [<f889d7f8>] ? xfs_bmap_search_multi_extents+0x88/0xe0 [x=
-fs]
-> [32040.120239]  [<c109ce1d>] ? kmem_cache_alloc+0x2d/0x110
-> [32040.120294]  [<f88c88ca>] ? xlog_space_left+0x2a/0xc0 [xfs]
-> [32040.120346]  [<f88c85cb>] xlog_wait+0x4b/0x70 [xfs]
-> [32040.120359]  [<c102ca00>] ? try_to_wake_up+0xc0/0xc0
-> [32040.120411]  [<f88c948b>] xlog_grant_log_space+0x8b/0x240 [xfs]
-> [32040.120464]  [<f88c936e>] ? xlog_grant_push_ail+0xbe/0xf0 [xfs]
-> [32040.120516]  [<f88c99db>] xfs_log_reserve+0xab/0xb0 [xfs]
-> [32040.120571]  [<f88d6dc8>] xfs_trans_reserve+0x78/0x1f0 [xfs]
-
-Hmmmmm. That may be caused by the conversion of the xfsaild to a
-work queue. Can you post the output of "xfs_info <mntpt>" and the
-mount options (/proc/mounts) used on you system?
-
-Cheers,
-
-Dave.
--- =
-
-Dave Chinner
-david@fromorbit.com
+XFS mounting filesystem sda4
+XFS mounting filesystem sda3
+001      [failed, exit status 1] - output mismatch (see 001.out.bad)
+--- 001.out     Thu Jan  1 00:07:48 1970
++++ 001.out.bad Thu Jan  1 00:59:07 1970
+@@ -1,9 +1,77 @@
+ QA output created by 001
+ cleanup
+ setup ....................................
+-iter 1 chain ... check ....................................
+-iter 2 chain ... check ....................................
+-iter 3 chain ... check ....................................
+-iter 4 chain ... check ....................................
+-iter 5 chain ... check ....................................
+-cleanup
++iter 1 chain ... check
++Error: corruption for small ...
++
++Error: corruption for big ...
++
++Error: corruption for sub/small ...
++
++Error: corruption for sub/big ...
++
++Error: corruption for sub/a ...
++
++Error: corruption for sub/b ...
++
++Error: corruption for sub/c ...
++
++Error: corruption for sub/d ...
++
++Error: corruption for sub/e ...
++
++Error: corruption for sub/f ...
++
++Error: corruption for sub/g ...
++
++Error: corruption for sub/h ...
++
++Error: corruption for sub/i ...
++
++Error: corruption for sub/j ...
++
++Error: corruption for sub/k ...
++
++Error: corruption for sub/l ...
++
++Error: corruption for sub/m ...
++
++Error: corruption for sub/n ...
++
++Error: corruption for sub/a00 ...
++
++Error: corruption for sub/b00 ...
++
++Error: corruption for sub/c00 ...
++
++Error: corruption for sub/d00 ...
++
++Error: corruption for sub/e00 ...
++
++Error: corruption for sub/f00 ...
++
++Error: corruption for sub/g00 ...
++
++Error: corruption for sub/h00 ...
++
++Error: corruption for sub/i00 ...
++
++Error: corruption for sub/j00 ...
++
++Error: corruption for sub/k00 ...
++
++Error: corruption for sub/l00 ...
++
++Error: corruption for sub/m00 ...
++
++Error: corruption for sub/n00 ...
++
++Error: corruption for sub/a000 ...
++
++Error: corruption for sub/e000 ...
++
++Error: corruption for sub/h000 ...
++
++Error: corruption for sub/k000 ...
++
++Fatal error: test abandoned without changes
+XFS mounting filesystem sda3
+002 1s ... 2s
+XFS mounting filesystem sda3
+003 1s ... 1s
+XFS mounting filesystem sda3
+004     XFS mounting filesystem sda4
+XFS mounting filesystem sda4
+ [failed, exit status 1] - output mismatch (see 004.out.bad)
+--- 004.out     Thu Jan  1 00:07:48 1970
++++ 004.out.bad Thu Jan  1 00:59:40 1970
+@@ -5,5 +5,13 @@
+ naming   =VERN bsize=XXX
+ log      =LDEV bsize=XXX blocks=XXX
+ realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
+-Checking blocks column same as df: yes
++Checking blocks column same as df: no (2806374400 != 33636352)
++Error: /dev/sda4: freesp mismatch: no (2806374400 != 33636352)
++xfs_db output ...
++   from      to extents  blocks    pct
++      1       1      16      16   0.00
++ 131072  172283       4  685134 100.00
++total free extents 20
++total free blocks 685150
++average free extent size 34257.5
+ Checking percent column yields 100: 100
+XFS mounting filesystem sda3
+005 1s ... 1s
+XFS mounting filesystem sda3
+006 39s ... 38s
+XFS mounting filesystem sda3
+007      31s
+XFS mounting filesystem sda3
+008 8s ... 5s
+XFS mounting filesystem sda3
+009 13s ...XFS mounting filesystem sda4
+ 13s
+XFS mounting filesystem sda3
+011      93s
+XFS mounting filesystem sda3
+012 78s ... 65s
+XFS mounting filesystem sda3
+013     XFS mounting filesystem sda3
+XFS mounting filesystem sda3
+INFO: task fsstress:15299 blocked for more than 120 seconds.
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+fsstress      D 8000606c     0 15299  15296 0x00100000
+Stack : 83a5a700 83a5a6d0 8103e8c0 83995e38 8000606c 0003c49a 7fffffff 7fffffff
+        00000002 00000000 00000000 00420000 00420000 0041d1c0 00420000 8000606c
+        83995e28 8006f20c 8004030c 00000003 83995e34 83a5a6d0 8103e8c0 80065528
+        0002480d 0003c499 00000000 00000000 7fffffff 83995e80 00000002 80005e90
+        00000000 810884e0 81077580 8103e8c0 00000001 83a5a6d0 80024144 83995e84
+        ...
+Call Trace:
+[<80005948>] schedule+0x3ec/0x4b0
+[<8000606c>] schedule_timeout+0x2c/0x210
+[<80005e90>] wait_for_common+0xf4/0x1bc
+[<800b77dc>] sync_inodes_sb+0x90/0x1a4
+[<800bc190>] __sync_filesystem+0x60/0xbc
+[<80097394>] iterate_supers+0xa0/0x124
+[<800bc25c>] sys_sync+0x44/0x74
+[<80002164>] stack_done+0x20/0x3c
 
 _______________________________________________
 xfs mailing list
