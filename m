@@ -1,15 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3RGN4YT221861 for <xfs@oss.sgi.com>; Wed, 27 Apr 2011 11:23:04 -0500
-Date: Wed, 27 Apr 2011 18:26:22 +0200
-From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
-Subject: Re: 2.6.39-rc3, 2.6.39-rc4: XFS lockup - regression since 2.6.38
-Message-ID: <20110427182622.05a068a2@neptune.home>
-In-Reply-To: <20110427050850.GG12436@dastard>
-References: <20110423224403.5fd1136a@neptune.home>
-	<20110427050850.GG12436@dastard>
-Mime-Version: 1.0
+	p3RGqpEa223134 for <xfs@oss.sgi.com>; Wed, 27 Apr 2011 11:52:51 -0500
+Subject: Re: [PATCH 4/4] xfs: reduce the number of pagb_lock roundtrips in
+	xfs_alloc_clear_busy
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <20110424190657.249817918@bombadil.infradead.org>
+References: <20110424190613.404786382@bombadil.infradead.org>
+	<20110424190657.249817918@bombadil.infradead.org>
+Date: Wed, 27 Apr 2011 11:56:21 -0500
+Message-ID: <1303923381.2056.58.camel@doink>
+MIME-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,84 +20,51 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Dave Chinner <dchinner@redhat.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, xfs-masters@oss.sgi.com, Alex Elder <aelder@sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-T24gV2VkLCAyNyBBcHJpbCAyMDExIERhdmUgQ2hpbm5lciA8ZGF2aWRAZnJvbW9yYml0LmNvbT4g
-d3JvdGU6Cj4gT24gU2F0LCBBcHIgMjMsIDIwMTEgYXQgMTA6NDQ6MDNQTSArMDIwMCwgQnJ1bm8g
-UHLDqW1vbnQgd3JvdGU6Cj4gPiBSdW5uaW5nIDIuNi4zOS1yYzMrIGFuZCBub3cgYWdhaW4gb24g
-Mi42LjM5LXJjNCsgKEkndmUgbm90IHRlc3RlZCAtcmMxCj4gPiBvciAtcmMyKSBJJ3ZlIGhpdCBh
-ICJkeWluZyBtYWNoaW5lIiB3aGVyZSBwcm9jZXNzZXMgd3JpdGluZyB0byBkaXNrIGVuZAo+ID4g
-dXAgaW4gRCBzdGF0ZS4KPiA+IEZyb20gb2NjdXJyZW5jZSB3aXRoIC1yYzMrIEkgZG9uJ3QgaGF2
-ZSBsb2dzIGFzIHRob3NlIG5ldmVyIGhpdCB0aGUgZGlzaywKPiA+IGZvciAtcmM0KyBJIGhhdmUg
-dGhlIGZvbGxvd2luZyAoc3lzcnErdCB3YXMgdG9vIGJpZywgd2hhdCBJIGhhdmUgb2YgaXQKPiA+
-IG1pc3NlcyBhIGRvemVuIG9mIGtlcm5lbCB0YXNrcyAtIGlmIG5lZWRlZCwgcGxlYXNlIGFzayk6
-Cj4gPiAKPiA+IFRoZSAtcmM0IGtlcm5lbCBpcyBhdCBjb21taXQgNTg0Zjc5MDQ2NzgwZTEwY2Iy
-NDM2N2E2OTFmOGMyODM5OGEwMGU4NAo+ID4gKCsgMSBwYXRjaCBvZiBtaW5lIHRvIHN0b3AgZGlz
-ayBvbiByZWJvb3QpLAo+ID4gZnVsbCBkbWVzZyBhdmFpbGFibGUgaWYgbmVlZGVkOyBrZXJuZWwg
-Y29uZmlnIGF0dGFjaGVkIChvbmx5IHNlbGVjdGVkCj4gPiBvcHRpb25zKS4gSW4gY2FzZSB0aGVy
-ZSBpcyBzb21ldGhpbmcgSSBzaG91bGQgZG8gYXQgbmV4dCBvY2N1cnJlbmNlCj4gPiBwbGVhc2Ug
-dGVsbC4gVW5mb3J0dW5hdGVseSBJIGhhdmUgbm8gdHJpZ2dlciBmb3IgaXQgYW5kIGl0IGRvZXMg
-bm90Cj4gPiBoYXBwZW4gdmVyeSBvZnRlbi4KPiA+IAo+ID4gWyAgICAwLjAwMDAwMF0gTGludXgg
-dmVyc2lvbiAyLjYuMzktcmM0LTAwMTIwLWc3M2I1YjU1IChrYnVpbGRAbmVwdHVuZSkgKGdjYyB2
-ZXJzaW9uIDQuNC41IChHZW50b28gNC40LjUgcDEuMiwgcGllLTAuNC41KSApICMxMiBUaHUgQXBy
-IDIxIDE5OjI4OjQ1IENFU1QgMjAxMQo+ID4gCj4gPiAKPiA+IFszMjA0MC4xMjAwNTVdIElORk86
-IHRhc2sgZmx1c2gtODowOjE2NjUgYmxvY2tlZCBmb3IgbW9yZSB0aGFuIDEyMCBzZWNvbmRzLgo+
-ID4gWzMyMDQwLjEyMDA2OF0gImVjaG8gMCA+IC9wcm9jL3N5cy9rZXJuZWwvaHVuZ190YXNrX3Rp
-bWVvdXRfc2VjcyIgZGlzYWJsZXMgdGhpcyBtZXNzYWdlLgo+ID4gWzMyMDQwLjEyMDA3N10gZmx1
-c2gtODowICAgICAgIEQgMDAwMDAwMDAgIDQ5MDggIDE2NjUgICAgICAyIDB4MDAwMDAwMDAKPiA+
-IFszMjA0MC4xMjAwOTldICBmNTVlZmI1YyAwMDAwMDA0NiAwMDAwMDAwMCAwMDAwMDAwMCAwMDAw
-MDAwMCAwMDAwMDAwMSBlMDM4MjkyNCAwMDAwMDAwMAo+ID4gWzMyMDQwLjEyMDExOF0gIGY1NWVm
-YjBjIGY1NWVmYjVjIDAwMDAwMDA0IGY2MjliYTcwIDU3MmYwMWEyIDAwMDAxY2ZlIGY2MjliYTcw
-IGZmZmZmZmMwCj4gPiBbMzIwNDAuMTIwMTM1XSAgZjU1ZWZjNjggZjU1ZWZiMzAgZjg4OWQ3Zjgg
-ZjU1ZWZiMjAgMDAwMDAwMDAgZjU1ZWZjNjggZTAzODI5MDAgZjU1ZWZjOTQKPiA+IFszMjA0MC4x
-MjAxNTNdIENhbGwgVHJhY2U6Cj4gPiBbMzIwNDAuMTIwMjIwXSAgWzxmODg5ZDdmOD5dID8geGZz
-X2JtYXBfc2VhcmNoX211bHRpX2V4dGVudHMrMHg4OC8weGUwIFt4ZnNdCj4gPiBbMzIwNDAuMTIw
-MjM5XSAgWzxjMTA5Y2UxZD5dID8ga21lbV9jYWNoZV9hbGxvYysweDJkLzB4MTEwCj4gPiBbMzIw
-NDAuMTIwMjk0XSAgWzxmODhjODhjYT5dID8geGxvZ19zcGFjZV9sZWZ0KzB4MmEvMHhjMCBbeGZz
-XQo+ID4gWzMyMDQwLjEyMDM0Nl0gIFs8Zjg4Yzg1Y2I+XSB4bG9nX3dhaXQrMHg0Yi8weDcwIFt4
-ZnNdCj4gPiBbMzIwNDAuMTIwMzU5XSAgWzxjMTAyY2EwMD5dID8gdHJ5X3RvX3dha2VfdXArMHhj
-MC8weGMwCj4gPiBbMzIwNDAuMTIwNDExXSAgWzxmODhjOTQ4Yj5dIHhsb2dfZ3JhbnRfbG9nX3Nw
-YWNlKzB4OGIvMHgyNDAgW3hmc10KPiA+IFszMjA0MC4xMjA0NjRdICBbPGY4OGM5MzZlPl0gPyB4
-bG9nX2dyYW50X3B1c2hfYWlsKzB4YmUvMHhmMCBbeGZzXQo+ID4gWzMyMDQwLjEyMDUxNl0gIFs8
-Zjg4Yzk5ZGI+XSB4ZnNfbG9nX3Jlc2VydmUrMHhhYi8weGIwIFt4ZnNdCj4gPiBbMzIwNDAuMTIw
-NTcxXSAgWzxmODhkNmRjOD5dIHhmc190cmFuc19yZXNlcnZlKzB4NzgvMHgxZjAgW3hmc10KPiAK
-PiBIbW1tbW0uIFRoYXQgbWF5IGJlIGNhdXNlZCBieSB0aGUgY29udmVyc2lvbiBvZiB0aGUgeGZz
-YWlsZCB0byBhCj4gd29yayBxdWV1ZS4gQ2FuIHlvdSBwb3N0IHRoZSBvdXRwdXQgb2YgInhmc19p
-bmZvIDxtbnRwdD4iIGFuZCB0aGUKPiBtb3VudCBvcHRpb25zICgvcHJvYy9tb3VudHMpIHVzZWQg
-b24geW91IHN5c3RlbT8KCkhlcmUgaXQgY29tZXMgKGluY2x1ZGluZyBhbGwgWEZTIG1vdW50LXBv
-aW50cyAtIHdpdGggYWZmZWN0ZWQga2VybmVsCmJ1dCBhZnRlciBmcmVzaCBib290KToKCiogL3By
-b2MvbW91bnRpbmZvICoKL2Rldi9zZGE2IC9tbnQvLlNSQyB4ZnMgcncsbm9hdGltZSxhdHRyMixk
-ZWxheWxvZyxub3F1b3RhIDAgMAovZGV2L3NkYTcgL2hvbWUgeGZzIHJ3LG5vYXRpbWUsYXR0cjIs
-ZGVsYXlsb2csbm9xdW90YSAwIDAKL2Rldi9zZGE2IC92YXIvY2FjaGUvZWRiIHhmcyBydyxub2F0
-aW1lLGF0dHIyLGRlbGF5bG9nLG5vcXVvdGEgMCAwCi9kZXYvc2RhNiAvdXNyL3NyYyB4ZnMgcncs
-bm9hdGltZSxhdHRyMixkZWxheWxvZyxub3F1b3RhIDAgMAovZGV2L3NkYTYgL3Zhci90bXAgeGZz
-IHJ3LG5vYXRpbWUsYXR0cjIsZGVsYXlsb2csbm9xdW90YSAwIDAKL2Rldi9zZGE2IC92YXIvbG9n
-IHhmcyBydyxub2F0aW1lLGF0dHIyLGRlbGF5bG9nLG5vcXVvdGEgMCAwCi9kZXYvc2RhNiAvdmFy
-L2xpYi9wb3J0YWdlL3BhY2thZ2VzIHhmcyBydyxub2F0aW1lLGF0dHIyLGRlbGF5bG9nLG5vcXVv
-dGEgMCAwCgoqIHhmc19pbmZvICoKbWV0YS1kYXRhPS9kZXYvc2RhNyAgICAgICAgICAgICAgaXNp
-emU9MjU2ICAgIGFnY291bnQ9NCwgYWdzaXplPTk4Nzk5NiBibGtzCiAgICAgICAgID0gICAgICAg
-ICAgICAgICAgICAgICAgIHNlY3Rzej01MTIgICBhdHRyPTIKZGF0YSAgICAgPSAgICAgICAgICAg
-ICAgICAgICAgICAgYnNpemU9NDA5NiAgIGJsb2Nrcz0zOTUxOTgyLCBpbWF4cGN0PTI1CiAgICAg
-ICAgID0gICAgICAgICAgICAgICAgICAgICAgIHN1bml0PTAgICAgICBzd2lkdGg9MCBibGtzCm5h
-bWluZyAgID12ZXJzaW9uIDIgICAgICAgICAgICAgIGJzaXplPTQwOTYgICBhc2NpaS1jaT0wCmxv
-ZyAgICAgID1pbnRlcm5hbCAgICAgICAgICAgICAgIGJzaXplPTQwOTYgICBibG9ja3M9MjU2MCwg
-dmVyc2lvbj0yCiAgICAgICAgID0gICAgICAgICAgICAgICAgICAgICAgIHNlY3Rzej01MTIgICBz
-dW5pdD0wIGJsa3MsIGxhenktY291bnQ9MApyZWFsdGltZSA9bm9uZSAgICAgICAgICAgICAgICAg
-ICBleHRzej00MDk2ICAgYmxvY2tzPTAsIHJ0ZXh0ZW50cz0wCgoKbWV0YS1kYXRhPS9kZXYvc2Rh
-NiAgICAgICAgICAgICAgaXNpemU9MjU2ICAgIGFnY291bnQ9NCwgYWdzaXplPTY1NTE0OSBibGtz
-CiAgICAgICAgID0gICAgICAgICAgICAgICAgICAgICAgIHNlY3Rzej01MTIgICBhdHRyPTIKZGF0
-YSAgICAgPSAgICAgICAgICAgICAgICAgICAgICAgYnNpemU9NDA5NiAgIGJsb2Nrcz0yNjIwNTk1
-LCBpbWF4cGN0PTI1CiAgICAgICAgID0gICAgICAgICAgICAgICAgICAgICAgIHN1bml0PTAgICAg
-ICBzd2lkdGg9MCBibGtzCm5hbWluZyAgID12ZXJzaW9uIDIgICAgICAgICAgICAgIGJzaXplPTQw
-OTYgICBhc2NpaS1jaT0wCmxvZyAgICAgID1pbnRlcm5hbCAgICAgICAgICAgICAgIGJzaXplPTQw
-OTYgICBibG9ja3M9MjU2MCwgdmVyc2lvbj0yCiAgICAgICAgID0gICAgICAgICAgICAgICAgICAg
-ICAgIHNlY3Rzej01MTIgICBzdW5pdD0wIGJsa3MsIGxhenktY291bnQ9MApyZWFsdGltZSA9bm9u
-ZSAgICAgICAgICAgICAgICAgICBleHRzej00MDk2ICAgYmxvY2tzPTAsIHJ0ZXh0ZW50cz0wCgoK
-QnJ1bm8KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhm
-cyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFu
-L2xpc3RpbmZvL3hmcwo=
+On Sun, 2011-04-24 at 15:06 -0400, Christoph Hellwig wrote:
+> Instead of finding the per-ag and then taking and releasing the pagb_lock
+> for every single busy extent completed sort the list of busy extents and
+> only switch betweens AGs where nessecary.  This becomes especially important
+> with the online discard support which will hit this lock more often.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+I said this looked good before, but since you haven't
+indicated that here yet, I'll make one more comment.
+
+Both places that call (the new) xfs_alloc_busy_clear()
+precede the call with a call to xfs_alloc_busy_sort().
+Considering that, and the fact that xfs_alloc_busy_clear()
+depends on the list being sorted for correct (or at least
+efficient) operation, I think you should just embed the
+list_sort() call in xfs_alloc_busy_clear().
+
+There would then be no real need to define the
+xfs_alloc_busy_sort() helper (just call list_sort()
+directly), and you can move the definition of
+xfs_busy_extent_ag_cmp() up in the file and give
+it private scope.
+
+Perhaps you have other plans that make the model you
+have here more appropriate though.  Let me know
+if you intend to re-submit, otherwise I'll just take
+this version.
+
+Either way, this looks good to me.  I have been
+testing with these patches.  I'll wait another day
+to give others a chance to review, but I'll plan
+to incorporate this tomorrow.
+
+Reviewed-by: Alex Elder <aelder@sgi.com>
+
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
