@@ -1,20 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3QNuxht188263 for <xfs@oss.sgi.com>; Tue, 26 Apr 2011 18:57:00 -0500
-Received: from edge20.ethz.ch (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 98D6F133290F
-	for <xfs@oss.sgi.com>; Tue, 26 Apr 2011 17:00:30 -0700 (PDT)
-Received: from edge20.ethz.ch (edge20.ethz.ch [82.130.99.26]) by cuda.sgi.com
-	with ESMTP id pCrOk8tV9OisFaUO for <xfs@oss.sgi.com>;
-	Tue, 26 Apr 2011 17:00:30 -0700 (PDT)
-Message-ID: <4DB75C6D.1080901@inf.ethz.ch>
-Date: Wed, 27 Apr 2011 01:59:41 +0200
-From: Benjamin Schindler <bschindler@inf.ethz.ch>
+	p3R2NSEO192162 for <xfs@oss.sgi.com>; Tue, 26 Apr 2011 21:23:29 -0500
+Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2FA5A4170A0
+	for <xfs@oss.sgi.com>; Tue, 26 Apr 2011 19:26:59 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	mLG4vTnClCsuFALd for <xfs@oss.sgi.com>;
+	Tue, 26 Apr 2011 19:26:59 -0700 (PDT)
+Date: Wed, 27 Apr 2011 12:26:55 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: 2.6.39-rc4+: oom-killer busy killing tasks
+Message-ID: <20110427022655.GE12436@dastard>
+References: <alpine.DEB.2.01.1104211841510.18728@trent.utfs.org>
+	<20110424234655.GC12436@dastard>
+	<alpine.DEB.2.01.1104242245090.18728@trent.utfs.org>
+	<alpine.DEB.2.01.1104250015480.18728@trent.utfs.org>
 MIME-Version: 1.0
-Subject: Re: xfs performance problem
-References: <4DB72084.8020205@inf.ethz.ch> <4DB74331.3030804@hardwarefreak.com>
-In-Reply-To: <4DB74331.3030804@hardwarefreak.com>
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.01.1104250015480.18728@trent.utfs.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,63 +32,42 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: xfs@oss.sgi.com
+To: Christian Kujau <lists@nerdbynature.de>
+Cc: LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-Hi
-
-I thought I would do a real measurement to have some numbers.
-On my raid-1 ext3, extracting a kernel archive:
-
-benjamin@metis ~/software $ time tar xfj
-/usr/portage/distfiles/linux-2.6.38.tar.bz2
-
-real    0m21.769s
-user    0m13.905s
-sys     0m1.751s
-
-On my root xfs
-
-root@metis ~ $ time tar xfj /usr/portage/distfiles/linux-2.6.38.tar.bz2
-
-real    2m20.522s
-user    0m16.051s
-sys     0m3.147s
-
-This is of course with delaylog enabled. I don't think a difference  of
-a factor 7 is normal, given that writing to a raid-0 (xfs numbers) is
-supposed to be faster than writing to raid-1 (ext3 numbers)
-
-Cheers
-Benjamin
-
-
-On 27.04.2011 00:12, Stan Hoeppner wrote:
-> Benjamin Schindler put forth on 4/26/2011 2:44 PM:
->> Hi
->>
->> Since upgrading to newer kernels I have serious problems with xfs
->> performance on my root fs.
->> It runs on a software raid 0 with 2 disks. On the same two disks, there
->> are two more partitions running a software raid-1 with ext3. On the ext3
->> system, I have no issue, so I assume the drives are fine.
->> But on the xfs filesystem, extracting a linux kernel archive takes 5
->> minutes or more, running ldconfig similarily long. The harddrives are
->> sata-2.
->> I'm running gentoo linux with kernel 2.6.38-gentoo-r1. I'm attaching the
->> kernel config but I guess more info is needed - just let me know what is
->> needed.
+On Mon, Apr 25, 2011 at 12:19:24AM -0700, Christian Kujau wrote:
+> On Mon, 25 Apr 2011 at 09:46, Dave Chinner wrote:
+> > I'd say they are not being reclaimmmed because the VFS hasn't let go
+> > of them yet. Can you also dump /proc/sys/fs/{dentry,inode}-state so
+> > we can see if the VFS has released the inodes such that they can be
+> > reclaimed by XFS?
 > 
-> The kernel config isn't the problem.  You haven't enabled the delayed
-> logging feature.  Add 'delaylog' to your fstab mount options for XFS
-> devices, remount (or reboot if necessary) and it should decrease the run
-> time of kernel tar extractions between 10x and 100x.
+> Please see http://nerdbynature.de/bits/2.6.39-rc4/oom/
 > 
-> Also, slap yourself in the forehead at least 3 times for running your
-> root filesystem on RAID 0.  That's akin to riding a motorcycle, naked,
-> in a blizzard, down a steep, winding, ice covered mountain road with no
-> guard rails and a 3000 ft drop. ;)
-> 
+>  - slabinfo-4.txt.bz2, contains /proc/sys/fs/{dentry,inode}-state and
+
+Ok, so looking at slabinfo-5.txt.bz2, this is the pattern of dentry,
+VFS inode and XFS inode use patterns:
+
+http://userweb.kernel.org/~dgc/slab-usage.png
+
+What this shows is that VFS inode cache memory usage increases until
+about the 550 sample mark before the VM starts to reclaim it with
+extreme prejudice. At that point, I'd expect the XFS inode cache to
+then shrink, and it doesn't. I've got no idea why the either the
+shrinker or background reclaim is not reclaiming and freeing inodes,
+but it is the reason why the system OOMs.
+
+Can you check if there are any blocked tasks nearing OOM (i.e. "echo
+w > /proc/sysrq-trigger") so we can see if XFS inode reclaim is
+stuck somewhere?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
