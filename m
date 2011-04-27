@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3R7qHNw205474 for <xfs@oss.sgi.com>; Wed, 27 Apr 2011 02:52:18 -0500
-Received: from firestarter.dermichi.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2472B41764C
-	for <xfs@oss.sgi.com>; Wed, 27 Apr 2011 00:55:49 -0700 (PDT)
-Received: from firestarter.dermichi.com (firestarter.dermichi.com
-	[78.41.115.230]) by cuda.sgi.com with ESMTP id WHbxYEldkjjdVl6q
-	for <xfs@oss.sgi.com>; Wed, 27 Apr 2011 00:55:49 -0700 (PDT)
-Received: from dermichi-2-pt.tunnel.tserv23.zrh1.ipv6.he.net
-	([2001:470:25:4f4::2])
-	by firestarter.dermichi.com with esmtpsa (TLSv1:CAMELLIA256-SHA:256)
-	(Exim 4.75) (envelope-from <mw@dermichi.com>) id 1QEzb8-0007dz-Tp
-	for xfs@oss.sgi.com; Wed, 27 Apr 2011 09:55:47 +0200
-Message-ID: <4DB7CC01.8090804@dermichi.com>
-Date: Wed, 27 Apr 2011 09:55:45 +0200
-From: Michael Weissenbacher <mw@dermichi.com>
+	p3R7hM4D205167 for <xfs@oss.sgi.com>; Wed, 27 Apr 2011 02:43:23 -0500
+Received: from trent.utfs.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D556C13332A0
+	for <xfs@oss.sgi.com>; Wed, 27 Apr 2011 00:46:53 -0700 (PDT)
+Received: from trent.utfs.org (trent.utfs.org [194.246.123.103]) by
+	cuda.sgi.com with ESMTP id sO7HOUjQcIGOg7nC for
+	<xfs@oss.sgi.com>; Wed, 27 Apr 2011 00:46:53 -0700 (PDT)
+Date: Wed, 27 Apr 2011 00:46:51 -0700 (PDT)
+From: Christian Kujau <lists@nerdbynature.de>
+Subject: Re: 2.6.39-rc4+: oom-killer busy killing tasks
+In-Reply-To: <20110427022655.GE12436@dastard>
+Message-ID: <alpine.DEB.2.01.1104270042510.18728@trent.utfs.org>
+References: <alpine.DEB.2.01.1104211841510.18728@trent.utfs.org>
+	<20110424234655.GC12436@dastard>
+	<alpine.DEB.2.01.1104242245090.18728@trent.utfs.org>
+	<alpine.DEB.2.01.1104250015480.18728@trent.utfs.org>
+	<20110427022655.GE12436@dastard>
 MIME-Version: 1.0
-Subject: Re: xfs performance problem
-References: <4DB72084.8020205@inf.ethz.ch> <4DB74331.3030804@hardwarefreak.com>
-In-Reply-To: <4DB74331.3030804@hardwarefreak.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,31 +31,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-schrieb Stan Hoeppner:
-> Benjamin Schindler put forth on 4/26/2011 2:44 PM:
->> Hi
-> Also, slap yourself in the forehead at least 3 times for running your
-> root filesystem on RAID 0.  That's akin to riding a motorcycle, naked,
-> in a blizzard, down a steep, winding, ice covered mountain road with no
-> guard rails and a 3000 ft drop. ;)
-> 
-If you are really adventurous and don't care about the data on your root
-fs use the following mount options:
-logbsize=256k,delaylog,nobarrier
+On Wed, 27 Apr 2011 at 12:26, Dave Chinner wrote:
+> What this shows is that VFS inode cache memory usage increases until
+> about the 550 sample mark before the VM starts to reclaim it with
+> extreme prejudice. At that point, I'd expect the XFS inode cache to
+> then shrink, and it doesn't. I've got no idea why the either the
 
-Personally i would only enable "nobarrier" on Server-Class hardware with
-Battery Backup and proper UPS. But since you are using RAID-0 i suppose
-you really don't care that much about the data on your root fs.
+Do you remember any XFS changes past 2.6.38 that could be related to 
+something like this?
 
-Note that both logbsize and delaylog will only have effect on your root
-fs if added to grub.conf (real_rootflags=) since remounting won't
-activate them. Use "cat /proc/mounts" to see if these options were
-really enabled.
+Bisecting is pretty slow on this machine. Could I somehow try to run 
+2.6.39-rc4 but w/o the XFS changes merged after 2.6.38? (Does someone know 
+how to do this via git?)
 
-hth,
-Michael
+> Can you check if there are any blocked tasks nearing OOM (i.e. "echo
+> w > /proc/sysrq-trigger") so we can see if XFS inode reclaim is
+> stuck somewhere?
+
+Will do, tomorrow.
+
+Should I open a regression bug, so we don't loose track of this thing?
+
+Thanks,
+Christian.
+-- 
+BOFH excuse #425:
+
+stop bit received
 
 _______________________________________________
 xfs mailing list
