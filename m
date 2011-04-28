@@ -1,30 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3SNgRwZ028343 for <xfs@oss.sgi.com>; Thu, 28 Apr 2011 18:42:27 -0500
-Received: from nospam5.slac.stanford.edu (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DB7F311B4CB8
-	for <xfs@oss.sgi.com>; Thu, 28 Apr 2011 16:46:00 -0700 (PDT)
-Received: from nospam5.slac.stanford.edu (nospam5.slac.stanford.edu
-	[134.79.18.83]) by cuda.sgi.com with ESMTP id sDfqweWGjeSXNB0v
-	for <xfs@oss.sgi.com>; Thu, 28 Apr 2011 16:46:00 -0700 (PDT)
-Received: from mailgate05.slac.stanford.edu (mailgate05.slac.stanford.edu
-	[134.79.18.85])
-	by nospam5.slac.stanford.edu (8.14.4/8.14.4) with ESMTP id
-	p3SNk0Id008561
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Thu, 28 Apr 2011 16:46:00 -0700
-	(envelope-from ling@slac.stanford.edu)
-Received: from [134.79.165.22] (psdev102.slac.stanford.edu [134.79.165.22])
-	by mailgate05.slac.stanford.edu (8.14.4/8.14.4) with ESMTP id
-	p3SNjxsq019122
-	for <xfs@oss.sgi.com>; Thu, 28 Apr 2011 16:45:59 -0700 (PDT)
-	(envelope-from ling@slac.stanford.edu)
-Message-ID: <4DB9FC37.8080904@slac.stanford.edu>
-Date: Thu, 28 Apr 2011 16:45:59 -0700
-From: Ling Ho <ling@slac.stanford.edu>
+	p3SNYWGp028080 for <xfs@oss.sgi.com>; Thu, 28 Apr 2011 18:34:32 -0500
+Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 61B8E11B8D49
+	for <xfs@oss.sgi.com>; Thu, 28 Apr 2011 16:38:04 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	zxQ06yF03QeWIxJK for <xfs@oss.sgi.com>;
+	Thu, 28 Apr 2011 16:38:04 -0700 (PDT)
+Date: Fri, 29 Apr 2011 09:37:51 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: 2.6.39-rc4+: oom-killer busy killing tasks
+Message-ID: <20110428233751.GR12436@dastard>
+References: <alpine.DEB.2.01.1104211841510.18728@trent.utfs.org>
+	<20110424234655.GC12436@dastard>
+	<alpine.DEB.2.01.1104242245090.18728@trent.utfs.org>
+	<alpine.DEB.2.01.1104250015480.18728@trent.utfs.org>
+	<20110427022655.GE12436@dastard>
+	<alpine.DEB.2.01.1104270042510.18728@trent.utfs.org>
+	<20110427102824.GI12436@dastard>
+	<alpine.DEB.2.01.1104281008320.18728@trent.utfs.org>
 MIME-Version: 1.0
-Subject: convert External Log to Internal Log
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.01.1104281008320.18728@trent.utfs.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,24 +32,50 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christian Kujau <lists@nerdbynature.de>
+Cc: LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-Is there any way to convert from external log to internal log on RHEL 5.6?
+On Thu, Apr 28, 2011 at 10:30:47AM -0700, Christian Kujau wrote:
+> Hi David,
+> 
+> sorry for the late response:
+> 
+> On Wed, 27 Apr 2011 at 20:28, Dave Chinner wrote:
+> > hmmmm. Speaking of which - have you changed any of the XFS tunables
+> > in /proc/sys/fs/xfs/ on your machine (specifically
+> > xfssyncd_centisecs)?
+> 
+> No, I did not change anything underneath /proc/sys/fs/xfs.
+>  
+> > Not easy because there are tree-wide changes that need to be
+> > preserved (e.g. block layer plugging changes) while others around it
+> > would need to be reverted....
+> 
+> Yeah, I noticed. I wanted to do something like this:
+> 
+>   $ for c in `git log --pretty=oneline --no-merges v2.6.38..v2.6.39-rc2 fs/xfs | awk '{print $1}'`; do
+>        git revert $c
+>     done
+> 
+> ...but this broke on the 1st or 2nd commit because of unresolved changes.
+> 
+> Now I'm in the middle of another bisect attempt, trying to reproduce but 
+> Im getting (probably totally unrelated) warnings here:
 
-I tried running xfs_growfs -i but it complains saying
+Did you read the email that pointed to CONFIG_TINY_RCU as the
+ptotential source of the problem? Can you change to CONFIG_TREE_RCU
+and see if the problem goes away?
 
-xfs_growfs: failed to access external log for /dev/sdc
+Cheers,
 
-and the man page says -i is not implemented. I am using xfsprogs version 
-3.1.5.
-
-Thanks,
-...
-ling
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
