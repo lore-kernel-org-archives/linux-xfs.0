@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3S25Oo8241711 for <xfs@oss.sgi.com>; Wed, 27 Apr 2011 21:05:24 -0500
+	p3S2H5d0242176 for <xfs@oss.sgi.com>; Wed, 27 Apr 2011 21:17:05 -0500
 Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F0E7141AC0F
-	for <xfs@oss.sgi.com>; Wed, 27 Apr 2011 19:08:55 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6930A11AD1AE
+	for <xfs@oss.sgi.com>; Wed, 27 Apr 2011 19:20:37 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	y59TbHocVgDP32yw for <xfs@oss.sgi.com>;
-	Wed, 27 Apr 2011 19:08:55 -0700 (PDT)
-Date: Thu, 28 Apr 2011 12:08:46 +1000
+	ZiSqJvO36BZRtkdO for <xfs@oss.sgi.com>;
+	Wed, 27 Apr 2011 19:20:37 -0700 (PDT)
+Date: Thu, 28 Apr 2011 12:20:36 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfstests: coalesce contiguous extents in extent map output
-Message-ID: <20110428020846.GM12436@dastard>
-References: <dd1c0747731332fed9637bc01d6c6de369a7fe6f.1303412098.git.aelder@sgi.com>
+Subject: Re: [PATCH] xfs: fix compiler warning in xfs_trace.h
+Message-ID: <20110428022036.GQ12436@dastard>
+References: <20110424190258.GA32137@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <dd1c0747731332fed9637bc01d6c6de369a7fe6f.1303412098.git.aelder@sgi.com>
+In-Reply-To: <20110424190258.GA32137@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,31 +29,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Thu, Apr 21, 2011 at 01:55:03PM -0500, Alex Elder wrote:
-> The specific set of extent sizes allocated to a file is not always
-> deterministic.  In particular, sometimes a range of unwritten blocks
-> is covered by a single extent, while in other cases it might be
-> represented by multiple consecutive unwritten extents.  This can
-> result in spurious errors being reported in tests that check file
-> extent maps.
+On Sun, Apr 24, 2011 at 03:02:58PM -0400, Christoph Hellwig wrote:
+> xfs_fsblock_t may be a 32-bit type on if XFS_BIG_BLKNOS is not set,
+> make sure to cast a value of this type to an unsigned long long
+> before using the ll printk qualifier.
 > 
-> Add a filter that finds adjacent extents in what gets produced for
-> fiemap and bmap output and coalesces them as if all consective
-> extents of the same time were really just one extent.  (Note that
-> as implemented here this applies to all extent types, not just
-> unwritten extents.)
+> Reported-by: Randy Dunlap <randy.dunlap@oracle.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > 
-> Update the golden output for test 242 to reflect the change.
+> Index: xfs/fs/xfs/linux-2.6/xfs_trace.h
+> ===================================================================
+> --- xfs.orig/fs/xfs/linux-2.6/xfs_trace.h	2011-04-22 06:22:11.409709360 +0200
+> +++ xfs/fs/xfs/linux-2.6/xfs_trace.h	2011-04-22 06:22:30.756271218 +0200
+> @@ -1418,7 +1418,7 @@ DECLARE_EVENT_CLASS(xfs_alloc_class,
+>  		  __entry->wasfromfl,
+>  		  __entry->isfl,
+>  		  __entry->userdata,
+> -		  __entry->firstblock)
+> +		  (unsigned long long)__entry->firstblock)
+>  )
+>  
+>  #define DEFINE_ALLOC_EVENT(name) \
 
-Looks sane. Does Josef's new test need the same golden output
-treatment?
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-Cheers,
-
-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
