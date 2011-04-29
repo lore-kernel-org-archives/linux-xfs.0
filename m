@@ -1,18 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3TGPGu2071299 for <xfs@oss.sgi.com>; Fri, 29 Apr 2011 11:25:16 -0500
-Received: from mail.lichtvoll.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C58F51B800C5
-	for <xfs@oss.sgi.com>; Fri, 29 Apr 2011 09:28:49 -0700 (PDT)
-Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by
-	cuda.sgi.com with ESMTP id 2CtI6KtZfWcJyZDW for
-	<xfs@oss.sgi.com>; Fri, 29 Apr 2011 09:28:49 -0700 (PDT)
-Subject: Re: xfs performance problem
-From: Martin Steigerwald <Martin@lichtvoll.de>
-Date: Fri, 29 Apr 2011 18:28:45 +0200
+	p3THU4AQ073708 for <xfs@oss.sgi.com>; Fri, 29 Apr 2011 12:30:04 -0500
+Received: from trent.utfs.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 96C284DB65A
+	for <xfs@oss.sgi.com>; Fri, 29 Apr 2011 10:32:24 -0700 (PDT)
+Received: from trent.utfs.org (trent.utfs.org [194.246.123.103]) by
+	cuda.sgi.com with ESMTP id yXlBbuvou4vDzkpX for
+	<xfs@oss.sgi.com>; Fri, 29 Apr 2011 10:32:24 -0700 (PDT)
+Date: Fri, 29 Apr 2011 10:32:16 -0700 (PDT)
+From: Christian Kujau <lists@nerdbynature.de>
+Subject: Re: 2.6.39-rc4+: oom-killer busy killing tasks
+In-Reply-To: <20110428233751.GR12436@dastard>
+Message-ID: <alpine.DEB.2.01.1104291029500.18728@trent.utfs.org>
+References: <alpine.DEB.2.01.1104211841510.18728@trent.utfs.org>
+	<20110424234655.GC12436@dastard>
+	<alpine.DEB.2.01.1104242245090.18728@trent.utfs.org>
+	<alpine.DEB.2.01.1104250015480.18728@trent.utfs.org>
+	<20110427022655.GE12436@dastard>
+	<alpine.DEB.2.01.1104270042510.18728@trent.utfs.org>
+	<20110427102824.GI12436@dastard>
+	<alpine.DEB.2.01.1104281008320.18728@trent.utfs.org>
+	<20110428233751.GR12436@dastard>
 MIME-Version: 1.0
-Message-Id: <201104291828.46420.Martin@lichtvoll.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,46 +31,30 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, Dave Chinner <david@fromorbit.com>
-Cc: Benjamin Schindler <bschindler@inf.ethz.ch>
+To: Dave Chinner <david@fromorbit.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-sorry, forgot to cc.
-
-Am Mittwoch, 27. April 2011 schrieb Dave Chinner:
-> On Tue, Apr 26, 2011 at 09:44:04PM +0200, Benjamin Schindler wrote:
-> > Hi
-> > 
-> > Since upgrading to newer kernels I have serious problems with xfs
-> > performance on my root fs.
-> > It runs on a software raid 0 with 2 disks. On the same two disks,
-> > there are two more partitions running a software raid-1 with ext3.
-> > On the ext3 system, I have no issue, so I assume the drives are
-> > fine.
-> > But on the xfs filesystem, extracting a linux kernel archive takes 5
-> > minutes or more, running ldconfig similarily long. The harddrives are
-> > sata-2.
-> > I'm running gentoo linux with kernel 2.6.38-gentoo-r1. I'm attaching
-> > the kernel config but I guess more info is needed - just let me know
-> > what is needed.
-> 
-> more than likely your problem is that barriers have been enabled for
-> MD/DM devices on the new kernel, and they aren't on the old kernel.
-> XFS uses barriers by default, ext3 does not. Hence XFS performance
-> will change while ext3 will not. Check dmesg output when mounting
-> the filesystems on the different kernels.
-
-But didn't 2.6.38 replace barriers by explicit flushes the filesystem has to 
-wait for - mitigating most of the performance problems with barriers?
-
--- 
-Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
-GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gRnJpLCAyOSBBcHIgMjAxMSBhdCAwOTozNywgRGF2ZSBDaGlubmVyIHdyb3RlOgo+IERpZCB5
+b3UgcmVhZCB0aGUgZW1haWwgdGhhdCBwb2ludGVkIHRvIENPTkZJR19USU5ZX1JDVSBhcyB0aGUK
+PiBwdG90ZW50aWFsIHNvdXJjZSBvZiB0aGUgcHJvYmxlbT8gQ2FuIHlvdSBjaGFuZ2UgdG8gQ09O
+RklHX1RSRUVfUkNVCj4gYW5kIHNlZSBpZiB0aGUgcHJvYmxlbSBnb2VzIGF3YXk/CgpGb3IgdGhh
+dCBJIGhhZCB0byBzZWxlY3QgU01QIG9uIHRoaXMgVVAtUG93ZXJQQyBHNCBtYWNoaW5lLiBCdXQg
+Y29tcGlsaW5nIAotcmM1IChhcyB0aGUgYnVnIGlzIHN0cmlsbCBwcmVzZW50IGluIC1yYzUpIGZh
+aWxzIHdpdGg6CgovdXNyL2xvY2FsL3NyYy9saW51eC0yLjYtZ2l0L2FyY2gvcG93ZXJwYy9rZXJu
+ZWwvY3Jhc2guYzogSW4gZnVuY3Rpb24gCuKAmGRlZmF1bHRfbWFjaGluZV9jcmFzaF9zaHV0ZG93
+buKAmToKL3Vzci9sb2NhbC9zcmMvbGludXgtMi42LWdpdC9hcmNoL3Bvd2VycGMva2VybmVsL2Ny
+YXNoLmM6MzQ5OiBlcnJvcjogCmltcGxpY2l0IGRlY2xhcmF0aW9uIG9mIGZ1bmN0aW9uIOKAmGNy
+YXNoX2tleGVjX3dhaXRfcmVhbG1vZGXigJkKbWFrZVsyXTogKioqIFthcmNoL3Bvd2VycGMva2Vy
+bmVsL2NyYXNoLm9dIEVycm9yIDEKbWFrZVsxXTogKioqIFthcmNoL3Bvd2VycGMva2VybmVsXSBF
+cnJvciAyCm1ha2U6ICoqKiBbc3ViLW1ha2VdIEVycm9yIDIKCk1heWJlIEknbGwganVzdCBkaXNh
+YmxlIGtleGVjIGFuZCBzZWUgaWYgVFJFRV9SQ1UgaGVscHMuCgpNZWFud2hpbGUsIEkgZ2F2ZSB1
+cCBvbiB0aGUgZ2l0IGJpc2VjdCwgYXMgSSBjYW4gaGFyZGx5IGJvb3QgaW5iZXR3ZWVuIApjb21t
+aXRzOiBodHRwOi8vbmVyZGJ5bmF0dXJlLmRlL2JpdHMvMi42LjM5LXJjNC9vb20vZ2l0LWJpc2Vj
+dC1sb2cudHh0CgpUaGFua3MsCkNocmlzdGlhbi4KLS0gCkJPRkggZXhjdXNlICM0NDY6CgpNYWls
+ZXItZGFlbW9uIGlzIGJ1c3kgYnVybmluZyB5b3VyIG1lc3NhZ2UgaW4gaGVsbC4KCl9fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QK
+eGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
