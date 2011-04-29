@@ -1,25 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3T1AAfB032224 for <xfs@oss.sgi.com>; Thu, 28 Apr 2011 20:10:10 -0500
-Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3C5FC41F2C6
-	for <xfs@oss.sgi.com>; Thu, 28 Apr 2011 18:13:43 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	tY4WvtVyoGuVLFwS for <xfs@oss.sgi.com>;
-	Thu, 28 Apr 2011 18:13:43 -0700 (PDT)
-Date: Fri, 29 Apr 2011 11:13:40 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 4/4] xfs: reduce the number of pagb_lock roundtrips in
-	xfs_alloc_clear_busy
-Message-ID: <20110429011340.GX12436@dastard>
-References: <20110424190613.404786382@bombadil.infradead.org>
-	<20110424190657.249817918@bombadil.infradead.org>
-	<1303923381.2056.58.camel@doink>
+	p3T1pLwu033970 for <xfs@oss.sgi.com>; Thu, 28 Apr 2011 20:51:21 -0500
+Received: from nospam1.slac.stanford.edu (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 374411A3DC13
+	for <xfs@oss.sgi.com>; Thu, 28 Apr 2011 18:54:54 -0700 (PDT)
+Received: from nospam1.slac.stanford.edu (nospam1.slac.stanford.edu
+	[134.79.18.81]) by cuda.sgi.com with ESMTP id MzYmNOGpToSGEJ6B
+	for <xfs@oss.sgi.com>; Thu, 28 Apr 2011 18:54:54 -0700 (PDT)
+Message-ID: <4DBA1A60.7050400@slac.stanford.edu>
+Date: Thu, 28 Apr 2011 18:54:40 -0700
+From: "Ling C. Ho" <ling@slac.stanford.edu>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1303923381.2056.58.camel@doink>
+Subject: Re: convert External Log to Internal Log
+References: <4DB9FC37.8080904@slac.stanford.edu>
+	<20110429003231.GS12436@dastard>
+In-Reply-To: <20110429003231.GS12436@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,49 +24,38 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Wed, Apr 27, 2011 at 11:56:21AM -0500, Alex Elder wrote:
-> On Sun, 2011-04-24 at 15:06 -0400, Christoph Hellwig wrote:
-> > Instead of finding the per-ag and then taking and releasing the pagb_lock
-> > for every single busy extent completed sort the list of busy extents and
-> > only switch betweens AGs where nessecary.  This becomes especially important
-> > with the online discard support which will hit this lock more often.
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
-> I said this looked good before, but since you haven't
-> indicated that here yet, I'll make one more comment.
-> 
-> Both places that call (the new) xfs_alloc_busy_clear()
-> precede the call with a call to xfs_alloc_busy_sort().
-> Considering that, and the fact that xfs_alloc_busy_clear()
-> depends on the list being sorted for correct (or at least
-> efficient) operation, I think you should just embed the
-> list_sort() call in xfs_alloc_busy_clear().
-> 
-> There would then be no real need to define the
-> xfs_alloc_busy_sort() helper (just call list_sort()
-> directly), and you can move the definition of
-> xfs_busy_extent_ag_cmp() up in the file and give
-> it private scope.
+Ok. I will go the safe route, recreate the file system, and restore the 
+data.
 
-I agree with this - sorting the list externally just seems to
-complicate the API and means callers need to remember to sort the
-list first...
+Thanks,
+...
+ling
 
-Otherwise,
-
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
--- 
-Dave Chinner
-david@fromorbit.com
+On 4/28/11 5:32 PM, Dave Chinner wrote:
+> On Thu, Apr 28, 2011 at 04:45:59PM -0700, Ling Ho wrote:
+>> Is there any way to convert from external log to internal log on RHEL 5.6?
+> Try dump-mkfs-restore - there's no simple way of converting an
+> existing filesystem.  At least, not without highly dangerous offline
+> manual xfs_db surgery that could corrupt the fs....
+>
+>> I tried running xfs_growfs -i but it complains saying
+>>
+>> xfs_growfs: failed to access external log for /dev/sdc
+>>
+>> and the man page says -i is not implemented. I am using xfsprogs
+>> version 3.1.5.
+> Yup, not implemented and as such not supported.
+>
+> Cheers,
+>
+> Dave.
 
 _______________________________________________
 xfs mailing list
