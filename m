@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3T177fg032091 for <xfs@oss.sgi.com>; Thu, 28 Apr 2011 20:07:07 -0500
+	p3T1AAfB032224 for <xfs@oss.sgi.com>; Thu, 28 Apr 2011 20:10:10 -0500
 Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 554181B7F522
-	for <xfs@oss.sgi.com>; Thu, 28 Apr 2011 18:10:40 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3C5FC41F2C6
+	for <xfs@oss.sgi.com>; Thu, 28 Apr 2011 18:13:43 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	2zWjhG9MtdRDcUuA for <xfs@oss.sgi.com>;
-	Thu, 28 Apr 2011 18:10:40 -0700 (PDT)
-Date: Fri, 29 Apr 2011 11:10:35 +1000
+	tY4WvtVyoGuVLFwS for <xfs@oss.sgi.com>;
+	Thu, 28 Apr 2011 18:13:43 -0700 (PDT)
+Date: Fri, 29 Apr 2011 11:13:40 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 3/4] xfs: exact busy extent tracking
-Message-ID: <20110429011035.GW12436@dastard>
+Subject: Re: [PATCH 4/4] xfs: reduce the number of pagb_lock roundtrips in
+	xfs_alloc_clear_busy
+Message-ID: <20110429011340.GX12436@dastard>
 References: <20110424190613.404786382@bombadil.infradead.org>
-	<20110424190657.064969622@bombadil.infradead.org>
+	<20110424190657.249817918@bombadil.infradead.org>
+	<1303923381.2056.58.camel@doink>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110424190657.064969622@bombadil.infradead.org>
+In-Reply-To: <1303923381.2056.58.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,24 +32,37 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Alex Elder <aelder@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Sun, Apr 24, 2011 at 03:06:16PM -0400, Christoph Hellwig wrote:
-> Update the extent tree in case we have to reuse a busy extent, so that it
-> always is kept uptodate.  This is done by replacing the busy list searches
-> with a new xfs_alloc_busy_reuse helper, which updates the busy extent tree
-> in case of a reuse.  This allows us to allow reusing metadata extents
-> unconditionally, and thus avoid log forces especially for allocation btree
-> blocks.
+On Wed, Apr 27, 2011 at 11:56:21AM -0500, Alex Elder wrote:
+> On Sun, 2011-04-24 at 15:06 -0400, Christoph Hellwig wrote:
+> > Instead of finding the per-ag and then taking and releasing the pagb_lock
+> > for every single busy extent completed sort the list of busy extents and
+> > only switch betweens AGs where nessecary.  This becomes especially important
+> > with the online discard support which will hit this lock more often.
+> > 
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
+> I said this looked good before, but since you haven't
+> indicated that here yet, I'll make one more comment.
+> 
+> Both places that call (the new) xfs_alloc_busy_clear()
+> precede the call with a call to xfs_alloc_busy_sort().
+> Considering that, and the fact that xfs_alloc_busy_clear()
+> depends on the list being sorted for correct (or at least
+> efficient) operation, I think you should just embed the
+> list_sort() call in xfs_alloc_busy_clear().
+> 
+> There would then be no real need to define the
+> xfs_alloc_busy_sort() helper (just call list_sort()
+> directly), and you can move the definition of
+> xfs_busy_extent_ag_cmp() up in the file and give
+> it private scope.
 
-I'd add one comment to this - that this returns to the old way of
-clearing busy extents by issuing a sync log force with the AGF
-locked. This can cause additional allocation latency, but should be
-rare given the occurrence of of metadata->data reallocation.
-
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Alex Elder <aelder@sgi.com>
+I agree with this - sorting the list externally just seems to
+complicate the API and means callers need to remember to sort the
+list first...
 
 Otherwise,
 
