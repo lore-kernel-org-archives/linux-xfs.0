@@ -1,19 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3TJW5au078314 for <xfs@oss.sgi.com>; Fri, 29 Apr 2011 14:32:05 -0500
-Date: Fri, 29 Apr 2011 21:35:24 +0200
-From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
-Subject: Re: 2.6.39-rc3, 2.6.39-rc4: XFS lockup - regression since 2.6.38
-Message-ID: <20110429213524.449e003b@neptune.home>
-In-Reply-To: <20110429151841.GA893@x4.trippels.de>
-References: <20110423224403.5fd1136a@neptune.home>
-	<20110427050850.GG12436@dastard>
-	<20110427182622.05a068a2@neptune.home>
-	<20110428194528.GA1627@x4.trippels.de>
-	<20110429011929.GA13542@dastard>
-	<20110429151841.GA893@x4.trippels.de>
-Mime-Version: 1.0
+	p3TKI429080171 for <xfs@oss.sgi.com>; Fri, 29 Apr 2011 15:18:04 -0500
+Received: from mail.ud10.udmedia.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6E8EC1DC4A2F
+	for <xfs@oss.sgi.com>; Fri, 29 Apr 2011 13:21:37 -0700 (PDT)
+Received: from mail.ud10.udmedia.de (ud10.udmedia.de [194.117.254.50]) by
+	cuda.sgi.com with ESMTP id hgb6eVgwwsH7V6MU for
+	<xfs@oss.sgi.com>; Fri, 29 Apr 2011 13:21:37 -0700 (PDT)
+Date: Fri, 29 Apr 2011 22:21:36 +0200
+From: Markus Trippelsdorf <markus@trippelsdorf.de>
+Subject: Re: 2.6.39-rc4+: oom-killer busy killing tasks
+Message-ID: <20110429202136.GB13166@x4.trippels.de>
+References: <alpine.DEB.2.01.1104242245090.18728@trent.utfs.org>
+	<alpine.DEB.2.01.1104250015480.18728@trent.utfs.org>
+	<20110427022655.GE12436@dastard>
+	<alpine.DEB.2.01.1104270042510.18728@trent.utfs.org>
+	<20110427102824.GI12436@dastard>
+	<alpine.DEB.2.01.1104281008320.18728@trent.utfs.org>
+	<20110428233751.GR12436@dastard>
+	<alpine.DEB.2.01.1104291250480.18728@trent.utfs.org>
+	<20110429201701.GA13166@x4.trippels.de>
+	<alpine.DEB.2.01.1104291319270.18728@trent.utfs.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.01.1104291319270.18728@trent.utfs.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,83 +33,27 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Markus Trippelsdorf <markus@trippelsdorf.de>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Dave Chinner <dchinner@redhat.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, xfs-masters@oss.sgi.com, Alex Elder <aelder@sgi.com>
+To: Christian Kujau <lists@nerdbynature.de>
+Cc: minchan.kim@gmail.com, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-T24gRnJpLCAyOSBBcHJpbCAyMDExIE1hcmt1cyBUcmlwcGVsc2RvcmYgd3JvdGU6Cj4gT24gMjAx
-MS4wNC4yOSBhdCAxMToxOSArMTAwMCwgRGF2ZSBDaGlubmVyIHdyb3RlOgo+ID4gT24gVGh1LCBB
-cHIgMjgsIDIwMTEgYXQgMDk6NDU6MjhQTSArMDIwMCwgTWFya3VzIFRyaXBwZWxzZG9yZiB3cm90
-ZToKPiA+ID4gT24gMjAxMS4wNC4yNyBhdCAxODoyNiArMDIwMCwgQnJ1bm8gUHLDqW1vbnQgd3Jv
-dGU6Cj4gPiA+ID4gT24gV2VkLCAyNyBBcHJpbCAyMDExIERhdmUgQ2hpbm5lciB3cm90ZToKPiA+
-ID4gPiA+IE9uIFNhdCwgQXByIDIzLCAyMDExIGF0IDEwOjQ0OjAzUE0gKzAyMDAsIEJydW5vIFBy
-w6ltb250IHdyb3RlOgo+ID4gPiA+ID4gPiBSdW5uaW5nIDIuNi4zOS1yYzMrIGFuZCBub3cgYWdh
-aW4gb24gMi42LjM5LXJjNCsgKEkndmUgbm90IHRlc3RlZCAtcmMxCj4gPiA+ID4gPiA+IG9yIC1y
-YzIpIEkndmUgaGl0IGEgImR5aW5nIG1hY2hpbmUiIHdoZXJlIHByb2Nlc3NlcyB3cml0aW5nIHRv
-IGRpc2sgZW5kCj4gPiA+ID4gPiA+IHVwIGluIEQgc3RhdGUuCj4gPiA+ID4gPiA+IEZyb20gb2Nj
-dXJyZW5jZSB3aXRoIC1yYzMrIEkgZG9uJ3QgaGF2ZSBsb2dzIGFzIHRob3NlIG5ldmVyIGhpdCB0
-aGUgZGlzaywKPiA+ID4gPiA+ID4gZm9yIC1yYzQrIEkgaGF2ZSB0aGUgZm9sbG93aW5nIChzeXNy
-cSt0IHdhcyB0b28gYmlnLCB3aGF0IEkgaGF2ZSBvZiBpdAo+ID4gPiA+ID4gPiBtaXNzZXMgYSBk
-b3plbiBvZiBrZXJuZWwgdGFza3MgLSBpZiBuZWVkZWQsIHBsZWFzZSBhc2spOgo+ID4gPiA+ID4g
-PiAKPiA+ID4gPiA+ID4gVGhlIC1yYzQga2VybmVsIGlzIGF0IGNvbW1pdCA1ODRmNzkwNDY3ODBl
-MTBjYjI0MzY3YTY5MWY4YzI4Mzk4YTAwZTg0Cj4gPiA+ID4gPiA+ICgrIDEgcGF0Y2ggb2YgbWlu
-ZSB0byBzdG9wIGRpc2sgb24gcmVib290KSwKPiA+ID4gPiA+ID4gZnVsbCBkbWVzZyBhdmFpbGFi
-bGUgaWYgbmVlZGVkOyBrZXJuZWwgY29uZmlnIGF0dGFjaGVkIChvbmx5IHNlbGVjdGVkCj4gPiA+
-ID4gPiA+IG9wdGlvbnMpLiBJbiBjYXNlIHRoZXJlIGlzIHNvbWV0aGluZyBJIHNob3VsZCBkbyBh
-dCBuZXh0IG9jY3VycmVuY2UKPiA+ID4gPiA+ID4gcGxlYXNlIHRlbGwuIFVuZm9ydHVuYXRlbHkg
-SSBoYXZlIG5vIHRyaWdnZXIgZm9yIGl0IGFuZCBpdCBkb2VzIG5vdAo+ID4gPiA+ID4gPiBoYXBw
-ZW4gdmVyeSBvZnRlbi4KPiA+ID4gPiA+ID4gCj4gPiA+ID4gPiA+IFszMjA0MC4xMjAwNTVdIElO
-Rk86IHRhc2sgZmx1c2gtODowOjE2NjUgYmxvY2tlZCBmb3IgbW9yZSB0aGFuIDEyMCBzZWNvbmRz
-Lgo+ID4gPiA+ID4gPiBbMzIwNDAuMTIwMDY4XSAiZWNobyAwID4gL3Byb2Mvc3lzL2tlcm5lbC9o
-dW5nX3Rhc2tfdGltZW91dF9zZWNzIiBkaXNhYmxlcyB0aGlzIG1lc3NhZ2UuCj4gPiA+ID4gPiA+
-IFszMjA0MC4xMjAwNzddIGZsdXNoLTg6MCAgICAgICBEIDAwMDAwMDAwICA0OTA4ICAxNjY1ICAg
-ICAgMiAweDAwMDAwMDAwCj4gPiA+ID4gPiA+IFszMjA0MC4xMjAwOTldICBmNTVlZmI1YyAwMDAw
-MDA0NiAwMDAwMDAwMCAwMDAwMDAwMCAwMDAwMDAwMCAwMDAwMDAwMSBlMDM4MjkyNCAwMDAwMDAw
-MAo+ID4gPiA+ID4gPiBbMzIwNDAuMTIwMTE4XSAgZjU1ZWZiMGMgZjU1ZWZiNWMgMDAwMDAwMDQg
-ZjYyOWJhNzAgNTcyZjAxYTIgMDAwMDFjZmUgZjYyOWJhNzAgZmZmZmZmYzAKPiA+ID4gPiA+ID4g
-WzMyMDQwLjEyMDEzNV0gIGY1NWVmYzY4IGY1NWVmYjMwIGY4ODlkN2Y4IGY1NWVmYjIwIDAwMDAw
-MDAwIGY1NWVmYzY4IGUwMzgyOTAwIGY1NWVmYzk0Cj4gPiA+ID4gPiA+IFszMjA0MC4xMjAxNTNd
-IENhbGwgVHJhY2U6Cj4gPiA+ID4gPiA+IFszMjA0MC4xMjAyMjBdICBbPGY4ODlkN2Y4Pl0gPyB4
-ZnNfYm1hcF9zZWFyY2hfbXVsdGlfZXh0ZW50cysweDg4LzB4ZTAgW3hmc10KPiA+ID4gPiA+ID4g
-WzMyMDQwLjEyMDIzOV0gIFs8YzEwOWNlMWQ+XSA/IGttZW1fY2FjaGVfYWxsb2MrMHgyZC8weDEx
-MAo+ID4gPiA+ID4gPiBbMzIwNDAuMTIwMjk0XSAgWzxmODhjODhjYT5dID8geGxvZ19zcGFjZV9s
-ZWZ0KzB4MmEvMHhjMCBbeGZzXQo+ID4gPiA+ID4gPiBbMzIwNDAuMTIwMzQ2XSAgWzxmODhjODVj
-Yj5dIHhsb2dfd2FpdCsweDRiLzB4NzAgW3hmc10KPiA+ID4gPiA+ID4gWzMyMDQwLjEyMDM1OV0g
-IFs8YzEwMmNhMDA+XSA/IHRyeV90b193YWtlX3VwKzB4YzAvMHhjMAo+ID4gPiA+ID4gPiBbMzIw
-NDAuMTIwNDExXSAgWzxmODhjOTQ4Yj5dIHhsb2dfZ3JhbnRfbG9nX3NwYWNlKzB4OGIvMHgyNDAg
-W3hmc10KPiA+ID4gPiA+ID4gWzMyMDQwLjEyMDQ2NF0gIFs8Zjg4YzkzNmU+XSA/IHhsb2dfZ3Jh
-bnRfcHVzaF9haWwrMHhiZS8weGYwIFt4ZnNdCj4gPiA+ID4gPiA+IFszMjA0MC4xMjA1MTZdICBb
-PGY4OGM5OWRiPl0geGZzX2xvZ19yZXNlcnZlKzB4YWIvMHhiMCBbeGZzXQo+ID4gPiA+ID4gPiBb
-MzIwNDAuMTIwNTcxXSAgWzxmODhkNmRjOD5dIHhmc190cmFuc19yZXNlcnZlKzB4NzgvMHgxZjAg
-W3hmc10KPiA+ID4gPiA+IAo+ID4gPiA+ID4gSG1tbW1tLiBUaGF0IG1heSBiZSBjYXVzZWQgYnkg
-dGhlIGNvbnZlcnNpb24gb2YgdGhlIHhmc2FpbGQgdG8gYQo+ID4gPiA+ID4gd29yayBxdWV1ZS4g
-Q2FuIHlvdSBwb3N0IHRoZSBvdXRwdXQgb2YgInhmc19pbmZvIDxtbnRwdD4iIGFuZCB0aGUKPiA+
-ID4gPiA+IG1vdW50IG9wdGlvbnMgKC9wcm9jL21vdW50cykgdXNlZCBvbiB5b3Ugc3lzdGVtPwo+
-ID4gPiAKPiA+ID4gSSBtYXkgaGF2ZSBoaXQgdGhlIHNhbWUgcHJvYmxlbSB0b2RheSBhbmQgbWFu
-YWdlZCB0byBjYXB0dXJlIHNvbWUgc3lzcnEtbAo+ID4gPiBhbmQgc3lzcnEtdyBvdXRwdXQuIAo+
-ID4gPiAKPiA+ID4gVGhlIHN5c3RlbSB3YXMgbGFyZ2VseSB1bnVzYWJsZSBkdXJpbmcgdGhpcyBp
-bmNpZGVudC4gSSBjb3VsZCBzdGlsbAo+ID4gPiBzd2l0Y2ggYmV0d2VlbiBYIGFuZCB0aGUgY29u
-c29sZSAoYW5kIHByZXNzIHRoZSBzeXNycSBrZXktY29tYmluYXRpb24pLAo+ID4gPiBidXQgSSBj
-b3VsZG4ndCBydW4gYW55IGNvbW1hbmRzIGluIHRoZSB0ZXJtaW5hbC4KPiA+IAo+ID4gT0ssIHNv
-IHRoZSBjb21tb24gZWxlbWVudHMgaGVyZSBhcHBlYXJzIHRvIGJlIHJvb3QgZmlsZXN5c3RlbXMK
-PiA+IHdpdGggc21hbGwgbG9nIHNpemVzLCB3aGljaCBtZWFucyB0aGV5IGFyZSB0YWlsIHB1c2hp
-bmcgYWxsIHRoZQo+ID4gdGltZSBtZXRhZGF0YSBvcGVyYXRpb25zIGFyZSBpbiBwcm9ncmVzcy4g
-RGVmaW5pdGVseSBzZWVtcyBsaWtlIGEKPiA+IHJhY2UgaW4gdGhlIEFJTCB3b3JrcXVldWUgdHJp
-Z2dlciBtZWNoYW5pc20uIEknbGwgc2VlIGlmIEkgY2FuCj4gPiByZXByb2R1Y2UgdGhpcyBhbmQg
-Y29vayB1cCBhIHBhdGNoIHRvIGZpeCBpdC4KPiAKPiBIbW0sIEknbSB3b25kZXJpbmcgaWYgdGhp
-cyBpc3N1ZSBpcyBzb21laG93IHJlbGF0ZWQgdG8gdGhlIGhydGltZXIgYnVnLAo+IHRoYXQgVGhv
-bWFzIEdsZWl4bmVyIGZpeGVkIHllc3RlcmRheToKPiBodHRwOi8vZ2l0LnVzLmtlcm5lbC5vcmcv
-P3A9bGludXgva2VybmVsL2dpdC90aXAvbGludXgtMi42LXRpcC5naXQ7YT1jb21taXQ7aD1jZTMx
-MzMyZDNjNzc1MzJkNmVhOTdkZGNiNDc1YTJiMDJkZDM1OGI0Cj4gaHR0cDovL3RocmVhZC5nbWFu
-ZS5vcmcvZ21hbmUubGludXgua2VybmVsLm1tLzYxOTA5Lwo+IAo+IEl0IGFsc28gbG9va3Mgc2lt
-aWxhciB0byB0aGUgaXNzdWUgdGhhdCBKYW1lcyBCb3R0b21sZXkgcmVwb3J0ZWQKPiBlYXJsaWVy
-OiBodHRwOi8vdGhyZWFkLmdtYW5lLm9yZy9nbWFuZS5saW51eC5rZXJuZWwubW0vNjIxODUvIAoK
-SSdtIGdvaW5nIHRvIHNlZSwgSSd2ZSBhcHBsaWVkIFRob21hcycgZml4IG9uIHRoZSBib3ggc2Vl
-aW5nIFhGUyBmcmVlemUgKHdpdGhvdXQKb3RoZXIgY2hhbmdlcyB0byBrZXJuZWwpLgpHb2luZyB0
-byBydW4gdGhhdCBrZXJuZWwgZm9yIHRoZSB3ZWVrLWVuZCBhbmQgYmV5b25kIGlmIGl0IHN1cnZp
-dmVzIHRvIHNlZSB3aGF0CmhhcHBlbnMuCgpCcnVubwoKX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20K
-aHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+On 2011.04.29 at 13:20 -0700, Christian Kujau wrote:
+> On Fri, 29 Apr 2011 at 22:17, Markus Trippelsdorf wrote:
+> > I could be the hrtimer bug again. Would you try to reproduce the issue
+> > with this patch applied?
+> > http://git.us.kernel.org/?p=linux/kernel/git/tip/linux-2.6-tip.git;a=commit;h=ce31332d3c77532d6ea97ddcb475a2b02dd358b4
+> 
+> will do. Should I enable TREE_RCU again (SMP) or use TINY_RCU for my UP 
+> system?
+
+It shouldn't matter. Both will do.
+-- 
+Markus
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
