@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3UFOXit126380
-	for <linux-xfs@oss.sgi.com>; Sat, 30 Apr 2011 10:24:33 -0500
+	p3UFOXDm126382 for <xfs@OSS.SGI.com>; Sat, 30 Apr 2011 10:24:33 -0500
 Received: from april.london.02.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E1D01422D46
-	for <linux-xfs@oss.sgi.com>; Sat, 30 Apr 2011 08:28:07 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 39D1C15CF078
+	for <xfs@OSS.SGI.com>; Sat, 30 Apr 2011 08:28:06 -0700 (PDT)
 Received: from april.london.02.net (april.london.02.net [87.194.255.143]) by
-	cuda.sgi.com with ESMTP id kDWPY2yGaBPz7uZq for
-	<linux-xfs@oss.sgi.com>; Sat, 30 Apr 2011 08:28:07 -0700 (PDT)
+	cuda.sgi.com with ESMTP id r57vs6hNXOiLbvFj for
+	<xfs@OSS.SGI.com>; Sat, 30 Apr 2011 08:28:06 -0700 (PDT)
 MIME-Version: 1.0
-Message-ID: <19900.8703.214676.218477@tree.ty.sabi.co.UK>
-Date: Sat, 30 Apr 2011 15:51:43 +0100
-Subject: op-journaled fs, journal size and storage speeds
-From: pg_xf2@xf2.to.sabi.co.UK (Peter Grandi)
+Message-ID: <19900.10868.583555.849181@tree.ty.sabi.co.UK>
+Date: Sat, 30 Apr 2011 16:27:48 +0100
+Subject: RAID6 r-m-w, op-journaled fs, SSDs
+From: pg_xf2@xf2.for.sabi.co.UK (Peter Grandi)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,57 +25,67 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Linux fs XFS <linux-xfs@oss.sgi.com>, Linux fs JFS <jfs-discussion@lists.SourceForge.net>
+To: Linux RAID <linux-raid@vger.kernel.org>, Linux fs XFS <xfs@oss.sgi.com>, Linux fs JFS <jfs-discussion@lists.SourceForge.net>
 
-Been thinking about journals and RAID6s and SSDs.
+While I agree with BAARF.com arguments fully, I sometimes have
+to deal with legacy systems with wide RAID6 sets (for example 16
+drives, quite revolting) which have op-journaled filesystems on
+them like XFS or JFS (sometimes block-journaled ext[34], but I
+am not that interested in them for this).
 
-In particular for file system designs like JFS and XFS that do
-operation journaling (while ext[34] do block journaling).
+Sometimes (but fortunately not that recently) I have had to deal
+with small-file filesystems setup on wide-stripe RAID6 setup by
+morons who don't understand the difference between a database
+and a filesystem (and I have strong doubts that RAID6 is
+remotely appropriate to databases).
 
-The issue is: journal size?
+So I'd like to figure out how much effort I should invest in
+undoing cases of the above, that is how badly they are likely to
+be and degrade over time (usually very badly).
 
-It seems to me that adopting as guideline a percent of the
-filesystem is very wrong, and so I have been using a rule of
-thumb like one second of expected transfer rate, so "in flight"
-updates are never much behind.
+First a couple of question purely about RAID, but indirectly
+relevant to op-journaled filesystems:
 
-But even at a single disk *sequential* transfer rate of say
-80MB/s average, a journal that contains operation records could
-conceivably hold dozens if not hundreds of thousands of pending
-metadata updates, probably targeted at very widely scattered
-locations on disk, and playing a journal fully could take a long
-time.
+  * Can Linux MD do "abbreviated" read-modify-write RAID6
+    updates like for RAID5? That is where not the whole stripe
+    is read in, modified and written, but just the block to be
+    updated and the parity wblocks.
 
-So the idea would be that the relevant transfer rate would be
-the *random* one, and since that is around 4MB/s per single
-disk, journal sizes would end up pretty small. But many people
-allocate very large (at least compared to that) journals.
+  * When reading or writing part of RAID[456] stripe for example
+    smaller than a sector, what is the minimum unit of transfer
+    with Linux MD? The full stripe, the chunk containing the
+    sector, or just the sector containing the bytes to be
+    written or updated (and potentially the parity sectors)? I
+    would expect reads to always read just the sector, but not
+    so sure about writing.
 
-This seems to me a fairly bad idea, because then the journal
-becomes a massive hot spot on the disk and draws the disk arm
-like black hole. I suspect that operations should not stay on
-the journal for a long time. However if the journal is too small
-processes that do metadata updates start to hang on it.
+  * What about popular HW RAID host adapter (e.g. LSI, Adaptec,
+    Areca, 3ware), where is the documentation if any on how they
+    behave in these cases?
 
-So some questions for which I have guesses but not good answers:
+Regardless, op-journaled file system designs like JFS and XFS
+write small records (way below a stripe set size, and usually
+way below a chunk size) to the journal when they queue
+operations, even if sometimes depending on design and options
+may "batch" the journal updates (potentially breaking safety
+semantics). Also they do small write when they dequeue the
+operations from the journal to the actual metadata records
+involved.
 
-  * What should journal size be proportional to?
-  * What is the downside of a too small journal?
-  * What is the downside of a too large journal other than space?
+How bad can this be when the journal is say internal for a
+filesystem that is held on wide-stride RAID6 set? I suspect very
+very bad, with apocalyptic read-modify-write storms, eating IOPS.
 
-Again I expect answers to be very different for ext[34] but I am
-asking for operation-journaling file system designs like JFS and
-XFS.
+I suspect that this happens a lot with SSDs too, where the role
+of stripe set size is played by the erase block size (often in
+the hundreds of KBytes, and even more expensive).
 
-BTW, another consideration is that for filesystems that are
-fairly journal-intensive, putting the journal on a low traffic
-storage device can have large benefits.
+Where are studies or even just impressions of anedoctes on how
+bad this is?
 
-But if they can be pretty small, I wonder whether putting the
-journals of several filesystems on the same storage device then
-becomes a sensible option as the locality will be quite narrow
-(e.g. a single physical cylinder) or it could be wortwhile like
-the database people do to journal to battery-backed RAM.
+Are there instrumentation tools in JFS or XFS that may allow me
+to watch/inspect what is happening with the journal? For Linux
+MD to see what are the rates of stripe r-m-w cases?
 
 _______________________________________________
 xfs mailing list
