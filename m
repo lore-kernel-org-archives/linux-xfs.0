@@ -1,29 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3UKl1Y9137547 for <xfs@oss.sgi.com>; Sat, 30 Apr 2011 15:47:01 -0500
-Received: from smtp1.linux-foundation.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6B3CE423171
-	for <xfs@oss.sgi.com>; Sat, 30 Apr 2011 13:50:35 -0700 (PDT)
-Received: from smtp1.linux-foundation.org (smtp1.linux-foundation.org
-	[140.211.169.13]) by cuda.sgi.com with ESMTP id
-	roi2fQ3oZdoExLOA for <xfs@oss.sgi.com>;
-	Sat, 30 Apr 2011 13:50:35 -0700 (PDT)
-Received: from mail-ew0-f53.google.com (mail-ew0-f53.google.com
-	[209.85.215.53]) (authenticated bits=0)
-	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with
-	ESMTP id p3UKoQJK000530
-	(version=TLSv1/SSLv3 cipher=RC4-SHA bits=128 verify=FAIL)
-	for <xfs@oss.sgi.com>; Sat, 30 Apr 2011 13:50:28 -0700
-Received: by ewy8 with SMTP id 8so1544238ewy.26
-	for <xfs@oss.sgi.com>; Sat, 30 Apr 2011 13:50:24 -0700 (PDT)
+	p3UKXDoX137081 for <xfs@oss.sgi.com>; Sat, 30 Apr 2011 15:33:13 -0500
+Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2F14A15CF5A8
+	for <xfs@oss.sgi.com>; Sat, 30 Apr 2011 13:36:46 -0700 (PDT)
+Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
+	cuda.sgi.com with ESMTP id Ob2XNjdmgm1xTzmx for
+	<xfs@oss.sgi.com>; Sat, 30 Apr 2011 13:36:46 -0700 (PDT)
+Received: from mailsrv.i.zmi.at (h081217106033.dyn.cm.kabsi.at [81.217.106.33])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
+	by mailsrv14.zmi.at (Postfix) with ESMTPSA id 3B521623
+	for <xfs@oss.sgi.com>; Sat, 30 Apr 2011 22:36:45 +0200 (CEST)
+Received: from saturn.localnet (saturn.i.zmi.at [10.72.27.2])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client did not present a certificate)
+	by mailsrv.i.zmi.at (Postfix) with ESMTPSA id E7CBB401C33
+	for <xfs@oss.sgi.com>; Sat, 30 Apr 2011 23:36:41 +0200 (CEST)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: Re: xfs performance problem
+Date: Sat, 30 Apr 2011 22:36:39 +0200
+References: <4DB72084.8020205@inf.ethz.ch> <4DB75C6D.1080901@inf.ethz.ch>
+	<19898.53907.842827.480883@tree.ty.sabi.co.UK>
+In-Reply-To: <19898.53907.842827.480883@tree.ty.sabi.co.UK>
 MIME-Version: 1.0
-In-Reply-To: <Xp4OiTz83N.A.O0D.JVGvNB@chimera>
-References: <Xp4OiTz83N.A.O0D.JVGvNB@chimera>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Sat, 30 Apr 2011 13:50:04 -0700
-Message-ID: <BANLkTik2L0BQ0cwOnWrgjyvxV4KMHkgaFQ@mail.gmail.com>
-Subject: Re: 2.6.39-rc5-git4: Reported regressions from 2.6.38
+Message-Id: <201104302236.43960@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,55 +34,80 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: multipart/mixed; boundary="===============2401367912861276201=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: "Rafael J. Wysocki" <rjw@sisk.pl>, Alex Elder <aelder@sgi.com>, xfs@oss.sgi.com
-Cc: Linux SCSI List <linux-scsi@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux Wireless List <linux-wireless@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, DRI <dri-devel@lists.freedesktop.org>, Florian Mickler <florian@mickler.org>, Andrew Morton <akpm@linux-foundation.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Maciej Rutecki <maciej.rutecki@gmail.com>
+To: xfs@oss.sgi.com
 
-On Sat, Apr 30, 2011 at 12:42 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->
-> Bug-Entry =A0 =A0 =A0 : http://bugzilla.kernel.org/show_bug.cgi?id=3D34012
-> Subject =A0 =A0 =A0 =A0 : 2.6.39-rc4+: oom-killer busy killing tasks
-> Submitter =A0 =A0 =A0 : Christian Kujau <lists@nerdbynature.de>
-> Date =A0 =A0 =A0 =A0 =A0 =A0: 2011-04-22 1:57 (9 days old)
-> Message-ID =A0 =A0 =A0: <alpine.DEB.2.01.1104211841510.18728@trent.utfs.o=
-rg>
-> References =A0 =A0 =A0: http://marc.info/?l=3Dlinux-kernel&m=3D1303437446=
-22331&w=3D2
+--===============2401367912861276201==
+Content-Type: multipart/signed;
+  boundary="nextPart5961636.AKCYjGzS5C";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 
-Judging by the extended debug info in:
+--nextPart5961636.AKCYjGzS5C
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 
-   http://nerdbynature.de/bits/2.6.39-rc4/oom/
-   (The -9 files are the current ones)
+On Freitag, 29. April 2011 Peter Grandi wrote:
+> Despite decades of seeing it happen, I keep being astonished by
+> how many people (some with decades of "experience") just don't
+> understand IOPS and metadata and commits and caching and who
+> think "performance" is whatever number they can get with their
+> clever "benchmarks".
 
-that thing shows a _lot_ of xfs inodes:
+Although I understand your arguing, the OP just said that with ext3 the=20
+process returns after 22s, while on xfs he has to wait 2m20s to have the=20
+command prompt back.
 
-  xfs_inode         479187 479187   1120   14    4 : tunables    0
-0    0 : slabdata  34329  34329      0
+That's not a benchmark, but user experience. I'm also surprised by that=20
+big difference, and given the numbers are correct I would say ext3 does=20
+something "better" here than xfs. I'd guess it's only an effect of=20
+caching, and in thruth the disks are still running like crazy in the=20
+background. But hey, if I decompress a kernel I'm more happy if it=20
+returns after 22s and I can start "make menuconfig", than having to wait=20
+2m20s. The damn thing should write in the background, that doesn't hurt=20
+(in this specific case).
 
-even though there aren't that many dentries (each inode should have at
-least one dentry associated with it under normal circumstances):
+=2D-=20
+mit freundlichen Gr=FCssen,
+Michael Monnerie, Ing. BSc
 
-  dentry             97896  97900    160   25    1 : tunables    0
-0    0 : slabdata   3916   3916      0
+it-management Internet Services: Prot=E9ger
+http://proteger.at [gesprochen: Prot-e-schee]
+Tel: +43 660 / 415 6531
 
-and then later when the system gets low on memory, the dentries shrink:
+// ****** Radiointerview zum Thema Spam ******
+// http://www.it-podcast.at/archiv.html#podcast-100716
+//=20
+// Haus zu verkaufen: http://zmi.at/langegg/
 
-  dentry              1017   3525    160   25    1 : tunables    0
-0    0 : slabdata    141    141      0
+--nextPart5961636.AKCYjGzS5C
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
-but the XFS inodes do not:
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.16 (GNU/Linux)
 
-  xfs_inode         557579 557579   1120   14    4 : tunables    0
-0    0 : slabdata  41492  41492      0
+iEYEABECAAYFAk28ctsACgkQzhSR9xwSCbTQZQCghActc1Jo3QphH/AnLYFjRBnv
+1RwAn2FJDMvq2jDy9PgA8YDmJYEoz5Fg
+=8gGN
+-----END PGP SIGNATURE-----
 
-so I suspect it's some kind of XFS inode leak.
+--nextPart5961636.AKCYjGzS5C--
 
-                      Linus
+
+--===============2401367912861276201==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============2401367912861276201==--
