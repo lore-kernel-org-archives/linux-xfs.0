@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3ULl1pM139828 for <xfs@oss.sgi.com>; Sat, 30 Apr 2011 16:47:01 -0500
-Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 14F3A14C5120
-	for <xfs@oss.sgi.com>; Sat, 30 Apr 2011 14:50:34 -0700 (PDT)
-Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
-	cuda.sgi.com with ESMTP id UBGlYvugBbBEHN5w for
-	<xfs@oss.sgi.com>; Sat, 30 Apr 2011 14:50:34 -0700 (PDT)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
+	p3UMNwaY141059 for <xfs@OSS.SGI.com>; Sat, 30 Apr 2011 17:23:59 -0500
+Received: from mx2.suse.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 246B815CE27C
+	for <xfs@OSS.SGI.com>; Sat, 30 Apr 2011 15:27:32 -0700 (PDT)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id SAV2KQMI0UnwCGFW for <xfs@OSS.SGI.com>;
+	Sat, 30 Apr 2011 15:27:32 -0700 (PDT)
+Date: Sun, 1 May 2011 08:27:17 +1000
+From: NeilBrown <neilb@suse.de>
 Subject: Re: RAID6 r-m-w, op-journaled fs, SSDs
-Date: Sat, 30 Apr 2011 23:50:31 +0200
+Message-ID: <20110501082717.5116e575@notabene.brown>
+In-Reply-To: <19900.10868.583555.849181@tree.ty.sabi.co.UK>
 References: <19900.10868.583555.849181@tree.ty.sabi.co.UK>
-	<20110430180213.6dcfc41c@galadriel2.home>
-	<4DBC68DA.1090708@hardwarefreak.com>
-In-Reply-To: <4DBC68DA.1090708@hardwarefreak.com>
-MIME-Version: 1.0
-Message-Id: <201104302350.32287@zmi.at>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,77 +23,106 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============7065203672834555327=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Stan Hoeppner <stan@hardwarefreak.com>
+To: Peter Grandi <pg_xf2@xf2.for.sabi.co.UK>
+Cc: Linux RAID <linux-raid@vger.kernel.org>, Linux fs JFS <jfs-discussion@lists.SourceForge.net>, Linux fs XFS <xfs@oss.sgi.com>
 
---===============7065203672834555327==
-Content-Type: multipart/signed;
-  boundary="nextPart46599110.ylCEUtaVep";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+On Sat, 30 Apr 2011 16:27:48 +0100 pg_xf2@xf2.for.sabi.co.UK (Peter Grandi)
+wrote:
 
---nextPart46599110.ylCEUtaVep
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+> While I agree with BAARF.com arguments fully, I sometimes have
+> to deal with legacy systems with wide RAID6 sets (for example 16
+> drives, quite revolting) which have op-journaled filesystems on
+> them like XFS or JFS (sometimes block-journaled ext[34], but I
+> am not that interested in them for this).
+> 
+> Sometimes (but fortunately not that recently) I have had to deal
+> with small-file filesystems setup on wide-stripe RAID6 setup by
+> morons who don't understand the difference between a database
+> and a filesystem (and I have strong doubts that RAID6 is
+> remotely appropriate to databases).
+> 
+> So I'd like to figure out how much effort I should invest in
+> undoing cases of the above, that is how badly they are likely to
+> be and degrade over time (usually very badly).
+> 
+> First a couple of question purely about RAID, but indirectly
+> relevant to op-journaled filesystems:
+> 
+>   * Can Linux MD do "abbreviated" read-modify-write RAID6
+>     updates like for RAID5? That is where not the whole stripe
+>     is read in, modified and written, but just the block to be
+>     updated and the parity wblocks.
 
-On Samstag, 30. April 2011 Stan Hoeppner wrote:
-> Poor cache management, I'd guess, is one reason why you see Areca
-> RAID  cards with 1-4GB cache DRAM whereas competing cards w/ similar
-> price/performance/features from LSI, Adaptec, and others sport
-> 512MB.
+No.  (patches welcome).
 
-On one server (XENserver virtualized with ~14 VMs running Linux) which=20
-suffered from slow I/O on RAID-6 during heavy times, I upgraded the=20
-cache from 1G to 4G using an Areca ARC-1260 controller (somewhat=20
-outdated now), and couldn't see any advantage. Maybe it would have been=20
-measurable, but the damn thing was still pretty slow, so using more hard=20
-disks is still the better option than upgrading the cache.
+> 
+>   * When reading or writing part of RAID[456] stripe for example
+>     smaller than a sector, what is the minimum unit of transfer
+>     with Linux MD? The full stripe, the chunk containing the
+>     sector, or just the sector containing the bytes to be
+>     written or updated (and potentially the parity sectors)? I
+>     would expect reads to always read just the sector, but not
+>     so sure about writing.
 
-Just for documentation if someone sees slow I/O on Areca. More spindles=20
-rock. That server had 8x 10krpm WD Raptor 150G drives by the time.
-
-=2D-=20
-mit freundlichen Gr=C3=BCssen,
-Michael Monnerie, Ing. BSc
-
-it-management Internet Services: Prot=C3=A9ger
-http://proteger.at [gesprochen: Prot-e-schee]
-Tel: +43 660 / 415 6531
-
-// ****** Radiointerview zum Thema Spam ******
-// http://www.it-podcast.at/archiv.html#podcast-100716
-//=20
-// Haus zu verkaufen: http://zmi.at/langegg/
-
---nextPart46599110.ylCEUtaVep
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.16 (GNU/Linux)
-
-iEYEABECAAYFAk28hCgACgkQzhSR9xwSCbS2qQCgmp1e3wO9ylz2NKPFNZ57rb9H
-yzgAoNUe2S4ZiusyaO5LqzCEYEiQcTMW
-=ptPW
------END PGP SIGNATURE-----
-
---nextPart46599110.ylCEUtaVep--
+1 "PAGE" - normally 4K.
 
 
---===============7065203672834555327==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+> 
+>   * What about popular HW RAID host adapter (e.g. LSI, Adaptec,
+>     Areca, 3ware), where is the documentation if any on how they
+>     behave in these cases?
+> 
+> Regardless, op-journaled file system designs like JFS and XFS
+> write small records (way below a stripe set size, and usually
+> way below a chunk size) to the journal when they queue
+> operations, even if sometimes depending on design and options
+> may "batch" the journal updates (potentially breaking safety
+> semantics). Also they do small write when they dequeue the
+> operations from the journal to the actual metadata records
+> involved.
+
+The ideal config for a journalled filesystem is for put the journal on a
+separate smaller lower-latency device.  e.g. a small RAID1 pair.
+
+In a previous work place I had good results with:
+  RAID1 pair of small disks with root, swap, journal
+  Large RAID5/6 array with bulk of filesystem.
+
+I also did data journalling as it helps a lot with NFS.
+
+
+
+> 
+> How bad can this be when the journal is say internal for a
+> filesystem that is held on wide-stride RAID6 set? I suspect very
+> very bad, with apocalyptic read-modify-write storms, eating IOPS.
+> 
+> I suspect that this happens a lot with SSDs too, where the role
+> of stripe set size is played by the erase block size (often in
+> the hundreds of KBytes, and even more expensive).
+> 
+> Where are studies or even just impressions of anedoctes on how
+> bad this is?
+> 
+> Are there instrumentation tools in JFS or XFS that may allow me
+> to watch/inspect what is happening with the journal? For Linux
+> MD to see what are the rates of stripe r-m-w cases?
+
+Not that I am aware of.
+
+
+NeilBrown
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============7065203672834555327==--
