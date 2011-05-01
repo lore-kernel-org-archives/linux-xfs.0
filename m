@@ -1,20 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p3UMNwaY141059 for <xfs@OSS.SGI.com>; Sat, 30 Apr 2011 17:23:59 -0500
-Received: from mx2.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 246B815CE27C
-	for <xfs@OSS.SGI.com>; Sat, 30 Apr 2011 15:27:32 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id SAV2KQMI0UnwCGFW for <xfs@OSS.SGI.com>;
-	Sat, 30 Apr 2011 15:27:32 -0700 (PDT)
-Date: Sun, 1 May 2011 08:27:17 +1000
-From: NeilBrown <neilb@suse.de>
+	p413E6vt150616 for <xfs@oss.sgi.com>; Sat, 30 Apr 2011 22:14:07 -0500
+Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 037631571919
+	for <xfs@oss.sgi.com>; Sat, 30 Apr 2011 20:17:41 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id 9vi2UlR2O6zVFBrK
+	for <xfs@oss.sgi.com>; Sat, 30 Apr 2011 20:17:41 -0700 (PDT)
+Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
+	by greer.hardwarefreak.com (Postfix) with ESMTP id 174366C129
+	for <xfs@oss.sgi.com>; Sat, 30 Apr 2011 22:17:41 -0500 (CDT)
+Message-ID: <4DBCD0D2.3030109@hardwarefreak.com>
+Date: Sat, 30 Apr 2011 22:17:38 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
+MIME-Version: 1.0
 Subject: Re: RAID6 r-m-w, op-journaled fs, SSDs
-Message-ID: <20110501082717.5116e575@notabene.brown>
-In-Reply-To: <19900.10868.583555.849181@tree.ty.sabi.co.UK>
-References: <19900.10868.583555.849181@tree.ty.sabi.co.UK>
-Mime-Version: 1.0
+References: <19900.10868.583555.849181@tree.ty.sabi.co.UK>	<20110430180213.6dcfc41c@galadriel2.home>	<4DBC68DA.1090708@hardwarefreak.com>
+	<201104302350.32287@zmi.at>
+In-Reply-To: <201104302350.32287@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,104 +27,55 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Peter Grandi <pg_xf2@xf2.for.sabi.co.UK>
-Cc: Linux RAID <linux-raid@vger.kernel.org>, Linux fs JFS <jfs-discussion@lists.SourceForge.net>, Linux fs XFS <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On Sat, 30 Apr 2011 16:27:48 +0100 pg_xf2@xf2.for.sabi.co.UK (Peter Grandi)
-wrote:
+On 4/30/2011 4:50 PM, Michael Monnerie wrote:
+> On Samstag, 30. April 2011 Stan Hoeppner wrote:
+>> Poor cache management, I'd guess, is one reason why you see Areca
+>> RAID  cards with 1-4GB cache DRAM whereas competing cards w/ similar
+>> price/performance/features from LSI, Adaptec, and others sport
+>> 512MB.
+>
+> On one server (XENserver virtualized with ~14 VMs running Linux) which
+> suffered from slow I/O on RAID-6 during heavy times, I upgraded the
+> cache from 1G to 4G using an Areca ARC-1260 controller (somewhat
+> outdated now), and couldn't see any advantage. Maybe it would have been
+> measurable, but the damn thing was still pretty slow, so using more hard
+> disks is still the better option than upgrading the cache.
+>
+> Just for documentation if someone sees slow I/O on Areca. More spindles
+> rock. That server had 8x 10krpm WD Raptor 150G drives by the time.
 
-> While I agree with BAARF.com arguments fully, I sometimes have
-> to deal with legacy systems with wide RAID6 sets (for example 16
-> drives, quite revolting) which have op-journaled filesystems on
-> them like XFS or JFS (sometimes block-journaled ext[34], but I
-> am not that interested in them for this).
-> 
-> Sometimes (but fortunately not that recently) I have had to deal
-> with small-file filesystems setup on wide-stripe RAID6 setup by
-> morons who don't understand the difference between a database
-> and a filesystem (and I have strong doubts that RAID6 is
-> remotely appropriate to databases).
-> 
-> So I'd like to figure out how much effort I should invest in
-> undoing cases of the above, that is how badly they are likely to
-> be and degrade over time (usually very badly).
-> 
-> First a couple of question purely about RAID, but indirectly
-> relevant to op-journaled filesystems:
-> 
->   * Can Linux MD do "abbreviated" read-modify-write RAID6
->     updates like for RAID5? That is where not the whole stripe
->     is read in, modified and written, but just the block to be
->     updated and the parity wblocks.
+Similar to the case with CPUs, more cache can only take you so far.  The 
+benefit resulting from the cache size, locality (on/off chip), and 
+algorithm is often very workload dependent, as is the case with RAID 
+controller cache.
 
-No.  (patches welcome).
+Adding controller cache can benefit some workloads, depending on the 
+controller make/model, but I agree with you that adding spindles, or 
+swapping to faster spindles (say 7.2 to 15k, or SSD), will typically 
+benefit all workloads.  However, given that DIMMs are so cheap compared 
+to hot swap disks, maxing out controller cache on models that have DIMM 
+slots is an inexpensive first step to take when faced with an IO bottleneck.
 
-> 
->   * When reading or writing part of RAID[456] stripe for example
->     smaller than a sector, what is the minimum unit of transfer
->     with Linux MD? The full stripe, the chunk containing the
->     sector, or just the sector containing the bytes to be
->     written or updated (and potentially the parity sectors)? I
->     would expect reads to always read just the sector, but not
->     so sure about writing.
+Larger controller cache seemed to have more positive impact on SCSI RAID 
+controllers of the mid/late 90s than on modern controllers.  The 
+difference between 8MB and 64MB was substantial with many workloads back 
+then.  On many modern SAS/SATA controllers the difference between 512MB 
+and 1GB isn't nearly as profound, if any at all.  The shared SCSI bus 
+dictated sequential access to all 15 drives on the bus which would tend 
+to explain why more cache made a big difference, by masking the 
+latencies.  SAS/SATA allows concurrent access to all drives 
+simultaneously (assuming no expanders) without the SCSI latencies.  This 
+may tend to explain why larger RAID cache on today's controllers doesn't 
+yield the benefits of previous generation SCSI RAID cards.
 
-1 "PAGE" - normally 4K.
-
-
-> 
->   * What about popular HW RAID host adapter (e.g. LSI, Adaptec,
->     Areca, 3ware), where is the documentation if any on how they
->     behave in these cases?
-> 
-> Regardless, op-journaled file system designs like JFS and XFS
-> write small records (way below a stripe set size, and usually
-> way below a chunk size) to the journal when they queue
-> operations, even if sometimes depending on design and options
-> may "batch" the journal updates (potentially breaking safety
-> semantics). Also they do small write when they dequeue the
-> operations from the journal to the actual metadata records
-> involved.
-
-The ideal config for a journalled filesystem is for put the journal on a
-separate smaller lower-latency device.  e.g. a small RAID1 pair.
-
-In a previous work place I had good results with:
-  RAID1 pair of small disks with root, swap, journal
-  Large RAID5/6 array with bulk of filesystem.
-
-I also did data journalling as it helps a lot with NFS.
-
-
-
-> 
-> How bad can this be when the journal is say internal for a
-> filesystem that is held on wide-stride RAID6 set? I suspect very
-> very bad, with apocalyptic read-modify-write storms, eating IOPS.
-> 
-> I suspect that this happens a lot with SSDs too, where the role
-> of stripe set size is played by the erase block size (often in
-> the hundreds of KBytes, and even more expensive).
-> 
-> Where are studies or even just impressions of anedoctes on how
-> bad this is?
-> 
-> Are there instrumentation tools in JFS or XFS that may allow me
-> to watch/inspect what is happening with the journal? For Linux
-> MD to see what are the rates of stripe r-m-w cases?
-
-Not that I am aware of.
-
-
-NeilBrown
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
