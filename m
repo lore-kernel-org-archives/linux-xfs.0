@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p418nEeH165481 for <xfs@oss.sgi.com>; Sun, 1 May 2011 03:49:14 -0500
+	p419OSdP167502
+	for <linux-xfs@oss.sgi.com>; Sun, 1 May 2011 04:24:28 -0500
 Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 166DF15D06BF
-	for <xfs@oss.sgi.com>; Sun,  1 May 2011 01:52:48 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1547B15719D8
+	for <linux-xfs@oss.sgi.com>; Sun,  1 May 2011 02:28:01 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	HGSQeB6hsmDKF0gI for <xfs@oss.sgi.com>;
-	Sun, 01 May 2011 01:52:48 -0700 (PDT)
-Date: Sun, 1 May 2011 18:52:46 +1000
+	OIF1gfe3cM89OP6u for <linux-xfs@oss.sgi.com>;
+	Sun, 01 May 2011 02:28:01 -0700 (PDT)
+Date: Sun, 1 May 2011 19:27:58 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs performance problem
-Message-ID: <20110501085246.GF13542@dastard>
-References: <4DB72084.8020205@inf.ethz.ch> <20110427023534.GF12436@dastard>
-	<201104291827.35801.Martin@lichtvoll.de>
+Subject: Re: op-journaled fs, journal size and storage speeds
+Message-ID: <20110501092758.GG13542@dastard>
+References: <19900.8703.214676.218477@tree.ty.sabi.co.UK>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <201104291827.35801.Martin@lichtvoll.de>
+In-Reply-To: <19900.8703.214676.218477@tree.ty.sabi.co.UK>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,40 +30,117 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Martin Steigerwald <Martin@lichtvoll.de>
-Cc: xfs@oss.sgi.com
+To: Peter Grandi <pg_xf2@xf2.to.sabi.co.UK>
+Cc: Linux fs XFS <linux-xfs@oss.sgi.com>, Linux fs JFS <jfs-discussion@lists.SourceForge.net>
 
-On Fri, Apr 29, 2011 at 06:27:34PM +0200, Martin Steigerwald wrote:
-> Am Mittwoch, 27. April 2011 schrieb Dave Chinner:
-> > On Tue, Apr 26, 2011 at 09:44:04PM +0200, Benjamin Schindler wrote:
-> > > Hi
-> > > 
-> > > Since upgrading to newer kernels I have serious problems with xfs
-> > > performance on my root fs.
-> > > It runs on a software raid 0 with 2 disks. On the same two disks,
-> > > there are two more partitions running a software raid-1 with ext3.
-> > > On the ext3 system, I have no issue, so I assume the drives are
-> > > fine.
-> > > But on the xfs filesystem, extracting a linux kernel archive takes 5
-> > > minutes or more, running ldconfig similarily long. The harddrives are
-> > > sata-2.
-> > > I'm running gentoo linux with kernel 2.6.38-gentoo-r1. I'm attaching
-> > > the kernel config but I guess more info is needed - just let me know
-> > > what is needed.
-> > 
-> > more than likely your problem is that barriers have been enabled for
-> > MD/DM devices on the new kernel, and they aren't on the old kernel.
-> > XFS uses barriers by default, ext3 does not. Hence XFS performance
-> > will change while ext3 will not. Check dmesg output when mounting
-> > the filesystems on the different kernels.
+On Sat, Apr 30, 2011 at 03:51:43PM +0100, Peter Grandi wrote:
+> Been thinking about journals and RAID6s and SSDs.
 > 
-> But didn't 2.6.38 replace barriers by explicit flushes the filesystem has to 
-> wait for - mitigating most of the performance problems with barriers?
+> In particular for file system designs like JFS and XFS that do
+> operation journaling (while ext[34] do block journaling).
 
-IIRC, it depends on whether the hardware supports FUA or not. If it
-doesn't then device cache flushes are used to emulate FUA and so
-performance can still suck. Christoph will no doubt correct me if I
-got that wrong ;)
+XFS is not an operation journalling filesystem. Most of the metadata
+is dirty-region logged via buffers, just like ext3/4. Perhaps you
+need to read some documentation like this:
+
+http://xfs.org/index.php/Improving_Metadata_Performance_By_Reducing_Journal_Overhead#Operation_Based_Logging
+
+> The issue is: journal size?
+>
+> It seems to me that adopting as guideline a percent of the
+> filesystem is very wrong, and so I have been using a rule of
+> thumb like one second of expected transfer rate, so "in flight"
+> updates are never much behind.
+
+How do you know what "one second" of "in flight" operations is going
+to be?
+
+I had to deal with this in XFS when implementing the delayed logging
+code. It uses a number of operations or a percentage of log space to
+determine when to checkpoint the modifications, and that is
+typically load dependent as to when it triggers.
+
+And then you've got the problem of concurrency - one second of a
+single threaded workload is much different to one second of the same
+workload spread across 20 CPU cores. You need to have limits that
+work well in both cases, and structures that scale to that level of
+concurrency.
+
+In reality, there's not much point in trying to calculate what one
+second's worth of metadata is going to be - more often that not
+you'll hit some other limitation in the journal subsystem, run out
+of memory or have to put limits in place anyway to avoid latency
+problems. Easiest and most reliable method seems to be to size your
+journal appropriatly in the first place and have you algorithms key
+off that....
+
+> But even at a single disk *sequential* transfer rate of say
+> 80MB/s average, a journal that contains operation records could
+> conceivably hold dozens if not hundreds of thousands of pending
+> metadata updates, probably targeted at very widely scattered
+> locations on disk, and playing a journal fully could take a long
+> time.
+
+17 minutes is my current record by crashing a VM during a chmod -R
+operation over a 100 million inode filesystem. That was on a ~2GB
+log (maximum supported size).
+
+http://xfs.org/index.php/Improving_Metadata_Performance_By_Reducing_Journal_Overhead#Reducing_Recovery_Time
+
+> So the idea would be that the relevant transfer rate would be
+> the *random* one, and since that is around 4MB/s per single
+> disk, journal sizes would end up pretty small. But many people
+> allocate very large (at least compared to that) journals.
+> 
+> This seems to me a fairly bad idea, because then the journal
+> becomes a massive hot spot on the disk and draws the disk arm
+> like black hole. I suspect that operations should not stay on
+
+That's why you can configure an external log....
+
+> the journal for a long time. However if the journal is too small
+> processes that do metadata updates start to hang on it.
+
+Well, yes. The journal needs to be large enough to hold all the
+transaction reservations for the active transactions. XFS, in the
+worse case for a default filesystem config, needs about 100MB of log
+space per 300 concurrent transactions. Increasing transaction
+concurrency was the main reason we increased the log size...
+
+> So some questions for which I have guesses but not good answers:
+> 
+>   * What should journal size be proportional to?
+
+Your workload.
+
+>   * What is the downside of a too small journal?
+
+Performance sucks.
+
+>   * What is the downside of a too large journal other than space?
+
+Recovery times too long, lots of outstanding metadata pinned in
+memory (hello OOM-killer!), and other resource management related
+scalability issues.
+
+> Again I expect answers to be very different for ext[34] but I am
+> asking for operation-journaling file system designs like JFS and
+> XFS.
+
+> BTW, another consideration is that for filesystems that are
+> fairly journal-intensive, putting the journal on a low traffic
+> storage device can have large benefits.
+
+Yeah, nobody ever thought of an external log before.... :)
+
+> But if they can be pretty small, I wonder whether putting the
+> journals of several filesystems on the same storage device then
+> becomes a sensible option as the locality will be quite narrow
+> (e.g. a single physical cylinder) or it could be wortwhile like
+> the database people do to journal to battery-backed RAM.
+
+Got a supplier for the custom hardware you'd need? Just use a PCIe
+SSD....
 
 Cheers,
 
