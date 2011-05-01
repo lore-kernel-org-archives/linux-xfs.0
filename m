@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p41GrIsN184657 for <xfs@oss.sgi.com>; Sun, 1 May 2011 11:53:19 -0500
-Received: from edge10.ethz.ch (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 537D015D1316
-	for <xfs@oss.sgi.com>; Sun,  1 May 2011 09:56:53 -0700 (PDT)
-Received: from edge10.ethz.ch (edge10.ethz.ch [82.130.75.186]) by cuda.sgi.com
-	with ESMTP id 2SxXuyYkASFDK7Si for <xfs@oss.sgi.com>;
-	Sun, 01 May 2011 09:56:53 -0700 (PDT)
-Message-ID: <4DBD90A3.6000101@inf.ethz.ch>
-Date: Sun, 1 May 2011 18:56:03 +0200
-From: Benjamin Schindler <bschindler@inf.ethz.ch>
-MIME-Version: 1.0
+	p41GqH8b184612 for <xfs@oss.sgi.com>; Sun, 1 May 2011 11:52:18 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 51D234247FD
+	for <xfs@oss.sgi.com>; Sun,  1 May 2011 09:55:53 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id FEUNIBUbqccnB2jE for
+	<xfs@oss.sgi.com>; Sun, 01 May 2011 09:55:53 -0700 (PDT)
+Date: Sun, 1 May 2011 12:55:46 -0400
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: xfs performance problem
-References: <201104291828.46420.Martin@lichtvoll.de>
-In-Reply-To: <201104291828.46420.Martin@lichtvoll.de>
+Message-ID: <20110501165546.GB5391@infradead.org>
+References: <4DB72084.8020205@inf.ethz.ch> <20110427023534.GF12436@dastard>
+	<201104291827.35801.Martin@lichtvoll.de>
+	<20110501085246.GF13542@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20110501085246.GF13542@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,48 +30,39 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Martin Steigerwald <Martin@lichtvoll.de>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-Hi
-
-On 29.04.2011 18:28, Martin Steigerwald wrote:
-> sorry, forgot to cc.
+On Sun, May 01, 2011 at 06:52:46PM +1000, Dave Chinner wrote:
+> > > more than likely your problem is that barriers have been enabled for
+> > > MD/DM devices on the new kernel, and they aren't on the old kernel.
+> > > XFS uses barriers by default, ext3 does not. Hence XFS performance
+> > > will change while ext3 will not. Check dmesg output when mounting
+> > > the filesystems on the different kernels.
+> > 
+> > But didn't 2.6.38 replace barriers by explicit flushes the filesystem has to 
+> > wait for - mitigating most of the performance problems with barriers?
 > 
-> Am Mittwoch, 27. April 2011 schrieb Dave Chinner:
->> On Tue, Apr 26, 2011 at 09:44:04PM +0200, Benjamin Schindler wrote:
->>> Hi
->>>
->>> Since upgrading to newer kernels I have serious problems with xfs
->>> performance on my root fs.
->>> It runs on a software raid 0 with 2 disks. On the same two disks,
->>> there are two more partitions running a software raid-1 with ext3.
->>> On the ext3 system, I have no issue, so I assume the drives are
->>> fine.
->>> But on the xfs filesystem, extracting a linux kernel archive takes 5
->>> minutes or more, running ldconfig similarily long. The harddrives are
->>> sata-2.
->>> I'm running gentoo linux with kernel 2.6.38-gentoo-r1. I'm attaching
->>> the kernel config but I guess more info is needed - just let me know
->>> what is needed.
->>
->> more than likely your problem is that barriers have been enabled for
->> MD/DM devices on the new kernel, and they aren't on the old kernel.
->> XFS uses barriers by default, ext3 does not. Hence XFS performance
->> will change while ext3 will not. Check dmesg output when mounting
->> the filesystems on the different kernels.
-> 
-> But didn't 2.6.38 replace barriers by explicit flushes the filesystem has to 
-> wait for - mitigating most of the performance problems with barriers?
-> 
+> IIRC, it depends on whether the hardware supports FUA or not. If it
+> doesn't then device cache flushes are used to emulate FUA and so
+> performance can still suck. Christoph will no doubt correct me if I
+> got that wrong ;)
 
-Well, that doesn't seem to work then may be? As always, I'm willing to
-do testing and provide info if required
+Mitigating most of the barrier performance issues is a bit of a strong
+word.  Yes, it remove useless ordering requirements, but fundamentally
+you still have to flush the disk cache to the physical medium, which
+is always going to be slower than just filling up a DRAM cache like
+ext3's default behaviour in mainline does (interestingly both SLES
+and RHEL have patched it to provide safe behaviour by default).
 
-Cheers
-Benjamin
-
-p.s. please keep the cc
+Both the old barrier and new flush code will use the FUA bit if
+available, and those optimize the post-flush for a log write out.
+Note that currently libata by default always disables FUA support,
+even if the disk supports it, so you'll need a SAS/FC/iSCSI/etc
+device to actually see FUA requests, which is quite sad as it
+should provide a nice speedup epecially for SATA where the cache
+flush command is not queueable and thus requires us to still
+drain any outstanding I/O at least for a short duration.
 
 _______________________________________________
 xfs mailing list
