@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p42CaZ0e231836 for <xfs@oss.sgi.com>; Mon, 2 May 2011 07:36:35 -0500
-Date: Mon, 2 May 2011 22:40:07 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: 2.6.39-rc3, 2.6.39-rc4: XFS lockup - regression since 2.6.38
-Message-ID: <20110502124007.GC2978@dastard>
-References: <20110423224403.5fd1136a@neptune.home>
-	<20110427050850.GG12436@dastard>
-	<20110427182622.05a068a2@neptune.home>
-	<20110428194528.GA1627@x4.trippels.de>
-	<20110429011929.GA13542@dastard>
-	<20110429151841.GA893@x4.trippels.de>
-	<20110429213524.449e003b@neptune.home>
-	<20110430161810.6ccd2c99@neptune.home>
-	<20110502061528.GA22538@x4.trippels.de>
+	p42FwuPD238865 for <xfs@oss.sgi.com>; Mon, 2 May 2011 10:59:03 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E85831E19B4C
+	for <xfs@oss.sgi.com>; Mon,  2 May 2011 09:02:32 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id sNdaL8cfolmy3iAJ for
+	<xfs@oss.sgi.com>; Mon, 02 May 2011 09:02:32 -0700 (PDT)
+Received: from hch by bombadil.infradead.org with local (Exim 4.72 #1 (Red Hat
+	Linux)) id 1QGvZw-0003lk-As
+	for xfs@oss.sgi.com; Mon, 02 May 2011 16:02:32 +0000
+Date: Mon, 2 May 2011 12:02:32 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH] xfstests: support post-udev device mapper nodes
+Message-ID: <20110502160232.GA14457@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110502061528.GA22538@x4.trippels.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,82 +25,67 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Markus Trippelsdorf <markus@trippelsdorf.de>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Dave Chinner <dchinner@redhat.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, xfs-masters@oss.sgi.com, Bruno =?iso-8859-1?Q?Pr=E9mont?= <bonbons@linux-vserver.org>, Alex Elder <aelder@sgi.com>
+To: xfs@oss.sgi.com
 
-On Mon, May 02, 2011 at 08:15:28AM +0200, Markus Trippelsdorf wrote:
-> On 2011.04.30 at 16:18 +0200, Bruno Pr=E9mont wrote:
-> > On Fri, 29 April 2011 Bruno Pr=E9mont wrote:
-> > > On Fri, 29 April 2011 Markus Trippelsdorf wrote:
-> > > > On 2011.04.29 at 11:19 +1000, Dave Chinner wrote:
-> > > > > OK, so the common elements here appears to be root filesystems
-> > > > > with small log sizes, which means they are tail pushing all the
-> > > > > time metadata operations are in progress. Definitely seems like a
-> > > > > race in the AIL workqueue trigger mechanism. I'll see if I can
-> > > > > reproduce this and cook up a patch to fix it.
-> > > > =
+Because of udevs complaining device mapper now creates /dev/dm-N as the real
+device nodes, and just symlinks the /dev/mapper/ names to it.  This would be
+easy if everything used the /dev/mapper clear names, but most system utilities
+translate them back to the /dev/mapper/ names and thus confuse various test
+cases.  Add support to _is_block_dev to read symlinks, and add documentation
+on how to run xfstests on device mapper volumes.
 
-> > > > Hmm, I'm wondering if this issue is somehow related to the hrtimer =
-bug,
-> > > > that Thomas Gleixner fixed yesterday:
-> > > > http://git.us.kernel.org/?p=3Dlinux/kernel/git/tip/linux-2.6-tip.gi=
-t;a=3Dcommit;h=3Dce31332d3c77532d6ea97ddcb475a2b02dd358b4
-> > > > http://thread.gmane.org/gmane.linux.kernel.mm/61909/
-> > > > =
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-> > > > It also looks similar to the issue that James Bottomley reported
-> > > > earlier: http://thread.gmane.org/gmane.linux.kernel.mm/62185/ =
-
-> > > =
-
-> > > I'm going to see, I've applied Thomas' fix on the box seeing XFS free=
-ze (without
-> > > other changes to kernel).
-> > > Going to run that kernel for the week-end and beyond if it survives t=
-o see what
-> > > happens.
-> > =
-
-> > Happened again (after a few hours of uptime), so it definitely is not
-> > caused by hrtimer bug that Thomas Gleixner fixed.
-> =
-
-> I've enabled lock debugging and this is what happened after a few hours
-> uptime. (I can't tell if this is a false positive):
-> =
-
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D
-> [ INFO: possible circular locking dependency detected ]
-> 2.6.39-rc5-00130-g3fd9952 #10
-> -------------------------------------------------------
-> kio_file/7364 is trying to acquire lock:
->  (&sb->s_type->i_mutex_key#5/2){+.+...}, at: [<ffffffff81151e4e>] generic=
-_file_splice_write+0xce/0x180
-> =
-
-> but task is already holding lock:
->  (xfs_iolock_active){++++++}, at: [<ffffffff811d7d05>] xfs_ilock+0x125/0x=
-1f0
-> =
-
-> which lock already depends on the new lock.
-
-Known problem. Been broken for ages, yet I only first saw a lockdep
-report for this about a week ago on a 2.6.32 kernel....
-
-Cheers,
-
-Dave.
--- =
-
-Dave Chinner
-david@fromorbit.com
+Index: xfstests-dev/common.rc
+===================================================================
+--- xfstests-dev.orig/common.rc	2011-05-02 12:45:25.000000000 +0000
++++ xfstests-dev/common.rc	2011-05-02 12:45:28.000000000 +0000
+@@ -587,7 +587,14 @@ _is_block_dev()
+ 	exit 1
+     fi
+ 
+-    [ -b $1 ] && src/lstat64 $1 | $AWK_PROG '/Device type:/ { print $9 }'
++    _dev=$1
++    if [ -L ${_dev} ]; then
++        _dev=`readlink -f ${_dev}`
++    fi
++
++    if [ -b ${_dev} ]; then
++        src/lstat64 ${_dev} | $AWK_PROG '/Device type:/ { print $9 }'
++    fi
+ }
+ 
+ # Do a command, log it to $seq.full, optionally test return status
+@@ -700,10 +707,12 @@ _require_scratch()
+ 	*)
+ 		 if [ -z "$SCRATCH_DEV" -o "`_is_block_dev $SCRATCH_DEV`" = "" ]
+ 		 then
++		     echo "no a block device";
+ 		     _notrun "this test requires a valid \$SCRATCH_DEV"
+ 		 fi
+ 		 if [ "`_is_block_dev $SCRATCH_DEV`" = "`_is_block_dev $TEST_DEV`" ]
+ 		 then
++		    echo "foo"
+ 		     _notrun "this test requires a valid \$SCRATCH_DEV"
+ 		 fi
+ 		if [ ! -d "$SCRATCH_MNT" ]
+Index: xfstests-dev/README.device-mapper
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ xfstests-dev/README.device-mapper	2011-05-02 15:51:24.000000000 +0000
+@@ -0,0 +1,8 @@
++
++To use xfstests on device mapper always use the /dev/mapper/<name> symlinks,
++not the /dev/dm-* devices, or the symlinks created by LVM.
++
++For example:
++
++TEST_DEV=/dev/mapper/test
++SCRATCH_DEV=/dev/mapper/scratch
 
 _______________________________________________
 xfs mailing list
