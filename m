@@ -1,31 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p42CYqnb231773 for <xfs@oss.sgi.com>; Mon, 2 May 2011 07:34:52 -0500
-Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9E37A1EC7B03
-	for <xfs@oss.sgi.com>; Mon,  2 May 2011 05:38:27 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	1ctPhYicZykCol8u for <xfs@oss.sgi.com>;
-	Mon, 02 May 2011 05:38:27 -0700 (PDT)
-Date: Mon, 2 May 2011 22:38:24 +1000
+	p42CaZ0e231836 for <xfs@oss.sgi.com>; Mon, 2 May 2011 07:36:35 -0500
+Date: Mon, 2 May 2011 22:40:07 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: 2.6.39-rc4+: oom-killer busy killing tasks
-Message-ID: <20110502123824.GB2978@dastard>
-References: <20110427022655.GE12436@dastard>
-	<alpine.DEB.2.01.1104270042510.18728@trent.utfs.org>
-	<20110427102824.GI12436@dastard>
-	<alpine.DEB.2.01.1104281008320.18728@trent.utfs.org>
-	<20110428233751.GR12436@dastard>
-	<alpine.DEB.2.01.1104291250480.18728@trent.utfs.org>
-	<20110429201701.GA13166@x4.trippels.de>
-	<alpine.DEB.2.01.1104291710340.18728@trent.utfs.org>
-	<20110501080149.GD13542@dastard>
-	<alpine.DEB.2.01.1105020210160.18728@trent.utfs.org>
+Subject: Re: 2.6.39-rc3, 2.6.39-rc4: XFS lockup - regression since 2.6.38
+Message-ID: <20110502124007.GC2978@dastard>
+References: <20110423224403.5fd1136a@neptune.home>
+	<20110427050850.GG12436@dastard>
+	<20110427182622.05a068a2@neptune.home>
+	<20110428194528.GA1627@x4.trippels.de>
+	<20110429011929.GA13542@dastard>
+	<20110429151841.GA893@x4.trippels.de>
+	<20110429213524.449e003b@neptune.home>
+	<20110430161810.6ccd2c99@neptune.home>
+	<20110502061528.GA22538@x4.trippels.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.01.1105020210160.18728@trent.utfs.org>
+In-Reply-To: <20110502061528.GA22538@x4.trippels.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,70 +26,80 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christian Kujau <lists@nerdbynature.de>
-Cc: minchan.kim@gmail.com, LKML <linux-kernel@vger.kernel.org>, Markus Trippelsdorf <markus@trippelsdorf.de>, xfs@oss.sgi.com
+To: Markus Trippelsdorf <markus@trippelsdorf.de>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Dave Chinner <dchinner@redhat.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, xfs-masters@oss.sgi.com, Bruno =?iso-8859-1?Q?Pr=E9mont?= <bonbons@linux-vserver.org>, Alex Elder <aelder@sgi.com>
 
-On Mon, May 02, 2011 at 02:26:17AM -0700, Christian Kujau wrote:
-> On Sun, 1 May 2011 at 18:01, Dave Chinner wrote:
-> > I really don't know why the xfs inode cache is not being trimmed. I
-> > really, really need to know if the XFS inode cache shrinker is
-> > getting blocked or not running - do you have those sysrq-w traces
-> > when near OOM I asked for a while back?
-> 
-> Here's another attempt at getting those:
-> 
->   http://nerdbynature.de/bits/2.6.39-rc4/oom/
->   * messages-11.txt.gz & slabinfo-11.txt.bz2
->     - oom-killer at 00:05:04
->     - last sysrq-w to succeed at 00:05:03
-> 
->   * messages-12.txt.gz & slabinfo-12.txt.bz2, along
->     with meminfo-post-oom-12.txt & sysrq-w_post-oom-12.jpg could
->     be more interesting:
->     - last sysrq-w to succeed at 01:27:08
->     - oom-killer at 01:27:11
-> 
->    ...but after the OOM-killer was killing quite a few processes, MemFree
->    showed 511236 kB free memory, yet ssh logins were still being killed.
->    Finally I got a root shell on the box, issued sysrq-w again and even
->    executed /bin/sync, which came back. But looking at the logs now 
->    nothing went to the disk (/var/log resides on / which is a ext4 fs).
->    See sysrq-w_post-oom-12.jpg for a sysrq-w I took 2381s after boot time,
->    or 01:32 - syslog stopped on 01:27.
+On Mon, May 02, 2011 at 08:15:28AM +0200, Markus Trippelsdorf wrote:
+> On 2011.04.30 at 16:18 +0200, Bruno Pr=E9mont wrote:
+> > On Fri, 29 April 2011 Bruno Pr=E9mont wrote:
+> > > On Fri, 29 April 2011 Markus Trippelsdorf wrote:
+> > > > On 2011.04.29 at 11:19 +1000, Dave Chinner wrote:
+> > > > > OK, so the common elements here appears to be root filesystems
+> > > > > with small log sizes, which means they are tail pushing all the
+> > > > > time metadata operations are in progress. Definitely seems like a
+> > > > > race in the AIL workqueue trigger mechanism. I'll see if I can
+> > > > > reproduce this and cook up a patch to fix it.
+> > > > =
 
-Same problem:
+> > > > Hmm, I'm wondering if this issue is somehow related to the hrtimer =
+bug,
+> > > > that Thomas Gleixner fixed yesterday:
+> > > > http://git.us.kernel.org/?p=3Dlinux/kernel/git/tip/linux-2.6-tip.gi=
+t;a=3Dcommit;h=3Dce31332d3c77532d6ea97ddcb475a2b02dd358b4
+> > > > http://thread.gmane.org/gmane.linux.kernel.mm/61909/
+> > > > =
 
-MemFree:          511236 kB
-....
-LowTotal:         759904 kB
-LowFree:            3804 kB
+> > > > It also looks similar to the issue that James Bottomley reported
+> > > > earlier: http://thread.gmane.org/gmane.linux.kernel.mm/62185/ =
 
-i.e. that low memory is being exhausted by the slab cache, while
-there is lots of free high memory, and the low memory zone is marked
-as all unreclaimable....
+> > > =
 
-The sysrq trace less than 1s before the first OOM shows this:
+> > > I'm going to see, I've applied Thomas' fix on the box seeing XFS free=
+ze (without
+> > > other changes to kernel).
+> > > Going to run that kernel for the week-end and beyond if it survives t=
+o see what
+> > > happens.
+> > =
 
-[c00770ec] __lock_acquire+0x43c/0x1818 (unreliable)
-[c000a924] __switch_to+0x9c/0x128
-[c0417580] schedule+0x274/0x8bc
-[c0418128] schedule_timeout+0x16c/0x214
-[c04172a0] io_schedule_timeout+0xb0/0x11c
-[c00b153c] congestion_wait+0x8c/0xdc
-[c00aa43c] kswapd+0x6d0/0x884
-[c005e3d0] kthread+0x84/0x88
-[c0010908] kernel_thread+0x4c/0x68
+> > Happened again (after a few hours of uptime), so it definitely is not
+> > caused by hrtimer bug that Thomas Gleixner fixed.
+> =
 
-Background memory reclaim appears to be blocked by IO congestion....
+> I've enabled lock debugging and this is what happened after a few hours
+> uptime. (I can't tell if this is a false positive):
+> =
+
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D
+> [ INFO: possible circular locking dependency detected ]
+> 2.6.39-rc5-00130-g3fd9952 #10
+> -------------------------------------------------------
+> kio_file/7364 is trying to acquire lock:
+>  (&sb->s_type->i_mutex_key#5/2){+.+...}, at: [<ffffffff81151e4e>] generic=
+_file_splice_write+0xce/0x180
+> =
+
+> but task is already holding lock:
+>  (xfs_iolock_active){++++++}, at: [<ffffffff811d7d05>] xfs_ilock+0x125/0x=
+1f0
+> =
+
+> which lock already depends on the new lock.
+
+Known problem. Been broken for ages, yet I only first saw a lockdep
+report for this about a week ago on a 2.6.32 kernel....
 
 Cheers,
 
 Dave.
--- 
+-- =
+
 Dave Chinner
 david@fromorbit.com
 
