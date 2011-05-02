@@ -1,20 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p42H9jwc241416 for <xfs@oss.sgi.com>; Mon, 2 May 2011 12:09:45 -0500
-Received: from smtp4-g21.free.fr (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F276F1649661
-	for <xfs@oss.sgi.com>; Mon,  2 May 2011 10:13:19 -0700 (PDT)
-Received: from smtp4-g21.free.fr (smtp4-g21.free.fr [212.27.42.4]) by
-	cuda.sgi.com with ESMTP id 5Ya4rPUpH28lp3GL for
-	<xfs@oss.sgi.com>; Mon, 02 May 2011 10:13:19 -0700 (PDT)
-Date: Mon, 2 May 2011 19:13:23 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: XFS/Linux Sanity check
-Message-ID: <20110502191323.417ef644@harpe.intellique.com>
-In-Reply-To: <BANLkTik4YjSr7-VA+f9Sh+UxvKfFKMy=+w@mail.gmail.com>
-References: <BANLkTik4YjSr7-VA+f9Sh+UxvKfFKMy=+w@mail.gmail.com>
-Mime-Version: 1.0
+	p42JTQhw245427 for <xfs@oss.sgi.com>; Mon, 2 May 2011 14:29:26 -0500
+Subject: Re: [PATCH] xfstests: support post-udev device mapper nodes
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <20110502160232.GA14457@infradead.org>
+References: <20110502160232.GA14457@infradead.org>
+Date: Mon, 2 May 2011 14:32:59 -0500
+Message-ID: <1304364779.3077.41.camel@doink>
+MIME-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,72 +18,104 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Paul Anderson <pha@umich.edu>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-Le Mon, 2 May 2011 11:47:48 -0400
-Paul Anderson <pha@umich.edu> =E9crivait:
+On Mon, 2011-05-02 at 12:02 -0400, Christoph Hellwig wrote:
+> Because of udevs complaining device mapper now creates /dev/dm-N as the real
+> device nodes, and just symlinks the /dev/mapper/ names to it.  This would be
+> easy if everything used the /dev/mapper clear names, but most system utilities
+> translate them back to the /dev/mapper/ names and thus confuse various test
+> cases.  Add support to _is_block_dev to read symlinks, and add documentation
+> on how to run xfstests on device mapper volumes.
 
-> We are deploying five Dell 810s, 192GiB RAM, 12 core, each with three
-> LSI 9200-8E SAS controllers, and three SuperMicro 847 45 drive bay
-> cabinets with enterprise grade 2TB drives.
+I'm not 100% sure I'm parsing the above right.  What
+I read is that, although we want to use the "real"
+device (not the link), the utilities tend to report
+the /dev/mapper names.  Therefore we want to use
+/dev/mapper names and internally translate them to
+their real devices.
 
-I have very little experience with these RAID coontrollers. However I
-have a 9212 4i4e (same card generation and same chipset) in test, and so
-far I must say it looks like _utter_ _crap_. The performance is abysmal
-(it's been busy rebuilding a 20TB array for... 6 days!); the server
-regularly freezes and crashes without any reason (it's a pure dev
-system with virtually zero load and zero IO); and there were lots of
-filesystem corruptions. I'm running a 2.6.32.25 64 bits plain vanilla
-kernel that poses no problem whatsoever with any other configuration.
- =
+Based on that understanding I think what you're trying
+to do is fine, but there a few problems with what you sent.
+Note that I'm not even looking at the specifics of
+/dev/mapper links at the moment.
 
-> In isolated testing, I see around 5GiBytes/second raw (135 parallel dd
-> reads), and with a benchmark test of 10 simultaneous 64GiByte dd
-> commands, I can see just shy of 2 GiBytes/second reading, and around
-> 1.4GiBytes/second writing through XFS.   The benchmark is crude, but
-> fairly representative of our expected use.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
+> Index: xfstests-dev/common.rc
+> ===================================================================
+> --- xfstests-dev.orig/common.rc	2011-05-02 12:45:25.000000000 +0000
+> +++ xfstests-dev/common.rc	2011-05-02 12:45:28.000000000 +0000
+> @@ -587,7 +587,14 @@ _is_block_dev()
+>  	exit 1
+>      fi
+>  
+> -    [ -b $1 ] && src/lstat64 $1 | $AWK_PROG '/Device type:/ { print $9 }'
+> +    _dev=$1
+> +    if [ -L ${_dev} ]; then
+> +        _dev=`readlink -f ${_dev}`
 
-I don't understand why there's such a gap between the raw and XFS
-performance. Generally XFS gives 90% performance or more of raw
-performance.
- =
+Although it typically shouldn't, if the "readlink -f" fails,
+it will make _dev have an empty value...
 
-> md apparently does not support barriers, so we are badly exposed in
-> that manner, I know.  As a test, I disabled write cache on all drives,
-> performance dropped by 30% or so, but since md is apparently the
-> problem, barriers still didn't work.
+> +    fi
+> +
+> +    if [ -b ${_dev} ]; then
 
-Frankly, I'd stay away from md at this array size. I'm pretty sure
-you're exploring uncharted territory here. =
+...which will lead to some sort of shell "syntax error"
+message here, which is rather unhelpful.
+
+At a minimum, I think putting quotes around it here
+would avoid that (but you should test), i.e.,
+    if [ -b "${_dev}" ]; then
+
+> +        src/lstat64 ${_dev} | $AWK_PROG '/Device type:/ { print $9 }'
+> +    fi
+>  }
+>  
+>  # Do a command, log it to $seq.full, optionally test return status
+> @@ -700,10 +707,12 @@ _require_scratch()
+>  	*)
+>  		 if [ -z "$SCRATCH_DEV" -o "`_is_block_dev $SCRATCH_DEV`" = "" ]
+>  		 then
+> +		     echo "no a block device";
+
+This and the next one appear to be junk that should
+be removed.
+
+>  		     _notrun "this test requires a valid \$SCRATCH_DEV"
+>  		 fi
+>  		 if [ "`_is_block_dev $SCRATCH_DEV`" = "`_is_block_dev $TEST_DEV`" ]
+>  		 then
+> +		    echo "foo"
+>  		     _notrun "this test requires a valid \$SCRATCH_DEV"
+>  		 fi
+>  		if [ ! -d "$SCRATCH_MNT" ]
+> Index: xfstests-dev/README.device-mapper
+> ===================================================================
+> --- /dev/null	1970-01-01 00:00:00.000000000 +0000
+> +++ xfstests-dev/README.device-mapper	2011-05-02 15:51:24.000000000 +0000
+> @@ -0,0 +1,8 @@
+> +
+> +To use xfstests on device mapper always use the /dev/mapper/<name> symlinks,
+> +not the /dev/dm-* devices, or the symlinks created by LVM.
+> +
+> +For example:
+> +
+> +TEST_DEV=/dev/mapper/test
+> +SCRATCH_DEV=/dev/mapper/scratch
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 
-> Ideally, I'd firstly be able to find informed opinions about how I can
-> improve this arrangement - we are mildly flexible on RAID controllers,
-> very flexible on versions of Linux, etc, and can try other OS's as a
-> last resort (but the leading contender here would be "something"
-> running ZFS, and though I love ZFS, it really didn't seem to work well
-> for our needs).
-
-I can't yet be sure because I plan more testing with this card, but I'd
-ditch the LSI controllers for LSI/3Ware or Adaptec (or Areca
-eventually), and stay away from md RAID and use hardware RAID. I'm an
-hardware RAID freak, but... hardware RAID allows proper write cache,
-for a start (because it has BBUs). =
-
-
--- =
-
-------------------------------------------------------------------------
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
-------------------------------------------------------------------------
 
 _______________________________________________
 xfs mailing list
