@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p42FiDHx238313 for <xfs@oss.sgi.com>; Mon, 2 May 2011 10:44:13 -0500
-Received: from mail-qy0-f174.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6BCE3156AD48
-	for <xfs@oss.sgi.com>; Mon,  2 May 2011 08:47:49 -0700 (PDT)
-Received: from mail-qy0-f174.google.com (mail-qy0-f174.google.com
-	[209.85.216.174]) by cuda.sgi.com with ESMTP id
-	rk58sMYznYFRtGUQ for <xfs@oss.sgi.com>;
-	Mon, 02 May 2011 08:47:49 -0700 (PDT)
-Received: by qyk7 with SMTP id 7so1548318qyk.5
-	for <xfs@oss.sgi.com>; Mon, 02 May 2011 08:47:48 -0700 (PDT)
-MIME-Version: 1.0
-Date: Mon, 2 May 2011 11:47:48 -0400
-Message-ID: <BANLkTik4YjSr7-VA+f9Sh+UxvKfFKMy=+w@mail.gmail.com>
-Subject: XFS/Linux Sanity check
-From: Paul Anderson <pha@umich.edu>
+	p42GErej239551 for <xfs@oss.sgi.com>; Mon, 2 May 2011 11:14:53 -0500
+Received: from legolas.restena.lu (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C4447513C84
+	for <xfs@oss.sgi.com>; Mon,  2 May 2011 09:18:26 -0700 (PDT)
+Received: from legolas.restena.lu (legolas.restena.lu [158.64.1.34]) by
+	cuda.sgi.com with ESMTP id ZJ52tCm5HmXYHSX1 for
+	<xfs@oss.sgi.com>; Mon, 02 May 2011 09:18:26 -0700 (PDT)
+Date: Mon, 2 May 2011 18:18:11 +0200
+From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
+Subject: Re: xfs hang on 2.6.39-rc5
+Message-ID: <20110502181811.61dd09eb@neptune.home>
+In-Reply-To: <4DBD7880.2040804@gmail.com>
+References: <4DBD7880.2040804@gmail.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,75 +27,111 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Doug Nazar <nazard.lkml@gmail.com>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-Our genetic sequencing research group is growing our file storage from
-1PB to 2PB.
+On Sun, 01 May 2011 Doug Nazar <nazard.lkml@gmail.com> wrote:
+> On two different hosts, both running 2.6.39-rc5-00123-g33b6c92, xfs 
+> seems to be locking up.
+> 
+> I had to revert the box from the second trace but this trace is mounted 
+> with:
 
-Our workload looks very much like large video processing might look -
-relatively low metadata, very, very high sequential I/O.  The servers
-will either be doing very high I/O with local I/O bound jobs, or
-serving data via NFSv4 (or possibly custom data distribution means) to
-our compute grid for compute bound jobs.  Our first PB of data is
-largely on Promise RAID arrays, all of which are set up with XFS.
-Generally, we're big fans of XFS for stability, high performance, and
-robustness in the face of crashes.  We tried ZFS, ran into I/O
-throttling issues that at the time seem intractable (write picketing -
-essentially half the maximum write rate of hardware).
+This looks related to at least:
+  http://thread.gmane.org/gmane.linux.kernel/1130312/focus=1131769
 
-We are deploying five Dell 810s, 192GiB RAM, 12 core, each with three
-LSI 9200-8E SAS controllers, and three SuperMicro 847 45 drive bay
-cabinets with enterprise grade 2TB drives.
 
-We're running Ubuntu 10.04 LTS, and have tried either the stock kernel
-(2.6.32-30) or 2.6.35 from linux.org.  We organize the storage as one
-software (MD) RAID 0 composed of 7 software RAID (MD) 6s, each with 18
-drives, giving 204 TiB usable (9 drives of the 135 are unused).  XFS
-is set up properly (as far as I know) with respect to stripe and chunk
-sizes.  Allocation groups are 1TiB in size, which seems sane for the
-size of files we expect to work with.
-
-In isolated testing, I see around 5GiBytes/second raw (135 parallel dd
-reads), and with a benchmark test of 10 simultaneous 64GiByte dd
-commands, I can see just shy of 2 GiBytes/second reading, and around
-1.4GiBytes/second writing through XFS.   The benchmark is crude, but
-fairly representative of our expected use.
-
-md apparently does not support barriers, so we are badly exposed in
-that manner, I know.  As a test, I disabled write cache on all drives,
-performance dropped by 30% or so, but since md is apparently the
-problem, barriers still didn't work.
-
-Nonetheless, what we need, but don't have, is stability.
-
-With 2.6.32-30, we get reliable kernel panics after 2 days of
-sustained rsync to the machine (around 150-250MiBytes/second for the
-entire time - the source machines are slow), and with 2.6.35, we get a
-bad resource contention problem fairly quickly - much less than 24
-hours (in this instance, we start getting XFS kernel thread timeouts
-similar to what I've seen posted here recently, but it isn't clear
-whether it is only XFS or also ext3 boot drives that are starved for
-I/O - suspending or killing all I/O load doesn't solve the problem -
-only a reboot does).
-
-Ideally, I'd firstly be able to find informed opinions about how I can
-improve this arrangement - we are mildly flexible on RAID controllers,
-very flexible on versions of Linux, etc, and can try other OS's as a
-last resort (but the leading contender here would be "something"
-running ZFS, and though I love ZFS, it really didn't seem to work well
-for our needs).
-
-Secondly, I welcome suggestions about which version of the linux
-kernel you'd prefer to hear bug reports about, as well as what kinds
-of output is most useful (we're getting all chassis set up with serial
-console so we can do kgdb and also full kernel panic output results).
-
-Thanks in advance,
-
-Paul Anderson
-Center for Statistical Genetics
-University of Michigan
-USA
+> UUID=dcdc849e-bad8-4971-935c-223819a6dcc4               /               
+> xfs             noatime         0 1
+> 
+> which ends up being:
+> 
+> /dev/sdb3 on / type xfs (rw,noatime,delaylog,noquota)
+> 
+> meta-data=/dev/sdb3              isize=256    agcount=16, agsize=601056 blks
+>           =                       sectsz=512   attr=0
+> data     =                       bsize=4096   blocks=9616896, imaxpct=25
+>           =                       sunit=0      swidth=0 blks
+> naming   =version 2              bsize=4096   ascii-ci=0
+> log      =internal               bsize=4096   blocks=4695, version=1
+>           =                       sectsz=512   sunit=0 blks, lazy-count=0
+> realtime =none                   extsz=65536  blocks=0, rtextents=0
+> 
+> [38160.536046] INFO: task multilog:7586 blocked for more than 120 seconds.
+> [38160.536052] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" 
+> disables this message.
+> [38160.536059] multilog        D 0012cfae     0  7586   7578 0x00000000
+> [38160.536069]  f5bcfd18 00000086 f9a4653a 0012cfae f9a33b34 00000024 
+> 6d783c2f 0000227f
+> [38160.536082]  f5bcfcc8 f5bcfcd8 00000000 00000000 f5bcfd18 f5c91810 
+> f5c91810 00000024
+> [38160.536092]  00d2e530 f1fd2e40 00001460 00dc5000 f5c1b780 0000695d 
+> 00000000 f5bcfd18
+> [38160.536103] Call Trace:
+> [38160.536188]  [<f9a4653a>] ? kmem_alloc+0x51/0xbe [xfs]
+> [38160.536212]  [<f9a33b34>] ? xlog_space_left+0x24/0xa9 [xfs]
+> [38160.536237]  [<f9a34644>] ? xlog_grant_push_ail+0xb8/0xdc [xfs]
+> [38160.536262]  [<f9a34c8f>] xlog_grant_log_space+0x173/0x42a [xfs]
+> [38160.536277]  [<c1028b95>] ? try_to_wake_up+0xd4/0xd4
+> [38160.536302]  [<f9a34ff1>] xfs_log_reserve+0xab/0xfe [xfs]
+> [38160.536329]  [<f9a40a20>] xfs_trans_reserve+0x74/0x1cb [xfs]
+> [38160.536357]  [<f9a3de78>] xfs_rename+0x122/0x61a [xfs]
+> [38160.536367]  [<c10bbd13>] ? link_path_walk+0x2de/0x77b
+> [38160.536375]  [<c10bae07>] ? generic_permission+0x1a/0x95
+> [38160.536398]  [<f9a4ee3e>] xfs_vn_rename+0x60/0x6a [xfs]
+> [38160.536407]  [<c10bd680>] vfs_rename+0x313/0x350
+> [38160.536415]  [<c10c290a>] ? d_lookup+0x1e/0x3d
+> [38160.536422]  [<c10be874>] sys_renameat+0x203/0x219
+> [38160.536431]  [<c10c889e>] ? mntput+0x13/0x1f
+> [38160.536437]  [<c10b4bfd>] ? fput+0x118/0x1b0
+> [38160.536443]  [<c10be8b2>] sys_rename+0x28/0x2a
+> [38160.536451]  [<c12db698>] sysenter_do_call+0x12/0x28
+> 
+> 
+> 
+> [94440.552055] INFO: task nfsd:8055 blocked for more than 120 seconds.
+> [94440.553587] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" 
+> disables this message.
+> [94440.556638] nfsd            D df5df880     0  8055      2 0x00000000
+> [94440.558258]  d6fb3d78 00000046 d6941c90 df5df880 df2b1400 df5df8c0 
+> 5a0961bd 000055be
+> [94440.561634]  d6fb3d28 03f35714 00014f61 00000000 d6fb3d78 d6fae370 
+> d6fae370 ffffff8c
+> [94440.565246]  d6941cdc d6fb3d48 c10c4aa8 cb5aea80 cb918000 0004e83b 
+> cb918201 e21adb34
+> [94440.569039] Call Trace:
+> [94440.570871]  [<c10c4aa8>] ? d_obtain_alias+0x3e/0xe6
+> [94440.572813]  [<e21adb34>] ? xlog_space_left+0x24/0xa9 [xfs]
+> [94440.574708]  [<e21aec08>] xlog_grant_log_space+0xec/0x42a [xfs]
+> [94440.576622]  [<e21ae644>] ? xlog_grant_push_ail+0xb8/0xdc [xfs]
+> [94440.578509]  [<c1028b95>] ? try_to_wake_up+0xd4/0xd4
+> [94440.580451]  [<e21aeff1>] xfs_log_reserve+0xab/0xfe [xfs]
+> [94440.582391]  [<e21baa20>] xfs_trans_reserve+0x74/0x1cb [xfs]
+> [94440.584353]  [<e21bdd48>] xfs_remove+0xd9/0x333 [xfs]
+> [94440.586270]  [<c10bad79>] ? acl_permission_check+0x1b/0x8f
+> [94440.588209]  [<c10bae07>] ? generic_permission+0x1a/0x95
+> [94440.590152]  [<e21c9079>] xfs_vn_unlink+0x30/0x6a [xfs]
+> [94440.592083]  [<c10bd2f7>] vfs_unlink+0x60/0xae
+> [94440.594006]  [<e1ebf9c5>] nfsd_unlink+0x19e/0x21b [nfsd]
+> [94440.595943]  [<e1ecae80>] ? nfsd4_encode_operation+0x56/0x161 [nfsd]
+> [94440.597911]  [<e1ec92a8>] nfsd4_remove+0x3e/0x114 [nfsd]
+> [94440.599878]  [<e1ec96f3>] nfsd4_proc_compound+0x334/0x3e9 [nfsd]
+> [94440.601853]  [<e1ecbcc7>] ? nfsd4_decode_getattr+0x8/0xa [nfsd]
+> [94440.603832]  [<e1ecfdb1>] ? nfs4svc_decode_compoundargs+0x268/0x342 
+> [nfsd]
+> [94440.605851]  [<e1ec926a>] ? nfsd4_rename+0x1e0/0x1e0 [nfsd]
+> [94440.607826]  [<e1ebc2be>] nfsd_dispatch+0xbc/0x1e9 [nfsd]
+> [94440.609794]  [<e1f81f2b>] svc_process+0x401/0x740 [sunrpc]
+> [94440.611715]  [<e1ebc8a4>] nfsd+0xae/0x130 [nfsd]
+> [94440.613620]  [<e1ebc7f6>] ? nfsd_svc+0x197/0x197 [nfsd]
+> [94440.615495]  [<e1ebc7f6>] ? nfsd_svc+0x197/0x197 [nfsd]
+> [94440.617277]  [<c1043c01>] kthread+0x67/0x69
+> [94440.618996]  [<c1043b9a>] ? kthreadd+0xa3/0xa3
+> [94440.620641]  [<c12dbc36>] kernel_thread_helper+0x6/0xd
+> 
+> 
+> Doug
+> 
 
 _______________________________________________
 xfs mailing list
