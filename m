@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p42AATnI226722 for <xfs@oss.sgi.com>; Mon, 2 May 2011 05:10:30 -0500
+	p42AatUj227603
+	for <linux-xfs@oss.sgi.com>; Mon, 2 May 2011 05:36:56 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B5DF71647DC2
-	for <xfs@oss.sgi.com>; Mon,  2 May 2011 03:14:05 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 75ECE1EC75C4
+	for <linux-xfs@oss.sgi.com>; Mon,  2 May 2011 03:40:32 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id PRKHQ0CNeNUYth2x for
-	<xfs@oss.sgi.com>; Mon, 02 May 2011 03:14:05 -0700 (PDT)
-Date: Mon, 2 May 2011 06:14:01 -0400
+	by cuda.sgi.com with ESMTP id 1fGBRy06LQmMQHhG for
+	<linux-xfs@oss.sgi.com>; Mon, 02 May 2011 03:40:32 -0700 (PDT)
+Date: Mon, 2 May 2011 06:40:31 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: xfs performance problem
-Message-ID: <20110502101401.GA9155@infradead.org>
-References: <4DB72084.8020205@inf.ethz.ch> <20110427023534.GF12436@dastard>
-	<201104291827.35801.Martin@lichtvoll.de>
-	<20110501085246.GF13542@dastard>
-	<20110501165546.GB5391@infradead.org>
-	<20110501182442.GA1635@x4.trippels.de>
+Subject: Re: op-journaled fs, journal size and storage speeds
+Message-ID: <20110502104031.GA22953@infradead.org>
+References: <19900.8703.214676.218477@tree.ty.sabi.co.UK>
+	<20110501092758.GG13542@dastard>
+	<19901.41647.606112.243194@tree.ty.sabi.co.UK>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110501182442.GA1635@x4.trippels.de>
+In-Reply-To: <19901.41647.606112.243194@tree.ty.sabi.co.UK>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,38 +31,56 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Markus Trippelsdorf <markus@trippelsdorf.de>
-Cc: xfs@oss.sgi.com
+To: Peter Grandi <pg_mh@sabi.co.UK>
+Cc: Linux fs XFS <linux-xfs@oss.sgi.com>, Linux fs JFS <jfs-discussion@lists.SourceForge.net>
 
-On Sun, May 01, 2011 at 08:24:42PM +0200, Markus Trippelsdorf wrote:
-> Another thing is that with the recent updates to block FLUSH handling,
-> using FUA might even be less efficient.  The new implementation
-> aggressively merges those commit writes and flushes.  IOW, depending
-> on timing, multiple consecutive commit writes can be merged as,
+On Sun, May 01, 2011 at 07:13:03PM +0100, Peter Grandi wrote:
+> > That's why you can configure an external log....
 > 
->  FLUSH + commit writes + FLUSH
-> 
-> or
-> 
->  FLUSH + some commit writes + FLUSH + other commit writes + FLUSH
-> 
-> and so on,
+> ...and lose barriers :-). But indeed.
 
-Except that writing multiple log buffers right next to each other
-is rather unusual - you'd have to have a burst of metadata only
-operations to get there.  What's more common is that a log write
-interrupts streams of actual data I/O, and the longer we drain
-the queue the more performance impact it has.
+Using a writeback cache on the log device is rather pointless as
+every writes needs write through semantics using FUA or a post-flush
+anyway.  But I actually have patch to allow for devices with
+a writeback cache in external log configurations, it's just a bit
+complicated as we basically need to copy the pre-flush statemachine
+into XFS to deal with the preflush beeing for a different device
+than the actual write.
 
-Moreover I'm working on avoiding the pre-flush if it's not needed,
-e.g. there were no appending writes, and there as no pushing of the
-log tail required, in which case the log write will only be
-a write with FUA set, with no FLUSH and thus no queue draining on
-SATA at all.
+> >> But if they can be pretty small, I wonder whether putting the
+> >> journals of several filesystems on the same storage device then
+> >> becomes a sensible option as the locality will be quite narrow
+> >> (e.g. a single physical cylinder) or it could be wortwhile like
+> >> the database people do to journal to battery-backed RAM.
+> 
+> For example as described in this old paper:
 
-Also when you move away from SATA to higher latency links like FC
-or iSCSI (maybe even over a WAN) avoiding protocol roundtrips buys
-you a lot of performance.
+It only makes sense if the log activity bursts for the different
+filesystems happen at different times, or none of the filesystems
+maxes out the log IOP rate.  
+
+> But they seem to me fundamentally terrible for journals, because
+> of the large erase blocks sizes and the enormous latency of erase
+> operations (lots of read-erase-write cycles for small commits).
+> They seem more oriented to large mostly read-only data sets than
+> very small mostly write ones.
+
+As mentioned earlier in this thread XFS allows to align and pad
+log writes.  Just make sure to get a device with an erase block
+size <= 256 kilobytes, which usually means SLC.  But even drives
+with a larger erase block size and sane firmware tend to be faster
+than plain old disks.  But as Dave mentioned there's nothing that's
+going to beat a battery backed cache/memory for log IOP performance.
+
+> The saving grace is the capacitor-backed RAM in SSDs (used to work
+> around erase block size issues as you probably know) which to a
+> significant extent may act as the  battery-backed RAM  I was
+> mentioning; and similarly as another post says the  battery-backed
+> RAM  in RAID host adapters would do much the same function.
+
+Just make sure your device actually has it.  Both the Intel X25 SSDs
+and many other consumer / prosumer SSDs actually don't have them
+and will lose data in case of a powerloss.
 
 _______________________________________________
 xfs mailing list
