@@ -1,30 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p42JuGPM246286 for <xfs@oss.sgi.com>; Mon, 2 May 2011 14:56:17 -0500
-Received: from trent.utfs.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2FF3C1D62186
-	for <xfs@oss.sgi.com>; Mon,  2 May 2011 12:59:52 -0700 (PDT)
-Received: from trent.utfs.org (trent.utfs.org [194.246.123.103]) by
-	cuda.sgi.com with ESMTP id JrJ7wSan3HHeTk90 for
-	<xfs@oss.sgi.com>; Mon, 02 May 2011 12:59:52 -0700 (PDT)
-Date: Mon, 2 May 2011 12:59:50 -0700 (PDT)
-From: Christian Kujau <lists@nerdbynature.de>
-Subject: Re: 2.6.39-rc4+: oom-killer busy killing tasks
-In-Reply-To: <20110502121958.GA2978@dastard>
-Message-ID: <alpine.DEB.2.01.1105021247410.18728@trent.utfs.org>
-References: <20110427022655.GE12436@dastard>
-	<alpine.DEB.2.01.1104270042510.18728@trent.utfs.org>
-	<20110427102824.GI12436@dastard>
-	<alpine.DEB.2.01.1104281008320.18728@trent.utfs.org>
-	<20110428233751.GR12436@dastard>
-	<alpine.DEB.2.01.1104291250480.18728@trent.utfs.org>
-	<20110429201701.GA13166@x4.trippels.de>
-	<alpine.DEB.2.01.1104291710340.18728@trent.utfs.org>
-	<20110501080149.GD13542@dastard>
-	<alpine.DEB.2.01.1105012135260.18728@trent.utfs.org>
-	<20110502121958.GA2978@dastard>
-MIME-Version: 1.0
+	p42K6ecH246744 for <xfs@oss.sgi.com>; Mon, 2 May 2011 15:06:40 -0500
+Received: from smtp3-g21.free.fr (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 110621D62466
+	for <xfs@oss.sgi.com>; Mon,  2 May 2011 13:10:15 -0700 (PDT)
+Received: from smtp3-g21.free.fr (smtp3-g21.free.fr [212.27.42.3]) by
+	cuda.sgi.com with ESMTP id P14oWgUZ8uOF3QRg for
+	<xfs@oss.sgi.com>; Mon, 02 May 2011 13:10:15 -0700 (PDT)
+Date: Mon, 2 May 2011 22:10:02 +0200
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: xfs performance problem
+Message-ID: <20110502221002.081a897c@galadriel2.home>
+In-Reply-To: <20110502025042.GK13542@dastard>
+References: <4DB72084.8020205@inf.ethz.ch> <4DB74331.3030804@hardwarefreak.com>
+	<4DB75C6D.1080901@inf.ethz.ch>
+	<19898.53907.842827.480883@tree.ty.sabi.co.UK>
+	<20110501084919.GE13542@dastard>
+	<19901.28769.553575.864887@tree.ty.sabi.co.UK>
+	<20110502025042.GK13542@dastard>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,38 +28,23 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: minchan.kim@gmail.com, LKML <linux-kernel@vger.kernel.org>, Markus Trippelsdorf <markus@trippelsdorf.de>, xfs@oss.sgi.com
+Cc: Peter Grandi <pg_xf2@xf2.for.sabi.co.UK>, Linux fs XFS <xfs@oss.sgi.com>
 
-On Mon, 2 May 2011 at 22:19, Dave Chinner wrote:
-> Yes. Try 2 orders of magnitude as a start. i.e change it to 10000...
-
-I've run the -12 test with vfs_cache_pressure=200 and now the -13 test 
-with vfs_cache_pressure=10000. The OOM killer still kicks in, but the 
-machine seems to be more usable afterwards and does not get totally stuck:
-
-  http://nerdbynature.de/bits/2.6.39-rc4/oom/
-  - messages-12.txt.gz & slabinfo-12.txt.bz2
-    * oom-debug.sh invoked oom-killer at 01:27:11
-    * sysrq-w works until 01:27:08, but got killed by oom
-
-  - messages-13.txt.gz & slabinfo-13.txt.bz2 
-    * find invoked oom-killer at 08:44:07
-    * sysrq-w works until 08:45:48 (listing jbd2/hda6-8), then
-      my debug script got killed
-
-Thanks,
-Christian.
--- 
-BOFH excuse #224:
-
-Jan  9 16:41:27 huber su: 'su root' succeeded for .... on /dev/pts/1
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+TGUgTW9uLCAyIE1heSAyMDExIDEyOjUwOjQyICsxMDAwIHZvdXMgw6ljcml2aWV6OgoKPiBBaCwg
+cXVvdGluZyBKb2VyZyBTY2hpbGxpbmcgRlVEIGFib3V0IExpbnV4LiBUaGF0J3MgYSBnb29kIHdh
+eQo+IHRvIGdldCBwZW9wbGUgdG8gaWdub3JlIHlvdS4uLi4KCldlIHNob3VsZCBzdGFydCBhIG5l
+dyB0aHJlYWQgYWJvdXQgaG93IHBvb3IgdGhlIGxpbnV4IFNDU0kgc3RhY2sgaXMgOikKTWF5YmUg
+dGhhdCdzIHRoZSByZWFzb24gZm9yIHRoZXNlIHBlcmZvcm1hbmNlIHByb2JsZW1zIDopCgotLSAK
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tCkVtbWFudWVsIEZsb3JhYyAgICAgfCAgIERpcmVjdGlvbiB0ZWNobmlx
+dWUKICAgICAgICAgICAgICAgICAgICB8ICAgSW50ZWxsaXF1ZQogICAgICAgICAgICAgICAgICAg
+IHwJPGVmbG9yYWNAaW50ZWxsaXF1ZS5jb20+CiAgICAgICAgICAgICAgICAgICAgfCAgICszMyAx
+IDc4IDk0IDg0IDAyCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQoKX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0
+cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
