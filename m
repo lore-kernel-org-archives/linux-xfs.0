@@ -1,16 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p42JW5JW245613 for <xfs@oss.sgi.com>; Mon, 2 May 2011 14:32:06 -0500
-Date: Mon, 2 May 2011 15:35:42 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfstests: support post-udev device mapper nodes
-Message-ID: <20110502193542.GA28530@infradead.org>
-References: <20110502160232.GA14457@infradead.org>
-	<1304364779.3077.41.camel@doink>
+	p42JuGPM246286 for <xfs@oss.sgi.com>; Mon, 2 May 2011 14:56:17 -0500
+Received: from trent.utfs.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2FF3C1D62186
+	for <xfs@oss.sgi.com>; Mon,  2 May 2011 12:59:52 -0700 (PDT)
+Received: from trent.utfs.org (trent.utfs.org [194.246.123.103]) by
+	cuda.sgi.com with ESMTP id JrJ7wSan3HHeTk90 for
+	<xfs@oss.sgi.com>; Mon, 02 May 2011 12:59:52 -0700 (PDT)
+Date: Mon, 2 May 2011 12:59:50 -0700 (PDT)
+From: Christian Kujau <lists@nerdbynature.de>
+Subject: Re: 2.6.39-rc4+: oom-killer busy killing tasks
+In-Reply-To: <20110502121958.GA2978@dastard>
+Message-ID: <alpine.DEB.2.01.1105021247410.18728@trent.utfs.org>
+References: <20110427022655.GE12436@dastard>
+	<alpine.DEB.2.01.1104270042510.18728@trent.utfs.org>
+	<20110427102824.GI12436@dastard>
+	<alpine.DEB.2.01.1104281008320.18728@trent.utfs.org>
+	<20110428233751.GR12436@dastard>
+	<alpine.DEB.2.01.1104291250480.18728@trent.utfs.org>
+	<20110429201701.GA13166@x4.trippels.de>
+	<alpine.DEB.2.01.1104291710340.18728@trent.utfs.org>
+	<20110501080149.GD13542@dastard>
+	<alpine.DEB.2.01.1105012135260.18728@trent.utfs.org>
+	<20110502121958.GA2978@dastard>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1304364779.3077.41.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,46 +37,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: minchan.kim@gmail.com, LKML <linux-kernel@vger.kernel.org>, Markus Trippelsdorf <markus@trippelsdorf.de>, xfs@oss.sgi.com
 
-On Mon, May 02, 2011 at 02:32:59PM -0500, Alex Elder wrote:
-> I'm not 100% sure I'm parsing the above right.  What
-> I read is that, although we want to use the "real"
-> device (not the link), the utilities tend to report
-> the /dev/mapper names.  Therefore we want to use
-> /dev/mapper names and internally translate them to
-> their real devices.
+On Mon, 2 May 2011 at 22:19, Dave Chinner wrote:
+> Yes. Try 2 orders of magnitude as a start. i.e change it to 10000...
 
-We as in xfstests want to use whatever everyone else uses to make
-our life easier for parsing mount table output, df output, etc,
-and that's normally the /dev/mapper/ name.  The only thing that
-can't cope with the symlink there is the _is_block_dev helper.
+I've run the -12 test with vfs_cache_pressure=200 and now the -13 test 
+with vfs_cache_pressure=10000. The OOM killer still kicks in, but the 
+machine seems to be more usable afterwards and does not get totally stuck:
 
-> > +    _dev=$1
-> > +    if [ -L ${_dev} ]; then
-> > +        _dev=`readlink -f ${_dev}`
-> 
-> Although it typically shouldn't, if the "readlink -f" fails,
-> it will make _dev have an empty value...
-> 
-> > +    fi
-> > +
-> > +    if [ -b ${_dev} ]; then
-> 
-> ...which will lead to some sort of shell "syntax error"
-> message here, which is rather unhelpful.
-> 
-> At a minimum, I think putting quotes around it here
-> would avoid that (but you should test), i.e.,
->     if [ -b "${_dev}" ]; then
+  http://nerdbynature.de/bits/2.6.39-rc4/oom/
+  - messages-12.txt.gz & slabinfo-12.txt.bz2
+    * oom-debug.sh invoked oom-killer at 01:27:11
+    * sysrq-w works until 01:27:08, but got killed by oom
 
-Ok.
+  - messages-13.txt.gz & slabinfo-13.txt.bz2 
+    * find invoked oom-killer at 08:44:07
+    * sysrq-w works until 08:45:48 (listing jbd2/hda6-8), then
+      my debug script got killed
 
-> This and the next one appear to be junk that should
-> be removed.
+Thanks,
+Christian.
+-- 
+BOFH excuse #224:
 
-Indeed.
+Jan  9 16:41:27 huber su: 'su root' succeeded for .... on /dev/pts/1
 
 _______________________________________________
 xfs mailing list
