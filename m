@@ -1,15 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p42K0AnJ246532 for <xfs@oss.sgi.com>; Mon, 2 May 2011 15:00:10 -0500
-Subject: Re: [PATCH] xfsprogs - resolve Debian readline build issue
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <360436721.31453.1304032530041.JavaMail.root@acxmail-au2.aconex.com>
-References: <360436721.31453.1304032530041.JavaMail.root@acxmail-au2.aconex.com>
-Date: Mon, 2 May 2011 15:03:43 -0500
-Message-ID: <1304366623.3077.44.camel@doink>
-MIME-Version: 1.0
-Reply-To: aelder@sgi.com
+	p42KPkFp247356 for <xfs@oss.sgi.com>; Mon, 2 May 2011 15:25:46 -0500
+Received: from idcmail-mo1so.shaw.ca (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D59CD1579C05
+	for <xfs@oss.sgi.com>; Mon,  2 May 2011 13:29:22 -0700 (PDT)
+Received: from idcmail-mo1so.shaw.ca (idcmail-mo1so.shaw.ca [24.71.223.10]) by
+	cuda.sgi.com with ESMTP id FQv9wwTgrniTlF5F for
+	<xfs@oss.sgi.com>; Mon, 02 May 2011 13:29:22 -0700 (PDT)
+Subject: Re: [XFS Punch Hole 1/1] XFS Add Punch Hole Testing to FSX
+Mime-Version: 1.0 (Apple Message framework v1082)
+From: Andreas Dilger <adilger@dilger.ca>
+In-Reply-To: <4DBF0789.3090808@redhat.com>
+Date: Mon, 2 May 2011 14:29:20 -0600
+Message-Id: <61E784AC-2E07-41DC-A65C-0C1B766A4A6F@dilger.ca>
+References: <4DBF02FF.608@linux.vnet.ibm.com> <4DBF0498.6070905@redhat.com>
+	<4DBF0789.3090808@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,29 +28,171 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Nathan Scott <nathans@aconex.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>, Ext4 Developers List <linux-ext4@vger.kernel.org>, Allison Henderson <achender@linux.vnet.ibm.com>
 
-On Fri, 2011-04-29 at 09:15 +1000, Nathan Scott wrote:
-> Address the recently reported build issue with libreadline5/6, via
-> the gplv2 route.  Since this appears to be a relatively recent pkg,
-> I made its use conditional so the deb build continues to work for
-> everyone not running a bleeding edge distro.  Works For Me (tm).
+On 5/2/11 2:16 PM, Allison Henderson wrote:
+> This patch adds punch hole tests to the fsx
+> stress test.  The test is performed through
+> the fallocate call by randomly choosing to
+> use the punch hole flag when running the
+> fallocate test.  Regions that have
+> been punched out should contain zeros, so
+> the expected file contents buffer is updated
+> to contain zeros when a hole is punched out.
 > 
-> This addresses Debian bug 553875: libreadline5-dev removal pending
+> Signed-off-by: Allison Henderson <achender@us.ibm.com>
+> ---
+> :100644 100644 32cd380... d424941... M	ltp/Makefile
+> :100644 100644 fe072d3... 4f54ef6... M	ltp/fsx.c
+> ltp/Makefile |    2 +-
+> ltp/fsx.c    |   73 ++++++++++++++++++++++++++++++++++++++++++++++++---------
+> 2 files changed, 62 insertions(+), 13 deletions(-)
+> 
+> diff --git a/ltp/Makefile b/ltp/Makefile
+> index 32cd380..d424941 100644
+> --- a/ltp/Makefile
+> +++ b/ltp/Makefile
+> @@ -27,7 +27,7 @@ LCFLAGS += -DAIO
+> LLDLIBS += -laio -lpthread
+> endif
+> 
+> -ifeq ($(HAVE_FALLOCATE), true)
+> +ifeq ($(HAVE_FALLOCATE), yes)
+> 
 
-As far as I'm concerned, this looks fine.
+> LCFLAGS += -DFALLOCATE
+> endif
+> 
+> diff --git a/ltp/fsx.c b/ltp/fsx.c
+> index fe072d3..4f54ef6 100644
+> --- a/ltp/fsx.c
+> +++ b/ltp/fsx.c
+> @@ -207,7 +207,8 @@ logdump(void)
+> {
+> 	int	i, count, down;
+> 	struct log_entry	*lp;
+> -	char *falloc_type[3] = {"PAST_EOF", "EXTENDING", "INTERIOR"};
+> +	char *falloc_type[4] = {"PAST_EOF", "EXTENDING", "INTERIOR",
+> +				"PUNCH_HOLE"};
+> 
+> 	prt("LOG DUMP (%d total operations):\n", logcount);
+> 	if (logcount < LOGSIZE) {
+> @@ -791,7 +792,11 @@ dofallocate(unsigned offset, unsigned length)
+> {
+> 	unsigned end_offset;
+> 	int keep_size;
+> -
+> +	int max_offset = 0;
+> +	int max_len = 0;
+> +	int punch_hole = 0;
+> +	int mode = 0;
+> +	char *op_name;
+>         if (length == 0) {
+>                 if (!quiet && testcalls > simulatedopcount)
+>                         prt("skipping zero length fallocate\n");
+> @@ -799,11 +804,31 @@ dofallocate(unsigned offset, unsigned length)
+>                 return;
+>         }
+> 
+> +#ifdef FALLOC_FL_PUNCH_HOLE
+> +	punch_hole = random() % 2;
+> +	/* Keep size must be set for punch hole */
+> +	if (punch_hole) {
+> +		keep_size = 1;
+> +		mode = FALLOC_FL_PUNCH_HOLE;
+> +	} else
+> +		keep_size = random() % 2;
+> +#else
+> 	keep_size = random() % 2;
+> +#endif
+> +
+> +	if (keep_size)
+> +		mode |= FALLOC_FL_KEEP_SIZE;
+> +
+> +	if (punch_hole && file_size <= (loff_t)offset) {
+> +		if (!quiet && testcalls > simulatedopcount)
+> +			prt("skipping hole punch off the end of the file\n");
+> +		log4(OP_SKIPPED, OP_FALLOCATE, offset, length);
+> +		return;
+> +	}
 
-I understand the issue, but I'm not really
-familiar with the Debian build/dependency
-system at work here, so I'm not really a
-very qualified reviewer.  But if you're
-comfortable with it and get nobody else to
-review it, you are welcome to use my sign-off.
+Isn't a hole punch off the end of the file is just a truncate?  I think that is a valid test case, since punch(newsize, ~0ULL) should be identical to truncate(newsize). In that case, "keep_size" would affect whether the file size is left alone, or it is now "newsize", so I don't think it should always be set to run with keep_size = 1 for FALLOC_FL_PUNCH_HOLE operations.
 
-Signed-off-by: Alex Elder <aelder@sgi.com>
+> 	end_offset = keep_size ? 0 : offset + length;
+> 
+> -	if (end_offset > biggest) {
+> +	if ((end_offset > biggest) && !punch_hole) {
+> 		biggest = end_offset;
+> 		if (!quiet && testcalls > simulatedopcount)
+> 			prt("fallocating to largest ever: 0x%x\n", end_offset);
+> @@ -811,13 +836,15 @@ dofallocate(unsigned offset, unsigned length)
+> 
+> 	/*
+> 	 * last arg:
+> -	 * 	1: allocate past EOF
+> -	 * 	2: extending prealloc
+> -	 * 	3: interior prealloc
+> +	 *      0: allocate past EOF
+> +	 *      1: extending prealloc
+> +	 *      2: interior prealloc
+> +	 *      3: punch hole
+> 	 */
+> -	log4(OP_FALLOCATE, offset, length, (end_offset > file_size) ? (keep_size ? 1 : 2) : 3);
+> +	log4(OP_FALLOCATE, offset, length, punch_hole ? 3 :
+> +			(end_offset > file_size) ? (keep_size ? 0 : 1) : 2);
+> 
+> -	if (end_offset > file_size) {
+> +	if (((loff_t)end_offset > file_size) && !punch_hole) {
+> 		memset(good_buf + file_size, '\0', end_offset - file_size);
+> 		file_size = end_offset;
+> 	}
+> @@ -827,13 +854,35 @@ dofallocate(unsigned offset, unsigned length)
+> 	
+> 	if ((progressinterval && testcalls % progressinterval == 0) ||
+> 	    (debug && (monitorstart == -1 || monitorend == -1 ||
+> -		      end_offset <= monitorend)))
+> -		prt("%lu falloc\tfrom 0x%x to 0x%x\n", testcalls, offset, length);
+> -	if (fallocate(fd, keep_size ? FALLOC_FL_KEEP_SIZE : 0, (loff_t)offset, (loff_t)length) == -1) {
+> -	        prt("fallocate: %x to %x\n", offset, length);
+> +		      end_offset <= monitorend))) {
+> +#ifdef FALLOC_FL_PUNCH_HOLE
+> +		op_name = (mode & FALLOC_FL_PUNCH_HOLE) ?
+> +			"punch hole" : "falloc";
+> +#else
+> +		op_name = "falloc";
+> +#endif
+> +		prt("%lu %s\tfrom 0x%x to 0x%x, (0x%x bytes)\n", testcalls,
+> +			op_name, offset, offset+length, length);
+> +	}
+> +	if (fallocate(fd, mode, (loff_t)offset, (loff_t)length) == -1) {
+> +#ifdef FALLOC_FL_PUNCH_HOLE
+> +		op_name = (mode & FALLOC_FL_PUNCH_HOLE) ?
+> +			"punch hole" : "fallocate";
+> +#else
+> +		op_name = "fallocate";
+> +#endif
+> +
+> +		prt("%s: %x to %x\n", op_name, offset, length);
+> 		prterr("dofallocate: fallocate");
+> 		report_failure(161);
+> 	}
+> +
+> +	if (punch_hole) {
+> +		max_offset = offset < file_size ? offset : file_size;
+> +		max_len = max_offset + length <= file_size ? length :
+> +				file_size - max_offset;
+> +		memset(good_buf + max_offset, '\0', max_len);
+> +	}
+> }
+> #else
+> void
 
-> Signed-off-by: Nathan Scott <nathans@debian.org>
+
+Cheers, Andreas
+
+
+
 
 
 _______________________________________________
