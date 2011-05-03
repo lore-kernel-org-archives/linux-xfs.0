@@ -1,11 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p43KBS8x027829 for <xfs@oss.sgi.com>; Tue, 3 May 2011 15:11:28 -0500
-From: Alex Elder <aelder@sgi.com>
-Subject: [PATCH] xfs: kill off xfs_printk()
-Date: Tue,  3 May 2011 15:14:44 -0500
-Message-Id: <a7077b2b2f6f46ac48d03cff4ccede2feba18f07.1304453673.git.aelder@sgi.com>
+	p43Knx1F028850 for <xfs@oss.sgi.com>; Tue, 3 May 2011 15:49:59 -0500
+Received: from trent.utfs.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 560931E1B0FD
+	for <xfs@oss.sgi.com>; Tue,  3 May 2011 13:53:35 -0700 (PDT)
+Received: from trent.utfs.org (trent.utfs.org [194.246.123.103]) by
+	cuda.sgi.com with ESMTP id m9KIiJEQt9tOQnya for
+	<xfs@oss.sgi.com>; Tue, 03 May 2011 13:53:35 -0700 (PDT)
+Date: Tue, 3 May 2011 13:53:31 -0700 (PDT)
+From: Christian Kujau <lists@nerdbynature.de>
+Subject: Re: 2.6.39-rc4+: oom-killer busy killing tasks
+In-Reply-To: <20110503005114.GE2978@dastard>
+Message-ID: <alpine.DEB.2.01.1105031345090.18728@trent.utfs.org>
+References: <20110427102824.GI12436@dastard>
+	<alpine.DEB.2.01.1104281008320.18728@trent.utfs.org>
+	<20110428233751.GR12436@dastard>
+	<alpine.DEB.2.01.1104291250480.18728@trent.utfs.org>
+	<20110429201701.GA13166@x4.trippels.de>
+	<alpine.DEB.2.01.1104291710340.18728@trent.utfs.org>
+	<20110501080149.GD13542@dastard>
+	<alpine.DEB.2.01.1105012135260.18728@trent.utfs.org>
+	<20110502121958.GA2978@dastard>
+	<alpine.DEB.2.01.1105021247410.18728@trent.utfs.org>
+	<20110503005114.GE2978@dastard>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -14,101 +33,48 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Joe Perches <joe@perches.com>, Alex Elder <aelder@sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: minchan.kim@gmail.com, LKML <linux-kernel@vger.kernel.org>, Markus Trippelsdorf <markus@trippelsdorf.de>, xfs@oss.sgi.com
 
-From: Joe Perches <joe@perches.com>
+On Tue, 3 May 2011 at 10:51, Dave Chinner wrote:
+> Can you run an event trace of all the XFS events during a find for
+> me? Don't do it over the entire subset of the filesystem - only
+> 100,000 inodes is sufficient (i.e. kill the find once the xfs inode
+> cache slab reaches 100k inodes. While still running the event trace,
+> can you then drop the caches (echo 3 > /proc/sys/vm/drop_caches) and
+> check that the xfs inode cache is emptied? If it isn't emptied, drop
+> caches again to see if that empties it. If you coul dthen post the
+> event trace, I might be able to see what is going strange with the
+> shrinker and/or reclaim.
 
-xfs_alert_tag() can be defined using xfs_alert(), and thereby avoid
-using xfs_printk() altogether.  This is the only remaining use of
-xfs_printk(), so changing it this way means xfs_printk() can simply
-be eliminated.can simply be eliminated.can simply be eliminated.can
-simply be eliminated.can simply be eliminated.can simply be
-eliminated.can simply be eliminated.can simply be eliminated.can
-simply be eliminated.
+OK, I've done something. Not sure if I got everything right:
 
-Also add format checking to the non-debug inline function xfs_debug.
-Miscellaneous function prototype argument alignment.
+  https://trent.utfs.org/p/bits/2.6.39-rc4/oom/trace/
+  (new URL, the other one ran out of webspace. Omit the s in https
+   if you don't have the CAcert.org root cert imported)
 
-(Updated to delete the definition of xfs_printk(), which is
-no longer used or needed.)
+* I've started 'trace-cmd record -e xfs /usr/bin/find /mnt/backup'
+  in one (screen-)window, which produced trace-14.dat.bz2
 
-Signed-off-by: Alex Elder <aelder@sgi.com>
----
- fs/xfs/linux-2.6/xfs_message.c |   20 +-------------------
- fs/xfs/linux-2.6/xfs_message.h |    7 +++----
- 2 files changed, 4 insertions(+), 23 deletions(-)
+* I've started my oom-debug.sh script in another, which produced
+  slabinfo-14.txt.bz2
 
-diff --git a/fs/xfs/linux-2.6/xfs_message.c b/fs/xfs/linux-2.6/xfs_message.c
-index 9f76cce..bd672de 100644
---- a/fs/xfs/linux-2.6/xfs_message.c
-+++ b/fs/xfs/linux-2.6/xfs_message.c
-@@ -41,23 +41,6 @@ __xfs_printk(
- 	printk("%sXFS: %pV\n", level, vaf);
- }
- 
--void xfs_printk(
--	const char		*level,
--	const struct xfs_mount	*mp,
--	const char		*fmt, ...)
--{
--	struct va_format	vaf;
--	va_list			args;
--
--	va_start(args, fmt);
--
--	vaf.fmt = fmt;
--	vaf.va = &args;
--
--	__xfs_printk(level, mp, &vaf);
--	va_end(args);
--}
--
- #define define_xfs_printk_level(func, kern_level)		\
- void func(const struct xfs_mount *mp, const char *fmt, ...)	\
- {								\
-@@ -95,8 +78,7 @@ xfs_alert_tag(
- 	int			do_panic = 0;
- 
- 	if (xfs_panic_mask && (xfs_panic_mask & panic_tag)) {
--		xfs_printk(KERN_ALERT, mp,
--			"XFS: Transforming an alert into a BUG.");
-+		xfs_alert(mp, "Transforming an alert into a BUG.");
- 		do_panic = 1;
- 	}
- 
-diff --git a/fs/xfs/linux-2.6/xfs_message.h b/fs/xfs/linux-2.6/xfs_message.h
-index f1b3fc1..7fb7ea0 100644
---- a/fs/xfs/linux-2.6/xfs_message.h
-+++ b/fs/xfs/linux-2.6/xfs_message.h
-@@ -3,9 +3,6 @@
- 
- struct xfs_mount;
- 
--extern void xfs_printk(const char *level, const struct xfs_mount *mp,
--                      const char *fmt, ...)
--        __attribute__ ((format (printf, 3, 4)));
- extern void xfs_emerg(const struct xfs_mount *mp, const char *fmt, ...)
-         __attribute__ ((format (printf, 2, 3)));
- extern void xfs_alert(const struct xfs_mount *mp, const char *fmt, ...)
-@@ -28,7 +25,9 @@ extern void xfs_info(const struct xfs_mount *mp, const char *fmt, ...)
- extern void xfs_debug(const struct xfs_mount *mp, const char *fmt, ...)
-         __attribute__ ((format (printf, 2, 3)));
- #else
--static inline void xfs_debug(const struct xfs_mount *mp, const char *fmt, ...)
-+static inline void
-+__attribute__ ((format (printf, 2, 3)))
-+xfs_debug(const struct xfs_mount *mp, const char *fmt, ...)
- {
- }
- #endif
+* In another window, I was dropping the caches and looked at
+  /proc/slabinfo again, see drop_caches-14.txt
+
+Somehow "trace-cmd report" segfaults here, but I hope "trace-14.report" 
+contains enough details already. If not, I can do this again.
+
+Thanks,
+Christian.
 -- 
-1.7.4.4
+BOFH excuse #314:
+
+You need to upgrade your VESA local bus to a MasterCard local bus.
 
 _______________________________________________
 xfs mailing list
