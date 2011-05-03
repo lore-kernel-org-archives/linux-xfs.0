@@ -1,15 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p43HJDCh022118 for <xfs@oss.sgi.com>; Tue, 3 May 2011 12:19:13 -0500
-Subject: Re: [PATCH v2] xfstests: support post-udev device mapper nodes
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110503084359.GA21704@infradead.org>
-References: <20110503084359.GA21704@infradead.org>
-Date: Tue, 3 May 2011 12:22:46 -0500
-Message-ID: <1304443366.2853.24.camel@doink>
+	p43HZoUv022761 for <xfs@oss.sgi.com>; Tue, 3 May 2011 12:35:50 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 080C91B834B4
+	for <xfs@oss.sgi.com>; Tue,  3 May 2011 10:39:27 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id NJeW60RN7achzk3r for
+	<xfs@oss.sgi.com>; Tue, 03 May 2011 10:39:27 -0700 (PDT)
+Date: Tue, 3 May 2011 13:39:27 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: xfstests 013 - 2.6.35.11 - hang
+Message-ID: <20110503173927.GB13209@infradead.org>
+References: <BANLkTimAXUtO=oxmLUaHLaRBnGafGP-9kg@mail.gmail.com>
+	<20110427171107.GA29196@infradead.org>
+	<BANLkTi=xpSa2x4vaD4zQjrz3_JSLkC-hgg@mail.gmail.com>
+	<BANLkTimgyWZP_1O_pwm+GXqHsMwhxz1d=A@mail.gmail.com>
 MIME-Version: 1.0
-Reply-To: aelder@sgi.com
+Content-Disposition: inline
+In-Reply-To: <BANLkTimgyWZP_1O_pwm+GXqHsMwhxz1d=A@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,23 +31,16 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Ajeet Yadav <ajeet.yadav.77@gmail.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, 2011-05-03 at 04:43 -0400, Christoph Hellwig wrote:
-> Because of udevs complaining device mapper now creates /dev/dm-N as the real
-> device nodes, and just symlinks the /dev/mapper/ names to it.  This would be
-> easy if everything used the /dev/mapper clear names, but most system utilities
-> translate them back to the /dev/mapper/ names and thus confuse various test
-> cases.  Add support to _is_block_dev to read symlinks, and add documentation
-> on how to run xfstests on device mapper volumes.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Mon, May 02, 2011 at 11:11:14AM +0530, Ajeet Yadav wrote:
+> Is there any thing I left out in xfs related to cache coherency.
 
-Looks good to me.
+I can't think of anything specific, but I have a hard time for other
+issues causing problems in these tests.
 
-Reviewed-by: Alex Elder <aelder@sgi.com>
-
+Did you check if ext2 passes this test?
 
 _______________________________________________
 xfs mailing list
