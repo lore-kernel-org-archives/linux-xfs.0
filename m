@@ -1,15 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p43HZAL9022728 for <xfs@oss.sgi.com>; Tue, 3 May 2011 12:35:10 -0500
-Subject: Re: [PATCH] xfstests: clean up fallocate configuration tests
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <4DBF492E.3040400@sandeen.net>
-References: <4DBF492E.3040400@sandeen.net>
-Date: Tue, 3 May 2011 12:38:43 -0500
-Message-ID: <1304444323.2853.28.camel@doink>
+	p43HTr53022452 for <xfs@oss.sgi.com>; Tue, 3 May 2011 12:29:55 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5539F11C93C7
+	for <xfs@oss.sgi.com>; Tue,  3 May 2011 10:33:28 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id YwI3seKiYACXypBH for
+	<xfs@oss.sgi.com>; Tue, 03 May 2011 10:33:28 -0700 (PDT)
+Date: Tue, 3 May 2011 13:33:25 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [patch] xfsprogs: fixes a regression hang in xfs_repair phase 4
+Message-ID: <20110503173325.GA13209@infradead.org>
+References: <BANLkTikBSadR7K2RfiS2k60nEOPncaDfyw@mail.gmail.com>
+	<20110422065120.GB14189@infradead.org>
+	<BANLkTi=3V0TohK6c6MYOvPQc3ADd_Pya3A@mail.gmail.com>
+	<BANLkTinfqmqPTuLFDW_jv_Dn4jNsP5gLcQ@mail.gmail.com>
+	<BANLkTinx_DF=cgY9um=h_0z+gC3fDakoUw@mail.gmail.com>
 MIME-Version: 1.0
-Reply-To: aelder@sgi.com
+Content-Disposition: inline
+In-Reply-To: <BANLkTinx_DF=cgY9um=h_0z+gC3fDakoUw@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,29 +32,18 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Allison Henderson <achender@linux.vnet.ibm.com>, xfs-oss <xfs@oss.sgi.com>
+To: Ajeet Yadav <ajeet.yadav.77@gmail.com>
+Cc: xfs@oss.sgi.com
 
-On Mon, 2011-05-02 at 19:15 -0500, Eric Sandeen wrote:
-> When I added fallocate support to fsx I inadvertently added
-> a duplicate fallocate test.
-> 
-> Consolidate them both into one test (the link test, not the
-> compile test) and make all tests use "true" rather than "yes"
-> to be more consistent with other tests.
+On Mon, May 02, 2011 at 11:09:32AM +0530, Ajeet Yadav wrote:
+> It will be fine for me, if you have received the xfs_metadump file I
+> sent in last mail.
+> I am sure it will help you find problem in repair btree, please
+> correct me if I left you anything from my side.
 
-Looks reasonable to me.  I learned a little something
-about autoconf while looking at this.  Glad you're an
-expert :)
+Yes, got it.  I'll apply your patch shortly.
 
-I do see that AC_TRY_COMPILE() is now considered obsolete
-so at some point maybe we should update to use the suggested
-alternatives (AC_COMPILE_IFELSE() in this example).
-
-Reviewed-by: Alex Elder <aelder@sgi.com>
-
-> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
-
+Thanks a lot!
 
 _______________________________________________
 xfs mailing list
