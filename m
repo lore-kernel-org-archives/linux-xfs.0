@@ -1,30 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p43Knx1F028850 for <xfs@oss.sgi.com>; Tue, 3 May 2011 15:49:59 -0500
-Received: from trent.utfs.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 560931E1B0FD
-	for <xfs@oss.sgi.com>; Tue,  3 May 2011 13:53:35 -0700 (PDT)
-Received: from trent.utfs.org (trent.utfs.org [194.246.123.103]) by
-	cuda.sgi.com with ESMTP id m9KIiJEQt9tOQnya for
-	<xfs@oss.sgi.com>; Tue, 03 May 2011 13:53:35 -0700 (PDT)
-Date: Tue, 3 May 2011 13:53:31 -0700 (PDT)
-From: Christian Kujau <lists@nerdbynature.de>
-Subject: Re: 2.6.39-rc4+: oom-killer busy killing tasks
-In-Reply-To: <20110503005114.GE2978@dastard>
-Message-ID: <alpine.DEB.2.01.1105031345090.18728@trent.utfs.org>
-References: <20110427102824.GI12436@dastard>
-	<alpine.DEB.2.01.1104281008320.18728@trent.utfs.org>
-	<20110428233751.GR12436@dastard>
-	<alpine.DEB.2.01.1104291250480.18728@trent.utfs.org>
-	<20110429201701.GA13166@x4.trippels.de>
-	<alpine.DEB.2.01.1104291710340.18728@trent.utfs.org>
-	<20110501080149.GD13542@dastard>
-	<alpine.DEB.2.01.1105012135260.18728@trent.utfs.org>
-	<20110502121958.GA2978@dastard>
-	<alpine.DEB.2.01.1105021247410.18728@trent.utfs.org>
-	<20110503005114.GE2978@dastard>
+	p43LcCP4030024 for <xfs@oss.sgi.com>; Tue, 3 May 2011 16:38:12 -0500
+Subject: Re: [PATCH] [xfsprogs]: Don't translate command name.
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <1302858438-22215-1-git-send-email-arekm@maven.pl>
+References: <1302858438-22215-1-git-send-email-arekm@maven.pl>
+Date: Tue, 3 May 2011 16:41:46 -0500
+Message-ID: <1304458906.9841.2.camel@doink>
 MIME-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,50 +18,23 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: minchan.kim@gmail.com, LKML <linux-kernel@vger.kernel.org>, Markus Trippelsdorf <markus@trippelsdorf.de>, xfs@oss.sgi.com
+To: Arkadiusz =?UTF-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Cc: xfs@oss.sgi.com
 
-On Tue, 3 May 2011 at 10:51, Dave Chinner wrote:
-> Can you run an event trace of all the XFS events during a find for
-> me? Don't do it over the entire subset of the filesystem - only
-> 100,000 inodes is sufficient (i.e. kill the find once the xfs inode
-> cache slab reaches 100k inodes. While still running the event trace,
-> can you then drop the caches (echo 3 > /proc/sys/vm/drop_caches) and
-> check that the xfs inode cache is emptied? If it isn't emptied, drop
-> caches again to see if that empties it. If you coul dthen post the
-> event trace, I might be able to see what is going strange with the
-> shrinker and/or reclaim.
-
-OK, I've done something. Not sure if I got everything right:
-
-  https://trent.utfs.org/p/bits/2.6.39-rc4/oom/trace/
-  (new URL, the other one ran out of webspace. Omit the s in https
-   if you don't have the CAcert.org root cert imported)
-
-* I've started 'trace-cmd record -e xfs /usr/bin/find /mnt/backup'
-  in one (screen-)window, which produced trace-14.dat.bz2
-
-* I've started my oom-debug.sh script in another, which produced
-  slabinfo-14.txt.bz2
-
-* In another window, I was dropping the caches and looked at
-  /proc/slabinfo again, see drop_caches-14.txt
-
-Somehow "trace-cmd report" segfaults here, but I hope "trace-14.report" 
-contains enough details already. If not, I can do this again.
-
-Thanks,
-Christian.
--- 
-BOFH excuse #314:
-
-You need to upgrade your VESA local bus to a MasterCard local bus.
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gRnJpLCAyMDExLTA0LTE1IGF0IDExOjA3ICswMjAwLCBBcmthZGl1c3ogTWnFm2tpZXdpY3og
+d3JvdGU6Cj4gQ29tbWFuZCBuYW1lcyBzaG91bGQgbmV2ZXIgYmUgdHJhbnNsYXRlZC4gQ3VycmVu
+dGx5IHRoZXJlIGlzCj4gJ3hmc19xdW90YSAteCAtYyAicHJvamVjdCIuLi4nIGluIG9uZSBsb2Nh
+bGUgKEMpIHdoaWxlCj4gJ3hmc19xdW90YSAteCAtYyAicHJvamVrdCIuLi4nIGluIGFub3RoZXIg
+KHBsX1BMKS4KCkkgaGF2ZW4ndCBsb29rZWQgYXQgdGhpcyBjbG9zZWx5IHlldCwgYnV0IGl0IGxv
+b2tzCnByZXR0eSBzdHJhaWdodGZvcndhcmQuCgpJIGhhdmUgdHJpZWQgdG8gZG8gYSBsaXR0bGUg
+cmVzZWFyY2ggb24gbG9jYWxpemF0aW9uCnRob3VnaCwgc28gSSdtIGEgbGl0dGxlIGJldHRlciBp
+bmZvcm1lZC4gIEkgYWNjZXB0CnlvdXIgc3RhdGVtZW50IHRoYXQgY29tbWFuZCBuYW1lcyBzaG91
+bGQgbmV2ZXIgYmUKdHJhbnNsYXRlZCwgYnV0IGlzIHRoYXQgYSB3ZWxsLWtub3duIGNvbnZlbnRp
+b24/CgpUaGFua3MuCgoJCQkJCS1BbGV4Cgo+IFNpZ25lZC1vZmYtYnk6IEFya2FkaXVzeiBNacWb
+a2lld2ljeiA8YXJla21AbWF2ZW4ucGw+CgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDov
+L29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
