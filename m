@@ -1,31 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p430lnir254334 for <xfs@oss.sgi.com>; Mon, 2 May 2011 19:47:49 -0500
+	p433FOXY257361 for <xfs@oss.sgi.com>; Mon, 2 May 2011 22:15:25 -0500
 Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8414F1E19B93
-	for <xfs@oss.sgi.com>; Mon,  2 May 2011 17:51:21 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 68FE911C6459
+	for <xfs@oss.sgi.com>; Mon,  2 May 2011 20:18:59 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	OZWjSvjKMbqEZlAP for <xfs@oss.sgi.com>;
-	Mon, 02 May 2011 17:51:21 -0700 (PDT)
-Date: Tue, 3 May 2011 10:51:14 +1000
+	kWwIz1X7x2fNH8nI for <xfs@oss.sgi.com>;
+	Mon, 02 May 2011 20:18:59 -0700 (PDT)
+Date: Tue, 3 May 2011 13:18:56 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: 2.6.39-rc4+: oom-killer busy killing tasks
-Message-ID: <20110503005114.GE2978@dastard>
-References: <20110427102824.GI12436@dastard>
-	<alpine.DEB.2.01.1104281008320.18728@trent.utfs.org>
-	<20110428233751.GR12436@dastard>
-	<alpine.DEB.2.01.1104291250480.18728@trent.utfs.org>
-	<20110429201701.GA13166@x4.trippels.de>
-	<alpine.DEB.2.01.1104291710340.18728@trent.utfs.org>
-	<20110501080149.GD13542@dastard>
-	<alpine.DEB.2.01.1105012135260.18728@trent.utfs.org>
-	<20110502121958.GA2978@dastard>
-	<alpine.DEB.2.01.1105021247410.18728@trent.utfs.org>
+Subject: Re: XFS/Linux Sanity check
+Message-ID: <20110503031856.GA9114@dastard>
+References: <BANLkTik4YjSr7-VA+f9Sh+UxvKfFKMy=+w@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.01.1105021247410.18728@trent.utfs.org>
+In-Reply-To: <BANLkTik4YjSr7-VA+f9Sh+UxvKfFKMy=+w@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,116 +25,135 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christian Kujau <lists@nerdbynature.de>
-Cc: minchan.kim@gmail.com, LKML <linux-kernel@vger.kernel.org>, Markus Trippelsdorf <markus@trippelsdorf.de>, xfs@oss.sgi.com
+To: Paul Anderson <pha@umich.edu>
+Cc: xfs@oss.sgi.com
 
-T24gTW9uLCBNYXkgMDIsIDIwMTEgYXQgMTI6NTk6NTBQTSAtMDcwMCwgQ2hyaXN0aWFuIEt1amF1
-IHdyb3RlOgo+IE9uIE1vbiwgMiBNYXkgMjAxMSBhdCAyMjoxOSwgRGF2ZSBDaGlubmVyIHdyb3Rl
-Ogo+ID4gWWVzLiBUcnkgMiBvcmRlcnMgb2YgbWFnbml0dWRlIGFzIGEgc3RhcnQuIGkuZSBjaGFu
-Z2UgaXQgdG8gMTAwMDAuLi4KPiAKPiBJJ3ZlIHJ1biB0aGUgLTEyIHRlc3Qgd2l0aCB2ZnNfY2Fj
-aGVfcHJlc3N1cmU9MjAwIGFuZCBub3cgdGhlIC0xMyB0ZXN0IAo+IHdpdGggdmZzX2NhY2hlX3By
-ZXNzdXJlPTEwMDAwLiBUaGUgT09NIGtpbGxlciBzdGlsbCBraWNrcyBpbiwgYnV0IHRoZSAKPiBt
-YWNoaW5lIHNlZW1zIHRvIGJlIG1vcmUgdXNhYmxlIGFmdGVyd2FyZHMgYW5kIGRvZXMgbm90IGdl
-dCB0b3RhbGx5IHN0dWNrOgo+IAo+ICAgaHR0cDovL25lcmRieW5hdHVyZS5kZS9iaXRzLzIuNi4z
-OS1yYzQvb29tLwo+ICAgLSBtZXNzYWdlcy0xMi50eHQuZ3ogJiBzbGFiaW5mby0xMi50eHQuYnoy
-Cj4gICAgICogb29tLWRlYnVnLnNoIGludm9rZWQgb29tLWtpbGxlciBhdCAwMToyNzoxMQo+ICAg
-ICAqIHN5c3JxLXcgd29ya3MgdW50aWwgMDE6Mjc6MDgsIGJ1dCBnb3Qga2lsbGVkIGJ5IG9vbQo+
-IAo+ICAgLSBtZXNzYWdlcy0xMy50eHQuZ3ogJiBzbGFiaW5mby0xMy50eHQuYnoyIAo+ICAgICAq
-IGZpbmQgaW52b2tlZCBvb20ta2lsbGVyIGF0IDA4OjQ0OjA3Cj4gICAgICogc3lzcnEtdyB3b3Jr
-cyB1bnRpbCAwODo0NTo0OCAobGlzdGluZyBqYmQyL2hkYTYtOCksIHRoZW4KPiAgICAgICBteSBk
-ZWJ1ZyBzY3JpcHQgZ290IGtpbGxlZAoKU28gYmVmb3JlIHRoZSBPT00ga2lsbGVyIGtpY2tzIGlu
-LCBrc3dhcGQgaXMgc3R1Y2sgaW4KY29uZ2VzdGlvbl93YWl0KCksIGFuZCBhZnRlciBhIG51bWJl
-ciBvZiBvb20ta2lsbHMgb3ZlciBhIDVzIHBlcmlvZAppdCBpcyBzdGlsbCBpbiBjb25nZXN0aW9u
-X3dhaXQoKS4gN3MgbGF0ZXIgaXQgaXMgc3RpbGwgaW4KY29uZ2VzdGlvbl93YWl0KCkgYW5kIHRo
-ZSBvb20ta2lsbGVyIHN0YXJ0cyB1cCBhZ2Fpbiwgd2l0aCBrc3dhcGQKc3RpbGwgYmVpbmcgaW4g
-Y29uZ2VzdGlvbl93YWl0KCkgd2hlbiB0aGUgb29tLWtpbGxlciBzdG9wcyBhZ2FpbiAzcwpsYXRl
-ci4KCk9rLCBzbyBrc3dhcGQgYmVpbmcgc3R1Y2sgaW4gY29uZ2VzdGlvbiB3YWl0IG1lYW5zIGl0
-IGNhbiBvbmx5IGJlIGluCmJhbGFuY2VfcGdkYXQoKSBhbmQgaXQgdGhpbmtzICB0aGF0IGl0IGlz
-IGdldHRpbmcgaW50byB0cm91YmxlLgoKTG9va2luZyBhdCB0aGUgT09NIG91dHB1dDoKCiAgYWN0
-aXZlX2Fub246Nzk5MiBpbmFjdGl2ZV9hbm9uOjg3MTQgaXNvbGF0ZWRfYW5vbjowCiAgYWN0aXZl
-X2ZpbGU6NTk5NSBpbmFjdGl2ZV9maWxlOjczNzgwIGlzb2xhdGVkX2ZpbGU6MAogIHVuZXZpY3Rh
-YmxlOjAgZGlydHk6MCB3cml0ZWJhY2s6MCB1bnN0YWJsZTowCiAgZnJlZTozNTI2MyBzbGFiX3Jl
-Y2xhaW1hYmxlOjE4MjY1MiBzbGFiX3VucmVjbGFpbWFibGU6MzIyNAogIG1hcHBlZDo2OTI5IHNo
-bWVtOjE5OSBwYWdldGFibGVzOjM5NiBib3VuY2U6MAogRE1BIGZyZWU6MzQzNmtCIG1pbjozNTMy
-a0IgbG93OjQ0MTJrQiBoaWdoOjUyOTZrQiBhY3RpdmVfYW5vbjowa0IgaW5hY3RpdmVfYW5vbjow
-a0IgYWN0aXZlX2ZpbGU6MjM2a0IgaW5hY3RpdmVfZmlsZToyNDhrQiB1bmV2aWN0YWJsZTowa0Ig
-aXNvbGF0ZWQoYW5vbik6MGtCIGlzb2xhdGVkKGZpbGUpOjBrQiBwcmVzZW50Ojc4MDI4OGtCIG1s
-b2NrZWQ6MGtCIGRpcnR5OjBrQiB3cml0ZWJhY2s6MGtCIG1hcHBlZDo4a0Igc2htZW06MGtCIHNs
-YWJfcmVjbGFpbWFibGU6NzMwNjA4a0Igc2xhYl91bnJlY2xhaW1hYmxlOjEyODk2a0Iga2VybmVs
-X3N0YWNrOjEwMzJrQiBwYWdldGFibGVzOjE1ODRrQiB1bnN0YWJsZTowa0IgYm91bmNlOjBrQiB3
-cml0ZWJhY2tfdG1wOjBrQiBwYWdlc19zY2FubmVkOjY4MCBhbGxfdW5yZWNsYWltYWJsZT8geWVz
-CiBsb3dtZW1fcmVzZXJ2ZVtdOiAwIDAgNTA4IDUwOAogSGlnaE1lbSBmcmVlOjEzNzYxNmtCIG1p
-bjo1MDhrQiBsb3c6MTA5NmtCIGhpZ2g6MTY4NGtCIGFjdGl2ZV9hbm9uOjMxOTY4a0IgaW5hY3Rp
-dmVfYW5vbjozNDg1NmtCIGFjdGl2ZV9maWxlOjIzNzQ0a0IgaW5hY3RpdmVfZmlsZToyOTQ4NzJr
-QiB1bmV2aWN0YWJsZTowa0IgaXNvbGF0ZWQoYW5vbik6MGtCIGlzb2xhdGVkKGZpbGUpOjBrQiBw
-cmVzZW50OjUyMDE5MmtCIG1sb2NrZWQ6MGtCIGRpcnR5OjBrQiB3cml0ZWJhY2s6MGtCIG1hcHBl
-ZDoyNzcwOGtCIHNobWVtOjc5NmtCIHNsYWJfcmVjbGFpbWFibGU6MGtCIHNsYWJfdW5yZWNsYWlt
-YWJsZTowa0Iga2VybmVsX3N0YWNrOjBrQiBwYWdldGFibGVzOjBrQiB1bnN0YWJsZTowa0IgYm91
-bmNlOjBrQiB3cml0ZWJhY2tfdG1wOjBrQiBwYWdlc19zY2FubmVkOjAgYWxsX3VucmVjbGFpbWFi
-bGU/IG5vCiBsb3dtZW1fcmVzZXJ2ZVtdOiAwIDAgMCAwCgpUaGVyZSBhcmUgbm8gaXNvbGF0ZWQg
-cGFnZXMsIHNvIHRoYXQgbWVhbnMgd2UgYXJlbid0IGluIHRoZQpjb25nZXN0aW9uX3dhaXQoKSBj
-YWxsIHJlbGF0ZWQgdG8gaGF2aW5nIHRvbyBtYW55IGlzb2xhdGVkIHBhZ2VzLgoKV2Ugc2VlIHRo
-YXQgdGhlIFpPTkVfRE1BIGlzIGFsbF91bnJlY2xhaW1hYmxlIGFuZCBoYWQgNjgwIHBhZ2VzCnNj
-YW5uZWQuIFpPTkVfSElHSE1FTSBoYWQgX3plcm9fIHBhZ2VzIHNjYW5uZWQsIHdoaWNoIG1lYW5z
-IGl0IG11c3QKYmUgb3ZlciB0aGUgaGlnaCB3YXRlciBtYXJrcyBmb3IgZnJlZSBtZW1vcnkgYW5k
-IHNvIG5vIGF0dGVtcHQgaXMKbWFkZSB0byByZWNsYWltIGZyb20gdGhpcyB6b25lLiBUaGF0IG1l
-YW5zIGxydV9wYWdlcyBpcyBzZXQgdG8Kem9uZV9yZWNsYWltYWJsZV9wYWdlcyhaT05FX0RNQSks
-IHdoaWNoIGF0IHRoaXMgcG9pbnQgaW4gdGltZSB3b3VsZApiZToKCglhY3RpdmVfYW5vbjowa0Ig
-aW5hY3RpdmVfYW5vbjowa0IgYWN0aXZlX2ZpbGU6MjM2a0IgaW5hY3RpdmVfZmlsZToyNDhrQgoK
-YWJvdXQgNDg0ayBvciAxMjEgcGFnZXMuIFRvIGdldCBhbGxfdW5yZWNsYWltYWJsZSBzZXQsIHRo
-ZQpzaHJpbmtfc2xhYigpIGNhbGwgbXVzdCBoYXZlIHJldHVybmVkIHplcm8gdG8gaW5kaWNhdGUg
-aXQgZGlkbid0CmZyZWUgYW55dGhpbmcuCgpTbyB0aGUgZmlyc3QgcGFzcyB0aHJvdWdoIHdvdWxk
-IGhhdmUgcGFzc2VkIHRoYXQgdG8gc2hyaW5rX3NsYWIsIGFuZAphc3VtbWluZyB0aGV5IGFyZSBh
-bGwgbWFwcGVkIHBhZ2VzIHdlJ2QgZW5kIHVwIHdpdGggbnJfc2Nhbm5lZCA9CjI0Mi4gRm9yIHRo
-ZSB4ZnMgaW5vZGUgY2FjaGUgd2l0aCA2MDAsMDAwIHJlY2xhaW1hYmxlIGlub2RlcywgdGhpcwp3
-b3VsZCBoYXZlIHJlc3VsdGVkIGluOgoKCW1heF9wYXNzID0gNjAwMDAwCglkZWx0YSA9IDQgKiAy
-NDIgLyAyID0gNDg0CglkZWx0YSA9IDQ4NCAqIDYwMCwwMDAgPSAyOTAsNDAwLDAwMAoJZGVsdGEg
-PSAyOTAsNDAwLDAwMCAvIDEyMSArIDEg2Y09IDIsMzgwLDMyNwoJc2hyaW5rZXItPm5yICs9IGRl
-bHRhCglpZiAoc2hyaW5rZXItPm5yID4gbWF4X3Bhc3MgKiAyKQoJCXNocmlua2VyLT5uciA9IG1h
-eF9wYXNzICogMjsgPSAxLDIwMCwwMDAKClNvLCB0aGUgc2hyaW5rZXItPm5yIHNob3VsZCBiZSB3
-ZWxsIGFib3ZlIHplcm8sIGV2ZW4gaW4gdGhlIHdvcnN0CmNhc2UuIFRoZSBxdWVzdGlvbiBpcyBu
-b3c6IGhvdyBvbiBlYXJ0aCBpcyBpdCByZXR1cm5pbmcgemVybz8KClR3byBjYXNlczogaWYgdGhl
-IHNocmlua2VyIHJldHVybnMgLTEsIG9yIGJlY2F1c2UgdGhlIGNhY2hlIGlzIGdyb3dpbmc6Cgog
-ICAgICAgICAgICAgICAgICAgICAgICBucl9iZWZvcmUgPSAoKnNocmlua2VyLT5zaHJpbmspKHNo
-cmlua2VyLCAwLCBnZnBfbWFzayk7CiAgICAgICAgICAgICAgICAgICAgICAgIHNocmlua19yZXQg
-PSAoKnNocmlua2VyLT5zaHJpbmspKHNocmlua2VyLCB0aGlzX3NjYW4sCiAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBnZnBfbWFz
-ayk7CiAgICAgICAgICAgICAgICAgICAgICAgIGlmIChzaHJpbmtfcmV0ID09IC0xKQogICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgIGJyZWFrOwogICAgICAgICAgICAgICAgICAgICAgICBp
-ZiAoc2hyaW5rX3JldCA8IG5yX2JlZm9yZSkKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICByZXQgKz0gbnJfYmVmb3JlIC0gc2hyaW5rX3JldDsKClNvLCBmaXJzdCBjYXNlIHdpbGwgaGFw
-cGVuIGZvciBYRlMgd2hlbjoKCgkJaWYgKCEoZ2ZwX21hc2sgJiBfX0dGUF9GUykpCiAgICAgICAg
-ICAgICAgICAgICAgICAgIHJldHVybiAtMTsKCkluIG1vc3Qgb2YgdGhlIE9PTS1raWxsZXIgaW52
-b2NhdGlvbnMsIHRoZSBzdGFjayB0cmFjZSBpczoKCiBvdXRfb2ZfbWVtb3J5KzB4MjdjLzB4MzYw
-CiBfX2FsbG9jX3BhZ2VzX25vZGVtYXNrKzB4NmY4LzB4NzA4CiBuZXdfc2xhYisweDFmYy8weDIz
-NAogVC45MTUrMHgxZjgvMHgzODgKIGttZW1fY2FjaGVfYWxsb2MrMHgxMWMvMHgxMjQKIGttZW1f
-em9uZV9hbGxvYysweGE0LzB4MTE0CiB4ZnNfaW5vZGVfYWxsb2MrMHg0MC8weDEzYwogeGZzX2ln
-ZXQrMHgyYTgvMHg2MjAKIHhmc19sb29rdXArMHhmOC8weDExNAogeGZzX3ZuX2xvb2t1cCsweDVj
-LzB4YjAKIGRfYWxsb2NfYW5kX2xvb2t1cCsweDU0LzB4OTAKIGRvX2xvb2t1cCsweDI0OC8weDJi
-YwogcGF0aF9sb29rdXBhdCsweGZjLzB4OGY0CiBkb19wYXRoX2xvb2t1cCsweDM0LzB4YWMKIHVz
-ZXJfcGF0aF9hdCsweDY0LzB4YjQKIHZmc19mc3RhdGF0KzB4NTgvMHhiYwogc3lzX2ZzdGF0YXQ2
-NCsweDI0LzB4NTAKIHJldF9mcm9tX3N5c2NhbGwrMHgwLzB4MzgKClNvIHdlIGFyZSBub3QgcHJl
-dmVudGluZyByZWNsYWltIHZpYSB0aGUgZ2ZwX21hc2suIFRoYXQgbGVhdmVzIHRoZQpvdGhlciBj
-YXNlLCB3aGVyZSB0aGUgbnVtYmVyIG9mIHJlY2xhaW1hYmxlIGlub2RlcyBpcyBncm93aW5nIGZh
-c3Rlcgp0aGFuIHRoZSBzaHJpbmtlciBpcyBmcmVlaW5nIHRoZW0uICBJIGNhbid0IHJlYWxseSBz
-ZWUgaG93IHRoYXQgaXMKcG9zc2libGUgd2l0aCBhIHNpbmdsZSBDUFUgbWFjaGluZSB3aXRob3V0
-IHByZW1wdCBlbmFibGVkIGFuZCwKYXBwYXJlbnRseSwgbm8gZGlydHkgaW5vZGVzLiBJbm9kZSBy
-ZWNsYWltIHNob3VsZCBub3QgYmxvY2sKKHNocmlua2VyIG9yIGJhY2tncm91bmQpLCBzbyB0aGVy
-ZSdzIHNvbWV0aGluZyBlbHNlIGdvaW5nIG9uIGhlcmUuCgpDYW4geW91IHJ1biBhbiBldmVudCB0
-cmFjZSBvZiBhbGwgdGhlIFhGUyBldmVudHMgZHVyaW5nIGEgZmluZCBmb3IKbWU/IERvbid0IGRv
-IGl0IG92ZXIgdGhlIGVudGlyZSBzdWJzZXQgb2YgdGhlIGZpbGVzeXN0ZW0gLSBvbmx5CjEwMCww
-MDAgaW5vZGVzIGlzIHN1ZmZpY2llbnQgKGkuZS4ga2lsbCB0aGUgZmluZCBvbmNlIHRoZSB4ZnMg
-aW5vZGUKY2FjaGUgc2xhYiByZWFjaGVzIDEwMGsgaW5vZGVzLiBXaGlsZSBzdGlsbCBydW5uaW5n
-IHRoZSBldmVudCB0cmFjZSwKY2FuIHlvdSB0aGVuIGRyb3AgdGhlIGNhY2hlcyAoZWNobyAzID4g
-L3Byb2Mvc3lzL3ZtL2Ryb3BfY2FjaGVzKSBhbmQKY2hlY2sgdGhhdCB0aGUgeGZzIGlub2RlIGNh
-Y2hlIGlzIGVtcHRpZWQ/IElmIGl0IGlzbid0IGVtcHRpZWQsIGRyb3AKY2FjaGVzIGFnYWluIHRv
-IHNlZSBpZiB0aGF0IGVtcHRpZXMgaXQuIElmIHlvdSBjb3VsIGR0aGVuIHBvc3QgdGhlCmV2ZW50
-IHRyYWNlLCBJIG1pZ2h0IGJlIGFibGUgdG8gc2VlIHdoYXQgaXMgZ29pbmcgc3RyYW5nZSB3aXRo
-IHRoZQpzaHJpbmtlciBhbmQvb3IgcmVjbGFpbS4KCkNoZWVycywKCkRhdmUuCi0tIApEYXZlIENo
-aW5uZXIKZGF2aWRAZnJvbW9yYml0LmNvbQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDov
-L29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+On Mon, May 02, 2011 at 11:47:48AM -0400, Paul Anderson wrote:
+> Our genetic sequencing research group is growing our file storage from
+> 1PB to 2PB.
+.....
+> We are deploying five Dell 810s, 192GiB RAM, 12 core, each with three
+> LSI 9200-8E SAS controllers, and three SuperMicro 847 45 drive bay
+> cabinets with enterprise grade 2TB drives.
+
+So roughly 250TB raw capacity per box.
+
+> We're running Ubuntu 10.04 LTS, and have tried either the stock kernel
+> (2.6.32-30) or 2.6.35 from linux.org.
+
+(OT: why do people install a desktop OS on their servers?)
+
+> We organize the storage as one
+> software (MD) RAID 0 composed of 7 software RAID (MD) 6s, each with 18
+> drives, giving 204 TiB usable (9 drives of the 135 are unused).
+
+That's adventurous. I would serious consider rethinking this -
+hardware RAID-6 with controllers that have ia significant amount of
+BBWC is much more appropriate for this scale of storage. You get an
+unclean shutdown (e.g. power loss) and MD is going to take _weeks_
+to resync those RAID6 arrays. Background scrubbing is likely to
+never cease, either....
+
+Also, knowing how you spread out the disks in each RAID-6 group
+between controllers, trays, etc as that has important performance
+and failure implications.
+
+e.g. I'm guessing that you are taking 6 drives from each enclosure
+for each 18-drive raid-6 group, which would split the RAID-6 group
+across all three SAS controllers and enclosures. That means if you
+lose a SAS controller or enclosure you lose all RAID-6 groups at
+once which is effectively catastrophic from a recovery point of view.
+It also means that one slow controller slows down everything so load
+balancing is difficult.
+
+Large stripes might look like a good idea, buti when you get to this
+scale concatenation of high throughput LUNs provides better
+throughput because of less contention through the storage
+controllers and enclosures.
+
+> XFS
+> is set up properly (as far as I know) with respect to stripe and chunk
+> sizes.
+
+Any details? You might be wrong ;)
+
+> Allocation groups are 1TiB in size, which seems sane for the
+> size of files we expect to work with.
+
+Any filesystem over 16TB will use 1TB AGs.
+
+> In isolated testing, I see around 5GiBytes/second raw (135 parallel dd
+> reads), and with a benchmark test of 10 simultaneous 64GiByte dd
+> commands, I can see just shy of 2 GiBytes/second reading, and around
+> 1.4GiBytes/second writing through XFS.   The benchmark is crude, but
+> fairly representative of our expected use.
+
+If you want insightful comments, then you'll need to provide
+intimate details of the tests your ran and the results (e.g. command
+lines, raw results, etc).
+
+> md apparently does not support barriers, so we are badly exposed in
+> that manner, I know.  As a test, I disabled write cache on all drives,
+> performance dropped by 30% or so, but since md is apparently the
+> problem, barriers still didn't work.
+
+Doesn't matter if you have BBWC on your hardware RAID
+controllers. Seriously, if you want to sustain high throughput, you
+want a large amount of BBWC in front your disks....
+
+> Nonetheless, what we need, but don't have, is stability.
+> 
+> With 2.6.32-30, we get reliable kernel panics after 2 days of
+> sustained rsync to the machine (around 150-250MiBytes/second for the
+> entire time - the source machines are slow),
+
+Stack traces from the crash?
+
+> and with 2.6.35, we get a
+> bad resource contention problem fairly quickly - much less than 24
+> hours (in this instance, we start getting XFS kernel thread timeouts
+> similar to what I've seen posted here recently, but it isn't clear
+> whether it is only XFS or also ext3 boot drives that are starved for
+> I/O - suspending or killing all I/O load doesn't solve the problem -
+> only a reboot does).
+
+Details of the timeout messages?
+
+> Ideally, I'd firstly be able to find informed opinions about how I can
+> improve this arrangement - we are mildly flexible on RAID controllers,
+> very flexible on versions of Linux, etc, and can try other OS's as a
+> last resort (but the leading contender here would be "something"
+> running ZFS, and though I love ZFS, it really didn't seem to work well
+> for our needs).
+> 
+> Secondly, I welcome suggestions about which version of the linux
+> kernel you'd prefer to hear bug reports about, as well as what kinds
+> of output is most useful (we're getting all chassis set up with serial
+> console so we can do kgdb and also full kernel panic output results).
+
+If you want to stay on mainline kernels with best-effort community
+support, I'd suggest 2.6.38 or more recent kernels are the only ones
+we're going to debug. If you want fixes, then running the curent -rc
+kernels is probably a good idea. It's unlikely you'll get anyone
+backporting fixes for you to older kernels.
+
+Alternatively, you can switch to something like RHEL (or SLES) where
+XFS is fully supported (and in the RHEL case, pays my bills :). The
+advantage of this is that once the bug is fixed in mainline, it will
+get backported to the supported kernel you are running.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
