@@ -1,15 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p43LcCP4030024 for <xfs@oss.sgi.com>; Tue, 3 May 2011 16:38:12 -0500
-Subject: Re: [PATCH] [xfsprogs]: Don't translate command name.
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1302858438-22215-1-git-send-email-arekm@maven.pl>
-References: <1302858438-22215-1-git-send-email-arekm@maven.pl>
-Date: Tue, 3 May 2011 16:41:46 -0500
-Message-ID: <1304458906.9841.2.camel@doink>
+	p440fVTn042976 for <xfs@oss.sgi.com>; Tue, 3 May 2011 19:41:32 -0500
+Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 534141E1B038
+	for <xfs@oss.sgi.com>; Tue,  3 May 2011 17:45:07 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	UP0UmsMiQHJ677Wg for <xfs@oss.sgi.com>;
+	Tue, 03 May 2011 17:45:07 -0700 (PDT)
+Date: Wed, 4 May 2011 10:44:54 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: kill off xfs_printk()
+Message-ID: <20110504004453.GC9114@dastard>
+References: <a7077b2b2f6f46ac48d03cff4ccede2feba18f07.1304453673.git.aelder@sgi.com>
 MIME-Version: 1.0
-Reply-To: aelder@sgi.com
+Content-Disposition: inline
+In-Reply-To: <a7077b2b2f6f46ac48d03cff4ccede2feba18f07.1304453673.git.aelder@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,23 +25,44 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Arkadiusz =?UTF-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
-Cc: xfs@oss.sgi.com
+To: Alex Elder <aelder@sgi.com>
+Cc: Joe Perches <joe@perches.com>, xfs@oss.sgi.com
 
-T24gRnJpLCAyMDExLTA0LTE1IGF0IDExOjA3ICswMjAwLCBBcmthZGl1c3ogTWnFm2tpZXdpY3og
-d3JvdGU6Cj4gQ29tbWFuZCBuYW1lcyBzaG91bGQgbmV2ZXIgYmUgdHJhbnNsYXRlZC4gQ3VycmVu
-dGx5IHRoZXJlIGlzCj4gJ3hmc19xdW90YSAteCAtYyAicHJvamVjdCIuLi4nIGluIG9uZSBsb2Nh
-bGUgKEMpIHdoaWxlCj4gJ3hmc19xdW90YSAteCAtYyAicHJvamVrdCIuLi4nIGluIGFub3RoZXIg
-KHBsX1BMKS4KCkkgaGF2ZW4ndCBsb29rZWQgYXQgdGhpcyBjbG9zZWx5IHlldCwgYnV0IGl0IGxv
-b2tzCnByZXR0eSBzdHJhaWdodGZvcndhcmQuCgpJIGhhdmUgdHJpZWQgdG8gZG8gYSBsaXR0bGUg
-cmVzZWFyY2ggb24gbG9jYWxpemF0aW9uCnRob3VnaCwgc28gSSdtIGEgbGl0dGxlIGJldHRlciBp
-bmZvcm1lZC4gIEkgYWNjZXB0CnlvdXIgc3RhdGVtZW50IHRoYXQgY29tbWFuZCBuYW1lcyBzaG91
-bGQgbmV2ZXIgYmUKdHJhbnNsYXRlZCwgYnV0IGlzIHRoYXQgYSB3ZWxsLWtub3duIGNvbnZlbnRp
-b24/CgpUaGFua3MuCgoJCQkJCS1BbGV4Cgo+IFNpZ25lZC1vZmYtYnk6IEFya2FkaXVzeiBNacWb
-a2lld2ljeiA8YXJla21AbWF2ZW4ucGw+CgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDov
-L29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+On Tue, May 03, 2011 at 03:14:44PM -0500, Alex Elder wrote:
+> From: Joe Perches <joe@perches.com>
+> 
+> xfs_alert_tag() can be defined using xfs_alert(), and thereby avoid
+> using xfs_printk() altogether.  This is the only remaining use of
+> xfs_printk(), so changing it this way means xfs_printk() can simply
+> be eliminated.can simply be eliminated.can simply be eliminated.can
+> simply be eliminated.can simply be eliminated.can simply be
+> eliminated.can simply be eliminated.can simply be eliminated.can
+> simply be eliminated.
+> 
+> Also add format checking to the non-debug inline function xfs_debug.
+> Miscellaneous function prototype argument alignment.
+> 
+> (Updated to delete the definition of xfs_printk(), which is
+> no longer used or needed.)
+> 
+> Signed-off-by: Alex Elder <aelder@sgi.com>
+
+If you are going to credit Joe as the original source of the patch
+in the commit (i.e. via the "From:" tag), you probably should copy
+in his original Signed-off-by tag as well....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
