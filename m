@@ -1,16 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p44EQNR0079352 for <xfs@oss.sgi.com>; Wed, 4 May 2011 09:26:23 -0500
+	p44EoZFs080079 for <xfs@oss.sgi.com>; Wed, 4 May 2011 09:50:35 -0500
+Received: from mail.perches.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7E7F042E5FF
+	for <xfs@oss.sgi.com>; Wed,  4 May 2011 07:54:13 -0700 (PDT)
+Received: from mail.perches.com (mail.perches.com [173.55.12.10]) by
+	cuda.sgi.com with ESMTP id U6iNpGykaJDEV28t for
+	<xfs@oss.sgi.com>; Wed, 04 May 2011 07:54:13 -0700 (PDT)
 Subject: Re: [PATCH] xfs: kill off xfs_printk()
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110504004453.GC9114@dastard>
+From: Joe Perches <joe@perches.com>
+In-Reply-To: <1304519398.2841.12.camel@doink>
 References: <a7077b2b2f6f46ac48d03cff4ccede2feba18f07.1304453673.git.aelder@sgi.com>
-	<20110504004453.GC9114@dastard>
-Date: Wed, 4 May 2011 09:29:58 -0500
-Message-ID: <1304519398.2841.12.camel@doink>
-MIME-Version: 1.0
-Reply-To: aelder@sgi.com
+	<20110504004453.GC9114@dastard>  <1304519398.2841.12.camel@doink>
+Date: Wed, 04 May 2011 07:54:11 -0700
+Message-ID: <1304520851.1788.96.camel@Joe-Laptop>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,41 +28,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Joe Perches <joe@perches.com>, xfs@oss.sgi.com
+To: aelder@sgi.com
+Cc: xfs@oss.sgi.com
 
-On Wed, 2011-05-04 at 10:44 +1000, Dave Chinner wrote:
-> On Tue, May 03, 2011 at 03:14:44PM -0500, Alex Elder wrote:
-> > From: Joe Perches <joe@perches.com>
-> > 
-> > xfs_alert_tag() can be defined using xfs_alert(), and thereby avoid
-> > using xfs_printk() altogether.  This is the only remaining use of
-> > xfs_printk(), so changing it this way means xfs_printk() can simply
-> > be eliminated.can simply be eliminated.can simply be eliminated.can
-> > simply be eliminated.can simply be eliminated.can simply be
-> > eliminated.can simply be eliminated.can simply be eliminated.can
-> > simply be eliminated.
-> > 
-> > Also add format checking to the non-debug inline function xfs_debug.
-> > Miscellaneous function prototype argument alignment.
-> > 
-> > (Updated to delete the definition of xfs_printk(), which is
-> > no longer used or needed.)
-> > 
-> > Signed-off-by: Alex Elder <aelder@sgi.com>
-> 
-> If you are going to credit Joe as the original source of the patch
-> in the commit (i.e. via the "From:" tag), you probably should copy
-> in his original Signed-off-by tag as well....
+On Wed, 2011-05-04 at 09:29 -0500, Alex Elder wrote:
+> Honestly I wasn't sure about that.  Since I changed it I
+> kind of hoped he'd acknowledge or sign off on it.  I guess
+> I'm still learning about the conventions for signing off
+> on things.  I want to give all credit properly, I just
+> don't always know the Right Way to do so.
 
-Honestly I wasn't sure about that.  Since I changed it I
-kind of hoped he'd acknowledge or sign off on it.  I guess
-I'm still learning about the conventions for signing off
-on things.  I want to give all credit properly, I just
-don't always know the Right Way to do so.
+When I modify a patch to my taste I use
 
-					-Alex
+Original-patch-by:
 
+Anyway, no worries to me, whatever you want.
+
+Acked-by: Joe Perches <joe@perches.com>
+Signed-off-by: Joe Perches <joe@perches.com>
+Original-patch-by: Joe Perches <joe@perches.com>
+
+cheers, Joe
 
 _______________________________________________
 xfs mailing list
