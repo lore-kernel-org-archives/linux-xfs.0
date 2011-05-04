@@ -1,19 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p44Fvjhp082562 for <xfs@oss.sgi.com>; Wed, 4 May 2011 10:57:46 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AF19D12298D4
-	for <xfs@oss.sgi.com>; Wed,  4 May 2011 09:01:23 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id 6YRmcMVDHPuw7d5f for
-	<xfs@oss.sgi.com>; Wed, 04 May 2011 09:01:23 -0700 (PDT)
-Date: Wed, 4 May 2011 12:01:22 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: XFS status update for April 2011
-Message-ID: <20110504160122.GA7224@infradead.org>
+	p44I5whc087247
+	for <linux-xfs@oss.sgi.com>; Wed, 4 May 2011 13:05:58 -0500
+Received: from n5-vm6.bullet.mail.sp2.yahoo.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with SMTP id 590DF42FBA9
+	for <linux-xfs@oss.sgi.com>; Wed,  4 May 2011 11:09:35 -0700 (PDT)
+Received: from n5-vm6.bullet.mail.sp2.yahoo.com
+	(n5-vm6.bullet.mail.sp2.yahoo.com [67.195.135.101]) by
+	cuda.sgi.com with SMTP id qiWFZXuf0U7m12IE for
+	<linux-xfs@oss.sgi.com>; Wed, 04 May 2011 11:09:35 -0700 (PDT)
+Date: 4 May 2011 18:09:35 -0000
+Message-ID: <1304532575.11.90555.w2@yahoogroups.com>
+From: Yahoo! Groups Customer Care
+	<confirm-prefs-5_if4BOtYfDuPq4R459rxXeMcOUGmJSs347sCnkuoQE1TB1gzmVXC5d8tERD9a2rarmR8hUMzntaMPXa@yahoogroups.com>
+Subject: Please confirm request to change your email preferences 
 MIME-Version: 1.0
-Content-Disposition: inline
+Reply-To: confirm-prefs-5_if4BOtYfDuPq4R459rxXeMcOUGmJSs347sCnkuoQE1TB1gzmVXC5d8tERD9a2rarmR8hUMzntaMPXa@yahoogroups.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,22 +29,45 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-xfs@oss.sgi.com
 
-April saw further stabilization work on the Linux 2.6.39 kernel, including
-a number of XFS bug fixes.  Most importantly a series of patches fixes various
-OOM problems due to bad interactions between the generic writeback code
-and XFS inode reclaim, but there also were other patches for various smaller
-issues.  In the meantime the XFS development tree saw the addition of the
-optimized busy extent tracking, which allows large speedups for multi-threaded
-meta data heavy workloads, and lays the groundwork for discard support on
-transaction commit, and a few other smaller patches.
 
-On the user space side the xfsprogs and xfsdump repositories saw a very quiet
-month with no applied patches, although a few were posted and discussed on
-the mailing list. The xfstests repository on the other hand saw a new test
-cases exercising the xfs_metadump functionally as well as a fixes to existing
-tests.
+Hello linux-xfs@oss.sgi.com,
+
+We have received your request to change your email preferences for
+Yahoo! Groups. This request will expire in 7 days.
+
+Email preferences:
+-------------------------------------------------------------------------------
+- Allow group moderators to add me to their group: No
+- Allow group moderators to invite me to join their groups: No
+
+To confirm your email preferences:
+-------------------------------------------------------------------------------
+
+1) Go to the Yahoo! Groups site by clicking on this link:
+  http://groups.yahoo.com/s?tag=5_if4BOtYfDuPq4R459rxXeMcOUGmJSs347sCnkuoQE1TB1gzmVXC5d8tERD9a2rarmR8hUMzntaMPXa
+
+  (If clicking doesn't work, "Cut" and "Paste" the line above into your 
+   Web browser's address bar.)
+
+-OR-
+
+2) REPLY to this email by clicking "Reply" and then "Send"
+   in your email program
+
+If you did not request to change any of your email preferences, please ignore
+this message.
+
+Regards,
+
+Yahoo! Groups Customer Care
+
+Your use of Yahoo! Groups is subject to http://docs.yahoo.com/info/terms/ 
+
+ 
+
+
 
 _______________________________________________
 xfs mailing list
