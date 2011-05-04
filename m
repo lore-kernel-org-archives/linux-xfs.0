@@ -1,31 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p447WiS1063698 for <xfs@oss.sgi.com>; Wed, 4 May 2011 02:32:44 -0500
-Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5154142C743
-	for <xfs@oss.sgi.com>; Wed,  4 May 2011 00:36:20 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	BL8aocg8MRSomPrb for <xfs@oss.sgi.com>;
-	Wed, 04 May 2011 00:36:20 -0700 (PDT)
-Date: Wed, 4 May 2011 17:36:15 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: 2.6.39-rc4+: oom-killer busy killing tasks
-Message-ID: <20110504073615.GD9114@dastard>
-References: <alpine.DEB.2.01.1104291250480.18728@trent.utfs.org>
-	<20110429201701.GA13166@x4.trippels.de>
-	<alpine.DEB.2.01.1104291710340.18728@trent.utfs.org>
-	<20110501080149.GD13542@dastard>
-	<alpine.DEB.2.01.1105012135260.18728@trent.utfs.org>
-	<20110502121958.GA2978@dastard>
-	<alpine.DEB.2.01.1105021247410.18728@trent.utfs.org>
-	<20110503005114.GE2978@dastard>
-	<alpine.DEB.2.01.1105031345090.18728@trent.utfs.org>
-	<alpine.DEB.2.01.1105031740460.18728@trent.utfs.org>
+	p44985cf066652 for <xfs@oss.sgi.com>; Wed, 4 May 2011 04:08:07 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CD0A042CD4F
+	for <xfs@oss.sgi.com>; Wed,  4 May 2011 02:11:43 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id ItBvwVgXcjp8R2BI for
+	<xfs@oss.sgi.com>; Wed, 04 May 2011 02:11:43 -0700 (PDT)
+Date: Wed, 4 May 2011 05:11:41 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: xfs_repair crashing (versions 3.1.4 and 3.1.5)
+Message-ID: <20110504091141.GA30330@infradead.org>
+References: <BANLkTikh1i3aYgXNZut+AGT-1kz=aqv-Eg@mail.gmail.com>
+	<20110419082705.GI23985@dastard>
+	<20110419130737.45beb611@destiny.ordissimo>
+	<4DB084CE.8020600@sandeen.net>
+	<20110422130920.7be686c6@destiny.ordissimo>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.01.1105031740460.18728@trent.utfs.org>
+In-Reply-To: <20110422130920.7be686c6@destiny.ordissimo>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,27 +32,64 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christian Kujau <lists@nerdbynature.de>
-Cc: minchan.kim@gmail.com, LKML <linux-kernel@vger.kernel.org>, Markus Trippelsdorf <markus@trippelsdorf.de>, xfs@oss.sgi.com
+To: Anisse Astier <anisse@astier.eu>
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-On Tue, May 03, 2011 at 05:46:14PM -0700, Christian Kujau wrote:
-> And another one, please see the files marked with 15- here:
+On Fri, Apr 22, 2011 at 01:09:20PM +0200, Anisse Astier wrote:
+> Yep, I figured that much, it just took me a while to get up & running
+> another system capable of building xfsprogs.
 > 
->    https://trent.utfs.org/p/bits/2.6.39-rc4/oom/trace/
+> Now that I have that, and that I commented the do_warn, xfs_repair is
+> still running after the previous failing point:
+> [???]
+>         - agno = 17
+> bad key in bmbt root (is 73434, would reset to 74194) in inode 2283178100 data fork
+> bad fwd (right) sibling pointer (saw 145202888 should be NULLDFSBNO)
+> bad data fork in inode 2283178100
+> would have cleared inode 2283178100
+>         - agno = 18
+> [???] (ongoing)
 > 
-> I tried to have more concise timestamps in each of these files, hope that 
-> helps. Sadly though, trace-cmd reports still segfaults on the tracefile.
+> Once this is done, I'll test with %llu instead of %u.
+> 
+> But please be patient, it's a 900GB filesystem (half-full) with just an 800
+> MHz ARM9 processor doing the work, so xfs_repair takes hours to complete.
+> Plus I won't have time to do many tests before next week.
+> 
+> To be continued.
 
-Ok, that will be helpful. Also helpful is that I've (FINALLY!)
-reproduced this myself, and i think i can now reproduce it at will
-on a highmem i686 machine. I'll look into it more later tonight....
+Any updates?
 
-Cheers,
+In the meantime I cooked up a little patch (below) to add format string
+checking to the repair-internal varargs printing helpers, which produces
+a lot of warnings.  A lot of that is different underlying types for
+fixes-size 64-bit types, but there's quite a few legit errors there as
+well.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+
+Index: xfsprogs-dev/repair/err_protos.h
+===================================================================
+--- xfsprogs-dev.orig/repair/err_protos.h	2011-04-22 12:45:25.018475622 +0200
++++ xfsprogs-dev/repair/err_protos.h	2011-04-22 12:47:22.014508467 +0200
+@@ -17,10 +17,14 @@
+  */
+ 
+ /* abort, internal error */
+-void  __attribute__((noreturn)) do_abort(char const *, ...);
++void  __attribute__((noreturn)) do_abort(char const *, ...)
++	__attribute__((format(printf,1,2)));
+ /* abort, system error */
+-void  __attribute__((noreturn)) do_error(char const *, ...);
++void  __attribute__((noreturn)) do_error(char const *, ...)
++	__attribute__((format(printf,1,2)));
+ /* issue warning */
+-void do_warn(char const *, ...);
++void do_warn(char const *, ...)
++	__attribute__((format(printf,1,2)));
+ /* issue log message */
+-void do_log(char const *, ...);
++void do_log(char const *, ...)
++	__attribute__((format(printf,1,2)));
 
 _______________________________________________
 xfs mailing list
