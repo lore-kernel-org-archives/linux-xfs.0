@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p44IuXTe088815 for <xfs@oss.sgi.com>; Wed, 4 May 2011 13:56:33 -0500
+	p44IuXR2088827 for <xfs@oss.sgi.com>; Wed, 4 May 2011 13:56:34 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 78B6B1B83F3D
-	for <xfs@oss.sgi.com>; Wed,  4 May 2011 12:00:11 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 357FC11CD885
+	for <xfs@oss.sgi.com>; Wed,  4 May 2011 12:00:12 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id e7RIJ0vcEm8j9cAs for
-	<xfs@oss.sgi.com>; Wed, 04 May 2011 12:00:11 -0700 (PDT)
+	by cuda.sgi.com with ESMTP id mZAtcXrwXFqtrNTC for
+	<xfs@oss.sgi.com>; Wed, 04 May 2011 12:00:12 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.72 #1 (Red Hat
-	Linux)) id 1QHhIx-00023B-0N
+	Linux)) id 1QHhIx-00024p-IB
 	for xfs@oss.sgi.com; Wed, 04 May 2011 19:00:11 +0000
-Message-Id: <20110504185513.136746538@bombadil.infradead.org>
-Date: Wed, 04 May 2011 14:55:13 -0400
+Message-Id: <20110504190011.508745503@bombadil.infradead.org>
+Date: Wed, 04 May 2011 14:55:16 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 0/4] online discard support V3
+Subject: [PATCH 3/4] xfs: add a reference count to the CIL context
+References: <20110504185513.136746538@bombadil.infradead.org>
+Content-Disposition: inline; filename=xfs-cil-ctx-refcounting
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,42 +32,138 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Add support for discarding unused blocks at CIL commit time.  The first
-patch is the guts of the implementation and relies and the resently
-included improved busy extent tracking.  The second patch is an optimization
-that helps a lot with performance, and the last two patches submit the
-discard requests asynchronously to not stall the log I/O completions threads
-and improve performance, but they currently trip over bugs in the block layer.
+For the upcoming asynchronoyus discard support we need to be able to delay
+freeing the CIL context until the last discard request that reference it
+has completed.  Add a reference count to the CIL context, and only clear
+the busy extents and free the CIL context structure when it reaches zero,
+and a work item to allow freeing it from irq context.
 
-The performance with these patches is quite bad on the SATA SSDs I tested,
-with up to 50% slowdowns on meta data intensive workloads, although ext4 is
-much worse and btrfs is almost as bad as bad.  I've demonstrated a prototype
-of a vectored discard at LSF that builds on the code subitted here and
-only changes the internals of xfs_discard_extents, which brings the performance
-back to acceptable levels.
+Note that this means delaying the clearing of the busy extents for a little
+bit even on non-discard mounts, but with the new busy extent trim/reuse
+code there is no real life impact of this change.
 
-For now my suggestion is to put patches 1 and 2 in to give people a chance
-to play with online discard on XFS.  If the block layer issues get fixed
-in time we can add patches 3 and 4 later in the 2.6.40 cycle, if not they
-will still be needed once we get the proper vectored discard support that
-I'm going to start working on soon.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-And here's the block layer workaround for the discard merge bug:
-
-
-Index: xfs/block/blk-core.c
+Index: xfs/fs/xfs/xfs_log_cil.c
 ===================================================================
---- xfs.orig/block/blk-core.c	2011-03-30 16:04:45.700659775 +0200
-+++ xfs/block/blk-core.c	2011-03-30 16:04:59.775160021 +0200
-@@ -1247,7 +1247,7 @@ static int __make_request(struct request
- 	 */
- 	blk_queue_bounce(q, &bio);
+--- xfs.orig/fs/xfs/xfs_log_cil.c	2011-05-03 12:00:49.000000000 +0200
++++ xfs/fs/xfs/xfs_log_cil.c	2011-05-03 12:17:19.399350953 +0200
+@@ -20,7 +20,7 @@
+ #include "xfs_types.h"
+ #include "xfs_bit.h"
+ #include "xfs_log.h"
+-#include "xfs_inum.h"
++#include "xfs_inum.h" 
+ #include "xfs_trans.h"
+ #include "xfs_trans_priv.h"
+ #include "xfs_log_priv.h"
+@@ -31,6 +31,46 @@
+ #include "xfs_alloc.h"
+ #include "xfs_discard.h"
  
--	if (bio->bi_rw & (REQ_FLUSH | REQ_FUA)) {
-+	if (bio->bi_rw & (REQ_FLUSH | REQ_FUA | REQ_DISCARD)) {
- 		spin_lock_irq(q->queue_lock);
- 		where = ELEVATOR_INSERT_FLUSH;
- 		goto get_rq;
++static void
++xlog_cil_ctx_free(
++	struct xfs_cil_ctx	*ctx)
++{
++	if (!list_empty(&ctx->busy_extents)) {
++		xfs_alloc_busy_clear(ctx->cil->xc_log->l_mp,
++				     &ctx->busy_extents, false);
++	}
++	kmem_free(ctx);
++}
++
++static void
++xlog_cil_ctx_free_work(
++	struct work_struct	*work)
++{
++	xlog_cil_ctx_free(container_of(work, struct xfs_cil_ctx, work));
++}
++
++static void
++xlog_cil_ctx_init(
++	struct xfs_cil_ctx	*ctx,
++	struct xfs_cil		*cil,
++	xfs_lsn_t		sequence)
++{
++	INIT_LIST_HEAD(&ctx->committing);
++	INIT_LIST_HEAD(&ctx->busy_extents);
++	ctx->sequence = sequence;
++	ctx->cil = cil;
++	atomic_set(&ctx->ref, 1);
++	INIT_WORK(&ctx->work, xlog_cil_ctx_free_work);
++	cil->xc_ctx = ctx;
++
++	/*
++	 * Mirror the sequence into the cil structure so that we can do
++	 * unlocked checks against the current sequence in log forces without
++	 * risking deferencing a freed context pointer.
++	 */
++	cil->xc_current_sequence = ctx->sequence;
++}
++
+ /*
+  * Perform initial CIL structure initialisation. If the CIL is not
+  * enabled in this filesystem, ensure the log->l_cilp is null so
+@@ -64,12 +104,7 @@ xlog_cil_init(
+ 	init_rwsem(&cil->xc_ctx_lock);
+ 	init_waitqueue_head(&cil->xc_commit_wait);
+ 
+-	INIT_LIST_HEAD(&ctx->committing);
+-	INIT_LIST_HEAD(&ctx->busy_extents);
+-	ctx->sequence = 1;
+-	ctx->cil = cil;
+-	cil->xc_ctx = ctx;
+-	cil->xc_current_sequence = ctx->sequence;
++	xlog_cil_ctx_init(ctx, cil, 1);
+ 
+ 	cil->xc_log = log;
+ 	log->l_cilp = cil;
+@@ -381,10 +416,10 @@ xlog_cil_committed(
+ 		ASSERT(mp->m_flags & XFS_MOUNT_DISCARD);
+ 
+ 		xfs_discard_extents(mp, &ctx->busy_extents);
+-		xfs_alloc_busy_clear(mp, &ctx->busy_extents, false);
+ 	}
+ 
+-	kmem_free(ctx);
++	if (atomic_dec_and_test(&ctx->ref))
++		xlog_cil_ctx_free(ctx);
+ }
+ 
+ /*
+@@ -491,18 +526,7 @@ xlog_cil_push(
+ 	 * during log forces to extract the commit lsn of the sequence that
+ 	 * needs to be forced.
+ 	 */
+-	INIT_LIST_HEAD(&new_ctx->committing);
+-	INIT_LIST_HEAD(&new_ctx->busy_extents);
+-	new_ctx->sequence = ctx->sequence + 1;
+-	new_ctx->cil = cil;
+-	cil->xc_ctx = new_ctx;
+-
+-	/*
+-	 * mirror the new sequence into the cil structure so that we can do
+-	 * unlocked checks against the current sequence in log forces without
+-	 * risking deferencing a freed context pointer.
+-	 */
+-	cil->xc_current_sequence = new_ctx->sequence;
++	xlog_cil_ctx_init(new_ctx, cil, ctx->sequence + 1);
+ 
+ 	/*
+ 	 * The switch is now done, so we can drop the context lock and move out
+Index: xfs/fs/xfs/xfs_log_priv.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_log_priv.h	2011-05-03 11:41:29.000000000 +0200
++++ xfs/fs/xfs/xfs_log_priv.h	2011-05-03 12:13:49.743820088 +0200
+@@ -390,6 +390,8 @@ struct xfs_cil_ctx {
+ 	struct xfs_log_vec	*lv_chain;	/* logvecs being pushed */
+ 	xfs_log_callback_t	log_cb;		/* completion callback hook. */
+ 	struct list_head	committing;	/* ctx committing list */
++	atomic_t		ref;		/* reference count */
++	struct work_struct	work;		/* for deferred freeing */
+ };
+ 
+ /*
 
 _______________________________________________
 xfs mailing list
