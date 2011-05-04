@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p44DMTOH077231 for <xfs@oss.sgi.com>; Wed, 4 May 2011 08:22:29 -0500
-Date: Wed, 4 May 2011 23:25:52 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: 2.6.39-rc3, 2.6.39-rc4: XFS lockup - regression since 2.6.38
-Message-ID: <20110504132552.GG9114@dastard>
-References: <20110423224403.5fd1136a@neptune.home>
-	<20110427050850.GG12436@dastard>
-	<20110427182622.05a068a2@neptune.home>
-	<20110428194528.GA1627@x4.trippels.de>
-	<20110429011929.GA13542@dastard>
-	<20110504005736.GA2958@cucamonga.audible.transient.net>
+	p44Dj5GE078025 for <xfs@oss.sgi.com>; Wed, 4 May 2011 08:45:05 -0500
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 39299C3D805
+	for <xfs@oss.sgi.com>; Wed,  4 May 2011 06:48:42 -0700 (PDT)
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id AwJpdYMnXJ7LuvlN for <xfs@oss.sgi.com>;
+	Wed, 04 May 2011 06:48:42 -0700 (PDT)
+Message-ID: <4DC15939.5020508@sandeen.net>
+Date: Wed, 04 May 2011 08:48:41 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110504005736.GA2958@cucamonga.audible.transient.net>
+Subject: Re: [PATCH] xfstests: clean up fallocate configuration tests
+References: <4DBF492E.3040400@sandeen.net>
+	<4DC0516F.2040108@linux.vnet.ibm.com>
+In-Reply-To: <4DC0516F.2040108@linux.vnet.ibm.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,34 +28,21 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-kernel@vger.kernel.org, Markus Trippelsdorf <markus@trippelsdorf.de>, Bruno =?iso-8859-1?Q?Pr=E9mont?= <bonbons@linux-vserver.org>, xfs-masters@oss.sgi.com, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Alex Elder <aelder@sgi.com>, Dave Chinner <dchinner@redhat.com>
+To: Allison Henderson <achender@linux.vnet.ibm.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Wed, May 04, 2011 at 12:57:36AM +0000, Jamie Heilman wrote:
-> Dave Chinner wrote:
-> > OK, so the common elements here appears to be root filesystems
-> > with small log sizes, which means they are tail pushing all the
-> > time metadata operations are in progress. Definitely seems like a
-> > race in the AIL workqueue trigger mechanism. I'll see if I can
-> > reproduce this and cook up a patch to fix it.
+On 5/3/11 2:03 PM, Allison Henderson wrote:
+
+> Thanks Eric,
 > 
-> Is there value in continuing to post sysrq-w, sysrq-l, xfs_info, and
-> other assorted feedback wrt this issue?  I've had it happen twice now
-> myself in the past week or so, though I have no reliable reproduction
-> technique.  Just wondering if more data points will help isolate the
-> cause, and if so, how to be prepared to get them.
+> I tried it out and it looks like it works great.  I will back out the changes to the Makefile in my fsx patch.
+> 
+> Allison Henderson
+> 
 
-Not really. I think I know where the problem lies, but I currently
-lack a reproducer. There's also been another regression I've only
-just got to the bottom of, so I haven't really had a chance to focus
-properly on this one yet. Log space hangs like this have
-historically been difficult to reproduce reliably....
+Thanks; I pushed it to the xfstests-dev git tree, you should be able to pull it and rebase your patches in a few minutes.
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+-Eric
 
 _______________________________________________
 xfs mailing list
