@@ -1,21 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p452Me8F107001 for <xfs@oss.sgi.com>; Wed, 4 May 2011 21:22:40 -0500
-Date: Thu, 5 May 2011 12:26:13 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: 2.6.39-rc3, 2.6.39-rc4: XFS lockup - regression since 2.6.38
-Message-ID: <20110505022613.GA26837@dastard>
-References: <20110423224403.5fd1136a@neptune.home>
-	<20110427050850.GG12436@dastard>
-	<20110427182622.05a068a2@neptune.home>
-	<20110428194528.GA1627@x4.trippels.de>
-	<20110429011929.GA13542@dastard>
-	<20110504005736.GA2958@cucamonga.audible.transient.net>
-	<20110505002126.GA26797@dastard>
+	p4523pD2106600 for <xfs@oss.sgi.com>; Wed, 4 May 2011 21:03:51 -0500
+Received: from trent.utfs.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4CF05FBF027
+	for <xfs@oss.sgi.com>; Wed,  4 May 2011 19:07:28 -0700 (PDT)
+Received: from trent.utfs.org (trent.utfs.org [194.246.123.103]) by
+	cuda.sgi.com with ESMTP id VsftkLgHKOX3WCR3 for
+	<xfs@oss.sgi.com>; Wed, 04 May 2011 19:07:28 -0700 (PDT)
+Date: Wed, 4 May 2011 19:07:27 -0700 (PDT)
+From: Christian Kujau <lists@nerdbynature.de>
+Subject: Re: 2.6.39-rc4+: oom-killer busy killing tasks
+In-Reply-To: <20110504231549.GA25956@dastard>
+Message-ID: <alpine.DEB.2.01.1105041901380.18728@trent.utfs.org>
+References: <20110501080149.GD13542@dastard>
+	<alpine.DEB.2.01.1105012135260.18728@trent.utfs.org>
+	<20110502121958.GA2978@dastard>
+	<alpine.DEB.2.01.1105021247410.18728@trent.utfs.org>
+	<20110503005114.GE2978@dastard>
+	<alpine.DEB.2.01.1105031345090.18728@trent.utfs.org>
+	<alpine.DEB.2.01.1105031740460.18728@trent.utfs.org>
+	<20110504073615.GD9114@dastard> <20110504111211.GF9114@dastard>
+	<alpine.DEB.2.01.1105041205340.18728@trent.utfs.org>
+	<20110504231549.GA25956@dastard>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110505002126.GA26797@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,47 +36,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-kernel@vger.kernel.org, Markus Trippelsdorf <markus@trippelsdorf.de>, Bruno =?iso-8859-1?Q?Pr=E9mont?= <bonbons@linux-vserver.org>, xfs-masters@oss.sgi.com, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Alex Elder <aelder@sgi.com>, Dave Chinner <dchinner@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: minchan.kim@gmail.com, LKML <linux-kernel@vger.kernel.org>, Markus Trippelsdorf <markus@trippelsdorf.de>, xfs@oss.sgi.com
 
-On Thu, May 05, 2011 at 10:21:26AM +1000, Dave Chinner wrote:
-> On Wed, May 04, 2011 at 12:57:36AM +0000, Jamie Heilman wrote:
-> > Dave Chinner wrote:
-> > > OK, so the common elements here appears to be root filesystems
-> > > with small log sizes, which means they are tail pushing all the
-> > > time metadata operations are in progress. Definitely seems like a
-> > > race in the AIL workqueue trigger mechanism. I'll see if I can
-> > > reproduce this and cook up a patch to fix it.
-> > 
-> > Is there value in continuing to post sysrq-w, sysrq-l, xfs_info, and
-> > other assorted feedback wrt this issue?  I've had it happen twice now
-> > myself in the past week or so, though I have no reliable reproduction
-> > technique.  Just wondering if more data points will help isolate the
-> > cause, and if so, how to be prepared to get them.
-> > 
-> > For whatever its worth, my last lockup was while running
-> > 2.6.39-rc5-00127-g1be6a1f with a preempt config without cgroups.
-> 
-> Can you all try the patch below? I've managed to trigger a couple of
-> xlog_wait() lockups in some controlled load tests. The lockups don't
-> appear to occur with the following patch to he race condition in
-> the AIL workqueue trigger.
+On Thu, 5 May 2011 at 09:15, Dave Chinner wrote:
+> I'll push the fix through the XFS tree to mainline. Thanks for all
+> your effort helping me understand and debug the problem, Christian.
 
-They are still there, just harder to hit.
+OK, I gave it some more testing and compiled the kernel wit UP and 
+TINY_RCU again and with your patch applied to -rc6 I could not reproduce 
+the issue any more. Plain -rc6 still has the OOM problem.
 
-FWIW, I've also discovered that "echo 2 > /proc/sys/vm/drop_caches"
-gets the system moving again because that changes the push target.
+Feel free to add:
 
-I've found two more bugs, and now my test case is now reliably
-reproducably a 5-10s pause at ~1M created 1byte files and then
-hanging at about 1.25M files. So there's yet another problem lurking
-that I need to get to the bottom of.
+  Tested-By: Christian Kujau <lists@nerdbynature.de>
 
-Cheers,
+Again, thanks so much for staying with me and guiding me through all the 
+debug steps. And all your effort fixing such a rare setup. I hope more 
+people will share the joy :-)
 
-Dave.
+Christian.
 -- 
-Dave Chinner
-david@fromorbit.com
+BOFH excuse #164:
+
+root rot
 
 _______________________________________________
 xfs mailing list
