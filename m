@@ -1,23 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p461jjIj170816 for <xfs@oss.sgi.com>; Thu, 5 May 2011 20:45:46 -0500
-Date: Fri, 6 May 2011 11:49:06 +1000
+	p462otX3173116 for <xfs@oss.sgi.com>; Thu, 5 May 2011 21:50:55 -0500
+Received: from ipmail07.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 93A271E1F008
+	for <xfs@oss.sgi.com>; Thu,  5 May 2011 19:54:33 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	H0KhYoEHbvIDFlNq for <xfs@oss.sgi.com>;
+	Thu, 05 May 2011 19:54:33 -0700 (PDT)
+Received: from chute ([192.168.1.1] helo=disappointment)
+	by dastard with esmtp (Exim 4.72)
+	(envelope-from <dave@fromorbit.com>) id 1QIBBV-00017z-Qs
+	for xfs@oss.sgi.com; Fri, 06 May 2011 12:54:29 +1000
+Received: from dave by disappointment with local (Exim 4.75)
+	(envelope-from <dave@disappointment.disaster>) id 1QIBBO-0007PR-ME
+	for xfs@oss.sgi.com; Fri, 06 May 2011 12:54:22 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: 2.6.39-rc3, 2.6.39-rc4: XFS lockup - regression since 2.6.38
-Message-ID: <20110506014906.GF26837@dastard>
-References: <20110423224403.5fd1136a@neptune.home>
-	<20110427050850.GG12436@dastard>
-	<20110427182622.05a068a2@neptune.home>
-	<20110428194528.GA1627@x4.trippels.de>
-	<20110429011929.GA13542@dastard>
-	<20110504005736.GA2958@cucamonga.audible.transient.net>
-	<20110505002126.GA26797@dastard> <20110505022613.GA26837@dastard>
-	<20110505122117.GB26837@dastard>
-	<20110505123959.GA21098@infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110505123959.GA21098@infradead.org>
+Subject: [PATCH 3/5] xfs: always push the AIL to the target
+Date: Fri,  6 May 2011 12:54:06 +1000
+Message-Id: <1304650448-28438-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1304650448-28438-1-git-send-email-david@fromorbit.com>
+References: <1304650448-28438-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,70 +30,52 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Dave Chinner <dchinner@redhat.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, xfs-masters@oss.sgi.com, Bruno Pr?mont <bonbons@linux-vserver.org>, Alex Elder <aelder@sgi.com>, Markus Trippelsdorf <markus@trippelsdorf.de>
+To: xfs@oss.sgi.com
 
-On Thu, May 05, 2011 at 08:39:59AM -0400, Christoph Hellwig wrote:
-> > The third problem is that updating the push target is not safe on 32
-> > bit machines. We cannot copy a 64 bit LSN without the possibility of
-> > corrupting the result when racing with another updating thread. We
-> > have function to do this update safely without needing to care about
-> > 32/64 bit issues - xfs_trans_ail_copy_lsn() - so use that when
-> > updating the AIL push target.
-> 
-> But reading xa_target without xa_lock isn't safe on 32-bit either, is it?
+From: Dave Chinner <dchinner@redhat.com>
 
-Not sure - I think it depends on the platform. I don't think we
-protect LSN reads in any specific way on 32 bit platforms.
+The recent conversion of the xfsaild functionality to a work queue
+introduced a hard-to-hit log space grant hang. One of the problems
+discovered is a target mismatch between the item pushing loop and
+the target itself.
 
-In this case, I don't think it matters so much on read, because if
-we get a race with a write that mixes upper/lower words of the
-target we will eventually hit the stop condition and we won't get a
-match. That will trigger the requeue code and we'll start the push
-again.
+The push trigger checks for the target increasing (i.e. new target >
+current) while the push loop only pushes items that have a LSN <
+current. As a result, we can get the situation where the push target
+is X, the items at the tail of the AIL have LSN X and they don't get
+pushed. The push work then completes thinking it is done, and cannot
+be restarted until the push target increases to >= X + 1. If the
+push target then never increases (because the tail is not moving),
+then we never run the push work again and we stall.
 
-The problem with getting such a race on the target write is that we
-could get a cycle/block pair that is beyond the current head of the
-log and we'd never be able to push the AIL again as all push
-thresholds are truncated to the current head LSN on disk...
+Fix it by making sure log items with a LSN that matches the target
+exactly are pushed during the loop.
 
-> For the first read it can trivially be moved into the critical
-> section a few lines below, and the second one should probably use
-> XFS_LSN_CMP.
-> 
-> > @@ -482,19 +481,24 @@ xfs_ail_worker(
-> >  	/* assume we have more work to do in a short while */
-> >  	tout = 10;
-> >  	if (!count) {
-> > +out_done:
-> 
-> Jumping into conditionals is really ugly.  By initializing count a bit
-> earlier you can just jump in front of the if/else clauses.  And while
-> you're there maybe moving the tout = 10; into an else clause would
-> also make the code more readable.
-> an uninitialied used of tout.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_trans_ail.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Ok, I'll rework that.
-
-> > +		if (ailp->xa_target == target ||
-> > +		    (test_and_set_bit(XFS_AIL_PUSHING_BIT, &ailp->xa_flags)))
-> 
-> no need for braces around the test_and_set_bit call.
-
-*nod*. Left over from developing the fix...
-
-I'll split all these and post them to the xfs-list for review...
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index 226c58b..9f427c2 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -387,7 +387,7 @@ xfs_ail_worker(
+ 	 * lots of contention on the AIL lists.
+ 	 */
+ 	lsn = lip->li_lsn;
+-	while ((XFS_LSN_CMP(lip->li_lsn, target) < 0)) {
++	while ((XFS_LSN_CMP(lip->li_lsn, target) <= 0)) {
+ 		int	lock_result;
+ 		/*
+ 		 * If we can lock the item without sleeping, unlock the AIL
 -- 
-Dave Chinner
-david@fromorbit.com
+1.7.4.4
 
 _______________________________________________
 xfs mailing list
