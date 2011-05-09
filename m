@@ -1,22 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p495rSpA066727 for <xfs@oss.sgi.com>; Mon, 9 May 2011 00:53:28 -0500
-Date: Mon, 9 May 2011 07:57:09 +0200
-From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
-Subject: Re: 2.6.39-rc3, 2.6.39-rc4: XFS lockup - regression since 2.6.38
-Message-ID: <20110509075709.3c527fd2@pluto.restena.lu>
-In-Reply-To: <20110505223513.3654c041@neptune.home>
-References: <20110423224403.5fd1136a@neptune.home>
-	<20110427050850.GG12436@dastard>
-	<20110427182622.05a068a2@neptune.home>
-	<20110428194528.GA1627@x4.trippels.de>
-	<20110429011929.GA13542@dastard>
-	<20110504005736.GA2958@cucamonga.audible.transient.net>
-	<20110505002126.GA26797@dastard> <20110505022613.GA26837@dastard>
-	<20110505122117.GB26837@dastard>
-	<20110505223513.3654c041@neptune.home>
-Mime-Version: 1.0
+	p497o2Ek070983 for <xfs@oss.sgi.com>; Mon, 9 May 2011 02:50:04 -0500
+Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8D2BE15A0911
+	for <xfs@oss.sgi.com>; Mon,  9 May 2011 00:53:41 -0700 (PDT)
+Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
+	cuda.sgi.com with ESMTP id 6UG1rnPZNaaxuOPA for
+	<xfs@oss.sgi.com>; Mon, 09 May 2011 00:53:41 -0700 (PDT)
+Received: from mailsrv.i.zmi.at (h081217106033.dyn.cm.kabsi.at [81.217.106.33])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
+	by mailsrv14.zmi.at (Postfix) with ESMTPSA id B6BE0522
+	for <xfs@oss.sgi.com>; Mon,  9 May 2011 09:53:38 +0200 (CEST)
+Received: from saturn.localnet (saturn.i.zmi.at [10.72.27.2])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client did not present a certificate)
+	by mailsrv.i.zmi.at (Postfix) with ESMTPSA id 4794A401C3A
+	for <xfs@oss.sgi.com>; Mon,  9 May 2011 09:53:35 +0200 (CEST)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: Re: 2.6.38.4: xfs speed problem?
+Date: Mon, 9 May 2011 09:53:34 +0200
+References: <alpine.DEB.2.02.1105071042210.20162@p34.internal.lan>
+	<20110508003321.GI26837@dastard>
+	<4DC6D067.1080208@hardwarefreak.com>
+In-Reply-To: <4DC6D067.1080208@hardwarefreak.com>
+MIME-Version: 1.0
+Message-Id: <201105090953.35090@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,59 +35,73 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: multipart/mixed; boundary="===============0822843354851686935=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Chinner <dchinner@redhat.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, xfs-masters@oss.sgi.com, Dave@oss.sgi.com, Alex Elder <aelder@sgi.com>, Markus Trippelsdorf <markus@trippelsdorf.de>
+To: xfs@oss.sgi.com
 
-T24gVGh1LCA1IE1heSAyMDExIDIyOjM1OjEzIEJydW5vIFByw6ltb250IHdyb3RlOgo+IE9uIFRo
-dSwgMDUgTWF5IDIwMTEgRGF2ZSBDaGlubmVyIHdyb3RlOgo+ID4gT24gVGh1LCBNYXkgMDUsIDIw
-MTEgYXQgMTI6MjY6MTNQTSArMTAwMCwgRGF2ZSBDaGlubmVyIHdyb3RlOgo+ID4gPiBPbiBUaHUs
-IE1heSAwNSwgMjAxMSBhdCAxMDoyMToyNkFNICsxMDAwLCBEYXZlIENoaW5uZXIgd3JvdGU6Cj4g
-PiA+ID4gT24gV2VkLCBNYXkgMDQsIDIwMTEgYXQgMTI6NTc6MzZBTSArMDAwMCwgSmFtaWUgSGVp
-bG1hbiB3cm90ZToKPiA+ID4gPiA+IERhdmUgQ2hpbm5lciB3cm90ZToKPiA+ID4gPiA+ID4gT0ss
-IHNvIHRoZSBjb21tb24gZWxlbWVudHMgaGVyZSBhcHBlYXJzIHRvIGJlIHJvb3QgZmlsZXN5c3Rl
-bXMKPiA+ID4gPiA+ID4gd2l0aCBzbWFsbCBsb2cgc2l6ZXMsIHdoaWNoIG1lYW5zIHRoZXkgYXJl
-IHRhaWwgcHVzaGluZyBhbGwgdGhlCj4gPiA+ID4gPiA+IHRpbWUgbWV0YWRhdGEgb3BlcmF0aW9u
-cyBhcmUgaW4gcHJvZ3Jlc3MuIERlZmluaXRlbHkgc2VlbXMgbGlrZSBhCj4gPiA+ID4gPiA+IHJh
-Y2UgaW4gdGhlIEFJTCB3b3JrcXVldWUgdHJpZ2dlciBtZWNoYW5pc20uIEknbGwgc2VlIGlmIEkg
-Y2FuCj4gPiA+ID4gPiA+IHJlcHJvZHVjZSB0aGlzIGFuZCBjb29rIHVwIGEgcGF0Y2ggdG8gZml4
-IGl0Lgo+ID4gPiA+ID4gCj4gPiA+ID4gPiBJcyB0aGVyZSB2YWx1ZSBpbiBjb250aW51aW5nIHRv
-IHBvc3Qgc3lzcnEtdywgc3lzcnEtbCwgeGZzX2luZm8sIGFuZAo+ID4gPiA+ID4gb3RoZXIgYXNz
-b3J0ZWQgZmVlZGJhY2sgd3J0IHRoaXMgaXNzdWU/ICBJJ3ZlIGhhZCBpdCBoYXBwZW4gdHdpY2Ug
-bm93Cj4gPiA+ID4gPiBteXNlbGYgaW4gdGhlIHBhc3Qgd2VlayBvciBzbywgdGhvdWdoIEkgaGF2
-ZSBubyByZWxpYWJsZSByZXByb2R1Y3Rpb24KPiA+ID4gPiA+IHRlY2huaXF1ZS4gIEp1c3Qgd29u
-ZGVyaW5nIGlmIG1vcmUgZGF0YSBwb2ludHMgd2lsbCBoZWxwIGlzb2xhdGUgdGhlCj4gPiA+ID4g
-PiBjYXVzZSwgYW5kIGlmIHNvLCBob3cgdG8gYmUgcHJlcGFyZWQgdG8gZ2V0IHRoZW0uCj4gPiA+
-ID4gPiAKPiA+ID4gPiA+IEZvciB3aGF0ZXZlciBpdHMgd29ydGgsIG15IGxhc3QgbG9ja3VwIHdh
-cyB3aGlsZSBydW5uaW5nCj4gPiA+ID4gPiAyLjYuMzktcmM1LTAwMTI3LWcxYmU2YTFmIHdpdGgg
-YSBwcmVlbXB0IGNvbmZpZyB3aXRob3V0IGNncm91cHMuCj4gPiA+ID4gCj4gPiA+ID4gQ2FuIHlv
-dSBhbGwgdHJ5IHRoZSBwYXRjaCBiZWxvdz8gSSd2ZSBtYW5hZ2VkIHRvIHRyaWdnZXIgYSBjb3Vw
-bGUgb2YKPiA+ID4gPiB4bG9nX3dhaXQoKSBsb2NrdXBzIGluIHNvbWUgY29udHJvbGxlZCBsb2Fk
-IHRlc3RzLiBUaGUgbG9ja3VwcyBkb24ndAo+ID4gPiA+IGFwcGVhciB0byBvY2N1ciB3aXRoIHRo
-ZSBmb2xsb3dpbmcgcGF0Y2ggdG8gaGUgcmFjZSBjb25kaXRpb24gaW4KPiA+ID4gPiB0aGUgQUlM
-IHdvcmtxdWV1ZSB0cmlnZ2VyLgo+ID4gPiAKPiA+ID4gVGhleSBhcmUgc3RpbGwgdGhlcmUsIGp1
-c3QgaGFyZGVyIHRvIGhpdC4KPiA+ID4gCj4gPiA+IEZXSVcsIEkndmUgYWxzbyBkaXNjb3ZlcmVk
-IHRoYXQgImVjaG8gMiA+IC9wcm9jL3N5cy92bS9kcm9wX2NhY2hlcyIKPiA+ID4gZ2V0cyB0aGUg
-c3lzdGVtIG1vdmluZyBhZ2FpbiBiZWNhdXNlIHRoYXQgY2hhbmdlcyB0aGUgcHVzaCB0YXJnZXQu
-Cj4gPiA+IAo+ID4gPiBJJ3ZlIGZvdW5kIHR3byBtb3JlIGJ1Z3MsIGFuZCBub3cgbXkgdGVzdCBj
-YXNlIGlzIG5vdyByZWxpYWJseQo+ID4gPiByZXByb2R1Y2FibHkgYSA1LTEwcyBwYXVzZSBhdCB+
-MU0gY3JlYXRlZCAxYnl0ZSBmaWxlcyBhbmQgdGhlbgo+ID4gPiBoYW5naW5nIGF0IGFib3V0IDEu
-MjVNIGZpbGVzLiBTbyB0aGVyZSdzIHlldCBhbm90aGVyIHByb2JsZW0gbHVya2luZwo+ID4gPiB0
-aGF0IEkgbmVlZCB0byBnZXQgdG8gdGhlIGJvdHRvbSBvZi4KPiA+IAo+ID4gV2hpY2gsIG9mIGNv
-dXJzZSwgd2FzIHRoZSByZWFsIHJlZ3Jlc3Npb24uIFRoZSBwYXRjaCBiZWxvdyBoYXMKPiA+IHN1
-cnZpdmVkIGEgY291cGxlIG9mIGhvdXJzIG9mIHRlc3RpbmcsIHdoaWNoIGZpeGVzIGFsbCA0IG9m
-IHRoZQo+ID4gcHJvYmxlbXMgSSBmb3VuZC4gUGxlYXNlIHRlc3QuCj4gCj4gU3VjY2Vzc2Z1bGx5
-IHN1cnZpdmVzIG15IDItaG91cnMgc2Vzc2lvbiBvZiB0b2RheS4gV2lsbCBjb250aW51ZSB0ZXN0
-aW5nCj4gZHVyaW5nIHdlZWstZW5kIGFuZCBzZWUgaWYgaXQgYWxzbyBzdXJ2aXZlcyB0aGUgbG9u
-Z2VyIHdob2xlLWRheSBzZXNzaW9ucy4KPiAKPiBXaWxsIHJlcG9ydCByZXN1bHRzIGF0IGVuZCBv
-ZiB3ZWVrLWVuZCAob3IgZWFybGllciBpbiBjYXNlIG9mIHRyb3VibGUpLgoKQWxzbyBzdXJ2aXZl
-ZCB0aGUgd2hvbGUgd2Vlay1lbmQgKGF0IGxlYXN0IHR3aWNlIDEwIGhvdXJzKSB3aXRoCm5vcm1h
-bCBkZXNrdG9wIHdvcmsgYXMgd2VsbCBhcyBhIGZldyBob3VycyBvZiBzb2Z0d2FyZSBjb21waWxh
-dGlvbi4KKHdpdGhvdXQgdGhlIHBhdGNoIGl0IHdvdWxkIHByb2JhYmx5IGhhdmUgZnJvemVuIGF0
-IGxlYXN0IHR3aWNlIGEgZGF5KQoKU28gbG9va3MgcmVhbGx5IGdvb2QhCgpUaGFua3MsCkJydW5v
-CgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFp
-bGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0
-aW5mby94ZnMK
+--===============0822843354851686935==
+Content-Type: multipart/signed;
+  boundary="nextPart1586613.nOVb0Pkeg8";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
+
+--nextPart1586613.nOVb0Pkeg8
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+
+[removed some recipients]
+
+On Sonntag, 8. Mai 2011 Stan Hoeppner wrote:
+> remake the fs on the above device with 'sw=3D16' or remount with=20
+> appropriate sunit and swidth values?
+
+A remount wouldn't help the existing metadata layout. Would it be=20
+sufficient to remount with sw=3D16 and then create a top-level dir,=20
+wherein you recreate all existing dirs new, then hard-link each file and=20
+remove the old directory structure?
+Or would it be needed to copy the files too to get advantage of the new=20
+sw?
+
+=2D-=20
+mit freundlichen Gr=FCssen,
+Michael Monnerie, Ing. BSc
+
+it-management Internet Services: Prot=E9ger
+http://proteger.at [gesprochen: Prot-e-schee]
+Tel: +43 660 / 415 6531
+
+// ****** Radiointerview zum Thema Spam ******
+// http://www.it-podcast.at/archiv.html#podcast-100716
+//=20
+// Haus zu verkaufen: http://zmi.at/langegg/
+
+--nextPart1586613.nOVb0Pkeg8
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.16 (GNU/Linux)
+
+iEYEABECAAYFAk3HnX8ACgkQzhSR9xwSCbR+xACbBRgo5xZgFVrkQm0R45Db9Pqb
+mn0AoOvVtgxw8Wd3A3v+JhfQsss5J7c+
+=CN/n
+-----END PGP SIGNATURE-----
+
+--nextPart1586613.nOVb0Pkeg8--
+
+
+--===============0822843354851686935==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============0822843354851686935==--
