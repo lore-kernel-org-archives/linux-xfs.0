@@ -1,22 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p49EDgc6012736 for <xfs@oss.sgi.com>; Mon, 9 May 2011 09:13:42 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C59301E230C1
-	for <xfs@oss.sgi.com>; Mon,  9 May 2011 07:13:41 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id HnMxX276f431tLc0 for
-	<xfs@oss.sgi.com>; Mon, 09 May 2011 07:13:41 -0700 (PDT)
-Date: Mon, 9 May 2011 10:13:41 -0400
+	p49E6wTh012520 for <xfs@oss.sgi.com>; Mon, 9 May 2011 09:07:01 -0500
+Date: Mon, 9 May 2011 10:06:57 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/5] xfs: always push the AIL to the target
-Message-ID: <20110509141341.GD12262@infradead.org>
-References: <1304650448-28438-1-git-send-email-david@fromorbit.com>
-	<1304650448-28438-4-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH] xfsprogs: fix open_by_handle memory leak
+Message-ID: <20110509140656.GA12262@infradead.org>
+References: <1304700177-8505-1-git-send-email-wkendall@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1304650448-28438-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1304700177-8505-1-git-send-email-wkendall@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,30 +22,18 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Bill Kendall <wkendall@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, May 06, 2011 at 12:54:06PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Fri, May 06, 2011 at 11:42:57AM -0500, Bill Kendall wrote:
+> open_by_handle() calls handle_to_fshandle() which
+> allocates an fshandle on the heap, which is never
+> freed by open_by_handle(). There is no need to
+> call handle_to_fshandle() though, just pass the
+> fhandle (rather than fshandle) to handle_to_fsfd(),
+> like the other *_by_handle() functions do.
 > 
-> The recent conversion of the xfsaild functionality to a work queue
-> introduced a hard-to-hit log space grant hang. One of the problems
-> discovered is a target mismatch between the item pushing loop and
-> the target itself.
-> 
-> The push trigger checks for the target increasing (i.e. new target >
-> current) while the push loop only pushes items that have a LSN <
-> current. As a result, we can get the situation where the push target
-> is X, the items at the tail of the AIL have LSN X and they don't get
-> pushed. The push work then completes thinking it is done, and cannot
-> be restarted until the push target increases to >= X + 1. If the
-> push target then never increases (because the tail is not moving),
-> then we never run the push work again and we stall.
-> 
-> Fix it by making sure log items with a LSN that matches the target
-> exactly are pushed during the loop.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Bill Kendall <wkendall@sgi.com>
 
 Looks good,
 
