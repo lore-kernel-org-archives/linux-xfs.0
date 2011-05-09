@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p48HErUm039224 for <xfs@oss.sgi.com>; Sun, 8 May 2011 12:14:53 -0500
-Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 73BC4159CD36
-	for <xfs@oss.sgi.com>; Sun,  8 May 2011 10:18:34 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id ZR0UymAoX0nVdA7N
-	for <xfs@oss.sgi.com>; Sun, 08 May 2011 10:18:34 -0700 (PDT)
-Message-ID: <4DC6D067.1080208@hardwarefreak.com>
-Date: Sun, 08 May 2011 12:18:31 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
-MIME-Version: 1.0
-Subject: Re: 2.6.38.4: xfs speed problem?
-References: <alpine.DEB.2.02.1105071042210.20162@p34.internal.lan>
-	<20110508003321.GI26837@dastard>
-In-Reply-To: <20110508003321.GI26837@dastard>
+	p495rSpA066727 for <xfs@oss.sgi.com>; Mon, 9 May 2011 00:53:28 -0500
+Date: Mon, 9 May 2011 07:57:09 +0200
+From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
+Subject: Re: 2.6.39-rc3, 2.6.39-rc4: XFS lockup - regression since 2.6.38
+Message-ID: <20110509075709.3c527fd2@pluto.restena.lu>
+In-Reply-To: <20110505223513.3654c041@neptune.home>
+References: <20110423224403.5fd1136a@neptune.home>
+	<20110427050850.GG12436@dastard>
+	<20110427182622.05a068a2@neptune.home>
+	<20110428194528.GA1627@x4.trippels.de>
+	<20110429011929.GA13542@dastard>
+	<20110504005736.GA2958@cucamonga.audible.transient.net>
+	<20110505002126.GA26797@dastard> <20110505022613.GA26837@dastard>
+	<20110505122117.GB26837@dastard>
+	<20110505223513.3654c041@neptune.home>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,73 +25,59 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-kernel@vger.kernel.org
+Cc: Chinner <dchinner@redhat.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, xfs-masters@oss.sgi.com, Dave@oss.sgi.com, Alex Elder <aelder@sgi.com>, Markus Trippelsdorf <markus@trippelsdorf.de>
 
-On 5/7/2011 7:33 PM, Dave Chinner wrote:
-> On Sat, May 07, 2011 at 12:09:46PM -0400, Justin Piszcz wrote:
->> Hello,
->>
->> Using 2.6.38.4 on two hosts:
->>
->> Host 1:
->> $ /usr/bin/time find geocities.data 1>  /dev/null
->> 80.92user 417.93system 2:19:07elapsed 5%CPU (0avgtext+0avgdata 105520maxresident)k
->> 0inputs+0outputs (0major+73373minor)pagefaults 0swaps
->>
->> # xfs_db -c frag -f /dev/sda1
->> actual 40203982, ideal 40088075, fragmentation factor 0.29%
->>
->> meta-data=/dev/sda1              isize=256    agcount=44, agsize=268435455 blks
->>           =                       sectsz=512   attr=2
->> data     =                       bsize=4096   blocks=11718704640, imaxpct=5
->>           =                       sunit=0      swidth=0 blks
->> naming   =version 2              bsize=4096   ascii-ci=0
->> log      =internal               bsize=4096   blocks=521728, version=2
->>           =                       sectsz=512   sunit=0 blks, lazy-count=1
->> realtime =none                   extsz=4096   blocks=0, rtextents=0
->>
->> --
->>
->> Host 2:
->> $ /usr/bin/time find geocities.data 1>/dev/null
->> 54.60user 337.20system 48:42.71elapsed 13%CPU (0avgtext+0avgdata 105632maxresident)k
->> 0inputs+0outputs (1major+72981minor)pagefaults 0swaps
->>
->> # xfs_db -c frag -f /dev/sdb1
->> actual 37998306, ideal 37939331, fragmentation factor 0.16%
->>
->> meta-data=/dev/sdb1              isize=256    agcount=10, agsize=268435455 blks
->>           =                       sectsz=512   attr=2
->> data     =                       bsize=4096   blocks=2441379328, imaxpct=5
->>           =                       sunit=0      swidth=0 blks
->> naming   =version 2              bsize=4096   ascii-ci=0
->> log      =internal               bsize=4096   blocks=521728, version=2
->>           =                       sectsz=512   sunit=0 blks, lazy-count=1
->> realtime =none                   extsz=4096   blocks=0, rtextents=0
-
-
-How much would it help, if any, with this specific 'test', or with 
-overall XFS performance, if Justin were to...
-
->> Host 1: RAID-6 (7200 RPM Drives, 18+1 hot spare)
-
-remake the fs on the above device with 'sw=16' or remount with 
-appropriate sunit and swidth values?
-
->> Host 2: RAID-6 (7200 RPM Drives, 12)
-
-remake the fs on the above device with 'sw=10' or remount with 
-appropriate sunit and swidth values?
-
--- 
-Stan
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVGh1LCA1IE1heSAyMDExIDIyOjM1OjEzIEJydW5vIFByw6ltb250IHdyb3RlOgo+IE9uIFRo
+dSwgMDUgTWF5IDIwMTEgRGF2ZSBDaGlubmVyIHdyb3RlOgo+ID4gT24gVGh1LCBNYXkgMDUsIDIw
+MTEgYXQgMTI6MjY6MTNQTSArMTAwMCwgRGF2ZSBDaGlubmVyIHdyb3RlOgo+ID4gPiBPbiBUaHUs
+IE1heSAwNSwgMjAxMSBhdCAxMDoyMToyNkFNICsxMDAwLCBEYXZlIENoaW5uZXIgd3JvdGU6Cj4g
+PiA+ID4gT24gV2VkLCBNYXkgMDQsIDIwMTEgYXQgMTI6NTc6MzZBTSArMDAwMCwgSmFtaWUgSGVp
+bG1hbiB3cm90ZToKPiA+ID4gPiA+IERhdmUgQ2hpbm5lciB3cm90ZToKPiA+ID4gPiA+ID4gT0ss
+IHNvIHRoZSBjb21tb24gZWxlbWVudHMgaGVyZSBhcHBlYXJzIHRvIGJlIHJvb3QgZmlsZXN5c3Rl
+bXMKPiA+ID4gPiA+ID4gd2l0aCBzbWFsbCBsb2cgc2l6ZXMsIHdoaWNoIG1lYW5zIHRoZXkgYXJl
+IHRhaWwgcHVzaGluZyBhbGwgdGhlCj4gPiA+ID4gPiA+IHRpbWUgbWV0YWRhdGEgb3BlcmF0aW9u
+cyBhcmUgaW4gcHJvZ3Jlc3MuIERlZmluaXRlbHkgc2VlbXMgbGlrZSBhCj4gPiA+ID4gPiA+IHJh
+Y2UgaW4gdGhlIEFJTCB3b3JrcXVldWUgdHJpZ2dlciBtZWNoYW5pc20uIEknbGwgc2VlIGlmIEkg
+Y2FuCj4gPiA+ID4gPiA+IHJlcHJvZHVjZSB0aGlzIGFuZCBjb29rIHVwIGEgcGF0Y2ggdG8gZml4
+IGl0Lgo+ID4gPiA+ID4gCj4gPiA+ID4gPiBJcyB0aGVyZSB2YWx1ZSBpbiBjb250aW51aW5nIHRv
+IHBvc3Qgc3lzcnEtdywgc3lzcnEtbCwgeGZzX2luZm8sIGFuZAo+ID4gPiA+ID4gb3RoZXIgYXNz
+b3J0ZWQgZmVlZGJhY2sgd3J0IHRoaXMgaXNzdWU/ICBJJ3ZlIGhhZCBpdCBoYXBwZW4gdHdpY2Ug
+bm93Cj4gPiA+ID4gPiBteXNlbGYgaW4gdGhlIHBhc3Qgd2VlayBvciBzbywgdGhvdWdoIEkgaGF2
+ZSBubyByZWxpYWJsZSByZXByb2R1Y3Rpb24KPiA+ID4gPiA+IHRlY2huaXF1ZS4gIEp1c3Qgd29u
+ZGVyaW5nIGlmIG1vcmUgZGF0YSBwb2ludHMgd2lsbCBoZWxwIGlzb2xhdGUgdGhlCj4gPiA+ID4g
+PiBjYXVzZSwgYW5kIGlmIHNvLCBob3cgdG8gYmUgcHJlcGFyZWQgdG8gZ2V0IHRoZW0uCj4gPiA+
+ID4gPiAKPiA+ID4gPiA+IEZvciB3aGF0ZXZlciBpdHMgd29ydGgsIG15IGxhc3QgbG9ja3VwIHdh
+cyB3aGlsZSBydW5uaW5nCj4gPiA+ID4gPiAyLjYuMzktcmM1LTAwMTI3LWcxYmU2YTFmIHdpdGgg
+YSBwcmVlbXB0IGNvbmZpZyB3aXRob3V0IGNncm91cHMuCj4gPiA+ID4gCj4gPiA+ID4gQ2FuIHlv
+dSBhbGwgdHJ5IHRoZSBwYXRjaCBiZWxvdz8gSSd2ZSBtYW5hZ2VkIHRvIHRyaWdnZXIgYSBjb3Vw
+bGUgb2YKPiA+ID4gPiB4bG9nX3dhaXQoKSBsb2NrdXBzIGluIHNvbWUgY29udHJvbGxlZCBsb2Fk
+IHRlc3RzLiBUaGUgbG9ja3VwcyBkb24ndAo+ID4gPiA+IGFwcGVhciB0byBvY2N1ciB3aXRoIHRo
+ZSBmb2xsb3dpbmcgcGF0Y2ggdG8gaGUgcmFjZSBjb25kaXRpb24gaW4KPiA+ID4gPiB0aGUgQUlM
+IHdvcmtxdWV1ZSB0cmlnZ2VyLgo+ID4gPiAKPiA+ID4gVGhleSBhcmUgc3RpbGwgdGhlcmUsIGp1
+c3QgaGFyZGVyIHRvIGhpdC4KPiA+ID4gCj4gPiA+IEZXSVcsIEkndmUgYWxzbyBkaXNjb3ZlcmVk
+IHRoYXQgImVjaG8gMiA+IC9wcm9jL3N5cy92bS9kcm9wX2NhY2hlcyIKPiA+ID4gZ2V0cyB0aGUg
+c3lzdGVtIG1vdmluZyBhZ2FpbiBiZWNhdXNlIHRoYXQgY2hhbmdlcyB0aGUgcHVzaCB0YXJnZXQu
+Cj4gPiA+IAo+ID4gPiBJJ3ZlIGZvdW5kIHR3byBtb3JlIGJ1Z3MsIGFuZCBub3cgbXkgdGVzdCBj
+YXNlIGlzIG5vdyByZWxpYWJseQo+ID4gPiByZXByb2R1Y2FibHkgYSA1LTEwcyBwYXVzZSBhdCB+
+MU0gY3JlYXRlZCAxYnl0ZSBmaWxlcyBhbmQgdGhlbgo+ID4gPiBoYW5naW5nIGF0IGFib3V0IDEu
+MjVNIGZpbGVzLiBTbyB0aGVyZSdzIHlldCBhbm90aGVyIHByb2JsZW0gbHVya2luZwo+ID4gPiB0
+aGF0IEkgbmVlZCB0byBnZXQgdG8gdGhlIGJvdHRvbSBvZi4KPiA+IAo+ID4gV2hpY2gsIG9mIGNv
+dXJzZSwgd2FzIHRoZSByZWFsIHJlZ3Jlc3Npb24uIFRoZSBwYXRjaCBiZWxvdyBoYXMKPiA+IHN1
+cnZpdmVkIGEgY291cGxlIG9mIGhvdXJzIG9mIHRlc3RpbmcsIHdoaWNoIGZpeGVzIGFsbCA0IG9m
+IHRoZQo+ID4gcHJvYmxlbXMgSSBmb3VuZC4gUGxlYXNlIHRlc3QuCj4gCj4gU3VjY2Vzc2Z1bGx5
+IHN1cnZpdmVzIG15IDItaG91cnMgc2Vzc2lvbiBvZiB0b2RheS4gV2lsbCBjb250aW51ZSB0ZXN0
+aW5nCj4gZHVyaW5nIHdlZWstZW5kIGFuZCBzZWUgaWYgaXQgYWxzbyBzdXJ2aXZlcyB0aGUgbG9u
+Z2VyIHdob2xlLWRheSBzZXNzaW9ucy4KPiAKPiBXaWxsIHJlcG9ydCByZXN1bHRzIGF0IGVuZCBv
+ZiB3ZWVrLWVuZCAob3IgZWFybGllciBpbiBjYXNlIG9mIHRyb3VibGUpLgoKQWxzbyBzdXJ2aXZl
+ZCB0aGUgd2hvbGUgd2Vlay1lbmQgKGF0IGxlYXN0IHR3aWNlIDEwIGhvdXJzKSB3aXRoCm5vcm1h
+bCBkZXNrdG9wIHdvcmsgYXMgd2VsbCBhcyBhIGZldyBob3VycyBvZiBzb2Z0d2FyZSBjb21waWxh
+dGlvbi4KKHdpdGhvdXQgdGhlIHBhdGNoIGl0IHdvdWxkIHByb2JhYmx5IGhhdmUgZnJvemVuIGF0
+IGxlYXN0IHR3aWNlIGEgZGF5KQoKU28gbG9va3MgcmVhbGx5IGdvb2QhCgpUaGFua3MsCkJydW5v
+CgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFp
+bGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0
+aW5mby94ZnMK
