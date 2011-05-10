@@ -1,21 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4AFXJcA072435 for <xfs@oss.sgi.com>; Tue, 10 May 2011 10:33:19 -0500
-Received: from enyo.dsw2k3.info (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E7B9C1B88278
-	for <xfs@oss.sgi.com>; Tue, 10 May 2011 08:33:18 -0700 (PDT)
-Received: from enyo.dsw2k3.info (enyo.dsw2k3.info [195.71.86.239]) by
-	cuda.sgi.com with ESMTP id HWK7ch1BB0P61Iz0 for
-	<xfs@oss.sgi.com>; Tue, 10 May 2011 08:33:18 -0700 (PDT)
-Date: Tue, 10 May 2011 17:33:00 +0200
-From: Matthias Schniedermeyer <ms@citd.de>
-Subject: Re: Files appear too big in `du`
-Message-ID: <20110510153300.GA5764@citd.de>
-References: <20110510105700.GA20307@citd.de> <20110510131705.GE19446@dastard>
+	p4AImlHp079416 for <xfs@oss.sgi.com>; Tue, 10 May 2011 13:48:47 -0500
+From: Alex Elder <aelder@sgi.com>
+Message-Id: <201105101848.p4AImgJF021856@stout.americas.sgi.com>
+Date: Tue, 10 May 2011 13:48:41 -0500
+Subject: [GIT PULL] XFS update for 2.6.39
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110510131705.GE19446@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,81 +19,61 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On 10.05.2011 23:17, Dave Chinner wrote:
-> On Tue, May 10, 2011 at 12:57:00PM +0200, Matthias Schniedermeyer wrote:
-> > Hi
-> > 
-> > 
-> > Since a few weeks i'm experiencing an annoying 'thing' where files are 
-> > often too big in `du` and directory totals are to high in `ls -l`.
-> > 
-> > I appears that files, which are in the process of beeing 
-> > copied/downloaded/whatever, grow in large chunks ahead of time, while 
-> > the actual file-content is beeing copied into the files.
-> 
-> It's supposed to work like this. It's called speculative allocation
-> beyond end of file. XFS has always done this, but we've recently
-> made it more aggressive to prevent excessive fragmentation on
-> concurrent large file workloads when there is lots of disk space
-> free.
+Linus,
 
-OK.
+I'm very sorry I couldn't provide you these regression fixes before
+yesterday.  They do address regressions that are pretty important
+so I hope you'll consider pulling them for inclusion in 2.6.39.
 
-> > And then it 
-> > appears that the last chunk isn't shrunk after the process is finished.
-> 
-> It should be truncated away when the file descriptor is closed and
-> the last reference goes away.
->
-> > Neither xfs_bmap (Version 3.1.5) nor filefrag show anything beyond the 
-> > extent that compromises the actual file-content.
-> 
-> what is the output of xfs_bmap -vvp on a file that apparently hasn't
-> been shrunk? How do you know it hasn't been shrunk? Does it persist
+The first one fixes a problem that can cause reclaim to stall on an
+XFS allocation group, which prevents inode cache shrinking from
+making progress and ultimately can cause the OOM killer to kick in.
 
-du
+The other four address small but distinct problems that can lead to
+filesystem hangs when attempting to grant log space:
+- The only real change in the first of these is the "goto out_done"
+  that causes a block of common code to be used for a case that was
+  not clearing a flag as it should.
+- The second of these fixes an off-by-one condition check problem.
+- The third addresses a few problems that can arise due to unsafe
+  assignment of 64-bit values on 32-bit architectures.
+- The last one is the most subtle.  Previously a flag bit was
+  getting cleared conditionally but not atomically.  A second
+  location used test_and_set_bit() to conditionally set the flag.
+  The flag could get cleared in the one spot just after a successful
+  test and set in another; the net result basically hung the
+  affected filesystem.  The fix modifies the non-atomic spot to
+  clear the flag unconditionally, then re-set it using atomic
+  test-and-set it if appropriate.
 
-> forever in this state, or does doing something like dropping caches
-> (echo 3 > /proc/sys/vm/drop_caches) cause the specualtive
-> preallocation to disappear?
+Dave Chinner deserves a lot of credit for sorting through
+these--especially the intersecting causes of the common "filesystem
+hang" symptom that the last four address.
 
-This works:
-sync ; echo 3 > /proc/sys/vm/drop_caches
+Thanks a lot.
 
-At least in several tries the `du` output shrunk to the size of the 
-original.
+					-Alex
 
-> > Any idea how to debug this, or is this a known bug and waiting a few 
-> > days for 2.6.39 should fix this?
-> 
-> It doesn't appear to be doing anything wrong from your description.
-> Remember that XFS is optimised for high end storage and server
-> configurations and workloads, not typical desktop usage...
+The following changes since commit 693d92a1bbc9e42681c42ed190bd42b636ca876f:
 
-I would call it a regression.
-I reguarly follow copying/downloading with `du`, the speculative
-preallocation makes that more or less useless. Especially downloading 
-someting big from the internet which @ 231kb/s isn't exactly fast and 
-shows identical `du`s for increasingly longer periods of time.
-(Or "--apparent-size" should be made default, but that falls short with 
-sparse-files)
+  Linux 2.6.39-rc7 (2011-05-09 19:33:54 -0700)
 
-IMHO `du`/`ls -l` should not be able to 'see' the speculative 
-preallocation.
+are available in the git repository at:
+  git://oss.sgi.com/xfs/xfs for-linus
 
+Dave Chinner (5):
+      xfs: ensure reclaim cursor is reset correctly at end of AG
+      xfs: exit AIL push work correctly when AIL is empty
+      xfs: always push the AIL to the target
+      xfs: make AIL target updates and compares 32bit safe.
+      xfs: fix race condition in AIL push trigger
 
-
-
-Bis denn
-
--- 
-Real Programmers consider "what you see is what you get" to be just as 
-bad a concept in Text Editors as it is in women. No, the Real Programmer
-wants a "you asked for it, you got it" text editor -- complicated, 
-cryptic, powerful, unforgiving, dangerous.
+ fs/xfs/linux-2.6/xfs_sync.c |    1 +
+ fs/xfs/xfs_trans_ail.c      |   47 +++++++++++++++++++++++-------------------
+ 2 files changed, 27 insertions(+), 21 deletions(-)
 
 _______________________________________________
 xfs mailing list
