@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4ADHBRE067213 for <xfs@oss.sgi.com>; Tue, 10 May 2011 08:17:12 -0500
+	p4ADN5Lm067459 for <xfs@oss.sgi.com>; Tue, 10 May 2011 08:23:05 -0500
 Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D651AC7A8D9
-	for <xfs@oss.sgi.com>; Tue, 10 May 2011 06:17:09 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 79B344415D4
+	for <xfs@oss.sgi.com>; Tue, 10 May 2011 06:23:03 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	yNqgFF8Z4TWDSvWy for <xfs@oss.sgi.com>;
-	Tue, 10 May 2011 06:17:09 -0700 (PDT)
-Date: Tue, 10 May 2011 23:17:06 +1000
+	vCmu4Y1PBp4cbYTb for <xfs@oss.sgi.com>;
+	Tue, 10 May 2011 06:23:03 -0700 (PDT)
+Date: Tue, 10 May 2011 23:23:00 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Files appear too big in `du`
-Message-ID: <20110510131705.GE19446@dastard>
-References: <20110510105700.GA20307@citd.de>
+Subject: Re: direct IO question
+Message-ID: <20110510132300.GF19446@dastard>
+References: <4DC8D01F.5060704@wm.jp.nec.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110510105700.GA20307@citd.de>
+In-Reply-To: <4DC8D01F.5060704@wm.jp.nec.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,47 +29,77 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Matthias Schniedermeyer <ms@citd.de>
-Cc: xfs@oss.sgi.com
+To: Utako Kusaka <u-kusaka@wm.jp.nec.com>
+Cc: xfs <xfs@oss.sgi.com>
 
-On Tue, May 10, 2011 at 12:57:00PM +0200, Matthias Schniedermeyer wrote:
-> Hi
+On Tue, May 10, 2011 at 02:41:51PM +0900, Utako Kusaka wrote:
+> Hi,
 > 
+> When I tested concurrent mmap write and direct IO to the same file,
+> it was corrupted. Kernel version is 2.6.39-rc4.
+
+Long time problem of the mmap_sem being held while .page_mkwrite is
+called, which means we can't use the i_mutex or xfs inode iolock for
+serialisation against reads and writes because the mmap_sem can be
+taken on page faults during read or write. Hence we've got the
+choice of deadlocks or no serialisation between direct Io and
+mmap...
+
+> I have two questions concerning xfs direct IO.
 > 
-> Since a few weeks i'm experiencing an annoying 'thing' where files are 
-> often too big in `du` and directory totals are to high in `ls -l`.
+> The first is dirty pages are released in direct read. xfs direct IO uses
+> xfs_flushinval_pages(), which writes out and releases dirty pages.
+
+Yup - once you bypass the page cache, it is stale and needs to be
+removed from memory so it can be reread from disk when the next
+buffered IO occurs.
+
+> If pages are marked as dirty after filemap_write_and_wait_range(),
+> they will be released in truncate_inode_pages_range() without writing out.
+
+If .page_mkwrite could take either the iolock or the i_mutex, it
+would be protected against this like all other operations are.
+
 > 
-> I appears that files, which are in the process of beeing 
-> copied/downloaded/whatever, grow in large chunks ahead of time, while 
-> the actual file-content is beeing copied into the files.
+> sys_read()
+>   vfs_read()
+>     do_sync_read()
+>       xfs_file_aio_read()
+>         xfs_flushinval_pages()
+>           filemap_write_and_wait_range()
+>           truncate_inode_pages_range()      <---
+>         generic_file_aio_read()
+>           filemap_write_and_wait_range()
+>           xfs_vm_direct_IO()
+> 
+> ext3 calls generic_file_aio_read() only and does not call
+> truncate_inode_pages_range().
+> 
+> sys_read()
+>   vfs_read()
+>     do_sync_read()
+>       generic_file_aio_read()
+>         filemap_write_and_wait_range()
+>         ext3_direct_IO()
 
-It's supposed to work like this. It's called speculative allocation
-beyond end of file. XFS has always done this, but we've recently
-made it more aggressive to prevent excessive fragmentation on
-concurrent large file workloads when there is lots of disk space
-free.
+ext3 is vastly different w.r.t. direct IO functionality, and so
+can't be directly compared against XFS behaviour.
 
-> And then it 
-> appears that the last chunk isn't shrunk after the process is finished.
+> xfs_file_aio_read() and xfs_file_dio_aio_write() call generic function. And
+> both xfs functions and generic functions call filemap_write_and_wait_range().
+> So I wonder whether xfs_flushinval_pages() is necessary.
 
-It should be truncated away when the file descriptor is closed and
-the last reference goes away.
+The data corruption it fixed long ago woul dprobably return in some
+form...
 
-> Neither xfs_bmap (Version 3.1.5) nor filefrag show anything beyond the 
-> extent that compromises the actual file-content.
+> Then, the write range in xfs_flushinval_pages() called from direct IO is
+> from start pos to -1, or LLONG_MAX, and is not IO range. Is there any reason?
+> In generic_file_aio_read and generic_file_direct_write(), it is from start pos
+> to (pos + len - 1).
+> I think xfs_flushinval_pages() should be called with same range.
 
-what is the output of xfs_bmap -vvp on a file that apparently hasn't
-been shrunk? How do you know it hasn't been shrunk? Does it persist
-forever in this state, or does doing something like dropping caches
-(echo 3 > /proc/sys/vm/drop_caches) cause the specualtive
-preallocation to disappear?
-
-> Any idea how to debug this, or is this a known bug and waiting a few 
-> days for 2.6.39 should fix this?
-
-It doesn't appear to be doing anything wrong from your description.
-Remember that XFS is optimised for high end storage and server
-configurations and workloads, not typical desktop usage...
+Probably should be, but it will need significant testing to ensure
+that it doesn't intorduce a new coherency/corruption corner case...
 
 Cheers,
 
