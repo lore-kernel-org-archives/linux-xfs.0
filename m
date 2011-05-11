@@ -1,15 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4ALfDTu086492 for <xfs@oss.sgi.com>; Tue, 10 May 2011 16:41:14 -0500
-Subject: Re: [PATCH] [xfsprogs]: Don't translate command name.
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1302858438-22215-1-git-send-email-arekm@maven.pl>
-References: <1302858438-22215-1-git-send-email-arekm@maven.pl>
-Date: Tue, 10 May 2011 16:41:09 -0500
-Message-ID: <1305063669.2962.20.camel@doink>
+	p4B5M298106789
+	for <linux-xfs@oss.sgi.com>; Wed, 11 May 2011 00:22:02 -0500
+Received: from sam.nabble.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7B00F444233
+	for <linux-xfs@oss.sgi.com>; Tue, 10 May 2011 22:22:01 -0700 (PDT)
+Received: from sam.nabble.com (sam.nabble.com [216.139.236.26]) by
+	cuda.sgi.com with ESMTP id 00CLFeZfbCxCXYdw for
+	<linux-xfs@oss.sgi.com>; Tue, 10 May 2011 22:22:01 -0700 (PDT)
+Received: from isper.nabble.com ([192.168.236.156])
+	by sam.nabble.com with esmtp (Exim 4.69)
+	(envelope-from <lists@nabble.com>) id 1QK1s0-00068d-Pe
+	for linux-xfs@oss.sgi.com; Tue, 10 May 2011 22:22:00 -0700
+Message-ID: <31591438.post@talk.nabble.com>
+Date: Tue, 10 May 2011 22:22:00 -0700 (PDT)
+From: stress_buster <leo1783@yahoo.com>
+Subject: corrupt inode
 MIME-Version: 1.0
-Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,15 +30,51 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Arkadiusz =?UTF-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
-Cc: xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-T24gRnJpLCAyMDExLTA0LTE1IGF0IDExOjA3ICswMjAwLCBBcmthZGl1c3ogTWnFm2tpZXdpY3og
-d3JvdGU6Cj4gQ29tbWFuZCBuYW1lcyBzaG91bGQgbmV2ZXIgYmUgdHJhbnNsYXRlZC4gQ3VycmVu
-dGx5IHRoZXJlIGlzCj4gJ3hmc19xdW90YSAteCAtYyAicHJvamVjdCIuLi4nIGluIG9uZSBsb2Nh
-bGUgKEMpIHdoaWxlCj4gJ3hmc19xdW90YSAteCAtYyAicHJvamVrdCIuLi4nIGluIGFub3RoZXIg
-KHBsX1BMKS4KPiAKPiBTaWduZWQtb2ZmLWJ5OiBBcmthZGl1c3ogTWnFm2tpZXdpY3ogPGFyZWtt
-QG1hdmVuLnBsPgoKTG9va3MgZ29vZC4gIEkgd2lsbCBjb21taXQgdGhpcyBmb3IgeW91LiAgVGhh
-bmtzLgoKUmV2aWV3ZWQtYnk6IEFsZXggRWxkZXIgPGFlbGRlckBzZ2kuY29tPgoKCl9fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QK
-eGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+Ckkgc2VlIHRoZSBmb2xsb3dpbmcgdHJhY2VzIGluIGRtZXNnOgoKRmlsZXN5c3RlbSAiY2Npc3Mv
+YzBkMCI6IGNvcnJ1cHQgaW5vZGUgMzc1ODA5ODQ2NSAoYmFkIHNpemUgNDYwNjI2IGZvciBsb2Nh
+bAppbm9kZSkuICBVbm1vdW50IGFuZCBydW4geGZzX3JlcGFpci4KMDAwMDAwMDA6IDQ5IDRlIDQx
+IGM5IDAxIDAxIDAwIDAzIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwICBJTkHDiS4uLi4uLi4uLi4u
+LgpGaWxlc3lzdGVtICJjY2lzcy9jMGQwIjogWEZTIGludGVybmFsIGVycm9yIHhmc19pZm9ybWF0
+KDUpIGF0IGxpbmUgNDE5IG9mCmZpbGUgZnMveGZzL3hmc19pbm9kZS5jLiAgQ2FsbGVyIDB4ZmZm
+ZmZmZmY4ODFkNDAyNgoKQ2FsbCBUcmFjZToKIFs8ZmZmZmZmZmY4ODFkM2M1MT5dIDp4ZnM6eGZz
+X2lmb3JtYXQrMHhlNi8weDNkNwogWzxmZmZmZmZmZjg4MWQ0MDI2Pl0gOnhmczp4ZnNfaXJlYWQr
+MHhlNC8weDFlYQogWzxmZmZmZmZmZjg4MWQ0MDI2Pl0gOnhmczp4ZnNfaXJlYWQrMHhlNC8weDFl
+YQogWzxmZmZmZmZmZjg4MWNmN2U5Pl0gOnhmczp4ZnNfaWdldF9jb3JlKzB4MmYyLzB4NTYzCiBb
+PGZmZmZmZmZmODAwMjU3YWU+XSBhbGxvY19pbm9kZSsweGViLzB4MTkyCiBbPGZmZmZmZmZmODgx
+Y2ZiMmM+XSA6eGZzOnhmc19pZ2V0KzB4ZDIvMHgxN2EKIFs8ZmZmZmZmZmY4ODFlNjA4Nj5dIDp4
+ZnM6eGZzX2xvb2t1cCsweDc2LzB4YTgKIFs8ZmZmZmZmZmY4MDAwZDNlOT5dIGRwdXQrMHgyYy8w
+eDExNAogWzxmZmZmZmZmZjg4MWYxMjRhPl0gOnhmczp4ZnNfdm5fbG9va3VwKzB4M2QvMHg3Ygog
+WzxmZmZmZmZmZjgwMDBjZjQ2Pl0gZG9fbG9va3VwKzB4ZTUvMHgxZTYKIFs8ZmZmZmZmZmY4MDAw
+YTIzYz5dIF9fbGlua19wYXRoX3dhbGsrMHhhMDEvMHhmNDIKIFs8ZmZmZmZmZmY4MDAwZWExMT5d
+IGxpbmtfcGF0aF93YWxrKzB4NDIvMHhiMgogWzxmZmZmZmZmZjgwMDBjY2UxPl0gZG9fcGF0aF9s
+b29rdXArMHgyNzUvMHgyZjEKIFs8ZmZmZmZmZmY4MDAxMjgzZD5dIGdldG5hbWUrMHgxNWIvMHgx
+YzIKIFs8ZmZmZmZmZmY4MDAyMzhjMz5dIF9fdXNlcl93YWxrX2ZkKzB4MzcvMHg0YwogWzxmZmZm
+ZmZmZjgwMDI4ODlkPl0gdmZzX3N0YXRfZmQrMHgxYi8weDRhCiBbPGZmZmZmZmZmODAwMjM1ZjU+
+XSBzeXNfbmV3c3RhdCsweDE5LzB4MzEKIFs8ZmZmZmZmZmY4MDA1ZTExNj5dIHN5c3RlbV9jYWxs
+KzB4N2UvMHg4MwoKRmlsZXN5c3RlbSAiY2Npc3MvYzBkMCI6IFhGUyBpbnRlcm5hbCBlcnJvciB4
+ZnNfaWZvcm1hdCg3KSBhdCBsaW5lIDQ0MCBvZgpmaWxlIGZzL3hmcy94ZnNfaW5vZGUuYy4gIENh
+bGxlciAweGZmZmZmZmZmODgxZDQwMjYKCkNhbGwgVHJhY2U6CiBbPGZmZmZmZmZmODgxZDNlNWE+
+XSA6eGZzOnhmc19pZm9ybWF0KzB4MmVmLzB4M2Q3CiBbPGZmZmZmZmZmODgxZDQwMjY+XSA6eGZz
+Onhmc19pcmVhZCsweGU0LzB4MWVhCiBbPGZmZmZmZmZmODgxY2Y3ZTk+XSA6eGZzOnhmc19pZ2V0
+X2NvcmUrMHgyZjIvMHg1NjMKIFs8ZmZmZmZmZmY4MDAyNTdhZT5dIGFsbG9jX2lub2RlKzB4ZWIv
+MHgxOTIKIFs8ZmZmZmZmZmY4ODFjZmIyYz5dIDp4ZnM6eGZzX2lnZXQrMHhkMi8weDE3YQogWzxm
+ZmZmZmZmZjg4MWU2MDg2Pl0gOnhmczp4ZnNfbG9va3VwKzB4NzYvMHhhOAogWzxmZmZmZmZmZjgw
+MDBkM2U5Pl0gZHB1dCsweDJjLzB4MTE0CiBbPGZmZmZmZmZmODgxZjEyNGE+XSA6eGZzOnhmc192
+bl9sb29rdXArMHgzZC8weDdiCiBbPGZmZmZmZmZmODAwMGNmNDY+XSBkb19sb29rdXArMHhlNS8w
+eDFlNgogWzxmZmZmZmZmZjgwMDBhMjNjPl0gX19saW5rX3BhdGhfd2FsaysweGEwMS8weGY0Mgog
+WzxmZmZmZmZmZjgwMDBlYTExPl0gbGlua19wYXRoX3dhbGsrMHg0Mi8weGIyCiBbPGZmZmZmZmZm
+ODAwMGNjZTE+XSBkb19wYXRoX2xvb2t1cCsweDI3NS8weDJmMQogWzxmZmZmZmZmZjgwMDEyODNk
+Pl0gZ2V0bmFtZSsweDE1Yi8weDFjMgogWzxmZmZmZmZmZjgwMDIzOGMzPl0gX191c2VyX3dhbGtf
+ZmQrMHgzNy8weDRjCiBbPGZmZmZmZmZmODAwMjg4OWQ+XSB2ZnNfc3RhdF9mZCsweDFiLzB4NGEK
+IFs8ZmZmZmZmZmY4MDAyMzVmNT5dIHN5c19uZXdzdGF0KzB4MTkvMHgzMQogWzxmZmZmZmZmZjgw
+MDVlMTE2Pl0gc3lzdGVtX2NhbGwrMHg3ZS8weDgzCgpJJ20gbG9zaW5nIGNvbm5lY3Rpdml0eSB0
+byBpc2NzaSB0YXJnZXRzIHJhbmRvbWx5IC4gVGhpcyBtYXliZSB1bnJlbGF0ZWQgdG8KdGhlIGZz
+IGVycm9ycyB0aG91Z2guCgpBbnkgdGhvdWdodHMgb24gd2hhdCB0aGUgYWJvdmUgYmFja3RyYWNl
+cyBhcmUgcG9pbnRpbmcgdG8/CgpUaGFua3MgaW4gYWR2YW5jZQoKLS0gClZpZXcgdGhpcyBtZXNz
+YWdlIGluIGNvbnRleHQ6IGh0dHA6Ly9vbGQubmFiYmxlLmNvbS9jb3JydXB0LWlub2RlLXRwMzE1
+OTE0MzhwMzE1OTE0MzguaHRtbApTZW50IGZyb20gdGhlIGxpbnV4LXhmcyBtYWlsaW5nIGxpc3Qg
+YXJjaGl2ZSBhdCBOYWJibGUuY29tLgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29z
+cy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
