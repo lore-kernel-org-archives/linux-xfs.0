@@ -1,22 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4BF7DM8128054 for <xfs@oss.sgi.com>; Wed, 11 May 2011 10:07:13 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5C6FD445774
-	for <xfs@oss.sgi.com>; Wed, 11 May 2011 08:07:13 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
-	by cuda.sgi.com with ESMTP id fZZaLGWhDOUo6IR3 for
-	<xfs@oss.sgi.com>; Wed, 11 May 2011 08:07:13 -0700 (PDT)
-Received: from hch by bombadil.infradead.org with local (Exim 4.72 #1 (Red Hat
-	Linux)) id 1QKB0K-0005h3-SC
-	for xfs@oss.sgi.com; Wed, 11 May 2011 15:07:12 +0000
-Message-Id: <20110511150712.830693893@bombadil.infradead.org>
-Date: Wed, 11 May 2011 11:04:10 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 8/9] xfs: fix up asserts in xfs_iflush_fork
-References: <20110511150402.258164661@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-fix-ep-access-5
+	p4BF7TOx128196 for <xfs@oss.sgi.com>; Wed, 11 May 2011 10:07:29 -0500
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D929D1EAC3DB
+	for <xfs@oss.sgi.com>; Wed, 11 May 2011 08:07:28 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id twNm3ZkEmEP6mIL9 for
+	<xfs@oss.sgi.com>; Wed, 11 May 2011 08:07:28 -0700 (PDT)
+Received: from int-mx12.intmail.prod.int.phx2.redhat.com
+	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id p4BF7RC2030496
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Wed, 11 May 2011 11:07:27 -0400
+Received: from [10.34.26.208] (dhcp-26-208.brq.redhat.com [10.34.26.208])
+	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id p4BF7QNn006116
+	for <xfs@oss.sgi.com>; Wed, 11 May 2011 11:07:27 -0400
+Subject: xfstests: print the message that fallocate is not supported to
+	stdout unless quiet output
+From: Boris Ranto <branto@redhat.com>
+Date: Wed, 11 May 2011 17:07:25 +0200
+Message-ID: <1305126445.22267.37.camel@dhcp-31-190.brq.redhat.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,38 +31,35 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: xfs <xfs@oss.sgi.com>
 
-Remove asserts in xfs_iflush_fork that would call xfs_iext_get_ext with
-a potentially invalid extent buffer index.
+ltp/fsx.c tests whether the filesystem it is run on supports fallocate. If it is not supported the fsx will print warning to stderr.
+This leads to fails of tests 075, 112, 127 for the filesystems that do not support fallocate. The tests use ltp/fsx but do not filter out stderr.
+Since ltp/fsx.c can work without fallocate support I propose to move this message to stdout unless quiet output is not requested.
+Previous patch printed the message even if -q flag was used. This patch honours the flag.
 
-Based on an earlier patch from Lachlan McIlroy.
+This simple patch fixes the issue for me, tested on all the mentioned tests:
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Boris Ranto <branto@redhat.com>
 
-Index: xfs/fs/xfs/xfs_inode.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_inode.c	2011-05-11 10:18:39.555233397 +0200
-+++ xfs/fs/xfs/xfs_inode.c	2011-05-11 12:04:24.099733330 +0200
-@@ -2557,12 +2557,9 @@ xfs_iflush_fork(
- 	case XFS_DINODE_FMT_EXTENTS:
- 		ASSERT((ifp->if_flags & XFS_IFEXTENTS) ||
- 		       !(iip->ili_format.ilf_fields & extflag[whichfork]));
--		ASSERT((xfs_iext_get_ext(ifp, 0) != NULL) ||
--			(ifp->if_bytes == 0));
--		ASSERT((xfs_iext_get_ext(ifp, 0) == NULL) ||
--			(ifp->if_bytes > 0));
- 		if ((iip->ili_format.ilf_fields & extflag[whichfork]) &&
- 		    (ifp->if_bytes > 0)) {
-+			ASSERT(xfs_iext_get_ext(ifp, 0));
- 			ASSERT(XFS_IFORK_NEXTENTS(ip, whichfork) > 0);
- 			(void)xfs_iextents_copy(ip, (xfs_bmbt_rec_t *)cp,
- 				whichfork);
+diff --git a/ltp/fsx.c b/ltp/fsx.c
+index fe072d3..43e7efe 100644
+--- a/ltp/fsx.c
++++ b/ltp/fsx.c
+@@ -1424,7 +1424,8 @@ main(int argc, char **argv)
+ #ifdef FALLOCATE
+        if (!lite && fallocate_calls) {
+                if (fallocate(fd, 0, 0, 1) && errno == EOPNOTSUPP) {
+-                       warn("main: filesystem does not support fallocate, disabling");
++                       if(!quiet)
++                               prt("fsx: main: filesystem does not support fallocate, disabling\n");
+                        fallocate_calls = 0;
+                } else
+                        ftruncate(fd, 0);
 
 _______________________________________________
 xfs mailing list
