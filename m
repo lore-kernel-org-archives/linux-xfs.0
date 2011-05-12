@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4C6siwj162625 for <xfs@oss.sgi.com>; Thu, 12 May 2011 01:54:45 -0500
-Received: from mx3-phx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8EE794492CD
-	for <xfs@oss.sgi.com>; Wed, 11 May 2011 23:54:44 -0700 (PDT)
-Received: from mx3-phx2.redhat.com (mx3-phx2.redhat.com [209.132.183.24]) by
-	cuda.sgi.com with ESMTP id mGM1Rh232xUapstC for
-	<xfs@oss.sgi.com>; Wed, 11 May 2011 23:54:44 -0700 (PDT)
-Date: Thu, 12 May 2011 02:54:41 -0400 (EDT)
+	p4C7O6kj163865 for <xfs@oss.sgi.com>; Thu, 12 May 2011 02:24:06 -0500
+Received: from mx4-phx2.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D258C1D67DC6
+	for <xfs@oss.sgi.com>; Thu, 12 May 2011 00:24:05 -0700 (PDT)
+Received: from mx4-phx2.redhat.com (mx4-phx2.redhat.com [209.132.183.25]) by
+	cuda.sgi.com with ESMTP id I9LmjlwDXchnnYLM for
+	<xfs@oss.sgi.com>; Thu, 12 May 2011 00:24:05 -0700 (PDT)
+Date: Thu, 12 May 2011 03:24:03 -0400 (EDT)
 From: Lachlan McIlroy <lmcilroy@redhat.com>
-Message-ID: <591073632.471215.1305183281646.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
-In-Reply-To: <2082652758.471187.1305183010394.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
-Subject: Re: [PATCH 3/9] xfs: correctly decrement the extent buffer index in
-	xfs_bmap_del_extent
+Message-ID: <1953221482.471512.1305185043208.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
+In-Reply-To: <20110511150712.830693893@bombadil.infradead.org>
+Subject: Re: [PATCH 8/9] xfs: fix up asserts in xfs_iflush_fork
 MIME-Version: 1.0
 Reply-To: Lachlan McIlroy <lmcilroy@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -28,53 +27,38 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Lachlan McIlroy <lmcilroy@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
+
+Looks good.
 
 ----- Original Message -----
-> ----- Original Message -----
-> > The code in xfs_bmap_del_extent does not correctly decrement the
-> > extent buffer
-> > index when deleting a whole extent. Most of the time this gets
-> > caught
-> > by
-> > checks in xfs_bmapi that work around it and decrement it manually
-> > and
-> > thus
-> > wasn't noticed so far.
-> >
-> > Based on an earlier patch from Lachlan McIlroy.
-> >
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> >
-> > Index: xfs/fs/xfs/xfs_bmap.c
-> > ===================================================================
-> > --- xfs.orig/fs/xfs/xfs_bmap.c 2011-05-10 17:11:21.212901236 +0200
-> > +++ xfs/fs/xfs/xfs_bmap.c 2011-05-10 17:13:36.177399627 +0200
-> > @@ -2916,8 +2916,10 @@ xfs_bmap_del_extent(
-> > */
-> > xfs_iext_remove(ip, *idx, 1,
-> > whichfork == XFS_ATTR_FORK ? BMAP_ATTRFORK : 0);
-> > + --*idx;
+> Remove asserts in xfs_iflush_fork that would call xfs_iext_get_ext
+> with
+> a potentially invalid extent buffer index.
 > 
-> I can see why this is needed but if we remove extent at
-> idx 0 then wont this go negative and confuse the next
-> call to xfs_iext_get_ext()?
-
-Ignore this comment - I see you've fixed that case in patch 6.  Guess I should have looked ahead.
-
+> Based on an earlier patch from Lachlan McIlroy.
 > 
-> > if (delay)
-> > break;
-> > +
-> > XFS_IFORK_NEXT_SET(ip, whichfork,
-> > XFS_IFORK_NEXTENTS(ip, whichfork) - 1);
-> > flags |= XFS_ILOG_CORE;
-> >
-> > _______________________________________________
-> > xfs mailing list
-> > xfs@oss.sgi.com
-> > http://oss.sgi.com/mailman/listinfo/xfs
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
+> Index: xfs/fs/xfs/xfs_inode.c
+> ===================================================================
+> --- xfs.orig/fs/xfs/xfs_inode.c 2011-05-11 10:18:39.555233397 +0200
+> +++ xfs/fs/xfs/xfs_inode.c 2011-05-11 12:04:24.099733330 +0200
+> @@ -2557,12 +2557,9 @@ xfs_iflush_fork(
+> case XFS_DINODE_FMT_EXTENTS:
+> ASSERT((ifp->if_flags & XFS_IFEXTENTS) ||
+> !(iip->ili_format.ilf_fields & extflag[whichfork]));
+> - ASSERT((xfs_iext_get_ext(ifp, 0) != NULL) ||
+> - (ifp->if_bytes == 0));
+> - ASSERT((xfs_iext_get_ext(ifp, 0) == NULL) ||
+> - (ifp->if_bytes > 0));
+> if ((iip->ili_format.ilf_fields & extflag[whichfork]) &&
+> (ifp->if_bytes > 0)) {
+> + ASSERT(xfs_iext_get_ext(ifp, 0));
+> ASSERT(XFS_IFORK_NEXTENTS(ip, whichfork) > 0);
+> (void)xfs_iextents_copy(ip, (xfs_bmbt_rec_t *)cp,
+> whichfork);
 > 
 > _______________________________________________
 > xfs mailing list
