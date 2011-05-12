@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4C6oKk4162406 for <xfs@oss.sgi.com>; Thu, 12 May 2011 01:50:20 -0500
-Received: from mx3-phx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A81161D674F7
-	for <xfs@oss.sgi.com>; Wed, 11 May 2011 23:50:18 -0700 (PDT)
-Received: from mx3-phx2.redhat.com (mx3-phx2.redhat.com [209.132.183.24]) by
-	cuda.sgi.com with ESMTP id AtmHKT4bCOvQfl5l for
-	<xfs@oss.sgi.com>; Wed, 11 May 2011 23:50:18 -0700 (PDT)
-Date: Thu, 12 May 2011 02:50:10 -0400 (EDT)
+	p4C7L38O163603 for <xfs@oss.sgi.com>; Thu, 12 May 2011 02:21:03 -0500
+Received: from mx4-phx2.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 178111BDDE90
+	for <xfs@oss.sgi.com>; Thu, 12 May 2011 00:21:02 -0700 (PDT)
+Received: from mx4-phx2.redhat.com (mx4-phx2.redhat.com [209.132.183.25]) by
+	cuda.sgi.com with ESMTP id aNVyScZQ84hiScYA for
+	<xfs@oss.sgi.com>; Thu, 12 May 2011 00:21:02 -0700 (PDT)
+Date: Thu, 12 May 2011 03:20:58 -0400 (EDT)
 From: Lachlan McIlroy <lmcilroy@redhat.com>
-Message-ID: <2082652758.471187.1305183010394.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
-In-Reply-To: <20110511150711.786279651@bombadil.infradead.org>
-Subject: Re: [PATCH 3/9] xfs: correctly decrement the extent buffer index in
-	xfs_bmap_del_extent
+Message-ID: <1935452012.471482.1305184858098.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
+In-Reply-To: <20110511150712.222802741@bombadil.infradead.org>
+Subject: Re: [PATCH 5/9] xfs: do not use unchecked extent indices in xfs_bmapi
 MIME-Version: 1.0
 Reply-To: Lachlan McIlroy <lmcilroy@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,14 +30,12 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
+Looks good.
+
 ----- Original Message -----
-> The code in xfs_bmap_del_extent does not correctly decrement the
-> extent buffer
-> index when deleting a whole extent. Most of the time this gets caught
-> by
-> checks in xfs_bmapi that work around it and decrement it manually and
-> thus
-> wasn't noticed so far.
+> Make sure to only call xfs_iext_get_ext after we've validate the
+> extent index
+> when moving on to the next index in xfs_bmapi.
 > 
 > Based on an earlier patch from Lachlan McIlroy.
 > 
@@ -46,24 +43,26 @@ Cc: xfs@oss.sgi.com
 > 
 > Index: xfs/fs/xfs/xfs_bmap.c
 > ===================================================================
-> --- xfs.orig/fs/xfs/xfs_bmap.c 2011-05-10 17:11:21.212901236 +0200
-> +++ xfs/fs/xfs/xfs_bmap.c 2011-05-10 17:13:36.177399627 +0200
-> @@ -2916,8 +2916,10 @@ xfs_bmap_del_extent(
+> --- xfs.orig/fs/xfs/xfs_bmap.c 2011-05-11 10:16:58.831733512 +0200
+> +++ xfs/fs/xfs/xfs_bmap.c 2011-05-11 10:16:58.847733078 +0200
+> @@ -4827,12 +4827,13 @@ xfs_bmapi(
+> /*
+> * Else go on to the next record.
 > */
-> xfs_iext_remove(ip, *idx, 1,
-> whichfork == XFS_ATTR_FORK ? BMAP_ATTRFORK : 0);
-> + --*idx;
-
-I can see why this is needed but if we remove extent at
-idx 0 then wont this go negative and confuse the next
-call to xfs_iext_get_ext()?
-
-> if (delay)
-> break;
-> +
-> XFS_IFORK_NEXT_SET(ip, whichfork,
-> XFS_IFORK_NEXTENTS(ip, whichfork) - 1);
-> flags |= XFS_ILOG_CORE;
+> - ep = xfs_iext_get_ext(ifp, ++lastx);
+> prev = got;
+> - if (lastx >= nextents)
+> - eof = 1;
+> - else
+> + if (++lastx < nextents) {
+> + ep = xfs_iext_get_ext(ifp, lastx);
+> xfs_bmbt_get_all(ep, &got);
+> + } else {
+> + eof = 1;
+> + }
+> }
+> *nmap = n;
+> /*
 > 
 > _______________________________________________
 > xfs mailing list
