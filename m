@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4CA27Io169290 for <xfs@oss.sgi.com>; Thu, 12 May 2011 05:02:08 -0500
-Received: from enyo.dsw2k3.info (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 790AD44ACB2
-	for <xfs@oss.sgi.com>; Thu, 12 May 2011 03:02:06 -0700 (PDT)
-Received: from enyo.dsw2k3.info (enyo.dsw2k3.info [195.71.86.239]) by
-	cuda.sgi.com with ESMTP id jZdWAnMgDaKxSz85 for
-	<xfs@oss.sgi.com>; Thu, 12 May 2011 03:02:06 -0700 (PDT)
-Date: Thu, 12 May 2011 12:01:53 +0200
-From: Matthias Schniedermeyer <ms@citd.de>
-Subject: Re: Files appear too big in `du`
-Message-ID: <20110512100153.GA19381@citd.de>
-References: <20110510105700.GA20307@citd.de> <20110510131705.GE19446@dastard>
-	<20110510153300.GA5764@citd.de>
+	p4CEN52L180712 for <xfs@oss.sgi.com>; Thu, 12 May 2011 09:23:06 -0500
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 69FFA14CD3D7
+	for <xfs@oss.sgi.com>; Thu, 12 May 2011 07:23:04 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id tCL0EOeFum6tyJza for
+	<xfs@oss.sgi.com>; Thu, 12 May 2011 07:23:04 -0700 (PDT)
+Message-ID: <4DCBED3E.4020302@redhat.com>
+Date: Thu, 12 May 2011 09:22:54 -0500
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110510153300.GA5764@citd.de>
+Subject: Re: [PATCH] Attempt to sync the fsstress writes to a frozen F.S
+References: <4DCA3583.7010904@canonical.com>
+	<1305097841-2308-1-git-send-email-surbhi.palande@canonical.com>
+In-Reply-To: <1305097841-2308-1-git-send-email-surbhi.palande@canonical.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,54 +28,50 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Surbhi Palande <surbhi.palande@canonical.com>
+Cc: m.mizuma@jp.fujitsu.com, jack@suse.cz, marco.stornelli@gmail.com, xfs-oss <xfs@oss.sgi.com>, toshi.okajima@jp.fujitsu.com, adilger.kernel@dilger.ca, linux-fsdevel@vger.kernel.org, tytso@mit.edu, linux-ext4@vger.kernel.org
 
-On 10.05.2011 17:33, Matthias Schniedermeyer wrote:
+On 5/11/11 2:10 AM, Surbhi Palande wrote:
+> While the fsstress background writes are busy dirtying the page cache, if a
+> fsfreeze happens then the background writes should stall. A sync should then
+> not have any data to sync to the FS. If it does have any data to sync then
+> sync will cause a deadlock by holding the s_umount write semaphore and waiting
+> in the wait queue for the FS to thaw, whereas the F.S can never thaw without
+> getting the s_umount write semaphore.
 > 
-> > > Any idea how to debug this, or is this a known bug and waiting a few 
-> > > days for 2.6.39 should fix this?
-> > 
-> > It doesn't appear to be doing anything wrong from your description.
-> > Remember that XFS is optimised for high end storage and server
-> > configurations and workloads, not typical desktop usage...
+> Signed-off-by: Surbhi Palande <surbhi.palande@canonical.com>
+
+Seems ok to me.  In the future, when sending xfstests patches,
+if you can add "xfstests" to the subject, and cc: the xfs list,
+it'd be great.
+
+I presume that this test does fail for you without your fixes?
+
+I'll see if anyone on the xfs list has comments and if not, I can check this in.
+
+Thanks,
+-Eric
+
+> ---
+>  068 |    5 +++++
+>  1 files changed, 5 insertions(+), 0 deletions(-)
 > 
-> I would call it a regression.
-> I reguarly follow copying/downloading with `du`, the speculative
-> preallocation makes that more or less useless. Especially downloading 
-> someting big from the internet which @ 231kb/s isn't exactly fast and 
-> shows identical `du`s for increasingly longer periods of time.
-> (Or "--apparent-size" should be made default, but that falls short with 
-> sparse-files)
-> 
-> IMHO `du`/`ls -l` should not be able to 'see' the speculative 
-> preallocation.
-
-
-After digging into the log of v2.6.37..v2.6.38 i stumbled upon:
-
-- snip -
-    The allocsize mount option turns off the dynamic behaviour and fixes
-    the prealloc size to whatever the mount option specifies. i.e. the
-    behaviour is unchanged.
-- snip -
-
-I think Documentation/filesystems/xfs.txt is in need of an update. All 
-that information in the commit-log is a little "out-of-reach" for most 
-people.
-
-
-
-
-
-
-Bis denn
-
--- 
-Real Programmers consider "what you see is what you get" to be just as 
-bad a concept in Text Editors as it is in women. No, the Real Programmer
-wants a "you asked for it, you got it" text editor -- complicated, 
-cryptic, powerful, unforgiving, dangerous.
+> diff --git a/068 b/068
+> index 82c1a4e..b9ac58d 100755
+> --- a/068
+> +++ b/068
+> @@ -101,6 +101,11 @@ do
+>  	    tee -a $seq.full
+>  	sleep 2
+>  
+> +	# there should be nothing to sync at this point. This may hang in case
+> +	# of fsstress background writes dirtying the page cache while the F.S is frozen
+> +	sync &
+> +	sleep 2
+> +
+>  	echo "*** thawing  \$SCRATCH_MNT" | tee -a $seq.full
+>  	xfs_freeze -u "$SCRATCH_MNT" | tee -a $seq.full
+>  	[ $? != 0 ] && echo xfs_freeze -u "$SCRATCH_MNT" failed | \
 
 _______________________________________________
 xfs mailing list
