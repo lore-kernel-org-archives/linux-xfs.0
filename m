@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4C7HjIo163478 for <xfs@oss.sgi.com>; Thu, 12 May 2011 02:17:45 -0500
-Received: from mx3-phx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9A76A14CB9AF
-	for <xfs@oss.sgi.com>; Thu, 12 May 2011 00:17:43 -0700 (PDT)
-Received: from mx3-phx2.redhat.com (mx3-phx2.redhat.com [209.132.183.24]) by
-	cuda.sgi.com with ESMTP id BOfG9ew2CPv6g5pE for
-	<xfs@oss.sgi.com>; Thu, 12 May 2011 00:17:43 -0700 (PDT)
-Date: Thu, 12 May 2011 03:17:39 -0400 (EDT)
-From: Lachlan McIlroy <lmcilroy@redhat.com>
-Message-ID: <1419180781.471454.1305184659046.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
-In-Reply-To: <20110511150711.786279651@bombadil.infradead.org>
-Subject: Re: [PATCH 3/9] xfs: correctly decrement the extent buffer index in
-	xfs_bmap_del_extent
+	p4CA27Io169290 for <xfs@oss.sgi.com>; Thu, 12 May 2011 05:02:08 -0500
+Received: from enyo.dsw2k3.info (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 790AD44ACB2
+	for <xfs@oss.sgi.com>; Thu, 12 May 2011 03:02:06 -0700 (PDT)
+Received: from enyo.dsw2k3.info (enyo.dsw2k3.info [195.71.86.239]) by
+	cuda.sgi.com with ESMTP id jZdWAnMgDaKxSz85 for
+	<xfs@oss.sgi.com>; Thu, 12 May 2011 03:02:06 -0700 (PDT)
+Date: Thu, 12 May 2011 12:01:53 +0200
+From: Matthias Schniedermeyer <ms@citd.de>
+Subject: Re: Files appear too big in `du`
+Message-ID: <20110512100153.GA19381@citd.de>
+References: <20110510105700.GA20307@citd.de> <20110510131705.GE19446@dastard>
+	<20110510153300.GA5764@citd.de>
 MIME-Version: 1.0
-Reply-To: Lachlan McIlroy <lmcilroy@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <20110510153300.GA5764@citd.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,44 +29,54 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-Looks good.
+On 10.05.2011 17:33, Matthias Schniedermeyer wrote:
+> 
+> > > Any idea how to debug this, or is this a known bug and waiting a few 
+> > > days for 2.6.39 should fix this?
+> > 
+> > It doesn't appear to be doing anything wrong from your description.
+> > Remember that XFS is optimised for high end storage and server
+> > configurations and workloads, not typical desktop usage...
+> 
+> I would call it a regression.
+> I reguarly follow copying/downloading with `du`, the speculative
+> preallocation makes that more or less useless. Especially downloading 
+> someting big from the internet which @ 231kb/s isn't exactly fast and 
+> shows identical `du`s for increasingly longer periods of time.
+> (Or "--apparent-size" should be made default, but that falls short with 
+> sparse-files)
+> 
+> IMHO `du`/`ls -l` should not be able to 'see' the speculative 
+> preallocation.
 
------ Original Message -----
-> The code in xfs_bmap_del_extent does not correctly decrement the
-> extent buffer
-> index when deleting a whole extent. Most of the time this gets caught
-> by
-> checks in xfs_bmapi that work around it and decrement it manually and
-> thus
-> wasn't noticed so far.
-> 
-> Based on an earlier patch from Lachlan McIlroy.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
-> Index: xfs/fs/xfs/xfs_bmap.c
-> ===================================================================
-> --- xfs.orig/fs/xfs/xfs_bmap.c 2011-05-10 17:11:21.212901236 +0200
-> +++ xfs/fs/xfs/xfs_bmap.c 2011-05-10 17:13:36.177399627 +0200
-> @@ -2916,8 +2916,10 @@ xfs_bmap_del_extent(
-> */
-> xfs_iext_remove(ip, *idx, 1,
-> whichfork == XFS_ATTR_FORK ? BMAP_ATTRFORK : 0);
-> + --*idx;
-> if (delay)
-> break;
-> +
-> XFS_IFORK_NEXT_SET(ip, whichfork,
-> XFS_IFORK_NEXTENTS(ip, whichfork) - 1);
-> flags |= XFS_ILOG_CORE;
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+
+After digging into the log of v2.6.37..v2.6.38 i stumbled upon:
+
+- snip -
+    The allocsize mount option turns off the dynamic behaviour and fixes
+    the prealloc size to whatever the mount option specifies. i.e. the
+    behaviour is unchanged.
+- snip -
+
+I think Documentation/filesystems/xfs.txt is in need of an update. All 
+that information in the commit-log is a little "out-of-reach" for most 
+people.
+
+
+
+
+
+
+Bis denn
+
+-- 
+Real Programmers consider "what you see is what you get" to be just as 
+bad a concept in Text Editors as it is in women. No, the Real Programmer
+wants a "you asked for it, you got it" text editor -- complicated, 
+cryptic, powerful, unforgiving, dangerous.
 
 _______________________________________________
 xfs mailing list
