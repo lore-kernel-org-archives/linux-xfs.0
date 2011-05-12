@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4BGtYCO131975 for <xfs@oss.sgi.com>; Wed, 11 May 2011 11:55:35 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EA7781BDCE68
-	for <xfs@oss.sgi.com>; Wed, 11 May 2011 09:55:33 -0700 (PDT)
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id kx6rZ7XwkZHvBCfA for <xfs@oss.sgi.com>;
-	Wed, 11 May 2011 09:55:33 -0700 (PDT)
-Message-ID: <4DCABF85.4080705@sandeen.net>
-Date: Wed, 11 May 2011 11:55:33 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	p4C6oKk4162406 for <xfs@oss.sgi.com>; Thu, 12 May 2011 01:50:20 -0500
+Received: from mx3-phx2.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A81161D674F7
+	for <xfs@oss.sgi.com>; Wed, 11 May 2011 23:50:18 -0700 (PDT)
+Received: from mx3-phx2.redhat.com (mx3-phx2.redhat.com [209.132.183.24]) by
+	cuda.sgi.com with ESMTP id AtmHKT4bCOvQfl5l for
+	<xfs@oss.sgi.com>; Wed, 11 May 2011 23:50:18 -0700 (PDT)
+Date: Thu, 12 May 2011 02:50:10 -0400 (EDT)
+From: Lachlan McIlroy <lmcilroy@redhat.com>
+Message-ID: <2082652758.471187.1305183010394.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
+In-Reply-To: <20110511150711.786279651@bombadil.infradead.org>
+Subject: Re: [PATCH 3/9] xfs: correctly decrement the extent buffer index in
+	xfs_bmap_del_extent
 MIME-Version: 1.0
-Subject: Re: xfstests: print the message that fallocate is not supported to
-	stdout unless quiet output
-References: <1305126445.22267.37.camel@dhcp-31-190.brq.redhat.com>
-In-Reply-To: <1305126445.22267.37.camel@dhcp-31-190.brq.redhat.com>
+Reply-To: Lachlan McIlroy <lmcilroy@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,45 +28,47 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Boris Ranto <branto@redhat.com>
-Cc: xfs <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On 5/11/11 10:07 AM, Boris Ranto wrote:
-> ltp/fsx.c tests whether the filesystem it is run on supports fallocate. If it is not supported the fsx will print warning to stderr.
-> This leads to fails of tests 075, 112, 127 for the filesystems that do not support fallocate. The tests use ltp/fsx but do not filter out stderr.
-> Since ltp/fsx.c can work without fallocate support I propose to move this message to stdout unless quiet output is not requested.
-> Previous patch printed the message even if -q flag was used. This patch honours the flag.
+----- Original Message -----
+> The code in xfs_bmap_del_extent does not correctly decrement the
+> extent buffer
+> index when deleting a whole extent. Most of the time this gets caught
+> by
+> checks in xfs_bmapi that work around it and decrement it manually and
+> thus
+> wasn't noticed so far.
 > 
-> This simple patch fixes the issue for me, tested on all the mentioned tests:
+> Based on an earlier patch from Lachlan McIlroy.
 > 
-> Signed-off-by: Boris Ranto <branto@redhat.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
+> Index: xfs/fs/xfs/xfs_bmap.c
+> ===================================================================
+> --- xfs.orig/fs/xfs/xfs_bmap.c 2011-05-10 17:11:21.212901236 +0200
+> +++ xfs/fs/xfs/xfs_bmap.c 2011-05-10 17:13:36.177399627 +0200
+> @@ -2916,8 +2916,10 @@ xfs_bmap_del_extent(
+> */
+> xfs_iext_remove(ip, *idx, 1,
+> whichfork == XFS_ATTR_FORK ? BMAP_ATTRFORK : 0);
+> + --*idx;
 
-Good idea, sorry about that!
+I can see why this is needed but if we remove extent at
+idx 0 then wont this go negative and confuse the next
+call to xfs_iext_get_ext()?
 
-I'll commit this with my signoff.
-
--Eric
-
-> diff --git a/ltp/fsx.c b/ltp/fsx.c
-> index fe072d3..43e7efe 100644
-> --- a/ltp/fsx.c
-> +++ b/ltp/fsx.c
-> @@ -1424,7 +1424,8 @@ main(int argc, char **argv)
->  #ifdef FALLOCATE
->         if (!lite && fallocate_calls) {
->                 if (fallocate(fd, 0, 0, 1) && errno == EOPNOTSUPP) {
-> -                       warn("main: filesystem does not support fallocate, disabling");
-> +                       if(!quiet)
-> +                               prt("fsx: main: filesystem does not support fallocate, disabling\n");
->                         fallocate_calls = 0;
->                 } else
->                         ftruncate(fd, 0);
+> if (delay)
+> break;
+> +
+> XFS_IFORK_NEXT_SET(ip, whichfork,
+> XFS_IFORK_NEXTENTS(ip, whichfork) - 1);
+> flags |= XFS_ILOG_CORE;
 > 
 > _______________________________________________
 > xfs mailing list
 > xfs@oss.sgi.com
 > http://oss.sgi.com/mailman/listinfo/xfs
-> 
 
 _______________________________________________
 xfs mailing list
