@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4E3lQuu002242 for <xfs@oss.sgi.com>; Fri, 13 May 2011 22:47:26 -0500
-Received: from mail-vx0-f181.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A05DA4517BC
-	for <xfs@oss.sgi.com>; Fri, 13 May 2011 20:47:25 -0700 (PDT)
-Received: from mail-vx0-f181.google.com (mail-vx0-f181.google.com
-	[209.85.220.181]) by cuda.sgi.com with ESMTP id
-	JPzwDF1XhbbuQfyh for <xfs@oss.sgi.com>;
-	Fri, 13 May 2011 20:47:25 -0700 (PDT)
-Received: by vxb39 with SMTP id 39so2526729vxb.26
-	for <xfs@oss.sgi.com>; Fri, 13 May 2011 20:47:24 -0700 (PDT)
+	p4G3KP88112552 for <xfs@oss.sgi.com>; Sun, 15 May 2011 22:20:26 -0500
+Received: from mprobst.securesites.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4F2A7457489
+	for <xfs@oss.sgi.com>; Sun, 15 May 2011 20:20:23 -0700 (PDT)
+Received: from mprobst.securesites.net (mprobst2.securesites.net
+	[198.173.85.114]) by cuda.sgi.com with ESMTP id
+	1PkHREMxhtVqhJWo for <xfs@oss.sgi.com>;
+	Sun, 15 May 2011 20:20:23 -0700 (PDT)
+Received: from [192.168.102.101] (photos.bigmama.probst.org [71.195.218.88])
+	(authenticated bits=0)
+	by mprobst.securesites.net (8.14.4/8.14.4) with ESMTP id p4G3KJvF050323
+	for <xfs@oss.sgi.com>; Sun, 15 May 2011 21:20:22 -0600 (MDT)
+	(envelope-from mprobst@zmcconsulting.com)
+Message-ID: <4DD097F9.6070205@zmcconsulting.com>
+Date: Sun, 15 May 2011 21:20:25 -0600
+From: "Matthew J. Probst" <mprobst@zmcconsulting.com>
 MIME-Version: 1.0
-Date: Sat, 14 May 2011 11:47:24 +0800
-Message-ID: <BANLkTi=ra8eKxqstqFqDWHYsQpVx66c8BQ@mail.gmail.com>
-Subject: [PATCH] xfstests:Make 225 compare map and fiemap at each block.
-From: Yongqiang Yang <xiaoqiangnk@gmail.com>
+Subject: XFS_WANT_CORRUPTED_GOTO on repair of large myisam (mysql) table
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,373 +31,287 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>, josef@redhat.com
-Cc: Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Hi All,
+Hi,
+I've run into the infamous XFS_WANT_CORRUPTED_GOTO error.... twice in
+the same day.... with an xfs_repair in-between.
+Both time I hit this error, I was doing a myisamchk  to repair a large
+corrupted mysql table (with a 20GB data file and a 17GB index file).
+I've run this database for years on this file system without a
+problem..... then in one day, both times when I attempted to repair this
+table.
+xfs crashed on me. 
 
-Due to my carelessness, I induced a ugly patch to ext4's fiemap, but
-225 could not find it.  So I looked into the 225 and could not figure out
-logic in compare_map_and_fiemap(), which seemed to mixed extents with
-blocks.  Then I made 225 compare map and fiemap at each block, the new
-225 can find another bug in ext4's fiemap.
+I believe this is the largest table I've attempted to repair on this
+file system.
 
-The new 225 works well on ext3 and ext4 with both 1K and 4K block. However,
-it report fiemap error on xfs with 4K block.  My working tree is 2.6.39-rc3
-pulled from Ted's tree. The error message is as follows.
+After the first crash, the file system refused to mount....  The repair
+was refused as well, saying that there were entries in the metadata log
+that needed replaying...  Given the problem mounting the file system, I
+ended up clearing the metadata log (xfs_repair -L).
+The system came back online....  but when I attempted to repair the same
+table, the same XFS_WANT_CORRUPTED_GOTO error occured.  This time, I was
+able to simply remount the fs w/o clearing the log and w/o an explicit
+repair... Since then I've avoided repairing this table.. and instead I
+restored a backup from a replication slave.   The system has been stable
+in the two days since the crash (though I've avoided all myisamchk
+attempts).
 
- QA output created by 225
- fiemap run without preallocation, with sync
-+map is 'DDHDHHDHHDHDDHDDHDDHHDHDDHDDDDDDHHDDDHHHHDH
-DDDDDDDDHDDHHHDDDHDDHHDDDDDDHHHHHHDDHHHHHDHDHDHDD
-DHDDHD'
-+logical: [       0..      15] phys:       12..      27 flags: 0x000 tot: 16
-+logical: [      17..      31] phys:       29..      43 flags: 0x000 tot: 15
-+logical: [      34..      63] phys:       46..      75 flags: 0x000 tot: 30
-+logical: [      65..      95] phys:       77..     107 flags: 0x001 tot: 31
-+Problem comparing fiemap and map
- fiemap run without preallocation or sync
-+map is 'DDHDHHDHHDHDDHDDHDDHHDHDDHDDDDDDHHDDDHHHHDH
-DDDDDDDDHDDHHHDDDHDDHHDDDDDDHHHHHHDDHHHHHDHDHDHDD
-DHDDHD'
-+logical: [       0..      15] phys:        0..      15 flags: 0x006 tot: 16
-+Problem comparing fiemap and map
-Ran: 225
-Failures: 225
-Failed 1 of 1 tests
+Any guidance would greatly be appreciated....  Given how mission
+critical this db is, I need to either find a root cause for the error or
+consider migration to an alternate filesystem.
 
-I am not sure this is a bug in new 225 or xfs.
+Below is information on:
+The storage hardware.
+The software used
+The kernel error seen (from dmesg).
+The output of the xfs_repair -L command (the one time I was forced to
+run it).
+Output of xfs_info.
 
-Yongqiang.
 
-Signed-off-by: Yongqiang Yang <xiaoqiangnk@gmail.com>
----
- src/fiemap-tester.c |  223 ++++++++++++++++++++++++++++----------------------
- 1 files changed, 125 insertions(+), 98 deletions(-)
 
-diff --git a/src/fiemap-tester.c b/src/fiemap-tester.c
-index 1663f84..99bb5ce 100644
---- a/src/fiemap-tester.c
-+++ b/src/fiemap-tester.c
-@@ -14,6 +14,9 @@
-  * You should have received a copy of the GNU General Public License
-  * along with this program; if not, write the Free Software Foundation,
-  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ *
-+ * Compare map and fiemap at each block,
-+ * Yongqiang Yang <xiaoqiangnk@gmail.com>, 2011
-  */
+##############################################################
+Storage hardware:
+##############################################################
+Multipath 3Gbps sas connection to a redundant external sas array (dual
+HA controllers), Raid-10 on 10x 15Krpm sas drives.
+8GB of ram.  I've run a memtest over it after the failure for 12+ hours
+and did not find any problems.
 
- #include <stdio.h>
-@@ -57,7 +60,7 @@ generate_file_mapping(int blocks, int prealloc)
- 	int num_types = 2, cur_block = 0;
- 	int i = 0;
 
--	map = malloc(sizeof(char) * blocks);
-+	map = malloc(sizeof(char) * (blocks + 1));
- 	if (!map)
- 		return NULL;
+##########################
+Software:
+##########################
+xfs on lvm2 on dm-multipath
 
-@@ -80,7 +83,8 @@ generate_file_mapping(int blocks, int prealloc)
- 		}
- 		cur_block++;
- 	}
--
-+	
-+	map[blocks] = 0;
- 	return map;
- }
+Kernel: 2.6.18-238.9.1.el5 (from RH/Centos 5.6)
+kmod-xfs version 0.4-2
+xfsprogs version 2.9.4-1
+lvm2 version: 2.02.74-5
+device mapper multipath verson: 0.4.7-42
+Mysql version 5.1 56
 
-@@ -247,55 +251,36 @@ check_flags(struct fiemap *fiemap, int blocksize)
- }
 
- static int
--check_data(struct fiemap *fiemap, __u64 logical_offset, int blocksize,
-+check_data(struct fiemap_extent * extent ,  __u64 logical_offset, int
-blocksize,
- 	   int last, int prealloc)
- {
--	struct fiemap_extent *extent;
--	__u64 orig_offset = logical_offset;
--	int c, found = 0;
--
--	for (c = 0; c < fiemap->fm_mapped_extents; c++) {
--		__u64 start, end;
--		extent = &fiemap->fm_extents[c];
--
--		start = extent->fe_logical;
--		end = extent->fe_logical + extent->fe_length;
--
--		if (logical_offset > end)
--			continue;
--
--		if (logical_offset + blocksize < start)
--			break;
--
--		if (logical_offset >= start &&
--		    logical_offset < end) {
--			if (prealloc &&
--			    !(extent->fe_flags & FIEMAP_EXTENT_UNWRITTEN)) {
--				printf("ERROR: preallocated extent is not "
--				       "marked with FIEMAP_EXTENT_UNWRITTEN: "
--				       "%llu\n",
--				       (unsigned long long)
--				       (start / blocksize));
--				return -1;
--			}
--
--			if (logical_offset + blocksize > end) {
--				logical_offset = end+1;
--				continue;
--			} else {
--				found = 1;
--				break;
--			}
-+	int found = 0;
-+	__u64 start, end;
-+
-+	start = extent->fe_logical;
-+	end = extent->fe_logical + extent->fe_length;
-+
-+	if (logical_offset >= start &&
-+	    logical_offset < end) {
-+		if (prealloc &&
-+		    !(extent->fe_flags & FIEMAP_EXTENT_UNWRITTEN)) {
-+			printf("ERROR: preallocated extent is not "
-+			       "marked with FIEMAP_EXTENT_UNWRITTEN: "
-+			       "%llu\n",
-+			       (unsigned long long)
-+			       (start / blocksize));
-+			return -1;
- 		}
-+		found = 1;
- 	}
--
-+	
- 	if (!found) {
- 		printf("ERROR: couldn't find extent at %llu\n",
--		       (unsigned long long)(orig_offset / blocksize));
-+		       (unsigned long long)(logical_offset / blocksize));
- 	} else if (last &&
--		   !(fiemap->fm_extents[c].fe_flags & FIEMAP_EXTENT_LAST)) {
-+		   !(extent->fe_flags & FIEMAP_EXTENT_LAST)) {
- 		printf("ERROR: last extent not marked as last: %llu\n",
--		       (unsigned long long)(orig_offset / blocksize));
-+		       (unsigned long long)(logical_offset / blocksize));
- 		found = 0;
- 	}
+##############################################################
+Text of kernel error:
+##############################################################
+XFS internal error XFS_WANT_CORRUPTED_GOTO at line 1572 of file
+fs/xfs/xfs_alloc.c.  Caller 0xffffffff88730969
 
-@@ -370,37 +355,26 @@ check_weird_fs_hole(int fd, __u64
-logical_offset, int blocksize)
- }
+Call Trace:
+ [<ffffffff8872ee2f>] :xfs:xfs_free_ag_extent+0x19e/0x67e
+ [<ffffffff88730969>] :xfs:xfs_free_extent+0xa9/0xc9
+ [<ffffffff8876abc8>] :xfs:xfs_trans_log_efd_extent+0x1c/0x48
+ [<ffffffff8876128b>] :xfs:xlog_recover_process_efi+0x112/0x16c
+ [<ffffffff8877adf4>] :xfs:xfs_fs_fill_super+0x0/0x3dc
+ [<ffffffff8876247e>] :xfs:xlog_recover_process_efis+0x4f/0x8d
+ [<ffffffff887624d0>] :xfs:xlog_recover_finish+0x14/0xad
+ [<ffffffff8877adf4>] :xfs:xfs_fs_fill_super+0x0/0x3dc
+ [<ffffffff88766fd4>] :xfs:xfs_mountfs+0x498/0x5e2
+ [<ffffffff887676f6>] :xfs:xfs_mru_cache_create+0x113/0x143
+ [<ffffffff8877aff7>] :xfs:xfs_fs_fill_super+0x203/0x3dc
+ [<ffffffff800e6bb9>] get_sb_bdev+0x10a/0x16c
+ [<ffffffff8012fe73>] selinux_sb_copy_data+0x1a1/0x1c5
+ [<ffffffff800e6556>] vfs_kern_mount+0x93/0x11a
+ [<ffffffff800e661f>] do_kern_mount+0x36/0x4d
+ [<ffffffff800f0ec8>] do_mount+0x6a9/0x719
+ [<ffffffff8000c7d8>] _atomic_dec_and_lock+0x39/0x57
+ [<ffffffff8002cbec>] mntput_no_expire+0x19/0x89
+ [<ffffffff80007691>] find_get_page+0x21/0x51
+ [<ffffffff8001398c>] filemap_nopage+0x193/0x360
+ [<ffffffff80008d5c>] __handle_mm_fault+0x5f3/0x1039
+ [<ffffffff800ce6b2>] zone_statistics+0x3e/0x6d
+ [<ffffffff8000f41e>] __alloc_pages+0x78/0x308
+ [<ffffffff8004c742>] sys_mount+0x8a/0xcd
+ [<ffffffff8005d28d>] tracesys+0xd5/0xe0
 
- static int
--check_hole(struct fiemap *fiemap, int fd, __u64 logical_offset, int blocksize)
-+check_hole(struct fiemap_extent *extent, int fd, __u64
-logical_offset, int blocksize)
- {
--	struct fiemap_extent *extent;
--	int c;
-+	__u64 start, end;
+Filesystem "dm-1": XFS internal error xfs_trans_cancel at line 1164 of
+file fs/xfs/xfs_trans.c.  Caller 0xffffffff887612d7
 
--	for (c = 0; c < fiemap->fm_mapped_extents; c++) {
--		__u64 start, end;
--		extent = &fiemap->fm_extents[c];
-+	start = extent->fe_logical;
-+	end = extent->fe_logical + extent->fe_length;
 
--		start = extent->fe_logical;
--		end = extent->fe_logical + extent->fe_length;
-+	if (logical_offset >= start &&
-+	    logical_offset < end) {
+Call Trace:
+ [<ffffffff887696eb>] :xfs:xfs_trans_cancel+0x55/0xfa
+ [<ffffffff887612d7>] :xfs:xlog_recover_process_efi+0x15e/0x16c
+ [<ffffffff8877adf4>] :xfs:xfs_fs_fill_super+0x0/0x3dc
+ [<ffffffff8876247e>] :xfs:xlog_recover_process_efis+0x4f/0x8d
+ [<ffffffff887624d0>] :xfs:xlog_recover_finish+0x14/0xad
+ [<ffffffff8877adf4>] :xfs:xfs_fs_fill_super+0x0/0x3dc
+ [<ffffffff88766fd4>] :xfs:xfs_mountfs+0x498/0x5e2
+ [<ffffffff887676f6>] :xfs:xfs_mru_cache_create+0x113/0x143
+ [<ffffffff8877aff7>] :xfs:xfs_fs_fill_super+0x203/0x3dc
+ [<ffffffff800e6bb9>] get_sb_bdev+0x10a/0x16c
+ [<ffffffff8012fe73>] selinux_sb_copy_data+0x1a1/0x1c5
+ [<ffffffff800e6556>] vfs_kern_mount+0x93/0x11a
+ [<ffffffff800e661f>] do_kern_mount+0x36/0x4d
+ [<ffffffff800f0ec8>] do_mount+0x6a9/0x719
+ [<ffffffff8000c7d8>] _atomic_dec_and_lock+0x39/0x57
+ [<ffffffff8002cbec>] mntput_no_expire+0x19/0x89
+ [<ffffffff80007691>] find_get_page+0x21/0x51
+ [<ffffffff8001398c>] filemap_nopage+0x193/0x360
+ [<ffffffff80008d5c>] __handle_mm_fault+0x5f3/0x1039
+ [<ffffffff800ce6b2>] zone_statistics+0x3e/0x6d
+ [<ffffffff8000f41e>] __alloc_pages+0x78/0x308
+ [<ffffffff8004c742>] sys_mount+0x8a/0xcd
+ [<ffffffff8005d28d>] tracesys+0xd5/0xe0
 
--		if (logical_offset > end)
--			continue;
--		if (logical_offset + blocksize < start)
--			break;
-+		if (check_weird_fs_hole(fd, logical_offset,
-+					blocksize) == 0)
-+			return 0;
+xfs_force_shutdown(dm-1,0x8) called from line 1165 of file
+fs/xfs/xfs_trans.c.  Return address = 0xffffffff88769704
+Filesystem "dm-1": Corruption of in-memory data detected.  Shutting down
+filesystem: dm-1
+Please umount the filesystem, and rectify the problem(s)
 
--		if (logical_offset >= start &&
--		    logical_offset < end) {
--
--			if (check_weird_fs_hole(fd, logical_offset,
--						blocksize) == 0)
--				break;
--
--			printf("ERROR: found an allocated extent where a hole "
--			       "should be: %llu\n",
--			       (unsigned long long)(start / blocksize));
--			return -1;
--		}
-+		printf("ERROR: found an allocated extent where a hole "
-+		       "should be: %llu\n",
-+		       (unsigned long long)(start / blocksize));
-+		return -1;
- 	}
--
-+	
- 	return 0;
- }
 
-@@ -423,9 +397,11 @@ compare_fiemap_and_map(int fd, char *map, int
-blocks, int blocksize, int syncfil
- {
- 	struct fiemap *fiemap;
- 	char *fiebuf;
--	int blocks_to_map, ret, cur_extent = 0, last_data;
-+	int blocks_to_map, ret, last_data = -1;
- 	__u64 map_start, map_length;
- 	int i, c;
-+	int cur_block = 0;
-+	int last_found = 0;
+###########################################################################
+output from: "xfs_repair -L -v /dev/primary_vg/master"
+############################################################################
+Phase 1 - find and verify superblock...
+        - block cache size set to 763768 entries
+Phase 2 - using internal log
+        - zero log...
+zero_log: head block 28095 tail block 26697
+ALERT: The filesystem has valuable metadata changes in a log which is being
+destroyed because the -L option was used.
+        - scan filesystem freespace and inode maps...
+        - found root inode chunk
+Phase 3 - for each AG...
+        - scan and clear agi unlinked lists...
+        - process known inodes and perform inode discovery...
+        - agno = 0
+        - agno = 1
+        - agno = 2
+        - agno = 3
+        - agno = 4
+        - agno = 5
+        - agno = 6
+        - agno = 7
+        - agno = 8
+44334940: Badness in key lookup (length)
+bp=(bno 167738016, len 16384 bytes) key=(bno 167738016, len 8192 bytes)
+        - agno = 9
+        - agno = 10
+        - agno = 11
+        - agno = 12
+        - agno = 13
+        - agno = 14
+        - agno = 15
+        - agno = 16
+        - agno = 17
+        - agno = 18
+        - agno = 19
+        - agno = 20
+        - agno = 21
+        - agno = 22
+        - process newly discovered inodes...
+Phase 4 - check for duplicate blocks...
+        - setting up duplicate extent list...
+        - check for inodes claiming duplicate blocks...
+        - agno = 0
+        - agno = 1
+        - agno = 2
+        - agno = 3
+        - agno = 4
+        - agno = 5
+        - agno = 9
+        - agno = 6
+        - agno = 7
+        - agno = 10
+        - agno = 8
+        - agno = 11
+        - agno = 12
+        - agno = 13
+        - agno = 14
+        - agno = 15
+        - agno = 16
+        - agno = 17
+        - agno = 18
+        - agno = 20
+        - agno = 19
+        - agno = 22
+        - agno = 21
+Phase 5 - rebuild AG headers and trees...
+        - agno = 0
+        - agno = 1
+        - agno = 2
+        - agno = 3
+        - agno = 4
+        - agno = 5
+        - agno = 6
+        - agno = 7
+        - agno = 8
+        - agno = 9
+        - agno = 10
+        - agno = 11
+        - agno = 12
+        - agno = 13
+        - agno = 14
+        - agno = 15
+        - agno = 16
+        - agno = 17
+        - agno = 18
+        - agno = 19
+        - agno = 20
+        - agno = 21
+        - agno = 22
+        - reset superblock...
+Phase 6 - check inode connectivity...
+        - resetting contents of realtime bitmap and summary inodes
+        - traversing filesystem ...
+        - agno = 0
+        - agno = 1
+        - agno = 2
+        - agno = 3
+        - agno = 4
+        - agno = 5
+        - agno = 6
+        - agno = 7
+        - agno = 8
+        - agno = 9
+        - agno = 10
+        - agno = 11
+        - agno = 12
+        - agno = 13
+        - agno = 14
+        - agno = 15
+        - agno = 16
+        - agno = 17
+        - agno = 18
+        - agno = 19
+        - agno = 20
+        - agno = 21
+        - agno = 22
+        - traversal finished ...
+        - moving disconnected inodes to lost+found ...
+disconnected inode 335476063, moving to lost+found
+Phase 7 - verify and correct link counts...
 
- 	if (query_fiemap_count(fd, blocks, blocksize) < 0)
- 		return -1;
-@@ -451,8 +427,11 @@ compare_fiemap_and_map(int fd, char *map, int
-blocks, int blocksize, int syncfil
- 	fiemap->fm_extent_count = blocks_to_map;
- 	fiemap->fm_mapped_extents = 0;
+        XFS_REPAIR Summary    Sat May 14 07:38:17 2011
 
-+	/* check fiemap by looking at each block. */
- 	do {
--		fiemap->fm_start = map_start;
-+		int nr_extents;
-+
-+		fiemap->fm_start = cur_block * blocksize;
- 		fiemap->fm_length = map_length;
+Phase           Start           End             Duration
+Phase 1:        05/14 07:38:06  05/14 07:38:06 
+Phase 2:        05/14 07:38:06  05/14 07:38:07  1 second
+Phase 3:        05/14 07:38:07  05/14 07:38:17  10 seconds
+Phase 4:        05/14 07:38:17  05/14 07:38:17 
+Phase 5:        05/14 07:38:17  05/14 07:38:17 
+Phase 6:        05/14 07:38:17  05/14 07:38:17 
+Phase 7:        05/14 07:38:17  05/14 07:38:17 
 
- 		ret = ioctl(fd, FS_IOC_FIEMAP, (unsigned long)fiemap);
-@@ -465,45 +444,93 @@ compare_fiemap_and_map(int fd, char *map, int
-blocks, int blocksize, int syncfil
- 		if (check_flags(fiemap, blocksize))
- 			goto error;
-
--		for (i = cur_extent, c = 1; i < blocks; i++, c++) {
--			__u64 logical_offset = i * blocksize;
-+		nr_extents = fiemap->fm_mapped_extents;
-+		if (nr_extents == 0) {
-+			int block = cur_block + (map_length - 1)/ blocksize;
-+			for (; cur_block <= block && cur_block < blocks; cur_block++) {
-+				/* check hole */
-+				if (map[cur_block] != 'H') {
-+					printf("ERROR: map[%d] should not be "
-+					       "a hole\n", cur_block);
-+					goto error;
-+				}
-+			}
-+			continue;
-+		}
-
--			if (c > fiemap->fm_mapped_extents) {
--				i++;
--				break;
-+		for (c = 0; c < nr_extents; c++) {
-+			__u64 offset;
-+			int block;
-+			struct fiemap_extent *extent;
-+
-+			if (last_found) {
-+				printf("ERROR: there is extent after"
-+				       "the last extent\n");
-+				goto error;
- 			}
-
--			switch (map[i]) {
--			case 'D':
--				if (check_data(fiemap, logical_offset,
--					       blocksize, last_data == i, 0))
--					goto error;
--				break;
--			case 'H':
--				if (check_hole(fiemap, fd, logical_offset,
--					       blocksize))
--					goto error;
--				break;
--			case 'P':
--				if (check_data(fiemap, logical_offset,
--					       blocksize, last_data == i, 1))
-+			extent = &fiemap->fm_extents[c];
-+			offset = extent->fe_logical;
-+			block = offset / blocksize;
-+
-+			/* check hole. */
-+			for (; cur_block < block; cur_block++) {
-+				if (map[cur_block] != 'H') {
-+					printf("ERROR: map[%d] should not be "
-+					       "a hole\n", cur_block);
- 					goto error;
--				break;
--			default:
--				printf("ERROR: weird value in map: %c\n",
--				       map[i]);
-+				}
-+			}
-+
-+			offset = extent->fe_logical + extent->fe_length;
-+			block = offset / blocksize;
-+
-+			if (block > blocks) {
-+				printf("ERROR: there are extents beyond EOF\n");
- 				goto error;
- 			}
-+
-+			/* check data */
-+			for (; cur_block < block; cur_block++) {
-+				offset = (__u64)cur_block * blocksize;
-+				last_found = (last_data == cur_block);
-+				switch (map[cur_block]) {
-+				case 'D':
-+					if (check_data(extent, offset,
-+						       blocksize, last_found, 0))
-+						goto error;
-+					break;
-+				case 'H':
-+					if (check_hole(extent, fd, offset,
-+						       blocksize));
-+						goto error;
-+					break;
-+
-+				case 'P':
-+					if (check_data(extent, offset,
-+						       blocksize, last_found, 1))
-+						goto error;
-+					break;
-+				default:
-+					printf("ERROR: weird value in map: %c\n",
-+					       map[i]);
-+					goto error;
-+				}
-+			}
- 		}
--		cur_extent = i;
--		map_start = i * blocksize;
--	} while (cur_extent < blocks);
-+	} while (cur_block < blocks);
-
--	ret = 0;
--	return ret;
-+	if (!last_found && last_data != -1) {
-+		printf("ERROR: find no last extent\n");
-+		goto error;
-+	}
-+
-+	free(fiebuf);
-+	return 0;
- error:
- 	printf("map is '%s'\n", map);
- 	show_extents(fiemap, blocksize);
-+	free(fiebuf);
- 	return -1;
- }
-
--- 
-1.7.5.1
-
--- 
-Best Wishes
-Yongqiang Yang
+Total run time: 11 seconds
+done
+##############################################################################
+xfs_info /dev/primary_vg/master
+##############################################################################
+# xfs_info  /dev/primary_vg/master
+meta-data=/dev/primary_vg/master isize=256    agcount=23, agsize=2097152
+blks
+         =                       sectsz=512   attr=1
+data     =                       bsize=4096   blocks=46661632, imaxpct=25
+         =                       sunit=0      swidth=0 blks, unwritten=1
+naming   =version 2              bsize=4096 
+log      =internal               bsize=4096   blocks=16384, version=1
+         =                       sectsz=512   sunit=0 blks, lazy-count=0
+realtime =none                   extsz=4096   blocks=0, rtextents=0
 
 _______________________________________________
 xfs mailing list
