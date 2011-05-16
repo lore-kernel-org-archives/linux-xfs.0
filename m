@@ -1,25 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4G9JlEm126337 for <xfs@oss.sgi.com>; Mon, 16 May 2011 04:19:47 -0500
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A5417CBB482
-	for <xfs@oss.sgi.com>; Mon, 16 May 2011 02:19:46 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id vJpxBqtQO3i805MF for
-	<xfs@oss.sgi.com>; Mon, 16 May 2011 02:19:46 -0700 (PDT)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id p4G9Jjdt009332
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Mon, 16 May 2011 05:19:45 -0400
-Date: Mon, 16 May 2011 11:19:44 +0200 (CEST)
-From: Lukas Czerner <lczerner@redhat.com>
-Subject: Re: [PATCH] xfstests 251: fix fitrim support test
-In-Reply-To: <4DCDA43A.30502@redhat.com>
-Message-ID: <alpine.LFD.2.00.1105161112290.3670@dhcp-27-109.brq.redhat.com>
-References: <4DCDA43A.30502@redhat.com>
-MIME-Version: 1.0
+	p4GEmIRn137201 for <xfs@oss.sgi.com>; Mon, 16 May 2011 09:48:18 -0500
+Received: from e3.ny.us.ibm.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 522C415EDC1A
+	for <xfs@oss.sgi.com>; Mon, 16 May 2011 07:48:16 -0700 (PDT)
+Received: from e3.ny.us.ibm.com (e3.ny.us.ibm.com [32.97.182.143]) by
+	cuda.sgi.com with ESMTP id C90uhNGQuRybkQAk for
+	<xfs@oss.sgi.com>; Mon, 16 May 2011 07:48:16 -0700 (PDT)
+Received: from d01relay05.pok.ibm.com (d01relay05.pok.ibm.com [9.56.227.237])
+	by e3.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p4GEQO8Q025574
+	for <xfs@oss.sgi.com>; Mon, 16 May 2011 10:26:24 -0400
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d01relay05.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	p4GEm7xK105308 for <xfs@oss.sgi.com>; Mon, 16 May 2011 10:48:09 -0400
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
+	id p4G8lrfD017754
+	for <xfs@oss.sgi.com>; Mon, 16 May 2011 02:47:54 -0600
+From: Mimi Zohar <zohar@linux.vnet.ibm.com>
+Subject: [PATCH v5 16/21] evm: add evm_inode_post_init call in xfs
+Date: Mon, 16 May 2011 10:45:10 -0400
+Message-Id: <1305557115-15652-17-git-send-email-zohar@linux.vnet.ibm.com>
+In-Reply-To: <1305557115-15652-1-git-send-email-zohar@linux.vnet.ibm.com>
+References: <1305557115-15652-1-git-send-email-zohar@linux.vnet.ibm.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,90 +32,79 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: =?ISO-8859-15?Q?Luk=E1=A8_Czerner?= <lczerner@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: linux-security-module@vger.kernel.org
+Cc: Dmitry Kasatkin <dmitry.kasatkin@nokia.com>, Mimi Zohar <zohar@us.ibm.com>, David Safford <safford@watson.ibm.com>, Greg KH <greg@kroah.com>, James Morris <jmorris@namei.org>, linux-kernel@vger.kernel.org, Alex Elder <aelder@sgi.com>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, xfs@oss.sgi.com, Mimi Zohar <zohar@linux.vnet.ibm.com>
 
-On Fri, 13 May 2011, Eric Sandeen wrote:
+After creating the initial LSM security extended attribute, call
+evm_inode_post_init_security() to create the 'security.evm'
+extended attribute.
 
-> On my ext4 filesystem, the simple "did fstrim work" test passes,
-> because it asks to free all blocks in the first 10m of the fs,
-> and those 10m are full of filesystem metadata.  Because no blocks
-> are free, no blocks are trimmed, and we get success returned.
-> 
-> But then when the test runs I'm flooded with error messages, because
-> it's a hard drive not an ssd...
-> 
-> So we need to step through the fs until we either free a block,
-> or encounter an error.
-> 
-> I think this is ugly bash, if anyone has a better plan I'm all ears.
-> 
-> (also change FSTRIM to FITRIM in the failure message, it seems
-> to be intended to print the ioctl name ...)
+Signed-off-by: Mimi Zohar <zohar@us.ibm.com>
+---
+ fs/xfs/linux-2.6/xfs_iops.c |   27 +++++++++++++++++++--------
+ 1 files changed, 19 insertions(+), 8 deletions(-)
 
-Hi Eric,
-
-this is actually a filesystem bug found unintentionally by this test :)
-and it is already fixed upstream 4143179218960a70d821a425e3c23ce44aa93dee
-for ext4.. So I think we better leave it as it is, since this is
-unwanted behaviour and should be detected.
-
-What we should fix however, is when fstrim fails after successful fist
-test, so the test exits and report failure, rather than printing tons of
-error messages.
-
-Thanks!
--Lukas
-
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
-> 
-> diff --git a/251 b/251
-> index fa3d74a..5ab0a87 100755
-> --- a/251
-> +++ b/251
-> @@ -73,7 +73,19 @@ _fail()
->  
->  _check_fstrim_support()
->  {
-> -	$here/src/fstrim -l 10M $SCRATCH_MNT &> /dev/null
-> +	# Go until error or until something gets trimmed
-> +	step=1048576
-> +	start=0
-> +	retval=0
-> +	nonetrimmed=1
-> +
-> +	while [ $retval -eq 0 ] && [ $nonetrimmed -ne 0 ]; do
-> +		result=`$here/src/fstrim -v -s $start -l $step $SCRATCH_MNT 2>&1`
-> +		retval=$?
-> +		[ "${result:0:1}" -eq "0" ] && nonetrimmed=1
-> +		start=$(( $start + $step ))
-> +	done
-> +	return $retval
->  }
->  
->  ##
-> diff --git a/src/fstrim.c b/src/fstrim.c
-> index f1f37ec..ad7fd6a 100644
-> --- a/src/fstrim.c
-> +++ b/src/fstrim.c
-> @@ -236,7 +236,7 @@ int main(int argc, char **argv)
->  	}
->  
->  	if (ioctl(fd, FITRIM, opts->range)) {
-> -		fprintf(stderr, "%s: FSTRIM: %s\n", program_name,
-> +		fprintf(stderr, "%s: FITRIM %s\n", program_name,
->  			strerror(errno));
->  		goto free_opts;
->  	}
-> 
-
+diff --git a/fs/xfs/linux-2.6/xfs_iops.c b/fs/xfs/linux-2.6/xfs_iops.c
+index dd21784..01b354d 100644
+--- a/fs/xfs/linux-2.6/xfs_iops.c
++++ b/fs/xfs/linux-2.6/xfs_iops.c
+@@ -46,6 +46,7 @@
+ #include <linux/namei.h>
+ #include <linux/posix_acl.h>
+ #include <linux/security.h>
++#include <linux/evm.h>
+ #include <linux/fiemap.h>
+ #include <linux/slab.h>
+ 
+@@ -106,23 +107,33 @@ xfs_init_security(
+ 	const struct qstr *qstr)
+ {
+ 	struct xfs_inode *ip = XFS_I(inode);
+-	size_t		length;
+-	void		*value;
+-	unsigned char	*name;
++	struct xattr lsm_xattr;
++	struct xattr evm_xattr;
+ 	int		error;
+ 
+-	error = security_inode_init_security(inode, dir, qstr, (char **)&name,
+-					     &value, &length);
++	error = security_inode_init_security(inode, dir, qstr, &lsm_xattr.name,
++					     &lsm_xattr.value,
++					     &lsm_xattr.value_len);
+ 	if (error) {
+ 		if (error == -EOPNOTSUPP)
+ 			return 0;
+ 		return -error;
+ 	}
+ 
+-	error = xfs_attr_set(ip, name, value, length, ATTR_SECURE);
++	error = xfs_attr_set(ip, lsm_xattr.name, lsm_xattr.value,
++			     lsm_xattr.value_len, ATTR_SECURE);
++	if (error)
++		goto out;
+ 
+-	kfree(name);
+-	kfree(value);
++	error = evm_inode_post_init_security(inode, &lsm_xattr, &evm_xattr);
++	if (error)
++		goto out;
++	error = xfs_attr_set(ip, evm_xattr.name, evm_xattr.value,
++			     evm_xattr.value_len, ATTR_SECURE);
++	kfree(evm_xattr.value);
++out:
++	kfree(lsm_xattr.name);
++	kfree(lsm_xattr.value);
+ 	return error;
+ }
+ 
 -- 
+1.7.3.4
 
 _______________________________________________
 xfs mailing list
