@@ -1,24 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4HF1HZ2189422 for <xfs@oss.sgi.com>; Tue, 17 May 2011 10:01:17 -0500
-Received: from mail-ey0-f181.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A866245DABC
-	for <xfs@oss.sgi.com>; Tue, 17 May 2011 08:01:16 -0700 (PDT)
-Received: from mail-ey0-f181.google.com (mail-ey0-f181.google.com
-	[209.85.215.181]) by cuda.sgi.com with ESMTP id
-	iCslprKreAOCW6Nd for <xfs@oss.sgi.com>;
-	Tue, 17 May 2011 08:01:16 -0700 (PDT)
-Received: by eyh5 with SMTP id 5so178596eyh.26
-	for <xfs@oss.sgi.com>; Tue, 17 May 2011 08:01:15 -0700 (PDT)
+	p4HFoLMc190676 for <xfs@oss.sgi.com>; Tue, 17 May 2011 10:50:22 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 855D0CC790F
+	for <xfs@oss.sgi.com>; Tue, 17 May 2011 08:50:20 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [18.85.46.34])
+	by cuda.sgi.com with ESMTP id XqSJlgPnpwGbtp4u for
+	<xfs@oss.sgi.com>; Tue, 17 May 2011 08:50:20 -0700 (PDT)
+Date: Tue, 17 May 2011 11:50:19 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: system hangs 2.6.39-rc7 xfs related
+Message-ID: <20110517155018.GB17735@infradead.org>
+References: <87ei3y7aei.fsf@sycorax.lbl.gov>
 MIME-Version: 1.0
-In-Reply-To: <4DD286E5.8090105@redhat.com>
-References: <BANLkTimQW+kyqjmzpAHH_W5x2v1EWW2AZA@mail.gmail.com>
-	<4DD286E5.8090105@redhat.com>
-Date: Tue, 17 May 2011 18:01:14 +0300
-Message-ID: <BANLkTi=pZS6sTjS61UmpbOsj+vF+ithVvw@mail.gmail.com>
-Subject: Re: xfstests: device busy when umount
-From: Amir Goldstein <amir73il@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <87ei3y7aei.fsf@sycorax.lbl.gov>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,41 +24,20 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: Ext4 Developers List <linux-ext4@vger.kernel.org>, Yongqiang Yang <xiaoqiangnk@gmail.com>, xfs-oss <xfs@oss.sgi.com>
+To: Alex Romosan <romosan@sycorax.lbl.gov>
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Tue, May 17, 2011 at 5:32 PM, Eric Sandeen <sandeen@redhat.com> wrote:
-> On 5/17/11 4:03 AM, Yongqiang Yang wrote:
->> Hi,
->>
->> I noticed that all tests which contain 'device busy' errors have
->> falloc operations. =A0Does the error have something to do with falloc?
->>
->
-> cc'ing xfs list since xfs devs maintain xfstests.
->
-> What tests have "device busy" errors? =A0What do the usual investigative
-> steps such as "lsof" and "fuser" tell you when this happens?
+On Mon, May 16, 2011 at 11:44:37AM -0700, Alex Romosan wrote:
+> my system just sort of locked up and everything that's trying to write
+> to disk is stuck. dmesg gives me this:
 
-I tried running lsof | grep $TEST_DIR before umount
-and I tried sleep 1 before umount and it didn't yield anything.
-
->
-> Are there loop devices that didn't get cleaned up, or processes that
-> have not terminated?
->
-> What tests have these problems?
-
-for me 124 always fails to umount, and 198 and 213 sometimes fails to umoun=
-t.
-
->
-> -Eric
->
+This looks quite similar to a few other XFS issues in the .39 cycle.
+Can you upgrade to latest Linus HEAD which has fixes for these similar
+issues and see if that fixes your issues?
 
 _______________________________________________
 xfs mailing list
