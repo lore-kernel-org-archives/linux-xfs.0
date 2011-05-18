@@ -1,27 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4IKwp0T260840 for <xfs@oss.sgi.com>; Wed, 18 May 2011 15:58:51 -0500
+	p4IKwkRL260806 for <xfs@oss.sgi.com>; Wed, 18 May 2011 15:58:46 -0500
 Received: from e4.ny.us.ibm.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E5C461652A6F
-	for <xfs@oss.sgi.com>; Wed, 18 May 2011 13:58:49 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E7C1F467A48
+	for <xfs@oss.sgi.com>; Wed, 18 May 2011 13:58:45 -0700 (PDT)
 Received: from e4.ny.us.ibm.com (e4.ny.us.ibm.com [32.97.182.144]) by
-	cuda.sgi.com with ESMTP id TRLoFYarOM67aSoD for
-	<xfs@oss.sgi.com>; Wed, 18 May 2011 13:58:49 -0700 (PDT)
-Received: from d01relay01.pok.ibm.com (d01relay01.pok.ibm.com [9.56.227.233])
-	by e4.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p4IKbumL024399
-	for <xfs@oss.sgi.com>; Wed, 18 May 2011 16:37:56 -0400
+	cuda.sgi.com with ESMTP id SXrGJxFNATFnHK9v for
+	<xfs@oss.sgi.com>; Wed, 18 May 2011 13:58:45 -0700 (PDT)
+Received: from d01relay03.pok.ibm.com (d01relay03.pok.ibm.com [9.56.227.235])
+	by e4.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p4IKbq2j024300
+	for <xfs@oss.sgi.com>; Wed, 18 May 2011 16:37:52 -0400
 Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
-	by d01relay01.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	p4IKwmRO123198 for <xfs@oss.sgi.com>; Wed, 18 May 2011 16:58:48 -0400
+	by d01relay03.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	p4IKwhvu114308 for <xfs@oss.sgi.com>; Wed, 18 May 2011 16:58:44 -0400
 Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
 	by d01av01.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
-	p4IKwmN0004539 for <xfs@oss.sgi.com>; Wed, 18 May 2011 16:58:48 -0400
-Message-ID: <4DD43305.7090508@linux.vnet.ibm.com>
-Date: Wed, 18 May 2011 13:58:45 -0700
+	p4IKwhFY004127 for <xfs@oss.sgi.com>; Wed, 18 May 2011 16:58:43 -0400
+Message-ID: <4DD43300.6010908@linux.vnet.ibm.com>
+Date: Wed, 18 May 2011 13:58:40 -0700
 From: Allison Henderson <achender@linux.vnet.ibm.com>
 MIME-Version: 1.0
-Subject: [XFS Tests Punch Hole 3/3 v3] XFS TESTS: Add Fallocate Punch Hole Test
+Subject: [XFS Tests Punch Hole 2/3 v3] XFS TESTS: Add Fallocate Punch Hole
+	Test Routines
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,363 +36,422 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs-oss <xfs@oss.sgi.com>, Ext4 Developers List <linux-ext4@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
-Cc: Eric Sandeen <sandeen@redhat.com>, Theodore Tso <tytso@mit.edu>
+Cc: Eric Sandeen <sandeen@redhat.com>
 
-This patch adds punch hole tests that are based off the test scripts that were 
-used to test and develop punch hole for ext4.  The tests use the new common 
-routines in common.punch to run through various corners cases for punching holes.  
+This patch adds low level routines to common.punch
+for populating test files and punching holes in them using
+fallocate.  When a hole is punched, file is then analyzed to
+verify that the hole was punched correctly.  These routines will
+be used to test various corner cases in the new fallocate
+punch hole tests.
 
 Signed-off-by: Allison Henderson <achender@us.ibm.com>
 ---
-:000000 100755 0000000... 32e8224... A	254
-:000000 100644 0000000... 020e6da... A	254.out
-:100644 100644 9f88e75... 29954dc... M	group
- 254     |  293 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 254.out |   27 ++++++
- group   |    1 +
- 3 files changed, 321 insertions(+), 0 deletions(-)
+:100644 100644 e2da5d8... 778389a... M	common.punch
+ common.punch |  393 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 393 insertions(+), 0 deletions(-)
 
-diff --git a/254 b/254
-new file mode 100755
-index 0000000..32e8224
---- /dev/null
-+++ b/254
-@@ -0,0 +1,293 @@
-+#! /bin/bash
-+# FS QA Test No. 254
-+#
-+# Test hole punching through fallocate
-+#
-+# This test is a collection of corner case tests for
-+# hole punching through fallocate
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2010 IBM Corporation. All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#
-+#-----------------------------------------------------------------------
-+#
-+# creator
-+owner=achender@us.ibm.com
+diff --git a/common.punch b/common.punch
+index e2da5d8..778389a 100644
+--- a/common.punch
++++ b/common.punch
+@@ -377,3 +377,396 @@ _test_generic_punch()
+ 		-c "$map_cmd -v" $testfile | $filter_cmd
+ 	[ $? -ne 0 ] && die_now
+ }
 +
-+seq=`basename $0`
-+echo "QA output created by $seq"
 +
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
++#_fill_file()
++#
++#Fills a file with the given byte value up to the
++#given number of bytes.
++#
++# $1: The name of the file to fill
++# $2: The byte value to fill the file with
++# $3: The number of bytes to put in the file
++# $4: The block size used when copying in 
++#     "block" sized chunks of data
++_fill_file() {
++	local file_to_fill=$1
++	local byte_value=$2
++	local number_of_bytes=$3
++	local blk_size=$4
++	
++	remaining_bytes=$number_of_bytes
++	blk=""
 +
-+_cleanup()
-+{
-+    rm -f $tmp.*
++	for (( i=0; i<blk_size; i++ ))
++	do
++		blk=$blk$byte_value
++	done
++
++	while [ $remaining_bytes -ge $blk_size ]
++	do
++		printf "$blk" >> $file_to_fill
++		remaining_bytes=$(($remaining_bytes - $blk_size))
++	done
++
++	for (( i=0; i<$remaining_bytes; i++ ))
++	do
++		printf "$byte_value" >> $file_to_fill
++	done
++	
++
 +}
 +
-+trap "_cleanup ; exit \$status" 0 1 2 3 15
-+
-+# get standard environment, filters and checks
-+. ./common.rc
-+. ./common.filter
-+. ./common.punch
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
-+
-+_require_xfs_io_falloc_punch
-+
-+testfile=$TEST_DIR/254.$$
-+
-+# Small Hole Test
++# _hole_test()
 +#
-+# In this test a hole is punched in a 10K file from bytes 
-+# 8180 to 16216 resulting in some blocks being removed, and 
-+# the non block aligned data to be cleared.  
++# Punches a hole in the test file.
++# The hole is the checked to make sure the correct number
++# of blocks are released and the associated extents are 
++# removed
 +#
-+# This test is a general purpose punch hole test to verify 
-+# that the code can successfully split the extents, and 
-+# remove the affected blocks, as well as clearing the 
-+# associated pages
-+#----------------------------------------------------------------------
-+echo Running Small Hole Test
-+file_len=40960
-+hole_offset=8180
-+hole_len=8180
-+_hole_test -s -c $file_len $testfile $hole_offset $hole_len
-+echo Small Hole Test OK
-+
-+# Big Hole and Hole Removal Test
-+#
-+# A hole large hole is punched in a large file,
-+# Resulting in all but a few blocks being punched out
-+# (exact number depends on the block size of the filesystem).
-+# After the hole is punched out, the file is deleted
-+#
-+# This verifies that the code can properly
-+# punch out a hole covering multiple extents, and
-+# also ensure the all of the extents are properly
-+# removed when the file is deleted.
++# Usage: _hole_test [options] file_name hole_offset hole_length
++# Options:
++#    -c <length> Create a file of the given length full of data to punch a hole in
++#    -p <length> Preallocate a file to the given length to punch a hole in
++#    -s          Sync the file before punching the hole
++#    -m          Remount the device before punching the hole
 +#
 +# This test is successful when the following conditions are met:
-+# - df shows that the number of available blocks is the same before the test file is copied 
-+#  into the file system, and after the file is deleted
-+#----------------------------------------------------------------------
-+echo Running Big Hole and Hole Removal Test
-+file_len=638162710
-+hole_offset=6144
-+hole_len=638150422
++#  - ls shows that the number of blocks occupied by the file
++#    has decreased by the number of blocks punched out.
++#  - df shows number of available blocks has increased by the number
++#    of blocks punched out
++#  - File frag shows that the blocks punched out are absent from
++#    the extents
++#  - The test file contains zeros where the hole should be
++# 
++_hole_test() {
 +
-+block_size=`stat -f $TEST_DEV | grep "Block size" | cut -d " " -f3`
++	err=0
++	sflag=
++	mflag=
++	pflag=
++	cflag=
++	lflag=
++	oflag=
++	OPTIND=1
++	while getopts 'smc:p:' OPTION
++	do
++		case $OPTION in
++		s)	sflag=1
++		;;
++		m)	mflag=1
++		;;
++		p)	pflag="$OPTARG"
++		;;
++		c)	cflag="$OPTARG"
++		;;
++		?)	echo Invalid flag
++		echo "Usage: $(basename $0): [options]  file_name hole_offset hole_length" >&2
++		echo "Options:" >&2
++		echo "-c <length> Create a file of the given length full of data to punch a hole in" >&2
++		echo "-p <length> Preallocate a file to the given length to punch a hole in" >&2
++		echo "-s          Sync the file before punching the hole" >&2
++		echo "-m          Remount the device before punching the hole"
++		exit 1
++		;;
++		esac
++	done
++	shift $(($OPTIND - 1))
 +
-+rm $testfile*
++	local file_name=$1
++	local hole_offset=$2
++	local hole_length=$3
++	local hole_offset_orig=$hole_offset
++	local hole_length_orig=$hole_length
 +
-+#record how many blocks free blocks the filesystem has
-+fs_used_before_test=`df --block-size=$block_size $TEST_DEV | grep $TEST_DEV | awk '{ print $3 }'`
-+fs_avail_before_test=`df --block-size=$block_size $TEST_DEV | grep $TEST_DEV | awk '{ print $4 }'`
++	if [ "$cflag" ]; then
++		local file_length=$cflag
++	elif [ "$pflag" ]; then
++		local file_length=$pflag
++	else
++		local file_length=`ls -ls $file_name | cut -d ' ' -f6`
++	fi
 +
-+_hole_test -s -c $file_len $testfile $hole_offset $hole_len
-+rm $testfile*
++	# If the hole to punch out extends off the edge of the file, 
++	# then we need to expect a smaller hole to be punched
++	if [ $hole_offset -ge $file_length ]; then
++		local hole_length=0
++		local hole_offset=$file_length
++	elif [ $(($hole_offset + $hole_length)) -gt $file_length ]; then
++		local hole_length=$(($file_length - $hole_offset))
++	fi
 +
-+#record how many blocks free blocks the filesystem has after the test
-+fs_used_after_test=`df --block-size=$block_size $TEST_DEV | grep $TEST_DEV | awk '{ print $3 }'`
-+fs_avail_after_test=`df --block-size=$block_size $TEST_DEV | grep $TEST_DEV | awk '{ print $4 }'`
++	# locations to store hexdumps must not be in the filesystem
++	# or it will skew the results.  When we measure used
++	# available blocks. Also, there may not be enough
++	# room to store them in the fs during ENOSPC tests
++	# So store the dumps in the cwd by stripping the path
++	expected=`echo $file_name.hexdump.expected | sed 's/.*\///'`
++	result=`echo $file_name.hexdump.result | sed 's/.*\///'`
 +
-+if [ $fs_used_before_test != $fs_used_after_test ] || \
-+   [ $fs_avail_before_test != $fs_avail_after_test ]; then
++	#calculate the end points of the hole in blocks
++	local block_size=`stat -f $TEST_DEV | grep "Block size" | cut -d " " -f3`
++	local hole_first_blk=$(( $hole_offset / $block_size ))
++	if [ $(($hole_offset % $block_size)) != 0 ]
++	then
++		local hole_first_blk=$(( $hole_first_blk + 1 ))
++	fi
 +
-+	echo Error: File system did not reclaim the correct number of blocks
-+	echo The number of used and available blocks should be the same before and after the test
-+	echo Used blocks before test: $fs_used_before_test
-+	echo Available blocks before test: $fs_avail_before_test
-+	echo Used blocks after test: $fs_used_after_test
-+	echo Available blocks after test: $fs_avail_after_test
-+	status=1 ; exit
-+else
-+	echo Big Hole and Hole Removal Test OK
-+fi
++	local hole_last_blk=$(( ($hole_offset + $hole_length) / $block_size ))
 +
-+# Last Block Hole Test
-+#
-+# This test cases punches a hole in 10K file from bytes 32768 to 40960 
-+# resulting in a hole that extends to the end of the file.  This test 
-+# verifies that the code appropriately handles removing blocks at the 
-+# end of the file
-+#----------------------------------------------------------------------
-+echo Running Last Block Hole Test
-+file_len=40960
-+hole_offset=32768
-+hole_len=8192
-+_hole_test -s -c $file_len $testfile $hole_offset $hole_len
-+echo Last Block Hole Test OK
++	#calculate the length of the hole in blocks
++	if [ $hole_first_blk -gt $hole_last_blk ]
++	then
++		local hole_length_block=0
++	else
++		local hole_length_block=$(( $hole_last_blk - $hole_first_blk ))
++	fi
 +
-+# First Block Hole Test
-+#
-+# This test cases punches a hole in 10K file from bytes 0 to 8180 
-+# This test verifies that the code appropriately handles punching
-+# holes appearing at the beginning of the file.
-+#----------------------------------------------------------------------
-+echo Running First Block Hole Test
-+file_len=40960
-+hole_offset=0
-+hole_len=8180
-+_hole_test -s -c $file_len $testfile $hole_offset $hole_len
-+echo First Block Hole Test OK
++	#record how many blocks free blocks the filesystem has
++	local fs_used_before=`df --block-size=$block_size $TEST_DEV | grep $TEST_DEV | awk '{ print $3 }'`
++	local fs_avail_before=`df --block-size=$block_size $TEST_DEV | grep $TEST_DEV | awk '{ print $4 }'`
 +
-+# Cold Cache Hole Test
-+#
-+# This test is similar to the Small Hole Test, but the drive is 
-+# unmounted and remounted before the hole is punched out to make 
-+# sure that there are no pages in the cache. This test verifies
-+# that the hole contains zeros even when the pages are cold.
-+#----------------------------------------------------------------------
-+echo Running Cold Cache Hole Test
-+file_len=40960
-+hole_offset=8180
-+hole_len=8180
-+_hole_test -m -s -c $file_len $testfile $hole_offset $hole_len
-+echo Cold Cache Hole Test OK
++	rm $expected &> /dev/null
++	rm $result &> /dev/null
++	local total_hole_overlap=0
 +
-+# Extended Last Block Hole Test
-+#
-+# This test cases punches a hole in 10K file from bytes 32768 to 45056
-+# resulting in a hole that extends beyond the end of the file.  This 
-+# test verifies that the code appropriately handles punching holes 
-+# that extend beyond the end of the file
-+#----------------------------------------------------------------------
-+echo Running Last Block Hole Test
-+file_len=40960
-+hole_offset=32768
-+hole_len=12288
-+_hole_test -s -c $file_len $testfile $hole_offset $hole_len
-+echo Last Block Hole Test OK
++	#if we are preallocating, then just fallocate the file
++	if [ "$pflag" ]; then
++		rm $file_name &> /dev/null
 +
-+# Off Edge Hole Test
-+#
-+# This test case punches a hole that is beyond the edge of the file.
-+# This test is successful when ls, df, filefrag and the file contents 
-+# show no changes
-+#----------------------------------------------------------------------
-+echo Running Off Edge Hole Test
-+file_len=40960
-+hole_offset=49052
-+hole_len=8180
-+_hole_test -s -c $file_len $testfile $hole_offset $hole_len
-+echo Off Edge Hole Test OK
++		fallocate -o 0 -l $file_length $file_name
 +
-+# One Block Hole Test
-+#
-+# This test punches a hole in a file that is only one block in size 
-+#----------------------------------------------------------------------
-+echo Running One Block Hole Test
-+block_size=`stat -f $TEST_DEV | grep "Block size" | cut -d " " -f3`
-+file_len=$block_size
-+hole_offset=$(( $block_size / 4 ))
-+hole_len=$(( $hole_offset * 2 ))
-+_hole_test -s -c $file_len $testfile $hole_offset $hole_len
-+echo One Block Hole Test OK
++		#get the hexdump, this is what the punch hole should look like
++		hexdump -C $file_name > $expected
 +
-+# Delayed Allocation Hole Test
-+#
-+# This test is similar to the Small Hole Test, but the file is not sync'd 
-+# to the disk before the hole is punched out. This will test the codes 
-+# ability to punch holes in delayed extents and also ensure that dirty
-+# pages are zero'd properly
-+#----------------------------------------------------------------------
-+echo Running Delayed Allocation Hole Test
-+file_len=40960
-+hole_offset=8180
-+hole_len=8180
-+_hole_test -c $file_len $testfile $hole_offset $hole_len
-+echo Delayed Allocation Hole Test OK
++	#else if createing the file, manually construct the file
++	elif [ "$cflag" ]; then
++		rm $file_name &> /dev/null
++		#create a file full of data with zeros in the middle
++		
++		#Fill in head of file
++		_fill_file $file_name "\xFF" $hole_offset $block_size
 +
-+# Pre Allocation Hole Test
-+#
-+# This test is similar to the Small Hole Test, but the file is 
-+# preallocated before the hole is punched out.
-+#----------------------------------------------------------------------
-+echo Running Pre Allocation Hole Test
-+file_len=40960
-+hole_offset=8180
-+hole_len=8180
-+_hole_test -p $file_len $testfile $hole_offset $hole_len
-+echo Pre Allocation Hole Test OK
++		#Fill in hole with zeros
++		if [ $hole_length -gt 0 ]; then
++			(dd if=/dev/zero of=$file_name obs=1 ibs=1 seek=$(($hole_offset + $hole_length - 1)) \
++			count=1 conv=notrunc) &> /dev/null
++		fi
 +
-+# Multi Hole Test
-+#
-+# This test verifies the code ability to handle existing holes
-+# The test punches out 5 consecutive overlapping holes in a 10K file
-+#----------------------------------------------------------------------
-+echo Running Multi Hole Test
-+file_len=40960
-+hole_offset=8192
-+hole_len=8192
++		#Fill in tail of file
++		_fill_file $file_name "\xFF" $(( $file_length - $hole_offset - $hole_length )) $block_size
 +
-+_hole_test -c $file_len $testfile $hole_offset $hole_len 
++		#get the hexdump, this is what the punch hole should look like
++		hexdump -C $file_name > $expected
 +
-+hole_offset=8192
-+hole_len=8192
-+_hole_test $testfile $hole_offset $hole_len 
++		#refill the file
++		rm $file_name
++		_fill_file $file_name "\xFF" $file_length $block_size
 +
-+hole_offset=8180
-+hole_len=8192
-+_hole_test $testfile $hole_offset $hole_len
++	#else we are punching a hole in an existing file
++	else
 +
-+hole_offset=8204
-+hole_len=8192
-+_hole_test $testfile $hole_offset $hole_len
++		local tmp_file=`echo $file_name.tmp | sed 's/.*\///'`
 +
-+hole_offset=12288
-+hole_len=12288
-+_hole_test $testfile $hole_offset $hole_len
++		#make a back up of the test file
++		cp $file_name $tmp_file
 +
-+echo Multi Hole Test OK
++		#Fill in hole with zeros
++		if [ $hole_length -gt 0 ]; then
++			(dd if=/dev/zero of=$tmp_file obs=1 ibs=1 seek=$(($hole_offset)) \
++			count=$hole_length conv=notrunc) &> /dev/null
++		fi
 +
++		#get the hexdump, this is what the punch hole should look like
++		hexdump -C $tmp_file > $expected
++		rm $tmp_file
 +
-+# Multi Hole Test Front
-+#
-+# This test verifies the codes ability to handle existing holes
-+# at the front of the file.
-+#----------------------------------------------------------------------
-+echo Running Multi Hole Test Front
-+file_len=40960
-+hole_offset=0
-+hole_len=8192
-+_hole_test -s -c $file_len $testfile $hole_offset $hole_len 
-+_hole_test $testfile $hole_offset $hole_len 
-+echo Multi Hole Test Front OK
++		# Now we need to check for existing holes
++		# Holes that are already punched out will need to be subtracted from the
++		# total blocks expected to be punched out
++		# Walk over the extents, to find existing holes.
++		if [ $hole_length_block -gt 0 ]; then
++			IFS="
++"
++			local prev_logical_blk=0
++			local prev_ext_len=0
++			local prev_last_logical_blk=0
++			extents=`filefrag -v $file_name | sed '1,3d' | sed '$d'`
++			for extent in $extents
++			do
++				#extract info from extent
++				ext_num=`echo $extent | cut -c1-4 | tr -d " "`
++				logical_blk=`echo $extent | cut -c5-12 | tr -d " "`
++				phys_blk=`echo $extent | cut -c13-21 | tr -d " "`
++				expct_phys_blk=`echo $extent | cut -c22-30 | tr -d " "`
++				ext_len=`echo $extent | cut -c31-37 | tr -d " "`
++				ext_flags=`echo $extent | cut -c38- | tr -d " "`
++				last_logical_blk=$(( $logical_blk + $ext_len ))
 +
++				#calculate the space between this extent and the last
++				existing_hole_start=$prev_last_logical_blk
++				existing_hole_len=$(( $logical_blk - $prev_last_logical_blk ))
++				existing_hole_end=$(( $existing_hole_start + $existing_hole_len ))
++				hole_overlap=0;
 +
-+# Multi Hole Test Delayed
-+#
-+# This test verifies the code ability to handle existing holes 
-+# in delayed blocks. This test is similar to the Delayed Allocation 
-+# Hole Test, but the hole is punched twice
-+#----------------------------------------------------------------------
-+echo Running Multi Hole Test Delayed
-+file_len=40960
-+hole_offset=8180
-+hole_len=8180
-+_hole_test -s -p $file_len $testfile $hole_offset $hole_len 
-+_hole_test $testfile $hole_offset $hole_len 
-+echo Multi Hole Test Delayed OK
++				#if there is a hole, check to see if it intersects with the new hole
++				if [ $existing_hole_len -gt 0 ]; then
++					if [[ $hole_first_blk -le $existing_hole_start && \
++						$existing_hole_start -lt $hole_last_blk ]]; then
 +
-+status=0 ; exit
++						if [[ $hole_first_blk -lt $existing_hole_end && \
++							$existing_hole_end -le $hole_last_blk ]] ;then
++
++							#The new hole contains an old hole
++							hole_overlap=$existing_hole_len;
++						else
++							#The new hole contains the start of an old hole
++							hole_overlap=$(( $hole_last_blk - $existing_hole_start ))
++						fi
++
++					elif [[ $hole_first_blk -lt $existing_hole_end && \
++						$existing_hole_end -le $hole_last_blk ]]; then
++
++						#The new hole contains the tail of an old hole
++						hole_overlap=$(( $existing_hole_end - $hole_first_blk ))
++
++					elif [[ $existing_hole_start -le $hole_first_blk && \
++						$hole_first_blk -lt $existing_hole_end ]] && \
++					     [[ $existing_hole_start -lt $hole_last_blk && \
++						$hole_last_blk -le $existing_hole_end ]]; then
++
++						#The old hole contains the new hole
++						hole_overlap=$hole_length_block
++
++					fi
++
++				fi
++
++				#tally up the total number of already punched out blocks
++				total_hole_overlap=$(( $total_hole_overlap + $hole_overlap ))
++
++				prev_logical_blk=$logical_blk
++				prev_ext_len=$ext_len
++				prev_last_logical_blk=$last_logical_blk
++			done
++		fi
 +
 +
++	fi
 +
-diff --git a/254.out b/254.out
-new file mode 100644
-index 0000000..020e6da
---- /dev/null
-+++ b/254.out
-@@ -0,0 +1,27 @@
-+QA output created by 254
-+Running Small Hole Test
-+Small Hole Test OK
-+Running Big Hole and Hole Removal Test
-+Big Hole and Hole Removal Test OK
-+Running Last Block Hole Test
-+Last Block Hole Test OK
-+Running First Block Hole Test
-+First Block Hole Test OK
-+Running Cold Cache Hole Test
-+Cold Cache Hole Test OK
-+Running Last Block Hole Test
-+Last Block Hole Test OK
-+Running Off Edge Hole Test
-+Off Edge Hole Test OK
-+Running One Block Hole Test
-+One Block Hole Test OK
-+Running Delayed Allocation Hole Test
-+Delayed Allocation Hole Test OK
-+Running Pre Allocation Hole Test
-+Pre Allocation Hole Test OK
-+Running Multi Hole Test
-+Multi Hole Test OK
-+Running Multi Hole Test Front
-+Multi Hole Test Front OK
-+Running Multi Hole Test Delayed
-+Multi Hole Test Delayed OK
-diff --git a/group b/group
-index 9f88e75..29954dc 100644
---- a/group
-+++ b/group
-@@ -367,3 +367,4 @@ deprecated
- 251 ioctl trim
- 252 auto quick prealloc
- 253 auto quick
-+254 other
++	if [ "$sflag" ]
++	then
++		sync
++	fi
++
++
++	if [ "$mflag" ]
++	then
++		umount $TEST_DEV
++		mount $TEST_DEV $TEST_DIR
++	fi
++
++	#record how many blocks free blocks the filesystem has
++	local fs_used_before=`df --block-size=$block_size $TEST_DEV | grep $TEST_DEV | awk '{ print $3 }'`
++	local fs_avail_before=`df --block-size=$block_size $TEST_DEV | grep $TEST_DEV | awk '{ print $4 }'`
++	local file_used_before=`ls -ls --block-size=$block_size $file_name | cut -d " " -f1`
++
++	#punch the hole
++	$XFS_IO_PROG -F -f -c "fpunch $hole_offset_orig $hole_length_orig " $file_name
++
++	#get the results
++	local fs_used_after=`df --block-size=$block_size $TEST_DEV | grep $TEST_DEV | awk '{ print $3 }'`
++	local fs_avail_after=`df --block-size=$block_size $TEST_DEV | grep $TEST_DEV | awk '{ print $4 }'`
++	local file_used_after=`ls -ls --block-size=$block_size $file_name | cut -d " " -f1`
++	hexdump -C $file_name > $result #this must be collected last or it will skew the results
++
++
++	# verify results
++	#------------------------------------
++
++	# Does the file contain zeros where it should?
++	diff $expected $result
++	if [ "$?" -ne "0" ]; then
++		echo Punch hole failed: Expected file and resulting file differ 
++		echo Check $expected vs $result
++		err=1
++	fi
++
++	# Has the number of used filesystem blocks decreased by the size of the hole?
++	if [ $(($fs_used_before - $fs_used_after)) != $(($hole_length_block - $total_hole_overlap)) ]; then
++		echo Punch hole failed: Filesystem shows an incorrect number of used blocks
++		echo Used blocks before: $fs_used_before
++		echo Used blocks after:  $fs_used_after
++		echo Hole Length: $hole_length_block
++		echo Blocks already punched out: $total_hole_overlap
++		echo Total blocks that should be punched out from this hole: $hole_length_block
++		err=1
++	fi
++
++	# Has the number of free filesystem blocks increased by the size of the hole?
++	if [ $(($fs_avail_after - $fs_avail_before)) != $(($hole_length_block - $total_hole_overlap)) ]; then
++		echo Punch hole failed: Filesystem shows an incorrect number of available blocks
++		echo Available blocks before: $fs_avail_before
++		echo Available blocks after:  $fs_avail_after
++		echo Hole Length: $hole_length_block
++		echo Blocks already punched out: $total_hole_overlap
++		echo Total blocks that should be punched out from this hole: $hole_length_block
++		err=1
++	fi
++
++	# Has the number of blocks the file occupies decreased by the size of the hole?
++	if [ $(($file_used_before - $file_used_after)) != $(($hole_length_block - $total_hole_overlap)) ]; then
++		echo Punch hole failed: File shows an incorrect number of used blocks
++		echo Used blocks before: $file_used_before
++		echo Used blocks after:  $file_used_after
++		echo Hole Length: $hole_length_block
++		echo Blocks already punched out: $total_hole_overlap
++		echo Total blocks that should be punched out from this hole: $hole_length_block
++		err=1
++	fi
++
++
++	#Check the file extents.  There should be no extent present where the hole is
++	if [ $hole_length_block -gt 0 ]; then
++		IFS="
++"
++
++		extents=`filefrag -v $file_name | sed '1,3d' | sed '$d'`
++		for extent in $extents 
++		do
++			ext_num=`echo $extent | cut -c1-4 | tr -d " "`
++			logical_blk=`echo $extent | cut -c5-12 | tr -d " "`
++			phys_blk=`echo $extent | cut -c13-21 | tr -d " "`
++			expct_phys_blk=`echo $extent | cut -c22-30 | tr -d " "`
++			ext_len=`echo $extent | cut -c31-37 | tr -d " "`
++			ext_flags=`echo $extent | cut -c38- | tr -d " "`
++			last_logical_blk=$(( $logical_blk + $ext_len ))
++
++			#check to see if the extent intersects with the hole
++			if	[[ $hole_first_blk -le $logical_blk && $logical_blk -lt $hole_last_blk ]] || \
++				[[ $hole_first_blk -lt $last_logical_blk && $last_logical_blk -le $hole_last_blk ]] || \
++				[[ $logical_blk -le $hole_first_blk && $hole_first_blk -lt $last_logical_blk ]] || \
++				[[ $logical_blk -lt $hole_last_blk && $hole_last_blk -le $last_logical_blk ]]
++			then
++
++				echo File fragmentation shows extents that should have been punched out
++				filefrag -v $file_name
++				echo Bad extent: $extent
++				echo Hole Start Block: $hole_first_blk End Block:$hole_last_blk Length:$hole_length_block
++				err=1	
++			fi
++		done
++	fi
++
++	if [ $err -gt 0 ]; then
++		echo Hole Punch Test Failed
++		status=1
++		exit $err
++	else
++		rm $expected
++		rm $result
++	fi
++
++}
++
 -- 
 1.7.1
 
