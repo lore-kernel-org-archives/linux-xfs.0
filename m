@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4J0ghE9005773 for <xfs@oss.sgi.com>; Wed, 18 May 2011 19:42:43 -0500
-Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1089FCE430F
-	for <xfs@oss.sgi.com>; Wed, 18 May 2011 17:42:41 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	wVC7dXuZa7eAF4I7 for <xfs@oss.sgi.com>;
-	Wed, 18 May 2011 17:42:41 -0700 (PDT)
-Date: Thu, 19 May 2011 10:42:38 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [XFS Tests Punch Hole 1/3 v3] XFS TESTS: Add Punch Hole to FSX
-Message-ID: <20110519004238.GE32466@dastard>
-References: <4DD432FC.5030904@linux.vnet.ibm.com>
+	p4J1gfDC008796 for <xfs@oss.sgi.com>; Wed, 18 May 2011 20:42:49 -0500
+Received: from ZenIV.linux.org.uk (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C4F10CE4E83
+	for <xfs@oss.sgi.com>; Wed, 18 May 2011 18:42:40 -0700 (PDT)
+Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [195.92.253.2]) by
+	cuda.sgi.com with ESMTP id TUSfq7UOqCIGCSG1 for
+	<xfs@oss.sgi.com>; Wed, 18 May 2011 18:42:40 -0700 (PDT)
+Date: Wed, 18 May 2011 18:41:51 -0700
+From: Joel Becker <jlbec@evilplan.org>
+Subject: Re: [XFS Tests Punch Hole 2/3 v3] XFS TESTS: Add Fallocate Punch
+	Hole Test Routines
+Message-ID: <20110519014149.GA11278@noexit.corp.google.com>
+References: <4DD43300.6010908@linux.vnet.ibm.com>
+	<20110519013144.GF32466@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4DD432FC.5030904@linux.vnet.ibm.com>
+In-Reply-To: <20110519013144.GF32466@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,137 +30,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Allison Henderson <achender@linux.vnet.ibm.com>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>, Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>, Eric Sandeen <sandeen@redhat.com>, Allison Henderson <achender@linux.vnet.ibm.com>
 
-On Wed, May 18, 2011 at 01:58:36PM -0700, Allison Henderson wrote:
-> This patch adds punch hole tests to the fsx
-> stress test. The test is performed through
-> the fallocate call by randomly choosing to
-> use the punch hole flag when running the
-> fallocate test. Regions that have
-> been punched out should contain zeros, so
-> the expected file contents buffer is updated
-> to contain zeros when a hole is punched out.
+On Thu, May 19, 2011 at 11:31:44AM +1000, Dave Chinner wrote:
+> > +#
+> > +# This test is successful when the following conditions are met:
+> > +#  - ls shows that the number of blocks occupied by the file
+> > +#    has decreased by the number of blocks punched out.
 > 
-> Signed-off-by: Allison Henderson <achender@us.ibm.com>
-> ---
-> v0 -> v1:
-> Corrections to the Makefile have been backed out.
-> This patch needs to be applied on top of
-> the "xfstests: clean up fallocate configuration tests"
-> patch
-> 
-> The punch hole tests can be disabled with the
-> -H flag, and will also be disabled if it is
-> detected that the filesystem does not support
-> punch hole
-> 
-> 
-> :100644 100644 fe072d3... 8978ef1... M	ltp/fsx.c
->  ltp/fsx.c |  111 ++++++++++++++++++++++++++++++++++++++++++++++++++++--------
->  1 files changed, 96 insertions(+), 15 deletions(-)
-> 
-> diff --git a/ltp/fsx.c b/ltp/fsx.c
-> index fe072d3..8978ef1 100644
-> --- a/ltp/fsx.c
-> +++ b/ltp/fsx.c
-> @@ -110,6 +110,7 @@ int	randomoplen = 1;		/* -O flag disables it */
->  int	seed = 1;			/* -S flag */
->  int     mapped_writes = 1;              /* -W flag disables */
->  int     fallocate_calls = 1;            /* -F flag disables */
-> +int     punch_hole_calls = 1;           /* -H flag disables */
->  int 	mapped_reads = 1;		/* -R flag disables it */
->  int	fsxgoodfd = 0;
->  int	o_direct;			/* -Z */
-> @@ -207,7 +208,8 @@ logdump(void)
->  {
->  	int	i, count, down;
->  	struct log_entry	*lp;
-> -	char *falloc_type[3] = {"PAST_EOF", "EXTENDING", "INTERIOR"};
-> +	char *falloc_type[4] = {"PAST_EOF", "EXTENDING", "INTERIOR",
-> +				"PUNCH_HOLE"};
->  
->  	prt("LOG DUMP (%d total operations):\n", logcount);
->  	if (logcount < LOGSIZE) {
-> @@ -791,6 +793,11 @@ dofallocate(unsigned offset, unsigned length)
->  {
->  	unsigned end_offset;
->  	int keep_size;
-> +	int max_offset = 0;
-> +	int max_len = 0;
-> +	int mode = 0;
-> +	char *op_name;
-> +	int punch_hole = 0;
->  
->          if (length == 0) {
->                  if (!quiet && testcalls > simulatedopcount)
-> @@ -799,11 +806,37 @@ dofallocate(unsigned offset, unsigned length)
->                  return;
->          }
->  
-> +#ifdef FALLOC_FL_PUNCH_HOLE
-> +	if (fallocate_calls && !punch_hole_calls)
-> +		punch_hole = 0;
-> +	else if (!fallocate_calls && punch_hole_calls)
-> +		punch_hole = 1;
-> +	else
-> +		punch_hole = random() % 2;
-> +
-> +	/* Keep size must be set for punch hole */
-> +	if (punch_hole) {
-> +		keep_size = 1;
-> +		mode = FALLOC_FL_PUNCH_HOLE;
-> +	} else
-> +		keep_size = random() % 2;
-> +#else
->  	keep_size = random() % 2;
-> +#endif
+> There's no guarantee that a filesystem will punch the number of
+> blocks you expect.
 
-Ugh. Can you please separate hole punching out into it's own
-function? i.e. do_fallocate() gets renamed to do_preallocate(), and
-this new functionality goes into do_hole_punch()? The fact that they
-both use the fallocate() system call is no reason for complicating
-the logic like this....
+	Cluster allocated filesystems like ocfs2 are certainly going to
+punch some multiple of clusters, not exact blocks.  Eg if the hole is
+punched in the middle of a cluster.
 
-> @@ -1426,8 +1489,26 @@ main(int argc, char **argv)
->  		if (fallocate(fd, 0, 0, 1) && errno == EOPNOTSUPP) {
->  			warn("main: filesystem does not support fallocate, disabling");
->  			fallocate_calls = 0;
-> -		} else
-> +			/*
-> +			 * punch hole depends on fallocate,
-> +			 * so turn punch hole off too
-> +			 */
-> +			punch_hole_calls = 0;
-> +		} else {
-> +#ifdef FALLOC_FL_PUNCH_HOLE
-> +			if (fallocate(fd,
-> +				FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE,
-> +				0, 1) && errno == EOPNOTSUPP) {
-> +				warn("main: filesystem does not support"
-> +					" fallocate punch hole, disabling");
-> +				punch_hole_calls = 0;
-> +			}
-> +#else
-> +			punch_hole_calls = 0;
-> +#endif
-> +
->  			ftruncate(fd, 0);
-> +		}
->  	}
->  #else /* ! FALLOCATE */
->  	fallocate_calls = 0;
+Joel
 
-And these functionality tests would probably be better in their own
-function, too.
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+
+Life's Little Instruction Book #464
+
+	"Don't miss the magic of the moment by focusing on what's
+	 to come."
+
+			http://www.jlbec.org/
+			jlbec@evilplan.org
 
 _______________________________________________
 xfs mailing list
