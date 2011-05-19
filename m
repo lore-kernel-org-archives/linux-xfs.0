@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4J2fnoM010908 for <xfs@oss.sgi.com>; Wed, 18 May 2011 21:41:49 -0500
-Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5B59DCE4CC6
-	for <xfs@oss.sgi.com>; Wed, 18 May 2011 19:41:46 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	8sGd98mUEwhu5qsA for <xfs@oss.sgi.com>;
-	Wed, 18 May 2011 19:41:46 -0700 (PDT)
-Date: Thu, 19 May 2011 12:41:43 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [XFS Tests Punch Hole 3/3 v3] XFS TESTS: Add Fallocate Punch
-	Hole Test
-Message-ID: <20110519024143.GG32466@dastard>
-References: <4DD43305.7090508@linux.vnet.ibm.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4DD43305.7090508@linux.vnet.ibm.com>
+	p4J7KkLw022988 for <xfs@oss.sgi.com>; Thu, 19 May 2011 02:20:46 -0500
+Received: from mail-px0-f182.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 33CA71B8C1D2
+	for <xfs@oss.sgi.com>; Thu, 19 May 2011 00:20:44 -0700 (PDT)
+Received: from mail-px0-f182.google.com (mail-px0-f182.google.com
+	[209.85.212.182]) by cuda.sgi.com with ESMTP id
+	jPZkQmZH0VTmx0IC for <xfs@oss.sgi.com>;
+	Thu, 19 May 2011 00:20:44 -0700 (PDT)
+Received: by pxi20 with SMTP id 20so2001698pxi.41
+	for <xfs@oss.sgi.com>; Thu, 19 May 2011 00:20:44 -0700 (PDT)
+From: Yongqiang Yang <xiaoqiangnk@gmail.com>
+Subject: [PATCH v2] xfstests:Make 225 compare map and fiemap at each block.
+Date: Thu, 19 May 2011 15:21:05 +0800
+Message-Id: <1305789665-32743-1-git-send-email-xiaoqiangnk@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,210 +23,413 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Allison Henderson <achender@linux.vnet.ibm.com>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>, Ext4 Developers List <linux-ext4@vger.kernel.org>, Theodore Tso <tytso@mit.edu>, xfs-oss <xfs@oss.sgi.com>
+To: josef@redhat.com, sandeen@redhat.com
+Cc: linux-ext4@vger.kernel.org, Yongqiang Yang <xiaoqiangnk@gmail.com>, xfs@oss.sgi.com
 
-On Wed, May 18, 2011 at 01:58:45PM -0700, Allison Henderson wrote:
-> This patch adds punch hole tests that are based off the test scripts that were 
-> used to test and develop punch hole for ext4.  The tests use the new common 
-> routines in common.punch to run through various corners cases for punching holes.  
+Due to my carelessness, I induced a ugly patch to ext4's fiemap, but
+225 could not find it.  So I looked into the 225 and could not figure out
+logic in compare_map_and_fiemap(), which seemed to mix extents with
+blocks.  Then I made 225 compare map and fiemap at each block, the new
+225 can find another bug in ext4 with 1k block.
 
-It's really just a slightly different set of corner cases to what
-252 tests, and there's quite a bit of overlap. What your tests don't
-do is test different combinations of extent type conversions and he
-splits and merges which, historically, have been the major source of
-bugs with hole punching...
+The new 225 works well on ext3, ext4 and xfs with both 1K and 4K block.
 
-Adding your various cases to 252 (generic_test_punch) would be a much
-better idea, I think.
+Signed-off-by: Yongqiang Yang <xiaoqiangnk@gmail.com>
+---
+v1->v2:
+Josef <josef@redhat.com> reviewed the v1 patch and pointed out the bug which
+made xfs not work and several coding styles.
 
-With that in mind:
+According to reply from Josef, I
+ fixed the bug which added ';' after an if statement.
+ removed the trailing whitespace.
 
-> +# Small Hole Test
+Apart from things above, I
+ made check_weird_fs_hole() verify bytes read by pread().
 
-Covered by 252, case 2 "into allocated space".
+ src/fiemap-tester.c |  251 ++++++++++++++++++++++++++++-----------------------
+ 1 files changed, 140 insertions(+), 111 deletions(-)
 
-> +# Big Hole and Hole Removal Test
-
-Covered by 252, cases 11, 12 and 13. it doesn't need to write 600MB
-files to do this, and in the case of XFS, a 600MB file is still only
-a single extent, so the test is behaving according to your desire on
-XFS.
-
-> +# also ensure the all of the extents are properly
-> +# removed when the file is deleted.
-
-That's covered by the removing of the test file between test
-cases in 252.
-
-> +#record how many blocks free blocks the filesystem has after the test
-> +fs_used_after_test=`df --block-size=$block_size $TEST_DEV | grep $TEST_DEV | awk '{ print $3 }'`
-> +fs_avail_after_test=`df --block-size=$block_size $TEST_DEV | grep $TEST_DEV | awk '{ print $4 }'`
-> +
-> +if [ $fs_used_before_test != $fs_used_after_test ] || \
-> +   [ $fs_avail_before_test != $fs_avail_after_test ]; then
-> +
-> +	echo Error: File system did not reclaim the correct number of blocks
-> +	echo The number of used and available blocks should be the same before and after the test
-> +	echo Used blocks before test: $fs_used_before_test
-> +	echo Available blocks before test: $fs_avail_before_test
-> +	echo Used blocks after test: $fs_used_after_test
-> +	echo Available blocks after test: $fs_avail_after_test
-> +	status=1 ; exit
-> +else
-> +	echo Big Hole and Hole Removal Test OK
-> +fi
-
-Again, the filesystem free block count tests are simply not
-reliable. I'm pretty sure that this simply won't work on btrfs....
-
-> +# Last Block Hole Test
-
-Not directly handled by 252. Easily added, though.
-
-	echo "  14. data -> hole @ EOF"
-	rm -f $testfile
-	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
-		-c "pwrite 0 20k" -c "fsync" \
-		-c "$zero_cmd 12k 8k" \
-		-c "$map_cmd -v" $testfile | $filter_cmd
-	[ $? -ne 0 ] && die_now
-
-> +# First Block Hole Test
-
-Same here
-
-	echo "  15. data -> hole @ 0"
-	rm -f $testfile
-	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
-		-c "pwrite 0 20k" -c "fsync" \
-		-c "$zero_cmd 0k 8k" \
-		-c "$map_cmd -v" $testfile | $filter_cmd
-	[ $? -ne 0 ] && die_now
-
-> +# Cold Cache Hole Test
-> +#
-> +# This test is similar to the Small Hole Test, but the drive is 
-> +# unmounted and remounted before the hole is punched out to make 
-> +# sure that there are no pages in the cache. This test verifies
-> +# that the hole contains zeros even when the pages are cold.
-> +#----------------------------------------------------------------------
-> +echo Running Cold Cache Hole Test
-> +file_len=40960
-> +hole_offset=8180
-> +hole_len=8180
-> +_hole_test -m -s -c $file_len $testfile $hole_offset $hole_len
-> +echo Cold Cache Hole Test OK
-
-Not directly tested in 252, but easily added via:
-
-	echo "  15. data -> cache cold ->hole"
-	rm -f $testfile
-	rm -f $testfile.2
-	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
-		-c "pwrite 8k 12k" -c "fsync" $testfile.2
-	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
-		-c "pwrite 0 20k" -c "fsync" \
-		-c "$zero_cmd 0k 8k" \
-		-c "fadvise -d" \
-		-c "$map_cmd -v" $testfile | $filter_cmd
-	diff $testfile $testfile.2
-	[ $? -ne 0 ] && die_now
-	rm -f $testfile.2
-
-
-> +# Extended Last Block Hole Test
-> +#
-> +# This test cases punches a hole in 10K file from bytes 32768 to 45056
-> +# resulting in a hole that extends beyond the end of the file.  This 
-> +# test verifies that the code appropriately handles punching holes 
-> +# that extend beyond the end of the file
-> +#----------------------------------------------------------------------
-> +echo Running Last Block Hole Test
-> +file_len=40960
-> +hole_offset=32768
-> +hole_len=12288
-> +_hole_test -s -c $file_len $testfile $hole_offset $hole_len
-> +echo Last Block Hole Test OK
-
-That's effectively a repeat of the "data -> hole @ EOF" test.
-Realistically, this test needs to be run with preallocation beyond
-EOF to show that it can punch extents beyond EOF....
-
-> +# Off Edge Hole Test
-
-Just using a non-block aligned start hole offset in the above test
-will cover this one as well. No need for multiple tests that
-effectively do the same thing.
-
-> +# One Block Hole Test
-
-If anyone is doing this in an application, they deserve what they
-get :/
-
-	echo "  16. data -> hole in single block file"
-	rm -f $testfile
-	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 512" \
-		-c "pwrite 0 512" -c "fsync" \
-		-c "$zero_cmd 128 128" \
-		-c "$map_cmd -v" $testfile | $filter_cmd
-	[ $? -ne 0 ] && die_now
-
-> +# Delayed Allocation Hole Test
-> +#
-> +# This test is similar to the Small Hole Test, but the file is not sync'd 
-> +# to the disk before the hole is punched out. This will test the codes 
-> +# ability to punch holes in delayed extents and also ensure that dirty
-> +# pages are zero'd properly
-> +#----------------------------------------------------------------------
-> +echo Running Delayed Allocation Hole Test
-> +file_len=40960
-> +hole_offset=8180
-> +hole_len=8180
-> +_hole_test -c $file_len $testfile $hole_offset $hole_len
-> +echo Delayed Allocation Hole Test OK
-
-If you want to test this properly, you need to run all the 252 tests
-without the fsync after the data write so the extents are still
-delalloc before the other operations are done. i.e. make the fsync
-command a variable like map_cmd and zero_cmd.
-
-> +
-> +# Pre Allocation Hole Test
-
-Already covered by case 3 "into unwritten space".
-
-> +# Multi Hole Test
-
-Far better to redo the whole punch series without removing the file
-in-between the individual tests. That will cover far more edge
-conditions that "same hole, 12 bytes lower, 12 bytes higher and 4k
-higher." As it is, the last test is already covered by 252.
-
-> +# Multi Hole Test Front
-
-And in doing so would cover this case.
-
-> +# Multi Hole Test Delayed
-
-and this case without needing any extra work.
-
-And the good part about extending 252 (from my persepctive) is that
-test 242 (for the XFS_IOC_ZERO_RANGE ioctl) will also get better
-coverage. And if I add the fallocate zero-range equivalent, it will
-also be easy to test for all these cases, too, just by running
-test_generic_punch with a different zero command....
-
-Cheers,
-
-Dave.
+diff --git a/src/fiemap-tester.c b/src/fiemap-tester.c
+index 1663f84..319a9bb 100644
+--- a/src/fiemap-tester.c
++++ b/src/fiemap-tester.c
+@@ -14,6 +14,9 @@
+  * You should have received a copy of the GNU General Public License
+  * along with this program; if not, write the Free Software Foundation,
+  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ *
++ * Compare map and fiemap at each block,
++ * Yongqiang Yang <xiaoqiangnk@gmail.com>, 2011
+  */
+ 
+ #include <stdio.h>
+@@ -57,7 +60,7 @@ generate_file_mapping(int blocks, int prealloc)
+ 	int num_types = 2, cur_block = 0;
+ 	int i = 0;
+ 
+-	map = malloc(sizeof(char) * blocks);
++	map = malloc(sizeof(char) * (blocks + 1));
+ 	if (!map)
+ 		return NULL;
+ 
+@@ -81,6 +84,7 @@ generate_file_mapping(int blocks, int prealloc)
+ 		cur_block++;
+ 	}
+ 
++	map[blocks] = 0;
+ 	return map;
+ }
+ 
+@@ -247,55 +251,36 @@ check_flags(struct fiemap *fiemap, int blocksize)
+ }
+ 
+ static int
+-check_data(struct fiemap *fiemap, __u64 logical_offset, int blocksize,
++check_data(struct fiemap_extent *extent ,  __u64 logical_offset, int blocksize,
+ 	   int last, int prealloc)
+ {
+-	struct fiemap_extent *extent;
+-	__u64 orig_offset = logical_offset;
+-	int c, found = 0;
+-
+-	for (c = 0; c < fiemap->fm_mapped_extents; c++) {
+-		__u64 start, end;
+-		extent = &fiemap->fm_extents[c];
+-
+-		start = extent->fe_logical;
+-		end = extent->fe_logical + extent->fe_length;
+-
+-		if (logical_offset > end)
+-			continue;
+-
+-		if (logical_offset + blocksize < start)
+-			break;
+-
+-		if (logical_offset >= start &&
+-		    logical_offset < end) {
+-			if (prealloc &&
+-			    !(extent->fe_flags & FIEMAP_EXTENT_UNWRITTEN)) {
+-				printf("ERROR: preallocated extent is not "
+-				       "marked with FIEMAP_EXTENT_UNWRITTEN: "
+-				       "%llu\n",
+-				       (unsigned long long)
+-				       (start / blocksize));
+-				return -1;
+-			}
+-
+-			if (logical_offset + blocksize > end) {
+-				logical_offset = end+1;
+-				continue;
+-			} else {
+-				found = 1;
+-				break;
+-			}
++	int found = 0;
++	__u64 start, end;
++
++	start = extent->fe_logical;
++	end = extent->fe_logical + extent->fe_length;
++
++	if (logical_offset >= start &&
++	    logical_offset < end) {
++		if (prealloc &&
++		    !(extent->fe_flags & FIEMAP_EXTENT_UNWRITTEN)) {
++			printf("ERROR: preallocated extent is not "
++			       "marked with FIEMAP_EXTENT_UNWRITTEN: "
++			       "%llu\n",
++			       (unsigned long long)
++			       (start / blocksize));
++			return -1;
+ 		}
++		found = 1;
+ 	}
+ 
+ 	if (!found) {
+ 		printf("ERROR: couldn't find extent at %llu\n",
+-		       (unsigned long long)(orig_offset / blocksize));
++		       (unsigned long long)(logical_offset / blocksize));
+ 	} else if (last &&
+-		   !(fiemap->fm_extents[c].fe_flags & FIEMAP_EXTENT_LAST)) {
++		   !(extent->fe_flags & FIEMAP_EXTENT_LAST)) {
+ 		printf("ERROR: last extent not marked as last: %llu\n",
+-		       (unsigned long long)(orig_offset / blocksize));
++		       (unsigned long long)(logical_offset / blocksize));
+ 		found = 0;
+ 	}
+ 
+@@ -306,7 +291,7 @@ static int
+ check_weird_fs_hole(int fd, __u64 logical_offset, int blocksize)
+ {
+ 	static int warning_printed = 0;
+-	int block, i;
++	int block, i, count;
+ 	size_t buf_len = sizeof(char) * blocksize;
+ 	char *buf;
+ 
+@@ -330,15 +315,16 @@ check_weird_fs_hole(int fd, __u64 logical_offset, int blocksize)
+ 		return -1;
+ 	}
+ 
+-	if (pread(fd, buf, buf_len, (off_t)logical_offset) < 0) {
++	count = pread(fd, buf, buf_len, (off_t)logical_offset);
++	if (count < 0) {
+ 		perror("Error reading from file");
+ 		free(buf);
+ 		return -1;
+ 	}
+ 
+-	for (i = 0; i < buf_len; i++) {
++	for (i = 0; i < count; i++) {
+ 		if (buf[i] != 0) {
+-			printf("ERROR: FIEMAP claimed there was data (%c) at "
++			printf("ERROR: FIEMAP claimed there was data (%x) at "
+ 			       "block %llu that should have been a hole, and "
+ 			       "FIBMAP confirmed that it was allocated, but "
+ 			       "it should be filled with 0's, but it was not "
+@@ -370,35 +356,25 @@ check_weird_fs_hole(int fd, __u64 logical_offset, int blocksize)
+ }
+ 
+ static int
+-check_hole(struct fiemap *fiemap, int fd, __u64 logical_offset, int blocksize)
++check_hole(struct fiemap_extent *extent, int fd, __u64 logical_offset,
++	   int blocksize)
+ {
+-	struct fiemap_extent *extent;
+-	int c;
++	__u64 start, end;
+ 
+-	for (c = 0; c < fiemap->fm_mapped_extents; c++) {
+-		__u64 start, end;
+-		extent = &fiemap->fm_extents[c];
+-
+-		start = extent->fe_logical;
+-		end = extent->fe_logical + extent->fe_length;
+-
+-		if (logical_offset > end)
+-			continue;
+-		if (logical_offset + blocksize < start)
+-			break;
++	start = extent->fe_logical;
++	end = extent->fe_logical + extent->fe_length;
+ 
+-		if (logical_offset >= start &&
+-		    logical_offset < end) {
++	if (logical_offset >= start &&
++	    logical_offset < end) {
+ 
+-			if (check_weird_fs_hole(fd, logical_offset,
+-						blocksize) == 0)
+-				break;
++		if (check_weird_fs_hole(fd, logical_offset,
++					blocksize) == 0)
++			return 0;
+ 
+-			printf("ERROR: found an allocated extent where a hole "
+-			       "should be: %llu\n",
+-			       (unsigned long long)(start / blocksize));
+-			return -1;
+-		}
++		printf("ERROR: found an allocated extent where a hole "
++		       "should be: %llu\n",
++		       (unsigned long long)(logical_offset / blocksize));
++		return -1;
+ 	}
+ 
+ 	return 0;
+@@ -423,9 +399,11 @@ compare_fiemap_and_map(int fd, char *map, int blocks, int blocksize, int syncfil
+ {
+ 	struct fiemap *fiemap;
+ 	char *fiebuf;
+-	int blocks_to_map, ret, cur_extent = 0, last_data;
++	int blocks_to_map, ret, last_data = -1;
+ 	__u64 map_start, map_length;
+ 	int i, c;
++	int cur_block = 0;
++	int last_found = 0;
+ 
+ 	if (query_fiemap_count(fd, blocks, blocksize) < 0)
+ 		return -1;
+@@ -451,8 +429,11 @@ compare_fiemap_and_map(int fd, char *map, int blocks, int blocksize, int syncfil
+ 	fiemap->fm_extent_count = blocks_to_map;
+ 	fiemap->fm_mapped_extents = 0;
+ 
++	/* check fiemap by looking at each block. */
+ 	do {
+-		fiemap->fm_start = map_start;
++		int nr_extents;
++
++		fiemap->fm_start = cur_block * blocksize;
+ 		fiemap->fm_length = map_length;
+ 
+ 		ret = ioctl(fd, FS_IOC_FIEMAP, (unsigned long)fiemap);
+@@ -465,45 +446,93 @@ compare_fiemap_and_map(int fd, char *map, int blocks, int blocksize, int syncfil
+ 		if (check_flags(fiemap, blocksize))
+ 			goto error;
+ 
+-		for (i = cur_extent, c = 1; i < blocks; i++, c++) {
+-			__u64 logical_offset = i * blocksize;
+-
+-			if (c > fiemap->fm_mapped_extents) {
+-				i++;
+-				break;
++		nr_extents = fiemap->fm_mapped_extents;
++		if (nr_extents == 0) {
++			int block = cur_block + (map_length - 1) / blocksize;
++			for (; cur_block <= block &&
++			       cur_block < blocks; cur_block++) {
++				/* check hole */
++				if (map[cur_block] != 'H') {
++					printf("ERROR: map[%d] should not be "
++					       "a hole\n", cur_block);
++					goto error;
++				}
+ 			}
++			continue;
++		}
+ 
+-			switch (map[i]) {
+-			case 'D':
+-				if (check_data(fiemap, logical_offset,
+-					       blocksize, last_data == i, 0))
++		for (c = 0; c < nr_extents; c++) {
++			__u64 offset;
++			int block;
++			struct fiemap_extent *extent;
++
++
++			extent = &fiemap->fm_extents[c];
++			offset = extent->fe_logical;
++			block = offset / blocksize;
++
++			/* check hole. */
++			for (; cur_block < block && cur_block < blocks;
++			     cur_block++) {
++				if (map[cur_block] != 'H') {
++					printf("ERROR: map[%d] should not be "
++					       "a hole\n", cur_block);
+ 					goto error;
+-				break;
+-			case 'H':
+-				if (check_hole(fiemap, fd, logical_offset,
+-					       blocksize))
++				}
++			}
++
++			offset = extent->fe_logical + extent->fe_length;
++			block = offset / blocksize;
++			/* check data */
++			for (; cur_block < block && cur_block < blocks;
++			     cur_block++) {
++				int last;
++				offset = (__u64)cur_block * blocksize;
++				last = (cur_block == last_data);
++				last_found = last_found ? last_found : last;
++				switch (map[cur_block]) {
++				case 'D':
++					if (check_data(extent, offset,
++						       blocksize, last, 0))
++						goto error;
++					break;
++				case 'H':
++					if (check_hole(extent, fd, offset,
++						       blocksize))
++						goto error;
++					break;
++
++				case 'P':
++					if (check_data(extent, offset,
++						       blocksize, last, 1))
++						goto error;
++					break;
++				default:
++					printf("ERROR: weird value in "
++					       "map: %c\n", map[i]);
+ 					goto error;
+-				break;
+-			case 'P':
+-				if (check_data(fiemap, logical_offset,
+-					       blocksize, last_data == i, 1))
++				}
++			}
++
++			for (; cur_block < block; cur_block++) {
++				offset = (__u64)cur_block * blocksize;
++				if (check_hole(extent, fd, offset, blocksize))
+ 					goto error;
+-				break;
+-			default:
+-				printf("ERROR: weird value in map: %c\n",
+-				       map[i]);
+-				goto error;
+ 			}
+ 		}
+-		cur_extent = i;
+-		map_start = i * blocksize;
+-	} while (cur_extent < blocks);
++	} while (cur_block < blocks);
+ 
+-	ret = 0;
+-	return ret;
++	if (!last_found && last_data != -1) {
++		printf("ERROR: find no last extent\n");
++		goto error;
++	}
++
++	free(fiebuf);
++	return 0;
+ error:
+ 	printf("map is '%s'\n", map);
+ 	show_extents(fiemap, blocksize);
++	free(fiebuf);
+ 	return -1;
+ }
+ 
+@@ -605,6 +634,18 @@ main(int argc, char **argv)
+ 		printf("Starting infinite run, if you don't see any output "
+ 		       "then its working properly.\n");
+ 	do {
++		if (ftruncate(fd, 0)) {
++			perror("Could not truncate file\n");
++			close(fd);
++			exit(1);
++		}
++
++		if (lseek(fd, 0, SEEK_SET)) {
++			perror("Could not seek set\n");
++			close(fd);
++			exit(1);
++		}
++
+ 		if (!map) {
+ 			blocks = random() % maxblocks;
+ 			if (blocks == 0) {
+@@ -639,18 +680,6 @@ main(int argc, char **argv)
+ 		free(map);
+ 		map = NULL;
+ 
+-		if (ftruncate(fd, 0)) {
+-			perror("Could not truncate file\n");
+-			close(fd);
+-			exit(1);
+-		}
+-
+-		if (lseek(fd, 0, SEEK_SET)) {
+-			perror("Could not seek set\n");
+-			close(fd);
+-			exit(1);
+-		}
+-
+ 		if (runs) runs--;
+ 	} while (runs != 0);
+ 
 -- 
-Dave Chinner
-david@fromorbit.com
+1.7.5.1
 
 _______________________________________________
 xfs mailing list
