@@ -1,16 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4JLsUo4055980 for <xfs@oss.sgi.com>; Thu, 19 May 2011 16:54:30 -0500
-Subject: Re: [PATCH 2/4] xfs: do not discard alloc btree blocks
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110504190011.319521066@bombadil.infradead.org>
-References: <20110504185513.136746538@bombadil.infradead.org>
-	<20110504190011.319521066@bombadil.infradead.org>
-Date: Thu, 19 May 2011 16:54:29 -0500
-Message-ID: <1305842069.2825.88.camel@doink>
+	p4JNbQtX059221 for <xfs@oss.sgi.com>; Thu, 19 May 2011 18:37:26 -0500
+Received: from rcsinet10.oracle.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C09BA1618709
+	for <xfs@oss.sgi.com>; Thu, 19 May 2011 16:37:25 -0700 (PDT)
+Received: from rcsinet10.oracle.com (rcsinet10.oracle.com [148.87.113.121]) by
+	cuda.sgi.com with ESMTP id F2jt3SEGeJvWxiH3 for
+	<xfs@oss.sgi.com>; Thu, 19 May 2011 16:37:25 -0700 (PDT)
+Message-ID: <4DD5A982.9090907@oracle.com>
+Date: Thu, 19 May 2011 16:36:34 -0700
+From: Sunil Mushran <sunil.mushran@oracle.com>
 MIME-Version: 1.0
-Reply-To: aelder@sgi.com
+Subject: Re: [XFS Tests Punch Hole 2/3 v3] XFS TESTS: Add Fallocate Punch
+	Hole Test Routines
+References: <4DD43300.6010908@linux.vnet.ibm.com>
+	<20110519013144.GF32466@dastard>
+	<4DD560CF.3040706@linux.vnet.ibm.com>
+In-Reply-To: <4DD560CF.3040706@linux.vnet.ibm.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,37 +26,20 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Allison Henderson <achender@linux.vnet.ibm.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, Mark Fasheh <mfasheh@suse.com>, xfs-oss <xfs@oss.sgi.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>
 
-On Wed, 2011-05-04 at 14:55 -0400, Christoph Hellwig wrote:
-> Blocks for the allocation btree are allocated from and release to
-> the AGFL, and thus frequently reused.  Even worse we do not have
-> an easy way to avoid using an AGFL block when it is discarded due
-> to the simple FILO list of free blocks, and thus can frequently
-> stall on blocks that are currently undergoing a discard.
-> 
-> Add a flag to the busy extent tracking structure to skip the discard for
-> allocation btree blocks.  In normal operation these blocks are reused
-> frequently enough that there is no need to discard them anyway, but
-> if they spill over to the allocation btree as part of a balance we
-> "leak" blocks that we would otherwise discard.  We could fix this
-> by adding another flag and keeping these block in the rbtree even
-> after they aren't busy any more so that we could discard them when
-> they migrate out of the AGFL.  Given that this would cause significant
-> overhead I don't think it's worthwile for now.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+On 05/19/2011 11:26 AM, Allison Henderson wrote:
+> Thx for the all the reviewing on this one.  Im not quite sure I agree that the tests are analogous though.  I did some poking around in xfsprogs which I believe is what test 252 is using to do perform most of its operations.  I found the code where the hole gets punched, but I didnt find any code that does any kind of analyzing to verify that the hole was punched correctly.  Maybe I over looked it?  It kinda looks like the hole gets punched and it just checks the return code (fpunch_f in io/prealloc.c right?).
+>
 
-This one looks good.  (If you add support for discard
-with nodelaylog it will need to be updated.)
+Mark Fasheh wrote a test for the same for ocfs2 that might help. Check it out.
 
-Reviewed-by: Alex Elder <aelder@sgi.com>
-
+http://oss.oracle.com/git/?p=ocfs2-test.git;a=tree;f=programs/fill_verify_holes;h=0df38895e7ff6e66a9a558f35407699ebb40f790;hb=HEAD
 
 _______________________________________________
 xfs mailing list
