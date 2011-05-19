@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4J1Vnew008514 for <xfs@oss.sgi.com>; Wed, 18 May 2011 20:31:49 -0500
+	p4J2fnoM010908 for <xfs@oss.sgi.com>; Wed, 18 May 2011 21:41:49 -0500
 Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 11E80CE488F
-	for <xfs@oss.sgi.com>; Wed, 18 May 2011 18:31:46 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5B59DCE4CC6
+	for <xfs@oss.sgi.com>; Wed, 18 May 2011 19:41:46 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	rTiCgK1OBQ8s3i7O for <xfs@oss.sgi.com>;
-	Wed, 18 May 2011 18:31:46 -0700 (PDT)
-Date: Thu, 19 May 2011 11:31:44 +1000
+	8sGd98mUEwhu5qsA for <xfs@oss.sgi.com>;
+	Wed, 18 May 2011 19:41:46 -0700 (PDT)
+Date: Thu, 19 May 2011 12:41:43 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [XFS Tests Punch Hole 2/3 v3] XFS TESTS: Add Fallocate Punch
-	Hole Test Routines
-Message-ID: <20110519013144.GF32466@dastard>
-References: <4DD43300.6010908@linux.vnet.ibm.com>
+Subject: Re: [XFS Tests Punch Hole 3/3 v3] XFS TESTS: Add Fallocate Punch
+	Hole Test
+Message-ID: <20110519024143.GG32466@dastard>
+References: <4DD43305.7090508@linux.vnet.ibm.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4DD43300.6010908@linux.vnet.ibm.com>
+In-Reply-To: <4DD43305.7090508@linux.vnet.ibm.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,240 +31,202 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Allison Henderson <achender@linux.vnet.ibm.com>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>, Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>, Ext4 Developers List <linux-ext4@vger.kernel.org>, Theodore Tso <tytso@mit.edu>, xfs-oss <xfs@oss.sgi.com>
 
-On Wed, May 18, 2011 at 01:58:40PM -0700, Allison Henderson wrote:
-> This patch adds low level routines to common.punch
-> for populating test files and punching holes in them using
-> fallocate.  When a hole is punched, file is then analyzed to
-> verify that the hole was punched correctly.  These routines will
-> be used to test various corner cases in the new fallocate
-> punch hole tests.
+On Wed, May 18, 2011 at 01:58:45PM -0700, Allison Henderson wrote:
+> This patch adds punch hole tests that are based off the test scripts that were 
+> used to test and develop punch hole for ext4.  The tests use the new common 
+> routines in common.punch to run through various corners cases for punching holes.  
 
-So what condition does this test cover that test 252 doesn't? 
+It's really just a slightly different set of corner cases to what
+252 tests, and there's quite a bit of overlap. What your tests don't
+do is test different combinations of extent type conversions and he
+splits and merges which, historically, have been the major source of
+bugs with hole punching...
 
-> 
-> Signed-off-by: Allison Henderson <achender@us.ibm.com>
-> ---
-> :100644 100644 e2da5d8... 778389a... M	common.punch
->  common.punch |  393 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  1 files changed, 393 insertions(+), 0 deletions(-)
-> 
-> diff --git a/common.punch b/common.punch
-> index e2da5d8..778389a 100644
-> --- a/common.punch
-> +++ b/common.punch
-> @@ -377,3 +377,396 @@ _test_generic_punch()
->  		-c "$map_cmd -v" $testfile | $filter_cmd
->  	[ $? -ne 0 ] && die_now
->  }
+Adding your various cases to 252 (generic_test_punch) would be a much
+better idea, I think.
+
+With that in mind:
+
+> +# Small Hole Test
+
+Covered by 252, case 2 "into allocated space".
+
+> +# Big Hole and Hole Removal Test
+
+Covered by 252, cases 11, 12 and 13. it doesn't need to write 600MB
+files to do this, and in the case of XFS, a 600MB file is still only
+a single extent, so the test is behaving according to your desire on
+XFS.
+
+> +# also ensure the all of the extents are properly
+> +# removed when the file is deleted.
+
+That's covered by the removing of the test file between test
+cases in 252.
+
+> +#record how many blocks free blocks the filesystem has after the test
+> +fs_used_after_test=`df --block-size=$block_size $TEST_DEV | grep $TEST_DEV | awk '{ print $3 }'`
+> +fs_avail_after_test=`df --block-size=$block_size $TEST_DEV | grep $TEST_DEV | awk '{ print $4 }'`
 > +
+> +if [ $fs_used_before_test != $fs_used_after_test ] || \
+> +   [ $fs_avail_before_test != $fs_avail_after_test ]; then
 > +
-> +#_fill_file()
+> +	echo Error: File system did not reclaim the correct number of blocks
+> +	echo The number of used and available blocks should be the same before and after the test
+> +	echo Used blocks before test: $fs_used_before_test
+> +	echo Available blocks before test: $fs_avail_before_test
+> +	echo Used blocks after test: $fs_used_after_test
+> +	echo Available blocks after test: $fs_avail_after_test
+> +	status=1 ; exit
+> +else
+> +	echo Big Hole and Hole Removal Test OK
+> +fi
+
+Again, the filesystem free block count tests are simply not
+reliable. I'm pretty sure that this simply won't work on btrfs....
+
+> +# Last Block Hole Test
+
+Not directly handled by 252. Easily added, though.
+
+	echo "  14. data -> hole @ EOF"
+	rm -f $testfile
+	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
+		-c "pwrite 0 20k" -c "fsync" \
+		-c "$zero_cmd 12k 8k" \
+		-c "$map_cmd -v" $testfile | $filter_cmd
+	[ $? -ne 0 ] && die_now
+
+> +# First Block Hole Test
+
+Same here
+
+	echo "  15. data -> hole @ 0"
+	rm -f $testfile
+	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
+		-c "pwrite 0 20k" -c "fsync" \
+		-c "$zero_cmd 0k 8k" \
+		-c "$map_cmd -v" $testfile | $filter_cmd
+	[ $? -ne 0 ] && die_now
+
+> +# Cold Cache Hole Test
 > +#
-> +#Fills a file with the given byte value up to the
-> +#given number of bytes.
+> +# This test is similar to the Small Hole Test, but the drive is 
+> +# unmounted and remounted before the hole is punched out to make 
+> +# sure that there are no pages in the cache. This test verifies
+> +# that the hole contains zeros even when the pages are cold.
+> +#----------------------------------------------------------------------
+> +echo Running Cold Cache Hole Test
+> +file_len=40960
+> +hole_offset=8180
+> +hole_len=8180
+> +_hole_test -m -s -c $file_len $testfile $hole_offset $hole_len
+> +echo Cold Cache Hole Test OK
+
+Not directly tested in 252, but easily added via:
+
+	echo "  15. data -> cache cold ->hole"
+	rm -f $testfile
+	rm -f $testfile.2
+	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
+		-c "pwrite 8k 12k" -c "fsync" $testfile.2
+	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
+		-c "pwrite 0 20k" -c "fsync" \
+		-c "$zero_cmd 0k 8k" \
+		-c "fadvise -d" \
+		-c "$map_cmd -v" $testfile | $filter_cmd
+	diff $testfile $testfile.2
+	[ $? -ne 0 ] && die_now
+	rm -f $testfile.2
+
+
+> +# Extended Last Block Hole Test
 > +#
-> +# $1: The name of the file to fill
-> +# $2: The byte value to fill the file with
-> +# $3: The number of bytes to put in the file
-> +# $4: The block size used when copying in 
-> +#     "block" sized chunks of data
-> +_fill_file() {
-> +	local file_to_fill=$1
-> +	local byte_value=$2
-> +	local number_of_bytes=$3
-> +	local blk_size=$4
-> +	
-> +	remaining_bytes=$number_of_bytes
-> +	blk=""
-> +
-> +	for (( i=0; i<blk_size; i++ ))
-> +	do
-> +		blk=$blk$byte_value
-> +	done
-> +
-> +	while [ $remaining_bytes -ge $blk_size ]
-> +	do
-> +		printf "$blk" >> $file_to_fill
-> +		remaining_bytes=$(($remaining_bytes - $blk_size))
-> +	done
-> +
-> +	for (( i=0; i<$remaining_bytes; i++ ))
-> +	do
-> +		printf "$byte_value" >> $file_to_fill
-> +	done
-> +	
-> +
-> +}
+> +# This test cases punches a hole in 10K file from bytes 32768 to 45056
+> +# resulting in a hole that extends beyond the end of the file.  This 
+> +# test verifies that the code appropriately handles punching holes 
+> +# that extend beyond the end of the file
+> +#----------------------------------------------------------------------
+> +echo Running Last Block Hole Test
+> +file_len=40960
+> +hole_offset=32768
+> +hole_len=12288
+> +_hole_test -s -c $file_len $testfile $hole_offset $hole_len
+> +echo Last Block Hole Test OK
 
-Ummm, do you really need to reinvent the wheel?
+That's effectively a repeat of the "data -> hole @ EOF" test.
+Realistically, this test needs to be run with preallocation beyond
+EOF to show that it can punch extents beyond EOF....
 
-$XFS_IO_PROG -F -f -c "pwrite -S $byte_value -b $blk_size 0 $number_of_bytes" $file_to_fill
+> +# Off Edge Hole Test
 
-> +
-> +# _hole_test()
+Just using a non-block aligned start hole offset in the above test
+will cover this one as well. No need for multiple tests that
+effectively do the same thing.
+
+> +# One Block Hole Test
+
+If anyone is doing this in an application, they deserve what they
+get :/
+
+	echo "  16. data -> hole in single block file"
+	rm -f $testfile
+	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 512" \
+		-c "pwrite 0 512" -c "fsync" \
+		-c "$zero_cmd 128 128" \
+		-c "$map_cmd -v" $testfile | $filter_cmd
+	[ $? -ne 0 ] && die_now
+
+> +# Delayed Allocation Hole Test
 > +#
-> +# Punches a hole in the test file.
-> +# The hole is the checked to make sure the correct number
-> +# of blocks are released and the associated extents are 
-> +# removed
-> +#
-> +# Usage: _hole_test [options] file_name hole_offset hole_length
-> +# Options:
-> +#    -c <length> Create a file of the given length full of data to punch a hole in
+> +# This test is similar to the Small Hole Test, but the file is not sync'd 
+> +# to the disk before the hole is punched out. This will test the codes 
+> +# ability to punch holes in delayed extents and also ensure that dirty
+> +# pages are zero'd properly
+> +#----------------------------------------------------------------------
+> +echo Running Delayed Allocation Hole Test
+> +file_len=40960
+> +hole_offset=8180
+> +hole_len=8180
+> +_hole_test -c $file_len $testfile $hole_offset $hole_len
+> +echo Delayed Allocation Hole Test OK
 
-rm -f $file_name
-$XFS_IO_PROG -F -f -c "t $length" $file_name
-
-> +#    -p <length> Preallocate a file to the given length to punch a hole in
-
-$XFS_IO_PROG -F -f -c "falloc 0 $length" $file_name
-
-> +#    -s          Sync the file before punching the hole
-
-$XFS_IO_PROG -F -f -c "fsync" $file_name
-
-> +#    -m          Remount the device before punching the hole
-....
-> +		umount $TEST_DEV
-> +		mount $TEST_DEV $TEST_DIR
-
-If you need remounts during the test, it should be using the scratch
-device, I think.
-
-> +#
-> +# This test is successful when the following conditions are met:
-> +#  - ls shows that the number of blocks occupied by the file
-> +#    has decreased by the number of blocks punched out.
-
-There's no guarantee that a filesystem will punch the number of
-blocks you expect.
-
-> +#  - df shows number of available blocks has increased by the number
-> +#    of blocks punched out
-
-Ditto - indeed, punching blocks can lead to allocation for things
-like extent tree splits because the number of extent records
-increases.
-
-> +#  - File frag shows that the blocks punched out are absent from
-> +#    the extents
-
-Probably the best method, though we tend to use the xfs_io output
-because we already have a lot of parsing functions for it.
-
-> +#  - The test file contains zeros where the hole should be
-> +# 
-> +_hole_test() {
-> +
-> +	err=0
-> +	sflag=
-> +	mflag=
-> +	pflag=
-> +	cflag=
-> +	lflag=
-> +	oflag=
-> +	OPTIND=1
-> +	while getopts 'smc:p:' OPTION
-> +	do
-> +		case $OPTION in
-> +		s)	sflag=1
-> +		;;
-> +		m)	mflag=1
-> +		;;
-> +		p)	pflag="$OPTARG"
-> +		;;
-> +		c)	cflag="$OPTARG"
-> +		;;
-> +		?)	echo Invalid flag
-> +		echo "Usage: $(basename $0): [options]  file_name hole_offset hole_length" >&2
-> +		echo "Options:" >&2
-> +		echo "-c <length> Create a file of the given length full of data to punch a hole in" >&2
-> +		echo "-p <length> Preallocate a file to the given length to punch a hole in" >&2
-> +		echo "-s          Sync the file before punching the hole" >&2
-> +		echo "-m          Remount the device before punching the hole"
-> +		exit 1
-> +		;;
-> +		esac
-> +	done
-> +	shift $(($OPTIND - 1))
-> +
-> +	local file_name=$1
-> +	local hole_offset=$2
-> +	local hole_length=$3
-> +	local hole_offset_orig=$hole_offset
-> +	local hole_length_orig=$hole_length
-> +
-> +	if [ "$cflag" ]; then
-> +		local file_length=$cflag
-> +	elif [ "$pflag" ]; then
-> +		local file_length=$pflag
-> +	else
-> +		local file_length=`ls -ls $file_name | cut -d ' ' -f6`
-> +	fi
-> +
-> +	# If the hole to punch out extends off the edge of the file, 
-> +	# then we need to expect a smaller hole to be punched
-> +	if [ $hole_offset -ge $file_length ]; then
-> +		local hole_length=0
-> +		local hole_offset=$file_length
-> +	elif [ $(($hole_offset + $hole_length)) -gt $file_length ]; then
-> +		local hole_length=$(($file_length - $hole_offset))
-> +	fi
-> +
-> +	# locations to store hexdumps must not be in the filesystem
-> +	# or it will skew the results.  When we measure used
-> +	# available blocks. Also, there may not be enough
-> +	# room to store them in the fs during ENOSPC tests
-> +	# So store the dumps in the cwd by stripping the path
-> +	expected=`echo $file_name.hexdump.expected | sed 's/.*\///'`
-> +	result=`echo $file_name.hexdump.result | sed 's/.*\///'`
-
-This is why you shoul dbe using the scratch device and using the
-test device to store the results. No hoops to jump through, and the
-result is s simpler test.
-
-Oh, and all you do is run diff on the hexdump output of the files.
-diff can check binary files just fine - why do you need the hexdump
-output? i.e. create files with zeros where the holes will be on the
-testdev, create new ones on the scratch dev, punch holes in them,
-diff them. No need for hexdumps, and the diff output can be put
-directly into the golden output. If we then dump the fiemap output
-into the output file (appropriately filtered) no further validation
-checks are needed to determine that the hole was punched in the
-correct place....
-
-Indeed, I've seen plenty of cases where same test case operating on
-an existing file gives different results to operating on a newly
-created file....
+If you want to test this properly, you need to run all the 252 tests
+without the fsync after the data write so the extents are still
+delalloc before the other operations are done. i.e. make the fsync
+command a variable like map_cmd and zero_cmd.
 
 > +
-> +	#calculate the end points of the hole in blocks
-> +	local block_size=`stat -f $TEST_DEV | grep "Block size" | cut -d " " -f3`
-> +	local hole_first_blk=$(( $hole_offset / $block_size ))
-> +	if [ $(($hole_offset % $block_size)) != 0 ]
-> +	then
-> +		local hole_first_blk=$(( $hole_first_blk + 1 ))
-> +	fi
-> +
-> +	local hole_last_blk=$(( ($hole_offset + $hole_length) / $block_size ))
+> +# Pre Allocation Hole Test
 
-That's making a big assumption about the granularity of hole
-punching. It's invalid for certain XFS configurations - when using
-per inode preferred allocation alignment or the real time device,
-and hole punching follows those alignments.
+Already covered by case 3 "into unwritten space".
 
-....
+> +# Multi Hole Test
 
-I think maybe this test is trying to be too smart and do too much,
-and the verbosity is hurting my eyes. I'm giving up here because I
-think it overlaps greatly with test 252, and I can't see what
-addition failures this test would actually detect that fsx and 252
-wouldn't. If there are corner cases that 252 isn't covering that
-this test does, then I think they should be added to 252....
+Far better to redo the whole punch series without removing the file
+in-between the individual tests. That will cover far more edge
+conditions that "same hole, 12 bytes lower, 12 bytes higher and 4k
+higher." As it is, the last test is already covered by 252.
 
+> +# Multi Hole Test Front
 
+And in doing so would cover this case.
+
+> +# Multi Hole Test Delayed
+
+and this case without needing any extra work.
+
+And the good part about extending 252 (from my persepctive) is that
+test 242 (for the XFS_IOC_ZERO_RANGE ioctl) will also get better
+coverage. And if I add the fallocate zero-range equivalent, it will
+also be easy to test for all these cases, too, just by running
+test_generic_punch with a different zero command....
+
+Cheers,
+
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
