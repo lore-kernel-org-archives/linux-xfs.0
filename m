@@ -1,22 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4K2v4Qr067546 for <xfs@oss.sgi.com>; Thu, 19 May 2011 21:57:05 -0500
-Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9FF3046CB40
-	for <xfs@oss.sgi.com>; Thu, 19 May 2011 19:57:02 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	uE7DSawzHfarrPIb for <xfs@oss.sgi.com>;
-	Thu, 19 May 2011 19:57:02 -0700 (PDT)
-Date: Fri, 20 May 2011 12:56:59 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: drastic changes to allocsize semantics in or around 2.6.38?
-Message-ID: <20110520025659.GO32466@dastard>
-References: <20110520005510.GA15348@schmorp.de>
+	p4KAOZuW086459 for <xfs@oss.sgi.com>; Fri, 20 May 2011 05:24:36 -0500
+Date: Fri, 20 May 2011 06:24:31 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/4] xfs: add online discard support
+Message-ID: <20110520102430.GA18199@infradead.org>
+References: <20110504185513.136746538@bombadil.infradead.org>
+	<20110504190011.156999943@bombadil.infradead.org>
+	<1305842024.2825.86.camel@doink>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110520005510.GA15348@schmorp.de>
+In-Reply-To: <1305842024.2825.86.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,78 +24,75 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Marc Lehmann <schmorp@schmorp.de>
+To: Alex Elder <aelder@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, May 20, 2011 at 02:55:11AM +0200, Marc Lehmann wrote:
-> Hi!
+On Thu, May 19, 2011 at 04:53:44PM -0500, Alex Elder wrote:
+> The first is, why not support it for non-delaylog?
+
+Because:
+
+ a) performance is going to suck even more horribly with the
+    amount of trim commands needed, with no chance of actually
+    fixing it
+ b) the async discard code in patch 3 not easily applyable to
+    the non-delaylog case, we'd need to keep two parallel codebases,
+    one of them guaranteed to be untested.
+
+> Second, why is it a two phase operation (marking an
+> extent for discard, then doing all the discards at
+> once)?  Is it just so you can do the discards without
+> holding the perag lock?
+
+Because we must prevent the allocation code from reusing an extent
+that is undergoing a discard right now to prevent corruption, thus
+we need to mark it as do not touch first. 
+
+> >  	xfs_trans_committed_bulk(ctx->cil->xc_log->l_ailp, ctx->lv_chain,
+> >  					ctx->start_lsn, abort);
+> >  
+> >  	xfs_alloc_busy_sort(&ctx->busy_extents);
 > 
-> I have "allocsize=64m" (or simialr sizes, such as 1m, 16m etc.) on many of my
-> xfs filesystems, in an attempt to fight fragmentation on logfiles.
+> I still think sorting the list belongs inside xfs_alloc_busy_clear().
+> I see that list_sort() is not necessarily trivial for an already
+> sorted list though...
+
+It's a bad idea to do the sort twice for no good reason, and adding
+another parameter to further overload xfs_alloc_busy_clear behaviour
+doesn't seem smart either.
+
+> 		if (error == EOPNOTSUPP) {
+> 			/*
+> 			 * Report this once per mount point somehow?
+> 			 * If so, turn off the mount option?
+> 			 */
+> 			break;
+
+We've been through this discussion again lately with dm and ext4
+folks, and the conclusion is that EOPNOTSUPP is perfectly fine to happen
+here.
+
+> > +	 * performing the discard a chance to mark the extent unbusy
+> > +	 * and retry.
+> > +	 */
+> > +	if (busyp->flags & XFS_ALLOC_BUSY_DISCARDED) {
+> > +		spin_unlock(&pag->pagb_lock);
+> > +		delay(1);
 > 
-> I am not sure about it's effectiveness, but in 2.6.38 (but not in 2.6.32),
-> this leads to very unexpected and weird behaviour, namely that files being
-> written have semi-permanently allocated chunks of allocsize to them.
+> I hate seeing calls to delay() although sometimes
+> it's the right thing to do...  I don't have a feel
+> for how long a discard is likely to take so I don't
+> know whether waiting here instead would be worth
+> the effort.
 
-The change that will be causing this was to how the preallocation is
-dropped. In normal use cases, the preallocation should be dropped
-when the file descriptor is closed. The change in 2.6.38 was to make
-this conditional on whether the inode had been closed multiple times
-while dirty. If the inode is closed (.release is called) multiple
-times while dirty, then the preallocation is not truncated away
-until the inode is dropped from the caches, rather than immediately
-on close.  This prevents writes on NFS servers from doing excessive
-work and triggering excessive fragmentation, as the NFS server does
-an "open-write-close" for every write that comes across the wire.
+It's not nice, but if the block layer gets fixed and we do asynchronous
+discards it simply goes away.
 
-This was also coupled witha change to the default speculative
-allocation behaviour to do more and larger specualtive preallocation
-and so in most cases remove the need for ever using the allocsize
-mount option. It dynamically increases the preallocation size as the
-file size increases, so small file writes behave like pre-2.6.38
-without the allocsize mount option, large file writes behave like
-they have a large allocsize mount option set and thereby preventing
-most known delayed allocation fragmentation cases from occurring.
+> If this option is to only be available for delaylog, it should
+> say so here (and maybe report that it's being ignored if it's
+> supplied with nodelaylog at mount time).
 
-> I realised this when I did a make clean and a make in a buildroot directory,
-> which cross-compiles uclibc, gcc, and lots of other packages, leading to a
-> lot of mostly small files.
-
-So the question there: how is your workload accessing the files? Is
-it opening and closing them multiple times in quick succession after
-writing them? I think it is triggering the "NFS server access
-pattern" logic and so keeping speculative preallocation around for
-longer.
-
-> Atfer I deleted some files to get some space and rebooted, I suddenly had
-> 180GB of space again, so it seems an unmount "fixes" this issue.
-> 
-> I often do these kind of build,s and I have allocsize on thee high values for
-> a very long time, without ever having run into this kind of problem.
-> 
-> It seems that files get temporarily allocated much larger chunks (which is
-> expoected behaviour), but xfs doesn't free them until there is a unmount
-> (which is unexpected).
-
-"echo 3 > /proc/sys/vm/drop_caches" should free up the space as the
-preallocation will be truncated as the inodes are removed from the
-VFS inode cache.
-
-> Is this the desired behaviour? I would assume that any allocsize > 0 could
-> lead to a lot of fragmentation if files that are closed and no longer being
-> in-use always have extra space allocated for expansion for extremely long
-> periods of time.
-
-I'd suggest removing the allocsize mount option - you shouldn't need
-it anymore because the new default behaviour resists fragmentation a
-whole lot better than pre-2.6.38 kernels.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+ok.
 
 _______________________________________________
 xfs mailing list
