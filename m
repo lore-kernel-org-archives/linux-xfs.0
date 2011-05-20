@@ -1,18 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4KBKXAF088263 for <xfs@oss.sgi.com>; Fri, 20 May 2011 06:20:33 -0500
-Date: Fri, 20 May 2011 17:20:18 +0600
-From: Andrey Rahmatullin <wrar@altlinux.org>
-Subject: Re: 2.6.39-rc3, 2.6.39-rc4: XFS lockup - regression since 2.6.38
-Message-ID: <20110520112018.GB3867@belkar.wrar.name>
-References: <20110423224403.5fd1136a@neptune.home>
-	<20110427050850.GG12436@dastard>
-	<20110427182622.05a068a2@neptune.home>
-	<20110428194528.GA1627@x4.trippels.de>
-	<20110429011929.GA13542@dastard>
+	p4KBi24x089046 for <xfs@oss.sgi.com>; Fri, 20 May 2011 06:44:02 -0500
+Date: Fri, 20 May 2011 13:43:50 +0200 (CEST)
+From: Lukas Czerner <lczerner@redhat.com>
+Subject: Re: [PATCH 1/4] xfs: add online discard support
+In-Reply-To: <20110520102430.GA18199@infradead.org>
+Message-ID: <alpine.LFD.2.00.1105201330360.5226@dhcp-27-109.brq.redhat.com>
+References: <20110504185513.136746538@bombadil.infradead.org>
+	<20110504190011.156999943@bombadil.infradead.org>
+	<1305842024.2825.86.camel@doink>
+	<20110520102430.GA18199@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <20110429011929.GA13542@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,82 +20,106 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============1901490380666981429=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Dave Chinner <dchinner@redhat.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, xfs-masters@oss.sgi.com, Bruno =?iso-8859-1?Q?Pr=E9mont?= <bonbons@linux-vserver.org>, Alex Elder <aelder@sgi.com>, Markus Trippelsdorf <markus@trippelsdorf.de>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com, Alex Elder <aelder@sgi.com>
 
+On Fri, 20 May 2011, Christoph Hellwig wrote:
 
---===============1901490380666981429==
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="XF85m9dhOBO43t/C"
-Content-Disposition: inline
+> On Thu, May 19, 2011 at 04:53:44PM -0500, Alex Elder wrote:
+> > The first is, why not support it for non-delaylog?
+> 
+> Because:
+> 
+>  a) performance is going to suck even more horribly with the
+>     amount of trim commands needed, with no chance of actually
+>     fixing it
+>  b) the async discard code in patch 3 not easily applyable to
+>     the non-delaylog case, we'd need to keep two parallel codebases,
+>     one of them guaranteed to be untested.
+> 
+> > Second, why is it a two phase operation (marking an
+> > extent for discard, then doing all the discards at
+> > once)?  Is it just so you can do the discards without
+> > holding the perag lock?
+> 
+> Because we must prevent the allocation code from reusing an extent
+> that is undergoing a discard right now to prevent corruption, thus
+> we need to mark it as do not touch first. 
+> 
+> > >  	xfs_trans_committed_bulk(ctx->cil->xc_log->l_ailp, ctx->lv_chain,
+> > >  					ctx->start_lsn, abort);
+> > >  
+> > >  	xfs_alloc_busy_sort(&ctx->busy_extents);
+> > 
+> > I still think sorting the list belongs inside xfs_alloc_busy_clear().
+> > I see that list_sort() is not necessarily trivial for an already
+> > sorted list though...
+> 
+> It's a bad idea to do the sort twice for no good reason, and adding
+> another parameter to further overload xfs_alloc_busy_clear behaviour
+> doesn't seem smart either.
+> 
+> > 		if (error == EOPNOTSUPP) {
+> > 			/*
+> > 			 * Report this once per mount point somehow?
+Actually, this is a good idea see https://lkml.org/lkml/2011/5/5/162. So
+you will get EOPNOTSUPP *only* if the device (as a whole) does not
+support discard.
 
+> > 			 * If so, turn off the mount option?
+Not so good idea, as some people mentioned several times, you can change
+the devices in dmsetup to SSD (for example) without umount and you would
+like your previous mount option to work. In the opposite case, the user
+just gets warning (once a day perhaps?) and its up to him to deal with
+it.
 
---XF85m9dhOBO43t/C
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Or, we can turn it of (with warning) and rely on the user to notice that
+it is turned off. But I would rather not rely on that.
 
-On Fri, Apr 29, 2011 at 11:19:29AM +1000, Dave Chinner wrote:
-> > x4 ~ # xfs_info /
-> > meta-data=3D/dev/root              isize=3D256    agcount=3D4, agsize=
-=3D1949824 blks
-> >          =3D                       sectsz=3D512   attr=3D2
-> > data     =3D                       bsize=3D4096   blocks=3D7799296, ima=
-xpct=3D25
-> >          =3D                       sunit=3D128    swidth=3D128 blks
-> > naming   =3Dversion 2              bsize=3D4096   ascii-ci=3D0
-> > log      =3Dinternal               bsize=3D4096   blocks=3D3808, versio=
-n=3D2
-> >          =3D                       sectsz=3D512   sunit=3D8 blks, lazy-=
-count=3D1
-> > realtime =3Dnone                   extsz=3D4096   blocks=3D0, rtextents=
-=3D0
-> OK, so the common elements here appears to be root filesystems
-> with small log sizes, which means they are tail pushing all the
-> time metadata operations are in progress.=20
-Does that mean that such filesystems are not optimal in terms of
-performance and/or reliability and should have larger log sizes?
+-Lukas
 
---=20
-WBR, wRAR
+> > 			 */
+> > 			break;
+> 
+> We've been through this discussion again lately with dm and ext4
+> folks, and the conclusion is that EOPNOTSUPP is perfectly fine to happen
+> here.
+> 
+> > > +	 * performing the discard a chance to mark the extent unbusy
+> > > +	 * and retry.
+> > > +	 */
+> > > +	if (busyp->flags & XFS_ALLOC_BUSY_DISCARDED) {
+> > > +		spin_unlock(&pag->pagb_lock);
+> > > +		delay(1);
+> > 
+> > I hate seeing calls to delay() although sometimes
+> > it's the right thing to do...  I don't have a feel
+> > for how long a discard is likely to take so I don't
+> > know whether waiting here instead would be worth
+> > the effort.
+> 
+> It's not nice, but if the block layer gets fixed and we do asynchronous
+> discards it simply goes away.
+> 
+> > If this option is to only be available for delaylog, it should
+> > say so here (and maybe report that it's being ignored if it's
+> > supplied with nodelaylog at mount time).
+> 
+> ok.
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
---XF85m9dhOBO43t/C
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBCAAGBQJN1k5yAAoJEDNi9wMaSZLh8YkQAKjzB4at+kizRbI1dL2KqGwp
-teIgc4x6aF3NCXdRUHHJvRr9zCIFwUUf0D3Tf1LAgmDsHhZ1cJSjwKHnPPR48giS
-SVXA2O0JI1lr4D0jWtcd6FQfS9E2cw2wrwswZqc3zvAihN1G1dfe+kEfLV0AVRCE
-Iim/Kqsd0aB3Ua/+01K87aPbA50EGhPkwO5SRu4upn8H86bvj3Yg0Out5dnvMYjX
-j5WXT6Ywu/xQkfhG7hQkJXdqs6SDGleqaAE2GFMI5q5FLs+ENUwlo8pgl4pvXAa5
-kbThH5ZzJkwEo4b+W5j6JfnOKfqLl78YL/WnFXghYkaVb5Fkc1AkcRZ1C0HeTZeV
-Ssqt79wAWwMinpZBo2YVr+LgztQo582m7ZBEVnTOsae93jBTjryWyOSpMH1x5BYn
-z+U6d+Nd1/tjYLn2NjTFLLaq9Q7Y2gT0qGg/eEupNEzHeLOgQCBhMDJ87ZkEHDpz
-UepYDQFFhh0TNUC5pzPwS8k5yIQFWWF7XRvU1IH4jwpRFQTau4yEeKWDvVdi0CiN
-KHDgAK15kWmrpZ+y+I0Khq5sTRFLryIZmWS3p4NqRaMnKVoelTj/+6njZchAYuW5
-D/APtuxNg9gOloUIb8wN5qQNDSojit0mkIYh7PDA4GtrYQZhWEuFQLuLQ2oLUQkw
-hizcs7YQb2IJrpsnmt69
-=d5hH
------END PGP SIGNATURE-----
-
---XF85m9dhOBO43t/C--
-
-
---===============1901490380666981429==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+-- 
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============1901490380666981429==--
