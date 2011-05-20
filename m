@@ -1,17 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4KFgRRj098247 for <xfs@oss.sgi.com>; Fri, 20 May 2011 10:42:27 -0500
-Subject: Re: [PATCH 1/4 v2] xfs: add online discard support
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110520134531.GA30013@infradead.org>
-References: <20110504185513.136746538@bombadil.infradead.org>
-	<20110504190011.156999943@bombadil.infradead.org>
-	<20110520134531.GA30013@infradead.org>
-Date: Fri, 20 May 2011 10:42:23 -0500
-Message-ID: <1305906143.1964.10.camel@doink>
+	p4KFnRqS098501 for <xfs@oss.sgi.com>; Fri, 20 May 2011 10:49:27 -0500
+Received: from mail.nethype.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3505146CA86
+	for <xfs@oss.sgi.com>; Fri, 20 May 2011 08:49:24 -0700 (PDT)
+Received: from mail.nethype.de (mail.nethype.de [78.47.73.129]) by
+	cuda.sgi.com with ESMTP id jo7V2jUBph1qJftC for
+	<xfs@oss.sgi.com>; Fri, 20 May 2011 08:49:24 -0700 (PDT)
+Date: Fri, 20 May 2011 17:49:20 +0200
+From: Marc Lehmann <schmorp@schmorp.de>
+Subject: Re: drastic changes to allocsize semantics in or around 2.6.38?
+Message-ID: <20110520154920.GD5828@schmorp.de>
+References: <20110520005510.GA15348@schmorp.de>
+	<20110520025659.GO32466@dastard>
 MIME-Version: 1.0
-Reply-To: aelder@sgi.com
+Content-Disposition: inline
+In-Reply-To: <20110520025659.GO32466@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,40 +29,45 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, 2011-05-20 at 09:45 -0400, Christoph Hellwig wrote:
-> Now that we have reliably tracking of deleted extents in a transaction
-> we can easily implement "online" discard support which calls
-> blkdev_issue_discard once a transaction commits.
+On Fri, May 20, 2011 at 12:56:59PM +1000, Dave Chinner <david@fromorbit.com> wrote:
+[thanks for the thorough explanation]
 > 
-> The actual discard is a two stage operation as we first have to mark
-> the busy extent as not available for reuse before we can start the
-> actual discard.  Note that we don't bother supporting discard for
-> the non-delaylog mode.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> So the question there: how is your workload accessing the files? Is
+> it opening and closing them multiple times in quick succession after
+> writing them?
 
-Looks good.
+I don't think so, but of course, when compiling a file, it will be linked
+afterwards, so I guess it would be accessed at least once.
 
-Given Lukas' note about EOPNOTSUPP getting reported only
-if 100% of the underlying storage does not (at the moment)
-support discard:
-- You might as well drop out of the loop in xfs_discard_extents()
-  once EOPNOTSUPP gets reported for any extent.
-- It might be nice to report something the first time that
-  happens on a particular mount point, record that fact,
-  then report again if it begins to *not* happen at some
-  point thereafter (due to the underlying support being
-  changed via dmsetup while still mounted).
+> I think it is triggering the "NFS server access pattern" logic and so
+> keeping speculative preallocation around for longer.
 
-But I'm not going to wait for that.  I'll take in this
-patch as-is and if you care to act on those suggestions
-will rely on you to do so by sending a new patch.
+Longer meaning practically infinitely :)
 
-Reviewed-by: Alex Elder <aelder@sgi.com>
+> I'd suggest removing the allocsize mount option - you shouldn't need
+> it anymore because the new default behaviour resists fragmentation a
+> whole lot better than pre-2.6.38 kernels.
 
+I did remove it already, and will actively try this on our production
+server which suffer from severe fragmentation (but xfs_fsr fixes that with
+some work (suspending the logfile writing) anyway).
+
+However, I would suggest that whatever heuristic 2.6.38 uses is deeply
+broken at the momment, as NFS was not involved here at all (so no need for
+it), the usage pattern was a simple compile-then-link-pattern (which is
+very common), and there is really no need to cache this preallocation for
+files that have been closed 8 hours ago and never touched since then.
+
+-- 
+                The choice of a       Deliantra, the free code+content MORPG
+      -----==-     _GNU_              http://www.deliantra.net
+      ----==-- _       generation
+      ---==---(_)__  __ ____  __      Marc Lehmann
+      --==---/ / _ \/ // /\ \/ /      schmorp@schmorp.de
+      -=====/_/_//_/\_,_/ /_/\_\
 
 _______________________________________________
 xfs mailing list
