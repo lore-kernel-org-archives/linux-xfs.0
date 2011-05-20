@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4JNu7LK059855 for <xfs@oss.sgi.com>; Thu, 19 May 2011 18:56:07 -0500
+	p4K0PX1w060911 for <xfs@oss.sgi.com>; Thu, 19 May 2011 19:25:33 -0500
 Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3AC3415D5E7F
-	for <xfs@oss.sgi.com>; Thu, 19 May 2011 16:56:04 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4FD581E3185E
+	for <xfs@oss.sgi.com>; Thu, 19 May 2011 17:25:31 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	Nt6WphONH0oHA6O7 for <xfs@oss.sgi.com>;
-	Thu, 19 May 2011 16:56:04 -0700 (PDT)
-Date: Fri, 20 May 2011 09:56:01 +1000
+	5WK8mGEoUOV79lro for <xfs@oss.sgi.com>;
+	Thu, 19 May 2011 17:25:31 -0700 (PDT)
+Date: Fri, 20 May 2011 10:25:28 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [XFS Tests Punch Hole 2/3 v3] XFS TESTS: Add Fallocate Punch
-	Hole Test Routines
-Message-ID: <20110519235601.GL32466@dastard>
-References: <4DD43300.6010908@linux.vnet.ibm.com>
-	<20110519013144.GF32466@dastard>
-	<4DD560CF.3040706@linux.vnet.ibm.com>
+Subject: Re: btree re-write and XFS_WANT_CORRUPTED_GOTO
+Message-ID: <20110520002528.GM32466@dastard>
+References: <BANLkTinb3aQc9GSy4dqFVeVpGk8W4M92fA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4DD560CF.3040706@linux.vnet.ibm.com>
+In-Reply-To: <BANLkTinb3aQc9GSy4dqFVeVpGk8W4M92fA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,126 +29,59 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Allison Henderson <achender@linux.vnet.ibm.com>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>, Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+To: Peter Watkins <treestem@gmail.com>
+Cc: xfs@oss.sgi.com
 
-On Thu, May 19, 2011 at 11:26:23AM -0700, Allison Henderson wrote:
-> On 5/18/2011 6:31 PM, Dave Chinner wrote:
-> >On Wed, May 18, 2011 at 01:58:40PM -0700, Allison Henderson wrote:
-> >>This patch adds low level routines to common.punch
-> >>for populating test files and punching holes in them using
-> >>fallocate.  When a hole is punched, file is then analyzed to
-> >>verify that the hole was punched correctly.  These routines will
-> >>be used to test various corner cases in the new fallocate
-> >>punch hole tests.
-> >
-> >So what condition does this test cover that test 252 doesn't?
-....
-> >....
-> >
-> >I think maybe this test is trying to be too smart and do too much,
-> >and the verbosity is hurting my eyes. I'm giving up here because I
-> >think it overlaps greatly with test 252, and I can't see what
-> >addition failures this test would actually detect that fsx and 252
-> >wouldn't. If there are corner cases that 252 isn't covering that
-> >this test does, then I think they should be added to 252....
-> >
-> >
+On Thu, May 19, 2011 at 11:59:18AM -0400, Peter Watkins wrote:
+> Hello again,
 > 
+> I've occasionally seen the XFS_WANT_CORRUPTED_GOTO error from
+> xfs_free_extent, usually when cleaning up an unlinked file or
+> truncating a file.
 > 
-> Hi there,
+> Is the btree rewrite known to fix any WANT_CORRUPTED problems? More
+
+No.
+
+> generally, why was the btree code reworked?
+
+Three copies of the almost the same btree code, spanning 15,000 lines
+of code, reduced to one btree core file and three ~1,000 line
+functions per btree type. All btrees get WANT_CORRUPTED coverage
+instead of just the freespace btree. Much easier to implement new
+btrees (~1,000 lines of code instead of ~4-7000 lines). Bug fixes to
+the btree core get fixed in all types, instead of a just the one
+tree it was discovered for. Optimisations need to touch one piece of
+code, not three, etc, etc.
+
+> going from 2.6.27 to 2.6.32 (still old I know), which seems to span
+> the btree re-write.
 > 
-> Thx for the all the reviewing on this one.  Im not quite sure I
-> agree that the tests are analogous though.  I did some poking around
-> in xfsprogs which I believe is what test 252 is using to do perform
-> most of its operations.  I found the code where the hole gets
-> punched, but I didnt find any code that does any kind of analyzing
-> to verify that the hole was punched correctly.
+> Are any particular patches recommended for this problem? I came across
+> 24446fc66fdebbdd8baca0f44fd2a47ad77ba580. It's discussed at
+> http://oss.sgi.com/archives/xfs/2011-01/msg00266.html  Do any others
+> come to mind?
 
-It's in the golden output - we use the "$map_cmd" output and filter
-it to the normalise the data/unwritten/hole pattern, and if that
-doesn't match the golden output, the test will fail. So it does
-indeed test that the hole is exactly where we expect it to be, just
-without needing the complex logic.
+That problem required CXFS to reproduce - mainline XFS never
+executes the particular code path that triggered the bug.
 
-> Maybe I over looked
-> it?  It kinda looks like the hole gets punched and it just checks
-> the return code (fpunch_f in io/prealloc.c right?).
+Seriously, if you are having problems with btree corruption, the
+first thin you need to do is run with the latest and greatest code.
+We fix problems all the time, so asking "what commits from the past
+12 releases will fix this problem" is kinda pointless - we can't
+give you any sort of reasonable answer to that.
 
-For the immediate exectution of the punch, yes. That code doesn't do
-the checking that there is a hole in the right place, though, which
-is what the golden output checks at the end of the test do.
+If you can reproduce the problem on a recent kernel (2.6.38 or .39)
+then we know we've got a bug that has not been fixed yet, and that
+means we need to do spend the effort to fiadn it. However, if you
+can't reproduce it on a current kernel, then theres really nothing
+much we can do to help you identify the cause - you can run a bisect
+on your reproducing workload and find the exact patch that fixed the
+problem much more easily than we can....
 
-> The reason this concerns me is that because a lot of the bugs that I
-> worked out during development did not show up in the form of a bad
-> return code or kernel oops.  Initially the tests were not automated
-> as they are now.  They would just perform the operations and print
-> out info about the file, the fs, fragmentation etc, and I would just
-> go through the raw output to make sure that every thing added up, as
-> well as just looking for anything that was out of the ordinary.  To
-> be honest, I feel that I caught a lot more bugs before they started
-> just with a careful eye, than if I had just been watching return
-> codes.  The above routine was meant to automate that work for
-> xfstests, but sense I do not see anything in xfstests or xfsprogs
-> that is doing any kinda of analyzing, I cannot say that I think
-> removing this layer provides the same level of verification.
-
-Looking through the raw output in an automated fashion is exactly
-what the filter and golden image checks do.
-
-> Unfortunately it does sound like a lot of what is going would not
-> work on all file systems, but I would feel better if we at least
-> kept the hexdumps. The reason I'm diffing hexdumps in here is
-> because some files get quite large and can take a while to copy, but
-> if they are full of repeating data the hexdumps are small.
-
-You've got to read the files to produce hexdumps, md5sums or just
-plain diff the binary files, so there's no saving in what you
-propose anyway. IMO, it's just a poor way to compare two files. You
-should have a golden image, and compare the test file against the
-golden image. You don't need hexdump to do that, and the files. And
-given the files are small, there is no reason not to copy stuff
-around.
-
-The only thing that 252 does not do is compare the file contents to
-determine whether the zeros start and stop at the correct spot.
-Realistically, fsx will do a much better job of testing these corner
-cases from a data POV than any manual test could ever do. Hence
-it's quite valid to make the assumption that we don't need to test
-the data for zeros because we have other tests that do a better job
-of it...
-
-Remember that robust unit testing is not based around the concept of
-"we need to check everything in one test". It's based around the
-concept that a test should be as simple as possible and test one
-thing. Then you write another simple test to cover a different
-aspect of the same functionality, and the test suite as a whole then
-covers all the functionality needing to be verified.  fsx will cover
-the "user data being zeroed correctly" cases, test 252 covers the
-"hole being punched in the right place" cases. IOWs, there isn't One
-True Test to test hole punching is working correctly - it's the
-coverage provided by the entire suite that gives us the confidence
-that hole punching is working correctly.
-
-> They can
-> be placed in the golden output just the same I suppose.  As much as
-> I would like to include output about the extents, I do not know how
-> that would work since the file may be inherently fragmented
-> differently from test to test.
-
-That's the problem that the map output (extent) filtering fixes. 
-
-And FWIW, there's a bunch of interesting hole punching tests in the
-DMAPI part of xfstests that is not normally run on mainline kernels
-(no dmapi support) because punching out extents is a primary
-functionality of a HSM and, as I've said before, a common place to
-find data corruption bugs. IOWs, XFS has had hole punch test
-coverage for a lot longer than the recent test cases have been
-around. Those are tests 145, 161, 175, 176 and 185.  If we want more
-robust hole punch coverage, taking those and making them run without
-needing dmapi or XFS specific interfaces would be a good place to
-start. We don't need to re-invent the wheel just to have generic
-tests....
+Of course, if you really want someone to do all this work and fix
+these sort of problems on older kernels for you, then that's the
+value proposition that using RHEL or SLES bring to the table.
 
 Cheers,
 
