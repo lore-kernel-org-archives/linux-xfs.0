@@ -1,23 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4KHcjie104116 for <xfs@oss.sgi.com>; Fri, 20 May 2011 12:38:45 -0500
-Received: from mail-qy0-f174.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E7FA9CF8050
-	for <xfs@oss.sgi.com>; Fri, 20 May 2011 10:38:43 -0700 (PDT)
-Received: from mail-qy0-f174.google.com (mail-qy0-f174.google.com
-	[209.85.216.174]) by cuda.sgi.com with ESMTP id
-	bgra8O9QaaBwB8aZ for <xfs@oss.sgi.com>;
-	Fri, 20 May 2011 10:38:43 -0700 (PDT)
-Received: by qyk7 with SMTP id 7so468849qyk.5
-	for <xfs@oss.sgi.com>; Fri, 20 May 2011 10:38:42 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <BANLkTikHE1iBrhLf-Y2F_YXoxFEW_Ybvhw@mail.gmail.com>
-References: <BANLkTikHE1iBrhLf-Y2F_YXoxFEW_Ybvhw@mail.gmail.com>
-Date: Fri, 20 May 2011 13:38:42 -0400
-Message-ID: <BANLkTimUe0VzmRbmrWqNyTcJf3sxgKVRnA@mail.gmail.com>
-Subject: Re: XFS mount via 2.6.38.5 fails - suggestions?
-From: Paul Anderson <pha@umich.edu>
+	p4KINRHi105730 for <xfs@oss.sgi.com>; Fri, 20 May 2011 13:23:28 -0500
+Received: from smtp-out.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 17F4FCF8006
+	for <xfs@oss.sgi.com>; Fri, 20 May 2011 11:23:24 -0700 (PDT)
+Received: from smtp-out.google.com (smtp-out.google.com [74.125.121.67]) by
+	cuda.sgi.com with ESMTP id 4XtDp1pAyddTJc6F for
+	<xfs@oss.sgi.com>; Fri, 20 May 2011 11:23:24 -0700 (PDT)
+From: haldar@google.com
+Subject: [PATCH] xfstests: test fallocate, write, ftruncate combinations.
+Date: Fri, 20 May 2011 11:22:51 -0700
+Message-Id: <1305915771-8003-1-git-send-email-haldar@google.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,164 +20,358 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: sandeen@redhat.com, haldar@google.com
 
-xfs_logprint with no options but the device reports this:
+From: Vivek Haldar <haldar@google.com>
 
-xfs_logprint:
-    data device: 0xfb01
-    log device: 0xfb01 daddr: 10737418272 length: 262144
+Scenarios covered:
+1. Fallocate X bytes
+2. Write Y bytes
+3. Truncate to Z bytes
+for various values of X, Y and Z, and check both file size and
+number of filesystem blocks used by the file after each of
+1, 2 and 3.
 
-Header 0x2003 wanted 0xfeedbabe
-**********************************************************************
-* ERROR: header cycle=3D8195        block=3D85485                        *
-**********************************************************************
-Bad log record header
+Signed-off-by: Vivek Haldar <haldar@google.com>
+---
+ 254     |  254 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 254.out |   48 ++++++++++++
+ group   |    1 +
+ 3 files changed, 303 insertions(+), 0 deletions(-)
+ create mode 100644 254
+ create mode 100644 254.out
 
-xfs_logprint with the -t option prints a few hundred thousand lines of
-transactions with no error.  If I use just the -v option, the output
-is the same as above.
-
-I'm unable to run xfs_check, as the log is dirty.
-
-Does this ring any bells with anyone?
-
-Thanks,
-
-Paul
-
-On Fri, May 20, 2011 at 9:41 AM, Paul Anderson <pha@umich.edu> wrote:
-> The following traceback comes when we try to mount what appears to now
-> be a corrupted filesystem. =A0We have backups of all small files, but
-> would like to copy off additional large files that were not backed up.
-> =A0The hardware the filesystem is on is currently working, but has a
-> checkered past (4 power outages over 2 years, lots of unrelated kernel
-> crashes, etc). =A0The filesystem is mounted on an LVM that spans about 6
-> hardware RAID6 arrays. =A0The last events that might have triggered the
-> problem were an unplanned power outage Monday, followed up on Tuesday
-> by a user who remove 7T of data.
->
-> I can't mount the FS, otherwise, I'd also include the xfs_info output
-> - but the settings were all stock from plain, unadorned mkfs.xfs
->
-> I have not attempted any recovery. =A0We tried two versions of the
-> kernel, 2.6.35 (our cluster version) and 2.6.38.5, which the report
-> below is from.
->
-> Can I mount readonly without playing the log without causing any
-> further damage to the filesystem? =A0I am familiar with the
-> xfs_dump/restore option, which also would be suspect given the
-> apparent damage.
->
-> It is a 70T filesystem, and I expect any recovery to be fairly long
-> term (weeks, maybe longer), but I am looking for suggestions of things
-> to try.
->
-> Our team is also interested in recruiting a short term contractor (5
-> hours?) who is qualified to look into the problem for us (preferably a
-> known XFS developer). =A0Please let me know off list if you have ability
-> and interest to look into this.
->
-> Thanks,
->
-> Paul
->
->
->
-> [ =A0143.914901] XFS mounting filesystem dm-1
-> [ =A0144.125964] Starting XFS recovery on filesystem: dm-1 (logdev: inter=
-nal)
-> [ =A0216.506511] BUG: unable to handle kernel NULL pointer dereference
-> at 00000000000000f8
-> [ =A0216.516382] IP: [<ffffffffa046bb82>] xfs_cmn_err+0x52/0xd0 [xfs]
-> [ =A0216.516382] PGD 1f3d9e6067 PUD 1f38547067 PMD 0
-> [ =A0216.516382] Oops: 0000 [#1] SMP
-> [ =A0216.516382] last sysfs file: /sys/devices/virtual/net/lo/type
-> [ =A0216.516382] CPU 0
-> [ =A0216.516382] Modules linked in: dlm configfs autofs4 dm_crypt xfs
-> mptctl nfsd exportfs nfs lockd nfs_acl auth_rpcgss sunrpc ixgbe bnx2
-> psmouse dca lp mdio shpchp joydev serio_raw dcdbas parport ses
-> enclosure radeon fbcon ttm tileblit font bitblit softcursor
-> drm_kms_helper drm e1000e mptfc mptscsih i2c_algo_bit usbhid hid
-> mptbase megaraid_sas scsi_transport_fc scsi_tgt
-> [ =A0216.516382]
-> [ =A0216.516382] Pid: 2068, comm: mount Not tainted 2.6.38.5 #1 Dell
-> Inc. PowerEdge R900/0X947H
-> [ =A0216.516382] RIP: 0010:[<ffffffffa046bb82>] =A0[<ffffffffa046bb82>]
-> xfs_cmn_err+0x52/0xd0 [xfs]
-> [ =A0216.516382] RSP: 0018:ffff881f3e28f9c8 =A0EFLAGS: 00010246
-> [ =A0216.516382] RAX: ffff881f3e28f9f8 RBX: ffff881f3e28fa08 RCX: fffffff=
-fa0473d80
-> [ =A0216.516382] RDX: 0000000000000000 RSI: ffffffffa0478dde RDI: fffffff=
-fa0479e17
-> [ =A0216.516382] RBP: ffff881f3e28fa48 R08: ffffffffa04789cd R09: 0000000=
-0000005f6
-> [ =A0216.516382] R10: ffff881f3dedf500 R11: 0000000000000001 R12: ffff881=
-f3dade0d0
-> [ =A0216.516382] R13: ffff881f3d4f87a8 R14: ffff881f3dade000 R15: 0000000=
-001cf0a0f
-> [ =A0216.516382] FS: =A000007f0565c5e7e0(0000) GS:ffff8800bf400000(0000)
-> knlGS:0000000000000000
-> [ =A0216.516382] CS: =A00010 DS: 0000 ES: 0000 CR0: 000000008005003b
-> [ =A0216.516382] CR2: 00000000000000f8 CR3: 0000001f3df72000 CR4: 0000000=
-0000006f0
-> [ =A0216.516382] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000=
-000000000
-> [ =A0216.516382] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000=
-000000400
-> [ =A0216.516382] Process mount (pid: 2068, threadinfo ffff881f3e28e000,
-> task ffff881f2d2396c0)
-> [ =A0216.516382] Stack:
-> [ =A0216.516382] =A00000000000014680 0000000000014680 0000000000000020
-> ffff881f3e28fa58
-> [ =A0216.516382] =A0ffff881f3e28fa08 0000000000000001 ffffffffa0473d80
-> ffff881f3e28f9d8
-> [ =A0216.516382] =A0ffff881fb2cebf00 ffff881f3d4f87a8 ffff881f35e5b000
-> ffffffffa040eb6c
-> [ =A0216.516382] Call Trace:
-> [ =A0216.516382] =A0[<ffffffffa040eb6c>] ? xfs_allocbt_init_cursor+0x4c/0=
-xc0 [xfs]
-> [ =A0216.516382] =A0[<ffffffffa04366e0>] xfs_error_report+0x40/0x50 [xfs]
-> [ =A0216.516382] =A0[<ffffffffa040e3e2>] ? xfs_free_extent+0xa2/0xc0 [xfs]
-> [ =A0216.516382] =A0[<ffffffffa040c62c>] xfs_free_ag_extent+0x60c/0x7f0 [=
-xfs]
-> [ =A0216.516382] =A0[<ffffffffa040e3e2>] xfs_free_extent+0xa2/0xc0 [xfs]
-> [ =A0216.516382] =A0[<ffffffffa04499c5>] xlog_recover_process_efi+0x1b5/0=
-x200 [xfs]
-> [ =A0216.516382] =A0[<ffffffffa04556ca>] ? xfs_trans_ail_cursor_set+0x1a/=
-0x30 [xfs]
-> [ =A0216.516382] =A0[<ffffffffa0449b57>] xlog_recover_process_efis+0x67/0=
-xc0 [xfs]
-> [ =A0216.516382] =A0[<ffffffffa044dcc4>] xlog_recover_finish+0x24/0xe0 [x=
-fs]
-> [ =A0216.516382] =A0[<ffffffffa04458bc>] xfs_log_mount_finish+0x2c/0x30 [=
-xfs]
-> [ =A0216.516382] =A0[<ffffffffa04519d4>] xfs_mountfs+0x444/0x710 [xfs]
-> [ =A0216.516382] =A0[<ffffffffa0469915>] xfs_fs_fill_super+0x245/0x340 [x=
-fs]
-> [ =A0216.516382] =A0[<ffffffff8114d3f3>] mount_bdev+0x1c3/0x210
-> [ =A0216.516382] =A0[<ffffffffa04696d0>] ? xfs_fs_fill_super+0x0/0x340 [x=
-fs]
-> [ =A0216.516382] =A0[<ffffffffa0467705>] xfs_fs_mount+0x15/0x20 [xfs]
-> [ =A0216.516382] =A0[<ffffffff8114c8c2>] vfs_kern_mount+0x92/0x250
-> [ =A0216.516382] =A0[<ffffffff8114caf2>] do_kern_mount+0x52/0x110
-> [ =A0216.516382] =A0[<ffffffff811693f9>] do_mount+0x259/0x840
-> [ =A0216.516382] =A0[<ffffffff81166e6a>] ? copy_mount_options+0xfa/0x1a0
-> [ =A0216.516382] =A0[<ffffffff81169a70>] sys_mount+0x90/0xe0
-> [ =A0216.516382] =A0[<ffffffff8100bf82>] system_call_fastpath+0x16/0x1b
-> [ =A0216.516382] Code: 10 48 8d 45 90 c7 45 90 20 00 00 00 48 89 4d b0
-> 48 c7 c7 17 9e 47 a0 48 89 5d 98 48 8d 5d c0 48 89 45 b8 48 8d 45 b0
-> 48 89 5d a0 <48> 8b b2 f8 00 00 00 48 89 c2 31 c0 e8 d7 fc 10 e1 48 83
-> c4 78
-> [ =A0216.516382] RIP =A0[<ffffffffa046bb82>] xfs_cmn_err+0x52/0xd0 [xfs]
-> [ =A0216.516382] =A0RSP <ffff881f3e28f9c8>
-> [ =A0216.516382] CR2: 00000000000000f8
-> [ =A0216.810967] ---[ end trace e790084103e4ceee ]---
->
+diff --git a/254 b/254
+new file mode 100644
+index 0000000..bb11b2e
+--- /dev/null
++++ b/254
+@@ -0,0 +1,254 @@
++#! /bin/bash
++# FS QA Test No. 254
++#
++# Test fallocate, write, ftruncate combinations.
++#
++# Scenarios covered:
++# 1. Fallocate X bytes
++# 2. Write Y bytes
++# 3. Truncate to Z bytes
++# for various values of X, Y and Z, and check both file size and
++# number of filesystem blocks used by the file after each of
++# 1, 2 and 3.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2011 Google, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++# creator
++owner=haldar@google.com
++
++seq=`basename $0`
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1        # failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++# fallocate, write and truncate with various options and checks.
++_test()
++{
++  falloc_size=${1}         # bytes
++  falloc_keep_size=${2}    # boolean
++  expected_size_after_falloc=${3}
++  expected_blocks_after_falloc=${4}
++  write_size=${5}
++  expected_size_after_write=${6}
++  expected_blocks_after_write=${7}
++  trunc_size=${8}
++  expected_size_after_trunc=${9}
++  expected_blocks_after_trunc=${10}
++  dont_delete_test_file=${11}  # boolean
++
++  echo "falloc/write/truncate test: \
++    falloc_size=${falloc_size} \
++    falloc_keep_size=${falloc_keep_size} \
++    expected_size_after_falloc=${expected_size_after_falloc} \
++    expected_blocks_after_falloc=${expected_blocks_after_falloc} \
++    write_size=${write_size} \
++    expected_size_after_write=${expected_size_after_write} \
++    expected_blocks_after_write=${expected_blocks_after_write} \
++    trunc_size=${trunc_size} \
++    expected_size_after_trunc=${expected_size_after_trunc} \
++    expected_blocks_after_trunc=${expected_blocks_after_trunc} \
++    dont_delete_test_file=${dont_delete_test_file}"
++    
++  if [ $dont_delete_test_file ] ; then
++    echo "Re-using test file."
++  else
++    rm -f $test_file
++  fi
++
++  # falloc
++  keep_size_flag=''
++  if $falloc_keep_size ; then
++    keep_size_flag='-k'
++  fi
++  if [ $falloc_size -gt 0 ]; then
++    ${XFS_IO_PROG} -F -f -d \
++      -c "falloc $keep_size_flag 0 $falloc_size" \
++      $test_file | _filter_xfs_io_unique
++  else
++    touch $test_file
++  fi
++
++  # check sizes after falloc
++  size_after_falloc=`stat --format="%s" $test_file`
++  blocks_after_falloc=`du --block-size=4096 -s $test_file | cut -f 1`
++
++  if [ $expected_size_after_falloc -ne $size_after_falloc ]; then
++    status=1
++    echo "Expected size after falloc to be $expected_size_after_falloc \
++      but it was actually $size_after_falloc."
++    exit ${status}
++  fi
++
++  if [ $expected_blocks_after_falloc -ne $blocks_after_falloc ]; then
++    status=1
++    echo "Expected blocks after falloc to be $expected_blocks_after_falloc \
++      but it was actually $blocks_after_falloc."
++    exit ${status}
++  fi
++
++  # write
++  if [ $write_size -gt 0 ]; then
++    ${XFS_IO_PROG} -F -f -d \
++      -c "pwrite 0 $write_size" \
++      $test_file | _filter_xfs_io_unique
++  fi
++
++  # check sizes after write
++  size_after_write=`stat --format="%s" $test_file`
++  blocks_after_write=`du --block-size=4096 -s $test_file | cut -f 1`
++
++  if [ $expected_size_after_write -ne $size_after_write ]; then
++    status=1
++    echo "Expected size after write to be $expected_size_after_write \
++      but it was actually $size_after_write."
++    exit ${status}
++  fi
++
++  if [ $expected_blocks_after_write -ne $blocks_after_write ]; then
++    status=1
++    echo "Expected blocks after write to be $expected_blocks_after_write \
++      but it was actually $blocks_after_write."
++    exit ${status}
++  fi
++
++  # trunc
++  if [ $trunc_size -gt 0 ]; then
++    ${XFS_IO_PROG} -F -f -d \
++      -c "truncate $trunc_size" \
++      $test_file | _filter_xfs_io_unique
++  fi
++
++  # check sizes after trunc
++  size_after_trunc=`stat --format="%s" $test_file`
++  blocks_after_trunc=`du --block-size=4096 -s $test_file | cut -f 1`
++
++  if [ $expected_size_after_trunc -ne $size_after_trunc ]; then
++    status=1
++    echo "Expected size after truncate to be $expected_size_after_trunc \
++      but it was actually $size_after_trunc."
++    exit ${status}
++  fi
++
++  if [ $expected_blocks_after_trunc -ne $blocks_after_trunc ]; then
++    status=1
++    echo "Expected blocks after trunc to be $expected_blocks_after_trunc \
++      but it was actually $blocks_after_trunc."
++    exit ${status}
++  fi
++}
++
++# Check that a file has the given bit pattern.
++_test_file_contents()
++{
++  file_name=${1}
++  offset=${2}
++  len=${3}
++  expected_pattern=${4}
++  expected_count=${5}
++
++  count=`${XFS_IO_PROG} -F -f -d -c \
++    "pread -v $offset $len" $file_name \
++    | grep -w -c $expected_pattern`
++
++  if [ $expected_count -ne $count ]; then
++    status=1
++    echo "Expected count $expected_count for $file_name at \
++      offset $offset for $len bytes for pattern $expected_pattern \
++      but count was $count."
++    exit ${status}
++  fi
++}
++
++# Get standard environment, filters and checks.
++. ./common.rc
++. ./common.filter
++
++# Prerequisites for the test run.
++_supported_fs generic
++_supported_os Linux
++_require_xfs_io_falloc
++
++# Remove any leftover files from last run.
++rm -f ${TEST_DIR}/test*
++
++test_file=${TEST_DIR}/test
++
++# Generic test cleanup function.
++_cleanup()
++{
++  cd /
++  rm -f $tmp.*
++  rm -f $test_file
++}
++
++# Begin test cases.
++
++# KEEP_SIZE
++_test 10240 true  0 3  0    0    3  0   0   3
++_test 8192  true  0 2  0    0    2  0   0   2
++_test 4096  true  0 1  0    0    1  0   0   1
++
++# !KEEP_SIZE
++_test 10240 false 10240  3  0    10240    3  0   10240   3
++_test 8192  false 8192   2  0    8192     2  0   8192    2
++_test 4096  false 4096   1  0    4096     1  0   4096    1
++_test_file_contents $test_file 1024 512 "00" 32   # check null.
++
++_test 10240 true 0 3  4096    4096    3  0   4096   3
++_test 10240 true 0 3  8192    8192    3  0   8192   3
++_test 10240 true 0 3  10240    10240    3  0   10240   3
++
++_test 16384 true 0 4  16384    16384    4  0   16384   4
++
++# just truncate tests, without falloc.
++_test 0 false 0 0   8192 8192 2    8192 8192 2
++_test 0 false 0 0   8192 8192 2    4096 4096 1
++_test 0 false 0 0   8192 8192 2    16384 16384 2
++_test_file_contents $test_file 8192 512 "00" 32   # check null.
++_test_file_contents $test_file 4096 512 "cd" 32   # check non-null.
++
++# write beyond fallocate size and then truncate to the written size.
++_test 8192 true 0 2    16384 16384 4    16384 16384 4
++_test_file_contents $test_file 8192 512 "cd" 32   # check non-null.
++
++# fallocate, write, truncate below the written size, and then truncate up. Then
++# try to read the previously written data to see whether it returns zero or the
++# stale data.
++_test 8192 true 0 2      16384 16384 4    12288 12288 3
++_test 0    true 12288 3  0     12288 3    16384 16384 3   true
++_test_file_contents $test_file 1024 512 "cd" 32    # check non-null.
++_test_file_contents $test_file 12288 512 "00" 32   # check null.
++
++# fallocate, write with the fallocate size, write after the fallocate size, and
++# then truncate to a size smaller than the fallocate size.
++_test 8192 true 0 2      8192 8192 2      0 8192 2
++_test 0    true 8192 2   12288 12288 3    4096 4096 1   true
++
++
++# The following reproduce an existing bug.
++# See http://patchwork.ozlabs.org/patch/96080/
++_test 10240 true 0 3  4096 4096 3  8192 8192 2
++_test 10240 true 0 3  0    0    3  8192 8192 2
++_test 16384 true 0 4  0        0        4  16384   16384   4
++
++
++status=0
++exit ${status}
+diff --git a/254.out b/254.out
+new file mode 100644
+index 0000000..fe70f0e
+--- /dev/null
++++ b/254.out
+@@ -0,0 +1,48 @@
++QA output created by 254
++falloc/write/truncate test:     falloc_size=10240     falloc_keep_size=true     expected_size_after_falloc=0     expected_blocks_after_falloc=3     write_size=0     expected_size_after_write=0     expected_blocks_after_write=3     trunc_size=0     expected_size_after_trunc=0     expected_blocks_after_trunc=3     dont_delete_test_file=
++falloc/write/truncate test:     falloc_size=8192     falloc_keep_size=true     expected_size_after_falloc=0     expected_blocks_after_falloc=2     write_size=0     expected_size_after_write=0     expected_blocks_after_write=2     trunc_size=0     expected_size_after_trunc=0     expected_blocks_after_trunc=2     dont_delete_test_file=
++falloc/write/truncate test:     falloc_size=4096     falloc_keep_size=true     expected_size_after_falloc=0     expected_blocks_after_falloc=1     write_size=0     expected_size_after_write=0     expected_blocks_after_write=1     trunc_size=0     expected_size_after_trunc=0     expected_blocks_after_trunc=1     dont_delete_test_file=
++falloc/write/truncate test:     falloc_size=10240     falloc_keep_size=false     expected_size_after_falloc=10240     expected_blocks_after_falloc=3     write_size=0     expected_size_after_write=10240     expected_blocks_after_write=3     trunc_size=0     expected_size_after_trunc=10240     expected_blocks_after_trunc=3     dont_delete_test_file=
++falloc/write/truncate test:     falloc_size=8192     falloc_keep_size=false     expected_size_after_falloc=8192     expected_blocks_after_falloc=2     write_size=0     expected_size_after_write=8192     expected_blocks_after_write=2     trunc_size=0     expected_size_after_trunc=8192     expected_blocks_after_trunc=2     dont_delete_test_file=
++falloc/write/truncate test:     falloc_size=4096     falloc_keep_size=false     expected_size_after_falloc=4096     expected_blocks_after_falloc=1     write_size=0     expected_size_after_write=4096     expected_blocks_after_write=1     trunc_size=0     expected_size_after_trunc=4096     expected_blocks_after_trunc=1     dont_delete_test_file=
++falloc/write/truncate test:     falloc_size=10240     falloc_keep_size=true     expected_size_after_falloc=0     expected_blocks_after_falloc=3     write_size=4096     expected_size_after_write=4096     expected_blocks_after_write=3     trunc_size=0     expected_size_after_trunc=4096     expected_blocks_after_trunc=3     dont_delete_test_file=
++wrote 4096/4096 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++falloc/write/truncate test:     falloc_size=10240     falloc_keep_size=true     expected_size_after_falloc=0     expected_blocks_after_falloc=3     write_size=8192     expected_size_after_write=8192     expected_blocks_after_write=3     trunc_size=0     expected_size_after_trunc=8192     expected_blocks_after_trunc=3     dont_delete_test_file=
++wrote 8192/8192 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++falloc/write/truncate test:     falloc_size=10240     falloc_keep_size=true     expected_size_after_falloc=0     expected_blocks_after_falloc=3     write_size=10240     expected_size_after_write=10240     expected_blocks_after_write=3     trunc_size=0     expected_size_after_trunc=10240     expected_blocks_after_trunc=3     dont_delete_test_file=
++wrote 10240/10240 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++falloc/write/truncate test:     falloc_size=16384     falloc_keep_size=true     expected_size_after_falloc=0     expected_blocks_after_falloc=4     write_size=16384     expected_size_after_write=16384     expected_blocks_after_write=4     trunc_size=0     expected_size_after_trunc=16384     expected_blocks_after_trunc=4     dont_delete_test_file=
++wrote 16384/16384 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++falloc/write/truncate test:     falloc_size=0     falloc_keep_size=false     expected_size_after_falloc=0     expected_blocks_after_falloc=0     write_size=8192     expected_size_after_write=8192     expected_blocks_after_write=2     trunc_size=8192     expected_size_after_trunc=8192     expected_blocks_after_trunc=2     dont_delete_test_file=
++wrote 8192/8192 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++falloc/write/truncate test:     falloc_size=0     falloc_keep_size=false     expected_size_after_falloc=0     expected_blocks_after_falloc=0     write_size=8192     expected_size_after_write=8192     expected_blocks_after_write=2     trunc_size=4096     expected_size_after_trunc=4096     expected_blocks_after_trunc=1     dont_delete_test_file=
++wrote 8192/8192 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++falloc/write/truncate test:     falloc_size=0     falloc_keep_size=false     expected_size_after_falloc=0     expected_blocks_after_falloc=0     write_size=8192     expected_size_after_write=8192     expected_blocks_after_write=2     trunc_size=16384     expected_size_after_trunc=16384     expected_blocks_after_trunc=2     dont_delete_test_file=
++wrote 8192/8192 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++falloc/write/truncate test:     falloc_size=8192     falloc_keep_size=true     expected_size_after_falloc=0     expected_blocks_after_falloc=2     write_size=16384     expected_size_after_write=16384     expected_blocks_after_write=4     trunc_size=16384     expected_size_after_trunc=16384     expected_blocks_after_trunc=4     dont_delete_test_file=
++wrote 16384/16384 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++falloc/write/truncate test:     falloc_size=8192     falloc_keep_size=true     expected_size_after_falloc=0     expected_blocks_after_falloc=2     write_size=16384     expected_size_after_write=16384     expected_blocks_after_write=4     trunc_size=12288     expected_size_after_trunc=12288     expected_blocks_after_trunc=3     dont_delete_test_file=
++wrote 16384/16384 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++falloc/write/truncate test:     falloc_size=0     falloc_keep_size=true     expected_size_after_falloc=12288     expected_blocks_after_falloc=3     write_size=0     expected_size_after_write=12288     expected_blocks_after_write=3     trunc_size=16384     expected_size_after_trunc=16384     expected_blocks_after_trunc=3     dont_delete_test_file=true
++Re-using test file.
++falloc/write/truncate test:     falloc_size=8192     falloc_keep_size=true     expected_size_after_falloc=0     expected_blocks_after_falloc=2     write_size=8192     expected_size_after_write=8192     expected_blocks_after_write=2     trunc_size=0     expected_size_after_trunc=8192     expected_blocks_after_trunc=2     dont_delete_test_file=
++wrote 8192/8192 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++falloc/write/truncate test:     falloc_size=0     falloc_keep_size=true     expected_size_after_falloc=8192     expected_blocks_after_falloc=2     write_size=12288     expected_size_after_write=12288     expected_blocks_after_write=3     trunc_size=4096     expected_size_after_trunc=4096     expected_blocks_after_trunc=1     dont_delete_test_file=true
++Re-using test file.
++wrote 12288/12288 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++falloc/write/truncate test:     falloc_size=10240     falloc_keep_size=true     expected_size_after_falloc=0     expected_blocks_after_falloc=3     write_size=4096     expected_size_after_write=4096     expected_blocks_after_write=3     trunc_size=8192     expected_size_after_trunc=8192     expected_blocks_after_trunc=2     dont_delete_test_file=
++wrote 4096/4096 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++falloc/write/truncate test:     falloc_size=10240     falloc_keep_size=true     expected_size_after_falloc=0     expected_blocks_after_falloc=3     write_size=0     expected_size_after_write=0     expected_blocks_after_write=3     trunc_size=8192     expected_size_after_trunc=8192     expected_blocks_after_trunc=2     dont_delete_test_file=
++falloc/write/truncate test:     falloc_size=16384     falloc_keep_size=true     expected_size_after_falloc=0     expected_blocks_after_falloc=4     write_size=0     expected_size_after_write=0     expected_blocks_after_write=4     trunc_size=16384     expected_size_after_trunc=16384     expected_blocks_after_trunc=4     dont_delete_test_file=
+diff --git a/group b/group
+index 9f88e75..a5e278d 100644
+--- a/group
++++ b/group
+@@ -367,3 +367,4 @@ deprecated
+ 251 ioctl trim
+ 252 auto quick prealloc
+ 253 auto quick
++254 auto quick prealloc
+-- 
+1.7.3.1
 
 _______________________________________________
 xfs mailing list
