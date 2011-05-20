@@ -1,22 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4K0PX1w060911 for <xfs@oss.sgi.com>; Thu, 19 May 2011 19:25:33 -0500
-Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4FD581E3185E
-	for <xfs@oss.sgi.com>; Thu, 19 May 2011 17:25:31 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	5WK8mGEoUOV79lro for <xfs@oss.sgi.com>;
-	Thu, 19 May 2011 17:25:31 -0700 (PDT)
-Date: Fri, 20 May 2011 10:25:28 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: btree re-write and XFS_WANT_CORRUPTED_GOTO
-Message-ID: <20110520002528.GM32466@dastard>
-References: <BANLkTinb3aQc9GSy4dqFVeVpGk8W4M92fA@mail.gmail.com>
+	p4K0tFlx061977 for <xfs@oss.sgi.com>; Thu, 19 May 2011 19:55:16 -0500
+Received: from mail.nethype.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6FEFECEC40A
+	for <xfs@oss.sgi.com>; Thu, 19 May 2011 17:55:13 -0700 (PDT)
+Received: from mail.nethype.de (mail.nethype.de [78.47.73.129]) by
+	cuda.sgi.com with ESMTP id SA9JTRPndiDnGLFF for
+	<xfs@oss.sgi.com>; Thu, 19 May 2011 17:55:13 -0700 (PDT)
+Received: from [10.0.0.5] (helo=doom.schmorp.de)
+	by mail.nethype.de with esmtp (Exim 4.72)
+	(envelope-from <schmorp@schmorp.de>) id 1QNDzj-0003Xv-LH
+	for xfs@oss.sgi.com; Fri, 20 May 2011 00:55:11 +0000
+Received: from [10.0.0.1] (helo=cerebro.laendle)
+	by doom.schmorp.de with esmtp (Exim 4.72)
+	(envelope-from <schmorp@schmorp.de>) id 1QNDzj-0005jd-GS
+	for xfs@oss.sgi.com; Fri, 20 May 2011 00:55:11 +0000
+Received: from root by cerebro.laendle with local (Exim 4.72)
+	(envelope-from <root@schmorp.de>) id 1QNDzj-0005Ar-F4
+	for xfs@oss.sgi.com; Fri, 20 May 2011 02:55:11 +0200
+Date: Fri, 20 May 2011 02:55:11 +0200
+From: Marc Lehmann <schmorp@schmorp.de>
+Subject: drastic changes to allocsize semantics in or around 2.6.38?
+Message-ID: <20110520005510.GA15348@schmorp.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <BANLkTinb3aQc9GSy4dqFVeVpGk8W4M92fA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,66 +37,48 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Peter Watkins <treestem@gmail.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, May 19, 2011 at 11:59:18AM -0400, Peter Watkins wrote:
-> Hello again,
-> 
-> I've occasionally seen the XFS_WANT_CORRUPTED_GOTO error from
-> xfs_free_extent, usually when cleaning up an unlinked file or
-> truncating a file.
-> 
-> Is the btree rewrite known to fix any WANT_CORRUPTED problems? More
+Hi!
 
-No.
+I have "allocsize=64m" (or simialr sizes, such as 1m, 16m etc.) on many of my
+xfs filesystems, in an attempt to fight fragmentation on logfiles.
 
-> generally, why was the btree code reworked?
+I am not sure about it's effectiveness, but in 2.6.38 (but not in 2.6.32),
+this leads to very unexpected and weird behaviour, namely that files being
+written have semi-permanently allocated chunks of allocsize to them.
 
-Three copies of the almost the same btree code, spanning 15,000 lines
-of code, reduced to one btree core file and three ~1,000 line
-functions per btree type. All btrees get WANT_CORRUPTED coverage
-instead of just the freespace btree. Much easier to implement new
-btrees (~1,000 lines of code instead of ~4-7000 lines). Bug fixes to
-the btree core get fixed in all types, instead of a just the one
-tree it was discovered for. Optimisations need to touch one piece of
-code, not three, etc, etc.
+I realised this when I did a make clean and a make in a buildroot directory,
+which cross-compiles uclibc, gcc, and lots of other packages, leading to a
+lot of mostly small files.
 
-> going from 2.6.27 to 2.6.32 (still old I know), which seems to span
-> the btree re-write.
-> 
-> Are any particular patches recommended for this problem? I came across
-> 24446fc66fdebbdd8baca0f44fd2a47ad77ba580. It's discussed at
-> http://oss.sgi.com/archives/xfs/2011-01/msg00266.html  Do any others
-> come to mind?
+After a few minutes, the job stopped because it ate 180GB of disk space and
+the disk was full. When I came back in the mornng (about 8 hours later), the
+disk was still full, and investigation showed that even 3kb files were
+allocated the full 64m (as seen with du).
 
-That problem required CXFS to reproduce - mainline XFS never
-executes the particular code path that triggered the bug.
+Atfer I deleted some files to get some space and rebooted, I suddenly had
+180GB of space again, so it seems an unmount "fixes" this issue.
 
-Seriously, if you are having problems with btree corruption, the
-first thin you need to do is run with the latest and greatest code.
-We fix problems all the time, so asking "what commits from the past
-12 releases will fix this problem" is kinda pointless - we can't
-give you any sort of reasonable answer to that.
+I often do these kind of build,s and I have allocsize on thee high values for
+a very long time, without ever having run into this kind of problem.
 
-If you can reproduce the problem on a recent kernel (2.6.38 or .39)
-then we know we've got a bug that has not been fixed yet, and that
-means we need to do spend the effort to fiadn it. However, if you
-can't reproduce it on a current kernel, then theres really nothing
-much we can do to help you identify the cause - you can run a bisect
-on your reproducing workload and find the exact patch that fixed the
-problem much more easily than we can....
+It seems that files get temporarily allocated much larger chunks (which is
+expoected behaviour), but xfs doesn't free them until there is a unmount
+(which is unexpected).
 
-Of course, if you really want someone to do all this work and fix
-these sort of problems on older kernels for you, then that's the
-value proposition that using RHEL or SLES bring to the table.
+Is this the desired behaviour? I would assume that any allocsize > 0 could
+lead to a lot of fragmentation if files that are closed and no longer being
+in-use always have extra space allocated for expansion for extremely long
+periods of time.
 
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+                The choice of a       Deliantra, the free code+content MORPG
+      -----==-     _GNU_              http://www.deliantra.net
+      ----==-- _       generation
+      ---==---(_)__  __ ____  __      Marc Lehmann
+      --==---/ / _ \/ // /\ \/ /      schmorp@schmorp.de
+      -=====/_/_//_/\_,_/ /_/\_\
 
 _______________________________________________
 xfs mailing list
