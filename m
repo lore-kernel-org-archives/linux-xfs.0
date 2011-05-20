@@ -1,16 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4JLrlt5055946 for <xfs@oss.sgi.com>; Thu, 19 May 2011 16:53:47 -0500
-Subject: Re: [PATCH 1/4] xfs: add online discard support
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110504190011.156999943@bombadil.infradead.org>
-References: <20110504185513.136746538@bombadil.infradead.org>
-	<20110504190011.156999943@bombadil.infradead.org>
-Date: Thu, 19 May 2011 16:53:44 -0500
-Message-ID: <1305842024.2825.86.camel@doink>
+	p4K15g2d063306 for <xfs@oss.sgi.com>; Thu, 19 May 2011 20:05:42 -0500
+Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 13C6ACEBD03
+	for <xfs@oss.sgi.com>; Thu, 19 May 2011 18:05:40 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	afJOHBM1v3tKBKRR for <xfs@oss.sgi.com>;
+	Thu, 19 May 2011 18:05:40 -0700 (PDT)
+Date: Fri, 20 May 2011 11:05:38 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Kernel bug when running xfs_fsr
+Message-ID: <20110520010538.GN32466@dastard>
+References: <BANLkTi=YSBY5Zq5ePCLZ2mLY70YEw=Yv7w@mail.gmail.com>
 MIME-Version: 1.0
-Reply-To: aelder@sgi.com
+Content-Disposition: inline
+In-Reply-To: <BANLkTi=YSBY5Zq5ePCLZ2mLY70YEw=Yv7w@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,231 +29,80 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: karn@ka9q.net
 Cc: xfs@oss.sgi.com
 
-On Wed, 2011-05-04 at 14:55 -0400, Christoph Hellwig wrote:
-> Now that we have reliably tracking of deleted extents in a transaction
-> we can easily implement "online" discard support which calls
-> blkdev_issue_discard once a transaction commits.
+On Thu, May 19, 2011 at 03:35:04PM -0700, Phil Karn wrote:
+> I just got the following on my console each time I invoked xfs_fsr on a XFS
+> file system. The file system resides on a OCZ SSD that I've been having
+> problems with. This morning my system deadlocked while running a program
+> that created and deleted many small files on the SSD (a Perl script feeding
+> a large number of email messages one at a time to procmail). I suspect bad
+> garbage collection algorithms in the SSD; I recovered by booting into single
+> user and running wiper.sh on the file system to replenish the drive's pool
+> of erased pages. Since then I've been running wiper.sh regularly to ensure a
+> sufficient erased page pool in the SSD. I had just run it when I ran
+> xfs_fsr.
 > 
-> The actual discard is a two stage operation as we first have to mark
-> the busy extent as not available for reuse before we can start the
-> actual discard.  Note that we don't bother supporting discard for
-> the non-delaylog mode.
-
-Generally, this is OK--I don't really see bugs.
-But I have some comments and questions.
-
-The first is, why not support it for non-delaylog?
-
-We have not formally deprecated that mode of operation
-(though I don't have a problem with doing that).  What
-I mean is, if we're going to kill off non-delaylog
-we ought to announce that intention and have a plan
-and schedule for when we can kill off the old code
-for good.  (But that's a separate discussion...)
-
-In any case, it looks like it would not be *that*
-hard to maintain discard support.  (I haven't looked
-at the follow-on patches yet though; maybe it's
-harder than it seems.)
-- Add a "do_discard" flag to xfs_trans_free() and pass
-  !(abortflag & XFS_LI_ABORTED) from xfs_trans_committed()
-  and false from all other callers.
-- Add the same discard supporting code to xfs_trans_free()
-  that you're adding to xlog_cil_committed().  I.e. use:
-     xfs_alloc_busy_clear(tp->t_mountp, &tp->t_busy, do_discard);
-     ...
-     if (!list_empty(&tp->t_busy)) {
-         ASSERT(mp->m_flags & XFS_MOUNT_DISCARD);
-         ...
-     }
-  That last block could be encapsulated into a function like:
-    void xfs_discard_busy(struct xfs_mount *mp, struct list_head *list);
-
-
-Second, why is it a two phase operation (marking an
-extent for discard, then doing all the discards at
-once)?  Is it just so you can do the discards without
-holding the perag lock?
-
-Other thoughts below.
-
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> So it's possible that my file system data structures are messed up. However,
+> the system otherwise seems normal, and I've been routinely tagging my files
+> with extended attributes containing their SHA-1 hashes so I can check their
+> integrity. So far my checks haven't found any corrupted files.
 > 
-> Index: xfs/fs/xfs/linux-2.6/xfs_super.c
-> ===================================================================
-> --- xfs.orig/fs/xfs/linux-2.6/xfs_super.c	2011-05-04 20:44:30.466422727 +0200
-> +++ xfs/fs/xfs/linux-2.6/xfs_super.c	2011-05-04 20:45:06.302895250 +0200
-> @@ -112,6 +112,8 @@ mempool_t *xfs_ioend_pool;
->  #define MNTOPT_QUOTANOENF  "qnoenforce"	/* same as uqnoenforce */
->  #define MNTOPT_DELAYLOG   "delaylog"	/* Delayed loging enabled */
->  #define MNTOPT_NODELAYLOG "nodelaylog"	/* Delayed loging disabled */
-> +#define MNTOPT_DISCARD	"discard"	/* Discard unused blocks */
-> +#define MNTOPT_NODISCARD "nodiscard"	/* Do not discard unused blocks */
+> Here is the relevant output from my kernel log. Is this a XFS bug, or does
+> it simply indicate a corrupted file system due to my earlier crash?
+> 
+> [29847.045684] BUG: unable to handle kernel NULL pointer dereference at
+> 0000000000000018
 
-Alignment in this section of this file looks a bit funny.
-Perhaps you could clean it up (though your options are
-limited).
+Dereferencing an offset of 24 bytes from the start of a structure.
 
->  
->  /*
->   * Table driven mount option parser.
+> [29847.045690] IP: [<ffffffffa033c11b>] xfs_trans_log_inode+0xb/0x30 [xfs]
 
-. . .
+Three structures possible: xfs_inode, xfs_trans, xfs_inode_log_item:
 
-> Index: xfs/fs/xfs/xfs_log_cil.c
-> ===================================================================
-> --- xfs.orig/fs/xfs/xfs_log_cil.c	2011-05-04 20:44:30.369756584 +0200
-> +++ xfs/fs/xfs/xfs_log_cil.c	2011-05-04 20:45:06.302895250 +0200
+138 xfs_trans_log_inode(
+139         xfs_trans_t     *tp,
+140         xfs_inode_t     *ip,
+141         uint            flags)
+142 {
+143         ASSERT(ip->i_transp == tp);
+144         ASSERT(ip->i_itemp != NULL);
+145         ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+146
+147         tp->t_flags |= XFS_TRANS_DIRTY;
+148         ip->i_itemp->ili_item.li_desc->lid_flags |= XFS_LID_DIRTY;
 
-. . .
+And the situation is that ip->i_itemp->ili_item.li_desc == NULL:
 
-> @@ -361,18 +362,28 @@ xlog_cil_committed(
->  	int	abort)
->  {
->  	struct xfs_cil_ctx	*ctx = args;
-> +	struct xfs_mount	*mp = ctx->cil->xc_log->l_mp;
->  
->  	xfs_trans_committed_bulk(ctx->cil->xc_log->l_ailp, ctx->lv_chain,
->  					ctx->start_lsn, abort);
->  
->  	xfs_alloc_busy_sort(&ctx->busy_extents);
+typedef struct xfs_log_item {
+        struct list_head                li_ail;         /* AIL pointers */
+        xfs_lsn_t                       li_lsn;         /* last on-disk lsn */
+        struct xfs_log_item_desc        *li_desc;       /* ptr to current desc*/
+.....
 
-I still think sorting the list belongs inside xfs_alloc_busy_clear().
-I see that list_sort() is not necessarily trivial for an already
-sorted list though...
+That should not happen - the inode should be linked into the
+transaction (tp), and li_desc should never be NULL here.
 
-> -	xfs_alloc_busy_clear(ctx->cil->xc_log->l_mp, &ctx->busy_extents);
-> +	xfs_alloc_busy_clear(mp, &ctx->busy_extents,
-> +			     (mp->m_flags & XFS_MOUNT_DISCARD) && !abort);
->  
->  	spin_lock(&ctx->cil->xc_cil_lock);
->  	list_del(&ctx->committing);
->  	spin_unlock(&ctx->cil->xc_cil_lock);
->  
->  	xlog_cil_free_logvec(ctx->lv_chain);
-> +
-> +	if (!list_empty(&ctx->busy_extents)) {
-> +		ASSERT(mp->m_flags & XFS_MOUNT_DISCARD);
-> +
-> +		xfs_discard_extents(mp, &ctx->busy_extents);
-> +		xfs_alloc_busy_clear(mp, &ctx->busy_extents, false);
-> +	}
-> +
->  	kmem_free(ctx);
->  }
->  
-> Index: xfs/fs/xfs/linux-2.6/xfs_discard.c
-> ===================================================================
-> --- xfs.orig/fs/xfs/linux-2.6/xfs_discard.c	2011-05-04 20:44:30.329756801 +0200
-> +++ xfs/fs/xfs/linux-2.6/xfs_discard.c	2011-05-04 20:45:06.306228566 +0200
-> @@ -191,3 +191,32 @@ xfs_ioc_trim(
->  		return -XFS_ERROR(EFAULT);
->  	return 0;
->  }
-> +
-> +int
-> +xfs_discard_extents(
-> +	struct xfs_mount	*mp,
-> +	struct list_head	*list)
-> +{
-> +	struct xfs_busy_extent	*busyp;
-> +	int			error = 0;
-> +
-> +	list_for_each_entry(busyp, list, list) {
-> +		trace_xfs_discard_extent(mp, busyp->agno, busyp->bno,
-> +					 busyp->length);
-> +
-> +		error = -blkdev_issue_discard(mp->m_ddev_targp->bt_bdev,
-> +				XFS_AGB_TO_DADDR(mp, busyp->agno, busyp->bno),
-> +				XFS_FSB_TO_BB(mp, busyp->length),
-> +				GFP_NOFS, 0);
+Are you running with CONFIG_XFS_DEBUG=y? If not, it is probably
+worthwhile as it should catch the problems more precisely before
+a NULL pointer dereference occurs.
 
-		if (error == EOPNOTSUPP) {
-			/*
-			 * Report this once per mount point somehow?
-			 * If so, turn off the mount option?
-			 */
-			break;
-		} else if (error) {
-> +		if (error && error != EOPNOTSUPP) {
-> +			xfs_info(mp,
-> +	 "discard failed for extent [0x%llu,%u], error %d",
-> +				 (unsigned long long)busyp->bno,
-> +				 busyp->length,
-> +				 error);
-> +			return error;
-> +		}
-> +	}
-> +
-> +	return 0;
-> +}
+> and so on...it repeats a few times because I issued the xfs_fsr command a
+> few times.
 
-. . .
-> Index: xfs/fs/xfs/xfs_alloc.c
-> ===================================================================
-> --- xfs.orig/fs/xfs/xfs_alloc.c	2011-05-04 20:44:30.386423159 +0200
-> +++ xfs/fs/xfs/xfs_alloc.c	2011-05-04 20:45:11.432867459 +0200
-> @@ -2610,6 +2610,18 @@ xfs_alloc_busy_update_extent(
->  	xfs_agblock_t		bend = bbno + busyp->length;
->  
->  	/*
-> +	 * This extent is currently beeing discard.  Give the thread
+So it is reproducable? Can you turn on the xfs_swapext tracepoints
+and gather the output over a failure, as well as using xfs_fsr -v -d
+and capturing that output? That might indicate that there is a
+specific inode extent swap configuration that triggers this problem
+that I haven't realised exists.
 
-				currently being discarded.
+Cheers,
 
-> +	 * performing the discard a chance to mark the extent unbusy
-> +	 * and retry.
-> +	 */
-> +	if (busyp->flags & XFS_ALLOC_BUSY_DISCARDED) {
-> +		spin_unlock(&pag->pagb_lock);
-> +		delay(1);
-
-I hate seeing calls to delay() although sometimes
-it's the right thing to do...  I don't have a feel
-for how long a discard is likely to take so I don't
-know whether waiting here instead would be worth
-the effort.
-
-> +		spin_lock(&pag->pagb_lock);
-> +		return false;
-> +	}
-> +
-> +	/*
->  	 * If there is a busy extent overlapping a user allocation, we have
->  	 * no choice but to force the log and retry the search.
->  	 *
-
-. . .
-
-> Index: xfs/Documentation/filesystems/xfs.txt
-> ===================================================================
-> --- xfs.orig/Documentation/filesystems/xfs.txt	2011-05-04 20:44:30.409756366 +0200
-> +++ xfs/Documentation/filesystems/xfs.txt	2011-05-04 20:45:06.306228566 +0200
-> @@ -39,6 +39,12 @@ When mounting an XFS filesystem, the fol
->  	drive level write caching to be enabled, for devices that
->  	support write barriers.
->  
-> +  discard
-> +	Issue command to let the block device reclaim space freed by the
-> +	filesystem.  This is useful for SSD devices, thinly provisioned
-> +	LUNs and virtual machine images, but may have a performance
-> +	impact.
-
-If this option is to only be available for delaylog, it should
-say so here (and maybe report that it's being ignored if it's
-supplied with nodelaylog at mount time).
-
-> +
->    dmapi
->  	Enable the DMAPI (Data Management API) event callouts.
->  	Use with the "mtpt" option.
-
-. . .
-
-
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
