@@ -1,18 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4KLqKnv113823 for <xfs@oss.sgi.com>; Fri, 20 May 2011 16:52:20 -0500
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1354A161C0B8
-	for <xfs@oss.sgi.com>; Fri, 20 May 2011 14:52:19 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id BFBAbXZgIZZILpCr for
-	<xfs@oss.sgi.com>; Fri, 20 May 2011 14:52:19 -0700 (PDT)
-Message-ID: <4DD6E291.9030905@redhat.com>
-Date: Fri, 20 May 2011 16:52:17 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+	p4L0Eefg118674 for <xfs@oss.sgi.com>; Fri, 20 May 2011 19:14:41 -0500
+Date: Sat, 21 May 2011 10:14:31 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: 2.6.39-rc3, 2.6.39-rc4: XFS lockup - regression since 2.6.38
+Message-ID: <20110521001431.GS32466@dastard>
+References: <20110423224403.5fd1136a@neptune.home>
+	<20110427050850.GG12436@dastard>
+	<20110427182622.05a068a2@neptune.home>
+	<20110428194528.GA1627@x4.trippels.de>
+	<20110429011929.GA13542@dastard>
+	<20110520112018.GB3867@belkar.wrar.name>
 MIME-Version: 1.0
-Subject: [PATCH] xfs: consolidate & clarify mount sanity checks
+Content-Disposition: inline
+In-Reply-To: <20110520112018.GB3867@belkar.wrar.name>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,110 +27,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>, Pavol Gono <Pavol.Gono@siemens.com>
+To: Andrey Rahmatullin <wrar@altlinux.org>
+Cc: Dave Chinner <dchinner@redhat.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, xfs-masters@oss.sgi.com, Bruno =?iso-8859-1?Q?Pr=E9mont?= <bonbons@linux-vserver.org>, Alex Elder <aelder@sgi.com>, Markus Trippelsdorf <markus@trippelsdorf.de>
 
-Pavol pointed out that there is one silent error case in the mount
-path, and that others are rather uninformative.
+On Fri, May 20, 2011 at 05:20:18PM +0600, Andrey Rahmatullin wrote:
+> On Fri, Apr 29, 2011 at 11:19:29AM +1000, Dave Chinner wrote:
+> > > x4 ~ # xfs_info /
+> > > meta-data=/dev/root              isize=256    agcount=4, agsize=1949824 blks
+> > >          =                       sectsz=512   attr=2
+> > > data     =                       bsize=4096   blocks=7799296, imaxpct=25
+> > >          =                       sunit=128    swidth=128 blks
+> > > naming   =version 2              bsize=4096   ascii-ci=0
+> > > log      =internal               bsize=4096   blocks=3808, version=2
+> > >          =                       sectsz=512   sunit=8 blks, lazy-count=1
+> > > realtime =none                   extsz=4096   blocks=0, rtextents=0
+> > OK, so the common elements here appears to be root filesystems
+> > with small log sizes, which means they are tail pushing all the
+> > time metadata operations are in progress. 
+> Does that mean that such filesystems are not optimal in terms of
+> performance and/or reliability and should have larger log sizes?
 
-I've taken Pavol's suggested patch and extended it a bit to also:
+Performance. Larger logs generally result in faster metadata
+performance, but it's really dependent on your workload and storage
+as to whether it makes any difference.
 
-* fix a message which says "turned off" but actually errors out
-* consolidate the vaguely differentiated "SB sanity check [12]"
-  messages, and hexdump the superblock for analysis
+Cheers,
 
-Original-patch-by: Pavol Gono <Pavol.Gono@siemens.com>
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-diff --git a/fs/xfs/xfs_fs.h b/fs/xfs/xfs_fs.h
-index 8f6fc1a..c13fed8 100644
---- a/fs/xfs/xfs_fs.h
-+++ b/fs/xfs/xfs_fs.h
-@@ -249,6 +249,11 @@ typedef struct xfs_fsop_resblks {
- #define XFS_MAX_LOG_BYTES \
- 	((2 * 1024 * 1024 * 1024ULL) - XFS_MIN_LOG_BYTES)
- 
-+/* Used for sanity checks on superblock */
-+#define XFS_MAX_DBLOCKS(s) ((xfs_drfsbno_t)(s)->sb_agcount * (s)->sb_agblocks)
-+#define XFS_MIN_DBLOCKS(s) ((xfs_drfsbno_t)((s)->sb_agcount - 1) *	\
-+			 (s)->sb_agblocks + XFS_MIN_AG_BLOCKS)
-+
- /*
-  * Structures for XFS_IOC_FSGROWFSDATA, XFS_IOC_FSGROWFSLOG & XFS_IOC_FSGROWFSRT
-  */
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index bb3f9a7..a27dda6 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -348,7 +348,7 @@ xfs_mount_validate_sb(
- 	}
- 
- 	/*
--	 * More sanity checking. These were stolen directly from
-+	 * More sanity checking.  Most of these were stolen directly from
- 	 * xfs_repair.
- 	 */
- 	if (unlikely(
-@@ -371,23 +371,13 @@ xfs_mount_validate_sb(
- 	    (sbp->sb_blocklog - sbp->sb_inodelog != sbp->sb_inopblog)	||
- 	    (sbp->sb_rextsize * sbp->sb_blocksize > XFS_MAX_RTEXTSIZE)	||
- 	    (sbp->sb_rextsize * sbp->sb_blocksize < XFS_MIN_RTEXTSIZE)	||
--	    (sbp->sb_imax_pct > 100 /* zero sb_imax_pct is valid */))) {
-+	    (sbp->sb_imax_pct > 100 /* zero sb_imax_pct is valid */)	||
-+	    sbp->sb_dblocks == 0					||
-+	    sbp->sb_dblocks > XFS_MAX_DBLOCKS(sbp)			||
-+	    sbp->sb_dblocks < XFS_MIN_DBLOCKS(sbp))) {
- 		if (loud)
--			xfs_warn(mp, "SB sanity check 1 failed");
--		return XFS_ERROR(EFSCORRUPTED);
--	}
--
--	/*
--	 * Sanity check AG count, size fields against data size field
--	 */
--	if (unlikely(
--	    sbp->sb_dblocks == 0 ||
--	    sbp->sb_dblocks >
--	     (xfs_drfsbno_t)sbp->sb_agcount * sbp->sb_agblocks ||
--	    sbp->sb_dblocks < (xfs_drfsbno_t)(sbp->sb_agcount - 1) *
--			      sbp->sb_agblocks + XFS_MIN_AG_BLOCKS)) {
--		if (loud)
--			xfs_warn(mp, "SB sanity check 2 failed");
-+			XFS_CORRUPTION_ERROR("SB sanity check failed",
-+				XFS_ERRLEVEL_LOW, mp, sbp);
- 		return XFS_ERROR(EFSCORRUPTED);
- 	}
- 
-@@ -864,7 +854,8 @@ xfs_update_alignment(xfs_mount_t *mp)
- 		if ((BBTOB(mp->m_dalign) & mp->m_blockmask) ||
- 		    (BBTOB(mp->m_swidth) & mp->m_blockmask)) {
- 			if (mp->m_flags & XFS_MOUNT_RETERR) {
--				xfs_warn(mp, "alignment check 1 failed");
-+				xfs_warn(mp, "alignment check failed: "
-+					 "(sunit/swidth vs. blocksize)");
- 				return XFS_ERROR(EINVAL);
- 			}
- 			mp->m_dalign = mp->m_swidth = 0;
-@@ -875,6 +866,8 @@ xfs_update_alignment(xfs_mount_t *mp)
- 			mp->m_dalign = XFS_BB_TO_FSBT(mp, mp->m_dalign);
- 			if (mp->m_dalign && (sbp->sb_agblocks % mp->m_dalign)) {
- 				if (mp->m_flags & XFS_MOUNT_RETERR) {
-+					xfs_warn(mp, "alignment check failed: "
-+					 	 "(sunit/swidth vs. ag size)");
- 					return XFS_ERROR(EINVAL);
- 				}
- 				xfs_warn(mp,
-@@ -889,8 +882,8 @@ xfs_update_alignment(xfs_mount_t *mp)
- 				mp->m_swidth = XFS_BB_TO_FSBT(mp, mp->m_swidth);
- 			} else {
- 				if (mp->m_flags & XFS_MOUNT_RETERR) {
--					xfs_warn(mp,
--		"stripe alignment turned off: sunit(%d) less than bsize(%d)",
-+					xfs_warn(mp, "alignment check failed: "
-+						"sunit(%d) less than bsize(%d)",
- 						mp->m_dalign,
- 						mp->m_blockmask +1);
- 					return XFS_ERROR(EINVAL);
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
