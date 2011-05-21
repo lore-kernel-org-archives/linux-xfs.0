@@ -1,25 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4L3Fqob126983 for <xfs@oss.sgi.com>; Fri, 20 May 2011 22:15:52 -0500
+	p4L3vCIn128293 for <xfs@oss.sgi.com>; Fri, 20 May 2011 22:57:12 -0500
 Received: from ipmail07.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5F5ED4449A0
-	for <xfs@oss.sgi.com>; Fri, 20 May 2011 20:15:50 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9574BCFB4A0
+	for <xfs@oss.sgi.com>; Fri, 20 May 2011 20:57:10 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	l73OET3j5WKjkTSv for <xfs@oss.sgi.com>;
-	Fri, 20 May 2011 20:15:50 -0700 (PDT)
-Date: Sat, 21 May 2011 13:15:37 +1000
+	mgPKKegB7KodkPAa for <xfs@oss.sgi.com>;
+	Fri, 20 May 2011 20:57:10 -0700 (PDT)
+Date: Sat, 21 May 2011 13:57:04 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: drastic changes to allocsize semantics in or around 2.6.38?
-Message-ID: <20110521031537.GV32466@dastard>
-References: <20110520005510.GA15348@schmorp.de>
-	<20110520025659.GO32466@dastard> <20110520154920.GD5828@schmorp.de>
-	<20110521004544.GT32466@dastard>
-	<20110521013604.GC10971@schmorp.de>
+Subject: Re: [XFS Tests Punch Hole 2/3 v3] XFS TESTS: Add Fallocate Punch
+	Hole Test Routines
+Message-ID: <20110521035704.GW32466@dastard>
+References: <4DD43300.6010908@linux.vnet.ibm.com>
+	<20110519013144.GF32466@dastard>
+	<4DD560CF.3040706@linux.vnet.ibm.com>
+	<20110519235601.GL32466@dastard>
+	<4DD5C242.3010708@linux.vnet.ibm.com>
+	<4DD70B5B.6090400@linux.vnet.ibm.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110521013604.GC10971@schmorp.de>
+In-Reply-To: <4DD70B5B.6090400@linux.vnet.ibm.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,83 +35,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Marc Lehmann <schmorp@schmorp.de>
-Cc: xfs@oss.sgi.com
+To: Allison Henderson <achender@linux.vnet.ibm.com>
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>, Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
 
-On Sat, May 21, 2011 at 03:36:04AM +0200, Marc Lehmann wrote:
-> On Sat, May 21, 2011 at 10:45:44AM +1000, Dave Chinner <david@fromorbit.com> wrote:
-> > > Longer meaning practically infinitely :)
-> > 
-> > No, longer meaning the in-memory lifecycle of the inode.
+On Fri, May 20, 2011 at 05:46:19PM -0700, Allison Henderson wrote:
+> On 5/19/2011 6:22 PM, Allison Henderson wrote:
+> >Also, there was one more test that I meant to be a part of this
+> >collection, but I was not finished with it at the time I submitted the
+> >patch for feedback. Basically it checks to see if a hole can still be
+> >punched out when the disk is full. In ext4 this is allowable because
+> >reserved space is used to allow the operation to proceed where it would
+> >have otherwise failed. I'm not sure if this is also ext4 specific
+> >though. Would this be another candidate for adding to 252? Thx!
 > 
-> That makes no sense - if I have twice the memory I suddenly have half (or
-> some other factor) free diskspace.
-> 
-> The lifetime of the preallocated area should be tied to something sensible,
-> really - all that xfs has now is a broken heuristic that ties the wrong
-> statistic to the extra space allocated.
+> I just didnt want this question to get washed away in the traffic.
+> I am working on an updated patch set, should I include the extra
+> test case?  Thx!
 
-So, instead of tying it to the lifecycle of the file descriptor, it
-gets tied to the lifecycle of the inode. There isn't much in between
-those that can be easily used.  When your workload spans hundreds of
-thousands of inodes and they are cached in memory, switching to the
-inode life-cycle heuristic works better than anything else that has
-been tried.  One of those cases is large NFS servers, and the
-changes made in 2.6.38 are intended to improve performance on NFS
-servers by switching it to use inode life-cycle to control
-speculative preallocation.
+Yes, though probably not in the _generic_test_punch function. And
+extra case specific to 252 that does something like:
 
-As it is, regardless of this change, we already have pre-existing
-circumstances where specualtive preallocation is controlled by the
-inode life-cycle - inodes with manual preallocation (e.g fallocate)
-and append only files - so this problem with allocsize causing
-premature ENOSPC raises it's head every couple of years regardless
-of whether there's been any recent changes or not.
+	umount SCRATCH_DEV
+	make a small filesystem
+	scratch_mount
+	prealloc to ENOSPC
+	punch
 
-FWIW, I remember reading bug reports for Irix from 1998 about such
-problems w.r.t. manual preallocation. In all cases that I can
-remember, the problems went away with small configuration tweaks....
-
-> > > However, I would suggest that whatever heuristic 2.6.38 uses
-> > > is deeply broken at the momment,
-> > 
-> > One bug report two months after general availability != deeply
-> > broken.
-> 
-> That makes no sense - I only found out about this broken behaviour
-> because I specified a large allocsize manually, which is rare.
-> 
-> However, the behaviour happens even without that.  but might not be
-> immediately noticable (how would you find out if you lost a few
-> gigabytes of disk space unless the disk runs full? most people
-> would have no clue where to look for).
-
-If most people never notice it and it reduces fragmentation
-and improves performance, then I don't see a problem. Right now
-evidence points to the "most people have not noticed it".
-
-Just to point out what people do notice: when the dynamic
-functionality was introduced into 2.6.38-rc1, it had a bug in a
-calculation that was resulting in 32bit machines always preallocing
-8GB extents. That was noticed _immediately_ and reported by several
-people independently. Once that bug was fixed there have been no
-further reports until yours. That tells me that the new default
-behaviour is not actually causing ENOSPC problems for most people.
-
-I've already said I'll look into the allocsize interaction with the
-new heuristic you've reported, and told you how to work around the
-problem in the mean time. I can't do any more than that.
-
-> Just because the breakage is not obviously visible doesn't mean it's not
-> deeply broken.
-> 
-> Also, I just looked more thoroughly through the list - the problem has
-> been reported before, but was basically ignored, so you are wrong in that
-> there is only one report.
-
-I stand corrected. I get at least 1000-1500 emails a day and I
-occasionally forget/miss/delete one I shouldn't. Or maybe it was one
-I put down to the above bug.
 
 Cheers,
 
