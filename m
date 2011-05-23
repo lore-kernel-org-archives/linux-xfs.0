@@ -1,27 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4NDZt1m002940 for <xfs@oss.sgi.com>; Mon, 23 May 2011 08:35:56 -0500
-Received: from mail.nethype.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A3CC31EB2C6F
-	for <xfs@oss.sgi.com>; Mon, 23 May 2011 06:35:52 -0700 (PDT)
-Received: from mail.nethype.de (mail.nethype.de [78.47.73.129]) by
-	cuda.sgi.com with ESMTP id HaEixlpWyW0TTNYW for
-	<xfs@oss.sgi.com>; Mon, 23 May 2011 06:35:52 -0700 (PDT)
-Date: Mon, 23 May 2011 15:35:48 +0200
-From: Marc Lehmann <schmorp@schmorp.de>
-Subject: Re: drastic changes to allocsize semantics in or around 2.6.38?
-Message-ID: <20110523133547.GA25777@schmorp.de>
-References: <20110520005510.GA15348@schmorp.de>
-	<20110520025659.GO32466@dastard> <20110520154920.GD5828@schmorp.de>
-	<20110521004544.GT32466@dastard>
-	<20110521013604.GC10971@schmorp.de>
-	<20110521031537.GV32466@dastard>
-	<20110521041652.GA18375@schmorp.de>
-	<20110522020024.GZ32466@dastard>
+	p4NKZCul022402 for <xfs@oss.sgi.com>; Mon, 23 May 2011 15:35:13 -0500
+Received: from e32.co.us.ibm.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 929F0162A3C1
+	for <xfs@oss.sgi.com>; Mon, 23 May 2011 13:35:12 -0700 (PDT)
+Received: from e32.co.us.ibm.com (e32.co.us.ibm.com [32.97.110.150]) by
+	cuda.sgi.com with ESMTP id lVA53gNrUeqXuSQr for
+	<xfs@oss.sgi.com>; Mon, 23 May 2011 13:35:12 -0700 (PDT)
+Received: from d03relay01.boulder.ibm.com (d03relay01.boulder.ibm.com
+	[9.17.195.226])
+	by e32.co.us.ibm.com (8.14.4/8.13.1) with ESMTP id p4NKNfRW019749
+	for <xfs@oss.sgi.com>; Mon, 23 May 2011 14:23:41 -0600
+Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
+	by d03relay01.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	p4NKZ6qf190618 for <xfs@oss.sgi.com>; Mon, 23 May 2011 14:35:06 -0600
+Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av01.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
+	id p4NKZ6N4001499
+	for <xfs@oss.sgi.com>; Mon, 23 May 2011 14:35:06 -0600
+Message-ID: <4DDAC4EF.1050702@linux.vnet.ibm.com>
+Date: Mon, 23 May 2011 13:34:55 -0700
+From: Allison Henderson <achender@linux.vnet.ibm.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110522020024.GZ32466@dastard>
+Subject: xfsprogs: Fix for xfstest 252 hang on ext4
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,142 +36,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>, Ext4 Developers List <linux-ext4@vger.kernel.org>
 
-On Sun, May 22, 2011 at 12:00:24PM +1000, Dave Chinner <david@fromorbit.com> wrote:
-> > The problem is that this is not anything like the normal case.
-> 
-> For you, maybe.
+Hi all,
 
-For the majority of boxes that use xfs - most desktop boxes are not heavy
-NFS servers.
+While trying to add more punch hole tests to xfstest, I found that test 252 hangs on ext4 due to a loop in xfsprogs that does not exit.  XFS gets out of this loop because there is logic in the loop that looks for the last extent flag and breaks out.  But it looks like ext4 does not return a last extent when the file has a hole at the end.  I am not sure if this is the correct behavior or not, so I will copy the ext4 folks on this too.  Below is a copy of the fix for xfsprogs:
 
-> > It's easy to get some gains in special situations at the expense of normal
-> > ones - keep in mind that this optimisation makes little sense for non-NFS
-> > cases, which is the majority of use cases.
-> 
-> XFS is used extensively in NAS products, from small $100 ARM/MIPS
-> embedded NAS systems all the way up to high end commercial NAS
-> products. It is one of the main use cases we optimise XFS for.
+diff --git a/io/fiemap.c b/io/fiemap.c
+index fa990cc..81fc92c 100644
+--- a/io/fiemap.c
++++ b/io/fiemap.c
+@@ -246,7 +246,7 @@ fiemap_f(
+ 		       flg_w, _("FLAGS"));
+ 	}
+ 
+-	while (!last && ((cur_extent + 1) != max_extents)) {
++	while (!last && (cur_extent <= max_extents)) {
+ 		if (max_extents)
+ 			num_extents = min(num_extents,
+ 					  max_extents - (cur_extent + 1));
 
-Thats really sad - maybe people like me who use XFS on their servers
-should rethink that decision that, if XFS mainly optimises for commercial
-nas boxes only.
 
-You aren't serious, are you?
+It looks like the loop enters with last=0, cur_extents=0, and max_extents = 0, and on the first iteration cur_extents get set to 2, so we dont see ((cur_extent + 1) == max_extents for a very long time.  I doubt the logic was meant to work that way, so this patch should fix it, but I wanted to make sure that the fiemap for ext4 is working as intended too.  Feed back appreciated!  Thx all!
 
-> Sure, that would be my preferred approach. However, if you followed
-> the discussion when this first came up, you'd realise that we've
-> been trying to get NFS server changes to fix this operation for the
-> past 5 years, and I've just about  given up trying.  Hell, the NFS
-> OFC (open file cache) proposal that would have mostly solved this
-> (and other problems like readahead state thrashing) from 2-3 years
-> ago went nowhere...
-
-In other words, if you can't do it right, you make ugly broken hacks, and
-then tell people that it's exepcted behaviour, because xfs is optimised
-for commercial NFS server boxes.
-
-> > The preallocation makes sense in relation to the working set, which can be
-> > characterised by the open files, or recently opened files.
-> > Tieing it to the (in-memory) inode lifetime is an abysmal approximation to
-> > this.
-> 
-> So you keep saying, but you keep ignoring the fact that the inode
-> cache represents the _entire_ working set of inodes. It's not an
-> approximation - it is the _exact_ current working set of files we
-> currently have.
-
-I am sory, but that is wrong and shows a serious lack of
-understanding. The cached inode set is just that, a cache. It is
-definitely not corresponding to any working set, simply because it is a
-*cache*.
-
-ls -l in a directory will cache all inodes, but that doesn't mean that
-those files are the working set 8 hours later.
-
-Open files are in the working set, because applications open files to use
-them.
-
-The inode cache probably contains stuff that was in the working set
-before, but is no longer.
-
-> Hence falling back to "preallocation lasts for as long as the inode
-> is part of the working set" is an extremely good heuristic to use -
-
-It's of course extremely broken, because all it does is improve the
-(fragmentation) performance for broken clients - for normal clients it
-will reduce performance of course.
-
-> we move from preallocation for only the L1 cache lifecycle (open
-> fd's) to using the L2 cache lifecycle (recently opened inodes)
-> instead.
-
-That comparison is seriously flawed, as a cache is transparent, but the
-xfs behaviour is not.
-
-> > If I unpack a large tar file, this means that I get a lot of (internal)
-> > fragmentation because all files are spread over a large area than
-> > necesssary, and diskspace is used for a potentially indefinite time.
-> 
-> So you can reproduce this using an tar? Any details on size, # of
-> files, the untar command, etc?
-
-I can reproduce it simply by running make in the uclibc source tree.
-
-Since gas has the same access behaviour as tar, why would it be different?
-What kind of broken heuristic is it that XFS now uses that these two use
-cases would make a difference?
-
-> How do you know you get internal fragmentation and tha tit is affecting
-> fragmentation?
-
-If what you say is true, thats a logical conclusion, it doesn'T need
-evidence, it follows from your claims.
-
-XFS can't preallocate for basically all files that are beign written and
-at the same time avoid fragmentation.
-
-> Please provide concrete examples (e.g. copy+paste the command lines and
-> any relevant output) that so I might be able to reproduce your problem
-> myself?
-
-"make" - I already told you in my first e-mail.
-
-> we should fix it. What I really want is your test cases that
-> reproduce the problem so I can analyse it for myself. Once I
-> understand what is going on, then we can talk about what the real
-> problem is and how to fix it.
-
-Being a good citizen wanting to improve XFS I of course dleivered that in
-my first e-mail. Again, I used allocsize=64m and then made a buildroot
-build, which stopped after a few minutes because 180GB of disk space were
-gone.
-
-The disk space was all used up by the buildroot, which is normally a few
-gigabytes (after a successful build).
-
-I found that the uclibc object directory uses 50GB of space, about 8 hours
-after the compile - the object files were typically a few kb in size, but
-du showed 64mb of usage, even though nobody was using that file more than
-once, or ever after the make stopped.
-
-I am sorry, I think you are more interested in forcing your personal
-toy heuristic through reality - thats how you come across, because you
-selectively ignore the bits that you don't like. It's also pretty telling
-that XFS mainly optimises for commercial NAS boxes now, and no longer for
-good performance on local boxes.
-
-:(
-
--- 
-                The choice of a       Deliantra, the free code+content MORPG
-      -----==-     _GNU_              http://www.deliantra.net
-      ----==-- _       generation
-      ---==---(_)__  __ ____  __      Marc Lehmann
-      --==---/ / _ \/ // /\ \/ /      schmorp@schmorp.de
-      -=====/_/_//_/\_,_/ /_/\_\
+Allison Henderson
 
 _______________________________________________
 xfs mailing list
