@@ -1,22 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4NCpunM001355 for <xfs@oss.sgi.com>; Mon, 23 May 2011 07:51:56 -0500
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A61451625EBB
-	for <xfs@oss.sgi.com>; Mon, 23 May 2011 05:51:54 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id uhoYL0NzCisLa4kz for
-	<xfs@oss.sgi.com>; Mon, 23 May 2011 05:51:54 -0700 (PDT)
-Subject: Re: xfstests - SCRATCH_DIR mounted/unmounted twice when testing nfs
-From: Boris Ranto <branto@redhat.com>
-In-Reply-To: <1305805778.8615.109.camel@dhcp-31-190.brq.redhat.com>
-References: <1305722498.25226.110.camel@dhcp-31-190.brq.redhat.com>
-	<20110519000202.GC32466@dastard>
-	<1305805778.8615.109.camel@dhcp-31-190.brq.redhat.com>
-Date: Mon, 23 May 2011 14:51:45 +0200
-Message-ID: <1306155105.3091.68.camel@dhcp-31-190.brq.redhat.com>
-Mime-Version: 1.0
+	p4NDZt1m002940 for <xfs@oss.sgi.com>; Mon, 23 May 2011 08:35:56 -0500
+Received: from mail.nethype.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A3CC31EB2C6F
+	for <xfs@oss.sgi.com>; Mon, 23 May 2011 06:35:52 -0700 (PDT)
+Received: from mail.nethype.de (mail.nethype.de [78.47.73.129]) by
+	cuda.sgi.com with ESMTP id HaEixlpWyW0TTNYW for
+	<xfs@oss.sgi.com>; Mon, 23 May 2011 06:35:52 -0700 (PDT)
+Date: Mon, 23 May 2011 15:35:48 +0200
+From: Marc Lehmann <schmorp@schmorp.de>
+Subject: Re: drastic changes to allocsize semantics in or around 2.6.38?
+Message-ID: <20110523133547.GA25777@schmorp.de>
+References: <20110520005510.GA15348@schmorp.de>
+	<20110520025659.GO32466@dastard> <20110520154920.GD5828@schmorp.de>
+	<20110521004544.GT32466@dastard>
+	<20110521013604.GC10971@schmorp.de>
+	<20110521031537.GV32466@dastard>
+	<20110521041652.GA18375@schmorp.de>
+	<20110522020024.GZ32466@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20110522020024.GZ32466@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,237 +35,141 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: xfs <xfs@oss.sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Thu, 2011-05-19 at 13:49 +0200, Boris Ranto wrote:
-> On Thu, 2011-05-19 at 10:02 +1000, Dave Chinner wrote:
-> > On Wed, May 18, 2011 at 12:41:38PM +0000, Boris Ranto wrote:
-> > > Tests 124, 127 and 128 unmount their SCRATCH_DEV manually while using _cleanup_testdir in trapped cleanup function.
-> > > This can lead to test fails due to double unmount on nfs where _cleanup_testdir unmounts SCRATCH_DEV.
-> > > 
-> > > Tests 129 and 130 use _setup_testdir and _scratch_mount that can lead to double mount on nfs where _setup_testdir mounts SCRATCH_DEV.
-> > > 
-> > > The least invasive patch (only nfs shall be affected by this patch) I could come up with that fixed this issue used conditional umounts in _cleanup_testdir and conditional mount/remount in _scratch_mount (remount was used so that mount flags do not get lost).
-> > > 
-> > From the code:
-> > 
-> > #
-> > # Warning for UDF and NFS:
-> > # this function calls _setup_udf_scratchdir and _setup_udf_scratchdir
-> > # which actually uses the scratch dir for the test dir.
-> > #
-> > # This was done because testdir was intended to be a persistent
-> > # XFS only partition.  This should eventually change, and treat
-> > # at least local filesystems all the same.
-> > #
-> > 
-> > I think that this means that the way _setup_testdir uses the scratch
-> > device was a nasty hack and was intended to be fixed at some point.
-> > Perhaps we should actually understand the issue that lead to this
-> > hack first, and then determine what is needed to fix it rather than
-> > just layering more hacks on top of it?
-> > 
-> > > Alternatively, _setup_testdir could stop mounting SCRATCH_DEV but
-> > > that would be probably too invasive.
-> > 
-> > I don't really care about how invasive fixing the problem
-> > properly is if it's the better long term solution....
+On Sun, May 22, 2011 at 12:00:24PM +1000, Dave Chinner <david@fromorbit.com> wrote:
+> > The problem is that this is not anything like the normal case.
 > 
-> I also prefer that solution. The fix could be relatively simple: just
-> treat nfs as regular local filesystem. The question is whether there are
-> any test cases that depends on the old _setup_testdir behaviour.
-> 
-> Looking through the tests I found two tests that have nfs in their
-> _supported_fs field: 062 and 192.
-> 
-> 062 expects scratch dev to be regular device and hence fails for nfs
-> either way. Therefore restricting the test to xfs (maybe +udf) shouldn't
-> cause any problems.
-> 
-> 192 uses TEST_DIR directly so it probably expects TEST_DIR to be mounted
-> xfs filesystem, therefore just changing _supported_fs to xfs (maybe
-> +udf) should be sufficient.
-> 
-> 
-> > Cheers,
-> > 
-> > Dave.
-> 
-> 
-> So far I could test the following patch (nfs only, udf unchanged) on few
-> tests with success. I'll let it run for all the tests and report back
-> later if it still makes sense.
-> 
-> diff --git a/062 b/062
-> index 5cb6f92..83644be 100755
-> --- a/062
-> +++ b/062
-> @@ -71,7 +71,7 @@ _create_test_bed()
->  }
->  
->  # real QA test starts here
-> -_supported_fs xfs udf nfs
-> +_supported_fs xfs
->  _supported_os Linux
->  
->  _require_scratch
->  
-> diff --git a/192 b/192
-> index d8301d5..1e582d1 100755
-> --- a/192
-> +++ b/192
-> @@ -45,7 +45,7 @@ _access_time()
->  
->  # real QA test starts here
->  
-> -_supported_fs xfs udf nfs
-> +_supported_fs xfs
->  _supported_os Linux
->  #delay=150
->  #delay=75
-> diff --git a/common.rc b/common.rc
-> index e634fbb..3d1a17b 100644
-> --- a/common.rc
-> +++ b/common.rc
-> @@ -302,7 +302,10 @@ _scratch_mkfs()
->          _scratch_mkfs_xfs $*
->  	;;
->      nfs*)
-> -	# do nothing for nfs
-> +       # clean scratch dir
-> +       _scratch_mount
-> +       rm -rf $SCRATCH_MNT/* $SCRATCH_MNT/.*
-> +       _scratch_unmount
->  	;;
->      udf)
->          $MKFS_UDF_PROG $MKFS_OPTIONS $* $SCRATCH_DEV > /dev/null
-> @@ -703,6 +706,10 @@ _require_scratch()
->  		 then
->  		     _notrun "this test requires a valid \$SCRATCH_DEV"
->  		 fi
-> +		 if [ ! -d "$SCRATCH_MNT" ]
-> +		 then
-> +		     _notrun "this test requires a valid \$SCRATCH_MNT"
-> +		 fi
->  		 ;;
->  	*)
->  		 if [ -z "$SCRATCH_DEV" -o "`_is_block_dev $SCRATCH_DEV`" = "" ]
-> @@ -1320,35 +1327,9 @@ _setup_udf_scratchdir()
->      testdir=$SCRATCH_MNT
->  }
->  
-> -_setup_nfs_scratchdir()
-> -{
-> -    [ "$FSTYP" != "nfs" ] \
-> -	&& _fail "setup_nfs_testdir: \$FSTYP is not nfs"
-> -    [ -z "$SCRATCH_DEV" ] \
-> -	&& _notrun "this test requires a valid host fs for \$SCRATCH_DEV"
-> -    [ -z "$SCRATCH_MNT" ] \
-> -	&& _notrun "this test requires a valid \$SCRATCH_MNT"
-> -
-> -    # mounted?
-> -    if _mount | grep -q $SCRATCH_DEV
-> -    then
-> -        # if it's mounted, make sure its on $SCRATCH_MNT
-> -        if ! _mount | grep $SCRATCH_DEV | grep -q $SCRATCH_MNT
-> -        then
-> -            _fail "\$SCRATCH_DEV is mounted but not on \$SCRATCH_MNT -
-> aborting"
-> -        fi
-> -    	$UMOUNT_PROG $SCRATCH_DEV
-> -    fi
-> -
-> -    _scratch_mkfs
-> -    _scratch_mount
-> -
-> -    testdir=$SCRATCH_MNT
-> -}
-> -
->  #
-> -# Warning for UDF and NFS:
-> -# this function calls _setup_udf_scratchdir and _setup_udf_scratchdir
-> +# Warning for UDF:
-> +# this function calls _setup_udf_scratchdir
->  # which actually uses the scratch dir for the test dir.
->  #
->  # This was done because testdir was intended to be a persistent
-> @@ -1361,9 +1342,6 @@ _setup_testdir()
->      udf)
->  	_setup_udf_scratchdir
->  	;;
-> -    nfs*)
-> -	_setup_nfs_scratchdir
-> -	;;
->      *)
->  	testdir=$TEST_DIR
->  	;;
-> @@ -1377,10 +1355,6 @@ _cleanup_testdir()
->  	# umount testdir as it is $SCRATCH_MNT which could be used by xfs next
->  	[ -n "$testdir" ] && $UMOUNT_PROG $testdir
->  	;;
-> -    nfs*)
-> -	# umount testdir as it is $SCRATCH_MNT which could be used by xfs next
-> -	[ -n "$testdir" ] && $UMOUNT_PROG $testdir
-> -	;;
->      *)
->  	# do nothing, testdir is $TEST_DIR
->  	:
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> For you, maybe.
 
-I've tested the patch with all the tests. Since neither nfs TEST_DEV nor
-SCRATCH_DEV are block devices tests 076 and 240 fail for nfs. All the
-other tests worked fine for me.
+For the majority of boxes that use xfs - most desktop boxes are not heavy
+NFS servers.
 
-This could be fixed by including _requrie_block_dev:
+> > It's easy to get some gains in special situations at the expense of normal
+> > ones - keep in mind that this optimisation makes little sense for non-NFS
+> > cases, which is the majority of use cases.
+> 
+> XFS is used extensively in NAS products, from small $100 ARM/MIPS
+> embedded NAS systems all the way up to high end commercial NAS
+> products. It is one of the main use cases we optimise XFS for.
 
-diff --git a/076 b/076
-index e472b26..630d6f4 100755
---- a/076
-+++ b/076
-@@ -57,6 +57,7 @@ _supported_fs generic
- _supported_os IRIX Linux
- 
- _require_scratch
-+_require_block_dev $SCRATCH_DEV
- 
- echo "*** init fs"
- 
-diff --git a/240 b/240
-index 563449e..11e5180 100755
---- a/240
-+++ b/240
-@@ -52,6 +52,7 @@ _supported_fs generic
- _supported_os Linux
- 
- _require_sparse_files
-+_require_block_dev $TEST_DEV
- 
- echo "Silence is golden."
- 
-diff --git a/common.rc b/common.rc
-index bc76812..5ea5a78 100644
---- a/common.rc
-+++ b/common.rc
-@@ -918,6 +918,15 @@ _require_sparse_files()
-     esac
- }
- 
-+# Check if the device is block device
-+#
-+_require_block_dev()
-+{
-+       DEV=$1
-+       [ "`_is_block_dev $DEV`" = "" ] && \
-+               _notrun "Device $DEV is not block device"
-+}
-+
- # check that a FS on a device is mounted
- # if so, return mount point
- #
+Thats really sad - maybe people like me who use XFS on their servers
+should rethink that decision that, if XFS mainly optimises for commercial
+nas boxes only.
+
+You aren't serious, are you?
+
+> Sure, that would be my preferred approach. However, if you followed
+> the discussion when this first came up, you'd realise that we've
+> been trying to get NFS server changes to fix this operation for the
+> past 5 years, and I've just about  given up trying.  Hell, the NFS
+> OFC (open file cache) proposal that would have mostly solved this
+> (and other problems like readahead state thrashing) from 2-3 years
+> ago went nowhere...
+
+In other words, if you can't do it right, you make ugly broken hacks, and
+then tell people that it's exepcted behaviour, because xfs is optimised
+for commercial NFS server boxes.
+
+> > The preallocation makes sense in relation to the working set, which can be
+> > characterised by the open files, or recently opened files.
+> > Tieing it to the (in-memory) inode lifetime is an abysmal approximation to
+> > this.
+> 
+> So you keep saying, but you keep ignoring the fact that the inode
+> cache represents the _entire_ working set of inodes. It's not an
+> approximation - it is the _exact_ current working set of files we
+> currently have.
+
+I am sory, but that is wrong and shows a serious lack of
+understanding. The cached inode set is just that, a cache. It is
+definitely not corresponding to any working set, simply because it is a
+*cache*.
+
+ls -l in a directory will cache all inodes, but that doesn't mean that
+those files are the working set 8 hours later.
+
+Open files are in the working set, because applications open files to use
+them.
+
+The inode cache probably contains stuff that was in the working set
+before, but is no longer.
+
+> Hence falling back to "preallocation lasts for as long as the inode
+> is part of the working set" is an extremely good heuristic to use -
+
+It's of course extremely broken, because all it does is improve the
+(fragmentation) performance for broken clients - for normal clients it
+will reduce performance of course.
+
+> we move from preallocation for only the L1 cache lifecycle (open
+> fd's) to using the L2 cache lifecycle (recently opened inodes)
+> instead.
+
+That comparison is seriously flawed, as a cache is transparent, but the
+xfs behaviour is not.
+
+> > If I unpack a large tar file, this means that I get a lot of (internal)
+> > fragmentation because all files are spread over a large area than
+> > necesssary, and diskspace is used for a potentially indefinite time.
+> 
+> So you can reproduce this using an tar? Any details on size, # of
+> files, the untar command, etc?
+
+I can reproduce it simply by running make in the uclibc source tree.
+
+Since gas has the same access behaviour as tar, why would it be different?
+What kind of broken heuristic is it that XFS now uses that these two use
+cases would make a difference?
+
+> How do you know you get internal fragmentation and tha tit is affecting
+> fragmentation?
+
+If what you say is true, thats a logical conclusion, it doesn'T need
+evidence, it follows from your claims.
+
+XFS can't preallocate for basically all files that are beign written and
+at the same time avoid fragmentation.
+
+> Please provide concrete examples (e.g. copy+paste the command lines and
+> any relevant output) that so I might be able to reproduce your problem
+> myself?
+
+"make" - I already told you in my first e-mail.
+
+> we should fix it. What I really want is your test cases that
+> reproduce the problem so I can analyse it for myself. Once I
+> understand what is going on, then we can talk about what the real
+> problem is and how to fix it.
+
+Being a good citizen wanting to improve XFS I of course dleivered that in
+my first e-mail. Again, I used allocsize=64m and then made a buildroot
+build, which stopped after a few minutes because 180GB of disk space were
+gone.
+
+The disk space was all used up by the buildroot, which is normally a few
+gigabytes (after a successful build).
+
+I found that the uclibc object directory uses 50GB of space, about 8 hours
+after the compile - the object files were typically a few kb in size, but
+du showed 64mb of usage, even though nobody was using that file more than
+once, or ever after the make stopped.
+
+I am sorry, I think you are more interested in forcing your personal
+toy heuristic through reality - thats how you come across, because you
+selectively ignore the bits that you don't like. It's also pretty telling
+that XFS mainly optimises for commercial NAS boxes now, and no longer for
+good performance on local boxes.
+
+:(
+
+-- 
+                The choice of a       Deliantra, the free code+content MORPG
+      -----==-     _GNU_              http://www.deliantra.net
+      ----==-- _       generation
+      ---==---(_)__  __ ____  __      Marc Lehmann
+      --==---/ / _ \/ // /\ \/ /      schmorp@schmorp.de
+      -=====/_/_//_/\_,_/ /_/\_\
 
 _______________________________________________
 xfs mailing list
