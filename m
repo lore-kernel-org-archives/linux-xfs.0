@@ -1,12 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4NLn7sh025342 for <xfs@oss.sgi.com>; Mon, 23 May 2011 16:49:07 -0500
-From: Alex Elder <aelder@sgi.com>
-Message-Id: <201105232149.p4NLn2PV022851@stout.americas.sgi.com>
-Date: Mon, 23 May 2011 16:49:02 -0500
-Subject: [GIT PULL] XFS update 1 for 2.6.40-rc1
+	p4NKZZSk022428 for <xfs@oss.sgi.com>; Mon, 23 May 2011 15:35:36 -0500
+Received: from e38.co.us.ibm.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 790FA1656007
+	for <xfs@oss.sgi.com>; Mon, 23 May 2011 13:35:17 -0700 (PDT)
+Received: from e38.co.us.ibm.com (e38.co.us.ibm.com [32.97.110.159]) by
+	cuda.sgi.com with ESMTP id qFTDLzQXt2gzmv9a for
+	<xfs@oss.sgi.com>; Mon, 23 May 2011 13:35:17 -0700 (PDT)
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com
+	[9.17.195.106])
+	by e38.co.us.ibm.com (8.14.4/8.13.1) with ESMTP id p4NKR6sD006497
+	for <xfs@oss.sgi.com>; Mon, 23 May 2011 14:27:06 -0600
+Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	p4NKaVZq095158 for <xfs@oss.sgi.com>; Mon, 23 May 2011 14:36:32 -0600
+Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av01.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
+	id p4NKZ9SQ001988
+	for <xfs@oss.sgi.com>; Mon, 23 May 2011 14:35:09 -0600
+Message-ID: <4DDAC4F2.9090909@linux.vnet.ibm.com>
+Date: Mon, 23 May 2011 13:34:58 -0700
+From: Allison Henderson <achender@linux.vnet.ibm.com>
 MIME-Version: 1.0
+Subject: [PATCH] xfsprogs: Fix for xfstest 252 hang on ext4
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,70 +36,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>, Ext4 Developers List <linux-ext4@vger.kernel.org>
 
-The following changes since commit ea2b50ef4c9e030749ae473e95258f477c3a68ca:
+Xfstests 252 hangs on ext4 due to a loop in xfsprogs that does not exit.  
 
-  Merge branch 'x86-apic-for-linus' of git://git.kernel.org/pub/scm/linux/kernel/git/tip/linux-2.6-tip (2011-05-23 12:54:15 -0700)
+Signed-off-by: Allison Henderson <achender@us.ibm.com>
+---
+:100644 100644 fa990cc... 81fc92c... M	io/fiemap.c
+ io/fiemap.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-are available in the git repository at:
-
-  git://oss.sgi.com/xfs/xfs for-linus
-
-Christoph Hellwig (6):
-      xfs: optimize AGFL refills
-      xfs: do not immediately reuse busy extent ranges
-      xfs: exact busy extent tracking
-      xfs: reduce the number of pagb_lock roundtrips in xfs_alloc_clear_busy
-      xfs: fix compiler warning in xfs_trace.h
-      xfs: add an x86 compat handler for XFS_IOC_ZERO_RANGE
-
-Dave Chinner (10):
-      xfs: ensure reclaim cursor is reset correctly at end of AG
-      xfs: exit AIL push work correctly when AIL is empty
-      xfs: always push the AIL to the target
-      xfs: make AIL target updates and compares 32bit safe.
-      xfs: fix race condition in AIL push trigger
-      xfs: fix duplicate workqueue initialisation
-      xfs: fix xfs_itruncate_start tracing
-      xfs: avoid getting stuck during async inode flushes
-      xfs: reset buffer pointers before freeing them
-      xfs: obey minleft values during extent allocation correctly
-
-David Sterba (1):
-      xfs: cleanup duplicate initializations
-
-Joe Perches (1):
-      xfs: kill off xfs_printk()
-
- fs/xfs/linux-2.6/xfs_buf.c     |   22 +-
- fs/xfs/linux-2.6/xfs_buf.h     |    1 +
- fs/xfs/linux-2.6/xfs_ioctl32.c |    3 +-
- fs/xfs/linux-2.6/xfs_ioctl32.h |    1 +
- fs/xfs/linux-2.6/xfs_linux.h   |    1 +
- fs/xfs/linux-2.6/xfs_message.c |   20 +-
- fs/xfs/linux-2.6/xfs_message.h |    7 +-
- fs/xfs/linux-2.6/xfs_super.c   |    4 -
- fs/xfs/linux-2.6/xfs_sync.c    |   11 +
- fs/xfs/linux-2.6/xfs_trace.h   |   76 ++---
- fs/xfs/xfs_ag.h                |    1 -
- fs/xfs/xfs_alloc.c             |  844 +++++++++++++++++++++++++++------------
- fs/xfs/xfs_alloc.h             |   15 +-
- fs/xfs/xfs_alloc_btree.c       |   13 +-
- fs/xfs/xfs_dfrag.c             |    6 +-
- fs/xfs/xfs_inode.c             |    2 +-
- fs/xfs/xfs_inode_item.c        |    1 -
- fs/xfs/xfs_log.c               |   15 +-
- fs/xfs/xfs_log.h               |    2 -
- fs/xfs/xfs_log_cil.c           |    5 +-
- fs/xfs/xfs_log_priv.h          |    2 +
- fs/xfs/xfs_log_recover.c       |   75 ++--
- fs/xfs/xfs_mount.c             |    4 +-
- fs/xfs/xfs_trans.c             |    6 +-
- fs/xfs/xfs_trans_ail.c         |   47 ++-
- fs/xfs/xfs_types.h             |    2 -
- 26 files changed, 748 insertions(+), 438 deletions(-)
+diff --git a/io/fiemap.c b/io/fiemap.c
+index fa990cc..81fc92c 100644
+--- a/io/fiemap.c
++++ b/io/fiemap.c
+@@ -246,7 +246,7 @@ fiemap_f(
+ 		       flg_w, _("FLAGS"));
+ 	}
+ 
+-	while (!last && ((cur_extent + 1) != max_extents)) {
++	while (!last && (cur_extent <= max_extents)) {
+ 		if (max_extents)
+ 			num_extents = min(num_extents,
+ 					  max_extents - (cur_extent + 1));
+-- 
+1.7.1
 
 _______________________________________________
 xfs mailing list
