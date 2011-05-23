@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4NArRll259290 for <xfs@oss.sgi.com>; Mon, 23 May 2011 05:53:28 -0500
-Received: from chipmunk.wormnet.eu (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4690C1621A6E
-	for <xfs@oss.sgi.com>; Mon, 23 May 2011 03:53:25 -0700 (PDT)
-Received: from chipmunk.wormnet.eu (chipmunk.wormnet.eu [195.195.131.226]) by
-	cuda.sgi.com with ESMTP id ZGBqJFTSlToRvQei for
-	<xfs@oss.sgi.com>; Mon, 23 May 2011 03:53:25 -0700 (PDT)
-Resent-Message-ID: <20110523105324.GY28383@chipmunk>
-Resent-To: xfs@oss.sgi.com
-Date: Sat, 7 May 2011 00:04:38 +0100
-From: Alexander Clouter <alex@digriz.org.uk>
-Subject: Re: SIGSEGV with 'cp -a'
-Message-ID: <20110506230438.GV25017@chipmunk>
-References: <20110506220035.GU25017@chipmunk>
-MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="ieNMXl1Fr3cevapt"
-Content-Disposition: inline
-In-Reply-To: <20110506220035.GU25017@chipmunk>
+	p4NCpunM001355 for <xfs@oss.sgi.com>; Mon, 23 May 2011 07:51:56 -0500
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A61451625EBB
+	for <xfs@oss.sgi.com>; Mon, 23 May 2011 05:51:54 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id uhoYL0NzCisLa4kz for
+	<xfs@oss.sgi.com>; Mon, 23 May 2011 05:51:54 -0700 (PDT)
+Subject: Re: xfstests - SCRATCH_DIR mounted/unmounted twice when testing nfs
+From: Boris Ranto <branto@redhat.com>
+In-Reply-To: <1305805778.8615.109.camel@dhcp-31-190.brq.redhat.com>
+References: <1305722498.25226.110.camel@dhcp-31-190.brq.redhat.com>
+	<20110519000202.GC32466@dastard>
+	<1305805778.8615.109.camel@dhcp-31-190.brq.redhat.com>
+Date: Mon, 23 May 2011 14:51:45 +0200
+Message-ID: <1306155105.3091.68.camel@dhcp-31-190.brq.redhat.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,174 +25,244 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: bfields@citi.umich.edu
-Cc: linux-xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs <xfs@oss.sgi.com>
 
-
---ieNMXl1Fr3cevapt
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-Hi,
-
-I *think* it all boils down to XFS[1] being bad and it should be 
-returning ENOATTR rather than EINVAL for unknown xattr names; according 
-to the getxattr() manpage.
-
-The previous patch just plasters over the problem (as we should never be 
-getting to acl_ptn4_acl_trans() on an XFS filesystem).  The result is 
-that you see the ACL's on a NFSv4 mount, but local filesystems they are 
-invisible.
-
-The attached patch fixes things (hopefully) properly.
-
-Cheers
-
-[1] http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=blob;f=fs/xfs/xfs_attr.c#l87
-
-* Alexander Clouter <alex@digriz.org.uk> [2011-05-06 23:00:35+0100]:
->
-> Unsure if you are interested, as it really looks like your nfs4 libacl 
-> patches[1] are no longer being maintained, but after moving my Debian 
-> installation from lenny to squeeze I got segfaults when copying files:
-> ----
-> Program received signal SIGSEGV, Segmentation fault.
-> acl_ptn4_acl_trans (pacl=0x8062f8c, acl=0x0, type=32768, is_dir=1,
->     nfs_domain=0xbffff108 "elar.soas.ac.uk") at acl_ptn4_acl_trans.c:109
-> 109             purge_aces(acl, type);
-> (gdb) where
-> #0  acl_ptn4_acl_trans (pacl=0x8062f8c, acl=0x0, type=32768, is_dir=1,
->     nfs_domain=0xbffff108 "elar.soas.ac.uk") at acl_ptn4_acl_trans.c:109
-> #1  0xb7fac969 in acl_set_file (path_p=0x8062d20 "moo/private", 
-> type=32768, acl=0x8062f8c)
->     at acl_set_file.c:114
-> [snipped]
-> ----
+On Thu, 2011-05-19 at 13:49 +0200, Boris Ranto wrote:
+> On Thu, 2011-05-19 at 10:02 +1000, Dave Chinner wrote:
+> > On Wed, May 18, 2011 at 12:41:38PM +0000, Boris Ranto wrote:
+> > > Tests 124, 127 and 128 unmount their SCRATCH_DEV manually while using _cleanup_testdir in trapped cleanup function.
+> > > This can lead to test fails due to double unmount on nfs where _cleanup_testdir unmounts SCRATCH_DEV.
+> > > 
+> > > Tests 129 and 130 use _setup_testdir and _scratch_mount that can lead to double mount on nfs where _setup_testdir mounts SCRATCH_DEV.
+> > > 
+> > > The least invasive patch (only nfs shall be affected by this patch) I could come up with that fixed this issue used conditional umounts in _cleanup_testdir and conditional mount/remount in _scratch_mount (remount was used so that mount flags do not get lost).
+> > > 
+> > From the code:
+> > 
+> > #
+> > # Warning for UDF and NFS:
+> > # this function calls _setup_udf_scratchdir and _setup_udf_scratchdir
+> > # which actually uses the scratch dir for the test dir.
+> > #
+> > # This was done because testdir was intended to be a persistent
+> > # XFS only partition.  This should eventually change, and treat
+> > # at least local filesystems all the same.
+> > #
+> > 
+> > I think that this means that the way _setup_testdir uses the scratch
+> > device was a nasty hack and was intended to be fixed at some point.
+> > Perhaps we should actually understand the issue that lead to this
+> > hack first, and then determine what is needed to fix it rather than
+> > just layering more hacks on top of it?
+> > 
+> > > Alternatively, _setup_testdir could stop mounting SCRATCH_DEV but
+> > > that would be probably too invasive.
+> > 
+> > I don't really care about how invasive fixing the problem
+> > properly is if it's the better long term solution....
 > 
-> Seems to come about as getxattr("system.nfs4_acl") on an XFS filesystem 
-> pops back with (iirc) EINVAL which trickles into libacl as NULL in acl 
-> when being passed to purge_aces().
+> I also prefer that solution. The fix could be relatively simple: just
+> treat nfs as regular local filesystem. The question is whether there are
+> any test cases that depends on the old _setup_testdir behaviour.
 > 
-> Obvious fix is to drop in a quick check for NULL, as done in the 
-> attached patch.  Would be great if you could could commit this to your 
-> dusty git tree, spit out a new patch and tell us all to "get with the 
-> program and use richacls" ;)
+> Looking through the tests I found two tests that have nfs in their
+> _supported_fs field: 062 and 192.
 > 
-> Having 'native' ACLs with NFSv4 has helped me no end, so my thanks to 
-> you (and any other contributors).
+> 062 expects scratch dev to be regular device and hence fails for nfs
+> either way. Therefore restricting the test to xfs (maybe +udf) shouldn't
+> cause any problems.
 > 
-> Cheers
+> 192 uses TEST_DIR directly so it probably expects TEST_DIR to be mounted
+> xfs filesystem, therefore just changing _supported_fs to xfs (maybe
+> +udf) should be sufficient.
 > 
-> [1] http://www.citi.umich.edu/projects/nfsv4/linux/
-> [2] I'm using the Debian acl/libacl 2.2.49-4 package with 
-> 	acl-2.2.42-CITI_NFS4_ALL-2.diff applied
+> 
+> > Cheers,
+> > 
+> > Dave.
+> 
+> 
+> So far I could test the following patch (nfs only, udf unchanged) on few
+> tests with success. I'll let it run for all the tests and report back
+> later if it still makes sense.
+> 
+> diff --git a/062 b/062
+> index 5cb6f92..83644be 100755
+> --- a/062
+> +++ b/062
+> @@ -71,7 +71,7 @@ _create_test_bed()
+>  }
+>  
+>  # real QA test starts here
+> -_supported_fs xfs udf nfs
+> +_supported_fs xfs
+>  _supported_os Linux
+>  
+>  _require_scratch
+>  
+> diff --git a/192 b/192
+> index d8301d5..1e582d1 100755
+> --- a/192
+> +++ b/192
+> @@ -45,7 +45,7 @@ _access_time()
+>  
+>  # real QA test starts here
+>  
+> -_supported_fs xfs udf nfs
+> +_supported_fs xfs
+>  _supported_os Linux
+>  #delay=150
+>  #delay=75
+> diff --git a/common.rc b/common.rc
+> index e634fbb..3d1a17b 100644
+> --- a/common.rc
+> +++ b/common.rc
+> @@ -302,7 +302,10 @@ _scratch_mkfs()
+>          _scratch_mkfs_xfs $*
+>  	;;
+>      nfs*)
+> -	# do nothing for nfs
+> +       # clean scratch dir
+> +       _scratch_mount
+> +       rm -rf $SCRATCH_MNT/* $SCRATCH_MNT/.*
+> +       _scratch_unmount
+>  	;;
+>      udf)
+>          $MKFS_UDF_PROG $MKFS_OPTIONS $* $SCRATCH_DEV > /dev/null
+> @@ -703,6 +706,10 @@ _require_scratch()
+>  		 then
+>  		     _notrun "this test requires a valid \$SCRATCH_DEV"
+>  		 fi
+> +		 if [ ! -d "$SCRATCH_MNT" ]
+> +		 then
+> +		     _notrun "this test requires a valid \$SCRATCH_MNT"
+> +		 fi
+>  		 ;;
+>  	*)
+>  		 if [ -z "$SCRATCH_DEV" -o "`_is_block_dev $SCRATCH_DEV`" = "" ]
+> @@ -1320,35 +1327,9 @@ _setup_udf_scratchdir()
+>      testdir=$SCRATCH_MNT
+>  }
+>  
+> -_setup_nfs_scratchdir()
+> -{
+> -    [ "$FSTYP" != "nfs" ] \
+> -	&& _fail "setup_nfs_testdir: \$FSTYP is not nfs"
+> -    [ -z "$SCRATCH_DEV" ] \
+> -	&& _notrun "this test requires a valid host fs for \$SCRATCH_DEV"
+> -    [ -z "$SCRATCH_MNT" ] \
+> -	&& _notrun "this test requires a valid \$SCRATCH_MNT"
+> -
+> -    # mounted?
+> -    if _mount | grep -q $SCRATCH_DEV
+> -    then
+> -        # if it's mounted, make sure its on $SCRATCH_MNT
+> -        if ! _mount | grep $SCRATCH_DEV | grep -q $SCRATCH_MNT
+> -        then
+> -            _fail "\$SCRATCH_DEV is mounted but not on \$SCRATCH_MNT -
+> aborting"
+> -        fi
+> -    	$UMOUNT_PROG $SCRATCH_DEV
+> -    fi
+> -
+> -    _scratch_mkfs
+> -    _scratch_mount
+> -
+> -    testdir=$SCRATCH_MNT
+> -}
+> -
+>  #
+> -# Warning for UDF and NFS:
+> -# this function calls _setup_udf_scratchdir and _setup_udf_scratchdir
+> +# Warning for UDF:
+> +# this function calls _setup_udf_scratchdir
+>  # which actually uses the scratch dir for the test dir.
+>  #
+>  # This was done because testdir was intended to be a persistent
+> @@ -1361,9 +1342,6 @@ _setup_testdir()
+>      udf)
+>  	_setup_udf_scratchdir
+>  	;;
+> -    nfs*)
+> -	_setup_nfs_scratchdir
+> -	;;
+>      *)
+>  	testdir=$TEST_DIR
+>  	;;
+> @@ -1377,10 +1355,6 @@ _cleanup_testdir()
+>  	# umount testdir as it is $SCRATCH_MNT which could be used by xfs next
+>  	[ -n "$testdir" ] && $UMOUNT_PROG $testdir
+>  	;;
+> -    nfs*)
+> -	# umount testdir as it is $SCRATCH_MNT which could be used by xfs next
+> -	[ -n "$testdir" ] && $UMOUNT_PROG $testdir
+> -	;;
+>      *)
+>  	# do nothing, testdir is $TEST_DIR
+>  	:
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
--- 
-Alexander Clouter
-.sigmonster says: problem drinker, n.:
-                  	A man who never buys.
+I've tested the patch with all the tests. Since neither nfs TEST_DEV nor
+SCRATCH_DEV are block devices tests 076 and 240 fail for nfs. All the
+other tests worked fine for me.
 
---ieNMXl1Fr3cevapt
-Content-Type: text/x-diff; charset=us-ascii
-Content-Disposition: attachment; filename="nfs4-acl-oops-fix.patch"
+This could be fixed by including _requrie_block_dev:
 
-diff -u -r acl-2.2.49.orig/debian/changelog acl-2.2.49/debian/changelog
---- acl-2.2.49.orig/debian/changelog	2010-09-21 06:02:04.000000000 +0100
-+++ acl-2.2.49/debian/changelog	2011-05-06 23:39:24.817562608 +0100
-@@ -1,3 +1,21 @@
-+acl (2.2.49-4.nfsv4-3) unstable; urgency=low
-+
-+  * Handle that XFS comes back with EINVAL for xattr ops
-+
-+ -- Alexander Clouter <alex@digriz.org.uk>  Fri,  6 May 2011 23:36:00 +0100
-+
-+acl (2.2.49-4.nfsv4-2) unstable; urgency=low
-+
-+  * Fix a nfsv4->posix mapping problem that gave groups spurious bits
-+
-+ -- J. Bruce Fields <bfields@ying8.citi.umich.edu>  Mon,  5 Nov 2007 18:49:20 -0500
-+
-+acl (2.2.49-4.nfsv4-1) unstable; urgency=low
-+
-+  * Add support for NFSv4 ACLs
-+
-+ -- J. Bruce Fields <bfields@fieldses.org>  Fri, 02 Sep 2006 00:22:07 -0400
-+
- acl (2.2.49-4) unstable; urgency=low
+diff --git a/076 b/076
+index e472b26..630d6f4 100755
+--- a/076
++++ b/076
+@@ -57,6 +57,7 @@ _supported_fs generic
+ _supported_os IRIX Linux
  
-   * Migrate to having binaries in sbindir (closes: #590240)
-diff -u -r acl-2.2.49.orig/libacl/acl_extended_file.c acl-2.2.49/libacl/acl_extended_file.c
---- acl-2.2.49.orig/libacl/acl_extended_file.c	2011-05-07 00:02:33.093234423 +0100
-+++ acl-2.2.49/libacl/acl_extended_file.c	2011-05-06 23:42:05.213231868 +0100
-@@ -40,7 +40,7 @@
- 	 * NFS4 stuff that's going on.  We need a cleaner separation. */
- #ifdef USE_NFSV4_TRANS
- 	retval = getxattr(path_p, ACL_NFS4_XATTR, NULL, 0);
--	if (retval < 0 && errno != ENOATTR && errno != EOPNOTSUPP)
-+	if (retval < 0 && errno != ENOATTR && errno != EOPNOTSUPP && errno != EINVAL)
- 		return -1;
- 	if (retval >= 0) {
- 		struct nfs4_acl *nfsacl;
-diff -u -r acl-2.2.49.orig/libacl/acl_get_fd.c acl-2.2.49/libacl/acl_get_fd.c
---- acl-2.2.49.orig/libacl/acl_get_fd.c	2011-05-07 00:02:33.093234423 +0100
-+++ acl-2.2.49/libacl/acl_get_fd.c	2011-05-06 23:40:45.269231919 +0100
-@@ -51,7 +51,7 @@
+ _require_scratch
++_require_block_dev $SCRATCH_DEV
  
- #ifdef USE_NFSV4_TRANS
- 	retval = fgetxattr(fd, ACL_NFS4_XATTR, ext_acl_p, size_guess);
--	if(retval == -1 && (errno == ENOATTR || errno == EOPNOTSUPP)) {
-+	if(retval == -1 && (errno == ENOATTR || errno == EOPNOTSUPP || errno == EINVAL)) {
- 		nfsv4acls = ACL_NFS4_NOT_USED;
- 		retval = fgetxattr(fd, name, ext_acl_p, size_guess);
- 	} else {
-diff -u -r acl-2.2.49.orig/libacl/acl_get_file.c acl-2.2.49/libacl/acl_get_file.c
---- acl-2.2.49.orig/libacl/acl_get_file.c	2011-05-07 00:02:33.093234423 +0100
-+++ acl-2.2.49/libacl/acl_get_file.c	2011-05-06 23:41:19.225231870 +0100
-@@ -63,7 +63,7 @@
- 		return NULL;
- #ifdef USE_NFSV4_TRANS
- 	retval = getxattr(path_p, ACL_NFS4_XATTR, ext_acl_p, size_guess);
--	if((retval == -1) && (errno == ENOATTR || errno == EOPNOTSUPP)) {
-+	if((retval == -1) && (errno == ENOATTR || errno == EOPNOTSUPP || errno == EINVAL)) {
- 		nfsv4acls = ACL_NFS4_NOT_USED;
- 		retval = getxattr(path_p, name, ext_acl_p, size_guess);
- 	} else {
-diff -u -r acl-2.2.49.orig/libacl/acl_set_fd.c acl-2.2.49/libacl/acl_set_fd.c
---- acl-2.2.49.orig/libacl/acl_set_fd.c	2011-05-07 00:02:33.097233581 +0100
-+++ acl-2.2.49/libacl/acl_set_fd.c	2011-05-06 23:41:32.273232819 +0100
-@@ -53,7 +53,7 @@
- #ifdef USE_NFSV4_TRANS
- 	retval = fgetxattr(fd, ACL_NFS4_XATTR, NULL, 0);
+ echo "*** init fs"
  
--	if(retval == -1 && (errno == ENOATTR || errno == EOPNOTSUPP)) {
-+	if(retval == -1 && (errno == ENOATTR || errno == EOPNOTSUPP || errno == EINVAL)) {
- 		ext_acl_p = __acl_to_xattr(acl_obj_p, &size);
- 	} else {
- 		char domain[NFS4_MAX_DOMAIN_LEN];
-diff -u -r acl-2.2.49.orig/libacl/acl_set_file.c acl-2.2.49/libacl/acl_set_file.c
---- acl-2.2.49.orig/libacl/acl_set_file.c	2011-05-07 00:02:33.101232756 +0100
-+++ acl-2.2.49/libacl/acl_set_file.c	2011-05-06 23:41:50.745232926 +0100
-@@ -100,7 +100,7 @@
- 		return -1;
- 	}
- 	nacl = get_nfs4_acl(path_p, is_dir);
--	if (nacl == NULL && (errno == ENOATTR || errno == EOPNOTSUPP))
-+	if (nacl == NULL && (errno == ENOATTR || errno == EOPNOTSUPP || errno == EINVAL))
- 		ext_acl_p = __acl_to_xattr(acl_obj_p, &size);
- 	else {
- 		char domain[NFS4_MAX_DOMAIN_LEN];
-
---ieNMXl1Fr3cevapt
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+diff --git a/240 b/240
+index 563449e..11e5180 100755
+--- a/240
++++ b/240
+@@ -52,6 +52,7 @@ _supported_fs generic
+ _supported_os Linux
+ 
+ _require_sparse_files
++_require_block_dev $TEST_DEV
+ 
+ echo "Silence is golden."
+ 
+diff --git a/common.rc b/common.rc
+index bc76812..5ea5a78 100644
+--- a/common.rc
++++ b/common.rc
+@@ -918,6 +918,15 @@ _require_sparse_files()
+     esac
+ }
+ 
++# Check if the device is block device
++#
++_require_block_dev()
++{
++       DEV=$1
++       [ "`_is_block_dev $DEV`" = "" ] && \
++               _notrun "Device $DEV is not block device"
++}
++
+ # check that a FS on a device is mounted
+ # if so, return mount point
+ #
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---ieNMXl1Fr3cevapt--
