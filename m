@@ -1,23 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4OJB5Ps091848 for <xfs@oss.sgi.com>; Tue, 24 May 2011 14:11:06 -0500
-Received: from mail-pz0-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2FCF51657E14
-	for <xfs@oss.sgi.com>; Tue, 24 May 2011 12:11:04 -0700 (PDT)
-Received: from mail-pz0-f53.google.com (mail-pz0-f53.google.com
-	[209.85.210.53]) by cuda.sgi.com with ESMTP id 3vZMtnpB6l083Tha
-	for <xfs@oss.sgi.com>; Tue, 24 May 2011 12:11:04 -0700 (PDT)
-Received: by pzk6 with SMTP id 6so3620262pzk.26
-	for <xfs@oss.sgi.com>; Tue, 24 May 2011 12:11:04 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <BANLkTin26bRHiaCxc15ZwjX__NR3QHaSFA@mail.gmail.com>
-References: <BANLkTikNMrFzxJF4a86ZM55r3D=ThPFmOw@mail.gmail.com>
-	<BANLkTin26bRHiaCxc15ZwjX__NR3QHaSFA@mail.gmail.com>
-From: Nuno Subtil <subtil@gmail.com>
-Date: Tue, 24 May 2011 12:10:44 -0700
-Message-ID: <BANLkTimOA3W2V+0uPsjpPt=MqrbeGcfs5g@mail.gmail.com>
-Subject: Re: XFS umount issue
+	p4OKQQOK094478 for <xfs@oss.sgi.com>; Tue, 24 May 2011 15:26:26 -0500
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 187A047BDF4
+	for <xfs@oss.sgi.com>; Tue, 24 May 2011 13:26:25 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id m6GJw9CAMMD6bv7K for
+	<xfs@oss.sgi.com>; Tue, 24 May 2011 13:26:25 -0700 (PDT)
+From: Josef Bacik <josef@redhat.com>
+Subject: [PATCH] xfstests: add test 254 for testing basic btrfs volume
+	functionality
+Date: Tue, 24 May 2011 16:26:03 -0400
+Message-Id: <1306268763-7932-1-git-send-email-josef@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,74 +21,196 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Paul Anderson <pha@umich.edu>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com, linux-btrfs@vger.kernel.org
 
-On Tue, May 24, 2011 at 06:33, Paul Anderson <pha@umich.edu> wrote:
-> Hi Nuno - can you elaborate on the ARM hardware? =A0I noticed that my
-> XFS on ARM was mildly unstable, but felt it wasn't XFS code, but
-> rather the ARM port of Linux. =A0My test case is a Seagate Dockstar
-> hacked to run Linux.
+This test just runs through all of the basic btrfs commands that manipulate our
+subvolume stuff.  It creates a snapshot, a subvolume, sets the subvolume as a
+default, lists the volumes and deletes the snapshot.  Thanks,
 
-Mine is a Netgear Stora. The interesting bit is that the stock
-firmware runs kernel 2.6.22.18 and uses XFS as well, but I don't know
-how stable it was to begin with.
+Signed-off-by: Josef Bacik <josef@redhat.com>
+---
+ 254     |  107 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 254.out |   40 +++++++++++++++++++++++
+ group   |    1 +
+ 3 files changed, 148 insertions(+), 0 deletions(-)
+ create mode 100755 254
+ create mode 100644 254.out
 
->
-> I'll see if I can update to the latest kernel and test this use case
-> as well - it would be interesting to see how well it works (I'd like
-> to run my Dockstar as a mythtv server - stability was good enough for
-> proof of concept, but not longer term use).
->
-> Thanks,
->
-> Paul
->
-> On Mon, May 23, 2011 at 5:39 PM, Nuno Subtil <subtil@gmail.com> wrote:
->> I have an MD RAID-1 array with two SATA drives, formatted as XFS.
->> Occasionally, doing an umount followed by a mount causes the mount to
->> fail with errors that strongly suggest some sort of filesystem
->> corruption (usually 'bad clientid' with a seemingly arbitrary ID, but
->> occasionally invalid log errors as well).
->>
->> The one thing in common among all these failures is that they require
->> xfs_repair -L to recover from. This has already caused a few
->> lost+found entries (and data loss on recently written files). I
->> originally noticed this bug because of mount failures at boot, but
->> I've managed to repro it reliably with this script:
->>
->> while true; do
->> =A0 =A0 =A0 =A0mount /store
->> =A0 =A0 =A0 =A0(cd /store && tar xf test.tar)
->> =A0 =A0 =A0 =A0umount /store
->> =A0 =A0 =A0 =A0mount /store
->> =A0 =A0 =A0 =A0rm -rf /store/test-data
->> =A0 =A0 =A0 =A0umount /store
->> done
->>
->> test.tar contains around 100 files with various sizes inside
->> test-data/, ranging from a few hundred KB to around 5-6MB. The failure
->> triggers within minutes of starting this loop.
->>
->> I'm not entirely sure that this is XFS-specific, but the same script
->> does run successfully overnight on the same MD array with ext3 on it.
->> This is on an ARM system running kernel 2.6.39.
->>
->> Has something like this been seen before?
->>
->> Thanks,
->> Nuno
->>
->> _______________________________________________
->> xfs mailing list
->> xfs@oss.sgi.com
->> http://oss.sgi.com/mailman/listinfo/xfs
->>
->
+diff --git a/254 b/254
+new file mode 100755
+index 0000000..3c1a5a1
+--- /dev/null
++++ b/254
+@@ -0,0 +1,107 @@
++#! /bin/bash
++# FS QA Test No. 254
++#
++# Test btrfs's subvolume and snapshot support
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2011 Red Hat.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#
++#-----------------------------------------------------------------------
++#
++# creator
++owner=josef@redhat.com
++
++seq=`basename $0`
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++
++_cleanup()
++{
++    rm -f $tmp.*
++}
++
++trap "_cleanup ; exit \$status" 0 1 2 3 15
++
++# get standard environment, filters and checks
++. ./common.rc
++
++# real QA test starts here
++_supported_fs btrfs
++_supported_os Linux
++_require_scratch
++
++_scratch_mkfs > /dev/null 2>&1
++_scratch_mount
++
++# First test basic snapshotting
++echo "Creating file foo in root dir"
++dd if=/dev/zero of=$SCRATCH_MNT/foo bs=1M count=1 &> /dev/null
++echo "List root dir"
++ls $SCRATCH_MNT
++echo "Creating snapshot of root dir"
++btrfs subvolume snapshot $SCRATCH_MNT $SCRATCH_MNT/snap
++echo "List root dir after snapshot"
++ls $SCRATCH_MNT
++echo "List snapshot dir"
++ls $SCRATCH_MNT/snap
++rm -f $SCRATCH_MNT/foo
++echo "List root dir after rm of foo"
++ls $SCRATCH_MNT
++echo "List snapshot dir"
++ls $SCRATCH_MNT/snap
++
++# Test creating a normal subvolme
++btrfs subvolume create $SCRATCH_MNT/subvol
++echo "Listing root dir"
++ls $SCRATCH_MNT
++echo "Listing subvol"
++ls $SCRATCH_MNT/subvol
++
++# Test setting a default mount
++echo "Creating file bar in subvol"
++dd if=/dev/zero of=$SCRATCH_MNT/subvol/bar bs=1M count=1 &> /dev/null
++echo "Setting subvol to the default"
++btrfs subvolume set-default $SCRATCH_MNT/subvol $SCRATCH_MNT/subvol
++_scratch_remount
++echo "List root dir which is now subvol"
++ls $SCRATCH_MNT
++_scratch_unmount
++echo "Mounting sbuvolid=0 for the root dir"
++_scratch_mount "-o subvolid=0"
++echo "List root dir"
++ls $SCRATCH_MNT
++echo "Setting the root dir as the default again"
++btrfs subvolume set-default $SCRATCH_MNT $SCRATCH_MNT
++_scratch_remount
++echo "List root dir"
++ls $SCRATCH_MNT
++
++# Test listing the subvolumes
++echo "Listing subvolumes"
++btrfs subvolume list $SCRATCH_MNT
++
++# Delete the snapshot
++btrfs subvolume delete $SCRATCH_MNT/snap
++echo "List root dir"
++ls $SCRATCH_MNT
++_scratch_remount
++echo "List root dir"
++ls $SCRATCH_MNT
++
++status=0 ; exit
+diff --git a/254.out b/254.out
+new file mode 100644
+index 0000000..e1c19ee
+--- /dev/null
++++ b/254.out
+@@ -0,0 +1,40 @@
++QA output created by 254
++Creating file foo in root dir
++List root dir
++foo
++Creating snapshot of root dir
++Create a snapshot of '/mnt/scratch' in '/mnt/scratch/snap'
++List root dir after snapshot
++foo
++snap
++List snapshot dir
++foo
++List root dir after rm of foo
++snap
++List snapshot dir
++foo
++Create subvolume '/mnt/scratch/subvol'
++Listing root dir
++snap
++subvol
++Listing subvol
++Creating file bar in subvol
++Setting subvol to the default
++List root dir which is now subvol
++bar
++Mounting sbuvolid=0 for the root dir
++List root dir
++snap
++subvol
++Setting the root dir as the default again
++List root dir
++snap
++subvol
++Listing subvolumes
++ID 256 top level 5 path snap
++ID 257 top level 5 path subvol
++Delete subvolume '/mnt/scratch/snap'
++List root dir
++subvol
++List root dir
++subvol
+diff --git a/group b/group
+index 9f88e75..1f86075 100644
+--- a/group
++++ b/group
+@@ -367,3 +367,4 @@ deprecated
+ 251 ioctl trim
+ 252 auto quick prealloc
+ 253 auto quick
++254 auto quick
+-- 
+1.7.2.3
 
 _______________________________________________
 xfs mailing list
