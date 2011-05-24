@@ -1,22 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4O02mug032535 for <xfs@oss.sgi.com>; Mon, 23 May 2011 19:02:49 -0500
+	p4O0KUiA034601 for <xfs@oss.sgi.com>; Mon, 23 May 2011 19:20:31 -0500
 Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7C1C8476D7D
-	for <xfs@oss.sgi.com>; Mon, 23 May 2011 17:02:46 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2934616566A7
+	for <xfs@oss.sgi.com>; Mon, 23 May 2011 17:20:28 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	xJtF6itgEQPQdKur for <xfs@oss.sgi.com>;
-	Mon, 23 May 2011 17:02:46 -0700 (PDT)
-Date: Tue, 24 May 2011 10:02:43 +1000
+	gvCDL8va5SloV0BD for <xfs@oss.sgi.com>;
+	Mon, 23 May 2011 17:20:28 -0700 (PDT)
+Date: Tue, 24 May 2011 10:20:26 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS umount issue
-Message-ID: <20110524000243.GB32466@dastard>
-References: <BANLkTikNMrFzxJF4a86ZM55r3D=ThPFmOw@mail.gmail.com>
+Subject: Re: drastic changes to allocsize semantics in or around 2.6.38?
+Message-ID: <20110524002026.GC32466@dastard>
+References: <20110520025659.GO32466@dastard> <20110520154920.GD5828@schmorp.de>
+	<20110521004544.GT32466@dastard>
+	<20110521013604.GC10971@schmorp.de>
+	<20110521031537.GV32466@dastard>
+	<20110521041652.GA18375@schmorp.de>
+	<20110522020024.GZ32466@dastard> <20110522075955.GA2341@citd.de>
+	<20110523012034.GA32466@dastard>
+	<20110523090144.GB15985@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <BANLkTikNMrFzxJF4a86ZM55r3D=ThPFmOw@mail.gmail.com>
+In-Reply-To: <20110523090144.GB15985@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,71 +36,51 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Nuno Subtil <subtil@gmail.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Marc Lehmann <schmorp@schmorp.de>, xfs@oss.sgi.com
 
-On Mon, May 23, 2011 at 02:39:39PM -0700, Nuno Subtil wrote:
-> I have an MD RAID-1 array with two SATA drives, formatted as XFS.
-
-Hi Nuno. it is probably best to say this at the start, too:
-
-> This is on an ARM system running kernel 2.6.39.
-
-So we know what platform this is occurring on.
-
-> Occasionally, doing an umount followed by a mount causes the mount to
-> fail with errors that strongly suggest some sort of filesystem
-> corruption (usually 'bad clientid' with a seemingly arbitrary ID, but
-> occasionally invalid log errors as well).
-
-So reading back the journal is getting bad data?
+On Mon, May 23, 2011 at 05:01:44AM -0400, Christoph Hellwig wrote:
+> On Mon, May 23, 2011 at 11:20:34AM +1000, Dave Chinner wrote:
+> > 
+> > The state used to track dirty inode release calls is not reset when
+> > an inode is reallocated and reused from the reclaimable state. This
+> > leads to specualtive preallocation not being truncated away in the
+> > expected manner for local files until the inode is subsequently
+> > truncated, freed or cycles out of the cache.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > ---
+> >  fs/xfs/xfs_iget.c |    7 +++++++
+> >  1 files changed, 7 insertions(+), 0 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_iget.c b/fs/xfs/xfs_iget.c
+> > index cb9b6d1..e75e757 100644
+> > --- a/fs/xfs/xfs_iget.c
+> > +++ b/fs/xfs/xfs_iget.c
+> > @@ -241,6 +241,13 @@ xfs_iget_cache_hit(
+> >  		 */
+> >  		ip->i_flags |= XFS_IRECLAIM;
+> >  
+> > +		/*
+> > +		 * clear the dirty release state as we are now effectively a
+> > +		 * new inode and so we need to treat speculative preallocation
+> > +		 * accordingly.
+> > +		 */
+> > +		ip->i_flags &= ~XFS_IDIRTY_RELEASE;
 > 
-> The one thing in common among all these failures is that they require
-> xfs_repair -L to recover from. This has already caused a few
-> lost+found entries (and data loss on recently written files). I
-> originally noticed this bug because of mount failures at boot, but
-> I've managed to repro it reliably with this script:
+> Btw, don't we need to clear even more flags here?  To me it seems we
+> need to clear XFS_ISTALE, XFS_IFILESTREAM and XFS_ITRUNCATED as well.
 
-Yup, that's normal with recovery errors.
+XFS_ISTALE is cleared unconditionally at the end of the function,
+which means that any lookup on a stale inode will clear it. I'm not
+absolutely sure this is right now that I think about it but that's a
+different issue.
 
-> while true; do
-> 	mount /store
-> 	(cd /store && tar xf test.tar)
-> 	umount /store
-> 	mount /store
-> 	rm -rf /store/test-data
-> 	umount /store
-> done
-
-Ok, so there's nothing here that actually says it's an unmount
-error. More likely it is a vmap problem in log recovery resulting in
-aliasing or some other stale data appearing in the buffer pages.
-
-Can you add a 'xfs_logprint -t <device>' after the umount? You
-should always see something like this telling you the log is clean:
-
-$ xfs_logprint -t /dev/vdb
-xfs_logprint:
-    data device: 0xfd10
-    log device: 0xfd10 daddr: 11534368 length: 20480
-
-    log tail: 51 head: 51 state: <CLEAN>
-
-If the log is not clean on an unmount, then you may have an unmount
-problem. If it is clean when the recovery error occurs, then it's
-almost certainly a problem with you platform not implementing vmap
-cache flushing correctly, not an XFS problem.
-
-> I'm not entirely sure that this is XFS-specific, but the same script
-> does run successfully overnight on the same MD array with ext3 on it.
-
-ext3 doesn't use vmapped buffers at all, so won't show such a
-proble,.
-
-> Has something like this been seen before?
-
-Every so often on ARM, MIPS, etc platforms that have virtually
-indexed caches.
+XFS_ITRUNCATED is mostly harmless, so it isn't a but issue, but we
+probably should clear it. I'm not sure what the end result of not
+clearing XFS_IFILESTREAM is, but you are right in that it should not
+pass through here, either. I'll respin the patch to clear all the
+state flags that hold sub-lifecycle state.
 
 Cheers,
 
