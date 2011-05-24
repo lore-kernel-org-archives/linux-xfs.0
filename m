@@ -1,23 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4O1GQsX036853 for <xfs@oss.sgi.com>; Mon, 23 May 2011 20:16:26 -0500
-Received: from mail-vx0-f181.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 084EC10E185D
-	for <xfs@oss.sgi.com>; Mon, 23 May 2011 18:16:25 -0700 (PDT)
-Received: from mail-vx0-f181.google.com (mail-vx0-f181.google.com
-	[209.85.220.181]) by cuda.sgi.com with ESMTP id
-	YtNymoEm0XlqgBHb for <xfs@oss.sgi.com>;
-	Mon, 23 May 2011 18:16:25 -0700 (PDT)
-Received: by vxb39 with SMTP id 39so5038966vxb.26
-	for <xfs@oss.sgi.com>; Mon, 23 May 2011 18:16:24 -0700 (PDT)
+	p4O1UNbv037475 for <xfs@oss.sgi.com>; Mon, 23 May 2011 20:30:23 -0500
+Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 558034770CF
+	for <xfs@oss.sgi.com>; Mon, 23 May 2011 18:30:21 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	ZAvR4mnMp4NA9kBb for <xfs@oss.sgi.com>;
+	Mon, 23 May 2011 18:30:21 -0700 (PDT)
+Date: Tue, 24 May 2011 11:30:17 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: drastic changes to allocsize semantics in or around 2.6.38?
+Message-ID: <20110524013016.GD32466@dastard>
+References: <20110520005510.GA15348@schmorp.de>
+	<20110520025659.GO32466@dastard> <20110520154920.GD5828@schmorp.de>
+	<20110521004544.GT32466@dastard>
+	<20110521013604.GC10971@schmorp.de>
+	<20110521031537.GV32466@dastard>
+	<20110521041652.GA18375@schmorp.de>
+	<20110522020024.GZ32466@dastard>
+	<20110523133547.GA25777@schmorp.de>
 MIME-Version: 1.0
-In-Reply-To: <4DDAC4EF.1050702@linux.vnet.ibm.com>
-References: <4DDAC4EF.1050702@linux.vnet.ibm.com>
-Date: Tue, 24 May 2011 09:16:24 +0800
-Message-ID: <BANLkTiks0NSDTSPN8n446JHWhKtM61_=Mw@mail.gmail.com>
-Subject: Re: xfsprogs: Fix for xfstest 252 hang on ext4
-From: Yongqiang Yang <xiaoqiangnk@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20110523133547.GA25777@schmorp.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,72 +32,106 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Allison Henderson <achender@linux.vnet.ibm.com>
-Cc: Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+To: Marc Lehmann <schmorp@schmorp.de>
+Cc: xfs@oss.sgi.com
 
-On Tue, May 24, 2011 at 4:34 AM, Allison Henderson
-<achender@linux.vnet.ibm.com> wrote:
-> Hi all,
->
-> While trying to add more punch hole tests to xfstest, I found that test 2=
-52 hangs on ext4 due to a loop in xfsprogs that does not exit. =A0XFS gets =
-out of this loop because there is logic in the loop that looks for the last=
- extent flag and breaks out. =A0But it looks like ext4 does not return a la=
-st extent when the file has a hole at the end. =A0I am not sure if this is =
-the correct behavior or not, so I will copy the ext4 folks on this too. =A0=
-Below is a copy of the fix for xfsprogs:
+On Mon, May 23, 2011 at 03:35:48PM +0200, Marc Lehmann wrote:
+> On Sun, May 22, 2011 at 12:00:24PM +1000, Dave Chinner <david@fromorbit.com> wrote:
+> > > The problem is that this is not anything like the normal case.
+> > 
+> > For you, maybe.
+> 
+> For the majority of boxes that use xfs - most desktop boxes are not heavy
+> NFS servers.
 
-Hi there,
+Desktops are not a use case we optimise XFS for. We make sure XFS
+works adequately on the desktop, but other than that we focus of
+server workloads as optimisation targets.
 
-What's blocksize of the tested ext4?    For now, ext4 returns
-LAST_EXTENT if the logical offset covered by the extent is greater
-than file size, so if there is a hole at the end, no last extent is
-returned. Thx!
+> > > It's easy to get some gains in special situations at the expense of normal
+> > > ones - keep in mind that this optimisation makes little sense for non-NFS
+> > > cases, which is the majority of use cases.
+> > 
+> > XFS is used extensively in NAS products, from small $100 ARM/MIPS
+> > embedded NAS systems all the way up to high end commercial NAS
+> > products. It is one of the main use cases we optimise XFS for.
+> 
+> Thats really sad - maybe people like me who use XFS on their servers
+> should rethink that decision that, if XFS mainly optimises for commercial
+> nas boxes only.
 
-Yongqiang.
+Nice twist - you're trying to imply we do something very different
+to what I said.
 
->
-> diff --git a/io/fiemap.c b/io/fiemap.c
-> index fa990cc..81fc92c 100644
-> --- a/io/fiemap.c
-> +++ b/io/fiemap.c
-> @@ -246,7 +246,7 @@ fiemap_f(
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 flg_w, _("FLAGS"));
-> =A0 =A0 =A0 =A0}
->
-> - =A0 =A0 =A0 while (!last && ((cur_extent + 1) !=3D max_extents)) {
-> + =A0 =A0 =A0 while (!last && (cur_extent <=3D max_extents)) {
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if (max_extents)
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0num_extents =3D min(num_ex=
-tents,
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =
-=A0 =A0 =A0max_extents - (cur_extent + 1));
->
->
-> It looks like the loop enters with last=3D0, cur_extents=3D0, and max_ext=
-ents =3D 0, and on the first iteration cur_extents get set to 2, so we dont=
- see ((cur_extent + 1) =3D=3D max_extents for a very long time. =A0I doubt =
-the logic was meant to work that way, so this patch should fix it, but I wa=
-nted to make sure that the fiemap for ext4 is working as intended too. =A0F=
-eed back appreciated! =A0Thx all!
->
-> Allison Henderson
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ext4" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
+So to set the record straight, we optimise for several different
+overlapping primary use cases. We make optimisation decisions that
+benefit systems and workloads that fall into the following
+categories:
 
+	- large filesystems (e.g > 100TB)
+	- large storage subsystems (hundreds to thousands of
+	  spindles)
+	- large amounts of RAM (tens of GBs to TBs of RAM)
+	- high concurrency from large numbers of CPUs (thousands of
+	  CPU cores)
+	- high throughput, both IOPS and bandwidth
+	- low fragmentation of large files
+	- robust error detection and handling
 
+IOWs, we optimise for high performance, high end servers and
+workloads.  And that means that Just because we make changes that
+help high performance, high end NFS servers acheive these goals
+_does not mean_ we only optimise for NFS servers.
 
--- =
+I'm not going to continue this part of this thread - it's just a
+waste of my time. If you want the regression fixed, then stop
+trying to tell us what the bug is and instead try to help diagnose
+the cause of the problem.
 
-Best Wishes
-Yongqiang Yang
+> > we should fix it. What I really want is your test cases that
+> > reproduce the problem so I can analyse it for myself. Once I
+> > understand what is going on, then we can talk about what the real
+> > problem is and how to fix it.
+> 
+> Being a good citizen wanting to improve XFS I of course dleivered that in
+> my first e-mail. Again, I used allocsize=64m and then made a buildroot
+> build, which stopped after a few minutes because 180GB of disk space were
+> gone.
+> 
+> The disk space was all used up by the buildroot, which is normally a few
+> gigabytes (after a successful build).
+> 
+> I found that the uclibc object directory uses 50GB of space, about 8 hours
+> after the compile - the object files were typically a few kb in size, but
+> du showed 64mb of usage, even though nobody was using that file more than
+> once, or ever after the make stopped.
+
+A vaguely specified 8 hour long test involving building some large number of packages
+is not a useful test case.  There are too many variables, too much
+setup time, too much data to analyse and taking 8 hours to get a
+result is far too long.  I did try a couple of kernel builds and
+didn't see the problem you reported. Hence I came to the conclusion
+that it was something specific to your build environment and asked
+for more a more exact test case.
+
+Indeed, someone else presented a 100% reproducable test case in a 3
+line script using cp and rm that took 10s to run. It then took me 15
+minutes to analyse, then write, test and post a patch that fixes the
+problem their test case demonstrated. Does the patch in the
+following email fix your buildroot space usage problem?
+
+http://oss.sgi.com/pipermail/xfs/2011-May/050651.html
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
