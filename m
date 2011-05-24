@@ -1,30 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4O2cIbY040398 for <xfs@oss.sgi.com>; Mon, 23 May 2011 21:38:19 -0500
-Received: from e7.ny.us.ibm.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4FA2AD0F930
-	for <xfs@oss.sgi.com>; Mon, 23 May 2011 19:38:17 -0700 (PDT)
-Received: from e7.ny.us.ibm.com (e7.ny.us.ibm.com [32.97.182.137]) by
-	cuda.sgi.com with ESMTP id MsaBr8sVMtJtslrF for
-	<xfs@oss.sgi.com>; Mon, 23 May 2011 19:38:17 -0700 (PDT)
-Received: from d01relay01.pok.ibm.com (d01relay01.pok.ibm.com [9.56.227.233])
-	by e7.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p4O2ErH2030512
-	for <xfs@oss.sgi.com>; Mon, 23 May 2011 22:14:53 -0400
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay01.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	p4O2cGGP087352 for <xfs@oss.sgi.com>; Mon, 23 May 2011 22:38:16 -0400
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
-	p4O2cGas010642 for <xfs@oss.sgi.com>; Mon, 23 May 2011 22:38:16 -0400
-Message-ID: <4DDB1A0C.5030502@linux.vnet.ibm.com>
-Date: Mon, 23 May 2011 19:38:04 -0700
-From: Allison Henderson <achender@linux.vnet.ibm.com>
+	p4O2gPtH040655 for <xfs@oss.sgi.com>; Mon, 23 May 2011 21:42:25 -0500
+Received: from mail-vx0-f181.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8DB5747543C
+	for <xfs@oss.sgi.com>; Mon, 23 May 2011 19:42:24 -0700 (PDT)
+Received: from mail-vx0-f181.google.com (mail-vx0-f181.google.com
+	[209.85.220.181]) by cuda.sgi.com with ESMTP id
+	3sCpgFf8Qb4kalIU for <xfs@oss.sgi.com>;
+	Mon, 23 May 2011 19:42:24 -0700 (PDT)
+Received: by vxb39 with SMTP id 39so5078208vxb.26
+	for <xfs@oss.sgi.com>; Mon, 23 May 2011 19:42:23 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: xfsprogs: Fix for xfstest 252 hang on ext4
-References: <4DDAC4EF.1050702@linux.vnet.ibm.com>
-	<BANLkTiks0NSDTSPN8n446JHWhKtM61_=Mw@mail.gmail.com>
-In-Reply-To: <BANLkTiks0NSDTSPN8n446JHWhKtM61_=Mw@mail.gmail.com>
+In-Reply-To: <20110524015105.GE32466@dastard>
+References: <1306134423-10028-1-git-send-email-xiaoqiangnk@gmail.com>
+	<20110524015105.GE32466@dastard>
+Date: Tue, 24 May 2011 10:42:23 +0800
+Message-ID: <BANLkTikWgG2E1EYcm+B2zxBCY=KH-Rb0Dw@mail.gmail.com>
+Subject: Re: [PATCH v3] xfstests:Make 225 compare map and fiemap at each block.
+From: Yongqiang Yang <xiaoqiangnk@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,65 +27,91 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Yongqiang Yang <xiaoqiangnk@gmail.com>
-Cc: Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: sandeen@redhat.com, linux-ext4@vger.kernel.org, josef@redhat.com, xfs@oss.sgi.com
 
-On 5/23/2011 6:16 PM, Yongqiang Yang wrote:
-> On Tue, May 24, 2011 at 4:34 AM, Allison Henderson
-> <achender@linux.vnet.ibm.com>  wrote:
->> Hi all,
->>
->> While trying to add more punch hole tests to xfstest, I found that test 252 hangs on ext4 due to a loop in xfsprogs that does not exit.  XFS gets out of this loop because there is logic in the loop that looks for the last extent flag and breaks out.  But it looks like ext4 does not return a last extent when the file has a hole at the end.  I am not sure if this is the correct behavior or not, so I will copy the ext4 folks on this too.  Below is a copy of the fix for xfsprogs:
+Thank you for your review.
+On Tue, May 24, 2011 at 9:51 AM, Dave Chinner <david@fromorbit.com> wrote:
+> On Mon, May 23, 2011 at 03:07:03PM +0800, Yongqiang Yang wrote:
+>> Due to my carelessness, =A0I induced a ugly patch to ext4's fiemap, as a=
+ result
+>> delayed-extents that did not start at the head block of a page was ignor=
+ed
+>> in ext4 with 1K block, but 225 could not find it.
 >
-> Hi there,
+> When ext4 is using 1k block sizes, fiemap-tester does not find
+> problems that may exist on ext4 with delayed allocation extents on
+> the first block of a page.
 >
-> What's blocksize of the tested ext4?    For now, ext4 returns
-> LAST_EXTENT if the logical offset covered by the extent is greater
-> than file size, so if there is a hole at the end, no last extent is
-> returned. Thx!
+>> So I looked into the 225
+>> and could not figure out logic in compare_map_and_fiemap(), which seemed=
+ to
+>> mix extents with blocks.
 >
-> Yongqiang.
+> Once again, "I don't understand it" is not a reason for a whoelsale
+> rewrite.
+>
+>> Then I made 225 compare map and fiemap at each block,
+>> the new 225 can find the bug I induced and another bug in ext4 with 1k b=
+lock,
+>> which ignored delayed-extents after a hole, which did not start at the h=
+ead
+>> block of a page.
+>
+> Which means that the first paragraph should read:
+>
+> "When ext4 is using 1k block sizes, fiemap-tester does not find
+> problems that may exist on ext4 with delayed allocation extents on
+> the first block of a page or directly after a hole."
+>
+> That's a concise description of the overall problem you are fixing
+> in this patch. Next you need to describe the different changes being
+> made in the patch and the bugs they are fixing. =A0There appear to be:
+>
+> =A0 =A0 =A0 =A0- an off-by one in map array allocation
+> =A0 =A0 =A0 =A0- zeroing the end block in the map array
+> =A0 =A0 =A0 =A0- making check_weird_fs_hole() verify bytes read by pread()
+> =A0 =A0 =A0 =A0- moving truncate/seek of the test file around
+> =A0 =A0 =A0 =A0- changing the way map/fiemap are compared
+Yes, thank you.
+>
+> Also, you haven't addressed any of the comments I made in my
+> original review:
+>
+> =A0 =A0 =A0 =A0- removing the changelog from the header comment
+The change is large, so I think  it's convenient for others to leave
+an e-mail in the file in case that they have some questions.   e.g.  I
+should cc to josef this time.  If you don't think it is necessary, I
+will remove it.
 
-Hi there,
+> =A0 =A0 =A0 =A0- adding comments on check_data/check_hole explaining what
+> =A0 =A0 =A0 =A0 =A0they are checking
+Sorry, I will adding comments in later version.
+> =A0 =A0 =A0 =A0- explaining why the existing map/fiemap compare couldn't
+> =A0 =A0 =A0 =A0 =A0detect the problems with delayed extents on ext4? i.e.
+> =A0 =A0 =A0 =A0 =A0what's the bug that you are fixing so we can determine=
+ if
+> =A0 =A0 =A0 =A0 =A0it really does need a rewrite to fix?
+I will try to figure it out.
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
+>
 
-The block size I've been using is 4096.  As long as that behavior is 
-expected,  I think the test will be ok with just the xfsprogs fix, 
-though.  Thx!
 
-Allison Henderson
 
->
->>
->> diff --git a/io/fiemap.c b/io/fiemap.c
->> index fa990cc..81fc92c 100644
->> --- a/io/fiemap.c
->> +++ b/io/fiemap.c
->> @@ -246,7 +246,7 @@ fiemap_f(
->>                        flg_w, _("FLAGS"));
->>         }
->>
->> -       while (!last&&  ((cur_extent + 1) != max_extents)) {
->> +       while (!last&&  (cur_extent<= max_extents)) {
->>                 if (max_extents)
->>                         num_extents = min(num_extents,
->>                                           max_extents - (cur_extent + 1));
->>
->>
->> It looks like the loop enters with last=0, cur_extents=0, and max_extents = 0, and on the first iteration cur_extents get set to 2, so we dont see ((cur_extent + 1) == max_extents for a very long time.  I doubt the logic was meant to work that way, so this patch should fix it, but I wanted to make sure that the fiemap for ext4 is working as intended too.  Feed back appreciated!  Thx all!
->>
->> Allison Henderson
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-ext4" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->
->
->
+-- =
+
+Best Wishes
+Yongqiang Yang
 
 _______________________________________________
 xfs mailing list
