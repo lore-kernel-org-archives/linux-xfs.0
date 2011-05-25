@@ -1,14 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4P2IsfN109480 for <xfs@oss.sgi.com>; Tue, 24 May 2011 21:18:54 -0500
-Subject: Re: [PATCH 1/4] xfs: PF_FSTRANS should never be set in ->writepage
+	p4P2J37q109500 for <xfs@oss.sgi.com>; Tue, 24 May 2011 21:19:03 -0500
+Subject: Re: [PATCH 2/4] xfs: remove the unused ilock_nowait codepath in
+	writepage
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110428130514.146517168@bombadil.infradead.org>
+In-Reply-To: <20110428130514.335250421@bombadil.infradead.org>
 References: <20110428125546.696493391@bombadil.infradead.org>
-	<20110428130514.146517168@bombadil.infradead.org>
-Date: Tue, 24 May 2011 21:18:49 -0500
-Message-ID: <1306289929.2823.120.camel@doink>
+	<20110428130514.335250421@bombadil.infradead.org>
+Date: Tue, 24 May 2011 21:18:57 -0500
+Message-ID: <1306289937.2823.121.camel@doink>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -27,24 +28,19 @@ To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
 On Thu, 2011-04-28 at 08:55 -0400, Christoph Hellwig wrote:
-> Now that we reject direct reclaim in addition to always using GFP_NOFS
-> allocation there's no chance we'll ever end up in ->writepage with
-> PF_FSTRANS set.  Add a WARN_ON if we hit this case, and stop checking
-> if we'd actually need to start a transaction.
+> wbc->nonblocking is never set, so this whole code has been unreachable
+> for a long time.  I'm also not sure it would make a lot of sense -
+> we'd rather finish our writeout after a short wait for the ilock
+> instead of cancelling the whole ioend.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Do the radix_tree_preload(GFP_KERNEL) calls in
-xfs_iget_cache_miss() and xfs_mru_cache_insert()
-pose any risk here?  (I haven't really looked
-closely, I just noticed that these were cases we
-did not use GFP_NOFS.)
-
-Outside of that, this looks good.
+Looks good.
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
 
-
+I'll continue tomorrow on the next one; it'll take a
+bit more time to review.
 
 _______________________________________________
 xfs mailing list
