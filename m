@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4PBlMK3138577 for <xfs@oss.sgi.com>; Wed, 25 May 2011 06:47:22 -0500
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9020A1657F30
-	for <xfs@oss.sgi.com>; Wed, 25 May 2011 04:47:21 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id dDrE7yECwJRxgOeY for
-	<xfs@oss.sgi.com>; Wed, 25 May 2011 04:47:21 -0700 (PDT)
-Date: Wed, 25 May 2011 13:47:15 +0200 (CEST)
-From: Lukas Czerner <lczerner@redhat.com>
+	p4PMaJ5v168409 for <xfs@oss.sgi.com>; Wed, 25 May 2011 17:36:19 -0500
+Received: from homer.ka9q.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2EA5D4790A8
+	for <xfs@oss.sgi.com>; Wed, 25 May 2011 15:36:17 -0700 (PDT)
+Received: from homer.ka9q.net (homer.ka9q.net [75.60.237.89]) by cuda.sgi.com
+	with ESMTP id mXhZVvoFXMbvgcFh for <xfs@oss.sgi.com>;
+	Wed, 25 May 2011 15:36:17 -0700 (PDT)
+Message-ID: <4DDD845E.9090709@ka9q.net>
+Date: Wed, 25 May 2011 15:36:14 -0700
+From: Phil Karn <karn@ka9q.net>
+MIME-Version: 1.0
 Subject: Re: automatically running fstrim
-In-Reply-To: <BANLkTi=8CX_rjWHFEjt5JO5oScdKoZopww@mail.gmail.com>
-Message-ID: <alpine.LFD.2.00.1105251335280.4667@dhcp-27-109.brq.redhat.com>
 References: <4DDBE293.8030203@philkarn.net>
 	<alpine.LFD.2.00.1105251155120.4667@dhcp-27-109.brq.redhat.com>
 	<BANLkTi=8CX_rjWHFEjt5JO5oScdKoZopww@mail.gmail.com>
-MIME-Version: 1.0
+	<alpine.LFD.2.00.1105251335280.4667@dhcp-27-109.brq.redhat.com>
+In-Reply-To: <alpine.LFD.2.00.1105251335280.4667@dhcp-27-109.brq.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,45 +30,44 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: karn@ka9q.net
-Cc: Lukas Czerner <lczerner@redhat.com>, xfs@oss.sgi.com
+To: Lukas Czerner <lczerner@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On Wed, 25 May 2011, Phil Karn wrote:
+On 5/25/11 4:47 AM, Lukas Czerner wrote:
 
-> Thanks. My problem is that I've been running some workloads that can gobble
-> up the SSD erased page pool rather quickly. It's a Perl script feeding a
-> large number of email messages to procmail, one at a time. I think this
-> creates and deletes a lot of temporary files. While XFS delayed allocation
-> normally keeps such files from going to disk, I think procmail defeats this
-> with fsync() to keep mail from ever being lost.
+
+> unlinked often). Unfortunately xfs does not have this support yet, but
+> other filesystems do (ext4,btrfs,...) so if you like you might try one
+> of those and mount it with -o discard mount option. What it does is,
+> that it will send a TRIM for every range of freed filesystem blocks.
 > 
-> So I've simply been running fstrim by hand a lot so I don't have a repeat of
-> the system lockup I had a few days ago that I am pretty sure was due to my
-> OCZ Revo drive not handling garbage collection very gracefully.
-> 
-> Phil
-> 
+> Generally, in its current state it comes with quite big performance
+> loss (that's why we have fstrim), but in you case it might be actually
+> more convenient than running fstrim all the time. Also it is handled
+> automatically and the only think needed is to pass the "-i discard"
+> mount option.
 
-Interesting, system lockup really ? I have never seen problems like this
-and I have been doing a lot of SSD testing. Looks like that the drive is
-really crappy :), have you tried to look up for firmware update ?
+I have thought of using ext4 with the discard option on that device for
+just this reason. But this OCZ Revo SSD seems to execute TRIM rather
+slowly. I just timed it at 7 minutes 38 seconds to trim 46 GB of free
+space on a 90 GB SSD. I wouldn't want that to occur in the foreground
+while I'm running a program that's generating a lot of garbage blocks.
 
-Anyway, if running fstrim more often solves the problem, it is fine. But
-I wonder if the other approach (periodic discard) would do better in
-this case (it might not since the files are really small and are
-unlinked often). Unfortunately xfs does not have this support yet, but
-other filesystems do (ext4,btrfs,...) so if you like you might try one
-of those and mount it with -o discard mount option. What it does is,
-that it will send a TRIM for every range of freed filesystem blocks.
+Intel drives, at least, seem to execute TRIM much faster; I think they
+can take more blocks in each operation, and I conjecture that the drive
+controller simply adds them to a "to do" list for later erasure in the
+background. So there should probably be an option for "real-time" TRIM
+on those SSDs that can do it without a performance penalty.
 
-Generally, in its current state it comes with quite big performance
-loss (that's why we have fstrim), but in you case it might be actually
-more convenient than running fstrim all the time. Also it is handled
-automatically and the only think needed is to pass the "-i discard"
-mount option.
+It would be nice if the fitrim ioctl were to issue TRIM commands only
+for newly created garbage blocks that haven't already been trimmed. But
+I guess that would require some major changes to the file system data
+structures. At the least, it would require some special record-keeping
+to keep track of this information. The Intel drive shows it's possible
+to implement a very speedy TRIM, so maybe it won't be such a bad thing
+to just trim the whole free list every time.
 
-Thanks!
--Lukas
+Phil
 
 _______________________________________________
 xfs mailing list
