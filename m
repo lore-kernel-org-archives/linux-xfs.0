@@ -1,17 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4P7kcaR127143 for <xfs@oss.sgi.com>; Wed, 25 May 2011 02:46:40 -0500
-Date: Wed, 25 May 2011 03:46:37 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/4] xfs: PF_FSTRANS should never be set in ->writepage
-Message-ID: <20110525074637.GA3056@infradead.org>
-References: <20110428125546.696493391@bombadil.infradead.org>
-	<20110428130514.146517168@bombadil.infradead.org>
-	<1306289929.2823.120.camel@doink>
+	p4P88XeT128052 for <xfs@oss.sgi.com>; Wed, 25 May 2011 03:08:33 -0500
+Received: from mail-px0-f182.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 67C3C1E34819
+	for <xfs@oss.sgi.com>; Wed, 25 May 2011 01:08:31 -0700 (PDT)
+Received: from mail-px0-f182.google.com (mail-px0-f182.google.com
+	[209.85.212.182]) by cuda.sgi.com with ESMTP id
+	KFDeAatO9K8bVOGU for <xfs@oss.sgi.com>;
+	Wed, 25 May 2011 01:08:31 -0700 (PDT)
+Received: by pxi20 with SMTP id 20so5929659pxi.41
+	for <xfs@oss.sgi.com>; Wed, 25 May 2011 01:08:31 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1306289929.2823.120.camel@doink>
+In-Reply-To: <20110525002947.GK32466@dastard>
+References: <BANLkTikNMrFzxJF4a86ZM55r3D=ThPFmOw@mail.gmail.com>
+	<BANLkTin26bRHiaCxc15ZwjX__NR3QHaSFA@mail.gmail.com>
+	<BANLkTimOA3W2V+0uPsjpPt=MqrbeGcfs5g@mail.gmail.com>
+	<20110525002947.GK32466@dastard>
+From: Nuno Subtil <subtil@gmail.com>
+Date: Wed, 25 May 2011 01:08:11 -0700
+Message-ID: <BANLkTi=Jjb1c0Zs0Fw+iLi7DbpE6fVPB_Q@mail.gmail.com>
+Subject: Re: XFS umount issue
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,26 +33,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Paul Anderson <pha@umich.edu>, xfs-oss <xfs@oss.sgi.com>
 
-On Tue, May 24, 2011 at 09:18:49PM -0500, Alex Elder wrote:
-> On Thu, 2011-04-28 at 08:55 -0400, Christoph Hellwig wrote:
-> > Now that we reject direct reclaim in addition to always using GFP_NOFS
-> > allocation there's no chance we'll ever end up in ->writepage with
-> > PF_FSTRANS set.  Add a WARN_ON if we hit this case, and stop checking
-> > if we'd actually need to start a transaction.
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
-> Do the radix_tree_preload(GFP_KERNEL) calls in
-> xfs_iget_cache_miss() and xfs_mru_cache_insert()
-> pose any risk here?  (I haven't really looked
-> closely, I just noticed that these were cases we
-> did not use GFP_NOFS.)
+On Tue, May 24, 2011 at 17:29, Dave Chinner <david@fromorbit.com> wrote:
+...
+>> Mine is a Netgear Stora. The interesting bit is that the stock
+>> firmware runs kernel 2.6.22.18 and uses XFS as well, but I don't know
+>> how stable it was to begin with.
+>
+> Have you checked to see whether there are extra patches added to
+> that kernel by Netgear? It's not uncommon for these embedded systems
+> to run a kernel that has been patched to fix problems that you are
+> seeing.
 
-They don't, given that we don't allow reclaim to proceed into
-->writepage any more.
+I looked through it and didn't see anything that stood out, although I
+could have easily missed it (the diff is quite noisy, plus it sounds
+like the vmap cache invalidation functions have changed names in the
+meantime?).
+
+The one interesting bit that I found was that the Netgear kernel
+comments out the test that disables write barriers at mount time,
+which I found quite odd, but it sounds unrelated to this issue.
+
+Nuno
 
 _______________________________________________
 xfs mailing list
