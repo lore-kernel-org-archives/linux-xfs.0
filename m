@@ -1,14 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4P0XCtk106087 for <xfs@oss.sgi.com>; Tue, 24 May 2011 19:33:12 -0500
-Subject: Re: [PATCH 7/9] xfs: do not do pointer arithmetics on extent records
+	p4P0XBog106072 for <xfs@oss.sgi.com>; Tue, 24 May 2011 19:33:11 -0500
+Subject: Re: [PATCH 6/9] xfs: do not use unchecked extent indices in
+	xfs_bunmapi
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110511150712.651478046@bombadil.infradead.org>
+In-Reply-To: <20110511150712.421348825@bombadil.infradead.org>
 References: <20110511150402.258164661@bombadil.infradead.org>
-	<20110511150712.651478046@bombadil.infradead.org>
-Date: Tue, 24 May 2011 19:31:47 -0500
-Message-ID: <1306283507.2823.96.camel@doink>
+	<20110511150712.421348825@bombadil.infradead.org>
+Date: Tue, 24 May 2011 19:31:42 -0500
+Message-ID: <1306283502.2823.95.camel@doink>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -27,44 +28,20 @@ To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
 On Wed, 2011-05-11 at 11:04 -0400, Christoph Hellwig wrote:
-> We need to call xfs_iext_get_ext for the previous extent to get a valid
-> pointer, and can't just do pointer arithmetics as they might be in
-> different pages.
+> Make sure to only call xfs_iext_get_ext after we've validate the extent index
+> when moving on to the next index in xfs_bunmapi.  Also remove the old
+> workaround for too large indices that has been superceeded by the proper
+> fix in xfs_bmap_del_extent.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Based on an earlier patch from Lachlan McIlroy.
 
-Wow, that one's nasty.  Did someone find this by hitting it?
-
-Looks good.
+This looks good, but I'd like to see this patch and
+patch 3/9 re-done to more cleanly separate their
+purposes (as I mentioned in my comments on patch 3).
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
 
-> Index: xfs/fs/xfs/xfs_bmap.c
-> ===================================================================
-> --- xfs.orig/fs/xfs/xfs_bmap.c	2011-05-11 10:16:58.847733078 +0200
-> +++ xfs/fs/xfs/xfs_bmap.c	2011-05-11 10:17:04.803235692 +0200
-> @@ -5145,9 +5145,12 @@ xfs_bunmapi(
->  				 */
->  				ASSERT(bno >= del.br_blockcount);
->  				bno -= del.br_blockcount;
-> -				if (bno < got.br_startoff) {
-> -					if (--lastx >= 0)
-> -						xfs_bmbt_get_all(--ep, &got);
-> +				if (got.br_startoff > bno) {
-> +					if (--lastx >= 0) {
-> +						ep = xfs_iext_get_ext(ifp,
-> +								      lastx);
-> +						xfs_bmbt_get_all(ep, &got);
-> +					}
->  				}
->  				continue;
->  			} else if (del.br_state == XFS_EXT_UNWRITTEN) {
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 
 _______________________________________________
