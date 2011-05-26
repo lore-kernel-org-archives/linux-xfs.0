@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4Q7uPQu193437 for <xfs@oss.sgi.com>; Thu, 26 May 2011 02:56:25 -0500
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AA68214DCE27
-	for <xfs@oss.sgi.com>; Thu, 26 May 2011 00:56:24 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id LU5cu3s8uyg9DfaQ for
-	<xfs@oss.sgi.com>; Thu, 26 May 2011 00:56:24 -0700 (PDT)
-Date: Thu, 26 May 2011 09:56:18 +0200 (CEST)
-From: Lukas Czerner <lczerner@redhat.com>
+	p4Q9Bew3195679 for <xfs@oss.sgi.com>; Thu, 26 May 2011 04:11:41 -0500
+Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C85B6481E46
+	for <xfs@oss.sgi.com>; Thu, 26 May 2011 02:11:38 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	bU5cvk1JMuEtENPp for <xfs@oss.sgi.com>;
+	Thu, 26 May 2011 02:11:38 -0700 (PDT)
+Date: Thu, 26 May 2011 19:11:35 +1000
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: automatically running fstrim
-In-Reply-To: <4DDD845E.9090709@ka9q.net>
-Message-ID: <alpine.LFD.2.00.1105260945540.3624@dhcp-27-109.brq.redhat.com>
+Message-ID: <20110526091135.GA561@dastard>
 References: <4DDBE293.8030203@philkarn.net>
 	<alpine.LFD.2.00.1105251155120.4667@dhcp-27-109.brq.redhat.com>
-	<BANLkTi=8CX_rjWHFEjt5JO5oScdKoZopww@mail.gmail.com>
-	<alpine.LFD.2.00.1105251335280.4667@dhcp-27-109.brq.redhat.com>
-	<4DDD845E.9090709@ka9q.net>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <alpine.LFD.2.00.1105251155120.4667@dhcp-27-109.brq.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,66 +30,93 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Phil Karn <karn@ka9q.net>
-Cc: Lukas Czerner <lczerner@redhat.com>, xfs@oss.sgi.com
+To: Lukas Czerner <lczerner@redhat.com>
+Cc: Phil Karn <karn@philkarn.net>, xfs@oss.sgi.com
 
-On Wed, 25 May 2011, Phil Karn wrote:
-
-> On 5/25/11 4:47 AM, Lukas Czerner wrote:
+On Wed, May 25, 2011 at 12:06:32PM +0200, Lukas Czerner wrote:
+> On Tue, 24 May 2011, Phil Karn wrote:
 > 
-> 
-> > unlinked often). Unfortunately xfs does not have this support yet, but
-> > other filesystems do (ext4,btrfs,...) so if you like you might try one
-> > of those and mount it with -o discard mount option. What it does is,
-> > that it will send a TRIM for every range of freed filesystem blocks.
+> > Now that the Linux 2.6.39 kernel is out, is there any reason I shouldn't
+> > run fstrim out of my crontab? It doesn't seem to slow down my system
+> > significantly while it runs.
 > > 
-> > Generally, in its current state it comes with quite big performance
-> > loss (that's why we have fstrim), but in you case it might be actually
-> > more convenient than running fstrim all the time. Also it is handled
-> > automatically and the only think needed is to pass the "-i discard"
-> > mount option.
+> > As I understand fstrim, it walks through the file system free list
+> > issuing TRIMs for each entry, and except for whatever load the TRIM
+> > commands themselves generate (which is drive dependent) it shouldn't
+> > interfere that much with system operation. Correct? Is there any
+> > mechanism to issue these commands at a lower priority than regular disk I/O?
 > 
-> I have thought of using ext4 with the discard option on that device for
-> just this reason. But this OCZ Revo SSD seems to execute TRIM rather
-> slowly. I just timed it at 7 minutes 38 seconds to trim 46 GB of free
-> space on a 90 GB SSD. I wouldn't want that to occur in the foreground
-> while I'm running a program that's generating a lot of garbage blocks.
+> No, not that I know of. But why not to run fstrim from cron lets say every
+> day ? Note that you do not necessarily need to run it "all the time",
+> because if the drive firmware has a lot of space for doing
+> wear-leveling, there is no point of sending TRIM.
 > 
-> Intel drives, at least, seem to execute TRIM much faster; I think they
-> can take more blocks in each operation, and I conjecture that the drive
-> controller simply adds them to a "to do" list for later erasure in the
-> background. So there should probably be an option for "real-time" TRIM
-> on those SSDs that can do it without a performance penalty.
-
-Well, this is a bit tricky. I have had a chance to test drive like this
-and I realized that the drive seems to perform slower after more and
-more trims sent to it. It did eventually recover, however it took about
-half a minute to get performance back. Well, it is still a bit young
-technology.
-
-If you want to see some of my results, look here:
-http://people.redhat.com/lczerner/discard/
-
-there is also a tool available to do the testing.
-
+> Also keep in mind that lot of newer SSD's has some "hidden" space just
+> for wear-leveling, so to get to the point where firmware will have hard
+> time doing it and the drive actually get slower takes even more writes
+> than just filling your drive up to max.
 > 
-> It would be nice if the fitrim ioctl were to issue TRIM commands only
-> for newly created garbage blocks that haven't already been trimmed. But
-> I guess that would require some major changes to the file system data
-> structures. At the least, it would require some special record-keeping
-> to keep track of this information.
-
-There are some patches for ext4 to do something like this, however it is
-still not finished.
-
-> The Intel drive shows it's possible
-> to implement a very speedy TRIM, so maybe it won't be such a bad thing
-> to just trim the whole free list every time.
+> So doing fstrim once or twice a day (it really depends on your work
+> load) is more than enough.
 > 
-> Phil
+> Also, since we have all this in place we might talk to distributions to
+> add the infrastructure to actually recognise "discard enabled" devices
+> and add fstrim into cron job automatically.
 
-Thanks!
--Lukas
+History suggests regularly scheduled preventative maintenance like
+this can have unintended consequences that don't show up for some
+time.
+
+When XFS first got it's online defrag tool (xfs_fsr) back on Irix in
+the late 90s, it was considered a good idea that running it once a
+week to quickly detect and fix fragementation problems before they
+got out of hand.
+
+That seems like a good idea, but then 6-12 months later people
+started reporting XFS filesystems with really severe fragmentation,
+worse than before xfs_fsr was being run regularly. The majority of
+the files that had been in the filesystem for some time were not
+fragmented, but any new file would be badly fragemented and could
+not be fixed.
+
+It was then discovered that the act of defragmenting files caused
+the fragementation of free space. That is, for every file with 2
+extents that was defragmented into 1 extent, we now have two
+freespace extents instead of 1. So, the more files you defragment,
+the more free space fragments you create. If you don't delete files
+regularly, then eventually you run out of large free space extents.
+Then you can't defragment files any more, nor can you create
+unfragemented files. 
+
+So, xfs_fsr was then removed from the system weekly cron job, and
+filesystems that suffered from this went through a dump-mkfs-restore
+process to defragment them. From that time, xfs_fsr has been
+recommended as a "run only when fragmentation is causing perf
+problems" type of tool...
+
+The moral of this story is that running trim as a preventative
+maintenance tool could have the same sort of unintended long-term
+consequences. That is, it may look like a good idea to run it often
+to keep things clean and neat, but we just don't know what it is
+doing to the underlying device's algorithms and it may take months
+for such problems to show up. e.g. as a device that performance
+cannot be restored to except via a secure erase....
+
+> Or, since the filesystem
+> should know the best when is the "right" time to do this, we might try
+> to figure out some kernel logic to trigger it. However it might be a
+> little bit tricky, since every drive behaves differently...
+
+And that makes it much more likely that it will cause some kind of
+unintended problem.
+
+Cheers,
+
+Dave.
+
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
