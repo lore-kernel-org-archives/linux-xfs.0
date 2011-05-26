@@ -1,31 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4Q2Yi36176865 for <xfs@oss.sgi.com>; Wed, 25 May 2011 21:34:44 -0500
-Received: from e9.ny.us.ibm.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D17F5D3154B
-	for <xfs@oss.sgi.com>; Wed, 25 May 2011 19:34:42 -0700 (PDT)
-Received: from e9.ny.us.ibm.com (e9.ny.us.ibm.com [32.97.182.139]) by
-	cuda.sgi.com with ESMTP id t0njLBfxfgWLzME3 for
-	<xfs@oss.sgi.com>; Wed, 25 May 2011 19:34:42 -0700 (PDT)
-Received: from d01relay05.pok.ibm.com (d01relay05.pok.ibm.com [9.56.227.237])
-	by e9.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p4Q24sa0026409
-	for <xfs@oss.sgi.com>; Wed, 25 May 2011 22:04:54 -0400
-Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
-	by d01relay05.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	p4Q2Yft6122172 for <xfs@oss.sgi.com>; Wed, 25 May 2011 22:34:41 -0400
-Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
-	by d01av03.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
-	p4PMYUsk020735 for <xfs@oss.sgi.com>; Wed, 25 May 2011 19:34:30 -0300
-Received: from [9.65.10.114] (sig-9-65-10-114.mts.ibm.com [9.65.10.114])
-	by d01av03.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVin) with ESMTP id
-	p4PMYTJk020713 for <xfs@oss.sgi.com>; Wed, 25 May 2011 19:34:29 -0300
-Message-ID: <4DDDBC3F.9080704@linux.vnet.ibm.com>
-Date: Wed, 25 May 2011 19:34:39 -0700
-From: Allison Henderson <achender@linux.vnet.ibm.com>
+	p4Q7uPQu193437 for <xfs@oss.sgi.com>; Thu, 26 May 2011 02:56:25 -0500
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id AA68214DCE27
+	for <xfs@oss.sgi.com>; Thu, 26 May 2011 00:56:24 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id LU5cu3s8uyg9DfaQ for
+	<xfs@oss.sgi.com>; Thu, 26 May 2011 00:56:24 -0700 (PDT)
+Date: Thu, 26 May 2011 09:56:18 +0200 (CEST)
+From: Lukas Czerner <lczerner@redhat.com>
+Subject: Re: automatically running fstrim
+In-Reply-To: <4DDD845E.9090709@ka9q.net>
+Message-ID: <alpine.LFD.2.00.1105260945540.3624@dhcp-27-109.brq.redhat.com>
+References: <4DDBE293.8030203@philkarn.net>
+	<alpine.LFD.2.00.1105251155120.4667@dhcp-27-109.brq.redhat.com>
+	<BANLkTi=8CX_rjWHFEjt5JO5oScdKoZopww@mail.gmail.com>
+	<alpine.LFD.2.00.1105251335280.4667@dhcp-27-109.brq.redhat.com>
+	<4DDD845E.9090709@ka9q.net>
 MIME-Version: 1.0
-Subject: [XFSTEST Add Fallocate Punch Hole Tests 2/3 v4] Expand 252 punch
-	hole test to cover additional corner cases
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,514 +31,66 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Phil Karn <karn@ka9q.net>
+Cc: Lukas Czerner <lczerner@redhat.com>, xfs@oss.sgi.com
 
-This patch adds additional punch hole tests to 252
-that were used to test ext4 punch hole. The _test_generic_punch
-routine has been modified to accept two new flags: 
+On Wed, 25 May 2011, Phil Karn wrote:
 
--k To keep the test file between tests.
-   This will test the handling of existing holes
-   
--d To not sync the file between tests.
-   This will test the handling of delayed extents 
+> On 5/25/11 4:47 AM, Lukas Czerner wrote:
+> 
+> 
+> > unlinked often). Unfortunately xfs does not have this support yet, but
+> > other filesystems do (ext4,btrfs,...) so if you like you might try one
+> > of those and mount it with -o discard mount option. What it does is,
+> > that it will send a TRIM for every range of freed filesystem blocks.
+> > 
+> > Generally, in its current state it comes with quite big performance
+> > loss (that's why we have fstrim), but in you case it might be actually
+> > more convenient than running fstrim all the time. Also it is handled
+> > automatically and the only think needed is to pass the "-i discard"
+> > mount option.
+> 
+> I have thought of using ext4 with the discard option on that device for
+> just this reason. But this OCZ Revo SSD seems to execute TRIM rather
+> slowly. I just timed it at 7 minutes 38 seconds to trim 46 GB of free
+> space on a 90 GB SSD. I wouldn't want that to occur in the foreground
+> while I'm running a program that's generating a lot of garbage blocks.
+> 
+> Intel drives, at least, seem to execute TRIM much faster; I think they
+> can take more blocks in each operation, and I conjecture that the drive
+> controller simply adds them to a "to do" list for later erasure in the
+> background. So there should probably be an option for "real-time" TRIM
+> on those SSDs that can do it without a performance penalty.
 
-Four new corner cases have also been added to the routine:
-14. data -> hole @ EOF
-15. data -> hole @ 0
-16. data -> cache cold ->hole
-17. data -> hole in single block file
+Well, this is a bit tricky. I have had a chance to test drive like this
+and I realized that the drive seems to perform slower after more and
+more trims sent to it. It did eventually recover, however it took about
+half a minute to get performance back. Well, it is still a bit young
+technology.
 
+If you want to see some of my results, look here:
+http://people.redhat.com/lczerner/discard/
 
-Signed-off-by: Allison Henderson <achender@us.ibm.com>
+there is also a tool available to do the testing.
 
----
-:100755 100755 dfdf3f8... 5efa243... M	252
-:100644 100644 cd8e4b4... 930c924... M	252.out
-:100644 100644 e2da5d8... ddf63b0... M	common.punch
- 252          |   10 +++
- 252.out      |  192 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- common.punch |  150 ++++++++++++++++++++++++++++++++++++++-------
- 3 files changed, 330 insertions(+), 22 deletions(-)
+> 
+> It would be nice if the fitrim ioctl were to issue TRIM commands only
+> for newly created garbage blocks that haven't already been trimmed. But
+> I guess that would require some major changes to the file system data
+> structures. At the least, it would require some special record-keeping
+> to keep track of this information.
 
-diff --git a/252 b/252
-index dfdf3f8..5efa243 100755
---- a/252
-+++ b/252
-@@ -52,6 +52,16 @@ _require_xfs_io_fiemap
- 
- testfile=$TEST_DIR/252.$$
- 
-+# Standard punch hole tests
- _test_generic_punch falloc fpunch fpunch fiemap _filter_fiemap $testfile -F
- 
-+# Delayed allocation punch hole tests
-+_test_generic_punch -d falloc fpunch fpunch fiemap _filter_fiemap $testfile -F
-+
-+# Multi hole punch tests
-+_test_generic_punch -k falloc fpunch fpunch fiemap _filter_fiemap $testfile -F
-+
-+# Delayed allocation multi punch hole tests
-+_test_generic_punch -d -k falloc fpunch fpunch fiemap _filter_fiemap $testfile -F
-+
- status=0 ; exit
-diff --git a/252.out b/252.out
-index cd8e4b4..930c924 100644
---- a/252.out
-+++ b/252.out
-@@ -45,3 +45,195 @@ QA output created by 252
- 0: [0..7]: data
- 1: [8..31]: hole
- 2: [32..39]: data
-+	14. data -> hole @ EOF
-+0: [0..23]: data
-+1: [24..39]: hole
-+	15. data -> hole @ 0
-+0: [0..15]: hole
-+1: [16..39]: data
-+	16. data -> cache cold ->hole
-+0: [0..15]: hole
-+1: [16..39]: data
-+	17. data -> hole in single block file
-+0: [0..7]: data
-+	1. into a hole
-+	2. into allocated space
-+0: [0..7]: data
-+1: [8..23]: hole
-+2: [24..39]: data
-+	3. into unwritten space
-+0: [0..7]: unwritten
-+1: [8..23]: hole
-+2: [24..39]: unwritten
-+	4. hole -> data
-+0: [0..23]: hole
-+1: [24..31]: data
-+2: [32..39]: hole
-+	5. hole -> unwritten
-+0: [0..23]: hole
-+1: [24..31]: unwritten
-+2: [32..39]: hole
-+	6. data -> hole
-+0: [0..7]: data
-+1: [8..39]: hole
-+	7. data -> unwritten
-+0: [0..7]: data
-+1: [8..23]: hole
-+2: [24..31]: unwritten
-+3: [32..39]: hole
-+	8. unwritten -> hole
-+0: [0..7]: unwritten
-+1: [8..39]: hole
-+	9. unwritten -> data
-+0: [0..7]: unwritten
-+1: [8..23]: hole
-+2: [24..31]: data
-+3: [32..39]: hole
-+	10. hole -> data -> hole
-+	11. data -> hole -> data
-+0: [0..7]: data
-+1: [8..31]: hole
-+2: [32..39]: data
-+	12. unwritten -> data -> unwritten
-+0: [0..7]: unwritten
-+1: [8..31]: hole
-+2: [32..39]: unwritten
-+	13. data -> unwritten -> data
-+0: [0..7]: data
-+1: [8..31]: hole
-+2: [32..39]: data
-+	14. data -> hole @ EOF
-+0: [0..23]: data
-+1: [24..39]: hole
-+	15. data -> hole @ 0
-+0: [0..15]: hole
-+1: [16..39]: data
-+	16. data -> cache cold ->hole
-+0: [0..15]: hole
-+1: [16..39]: data
-+	17. data -> hole in single block file
-+0: [0..7]: data
-+	1. into a hole
-+0: [0..7]: data
-+1: [8..39]: hole
-+	2. into allocated space
-+0: [0..7]: data
-+1: [8..23]: hole
-+2: [24..39]: data
-+	3. into unwritten space
-+0: [0..7]: data
-+1: [8..23]: hole
-+2: [24..39]: data
-+	4. hole -> data
-+0: [0..7]: data
-+1: [8..23]: hole
-+2: [24..39]: data
-+	5. hole -> unwritten
-+0: [0..7]: data
-+1: [8..23]: hole
-+2: [24..39]: data
-+	6. data -> hole
-+0: [0..7]: data
-+1: [8..23]: hole
-+2: [24..39]: data
-+	7. data -> unwritten
-+0: [0..7]: data
-+1: [8..23]: hole
-+2: [24..39]: data
-+	8. unwritten -> hole
-+0: [0..7]: data
-+1: [8..23]: hole
-+2: [24..39]: data
-+	9. unwritten -> data
-+0: [0..7]: data
-+1: [8..23]: hole
-+2: [24..39]: data
-+	10. hole -> data -> hole
-+0: [0..7]: data
-+1: [8..31]: hole
-+2: [32..39]: data
-+	11. data -> hole -> data
-+0: [0..7]: data
-+1: [8..31]: hole
-+2: [32..39]: data
-+	12. unwritten -> data -> unwritten
-+0: [0..7]: data
-+1: [8..31]: hole
-+2: [32..39]: data
-+	13. data -> unwritten -> data
-+0: [0..7]: data
-+1: [8..31]: hole
-+2: [32..39]: data
-+	14. data -> hole @ EOF
-+0: [0..23]: data
-+1: [24..39]: hole
-+	15. data -> hole @ 0
-+0: [0..15]: hole
-+1: [16..39]: data
-+	16. data -> cache cold ->hole
-+0: [0..15]: hole
-+1: [16..39]: data
-+	17. data -> hole in single block file
-+0: [0..7]: data
-+	1. into a hole
-+0: [0..7]: data
-+1: [8..39]: hole
-+	2. into allocated space
-+0: [0..7]: data
-+1: [8..23]: hole
-+2: [24..39]: data
-+	3. into unwritten space
-+0: [0..7]: data
-+1: [8..23]: hole
-+2: [24..39]: data
-+	4. hole -> data
-+0: [0..7]: data
-+1: [8..23]: hole
-+2: [24..39]: data
-+	5. hole -> unwritten
-+0: [0..7]: data
-+1: [8..23]: hole
-+2: [24..39]: data
-+	6. data -> hole
-+0: [0..7]: data
-+1: [8..23]: hole
-+2: [24..39]: data
-+	7. data -> unwritten
-+0: [0..7]: data
-+1: [8..23]: hole
-+2: [24..39]: data
-+	8. unwritten -> hole
-+0: [0..7]: data
-+1: [8..23]: hole
-+2: [24..39]: data
-+	9. unwritten -> data
-+0: [0..7]: data
-+1: [8..23]: hole
-+2: [24..39]: data
-+	10. hole -> data -> hole
-+0: [0..7]: data
-+1: [8..31]: hole
-+2: [32..39]: data
-+	11. data -> hole -> data
-+0: [0..7]: data
-+1: [8..31]: hole
-+2: [32..39]: data
-+	12. unwritten -> data -> unwritten
-+0: [0..7]: data
-+1: [8..31]: hole
-+2: [32..39]: data
-+	13. data -> unwritten -> data
-+0: [0..7]: data
-+1: [8..31]: hole
-+2: [32..39]: data
-+	14. data -> hole @ EOF
-+0: [0..23]: data
-+1: [24..39]: hole
-+	15. data -> hole @ 0
-+0: [0..15]: hole
-+1: [16..39]: data
-+	16. data -> cache cold ->hole
-+0: [0..15]: hole
-+1: [16..39]: data
-+	17. data -> hole in single block file
-+0: [0..7]: data
-diff --git a/common.punch b/common.punch
-index e2da5d8..ddf63b0 100644
---- a/common.punch
-+++ b/common.punch
-@@ -256,8 +256,39 @@ die_now()
- #	11. data -> hole -> data
- #	12. unwritten -> data -> unwritten
- #	13. data -> unwritten -> data
-+#	14. data -> hole @ EOF
-+#	15. data -> hole @ 0
-+#	16. data -> cache cold ->hole
-+#	17. data -> hole in single block file
-+#
-+# Test file is removed, created and sync'd between tests.
-+#
-+# Use -k flag to keep the file between tests.  This will
-+# test the handling of pre-existing holes.
-+#
-+# Use the -d flag to not sync the file between tests.
-+# This will test the handling of delayed extents
-+#
- _test_generic_punch()
- {
-+
-+	remove_testfile=1
-+	sync_cmd="-c fsync"
-+	OPTIND=1
-+	while getopts 'dk' OPTION
-+	do
-+		case $OPTION in
-+		k)	remove_testfile=
-+		;;
-+		d)	sync_cmd=
-+		;;
-+		?)	echo Invalid flag
-+		exit 1
-+		;;
-+		esac
-+	done
-+	shift $(($OPTIND - 1))
-+
- 	alloc_cmd=$1
- 	punch_cmd=$2
- 	zero_cmd=$3	#if not testing zero just set to punch
-@@ -267,22 +298,28 @@ _test_generic_punch()
- 	xfs_io_opt=$7	#needs to be -F if not testing xfs
- 
- 	echo "	1. into a hole"
--	rm -f $testfile
-+	if [ "$remove_testfile" ]; then
-+		rm -f $testfile
-+	fi
- 	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
- 		-c "$zero_cmd 4k 8k" \
- 		-c "$map_cmd -v" $testfile | $filter_cmd
- 	[ $? -ne 0 ] && die_now
- 
- 	echo "	2. into allocated space"
--	rm -f $testfile
-+	if [ "$remove_testfile" ]; then
-+		rm -f $testfile
-+	fi
- 	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
--		-c "pwrite 0 20k" -c "fsync" \
-+		-c "pwrite 0 20k" $sync_cmd \
- 		-c "$zero_cmd 4k 8k" \
- 		-c "$map_cmd -v" $testfile | $filter_cmd
- 	[ $? -ne 0 ] && die_now
- 
- 	echo "	3. into unwritten space"
--	rm -f $testfile
-+	if [ "$remove_testfile" ]; then
-+		rm -f $testfile
-+	fi
- 	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
- 		-c "$alloc_cmd 0 20k" \
- 		-c "$zero_cmd 4k 8k" \
-@@ -290,15 +327,19 @@ _test_generic_punch()
- 	[ $? -ne 0 ] && die_now
- 
- 	echo "	4. hole -> data"
--	rm -f $testfile
-+	if [ "$remove_testfile" ]; then
-+		rm -f $testfile
-+	fi
- 	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
--		-c "pwrite 8k 8k" -c "fsync" \
-+		-c "pwrite 8k 8k" $sync_cmd \
- 		-c "$zero_cmd 4k 8k" \
- 		-c "$map_cmd -v" $testfile | $filter_cmd
- 	[ $? -ne 0 ] && die_now
- 
- 	echo "	5. hole -> unwritten"
--	rm -f $testfile
-+	if [ "$remove_testfile" ]; then
-+		rm -f $testfile
-+	fi
- 	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
- 		-c "$alloc_cmd 8k 8k" \
- 		-c "$zero_cmd 4k 8k" \
-@@ -306,24 +347,30 @@ _test_generic_punch()
- 	[ $? -ne 0 ] && die_now
- 
- 	echo "	6. data -> hole"
--	rm -f $testfile
-+	if [ "$remove_testfile" ]; then
-+		rm -f $testfile
-+	fi
- 	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
--		-c "pwrite 0 8k" -c "fsync" \
-+		-c "pwrite 0 8k" $sync_cmd \
- 		-c "$zero_cmd 4k 8k" \
- 		-c "$map_cmd -v" $testfile | $filter_cmd
- 	[ $? -ne 0 ] && die_now
- 
- 	echo "	7. data -> unwritten"
--	rm -f $testfile
-+	if [ "$remove_testfile" ]; then
-+		rm -f $testfile
-+	fi
- 	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
--		-c "pwrite 0 8k" -c "fsync" \
-+		-c "pwrite 0 8k" $sync_cmd \
- 		-c "$alloc_cmd 8k 8k" \
- 		-c "$zero_cmd 4k 8k" \
- 		-c "$map_cmd -v" $testfile | $filter_cmd
- 	[ $? -ne 0 ] && die_now
- 
- 	echo "	8. unwritten -> hole"
--	rm -f $testfile
-+	if [ "$remove_testfile" ]; then
-+		rm -f $testfile
-+	fi
- 	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
- 		-c "$alloc_cmd 0 8k" \
- 		-c "$zero_cmd 4k 8k" \
-@@ -331,49 +378,108 @@ _test_generic_punch()
- 	[ $? -ne 0 ] && die_now
- 
- 	echo "	9. unwritten -> data"
--	rm -f $testfile
-+	if [ "$remove_testfile" ]; then
-+		rm -f $testfile
-+	fi
- 	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
- 		-c "$alloc_cmd 0 8k" \
--		-c "pwrite 8k 8k" -c "fsync" \
-+		-c "pwrite 8k 8k" $sync_cmd \
- 		-c "$zero_cmd 4k 8k" \
- 		-c "$map_cmd -v" $testfile | $filter_cmd
- 	[ $? -ne 0 ] && die_now
- 
- 	echo "	10. hole -> data -> hole"
--	rm -f $testfile
-+	if [ "$remove_testfile" ]; then
-+		rm -f $testfile
-+	fi
- 	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
--		-c "pwrite 8k 4k" -c "fsync" \
-+		-c "pwrite 8k 4k" $sync_cmd \
- 		-c "$zero_cmd 4k 12k" \
- 		-c "$map_cmd -v" $testfile | $filter_cmd
- 	[ $? -ne 0 ] && die_now
- 
- 	echo "	11. data -> hole -> data"
--	rm -f $testfile
-+	if [ "$remove_testfile" ]; then
-+		rm -f $testfile
-+	fi
- 	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
- 		-c "$alloc_cmd 0 20k" \
- 		-c "pwrite 0 8k" \
--		-c "pwrite 12k 8k" -c "fsync" \
-+		-c "pwrite 12k 8k" $sync_cmd \
- 		-c "$punch_cmd 8k 4k" \
- 		-c "$zero_cmd 4k 12k" \
- 		-c "$map_cmd -v" $testfile | $filter_cmd
- 	[ $? -ne 0 ] && die_now
- 
- 	echo "	12. unwritten -> data -> unwritten"
--	rm -f $testfile
-+	if [ "$remove_testfile" ]; then
-+		rm -f $testfile
-+	fi
- 	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
- 		-c "$alloc_cmd 0 20k" \
--		-c "pwrite 8k 4k" -c "fsync" \
-+		-c "pwrite 8k 4k" $sync_cmd \
- 		-c "$zero_cmd 4k 12k" \
- 		-c "$map_cmd -v" $testfile | $filter_cmd
- 	[ $? -ne 0 ] && die_now
- 
- 	echo "	13. data -> unwritten -> data"
--	rm -f $testfile
-+	if [ "$remove_testfile" ]; then
-+		rm -f $testfile
-+	fi
- 	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
- 		-c "$alloc_cmd 0 20k" \
--		-c "pwrite 0k 8k" -c "fsync" \
-+		-c "pwrite 0k 8k" $sync_cmd \
- 		-c "pwrite 12k 8k" -c "fsync" \
- 		-c "$zero_cmd 4k 12k" \
- 		-c "$map_cmd -v" $testfile | $filter_cmd
- 	[ $? -ne 0 ] && die_now
-+
-+	echo "	14. data -> hole @ EOF"
-+	rm -f $testfile
-+	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
-+		-c "pwrite 0 20k" $sync_cmd \
-+		-c "$zero_cmd 12k 8k" \
-+		-c "$map_cmd -v" $testfile | $filter_cmd
-+	[ $? -ne 0 ] && die_now
-+
-+	echo "	15. data -> hole @ 0"
-+	if [ "$remove_testfile" ]; then
-+		rm -f $testfile
-+	fi
-+	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
-+		-c "pwrite 0 20k" $sync_cmd \
-+		-c "$zero_cmd 0k 8k" \
-+		-c "$map_cmd -v" $testfile | $filter_cmd
-+	[ $? -ne 0 ] && die_now
-+
-+	echo "	16. data -> cache cold ->hole"
-+	if [ "$remove_testfile" ]; then
-+		rm -f $testfile
-+		rm -f $testfile.2
-+	else
-+		cp $testfile $testfile.2
-+	fi
-+	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
-+		-c "pwrite 8k 12k" -c "fsync" $testfile.2 \
-+		> /dev/null
-+	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
-+		-c "pwrite 0 20k" $sync_cmd \
-+		-c "$zero_cmd 0k 8k" \
-+		-c "fadvise -d" \
-+		-c "$map_cmd -v" $testfile | $filter_cmd
-+	diff $testfile $testfile.2
-+	[ $? -ne 0 ] && die_now
-+	rm -f $testfile.2
-+
-+	echo "	17. data -> hole in single block file"
-+	if [ "$remove_testfile" ]; then
-+		rm -f $testfile
-+	fi
-+	block_size=`stat -f $TEST_DEV | grep "Block size" | cut -d " " -f3`
-+	$XFS_IO_PROG $xfs_io_opt -f -c "truncate $block_size" \
-+		-c "pwrite 0 $block_size" $sync_cmd \
-+		-c "$zero_cmd 128 128" \
-+		-c "$map_cmd -v" $testfile | $filter_cmd
-+	[ $? -ne 0 ] && die_now
-+
- }
--- 
-1.7.1
+There are some patches for ext4 to do something like this, however it is
+still not finished.
+
+> The Intel drive shows it's possible
+> to implement a very speedy TRIM, so maybe it won't be such a bad thing
+> to just trim the whole free list every time.
+> 
+> Phil
+
+Thanks!
+-Lukas
 
 _______________________________________________
 xfs mailing list
