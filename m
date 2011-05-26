@@ -1,32 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4QCjAs9205052
-	for <linux-xfs@oss.sgi.com>; Thu, 26 May 2011 07:45:10 -0500
-Received: from lo.gmane.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5EE1648263D
-	for <linux-xfs@oss.sgi.com>; Thu, 26 May 2011 05:45:08 -0700 (PDT)
-Received: from lo.gmane.org (lo.gmane.org [80.91.229.12]) by cuda.sgi.com with
-	ESMTP id 3f8XlEh0ilx01FNf for <linux-xfs@oss.sgi.com>;
-	Thu, 26 May 2011 05:45:08 -0700 (PDT)
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1QPZw1-0007QP-Nd
-	for linux-xfs@oss.sgi.com; Thu, 26 May 2011 14:45:05 +0200
-Received: from host167-105-dynamic.50-82-r.retail.telecomitalia.it
-	([82.50.105.167]) by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-	id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Thu, 26 May 2011 14:45:05 +0200
-Received: from roberto.fastec by
-	host167-105-dynamic.50-82-r.retail.telecomitalia.it with local
-	(Gmexim 0.1 (Debian)) id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Thu, 26 May 2011 14:45:05 +0200
-From: Robert <roberto.fastec@gmail.com>
-Subject: Re: ways to restore data from crashed disk
-Date: Thu, 26 May 2011 12:39:00 +0000 (UTC)
-Message-ID: <loom.20110526T143714-411@post.gmane.org>
-References: <465EA882.3030403@deserver.nl> <465ECF9B.2000500@sandeen.net>
-	<46684A9B.90908@deserver.nl> <466854D9.3070903@deserver.nl>
-Mime-Version: 1.0
+	p4QGjopo215165 for <xfs@oss.sgi.com>; Thu, 26 May 2011 11:45:50 -0500
+From: Alex Elder <aelder@sgi.com>
+Message-Id: <201105261645.p4QGjjOv026256@stout.americas.sgi.com>
+Date: Thu, 26 May 2011 11:45:45 -0500
+Subject: [GIT PULL] XFS update 2 for 2.6.40-rc1
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,18 +19,45 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-Thank you for this interesting thread.
+The following changes since commit 4db70f73e56961b9bcdfd0c36c62847a18b7dbb5:
 
-I'm going to check an xfs image file and your advises are really useful.
+  tmpfs: fix XATTR N overriding POSIX_ACL Y (2011-05-25 19:53:02 -0700)
 
-Kind regards
+are available in the git repository at:
+  git://oss.sgi.com/xfs/xfs for-linus
 
-Robert
+Christoph Hellwig (11):
+      xfs: add online discard support
+      xfs: do not discard alloc btree blocks
+      xfs: remove the unused XFS_BMAPI_RSVBLOCKS flag
+      xfs: remove if_lastex
+      xfs: do not use unchecked extent indices in xfs_bmap_add_extent_*
+      xfs: do not use unchecked extent indices in xfs_bmapi
+      xfs: do not use unchecked extent indices in xfs_bunmapi
+      xfs: do not do pointer arithmetic on extent records
+      xfs: fix up asserts in xfs_iflush_fork
+      xfs: check for valid indices in xfs_iext_get_ext and xfs_iext_idx_to_irec
+      xfs: correctly decrement the extent buffer index in xfs_bmap_del_extent
 
-
-
+ Documentation/filesystems/xfs.txt |    6 +
+ fs/xfs/linux-2.6/xfs_discard.c    |   29 ++
+ fs/xfs/linux-2.6/xfs_discard.h    |    2 +
+ fs/xfs/linux-2.6/xfs_super.c      |   18 +-
+ fs/xfs/xfs_ag.h                   |    3 +
+ fs/xfs/xfs_alloc.c                |   35 ++-
+ fs/xfs/xfs_alloc.h                |    5 +-
+ fs/xfs/xfs_alloc_btree.c          |    3 +-
+ fs/xfs/xfs_bmap.c                 |  549 +++++++++++++++++--------------------
+ fs/xfs/xfs_bmap.h                 |    2 -
+ fs/xfs/xfs_inode.c                |   15 +-
+ fs/xfs/xfs_inode.h                |    1 -
+ fs/xfs/xfs_log_cil.c              |   13 +-
+ fs/xfs/xfs_mount.h                |    1 +
+ fs/xfs/xfs_trans.c                |    2 +-
+ 15 files changed, 366 insertions(+), 318 deletions(-)
 
 _______________________________________________
 xfs mailing list
