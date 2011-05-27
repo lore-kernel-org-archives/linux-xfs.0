@@ -1,29 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4QIX3l6218551 for <xfs@oss.sgi.com>; Thu, 26 May 2011 13:33:04 -0500
-Received: from e6.ny.us.ibm.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 47BA7483B0A
-	for <xfs@oss.sgi.com>; Thu, 26 May 2011 11:33:02 -0700 (PDT)
-Received: from e6.ny.us.ibm.com (e6.ny.us.ibm.com [32.97.182.146]) by
-	cuda.sgi.com with ESMTP id KoH2WAEJ08FrACPK for
-	<xfs@oss.sgi.com>; Thu, 26 May 2011 11:33:02 -0700 (PDT)
-Received: from d01relay05.pok.ibm.com (d01relay05.pok.ibm.com [9.56.227.237])
-	by e6.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p4QI8qBR015905
-	for <xfs@oss.sgi.com>; Thu, 26 May 2011 14:08:52 -0400
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay05.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	p4QIX27H054330 for <xfs@oss.sgi.com>; Thu, 26 May 2011 14:33:02 -0400
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
-	p4QIX2Ba025391 for <xfs@oss.sgi.com>; Thu, 26 May 2011 15:33:02 -0300
-Message-ID: <4DDE9CD9.3010300@linux.vnet.ibm.com>
-Date: Thu, 26 May 2011 11:32:57 -0700
-From: Allison Henderson <achender@linux.vnet.ibm.com>
+	p4RGfkDW027928 for <xfs@oss.sgi.com>; Fri, 27 May 2011 11:41:46 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 794481E36638
+	for <xfs@oss.sgi.com>; Fri, 27 May 2011 09:41:41 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	hTjCW4jEVMB3n87W for <xfs@oss.sgi.com>;
+	Fri, 27 May 2011 09:41:41 -0700 (PDT)
+Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
+	Linux)) id 1QQ06T-0001cW-Ca
+	for xfs@oss.sgi.com; Fri, 27 May 2011 16:41:37 +0000
+Date: Fri, 27 May 2011 12:41:37 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH] xfs: make log devices with write back caches work
+Message-ID: <20110527164137.GA5833@infradead.org>
 MIME-Version: 1.0
-Subject: Re: xfsprogs: Fix for xfstest 252 hang on ext4
-References: <4DDAC4EF.1050702@linux.vnet.ibm.com>
-In-Reply-To: <4DDAC4EF.1050702@linux.vnet.ibm.com>
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,50 +27,240 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>, Ext4 Developers List <linux-ext4@vger.kernel.org>
+To: xfs@oss.sgi.com
 
-On 5/23/2011 1:34 PM, Allison Henderson wrote:
-> Hi all,
->
-> While trying to add more punch hole tests to xfstest, I found that test 252 hangs on ext4 due to a loop in xfsprogs that does not exit.  XFS gets out of this loop because there is logic in the loop that looks for the last extent flag and breaks out.  But it looks like ext4 does not return a last extent when the file has a hole at the end.  I am not sure if this is the correct behavior or not, so I will copy the ext4 folks on this too.  Below is a copy of the fix for xfsprogs:
->
-> diff --git a/io/fiemap.c b/io/fiemap.c
-> index fa990cc..81fc92c 100644
-> --- a/io/fiemap.c
-> +++ b/io/fiemap.c
-> @@ -246,7 +246,7 @@ fiemap_f(
->   		       flg_w, _("FLAGS"));
->   	}
->
-> -	while (!last&&  ((cur_extent + 1) != max_extents)) {
-> +	while (!last&&  (cur_extent<= max_extents)) {
->   		if (max_extents)
->   			num_extents = min(num_extents,
->   					  max_extents - (cur_extent + 1));
->
->
-> It looks like the loop enters with last=0, cur_extents=0, and max_extents = 0, and on the first iteration cur_extents get set to 2, so we dont see ((cur_extent + 1) == max_extents for a very long time.  I doubt the logic was meant to work that way, so this patch should fix it, but I wanted to make sure that the fiemap for ext4 is working as intended too.  Feed back appreciated!  Thx all!
->
-> Allison Henderson
->
-Hi all,
+There's no reason not to support cache flushing on external log devices.
+The only thing this really requires is flushing the data device first
+both in fsync and log commits.  A side effect is that we also have to
+remove the barrier write test during mount, which has been superflous
+since the new FLUSH+FUA code anyway.  Also use the chance to flush the
+RT subvolume write cache before the fsync commit, which is required
+for correct semantics.
 
-I haven't heard much back on this patch, so Im just poking this thread 
-to make sure it doesn't get forgotten. I have some patches out there for 
-punch hole, and I'm currently looking at fixing up some older punch hole 
-tests in the dmapi code, but they wont do much good for ext4 with out 
-this fix.  If I could get a quick peek from some one on the xfs list for 
-this patch, that would be much appreciated.  Thx all!
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Allison Henderson
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Index: xfs/fs/xfs/linux-2.6/xfs_file.c
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_file.c	2011-05-27 13:07:41.260498122 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_file.c	2011-05-27 17:37:30.152495811 +0200
+@@ -131,19 +131,32 @@ xfs_file_fsync(
+ {
+ 	struct inode		*inode = file->f_mapping->host;
+ 	struct xfs_inode	*ip = XFS_I(inode);
++	struct xfs_mount	*mp = ip->i_mount;
+ 	struct xfs_trans	*tp;
+ 	int			error = 0;
+ 	int			log_flushed = 0;
+ 
+ 	trace_xfs_file_fsync(ip);
+ 
+-	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
++	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return -XFS_ERROR(EIO);
+ 
+ 	xfs_iflags_clear(ip, XFS_ITRUNCATED);
+ 
+ 	xfs_ioend_wait(ip);
+ 
++	if (mp->m_flags & XFS_MOUNT_BARRIER) {
++		/*
++		 * If we have an RT and/or log subvolume we need to make sure
++		 * to flush the write cache on the device that the data
++		 * resides before commit the transaction.
++		 */
++		if (XFS_IS_REALTIME_INODE(ip))
++			xfs_blkdev_issue_flush(mp->m_rtdev_targp);
++		else if (mp->m_logdev_targp != mp->m_ddev_targp)
++			xfs_blkdev_issue_flush(mp->m_ddev_targp);
++	}
++
+ 	/*
+ 	 * We always need to make sure that the required inode state is safe on
+ 	 * disk.  The inode might be clean but we still might need to force the
+@@ -175,9 +188,9 @@ xfs_file_fsync(
+ 		 * updates.  The sync transaction will also force the log.
+ 		 */
+ 		xfs_iunlock(ip, XFS_ILOCK_SHARED);
+-		tp = xfs_trans_alloc(ip->i_mount, XFS_TRANS_FSYNC_TS);
++		tp = xfs_trans_alloc(mp, XFS_TRANS_FSYNC_TS);
+ 		error = xfs_trans_reserve(tp, 0,
+-				XFS_FSYNC_TS_LOG_RES(ip->i_mount), 0, 0, 0);
++				XFS_FSYNC_TS_LOG_RES(mp), 0, 0, 0);
+ 		if (error) {
+ 			xfs_trans_cancel(tp, 0);
+ 			return -error;
+@@ -209,28 +222,23 @@ xfs_file_fsync(
+ 		 * force the log.
+ 		 */
+ 		if (xfs_ipincount(ip)) {
+-			error = _xfs_log_force_lsn(ip->i_mount,
++			error = _xfs_log_force_lsn(mp,
+ 					ip->i_itemp->ili_last_lsn,
+ 					XFS_LOG_SYNC, &log_flushed);
+ 		}
+ 		xfs_iunlock(ip, XFS_ILOCK_SHARED);
+ 	}
+ 
+-	if (ip->i_mount->m_flags & XFS_MOUNT_BARRIER) {
+-		/*
+-		 * If the log write didn't issue an ordered tag we need
+-		 * to flush the disk cache for the data device now.
+-		 */
+-		if (!log_flushed)
+-			xfs_blkdev_issue_flush(ip->i_mount->m_ddev_targp);
+-
+-		/*
+-		 * If this inode is on the RT dev we need to flush that
+-		 * cache as well.
+-		 */
+-		if (XFS_IS_REALTIME_INODE(ip))
+-			xfs_blkdev_issue_flush(ip->i_mount->m_rtdev_targp);
+-	}
++	/*
++	 * Flush the write cache on the data volume, if the data for this
++	 * inode actually resides on it, and the transaction commit did
++	 * not flush it yet.
++	 */
++	if ((mp->m_flags & XFS_MOUNT_BARRIER) &&
++	    mp->m_logdev_targp == mp->m_ddev_targp &&
++	    !XFS_IS_REALTIME_INODE(ip) &&
++	    !log_flushed)
++		xfs_blkdev_issue_flush(mp->m_ddev_targp);
+ 
+ 	return -error;
+ }
+Index: xfs/fs/xfs/linux-2.6/xfs_super.c
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_super.c	2011-05-27 13:07:41.272495356 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_super.c	2011-05-27 15:37:11.673496345 +0200
+@@ -627,68 +627,6 @@ xfs_blkdev_put(
+ 		blkdev_put(bdev, FMODE_READ|FMODE_WRITE|FMODE_EXCL);
+ }
+ 
+-/*
+- * Try to write out the superblock using barriers.
+- */
+-STATIC int
+-xfs_barrier_test(
+-	xfs_mount_t	*mp)
+-{
+-	xfs_buf_t	*sbp = xfs_getsb(mp, 0);
+-	int		error;
+-
+-	XFS_BUF_UNDONE(sbp);
+-	XFS_BUF_UNREAD(sbp);
+-	XFS_BUF_UNDELAYWRITE(sbp);
+-	XFS_BUF_WRITE(sbp);
+-	XFS_BUF_UNASYNC(sbp);
+-	XFS_BUF_ORDERED(sbp);
+-
+-	xfsbdstrat(mp, sbp);
+-	error = xfs_buf_iowait(sbp);
+-
+-	/*
+-	 * Clear all the flags we set and possible error state in the
+-	 * buffer.  We only did the write to try out whether barriers
+-	 * worked and shouldn't leave any traces in the superblock
+-	 * buffer.
+-	 */
+-	XFS_BUF_DONE(sbp);
+-	XFS_BUF_ERROR(sbp, 0);
+-	XFS_BUF_UNORDERED(sbp);
+-
+-	xfs_buf_relse(sbp);
+-	return error;
+-}
+-
+-STATIC void
+-xfs_mountfs_check_barriers(xfs_mount_t *mp)
+-{
+-	int error;
+-
+-	if (mp->m_logdev_targp != mp->m_ddev_targp) {
+-		xfs_notice(mp,
+-		  "Disabling barriers, not supported with external log device");
+-		mp->m_flags &= ~XFS_MOUNT_BARRIER;
+-		return;
+-	}
+-
+-	if (xfs_readonly_buftarg(mp->m_ddev_targp)) {
+-		xfs_notice(mp,
+-			"Disabling barriers, underlying device is readonly");
+-		mp->m_flags &= ~XFS_MOUNT_BARRIER;
+-		return;
+-	}
+-
+-	error = xfs_barrier_test(mp);
+-	if (error) {
+-		xfs_notice(mp,
+-			"Disabling barriers, trial barrier write failed");
+-		mp->m_flags &= ~XFS_MOUNT_BARRIER;
+-		return;
+-	}
+-}
+-
+ void
+ xfs_blkdev_issue_flush(
+ 	xfs_buftarg_t		*buftarg)
+@@ -1239,14 +1177,6 @@ xfs_fs_remount(
+ 		switch (token) {
+ 		case Opt_barrier:
+ 			mp->m_flags |= XFS_MOUNT_BARRIER;
+-
+-			/*
+-			 * Test if barriers are actually working if we can,
+-			 * else delay this check until the filesystem is
+-			 * marked writeable.
+-			 */
+-			if (!(mp->m_flags & XFS_MOUNT_RDONLY))
+-				xfs_mountfs_check_barriers(mp);
+ 			break;
+ 		case Opt_nobarrier:
+ 			mp->m_flags &= ~XFS_MOUNT_BARRIER;
+@@ -1281,8 +1211,6 @@ xfs_fs_remount(
+ 	/* ro -> rw */
+ 	if ((mp->m_flags & XFS_MOUNT_RDONLY) && !(*flags & MS_RDONLY)) {
+ 		mp->m_flags &= ~XFS_MOUNT_RDONLY;
+-		if (mp->m_flags & XFS_MOUNT_BARRIER)
+-			xfs_mountfs_check_barriers(mp);
+ 
+ 		/*
+ 		 * If this is the first remount to writeable state we
+@@ -1464,9 +1392,6 @@ xfs_fs_fill_super(
+ 	if (error)
+ 		goto out_free_sb;
+ 
+-	if (mp->m_flags & XFS_MOUNT_BARRIER)
+-		xfs_mountfs_check_barriers(mp);
+-
+ 	error = xfs_filestream_mount(mp);
+ 	if (error)
+ 		goto out_free_sb;
+Index: xfs/fs/xfs/xfs_log.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_log.c	2011-05-27 13:07:41.284496076 +0200
++++ xfs/fs/xfs/xfs_log.c	2011-05-27 15:37:11.681500020 +0200
+@@ -1372,8 +1372,15 @@ xlog_sync(xlog_t		*log,
+ 	XFS_BUF_ASYNC(bp);
+ 	bp->b_flags |= XBF_LOG_BUFFER;
+ 
+-	if (log->l_mp->m_flags & XFS_MOUNT_BARRIER)
++	if (log->l_mp->m_flags & XFS_MOUNT_BARRIER) {
++		/*
++		 * If we have an external log device, flush the data device
++		 * before flushing the log.
++		 */
++		if (log->l_mp->m_logdev_targp != log->l_mp->m_ddev_targp)
++			xfs_blkdev_issue_flush(log->l_mp->m_ddev_targp);
+ 		XFS_BUF_ORDERED(bp);
++	}
+ 
+ 	ASSERT(XFS_BUF_ADDR(bp) <= log->l_logBBsize-1);
+ 	ASSERT(XFS_BUF_ADDR(bp) + BTOBB(count) <= log->l_logBBsize);
 
 _______________________________________________
 xfs mailing list
