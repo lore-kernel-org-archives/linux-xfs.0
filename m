@@ -1,13 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4SHbOT9118229 for <xfs@oss.sgi.com>; Sat, 28 May 2011 12:37:24 -0500
-From: Joe Perches <joe@perches.com>
-Subject: [TRIVIAL PATCH next 13/15] fs: Convert vmalloc/memset to vzalloc
-Date: Sat, 28 May 2011 10:36:33 -0700
-Message-Id: <4561db676a209fff984a75ade2f552ddbfabb95b.1306603968.git.joe@perches.com>
-In-Reply-To: <cover.1306603968.git.joe@perches.com>
-References: <cover.1306603968.git.joe@perches.com>
+	p4U1PeAi211792 for <xfs@oss.sgi.com>; Sun, 29 May 2011 20:25:41 -0500
+Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DA103D4B7C6
+	for <xfs@oss.sgi.com>; Sun, 29 May 2011 18:25:38 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	3mNM11Ciunay3cfV for <xfs@oss.sgi.com>;
+	Sun, 29 May 2011 18:25:38 -0700 (PDT)
+Date: Mon, 30 May 2011 11:25:34 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfsprogs: Fix for xfstest 252 hang on ext4
+Message-ID: <20110530012534.GB561@dastard>
+References: <4DDAC4EF.1050702@linux.vnet.ibm.com>
+	<4DDE9CD9.3010300@linux.vnet.ibm.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4DDE9CD9.3010300@linux.vnet.ibm.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -16,131 +26,70 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jan Harkes <jaharkes@cs.cmu.edu>, coda@cs.cmu.edu, Jiri Kosina <trivial@kernel.org>
-Cc: codalist@TELEMANN.coda.cs.cmu.edu, linux-kernel@vger.kernel.org, reiserfs-devel@vger.kernel.org, xfs@oss.sgi.com, xfs-masters@oss.sgi.com, Alex Elder <aelder@sgi.com>
+To: Allison Henderson <achender@linux.vnet.ibm.com>
+Cc: Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- fs/coda/coda_linux.h    |    5 ++---
- fs/reiserfs/journal.c   |    9 +++------
- fs/reiserfs/resize.c    |    4 +---
- fs/xfs/linux-2.6/kmem.h |    7 +------
- 4 files changed, 7 insertions(+), 18 deletions(-)
+On Thu, May 26, 2011 at 11:32:57AM -0700, Allison Henderson wrote:
+> On 5/23/2011 1:34 PM, Allison Henderson wrote:
+> >Hi all,
+> >
+> >While trying to add more punch hole tests to xfstest, I found
+> >that test 252 hangs on ext4 due to a loop in xfsprogs that does
+> >not exit.  XFS gets out of this loop because there is logic in
+> >the loop that looks for the last extent flag and breaks out.  But
+> >it looks like ext4 does not return a last extent when the file
+> >has a hole at the end.  I am not sure if this is the correct
+> >behavior or not, so I will copy the ext4 folks on this too.
+> >Below is a copy of the fix for xfsprogs:
+> >
+> >diff --git a/io/fiemap.c b/io/fiemap.c
+> >index fa990cc..81fc92c 100644
+> >--- a/io/fiemap.c
+> >+++ b/io/fiemap.c
+> >@@ -246,7 +246,7 @@ fiemap_f(
+> >  		       flg_w, _("FLAGS"));
+> >  	}
+> >
+> >-	while (!last&&  ((cur_extent + 1) != max_extents)) {
+> >+	while (!last&&  (cur_extent<= max_extents)) {
+> >  		if (max_extents)
+> >  			num_extents = min(num_extents,
+> >  					  max_extents - (cur_extent + 1));
+> >
+> >
+> >It looks like the loop enters with last=0, cur_extents=0, and
+> >max_extents = 0, and on the first iteration cur_extents get set
+> >to 2, so we dont see ((cur_extent + 1) == max_extents for a very
+> >long time.  I doubt the logic was meant to work that way, so this
+> >patch should fix it, but I wanted to make sure that the fiemap
+> >for ext4 is working as intended too.  Feed back appreciated!  Thx
+> >all!
+> >
+> >Allison Henderson
+> >
+> Hi all,
+> 
+> I haven't heard much back on this patch, so Im just poking this
+> thread to make sure it doesn't get forgotten. I have some patches
+> out there for punch hole, and I'm currently looking at fixing up
+> some older punch hole tests in the dmapi code, but they wont do much
+> good for ext4 with out this fix.  If I could get a quick peek from
+> some one on the xfs list for this patch, that would be much
+> appreciated.  Thx all!
 
-diff --git a/fs/coda/coda_linux.h b/fs/coda/coda_linux.h
-index 9b0c532..7807025 100644
---- a/fs/coda/coda_linux.h
-+++ b/fs/coda/coda_linux.h
-@@ -59,12 +59,11 @@ void coda_sysctl_clean(void);
- 
- #define CODA_ALLOC(ptr, cast, size) do { \
-     if (size < PAGE_SIZE) \
--        ptr = kmalloc((unsigned long) size, GFP_KERNEL); \
-+        ptr = kzalloc((unsigned long) size, GFP_KERNEL); \
-     else \
--        ptr = (cast)vmalloc((unsigned long) size); \
-+        ptr = (cast)vzalloc((unsigned long) size); \
-     if (!ptr) \
-         printk("kernel malloc returns 0 at %s:%d\n", __FILE__, __LINE__); \
--    else memset( ptr, 0, size ); \
- } while (0)
- 
- 
-diff --git a/fs/reiserfs/journal.c b/fs/reiserfs/journal.c
-index c5e82ec..40d8b0a 100644
---- a/fs/reiserfs/journal.c
-+++ b/fs/reiserfs/journal.c
-@@ -291,14 +291,13 @@ int reiserfs_allocate_list_bitmaps(struct super_block *sb,
- 	for (i = 0; i < JOURNAL_NUM_BITMAPS; i++) {
- 		jb = jb_array + i;
- 		jb->journal_list = NULL;
--		jb->bitmaps = vmalloc(mem);
-+		jb->bitmaps = vzalloc(mem);
- 		if (!jb->bitmaps) {
- 			reiserfs_warning(sb, "clm-2000", "unable to "
- 					 "allocate bitmaps for journal lists");
- 			failed = 1;
- 			break;
- 		}
--		memset(jb->bitmaps, 0, mem);
- 	}
- 	if (failed) {
- 		free_list_bitmaps(sb, jb_array);
-@@ -353,11 +352,10 @@ static struct reiserfs_journal_cnode *allocate_cnodes(int num_cnodes)
- 	if (num_cnodes <= 0) {
- 		return NULL;
- 	}
--	head = vmalloc(num_cnodes * sizeof(struct reiserfs_journal_cnode));
-+	head = vzalloc(num_cnodes * sizeof(struct reiserfs_journal_cnode));
- 	if (!head) {
- 		return NULL;
- 	}
--	memset(head, 0, num_cnodes * sizeof(struct reiserfs_journal_cnode));
- 	head[0].prev = NULL;
- 	head[0].next = head + 1;
- 	for (i = 1; i < num_cnodes; i++) {
-@@ -2695,14 +2693,13 @@ int journal_init(struct super_block *sb, const char *j_dev_name,
- 	 * dependency inversion warnings.
- 	 */
- 	reiserfs_write_unlock(sb);
--	journal = SB_JOURNAL(sb) = vmalloc(sizeof(struct reiserfs_journal));
-+	journal = SB_JOURNAL(sb) = vzalloc(sizeof(struct reiserfs_journal));
- 	if (!journal) {
- 		reiserfs_warning(sb, "journal-1256",
- 				 "unable to get memory for journal structure");
- 		reiserfs_write_lock(sb);
- 		return 1;
- 	}
--	memset(journal, 0, sizeof(struct reiserfs_journal));
- 	INIT_LIST_HEAD(&journal->j_bitmap_nodes);
- 	INIT_LIST_HEAD(&journal->j_prealloc_list);
- 	INIT_LIST_HEAD(&journal->j_working_list);
-diff --git a/fs/reiserfs/resize.c b/fs/reiserfs/resize.c
-index b3a94d2..cfb5196 100644
---- a/fs/reiserfs/resize.c
-+++ b/fs/reiserfs/resize.c
-@@ -111,15 +111,13 @@ int reiserfs_resize(struct super_block *s, unsigned long block_count_new)
- 		/* allocate additional bitmap blocks, reallocate array of bitmap
- 		 * block pointers */
- 		bitmap =
--		    vmalloc(sizeof(struct reiserfs_bitmap_info) * bmap_nr_new);
-+		    vzalloc(sizeof(struct reiserfs_bitmap_info) * bmap_nr_new);
- 		if (!bitmap) {
- 			/* Journal bitmaps are still supersized, but the memory isn't
- 			 * leaked, so I guess it's ok */
- 			printk("reiserfs_resize: unable to allocate memory.\n");
- 			return -ENOMEM;
- 		}
--		memset(bitmap, 0,
--		       sizeof(struct reiserfs_bitmap_info) * bmap_nr_new);
- 		for (i = 0; i < bmap_nr; i++)
- 			bitmap[i] = old_bitmap[i];
- 
-diff --git a/fs/xfs/linux-2.6/kmem.h b/fs/xfs/linux-2.6/kmem.h
-index f7c8f7a..292eff1 100644
---- a/fs/xfs/linux-2.6/kmem.h
-+++ b/fs/xfs/linux-2.6/kmem.h
-@@ -61,12 +61,7 @@ extern void  kmem_free(const void *);
- 
- static inline void *kmem_zalloc_large(size_t size)
- {
--	void *ptr;
--
--	ptr = vmalloc(size);
--	if (ptr)
--		memset(ptr, 0, size);
--	return ptr;
-+	return vzalloc(size);
- }
- static inline void kmem_free_large(void *ptr)
- {
+If ext4 is not setting the last extent flag on the last extent then
+that's an ext4 bug that the test has detected, right? And so you
+should be fixing ext4 rather than modifying the test to hide the
+different behaviour?
+
+Cheer
 -- 
-1.7.5.rc3.dirty
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
