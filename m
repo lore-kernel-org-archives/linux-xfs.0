@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4U3lkEk219007 for <xfs@oss.sgi.com>; Sun, 29 May 2011 22:47:46 -0500
-Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4F7C9166B333
-	for <xfs@oss.sgi.com>; Sun, 29 May 2011 20:47:44 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	FnnHqGua5iMD8oGf for <xfs@oss.sgi.com>;
-	Sun, 29 May 2011 20:47:44 -0700 (PDT)
-Date: Mon, 30 May 2011 13:47:41 +1000
-From: Dave Chinner <david@fromorbit.com>
+	p4U4Jqek220210 for <xfs@oss.sgi.com>; Sun, 29 May 2011 23:19:52 -0500
+Received: from cobra.newdream.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id ADC64166D629
+	for <xfs@oss.sgi.com>; Sun, 29 May 2011 21:19:26 -0700 (PDT)
+Received: from cobra.newdream.net (cobra.newdream.net [66.33.216.30]) by
+	cuda.sgi.com with ESMTP id Csdf5ZRdWN9y85rW for
+	<xfs@oss.sgi.com>; Sun, 29 May 2011 21:19:26 -0700 (PDT)
+Date: Sun, 29 May 2011 21:20:59 -0700 (PDT)
+From: Sage Weil <sage@newdream.net>
 Subject: Re: [regression, 3.0-rc1] dentry cache growth during unlinks, XFS
 	performance way down
-Message-ID: <20110530034741.GD561@dastard>
-References: <20110530020604.GC561@dastard>
+In-Reply-To: <20110530034741.GD561@dastard>
+Message-ID: <Pine.LNX.4.64.1105292057570.9134@cobra.newdream.net>
+References: <20110530020604.GC561@dastard> <20110530034741.GD561@dastard>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110530020604.GC561@dastard>
+Content-Type: MULTIPART/MIXED; BOUNDARY="557981400-1242587162-1306728170=:9134"
+Content-ID: <Pine.LNX.4.64.1105292103520.9342@cobra.newdream.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,91 +26,139 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-kernel@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-T24gTW9uLCBNYXkgMzAsIDIwMTEgYXQgMTI6MDY6MDRQTSArMTAwMCwgRGF2ZSBDaGlubmVyIHdy
-b3RlOgo+IEZvbGtzLAo+IAo+IEkganVzdCBib290ZWQgdXAgYSAzLjAtcmMxIGtlcm5lbCwgYW5k
-IG1vdW50ZWQgYW4gWEZTIGZpbGVzeXN0ZW0KPiB3aXRoIDUwTSBmaWxlcyBpbiBpdC4gUnVubmlu
-ZzoKPiAKPiAkIGZvciBpIGluIC9tbnQvc2NyYXRjaC8qOyBkbyBzdWRvIC91c3IvYmluL3RpbWUg
-cm0gLXJmICRpIDI+JjEgJiBkb25lCj4gCj4gcnVucyBhbiA4LXdheSBwYXJhbGxlbCB1bmxpbmsg
-b24gdGhlIGZpbGVzLiBOb3JtYWxseSB0aGlzIHJ1bnMgYXQKPiBhcm91bmQgODBrIHVubGlua3Mv
-cywgYW5kIGl0IHJ1bnMgd2l0aCBhYm91dCA1MDBrLTFtIGRlbnRyaWVzIGFuZAo+IGlub2RlcyBj
-YWNoZWQgaW4gdGhlIHN0ZWFkeSBzdGF0ZS4KPiAKPiBUaGUgc3RlYWR5IHN0YXRlIGJlaGF2aW91
-ciB3aXRoIDMuMC1yYzEgaXMgdGhhdCB0aGVyZSBhcmUgYXJvdW5kIDEwbQo+IGNhY2hlZCBkZW50
-cmllcyAtIGFsbCBuZWdhdGl2ZSBkZW50cmllcyAtIGNvbnN1bWluZyBhYm91dCAxLjZHQiBvZgo+
-IFJBTSAob2YgNEdCIHRvdGFsKS4gUHJldmlvdXMgc3RlYWR5IHN0YXRlIHdhcywgSUlSQywgYXJv
-dW5kIDIwME1CIG9mCj4gZGVudHJpZXMuIE15IGluaXRpYWwgc3VzcGljaW9ucyBhcmUgdGhhdCB0
-aGUgZGVudHJ5IHVuaGFzaGluZwo+IGNoYW5nZdGVIG1heSBiZSB0aGUgY2F1c2Ugb2YgdGhpcy4u
-LgoKU28gYSBiaXNlY3QgbGFuZHMgb246CgokIGdpdCBiaXNlY3QgZ29vZAo3OWJmN2M3MzJiNWZm
-NzViOTYwMjJlZDlkMjkxODFhZmQzZDI1MDljIGlzIHRoZSBmaXJzdCBiYWQgY29tbWl0CmNvbW1p
-dCA3OWJmN2M3MzJiNWZmNzViOTYwMjJlZDlkMjkxODFhZmQzZDI1MDljCkF1dGhvcjogU2FnZSBX
-ZWlsIDxzYWdlQG5ld2RyZWFtLm5ldD4KRGF0ZTogICBUdWUgTWF5IDI0IDEzOjA2OjA2IDIwMTEg
-LTA3MDAKCiAgICB2ZnM6IHB1c2ggZGVudHJ5X3VuaGFzaCBvbiBybWRpciBpbnRvIGZpbGUgc3lz
-dGVtcwoKICAgIE9ubHkgYSBmZXcgZmlsZSBzeXN0ZW1zIG5lZWQgdGhpcy4gIFN0YXJ0IGJ5IHB1
-c2hpbmcgaXQgZG93biBpbnRvIGVhY2gKICAgIGZzIHJtZGlyIG1ldGhvZCAoZXhjZXB0IGdmczIg
-YW5kIHhmcykgc28gaXQgY2FuIGJlIGRlYWx0IHdpdGggb24gYSBwZXItZnMKICAgIGJhc2lzLgoK
-ICAgIFRoaXMgZG9lcyBub3QgY2hhbmdlIGJlaGF2aW9yIGZvciBhbnkgaW4tdHJlZSBmaWxlIHN5
-c3RlbXMuCgogICAgQWNrZWQtYnk6IENocmlzdG9waCBIZWxsd2lnIDxoY2hAbHN0LmRlPgogICAg
-U2lnbmVkLW9mZi1ieTogU2FnZSBXZWlsIDxzYWdlQG5ld2RyZWFtLm5ldD4KICAgIFNpZ25lZC1v
-ZmYtYnk6IEFsIFZpcm8gPHZpcm9AemVuaXYubGludXgub3JnLnVrPgoKOjA0MDAwMCAwNDAwMDAg
-YzQ1ZDU4NzE4ZDMzZjdjYTFkYTg3Zjk5ZmE1MzhmNjVlYWEzZmUyYyBlYzcxY2JlY2M1OWU4YjE0
-MmE3YmZjYWJkNDY5ZmE2NzQ4NmJlZjMwIE0gICAgICAgIGZzCgpPaywgc28gdGhlIHF1ZXN0aW9u
-IGhhcyB0byBiZSBhc2tlZCAtIHdoeSB3YXNuJ3QgZGVudHJ5X3VuaGFzaCgpCnB1c2hlZCBkb3du
-IGludG8gWEZTPwoKRnVydGhlciwgbm93IHRoYXQgZGVudHJ5X3VuaGFzaCgpIGhhcyBiZWVuIHJl
-bW92ZWQgZnJvbSBtb3N0CmZpbGVzeXN0ZW1zLCB3aGF0IGlzIHJlcGxhY2luZyB0aGUgc2hyaW5r
-X2RjYWNoZV9wYXJlbnQoKSBjYWxsIHRoYXQKd2FzIGNsZWFuaW5nIHVwIHRoZSAid2UgY2FuIG5l
-dmVyIHJlZmVyZW5jZSBhZ2FpbiIgY2hpbGQgZGVudHJpZXMgb2YKdGhlIHVubGlua2VkIGRpcmVj
-dG9yaWVzPyBJdCBhcHBlYXJzIHRoYXQgdGhleSBhcmUgbm93IGJlaW5nIGxlZnQgaW4KbWVtb3J5
-IG9uIHRoZSBkZW50cnkgTFJVLiBJdCBhbHNvIGFwcGVhcnMgdGhhdCB0aGV5IGhhdmUKRF9SRUZF
-UkVOQ0VEIGJpdCBzZXQsIHNvIHRoZXkgZG8gbm90IGdldCBpbW1lZGlhdGVseSByZWNsYWltZWQg
-YnkKdGhlIHNocmlua2VyLgoKSGVuY2UgdGhleSBtdWNoIG1vcmUgZGlmZmljdWx0IHRvIHJlbW92
-ZSBmcm9tIG1lbW9yeSB0aGFuIGluIDIuNi4zOSwKYW5kIHdpdGggdGhlIHJhdGUgYXQgd2hpY2gg
-dGhleSBhcmUgYmVpbmcgY3JlYXRlZCB0aGUgc2hyaW5rZXIgaXMKc2ltcGx5IG5vdCBhZ2dyZXNz
-aXZlIGVub3VnaCB0byBmcmVlIHRoZW0gYXQgdGhlIHNhbWUgcmF0ZSBhcyBpbgoyLjYuMzkgYW5k
-IGhlbmNlIHRoZSBtZW1vcnkgYmFsYW5jZSBvZiB0aGUgY2FjaGVzIGlzIHNpZ25pZmljYW50bHkK
-Y2hhbmdlZC4KCkl0IHdvdWxkIHNlZW0gdG8gbWUgdGhhdCB3ZSBzdGlsbCBuZWVkIHRoZSBjYWxs
-IHRvCnNocmlua19kY2FjaGVfcGFyZW50KCkgZm9yIHVubGlua2VkIGRpcmVjdG9yaWVzIC0gdGhh
-dCBwYXJ0IG9mIHRoZQpkZW50cnlfdW5oYXNoKCkgc3RpbGwgbmVlZHMgdG8gYmUgcnVuIHRvIGVu
-c3VyZSB0aGF0IHdlIGRvbid0CnBvbGx1dGUgbWVtb3J5IHdpdGggc3RhbGUgZGVudHJpZXMuIFRo
-ZSBvcmlnaW5hbCBwYXRjaCBzZXJpZXMKc3VnZ2VzdHMgdGhhdCB0aGlzIGlzIGEgcGVyLWZpbGVz
-eXN0ZW0gZGVjaXNpb247IEkgdGhpbmsgdGhpcwpwcm9ibGVtIHNob3dzIHRoYXQgaXQgaXMgcmVh
-bGx5IG5lY2Vzc2FyeSBmb3IgbW9zdCBmaWxlc3lzdGVtcy4KU28sIGRvIGkganVzdCBmaXggdGhp
-cyBpbiBYRlMsIG9yIHNob3VsZCBJIHJlLWFkZCBjYWxscyB0bwpzaHJpbmtfZGNhY2hlX3BhcmVu
-dCgpIGluIHRoZSBWRlMgZm9yIHJtZGlyIGFuZCByZW5hbWU/Cgo+IG9mIGFib3V0IDIwcywgd2hl
-cmUgdGhlIHBlYWsgaXMgYWJvdXQgODBrIHVubGlua3MvcywgYW5kIHRoZSB0cm91Z2gKPiBpcyBh
-cm91bmQgMjBrIHVubGlua3Mvcy4gVGhlIHJ1bnRpbWUgb2YgdGhlIDUwbSBpbm9kZSBkZWxldGUg
-aGFzCj4gZ29uZSBmcm9tIGFyb3VuZCAxMG0gb24gMi42LjM5LCB0bzoKPiAKPiAxMS43MXVzZXIg
-NDcwLjA4c3lzdGVtIDE1OjA3LjkxZWxhcHNlZCA1MyVDUFUgKDBhdmd0ZXh0KzBhdmdkYXRhIDEz
-MzE4NG1heHJlc2lkZW50KWsKPiAwaW5wdXRzKzBvdXRwdXRzICgzMG1ham9yKzQ5NzIyOG1pbm9y
-KXBhZ2VmYXVsdHMgMHN3YXBzCj4gMTEuNTB1c2VyIDQ2OC4zMHN5c3RlbSAxNToxNC4zNWVsYXBz
-ZWQgNTIlQ1BVICgwYXZndGV4dCswYXZnZGF0YSAxMzMxNjhtYXhyZXNpZGVudClrCj4gMGlucHV0
-cyswb3V0cHV0cyAoNDJtYWpvcis0OTcyNjhtaW5vcilwYWdlZmF1bHRzIDBzd2Fwcwo+IDExLjM0
-dXNlciA0NjYuNjZzeXN0ZW0gMTU6MjYuMDRlbGFwc2VkIDUxJUNQVSAoMGF2Z3RleHQrMGF2Z2Rh
-dGEgMTMzMjE2bWF4cmVzaWRlbnQpawo+IDBpbnB1dHMrMG91dHB1dHMgKDE4bWFqb3IrNDk3MTIx
-bWlub3IpcGFnZWZhdWx0cyAwc3dhcHMKPiAxMi4xNHVzZXIgNDcwLjQ2c3lzdGVtIDE1OjI2LjYw
-ZWxhcHNlZCA1MiVDUFUgKDBhdmd0ZXh0KzBhdmdkYXRhIDEzMzIxNm1heHJlc2lkZW50KWsKPiAw
-aW5wdXRzKzBvdXRwdXRzICg0NG1ham9yKzQ5NzMwOW1pbm9yKXBhZ2VmYXVsdHMgMHN3YXBzCj4g
-MTIuMDZ1c2VyIDQ2My43NHN5c3RlbSAxNToyOC44NGVsYXBzZWQgNTElQ1BVICgwYXZndGV4dCsw
-YXZnZGF0YSAxMzMyMzJtYXhyZXNpZGVudClrCj4gMGlucHV0cyswb3V0cHV0cyAoMjVtYWpvcis0
-OTcwNDZtaW5vcilwYWdlZmF1bHRzIDBzd2Fwcwo+IDExLjM3dXNlciA0NjguMThzeXN0ZW0gMTU6
-MjkuMDdlbGFwc2VkIDUxJUNQVSAoMGF2Z3RleHQrMGF2Z2RhdGEgMTMzMTg0bWF4cmVzaWRlbnQp
-awo+IDBpbnB1dHMrMG91dHB1dHMgKDU1bWFqb3IrNDk3MDU2bWlub3IpcGFnZWZhdWx0cyAwc3dh
-cHMKPiAxMS42OXVzZXIgNDc0LjQ2c3lzdGVtIDE1OjQ3LjQ1ZWxhcHNlZCA1MSVDUFUgKDBhdmd0
-ZXh0KzBhdmdkYXRhIDEzMzIzMm1heHJlc2lkZW50KWsKPiAwaW5wdXRzKzBvdXRwdXRzICg2MW1h
-am9yKzQ5NzI4NG1pbm9yKXBhZ2VmYXVsdHMgMHN3YXBzCj4gMTEuMzJ1c2VyIDQ3Ni45M3N5c3Rl
-bSAxNjowNS4xNGVsYXBzZWQgNTAlQ1BVICgwYXZndGV4dCswYXZnZGF0YSAxMzMxODRtYXhyZXNp
-ZGVudClrCj4gMGlucHV0cyswb3V0cHV0cyAoMzBtYWpvcis0OTcyMjVtaW5vcilwYWdlZmF1bHRz
-IDBzd2Fwcwo+IAo+IEFib3V0IDE2IG1pbnV0ZXMuIEknbSBub3Qgc3VyZSB5ZXQgd2hldGhlciB0
-aGlzIGNoYW5nZSBvZiBjYWNoZQo+IGJlaGF2aW91ciBpcyB0aGUgY2F1c2Ugb2YgdGhlIGVudGly
-ZSBwZXJmb3JtYW5jZSByZWdyZXNzaW9uLCBidXQKPiBpdCdzIGEgZ29vZCBjaGFuY2UgdGhhdCBp
-dCBpcyBhIGNvbnRyaWJ1dGluZyBmYWN0b3IuCgpUaGUgY2FjaGUgc2l6ZSBncm93dGggYnVnIGRv
-ZXMgbm90IGFwcGVhciB0byBiZSByZXNwb25zaWJsZSBmb3IgYW55Cm9mIHRoZSBwZXJmb3JtYW5j
-ZSByZWdyZXNzaW9uLgoKQ2hlZXJzLAoKRGF2ZS4KLS0gCkRhdmUgQ2hpbm5lcgpkYXZpZEBmcm9t
-b3JiaXQuY29tCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-Xwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFp
-bG1hbi9saXN0aW5mby94ZnMK
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
+
+--557981400-1242587162-1306728170=:9134
+Content-Type: TEXT/PLAIN; CHARSET=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-ID: <Pine.LNX.4.64.1105292103521.9342@cobra.newdream.net>
+
+Hey Dave,
+
+On Mon, 30 May 2011, Dave Chinner wrote:
+> On Mon, May 30, 2011 at 12:06:04PM +1000, Dave Chinner wrote:
+> > Folks,
+> >=20
+> > I just booted up a 3.0-rc1 kernel, and mounted an XFS filesystem
+> > with 50M files in it. Running:
+> >=20
+> > $ for i in /mnt/scratch/*; do sudo /usr/bin/time rm -rf $i 2>&1 & done
+> >=20
+> > runs an 8-way parallel unlink on the files. Normally this runs at
+> > around 80k unlinks/s, and it runs with about 500k-1m dentries and
+> > inodes cached in the steady state.
+> >=20
+> > The steady state behaviour with 3.0-rc1 is that there are around 10m
+> > cached dentries - all negative dentries - consuming about 1.6GB of
+> > RAM (of 4GB total). Previous steady state was, IIRC, around 200MB of
+> > dentries. My initial suspicions are that the dentry unhashing
+> > change=FF=FF may be the cause of this...
+>=20
+> So a bisect lands on:
+>=20
+> $ git bisect good
+> 79bf7c732b5ff75b96022ed9d29181afd3d2509c is the first bad commit
+> commit 79bf7c732b5ff75b96022ed9d29181afd3d2509c
+> Author: Sage Weil <sage@newdream.net>
+> Date:   Tue May 24 13:06:06 2011 -0700
+>=20
+>     vfs: push dentry_unhash on rmdir into file systems
+>=20
+>     Only a few file systems need this.  Start by pushing it down into eac=
+h
+>     fs rmdir method (except gfs2 and xfs) so it can be dealt with on a pe=
+r-fs
+>     basis.
+>=20
+>     This does not change behavior for any in-tree file systems.
+>=20
+>     Acked-by: Christoph Hellwig <hch@lst.de>
+>     Signed-off-by: Sage Weil <sage@newdream.net>
+>     Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
+>=20
+> :040000 040000 c45d58718d33f7ca1da87f99fa538f65eaa3fe2c ec71cbecc59e8b142=
+a7bfcabd469fa67486bef30 M        fs
+>=20
+> Ok, so the question has to be asked - why wasn't dentry_unhash()
+> pushed down into XFS?
+
+Christoph asked me to leave it out to avoid the push-down + remove=20
+noise.  I missed it in v1, added it in v2, then took it out again. =20
+Ultimately that isn't the real problem, though:
+
+> Further, now that dentry_unhash() has been removed from most
+> filesystems, what is replacing the shrink_dcache_parent() call that
+> was cleaning up the "we can never reference again" child dentries of
+> the unlinked directories? It appears that they are now being left in
+> memory on the dentry LRU. It also appears that they have
+> D_REFERENCED bit set, so they do not get immediately reclaimed by
+> the shrinker.
+
+Ah, yeah, that makes sense.  I missed the shrink_dcache_parent side=20
+effect.  I suspect we just need something like the below?  (Very lightly=20
+tested!)
+
+Thanks-
+sage
+
+
+From=20c1fac19b662b02ab4aea98ee2a8d0098bc985bc8 Mon Sep 17 00:00:00 2001
+From: Sage Weil <sage@newdream.net>
+Date: Sun, 29 May 2011 20:35:44 -0700
+Subject: [PATCH 1/3] vfs: shrink_dcache_parent before rmdir, dir rename
+
+The dentry_unhash push-down series missed that shink_dcache_parent needs to
+be called prior to rmdir or dir rename to clear DCACHE_REFERENCED and
+allow efficient dentry reclaim.
+
+Reported-by: Dave Chinner <david@fromorbit.com>
+Signed-off-by: Sage Weil <sage@newdream.net>
+---
+ fs/namei.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
+
+diff --git a/fs/namei.c b/fs/namei.c
+index 1ab641f..e2e4e8d 100644
+--- a/fs/namei.c
++++ b/fs/namei.c
+@@ -2579,6 +2579,7 @@ int vfs_rmdir(struct inode *dir, struct dentry *dentr=
+y)
+ =09if (error)
+ =09=09goto out;
+=20
++=09shrink_dcache_parent(dentry);
+ =09error =3D dir->i_op->rmdir(dir, dentry);
+ =09if (error)
+ =09=09goto out;
+@@ -2993,6 +2994,8 @@ static int vfs_rename_dir(struct inode *old_dir, stru=
+ct dentry *old_dentry,
+ =09if (d_mountpoint(old_dentry) || d_mountpoint(new_dentry))
+ =09=09goto out;
+=20
++=09if (target)
++=09=09shrink_dcache_parent(new_dentry);
+ =09error =3D old_dir->i_op->rename(old_dir, old_dentry, new_dir, new_dentr=
+y);
+ =09if (error)
+ =09=09goto out;
+--=20
+1.7.1
+
+--557981400-1242587162-1306728170=:9134
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
+
+--557981400-1242587162-1306728170=:9134--
