@@ -1,20 +1,40 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4VELK1h048900 for <xfs@oss.sgi.com>; Tue, 31 May 2011 09:21:21 -0500
-Received: from mail-wy0-f181.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6D998490A44
-	for <xfs@oss.sgi.com>; Tue, 31 May 2011 07:21:19 -0700 (PDT)
-Received: from mail-wy0-f181.google.com (mail-wy0-f181.google.com
-	[74.125.82.181]) by cuda.sgi.com with ESMTP id KZ6D6pvVxzCWEJFM
-	for <xfs@oss.sgi.com>; Tue, 31 May 2011 07:21:19 -0700 (PDT)
-Received: by wyi11 with SMTP id 11so3918298wyi.26
-	for <xfs@oss.sgi.com>; Tue, 31 May 2011 07:21:19 -0700 (PDT)
-MIME-Version: 1.0
-Date: Tue, 31 May 2011 17:21:19 +0300
-Message-ID: <BANLkTimjBe5gmgObaG9j8SiD3mj9RxaSaw@mail.gmail.com>
-Subject: [PATCH] fix hardcoded reference to /mnt/test in common.attr
-From: Amir Goldstein <amir73il@gmail.com>
+	p4VEfIfr049788
+	for <linux-xfs@oss.sgi.com>; Tue, 31 May 2011 09:41:18 -0500
+Received: from lo.gmane.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 64883490BB0
+	for <linux-xfs@oss.sgi.com>; Tue, 31 May 2011 07:41:16 -0700 (PDT)
+Received: from lo.gmane.org (lo.gmane.org [80.91.229.12]) by cuda.sgi.com with
+	ESMTP id sQXix0nTwwMzSPcu for <linux-xfs@oss.sgi.com>;
+	Tue, 31 May 2011 07:41:16 -0700 (PDT)
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1QRQ8A-0007oM-1t
+	for linux-xfs@oss.sgi.com; Tue, 31 May 2011 16:41:14 +0200
+Received: from host2.kattenlaw.com ([host2.kattenlaw.com])
+	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+	id 1AlnuQ-0007hv-00
+	for <linux-xfs@oss.sgi.com>; Tue, 31 May 2011 16:41:14 +0200
+Received: from brianmduncan by host2.kattenlaw.com with local (Gmexim 0.1
+	(Debian)) id 1AlnuQ-0007hv-00
+	for <linux-xfs@oss.sgi.com>; Tue, 31 May 2011 16:41:14 +0200
+From: Brian Duncan <brianmduncan@gmail.com>
+Subject: Re: xfssyncd and disk spin down
+Date: Tue, 31 May 2011 14:40:57 +0000 (UTC)
+Message-ID: <loom.20110531T163459-953@post.gmane.org>
+References: <20101223165532.GA23813@peter.simplex.ro>
+	<20101227021904.GA24828@dastard>
+	<20101227061629.GA2275@pandora.simplex.ro>
+	<20101227140750.GB24828@dastard>
+	<20101227171939.GA7759@pandora.simplex.ro>
+	<20101231001323.GD15179@dastard>
+	<20110120100143.GA2007@peter.simplex.ro>
+	<20110120234310.GV16267@dastard>
+	<20110210204254.GA10451@peter.simplex.ro>
+	<20110210221851.GG2559@dastard>
+	<loom.20110214T185310-606@post.gmane.org>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,39 +47,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: XFS <xfs@oss.sgi.com>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, sergey ivanov <sergey57@gmail.com>, Christoph Hellwig <hch@lst.de>
+To: linux-xfs@oss.sgi.com
 
-From: Amir Goldstein <amir73il@users.sf.net>
+> Dave Chinner <david <at> fromorbit.com> writes:
+> > 
+> > I know what the problem is, but I haven't had time to work out of
+> > code a fix. Been spending my time trying to work out the cause bugs
+> > that are triggering hangs, crashes or corruptions here...
+> > 
+> > Cheers,
+> > 
+> > Dave.
+> 
+> 
 
-When trying to run test 70, we encountered several problems.
-Sergey has strace'd some of the problems to attempts to
-set xattr on the wrong test dir (/mnt/test/), which appears to be
-hardcoded in common.attr.
 
-Reported-by: Sergey Ivanov <sergey57@gmail.com>
-Signed-off-by: Amir Goldstein <amir73il@users.sf.net>
----
- common.attr |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Can anyone please comment if this bug was ever fixed?
 
-diff --git a/common.attr b/common.attr
-index 343edfc..37d0927 100644
---- a/common.attr
-+++ b/common.attr
-@@ -163,7 +163,7 @@ _require_attrs()
-     # stored on disk.
-     #
-     touch $TEST_DIR/syscalltest
--    attr -s "user.xfstests" -V "attr" /mnt/test/ >
-$TEST_DIR/syscalltest.out 2>&1
-+    attr -s "user.xfstests" -V "attr" $TEST_DIR >
-$TEST_DIR/syscalltest.out 2>&1
-     cat $TEST_DIR/syscalltest.out >> $here/$seq.full
+I have searched and see no further talk about this.
 
-     if grep -q 'Function not implemented' $TEST_DIR/syscalltest.out; then
--- 
-1.7.4.1
+echo 720000 > /proc/sys/fs/xfs/xfssyncd_centisecs allows a drive to sleep more
+often, but still is impacted by this. 
+
+Thanks!
+
 
 _______________________________________________
 xfs mailing list
