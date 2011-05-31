@@ -1,28 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4V4LMsV024992 for <xfs@oss.sgi.com>; Mon, 30 May 2011 23:21:22 -0500
-Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 755801610ACE
-	for <xfs@oss.sgi.com>; Mon, 30 May 2011 21:21:20 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	eWQ49OxJ9OYaCZDb for <xfs@oss.sgi.com>;
-	Mon, 30 May 2011 21:21:20 -0700 (PDT)
-Received: from chute ([192.168.1.1] helo=disappointment)
-	by dastard with esmtp (Exim 4.72)
-	(envelope-from <dave@fromorbit.com>) id 1QRGSE-0002AM-Ql
-	for xfs@oss.sgi.com; Tue, 31 May 2011 14:21:18 +1000
-Received: from dave by disappointment with local (Exim 4.76)
-	(envelope-from <dave@disappointment.disaster>) id 1QRGS8-00065D-T5
-	for xfs@oss.sgi.com; Tue, 31 May 2011 14:21:12 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/2] xfs: prevent bogus assert when trying to remove
-	non-existent attribute
-Date: Tue, 31 May 2011 14:20:59 +1000
-Message-Id: <1306815659-23346-3-git-send-email-david@fromorbit.com>
-In-Reply-To: <1306815659-23346-1-git-send-email-david@fromorbit.com>
-References: <1306815659-23346-1-git-send-email-david@fromorbit.com>
+	p4V5UC9e029381 for <xfs@oss.sgi.com>; Tue, 31 May 2011 00:30:13 -0500
+Received: from nm7-vm0.bullet.mail.sg1.yahoo.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with SMTP id 4A64748F556
+	for <xfs@oss.sgi.com>; Mon, 30 May 2011 22:30:10 -0700 (PDT)
+Received: from nm7-vm0.bullet.mail.sg1.yahoo.com
+	(nm7-vm0.bullet.mail.sg1.yahoo.com [115.178.12.201]) by
+	cuda.sgi.com with SMTP id Hu71yEWAOOeXD1Tb for
+	<xfs@oss.sgi.com>; Mon, 30 May 2011 22:30:10 -0700 (PDT)
+Message-ID: <164529.98085.qm@web77701.mail.sg1.yahoo.com>
+Date: Tue, 31 May 2011 13:30:08 +0800 (SGT)
+From: Gim Leong Chin <chingimleong@yahoo.com.sg>
+Subject: Question about Number of Allocation Groups
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,63 +22,32 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Hi,
 
-If the attribute fork on an inode is in btree format and has
-multiple levels (i.e node format rather than leaf format), then a
-lookup failure will trigger an assert failure in xfs_da_path_shift
-if the flag XFS_DA_OP_OKNOENT is not set. This flag is used to
-indicate to the directory btree code that not finding an entry is
-not a fatal error. In the case of doing a lookup for a directory
-name removal, this is valid as a user cannot insert an arbitrary
-name to remove from the directory btree.
+I have a question about the number of allocation groups in XFS.
 
-However, in the case of the attribute tree, a user has direct
-control over the attribute name and can ask for any random name to
-be removed without any validation. In this case, fsstress is asking
-for a non-existent user.selinux attribute to be removed, and that is
-causing xfs_da_path_shift() to fall off the bottom of the tree where
-it asserts that a lookup failure is allowed. Because the flag is not
-set, we die a horrible death on a debug enable kernel.
+In SUSE Linux Enterprise 10 SP2 kernel 2.6.16, the default number of allocation groups from what I have seen is 16 for a 144 GB filesystem, 32 for a 1.1 TB filesystem.
 
-Prevent this assert from firing on attribute removes by adding the
-op_flag XFS_DA_OP_OKNOENT to atribute removal operations.
+In SUSE Linux Enterprise 11 kernel 2.6.27, the default number of allocation groups is 4 even for a 800 GB filesystem (from what I have observed on openSUSE 11.4 kernel 2.6.37, that number is still 4).  I have observed that for XFS on mdraid the default is 16 for a 101 GB filesytem, 32 for a 4.5 TB filesystem.
 
-Discovered when testing on a SELinux enabled system by fsstress in
-test 070 by trying to remove a non-existent user.selinux attribute.
+1) May I know what is the  method for computing the default number of allocation groups, and why the big change from kernel 2.6.16 to 2.6.27 (16, 32 to 4)?
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_attr.c |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
+2) What are the guide lines for deciding how many allocation groups we should specify?  Is the number related to filesystem size, the IO bandwidth, the number of processor cores, the number of parallelism threads we want to occupy the system, system usage/workload characteristics?
 
-diff --git a/fs/xfs/xfs_attr.c b/fs/xfs/xfs_attr.c
-index c863753..01d2072 100644
---- a/fs/xfs/xfs_attr.c
-+++ b/fs/xfs/xfs_attr.c
-@@ -490,6 +490,13 @@ xfs_attr_remove_int(xfs_inode_t *dp, struct xfs_name *name, int flags)
- 	args.whichfork = XFS_ATTR_FORK;
- 
- 	/*
-+	 * we have no control over the attribute names that userspace passes us
-+	 * to remove, so we have to allow the name lookup prior to attribute
-+	 * removal to fail.
-+	 */
-+	args.op_flags = XFS_DA_OP_OKNOENT;
-+
-+	/*
- 	 * Attach the dquots to the inode.
- 	 */
- 	error = xfs_qm_dqattach(dp, 0);
--- 
-1.7.5.1
+3) I am sure there is some point for any system where an increasing number of allocation groups will first increase performance, and then the performance will start to drop?
+
+4) What would be an optimum number for the root filesystem for the operating system?  As I have 100 GB for the "/", my OS partitions not on mdraid have the default 4 allocation groups for kernel 2.6.27 and 2.6.37.
+
+Thank you!  This are questions that have been puzzling me for a while I would really appreciate the answers.
+
+
+Chin Gim Leong
 
 _______________________________________________
 xfs mailing list
