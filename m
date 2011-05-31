@@ -1,14 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4VMJOxd079144 for <xfs@oss.sgi.com>; Tue, 31 May 2011 17:19:24 -0500
-Subject: Re: [PATCH 1/2] xfs: clear inode per-lifetime state when recycling it
+	p4VMJUSs079162 for <xfs@oss.sgi.com>; Tue, 31 May 2011 17:19:31 -0500
+Subject: Re: [PATCH 2/2] xfs: prevent bogus assert when trying to remove
+	non-existent attribute
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1306815659-23346-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1306815659-23346-3-git-send-email-david@fromorbit.com>
 References: <1306815659-23346-1-git-send-email-david@fromorbit.com>
-	<1306815659-23346-2-git-send-email-david@fromorbit.com>
-Date: Tue, 31 May 2011 17:19:19 -0500
-Message-ID: <1306880359.2865.73.camel@doink>
+	<1306815659-23346-3-git-send-email-david@fromorbit.com>
+Date: Tue, 31 May 2011 17:19:26 -0500
+Message-ID: <1306880366.2865.74.camel@doink>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -29,73 +30,36 @@ Cc: xfs@oss.sgi.com
 On Tue, 2011-05-31 at 14:20 +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> XFs inodes have several per-lifetime state flags that determine heaviour of the
-> inode. These state flags are not reset when an inode is reallocated and reused
-> from the reclaimable state.
+> If the attribute fork on an inode is in btree format and has
+> multiple levels (i.e node format rather than leaf format), then a
+> lookup failure will trigger an assert failure in xfs_da_path_shift
+> if the flag XFS_DA_OP_OKNOENT is not set. This flag is used to
+> indicate to the directory btree code that not finding an entry is
+> not a fatal error. In the case of doing a lookup for a directory
+> name removal, this is valid as a user cannot insert an arbitrary
+> name to remove from the directory btree.
 > 
-> This can lead to specualtive preallocation not being truncated away in the
-> expected manner for local files until the inode is subsequently truncated,
-> freed or cycles out of the cache. It can also lead to an inode being considered
-> to be a filestream inode or having been truncated when that is not the case.
+> However, in the case of the attribute tree, a user has direct
+> control over the attribute name and can ask for any random name to
+> be removed without any validation. In this case, fsstress is asking
+> for a non-existent user.selinux attribute to be removed, and that is
+> causing xfs_da_path_shift() to fall off the bottom of the tree where
+> it asserts that a lookup failure is allowed. Because the flag is not
+> set, we die a horrible death on a debug enable kernel.
 > 
-> Clear the state flags when the inode is recycled to avoid these problems.
+> Prevent this assert from firing on attribute removes by adding the
+> op_flag XFS_DA_OP_OKNOENT to atribute removal operations.
+> 
+> Discovered when testing on a SELinux enabled system by fsstress in
+> test 070 by trying to remove a non-existent user.selinux attribute.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-Other than simple typo's, this looks good to me.
+I have not carefully verified this change, but your
+description of the problem was very good so based
+on this the change looks right to me.
 
-Comment below.
-
-Reviewed-by: Alex Elder <aelder@sgi.com>
-
-> ---
->  fs/xfs/xfs_iget.c |   12 +++++++++++-
->  1 files changed, 11 insertions(+), 1 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_iget.c b/fs/xfs/xfs_iget.c
-> index cb9b6d1..36467f1 100644
-> --- a/fs/xfs/xfs_iget.c
-> +++ b/fs/xfs/xfs_iget.c
-> @@ -262,7 +262,17 @@ xfs_iget_cache_hit(
->  
->  		spin_lock(&pag->pag_ici_lock);
->  		spin_lock(&ip->i_flags_lock);
-> -		ip->i_flags &= ~(XFS_IRECLAIMABLE | XFS_IRECLAIM);
-> +
-> +		/*
-> +		 * Clear the relcaim and per-lifetime state flags as we are now
-
-                              reclaim
-
-> +		 * effectively a new inode and so we need to reset to the
-> +		 * initial state.
-> +		 *
-> +		 * XXX(dgc): should the XFS_ISTALE flag only be cleared here?
-> +		 */
-> +		ip->i_flags &= ~(XFS_IRECLAIMABLE | XFS_IRECLAIM |
-> +				 XFS_IDIRTY_RELEASE | XFS_ITRUNCATED |
-> +				 XFS_IFILESTREAM);
->  		ip->i_flags |= XFS_INEW;
-
-If you clear XFS_ISTALE here you could simply re-phrase the
-above comment to emphasize the "reset to initial state" and
-change it to a simple assignment:
-
- 		ip->i_flags = XFS_INEW;
-
-(Though that makes clearing the rest of the flags
-implicit, which I think is undesirable from the point
-of view of code searching.  XFS_IDIRTY_RELEASE is
-already cleared only implicitly.)
-
-Otherwise I was going to suggest you define a symbol
-representing the subset of XFS inode flags that are
-per-lifetime state flags, so if another one gets
-invented along the way it could get added to the set.
-
-
->  		__xfs_inode_clear_reclaim_tag(mp, pag, ip);
->  		inode->i_state = I_NEW;
+Signed-off-by: Alex Elder <aelder@sgi.com>
 
 
 
