@@ -1,25 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4VHYTTL056963 for <xfs@oss.sgi.com>; Tue, 31 May 2011 12:34:30 -0500
-Received: from ZenIV.linux.org.uk (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 54C0214E1D08
-	for <xfs@oss.sgi.com>; Tue, 31 May 2011 10:34:27 -0700 (PDT)
-Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [195.92.253.2]) by
-	cuda.sgi.com with ESMTP id cueifgHRRIByDMsC for
-	<xfs@oss.sgi.com>; Tue, 31 May 2011 10:34:27 -0700 (PDT)
-Date: Tue, 31 May 2011 18:33:48 +0100
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: Re: [git pull] dentry_unhash() breakage
-Message-ID: <20110531173348.GL11521@ZenIV.linux.org.uk>
-References: <20110530020604.GC561@dastard> <20110530034741.GD561@dastard>
-	<Pine.LNX.4.64.1105292057570.9134@cobra.newdream.net>
-	<20110530055601.GK11521@ZenIV.linux.org.uk>
-	<20110530085922.GA11336@infradead.org>
-	<Pine.LNX.4.64.1105310924040.25709@cobra.newdream.net>
+Subject: Re: [TRIVIAL PATCH next 13/15] fs: Convert vmalloc/memset to vzalloc
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <4561db676a209fff984a75ade2f552ddbfabb95b.1306603968.git.joe@perches.com>
+References: <cover.1306603968.git.joe@perches.com>
+	<4561db676a209fff984a75ade2f552ddbfabb95b.1306603968.git.joe@perches.com>
+Date: Tue, 31 May 2011 13:20:39 -0500
+Message-ID: <1306866039.2865.26.camel@doink>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.1105310924040.25709@cobra.newdream.net>
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,22 +20,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Sage Weil <sage@newdream.net>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Joe Perches <joe@perches.com>
+Cc: codalist@TELEMANN.coda.cs.cmu.edu, Jan Harkes <jaharkes@cs.cmu.edu>, Jiri Kosina <trivial@kernel.org>, coda@cs.cmu.edu, linux-kernel@vger.kernel.org, reiserfs-devel@vger.kernel.org, xfs-masters@oss.sgi.com, xfs@oss.sgi.com
 
-On Tue, May 31, 2011 at 09:26:52AM -0700, Sage Weil wrote:
-> On Mon, 30 May 2011, Christoph Hellwig wrote:
-> > On Mon, May 30, 2011 at 06:56:01AM +0100, Al Viro wrote:
-> > > A couple of dentry_unhash fallout fixes
-> > 
-> > Shouldn't we do the shrink_dcache_parent only after a successfull
-> > rmdir or rename?
+On Sat, 2011-05-28 at 10:36 -0700, Joe Perches wrote:
+> Signed-off-by: Joe Perches <joe@perches.com>
+> ---
+>  fs/coda/coda_linux.h    |    5 ++---
+>  fs/reiserfs/journal.c   |    9 +++------
+>  fs/reiserfs/resize.c    |    4 +---
+>  fs/xfs/linux-2.6/kmem.h |    7 +------
+>  4 files changed, 7 insertions(+), 18 deletions(-)
 > 
-> Yeah, that makes more sense to me...
 
-No, it doesn't.  Let's keep changes to minimum.  I *really* don't want
-to audit autofs and hell knows how many other places for more or less
-subtle breakage caused by that.  It's bad enough as it is...
+Acked-by: Alex Elder <aelder@sgi.com>
+
+. . .
+
+> diff --git a/fs/xfs/linux-2.6/kmem.h b/fs/xfs/linux-2.6/kmem.h
+> index f7c8f7a..292eff1 100644
+> --- a/fs/xfs/linux-2.6/kmem.h
+> +++ b/fs/xfs/linux-2.6/kmem.h
+> @@ -61,12 +61,7 @@ extern void  kmem_free(const void *);
+>  
+>  static inline void *kmem_zalloc_large(size_t size)
+>  {
+> -	void *ptr;
+> -
+> -	ptr = vmalloc(size);
+> -	if (ptr)
+> -		memset(ptr, 0, size);
+> -	return ptr;
+> +	return vzalloc(size);
+>  }
+>  static inline void kmem_free_large(void *ptr)
+>  {
+
+
 
 _______________________________________________
 xfs mailing list
