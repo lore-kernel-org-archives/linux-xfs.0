@@ -1,15 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p4VMJUSs079162 for <xfs@oss.sgi.com>; Tue, 31 May 2011 17:19:31 -0500
-Subject: Re: [PATCH 2/2] xfs: prevent bogus assert when trying to remove
-	non-existent attribute
+	p4VMSeBi079611 for <xfs@oss.sgi.com>; Tue, 31 May 2011 17:28:40 -0500
+Subject: Re: [PATCH] xfs: consolidate & clarify mount sanity checks
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1306815659-23346-3-git-send-email-david@fromorbit.com>
-References: <1306815659-23346-1-git-send-email-david@fromorbit.com>
-	<1306815659-23346-3-git-send-email-david@fromorbit.com>
-Date: Tue, 31 May 2011 17:19:26 -0500
-Message-ID: <1306880366.2865.74.camel@doink>
+In-Reply-To: <4DD6E291.9030905@redhat.com>
+References: <4DD6E291.9030905@redhat.com>
+Date: Tue, 31 May 2011 17:28:36 -0500
+Message-ID: <1306880916.2865.78.camel@doink>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -24,42 +22,124 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: Pavol Gono <Pavol.Gono@siemens.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Tue, 2011-05-31 at 14:20 +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Fri, 2011-05-20 at 16:52 -0500, Eric Sandeen wrote:
+> Pavol pointed out that there is one silent error case in the mount
+> path, and that others are rather uninformative.
 > 
-> If the attribute fork on an inode is in btree format and has
-> multiple levels (i.e node format rather than leaf format), then a
-> lookup failure will trigger an assert failure in xfs_da_path_shift
-> if the flag XFS_DA_OP_OKNOENT is not set. This flag is used to
-> indicate to the directory btree code that not finding an entry is
-> not a fatal error. In the case of doing a lookup for a directory
-> name removal, this is valid as a user cannot insert an arbitrary
-> name to remove from the directory btree.
+> I've taken Pavol's suggested patch and extended it a bit to also:
 > 
-> However, in the case of the attribute tree, a user has direct
-> control over the attribute name and can ask for any random name to
-> be removed without any validation. In this case, fsstress is asking
-> for a non-existent user.selinux attribute to be removed, and that is
-> causing xfs_da_path_shift() to fall off the bottom of the tree where
-> it asserts that a lookup failure is allowed. Because the flag is not
-> set, we die a horrible death on a debug enable kernel.
+> * fix a message which says "turned off" but actually errors out
+> * consolidate the vaguely differentiated "SB sanity check [12]"
+>   messages, and hexdump the superblock for analysis
 > 
-> Prevent this assert from firing on attribute removes by adding the
-> op_flag XFS_DA_OP_OKNOENT to atribute removal operations.
-> 
-> Discovered when testing on a SELinux enabled system by fsstress in
-> test 070 by trying to remove a non-existent user.selinux attribute.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Original-patch-by: Pavol Gono <Pavol.Gono@siemens.com>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-I have not carefully verified this change, but your
-description of the problem was very good so based
-on this the change looks right to me.
+Looks good to me.  Based on Linus' message about the 3.0 release,
+I'll hold this for 3.1 unless you really feel strongly it belongs
+in 3.0.
 
-Signed-off-by: Alex Elder <aelder@sgi.com>
+Reviewed-by: Alex Elder <aelder@sgi.com>
+
+> ---
+> 
+> diff --git a/fs/xfs/xfs_fs.h b/fs/xfs/xfs_fs.h
+> index 8f6fc1a..c13fed8 100644
+> --- a/fs/xfs/xfs_fs.h
+> +++ b/fs/xfs/xfs_fs.h
+> @@ -249,6 +249,11 @@ typedef struct xfs_fsop_resblks {
+>  #define XFS_MAX_LOG_BYTES \
+>  	((2 * 1024 * 1024 * 1024ULL) - XFS_MIN_LOG_BYTES)
+>  
+> +/* Used for sanity checks on superblock */
+> +#define XFS_MAX_DBLOCKS(s) ((xfs_drfsbno_t)(s)->sb_agcount * (s)->sb_agblocks)
+> +#define XFS_MIN_DBLOCKS(s) ((xfs_drfsbno_t)((s)->sb_agcount - 1) *	\
+> +			 (s)->sb_agblocks + XFS_MIN_AG_BLOCKS)
+> +
+>  /*
+>   * Structures for XFS_IOC_FSGROWFSDATA, XFS_IOC_FSGROWFSLOG & XFS_IOC_FSGROWFSRT
+>   */
+> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> index bb3f9a7..a27dda6 100644
+> --- a/fs/xfs/xfs_mount.c
+> +++ b/fs/xfs/xfs_mount.c
+> @@ -348,7 +348,7 @@ xfs_mount_validate_sb(
+>  	}
+>  
+>  	/*
+> -	 * More sanity checking. These were stolen directly from
+> +	 * More sanity checking.  Most of these were stolen directly from
+>  	 * xfs_repair.
+>  	 */
+>  	if (unlikely(
+> @@ -371,23 +371,13 @@ xfs_mount_validate_sb(
+>  	    (sbp->sb_blocklog - sbp->sb_inodelog != sbp->sb_inopblog)	||
+>  	    (sbp->sb_rextsize * sbp->sb_blocksize > XFS_MAX_RTEXTSIZE)	||
+>  	    (sbp->sb_rextsize * sbp->sb_blocksize < XFS_MIN_RTEXTSIZE)	||
+> -	    (sbp->sb_imax_pct > 100 /* zero sb_imax_pct is valid */))) {
+> +	    (sbp->sb_imax_pct > 100 /* zero sb_imax_pct is valid */)	||
+> +	    sbp->sb_dblocks == 0					||
+> +	    sbp->sb_dblocks > XFS_MAX_DBLOCKS(sbp)			||
+> +	    sbp->sb_dblocks < XFS_MIN_DBLOCKS(sbp))) {
+>  		if (loud)
+> -			xfs_warn(mp, "SB sanity check 1 failed");
+> -		return XFS_ERROR(EFSCORRUPTED);
+> -	}
+> -
+> -	/*
+> -	 * Sanity check AG count, size fields against data size field
+> -	 */
+> -	if (unlikely(
+> -	    sbp->sb_dblocks == 0 ||
+> -	    sbp->sb_dblocks >
+> -	     (xfs_drfsbno_t)sbp->sb_agcount * sbp->sb_agblocks ||
+> -	    sbp->sb_dblocks < (xfs_drfsbno_t)(sbp->sb_agcount - 1) *
+> -			      sbp->sb_agblocks + XFS_MIN_AG_BLOCKS)) {
+> -		if (loud)
+> -			xfs_warn(mp, "SB sanity check 2 failed");
+> +			XFS_CORRUPTION_ERROR("SB sanity check failed",
+> +				XFS_ERRLEVEL_LOW, mp, sbp);
+>  		return XFS_ERROR(EFSCORRUPTED);
+>  	}
+>  
+> @@ -864,7 +854,8 @@ xfs_update_alignment(xfs_mount_t *mp)
+>  		if ((BBTOB(mp->m_dalign) & mp->m_blockmask) ||
+>  		    (BBTOB(mp->m_swidth) & mp->m_blockmask)) {
+>  			if (mp->m_flags & XFS_MOUNT_RETERR) {
+> -				xfs_warn(mp, "alignment check 1 failed");
+> +				xfs_warn(mp, "alignment check failed: "
+> +					 "(sunit/swidth vs. blocksize)");
+>  				return XFS_ERROR(EINVAL);
+>  			}
+>  			mp->m_dalign = mp->m_swidth = 0;
+> @@ -875,6 +866,8 @@ xfs_update_alignment(xfs_mount_t *mp)
+>  			mp->m_dalign = XFS_BB_TO_FSBT(mp, mp->m_dalign);
+>  			if (mp->m_dalign && (sbp->sb_agblocks % mp->m_dalign)) {
+>  				if (mp->m_flags & XFS_MOUNT_RETERR) {
+> +					xfs_warn(mp, "alignment check failed: "
+> +					 	 "(sunit/swidth vs. ag size)");
+>  					return XFS_ERROR(EINVAL);
+>  				}
+>  				xfs_warn(mp,
+> @@ -889,8 +882,8 @@ xfs_update_alignment(xfs_mount_t *mp)
+>  				mp->m_swidth = XFS_BB_TO_FSBT(mp, mp->m_swidth);
+>  			} else {
+>  				if (mp->m_flags & XFS_MOUNT_RETERR) {
+> -					xfs_warn(mp,
+> -		"stripe alignment turned off: sunit(%d) less than bsize(%d)",
+> +					xfs_warn(mp, "alignment check failed: "
+> +						"sunit(%d) less than bsize(%d)",
+>  						mp->m_dalign,
+>  						mp->m_blockmask +1);
+>  					return XFS_ERROR(EINVAL);
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 
 
