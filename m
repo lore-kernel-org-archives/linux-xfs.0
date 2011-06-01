@@ -1,25 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p511wlM6085468 for <xfs@oss.sgi.com>; Tue, 31 May 2011 20:58:47 -0500
-Received: from mail-pv0-f181.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 480801E395FE
-	for <xfs@oss.sgi.com>; Tue, 31 May 2011 18:58:45 -0700 (PDT)
-Received: from mail-pv0-f181.google.com (mail-pv0-f181.google.com
-	[74.125.83.181]) by cuda.sgi.com with ESMTP id u2Emx6hUzlzdWc6Y
-	for <xfs@oss.sgi.com>; Tue, 31 May 2011 18:58:45 -0700 (PDT)
-Received: by pvg13 with SMTP id 13so2619589pvg.26
-	for <xfs@oss.sgi.com>; Tue, 31 May 2011 18:58:45 -0700 (PDT)
+	p513E2GC090437 for <xfs@oss.sgi.com>; Tue, 31 May 2011 22:14:02 -0500
+Received: from mail-wy0-f181.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 666E215D9C1C
+	for <xfs@oss.sgi.com>; Tue, 31 May 2011 20:14:00 -0700 (PDT)
+Received: from mail-wy0-f181.google.com (mail-wy0-f181.google.com
+	[74.125.82.181]) by cuda.sgi.com with ESMTP id NMUkB2W2ICsHz1qM
+	for <xfs@oss.sgi.com>; Tue, 31 May 2011 20:14:00 -0700 (PDT)
+Received: by wyi11 with SMTP id 11so4398232wyi.26
+	for <xfs@oss.sgi.com>; Tue, 31 May 2011 20:13:59 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <4DE50881.90401@linux.vnet.ibm.com>
-References: <4DDAC4EF.1050702@linux.vnet.ibm.com>
-	<BANLkTiks0NSDTSPN8n446JHWhKtM61_=Mw@mail.gmail.com>
-	<4DDB1A0C.5030502@linux.vnet.ibm.com>
-	<4DE50881.90401@linux.vnet.ibm.com>
-Date: Wed, 1 Jun 2011 09:58:45 +0800
-Message-ID: <BANLkTin3+GT+LmjTACDnZUKamhFhDMkvVA@mail.gmail.com>
-Subject: Re: xfsprogs: Fix for xfstest 252 hang on ext4
-From: Yongqiang Yang <xiaoqiangnk@gmail.com>
+Date: Wed, 1 Jun 2011 06:13:59 +0300
+Message-ID: <BANLkTimBnAgiXZnvS56eAzEdJ=kw1zVGsg@mail.gmail.com>
+Subject: [PATCH] xfstests: add support for ext4dev FSTYP
+From: Amir Goldstein <amir73il@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,91 +23,138 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Allison Henderson <achender@linux.vnet.ibm.com>
-Cc: Ted Ts'o <tytso@mit.edu>, Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+To: XFS <xfs@oss.sgi.com>
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>, Sergey Ivanov <sergey57@gmail.com>, Ext4 Developers List <linux-ext4@vger.kernel.org>
 
-T24gVHVlLCBNYXkgMzEsIDIwMTEgYXQgMTE6MjUgUE0sIEFsbGlzb24gSGVuZGVyc29uCjxhY2hl
-bmRlckBsaW51eC52bmV0LmlibS5jb20+IHdyb3RlOgo+IE9uIDUvMjMvMjAxMSA3OjM4IFBNLCBB
-bGxpc29uIEhlbmRlcnNvbiB3cm90ZToKPj4KPj4gT24gNS8yMy8yMDExIDY6MTYgUE0sIFlvbmdx
-aWFuZyBZYW5nIHdyb3RlOgo+Pj4KPj4+IE9uIFR1ZSwgTWF5IDI0LCAyMDExIGF0IDQ6MzQgQU0s
-IEFsbGlzb24gSGVuZGVyc29uCj4+PiA8YWNoZW5kZXJAbGludXgudm5ldC5pYm0uY29tPiB3cm90
-ZToKPj4+Pgo+Pj4+IEhpIGFsbCwKPj4+Pgo+Pj4+IFdoaWxlIHRyeWluZyB0byBhZGQgbW9yZSBw
-dW5jaCBob2xlIHRlc3RzIHRvIHhmc3Rlc3QsIEkgZm91bmQgdGhhdAo+Pj4+IHRlc3QgMjUyIGhh
-bmdzIG9uIGV4dDQgZHVlIHRvIGEgbG9vcCBpbiB4ZnNwcm9ncyB0aGF0IGRvZXMgbm90IGV4aXQu
-Cj4+Pj4gWEZTIGdldHMgb3V0IG9mIHRoaXMgbG9vcCBiZWNhdXNlIHRoZXJlIGlzIGxvZ2ljIGlu
-IHRoZSBsb29wIHRoYXQKPj4+PiBsb29rcyBmb3IgdGhlIGxhc3QgZXh0ZW50IGZsYWcgYW5kIGJy
-ZWFrcyBvdXQuIEJ1dCBpdCBsb29rcyBsaWtlIGV4dDQKPj4+PiBkb2VzIG5vdCByZXR1cm4gYSBs
-YXN0IGV4dGVudCB3aGVuIHRoZSBmaWxlIGhhcyBhIGhvbGUgYXQgdGhlIGVuZC4gSQo+Pj4+IGFt
-IG5vdCBzdXJlIGlmIHRoaXMgaXMgdGhlIGNvcnJlY3QgYmVoYXZpb3Igb3Igbm90LCBzbyBJIHdp
-bGwgY29weQo+Pj4+IHRoZSBleHQ0IGZvbGtzIG9uIHRoaXMgdG9vLiBCZWxvdyBpcyBhIGNvcHkg
-b2YgdGhlIGZpeCBmb3IgeGZzcHJvZ3M6Cj4+Pgo+Pj4gSGkgdGhlcmUsCj4+Pgo+Pj4gV2hhdCdz
-IGJsb2Nrc2l6ZSBvZiB0aGUgdGVzdGVkIGV4dDQ/IEZvciBub3csIGV4dDQgcmV0dXJucwo+Pj4g
-TEFTVF9FWFRFTlQgaWYgdGhlIGxvZ2ljYWwgb2Zmc2V0IGNvdmVyZWQgYnkgdGhlIGV4dGVudCBp
-cyBncmVhdGVyCj4+PiB0aGFuIGZpbGUgc2l6ZSwgc28gaWYgdGhlcmUgaXMgYSBob2xlIGF0IHRo
-ZSBlbmQsIG5vIGxhc3QgZXh0ZW50IGlzCj4+PiByZXR1cm5lZC4gVGh4IQo+Pj4KPj4+IFlvbmdx
-aWFuZy4KPj4KPj4gSGkgdGhlcmUsCj4+Cj4+IFRoZSBibG9jayBzaXplIEkndmUgYmVlbiB1c2lu
-ZyBpcyA0MDk2LiBBcyBsb25nIGFzIHRoYXQgYmVoYXZpb3IgaXMKPj4gZXhwZWN0ZWQsIEkgdGhp
-bmsgdGhlIHRlc3Qgd2lsbCBiZSBvayB3aXRoIGp1c3QgdGhlIHhmc3Byb2dzIGZpeCwKPj4gdGhv
-dWdoLiBUaHghCj4+Cj4+IEFsbGlzb24gSGVuZGVyc29uCj4+Cj4+Pgo+Pj4+Cj4+Pj4gZGlmZiAt
-LWdpdCBhL2lvL2ZpZW1hcC5jIGIvaW8vZmllbWFwLmMKPj4+PiBpbmRleCBmYTk5MGNjLi44MWZj
-OTJjIDEwMDY0NAo+Pj4+IC0tLSBhL2lvL2ZpZW1hcC5jCj4+Pj4gKysrIGIvaW8vZmllbWFwLmMK
-Pj4+PiBAQCAtMjQ2LDcgKzI0Niw3IEBAIGZpZW1hcF9mKAo+Pj4+IGZsZ193LCBfKCJGTEFHUyIp
-KTsKPj4+PiB9Cj4+Pj4KPj4+PiAtIHdoaWxlICghbGFzdCYmICgoY3VyX2V4dGVudCArIDEpICE9
-IG1heF9leHRlbnRzKSkgewo+Pj4+ICsgd2hpbGUgKCFsYXN0JiYgKGN1cl9leHRlbnQ8PSBtYXhf
-ZXh0ZW50cykpIHsKPj4+PiBpZiAobWF4X2V4dGVudHMpCj4+Pj4gbnVtX2V4dGVudHMgPSBtaW4o
-bnVtX2V4dGVudHMsCj4+Pj4gbWF4X2V4dGVudHMgLSAoY3VyX2V4dGVudCArIDEpKTsKPj4+Pgo+
-Pj4+Cj4+Pj4gSXQgbG9va3MgbGlrZSB0aGUgbG9vcCBlbnRlcnMgd2l0aCBsYXN0PTAsIGN1cl9l
-eHRlbnRzPTAsIGFuZAo+Pj4+IG1heF9leHRlbnRzID0gMCwgYW5kIG9uIHRoZSBmaXJzdCBpdGVy
-YXRpb24gY3VyX2V4dGVudHMgZ2V0IHNldCB0byAyLAo+Pj4+IHNvIHdlIGRvbnQgc2VlICgoY3Vy
-X2V4dGVudCArIDEpID09IG1heF9leHRlbnRzIGZvciBhIHZlcnkgbG9uZyB0aW1lLgo+Pj4+IEkg
-ZG91YnQgdGhlIGxvZ2ljIHdhcyBtZWFudCB0byB3b3JrIHRoYXQgd2F5LCBzbyB0aGlzIHBhdGNo
-IHNob3VsZAo+Pj4+IGZpeCBpdCwgYnV0IEkgd2FudGVkIHRvIG1ha2Ugc3VyZSB0aGF0IHRoZSBm
-aWVtYXAgZm9yIGV4dDQgaXMgd29ya2luZwo+Pj4+IGFzIGludGVuZGVkIHRvby4gRmVlZCBiYWNr
-IGFwcHJlY2lhdGVkISBUaHggYWxsIQo+Pj4+Cj4+Pj4gQWxsaXNvbiBIZW5kZXJzb24KPj4+PiAt
-LQo+Pj4+IFRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1
-YnNjcmliZSBsaW51eC1leHQ0IiBpbgo+Pj4+IHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpv
-cmRvbW9Admdlci5rZXJuZWwub3JnCj4+Pj4gTW9yZSBtYWpvcmRvbW8gaW5mbyBhdCBodHRwOi8v
-dmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwKPj4+Pgo+Pj4KPj4+Cj4+Pgo+Pgo+
-Cj4KPj4+IEhpIGFsbCwKPj4+Cj4+PiBJIGhhdmVuJ3QgaGVhcmQgbXVjaCBiYWNrIG9uIHRoaXMg
-cGF0Y2gsIHNvIEltIGp1c3QgcG9raW5nIHRoaXMKPj4+IHRocmVhZCB0byBtYWtlIHN1cmUgaXQg
-ZG9lc24ndCBnZXQgZm9yZ290dGVuLiBJIGhhdmUgc29tZSBwYXRjaGVzCj4+PiBvdXQgdGhlcmUg
-Zm9yIHB1bmNoIGhvbGUsIGFuZCBJJ20gY3VycmVudGx5IGxvb2tpbmcgYXQgZml4aW5nIHVwCj4+
-PiBzb21lIG9sZGVyIHB1bmNoIGhvbGUgdGVzdHMgaW4gdGhlIGRtYXBpIGNvZGUsIGJ1dCB0aGV5
-IHdvbnQgZG8gbXVjaAo+Pj4gZ29vZCBmb3IgZXh0NCB3aXRoIG91dCB0aGlzIGZpeC4gwqBJZiBJ
-IGNvdWxkIGdldCBhIHF1aWNrIHBlZWsgZnJvbQo+Pj4gc29tZSBvbmUgb24gdGhlIHhmcyBsaXN0
-IGZvciB0aGlzIHBhdGNoLCB0aGF0IHdvdWxkIGJlIG11Y2gKPj4+IGFwcHJlY2lhdGVkLiDCoFRo
-eCBhbGwhCj4+Cj4+IElmIGV4dDQgaXMgbm90IHNldHRpbmcgdGhlIGxhc3QgZXh0ZW50IGZsYWcg
-b24gdGhlIGxhc3QgZXh0ZW50IHRoZW4KPj4gdGhhdCdzIGFuIGV4dDQgYnVnIHRoYXQgdGhlIHRl
-c3QgaGFzIGRldGVjdGVkLCByaWdodD8gQW5kIHNvIHlvdQo+PiBzaG91bGQgYmUgZml4aW5nIGV4
-dDQgcmF0aGVyIHRoYW4gbW9kaWZ5aW5nIHRoZSB0ZXN0IHRvIGhpZGUgdGhlCj4+IGRpZmZlcmVu
-dCBiZWhhdmlvdXI/Cj4+Cj4+IENoZWVyCj4+Cj4+LS0gRGF2ZSBDaGlubmVyIGRhdmlkQGZyb21v
-cmJpdC5jb20KPgo+IEhpIEFsbCwKPgo+IFNvcnJ5LCBJIHNob3VsZCBoYXZlIHBva2VkIHRoZSB0
-aHJlYWQgd2l0aCBZb25ncWlhbmcncyByZXNwb25zZSwgc28gSSB3aWxsCj4gbW92ZSB0aGUgZGlh
-bG9nIGludG8gdGhpcyB0aHJlYWQuIMKgQXQgdGhlIG1vbWVudCwgaXQgc291bmRzIGxpa2UgdGhl
-IGZpZW1hcAo+IGZvciBleHQ0IGlzIHdvcmtpbmcgYXMgaW50ZW5kZWQuIMKgWW9uZ3FpYW5nLCBk
-byB5b3UgYWdyZWUgdGhhdCB0aGUgZmllbWFwCj4gZm9yIGV4dDQgc2hvdWxkIGJlIGNoYW5nZWQ/
-IMKgSSB0aGluayB5b3UgYXJlIG1vcmUgZmFtaWxpYXIgd2l0aCB0aGlzIHBhcnQgb2YKWWVzLCBJ
-IGFncmVlLiAgZXh0NCBzaG91bGQgcmV0dXJuIExBU1QgZXh0ZW50LiAgSSBhbSB0aGlua2luZyBp
-ZiB3ZQpjYW4gZmluZCBhIG5ldyBzb2x1dGlvbiBjb2xsZWN0aW5nIGV4dGVudHMuCgpNYXliZSB3
-ZSBjYW4gaW5zZXJ0IGRlbGF5ZWQgZXh0ZW50cyBpbnRvIGV4dGVudCB0cmVlLiBUaGlzIHdheSBm
-aWVtYXAKd2lsbCBiZSBzaW1wbGVyIGFuZCBtdWNoIG1vcmUgZWZmaWNpZW50LgoKSSB3b3VsZCBs
-aWtlIHRvIHRocm93IG91dCB0aGUgcHJvcG9zYWwgaW5zZXJ0aW5nIGRlbGF5ZWQtZXh0ZW50cyBp
-bnRvCmV4dGVudCB0cmVlLiAgV2hhdCB3aWxsIGl0IGJyaW5nPyAgQUZBSUsgaXQgd2lsbCBicmlu
-ZzoKMS4gV2UgbmVlZCB0byBkb3duIGlfZGF0YV9zZW0gaW4gZGVsYXllZCB3cml0ZS1wYXRoIHRv
-IGluc2VydApkZWxheWVkLWV4dGVudHMgaW50byB0aGUgdHJlZSB3aXRob3V0IGpvdXJuYWxpbmcg
-aXQuCgoyLiBXaGVuIHdlIGNvbWUgdG8gYmxvY2sgYWxsb2NhdGlvbiwgd2UgY2FuIGNvbnZlcnQg
-ZGVsYXllZC1leHRlbnRzIHRvCm5vcm1hbCBleHRlbnRzLgoKVGhlcmUgaXMgYSBwcm9ibGVtIHRo
-YXQgdGhlIHNvbHV0aW9uIGNhbiBiZSBvbmx5IHVzZWQgaW4gb3JkZXJlZCBtb2RlLgpTbyB3aGF0
-IGFyZSB5b3VyIG9waW5pb25z77yfCgpZb25ncWlhbmcuCgo+IHRoZSBjb2RlIHRoYW4gSSBhbSwg
-YW5kIEkganVzdCB3YW50IHRvIG1ha2Ugc3VyZSB3ZSBmaW5kIGEgc29sdXRpb24gdGhhdAo+IGV2
-ZXJ5b25lIGlzIGhhcHB5IHdpdGguIMKgVGh4IQo+Cj4gQWxsaXNvbiBIZW5kZXJzb24KPgo+Cj4K
-Pgo+Cj4+IF9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCj4+
-IHhmcyBtYWlsaW5nIGxpc3QKPj4geGZzQG9zcy5zZ2kuY29tCj4+IGh0dHA6Ly9vc3Muc2dpLmNv
-bS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo+Cj4KCgoKLS0gCkJlc3QgV2lzaGVzCllvbmdxaWFuZyBZ
-YW5nCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMg
-bWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9s
-aXN0aW5mby94ZnMK
+From: Amir Goldstein <amir73il@users.sf.net>
+
+blkid knows to identify the ext4dev FSTYP of a partition that was
+formatted with mkfs.ext4dev.
+quota tools and various util-linux utils are also aware of ext4dev,
+so ext4dev shares the same capabilities as ext4.
+
+While testing on Fedora 15, we encoutered a buggy fsck utility, which
+invokes fsck.ext4, even though it was called with -t ext4dev argument.
+In our setup fsck.ext4dev knows about new fs features that fsck.ext4
+doesn't know, so the generic_fs_check fails.
+Since we have no real use of the extra capabilities provided by fsck util,
+we decided to invoke fsck.$FSTYP directly to avoid this issue.
+
+Signed-off-by: Amir Goldstein <amir73il@users.sf.net>
+Tested-by: Sergey Ivanov <sergey57@gmail.com>
+---
+ext4dev is used to test experimental ext4 code in mutual existance
+with production ext4 code on the same system.
+
+Specifically, ext4 snapshots code is available for testing as a
+stand-alone ext4dev module for Fedora 15 and Ubuntu 11.4
+(see http://next3.sf.net).
+
+ common.defrag |    2 +-
+ common.quota  |    4 ++--
+ common.rc     |   12 ++++++------
+ 3 files changed, 9 insertions(+), 9 deletions(-)
+
+diff --git a/common.defrag b/common.defrag
+index 1bcf01d..4850803 100644
+--- a/common.defrag
++++ b/common.defrag
+@@ -26,7 +26,7 @@ _require_defrag()
+     xfs)
+         DEFRAG_PROG=/usr/sbin/xfs_fsr
+ 	;;
+-    ext4)
++    ext4|ext4dev)
+         DEFRAG_PROG=/usr/bin/e4defrag
+ 	;;
+     *)
+diff --git a/common.quota b/common.quota
+index 3c87ce1..9eac19d 100644
+--- a/common.quota
++++ b/common.quota
+@@ -29,7 +29,7 @@ _require_quota()
+     [ -n $QUOTA_PROG ] || _notrun "Quota user tools not installed"
+
+     case $FSTYP in
+-    ext2|ext3|ext4|reiserfs)
++    ext2|ext3|ext4|ext4dev|reiserfs)
+ 	if [ ! -d /proc/sys/fs/quota ]; then
+ 	    _notrun "Installed kernel does not support quotas"
+ 	fi
+@@ -237,7 +237,7 @@ _check_quota_usage()
+ 	# Sync to get delalloc to disk
+ 	sync
+ 	VFS_QUOTA=0
+-	if [ $FSTYP = "ext2" -o $FSTYP = "ext3" -o $FSTYP = "ext4" -o $FSTYP
+= "reiserfs" ]; then
++	if [ $FSTYP = "ext2" -o $FSTYP = "ext3" -o $FSTYP = "ext4" -o $FSTYP
+= "ext4dev" -o $FSTYP = "reiserfs" ]; then
+ 		VFS_QUOTA=1
+ 		quotaon -f -u -g $SCRATCH_MNT 2>/dev/null
+ 	fi
+diff --git a/common.rc b/common.rc
+index e634fbb..e71fe9c 100644
+--- a/common.rc
++++ b/common.rc
+@@ -65,7 +65,7 @@ _mount_opts()
+     nfs)
+ 	export MOUNT_OPTIONS=$NFS_MOUNT_OPTIONS
+ 	;;
+-    ext2|ext3|ext4)
++    ext2|ext3|ext4|ext4dev)
+ 	# acls & xattrs aren't turned on by default on ext$FOO
+ 	export MOUNT_OPTIONS="-o acl,user_xattr $EXT_MOUNT_OPTIONS"
+ 	;;
+@@ -110,7 +110,7 @@ _mkfs_opts()
+ _fsck_opts()
+ {
+     case $FSTYP in
+-    ext2|ext3|ext4)
++    ext2|ext3|ext4|ext4dev)
+ 	export FSCK_OPTIONS="-nf"
+ 	;;
+     reiserfs)
+@@ -326,10 +326,10 @@ _scratch_mkfs_sized()
+     xfs)
+ 	_scratch_mkfs_xfs -d size=$fssize -b size=$blocksize
+ 	;;
+-    ext2|ext3|ext4)
++    ext2|ext3|ext4|ext4dev)
+ 	/sbin/mkfs.$FSTYP $MKFS_OPTIONS -b $blocksize $SCRATCH_DEV $blocks
+ 	;;
+-     btrfs)
++    btrfs)
+ 	/sbin/mkfs.$FSTYP $MKFS_OPTIONS $SCRATCH_DEV -b $fssize
+ 	;;
+     *)
+@@ -354,7 +354,7 @@ _scratch_mkfs_geom()
+     xfs)
+ 	MKFS_OPTIONS+=" -b size=$blocksize, -d su=$sunit_bytes,sw=$swidth_mult"
+ 	;;
+-    ext4)
++    ext4|ext4dev)
+ 	MKFS_OPTIONS+=" -b $blocksize -E
+stride=$sunit_blocks,stripe_width=$swidth_blocks"
+ 	;;
+     *)
+@@ -1026,7 +1026,7 @@ _check_generic_filesystem()
+         mountpoint=`_umount_or_remount_ro $device`
+     fi
+
+-    fsck -t $FSTYP $FSCK_OPTIONS $device >$tmp.fsck 2>&1
++    fsck.$FSTYP $FSCK_OPTIONS $device >$tmp.fsck 2>&1
+     if [ $? -ne 0 ]
+     then
+         echo "_check_generic_filesystem: filesystem on $device is
+inconsistent (see $seq.full)"
+-- 
+1.7.4.1
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
