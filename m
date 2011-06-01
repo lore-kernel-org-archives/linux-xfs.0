@@ -1,19 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p51B5m0t116251 for <xfs@oss.sgi.com>; Wed, 1 Jun 2011 06:05:48 -0500
-Received: from server655-han.de-nserver.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D2B181ED09DB
-	for <xfs@oss.sgi.com>; Wed,  1 Jun 2011 04:05:47 -0700 (PDT)
-Received: from server655-han.de-nserver.de (server655-han.de-nserver.de
-	[85.158.177.45]) by cuda.sgi.com with ESMTP id g0oq7aTPM3FxcGKy
-	for <xfs@oss.sgi.com>; Wed, 01 Jun 2011 04:05:47 -0700 (PDT)
-Message-ID: <4DE61D09.8010507@profihost.ag>
-Date: Wed, 01 Jun 2011 13:05:45 +0200
-From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+	p51BMwqd116913
+	for <linux-xfs@oss.sgi.com>; Wed, 1 Jun 2011 06:22:58 -0500
+Received: from omr5.networksolutionsemail.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8EF73493B4F
+	for <linux-xfs@oss.sgi.com>; Wed,  1 Jun 2011 04:22:56 -0700 (PDT)
+Received: from omr5.networksolutionsemail.com (omr5.networksolutionsemail.com
+	[205.178.146.55]) by cuda.sgi.com with ESMTP id
+	VqWBqn8L9mK7pXmc for <linux-xfs@oss.sgi.com>;
+	Wed, 01 Jun 2011 04:22:56 -0700 (PDT)
+Received: from cm-omr6 (mail.networksolutionsemail.com [205.178.146.50])
+	by omr5.networksolutionsemail.com (8.13.6/8.13.6) with ESMTP id
+	p51BMucG005694
+	for <linux-xfs@oss.sgi.com>; Wed, 1 Jun 2011 07:22:56 -0400
+Date: Wed, 1 Jun 2011 11:22:43 +0000
+From: Wealth Builder <support@marketingbiz.com>
+Subject: Have You Blown A Chance at Wealth?
+Message-ID: <20fe40750a805b328caf55bcdcd6bce7@192.168.1.101>
 MIME-Version: 1.0
-Subject: XFS crashes with shrink_slab: xfs_reclaim_inode_shrink+0x0/0x10d
-	negative objects to delete nr
+Reply-To: Wealth Builder <support@marketingbiz.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,43 +28,101 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-Hi guys,
 
-we're seeing a really bad behaviour on one of our machines running 
-vanilla 2.6.32.40 kernel.
+Hi Fellow Marketers,
 
-It freezes from time to time or processes starts to hang. At the same 
-time the following message appears in the kernel log:
+What a stir Mark Hardy has made with his astounding, =
 
-shrink_slab: xfs_reclaim_inode_shrink+0x0/0x10d negative objects to 
-delete nr=-274207938304
+traffic-driving software.
 
-shrink_slab: xfs_reclaim_inode_shrink+0x0/0x10d negative objects to 
-delete nr=-549059303168
+He=92s proved he knows whereof he speaks.
 
-shrink_slab: xfs_reclaim_inode_shrink+0x0/0x10d negative objects to 
-delete nr=-549500554116
+He=92s walked the affiliate marketing walk and now he, =
 
-shrink_slab: xfs_reclaim_inode_shrink+0x0/0x10d negative objects to 
-delete nr=-549360922112
+and a few select others, reap the benefits of huge =
 
-shrink_slab: xfs_reclaim_inode_shrink+0x0/0x10d negative objects to 
-delete nr=-549407219078
+commissions, derived from an advanced algorithm that =
 
-shrink_slab: xfs_reclaim_inode_shrink+0x0/0x10d negative objects to 
-delete nr=-549480231300
+taps into a traffic torrent called the Black River. =
 
-Any ideas? An xfs_repair says everything is fine.
 
--- 
-Regards,
-   Stefan Priebe
+Have you been by yet?
+
+http://iwealth004.co.cc/affmcmx.php?e=3Dlinux-xfs@oss.sgi.com
+
+Because Mark doesn=92t need the small amount he=92s =
+
+charging for his amazing software.
+
+And he doesn=92t need to be checking on a website =
+
+for sales. =
+
+
+But he does want to help out affiliate marketers who =
+
+are bold enough to seek help and ready to change their =
+
+lives for the better. =
+
+
+I haven=92t been by Mark=92s site today, so it may be gone =
+
+already.
+
+If that=92s so, and you never made it by, all I can say is: =
+
+too bad.
+
+Opportunities like Mark=92s software are rare. =
+
+
+Check this out quickly:
+
+http://iwealth004.co.cc/affmcmx.php?e=3Dlinux-xfs@oss.sgi.com
+
+You could=92ve been a member of the affiliate marketing =
+
+elite, pulling in six and seven figures.
+
+Instead, you=92ll go on being cautious. =
+
+
+There may still be time.
+
+Six clicks is all it takes to set-up, align and activate =
+
+this revolutionary software.
+
+Six clicks to success. =
+
+
+You deserve it. =
+
+
+You can handle it. =
+
+
+Don=92t let yourself and your family down by failing to act. =
+
+
+http://iwealth004.co.cc/affmcmx.php?e=3Dlinux-xfs@oss.sgi.com
+
+
+Good Luck
+
+Wealth Builder Team
+
+
+Removal link:
+http://iwealth004.co.cc/un.php?e=3Dlinux-xfs@oss.sgi.com
+
 
 _______________________________________________
 xfs mailing list
