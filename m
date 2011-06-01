@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p51NSAZG154970 for <xfs@oss.sgi.com>; Wed, 1 Jun 2011 18:28:10 -0500
+	p51NpsKH155965 for <xfs@oss.sgi.com>; Wed, 1 Jun 2011 18:51:55 -0500
 Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 65C07495A2E
-	for <xfs@oss.sgi.com>; Wed,  1 Jun 2011 16:28:08 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0C9D3D6CA39
+	for <xfs@oss.sgi.com>; Wed,  1 Jun 2011 16:51:53 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	ZFl4AYWiyRuY7tDs for <xfs@oss.sgi.com>;
-	Wed, 01 Jun 2011 16:28:08 -0700 (PDT)
-Date: Thu, 2 Jun 2011 09:28:04 +1000
+	oEPioWcFES5uOxXH for <xfs@oss.sgi.com>;
+	Wed, 01 Jun 2011 16:51:53 -0700 (PDT)
+Date: Thu, 2 Jun 2011 09:51:50 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2] xfstests: add support for ext4dev FSTYP
-Message-ID: <20110601232804.GL32466@dastard>
-References: <1306933012-8666-1-git-send-email-amir73il@users.sourceforge.net>
+Subject: Re: XFS crashes with shrink_slab:
+	xfs_reclaim_inode_shrink+0x0/0x10d negative objects to delete nr
+Message-ID: <20110601235150.GL561@dastard>
+References: <4DE61A7F.40800@profihost.ag>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1306933012-8666-1-git-send-email-amir73il@users.sourceforge.net>
+In-Reply-To: <4DE61A7F.40800@profihost.ag>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,79 +30,72 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: amir73il@users.sourceforge.net
-Cc: sandeen@redhat.com, Amir Goldstein <amir73il@users.sf.net>, xfs@oss.sgi.com, sergey57@gmail.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
+To: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+Cc: xfs@oss.sgi.com
 
-On Wed, Jun 01, 2011 at 03:56:52PM +0300, amir73il@users.sourceforge.net wrote:
-> From: Amir Goldstein <amir73il@users.sf.net>
+On Wed, Jun 01, 2011 at 12:54:55PM +0200, Stefan Priebe - Profihost AG wrote:
+> Hi guys,
 > 
-> From: Amir Goldstein <amir73il@users.sf.net>
+> we're seeing a really bad behaviour on one of our machines running
+> vanilla 2.6.32.40 kernel.
 > 
-> blkid knows to identify the ext4dev FSTYP of a partition that was
-> formatted with mkfs.ext4dev.
-> quota tools and various util-linux utils are also aware of ext4dev,
-> so ext4dev shares the same capabilities as ext4.
-> 
-> Signed-off-by: Amir Goldstein <amir73il@users.sf.net>
-> Tested-by: Sergey Ivanov <sergey57@gmail.com>
-> ---
-> ext4dev is used to test experimental ext4 code in mutual existance
-> with production ext4 code on the same system.
-> 
-> Specifically, ext4 snapshots code is available for testing as a
-> stand-alone ext4dev module for Fedora 15 and Ubuntu 11.4
-> (see http://next3.sf.net).
-> 
-> v1 -> v2:
-> - undo change of fsck -t $FSTYP to fsck.$FSTYP
-> 
->  common.defrag |    2 +-
->  common.quota  |    4 ++--
->  common.rc     |   10 +++++-----
->  3 files changed, 8 insertions(+), 8 deletions(-)
-> 
-> diff --git a/common.defrag b/common.defrag
-> index 1bcf01d..4850803 100644
-> --- a/common.defrag
-> +++ b/common.defrag
-> @@ -26,7 +26,7 @@ _require_defrag()
->      xfs)
->          DEFRAG_PROG=/usr/sbin/xfs_fsr
->  	;;
-> -    ext4)
-> +    ext4|ext4dev)
->          DEFRAG_PROG=/usr/bin/e4defrag
->  	;;
->      *)
-> diff --git a/common.quota b/common.quota
-> index 3c87ce1..b6d5f16 100644
-> --- a/common.quota
-> +++ b/common.quota
-> @@ -29,7 +29,7 @@ _require_quota()
->      [ -n $QUOTA_PROG ] || _notrun "Quota user tools not installed"
->  
->      case $FSTYP in
-> -    ext2|ext3|ext4|reiserfs)
-> +    ext2|ext3|ext4|ext4dev|reiserfs)
->  	if [ ! -d /proc/sys/fs/quota ]; then
->  	    _notrun "Installed kernel does not support quotas"
->  	fi
-> @@ -237,7 +237,7 @@ _check_quota_usage()
->  	# Sync to get delalloc to disk
->  	sync
->  	VFS_QUOTA=0
-> -	if [ $FSTYP = "ext2" -o $FSTYP = "ext3" -o $FSTYP = "ext4" -o $FSTYP = "reiserfs" ]; then
-> +	if [ $FSTYP = "ext2" -o $FSTYP = "ext3" -o $FSTYP = "ext4" -o $FSTYP = "ext4dev" -o $FSTYP = "reiserfs" ]; then
->  		VFS_QUOTA=1
->  		quotaon -f -u -g $SCRATCH_MNT 2>/dev/null
->  	fi
+> It freezes from time to time or processes starts to hang. At the
+> same time the following message appears in the kernel log:
 
-Perhaps this should be changes to a case statement?
+Perhaps 2.6.32.40 needs this patch:
+
+commit 081003fff467ea0e727f66d5d435b4f473a789b3
+Author: Johannes Weiner <hannes@cmpxchg.org>
+Date:   Fri Oct 1 07:43:54 2010 +0000
+
+    xfs: properly account for reclaimed inodes
+
+    When marking an inode reclaimable, a per-AG counter is increased, the
+    inode is tagged reclaimable in its per-AG tree, and, when this is the
+    first reclaimable inode in the AG, the AG entry in the per-mount tree
+    is also tagged.
+
+    When an inode is finally reclaimed, however, it is only deleted from
+    the per-AG tree.  Neither the counter is decreased, nor is the parent
+    tree's AG entry untagged properly.
+
+    Since the tags in the per-mount tree are not cleared, the inode
+    shrinker iterates over all AGs that have had reclaimable inodes at one
+    point in time.
+
+    The counters on the other hand signal an increasing amount of slab
+    objects to reclaim.  Since "70e60ce xfs: convert inode shrinker to
+    per-filesystem context" this is not a real issue anymore because the
+    shrinker bails out after one iteration.
+
+    But the problem was observable on a machine running v2.6.34, where the
+    reclaimable work increased and each process going into direct reclaim
+    eventually got stuck on the xfs inode shrinking path, trying to scan
+    several million objects.
+
+    Fix this by properly unwinding the reclaimable-state tracking of an
+    inode when it is reclaimed.
+
+    Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+    Cc: stable@kernel.org
+    Reviewed-by: Dave Chinner <dchinner@redhat.com>
+    Signed-off-by: Alex Elder <aelder@sgi.com>
+
+> 
+> shrink_slab: xfs_reclaim_inode_shrink+0x0/0x10d negative objects to
+> delete nr=-274207938304
+
+That's an error messge that was introduced in 2.6.34, and the above
+patch was introduced in 2.6.36. Obvious a bug has been backported to
+2.6.32, but was the fix? It was clearly marked for stable kernels,
+but I have no I have no idea if the stable kernel folks pushed it
+back to .32. I really don't have the time to track what fixes were
+or were not backported to what kernels because there are too many
+"long term stable" kernels in existance now.
 
 Cheers,
 
 Dave.
-
 -- 
 Dave Chinner
 david@fromorbit.com
