@@ -1,21 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p51FS1W8126806 for <xfs@oss.sgi.com>; Wed, 1 Jun 2011 10:28:01 -0500
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2C1511ED18B3
-	for <xfs@oss.sgi.com>; Wed,  1 Jun 2011 08:28:00 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id mAlVGc6JuRQKwgU2 for
-	<xfs@oss.sgi.com>; Wed, 01 Jun 2011 08:28:00 -0700 (PDT)
-Message-ID: <4DE65A7C.7070908@redhat.com>
-Date: Wed, 01 Jun 2011 10:27:56 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+	p51KoxdQ146012 for <xfs@oss.sgi.com>; Wed, 1 Jun 2011 15:51:00 -0500
+Received: from e9.ny.us.ibm.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1786C1ED2D7B
+	for <xfs@oss.sgi.com>; Wed,  1 Jun 2011 13:50:58 -0700 (PDT)
+Received: from e9.ny.us.ibm.com (e9.ny.us.ibm.com [32.97.182.139]) by
+	cuda.sgi.com with ESMTP id xgbvrNczFa6FguFY for
+	<xfs@oss.sgi.com>; Wed, 01 Jun 2011 13:50:58 -0700 (PDT)
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e9.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p51KKobW007453
+	for <xfs@oss.sgi.com>; Wed, 1 Jun 2011 16:20:50 -0400
+Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	p51KotAW063100 for <xfs@oss.sgi.com>; Wed, 1 Jun 2011 16:50:55 -0400
+Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
+	by d01av01.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
+	p51KosQv009814 for <xfs@oss.sgi.com>; Wed, 1 Jun 2011 16:50:55 -0400
+Message-ID: <4DE6A621.7040206@linux.vnet.ibm.com>
+Date: Wed, 01 Jun 2011 13:50:41 -0700
+From: Allison Henderson <achender@linux.vnet.ibm.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: add support for ext4dev FSTYP
-References: <BANLkTimBnAgiXZnvS56eAzEdJ=kw1zVGsg@mail.gmail.com>	<4DE5C1FE.8080006@redhat.com>	<BANLkTikfjitncM=zLpfTrfQkd8VfQAxbUA@mail.gmail.com>	<4DE5CC8E.1090208@redhat.com>	<4DE5CF6C.4080707@redhat.com>	<BANLkTimoRUrY7xVnamBT=yFPzafhADA=tA@mail.gmail.com>	<BANLkTikQ=V8MJyuAQsZboCorZwnBSzX=Bg@mail.gmail.com>
-	<BANLkTikOtoWJBz+PQ0+=e6466zAntA_f_g@mail.gmail.com>
-In-Reply-To: <BANLkTikOtoWJBz+PQ0+=e6466zAntA_f_g@mail.gmail.com>
+Subject: Re: xfsprogs: Fix for xfstest 252 hang on ext4
+References: <4DDAC4EF.1050702@linux.vnet.ibm.com>
+	<BANLkTiks0NSDTSPN8n446JHWhKtM61_=Mw@mail.gmail.com>
+	<4DDB1A0C.5030502@linux.vnet.ibm.com>	<4DE50881.90401@linux.vnet.ibm.com>
+	<BANLkTin3+GT+LmjTACDnZUKamhFhDMkvVA@mail.gmail.com>
+In-Reply-To: <BANLkTin3+GT+LmjTACDnZUKamhFhDMkvVA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,172 +35,115 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, sergey ivanov <sergey57@gmail.com>, Ext4 Developers List <linux-ext4@vger.kernel.org>, XFS <xfs@oss.sgi.com>
+To: Yongqiang Yang <xiaoqiangnk@gmail.com>
+Cc: Ted Ts'o <tytso@mit.edu>, Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
 
-On 6/1/11 7:37 AM, Amir Goldstein wrote:
-> On Wed, Jun 1, 2011 at 2:48 PM, sergey ivanov <sergey57@gmail.com> wrote:
->> On Wed, Jun 1, 2011 at 2:37 AM, Amir Goldstein <amir73il@gmail.com> wrote:
->>>
->>> On Wed, Jun 1, 2011 at 8:34 AM, Eric Sandeen <sandeen@redhat.com> wrote:
->>>> On 6/1/11 12:22 AM, Eric Sandeen wrote:
->>>>> On 5/31/11 11:56 PM, Amir Goldstein wrote:
->>>>>> On Wed, Jun 1, 2011 at 7:37 AM, Eric Sandeen <sandeen@redhat.com>
->>>>>> wrote:
->>>>>>> On 5/31/11 10:13 PM, Amir Goldstein wrote:
->>>>>>>> From: Amir Goldstein <amir73il@users.sf.net>
->>>>>>>>
->>>>>>>> blkid knows to identify the ext4dev FSTYP of a partition that was
->>>>>>>> formatted with mkfs.ext4dev.
->>>>>>>> quota tools and various util-linux utils are also aware of ext4dev,
->>>>>>>> so ext4dev shares the same capabilities as ext4.
->>>>>>>>
->>>>>>>> While testing on Fedora 15, we encoutered a buggy fsck utility,
->>>>>>>> which
->>>>>>>> invokes fsck.ext4, even though it was called with -t ext4dev
->>>>>>>> argument.
->>>>>>>> In our setup fsck.ext4dev knows about new fs features that fsck.ext4
->>>>>>>> doesn't know, so the generic_fs_check fails.
->>>>>>>> Since we have no real use of the extra capabilities provided by fsck
->>>>>>>> util,
->>>>>>>> we decided to invoke fsck.$FSTYP directly to avoid this issue.
->>>>>>>
->>>>>>> Adding ext4dev to every case seems harmless enough.  TBH I thought I
->>>>>>> had
->>>>>>> it there already but I guess not.
->>>>>>>
->>>>>>> I'm less certain of the change from fsck -t $FSTYP to fsck.$FSTYP
->>>>>>>
->>>>>>> What issue are you avoiding?  wouldn't fsck -t ext4dev invoke
->>>>>>> fsck.ext4dev anyway?
->>>>>>>
->>>>>>> It seems like it should be harmless, but I don't understand how it
->>>>>>> helps you.
->>>>>>>
->>>>>>
->>>>>> As I wrote in the patch description, the fsck utility in Fedora 15
->>>>>> invokes
->>>>>> fsck.ext4 for some reason when calling fsck -t ext4dev.
->>>>>
->>>>> Oh, right.
->>>>>
->>>>>> this fails because fsck.ext4 doesn't know the snapshot feature.
->>>>>> I didn't debug fsck utility for that. it seemed pointless.
->>>>>
->>>>> Did you file a bug with Fedora?  I'd rather fix the root cause than
->>>>> work around it...
->>>>> Feel free to cc: me on the bug.
->>>
->>> No, I didn't file a bug.
->>> In any case, it was Sergey, who tested and reported the problem on F15.
->>>
->>> Would you agree to fix the problem in xfstests now, so that F15 users can
->>> test ext4dev and fix the bug in fsck regardless?
->>>
->>>>
->>>> RHEL6 does the same; mkfs.ext4dev then fsck -t ext4dev invokes
->>>> fsck.ext4; but this
->>>> is because blkid identifies it as ext4, not ext4dev, despite the test_fs
->>>> flag being set.
->>>>
->>>> ISTR this is due to some tortured logic about when ext4dev isn't
->>>> ext4dev, but
->>>> I don't remember the details... I don't know if this is the same
->>>> situation
->>>> you're seeing; just to double check - does blkid correctly identify it
->>>> as ext4dev
->>>> on F15?
->>>
->>>
->>> For me (on Ubuntu) blkid identifies ext4dev, but maybe the tortured logic
->>> finds unknown features a justification for declaring ext4dev?
->>> Segrey, can you answer the question for F15?
->>> Did you set FSTYP to ext4dev manually or did blkid identified it for you?
->>
->> Amir, Fedora's fsck behaves differently on ext4dev and next4. When I made
->> next4 partition on Fedora-15 by
->> {{{
->> mkfs  -t next4 /dev/sdd9
->> }}}
->> it requires "export FSTYP=next4" to be defined and exported in local.conf.
->> It mounts partition with
->> {{{
->> mount -t next4 /dev/sdd9 /mnt/sdd9
->> }}}
->> But on attempt to fsck it calls wrong fsck, as you reported:
->> {{{
->> [seriv@pimbra xfstests]$ sudo fsck -t next4 /dev/sdd9
->> fsck from util-linux 2.19.1
->> e2fsck 1.41.14 (22-Dec-2010)
->> /dev/sdd9 has unsupported feature(s): FEATURE_C7 FEATURE_C8 FEATURE_R7
->> e2fsck: Get a newer version of e2fsck!
->> }}}
->> And the problem can be easily traced to this wrong call:
->> {{{
->> [seriv@pimbra xfstests]$ sudo strace -o /var/log/fsck.strace fsck -t next4
->> /dev/sdd9
->> fsck from util-linux 2.19.1
->> e2fsck 1.41.14 (22-Dec-2010)
->> /dev/sdd9 has unsupported feature(s): FEATURE_C7 FEATURE_C8 FEATURE_R7
->> e2fsck: Get a newer version of e2fsck!
->> [seriv@pimbra xfstests]$ grep sbin /var/log/fsck.strace
->> execve("/sbin/fsck", ["fsck", "-t", "next4", "/dev/sdd9"], [/* 17 vars */])
->> = 0
->> stat("/sbin/fsck.ext4", {st_mode=S_IFREG|0755, st_size=194280, ...}) = 0
->> }}}
->> But it's not the case for ext4dev, with it I even don't need "-t ext4dev",
->> it is recognized by blkid:
->> {{{
->> [seriv@pimbra xfstests]$ sudo mkfs -t ext4dev /dev/sdd9
->> mke2fs 1.41.14-next3-1.0.13-7 (24-May-2011)
->> [skip]
->> This filesystem will be automatically checked every 27 mounts or
->> 180 days, whichever comes first.  Use tune2fs -c or -i to override.
->> [seriv@pimbra xfstests]$ sudo mount /dev/sdd9 /mnt/sdd9
->> [seriv@pimbra xfstests]$ mount | grep sdd9
->> /dev/sdd9 on /mnt/sdd9 type ext4dev (rw)
->> [seriv@pimbra xfstests]$ sudo umount /dev/sdd9
->> [seriv@pimbra xfstests]$ sudo fsck /dev/sdd9
->> fsck from util-linux 2.19.1
->> e2fsck 1.41.14-next3-1.0.13-7 (24-May-2011)
->> The test_fs flag is set (and ext4 is available).  Clear<y>?
->> }}}
->> and at this point in another session
->> {{{
->> [seriv@pimbra xfstests]$ pgrep -f -l fsck
->> 4365 sudo fsck /dev/sdd9
->> 4366 fsck /dev/sdd9
->> 4367 fsck.ext4dev /dev/sdd9
->> }}}
->> So I'd like this patch to be applied to xfstests to be able to use it on the
->> different filesystems, - if not, then why have this FSTYP and not rely upon
->> blkid
->> --
-> 
-> To make a long story a bit shorter, there was no intention to set
-> FSTYP manually,
-> that was only a temporary hack to make next4 clone work, but since ext4dev is
-> identified by blkid and respected by fsck/mkfs/mount, we are going to
-> work with it
-> and not with next4.
-> 
-> So I understood the problem incorrectly and the patch to xfstests doesn't need
-> to change fsck -t $FSTYP to fsck.$FSTYP.
-> I will resend the patch without this change.
-
-Thanks, that makes sense to me.
-
-Just wanted to make sure we weren't masking some other problem by working around it in xfstests ...
-
--Eric
-
-> Amir.
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gNS8zMS8yMDExIDY6NTggUE0sIFlvbmdxaWFuZyBZYW5nIHdyb3RlOgo+IE9uIFR1ZSwgTWF5
+IDMxLCAyMDExIGF0IDExOjI1IFBNLCBBbGxpc29uIEhlbmRlcnNvbgo+IDxhY2hlbmRlckBsaW51
+eC52bmV0LmlibS5jb20+ICB3cm90ZToKPj4gT24gNS8yMy8yMDExIDc6MzggUE0sIEFsbGlzb24g
+SGVuZGVyc29uIHdyb3RlOgo+Pj4KPj4+IE9uIDUvMjMvMjAxMSA2OjE2IFBNLCBZb25ncWlhbmcg
+WWFuZyB3cm90ZToKPj4+Pgo+Pj4+IE9uIFR1ZSwgTWF5IDI0LCAyMDExIGF0IDQ6MzQgQU0sIEFs
+bGlzb24gSGVuZGVyc29uCj4+Pj4gPGFjaGVuZGVyQGxpbnV4LnZuZXQuaWJtLmNvbT4gIHdyb3Rl
+Ogo+Pj4+Pgo+Pj4+PiBIaSBhbGwsCj4+Pj4+Cj4+Pj4+IFdoaWxlIHRyeWluZyB0byBhZGQgbW9y
+ZSBwdW5jaCBob2xlIHRlc3RzIHRvIHhmc3Rlc3QsIEkgZm91bmQgdGhhdAo+Pj4+PiB0ZXN0IDI1
+MiBoYW5ncyBvbiBleHQ0IGR1ZSB0byBhIGxvb3AgaW4geGZzcHJvZ3MgdGhhdCBkb2VzIG5vdCBl
+eGl0Lgo+Pj4+PiBYRlMgZ2V0cyBvdXQgb2YgdGhpcyBsb29wIGJlY2F1c2UgdGhlcmUgaXMgbG9n
+aWMgaW4gdGhlIGxvb3AgdGhhdAo+Pj4+PiBsb29rcyBmb3IgdGhlIGxhc3QgZXh0ZW50IGZsYWcg
+YW5kIGJyZWFrcyBvdXQuIEJ1dCBpdCBsb29rcyBsaWtlIGV4dDQKPj4+Pj4gZG9lcyBub3QgcmV0
+dXJuIGEgbGFzdCBleHRlbnQgd2hlbiB0aGUgZmlsZSBoYXMgYSBob2xlIGF0IHRoZSBlbmQuIEkK
+Pj4+Pj4gYW0gbm90IHN1cmUgaWYgdGhpcyBpcyB0aGUgY29ycmVjdCBiZWhhdmlvciBvciBub3Qs
+IHNvIEkgd2lsbCBjb3B5Cj4+Pj4+IHRoZSBleHQ0IGZvbGtzIG9uIHRoaXMgdG9vLiBCZWxvdyBp
+cyBhIGNvcHkgb2YgdGhlIGZpeCBmb3IgeGZzcHJvZ3M6Cj4+Pj4KPj4+PiBIaSB0aGVyZSwKPj4+
+Pgo+Pj4+IFdoYXQncyBibG9ja3NpemUgb2YgdGhlIHRlc3RlZCBleHQ0PyBGb3Igbm93LCBleHQ0
+IHJldHVybnMKPj4+PiBMQVNUX0VYVEVOVCBpZiB0aGUgbG9naWNhbCBvZmZzZXQgY292ZXJlZCBi
+eSB0aGUgZXh0ZW50IGlzIGdyZWF0ZXIKPj4+PiB0aGFuIGZpbGUgc2l6ZSwgc28gaWYgdGhlcmUg
+aXMgYSBob2xlIGF0IHRoZSBlbmQsIG5vIGxhc3QgZXh0ZW50IGlzCj4+Pj4gcmV0dXJuZWQuIFRo
+eCEKPj4+Pgo+Pj4+IFlvbmdxaWFuZy4KPj4+Cj4+PiBIaSB0aGVyZSwKPj4+Cj4+PiBUaGUgYmxv
+Y2sgc2l6ZSBJJ3ZlIGJlZW4gdXNpbmcgaXMgNDA5Ni4gQXMgbG9uZyBhcyB0aGF0IGJlaGF2aW9y
+IGlzCj4+PiBleHBlY3RlZCwgSSB0aGluayB0aGUgdGVzdCB3aWxsIGJlIG9rIHdpdGgganVzdCB0
+aGUgeGZzcHJvZ3MgZml4LAo+Pj4gdGhvdWdoLiBUaHghCj4+Pgo+Pj4gQWxsaXNvbiBIZW5kZXJz
+b24KPj4+Cj4+Pj4KPj4+Pj4KPj4+Pj4gZGlmZiAtLWdpdCBhL2lvL2ZpZW1hcC5jIGIvaW8vZmll
+bWFwLmMKPj4+Pj4gaW5kZXggZmE5OTBjYy4uODFmYzkyYyAxMDA2NDQKPj4+Pj4gLS0tIGEvaW8v
+ZmllbWFwLmMKPj4+Pj4gKysrIGIvaW8vZmllbWFwLmMKPj4+Pj4gQEAgLTI0Niw3ICsyNDYsNyBA
+QCBmaWVtYXBfZigKPj4+Pj4gZmxnX3csIF8oIkZMQUdTIikpOwo+Pj4+PiB9Cj4+Pj4+Cj4+Pj4+
+IC0gd2hpbGUgKCFsYXN0JiYgICgoY3VyX2V4dGVudCArIDEpICE9IG1heF9leHRlbnRzKSkgewo+
+Pj4+PiArIHdoaWxlICghbGFzdCYmICAoY3VyX2V4dGVudDw9IG1heF9leHRlbnRzKSkgewo+Pj4+
+PiBpZiAobWF4X2V4dGVudHMpCj4+Pj4+IG51bV9leHRlbnRzID0gbWluKG51bV9leHRlbnRzLAo+
+Pj4+PiBtYXhfZXh0ZW50cyAtIChjdXJfZXh0ZW50ICsgMSkpOwo+Pj4+Pgo+Pj4+Pgo+Pj4+PiBJ
+dCBsb29rcyBsaWtlIHRoZSBsb29wIGVudGVycyB3aXRoIGxhc3Q9MCwgY3VyX2V4dGVudHM9MCwg
+YW5kCj4+Pj4+IG1heF9leHRlbnRzID0gMCwgYW5kIG9uIHRoZSBmaXJzdCBpdGVyYXRpb24gY3Vy
+X2V4dGVudHMgZ2V0IHNldCB0byAyLAo+Pj4+PiBzbyB3ZSBkb250IHNlZSAoKGN1cl9leHRlbnQg
+KyAxKSA9PSBtYXhfZXh0ZW50cyBmb3IgYSB2ZXJ5IGxvbmcgdGltZS4KPj4+Pj4gSSBkb3VidCB0
+aGUgbG9naWMgd2FzIG1lYW50IHRvIHdvcmsgdGhhdCB3YXksIHNvIHRoaXMgcGF0Y2ggc2hvdWxk
+Cj4+Pj4+IGZpeCBpdCwgYnV0IEkgd2FudGVkIHRvIG1ha2Ugc3VyZSB0aGF0IHRoZSBmaWVtYXAg
+Zm9yIGV4dDQgaXMgd29ya2luZwo+Pj4+PiBhcyBpbnRlbmRlZCB0b28uIEZlZWQgYmFjayBhcHBy
+ZWNpYXRlZCEgVGh4IGFsbCEKPj4+Pj4KPj4+Pj4gQWxsaXNvbiBIZW5kZXJzb24KPj4+Pj4gLS0K
+Pj4+Pj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vi
+c2NyaWJlIGxpbnV4LWV4dDQiIGluCj4+Pj4+IHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpv
+cmRvbW9Admdlci5rZXJuZWwub3JnCj4+Pj4+IE1vcmUgbWFqb3Jkb21vIGluZm8gYXQgaHR0cDov
+L3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1sCj4+Pj4+Cj4+Pj4KPj4+Pgo+Pj4+
+Cj4+Pgo+Pgo+Pgo+Pj4+IEhpIGFsbCwKPj4+Pgo+Pj4+IEkgaGF2ZW4ndCBoZWFyZCBtdWNoIGJh
+Y2sgb24gdGhpcyBwYXRjaCwgc28gSW0ganVzdCBwb2tpbmcgdGhpcwo+Pj4+IHRocmVhZCB0byBt
+YWtlIHN1cmUgaXQgZG9lc24ndCBnZXQgZm9yZ290dGVuLiBJIGhhdmUgc29tZSBwYXRjaGVzCj4+
+Pj4gb3V0IHRoZXJlIGZvciBwdW5jaCBob2xlLCBhbmQgSSdtIGN1cnJlbnRseSBsb29raW5nIGF0
+IGZpeGluZyB1cAo+Pj4+IHNvbWUgb2xkZXIgcHVuY2ggaG9sZSB0ZXN0cyBpbiB0aGUgZG1hcGkg
+Y29kZSwgYnV0IHRoZXkgd29udCBkbyBtdWNoCj4+Pj4gZ29vZCBmb3IgZXh0NCB3aXRoIG91dCB0
+aGlzIGZpeC4gIElmIEkgY291bGQgZ2V0IGEgcXVpY2sgcGVlayBmcm9tCj4+Pj4gc29tZSBvbmUg
+b24gdGhlIHhmcyBsaXN0IGZvciB0aGlzIHBhdGNoLCB0aGF0IHdvdWxkIGJlIG11Y2gKPj4+PiBh
+cHByZWNpYXRlZC4gIFRoeCBhbGwhCj4+Pgo+Pj4gSWYgZXh0NCBpcyBub3Qgc2V0dGluZyB0aGUg
+bGFzdCBleHRlbnQgZmxhZyBvbiB0aGUgbGFzdCBleHRlbnQgdGhlbgo+Pj4gdGhhdCdzIGFuIGV4
+dDQgYnVnIHRoYXQgdGhlIHRlc3QgaGFzIGRldGVjdGVkLCByaWdodD8gQW5kIHNvIHlvdQo+Pj4g
+c2hvdWxkIGJlIGZpeGluZyBleHQ0IHJhdGhlciB0aGFuIG1vZGlmeWluZyB0aGUgdGVzdCB0byBo
+aWRlIHRoZQo+Pj4gZGlmZmVyZW50IGJlaGF2aW91cj8KPj4+Cj4+PiBDaGVlcgo+Pj4KPj4+IC0t
+IERhdmUgQ2hpbm5lciBkYXZpZEBmcm9tb3JiaXQuY29tCj4+Cj4+IEhpIEFsbCwKPj4KPj4gU29y
+cnksIEkgc2hvdWxkIGhhdmUgcG9rZWQgdGhlIHRocmVhZCB3aXRoIFlvbmdxaWFuZydzIHJlc3Bv
+bnNlLCBzbyBJIHdpbGwKPj4gbW92ZSB0aGUgZGlhbG9nIGludG8gdGhpcyB0aHJlYWQuICBBdCB0
+aGUgbW9tZW50LCBpdCBzb3VuZHMgbGlrZSB0aGUgZmllbWFwCj4+IGZvciBleHQ0IGlzIHdvcmtp
+bmcgYXMgaW50ZW5kZWQuICBZb25ncWlhbmcsIGRvIHlvdSBhZ3JlZSB0aGF0IHRoZSBmaWVtYXAK
+Pj4gZm9yIGV4dDQgc2hvdWxkIGJlIGNoYW5nZWQ/ICBJIHRoaW5rIHlvdSBhcmUgbW9yZSBmYW1p
+bGlhciB3aXRoIHRoaXMgcGFydCBvZgo+IFllcywgSSBhZ3JlZS4gIGV4dDQgc2hvdWxkIHJldHVy
+biBMQVNUIGV4dGVudC4gIEkgYW0gdGhpbmtpbmcgaWYgd2UKPiBjYW4gZmluZCBhIG5ldyBzb2x1
+dGlvbiBjb2xsZWN0aW5nIGV4dGVudHMuCj4KPiBNYXliZSB3ZSBjYW4gaW5zZXJ0IGRlbGF5ZWQg
+ZXh0ZW50cyBpbnRvIGV4dGVudCB0cmVlLiBUaGlzIHdheSBmaWVtYXAKPiB3aWxsIGJlIHNpbXBs
+ZXIgYW5kIG11Y2ggbW9yZSBlZmZpY2llbnQuCj4KPiBJIHdvdWxkIGxpa2UgdG8gdGhyb3cgb3V0
+IHRoZSBwcm9wb3NhbCBpbnNlcnRpbmcgZGVsYXllZC1leHRlbnRzIGludG8KPiBleHRlbnQgdHJl
+ZS4gIFdoYXQgd2lsbCBpdCBicmluZz8gIEFGQUlLIGl0IHdpbGwgYnJpbmc6Cj4gMS4gV2UgbmVl
+ZCB0byBkb3duIGlfZGF0YV9zZW0gaW4gZGVsYXllZCB3cml0ZS1wYXRoIHRvIGluc2VydAo+IGRl
+bGF5ZWQtZXh0ZW50cyBpbnRvIHRoZSB0cmVlIHdpdGhvdXQgam91cm5hbGluZyBpdC4KPgo+IDIu
+IFdoZW4gd2UgY29tZSB0byBibG9jayBhbGxvY2F0aW9uLCB3ZSBjYW4gY29udmVydCBkZWxheWVk
+LWV4dGVudHMgdG8KPiBub3JtYWwgZXh0ZW50cy4KPgo+IFRoZXJlIGlzIGEgcHJvYmxlbSB0aGF0
+IHRoZSBzb2x1dGlvbiBjYW4gYmUgb25seSB1c2VkIGluIG9yZGVyZWQgbW9kZS4KPiBTbyB3aGF0
+IGFyZSB5b3VyIG9waW5pb25z77yfCj4KPiBZb25ncWlhbmcuCgoKSGkgQWxsLAoKV2VsbCwgSSBh
+bSBub3QgeWV0IGZhbWlsaWFyIHdpdGggaG93IHRoZSBjb2RlIGZvciBvcmRlcmVkIG1vZGUgd29y
+a3MsIHNvIApJIG1heSBub3QgYmUgbXVjaCBoZWxwIGhlcmUsIGJ1dCBJIGRvIHRoaW5rIHRoYXQg
+aWYgd2UgY291bGQgZ2V0IGl0IHRvIAp3b3JrLCBpdCB3b3VsZCBoZWxwIHNpbXBsaWZ5IGEgbG90
+IG9mIHRoaW5ncyBpbmNsdWRpbmcgZmllbWFwIGFuZCBwdW5jaCAKaG9sZS4gIEkga25vdyB0aGF0
+IHRoZSBlYXJsaWVyIHZlcnNpb25zIG9mIHB1bmNoIGhvbGUgd2VyZSBhIGxpdHRsZSAKY29tcGxp
+Y2F0ZWQgYmVjYXVzZSBvZiB0aGUgZGlmZmVyZW50IG1lY2hhbmlzbXMgbmVlZGVkIHRvIGlkZW50
+aWZ5IAptYXBwZWQgZXh0ZW50cywgZGVsYXllZCBleHRlbnRzIGFuZCBob2xlcy4gIEV2ZW50dWFs
+bHkgd2hhdCB3ZSBkaWQgd2FzIAp0byBmbHVzaCBvdXQgdGhlIGRhdGEgaW4gdGhlIHJlZ2lvbiB0
+byBiZSBwdW5jaGVkIG91dCBpbiBvcmRlciB0byBhdm9pZCAKcmFjZSBjb25kaXRpb25zLCBhbmQg
+YWxzbyB0byBzaW1wbGlmeSB0aGUgbG9naWMuICBUaGlzIGhhcyBpbnRyb2R1Y2VkIApzb21lIHBy
+b2JsZW1zIGluIHNvbWUgb2YgdGhlIGV4aXN0aW5nIHhmc3Rlc3RzIHB1bmNoIGhvbGUgdGVzdHMs
+IGJlY2F1c2UgCnRoZSB0ZXN0cyB3YW50IHRvIHNlZSBhIGhvbGUgaW4gdW53cml0dGVuIGV4dGVu
+dHMgaW5zdGVhZCBvZiB3cml0dGVuIApleHRlbnRzLiAgSSB3YXMgd29ya2luZyBvbiBzb21lIG9w
+dGltaXphdGlvbiBwYXRjaGVzIHRvIGF2b2lkIHRoaXMsIGJ1dCAKaWYgdGhpcyBwcm9wb3NhbCBp
+cyBwdXQgaW4gcGxhY2UsIEkgdGhpbmsgSSBjb3VsZCBvcHRpbWl6ZSB0aGF0IGZpeCBhIApsb3Qu
+ICBBbmQgSSBrbm93IHRoZSBmaWVtYXAgcm91dGluZXMgd291bGQgZ2V0IHNpbXBsZXIgc2Vuc2Ug
+dGhleSB3b3VsZCAKb25seSBoYXZlIHRvIGRlYWwgd2l0aCB0aGUgZXh0ZW50IHRyZWUuIElmIHdl
+IGRlY2lkZSB0byBkbyB3aGF0IHlvdSAKcHJvcG9zZSwgSSB3aWxsIHdhaXQgb24gZG9pbmcgYW55
+IHB1bmNoIGhvbGUgb3IgZmllbWFwIHBhdGNoZXMgdG8gdGFrZSAKYWR2YW50YWdlIG9mIHRoYXQu
+ICBJJ2xsIHBva2UgYXJvdW5kIHdpdGggdGhlIG1vZGVzIHRvbyB0byBzZWUgaWYgCnRoZXJlJ3Mg
+YW55IHRoaW5nIHdlIGNhbiBkbyB0byBnZXQgYXJvdW5kIHRoYXQgcHJvYmxlbS4gIFRoeCEKCkFs
+bGlzb24gSGVuZGVyc29uCgo+Cj4+IHRoZSBjb2RlIHRoYW4gSSBhbSwgYW5kIEkganVzdCB3YW50
+IHRvIG1ha2Ugc3VyZSB3ZSBmaW5kIGEgc29sdXRpb24gdGhhdAo+PiBldmVyeW9uZSBpcyBoYXBw
+eSB3aXRoLiAgVGh4IQo+Pgo+PiBBbGxpc29uIEhlbmRlcnNvbgo+Pgo+Pgo+Pgo+Pgo+Pgo+Pj4g
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KPj4+IHhmcyBt
+YWlsaW5nIGxpc3QKPj4+IHhmc0Bvc3Muc2dpLmNvbQo+Pj4gaHR0cDovL29zcy5zZ2kuY29tL21h
+aWxtYW4vbGlzdGluZm8veGZzCj4+Cj4+Cj4KPgo+CgpfX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpo
+dHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
