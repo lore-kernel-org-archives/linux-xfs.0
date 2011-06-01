@@ -1,21 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p516fXie098586 for <xfs@oss.sgi.com>; Wed, 1 Jun 2011 01:41:33 -0500
-Received: from mail-vx0-f181.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C5C1249311A
-	for <xfs@oss.sgi.com>; Tue, 31 May 2011 23:41:32 -0700 (PDT)
-Received: from mail-vx0-f181.google.com (mail-vx0-f181.google.com
-	[209.85.220.181]) by cuda.sgi.com with ESMTP id
-	heoIZLVqLEulUpvX for <xfs@oss.sgi.com>;
-	Tue, 31 May 2011 23:41:32 -0700 (PDT)
-Received: by vxb39 with SMTP id 39so4495056vxb.26
-	for <xfs@oss.sgi.com>; Tue, 31 May 2011 23:41:32 -0700 (PDT)
+	p51Asw3U115917 for <xfs@oss.sgi.com>; Wed, 1 Jun 2011 05:54:58 -0500
+Received: from server655-han.de-nserver.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6D4E0165CB9E
+	for <xfs@oss.sgi.com>; Wed,  1 Jun 2011 03:54:56 -0700 (PDT)
+Received: from server655-han.de-nserver.de (server655-han.de-nserver.de
+	[85.158.177.45]) by cuda.sgi.com with ESMTP id w0Dd89BVCqKZ2lNr
+	for <xfs@oss.sgi.com>; Wed, 01 Jun 2011 03:54:56 -0700 (PDT)
+Message-ID: <4DE61A7F.40800@profihost.ag>
+Date: Wed, 01 Jun 2011 12:54:55 +0200
+From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
 MIME-Version: 1.0
-Date: Wed, 1 Jun 2011 12:11:31 +0530
-Message-ID: <BANLkTi=eMCp6U8+um1vXKaj+0rstsYjHiw@mail.gmail.com>
-Subject: What is xfs_prepair64 ?
-From: Ajeet Yadav <ajeet.yadav.77@gmail.com>
+Subject: XFS crashes with shrink_slab: xfs_reclaim_inode_shrink+0x0/0x10d
+	negative objects to delete nr
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,17 +22,43 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-xfstests FS QA Test No. 148 needs "xfs_prepair64" to run ?
-I did not find this in xfsprogs-3.1.5, please guide from where to find this ?
+Hi guys,
 
-With Regards,
-Ajeet Yadav
+we're seeing a really bad behaviour on one of our machines running 
+vanilla 2.6.32.40 kernel.
+
+It freezes from time to time or processes starts to hang. At the same 
+time the following message appears in the kernel log:
+
+shrink_slab: xfs_reclaim_inode_shrink+0x0/0x10d negative objects to 
+delete nr=-274207938304
+
+shrink_slab: xfs_reclaim_inode_shrink+0x0/0x10d negative objects to 
+delete nr=-549059303168
+
+shrink_slab: xfs_reclaim_inode_shrink+0x0/0x10d negative objects to 
+delete nr=-549500554116
+
+shrink_slab: xfs_reclaim_inode_shrink+0x0/0x10d negative objects to 
+delete nr=-549360922112
+
+shrink_slab: xfs_reclaim_inode_shrink+0x0/0x10d negative objects to 
+delete nr=-549407219078
+
+shrink_slab: xfs_reclaim_inode_shrink+0x0/0x10d negative objects to 
+delete nr=-549480231300
+
+Any ideas? An xfs_repair says everything is fine.
+
+-- 
+Regards,
+   Stefan Priebe
 
 _______________________________________________
 xfs mailing list
