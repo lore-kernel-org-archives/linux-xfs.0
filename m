@@ -1,14 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p511hpWQ085204 for <xfs@oss.sgi.com>; Tue, 31 May 2011 20:43:51 -0500
-Message-ID: <4DE59952.4000107@redhat.com>
-Date: Tue, 31 May 2011 20:43:46 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+	p511wlM6085468 for <xfs@oss.sgi.com>; Tue, 31 May 2011 20:58:47 -0500
+Received: from mail-pv0-f181.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 480801E395FE
+	for <xfs@oss.sgi.com>; Tue, 31 May 2011 18:58:45 -0700 (PDT)
+Received: from mail-pv0-f181.google.com (mail-pv0-f181.google.com
+	[74.125.83.181]) by cuda.sgi.com with ESMTP id u2Emx6hUzlzdWc6Y
+	for <xfs@oss.sgi.com>; Tue, 31 May 2011 18:58:45 -0700 (PDT)
+Received: by pvg13 with SMTP id 13so2619589pvg.26
+	for <xfs@oss.sgi.com>; Tue, 31 May 2011 18:58:45 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: consolidate & clarify mount sanity checks
-References: <4DD6E291.9030905@redhat.com> <1306880916.2865.78.camel@doink>
-In-Reply-To: <1306880916.2865.78.camel@doink>
+In-Reply-To: <4DE50881.90401@linux.vnet.ibm.com>
+References: <4DDAC4EF.1050702@linux.vnet.ibm.com>
+	<BANLkTiks0NSDTSPN8n446JHWhKtM61_=Mw@mail.gmail.com>
+	<4DDB1A0C.5030502@linux.vnet.ibm.com>
+	<4DE50881.90401@linux.vnet.ibm.com>
+Date: Wed, 1 Jun 2011 09:58:45 +0800
+Message-ID: <BANLkTin3+GT+LmjTACDnZUKamhFhDMkvVA@mail.gmail.com>
+Subject: Re: xfsprogs: Fix for xfstest 252 hang on ext4
+From: Yongqiang Yang <xiaoqiangnk@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -17,140 +28,91 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: aelder@sgi.com
-Cc: Pavol Gono <Pavol.Gono@siemens.com>, xfs-oss <xfs@oss.sgi.com>
+To: Allison Henderson <achender@linux.vnet.ibm.com>
+Cc: Ted Ts'o <tytso@mit.edu>, Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
 
-On 5/31/11 5:28 PM, Alex Elder wrote:
-> On Fri, 2011-05-20 at 16:52 -0500, Eric Sandeen wrote:
->> Pavol pointed out that there is one silent error case in the mount
->> path, and that others are rather uninformative.
->>
->> I've taken Pavol's suggested patch and extended it a bit to also:
->>
->> * fix a message which says "turned off" but actually errors out
->> * consolidate the vaguely differentiated "SB sanity check [12]"
->>   messages, and hexdump the superblock for analysis
->>
->> Original-patch-by: Pavol Gono <Pavol.Gono@siemens.com>
->> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> 
-> Looks good to me.  Based on Linus' message about the 3.0 release,
-> I'll hold this for 3.1 unless you really feel strongly it belongs
-> in 3.0.
-
-Fine by me, it's been this way ~forever.
-
-> Reviewed-by: Alex Elder <aelder@sgi.com>
-
-Thanks!
-
--Eric
-
->> ---
->>
->> diff --git a/fs/xfs/xfs_fs.h b/fs/xfs/xfs_fs.h
->> index 8f6fc1a..c13fed8 100644
->> --- a/fs/xfs/xfs_fs.h
->> +++ b/fs/xfs/xfs_fs.h
->> @@ -249,6 +249,11 @@ typedef struct xfs_fsop_resblks {
->>  #define XFS_MAX_LOG_BYTES \
->>  	((2 * 1024 * 1024 * 1024ULL) - XFS_MIN_LOG_BYTES)
->>  
->> +/* Used for sanity checks on superblock */
->> +#define XFS_MAX_DBLOCKS(s) ((xfs_drfsbno_t)(s)->sb_agcount * (s)->sb_agblocks)
->> +#define XFS_MIN_DBLOCKS(s) ((xfs_drfsbno_t)((s)->sb_agcount - 1) *	\
->> +			 (s)->sb_agblocks + XFS_MIN_AG_BLOCKS)
->> +
->>  /*
->>   * Structures for XFS_IOC_FSGROWFSDATA, XFS_IOC_FSGROWFSLOG & XFS_IOC_FSGROWFSRT
->>   */
->> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
->> index bb3f9a7..a27dda6 100644
->> --- a/fs/xfs/xfs_mount.c
->> +++ b/fs/xfs/xfs_mount.c
->> @@ -348,7 +348,7 @@ xfs_mount_validate_sb(
->>  	}
->>  
->>  	/*
->> -	 * More sanity checking. These were stolen directly from
->> +	 * More sanity checking.  Most of these were stolen directly from
->>  	 * xfs_repair.
->>  	 */
->>  	if (unlikely(
->> @@ -371,23 +371,13 @@ xfs_mount_validate_sb(
->>  	    (sbp->sb_blocklog - sbp->sb_inodelog != sbp->sb_inopblog)	||
->>  	    (sbp->sb_rextsize * sbp->sb_blocksize > XFS_MAX_RTEXTSIZE)	||
->>  	    (sbp->sb_rextsize * sbp->sb_blocksize < XFS_MIN_RTEXTSIZE)	||
->> -	    (sbp->sb_imax_pct > 100 /* zero sb_imax_pct is valid */))) {
->> +	    (sbp->sb_imax_pct > 100 /* zero sb_imax_pct is valid */)	||
->> +	    sbp->sb_dblocks == 0					||
->> +	    sbp->sb_dblocks > XFS_MAX_DBLOCKS(sbp)			||
->> +	    sbp->sb_dblocks < XFS_MIN_DBLOCKS(sbp))) {
->>  		if (loud)
->> -			xfs_warn(mp, "SB sanity check 1 failed");
->> -		return XFS_ERROR(EFSCORRUPTED);
->> -	}
->> -
->> -	/*
->> -	 * Sanity check AG count, size fields against data size field
->> -	 */
->> -	if (unlikely(
->> -	    sbp->sb_dblocks == 0 ||
->> -	    sbp->sb_dblocks >
->> -	     (xfs_drfsbno_t)sbp->sb_agcount * sbp->sb_agblocks ||
->> -	    sbp->sb_dblocks < (xfs_drfsbno_t)(sbp->sb_agcount - 1) *
->> -			      sbp->sb_agblocks + XFS_MIN_AG_BLOCKS)) {
->> -		if (loud)
->> -			xfs_warn(mp, "SB sanity check 2 failed");
->> +			XFS_CORRUPTION_ERROR("SB sanity check failed",
->> +				XFS_ERRLEVEL_LOW, mp, sbp);
->>  		return XFS_ERROR(EFSCORRUPTED);
->>  	}
->>  
->> @@ -864,7 +854,8 @@ xfs_update_alignment(xfs_mount_t *mp)
->>  		if ((BBTOB(mp->m_dalign) & mp->m_blockmask) ||
->>  		    (BBTOB(mp->m_swidth) & mp->m_blockmask)) {
->>  			if (mp->m_flags & XFS_MOUNT_RETERR) {
->> -				xfs_warn(mp, "alignment check 1 failed");
->> +				xfs_warn(mp, "alignment check failed: "
->> +					 "(sunit/swidth vs. blocksize)");
->>  				return XFS_ERROR(EINVAL);
->>  			}
->>  			mp->m_dalign = mp->m_swidth = 0;
->> @@ -875,6 +866,8 @@ xfs_update_alignment(xfs_mount_t *mp)
->>  			mp->m_dalign = XFS_BB_TO_FSBT(mp, mp->m_dalign);
->>  			if (mp->m_dalign && (sbp->sb_agblocks % mp->m_dalign)) {
->>  				if (mp->m_flags & XFS_MOUNT_RETERR) {
->> +					xfs_warn(mp, "alignment check failed: "
->> +					 	 "(sunit/swidth vs. ag size)");
->>  					return XFS_ERROR(EINVAL);
->>  				}
->>  				xfs_warn(mp,
->> @@ -889,8 +882,8 @@ xfs_update_alignment(xfs_mount_t *mp)
->>  				mp->m_swidth = XFS_BB_TO_FSBT(mp, mp->m_swidth);
->>  			} else {
->>  				if (mp->m_flags & XFS_MOUNT_RETERR) {
->> -					xfs_warn(mp,
->> -		"stripe alignment turned off: sunit(%d) less than bsize(%d)",
->> +					xfs_warn(mp, "alignment check failed: "
->> +						"sunit(%d) less than bsize(%d)",
->>  						mp->m_dalign,
->>  						mp->m_blockmask +1);
->>  					return XFS_ERROR(EINVAL);
->>
->> _______________________________________________
->> xfs mailing list
->> xfs@oss.sgi.com
->> http://oss.sgi.com/mailman/listinfo/xfs
-> 
-> 
-> 
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVHVlLCBNYXkgMzEsIDIwMTEgYXQgMTE6MjUgUE0sIEFsbGlzb24gSGVuZGVyc29uCjxhY2hl
+bmRlckBsaW51eC52bmV0LmlibS5jb20+IHdyb3RlOgo+IE9uIDUvMjMvMjAxMSA3OjM4IFBNLCBB
+bGxpc29uIEhlbmRlcnNvbiB3cm90ZToKPj4KPj4gT24gNS8yMy8yMDExIDY6MTYgUE0sIFlvbmdx
+aWFuZyBZYW5nIHdyb3RlOgo+Pj4KPj4+IE9uIFR1ZSwgTWF5IDI0LCAyMDExIGF0IDQ6MzQgQU0s
+IEFsbGlzb24gSGVuZGVyc29uCj4+PiA8YWNoZW5kZXJAbGludXgudm5ldC5pYm0uY29tPiB3cm90
+ZToKPj4+Pgo+Pj4+IEhpIGFsbCwKPj4+Pgo+Pj4+IFdoaWxlIHRyeWluZyB0byBhZGQgbW9yZSBw
+dW5jaCBob2xlIHRlc3RzIHRvIHhmc3Rlc3QsIEkgZm91bmQgdGhhdAo+Pj4+IHRlc3QgMjUyIGhh
+bmdzIG9uIGV4dDQgZHVlIHRvIGEgbG9vcCBpbiB4ZnNwcm9ncyB0aGF0IGRvZXMgbm90IGV4aXQu
+Cj4+Pj4gWEZTIGdldHMgb3V0IG9mIHRoaXMgbG9vcCBiZWNhdXNlIHRoZXJlIGlzIGxvZ2ljIGlu
+IHRoZSBsb29wIHRoYXQKPj4+PiBsb29rcyBmb3IgdGhlIGxhc3QgZXh0ZW50IGZsYWcgYW5kIGJy
+ZWFrcyBvdXQuIEJ1dCBpdCBsb29rcyBsaWtlIGV4dDQKPj4+PiBkb2VzIG5vdCByZXR1cm4gYSBs
+YXN0IGV4dGVudCB3aGVuIHRoZSBmaWxlIGhhcyBhIGhvbGUgYXQgdGhlIGVuZC4gSQo+Pj4+IGFt
+IG5vdCBzdXJlIGlmIHRoaXMgaXMgdGhlIGNvcnJlY3QgYmVoYXZpb3Igb3Igbm90LCBzbyBJIHdp
+bGwgY29weQo+Pj4+IHRoZSBleHQ0IGZvbGtzIG9uIHRoaXMgdG9vLiBCZWxvdyBpcyBhIGNvcHkg
+b2YgdGhlIGZpeCBmb3IgeGZzcHJvZ3M6Cj4+Pgo+Pj4gSGkgdGhlcmUsCj4+Pgo+Pj4gV2hhdCdz
+IGJsb2Nrc2l6ZSBvZiB0aGUgdGVzdGVkIGV4dDQ/IEZvciBub3csIGV4dDQgcmV0dXJucwo+Pj4g
+TEFTVF9FWFRFTlQgaWYgdGhlIGxvZ2ljYWwgb2Zmc2V0IGNvdmVyZWQgYnkgdGhlIGV4dGVudCBp
+cyBncmVhdGVyCj4+PiB0aGFuIGZpbGUgc2l6ZSwgc28gaWYgdGhlcmUgaXMgYSBob2xlIGF0IHRo
+ZSBlbmQsIG5vIGxhc3QgZXh0ZW50IGlzCj4+PiByZXR1cm5lZC4gVGh4IQo+Pj4KPj4+IFlvbmdx
+aWFuZy4KPj4KPj4gSGkgdGhlcmUsCj4+Cj4+IFRoZSBibG9jayBzaXplIEkndmUgYmVlbiB1c2lu
+ZyBpcyA0MDk2LiBBcyBsb25nIGFzIHRoYXQgYmVoYXZpb3IgaXMKPj4gZXhwZWN0ZWQsIEkgdGhp
+bmsgdGhlIHRlc3Qgd2lsbCBiZSBvayB3aXRoIGp1c3QgdGhlIHhmc3Byb2dzIGZpeCwKPj4gdGhv
+dWdoLiBUaHghCj4+Cj4+IEFsbGlzb24gSGVuZGVyc29uCj4+Cj4+Pgo+Pj4+Cj4+Pj4gZGlmZiAt
+LWdpdCBhL2lvL2ZpZW1hcC5jIGIvaW8vZmllbWFwLmMKPj4+PiBpbmRleCBmYTk5MGNjLi44MWZj
+OTJjIDEwMDY0NAo+Pj4+IC0tLSBhL2lvL2ZpZW1hcC5jCj4+Pj4gKysrIGIvaW8vZmllbWFwLmMK
+Pj4+PiBAQCAtMjQ2LDcgKzI0Niw3IEBAIGZpZW1hcF9mKAo+Pj4+IGZsZ193LCBfKCJGTEFHUyIp
+KTsKPj4+PiB9Cj4+Pj4KPj4+PiAtIHdoaWxlICghbGFzdCYmICgoY3VyX2V4dGVudCArIDEpICE9
+IG1heF9leHRlbnRzKSkgewo+Pj4+ICsgd2hpbGUgKCFsYXN0JiYgKGN1cl9leHRlbnQ8PSBtYXhf
+ZXh0ZW50cykpIHsKPj4+PiBpZiAobWF4X2V4dGVudHMpCj4+Pj4gbnVtX2V4dGVudHMgPSBtaW4o
+bnVtX2V4dGVudHMsCj4+Pj4gbWF4X2V4dGVudHMgLSAoY3VyX2V4dGVudCArIDEpKTsKPj4+Pgo+
+Pj4+Cj4+Pj4gSXQgbG9va3MgbGlrZSB0aGUgbG9vcCBlbnRlcnMgd2l0aCBsYXN0PTAsIGN1cl9l
+eHRlbnRzPTAsIGFuZAo+Pj4+IG1heF9leHRlbnRzID0gMCwgYW5kIG9uIHRoZSBmaXJzdCBpdGVy
+YXRpb24gY3VyX2V4dGVudHMgZ2V0IHNldCB0byAyLAo+Pj4+IHNvIHdlIGRvbnQgc2VlICgoY3Vy
+X2V4dGVudCArIDEpID09IG1heF9leHRlbnRzIGZvciBhIHZlcnkgbG9uZyB0aW1lLgo+Pj4+IEkg
+ZG91YnQgdGhlIGxvZ2ljIHdhcyBtZWFudCB0byB3b3JrIHRoYXQgd2F5LCBzbyB0aGlzIHBhdGNo
+IHNob3VsZAo+Pj4+IGZpeCBpdCwgYnV0IEkgd2FudGVkIHRvIG1ha2Ugc3VyZSB0aGF0IHRoZSBm
+aWVtYXAgZm9yIGV4dDQgaXMgd29ya2luZwo+Pj4+IGFzIGludGVuZGVkIHRvby4gRmVlZCBiYWNr
+IGFwcHJlY2lhdGVkISBUaHggYWxsIQo+Pj4+Cj4+Pj4gQWxsaXNvbiBIZW5kZXJzb24KPj4+PiAt
+LQo+Pj4+IFRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1
+YnNjcmliZSBsaW51eC1leHQ0IiBpbgo+Pj4+IHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpv
+cmRvbW9Admdlci5rZXJuZWwub3JnCj4+Pj4gTW9yZSBtYWpvcmRvbW8gaW5mbyBhdCBodHRwOi8v
+dmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwKPj4+Pgo+Pj4KPj4+Cj4+Pgo+Pgo+
+Cj4KPj4+IEhpIGFsbCwKPj4+Cj4+PiBJIGhhdmVuJ3QgaGVhcmQgbXVjaCBiYWNrIG9uIHRoaXMg
+cGF0Y2gsIHNvIEltIGp1c3QgcG9raW5nIHRoaXMKPj4+IHRocmVhZCB0byBtYWtlIHN1cmUgaXQg
+ZG9lc24ndCBnZXQgZm9yZ290dGVuLiBJIGhhdmUgc29tZSBwYXRjaGVzCj4+PiBvdXQgdGhlcmUg
+Zm9yIHB1bmNoIGhvbGUsIGFuZCBJJ20gY3VycmVudGx5IGxvb2tpbmcgYXQgZml4aW5nIHVwCj4+
+PiBzb21lIG9sZGVyIHB1bmNoIGhvbGUgdGVzdHMgaW4gdGhlIGRtYXBpIGNvZGUsIGJ1dCB0aGV5
+IHdvbnQgZG8gbXVjaAo+Pj4gZ29vZCBmb3IgZXh0NCB3aXRoIG91dCB0aGlzIGZpeC4gwqBJZiBJ
+IGNvdWxkIGdldCBhIHF1aWNrIHBlZWsgZnJvbQo+Pj4gc29tZSBvbmUgb24gdGhlIHhmcyBsaXN0
+IGZvciB0aGlzIHBhdGNoLCB0aGF0IHdvdWxkIGJlIG11Y2gKPj4+IGFwcHJlY2lhdGVkLiDCoFRo
+eCBhbGwhCj4+Cj4+IElmIGV4dDQgaXMgbm90IHNldHRpbmcgdGhlIGxhc3QgZXh0ZW50IGZsYWcg
+b24gdGhlIGxhc3QgZXh0ZW50IHRoZW4KPj4gdGhhdCdzIGFuIGV4dDQgYnVnIHRoYXQgdGhlIHRl
+c3QgaGFzIGRldGVjdGVkLCByaWdodD8gQW5kIHNvIHlvdQo+PiBzaG91bGQgYmUgZml4aW5nIGV4
+dDQgcmF0aGVyIHRoYW4gbW9kaWZ5aW5nIHRoZSB0ZXN0IHRvIGhpZGUgdGhlCj4+IGRpZmZlcmVu
+dCBiZWhhdmlvdXI/Cj4+Cj4+IENoZWVyCj4+Cj4+LS0gRGF2ZSBDaGlubmVyIGRhdmlkQGZyb21v
+cmJpdC5jb20KPgo+IEhpIEFsbCwKPgo+IFNvcnJ5LCBJIHNob3VsZCBoYXZlIHBva2VkIHRoZSB0
+aHJlYWQgd2l0aCBZb25ncWlhbmcncyByZXNwb25zZSwgc28gSSB3aWxsCj4gbW92ZSB0aGUgZGlh
+bG9nIGludG8gdGhpcyB0aHJlYWQuIMKgQXQgdGhlIG1vbWVudCwgaXQgc291bmRzIGxpa2UgdGhl
+IGZpZW1hcAo+IGZvciBleHQ0IGlzIHdvcmtpbmcgYXMgaW50ZW5kZWQuIMKgWW9uZ3FpYW5nLCBk
+byB5b3UgYWdyZWUgdGhhdCB0aGUgZmllbWFwCj4gZm9yIGV4dDQgc2hvdWxkIGJlIGNoYW5nZWQ/
+IMKgSSB0aGluayB5b3UgYXJlIG1vcmUgZmFtaWxpYXIgd2l0aCB0aGlzIHBhcnQgb2YKWWVzLCBJ
+IGFncmVlLiAgZXh0NCBzaG91bGQgcmV0dXJuIExBU1QgZXh0ZW50LiAgSSBhbSB0aGlua2luZyBp
+ZiB3ZQpjYW4gZmluZCBhIG5ldyBzb2x1dGlvbiBjb2xsZWN0aW5nIGV4dGVudHMuCgpNYXliZSB3
+ZSBjYW4gaW5zZXJ0IGRlbGF5ZWQgZXh0ZW50cyBpbnRvIGV4dGVudCB0cmVlLiBUaGlzIHdheSBm
+aWVtYXAKd2lsbCBiZSBzaW1wbGVyIGFuZCBtdWNoIG1vcmUgZWZmaWNpZW50LgoKSSB3b3VsZCBs
+aWtlIHRvIHRocm93IG91dCB0aGUgcHJvcG9zYWwgaW5zZXJ0aW5nIGRlbGF5ZWQtZXh0ZW50cyBp
+bnRvCmV4dGVudCB0cmVlLiAgV2hhdCB3aWxsIGl0IGJyaW5nPyAgQUZBSUsgaXQgd2lsbCBicmlu
+ZzoKMS4gV2UgbmVlZCB0byBkb3duIGlfZGF0YV9zZW0gaW4gZGVsYXllZCB3cml0ZS1wYXRoIHRv
+IGluc2VydApkZWxheWVkLWV4dGVudHMgaW50byB0aGUgdHJlZSB3aXRob3V0IGpvdXJuYWxpbmcg
+aXQuCgoyLiBXaGVuIHdlIGNvbWUgdG8gYmxvY2sgYWxsb2NhdGlvbiwgd2UgY2FuIGNvbnZlcnQg
+ZGVsYXllZC1leHRlbnRzIHRvCm5vcm1hbCBleHRlbnRzLgoKVGhlcmUgaXMgYSBwcm9ibGVtIHRo
+YXQgdGhlIHNvbHV0aW9uIGNhbiBiZSBvbmx5IHVzZWQgaW4gb3JkZXJlZCBtb2RlLgpTbyB3aGF0
+IGFyZSB5b3VyIG9waW5pb25z77yfCgpZb25ncWlhbmcuCgo+IHRoZSBjb2RlIHRoYW4gSSBhbSwg
+YW5kIEkganVzdCB3YW50IHRvIG1ha2Ugc3VyZSB3ZSBmaW5kIGEgc29sdXRpb24gdGhhdAo+IGV2
+ZXJ5b25lIGlzIGhhcHB5IHdpdGguIMKgVGh4IQo+Cj4gQWxsaXNvbiBIZW5kZXJzb24KPgo+Cj4K
+Pgo+Cj4+IF9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCj4+
+IHhmcyBtYWlsaW5nIGxpc3QKPj4geGZzQG9zcy5zZ2kuY29tCj4+IGh0dHA6Ly9vc3Muc2dpLmNv
+bS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo+Cj4KCgoKLS0gCkJlc3QgV2lzaGVzCllvbmdxaWFuZyBZ
+YW5nCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMg
+bWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9s
+aXN0aW5mby94ZnMK
