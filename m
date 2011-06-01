@@ -1,31 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p51Nb65v155287 for <xfs@oss.sgi.com>; Wed, 1 Jun 2011 18:37:06 -0500
+	p51NSAZG154970 for <xfs@oss.sgi.com>; Wed, 1 Jun 2011 18:28:10 -0500
 Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D63C015DA73D
-	for <xfs@oss.sgi.com>; Wed,  1 Jun 2011 16:37:04 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 65C07495A2E
+	for <xfs@oss.sgi.com>; Wed,  1 Jun 2011 16:28:08 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	TD04AxuFan6eYecZ for <xfs@oss.sgi.com>;
-	Wed, 01 Jun 2011 16:37:04 -0700 (PDT)
-Date: Thu, 2 Jun 2011 09:37:02 +1000
+	ZFl4AYWiyRuY7tDs for <xfs@oss.sgi.com>;
+	Wed, 01 Jun 2011 16:28:08 -0700 (PDT)
+Date: Thu, 2 Jun 2011 09:28:04 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfssyncd and disk spin down
-Message-ID: <20110601233702.GJ561@dastard>
-References: <20101227140750.GB24828@dastard>
-	<20101227171939.GA7759@pandora.simplex.ro>
-	<20101231001323.GD15179@dastard>
-	<20110120100143.GA2007@peter.simplex.ro>
-	<20110120234310.GV16267@dastard>
-	<20110210204254.GA10451@peter.simplex.ro>
-	<20110210221851.GG2559@dastard>
-	<loom.20110214T185310-606@post.gmane.org>
-	<loom.20110531T163459-953@post.gmane.org>
-	<4DE5064D.1010203@dermichi.com>
+Subject: Re: [PATCH v2] xfstests: add support for ext4dev FSTYP
+Message-ID: <20110601232804.GL32466@dastard>
+References: <1306933012-8666-1-git-send-email-amir73il@users.sourceforge.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4DE5064D.1010203@dermichi.com>
+In-Reply-To: <1306933012-8666-1-git-send-email-amir73il@users.sourceforge.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,56 +29,79 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Michael Weissenbacher <mw@dermichi.com>
-Cc: xfs@oss.sgi.com
+To: amir73il@users.sourceforge.net
+Cc: sandeen@redhat.com, Amir Goldstein <amir73il@users.sf.net>, xfs@oss.sgi.com, sergey57@gmail.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
 
-On Tue, May 31, 2011 at 05:16:29PM +0200, Michael Weissenbacher wrote:
-> Brian wrote:
-> > 
-> > Can anyone please comment if this bug was ever fixed?
-> > 
-> > I have searched and see no further talk about this.
-> > 
-> > echo 720000 > /proc/sys/fs/xfs/xfssyncd_centisecs allows a drive to sleep more
-> > often, but still is impacted by this. 
-> > 
-> > Thanks!
-> > 
-> AFAICT nothing has changed in this regard. I sill see the same behavior
-> with kernel 2.6.39. Thanks to this thread i found out about the problems
-> related to accumulating head unloads which i was able to mitigate by
-> setting xfssyncd_centisecs to a higher value.
+On Wed, Jun 01, 2011 at 03:56:52PM +0300, amir73il@users.sourceforge.net wrote:
+> From: Amir Goldstein <amir73il@users.sf.net>
+> 
+> From: Amir Goldstein <amir73il@users.sf.net>
+> 
+> blkid knows to identify the ext4dev FSTYP of a partition that was
+> formatted with mkfs.ext4dev.
+> quota tools and various util-linux utils are also aware of ext4dev,
+> so ext4dev shares the same capabilities as ext4.
+> 
+> Signed-off-by: Amir Goldstein <amir73il@users.sf.net>
+> Tested-by: Sergey Ivanov <sergey57@gmail.com>
+> ---
+> ext4dev is used to test experimental ext4 code in mutual existance
+> with production ext4 code on the same system.
+> 
+> Specifically, ext4 snapshots code is available for testing as a
+> stand-alone ext4dev module for Fedora 15 and Ubuntu 11.4
+> (see http://next3.sf.net).
+> 
+> v1 -> v2:
+> - undo change of fsck -t $FSTYP to fsck.$FSTYP
+> 
+>  common.defrag |    2 +-
+>  common.quota  |    4 ++--
+>  common.rc     |   10 +++++-----
+>  3 files changed, 8 insertions(+), 8 deletions(-)
+> 
+> diff --git a/common.defrag b/common.defrag
+> index 1bcf01d..4850803 100644
+> --- a/common.defrag
+> +++ b/common.defrag
+> @@ -26,7 +26,7 @@ _require_defrag()
+>      xfs)
+>          DEFRAG_PROG=/usr/sbin/xfs_fsr
+>  	;;
+> -    ext4)
+> +    ext4|ext4dev)
+>          DEFRAG_PROG=/usr/bin/e4defrag
+>  	;;
+>      *)
+> diff --git a/common.quota b/common.quota
+> index 3c87ce1..b6d5f16 100644
+> --- a/common.quota
+> +++ b/common.quota
+> @@ -29,7 +29,7 @@ _require_quota()
+>      [ -n $QUOTA_PROG ] || _notrun "Quota user tools not installed"
+>  
+>      case $FSTYP in
+> -    ext2|ext3|ext4|reiserfs)
+> +    ext2|ext3|ext4|ext4dev|reiserfs)
+>  	if [ ! -d /proc/sys/fs/quota ]; then
+>  	    _notrun "Installed kernel does not support quotas"
+>  	fi
+> @@ -237,7 +237,7 @@ _check_quota_usage()
+>  	# Sync to get delalloc to disk
+>  	sync
+>  	VFS_QUOTA=0
+> -	if [ $FSTYP = "ext2" -o $FSTYP = "ext3" -o $FSTYP = "ext4" -o $FSTYP = "reiserfs" ]; then
+> +	if [ $FSTYP = "ext2" -o $FSTYP = "ext3" -o $FSTYP = "ext4" -o $FSTYP = "ext4dev" -o $FSTYP = "reiserfs" ]; then
+>  		VFS_QUOTA=1
+>  		quotaon -f -u -g $SCRATCH_MNT 2>/dev/null
+>  	fi
 
-commit fd074841cfe01b006465fb9388091012585e8dfb
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Fri Apr 8 12:45:07 2011 +1000
-
-    xfs: push the AIL from memory reclaim and periodic sync
-
-    When we are short on memory, we want to expedite the cleaning of
-    dirty objects.  Hence when we run short on memory, we need to kick
-    the AIL flushing into action to clean as many dirty objects as
-    quickly as possible.  To implement this, sample the lsn of the log
-    item at the head of the AIL and use that as the push target for the
-    AIL flush.
-
-    Further, we keep items in the AIL that are dirty that are not
-    tracked any other way, so we can get objects sitting in the AIL that
-    don't get written back until the AIL is pushed. Hence to get the
-    filesystem to the idle state, we might need to push the AIL to flush
-    out any remaining dirty objects sitting in the AIL. This requires
-    the same push mechanism as the reclaim push.
-
-    This patch also renames xfs_trans_ail_tail() to xfs_ail_min_lsn() to
-    match the new xfs_ail_max_lsn() function introduced in this patch.
-    Similarly for xfs_trans_ail_push -> xfs_ail_push.
-
-    Signed-off-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Alex Elder <aelder@sgi.com>
+Perhaps this should be changes to a case statement?
 
 Cheers,
 
 Dave.
+
 -- 
 Dave Chinner
 david@fromorbit.com
