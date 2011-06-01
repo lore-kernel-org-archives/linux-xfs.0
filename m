@@ -1,32 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p51KoxdQ146012 for <xfs@oss.sgi.com>; Wed, 1 Jun 2011 15:51:00 -0500
+	p51N2NfE154027 for <xfs@oss.sgi.com>; Wed, 1 Jun 2011 18:02:24 -0500
 Received: from e9.ny.us.ibm.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1786C1ED2D7B
-	for <xfs@oss.sgi.com>; Wed,  1 Jun 2011 13:50:58 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8F6384958C4
+	for <xfs@oss.sgi.com>; Wed,  1 Jun 2011 16:02:22 -0700 (PDT)
 Received: from e9.ny.us.ibm.com (e9.ny.us.ibm.com [32.97.182.139]) by
-	cuda.sgi.com with ESMTP id xgbvrNczFa6FguFY for
-	<xfs@oss.sgi.com>; Wed, 01 Jun 2011 13:50:58 -0700 (PDT)
+	cuda.sgi.com with ESMTP id yVhqZpEsz6P60dQr for
+	<xfs@oss.sgi.com>; Wed, 01 Jun 2011 16:02:22 -0700 (PDT)
 Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e9.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p51KKobW007453
-	for <xfs@oss.sgi.com>; Wed, 1 Jun 2011 16:20:50 -0400
-Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
+	by e9.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p51MWGqG024587
+	for <xfs@oss.sgi.com>; Wed, 1 Jun 2011 18:32:16 -0400
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
 	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	p51KotAW063100 for <xfs@oss.sgi.com>; Wed, 1 Jun 2011 16:50:55 -0400
-Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
-	by d01av01.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
-	p51KosQv009814 for <xfs@oss.sgi.com>; Wed, 1 Jun 2011 16:50:55 -0400
-Message-ID: <4DE6A621.7040206@linux.vnet.ibm.com>
-Date: Wed, 01 Jun 2011 13:50:41 -0700
+	p51N2Mov100512 for <xfs@oss.sgi.com>; Wed, 1 Jun 2011 19:02:22 -0400
+Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
+	by d01av04.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
+	p51N2LdE007518 for <xfs@oss.sgi.com>; Wed, 1 Jun 2011 19:02:21 -0400
+Message-ID: <4DE6C4F2.7040706@linux.vnet.ibm.com>
+Date: Wed, 01 Jun 2011 16:02:10 -0700
 From: Allison Henderson <achender@linux.vnet.ibm.com>
 MIME-Version: 1.0
-Subject: Re: xfsprogs: Fix for xfstest 252 hang on ext4
-References: <4DDAC4EF.1050702@linux.vnet.ibm.com>
-	<BANLkTiks0NSDTSPN8n446JHWhKtM61_=Mw@mail.gmail.com>
-	<4DDB1A0C.5030502@linux.vnet.ibm.com>	<4DE50881.90401@linux.vnet.ibm.com>
-	<BANLkTin3+GT+LmjTACDnZUKamhFhDMkvVA@mail.gmail.com>
-In-Reply-To: <BANLkTin3+GT+LmjTACDnZUKamhFhDMkvVA@mail.gmail.com>
+Subject: Re: [XFSTEST Add Fallocate Punch Hole Tests 3/3 v4] Add ENOSPC Hole
+	Punch Test
+References: <4DDDBC44.2070100@linux.vnet.ibm.com>
+In-Reply-To: <4DDDBC44.2070100@linux.vnet.ibm.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,115 +33,175 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Yongqiang Yang <xiaoqiangnk@gmail.com>
-Cc: Ted Ts'o <tytso@mit.edu>, Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+To: xfs-oss <xfs@oss.sgi.com>, Dave Chinner <david@fromorbit.com>
 
-T24gNS8zMS8yMDExIDY6NTggUE0sIFlvbmdxaWFuZyBZYW5nIHdyb3RlOgo+IE9uIFR1ZSwgTWF5
-IDMxLCAyMDExIGF0IDExOjI1IFBNLCBBbGxpc29uIEhlbmRlcnNvbgo+IDxhY2hlbmRlckBsaW51
-eC52bmV0LmlibS5jb20+ICB3cm90ZToKPj4gT24gNS8yMy8yMDExIDc6MzggUE0sIEFsbGlzb24g
-SGVuZGVyc29uIHdyb3RlOgo+Pj4KPj4+IE9uIDUvMjMvMjAxMSA2OjE2IFBNLCBZb25ncWlhbmcg
-WWFuZyB3cm90ZToKPj4+Pgo+Pj4+IE9uIFR1ZSwgTWF5IDI0LCAyMDExIGF0IDQ6MzQgQU0sIEFs
-bGlzb24gSGVuZGVyc29uCj4+Pj4gPGFjaGVuZGVyQGxpbnV4LnZuZXQuaWJtLmNvbT4gIHdyb3Rl
-Ogo+Pj4+Pgo+Pj4+PiBIaSBhbGwsCj4+Pj4+Cj4+Pj4+IFdoaWxlIHRyeWluZyB0byBhZGQgbW9y
-ZSBwdW5jaCBob2xlIHRlc3RzIHRvIHhmc3Rlc3QsIEkgZm91bmQgdGhhdAo+Pj4+PiB0ZXN0IDI1
-MiBoYW5ncyBvbiBleHQ0IGR1ZSB0byBhIGxvb3AgaW4geGZzcHJvZ3MgdGhhdCBkb2VzIG5vdCBl
-eGl0Lgo+Pj4+PiBYRlMgZ2V0cyBvdXQgb2YgdGhpcyBsb29wIGJlY2F1c2UgdGhlcmUgaXMgbG9n
-aWMgaW4gdGhlIGxvb3AgdGhhdAo+Pj4+PiBsb29rcyBmb3IgdGhlIGxhc3QgZXh0ZW50IGZsYWcg
-YW5kIGJyZWFrcyBvdXQuIEJ1dCBpdCBsb29rcyBsaWtlIGV4dDQKPj4+Pj4gZG9lcyBub3QgcmV0
-dXJuIGEgbGFzdCBleHRlbnQgd2hlbiB0aGUgZmlsZSBoYXMgYSBob2xlIGF0IHRoZSBlbmQuIEkK
-Pj4+Pj4gYW0gbm90IHN1cmUgaWYgdGhpcyBpcyB0aGUgY29ycmVjdCBiZWhhdmlvciBvciBub3Qs
-IHNvIEkgd2lsbCBjb3B5Cj4+Pj4+IHRoZSBleHQ0IGZvbGtzIG9uIHRoaXMgdG9vLiBCZWxvdyBp
-cyBhIGNvcHkgb2YgdGhlIGZpeCBmb3IgeGZzcHJvZ3M6Cj4+Pj4KPj4+PiBIaSB0aGVyZSwKPj4+
-Pgo+Pj4+IFdoYXQncyBibG9ja3NpemUgb2YgdGhlIHRlc3RlZCBleHQ0PyBGb3Igbm93LCBleHQ0
-IHJldHVybnMKPj4+PiBMQVNUX0VYVEVOVCBpZiB0aGUgbG9naWNhbCBvZmZzZXQgY292ZXJlZCBi
-eSB0aGUgZXh0ZW50IGlzIGdyZWF0ZXIKPj4+PiB0aGFuIGZpbGUgc2l6ZSwgc28gaWYgdGhlcmUg
-aXMgYSBob2xlIGF0IHRoZSBlbmQsIG5vIGxhc3QgZXh0ZW50IGlzCj4+Pj4gcmV0dXJuZWQuIFRo
-eCEKPj4+Pgo+Pj4+IFlvbmdxaWFuZy4KPj4+Cj4+PiBIaSB0aGVyZSwKPj4+Cj4+PiBUaGUgYmxv
-Y2sgc2l6ZSBJJ3ZlIGJlZW4gdXNpbmcgaXMgNDA5Ni4gQXMgbG9uZyBhcyB0aGF0IGJlaGF2aW9y
-IGlzCj4+PiBleHBlY3RlZCwgSSB0aGluayB0aGUgdGVzdCB3aWxsIGJlIG9rIHdpdGgganVzdCB0
-aGUgeGZzcHJvZ3MgZml4LAo+Pj4gdGhvdWdoLiBUaHghCj4+Pgo+Pj4gQWxsaXNvbiBIZW5kZXJz
-b24KPj4+Cj4+Pj4KPj4+Pj4KPj4+Pj4gZGlmZiAtLWdpdCBhL2lvL2ZpZW1hcC5jIGIvaW8vZmll
-bWFwLmMKPj4+Pj4gaW5kZXggZmE5OTBjYy4uODFmYzkyYyAxMDA2NDQKPj4+Pj4gLS0tIGEvaW8v
-ZmllbWFwLmMKPj4+Pj4gKysrIGIvaW8vZmllbWFwLmMKPj4+Pj4gQEAgLTI0Niw3ICsyNDYsNyBA
-QCBmaWVtYXBfZigKPj4+Pj4gZmxnX3csIF8oIkZMQUdTIikpOwo+Pj4+PiB9Cj4+Pj4+Cj4+Pj4+
-IC0gd2hpbGUgKCFsYXN0JiYgICgoY3VyX2V4dGVudCArIDEpICE9IG1heF9leHRlbnRzKSkgewo+
-Pj4+PiArIHdoaWxlICghbGFzdCYmICAoY3VyX2V4dGVudDw9IG1heF9leHRlbnRzKSkgewo+Pj4+
-PiBpZiAobWF4X2V4dGVudHMpCj4+Pj4+IG51bV9leHRlbnRzID0gbWluKG51bV9leHRlbnRzLAo+
-Pj4+PiBtYXhfZXh0ZW50cyAtIChjdXJfZXh0ZW50ICsgMSkpOwo+Pj4+Pgo+Pj4+Pgo+Pj4+PiBJ
-dCBsb29rcyBsaWtlIHRoZSBsb29wIGVudGVycyB3aXRoIGxhc3Q9MCwgY3VyX2V4dGVudHM9MCwg
-YW5kCj4+Pj4+IG1heF9leHRlbnRzID0gMCwgYW5kIG9uIHRoZSBmaXJzdCBpdGVyYXRpb24gY3Vy
-X2V4dGVudHMgZ2V0IHNldCB0byAyLAo+Pj4+PiBzbyB3ZSBkb250IHNlZSAoKGN1cl9leHRlbnQg
-KyAxKSA9PSBtYXhfZXh0ZW50cyBmb3IgYSB2ZXJ5IGxvbmcgdGltZS4KPj4+Pj4gSSBkb3VidCB0
-aGUgbG9naWMgd2FzIG1lYW50IHRvIHdvcmsgdGhhdCB3YXksIHNvIHRoaXMgcGF0Y2ggc2hvdWxk
-Cj4+Pj4+IGZpeCBpdCwgYnV0IEkgd2FudGVkIHRvIG1ha2Ugc3VyZSB0aGF0IHRoZSBmaWVtYXAg
-Zm9yIGV4dDQgaXMgd29ya2luZwo+Pj4+PiBhcyBpbnRlbmRlZCB0b28uIEZlZWQgYmFjayBhcHBy
-ZWNpYXRlZCEgVGh4IGFsbCEKPj4+Pj4KPj4+Pj4gQWxsaXNvbiBIZW5kZXJzb24KPj4+Pj4gLS0K
-Pj4+Pj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vi
-c2NyaWJlIGxpbnV4LWV4dDQiIGluCj4+Pj4+IHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpv
-cmRvbW9Admdlci5rZXJuZWwub3JnCj4+Pj4+IE1vcmUgbWFqb3Jkb21vIGluZm8gYXQgaHR0cDov
-L3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1sCj4+Pj4+Cj4+Pj4KPj4+Pgo+Pj4+
-Cj4+Pgo+Pgo+Pgo+Pj4+IEhpIGFsbCwKPj4+Pgo+Pj4+IEkgaGF2ZW4ndCBoZWFyZCBtdWNoIGJh
-Y2sgb24gdGhpcyBwYXRjaCwgc28gSW0ganVzdCBwb2tpbmcgdGhpcwo+Pj4+IHRocmVhZCB0byBt
-YWtlIHN1cmUgaXQgZG9lc24ndCBnZXQgZm9yZ290dGVuLiBJIGhhdmUgc29tZSBwYXRjaGVzCj4+
-Pj4gb3V0IHRoZXJlIGZvciBwdW5jaCBob2xlLCBhbmQgSSdtIGN1cnJlbnRseSBsb29raW5nIGF0
-IGZpeGluZyB1cAo+Pj4+IHNvbWUgb2xkZXIgcHVuY2ggaG9sZSB0ZXN0cyBpbiB0aGUgZG1hcGkg
-Y29kZSwgYnV0IHRoZXkgd29udCBkbyBtdWNoCj4+Pj4gZ29vZCBmb3IgZXh0NCB3aXRoIG91dCB0
-aGlzIGZpeC4gIElmIEkgY291bGQgZ2V0IGEgcXVpY2sgcGVlayBmcm9tCj4+Pj4gc29tZSBvbmUg
-b24gdGhlIHhmcyBsaXN0IGZvciB0aGlzIHBhdGNoLCB0aGF0IHdvdWxkIGJlIG11Y2gKPj4+PiBh
-cHByZWNpYXRlZC4gIFRoeCBhbGwhCj4+Pgo+Pj4gSWYgZXh0NCBpcyBub3Qgc2V0dGluZyB0aGUg
-bGFzdCBleHRlbnQgZmxhZyBvbiB0aGUgbGFzdCBleHRlbnQgdGhlbgo+Pj4gdGhhdCdzIGFuIGV4
-dDQgYnVnIHRoYXQgdGhlIHRlc3QgaGFzIGRldGVjdGVkLCByaWdodD8gQW5kIHNvIHlvdQo+Pj4g
-c2hvdWxkIGJlIGZpeGluZyBleHQ0IHJhdGhlciB0aGFuIG1vZGlmeWluZyB0aGUgdGVzdCB0byBo
-aWRlIHRoZQo+Pj4gZGlmZmVyZW50IGJlaGF2aW91cj8KPj4+Cj4+PiBDaGVlcgo+Pj4KPj4+IC0t
-IERhdmUgQ2hpbm5lciBkYXZpZEBmcm9tb3JiaXQuY29tCj4+Cj4+IEhpIEFsbCwKPj4KPj4gU29y
-cnksIEkgc2hvdWxkIGhhdmUgcG9rZWQgdGhlIHRocmVhZCB3aXRoIFlvbmdxaWFuZydzIHJlc3Bv
-bnNlLCBzbyBJIHdpbGwKPj4gbW92ZSB0aGUgZGlhbG9nIGludG8gdGhpcyB0aHJlYWQuICBBdCB0
-aGUgbW9tZW50LCBpdCBzb3VuZHMgbGlrZSB0aGUgZmllbWFwCj4+IGZvciBleHQ0IGlzIHdvcmtp
-bmcgYXMgaW50ZW5kZWQuICBZb25ncWlhbmcsIGRvIHlvdSBhZ3JlZSB0aGF0IHRoZSBmaWVtYXAK
-Pj4gZm9yIGV4dDQgc2hvdWxkIGJlIGNoYW5nZWQ/ICBJIHRoaW5rIHlvdSBhcmUgbW9yZSBmYW1p
-bGlhciB3aXRoIHRoaXMgcGFydCBvZgo+IFllcywgSSBhZ3JlZS4gIGV4dDQgc2hvdWxkIHJldHVy
-biBMQVNUIGV4dGVudC4gIEkgYW0gdGhpbmtpbmcgaWYgd2UKPiBjYW4gZmluZCBhIG5ldyBzb2x1
-dGlvbiBjb2xsZWN0aW5nIGV4dGVudHMuCj4KPiBNYXliZSB3ZSBjYW4gaW5zZXJ0IGRlbGF5ZWQg
-ZXh0ZW50cyBpbnRvIGV4dGVudCB0cmVlLiBUaGlzIHdheSBmaWVtYXAKPiB3aWxsIGJlIHNpbXBs
-ZXIgYW5kIG11Y2ggbW9yZSBlZmZpY2llbnQuCj4KPiBJIHdvdWxkIGxpa2UgdG8gdGhyb3cgb3V0
-IHRoZSBwcm9wb3NhbCBpbnNlcnRpbmcgZGVsYXllZC1leHRlbnRzIGludG8KPiBleHRlbnQgdHJl
-ZS4gIFdoYXQgd2lsbCBpdCBicmluZz8gIEFGQUlLIGl0IHdpbGwgYnJpbmc6Cj4gMS4gV2UgbmVl
-ZCB0byBkb3duIGlfZGF0YV9zZW0gaW4gZGVsYXllZCB3cml0ZS1wYXRoIHRvIGluc2VydAo+IGRl
-bGF5ZWQtZXh0ZW50cyBpbnRvIHRoZSB0cmVlIHdpdGhvdXQgam91cm5hbGluZyBpdC4KPgo+IDIu
-IFdoZW4gd2UgY29tZSB0byBibG9jayBhbGxvY2F0aW9uLCB3ZSBjYW4gY29udmVydCBkZWxheWVk
-LWV4dGVudHMgdG8KPiBub3JtYWwgZXh0ZW50cy4KPgo+IFRoZXJlIGlzIGEgcHJvYmxlbSB0aGF0
-IHRoZSBzb2x1dGlvbiBjYW4gYmUgb25seSB1c2VkIGluIG9yZGVyZWQgbW9kZS4KPiBTbyB3aGF0
-IGFyZSB5b3VyIG9waW5pb25z77yfCj4KPiBZb25ncWlhbmcuCgoKSGkgQWxsLAoKV2VsbCwgSSBh
-bSBub3QgeWV0IGZhbWlsaWFyIHdpdGggaG93IHRoZSBjb2RlIGZvciBvcmRlcmVkIG1vZGUgd29y
-a3MsIHNvIApJIG1heSBub3QgYmUgbXVjaCBoZWxwIGhlcmUsIGJ1dCBJIGRvIHRoaW5rIHRoYXQg
-aWYgd2UgY291bGQgZ2V0IGl0IHRvIAp3b3JrLCBpdCB3b3VsZCBoZWxwIHNpbXBsaWZ5IGEgbG90
-IG9mIHRoaW5ncyBpbmNsdWRpbmcgZmllbWFwIGFuZCBwdW5jaCAKaG9sZS4gIEkga25vdyB0aGF0
-IHRoZSBlYXJsaWVyIHZlcnNpb25zIG9mIHB1bmNoIGhvbGUgd2VyZSBhIGxpdHRsZSAKY29tcGxp
-Y2F0ZWQgYmVjYXVzZSBvZiB0aGUgZGlmZmVyZW50IG1lY2hhbmlzbXMgbmVlZGVkIHRvIGlkZW50
-aWZ5IAptYXBwZWQgZXh0ZW50cywgZGVsYXllZCBleHRlbnRzIGFuZCBob2xlcy4gIEV2ZW50dWFs
-bHkgd2hhdCB3ZSBkaWQgd2FzIAp0byBmbHVzaCBvdXQgdGhlIGRhdGEgaW4gdGhlIHJlZ2lvbiB0
-byBiZSBwdW5jaGVkIG91dCBpbiBvcmRlciB0byBhdm9pZCAKcmFjZSBjb25kaXRpb25zLCBhbmQg
-YWxzbyB0byBzaW1wbGlmeSB0aGUgbG9naWMuICBUaGlzIGhhcyBpbnRyb2R1Y2VkIApzb21lIHBy
-b2JsZW1zIGluIHNvbWUgb2YgdGhlIGV4aXN0aW5nIHhmc3Rlc3RzIHB1bmNoIGhvbGUgdGVzdHMs
-IGJlY2F1c2UgCnRoZSB0ZXN0cyB3YW50IHRvIHNlZSBhIGhvbGUgaW4gdW53cml0dGVuIGV4dGVu
-dHMgaW5zdGVhZCBvZiB3cml0dGVuIApleHRlbnRzLiAgSSB3YXMgd29ya2luZyBvbiBzb21lIG9w
-dGltaXphdGlvbiBwYXRjaGVzIHRvIGF2b2lkIHRoaXMsIGJ1dCAKaWYgdGhpcyBwcm9wb3NhbCBp
-cyBwdXQgaW4gcGxhY2UsIEkgdGhpbmsgSSBjb3VsZCBvcHRpbWl6ZSB0aGF0IGZpeCBhIApsb3Qu
-ICBBbmQgSSBrbm93IHRoZSBmaWVtYXAgcm91dGluZXMgd291bGQgZ2V0IHNpbXBsZXIgc2Vuc2Ug
-dGhleSB3b3VsZCAKb25seSBoYXZlIHRvIGRlYWwgd2l0aCB0aGUgZXh0ZW50IHRyZWUuIElmIHdl
-IGRlY2lkZSB0byBkbyB3aGF0IHlvdSAKcHJvcG9zZSwgSSB3aWxsIHdhaXQgb24gZG9pbmcgYW55
-IHB1bmNoIGhvbGUgb3IgZmllbWFwIHBhdGNoZXMgdG8gdGFrZSAKYWR2YW50YWdlIG9mIHRoYXQu
-ICBJJ2xsIHBva2UgYXJvdW5kIHdpdGggdGhlIG1vZGVzIHRvbyB0byBzZWUgaWYgCnRoZXJlJ3Mg
-YW55IHRoaW5nIHdlIGNhbiBkbyB0byBnZXQgYXJvdW5kIHRoYXQgcHJvYmxlbS4gIFRoeCEKCkFs
-bGlzb24gSGVuZGVyc29uCgo+Cj4+IHRoZSBjb2RlIHRoYW4gSSBhbSwgYW5kIEkganVzdCB3YW50
-IHRvIG1ha2Ugc3VyZSB3ZSBmaW5kIGEgc29sdXRpb24gdGhhdAo+PiBldmVyeW9uZSBpcyBoYXBw
-eSB3aXRoLiAgVGh4IQo+Pgo+PiBBbGxpc29uIEhlbmRlcnNvbgo+Pgo+Pgo+Pgo+Pgo+Pgo+Pj4g
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KPj4+IHhmcyBt
-YWlsaW5nIGxpc3QKPj4+IHhmc0Bvc3Muc2dpLmNvbQo+Pj4gaHR0cDovL29zcy5zZ2kuY29tL21h
-aWxtYW4vbGlzdGluZm8veGZzCj4+Cj4+Cj4KPgo+CgpfX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpo
-dHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+On 5/25/2011 7:34 PM, Allison Henderson wrote:
+> This patch adds a test to 252 that tests that a hole can be punched even when the
+> disk is full.  Reserved blocks should be used to allow a punch hole to proceed even
+> when there is not enough blocks to further fragment the file. To test this, the
+> file system is fragmented by punching holes in regular intervals and filling
+> the file system between punches. This will eventually force the file system to use
+> reserved blocks to proceed with the punch hole operation.
+> 
+> Signed-off-by: Allison Henderson<achender@us.ibm.com>
+> ---
+> :100755 100755 5efa243... b5204fe... M	252
+> :100644 100644 ddf63b0... fc6123c... M	common.punch
+>   252          |   12 +++++++
+>   common.punch |   95 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>   2 files changed, 107 insertions(+), 0 deletions(-)
+> 
+> diff --git a/252 b/252
+> index 5efa243..b5204fe 100755
+> --- a/252
+> +++ b/252
+> @@ -49,6 +49,7 @@ _supported_os Linux
+> 
+>   _require_xfs_io_falloc_punch
+>   _require_xfs_io_fiemap
+> +_require_scratch
+> 
+>   testfile=$TEST_DIR/252.$$
+> 
+> @@ -64,4 +65,15 @@ _test_generic_punch -k falloc fpunch fpunch fiemap _filter_fiemap $testfile -F
+>   # Delayed allocation multi punch hole tests
+>   _test_generic_punch -d -k falloc fpunch fpunch fiemap _filter_fiemap $testfile -F
+> 
+> +# Test full filesystem hole punching.
+> +# Make a small file system to fill
+> +umount $SCRATCH_DEV&>  /dev/null
+> +_scratch_mkfs_sized $(( 1024 * 1024 * 1024 ))&>  /dev/null
+> +_scratch_mount
+> +# Test must be able to write files with non-root permissions
+> +chmod 777 $SCRATCH_MNT
+> +
+> +block_size=`stat -f $SCRATCH_DEV | grep "Block size" | cut -d " " -f3`
+> +_test_full_fs_punch $(( $block_size * 2 )) $block_size 500 $SCRATCH_MNT/252.$$
+> +
+>   status=0 ; exit
+> diff --git a/common.punch b/common.punch
+> index ddf63b0..fc6123c 100644
+> --- a/common.punch
+> +++ b/common.punch
+> @@ -481,5 +481,100 @@ _test_generic_punch()
+>   		-c "$zero_cmd 128 128" \
+>   		-c "$map_cmd -v" $testfile | $filter_cmd
+>   	[ $? -ne 0 ]&&  die_now
+> +}
+> +
+> +# _fill_fs()
+> +#
+> +# Fills a file system by repeatedly creating files in the given folder
+> +# starting with the given file size.  Files are reduced in size when
+> +# they can no longer fit untill no more files can be created.
+> +#
+> +# This routine is used by _test_full_fs_punch to test that a hole may
+> +# still be punched when the disk is full by borrowing reserved blocks.
+> +# All files are created as a non root user to prevent reserved blocks
+> +# from being consumed.
+> +#
+> +_fill_fs() {
+> +	local file_size=$1
+> +	local dir=$2
+> +	local file_count=1
+> +
+> +	if [ $# -ne 2 ]
+> +	then
+> +	    echo "USAGE: $0 filesize dir"
+> +	    exit 1
+> +	fi
+> +
+> +	mkdir -p $dir&>  /dev/null
+> +	if [[ $? != 0 ]] ; then
+> +		return 0
+> +	fi
+> +	chmod 777 $dir
+> +
+> +	rc=0
+> +	while [ $file_size -gt 0 -a $rc == 0 ]
+> +	do
+> +		# This part must not be done as root or
+> +		# reserved blocks will be consumed
+> +		sudo -u nobody $XFS_IO_PROG -F -f -c "pwrite  0 $file_size" $dir/$file_count.bin&>  /dev/null
+
+Hi all,
+
+This is the ENOSPC test that we used on the ext4 punch hole, but modified to use the xfsprogs facilities.  
+I notice the test takes a lot longer to run after doing this.  If I replace the above command with the original code:
+
+sudo -u nobody dd if=/dev/zero of=$dir/$file_count.bin bs=$file_size count=1 &> /dev/null
+
+it runs a lot faster (takes off almost 15 minutes).  Is there anything we can do to improve the xfsprogs command?  Thx!  
+
+Allison Henderson
+
+> +		rc=$?
+> +
+> +		# If there was no room to make the file,
+> +		# and the file size can still be made smaller,
+> +		# then divide it in half, and keep going
+> +		if [ $file_size -gt 1 -a $rc != 0 ]
+> +		then
+> +			file_size=$(( $file_size / 2 ))
+> +			rc=0
+> +		fi
+> +		file_count=$(( $file_count + 1 ))
+> +
+> +	done
+> +}
+> 
+> +# _test_full_fs_punch()
+> +#
+> +# This function will test that a hole may be punched
+> +# even when the file system is full.  Reserved blocks
+> +# should be used to allow a punch hole to proceed even
+> +# when there is not enough blocks to further fragment the
+> +# file. To test this, this function will fragment the file
+> +# system by punching holes in regular intervals and filling
+> +# the file system between punches.
+> +#
+> +_test_full_fs_punch()
+> +{
+> +	hole_len=$1      # The length of the holes to punch
+> +	hole_interval=$2 # The interval between the holes
+> +	iterations=$3    # The number of holes to punch
+> +	file_name=$4     # File to punch holes in
+> +	file_len=$(( $(( $hole_len + $hole_interval )) * $iterations ))
+> +	path=`dirname $file_name`
+> +	hole_offset=0
+> +
+> +	rm -f $file_name&>  /dev/null
+> +
+> +	$XFS_IO_PROG -F -f -c "pwrite 0 $file_len" \
+> +		-c "fsync" $file_name&>  /dev/null
+> +	chmod 666 $file_name
+> +
+> +	_fill_fs $(( 1024 * 1024 * 1024 )) $path/fill
+> +
+> +	for (( i=0; i<$iterations; i++ ))
+> +	do
+> +		# This part must not be done as root in order to
+> +		# test that reserved blocks are used when needed
+> +		sudo -u nobody $XFS_IO_PROG -F -f -c "fpunch $hole_offset $hole_len" $file_name
+> +		rc=$?
+> +		if [[ $? != 0 ]] ; then
+> +			echo Punch hole failed
+> +			break
+> +		fi
+> +
+> +		hole_offset=$(( $hole_offset + $hole_len + $hole_interval ))
+> +
+> +		_fill_fs $hole_len $path/fill.$i
+> +
+> +	done
+>   }
+> +
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
