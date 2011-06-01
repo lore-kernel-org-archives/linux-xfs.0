@@ -1,30 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p51N1sNK153994 for <xfs@oss.sgi.com>; Wed, 1 Jun 2011 18:01:54 -0500
-Received: from e9.ny.us.ibm.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5A5111ED3430
-	for <xfs@oss.sgi.com>; Wed,  1 Jun 2011 16:01:53 -0700 (PDT)
-Received: from e9.ny.us.ibm.com (e9.ny.us.ibm.com [32.97.182.139]) by
-	cuda.sgi.com with ESMTP id 8cxwErIPug7enW9K for
-	<xfs@oss.sgi.com>; Wed, 01 Jun 2011 16:01:53 -0700 (PDT)
-Received: from d01relay05.pok.ibm.com (d01relay05.pok.ibm.com [9.56.227.237])
-	by e9.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p51MVlpG024507
-	for <xfs@oss.sgi.com>; Wed, 1 Jun 2011 18:31:47 -0400
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay05.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	p51N1raG118424 for <xfs@oss.sgi.com>; Wed, 1 Jun 2011 19:01:53 -0400
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
-	p51N1qvA005731 for <xfs@oss.sgi.com>; Wed, 1 Jun 2011 19:01:53 -0400
-Message-ID: <4DE6C4D6.9080305@linux.vnet.ibm.com>
-Date: Wed, 01 Jun 2011 16:01:42 -0700
-From: Allison Henderson <achender@linux.vnet.ibm.com>
+	p51Nb65v155287 for <xfs@oss.sgi.com>; Wed, 1 Jun 2011 18:37:06 -0500
+Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D63C015DA73D
+	for <xfs@oss.sgi.com>; Wed,  1 Jun 2011 16:37:04 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	TD04AxuFan6eYecZ for <xfs@oss.sgi.com>;
+	Wed, 01 Jun 2011 16:37:04 -0700 (PDT)
+Date: Thu, 2 Jun 2011 09:37:02 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfssyncd and disk spin down
+Message-ID: <20110601233702.GJ561@dastard>
+References: <20101227140750.GB24828@dastard>
+	<20101227171939.GA7759@pandora.simplex.ro>
+	<20101231001323.GD15179@dastard>
+	<20110120100143.GA2007@peter.simplex.ro>
+	<20110120234310.GV16267@dastard>
+	<20110210204254.GA10451@peter.simplex.ro>
+	<20110210221851.GG2559@dastard>
+	<loom.20110214T185310-606@post.gmane.org>
+	<loom.20110531T163459-953@post.gmane.org>
+	<4DE5064D.1010203@dermichi.com>
 MIME-Version: 1.0
-Subject: Re: [XFSTEST Add Fallocate Punch Hole Tests 2/3 v4] Expand 252 punch
-	hole test to cover additional corner cases
-References: <4DDDBC3F.9080704@linux.vnet.ibm.com>
-In-Reply-To: <4DDDBC3F.9080704@linux.vnet.ibm.com>
+Content-Disposition: inline
+In-Reply-To: <4DE5064D.1010203@dermichi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,536 +34,63 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Michael Weissenbacher <mw@dermichi.com>
+Cc: xfs@oss.sgi.com
 
-On 5/25/2011 7:34 PM, Allison Henderson wrote:
-> This patch adds additional punch hole tests to 252
-> that were used to test ext4 punch hole. The _test_generic_punch
-> routine has been modified to accept two new flags:
->
-> -k To keep the test file between tests.
->     This will test the handling of existing holes
->
-> -d To not sync the file between tests.
->     This will test the handling of delayed extents
->
-> Four new corner cases have also been added to the routine:
-> 14. data ->  hole @ EOF
-> 15. data ->  hole @ 0
-> 16. data ->  cache cold ->hole
-> 17. data ->  hole in single block file
->
->
-> Signed-off-by: Allison Henderson<achender@us.ibm.com>
->
-> ---
-> :100755 100755 dfdf3f8... 5efa243... M	252
-> :100644 100644 cd8e4b4... 930c924... M	252.out
-> :100644 100644 e2da5d8... ddf63b0... M	common.punch
->   252          |   10 +++
->   252.out      |  192 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
->   common.punch |  150 ++++++++++++++++++++++++++++++++++++++-------
->   3 files changed, 330 insertions(+), 22 deletions(-)
->
-> diff --git a/252 b/252
-> index dfdf3f8..5efa243 100755
-> --- a/252
-> +++ b/252
-> @@ -52,6 +52,16 @@ _require_xfs_io_fiemap
->
->   testfile=$TEST_DIR/252.$$
->
-> +# Standard punch hole tests
->   _test_generic_punch falloc fpunch fpunch fiemap _filter_fiemap $testfile -F
->
-> +# Delayed allocation punch hole tests
-> +_test_generic_punch -d falloc fpunch fpunch fiemap _filter_fiemap $testfile -F
-> +
-> +# Multi hole punch tests
-> +_test_generic_punch -k falloc fpunch fpunch fiemap _filter_fiemap $testfile -F
-> +
-> +# Delayed allocation multi punch hole tests
-> +_test_generic_punch -d -k falloc fpunch fpunch fiemap _filter_fiemap $testfile -F
-> +
->   status=0 ; exit
-> diff --git a/252.out b/252.out
-> index cd8e4b4..930c924 100644
-> --- a/252.out
-> +++ b/252.out
-> @@ -45,3 +45,195 @@ QA output created by 252
->   0: [0..7]: data
->   1: [8..31]: hole
->   2: [32..39]: data
-> +	14. data ->  hole @ EOF
-> +0: [0..23]: data
-> +1: [24..39]: hole
-> +	15. data ->  hole @ 0
-> +0: [0..15]: hole
-> +1: [16..39]: data
-> +	16. data ->  cache cold ->hole
-> +0: [0..15]: hole
-> +1: [16..39]: data
-> +	17. data ->  hole in single block file
-> +0: [0..7]: data
-> +	1. into a hole
-> +	2. into allocated space
-> +0: [0..7]: data
-> +1: [8..23]: hole
-> +2: [24..39]: data
-> +	3. into unwritten space
-> +0: [0..7]: unwritten
-> +1: [8..23]: hole
-> +2: [24..39]: unwritten
-> +	4. hole ->  data
-> +0: [0..23]: hole
-> +1: [24..31]: data
-> +2: [32..39]: hole
-> +	5. hole ->  unwritten
-> +0: [0..23]: hole
-> +1: [24..31]: unwritten
-> +2: [32..39]: hole
-> +	6. data ->  hole
-> +0: [0..7]: data
-> +1: [8..39]: hole
-> +	7. data ->  unwritten
-> +0: [0..7]: data
-> +1: [8..23]: hole
-> +2: [24..31]: unwritten
-> +3: [32..39]: hole
-> +	8. unwritten ->  hole
-> +0: [0..7]: unwritten
-> +1: [8..39]: hole
-> +	9. unwritten ->  data
-> +0: [0..7]: unwritten
-> +1: [8..23]: hole
-> +2: [24..31]: data
-> +3: [32..39]: hole
-> +	10. hole ->  data ->  hole
-> +	11. data ->  hole ->  data
-> +0: [0..7]: data
-> +1: [8..31]: hole
-> +2: [32..39]: data
-> +	12. unwritten ->  data ->  unwritten
-> +0: [0..7]: unwritten
-> +1: [8..31]: hole
-> +2: [32..39]: unwritten
-> +	13. data ->  unwritten ->  data
-> +0: [0..7]: data
-> +1: [8..31]: hole
-> +2: [32..39]: data
-> +	14. data ->  hole @ EOF
-> +0: [0..23]: data
-> +1: [24..39]: hole
-> +	15. data ->  hole @ 0
-> +0: [0..15]: hole
-> +1: [16..39]: data
-> +	16. data ->  cache cold ->hole
-> +0: [0..15]: hole
-> +1: [16..39]: data
-> +	17. data ->  hole in single block file
-> +0: [0..7]: data
-> +	1. into a hole
-> +0: [0..7]: data
-> +1: [8..39]: hole
-> +	2. into allocated space
-> +0: [0..7]: data
-> +1: [8..23]: hole
-> +2: [24..39]: data
-> +	3. into unwritten space
-> +0: [0..7]: data
-> +1: [8..23]: hole
-> +2: [24..39]: data
-> +	4. hole ->  data
-> +0: [0..7]: data
-> +1: [8..23]: hole
-> +2: [24..39]: data
-> +	5. hole ->  unwritten
-> +0: [0..7]: data
-> +1: [8..23]: hole
-> +2: [24..39]: data
-> +	6. data ->  hole
-> +0: [0..7]: data
-> +1: [8..23]: hole
-> +2: [24..39]: data
-> +	7. data ->  unwritten
-> +0: [0..7]: data
-> +1: [8..23]: hole
-> +2: [24..39]: data
-> +	8. unwritten ->  hole
-> +0: [0..7]: data
-> +1: [8..23]: hole
-> +2: [24..39]: data
-> +	9. unwritten ->  data
-> +0: [0..7]: data
-> +1: [8..23]: hole
-> +2: [24..39]: data
-> +	10. hole ->  data ->  hole
-> +0: [0..7]: data
-> +1: [8..31]: hole
-> +2: [32..39]: data
-> +	11. data ->  hole ->  data
-> +0: [0..7]: data
-> +1: [8..31]: hole
-> +2: [32..39]: data
-> +	12. unwritten ->  data ->  unwritten
-> +0: [0..7]: data
-> +1: [8..31]: hole
-> +2: [32..39]: data
-> +	13. data ->  unwritten ->  data
-> +0: [0..7]: data
-> +1: [8..31]: hole
-> +2: [32..39]: data
-> +	14. data ->  hole @ EOF
-> +0: [0..23]: data
-> +1: [24..39]: hole
-> +	15. data ->  hole @ 0
-> +0: [0..15]: hole
-> +1: [16..39]: data
-> +	16. data ->  cache cold ->hole
-> +0: [0..15]: hole
-> +1: [16..39]: data
-> +	17. data ->  hole in single block file
-> +0: [0..7]: data
-> +	1. into a hole
-> +0: [0..7]: data
-> +1: [8..39]: hole
-> +	2. into allocated space
-> +0: [0..7]: data
-> +1: [8..23]: hole
-> +2: [24..39]: data
-> +	3. into unwritten space
-> +0: [0..7]: data
-> +1: [8..23]: hole
-> +2: [24..39]: data
-> +	4. hole ->  data
-> +0: [0..7]: data
-> +1: [8..23]: hole
-> +2: [24..39]: data
-> +	5. hole ->  unwritten
-> +0: [0..7]: data
-> +1: [8..23]: hole
-> +2: [24..39]: data
-> +	6. data ->  hole
-> +0: [0..7]: data
-> +1: [8..23]: hole
-> +2: [24..39]: data
-> +	7. data ->  unwritten
-> +0: [0..7]: data
-> +1: [8..23]: hole
-> +2: [24..39]: data
-> +	8. unwritten ->  hole
-> +0: [0..7]: data
-> +1: [8..23]: hole
-> +2: [24..39]: data
-> +	9. unwritten ->  data
-> +0: [0..7]: data
-> +1: [8..23]: hole
-> +2: [24..39]: data
-> +	10. hole ->  data ->  hole
-> +0: [0..7]: data
-> +1: [8..31]: hole
-> +2: [32..39]: data
-> +	11. data ->  hole ->  data
-> +0: [0..7]: data
-> +1: [8..31]: hole
-> +2: [32..39]: data
-> +	12. unwritten ->  data ->  unwritten
-> +0: [0..7]: data
-> +1: [8..31]: hole
-> +2: [32..39]: data
-> +	13. data ->  unwritten ->  data
-> +0: [0..7]: data
-> +1: [8..31]: hole
-> +2: [32..39]: data
-> +	14. data ->  hole @ EOF
-> +0: [0..23]: data
-> +1: [24..39]: hole
-> +	15. data ->  hole @ 0
-> +0: [0..15]: hole
-> +1: [16..39]: data
-> +	16. data ->  cache cold ->hole
-> +0: [0..15]: hole
-> +1: [16..39]: data
-> +	17. data ->  hole in single block file
-> +0: [0..7]: data
-> diff --git a/common.punch b/common.punch
-> index e2da5d8..ddf63b0 100644
-> --- a/common.punch
-> +++ b/common.punch
-> @@ -256,8 +256,39 @@ die_now()
->   #	11. data ->  hole ->  data
->   #	12. unwritten ->  data ->  unwritten
->   #	13. data ->  unwritten ->  data
-> +#	14. data ->  hole @ EOF
-> +#	15. data ->  hole @ 0
-> +#	16. data ->  cache cold ->hole
-> +#	17. data ->  hole in single block file
-> +#
-> +# Test file is removed, created and sync'd between tests.
-> +#
-> +# Use -k flag to keep the file between tests.  This will
-> +# test the handling of pre-existing holes.
-> +#
-> +# Use the -d flag to not sync the file between tests.
-> +# This will test the handling of delayed extents
-> +#
->   _test_generic_punch()
->   {
-> +
-> +	remove_testfile=1
-> +	sync_cmd="-c fsync"
-> +	OPTIND=1
-> +	while getopts 'dk' OPTION
-> +	do
-> +		case $OPTION in
-> +		k)	remove_testfile=
-> +		;;
-> +		d)	sync_cmd=
-> +		;;
-> +		?)	echo Invalid flag
-> +		exit 1
-> +		;;
-> +		esac
-> +	done
-> +	shift $(($OPTIND - 1))
-> +
->   	alloc_cmd=$1
->   	punch_cmd=$2
->   	zero_cmd=$3	#if not testing zero just set to punch
-> @@ -267,22 +298,28 @@ _test_generic_punch()
->   	xfs_io_opt=$7	#needs to be -F if not testing xfs
->
->   	echo "	1. into a hole"
-> -	rm -f $testfile
-> +	if [ "$remove_testfile" ]; then
-> +		rm -f $testfile
-> +	fi
->   	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
->   		-c "$zero_cmd 4k 8k" \
->   		-c "$map_cmd -v" $testfile | $filter_cmd
->   	[ $? -ne 0 ]&&  die_now
->
->   	echo "	2. into allocated space"
-> -	rm -f $testfile
-> +	if [ "$remove_testfile" ]; then
-> +		rm -f $testfile
-> +	fi
->   	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
-> -		-c "pwrite 0 20k" -c "fsync" \
-> +		-c "pwrite 0 20k" $sync_cmd \
->   		-c "$zero_cmd 4k 8k" \
->   		-c "$map_cmd -v" $testfile | $filter_cmd
->   	[ $? -ne 0 ]&&  die_now
->
->   	echo "	3. into unwritten space"
-> -	rm -f $testfile
-> +	if [ "$remove_testfile" ]; then
-> +		rm -f $testfile
-> +	fi
->   	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
->   		-c "$alloc_cmd 0 20k" \
->   		-c "$zero_cmd 4k 8k" \
-> @@ -290,15 +327,19 @@ _test_generic_punch()
->   	[ $? -ne 0 ]&&  die_now
->
->   	echo "	4. hole ->  data"
-> -	rm -f $testfile
-> +	if [ "$remove_testfile" ]; then
-> +		rm -f $testfile
-> +	fi
->   	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
-> -		-c "pwrite 8k 8k" -c "fsync" \
-> +		-c "pwrite 8k 8k" $sync_cmd \
->   		-c "$zero_cmd 4k 8k" \
->   		-c "$map_cmd -v" $testfile | $filter_cmd
->   	[ $? -ne 0 ]&&  die_now
->
->   	echo "	5. hole ->  unwritten"
-> -	rm -f $testfile
-> +	if [ "$remove_testfile" ]; then
-> +		rm -f $testfile
-> +	fi
->   	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
->   		-c "$alloc_cmd 8k 8k" \
->   		-c "$zero_cmd 4k 8k" \
-> @@ -306,24 +347,30 @@ _test_generic_punch()
->   	[ $? -ne 0 ]&&  die_now
->
->   	echo "	6. data ->  hole"
-> -	rm -f $testfile
-> +	if [ "$remove_testfile" ]; then
-> +		rm -f $testfile
-> +	fi
->   	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
-> -		-c "pwrite 0 8k" -c "fsync" \
-> +		-c "pwrite 0 8k" $sync_cmd \
->   		-c "$zero_cmd 4k 8k" \
->   		-c "$map_cmd -v" $testfile | $filter_cmd
->   	[ $? -ne 0 ]&&  die_now
->
->   	echo "	7. data ->  unwritten"
-> -	rm -f $testfile
-> +	if [ "$remove_testfile" ]; then
-> +		rm -f $testfile
-> +	fi
->   	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
-> -		-c "pwrite 0 8k" -c "fsync" \
-> +		-c "pwrite 0 8k" $sync_cmd \
->   		-c "$alloc_cmd 8k 8k" \
->   		-c "$zero_cmd 4k 8k" \
->   		-c "$map_cmd -v" $testfile | $filter_cmd
->   	[ $? -ne 0 ]&&  die_now
->
->   	echo "	8. unwritten ->  hole"
-> -	rm -f $testfile
-> +	if [ "$remove_testfile" ]; then
-> +		rm -f $testfile
-> +	fi
->   	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
->   		-c "$alloc_cmd 0 8k" \
->   		-c "$zero_cmd 4k 8k" \
-> @@ -331,49 +378,108 @@ _test_generic_punch()
->   	[ $? -ne 0 ]&&  die_now
->
->   	echo "	9. unwritten ->  data"
-> -	rm -f $testfile
-> +	if [ "$remove_testfile" ]; then
-> +		rm -f $testfile
-> +	fi
->   	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
->   		-c "$alloc_cmd 0 8k" \
-> -		-c "pwrite 8k 8k" -c "fsync" \
-> +		-c "pwrite 8k 8k" $sync_cmd \
->   		-c "$zero_cmd 4k 8k" \
->   		-c "$map_cmd -v" $testfile | $filter_cmd
->   	[ $? -ne 0 ]&&  die_now
->
->   	echo "	10. hole ->  data ->  hole"
-> -	rm -f $testfile
-> +	if [ "$remove_testfile" ]; then
-> +		rm -f $testfile
-> +	fi
->   	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
-> -		-c "pwrite 8k 4k" -c "fsync" \
-> +		-c "pwrite 8k 4k" $sync_cmd \
->   		-c "$zero_cmd 4k 12k" \
->   		-c "$map_cmd -v" $testfile | $filter_cmd
->   	[ $? -ne 0 ]&&  die_now
->
->   	echo "	11. data ->  hole ->  data"
-> -	rm -f $testfile
-> +	if [ "$remove_testfile" ]; then
-> +		rm -f $testfile
-> +	fi
->   	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
->   		-c "$alloc_cmd 0 20k" \
->   		-c "pwrite 0 8k" \
-> -		-c "pwrite 12k 8k" -c "fsync" \
-> +		-c "pwrite 12k 8k" $sync_cmd \
->   		-c "$punch_cmd 8k 4k" \
->   		-c "$zero_cmd 4k 12k" \
->   		-c "$map_cmd -v" $testfile | $filter_cmd
->   	[ $? -ne 0 ]&&  die_now
->
->   	echo "	12. unwritten ->  data ->  unwritten"
-> -	rm -f $testfile
-> +	if [ "$remove_testfile" ]; then
-> +		rm -f $testfile
-> +	fi
->   	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
->   		-c "$alloc_cmd 0 20k" \
-> -		-c "pwrite 8k 4k" -c "fsync" \
-> +		-c "pwrite 8k 4k" $sync_cmd \
->   		-c "$zero_cmd 4k 12k" \
->   		-c "$map_cmd -v" $testfile | $filter_cmd
->   	[ $? -ne 0 ]&&  die_now
+On Tue, May 31, 2011 at 05:16:29PM +0200, Michael Weissenbacher wrote:
+> Brian wrote:
+> > 
+> > Can anyone please comment if this bug was ever fixed?
+> > 
+> > I have searched and see no further talk about this.
+> > 
+> > echo 720000 > /proc/sys/fs/xfs/xfssyncd_centisecs allows a drive to sleep more
+> > often, but still is impacted by this. 
+> > 
+> > Thanks!
+> > 
+> AFAICT nothing has changed in this regard. I sill see the same behavior
+> with kernel 2.6.39. Thanks to this thread i found out about the problems
+> related to accumulating head unloads which i was able to mitigate by
+> setting xfssyncd_centisecs to a higher value.
 
-Hi all,
+commit fd074841cfe01b006465fb9388091012585e8dfb
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Fri Apr 8 12:45:07 2011 +1000
 
-I had some questions about test 12. The output for this test is:
+    xfs: push the AIL from memory reclaim and periodic sync
 
-         12. unwritten -> data -> unwritten
-0: [0..7]: unwritten
-1: [8..31]: hole
-2: [32..39]: unwritten
+    When we are short on memory, we want to expedite the cleaning of
+    dirty objects.  Hence when we run short on memory, we need to kick
+    the AIL flushing into action to clean as many dirty objects as
+    quickly as possible.  To implement this, sample the lsn of the log
+    item at the head of the AIL and use that as the push target for the
+    AIL flush.
 
-But ext4 gets data extents here instead of unwritten extents (on the 
-first test with the fsync flag on).  I did some investigating and it 
-looks like the fsync command causes the extents to be written out before 
-the punch hole operation even starts.  So it makes sense to me that it 
-should end up with data extents.  Can someone explain why the golden 
-output has unwritten extents here? Thx!
+    Further, we keep items in the AIL that are dirty that are not
+    tracked any other way, so we can get objects sitting in the AIL that
+    don't get written back until the AIL is pushed. Hence to get the
+    filesystem to the idle state, we might need to push the AIL to flush
+    out any remaining dirty objects sitting in the AIL. This requires
+    the same push mechanism as the reclaim push.
 
-Allison Henderson
+    This patch also renames xfs_trans_ail_tail() to xfs_ail_min_lsn() to
+    match the new xfs_ail_max_lsn() function introduced in this patch.
+    Similarly for xfs_trans_ail_push -> xfs_ail_push.
 
->
->   	echo "	13. data ->  unwritten ->  data"
-> -	rm -f $testfile
-> +	if [ "$remove_testfile" ]; then
-> +		rm -f $testfile
-> +	fi
->   	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
->   		-c "$alloc_cmd 0 20k" \
-> -		-c "pwrite 0k 8k" -c "fsync" \
-> +		-c "pwrite 0k 8k" $sync_cmd \
->   		-c "pwrite 12k 8k" -c "fsync" \
->   		-c "$zero_cmd 4k 12k" \
->   		-c "$map_cmd -v" $testfile | $filter_cmd
->   	[ $? -ne 0 ]&&  die_now
-> +
-> +	echo "	14. data ->  hole @ EOF"
-> +	rm -f $testfile
-> +	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
-> +		-c "pwrite 0 20k" $sync_cmd \
-> +		-c "$zero_cmd 12k 8k" \
-> +		-c "$map_cmd -v" $testfile | $filter_cmd
-> +	[ $? -ne 0 ]&&  die_now
-> +
-> +	echo "	15. data ->  hole @ 0"
-> +	if [ "$remove_testfile" ]; then
-> +		rm -f $testfile
-> +	fi
-> +	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
-> +		-c "pwrite 0 20k" $sync_cmd \
-> +		-c "$zero_cmd 0k 8k" \
-> +		-c "$map_cmd -v" $testfile | $filter_cmd
-> +	[ $? -ne 0 ]&&  die_now
-> +
-> +	echo "	16. data ->  cache cold ->hole"
-> +	if [ "$remove_testfile" ]; then
-> +		rm -f $testfile
-> +		rm -f $testfile.2
-> +	else
-> +		cp $testfile $testfile.2
-> +	fi
-> +	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
-> +		-c "pwrite 8k 12k" -c "fsync" $testfile.2 \
-> +		>  /dev/null
-> +	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
-> +		-c "pwrite 0 20k" $sync_cmd \
-> +		-c "$zero_cmd 0k 8k" \
-> +		-c "fadvise -d" \
-> +		-c "$map_cmd -v" $testfile | $filter_cmd
-> +	diff $testfile $testfile.2
-> +	[ $? -ne 0 ]&&  die_now
-> +	rm -f $testfile.2
-> +
-> +	echo "	17. data ->  hole in single block file"
-> +	if [ "$remove_testfile" ]; then
-> +		rm -f $testfile
-> +	fi
-> +	block_size=`stat -f $TEST_DEV | grep "Block size" | cut -d " " -f3`
-> +	$XFS_IO_PROG $xfs_io_opt -f -c "truncate $block_size" \
-> +		-c "pwrite 0 $block_size" $sync_cmd \
-> +		-c "$zero_cmd 128 128" \
-> +		-c "$map_cmd -v" $testfile | $filter_cmd
-> +	[ $? -ne 0 ]&&  die_now
-> +
->   }
+    Signed-off-by: Dave Chinner <dchinner@redhat.com>
+    Reviewed-by: Alex Elder <aelder@sgi.com>
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
