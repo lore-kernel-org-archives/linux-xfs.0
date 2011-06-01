@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p51Asw3U115917 for <xfs@oss.sgi.com>; Wed, 1 Jun 2011 05:54:58 -0500
+	p51B5m0t116251 for <xfs@oss.sgi.com>; Wed, 1 Jun 2011 06:05:48 -0500
 Received: from server655-han.de-nserver.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6D4E0165CB9E
-	for <xfs@oss.sgi.com>; Wed,  1 Jun 2011 03:54:56 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D2B181ED09DB
+	for <xfs@oss.sgi.com>; Wed,  1 Jun 2011 04:05:47 -0700 (PDT)
 Received: from server655-han.de-nserver.de (server655-han.de-nserver.de
-	[85.158.177.45]) by cuda.sgi.com with ESMTP id w0Dd89BVCqKZ2lNr
-	for <xfs@oss.sgi.com>; Wed, 01 Jun 2011 03:54:56 -0700 (PDT)
-Message-ID: <4DE61A7F.40800@profihost.ag>
-Date: Wed, 01 Jun 2011 12:54:55 +0200
+	[85.158.177.45]) by cuda.sgi.com with ESMTP id g0oq7aTPM3FxcGKy
+	for <xfs@oss.sgi.com>; Wed, 01 Jun 2011 04:05:47 -0700 (PDT)
+Message-ID: <4DE61D09.8010507@profihost.ag>
+Date: Wed, 01 Jun 2011 13:05:45 +0200
 From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
 MIME-Version: 1.0
 Subject: XFS crashes with shrink_slab: xfs_reclaim_inode_shrink+0x0/0x10d
