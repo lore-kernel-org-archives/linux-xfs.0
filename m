@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5271Lxe180466 for <xfs@oss.sgi.com>; Thu, 2 Jun 2011 02:01:21 -0500
+	p5271pes180621 for <xfs@oss.sgi.com>; Thu, 2 Jun 2011 02:01:51 -0500
 Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7478915DACF1
-	for <xfs@oss.sgi.com>; Thu,  2 Jun 2011 00:01:19 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6DC021ED190E
+	for <xfs@oss.sgi.com>; Thu,  2 Jun 2011 00:01:49 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	snjbPSq9aVnNR9Qy for <xfs@oss.sgi.com>;
-	Thu, 02 Jun 2011 00:01:19 -0700 (PDT)
+	vP1kHukR05NyRpFF for <xfs@oss.sgi.com>;
+	Thu, 02 Jun 2011 00:01:49 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 02/12] vmscan: shrinker->nr updates race and go wrong
-Date: Thu,  2 Jun 2011 17:00:57 +1000
-Message-Id: <1306998067-27659-3-git-send-email-david@fromorbit.com>
+Subject: [PATCH 12/12] xfs: make use of new shrinker callout for the inode
+	cache
+Date: Thu,  2 Jun 2011 17:01:07 +1000
+Message-Id: <1306998067-27659-13-git-send-email-david@fromorbit.com>
 In-Reply-To: <1306998067-27659-1-git-send-email-david@fromorbit.com>
 References: <1306998067-27659-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,173 +34,230 @@ Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-shrink_slab() allows shrinkers to be called in parallel so the
-struct shrinker can be updated concurrently. It does not provide any
-exclusio for such updates, so we can get the shrinker->nr value
-increasing or decreasing incorrectly.
-
-As a result, when a shrinker repeatedly returns a value of -1 (e.g.
-a VFS shrinker called w/ GFP_NOFS), the shrinker->nr goes haywire,
-sometimes updating with the scan count that wasn't used, sometimes
-losing it altogether. Worse is when a shrinker does work and that
-update is lost due to racy updates, which means the shrinker will do
-the work again!
-
-Fix this by making the total_scan calculations independent of
-shrinker->nr, and making the shrinker->nr updates atomic w.r.t. to
-other updates via cmpxchg loops.
+Convert the inode reclaim shrinker to use the new per-sb shrinker
+operations. This allows much bigger reclaim batches to be used, and
+allows the XFS inode cache to be shrunk in proportion with the VFS
+dentry and inode caches. This avoids the problem of the VFS caches
+being shrunk significantly before the XFS inode cache is shrunk
+resulting in imbalances in the caches during reclaim.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- include/trace/events/vmscan.h |   26 ++++++++++++++----------
- mm/vmscan.c                   |   43 ++++++++++++++++++++++++++++++----------
- 2 files changed, 47 insertions(+), 22 deletions(-)
+ fs/xfs/linux-2.6/xfs_super.c |   26 ++++++++++-----
+ fs/xfs/linux-2.6/xfs_sync.c  |   71 ++++++++++++++++--------------------------
+ fs/xfs/linux-2.6/xfs_sync.h  |    5 +--
+ 3 files changed, 46 insertions(+), 56 deletions(-)
 
-diff --git a/include/trace/events/vmscan.h b/include/trace/events/vmscan.h
-index c798cd7..6147b4e 100644
---- a/include/trace/events/vmscan.h
-+++ b/include/trace/events/vmscan.h
-@@ -311,12 +311,13 @@ TRACE_EVENT(mm_vmscan_lru_shrink_inactive,
- );
+diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
+index 1e3a7ce..b133b69 100644
+--- a/fs/xfs/linux-2.6/xfs_super.c
++++ b/fs/xfs/linux-2.6/xfs_super.c
+@@ -1087,11 +1087,6 @@ xfs_fs_put_super(
+ {
+ 	struct xfs_mount	*mp = XFS_M(sb);
  
- TRACE_EVENT(mm_shrink_slab_start,
--	TP_PROTO(struct shrinker *shr, struct shrink_control *sc,
-+	TP_PROTO(struct shrinker *shr, struct shrink_control *sc, long shr_nr,
- 		unsigned long pgs_scanned, unsigned long lru_pgs,
- 		unsigned long cache_items, unsigned long long delta,
- 		unsigned long total_scan),
+-	/*
+-	 * Unregister the memory shrinker before we tear down the mount
+-	 * structure so we don't have memory reclaim racing with us here.
+-	 */
+-	xfs_inode_shrinker_unregister(mp);
+ 	xfs_syncd_stop(mp);
  
--	TP_ARGS(shr, sc, pgs_scanned, lru_pgs, cache_items, delta, total_scan),
-+	TP_ARGS(shr, sc, shr_nr, pgs_scanned, lru_pgs,
-+		cache_items, delta, total_scan),
+ 	/*
+@@ -1491,8 +1486,6 @@ xfs_fs_fill_super(
+ 	if (error)
+ 		goto out_filestream_unmount;
  
- 	TP_STRUCT__entry(
- 		__field(struct shrinker *, shr)
-@@ -331,7 +332,7 @@ TRACE_EVENT(mm_shrink_slab_start,
+-	xfs_inode_shrinker_register(mp);
+-
+ 	error = xfs_mountfs(mp);
+ 	if (error)
+ 		goto out_syncd_stop;
+@@ -1515,7 +1508,6 @@ xfs_fs_fill_super(
+ 	return 0;
  
- 	TP_fast_assign(
- 		__entry->shr = shr;
--		__entry->shr_nr = shr->nr;
-+		__entry->shr_nr = shr_nr;
- 		__entry->gfp_flags = sc->gfp_mask;
- 		__entry->pgs_scanned = pgs_scanned;
- 		__entry->lru_pgs = lru_pgs;
-@@ -353,27 +354,30 @@ TRACE_EVENT(mm_shrink_slab_start,
- 
- TRACE_EVENT(mm_shrink_slab_end,
- 	TP_PROTO(struct shrinker *shr, int shrinker_ret,
--		unsigned long total_scan),
-+		long old_nr, long new_nr),
- 
--	TP_ARGS(shr, shrinker_ret, total_scan),
-+	TP_ARGS(shr, shrinker_ret, old_nr, new_nr),
- 
- 	TP_STRUCT__entry(
- 		__field(struct shrinker *, shr)
--		__field(long, shr_nr)
-+		__field(long, old_nr)
-+		__field(long, new_nr)
- 		__field(int, shrinker_ret)
--		__field(unsigned long, total_scan)
-+		__field(long, total_scan)
- 	),
- 
- 	TP_fast_assign(
- 		__entry->shr = shr;
--		__entry->shr_nr = shr->nr;
-+		__entry->old_nr = old_nr;
-+		__entry->new_nr = new_nr;
- 		__entry->shrinker_ret = shrinker_ret;
--		__entry->total_scan = total_scan;
-+		__entry->total_scan = new_nr - old_nr;
- 	),
- 
--	TP_printk("shrinker %p: nr %ld total_scan %ld return val %d",
-+	TP_printk("shrinker %p: old_nr %ld new_nr %ld total_scan %ld return val %d",
- 		__entry->shr,
--		__entry->shr_nr,
-+		__entry->old_nr,
-+		__entry->new_nr,
- 		__entry->total_scan,
- 		__entry->shrinker_ret)
- );
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 48e3fbd..dce2767 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -251,17 +251,29 @@ unsigned long shrink_slab(struct shrink_control *shrink,
- 		unsigned long total_scan;
- 		unsigned long max_pass;
- 		int shrink_ret = 0;
-+		long nr;
-+		long new_nr;
- 
-+		/*
-+		 * copy the current shrinker scan count into a local variable
-+		 * and zero it so that other concurrent shrinker invocations
-+		 * don't also do this scanning work.
-+		 */
-+		do {
-+			nr = shrinker->nr;
-+		} while (cmpxchg(&shrinker->nr, nr, 0) != nr);
-+
-+		total_scan = nr;
- 		max_pass = do_shrinker_shrink(shrinker, shrink, 0);
- 		delta = (4 * nr_pages_scanned) / shrinker->seeks;
- 		delta *= max_pass;
- 		do_div(delta, lru_pages + 1);
--		shrinker->nr += delta;
--		if (shrinker->nr < 0) {
-+		total_scan += delta;
-+		if (total_scan < 0) {
- 			printk(KERN_ERR "shrink_slab: %pF negative objects to "
- 			       "delete nr=%ld\n",
--			       shrinker->shrink, shrinker->nr);
--			shrinker->nr = max_pass;
-+			       shrinker->shrink, total_scan);
-+			total_scan = max_pass;
- 		}
- 
- 		/*
-@@ -269,13 +281,11 @@ unsigned long shrink_slab(struct shrink_control *shrink,
- 		 * never try to free more than twice the estimate number of
- 		 * freeable entries.
- 		 */
--		if (shrinker->nr > max_pass * 2)
--			shrinker->nr = max_pass * 2;
-+		if (total_scan > max_pass * 2)
-+			total_scan = max_pass * 2;
- 
--		total_scan = shrinker->nr;
--		shrinker->nr = 0;
- 
--		trace_mm_shrink_slab_start(shrinker, shrink, nr_pages_scanned,
-+		trace_mm_shrink_slab_start(shrinker, shrink, nr, nr_pages_scanned,
- 					lru_pages, max_pass, delta, total_scan);
- 
- 		while (total_scan >= SHRINK_BATCH) {
-@@ -295,8 +305,19 @@ unsigned long shrink_slab(struct shrink_control *shrink,
- 			cond_resched();
- 		}
- 
--		shrinker->nr += total_scan;
--		trace_mm_shrink_slab_end(shrinker, shrink_ret, total_scan);
-+		/*
-+		 * move the unused scan count back into the shrinker in a
-+		 * manner that handles concurrent updates. If we exhausted the
-+		 * scan, there is no need to do an update.
-+		 */
-+		do {
-+			nr = shrinker->nr;
-+			new_nr = total_scan + nr;
-+			if (total_scan <= 0)
-+				break;
-+		} while (cmpxchg(&shrinker->nr, nr, new_nr) != nr);
-+
-+		trace_mm_shrink_slab_end(shrinker, shrink_ret, nr, new_nr);
+  out_syncd_stop:
+-	xfs_inode_shrinker_unregister(mp);
+ 	xfs_syncd_stop(mp);
+  out_filestream_unmount:
+ 	xfs_filestream_unmount(mp);
+@@ -1540,7 +1532,6 @@ xfs_fs_fill_super(
  	}
- 	up_read(&shrinker_rwsem);
- out:
+ 
+  fail_unmount:
+-	xfs_inode_shrinker_unregister(mp);
+ 	xfs_syncd_stop(mp);
+ 
+ 	/*
+@@ -1566,6 +1557,21 @@ xfs_fs_mount(
+ 	return mount_bdev(fs_type, flags, dev_name, data, xfs_fs_fill_super);
+ }
+ 
++static int
++xfs_fs_nr_cached_objects(
++	struct super_block	*sb)
++{
++	return xfs_reclaim_inodes_count(XFS_M(sb));
++}
++
++static void
++xfs_fs_free_cached_objects(
++	struct super_block	*sb,
++	int			nr_to_scan)
++{
++	xfs_reclaim_inodes_nr(XFS_M(sb), nr_to_scan);
++}
++
+ static const struct super_operations xfs_super_operations = {
+ 	.alloc_inode		= xfs_fs_alloc_inode,
+ 	.destroy_inode		= xfs_fs_destroy_inode,
+@@ -1579,6 +1585,8 @@ static const struct super_operations xfs_super_operations = {
+ 	.statfs			= xfs_fs_statfs,
+ 	.remount_fs		= xfs_fs_remount,
+ 	.show_options		= xfs_fs_show_options,
++	.nr_cached_objects	= xfs_fs_nr_cached_objects,
++	.free_cached_objects	= xfs_fs_free_cached_objects,
+ };
+ 
+ static struct file_system_type xfs_fs_type = {
+diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
+index 8ecad5f..9bd7e89 100644
+--- a/fs/xfs/linux-2.6/xfs_sync.c
++++ b/fs/xfs/linux-2.6/xfs_sync.c
+@@ -179,6 +179,8 @@ restart:
+ 		if (error == EFSCORRUPTED)
+ 			break;
+ 
++		cond_resched();
++
+ 	} while (nr_found && !done);
+ 
+ 	if (skipped) {
+@@ -986,6 +988,8 @@ restart:
+ 
+ 			*nr_to_scan -= XFS_LOOKUP_BATCH;
+ 
++			cond_resched();
++
+ 		} while (nr_found && !done && *nr_to_scan > 0);
+ 
+ 		if (trylock && !done)
+@@ -1003,7 +1007,7 @@ restart:
+ 	 * ensure that when we get more reclaimers than AGs we block rather
+ 	 * than spin trying to execute reclaim.
+ 	 */
+-	if (trylock && skipped && *nr_to_scan > 0) {
++	if (skipped && (flags & SYNC_WAIT) && *nr_to_scan > 0) {
+ 		trylock = 0;
+ 		goto restart;
+ 	}
+@@ -1021,44 +1025,38 @@ xfs_reclaim_inodes(
+ }
+ 
+ /*
+- * Inode cache shrinker.
++ * Scan a certain number of inodes for reclaim.
+  *
+  * When called we make sure that there is a background (fast) inode reclaim in
+- * progress, while we will throttle the speed of reclaim via doiing synchronous
++ * progress, while we will throttle the speed of reclaim via doing synchronous
+  * reclaim of inodes. That means if we come across dirty inodes, we wait for
+  * them to be cleaned, which we hope will not be very long due to the
+  * background walker having already kicked the IO off on those dirty inodes.
+  */
+-static int
+-xfs_reclaim_inode_shrink(
+-	struct shrinker	*shrink,
+-	struct shrink_control *sc)
++void
++xfs_reclaim_inodes_nr(
++	struct xfs_mount	*mp,
++	int			nr_to_scan)
+ {
+-	struct xfs_mount *mp;
+-	struct xfs_perag *pag;
+-	xfs_agnumber_t	ag;
+-	int		reclaimable;
+-	int nr_to_scan = sc->nr_to_scan;
+-	gfp_t gfp_mask = sc->gfp_mask;
+-
+-	mp = container_of(shrink, struct xfs_mount, m_inode_shrink);
+-	if (nr_to_scan) {
+-		/* kick background reclaimer and push the AIL */
+-		xfs_syncd_queue_reclaim(mp);
+-		xfs_ail_push_all(mp->m_ail);
++	/* kick background reclaimer and push the AIL */
++	xfs_syncd_queue_reclaim(mp);
++	xfs_ail_push_all(mp->m_ail);
+ 
+-		if (!(gfp_mask & __GFP_FS))
+-			return -1;
++	xfs_reclaim_inodes_ag(mp, SYNC_TRYLOCK | SYNC_WAIT, &nr_to_scan);
++}
+ 
+-		xfs_reclaim_inodes_ag(mp, SYNC_TRYLOCK | SYNC_WAIT,
+-					&nr_to_scan);
+-		/* terminate if we don't exhaust the scan */
+-		if (nr_to_scan > 0)
+-			return -1;
+-       }
++/*
++ * Return the number of reclaimable inodes in the filesystem for
++ * the shrinker to determine how much to reclaim.
++ */
++int
++xfs_reclaim_inodes_count(
++	struct xfs_mount	*mp)
++{
++	struct xfs_perag	*pag;
++	xfs_agnumber_t		ag = 0;
++	int			reclaimable = 0;
+ 
+-	reclaimable = 0;
+-	ag = 0;
+ 	while ((pag = xfs_perag_get_tag(mp, ag, XFS_ICI_RECLAIM_TAG))) {
+ 		ag = pag->pag_agno + 1;
+ 		reclaimable += pag->pag_ici_reclaimable;
+@@ -1067,18 +1065,3 @@ xfs_reclaim_inode_shrink(
+ 	return reclaimable;
+ }
+ 
+-void
+-xfs_inode_shrinker_register(
+-	struct xfs_mount	*mp)
+-{
+-	mp->m_inode_shrink.shrink = xfs_reclaim_inode_shrink;
+-	mp->m_inode_shrink.seeks = DEFAULT_SEEKS;
+-	register_shrinker(&mp->m_inode_shrink);
+-}
+-
+-void
+-xfs_inode_shrinker_unregister(
+-	struct xfs_mount	*mp)
+-{
+-	unregister_shrinker(&mp->m_inode_shrink);
+-}
+diff --git a/fs/xfs/linux-2.6/xfs_sync.h b/fs/xfs/linux-2.6/xfs_sync.h
+index e3a6ad2..2e15685 100644
+--- a/fs/xfs/linux-2.6/xfs_sync.h
++++ b/fs/xfs/linux-2.6/xfs_sync.h
+@@ -43,6 +43,8 @@ void xfs_quiesce_attr(struct xfs_mount *mp);
+ void xfs_flush_inodes(struct xfs_inode *ip);
+ 
+ int xfs_reclaim_inodes(struct xfs_mount *mp, int mode);
++int xfs_reclaim_inodes_count(struct xfs_mount *mp);
++void xfs_reclaim_inodes_nr(struct xfs_mount *mp, int nr_to_scan);
+ 
+ void xfs_inode_set_reclaim_tag(struct xfs_inode *ip);
+ void __xfs_inode_set_reclaim_tag(struct xfs_perag *pag, struct xfs_inode *ip);
+@@ -54,7 +56,4 @@ int xfs_inode_ag_iterator(struct xfs_mount *mp,
+ 	int (*execute)(struct xfs_inode *ip, struct xfs_perag *pag, int flags),
+ 	int flags);
+ 
+-void xfs_inode_shrinker_register(struct xfs_mount *mp);
+-void xfs_inode_shrinker_unregister(struct xfs_mount *mp);
+-
+ #endif
 -- 
 1.7.5.1
 
