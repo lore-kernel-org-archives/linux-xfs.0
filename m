@@ -1,20 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5271lQn180561 for <xfs@oss.sgi.com>; Thu, 2 Jun 2011 02:01:47 -0500
-Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A59F01ED1906
-	for <xfs@oss.sgi.com>; Thu,  2 Jun 2011 00:01:45 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	GfV4XkKcn2mHXBRp for <xfs@oss.sgi.com>;
-	Thu, 02 Jun 2011 00:01:45 -0700 (PDT)
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 11/12] vfs: increase shrinker batch size
-Date: Thu,  2 Jun 2011 17:01:06 +1000
-Message-Id: <1306998067-27659-12-git-send-email-david@fromorbit.com>
-In-Reply-To: <1306998067-27659-1-git-send-email-david@fromorbit.com>
-References: <1306998067-27659-1-git-send-email-david@fromorbit.com>
+	p527BjII181056 for <xfs@oss.sgi.com>; Thu, 2 Jun 2011 02:11:45 -0500
+Received: from mail-ww0-f51.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id AC7F31ED1ED6
+	for <xfs@oss.sgi.com>; Thu,  2 Jun 2011 00:11:43 -0700 (PDT)
+Received: from mail-ww0-f51.google.com (mail-ww0-f51.google.com
+	[74.125.82.51]) by cuda.sgi.com with ESMTP id NISbf3XJK6qPVBSB
+	for <xfs@oss.sgi.com>; Thu, 02 Jun 2011 00:11:43 -0700 (PDT)
+Received: by wwf26 with SMTP id 26so455579wwf.32
+	for <xfs@oss.sgi.com>; Thu, 02 Jun 2011 00:11:43 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20110602064040.GS561@dastard>
+References: <1306933012-8666-1-git-send-email-amir73il@users.sourceforge.net>
+	<20110601232804.GL32466@dastard>
+	<BANLkTi=sV5=PyZvNSd=DGNW-V84=27d7Yw@mail.gmail.com>
+	<BANLkTimbPWfOJKq6er4mnSYNPcx6VHLcrw@mail.gmail.com>
+	<20110602030802.GR561@dastard>
+	<BANLkTi=sPM_AYB4w=N5pWHfws9R3WnfJVw@mail.gmail.com>
+	<20110602064040.GS561@dastard>
+Date: Thu, 2 Jun 2011 10:11:43 +0300
+Message-ID: <BANLkTinJcvvv2pfXBt7EZ9TXONb9jRe0uQ@mail.gmail.com>
+Subject: Re: [PATCH v2] xfstests: add support for ext4dev FSTYP
+From: "Amir G." <amir73il@users.sourceforge.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,68 +31,120 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-fsdevel@vger.kernel.org
-Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: sandeen@redhat.com, Amir Goldstein <amir73il@users.sf.net>, xfs@oss.sgi.com, sergey57@gmail.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On Thu, Jun 2, 2011 at 9:40 AM, Dave Chinner <david@fromorbit.com> wrote:
+> On Thu, Jun 02, 2011 at 06:49:20AM +0300, Amir G. wrote:
+>> On Thu, Jun 2, 2011 at 6:08 AM, Dave Chinner <david@fromorbit.com> wrote:
+>> > On Thu, Jun 02, 2011 at 05:33:34AM +0300, Amir G. wrote:
+>> >> On Thu, Jun 2, 2011 at 5:16 AM, Amir G. <amir73il@users.sourceforge.n=
+et> wrote:
+>> >> > On Thu, Jun 2, 2011 at 2:28 AM, Dave Chinner <david@fromorbit.com> =
+wrote:
+>> > Personally I think that ext4dev shouldn't be supported at all. A
+>> > special fstyp iwhile ext4 was being developed was, IMO, a stupid
+>> > thing to do in the first place, and I was happy when it died. It
+>> > should not be resurrected and propagated.
+>> >
+>> > xfstests assumes that you are using a userspace that is current with
+>> > the version of the filesystem the kernel supports. If you are
+>> > running a development/special branch of ext4, then you need to be
+>> > running a userspace that understands it completely. If all you are
+>> > doing with the ext4dev fstyp is trying to vector to a different fsck
+>> > program that supports a new set of feature bits, then IMO you are
+>> > doing it all wrong.
+>> >
+>> > Fundamentally, the filesystem is either ext4 or it isn't. If the
+>> > features are never going to make it into mainline ext4, then you
+>> > need a completely different fstype and full userspace support for
+>> > that fstype. Once you have that, you can add the fstype support to
+>> > xfstests. However, just using a different fstyp just to set a
+>> > certain set of feature flags is, again IMO, a pretty stupid way of
+>> > going about this.
+>> >
+>>
+>> The features are going into mainline, but are not there yet.
+>
+> So using feature bits as they were intended is the right thing to
+> do, isn't it?
 
-Now that the per-sb shrinker is responsible for shrinking 2 or more
-caches, increase the batch size to keep econmies of scale for
-shrinking each cache.  Increase the shrinker batch size to 1024
-objects.
+I am not sure what you mean by that.
+The fact that to this day fsck.ext2/3/4 have always been the same
+file (hence support the same feature set) does not mean that they have
+to be that way by design.
 
-To allow for a large increase in batch size, add a conditional
-reschedule to prune_icache_sb() so that we don't hold the LRU spin
-lock for too long. This mirrors the behaviour of the
-__shrink_dcache_sb(), and allows us to increase the batch size
-without needing to worry about problems caused by long lock hold
-times.
+on my test system fsck.ext4dev must be used to test ext4dev, which has
+newer features than ext4.
+I fail to see the problem with that.
 
-To ensure that filesystems using the per-sb shrinker callouts don't
-cause problems, document that the object freeing method must
-reschedule appropriately inside loops.
+>
+>> I did not invent the ext4dev standard, which is pretty well supported
+>> by all relevant tools, but I find it very convenient for the testing.
+>
+> As I understand it, ext4dev is deprecated and should not be used for
+> any new filesystems. When did that status change?
+>
+> Or did you just start using it because it's convenient for your
+> purposes? =A0What happens when someone else decides to use ext4dev for
+> testing incompatible development features because it is convenient
+> for them?
+>
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- Documentation/filesystems/vfs.txt |    5 +++++
- fs/super.c                        |    1 +
- 2 files changed, 6 insertions(+), 0 deletions(-)
+The way I see it, ext4dev is a tool for ext4 developers (and testers).
+Anyone can use it for their own needs and it would be convenient for everyo=
+ne.
+I never suggested that Fedora push my ext4dev utils as a standard package.
+But me and my group can use it to test the snapshots feature and Ted
+and his group can use it to test the allocation clusters feature.
 
-diff --git a/Documentation/filesystems/vfs.txt b/Documentation/filesystems/vfs.txt
-index dc732d2..2e26973 100644
---- a/Documentation/filesystems/vfs.txt
-+++ b/Documentation/filesystems/vfs.txt
-@@ -317,6 +317,11 @@ or bottom half).
- 	the VM is trying to reclaim under GFP_NOFS conditions, hence this
- 	method does not need to handle that situation itself.
- 
-+	Implementations must include conditional reschedule calls inside any
-+	scanning loop that is done. This allows the VFS to determine
-+	appropriate scan batch sizes without having to worry about whether
-+	implementations will cause holdoff problems due ot large batch sizes.
-+
- Whoever sets up the inode is responsible for filling in the "i_op" field. This
- is a pointer to a "struct inode_operations" which describes the methods that
- can be performed on individual inodes.
-diff --git a/fs/super.c b/fs/super.c
-index b55f968..323a63e 100644
---- a/fs/super.c
-+++ b/fs/super.c
-@@ -184,6 +184,7 @@ static struct super_block *alloc_super(struct file_system_type *type)
- 
- 		s->s_shrink.seeks = DEFAULT_SEEKS;
- 		s->s_shrink.shrink = prune_super;
-+		s->s_shrink.batch = 1024;
- 	}
- out:
- 	return s;
--- 
-1.7.5.1
+
+>> Especially, when I expect my testers to be running a stable
+>> distro release (i.e. F15 or Ubuntu 11.4) and be able to install
+>> my experimental ext4dev module and utils, without it affecting
+>> their (most likely) root ext4/ext3 fs.
+>
+> So get them to use an ext3, XFS, reiser or JFS root filesystem if
+> that's your major concern. That's long been a best practice for
+> configuring a filesystem test box - don't use the same filesystem
+> for your root/stable filesystems as the filesytsem you are testing.
+>
+> e.g. If you pick ext3 for the root filesystem, then you can test
+> ext4, btrfs, xfs, etc changes without having to worry about whether
+> the development module being tested is going to affect your root
+> filesystem....
+
+You make it sound as if I have a flock of testers out there waiting for
+me to feed them with use cases to test and who abide to my setup
+instructions.
+
+Wake up call! this is not the case for me and for most developers.
+If I'm lucky, I can get a e few testers who will say:
+OK, if all I have to do is download this package and run 'make test'
+I can spare an hour to play with it.
+
+So, yes, it's true. There are other ways to accomplish what I am doing,
+but I am going out of my way to try to make the life of developers and test=
+ers
+easier and you are doing the exact opposite by raising objections to a rath=
+er
+trivial and harmless patch.
+
+Let me ask you this: which FSTYP will be useful to more developers
+ext4dev or reiserfs?
+
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
+>
 
 _______________________________________________
 xfs mailing list
