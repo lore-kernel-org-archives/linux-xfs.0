@@ -1,28 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p527BjII181056 for <xfs@oss.sgi.com>; Thu, 2 Jun 2011 02:11:45 -0500
-Received: from mail-ww0-f51.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AC7F31ED1ED6
-	for <xfs@oss.sgi.com>; Thu,  2 Jun 2011 00:11:43 -0700 (PDT)
-Received: from mail-ww0-f51.google.com (mail-ww0-f51.google.com
-	[74.125.82.51]) by cuda.sgi.com with ESMTP id NISbf3XJK6qPVBSB
-	for <xfs@oss.sgi.com>; Thu, 02 Jun 2011 00:11:43 -0700 (PDT)
-Received: by wwf26 with SMTP id 26so455579wwf.32
-	for <xfs@oss.sgi.com>; Thu, 02 Jun 2011 00:11:43 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20110602064040.GS561@dastard>
-References: <1306933012-8666-1-git-send-email-amir73il@users.sourceforge.net>
-	<20110601232804.GL32466@dastard>
-	<BANLkTi=sV5=PyZvNSd=DGNW-V84=27d7Yw@mail.gmail.com>
-	<BANLkTimbPWfOJKq6er4mnSYNPcx6VHLcrw@mail.gmail.com>
-	<20110602030802.GR561@dastard>
-	<BANLkTi=sPM_AYB4w=N5pWHfws9R3WnfJVw@mail.gmail.com>
-	<20110602064040.GS561@dastard>
-Date: Thu, 2 Jun 2011 10:11:43 +0300
-Message-ID: <BANLkTinJcvvv2pfXBt7EZ9TXONb9jRe0uQ@mail.gmail.com>
-Subject: Re: [PATCH v2] xfstests: add support for ext4dev FSTYP
-From: "Amir G." <amir73il@users.sourceforge.net>
+	p5271MV6180476 for <xfs@oss.sgi.com>; Thu, 2 Jun 2011 02:01:23 -0500
+Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E52E915DACF1
+	for <xfs@oss.sgi.com>; Thu,  2 Jun 2011 00:01:20 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	iu526RXOhQdHAVGd for <xfs@oss.sgi.com>;
+	Thu, 02 Jun 2011 00:01:20 -0700 (PDT)
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 06/12] inode: Make unused inode LRU per superblock
+Date: Thu,  2 Jun 2011 17:01:01 +1000
+Message-Id: <1306998067-27659-7-git-send-email-david@fromorbit.com>
+In-Reply-To: <1306998067-27659-1-git-send-email-david@fromorbit.com>
+References: <1306998067-27659-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,120 +23,249 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: sandeen@redhat.com, Amir Goldstein <amir73il@users.sf.net>, xfs@oss.sgi.com, sergey57@gmail.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org
+Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Thu, Jun 2, 2011 at 9:40 AM, Dave Chinner <david@fromorbit.com> wrote:
-> On Thu, Jun 02, 2011 at 06:49:20AM +0300, Amir G. wrote:
->> On Thu, Jun 2, 2011 at 6:08 AM, Dave Chinner <david@fromorbit.com> wrote:
->> > On Thu, Jun 02, 2011 at 05:33:34AM +0300, Amir G. wrote:
->> >> On Thu, Jun 2, 2011 at 5:16 AM, Amir G. <amir73il@users.sourceforge.n=
-et> wrote:
->> >> > On Thu, Jun 2, 2011 at 2:28 AM, Dave Chinner <david@fromorbit.com> =
-wrote:
->> > Personally I think that ext4dev shouldn't be supported at all. A
->> > special fstyp iwhile ext4 was being developed was, IMO, a stupid
->> > thing to do in the first place, and I was happy when it died. It
->> > should not be resurrected and propagated.
->> >
->> > xfstests assumes that you are using a userspace that is current with
->> > the version of the filesystem the kernel supports. If you are
->> > running a development/special branch of ext4, then you need to be
->> > running a userspace that understands it completely. If all you are
->> > doing with the ext4dev fstyp is trying to vector to a different fsck
->> > program that supports a new set of feature bits, then IMO you are
->> > doing it all wrong.
->> >
->> > Fundamentally, the filesystem is either ext4 or it isn't. If the
->> > features are never going to make it into mainline ext4, then you
->> > need a completely different fstype and full userspace support for
->> > that fstype. Once you have that, you can add the fstype support to
->> > xfstests. However, just using a different fstyp just to set a
->> > certain set of feature flags is, again IMO, a pretty stupid way of
->> > going about this.
->> >
->>
->> The features are going into mainline, but are not there yet.
->
-> So using feature bits as they were intended is the right thing to
-> do, isn't it?
+From: Dave Chinner <dchinner@redhat.com>
 
-I am not sure what you mean by that.
-The fact that to this day fsck.ext2/3/4 have always been the same
-file (hence support the same feature set) does not mean that they have
-to be that way by design.
+The inode unused list is currently a global LRU. This does not match
+the other global filesystem cache - the dentry cache - which uses
+per-superblock LRU lists. Hence we have related filesystem object
+types using different LRU reclaimation schemes.
 
-on my test system fsck.ext4dev must be used to test ext4dev, which has
-newer features than ext4.
-I fail to see the problem with that.
+To enable a per-superblock filesystem cache shrinker, both of these
+caches need to have per-sb unused object LRU lists. Hence this patch
+converts the global inode LRU to per-sb LRUs.
 
->
->> I did not invent the ext4dev standard, which is pretty well supported
->> by all relevant tools, but I find it very convenient for the testing.
->
-> As I understand it, ext4dev is deprecated and should not be used for
-> any new filesystems. When did that status change?
->
-> Or did you just start using it because it's convenient for your
-> purposes? =A0What happens when someone else decides to use ext4dev for
-> testing incompatible development features because it is convenient
-> for them?
->
+The patch only does rudimentary per-sb propotioning in the shrinker
+infrastructure, as this gets removed when the per-sb shrinker
+callouts are introduced later on.
 
-The way I see it, ext4dev is a tool for ext4 developers (and testers).
-Anyone can use it for their own needs and it would be convenient for everyo=
-ne.
-I never suggested that Fedora push my ext4dev utils as a standard package.
-But me and my group can use it to test the snapshots feature and Ted
-and his group can use it to test the allocation clusters feature.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/inode.c         |   91 +++++++++++++++++++++++++++++++++++++++++++++------
+ fs/super.c         |    1 +
+ include/linux/fs.h |    4 ++
+ 3 files changed, 85 insertions(+), 11 deletions(-)
 
-
->> Especially, when I expect my testers to be running a stable
->> distro release (i.e. F15 or Ubuntu 11.4) and be able to install
->> my experimental ext4dev module and utils, without it affecting
->> their (most likely) root ext4/ext3 fs.
->
-> So get them to use an ext3, XFS, reiser or JFS root filesystem if
-> that's your major concern. That's long been a best practice for
-> configuring a filesystem test box - don't use the same filesystem
-> for your root/stable filesystems as the filesytsem you are testing.
->
-> e.g. If you pick ext3 for the root filesystem, then you can test
-> ext4, btrfs, xfs, etc changes without having to worry about whether
-> the development module being tested is going to affect your root
-> filesystem....
-
-You make it sound as if I have a flock of testers out there waiting for
-me to feed them with use cases to test and who abide to my setup
-instructions.
-
-Wake up call! this is not the case for me and for most developers.
-If I'm lucky, I can get a e few testers who will say:
-OK, if all I have to do is download this package and run 'make test'
-I can spare an hour to play with it.
-
-So, yes, it's true. There are other ways to accomplish what I am doing,
-but I am going out of my way to try to make the life of developers and test=
-ers
-easier and you are doing the exact opposite by raising objections to a rath=
-er
-trivial and harmless patch.
-
-Let me ask you this: which FSTYP will be useful to more developers
-ext4dev or reiserfs?
-
->
-> Cheers,
->
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
->
+diff --git a/fs/inode.c b/fs/inode.c
+index 17fea5b..e039115 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -34,7 +34,7 @@
+  * inode->i_lock protects:
+  *   inode->i_state, inode->i_hash, __iget()
+  * inode_lru_lock protects:
+- *   inode_lru, inode->i_lru
++ *   inode->i_sb->s_inode_lru, inode->i_lru
+  * inode_sb_list_lock protects:
+  *   sb->s_inodes, inode->i_sb_list
+  * inode_wb_list_lock protects:
+@@ -64,7 +64,6 @@ static unsigned int i_hash_shift __read_mostly;
+ static struct hlist_head *inode_hashtable __read_mostly;
+ static __cacheline_aligned_in_smp DEFINE_SPINLOCK(inode_hash_lock);
+ 
+-static LIST_HEAD(inode_lru);
+ static DEFINE_SPINLOCK(inode_lru_lock);
+ 
+ __cacheline_aligned_in_smp DEFINE_SPINLOCK(inode_sb_list_lock);
+@@ -345,7 +344,8 @@ static void inode_lru_list_add(struct inode *inode)
+ {
+ 	spin_lock(&inode_lru_lock);
+ 	if (list_empty(&inode->i_lru)) {
+-		list_add(&inode->i_lru, &inode_lru);
++		list_add(&inode->i_lru, &inode->i_sb->s_inode_lru);
++		inode->i_sb->s_nr_inodes_unused++;
+ 		this_cpu_inc(nr_unused);
+ 	}
+ 	spin_unlock(&inode_lru_lock);
+@@ -356,6 +356,7 @@ static void inode_lru_list_del(struct inode *inode)
+ 	spin_lock(&inode_lru_lock);
+ 	if (!list_empty(&inode->i_lru)) {
+ 		list_del_init(&inode->i_lru);
++		inode->i_sb->s_nr_inodes_unused--;
+ 		this_cpu_dec(nr_unused);
+ 	}
+ 	spin_unlock(&inode_lru_lock);
+@@ -621,21 +622,20 @@ static int can_unuse(struct inode *inode)
+  * LRU does not have strict ordering. Hence we don't want to reclaim inodes
+  * with this flag set because they are the inodes that are out of order.
+  */
+-static void prune_icache(int nr_to_scan)
++static void shrink_icache_sb(struct super_block *sb, int *nr_to_scan)
+ {
+ 	LIST_HEAD(freeable);
+ 	int nr_scanned;
+ 	unsigned long reap = 0;
+ 
+-	down_read(&iprune_sem);
+ 	spin_lock(&inode_lru_lock);
+-	for (nr_scanned = 0; nr_scanned < nr_to_scan; nr_scanned++) {
++	for (nr_scanned = *nr_to_scan; nr_scanned >= 0; nr_scanned--) {
+ 		struct inode *inode;
+ 
+-		if (list_empty(&inode_lru))
++		if (list_empty(&sb->s_inode_lru))
+ 			break;
+ 
+-		inode = list_entry(inode_lru.prev, struct inode, i_lru);
++		inode = list_entry(sb->s_inode_lru.prev, struct inode, i_lru);
+ 
+ 		/*
+ 		 * we are inverting the inode_lru_lock/inode->i_lock here,
+@@ -643,7 +643,7 @@ static void prune_icache(int nr_to_scan)
+ 		 * inode to the back of the list so we don't spin on it.
+ 		 */
+ 		if (!spin_trylock(&inode->i_lock)) {
+-			list_move(&inode->i_lru, &inode_lru);
++			list_move(&inode->i_lru, &sb->s_inode_lru);
+ 			continue;
+ 		}
+ 
+@@ -655,6 +655,7 @@ static void prune_icache(int nr_to_scan)
+ 		    (inode->i_state & ~I_REFERENCED)) {
+ 			list_del_init(&inode->i_lru);
+ 			spin_unlock(&inode->i_lock);
++			sb->s_nr_inodes_unused--;
+ 			this_cpu_dec(nr_unused);
+ 			continue;
+ 		}
+@@ -662,7 +663,7 @@ static void prune_icache(int nr_to_scan)
+ 		/* recently referenced inodes get one more pass */
+ 		if (inode->i_state & I_REFERENCED) {
+ 			inode->i_state &= ~I_REFERENCED;
+-			list_move(&inode->i_lru, &inode_lru);
++			list_move(&inode->i_lru, &sb->s_inode_lru);
+ 			spin_unlock(&inode->i_lock);
+ 			continue;
+ 		}
+@@ -676,7 +677,7 @@ static void prune_icache(int nr_to_scan)
+ 			iput(inode);
+ 			spin_lock(&inode_lru_lock);
+ 
+-			if (inode != list_entry(inode_lru.next,
++			if (inode != list_entry(sb->s_inode_lru.next,
+ 						struct inode, i_lru))
+ 				continue;	/* wrong inode or list_empty */
+ 			/* avoid lock inversions with trylock */
+@@ -692,6 +693,7 @@ static void prune_icache(int nr_to_scan)
+ 		spin_unlock(&inode->i_lock);
+ 
+ 		list_move(&inode->i_lru, &freeable);
++		sb->s_nr_inodes_unused--;
+ 		this_cpu_dec(nr_unused);
+ 	}
+ 	if (current_is_kswapd())
+@@ -699,8 +701,75 @@ static void prune_icache(int nr_to_scan)
+ 	else
+ 		__count_vm_events(PGINODESTEAL, reap);
+ 	spin_unlock(&inode_lru_lock);
++	*nr_to_scan = nr_scanned;
+ 
+ 	dispose_list(&freeable);
++}
++
++static void prune_icache(int count)
++{
++	struct super_block *sb, *p = NULL;
++	int w_count;
++	int unused = inodes_stat.nr_unused;
++	int prune_ratio;
++	int pruned;
++
++	if (unused == 0 || count == 0)
++		return;
++	down_read(&iprune_sem);
++	if (count >= unused)
++		prune_ratio = 1;
++	else
++		prune_ratio = unused / count;
++	spin_lock(&sb_lock);
++	list_for_each_entry(sb, &super_blocks, s_list) {
++		if (list_empty(&sb->s_instances))
++			continue;
++		if (sb->s_nr_inodes_unused == 0)
++			continue;
++		sb->s_count++;
++		/* Now, we reclaim unused dentrins with fairness.
++		 * We reclaim them same percentage from each superblock.
++		 * We calculate number of dentries to scan on this sb
++		 * as follows, but the implementation is arranged to avoid
++		 * overflows:
++		 * number of dentries to scan on this sb =
++		 * count * (number of dentries on this sb /
++		 * number of dentries in the machine)
++		 */
++		spin_unlock(&sb_lock);
++		if (prune_ratio != 1)
++			w_count = (sb->s_nr_inodes_unused / prune_ratio) + 1;
++		else
++			w_count = sb->s_nr_inodes_unused;
++		pruned = w_count;
++		/*
++		 * We need to be sure this filesystem isn't being unmounted,
++		 * otherwise we could race with generic_shutdown_super(), and
++		 * end up holding a reference to an inode while the filesystem
++		 * is unmounted.  So we try to get s_umount, and make sure
++		 * s_root isn't NULL.
++		 */
++		if (down_read_trylock(&sb->s_umount)) {
++			if ((sb->s_root != NULL) &&
++			    (!list_empty(&sb->s_dentry_lru))) {
++				shrink_icache_sb(sb, &w_count);
++				pruned -= w_count;
++			}
++			up_read(&sb->s_umount);
++		}
++		spin_lock(&sb_lock);
++		if (p)
++			__put_super(p);
++		count -= pruned;
++		p = sb;
++		/* more work left to do? */
++		if (count <= 0)
++			break;
++	}
++	if (p)
++		__put_super(p);
++	spin_unlock(&sb_lock);
+ 	up_read(&iprune_sem);
+ }
+ 
+diff --git a/fs/super.c b/fs/super.c
+index c755939..ef7caf7 100644
+--- a/fs/super.c
++++ b/fs/super.c
+@@ -77,6 +77,7 @@ static struct super_block *alloc_super(struct file_system_type *type)
+ 		INIT_HLIST_BL_HEAD(&s->s_anon);
+ 		INIT_LIST_HEAD(&s->s_inodes);
+ 		INIT_LIST_HEAD(&s->s_dentry_lru);
++		INIT_LIST_HEAD(&s->s_inode_lru);
+ 		init_rwsem(&s->s_umount);
+ 		mutex_init(&s->s_lock);
+ 		lockdep_set_class(&s->s_umount, &type->s_umount_key);
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index c55d6b7..a96071d 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1393,6 +1393,10 @@ struct super_block {
+ 	struct list_head	s_dentry_lru;	/* unused dentry lru */
+ 	int			s_nr_dentry_unused;	/* # of dentry on lru */
+ 
++	/* inode_lru_lock protects s_inode_lru and s_nr_inodes_unused */
++	struct list_head	s_inode_lru;		/* unused inode lru */
++	int			s_nr_inodes_unused;	/* # of inodes on lru */
++
+ 	struct block_device	*s_bdev;
+ 	struct backing_dev_info *s_bdi;
+ 	struct mtd_info		*s_mtd;
+-- 
+1.7.5.1
 
 _______________________________________________
 xfs mailing list
