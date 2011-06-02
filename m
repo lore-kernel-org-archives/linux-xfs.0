@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5271nqA180604 for <xfs@oss.sgi.com>; Thu, 2 Jun 2011 02:01:49 -0500
+	p5271Lxe180466 for <xfs@oss.sgi.com>; Thu, 2 Jun 2011 02:01:21 -0500
 Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 682ED1ED190D
-	for <xfs@oss.sgi.com>; Thu,  2 Jun 2011 00:01:46 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7478915DACF1
+	for <xfs@oss.sgi.com>; Thu,  2 Jun 2011 00:01:19 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	tk2FGOLHYEq8HN7u for <xfs@oss.sgi.com>;
-	Thu, 02 Jun 2011 00:01:46 -0700 (PDT)
+	snjbPSq9aVnNR9Qy for <xfs@oss.sgi.com>;
+	Thu, 02 Jun 2011 00:01:19 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: =?UTF-8?q?=5BPATCH=2008/12=5D=20superblock=3A=20introduce=20per-sb=20cache=20shrinker=20infrastructure?=
-Date: Thu,  2 Jun 2011 17:01:03 +1000
-Message-Id: <1306998067-27659-9-git-send-email-david@fromorbit.com>
+Subject: [PATCH 02/12] vmscan: shrinker->nr updates race and go wrong
+Date: Thu,  2 Jun 2011 17:00:57 +1000
+Message-Id: <1306998067-27659-3-git-send-email-david@fromorbit.com>
 In-Reply-To: <1306998067-27659-1-git-send-email-david@fromorbit.com>
 References: <1306998067-27659-1-git-send-email-david@fromorbit.com>
-MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,282 +23,187 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org
 Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-RnJvbTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgoKV2l0aCBjb250ZXh0IGJh
-c2VkIHNocmlua2Vycywgd2UgY2FuIGltcGxlbWVudCBhIHBlci1zdXBlcmJsb2NrCnNocmlua2Vy
-IHRoYXQgc2hyaW5rcyB0aGUgY2FjaGVzIGF0dGFjaGVkIHRvIHRoZSBzdXBlcmJsb2NrLiBXZQpj
-dXJyZW50bHkgaGF2ZSBnbG9iYWwgc2hyaW5rZXJzIGZvciB0aGUgaW5vZGUgYW5kIGRlbnRyeSBj
-YWNoZXMgdGhhdApzcGxpdCB1cCBpbnRvIHBlci1zdXBlcmJsb2NrIG9wZXJhdGlvbnMgdmlhIGEg
-Y29hcnNlIHByb3BvcnRpb25pbmcKbWV0aG9kIHRoYXQgZG9lcyBub3QgYmF0Y2ggdmVyeSB3ZWxs
-LiAgVGhlIGdsb2JhbCBzaHJpbmtlcnMgYWxzbwpoYXZlIGEgZGVwZW5kZW5jeSAtIGRlbnRyaWVz
-IHBpbiBpbm9kZXMgLSBzbyB3ZSBoYXZlIHRvIGJlIHZlcnkKY2FyZWZ1bCBhYm91dCBob3cgd2Ug
-cmVnaXN0ZXIgdGhlIGdsb2JhbCBzaHJpbmtlcnMgc28gdGhhdCB0aGUKaW1wbGljaXQgY2FsbCBv
-cmRlciBpcyBhbHdheXMgY29ycmVjdC4KCldpdGggYSBwZXItc2Igc2hyaW5rZXIgY2FsbG91dCwg
-d2UgY2FuIGVuY29kZSB0aGlzIGRlcGVuZGVuY3kKZGlyZWN0bHkgaW50byB0aGUgcGVyLXNiIHNo
-cmlua2VyLCBoZW5jZSBhdm9pZGluZyB0aGUgbmVlZCBmb3IKc3RyaWN0bHkgb3JkZXJpbmcgc2hy
-aW5rZXIgcmVnaXN0cmF0aW9ucy4gV2UgYWxzbyBoYXZlIG5vIG5lZWQgZm9yCmFueSBwcm9wb3J0
-aW9uaW5nIGNvZGUgZm9yIHRoZSBzaHJpbmtlciBzdWJzeXN0ZW0gYWxyZWFkeSBwcm92aWRlcwp0
-aGlzIGZ1bmN0aW9uYWxpdHkgYWNyb3NzIGFsbCBzaHJpbmtlcnMuIEFsbG93aW5nIHRoZSBzaHJp
-bmtlciB0bwpvcGVyYXRlIG9uIGEgc2luZ2xlIHN1cGVyYmxvY2sgYXQgYSB0aW1lIG1lYW5zIHRo
-YXQgd2UgZG8gbGVzcwpzdXBlcmJsb2NrIGxpc3QgdHJhdmVyc2FscyBhbmQgbG9ja2luZyBhbmQg
-cmVjbGFpbSBzaG91bGQgYmF0Y2ggbW9yZQplZmZlY3RpdmVseS4gVGhpcyBzaG91bGQgcmVzdWx0
-IGluIGxlc3MgQ1BVIG92ZXJoZWFkIGZvciByZWNsYWltIGFuZApwb3RlbnRpYWxseSBmYXN0ZXIg
-cmVjbGFpbSBvZiBpdGVtcyBmcm9tIGVhY2ggZmlsZXN5c3RlbS4KClNpZ25lZC1vZmYtYnk6IERh
-dmUgQ2hpbm5lciA8ZGNoaW5uZXJAcmVkaGF0LmNvbT4KLS0tCiBmcy9kY2FjaGUuYyAgICAgICAg
-fCAgMTIxICsrKysrLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LQogZnMvaW5vZGUuYyAgICAgICAgIHwgIDExNyArKysrLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLQogZnMvc3VwZXIuYyAgICAgICAgIHwgICA1NSArKysrKysr
-KysrKysrKysrKysrKysrKy0KIGluY2x1ZGUvbGludXgvZnMuaCB8ICAgIDcgKysrCiA0IGZpbGVz
-IGNoYW5nZWQsIDgyIGluc2VydGlvbnMoKyksIDIxOCBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQg
-YS9mcy9kY2FjaGUuYyBiL2ZzL2RjYWNoZS5jCmluZGV4IDM3ZjcyZWUuLmY3M2VmMjMgMTAwNjQ0
-Ci0tLSBhL2ZzL2RjYWNoZS5jCisrKyBiL2ZzL2RjYWNoZS5jCkBAIC03MjAsMTMgKzcyMCwxMSBA
-QCBzdGF0aWMgdm9pZCBzaHJpbmtfZGVudHJ5X2xpc3Qoc3RydWN0IGxpc3RfaGVhZCAqbGlzdCkK
-ICAqCiAgKiBJZiBmbGFncyBjb250YWlucyBEQ0FDSEVfUkVGRVJFTkNFRCByZWZlcmVuY2UgZGVu
-dHJpZXMgd2lsbCBub3QgYmUgcHJ1bmVkLgogICovCi1zdGF0aWMgdm9pZCBfX3Nocmlua19kY2Fj
-aGVfc2Ioc3RydWN0IHN1cGVyX2Jsb2NrICpzYiwgaW50ICpjb3VudCwgaW50IGZsYWdzKQorc3Rh
-dGljIHZvaWQgX19zaHJpbmtfZGNhY2hlX3NiKHN0cnVjdCBzdXBlcl9ibG9jayAqc2IsIGludCBj
-b3VudCwgaW50IGZsYWdzKQogewotCS8qIGNhbGxlZCBmcm9tIHBydW5lX2RjYWNoZSgpIGFuZCBz
-aHJpbmtfZGNhY2hlX3BhcmVudCgpICovCiAJc3RydWN0IGRlbnRyeSAqZGVudHJ5OwogCUxJU1Rf
-SEVBRChyZWZlcmVuY2VkKTsKIAlMSVNUX0hFQUQodG1wKTsKLQlpbnQgY250ID0gKmNvdW50Owog
-CiByZWxvY2s6CiAJc3Bpbl9sb2NrKCZkY2FjaGVfbHJ1X2xvY2spOwpAQCAtNzU0LDcgKzc1Miw3
-IEBAIHJlbG9jazoKIAkJfSBlbHNlIHsKIAkJCWxpc3RfbW92ZV90YWlsKCZkZW50cnktPmRfbHJ1
-LCAmdG1wKTsKIAkJCXNwaW5fdW5sb2NrKCZkZW50cnktPmRfbG9jayk7Ci0JCQlpZiAoIS0tY250
-KQorCQkJaWYgKCEtLWNvdW50KQogCQkJCWJyZWFrOwogCQl9CiAJCWNvbmRfcmVzY2hlZF9sb2Nr
-KCZkY2FjaGVfbHJ1X2xvY2spOwpAQCAtNzY0LDgzICs3NjIsMjIgQEAgcmVsb2NrOgogCXNwaW5f
-dW5sb2NrKCZkY2FjaGVfbHJ1X2xvY2spOwogCiAJc2hyaW5rX2RlbnRyeV9saXN0KCZ0bXApOwot
-Ci0JKmNvdW50ID0gY250OwogfQogCiAvKioKLSAqIHBydW5lX2RjYWNoZSAtIHNocmluayB0aGUg
-ZGNhY2hlCi0gKiBAY291bnQ6IG51bWJlciBvZiBlbnRyaWVzIHRvIHRyeSB0byBmcmVlCisgKiBw
-cnVuZV9kY2FjaGVfc2IgLSBzaHJpbmsgdGhlIGRjYWNoZQorICogQG5yX3RvX3NjYW46IG51bWJl
-ciBvZiBlbnRyaWVzIHRvIHRyeSB0byBmcmVlCiAgKgotICogU2hyaW5rIHRoZSBkY2FjaGUuIFRo
-aXMgaXMgZG9uZSB3aGVuIHdlIG5lZWQgbW9yZSBtZW1vcnksIG9yIHNpbXBseSB3aGVuIHdlCi0g
-KiBuZWVkIHRvIHVubW91bnQgc29tZXRoaW5nIChhdCB3aGljaCBwb2ludCB3ZSBuZWVkIHRvIHVu
-dXNlIGFsbCBkZW50cmllcykuCisgKiBBdHRlbXB0IHRvIHNocmluayB0aGUgc3VwZXJibG9jayBk
-Y2FjaGUgTFJVIGJ5IEBucl90b19zY2FuIGVudHJpZXMuIFRoaXMgaXMKKyAqIGRvbmUgd2hlbiB3
-ZSBuZWVkIG1vcmUgbWVtb3J5IGFuIGNhbGxlZCBmcm9tIHRoZSBzdXBlcmJsb2NrIHNocmlua2Vy
-CisgKiBmdW5jdGlvbi4KICAqCi0gKiBUaGlzIGZ1bmN0aW9uIG1heSBmYWlsIHRvIGZyZWUgYW55
-IHJlc291cmNlcyBpZiBhbGwgdGhlIGRlbnRyaWVzIGFyZSBpbiB1c2UuCisgKiBUaGlzIGZ1bmN0
-aW9uIG1heSBmYWlsIHRvIGZyZWUgYW55IHJlc291cmNlcyBpZiBhbGwgdGhlIGRlbnRyaWVzIGFy
-ZSBpbgorICogdXNlLgogICovCi1zdGF0aWMgdm9pZCBwcnVuZV9kY2FjaGUoaW50IGNvdW50KQor
-dm9pZCBwcnVuZV9kY2FjaGVfc2Ioc3RydWN0IHN1cGVyX2Jsb2NrICpzYiwgaW50IG5yX3RvX3Nj
-YW4pCiB7Ci0Jc3RydWN0IHN1cGVyX2Jsb2NrICpzYiwgKnAgPSBOVUxMOwotCWludCB3X2NvdW50
-OwotCWludCB1bnVzZWQgPSBkZW50cnlfc3RhdC5ucl91bnVzZWQ7Ci0JaW50IHBydW5lX3JhdGlv
-OwotCWludCBwcnVuZWQ7Ci0KLQlpZiAodW51c2VkID09IDAgfHwgY291bnQgPT0gMCkKLQkJcmV0
-dXJuOwotCWlmIChjb3VudCA+PSB1bnVzZWQpCi0JCXBydW5lX3JhdGlvID0gMTsKLQllbHNlCi0J
-CXBydW5lX3JhdGlvID0gdW51c2VkIC8gY291bnQ7Ci0Jc3Bpbl9sb2NrKCZzYl9sb2NrKTsKLQls
-aXN0X2Zvcl9lYWNoX2VudHJ5KHNiLCAmc3VwZXJfYmxvY2tzLCBzX2xpc3QpIHsKLQkJaWYgKGxp
-c3RfZW1wdHkoJnNiLT5zX2luc3RhbmNlcykpCi0JCQljb250aW51ZTsKLQkJaWYgKHNiLT5zX25y
-X2RlbnRyeV91bnVzZWQgPT0gMCkKLQkJCWNvbnRpbnVlOwotCQlzYi0+c19jb3VudCsrOwotCQkv
-KiBOb3csIHdlIHJlY2xhaW0gdW51c2VkIGRlbnRyaW5zIHdpdGggZmFpcm5lc3MuCi0JCSAqIFdl
-IHJlY2xhaW0gdGhlbSBzYW1lIHBlcmNlbnRhZ2UgZnJvbSBlYWNoIHN1cGVyYmxvY2suCi0JCSAq
-IFdlIGNhbGN1bGF0ZSBudW1iZXIgb2YgZGVudHJpZXMgdG8gc2NhbiBvbiB0aGlzIHNiCi0JCSAq
-IGFzIGZvbGxvd3MsIGJ1dCB0aGUgaW1wbGVtZW50YXRpb24gaXMgYXJyYW5nZWQgdG8gYXZvaWQK
-LQkJICogb3ZlcmZsb3dzOgotCQkgKiBudW1iZXIgb2YgZGVudHJpZXMgdG8gc2NhbiBvbiB0aGlz
-IHNiID0KLQkJICogY291bnQgKiAobnVtYmVyIG9mIGRlbnRyaWVzIG9uIHRoaXMgc2IgLwotCQkg
-KiBudW1iZXIgb2YgZGVudHJpZXMgaW4gdGhlIG1hY2hpbmUpCi0JCSAqLwotCQlzcGluX3VubG9j
-aygmc2JfbG9jayk7Ci0JCWlmIChwcnVuZV9yYXRpbyAhPSAxKQotCQkJd19jb3VudCA9IChzYi0+
-c19ucl9kZW50cnlfdW51c2VkIC8gcHJ1bmVfcmF0aW8pICsgMTsKLQkJZWxzZQotCQkJd19jb3Vu
-dCA9IHNiLT5zX25yX2RlbnRyeV91bnVzZWQ7Ci0JCXBydW5lZCA9IHdfY291bnQ7Ci0JCS8qCi0J
-CSAqIFdlIG5lZWQgdG8gYmUgc3VyZSB0aGlzIGZpbGVzeXN0ZW0gaXNuJ3QgYmVpbmcgdW5tb3Vu
-dGVkLAotCQkgKiBvdGhlcndpc2Ugd2UgY291bGQgcmFjZSB3aXRoIGdlbmVyaWNfc2h1dGRvd25f
-c3VwZXIoKSwgYW5kCi0JCSAqIGVuZCB1cCBob2xkaW5nIGEgcmVmZXJlbmNlIHRvIGFuIGlub2Rl
-IHdoaWxlIHRoZSBmaWxlc3lzdGVtCi0JCSAqIGlzIHVubW91bnRlZC4gIFNvIHdlIHRyeSB0byBn
-ZXQgc191bW91bnQsIGFuZCBtYWtlIHN1cmUKLQkJICogc19yb290IGlzbid0IE5VTEwuCi0JCSAq
-LwotCQlpZiAoZG93bl9yZWFkX3RyeWxvY2soJnNiLT5zX3Vtb3VudCkpIHsKLQkJCWlmICgoc2It
-PnNfcm9vdCAhPSBOVUxMKSAmJgotCQkJICAgICghbGlzdF9lbXB0eSgmc2ItPnNfZGVudHJ5X2xy
-dSkpKSB7Ci0JCQkJX19zaHJpbmtfZGNhY2hlX3NiKHNiLCAmd19jb3VudCwKLQkJCQkJCURDQUNI
-RV9SRUZFUkVOQ0VEKTsKLQkJCQlwcnVuZWQgLT0gd19jb3VudDsKLQkJCX0KLQkJCXVwX3JlYWQo
-JnNiLT5zX3Vtb3VudCk7Ci0JCX0KLQkJc3Bpbl9sb2NrKCZzYl9sb2NrKTsKLQkJaWYgKHApCi0J
-CQlfX3B1dF9zdXBlcihwKTsKLQkJY291bnQgLT0gcHJ1bmVkOwotCQlwID0gc2I7Ci0JCS8qIG1v
-cmUgd29yayBsZWZ0IHRvIGRvPyAqLwotCQlpZiAoY291bnQgPD0gMCkKLQkJCWJyZWFrOwotCX0K
-LQlpZiAocCkKLQkJX19wdXRfc3VwZXIocCk7Ci0Jc3Bpbl91bmxvY2soJnNiX2xvY2spOworCV9f
-c2hyaW5rX2RjYWNoZV9zYihzYiwgbnJfdG9fc2NhbiwgRENBQ0hFX1JFRkVSRU5DRUQpOwogfQog
-CiAvKioKQEAgLTEyMTUsNDIgKzExNTIsMTAgQEAgdm9pZCBzaHJpbmtfZGNhY2hlX3BhcmVudChz
-dHJ1Y3QgZGVudHJ5ICogcGFyZW50KQogCWludCBmb3VuZDsKIAogCXdoaWxlICgoZm91bmQgPSBz
-ZWxlY3RfcGFyZW50KHBhcmVudCkpICE9IDApCi0JCV9fc2hyaW5rX2RjYWNoZV9zYihzYiwgJmZv
-dW5kLCAwKTsKKwkJX19zaHJpbmtfZGNhY2hlX3NiKHNiLCBmb3VuZCwgMCk7CiB9CiBFWFBPUlRf
-U1lNQk9MKHNocmlua19kY2FjaGVfcGFyZW50KTsKIAotLyoKLSAqIFNjYW4gYHNjLT5ucl9zbGFi
-X3RvX3JlY2xhaW0nIGRlbnRyaWVzIGFuZCByZXR1cm4gdGhlIG51bWJlciB3aGljaCByZW1haW4u
-Ci0gKgotICogV2UgbmVlZCB0byBhdm9pZCByZWVudGVyaW5nIHRoZSBmaWxlc3lzdGVtIGlmIHRo
-ZSBjYWxsZXIgaXMgcGVyZm9ybWluZyBhCi0gKiBHRlBfTk9GUyBhbGxvY2F0aW9uIGF0dGVtcHQu
-ICBPbmUgZXhhbXBsZSBkZWFkbG9jayBpczoKLSAqCi0gKiBleHQyX25ld19ibG9jay0+Z2V0Ymxr
-LT5HRlAtPnNocmlua19kY2FjaGVfbWVtb3J5LT5wcnVuZV9kY2FjaGUtPgotICogcHJ1bmVfb25l
-X2RlbnRyeS0+ZHB1dC0+ZGVudHJ5X2lwdXQtPmlwdXQtPmlub2RlLT5pX3NiLT5zX29wLT5wdXRf
-aW5vZGUtPgotICogZXh0Ml9kaXNjYXJkX3ByZWFsbG9jLT5leHQyX2ZyZWVfYmxvY2tzLT5sb2Nr
-X3N1cGVyLT5ERUFETE9DSy4KLSAqCi0gKiBJbiB0aGlzIGNhc2Ugd2UgcmV0dXJuIC0xIHRvIHRl
-bGwgdGhlIGNhbGxlciB0aGF0IHdlIGJhbGVkLgotICovCi1zdGF0aWMgaW50IHNocmlua19kY2Fj
-aGVfbWVtb3J5KHN0cnVjdCBzaHJpbmtlciAqc2hyaW5rLAotCQkJCXN0cnVjdCBzaHJpbmtfY29u
-dHJvbCAqc2MpCi17Ci0JaW50IG5yID0gc2MtPm5yX3RvX3NjYW47Ci0JZ2ZwX3QgZ2ZwX21hc2sg
-PSBzYy0+Z2ZwX21hc2s7Ci0KLQlpZiAobnIpIHsKLQkJaWYgKCEoZ2ZwX21hc2sgJiBfX0dGUF9G
-UykpCi0JCQlyZXR1cm4gLTE7Ci0JCXBydW5lX2RjYWNoZShucik7Ci0JfQotCi0JcmV0dXJuIChk
-ZW50cnlfc3RhdC5ucl91bnVzZWQgLyAxMDApICogc3lzY3RsX3Zmc19jYWNoZV9wcmVzc3VyZTsK
-LX0KLQotc3RhdGljIHN0cnVjdCBzaHJpbmtlciBkY2FjaGVfc2hyaW5rZXIgPSB7Ci0JLnNocmlu
-ayA9IHNocmlua19kY2FjaGVfbWVtb3J5LAotCS5zZWVrcyA9IERFRkFVTFRfU0VFS1MsCi19Owot
-CiAvKioKICAqIGRfYWxsb2MJLQlhbGxvY2F0ZSBhIGRjYWNoZSBlbnRyeQogICogQHBhcmVudDog
-cGFyZW50IG9mIGVudHJ5IHRvIGFsbG9jYXRlCkBAIC0zMDMwLDggKzI5MzUsNiBAQCBzdGF0aWMg
-dm9pZCBfX2luaXQgZGNhY2hlX2luaXQodm9pZCkKIAkgKi8KIAlkZW50cnlfY2FjaGUgPSBLTUVN
-X0NBQ0hFKGRlbnRyeSwKIAkJU0xBQl9SRUNMQUlNX0FDQ09VTlR8U0xBQl9QQU5JQ3xTTEFCX01F
-TV9TUFJFQUQpOwotCQotCXJlZ2lzdGVyX3Nocmlua2VyKCZkY2FjaGVfc2hyaW5rZXIpOwogCiAJ
-LyogSGFzaCBtYXkgaGF2ZSBiZWVuIHNldCB1cCBpbiBkY2FjaGVfaW5pdF9lYXJseSAqLwogCWlm
-ICghaGFzaGRpc3QpCmRpZmYgLS1naXQgYS9mcy9pbm9kZS5jIGIvZnMvaW5vZGUuYwppbmRleCA2
-NjdhMjljLi44OTBkOTVlIDEwMDY0NAotLS0gYS9mcy9pbm9kZS5jCisrKyBiL2ZzL2lub2RlLmMK
-QEAgLTczLDcgKzczLDcgQEAgX19jYWNoZWxpbmVfYWxpZ25lZF9pbl9zbXAgREVGSU5FX1NQSU5M
-T0NLKGlub2RlX3diX2xpc3RfbG9jayk7CiAgKgogICogV2UgZG9uJ3QgYWN0dWFsbHkgbmVlZCBp
-dCB0byBwcm90ZWN0IGFueXRoaW5nIGluIHRoZSB1bW91bnQgcGF0aCwKICAqIGJ1dCBvbmx5IG5l
-ZWQgdG8gY3ljbGUgdGhyb3VnaCBpdCB0byBtYWtlIHN1cmUgYW55IGlub2RlIHRoYXQKLSAqIHBy
-dW5lX2ljYWNoZSB0b29rIG9mZiB0aGUgTFJVIGxpc3QgaGFzIGJlZW4gZnVsbHkgdG9ybiBkb3du
-IGJ5IHRoZQorICogcHJ1bmVfaWNhY2hlX3NiIHRvb2sgb2ZmIHRoZSBMUlUgbGlzdCBoYXMgYmVl
-biBmdWxseSB0b3JuIGRvd24gYnkgdGhlCiAgKiB0aW1lIHdlIGFyZSBwYXN0IGV2aWN0X2lub2Rl
-cy4KICAqLwogc3RhdGljIERFQ0xBUkVfUldTRU0oaXBydW5lX3NlbSk7CkBAIC01MzcsNyArNTM3
-LDcgQEAgdm9pZCBldmljdF9pbm9kZXMoc3RydWN0IHN1cGVyX2Jsb2NrICpzYikKIAlkaXNwb3Nl
-X2xpc3QoJmRpc3Bvc2UpOwogCiAJLyoKLQkgKiBDeWNsZSB0aHJvdWdoIGlwcnVuZV9zZW0gdG8g
-bWFrZSBzdXJlIGFueSBpbm9kZSB0aGF0IHBydW5lX2ljYWNoZQorCSAqIEN5Y2xlIHRocm91Z2gg
-aXBydW5lX3NlbSB0byBtYWtlIHN1cmUgYW55IGlub2RlIHRoYXQgcHJ1bmVfaWNhY2hlX3NiCiAJ
-ICogbW92ZWQgb2ZmIHRoZSBsaXN0IGJlZm9yZSB3ZSB0b29rIHRoZSBsb2NrIGhhcyBiZWVuIGZ1
-bGx5IHRvcm4KIAkgKiBkb3duLgogCSAqLwpAQCAtNjA1LDkgKzYwNSwxMCBAQCBzdGF0aWMgaW50
-IGNhbl91bnVzZShzdHJ1Y3QgaW5vZGUgKmlub2RlKQogfQogCiAvKgotICogU2NhbiBgZ29hbCcg
-aW5vZGVzIG9uIHRoZSB1bnVzZWQgbGlzdCBmb3IgZnJlZWFibGUgb25lcy4gVGhleSBhcmUgbW92
-ZWQgdG8gYQotICogdGVtcG9yYXJ5IGxpc3QgYW5kIHRoZW4gYXJlIGZyZWVkIG91dHNpZGUgc2It
-PnNfaW5vZGVfbHJ1X2xvY2sgYnkKLSAqIGRpc3Bvc2VfbGlzdCgpLgorICogV2FsayB0aGUgc3Vw
-ZXJibG9jayBpbm9kZSBMUlUgZm9yIGZyZWVhYmxlIGlub2RlcyBhbmQgYXR0ZW1wdCB0byBmcmVl
-IHRoZW0uCisgKiBUaGlzIGlzIGNhbGxlZCBmcm9tIHRoZSBzdXBlcmJsb2NrIHNocmlua2VyIGZ1
-bmN0aW9uIHdpdGggYSBudW1iZXIgb2YgaW5vZGVzCisgKiB0byB0cmltIGZyb20gdGhlIExSVS4g
-SW5vZGVzIHRvIGJlIGZyZWVkIGFyZSBtb3ZlZCB0byBhIHRlbXBvcmFyeSBsaXN0IGFuZAorICog
-dGhlbiBhcmUgZnJlZWQgb3V0c2lkZSBpbm9kZV9sb2NrIGJ5IGRpc3Bvc2VfbGlzdCgpLgogICoK
-ICAqIEFueSBpbm9kZXMgd2hpY2ggYXJlIHBpbm5lZCBwdXJlbHkgYmVjYXVzZSBvZiBhdHRhY2hl
-ZCBwYWdlY2FjaGUgaGF2ZSB0aGVpcgogICogcGFnZWNhY2hlIHJlbW92ZWQuICBJZiB0aGUgaW5v
-ZGUgaGFzIG1ldGFkYXRhIGJ1ZmZlcnMgYXR0YWNoZWQgdG8KQEAgLTYyMSwxNCArNjIyLDE1IEBA
-IHN0YXRpYyBpbnQgY2FuX3VudXNlKHN0cnVjdCBpbm9kZSAqaW5vZGUpCiAgKiBMUlUgZG9lcyBu
-b3QgaGF2ZSBzdHJpY3Qgb3JkZXJpbmcuIEhlbmNlIHdlIGRvbid0IHdhbnQgdG8gcmVjbGFpbSBp
-bm9kZXMKICAqIHdpdGggdGhpcyBmbGFnIHNldCBiZWNhdXNlIHRoZXkgYXJlIHRoZSBpbm9kZXMg
-dGhhdCBhcmUgb3V0IG9mIG9yZGVyLgogICovCi1zdGF0aWMgdm9pZCBzaHJpbmtfaWNhY2hlX3Ni
-KHN0cnVjdCBzdXBlcl9ibG9jayAqc2IsIGludCAqbnJfdG9fc2NhbikKK3ZvaWQgcHJ1bmVfaWNh
-Y2hlX3NiKHN0cnVjdCBzdXBlcl9ibG9jayAqc2IsIGludCBucl90b19zY2FuKQogewogCUxJU1Rf
-SEVBRChmcmVlYWJsZSk7CiAJaW50IG5yX3NjYW5uZWQ7CiAJdW5zaWduZWQgbG9uZyByZWFwID0g
-MDsKIAorCWRvd25fcmVhZCgmaXBydW5lX3NlbSk7CiAJc3Bpbl9sb2NrKCZzYi0+c19pbm9kZV9s
-cnVfbG9jayk7Ci0JZm9yIChucl9zY2FubmVkID0gKm5yX3RvX3NjYW47IG5yX3NjYW5uZWQgPj0g
-MDsgbnJfc2Nhbm5lZC0tKSB7CisJZm9yIChucl9zY2FubmVkID0gbnJfdG9fc2NhbjsgbnJfc2Nh
-bm5lZCA+PSAwOyBucl9zY2FubmVkLS0pIHsKIAkJc3RydWN0IGlub2RlICppbm9kZTsKIAogCQlp
-ZiAobGlzdF9lbXB0eSgmc2ItPnNfaW5vZGVfbHJ1KSkKQEAgLTcwMCwxMTEgKzcwMiwxMSBAQCBz
-dGF0aWMgdm9pZCBzaHJpbmtfaWNhY2hlX3NiKHN0cnVjdCBzdXBlcl9ibG9jayAqc2IsIGludCAq
-bnJfdG9fc2NhbikKIAllbHNlCiAJCV9fY291bnRfdm1fZXZlbnRzKFBHSU5PREVTVEVBTCwgcmVh
-cCk7CiAJc3Bpbl91bmxvY2soJnNiLT5zX2lub2RlX2xydV9sb2NrKTsKLQkqbnJfdG9fc2NhbiA9
-IG5yX3NjYW5uZWQ7CiAKIAlkaXNwb3NlX2xpc3QoJmZyZWVhYmxlKTsKLX0KLQotc3RhdGljIHZv
-aWQgcHJ1bmVfaWNhY2hlKGludCBjb3VudCkKLXsKLQlzdHJ1Y3Qgc3VwZXJfYmxvY2sgKnNiLCAq
-cCA9IE5VTEw7Ci0JaW50IHdfY291bnQ7Ci0JaW50IHVudXNlZCA9IGlub2Rlc19zdGF0Lm5yX3Vu
-dXNlZDsKLQlpbnQgcHJ1bmVfcmF0aW87Ci0JaW50IHBydW5lZDsKLQotCWlmICh1bnVzZWQgPT0g
-MCB8fCBjb3VudCA9PSAwKQotCQlyZXR1cm47Ci0JZG93bl9yZWFkKCZpcHJ1bmVfc2VtKTsKLQlp
-ZiAoY291bnQgPj0gdW51c2VkKQotCQlwcnVuZV9yYXRpbyA9IDE7Ci0JZWxzZQotCQlwcnVuZV9y
-YXRpbyA9IHVudXNlZCAvIGNvdW50OwotCXNwaW5fbG9jaygmc2JfbG9jayk7Ci0JbGlzdF9mb3Jf
-ZWFjaF9lbnRyeShzYiwgJnN1cGVyX2Jsb2Nrcywgc19saXN0KSB7Ci0JCWlmIChsaXN0X2VtcHR5
-KCZzYi0+c19pbnN0YW5jZXMpKQotCQkJY29udGludWU7Ci0JCWlmIChzYi0+c19ucl9pbm9kZXNf
-dW51c2VkID09IDApCi0JCQljb250aW51ZTsKLQkJc2ItPnNfY291bnQrKzsKLQkJLyogTm93LCB3
-ZSByZWNsYWltIHVudXNlZCBkZW50cmlucyB3aXRoIGZhaXJuZXNzLgotCQkgKiBXZSByZWNsYWlt
-IHRoZW0gc2FtZSBwZXJjZW50YWdlIGZyb20gZWFjaCBzdXBlcmJsb2NrLgotCQkgKiBXZSBjYWxj
-dWxhdGUgbnVtYmVyIG9mIGRlbnRyaWVzIHRvIHNjYW4gb24gdGhpcyBzYgotCQkgKiBhcyBmb2xs
-b3dzLCBidXQgdGhlIGltcGxlbWVudGF0aW9uIGlzIGFycmFuZ2VkIHRvIGF2b2lkCi0JCSAqIG92
-ZXJmbG93czoKLQkJICogbnVtYmVyIG9mIGRlbnRyaWVzIHRvIHNjYW4gb24gdGhpcyBzYiA9Ci0J
-CSAqIGNvdW50ICogKG51bWJlciBvZiBkZW50cmllcyBvbiB0aGlzIHNiIC8KLQkJICogbnVtYmVy
-IG9mIGRlbnRyaWVzIGluIHRoZSBtYWNoaW5lKQotCQkgKi8KLQkJc3Bpbl91bmxvY2soJnNiX2xv
-Y2spOwotCQlpZiAocHJ1bmVfcmF0aW8gIT0gMSkKLQkJCXdfY291bnQgPSAoc2ItPnNfbnJfaW5v
-ZGVzX3VudXNlZCAvIHBydW5lX3JhdGlvKSArIDE7Ci0JCWVsc2UKLQkJCXdfY291bnQgPSBzYi0+
-c19ucl9pbm9kZXNfdW51c2VkOwotCQlwcnVuZWQgPSB3X2NvdW50OwotCQkvKgotCQkgKiBXZSBu
-ZWVkIHRvIGJlIHN1cmUgdGhpcyBmaWxlc3lzdGVtIGlzbid0IGJlaW5nIHVubW91bnRlZCwKLQkJ
-ICogb3RoZXJ3aXNlIHdlIGNvdWxkIHJhY2Ugd2l0aCBnZW5lcmljX3NodXRkb3duX3N1cGVyKCks
-IGFuZAotCQkgKiBlbmQgdXAgaG9sZGluZyBhIHJlZmVyZW5jZSB0byBhbiBpbm9kZSB3aGlsZSB0
-aGUgZmlsZXN5c3RlbQotCQkgKiBpcyB1bm1vdW50ZWQuICBTbyB3ZSB0cnkgdG8gZ2V0IHNfdW1v
-dW50LCBhbmQgbWFrZSBzdXJlCi0JCSAqIHNfcm9vdCBpc24ndCBOVUxMLgotCQkgKi8KLQkJaWYg
-KGRvd25fcmVhZF90cnlsb2NrKCZzYi0+c191bW91bnQpKSB7Ci0JCQlpZiAoKHNiLT5zX3Jvb3Qg
-IT0gTlVMTCkgJiYKLQkJCSAgICAoIWxpc3RfZW1wdHkoJnNiLT5zX2RlbnRyeV9scnUpKSkgewot
-CQkJCXNocmlua19pY2FjaGVfc2Ioc2IsICZ3X2NvdW50KTsKLQkJCQlwcnVuZWQgLT0gd19jb3Vu
-dDsKLQkJCX0KLQkJCXVwX3JlYWQoJnNiLT5zX3Vtb3VudCk7Ci0JCX0KLQkJc3Bpbl9sb2NrKCZz
-Yl9sb2NrKTsKLQkJaWYgKHApCi0JCQlfX3B1dF9zdXBlcihwKTsKLQkJY291bnQgLT0gcHJ1bmVk
-OwotCQlwID0gc2I7Ci0JCS8qIG1vcmUgd29yayBsZWZ0IHRvIGRvPyAqLwotCQlpZiAoY291bnQg
-PD0gMCkKLQkJCWJyZWFrOwotCX0KLQlpZiAocCkKLQkJX19wdXRfc3VwZXIocCk7Ci0Jc3Bpbl91
-bmxvY2soJnNiX2xvY2spOwogCXVwX3JlYWQoJmlwcnVuZV9zZW0pOwogfQogCi0vKgotICogc2hy
-aW5rX2ljYWNoZV9tZW1vcnkoKSB3aWxsIGF0dGVtcHQgdG8gcmVjbGFpbSBzb21lIHVudXNlZCBp
-bm9kZXMuICBIZXJlLAotICogInVudXNlZCIgbWVhbnMgdGhhdCBubyBkZW50cmllcyBhcmUgcmVm
-ZXJyaW5nIHRvIHRoZSBpbm9kZXM6IHRoZSBmaWxlcyBhcmUKLSAqIG5vdCBvcGVuIGFuZCB0aGUg
-ZGNhY2hlIHJlZmVyZW5jZXMgdG8gdGhvc2UgaW5vZGVzIGhhdmUgYWxyZWFkeSBiZWVuCi0gKiBy
-ZWNsYWltZWQuCi0gKgotICogVGhpcyBmdW5jdGlvbiBpcyBwYXNzZWQgdGhlIG51bWJlciBvZiBp
-bm9kZXMgdG8gc2NhbiwgYW5kIGl0IHJldHVybnMgdGhlCi0gKiB0b3RhbCBudW1iZXIgb2YgcmVt
-YWluaW5nIHBvc3NpYmx5LXJlY2xhaW1hYmxlIGlub2Rlcy4KLSAqLwotc3RhdGljIGludCBzaHJp
-bmtfaWNhY2hlX21lbW9yeShzdHJ1Y3Qgc2hyaW5rZXIgKnNocmluaywKLQkJCQlzdHJ1Y3Qgc2hy
-aW5rX2NvbnRyb2wgKnNjKQotewotCWludCBuciA9IHNjLT5ucl90b19zY2FuOwotCWdmcF90IGdm
-cF9tYXNrID0gc2MtPmdmcF9tYXNrOwotCi0JaWYgKG5yKSB7Ci0JCS8qCi0JCSAqIE5hc3R5IGRl
-YWRsb2NrIGF2b2lkYW5jZS4gIFdlIG1heSBob2xkIHZhcmlvdXMgRlMgbG9ja3MsCi0JCSAqIGFu
-ZCB3ZSBkb24ndCB3YW50IHRvIHJlY3Vyc2UgaW50byB0aGUgRlMgdGhhdCBjYWxsZWQgdXMKLQkJ
-ICogaW4gY2xlYXJfaW5vZGUoKSBhbmQgZnJpZW5kcy4uCi0JCSAqLwotCQlpZiAoIShnZnBfbWFz
-ayAmIF9fR0ZQX0ZTKSkKLQkJCXJldHVybiAtMTsKLQkJcHJ1bmVfaWNhY2hlKG5yKTsKLQl9Ci0J
-cmV0dXJuIChnZXRfbnJfaW5vZGVzX3VudXNlZCgpIC8gMTAwKSAqIHN5c2N0bF92ZnNfY2FjaGVf
-cHJlc3N1cmU7Ci19Ci0KLXN0YXRpYyBzdHJ1Y3Qgc2hyaW5rZXIgaWNhY2hlX3Nocmlua2VyID0g
-ewotCS5zaHJpbmsgPSBzaHJpbmtfaWNhY2hlX21lbW9yeSwKLQkuc2Vla3MgPSBERUZBVUxUX1NF
-RUtTLAotfTsKLQogc3RhdGljIHZvaWQgX193YWl0X29uX2ZyZWVpbmdfaW5vZGUoc3RydWN0IGlu
-b2RlICppbm9kZSk7CiAvKgogICogQ2FsbGVkIHdpdGggdGhlIGlub2RlIGxvY2sgaGVsZC4KQEAg
-LTE2ODQsNyArMTU4Niw2IEBAIHZvaWQgX19pbml0IGlub2RlX2luaXQodm9pZCkKIAkJCQkJIChT
-TEFCX1JFQ0xBSU1fQUNDT1VOVHxTTEFCX1BBTklDfAogCQkJCQkgU0xBQl9NRU1fU1BSRUFEKSwK
-IAkJCQkJIGluaXRfb25jZSk7Ci0JcmVnaXN0ZXJfc2hyaW5rZXIoJmljYWNoZV9zaHJpbmtlcik7
-CiAKIAkvKiBIYXNoIG1heSBoYXZlIGJlZW4gc2V0IHVwIGluIGlub2RlX2luaXRfZWFybHkgKi8K
-IAlpZiAoIWhhc2hkaXN0KQpkaWZmIC0tZ2l0IGEvZnMvc3VwZXIuYyBiL2ZzL3N1cGVyLmMKaW5k
-ZXggOWMzZmExZi4uZjQ2MzBkOSAxMDA2NDQKLS0tIGEvZnMvc3VwZXIuYworKysgYi9mcy9zdXBl
-ci5jCkBAIC0zOCw2ICszOCw1MCBAQAogTElTVF9IRUFEKHN1cGVyX2Jsb2Nrcyk7CiBERUZJTkVf
-U1BJTkxPQ0soc2JfbG9jayk7CiAKK3N0YXRpYyBpbnQgcHJ1bmVfc3VwZXIoc3RydWN0IHNocmlu
-a2VyICpzaHJpbmssIHN0cnVjdCBzaHJpbmtfY29udHJvbCAqc2MpCit7CisJc3RydWN0IHN1cGVy
-X2Jsb2NrICpzYjsKKwlpbnQgY291bnQ7CisKKwlzYiA9IGNvbnRhaW5lcl9vZihzaHJpbmssIHN0
-cnVjdCBzdXBlcl9ibG9jaywgc19zaHJpbmspOworCisJLyoKKwkgKiBEZWFkbG9jayBhdm9pZGFu
-Y2UuICBXZSBtYXkgaG9sZCB2YXJpb3VzIEZTIGxvY2tzLCBhbmQgd2UgZG9uJ3Qgd2FudAorCSAq
-IHRvIHJlY3Vyc2UgaW50byB0aGUgRlMgdGhhdCBjYWxsZWQgdXMgaW4gY2xlYXJfaW5vZGUoKSBh
-bmQgZnJpZW5kcy4uCisJICovCisJaWYgKHNjLT5ucl90b19zY2FuICYmICEoc2MtPmdmcF9tYXNr
-ICYgX19HRlBfRlMpKQorCQlyZXR1cm4gLTE7CisKKwkvKgorCSAqIGlmIHdlIGNhbid0IGdldCB0
-aGUgdW1vdW50IGxvY2ssIHRoZW4gdGhlcmUncyBubyBwb2ludCBoYXZpbmcgdGhlCisJICogc2hy
-aW5rZXIgdHJ5IGFnYWluIGJlY2F1c2UgdGhlIHNiIGlzIGJlaW5nIHRvcm4gZG93bi4KKwkgKi8K
-KwlpZiAoIWRvd25fcmVhZF90cnlsb2NrKCZzYi0+c191bW91bnQpKQorCQlyZXR1cm4gLTE7CisK
-KwlpZiAoIXNiLT5zX3Jvb3QpIHsKKwkJdXBfcmVhZCgmc2ItPnNfdW1vdW50KTsKKwkJcmV0dXJu
-IC0xOworCX0KKworCWlmIChzYy0+bnJfdG9fc2NhbikgeworCQkvKiBwcm9wb3J0aW9uIHRoZSBz
-Y2FuIGJldHdlZW4gdGhlIHR3byBjYWNoZdGVICovCisJCWludCB0b3RhbDsKKworCQl0b3RhbCA9
-IHNiLT5zX25yX2RlbnRyeV91bnVzZWQgKyBzYi0+c19ucl9pbm9kZXNfdW51c2VkICsgMTsKKwkJ
-Y291bnQgPSAoc2MtPm5yX3RvX3NjYW4gKiBzYi0+c19ucl9kZW50cnlfdW51c2VkKSAvIHRvdGFs
-OworCisJCS8qIHBydW5lIGRjYWNoZSBmaXJzdCBhcyBpY2FjaGUgaXMgcGlubmVkIGJ5IGl0ICov
-CisJCXBydW5lX2RjYWNoZV9zYihzYiwgY291bnQpOworCQlwcnVuZV9pY2FjaGVfc2Ioc2IsIHNj
-LT5ucl90b19zY2FuIC0gY291bnQpOworCX0KKworCWNvdW50ID0gKChzYi0+c19ucl9kZW50cnlf
-dW51c2VkICsgc2ItPnNfbnJfaW5vZGVzX3VudXNlZCkgLyAxMDApCisJCQkJCQkqIHN5c2N0bF92
-ZnNfY2FjaGVfcHJlc3N1cmU7CisJdXBfcmVhZCgmc2ItPnNfdW1vdW50KTsKKwlyZXR1cm4gY291
-bnQ7Cit9CisKIC8qKgogICoJYWxsb2Nfc3VwZXIJLQljcmVhdGUgbmV3IHN1cGVyYmxvY2sKICAq
-CUB0eXBlOglmaWxlc3lzdGVtIHR5cGUgc3VwZXJibG9jayBzaG91bGQgYmVsb25nIHRvCkBAIC0x
-MTYsNiArMTYwLDkgQEAgc3RhdGljIHN0cnVjdCBzdXBlcl9ibG9jayAqYWxsb2Nfc3VwZXIoc3Ry
-dWN0IGZpbGVfc3lzdGVtX3R5cGUgKnR5cGUpCiAJCXMtPnNfb3AgPSAmZGVmYXVsdF9vcDsKIAkJ
-cy0+c190aW1lX2dyYW4gPSAxMDAwMDAwMDAwOwogCQlzLT5jbGVhbmNhY2hlX3Bvb2xpZCA9IC0x
-OworCisJCXMtPnNfc2hyaW5rLnNlZWtzID0gREVGQVVMVF9TRUVLUzsKKwkJcy0+c19zaHJpbmsu
-c2hyaW5rID0gcHJ1bmVfc3VwZXI7CiAJfQogb3V0OgogCXJldHVybiBzOwpAQCAtMjc4LDcgKzMy
-NSwxMiBAQCB2b2lkIGdlbmVyaWNfc2h1dGRvd25fc3VwZXIoc3RydWN0IHN1cGVyX2Jsb2NrICpz
-YikKIHsKIAljb25zdCBzdHJ1Y3Qgc3VwZXJfb3BlcmF0aW9ucyAqc29wID0gc2ItPnNfb3A7CiAK
-LQorCS8qCisJICogc2h1dCBkb3duIHRoZSBzaHJpbmtlciBmaXJzdCBzbyB3ZSBrbm93IHRoYXQg
-dGhlcmUgYXJlIG5vIHBvc3NpYmxlCisJICogcmFjZXMgd2hlbiBzaHJpbmtpbmcgdGhlIGRjYWNo
-ZSBvciBpY2FjaGUuIFJlbW92ZXMgdGhlIG5lZWQgZm9yCisJICogZXh0ZXJuYWwgbG9ja2luZyB0
-byBwcmV2ZW50IHN1Y2ggcmFjZXMuCisJICovCisJdW5yZWdpc3Rlcl9zaHJpbmtlcigmc2ItPnNf
-c2hyaW5rKTsKIAlpZiAoc2ItPnNfcm9vdCkgewogCQlzaHJpbmtfZGNhY2hlX2Zvcl91bW91bnQo
-c2IpOwogCQlzeW5jX2ZpbGVzeXN0ZW0oc2IpOwpAQCAtMzY2LDYgKzQxOCw3IEBAIHJldHJ5Ogog
-CWxpc3RfYWRkKCZzLT5zX2luc3RhbmNlcywgJnR5cGUtPmZzX3N1cGVycyk7CiAJc3Bpbl91bmxv
-Y2soJnNiX2xvY2spOwogCWdldF9maWxlc3lzdGVtKHR5cGUpOworCXJlZ2lzdGVyX3Nocmlua2Vy
-KCZzLT5zX3Nocmluayk7CiAJcmV0dXJuIHM7CiB9CiAKZGlmZiAtLWdpdCBhL2luY2x1ZGUvbGlu
-dXgvZnMuaCBiL2luY2x1ZGUvbGludXgvZnMuaAppbmRleCBiYmQ0NzhlLi5jM2IzNDYyIDEwMDY0
-NAotLS0gYS9pbmNsdWRlL2xpbnV4L2ZzLmgKKysrIGIvaW5jbHVkZS9saW51eC9mcy5oCkBAIC0z
-OTEsNiArMzkxLDcgQEAgc3RydWN0IGlub2Rlc19zdGF0X3QgewogI2luY2x1ZGUgPGxpbnV4L3Nl
-bWFwaG9yZS5oPgogI2luY2x1ZGUgPGxpbnV4L2ZpZW1hcC5oPgogI2luY2x1ZGUgPGxpbnV4L3Jj
-dWxpc3RfYmwuaD4KKyNpbmNsdWRlIDxsaW51eC9tbS5oPgogCiAjaW5jbHVkZSA8YXNtL2F0b21p
-Yy5oPgogI2luY2x1ZGUgPGFzbS9ieXRlb3JkZXIuaD4KQEAgLTE0NDAsOCArMTQ0MSwxNCBAQCBz
-dHJ1Y3Qgc3VwZXJfYmxvY2sgewogCSAqIFNhdmVkIHBvb2wgaWRlbnRpZmllciBmb3IgY2xlYW5j
-YWNoZSAoLTEgbWVhbnMgbm9uZSkKIAkgKi8KIAlpbnQgY2xlYW5jYWNoZV9wb29saWQ7CisKKwlz
-dHJ1Y3Qgc2hyaW5rZXIgc19zaHJpbms7CS8qIHBlci1zYiBzaHJpbmtlciBoYW5kbGUgKi8KIH07
-CiAKKy8qIHN1cGVyYmxvY2sgY2FjaGUgcHJ1bmluZyBmdW5jdGlvbnMgKi8KK2V4dGVybiB2b2lk
-IHBydW5lX2ljYWNoZV9zYihzdHJ1Y3Qgc3VwZXJfYmxvY2sgKnNiLCBpbnQgbnJfdG9fc2Nhbik7
-CitleHRlcm4gdm9pZCBwcnVuZV9kY2FjaGVfc2Ioc3RydWN0IHN1cGVyX2Jsb2NrICpzYiwgaW50
-IG5yX3RvX3NjYW4pOworCiBleHRlcm4gc3RydWN0IHRpbWVzcGVjIGN1cnJlbnRfZnNfdGltZShz
-dHJ1Y3Qgc3VwZXJfYmxvY2sgKnNiKTsKIAogLyoKLS0gCjEuNy41LjEKCl9fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9z
-cy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+From: Dave Chinner <dchinner@redhat.com>
+
+shrink_slab() allows shrinkers to be called in parallel so the
+struct shrinker can be updated concurrently. It does not provide any
+exclusio for such updates, so we can get the shrinker->nr value
+increasing or decreasing incorrectly.
+
+As a result, when a shrinker repeatedly returns a value of -1 (e.g.
+a VFS shrinker called w/ GFP_NOFS), the shrinker->nr goes haywire,
+sometimes updating with the scan count that wasn't used, sometimes
+losing it altogether. Worse is when a shrinker does work and that
+update is lost due to racy updates, which means the shrinker will do
+the work again!
+
+Fix this by making the total_scan calculations independent of
+shrinker->nr, and making the shrinker->nr updates atomic w.r.t. to
+other updates via cmpxchg loops.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ include/trace/events/vmscan.h |   26 ++++++++++++++----------
+ mm/vmscan.c                   |   43 ++++++++++++++++++++++++++++++----------
+ 2 files changed, 47 insertions(+), 22 deletions(-)
+
+diff --git a/include/trace/events/vmscan.h b/include/trace/events/vmscan.h
+index c798cd7..6147b4e 100644
+--- a/include/trace/events/vmscan.h
++++ b/include/trace/events/vmscan.h
+@@ -311,12 +311,13 @@ TRACE_EVENT(mm_vmscan_lru_shrink_inactive,
+ );
+ 
+ TRACE_EVENT(mm_shrink_slab_start,
+-	TP_PROTO(struct shrinker *shr, struct shrink_control *sc,
++	TP_PROTO(struct shrinker *shr, struct shrink_control *sc, long shr_nr,
+ 		unsigned long pgs_scanned, unsigned long lru_pgs,
+ 		unsigned long cache_items, unsigned long long delta,
+ 		unsigned long total_scan),
+ 
+-	TP_ARGS(shr, sc, pgs_scanned, lru_pgs, cache_items, delta, total_scan),
++	TP_ARGS(shr, sc, shr_nr, pgs_scanned, lru_pgs,
++		cache_items, delta, total_scan),
+ 
+ 	TP_STRUCT__entry(
+ 		__field(struct shrinker *, shr)
+@@ -331,7 +332,7 @@ TRACE_EVENT(mm_shrink_slab_start,
+ 
+ 	TP_fast_assign(
+ 		__entry->shr = shr;
+-		__entry->shr_nr = shr->nr;
++		__entry->shr_nr = shr_nr;
+ 		__entry->gfp_flags = sc->gfp_mask;
+ 		__entry->pgs_scanned = pgs_scanned;
+ 		__entry->lru_pgs = lru_pgs;
+@@ -353,27 +354,30 @@ TRACE_EVENT(mm_shrink_slab_start,
+ 
+ TRACE_EVENT(mm_shrink_slab_end,
+ 	TP_PROTO(struct shrinker *shr, int shrinker_ret,
+-		unsigned long total_scan),
++		long old_nr, long new_nr),
+ 
+-	TP_ARGS(shr, shrinker_ret, total_scan),
++	TP_ARGS(shr, shrinker_ret, old_nr, new_nr),
+ 
+ 	TP_STRUCT__entry(
+ 		__field(struct shrinker *, shr)
+-		__field(long, shr_nr)
++		__field(long, old_nr)
++		__field(long, new_nr)
+ 		__field(int, shrinker_ret)
+-		__field(unsigned long, total_scan)
++		__field(long, total_scan)
+ 	),
+ 
+ 	TP_fast_assign(
+ 		__entry->shr = shr;
+-		__entry->shr_nr = shr->nr;
++		__entry->old_nr = old_nr;
++		__entry->new_nr = new_nr;
+ 		__entry->shrinker_ret = shrinker_ret;
+-		__entry->total_scan = total_scan;
++		__entry->total_scan = new_nr - old_nr;
+ 	),
+ 
+-	TP_printk("shrinker %p: nr %ld total_scan %ld return val %d",
++	TP_printk("shrinker %p: old_nr %ld new_nr %ld total_scan %ld return val %d",
+ 		__entry->shr,
+-		__entry->shr_nr,
++		__entry->old_nr,
++		__entry->new_nr,
+ 		__entry->total_scan,
+ 		__entry->shrinker_ret)
+ );
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 48e3fbd..dce2767 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -251,17 +251,29 @@ unsigned long shrink_slab(struct shrink_control *shrink,
+ 		unsigned long total_scan;
+ 		unsigned long max_pass;
+ 		int shrink_ret = 0;
++		long nr;
++		long new_nr;
+ 
++		/*
++		 * copy the current shrinker scan count into a local variable
++		 * and zero it so that other concurrent shrinker invocations
++		 * don't also do this scanning work.
++		 */
++		do {
++			nr = shrinker->nr;
++		} while (cmpxchg(&shrinker->nr, nr, 0) != nr);
++
++		total_scan = nr;
+ 		max_pass = do_shrinker_shrink(shrinker, shrink, 0);
+ 		delta = (4 * nr_pages_scanned) / shrinker->seeks;
+ 		delta *= max_pass;
+ 		do_div(delta, lru_pages + 1);
+-		shrinker->nr += delta;
+-		if (shrinker->nr < 0) {
++		total_scan += delta;
++		if (total_scan < 0) {
+ 			printk(KERN_ERR "shrink_slab: %pF negative objects to "
+ 			       "delete nr=%ld\n",
+-			       shrinker->shrink, shrinker->nr);
+-			shrinker->nr = max_pass;
++			       shrinker->shrink, total_scan);
++			total_scan = max_pass;
+ 		}
+ 
+ 		/*
+@@ -269,13 +281,11 @@ unsigned long shrink_slab(struct shrink_control *shrink,
+ 		 * never try to free more than twice the estimate number of
+ 		 * freeable entries.
+ 		 */
+-		if (shrinker->nr > max_pass * 2)
+-			shrinker->nr = max_pass * 2;
++		if (total_scan > max_pass * 2)
++			total_scan = max_pass * 2;
+ 
+-		total_scan = shrinker->nr;
+-		shrinker->nr = 0;
+ 
+-		trace_mm_shrink_slab_start(shrinker, shrink, nr_pages_scanned,
++		trace_mm_shrink_slab_start(shrinker, shrink, nr, nr_pages_scanned,
+ 					lru_pages, max_pass, delta, total_scan);
+ 
+ 		while (total_scan >= SHRINK_BATCH) {
+@@ -295,8 +305,19 @@ unsigned long shrink_slab(struct shrink_control *shrink,
+ 			cond_resched();
+ 		}
+ 
+-		shrinker->nr += total_scan;
+-		trace_mm_shrink_slab_end(shrinker, shrink_ret, total_scan);
++		/*
++		 * move the unused scan count back into the shrinker in a
++		 * manner that handles concurrent updates. If we exhausted the
++		 * scan, there is no need to do an update.
++		 */
++		do {
++			nr = shrinker->nr;
++			new_nr = total_scan + nr;
++			if (total_scan <= 0)
++				break;
++		} while (cmpxchg(&shrinker->nr, nr, new_nr) != nr);
++
++		trace_mm_shrink_slab_end(shrinker, shrink_ret, nr, new_nr);
+ 	}
+ 	up_read(&shrinker_rwsem);
+ out:
+-- 
+1.7.5.1
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
