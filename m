@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5271MV6180476 for <xfs@oss.sgi.com>; Thu, 2 Jun 2011 02:01:23 -0500
+	p5271gaY180519 for <xfs@oss.sgi.com>; Thu, 2 Jun 2011 02:01:42 -0500
 Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E52E915DACF1
-	for <xfs@oss.sgi.com>; Thu,  2 Jun 2011 00:01:20 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A69D44963BE
+	for <xfs@oss.sgi.com>; Thu,  2 Jun 2011 00:01:40 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	iu526RXOhQdHAVGd for <xfs@oss.sgi.com>;
-	Thu, 02 Jun 2011 00:01:20 -0700 (PDT)
+	skQyoF9FLaF1r6Cn for <xfs@oss.sgi.com>;
+	Thu, 02 Jun 2011 00:01:40 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 06/12] inode: Make unused inode LRU per superblock
-Date: Thu,  2 Jun 2011 17:01:01 +1000
-Message-Id: <1306998067-27659-7-git-send-email-david@fromorbit.com>
+Subject: [PATCH 01/12] vmscan: add shrink_slab tracepoints
+Date: Thu,  2 Jun 2011 17:00:56 +1000
+Message-Id: <1306998067-27659-2-git-send-email-david@fromorbit.com>
 In-Reply-To: <1306998067-27659-1-git-send-email-david@fromorbit.com>
 References: <1306998067-27659-1-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,251 +24,77 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org
 Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
-
-The inode unused list is currently a global LRU. This does not match
-the other global filesystem cache - the dentry cache - which uses
-per-superblock LRU lists. Hence we have related filesystem object
-types using different LRU reclaimation schemes.
-
-To enable a per-superblock filesystem cache shrinker, both of these
-caches need to have per-sb unused object LRU lists. Hence this patch
-converts the global inode LRU to per-sb LRUs.
-
-The patch only does rudimentary per-sb propotioning in the shrinker
-infrastructure, as this gets removed when the per-sb shrinker
-callouts are introduced later on.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/inode.c         |   91 +++++++++++++++++++++++++++++++++++++++++++++------
- fs/super.c         |    1 +
- include/linux/fs.h |    4 ++
- 3 files changed, 85 insertions(+), 11 deletions(-)
-
-diff --git a/fs/inode.c b/fs/inode.c
-index 17fea5b..e039115 100644
---- a/fs/inode.c
-+++ b/fs/inode.c
-@@ -34,7 +34,7 @@
-  * inode->i_lock protects:
-  *   inode->i_state, inode->i_hash, __iget()
-  * inode_lru_lock protects:
-- *   inode_lru, inode->i_lru
-+ *   inode->i_sb->s_inode_lru, inode->i_lru
-  * inode_sb_list_lock protects:
-  *   sb->s_inodes, inode->i_sb_list
-  * inode_wb_list_lock protects:
-@@ -64,7 +64,6 @@ static unsigned int i_hash_shift __read_mostly;
- static struct hlist_head *inode_hashtable __read_mostly;
- static __cacheline_aligned_in_smp DEFINE_SPINLOCK(inode_hash_lock);
- 
--static LIST_HEAD(inode_lru);
- static DEFINE_SPINLOCK(inode_lru_lock);
- 
- __cacheline_aligned_in_smp DEFINE_SPINLOCK(inode_sb_list_lock);
-@@ -345,7 +344,8 @@ static void inode_lru_list_add(struct inode *inode)
- {
- 	spin_lock(&inode_lru_lock);
- 	if (list_empty(&inode->i_lru)) {
--		list_add(&inode->i_lru, &inode_lru);
-+		list_add(&inode->i_lru, &inode->i_sb->s_inode_lru);
-+		inode->i_sb->s_nr_inodes_unused++;
- 		this_cpu_inc(nr_unused);
- 	}
- 	spin_unlock(&inode_lru_lock);
-@@ -356,6 +356,7 @@ static void inode_lru_list_del(struct inode *inode)
- 	spin_lock(&inode_lru_lock);
- 	if (!list_empty(&inode->i_lru)) {
- 		list_del_init(&inode->i_lru);
-+		inode->i_sb->s_nr_inodes_unused--;
- 		this_cpu_dec(nr_unused);
- 	}
- 	spin_unlock(&inode_lru_lock);
-@@ -621,21 +622,20 @@ static int can_unuse(struct inode *inode)
-  * LRU does not have strict ordering. Hence we don't want to reclaim inodes
-  * with this flag set because they are the inodes that are out of order.
-  */
--static void prune_icache(int nr_to_scan)
-+static void shrink_icache_sb(struct super_block *sb, int *nr_to_scan)
- {
- 	LIST_HEAD(freeable);
- 	int nr_scanned;
- 	unsigned long reap = 0;
- 
--	down_read(&iprune_sem);
- 	spin_lock(&inode_lru_lock);
--	for (nr_scanned = 0; nr_scanned < nr_to_scan; nr_scanned++) {
-+	for (nr_scanned = *nr_to_scan; nr_scanned >= 0; nr_scanned--) {
- 		struct inode *inode;
- 
--		if (list_empty(&inode_lru))
-+		if (list_empty(&sb->s_inode_lru))
- 			break;
- 
--		inode = list_entry(inode_lru.prev, struct inode, i_lru);
-+		inode = list_entry(sb->s_inode_lru.prev, struct inode, i_lru);
- 
- 		/*
- 		 * we are inverting the inode_lru_lock/inode->i_lock here,
-@@ -643,7 +643,7 @@ static void prune_icache(int nr_to_scan)
- 		 * inode to the back of the list so we don't spin on it.
- 		 */
- 		if (!spin_trylock(&inode->i_lock)) {
--			list_move(&inode->i_lru, &inode_lru);
-+			list_move(&inode->i_lru, &sb->s_inode_lru);
- 			continue;
- 		}
- 
-@@ -655,6 +655,7 @@ static void prune_icache(int nr_to_scan)
- 		    (inode->i_state & ~I_REFERENCED)) {
- 			list_del_init(&inode->i_lru);
- 			spin_unlock(&inode->i_lock);
-+			sb->s_nr_inodes_unused--;
- 			this_cpu_dec(nr_unused);
- 			continue;
- 		}
-@@ -662,7 +663,7 @@ static void prune_icache(int nr_to_scan)
- 		/* recently referenced inodes get one more pass */
- 		if (inode->i_state & I_REFERENCED) {
- 			inode->i_state &= ~I_REFERENCED;
--			list_move(&inode->i_lru, &inode_lru);
-+			list_move(&inode->i_lru, &sb->s_inode_lru);
- 			spin_unlock(&inode->i_lock);
- 			continue;
- 		}
-@@ -676,7 +677,7 @@ static void prune_icache(int nr_to_scan)
- 			iput(inode);
- 			spin_lock(&inode_lru_lock);
- 
--			if (inode != list_entry(inode_lru.next,
-+			if (inode != list_entry(sb->s_inode_lru.next,
- 						struct inode, i_lru))
- 				continue;	/* wrong inode or list_empty */
- 			/* avoid lock inversions with trylock */
-@@ -692,6 +693,7 @@ static void prune_icache(int nr_to_scan)
- 		spin_unlock(&inode->i_lock);
- 
- 		list_move(&inode->i_lru, &freeable);
-+		sb->s_nr_inodes_unused--;
- 		this_cpu_dec(nr_unused);
- 	}
- 	if (current_is_kswapd())
-@@ -699,8 +701,75 @@ static void prune_icache(int nr_to_scan)
- 	else
- 		__count_vm_events(PGINODESTEAL, reap);
- 	spin_unlock(&inode_lru_lock);
-+	*nr_to_scan = nr_scanned;
- 
- 	dispose_list(&freeable);
-+}
-+
-+static void prune_icache(int count)
-+{
-+	struct super_block *sb, *p = NULL;
-+	int w_count;
-+	int unused = inodes_stat.nr_unused;
-+	int prune_ratio;
-+	int pruned;
-+
-+	if (unused == 0 || count == 0)
-+		return;
-+	down_read(&iprune_sem);
-+	if (count >= unused)
-+		prune_ratio = 1;
-+	else
-+		prune_ratio = unused / count;
-+	spin_lock(&sb_lock);
-+	list_for_each_entry(sb, &super_blocks, s_list) {
-+		if (list_empty(&sb->s_instances))
-+			continue;
-+		if (sb->s_nr_inodes_unused == 0)
-+			continue;
-+		sb->s_count++;
-+		/* Now, we reclaim unused dentrins with fairness.
-+		 * We reclaim them same percentage from each superblock.
-+		 * We calculate number of dentries to scan on this sb
-+		 * as follows, but the implementation is arranged to avoid
-+		 * overflows:
-+		 * number of dentries to scan on this sb =
-+		 * count * (number of dentries on this sb /
-+		 * number of dentries in the machine)
-+		 */
-+		spin_unlock(&sb_lock);
-+		if (prune_ratio != 1)
-+			w_count = (sb->s_nr_inodes_unused / prune_ratio) + 1;
-+		else
-+			w_count = sb->s_nr_inodes_unused;
-+		pruned = w_count;
-+		/*
-+		 * We need to be sure this filesystem isn't being unmounted,
-+		 * otherwise we could race with generic_shutdown_super(), and
-+		 * end up holding a reference to an inode while the filesystem
-+		 * is unmounted.  So we try to get s_umount, and make sure
-+		 * s_root isn't NULL.
-+		 */
-+		if (down_read_trylock(&sb->s_umount)) {
-+			if ((sb->s_root != NULL) &&
-+			    (!list_empty(&sb->s_dentry_lru))) {
-+				shrink_icache_sb(sb, &w_count);
-+				pruned -= w_count;
-+			}
-+			up_read(&sb->s_umount);
-+		}
-+		spin_lock(&sb_lock);
-+		if (p)
-+			__put_super(p);
-+		count -= pruned;
-+		p = sb;
-+		/* more work left to do? */
-+		if (count <= 0)
-+			break;
-+	}
-+	if (p)
-+		__put_super(p);
-+	spin_unlock(&sb_lock);
- 	up_read(&iprune_sem);
- }
- 
-diff --git a/fs/super.c b/fs/super.c
-index c755939..ef7caf7 100644
---- a/fs/super.c
-+++ b/fs/super.c
-@@ -77,6 +77,7 @@ static struct super_block *alloc_super(struct file_system_type *type)
- 		INIT_HLIST_BL_HEAD(&s->s_anon);
- 		INIT_LIST_HEAD(&s->s_inodes);
- 		INIT_LIST_HEAD(&s->s_dentry_lru);
-+		INIT_LIST_HEAD(&s->s_inode_lru);
- 		init_rwsem(&s->s_umount);
- 		mutex_init(&s->s_lock);
- 		lockdep_set_class(&s->s_umount, &type->s_umount_key);
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index c55d6b7..a96071d 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1393,6 +1393,10 @@ struct super_block {
- 	struct list_head	s_dentry_lru;	/* unused dentry lru */
- 	int			s_nr_dentry_unused;	/* # of dentry on lru */
- 
-+	/* inode_lru_lock protects s_inode_lru and s_nr_inodes_unused */
-+	struct list_head	s_inode_lru;		/* unused inode lru */
-+	int			s_nr_inodes_unused;	/* # of inodes on lru */
-+
- 	struct block_device	*s_bdev;
- 	struct backing_dev_info *s_bdi;
- 	struct mtd_info		*s_mtd;
--- 
-1.7.5.1
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+RnJvbTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgoK0IZ0IGlzIGltcG9zc2li
+bGUgdG8gdW5kZXJzdGFuZCB3aGF0IHRoZSBzaHJpbmtlcnMgYXJlIGFjdHVhbGx5IGRvaW5nCndp
+dGhvdXQgaW5zdHJ1bWVudGluZyB0aGUgY29kZSwgc28gYWRkIGEgc29tZSB0cmFjZXBvaW50cyB0
+byBhbGxvdwppbnNpZ2h0IHRvIGJlIGdhaW5lZC4KClNpZ25lZC1vZmYtYnk6IERhdmUgQ2hpbm5l
+ciA8ZGNoaW5uZXJAcmVkaGF0LmNvbT4KLS0tCiBpbmNsdWRlL3RyYWNlL2V2ZW50cy92bXNjYW4u
+aCB8ICAgNjcgKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysKIG1tL3Zt
+c2Nhbi5jICAgICAgICAgICAgICAgICAgIHwgICAgNiArKystCiAyIGZpbGVzIGNoYW5nZWQsIDcy
+IGluc2VydGlvbnMoKyksIDEgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvaW5jbHVkZS90cmFj
+ZS9ldmVudHMvdm1zY2FuLmggYi9pbmNsdWRlL3RyYWNlL2V2ZW50cy92bXNjYW4uaAppbmRleCBl
+YTQyMmFhLi5jNzk4Y2Q3IDEwMDY0NAotLS0gYS9pbmNsdWRlL3RyYWNlL2V2ZW50cy92bXNjYW4u
+aAorKysgYi9pbmNsdWRlL3RyYWNlL2V2ZW50cy92bXNjYW4uaApAQCAtMzEwLDYgKzMxMCw3MyBA
+QCBUUkFDRV9FVkVOVChtbV92bXNjYW5fbHJ1X3Nocmlua19pbmFjdGl2ZSwKIAkJc2hvd19yZWNs
+YWltX2ZsYWdzKF9fZW50cnktPnJlY2xhaW1fZmxhZ3MpKQogKTsKIAorVFJBQ0VfRVZFTlQobW1f
+c2hyaW5rX3NsYWJfc3RhcnQsCisJVFBfUFJPVE8oc3RydWN0IHNocmlua2VyICpzaHIsIHN0cnVj
+dCBzaHJpbmtfY29udHJvbCAqc2MsCisJCXVuc2lnbmVkIGxvbmcgcGdzX3NjYW5uZWQsIHVuc2ln
+bmVkIGxvbmcgbHJ1X3BncywKKwkJdW5zaWduZWQgbG9uZyBjYWNoZV9pdGVtcywgdW5zaWduZWQg
+bG9uZyBsb25nIGRlbHRhLAorCQl1bnNpZ25lZCBsb25nIHRvdGFsX3NjYW4pLAorCisJVFBfQVJH
+UyhzaHIsIHNjLCBwZ3Nfc2Nhbm5lZCwgbHJ1X3BncywgY2FjaGVfaXRlbXMsIGRlbHRhLCB0b3Rh
+bF9zY2FuKSwKKworCVRQX1NUUlVDVF9fZW50cnkoCisJCV9fZmllbGQoc3RydWN0IHNocmlua2Vy
+ICosIHNocikKKwkJX19maWVsZChsb25nLCBzaHJfbnIpCisJCV9fZmllbGQoZ2ZwX3QsIGdmcF9m
+bGFncykKKwkJX19maWVsZCh1bnNpZ25lZCBsb25nLCBwZ3Nfc2Nhbm5lZCkKKwkJX19maWVsZCh1
+bnNpZ25lZCBsb25nLCBscnVfcGdzKQorCQlfX2ZpZWxkKHVuc2lnbmVkIGxvbmcsIGNhY2hlX2l0
+ZW1zKQorCQlfX2ZpZWxkKHVuc2lnbmVkIGxvbmcgbG9uZywgZGVsdGEpCisJCV9fZmllbGQodW5z
+aWduZWQgbG9uZywgdG90YWxfc2NhbikKKwkpLAorCisJVFBfZmFzdF9hc3NpZ24oCisJCV9fZW50
+cnktPnNociA9IHNocjsKKwkJX19lbnRyeS0+c2hyX25yID0gc2hyLT5ucjsKKwkJX19lbnRyeS0+
+Z2ZwX2ZsYWdzID0gc2MtPmdmcF9tYXNrOworCQlfX2VudHJ5LT5wZ3Nfc2Nhbm5lZCA9IHBnc19z
+Y2FubmVkOworCQlfX2VudHJ5LT5scnVfcGdzID0gbHJ1X3BnczsKKwkJX19lbnRyeS0+Y2FjaGVf
+aXRlbXMgPSBjYWNoZV9pdGVtczsKKwkJX19lbnRyeS0+ZGVsdGEgPSBkZWx0YTsKKwkJX19lbnRy
+eS0+dG90YWxfc2NhbiA9IHRvdGFsX3NjYW47CisJKSwKKworCVRQX3ByaW50aygic2hyaW5rZXIg
+JXA6IG5yICVsZCBnZnBfZmxhZ3MgJXMgcGdzX3NjYW5uZWQgJWxkIGxydV9wZ3MgJWxkIGNhY2hl
+IGl0ZW1zICVsZCBkZWx0YSAlbGxkIHRvdGFsX3NjYW4gJWxkIiwKKwkJX19lbnRyeS0+c2hyLAor
+CQlfX2VudHJ5LT5zaHJfbnIsCisJCXNob3dfZ2ZwX2ZsYWdzKF9fZW50cnktPmdmcF9mbGFncyks
+CisJCV9fZW50cnktPnBnc19zY2FubmVkLAorCQlfX2VudHJ5LT5scnVfcGdzLAorCQlfX2VudHJ5
+LT5jYWNoZV9pdGVtcywKKwkJX19lbnRyeS0+ZGVsdGEsCisJCV9fZW50cnktPnRvdGFsX3NjYW4p
+CispOworCitUUkFDRV9FVkVOVChtbV9zaHJpbmtfc2xhYl9lbmQsCisJVFBfUFJPVE8oc3RydWN0
+IHNocmlua2VyICpzaHIsIGludCBzaHJpbmtlcl9yZXQsCisJCXVuc2lnbmVkIGxvbmcgdG90YWxf
+c2NhbiksCisKKwlUUF9BUkdTKHNociwgc2hyaW5rZXJfcmV0LCB0b3RhbF9zY2FuKSwKKworCVRQ
+X1NUUlVDVF9fZW50cnkoCisJCV9fZmllbGQoc3RydWN0IHNocmlua2VyICosIHNocikKKwkJX19m
+aWVsZChsb25nLCBzaHJfbnIpCisJCV9fZmllbGQoaW50LCBzaHJpbmtlcl9yZXQpCisJCV9fZmll
+bGQodW5zaWduZWQgbG9uZywgdG90YWxfc2NhbikKKwkpLAorCisJVFBfZmFzdF9hc3NpZ24oCisJ
+CV9fZW50cnktPnNociA9IHNocjsKKwkJX19lbnRyeS0+c2hyX25yID0gc2hyLT5ucjsKKwkJX19l
+bnRyeS0+c2hyaW5rZXJfcmV0ID0gc2hyaW5rZXJfcmV0OworCQlfX2VudHJ5LT50b3RhbF9zY2Fu
+ID0gdG90YWxfc2NhbjsKKwkpLAorCisJVFBfcHJpbnRrKCJzaHJpbmtlciAlcDogbnIgJWxkIHRv
+dGFsX3NjYW4gJWxkIHJldHVybiB2YWwgJWQiLAorCQlfX2VudHJ5LT5zaHIsCisJCV9fZW50cnkt
+PnNocl9uciwKKwkJX19lbnRyeS0+dG90YWxfc2NhbiwKKwkJX19lbnRyeS0+c2hyaW5rZXJfcmV0
+KQorKTsKIAogI2VuZGlmIC8qIF9UUkFDRV9WTVNDQU5fSCAqLwogCmRpZmYgLS1naXQgYS9tbS92
+bXNjYW4uYyBiL21tL3Ztc2Nhbi5jCmluZGV4IGZhYTBhMDguLjQ4ZTNmYmQgMTAwNjQ0Ci0tLSBh
+L21tL3Ztc2Nhbi5jCisrKyBiL21tL3Ztc2Nhbi5jCkBAIC0yNTAsNiArMjUwLDcgQEAgdW5zaWdu
+ZWQgbG9uZyBzaHJpbmtfc2xhYihzdHJ1Y3Qgc2hyaW5rX2NvbnRyb2wgKnNocmluaywKIAkJdW5z
+aWduZWQgbG9uZyBsb25nIGRlbHRhOwogCQl1bnNpZ25lZCBsb25nIHRvdGFsX3NjYW47CiAJCXVu
+c2lnbmVkIGxvbmcgbWF4X3Bhc3M7CisJCWludCBzaHJpbmtfcmV0ID0gMDsKIAogCQltYXhfcGFz
+cyA9IGRvX3Nocmlua2VyX3NocmluayhzaHJpbmtlciwgc2hyaW5rLCAwKTsKIAkJZGVsdGEgPSAo
+NCAqIG5yX3BhZ2VzX3NjYW5uZWQpIC8gc2hyaW5rZXItPnNlZWtzOwpAQCAtMjc0LDkgKzI3NSwx
+MSBAQCB1bnNpZ25lZCBsb25nIHNocmlua19zbGFiKHN0cnVjdCBzaHJpbmtfY29udHJvbCAqc2hy
+aW5rLAogCQl0b3RhbF9zY2FuID0gc2hyaW5rZXItPm5yOwogCQlzaHJpbmtlci0+bnIgPSAwOwog
+CisJCXRyYWNlX21tX3Nocmlua19zbGFiX3N0YXJ0KHNocmlua2VyLCBzaHJpbmssIG5yX3BhZ2Vz
+X3NjYW5uZWQsCisJCQkJCWxydV9wYWdlcywgbWF4X3Bhc3MsIGRlbHRhLCB0b3RhbF9zY2FuKTsK
+KwogCQl3aGlsZSAodG90YWxfc2NhbiA+PSBTSFJJTktfQkFUQ0gpIHsKIAkJCWxvbmcgdGhpc19z
+Y2FuID0gU0hSSU5LX0JBVENIOwotCQkJaW50IHNocmlua19yZXQ7CiAJCQlpbnQgbnJfYmVmb3Jl
+OwogCiAJCQlucl9iZWZvcmUgPSBkb19zaHJpbmtlcl9zaHJpbmsoc2hyaW5rZXIsIHNocmluaywg
+MCk7CkBAIC0yOTMsNiArMjk2LDcgQEAgdW5zaWduZWQgbG9uZyBzaHJpbmtfc2xhYihzdHJ1Y3Qg
+c2hyaW5rX2NvbnRyb2wgKnNocmluaywKIAkJfQogCiAJCXNocmlua2VyLT5uciArPSB0b3RhbF9z
+Y2FuOworCQl0cmFjZV9tbV9zaHJpbmtfc2xhYl9lbmQoc2hyaW5rZXIsIHNocmlua19yZXQsIHRv
+dGFsX3NjYW4pOwogCX0KIAl1cF9yZWFkKCZzaHJpbmtlcl9yd3NlbSk7CiBvdXQ6Ci0tIAoxLjcu
+NS4xCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMg
+bWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9s
+aXN0aW5mby94ZnMK
