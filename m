@@ -1,19 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p524HMPq168930 for <xfs@oss.sgi.com>; Wed, 1 Jun 2011 23:17:22 -0500
-Received: from mail-ww0-f51.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 975B81E3B1AF
-	for <xfs@oss.sgi.com>; Wed,  1 Jun 2011 21:17:20 -0700 (PDT)
-Received: from mail-ww0-f51.google.com (mail-ww0-f51.google.com
-	[74.125.82.51]) by cuda.sgi.com with ESMTP id lSOsKeIgYFxKI7Jr
-	for <xfs@oss.sgi.com>; Wed, 01 Jun 2011 21:17:20 -0700 (PDT)
-Received: by wwf26 with SMTP id 26so388746wwf.32
-	for <xfs@oss.sgi.com>; Wed, 01 Jun 2011 21:17:20 -0700 (PDT)
-From: amir73il@users.sourceforge.net
-Subject: [PATCH v3] xfstests: add support for ext4dev FSTYP
-Date: Thu,  2 Jun 2011 07:17:01 +0300
-Message-Id: <1306988221-3543-1-git-send-email-amir73il@users.sourceforge.net>
+	p526elGN176921 for <xfs@oss.sgi.com>; Thu, 2 Jun 2011 01:40:47 -0500
+Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 53EFC15DAC27
+	for <xfs@oss.sgi.com>; Wed,  1 Jun 2011 23:40:45 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	1SIewnZTWFEhtcCA for <xfs@oss.sgi.com>;
+	Wed, 01 Jun 2011 23:40:45 -0700 (PDT)
+Date: Thu, 2 Jun 2011 16:40:40 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2] xfstests: add support for ext4dev FSTYP
+Message-ID: <20110602064040.GS561@dastard>
+References: <1306933012-8666-1-git-send-email-amir73il@users.sourceforge.net>
+	<20110601232804.GL32466@dastard>
+	<BANLkTi=sV5=PyZvNSd=DGNW-V84=27d7Yw@mail.gmail.com>
+	<BANLkTimbPWfOJKq6er4mnSYNPcx6VHLcrw@mail.gmail.com>
+	<20110602030802.GR561@dastard>
+	<BANLkTi=sPM_AYB4w=N5pWHfws9R3WnfJVw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <BANLkTi=sPM_AYB4w=N5pWHfws9R3WnfJVw@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,131 +30,77 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: linux-fsdevel@vger.kernel.org, sandeen@redhat.com, sergey57@gmail.com, linux-ext4@vger.kernel.org, Amir Goldstein <amir73il@users.sf.net>
+To: "Amir G." <amir73il@users.sourceforge.net>
+Cc: sandeen@redhat.com, Amir Goldstein <amir73il@users.sf.net>, xfs@oss.sgi.com, sergey57@gmail.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
 
-From: Amir Goldstein <amir73il@users.sf.net>
+On Thu, Jun 02, 2011 at 06:49:20AM +0300, Amir G. wrote:
+> On Thu, Jun 2, 2011 at 6:08 AM, Dave Chinner <david@fromorbit.com> wrote:
+> > On Thu, Jun 02, 2011 at 05:33:34AM +0300, Amir G. wrote:
+> >> On Thu, Jun 2, 2011 at 5:16 AM, Amir G. <amir73il@users.sourceforge.net> wrote:
+> >> > On Thu, Jun 2, 2011 at 2:28 AM, Dave Chinner <david@fromorbit.com> wrote:
+> > Personally I think that ext4dev shouldn't be supported at all. A
+> > special fstyp iwhile ext4 was being developed was, IMO, a stupid
+> > thing to do in the first place, and I was happy when it died. It
+> > should not be resurrected and propagated.
+> >
+> > xfstests assumes that you are using a userspace that is current with
+> > the version of the filesystem the kernel supports. If you are
+> > running a development/special branch of ext4, then you need to be
+> > running a userspace that understands it completely. If all you are
+> > doing with the ext4dev fstyp is trying to vector to a different fsck
+> > program that supports a new set of feature bits, then IMO you are
+> > doing it all wrong.
+> >
+> > Fundamentally, the filesystem is either ext4 or it isn't. If the
+> > features are never going to make it into mainline ext4, then you
+> > need a completely different fstype and full userspace support for
+> > that fstype. Once you have that, you can add the fstype support to
+> > xfstests. However, just using a different fstyp just to set a
+> > certain set of feature flags is, again IMO, a pretty stupid way of
+> > going about this.
+> >
+> 
+> The features are going into mainline, but are not there yet.
 
-blkid knows to identify the ext4dev FSTYP of a partition that was
-formatted with mkfs.ext4dev.
-quota tools and various util-linux utils are also aware of ext4dev,
-so ext4dev shares the same capabilities as ext4.
+So using feature bits as they were intended is the right thing to
+do, isn't it?
 
-Signed-off-by: Amir Goldstein <amir73il@users.sf.net>
-Tested-by: Sergey Ivanov <sergey57@gmail.com>
----
-ext4dev is used to test experimental ext4 code in mutual existance
-with production ext4 code on the same system.
+> I did not invent the ext4dev standard, which is pretty well supported
+> by all relevant tools, but I find it very convenient for the testing.
 
-Specifically, ext4 snapshots code is available for testing as a
-stand-alone ext4dev module for Fedora 15 and Ubuntu 11.4
-(see http://next3.sf.net).
+As I understand it, ext4dev is deprecated and should not be used for
+any new filesystems. When did that status change?
 
-v2 -> v3:
-- change if to case statement
+Or did you just start using it because it's convenient for your
+purposes?  What happens when someone else decides to use ext4dev for
+testing incompatible development features because it is convenient
+for them?
 
-v1 -> v2:
-- undo change of fsck -t $FSTYP to fsck.$FSTYP
+> Especially, when I expect my testers to be running a stable
+> distro release (i.e. F15 or Ubuntu 11.4) and be able to install
+> my experimental ext4dev module and utils, without it affecting
+> their (most likely) root ext4/ext3 fs.
 
- common.defrag |    2 +-
- common.quota  |   10 +++++++---
- common.rc     |   10 +++++-----
- 3 files changed, 13 insertions(+), 9 deletions(-)
+So get them to use an ext3, XFS, reiser or JFS root filesystem if
+that's your major concern. That's long been a best practice for
+configuring a filesystem test box - don't use the same filesystem
+for your root/stable filesystems as the filesytsem you are testing.
 
-diff --git a/common.defrag b/common.defrag
-index 1bcf01d..4850803 100644
---- a/common.defrag
-+++ b/common.defrag
-@@ -26,7 +26,7 @@ _require_defrag()
-     xfs)
-         DEFRAG_PROG=/usr/sbin/xfs_fsr
- 	;;
--    ext4)
-+    ext4|ext4dev)
-         DEFRAG_PROG=/usr/bin/e4defrag
- 	;;
-     *)
-diff --git a/common.quota b/common.quota
-index 3c87ce1..9736306 100644
---- a/common.quota
-+++ b/common.quota
-@@ -29,7 +29,7 @@ _require_quota()
-     [ -n $QUOTA_PROG ] || _notrun "Quota user tools not installed"
- 
-     case $FSTYP in
--    ext2|ext3|ext4|reiserfs)
-+    ext2|ext3|ext4|ext4dev|reiserfs)
- 	if [ ! -d /proc/sys/fs/quota ]; then
- 	    _notrun "Installed kernel does not support quotas"
- 	fi
-@@ -237,10 +237,14 @@ _check_quota_usage()
- 	# Sync to get delalloc to disk
- 	sync
- 	VFS_QUOTA=0
--	if [ $FSTYP = "ext2" -o $FSTYP = "ext3" -o $FSTYP = "ext4" -o $FSTYP = "reiserfs" ]; then
-+	case $FSTYP in
-+	ext2|ext3|ext4|ext4dev|reiserfs)
- 		VFS_QUOTA=1
- 		quotaon -f -u -g $SCRATCH_MNT 2>/dev/null
--	fi
-+		;;
-+	*)
-+		;;
-+	esac
- 	repquota -u -n $SCRATCH_MNT  | grep -v "^#0" | _filter_scratch |
- 		sort >$tmp.user.orig
- 	repquota -g -n $SCRATCH_MNT  | grep -v "^#0" | _filter_scratch |
-diff --git a/common.rc b/common.rc
-index e634fbb..c510c66 100644
---- a/common.rc
-+++ b/common.rc
-@@ -65,7 +65,7 @@ _mount_opts()
-     nfs)
- 	export MOUNT_OPTIONS=$NFS_MOUNT_OPTIONS
- 	;;
--    ext2|ext3|ext4)
-+    ext2|ext3|ext4|ext4dev)
- 	# acls & xattrs aren't turned on by default on ext$FOO
- 	export MOUNT_OPTIONS="-o acl,user_xattr $EXT_MOUNT_OPTIONS"
- 	;;
-@@ -110,7 +110,7 @@ _mkfs_opts()
- _fsck_opts()
- {
-     case $FSTYP in
--    ext2|ext3|ext4)
-+    ext2|ext3|ext4|ext4dev)
- 	export FSCK_OPTIONS="-nf"
- 	;;
-     reiserfs)
-@@ -326,10 +326,10 @@ _scratch_mkfs_sized()
-     xfs)
- 	_scratch_mkfs_xfs -d size=$fssize -b size=$blocksize
- 	;;
--    ext2|ext3|ext4)
-+    ext2|ext3|ext4|ext4dev)
- 	/sbin/mkfs.$FSTYP $MKFS_OPTIONS -b $blocksize $SCRATCH_DEV $blocks
- 	;;
--     btrfs)
-+    btrfs)
- 	/sbin/mkfs.$FSTYP $MKFS_OPTIONS $SCRATCH_DEV -b $fssize
- 	;;
-     *)
-@@ -354,7 +354,7 @@ _scratch_mkfs_geom()
-     xfs)
- 	MKFS_OPTIONS+=" -b size=$blocksize, -d su=$sunit_bytes,sw=$swidth_mult"
- 	;;
--    ext4)
-+    ext4|ext4dev)
- 	MKFS_OPTIONS+=" -b $blocksize -E stride=$sunit_blocks,stripe_width=$swidth_blocks"
- 	;;
-     *)
+e.g. If you pick ext3 for the root filesystem, then you can test
+ext4, btrfs, xfs, etc changes without having to worry about whether
+the development module being tested is going to affect your root
+filesystem....
+
+Cheers,
+
+Dave.
 -- 
-1.7.4.1
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
