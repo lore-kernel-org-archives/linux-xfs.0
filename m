@@ -1,24 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p614UuXr030308 for <xfs@oss.sgi.com>; Thu, 30 Jun 2011 23:30:57 -0500
-Received: from mail-ey0-f181.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DF0CE1D7EC86
-	for <xfs@oss.sgi.com>; Thu, 30 Jun 2011 21:30:55 -0700 (PDT)
-Received: from mail-ey0-f181.google.com (mail-ey0-f181.google.com
-	[209.85.215.181]) by cuda.sgi.com with ESMTP id
-	tGbuFTsX3E6h7SOw for <xfs@oss.sgi.com>;
-	Thu, 30 Jun 2011 21:30:55 -0700 (PDT)
-Received: by eyh5 with SMTP id 5so1020879eyh.26
-	for <xfs@oss.sgi.com>; Thu, 30 Jun 2011 21:30:54 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20110630121918.GK561@dastard>
-References: <BANLkTikhE+N3GByMKnKJU=Tn1CTYHoNRUg@mail.gmail.com>
-	<20110630121918.GK561@dastard>
-Date: Fri, 1 Jul 2011 10:00:54 +0530
-Message-ID: <BANLkTimyhDJeuNo_L-xc=yEc_EtyH5NTVg@mail.gmail.com>
-Subject: Re: XFS and USB Hang on 2.6.35.13
-From: Amit Sahrawat <amit.sahrawat83@gmail.com>
+	p5271l5J180579 for <xfs@oss.sgi.com>; Thu, 2 Jun 2011 02:01:48 -0500
+Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D3FFD1ED1909
+	for <xfs@oss.sgi.com>; Thu,  2 Jun 2011 00:01:45 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	UaWFcLua5hmuLZsL for <xfs@oss.sgi.com>;
+	Thu, 02 Jun 2011 00:01:45 -0700 (PDT)
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 07/12] inode: move to per-sb LRU locks
+Date: Thu,  2 Jun 2011 17:01:02 +1000
+Message-Id: <1306998067-27659-8-git-send-email-david@fromorbit.com>
+In-Reply-To: <1306998067-27659-1-git-send-email-david@fromorbit.com>
+References: <1306998067-27659-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,203 +23,168 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: linux-fsdevel@vger.kernel.org
+Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Thu, Jun 30, 2011 at 5:49 PM, Dave Chinner <david@fromorbit.com> wrote:
->
-> On Thu, Jun 30, 2011 at 04:57:42PM +0530, Amit Sahrawat wrote:
-> > Hi All,
-> > I encountered a hang on XFS during unplug.
-> > *Test Case:*
-> > #!/bin/sh
-> > index=3D0
-> > while [ "$?" =3D=3D 0 ]
-> > do
-> > =A0 =A0 =A0 =A0 index=3D$(($index+1))
-> > =A0 =A0 =A0 =A0 sync
-> > =A0 =A0 =A0 =A0 cp /mnt/1KB.txt /tmp/"$index".test
-> > done
-> > Where /mnt - mount point for vfat and /tmp mount point for XFS, both ca=
-n be
-> > XFS also.
-> >
-> > During this operation, unplug the USB. I am getting HANG almost everyti=
-me I
-> > unplug.
->
-> Well, that's no surprise. The unplug appears to be losing IOs in
-> progress.
->
-> > *Kernel Version:* 2.6.35.13 (extremely sorry, I know next question will=
- be
-> > why am I not using TOT kernel - I tried but my PC does not boot up with=
- the
-> > latest one)
-> >
-> > *Target=3DARM*
-> > *Logs Using Kernel Hung Task Feature*
-> > # sh test.sh
-> > usb 2-1: USB disconnect, address 2
-> > sd 0:0:0:0: [sda] Unhandled error code
-> > sd 0:0:0:0: [sda] Result: hostbyte=3D0x01 driverbyte=3D0x00
-> > sd 0:0:0:0: [sda] CDB: cdb[0]=3D0x2a: 2a 00 00 40 08 01 00 00 02 00
-> > end_request: I/O error, dev sda, sector 4196353
-> > sd 0:0:0:0: [sda] Unhandled error code
-> > sd 0:0:0:0: [sda] Result: hostbyte=3D0x01 driverbyte=3D0x00
-> > sd 0:0:0:0: [sda] CDB: cdb[0]=3D0x2a: 2a 00 00 40 08 08 00 00 18 00
-> > end_request: I/O error, dev sda, sector 4196360
-> > end_request: I/O error, dev sda, sector 6293645
-> > Device sda3, XFS metadata write error block 0x1 in sda3
-> > xfs_force_shutdown(sda3,0x1) called from line 1031 of file
-> > fs/xfs/xfs_buf_item.c. =A0Return address =3D 0xc0507b1c
->
-> So the device was unplugged, there was a disconnect error, a few IO
-> errors and then a shutdown.
->
-> >
-> > *INFO: task khubd:*33 blocked for more than 120 seconds.
-> > "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this messag=
-e.
-> > khubd =A0 =A0 =A0 =A0 D c06c261c =A0 =A0 0 =A0 =A033 =A0 =A0 =A02 0x000=
-00000
-> > Backtrace:
-> > [<c06c2210>] (schedule+0x0/0x500) from [<c0523f4c>]
-> > (_xfs_log_force+0x230/0x284)
->
-> You need to turn off line wrapping for stuff you paste into email.
-> The cleaned up (i.e. relevant part) trace is:
->
-> [<c06c2210>] (schedule+0x0/0x500)
-> [<c0523d1c>] (_xfs_log_force+0x0/0x284)
-> [<c052417c>] (xfs_log_force+0x0/0x38)
-> [<c0544e94>] (xfs_sync_data+0x0/0x58)
-> [<c0544f20>] (xfs_quiesce_data+0x0/0x80)
-> [<c05421e4>] (xfs_fs_sync_fs+0x0/0xe0)
-> [<c048fa74>] (__sync_filesystem+0x0/0xa0)
-> [<c048fb88>] (sync_filesystem+0x0/0x60)
-> [<c0499104>] (fsync_bdev+0x0/0x44)
-> [<c056c680>] (invalidate_partition+0x0/0x3c)
-> [<c04b88e0>] (del_gendisk+0x0/0x140)
-> [<c05c78a0>] (sd_remove+0x0/0x84)
-> [<c05b27f4>] (__device_release_driver+0x0/0xac)
-> [<c05b2954>] (device_release_driver+0x0/0x30)
-> [<c05b1ddc>] (bus_remove_device+0x0/0x8c)
-> [<c05b02d8>] (device_del+0x0/0x170)
-> [<c05c4d5c>] (__scsi_remove_device+0x0/0x90)
-> [<c05c23bc>] (scsi_forget_host+0x0/0x6c)
-> [<c05bc38c>] (scsi_remove_host+0x0/0x104)
-> [<c0612f94>] (quiesce_and_remove_host+0x0/0x9c)
-> [<c06130b4>] (usb_stor_disconnect+0x0/0x28)
-> [<c0601614>] (usb_unbind_interface+0x0/0xdc)
-> [<c05b27f4>] (__device_release_driver+0x0/0xac)
-> [<c05b2954>] (device_release_driver+0x0/0x30)
-> [<c05b1ddc>] (bus_remove_device+0x0/0x8c)
-> [<c05b02d8>] (device_del+0x0/0x170)
-> [<c05ff06c>] (usb_disable_device+0x0/0xf8)
-> [<c05fa8e0>] (usb_disconnect+0x0/0xf4)
-> [<c05fabd8>] (hub_thread+0x0/0xd78)
-> [<c041e61c>] (kthread+0x0/0x8c)
->
-> Well, that just looks utterly braindamaged to me.
->
-> We just had the device containing the filesystem removed from the
-> system, so the error handling routine ends up trying to sync the
-> filesystem to the device that doesn't exist anymore. WTF?
->
+From: Dave Chinner <dchinner@redhat.com>
 
->>> This is what I think, why is syncing taking place when the device doesn=
-'t exist anymore. What is the gain in doing so? I will try and propose this=
- feature.
+With the inode LRUs moving to per-sb structures, there is no longer
+a need for a global inode_lru_lock. The locking can be made more
+fine-grained by moving to a per-sb LRU lock, isolating the LRU
+operations of different filesytsems completely from each other.
 
-> Anyway, that's not the cause of the hang, but just an example of
-> someone not thinking through what their error handling actually
-> does...
->
-> > *INFO: task xfslogd/1*:40 blocked for more than 120 seconds.
-> > "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this messag=
-e.
-> > xfslogd/1 =A0 =A0 D c06c261c =A0 =A0 0 =A0 =A040 =A0 =A0 =A02 0x00000000
-> > Backtrace:
->
-> [<c06c2210>] (schedule+0x0/0x500)
-> [<c0523d1c>] (_xfs_log_force+0x0/0x284)
-> [<c0523fa0>] (xfs_log_force_umount+0x0/0x1dc)
-> [<c05374cc>] (xfs_do_force_shutdown+0x0/0x164)
-> [<c05079d0>] (xfs_buf_iodone_callbacks+0x0/0x184)
-> [<c053b888>] (xfs_buf_iodone_work+0x0/0x7c)
-> [<c041a768>] (worker_thread+0x0/0x1e4)
-> [<c041e61c>] (kthread+0x0/0x8c)
->
-> That's where the shutdown has hung - only the xfslogd can complete
-> the IO that will allow the log force to complete, and that is not
-> occurring because it is waiting for the log force to complete before
-> it can complete the IO that will complete the log force...
->
-> AFAICT, this problem doesn't exist in TOT - the conversion of the
->>> Again I have a problem which seems fixed in TOT :)
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/inode.c         |   27 +++++++++++++--------------
+ fs/super.c         |    1 +
+ include/linux/fs.h |    3 ++-
+ 3 files changed, 16 insertions(+), 15 deletions(-)
 
-> xfslogd workqueue to CMWQ allows processing of other xfslogd
-> workqueue events to continue even though this one has gone to sleep.
->
-> You probably need to change the shutdown type to
-> SHUTDOWN_LOG_IO_ERROR to prevent a log flush from occurring in this
-> shutdown context.
-
->>> This will fix the error for this kernel version, I will give this a try.
->>> Is this the patchwork for CMWQ: http://patchwork.xfs.org/patch/2037/ (x=
-fs: improve sync behaviour in face of aggressive dirtying) ? Please let me =
-know.
-
->
-> > =A0r7:00000013 r6:c040c04c r5:c041e61c r4:dbc2decc
-> > *INFO: task sync:*164 blocked for more than 120 seconds.
-> > "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this messag=
-e.
-> > sync =A0 =A0 =A0 =A0 =A0D c06c261c =A0 =A0 0 =A0 164 =A0 =A0136 0x00000=
-000
-> > Backtrace:
-> [<c06c2210>] (schedule+0x0/0x500)
-> [<c06c295c>] (schedule_timeout+0x0/0x200)
-> [<c06c2000>] (wait_for_common+0x0/0x164)
-> [<c06c21f4>] (wait_for_completion+0x0/0x1c)
-> [<c053a6f8>] (xfs_buf_iowait+0x0/0x5c)
-> [<c053ba50>] (xfs_flush_buftarg+0x0/0x180)
-> [<c0544f20>] (xfs_quiesce_data+0x0/0x80)
-> [<c05421e4>] (xfs_fs_sync_fs+0x0/0xe0)
-> [<c048fa74>] (__sync_filesystem+0x0/0xa0)
-> [<c048fb14>] (sync_one_sb+0x0/0x30)
-> [<c0470c2c>] (iterate_supers+0x0/0xb8)
-> [<c048fa10>] (sync_filesystems+0x0/0x2c)
-> [<c048fb44>] (sys_sync+0x0/0x44)
->
-> And that one is probably stuck waiting for the xfslogd to complete
-> the IO.
-
->>>Yes, Both are waiting for signal to come.
-Waiting [_xfs_log_force()][3125][Name:khubd]
-end_request: I/O error, dev sda, sector 4226672
-end_request: I/O error, dev sda, sector 5283400
-Device sda3, XFS metadata write error block 0x1 in sda3
-xfs_force_shutdown(sda3,0x1) called from line 1031 of file
-fs/xfs/xfs_buf_item.c.  Return address =3D 0xc0507b1c
-
-Waiting [_xfs_log_force()][3125][Name:xfslogd/0]
-
-
-> Cheers,
->
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
-
-Thanks & Regards,
-Amit Sahrawat
+diff --git a/fs/inode.c b/fs/inode.c
+index e039115..667a29c 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -33,7 +33,7 @@
+  *
+  * inode->i_lock protects:
+  *   inode->i_state, inode->i_hash, __iget()
+- * inode_lru_lock protects:
++ * inode->i_sb->s_inode_lru_lock protects:
+  *   inode->i_sb->s_inode_lru, inode->i_lru
+  * inode_sb_list_lock protects:
+  *   sb->s_inodes, inode->i_sb_list
+@@ -46,7 +46,7 @@
+  *
+  * inode_sb_list_lock
+  *   inode->i_lock
+- *     inode_lru_lock
++ *     inode->i_sb->s_inode_lru_lock
+  *
+  * inode_wb_list_lock
+  *   inode->i_lock
+@@ -64,8 +64,6 @@ static unsigned int i_hash_shift __read_mostly;
+ static struct hlist_head *inode_hashtable __read_mostly;
+ static __cacheline_aligned_in_smp DEFINE_SPINLOCK(inode_hash_lock);
+ 
+-static DEFINE_SPINLOCK(inode_lru_lock);
+-
+ __cacheline_aligned_in_smp DEFINE_SPINLOCK(inode_sb_list_lock);
+ __cacheline_aligned_in_smp DEFINE_SPINLOCK(inode_wb_list_lock);
+ 
+@@ -342,24 +340,24 @@ EXPORT_SYMBOL(ihold);
+ 
+ static void inode_lru_list_add(struct inode *inode)
+ {
+-	spin_lock(&inode_lru_lock);
++	spin_lock(&inode->i_sb->s_inode_lru_lock);
+ 	if (list_empty(&inode->i_lru)) {
+ 		list_add(&inode->i_lru, &inode->i_sb->s_inode_lru);
+ 		inode->i_sb->s_nr_inodes_unused++;
+ 		this_cpu_inc(nr_unused);
+ 	}
+-	spin_unlock(&inode_lru_lock);
++	spin_unlock(&inode->i_sb->s_inode_lru_lock);
+ }
+ 
+ static void inode_lru_list_del(struct inode *inode)
+ {
+-	spin_lock(&inode_lru_lock);
++	spin_lock(&inode->i_sb->s_inode_lru_lock);
+ 	if (!list_empty(&inode->i_lru)) {
+ 		list_del_init(&inode->i_lru);
+ 		inode->i_sb->s_nr_inodes_unused--;
+ 		this_cpu_dec(nr_unused);
+ 	}
+-	spin_unlock(&inode_lru_lock);
++	spin_unlock(&inode->i_sb->s_inode_lru_lock);
+ }
+ 
+ /**
+@@ -608,7 +606,8 @@ static int can_unuse(struct inode *inode)
+ 
+ /*
+  * Scan `goal' inodes on the unused list for freeable ones. They are moved to a
+- * temporary list and then are freed outside inode_lru_lock by dispose_list().
++ * temporary list and then are freed outside sb->s_inode_lru_lock by
++ * dispose_list().
+  *
+  * Any inodes which are pinned purely because of attached pagecache have their
+  * pagecache removed.  If the inode has metadata buffers attached to
+@@ -628,7 +627,7 @@ static void shrink_icache_sb(struct super_block *sb, int *nr_to_scan)
+ 	int nr_scanned;
+ 	unsigned long reap = 0;
+ 
+-	spin_lock(&inode_lru_lock);
++	spin_lock(&sb->s_inode_lru_lock);
+ 	for (nr_scanned = *nr_to_scan; nr_scanned >= 0; nr_scanned--) {
+ 		struct inode *inode;
+ 
+@@ -638,7 +637,7 @@ static void shrink_icache_sb(struct super_block *sb, int *nr_to_scan)
+ 		inode = list_entry(sb->s_inode_lru.prev, struct inode, i_lru);
+ 
+ 		/*
+-		 * we are inverting the inode_lru_lock/inode->i_lock here,
++		 * we are inverting the sb->s_inode_lru_lock/inode->i_lock here,
+ 		 * so use a trylock. If we fail to get the lock, just move the
+ 		 * inode to the back of the list so we don't spin on it.
+ 		 */
+@@ -670,12 +669,12 @@ static void shrink_icache_sb(struct super_block *sb, int *nr_to_scan)
+ 		if (inode_has_buffers(inode) || inode->i_data.nrpages) {
+ 			__iget(inode);
+ 			spin_unlock(&inode->i_lock);
+-			spin_unlock(&inode_lru_lock);
++			spin_unlock(&sb->s_inode_lru_lock);
+ 			if (remove_inode_buffers(inode))
+ 				reap += invalidate_mapping_pages(&inode->i_data,
+ 								0, -1);
+ 			iput(inode);
+-			spin_lock(&inode_lru_lock);
++			spin_lock(&sb->s_inode_lru_lock);
+ 
+ 			if (inode != list_entry(sb->s_inode_lru.next,
+ 						struct inode, i_lru))
+@@ -700,7 +699,7 @@ static void shrink_icache_sb(struct super_block *sb, int *nr_to_scan)
+ 		__count_vm_events(KSWAPD_INODESTEAL, reap);
+ 	else
+ 		__count_vm_events(PGINODESTEAL, reap);
+-	spin_unlock(&inode_lru_lock);
++	spin_unlock(&sb->s_inode_lru_lock);
+ 	*nr_to_scan = nr_scanned;
+ 
+ 	dispose_list(&freeable);
+diff --git a/fs/super.c b/fs/super.c
+index ef7caf7..9c3fa1f 100644
+--- a/fs/super.c
++++ b/fs/super.c
+@@ -78,6 +78,7 @@ static struct super_block *alloc_super(struct file_system_type *type)
+ 		INIT_LIST_HEAD(&s->s_inodes);
+ 		INIT_LIST_HEAD(&s->s_dentry_lru);
+ 		INIT_LIST_HEAD(&s->s_inode_lru);
++		spin_lock_init(&s->s_inode_lru_lock);
+ 		init_rwsem(&s->s_umount);
+ 		mutex_init(&s->s_lock);
+ 		lockdep_set_class(&s->s_umount, &type->s_umount_key);
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index a96071d..bbd478e 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1393,7 +1393,8 @@ struct super_block {
+ 	struct list_head	s_dentry_lru;	/* unused dentry lru */
+ 	int			s_nr_dentry_unused;	/* # of dentry on lru */
+ 
+-	/* inode_lru_lock protects s_inode_lru and s_nr_inodes_unused */
++	/* s_inode_lru_lock protects s_inode_lru and s_nr_inodes_unused */
++	spinlock_t		s_inode_lru_lock ____cacheline_aligned_in_smp;
+ 	struct list_head	s_inode_lru;		/* unused inode lru */
+ 	int			s_nr_inodes_unused;	/* # of inodes on lru */
+ 
+-- 
+1.7.5.1
 
 _______________________________________________
 xfs mailing list
