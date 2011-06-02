@@ -1,29 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p52EiI65203834 for <xfs@oss.sgi.com>; Thu, 2 Jun 2011 09:44:18 -0500
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C4E15497B93
-	for <xfs@oss.sgi.com>; Thu,  2 Jun 2011 07:44:17 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id UbvHc636rMoD8xoJ for
-	<xfs@oss.sgi.com>; Thu, 02 Jun 2011 07:44:17 -0700 (PDT)
-Date: Thu, 2 Jun 2011 16:44:07 +0200 (CEST)
-From: Lukas Czerner <lczerner@redhat.com>
-Subject: Re: [PATCH v2] xfstests: add support for ext4dev FSTYP
-In-Reply-To: <BANLkTinBL5GbhUg5NLCqmLEfz0nNFrjf-w@mail.gmail.com>
-Message-ID: <alpine.LFD.2.00.1106021639230.3931@dhcp-27-109.brq.redhat.com>
-References: <1306933012-8666-1-git-send-email-amir73il@users.sourceforge.net>
-	<20110601232804.GL32466@dastard>
-	<BANLkTi=sV5=PyZvNSd=DGNW-V84=27d7Yw@mail.gmail.com>
-	<BANLkTimbPWfOJKq6er4mnSYNPcx6VHLcrw@mail.gmail.com>
-	<20110602030802.GR561@dastard>
-	<BANLkTi=sPM_AYB4w=N5pWHfws9R3WnfJVw@mail.gmail.com>
-	<20110602064040.GS561@dastard>
-	<BANLkTinJcvvv2pfXBt7EZ9TXONb9jRe0uQ@mail.gmail.com>
-	<alpine.LFD.2.00.1106021352330.3931@dhcp-27-109.brq.redhat.com>
-	<BANLkTinBL5GbhUg5NLCqmLEfz0nNFrjf-w@mail.gmail.com>
+	p52EgnqL203753 for <xfs@oss.sgi.com>; Thu, 2 Jun 2011 09:42:49 -0500
+Received: from mail-ww0-f51.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 190E51235F25
+	for <xfs@oss.sgi.com>; Thu,  2 Jun 2011 07:42:47 -0700 (PDT)
+Received: from mail-ww0-f51.google.com (mail-ww0-f51.google.com
+	[74.125.82.51]) by cuda.sgi.com with ESMTP id KLUJyOFvnw4DBXlG
+	for <xfs@oss.sgi.com>; Thu, 02 Jun 2011 07:42:47 -0700 (PDT)
+Received: by wwf26 with SMTP id 26so752669wwf.32
+	for <xfs@oss.sgi.com>; Thu, 02 Jun 2011 07:42:46 -0700 (PDT)
 MIME-Version: 1.0
+Date: Thu, 2 Jun 2011 10:42:46 -0400
+Message-ID: <BANLkTim_BCiKeqi5gY_gXAcmg7JgrgJCxQ@mail.gmail.com>
+Subject: I/O hang, possibly XFS, possibly general
+From: Paul Anderson <pha@umich.edu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,65 +27,61 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: "Amir G." <amir73il@users.sourceforge.net>
-Cc: sandeen@redhat.com, Theodore Tso <tytso@mit.edu>, xfs@oss.sgi.com, sergey57@gmail.com, linux-fsdevel@vger.kernel.org, Lukas Czerner <lczerner@redhat.com>, linux-ext4@vger.kernel.org
+To: xfs-oss <xfs@oss.sgi.com>
 
-On Thu, 2 Jun 2011, Amir G. wrote:
+This morning, I had a symptom of a I/O throughput problem in which
+dirty pages appeared to be taking a long time to write to disk.
 
---snip--
-> 
-> Ted actually brought this up in our ext4 developers meeting on LSF.
-> He said we could register an ext4 module with the ext4dev external symbols
-> and it would be useful for testing, since we already have all those tools that
-> are aware of ext4dev.
+The system is a large x64 192GiB dell 810 server running 2.6.38.5 from
+kernel.org - the basic workload was data intensive - concurrent large
+NFS (with high metadata/low filesize), rsync/lftp (with low
+metadata/high file size) all working in a 200TiB XFS volume on a
+software MD raid0 on top of 7 software MD raid6, each w/18 drives.  I
+had mounted the filesystem with inode64,largeio,logbufs=8,noatime.
 
-I know, but my point is still valid. why to introduce non-existing FSTYP
-into other tools, this is not proper course of action. If the goal is
-really resurrect ext4dev we should do this first.
+The specific symptom was that 'sync' hung, a dpkg command hung
+(presumably trying to issue fsync), and experimenting with "killall
+-STOP" or "kill -STOP" of the workload jobs didn't let the system
+drain I/O enough to finish the sync.  I probably did not wait long
+enough, however.
 
-> 
-> I  am still using a more low-tech method of cloning ext4 (sed) to build
-> a standalone ext4dev module for testing, but it's the same principle.
-> 
-> >>
-> >>
---snip--
-> >>
-> >> So, yes, it's true. There are other ways to accomplish what I am doing,
-> >> but I am going out of my way to try to make the life of developers and testers
-> >> easier and you are doing the exact opposite by raising objections to a rather
-> >> trivial and harmless patch.
-> >
-> > What is easier for testers and developers ? I fail to see the reason for
-> > including non-existing FSTYP into xfstests while it should be forgotten
-> > by now. Just provide sources with whatever fs name you choose (or just
-> > patches for ext4 preferably), provide patches to e2fsprogs and patches to
-> > xfstests if you want people to test with it. And it should be easy for every
-> > tester, or developer to use it, shouldn't it ? Is that a problem ?
-> 
-> Yes, it is a problem. You are thinking in terms of a developer who builds
-> new kernels on a daily basis.
-> Back in the time, when I developed next3, I asked some friend and
-> people in the community
-> if they could test it.
-> It turned out that they don't even know how to build a kernel and they
-> don't want
-> to invest the time in doing that.
-> This is when I realized that to get to a wider audience of testers, I
-> need to make the testing
-> process E A S Y !
-> 
-> And by E A S Y, I mean:
-> 1. Take a Fedora 15 system
-> 2. download http://next3.sourceforge.net/files/1.0.13/ext4dev_snapshots-1.0.13-x86_64.tar.gz
-> 3. tar xfz ext4dev_snapshots-1.0.13-x86_64.tar.gz && cd ext4dev_snapshots-1.0.13
-> 4. make && sudo make install && sudo make test
+So here's what I did to diagnose: when all workloads were stopped,
+there was still low rate I/O from kflush->md array jobs.  No CPU
+starvation, but the I/O rate was low - 5-30MiB/second (the array can
+readily do >1000MiB/second for big I/O).  Mind you, one "md5sum
+--check" job was able to run at >200MiB/second without trouble - turn
+it off or on and the aggregate I/O load shoots right up or down along
+with it, so I'm fairly confident in the underlying physical arrays as
+well as XFS large data I/O.
 
-So you're saying that you can not patch xfstests (and other) sources in the
-make time ??
+I did "echo 3 > /proc/sys/vm/drop_caches" repeatedly and noticed that
+according to top, the total amount of cached data would drop down
+rapidly (first time had the big drop), but still be stuck at around
+8-10Gigabytes.  While continuing to do this, I noticed finally that
+the cached data value was in fact dropping slowly (at the rate of
+5-30MiB/second), and in fact finally dropped down to approximately
+60Megabytes at which point the stuck dpkg command finished, and I was
+again able to issue sync commands that finished instantly.
 
-Thanks!
--Lukas
+My guess is that I've done something to fill the buffer pool with slow
+to flush metadata - and prior to rebooting the machine a few minutes
+ago, I removed the largeio option in /etc/fstab.
+
+I can't say this is an XFS bug specifically, but more likely how I am
+using it - are there other tools I can use to better diagnose what is
+going on?  I do know it will happen again, since we will have 5 of
+these machines running at very high rates soon.  Also, any suggestions
+for better metadata or log management are very welcome.
+
+This particular machine is probably our worst, since it has the widest
+variation in offered file I/O load (tens of millions of small files,
+thousands of >1GB  files).  If this workload is pushing XFS too hard,
+I can deploy new hardware to split the workload across different
+filesystems.
+
+Thanks very much for any thoughts or suggestions,
+
+Paul Anderson
 
 _______________________________________________
 xfs mailing list
