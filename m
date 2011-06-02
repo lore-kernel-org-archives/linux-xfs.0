@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5271mrE180582 for <xfs@oss.sgi.com>; Thu, 2 Jun 2011 02:01:48 -0500
+	p5271lQn180561 for <xfs@oss.sgi.com>; Thu, 2 Jun 2011 02:01:47 -0500
 Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A7C664963DE
-	for <xfs@oss.sgi.com>; Thu,  2 Jun 2011 00:01:46 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A59F01ED1906
+	for <xfs@oss.sgi.com>; Thu,  2 Jun 2011 00:01:45 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	ElZRxZHXDuoAcRng for <xfs@oss.sgi.com>;
-	Thu, 02 Jun 2011 00:01:46 -0700 (PDT)
+	GfV4XkKcn2mHXBRp for <xfs@oss.sgi.com>;
+	Thu, 02 Jun 2011 00:01:45 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: =?UTF-8?q?=5BPATCH=2010/12=5D=20superblock=3A=20add=20filesystem=20shrinker=20operations?=
-Date: Thu,  2 Jun 2011 17:01:05 +1000
-Message-Id: <1306998067-27659-11-git-send-email-david@fromorbit.com>
+Subject: [PATCH 11/12] vfs: increase shrinker batch size
+Date: Thu,  2 Jun 2011 17:01:06 +1000
+Message-Id: <1306998067-27659-12-git-send-email-david@fromorbit.com>
 In-Reply-To: <1306998067-27659-1-git-send-email-david@fromorbit.com>
 References: <1306998067-27659-1-git-send-email-david@fromorbit.com>
-MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,100 +23,70 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org
 Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-RnJvbTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgoKTm93IHdlIGhhdmUgYSBw
-ZXItc3VwZXJibG9jayBzaHJpbmtlciBpbXBsZW1lbnRhdGlvbiwgd2UgY2FuIGFkZCBhCmZpbGVz
-eXN0ZW0gc3BlY2lmaWMgY2FsbG91dCB0byBpdCB0byBhbGxvdyBmaWxlc3lzdGVtIGludGVybmFs
-CmNhY2hlcyB0byBiZSBzaHJ1bmsgYnkgdGhlIHN1cGVyYmxvY2sgc2hyaW5rZXIuCgpSYXRoZXIg
-dGhhbiBwZXJwZXR1YXRlIHRoZSBtdWx0aXB1cnBvc2Ugc2hyaW5rZXIgY2FsbGJhY2sgQVBJIChp
-LmUuCm5yX3RvX3NjYW4gPT0gMCBtZWFuaW5nICJ0ZWxsIG1lIGhvdyBtYW55IG9iamVjdHMgZnJl
-ZWFibGUgaW4gdGhlCmNhY2hlKSwgdHdvIG9wZXJhdGlvbnMgd2lsbCBiZSBhZGRlZC4gVGhlIGZp
-cnN0IHdpbGwgcmV0dXJuIHRoZQpudW1iZXIgb2Ygb2JqZWN0cyB0aGF0IGFyZSBmcmVlYWJsZSwg
-dGhlIHNlY29uZCBpcyB0aGUgYWN0dWFsCnNocmlua2VyIGNhbGwuCgpTaWduZWQtb2ZmLWJ5OiBE
-YXZlIENoaW5uZXIgPGRjaGlubmVyQHJlZGhhdC5jb20+Ci0tLQogRG9jdW1lbnRhdGlvbi9maWxl
-c3lzdGVtcy92ZnMudHh0IHwgICAxNiArKysrKysrKysrKysrCiBmcy9zdXBlci5jICAgICAgICAg
-ICAgICAgICAgICAgICAgfCAgIDQzICsrKysrKysrKysrKysrKysrKysrKysrKysrKy0tLS0tLS0t
-LQogaW5jbHVkZS9saW51eC9mcy5oICAgICAgICAgICAgICAgIHwgICAgMiArCiAzIGZpbGVzIGNo
-YW5nZWQsIDUwIGluc2VydGlvbnMoKyksIDExIGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL0Rv
-Y3VtZW50YXRpb24vZmlsZXN5c3RlbXMvdmZzLnR4dCBiL0RvY3VtZW50YXRpb24vZmlsZXN5c3Rl
-bXMvdmZzLnR4dAppbmRleCA4OGI5ZjU1Li5kYzczMmQyIDEwMDY0NAotLS0gYS9Eb2N1bWVudGF0
-aW9uL2ZpbGVzeXN0ZW1zL3Zmcy50eHQKKysrIGIvRG9jdW1lbnRhdGlvbi9maWxlc3lzdGVtcy92
-ZnMudHh0CkBAIC0yMjksNiArMjI5LDggQEAgc3RydWN0IHN1cGVyX29wZXJhdGlvbnMgewogCiAg
-ICAgICAgIHNzaXplX3QgKCpxdW90YV9yZWFkKShzdHJ1Y3Qgc3VwZXJfYmxvY2sgKiwgaW50LCBj
-aGFyICosIHNpemVfdCwgbG9mZl90KTsKICAgICAgICAgc3NpemVfdCAoKnF1b3RhX3dyaXRlKShz
-dHJ1Y3Qgc3VwZXJfYmxvY2sgKiwgaW50LCBjb25zdCBjaGFyICosIHNpemVfdCwgbG9mZl90KTsK
-KwlpbnQgKCpucl9jYWNoZWRfb2JqZWN0cykoc3RydWN0IHN1cGVyX2Jsb2NrICopOworCXZvaWQg
-KCpmcmVlX2NhY2hlZF9vYmplY3RzKShzdHJ1Y3Qgc3VwZXJfYmxvY2sgKiwgaW50KTsKIH07CiAK
-IEFsbCBtZXRob2RzIGFyZSBjYWxsZWQgd2l0aG91dCBhbnkgbG9ja3MgYmVpbmcgaGVsZCwgdW5s
-ZXNzIG90aGVyd2lzZQpAQCAtMzAxLDYgKzMwMywyMCBAQCBvciBib3R0b20gaGFsZikuCiAKICAg
-cXVvdGFfd3JpdGU6IGNhbGxlZCBieSB0aGUgVkZTIHRvIHdyaXRlIHRvIGZpbGVzeXN0ZW0gcXVv
-dGEgZmlsZS4KIAorICBucl9jYWNoZWRfb2JqZWN0czogY2FsbGVkIGJ5IHRoZSBzYiBjYWNoZSBz
-aHJpbmtpbmcgZnVuY3Rpb24gZm9yIHRoZQorCWZpbGVzeXN0ZW0gdG8gcmV0dXJuIHRoZSBudW1i
-ZXIgb2YgZnJlZWFibGUgY2FjaGVkIG9iamVjdHMgaXQgY29udGFpbnMuCisJT3B0aW9uYWwuCisK
-KyAgZnJlZV9jYWNoZV9vYmplY3RzOiBjYWxsZWQgYnkgdGhlIHNiIGNhY2hlIHNocmlua2luZyBm
-dW5jdGlvbiBmb3IgdGhlCisJZmlsZXN5c3RlbSB0byBzY2FuIHRoZSBudW1iZXIgb2Ygb2JqZWN0
-cyBpbmRpY2F0ZWQgdG8gdHJ5IHRvIGZyZWUgdGhlbS4KKwlPcHRpb25hbCwgYnV0IGFueSBmaWxl
-c3lzdGVtIGltcGxlbWVudGluZyB0aGlzIG1ldGhvZCBuZWVkcyB0byBhbHNvCisJaW1wbGVtZW50
-IC0+bnJfY2FjaGVkX29iamVjdHMgZm9yIGl0IHRvIGJlIGNhbGxlZCBjb3JyZWN0bHkuCisKKwlX
-ZSBjYW4ndCBkbyBhbnl0aGluZyB3aXRoIGFueSBlcnJvcnMgdGhhdCB0aGUgZmlsZXN5c3RlbSBt
-aWdodAorCWVuY291bnRlcmVkLCBoZW5jZSB0aGUgdm9pZCByZXR1cm4gdHlwZS4gVGhpcyB3aWxs
-IG5ldmVyIGJlIGNhbGxlZCBpZgorCXRoZSBWTSBpcyB0cnlpbmcgdG8gcmVjbGFpbSB1bmRlciBH
-RlBfTk9GUyBjb25kaXRpb25zLCBoZW5jZSB0aGlzCisJbWV0aG9kIGRvZXMgbm90IG5lZWQgdG8g
-aGFuZGxlIHRoYXQgc2l0dWF0aW9uIGl0c2VsZi4KKwogV2hvZXZlciBzZXRzIHVwIHRoZSBpbm9k
-ZSBpcyByZXNwb25zaWJsZSBmb3IgZmlsbGluZyBpbiB0aGUgImlfb3AiIGZpZWxkLiBUaGlzCiBp
-cyBhIHBvaW50ZXIgdG8gYSAic3RydWN0IGlub2RlX29wZXJhdGlvbnMiIHdoaWNoIGRlc2NyaWJl
-cyB0aGUgbWV0aG9kcyB0aGF0CiBjYW4gYmUgcGVyZm9ybWVkIG9uIGluZGl2aWR1YWwgaW5vZGVz
-LgpkaWZmIC0tZ2l0IGEvZnMvc3VwZXIuYyBiL2ZzL3N1cGVyLmMKaW5kZXggZjQ2MzBkOS4uYjU1
-Zjk2OCAxMDA2NDQKLS0tIGEvZnMvc3VwZXIuYworKysgYi9mcy9zdXBlci5jCkBAIC00MSw3ICs0
-MSw4IEBAIERFRklORV9TUElOTE9DSyhzYl9sb2NrKTsKIHN0YXRpYyBpbnQgcHJ1bmVfc3VwZXIo
-c3RydWN0IHNocmlua2VyICpzaHJpbmssIHN0cnVjdCBzaHJpbmtfY29udHJvbCAqc2MpCiB7CiAJ
-c3RydWN0IHN1cGVyX2Jsb2NrICpzYjsKLQlpbnQgY291bnQ7CisJaW50CWZzX29iamVjdHMgPSAw
-OworCWludAl0b3RhbF9vYmplY3RzOwogCiAJc2IgPSBjb250YWluZXJfb2Yoc2hyaW5rLCBzdHJ1
-Y3Qgc3VwZXJfYmxvY2ssIHNfc2hyaW5rKTsKIApAQCAtNjQsMjIgKzY1LDQyIEBAIHN0YXRpYyBp
-bnQgcHJ1bmVfc3VwZXIoc3RydWN0IHNocmlua2VyICpzaHJpbmssIHN0cnVjdCBzaHJpbmtfY29u
-dHJvbCAqc2MpCiAJCXJldHVybiAtMTsKIAl9CiAKLQlpZiAoc2MtPm5yX3RvX3NjYW4pIHsKLQkJ
-LyogcHJvcG9ydGlvbiB0aGUgc2NhbiBiZXR3ZWVuIHRoZSB0d28gY2FjaGXRlSAqLwotCQlpbnQg
-dG90YWw7CisJaWYgKHNiLT5zX29wICYmIHNiLT5zX29wLT5ucl9jYWNoZWRfb2JqZWN0cykKKwkJ
-ZnNfb2JqZWN0cyA9IHNiLT5zX29wLT5ucl9jYWNoZWRfb2JqZWN0cyhzYik7CisKKwl0b3RhbF9v
-YmplY3RzID0gc2ItPnNfbnJfZGVudHJ5X3VudXNlZCArCisJCQlzYi0+c19ucl9pbm9kZXNfdW51
-c2VkICsgZnNfb2JqZWN0cyArIDE7CiAKLQkJdG90YWwgPSBzYi0+c19ucl9kZW50cnlfdW51c2Vk
-ICsgc2ItPnNfbnJfaW5vZGVzX3VudXNlZCArIDE7Ci0JCWNvdW50ID0gKHNjLT5ucl90b19zY2Fu
-ICogc2ItPnNfbnJfZGVudHJ5X3VudXNlZCkgLyB0b3RhbDsKKwlpZiAoc2MtPm5yX3RvX3NjYW4p
-IHsKKwkJaW50CWRlbnRyaWVzOworCQlpbnQJaW5vZGVzOworCisJCS8qIHByb3BvcnRpb24gdGhl
-IHNjYW4gYmV0d2VlbiB0aGUgY2FjaGXRlSAqLworCQlkZW50cmllcyA9IChzYy0+bnJfdG9fc2Nh
-biAqIHNiLT5zX25yX2RlbnRyeV91bnVzZWQpIC8KKwkJCQkJCQl0b3RhbF9vYmplY3RzOworCQlp
-bm9kZXMgPSAoc2MtPm5yX3RvX3NjYW4gKiBzYi0+c19ucl9pbm9kZXNfdW51c2VkKSAvCisJCQkJ
-CQkJdG90YWxfb2JqZWN0czsKKwkJaWYgKGZzX29iamVjdHMpCisJCQlmc19vYmplY3RzID0gKHNj
-LT5ucl90b19zY2FuICogZnNfb2JqZWN0cykgLworCQkJCQkJCXRvdGFsX29iamVjdHM7CisJCS8q
-CisJCSAqIHBydW5lIHRoZSBkY2FjaGUgZmlyc3QgYXMgdGhlIGljYWNoZSBpcyBwaW5uZWQgYnkg
-aXQsIHRoZW4KKwkJICogcHJ1bmUgdGhlIGljYWNoZSwgZm9sbG93ZWQgYnkgdGhlIGZpbGVzeXN0
-ZW0gc3BlY2lmaWMgY2FjaGVzCisJCSAqLworCQlwcnVuZV9kY2FjaGVfc2Ioc2IsIGRlbnRyaWVz
-KTsKKwkJcHJ1bmVfaWNhY2hlX3NiKHNiLCBpbm9kZXMpOwogCi0JCS8qIHBydW5lIGRjYWNoZSBm
-aXJzdCBhcyBpY2FjaGUgaXMgcGlubmVkIGJ5IGl0ICovCi0JCXBydW5lX2RjYWNoZV9zYihzYiwg
-Y291bnQpOwotCQlwcnVuZV9pY2FjaGVfc2Ioc2IsIHNjLT5ucl90b19zY2FuIC0gY291bnQpOwor
-CQlpZiAoZnNfb2JqZWN0cyAmJiBzYi0+c19vcC0+ZnJlZV9jYWNoZWRfb2JqZWN0cykgeworCQkJ
-c2ItPnNfb3AtPmZyZWVfY2FjaGVkX29iamVjdHMoc2IsIGZzX29iamVjdHMpOworCQkJZnNfb2Jq
-ZWN0cyA9IHNiLT5zX29wLT5ucl9jYWNoZWRfb2JqZWN0cyhzYik7CisJCX0KKwkJdG90YWxfb2Jq
-ZWN0cyA9IHNiLT5zX25yX2RlbnRyeV91bnVzZWQgKworCQkJCXNiLT5zX25yX2lub2Rlc191bnVz
-ZWQgKyBmc19vYmplY3RzOwogCX0KIAotCWNvdW50ID0gKChzYi0+c19ucl9kZW50cnlfdW51c2Vk
-ICsgc2ItPnNfbnJfaW5vZGVzX3VudXNlZCkgLyAxMDApCi0JCQkJCQkqIHN5c2N0bF92ZnNfY2Fj
-aGVfcHJlc3N1cmU7CisJdG90YWxfb2JqZWN0cyA9ICh0b3RhbF9vYmplY3RzIC8gMTAwKSAqIHN5
-c2N0bF92ZnNfY2FjaGVfcHJlc3N1cmU7CiAJdXBfcmVhZCgmc2ItPnNfdW1vdW50KTsKLQlyZXR1
-cm4gY291bnQ7CisJcmV0dXJuIHRvdGFsX29iamVjdHM7CiB9CiAKIC8qKgpkaWZmIC0tZ2l0IGEv
-aW5jbHVkZS9saW51eC9mcy5oIGIvaW5jbHVkZS9saW51eC9mcy5oCmluZGV4IGMzYjM0NjIuLjRm
-MGVkMGEgMTAwNjQ0Ci0tLSBhL2luY2x1ZGUvbGludXgvZnMuaAorKysgYi9pbmNsdWRlL2xpbnV4
-L2ZzLmgKQEAgLTE2NTQsNiArMTY1NCw4IEBAIHN0cnVjdCBzdXBlcl9vcGVyYXRpb25zIHsKIAlz
-c2l6ZV90ICgqcXVvdGFfd3JpdGUpKHN0cnVjdCBzdXBlcl9ibG9jayAqLCBpbnQsIGNvbnN0IGNo
-YXIgKiwgc2l6ZV90LCBsb2ZmX3QpOwogI2VuZGlmCiAJaW50ICgqYmRldl90cnlfdG9fZnJlZV9w
-YWdlKShzdHJ1Y3Qgc3VwZXJfYmxvY2sqLCBzdHJ1Y3QgcGFnZSosIGdmcF90KTsKKwlpbnQgKCpu
-cl9jYWNoZWRfb2JqZWN0cykoc3RydWN0IHN1cGVyX2Jsb2NrICopOworCXZvaWQgKCpmcmVlX2Nh
-Y2hlZF9vYmplY3RzKShzdHJ1Y3Qgc3VwZXJfYmxvY2sgKiwgaW50KTsKIH07CiAKIC8qCi0tIAox
-LjcuNS4xCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4
-ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1h
-bi9saXN0aW5mby94ZnMK
+From: Dave Chinner <dchinner@redhat.com>
+
+Now that the per-sb shrinker is responsible for shrinking 2 or more
+caches, increase the batch size to keep econmies of scale for
+shrinking each cache.  Increase the shrinker batch size to 1024
+objects.
+
+To allow for a large increase in batch size, add a conditional
+reschedule to prune_icache_sb() so that we don't hold the LRU spin
+lock for too long. This mirrors the behaviour of the
+__shrink_dcache_sb(), and allows us to increase the batch size
+without needing to worry about problems caused by long lock hold
+times.
+
+To ensure that filesystems using the per-sb shrinker callouts don't
+cause problems, document that the object freeing method must
+reschedule appropriately inside loops.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ Documentation/filesystems/vfs.txt |    5 +++++
+ fs/super.c                        |    1 +
+ 2 files changed, 6 insertions(+), 0 deletions(-)
+
+diff --git a/Documentation/filesystems/vfs.txt b/Documentation/filesystems/vfs.txt
+index dc732d2..2e26973 100644
+--- a/Documentation/filesystems/vfs.txt
++++ b/Documentation/filesystems/vfs.txt
+@@ -317,6 +317,11 @@ or bottom half).
+ 	the VM is trying to reclaim under GFP_NOFS conditions, hence this
+ 	method does not need to handle that situation itself.
+ 
++	Implementations must include conditional reschedule calls inside any
++	scanning loop that is done. This allows the VFS to determine
++	appropriate scan batch sizes without having to worry about whether
++	implementations will cause holdoff problems due ot large batch sizes.
++
+ Whoever sets up the inode is responsible for filling in the "i_op" field. This
+ is a pointer to a "struct inode_operations" which describes the methods that
+ can be performed on individual inodes.
+diff --git a/fs/super.c b/fs/super.c
+index b55f968..323a63e 100644
+--- a/fs/super.c
++++ b/fs/super.c
+@@ -184,6 +184,7 @@ static struct super_block *alloc_super(struct file_system_type *type)
+ 
+ 		s->s_shrink.seeks = DEFAULT_SEEKS;
+ 		s->s_shrink.shrink = prune_super;
++		s->s_shrink.batch = 1024;
+ 	}
+ out:
+ 	return s;
+-- 
+1.7.5.1
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
