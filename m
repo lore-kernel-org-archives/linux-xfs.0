@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p52ExhVg207219 for <xfs@oss.sgi.com>; Thu, 2 Jun 2011 09:59:43 -0500
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7C69B497847
-	for <xfs@oss.sgi.com>; Thu,  2 Jun 2011 07:59:42 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Cwh5zeQII5auWMHa for
-	<xfs@oss.sgi.com>; Thu, 02 Jun 2011 07:59:42 -0700 (PDT)
-Message-ID: <4DE7A557.9040608@redhat.com>
-Date: Thu, 02 Jun 2011 09:59:35 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+	p52GHKoe210139 for <xfs@oss.sgi.com>; Thu, 2 Jun 2011 11:17:22 -0500
+Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 44E0F14E26B5
+	for <xfs@oss.sgi.com>; Thu,  2 Jun 2011 09:17:19 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id Fx1R9bcrdeU0lxkb
+	for <xfs@oss.sgi.com>; Thu, 02 Jun 2011 09:17:19 -0700 (PDT)
+Message-ID: <4DE7B78C.4040608@hardwarefreak.com>
+Date: Thu, 02 Jun 2011 11:17:16 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH v2] xfstests: add support for ext4dev FSTYP
-References: <1306933012-8666-1-git-send-email-amir73il@users.sourceforge.net>	<20110601232804.GL32466@dastard>	<BANLkTi=sV5=PyZvNSd=DGNW-V84=27d7Yw@mail.gmail.com>	<BANLkTimbPWfOJKq6er4mnSYNPcx6VHLcrw@mail.gmail.com>
-	<BANLkTimKV3LxugkW6_cE5vutjcmatESXuw@mail.gmail.com>
-In-Reply-To: <BANLkTimKV3LxugkW6_cE5vutjcmatESXuw@mail.gmail.com>
+Subject: Re: I/O hang, possibly XFS, possibly general
+References: <BANLkTim_BCiKeqi5gY_gXAcmg7JgrgJCxQ@mail.gmail.com>
+In-Reply-To: <BANLkTim_BCiKeqi5gY_gXAcmg7JgrgJCxQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,29 +27,26 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: "Amir G." <amir73il@users.sourceforge.net>
-Cc: Amir Goldstein <amir73il@users.sf.net>, xfs@oss.sgi.com, sergey57@gmail.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
+To: Paul Anderson <pha@umich.edu>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On 6/2/11 2:16 AM, Amir G. wrote:
+On 6/2/2011 9:42 AM, Paul Anderson wrote:
 
-> OK, after upgrading to newer util-linux and building it from git,
-> which also didn't help, I finally found who to blame - me.
-> I had an old (noauto) entry in /etc/fstab which claimed that /dev/sda5 is ext4.
-> fsck was picking up that entry and insisting that /dev/sda5 is ext4
-> (regardless of what it really is)
-> blkid isn't doing that silly thing.
-> 
-> Amir
+> had mounted the filesystem with inode64,largeio,logbufs=8,noatime.
 
-So where are we at with all this?
+I don't see 'delaylog' in your mount options nor an external log device
+specified.  Delayed logging will dramatically decrease IOPs to the log
+device via cleverly discarding duplicate metadata write operations and
+other tricks.  Enabling it may solve your problem given your high
+metadata workload.  Delayed logging design document:
 
-I don't really mind adding ext4dev to FSTYP case statements, it -is- something which blkid could, in theory, still return, and making xfstests cope with that and try to invoke fsck -t ext4dev doesn't bother me too much.  It is sadly an fs type embedded into a few tools.
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=blob;f=Documentation/filesystems/xfs-delayed-logging-design.txt
 
-But other than that, I don't think we should be making changes to upstream projects based on your current development hacks (I don't mean hack in a bad way, just that running sed across ext4 to create your custom filesystem for testing should not require upstream projects to change...)
+Delaylog was an optional mount option from 2.6.35 to 2.6.38.  In 2.6.39
+and up it is the default.  Give it a go.
 
-So I'm ok with sprinkling "ext4|ext4dev" around if necessary.  Anyone else disagree?
-
--Eric
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
