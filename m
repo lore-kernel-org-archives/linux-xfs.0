@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5271pes180621 for <xfs@oss.sgi.com>; Thu, 2 Jun 2011 02:01:51 -0500
-Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6DC021ED190E
-	for <xfs@oss.sgi.com>; Thu,  2 Jun 2011 00:01:49 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	vP1kHukR05NyRpFF for <xfs@oss.sgi.com>;
-	Thu, 02 Jun 2011 00:01:49 -0700 (PDT)
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 12/12] xfs: make use of new shrinker callout for the inode
-	cache
-Date: Thu,  2 Jun 2011 17:01:07 +1000
-Message-Id: <1306998067-27659-13-git-send-email-david@fromorbit.com>
-In-Reply-To: <1306998067-27659-1-git-send-email-david@fromorbit.com>
+	p529VCqf186667 for <xfs@oss.sgi.com>; Thu, 2 Jun 2011 04:31:12 -0500
+Received: from webhosting01.bon.m2soft.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DD7D44964E4
+	for <xfs@oss.sgi.com>; Thu,  2 Jun 2011 02:31:10 -0700 (PDT)
+Received: from webhosting01.bon.m2soft.com (webhosting01.bon.m2soft.com
+	[195.38.20.32]) by cuda.sgi.com with ESMTP id 2Jv6X7A2eVBNO4i6
+	for <xfs@oss.sgi.com>; Thu, 02 Jun 2011 02:31:10 -0700 (PDT)
+Date: Thu, 2 Jun 2011 11:30:26 +0200
+From: Nicolas Kaiser <nikai@nikai.net>
+Subject: Re: [PATCH 11/12] vfs: increase shrinker batch size
+Message-ID: <20110602113026.7291b1a7@absol.kitzblitz>
+In-Reply-To: <1306998067-27659-12-git-send-email-david@fromorbit.com>
 References: <1306998067-27659-1-git-send-email-david@fromorbit.com>
+	<1306998067-27659-12-git-send-email-david@fromorbit.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,242 +24,46 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-fsdevel@vger.kernel.org
-Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Just noticed below two typos.
 
-Convert the inode reclaim shrinker to use the new per-sb shrinker
-operations. This allows much bigger reclaim batches to be used, and
-allows the XFS inode cache to be shrunk in proportion with the VFS
-dentry and inode caches. This avoids the problem of the VFS caches
-being shrunk significantly before the XFS inode cache is shrunk
-resulting in imbalances in the caches during reclaim.
+* Dave Chinner <david@fromorbit.com>:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Now that the per-sb shrinker is responsible for shrinking 2 or more
+> caches, increase the batch size to keep econmies of scale for
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/linux-2.6/xfs_super.c |   26 ++++++++++-----
- fs/xfs/linux-2.6/xfs_sync.c  |   71 ++++++++++++++++--------------------------
- fs/xfs/linux-2.6/xfs_sync.h  |    5 +--
- 3 files changed, 46 insertions(+), 56 deletions(-)
+economies
 
-diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
-index 1e3a7ce..b133b69 100644
---- a/fs/xfs/linux-2.6/xfs_super.c
-+++ b/fs/xfs/linux-2.6/xfs_super.c
-@@ -1087,11 +1087,6 @@ xfs_fs_put_super(
- {
- 	struct xfs_mount	*mp = XFS_M(sb);
- 
--	/*
--	 * Unregister the memory shrinker before we tear down the mount
--	 * structure so we don't have memory reclaim racing with us here.
--	 */
--	xfs_inode_shrinker_unregister(mp);
- 	xfs_syncd_stop(mp);
- 
- 	/*
-@@ -1491,8 +1486,6 @@ xfs_fs_fill_super(
- 	if (error)
- 		goto out_filestream_unmount;
- 
--	xfs_inode_shrinker_register(mp);
--
- 	error = xfs_mountfs(mp);
- 	if (error)
- 		goto out_syncd_stop;
-@@ -1515,7 +1508,6 @@ xfs_fs_fill_super(
- 	return 0;
- 
-  out_syncd_stop:
--	xfs_inode_shrinker_unregister(mp);
- 	xfs_syncd_stop(mp);
-  out_filestream_unmount:
- 	xfs_filestream_unmount(mp);
-@@ -1540,7 +1532,6 @@ xfs_fs_fill_super(
- 	}
- 
-  fail_unmount:
--	xfs_inode_shrinker_unregister(mp);
- 	xfs_syncd_stop(mp);
- 
- 	/*
-@@ -1566,6 +1557,21 @@ xfs_fs_mount(
- 	return mount_bdev(fs_type, flags, dev_name, data, xfs_fs_fill_super);
- }
- 
-+static int
-+xfs_fs_nr_cached_objects(
-+	struct super_block	*sb)
-+{
-+	return xfs_reclaim_inodes_count(XFS_M(sb));
-+}
-+
-+static void
-+xfs_fs_free_cached_objects(
-+	struct super_block	*sb,
-+	int			nr_to_scan)
-+{
-+	xfs_reclaim_inodes_nr(XFS_M(sb), nr_to_scan);
-+}
-+
- static const struct super_operations xfs_super_operations = {
- 	.alloc_inode		= xfs_fs_alloc_inode,
- 	.destroy_inode		= xfs_fs_destroy_inode,
-@@ -1579,6 +1585,8 @@ static const struct super_operations xfs_super_operations = {
- 	.statfs			= xfs_fs_statfs,
- 	.remount_fs		= xfs_fs_remount,
- 	.show_options		= xfs_fs_show_options,
-+	.nr_cached_objects	= xfs_fs_nr_cached_objects,
-+	.free_cached_objects	= xfs_fs_free_cached_objects,
- };
- 
- static struct file_system_type xfs_fs_type = {
-diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
-index 8ecad5f..9bd7e89 100644
---- a/fs/xfs/linux-2.6/xfs_sync.c
-+++ b/fs/xfs/linux-2.6/xfs_sync.c
-@@ -179,6 +179,8 @@ restart:
- 		if (error == EFSCORRUPTED)
- 			break;
- 
-+		cond_resched();
-+
- 	} while (nr_found && !done);
- 
- 	if (skipped) {
-@@ -986,6 +988,8 @@ restart:
- 
- 			*nr_to_scan -= XFS_LOOKUP_BATCH;
- 
-+			cond_resched();
-+
- 		} while (nr_found && !done && *nr_to_scan > 0);
- 
- 		if (trylock && !done)
-@@ -1003,7 +1007,7 @@ restart:
- 	 * ensure that when we get more reclaimers than AGs we block rather
- 	 * than spin trying to execute reclaim.
- 	 */
--	if (trylock && skipped && *nr_to_scan > 0) {
-+	if (skipped && (flags & SYNC_WAIT) && *nr_to_scan > 0) {
- 		trylock = 0;
- 		goto restart;
- 	}
-@@ -1021,44 +1025,38 @@ xfs_reclaim_inodes(
- }
- 
- /*
-- * Inode cache shrinker.
-+ * Scan a certain number of inodes for reclaim.
-  *
-  * When called we make sure that there is a background (fast) inode reclaim in
-- * progress, while we will throttle the speed of reclaim via doiing synchronous
-+ * progress, while we will throttle the speed of reclaim via doing synchronous
-  * reclaim of inodes. That means if we come across dirty inodes, we wait for
-  * them to be cleaned, which we hope will not be very long due to the
-  * background walker having already kicked the IO off on those dirty inodes.
-  */
--static int
--xfs_reclaim_inode_shrink(
--	struct shrinker	*shrink,
--	struct shrink_control *sc)
-+void
-+xfs_reclaim_inodes_nr(
-+	struct xfs_mount	*mp,
-+	int			nr_to_scan)
- {
--	struct xfs_mount *mp;
--	struct xfs_perag *pag;
--	xfs_agnumber_t	ag;
--	int		reclaimable;
--	int nr_to_scan = sc->nr_to_scan;
--	gfp_t gfp_mask = sc->gfp_mask;
--
--	mp = container_of(shrink, struct xfs_mount, m_inode_shrink);
--	if (nr_to_scan) {
--		/* kick background reclaimer and push the AIL */
--		xfs_syncd_queue_reclaim(mp);
--		xfs_ail_push_all(mp->m_ail);
-+	/* kick background reclaimer and push the AIL */
-+	xfs_syncd_queue_reclaim(mp);
-+	xfs_ail_push_all(mp->m_ail);
- 
--		if (!(gfp_mask & __GFP_FS))
--			return -1;
-+	xfs_reclaim_inodes_ag(mp, SYNC_TRYLOCK | SYNC_WAIT, &nr_to_scan);
-+}
- 
--		xfs_reclaim_inodes_ag(mp, SYNC_TRYLOCK | SYNC_WAIT,
--					&nr_to_scan);
--		/* terminate if we don't exhaust the scan */
--		if (nr_to_scan > 0)
--			return -1;
--       }
-+/*
-+ * Return the number of reclaimable inodes in the filesystem for
-+ * the shrinker to determine how much to reclaim.
-+ */
-+int
-+xfs_reclaim_inodes_count(
-+	struct xfs_mount	*mp)
-+{
-+	struct xfs_perag	*pag;
-+	xfs_agnumber_t		ag = 0;
-+	int			reclaimable = 0;
- 
--	reclaimable = 0;
--	ag = 0;
- 	while ((pag = xfs_perag_get_tag(mp, ag, XFS_ICI_RECLAIM_TAG))) {
- 		ag = pag->pag_agno + 1;
- 		reclaimable += pag->pag_ici_reclaimable;
-@@ -1067,18 +1065,3 @@ xfs_reclaim_inode_shrink(
- 	return reclaimable;
- }
- 
--void
--xfs_inode_shrinker_register(
--	struct xfs_mount	*mp)
--{
--	mp->m_inode_shrink.shrink = xfs_reclaim_inode_shrink;
--	mp->m_inode_shrink.seeks = DEFAULT_SEEKS;
--	register_shrinker(&mp->m_inode_shrink);
--}
--
--void
--xfs_inode_shrinker_unregister(
--	struct xfs_mount	*mp)
--{
--	unregister_shrinker(&mp->m_inode_shrink);
--}
-diff --git a/fs/xfs/linux-2.6/xfs_sync.h b/fs/xfs/linux-2.6/xfs_sync.h
-index e3a6ad2..2e15685 100644
---- a/fs/xfs/linux-2.6/xfs_sync.h
-+++ b/fs/xfs/linux-2.6/xfs_sync.h
-@@ -43,6 +43,8 @@ void xfs_quiesce_attr(struct xfs_mount *mp);
- void xfs_flush_inodes(struct xfs_inode *ip);
- 
- int xfs_reclaim_inodes(struct xfs_mount *mp, int mode);
-+int xfs_reclaim_inodes_count(struct xfs_mount *mp);
-+void xfs_reclaim_inodes_nr(struct xfs_mount *mp, int nr_to_scan);
- 
- void xfs_inode_set_reclaim_tag(struct xfs_inode *ip);
- void __xfs_inode_set_reclaim_tag(struct xfs_perag *pag, struct xfs_inode *ip);
-@@ -54,7 +56,4 @@ int xfs_inode_ag_iterator(struct xfs_mount *mp,
- 	int (*execute)(struct xfs_inode *ip, struct xfs_perag *pag, int flags),
- 	int flags);
- 
--void xfs_inode_shrinker_register(struct xfs_mount *mp);
--void xfs_inode_shrinker_unregister(struct xfs_mount *mp);
--
- #endif
--- 
-1.7.5.1
+(..)
+
+>  Documentation/filesystems/vfs.txt |    5 +++++
+>  fs/super.c                        |    1 +
+>  2 files changed, 6 insertions(+), 0 deletions(-)
+> 
+> diff --git a/Documentation/filesystems/vfs.txt b/Documentation/filesystems/vfs.txt
+> index dc732d2..2e26973 100644
+> --- a/Documentation/filesystems/vfs.txt
+> +++ b/Documentation/filesystems/vfs.txt
+> @@ -317,6 +317,11 @@ or bottom half).
+>  	the VM is trying to reclaim under GFP_NOFS conditions, hence this
+>  	method does not need to handle that situation itself.
+>  
+> +	Implementations must include conditional reschedule calls inside any
+> +	scanning loop that is done. This allows the VFS to determine
+> +	appropriate scan batch sizes without having to worry about whether
+> +	implementations will cause holdoff problems due ot large batch sizes.
+
+due to
+
+Best regards,
+Nicolas Kaiser
 
 _______________________________________________
 xfs mailing list
