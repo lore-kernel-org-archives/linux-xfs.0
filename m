@@ -1,17 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p53DqxET015077 for <xfs@oss.sgi.com>; Fri, 3 Jun 2011 08:52:59 -0500
-Received: from mx2.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2EDA41688658
-	for <xfs@oss.sgi.com>; Fri,  3 Jun 2011 06:52:56 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id rrI93nEh0fDLXMxE for <xfs@oss.sgi.com>;
-	Fri, 03 Jun 2011 06:52:56 -0700 (PDT)
-From: David Sterba <dsterba@suse.cz>
-Subject: [PATCH] xfstests: fix hardcoded path in output of 254
-Date: Fri,  3 Jun 2011 15:52:42 +0200
-Message-Id: <1307109162-21811-1-git-send-email-dsterba@suse.cz>
+	p53FPigo018182 for <xfs@oss.sgi.com>; Fri, 3 Jun 2011 10:25:44 -0500
+Subject: Re: [PATCH] xfstests: Improve test 219 to work with different
+	filesystems
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <1305805675-13753-1-git-send-email-jack@suse.cz>
+References: <1305805675-13753-1-git-send-email-jack@suse.cz>
+Date: Fri, 3 Jun 2011 10:25:40 -0500
+Message-ID: <1307114740.2886.26.camel@doink>
+MIME-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,116 +19,99 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: linux-fsdevel@vger.kernel.org, David Sterba <dsterba@suse.cz>, josef@redhat.com
+To: Jan Kara <jack@suse.cz>
+Cc: xfs@oss.sgi.com
 
-Add filters after btrfs commands, else the test would incorrectly appear
-failed.
+On Thu, 2011-05-19 at 13:47 +0200, Jan Kara wrote:
+> Different filesystems account different amount of metadata in quota. Thus it is
+> impractical to check for a particular amount of space occupied by a file
+> because there is no right value. Change the test to verify whether the amount
+> of space is between the expected amount of space and the expected amount +5%.
+> The number of files is checked exactly as previously.
+> 
+> Signed-off-by: Jan Kara <jack@suse.cz>
 
-Signed-off-by: David Sterba <dsterba@suse.cz>
----
- 254     |   13 +++++++------
- 254.out |    6 +++---
- 2 files changed, 10 insertions(+), 9 deletions(-)
+I don't know enough about the differences
+between filesystem quota reporting.  Perhaps
+that's something whose definition should be
+better formalized across filesystem types.
+In any case I don't outright object to
+allowing the 5% variability.
 
-diff --git a/254 b/254
-index 3c1a5a1..6320291 100755
---- a/254
-+++ b/254
-@@ -40,6 +40,7 @@ trap "_cleanup ; exit \$status" 0 1 2 3 15
- 
- # get standard environment, filters and checks
- . ./common.rc
-+. ./common.filter
- 
- # real QA test starts here
- _supported_fs btrfs
-@@ -55,7 +56,7 @@ dd if=/dev/zero of=$SCRATCH_MNT/foo bs=1M count=1 &> /dev/null
- echo "List root dir"
- ls $SCRATCH_MNT
- echo "Creating snapshot of root dir"
--btrfs subvolume snapshot $SCRATCH_MNT $SCRATCH_MNT/snap
-+btrfs subvolume snapshot $SCRATCH_MNT $SCRATCH_MNT/snap | _filter_scratch
- echo "List root dir after snapshot"
- ls $SCRATCH_MNT
- echo "List snapshot dir"
-@@ -67,7 +68,7 @@ echo "List snapshot dir"
- ls $SCRATCH_MNT/snap
- 
- # Test creating a normal subvolme
--btrfs subvolume create $SCRATCH_MNT/subvol
-+btrfs subvolume create $SCRATCH_MNT/subvol | _filter_scratch
- echo "Listing root dir"
- ls $SCRATCH_MNT
- echo "Listing subvol"
-@@ -77,7 +78,7 @@ ls $SCRATCH_MNT/subvol
- echo "Creating file bar in subvol"
- dd if=/dev/zero of=$SCRATCH_MNT/subvol/bar bs=1M count=1 &> /dev/null
- echo "Setting subvol to the default"
--btrfs subvolume set-default $SCRATCH_MNT/subvol $SCRATCH_MNT/subvol
-+btrfs subvolume set-default $SCRATCH_MNT/subvol $SCRATCH_MNT/subvol | _filter_scratch
- _scratch_remount
- echo "List root dir which is now subvol"
- ls $SCRATCH_MNT
-@@ -87,17 +88,17 @@ _scratch_mount "-o subvolid=0"
- echo "List root dir"
- ls $SCRATCH_MNT
- echo "Setting the root dir as the default again"
--btrfs subvolume set-default $SCRATCH_MNT $SCRATCH_MNT
-+btrfs subvolume set-default $SCRATCH_MNT $SCRATCH_MNT | _filter_scratch
- _scratch_remount
- echo "List root dir"
- ls $SCRATCH_MNT
- 
- # Test listing the subvolumes
- echo "Listing subvolumes"
--btrfs subvolume list $SCRATCH_MNT
-+btrfs subvolume list $SCRATCH_MNT | _filter_scratch
- 
- # Delete the snapshot
--btrfs subvolume delete $SCRATCH_MNT/snap
-+btrfs subvolume delete $SCRATCH_MNT/snap | _filter_scratch
- echo "List root dir"
- ls $SCRATCH_MNT
- _scratch_remount
-diff --git a/254.out b/254.out
-index e1c19ee..582357a 100644
---- a/254.out
-+++ b/254.out
-@@ -3,7 +3,7 @@ Creating file foo in root dir
- List root dir
- foo
- Creating snapshot of root dir
--Create a snapshot of '/mnt/scratch' in '/mnt/scratch/snap'
-+Create a snapshot of 'SCRATCH_MNT' in 'SCRATCH_MNT/snap'
- List root dir after snapshot
- foo
- snap
-@@ -13,7 +13,7 @@ List root dir after rm of foo
- snap
- List snapshot dir
- foo
--Create subvolume '/mnt/scratch/subvol'
-+Create subvolume 'SCRATCH_MNT/subvol'
- Listing root dir
- snap
- subvol
-@@ -33,7 +33,7 @@ subvol
- Listing subvolumes
- ID 256 top level 5 path snap
- ID 257 top level 5 path subvol
--Delete subvolume '/mnt/scratch/snap'
-+Delete subvolume 'SCRATCH_MNT/snap'
- List root dir
- subvol
- List root dir
--- 
-1.7.5.2.353.g5df3e
+I do have questions/comments about your change,
+however.
+
+> ---
+>  219 |   25 +++++++++++++++++++++++--
+>  1 files changed, 23 insertions(+), 2 deletions(-)
+> 
+>  Dave, does this look better?
+> 
+> diff --git a/219 b/219
+> index 836d703..ad4e64d 100755
+> --- a/219
+> +++ b/219
+> @@ -58,6 +58,23 @@ test_files()
+>  	done
+>  }
+>  
+> +check_usage()
+> +{
+> +	wroteblocks=$1
+> +	wrotefiles=$2
+> +	read id exceed blocks bsoft bhard inodes isoft ihard
+> +	if [ "$blocks" -lt "$wroteblocks" ]; then
+> +		echo "Too few blocks used (type=$type)"
+> +	# Save 5% for overhead of metadata or different block size
+> +	elif [ "$blocks" -gt $((wroteblocks+wroteblocks/20)) ]; then
+> +		echo "Too many blocks used (type=$type)"
+> +	elif [ "$inodes" != "$wrotefiles" ]; then
+> +		echo "Bad number of inodes used (type=$type)"
+> +	else
+> +		echo "Usage OK (type=$type)"
+> +	fi
+> +}
+> +
+>  test_accounting()
+>  {
+>  	echo "### some controlled buffered, direct and mmapd IO (type=$type)"
+> @@ -77,8 +94,12 @@ test_accounting()
+>  		$here/src/lstat64 $file | head -3 | _filter_scratch
+>  	done
+>  
+> -	repquota -$type -n $SCRATCH_MNT  | grep -v "^#0" | _filter_scratch |
+> -	awk '/^#/ { if (seen[$1]) next; seen[$1]++; } { print; }'
+
+Why did you delete this awk line?
+
+> +	if [ $type == 'u' ]; then
+> +		id=$uid
+> +	else
+> +		id=$gid
+> +	fi
+
+This (above) seems to be doing a better job of selecting what
+we're interested in seeing rather than filtering out anything
+owned by root.  Is that what you're doing here?  Does doing
+this also eliminate duplicate entries (which I think can occur
+when multiple user names share the same UID, for example)?
+
+Regardless, this hunk has nothing to do with the 5% slop
+that's the stated purpose of this patch.  It really ought
+to have been done as separate (earlier) patch.  Maybe this
+isn't a big deal for xfstests but in XFS we try to be more
+disciplined about that.
+
+> +	repquota -$type -n $SCRATCH_MNT  | grep "^#$id" | check_usage 144 3
+>  }
+>  
+>  # real QA test starts here
+
+
 
 _______________________________________________
 xfs mailing list
