@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p530dC7X233021 for <xfs@oss.sgi.com>; Thu, 2 Jun 2011 19:39:12 -0500
+	p531dr1F235346 for <xfs@oss.sgi.com>; Thu, 2 Jun 2011 20:39:54 -0500
 Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D24C7499A59
-	for <xfs@oss.sgi.com>; Thu,  2 Jun 2011 17:39:10 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3D8C6D6E2D9
+	for <xfs@oss.sgi.com>; Thu,  2 Jun 2011 18:39:51 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	PVvxWMUAgxC8KQkN for <xfs@oss.sgi.com>;
-	Thu, 02 Jun 2011 17:39:10 -0700 (PDT)
-Date: Fri, 3 Jun 2011 10:39:07 +1000
+	phGOGRDfYheeYoAx for <xfs@oss.sgi.com>;
+	Thu, 02 Jun 2011 18:39:51 -0700 (PDT)
+Date: Fri, 3 Jun 2011 11:39:48 +1000
 From: Dave Chinner <david@fromorbit.com>
 Subject: Re: I/O hang, possibly XFS, possibly general
-Message-ID: <20110603003907.GW561@dastard>
+Message-ID: <20110603013948.GX561@dastard>
 References: <BANLkTim_BCiKeqi5gY_gXAcmg7JgrgJCxQ@mail.gmail.com>
-	<19943.56524.969126.59978@tree.ty.sabi.co.UK>
-	<BANLkTim978GhfamN=TEFULP5GdfMu02-7w@mail.gmail.com>
-	<4DE823DD.7060600@philkarn.net>
+	<20110603004247.GA28043@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4DE823DD.7060600@philkarn.net>
+In-Reply-To: <20110603004247.GA28043@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,49 +30,50 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Phil Karn <karn@philkarn.net>
-Cc: Paul Anderson <pha@umich.edu>, Linux fs XFS <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Paul Anderson <pha@umich.edu>, xfs-oss <xfs@oss.sgi.com>
 
-On Thu, Jun 02, 2011 at 04:59:25PM -0700, Phil Karn wrote:
-> On 6/2/11 2:24 PM, Paul Anderson wrote:
+On Thu, Jun 02, 2011 at 08:42:47PM -0400, Christoph Hellwig wrote:
+> On Thu, Jun 02, 2011 at 10:42:46AM -0400, Paul Anderson wrote:
+> > This morning, I had a symptom of a I/O throughput problem in which
+> > dirty pages appeared to be taking a long time to write to disk.
+> > 
+> > The system is a large x64 192GiB dell 810 server running 2.6.38.5 from
+> > kernel.org - the basic workload was data intensive - concurrent large
+> > NFS (with high metadata/low filesize), rsync/lftp (with low
+> > metadata/high file size) all working in a 200TiB XFS volume on a
+> > software MD raid0 on top of 7 software MD raid6, each w/18 drives.  I
+> > had mounted the filesystem with inode64,largeio,logbufs=8,noatime.
 > 
-> > The data itself has very odd lifecycle behavior, as well - since it is
-> > research, the different stages are still being sorted out, but some
-> > stages are essentially write once, read once, maybe keep, maybe
-> > discard, depending on the research scenario.
-> ...
-> > The bulk of the work is not small-file - almost all is large files.
+> A few comments on the setup before trying to analze what's going on in
+> detail.  I'd absolutely recommend an external log device for this setup,
+> that is buy another two fast but small disks, or take two existing ones
+> and use a RAID 1 for the external log device.  This will speed up
+> anything log intensive, which both NFS, and resync workloads are lot.
 > 
-> Out of curiosity, do your writers use the fallocate() call? If not, how
-> fragmented do your filesystems get?
+> Second thing if you can split the workloads into multiple volumes if you
+> have two such different workloads, so thay they don't interfear with
+> each other.
 > 
-> Even if most of your data isn't read very often, it seems like a good
-> idea to minimize its fragmentation because that also reduces
-> fragmentation of the free list, which makes it easier to keep contiguous
-> other files that *are* heavily read. Also, fewer extents per file means
-> less metadata per file, ergo less metadata and log I/O, etc.
+> Second a RAID0 on top of RAID6 volumes sounds like a pretty worst case
+> for almost any type of I/O.  You end up doing even relatively small I/O
+> to all of the disks in the worst case.  I think you'd be much better
+> off with a simple linear concatenation of the RAID6 devices, even if you
+> can split them into multiple filesystems
 > 
-> When a writer knows in advance how big a file will be, I can't see any
-> downside to having it call fallocate() to let the file system know.
+> > The specific symptom was that 'sync' hung, a dpkg command hung
+> > (presumably trying to issue fsync), and experimenting with "killall
+> > -STOP" or "kill -STOP" of the workload jobs didn't let the system
+> > drain I/O enough to finish the sync.  I probably did not wait long
+> > enough, however.
+> 
+> It really sounds like you're simply killloing the MD setup with a
+> log of log I/O that does to all the devices.
 
-You're ignoring the fact that delayed allocation effectively does
-this for you without needing to physically allocate the blocks.
-So when you have files that are short lived, you don't actually do
-any allocation at all, Further delayed allocation results in
-allocation order according to writeback order rather than write()
-order, so I/O patterns are much nicer when using delayed allocation.
-
-Basicaly you are removing one of the major IO optimisation
-capabilities of XFS by preallocating everything like this.
-
-> Soon
-> after I switched to XFS six months ago I've been running locally patched
-> versions of rsync/tar/cp and so on, and they really do minimize
-> fragmentation with very little effort.
-
-So you don't have any idea of how well XFS minimises fragmentation
-without needing to use preallocation? Sounds like you have a classic
-case of premature optimisation. ;)
+And this is one of the reasons why I originally suggested that
+storage at this scale really should be using hardware RAID with
+large amounts of BBWC to isolate the backend from such problematic
+IO patterns.
 
 Cheers,
 
