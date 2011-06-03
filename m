@@ -1,30 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p53JEfd9029635 for <xfs@oss.sgi.com>; Fri, 3 Jun 2011 14:14:41 -0500
-Received: from e32.co.us.ibm.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A9D5649C718
-	for <xfs@oss.sgi.com>; Fri,  3 Jun 2011 12:14:40 -0700 (PDT)
-Received: from e32.co.us.ibm.com (e32.co.us.ibm.com [32.97.110.150]) by
-	cuda.sgi.com with ESMTP id C1t3TjyPTmYvGs2t for
-	<xfs@oss.sgi.com>; Fri, 03 Jun 2011 12:14:40 -0700 (PDT)
-Received: from d03relay01.boulder.ibm.com (d03relay01.boulder.ibm.com
-	[9.17.195.226])
-	by e32.co.us.ibm.com (8.14.4/8.13.1) with ESMTP id p53J31Re009471
-	for <xfs@oss.sgi.com>; Fri, 3 Jun 2011 13:03:01 -0600
+	p53JEBIV029617 for <xfs@oss.sgi.com>; Fri, 3 Jun 2011 14:14:12 -0500
+Received: from e33.co.us.ibm.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 988EB49C70D
+	for <xfs@oss.sgi.com>; Fri,  3 Jun 2011 12:14:11 -0700 (PDT)
+Received: from e33.co.us.ibm.com (e33.co.us.ibm.com [32.97.110.151]) by
+	cuda.sgi.com with ESMTP id xx8tZviOK6qMBw3Q for
+	<xfs@oss.sgi.com>; Fri, 03 Jun 2011 12:14:11 -0700 (PDT)
+Received: from d03relay05.boulder.ibm.com (d03relay05.boulder.ibm.com
+	[9.17.195.107])
+	by e33.co.us.ibm.com (8.14.4/8.13.1) with ESMTP id p53J6oFw004355
+	for <xfs@oss.sgi.com>; Fri, 3 Jun 2011 13:06:50 -0600
 Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
-	by d03relay01.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	p53JEP9g070552 for <xfs@oss.sgi.com>; Fri, 3 Jun 2011 13:14:27 -0600
+	by d03relay05.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	p53JDjXk164868 for <xfs@oss.sgi.com>; Fri, 3 Jun 2011 13:13:50 -0600
 Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
 	by d03av04.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
-	id p53DEPip028029
-	for <xfs@oss.sgi.com>; Fri, 3 Jun 2011 07:14:25 -0600
-Message-ID: <4DE93290.70709@linux.vnet.ibm.com>
-Date: Fri, 03 Jun 2011 12:14:24 -0700
+	id p53DDiw4025790
+	for <xfs@oss.sgi.com>; Fri, 3 Jun 2011 07:13:45 -0600
+Message-ID: <4DE93268.90007@linux.vnet.ibm.com>
+Date: Fri, 03 Jun 2011 12:13:44 -0700
 From: Allison Henderson <achender@linux.vnet.ibm.com>
 MIME-Version: 1.0
-Subject: Fwd: [XFSTEST Add Fallocate Punch Hole Tests 2/3 v4] Expand 252 punch
-	hole test to cover additional corner cases
+Subject: Fwd: [XFSTEST Add Fallocate Punch Hole Tests 1/3 v4] Add Punch Hole
+	to FSX
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,518 +39,290 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
 
+Hi All,
 
+I realized today that this patch needed to go out on some more mailing lists,
+so I'm going to forward them along.  This is the patch set I've been 
+working on to add more punch hole tests to xfstests.  I'll keep the xfs 
+mailing list on the forward too, to help keep the discussions in one thread. Thx!
 
+Allison Henderson
+ 
 -------- Original Message --------
-Subject: [XFSTEST Add Fallocate Punch Hole Tests 2/3 v4] Expand 252 punch	hole test to cover additional corner cases
-Date: Wed, 25 May 2011 19:34:39 -0700
+Subject: [XFSTEST Add Fallocate Punch Hole Tests 1/3 v4] Add Punch Hole to FSX
+Date: Wed, 25 May 2011 19:34:28 -0700
 From: Allison Henderson <achender@linux.vnet.ibm.com>
 To: xfs-oss <xfs@oss.sgi.com>
 
-This patch adds additional punch hole tests to 252
-that were used to test ext4 punch hole. The _test_generic_punch
-routine has been modified to accept two new flags: 
-
--k To keep the test file between tests.
-   This will test the handling of existing holes
-   
--d To not sync the file between tests.
-   This will test the handling of delayed extents 
-
-Four new corner cases have also been added to the routine:
-14. data -> hole @ EOF
-15. data -> hole @ 0
-16. data -> cache cold ->hole
-17. data -> hole in single block file
-
+This patch adds punch hole tests to the fsx stress test. 
 
 Signed-off-by: Allison Henderson <achender@us.ibm.com>
 
+v1 -> v2:
+Corrections to the Makefile have been backed out.
+Those corrections have been addressed in the
+"xfstests: clean up fallocate configuration tests"
+patch
+
+The punch hole tests can be disabled with the
+-H flag, and will also be disabled if it is
+detected that the filesystem does not support
+punch hole
+
+v2 -> v4
+Punch hole tests and functionality tests have been moved
+into their own functions.  Existing dofallocate routine
+has been renamed to do_preallocate.
 ---
-:100755 100755 dfdf3f8... 5efa243... M	252
-:100644 100644 cd8e4b4... 930c924... M	252.out
-:100644 100644 e2da5d8... ddf63b0... M	common.punch
- 252          |   10 +++
- 252.out      |  192 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- common.punch |  150 ++++++++++++++++++++++++++++++++++++++-------
- 3 files changed, 330 insertions(+), 22 deletions(-)
+:100644 100755 fe072d3... a55b6f7... M	ltp/fsx.c
+ ltp/fsx.c |  140 +++++++++++++++++++++++++++++++++++++++++++++++++++++--------
+ 1 files changed, 122 insertions(+), 18 deletions(-)
 
-diff --git a/252 b/252
-index dfdf3f8..5efa243 100755
---- a/252
-+++ b/252
-@@ -52,6 +52,16 @@ _require_xfs_io_fiemap
+diff --git a/ltp/fsx.c b/ltp/fsx.c
+old mode 100644
+new mode 100755
+index fe072d3..a55b6f7
+--- a/ltp/fsx.c
++++ b/ltp/fsx.c
+@@ -69,6 +69,7 @@ int			logcount = 0;	/* total ops */
+ #define OP_MAPWRITE	6
+ #define OP_SKIPPED	7
+ #define OP_FALLOCATE	8
++#define OP_PUNCH_HOLE	9
 
- testfile=$TEST_DIR/252.$$
-
-+# Standard punch hole tests
- _test_generic_punch falloc fpunch fpunch fiemap _filter_fiemap $testfile -F
-
-+# Delayed allocation punch hole tests
-+_test_generic_punch -d falloc fpunch fpunch fiemap _filter_fiemap $testfile -F
-+
-+# Multi hole punch tests
-+_test_generic_punch -k falloc fpunch fpunch fiemap _filter_fiemap $testfile -F
-+
-+# Delayed allocation multi punch hole tests
-+_test_generic_punch -d -k falloc fpunch fpunch fiemap _filter_fiemap $testfile -F
-+
- status=0 ; exit
-diff --git a/252.out b/252.out
-index cd8e4b4..930c924 100644
---- a/252.out
-+++ b/252.out
-@@ -45,3 +45,195 @@ QA output created by 252
- 0: [0..7]: data
- 1: [8..31]: hole
- 2: [32..39]: data
-+	14. data -> hole @ EOF
-+0: [0..23]: data
-+1: [24..39]: hole
-+	15. data -> hole @ 0
-+0: [0..15]: hole
-+1: [16..39]: data
-+	16. data -> cache cold ->hole
-+0: [0..15]: hole
-+1: [16..39]: data
-+	17. data -> hole in single block file
-+0: [0..7]: data
-+	1. into a hole
-+	2. into allocated space
-+0: [0..7]: data
-+1: [8..23]: hole
-+2: [24..39]: data
-+	3. into unwritten space
-+0: [0..7]: unwritten
-+1: [8..23]: hole
-+2: [24..39]: unwritten
-+	4. hole -> data
-+0: [0..23]: hole
-+1: [24..31]: data
-+2: [32..39]: hole
-+	5. hole -> unwritten
-+0: [0..23]: hole
-+1: [24..31]: unwritten
-+2: [32..39]: hole
-+	6. data -> hole
-+0: [0..7]: data
-+1: [8..39]: hole
-+	7. data -> unwritten
-+0: [0..7]: data
-+1: [8..23]: hole
-+2: [24..31]: unwritten
-+3: [32..39]: hole
-+	8. unwritten -> hole
-+0: [0..7]: unwritten
-+1: [8..39]: hole
-+	9. unwritten -> data
-+0: [0..7]: unwritten
-+1: [8..23]: hole
-+2: [24..31]: data
-+3: [32..39]: hole
-+	10. hole -> data -> hole
-+	11. data -> hole -> data
-+0: [0..7]: data
-+1: [8..31]: hole
-+2: [32..39]: data
-+	12. unwritten -> data -> unwritten
-+0: [0..7]: unwritten
-+1: [8..31]: hole
-+2: [32..39]: unwritten
-+	13. data -> unwritten -> data
-+0: [0..7]: data
-+1: [8..31]: hole
-+2: [32..39]: data
-+	14. data -> hole @ EOF
-+0: [0..23]: data
-+1: [24..39]: hole
-+	15. data -> hole @ 0
-+0: [0..15]: hole
-+1: [16..39]: data
-+	16. data -> cache cold ->hole
-+0: [0..15]: hole
-+1: [16..39]: data
-+	17. data -> hole in single block file
-+0: [0..7]: data
-+	1. into a hole
-+0: [0..7]: data
-+1: [8..39]: hole
-+	2. into allocated space
-+0: [0..7]: data
-+1: [8..23]: hole
-+2: [24..39]: data
-+	3. into unwritten space
-+0: [0..7]: data
-+1: [8..23]: hole
-+2: [24..39]: data
-+	4. hole -> data
-+0: [0..7]: data
-+1: [8..23]: hole
-+2: [24..39]: data
-+	5. hole -> unwritten
-+0: [0..7]: data
-+1: [8..23]: hole
-+2: [24..39]: data
-+	6. data -> hole
-+0: [0..7]: data
-+1: [8..23]: hole
-+2: [24..39]: data
-+	7. data -> unwritten
-+0: [0..7]: data
-+1: [8..23]: hole
-+2: [24..39]: data
-+	8. unwritten -> hole
-+0: [0..7]: data
-+1: [8..23]: hole
-+2: [24..39]: data
-+	9. unwritten -> data
-+0: [0..7]: data
-+1: [8..23]: hole
-+2: [24..39]: data
-+	10. hole -> data -> hole
-+0: [0..7]: data
-+1: [8..31]: hole
-+2: [32..39]: data
-+	11. data -> hole -> data
-+0: [0..7]: data
-+1: [8..31]: hole
-+2: [32..39]: data
-+	12. unwritten -> data -> unwritten
-+0: [0..7]: data
-+1: [8..31]: hole
-+2: [32..39]: data
-+	13. data -> unwritten -> data
-+0: [0..7]: data
-+1: [8..31]: hole
-+2: [32..39]: data
-+	14. data -> hole @ EOF
-+0: [0..23]: data
-+1: [24..39]: hole
-+	15. data -> hole @ 0
-+0: [0..15]: hole
-+1: [16..39]: data
-+	16. data -> cache cold ->hole
-+0: [0..15]: hole
-+1: [16..39]: data
-+	17. data -> hole in single block file
-+0: [0..7]: data
-+	1. into a hole
-+0: [0..7]: data
-+1: [8..39]: hole
-+	2. into allocated space
-+0: [0..7]: data
-+1: [8..23]: hole
-+2: [24..39]: data
-+	3. into unwritten space
-+0: [0..7]: data
-+1: [8..23]: hole
-+2: [24..39]: data
-+	4. hole -> data
-+0: [0..7]: data
-+1: [8..23]: hole
-+2: [24..39]: data
-+	5. hole -> unwritten
-+0: [0..7]: data
-+1: [8..23]: hole
-+2: [24..39]: data
-+	6. data -> hole
-+0: [0..7]: data
-+1: [8..23]: hole
-+2: [24..39]: data
-+	7. data -> unwritten
-+0: [0..7]: data
-+1: [8..23]: hole
-+2: [24..39]: data
-+	8. unwritten -> hole
-+0: [0..7]: data
-+1: [8..23]: hole
-+2: [24..39]: data
-+	9. unwritten -> data
-+0: [0..7]: data
-+1: [8..23]: hole
-+2: [24..39]: data
-+	10. hole -> data -> hole
-+0: [0..7]: data
-+1: [8..31]: hole
-+2: [32..39]: data
-+	11. data -> hole -> data
-+0: [0..7]: data
-+1: [8..31]: hole
-+2: [32..39]: data
-+	12. unwritten -> data -> unwritten
-+0: [0..7]: data
-+1: [8..31]: hole
-+2: [32..39]: data
-+	13. data -> unwritten -> data
-+0: [0..7]: data
-+1: [8..31]: hole
-+2: [32..39]: data
-+	14. data -> hole @ EOF
-+0: [0..23]: data
-+1: [24..39]: hole
-+	15. data -> hole @ 0
-+0: [0..15]: hole
-+1: [16..39]: data
-+	16. data -> cache cold ->hole
-+0: [0..15]: hole
-+1: [16..39]: data
-+	17. data -> hole in single block file
-+0: [0..7]: data
-diff --git a/common.punch b/common.punch
-index e2da5d8..ddf63b0 100644
---- a/common.punch
-+++ b/common.punch
-@@ -256,8 +256,39 @@ die_now()
- #	11. data -> hole -> data
- #	12. unwritten -> data -> unwritten
- #	13. data -> unwritten -> data
-+#	14. data -> hole @ EOF
-+#	15. data -> hole @ 0
-+#	16. data -> cache cold ->hole
-+#	17. data -> hole in single block file
-+#
-+# Test file is removed, created and sync'd between tests.
-+#
-+# Use -k flag to keep the file between tests.  This will
-+# test the handling of pre-existing holes.
-+#
-+# Use the -d flag to not sync the file between tests.
-+# This will test the handling of delayed extents
-+#
- _test_generic_punch()
- {
-+
-+	remove_testfile=1
-+	sync_cmd="-c fsync"
-+	OPTIND=1
-+	while getopts 'dk' OPTION
-+	do
-+		case $OPTION in
-+		k)	remove_testfile=
-+		;;
-+		d)	sync_cmd=
-+		;;
-+		?)	echo Invalid flag
-+		exit 1
-+		;;
-+		esac
-+	done
-+	shift $(($OPTIND - 1))
-+
- 	alloc_cmd=$1
- 	punch_cmd=$2
- 	zero_cmd=$3	#if not testing zero just set to punch
-@@ -267,22 +298,28 @@ _test_generic_punch()
- 	xfs_io_opt=$7	#needs to be -F if not testing xfs
-
- 	echo "	1. into a hole"
--	rm -f $testfile
-+	if [ "$remove_testfile" ]; then
-+		rm -f $testfile
-+	fi
- 	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
- 		-c "$zero_cmd 4k 8k" \
- 		-c "$map_cmd -v" $testfile | $filter_cmd
- 	[ $? -ne 0 ] && die_now
-
- 	echo "	2. into allocated space"
--	rm -f $testfile
-+	if [ "$remove_testfile" ]; then
-+		rm -f $testfile
-+	fi
- 	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
--		-c "pwrite 0 20k" -c "fsync" \
-+		-c "pwrite 0 20k" $sync_cmd \
- 		-c "$zero_cmd 4k 8k" \
- 		-c "$map_cmd -v" $testfile | $filter_cmd
- 	[ $? -ne 0 ] && die_now
-
- 	echo "	3. into unwritten space"
--	rm -f $testfile
-+	if [ "$remove_testfile" ]; then
-+		rm -f $testfile
-+	fi
- 	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
- 		-c "$alloc_cmd 0 20k" \
- 		-c "$zero_cmd 4k 8k" \
-@@ -290,15 +327,19 @@ _test_generic_punch()
- 	[ $? -ne 0 ] && die_now
-
- 	echo "	4. hole -> data"
--	rm -f $testfile
-+	if [ "$remove_testfile" ]; then
-+		rm -f $testfile
-+	fi
- 	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
--		-c "pwrite 8k 8k" -c "fsync" \
-+		-c "pwrite 8k 8k" $sync_cmd \
- 		-c "$zero_cmd 4k 8k" \
- 		-c "$map_cmd -v" $testfile | $filter_cmd
- 	[ $? -ne 0 ] && die_now
-
- 	echo "	5. hole -> unwritten"
--	rm -f $testfile
-+	if [ "$remove_testfile" ]; then
-+		rm -f $testfile
-+	fi
- 	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
- 		-c "$alloc_cmd 8k 8k" \
- 		-c "$zero_cmd 4k 8k" \
-@@ -306,24 +347,30 @@ _test_generic_punch()
- 	[ $? -ne 0 ] && die_now
-
- 	echo "	6. data -> hole"
--	rm -f $testfile
-+	if [ "$remove_testfile" ]; then
-+		rm -f $testfile
-+	fi
- 	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
--		-c "pwrite 0 8k" -c "fsync" \
-+		-c "pwrite 0 8k" $sync_cmd \
- 		-c "$zero_cmd 4k 8k" \
- 		-c "$map_cmd -v" $testfile | $filter_cmd
- 	[ $? -ne 0 ] && die_now
-
- 	echo "	7. data -> unwritten"
--	rm -f $testfile
-+	if [ "$remove_testfile" ]; then
-+		rm -f $testfile
-+	fi
- 	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
--		-c "pwrite 0 8k" -c "fsync" \
-+		-c "pwrite 0 8k" $sync_cmd \
- 		-c "$alloc_cmd 8k 8k" \
- 		-c "$zero_cmd 4k 8k" \
- 		-c "$map_cmd -v" $testfile | $filter_cmd
- 	[ $? -ne 0 ] && die_now
-
- 	echo "	8. unwritten -> hole"
--	rm -f $testfile
-+	if [ "$remove_testfile" ]; then
-+		rm -f $testfile
-+	fi
- 	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
- 		-c "$alloc_cmd 0 8k" \
- 		-c "$zero_cmd 4k 8k" \
-@@ -331,49 +378,108 @@ _test_generic_punch()
- 	[ $? -ne 0 ] && die_now
-
- 	echo "	9. unwritten -> data"
--	rm -f $testfile
-+	if [ "$remove_testfile" ]; then
-+		rm -f $testfile
-+	fi
- 	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
- 		-c "$alloc_cmd 0 8k" \
--		-c "pwrite 8k 8k" -c "fsync" \
-+		-c "pwrite 8k 8k" $sync_cmd \
- 		-c "$zero_cmd 4k 8k" \
- 		-c "$map_cmd -v" $testfile | $filter_cmd
- 	[ $? -ne 0 ] && die_now
-
- 	echo "	10. hole -> data -> hole"
--	rm -f $testfile
-+	if [ "$remove_testfile" ]; then
-+		rm -f $testfile
-+	fi
- 	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
--		-c "pwrite 8k 4k" -c "fsync" \
-+		-c "pwrite 8k 4k" $sync_cmd \
- 		-c "$zero_cmd 4k 12k" \
- 		-c "$map_cmd -v" $testfile | $filter_cmd
- 	[ $? -ne 0 ] && die_now
-
- 	echo "	11. data -> hole -> data"
--	rm -f $testfile
-+	if [ "$remove_testfile" ]; then
-+		rm -f $testfile
-+	fi
- 	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
- 		-c "$alloc_cmd 0 20k" \
- 		-c "pwrite 0 8k" \
--		-c "pwrite 12k 8k" -c "fsync" \
-+		-c "pwrite 12k 8k" $sync_cmd \
- 		-c "$punch_cmd 8k 4k" \
- 		-c "$zero_cmd 4k 12k" \
- 		-c "$map_cmd -v" $testfile | $filter_cmd
- 	[ $? -ne 0 ] && die_now
-
- 	echo "	12. unwritten -> data -> unwritten"
--	rm -f $testfile
-+	if [ "$remove_testfile" ]; then
-+		rm -f $testfile
-+	fi
- 	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
- 		-c "$alloc_cmd 0 20k" \
--		-c "pwrite 8k 4k" -c "fsync" \
-+		-c "pwrite 8k 4k" $sync_cmd \
- 		-c "$zero_cmd 4k 12k" \
- 		-c "$map_cmd -v" $testfile | $filter_cmd
- 	[ $? -ne 0 ] && die_now
-
- 	echo "	13. data -> unwritten -> data"
--	rm -f $testfile
-+	if [ "$remove_testfile" ]; then
-+		rm -f $testfile
-+	fi
- 	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
- 		-c "$alloc_cmd 0 20k" \
--		-c "pwrite 0k 8k" -c "fsync" \
-+		-c "pwrite 0k 8k" $sync_cmd \
- 		-c "pwrite 12k 8k" -c "fsync" \
- 		-c "$zero_cmd 4k 12k" \
- 		-c "$map_cmd -v" $testfile | $filter_cmd
- 	[ $? -ne 0 ] && die_now
-+
-+	echo "	14. data -> hole @ EOF"
-+	rm -f $testfile
-+	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
-+		-c "pwrite 0 20k" $sync_cmd \
-+		-c "$zero_cmd 12k 8k" \
-+		-c "$map_cmd -v" $testfile | $filter_cmd
-+	[ $? -ne 0 ] && die_now
-+
-+	echo "	15. data -> hole @ 0"
-+	if [ "$remove_testfile" ]; then
-+		rm -f $testfile
-+	fi
-+	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
-+		-c "pwrite 0 20k" $sync_cmd \
-+		-c "$zero_cmd 0k 8k" \
-+		-c "$map_cmd -v" $testfile | $filter_cmd
-+	[ $? -ne 0 ] && die_now
-+
-+	echo "	16. data -> cache cold ->hole"
-+	if [ "$remove_testfile" ]; then
-+		rm -f $testfile
-+		rm -f $testfile.2
-+	else
-+		cp $testfile $testfile.2
-+	fi
-+	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
-+		-c "pwrite 8k 12k" -c "fsync" $testfile.2 \
-+		> /dev/null
-+	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
-+		-c "pwrite 0 20k" $sync_cmd \
-+		-c "$zero_cmd 0k 8k" \
-+		-c "fadvise -d" \
-+		-c "$map_cmd -v" $testfile | $filter_cmd
-+	diff $testfile $testfile.2
-+	[ $? -ne 0 ] && die_now
-+	rm -f $testfile.2
-+
-+	echo "	17. data -> hole in single block file"
-+	if [ "$remove_testfile" ]; then
-+		rm -f $testfile
-+	fi
-+	block_size=`stat -f $TEST_DEV | grep "Block size" | cut -d " " -f3`
-+	$XFS_IO_PROG $xfs_io_opt -f -c "truncate $block_size" \
-+		-c "pwrite 0 $block_size" $sync_cmd \
-+		-c "$zero_cmd 128 128" \
-+		-c "$map_cmd -v" $testfile | $filter_cmd
-+	[ $? -ne 0 ] && die_now
-+
+ #undef PAGE_SIZE
+ #define PAGE_SIZE       getpagesize()
+@@ -110,6 +111,7 @@ int	randomoplen = 1;		/* -O flag disables it */
+ int	seed = 1;			/* -S flag */
+ int     mapped_writes = 1;              /* -W flag disables */
+ int     fallocate_calls = 1;            /* -F flag disables */
++int     punch_hole_calls = 1;           /* -H flag disables */
+ int 	mapped_reads = 1;		/* -R flag disables it */
+ int	fsxgoodfd = 0;
+ int	o_direct;			/* -Z */
+@@ -279,6 +281,14 @@ logdump(void)
+ 			    badoff < lp->args[0] + lp->args[1])
+ 				prt("\t******FFFF");
+ 			break;
++		case OP_PUNCH_HOLE:
++			prt("PUNCH HOLE\t0x%x thru 0x%x\t(0x%x bytes)",
++			    lp->args[0], lp->args[0] + lp->args[1] - 1,
++			    lp->args[1]);
++			if (badoff >= lp->args[0] && badoff <
++						     lp->args[0] + lp->args[1])
++				prt("\t******PPPP");
++			break;
+ 		case OP_SKIPPED:
+ 			prt("SKIPPED (no operation)");
+ 			break;
+@@ -784,10 +794,67 @@ dotruncate(unsigned size)
+ 	}
  }
+
++#ifdef FALLOC_FL_PUNCH_HOLE
++void
++do_punch_hole(unsigned offset, unsigned length)
++{
++	unsigned end_offset;
++	int max_offset = 0;
++	int max_len = 0;
++	int mode = FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE;
++
++	if (length == 0) {
++		if (!quiet && testcalls > simulatedopcount)
++			prt("skipping zero length punch hole\n");
++			log4(OP_SKIPPED, OP_PUNCH_HOLE, offset, length);
++		return;
++	}
++
++	if (file_size <= (loff_t)offset) {
++		if (!quiet && testcalls > simulatedopcount)
++			prt("skipping hole punch off the end of the file\n");
++			log4(OP_SKIPPED, OP_PUNCH_HOLE, offset, length);
++		return;
++	}
++
++	end_offset = offset + length;
++
++	log4(OP_PUNCH_HOLE, offset, length, 0);
++
++	if (testcalls <= simulatedopcount)
++		return;
++
++	if ((progressinterval && testcalls % progressinterval == 0) ||
++	    (debug && (monitorstart == -1 || monitorend == -1 ||
++		      end_offset <= monitorend))) {
++		prt("%lu punch\tfrom 0x%x to 0x%x, (0x%x bytes)\n", testcalls,
++			offset, offset+length, length);
++	}
++	if (fallocate(fd, mode, (loff_t)offset, (loff_t)length) == -1) {
++		prt("%punch hole: %x to %x\n", offset, length);
++		prterr("do_punch_hole: fallocate");
++		report_failure(161);
++	}
++
++
++	max_offset = offset < file_size ? offset : file_size;
++	max_len = max_offset + length <= file_size ? length :
++			file_size - max_offset;
++	memset(good_buf + max_offset, '\0', max_len);
++}
++
++#else
++void
++do_punch_hole(unsigned offset, unsigned length)
++{
++	return;
++}
++#endif
++
+ #ifdef FALLOCATE
+ /* fallocate is basically a no-op unless extending, then a lot like a truncate */
+ void
+-dofallocate(unsigned offset, unsigned length)
++do_preallocate(unsigned offset, unsigned length)
+ {
+ 	unsigned end_offset;
+ 	int keep_size;
+@@ -831,13 +898,13 @@ dofallocate(unsigned offset, unsigned length)
+ 		prt("%lu falloc\tfrom 0x%x to 0x%x\n", testcalls, offset, length);
+ 	if (fallocate(fd, keep_size ? FALLOC_FL_KEEP_SIZE : 0, (loff_t)offset, (loff_t)length) == -1) {
+ 	        prt("fallocate: %x to %x\n", offset, length);
+-		prterr("dofallocate: fallocate");
++		prterr("do_preallocate: fallocate");
+ 		report_failure(161);
+ 	}
+ }
+ #else
+ void
+-dofallocate(unsigned offset, unsigned length)
++do_preallocate(unsigned offset, unsigned length)
+ {
+ 	return;
+ }
+@@ -895,8 +962,7 @@ test(void)
+ 	unsigned long	offset;
+ 	unsigned long	size = maxoplen;
+ 	unsigned long	rv = random();
+-	unsigned long	op = rv % (3 + !lite + mapped_writes + fallocate_calls);
+-
++	unsigned long	op = rv % (3 + !lite + mapped_writes + fallocate_calls + punch_hole_calls);
+         /* turn off the map read if necessary */
+
+         if (op == 2 && !mapped_reads)
+@@ -924,6 +990,7 @@ test(void)
+ 	 * TRUNCATE:	op = -     3
+ 	 * MAPWRITE:    op = 3     4
+ 	 * FALLOCATE:   op = -     5
++	 * PUNCH HOLE:  op = -     6
+ 	 */
+ 	if (lite ? 0 : op == 3 && (style & 1) == 0) /* vanilla truncate? */
+ 		dotruncate(random() % maxfilelen);
+@@ -941,7 +1008,12 @@ test(void)
+ 				offset %= maxfilelen;
+ 				if (offset + size > maxfilelen)
+ 					size = maxfilelen - offset;
+-				dofallocate(offset, size);
++				do_preallocate(offset, size);
++			} else if (op == 6) {
++				offset %= maxfilelen;
++				if (offset + size > maxfilelen)
++					size = maxfilelen - offset;
++				do_punch_hole(offset, size);
+ 			} else if (op == 1 || op == (lite ? 3 : 4)) {
+ 				/* write / mapwrite */
+ 				offset %= maxfilelen;
+@@ -1013,6 +1085,9 @@ usage(void)
+ #ifdef FALLOCATE
+ "	-F: Do not use fallocate (preallocation) calls\n"
+ #endif
++#ifdef FALLOC_FL_PUNCH_HOLE
++"       -H: Do not use punch hole calls\n"
++#endif
+ "	-L: fsxLite - no file creations & no file size changes\n\
+ 	-N numops: total # operations to do (default infinity)\n\
+ 	-O: use oplen (see -o flag) for every op (default random)\n\
+@@ -1161,6 +1236,41 @@ int aio_rw(int rw, int fd, char *buf, unsigned len, unsigned offset)
+
+ #endif
+
++void
++test_fallocate()
++{
++#ifdef FALLOCATE
++	if (!lite && fallocate_calls) {
++		if (fallocate(fd, 0, 0, 1) && errno == EOPNOTSUPP) {
++			warn("main: filesystem does not support fallocate, disabling");
++			fallocate_calls = 0;
++		} else {
++			ftruncate(fd, 0);
++		}
++	}
++#else /* ! FALLOCATE */
++	fallocate_calls = 0;
++#endif
++}
++
++void
++test_punch_hole()
++{
++#ifdef FALLOC_FL_PUNCH_HOLE
++	if (!lite && punch_hole_calls) {
++		if (fallocate(fd, 0, 0,
++			FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE) &&
++			errno == EOPNOTSUPP) {
++
++			warn("main: filesystem does not support fallocate punch hole, disabling");
++			punch_hole_calls = 0;
++		}
++	}
++#else /* ! PUNCH HOLE */
++	punch_hole_calls = 0;
++#endif
++}
++
+ int
+ main(int argc, char **argv)
+ {
+@@ -1179,7 +1289,7 @@ main(int argc, char **argv)
+
+ 	setvbuf(stdout, (char *)0, _IOLBF, 0); /* line buffered stdout */
+
+-	while ((ch = getopt(argc, argv, "b:c:dfl:m:no:p:qr:s:t:w:xyAD:FLN:OP:RS:WZ"))
++	while ((ch = getopt(argc, argv, "b:c:dfl:m:no:p:qr:s:t:w:xyAD:FHLN:OP:RS:WZ"))
+ 	       != EOF)
+ 		switch (ch) {
+ 		case 'b':
+@@ -1276,6 +1386,9 @@ main(int argc, char **argv)
+ 		case 'F':
+ 			fallocate_calls = 0;
+ 			break;
++		case 'H':
++			punch_hole_calls = 0;
++			break;
+ 		case 'L':
+ 		        lite = 1;
+ 			break;
+@@ -1421,17 +1534,8 @@ main(int argc, char **argv)
+ 	} else 
+ 		check_trunc_hack();
+
+-#ifdef FALLOCATE
+-	if (!lite && fallocate_calls) {
+-		if (fallocate(fd, 0, 0, 1) && errno == EOPNOTSUPP) {
+-			warn("main: filesystem does not support fallocate, disabling");
+-			fallocate_calls = 0;
+-		} else
+-			ftruncate(fd, 0);
+-	}
+-#else /* ! FALLOCATE */
+-	fallocate_calls = 0;
+-#endif
++	test_fallocate();
++	test_punch_hole();
+
+ 	while (numops == -1 || numops--)
+ 		test();
 -- 
 1.7.1
 
