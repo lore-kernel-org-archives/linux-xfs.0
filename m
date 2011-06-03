@@ -1,15 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p53FRdjY018255 for <xfs@oss.sgi.com>; Fri, 3 Jun 2011 10:27:40 -0500
-Subject: Re: [PATCH] xfstests: fix hardcoded path in output of 254
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1307109162-21811-1-git-send-email-dsterba@suse.cz>
-References: <1307109162-21811-1-git-send-email-dsterba@suse.cz>
-Date: Fri, 3 Jun 2011 10:27:36 -0500
-Message-ID: <1307114856.2886.27.camel@doink>
-MIME-Version: 1.0
-Reply-To: aelder@sgi.com
+	p53GF7xe019828
+	for <linux-xfs@oss.sgi.com>; Fri, 3 Jun 2011 11:15:08 -0500
+Received: from lo.gmane.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 76E4349BF90
+	for <linux-xfs@oss.sgi.com>; Fri,  3 Jun 2011 09:15:05 -0700 (PDT)
+Received: from lo.gmane.org (lo.gmane.org [80.91.229.12]) by cuda.sgi.com with
+	ESMTP id ftOxDmUpp45lliOT for <linux-xfs@oss.sgi.com>;
+	Fri, 03 Jun 2011 09:15:05 -0700 (PDT)
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1QSX1c-0004ln-KW
+	for linux-xfs@oss.sgi.com; Fri, 03 Jun 2011 18:15:04 +0200
+Received: from s0106000acd1d509c.du.shawcable.net ([70.67.174.161])
+	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+	id 1AlnuQ-0007hv-00
+	for <linux-xfs@oss.sgi.com>; Fri, 03 Jun 2011 18:15:04 +0200
+Received: from prad by s0106000acd1d509c.du.shawcable.net with local (Gmexim
+	0.1 (Debian)) id 1AlnuQ-0007hv-00
+	for <linux-xfs@oss.sgi.com>; Fri, 03 Jun 2011 18:15:04 +0200
+From: prad <prad@towardsfreedom.com>
+Subject: altering defaults
+Date: Fri, 03 Jun 2011 08:33:06 -0700
+Message-ID: <8762onaq19.fsf@psinom.home>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,19 +36,29 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: David Sterba <dsterba@suse.cz>
-Cc: linux-fsdevel@vger.kernel.org, josef@redhat.com, xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-On Fri, 2011-06-03 at 15:52 +0200, David Sterba wrote:
-> Add filters after btrfs commands, else the test would incorrectly appear
-> failed.
-> 
-> Signed-off-by: David Sterba <dsterba@suse.cz>
+i'm new to xfs (courtesy of most helpful and encouraging commentary by
+stan hoeppner!) and i've seen some advice which says to make the 
+block size     -> 512
+directory size -> 4096
 
-Looks good.  I will commit this for you.
+on the other hand, i've also come across webpages which say don't mess
+around! keep the defaults as they are unless you are absolutely sure
+that changing it suits your purpose and know why.
 
-Signed-off-by: Alex Elder <aelder@sgi.com>
+my question is for the data storage area on a web/email server. we're
+mainly going to have small files there and the email part will have only
+temporary files for the most part since people will download (ie pop).
 
+it makes sense to make the block size = 512, but i wonder if it really
+matters noticeably. the server is not a heavily visited one and only on
+very rare occasions will we get around 50000 hits/day - most of the time
+we're looking at under 10000 and that is with all the domains combined.
+
+-- 
+in friendship,
+prad
 
 _______________________________________________
 xfs mailing list
