@@ -1,27 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p530aNjl232935 for <xfs@oss.sgi.com>; Thu, 2 Jun 2011 19:36:23 -0500
-Received: from test.thunk.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 675C849498E
-	for <xfs@oss.sgi.com>; Thu,  2 Jun 2011 17:36:22 -0700 (PDT)
-Received: from test.thunk.org (li9-11.members.linode.com [67.18.176.11]) by
-	cuda.sgi.com with ESMTP id pcKAI1VnjsNCFSZw for
-	<xfs@oss.sgi.com>; Thu, 02 Jun 2011 17:36:22 -0700 (PDT)
-Date: Thu, 2 Jun 2011 20:36:10 -0400
-From: "Ted Ts'o" <tytso@mit.edu>
-Subject: Re: [PATCH v2] xfstests: add support for ext4dev FSTYP
-Message-ID: <20110603003610.GD16306@thunk.org>
-References: <1306933012-8666-1-git-send-email-amir73il@users.sourceforge.net>
-	<20110601232804.GL32466@dastard>
-	<BANLkTi=sV5=PyZvNSd=DGNW-V84=27d7Yw@mail.gmail.com>
-	<BANLkTimbPWfOJKq6er4mnSYNPcx6VHLcrw@mail.gmail.com>
-	<BANLkTimKV3LxugkW6_cE5vutjcmatESXuw@mail.gmail.com>
-	<4DE7A557.9040608@redhat.com>
-	<7D3F86FA-5AA9-49B0-9AFE-F597E83C07B4@dilger.ca>
+	p530dC7X233021 for <xfs@oss.sgi.com>; Thu, 2 Jun 2011 19:39:12 -0500
+Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D24C7499A59
+	for <xfs@oss.sgi.com>; Thu,  2 Jun 2011 17:39:10 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	PVvxWMUAgxC8KQkN for <xfs@oss.sgi.com>;
+	Thu, 02 Jun 2011 17:39:10 -0700 (PDT)
+Date: Fri, 3 Jun 2011 10:39:07 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: I/O hang, possibly XFS, possibly general
+Message-ID: <20110603003907.GW561@dastard>
+References: <BANLkTim_BCiKeqi5gY_gXAcmg7JgrgJCxQ@mail.gmail.com>
+	<19943.56524.969126.59978@tree.ty.sabi.co.UK>
+	<BANLkTim978GhfamN=TEFULP5GdfMu02-7w@mail.gmail.com>
+	<4DE823DD.7060600@philkarn.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <7D3F86FA-5AA9-49B0-9AFE-F597E83C07B4@dilger.ca>
+In-Reply-To: <4DE823DD.7060600@philkarn.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,54 +32,56 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Andreas Dilger <adilger@dilger.ca>
-Cc: Eric Sandeen <sandeen@redhat.com>, Amir Goldstein <amir73il@users.sf.net>, xfs@oss.sgi.com, sergey57@gmail.com, "Amir G." <amir73il@users.sourceforge.net>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
+To: Phil Karn <karn@philkarn.net>
+Cc: Paul Anderson <pha@umich.edu>, Linux fs XFS <xfs@oss.sgi.com>
 
-On Thu, Jun 02, 2011 at 11:22:53AM -0600, Andreas Dilger wrote:
-> On 2011-06-02, at 8:59 AM, Eric Sandeen wrote:
-> > I don't really mind adding ext4dev to FSTYP case statements, it
-> > -is- something which blkid could, in theory, still return, and
-> > making xfstests cope with that and try to invoke fsck -t ext4dev
-> > doesn't bother me too much.  It is sadly an fs type embedded into
-> > a few tools.
+On Thu, Jun 02, 2011 at 04:59:25PM -0700, Phil Karn wrote:
+> On 6/2/11 2:24 PM, Paul Anderson wrote:
 > 
-> I'm perfectly OK with using ext4dev as a filesystem type that allows testing
-> changes to ext4 on a system that is already running ext4 as the root fs.
+> > The data itself has very odd lifecycle behavior, as well - since it is
+> > research, the different stages are still being sorted out, but some
+> > stages are essentially write once, read once, maybe keep, maybe
+> > discard, depending on the research scenario.
+> ...
+> > The bulk of the work is not small-file - almost all is large files.
+> 
+> Out of curiosity, do your writers use the fallocate() call? If not, how
+> fragmented do your filesystems get?
+> 
+> Even if most of your data isn't read very often, it seems like a good
+> idea to minimize its fragmentation because that also reduces
+> fragmentation of the free list, which makes it easier to keep contiguous
+> other files that *are* heavily read. Also, fewer extents per file means
+> less metadata per file, ergo less metadata and log I/O, etc.
+> 
+> When a writer knows in advance how big a file will be, I can't see any
+> downside to having it call fallocate() to let the file system know.
 
-My take on this is that way too much time has been spent this subject.
-Being able to use ext4dev is useful, and given that we have all of
-this support in our existing system tools, why not use it to make ext4
-development more efficient/easy?  As a bonus you can build the ext4dev
-as a module, and that means you the compile/edit/debug cycle can be
-much faster since you can avoid doing a reboot, for those
-circumstances where using KVM is not possible/convenient.  Personally,
-I normally use KVM these days, but I can imagine situations where
-using ext4dev would be a better way to go.  For example, I'd probably
-use KVM on my laptop, but for testing on production servers in a data
-center, I'd probably use ext4dev, for a variety of local deployment
-considerations that's not worth going into here.
+You're ignoring the fact that delayed allocation effectively does
+this for you without needing to physically allocate the blocks.
+So when you have files that are short lived, you don't actually do
+any allocation at all, Further delayed allocation results in
+allocation order according to writeback order rather than write()
+order, so I/O patterns are much nicer when using delayed allocation.
 
-That being said, whether or not we modify xfstests seems to be a moot
-point.  In order for me to do my bigalloc development, I've been
-patching common.rc so that "/sbin/mkfs.$FSTYP" --> "mkfs.$FSTYP" and
-"/sbin/fsck -t $FSTYP" --> "fsck.$FSTYP".  It's a 3 line change.  Not
-a big deal.  I've been making this change using /bin/ed after
-installing xfstests.  So if the XFS folks want to veto this change ---
-who cares?  It's not hard to make the change locally in order to make
-xfstests.
+Basicaly you are removing one of the major IO optimisation
+capabilities of XFS by preallocating everything like this.
 
-On the other hand, given that xfstests is using "mkfs.$FSTYP", I don't
-see why it's so important that it clings to "fsck -t $FSTYP" instead
-of using "fsck.$FSTYP".  There's no real benefit to calling the fsck
-driver; it's just an extra fork and exec, and xfstests is being
-inconsistent by insisting on the use of the fsck driver, but not using
-the mkfs driver.
+> Soon
+> after I switched to XFS six months ago I've been running locally patched
+> versions of rsync/tar/cp and so on, and they really do minimize
+> fragmentation with very little effort.
 
-But that being said, hacking xfstests is not hard, and if Dave and/or
-Eric feels strongly about resisting this change, it's not worth a lot
-of time, one way or another....
+So you don't have any idea of how well XFS minimises fragmentation
+without needing to use preallocation? Sounds like you have a classic
+case of premature optimisation. ;)
 
-						- Ted
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
