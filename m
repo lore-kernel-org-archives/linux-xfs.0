@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p52NxUvm231770 for <xfs@oss.sgi.com>; Thu, 2 Jun 2011 18:59:31 -0500
-Received: from mail-pw0-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3CD4614E28BD
-	for <xfs@oss.sgi.com>; Thu,  2 Jun 2011 16:59:29 -0700 (PDT)
-Received: from mail-pw0-f53.google.com (mail-pw0-f53.google.com
-	[209.85.160.53]) by cuda.sgi.com with ESMTP id EILo2olvbVNcrBa5
-	for <xfs@oss.sgi.com>; Thu, 02 Jun 2011 16:59:29 -0700 (PDT)
-Received: by pwj5 with SMTP id 5so792418pwj.26
-	for <xfs@oss.sgi.com>; Thu, 02 Jun 2011 16:59:29 -0700 (PDT)
-Message-ID: <4DE823DD.7060600@philkarn.net>
-Date: Thu, 02 Jun 2011 16:59:25 -0700
+	p53069Fk232003 for <xfs@oss.sgi.com>; Thu, 2 Jun 2011 19:06:09 -0500
+Received: from mail-px0-f174.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id F1FEB49968E
+	for <xfs@oss.sgi.com>; Thu,  2 Jun 2011 17:06:08 -0700 (PDT)
+Received: from mail-px0-f174.google.com (mail-px0-f174.google.com
+	[209.85.212.174]) by cuda.sgi.com with ESMTP id
+	36Cgm6jJf8ypFULg for <xfs@oss.sgi.com>;
+	Thu, 02 Jun 2011 17:06:08 -0700 (PDT)
+Received: by pxi15 with SMTP id 15so911270pxi.5
+	for <xfs@oss.sgi.com>; Thu, 02 Jun 2011 17:06:08 -0700 (PDT)
+Message-ID: <4DE8256C.10706@philkarn.net>
+Date: Thu, 02 Jun 2011 17:06:04 -0700
 From: Phil Karn <karn@philkarn.net>
 MIME-Version: 1.0
 Subject: Re: I/O hang, possibly XFS, possibly general
 References: <BANLkTim_BCiKeqi5gY_gXAcmg7JgrgJCxQ@mail.gmail.com>
 	<19943.56524.969126.59978@tree.ty.sabi.co.UK>
-	<BANLkTim978GhfamN=TEFULP5GdfMu02-7w@mail.gmail.com>
-In-Reply-To: <BANLkTim978GhfamN=TEFULP5GdfMu02-7w@mail.gmail.com>
+In-Reply-To: <19943.56524.969126.59978@tree.ty.sabi.co.UK>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,32 +31,29 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Paul Anderson <pha@umich.edu>
+To: Peter Grandi <pg_xf2@xf2.for.sabi.co.UK>
 Cc: Linux fs XFS <xfs@oss.sgi.com>
 
-On 6/2/11 2:24 PM, Paul Anderson wrote:
+On 6/2/11 11:56 AM, Peter Grandi wrote:
 
-> The data itself has very odd lifecycle behavior, as well - since it is
-> research, the different stages are still being sorted out, but some
-> stages are essentially write once, read once, maybe keep, maybe
-> discard, depending on the research scenario.
-...
-> The bulk of the work is not small-file - almost all is large files.
+> Disclaimer: some smart people I know built knowingly a similar
+> and fortunately much smaller collection of RAID6 sets because
+> that was the least worst option for them, and since they know
+> that it will not fill up before they can replace it, they are
+> effectively short-stroking all those 2TB drives (I still would
+> have bought ERC ones if possible) so it's cooler than it looks.
 
-Out of curiosity, do your writers use the fallocate() call? If not, how
-fragmented do your filesystems get?
+What do you mean by "short stroking"? That the data (and head motions)
+stay in one part of the disk? I haven't been using XFS that long and I'm
+no expert on it, but I've noticed that it seems to distribute files
+pretty evenly across an entire disk. Even without the inode64 option,
+only the inodes are kept at the beginning; the data can be anywhere.
 
-Even if most of your data isn't read very often, it seems like a good
-idea to minimize its fragmentation because that also reduces
-fragmentation of the free list, which makes it easier to keep contiguous
-other files that *are* heavily read. Also, fewer extents per file means
-less metadata per file, ergo less metadata and log I/O, etc.
-
-When a writer knows in advance how big a file will be, I can't see any
-downside to having it call fallocate() to let the file system know. Soon
-after I switched to XFS six months ago I've been running locally patched
-versions of rsync/tar/cp and so on, and they really do minimize
-fragmentation with very little effort.
+The only way I can think of to confine the activity on a lightly-loaded
+XFS file system to one part of a disk (e.g., to reduce average seek
+times and to stay in the faster outer area of the drive) is to create
+partitions that initially span only part of the disk, then grow them
+later as needed. Is that what you mean?
 
 _______________________________________________
 xfs mailing list
