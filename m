@@ -1,27 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p533QJ5t248761 for <xfs@oss.sgi.com>; Thu, 2 Jun 2011 22:26:19 -0500
+	p533X90b249388 for <xfs@oss.sgi.com>; Thu, 2 Jun 2011 22:33:09 -0500
 Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C3022499B9F
-	for <xfs@oss.sgi.com>; Thu,  2 Jun 2011 20:26:17 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A1D4C12CFDD6
+	for <xfs@oss.sgi.com>; Thu,  2 Jun 2011 20:33:08 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id HSKyTbVzGoRxwTtC for
-	<xfs@oss.sgi.com>; Thu, 02 Jun 2011 20:26:17 -0700 (PDT)
-Message-ID: <4DE8544D.30800@redhat.com>
-Date: Thu, 02 Jun 2011 22:26:05 -0500
+	cuda.sgi.com with ESMTP id BEcbxx0Nd0XG5Xk6 for
+	<xfs@oss.sgi.com>; Thu, 02 Jun 2011 20:33:08 -0700 (PDT)
+Message-ID: <4DE855EB.6020207@redhat.com>
+Date: Thu, 02 Jun 2011 22:32:59 -0500
 From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH v2] xfstests: add support for ext4dev FSTYP
-References: <1306933012-8666-1-git-send-email-amir73il@users.sourceforge.net>
-	<20110601232804.GL32466@dastard>
-	<BANLkTi=sV5=PyZvNSd=DGNW-V84=27d7Yw@mail.gmail.com>
-	<BANLkTimbPWfOJKq6er4mnSYNPcx6VHLcrw@mail.gmail.com>
-	<BANLkTimKV3LxugkW6_cE5vutjcmatESXuw@mail.gmail.com>
-	<4DE7A557.9040608@redhat.com>
-	<7D3F86FA-5AA9-49B0-9AFE-F597E83C07B4@dilger.ca>
-	<20110603003610.GD16306@thunk.org>
-In-Reply-To: <20110603003610.GD16306@thunk.org>
+Subject: Re: [PATCH v3] xfstests: add support for ext4dev FSTYP
+References: <1306988221-3543-1-git-send-email-amir73il@users.sourceforge.net>
+In-Reply-To: <1306988221-3543-1-git-send-email-amir73il@users.sourceforge.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,67 +27,131 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ted Ts'o <tytso@mit.edu>
-Cc: Andreas Dilger <adilger@dilger.ca>, Amir Goldstein <amir73il@users.sf.net>, xfs@oss.sgi.com, sergey57@gmail.com, "Amir G." <amir73il@users.sourceforge.net>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
+To: amir73il@users.sourceforge.net
+Cc: linux-fsdevel@vger.kernel.org, sergey57@gmail.com, linux-ext4@vger.kernel.org, Amir Goldstein <amir73il@users.sf.net>, xfs@oss.sgi.com
 
-On 6/2/11 7:36 PM, Ted Ts'o wrote:
-> On Thu, Jun 02, 2011 at 11:22:53AM -0600, Andreas Dilger wrote:
->> On 2011-06-02, at 8:59 AM, Eric Sandeen wrote:
->>> I don't really mind adding ext4dev to FSTYP case statements, it
->>> -is- something which blkid could, in theory, still return, and
->>> making xfstests cope with that and try to invoke fsck -t ext4dev
->>> doesn't bother me too much.  It is sadly an fs type embedded into
->>> a few tools.
->>
->> I'm perfectly OK with using ext4dev as a filesystem type that allows testing
->> changes to ext4 on a system that is already running ext4 as the root fs.
+On 6/1/11 11:17 PM, amir73il@users.sourceforge.net wrote:
+> From: Amir Goldstein <amir73il@users.sf.net>
 > 
-> My take on this is that way too much time has been spent this subject.
-> Being able to use ext4dev is useful, and given that we have all of
-> this support in our existing system tools, why not use it to make ext4
-> development more efficient/easy?  As a bonus you can build the ext4dev
-> as a module, and that means you the compile/edit/debug cycle can be
-> much faster since you can avoid doing a reboot, for those
-> circumstances where using KVM is not possible/convenient.  Personally,
-> I normally use KVM these days, but I can imagine situations where
-> using ext4dev would be a better way to go.  For example, I'd probably
-> use KVM on my laptop, but for testing on production servers in a data
-> center, I'd probably use ext4dev, for a variety of local deployment
-> considerations that's not worth going into here.
+> blkid knows to identify the ext4dev FSTYP of a partition that was
+> formatted with mkfs.ext4dev.
+> quota tools and various util-linux utils are also aware of ext4dev,
+> so ext4dev shares the same capabilities as ext4.
 > 
-> That being said, whether or not we modify xfstests seems to be a moot
-> point.  In order for me to do my bigalloc development, I've been
-> patching common.rc so that "/sbin/mkfs.$FSTYP" --> "mkfs.$FSTYP" and
-> "/sbin/fsck -t $FSTYP" --> "fsck.$FSTYP".  It's a 3 line change.  Not
-> a big deal.  I've been making this change using /bin/ed after
-> installing xfstests.  So if the XFS folks want to veto this change ---
-> who cares?  It's not hard to make the change locally in order to make
-> xfstests.
+> Signed-off-by: Amir Goldstein <amir73il@users.sf.net>
+> Tested-by: Sergey Ivanov <sergey57@gmail.com>
+> ---
+> ext4dev is used to test experimental ext4 code in mutual existance
+> with production ext4 code on the same system.
 > 
-> On the other hand, given that xfstests is using "mkfs.$FSTYP", I don't
-> see why it's so important that it clings to "fsck -t $FSTYP" instead
-> of using "fsck.$FSTYP".  There's no real benefit to calling the fsck
-> driver; it's just an extra fork and exec, and xfstests is being
-> inconsistent by insisting on the use of the fsck driver, but not using
-> the mkfs driver.
+> Specifically, ext4 snapshots code is available for testing as a
+> stand-alone ext4dev module for Fedora 15 and Ubuntu 11.4
+> (see http://next3.sf.net).
 > 
-> But that being said, hacking xfstests is not hard, and if Dave and/or
-> Eric feels strongly about resisting this change, it's not worth a lot
-> of time, one way or another....
+> v2 -> v3:
+> - change if to case statement
+> 
+> v1 -> v2:
+> - undo change of fsck -t $FSTYP to fsck.$FSTYP
 
-I think we just want to make sure we understand the reasons for a change.
+looks good to me, and thanks for fixing up the case statement :)
 
-Every change has risks, and xfstests is used on a lot of different systems.
-
-If I don't fully understand the motivation for a change, I ask questions.
-All part of a careful review.
-
-And I apologize for the mkfs vs. fsck inconsistency, that was probably
-my fault, originally ;)
+I'll merge this tonight to the xfstests-dev tree.
 
 -Eric
- 
-> 						- Ted
+
+>  common.defrag |    2 +-
+>  common.quota  |   10 +++++++---
+>  common.rc     |   10 +++++-----
+>  3 files changed, 13 insertions(+), 9 deletions(-)
+> 
+> diff --git a/common.defrag b/common.defrag
+> index 1bcf01d..4850803 100644
+> --- a/common.defrag
+> +++ b/common.defrag
+> @@ -26,7 +26,7 @@ _require_defrag()
+>      xfs)
+>          DEFRAG_PROG=/usr/sbin/xfs_fsr
+>  	;;
+> -    ext4)
+> +    ext4|ext4dev)
+>          DEFRAG_PROG=/usr/bin/e4defrag
+>  	;;
+>      *)
+> diff --git a/common.quota b/common.quota
+> index 3c87ce1..9736306 100644
+> --- a/common.quota
+> +++ b/common.quota
+> @@ -29,7 +29,7 @@ _require_quota()
+>      [ -n $QUOTA_PROG ] || _notrun "Quota user tools not installed"
+>  
+>      case $FSTYP in
+> -    ext2|ext3|ext4|reiserfs)
+> +    ext2|ext3|ext4|ext4dev|reiserfs)
+>  	if [ ! -d /proc/sys/fs/quota ]; then
+>  	    _notrun "Installed kernel does not support quotas"
+>  	fi
+> @@ -237,10 +237,14 @@ _check_quota_usage()
+>  	# Sync to get delalloc to disk
+>  	sync
+>  	VFS_QUOTA=0
+> -	if [ $FSTYP = "ext2" -o $FSTYP = "ext3" -o $FSTYP = "ext4" -o $FSTYP = "reiserfs" ]; then
+> +	case $FSTYP in
+> +	ext2|ext3|ext4|ext4dev|reiserfs)
+>  		VFS_QUOTA=1
+>  		quotaon -f -u -g $SCRATCH_MNT 2>/dev/null
+> -	fi
+> +		;;
+> +	*)
+> +		;;
+> +	esac
+>  	repquota -u -n $SCRATCH_MNT  | grep -v "^#0" | _filter_scratch |
+>  		sort >$tmp.user.orig
+>  	repquota -g -n $SCRATCH_MNT  | grep -v "^#0" | _filter_scratch |
+> diff --git a/common.rc b/common.rc
+> index e634fbb..c510c66 100644
+> --- a/common.rc
+> +++ b/common.rc
+> @@ -65,7 +65,7 @@ _mount_opts()
+>      nfs)
+>  	export MOUNT_OPTIONS=$NFS_MOUNT_OPTIONS
+>  	;;
+> -    ext2|ext3|ext4)
+> +    ext2|ext3|ext4|ext4dev)
+>  	# acls & xattrs aren't turned on by default on ext$FOO
+>  	export MOUNT_OPTIONS="-o acl,user_xattr $EXT_MOUNT_OPTIONS"
+>  	;;
+> @@ -110,7 +110,7 @@ _mkfs_opts()
+>  _fsck_opts()
+>  {
+>      case $FSTYP in
+> -    ext2|ext3|ext4)
+> +    ext2|ext3|ext4|ext4dev)
+>  	export FSCK_OPTIONS="-nf"
+>  	;;
+>      reiserfs)
+> @@ -326,10 +326,10 @@ _scratch_mkfs_sized()
+>      xfs)
+>  	_scratch_mkfs_xfs -d size=$fssize -b size=$blocksize
+>  	;;
+> -    ext2|ext3|ext4)
+> +    ext2|ext3|ext4|ext4dev)
+>  	/sbin/mkfs.$FSTYP $MKFS_OPTIONS -b $blocksize $SCRATCH_DEV $blocks
+>  	;;
+> -     btrfs)
+> +    btrfs)
+>  	/sbin/mkfs.$FSTYP $MKFS_OPTIONS $SCRATCH_DEV -b $fssize
+>  	;;
+>      *)
+> @@ -354,7 +354,7 @@ _scratch_mkfs_geom()
+>      xfs)
+>  	MKFS_OPTIONS+=" -b size=$blocksize, -d su=$sunit_bytes,sw=$swidth_mult"
+>  	;;
+> -    ext4)
+> +    ext4|ext4dev)
+>  	MKFS_OPTIONS+=" -b $blocksize -E stride=$sunit_blocks,stripe_width=$swidth_blocks"
+>  	;;
+>      *)
 
 _______________________________________________
 xfs mailing list
