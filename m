@@ -1,27 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p54EOqLL085013 for <xfs@oss.sgi.com>; Sat, 4 Jun 2011 09:24:52 -0500
-Received: from ZenIV.linux.org.uk (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 08B371E3D745
-	for <xfs@oss.sgi.com>; Sat,  4 Jun 2011 07:24:51 -0700 (PDT)
-Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [195.92.253.2]) by
-	cuda.sgi.com with ESMTP id tj0b6wZkpDSy0I6M for
-	<xfs@oss.sgi.com>; Sat, 04 Jun 2011 07:24:51 -0700 (PDT)
-Date: Sat, 4 Jun 2011 15:24:48 +0100
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: Re: [PATCH 08/12] superblock: introduce per-sb cache shrinker
-	infrastructure
-Message-ID: <20110604142448.GX11521@ZenIV.linux.org.uk>
-References: <1306998067-27659-1-git-send-email-david@fromorbit.com>
-	<1306998067-27659-9-git-send-email-david@fromorbit.com>
-	<20110604004231.GV11521@ZenIV.linux.org.uk>
-	<20110604015212.GD561@dastard>
-	<20110604140848.GA20404@infradead.org>
-	<20110604141940.GW11521@ZenIV.linux.org.uk>
+	p54NAdkf112611 for <xfs@oss.sgi.com>; Sat, 4 Jun 2011 18:10:40 -0500
+Received: from ipmail07.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id ACCAF49E782
+	for <xfs@oss.sgi.com>; Sat,  4 Jun 2011 16:10:36 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	btxb2eJUtUuyD1r2 for <xfs@oss.sgi.com>;
+	Sat, 04 Jun 2011 16:10:36 -0700 (PDT)
+Date: Sun, 5 Jun 2011 09:10:32 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: I/O hang, possibly XFS, possibly general
+Message-ID: <20110604231032.GM32466@dastard>
+References: <BANLkTim_BCiKeqi5gY_gXAcmg7JgrgJCxQ@mail.gmail.com>
+	<20110603004247.GA28043@infradead.org>
+	<20110603013948.GX561@dastard>
+	<BANLkTi=FjSzSZJXGofVjtiUe2ZNvki2R-Q@mail.gmail.com>
+	<4DE9E97D.30500@hardwarefreak.com> <20110604103247.GG561@dastard>
+	<4DEA2106.5000900@hardwarefreak.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110604141940.GW11521@ZenIV.linux.org.uk>
+In-Reply-To: <4DEA2106.5000900@hardwarefreak.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,31 +30,111 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: Paul Anderson <pha@umich.edu>, Christoph Hellwig <hch@infradead.org>, xfs-oss <xfs@oss.sgi.com>
 
-On Sat, Jun 04, 2011 at 03:19:40PM +0100, Al Viro wrote:
-> > The iprune_sem removal is fine as soon as you have a per-sb shrinker
-> > for the inodes which keeps an active reference on the superblock until
-> > all the inodes are evicted.
-> 
-> I really don't like that.  Stuff keeping active refs, worse yet doing that
-> asynchronously...  Shrinkers should *not* do that.  Just grab a passive
-> ref (i.e. bump s_count), try grab s_umount (shared) and if that thing still
-> has ->s_root while we hold s_umount, go ahead.  Unregister either at the
-> end of generic_shutdown_super() or from deactivate_locked_super(), between
-> the calls of ->kill_sb() and put_filesystem().
-
-PS: shrinkers should not acquire active refs; more specifically, they should
-not _drop_ active refs, lest they end up dropping the last active one and
-trigger unregistering a shrinker for superblock in question.  From inside of
-->shrink(), with shrinker_rwsem held by caller.  Deadlock...
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gU2F0LCBKdW4gMDQsIDIwMTEgYXQgMDc6MTE6NTBBTSAtMDUwMCwgU3RhbiBIb2VwcG5lciB3
+cm90ZToKPiBPbiA2LzQvMjAxMSA1OjMyIEFNLCBEYXZlIENoaW5uZXIgd3JvdGU6Cj4gPiBPbiBT
+YXQsIEp1biAwNCwgMjAxMSBhdCAwMzoxNDo1M0FNIC0wNTAwLCBTdGFuIEhvZXBwbmVyIHdyb3Rl
+Ogo+ID4+IE9uIDYvMy8yMDExIDEwOjU5IEFNLCBQYXVsIEFuZGVyc29uIHdyb3RlOgo+ID4+PiBO
+b3Qgc3VyZSB3aGF0IEkgY2FuIGRvIGFib3V0IHRoZSBsb2cgLSBtYW4gcGFnZSBzYXlzIHhmc19n
+cm93ZnMKPiA+Pj4gZG9lc24ndCBpbXBsZW1lbnQgbG9nIG1vdmluZy4gIEkgY2FuIHJlYnVpbGQg
+dGhlIGZpbGVzeXN0ZW1zLCBidXQgZm9yCj4gPj4+IHRoZSBvbmUgbWVudGlvbmVkIGluIHRoaXMg
+dGhlcmVhZCwgdGhpcyB3aWxsIHRha2UgYSBsb25nIHRpbWUuCj4gPj4KPiA+PiBTZWUgdGhlIGxv
+Z2RldiBtb3VudCBvcHRpb24uICBVc2luZyB0d28gbWlycm9yZWQgZHJpdmVzIHdhcyByZWNvbW1l
+bmRlZCwKPiA+PiBJJ2QgZ28gYSBzdGVwIGZ1cnRoZXIgYW5kIHVzZSB0d28gcXVhbGl0eSAiY29u
+c3VtZXIgZ3JhZGUiLCBpLmUuIE1MQwo+ID4+IGJhc2VkLCBTU0RzLCBzdWNoIGFzOgo+ID4+Cj4g
+Pj4gaHR0cDovL3d3dy5jZHcuY29tL3Nob3AvcHJvZHVjdHMvQ29yc2Fpci1Gb3JjZS1TZXJpZXMt
+RjQwLXNvbGlkLXN0YXRlLWRyaXZlLTQwLUdCLVNBVEEtMzAwLzIxODExMTQuYXNweAo+ID4+Cj4g
+Pj4gUmF0ZWQgYXQgNTBLIDRLIHdyaXRlIElPUFMsIGFib3V0IDE1MCB0aW1lcyBncmVhdGVyIHRo
+YW4gYSAxNUsgU0FTIGRyaXZlLgo+ID4gCj4gPiBJZiB5b3UgYXJlIHVzaW5nIGRlbGF5ZWQgbG9n
+Z2luZywgdGhlbiBhIHBhaXIgb2YgbWlycm9yZWQgNzIwMHJwbQo+ID4gU0FTIG9yIFNBVEEgZHJp
+dmVzIHdvdWxkIGJlIHN1ZmZpY2llbnQgZm9yIG1vc3Qgd29ya2xvYWRzIGFzIHRoZSBsb2cKPiA+
+IGJhbmR3aWR0aCByYXJlbHkgZ2V0cyBhYm92ZSA1ME1CL3MgaW4gbm9ybWFsIG9wZXJhdGlvbi4K
+PiAKPiBIaSBEYXZlLiAgSSBtYWRlIHRoZSBmaXJzdCByZXBseSB0byBQYXVsJ3MgcG9zdCwgcmVj
+b21tZW5kaW5nIGhlIGVuYWJsZQo+IGRlbGF5ZWQgbG9nZ2luZyBhcyBhIHBvc3NpYmxlIHNvbHV0
+aW9uIHRvIGhpcyBJL08gaGFuZyBwcm9ibGVtLiAgSQo+IHJlY29tbWVuZGVkIHRoaXMgZHVlIHRv
+IGhpcyBtZW50aW9uIG9mIHN1cGVyIGhlYXZ5IG1ldGFkYXRhIG9wZXJhdGlvbnMKPiBhdCB0aGUg
+dGltZSBvbiBoaXMgYWxsIG1kIHJhaWQ2MCBvbiBwbGFpbiBIQkEgc2V0dXAuICBQYXVsIGRpZCBu
+b3QgbGlzdAo+IGRlbGF5bG9nIHdoZW4gaGUgc3VibWl0dGVkIGhpcyAyLjYuMzguNSBtb3VudCBv
+cHRpb25zOgo+IAo+IGlub2RlNjQsbGFyZ2Vpbyxsb2didWZzPTgsbm9hdGltZQo+IAo+IEJlaW5n
+IHRoZSBhdXRob3Igb2YgdGhlIGRlbGF5ZWQgbG9nZ2luZyBjb2RlLCBJIGhhZCBleHBlY3RlZCB5
+b3UgdG8KPiBjb21tZW50IG9uIHRoaXMsIGVpdGhlciBleHBvdW5kaW5nIG9uIG15IHJlY29tbWVu
+ZGF0aW9uLCBvciBzaG9vdGluZyBpdAo+IGRvd24sIGFuZCBnaXZpbmcgdGhlIHJlYXNvbnMgd2h5
+Lgo+IAo+IFNvLCB3b3VsZCBkZWxheWVkIGxvZ2dpbmcgaGF2ZSBwb3NzaWJseSBwcmV2ZW50ZWQg
+aGlzIGhhbmcgcHJvYmxlbSBvcgo+IG5vPyAgSSBhbHdheXMgcmVhZCB5b3VyIHJlcGxpZXMgYXQg
+bGVhc3QgdHdpY2UsIGFuZCBJIGRvbid0IHJlY2FsbCB5b3UKPiB0b3VjaGluZyBvbiBkZWxheWVk
+IGxvZ2dpbmcgaW4gdGhpcyB0aHJlYWQuICBJZiB5b3UgZGlkIGFuZCBJIG1pc3NlZCBpdCwKPiBt
+eSBhcG9sb2dpZXMuCgpJdCBtaWdodCwgYnV0IEkgZGVsYXllZCBsb2dnaW5nIGnRmyBub3QgaGUg
+c29sdXRpb24gdG8gZXZlcnkgcHJvYmxlbSwKYW5kIE5GUyBzZXJ2ZXJzIGFyZSBub3RvcmlvdXNs
+eSBoZWF2eSBvbiBsb2cgZm9yY2VzIGR1ZSB0byBDT01NSVQKb3BlcmF0aW9ucyBkdXJpbmcgd3Jp
+dGVzLiBTbyBpdCdzIGEgZ29vZCBiZXQgdGhhdCBkZWx5ZWQgbG9nZ2luZwp3b24ndCBmaXggdGhl
+IHByb2JsZW0gZW50aXJlbHkuCgo+ID4gSWYgeW91IGhhdmUgZnN5bmMgaGVhdnkgd29ya2xvYWRz
+LCBvciBhcmUgbm90IHVzaW5nIGRlbGF5ZWQgbG9nZ2luZywKPiA+IHRoZW4geW91IHJlYWxseSBu
+ZWVkIHRvIHVzZSB0aGUgUkFJRDUvNiBkZXZpY2UgYmVoaW5kIGEgQkJXQyBiZWNhdXNlCj4gPiB0
+aGUgbG9nIGlzIC1zZXJpb3VzbHktIGJhbmR3aWR0aCBpbnRlbnNpdmUuIEkgY2FuIGRyaXZlID41
+MDBNQi9zIG9mCj4gPiBsb2cgdGhyb3VnaHB1dCBvbiBtZXRhZGF0YSBpbnRlbnNpdmUgd29ya2xv
+YWRzIG9uIDIuNi4zOSB3aGVuIG5vdAo+ID4gdXNpbmcgZGVsYXllZCBsb2dnaW5nIG9yIEknbSBy
+ZWd1bGFybHkgZm9yY2luZyB0aGUgbG9nIHZpYSBmc3luYy4KPiA+IFlvdSBzdXJlIGFzIGhlbGwg
+ZG9uJ3Qgd2FudCB0byBiZSBydW5uaW5nIGEgc3VzdGFpbmVkIGxvbmcgdGVybQo+ID4gd3JpdGUg
+bG9hZCBsaWtlIHRoYXQgb24gY29uc3VtZXIgZ3JhZGUgU1NEcy4uLi4uCj4gCj4gR2l2ZW4gdGhh
+dCB0aGUgbWF4IGxvZyBzaXplIGlzIDJHQiwgSUlSQywgYW5kIHRoYXQgbW9zdCByZWNvbW1lbmRh
+dGlvbnMKPiBJJ3ZlIHNlZW4gaGVyZSBhcmUgYWdhaW5zdCB1c2luZyBhIGxvZyB0aGF0IGJpZywg
+SSBmaWd1cmUgc3VjaCBNTEMKPiBkcml2ZXMgd291bGQgYmUgZmluZS4gIEFJVUksIG1vZGVybiB3
+ZWFyIGxldmVsaW5nIHdpbGwgc3ByZWFkIHdyaXRlcwo+IHRocm91Z2hvdXQgdGhlIGVudGlyZSBm
+bGFzaCBhcnJheSBiZWZvcmUgZ29pbmcgYmFjayBhbmQgb3ZlciB3cml0aW5nIHRoZQo+IGZpcnN0
+IHNlY3Rvci4gIFB1Ymxpc2hlZCBNVEJGIG9uIG1vc3QgTUxDIGRyaXZlcyByYXRlcyBhcmUgcm91
+Z2hseQo+IGVxdWl2YWxlbnQgdG8gZW50ZXJwcmlzZSBTUkRzLCAxKyBtaWxsaW9uIGhvdXJzLgo+
+IAo+IERvIHlvdSBiZWxpZXZlIE1MQyBiYXNlZCBTU0RzIGFyZSBzaW1wbHkgbmV2ZXIgYXBwcm9w
+cmlhdGUgZm9yIGFueXRoaW5nCj4gYnV0IGNvbnN1bWVyIHVzZSwgYW5kIHRoYXQgb25seSBTTEMg
+ZGV2aWNlcyBzaG91bGQgYmUgdXNlZCBmb3IgcmVhbAo+IHN0b3JhZ2UgYXBwbGljYXRpb25zPyAg
+QUlVSSBTTEMgZmxhc2ggY2VsbHMgZG8gaGF2ZSBhYm91dCBhIDEwOjEgZ3JlYXRlcgo+IGxpZmV0
+aW1lIHRoYW4gTUxDIGNlbGxzLiAgSG93ZXZlciwgdGhlcmUgaGF2ZSBiZWVuIGEgbnVtYmVyIG9m
+Cj4gYXJ0aWNsZXMvcG9zdHMgZGVtb25zdHJhdGluZyBtYXRoIHdoaWNoIHNob3dzIGEgY3VycmVu
+dCBnZW5lcmF0aW9uCj4gU2FuZEZvcmNlIGJhc2VkIE1MQyBTU0QsIHVuZGVyIGEgY29uc3RhbnQg
+MTAwTUIvcyB3cml0ZSBzdHJlYW0sIHdpbGwgcnVuCj4gZm9yIDIwKyB5ZWFycywgSUlSQywgYmVm
+b3JlIHN1ZmZpY2llbnQgbGl2ZStyZXNlcnZlZCBzcGFyZSBjZWxscyBidXJuCj4gb3V0IHRvIGNh
+dXNlIGhhcmQgd3JpdGUgZXJyb3JzLCB0aHVzIG5lY2Vzc2l0YXRpbmcgZHJpdmUgcmVwbGFjZW1l
+bnQuCj4gVW5kZXIgeW91ciA1MDBNQi9zIGxvYWQsIGFzc3VtaW5nIHRoYXQncyBjb25zdGFudCwg
+dGhlIGRyaXZlcyB3b3VsZAo+IHRoZW9yZXRpY2FsbHkgbGFzdCA0KyB5ZWFycy4gIElmIHRoYXQg
+NTAwTUIvcyBsb2FkIHdhcyBvbmx5IGZvciAxMiBob3Vycwo+IGVhY2ggZGF5LCB0aGUgZHJpdmVz
+IHdvdWxkIGxhc3QgOCsgeWVhcnMuICBJIHdpc2ggSSBoYWQgb25lIG9mIHRob3NlCj4gYXJ0aWNs
+ZXMgYm9va21hcmtlZC4uLgoKVGhhdCdzIHRoZSB0aGVvcnksIGFueXdheS4gTGV0J3MgY2FsbCBp
+dCBhbiBleHBlY3RlZCA0IHllYXIgbGlmZQpjeWNsZSB1bmRlciB0aGlzIHdvcmtsb2FkICh3aGlj
+aCBpcyBoaWdobHkgb3B0aW1pc3RpYywgSU1PKS4gTm93IHlvdQpoYXZlIHR3byBkcml2ZXMgaW4g
+UkFJRDEsIHRoYXQgbWVhbnMgb25lIHdpbGwgZmFpbCBpbiAyIHllYXJzLCBvciBpZgp5b3UgbmVl
+ZCBtb3JlIGRyaXZlcyB0byBzdXN0YWluIHRoYXQgcGVyZm9ybWFuY2UgdGhlIGxvZyBuZWVkcyAo
+KikKeW91IG1pZ2h0IGJlIGxvb2tpbmcgYXQgNCBvciBtb3JlIGRyaXZlcywgYW5kIHRoYXQgYnJp
+bmdzIHRoZSBleHBldApmYWlsdXJlIHJhdGUgZG93biB1bmRlciBvbmUgZHJpdmUgcGVyIHllYXIu
+IE11bHRpcGx5IHRoYXQgYWNyb3NzCjUtMTAgc2VydmVycywgYW5kIHRoYXQncyBhIGRyaXZlIGZh
+aWx1cmUgZXZlcnkgbW9udGgganVzdCBvbiB0aGUgbG9nCmRldmljZXMuCgpUaGF0IGZhaWx1cmUg
+cmF0ZSB3b3VsZCBtYWtlIG1lIGV4dHJlbWVseSBuZXJ2b3VzIC0gbG9zaW5nIHRoZSBsb2cKaXMg
+YSAtbWFqb3ItIGZpbGVzeXN0ZW0gY29ycnVwdGlvbiBldmVudCAtIGFuZCBtYWtlIG1lIHdhbnQg
+dG8gc3BlbmQKbW9yZSBtb25leSBvciBjaGFuZ2UgdGhlIGNvbmZpZyB0byByZWR1Y2UgdGhlIHJp
+c2sgb2YgYSBkb3VibGUKZmFpbHVyZSBjYXVzaW5nIHRoZSBsb2cgZGV2aWNlIHRvIGJlIGxvc3Qu
+IEVzcGVjaWFsbHkgaWYgdGhlcmUgYXJlCmh1bmRyZWRzIG9mIHRlcmFieXRlcyBvZiBkYXRhIGF0
+IHJpc2suCgpDaGVlcnMsCgpEYXZlLgoKKCopIFlvdSBoYXZlIHRvIGNvbnNpZGVyIHRoYXQgc3Vz
+dGFpbmVkIHdvcmtsb2FkcyBtZWFuIHRoYXQgdGhlCmRyaXZlcyBkb24ndCBnZXQgaWRsZSB0aW1l
+IHRvIHRyaWdnZXIgYmFja2dyb3VuZCBnYXJiYWdlIGNvbGxlY3Rpb24sCndoaWNoIGlzIG9uZSBv
+ZiB0aGUga2V5IGZlYXR1cmVzIHRoYXQgY3VycmVudCBjb25zdW1lciBsZXZlbCBkcml2ZXMKcmVs
+eSBvbiBmb3IgbWFpbnRhaW5pbmcgcGVyZm9ybWFuY2UgYW5kIGV2ZW4gd2VhciBsZXZlbGxpbmcu
+IFRoZQoic3BhcmUiIGFyZWEgaW4gdGhlIGRyaXZlcyBpcyBrZXB0IHNtYWxsIGJlY2F1c2UgaXQg
+aXMgYXNzdW1lZCB0aGF0CnRoZXJlIHdvbid0IGJlIGxvbmcgdGVybSBzdXN0YWluZWQgSU8gc28g
+dGhhdCB0aGUgZ2FyYmFnZSBjb2xsZWN0aW9uCmNhbiBjbGVhbiB1cCBiZWZvcmUgc3BhcmUgYXJl
+YSBpcyBleGhhdXN0ZWQuCgpFbnRlcnByaXNlIGRyaXZlcyBoYXZlIGEgbXVjaCBsYXJnZXIgcmVs
+YXRpdmUgcGVyY2VudGFnZSBvZiBmbGFzaCBpbgp0aGUgZHJpdmUgcmVzZXJ2ZWQgYXMgc3BhcmUg
+dG8gYXZvaWQgc2V2ZXJlIGRlZ3JhZGF0aW9uIGluIHN1Y2gKc3VzdGFpbmVkIChjb21tb24gZW50
+ZXJwcmlzZSkgd29ya2xvYWRzLiAgSGVuY2UgcGVyZm9ybWFuY2Ugb24KY29uc3VtZXIgTUxDIGRy
+aXZlcyB0YWlscyBvZmYgbXVjaCBtb3JlIHF1aWNrbHkgdGhhbiBTTEMgZHJpdmVzLgoKSGVuY2Ug
+cGVyZm9ybWFuY2Ugb24gY29uc3VtZXIgTUxDIGRyaXZlcyBtYXkgbm90IGJlIHN1c3RhaW5hYmxl
+LCBhbmQKd2VhciBsZXZlbGluZyBtYXkgbm90IGJlIG9wdGltYWwsIHJlc3VsdGluZyBpbiBmbGFz
+aCBmYWlsdXJlIGVhcmxpZXIKdGhhbiB5b3UgZXhwZWN0LiAgVG8gbWFpbnRhaW4gcGVyZm9ybWFu
+Y2UsIHlvdSdsbCBuZWVkIG1vcmUgTUxDCmRyaXZlcyB0byBtYWludGFpbiBiYXNlbGluZSBwZXJm
+b3JtYW5jZS4gIEFuZCB3aXRoIG1vcmUgZHJpdmVzLCB0aGUKY2hhbmNlIG9mIGZhaWx1cmUgZ29l
+cyB1cC4uLgotLSAKRGF2ZSBDaGlubmVyCmRhdmlkQGZyb21vcmJpdC5jb20KCl9fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZz
+QG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
