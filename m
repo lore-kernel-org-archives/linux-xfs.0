@@ -1,26 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p551Vnql123097 for <xfs@oss.sgi.com>; Sat, 4 Jun 2011 20:31:50 -0500
-Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1B9E649EAF2
-	for <xfs@oss.sgi.com>; Sat,  4 Jun 2011 18:31:48 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id MBMEBeB3xNKcwo71
-	for <xfs@oss.sgi.com>; Sat, 04 Jun 2011 18:31:48 -0700 (PDT)
-Message-ID: <4DEADC80.8000200@hardwarefreak.com>
-Date: Sat, 04 Jun 2011 20:31:44 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	p55BCesS154356 for <xfs@oss.sgi.com>; Sun, 5 Jun 2011 06:12:40 -0500
+Received: from ZenIV.linux.org.uk (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DEFA716625D2
+	for <xfs@oss.sgi.com>; Sun,  5 Jun 2011 04:12:33 -0700 (PDT)
+Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [195.92.253.2]) by
+	cuda.sgi.com with ESMTP id bR7DwinobNrc768f for
+	<xfs@oss.sgi.com>; Sun, 05 Jun 2011 04:12:33 -0700 (PDT)
+Date: Sun, 5 Jun 2011 12:12:31 +0100
+From: Al Viro <viro@ZenIV.linux.org.uk>
+Subject: [PATCH] fix ->mknod() return value on xfs_get_acl() failure
+Message-ID: <20110605111231.GD11521@ZenIV.linux.org.uk>
 MIME-Version: 1.0
-Subject: Re: I/O hang, possibly XFS, possibly general
-References: <BANLkTim_BCiKeqi5gY_gXAcmg7JgrgJCxQ@mail.gmail.com>
-	<20110603004247.GA28043@infradead.org>
-	<20110603013948.GX561@dastard>
-	<BANLkTi=FjSzSZJXGofVjtiUe2ZNvki2R-Q@mail.gmail.com>
-	<4DE9E97D.30500@hardwarefreak.com> <20110604103247.GG561@dastard>
-	<4DEA2106.5000900@hardwarefreak.com>
-	<20110604231032.GM32466@dastard>
-In-Reply-To: <20110604231032.GM32466@dastard>
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,86 +22,33 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Paul Anderson <pha@umich.edu>, Christoph Hellwig <hch@infradead.org>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
+Cc: linux-kernel@vger.kernel.org
 
-T24gNi80LzIwMTEgNjoxMCBQTSwgRGF2ZSBDaGlubmVyIHdyb3RlOgo+IE9uIFNhdCwgSnVuIDA0
-LCAyMDExIGF0IDA3OjExOjUwQU0gLTA1MDAsIFN0YW4gSG9lcHBuZXIgd3JvdGU6Cgo+PiBTbywg
-d291bGQgZGVsYXllZCBsb2dnaW5nIGhhdmUgcG9zc2libHkgcHJldmVudGVkIGhpcyBoYW5nIHBy
-b2JsZW0gb3IKPj4gbm8/ICBJIGFsd2F5cyByZWFkIHlvdXIgcmVwbGllcyBhdCBsZWFzdCB0d2lj
-ZSwgYW5kIEkgZG9uJ3QgcmVjYWxsIHlvdQo+PiB0b3VjaGluZyBvbiBkZWxheWVkIGxvZ2dpbmcg
-aW4gdGhpcyB0aHJlYWQuICBJZiB5b3UgZGlkIGFuZCBJIG1pc3NlZCBpdCwKPj4gbXkgYXBvbG9n
-aWVzLgo+IAo+IEl0IG1pZ2h0LCBidXQgSSBkZWxheWVkIGxvZ2dpbmcgadGbIG5vdCBoZSBzb2x1
-dGlvbiB0byBldmVyeSBwcm9ibGVtLAo+IGFuZCBORlMgc2VydmVycyBhcmUgbm90b3Jpb3VzbHkg
-aGVhdnkgb24gbG9nIGZvcmNlcyBkdWUgdG8gQ09NTUlUCj4gb3BlcmF0aW9ucyBkdXJpbmcgd3Jp
-dGVzLiBTbyBpdCdzIGEgZ29vZCBiZXQgdGhhdCBkZWx5ZWQgbG9nZ2luZwo+IHdvbid0IGZpeCB0
-aGUgcHJvYmxlbSBlbnRpcmVseS4KClNvIHRoZSBzb2x1dGlvbiBpbiB0aGlzIGNhc2Ugd2lsbCBs
-aWtlbHkgcmVxdWlyZSBhIG11bHRpIHByb25nZWQKYXBwcm9hY2gsIGluY2x1ZGluZyBYRlMgb3B0
-aW1pemF0aW9uLCBhbmQgUkFJRCBjYXJkIGFuZC9vciBSQUlEIGxldmVsCnJlY29uZmlndXJhdGlv
-biB0aGF0IGhhcyBiZWVuIG1lbnRpb25lZC4KCj4+IERvIHlvdSBiZWxpZXZlIE1MQyBiYXNlZCBT
-U0RzIGFyZSBzaW1wbHkgbmV2ZXIgYXBwcm9wcmlhdGUgZm9yIGFueXRoaW5nCj4+IGJ1dCBjb25z
-dW1lciB1c2UsIGFuZCB0aGF0IG9ubHkgU0xDIGRldmljZXMgc2hvdWxkIGJlIHVzZWQgZm9yIHJl
-YWwKPj4gc3RvcmFnZSBhcHBsaWNhdGlvbnM/ICBBSVVJIFNMQyBmbGFzaCBjZWxscyBkbyBoYXZl
-IGFib3V0IGEgMTA6MSBncmVhdGVyCj4+IGxpZmV0aW1lIHRoYW4gTUxDIGNlbGxzLiAgSG93ZXZl
-ciwgdGhlcmUgaGF2ZSBiZWVuIGEgbnVtYmVyIG9mCj4+IGFydGljbGVzL3Bvc3RzIGRlbW9uc3Ry
-YXRpbmcgbWF0aCB3aGljaCBzaG93cyBhIGN1cnJlbnQgZ2VuZXJhdGlvbgo+PiBTYW5kRm9yY2Ug
-YmFzZWQgTUxDIFNTRCwgdW5kZXIgYSBjb25zdGFudCAxMDBNQi9zIHdyaXRlIHN0cmVhbSwgd2ls
-bCBydW4KPj4gZm9yIDIwKyB5ZWFycywgSUlSQywgYmVmb3JlIHN1ZmZpY2llbnQgbGl2ZStyZXNl
-cnZlZCBzcGFyZSBjZWxscyBidXJuCj4+IG91dCB0byBjYXVzZSBoYXJkIHdyaXRlIGVycm9ycywg
-dGh1cyBuZWNlc3NpdGF0aW5nIGRyaXZlIHJlcGxhY2VtZW50Lgo+PiBVbmRlciB5b3VyIDUwME1C
-L3MgbG9hZCwgYXNzdW1pbmcgdGhhdCdzIGNvbnN0YW50LCB0aGUgZHJpdmVzIHdvdWxkCj4+IHRo
-ZW9yZXRpY2FsbHkgbGFzdCA0KyB5ZWFycy4gIElmIHRoYXQgNTAwTUIvcyBsb2FkIHdhcyBvbmx5
-IGZvciAxMiBob3Vycwo+PiBlYWNoIGRheSwgdGhlIGRyaXZlcyB3b3VsZCBsYXN0IDgrIHllYXJz
-LiAgSSB3aXNoIEkgaGFkIG9uZSBvZiB0aG9zZQo+PiBhcnRpY2xlcyBib29rbWFya2VkLi4uCj4g
-Cj4gVGhhdCdzIHRoZSB0aGVvcnksIGFueXdheS4gTGV0J3MgY2FsbCBpdCBhbiBleHBlY3RlZCA0
-IHllYXIgbGlmZQo+IGN5Y2xlIHVuZGVyIHRoaXMgd29ya2xvYWQgKHdoaWNoIGlzIGhpZ2hseSBv
-cHRpbWlzdGljLCBJTU8pLiBOb3cgeW91Cj4gaGF2ZSB0d28gZHJpdmVzIGluIFJBSUQxLCB0aGF0
-IG1lYW5zIG9uZSB3aWxsIGZhaWwgaW4gMiB5ZWFycywgb3IgaWYKPiB5b3UgbmVlZCBtb3JlIGRy
-aXZlcyB0byBzdXN0YWluIHRoYXQgcGVyZm9ybWFuY2UgdGhlIGxvZyBuZWVkcyAoKikKPiB5b3Ug
-bWlnaHQgYmUgbG9va2luZyBhdCA0IG9yIG1vcmUgZHJpdmVzLCBhbmQgdGhhdCBicmluZ3MgdGhl
-IGV4cGV0Cj4gZmFpbHVyZSByYXRlIGRvd24gdW5kZXIgb25lIGRyaXZlIHBlciB5ZWFyLiBNdWx0
-aXBseSB0aGF0IGFjcm9zcwo+IDUtMTAgc2VydmVycywgYW5kIHRoYXQncyBhIGRyaXZlIGZhaWx1
-cmUgZXZlcnkgbW9udGgganVzdCBvbiB0aGUgbG9nCj4gZGV2aWNlcy4KClZlcnkgZ29vZCBwb2lu
-dC4gIEkgd2FzIGxvb2tpbmcgYXQgc2luZ2xlIHN5c3RlbSBwcm9iYWJpbGl0aWVzIGluc3RlYWQK
-b2YgZmFybSBzY2FsZSAoc2hhbWUgb24gbWUgZm9yIHRoYXQgbmV3YmlzaCBvdmVyc2lnaHQpLgoK
-PiBUaGF0IGZhaWx1cmUgcmF0ZSB3b3VsZCBtYWtlIG1lIGV4dHJlbWVseSBuZXJ2b3VzIC0gbG9z
-aW5nIHRoZSBsb2cKPiBpcyBhIC1tYWpvci0gZmlsZXN5c3RlbSBjb3JydXB0aW9uIGV2ZW50IC0g
-YW5kIG1ha2UgbWUgd2FudCB0byBzcGVuZAo+IG1vcmUgbW9uZXkgb3IgY2hhbmdlIHRoZSBjb25m
-aWcgdG8gcmVkdWNlIHRoZSByaXNrIG9mIGEgZG91YmxlCj4gZmFpbHVyZSBjYXVzaW5nIHRoZSBs
-b2cgZGV2aWNlIHRvIGJlIGxvc3QuIEVzcGVjaWFsbHkgaWYgdGhlcmUgYXJlCj4gaHVuZHJlZHMg
-b2YgdGVyYWJ5dGVzIG9mIGRhdGEgYXQgcmlzay4KCj4gQ2hlZXJzLAo+IAo+IERhdmUuCj4gCj4g
-KCopIFlvdSBoYXZlIHRvIGNvbnNpZGVyIHRoYXQgc3VzdGFpbmVkIHdvcmtsb2FkcyBtZWFuIHRo
-YXQgdGhlCj4gZHJpdmVzIGRvbid0IGdldCBpZGxlIHRpbWUgdG8gdHJpZ2dlciBiYWNrZ3JvdW5k
-IGdhcmJhZ2UgY29sbGVjdGlvbiwKPiB3aGljaCBpcyBvbmUgb2YgdGhlIGtleSBmZWF0dXJlcyB0
-aGF0IGN1cnJlbnQgY29uc3VtZXIgbGV2ZWwgZHJpdmVzCj4gcmVseSBvbiBmb3IgbWFpbnRhaW5p
-bmcgcGVyZm9ybWFuY2UgYW5kIGV2ZW4gd2VhciBsZXZlbGxpbmcuIFRoZQo+ICJzcGFyZSIgYXJl
-YSBpbiB0aGUgZHJpdmVzIGlzIGtlcHQgc21hbGwgYmVjYXVzZSBpdCBpcyBhc3N1bWVkIHRoYXQK
-PiB0aGVyZSB3b24ndCBiZSBsb25nIHRlcm0gc3VzdGFpbmVkIElPIHNvIHRoYXQgdGhlIGdhcmJh
-Z2UgY29sbGVjdGlvbgo+IGNhbiBjbGVhbiB1cCBiZWZvcmUgc3BhcmUgYXJlYSBpcyBleGhhdXN0
-ZWQuCj4gCj4gRW50ZXJwcmlzZSBkcml2ZXMgaGF2ZSBhIG11Y2ggbGFyZ2VyIHJlbGF0aXZlIHBl
-cmNlbnRhZ2Ugb2YgZmxhc2ggaW4KPiB0aGUgZHJpdmUgcmVzZXJ2ZWQgYXMgc3BhcmUgdG8gYXZv
-aWQgc2V2ZXJlIGRlZ3JhZGF0aW9uIGluIHN1Y2gKPiBzdXN0YWluZWQgKGNvbW1vbiBlbnRlcnBy
-aXNlKSB3b3JrbG9hZHMuICBIZW5jZSBwZXJmb3JtYW5jZSBvbgo+IGNvbnN1bWVyIE1MQyBkcml2
-ZXMgdGFpbHMgb2ZmIG11Y2ggbW9yZSBxdWlja2x5IHRoYW4gU0xDIGRyaXZlcy4KCkFoaCwgSSBk
-aWRuJ3QgcmVhbGl6ZSB0aGUgU0xDIGRyaXZlcyBoYXZlIG11Y2ggbGFyZ2VyIHJlc2VydmVkIGFy
-ZWFzLgpTaGFtZSBvbiBtZSBhZ2Fpbi4gIEEgaGFyZHdhcmVmcmVhayBzaG91bGQga25vdyBzdWNo
-IHRoaW5ncy4gOigKCj4gSGVuY2UgcGVyZm9ybWFuY2Ugb24gY29uc3VtZXIgTUxDIGRyaXZlcyBt
-YXkgbm90IGJlIHN1c3RhaW5hYmxlLCBhbmQKPiB3ZWFyIGxldmVsaW5nIG1heSBub3QgYmUgb3B0
-aW1hbCwgcmVzdWx0aW5nIGluIGZsYXNoIGZhaWx1cmUgZWFybGllcgo+IHRoYW4geW91IGV4cGVj
-dC4gIFRvIG1haW50YWluIHBlcmZvcm1hbmNlLCB5b3UnbGwgbmVlZCBtb3JlIE1MQwo+IGRyaXZl
-cyB0byBtYWludGFpbiBiYXNlbGluZSBwZXJmb3JtYW5jZS4gIEFuZCB3aXRoIG1vcmUgZHJpdmVz
-LCB0aGUKPiBjaGFuY2Ugb2YgZmFpbHVyZSBnb2VzIHVwLi4uCgpBcmUgdGhlIGVudGVycHJpc2Ug
-U0xDIGRyaXZlcyBhYmxlIHRvIHBlcmZvcm0gZ2FyYmFnZSBjb2xsZWN0aW9uIGV0Ywp3aGlsZSB1
-bmRlciBzdWNoIGNvbnN0YW50IGxvYWQ/ICBJZiBub3QsIGlzIGl0IGFsd2F5cyBiZXR0ZXIgdG8g
-dXNlIFNSRHMKZm9yIHRoZSBsb2csIGVpdGhlciBpbnRlcm5hbCBvbiBhIEJCV0MgYXJyYXksIG9y
-IGFuIGV4dGVybmFsIG1pcnJvcmVkIHBhaXI/CgpJIHByZXZpb3VzbHkgbWVudGlvbmVkIEkgYWx3
-YXlzIHJlYWQgeW91ciBwb3N0cyB0d2ljZS4gIFlvdSBhcmUgYSBkZWVwCndlbGwgb2YgYXV0aG9y
-aXRhdGl2ZSBpbmZvcm1hdGlvbiBhbmQgZXhwZXJpZW5jZS4gIEtlZXAgdXAgdGhlIGdyZWF0Cndv
-cmsgYW5kIGNvbnRyaWJ1dGlvbiB0byB0aGUga25vd2xlZGdlIGJhc2Ugb2YgdGhpcyBsaXN0LgoK
-LS0gClN0YW4KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-CnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWls
-bWFuL2xpc3RpbmZvL3hmcwo=
+	->mknod() should return negative on errors and PTR_ERR() gives
+already negative value...
+
+Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
+---
+diff --git a/fs/xfs/linux-2.6/xfs_iops.c b/fs/xfs/linux-2.6/xfs_iops.c
+index dd21784..d44d92c 100644
+--- a/fs/xfs/linux-2.6/xfs_iops.c
++++ b/fs/xfs/linux-2.6/xfs_iops.c
+@@ -182,7 +182,7 @@ xfs_vn_mknod(
+ 	if (IS_POSIXACL(dir)) {
+ 		default_acl = xfs_get_acl(dir, ACL_TYPE_DEFAULT);
+ 		if (IS_ERR(default_acl))
+-			return -PTR_ERR(default_acl);
++			return PTR_ERR(default_acl);
+ 
+ 		if (!default_acl)
+ 			mode &= ~current_umask();
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
