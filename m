@@ -1,30 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p56GU9xw239264
-	for <linux-xfs@oss.sgi.com>; Mon, 6 Jun 2011 11:30:12 -0500
-Received: from lo.gmane.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D96971E3F447
-	for <linux-xfs@oss.sgi.com>; Mon,  6 Jun 2011 09:30:06 -0700 (PDT)
-Received: from lo.gmane.org (lo.gmane.org [80.91.229.12]) by cuda.sgi.com with
-	ESMTP id 60bc7fBZzaLmKIXm for <linux-xfs@oss.sgi.com>;
-	Mon, 06 Jun 2011 09:30:06 -0700 (PDT)
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1QTcgn-0007kJ-Ac
-	for linux-xfs@oss.sgi.com; Mon, 06 Jun 2011 18:30:05 +0200
-Received: from s0106000acd1d509c.du.shawcable.net ([70.67.174.161])
-	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-	id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Mon, 06 Jun 2011 18:30:05 +0200
-Received: from prad by s0106000acd1d509c.du.shawcable.net with local (Gmexim
-	0.1 (Debian)) id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Mon, 06 Jun 2011 18:30:05 +0200
-From: prad <prad@towardsfreedom.com>
-Subject: Re: altering defaults
-Date: Mon, 06 Jun 2011 09:26:27 -0700
-Message-ID: <871uz7lydo.fsf@psinom.home>
-References: <8762onaq19.fsf@psinom.home> <4DEC4DE0.5090503@sandeen.net>
-Mime-Version: 1.0
+	p56Hfqq3241457 for <xfs@oss.sgi.com>; Mon, 6 Jun 2011 12:41:52 -0500
+Received: from e2.ny.us.ibm.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C3A561E3FDE3
+	for <xfs@oss.sgi.com>; Mon,  6 Jun 2011 10:41:51 -0700 (PDT)
+Received: from e2.ny.us.ibm.com (e2.ny.us.ibm.com [32.97.182.142]) by
+	cuda.sgi.com with ESMTP id bsahIFHLiYH1GNxr for
+	<xfs@oss.sgi.com>; Mon, 06 Jun 2011 10:41:51 -0700 (PDT)
+Received: from d01relay07.pok.ibm.com (d01relay07.pok.ibm.com [9.56.227.147])
+	by e2.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p56HLTRA009057
+	for <xfs@oss.sgi.com>; Mon, 6 Jun 2011 13:21:29 -0400
+Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
+	by d01relay07.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	p56Hfi5B446596 for <xfs@oss.sgi.com>; Mon, 6 Jun 2011 13:41:45 -0400
+Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
+	by d01av01.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
+	p56HfimR002765 for <xfs@oss.sgi.com>; Mon, 6 Jun 2011 13:41:44 -0400
+Message-ID: <4DED1155.4060503@vnet.ibm.com>
+Date: Mon, 06 Jun 2011 10:41:41 -0700
+From: Allison Henderson <achender@vnet.ibm.com>
+MIME-Version: 1.0
+Subject: Re: Fwd: [XFSTEST Add Fallocate Punch Hole Tests 1/3 v4] Add Punch
+	Hole to FSX
+References: <4DE93268.90007@linux.vnet.ibm.com>
+	<20110606150323.GB22236@infradead.org>
+In-Reply-To: <20110606150323.GB22236@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,29 +34,25 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>, Ext4 Developers List <linux-ext4@vger.kernel.org>, Allison Henderson <achender@linux.vnet.ibm.com>
 
-Eric Sandeen <sandeen@sandeen.net> writes:
+On 06/06/2011 08:03 AM, Christoph Hellwig wrote:
+> Btw, you mails are basically unreadable to me.  There doesn't seem to be
+> any threading context, and they all have your reply on top with a full
+> quote.  Please try again with a submission from a saner mailer, and all
+> important context information included in the [PATCH 0/n] mail.
 
-> If space efficiency is a consideration then smaller blocksizes might
-> be useful.  Not so much for hits per day, but for how many files you
-> expect to store at any one time; you'll waste ((blocksize / 2) * nr
-> files) on average.
->
-space is not likely an issue at all.
-if there is no efficiency issue the usage of 4096 bytes hardly seems
-significant.
-
-so thx eric and michael for your input on this!
-we'll leave things alone. :D
-
--- 
-in friendship,
-prad
+Sorry about that, does this reply look better?  I realized that I needed 
+to send the patch to more lists than just xfs, so I forwarded the set 
+and the discussions.  I think the forwarding might have been what broke 
+the threading, and I can turn off the full quote.  If this reply looks 
+ok, I can resend the set and just collapse down the questions into a 
+[PATCH 0/n] email.  Thx!
 
 _______________________________________________
 xfs mailing list
