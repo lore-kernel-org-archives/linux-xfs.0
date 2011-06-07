@@ -1,27 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p56NWV1B256214 for <xfs@oss.sgi.com>; Mon, 6 Jun 2011 18:32:31 -0500
-Received: from e5.ny.us.ibm.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C8FD116B17AA
-	for <xfs@oss.sgi.com>; Mon,  6 Jun 2011 16:32:30 -0700 (PDT)
-Received: from e5.ny.us.ibm.com (e5.ny.us.ibm.com [32.97.182.145]) by
-	cuda.sgi.com with ESMTP id LkoDDJO60IO5I4hD for
-	<xfs@oss.sgi.com>; Mon, 06 Jun 2011 16:32:30 -0700 (PDT)
-Received: from d01relay07.pok.ibm.com (d01relay07.pok.ibm.com [9.56.227.147])
-	by e5.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p56N4sLQ014632
-	for <xfs@oss.sgi.com>; Mon, 6 Jun 2011 19:04:54 -0400
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay07.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	p56NWToM1052858 for <xfs@oss.sgi.com>; Mon, 6 Jun 2011 19:32:29 -0400
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
-	p56NWS3v003901 for <xfs@oss.sgi.com>; Mon, 6 Jun 2011 19:32:28 -0400
-Message-ID: <4DED638B.3080806@vnet.ibm.com>
-Date: Mon, 06 Jun 2011 16:32:27 -0700
-From: Allison Henderson <achender@vnet.ibm.com>
+	p570iqEl257375 for <xfs@oss.sgi.com>; Mon, 6 Jun 2011 19:44:53 -0500
+Received: from test.thunk.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3C37615DE865
+	for <xfs@oss.sgi.com>; Mon,  6 Jun 2011 17:44:51 -0700 (PDT)
+Received: from test.thunk.org (li9-11.members.linode.com [67.18.176.11]) by
+	cuda.sgi.com with ESMTP id 9cvXpG6tdn4A2WiT for
+	<xfs@oss.sgi.com>; Mon, 06 Jun 2011 17:44:51 -0700 (PDT)
+Date: Mon, 6 Jun 2011 20:44:45 -0400
+From: "Ted Ts'o" <tytso@mit.edu>
+Subject: Re: [PATCH 1/3 v5] XFS TESTS: Add Punch Hole to FSX
+Message-ID: <20110607004445.GG20818@thunk.org>
+References: <4DED63D1.5010600@vnet.ibm.com>
 MIME-Version: 1.0
-Subject: [PATCH 0/3 v5] XFS TESTS: Add Fallocate Punch Hole Tests
+Content-Disposition: inline
+In-Reply-To: <4DED63D1.5010600@vnet.ibm.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,43 +28,62 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+To: Allison Henderson <achender@vnet.ibm.com>
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
 
-Hi All,
+On Mon, Jun 06, 2011 at 04:33:37PM -0700, Allison Henderson wrote:
+> This patch adds punch hole tests to the fsx stress test. 
+> 
+> Signed-off-by: Allison Henderson <achender@us.ibm.com>
+> 
 
-Here is v5 of the punch hole tests that I have been working with Dave on.  In v4 I merged in the non over-lapping tests from v3 into 252, and I separated the code paths for punch hole and fallocate in the fsx patch.  In v5, patch 1 was re based to the latest xfstests code due to activity that had caused the patch to not apply.  I've also included the ENOSPC test that we used in the ext4 punch hole tests.  Some things I need some feedback on:
+Hey Allison, there are two things you can do that will make life much
+easier for people to review and apply your patches.  First of all,
+move the version information below to after the "---" line.  If you
+want to keep this information in the git commit log, just move the
+"---" line after you run the "git format-patch" command.
 
+Secondly, run the command "git config format.thread true"; this is the
+default in newer versions of git, but apparently you're not using a
+new enough version of git.  You can also use "git send-email --thread"
+if you don't want to set the git configuration variable.  The other
+possibility is that your mailer is stripping the in-reply-to: and
+references: header, so the mail threading is disappearing.  I never
+used vnet.ibm.com's mailer, so I don't know if it's responsible for
+stripping mail headers, but I tend not to trust VM or Lotus Notes'
+standard adherence... fortunately for IBM the CIO's who make the
+purchasing decisions tend not to know the first thing about Internet
+Mail Standers or RFC's.  :-)
 
-Ext4 is currently having a hard time passing xfstest 252, test number 12.  The test is:
+		       	      	       - Ted
 
-	$XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
-		-c "$alloc_cmd 0 20k" \	
-		-c "pwrite 8k 4k" -c "fsync" \		
-		-c "$zero_cmd 4k 12k" \
-		-c "$map_cmd -v" $testfile | $filter_cmd
-	[ $? -ne 0 ]&&  die_now
-
-and the output is:
-
-        12. unwritten -> data -> unwritten
-0: [0..7]: unwritten
-1: [8..31]: hole
-2: [32..39]: unwritten
-
-Ext4 gets data extents here instead of unwritten extents.  I did some investigating and it looks like the fsync command causes the extents to be written out before the punch hole operation even starts.  I believe what happens is that when an unwritten extent gets written to, it doesnt always split the extent.  If the extent is small enough, then it just zeros out the portions that are not written to, and the whole extent becomes a written extent.  Im not sure if that is incorrect or if we need to change the test to not compare the extent types.
-
-Also, we had a test for ext4 punch hole that tests to see if a hole can still be punched when the disk is full.  The test has been modified to use the xfsprogs facilities to fit the xfstests framework, but has become very slow.   I found that if I replace the line:
-
-$XFS_IO_PROG -F -f -c "pwrite  0 $file_size" $dir/$file_count.bin&>  /dev/null
-
-with the original code:
-
-dd if=/dev/zero of=$dir/$file_count.bin bs=$file_size count=1 &> /dev/null
-
-it becomes a lot faster (takes off almost 15 minutes).  Is there anything we can do to improve the xfsprogs command?  Thx!
-
-
-Allison Henderson
+> v1 -> v2:
+> Corrections to the Makefile have been backed out.
+> This patch needs to be applied on top of
+> the "xfstests: clean up fallocate configuration tests"
+> patch
+> 
+> The punch hole tests can be disabled with the
+> -H flag, and will also be disabled if it is
+> detected that the filesystem does not support
+> punch hole
+> 
+> v2 -> v4
+> Punch hole tests and functionality tests have been moved
+> into their own functions.  Existing dofallocate routine
+> has been renamed to do_preallocate.
+> 
+> v4 -> v5
+> The code to test fallocate functionality changed slightly,
+> so the patch has been updated to apply with out err
+> ---
+> :100644 100644 0eebc70... 0683853... M	ltp/fsx.c
+>  ltp/fsx.c |  143 ++++++++++++++++++++++++++++++++++++++++++++++++++++--------
+>  1 files changed, 124 insertions(+), 19 deletions(-)
+> 
+> diff --git a/ltp/fsx.c b/ltp/fsx.c
+> index 0eebc70..0683853 100644
+...
 
 _______________________________________________
 xfs mailing list
