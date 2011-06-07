@@ -1,26 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p57C6SL2023728 for <xfs@oss.sgi.com>; Tue, 7 Jun 2011 07:06:29 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B471CD785F9
-	for <xfs@oss.sgi.com>; Tue,  7 Jun 2011 05:06:27 -0700 (PDT)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	Myo347V2BveFy9sc for <xfs@oss.sgi.com>;
-	Tue, 07 Jun 2011 05:06:27 -0700 (PDT)
-Date: Tue, 7 Jun 2011 08:06:22 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Fwd: [XFSTEST Add Fallocate Punch Hole Tests 1/3 v4] Add Punch
-	Hole to FSX
-Message-ID: <20110607120622.GA13357@infradead.org>
-References: <4DE93268.90007@linux.vnet.ibm.com>
-	<20110606150323.GB22236@infradead.org>
-	<4DED1155.4060503@vnet.ibm.com>
+	p57C5t7l023690 for <xfs@oss.sgi.com>; Tue, 7 Jun 2011 07:05:55 -0500
+Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9AF2B1ED523F
+	for <xfs@oss.sgi.com>; Tue,  7 Jun 2011 05:05:54 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id KEMlQswfAnXA91uj
+	for <xfs@oss.sgi.com>; Tue, 07 Jun 2011 05:05:54 -0700 (PDT)
+Message-ID: <4DEE1422.7060902@hardwarefreak.com>
+Date: Tue, 07 Jun 2011 07:05:54 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4DED1155.4060503@vnet.ibm.com>
+Subject: Re: Defragging XFS File Systems
+References: <BANLkTi=40mmE+DCbLcSWBwNQtWpP=N=tXw@mail.gmail.com>
+In-Reply-To: <BANLkTi=40mmE+DCbLcSWBwNQtWpP=N=tXw@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,11 +27,67 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Allison Henderson <achender@vnet.ibm.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>, Ext4 Developers List <linux-ext4@vger.kernel.org>, Allison Henderson <achender@linux.vnet.ibm.com>
+To: Kenneth Emerson <kenneth.emerson@gmail.com>
+Cc: xfs@oss.sgi.com
 
-This and the new patchset look quite a bit better.  I'll try to get some
-time to review the patches soon, thanks!
+On 6/6/2011 10:52 PM, Kenneth Emerson wrote:
+> I hadn't given much thought to fragmentation of my TV recordings volume
+> (XFS) until reading through some MythTV-users threads recently that
+> mentioned how fragmented an XFS file system could become.  After running
+> xfs_db, I found out that my fs appeared to be quite bad:
+> 
+> $ sudo xfs_db -c frag -r /dev/mapper/appl_vg-appl_lv
+>  actual 1138668, ideal 11023, fragmentation factor 99.03%
+> 
+> I then ran xfs_fsr with all defaults (ran for two hours) and then re-ran
+
+>From man xfs_fsr:
+
+       It runs for up to two hours after which it records the
+       filesystem where it left off, so it can start there the next
+       time.  This  information  is stored in the file
+       /var/tmp/.fsrlast_xfs.  If the information found here is somehow
+       inconsistent or out of date it is ignored and reorganization
+       starts at the beginning of the first filesystem found in
+       /etc/mtab.
+
+If xfs_fsr stopped at 2 hours, multiple additional runs will likely be
+required to get good defragmentation.
+
+> xfs_db and got the following results:
+> 
+> $ sudo xfs_db -c frag -r /dev/mapper/appl_vg-appl_lv
+
+The -r above suggests you created a large realtime section for your
+MythTV storage.  It may be helpful for you to provide xfs_info output
+for the heavily fragmented filesystem.
+
+> invalid numrecs (27111) in bmapbtd block
+> invalid numrecs (4716) in bmapbtd block
+> invalid numrecs (58978) in bmapbtd block
+
+I'll leave these errors for one of the devs to tackle.
+
+> actual 1034793, ideal 11024, fragmentation factor 98.93%
+> 
+> The fragmentation level was reduced, 
+
+It was likely reduced much more than this.  Dropping caches or
+unmounting and remounting the filesystem is often necessary after
+running xfs_fsr in order to show the actual fragmentation level.  Try:
+
+# echo 3 > /proc/sys/vm/drop_caches
+
+and then run xfs_db again.
+
+> but I was concerned about the error
+> messages.  Before I go any further, am I corrupting my file system with the
+> defragging or are these "invalid numrecs" messages unimportant?
+
+Run 'xfs_check' or 'xfs_repair -n' and post the results.
+
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
