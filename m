@@ -1,25 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p57DYUTx026024 for <xfs@oss.sgi.com>; Tue, 7 Jun 2011 08:34:31 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 411184A5B99
-	for <xfs@oss.sgi.com>; Tue,  7 Jun 2011 06:34:29 -0700 (PDT)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	NbueBSv4btKZy0Ns for <xfs@oss.sgi.com>;
-	Tue, 07 Jun 2011 06:34:29 -0700 (PDT)
-Date: Tue, 7 Jun 2011 09:34:29 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: XFS: accounting of reclaimable inodes is incorrect
-Message-ID: <20110607133429.GA9049@infradead.org>
-References: <4DEE0EA4.9090002@profihost.ag>
-	<20110607115441.GA4653@infradead.org>
-	<4DEE2078.3010102@profihost.ag>
+	p57E0DPc026784 for <xfs@oss.sgi.com>; Tue, 7 Jun 2011 09:00:14 -0500
+Received: from ppsw-51.csi.cam.ac.uk (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4BB6412D1187
+	for <xfs@oss.sgi.com>; Tue,  7 Jun 2011 07:00:11 -0700 (PDT)
+Received: from ppsw-51.csi.cam.ac.uk (ppsw-51.csi.cam.ac.uk [131.111.8.151])
+	by cuda.sgi.com with ESMTP id hmAvPILU7T00cpM5 for
+	<xfs@oss.sgi.com>; Tue, 07 Jun 2011 07:00:11 -0700 (PDT)
+Received: from mail.mrc-lmb.cam.ac.uk ([131.111.85.9]:38173
+	helo=mail.lmb.internal)
+	by ppsw-51.csi.cam.ac.uk (ppsw.cam.ac.uk [131.111.8.138]:25)
+	with esmtp id 1QTwpG-0007yN-Z4 (Exim 4.72) for xfs@oss.sgi.com
+	(return-path <dhoworth@mrc-lmb.cam.ac.uk>);
+	Tue, 07 Jun 2011 15:00:10 +0100
+Received: from cpepc210-3.lmb.internal ([10.14.0.2])
+	by mail.lmb.internal with esmtp (Exim 4.63)
+	(envelope-from <dhoworth@mrc-lmb.cam.ac.uk>) id 1QTwpG-00054D-PE
+	for xfs@oss.sgi.com; Tue, 07 Jun 2011 15:00:10 +0100
+Message-ID: <4DEE2EEA.3080705@mrc-lmb.cam.ac.uk>
+Date: Tue, 07 Jun 2011 15:00:10 +0100
+From: Dave Howorth <dhoworth@mrc-lmb.cam.ac.uk>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4DEE2078.3010102@profihost.ag>
+Subject: Re: XFS: accounting of reclaimable inodes is incorrect
+References: <4DEE0EA4.9090002@profihost.ag>	<20110607115441.GA4653@infradead.org>	<4DEE2078.3010102@profihost.ag>
+	<20110607133429.GA9049@infradead.org>
+In-Reply-To: <20110607133429.GA9049@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,24 +38,15 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Jun 07, 2011 at 02:58:32PM +0200, Stefan Priebe - Profihost AG wrote:
-> Sorry i can't. I'm not a kernel hacker. But i think a real bug /
-> showstopper should be fixed in a longterm stable kernel.
+Christoph Hellwig wrote:
+> Linux 2.6.32 isn't really something supported by us.  It's not just a
+> very old codebase, but also one where a lot of the XFS code was pretty
+> much in flux.  If you want supported old releases work use one of
+> the commercially supported one like RedHat or SuSE.
 
-Linux 2.6.32 isn't really something supported by us.  It's not just a
-very old codebase, but also one where a lot of the XFS code was pretty
-much in flux.  If you want supported old releases work use one of
-the commercially supported one like RedHat or SuSE.
-
-> Redhat seems to have fixed it on it's own:
-> https://bugzilla.redhat.com/show_bug.cgi?id=642680
-
-I suspect the upstream commit you want is
-081003fff467ea0e727f66d5d435b4f473a789b3, but I can't gurantee this
-actually applies to the 2.6.32 codebase.
+2.6.32 is also the kernel in Ubuntu 10.04 LTS
 
 _______________________________________________
 xfs mailing list
