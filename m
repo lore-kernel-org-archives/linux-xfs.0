@@ -1,26 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p585IlCh073924 for <xfs@oss.sgi.com>; Wed, 8 Jun 2011 00:18:48 -0500
-Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AB44616C54CF
-	for <xfs@oss.sgi.com>; Tue,  7 Jun 2011 22:18:45 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	qf794Kjpw1KD4e74 for <xfs@oss.sgi.com>;
-	Tue, 07 Jun 2011 22:18:45 -0700 (PDT)
-Date: Wed, 8 Jun 2011 15:18:42 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: I/O hang, possibly XFS, possibly general
-Message-ID: <20110608051842.GO32466@dastard>
-References: <BANLkTim_BCiKeqi5gY_gXAcmg7JgrgJCxQ@mail.gmail.com>
-	<BANLkTim978GhfamN=TEFULP5GdfMu02-7w@mail.gmail.com>
-	<19945.24042.711472.158523@tree.ty.sabi.co.UK>
-	<201106060929.06814@zmi.at>
-	<19950.12549.541440.285348@tree.ty.sabi.co.UK>
+	p587BFI3078847 for <xfs@oss.sgi.com>; Wed, 8 Jun 2011 02:11:16 -0500
+Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 054094A9AB4
+	for <xfs@oss.sgi.com>; Wed,  8 Jun 2011 00:11:13 -0700 (PDT)
+Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
+	cuda.sgi.com with ESMTP id 94EQsaWIPVnMoXR5 for
+	<xfs@oss.sgi.com>; Wed, 08 Jun 2011 00:11:13 -0700 (PDT)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: Re: Small files perform much faster on newly formatted fs?
+Date: Wed, 8 Jun 2011 09:11:10 +0200
+References: <20110607163742.GH28625@pyre.virge.net>
+In-Reply-To: <20110607163742.GH28625@pyre.virge.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <19950.12549.541440.285348@tree.ty.sabi.co.UK>
+Message-Id: <201106080911.11286@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,36 +23,67 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============8573602248044027396=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Peter Grandi <pg_mh@sabi.co.UK>
-Cc: Michael Monnerie <michael.monnerie@is.it-management.at>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Norbert Veber <nveber@pyre.virge.net>
 
-On Tue, Jun 07, 2011 at 03:09:09PM +0100, Peter Grandi wrote:
-> Personally I'd rather have a file system design with space
-> reservations (on detecting an append-like access pattern) and
-> truncate-on-close than delayed allocation like XFS;
+--===============8573602248044027396==
+Content-Type: multipart/signed;
+  boundary="nextPart14545136.KOncusAfmJ";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 
-Welcome to the 1990s, Peter. XFS has been doing this for 15 years.
-It is an optimisation used by the delayed allocation mechanism,
-not a replacement for it. You might have heard the term
-"speculative preallocation" before - this is what it does.
+--nextPart14545136.KOncusAfmJ
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 
-FYI, ext3 has a space reservation infrastructure to try to ensure
-contiguous allocation occurs without using delayed allocation. It
-doesn't work nearly as well as delayed allocation in ext4, btrfs or
-XFS...
+On Dienstag, 7. Juni 2011 Norbert Veber wrote:
+> 20 seconds vs 3+ minutes?!  The only difference I can see is
+> lazy-count=3D1 and a larger agcount.  Sunit and swidth were also set
+> automatically by mkfs this time.
 
-Cheers,
+Then retry mounting the old fs with sunit=3D and swidth=3D parameters. Are=
+=20
+they on the same disks? What are your disks (number, kind)?
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+=2D-=20
+mit freundlichen Gr=FCssen,
+Michael Monnerie, Ing. BSc
+
+it-management Internet Services: Prot=E9ger
+http://proteger.at [gesprochen: Prot-e-schee]
+Tel: +43 660 / 415 6531
+
+// Haus zu verkaufen: http://zmi.at/langegg/
+
+--nextPart14545136.KOncusAfmJ
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.16 (GNU/Linux)
+
+iEYEABECAAYFAk3vII8ACgkQzhSR9xwSCbSAxACgwUzQMUNSceJD5bCTNbaXUcUG
+DpkAoOMw2cH0QNVN8Wekd83Mb0c2/8gY
+=i5k5
+-----END PGP SIGNATURE-----
+
+--nextPart14545136.KOncusAfmJ--
+
+
+--===============8573602248044027396==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============8573602248044027396==--
