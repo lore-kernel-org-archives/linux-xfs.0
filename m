@@ -1,19 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p57Gbj0p037071 for <xfs@oss.sgi.com>; Tue, 7 Jun 2011 11:37:45 -0500
-Received: from pyre.virge.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 27EA31E412E6
-	for <xfs@oss.sgi.com>; Tue,  7 Jun 2011 09:37:43 -0700 (PDT)
-Received: from pyre.virge.net (24-246-28-70.cable.teksavvy.com [24.246.28.70])
-	by cuda.sgi.com with ESMTP id myEIUngmZmRv0Bmy for
-	<xfs@oss.sgi.com>; Tue, 07 Jun 2011 09:37:43 -0700 (PDT)
-Date: Tue, 7 Jun 2011 12:37:42 -0400
-From: Norbert Veber <nveber@pyre.virge.net>
-Subject: Small files perform much faster on newly formatted fs?
-Message-ID: <20110607163742.GH28625@pyre.virge.net>
+	p585IlCh073924 for <xfs@oss.sgi.com>; Wed, 8 Jun 2011 00:18:48 -0500
+Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id AB44616C54CF
+	for <xfs@oss.sgi.com>; Tue,  7 Jun 2011 22:18:45 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	qf794Kjpw1KD4e74 for <xfs@oss.sgi.com>;
+	Tue, 07 Jun 2011 22:18:45 -0700 (PDT)
+Date: Wed, 8 Jun 2011 15:18:42 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: I/O hang, possibly XFS, possibly general
+Message-ID: <20110608051842.GO32466@dastard>
+References: <BANLkTim_BCiKeqi5gY_gXAcmg7JgrgJCxQ@mail.gmail.com>
+	<BANLkTim978GhfamN=TEFULP5GdfMu02-7w@mail.gmail.com>
+	<19945.24042.711472.158523@tree.ty.sabi.co.UK>
+	<201106060929.06814@zmi.at>
+	<19950.12549.541440.285348@tree.ty.sabi.co.UK>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <19950.12549.541440.285348@tree.ty.sabi.co.UK>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,92 +33,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Peter Grandi <pg_mh@sabi.co.UK>
+Cc: Michael Monnerie <michael.monnerie@is.it-management.at>, xfs@oss.sgi.com
 
-Hi,
+On Tue, Jun 07, 2011 at 03:09:09PM +0100, Peter Grandi wrote:
+> Personally I'd rather have a file system design with space
+> reservations (on detecting an append-like access pattern) and
+> truncate-on-close than delayed allocation like XFS;
 
-I have some xfs filesystems on my computer running linux.  These were
-created (formatted) about 2 years ago on debian 5.0 on software raid
-5+lvm.  I am getting pretty terible performance with small files, and
-decided to try to optimize that a bit with some mount options etc.
+Welcome to the 1990s, Peter. XFS has been doing this for 15 years.
+It is an optimisation used by the delayed allocation mechanism,
+not a replacement for it. You might have heard the term
+"speculative preallocation" before - this is what it does.
 
-I also created a new filesystem to try different mkfs options.  This was
-done on the same computer which has since been upgraded to debian 6.0.
+FYI, ext3 has a space reservation infrastructure to try to ensure
+contiguous allocation occurs without using delayed allocation. It
+doesn't work nearly as well as delayed allocation in ext4, btrfs or
+XFS...
 
-I found a very suprising thing.  The new filesystem performed an order
-of magnitude faster than the 2 year old filessytem which has made with
-an older kernel and older mkfs.xfs (from debian 5.0).
+Cheers,
 
-For a simple test I tried to time the untar and rm -rf on the linux
-2.6.32 source tree.  Its not very scientific but I get pretty consistent
-results.  Old 20gb filessystem:
-
-pyre:/shared# xfs_info /shared
-meta-data=/dev/mapper/vg0-shared isize=256    agcount=9, agsize=610304
-blks
-         =                       sectsz=512   attr=2
-data     =                       bsize=4096   blocks=5062656, imaxpct=25
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0
-log      =internal               bsize=4096   blocks=2560, version=2
-         =                       sectsz=512   sunit=0 blks, lazy-count=0
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-
-Since sunit and swidth wasnt automatically set by the old debian 5 mkfs
-time, I use the mount options isntead:
-
-nveber@pyre[6788:~/files/doc]$ mount | grep shared
-/dev/mapper/vg0-newshared on /mnt/tmp type xfs (rw)
-/dev/mapper/vg0-shared on /shared type xfs (rw,sunit=128,swidth=256)
-
-Now for the "benchmark":
-pyre:/shared# sync;sleep 15s;time ionice -c1 tar -zxf linux-2.6_2.6.32.orig.tar.gz
-
-real	3m6.842s
-user	0m3.800s
-sys	0m2.692s
-
-New 30gb filesystem:
-pyre:/shared# xfs_info /mnt/tmp
-meta-data=/dev/mapper/vg0-newshared isize=256    agcount=16,
-agsize=491504 blks
-         =                       sectsz=512   attr=2
-data     =                       bsize=4096   blocks=7864064, imaxpct=25
-         =                       sunit=16     swidth=32 blks
-naming   =version 2              bsize=4096   ascii-ci=0
-log      =internal               bsize=4096   blocks=3840, version=2
-         =                       sectsz=512   sunit=16 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-
-pyre:/mnt/tmp# sync;sleep 15s;time ionice -c1 tar -zxf
-linux-2.6_2.6.32.orig.tar.gz
-
-real	0m19.851s
-user	0m3.828s
-sys	0m2.184s
-
-20 seconds vs 3+ minutes?!  The only difference I can see is
-lazy-count=1 and a larger agcount.  Sunit and swidth were also set
-automatically by mkfs this time.  I tried the lazy-count option for the
-old fs:
-pyre:~# umount /shared
-pyre:~# xfs_admin -c1 /dev/vg0/shared
-Enabling lazy-counters
-pyre:~# mount /shared
-pyre:/shared# mv linux-2.6-2.6.32/ deleteme
-pyre:/shared# sync;sleep 15s;time ionice -c1 tar -zxf linux-2.6_2.6.32.orig.tar.gz
-
-real	2m37.634s
-user	0m3.800s
-sys	0m2.612s
-
-Its a little faster now, but still way slower than the new fs.  Whats
-the difference, and how can I make the old one perform at this level
-short of reformatting? :)
-
-Thanks,
-
-Norbert
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
