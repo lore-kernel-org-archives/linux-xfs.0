@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p59B8XER172381 for <xfs@oss.sgi.com>; Thu, 9 Jun 2011 06:08:34 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E586E10C061F
-	for <xfs@oss.sgi.com>; Thu,  9 Jun 2011 04:08:30 -0700 (PDT)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	QqLExRBqsU9hj0W2 for <xfs@oss.sgi.com>;
-	Thu, 09 Jun 2011 04:08:30 -0700 (PDT)
-Date: Thu, 9 Jun 2011 07:08:26 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Port xfstests 145, 161, 175, 176, 185?
-Message-ID: <20110609110826.GA14899@infradead.org>
-References: <4DEFC41A.9070701@linux.vnet.ibm.com>
+	p59DmG0Y177915 for <xfs@oss.sgi.com>; Thu, 9 Jun 2011 08:48:17 -0500
+Received: from pyre.virge.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A47554AF537
+	for <xfs@oss.sgi.com>; Thu,  9 Jun 2011 06:48:13 -0700 (PDT)
+Received: from pyre.virge.net (24-246-28-70.cable.teksavvy.com [24.246.28.70])
+	by cuda.sgi.com with ESMTP id P5ORrIcltB14HgC5 for
+	<xfs@oss.sgi.com>; Thu, 09 Jun 2011 06:48:13 -0700 (PDT)
+Date: Thu, 9 Jun 2011 09:48:11 -0400
+From: Norbert Veber <nveber@pyre.virge.net>
+Subject: Re: Small files perform much faster on newly formatted fs?
+Message-ID: <20110609134811.GI28625@pyre.virge.net>
+References: <20110607163742.GH28625@pyre.virge.net> <201106080911.11286@zmi.at>
+	<20110608122638.GQ28625@pyre.virge.net>
+	<20110609012907.GR32466@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4DEFC41A.9070701@linux.vnet.ibm.com>
+In-Reply-To: <20110609012907.GR32466@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,32 +30,41 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Allison Henderson <achender@linux.vnet.ibm.com>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Michael Monnerie <michael.monnerie@is.it-management.at>, xfs@oss.sgi.com
 
-On Wed, Jun 08, 2011 at 11:48:58AM -0700, Allison Henderson wrote:
-> During one of my reviews for the punch hole tests patch set it was
-> mentioned that it would be helpful to take the xfstests 145, 161,
-> 175, 176, 185 and modify them such that they can run with out
-> requiring the dmapi.  These tests contain some more interesting
-> punch hole tests, but they dont normally run unless there is support
-> for dmapi.
-> 
-> I did take a peek at them and I was thinking that if we decide to do
-> this, we would probably need to do something like introduce a new
-> set of source code that is similar to what is seen under the dmapi
-> folder, but modified to use a generic interface instead of the dmapi
-> libraries.  We could try to merge them into a single code path, but
-> I think that may introduce more complexities than would be
-> desirable.
+On Thu, Jun 09, 2011 at 11:29:07AM +1000, Dave Chinner wrote:
+> Those mount options are ignored if the filesystem doesn't have the
+> superblock feature bit set for aligned allocations. A filesystem
+> with 0/0 for sunit/swidth does not have the superblock bit set....
 
-Most of it should be doable using xfs_io.  If it's nessecary to write
-new source files because of e.g. concurrency tests that we can't easily
-do from xfs_io please add new source files to the src/ directory.
+Oh man!  I thought I saw some improvement with iometer benchmarks before
+and after the mount options, but I dont see any significant difference
+while timing the untar and rm -rf I've been doing.
 
-Also, please don't rewrite the actual existing dmapi test cases, but
-add new ones testing these patterns using the fallocate interface, as
-the coverage for the dmapi interface still is useful.
+All the documentation I came across including the man page and XFS faq
+entry imply that the mount options can be used to perform alignment..
+
+"XFS allows to optimize for a given RAID stripe unit (stripe size) and
+stripe width (number of data disks) via mount options."
+http://xfs.org/index.php/XFS_FAQ#Q:_How_to_calculate_the_correct_sunit.2Cswidth_values_for_optimal_performance
+
+"While the stripe unit and stripe width cannot be changed after an XFS
+file system has been created, they can be overridden at mount time with
+the sunit/swidth options, similar to ones used by mkfs.xfs."
+https://raid.wiki.kernel.org/index.php/RAID_setup#XFS
+
+In these kinds of cases maybe there should be an error logged instead of
+just silently ignoring them?
+
+Is there any way to change the superblock?  Eg. soething like the ext*
+command:
+
+tune2fs -E stride=n,stripe-width=m /dev/xxx
+
+Thanks,
+
+Norbert
 
 _______________________________________________
 xfs mailing list
