@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p591TBaD129589 for <xfs@oss.sgi.com>; Wed, 8 Jun 2011 20:29:11 -0500
-Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9CEB114E9735
-	for <xfs@oss.sgi.com>; Wed,  8 Jun 2011 18:29:09 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	uxRDgd56Y4KMJWc6 for <xfs@oss.sgi.com>;
-	Wed, 08 Jun 2011 18:29:09 -0700 (PDT)
-Date: Thu, 9 Jun 2011 11:29:07 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Small files perform much faster on newly formatted fs?
-Message-ID: <20110609012907.GR32466@dastard>
-References: <20110607163742.GH28625@pyre.virge.net> <201106080911.11286@zmi.at>
-	<20110608122638.GQ28625@pyre.virge.net>
+	p595nola151643 for <xfs@oss.sgi.com>; Thu, 9 Jun 2011 00:49:50 -0500
+Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 790B316CB394
+	for <xfs@oss.sgi.com>; Wed,  8 Jun 2011 22:49:39 -0700 (PDT)
+Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
+	cuda.sgi.com with ESMTP id 259Zl9RZxEUgwYDK for
+	<xfs@oss.sgi.com>; Wed, 08 Jun 2011 22:49:39 -0700 (PDT)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: Re: Defragging XFS File Systems
+Date: Thu, 9 Jun 2011 07:49:36 +0200
+References: <BANLkTi=40mmE+DCbLcSWBwNQtWpP=N=tXw@mail.gmail.com>
+	<BANLkTikBSL8-eTAbF7a94ckLuZNyWCM=Eg@mail.gmail.com>
+	<4DEFE2E6.9010206@hardwarefreak.com>
+In-Reply-To: <4DEFE2E6.9010206@hardwarefreak.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110608122638.GQ28625@pyre.virge.net>
+Message-Id: <201106090749.37745@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,38 +25,70 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============7789818342367594217=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Norbert Veber <nveber@pyre.virge.net>
-Cc: Michael Monnerie <michael.monnerie@is.it-management.at>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Kenneth Emerson <kenneth.emerson@gmail.com>, Stan Hoeppner <stan@hardwarefreak.com>
 
-On Wed, Jun 08, 2011 at 08:26:38AM -0400, Norbert Veber wrote:
-> On Wed, Jun 08, 2011 at 09:11:10AM +0200, Michael Monnerie wrote:
-> > On Dienstag, 7. Juni 2011 Norbert Veber wrote:
-> > > 20 seconds vs 3+ minutes?!  The only difference I can see is
-> > > lazy-count=1 and a larger agcount.  Sunit and swidth were also set
-> > > automatically by mkfs this time.
-> > 
-> > Then retry mounting the old fs with sunit= and swidth= parameters. Are 
-> > they on the same disks? What are your disks (number, kind)?
-> 
-> Yes its already mounted this way as I mentioned in my original message:
-> /dev/mapper/vg0-shared on /shared type xfs (rw,noatime,sunit=128,swidth=256)
+--===============7789818342367594217==
+Content-Type: multipart/signed;
+  boundary="nextPart6522634.uoPHKelKRm";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 
-Those mount options are ignored if the filesystem doesn't have the
-superblock feature bit set for aligned allocations. A filesystem
-with 0/0 for sunit/swidth does not have the superblock bit set....
+--nextPart6522634.uoPHKelKRm
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 
-Cheers,
+On Mittwoch, 8. Juni 2011 Kenneth wrote:
+> > After that, I will make
+> > a cron job to run on a regular basis to keep the volume from
+> > getting so fragmented again.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+How will you do that? Running xfs_fsr on a regular basis is *not*=20
+recommended, as it will age your filesystem and defrag free space. In=20
+the beginning, and as long as your filesystem is maybe 50% full it will=20
+be fine, but there's a point where it starts to get worse - much worse.=20
+Just run a recent kernel, it has all the naughty stuff to help keep the=20
+performance high.
+
+=2D-=20
+mit freundlichen Gr=FCssen,
+Michael Monnerie, Ing. BSc
+
+it-management Internet Services: Prot=E9ger
+http://proteger.at [gesprochen: Prot-e-schee]
+Tel: +43 660 / 415 6531
+
+// Haus zu verkaufen: http://zmi.at/langegg/
+
+--nextPart6522634.uoPHKelKRm
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.16 (GNU/Linux)
+
+iEYEABECAAYFAk3wXvEACgkQzhSR9xwSCbRiAgCgwfIVBex3a+dVhzWrRsbE6bbC
+ghUAoIvCX1eZ0UsvsD3EhopnJ2Wx5KIW
+=z12n
+-----END PGP SIGNATURE-----
+
+--nextPart6522634.uoPHKelKRm--
+
+
+--===============7789818342367594217==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============7789818342367594217==--
