@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p598DX3t160248 for <xfs@oss.sgi.com>; Thu, 9 Jun 2011 03:13:33 -0500
-Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 848BC4AE33A
-	for <xfs@oss.sgi.com>; Thu,  9 Jun 2011 01:13:32 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id SNG7xumTbXIfrqYo
-	for <xfs@oss.sgi.com>; Thu, 09 Jun 2011 01:13:32 -0700 (PDT)
-Message-ID: <4DF080AC.2090507@hardwarefreak.com>
-Date: Thu, 09 Jun 2011 03:13:32 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	p598MaB6160504 for <xfs@oss.sgi.com>; Thu, 9 Jun 2011 03:22:37 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 583E216D43F2
+	for <xfs@oss.sgi.com>; Thu,  9 Jun 2011 01:22:33 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	GqAJGjoqb8XPYtck for <xfs@oss.sgi.com>;
+	Thu, 09 Jun 2011 01:22:33 -0700 (PDT)
+Date: Thu, 9 Jun 2011 04:22:17 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Small files perform much faster on newly formatted fs?
+Message-ID: <20110609082217.GA7129@infradead.org>
+References: <20110607163742.GH28625@pyre.virge.net> <201106080911.11286@zmi.at>
+	<20110608122638.GQ28625@pyre.virge.net>
+	<20110609012907.GR32466@dastard>
 MIME-Version: 1.0
-Subject: Re: Defragging XFS File Systems
-References: <BANLkTi=40mmE+DCbLcSWBwNQtWpP=N=tXw@mail.gmail.com>
-	<BANLkTikBSL8-eTAbF7a94ckLuZNyWCM=Eg@mail.gmail.com>
-	<4DEFE2E6.9010206@hardwarefreak.com> <201106090749.37745@zmi.at>
-In-Reply-To: <201106090749.37745@zmi.at>
+Content-Disposition: inline
+In-Reply-To: <20110609012907.GR32466@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,34 +32,23 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Michael Monnerie <michael.monnerie@is.it-management.at>
-Cc: Kenneth Emerson <kenneth.emerson@gmail.com>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Michael Monnerie <michael.monnerie@is.it-management.at>, Norbert Veber <nveber@pyre.virge.net>, xfs@oss.sgi.com
 
-On 6/9/2011 12:49 AM, Michael Monnerie wrote:
-> On Mittwoch, 8. Juni 2011 Kenneth wrote:
->>> After that, I will make
->>> a cron job to run on a regular basis to keep the volume from
->>> getting so fragmented again.
+On Thu, Jun 09, 2011 at 11:29:07AM +1000, Dave Chinner wrote:
+> > > Then retry mounting the old fs with sunit= and swidth= parameters. Are 
+> > > they on the same disks? What are your disks (number, kind)?
+> > 
+> > Yes its already mounted this way as I mentioned in my original message:
+> > /dev/mapper/vg0-shared on /shared type xfs (rw,noatime,sunit=128,swidth=256)
 > 
-> How will you do that? Running xfs_fsr on a regular basis is *not* 
-> recommended, as it will age your filesystem and defrag free space. In 
-> the beginning, and as long as your filesystem is maybe 50% full it will 
-> be fine, but there's a point where it starts to get worse - much worse. 
-> Just run a recent kernel, it has all the naughty stuff to help keep the 
-> performance high.
+> Those mount options are ignored if the filesystem doesn't have the
+> superblock feature bit set for aligned allocations. A filesystem
+> with 0/0 for sunit/swidth does not have the superblock bit set....
 
-When *is* running xfs_fsr recommended?
-
-I scheduled it twice a week some time ago due to a filesystem containing
-active mbox files.  I did so because they became so heavily fragmented
-in short order, especially those swallowing copious amounts of list
-mail.  Before cron'ing xfs_fsr I was seeing mbox files with over 1000
-fragmented extents, and increasing MUA latency as the files became more
-fragmented.  The filesystem is currently 90% free.
-
--- 
-Stan
-
+The other thing that sticks out is the lack of lazy-count for the old
+filesystem.  That will give a lot of additional superblock updates on
+the old one.
 
 _______________________________________________
 xfs mailing list
