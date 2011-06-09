@@ -1,30 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p59JI4Im196947 for <xfs@oss.sgi.com>; Thu, 9 Jun 2011 14:18:05 -0500
-Received: from e3.ny.us.ibm.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3D522D9725F
-	for <xfs@oss.sgi.com>; Thu,  9 Jun 2011 12:18:03 -0700 (PDT)
-Received: from e3.ny.us.ibm.com (e3.ny.us.ibm.com [32.97.182.143]) by
-	cuda.sgi.com with ESMTP id IigJhRJe2J3HK1J4 for
-	<xfs@oss.sgi.com>; Thu, 09 Jun 2011 12:18:03 -0700 (PDT)
-Received: from d01relay05.pok.ibm.com (d01relay05.pok.ibm.com [9.56.227.237])
-	by e3.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p59ItaKl003827
-	for <xfs@oss.sgi.com>; Thu, 9 Jun 2011 14:55:36 -0400
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay05.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	p59JI1wq116880 for <xfs@oss.sgi.com>; Thu, 9 Jun 2011 15:18:01 -0400
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
-	p59JI1QJ027168 for <xfs@oss.sgi.com>; Thu, 9 Jun 2011 16:18:01 -0300
-Message-ID: <4DF11C67.8090702@linux.vnet.ibm.com>
-Date: Thu, 09 Jun 2011 12:17:59 -0700
-From: Allison Henderson <achender@linux.vnet.ibm.com>
+	p59KU8Vx199330 for <xfs@oss.sgi.com>; Thu, 9 Jun 2011 15:30:08 -0500
+Received: from pyre.virge.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E83484B0BAE
+	for <xfs@oss.sgi.com>; Thu,  9 Jun 2011 13:30:06 -0700 (PDT)
+Received: from pyre.virge.net (24-246-28-70.cable.teksavvy.com [24.246.28.70])
+	by cuda.sgi.com with ESMTP id 0H5a7Vtt4aryN9N0 for
+	<xfs@oss.sgi.com>; Thu, 09 Jun 2011 13:30:06 -0700 (PDT)
+Date: Thu, 9 Jun 2011 16:30:01 -0400
+From: Norbert Veber <nveber@pyre.virge.net>
+Subject: Re: Small files perform much faster on newly formatted fs?
+Message-ID: <20110609203000.GM28625@pyre.virge.net>
+References: <20110607163742.GH28625@pyre.virge.net>
+	<20110609012907.GR32466@dastard>
+	<20110609134811.GI28625@pyre.virge.net> <201106091830.29491@zmi.at>
 MIME-Version: 1.0
-Subject: Re: Port xfstests 145, 161, 175, 176, 185?
-References: <4DEFC41A.9070701@linux.vnet.ibm.com>
-	<20110609110826.GA14899@infradead.org>
-In-Reply-To: <20110609110826.GA14899@infradead.org>
+Content-Disposition: inline
+In-Reply-To: <201106091830.29491@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,40 +26,41 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+To: Michael Monnerie <michael.monnerie@is.it-management.at>
+Cc: xfs@oss.sgi.com
 
-On 06/09/2011 04:08 AM, Christoph Hellwig wrote:
-> On Wed, Jun 08, 2011 at 11:48:58AM -0700, Allison Henderson wrote:
->> During one of my reviews for the punch hole tests patch set it was
->> mentioned that it would be helpful to take the xfstests 145, 161,
->> 175, 176, 185 and modify them such that they can run with out
->> requiring the dmapi.  These tests contain some more interesting
->> punch hole tests, but they dont normally run unless there is support
->> for dmapi.
->>
->> I did take a peek at them and I was thinking that if we decide to do
->> this, we would probably need to do something like introduce a new
->> set of source code that is similar to what is seen under the dmapi
->> folder, but modified to use a generic interface instead of the dmapi
->> libraries.  We could try to merge them into a single code path, but
->> I think that may introduce more complexities than would be
->> desirable.
->
-> Most of it should be doable using xfs_io.  If it's nessecary to write
-> new source files because of e.g. concurrency tests that we can't easily
-> do from xfs_io please add new source files to the src/ directory.
->
-> Also, please don't rewrite the actual existing dmapi test cases, but
-> add new ones testing these patterns using the fallocate interface, as
-> the coverage for the dmapi interface still is useful.
->
+On Thu, Jun 09, 2011 at 06:30:28PM +0200, Michael Monnerie wrote:
+> On Donnerstag, 9. Juni 2011 Norbert Veber wrote:
+> > In these kinds of cases maybe there should be an error logged instead
+> > of just silently ignoring them?
+> 
+> And also don't show them in the mount options when calling "mount" or 
+> "cat /proc/mount".
 
-Alrighty, thx Christoph.  I will keep this work item on my todo list then.
+Yes, thats even worse.  I found I can just put random things in there
+when doing a mount -o remount, and it will just show up.
+
+pyre:~# mount -o remount,bobsyouruncle /shared
+pyre:~# mount | grep shared
+/dev/mapper/vg0-shared on /shared type xfs (rw,sunit=128,swidth=256,bobsyouruncle)
+
+Thats on 2.6.32.  No error in dmesg output either.
+
+It doesnt accept random nonexistent options when mounting, only when
+remounting.  
+
+moupyre:~# mount -o bobsyouruncle /shared
+mount: wrong fs type, bad option, bad superblock on
+/dev/mapper/vg0-shared,
+       missing codepage or helper program, or other error
+       In some cases useful info is found in syslog - try
+       dmesg | tail  or so
+pyre:~# dmesg | tail -n1
+[441854.007959] XFS: unknown mount option [bobsyouruncle].
 
 _______________________________________________
 xfs mailing list
