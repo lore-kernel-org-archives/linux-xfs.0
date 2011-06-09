@@ -1,22 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p59IOXaK191518 for <xfs@oss.sgi.com>; Thu, 9 Jun 2011 13:24:33 -0500
-Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6C5524B0619
-	for <xfs@oss.sgi.com>; Thu,  9 Jun 2011 11:24:31 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id mZ94QC7HKvVYDV57
-	for <xfs@oss.sgi.com>; Thu, 09 Jun 2011 11:24:31 -0700 (PDT)
-Message-ID: <4DF10FDF.1090508@hardwarefreak.com>
-Date: Thu, 09 Jun 2011 13:24:31 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	p59JI4Im196947 for <xfs@oss.sgi.com>; Thu, 9 Jun 2011 14:18:05 -0500
+Received: from e3.ny.us.ibm.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3D522D9725F
+	for <xfs@oss.sgi.com>; Thu,  9 Jun 2011 12:18:03 -0700 (PDT)
+Received: from e3.ny.us.ibm.com (e3.ny.us.ibm.com [32.97.182.143]) by
+	cuda.sgi.com with ESMTP id IigJhRJe2J3HK1J4 for
+	<xfs@oss.sgi.com>; Thu, 09 Jun 2011 12:18:03 -0700 (PDT)
+Received: from d01relay05.pok.ibm.com (d01relay05.pok.ibm.com [9.56.227.237])
+	by e3.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p59ItaKl003827
+	for <xfs@oss.sgi.com>; Thu, 9 Jun 2011 14:55:36 -0400
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay05.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	p59JI1wq116880 for <xfs@oss.sgi.com>; Thu, 9 Jun 2011 15:18:01 -0400
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
+	p59JI1QJ027168 for <xfs@oss.sgi.com>; Thu, 9 Jun 2011 16:18:01 -0300
+Message-ID: <4DF11C67.8090702@linux.vnet.ibm.com>
+Date: Thu, 09 Jun 2011 12:17:59 -0700
+From: Allison Henderson <achender@linux.vnet.ibm.com>
 MIME-Version: 1.0
-Subject: Re: Defragging XFS File Systems
-References: <BANLkTi=40mmE+DCbLcSWBwNQtWpP=N=tXw@mail.gmail.com>
-	<201106090749.37745@zmi.at> <4DF080AC.2090507@hardwarefreak.com>
-	<201106091212.36227@zmi.at>
-In-Reply-To: <201106091212.36227@zmi.at>
+Subject: Re: Port xfstests 145, 161, 175, 176, 185?
+References: <4DEFC41A.9070701@linux.vnet.ibm.com>
+	<20110609110826.GA14899@infradead.org>
+In-Reply-To: <20110609110826.GA14899@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,58 +33,40 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Michael Monnerie <michael.monnerie@is.it-management.at>
-Cc: Kenneth Emerson <kenneth.emerson@gmail.com>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
 
-On 6/9/2011 5:12 AM, Michael Monnerie wrote:
-> On Donnerstag, 9. Juni 2011 Stan Hoeppner wrote:
->> When is running xfs_fsr recommended?
-> 
-> Good question. One case that comes to my mind is a filesystem that was 
-> used a long time when filled >85%, which has now either been expanded or 
-> files removed so you have a lot of space again, and you want to defrag 
-> all those files that have been badly fragmented.
->  
->> I scheduled it twice a week some time ago due to a filesystem
->> containing active mbox files.  I did so because they became so
->> heavily fragmented in short order, especially those swallowing
->> copious amounts of list mail.  Before cron'ing xfs_fsr I was seeing
->> mbox files with over 1000 fragmented extents, and increasing MUA
->> latency as the files became more fragmented.  The filesystem is
->> currently 90% free.
-> 
-> This is also an example where defrag may help. You have 10% usage, so 
-> there's enough space. Maybe your usage fits the mount option 
-> "allocsize", 
+On 06/09/2011 04:08 AM, Christoph Hellwig wrote:
+> On Wed, Jun 08, 2011 at 11:48:58AM -0700, Allison Henderson wrote:
+>> During one of my reviews for the punch hole tests patch set it was
+>> mentioned that it would be helpful to take the xfstests 145, 161,
+>> 175, 176, 185 and modify them such that they can run with out
+>> requiring the dmapi.  These tests contain some more interesting
+>> punch hole tests, but they dont normally run unless there is support
+>> for dmapi.
+>>
+>> I did take a peek at them and I was thinking that if we decide to do
+>> this, we would probably need to do something like introduce a new
+>> set of source code that is similar to what is seen under the dmapi
+>> folder, but modified to use a generic interface instead of the dmapi
+>> libraries.  We could try to merge them into a single code path, but
+>> I think that may introduce more complexities than would be
+>> desirable.
+>
+> Most of it should be doable using xfs_io.  If it's nessecary to write
+> new source files because of e.g. concurrency tests that we can't easily
+> do from xfs_io please add new source files to the src/ directory.
+>
+> Also, please don't rewrite the actual existing dmapi test cases, but
+> add new ones testing these patterns using the fallocate interface, as
+> the coverage for the dmapi interface still is useful.
+>
 
-I tried allocsize=1m but it didn't seem to help already existing files.
- I simply don't think there's much that can be done in filesystem logic
-to keep long lived constantly appended files from fragmenting, short of
-the log rotation method, which isn't really suitable for large mbox
-files.  Maildir is obviously an option to combat fragmentation, but it
-has downsides as well, mainly much higher small file IOPS during normal
-operation.  Using mbox I can 'hide the IO' by running xfs_fsr at night
-and/or on weekends.
-
-> so that you keep room for file append. But newer kernels 
-> changed behaviour of XFS, so I'm not sure up to which kernel version its 
-> good. Maybe Dave Chinner can chime in here. BTW, maybe this behaviour 
-> should be documented in the FAQ so we can reference it.
-
-My current method seems to work well for now.  This filesystem will
-likely not even be half full by the time this server is replaced in a
-few years, so I probably don't need to worry about xfs_fsr efficiency
-WRT free space.  Due to the low cost of today's gargantuan platters, I'm
-guessing there are likely many admins in a similar position.  Four 600GB
-SAS drives in RAID10 yields ~1.2TB of mail storage.  That's a lot of
-space, and performance, for small/medium organization's mailboxes...
-
--- 
-Stan
+Alrighty, thx Christoph.  I will keep this work item on my todo list then.
 
 _______________________________________________
 xfs mailing list
