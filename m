@@ -1,30 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p59GmLXr188491 for <xfs@oss.sgi.com>; Thu, 9 Jun 2011 11:48:22 -0500
-Received: from e5.ny.us.ibm.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 14BF5D95E45
-	for <xfs@oss.sgi.com>; Thu,  9 Jun 2011 09:48:20 -0700 (PDT)
-Received: from e5.ny.us.ibm.com (e5.ny.us.ibm.com [32.97.182.145]) by
-	cuda.sgi.com with ESMTP id PFRdUoNFiQ15HdOI for
-	<xfs@oss.sgi.com>; Thu, 09 Jun 2011 09:48:20 -0700 (PDT)
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e5.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p59GKWhi022060
-	for <xfs@oss.sgi.com>; Thu, 9 Jun 2011 12:20:32 -0400
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	p59GmCjL092484 for <xfs@oss.sgi.com>; Thu, 9 Jun 2011 12:48:12 -0400
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
-	id p59AlVPi025089
-	for <xfs@oss.sgi.com>; Thu, 9 Jun 2011 04:47:31 -0600
-Subject: PATCH: remove varibale that serve no purpose in
-	xfs_alloc_ag_vextent_exact()
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-Date: Thu, 09 Jun 2011 09:47:49 -0700
-Message-ID: <1307638069.7661.432.camel@chandra-lucid.beaverton.ibm.com>
-Mime-Version: 1.0
-Reply-To: sekharan@us.ibm.com
+	p59GUYos187882 for <xfs@oss.sgi.com>; Thu, 9 Jun 2011 11:30:35 -0500
+Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 10E63D961C2
+	for <xfs@oss.sgi.com>; Thu,  9 Jun 2011 09:30:32 -0700 (PDT)
+Received: from mailsrv14.zmi.at (mailsrv1.zmi.at [212.69.164.54]) by
+	cuda.sgi.com with ESMTP id YRXGy65V4Fxwd7Gs for
+	<xfs@oss.sgi.com>; Thu, 09 Jun 2011 09:30:32 -0700 (PDT)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: Re: Small files perform much faster on newly formatted fs?
+Date: Thu, 9 Jun 2011 18:30:28 +0200
+References: <20110607163742.GH28625@pyre.virge.net>
+	<20110609012907.GR32466@dastard>
+	<20110609134811.GI28625@pyre.virge.net>
+In-Reply-To: <20110609134811.GI28625@pyre.virge.net>
+MIME-Version: 1.0
+Message-Id: <201106091830.29491@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,65 +25,65 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============4162489986853499953=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: Alex Elder <aelder@sgi.com>
+Cc: Norbert Veber <nveber@pyre.virge.net>
 
-Hi,
+--===============4162489986853499953==
+Content-Type: multipart/signed;
+  boundary="nextPart27839233.5sKfQIQnPV";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 
-As per Alex Elder suggestion, here is a patch to remove non-purpose
-variables in xfs_alloc_ag_vextent_exact()
+--nextPart27839233.5sKfQIQnPV
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 
-chandra
+On Donnerstag, 9. Juni 2011 Norbert Veber wrote:
+> In these kinds of cases maybe there should be an error logged instead
+> of just silently ignoring them?
 
---------------------
-Remove the variables that serves no purpose.
+And also don't show them in the mount options when calling "mount" or=20
+"cat /proc/mount".
 
-Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
----
-diff --git a/fs/xfs/xfs_alloc.c b/fs/xfs/xfs_alloc.c
-index 95862bb..7a53c8f 100644
---- a/fs/xfs/xfs_alloc.c
-+++ b/fs/xfs/xfs_alloc.c
-@@ -570,9 +570,7 @@ xfs_alloc_ag_vextent_exact(
- 	xfs_agblock_t	tbno;	/* start block of trimmed extent */
- 	xfs_extlen_t	tlen;	/* length of trimmed extent */
- 	xfs_agblock_t	tend;	/* end block of trimmed extent */
--	xfs_agblock_t	end;	/* end of allocated extent */
- 	int		i;	/* success/failure of operation */
--	xfs_extlen_t	rlen;	/* length of returned extent */
- 
- 	ASSERT(args->alignment == 1);
- 
-@@ -625,18 +623,16 @@ xfs_alloc_ag_vextent_exact(
- 	 *
- 	 * Fix the length according to mod and prod if given.
- 	 */
--	end = XFS_AGBLOCK_MIN(tend, args->agbno + args->maxlen);
--	args->len = end - args->agbno;
-+	args->len = XFS_AGBLOCK_MIN(tend, args->agbno + args->maxlen)
-+						- args->agbno;
- 	xfs_alloc_fix_len(args);
- 	if (!xfs_alloc_fix_minleft(args))
- 		goto not_found;
- 
--	rlen = args->len;
--	ASSERT(args->agbno + rlen <= tend);
--	end = args->agbno + rlen;
-+	ASSERT(args->agbno + args->len <= tend);
- 
- 	/*
--	 * We are allocating agbno for rlen [agbno .. end]
-+	 * We are allocating agbno for args->len
- 	 * Allocate/initialize a cursor for the by-size btree.
- 	 */
- 	cnt_cur = xfs_allocbt_init_cursor(args->mp, args->tp, args->agbp,
----
+=2D-=20
+mit freundlichen Gr=FCssen,
+Michael Monnerie, Ing. BSc
+
+it-management Internet Services: Prot=E9ger
+http://proteger.at [gesprochen: Prot-e-schee]
+Tel: +43 660 / 415 6531
+
+// Haus zu verkaufen: http://zmi.at/langegg/
+
+--nextPart27839233.5sKfQIQnPV
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.16 (GNU/Linux)
+
+iEYEABECAAYFAk3w9SUACgkQzhSR9xwSCbRSLQCfX8QG/Ftp1KSpNsbkTMtrI5Aj
+pA4AnjEFNx53bj61dE6uC7VadYzVgu6o
+=MNDW
+-----END PGP SIGNATURE-----
+
+--nextPart27839233.5sKfQIQnPV--
+
+
+--===============4162489986853499953==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============4162489986853499953==--
