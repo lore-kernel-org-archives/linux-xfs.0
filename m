@@ -1,21 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5AMCPkV012890 for <xfs@oss.sgi.com>; Fri, 10 Jun 2011 17:12:25 -0500
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1D35D4BA54A
-	for <xfs@oss.sgi.com>; Fri, 10 Jun 2011 15:12:24 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id xoXfdy7WPwsvIqes for
-	<xfs@oss.sgi.com>; Fri, 10 Jun 2011 15:12:24 -0700 (PDT)
-Message-ID: <4DF296C6.2090606@redhat.com>
-Date: Fri, 10 Jun 2011 17:12:22 -0500
-From: Eric Sandeen <sandeen@redhat.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH]: [xfstests] v2: Make ext2 requirement explicit for test
-	049
-References: <1307737668.7661.438.camel@chandra-lucid.beaverton.ibm.com>
-In-Reply-To: <1307737668.7661.438.camel@chandra-lucid.beaverton.ibm.com>
+	p5ANQ6fg019115 for <xfs@oss.sgi.com>; Fri, 10 Jun 2011 18:26:06 -0500
+Received: from e39.co.us.ibm.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7E1AB16EA8CD
+	for <xfs@oss.sgi.com>; Fri, 10 Jun 2011 16:26:04 -0700 (PDT)
+Received: from e39.co.us.ibm.com (e39.co.us.ibm.com [32.97.110.160]) by
+	cuda.sgi.com with ESMTP id 0IOzMdmQz7F763ro for
+	<xfs@oss.sgi.com>; Fri, 10 Jun 2011 16:26:04 -0700 (PDT)
+Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com
+	[9.17.195.227])
+	by e39.co.us.ibm.com (8.14.4/8.13.1) with ESMTP id p5ANBp7F005518
+	for <xfs@oss.sgi.com>; Fri, 10 Jun 2011 17:11:51 -0600
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id
+	p5ANQ17d165702 for <xfs@oss.sgi.com>; Fri, 10 Jun 2011 17:26:01 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
+	id p5AHPYTO009062
+	for <xfs@oss.sgi.com>; Fri, 10 Jun 2011 11:25:34 -0600
+Subject: Re: Failure of xfstests test case 202
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+In-Reply-To: <20110610214143.GZ32466@dastard>
+References: <1307738387.7661.450.camel@chandra-lucid.beaverton.ibm.com>
+	<20110610214143.GZ32466@dastard>
+Date: Fri, 10 Jun 2011 16:25:58 -0700
+Message-ID: <1307748358.7661.459.camel@chandra-lucid.beaverton.ibm.com>
+Mime-Version: 1.0
+Reply-To: sekharan@us.ibm.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,66 +40,73 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: sekharan@us.ibm.com
+To: Dave Chinner <david@fromorbit.com>
 Cc: XFS Mailing List <xfs@oss.sgi.com>
 
-On 6/10/11 3:27 PM, Chandra Seetharaman wrote:
-> Test 049 depends on ext2 module being supported by the kernel.
+On Sat, 2011-06-11 at 07:41 +1000, Dave Chinner wrote:
+> On Fri, Jun 10, 2011 at 01:39:47PM -0700, Chandra Seetharaman wrote:
+> > Hi all,
+> > 
+> > Test case 202 tries to create a single AG filesystem and runs xfs_repair
+> > on it expecting it to fail.
+> > 
+> > But, when I run the test with a filesystem that is bigger than 1TB it
+> > fails (not pleasantly) since the max AG size is 1TB.
+> > 
+> > I am thinking of the following solution, please let me know if there is
+> > any other elegant fix.
+> > 
+> > chandra
+> > ------------------------
+> > diff --git a/202 b/202
+> > index cbdcb57..b871d8b 100755
+> > --- a/202
+> > +++ b/202
+> > @@ -42,10 +42,12 @@ _supported_os Linux
+> >  _require_scratch
+> >  
+> >  echo "== Creating single-AG filesystem =="
+> > -_scratch_mkfs_xfs -d agcount=1 >/dev/null 2>&1
+> > +_scratch_mkfs_xfs -d agcount=1 >/dev/null 2>&1 \
+> > + || _scratch_mkfs_xfs -d agcount=1 -d size=268435455b >/dev/null 2>&1 
+> > + || _fail "!!! failed to make filesystem"
 > 
-> This patch makes it a explicit, instead of failing the test with
-> obscure message.
-> 
-> Signed-Off-By: Chandra Seetharaman <sekharan@us.ibm.com>
+> Why the second mkfs attempt with a fixed block size?
 
-committed in the xfstests-dev tree on kernel.org, thanks!
+to see if the mkfs failed because the default filesystem size is too
+big.
 
--Eric
+>   That will
+> still fail for block size > 4k. 
 
-> ---
+Realized that. It should have been absolute.
+ 
+>  All you need to do is detect the
+> first attempt failed.
+
+But, I didn't want the test to fail, instead want it to proceed if big
+filesystem was the reason for failure.
+
+By now you might have seen my response to Christoph's email. What do you
+think of that ?
 > 
-> diff --git a/049 b/049
-> index 3d3f030..c6c4faa 100755
-> --- a/049
-> +++ b/049
-> @@ -64,6 +64,7 @@ _require_nobigloopfs
->  _require_nonexternal
->  _require_scratch
->  _require_loop
-> +_require_ext2
->  
->  rm -f $seq.full
->  
-> diff --git a/common.rc b/common.rc
-> index c510c66..44c746d 100644
-> --- a/common.rc
-> +++ b/common.rc
-> @@ -769,6 +769,24 @@ _require_loop()
->      fi
->  }
->  
-> +# this test requires ext2 filesystem support
-> +#
-> +_require_ext2()
-> +{
-> +    if [ "$HOSTOS" != "Linux" ]
-> +    then
-> +	_notrun "This test requires linux for ext2 filesystem support"
-> +    fi
-> +
-> +    modprobe ext2 >/dev/null 2>&1
-> +    if grep ext2 /proc/filesystems >/dev/null 2>&1
-> +    then
-> +	:
-> +    else
-> +	_notrun "This test requires ext2 filesystem support"
-> +    fi
-> +}
-> +
->  # this test requires that (large) loopback device files are not in use
->  #
->  _require_nobigloopfs()
+> >  
+> >  echo "== Trying to repair it (should fail) =="
+> > -_scratch_xfs_repair
+> > +_scratch_xfs_repair && _fail "!!! xfs_repair of single AG filesystem
+> > succeeded"
 > 
+> This is not necessary - the golden image compare at the end of the
+> test will detect this succeeding when it shoul dbe failing.
+
+But it is not very informative about "why" the test failed. This message
+will make it clear to the user.
+
 > 
+> Cheers,
+> 
+> Dave.
+
 
 _______________________________________________
 xfs mailing list
