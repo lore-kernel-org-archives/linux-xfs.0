@@ -1,24 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5AHv2CQ261869 for <xfs@oss.sgi.com>; Fri, 10 Jun 2011 12:57:03 -0500
-Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1B129DA2CC6
-	for <xfs@oss.sgi.com>; Fri, 10 Jun 2011 10:56:59 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	wiAE8Fwah1ZlEbXH for <xfs@oss.sgi.com>;
-	Fri, 10 Jun 2011 10:56:59 -0700 (PDT)
-Date: Sat, 11 Jun 2011 03:56:56 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Defragging XFS File Systems
-Message-ID: <20110610175656.GW32466@dastard>
-References: <BANLkTi=40mmE+DCbLcSWBwNQtWpP=N=tXw@mail.gmail.com>
-	<201106090749.37745@zmi.at> <4DF080AC.2090507@hardwarefreak.com>
-	<201106091212.36227@zmi.at> <4DF10FDF.1090508@hardwarefreak.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4DF10FDF.1090508@hardwarefreak.com>
+	p5AIjcvW002193 for <xfs@oss.sgi.com>; Fri, 10 Jun 2011 13:45:38 -0500
+Received: from e8.ny.us.ibm.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CB1F54B1E3A
+	for <xfs@oss.sgi.com>; Fri, 10 Jun 2011 11:45:37 -0700 (PDT)
+Received: from e8.ny.us.ibm.com (e8.ny.us.ibm.com [32.97.182.138]) by
+	cuda.sgi.com with ESMTP id LyrhdyQgkXkEERTK for
+	<xfs@oss.sgi.com>; Fri, 10 Jun 2011 11:45:37 -0700 (PDT)
+Received: from d01relay07.pok.ibm.com (d01relay07.pok.ibm.com [9.56.227.147])
+	by e8.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p5AIYPmt018156
+	for <xfs@oss.sgi.com>; Fri, 10 Jun 2011 14:34:25 -0400
+Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
+	by d01relay07.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	p5AIjaoi1216658
+	for <xfs@oss.sgi.com>; Fri, 10 Jun 2011 14:45:36 -0400
+Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
+	by d01av03.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
+	p5AEjOZa017180 for <xfs@oss.sgi.com>; Fri, 10 Jun 2011 11:45:24 -0300
+Subject: [PATCH]: [xfstests] Make ext2 requirement explicit for test 049
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Date: Fri, 10 Jun 2011 11:45:33 -0700
+Message-ID: <1307731533.7661.436.camel@chandra-lucid.beaverton.ibm.com>
+Mime-Version: 1.0
+Reply-To: sekharan@us.ibm.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,55 +36,58 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: Michael Monnerie <michael.monnerie@is.it-management.at>, Kenneth Emerson <kenneth.emerson@gmail.com>, xfs@oss.sgi.com
+To: XFS <xfs@oss.sgi.com>
+Cc: Eric Sandeen <sandeen@redhat.com>
 
-On Thu, Jun 09, 2011 at 01:24:31PM -0500, Stan Hoeppner wrote:
-> On 6/9/2011 5:12 AM, Michael Monnerie wrote:
-> > On Donnerstag, 9. Juni 2011 Stan Hoeppner wrote:
-> >> When is running xfs_fsr recommended?
-> > 
-> > Good question. One case that comes to my mind is a filesystem that was 
-> > used a long time when filled >85%, which has now either been expanded or 
-> > files removed so you have a lot of space again, and you want to defrag 
-> > all those files that have been badly fragmented.
-> >  
-> >> I scheduled it twice a week some time ago due to a filesystem
-> >> containing active mbox files.  I did so because they became so
-> >> heavily fragmented in short order, especially those swallowing
-> >> copious amounts of list mail.  Before cron'ing xfs_fsr I was seeing
-> >> mbox files with over 1000 fragmented extents, and increasing MUA
-> >> latency as the files became more fragmented.  The filesystem is
-> >> currently 90% free.
-> > 
-> > This is also an example where defrag may help. You have 10% usage, so 
-> > there's enough space. Maybe your usage fits the mount option 
-> > "allocsize", 
-> 
-> I tried allocsize=1m but it didn't seem to help already existing files.
->  I simply don't think there's much that can be done in filesystem logic
-> to keep long lived constantly appended files from fragmenting, short of
+Test 049 depends on ext2 module being supported by the kernel.
 
-YOu can stop XFS from truncating speculative preallocation beyond
-EOF by either telling the inode it has preallocated space or
-or turning it into a an append-only file. e.g.
+This patch makes it a explicit, instead of failing the test with
+obscure message.
 
-$ xfs_io -f -c "resvsp 0 4k" <file>
+Signed-Off-By: Chandra Seetharaman <sekharan@us.ibm.com>
+---
 
-or
+diff --git a/049 b/049
+index 3d3f030..c6c4faa 100755
+--- a/049
++++ b/049
+@@ -64,6 +64,7 @@ _require_nobigloopfs
+ _require_nonexternal
+ _require_scratch
+ _require_loop
++_require_ext2
+ 
+ rm -f $seq.full
+ 
+diff --git a/common.rc b/common.rc
+index c510c66..531a43e 100644
+--- a/common.rc
++++ b/common.rc
+@@ -769,6 +769,23 @@ _require_loop()
+     fi
+ }
+ 
++# this test requires ext2 filesystem support
++#
++_require_ext2()
++{
++    if [ "$HOSTOS" != "Linux" ]
++    then
++	_notrun "This test requires linux for ext2 filesystem support"
++    fi
++
++    if modprobe ext2 >/dev/null 2>&1
++    then
++	:
++    else
++	_notrun "This test requires ext2 filesystem support"
++    fi
++}
++
+ # this test requires that (large) loopback device files are not in use
+ #
+ _require_nobigloopfs()
 
-$ sudo chattr +a <file>
-
-Either way, XFS won't truncate extents beyond EOF on file close for
-such a file and that should prevent most future fragmentation of the
-file.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
