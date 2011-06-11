@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5B1XLsJ023432 for <xfs@oss.sgi.com>; Fri, 10 Jun 2011 20:33:21 -0500
-Received: from Ishtar.tlinx.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5D82416EAC7C
-	for <xfs@oss.sgi.com>; Fri, 10 Jun 2011 18:33:19 -0700 (PDT)
-Received: from Ishtar.tlinx.org (ishtar.tlinx.org [173.164.175.65]) by
-	cuda.sgi.com with ESMTP id 5gH9sujbD1ALcjwU for
-	<xfs@oss.sgi.com>; Fri, 10 Jun 2011 18:33:19 -0700 (PDT)
-Message-ID: <4DF2C5D4.6030507@tlinx.org>
-Date: Fri, 10 Jun 2011 18:33:08 -0700
-From: Linda Walsh <xfs@tlinx.org>
+	p5B7749c045439 for <xfs@oss.sgi.com>; Sat, 11 Jun 2011 02:07:04 -0500
+Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D82D014EBD57
+	for <xfs@oss.sgi.com>; Sat, 11 Jun 2011 00:07:02 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	wxIKWemM2I66RHmk for <xfs@oss.sgi.com>;
+	Sat, 11 Jun 2011 00:07:02 -0700 (PDT)
+Date: Sat, 11 Jun 2011 17:07:00 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Failure of xfstests test case 202
+Message-ID: <20110611070700.GB32466@dastard>
+References: <1307738387.7661.450.camel@chandra-lucid.beaverton.ibm.com>
+	<20110610211911.GA11509@infradead.org>
+	<1307741624.7661.453.camel@chandra-lucid.beaverton.ibm.com>
 MIME-Version: 1.0
-Subject: FYI: LSI rebuilding;
-	and XFS speed V. raw - hints on maxing out 'dd'....(if not already
-	obvious)...
-References: <BANLkTik4YjSr7-VA+f9Sh+UxvKfFKMy=+w@mail.gmail.com>
-	<20110502191323.417ef644@harpe.intellique.com>
-In-Reply-To: <20110502191323.417ef644@harpe.intellique.com>
+Content-Disposition: inline
+In-Reply-To: <1307741624.7661.453.camel@chandra-lucid.beaverton.ibm.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,46 +27,82 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Emmanuel Florac <eflorac@intellique.com>
-Cc: Paul Anderson <pha@umich.edu>, xfs@oss.sgi.com
+To: Chandra Seetharaman <sekharan@us.ibm.com>
+Cc: Christoph Hellwig <hch@infradead.org>, XFS Mailing List <xfs@oss.sgi.com>
 
-CgpFbW1hbnVlbCBGbG9yYWMgd3JvdGU6Cj4gTGUgTW9uLCAyIE1heSAyMDExIDExOjQ3OjQ4IC0w
-NDAwCj4gUGF1bCBBbmRlcnNvbiA8cGhhQHVtaWNoLmVkdT4gw6ljcml2YWl0Ogo+IAo+PiBXZSBh
-cmUgZGVwbG95aW5nIGZpdmUgRGVsbCA4MTBzLCAxOTJHaUIgUkFNLCAxMiBjb3JlLCBlYWNoIHdp
-dGggdGhyZWUKPj4gTFNJIDkyMDAtOEUgU0FTIGNvbnRyb2xsZXJzLCBhbmQgdGhyZWUgU3VwZXJN
-aWNybyA4NDcgNDUgZHJpdmUgYmF5Cj4+IGNhYmluZXRzIHdpdGggZW50ZXJwcmlzZSBncmFkZSAy
-VEIgZHJpdmVzLgo+IAo+IEkgaGF2ZSB2ZXJ5IGxpdHRsZSBleHBlcmllbmNlIHdpdGggdGhlc2Ug
-UkFJRCBjb29udHJvbGxlcnMuIEhvd2V2ZXIgSQo+IGhhdmUgYSA5MjEyIDRpNGUgKHNhbWUgY2Fy
-ZCBnZW5lcmF0aW9uIGFuZCBzYW1lIGNoaXBzZXQpIGluIHRlc3QsIGFuZCBzbwo+IGZhciBJIG11
-c3Qgc2F5IGl0IGxvb2tzIGxpa2UgX3V0dGVyXyBfY3JhcF8uIFRoZSBwZXJmb3JtYW5jZSBpcyBh
-YnlzbWFsCj4gKGl0J3MgYmVlbiBidXN5IHJlYnVpbGRpbmcgYSAyMFRCIGFycmF5IGZvci4uLiA2
-IGRheXMhKTsgdGhlIHNlcnZlcgotLS0tCkJ5IGRlZmF1bHQgdGhlIGNhcmQgb25seSBhbGxvY2F0
-ZXMgYWJvdXQgMjAlIG9mIGl0J3MgZGlzayBjYXBhY2l0eSBmb3IKcmVidWlsZHMgd2l0aCB0aGUg
-cmVzdCBhbGxvY2F0ZWQgZm9yICdyZWFsIHdvcmsnLiAgIEl0J3Mgbm90IHNvIHNtYXJ0IGFzCnRv
-IHVzZSAxMDAlIHdoZW4gdGhlcmUgaXMgbm8gcmVhbCB3b3JrLi4uICAgSWYgeW91IGVudGVyIHRo
-ZSBjb250cm9sIHNvZnR3YXJlLCAKKHJ1bnMgdW5kZXIgWCBvbiBsaW51eCAtLSBldmVuIGRpc3Bs
-YXlzIG9uIEN5Z1gpLi4uIGFuZCBlbnRlciBzb21ldGhpbmcgbGlrZQo5MCUsIHlvdSdsbCBmaW5k
-IHlvdXIgcmVidWlsZHMgd2lsbCBnbyBtdWNoIGZhc3RlciwgYnV0IHlvdSBjYW4gZXhwZWN0IGFu
-eQpyZWFsLWFjY2VzcyB0byB0aGUgZGV2aWNlIHRvIHN1ZmZlciBhY2NvcmRpbmdseS4KCkkgaGF2
-ZSBhIDkyODUtOEUgYW5kIGhhdmUgYmVlbiBwcmV0dHkgaGFwcHkgd2l0aCBpdCdzIHBlcmZvcm1h
-bmNlLCBidXQgSSBvbmx5CmhhdmUgMTAgZGF0YSBkaXNrcyAoMng2LWRpc2sgUkFJRDUgPT5SQUlE
-NTApIHdpdGggMlRCIFNBVEEncyBhbmQgZ2V0IDFHQiBwZXJmLi4uCmFib3V0IHdoYXQgSSdkIGV4
-cGVjdCBmcm9tIGRpc2tzIHRoYXQgZ2V0IGFyb3VuZCAxMjBNQiBlYWNoIGFuZCBkb2luZyAyIFJB
-SUQ1CmNhbGNzLi4uKS4uLgoKLS0tLQoKVGhlIG9ubHkgb3RoZXIgdGhpbmdzIEkgY2FuIHRoaW5r
-IG9mIHdoZW4gYmVuY2hpbmcgWEZTIGZvciBtYXggdGhyb3VnaHB1dC4KCjEpIFJlYWx0aW1lIHBh
-cnRpdGlvbiBtaWdodCBiZSBhbiBvcHRpb24gKG5ldmVyIHRyaWVkLCBidXQgdGhvdWdodCBJJ2Qg
-bWVudGlvbgppdCkKCjIpIG9uICJkZCIsIGlmIHlvdSBhcmUgdGVzdGluZyAid3JpdGUiIHBlcmZv
-cm1hbmNlLCB0cnkgcHJlLWFsbG9jYXRpbmcgdGhlIGZpbGUKdXNpbmcgKGZpbGxpbmcgaW4gdGhl
-IHZhcnMuLi4pOgoKICAgeGZzX2lvIC1mIC1jICJ0cnVuY2F0ZSAkc2l6ZSIgLWMgInJlc3ZzcCAw
-ICRzaXplIiAiJE5ld2ZpbGUiCgp0aGVuIHRlc3QgZm9yIGZyYWdtZW50YXRpb246CihzZWUgaWYg
-aXQgaXMgaW4gMSAnZXh0ZW50Jy4uLi4sIDEvbGluZSk6CgoJeGZzX2JtYXAgICIkTmV3ZmlsZSIK
-CmlmIG5lZWRlZCwgdHJ5IGRlZnJhZ2dpbmc6CiAgeGZzX2ZzciAiJE5ld2ZpbGUiCgpUaGVuIG9u
-ICJkZCIgdXNlIHRoZSBjb252PSJub2NyZWF0LG5vdHJ1bmMiIGZsYWdzIC0tIHRoYXQgd2F5IHlv
-dSdsbCBiZSBhYmxlCnRvIGR1bXAgSS9PIGRpcmVjdGx5IGludG8gdGhlIGZpbGUgd2l0aG91dCBp
-dCBoYXZpbmcgdG8gYmUgImNyZWF0ZWQgb3IgYWxsb2NhdGVkIi4uLgoKCgoKCgoKX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4
-ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+On Fri, Jun 10, 2011 at 02:33:44PM -0700, Chandra Seetharaman wrote:
+> 
+> On Fri, 2011-06-10 at 17:19 -0400, Christoph Hellwig wrote:
+> > On Fri, Jun 10, 2011 at 01:39:47PM -0700, Chandra Seetharaman wrote:
+> > > Hi all,
+> > > 
+> > > Test case 202 tries to create a single AG filesystem and runs xfs_repair
+> > > on it expecting it to fail.
+> > > 
+> > > But, when I run the test with a filesystem that is bigger than 1TB it
+> > > fails (not pleasantly) since the max AG size is 1TB.
+> > > 
+> > > I am thinking of the following solution, please let me know if there is
+> > > any other elegant fix.
+> > 
+> > What about:
+> > 
+> > #
+> > # The AG size is limited to 1TB (or even less with historic xfsprogs),
+> > # so chose a small enough filesystem to make sure we can actually create
+> > # a single AG filesystem.
+> > #
+> > _scratch_mkfs_sized `expr 1024 \* 1024 \* 1024`
+> > 
+> > instead?
+> 
+> Good point. Here is a solution based on your suggestion, but not using
+> _scratch_mkfs_sized (sincein the current context we need it to take
+> extra option, whereas _scratch_mkfs_sized takes fixed options).
+> 
+> What do you think ?
+> 
+> ----------------
+> diff --git a/202 b/202
+> index cbdcb57..b982956 100755
+> --- a/202
+> +++ b/202
+> @@ -41,11 +41,18 @@ _supported_os Linux
+>  
+>  _require_scratch
+>  
+> +#
+> +# The AG size is limited to 1TB (or even less with historic xfsprogs),
+> +# so chose a small enough filesystem to make sure we can actually create
+> +# a single AG filesystem.
+> +#
+>  echo "== Creating single-AG filesystem =="
+> -_scratch_mkfs_xfs -d agcount=1 >/dev/null 2>&1
+> +_scratch_mkfs_xfs -d agcount=1 -d size=$((1024*1024*1024)) >/dev/null 2>&1 \
+> + || _fail "!!! failed to make filesystem with single AG"
+
+Should work for most test setups.
+
+>  
+>  echo "== Trying to repair it (should fail) =="
+> -_scratch_xfs_repair
+> +_scratch_xfs_repair \
+> + && _fail "!!! xfs_repair of single AG filesystem succeeded. Expected to fail."
+
+But as I said before, this change is not necessary.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
