@@ -1,33 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5ANQ6fg019115 for <xfs@oss.sgi.com>; Fri, 10 Jun 2011 18:26:06 -0500
-Received: from e39.co.us.ibm.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7E1AB16EA8CD
-	for <xfs@oss.sgi.com>; Fri, 10 Jun 2011 16:26:04 -0700 (PDT)
-Received: from e39.co.us.ibm.com (e39.co.us.ibm.com [32.97.110.160]) by
-	cuda.sgi.com with ESMTP id 0IOzMdmQz7F763ro for
-	<xfs@oss.sgi.com>; Fri, 10 Jun 2011 16:26:04 -0700 (PDT)
-Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com
-	[9.17.195.227])
-	by e39.co.us.ibm.com (8.14.4/8.13.1) with ESMTP id p5ANBp7F005518
-	for <xfs@oss.sgi.com>; Fri, 10 Jun 2011 17:11:51 -0600
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id
-	p5ANQ17d165702 for <xfs@oss.sgi.com>; Fri, 10 Jun 2011 17:26:01 -0600
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
-	id p5AHPYTO009062
-	for <xfs@oss.sgi.com>; Fri, 10 Jun 2011 11:25:34 -0600
-Subject: Re: Failure of xfstests test case 202
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-In-Reply-To: <20110610214143.GZ32466@dastard>
-References: <1307738387.7661.450.camel@chandra-lucid.beaverton.ibm.com>
-	<20110610214143.GZ32466@dastard>
-Date: Fri, 10 Jun 2011 16:25:58 -0700
-Message-ID: <1307748358.7661.459.camel@chandra-lucid.beaverton.ibm.com>
-Mime-Version: 1.0
-Reply-To: sekharan@us.ibm.com
+	p5B1Ch2P022802 for <xfs@oss.sgi.com>; Fri, 10 Jun 2011 20:12:43 -0500
+Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B22B816EAC26
+	for <xfs@oss.sgi.com>; Fri, 10 Jun 2011 18:12:41 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id vqZAQyatSDCGwIw9
+	for <xfs@oss.sgi.com>; Fri, 10 Jun 2011 18:12:41 -0700 (PDT)
+Message-ID: <4DF2C108.70106@hardwarefreak.com>
+Date: Fri, 10 Jun 2011 20:12:40 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
+MIME-Version: 1.0
+Subject: Re: Defragging XFS File Systems
+References: <BANLkTi=40mmE+DCbLcSWBwNQtWpP=N=tXw@mail.gmail.com>
+	<201106090749.37745@zmi.at> <4DF080AC.2090507@hardwarefreak.com>
+	<201106091212.36227@zmi.at> <4DF10FDF.1090508@hardwarefreak.com>
+	<20110610175656.GW32466@dastard>
+In-Reply-To: <20110610175656.GW32466@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -41,72 +31,65 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: XFS Mailing List <xfs@oss.sgi.com>
+Cc: Michael Monnerie <michael.monnerie@is.it-management.at>, Kenneth Emerson <kenneth.emerson@gmail.com>, xfs@oss.sgi.com
 
-On Sat, 2011-06-11 at 07:41 +1000, Dave Chinner wrote:
-> On Fri, Jun 10, 2011 at 01:39:47PM -0700, Chandra Seetharaman wrote:
-> > Hi all,
-> > 
-> > Test case 202 tries to create a single AG filesystem and runs xfs_repair
-> > on it expecting it to fail.
-> > 
-> > But, when I run the test with a filesystem that is bigger than 1TB it
-> > fails (not pleasantly) since the max AG size is 1TB.
-> > 
-> > I am thinking of the following solution, please let me know if there is
-> > any other elegant fix.
-> > 
-> > chandra
-> > ------------------------
-> > diff --git a/202 b/202
-> > index cbdcb57..b871d8b 100755
-> > --- a/202
-> > +++ b/202
-> > @@ -42,10 +42,12 @@ _supported_os Linux
-> >  _require_scratch
-> >  
-> >  echo "== Creating single-AG filesystem =="
-> > -_scratch_mkfs_xfs -d agcount=1 >/dev/null 2>&1
-> > +_scratch_mkfs_xfs -d agcount=1 >/dev/null 2>&1 \
-> > + || _scratch_mkfs_xfs -d agcount=1 -d size=268435455b >/dev/null 2>&1 
-> > + || _fail "!!! failed to make filesystem"
+On 6/10/2011 12:56 PM, Dave Chinner wrote:
+> On Thu, Jun 09, 2011 at 01:24:31PM -0500, Stan Hoeppner wrote:
+>> On 6/9/2011 5:12 AM, Michael Monnerie wrote:
+>>> On Donnerstag, 9. Juni 2011 Stan Hoeppner wrote:
+>>>> When is running xfs_fsr recommended?
+>>>
+>>> Good question. One case that comes to my mind is a filesystem that was 
+>>> used a long time when filled >85%, which has now either been expanded or 
+>>> files removed so you have a lot of space again, and you want to defrag 
+>>> all those files that have been badly fragmented.
+>>>  
+>>>> I scheduled it twice a week some time ago due to a filesystem
+>>>> containing active mbox files.  I did so because they became so
+>>>> heavily fragmented in short order, especially those swallowing
+>>>> copious amounts of list mail.  Before cron'ing xfs_fsr I was seeing
+>>>> mbox files with over 1000 fragmented extents, and increasing MUA
+>>>> latency as the files became more fragmented.  The filesystem is
+>>>> currently 90% free.
+>>>
+>>> This is also an example where defrag may help. You have 10% usage, so 
+>>> there's enough space. Maybe your usage fits the mount option 
+>>> "allocsize", 
+>>
+>> I tried allocsize=1m but it didn't seem to help already existing files.
+>>  I simply don't think there's much that can be done in filesystem logic
+>> to keep long lived constantly appended files from fragmenting, short of
 > 
-> Why the second mkfs attempt with a fixed block size?
-
-to see if the mkfs failed because the default filesystem size is too
-big.
-
->   That will
-> still fail for block size > 4k. 
-
-Realized that. It should have been absolute.
- 
->  All you need to do is detect the
-> first attempt failed.
-
-But, I didn't want the test to fail, instead want it to proceed if big
-filesystem was the reason for failure.
-
-By now you might have seen my response to Christoph's email. What do you
-think of that ?
+> YOu can stop XFS from truncating speculative preallocation beyond
+> EOF by either telling the inode it has preallocated space or
+> or turning it into a an append-only file. e.g.
 > 
-> >  
-> >  echo "== Trying to repair it (should fail) =="
-> > -_scratch_xfs_repair
-> > +_scratch_xfs_repair && _fail "!!! xfs_repair of single AG filesystem
-> > succeeded"
+> $ xfs_io -f -c "resvsp 0 4k" <file>
 > 
-> This is not necessary - the golden image compare at the end of the
-> test will detect this succeeding when it shoul dbe failing.
-
-But it is not very informative about "why" the test failed. This message
-will make it clear to the user.
-
+> or
 > 
-> Cheers,
+> $ sudo chattr +a <file>
 > 
-> Dave.
+> Either way, XFS won't truncate extents beyond EOF on file close for
+> such a file and that should prevent most future fragmentation of the
+> file.
 
+Given the way in which individual mails are deleted from an mbox
+file[1], how would changing the file to append-only affect a user's
+ability to delete mail from that mbox?  Is this something I could use
+generically on all mbox files, or is this only applicable to files for
+which there is some certainty that they'll only be appended in the future?
+
+[1] http://www.linuxmail.info/mbox-maildir-mail-storage-formats/
+1.  Lock the mailbox.
+2.  Move the contents of the mailbox, beginning from the position right
+    after the mail to be deleted until the end of the mailbox, into the
+    position of the mail to be deleted.
+3.  Reduce the size of the mailbox file by the size of the deleted mail.
+4.  Unlock the mailbox.
+
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
