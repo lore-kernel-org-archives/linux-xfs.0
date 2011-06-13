@@ -1,22 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5DEDTJ6244900 for <xfs@oss.sgi.com>; Mon, 13 Jun 2011 09:13:30 -0500
-Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4657914EE0F9
-	for <xfs@oss.sgi.com>; Mon, 13 Jun 2011 07:13:27 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	baQyzXkKd4Fv32LR for <xfs@oss.sgi.com>;
-	Mon, 13 Jun 2011 07:13:27 -0700 (PDT)
-Date: Tue, 14 Jun 2011 00:13:24 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfstest run result on 2.6.35.13 X86, 51 test cases failed
-Message-ID: <20110613141324.GC32466@dastard>
-References: <BANLkTinCvmt+=ZO9HwUWda1vkmLEqOfSwg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <BANLkTinCvmt+=ZO9HwUWda1vkmLEqOfSwg@mail.gmail.com>
+	p5DGIUCI257218 for <xfs@oss.sgi.com>; Mon, 13 Jun 2011 11:18:31 -0500
+Received: from e2.ny.us.ibm.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3476114EE8AD
+	for <xfs@oss.sgi.com>; Mon, 13 Jun 2011 09:18:29 -0700 (PDT)
+Received: from e2.ny.us.ibm.com (e2.ny.us.ibm.com [32.97.182.142]) by
+	cuda.sgi.com with ESMTP id CPrsSM9ZQfQ0deTZ for
+	<xfs@oss.sgi.com>; Mon, 13 Jun 2011 09:18:29 -0700 (PDT)
+Received: from d01relay05.pok.ibm.com (d01relay05.pok.ibm.com [9.56.227.237])
+	by e2.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p5DFw382031265
+	for <xfs@oss.sgi.com>; Mon, 13 Jun 2011 11:58:03 -0400
+Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
+	by d01relay05.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	p5DGIRP9056042 for <xfs@oss.sgi.com>; Mon, 13 Jun 2011 12:18:27 -0400
+Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
+	by d01av03.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
+	p5DCIFuR021351 for <xfs@oss.sgi.com>; Mon, 13 Jun 2011 09:18:15 -0300
+Subject: [PATCH]: [xfstests] Change test 202 to create a filesystem with
+	small enough filesystem for a single AG
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Date: Mon, 13 Jun 2011 09:18:25 -0700
+Message-ID: <1307981905.7661.461.camel@chandra-lucid.beaverton.ibm.com>
+Mime-Version: 1.0
+Reply-To: sekharan@us.ibm.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,35 +36,38 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ajeet Yadav <ajeet.yadav.77@gmail.com>
-Cc: xfs@oss.sgi.com
+To: XFS Mailing List <xfs@oss.sgi.com>
+Cc: Eric Sandeen <sandeen@redhat.com>
 
-On Mon, Jun 13, 2011 at 02:16:02PM +0530, Ajeet Yadav wrote:
-> Dear All.
-> I have installed the 2.6.35.13 long term valilla kernel release
-> (www.kenrel.org) on my Intel core 2 duo PC, and run 11-05-2011 xfstest
-> version, and run on it, below is the list of fails test cases.
-> As far as I know community uses xfstest for QA, seeing so many fails,
-> I am bit worried.
+Test 202 fails when the filesystem size is greater than 1TB with
+not so clear message. 
 
-It shouldn't fail very many tests at all...
+Call mkfs with a small enough filesystem size even with older 
+versions of XFS.
 
-> Can anyone hepl me know that why so many fails, is I missed some
-> config option ? or these test cases are not applicable ? or there is
-> someting else
+Signed-Off-By: Chandra Seetharaman <sekharan@us.ibm.com>
+---
+diff --git a/202 b/202
+index cbdcb57..f3030fc 100755
+--- a/202
++++ b/202
+@@ -41,8 +41,14 @@ _supported_os Linux
+ 
+ _require_scratch
+ 
++#
++# The AG size is limited to 1TB (or even less with historic xfsprogs),
++# so chose a small enough filesystem to make sure we can actually create
++# a single AG filesystem.
++#
+ echo "== Creating single-AG filesystem =="
+-_scratch_mkfs_xfs -d agcount=1 >/dev/null 2>&1
++_scratch_mkfs_xfs -d agcount=1 -d size=$((1024*1024*1024)) >/dev/null 2>&1 \
++ || _fail "!!! failed to make filesystem with single AG"
+ 
+ echo "== Trying to repair it (should fail) =="
+ _scratch_xfs_repair
 
-Well, without telling us why the tests are failing (i.e. copy all
-the output rather than just telling us some tests failed) we have no
-idea what the failures you are seeing are. Without some indication
-of what they failures are nobody can really comment on your
-situation....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
