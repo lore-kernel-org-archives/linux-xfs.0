@@ -1,20 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5EG6xDI089992 for <xfs@oss.sgi.com>; Tue, 14 Jun 2011 11:07:00 -0500
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 84F7E1EDA557
-	for <xfs@oss.sgi.com>; Tue, 14 Jun 2011 09:06:59 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id mAkRe14RKCfYDx7n for
-	<xfs@oss.sgi.com>; Tue, 14 Jun 2011 09:06:59 -0700 (PDT)
-Message-ID: <4DF78716.4040605@redhat.com>
-Date: Tue, 14 Jun 2011 11:06:46 -0500
-From: Eric Sandeen <sandeen@redhat.com>
-MIME-Version: 1.0
-Subject: Re: xfstests 252 failure
-References: <4DF78127.40505@linux.vnet.ibm.com>
-In-Reply-To: <4DF78127.40505@linux.vnet.ibm.com>
+	p5EIpPej117828 for <xfs@oss.sgi.com>; Tue, 14 Jun 2011 13:51:25 -0500
+Received: from e33.co.us.ibm.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0B9423ECD
+	for <xfs@oss.sgi.com>; Tue, 14 Jun 2011 11:51:24 -0700 (PDT)
+Received: from e33.co.us.ibm.com (e33.co.us.ibm.com [32.97.110.151]) by
+	cuda.sgi.com with ESMTP id AQIzg7xAAVMOs2Wp for
+	<xfs@oss.sgi.com>; Tue, 14 Jun 2011 11:51:24 -0700 (PDT)
+Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com
+	[9.17.195.227])
+	by e33.co.us.ibm.com (8.14.4/8.13.1) with ESMTP id p5EIhwuD019750
+	for <xfs@oss.sgi.com>; Tue, 14 Jun 2011 12:43:58 -0600
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id
+	p5EIp9o4129776 for <xfs@oss.sgi.com>; Tue, 14 Jun 2011 12:51:11 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
+	id p5ECocRp026461
+	for <xfs@oss.sgi.com>; Tue, 14 Jun 2011 06:50:38 -0600
+Received: from [9.47.24.164] (chandra-lucid.beaverton.ibm.com [9.47.24.164])
+	by d03av02.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVin) with ESMTP id
+	p5ECoc6E026406 for <xfs@oss.sgi.com>; Tue, 14 Jun 2011 06:50:38 -0600
+Subject: xfstests test case 180 fails often
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Date: Tue, 14 Jun 2011 11:51:04 -0700
+Message-ID: <1308077464.7661.473.camel@chandra-lucid.beaverton.ibm.com>
+Mime-Version: 1.0
+Reply-To: sekharan@us.ibm.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,90 +40,29 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Allison Henderson <achender@linux.vnet.ibm.com>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, Josef Bacik <josef@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: XFS Mailing List <xfs@oss.sgi.com>
 
-On 6/14/11 10:41 AM, Allison Henderson wrote:
-> Hi all,
-> 
-> I just wanted to get some ideas moving on this question before too
-> much time goes by. Ext4 is currently failing xfstest 252, test number
-> 12. Currently test 12 is:
-> 
->     $XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
->         -c "$alloc_cmd 0 20k" \   
->         -c "pwrite 8k 4k" -c "fsync" \       
->         -c "$zero_cmd 4k 12k" \
->         -c "$map_cmd -v" $testfile | $filter_cmd
->     [ $? -ne 0 ]&&  die_now
+Hello All,
 
-so the file should go through these steps:
-(H=hole, P=prealloc, D=data)
+test case 180 fails often (4 out of 5) in my x86_64 system.
+Any suggestions on how to proceed to debug ?
 
-0k                       20k
-|  H |  H |  H |  H |  H | (truncate)
-|  P |  P |  P |  P |  P | (alloc_cmd)
-|  P |  P |  D |  P |  P | (pwrite)
-<fsync>                    (fsync)
-|  P |  H |  H |  H |  P | (punch)
- 
-> and the output is:
-> 
->         12. unwritten -> data -> unwritten
-> 0: [0..7]: unwritten
-> 1: [8..31]: hole
-> 2: [32..39]: unwritten
-> 
-> Ext4 gets data extents here instead of unwritten extents. 
+regards,
 
-so it's like this?
+chandra
 
-0: [0..7]: data
-1: [8..31]: hole
-2: [32..39]: data
+80 176s ... - output mismatch (see 180.out.bad)^M
+--- 180.out     2011-04-20 08:34:36.000000000 -0700^M
++++ 180.out.bad 2011-06-03 14:10:45.000000000 -0700^M
+@@ -1 +1,4 @@^M
+ QA output created by 180^M
++file /mnt/xfsScratchMntPt/656 has incorrect size - sync failed^M
++file /mnt/xfsScratchMntPt/818 has incorrect size - sync failed^M
++file /mnt/xfsScratchMntPt/899 has incorrect size - sync failed^M
+Ran: 180^M
+Failures: 180^M
+Failed 1 of 1 tests^M
 
-> I did some
-> investigating and it looks like the fsync command causes the extents
-> to be written out before the punch hole operation starts. It looks
-> like what happens is that when an unwritten extent gets written to,
-> it doesnt always split the extent. If the extent is small enough,
-> then it just zeros out the portions that are not written to, and the
-> whole extent becomes a written extent. Im not sure if that is
-> incorrect or if we need to change the test to not compare the extent
-> types.
-
-Yes, it does do that IIRC.
-
-I probably need to look closer, but any test which expects exact
-layouts from a filesystem after a series of operations is probably
-expecting too much...
-
->From a data integrity perspective, written zeros is as good as a hole is
-as good as preallocated space, so I suppose those should all be acceptable,
-though I guess "punch" should result in holes exactly as requested.
-
-> It looks to me that the code in ext4 that does this is supposed to be
-> an optimization to help reduce fragmentation. We could change the
-> filters to print just "extent" instead of "unwritten" or "data", but
-> I realize that probably makes the test a lot less effective for xfs.
-> If anyone can think of some more elegant fixes, please let me know.
-> Thx!
-
-Josef, what do you think?  It's your test originally.  :)
-
-But if the test is supposed to verify hole punching behavior,
-then to me, making unwritten extents equivalent to data extents
-full of 0s should be fine.  Perhaps an md5sum step would be 
-in order to verify that it is in fact all 0s.
-
--Eric
-
-> Allison Henderson
-> 
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe linux-ext4" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 _______________________________________________
 xfs mailing list
