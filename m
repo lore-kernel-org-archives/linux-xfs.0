@@ -1,20 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5EIg2uf116672 for <xfs@oss.sgi.com>; Tue, 14 Jun 2011 13:42:03 -0500
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 74A551EDAD4A
-	for <xfs@oss.sgi.com>; Tue, 14 Jun 2011 11:42:01 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 5gXqy4G9LmZUhwp4 for
-	<xfs@oss.sgi.com>; Tue, 14 Jun 2011 11:42:01 -0700 (PDT)
-Message-ID: <4DF7AB76.8030701@redhat.com>
-Date: Tue, 14 Jun 2011 14:41:58 -0400
-From: Josef Bacik <josef@redhat.com>
-MIME-Version: 1.0
-Subject: Re: xfstests 252 failure
-References: <4DF78127.40505@linux.vnet.ibm.com> <4DF78716.4040605@redhat.com>
-In-Reply-To: <4DF78716.4040605@redhat.com>
+	p5EIs2EJ118256 for <xfs@oss.sgi.com>; Tue, 14 Jun 2011 13:54:02 -0500
+Received: from e4.ny.us.ibm.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9B11511DC1DD
+	for <xfs@oss.sgi.com>; Tue, 14 Jun 2011 11:54:01 -0700 (PDT)
+Received: from e4.ny.us.ibm.com (e4.ny.us.ibm.com [32.97.182.144]) by
+	cuda.sgi.com with ESMTP id FxGcknnkyoZzMvB1 for
+	<xfs@oss.sgi.com>; Tue, 14 Jun 2011 11:54:01 -0700 (PDT)
+Received: from d01relay05.pok.ibm.com (d01relay05.pok.ibm.com [9.56.227.237])
+	by e4.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p5EIWTLa024785
+	for <xfs@oss.sgi.com>; Tue, 14 Jun 2011 14:32:29 -0400
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by d01relay05.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	p5EIrxdV117824 for <xfs@oss.sgi.com>; Tue, 14 Jun 2011 14:53:59 -0400
+Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
+	by d01av04.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
+	p5EIrw7X027519 for <xfs@oss.sgi.com>; Tue, 14 Jun 2011 14:53:58 -0400
+Received: from [9.47.24.164] (chandra-lucid.beaverton.ibm.com [9.47.24.164])
+	by d01av04.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVin) with ESMTP id
+	p5EIrvl6027458 for <xfs@oss.sgi.com>; Tue, 14 Jun 2011 14:53:57 -0400
+Subject: xfstests test case 229 fails consistently
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Date: Tue, 14 Jun 2011 11:53:56 -0700
+Message-ID: <1308077636.7661.476.camel@chandra-lucid.beaverton.ibm.com>
+Mime-Version: 1.0
+Reply-To: sekharan@us.ibm.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,85 +38,76 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>, Allison Henderson <achender@linux.vnet.ibm.com>
+To: XFS Mailing List <xfs@oss.sgi.com>
 
-On 06/14/2011 12:06 PM, Eric Sandeen wrote:
-> On 6/14/11 10:41 AM, Allison Henderson wrote:
->> Hi all,
->>
->> I just wanted to get some ideas moving on this question before too
->> much time goes by. Ext4 is currently failing xfstest 252, test number
->> 12. Currently test 12 is:
->>
->>     $XFS_IO_PROG $xfs_io_opt -f -c "truncate 20k" \
->>         -c "$alloc_cmd 0 20k" \   
->>         -c "pwrite 8k 4k" -c "fsync" \       
->>         -c "$zero_cmd 4k 12k" \
->>         -c "$map_cmd -v" $testfile | $filter_cmd
->>     [ $? -ne 0 ]&&  die_now
-> 
-> so the file should go through these steps:
-> (H=hole, P=prealloc, D=data)
-> 
-> 0k                       20k
-> |  H |  H |  H |  H |  H | (truncate)
-> |  P |  P |  P |  P |  P | (alloc_cmd)
-> |  P |  P |  D |  P |  P | (pwrite)
-> <fsync>                    (fsync)
-> |  P |  H |  H |  H |  P | (punch)
->  
->> and the output is:
->>
->>         12. unwritten -> data -> unwritten
->> 0: [0..7]: unwritten
->> 1: [8..31]: hole
->> 2: [32..39]: unwritten
->>
->> Ext4 gets data extents here instead of unwritten extents. 
-> 
-> so it's like this?
-> 
-> 0: [0..7]: data
-> 1: [8..31]: hole
-> 2: [32..39]: data
-> 
->> I did some
->> investigating and it looks like the fsync command causes the extents
->> to be written out before the punch hole operation starts. It looks
->> like what happens is that when an unwritten extent gets written to,
->> it doesnt always split the extent. If the extent is small enough,
->> then it just zeros out the portions that are not written to, and the
->> whole extent becomes a written extent. Im not sure if that is
->> incorrect or if we need to change the test to not compare the extent
->> types.
-> 
-> Yes, it does do that IIRC.
-> 
-> I probably need to look closer, but any test which expects exact
-> layouts from a filesystem after a series of operations is probably
-> expecting too much...
-> 
-> From a data integrity perspective, written zeros is as good as a hole is
-> as good as preallocated space, so I suppose those should all be acceptable,
-> though I guess "punch" should result in holes exactly as requested.
-> 
->> It looks to me that the code in ext4 that does this is supposed to be
->> an optimization to help reduce fragmentation. We could change the
->> filters to print just "extent" instead of "unwritten" or "data", but
->> I realize that probably makes the test a lot less effective for xfs.
->> If anyone can think of some more elegant fixes, please let me know.
->> Thx!
-> 
-> Josef, what do you think?  It's your test originally.  :)
-> 
+Hello All,
 
-Yes, a test that was really only meant to test the block based fiemap
-since they all act in a dumb and easy to verify way.  I think if we want
-to keep this test we should probably have it just recognize these little
-optimizations so it doesn't freak out.  Thanks,
+xfstests test case 229 fails consistently in my x84_64 system.
+Only thing that is different between runs is the number of errors. 
+Any suggestions on how to proceed with the debug. 
 
-Josef
+regards,
+
+chandra
+
+229 118s ... [failed, exit status 45] - output mismatch (see 229.out.bad)
+--- 229.out     2011-04-20 08:34:36.000000000 -0700
++++ 229.out.bad 2011-06-03 14:53:22.000000000 -0700
+@@ -1,4 +1,49 @@
+ QA output created by 229
+ generating 10 files
+ comparing files
+-got 0 errors
++/mnt/xfsMntPt//t_holes/0 /mnt/xfsMntPt//t_holes/1 differ: char 266241, line 1
++/mnt/xfsMntPt//t_holes/0 /mnt/xfsMntPt//t_holes/2 differ: char 262145, line 1
++/mnt/xfsMntPt//t_holes/0 /mnt/xfsMntPt//t_holes/3 differ: char 262145, line 1
++/mnt/xfsMntPt//t_holes/0 /mnt/xfsMntPt//t_holes/4 differ: char 266241, line 1
++/mnt/xfsMntPt//t_holes/0 /mnt/xfsMntPt//t_holes/5 differ: char 266241, line 1
++/mnt/xfsMntPt//t_holes/0 /mnt/xfsMntPt//t_holes/6 differ: char 262145, line 1
++/mnt/xfsMntPt//t_holes/0 /mnt/xfsMntPt//t_holes/7 differ: char 274433, line 1
++/mnt/xfsMntPt//t_holes/0 /mnt/xfsMntPt//t_holes/8 differ: char 266241, line 1
++/mnt/xfsMntPt//t_holes/0 /mnt/xfsMntPt//t_holes/9 differ: char 274433, line 1
++/mnt/xfsMntPt//t_holes/1 /mnt/xfsMntPt//t_holes/2 differ: char 262145, line 1
++/mnt/xfsMntPt//t_holes/1 /mnt/xfsMntPt//t_holes/3 differ: char 262145, line 1
++/mnt/xfsMntPt//t_holes/1 /mnt/xfsMntPt//t_holes/4 differ: char 274433, line 1
++/mnt/xfsMntPt//t_holes/1 /mnt/xfsMntPt//t_holes/5 differ: char 274433, line 1
++/mnt/xfsMntPt//t_holes/1 /mnt/xfsMntPt//t_holes/6 differ: char 262145, line 1
++/mnt/xfsMntPt//t_holes/1 /mnt/xfsMntPt//t_holes/7 differ: char 266241, line 1
++/mnt/xfsMntPt//t_holes/1 /mnt/xfsMntPt//t_holes/8 differ: char 270337, line 1
++/mnt/xfsMntPt//t_holes/1 /mnt/xfsMntPt//t_holes/9 differ: char 266241, line 1
++/mnt/xfsMntPt//t_holes/2 /mnt/xfsMntPt//t_holes/3 differ: char 266241, line 1
++/mnt/xfsMntPt//t_holes/2 /mnt/xfsMntPt//t_holes/4 differ: char 262145, line 1
++/mnt/xfsMntPt//t_holes/2 /mnt/xfsMntPt//t_holes/5 differ: char 262145, line 1
++/mnt/xfsMntPt//t_holes/2 /mnt/xfsMntPt//t_holes/6 differ: char 266241, line 1
++/mnt/xfsMntPt//t_holes/2 /mnt/xfsMntPt//t_holes/7 differ: char 262145, line 1
++/mnt/xfsMntPt//t_holes/2 /mnt/xfsMntPt//t_holes/8 differ: char 262145, line 1
++/mnt/xfsMntPt//t_holes/2 /mnt/xfsMntPt//t_holes/9 differ: char 262145, line 1
++/mnt/xfsMntPt//t_holes/3 /mnt/xfsMntPt//t_holes/4 differ: char 262145, line 1
++/mnt/xfsMntPt//t_holes/3 /mnt/xfsMntPt//t_holes/5 differ: char 262145, line 1
++/mnt/xfsMntPt//t_holes/3 /mnt/xfsMntPt//t_holes/6 differ: char 278529, line 1
++/mnt/xfsMntPt//t_holes/3 /mnt/xfsMntPt//t_holes/7 differ: char 262145, line 1
++/mnt/xfsMntPt//t_holes/3 /mnt/xfsMntPt//t_holes/8 differ: char 262145, line 1
++/mnt/xfsMntPt//t_holes/3 /mnt/xfsMntPt//t_holes/9 differ: char 262145, line 1
++/mnt/xfsMntPt//t_holes/4 /mnt/xfsMntPt//t_holes/5 differ: char 282625, line 1
++/mnt/xfsMntPt//t_holes/4 /mnt/xfsMntPt//t_holes/6 differ: char 262145, line 1
++/mnt/xfsMntPt//t_holes/4 /mnt/xfsMntPt//t_holes/7 differ: char 266241, line 1
++/mnt/xfsMntPt//t_holes/4 /mnt/xfsMntPt//t_holes/8 differ: char 270337, line 1
++/mnt/xfsMntPt//t_holes/4 /mnt/xfsMntPt//t_holes/9 differ: char 266241, line 1
++/mnt/xfsMntPt//t_holes/5 /mnt/xfsMntPt//t_holes/6 differ: char 262145, line 1
++/mnt/xfsMntPt//t_holes/5 /mnt/xfsMntPt//t_holes/7 differ: char 266241, line 1
++/mnt/xfsMntPt//t_holes/5 /mnt/xfsMntPt//t_holes/8 differ: char 270337, line 1
++/mnt/xfsMntPt//t_holes/5 /mnt/xfsMntPt//t_holes/9 differ: char 266241, line 1
++/mnt/xfsMntPt//t_holes/6 /mnt/xfsMntPt//t_holes/7 differ: char 262145, line 1
++/mnt/xfsMntPt//t_holes/6 /mnt/xfsMntPt//t_holes/8 differ: char 262145, line 1
++/mnt/xfsMntPt//t_holes/6 /mnt/xfsMntPt//t_holes/9 differ: char 262145, line 1
++/mnt/xfsMntPt//t_holes/7 /mnt/xfsMntPt//t_holes/8 differ: char 266241, line 1
++/mnt/xfsMntPt//t_holes/7 /mnt/xfsMntPt//t_holes/9 differ: char 70037361, line 8097
++/mnt/xfsMntPt//t_holes/8 /mnt/xfsMntPt//t_holes/9 differ: char 266241, line 1
++got 45 errors
+Ran: 229
+Failures: 229
+Failed 1 of 1 tests
+
 
 _______________________________________________
 xfs mailing list
