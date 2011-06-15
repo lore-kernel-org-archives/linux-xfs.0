@@ -1,20 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5FF3Rck191875 for <xfs@oss.sgi.com>; Wed, 15 Jun 2011 10:03:28 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AAB8212DDC05
-	for <xfs@oss.sgi.com>; Wed, 15 Jun 2011 08:03:26 -0700 (PDT)
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id maqwJVvSdEKFw58g for <xfs@oss.sgi.com>;
-	Wed, 15 Jun 2011 08:03:26 -0700 (PDT)
-Message-ID: <4DF8C9BD.6020104@sandeen.net>
-Date: Wed, 15 Jun 2011 10:03:25 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	p5FIcsLF203842 for <xfs@oss.sgi.com>; Wed, 15 Jun 2011 13:38:54 -0500
+Subject: Re: [PATCH] xfs: make log devices with write back caches work
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <20110527164137.GA5833@infradead.org>
+References: <20110527164137.GA5833@infradead.org>
+Date: Wed, 15 Jun 2011 13:38:47 -0500
+Message-ID: <1308163127.2893.58.camel@doink>
 MIME-Version: 1.0
-Subject: Re: auto group failing on kernel v2.6.38.5
-References: <BANLkTi=pgOCvn_2tdKXM6sLx_JKhzbrcEw@mail.gmail.com>
-In-Reply-To: <BANLkTi=pgOCvn_2tdKXM6sLx_JKhzbrcEw@mail.gmail.com>
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,68 +22,226 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Manish Aggarwal <mani.iitb@gmail.com>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On 6/15/11 4:24 AM, Manish Aggarwal wrote:
-> Hi I am running xfstest suite using command
-> 
-> ./check -xfs -g auto
-> 
-> PC x86 machine with Kernel version 2.6.38.5
-> XFS Tests Suite dated 2011-05-11 (http://oss.sgi.com/cgi-bin/gitweb.cgi?p=xfs/cmds/xfstests.git;a=summary)
-> 
-> 
-> Many of the test cases are failing , please let me know thatt am I missing something?
+On Fri, 2011-05-27 at 11:41 -0500, Christoph Hellwig wrote:
+> There's no reason not to support cache flushing on external log devices.
+> The only thing this really requires is flushing the data device first
 
-Most are failing with something like "+umount: /home/manish/Projects/xfstests/sdb4: device is busy."
+I know this is just the description but it wasn't obvious to me
+initially the reason for this ordering.  Now I know:  it's to
+ensure any data written to new space on a file extending write
+is on disk before a size change gets committed.  Maybe you could
+mention this (in addition to mentioning it in a comment, as I
+suggest below.
 
-You should investigate to find out why that might be the case ...
+(And I don't know if the case mentioned above is the only
+one where this ordering is important.  It's conceivable there
+could be a case where the reverse ordering (log first) was
+needed, but I have not thought that through at all and I
+presume not.)
 
-> +umount: /home/manish/Projects/xfstests/sdb4: device is busy.
-> +        (In some cases useful info about processes that use
-> +         the device is found by lsof(8) or fuser(1))
+> both in fsync and log commits.  A side effect is that we also have to
+> remove the barrier write test during mount, which has been superflous
+> since the new FLUSH+FUA code anyway.  Also use the chance to flush the
+> RT subvolume write cache before the fsync commit, which is required
+> for correct semantics.
 
--Eric
+A few comments below.
 
-> Regards,
-> Manish
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > 
-> 
-> FSTYP         -- xfs (non-debug)
-> PLATFORM      -- Linux/i686 mannuDesk 2.6.38.5
-> MKFS_OPTIONS  -- -f -bsize=4096 /dev/sda6
-> MOUNT_OPTIONS -- /dev/sda6 /home/manish/Projects/xfstests/sdb4
-> 
-> 001 4s ... 5s
-> 002 0s ... 0s
-> 003 0s ... 0s
-> 004 1s ... 1s
-> 005 0s ... 0s
-> 006 35s ... 36s
-> 007 58s ... 58s
-> 008 1s ... 1s
-> 009 1s ... 1s
-> 010     [not run] dbtest was not built for this platform
-> 011 43s ... 45s
-> 012 1s ... 2s
-> 013 145s ... 158s
-> 014 53s ... 51s
-> 015 1s ... - output mismatch (see 015.out.bad)
-> --- 015.out    2011-05-11 22:32:24.000000000 +0530
-> +++ 015.out.bad    2011-06-15 14:34:36.561351828 +0530
-> @@ -4,4 +4,8 @@
->  check free space:
->  delete fill:
->  check free space:
-> -   !!! free space is in range
-> +   !!! free space has value of 20
-> +free space is NOT in range 43306.56 .. 44181.44
-> +umount: /home/manish/Projects/xfstests/sdb4: device is busy.
-> +        (In some cases useful info about processes that use
-> +         the device is found by lsof(8) or fuser(1))
+> Index: xfs/fs/xfs/linux-2.6/xfs_file.c
+> ===================================================================
+> --- xfs.orig/fs/xfs/linux-2.6/xfs_file.c	2011-05-27 13:07:41.260498122 +0200
+> +++ xfs/fs/xfs/linux-2.6/xfs_file.c	2011-05-27 17:37:30.152495811 +0200
+> @@ -131,19 +131,32 @@ xfs_file_fsync(
+>  {
+>  	struct inode		*inode = file->f_mapping->host;
+>  	struct xfs_inode	*ip = XFS_I(inode);
 
-... snip
+. . .
+
+>  	xfs_ioend_wait(ip);
+>  
+> +	if (mp->m_flags & XFS_MOUNT_BARRIER) {
+> +		/*
+> +		 * If we have an RT and/or log subvolume we need to make sure
+> +		 * to flush the write cache on the device that the data
+> +		 * resides before commit the transaction.
+> +		 */
+> +		if (XFS_IS_REALTIME_INODE(ip))
+> +			xfs_blkdev_issue_flush(mp->m_rtdev_targp);
+
+I questioned the "else" below.  But as you mentioned on IRC
+it makes sense because a realtime inode will never share the
+same device target as the log (or later in this function, the
+data device).  A short mention of that in the comment above
+might be reassuring.  Similarly, I think it would be worthwhile
+to mention the reason for doing this flush here *before* the
+log gets forced.
+
+> +		else if (mp->m_logdev_targp != mp->m_ddev_targp)
+> +			xfs_blkdev_issue_flush(mp->m_ddev_targp);
+> +	}
+> +
+>  	/*
+>  	 * We always need to make sure that the required inode state is safe on
+>  	 * disk.  The inode might be clean but we still might need to force the
+
+. . .
+
+> @@ -209,28 +222,23 @@ xfs_file_fsync(
+>  		 * force the log.
+>  		 */
+>  		if (xfs_ipincount(ip)) {
+> -			error = _xfs_log_force_lsn(ip->i_mount,
+> +			error = _xfs_log_force_lsn(mp,
+>  					ip->i_itemp->ili_last_lsn,
+>  					XFS_LOG_SYNC, &log_flushed);
+
+If log_flushed is set on return here, does that also imply
+that the actual blkdev flush of the log device (which is
+possibly the data device) has occurred?  It looks to
+me like xlog_sync() marks each log buffer ordered but I
+don't see the flush (though I didn't look *that* hard...).
+
+>  		}
+>  		xfs_iunlock(ip, XFS_ILOCK_SHARED);
+>  	}
+>  
+> -	if (ip->i_mount->m_flags & XFS_MOUNT_BARRIER) {
+> -		/*
+> -		 * If the log write didn't issue an ordered tag we need
+> -		 * to flush the disk cache for the data device now.
+> -		 */
+> -		if (!log_flushed)
+> -			xfs_blkdev_issue_flush(ip->i_mount->m_ddev_targp);
+> -
+> -		/*
+> -		 * If this inode is on the RT dev we need to flush that
+> -		 * cache as well.
+> -		 */
+> -		if (XFS_IS_REALTIME_INODE(ip))
+> -			xfs_blkdev_issue_flush(ip->i_mount->m_rtdev_targp);
+> -	}
+> +	/*
+> +	 * Flush the write cache on the data volume, if the data for this
+> +	 * inode actually resides on it, and the transaction commit did
+> +	 * not flush it yet.
+> +	 */
+> +	if ((mp->m_flags & XFS_MOUNT_BARRIER) &&
+> +	    mp->m_logdev_targp == mp->m_ddev_targp &&
+> +	    !XFS_IS_REALTIME_INODE(ip) &&
+> +	    !log_flushed)
+> +		xfs_blkdev_issue_flush(mp->m_ddev_targp);
+
+Note my previous comment.  It kind of arose because my
+thought when seeing this was "What if it is an internal
+log but _xfs_log_force_lsn() does *not* issue a blkdev
+flush to the log/data device?"
+
+Breaking it down, we have either one or two devices to flush,
+the log and either the realtime or (if external log) the data
+device:
+- realtime device (flush it before log device flush)
+- data device (only if not realtime; do first if external log)
+- log device (flush this last, realtime or not)
+
+I may be wrong, but it seems like this may be the
+logic you need:
+
+    if (RT)
+	flush RT device
+    else if (external log)
+	flush data device
+    force the log
+    if (log device wasn't flushed when log forced)
+	flush log device
+
+The log device flush of course implies a data device flush
+for an internal log.
+
+>  	return -error;
+>  }
+> Index: xfs/fs/xfs/linux-2.6/xfs_super.c
+> ===================================================================
+> --- xfs.orig/fs/xfs/linux-2.6/xfs_super.c	2011-05-27 13:07:41.272495356 +0200
+> +++ xfs/fs/xfs/linux-2.6/xfs_super.c	2011-05-27 15:37:11.673496345 +0200
+> @@ -627,68 +627,6 @@ xfs_blkdev_put(
+>  		blkdev_put(bdev, FMODE_READ|FMODE_WRITE|FMODE_EXCL);
+>  }
+
+. . .
+
+> -
+> -STATIC void
+> -xfs_mountfs_check_barriers(xfs_mount_t *mp)
+> -{
+
+. . .
+
+> -	if (xfs_readonly_buftarg(mp->m_ddev_targp)) {
+> -		xfs_notice(mp,
+> -			"Disabling barriers, underlying device is readonly");
+> -		mp->m_flags &= ~XFS_MOUNT_BARRIER;
+> -		return;
+> -	}
+
+At first I was going to suggest this might still be
+a worthwhile optimization.  But I think a read-only
+underlying device will prevent us from ever reaching
+the points that (now) would bother checking the
+XFS_MOUNT_BARRIER flag.
+
+> -
+> -	error = xfs_barrier_test(mp);
+> -	if (error) {
+> -		xfs_notice(mp,
+> -			"Disabling barriers, trial barrier write failed");
+> -		mp->m_flags &= ~XFS_MOUNT_BARRIER;
+> -		return;
+> -	}
+> -}
+> -
+>  void
+>  xfs_blkdev_issue_flush(
+>  	xfs_buftarg_t		*buftarg)
+
+. . .
+
+> Index: xfs/fs/xfs/xfs_log.c
+> ===================================================================
+> --- xfs.orig/fs/xfs/xfs_log.c	2011-05-27 13:07:41.284496076 +0200
+> +++ xfs/fs/xfs/xfs_log.c	2011-05-27 15:37:11.681500020 +0200
+> @@ -1372,8 +1372,15 @@ xlog_sync(xlog_t		*log,
+>  	XFS_BUF_ASYNC(bp);
+>  	bp->b_flags |= XBF_LOG_BUFFER;
+>  
+> -	if (log->l_mp->m_flags & XFS_MOUNT_BARRIER)
+> +	if (log->l_mp->m_flags & XFS_MOUNT_BARRIER) {
+> +		/*
+> +		 * If we have an external log device, flush the data device
+> +		 * before flushing the log.
+> +		 */
+> +		if (log->l_mp->m_logdev_targp != log->l_mp->m_ddev_targp)
+> +			xfs_blkdev_issue_flush(log->l_mp->m_ddev_targp);
+
+Shouldn't we flush the realtime device as well here, if present?
+
+>  		XFS_BUF_ORDERED(bp);
+> +	}
+>  
+>  	ASSERT(XFS_BUF_ADDR(bp) <= log->l_logBBsize-1);
+>  	ASSERT(XFS_BUF_ADDR(bp) + BTOBB(count) <= log->l_logBBsize);
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+
+
 
 _______________________________________________
 xfs mailing list
