@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5GEktXx039572 for <xfs@oss.sgi.com>; Thu, 16 Jun 2011 09:46:56 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DC6A5B4126A
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2011 07:46:54 -0700 (PDT)
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id Uk8YWpJk8ZHFB7P6 for <xfs@oss.sgi.com>;
-	Thu, 16 Jun 2011 07:46:54 -0700 (PDT)
-Message-ID: <4DFA175D.9060005@sandeen.net>
-Date: Thu, 16 Jun 2011 09:46:53 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	p5GF9igO042078 for <xfs@oss.sgi.com>; Thu, 16 Jun 2011 10:09:46 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 885B951D3DA
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2011 08:09:43 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	FpuD3G4CvaaIuIKq for <xfs@oss.sgi.com>;
+	Thu, 16 Jun 2011 08:09:43 -0700 (PDT)
+Date: Thu, 16 Jun 2011 11:09:41 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: suse xfs patches
+Message-ID: <20110616150941.GA28112@infradead.org>
+References: <20110614201238.GA17586@infradead.org>
+	<20110614220550.GA9138@baloo.cartoons>
 MIME-Version: 1.0
-Subject: Re: auto group failing on kernel v2.6.38.5
-References: <BANLkTi=pgOCvn_2tdKXM6sLx_JKhzbrcEw@mail.gmail.com>	<4DF8C9BD.6020104@sandeen.net>
-	<BANLkTimmEHrxONk-bm354sPnnLyc-0eQ-w@mail.gmail.com>
-In-Reply-To: <BANLkTimmEHrxONk-bm354sPnnLyc-0eQ-w@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20110614220550.GA9138@baloo.cartoons>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,40 +31,37 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Manish Aggarwal <mani.iitb@gmail.com>
-Cc: xfs@oss.sgi.com
+To: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Cc: Christoph Hellwig <hch@infradead.org>, neilb@suse.de, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-On 6/16/11 12:05 AM, Manish Aggarwal wrote:
-> Hi Eric,
+On Tue, Jun 14, 2011 at 05:05:50PM -0500, Goldwyn Rodrigues wrote:
 > 
-> Thanks for responding. Yes I agree most of the Test Cases are failed
-> due to the umount failure.
-> 
-> But isn't the "quick and auto" group are supposed to run without any
-> error?
+> Yes sure. I suppose you are refering to the patch attached.
+> I did not send it upstream because the upstream code had taken a
+> different approach and the patch was relevant to the SLES kernel
+> tree only.
 
-Yes, but if that were guaranteed, there would be no reason to run them!  :)
+That, and "XFS: force log before waiting for a pinned buffer".
 
-> The point is in case I am running xfstest suite on some target, how
-> would I know that whether the there is some error with my target (or
-> kernel settings) or if there is some error in xfs test suite itself.
+They look similar, but different enough from things that we have
+in mainline that make me really curious if you a) were hitting the
+same things, and b) came to different conclusions under different
+workloads.
 
-The test suite is not perfect; it evolves, and there are bugs in it
-as with any other software.
+Looking over it in more detail the bufd patch should be fully superceed
+by current mainline code, altough less so by the commit you quote, but
+rather by the LRU-ification of the xfs_buf code.
 
-It is your role as a developer and as a user of the test suite to
-investigate failures, and discern where the problem lies.
+Similarly the other one you quote isn't really related to what you have
+in tree, in fact you are still missing that case in the suse tree - the
+addition to xfs_buf_lock that you're adding only in one caller was added
+in commit ed3b4d6cdc81e8feefdbfa3c584614be301b6d39, but that was still
+missing the trylock case.
 
-In general, the test suite works.  Busy filesystems at unmount are
-not a common result, so you need to try to find out why you are
-running into that, and what the root cause may be ...
-
-Running on a usb stick is not something the core xfs developers do,
-so you may well run into unique issues.
-
--Eric
-
-> Regards, Manish
+Either way the mainline code only handles pinned and stale buffers,
+which from my understanding are what matters, but the changelog from
+Neil reads like he saw a case where even non-stale buffers might
+matter - except that it's not explained very well.
 
 _______________________________________________
 xfs mailing list
