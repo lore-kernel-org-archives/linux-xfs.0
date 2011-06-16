@@ -1,16 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5GHETlO047862 for <xfs@oss.sgi.com>; Thu, 16 Jun 2011 12:14:29 -0500
-Subject: Re: [PATCH] [RFC] xfs: introduce an allocation workqueue
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110415014928.GM21395@dastard>
-References: <1302616337-29894-1-git-send-email-david@fromorbit.com>
-	<1302809374.2608.73.camel@doink>  <20110415014928.GM21395@dastard>
-Date: Thu, 16 Jun 2011 12:14:24 -0500
-Message-ID: <1308244464.2717.13.camel@doink>
+	p5GHXpSq048620
+	for <linux-xfs@oss.sgi.com>; Thu, 16 Jun 2011 12:33:51 -0500
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C6FFCDC9156
+	for <linux-xfs@oss.sgi.com>; Thu, 16 Jun 2011 10:33:49 -0700 (PDT)
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id B6o22GlkeZz5eUDx for <linux-xfs@oss.sgi.com>;
+	Thu, 16 Jun 2011 10:33:49 -0700 (PDT)
+Message-ID: <4DFA3E7D.4030408@sandeen.net>
+Date: Thu, 16 Jun 2011 12:33:49 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Reply-To: aelder@sgi.com
+Subject: Re: sparse file handling bug in XFS
+References: <081DDE43F61F3D43929A181B477DCA95639B561F@MSXAOA6.twosigma.com>
+	<4DFA2A76.6000104@sandeen.net>
+In-Reply-To: <4DFA2A76.6000104@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,87 +25,90 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Sean Noonan <Sean.Noonan@twosigma.com>
+Cc: "'linux-xfs@oss.sgi.com'" <linux-xfs@oss.sgi.com>, Martin Bligh <Martin.Bligh@twosigma.com>, Trammell Hudson <Trammell.Hudson@twosigma.com>, Ian Baum <Ian.Baum@twosigma.com>, Stephen Degler <Stephen.Degler@twosigma.com>
 
-T24gVGh1LCAyMDExLTA0LTE0IGF0IDIwOjQ5IC0wNTAwLCBEYXZlIENoaW5uZXIgd3JvdGU6Cj4g
-T24gVGh1LCBBcHIgMTQsIDIwMTEgYXQgMDI6Mjk6MzRQTSAtMDUwMCwgQWxleCBFbGRlciB3cm90
-ZToKPiA+IE9uIFR1ZSwgMjAxMS0wNC0xMiBhdCAyMzo1MiArMTAwMCwgRGF2ZSBDaGlubmVyIHdy
-b3RlOgo+ID4gPiBGcm9tOiBEYXZlIENoaW5uZXIgPGRjaGlubmVyQHJlZGhhdC5jb20+Cj4gPiA+
-IAo+ID4gPiBXZSBjdXJyZW50bHkgaGF2ZSBzaWduaWZpY2FudCBpc3N1ZXMgd2l0aCB0aGUgYW1v
-dW50IG9mIHN0YWNrIHRoYXQKPiA+ID4gYWxsb2NhdGlvbiBpbiBYRlMgdXNlcywgZXNwZWNpYWxs
-eSBpbiB0aGUgd3JpdGViYWNrIHBhdGguIFdlIGNhbgo+ID4gPiBlYXNpbHkgY29uc3VtZSA0ayBv
-ZiBzdGFjayBiZXR3ZWVuIG1hcHBpbmcgdGhlIHBhZ2UsIG1hbmlwdWxhdGluZwo+ID4gPiB0aGUg
-Ym1hcCBidHJlZSBhbmQgYWxsb2NhdGluZyBibG9ja3MgZnJvbSB0aGUgZnJlZSBsaXN0LiBOb3Qg
-dG8KPiA+ID4gbWVudGlvbiBidHJlZSBibG9jayByZWFkYWhlYWQgYW5kIG90aGVyIGZ1bmN0aW9u
-YWxpdHkgdGhhdCBpc3N1ZXMgSU8KPiA+ID4gaW4gdGhlIGFsbG9jYXRpb24gcGF0aC4KPiA+ID4g
-Cj4gPiA+IEFzIGEgcmVzdWx0LCB3ZSBjYW4gbm8gbG9uZ2VyIGZpdCBhbGxvY2F0aW9uIGluIHRo
-ZSB3cml0ZWJhY2sgcGF0aAo+ID4gPiBpbiB0aGUgc3RhY2sgc3BhY2UgcHJvdmlkZWQgb24geDg2
-XzY0LiBUbyBhbGxldmlhdGUgdGhpcyBwcm9ibGVtLAo+ID4gPiBpbnRyb2R1Y2UgYW4gYWxsb2Nh
-dGlvbiB3b3JrcXVldWUgYW5kIG1vdmUgYWxsIGFsbG9jYXRpb25zIHRvIGEKPiA+ID4gc2VwZXJh
-dGUgY29udGV4dC4gVGhpcyBjYW4gYmUgZWFzaWx5IGFkZGVkIGFzIGFuIGludGVycG9zaW5nIGxh
-eWVyCj4gPiA+IGludG8geGZzX2FsbG9jX3ZleHRlbnQoKSwgd2hpY2ggdGFrZXMgYSBzaW5nbGUg
-YXJndW1lbnQgc3RydWN0dXJlCj4gPiA+IGFuZCBkb2VzIG5vdCByZXR1cm4gdW50aWwgdGhlIGFs
-bG9jYXRpb24gaXMgY29tcGxldGUgb3IgaGFzIGZhaWxlZC4KPiA+ID4gCj4gPiA+IFRvIGRvIHRo
-aXMsIGFkZCBhIHdvcmsgc3RydWN0dXJlIGFuZCBhIGNvbXBsZXRpb24gdG8gdGhlIGFsbG9jYXRp
-b24KPiA+ID4gYXJncyBzdHJ1Y3R1cmUuIFRoaXMgYWxsb3dzIHhmc19hbGxvY192ZXh0ZW50IHRv
-IHF1ZXVlIHRoZSBhcmdzIG9udG8KPiA+ID4gdGhlIHdvcmtxdWV1ZSBhbmQgd2FpdCBmb3IgaXQg
-dG8gYmUgY29tcGxldGVkIGJ5IHRoZSB3b3JrZXIuIFRoaXMKPiA+ID4gY2FuIGJlIGRvbmUgY29t
-cGxldGVseSB0cmFuc3BhcmVudGx5IHRvIHRoZSBjYWxsZXIuCj4gPiA+IAo+ID4gPiBUaGUgd29y
-a2VyIGZ1bmN0aW9uIG5lZWRzIHRvIGVuc3VyZSB0aGF0IGl0IHNldHMgYW5kIGNsZWFycyB0aGUK
-PiA+ID4gUEZfTUVNQUxMT0MgZmxhZyBhcHByb3ByaWF0ZWx5IGFzIGl0IGlzIGJlaW5nIHJ1biBp
-biBhbiBhY3RpdmUKPiA+ID4gdHJhbtGVYWN0aW9uIGNvbnRleHQuIFdvcmsgY2FuIGFsc28gYmUg
-cXVldWVkIGluIGEgbWVtb3J5IHJlY2xhaW0KPiA+ID4gY29udGV4dCwgc28gYSByZXNjdWVyIGlz
-IG5lZWRlZCBmb3IgdGhlIHdvcmtxdWV1ZS4KPiA+ID4gCj4gPiA+IFNpZ25lZC1vZmYtYnk6IERh
-dmUgQ2hpbm5lciA8ZGNoaW5uZXJAcmVkaGF0LmNvbT4KPiA+IAo+ID4gSW50ZXJlc3RpbmcuCj4g
-PiAKPiA+IEkgZ3Vlc3MgSSBkb24ndCBzZWUgYW55dGhpbmcgaW5oZXJlbnRseSB3cm9uZyB3aXRo
-IHRoaXMuCj4gPiBBdCBmaXJzdCBnbGFuY2UgaXQgc2VlbXMgbGlrZSB3b3JrcXVldWUgYWJ1c2Uu
-ICBCdXQgaXQncwo+ID4gYmV0dGVyIHRoYW4gcm9sbGluZyBvdXIgb3duIGRhZW1vbiB0byBkbyB0
-aGUgc2FtZSB0aGluZy4KPiA+IChUaGVyZSdzIG5vdGhpbmcgdG8gc3RvcCB5b3UgZnJvbSBkb2lu
-ZyB0aGlzIGdlbmVyaWNhbGx5Cj4gPiBlaXRoZXIuLi4pCj4gPiAKPiA+IFdpbGwgaXQgc2hpZnQg
-c29tZSBhY2NvdW50aW5nIG9mIENQVSB0aW1lIGZyb20gdXNlciB0bwo+ID4gc3lzdGVtPwo+IAo+
-IFNvbWUsIHllcy4gRm9yIGRlbGF5ZWQgYWxsb2NhdGlvbiBpbiB0aGUgYmFja2dyb3VuZCBmbHVz
-aCBvciBzeW5jCj4gcGF0aCwgdGhlcmUgaXMgbm8gZGlmZmVyZW5jZSBiZWNhdXNlIHRoYXQgaXNu
-J3QgYWNjb3VudGVkIHRvIHRoZQo+IHVzZXIgYW55d2F5LiBUaGUgb25seSBjYXNlcyBpdCB3aWxs
-IG1ha2UgYSBkaWZmZXJlbmNlIGFyZSBmb3IKPiBmb3JlZ3JvdW5kIHdyaXRlYmFjayAoZS5nLiBm
-c3luYyBvciB3cml0ZSB0aHJvdHRsaW5nKSwgYW5kIGZvciBpbm9kZQo+IGFuZCBkaXJlY3Rvcnkg
-YWxsb2NhdGlvbi4KCkxpbnVzIG1hZGUgYSBjb21tZW50IHJlbGV2YW50IHRvIHRoaXMgeWVzdGVy
-ZGF5LApidXQgaW4gcmVmZXJlbmNlIHRvIFJDVSBtYWtpbmcgdXNlIG9mIGtlcm5lbCB0aHJlYWRz
-OgoKICAgICAgICBSZTogUkVHUkVTU0lPTjogUGVyZm9ybWFuY2UgcmVncmVzc2lvbnMgZnJvbSBz
-d2l0Y2hpbmcKICAgICAgICBhbm9uX3ZtYS0+bG9jayB0byBtdXRleAogICAgICAgIAogICAgICAg
-IFNvIHVzaW5nIGFub255bW91cyBrZXJuZWwgdGhyZWFkcyBpcyBhY3R1YWxseSBhIHJlYWwgZG93
-bnNpZGUuCiAgICAgICAgSXQgbWFrZXMgaXQgbXVjaCBsZXNzIG9idmlvdXMgd2hhdCBpcyBnb2lu
-ZyBvbi4gV2Ugc2F3IHRoYXQKICAgICAgICBleGFjdCBzYW1lIHRoaW5nIHdpdGggdGhlIGdlbmVy
-aWMgd29ya2VyIHRocmVhZCBjb252ZXJzaW9uczoKICAgICAgICB0aGluZ3MgdGhhdCB1c2VkIHRv
-IGhhdmUgY2xlYXIgcGVyZm9ybWFuY2UgaXNzdWVzICgib2gsIHRoZQogICAgICAgIGl3bC1waHkw
-IHRocmVhZCBpcyB1c2luZyAzJSBvZiBDUFUgdGltZSBiZWNhdXNlIGl0IGlzIHBvbGxpbmcKICAg
-ICAgICBmb3IgSU8sIGFuZCBJIGNhbiBzZWUgdGhhdCBpbiAndG9wJyIpIHR1cm5lZCBpbnRvCiAg
-ICAgICAgbXVjaC1oYXJkZXItdG8tc2VlIGlzc3VlcyAoIm9oLCBrd29yazAgdXMgdXNpbmcgMyUg
-Q1BVIHRpbWUKICAgICAgICBhY2NvcmRpbmcgdG8gJ3RvcCcgLSBJIGhhdmUgbm8gaWRlYSB3aHki
-KS4KCk1heWJlIGlmIHRoZXJlIHdlcmUgYSB3YXkgdG8gcmV1c2UgdGhlIGdlbmVyaWMKd29ya2Vy
-IGluZnJhc3RydWN0dXJlIGJ1dCBoYXZlIGl0IGFzc29jaWF0ZWQgd2l0aAphIGtlcm5lbCBtb2R1
-bGUgb3Igc29tZXRoaW5nLiAgVGhlbiBhZ2FpbiB0aGF0IGlzCnNvcnQgb2YgY29udHJhcnkgdG8g
-dGhlIHB1cnBvc2Ugb2YgdGhlIGdlbmVyaWMKY2VudHJhbGx5LW1hbmFnZWQgcG9vbC4gIE1heWJl
-IGlmIGdlbmVyaWMgd29yawpjb3VsZCBzb21laG93IGdldCB0YWdnZWQgd2l0aCBpdHMgcmVhbCBv
-d25lcgpvciBvcmlnaW4gaXQgd291bGQgYmUgYmV0dGVyLCBidXQgSSByZWFsbHkgaGF2ZQpubyBp
-ZGVhIGhvdyBvbmUgd291bGQgZ28gYWJvdXQgdGhhdC4KCkluIGFueSBjYXNlLCBJIHRoaW5rIHdl
-IG5lZWQgdG8gYmUgY2F1dGlvdXMgYWJvdXQKbW92aW5nIGluIHRoaXMgZGlyZWN0aW9uLgoKCQkJ
-CQktQWxleAoKCj4gPiBUaGUgY29kZSBsb29rcyBPSyB0byBtZS4gVGhlIGlkZWEgb2YgaXQgbWFr
-ZXMgbWUgcGF1c2UKPiA+IGEgbGl0dGxlLCB0aG91Z2ggSSBkb24ndCBvYmplY3QuCj4gCj4gSXQn
-cyBkZWZpbml0ZWx5IGEgZGlmZmVyZW50IHdheSBvZiB0aGlua2luZywgYnV0IEknbSBzZXJpb3Vz
-bHkKPiBzdGFydGluZyB0byBjb25zaWRlciBwdXNoaW5nIG1vcmUgb3BlcmF0aW9ucyBpbnRvIGFz
-eWNocm9ub3VzCj4gYmFja2dyb3VuZCB0YXNrcyB0aGF0IHRoZSBjYWxsZXIgY2FuIHdhaXQgb24g
-aWYgdGhleSBzbyBkZXNpcmUuCj4gZS5nLiBFT0YgdHJ1bmNhdGlvbiBkdXJpbmcgeGZzX2luYWN0
-aXZlIGFuZCB4ZnNfcmVsZWFzZSgpLCBmbHVzaGluZwo+IGEgcmFuZ2Ugb2YgYSBmaWxlLCBpbm9k
-ZSBjbHVzdGVyIGZyZWVpbmcsIENJTCBmbHVzaGVzLCBldGMuCj4gCj4gV2UndmUgZ290IG11bHRp
-cGxlIGNvcmVzIGluIG1vc3QgbWFjaGluZXMgdGhlc2UgZGF5cyAoZXZlbiB0aGUgbG93Cj4gZW5k
-IGlzIGdvaW5nIG11bHRpLWNvcmUpLCBjb250ZXh0IHN3aXRjaCBvdmVyaGVhZCBpcyBwcmV0dHkg
-bG93IGFuZAo+IHdlJ3ZlIGdvdCBjb25jdXJyZW5jeSBtYW5hZ2VkIHdvcmsgcXVldWVzIHNvIHdl
-IGRvbid0IG5lZWQgdGhyZWFkCj4gcG9vbHMgLSB3ZSBzaG91bGQgdGFrZSBhZHZhbnRhZ2Ugb2Yg
-d2hhdCB0aGV5IHByb3ZpZGUuLi4uCj4gCj4gQ2hlZXJzLAo+IAo+IERhdmUuCgoKCl9fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QK
-eGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On 6/16/11 11:08 AM, Eric Sandeen wrote:
+> On 6/16/11 9:49 AM, Sean Noonan wrote:
+>> Sparse files do not stay sparse.
+>> Here's the simplest test case I've got so far.  I don't think it can get much simpler than this.
+>>
+>> This did not exist in 2.6.36.  It appeared by 2.6.38-rc8.  It continued into 2.6.38.2.  It continues to exist on 3.0.0-rc3.
+>>
+>> # for x in gogo xfs; do date | dd of=sparse-file bs=1k seek=4096; stat sparse-file; done
+> 
+> Funky; if we do xfs_bmap, it shows the right nr of blocks allocated:
+> 
+> # for x in gogo xfs; do date | dd of=sparse-file bs=1k seek=4096; stat sparse-file | grep Blocks; xfs_bmap -v sparse-file; done
+>   Size: 4194333   	Blocks: 8          IO Block: 4096   regular file
+> sparse-file:
+>  EXT: FILE-OFFSET      BLOCK-RANGE          AG AG-OFFSET            TOTAL
+>    0: [0..8191]:       hole                                          8192
+>    1: [8192..8199]:    450475168..450475175  2 (18736320..18736327)     8
+> 
+>   Size: 4194333   	Blocks: 8192       IO Block: 4096   regular file
+> sparse-file:
+>  EXT: FILE-OFFSET      BLOCK-RANGE          AG AG-OFFSET            TOTAL
+>    0: [0..8191]:       hole                                          8192
+>    1: [8192..8199]:    459367952..459367959  2 (27629104..27629111)     8
+> 
+> 
+> And if we unmount & remount it's right again:
+> 
+> # stat sparse-file | grep Blocks
+>   Size: 4194333   	Blocks: 8          IO Block: 4096   regular file
+> 
+> so they do remain sparse, but stat tells us the wrong thing.  I think it has
+> to do with the count of delayed blocks but I'll try to look into it.
+
+Actually this looks like it's a result of
+
+6e857567dbbfe14dd6cc3f7414671b047b1ff5c7 xfs: don't truncate prealloc from frequently accessed inodes
+
+I thought Dave's patch from the "Re: drastic changes to allocsize semantics in or around 2.6.38?"
+thread would fix it, but it doesn't seem to.  Here it is anyway ;)
+
+xfs: clear inode dirty release flag when recycling it
+
+From: Dave Chinner <dchinner@redhat.com>
+
+The state used to track dirty inode release calls is not reset when
+an inode is reallocated and reused from the reclaimable state. This
+leads to specualtive preallocation not being truncated away in the
+expected manner for local files until the inode is subsequently
+truncated, freed or cycles out of the cache.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_iget.c |    7 +++++++
+ 1 files changed, 7 insertions(+), 0 deletions(-)
+
+diff --git a/fs/xfs/xfs_iget.c b/fs/xfs/xfs_iget.c
+index cb9b6d1..e75e757 100644
+--- a/fs/xfs/xfs_iget.c
++++ b/fs/xfs/xfs_iget.c
+@@ -241,6 +241,13 @@ xfs_iget_cache_hit(
+ 		 */
+ 		ip->i_flags |= XFS_IRECLAIM;
+ 
++		/*
++		 * clear the dirty release state as we are now effectively a
++		 * new inode and so we need to treat speculative preallocation
++		 * accordingly.
++		 */
++		ip->i_flags &= ~XFS_IDIRTY_RELEASE;
++
+ 		spin_unlock(&ip->i_flags_lock);
+ 		rcu_read_unlock();
+
+
+-Eric
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
