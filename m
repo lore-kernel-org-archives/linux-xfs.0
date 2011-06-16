@@ -1,16 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5GBP12o028530 for <xfs@oss.sgi.com>; Thu, 16 Jun 2011 06:25:01 -0500
-Date: Thu, 16 Jun 2011 07:24:57 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: make log devices with write back caches work
-Message-ID: <20110616112457.GA12467@infradead.org>
-References: <20110527164137.GA5833@infradead.org>
-	<1308163127.2893.58.camel@doink>
+	p5GEnN1R039880
+	for <linux-xfs@oss.sgi.com>; Thu, 16 Jun 2011 09:49:24 -0500
+Received: from mx3.twosigma.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 51BA4171D121
+	for <linux-xfs@oss.sgi.com>; Thu, 16 Jun 2011 07:49:21 -0700 (PDT)
+Received: from mx3.twosigma.com (mx3.twosigma.com [208.77.213.34]) by
+	cuda.sgi.com with ESMTP id NZHj5FhsAjftxHRk for
+	<linux-xfs@oss.sgi.com>; Thu, 16 Jun 2011 07:49:21 -0700 (PDT)
+Received: from msxaoa3.twosigma.com (nfw1-1-dmz.twosigma.com [208.77.213.62])
+	by mx3.twosigma.com (Postfix) with ESMTP id D2A3F66709
+	for <linux-xfs@oss.sgi.com>; Thu, 16 Jun 2011 14:49:15 +0000 (UTC)
+From: Sean Noonan <Sean.Noonan@twosigma.com>
+Date: Thu, 16 Jun 2011 10:49:14 -0400
+Subject: sparse file handling bug in XFS
+Message-ID: <081DDE43F61F3D43929A181B477DCA95639B561F@MSXAOA6.twosigma.com>
+Content-Language: en-US
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1308163127.2893.58.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,86 +30,84 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: "'linux-xfs@oss.sgi.com'" <linux-xfs@oss.sgi.com>
+Cc: Martin Bligh <Martin.Bligh@twosigma.com>, Trammell Hudson <Trammell.Hudson@twosigma.com>, Ian Baum <Ian.Baum@twosigma.com>, Stephen Degler <Stephen.Degler@twosigma.com>
 
-On Wed, Jun 15, 2011 at 01:38:47PM -0500, Alex Elder wrote:
-> I questioned the "else" below.  But as you mentioned on IRC
-> it makes sense because a realtime inode will never share the
-> same device target as the log (or later in this function, the
-> data device).  A short mention of that in the comment above
-> might be reassuring.  Similarly, I think it would be worthwhile
-> to mention the reason for doing this flush here *before* the
-> log gets forced.
+Sparse files do not stay sparse.
+Here's the simplest test case I've got so far.  I don't think it can get much simpler than this.
 
-I'll update the comments.
+This did not exist in 2.6.36.  It appeared by 2.6.38-rc8.  It continued into 2.6.38.2.  It continues to exist on 3.0.0-rc3.
 
-> If log_flushed is set on return here, does that also imply
-> that the actual blkdev flush of the log device (which is
-> possibly the data device) has occurred?  It looks to
-> me like xlog_sync() marks each log buffer ordered but I
-> don't see the flush (though I didn't look *that* hard...).
+# for x in gogo xfs; do date | dd of=sparse-file bs=1k seek=4096; stat sparse-file; done
+0+1 records in
+0+1 records out
+29 bytes (29 B) copied, 0.00151976 s, 19.1 kB/s
+  File: `sparse-file'
+  Size: 4194333                   Blocks: 8          IO Block: 4096   regular file
+Device: 6809h/26633d    Inode: 12153368    Links: 1
+Access: (0644/-rw-r--r--)  Uid: (    0/    root)   Gid: (    0/    root)
+Access: 2011-06-14 13:56:43.826251881 +0000
+Modify: 2011-06-14 13:56:43.826251881 +0000
+Change: 2011-06-14 13:56:43.826251881 +0000
+0+1 records in
+0+1 records out
+29 bytes (29 B) copied, 0.00152104 s, 19.1 kB/s
+  File: `sparse-file'
+  Size: 4194333                   Blocks: 8192       IO Block: 4096   regular file
+Device: 6809h/26633d    Inode: 12153368    Links: 1
+Access: (0644/-rw-r--r--)  Uid: (    0/    root)   Gid: (    0/    root)
+Access: 2011-06-14 13:56:43.826251881 +0000
+Modify: 2011-06-14 13:56:43.834252062 +0000
+Change: 2011-06-14 13:56:43.834252062 +0000
 
-Yes.  The XBF_ORDERED flag is a bit misnamed, but it causes the
-to set REQ_FLUSH_FUA and thus a full cache flush before the
-actual write.
 
-I have some patches in my queue for the next cycle to clean that
-naming up.
+For more fun, it even happens if we explicitly remove the file in between!  (It looks like this is just because the recently freed inode is reused and not properly initialized.)
 
-> Breaking it down, we have either one or two devices to flush,
-> the log and either the realtime or (if external log) the data
-> device:
-> - realtime device (flush it before log device flush)
-> - data device (only if not realtime; do first if external log)
-> - log device (flush this last, realtime or not)
+FILE=sparse-file-99; for x in gogo xfs; do rm -f $FILE; date | dd of=$FILE bs=1k seek=4096; stat $FILE; done
+0+1 records in
+0+1 records out
+29 bytes (29 B) copied, 0.00151841 s, 19.1 kB/s
+  File: `sparse-file-99'
+  Size: 4194333                   Blocks: 8          IO Block: 4096   regular file
+Device: 6809h/26633d    Inode: 12153371    Links: 1
+Access: (0644/-rw-r--r--)  Uid: (    0/    root)   Gid: (    0/    root)
+Access: 2011-06-14 14:03:37.933888145 +0000
+Modify: 2011-06-14 14:03:37.937888543 +0000
+Change: 2011-06-14 14:03:37.937888543 +0000
+0+1 records in
+0+1 records out
+29 bytes (29 B) copied, 2.1681e-05 s, 1.3 MB/s
+  File: `sparse-file-99'
+  Size: 4194333                   Blocks: 8192       IO Block: 4096   regular file
+Device: 6809h/26633d    Inode: 12153371    Links: 1
+Access: (0644/-rw-r--r--)  Uid: (    0/    root)   Gid: (    0/    root)
+Access: 2011-06-14 14:03:37.941888722 +0000
+Modify: 2011-06-14 14:03:37.941888722 +0000
+Change: 2011-06-14 14:03:37.941888722 +0000
 
-If we have both an RT and a log device we might even have to flush
-all three.  But the flush of the main device is trasparently handled in
-xlog_sync().  At this point we might double-flush the data device,
-but cleaning that up is more involved and I'll leave it for the next
-cycle.
 
-> 
-> I may be wrong, but it seems like this may be the
-> logic you need:
-> 
->     if (RT)
-> 	flush RT device
->     else if (external log)
-> 	flush data device
->     force the log
->     if (log device wasn't flushed when log forced)
-> 	flush log device
-> 
-> The log device flush of course implies a data device flush
-> for an internal log.
-
-No, that's incorrect.  If we have dirty data in the log that needs to be
-flushed (that is anything dirty for this inode is in the log), the log
-force does it for us.
-
-The flush of the data device after the log force is for the case where
-the log did not get flushed.  That case only happens if we did
-overwrites of and already allocated file, and we're using fdatasync
-and thus don't flush out the timestamps.
-
-> > -	if (log->l_mp->m_flags & XFS_MOUNT_BARRIER)
-> > +	if (log->l_mp->m_flags & XFS_MOUNT_BARRIER) {
-> > +		/*
-> > +		 * If we have an external log device, flush the data device
-> > +		 * before flushing the log.
-> > +		 */
-> > +		if (log->l_mp->m_logdev_targp != log->l_mp->m_ddev_targp)
-> > +			xfs_blkdev_issue_flush(log->l_mp->m_ddev_targp);
-> 
-> Shouldn't we flush the realtime device as well here, if present?
-
-No.  The reason we flush the data device here is to make sure metadata
-written back from the AIL actually made it to disk before moving the
-log tail.  None of that metadata is on the RT device.
-
-I'll add a comment explaning what we do here.
+Here is a run on ext3.  Notice how blocks stays at 16.
+# for x in gogo xfs; do date | dd of=sparse-file bs=1k seek=4096; stat sparse-file; done
+0+1 records in
+0+1 records out
+29 bytes (29 B) copied, 0.00603038 s, 4.8 kB/s
+  File: `sparse-file'
+  Size: 4194333   	Blocks: 16         IO Block: 4096   regular file
+Device: 6805h/26629d	Inode: 24          Links: 1
+Access: (0644/-rw-r--r--)  Uid: (    0/    root)   Gid: (    0/    root)
+Access: 2011-06-16 14:48:32.480750867 +0000
+Modify: 2011-06-16 14:48:32.480750867 +0000
+Change: 2011-06-16 14:48:32.480750867 +0000
+0+1 records in
+0+1 records out
+29 bytes (29 B) copied, 0.00125449 s, 23.1 kB/s
+  File: `sparse-file'
+  Size: 4194333   	Blocks: 16         IO Block: 4096   regular file
+Device: 6805h/26629d	Inode: 24          Links: 1
+Access: (0644/-rw-r--r--)  Uid: (    0/    root)   Gid: (    0/    root)
+Access: 2011-06-16 14:48:32.480750867 +0000
+Modify: 2011-06-16 14:48:32.492751347 +0000
+Change: 2011-06-16 14:48:32.492751347 +0000
 
 _______________________________________________
 xfs mailing list
