@@ -1,24 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5GF9igO042078 for <xfs@oss.sgi.com>; Thu, 16 Jun 2011 10:09:46 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 885B951D3DA
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2011 08:09:43 -0700 (PDT)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	FpuD3G4CvaaIuIKq for <xfs@oss.sgi.com>;
-	Thu, 16 Jun 2011 08:09:43 -0700 (PDT)
-Date: Thu, 16 Jun 2011 11:09:41 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: suse xfs patches
-Message-ID: <20110616150941.GA28112@infradead.org>
-References: <20110614201238.GA17586@infradead.org>
-	<20110614220550.GA9138@baloo.cartoons>
+	p5GG8O2l045297
+	for <linux-xfs@oss.sgi.com>; Thu, 16 Jun 2011 11:08:25 -0500
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0048E11E3DB1
+	for <linux-xfs@oss.sgi.com>; Thu, 16 Jun 2011 09:08:23 -0700 (PDT)
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id Nnr7kR9r1qL2rd4m for <linux-xfs@oss.sgi.com>;
+	Thu, 16 Jun 2011 09:08:23 -0700 (PDT)
+Message-ID: <4DFA2A76.6000104@sandeen.net>
+Date: Thu, 16 Jun 2011 11:08:22 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110614220550.GA9138@baloo.cartoons>
+Subject: Re: sparse file handling bug in XFS
+References: <081DDE43F61F3D43929A181B477DCA95639B561F@MSXAOA6.twosigma.com>
+In-Reply-To: <081DDE43F61F3D43929A181B477DCA95639B561F@MSXAOA6.twosigma.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,37 +28,42 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Cc: Christoph Hellwig <hch@infradead.org>, neilb@suse.de, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
+To: Sean Noonan <Sean.Noonan@twosigma.com>
+Cc: "'linux-xfs@oss.sgi.com'" <linux-xfs@oss.sgi.com>, Martin Bligh <Martin.Bligh@twosigma.com>, Stephen Degler <Stephen.Degler@twosigma.com>, Ian Baum <Ian.Baum@twosigma.com>, Trammell Hudson <Trammell.Hudson@twosigma.com>
 
-On Tue, Jun 14, 2011 at 05:05:50PM -0500, Goldwyn Rodrigues wrote:
+On 6/16/11 9:49 AM, Sean Noonan wrote:
+> Sparse files do not stay sparse.
+> Here's the simplest test case I've got so far.  I don't think it can get much simpler than this.
 > 
-> Yes sure. I suppose you are refering to the patch attached.
-> I did not send it upstream because the upstream code had taken a
-> different approach and the patch was relevant to the SLES kernel
-> tree only.
+> This did not exist in 2.6.36.  It appeared by 2.6.38-rc8.  It continued into 2.6.38.2.  It continues to exist on 3.0.0-rc3.
+> 
+> # for x in gogo xfs; do date | dd of=sparse-file bs=1k seek=4096; stat sparse-file; done
 
-That, and "XFS: force log before waiting for a pinned buffer".
+Funky; if we do xfs_bmap, it shows the right nr of blocks allocated:
 
-They look similar, but different enough from things that we have
-in mainline that make me really curious if you a) were hitting the
-same things, and b) came to different conclusions under different
-workloads.
+# for x in gogo xfs; do date | dd of=sparse-file bs=1k seek=4096; stat sparse-file | grep Blocks; xfs_bmap -v sparse-file; done
+  Size: 4194333   	Blocks: 8          IO Block: 4096   regular file
+sparse-file:
+ EXT: FILE-OFFSET      BLOCK-RANGE          AG AG-OFFSET            TOTAL
+   0: [0..8191]:       hole                                          8192
+   1: [8192..8199]:    450475168..450475175  2 (18736320..18736327)     8
 
-Looking over it in more detail the bufd patch should be fully superceed
-by current mainline code, altough less so by the commit you quote, but
-rather by the LRU-ification of the xfs_buf code.
+  Size: 4194333   	Blocks: 8192       IO Block: 4096   regular file
+sparse-file:
+ EXT: FILE-OFFSET      BLOCK-RANGE          AG AG-OFFSET            TOTAL
+   0: [0..8191]:       hole                                          8192
+   1: [8192..8199]:    459367952..459367959  2 (27629104..27629111)     8
 
-Similarly the other one you quote isn't really related to what you have
-in tree, in fact you are still missing that case in the suse tree - the
-addition to xfs_buf_lock that you're adding only in one caller was added
-in commit ed3b4d6cdc81e8feefdbfa3c584614be301b6d39, but that was still
-missing the trylock case.
 
-Either way the mainline code only handles pinned and stale buffers,
-which from my understanding are what matters, but the changelog from
-Neil reads like he saw a case where even non-stale buffers might
-matter - except that it's not explained very well.
+And if we unmount & remount it's right again:
+
+# stat sparse-file | grep Blocks
+  Size: 4194333   	Blocks: 8          IO Block: 4096   regular file
+
+so they do remain sparse, but stat tells us the wrong thing.  I think it has
+to do with the count of delayed blocks but I'll try to look into it.
+
+-Eric
 
 _______________________________________________
 xfs mailing list
