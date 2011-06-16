@@ -1,15 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5GGWwJ7046272 for <xfs@oss.sgi.com>; Thu, 16 Jun 2011 11:32:58 -0500
-Subject: Re: [PATCH v2] xfs: make log devices with write back caches work
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110616120223.GA9854@infradead.org>
-References: <20110616120223.GA9854@infradead.org>
-Date: Thu, 16 Jun 2011 11:32:54 -0500
-Message-ID: <1308241974.2717.1.camel@doink>
+	p5GGkFBC046741 for <xfs@oss.sgi.com>; Thu, 16 Jun 2011 11:46:16 -0500
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 70AF5171D9E8
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2011 09:46:14 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id wQ94eSAqZIpPmZLp for
+	<xfs@oss.sgi.com>; Thu, 16 Jun 2011 09:46:14 -0700 (PDT)
+Message-ID: <4DFA301C.3050307@redhat.com>
+Date: Thu, 16 Jun 2011 11:32:28 -0500
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Reply-To: aelder@sgi.com
+Subject: Re: xfstests test case 032 fails for wrong reason
+References: <1308185652.7661.492.camel@chandra-lucid.beaverton.ibm.com>	
+	<4DF955CE.6090108@redhat.com>
+	<1308241896.5505.0.camel@chandra-lucid.beaverton.ibm.com>
+In-Reply-To: <1308241896.5505.0.camel@chandra-lucid.beaverton.ibm.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,26 +29,86 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: sekharan@us.ibm.com
+Cc: XFS Mailing List <xfs@oss.sgi.com>
 
-On Thu, 2011-06-16 at 08:02 -0400, Christoph Hellwig wrote:
-> There's no reason not to support cache flushing on external log devices.
-> The only thing this really requires is flushing the data device first
-> both in fsync and log commits.  A side effect is that we also have to
-> remove the barrier write test during mount, which has been superflous
-> since the new FLUSH+FUA code anyway.  Also use the chance to flush the
-> RT subvolume write cache before the fsync commit, which is required
-> for correct semantics.
+On 6/16/11 11:31 AM, Chandra Seetharaman wrote:
+> On Wed, 2011-06-15 at 20:01 -0500, Eric Sandeen wrote:
+>> On 6/15/11 7:54 PM, Chandra Seetharaman wrote:
+>>> Hello All,
+>>>
+>>> xfstests test case 032 creates different filesystems on the scratch
+>>> partition and tries mkfs.xfs on the same filesystem expecting it to
+>>> fail.
+>>>
+>>> In my system, for whatever reason, mkfs of btrfs fails which leads to
+>>> the test case failure like this:
+>>> ----------------
+>>> FSTYP         -- xfs (non-debug)
+>>> PLATFORM      -- Linux/x86_64 elm3c201 2.6.39-rc4-xfs.git.p2+
+>>> MKFS_OPTIONS  -- -f -bsize=4096 /dev/sdd2
+>>> MOUNT_OPTIONS -- -o
+>>> context=system_u:object_r:nfs_t:s0 /dev/sdd2 /mnt/xfsScratchMntPt
+>>>
+>>> 032 20s ... - output mismatch (see 032.out.bad)
+>>> --- 032.out	2011-06-10 17:25:22.000000000 -0700
+>>> +++ 032.out.bad	2011-06-15 17:47:23.000000000 -0700
+>>> @@ -1,2 +1,3 @@
+>>>  QA output created by 032
+>>>  Silence is golden.
+>>> +Failed - overwrote fs type btrfs!
+>>> Ran: 032
+>>> Failures: 032
+>>> Failed 1 of 1 tests
+>>> ---------------------
+>>>
+>>> which is incorrect. I am thinking of submitting the following change (to
+>>> run mkfs.xfs only if the preceding mkfs.$fs succeeds). Anybody has any
+>>> opinions or better suggestions ?
+>>
+>> Sounds like the right approach.  Would be good to know why mkfs.btrfs
+>> failed too, though, just for informational reasons :)
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> It is saved in $seq.full. Is that sufficient ?
 
-Thanks for the explanations and update.  This looks good.
-I'm testing now and barring a problem should be to Linus
-this weekend.
+sure.  Why -did- it fail, out of curiosity?
 
-Reviewed-by: Alex Elder <aelder@sgi.com>
+-Eric
 
+>>
+>> -Eric
+>>
+>>> ---------------
+>>> diff --git a/032 b/032
+>>> index 839b913..4261ca2 100755
+>>> --- a/032
+>>> +++ b/032
+>>> @@ -75,11 +75,15 @@ do
+>>>         echo "    ( $preop mkfs -t $fs $preargs $SCRATCH_DEV $postargs )" >>$seq.full
+>>>         eval $preop mkfs -t $fs $preargs $SCRATCH_DEV $postargs >>$seq.full 2>&1
+>>>  
+>>> -       # next, ensure we don't overwrite it
+>>> -       echo "=== Attempting XFS overwrite of $fs..." >>$seq.full
+>>> -       /sbin/mkfs.xfs $SCRATCH_DEV >>$seq.full 2>&1
+>>> +       if [ $? -eq 0 ] ; then
+>>> +               # next, ensure we don't overwrite it
+>>> +               echo "=== Attempting XFS overwrite of $fs..." >>$seq.full
+>>> +               /sbin/mkfs.xfs $SCRATCH_DEV >>$seq.full 2>&1
+>>>  
+>>> -       [ $? -eq 0 ] && echo "Failed - overwrote fs type ${fs}!"
+>>> +               [ $? -eq 0 ] && echo "Failed - overwrote fs type ${fs}!"
+>>> +       else
+>>> +               echo "mkfs of type ${fs} failed" >>$seq.full
+>>> +       fi
+>>> ------------------
+>>>
+>>> regards,
+>>>
+>>> chandra
+>>>
+>>
+> 
+> 
 
 _______________________________________________
 xfs mailing list
