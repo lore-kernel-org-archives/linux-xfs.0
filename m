@@ -1,14 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5GLf6H6063460 for <xfs@oss.sgi.com>; Thu, 16 Jun 2011 16:41:06 -0500
-Subject: Re: [PATCH]: [xfstests] Change test 202 to create a filesystem
-	with small enough filesystem for a single AG
+	p5GLTRl3063094 for <xfs@oss.sgi.com>; Thu, 16 Jun 2011 16:29:27 -0500
+Subject: Re: xfstests test case 180 fails often
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1307981905.7661.461.camel@chandra-lucid.beaverton.ibm.com>
-References: <1307981905.7661.461.camel@chandra-lucid.beaverton.ibm.com>
-Date: Thu, 16 Jun 2011 16:41:02 -0500
-Message-ID: <1308260462.2717.33.camel@doink>
+In-Reply-To: <1308077464.7661.473.camel@chandra-lucid.beaverton.ibm.com>
+References: <1308077464.7661.473.camel@chandra-lucid.beaverton.ibm.com>
+Date: Thu, 16 Jun 2011 16:29:22 -0500
+Message-ID: <1308259762.2717.31.camel@doink>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -24,20 +23,47 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: sekharan@us.ibm.com
-Cc: Eric Sandeen <sandeen@redhat.com>, XFS Mailing List <xfs@oss.sgi.com>
+Cc: XFS Mailing List <xfs@oss.sgi.com>
 
-On Mon, 2011-06-13 at 09:18 -0700, Chandra Seetharaman wrote:
-> Test 202 fails when the filesystem size is greater than 1TB with
-> not so clear message. 
+On Tue, 2011-06-14 at 11:51 -0700, Chandra Seetharaman wrote:
+> Hello All,
 > 
-> Call mkfs with a small enough filesystem size even with older 
-> versions of XFS.
+> test case 180 fails often (4 out of 5) in my x86_64 system.
+> Any suggestions on how to proceed to debug ?
+
+I have been seeing failures like that sometimes
+(more often recently I think) for a while.  I
+have not had the chance to really chase it down.
+
+If you can reproduce it pretty relibly you could
+use "git bisect" to try to find out whether the
+failures started to occur after a particular
+commit.
+
+					-Alex
+
+> regards,
 > 
-> Signed-Off-By: Chandra Seetharaman <sekharan@us.ibm.com>
+> chandra
+> 
+> 80 176s ... - output mismatch (see 180.out.bad)^M
+> --- 180.out     2011-04-20 08:34:36.000000000 -0700^M
+> +++ 180.out.bad 2011-06-03 14:10:45.000000000 -0700^M
+> @@ -1 +1,4 @@^M
+>  QA output created by 180^M
+> +file /mnt/xfsScratchMntPt/656 has incorrect size - sync failed^M
+> +file /mnt/xfsScratchMntPt/818 has incorrect size - sync failed^M
+> +file /mnt/xfsScratchMntPt/899 has incorrect size - sync failed^M
+> Ran: 180^M
+> Failures: 180^M
+> Failed 1 of 1 tests^M
+> 
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
-Looks good.  I will commit this for you.
-
-Reviewed-by: Alex Elder <aelder@sgi.com>
 
 
 _______________________________________________
