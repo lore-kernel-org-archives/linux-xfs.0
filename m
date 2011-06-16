@@ -1,15 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5FIcsLF203842 for <xfs@oss.sgi.com>; Wed, 15 Jun 2011 13:38:54 -0500
-Subject: Re: [PATCH] xfs: make log devices with write back caches work
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110527164137.GA5833@infradead.org>
-References: <20110527164137.GA5833@infradead.org>
-Date: Wed, 15 Jun 2011 13:38:47 -0500
-Message-ID: <1308163127.2893.58.camel@doink>
+	p5G119hr239552 for <xfs@oss.sgi.com>; Wed, 15 Jun 2011 20:01:09 -0500
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2D446171154B
+	for <xfs@oss.sgi.com>; Wed, 15 Jun 2011 18:01:08 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id a2eOs9MtMxQoTADZ for
+	<xfs@oss.sgi.com>; Wed, 15 Jun 2011 18:01:08 -0700 (PDT)
+Message-ID: <4DF955CE.6090108@redhat.com>
+Date: Wed, 15 Jun 2011 20:01:02 -0500
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Reply-To: aelder@sgi.com
+Subject: Re: xfstests test case 032 fails for wrong reason
+References: <1308185652.7661.492.camel@chandra-lucid.beaverton.ibm.com>
+In-Reply-To: <1308185652.7661.492.camel@chandra-lucid.beaverton.ibm.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,226 +27,74 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: sekharan@us.ibm.com
+Cc: XFS Mailing List <xfs@oss.sgi.com>
 
-On Fri, 2011-05-27 at 11:41 -0500, Christoph Hellwig wrote:
-> There's no reason not to support cache flushing on external log devices.
-> The only thing this really requires is flushing the data device first
-
-I know this is just the description but it wasn't obvious to me
-initially the reason for this ordering.  Now I know:  it's to
-ensure any data written to new space on a file extending write
-is on disk before a size change gets committed.  Maybe you could
-mention this (in addition to mentioning it in a comment, as I
-suggest below.
-
-(And I don't know if the case mentioned above is the only
-one where this ordering is important.  It's conceivable there
-could be a case where the reverse ordering (log first) was
-needed, but I have not thought that through at all and I
-presume not.)
-
-> both in fsync and log commits.  A side effect is that we also have to
-> remove the barrier write test during mount, which has been superflous
-> since the new FLUSH+FUA code anyway.  Also use the chance to flush the
-> RT subvolume write cache before the fsync commit, which is required
-> for correct semantics.
-
-A few comments below.
-
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+On 6/15/11 7:54 PM, Chandra Seetharaman wrote:
+> Hello All,
 > 
-> Index: xfs/fs/xfs/linux-2.6/xfs_file.c
-> ===================================================================
-> --- xfs.orig/fs/xfs/linux-2.6/xfs_file.c	2011-05-27 13:07:41.260498122 +0200
-> +++ xfs/fs/xfs/linux-2.6/xfs_file.c	2011-05-27 17:37:30.152495811 +0200
-> @@ -131,19 +131,32 @@ xfs_file_fsync(
->  {
->  	struct inode		*inode = file->f_mapping->host;
->  	struct xfs_inode	*ip = XFS_I(inode);
-
-. . .
-
->  	xfs_ioend_wait(ip);
->  
-> +	if (mp->m_flags & XFS_MOUNT_BARRIER) {
-> +		/*
-> +		 * If we have an RT and/or log subvolume we need to make sure
-> +		 * to flush the write cache on the device that the data
-> +		 * resides before commit the transaction.
-> +		 */
-> +		if (XFS_IS_REALTIME_INODE(ip))
-> +			xfs_blkdev_issue_flush(mp->m_rtdev_targp);
-
-I questioned the "else" below.  But as you mentioned on IRC
-it makes sense because a realtime inode will never share the
-same device target as the log (or later in this function, the
-data device).  A short mention of that in the comment above
-might be reassuring.  Similarly, I think it would be worthwhile
-to mention the reason for doing this flush here *before* the
-log gets forced.
-
-> +		else if (mp->m_logdev_targp != mp->m_ddev_targp)
-> +			xfs_blkdev_issue_flush(mp->m_ddev_targp);
-> +	}
-> +
->  	/*
->  	 * We always need to make sure that the required inode state is safe on
->  	 * disk.  The inode might be clean but we still might need to force the
-
-. . .
-
-> @@ -209,28 +222,23 @@ xfs_file_fsync(
->  		 * force the log.
->  		 */
->  		if (xfs_ipincount(ip)) {
-> -			error = _xfs_log_force_lsn(ip->i_mount,
-> +			error = _xfs_log_force_lsn(mp,
->  					ip->i_itemp->ili_last_lsn,
->  					XFS_LOG_SYNC, &log_flushed);
-
-If log_flushed is set on return here, does that also imply
-that the actual blkdev flush of the log device (which is
-possibly the data device) has occurred?  It looks to
-me like xlog_sync() marks each log buffer ordered but I
-don't see the flush (though I didn't look *that* hard...).
-
->  		}
->  		xfs_iunlock(ip, XFS_ILOCK_SHARED);
->  	}
->  
-> -	if (ip->i_mount->m_flags & XFS_MOUNT_BARRIER) {
-> -		/*
-> -		 * If the log write didn't issue an ordered tag we need
-> -		 * to flush the disk cache for the data device now.
-> -		 */
-> -		if (!log_flushed)
-> -			xfs_blkdev_issue_flush(ip->i_mount->m_ddev_targp);
-> -
-> -		/*
-> -		 * If this inode is on the RT dev we need to flush that
-> -		 * cache as well.
-> -		 */
-> -		if (XFS_IS_REALTIME_INODE(ip))
-> -			xfs_blkdev_issue_flush(ip->i_mount->m_rtdev_targp);
-> -	}
-> +	/*
-> +	 * Flush the write cache on the data volume, if the data for this
-> +	 * inode actually resides on it, and the transaction commit did
-> +	 * not flush it yet.
-> +	 */
-> +	if ((mp->m_flags & XFS_MOUNT_BARRIER) &&
-> +	    mp->m_logdev_targp == mp->m_ddev_targp &&
-> +	    !XFS_IS_REALTIME_INODE(ip) &&
-> +	    !log_flushed)
-> +		xfs_blkdev_issue_flush(mp->m_ddev_targp);
-
-Note my previous comment.  It kind of arose because my
-thought when seeing this was "What if it is an internal
-log but _xfs_log_force_lsn() does *not* issue a blkdev
-flush to the log/data device?"
-
-Breaking it down, we have either one or two devices to flush,
-the log and either the realtime or (if external log) the data
-device:
-- realtime device (flush it before log device flush)
-- data device (only if not realtime; do first if external log)
-- log device (flush this last, realtime or not)
-
-I may be wrong, but it seems like this may be the
-logic you need:
-
-    if (RT)
-	flush RT device
-    else if (external log)
-	flush data device
-    force the log
-    if (log device wasn't flushed when log forced)
-	flush log device
-
-The log device flush of course implies a data device flush
-for an internal log.
-
->  	return -error;
->  }
-> Index: xfs/fs/xfs/linux-2.6/xfs_super.c
-> ===================================================================
-> --- xfs.orig/fs/xfs/linux-2.6/xfs_super.c	2011-05-27 13:07:41.272495356 +0200
-> +++ xfs/fs/xfs/linux-2.6/xfs_super.c	2011-05-27 15:37:11.673496345 +0200
-> @@ -627,68 +627,6 @@ xfs_blkdev_put(
->  		blkdev_put(bdev, FMODE_READ|FMODE_WRITE|FMODE_EXCL);
->  }
-
-. . .
-
-> -
-> -STATIC void
-> -xfs_mountfs_check_barriers(xfs_mount_t *mp)
-> -{
-
-. . .
-
-> -	if (xfs_readonly_buftarg(mp->m_ddev_targp)) {
-> -		xfs_notice(mp,
-> -			"Disabling barriers, underlying device is readonly");
-> -		mp->m_flags &= ~XFS_MOUNT_BARRIER;
-> -		return;
-> -	}
-
-At first I was going to suggest this might still be
-a worthwhile optimization.  But I think a read-only
-underlying device will prevent us from ever reaching
-the points that (now) would bother checking the
-XFS_MOUNT_BARRIER flag.
-
-> -
-> -	error = xfs_barrier_test(mp);
-> -	if (error) {
-> -		xfs_notice(mp,
-> -			"Disabling barriers, trial barrier write failed");
-> -		mp->m_flags &= ~XFS_MOUNT_BARRIER;
-> -		return;
-> -	}
-> -}
-> -
->  void
->  xfs_blkdev_issue_flush(
->  	xfs_buftarg_t		*buftarg)
-
-. . .
-
-> Index: xfs/fs/xfs/xfs_log.c
-> ===================================================================
-> --- xfs.orig/fs/xfs/xfs_log.c	2011-05-27 13:07:41.284496076 +0200
-> +++ xfs/fs/xfs/xfs_log.c	2011-05-27 15:37:11.681500020 +0200
-> @@ -1372,8 +1372,15 @@ xlog_sync(xlog_t		*log,
->  	XFS_BUF_ASYNC(bp);
->  	bp->b_flags |= XBF_LOG_BUFFER;
->  
-> -	if (log->l_mp->m_flags & XFS_MOUNT_BARRIER)
-> +	if (log->l_mp->m_flags & XFS_MOUNT_BARRIER) {
-> +		/*
-> +		 * If we have an external log device, flush the data device
-> +		 * before flushing the log.
-> +		 */
-> +		if (log->l_mp->m_logdev_targp != log->l_mp->m_ddev_targp)
-> +			xfs_blkdev_issue_flush(log->l_mp->m_ddev_targp);
-
-Shouldn't we flush the realtime device as well here, if present?
-
->  		XFS_BUF_ORDERED(bp);
-> +	}
->  
->  	ASSERT(XFS_BUF_ADDR(bp) <= log->l_logBBsize-1);
->  	ASSERT(XFS_BUF_ADDR(bp) + BTOBB(count) <= log->l_logBBsize);
+> xfstests test case 032 creates different filesystems on the scratch
+> partition and tries mkfs.xfs on the same filesystem expecting it to
+> fail.
 > 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> In my system, for whatever reason, mkfs of btrfs fails which leads to
+> the test case failure like this:
+> ----------------
+> FSTYP         -- xfs (non-debug)
+> PLATFORM      -- Linux/x86_64 elm3c201 2.6.39-rc4-xfs.git.p2+
+> MKFS_OPTIONS  -- -f -bsize=4096 /dev/sdd2
+> MOUNT_OPTIONS -- -o
+> context=system_u:object_r:nfs_t:s0 /dev/sdd2 /mnt/xfsScratchMntPt
+> 
+> 032 20s ... - output mismatch (see 032.out.bad)
+> --- 032.out	2011-06-10 17:25:22.000000000 -0700
+> +++ 032.out.bad	2011-06-15 17:47:23.000000000 -0700
+> @@ -1,2 +1,3 @@
+>  QA output created by 032
+>  Silence is golden.
+> +Failed - overwrote fs type btrfs!
+> Ran: 032
+> Failures: 032
+> Failed 1 of 1 tests
+> ---------------------
+> 
+> which is incorrect. I am thinking of submitting the following change (to
+> run mkfs.xfs only if the preceding mkfs.$fs succeeds). Anybody has any
+> opinions or better suggestions ?
 
+Sounds like the right approach.  Would be good to know why mkfs.btrfs
+failed too, though, just for informational reasons :)
 
+-Eric
+
+> ---------------
+> diff --git a/032 b/032
+> index 839b913..4261ca2 100755
+> --- a/032
+> +++ b/032
+> @@ -75,11 +75,15 @@ do
+>         echo "    ( $preop mkfs -t $fs $preargs $SCRATCH_DEV $postargs )" >>$seq.full
+>         eval $preop mkfs -t $fs $preargs $SCRATCH_DEV $postargs >>$seq.full 2>&1
+>  
+> -       # next, ensure we don't overwrite it
+> -       echo "=== Attempting XFS overwrite of $fs..." >>$seq.full
+> -       /sbin/mkfs.xfs $SCRATCH_DEV >>$seq.full 2>&1
+> +       if [ $? -eq 0 ] ; then
+> +               # next, ensure we don't overwrite it
+> +               echo "=== Attempting XFS overwrite of $fs..." >>$seq.full
+> +               /sbin/mkfs.xfs $SCRATCH_DEV >>$seq.full 2>&1
+>  
+> -       [ $? -eq 0 ] && echo "Failed - overwrote fs type ${fs}!"
+> +               [ $? -eq 0 ] && echo "Failed - overwrote fs type ${fs}!"
+> +       else
+> +               echo "mkfs of type ${fs} failed" >>$seq.full
+> +       fi
+> ------------------
+> 
+> regards,
+> 
+> chandra
+> 
 
 _______________________________________________
 xfs mailing list
