@@ -1,18 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5HBaFZD116215 for <xfs@oss.sgi.com>; Fri, 17 Jun 2011 06:36:16 -0500
-Received: from nm8.bullet.mail.sg1.yahoo.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with SMTP id 11F0C1EDD8C3
-	for <xfs@oss.sgi.com>; Fri, 17 Jun 2011 04:36:13 -0700 (PDT)
-Received: from nm8.bullet.mail.sg1.yahoo.com (nm8.bullet.mail.sg1.yahoo.com
-	[115.178.12.208]) by cuda.sgi.com with SMTP id h8Hg0o419sGmhX0w
-	for <xfs@oss.sgi.com>; Fri, 17 Jun 2011 04:36:13 -0700 (PDT)
-Message-ID: <385532.69322.qm@web77719.mail.sg1.yahoo.com>
-Date: Fri, 17 Jun 2011 19:36:12 +0800 (SGT)
-From: Gim Leong Chin <chingimleong@yahoo.com.sg>
-Subject: Warning: AG size is a multiple of stripe width?
+	p5HC8evV117418 for <xfs@oss.sgi.com>; Fri, 17 Jun 2011 07:08:40 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9AB4951DB08
+	for <xfs@oss.sgi.com>; Fri, 17 Jun 2011 05:08:39 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	B69PvejBEFfJE9WJ for <xfs@oss.sgi.com>;
+	Fri, 17 Jun 2011 05:08:39 -0700 (PDT)
+Date: Fri, 17 Jun 2011 08:08:38 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 3/3 v5] XFS TESTS: Add ENOSPC Hole Punch Test
+Message-ID: <20110617120838.GA20714@infradead.org>
+References: <4DED6405.7020104@vnet.ibm.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4DED6405.7020104@vnet.ibm.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,57 +30,22 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Allison Henderson <achender@vnet.ibm.com>
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
 
-Hi,
+This one fails for me because my test system doesn't have sudo
+installed.  I can't see any reason why a simple su wouldn't be enough.
 
+We already have a helper to make su usable on both IRIX and Linux in
+test 123, and it might be a good idea to add this to the common routines
+and use it.
 
-I have a Sun workstation with eight Cheetah 15K.5 SAS 300 GB on RAID 1E (RAID 10) on LSI SAS3081E-R.
+I'd also suggest to split this test off 252 into a new test case, as
+unlike the other tests it actually requires a scratch devices, and in
+general is pretty different from the simple xfs_io exercises in 252.
 
-I am installing SLED 11 SP1 on it and I thought I will do a thorough optimization right down to the partition boundaries.
-
-Since the default for XFS is to create four aggregation groups, and with the reasoning that Cheetah can do double the seeks of normal 7200 RPM drives, I have four aggregation groups per drive for a total of 16 for 70 GB /dev/sda2 partition, and eight per drive for total of 32 for /dev/sda3 partition (1011 GB).
-
-I have aligned the partition start and end with the stripe width boundaries.
-The stripe size is 64 kB, stripe width is 4*64 kB = 256 kB, in terms of 512 byte sectors:
-
-70 GB /
-
-No      Start           End             Number
-1       512             67109375        32 GB = 67108864 sectors = 131072 stripe sets
-
-2       67109376        213910015       70 GB = 146800640 sectors = 286720 stripe sets
-
-3       213910016       2335932415      Left = 2335932416 - 213910016 = 2122022400 sectors = 4144575 stripe sets
-
-
-When I do the following:
-
-mkfs.xfs -f -b size=4k -d agcount=16,su=64k,sw=4 -i size=256,align=1,attr=2 -l version=2,su=64k,lazy-count=1 -n version=2 -s size=512 -L / /dev/sda2
-
-Warning: AG size is a multiple of stripe width.  This can cause performance problems by aligning all AGs on the same disk.  To avoid this, run mkfs with an AG size that is one stripe unit smaller, for example 1146864
-
-agcount=16 agsize=1146880 blks
-bsize=4096
-sunit=16 swidth=64 blks
-
-mkfs.xfs -f -b size=4k -d agcount=32,su=64k,sw=4 -i size=256,align=1,attr=2 -l version=2,su=64k,lazy-count=1 -n version=2 -s size=512 -L /home /dev/sda3
-
-Warning: AG size is a multiple of stripe width.  This can cause performance problems by aligning all AGs on the same disk.  To avoid this, run mkfs with an AG size that is one stripe unit smaller, for example 8289136
-
-agcount=32 agsize=8289152 blks
-bsize=4096
-sunit=16 swidth=64 blks
-
-I am really puzzled since I thought all I am doing is distributing 4 aggregation groups per drive for sda2 and 8 per drive for sda3.
-
-What have I done wrong and what is the flaw with my understanding?
-
-Thank you!
-
-
-Chin Gim Leong
-
+I'd also move the newly added helpers directly into the new testcase
+as they really aren't common.
 
 _______________________________________________
 xfs mailing list
