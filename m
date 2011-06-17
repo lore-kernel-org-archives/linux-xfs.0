@@ -1,22 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5HDD3Gn119964 for <xfs@oss.sgi.com>; Fri, 17 Jun 2011 08:13:04 -0500
+	p5HDFNJJ120066 for <xfs@oss.sgi.com>; Fri, 17 Jun 2011 08:15:23 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D40DF1E4A1E3
-	for <xfs@oss.sgi.com>; Fri, 17 Jun 2011 06:13:02 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A30051D7617A
+	for <xfs@oss.sgi.com>; Fri, 17 Jun 2011 06:15:21 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	XeRfOk2iR4gH2bbo for <xfs@oss.sgi.com>;
-	Fri, 17 Jun 2011 06:13:02 -0700 (PDT)
-Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1QXYr7-0000gu-TM
-	for xfs@oss.sgi.com; Fri, 17 Jun 2011 13:13:01 +0000
-Date: Fri, 17 Jun 2011 09:13:01 -0400
+	1ENb5UZyMjU0M7hf for <xfs@oss.sgi.com>;
+	Fri, 17 Jun 2011 06:15:21 -0700 (PDT)
+Date: Fri, 17 Jun 2011 09:15:20 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] xfs: kill xfs_itruncate_start
-Message-ID: <20110617131301.GB2141@infradead.org>
+Subject: [PATCH 1/2] xfs: split xfs_setattr
+Message-ID: <20110617131519.GA2822@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,326 +30,962 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-xfs_itruncate_start is a rather length wrapper that evaluates to a call
-to xfs_ioend_wait and xfs_tosspages, and only has two callers.
-
-Instead of using the complicated checks left over from IRIX where we
-can to truncate the pagecache just call xfs_tosspages
-(aka truncate_inode_pages) directly as we want to get rid of all data
-after i_size, and truncate_inode_pages handles incorrect alignments
-and too large offsets just fine.
+Split up xfs_setattr into two functions, one for the complex truncate
+handling, and one for the trivial attribute updates.  Also move both
+new routines to xfs_iops.c as they are fairly Linux-specific.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: xfs/fs/xfs/xfs_inode.c
+Index: xfs/fs/xfs/linux-2.6/xfs_iops.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_inode.c	2011-05-23 20:54:39.043447167 +0200
-+++ xfs/fs/xfs/xfs_inode.c	2011-05-23 21:02:18.231947817 +0200
-@@ -1217,165 +1217,8 @@ xfs_isize_check(
- #endif	/* DEBUG */
+--- xfs.orig/fs/xfs/linux-2.6/xfs_iops.c	2011-06-17 14:07:57.059091534 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_iops.c	2011-06-17 14:18:42.495725522 +0200
+@@ -39,6 +39,7 @@
+ #include "xfs_buf_item.h"
+ #include "xfs_utils.h"
+ #include "xfs_vnodeops.h"
++#include "xfs_inode_item.h"
+ #include "xfs_trace.h"
  
- /*
-- * Calculate the last possible buffered byte in a file.  This must
-- * include data that was buffered beyond the EOF by the write code.
-- * This also needs to deal with overflowing the xfs_fsize_t type
-- * which can happen for sizes near the limit.
-- *
-- * We also need to take into account any blocks beyond the EOF.  It
-- * may be the case that they were buffered by a write which failed.
-- * In that case the pages will still be in memory, but the inode size
-- * will never have been updated.
-- */
--STATIC xfs_fsize_t
--xfs_file_last_byte(
--	xfs_inode_t	*ip)
--{
--	xfs_mount_t	*mp;
--	xfs_fsize_t	last_byte;
--	xfs_fileoff_t	last_block;
--	xfs_fileoff_t	size_last_block;
--	int		error;
--
--	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL|XFS_IOLOCK_SHARED));
--
--	mp = ip->i_mount;
--	/*
--	 * Only check for blocks beyond the EOF if the extents have
--	 * been read in.  This eliminates the need for the inode lock,
--	 * and it also saves us from looking when it really isn't
--	 * necessary.
--	 */
--	if (ip->i_df.if_flags & XFS_IFEXTENTS) {
--		xfs_ilock(ip, XFS_ILOCK_SHARED);
--		error = xfs_bmap_last_offset(NULL, ip, &last_block,
--			XFS_DATA_FORK);
--		xfs_iunlock(ip, XFS_ILOCK_SHARED);
--		if (error) {
--			last_block = 0;
--		}
--	} else {
--		last_block = 0;
--	}
--	size_last_block = XFS_B_TO_FSB(mp, (xfs_ufsize_t)ip->i_size);
--	last_block = XFS_FILEOFF_MAX(last_block, size_last_block);
--
--	last_byte = XFS_FSB_TO_B(mp, last_block);
--	if (last_byte < 0) {
--		return XFS_MAXIOFFSET(mp);
--	}
--	last_byte += (1 << mp->m_writeio_log);
--	if (last_byte < 0) {
--		return XFS_MAXIOFFSET(mp);
--	}
--	return last_byte;
--}
--
--/*
-- * Start the truncation of the file to new_size.  The new size
-- * must be smaller than the current size.  This routine will
-- * clear the buffer and page caches of file data in the removed
-- * range, and xfs_itruncate_finish() will remove the underlying
-- * disk blocks.
-- *
-- * The inode must have its I/O lock locked EXCLUSIVELY, and it
-- * must NOT have the inode lock held at all.  This is because we're
-- * calling into the buffer/page cache code and we can't hold the
-- * inode lock when we do so.
-- *
-- * We need to wait for any direct I/Os in flight to complete before we
-- * proceed with the truncate. This is needed to prevent the extents
-- * being read or written by the direct I/Os from being removed while the
-- * I/O is in flight as there is no other method of synchronising
-- * direct I/O with the truncate operation.  Also, because we hold
-- * the IOLOCK in exclusive mode, we prevent new direct I/Os from being
-- * started until the truncate completes and drops the lock. Essentially,
-- * the xfs_ioend_wait() call forms an I/O barrier that provides strict
-- * ordering between direct I/Os and the truncate operation.
-- *
-- * The flags parameter can have either the value XFS_ITRUNC_DEFINITE
-- * or XFS_ITRUNC_MAYBE.  The XFS_ITRUNC_MAYBE value should be used
-- * in the case that the caller is locking things out of order and
-- * may not be able to call xfs_itruncate_finish() with the inode lock
-- * held without dropping the I/O lock.  If the caller must drop the
-- * I/O lock before calling xfs_itruncate_finish(), then xfs_itruncate_start()
-- * must be called again with all the same restrictions as the initial
-- * call.
-- */
--int
--xfs_itruncate_start(
--	xfs_inode_t	*ip,
--	uint		flags,
--	xfs_fsize_t	new_size)
--{
--	xfs_fsize_t	last_byte;
--	xfs_off_t	toss_start;
--	xfs_mount_t	*mp;
--	int		error = 0;
--
--	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
--	ASSERT((new_size == 0) || (new_size <= ip->i_size));
--	ASSERT((flags == XFS_ITRUNC_DEFINITE) ||
--	       (flags == XFS_ITRUNC_MAYBE));
--
--	mp = ip->i_mount;
--
--	/* wait for the completion of any pending DIOs */
--	if (new_size == 0 || new_size < ip->i_size)
--		xfs_ioend_wait(ip);
--
--	/*
--	 * Call toss_pages or flushinval_pages to get rid of pages
--	 * overlapping the region being removed.  We have to use
--	 * the less efficient flushinval_pages in the case that the
--	 * caller may not be able to finish the truncate without
--	 * dropping the inode's I/O lock.  Make sure
--	 * to catch any pages brought in by buffers overlapping
--	 * the EOF by searching out beyond the isize by our
--	 * block size. We round new_size up to a block boundary
--	 * so that we don't toss things on the same block as
--	 * new_size but before it.
--	 *
--	 * Before calling toss_page or flushinval_pages, make sure to
--	 * call remapf() over the same region if the file is mapped.
--	 * This frees up mapped file references to the pages in the
--	 * given range and for the flushinval_pages case it ensures
--	 * that we get the latest mapped changes flushed out.
--	 */
--	toss_start = XFS_B_TO_FSB(mp, (xfs_ufsize_t)new_size);
--	toss_start = XFS_FSB_TO_B(mp, toss_start);
--	if (toss_start < 0) {
--		/*
--		 * The place to start tossing is beyond our maximum
--		 * file size, so there is no way that the data extended
--		 * out there.
--		 */
--		return 0;
--	}
--	last_byte = xfs_file_last_byte(ip);
--	trace_xfs_itruncate_start(ip, new_size, flags, toss_start, last_byte);
--	if (last_byte > toss_start) {
--		if (flags & XFS_ITRUNC_DEFINITE) {
--			xfs_tosspages(ip, toss_start,
--					-1, FI_REMAPF_LOCKED);
--		} else {
--			error = xfs_flushinval_pages(ip, toss_start,
--					-1, FI_REMAPF_LOCKED);
--		}
--	}
--
--#ifdef DEBUG
--	if (new_size == 0) {
--		ASSERT(VN_CACHED(VFS_I(ip)) == 0);
--	}
--#endif
--	return error;
--}
--
--/*
-- * Shrink the file to the given new_size.  The new size must be smaller than
-- * the current size.  This will free up the underlying blocks in the removed
-- * range after a call to xfs_itruncate_start() or xfs_atruncate_start().
-+ * Free up the underlying blocks past new_size.  The new size must be
-+ * smaller than the current size.
-  *
-  * The transaction passed to this routine must have made a permanent log
-  * reservation of at least XFS_ITRUNCATE_LOG_RES.  This routine may commit the
-@@ -1387,7 +1230,7 @@ xfs_itruncate_start(
-  * will be "held" within the returned transaction.  This routine does NOT
-  * require any disk space to be reserved for it within the transaction.
-  *
-- * The fork parameter must be either xfs_attr_fork or xfs_data_fork, and it
-+ * The fork parameter must be either XFS_ATTR_FORK or XFS_DATA_FORK, and it
-  * indicates the fork which is to be truncated.  For the attribute fork we only
-  * support truncation to size 0.
-  *
+ #include <linux/capability.h>
+@@ -497,12 +498,452 @@ xfs_vn_getattr(
+ 	return 0;
+ }
+ 
++int
++xfs_setattr_simple(
++	struct xfs_inode	*ip,
++	struct iattr		*iattr,
++	int			flags)
++{
++	xfs_mount_t		*mp = ip->i_mount;
++	struct inode		*inode = VFS_I(ip);
++	int			mask = iattr->ia_valid;
++	xfs_trans_t		*tp;
++	int			error;
++	uint			lock_flags = 0;
++	uid_t			uid = 0, iuid = 0;
++	gid_t			gid = 0, igid = 0;
++	struct xfs_dquot	*udqp = NULL, *gdqp = NULL;
++	struct xfs_dquot	*olddquot1 = NULL, *olddquot2 = NULL;
++
++	trace_xfs_setattr(ip);
++
++	if (mp->m_flags & XFS_MOUNT_RDONLY)
++		return XFS_ERROR(EROFS);
++
++	if (XFS_FORCED_SHUTDOWN(mp))
++		return XFS_ERROR(EIO);
++
++	error = -inode_change_ok(inode, iattr);
++	if (error)
++		return error;
++
++	ASSERT((mask & ATTR_SIZE) == 0);
++
++	/*
++	 * If disk quotas is on, we make sure that the dquots do exist on disk,
++	 * before we start any other transactions. Trying to do this later
++	 * is messy. We don't care to take a readlock to look at the ids
++	 * in inode here, because we can't hold it across the trans_reserve.
++	 * If the IDs do change before we take the ilock, we're covered
++	 * because the i_*dquot fields will get updated anyway.
++	 */
++	if (XFS_IS_QUOTA_ON(mp) && (mask & (ATTR_UID|ATTR_GID))) {
++		uint	qflags = 0;
++
++		if ((mask & ATTR_UID) && XFS_IS_UQUOTA_ON(mp)) {
++			uid = iattr->ia_uid;
++			qflags |= XFS_QMOPT_UQUOTA;
++		} else {
++			uid = ip->i_d.di_uid;
++		}
++		if ((mask & ATTR_GID) && XFS_IS_GQUOTA_ON(mp)) {
++			gid = iattr->ia_gid;
++			qflags |= XFS_QMOPT_GQUOTA;
++		}  else {
++			gid = ip->i_d.di_gid;
++		}
++
++		/*
++		 * We take a reference when we initialize udqp and gdqp,
++		 * so it is important that we never blindly double trip on
++		 * the same variable. See xfs_create() for an example.
++		 */
++		ASSERT(udqp == NULL);
++		ASSERT(gdqp == NULL);
++		error = xfs_qm_vop_dqalloc(ip, uid, gid, xfs_get_projid(ip),
++					 qflags, &udqp, &gdqp);
++		if (error)
++			return error;
++	}
++
++	tp = xfs_trans_alloc(mp, XFS_TRANS_SETATTR_NOT_SIZE);
++	error = xfs_trans_reserve(tp, 0, XFS_ICHANGE_LOG_RES(mp), 0, 0, 0);
++	if (error)
++		goto error_return;
++
++	lock_flags = XFS_ILOCK_EXCL;
++	xfs_ilock(ip, lock_flags);
++
++	/*
++	 * Change file ownership.  Must be the owner or privileged.
++	 */
++	if (mask & (ATTR_UID|ATTR_GID)) {
++		/*
++		 * These IDs could have changed since we last looked at them.
++		 * But, we're assured that if the ownership did change
++		 * while we didn't have the inode locked, inode's dquot(s)
++		 * would have changed also.
++		 */
++		iuid = ip->i_d.di_uid;
++		igid = ip->i_d.di_gid;
++		gid = (mask & ATTR_GID) ? iattr->ia_gid : igid;
++		uid = (mask & ATTR_UID) ? iattr->ia_uid : iuid;
++
++		/*
++		 * Do a quota reservation only if uid/gid is actually
++		 * going to change.
++		 */
++		if (XFS_IS_QUOTA_RUNNING(mp) &&
++		    ((XFS_IS_UQUOTA_ON(mp) && iuid != uid) ||
++		     (XFS_IS_GQUOTA_ON(mp) && igid != gid))) {
++			ASSERT(tp);
++			error = xfs_qm_vop_chown_reserve(tp, ip, udqp, gdqp,
++						capable(CAP_FOWNER) ?
++						XFS_QMOPT_FORCE_RES : 0);
++			if (error)	/* out of quota */
++				goto error_return;
++		}
++	}
++
++	xfs_trans_ijoin(tp, ip);
++
++	/*
++	 * Change file ownership.  Must be the owner or privileged.
++	 */
++	if (mask & (ATTR_UID|ATTR_GID)) {
++		/*
++		 * CAP_FSETID overrides the following restrictions:
++		 *
++		 * The set-user-ID and set-group-ID bits of a file will be
++		 * cleared upon successful return from chown()
++		 */
++		if ((ip->i_d.di_mode & (S_ISUID|S_ISGID)) &&
++		    !capable(CAP_FSETID))
++			ip->i_d.di_mode &= ~(S_ISUID|S_ISGID);
++
++		/*
++		 * Change the ownerships and register quota modifications
++		 * in the transaction.
++		 */
++		if (iuid != uid) {
++			if (XFS_IS_QUOTA_RUNNING(mp) && XFS_IS_UQUOTA_ON(mp)) {
++				ASSERT(mask & ATTR_UID);
++				ASSERT(udqp);
++				olddquot1 = xfs_qm_vop_chown(tp, ip,
++							&ip->i_udquot, udqp);
++			}
++			ip->i_d.di_uid = uid;
++			inode->i_uid = uid;
++		}
++		if (igid != gid) {
++			if (XFS_IS_QUOTA_RUNNING(mp) && XFS_IS_GQUOTA_ON(mp)) {
++				ASSERT(!XFS_IS_PQUOTA_ON(mp));
++				ASSERT(mask & ATTR_GID);
++				ASSERT(gdqp);
++				olddquot2 = xfs_qm_vop_chown(tp, ip,
++							&ip->i_gdquot, gdqp);
++			}
++			ip->i_d.di_gid = gid;
++			inode->i_gid = gid;
++		}
++	}
++
++	/*
++	 * Change file access modes.
++	 */
++	if (mask & ATTR_MODE) {
++		umode_t mode = iattr->ia_mode;
++
++		if (!in_group_p(inode->i_gid) && !capable(CAP_FSETID))
++			mode &= ~S_ISGID;
++
++		ip->i_d.di_mode &= S_IFMT;
++		ip->i_d.di_mode |= mode & ~S_IFMT;
++
++		inode->i_mode &= S_IFMT;
++		inode->i_mode |= mode & ~S_IFMT;
++	}
++
++	/*
++	 * Change file access or modified times.
++	 */
++	if (mask & ATTR_ATIME) {
++		inode->i_atime = iattr->ia_atime;
++		ip->i_d.di_atime.t_sec = iattr->ia_atime.tv_sec;
++		ip->i_d.di_atime.t_nsec = iattr->ia_atime.tv_nsec;
++		ip->i_update_core = 1;
++	}
++	if (mask & ATTR_CTIME) {
++		inode->i_ctime = iattr->ia_ctime;
++		ip->i_d.di_ctime.t_sec = iattr->ia_ctime.tv_sec;
++		ip->i_d.di_ctime.t_nsec = iattr->ia_ctime.tv_nsec;
++		ip->i_update_core = 1;
++	}
++	if (mask & ATTR_MTIME) {
++		inode->i_mtime = iattr->ia_mtime;
++		ip->i_d.di_mtime.t_sec = iattr->ia_mtime.tv_sec;
++		ip->i_d.di_mtime.t_nsec = iattr->ia_mtime.tv_nsec;
++		ip->i_update_core = 1;
++	}
++
++	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
++
++	XFS_STATS_INC(xs_ig_attrchg);
++
++	if (mp->m_flags & XFS_MOUNT_WSYNC)
++		xfs_trans_set_sync(tp);
++	error = xfs_trans_commit(tp, 0);
++
++	xfs_iunlock(ip, lock_flags);
++
++	/*
++	 * Release any dquot(s) the inode had kept before chown.
++	 */
++	xfs_qm_dqrele(olddquot1);
++	xfs_qm_dqrele(olddquot2);
++	xfs_qm_dqrele(udqp);
++	xfs_qm_dqrele(gdqp);
++
++	if (error)
++		return error;
++
++	/*
++	 * XXX(hch): Updating the ACL entries is not atomic vs the i_mode
++	 * 	     update.  We could avoid this with linked transactions
++	 * 	     and passing down the transaction pointer all the way
++	 *	     to attr_set.  No previous user of the generic
++	 * 	     Posix ACL code seems to care about this issue either.
++	 */
++	if ((mask & ATTR_MODE) && !(flags & XFS_ATTR_NOACL)) {
++		error = -xfs_acl_chmod(inode);
++		if (error)
++			return XFS_ERROR(error);
++	}
++
++	return 0;
++
++error_return:
++	xfs_qm_dqrele(udqp);
++	xfs_qm_dqrele(gdqp);
++	if (tp)
++		xfs_trans_cancel(tp, 0);
++	if (lock_flags != 0)
++		xfs_iunlock(ip, lock_flags);
++	return error;
++}
++
++/*
++ * Truncate file.  Must have write permission and not be a directory.
++ */
++int
++xfs_setattr_size(
++	struct xfs_inode	*ip,
++	struct iattr		*iattr,
++	int			flags)
++{
++	struct xfs_mount	*mp = ip->i_mount;
++	struct inode		*inode = VFS_I(ip);
++	int			mask = iattr->ia_valid;
++	struct xfs_trans	*tp;
++	int			error;
++	uint			lock_flags;
++	uint			commit_flags = 0;
++
++	trace_xfs_setattr(ip);
++
++	if (mp->m_flags & XFS_MOUNT_RDONLY)
++		return XFS_ERROR(EROFS);
++
++	if (XFS_FORCED_SHUTDOWN(mp))
++		return XFS_ERROR(EIO);
++
++	error = -inode_change_ok(inode, iattr);
++	if (error)
++		return error;
++
++	ASSERT(S_ISREG(ip->i_d.di_mode));
++	ASSERT((mask & (ATTR_MODE|ATTR_UID|ATTR_GID|ATTR_ATIME|ATTR_ATIME_SET|
++			ATTR_MTIME_SET|ATTR_KILL_SUID|ATTR_KILL_SGID|
++			ATTR_KILL_PRIV|ATTR_TIMES_SET)) == 0);
++
++	lock_flags = XFS_ILOCK_EXCL;
++	if (!(flags & XFS_ATTR_NOLOCK))
++		lock_flags |= XFS_IOLOCK_EXCL;
++	xfs_ilock(ip, lock_flags);
++
++	/*
++	 * Short circuit the truncate case for zero length files.
++	 */
++	if (iattr->ia_size == 0 &&
++	    ip->i_size == 0 && ip->i_d.di_nextents == 0) {
++		xfs_iunlock(ip, XFS_ILOCK_EXCL);
++		lock_flags &= ~XFS_ILOCK_EXCL;
++		if (mask & ATTR_CTIME) {
++			inode->i_mtime = inode->i_ctime =
++					current_fs_time(inode->i_sb);
++			xfs_mark_inode_dirty_sync(ip);
++		}
++		goto out_unlock;
++	}
++
++	/*
++	 * Make sure that the dquots are attached to the inode.
++	 */
++	error = xfs_qm_dqattach_locked(ip, 0);
++	if (error)
++		goto out_unlock;
++
++	/*
++	 * Now we can make the changes.  Before we join the inode to the
++	 * transaction, take care of the part of the truncation that must be
++	 * done without the inode lock.  This needs to be done before joining
++	 * the inode to the transaction, because the inode cannot be unlocked
++	 * once it is a part of the transaction.
++	 */
++	if (iattr->ia_size > ip->i_size) {
++		/*
++		 * Do the first part of growing a file: zero any data in the
++		 * last block that is beyond the old EOF.  We need to do this
++		 * before the inode is joined to the transaction to modify
++		 * i_size.
++		 */
++		error = xfs_zero_eof(ip, iattr->ia_size, ip->i_size);
++		if (error)
++			goto out_unlock;
++	}
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++	lock_flags &= ~XFS_ILOCK_EXCL;
++
++	/*
++	 * We are going to log the inode size change in this transaction so
++	 * any previous writes that are beyond the on disk EOF and the new
++	 * EOF that have not been written out need to be written here.  If we
++	 * do not write the data out, we expose ourselves to the null files
++	 * problem.
++	 *
++	 * Only flush from the on disk size to the smaller of the in memory
++	 * file size or the new size as that's the range we really care about
++	 * here and prevents waiting for other data not within the range we
++	 * care about here.
++	 */
++	if (ip->i_size != ip->i_d.di_size && iattr->ia_size > ip->i_d.di_size) {
++		error = xfs_flush_pages(ip, ip->i_d.di_size, iattr->ia_size,
++					XBF_ASYNC, FI_NONE);
++		if (error)
++			goto out_unlock;
++	}
++
++	/*
++	 * Wait for all I/O to complete.
++	 */
++	xfs_ioend_wait(ip);
++
++	error = -block_truncate_page(inode->i_mapping, iattr->ia_size,
++				     xfs_get_blocks);
++	if (error)
++		goto out_unlock;
++
++	tp = xfs_trans_alloc(mp, XFS_TRANS_SETATTR_SIZE);
++	error = xfs_trans_reserve(tp, 0, XFS_ITRUNCATE_LOG_RES(mp), 0,
++				 XFS_TRANS_PERM_LOG_RES,
++				 XFS_ITRUNCATE_LOG_COUNT);
++	if (error)
++		goto out_trans_cancel;
++
++	truncate_setsize(inode, iattr->ia_size);
++
++	commit_flags = XFS_TRANS_RELEASE_LOG_RES;
++	lock_flags |= XFS_ILOCK_EXCL;
++
++	xfs_ilock(ip, XFS_ILOCK_EXCL);
++
++	xfs_trans_ijoin(tp, ip);
++
++	/*
++	 * Only change the c/mtime if we are changing the size or we are
++	 * explicitly asked to change it.  This handles the semantic difference
++	 * between truncate() and ftruncate() as implemented in the VFS.
++	 *
++	 * The regular truncate() case without ATTR_CTIME and ATTR_MTIME is a
++	 * special case where we need to update the times despite not having
++	 * these flags set.  For all other operations the VFS set these flags
++	 * explicitly if it wants a timestamp update.
++	 */
++	if (iattr->ia_size != ip->i_size &&
++	    (!(mask & (ATTR_CTIME | ATTR_MTIME)))) {
++		iattr->ia_ctime = iattr->ia_mtime =
++			current_fs_time(inode->i_sb);
++		mask |= ATTR_CTIME | ATTR_MTIME;
++	}
++
++	if (iattr->ia_size > ip->i_size) {
++		ip->i_d.di_size = iattr->ia_size;
++		ip->i_size = iattr->ia_size;
++	} else if (iattr->ia_size <= ip->i_size ||
++		   (iattr->ia_size == 0 && ip->i_d.di_nextents)) {
++		/*
++		 * Signal a sync transaction unless we are truncating an
++		 * already unlinked file on a wsync filesystem.
++		 */
++		error = xfs_itruncate_finish(&tp, ip, iattr->ia_size,
++				    XFS_DATA_FORK,
++				    ((ip->i_d.di_nlink != 0 ||
++				      !(mp->m_flags & XFS_MOUNT_WSYNC))
++				     ? 1 : 0));
++		if (error)
++			goto out_trans_abort;
++
++		/*
++		 * Truncated "down", so we're removing references to old data
++		 * here - if we delay flushing for a long time, we expose
++		 * ourselves unduly to the notorious NULL files problem.  So,
++		 * we mark this inode and flush it when the file is closed,
++		 * and do not wait the usual (long) time for writeout.
++		 */
++		xfs_iflags_set(ip, XFS_ITRUNCATED);
++	}
++
++	if (mask & ATTR_CTIME) {
++		inode->i_ctime = iattr->ia_ctime;
++		ip->i_d.di_ctime.t_sec = iattr->ia_ctime.tv_sec;
++		ip->i_d.di_ctime.t_nsec = iattr->ia_ctime.tv_nsec;
++		ip->i_update_core = 1;
++	}
++	if (mask & ATTR_MTIME) {
++		inode->i_mtime = iattr->ia_mtime;
++		ip->i_d.di_mtime.t_sec = iattr->ia_mtime.tv_sec;
++		ip->i_d.di_mtime.t_nsec = iattr->ia_mtime.tv_nsec;
++		ip->i_update_core = 1;
++	}
++
++	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
++
++	XFS_STATS_INC(xs_ig_attrchg);
++
++	if (mp->m_flags & XFS_MOUNT_WSYNC)
++		xfs_trans_set_sync(tp);
++
++	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
++	goto out_unlock;
++
++out_trans_abort:
++	commit_flags |= XFS_TRANS_ABORT;
++out_trans_cancel:
++	xfs_trans_cancel(tp, commit_flags);
++out_unlock:
++	if (lock_flags)
++		xfs_iunlock(ip, lock_flags);
++	return error;
++}
++
+ STATIC int
+ xfs_vn_setattr(
+ 	struct dentry	*dentry,
+ 	struct iattr	*iattr)
+ {
+-	return -xfs_setattr(XFS_I(dentry->d_inode), iattr, 0);
++	if (iattr->ia_valid & ATTR_SIZE)
++		return -xfs_setattr_size(XFS_I(dentry->d_inode), iattr, 0);
++	return -xfs_setattr_simple(XFS_I(dentry->d_inode), iattr, 0);
+ }
+ 
+ #define XFS_FIEMAP_FLAGS	(FIEMAP_FLAG_SYNC|FIEMAP_FLAG_XATTR)
+Index: xfs/fs/xfs/linux-2.6/xfs_acl.c
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_acl.c	2011-06-09 11:50:25.016311672 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_acl.c	2011-06-17 14:18:42.495725522 +0200
+@@ -264,7 +264,7 @@ xfs_set_mode(struct inode *inode, mode_t
+ 		iattr.ia_mode = mode;
+ 		iattr.ia_ctime = current_fs_time(inode->i_sb);
+ 
+-		error = -xfs_setattr(XFS_I(inode), &iattr, XFS_ATTR_NOACL);
++		error = -xfs_setattr_simple(XFS_I(inode), &iattr, XFS_ATTR_NOACL);
+ 	}
+ 
+ 	return error;
+Index: xfs/fs/xfs/linux-2.6/xfs_file.c
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_file.c	2011-06-17 14:07:57.000000000 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_file.c	2011-06-17 14:18:42.499058855 +0200
+@@ -944,7 +944,7 @@ xfs_file_fallocate(
+ 
+ 		iattr.ia_valid = ATTR_SIZE;
+ 		iattr.ia_size = new_size;
+-		error = -xfs_setattr(ip, &iattr, XFS_ATTR_NOLOCK);
++		error = -xfs_setattr_size(ip, &iattr, XFS_ATTR_NOLOCK);
+ 	}
+ 
+ out_unlock:
 Index: xfs/fs/xfs/xfs_vnodeops.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_vnodeops.c	2011-05-23 20:54:39.055445403 +0200
-+++ xfs/fs/xfs/xfs_vnodeops.c	2011-05-23 20:57:30.379948217 +0200
-@@ -197,13 +197,6 @@ xfs_free_eofblocks(
- 		 */
- 		tp = xfs_trans_alloc(mp, XFS_TRANS_INACTIVE);
+--- xfs.orig/fs/xfs/xfs_vnodeops.c	2011-06-09 11:50:25.039645004 +0200
++++ xfs/fs/xfs/xfs_vnodeops.c	2011-06-17 14:18:42.499058855 +0200
+@@ -50,430 +50,6 @@
+ #include "xfs_vnodeops.h"
+ #include "xfs_trace.h"
  
--		/*
--		 * Do the xfs_itruncate_start() call before
--		 * reserving any log space because
--		 * itruncate_start will call into the buffer
--		 * cache and we can't
--		 * do that within a transaction.
--		 */
- 		if (flags & XFS_FREE_EOF_TRYLOCK) {
- 			if (!xfs_ilock_nowait(ip, XFS_IOLOCK_EXCL)) {
- 				xfs_trans_cancel(tp, 0);
-@@ -212,13 +205,6 @@ xfs_free_eofblocks(
- 		} else {
- 			xfs_ilock(ip, XFS_IOLOCK_EXCL);
- 		}
--		error = xfs_itruncate_start(ip, XFS_ITRUNC_DEFINITE,
--				    ip->i_size);
--		if (error) {
--			xfs_trans_cancel(tp, 0);
--			xfs_iunlock(ip, XFS_IOLOCK_EXCL);
--			return error;
--		}
- 
- 		error = xfs_trans_reserve(tp, 0,
- 					  XFS_ITRUNCATE_LOG_RES(mp),
-@@ -657,20 +643,9 @@ xfs_inactive(
- 
- 	tp = xfs_trans_alloc(mp, XFS_TRANS_INACTIVE);
- 	if (truncate) {
--		/*
--		 * Do the xfs_itruncate_start() call before
--		 * reserving any log space because itruncate_start
--		 * will call into the buffer cache and we can't
--		 * do that within a transaction.
--		 */
- 		xfs_ilock(ip, XFS_IOLOCK_EXCL);
- 
--		error = xfs_itruncate_start(ip, XFS_ITRUNC_DEFINITE, 0);
--		if (error) {
--			xfs_trans_cancel(tp, 0);
--			xfs_iunlock(ip, XFS_IOLOCK_EXCL);
--			return VN_INACTIVE_CACHE;
--		}
-+		xfs_ioend_wait(ip);
- 
- 		error = xfs_trans_reserve(tp, 0,
- 					  XFS_ITRUNCATE_LOG_RES(mp),
-Index: xfs/fs/xfs/linux-2.6/xfs_trace.h
-===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_trace.h	2011-05-23 20:59:44.039946364 +0200
-+++ xfs/fs/xfs/linux-2.6/xfs_trace.h	2011-05-23 21:00:06.955570292 +0200
-@@ -1029,40 +1029,6 @@ DEFINE_SIMPLE_IO_EVENT(xfs_delalloc_enos
- DEFINE_SIMPLE_IO_EVENT(xfs_unwritten_convert);
- DEFINE_SIMPLE_IO_EVENT(xfs_get_blocks_notfound);
- 
+-int
+-xfs_setattr(
+-	struct xfs_inode	*ip,
+-	struct iattr		*iattr,
+-	int			flags)
+-{
+-	xfs_mount_t		*mp = ip->i_mount;
+-	struct inode		*inode = VFS_I(ip);
+-	int			mask = iattr->ia_valid;
+-	xfs_trans_t		*tp;
+-	int			code;
+-	uint			lock_flags;
+-	uint			commit_flags=0;
+-	uid_t			uid=0, iuid=0;
+-	gid_t			gid=0, igid=0;
+-	struct xfs_dquot	*udqp, *gdqp, *olddquot1, *olddquot2;
+-	int			need_iolock = 1;
 -
--TRACE_EVENT(xfs_itruncate_start,
--	TP_PROTO(struct xfs_inode *ip, xfs_fsize_t new_size, int flag,
--		 xfs_off_t toss_start, xfs_off_t toss_finish),
--	TP_ARGS(ip, new_size, flag, toss_start, toss_finish),
--	TP_STRUCT__entry(
--		__field(dev_t, dev)
--		__field(xfs_ino_t, ino)
--		__field(xfs_fsize_t, size)
--		__field(xfs_fsize_t, new_size)
--		__field(xfs_off_t, toss_start)
--		__field(xfs_off_t, toss_finish)
--		__field(int, flag)
--	),
--	TP_fast_assign(
--		__entry->dev = VFS_I(ip)->i_sb->s_dev;
--		__entry->ino = ip->i_ino;
--		__entry->size = ip->i_d.di_size;
--		__entry->new_size = new_size;
--		__entry->toss_start = toss_start;
--		__entry->toss_finish = toss_finish;
--		__entry->flag = flag;
--	),
--	TP_printk("dev %d:%d ino 0x%llx %s size 0x%llx new_size 0x%llx "
--		  "toss start 0x%llx toss finish 0x%llx",
--		  MAJOR(__entry->dev), MINOR(__entry->dev),
--		  __entry->ino,
--		  __print_flags(__entry->flag, "|", XFS_ITRUNC_FLAGS),
--		  __entry->size,
--		  __entry->new_size,
--		  __entry->toss_start,
--		  __entry->toss_finish)
--);
+-	trace_xfs_setattr(ip);
 -
- DECLARE_EVENT_CLASS(xfs_itrunc_class,
- 	TP_PROTO(struct xfs_inode *ip, xfs_fsize_t new_size),
- 	TP_ARGS(ip, new_size),
-Index: xfs/fs/xfs/xfs_inode.h
-===================================================================
---- xfs.orig/fs/xfs/xfs_inode.h	2011-05-23 20:59:23.304947922 +0200
-+++ xfs/fs/xfs/xfs_inode.h	2011-05-23 20:59:34.971947361 +0200
-@@ -448,16 +448,6 @@ static inline void xfs_ifunlock(xfs_inod
- extern struct lock_class_key xfs_iolock_reclaimable;
- 
+-	if (mp->m_flags & XFS_MOUNT_RDONLY)
+-		return XFS_ERROR(EROFS);
+-
+-	if (XFS_FORCED_SHUTDOWN(mp))
+-		return XFS_ERROR(EIO);
+-
+-	code = -inode_change_ok(inode, iattr);
+-	if (code)
+-		return code;
+-
+-	olddquot1 = olddquot2 = NULL;
+-	udqp = gdqp = NULL;
+-
+-	/*
+-	 * If disk quotas is on, we make sure that the dquots do exist on disk,
+-	 * before we start any other transactions. Trying to do this later
+-	 * is messy. We don't care to take a readlock to look at the ids
+-	 * in inode here, because we can't hold it across the trans_reserve.
+-	 * If the IDs do change before we take the ilock, we're covered
+-	 * because the i_*dquot fields will get updated anyway.
+-	 */
+-	if (XFS_IS_QUOTA_ON(mp) && (mask & (ATTR_UID|ATTR_GID))) {
+-		uint	qflags = 0;
+-
+-		if ((mask & ATTR_UID) && XFS_IS_UQUOTA_ON(mp)) {
+-			uid = iattr->ia_uid;
+-			qflags |= XFS_QMOPT_UQUOTA;
+-		} else {
+-			uid = ip->i_d.di_uid;
+-		}
+-		if ((mask & ATTR_GID) && XFS_IS_GQUOTA_ON(mp)) {
+-			gid = iattr->ia_gid;
+-			qflags |= XFS_QMOPT_GQUOTA;
+-		}  else {
+-			gid = ip->i_d.di_gid;
+-		}
+-
+-		/*
+-		 * We take a reference when we initialize udqp and gdqp,
+-		 * so it is important that we never blindly double trip on
+-		 * the same variable. See xfs_create() for an example.
+-		 */
+-		ASSERT(udqp == NULL);
+-		ASSERT(gdqp == NULL);
+-		code = xfs_qm_vop_dqalloc(ip, uid, gid, xfs_get_projid(ip),
+-					 qflags, &udqp, &gdqp);
+-		if (code)
+-			return code;
+-	}
+-
+-	/*
+-	 * For the other attributes, we acquire the inode lock and
+-	 * first do an error checking pass.
+-	 */
+-	tp = NULL;
+-	lock_flags = XFS_ILOCK_EXCL;
+-	if (flags & XFS_ATTR_NOLOCK)
+-		need_iolock = 0;
+-	if (!(mask & ATTR_SIZE)) {
+-		tp = xfs_trans_alloc(mp, XFS_TRANS_SETATTR_NOT_SIZE);
+-		commit_flags = 0;
+-		code = xfs_trans_reserve(tp, 0, XFS_ICHANGE_LOG_RES(mp),
+-					 0, 0, 0);
+-		if (code) {
+-			lock_flags = 0;
+-			goto error_return;
+-		}
+-	} else {
+-		if (need_iolock)
+-			lock_flags |= XFS_IOLOCK_EXCL;
+-	}
+-
+-	xfs_ilock(ip, lock_flags);
+-
+-	/*
+-	 * Change file ownership.  Must be the owner or privileged.
+-	 */
+-	if (mask & (ATTR_UID|ATTR_GID)) {
+-		/*
+-		 * These IDs could have changed since we last looked at them.
+-		 * But, we're assured that if the ownership did change
+-		 * while we didn't have the inode locked, inode's dquot(s)
+-		 * would have changed also.
+-		 */
+-		iuid = ip->i_d.di_uid;
+-		igid = ip->i_d.di_gid;
+-		gid = (mask & ATTR_GID) ? iattr->ia_gid : igid;
+-		uid = (mask & ATTR_UID) ? iattr->ia_uid : iuid;
+-
+-		/*
+-		 * Do a quota reservation only if uid/gid is actually
+-		 * going to change.
+-		 */
+-		if (XFS_IS_QUOTA_RUNNING(mp) &&
+-		    ((XFS_IS_UQUOTA_ON(mp) && iuid != uid) ||
+-		     (XFS_IS_GQUOTA_ON(mp) && igid != gid))) {
+-			ASSERT(tp);
+-			code = xfs_qm_vop_chown_reserve(tp, ip, udqp, gdqp,
+-						capable(CAP_FOWNER) ?
+-						XFS_QMOPT_FORCE_RES : 0);
+-			if (code)	/* out of quota */
+-				goto error_return;
+-		}
+-	}
+-
+-	/*
+-	 * Truncate file.  Must have write permission and not be a directory.
+-	 */
+-	if (mask & ATTR_SIZE) {
+-		/* Short circuit the truncate case for zero length files */
+-		if (iattr->ia_size == 0 &&
+-		    ip->i_size == 0 && ip->i_d.di_nextents == 0) {
+-			xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-			lock_flags &= ~XFS_ILOCK_EXCL;
+-			if (mask & ATTR_CTIME) {
+-				inode->i_mtime = inode->i_ctime =
+-						current_fs_time(inode->i_sb);
+-				xfs_mark_inode_dirty_sync(ip);
+-			}
+-			code = 0;
+-			goto error_return;
+-		}
+-
+-		if (S_ISDIR(ip->i_d.di_mode)) {
+-			code = XFS_ERROR(EISDIR);
+-			goto error_return;
+-		} else if (!S_ISREG(ip->i_d.di_mode)) {
+-			code = XFS_ERROR(EINVAL);
+-			goto error_return;
+-		}
+-
+-		/*
+-		 * Make sure that the dquots are attached to the inode.
+-		 */
+-		code = xfs_qm_dqattach_locked(ip, 0);
+-		if (code)
+-			goto error_return;
+-
+-		/*
+-		 * Now we can make the changes.  Before we join the inode
+-		 * to the transaction, if ATTR_SIZE is set then take care of
+-		 * the part of the truncation that must be done without the
+-		 * inode lock.  This needs to be done before joining the inode
+-		 * to the transaction, because the inode cannot be unlocked
+-		 * once it is a part of the transaction.
+-		 */
+-		if (iattr->ia_size > ip->i_size) {
+-			/*
+-			 * Do the first part of growing a file: zero any data
+-			 * in the last block that is beyond the old EOF.  We
+-			 * need to do this before the inode is joined to the
+-			 * transaction to modify the i_size.
+-			 */
+-			code = xfs_zero_eof(ip, iattr->ia_size, ip->i_size);
+-			if (code)
+-				goto error_return;
+-		}
+-		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-		lock_flags &= ~XFS_ILOCK_EXCL;
+-
+-		/*
+-		 * We are going to log the inode size change in this
+-		 * transaction so any previous writes that are beyond the on
+-		 * disk EOF and the new EOF that have not been written out need
+-		 * to be written here. If we do not write the data out, we
+-		 * expose ourselves to the null files problem.
+-		 *
+-		 * Only flush from the on disk size to the smaller of the in
+-		 * memory file size or the new size as that's the range we
+-		 * really care about here and prevents waiting for other data
+-		 * not within the range we care about here.
+-		 */
+-		if (ip->i_size != ip->i_d.di_size &&
+-		    iattr->ia_size > ip->i_d.di_size) {
+-			code = xfs_flush_pages(ip,
+-					ip->i_d.di_size, iattr->ia_size,
+-					XBF_ASYNC, FI_NONE);
+-			if (code)
+-				goto error_return;
+-		}
+-
+-		/* wait for all I/O to complete */
+-		xfs_ioend_wait(ip);
+-
+-		code = -block_truncate_page(inode->i_mapping, iattr->ia_size,
+-					    xfs_get_blocks);
+-		if (code)
+-			goto error_return;
+-
+-		tp = xfs_trans_alloc(mp, XFS_TRANS_SETATTR_SIZE);
+-		code = xfs_trans_reserve(tp, 0, XFS_ITRUNCATE_LOG_RES(mp), 0,
+-					 XFS_TRANS_PERM_LOG_RES,
+-					 XFS_ITRUNCATE_LOG_COUNT);
+-		if (code)
+-			goto error_return;
+-
+-		truncate_setsize(inode, iattr->ia_size);
+-
+-		commit_flags = XFS_TRANS_RELEASE_LOG_RES;
+-		lock_flags |= XFS_ILOCK_EXCL;
+-
+-		xfs_ilock(ip, XFS_ILOCK_EXCL);
+-
+-		xfs_trans_ijoin(tp, ip);
+-
+-		/*
+-		 * Only change the c/mtime if we are changing the size
+-		 * or we are explicitly asked to change it. This handles
+-		 * the semantic difference between truncate() and ftruncate()
+-		 * as implemented in the VFS.
+-		 *
+-		 * The regular truncate() case without ATTR_CTIME and ATTR_MTIME
+-		 * is a special case where we need to update the times despite
+-		 * not having these flags set.  For all other operations the
+-		 * VFS set these flags explicitly if it wants a timestamp
+-		 * update.
+-		 */
+-		if (iattr->ia_size != ip->i_size &&
+-		    (!(mask & (ATTR_CTIME | ATTR_MTIME)))) {
+-			iattr->ia_ctime = iattr->ia_mtime =
+-				current_fs_time(inode->i_sb);
+-			mask |= ATTR_CTIME | ATTR_MTIME;
+-		}
+-
+-		if (iattr->ia_size > ip->i_size) {
+-			ip->i_d.di_size = iattr->ia_size;
+-			ip->i_size = iattr->ia_size;
+-			xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+-		} else if (iattr->ia_size <= ip->i_size ||
+-			   (iattr->ia_size == 0 && ip->i_d.di_nextents)) {
+-			/*
+-			 * signal a sync transaction unless
+-			 * we're truncating an already unlinked
+-			 * file on a wsync filesystem
+-			 */
+-			code = xfs_itruncate_finish(&tp, ip, iattr->ia_size,
+-					    XFS_DATA_FORK,
+-					    ((ip->i_d.di_nlink != 0 ||
+-					      !(mp->m_flags & XFS_MOUNT_WSYNC))
+-					     ? 1 : 0));
+-			if (code)
+-				goto abort_return;
+-			/*
+-			 * Truncated "down", so we're removing references
+-			 * to old data here - if we now delay flushing for
+-			 * a long time, we expose ourselves unduly to the
+-			 * notorious NULL files problem.  So, we mark this
+-			 * vnode and flush it when the file is closed, and
+-			 * do not wait the usual (long) time for writeout.
+-			 */
+-			xfs_iflags_set(ip, XFS_ITRUNCATED);
+-		}
+-	} else if (tp) {
+-		xfs_trans_ijoin(tp, ip);
+-	}
+-
+-	/*
+-	 * Change file ownership.  Must be the owner or privileged.
+-	 */
+-	if (mask & (ATTR_UID|ATTR_GID)) {
+-		/*
+-		 * CAP_FSETID overrides the following restrictions:
+-		 *
+-		 * The set-user-ID and set-group-ID bits of a file will be
+-		 * cleared upon successful return from chown()
+-		 */
+-		if ((ip->i_d.di_mode & (S_ISUID|S_ISGID)) &&
+-		    !capable(CAP_FSETID)) {
+-			ip->i_d.di_mode &= ~(S_ISUID|S_ISGID);
+-		}
+-
+-		/*
+-		 * Change the ownerships and register quota modifications
+-		 * in the transaction.
+-		 */
+-		if (iuid != uid) {
+-			if (XFS_IS_QUOTA_RUNNING(mp) && XFS_IS_UQUOTA_ON(mp)) {
+-				ASSERT(mask & ATTR_UID);
+-				ASSERT(udqp);
+-				olddquot1 = xfs_qm_vop_chown(tp, ip,
+-							&ip->i_udquot, udqp);
+-			}
+-			ip->i_d.di_uid = uid;
+-			inode->i_uid = uid;
+-		}
+-		if (igid != gid) {
+-			if (XFS_IS_QUOTA_RUNNING(mp) && XFS_IS_GQUOTA_ON(mp)) {
+-				ASSERT(!XFS_IS_PQUOTA_ON(mp));
+-				ASSERT(mask & ATTR_GID);
+-				ASSERT(gdqp);
+-				olddquot2 = xfs_qm_vop_chown(tp, ip,
+-							&ip->i_gdquot, gdqp);
+-			}
+-			ip->i_d.di_gid = gid;
+-			inode->i_gid = gid;
+-		}
+-	}
+-
+-	/*
+-	 * Change file access modes.
+-	 */
+-	if (mask & ATTR_MODE) {
+-		umode_t mode = iattr->ia_mode;
+-
+-		if (!in_group_p(inode->i_gid) && !capable(CAP_FSETID))
+-			mode &= ~S_ISGID;
+-
+-		ip->i_d.di_mode &= S_IFMT;
+-		ip->i_d.di_mode |= mode & ~S_IFMT;
+-
+-		inode->i_mode &= S_IFMT;
+-		inode->i_mode |= mode & ~S_IFMT;
+-	}
+-
+-	/*
+-	 * Change file access or modified times.
+-	 */
+-	if (mask & ATTR_ATIME) {
+-		inode->i_atime = iattr->ia_atime;
+-		ip->i_d.di_atime.t_sec = iattr->ia_atime.tv_sec;
+-		ip->i_d.di_atime.t_nsec = iattr->ia_atime.tv_nsec;
+-		ip->i_update_core = 1;
+-	}
+-	if (mask & ATTR_CTIME) {
+-		inode->i_ctime = iattr->ia_ctime;
+-		ip->i_d.di_ctime.t_sec = iattr->ia_ctime.tv_sec;
+-		ip->i_d.di_ctime.t_nsec = iattr->ia_ctime.tv_nsec;
+-		ip->i_update_core = 1;
+-	}
+-	if (mask & ATTR_MTIME) {
+-		inode->i_mtime = iattr->ia_mtime;
+-		ip->i_d.di_mtime.t_sec = iattr->ia_mtime.tv_sec;
+-		ip->i_d.di_mtime.t_nsec = iattr->ia_mtime.tv_nsec;
+-		ip->i_update_core = 1;
+-	}
+-
+-	/*
+-	 * And finally, log the inode core if any attribute in it
+-	 * has been changed.
+-	 */
+-	if (mask & (ATTR_UID|ATTR_GID|ATTR_MODE|
+-		    ATTR_ATIME|ATTR_CTIME|ATTR_MTIME))
+-		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+-
+-	XFS_STATS_INC(xs_ig_attrchg);
+-
+-	/*
+-	 * If this is a synchronous mount, make sure that the
+-	 * transaction goes to disk before returning to the user.
+-	 * This is slightly sub-optimal in that truncates require
+-	 * two sync transactions instead of one for wsync filesystems.
+-	 * One for the truncate and one for the timestamps since we
+-	 * don't want to change the timestamps unless we're sure the
+-	 * truncate worked.  Truncates are less than 1% of the laddis
+-	 * mix so this probably isn't worth the trouble to optimize.
+-	 */
+-	code = 0;
+-	if (mp->m_flags & XFS_MOUNT_WSYNC)
+-		xfs_trans_set_sync(tp);
+-
+-	code = xfs_trans_commit(tp, commit_flags);
+-
+-	xfs_iunlock(ip, lock_flags);
+-
+-	/*
+-	 * Release any dquot(s) the inode had kept before chown.
+-	 */
+-	xfs_qm_dqrele(olddquot1);
+-	xfs_qm_dqrele(olddquot2);
+-	xfs_qm_dqrele(udqp);
+-	xfs_qm_dqrele(gdqp);
+-
+-	if (code)
+-		return code;
+-
+-	/*
+-	 * XXX(hch): Updating the ACL entries is not atomic vs the i_mode
+-	 * 	     update.  We could avoid this with linked transactions
+-	 * 	     and passing down the transaction pointer all the way
+-	 *	     to attr_set.  No previous user of the generic
+-	 * 	     Posix ACL code seems to care about this issue either.
+-	 */
+-	if ((mask & ATTR_MODE) && !(flags & XFS_ATTR_NOACL)) {
+-		code = -xfs_acl_chmod(inode);
+-		if (code)
+-			return XFS_ERROR(code);
+-	}
+-
+-	return 0;
+-
+- abort_return:
+-	commit_flags |= XFS_TRANS_ABORT;
+- error_return:
+-	xfs_qm_dqrele(udqp);
+-	xfs_qm_dqrele(gdqp);
+-	if (tp) {
+-		xfs_trans_cancel(tp, commit_flags);
+-	}
+-	if (lock_flags != 0) {
+-		xfs_iunlock(ip, lock_flags);
+-	}
+-	return code;
+-}
+-
  /*
-- * Flags for xfs_itruncate_start().
-- */
--#define	XFS_ITRUNC_DEFINITE	0x1
--#define	XFS_ITRUNC_MAYBE	0x2
--
--#define XFS_ITRUNC_FLAGS \
--	{ XFS_ITRUNC_DEFINITE,	"DEFINITE" }, \
--	{ XFS_ITRUNC_MAYBE,	"MAYBE" }
--
--/*
-  * For multiple groups support: if S_ISGID bit is set in the parent
-  * directory, group of new file is set to that of the parent, and
-  * new subdirectory gets S_ISGID bit from parent.
-@@ -491,7 +481,6 @@ uint		xfs_ip2xflags(struct xfs_inode *);
- uint		xfs_dic2xflags(struct xfs_dinode *);
- int		xfs_ifree(struct xfs_trans *, xfs_inode_t *,
- 			   struct xfs_bmap_free *);
--int		xfs_itruncate_start(xfs_inode_t *, uint, xfs_fsize_t);
- int		xfs_itruncate_finish(struct xfs_trans **, xfs_inode_t *,
- 				     xfs_fsize_t, int, int);
- int		xfs_iunlink(struct xfs_trans *, xfs_inode_t *);
+  * The maximum pathlen is 1024 bytes. Since the minimum file system
+  * blocksize is 512 bytes, we can get a max of 2 extents back from
+@@ -2781,7 +2357,7 @@ xfs_change_file_space(
+ 		iattr.ia_valid = ATTR_SIZE;
+ 		iattr.ia_size = startoffset;
+ 
+-		error = xfs_setattr(ip, &iattr, attr_flags);
++		error = xfs_setattr_size(ip, &iattr, attr_flags);
+ 
+ 		if (error)
+ 			return error;
+Index: xfs/fs/xfs/xfs_vnodeops.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_vnodeops.h	2011-06-09 11:50:25.056311670 +0200
++++ xfs/fs/xfs/xfs_vnodeops.h	2011-06-17 14:18:42.502392188 +0200
+@@ -13,7 +13,8 @@ struct xfs_inode;
+ struct xfs_iomap;
+ 
+ 
+-int xfs_setattr(struct xfs_inode *ip, struct iattr *vap, int flags);
++int xfs_setattr_simple(struct xfs_inode *ip, struct iattr *vap, int flags);
++int xfs_setattr_size(struct xfs_inode *ip, struct iattr *vap, int flags);
+ #define	XFS_ATTR_DMI		0x01	/* invocation from a DMI function */
+ #define	XFS_ATTR_NONBLOCK	0x02	/* return EAGAIN if operation would block */
+ #define XFS_ATTR_NOLOCK		0x04	/* Don't grab any conflicting locks */
 
 _______________________________________________
 xfs mailing list
