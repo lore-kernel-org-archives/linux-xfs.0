@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5JMIwPR076798 for <xfs@oss.sgi.com>; Sun, 19 Jun 2011 17:18:58 -0500
+	p5JMRRNs077121
+	for <linux-xfs@oss.sgi.com>; Sun, 19 Jun 2011 17:27:27 -0500
 Received: from ipmail07.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1CA7A171E051
-	for <xfs@oss.sgi.com>; Sun, 19 Jun 2011 15:18:55 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A38DF1349CA3
+	for <linux-xfs@oss.sgi.com>; Sun, 19 Jun 2011 15:27:25 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	IEkPxWUsGmKqZR2T for <xfs@oss.sgi.com>;
-	Sun, 19 Jun 2011 15:18:55 -0700 (PDT)
-Date: Mon, 20 Jun 2011 08:18:52 +1000
+	jc4bv8LFv09HG2fG for <linux-xfs@oss.sgi.com>;
+	Sun, 19 Jun 2011 15:27:25 -0700 (PDT)
+Date: Mon, 20 Jun 2011 08:27:23 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: ENOSPC but df and df -i show free space
-Message-ID: <20110619221852.GH561@dastard>
-References: <20110619215039.GA17820@hexapodia.org>
+Subject: Re: sparse file handling bug in XFS
+Message-ID: <20110619222723.GJ561@dastard>
+References: <081DDE43F61F3D43929A181B477DCA95639B561F@MSXAOA6.twosigma.com>
+	<4DFA2A76.6000104@sandeen.net> <4DFA3E7D.4030408@sandeen.net>
+	<20110616175743.GA20570@infradead.org>
+	<4DFA70B7.5080206@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110619215039.GA17820@hexapodia.org>
+In-Reply-To: <4DFA70B7.5080206@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,46 +33,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Andy Isaacson <adi@hexapodia.org>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Trammell Hudson <Trammell.Hudson@twosigma.com>, Sean Noonan <Sean.Noonan@twosigma.com>, Martin Bligh <Martin.Bligh@twosigma.com>, Ian Baum <Ian.Baum@twosigma.com>, Stephen Degler <Stephen.Degler@twosigma.com>, Christoph Hellwig <hch@infradead.org>, "'linux-xfs@oss.sgi.com'" <linux-xfs@oss.sgi.com>
 
-On Sun, Jun 19, 2011 at 02:50:39PM -0700, Andy Isaacson wrote:
-> % touch /d1/tmp/foo
-> touch: cannot touch `/d1/tmp/foo': No space left on device
-> % df /d1
-> Filesystem           1K-blocks      Used Available Use% Mounted on
-> /dev/mapper/vg0-d1   943616000 904690332  38925668  96% /d1
-
-Problems like this will occur if you run your filesystem at > 85-90%
-full for extented periods....
-
-> % df -i /d1
-> Filesystem            Inodes   IUsed   IFree IUse% Mounted on
-> /dev/mapper/vg0-d1   167509008 11806336 155702672    8% /d1
-> % sudo xfs_growfs -n /d1
-> meta-data=/dev/mapper/vg0-d1     isize=256    agcount=18, agsize=13107200 blks
->          =                       sectsz=512   attr=2
-> data     =                       bsize=4096   blocks=235929600, imaxpct=25
->          =                       sunit=0      swidth=0 blks
-> naming   =version 2              bsize=4096   ascii-ci=0
-> log      =internal               bsize=4096   blocks=25600, version=2
->          =                       sectsz=512   sunit=0 blks, lazy-count=1
-> realtime =none                   extsz=4096   blocks=0, rtextents=0
-> % grep d1 /proc/mounts
-> /dev/mapper/vg0-d1 /d1 xfs rw,relatime,attr2,noquota 0 0
+On Thu, Jun 16, 2011 at 04:08:07PM -0500, Eric Sandeen wrote:
+> On 6/16/11 12:57 PM, Christoph Hellwig wrote:
+> > On Thu, Jun 16, 2011 at 12:33:49PM -0500, Eric Sandeen wrote:
+> >> Actually this looks like it's a result of
+> >>
+> >> 6e857567dbbfe14dd6cc3f7414671b047b1ff5c7 xfs: don't truncate prealloc from frequently accessed inodes
+> >>
+> >> I thought Dave's patch from the "Re: drastic changes to allocsize semantics in or around 2.6.38?"
+> >> thread would fix it, but it doesn't seem to.  Here it is anyway ;)
+> > 
+> > It should fix the thing about the preallocation staying when removing
+> > and recreating the file.  Keeping pre-allocate blocks around otherwise
+> > is a considered a feature.
 > 
-> Obviously I'm missing something, but what?
+> It strikes me as odd that truncating & rewriting would lead to
+> different preallocation though .. I'll let Dave chime in.
 
-Most likely is that you have no contiguous free space large enough
-to create a new inode chunk.  using xfs_db to dump the freespace
-size histogram will tell you if this is the case or not.
-
-> Nothing relevant in dmesg that I can see.  The filesystem started out at
-> 200 GB and has been xfs_growfs'd in 100GB increments up to its current
-> size of 900 GB.
-
-Ugh. Sounds like you've been running the filesystem near full for
-it's entire life....
+Yeah, it's an oversight - we should reset the XFS_IDIRTY_RELEASE
+flag when we set the XFS_ITRUNCATED flag. We remove the
+preallocation beyond EOF when we truncate, so we should also trash
+the state that tries to preserve it at the same time....
 
 Cheers,
 
