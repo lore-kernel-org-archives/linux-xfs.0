@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5J8Gd6G024030 for <xfs@oss.sgi.com>; Sun, 19 Jun 2011 03:16:39 -0500
-Received: from mail.ud10.udmedia.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 978E4DDC742
-	for <xfs@oss.sgi.com>; Sun, 19 Jun 2011 01:16:37 -0700 (PDT)
-Received: from mail.ud10.udmedia.de (ud10.udmedia.de [194.117.254.50]) by
-	cuda.sgi.com with ESMTP id KGk646gvNqwf3Tp9 for
-	<xfs@oss.sgi.com>; Sun, 19 Jun 2011 01:16:37 -0700 (PDT)
-Date: Sun, 19 Jun 2011 10:16:35 +0200
-From: Markus Trippelsdorf <markus@trippelsdorf.de>
-Subject: Re: long hangs when deleting large directories (3.0-rc3)
-Message-ID: <20110619081635.GA1703@x4.trippels.de>
-References: <20110618141950.GA1685@x4.trippels.de>
-	<20110618142456.GA26419@infradead.org>
-	<20110618143720.GA1703@x4.trippels.de>
+	p5JBP0pk032627 for <xfs@oss.sgi.com>; Sun, 19 Jun 2011 06:25:01 -0500
+Received: from astoria.ccjclearline.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id AE126165E7
+	for <xfs@oss.sgi.com>; Sun, 19 Jun 2011 04:24:58 -0700 (PDT)
+Received: from astoria.ccjclearline.com (astoria.ccjclearline.com
+	[64.235.106.9]) by cuda.sgi.com with ESMTP id p8rR8oEVsG7YbCGp
+	for <xfs@oss.sgi.com>; Sun, 19 Jun 2011 04:24:58 -0700 (PDT)
+Received: from cpec03f0ed08c7f-cm001ac318e826.cpe.net.cable.rogers.com
+	([99.241.2.77] helo=crashcourse.ca)
+	by astoria.ccjclearline.com with esmtpsa (TLSv1:AES256-SHA:256)
+	(Exim 4.69) (envelope-from <rpjday@crashcourse.ca>)
+	id 1QYG7a-0000QM-9Q
+	for xfs@oss.sgi.com; Sun, 19 Jun 2011 07:24:55 -0400
+Date: Sun, 19 Jun 2011 07:24:46 -0400 (EDT)
+From: "Robert P. J. Day" <rpjday@crashcourse.ca>
+Subject: XFS Kconfig variable XFS_TRACE not defined anywhere
+Message-ID: <alpine.DEB.2.02.1106190628410.17930@localhost6.localdomain6>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110618143720.GA1703@x4.trippels.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,36 +31,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 2011.06.18 at 16:37 +0200, Markus Trippelsdorf wrote:
-> On 2011.06.18 at 10:24 -0400, Christoph Hellwig wrote:
-> > On Sat, Jun 18, 2011 at 04:19:50PM +0200, Markus Trippelsdorf wrote:
-> > > Running the latest git kernel (3.0-rc3) my machine hangs for long
-> > > periods (1-2 sec) whenever I delete a large directory recursively on my
-> > > xfs partition. During the hang I cannot move the mouse pointer or use
-> > > the keyboard (but the music keeps playing without stuttering). A quick
-> > > way to reproduce is to "rm -fr" a kernel tree. 
-> > 
-> > Does this also happen when using the deadline I/O schedule, that is
-> > after a:
-> > 
-> > echo "deadline" > /sys/block/sda/queue/scheduler
-> 
-> Yes.
 
-I've tested this a little further. The behavior is independent of the
-kernel version used (tested back to 2.6.37). My SSD is also fine and a
-freshly created xfs partition shows no problems, too.
-Please note that the affected partition is used very heavily here
-(several git trees, daily backups of / and the Gentoo build-dir reside
-there).
-So it appears that the observed "hangs" are the result of a strongly
-aged file-system. 
+  just FYI:
+
+===== XFS_TRACE =====
+./fs/xfs/Makefile:xfs-$(CONFIG_XFS_TRACE)		+= xfs_btree_trace.o
+
+  as far as i can tell, there is no definition of the Kconfig variable
+XFS_TRACE, so that Makefile entry is redundant.
+
+rday
 
 -- 
-Markus
+
+========================================================================
+Robert P. J. Day                                 Ottawa, Ontario, CANADA
+                        http://crashcourse.ca
+
+Twitter:                                       http://twitter.com/rpjday
+LinkedIn:                               http://ca.linkedin.com/in/rpjday
+========================================================================
 
 _______________________________________________
 xfs mailing list
