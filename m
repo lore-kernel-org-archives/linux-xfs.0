@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5JCDgOu040273
-	for <linux-xfs@oss.sgi.com>; Sun, 19 Jun 2011 07:13:42 -0500
-Received: from cl-t105-140cl.privatedns.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 724F01E4B683
-	for <linux-xfs@oss.sgi.com>; Sun, 19 Jun 2011 05:13:41 -0700 (PDT)
-Received: from cl-t105-140cl.privatedns.com (server.mediahostingpro.com
-	[67.205.124.75]) by cuda.sgi.com with ESMTP id MfDsWVeLTIKJO3Ep
-	for <linux-xfs@oss.sgi.com>; Sun, 19 Jun 2011 05:13:41 -0700 (PDT)
-Date: 19 Jun 2011 14:11:09 +0200
-From: MAILER-DAEMON@cl-t105-140cl.privatedns.com
-Subject: failure notice
-Message-Id: <20110619121341.724F01E4B683@cuda.sgi.com>
+	p5JLnnaT075545 for <xfs@oss.sgi.com>; Sun, 19 Jun 2011 16:49:49 -0500
+Received: from straum.hexapodia.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9C02A51E99B
+	for <xfs@oss.sgi.com>; Sun, 19 Jun 2011 14:49:48 -0700 (PDT)
+Received: from straum.hexapodia.org (straum.hexapodia.org [207.7.131.186]) by
+	cuda.sgi.com with ESMTP id rfqGvnL5Nti99i8a for
+	<xfs@oss.sgi.com>; Sun, 19 Jun 2011 14:49:48 -0700 (PDT)
+Date: Sun, 19 Jun 2011 14:50:39 -0700
+From: Andy Isaacson <adi@hexapodia.org>
+Subject: ENOSPC but df and df -i show free space
+Message-ID: <20110619215039.GA17820@hexapodia.org>
+MIME-Version: 1.0
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,67 +22,44 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============3735822831370726068=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
---===============3735822831370726068==
-Content-Type: text/plain
+% touch /d1/tmp/foo
+touch: cannot touch `/d1/tmp/foo': No space left on device
+% df /d1
+Filesystem           1K-blocks      Used Available Use% Mounted on
+/dev/mapper/vg0-d1   943616000 904690332  38925668  96% /d1
+% df -i /d1
+Filesystem            Inodes   IUsed   IFree IUse% Mounted on
+/dev/mapper/vg0-d1   167509008 11806336 155702672    8% /d1
+% sudo xfs_growfs -n /d1
+meta-data=/dev/mapper/vg0-d1     isize=256    agcount=18, agsize=13107200 blks
+         =                       sectsz=512   attr=2
+data     =                       bsize=4096   blocks=235929600, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0
+log      =internal               bsize=4096   blocks=25600, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+% grep d1 /proc/mounts
+/dev/mapper/vg0-d1 /d1 xfs rw,relatime,attr2,noquota 0 0
 
-Hi. This is the qmail-send program at cl-t105-140cl.privatedns.com.
-I'm afraid I wasn't able to deliver your message to the following addresses.
-This is a permanent error; I've given up. Sorry it didn't work out.
+Obviously I'm missing something, but what?
 
-<panzrineetith@tf1mail.com>:
-Sorry. Although I'm listed as a best-preference MX or A for that host,
-it isn't in my control/locals file, so I don't treat it as local. (#5.4.6)
+Nothing relevant in dmesg that I can see.  The filesystem started out at
+200 GB and has been xfs_growfs'd in 100GB increments up to its current
+size of 900 GB.
 
---- Below this line is a copy of the message.
+x86_64 2.6.38-rc3-00019-gafe8a88 on a quad-core i7 with 12GB RAM, on DM
+on AHCI SATA.
 
-Return-Path: <linux-xfs@oss.sgi.com>
-Received: (qmail 16929 invoked from network); 19 Jun 2011 14:11:09 +0200
-Received: from localhost (HELO server.mediahostingpro.com) (127.0.0.1)
-  by localhost with SMTP; 19 Jun 2011 14:11:09 +0200
-Date: Sun, 19 Jun 2011 14:11:09 +0200
-From: Google Tips <linux-xfs@oss.sgi.com>
-Reply-To: Google Tips <linux-xfs@oss.sgi.com>
-X-Priority: 3
-Message-ID: <01cc2e79.404438bb@server.mediahostingpro.com>
-To: <panzrineetith@tf1mail.com>
-Subject: Prussian, a
-MIME-Version: 1.0
-Content-Type: text/html; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-
-<HTML>
-<HEAD></HEAD>
-<BODY>
-Forfluo
-<TABLE borderColor="#ffffff" cellSpacing="3" cellPadding="3" width="600" bgColor="#E17100"
-border="2">
-<TR>
-<TD>
-<DIV align="center"><a href="http://cursofraga.com.br/s/e/e/" title="qcenoltvhr"><STRONG><FONT color=#EAEA00>This makes this world spin around.</FONT></STRONG></a></DIV>
-<BR>
-<SPAN style="color:#C0C0C0"> Google.com © 2011</SPAN>
-</TD>
-</TR>
-</TABLE>
-</BODY>
-</HTML>
-
-
---===============3735822831370726068==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+-andy
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============3735822831370726068==--
