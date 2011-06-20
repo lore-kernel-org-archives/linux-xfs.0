@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5K1PbGh098465 for <xfs@oss.sgi.com>; Sun, 19 Jun 2011 20:25:37 -0500
-Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 108061C582
-	for <xfs@oss.sgi.com>; Sun, 19 Jun 2011 18:25:36 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	12Q8q8p2RTHIvWfk for <xfs@oss.sgi.com>;
-	Sun, 19 Jun 2011 18:25:36 -0700 (PDT)
-Date: Mon, 20 Jun 2011 11:25:31 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 02/12] vmscan: shrinker->nr updates race and go wrong
-Message-ID: <20110620012531.GN561@dastard>
-References: <1306998067-27659-1-git-send-email-david@fromorbit.com>
-	<1306998067-27659-3-git-send-email-david@fromorbit.com>
-	<4DFE987E.1070900@jp.fujitsu.com>
+	p5K22dFL100146 for <xfs@oss.sgi.com>; Sun, 19 Jun 2011 21:02:39 -0500
+Received: from mail.ud10.udmedia.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9B6BB172B4EC
+	for <xfs@oss.sgi.com>; Sun, 19 Jun 2011 19:02:37 -0700 (PDT)
+Received: from mail.ud10.udmedia.de (ud10.udmedia.de [194.117.254.50]) by
+	cuda.sgi.com with ESMTP id YzWaxw8UH4cCkGaM for
+	<xfs@oss.sgi.com>; Sun, 19 Jun 2011 19:02:37 -0700 (PDT)
+Date: Mon, 20 Jun 2011 04:02:36 +0200
+From: Markus Trippelsdorf <markus@trippelsdorf.de>
+Subject: Re: long hangs when deleting large directories (3.0-rc3)
+Message-ID: <20110620020236.GB1730@x4.trippels.de>
+References: <20110618141950.GA1685@x4.trippels.de>
+	<20110619222447.GI561@dastard>
+	<20110620005415.GA1730@x4.trippels.de>
+	<20110620013449.GO561@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4DFE987E.1070900@jp.fujitsu.com>
+In-Reply-To: <20110620013449.GO561@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,113 +27,109 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Mon, Jun 20, 2011 at 09:46:54AM +0900, KOSAKI Motohiro wrote:
-> > diff --git a/mm/vmscan.c b/mm/vmscan.c
-> > index 48e3fbd..dce2767 100644
-> > --- a/mm/vmscan.c
-> > +++ b/mm/vmscan.c
-> > @@ -251,17 +251,29 @@ unsigned long shrink_slab(struct shrink_control *shrink,
-> >  		unsigned long total_scan;
-> >  		unsigned long max_pass;
-> >  		int shrink_ret = 0;
-> > +		long nr;
-> > +		long new_nr;
-> >  
-> > +		/*
-> > +		 * copy the current shrinker scan count into a local variable
-> > +		 * and zero it so that other concurrent shrinker invocations
-> > +		 * don't also do this scanning work.
-> > +		 */
-> > +		do {
-> > +			nr = shrinker->nr;
-> > +		} while (cmpxchg(&shrinker->nr, nr, 0) != nr);
-> > +
-> > +		total_scan = nr;
-> >  		max_pass = do_shrinker_shrink(shrinker, shrink, 0);
-> >  		delta = (4 * nr_pages_scanned) / shrinker->seeks;
-> >  		delta *= max_pass;
-> >  		do_div(delta, lru_pages + 1);
-> > -		shrinker->nr += delta;
-> > -		if (shrinker->nr < 0) {
-> > +		total_scan += delta;
-> > +		if (total_scan < 0) {
-> >  			printk(KERN_ERR "shrink_slab: %pF negative objects to "
-> >  			       "delete nr=%ld\n",
-> > -			       shrinker->shrink, shrinker->nr);
-> > -			shrinker->nr = max_pass;
-> > +			       shrinker->shrink, total_scan);
-> > +			total_scan = max_pass;
-> >  		}
-> >  
-> >  		/*
-> > @@ -269,13 +281,11 @@ unsigned long shrink_slab(struct shrink_control *shrink,
-> >  		 * never try to free more than twice the estimate number of
-> >  		 * freeable entries.
-> >  		 */
-> > -		if (shrinker->nr > max_pass * 2)
-> > -			shrinker->nr = max_pass * 2;
-> > +		if (total_scan > max_pass * 2)
-> > +			total_scan = max_pass * 2;
-> >  
-> > -		total_scan = shrinker->nr;
-> > -		shrinker->nr = 0;
-> >  
-> > -		trace_mm_shrink_slab_start(shrinker, shrink, nr_pages_scanned,
-> > +		trace_mm_shrink_slab_start(shrinker, shrink, nr, nr_pages_scanned,
-> >  					lru_pages, max_pass, delta, total_scan);
-> >  
-> >  		while (total_scan >= SHRINK_BATCH) {
-> > @@ -295,8 +305,19 @@ unsigned long shrink_slab(struct shrink_control *shrink,
-> >  			cond_resched();
-> >  		}
-> >  
-> > -		shrinker->nr += total_scan;
-> > -		trace_mm_shrink_slab_end(shrinker, shrink_ret, total_scan);
-> > +		/*
-> > +		 * move the unused scan count back into the shrinker in a
-> > +		 * manner that handles concurrent updates. If we exhausted the
-> > +		 * scan, there is no need to do an update.
-> > +		 */
-> > +		do {
-> > +			nr = shrinker->nr;
-> > +			new_nr = total_scan + nr;
-> > +			if (total_scan <= 0)
-> > +				break;
-> > +		} while (cmpxchg(&shrinker->nr, nr, new_nr) != nr);
-> > +
-> > +		trace_mm_shrink_slab_end(shrinker, shrink_ret, nr, new_nr);
-> >  	}
-> >  	up_read(&shrinker_rwsem);
-> >  out:
-> 
-> Looks great fix. Please remove tracepoint change from this patch and send it
-> to -stable. iow, I expect I'll ack your next spin.
+On 2011.06.20 at 11:34 +1000, Dave Chinner wrote:
+> On Mon, Jun 20, 2011 at 02:54:15AM +0200, Markus Trippelsdorf wrote:
+> > On 2011.06.20 at 08:24 +1000, Dave Chinner wrote:
+> > > On Sat, Jun 18, 2011 at 04:19:50PM +0200, Markus Trippelsdorf wrote:
+> > > > Running the latest git kernel (3.0-rc3) my machine hangs for long
+> > > > periods (1-2 sec) whenever I delete a large directory recursively o=
+n my
+> > > > xfs partition. During the hang I cannot move the mouse pointer or u=
+se
+> > > > the keyboard (but the music keeps playing without stuttering). A qu=
+ick
+> > > > way to reproduce is to "rm -fr" a kernel tree. =
 
-I don't believe such a change belongs in -stable. This code has been
-buggy for many years and as I mentioned it actually makes existing
-bad shrinker behaviour worse. I don't test stable kernels, so I've
-got no idea what side effects it will have outside of this series.
-I'm extremely hesitant to change VM behaviour in stable kernels
-without having tested first, so I'm not going to push it for stable
-kernels.
+> > > =
 
-If you want it in stable kernels, then you can always let
-stable@kernel.org know once the commits are in the mainline tree and
-you've tested them...
+> > > So what is the system doing when it "hangs"? Is it CPU bound (e.g.
+> > > cpu scheduler issue)? Is the system running out of memory and
+> > > stalling everything in memory reclaim? What IO is occurring?
+> > =
 
-Cheers,
+> > It's totally idle otherwise; just a desktop with a single xterm. The
+> > machine has four cores (and also runs with "CONFIG_PREEMPT=3Dy"), so I
+> > don't think it is CPU bound at all. It has 8GB of memory (and the
+> > "hangs" even occur after reboot when most of it is free). No other IO
+> > activity is occurring.
+> =
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> Sure, the system might be otherwise idle, but what I was asking is
+> what load does the "rm -rf" cause. What IO does it cause? is it cpu
+> bound? etc.
+
+I have not measured this, so I cannot tell.
+
+> > > > This happens on a 4kb SATA hard drive:
+> > > =
+
+> > > How does this appear to the OS? as a 512/512, 512/4k or 4k/4k
+> > > logical/physical sector size drive?
+> > =
+
+> > It unfortunately appears as 512/512, but because I know it's a 4KB
+> > drive, I formated it with "-s size=3D4096".
+> =
+
+> Oh, joy. Another user having strange performance problems on a 4k
+> sector drive that lies to the OS about it's geometry....
+> =
+
+> > > > xfs_info /var
+> > > > meta-data=3D/dev/sda1              isize=3D256    agcount=3D4, agsi=
+ze=3D12800000 blks
+> > > >          =3D                       sectsz=3D4096  attr=3D2
+> > > > data     =3D                       bsize=3D4096   blocks=3D51200000=
+, imaxpct=3D25
+> > > >          =3D                       sunit=3D0      swidth=3D0 blks
+> > > > naming   =3Dversion 2              bsize=3D4096   ascii-ci=3D0
+> > > > log      =3Dinternal               bsize=3D4096   blocks=3D25000, v=
+ersion=3D2
+> > > >          =3D                       sectsz=3D4096  sunit=3D1 blks, l=
+azy-count=3D1
+> > > > realtime =3Dnone                   extsz=3D4096   blocks=3D0, rtext=
+ents=3D0
+> > > > =
+
+> > > > /dev/sda1 on /var type xfs (rw,noatime,attr2,delaylog,logbsize=3D25=
+6k,noquota)
+> > > =
+
+> > > Is your partition correctly sector aligned for however your drive
+> > > maps it's 4k sectors?
+> > =
+
+> > Yes, it's a GPT partition that is aligned to 1MB.
+> =
+
+> Ok, that is fine, but the big question now is how does the drive
+> align sector 0? Is that 4k aligned, or is it one of those drives
+> that aligns an odd 512 byte logical sector to the physical 4k sector
+> boundary (i.e. sector 63 is 4k aligned to work with msdos
+> partitions). FYI, some drives have jumpers on them to change this
+> odd/even sector alignment configuration.....
+
+No, it's none of those (it's a Seagate Barracuda Green ST1500). Sector 0
+is 4k aligned for sure. The odd 512 byte offset was present only on some
+first generation drives. =
+
+But I think the whole alignment issue is a red herring, because I cannot
+reproduce the "hangs" on the next partition on the same drive. This
+partition is larger and contains my music and film collection (so mostly
+static content and no traffic). And as I wrote in my other reply to this
+thread: =BBit appears that the observed "hangs" are the result of a
+strongly aged file-system.=AB
+
+-- =
+
+Markus
 
 _______________________________________________
 xfs mailing list
