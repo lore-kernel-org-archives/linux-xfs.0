@@ -1,22 +1,37 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5K0sIcd095823 for <xfs@oss.sgi.com>; Sun, 19 Jun 2011 19:54:18 -0500
-Received: from mail.ud10.udmedia.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DCA96172B55D
-	for <xfs@oss.sgi.com>; Sun, 19 Jun 2011 17:54:17 -0700 (PDT)
-Received: from mail.ud10.udmedia.de (ud10.udmedia.de [194.117.254.50]) by
-	cuda.sgi.com with ESMTP id mtBauPsOaB2tEGcB for
-	<xfs@oss.sgi.com>; Sun, 19 Jun 2011 17:54:17 -0700 (PDT)
-Date: Mon, 20 Jun 2011 02:54:15 +0200
-From: Markus Trippelsdorf <markus@trippelsdorf.de>
-Subject: Re: long hangs when deleting large directories (3.0-rc3)
-Message-ID: <20110620005415.GA1730@x4.trippels.de>
-References: <20110618141950.GA1685@x4.trippels.de>
-	<20110619222447.GI561@dastard>
+	p5K0pGGE095448 for <xfs@oss.sgi.com>; Sun, 19 Jun 2011 19:51:17 -0500
+Received: from fgwmail6.fujitsu.co.jp (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 165B3DDE42D
+	for <xfs@oss.sgi.com>; Sun, 19 Jun 2011 17:51:13 -0700 (PDT)
+Received: from fgwmail6.fujitsu.co.jp (fgwmail6.fujitsu.co.jp [192.51.44.36])
+	by cuda.sgi.com with ESMTP id isCphxldL3sG1H3d for
+	<xfs@oss.sgi.com>; Sun, 19 Jun 2011 17:51:13 -0700 (PDT)
+Received: from m2.gw.fujitsu.co.jp (unknown [10.0.50.72])
+	by fgwmail6.fujitsu.co.jp (Postfix) with ESMTP id 9B0F53EE0C7
+	for <xfs@oss.sgi.com>; Mon, 20 Jun 2011 09:51:09 +0900 (JST)
+Received: from smail (m2 [127.0.0.1])
+	by outgoing.m2.gw.fujitsu.co.jp (Postfix) with ESMTP id 73DB545DE6A
+	for <xfs@oss.sgi.com>; Mon, 20 Jun 2011 09:51:09 +0900 (JST)
+Received: from s2.gw.fujitsu.co.jp (s2.gw.fujitsu.co.jp [10.0.50.92])
+	by m2.gw.fujitsu.co.jp (Postfix) with ESMTP id 5ACFF45DE69
+	for <xfs@oss.sgi.com>; Mon, 20 Jun 2011 09:51:09 +0900 (JST)
+Received: from s2.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
+	by s2.gw.fujitsu.co.jp (Postfix) with ESMTP id 476111DB803C
+	for <xfs@oss.sgi.com>; Mon, 20 Jun 2011 09:51:09 +0900 (JST)
+Received: from ml14.s.css.fujitsu.com (ml14.s.css.fujitsu.com [10.240.81.134])
+	by s2.gw.fujitsu.co.jp (Postfix) with ESMTP id 020011DB8042
+	for <xfs@oss.sgi.com>; Mon, 20 Jun 2011 09:51:09 +0900 (JST)
+Message-ID: <4DFE997C.2060805@jp.fujitsu.com>
+Date: Mon, 20 Jun 2011 09:51:08 +0900
+From: KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110619222447.GI561@dastard>
+Subject: Re: [PATCH 03/12] vmscan: reduce wind up shrinker->nr when shrinker
+	can't do work
+References: <1306998067-27659-1-git-send-email-david@fromorbit.com>
+	<1306998067-27659-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1306998067-27659-4-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,60 +40,81 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: david@fromorbit.com
+Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On 2011.06.20 at 08:24 +1000, Dave Chinner wrote:
-> On Sat, Jun 18, 2011 at 04:19:50PM +0200, Markus Trippelsdorf wrote:
-> > Running the latest git kernel (3.0-rc3) my machine hangs for long
-> > periods (1-2 sec) whenever I delete a large directory recursively on my
-> > xfs partition. During the hang I cannot move the mouse pointer or use
-> > the keyboard (but the music keeps playing without stuttering). A quick
-> > way to reproduce is to "rm -fr" a kernel tree. 
-> 
-> So what is the system doing when it "hangs"? Is it CPU bound (e.g.
-> cpu scheduler issue)? Is the system running out of memory and
-> stalling everything in memory reclaim? What IO is occurring?
-
-It's totally idle otherwise; just a desktop with a single xterm. The
-machine has four cores (and also runs with "CONFIG_PREEMPT=y"), so I
-don't think it is CPU bound at all. It has 8GB of memory (and the
-"hangs" even occur after reboot when most of it is free). No other IO
-activity is occurring.
-
-> > This happens on a 4kb SATA hard drive:
-> 
-> How does this appear to the OS? as a 512/512, 512/4k or 4k/4k
-> logical/physical sector size drive?
-
-It unfortunately appears as 512/512, but because I know it's a 4KB
-drive, I formated it with "-s size=4096".
-
-> > xfs_info /var
-> > meta-data=/dev/sda1              isize=256    agcount=4, agsize=12800000 blks
-> >          =                       sectsz=4096  attr=2
-> > data     =                       bsize=4096   blocks=51200000, imaxpct=25
-> >          =                       sunit=0      swidth=0 blks
-> > naming   =version 2              bsize=4096   ascii-ci=0
-> > log      =internal               bsize=4096   blocks=25000, version=2
-> >          =                       sectsz=4096  sunit=1 blks, lazy-count=1
-> > realtime =none                   extsz=4096   blocks=0, rtextents=0
-> > 
-> > /dev/sda1 on /var type xfs (rw,noatime,attr2,delaylog,logbsize=256k,noquota)
-> 
-> Is your partition correctly sector aligned for however your drive
-> maps it's 4k sectors?
-
-Yes, it's a GPT partition that is aligned to 1MB.
-
--- 
-Markus
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+KDIwMTEvMDYvMDIgMTY6MDApLCBEYXZlIENoaW5uZXIgd3JvdGU6Cj4gRnJvbTogRGF2ZSBDaGlu
+bmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgo+IAo+IFdoZW4gYSBzaHJpbmtlciByZXR1cm5zIC0x
+IHRvIHNocmlua19zbGFiKCkgdG8gaW5kaWNhdGUgaXQgY2Fubm90IGRvCj4gYW55IHdvcmsgZ2l2
+ZW4gdGhlIGN1cnJlbnQgbWVtb3J5IHJlY2xhaW0gcmVxdWlyZW1lbnRzLCBpdCBhZGRzIHRoZQo+
+IGVudGlyZSB0b3RhbF9zY2FuIGNvdW50IHRvIHNocmlua2VyLT5uci4gVGhlIGlkZWEgZWhpbmQg
+dGhpcyBpcyB0aGF0Cj4gd2hlbnRlaCBzaHJpbmtlciBpcyBuZXh0IGNhbGxlZCBhbmQgY2FuIGRv
+IHdvcmssIGl0IHdpbGwgZG8gdGhlIHdvcmsKPiBvZiB0aGUgcHJldmlvdXNseSBhYm9ydGVkIHNo
+cmlua2VyIGNhbGwgYXMgd2VsbC4KPiAKPiBIb3dldmVyLCBpZiBhIGZpbGVzeXN0ZW0gaXMgZG9p
+bmcgbG90cyBvZiBhbGxvY2F0aW9uIHdpdGggR0ZQX05PRlMKPiBzZXQsIHRoZW4gd2UgZ2V0IG1h
+bnksIG1hbnkgbW9yZSBhYm9ydHMgZnJvbSB0aGUgc2hyaW5rZXJzIHRoYW4gd2UKPiBkbyBzdWNj
+ZXNzZnVsIGNhbGxzLiBUaGUgcmVzdWx0IGlzIHRoYXQgc2hyaW5rZXItPm5yIHdpbmRzIHVwIHRv
+Cj4gaXQncyBtYXhpbXVtIHBlcm1pc3NpYmxlIHZhbHVlICh0d2ljZSB0aGUgY3VycmVudCBjYWNo
+ZSBzaXplKSBhbmQKPiB0aGVuIHdoZW4gdGhlIG5leHQgc2hyaW5rZXIgY2FsbCB0aGF0IGNhbiBk
+byB3b3JrIGlzIGlzc3VlZCwgaXQKPiBoYXMgZW5vdWdoIHNjYW4gY291bnQgYnVpbHQgdXAgdG8g
+ZnJlZSB0aGUgZW50aXJlIGNhY2hlIHR3aWNlIG92ZXIuCj4gCj4gVGhpcyBtYW5pZmVzdHMgaXRz
+ZWxmIGluIHRoZSBjYWNoZSBnb2luZyBmcm9tIGZ1bGwgdG8gZW1wdHkgaW4gYQo+IG1hdHRlciBv
+ZiBzZWNvbmRzLCBldmVuIHdoZW4gb25seSBhIHNtYWxsIHBhcnQgb2YgdGhlIGNhY2hlIGlzCj4g
+bmVlZGVkIHRvIGJlIGVtcHRpZWQgdG8gZnJlZSBzdWZmaWNpZW50IG1lbW9yeS4KPiAKPiBVbmRl
+ciBtZXRhZGF0YSBpbnRlbnNpdmUgd29ya2xvYWRzIG9uIGV4dDQgYW5kIFhGUywgSSdtIHNlZWlu
+ZyB0aGUKPiBWRlMgY2FjaGVzIGluY3JlYXNlIG1lbW9yeSBjb25zdW1wdGlvbiB1cCB0byA3NSUg
+b2YgbWVtb3J5IChubyBwYWdlCj4gY2FjaGUgcHJlc3N1cmUpIG92ZXIgYSBwZXJpb2Qgb2YgMzAt
+NjBzLCBhbmQgdGhlbiB0aGUgc2hyaW5rZXIKPiBlbXB0aWVzIHRoZW0gZG93biB0byB6ZXJvIGlu
+IHRoZSBzcGFjZSBvZiAyLTNzLiBUaGlzIGN5Y2xlIHJlcGVhdHMKPiBvdmVyIGFuZCBvdmVyIGFn
+YWluLCB3aXRoIHRoZSBzaHJpbmtlciBjb21wbGV0ZWx5IHRyYXNoaW5nIHRoZSDRlm5vZGUKPiBh
+bmQgZGVudHJ5IGNhY2hlcyBldmVyeSBtaW51dGUgb3Igc28gdGhlIHdvcmtsb2FkIGNvbnRpbnVl
+cy4KPiAKPiBUaGlzIGJlaGF2aW91ciB3YXMgbWFkZSBvYnZpb3VzIGJ5IHRoZSBzaHJpbmtfc2xh
+YiB0cmFjZXBvaW50cyBhZGRlZAo+IGVhcmxpZXIgaW4gdGhlIHNlcmllcywgYW5kIG1hZGUgd29y
+c2UgYnkgdGhlIHBhdGNoIHRoYXQgY29ycmVjdGVkCj4gdGhlIGNvbmN1cnJlbnQgYWNjb3VudGlu
+ZyBvZiBzaHJpbmtlci0+bnIuCj4gCj4gVG8gYXZvaWQgdGhpcyBwcm9ibGVtLCBzdG9wIHJlcGVh
+dGVkIHNtYWxsIGluY3JlbWVudHMgb2YgdGhlIHRvdGFsCj4gc2NhbiB2YWx1ZSBmcm9tIHdpbmRp
+bmcgc2hyaW5rZXItPm5yIHVwIHRvIGEgdmFsdWUgdGhhdCBjYW4gY2F1c2UKPiB0aGUgZW50aXJl
+IGNhY2hlIHRvIGJlIGZyZWVkLiBXZSBzdGlsbCBuZWVkIHRvIGFsbG93IGl0IHRvIHdpbmQgdXAs
+Cj4gc28gdXNlIHRoZSBkZWx0YSBhcyB0aGUgImxhcmdlIHNjYW4iIHRocmVzaG9sZCBjaGVjayAt
+IGlmIHRoZSBkZWx0YQo+IGlzIG1vcmUgdGhhbiBhIHF1YXJ0ZXIgb2YgdGhlIGVudGlyZSBjYWNo
+ZSBzaXplLCB0aGVuIGl0IGlzIGEgbGFyZ2UKPiBzY2FuIGFuZCBhbGxvd2VkIHRvIGNhdXNlIGxv
+dHMgb2Ygd2luZHVwIGJlY2F1c2Ugd2UgYXJlIGNsZWFybHkKPiBuZWVkaW5nIHRvIGZyZWUgbG90
+cyBvZiBtZW1vcnkuCj4gCj4gSWYgaXQgaXNuJ3QgYSBsYXJnZSBzY2FuIHRoZW4gbGltaXQgdGhl
+IHRvdGFsIHNjYW4gdG8gaGFsZiB0aGUgc2l6ZQo+IG9mIHRoZSBjYWNoZSBzbyB0aGF0IHdpbmR1
+cCBuZXZlciBpbmNyZWFzZXMgdG8gY29uc3VtZSB0aGUgd2hvbGUKPiBjYWNoZS4gUmVkdWNpbmcg
+dGhlIHRvdGFsIHNjYW4gbGltaXQgZnVydGhlciBkb2VzIG5vdCBhbGxvdyBlbm91Z2gKPiB3aW5k
+LXVwIHRvIG1haW50YWluIHRoZSBjdXJyZW50IGxldmVscyBvZiBwZXJmb3JtYW5jZSwgd2hpbHN0
+IGEKPiBoaWdoZXIgdGhyZXNob2xkIGRvZXMgbm90IHByZXZlbnQgdGhlIHdpbmR1cCBmcm9tIGZy
+ZWVpbmcgdGhlIGVudGlyZQo+IGNhY2hlIHVuZGVyIHN1c3RhaW5lZCB3b3JrbG9hZHMuCj4gCj4g
+U2lnbmVkLW9mZi1ieTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgo+IC0tLQo+
+ICBtbS92bXNjYW4uYyB8ICAgMTQgKysrKysrKysrKysrKysKPiAgMSBmaWxlcyBjaGFuZ2VkLCAx
+NCBpbnNlcnRpb25zKCspLCAwIGRlbGV0aW9ucygtKQo+IAo+IGRpZmYgLS1naXQgYS9tbS92bXNj
+YW4uYyBiL21tL3Ztc2Nhbi5jCj4gaW5kZXggZGNlMjc2Ny4uMzY4OGY0NyAxMDA2NDQKPiAtLS0g
+YS9tbS92bXNjYW4uYwo+ICsrKyBiL21tL3Ztc2Nhbi5jCj4gQEAgLTI3Nyw2ICsyNzcsMjAgQEAg
+dW5zaWduZWQgbG9uZyBzaHJpbmtfc2xhYihzdHJ1Y3Qgc2hyaW5rX2NvbnRyb2wgKnNocmluaywK
+PiAgCQl9Cj4gIAo+ICAJCS8qCj4gKwkJICogQXZvaWQgZXhjZXNzaXZlIHdpbmR1cCBvbiBmaWVs
+c3lzdGVtIHNocmlua2VycyBkdWUgdG8gbGFyZ2UKPiArCQkgKiBudW1iZXJzIG9mIEdGUF9OT0ZT
+IGFsbG9jYXRpb25zIGNhdXNpbmcgdGhlIHNocmlua2VycyB0bwo+ICsJCSAqIHJldHVybiAtMSBh
+bGwgdGhlIHRpbWUuIFRoaXMgcmVzdWx0cyBpbiBhIGxhcmdlIG5yIGJlaW5nCj4gKwkJICogYnVp
+bHQgdXAgc28gd2hlbiBhIHNocmluayB0aGF0IGNhbiBkbyBzb21lIHdvcmsgY29tZXMgYWxvbmcK
+PiArCQkgKiBpdCBlbXB0aWVzIHRoZSBlbnRpcmUgY2FjaGUgZHVlIHRvIG5yID4+PiBtYXhfcGFz
+cy4gIFRoaXMgaXMKPiArCQkgKiBiYWQgZm9yIHN1c3RhaW5pbmcgYSB3b3JraW5nIHNldCBpbiBt
+ZW1vcnkuCj4gKwkJICoKPiArCQkgKiBIZW5jZSBvbmx5IGFsbG93IG5yIHRvIGdvIGxhcmdlIHdo
+ZW4gYSBsYXJnZSBkZWx0YSBpcwo+ICsJCSAqIGNhbGN1bGF0ZWQuCj4gKwkJICovCj4gKwkJaWYg
+KGRlbHRhIDwgbWF4X3Bhc3MgLyA0KQo+ICsJCQl0b3RhbF9zY2FuID0gbWluKHRvdGFsX3NjYW4s
+IG1heF9wYXNzIC8gMik7Cj4gKwo+ICsJCS8qCj4gIAkJICogQXZvaWQgcmlza2luZyBsb29waW5n
+IGZvcmV2ZXIgZHVlIHRvIHRvbyBsYXJnZSBuciB2YWx1ZToKPiAgCQkgKiBuZXZlciB0cnkgdG8g
+ZnJlZSBtb3JlIHRoYW4gdHdpY2UgdGhlIGVzdGltYXRlIG51bWJlciBvZgo+ICAJCSAqIGZyZWVh
+YmxlIGVudHJpZXMuCgpJIGd1ZXNzICJtYXhfcGFzcy80IiBhbmQgIm1pbih0b3RhbF9zY2FuLCBt
+YXhfcGFzcyAvIDIpIiBhcmUgeW91ciBoZXVyaXN0aWMgdmFsdWUuIHJpZ2h0PwpJZiBzbywgcGxl
+YXNlIHdyaXRlIHlvdXIgYmVuY2htYXJrIG5hbWUgYW5kIGl0cyByZXN1bHQgaW50byB0aGUgZGVz
+Y3JpcHRpb24uIEkgbWVhbiwKY3VycmVudGx5IHNvbWUgbW0gZm9sa3MgcGxhbiB0byBlbmhhbmNl
+IHNocmlua2VyLiBTbywgc2hhcmluZyBiZW5jaG1hcmsgbWF5IGhlbHAgdG8gYXZvaWQKYW4gYWNj
+aWRlbnRhbCByZWdyZXNzaW9uLgoKSSBtZWFuLCB5b3VyIGNvZGUgaXRzZWxmIGxvb2tzIHByZXR0
+eSBnb29kIHRvIG1lLgoKdGhhbmtzLgoKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9v
+c3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
