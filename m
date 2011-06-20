@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5K1Ldqc098006 for <xfs@oss.sgi.com>; Sun, 19 Jun 2011 20:21:40 -0500
-Received: from mx4-phx2.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7E7DD190C5
-	for <xfs@oss.sgi.com>; Sun, 19 Jun 2011 18:21:38 -0700 (PDT)
-Received: from mx4-phx2.redhat.com (mx4-phx2.redhat.com [209.132.183.25]) by
-	cuda.sgi.com with ESMTP id Jai64FCSPJh0l6n0 for
-	<xfs@oss.sgi.com>; Sun, 19 Jun 2011 18:21:38 -0700 (PDT)
-Date: Sun, 19 Jun 2011 21:21:37 -0400 (EDT)
-From: Lachlan McIlroy <lmcilroy@redhat.com>
-Message-ID: <1716056921.90273.1308532897819.JavaMail.root@zmail05.collab.prod.int.phx2.redhat.com>
-In-Reply-To: <385532.69322.qm@web77719.mail.sg1.yahoo.com>
-Subject: Re: Warning: AG size is a multiple of stripe width?
+	p5K0sIcd095823 for <xfs@oss.sgi.com>; Sun, 19 Jun 2011 19:54:18 -0500
+Received: from mail.ud10.udmedia.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DCA96172B55D
+	for <xfs@oss.sgi.com>; Sun, 19 Jun 2011 17:54:17 -0700 (PDT)
+Received: from mail.ud10.udmedia.de (ud10.udmedia.de [194.117.254.50]) by
+	cuda.sgi.com with ESMTP id mtBauPsOaB2tEGcB for
+	<xfs@oss.sgi.com>; Sun, 19 Jun 2011 17:54:17 -0700 (PDT)
+Date: Mon, 20 Jun 2011 02:54:15 +0200
+From: Markus Trippelsdorf <markus@trippelsdorf.de>
+Subject: Re: long hangs when deleting large directories (3.0-rc3)
+Message-ID: <20110620005415.GA1730@x4.trippels.de>
+References: <20110618141950.GA1685@x4.trippels.de>
+	<20110619222447.GI561@dastard>
 MIME-Version: 1.0
-Reply-To: Lachlan McIlroy <lmcilroy@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <20110619222447.GI561@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,97 +29,54 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Gim Leong Chin <chingimleong@yahoo.com.sg>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
------ Original Message -----
-> Hi,
+On 2011.06.20 at 08:24 +1000, Dave Chinner wrote:
+> On Sat, Jun 18, 2011 at 04:19:50PM +0200, Markus Trippelsdorf wrote:
+> > Running the latest git kernel (3.0-rc3) my machine hangs for long
+> > periods (1-2 sec) whenever I delete a large directory recursively on my
+> > xfs partition. During the hang I cannot move the mouse pointer or use
+> > the keyboard (but the music keeps playing without stuttering). A quick
+> > way to reproduce is to "rm -fr" a kernel tree. 
 > 
-> 
-> I have a Sun workstation with eight Cheetah 15K.5 SAS 300 GB on RAID
-> 1E (RAID 10) on LSI SAS3081E-R.
-> 
-> I am installing SLED 11 SP1 on it and I thought I will do a thorough
-> optimization right down to the partition boundaries.
-> 
-> Since the default for XFS is to create four aggregation groups, and
-> with the reasoning that Cheetah can do double the seeks of normal 7200
-> RPM drives, I have four aggregation groups per drive for a total of 16
-> for 70 GB /dev/sda2 partition, and eight per drive for total of 32 for
-> /dev/sda3 partition (1011 GB).
-> 
-> I have aligned the partition start and end with the stripe width
-> boundaries.
-> The stripe size is 64 kB, stripe width is 4*64 kB = 256 kB, in terms
-> of 512 byte sectors:
-> 
-> 70 GB /
-> 
-> No Start End Number
-> 1 512 67109375 32 GB = 67108864 sectors = 131072 stripe sets
-> 
-> 2 67109376 213910015 70 GB = 146800640 sectors = 286720 stripe sets
-> 
-> 3 213910016 2335932415 Left = 2335932416 - 213910016 = 2122022400
-> sectors = 4144575 stripe sets
-> 
-> 
-> When I do the following:
-> 
-> mkfs.xfs -f -b size=4k -d agcount=16,su=64k,sw=4 -i
-> size=256,align=1,attr=2 -l version=2,su=64k,lazy-count=1 -n version=2
-> -s size=512 -L / /dev/sda2
-> 
-> Warning: AG size is a multiple of stripe width. This can cause
-> performance problems by aligning all AGs on the same disk. To avoid
-> this, run mkfs with an AG size that is one stripe unit smaller, for
-> example 1146864
-> 
-> agcount=16 agsize=1146880 blks
-> bsize=4096
-> sunit=16 swidth=64 blks
-> 
-> mkfs.xfs -f -b size=4k -d agcount=32,su=64k,sw=4 -i
-> size=256,align=1,attr=2 -l version=2,su=64k,lazy-count=1 -n version=2
-> -s size=512 -L /home /dev/sda3
-> 
-> Warning: AG size is a multiple of stripe width. This can cause
-> performance problems by aligning all AGs on the same disk. To avoid
-> this, run mkfs with an AG size that is one stripe unit smaller, for
-> example 8289136
+> So what is the system doing when it "hangs"? Is it CPU bound (e.g.
+> cpu scheduler issue)? Is the system running out of memory and
+> stalling everything in memory reclaim? What IO is occurring?
 
-Each allocation group has some headers that are updated frequently and if
-the allocation group size is a multiple of the AG size then all of the AG
-headers will land on the same disk.  This may cause congestion on this
-disk and reduce the performance of the rest of the stripe.
+It's totally idle otherwise; just a desktop with a single xterm. The
+machine has four cores (and also runs with "CONFIG_PREEMPT=y"), so I
+don't think it is CPU bound at all. It has 8GB of memory (and the
+"hangs" even occur after reboot when most of it is free). No other IO
+activity is occurring.
 
+> > This happens on a 4kb SATA hard drive:
 > 
-> agcount=32 agsize=8289152 blks
-> bsize=4096
-> sunit=16 swidth=64 blks
-> 
-> I am really puzzled since I thought all I am doing is distributing 4
-> aggregation groups per drive for sda2 and 8 per drive for sda3.
-> 
-> What have I done wrong and what is the flaw with my understanding?
+> How does this appear to the OS? as a 512/512, 512/4k or 4k/4k
+> logical/physical sector size drive?
 
-If you had concatenated the disks then your logic would make sense but
-since you've striped the disks then all of the allocations groups will be
-represented in part on each of the disks.  So if you have 32 AGs then each
-disk will need to accommodate (part of) each of the 32 AGs instead of
-the recommended 4 AGs which will probably make the disks seek a lot more.
+It unfortunately appears as 512/512, but because I know it's a 4KB
+drive, I formated it with "-s size=4096".
 
+> > xfs_info /var
+> > meta-data=/dev/sda1              isize=256    agcount=4, agsize=12800000 blks
+> >          =                       sectsz=4096  attr=2
+> > data     =                       bsize=4096   blocks=51200000, imaxpct=25
+> >          =                       sunit=0      swidth=0 blks
+> > naming   =version 2              bsize=4096   ascii-ci=0
+> > log      =internal               bsize=4096   blocks=25000, version=2
+> >          =                       sectsz=4096  sunit=1 blks, lazy-count=1
+> > realtime =none                   extsz=4096   blocks=0, rtextents=0
+> > 
+> > /dev/sda1 on /var type xfs (rw,noatime,attr2,delaylog,logbsize=256k,noquota)
 > 
-> Thank you!
-> 
-> 
-> Chin Gim Leong
-> 
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> Is your partition correctly sector aligned for however your drive
+> maps it's 4k sectors?
+
+Yes, it's a GPT partition that is aligned to 1MB.
+
+-- 
+Markus
 
 _______________________________________________
 xfs mailing list
