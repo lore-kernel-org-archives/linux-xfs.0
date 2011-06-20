@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5K7NvGX123631 for <xfs@oss.sgi.com>; Mon, 20 Jun 2011 02:23:58 -0500
+	p5K8I3lg130834 for <xfs@oss.sgi.com>; Mon, 20 Jun 2011 03:18:04 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2D0C815E5403
-	for <xfs@oss.sgi.com>; Mon, 20 Jun 2011 00:23:51 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 30F4B172D308
+	for <xfs@oss.sgi.com>; Mon, 20 Jun 2011 01:18:02 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	wi3UJC5XeoImyioe for <xfs@oss.sgi.com>;
-	Mon, 20 Jun 2011 00:23:51 -0700 (PDT)
-Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1QYYpr-000596-0t
-	for xfs@oss.sgi.com; Mon, 20 Jun 2011 07:23:51 +0000
-Date: Mon, 20 Jun 2011 03:23:51 -0400
+	CuiA0Tm2u9QmaspM for <xfs@oss.sgi.com>;
+	Mon, 20 Jun 2011 01:18:02 -0700 (PDT)
+Date: Mon, 20 Jun 2011 04:18:02 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] xfs: fix filesystsem freeze race in xfs_trans_alloc
-Message-ID: <20110620072350.GA19765@infradead.org>
+Subject: Re: [PATCH] xfs: improve sync behaviour in face of aggressive dirtying
+Message-ID: <20110620081802.GA27111@infradead.org>
+References: <20110617131401.GC2141@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <20110617131401.GC2141@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,151 +31,114 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: Wu Fengguang <fengguang.wu@intel.com>
 
-As pointed out by Jan xfs_trans_alloc can race with a concurrent filesystem
-free when it sleeps during the memory allocation.  Fix this by moving the
-wait_for_freeze call after the memory allocation.  This means moving the
-freeze into the low-level _xfs_trans_alloc helper, which thus grows a new
-argument.  Also fix up some comments in that area while at it.
+As confirmed by Wu moving to a workqueue flush as in the test patch
+below brings our performance on par with other filesystems.  But there's
+a major and a minor issues with that.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+The minor one is that we always flush all work items and not just those
+on the filesystem to be flushed.  This might become an issue for lager
+systems, or when we apply a similar scheme to fsync, which has the same
+underlying issue.
 
-Index: xfs/fs/xfs/xfs_fsops.c
+The major one is that flush_workqueue only flushed work items that were
+queued before it was called, but we can requeue completions when we fail
+to get the ilock in xfs_setfilesize, which can lead to losing i_size
+updates when it happens.
+
+I see two ways to fix this:  either we implement our own workqueue
+look-alike based on the old workqueue code.  This would allow flushing
+queues per-sb or even per-inode, and allow us to special case flushing
+requeues as well before returning.
+
+Or we copy the scheme ext4 uses for fsync (it completely fails to flush
+the completion queue for plain sync), that is add a list of pending
+items to the inode, and a lock to protect it.  I don't like this because
+it a) bloats the inode, b) adds a lot of complexity, and c) another lock
+to the irq I/O completion.
+
+Any other ideas?
+
+
+Index: xfs/fs/xfs/linux-2.6/xfs_sync.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_fsops.c	2011-06-17 14:18:52.185725030 +0200
-+++ xfs/fs/xfs/xfs_fsops.c	2011-06-18 16:28:04.557624784 +0200
-@@ -626,7 +626,7 @@ xfs_fs_log_dummy(
- 	xfs_trans_t	*tp;
- 	int		error;
- 
--	tp = _xfs_trans_alloc(mp, XFS_TRANS_DUMMY1, KM_SLEEP);
-+	tp = _xfs_trans_alloc(mp, XFS_TRANS_DUMMY1, KM_SLEEP, false);
- 	error = xfs_trans_reserve(tp, 0, mp->m_sb.sb_sectsize + 128, 0, 0,
- 					XFS_DEFAULT_LOG_COUNT);
- 	if (error) {
-Index: xfs/fs/xfs/xfs_iomap.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_iomap.c	2011-06-17 14:18:52.195725031 +0200
-+++ xfs/fs/xfs/xfs_iomap.c	2011-06-18 16:28:04.560958118 +0200
-@@ -688,8 +688,7 @@ xfs_iomap_write_unwritten(
- 		 * the same inode that we complete here and might deadlock
- 		 * on the iolock.
- 		 */
--		xfs_wait_for_freeze(mp, SB_FREEZE_TRANS);
--		tp = _xfs_trans_alloc(mp, XFS_TRANS_STRAT_WRITE, KM_NOFS);
-+		tp = _xfs_trans_alloc(mp, XFS_TRANS_STRAT_WRITE, KM_NOFS, true);
- 		tp->t_flags |= XFS_TRANS_RESERVE;
- 		error = xfs_trans_reserve(tp, resblks,
- 				XFS_WRITE_LOG_RES(mp), 0,
-Index: xfs/fs/xfs/xfs_trans.h
-===================================================================
---- xfs.orig/fs/xfs/xfs_trans.h	2011-06-17 14:18:52.209058363 +0200
-+++ xfs/fs/xfs/xfs_trans.h	2011-06-18 16:28:04.560958118 +0200
-@@ -448,7 +448,7 @@ typedef struct xfs_trans {
-  * XFS transaction mechanism exported interfaces.
-  */
- xfs_trans_t	*xfs_trans_alloc(struct xfs_mount *, uint);
--xfs_trans_t	*_xfs_trans_alloc(struct xfs_mount *, uint, uint);
-+xfs_trans_t	*_xfs_trans_alloc(struct xfs_mount *, uint, uint, bool);
- xfs_trans_t	*xfs_trans_dup(xfs_trans_t *);
- int		xfs_trans_reserve(xfs_trans_t *, uint, uint, uint,
- 				  uint, uint);
-Index: xfs/fs/xfs/xfs_mount.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_mount.c	2011-06-17 14:18:52.222391695 +0200
-+++ xfs/fs/xfs/xfs_mount.c	2011-06-18 16:28:04.560958118 +0200
-@@ -1566,15 +1566,9 @@ xfs_fs_writable(xfs_mount_t *mp)
- }
- 
- /*
-- * xfs_log_sbcount
-- *
-  * Called either periodically to keep the on disk superblock values
-  * roughly up to date or from unmount to make sure the values are
-  * correct on a clean unmount.
-- *
-- * Note this code can be called during the process of freezing, so
-- * we may need to use the transaction allocator which does not not
-- * block when the transaction subsystem is in its frozen state.
-  */
- int
- xfs_log_sbcount(
-@@ -1596,7 +1590,13 @@ xfs_log_sbcount(
- 	if (!xfs_sb_version_haslazysbcount(&mp->m_sb))
- 		return 0;
- 
--	tp = _xfs_trans_alloc(mp, XFS_TRANS_SB_COUNT, KM_SLEEP);
-+	/*
-+	 * We can be called during the process of freezing, so make sure
-+	 * we go ahead even if the frozen for new transactions.  We will
-+	 * always use a sync transaction in the freeze path to make sure
-+	 * the transaction has completed by the time we return.
-+	 */
-+	tp = _xfs_trans_alloc(mp, XFS_TRANS_SB_COUNT, KM_SLEEP, false);
- 	error = xfs_trans_reserve(tp, 0, mp->m_sb.sb_sectsize + 128, 0, 0,
- 					XFS_DEFAULT_LOG_COUNT);
- 	if (error) {
-Index: xfs/fs/xfs/xfs_trans.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_trans.c	2011-06-09 11:51:01.000000000 +0200
-+++ xfs/fs/xfs/xfs_trans.c	2011-06-18 16:28:24.970957084 +0200
-@@ -566,31 +566,24 @@ xfs_trans_init(
- 
- /*
-  * This routine is called to allocate a transaction structure.
-+ *
-  * The type parameter indicates the type of the transaction.  These
-  * are enumerated in xfs_trans.h.
-- *
-- * Dynamically allocate the transaction structure from the transaction
-- * zone, initialize it, and return it to the caller.
-  */
--xfs_trans_t *
--xfs_trans_alloc(
--	xfs_mount_t	*mp,
--	uint		type)
--{
--	xfs_wait_for_freeze(mp, SB_FREEZE_TRANS);
--	return _xfs_trans_alloc(mp, type, KM_SLEEP);
--}
--
--xfs_trans_t *
-+struct xfs_trans *
- _xfs_trans_alloc(
--	xfs_mount_t	*mp,
--	uint		type,
--	uint		memflags)
-+	struct xfs_mount	*mp,
-+	uint			type,
-+	uint			memflags,
-+	bool			wait_for_freeze)
+--- xfs.orig/fs/xfs/linux-2.6/xfs_sync.c	2011-06-17 14:16:18.442399481 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_sync.c	2011-06-18 17:55:44.864025123 +0200
+@@ -359,14 +359,16 @@ xfs_quiesce_data(
  {
--	xfs_trans_t	*tp;
-+	struct xfs_trans	*tp;
+ 	int			error, error2 = 0;
  
- 	atomic_inc(&mp->m_active_trans);
+-	/* push non-blocking */
+-	xfs_sync_data(mp, 0);
+ 	xfs_qm_sync(mp, SYNC_TRYLOCK);
+-
+-	/* push and block till complete */
+-	xfs_sync_data(mp, SYNC_WAIT);
+ 	xfs_qm_sync(mp, SYNC_WAIT);
  
-+	if (wait_for_freeze)
-+		xfs_wait_for_freeze(mp, SB_FREEZE_TRANS);
++	/* flush all pending size updates and unwritten extent conversions */
++	flush_workqueue(xfsconvertd_workqueue);
++	flush_workqueue(xfsdatad_workqueue);
 +
- 	tp = kmem_zone_zalloc(xfs_trans_zone, memflags);
- 	tp->t_magic = XFS_TRANS_MAGIC;
- 	tp->t_type = type;
-@@ -600,6 +593,14 @@ _xfs_trans_alloc(
- 	return tp;
- }
- 
-+struct xfs_trans *
-+xfs_trans_alloc(
-+	struct xfs_mount	*mp,
-+	uint			type)
-+{
-+	return _xfs_trans_alloc(mp, type, KM_SLEEP, true);
-+}
++	/* force out the newly dirtied log buffers */
++	xfs_log_force(mp, XFS_LOG_SYNC);
 +
- /*
-  * Free the transaction structure.  If there is more clean up
-  * to do when the structure is freed, add it here.
+ 	/* write superblock and hoover up shutdown errors */
+ 	error = xfs_sync_fsdata(mp);
+ 
+Index: xfs/fs/xfs/linux-2.6/xfs_super.c
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_super.c	2011-06-18 17:51:05.660705925 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_super.c	2011-06-18 17:52:50.107367305 +0200
+@@ -929,45 +929,12 @@ xfs_fs_write_inode(
+ 		 * ->sync_fs call do that for thus, which reduces the number
+ 		 * of synchronous log foces dramatically.
+ 		 */
+-		xfs_ioend_wait(ip);
+ 		xfs_ilock(ip, XFS_ILOCK_SHARED);
+-		if (ip->i_update_core) {
++		if (ip->i_update_core)
+ 			error = xfs_log_inode(ip);
+-			if (error)
+-				goto out_unlock;
+-		}
+-	} else {
+-		/*
+-		 * We make this non-blocking if the inode is contended, return
+-		 * EAGAIN to indicate to the caller that they did not succeed.
+-		 * This prevents the flush path from blocking on inodes inside
+-		 * another operation right now, they get caught later by
+-		 * xfs_sync.
+-		 */
+-		if (!xfs_ilock_nowait(ip, XFS_ILOCK_SHARED))
+-			goto out;
+-
+-		if (xfs_ipincount(ip) || !xfs_iflock_nowait(ip))
+-			goto out_unlock;
+-
+-		/*
+-		 * Now we have the flush lock and the inode is not pinned, we
+-		 * can check if the inode is really clean as we know that
+-		 * there are no pending transaction completions, it is not
+-		 * waiting on the delayed write queue and there is no IO in
+-		 * progress.
+-		 */
+-		if (xfs_inode_clean(ip)) {
+-			xfs_ifunlock(ip);
+-			error = 0;
+-			goto out_unlock;
+-		}
+-		error = xfs_iflush(ip, SYNC_TRYLOCK);
++		xfs_iunlock(ip, XFS_ILOCK_SHARED);
+ 	}
+ 
+- out_unlock:
+-	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+- out:
+ 	/*
+ 	 * if we failed to write out the inode then mark
+ 	 * it dirty again so we'll try again later.
 
 _______________________________________________
 xfs mailing list
