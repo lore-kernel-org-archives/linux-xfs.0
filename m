@@ -1,24 +1,36 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5JNsSn5087418 for <xfs@oss.sgi.com>; Sun, 19 Jun 2011 18:54:29 -0500
-Received: from straum.hexapodia.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2336BDDBCC7
-	for <xfs@oss.sgi.com>; Sun, 19 Jun 2011 16:54:27 -0700 (PDT)
-Received: from straum.hexapodia.org (straum.hexapodia.org [207.7.131.186]) by
-	cuda.sgi.com with ESMTP id zRjpjToY4Qu85drj for
-	<xfs@oss.sgi.com>; Sun, 19 Jun 2011 16:54:27 -0700 (PDT)
-Date: Sun, 19 Jun 2011 16:55:18 -0700
-From: Andy Isaacson <adi@hexapodia.org>
-Subject: Re: ENOSPC but df and df -i show free space
-Message-ID: <20110619235518.GA21778@hexapodia.org>
-References: <20110619215039.GA17820@hexapodia.org>
-	<20110619221852.GH561@dastard>
-	<20110619225834.GY21778@hexapodia.org>
-	<20110619232339.GK561@dastard>
+	p5K0isUB094934 for <xfs@oss.sgi.com>; Sun, 19 Jun 2011 19:44:55 -0500
+Received: from fgwmail6.fujitsu.co.jp (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 22A4351EBE0
+	for <xfs@oss.sgi.com>; Sun, 19 Jun 2011 17:44:51 -0700 (PDT)
+Received: from fgwmail6.fujitsu.co.jp (fgwmail6.fujitsu.co.jp [192.51.44.36])
+	by cuda.sgi.com with ESMTP id rNfPiDsSKLRWvv9B for
+	<xfs@oss.sgi.com>; Sun, 19 Jun 2011 17:44:51 -0700 (PDT)
+Received: from m2.gw.fujitsu.co.jp (unknown [10.0.50.72])
+	by fgwmail6.fujitsu.co.jp (Postfix) with ESMTP id 3B60A3EE0B5
+	for <xfs@oss.sgi.com>; Mon, 20 Jun 2011 09:44:44 +0900 (JST)
+Received: from smail (m2 [127.0.0.1])
+	by outgoing.m2.gw.fujitsu.co.jp (Postfix) with ESMTP id 1D0E045DE72
+	for <xfs@oss.sgi.com>; Mon, 20 Jun 2011 09:44:44 +0900 (JST)
+Received: from s2.gw.fujitsu.co.jp (s2.gw.fujitsu.co.jp [10.0.50.92])
+	by m2.gw.fujitsu.co.jp (Postfix) with ESMTP id 0044E45DE6A
+	for <xfs@oss.sgi.com>; Mon, 20 Jun 2011 09:44:44 +0900 (JST)
+Received: from s2.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
+	by s2.gw.fujitsu.co.jp (Postfix) with ESMTP id CC966E08001
+	for <xfs@oss.sgi.com>; Mon, 20 Jun 2011 09:44:43 +0900 (JST)
+Received: from ml13.s.css.fujitsu.com (ml13.s.css.fujitsu.com [10.240.81.133])
+	by s2.gw.fujitsu.co.jp (Postfix) with ESMTP id 3CA9DE08003
+	for <xfs@oss.sgi.com>; Mon, 20 Jun 2011 09:44:43 +0900 (JST)
+Message-ID: <4DFE97F1.2030206@jp.fujitsu.com>
+Date: Mon, 20 Jun 2011 09:44:33 +0900
+From: KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110619232339.GK561@dastard>
+Subject: Re: [PATCH 01/12] vmscan: add shrink_slab tracepoints
+References: <1306998067-27659-1-git-send-email-david@fromorbit.com>
+	<1306998067-27659-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1306998067-27659-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,95 +39,27 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: david@fromorbit.com
+Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Mon, Jun 20, 2011 at 09:23:39AM +1000, Dave Chinner wrote:
-> No allocation algorithm is perfect in all circumstances. The
-> alogrithms in XFS tend to degrade when large contiguous freespace
-> regions are not available, resulting in more fragmentation of data
-> extents and subsequent freespace fragmentation when those files are
-> removed or defragmented. The algorithms will recover if you free up
-> enough space that large contiguous freespace extents re-form, but
-> that can require removing a large amount of data....
-
-Thanks for the background explanation!
-
-> > > > % df -i /d1
-> > > > Filesystem            Inodes   IUsed   IFree IUse% Mounted on
-> > > > /dev/mapper/vg0-d1   167509008 11806336 155702672    8% /d1
-> > > > % sudo xfs_growfs -n /d1
-> > > > meta-data=/dev/mapper/vg0-d1     isize=256    agcount=18, agsize=13107200 blks
-> > > >          =                       sectsz=512   attr=2
-> > > > data     =                       bsize=4096   blocks=235929600, imaxpct=25
-> > > >          =                       sunit=0      swidth=0 blks
-> > > > naming   =version 2              bsize=4096   ascii-ci=0
-> > > > log      =internal               bsize=4096   blocks=25600, version=2
-> > > >          =                       sectsz=512   sunit=0 blks, lazy-count=1
-> > > > realtime =none                   extsz=4096   blocks=0, rtextents=0
-> > > > % grep d1 /proc/mounts
-> > > > /dev/mapper/vg0-d1 /d1 xfs rw,relatime,attr2,noquota 0 0
-> > > > 
-> > > > Obviously I'm missing something, but what?
-> > > 
-> > > Most likely is that you have no contiguous free space large enough
-> > > to create a new inode chunk.  using xfs_db to dump the freespace
-> > > size histogram will tell you if this is the case or not.
-> > 
-> > % sudo xfs_db -c freesp /dev/vg0/d1
-> >    from      to extents  blocks    pct
-> >       1       1  168504  168504   1.71
-> >       2       3     446    1135   0.01
-> >       4       7    5550   37145   0.38
-> >       8      15   49159  524342   5.33
-> >      16      31    1383   29223   0.30
-> > 2097152 4194303       1 2931455  29.78
-> > 4194304 8388607       1 6150953  62.49
-> > 
-> > I don't really grok that output.
-> 
-> It's the historgram of free space extent sizes. You have 168504
-> single free block regions (4k in size) in the filesystem, 446
-> between 8k and 12k (2-3 blocks), etc.
-
-Ah, OK!  Now it makes sense.
-
-> Inode allocation requires aligned 16k allocations (64x256 byte
-> inodes), so you need free extents in the 4-7 block range or larger,
-> which you appear to have so it should not be failing. Did you dump
-> this histogram while touch was giving ENOSPC errors?
-
-Yes, that was before I grew the filesystem again to get back to
-a working state.  I killed all the processes using the filesystem,
-unmounted it, and ran xfs_db.
-
-> Also, it might be worthwhile dumping the per-ag histograms (use a
-> for loop and the "freesp -a <x>" command) - it may be that certain
-> AGs are out of contiguous freespace and that is causing the issue...
-
-I've now grown the filesystem again to get it back into a working state;
-it's obviously not "production" per se given my janky configuration, but
-it is more convenient if I can create files. :)
-
-It's a shame that we lost the chance to do more debugging though.
-
-> FWIW, you shoul drun "echo 1 > /proc/sys/vm/drop_caches" before
-> running the xfsdb comand so that it is not reading stale metadata
-> from cache...
-
-I unmounted the filesystem before running xfs_db, so it should be fine.
-Didn't even occur to me that it might work to run xfs_db on a block
-device that's mounted and active...
-
-I did notice that the unmount command took a minute or two to complete.
-
--andy
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+KDIwMTEvMDYvMDIgMTY6MDApLCBEYXZlIENoaW5uZXIgd3JvdGU6Cj4gRnJvbTogRGF2ZSBDaGlu
+bmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgo+IAo+INCGdCBpcyBpbXBvc3NpYmxlIHRvIHVuZGVy
+c3RhbmQgd2hhdCB0aGUgc2hyaW5rZXJzIGFyZSBhY3R1YWxseSBkb2luZwo+IHdpdGhvdXQgaW5z
+dHJ1bWVudGluZyB0aGUgY29kZSwgc28gYWRkIGEgc29tZSB0cmFjZXBvaW50cyB0byBhbGxvdwo+
+IGluc2lnaHQgdG8gYmUgZ2FpbmVkLgo+IAo+IFNpZ25lZC1vZmYtYnk6IERhdmUgQ2hpbm5lciA8
+ZGNoaW5uZXJAcmVkaGF0LmNvbT4KPiAtLS0KPiAgaW5jbHVkZS90cmFjZS9ldmVudHMvdm1zY2Fu
+LmggfCAgIDY3ICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrCj4gIG1t
+L3Ztc2Nhbi5jICAgICAgICAgICAgICAgICAgIHwgICAgNiArKystCj4gIDIgZmlsZXMgY2hhbmdl
+ZCwgNzIgaW5zZXJ0aW9ucygrKSwgMSBkZWxldGlvbnMoLSkKClRoaXMgbG9vayBnb29kIHRvIG1l
+LiBJIGhhdmUgdHdvIG1pbm9yIHJlcXVlc3QuIDEpIHBsZWFzZSBjaGFuZ2UgcGF0Y2ggb3JkZXIs
+Cm1vdmUgdGhpcyBwYXRjaCBhZnRlciBzaHJpbmtlciBjaGFuZ2VzLiBpb3csIG5vdyBib3RoIHRo
+aXMgYW5kIFsyLzEyXSBoYXZlCnRyYWNlcG9pbnQgY2hhbmdlLiBJIGRvbid0IGxpa2UgaXQuIDIp
+IHBsZWFzZSBhdm9pZCBjcnlwdGljIGFiYnJldmlhdGVkIHZhcmlhYmxlCm5hbWVzLiBJbnN0ZWFk
+LCBwbGVhc2UganVzdCB1c2UgdGhlIHNhbWUgdmFyaWFibGUgbmFtZSB3aXRoIHZtc2Nhbi5jIHNv
+dXJjZSBjb2RlLgoKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9t
+YWlsbWFuL2xpc3RpbmZvL3hmcwo=
