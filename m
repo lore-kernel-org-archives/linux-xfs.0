@@ -1,32 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5KEnjVM156672 for <xfs@oss.sgi.com>; Mon, 20 Jun 2011 09:49:46 -0500
-Received: from e32.co.us.ibm.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0F0514E34ED
-	for <xfs@oss.sgi.com>; Mon, 20 Jun 2011 07:49:44 -0700 (PDT)
-Received: from e32.co.us.ibm.com (e32.co.us.ibm.com [32.97.110.150]) by
-	cuda.sgi.com with ESMTP id N79n5TFp2zZWaXrT for
-	<xfs@oss.sgi.com>; Mon, 20 Jun 2011 07:49:44 -0700 (PDT)
-Received: from d03relay03.boulder.ibm.com (d03relay03.boulder.ibm.com
-	[9.17.195.228])
-	by e32.co.us.ibm.com (8.14.4/8.13.1) with ESMTP id p5KEbrco018680
-	for <xfs@oss.sgi.com>; Mon, 20 Jun 2011 08:37:53 -0600
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay03.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	p5KEnQUL157076 for <xfs@oss.sgi.com>; Mon, 20 Jun 2011 08:49:30 -0600
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
-	id p5K8mrYi032633
-	for <xfs@oss.sgi.com>; Mon, 20 Jun 2011 02:48:55 -0600
-Message-ID: <4DFF5DEF.5040709@linux.vnet.ibm.com>
-Date: Mon, 20 Jun 2011 07:49:19 -0700
-From: Allison Henderson <achender@linux.vnet.ibm.com>
+	p5KKuNXB186440 for <xfs@oss.sgi.com>; Mon, 20 Jun 2011 15:56:23 -0500
+Message-ID: <4DFFB3F3.3070606@sgi.com>
+Date: Mon, 20 Jun 2011 15:56:19 -0500
+From: Kevan Rehm <kfr@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 2/3 v5] XFS TESTS: Expand 252 punch hole test
-References: <4DED63DE.1070000@vnet.ibm.com>
-	<20110620090754.GA27583@infradead.org>
-In-Reply-To: <20110620090754.GA27583@infradead.org>
+Subject: question on xfs_vm_writepage in combination with fsync
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,27 +15,65 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, Allison Henderson <achender@vnet.ibm.com>, Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On 06/20/2011 02:07 AM, Christoph Hellwig wrote:
-> This actually broke 242 due to the new output from the new tests for me.
->
-> Next time please do a full xfsqa run before submitting patches.
->
+Greetings,
 
-Ah, sorry about that, I will remember to run the whole xfsqa from now 
-on. I think I have another set I submitted last night that I need to do 
-that with too. I will get it fixed up and resent.
+I've run into a case where the fsync() system call seems to have
+returned before all file data was actually on disk.  (A SLES11SP1 system
+crash occurred shortly after an fsync which had returned zero.  After
+restarting the machine, the last I/O before the fsync is not in the
+file.)  In attempting to find the problem, I've come across code I don't
+understand, and am hoping someone can enlighten me as to how things are
+supposed to work.
 
-Allison Henderson
+Routine xfs_vm_writepage has various situations under which it will
+decide it can't currently initiate writeback on a page, and in that case
+calls redirty_page_for_writepage, unlocks the page, and returns zero.
+That seems to me to be incompatible with fsync(), so I'm obviously
+missing some key piece of logic.
 
+The calling sequence of routines involved in fsync is:
 
+do_fsync->vfs_fsync->vfs_fsync_range->
+	filemap_write_and_wait_range->
+	__filemap_fdatawrite_range->
+	do_writepages->generic_writepages->
+	write_cache_pages
 
+Routine write_cache_pages walks the radix tree and calls
+clear_page_dirty_for_io and then __writepage on each dirty page to
+initiate writeback.  __writepage calls xfs_vm_writepage.  That routine
+is occasionally unable to immediately start writeback of the page, and
+so it calls redirty_page_for_writepage without setting the writeback flag.
+
+When write_cache_pages resumes after the __writepage call, it continues
+walking the radix tree starting additional writebacks on dirty pages,
+but nothing I can see will ever come back and try again to start a
+writeback on the page that xfs_vm_writepage couldn't writeback.
+Eventually control bubbles back up to filemap_write_and_wait_range()
+where wait_on_page_writeback_range is called, but that routine only
+waits for writebacks to complete, it doesn't do anything about dirty
+pages.   So it appears to me that the dirty page will be left dirty
+indefinitely even though the wbc contained WB_SYNC_ALL.
+
+I'd like to believe that I am missing something, and that the code is
+correct, but I do have a crash dump where I can see dirty pages in files
+that were recently fsync'd.  And I can't believe the problem is
+something inside XFS, because I see other filesystems also call
+redirty_page_for_writepage, so I think the same problem could occur with
+them.
+
+Could someone please describe to me how fsync is supposed to work in
+combination with xfs_vm_writepage?
+
+Thanks in advance,
+
+Regards, Kevan
 
 _______________________________________________
 xfs mailing list
