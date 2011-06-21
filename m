@@ -1,25 +1,38 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5L59LgF229629 for <xfs@oss.sgi.com>; Tue, 21 Jun 2011 00:09:21 -0500
-Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 344A11DCC2
-	for <xfs@oss.sgi.com>; Mon, 20 Jun 2011 22:09:18 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	MmdaiZ77NyWELJ4g for <xfs@oss.sgi.com>;
-	Mon, 20 Jun 2011 22:09:18 -0700 (PDT)
-Date: Tue, 21 Jun 2011 15:09:14 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 03/12] vmscan: reduce wind up shrinker->nr when
-	shrinker can't do work
-Message-ID: <20110621050914.GO32466@dastard>
+	p5L5Rp7j230650 for <xfs@oss.sgi.com>; Tue, 21 Jun 2011 00:27:51 -0500
+Received: from fgwmail5.fujitsu.co.jp (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D49E21EBA2
+	for <xfs@oss.sgi.com>; Mon, 20 Jun 2011 22:27:50 -0700 (PDT)
+Received: from fgwmail5.fujitsu.co.jp (fgwmail5.fujitsu.co.jp [192.51.44.35])
+	by cuda.sgi.com with ESMTP id q0GdA8qO2raTM9Ni for
+	<xfs@oss.sgi.com>; Mon, 20 Jun 2011 22:27:50 -0700 (PDT)
+Received: from m2.gw.fujitsu.co.jp (unknown [10.0.50.72])
+	by fgwmail5.fujitsu.co.jp (Postfix) with ESMTP id F34CB3EE0C1
+	for <xfs@oss.sgi.com>; Tue, 21 Jun 2011 14:27:47 +0900 (JST)
+Received: from smail (m2 [127.0.0.1])
+	by outgoing.m2.gw.fujitsu.co.jp (Postfix) with ESMTP id D5DBD45DE72
+	for <xfs@oss.sgi.com>; Tue, 21 Jun 2011 14:27:47 +0900 (JST)
+Received: from s2.gw.fujitsu.co.jp (s2.gw.fujitsu.co.jp [10.0.50.92])
+	by m2.gw.fujitsu.co.jp (Postfix) with ESMTP id B638B45DE69
+	for <xfs@oss.sgi.com>; Tue, 21 Jun 2011 14:27:47 +0900 (JST)
+Received: from s2.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
+	by s2.gw.fujitsu.co.jp (Postfix) with ESMTP id AA4311DB802C
+	for <xfs@oss.sgi.com>; Tue, 21 Jun 2011 14:27:47 +0900 (JST)
+Received: from ml13.s.css.fujitsu.com (ml13.s.css.fujitsu.com [10.240.81.133])
+	by s2.gw.fujitsu.co.jp (Postfix) with ESMTP id 73336E08003
+	for <xfs@oss.sgi.com>; Tue, 21 Jun 2011 14:27:47 +0900 (JST)
+Message-ID: <4E002BD0.3000003@jp.fujitsu.com>
+Date: Tue, 21 Jun 2011 14:27:44 +0900
+From: KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH 03/12] vmscan: reduce wind up shrinker->nr when shrinker
+	can't do work
 References: <1306998067-27659-1-git-send-email-david@fromorbit.com>
 	<1306998067-27659-4-git-send-email-david@fromorbit.com>
-	<4DFE997C.2060805@jp.fujitsu.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4DFE997C.2060805@jp.fujitsu.com>
+	<4DFE997C.2060805@jp.fujitsu.com> <20110621050914.GO32466@dastard>
+In-Reply-To: <20110621050914.GO32466@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,113 +41,22 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>
+To: david@fromorbit.com
 Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-T24gTW9uLCBKdW4gMjAsIDIwMTEgYXQgMDk6NTE6MDhBTSArMDkwMCwgS09TQUtJIE1vdG9oaXJv
-IHdyb3RlOgo+ICgyMDExLzA2LzAyIDE2OjAwKSwgRGF2ZSBDaGlubmVyIHdyb3RlOgo+ID4gRnJv
-bTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgo+ID4gCj4gPiBXaGVuIGEgc2hy
-aW5rZXIgcmV0dXJucyAtMSB0byBzaHJpbmtfc2xhYigpIHRvIGluZGljYXRlIGl0IGNhbm5vdCBk
-bwo+ID4gYW55IHdvcmsgZ2l2ZW4gdGhlIGN1cnJlbnQgbWVtb3J5IHJlY2xhaW0gcmVxdWlyZW1l
-bnRzLCBpdCBhZGRzIHRoZQo+ID4gZW50aXJlIHRvdGFsX3NjYW4gY291bnQgdG8gc2hyaW5rZXIt
-Pm5yLiBUaGUgaWRlYSBlaGluZCB0aGlzIGlzIHRoYXQKPiA+IHdoZW50ZWggc2hyaW5rZXIgaXMg
-bmV4dCBjYWxsZWQgYW5kIGNhbiBkbyB3b3JrLCBpdCB3aWxsIGRvIHRoZSB3b3JrCj4gPiBvZiB0
-aGUgcHJldmlvdXNseSBhYm9ydGVkIHNocmlua2VyIGNhbGwgYXMgd2VsbC4KPiA+IAo+ID4gSG93
-ZXZlciwgaWYgYSBmaWxlc3lzdGVtIGlzIGRvaW5nIGxvdHMgb2YgYWxsb2NhdGlvbiB3aXRoIEdG
-UF9OT0ZTCj4gPiBzZXQsIHRoZW4gd2UgZ2V0IG1hbnksIG1hbnkgbW9yZSBhYm9ydHMgZnJvbSB0
-aGUgc2hyaW5rZXJzIHRoYW4gd2UKPiA+IGRvIHN1Y2Nlc3NmdWwgY2FsbHMuIFRoZSByZXN1bHQg
-aXMgdGhhdCBzaHJpbmtlci0+bnIgd2luZHMgdXAgdG8KPiA+IGl0J3MgbWF4aW11bSBwZXJtaXNz
-aWJsZSB2YWx1ZSAodHdpY2UgdGhlIGN1cnJlbnQgY2FjaGUgc2l6ZSkgYW5kCj4gPiB0aGVuIHdo
-ZW4gdGhlIG5leHQgc2hyaW5rZXIgY2FsbCB0aGF0IGNhbiBkbyB3b3JrIGlzIGlzc3VlZCwgaXQK
-PiA+IGhhcyBlbm91Z2ggc2NhbiBjb3VudCBidWlsdCB1cCB0byBmcmVlIHRoZSBlbnRpcmUgY2Fj
-aGUgdHdpY2Ugb3Zlci4KPiA+IAo+ID4gVGhpcyBtYW5pZmVzdHMgaXRzZWxmIGluIHRoZSBjYWNo
-ZSBnb2luZyBmcm9tIGZ1bGwgdG8gZW1wdHkgaW4gYQo+ID4gbWF0dGVyIG9mIHNlY29uZHMsIGV2
-ZW4gd2hlbiBvbmx5IGEgc21hbGwgcGFydCBvZiB0aGUgY2FjaGUgaXMKPiA+IG5lZWRlZCB0byBi
-ZSBlbXB0aWVkIHRvIGZyZWUgc3VmZmljaWVudCBtZW1vcnkuCj4gPiAKPiA+IFVuZGVyIG1ldGFk
-YXRhIGludGVuc2l2ZSB3b3JrbG9hZHMgb24gZXh0NCBhbmQgWEZTLCBJJ20gc2VlaW5nIHRoZQo+
-ID4gVkZTIGNhY2hlcyBpbmNyZWFzZSBtZW1vcnkgY29uc3VtcHRpb24gdXAgdG8gNzUlIG9mIG1l
-bW9yeSAobm8gcGFnZQo+ID4gY2FjaGUgcHJlc3N1cmUpIG92ZXIgYSBwZXJpb2Qgb2YgMzAtNjBz
-LCBhbmQgdGhlbiB0aGUgc2hyaW5rZXIKPiA+IGVtcHRpZXMgdGhlbSBkb3duIHRvIHplcm8gaW4g
-dGhlIHNwYWNlIG9mIDItM3MuIFRoaXMgY3ljbGUgcmVwZWF0cwo+ID4gb3ZlciBhbmQgb3ZlciBh
-Z2Fpbiwgd2l0aCB0aGUgc2hyaW5rZXIgY29tcGxldGVseSB0cmFzaGluZyB0aGUg0ZZub2RlCj4g
-PiBhbmQgZGVudHJ5IGNhY2hlcyBldmVyeSBtaW51dGUgb3Igc28gdGhlIHdvcmtsb2FkIGNvbnRp
-bnVlcy4KPiA+IAo+ID4gVGhpcyBiZWhhdmlvdXIgd2FzIG1hZGUgb2J2aW91cyBieSB0aGUgc2hy
-aW5rX3NsYWIgdHJhY2Vwb2ludHMgYWRkZWQKPiA+IGVhcmxpZXIgaW4gdGhlIHNlcmllcywgYW5k
-IG1hZGUgd29yc2UgYnkgdGhlIHBhdGNoIHRoYXQgY29ycmVjdGVkCj4gPiB0aGUgY29uY3VycmVu
-dCBhY2NvdW50aW5nIG9mIHNocmlua2VyLT5uci4KPiA+IAo+ID4gVG8gYXZvaWQgdGhpcyBwcm9i
-bGVtLCBzdG9wIHJlcGVhdGVkIHNtYWxsIGluY3JlbWVudHMgb2YgdGhlIHRvdGFsCj4gPiBzY2Fu
-IHZhbHVlIGZyb20gd2luZGluZyBzaHJpbmtlci0+bnIgdXAgdG8gYSB2YWx1ZSB0aGF0IGNhbiBj
-YXVzZQo+ID4gdGhlIGVudGlyZSBjYWNoZSB0byBiZSBmcmVlZC4gV2Ugc3RpbGwgbmVlZCB0byBh
-bGxvdyBpdCB0byB3aW5kIHVwLAo+ID4gc28gdXNlIHRoZSBkZWx0YSBhcyB0aGUgImxhcmdlIHNj
-YW4iIHRocmVzaG9sZCBjaGVjayAtIGlmIHRoZSBkZWx0YQo+ID4gaXMgbW9yZSB0aGFuIGEgcXVh
-cnRlciBvZiB0aGUgZW50aXJlIGNhY2hlIHNpemUsIHRoZW4gaXQgaXMgYSBsYXJnZQo+ID4gc2Nh
-biBhbmQgYWxsb3dlZCB0byBjYXVzZSBsb3RzIG9mIHdpbmR1cCBiZWNhdXNlIHdlIGFyZSBjbGVh
-cmx5Cj4gPiBuZWVkaW5nIHRvIGZyZWUgbG90cyBvZiBtZW1vcnkuCj4gPiAKPiA+IElmIGl0IGlz
-bid0IGEgbGFyZ2Ugc2NhbiB0aGVuIGxpbWl0IHRoZSB0b3RhbCBzY2FuIHRvIGhhbGYgdGhlIHNp
-emUKPiA+IG9mIHRoZSBjYWNoZSBzbyB0aGF0IHdpbmR1cCBuZXZlciBpbmNyZWFzZXMgdG8gY29u
-c3VtZSB0aGUgd2hvbGUKPiA+IGNhY2hlLiBSZWR1Y2luZyB0aGUgdG90YWwgc2NhbiBsaW1pdCBm
-dXJ0aGVyIGRvZXMgbm90IGFsbG93IGVub3VnaAo+ID4gd2luZC11cCB0byBtYWludGFpbiB0aGUg
-Y3VycmVudCBsZXZlbHMgb2YgcGVyZm9ybWFuY2UsIHdoaWxzdCBhCj4gPiBoaWdoZXIgdGhyZXNo
-b2xkIGRvZXMgbm90IHByZXZlbnQgdGhlIHdpbmR1cCBmcm9tIGZyZWVpbmcgdGhlIGVudGlyZQo+
-ID4gY2FjaGUgdW5kZXIgc3VzdGFpbmVkIHdvcmtsb2Fkcy4KPiA+IAo+ID4gU2lnbmVkLW9mZi1i
-eTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgo+ID4gLS0tCj4gPiAgbW0vdm1z
-Y2FuLmMgfCAgIDE0ICsrKysrKysrKysrKysrCj4gPiAgMSBmaWxlcyBjaGFuZ2VkLCAxNCBpbnNl
-cnRpb25zKCspLCAwIGRlbGV0aW9ucygtKQo+ID4gCj4gPiBkaWZmIC0tZ2l0IGEvbW0vdm1zY2Fu
-LmMgYi9tbS92bXNjYW4uYwo+ID4gaW5kZXggZGNlMjc2Ny4uMzY4OGY0NyAxMDA2NDQKPiA+IC0t
-LSBhL21tL3Ztc2Nhbi5jCj4gPiArKysgYi9tbS92bXNjYW4uYwo+ID4gQEAgLTI3Nyw2ICsyNzcs
-MjAgQEAgdW5zaWduZWQgbG9uZyBzaHJpbmtfc2xhYihzdHJ1Y3Qgc2hyaW5rX2NvbnRyb2wgKnNo
-cmluaywKPiA+ICAJCX0KPiA+ICAKPiA+ICAJCS8qCj4gPiArCQkgKiBBdm9pZCBleGNlc3NpdmUg
-d2luZHVwIG9uIGZpZWxzeXN0ZW0gc2hyaW5rZXJzIGR1ZSB0byBsYXJnZQo+ID4gKwkJICogbnVt
-YmVycyBvZiBHRlBfTk9GUyBhbGxvY2F0aW9ucyBjYXVzaW5nIHRoZSBzaHJpbmtlcnMgdG8KPiA+
-ICsJCSAqIHJldHVybiAtMSBhbGwgdGhlIHRpbWUuIFRoaXMgcmVzdWx0cyBpbiBhIGxhcmdlIG5y
-IGJlaW5nCj4gPiArCQkgKiBidWlsdCB1cCBzbyB3aGVuIGEgc2hyaW5rIHRoYXQgY2FuIGRvIHNv
-bWUgd29yayBjb21lcyBhbG9uZwo+ID4gKwkJICogaXQgZW1wdGllcyB0aGUgZW50aXJlIGNhY2hl
-IGR1ZSB0byBuciA+Pj4gbWF4X3Bhc3MuICBUaGlzIGlzCj4gPiArCQkgKiBiYWQgZm9yIHN1c3Rh
-aW5pbmcgYSB3b3JraW5nIHNldCBpbiBtZW1vcnkuCj4gPiArCQkgKgo+ID4gKwkJICogSGVuY2Ug
-b25seSBhbGxvdyBuciB0byBnbyBsYXJnZSB3aGVuIGEgbGFyZ2UgZGVsdGEgaXMKPiA+ICsJCSAq
-IGNhbGN1bGF0ZWQuCj4gPiArCQkgKi8KPiA+ICsJCWlmIChkZWx0YSA8IG1heF9wYXNzIC8gNCkK
-PiA+ICsJCQl0b3RhbF9zY2FuID0gbWluKHRvdGFsX3NjYW4sIG1heF9wYXNzIC8gMik7Cj4gPiAr
-Cj4gPiArCQkvKgo+ID4gIAkJICogQXZvaWQgcmlza2luZyBsb29waW5nIGZvcmV2ZXIgZHVlIHRv
-IHRvbyBsYXJnZSBuciB2YWx1ZToKPiA+ICAJCSAqIG5ldmVyIHRyeSB0byBmcmVlIG1vcmUgdGhh
-biB0d2ljZSB0aGUgZXN0aW1hdGUgbnVtYmVyIG9mCj4gPiAgCQkgKiBmcmVlYWJsZSBlbnRyaWVz
-Lgo+IAo+IEkgZ3Vlc3MgIm1heF9wYXNzLzQiIGFuZCAibWluKHRvdGFsX3NjYW4sIG1heF9wYXNz
-IC8gMikiIGFyZSB5b3VyIGhldXJpc3RpYyB2YWx1ZS4gcmlnaHQ/CgpZZXMuCgo+IElmIHNvLCBw
-bGVhc2Ugd3JpdGUgeW91ciBiZW5jaG1hcmsgbmFtZSBhbmQgaXRzIHJlc3VsdCBpbnRvIHRoZSBk
-ZXNjcmlwdGlvbi4KClRha2UgeW91ciBwaWNrLgoKQW55dGhpbmcgdGhhdCBnZW5lcmF0ZXMgYSBs
-YXJnZSBhbW91bnQgb2YgdmZzIGNhY2hlIHByZXNzdXJlCmNvbWJpbmVkIHdpdGggR0ZQX05PRlMg
-bWVtb3J5IGFsbG9jYXRpb24gd2lsbCBzaG93IGNoYW5nZXMgaW4KLWJlaGF2aW91ci0gYXMgeW91
-IG1vZGlmeSB0aGVzZSB2YXJpYWJsZXMuICBlLmcuIGNyZWF0aW5nIDUwIG1pbGxpb24KaW5vZGVz
-IGluIHBhcmFsbGVsIHdpdGggZnNfbWFyaywgcGFyYWxsZWwgY2htb2QgLVIgdHJhdmVyc2FscyBv
-ZgpzYWlkIGlub2RlcywgcGFyYWxsZWwgcm0gLXJmLCBldGMuIFRoZSBzYW1lIGNhY2hlIGJlaGF2
-aW91ciBjYW4gYmUKb2JzZXJ2ZWQgd2l0aCBhbnkgb2YgdGhlc2Ugc29ydHMgb2YgY29sZCBjYWNo
-ZSB3b3JrbG9hZHMuCgpJIHNheSBjaGFuZ2VzIGluIGJlaGF2aW91ciByYXRoZXIgdGhhbiBwZXJm
-b3JtYW5jZSBiZWNhdXNlIGp1c3QKbWVhc3VyaW5nIHdhbGwgdGltZSBkb2VzIG5vdCBuZWNlc3Nh
-cmlseSBzaG93IGFueSBkaWZmZXJlbmNlIGluCnBlcmZvcm1hbmNlLiBUaGUgYnVnIHRoaXMgZml4
-ZXMgaXMgdGhlIGNhY2hlIGJlaW5nIGNvbXBsZXRlIHRyYXNoZWQKcGVyaW9kaWNhbGx5LCBidXQg
-bm9uZSBvZiB0aGUgYWJvdmUgd29ya2xvYWRzIHNob3cgc2lnbmlmaWNhbnQgd2FsbAp0aW1lIGRp
-ZmZlcmVuY2VzIGluIGJlaGF2aW91ciBiZWNhdXNlIG9mIHRoaXMgbW9kaWZpY2F0aW9uIGFzIHRo
-ZXkKZG9uJ3QgcmVseSBvbiBjYWNoZSBoaXRzIGZvciBwZXJmb3JtYW5jZS4gSWYgeW91IGhhdmUg
-YSB3b3JrbG9hZAp0aGF0IGFjdHVhbGx5IHJlbGllcyBvbiByZXNpZGVudCBjYWNoZSBoaXRzIGZv
-ciBnb29kIHBlcmZvcm1hbmNlLAp0aGVuIHlvdSdsbCBzZWUgYSBkaWZmZXJlbmNlIGluIHBlcmZv
-cm1hbmNlIHRoYXQgeW91IGNhbiBtZWFzdXJlCndpdGggd2FsbCB0aW1lLi4uLgoKV2hhdCB0aGlz
-IGNoYW5nZSBkb2VzIGhhdmUgYW4gZWZmZWN0IG9uIGlzIHRoZSB2YXJpYW5jZSBvZiB0aGUKcmVz
-aWRlbnQgY2FjaGUgc2l6ZSwgd2hpY2ggSSBtb25pdG9yIHZpYSBsaXZlIGdyYXBoaW5nIG9mIHRo
-ZQp2YXJpb3VzIGNhY2hlIG1ldHJpY3MuIEl0IGlzIG5vdCBhcyBzaW1wbGUgdG8gbW9uaXRvciBh
-cyBoYXZpbmcgYQpzaW5nbGUgbnVtYmVyIGZhbGwgb3V0IHRoZSBib3R0b20gdGhhdCB5b3UgY2Fu
-IHBvaW50IHRvIGZvcgppbXByb3ZlbWVudC4gRGV0YWlscyBvZiB0aGlzIGlzIGFscmVhZHkgZG9j
-dW1lbnRlZCBpbiBwYXRjaCB6ZXJvIG9mCnRoZSBzZXJpZXM6CgpodHRwczovL2xrbWwub3JnL2xr
-bWwvMjAxMS82LzIvNDIKCkJzaWNhbGx5LCB0aGUgYWJvdmUgbnVtYmVycyBnYXZlIHRoZSBsb3dl
-c3QgdmFyaWFuY2UgaW4gdGhlIHJlc2lkZW50CmNhY2hlIHNpemUgd2l0aG91dCBwcmV2ZW50aW5n
-IHRoZSBzaHJpbmtlciBmcm9tIGJlaW5nIGFibGUgdG8gZnJlZQplbm91Z2ggbWVtb3J5IGZvciB0
-aGUgc3lzdGVtIHRvIHdvcmsgZWZmZWN0aXZlbHkuCgo+IEkgbWVhbiwgY3VycmVudGx5IHNvbWUg
-bW0gZm9sa3MgcGxhbiB0byBlbmhhbmNlIHNocmlua2VyLiBTbywKPiBzaGFyaW5nIGJlbmNobWFy
-ayBtYXkgaGVscCB0byBhdm9pZCBhbiBhY2NpZGVudGFsIHJlZ3Jlc3Npb24uCgpJIHByZWRpY3Qg
-dGhhdCBJIHdpbGwgaGF2ZSBzb21lIGJ1ZyByZXBvcnRpbmcgdG8gZG8gaW4gZnV0dXJlLiA7KQoK
-Q2hlZXJzLAoKRGF2ZS4KLS0gCkRhdmUgQ2hpbm5lcgpkYXZpZEBmcm9tb3JiaXQuY29tCgpfX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBs
-aXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94
-ZnMK
+>> I mean, currently some mm folks plan to enhance shrinker. So,
+>> sharing benchmark may help to avoid an accidental regression.
+> 
+> I predict that I will have some bug reporting to do in future. ;)
+
+Ok, I have no objection. thanks.
+
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
