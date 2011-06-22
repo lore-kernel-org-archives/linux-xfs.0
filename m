@@ -1,25 +1,34 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5MFPiX1099428 for <xfs@oss.sgi.com>; Wed, 22 Jun 2011 10:25:45 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6843BDFB3D8
-	for <xfs@oss.sgi.com>; Wed, 22 Jun 2011 08:25:44 -0700 (PDT)
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id mG8QFH6STAmcNZhk for <xfs@oss.sgi.com>;
-	Wed, 22 Jun 2011 08:25:44 -0700 (PDT)
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
-	(using TLSv1 with cipher AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mail.sandeen.net (Postfix) with ESMTP id 737524964601
-	for <xfs@oss.sgi.com>; Wed, 22 Jun 2011 10:25:43 -0500 (CDT)
-Message-ID: <4E020977.9080000@sandeen.net>
-Date: Wed, 22 Jun 2011 10:25:43 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	p5MFW4Z8100624 for <xfs@oss.sgi.com>; Wed, 22 Jun 2011 10:32:05 -0500
+Received: from ns2.tower-research.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 801931EDFD53
+	for <xfs@oss.sgi.com>; Wed, 22 Jun 2011 08:32:02 -0700 (PDT)
+Received: from ns2.tower-research.com (ns2.tower-research.com [64.245.141.6])
+	by cuda.sgi.com with ESMTP id byxv85nwKGDHpxVb for
+	<xfs@oss.sgi.com>; Wed, 22 Jun 2011 08:32:02 -0700 (PDT)
+Received: from lithium-b.tower-research.com (lithium-b.tower-research.com
+	[10.1.1.13])
+	by ns2.tower-research.com (8.13.8/8.13.8) with ESMTP id p5MFW2kv007221
+	for <xfs@oss.sgi.com>; Wed, 22 Jun 2011 11:32:02 -0400
+Received: from ionlinux.tower-research.com (ionlinux.tower-research.com
+	[10.0.20.21])
+	by lithium-b.tower-research.com (8.13.8/8.13.8) with ESMTP id
+	p5MFW1vE024019
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Wed, 22 Jun 2011 11:32:01 -0400
+Received: from ionlinux.tower-research.com (localhost.localdomain [127.0.0.1])
+	by ionlinux.tower-research.com (8.13.1/8.13.1) with ESMTP id
+	p5MFW1Dw027251 for <xfs@oss.sgi.com>; Wed, 22 Jun 2011 11:32:01 -0400
+Received: from localhost (ion@localhost)
+	by ionlinux.tower-research.com (8.13.1/8.13.1/Submit) with ESMTP id
+	p5MFW1C2027245 for <xfs@oss.sgi.com>; Wed, 22 Jun 2011 11:32:01 -0400
+Date: Wed, 22 Jun 2011 11:32:01 -0400 (EDT)
+From: Ion Badulescu <ib-xfs@badula.org>
+Subject: Re: xfs_repair never finishes on lvm partition
+Message-ID: <alpine.LRH.2.00.1106221115510.16108@ionlinux.tower-research.com>
 MIME-Version: 1.0
-Subject: Re: duplicate code in dir2
-References: <4E020912.9020106@sandeen.net>
-In-Reply-To: <4E020912.9020106@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,50 +37,51 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-Another interesting chunk elsewhere:
+Hello,
 
-/src/git/linux-2.6/fs/xfs/xfs_da_btree.c(782)
-/src/git/linux-2.6/fs/xfs/xfs_attr_leaf.c(1542)
-                *action = 0;
-                return(0);
-        if (count == 0) {
-                forward = (info->forw != 0);
-                memcpy(&state->altpath, &state->path, sizeof(state->path));
-                error = xfs_da_path_shift(state, &state->altpath, forward,
-                                                 0, &retval);
-                if (error)
-                        return(error);
-                if (retval) {
-                        *action = 0;
-                } else {
-                        *action = 2;
-                return(0);
-        forward = (be32_to_cpu(info->forw) < be32_to_cpu(info->back));
-        for (i = 0; i < 2; forward = !forward, i++) {
-                if (forward)
-                        blkno = be32_to_cpu(info->forw);
-                else
-                        blkno = be32_to_cpu(info->back);
-                if (blkno == 0)
-                        continue;
-                error = xfs_da_read_buf(state->args->trans, state->args->dp,
+Sorry for highjacking this old thread from last year. I actually ran into 
+the same situation as the original poster, using xfsprogs-3.1.5 on kernel 
+2.6.38.7. Using xfs_repair -P fixed the issue, and I also managed to get a 
+metadump before repairing it so you guys can take a look and maybe fix the 
+prefetch mode.
 
-/src/git/linux-2.6/fs/xfs/xfs_da_btree.c(842)
-/src/git/linux-2.6/fs/xfs/xfs_attr_leaf.c(1605)
-                        break;
-        if (i >= 2) {
-                *action = 0;
-                return(0);
-        memcpy(&state->altpath, &state->path, sizeof(state->path));
-        if (blkno < blk->blkno) {
-                error = xfs_da_path_shift(state, &state->altpath, forward,
-                                                 0, &retval);
+The strace of the xfs_repair, for what it's worth, seems to show a 
+complete deadlock with all threads waiting on futexes:
+
+# strace -f -F -p 8315
+Process 8374 attached with 6 threads - interrupt to quit
+[pid  8374] futex(0x7f2336d20a84, FUTEX_WAIT, 4, NULL <unfinished ...>
+[pid  8373] futex(0x7f2336d20a84, FUTEX_WAIT, 3, NULL) = -1 EAGAIN (Resource temporarily unavailable)
+[pid  8372] futex(0x7f2336d20a84, FUTEX_WAIT, 2, NULL <unfinished ...>
+[pid  8373] futex(0x7f2336d20a84, FUTEX_WAIT, 4, NULL <unfinished ...>
+[pid  8372] <... futex resumed> )       = -1 EAGAIN (Resource temporarily unavailable)
+[pid  8372] futex(0x7f2336d20a84, FUTEX_WAIT, 4, NULL <unfinished ...>
+[pid  8371] futex(0x7f2336d20a84, FUTEX_WAIT, 1, NULL) = -1 EAGAIN (Resource temporarily unavailable)
+[pid  8370] futex(0x7f2336d20b08, FUTEX_WAIT, 0, NULL <unfinished ...>
+[pid  8371] futex(0x7f2336d20a84, FUTEX_WAIT, 4, NULL <unfinished ...>
+[pid  8315] futex(0x7f2336d1f958, FUTEX_WAIT, 2, NULL^C <unfinished ...>
+Process 8315 detached
+Process 8370 detached
+Process 8371 detached
+Process 8372 detached
+Process 8373 detached
+Process 8374 detached
+
+The metadump is 4.2GB, off of a 2.2TB filesystem. If there are interested 
+parties, I can arrange to put online somewhere for an http download.
+
+Thanks,
+-Ion
+
+-- 
+   It is better to keep your mouth shut and be thought a fool,
+             than to open it and remove all doubt.
 
 _______________________________________________
 xfs mailing list
