@@ -1,25 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5M7ejVt069606 for <xfs@oss.sgi.com>; Wed, 22 Jun 2011 02:40:46 -0500
-Received: from mail.ud10.udmedia.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F082217430D3
-	for <xfs@oss.sgi.com>; Wed, 22 Jun 2011 00:40:44 -0700 (PDT)
-Received: from mail.ud10.udmedia.de (ud10.udmedia.de [194.117.254.50]) by
-	cuda.sgi.com with ESMTP id VcYzaeDdBy16yF60 for
-	<xfs@oss.sgi.com>; Wed, 22 Jun 2011 00:40:44 -0700 (PDT)
-Date: Wed, 22 Jun 2011 09:40:43 +0200
-From: Markus Trippelsdorf <markus@trippelsdorf.de>
-Subject: Re: long hangs when deleting large directories (3.0-rc3)
-Message-ID: <20110622074043.GA10672@x4.trippels.de>
-References: <20110621212201.GA1755@x4.trippels.de>
-	<20110621185701.GB1723@x4.trippels.de>
-	<20110622000449.GQ32466@dastard>
-	<20110622070647.GA1744@x4.trippels.de>
-	<20110622073047.GT32466@dastard>
+	p5MAOVZl076267 for <xfs@oss.sgi.com>; Wed, 22 Jun 2011 05:24:32 -0500
+Received: from mail-ew0-f53.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8AD4BDF4EE5
+	for <xfs@oss.sgi.com>; Wed, 22 Jun 2011 03:24:29 -0700 (PDT)
+Received: from mail-ew0-f53.google.com (mail-ew0-f53.google.com
+	[209.85.215.53]) by cuda.sgi.com with ESMTP id AgxEwZPEZGkPnAZs
+	for <xfs@oss.sgi.com>; Wed, 22 Jun 2011 03:24:29 -0700 (PDT)
+Received: by ewy8 with SMTP id 8so200984ewy.26
+	for <xfs@oss.sgi.com>; Wed, 22 Jun 2011 03:24:29 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110622073047.GT32466@dastard>
+Date: Wed, 22 Jun 2011 15:54:28 +0530
+Message-ID: <BANLkTinBNa9ox+jDaorBoKdhoQQzTUA58A@mail.gmail.com>
+Subject: XFS Test Case:252 - Shows Wrong Output
+From: Amit Sahrawat <amit.sahrawat83@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,125 +23,141 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: multipart/mixed; boundary="===============7739822467443922252=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-T24gMjAxMS4wNi4yMiBhdCAxNzozMCArMTAwMCwgRGF2ZSBDaGlubmVyIHdyb3RlOgo+IE9uIFdl
-ZCwgSnVuIDIyLCAyMDExIGF0IDA5OjA2OjQ3QU0gKzAyMDAsIE1hcmt1cyBUcmlwcGVsc2RvcmYg
-d3JvdGU6Cj4gPiBPbiAyMDExLjA2LjIyIGF0IDEwOjA0ICsxMDAwLCBEYXZlIENoaW5uZXIgd3Jv
-dGU6Cj4gPiA+IE9uIFR1ZSwgSnVuIDIxLCAyMDExIGF0IDA4OjU3OjAxUE0gKzAyMDAsIE1hcmt1
-cyBUcmlwcGVsc2RvcmYgd3JvdGU6Cj4gPiA+ID4gT24gMjAxMS4wNi4yMSBhdCAyMDoyNCArMDIw
-MCwgTWFya3VzIFRyaXBwZWxzZG9yZiB3cm90ZToKPiA+ID4gPiA+IE9uIDIwMTEuMDYuMjEgYXQg
-MTA6MDIgKzAyMDAsIE1hcmt1cyBUcmlwcGVsc2RvcmYgd3JvdGU6Cj4gPiA+ID4gPiA+IE9uIDIw
-MTEuMDYuMjEgYXQgMTQ6MjUgKzEwMDAsIERhdmUgQ2hpbm5lciB3cm90ZToKPiA+ID4gPiA+ID4g
-PiBUaGF0IGlzLCB5b3UgcmVhbGx5IG5lZWQgdG8gZ2V0IGEgcHJvZmlsZSBvZiB0aGUgcm0gLXJm
-IHByb2Nlc3MgLSBvcgo+ID4gPiA+ID4gPiA+IHdoYXRldmVyIGlzIGNvbnN1bWluZyB0aGUgQ1BV
-IHRpbWUgLSAoZS5nLiB2aWEgcGVyZiBvciBmdHJhY2UpCj4gPiA+ID4gPiA+ID4gYWNyb3NzIHRo
-ZSBoYW5nIHRvIHNvIHdlIGNhbiBuYXJyb3cgZG93biB0aGUgcG90ZW50aWFsIGNhdXNlIG9mIHRo
-ZQo+ID4gPiA+ID4gPiA+IGxhdGVuY3kuIFNwZWFraW5nIG9mIHdoaWNoLCBsYXRlbmN5dG9wIG1p
-Z2h0IGJlIGhlbHBmdWwgaW4KPiA+ID4gPiA+ID4gPiBpZGVudGlmeWluZyB3aGVyZSBpbnB1dCBp
-cyBnZXR0aW5nIGhlbGQgdXAuLi4uCj4gPiA+ID4gPiA+IAo+ID4gPiA+ID4gPiBJJ3ZlIHJlY29y
-ZGVkIGEgcHJvZmlsZSB3aXRoICJwZXJmIHJlY29yZCAtZyAvaG9tZS9tYXJrdXMvcm1fc3luYyIK
-PiA+ID4gPiA+ID4gfiAlIGNhdCBybV9zeW5jCj4gPiA+ID4gPiA+IHJtIC1mciAvbW50L3RtcC90
-bXAvbGludXggJiYgc3luYwo+ID4gPiA+ID4gCj4gPiA+ID4gPiBGV0lXIGhlcmUgYXJlIHR3byBs
-aW5rcyB0byBzdmcgdGltZS1jaGFydHMgcHJvZHVjZWQgYnk6Cj4gPiA+ID4gPiAKPiA+ID4gPiA+
-IHBlcmYgdGltZWNoYXJ0IHJlY29yZCAvaG9tZS9tYXJrdXMvcm1fc3luYwo+ID4gPiA+ID4gCj4g
-PiA+ID4gPiBodHRwOi8vdHJpcHBlbHNkb3JmLmRlL3RpbWVjaGFydDEuc3ZnCj4gPiA+ID4gPiBo
-dHRwOi8vdHJpcHBlbHNkb3JmLmRlL3RpbWVjaGFydDIuc3ZnCj4gPiA+ID4gPiAKPiA+ID4gPiAK
-PiA+ID4gPiBBbmQgdGhpcyBpcyB3aGF0IHRoZSBteXN0ZXJpb3VzIGt3b3JrZXIgaXMgZG9pbmcg
-ZHVyaW5nIHRoZSBzeW5jLgo+ID4gPiA+IEl0J3MgdGhlIG9uZSBjb25zdW1pbmcgbW9zdCBvZiB0
-aGUgQ1BVIHRpbWUuCj4gPiA+ID4gCj4gPiA+ID4gICAgIDM5Ljk2JSAgICAgIGt3b3JrZXIvMzow
-ICBba2VybmVsLmthbGxzeW1zXSAgICAgICAgICAgICAgICAgICAgICAgICAgICAweGZmZmZmZmZm
-ODExZGE5ZGEgayBba10geGZzX3RyYW5zX2FpbF91cGRhdGVfYnVsawo+ID4gPiA+ICAgICAgICAg
-ICAgICAgICB8Cj4gPiA+ID4gICAgICAgICAgICAgICAgIC0tLSB4ZnNfdHJhbnNfYWlsX3VwZGF0
-ZV9idWxrCj4gPiA+ID4gICAgICAgICAgICAgICAgICAgICB4ZnNfdHJhbnNfY29tbWl0dGVkX2J1
-bGsKPiA+ID4gPiAgICAgICAgICAgICAgICAgICAgIHhsb2dfY2lsX2NvbW1pdHRlZAo+ID4gPiA+
-ICAgICAgICAgICAgICAgICAgICAgeGxvZ19zdGF0ZV9kb19jYWxsYmFjawo+ID4gPiA+ICAgICAg
-ICAgICAgICAgICAgICAgeGxvZ19zdGF0ZV9kb25lX3N5bmNpbmcKPiA+ID4gPiAgICAgICAgICAg
-ICAgICAgICAgIHhsb2dfaW9kb25lCj4gPiA+ID4gICAgICAgICAgICAgICAgICAgICB4ZnNfYnVm
-X2lvZG9uZV93b3JrCj4gPiA+ID4gICAgICAgICAgICAgICAgICAgICBwcm9jZXNzX29uZV93b3Jr
-Cj4gPiA+ID4gICAgICAgICAgICAgICAgICAgICB3b3JrZXJfdGhyZWFkCj4gPiA+ID4gICAgICAg
-ICAgICAgICAgICAgICBrdGhyZWFkCj4gPiA+ID4gICAgICAgICAgICAgICAgICAgICBrZXJuZWxf
-dGhyZWFkX2hlbHBlcgo+ID4gPiAKPiA+ID4gU28gdGhhdCBpcyBpbnNlcnRpbmcgaXRlbXMgaW50
-byB0aGUgQUlMIGF0IHRyYW5zYWN0aW9uIGNvbXBsZXRpb24uCj4gPiA+IFRoYXQgY2FuIGNvbnN1
-bWUgbG90cyBvZiBDUFUgdGltZSBpZiB0aGUgQ0lMIGNoZWNrcG9pbnRzIGFyZSBiZWluZwo+ID4g
-PiBmbHVzaGVkIHF1aWNrbHkgZW5vdWdoLiBHaXZlbiB5b3UgYXJlIGRvaW5nIGEgcm0gLXJmIGF0
-IHRoaXMgcG9pbnQKPiA+ID4gaW4gdGltZSwgSSdkIGV4cGVjdCB0byBzZWUgdGhpcyB0cmFjZSBw
-cmVzZW50IGluIHRoZSBwcm9maWxlLCB0aG91Z2gKPiA+ID4gbWF5YmUgbm90IGF0IHRoYXQgZXh0
-ZW50Lgo+ID4gPiAKPiA+ID4gSSBoYXZlIHNlZW4gdGhpcyBiZWZvcmUgYnV0IGhhdmUgbmV2ZXIg
-YmVlbiBhYmxlIHRvIGl0IHJlcHJvZHVjZQo+ID4gPiByZWxpYWJseS4gIElmIGNoZWNrcG9pbnRz
-IGFyZSBjb21wbGV0ZWQgIm91dCBvZiBvcmRlciIgZHVlIHRvIHRoZQo+ID4gPiB3YXkgdGhlIGNv
-bW1pdCByZWNvcmRzIGFyZSB3cml0dGVuIGludG8gdGhlIGljbG9ncy4gVGhpcyBjYW4gY2F1c2UK
-PiA+ID4gZXh0cmEgQ1BVIGJlY2F1c2UgdGhlIEFJTCBpbnNlcnRpb24gdGhlbiBoYXMgdG8gc2tp
-cCBvdmVyIGFsbCB0aGUKPiA+ID4gaXRlbXMgdGhhdCB3ZXJlIGluc2VydGVkIG91dCBvZiBvcmRl
-ciBiZWZvcmUgc3BsaWNpbmcgZWFjaCBncm91cCBvZgo+ID4gPiBpdGVtcyBpbnRvIHRoZSBBSUwu
-IEkgb25seSByYXJlbHkgc2VlIHRoaXMgKG1heWJlIG9uY2UgZXZlcnkgY291cGxlCj4gPiA+IG9m
-IHdlZWtzIG9mIHBlcmZvcm1hbmNlIHRlc3RpbmcpLCBzbyBJJ20gbm90IHN1cmUgaXQncyB0aGUg
-cHJvYmxlbQo+ID4gPiB5b3UgYXJlIHNlZWluZy4KPiA+ID4gCj4gPiA+IEFkZGluZyB0aGlzIGRl
-YnVnIHRvIHhmc19haWxfc3BsaWNlKCkgbGlzdCB3YWxrIHdpbGwgdGVsbCB1cyBpZiB0aGlzIGlz
-Cj4gPiA+IGhhcHBlbmluZyBhbmQgaG93IG1hbnkgaXRlbXMgaXQgaGFkIHRvIHdhbGsgd2hlbiB5
-b3Ugc2VlIGEgaGFuZzoKPiA+ID4gCj4gPiA+ICAJeGZzX2xzbl90ICAgICAgIGxzbikKPiA+ID4g
-IHsKPiA+ID4gIAl4ZnNfbG9nX2l0ZW1fdCAgKm5leHRfbGlwOwo+ID4gPiArCWludCB3YWxrZWQg
-PSAwOwo+ID4gPiAgCj4gPiA+ICAJLyogSWYgdGhlIGxpc3QgaXMgZW1wdHksIGp1c3QgaW5zZXJ0
-IHRoZSBpdGVtLiAgKi8KPiA+ID4gIAlpZiAobGlzdF9lbXB0eSgmYWlscC0+eGFfYWlsKSkgewo+
-ID4gPiAgCQlsaXN0X3NwbGljZShsaXN0LCAmYWlscC0+eGFfYWlsKTsKPiA+ID4gIAkJcmV0dXJu
-Owo+ID4gPiAgCX0KPiA+ID4gIAo+ID4gPiAgCWxpc3RfZm9yX2VhY2hfZW50cnlfcmV2ZXJzZShu
-ZXh0X2xpcCwgJmFpbHAtPnhhX2FpbCwgbGlfYWlsKSB7Cj4gPiA+ICAJCWlmIChYRlNfTFNOX0NN
-UChuZXh0X2xpcC0+bGlfbHNuLCBsc24pIDw9IDApCj4gPiA+ICAJCQlicmVhazsKPiA+ID4gKwkJ
-aWYgKCF3YWxrZWQrKykgewo+ID4gPiArCQkJeGZzX3dhcm4oYWlscC0+eGFfbW91bnQsCj4gPiA+
-ICsJCQkgImFpbDogb29vIHNwbGljZSwgdGFpbCAweCVsbHgsIGl0ZW0gMHglbGx4XG4iLAo+ID4g
-PiArCQkJCW5leHRfbGlwLT5saV9sc24sIGxzbik7Cj4gPiA+ICsJCX0KPiA+ID4gIAl9Cj4gPiA+
-ICsJaWYgKHdhbGtlZCA+IDEwKSB7Cj4gPiA+ICsJCXhmc193YXJuKGFpbHAtPnhhX21vdW50LAo+
-ID4gPiArCQkJICJhaWw6IG9vbyBzcGxpY2UsIHdhbGtlZCAlZCBpdGVtc1xuIiwgd2Fsa2VkKTsK
-PiA+ID4gKwl9Cj4gPiA+ICAKPiA+ID4gIAlBU1NFUlQoJm5leHRfbGlwLT5saV9haWwgPT0gJmFp
-bHAtPnhhX2FpbCB8fAo+ID4gPiAgCSAgICAgICBYRlNfTFNOX0NNUChuZXh0X2xpcC0+bGlfbHNu
-LCBsc24pIDw9IDApOwo+ID4gPiAKPiA+ID4gVGhhdCB3aWxsIGF0IGxlYXN0IHRlbGwgdXMgaWYg
-dGhpcyBpcyB0aGUgY2F1c2Ugb2YgeW91ciBwcm9ibGVtLiBJZgo+ID4gPiBpdCBpcywgSSB0aGlu
-ayBJIGtub3cgaG93IHRvIGF2b2lkIG1vc3Qgb2YgdGhlIGxpc3Qgd2FsayBvdmVyaGVhZAo+ID4g
-PiBmYWlybHkgZWFzaWx5IGFuZCB0aGF0IHNob3VsZCBhdm9pZCB0aGUgbmVlZCB0byBjaGFuZ2Ug
-d29ya3F1ZXVlCj4gPiA+IGNvbmZpZ3VyYXRpb25zIGF0IGFsbC4KPiA+IAo+ID4gVGhlIGtlcm5l
-bCBsb2cgaXMgYXR0YWNoZWQuCj4gCj4gT2ssIHNvIHRoYXQgaXMgdGhlIGNhdXNlIG9mIHRoZSBw
-cm9ibGVt4oi1IFRIZSAzIHNlY29uZHMgb2Ygb3V0cHV0Cj4gd2hlcmUgaXQgaXMgbm90aGluZyBi
-dXQ6Cj4gCj4gSnVuIDIyIDA4OjUzOjA5IHg0IGtlcm5lbDogWEZTIChzZGIxKTogYWlsOiBvb28g
-c3BsaWNlLCB0YWlsIDB4MTIwMDAxNTZlNywgaXRlbSAweDEyMDAwMTU2ZTYKPiBKdW4gMjIgMDg6
-NTM6MDkgeDQga2VybmVsOiBYRlMgKHNkYjEpOiBhaWw6IG9vbyBzcGxpY2UsIHdhbGtlZCAxNTUw
-MyBpdGVtcyAgICAgIAo+IC4uLi4uCj4gSnVuIDIyIDA4OjUzOjEyIHg0IGtlcm5lbDogWEZTIChz
-ZGIxKTogYWlsOiBvb28gc3BsaWNlLCB0YWlsIDB4MTIwMDAxNTZlNywgaXRlbSAweDEyMDAwMTU2
-ZTYKPiBKdW4gMjIgMDg6NTM6MTIgeDQga2VybmVsOiBYRlMgKHNkYjEpOiBhaWw6IG9vbyBzcGxp
-Y2UsIHdhbGtlZCAxNjk0NSBpdGVtcwo+IAo+IEludGVyZXN0aW5nIGlzIHRoZSBMU04gb2YgdGhl
-IHRhaWwgLSBpdCdzIG9ubHkgb25lIHNlY3RvciBmdXJ0aGVyIG9uCj4gdGhhbiB0aGUgaXRlbXMg
-YmVpbmcgaW5zZXJ0ZWQuIFRoYXQncyB3aGF0IEknZCBleHBlY3QgZnJvbSBhIGNvbW1pdAo+IHJl
-Y29yZCB3cml0ZSByYWNlIGJldHdlZW4gdHdvIGNoZWNrcG9pbnRzLiBJJ2xsIGhhdmUgYSBkZWVw
-ZXIgbG9vawo+IGludG8gd2hldGhlciB0aGlzIGNhbiBiZSBhdm9pZGVkIGxhdGVyIHRvbmlnaHQg
-YW5kIGFsc28gd2hldGhlciBJCj4gY2FuIGVhc2lseSBpbXBsZW1lbnQgYSAibGFzdCBpbnNlcnQg
-Y3Vyc29yIiBlYXNpbHkgc28gc3Vic2VxdWVudAo+IGluc2VydHMgYXQgdGhlIHNhbWUgTFNOIGF2
-b2lkIHRoZSB3YWxrLi4uLgo+IAo+ID4gPiA+IFRoZSBmb2xsb3dpbmcgcGF0Y2ggZml4ZXMgdGhl
-IHByb2JsZW0gZm9yIG1lLgo+IC4uLi4uCj4gPiA+IFRoZXJlIGFyZSB0d28gZGlmZmVyZW50IHRo
-aW5ncyB5b3UgY2FuIHRyeSB3aXRoIHRoZSB3cQo+ID4gPiBpbml0aWFsaXNhdGlvbiB0aGF0IG1p
-Z2h0IGhlbHAgcHJldmVudCB0aGUgcHJvYmxlbS4gRmlyc3RseSwgdHJ5Cj4gPiA+IHRoaXM6Cj4g
-PiA+IAo+ID4gPiAtCQkJCQlXUV9NRU1fUkVDTEFJTSB8IFdRX0hJR0hQUkksIDEpOwo+ID4gPiAr
-CQkJCQlXUV9NRU1fUkVDTEFJTSB8IFdRX0hJR0hQUkksIDgpOwo+ID4gPiAKPiA+ID4gVG8gY2hh
-bmdlIHRoZSBudW1iZXIgb2YgY29uY3VycmVudCBwZXItY3B1IHdvcmsgaXRlbXMgdGhhdCBjYW4g
-YmUKPiA+ID4gcHJvY2Vzc2VkIG9uIHRoZSB3b3JrIHF1ZXVlLiBJIGRvbid0IHRoaW5rIHRoYXQg
-d2lsbCBmaXggdGhlCj4gPiA+IGludmVyc2lvbiwgYnV0IGl0IG1heSBhbGxvdyBtb3JlIGNvbmN1
-cnJlbmN5IHdoaWNoIGhpZGVzIHRoZQo+ID4gPiBpbnZlcnNpb24uCj4gPiA+IAo+ID4gPiBUaGUg
-b3RoZXIgdGhpbmcgeW91IGNhbiB0cnkgaXM6Cj4gPiA+IAo+ID4gPiAtCQkJCQlXUV9NRU1fUkVD
-TEFJTSB8IFdRX0hJR0hQUkksIDEpOwo+ID4gPiArCQkJCQlXUV9NRU1fUkVDTEFJTSB8IFdRX0hJ
-R0hQUkkgfCBXUV9DUFVfSU5URU5TSVZFLCAxKTsKPiA+ID4gCj4gPiA+IFdoaWNoIG1hcmtzIHRo
-ZSB3b3JrcXVldWUgYXMgb25lIHRoYXQgd2lsbCBjb25zdW1lIGEgbG90IG9mIENQVSBhbmQKPiA+
-ID4gaGVuY2UgaXQgaXMgc2NoZWR1bGVkIGRpZmZlcmVudGx5IGFuZCBoZW5jZSBzaG91bGQgYXZv
-aWQgb3RoZXIKPiA+ID4gcGVuZGluZyB3b3JrIGZyb20gYmVpbmcgc3RhcnZlZC4gV2UgdXNlIHRo
-aXMgV1FfQ1BVX0lOVEVOU0lWRSBmbGFnCj4gPiA+IG9uIG90aGVyIFhGUyB3b3JrcXVldWVzIHRo
-YXQgYXJlIGtub3duIHRvIGNvbnN1bWUgbG90cyBvZiBDUFUsIHNvIEkKPiA+ID4gc3VzcGVjdCB0
-aGlzIGlzIHRoZSByaWdodCB0aGluZyB0byBkbyBoZXJlLgo+ID4gCj4gPiBZZXMsIHRoYXQgd2Fz
-IHRoZSBuZXh0IGNvbWJpbmF0aW9uIEkndmUgdGVzdGVkIGFmdGVyIFdRX1VOQk9VTkQgYW5kIGl0
-Cj4gPiBzb2x2ZXMgdGhlIGlzc3VlLCB0b28uCj4gCj4gSnVzdCB0byBiZSBjbGVhciwgd2hpY2gg
-Y29tYmluYXRpb24gZGlkIHlvdSB0ZXN0PyBUaGUKPiBXUV9DUFVfSU5URU5TSVZFIG9uZT8KClNv
-cnJ5LCB0aGUgIldRX0hJR0hQUkkgfCBXUV9DUFVfSU5URU5TSVZFIiBvbmUuCgotLSAKTWFya3Vz
-CgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFp
-bGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0
-aW5mby94ZnMK
+--===============7739822467443922252==
+Content-Type: multipart/alternative; boundary=0016364c6ecf9f38ce04a64a5f98
+
+--0016364c6ecf9f38ce04a64a5f98
+Content-Type: text/plain; charset=ISO-8859-1
+
+While executing Test case no: 252 from xfstestsuites - I got Output
+mismatch.
+
+*Environment tried:*
+*X86 : Linux version 2.6.31.5-127.fc12.i686.PAE*
+*ARM: Linux version2.6.35.13*
+
+On looking at the test case and then dividing the total case into invidual
+test's I could somehow correlate the results as per the commands issues.
+Complete output for the '13' commands in this case is as given below:
+
+[root@localhost PROGS]# sh cmd.sh
+  1. into a hole
+0: [0..7]: hole
+1: [8..23]: unwritten
+2: [24..39]: hole
+  2. into allocated space
+0: [0..39]: data
+  3. into unwritten space
+0: [0..39]: unwritten
+  4. hole -> data
+0: [0..7]: hole
+1: [8..15]: unwritten
+2: [16..31]: data
+3: [32..39]: hole
+  5. hole -> unwritten
+0: [0..7]: hole
+1: [8..15]: unwritten
+2: [16..31]: unwritten
+3: [32..39]: hole
+  6. data -> hole
+0: [0..15]: data
+1: [16..23]: unwritten
+2: [24..39]: hole
+  7. data -> unwritten
+0: [0..15]: data
+1: [16..31]: unwritten
+2: [32..39]: hole
+  8. unwritten -> hole
+0: [0..23]: unwritten
+1: [24..39]: hole
+  9. unwritten -> data
+0: [0..15]: unwritten
+1: [16..31]: data
+2: [32..39]: hole
+  10. hole -> data -> hole
+0: [0..7]: hole
+1: [8..15]: unwritten
+2: [16..23]: data
+3: [24..31]: unwritten
+4: [32..39]: hole
+  11. data -> hole -> data
+0: [0..15]: data
+1: [16..23]: unwritten
+2: [24..39]: data
+  12. unwritten -> data -> unwritten
+0: [0..15]: unwritten
+1: [16..23]: data
+2: [24..39]: unwritten
+  13. data -> unwritten -> data
+0: [0..15]: data
+1: [16..23]: unwritten
+2: [24..39]: data
+[root@localhost PROGS]#
+The above output seems as per the tests commands issue. Please correct me if
+i am wrong.
+If this correct, then for the test case we need to change 252.out file.
+
+Thanks & Regards,
+Amit Sahrawat
+
+--0016364c6ecf9f38ce04a64a5f98
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+
+<div>While executing Test case no: 252 from xfstestsuites - I got Output mi=
+smatch.</div><div>=A0</div><div><strong>Environment tried:</strong></div><d=
+iv><strong>X86 : Linux version 2.6.31.5-127.fc12.i686.PAE</strong></div><di=
+v>
+<strong>ARM: Linux version2.6.35.13</strong></div><div>=A0</div><div>On loo=
+king at the test case and then dividing the total case into invidual test&#=
+39;s I could somehow correlate the results as per the commands issues.</div=
+>
+<div>Complete output for the &#39;13&#39; commands in this case is as given=
+ below:</div><div>=A0</div><div>[root@localhost PROGS]# sh cmd.sh <br>=A0 1=
+. into a hole<br>0: [0..7]: hole<br>1: [8..23]: unwritten<br>2: [24..39]: h=
+ole<br>
+=A0 2. into allocated space<br>0: [0..39]: data<br>=A0 3. into unwritten sp=
+ace<br>0: [0..39]: unwritten<br>=A0 4. hole -&gt; data<br>0: [0..7]: hole<b=
+r>1: [8..15]: unwritten<br>2: [16..31]: data<br>3: [32..39]: hole<br>=A0 5.=
+ hole -&gt; unwritten<br>
+0: [0..7]: hole<br>1: [8..15]: unwritten<br>2: [16..31]: unwritten<br>3: [3=
+2..39]: hole<br>=A0 6. data -&gt; hole<br>0: [0..15]: data<br>1: [16..23]: =
+unwritten<br>2: [24..39]: hole<br>=A0 7. data -&gt; unwritten<br>0: [0..15]=
+: data<br>
+1: [16..31]: unwritten<br>2: [32..39]: hole<br>=A0 8. unwritten -&gt; hole<=
+br>0: [0..23]: unwritten<br>1: [24..39]: hole<br>=A0 9. unwritten -&gt; dat=
+a<br>0: [0..15]: unwritten<br>1: [16..31]: data<br>2: [32..39]: hole<br>=A0=
+ 10. hole -&gt; data -&gt; hole<br>
+0: [0..7]: hole<br>1: [8..15]: unwritten<br>2: [16..23]: data<br>3: [24..31=
+]: unwritten<br>4: [32..39]: hole<br>=A0 11. data -&gt; hole -&gt; data<br>=
+0: [0..15]: data<br>1: [16..23]: unwritten<br>2: [24..39]: data<br>=A0 12. =
+unwritten -&gt; data -&gt; unwritten<br>
+0: [0..15]: unwritten<br>1: [16..23]: data<br>2: [24..39]: unwritten<br>=A0=
+ 13. data -&gt; unwritten -&gt; data<br>0: [0..15]: data<br>1: [16..23]: un=
+written<br>2: [24..39]: data<br>[root@localhost PROGS]# </div><div>The abov=
+e output seems as per the tests commands issue. Please correct me if i am w=
+rong.</div>
+<div>If this correct, then for the test case we need to change 252.out file=
+.</div><div>=A0</div><div>Thanks &amp; Regards,</div><div>Amit Sahrawat</di=
+v><div>=A0</div><div>=A0</div><div>=A0</div><div>=A0</div><div>=A0</div>
+
+--0016364c6ecf9f38ce04a64a5f98--
+
+
+--===============7739822467443922252==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============7739822467443922252==--
