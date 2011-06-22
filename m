@@ -1,34 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5MFW4Z8100624 for <xfs@oss.sgi.com>; Wed, 22 Jun 2011 10:32:05 -0500
-Received: from ns2.tower-research.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 801931EDFD53
-	for <xfs@oss.sgi.com>; Wed, 22 Jun 2011 08:32:02 -0700 (PDT)
-Received: from ns2.tower-research.com (ns2.tower-research.com [64.245.141.6])
-	by cuda.sgi.com with ESMTP id byxv85nwKGDHpxVb for
-	<xfs@oss.sgi.com>; Wed, 22 Jun 2011 08:32:02 -0700 (PDT)
-Received: from lithium-b.tower-research.com (lithium-b.tower-research.com
-	[10.1.1.13])
-	by ns2.tower-research.com (8.13.8/8.13.8) with ESMTP id p5MFW2kv007221
-	for <xfs@oss.sgi.com>; Wed, 22 Jun 2011 11:32:02 -0400
-Received: from ionlinux.tower-research.com (ionlinux.tower-research.com
-	[10.0.20.21])
-	by lithium-b.tower-research.com (8.13.8/8.13.8) with ESMTP id
-	p5MFW1vE024019
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Wed, 22 Jun 2011 11:32:01 -0400
-Received: from ionlinux.tower-research.com (localhost.localdomain [127.0.0.1])
-	by ionlinux.tower-research.com (8.13.1/8.13.1) with ESMTP id
-	p5MFW1Dw027251 for <xfs@oss.sgi.com>; Wed, 22 Jun 2011 11:32:01 -0400
-Received: from localhost (ion@localhost)
-	by ionlinux.tower-research.com (8.13.1/8.13.1/Submit) with ESMTP id
-	p5MFW1C2027245 for <xfs@oss.sgi.com>; Wed, 22 Jun 2011 11:32:01 -0400
-Date: Wed, 22 Jun 2011 11:32:01 -0400 (EDT)
-From: Ion Badulescu <ib-xfs@badula.org>
-Subject: Re: xfs_repair never finishes on lvm partition
-Message-ID: <alpine.LRH.2.00.1106221115510.16108@ionlinux.tower-research.com>
+	p5MFO72N099148 for <xfs@oss.sgi.com>; Wed, 22 Jun 2011 10:24:07 -0500
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9EEED24E30
+	for <xfs@oss.sgi.com>; Wed, 22 Jun 2011 08:24:06 -0700 (PDT)
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id TjEyhfK4Fg2MEyer for <xfs@oss.sgi.com>;
+	Wed, 22 Jun 2011 08:24:06 -0700 (PDT)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1 with cipher AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mail.sandeen.net (Postfix) with ESMTP id F02BC4964600
+	for <xfs@oss.sgi.com>; Wed, 22 Jun 2011 10:24:02 -0500 (CDT)
+Message-ID: <4E020912.9020106@sandeen.net>
+Date: Wed, 22 Jun 2011 10:24:02 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
+Subject: duplicate code in dir2
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,51 +26,89 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-Hello,
+I was poking around with various code metrics, and found a fair bit of duplication in dir2 code (using "duplo").
 
-Sorry for highjacking this old thread from last year. I actually ran into 
-the same situation as the original poster, using xfsprogs-3.1.5 on kernel 
-2.6.38.7. Using xfs_repair -P fixed the issue, and I also managed to get a 
-metadump before repairing it so you guys can take a look and maybe fix the 
-prefetch mode.
+Haven't really thought about how it might be factorable, but thought it might be interesting to share.
 
-The strace of the xfs_repair, for what it's worth, seems to show a 
-complete deadlock with all threads waiting on futexes:
+-Eric
 
-# strace -f -F -p 8315
-Process 8374 attached with 6 threads - interrupt to quit
-[pid  8374] futex(0x7f2336d20a84, FUTEX_WAIT, 4, NULL <unfinished ...>
-[pid  8373] futex(0x7f2336d20a84, FUTEX_WAIT, 3, NULL) = -1 EAGAIN (Resource temporarily unavailable)
-[pid  8372] futex(0x7f2336d20a84, FUTEX_WAIT, 2, NULL <unfinished ...>
-[pid  8373] futex(0x7f2336d20a84, FUTEX_WAIT, 4, NULL <unfinished ...>
-[pid  8372] <... futex resumed> )       = -1 EAGAIN (Resource temporarily unavailable)
-[pid  8372] futex(0x7f2336d20a84, FUTEX_WAIT, 4, NULL <unfinished ...>
-[pid  8371] futex(0x7f2336d20a84, FUTEX_WAIT, 1, NULL) = -1 EAGAIN (Resource temporarily unavailable)
-[pid  8370] futex(0x7f2336d20b08, FUTEX_WAIT, 0, NULL <unfinished ...>
-[pid  8371] futex(0x7f2336d20a84, FUTEX_WAIT, 4, NULL <unfinished ...>
-[pid  8315] futex(0x7f2336d1f958, FUTEX_WAIT, 2, NULL^C <unfinished ...>
-Process 8315 detached
-Process 8370 detached
-Process 8371 detached
-Process 8372 detached
-Process 8373 detached
-Process 8374 detached
+/src/git/linux-2.6/fs/xfs/xfs_dir2_node.c(251)
+/src/git/linux-2.6/fs/xfs/xfs_dir2_leaf.c(440)
+                if (index < be16_to_cpu(leaf->hdr.count))
+                        memmove(lep + 1, lep,
+                                (be16_to_cpu(leaf->hdr.count) - index) * sizeof(*lep));
+                lfloglow = index;
+                lfloghigh = be16_to_cpu(leaf->hdr.count);
+                be16_add_cpu(&leaf->hdr.count, 1);
+        else {
+                if (compact == 0) {
+                        for (lowstale = index - 1;
+                             lowstale >= 0 &&
+                                be32_to_cpu(leaf->ents[lowstale].address) !=
+                                XFS_DIR2_NULL_DATAPTR;
+                             lowstale--)
+                                continue;
+                        for (highstale = index;
+                             highstale < be16_to_cpu(leaf->hdr.count) &&
+                                be32_to_cpu(leaf->ents[highstale].address) !=
+                                XFS_DIR2_NULL_DATAPTR &&
+                                (lowstale < 0 ||
+                                 index - lowstale - 1 >= highstale - index);
+                             highstale++)
+                                continue;
+                if (lowstale >= 0 &&
+                    (highstale == be16_to_cpu(leaf->hdr.count) ||
+                     index - lowstale - 1 < highstale - index)) {
 
-The metadump is 4.2GB, off of a 2.2TB filesystem. If there are interested 
-parties, I can arrange to put online somewhere for an http download.
+/src/git/linux-2.6/fs/xfs/xfs_dir2_node.c(300)
+/src/git/linux-2.6/fs/xfs/xfs_dir2_leaf.c(499)
+                        if (index - lowstale - 1 > 0)
+                                memmove(&leaf->ents[lowstale],
+                                        &leaf->ents[lowstale + 1],
+                                        (index - lowstale - 1) * sizeof(*lep));
+                        lep = &leaf->ents[index - 1];
+                        lfloglow = MIN(lowstale, lfloglow);
+                        lfloghigh = MAX(index - 1, lfloghigh);
+                else {
 
-Thanks,
--Ion
+/src/git/linux-2.6/fs/xfs/xfs_dir2_node.c(316)
+/src/git/linux-2.6/fs/xfs/xfs_dir2_leaf.c(518)
+                        if (highstale - index > 0)
+                                memmove(&leaf->ents[index + 1],
+                                        &leaf->ents[index],
+                                        (highstale - index) * sizeof(*lep));
+                        lep = &leaf->ents[index];
+                        lfloglow = MIN(index, lfloglow);
+                        lfloghigh = MAX(highstale, lfloghigh);
+                be16_add_cpu(&leaf->hdr.stale, -1);
+        lep->hashval = cpu_to_be32(args->hashval);
 
--- 
-   It is better to keep your mouth shut and be thought a fool,
-             than to open it and remove all doubt.
+/src/git/linux-2.6/fs/xfs/xfs_dir2_node.c(582)
+/src/git/linux-2.6/fs/xfs/xfs_dir2_leaf.c(1349)
+        for (lep = &leaf->ents[index]; index < be16_to_cpu(leaf->hdr.count) &&
+                                be32_to_cpu(lep->hashval) == args->hashval;
+                                lep++, index++) {
+                if (be32_to_cpu(lep->address) == XFS_DIR2_NULL_DATAPTR)
+                        continue;
+                newdb = xfs_dir2_dataptr_to_db(mp, be32_to_cpu(lep->address));
+                if (newdb != curdb) {
+
+/src/git/linux-2.6/fs/xfs/xfs_dir2_node.c(442)
+/src/git/linux-2.6/fs/xfs/xfs_dir2_leaf.c(1349)
+        for (lep = &leaf->ents[index]; index < be16_to_cpu(leaf->hdr.count) &&
+                                be32_to_cpu(lep->hashval) == args->hashval;
+                                lep++, index++) {
+                if (be32_to_cpu(lep->address) == XFS_DIR2_NULL_DATAPTR)
+                        continue;
+                newdb = xfs_dir2_dataptr_to_db(mp, be32_to_cpu(lep->address));
+                if (newdb != curdb) {
+
 
 _______________________________________________
 xfs mailing list
