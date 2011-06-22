@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5MLWuJj123843 for <xfs@oss.sgi.com>; Wed, 22 Jun 2011 16:32:56 -0500
-Received: from mail-fx0-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BFB9611E7AB7
-	for <xfs@oss.sgi.com>; Wed, 22 Jun 2011 14:32:54 -0700 (PDT)
-Received: from mail-fx0-f53.google.com (mail-fx0-f53.google.com
-	[209.85.161.53]) by cuda.sgi.com with ESMTP id l31lUtNzQhkUd7GI
-	for <xfs@oss.sgi.com>; Wed, 22 Jun 2011 14:32:54 -0700 (PDT)
-Received: by fxm8 with SMTP id 8so1002427fxm.26
-	for <xfs@oss.sgi.com>; Wed, 22 Jun 2011 14:32:54 -0700 (PDT)
+	p5MMRGa4125745 for <xfs@oss.sgi.com>; Wed, 22 Jun 2011 17:27:16 -0500
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2DA2B1EDFE1B
+	for <xfs@oss.sgi.com>; Wed, 22 Jun 2011 15:27:15 -0700 (PDT)
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id 9tmzcSiiBu1SAteL for <xfs@oss.sgi.com>;
+	Wed, 22 Jun 2011 15:27:15 -0700 (PDT)
+Message-ID: <4E026C42.2030500@sandeen.net>
+Date: Wed, 22 Jun 2011 17:27:14 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Date: Wed, 22 Jun 2011 14:32:53 -0700
-Message-ID: <BANLkTi=gS5iO9R9pVk_df-4ofkkb0ZJgfw@mail.gmail.com>
-Subject: xfs_repair: "fatal error -- ran out of disk space!"
-From: "Patrick J. LoPresti" <lopresti@gmail.com>
+Subject: Re: xfs_repair: "fatal error -- ran out of disk space!"
+References: <BANLkTi=gS5iO9R9pVk_df-4ofkkb0ZJgfw@mail.gmail.com>
+In-Reply-To: <BANLkTi=gS5iO9R9pVk_df-4ofkkb0ZJgfw@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,61 +27,83 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: "Patrick J. LoPresti" <lopresti@gmail.com>
+Cc: xfs@oss.sgi.com
 
-I have a 5.1TB XFS file system that is 93% full (399G free according to "df").
+On 6/22/11 4:32 PM, Patrick J. LoPresti wrote:
+> I have a 5.1TB XFS file system that is 93% full (399G free according to "df").
+> 
+> I am trying to run "xfs_repair" on it.
+> 
+> The output is appended.
+> 
+> Question:  What am I supposed to do about this?  "xfs_repair -V" says
+> "xfs_repair version 3.1.5".  (I downloaded and built the latest
+> version hoping it would fix the issue, but no luck.)  Should I just
+> start deleting files at random?
 
-I am trying to run "xfs_repair" on it.
+You could start by removing a few files you know you don't need, rather than
+at random.  :)
 
-The output is appended.
+TBH I've not seen this one before, and the error message is not all that
+helpful.  It'd be nice to know how many blocks it was trying to reserve
+when it ran out of space; I guess you'd need to use gdb, or instrument
+all the calls to res_failed() in phase6.c to know for sure...
 
-Question:  What am I supposed to do about this?  "xfs_repair -V" says
-"xfs_repair version 3.1.5".  (I downloaded and built the latest
-version hoping it would fix the issue, but no luck.)  Should I just
-start deleting files at random?
+You could also capture an xfs_metadump of the fs and provide it for
+analysis, it would let us reproduce the issue and know for sure what's
+going on.  By default it obfuscates metadata.
 
-Any ideas would be appreciated; I am trying to get this server back
-up, and restoring 5.1T is not going to be pleasant.
+-Eric
 
-Thanks!
-
- - Pat
-
-
-Phase 1 - find and verify superblock...
-Phase 2 - using internal log
-        - zero log...
-        - scan filesystem freespace and inode maps...
-sb_icount 42688, counted 59328
-sb_ifree 1, counted 36
-sb_fdblocks 104582610, counted 24
-        - found root inode chunk
-Phase 3 - for each AG...
-        - scan and clear agi unlinked lists...
-        - process known inodes and perform inode discovery...
-        - agno = 0
-        - agno = 1
-        - agno = 2
-        - agno = 3
-        - agno = 4
-        - agno = 5
-        - process newly discovered inodes...
-Phase 4 - check for duplicate blocks...
-        - setting up duplicate extent list...
-        - check for inodes claiming duplicate blocks...
-        - agno = 0
-        - agno = 2
-        - agno = 3
-        - agno = 5
-        - agno = 4
-        - agno = 1
-Phase 5 - rebuild AG headers and trees...
-        - reset superblock...
-Phase 6 - check inode connectivity...
-        - resetting contents of realtime bitmap and summary inodes
-        - traversing filesystem ...
-
-fatal error -- ran out of disk space!
+> Any ideas would be appreciated; I am trying to get this server back
+> up, and restoring 5.1T is not going to be pleasant.
+> 
+> Thanks!
+> 
+>  - Pat
+> 
+> 
+> Phase 1 - find and verify superblock...
+> Phase 2 - using internal log
+>         - zero log...
+>         - scan filesystem freespace and inode maps...
+> sb_icount 42688, counted 59328
+> sb_ifree 1, counted 36
+> sb_fdblocks 104582610, counted 24
+>         - found root inode chunk
+> Phase 3 - for each AG...
+>         - scan and clear agi unlinked lists...
+>         - process known inodes and perform inode discovery...
+>         - agno = 0
+>         - agno = 1
+>         - agno = 2
+>         - agno = 3
+>         - agno = 4
+>         - agno = 5
+>         - process newly discovered inodes...
+> Phase 4 - check for duplicate blocks...
+>         - setting up duplicate extent list...
+>         - check for inodes claiming duplicate blocks...
+>         - agno = 0
+>         - agno = 2
+>         - agno = 3
+>         - agno = 5
+>         - agno = 4
+>         - agno = 1
+> Phase 5 - rebuild AG headers and trees...
+>         - reset superblock...
+> Phase 6 - check inode connectivity...
+>         - resetting contents of realtime bitmap and summary inodes
+>         - traversing filesystem ...
+> 
+> fatal error -- ran out of disk space!
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
