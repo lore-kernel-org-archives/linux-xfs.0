@@ -1,23 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5MFO72N099148 for <xfs@oss.sgi.com>; Wed, 22 Jun 2011 10:24:07 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9EEED24E30
-	for <xfs@oss.sgi.com>; Wed, 22 Jun 2011 08:24:06 -0700 (PDT)
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id TjEyhfK4Fg2MEyer for <xfs@oss.sgi.com>;
-	Wed, 22 Jun 2011 08:24:06 -0700 (PDT)
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
-	(using TLSv1 with cipher AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mail.sandeen.net (Postfix) with ESMTP id F02BC4964600
-	for <xfs@oss.sgi.com>; Wed, 22 Jun 2011 10:24:02 -0500 (CDT)
-Message-ID: <4E020912.9020106@sandeen.net>
-Date: Wed, 22 Jun 2011 10:24:02 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	p5MHMsmj107259 for <xfs@oss.sgi.com>; Wed, 22 Jun 2011 12:22:55 -0500
+Received: from e9.ny.us.ibm.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 115A8DFCB70
+	for <xfs@oss.sgi.com>; Wed, 22 Jun 2011 10:22:53 -0700 (PDT)
+Received: from e9.ny.us.ibm.com (e9.ny.us.ibm.com [32.97.182.139]) by
+	cuda.sgi.com with ESMTP id vxD887TVOiAFRUrI for
+	<xfs@oss.sgi.com>; Wed, 22 Jun 2011 10:22:53 -0700 (PDT)
+Received: from d01relay05.pok.ibm.com (d01relay05.pok.ibm.com [9.56.227.237])
+	by e9.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p5MGpgCM015887
+	for <xfs@oss.sgi.com>; Wed, 22 Jun 2011 12:51:42 -0400
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by d01relay05.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	p5MHMgui147460 for <xfs@oss.sgi.com>; Wed, 22 Jun 2011 13:22:42 -0400
+Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
+	by d01av04.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
+	p5MHMgvI024312 for <xfs@oss.sgi.com>; Wed, 22 Jun 2011 13:22:42 -0400
+Message-ID: <4E0224DD.5030501@linux.vnet.ibm.com>
+Date: Wed, 22 Jun 2011 10:22:37 -0700
+From: Allison Henderson <achender@linux.vnet.ibm.com>
 MIME-Version: 1.0
-Subject: duplicate code in dir2
+Subject: Re: XFS Test Case:252 - Shows Wrong Output
+References: <BANLkTinBNa9ox+jDaorBoKdhoQQzTUA58A@mail.gmail.com>
+	<BANLkTi=wHAxYuLE33AVsc2rp0eEm5GB40w@mail.gmail.com>
+In-Reply-To: <BANLkTi=wHAxYuLE33AVsc2rp0eEm5GB40w@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,89 +33,55 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Amit Sahrawat <amit.sahrawat83@gmail.com>
+Cc: xfs@oss.sgi.com
 
-I was poking around with various code metrics, and found a fair bit of duplication in dir2 code (using "duplo").
+On 06/22/2011 03:48 AM, Amit Sahrawat wrote:
+> echo "13. data ->  unwritten ->  data"
+> rm -f $testfile
+> xfs_io -f -c "truncate 20k" -c \
+> "falloc 0 20k" -c "pwrite 0k 8k" -c "fsync" -c "pwrite 12k 8k" -c  \
+> "fsync" -c "fpunch 4k 12k" -c "fiemap -v" $testfile | $filter_cmd
+>
+> *Original Output(Taken from 252.out):
+> *        13. data ->  unwritten ->  data
+> 0: [0..7]: data
+> 1: [8..31]: hole
+> 2: [32..39]: data
+> *Output in my case*
+>    13. data ->  unwritten ->  data
+> 0: [0..15]: data
+> 1: [16..23]: unwritten
+> 2: [24..39]: data
 
-Haven't really thought about how it might be factorable, but thought it might be interesting to share.
+Hi there,
 
--Eric
+I believe the -c "fpunch 4k 12k" is supposed to be what puts the hole 
+there.  If I run the command you have above, the fiemap should show you 
+a hole.  Something like this:
 
-/src/git/linux-2.6/fs/xfs/xfs_dir2_node.c(251)
-/src/git/linux-2.6/fs/xfs/xfs_dir2_leaf.c(440)
-                if (index < be16_to_cpu(leaf->hdr.count))
-                        memmove(lep + 1, lep,
-                                (be16_to_cpu(leaf->hdr.count) - index) * sizeof(*lep));
-                lfloglow = index;
-                lfloghigh = be16_to_cpu(leaf->hdr.count);
-                be16_add_cpu(&leaf->hdr.count, 1);
-        else {
-                if (compact == 0) {
-                        for (lowstale = index - 1;
-                             lowstale >= 0 &&
-                                be32_to_cpu(leaf->ents[lowstale].address) !=
-                                XFS_DIR2_NULL_DATAPTR;
-                             lowstale--)
-                                continue;
-                        for (highstale = index;
-                             highstale < be16_to_cpu(leaf->hdr.count) &&
-                                be32_to_cpu(leaf->ents[highstale].address) !=
-                                XFS_DIR2_NULL_DATAPTR &&
-                                (lowstale < 0 ||
-                                 index - lowstale - 1 >= highstale - index);
-                             highstale++)
-                                continue;
-                if (lowstale >= 0 &&
-                    (highstale == be16_to_cpu(leaf->hdr.count) ||
-                     index - lowstale - 1 < highstale - index)) {
+xfs_io -f -c "truncate 20k" -c "falloc 0 20k" -c "pwrite 0k 8k" -c 
+"fsync" -c "pwrite 12k 8k" -c  "fsync" -c "fpunch 4k 12k" -c "fiemap -v" 
+somefile
 
-/src/git/linux-2.6/fs/xfs/xfs_dir2_node.c(300)
-/src/git/linux-2.6/fs/xfs/xfs_dir2_leaf.c(499)
-                        if (index - lowstale - 1 > 0)
-                                memmove(&leaf->ents[lowstale],
-                                        &leaf->ents[lowstale + 1],
-                                        (index - lowstale - 1) * sizeof(*lep));
-                        lep = &leaf->ents[index - 1];
-                        lfloglow = MIN(lowstale, lfloglow);
-                        lfloghigh = MAX(index - 1, lfloghigh);
-                else {
+wrote 8192/8192 bytes at offset 0
+8 KiB, 2 ops; 0.0000 sec (217.014 MiB/sec and 55555.5556 ops/sec)
+wrote 8192/8192 bytes at offset 12288
+8 KiB, 2 ops; 0.0000 sec (269.397 MiB/sec and 68965.5172 ops/sec)
+somefile:
+  EXT: FILE-OFFSET      BLOCK-RANGE      TOTAL FLAGS
+    0: [0..7]:          296..303             8   0x0
+    1: [8..31]:         hole                24
+    2: [32..39]:        328..335             8   0x1
 
-/src/git/linux-2.6/fs/xfs/xfs_dir2_node.c(316)
-/src/git/linux-2.6/fs/xfs/xfs_dir2_leaf.c(518)
-                        if (highstale - index > 0)
-                                memmove(&leaf->ents[index + 1],
-                                        &leaf->ents[index],
-                                        (highstale - index) * sizeof(*lep));
-                        lep = &leaf->ents[index];
-                        lfloglow = MIN(index, lfloglow);
-                        lfloghigh = MAX(highstale, lfloghigh);
-                be16_add_cpu(&leaf->hdr.stale, -1);
-        lep->hashval = cpu_to_be32(args->hashval);
+If you do not see the hole there, it could be that your punch hole 
+operation is failing for some reason.
 
-/src/git/linux-2.6/fs/xfs/xfs_dir2_node.c(582)
-/src/git/linux-2.6/fs/xfs/xfs_dir2_leaf.c(1349)
-        for (lep = &leaf->ents[index]; index < be16_to_cpu(leaf->hdr.count) &&
-                                be32_to_cpu(lep->hashval) == args->hashval;
-                                lep++, index++) {
-                if (be32_to_cpu(lep->address) == XFS_DIR2_NULL_DATAPTR)
-                        continue;
-                newdb = xfs_dir2_dataptr_to_db(mp, be32_to_cpu(lep->address));
-                if (newdb != curdb) {
-
-/src/git/linux-2.6/fs/xfs/xfs_dir2_node.c(442)
-/src/git/linux-2.6/fs/xfs/xfs_dir2_leaf.c(1349)
-        for (lep = &leaf->ents[index]; index < be16_to_cpu(leaf->hdr.count) &&
-                                be32_to_cpu(lep->hashval) == args->hashval;
-                                lep++, index++) {
-                if (be32_to_cpu(lep->address) == XFS_DIR2_NULL_DATAPTR)
-                        continue;
-                newdb = xfs_dir2_dataptr_to_db(mp, be32_to_cpu(lep->address));
-                if (newdb != curdb) {
-
+Allison Henderson
 
 _______________________________________________
 xfs mailing list
