@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5N7giI1169332 for <xfs@oss.sgi.com>; Thu, 23 Jun 2011 02:42:45 -0500
-Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EEE1D27D9C
-	for <xfs@oss.sgi.com>; Thu, 23 Jun 2011 00:42:43 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id hHSIt0e0ahVLdBvO
-	for <xfs@oss.sgi.com>; Thu, 23 Jun 2011 00:42:43 -0700 (PDT)
-Message-ID: <4E02EE71.7010300@hardwarefreak.com>
-Date: Thu, 23 Jun 2011 02:42:41 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	p5NAa7K6176947 for <xfs@oss.sgi.com>; Thu, 23 Jun 2011 05:36:07 -0500
+Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0F9321E4EA68
+	for <xfs@oss.sgi.com>; Thu, 23 Jun 2011 03:36:05 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	rHuRXwy1VyyAYjfp for <xfs@oss.sgi.com>;
+	Thu, 23 Jun 2011 03:36:05 -0700 (PDT)
+Date: Thu, 23 Jun 2011 20:35:59 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: only SetPageUptodate if all buffers are uptodate
+Message-ID: <20110623103559.GZ32466@dastard>
+References: <20110419114028.7844.10303.stgit@nfs3>
+	<20110420103521.GA20510@infradead.org>
+	<20110420145722.GB29759@sgi.com>
+	<20110420153614.GA11362@infradead.org>
+	<20110623050819.GW32466@dastard> <20110623060900.GX32466@dastard>
 MIME-Version: 1.0
-Subject: Re: xfs_repair: "fatal error -- ran out of disk space!"
-References: <BANLkTi=gS5iO9R9pVk_df-4ofkkb0ZJgfw@mail.gmail.com>	<4E026C42.2030500@sandeen.net>
-	<20110622232418.GV32466@dastard>
-	<BANLkTinu03WnKTL=SzoWt+Sd9YHjy0_w6g@mail.gmail.com>
-In-Reply-To: <BANLkTinu03WnKTL=SzoWt+Sd9YHjy0_w6g@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20110623060900.GX32466@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,32 +33,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: "Patrick J. LoPresti" <lopresti@gmail.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: bpm@sgi.com, xfs@oss.sgi.com, aelder@sgi.com
 
-On 6/22/2011 6:41 PM, Patrick J. LoPresti wrote:
+On Thu, Jun 23, 2011 at 04:09:00PM +1000, Dave Chinner wrote:
+> On Thu, Jun 23, 2011 at 03:08:19PM +1000, Dave Chinner wrote:
+> > On Wed, Apr 20, 2011 at 11:36:14AM -0400, Christoph Hellwig wrote:
+> > > On Wed, Apr 20, 2011 at 09:57:22AM -0500, bpm@sgi.com wrote:
+> > > > Wish I did.  The test case that discovered this only applies to CXFS.  I
+> > > > would have liked to post a test case for XFS but decided that this has
+> > > > been on my TODO list for too long already.  Looks to me like it has to
+> > > > be related to the inode size, so you quit probing buffers after the
+> > > > first.  Maybe some discussion will ring some bells for somebody.
+> > > 
+> > > It would be really good to have one, but the actual patch looks good
+> > > enough that I'd consider putting it in.  I can assumes you ran
+> > > xfstests with various small blocksize options for both the test
+> > > and scratch device and it didn't show any regressions?
+> > 
+> > I've been running this patch for quite some time, but having just
+> > upgraded to the latest xfstests, this patch is causing fsx failures
+> > in tests 075 091 112 127 and 231 on 3.0-rc4 on x86_64 with default
+> > mkfs and mount parameters. fsx passes again with this patch removed
+> > from my test stack....
+> 
+> Seems I spoke too soon - the fsx failures seems to be intermittent,
+> and it was just chance that my bisect landed on this patch....
 
-> I guess one question is how xfs_repair should behave in this case.  I
-> mean, what if the file system had been full, but too corrupt for me to
-> delete anything?
+I've reproduced the fsx failure with an unmodified, top-of-tree
+Linus 3.0-rc kernel, so it's time to start the mainline bisect dance
+again.....
 
-Maybe you should rethink your policy on filesystem space management.
->From what you stated the FS in question actually was full.  You
-apparently were unaware of it until a problem (misbehaving nfsd process)
-brought it to your attention.  You should be monitoring your FS usage.
-Something as simple as logwatch daily summaries can save your bacon here.
+Cheers,
 
-As a general rule, when an FS begins steadily growing past the 80% mark
-heading toward 90%, you need to take action, either adding more disk to
-the underlying LVM device and growing the FS, mounting a new device/FS
-into a new directory in the tree and manually moving files, or making
-use of some HSM software.
-
-Full filesystems have been a source of problems basically forever.  It's
-best to avoid such situations instead of tickling the dragon.
-
+Dave.
 -- 
-Stan
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
