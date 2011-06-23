@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5NAa7K6176947 for <xfs@oss.sgi.com>; Thu, 23 Jun 2011 05:36:07 -0500
-Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0F9321E4EA68
-	for <xfs@oss.sgi.com>; Thu, 23 Jun 2011 03:36:05 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	rHuRXwy1VyyAYjfp for <xfs@oss.sgi.com>;
-	Thu, 23 Jun 2011 03:36:05 -0700 (PDT)
-Date: Thu, 23 Jun 2011 20:35:59 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: only SetPageUptodate if all buffers are uptodate
-Message-ID: <20110623103559.GZ32466@dastard>
-References: <20110419114028.7844.10303.stgit@nfs3>
-	<20110420103521.GA20510@infradead.org>
-	<20110420145722.GB29759@sgi.com>
-	<20110420153614.GA11362@infradead.org>
-	<20110623050819.GW32466@dastard> <20110623060900.GX32466@dastard>
+	p5NArKeu177648 for <xfs@oss.sgi.com>; Thu, 23 Jun 2011 05:53:20 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DB52C28308
+	for <xfs@oss.sgi.com>; Thu, 23 Jun 2011 03:53:19 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	yLEHyMSCC6a26ggY for <xfs@oss.sgi.com>;
+	Thu, 23 Jun 2011 03:53:19 -0700 (PDT)
+Date: Thu, 23 Jun 2011 06:53:19 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: duplicate code in dir2
+Message-ID: <20110623105318.GA11195@infradead.org>
+References: <4E020912.9020106@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110623060900.GX32466@dastard>
+In-Reply-To: <4E020912.9020106@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,43 +30,62 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: bpm@sgi.com, xfs@oss.sgi.com, aelder@sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Thu, Jun 23, 2011 at 04:09:00PM +1000, Dave Chinner wrote:
-> On Thu, Jun 23, 2011 at 03:08:19PM +1000, Dave Chinner wrote:
-> > On Wed, Apr 20, 2011 at 11:36:14AM -0400, Christoph Hellwig wrote:
-> > > On Wed, Apr 20, 2011 at 09:57:22AM -0500, bpm@sgi.com wrote:
-> > > > Wish I did.  The test case that discovered this only applies to CXFS.  I
-> > > > would have liked to post a test case for XFS but decided that this has
-> > > > been on my TODO list for too long already.  Looks to me like it has to
-> > > > be related to the inode size, so you quit probing buffers after the
-> > > > first.  Maybe some discussion will ring some bells for somebody.
-> > > 
-> > > It would be really good to have one, but the actual patch looks good
-> > > enough that I'd consider putting it in.  I can assumes you ran
-> > > xfstests with various small blocksize options for both the test
-> > > and scratch device and it didn't show any regressions?
-> > 
-> > I've been running this patch for quite some time, but having just
-> > upgraded to the latest xfstests, this patch is causing fsx failures
-> > in tests 075 091 112 127 and 231 on 3.0-rc4 on x86_64 with default
-> > mkfs and mount parameters. fsx passes again with this patch removed
-> > from my test stack....
+> /src/git/linux-2.6/fs/xfs/xfs_dir2_node.c(251)
+> /src/git/linux-2.6/fs/xfs/xfs_dir2_leaf.c(440)
+>                 if (index < be16_to_cpu(leaf->hdr.count))
+>                         memmove(lep + 1, lep,
+>                                 (be16_to_cpu(leaf->hdr.count) - index) * sizeof(*lep));
+>                 lfloglow = index;
+>                 lfloghigh = be16_to_cpu(leaf->hdr.count);
+>                 be16_add_cpu(&leaf->hdr.count, 1);
+>         else {
+
+This one and the the chunks following it are easily factorable, and I've
+created a patch. It's 100 lines of common code, just with the order of
+asssers switched, and one of them reusing the lep pointer on entry, and
+the other one recalculating it.  With the function header and lots of
+parameters we don't actually remove a whole lot of code, but having this
+relatively complex piece of code only once sounds like a good idea.
+
+> /src/git/linux-2.6/fs/xfs/xfs_dir2_node.c(582)
+> /src/git/linux-2.6/fs/xfs/xfs_dir2_leaf.c(1349)
+>         for (lep = &leaf->ents[index]; index < be16_to_cpu(leaf->hdr.count) &&
+>                                 be32_to_cpu(lep->hashval) == args->hashval;
+>                                 lep++, index++) {
+>                 if (be32_to_cpu(lep->address) == XFS_DIR2_NULL_DATAPTR)
+>                         continue;
+>                 newdb = xfs_dir2_dataptr_to_db(mp, be32_to_cpu(lep->address));
+>                 if (newdb != curdb) {
 > 
-> Seems I spoke too soon - the fsx failures seems to be intermittent,
-> and it was just chance that my bisect landed on this patch....
+> /src/git/linux-2.6/fs/xfs/xfs_dir2_node.c(442)
+> /src/git/linux-2.6/fs/xfs/xfs_dir2_leaf.c(1349)
+>         for (lep = &leaf->ents[index]; index < be16_to_cpu(leaf->hdr.count) &&
+>                                 be32_to_cpu(lep->hashval) == args->hashval;
+>                                 lep++, index++) {
+>                 if (be32_to_cpu(lep->address) == XFS_DIR2_NULL_DATAPTR)
+>                         continue;
+>                 newdb = xfs_dir2_dataptr_to_db(mp, be32_to_cpu(lep->address));
+>                 if (newdb != curdb) {
 
-I've reproduced the fsx failure with an unmodified, top-of-tree
-Linus 3.0-rc kernel, so it's time to start the mainline bisect dance
-again.....
+This seems like a relatively common patter, which has even more
+occurances with minimal variations, but I'm not sure there's an easy way
+to factor it.
 
-Cheers,
+I'd prefer to rewrite the loops to something more readable like:
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+	for (; index < be16_to_cpu(leaf->hdr.count); index++) {
+		lep = &leaf->ents[index];
+
+		if (be32_to_cpu(lep->hashval) != args->hashval)
+			break;
+		if (be32_to_cpu(lep->address) == XFS_DIR2_NULL_DATAPTR)
+			continue;
+
+		...
+	}
 
 _______________________________________________
 xfs mailing list
