@@ -1,16 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5NHtfou203976 for <xfs@oss.sgi.com>; Thu, 23 Jun 2011 12:55:41 -0500
-Date: Thu, 23 Jun 2011 18:55:33 +0100
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: Re: [PATCH v2] xfs: Silence bounds checking compiler warning
-Message-ID: <20110623175533.GK11521@ZenIV.linux.org.uk>
-References: <4E037001.8090306__42924.0493024283$1308849791$gmane$org@gmail.com>
-	<m2boxocvb5.fsf@firstfloor.org>
+	p5NLLhYU217924 for <xfs@oss.sgi.com>; Thu, 23 Jun 2011 16:21:43 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A38211BF43E1
+	for <xfs@oss.sgi.com>; Thu, 23 Jun 2011 14:21:42 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	cdxLBa6Tgl0mpKCV for <xfs@oss.sgi.com>;
+	Thu, 23 Jun 2011 14:21:42 -0700 (PDT)
+Date: Thu, 23 Jun 2011 17:21:41 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 2/3] xfs: clear XFS_IDIRTY_RELEASE on truncate down
+Message-ID: <20110623212141.GB18901@infradead.org>
+References: <1308792901-22880-1-git-send-email-david@fromorbit.com>
+	<1308792901-22880-3-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <m2boxocvb5.fsf@firstfloor.org>
+In-Reply-To: <1308792901-22880-3-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,25 +31,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Andi Kleen <andi@firstfloor.org>
-Cc: Maarten Lankhorst <m.b.lankhorst@gmail.com>, xfs@oss.sgi.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs-masters@oss.sgi.com, Alex Elder <aelder@sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Thu, Jun 23, 2011 at 10:27:26AM -0700, Andi Kleen wrote:
-> Maarten Lankhorst <m.b.lankhorst@gmail.com> writes:
+On Thu, Jun 23, 2011 at 11:35:00AM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> > gcc with -Warray-bounds generates a false positive on this
-> > since xfs defines the struct with u8 name[1]; to be able to
-> > add a tag at the end.
+> When an inode is truncated down, speculative preallocation is
+> removed from the inode. This should also reset the state bits for
+> controlling whether preallocation is subsequently removed when the
+> file is next closed. The flag is not being cleared, so repeated
+> operations on a file that first involve a truncate (e.g. multiple
+> repeated dd invocations on a file) give different file layouts for
+> the second and subsequent invocations.
 > 
-> A better way would be to define it as name[0]. Then the compiler
-> would know it's a VLA. You may need to check noone relies on
-> the one byte though.
+> Fix this by clearing the XFS_IDIRTY_RELEASE state bit when the
+> XFS_ITRUNCATED bit is detected in xfs_release() and hence ensure
+> that speculative delalloc is removed on files that have been
+> truncated down.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-... and even better is to write in real C and have u8 name[]; in the
-end of your structure.  That's the standard C99 for this kind of thing
-(see 6.7.2.1p2, p16).  Zero-sized array is a gccism predating standard
-flexible array members and since the standard syntax is accepted by
-any gcc version that might be recent enough to build the kernel...
+Looks good,
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
