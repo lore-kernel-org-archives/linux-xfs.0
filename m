@@ -1,12 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5NGtXLl200776 for <xfs@oss.sgi.com>; Thu, 23 Jun 2011 11:55:33 -0500
-Message-ID: <4E037001.8090306@gmail.com>
-Date: Thu, 23 Jun 2011 18:55:29 +0200
-From: Maarten Lankhorst <m.b.lankhorst@gmail.com>
+	p5NHT08P202154 for <xfs@oss.sgi.com>; Thu, 23 Jun 2011 12:29:00 -0500
+From: Andi Kleen <andi@firstfloor.org>
+Subject: Re: [PATCH v2] xfs: Silence bounds checking compiler warning
+References: <4E037001.8090306__42924.0493024283$1308849791$gmane$org@gmail.com>
+Date: Thu, 23 Jun 2011 10:27:26 -0700
+In-Reply-To: <4E037001.8090306__42924.0493024283$1308849791$gmane$org@gmail.com>
+	(Maarten Lankhorst's message of "Thu, 23 Jun 2011 18:55:29 +0200")
+Message-ID: <m2boxocvb5.fsf@firstfloor.org>
 MIME-Version: 1.0
-Subject: [PATCH v2] xfs: Silence bounds checking compiler warning
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,35 +22,22 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
-Cc: xfs-masters@oss.sgi.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+To: Maarten Lankhorst <m.b.lankhorst@gmail.com>
+Cc: xfs-masters@oss.sgi.com, xfs@oss.sgi.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Alex Elder <aelder@sgi.com>
 
-gcc with -Warray-bounds generates a false positive on this
-since xfs defines the struct with u8 name[1]; to be able to
-add a tag at the end.
+Maarten Lankhorst <m.b.lankhorst@gmail.com> writes:
 
-Signed-off-by: Maarten Lankhorst <m.b.lankhorst@gmail.com>
----
- fs/xfs/xfs_dir2_block.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+> gcc with -Warray-bounds generates a false positive on this
+> since xfs defines the struct with u8 name[1]; to be able to
+> add a tag at the end.
 
-diff --git a/fs/xfs/xfs_dir2_block.c b/fs/xfs/xfs_dir2_block.c
-index 580d99c..2c5f287 100644
---- a/fs/xfs/xfs_dir2_block.c
-+++ b/fs/xfs/xfs_dir2_block.c
-@@ -1148,7 +1148,7 @@ xfs_dir2_sf_to_block(
- 		((char *)block + XFS_DIR2_DATA_DOTDOT_OFFSET);
- 	dep->inumber = cpu_to_be64(xfs_dir2_sf_get_inumber(sfp, &sfp->hdr.parent));
- 	dep->namelen = 2;
--	dep->name[0] = dep->name[1] = '.';
-+	memset(dep->name, '.', 2);
- 	tagp = xfs_dir2_data_entry_tag_p(dep);
- 	*tagp = cpu_to_be16((char *)dep - (char *)block);
- 	xfs_dir2_data_log_entry(tp, bp, dep);
+A better way would be to define it as name[0]. Then the compiler
+would know it's a VLA. You may need to check noone relies on
+the one byte though.
+
+-Andi
 -- 
-1.7.5.4
-
-v2: memset looks like the cleanest solution, other options rely on ugly casts
+ak@linux.intel.com -- Speaking for myself only
 
 _______________________________________________
 xfs mailing list
