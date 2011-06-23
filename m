@@ -1,15 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5NHT08P202154 for <xfs@oss.sgi.com>; Thu, 23 Jun 2011 12:29:00 -0500
-From: Andi Kleen <andi@firstfloor.org>
+	p5NIDQp0207291 for <xfs@oss.sgi.com>; Thu, 23 Jun 2011 13:13:26 -0500
+Date: Thu, 23 Jun 2011 14:13:17 -0400
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: [PATCH v2] xfs: Silence bounds checking compiler warning
+Message-ID: <20110623181317.GA26945@infradead.org>
 References: <4E037001.8090306__42924.0493024283$1308849791$gmane$org@gmail.com>
-Date: Thu, 23 Jun 2011 10:27:26 -0700
-In-Reply-To: <4E037001.8090306__42924.0493024283$1308849791$gmane$org@gmail.com>
-	(Maarten Lankhorst's message of "Thu, 23 Jun 2011 18:55:29 +0200")
-Message-ID: <m2boxocvb5.fsf@firstfloor.org>
+	<m2boxocvb5.fsf@firstfloor.org>
+	<20110623175533.GK11521@ZenIV.linux.org.uk>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20110623175533.GK11521@ZenIV.linux.org.uk>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,22 +24,23 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Maarten Lankhorst <m.b.lankhorst@gmail.com>
-Cc: xfs-masters@oss.sgi.com, xfs@oss.sgi.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Alex Elder <aelder@sgi.com>
+To: Al Viro <viro@ZenIV.linux.org.uk>
+Cc: Maarten Lankhorst <m.b.lankhorst@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, xfs-masters@oss.sgi.com, Andi Kleen <andi@firstfloor.org>, Alex Elder <aelder@sgi.com>
 
-Maarten Lankhorst <m.b.lankhorst@gmail.com> writes:
+On Thu, Jun 23, 2011 at 06:55:33PM +0100, Al Viro wrote:
+> ... and even better is to write in real C and have u8 name[]; in the
+> end of your structure.  That's the standard C99 for this kind of thing
+> (see 6.7.2.1p2, p16).  Zero-sized array is a gccism predating standard
+> flexible array members and since the standard syntax is accepted by
+> any gcc version that might be recent enough to build the kernel...
 
-> gcc with -Warray-bounds generates a false positive on this
-> since xfs defines the struct with u8 name[1]; to be able to
-> add a tag at the end.
-
-A better way would be to define it as name[0]. Then the compiler
-would know it's a VLA. You may need to check noone relies on
-the one byte though.
-
--Andi
--- 
-ak@linux.intel.com -- Speaking for myself only
+The situation is even more nasty - the one sized fake flex-array
+actually is in the middle of the structure.  Besides sizeof-expressions
+taking the one member array into account only members before the
+variable sized array are used.  I've started a series cleaning up the
+few structures that were done that way (for whatever reason), but it's
+pretty intrusive.  I don't think papering over these warnings at this
+point is a good idea.
 
 _______________________________________________
 xfs mailing list
