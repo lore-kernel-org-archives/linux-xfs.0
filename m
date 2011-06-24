@@ -1,16 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5NLx1IQ219077 for <xfs@oss.sgi.com>; Thu, 23 Jun 2011 16:59:01 -0500
-Subject: Re: [PATCH 1/3] xfs: reset inode per-lifetime state when recycling it
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1308792901-22880-2-git-send-email-david@fromorbit.com>
-References: <1308792901-22880-1-git-send-email-david@fromorbit.com>
-	<1308792901-22880-2-git-send-email-david@fromorbit.com>
-Date: Thu, 23 Jun 2011 16:58:05 -0500
-Message-ID: <1308866285.2010.32.camel@doink>
+	p5O2FfsI236209 for <xfs@oss.sgi.com>; Thu, 23 Jun 2011 21:15:41 -0500
+Date: Fri, 24 Jun 2011 12:15:34 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2] xfs: Silence bounds checking compiler warning
+Message-ID: <20110624021534.GA32466@dastard>
+References: <4E037001.8090306__42924.0493024283$1308849791$gmane$org@gmail.com>
+	<m2boxocvb5.fsf@firstfloor.org>
+	<20110623175533.GK11521@ZenIV.linux.org.uk>
 MIME-Version: 1.0
-Reply-To: aelder@sgi.com
+Content-Disposition: inline
+In-Reply-To: <20110623175533.GK11521@ZenIV.linux.org.uk>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,33 +24,45 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Al Viro <viro@ZenIV.linux.org.uk>
+Cc: Maarten Lankhorst <m.b.lankhorst@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, xfs-masters@oss.sgi.com, Andi Kleen <andi@firstfloor.org>, Alex Elder <aelder@sgi.com>
 
-On Thu, 2011-06-23 at 11:34 +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Thu, Jun 23, 2011 at 06:55:33PM +0100, Al Viro wrote:
+> On Thu, Jun 23, 2011 at 10:27:26AM -0700, Andi Kleen wrote:
+> > Maarten Lankhorst <m.b.lankhorst@gmail.com> writes:
+> > 
+> > > gcc with -Warray-bounds generates a false positive on this
+> > > since xfs defines the struct with u8 name[1]; to be able to
+> > > add a tag at the end.
+> > 
+> > A better way would be to define it as name[0]. Then the compiler
+> > would know it's a VLA. You may need to check noone relies on
+> > the one byte though.
 > 
-> XFS inodes has several per-lifetime state fields that determine the
-> behaviour of the inode. These state fields are not all reset when an
-> inode is reused from the reclaimable state.
-> 
-> This can lead to unexpected behaviour of the new inode such as
-> speculative preallocation not being truncated away in the expected
-> manner for local files until the inode is subsequently truncated,
-> freed or cycles out of the cache. It can also lead to an inode being
-> considered to be a filestream inode or having been truncated when
-> that is not the case.
-> 
-> Rework the reinitialisation of the inode when it is recycled to
-> ensure that it is pristine before it is reused. While there, also
-> fix the resetting of state flags in the recycling error paths so the
-> inode does not become unreclaimable.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ... and even better is to write in real C and have u8 name[]; in the
+> end of your structure.
 
-Looks good to me.
+Hard to do when the structure is effectively the definition of the
+on-disk format. Hence it can't just be changed around and the kernel
+recompiled to fix the problem.
 
-Reviewed-by: Alex Elder <aelder@sgi.com>
+> That's the standard C99 for this kind of thing
+> (see 6.7.2.1p2, p16).  Zero-sized array is a gccism predating standard
+> flexible array members and since the standard syntax is accepted by
+> any gcc version that might be recent enough to build the kernel...
+
+This code came from Irix, which means it predates both the gccism
+and the C99 standard methods of using flexible array sizes. The code
+works so it's never been modified because stuffing about with
+structures that define disk formats is not done just for the hell of
+it... ;)
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
