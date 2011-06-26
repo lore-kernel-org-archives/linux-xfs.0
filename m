@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5Q0U6SA160550 for <xfs@oss.sgi.com>; Sat, 25 Jun 2011 19:30:06 -0500
-Received: from Ishtar.tlinx.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 69F16DF31A2
-	for <xfs@oss.sgi.com>; Sat, 25 Jun 2011 17:30:05 -0700 (PDT)
-Received: from Ishtar.tlinx.org (ishtar.tlinx.org [173.164.175.65]) by
-	cuda.sgi.com with ESMTP id IABNTArrIA22QaWF for
-	<xfs@oss.sgi.com>; Sat, 25 Jun 2011 17:30:05 -0700 (PDT)
-Received: from [192.168.3.12] (Athenae [192.168.3.12])
-	by Ishtar.tlinx.org (8.14.4/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5Q0Tr6s024506 for <xfs@oss.sgi.com>; Sat, 25 Jun 2011 17:29:55 -0700
-Message-ID: <4E067D81.4070605@tlinx.org>
-Date: Sat, 25 Jun 2011 17:29:53 -0700
-From: "Linda A. Walsh" <xfs@tlinx.org>
+	p5Q29Nxb165126
+	for <linux-xfs@oss.sgi.com>; Sat, 25 Jun 2011 21:09:23 -0500
+Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 384A71764C97
+	for <linux-xfs@oss.sgi.com>; Sat, 25 Jun 2011 19:09:21 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id CdNrBJsRv1mfWrZg
+	for <linux-xfs@oss.sgi.com>; Sat, 25 Jun 2011 19:09:21 -0700 (PDT)
+Message-ID: <4E0694CC.8050003@hardwarefreak.com>
+Date: Sat, 25 Jun 2011 21:09:16 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Subject: question on new feature complexity/possibility/sensibility? (^
-	Alternate)
+Subject: Re: mkfs.xfs error creating large agcount an raid
+References: <4E063BC6.9000801@task.com.br>
+In-Reply-To: <4E063BC6.9000801@task.com.br>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,87 +24,52 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Marcus Pereira <marcus@task.com.br>
+Cc: linux-xfs@oss.sgi.com
 
-I noticed in the 'cp' (coretuils 8.9-4.1) command on suse, there is a 
-a "--reflink" that controls "clone/CoW" copies -- which says
-it performs a 'lightweight' copy where the data blocks are copied
-only when modified.  Now it is vague the 'when modified', (i.e.
-does it mean ones that are different between the two copies) (src
-and dst), or does it mean only to copy blocks that were modified
-since 'some point' -- Doesn't say, but would guess it's src/dst diffs
-(I wonder if it is restricted to the same physical filesystem).
+On 6/25/2011 2:49 PM, Marcus Pereira wrote:
+> I have an issue when creating xfs volume using large agcounts on raid
+> volumes.
 
-Anyway, turns out, it's only for BTRFS (which I haven't yet used, 
-and therefore know only that it supports operations like the above).  
+Yes, you do have an issue, but not the one you think.
 
-Would it be practice to implement, some similar, feature in XFS?
+> /dev/md0 is a 4 disks raid 0 array:
+> 
+> ----------------------------------------
+> # mkfs.xfs -V
+> mkfs.xfs version 3.1.4
+> 
+> # mkfs.xfs -d agcount=1872 -b size=4096 /dev/md0 -f
 
-It wouldn't be practice or useful to do it on an 'extent' basis due
-to their large size...So to do something similar on XFS, I was
-thinking,  with "some amount of effort", some number of 
-"updated extents" could be kept, in addition to the original data.
+mkfs.xfs queries mdraid for its parameters and creates close to the
+optimal number of AGs, sets the stripe width, etc, all automatically.
+The default number of AGs for striped mdraid devices is 16 IIRC, and
+even that is probably a tad too high for a 4 spindle stripe.  Four or
+eight AGs would probably be better here, depending on your workload,
+which you did not state.  Please state your target workload.
 
-Any future modifications to the file would also have the extents 
-modified, but any extents that overlap previous mods will be 
-merged, and only the newest data would be kept (meaning that
-new sections that are written, that skip over parts of the 
-file, wouldn't overwrite a pending change to that section -- only
-the bytes (granularity?)  that were changed.
+At 1872 you have 117 times the number of default AGs.  The two main
+downsides to doing this are:
 
-I.e. file is 1Mb.
-User1 updates bytes 1k-200k.
-User2, later updates bytes 100k-300k, 
-New modification 'extent' is created with 1k-300k, with bytes
-1k-(100k-1) from user1 be saved, and 100k-300k from user2.
+1. Abysmal performance due to excessive head seeking on an epic scale
+2. Premature drive failure due to head actuator failure
 
-Changes to the 'base' copy would be made upon some ioctl 'sync'
-command (file-by-file)...  
+Now, the above assumes your "4 disks" are mechanical drives.  If these
+are actually SSDs then the hardware won't suffer failures, but
+performance will likely be far less than optimal.
 
-It would require up to double the amount of file space.
+Why are you attempting to create an insane number of allocation groups?
+ What benefit do you expect to gain from doing so?
 
+Regardless of your answer, the correct answer is that such high AG
+counts only have downsides, and zero upside.
 
-----
-Another possibility would simply be to create a record of byte
-ranges that have been updated in the extent and the extent's last
-modification time.  Then one could compare the mod times and 
-apply the changes.   The problem there would be having to keep a
-possibly 'large' log of changes (what if it's not sync/purged...
-couldn't be circular as that would allow events to be lost -- though
-the file system could be forced 'offline' if the event log became full
-...a major pain...)..., but if it was created with a few G of space, 
-might take a while...and if synced in time, no prob.
-
-
-
-Still, may be no great desire or benefit, but DAMN if I haven't
-wanted copy-on-write files for a LONG time.
-
-I.e. being able to hardlink files, but have an option to mark it as
-copy on write -- allowing space to be save when copying directory trees,
-but then dynamically making new copies when someone updates one of the
-linked copies.
-
-
-
-Maybe that's a different feature that could be more easily done?
-
-Anyway -- the new copy option just got me thinking....
-
-Any ideas or work in thinking about things in this area for XFS to
-keep it updated and 'current as a "Filesystem of Choice"....?
-
-
-Thanks,
-Linda
-
-
-
-so if a user wants to modify it -- it 
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
