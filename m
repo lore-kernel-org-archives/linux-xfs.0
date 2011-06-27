@@ -1,22 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5R4EbmN031091
-	for <linux-xfs@oss.sgi.com>; Sun, 26 Jun 2011 23:14:37 -0500
-Received: from mail4.task.com.br (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 74B962FE36
-	for <linux-xfs@oss.sgi.com>; Sun, 26 Jun 2011 21:14:36 -0700 (PDT)
-Received: from mail4.task.com.br (mail4.task.com.br [75.126.195.14]) by
-	cuda.sgi.com with ESMTP id YE3JGMWLVZYkXmnk for
-	<linux-xfs@oss.sgi.com>; Sun, 26 Jun 2011 21:14:36 -0700 (PDT)
-Message-ID: <4E0803AA.20809@task.com.br>
-Date: Mon, 27 Jun 2011 01:14:34 -0300
-From: Marcus Pereira <marcus@task.com.br>
+	p5R5nGdk050419 for <xfs@oss.sgi.com>; Mon, 27 Jun 2011 00:49:16 -0500
+Received: from ipmail07.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C16CF3040C
+	for <xfs@oss.sgi.com>; Sun, 26 Jun 2011 22:49:14 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	CI4geNnUZ5LxcxBE for <xfs@oss.sgi.com>;
+	Sun, 26 Jun 2011 22:49:14 -0700 (PDT)
+Received: from chute ([192.168.1.1] helo=disappointment)
+	by dastard with esmtp (Exim 4.72)
+	(envelope-from <dave@fromorbit.com>) id 1Qb4h6-0004J3-T2
+	for xfs@oss.sgi.com; Mon, 27 Jun 2011 15:49:12 +1000
+Received: from dave by disappointment with local (Exim 4.76)
+	(envelope-from <dave@disappointment.disaster>) id 1Qb4gg-0000Ko-QK
+	for xfs@oss.sgi.com; Mon, 27 Jun 2011 15:48:46 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 2/4] xfstests: fsx fallocate support is b0rked
+Date: Mon, 27 Jun 2011 15:48:40 +1000
+Message-Id: <1309153722-1231-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1309153722-1231-1-git-send-email-david@fromorbit.com>
+References: <1309153722-1231-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-Subject: Re: mkfs.xfs error creating large agcount an raid
-References: <4E063BC6.9000801@task.com.br>	<4E0694CC.8050003@hardwarefreak.com>	<4E06C967.2060107@task.com.br>	<20110626235959.GC32466@dastard>
-	<4E07FA07.4050907@hardwarefreak.com>
-In-Reply-To: <4E07FA07.4050907@hardwarefreak.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,62 +31,106 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="windows-1252"; Format="flowed"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Em 27-06-2011 00:33, Stan Hoeppner escreveu:
->
-> I recommend 3 changes, one of which I previously mentioned:
->
-> 1.  Use 8 mirror pairs instead of 4
-> 2.  Don't use striping.  Make an mdraid --linear device of the 8 mirrors
-> 3.  Format with '-d agcount=3D32' which will give you 4 AGs per spindle
->
-> Test this configuration and post your results.
-
-I am thanks for all advices. I will make the tests and post, may take =
-
-some time.
-
-About all other messages. My system may not be a Ferrari but its not a =
-
-Volks. I certainly do not have that many HDs in fiber channel, but the =
-
-sever is a dual core Xeon 6 cores with HT. Linux sees a total of 24 =
-
-cores, total RAM is 24GB. The HDs are all SAS 15Krpm and the system runs =
-
-on SSD. They are dedicated to handle the maildir files and I have =
-
-several of those servers running nicely.
-But I don=92t want to make the thread about my system larger.
-
-Yes, I don=92t know much about XFS and Allocation groups, thanks for you =
-
-all to help me a bit.
-
-At the end the reason why I opened the thread it the error and the =
-
-developers should take some care about that.
-
-Ok, no reason to use that many agcount but giving a "mkfs.xfs: pwrite64 =
-
-failed: No space left on device" error for me stills seems a bug.
-I manage to create a XFS volume with agcount=3D30000 on a normal device, =
-
-no error or warning.
-On md or lvm arrays I got that error at some point.
-
-Marcus
-
-
--- =
-
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+RnJvbTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgoKVGhlIHJlY2VudCBmYWxs
+b2NhdGUvZnB1bmNoIGFkZGl0aW9ucyB0byBmc3ggaGF2ZSBub3QgYWN0dWFsbHkgYmUKZXhlY3V0
+aW5nIGZhbGxvY2F0ZS9mcHVuY2ggb3BlcmF0aW9ucy4gVGhlIGxvZ2ljIHRvIHNlbGVjdCB3aGF0
+Cm9wZXJhdGlvbiB0byBydW4gaXMgYnJva2VuIGluIHN1Y2ggYSB3YXkgdGhhdCBmc3ggaGFzIGJl
+ZW4gZXhlY3V0aW5nCm1hcHBlZCB3cml0ZXMgYW5kIHRydW5jYXRlcyBpbnN0ZWFkIG9mIGZhbGxv
+Y2F0ZSBhbmQgZnB1bmNoCm9wZXJhdGlvbnMuCgpSZW1vdmUgYWxsIHRoZSAoYjBya2VuKSBzbWFy
+dHktcGFudHMgc2VsZWN0aW9uIGxvZ2ljIGZyb20gdGhlIHRlc3QoKQpmdW5jdGlvbi4gUmVwbGFj
+ZSBpdCB3aXRoIGEgY2xlYXJseSBkZWZpbmVkIHNldCBvZiBvcGVyYXRpb25zIGZvcgplYWNoIG1v
+ZGUgYW5kIHVzZSB1bmRlcnN0YW5kYWJsZSBmYWxsYmFjayBsb2dpYyB3aGVuIHZhcmlvdXMKb3Bl
+cmF0aW9uIHR5cGVzIGhhdmUgYmVlbiBkaXNhYmxlZC4gVGhlbiB1c2UgYSBzaW1wbGUgc3dpdGNo
+CnN0YXRlbWVudCB0byBleGVjdXRlIGVhY2ggb2YgdGhlIGRpZmZlcmVudCBvcGVyYXRpb25zLCBy
+ZW1vdmluZyB0aGUKdG9ydHVyZWQgbmVzdGluZyBvZiBpZi9lbHNlIHN0YXRlbWVudHMgdGhhdCBv
+bmx5IHNlcnZlIHRvIG9iZnVzY2F0ZQp0aGUgY29kZS4KCk5BcyBhIHJlc3VsdCwgZnN4IHVzZXMg
+ZmFsbG9jYXRlL2ZwdW5jaCBhcHByb3ByaWF0ZWx5IGR1cmluZwpvcGVyYXRpb25zLCBhbmQgdXNl
+cy9kaXNhYmxl0ZUgdGhlIG9wZXJhdGlvbnMgYXMgZGVmaW5lZCBvbiB0aGUKY29tbWFuZCBsaW5l
+IGNvcnJlY3RseS4KClNpZ25lZC1vZmYtYnk6IERhdmUgQ2hpbm5lciA8ZGNoaW5uZXJAcmVkaGF0
+LmNvbT4KLS0tCiBsdHAvZnN4LmMgfCAgMTYyICsrKysrKysrKysrKysrKysrKysrKysrKysrKysr
+KysrKysrKysrKy0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KIDEgZmlsZXMgY2hhbmdlZCwgMTAzIGlu
+c2VydGlvbnMoKyksIDU5IGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2x0cC9mc3guYyBiL2x0
+cC9mc3guYwppbmRleCBhMzdlMjIzLi42NmRhZWZlIDEwMDY0NAotLS0gYS9sdHAvZnN4LmMKKysr
+IGIvbHRwL2ZzeC5jCkBAIC05NTUsMTggKzk1NSw0MiBAQCBkb2Nsb3Nlb3Blbih2b2lkKQogCX0K
+IH0KIAorI2RlZmluZSBUUklNX09GRl9MRU4ob2ZmLCBsZW4sIHNpemUpCVwKK2RvIHsJCQkJCVwK
+KwlpZiAoZmlsZV9zaXplKQkJCVwKKwkJb2Zmc2V0ICU9IHNpemU7CQlcCisJZWxzZQkJCQlcCisJ
+CW9mZnNldCA9IDA7CQlcCisJaWYgKG9mZnNldCArIGxlbiA+IHNpemUpCVwKKwkJbGVuID0gc2l6
+ZSAtIG9mZnNldDsJXAorfSB3aGlsZSAoMCkKIAorLyoKKyAqIFRoZSBvcGVyYXRpb24gbWF0cml4
+IGlzIGNvbXBsZXggZHVlIHRvIGNvbmRpdGlvbmFsIHZhcmlhYmxlcy4KKyAqIFdlIGNhbGN1bGF0
+ZSBob3cgbWFueSBkaWZmZXJlbnQgb3BlcmF0aW9ucyB3ZSBjYW4gdXNlLCB0aGVuCisgKiBtYXAg
+dGhlbSBhcHByb3ByaWF0ZWx5IGFjY29yZGluZyB0byBob3cgbWFueSBvcHRpb25zIGFyZSBlbmFi
+bGVkLgorICogVGhlIG1hcHBpbmcgaXM6CisgKgorICoJCWxpdGUJIWxpdGUKKyAqIFJFQUQ6CTAJ
+MAorICogV1JJVEU6CTEJMQorICogTUFQUkVBRDoJMgkyCisgKiBNQVBXUklURToJMwkzCisgKiBU
+UlVOQ0FURToJLQk0CisgKiBGQUxMT0NBVEU6CS0JNQorICogUFVOQ0ggSE9MRToJLQk2CisgKgor
+ICogV2hlbiBtYXBwZWQgcmVhZC93cml0ZXMgYXJlIGRpc2FibGVkLCB0aGV5IGFyZSBzaW1wbHkg
+Y29udmVydGVkIHRvIG5vcm1hbAorICogcmVhZHMgYW5kIHdyaXRlcy4gV2hlbiBmYWxsb2NhdGUv
+ZnB1bmNoIGNhbGxzIGFyZSBkaXNhYmxlZCwgdGhleSBhcmUKKyAqIGNvbnZlcnRlZCB0byBPUF9T
+S0lQUEVELgorICovCiB2b2lkCiB0ZXN0KHZvaWQpCiB7CiAJdW5zaWduZWQgbG9uZwlvZmZzZXQ7
+CiAJdW5zaWduZWQgbG9uZwlzaXplID0gbWF4b3BsZW47CiAJdW5zaWduZWQgbG9uZwlydiA9IHJh
+bmRvbSgpOwotCXVuc2lnbmVkIGxvbmcJb3AgPSBydiAlICgzICsgIWxpdGUgKyBtYXBwZWRfd3Jp
+dGVzICsgZmFsbG9jYXRlX2NhbGxzICsgcHVuY2hfaG9sZV9jYWxscyk7Ci0gICAgICAgIC8qIHR1
+cm4gb2ZmIHRoZSBtYXAgcmVhZCBpZiBuZWNlc3NhcnkgKi8KLQotICAgICAgICBpZiAob3AgPT0g
+MiAmJiAhbWFwcGVkX3JlYWRzKQotICAgICAgICAgICAgb3AgPSAwOworCXVuc2lnbmVkIGxvbmcJ
+b3A7CiAKIAlpZiAoc2ltdWxhdGVkb3Bjb3VudCA+IDAgJiYgdGVzdGNhbGxzID09IHNpbXVsYXRl
+ZG9wY291bnQpCiAJCXdyaXRlZmlsZWltYWdlKCk7CkBAIC05ODIsNjIgKzEwMDYsODIgQEAgdGVz
+dCh2b2lkKQogCWlmICghcXVpZXQgJiYgdGVzdGNhbGxzIDwgc2ltdWxhdGVkb3Bjb3VudCAmJiB0
+ZXN0Y2FsbHMgJSAxMDAwMDAgPT0gMCkKIAkJcHJ0KCIlbHUuLi5cbiIsIHRlc3RjYWxscyk7CiAK
+LQkvKgotCSAqICAgICAgICAgICAgICAgICBsaXRlICAhbGl0ZQotCSAqIFJFQUQ6CW9wID0gMAkg
+ICAwCi0JICogV1JJVEU6CW9wID0gMSAgICAgMQotCSAqIE1BUFJFQUQ6ICAgICBvcCA9IDIgICAg
+IDIKLQkgKiBUUlVOQ0FURToJb3AgPSAtICAgICAzCi0JICogTUFQV1JJVEU6ICAgIG9wID0gMyAg
+ICAgNAotCSAqIEZBTExPQ0FURTogICBvcCA9IC0gICAgIDUKLQkgKiBQVU5DSCBIT0xFOiAgb3Ag
+PSAtICAgICA2Ci0JICovCi0JaWYgKGxpdGUgPyAwIDogb3AgPT0gMyAmJiAoc3R5bGUgJiAxKSA9
+PSAwKSAvKiB2YW5pbGxhIHRydW5jYXRlPyAqLwotCQlkb3RydW5jYXRlKHJhbmRvbSgpICUgbWF4
+ZmlsZWxlbik7Ci0JZWxzZSB7Ci0JCWlmIChyYW5kb21vcGxlbikKLQkJCXNpemUgPSByYW5kb20o
+KSAlIChtYXhvcGxlbisxKTsKLQotCQlpZiAobGl0ZSA/IDAgOiBvcCA9PSAzKSB7Ci0JCQkvKiB0
+cnVuY2F0ZSAqLwotCQkJZG90cnVuY2F0ZShzaXplKTsKLQkJfSBlbHNlIHsKLQkJCW9mZnNldCA9
+IHJhbmRvbSgpOwotCQkJaWYgKG9wID09IDUpIHsKLQkJCQkvKiBmYWxsb2NhdGUgKi8KLQkJCQlv
+ZmZzZXQgJT0gbWF4ZmlsZWxlbjsKLQkJCQlpZiAob2Zmc2V0ICsgc2l6ZSA+IG1heGZpbGVsZW4p
+Ci0JCQkJCXNpemUgPSBtYXhmaWxlbGVuIC0gb2Zmc2V0OwotCQkJCWRvX3ByZWFsbG9jYXRlKG9m
+ZnNldCwgc2l6ZSk7Ci0JCQl9IGVsc2UgaWYgKG9wID09IDYpIHsKLQkJCQlvZmZzZXQgJT0gbWF4
+ZmlsZWxlbjsKLQkJCQlpZiAob2Zmc2V0ICsgc2l6ZSA+IG1heGZpbGVsZW4pCi0JCQkJCXNpemUg
+PSBtYXhmaWxlbGVuIC0gb2Zmc2V0OwotCQkJCWRvX3B1bmNoX2hvbGUob2Zmc2V0LCBzaXplKTsK
+LQkJCX0gZWxzZSBpZiAob3AgPT0gMSB8fCBvcCA9PSAobGl0ZSA/IDMgOiA0KSkgewotCQkJCS8q
+IHdyaXRlIC8gbWFwd3JpdGUgKi8KLQkJCQlvZmZzZXQgJT0gbWF4ZmlsZWxlbjsKLQkJCQlpZiAo
+b2Zmc2V0ICsgc2l6ZSA+IG1heGZpbGVsZW4pCi0JCQkJCXNpemUgPSBtYXhmaWxlbGVuIC0gb2Zm
+c2V0OwotCQkJCWlmIChvcCAhPSAxKQotCQkJCQlkb21hcHdyaXRlKG9mZnNldCwgc2l6ZSk7Ci0J
+CQkJZWxzZQotCQkJCQlkb3dyaXRlKG9mZnNldCwgc2l6ZSk7Ci0JCQl9IGVsc2UgewotCQkJCS8q
+IHJlYWQgLyBtYXByZWFkICovCi0JCQkJaWYgKGZpbGVfc2l6ZSkKLQkJCQkJb2Zmc2V0ICU9IGZp
+bGVfc2l6ZTsKLQkJCQllbHNlCi0JCQkJCW9mZnNldCA9IDA7Ci0JCQkJaWYgKG9mZnNldCArIHNp
+emUgPiBmaWxlX3NpemUpCi0JCQkJCXNpemUgPSBmaWxlX3NpemUgLSBvZmZzZXQ7Ci0JCQkJaWYg
+KG9wICE9IDApCi0JCQkJCWRvbWFwcmVhZChvZmZzZXQsIHNpemUpOwotCQkJCWVsc2UKLQkJCQkJ
+ZG9yZWFkKG9mZnNldCwgc2l6ZSk7Ci0JCQl9CisJb2Zmc2V0ID0gcmFuZG9tKCk7CisJaWYgKHJh
+bmRvbW9wbGVuKQorCQlzaXplID0gcmFuZG9tKCkgJSAobWF4b3BsZW4gKyAxKTsKKworCS8qIGNh
+bGN1bGF0ZSBhcHByb3ByaWF0ZSBvcCB0byBydW4gKi8KKwlpZiAobGl0ZSkKKwkJb3AgPSBydiAl
+IDQ7CisJZWxzZQorCQlvcCA9IHJ2ICUgNzsKKworCXN3aXRjaCAob3ApIHsKKwljYXNlIDI6CisJ
+CWlmICghbWFwcGVkX3JlYWRzKQorCQkJb3AgPSAwOworCQlicmVhazsKKwljYXNlIDM6CisJCWlm
+ICghbWFwcGVkX3dyaXRlcykKKwkJCW9wID0gMTsKKwkJYnJlYWs7CisJY2FzZSA1OgorCQlpZiAo
+IWZhbGxvY2F0ZV9jYWxscykgeworCQkJbG9nNChPUF9TS0lQUEVELCBPUF9GQUxMT0NBVEUsIG9m
+ZnNldCwgc2l6ZSk7CisJCQlnb3RvIG91dDsKKwkJfQorCQlicmVhazsKKwljYXNlIDY6CisJCWlm
+ICghcHVuY2hfaG9sZV9jYWxscykgeworCQkJbG9nNChPUF9TS0lQUEVELCBPUF9QVU5DSF9IT0xF
+LCBvZmZzZXQsIHNpemUpOworCQkJZ290byBvdXQ7CiAJCX0KKwkJYnJlYWs7CiAJfQorCisJc3dp
+dGNoIChvcCkgeworCWNhc2UgMDoJLyogcmVhZCAqLworCQlUUklNX09GRl9MRU4ob2Zmc2V0LCBz
+aXplLCBmaWxlX3NpemUpOworCQlkb3JlYWQob2Zmc2V0LCBzaXplKTsKKwkJYnJlYWs7CisKKwlj
+YXNlIDE6IC8qIHdyaXRlICovCisJCVRSSU1fT0ZGX0xFTihvZmZzZXQsIHNpemUsIG1heGZpbGVs
+ZW4pOworCQlkb3dyaXRlKG9mZnNldCwgc2l6ZSk7CisJCWJyZWFrOworCisJY2FzZSAyOgkvKiBt
+YXByZWFkICovCisJCVRSSU1fT0ZGX0xFTihvZmZzZXQsIHNpemUsIG1heGZpbGVsZW4pOworCQlk
+b21hcHJlYWQob2Zmc2V0LCBzaXplKTsKKwkJYnJlYWs7CisKKwljYXNlIDM6CS8qIG1hcHdyaXRl
+ICovCisJCVRSSU1fT0ZGX0xFTihvZmZzZXQsIHNpemUsIG1heGZpbGVsZW4pOworCQlkb21hcHdy
+aXRlKG9mZnNldCwgc2l6ZSk7CisJCWJyZWFrOworCisJY2FzZSA0OiAvKiB0cnVuY2F0ZSAqLwor
+CQlpZiAoIXN0eWxlKQorCQkJc2l6ZSA9IHJhbmRvbSgpICUgbWF4ZmlsZWxlbjsKKwkJZG90cnVu
+Y2F0ZShzaXplKTsKKwkJYnJlYWs7CisKKwljYXNlIDU6CS8qIGZhbGxvY2F0ZSAqLworCQlUUklN
+X09GRl9MRU4ob2Zmc2V0LCBzaXplLCBtYXhmaWxlbGVuKTsKKwkJZG9fcHJlYWxsb2NhdGUob2Zm
+c2V0LCBzaXplKTsKKwkJYnJlYWs7CisKKwljYXNlIDY6CS8qIHB1bmNoICovCisJCVRSSU1fT0ZG
+X0xFTihvZmZzZXQsIHNpemUsIG1heGZpbGVsZW4pOworCQlkb19wdW5jaF9ob2xlKG9mZnNldCwg
+c2l6ZSk7CisJCWJyZWFrOworCWRlZmF1bHQ6CisJCXBydGVycigidGVzdDogdW5rbm93biBvcGVy
+YXRpb24iKTsKKwkJcmVwb3J0X2ZhaWx1cmUoNDIpOworCQlicmVhazsKKwl9CisKK291dDoKIAlp
+ZiAoc2l6ZWNoZWNrcyAmJiB0ZXN0Y2FsbHMgPiBzaW11bGF0ZWRvcGNvdW50KQogCQljaGVja19z
+aXplKCk7CiAJaWYgKGNsb3Nlb3BlbikKLS0gCjEuNy41LjEKCl9fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2ku
+Y29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
