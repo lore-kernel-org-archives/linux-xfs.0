@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5RLGMTG147009 for <xfs@oss.sgi.com>; Mon, 27 Jun 2011 16:16:23 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C689933437
-	for <xfs@oss.sgi.com>; Mon, 27 Jun 2011 14:16:21 -0700 (PDT)
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id Fv5GwrBgm33ZUn02 for <xfs@oss.sgi.com>;
-	Mon, 27 Jun 2011 14:16:21 -0700 (PDT)
-Message-ID: <4E08F324.5040703@sandeen.net>
-Date: Mon, 27 Jun 2011 16:16:20 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	p5RKtSje142498
+	for <linux-xfs@oss.sgi.com>; Mon, 27 Jun 2011 15:55:28 -0500
+Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 107DE16727FB
+	for <linux-xfs@oss.sgi.com>; Mon, 27 Jun 2011 13:55:27 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id cZDJQCfbNmFqr9Tf
+	for <linux-xfs@oss.sgi.com>; Mon, 27 Jun 2011 13:55:27 -0700 (PDT)
+Message-ID: <4E08EE3E.1090604@hardwarefreak.com>
+Date: Mon, 27 Jun 2011 15:55:26 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 2/4] xfstests: fsx fallocate support is b0rked
-References: <1309153722-1231-1-git-send-email-david@fromorbit.com>
-	<1309153722-1231-3-git-send-email-david@fromorbit.com>
-In-Reply-To: <1309153722-1231-3-git-send-email-david@fromorbit.com>
+Subject: Re: mkfs.xfs error creating large agcount an raid
+References: <4E063BC6.9000801@task.com.br>	<4E0694CC.8050003@hardwarefreak.com>	<4E06C967.2060107@task.com.br>	<20110626235959.GC32466@dastard>	<4E07FA07.4050907@hardwarefreak.com>	<4E0803AA.20809@task.com.br>	<4E08456F.1090503@hardwarefreak.com>	<BANLkTimJm5Fe1LvD1AQYZC5QCDs0gXJpFA@mail.gmail.com>	<4E089D4E.1060503@sandeen.net>
+	<BANLkTikJe7ayzwD2Yqc7BHePfZ4x-M_SyQ@mail.gmail.com>
+In-Reply-To: <BANLkTikJe7ayzwD2Yqc7BHePfZ4x-M_SyQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,121 +25,43 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Paul Anderson <pha@umich.edu>
+Cc: linux-xfs@oss.sgi.com, Marcus Pereira <marcus@task.com.br>, Eric Sandeen <sandeen@sandeen.net>
 
-T24gNi8yNy8xMSAxMjo0OCBBTSwgRGF2ZSBDaGlubmVyIHdyb3RlOgo+IEZyb206IERhdmUgQ2hp
-bm5lciA8ZGNoaW5uZXJAcmVkaGF0LmNvbT4KPiAKPiBUaGUgcmVjZW50IGZhbGxvY2F0ZS9mcHVu
-Y2ggYWRkaXRpb25zIHRvIGZzeCBoYXZlIG5vdCBhY3R1YWxseSBiZQo+IGV4ZWN1dGluZyBmYWxs
-b2NhdGUvZnB1bmNoIG9wZXJhdGlvbnMuIFRoZSBsb2dpYyB0byBzZWxlY3Qgd2hhdAo+IG9wZXJh
-dGlvbiB0byBydW4gaXMgYnJva2VuIGluIHN1Y2ggYSB3YXkgdGhhdCBmc3ggaGFzIGJlZW4gZXhl
-Y3V0aW5nCj4gbWFwcGVkIHdyaXRlcyBhbmQgdHJ1bmNhdGVzIGluc3RlYWQgb2YgZmFsbG9jYXRl
-IGFuZCBmcHVuY2gKPiBvcGVyYXRpb25zLgo+IAo+IFJlbW92ZSBhbGwgdGhlIChiMHJrZW4pIHNt
-YXJ0eS1wYW50cyBzZWxlY3Rpb24gbG9naWMgZnJvbSB0aGUgdGVzdCgpCgpJIGhvcGUgSSBvbmx5
-IGV4dGVuZGVkIHRoYXQgc21hcnR5LXBhbnRzIGxvZ2ljIGFuZCBkaWRuJ3QgaW52ZW50IGl0LgpJ
-IHN1cHBvc2UgbWF5YmUgSSBicm9rZSBpdCBmaXJzdCB0aG91Z2gsIGRhbW4uCgo+IGZ1bmN0aW9u
-LiBSZXBsYWNlIGl0IHdpdGggYSBjbGVhcmx5IGRlZmluZWQgc2V0IG9mIG9wZXJhdGlvbnMgZm9y
-Cj4gZWFjaCBtb2RlIGFuZCB1c2UgdW5kZXJzdGFuZGFibGUgZmFsbGJhY2sgbG9naWMgd2hlbiB2
-YXJpb3VzCj4gb3BlcmF0aW9uIHR5cGVzIGhhdmUgYmVlbiBkaXNhYmxlZC4gVGhlbiB1c2UgYSBz
-aW1wbGUgc3dpdGNoCj4gc3RhdGVtZW50IHRvIGV4ZWN1dGUgZWFjaCBvZiB0aGUgZGlmZmVyZW50
-IG9wZXJhdGlvbnMsIHJlbW92aW5nIHRoZQo+IHRvcnR1cmVkIG5lc3Rpbmcgb2YgaWYvZWxzZSBz
-dGF0ZW1lbnRzIHRoYXQgb25seSBzZXJ2ZSB0byBvYmZ1c2NhdGUKPiB0aGUgY29kZS4KPiAKPiBO
-QXMgYSByZXN1bHQsIGZzeCB1c2VzIGZhbGxvY2F0ZS9mcHVuY2ggYXBwcm9wcmlhdGVseSBkdXJp
-bmcKPiBvcGVyYXRpb25zLCBhbmQgdXNlcy9kaXNhYmxl0ZUgdGhlIG9wZXJhdGlvbnMgYXMgZGVm
-aW5lZCBvbiB0aGUKPiBjb21tYW5kIGxpbmUgY29ycmVjdGx5LgoKSG0gd2UncmUgYmFjayBpbiB0
-aGUgZnN4IG1haW50ZW5hbmNlIGJ1c2luZXNzIEkgZ3Vlc3MuCgpXb3VsZCBpdCBiZSB3b3J0aCBk
-b2luZyBkZWZpbmVzIG9yIGFuIGVudW0gZm9yIHRoZSBvcHMvY2FzZXMsIHRvIG1ha2UgaXQKYSBs
-aXR0bGUgbW9yZSByZWFkYWJsZT8KCk90aGVyd2lzZSBsb29rcyBtdWNoIGJldHRlci4KCi1Fcmlj
-Cgo+IFNpZ25lZC1vZmYtYnk6IERhdmUgQ2hpbm5lciA8ZGNoaW5uZXJAcmVkaGF0LmNvbT4KPiAt
-LS0KPiAgbHRwL2ZzeC5jIHwgIDE2MiArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
-KysrKystLS0tLS0tLS0tLS0tLS0tLS0tLS0tCj4gIDEgZmlsZXMgY2hhbmdlZCwgMTAzIGluc2Vy
-dGlvbnMoKyksIDU5IGRlbGV0aW9ucygtKQo+IAo+IGRpZmYgLS1naXQgYS9sdHAvZnN4LmMgYi9s
-dHAvZnN4LmMKPiBpbmRleCBhMzdlMjIzLi42NmRhZWZlIDEwMDY0NAo+IC0tLSBhL2x0cC9mc3gu
-Ywo+ICsrKyBiL2x0cC9mc3guYwo+IEBAIC05NTUsMTggKzk1NSw0MiBAQCBkb2Nsb3Nlb3Blbih2
-b2lkKQo+ICAJfQo+ICB9Cj4gIAo+ICsjZGVmaW5lIFRSSU1fT0ZGX0xFTihvZmYsIGxlbiwgc2l6
-ZSkJXAo+ICtkbyB7CQkJCQlcCj4gKwlpZiAoZmlsZV9zaXplKQkJCVwKPiArCQlvZmZzZXQgJT0g
-c2l6ZTsJCVwKPiArCWVsc2UJCQkJXAo+ICsJCW9mZnNldCA9IDA7CQlcCj4gKwlpZiAob2Zmc2V0
-ICsgbGVuID4gc2l6ZSkJXAo+ICsJCWxlbiA9IHNpemUgLSBvZmZzZXQ7CVwKPiArfSB3aGlsZSAo
-MCkKPiAgCj4gKy8qCj4gKyAqIFRoZSBvcGVyYXRpb24gbWF0cml4IGlzIGNvbXBsZXggZHVlIHRv
-IGNvbmRpdGlvbmFsIHZhcmlhYmxlcy4KPiArICogV2UgY2FsY3VsYXRlIGhvdyBtYW55IGRpZmZl
-cmVudCBvcGVyYXRpb25zIHdlIGNhbiB1c2UsIHRoZW4KPiArICogbWFwIHRoZW0gYXBwcm9wcmlh
-dGVseSBhY2NvcmRpbmcgdG8gaG93IG1hbnkgb3B0aW9ucyBhcmUgZW5hYmxlZC4KPiArICogVGhl
-IG1hcHBpbmcgaXM6Cj4gKyAqCj4gKyAqCQlsaXRlCSFsaXRlCj4gKyAqIFJFQUQ6CTAJMAo+ICsg
-KiBXUklURToJMQkxCj4gKyAqIE1BUFJFQUQ6CTIJMgo+ICsgKiBNQVBXUklURToJMwkzCj4gKyAq
-IFRSVU5DQVRFOgktCTQKPiArICogRkFMTE9DQVRFOgktCTUKPiArICogUFVOQ0ggSE9MRToJLQk2
-Cj4gKyAqCj4gKyAqIFdoZW4gbWFwcGVkIHJlYWQvd3JpdGVzIGFyZSBkaXNhYmxlZCwgdGhleSBh
-cmUgc2ltcGx5IGNvbnZlcnRlZCB0byBub3JtYWwKPiArICogcmVhZHMgYW5kIHdyaXRlcy4gV2hl
-biBmYWxsb2NhdGUvZnB1bmNoIGNhbGxzIGFyZSBkaXNhYmxlZCwgdGhleSBhcmUKPiArICogY29u
-dmVydGVkIHRvIE9QX1NLSVBQRUQuCj4gKyAqLwo+ICB2b2lkCj4gIHRlc3Qodm9pZCkKPiAgewo+
-ICAJdW5zaWduZWQgbG9uZwlvZmZzZXQ7Cj4gIAl1bnNpZ25lZCBsb25nCXNpemUgPSBtYXhvcGxl
-bjsKPiAgCXVuc2lnbmVkIGxvbmcJcnYgPSByYW5kb20oKTsKPiAtCXVuc2lnbmVkIGxvbmcJb3Ag
-PSBydiAlICgzICsgIWxpdGUgKyBtYXBwZWRfd3JpdGVzICsgZmFsbG9jYXRlX2NhbGxzICsgcHVu
-Y2hfaG9sZV9jYWxscyk7Cj4gLSAgICAgICAgLyogdHVybiBvZmYgdGhlIG1hcCByZWFkIGlmIG5l
-Y2Vzc2FyeSAqLwo+IC0KPiAtICAgICAgICBpZiAob3AgPT0gMiAmJiAhbWFwcGVkX3JlYWRzKQo+
-IC0gICAgICAgICAgICBvcCA9IDA7Cj4gKwl1bnNpZ25lZCBsb25nCW9wOwo+ICAKPiAgCWlmIChz
-aW11bGF0ZWRvcGNvdW50ID4gMCAmJiB0ZXN0Y2FsbHMgPT0gc2ltdWxhdGVkb3Bjb3VudCkKPiAg
-CQl3cml0ZWZpbGVpbWFnZSgpOwo+IEBAIC05ODIsNjIgKzEwMDYsODIgQEAgdGVzdCh2b2lkKQo+
-ICAJaWYgKCFxdWlldCAmJiB0ZXN0Y2FsbHMgPCBzaW11bGF0ZWRvcGNvdW50ICYmIHRlc3RjYWxs
-cyAlIDEwMDAwMCA9PSAwKQo+ICAJCXBydCgiJWx1Li4uXG4iLCB0ZXN0Y2FsbHMpOwo+ICAKPiAt
-CS8qCj4gLQkgKiAgICAgICAgICAgICAgICAgbGl0ZSAgIWxpdGUKPiAtCSAqIFJFQUQ6CW9wID0g
-MAkgICAwCj4gLQkgKiBXUklURToJb3AgPSAxICAgICAxCj4gLQkgKiBNQVBSRUFEOiAgICAgb3Ag
-PSAyICAgICAyCj4gLQkgKiBUUlVOQ0FURToJb3AgPSAtICAgICAzCj4gLQkgKiBNQVBXUklURTog
-ICAgb3AgPSAzICAgICA0Cj4gLQkgKiBGQUxMT0NBVEU6ICAgb3AgPSAtICAgICA1Cj4gLQkgKiBQ
-VU5DSCBIT0xFOiAgb3AgPSAtICAgICA2Cj4gLQkgKi8KPiAtCWlmIChsaXRlID8gMCA6IG9wID09
-IDMgJiYgKHN0eWxlICYgMSkgPT0gMCkgLyogdmFuaWxsYSB0cnVuY2F0ZT8gKi8KPiAtCQlkb3Ry
-dW5jYXRlKHJhbmRvbSgpICUgbWF4ZmlsZWxlbik7Cj4gLQllbHNlIHsKPiAtCQlpZiAocmFuZG9t
-b3BsZW4pCj4gLQkJCXNpemUgPSByYW5kb20oKSAlIChtYXhvcGxlbisxKTsKPiAtCj4gLQkJaWYg
-KGxpdGUgPyAwIDogb3AgPT0gMykgewo+IC0JCQkvKiB0cnVuY2F0ZSAqLwo+IC0JCQlkb3RydW5j
-YXRlKHNpemUpOwo+IC0JCX0gZWxzZSB7Cj4gLQkJCW9mZnNldCA9IHJhbmRvbSgpOwo+IC0JCQlp
-ZiAob3AgPT0gNSkgewo+IC0JCQkJLyogZmFsbG9jYXRlICovCj4gLQkJCQlvZmZzZXQgJT0gbWF4
-ZmlsZWxlbjsKPiAtCQkJCWlmIChvZmZzZXQgKyBzaXplID4gbWF4ZmlsZWxlbikKPiAtCQkJCQlz
-aXplID0gbWF4ZmlsZWxlbiAtIG9mZnNldDsKPiAtCQkJCWRvX3ByZWFsbG9jYXRlKG9mZnNldCwg
-c2l6ZSk7Cj4gLQkJCX0gZWxzZSBpZiAob3AgPT0gNikgewo+IC0JCQkJb2Zmc2V0ICU9IG1heGZp
-bGVsZW47Cj4gLQkJCQlpZiAob2Zmc2V0ICsgc2l6ZSA+IG1heGZpbGVsZW4pCj4gLQkJCQkJc2l6
-ZSA9IG1heGZpbGVsZW4gLSBvZmZzZXQ7Cj4gLQkJCQlkb19wdW5jaF9ob2xlKG9mZnNldCwgc2l6
-ZSk7Cj4gLQkJCX0gZWxzZSBpZiAob3AgPT0gMSB8fCBvcCA9PSAobGl0ZSA/IDMgOiA0KSkgewo+
-IC0JCQkJLyogd3JpdGUgLyBtYXB3cml0ZSAqLwo+IC0JCQkJb2Zmc2V0ICU9IG1heGZpbGVsZW47
-Cj4gLQkJCQlpZiAob2Zmc2V0ICsgc2l6ZSA+IG1heGZpbGVsZW4pCj4gLQkJCQkJc2l6ZSA9IG1h
-eGZpbGVsZW4gLSBvZmZzZXQ7Cj4gLQkJCQlpZiAob3AgIT0gMSkKPiAtCQkJCQlkb21hcHdyaXRl
-KG9mZnNldCwgc2l6ZSk7Cj4gLQkJCQllbHNlCj4gLQkJCQkJZG93cml0ZShvZmZzZXQsIHNpemUp
-Owo+IC0JCQl9IGVsc2Ugewo+IC0JCQkJLyogcmVhZCAvIG1hcHJlYWQgKi8KPiAtCQkJCWlmIChm
-aWxlX3NpemUpCj4gLQkJCQkJb2Zmc2V0ICU9IGZpbGVfc2l6ZTsKPiAtCQkJCWVsc2UKPiAtCQkJ
-CQlvZmZzZXQgPSAwOwo+IC0JCQkJaWYgKG9mZnNldCArIHNpemUgPiBmaWxlX3NpemUpCj4gLQkJ
-CQkJc2l6ZSA9IGZpbGVfc2l6ZSAtIG9mZnNldDsKPiAtCQkJCWlmIChvcCAhPSAwKQo+IC0JCQkJ
-CWRvbWFwcmVhZChvZmZzZXQsIHNpemUpOwo+IC0JCQkJZWxzZQo+IC0JCQkJCWRvcmVhZChvZmZz
-ZXQsIHNpemUpOwo+IC0JCQl9Cj4gKwlvZmZzZXQgPSByYW5kb20oKTsKPiArCWlmIChyYW5kb21v
-cGxlbikKPiArCQlzaXplID0gcmFuZG9tKCkgJSAobWF4b3BsZW4gKyAxKTsKPiArCj4gKwkvKiBj
-YWxjdWxhdGUgYXBwcm9wcmlhdGUgb3AgdG8gcnVuICovCj4gKwlpZiAobGl0ZSkKPiArCQlvcCA9
-IHJ2ICUgNDsKPiArCWVsc2UKPiArCQlvcCA9IHJ2ICUgNzsKPiArCj4gKwlzd2l0Y2ggKG9wKSB7
-Cj4gKwljYXNlIDI6Cj4gKwkJaWYgKCFtYXBwZWRfcmVhZHMpCj4gKwkJCW9wID0gMDsKPiArCQli
-cmVhazsKPiArCWNhc2UgMzoKPiArCQlpZiAoIW1hcHBlZF93cml0ZXMpCj4gKwkJCW9wID0gMTsK
-PiArCQlicmVhazsKPiArCWNhc2UgNToKPiArCQlpZiAoIWZhbGxvY2F0ZV9jYWxscykgewo+ICsJ
-CQlsb2c0KE9QX1NLSVBQRUQsIE9QX0ZBTExPQ0FURSwgb2Zmc2V0LCBzaXplKTsKPiArCQkJZ290
-byBvdXQ7Cj4gKwkJfQo+ICsJCWJyZWFrOwo+ICsJY2FzZSA2Ogo+ICsJCWlmICghcHVuY2hfaG9s
-ZV9jYWxscykgewo+ICsJCQlsb2c0KE9QX1NLSVBQRUQsIE9QX1BVTkNIX0hPTEUsIG9mZnNldCwg
-c2l6ZSk7Cj4gKwkJCWdvdG8gb3V0Owo+ICAJCX0KPiArCQlicmVhazsKPiAgCX0KPiArCj4gKwlz
-d2l0Y2ggKG9wKSB7Cj4gKwljYXNlIDA6CS8qIHJlYWQgKi8KPiArCQlUUklNX09GRl9MRU4ob2Zm
-c2V0LCBzaXplLCBmaWxlX3NpemUpOwo+ICsJCWRvcmVhZChvZmZzZXQsIHNpemUpOwo+ICsJCWJy
-ZWFrOwo+ICsKPiArCWNhc2UgMTogLyogd3JpdGUgKi8KPiArCQlUUklNX09GRl9MRU4ob2Zmc2V0
-LCBzaXplLCBtYXhmaWxlbGVuKTsKPiArCQlkb3dyaXRlKG9mZnNldCwgc2l6ZSk7Cj4gKwkJYnJl
-YWs7Cj4gKwo+ICsJY2FzZSAyOgkvKiBtYXByZWFkICovCj4gKwkJVFJJTV9PRkZfTEVOKG9mZnNl
-dCwgc2l6ZSwgbWF4ZmlsZWxlbik7Cj4gKwkJZG9tYXByZWFkKG9mZnNldCwgc2l6ZSk7Cj4gKwkJ
-YnJlYWs7Cj4gKwo+ICsJY2FzZSAzOgkvKiBtYXB3cml0ZSAqLwo+ICsJCVRSSU1fT0ZGX0xFTihv
-ZmZzZXQsIHNpemUsIG1heGZpbGVsZW4pOwo+ICsJCWRvbWFwd3JpdGUob2Zmc2V0LCBzaXplKTsK
-PiArCQlicmVhazsKPiArCj4gKwljYXNlIDQ6IC8qIHRydW5jYXRlICovCj4gKwkJaWYgKCFzdHls
-ZSkKPiArCQkJc2l6ZSA9IHJhbmRvbSgpICUgbWF4ZmlsZWxlbjsKPiArCQlkb3RydW5jYXRlKHNp
-emUpOwo+ICsJCWJyZWFrOwo+ICsKPiArCWNhc2UgNToJLyogZmFsbG9jYXRlICovCj4gKwkJVFJJ
-TV9PRkZfTEVOKG9mZnNldCwgc2l6ZSwgbWF4ZmlsZWxlbik7Cj4gKwkJZG9fcHJlYWxsb2NhdGUo
-b2Zmc2V0LCBzaXplKTsKPiArCQlicmVhazsKPiArCj4gKwljYXNlIDY6CS8qIHB1bmNoICovCj4g
-KwkJVFJJTV9PRkZfTEVOKG9mZnNldCwgc2l6ZSwgbWF4ZmlsZWxlbik7Cj4gKwkJZG9fcHVuY2hf
-aG9sZShvZmZzZXQsIHNpemUpOwo+ICsJCWJyZWFrOwo+ICsJZGVmYXVsdDoKPiArCQlwcnRlcnIo
-InRlc3Q6IHVua25vd24gb3BlcmF0aW9uIik7Cj4gKwkJcmVwb3J0X2ZhaWx1cmUoNDIpOwo+ICsJ
-CWJyZWFrOwo+ICsJfQo+ICsKPiArb3V0Ogo+ICAJaWYgKHNpemVjaGVja3MgJiYgdGVzdGNhbGxz
-ID4gc2ltdWxhdGVkb3Bjb3VudCkKPiAgCQljaGVja19zaXplKCk7Cj4gIAlpZiAoY2xvc2VvcGVu
-KQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1h
-aWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlz
-dGluZm8veGZzCg==
+On 6/27/2011 10:27 AM, Paul Anderson wrote:
+
+> There is nothing in the man page I see indicating what is good or bad
+> regarding allocation groups - either document it there or warn in the
+> software.  If allocation algorithms are linear with respect to
+> allocation groups, the something like this should be stated in the man
+> pages.
+
+It is.  From the 2nd paragraph of 'man 5 xfs':
+
+...The data section is divided into a number of allocation groups. The
+number and size of the allocation groups are chosen by mkfs.xfs(8) so
+that there is normally a small number of equal-sized groups. The number
+of allocation groups controls the amount of parallelism available in
+file and block allocation. It should be increased from the default if
+there is sufficient memory and a lot of allocation activity. The number
+of allocation groups should not be set very high, since this can cause
+large amounts of CPU time to be used by the filesystem, especially when
+the filesystem is nearly full. More allocation groups are added (of the
+original size) when xfs_growfs(8) is run.
+
+Maybe some of this information could/should be moved to the agcount
+section of 'man mkfs.xfs'.  I'll concede that "should not be set very
+high" is subjective for novice XFS users.  To Marcus 20,000 may not be
+"very high". :)
+
+-- 
+Stan
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
