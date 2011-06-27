@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5R0066V010065
-	for <linux-xfs@oss.sgi.com>; Sun, 26 Jun 2011 19:00:07 -0500
+	p5R0WERO013650 for <xfs@oss.sgi.com>; Sun, 26 Jun 2011 19:32:14 -0500
 Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B85752FA31
-	for <linux-xfs@oss.sgi.com>; Sun, 26 Jun 2011 17:00:03 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3CA961670D45
+	for <xfs@oss.sgi.com>; Sun, 26 Jun 2011 17:32:12 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	WtvxyLTEhaBcq3Xx for <linux-xfs@oss.sgi.com>;
-	Sun, 26 Jun 2011 17:00:03 -0700 (PDT)
-Date: Mon, 27 Jun 2011 09:59:59 +1000
+	CKXXgx33EfH61fgU for <xfs@oss.sgi.com>;
+	Sun, 26 Jun 2011 17:32:12 -0700 (PDT)
+Date: Mon, 27 Jun 2011 10:32:09 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: mkfs.xfs error creating large agcount an raid
-Message-ID: <20110626235959.GC32466@dastard>
-References: <4E063BC6.9000801@task.com.br> <4E0694CC.8050003@hardwarefreak.com>
-	<4E06C967.2060107@task.com.br>
+Subject: Re: question on new feature complexity/possibility/sensibility? (^
+	Alternate)
+Message-ID: <20110627003209.GD32466@dastard>
+References: <4E067D81.4070605@tlinx.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4E06C967.2060107@task.com.br>
+In-Reply-To: <4E067D81.4070605@tlinx.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,103 +30,120 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Marcus Pereira <marcus@task.com.br>
-Cc: linux-xfs@oss.sgi.com
+To: "Linda A. Walsh" <xfs@tlinx.org>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Sun, Jun 26, 2011 at 02:53:43AM -0300, Marcus Pereira wrote:
-> Em 25-06-2011 23:09, Stan Hoeppner escreveu:
-> >On 6/25/2011 2:49 PM, Marcus Pereira wrote:
-> >>I have an issue when creating xfs volume using large agcounts on raid
-> >>volumes.
-> >Yes, you do have an issue, but not the one you think.
-> Ok, but seems something that should be corrected. Isn't that?
+On Sat, Jun 25, 2011 at 05:29:53PM -0700, Linda A. Walsh wrote:
+> I noticed in the 'cp' (coretuils 8.9-4.1) command on suse, there is
+> a a "--reflink" that controls "clone/CoW" copies -- which says
+> it performs a 'lightweight' copy where the data blocks are copied
+> only when modified.  Now it is vague the 'when modified', (i.e.
+> does it mean ones that are different between the two copies) (src
+> and dst), or does it mean only to copy blocks that were modified
+> since 'some point' -- Doesn't say, but would guess it's src/dst diffs
+> (I wonder if it is restricted to the same physical filesystem).
 > 
-> >>/dev/md0 is a 4 disks raid 0 array:
-> >>
-> >>----------------------------------------
-> >># mkfs.xfs -V
-> >>mkfs.xfs version 3.1.4
-> >>
-> >># mkfs.xfs -d agcount=1872 -b size=4096 /dev/md0 -f
-> >mkfs.xfs queries mdraid for its parameters and creates close to the
-> >optimal number of AGs, sets the stripe width, etc, all automatically.
-> >The default number of AGs for striped mdraid devices is 16 IIRC, and
-> >even that is probably a tad too high for a 4 spindle stripe.  Four or
-> >eight AGs would probably be better here, depending on your workload,
-> >which you did not state.  Please state your target workload.
-> The system is a heavy loaded email server.
-> >At 1872 you have 117 times the number of default AGs.  The two main
-> >downsides to doing this are:
-> The default agcount was 32 at this system.
-> >1. Abysmal performance due to excessive head seeking on an epic scale
-> >2. Premature drive failure due to head actuator failure
-> There is already insane head seeking at this server, hundreds of
-> simultaneous users reading their mailboxes.
+> Anyway, turns out, it's only for BTRFS (which I haven't yet used,
+> and therefore know only that it supports operations like the above).
 
-Perhaps you should just usethe defaults first and only consider
-changes if there is an obvious problem,?
+Yup, it requires a refcounted, shared, copy-on-write extent index to
+do efficiently.
 
-> In fact I was trying to
-> reduce the head seeking with larger agcounts.
+> Would it be practice to implement, some similar, feature in XFS?
 
-AGs are not for reducing seeking - they are for increasing
-allocation parallelism and scaling freespace indexes to extremely
-large filesystem sizes.
+It could be done, but it's a fairly large chunk of work....
 
-In fact, trying to use more than a few hundred AGs will hit internal
-AG indexing scalability limitations, especially as you start to fill
-up AGs and have to scan for AGs with free space in them.
+> It wouldn't be practice or useful to do it on an 'extent' basis due
+> to their large size...So to do something similar on XFS, I was
+> thinking,  with "some amount of effort", some number of "updated
+> extents" could be kept, in addition to the original data.
 
-IOWs, using large numbers of AGs are inadvisable for many reasons.
+Kept where, exactly? And how do you share the original extent tree
+between multiple inodes? And if all the inodes that share the
+original tree get truncated, how do you know that you can break the
+ref-link state and remove the original, now unreferenced tree?
 
-> >are actually SSDs then the hardware won't suffer failures, but
-> >performance will likely be far less than optimal.
-> The 4 disks are mechanical, in fact each of them are 2 SCSI HD raid
-> 1 hardware raid 0 array but the OS sees it as a single device.
-> So its a raid 10 with hardware raid 1 and software raid 0.
+Once you have solved those problems, you have effectively designed a
+refcounted, shared, copy-on-write extent index....
+
+> Any future modifications to the file would also have the extents
+> modified, but any extents that overlap previous mods will be merged,
+> and only the newest data would be kept (meaning that
+> new sections that are written, that skip over parts of the file,
+> wouldn't overwrite a pending change to that section -- only
+> the bytes (granularity?)  that were changed.
 > 
-> >Why are you attempting to create an insane number of allocation groups?
-> >  What benefit do you expect to gain from doing so?
-> >
-> >Regardless of your answer, the correct answer is that such high AG
-> >counts only have downsides, and zero upside.
-> It is still a test to find an optimal agcount, there are several of
-> this servers and each of them would be with a different agcount. I
-> was trying to build an even larger agcount something like 20000 to
-> 30000. :-)
+> I.e. file is 1Mb.
+> User1 updates bytes 1k-200k.
+> User2, later updates bytes 100k-300k, New modification 'extent' is
+> created with 1k-300k, with bytes
+> 1k-(100k-1) from user1 be saved, and 100k-300k from user2.
+> 
+> Changes to the 'base' copy would be made upon some ioctl 'sync'
+> command (file-by-file)...
+> 
+> It would require up to double the amount of file space.
 
-IOWs, you truly do not understand how AGs are used to scale
-filesystem performance and therefore you should be using the
-defaults.
+For a single reflink copy, yes. But there's nothing stopping you
+from having multiple ref-link copies of the one file. And so the
+problem is far more complex than you are considering.
 
-> The goal is to try to keep less or even 1 mailboxes per AG so more
-> sequential reading at each mailbox access and less random seek at
-> the volume.
+I've looked at what it would require to implemnt reflinks
+transparently in XFS, and it's not pretty.  Major surgery to the
+bmap code, a new btree type that includes back pointers to all the
+owner inodes, a new shadow inode type that holds the original tree,
+a new reflink inode type that contains the overwrite extent tree
+instead of a normal extent tree, a bunch of new transactions, new
+extent lookup/seek code, etc.
 
-You have no direct control over the placement of directories and
-files in AGs, so it doesn't matter how many AGs you create, you
-aren't going to be able to achieve this....
+I'd estimate it to be a 6 month project for someone who knew what
+they were doing. It's not just kernel code, but all the userspace
+tools need to be updated to understand reflinks and the COW based
+format (repair, check, db, bmap, etc)
 
-> I dont know if it was going to work like I was thinking.
-> I got this idea at this post and was giving it a try:
-> http://www.techforce.com.br/news/linux_blog/lvm_raid_xfs_ext3_tuning_for_small_files_parallel_i_o_on_debian
+FWIW, I haven't even looked at how extended attributes are
+supposed to be handled on reflinked files, so that could increase
+the complexity significantly.
 
-<sigh>
+> ----
+> Another possibility would simply be to create a record of byte
+> ranges that have been updated in the extent and the extent's last
+> modification time.  Then one could compare the mod times and apply
+> the changes.   The problem there would be having to keep a
+> possibly 'large' log of changes (what if it's not sync/purged...
+> couldn't be circular as that would allow events to be lost -- though
+> the file system could be forced 'offline' if the event log became full
+> ...a major pain...)..., but if it was created with a few G of space,
+> might take a while...and if synced in time, no prob.
+> 
+> Still, may be no great desire or benefit, but DAMN if I haven't
+> wanted copy-on-write files for a LONG time.
 
-http://xfs.org/index.php/XFS_FAQ#Q:_I_want_to_tune_my_XFS_filesystems_for_.3Csomething.3E
+So use a filesystem that supports them natively ;)
+
+> I.e. being able to hardlink files, but have an option to mark it as
+> copy on write -- allowing space to be save when copying directory trees,
+> but then dynamically making new copies when someone updates one of the
+> linked copies.
+
+The problem is that a reflink sort of looks like a hard link, but in
+many cases behaves like a soft link (e.g. different owners,
+permissions, etc are possible) and hence - combined with the
+copy-on-write behaviour - they need to be treated more like a
+soft-link in terms of implementation. Soft links have their own
+inode so can hold state separate to the inode they are pointing to,
+and for reflinked files it is simply not practical to retroactively
+modify the directory structure to point at a different inode when
+the first COW operation occurs.
+
+Like I said, it can be done, but it's not a small project. If you
+want to sink a significant amount of development time to the
+project, we will help you in any way we can. However, I don't think
+anyone has the time to do something like this for you....
 
 Cheers,
 
 Dave.
-> 
-> -- 
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
-
 -- 
 Dave Chinner
 david@fromorbit.com
