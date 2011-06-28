@@ -1,18 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5SFXRiw236259 for <xfs@oss.sgi.com>; Tue, 28 Jun 2011 10:33:28 -0500
+	p5SFXPOT236237 for <xfs@oss.sgi.com>; Tue, 28 Jun 2011 10:33:26 -0500
 Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F171D14F9718
-	for <xfs@oss.sgi.com>; Tue, 28 Jun 2011 08:33:26 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7E1B31770BDE
+	for <xfs@oss.sgi.com>; Tue, 28 Jun 2011 08:33:25 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id MC02FRNbTlo7na4d for
-	<xfs@oss.sgi.com>; Tue, 28 Jun 2011 08:33:26 -0700 (PDT)
+	cuda.sgi.com with ESMTP id s33a6EwQhV4Lk8yO for
+	<xfs@oss.sgi.com>; Tue, 28 Jun 2011 08:33:25 -0700 (PDT)
 From: Josef Bacik <josef@redhat.com>
-Subject: [PATCH 4/4] fs: handle SEEK_HOLE/SEEK_DATA properly in all fs's that
-	define their own llseek
-Date: Tue, 28 Jun 2011 11:33:18 -0400
-Message-Id: <1309275199-10801-4-git-send-email-josef@redhat.com>
+Subject: [PATCH 2/4] Btrfs: implement our own ->llseek
+Date: Tue, 28 Jun 2011 11:33:16 -0400
+Message-Id: <1309275199-10801-2-git-send-email-josef@redhat.com>
 In-Reply-To: <1309275199-10801-1-git-send-email-josef@redhat.com>
 References: <1309275199-10801-1-git-send-email-josef@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -30,223 +29,192 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com, viro@ZenIV.linux.org.uk
 
-This converts everybody to handle SEEK_HOLE/SEEK_DATA properly.  In some cases
-we just return -EINVAL, in others we do the normal generic thing, and in others
-we're simply making sure that the properly due-dilligence is done.  For example
-in NFS/CIFS we need to make sure the file size is update properly for the
-SEEK_HOLE and SEEK_DATA case, but since it calls the generic llseek stuff itself
-that is all we have to do.  Thanks,
+In order to handle SEEK_HOLE/SEEK_DATA we need to implement our own llseek.
+Basically for the normal SEEK_*'s we will just defer to the generic helper, and
+for SEEK_HOLE/SEEK_DATA we will use our fiemap helper to figure out the nearest
+hole or data.  Currently this helper doesn't check for delalloc bytes for
+prealloc space, so for now treat prealloc as data until that is fixed.  Thanks,
 
 Signed-off-by: Josef Bacik <josef@redhat.com>
 ---
- fs/block_dev.c   |   11 ++++++++---
- fs/ceph/dir.c    |    8 +++++++-
- fs/ceph/file.c   |   20 ++++++++++++++++++--
- fs/cifs/cifsfs.c |    7 +++++--
- fs/fuse/file.c   |   21 +++++++++++++++++++--
- fs/hpfs/dir.c    |    4 ++++
- fs/nfs/file.c    |    7 +++++--
- 7 files changed, 66 insertions(+), 12 deletions(-)
+ fs/btrfs/ctree.h |    3 +
+ fs/btrfs/file.c  |  148 +++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 150 insertions(+), 1 deletions(-)
 
-diff --git a/fs/block_dev.c b/fs/block_dev.c
-index 610e8e0..966617a 100644
---- a/fs/block_dev.c
-+++ b/fs/block_dev.c
-@@ -355,20 +355,25 @@ static loff_t block_llseek(struct file *file, loff_t offset, int origin)
- 	mutex_lock(&bd_inode->i_mutex);
- 	size = i_size_read(bd_inode);
+diff --git a/fs/btrfs/ctree.h b/fs/btrfs/ctree.h
+index f30ac05..32be5e0 100644
+--- a/fs/btrfs/ctree.h
++++ b/fs/btrfs/ctree.h
+@@ -2505,6 +2505,9 @@ int btrfs_csum_truncate(struct btrfs_trans_handle *trans,
+ int btrfs_lookup_csums_range(struct btrfs_root *root, u64 start, u64 end,
+ 			     struct list_head *list, int search_commit);
+ /* inode.c */
++struct extent_map *btrfs_get_extent_fiemap(struct inode *inode, struct page *page,
++					   size_t pg_offset, u64 start, u64 len,
++					   int create);
  
-+	retval = -EINVAL;
- 	switch (origin) {
--		case 2:
-+		case SEEK_END:
- 			offset += size;
- 			break;
--		case 1:
-+		case SEEK_CUR:
- 			offset += file->f_pos;
-+		case SEEK_SET:
-+			break;
-+		default:
-+			goto out;
- 	}
--	retval = -EINVAL;
- 	if (offset >= 0 && offset <= size) {
- 		if (offset != file->f_pos) {
- 			file->f_pos = offset;
- 		}
- 		retval = offset;
- 	}
-+out:
- 	mutex_unlock(&bd_inode->i_mutex);
- 	return retval;
+ /* RHEL and EL kernels have a patch that renames PG_checked to FsMisc */
+ #if defined(ClearPageFsMisc) && !defined(ClearPageChecked)
+diff --git a/fs/btrfs/file.c b/fs/btrfs/file.c
+index fa4ef18..bd4d061 100644
+--- a/fs/btrfs/file.c
++++ b/fs/btrfs/file.c
+@@ -1664,8 +1664,154 @@ out:
+ 	return ret;
  }
-diff --git a/fs/ceph/dir.c b/fs/ceph/dir.c
-index ef8f08c..79cd77c 100644
---- a/fs/ceph/dir.c
-+++ b/fs/ceph/dir.c
-@@ -446,14 +446,19 @@ static loff_t ceph_dir_llseek(struct file *file, loff_t offset, int origin)
- 	loff_t retval;
  
- 	mutex_lock(&inode->i_mutex);
-+	retval = -EINVAL;
- 	switch (origin) {
- 	case SEEK_END:
- 		offset += inode->i_size + 2;   /* FIXME */
- 		break;
- 	case SEEK_CUR:
- 		offset += file->f_pos;
-+	case SEEK_SET:
-+		break;
-+	default:
-+		goto out;
- 	}
--	retval = -EINVAL;
++static int find_desired_extent(struct inode *inode, loff_t *offset, int origin)
++{
++	struct btrfs_root *root = BTRFS_I(inode)->root;
++	struct extent_map *em;
++	struct extent_state *cached_state = NULL;
++	u64 lockstart = *offset;
++	u64 lockend = i_size_read(inode);
++	u64 start = *offset;
++	u64 orig_start = *offset;
++	u64 len = i_size_read(inode);
++	u64 last_end = 0;
++	int ret = 0;
 +
- 	if (offset >= 0 && offset <= inode->i_sb->s_maxbytes) {
- 		if (offset != file->f_pos) {
- 			file->f_pos = offset;
-@@ -477,6 +482,7 @@ static loff_t ceph_dir_llseek(struct file *file, loff_t offset, int origin)
- 		if (offset > old_offset)
- 			fi->dir_release_count--;
- 	}
-+out:
- 	mutex_unlock(&inode->i_mutex);
- 	return retval;
- }
-diff --git a/fs/ceph/file.c b/fs/ceph/file.c
-index 9542f07..774feb1 100644
---- a/fs/ceph/file.c
-+++ b/fs/ceph/file.c
-@@ -770,13 +770,16 @@ static loff_t ceph_llseek(struct file *file, loff_t offset, int origin)
- 
- 	mutex_lock(&inode->i_mutex);
- 	__ceph_do_pending_vmtruncate(inode);
--	switch (origin) {
--	case SEEK_END:
-+	if (origin != SEEK_CUR || origin != SEEK_SET) {
- 		ret = ceph_do_getattr(inode, CEPH_STAT_CAP_SIZE);
- 		if (ret < 0) {
- 			offset = ret;
- 			goto out;
- 		}
-+	}
++	lockend = max_t(u64, root->sectorsize, lockend);
++	if (lockend <= lockstart)
++		lockend = lockstart + root->sectorsize;
 +
-+	switch (origin) {
-+	case SEEK_END:
- 		offset += inode->i_size;
- 		break;
- 	case SEEK_CUR:
-@@ -792,6 +795,19 @@ static loff_t ceph_llseek(struct file *file, loff_t offset, int origin)
- 		}
- 		offset += file->f_pos;
- 		break;
-+	case SEEK_DATA:
-+		if (offset >= inode->i_size) {
-+			ret = -ENXIO;
-+			goto out;
-+		}
-+		break;
-+	case SEEK_HOLE:
-+		if (offset >= inode->i_size) {
-+			ret = -ENXIO;
-+			goto out;
-+		}
-+		offset = inode->i_size;
-+		break;
- 	}
- 
- 	if (offset < 0 || offset > inode->i_sb->s_maxbytes) {
-diff --git a/fs/cifs/cifsfs.c b/fs/cifs/cifsfs.c
-index 35f9154..5feb6bb 100644
---- a/fs/cifs/cifsfs.c
-+++ b/fs/cifs/cifsfs.c
-@@ -746,8 +746,11 @@ static ssize_t cifs_file_aio_write(struct kiocb *iocb, const struct iovec *iov,
- 
- static loff_t cifs_llseek(struct file *file, loff_t offset, int origin)
- {
--	/* origin == SEEK_END => we must revalidate the cached file length */
--	if (origin == SEEK_END) {
++	len = lockend - lockstart + 1;
++
++	len = max_t(u64, len, root->sectorsize);
++	if (inode->i_size == 0)
++		return -ENXIO;
++
++	lock_extent_bits(&BTRFS_I(inode)->io_tree, lockstart, lockend, 0,
++			 &cached_state, GFP_NOFS);
++
 +	/*
-+	 * origin == SEEK_END || SEEK_DATA || SEEK_HOLE => we must revalidate
-+	 * the cached file length
++	 * Delalloc is such a pain.  If we have a hole and we have pending
++	 * delalloc for a portion of the hole we will get back a hole that
++	 * exists for the entire range since it hasn't been actually written
++	 * yet.  So to take care of this case we need to look for an extent just
++	 * before the position we want in case there is outstanding delalloc
++	 * going on here.
 +	 */
-+	if (origin != SEEK_SET || origin != SEEK_CUR) {
- 		int rc;
- 		struct inode *inode = file->f_path.dentry->d_inode;
- 
-diff --git a/fs/fuse/file.c b/fs/fuse/file.c
-index 82a6646..73b89df 100644
---- a/fs/fuse/file.c
-+++ b/fs/fuse/file.c
-@@ -1600,15 +1600,32 @@ static loff_t fuse_file_llseek(struct file *file, loff_t offset, int origin)
- 	struct inode *inode = file->f_path.dentry->d_inode;
- 
- 	mutex_lock(&inode->i_mutex);
--	switch (origin) {
--	case SEEK_END:
-+	if (origin != SEEK_CUR || origin != SEEK_SET) {
- 		retval = fuse_update_attributes(inode, NULL, file, NULL);
- 		if (retval)
- 			goto exit;
++	if (origin == SEEK_HOLE && start != 0) {
++		if (start <= root->sectorsize)
++			em = btrfs_get_extent_fiemap(inode, NULL, 0, 0,
++						     root->sectorsize, 0);
++		else
++			em = btrfs_get_extent_fiemap(inode, NULL, 0,
++						     start - root->sectorsize,
++						     root->sectorsize, 0);
++		if (IS_ERR(em)) {
++			ret = -ENXIO;
++			goto out;
++		}
++		last_end = em->start + em->len;
++		if (em->block_start == EXTENT_MAP_DELALLOC)
++			last_end = min_t(u64, last_end, inode->i_size);
++		free_extent_map(em);
 +	}
 +
++	while (1) {
++		em = btrfs_get_extent_fiemap(inode, NULL, 0, start, len, 0);
++		if (IS_ERR(em)) {
++			ret = -ENXIO;
++			break;
++		}
++
++		if (em->block_start == EXTENT_MAP_HOLE) {
++			if (test_bit(EXTENT_FLAG_VACANCY, &em->flags)) {
++				if (last_end <= orig_start) {
++					free_extent_map(em);
++					ret = -ENXIO;
++					break;
++				}
++			}
++
++			if (origin == SEEK_HOLE) {
++				*offset = start;
++				free_extent_map(em);
++				break;
++			}
++		} else {
++			if (origin == SEEK_DATA) {
++				if (em->block_start == EXTENT_MAP_DELALLOC) {
++					if (start >= inode->i_size) {
++						free_extent_map(em);
++						ret = -ENXIO;
++						break;
++					}
++				}
++
++				*offset = start;
++				free_extent_map(em);
++				break;
++			}
++		}
++
++		start = em->start + em->len;
++		last_end = em->start + em->len;
++
++		if (em->block_start == EXTENT_MAP_DELALLOC)
++			last_end = min_t(u64, last_end, inode->i_size);
++
++		if (test_bit(EXTENT_FLAG_VACANCY, &em->flags)) {
++			free_extent_map(em);
++			ret = -ENXIO;
++			break;
++		}
++		free_extent_map(em);
++		cond_resched();
++	}
++	if (!ret)
++		*offset = min(*offset, inode->i_size);
++out:
++	unlock_extent_cached(&BTRFS_I(inode)->io_tree, lockstart, lockend,
++			     &cached_state, GFP_NOFS);
++	return ret;
++}
++
++static loff_t btrfs_file_llseek(struct file *file, loff_t offset, int origin)
++{
++	struct inode *inode = file->f_mapping->host;
++	int ret;
++
++	mutex_lock(&inode->i_mutex);
 +	switch (origin) {
 +	case SEEK_END:
- 		offset += i_size_read(inode);
- 		break;
- 	case SEEK_CUR:
- 		offset += file->f_pos;
-+		break;
++	case SEEK_CUR:
++		offset = generic_file_llseek_unlocked(file, offset, origin);
++		goto out;
 +	case SEEK_DATA:
-+		if (offset >= i_size_read(inode)) {
-+			retval = -ENXIO;
-+			goto exit;
-+		}
-+		break;
 +	case SEEK_HOLE:
-+		if (offset >= i_size_read(inode)) {
-+			retval = -ENXIO;
-+			goto exit;
++		ret = find_desired_extent(inode, &offset, origin);
++		if (ret) {
++			mutex_unlock(&inode->i_mutex);
++			return ret;
 +		}
-+		offset = i_size_read(inode);
-+		break;
- 	}
- 	retval = -EINVAL;
- 	if (offset >= 0 && offset <= inode->i_sb->s_maxbytes) {
-diff --git a/fs/hpfs/dir.c b/fs/hpfs/dir.c
-index f46ae02..96a8ed9 100644
---- a/fs/hpfs/dir.c
-+++ b/fs/hpfs/dir.c
-@@ -29,6 +29,10 @@ static loff_t hpfs_dir_lseek(struct file *filp, loff_t off, int whence)
- 	struct hpfs_inode_info *hpfs_inode = hpfs_i(i);
- 	struct super_block *s = i->i_sb;
- 
-+	/* Somebody else will have to figure out what to do here */
-+	if (whence == SEEK_DATA || whence == SEEK_HOLE)
++	}
++
++	if (offset < 0 && !(file->f_mode & FMODE_UNSIGNED_OFFSET))
++		return -EINVAL;
++	if (offset > inode->i_sb->s_maxbytes)
 +		return -EINVAL;
 +
- 	hpfs_lock(s);
- 
- 	/*printk("dir lseek\n");*/
-diff --git a/fs/nfs/file.c b/fs/nfs/file.c
-index 2f093ed..2c1705b 100644
---- a/fs/nfs/file.c
-+++ b/fs/nfs/file.c
-@@ -187,8 +187,11 @@ static loff_t nfs_file_llseek(struct file *filp, loff_t offset, int origin)
- 			filp->f_path.dentry->d_name.name,
- 			offset, origin);
- 
--	/* origin == SEEK_END => we must revalidate the cached file length */
--	if (origin == SEEK_END) {
-+	/*
-+	 * origin == SEEK_END || SEEK_DATA || SEEK_HOLE => we must revalidate
-+	 * the cached file length
-+	 */
-+	if (origin != SEEK_SET || origin != SEEK_CUR) {
- 		struct inode *inode = filp->f_mapping->host;
- 
- 		int retval = nfs_revalidate_file_size(inode, filp);
++	/* Special lock needed here? */
++	if (offset != file->f_pos) {
++		file->f_pos = offset;
++		file->f_version = 0;
++	}
++out:
++	mutex_unlock(&inode->i_mutex);
++	return offset;
++}
++
+ const struct file_operations btrfs_file_operations = {
+-	.llseek		= generic_file_llseek,
++	.llseek		= btrfs_file_llseek,
+ 	.read		= do_sync_read,
+ 	.write		= do_sync_write,
+ 	.aio_read       = generic_file_aio_read,
 -- 
 1.7.5.2
 
