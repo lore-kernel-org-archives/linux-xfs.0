@@ -1,19 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5SFXPOT236237 for <xfs@oss.sgi.com>; Tue, 28 Jun 2011 10:33:26 -0500
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7E1B31770BDE
-	for <xfs@oss.sgi.com>; Tue, 28 Jun 2011 08:33:25 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id s33a6EwQhV4Lk8yO for
-	<xfs@oss.sgi.com>; Tue, 28 Jun 2011 08:33:25 -0700 (PDT)
-From: Josef Bacik <josef@redhat.com>
-Subject: [PATCH 2/4] Btrfs: implement our own ->llseek
-Date: Tue, 28 Jun 2011 11:33:16 -0400
-Message-Id: <1309275199-10801-2-git-send-email-josef@redhat.com>
-In-Reply-To: <1309275199-10801-1-git-send-email-josef@redhat.com>
-References: <1309275199-10801-1-git-send-email-josef@redhat.com>
+	p5SNdOxi013727 for <xfs@oss.sgi.com>; Tue, 28 Jun 2011 18:39:24 -0500
+Received: from e3.ny.us.ibm.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C86FC1775C6D
+	for <xfs@oss.sgi.com>; Tue, 28 Jun 2011 16:39:23 -0700 (PDT)
+Received: from e3.ny.us.ibm.com (e3.ny.us.ibm.com [32.97.182.143]) by
+	cuda.sgi.com with ESMTP id cMCyui3uoVX53ATl for
+	<xfs@oss.sgi.com>; Tue, 28 Jun 2011 16:39:23 -0700 (PDT)
+Received: from d01relay06.pok.ibm.com (d01relay06.pok.ibm.com [9.56.227.116])
+	by e3.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p5SNGRc0001663
+	for <xfs@oss.sgi.com>; Tue, 28 Jun 2011 19:16:27 -0400
+Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
+	by d01relay06.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	p5SNdMbw1658906
+	for <xfs@oss.sgi.com>; Tue, 28 Jun 2011 19:39:22 -0400
+Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
+	by d01av03.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
+	p5SJdAEx032003 for <xfs@oss.sgi.com>; Tue, 28 Jun 2011 16:39:10 -0300
+Subject: Re: xfstests test case 180 fails often
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+In-Reply-To: <1308259762.2717.31.camel@doink>
+References: <1308077464.7661.473.camel@chandra-lucid.beaverton.ibm.com>
+	<1308259762.2717.31.camel@doink>
+Date: Tue, 28 Jun 2011 16:39:21 -0700
+Message-ID: <1309304361.5505.6211.camel@chandra-lucid.beaverton.ibm.com>
+Mime-Version: 1.0
+Reply-To: sekharan@us.ibm.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,201 +35,71 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com, viro@ZenIV.linux.org.uk
+To: aelder@sgi.com
+Cc: XFS Mailing List <xfs@oss.sgi.com>
 
-In order to handle SEEK_HOLE/SEEK_DATA we need to implement our own llseek.
-Basically for the normal SEEK_*'s we will just defer to the generic helper, and
-for SEEK_HOLE/SEEK_DATA we will use our fiemap helper to figure out the nearest
-hole or data.  Currently this helper doesn't check for delalloc bytes for
-prealloc space, so for now treat prealloc as data until that is fixed.  Thanks,
+Hi Alex,
 
-Signed-off-by: Josef Bacik <josef@redhat.com>
----
- fs/btrfs/ctree.h |    3 +
- fs/btrfs/file.c  |  148 +++++++++++++++++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 150 insertions(+), 1 deletions(-)
+I tried git bisect and it ended up in a qla2xxx fix (and I do not even
+have qlogic card in that system).
 
-diff --git a/fs/btrfs/ctree.h b/fs/btrfs/ctree.h
-index f30ac05..32be5e0 100644
---- a/fs/btrfs/ctree.h
-+++ b/fs/btrfs/ctree.h
-@@ -2505,6 +2505,9 @@ int btrfs_csum_truncate(struct btrfs_trans_handle *trans,
- int btrfs_lookup_csums_range(struct btrfs_root *root, u64 start, u64 end,
- 			     struct list_head *list, int search_commit);
- /* inode.c */
-+struct extent_map *btrfs_get_extent_fiemap(struct inode *inode, struct page *page,
-+					   size_t pg_offset, u64 start, u64 len,
-+					   int create);
+I did it couple more times and landed on different patches.
+
+My latest (fourth ot fifth, I forgot :) bisect landed on the patch with
+commit 546a1924224078c6f582e68f890b05b387b42653 ( writeback:
+write_cache_pages doesn't terminate at nr_to_write <= 0)
+
+I verified that this is valid patch by running the test script 180 for
+nearly 500 times on the tree just prior to this patch.
  
- /* RHEL and EL kernels have a patch that renames PG_checked to FsMisc */
- #if defined(ClearPageFsMisc) && !defined(ClearPageChecked)
-diff --git a/fs/btrfs/file.c b/fs/btrfs/file.c
-index fa4ef18..bd4d061 100644
---- a/fs/btrfs/file.c
-+++ b/fs/btrfs/file.c
-@@ -1664,8 +1664,154 @@ out:
- 	return ret;
- }
- 
-+static int find_desired_extent(struct inode *inode, loff_t *offset, int origin)
-+{
-+	struct btrfs_root *root = BTRFS_I(inode)->root;
-+	struct extent_map *em;
-+	struct extent_state *cached_state = NULL;
-+	u64 lockstart = *offset;
-+	u64 lockend = i_size_read(inode);
-+	u64 start = *offset;
-+	u64 orig_start = *offset;
-+	u64 len = i_size_read(inode);
-+	u64 last_end = 0;
-+	int ret = 0;
-+
-+	lockend = max_t(u64, root->sectorsize, lockend);
-+	if (lockend <= lockstart)
-+		lockend = lockstart + root->sectorsize;
-+
-+	len = lockend - lockstart + 1;
-+
-+	len = max_t(u64, len, root->sectorsize);
-+	if (inode->i_size == 0)
-+		return -ENXIO;
-+
-+	lock_extent_bits(&BTRFS_I(inode)->io_tree, lockstart, lockend, 0,
-+			 &cached_state, GFP_NOFS);
-+
-+	/*
-+	 * Delalloc is such a pain.  If we have a hole and we have pending
-+	 * delalloc for a portion of the hole we will get back a hole that
-+	 * exists for the entire range since it hasn't been actually written
-+	 * yet.  So to take care of this case we need to look for an extent just
-+	 * before the position we want in case there is outstanding delalloc
-+	 * going on here.
-+	 */
-+	if (origin == SEEK_HOLE && start != 0) {
-+		if (start <= root->sectorsize)
-+			em = btrfs_get_extent_fiemap(inode, NULL, 0, 0,
-+						     root->sectorsize, 0);
-+		else
-+			em = btrfs_get_extent_fiemap(inode, NULL, 0,
-+						     start - root->sectorsize,
-+						     root->sectorsize, 0);
-+		if (IS_ERR(em)) {
-+			ret = -ENXIO;
-+			goto out;
-+		}
-+		last_end = em->start + em->len;
-+		if (em->block_start == EXTENT_MAP_DELALLOC)
-+			last_end = min_t(u64, last_end, inode->i_size);
-+		free_extent_map(em);
-+	}
-+
-+	while (1) {
-+		em = btrfs_get_extent_fiemap(inode, NULL, 0, start, len, 0);
-+		if (IS_ERR(em)) {
-+			ret = -ENXIO;
-+			break;
-+		}
-+
-+		if (em->block_start == EXTENT_MAP_HOLE) {
-+			if (test_bit(EXTENT_FLAG_VACANCY, &em->flags)) {
-+				if (last_end <= orig_start) {
-+					free_extent_map(em);
-+					ret = -ENXIO;
-+					break;
-+				}
-+			}
-+
-+			if (origin == SEEK_HOLE) {
-+				*offset = start;
-+				free_extent_map(em);
-+				break;
-+			}
-+		} else {
-+			if (origin == SEEK_DATA) {
-+				if (em->block_start == EXTENT_MAP_DELALLOC) {
-+					if (start >= inode->i_size) {
-+						free_extent_map(em);
-+						ret = -ENXIO;
-+						break;
-+					}
-+				}
-+
-+				*offset = start;
-+				free_extent_map(em);
-+				break;
-+			}
-+		}
-+
-+		start = em->start + em->len;
-+		last_end = em->start + em->len;
-+
-+		if (em->block_start == EXTENT_MAP_DELALLOC)
-+			last_end = min_t(u64, last_end, inode->i_size);
-+
-+		if (test_bit(EXTENT_FLAG_VACANCY, &em->flags)) {
-+			free_extent_map(em);
-+			ret = -ENXIO;
-+			break;
-+		}
-+		free_extent_map(em);
-+		cond_resched();
-+	}
-+	if (!ret)
-+		*offset = min(*offset, inode->i_size);
-+out:
-+	unlock_extent_cached(&BTRFS_I(inode)->io_tree, lockstart, lockend,
-+			     &cached_state, GFP_NOFS);
-+	return ret;
-+}
-+
-+static loff_t btrfs_file_llseek(struct file *file, loff_t offset, int origin)
-+{
-+	struct inode *inode = file->f_mapping->host;
-+	int ret;
-+
-+	mutex_lock(&inode->i_mutex);
-+	switch (origin) {
-+	case SEEK_END:
-+	case SEEK_CUR:
-+		offset = generic_file_llseek_unlocked(file, offset, origin);
-+		goto out;
-+	case SEEK_DATA:
-+	case SEEK_HOLE:
-+		ret = find_desired_extent(inode, &offset, origin);
-+		if (ret) {
-+			mutex_unlock(&inode->i_mutex);
-+			return ret;
-+		}
-+	}
-+
-+	if (offset < 0 && !(file->f_mode & FMODE_UNSIGNED_OFFSET))
-+		return -EINVAL;
-+	if (offset > inode->i_sb->s_maxbytes)
-+		return -EINVAL;
-+
-+	/* Special lock needed here? */
-+	if (offset != file->f_pos) {
-+		file->f_pos = offset;
-+		file->f_version = 0;
-+	}
-+out:
-+	mutex_unlock(&inode->i_mutex);
-+	return offset;
-+}
-+
- const struct file_operations btrfs_file_operations = {
--	.llseek		= generic_file_llseek,
-+	.llseek		= btrfs_file_llseek,
- 	.read		= do_sync_read,
- 	.write		= do_sync_write,
- 	.aio_read       = generic_file_aio_read,
--- 
-1.7.5.2
+chandra
+On Thu, 2011-06-16 at 16:29 -0500, Alex Elder wrote:
+> On Tue, 2011-06-14 at 11:51 -0700, Chandra Seetharaman wrote:
+> > Hello All,
+> > 
+> > test case 180 fails often (4 out of 5) in my x86_64 system.
+> > Any suggestions on how to proceed to debug ?
+> 
+> I have been seeing failures like that sometimes
+> (more often recently I think) for a while.  I
+> have not had the chance to really chase it down.
+> 
+> If you can reproduce it pretty relibly you could
+> use "git bisect" to try to find out whether the
+> failures started to occur after a particular
+> commit.
+> 
+> 					-Alex
+> 
+> > regards,
+> > 
+> > chandra
+> > 
+> > 80 176s ... - output mismatch (see 180.out.bad)^M
+> > --- 180.out     2011-04-20 08:34:36.000000000 -0700^M
+> > +++ 180.out.bad 2011-06-03 14:10:45.000000000 -0700^M
+> > @@ -1 +1,4 @@^M
+> >  QA output created by 180^M
+> > +file /mnt/xfsScratchMntPt/656 has incorrect size - sync failed^M
+> > +file /mnt/xfsScratchMntPt/818 has incorrect size - sync failed^M
+> > +file /mnt/xfsScratchMntPt/899 has incorrect size - sync failed^M
+> > Ran: 180^M
+> > Failures: 180^M
+> > Failed 1 of 1 tests^M
+> > 
+> > 
+> > _______________________________________________
+> > xfs mailing list
+> > xfs@oss.sgi.com
+> > http://oss.sgi.com/mailman/listinfo/xfs
+> 
+> 
+> 
+
 
 _______________________________________________
 xfs mailing list
