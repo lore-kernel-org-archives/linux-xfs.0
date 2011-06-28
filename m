@@ -1,31 +1,34 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5S5UcZ9182624 for <xfs@oss.sgi.com>; Tue, 28 Jun 2011 00:30:39 -0500
-Received: from e35.co.us.ibm.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6E3183435E
-	for <xfs@oss.sgi.com>; Mon, 27 Jun 2011 22:30:38 -0700 (PDT)
-Received: from e35.co.us.ibm.com (e35.co.us.ibm.com [32.97.110.153]) by
-	cuda.sgi.com with ESMTP id Rd2fbxHuLQCt3gis for
-	<xfs@oss.sgi.com>; Mon, 27 Jun 2011 22:30:38 -0700 (PDT)
+	p5S5QtLt182476 for <xfs@oss.sgi.com>; Tue, 28 Jun 2011 00:26:56 -0500
+Received: from e36.co.us.ibm.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 48B153433C
+	for <xfs@oss.sgi.com>; Mon, 27 Jun 2011 22:26:54 -0700 (PDT)
+Received: from e36.co.us.ibm.com (e36.co.us.ibm.com [32.97.110.154]) by
+	cuda.sgi.com with ESMTP id fJ4HoB85fVPlMnOv for
+	<xfs@oss.sgi.com>; Mon, 27 Jun 2011 22:26:54 -0700 (PDT)
 Received: from d03relay03.boulder.ibm.com (d03relay03.boulder.ibm.com
 	[9.17.195.228])
-	by e35.co.us.ibm.com (8.14.4/8.13.1) with ESMTP id p5S5CI0d001693
-	for <xfs@oss.sgi.com>; Mon, 27 Jun 2011 23:12:18 -0600
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by e36.co.us.ibm.com (8.14.4/8.13.1) with ESMTP id p5S5KfFl026205
+	for <xfs@oss.sgi.com>; Mon, 27 Jun 2011 23:20:41 -0600
+Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
 	by d03relay03.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	p5S5UVww118918 for <xfs@oss.sgi.com>; Mon, 27 Jun 2011 23:30:31 -0600
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
-	id p5RNU1CK022257
-	for <xfs@oss.sgi.com>; Mon, 27 Jun 2011 17:30:02 -0600
+	p5S5Qg6d135836 for <xfs@oss.sgi.com>; Mon, 27 Jun 2011 23:26:42 -0600
+Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av04.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
+	id p5RNQfCp008133
+	for <xfs@oss.sgi.com>; Mon, 27 Jun 2011 17:26:41 -0600
+Message-ID: <4E09660B.7050706@linux.vnet.ibm.com>
+Date: Mon, 27 Jun 2011 22:26:35 -0700
 From: Allison Henderson <achender@linux.vnet.ibm.com>
-Subject: [PATCH 1/2 v6] XFS TESTS: ENOSPC Punch Hole: Move su routines in 123
-	to common.rc
-Date: Mon, 27 Jun 2011 22:32:42 -0700
-Message-Id: <1309239163-3975-2-git-send-email-achender@linux.vnet.ibm.com>
-In-Reply-To: <1309239163-3975-1-git-send-email-achender@linux.vnet.ibm.com>
-References: <1309239163-3975-1-git-send-email-achender@linux.vnet.ibm.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH 2/3 v2] XFS TESTS: Fix 252 Failure: Update 252 Golden
+	Output
+References: <1309235247-32650-1-git-send-email-achender@linux.vnet.ibm.com>
+	<1309235247-32650-3-git-send-email-achender@linux.vnet.ibm.com>
+	<20110628050900.GL32466@dastard>
+In-Reply-To: <20110628050900.GL32466@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,93 +37,60 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
-Cc: Allison Henderson <achender@linux.vnet.ibm.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-fsdevel@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>, Ext4 Developers List <linux-ext4@vger.kernel.org>, Josef Bacik <josef@redhat.com>, xfs@oss.sgi.com
 
-This patch moves the su routines in test 123 to common.rc
-so that they can also be used in the new test 255
+On 06/27/2011 10:09 PM, Dave Chinner wrote:
+> On Mon, Jun 27, 2011 at 09:27:26PM -0700, Allison Henderson wrote:
+>> New filtered golden output for test 252
+>>
+>> Signed-off-by: Allison Henderson<achender@linux.vnet.ibm.com>
+>> ---
+>> :100644 100644 930c924... fcfd121... M	252.out
+>>   252.out |  272 +++++++++++++++++++++++++++++++++++++++------------------------
+>>   1 files changed, 170 insertions(+), 102 deletions(-)
+>>
+>> diff --git a/252.out b/252.out
+>> index 930c924..fcfd121 100644
+>> --- a/252.out
+>> +++ b/252.out
+>> @@ -1,239 +1,307 @@
+>>   QA output created by 252
+>>   	1. into a hole
+>> +daa100df6e6711906b61c9ab5aa16032
+>>   	2. into allocated space
+>> -0: [0..7]: data
+>> +0: [0..7]: extent
+>>   1: [8..23]: hole
+>> -2: [24..39]: data
+>> +2: [24..39]: extent
+>> +cc58a7417c2d7763adc45b6fcd3fa024
+>
+> I don't really like the way this weakens the test for XFS. With this
+> change, the test no longer is checking that unwritten extent
+> behaviour is correct.
+>
+> Rather than weakening the test, perhaps it would be better to
+> execute 252 for XFS only (with the md5sums added), and then
+> duplicate it to a new test for all filesystems to run with the
+> weaker result checking that using the new filter function gives us.
+> With the amount of common code the two tests share, it should be
+> trivial to do this....
+>
 
-Signed-off-by: Allison Henderson <achender@linux.vnet.ibm.com>
----
-:100755 100755 27c1e66... ee1194d... M	123
-:100644 100644 680631d... 9d68574... M	common.rc
- 123       |   24 ------------------------
- common.rc |   20 ++++++++++++++++++++
- 2 files changed, 20 insertions(+), 24 deletions(-)
+Alrighty, that sounds pretty straight forward, as long as every one is 
+in agreement.  I think that would help retain the tests effectiveness. 
+Eric, Josef, what are your thoughts?
 
-diff --git a/123 b/123
-index 27c1e66..ee1194d 100755
---- a/123
-+++ b/123
-@@ -42,30 +42,6 @@ _cleanup()
-     _cleanup_testdir
- }
- 
--
--_filter_user_do()
--{
--        perl -ne "
--s,.*Permission\sdenied.*,Permission denied,;
--s,.*no\saccess\sto\stty.*,,;
--s,.*no\sjob\scontrol\sin\sthis\sshell.*,,;
--s,^\s*$,,;
--        print;"
--}
--
--
--
--
--_user_do()
--{
--    if [ "$HOSTOS" == "IRIX" ]
--	then
--	echo $1 | /bin/bash "su $qa_user 2>&1" | _filter_user_do
--    else
--	echo $1 | su $qa_user 2>&1 | _filter_user_do
--    fi
--}
--
- # get standard environment, filters and checks
- . ./common.rc
- . ./common.filter
-diff --git a/common.rc b/common.rc
-index 680631d..9d68574 100644
---- a/common.rc
-+++ b/common.rc
-@@ -867,6 +867,26 @@ _require_user()
-     [ "$?" == "0" ] || _notrun "$qa_user user not defined."
- }
- 
-+_filter_user_do()
-+{
-+        perl -ne "
-+s,.*Permission\sdenied.*,Permission denied,;
-+s,.*no\saccess\sto\stty.*,,;
-+s,.*no\sjob\scontrol\sin\sthis\sshell.*,,;
-+s,^\s*$,,;
-+        print;"
-+}
-+
-+_user_do()
-+{
-+    if [ "$HOSTOS" == "IRIX" ]
-+	then
-+	echo $1 | /bin/bash "su $qa_user 2>&1" | _filter_user_do
-+    else
-+	echo $1 | su $qa_user 2>&1 | _filter_user_do
-+    fi  
-+}
-+
- # check that xfs_io, glibc, kernel, and filesystem all (!) support
- # fallocate
- #
--- 
-1.7.1
+Allison Henderson
+
+> Cheers,
+>
+> Dave.
 
 _______________________________________________
 xfs mailing list
