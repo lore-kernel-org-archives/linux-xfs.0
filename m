@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5SBbANE215898 for <xfs@oss.sgi.com>; Tue, 28 Jun 2011 06:37:10 -0500
-Received: from ipmail07.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6CA283516B
-	for <xfs@oss.sgi.com>; Tue, 28 Jun 2011 04:37:08 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	vvVnclwLygIsILzq for <xfs@oss.sgi.com>;
-	Tue, 28 Jun 2011 04:37:08 -0700 (PDT)
-Date: Tue, 28 Jun 2011 21:37:02 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs_repair: Check if agno is inside the filesystem
-Message-ID: <20110628113702.GO32466@dastard>
-References: <1309193610-17078-1-git-send-email-lczerner@redhat.com>
-	<20110628012838.GI32466@dastard>
-	<alpine.LFD.2.00.1106281120250.3864@dhcp-27-109.brq.redhat.com>
+	p5SDThrm228471 for <xfs@oss.sgi.com>; Tue, 28 Jun 2011 08:29:43 -0500
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id F197F12E5BC3
+	for <xfs@oss.sgi.com>; Tue, 28 Jun 2011 06:29:42 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id gFk2iauZeFy3It9E for
+	<xfs@oss.sgi.com>; Tue, 28 Jun 2011 06:29:42 -0700 (PDT)
+Message-ID: <4E09D735.5060000@redhat.com>
+Date: Tue, 28 Jun 2011 08:29:25 -0500
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <alpine.LFD.2.00.1106281120250.3864@dhcp-27-109.brq.redhat.com>
+Subject: Re: [PATCH 2/3 v2] XFS TESTS: Fix 252 Failure: Update 252 Golden
+	Output
+References: <1309235247-32650-1-git-send-email-achender@linux.vnet.ibm.com>
+	<1309235247-32650-3-git-send-email-achender@linux.vnet.ibm.com>
+	<20110628050900.GL32466@dastard>
+	<4E09660B.7050706@linux.vnet.ibm.com>
+In-Reply-To: <4E09660B.7050706@linux.vnet.ibm.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,38 +31,64 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Lukas Czerner <lczerner@redhat.com>
-Cc: aelder@sgi.com, xfs@oss.sgi.com
+To: Allison Henderson <achender@linux.vnet.ibm.com>
+Cc: linux-fsdevel@vger.kernel.org, Ext4 Developers List <linux-ext4@vger.kernel.org>, Josef Bacik <josef@redhat.com>, xfs@oss.sgi.com
 
-On Tue, Jun 28, 2011 at 11:24:46AM +0200, Lukas Czerner wrote:
-> On Tue, 28 Jun 2011, Dave Chinner wrote:
+On 6/28/11 12:26 AM, Allison Henderson wrote:
+> On 06/27/2011 10:09 PM, Dave Chinner wrote:
+>> On Mon, Jun 27, 2011 at 09:27:26PM -0700, Allison Henderson wrote:
+>>> New filtered golden output for test 252
+>>>
+>>> Signed-off-by: Allison Henderson<achender@linux.vnet.ibm.com>
+>>> ---
+>>> :100644 100644 930c924... fcfd121... M    252.out
+>>>   252.out |  272 +++++++++++++++++++++++++++++++++++++++------------------------
+>>>   1 files changed, 170 insertions(+), 102 deletions(-)
+>>>
+>>> diff --git a/252.out b/252.out
+>>> index 930c924..fcfd121 100644
+>>> --- a/252.out
+>>> +++ b/252.out
+>>> @@ -1,239 +1,307 @@
+>>>   QA output created by 252
+>>>       1. into a hole
+>>> +daa100df6e6711906b61c9ab5aa16032
+>>>       2. into allocated space
+>>> -0: [0..7]: data
+>>> +0: [0..7]: extent
+>>>   1: [8..23]: hole
+>>> -2: [24..39]: data
+>>> +2: [24..39]: extent
+>>> +cc58a7417c2d7763adc45b6fcd3fa024
+>>
+>> I don't really like the way this weakens the test for XFS. With this
+>> change, the test no longer is checking that unwritten extent
+>> behaviour is correct.
+>>
+>> Rather than weakening the test, perhaps it would be better to
+>> execute 252 for XFS only (with the md5sums added), and then
+>> duplicate it to a new test for all filesystems to run with the
+>> weaker result checking that using the new filter function gives us.
+>> With the amount of common code the two tests share, it should be
+>> trivial to do this....
+>>
 > 
-> > On Mon, Jun 27, 2011 at 06:53:30PM +0200, Lukas Czerner wrote:
-> > > When getting an inode tree pointer from an array inode_tree_ptrs, we
-> > > should check if agno, which is used as a pointer to the array, lives
-> > > within the file system, because if it is not, we can end up touching
-> > > uninitialized memory.
-> > 
-> > How do you get an agno outside the bounds of the filesystem?
+> Alrighty, that sounds pretty straight forward, as long as every one
+> is in agreement. I think that would help retain the tests
+> effectiveness. Eric, Josef, what are your thoughts?
+
+Yeah, I agree, I share Dave's concerns and that sounds like a good
+way to go.
+
+Thanks,
+-Eric
+
+> Allison Henderson
 > 
-> Hi Dave,
+>> Cheers,
+>>
+>> Dave.
 > 
-> in my particular case the problem was in
-> longform_dir2_entry_check_data(). xfs_dir2_data_entry_t was read and we
-> used inode numbed (xfs_dir2_data_entry_t)->inumber to compute AG number.
-> However it contained garbage so the resulting agno was too high. In
-> modify mode it was not a problem, because the inode was cleared in the
-> earlies phase, but in no_modify mode, the was still there.
-
-Ok, a corrupted directory entry is the cause. Might be worthwhile
-mentioning that in the commit log.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
