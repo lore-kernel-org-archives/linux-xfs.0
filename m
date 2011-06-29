@@ -1,29 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5TCmIhj101236 for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 07:48:18 -0500
-Received: from mail.ud10.udmedia.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 94EEB1EE0F61
-	for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 05:48:16 -0700 (PDT)
-Received: from mail.ud10.udmedia.de (ud10.udmedia.de [194.117.254.50]) by
-	cuda.sgi.com with ESMTP id 9mnAHhzD7CnHXWlE for
-	<xfs@oss.sgi.com>; Wed, 29 Jun 2011 05:48:16 -0700 (PDT)
-Date: Wed, 29 Jun 2011 14:48:14 +0200
-From: Markus Trippelsdorf <markus@trippelsdorf.de>
-Subject: Re: long hangs when deleting large directories (3.0-rc3)
-Message-ID: <20110629124814.GA1762@x4.trippels.de>
-References: <20110621212201.GA1755@x4.trippels.de>
-	<20110621185701.GB1723@x4.trippels.de>
-	<20110622000449.GQ32466@dastard>
-	<20110622070647.GA1744@x4.trippels.de>
-	<20110622073047.GT32466@dastard> <20110629043143.GA1026@dastard>
-	<20110629061954.GA1711@x4.trippels.de>
-	<20110629072446.GR561@dastard>
-	<20110629074127.GA1746@x4.trippels.de>
-	<20110629121001.GS561@dastard>
+	p5TDKHHV102796 for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 08:20:17 -0500
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3DA4840327
+	for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 06:19:52 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id zHtEk7LVG5s122t7 for
+	<xfs@oss.sgi.com>; Wed, 29 Jun 2011 06:19:52 -0700 (PDT)
+Message-ID: <4E0B266D.30000@redhat.com>
+Date: Wed, 29 Jun 2011 09:19:41 -0400
+From: Josef Bacik <josef@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110629121001.GS561@dastard>
+Subject: Re: [PATCH] xfstests 255: add a seek_data/seek_hole tester
+References: <1309275199-10801-1-git-send-email-josef@redhat.com>
+	<1309275199-10801-5-git-send-email-josef@redhat.com>
+	<20110629065306.GC1026@dastard>
+In-Reply-To: <20110629065306.GC1026@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,107 +25,121 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+Cc: linux-fsdevel@vger.kernel.org, viro@ZenIV.linux.org.uk, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-On 2011.06.29 at 22:10 +1000, Dave Chinner wrote:
-> On Wed, Jun 29, 2011 at 09:41:27AM +0200, Markus Trippelsdorf wrote:
-> > On 2011.06.29 at 17:24 +1000, Dave Chinner wrote:
-> > > On Wed, Jun 29, 2011 at 08:19:54AM +0200, Markus Trippelsdorf wrote:
-> > > > On 2011.06.29 at 14:31 +1000, Dave Chinner wrote:
-> > > > > On Wed, Jun 22, 2011 at 05:30:47PM +1000, Dave Chinner wrote:
-> > > > > > Jun 22 08:53:09 x4 kernel: XFS (sdb1): ail: ooo splice, tail 0x12000156e7, item 0x12000156e6
-> > > > > > Jun 22 08:53:09 x4 kernel: XFS (sdb1): ail: ooo splice, walked 15503 items      
-> > > > > > .....
-> > > > > > Jun 22 08:53:12 x4 kernel: XFS (sdb1): ail: ooo splice, tail 0x12000156e7, item 0x12000156e6
-> > > > > > Jun 22 08:53:12 x4 kernel: XFS (sdb1): ail: ooo splice, walked 16945 items
-> > > > > > 
-> > > > > > Interesting is the LSN of the tail - it's only one sector further on
-> > > > > > than the items being inserted. That's what I'd expect from a commit
-> > > > > > record write race between two checkpoints. I'll have a deeper look
-> > > > > > into whether this can be avoided later tonight and also whether I
-> > > > > > can easily implement a "last insert cursor" easily so subsequent
-> > > > > > inserts at the same LSN avoid the walk....
-> > > > > 
-> > > > > Ok, so here's a patch that does just this. I should probably also do
-> > > > > a little bit of cleanup on the cursor code as well, but this avoids
-> > > > > the repeated walks of the AIL to find the insert position.
-> > > > > 
-> > > > > Can you try it without the WQ changes you made, Marcus, and see if
-> > > > > the interactivity problems go away?
-> > > > 
-> > > > Sorry to be the bringer of bad news, but this made things much worse:
-> > > > 
-> > > > -------cpu0-usage--------------cpu1-usage--------------cpu2-usage--------------cpu3-usage------ --dsk/sdc-- ---system-- ---load-avg--- --dsk/sdc--
-> > > > usr sys idl wai hiq siq:usr sys idl wai hiq siq:usr sys idl wai hiq siq:usr sys idl wai hiq siq| read  writ| int   csw | 1m   5m  15m |reads writs
-> > > >   1   1  98   0   0   0:  0   1  99   0   0   0:  0   1  99   0   0   0:  0   1  99   0   0   0|   0     0 | 603   380 |0.66 0.55 0.28|   0     0 
-> > > >   1   0  99   0   0   0:  1   0  99   0   0   0:  1  19  80   0   0   0:  0   0 100   0   0   0|   0     0 | 719   383 |0.66 0.55 0.28|   0     0 
-> > > >   3   1  96   0   0   0:  3   1  96   0   0   0:  1  52  47   0   0   0:  0   0 100   0   0   0|   0  6464k|1847   919 |0.66 0.55 0.28|   0   202 
-> > > >   2  13  85   0   0   0:  2   2  96   0   0   0:  1  56  43   0   0   0:  1  31  69   0   0   0|4096B  256k|1910  1280 |0.68 0.56 0.28|   1     8 
-> > > > > 0   1  99   0   0   0:  0   0 100   0   0   0:  0   1  99   0   0   0:  0 100   0   0   0   0|   0     0 |1256   170 |0.68 0.56 0.28|   0     0 
-> > > > > 0   1  99   0   0   0:  1   1  98   0   0   0:  1   0  99   0   0   0:  0  99   0   0   0   1|   0     0 |1395   229 |0.68 0.56 0.28|   0     0 
-> > > > > 0   0 100   0   0   0:  0   0 100   0   0   0:  0   3  97   0   0   0:  0 100   0   0   0   0|   0   512B|1304   167 |0.68 0.56 0.28|   0     1 
-> > > > > 1   1  98   0   0   0:  1   1  98   0   0   0:  0   0 100   0   0   0:  0  99   0   0   0   1|   0     0 |1211   146 |0.68 0.56 0.28|   0     0 
-> > > > > 0   0 100   0   0   0:  0   0 100   0   0   0:  0   1  99   0   0   0:  0  97   0   0   0   3|   0     0 |1270   149 |0.87 0.60 0.30|   0     0 
-> > > >   5   2  65  29   0   0:  2   3  95   0   0   0:  1   0  99   0   0   0:  2  24  72   0   0   1|   0  8866k|2654  2398 |0.87 0.60 0.30|   0   496 
-> > > >   6   2  25  67   0   0:  3   1  59  37   0   0:  0   0 100   0   0   0:  4   4  92   0   0   0|   0  4554k|2224  2494 |0.87 0.60 0.30|   0   399 
-> > > >   1   1  98   0   0   0:  0   0  83  17   0   0:  1   3  96   0   0   0:  0   1  99   0   0   0|   0  2270k|1079  1030 |0.87 0.60 0.30|   0   200 
-> > > >   1   1  98   0   0   0:  1   1  98   0   0   0:  0   1  99   0   0   0:  1   0  99   0   0   0|   0  9216B| 713   567 |0.87 0.60 0.30|   0     2 
-> > > >   0   0 100   0   0   0:  1   1  98   0   0   0:  0   0 100   0   0   0:  0   1  99   0   0   0|   0     0 | 492   386 |0.80 0.59 0.30|   0     0 
-> > > > 
-> > > > As you can see in the table above (resolution 1sec) the hang is now
-> > > > 5-6 seconds long, instead of the 1-3 seconds seen before.
-> > > 
-> > > Interesting. I checked that the ordering was correct in each case
-> > > adn that it was behaving correctly here.
-> > > 
-> > > Can you add the following patch and send me the dmesg output over a
-> > > hang? It will tell me where the cursor is being initialised and when
-> > > it is being dropped, so should indicate if a specific insert chain
-> > > is getting stuck or doing something stoopid.
-> > 
-> > The kernel log is attached.
-> > rm -fr && sync starts at Jun 29 09:32:24.
-> 
-> Add this patch on top of the first one I sent. If it doesn't fix the
-> problem, can you readd the debug patch and send the log again?
-
-This completely fixes the issue. As a bonus "rm -fr && sync" completes
-much quicker now.
-
-Here are three different examples of the "remove kernel tree" workload:
-
--------cpu0-usage--------------cpu1-usage--------------cpu2-usage--------------cpu3-usage------ --dsk/sdb-- ---system-- ---load-avg--- --dsk/sdb--
-usr sys idl wai hiq siq:usr sys idl wai hiq siq:usr sys idl wai hiq siq:usr sys idl wai hiq siq| read  writ| int   csw | 1m   5m  15m |reads writs
-
-  0   0 100   0   0   0:  1   0  99   0   0   0:  0   0 100   0   0   0:  1  20  79   0   0   0|   0     0 | 761   254 |0.86 0.29 0.10|   0     0 
-  9   1  90   0   0   0:  3   8  89   0   0   0:  7   5  88   0   0   0:  7  51  41   0   0   0|   0  6464k|3250  2742 |0.86 0.29 0.10|   0   202 
-  1   0  99   0   0   0:  2  51  47   0   0   0:  1   1  98   0   0   0:  0   3  97   0   0   0|4096B 5856k|1895   905 |0.86 0.29 0.10|   1   177 
-  5   1  94   0   0   0:  1   0  99   0   0   0:  4   0  96   0   0   0:  8   9  83   0   0   0|   0   559k|1662  1470 |0.86 0.29 0.10|   0   148 
-  5   1  94   0   0   0:  1   1  98   0   0   0:  1   1  98   0   0   0:  6   5  89   0   0   0|   0     0 |1697  1568 |0.86 0.29 0.10|   0     0 
-
-  1   1  98   0   0   0:  0   0 100   0   0   0:  0   0 100   0   0   0:  0   1  99   0   0   0|   0     0 | 741   392 |1.04 0.43 0.16|   0     0 
-  9   6  85   0   0   0:  6   1  93   0   0   0:  1   1  98   0   0   0:  2  61  37   0   0   0|   0    32k|2070  1383 |0.96 0.42 0.16|   0     0 
-  6   3  91   0   0   0:  3   1  95   0   0   0:  2  44  54   0   0   0:  3   4  92   0   0   0|   0  6432k|2495  1663 |0.96 0.42 0.16|   0   202 
-  2   6  92   0   0   0:  2   1  97   0   0   0:  2   7  91   0   0   0:  3   8  90   0   0   0|4096B 6140k|2394  1805 |0.96 0.42 0.16|   1   258 
-  4   1  95   0   0   0:  3   3  94   0   0   0:  0   0 100   0   0   0:  3   2  95   0   0   0|   0     0 |1473   730 |0.96 0.42 0.16|   0     0 
-
-  1   1  98   0   0   0:  0   1  99   0   0   0:  1   3  96   0   0   0:  1   1  98   0   0   0|   0     0 | 926   433 |0.60 0.42 0.19|   0     0 
-  5   2  93   0   0   0:  3   0  97   0   0   0:  2  60  38   0   0   0:  7   3  90   0   0   0|   0  5312k|2328  1897 |0.60 0.42 0.19|   0   161 
-  2  62  36   0   0   0:  6   2  92   0   0   0:  2   0  98   0   0   0:  8   7  85   0   0   0|4096B 4000k|2439  1827 |0.60 0.42 0.19|   1   129 
-  8   1  91   0   0   0:  3   1  96   0   0   0:  0   0 100   0   0   0: 12  18  69   0   0   1|   0  3293k|2568  2223 |0.63 0.43 0.20|   0   170 
-  4   1  95   0   0   0:  1   2  97   0   0   0:  2   1  97   0   0   0:  6   7  87   0   0   0|   0     0 |1606  1627 |0.63 0.43 0.20|   0     0 
-
-So many thanks Dave. Your prompt help is very much appreciated.
-
--- 
-Markus
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gMDYvMjkvMjAxMSAwMjo1MyBBTSwgRGF2ZSBDaGlubmVyIHdyb3RlOgo+IE9uIFR1ZSwgSnVu
+IDI4LCAyMDExIGF0IDExOjMzOjE5QU0gLTA0MDAsIEpvc2VmIEJhY2lrIHdyb3RlOgo+PiBUaGlz
+IGlzIGEgdGVzdCB0byBtYWtlIHN1cmUgc2Vla19kYXRhL3NlZWtfaG9sZSBpcyBhY3RpbmcgbGlr
+ZSBpdCBkb2VzIG9uCj4+IFNvbGFyaXMuICBJdCB3aWxsIGNoZWNrIHRvIHNlZSBpZiB0aGUgZnMg
+c3VwcG9ydHMgZmluZGluZyBhIGhvbGUgb3Igbm90IGFuZCB3aWxsCj4+IGFkanVzdCBhcyBuZWNl
+c3NhcnkuCj4KPiBTbyBJIGp1c3QgbG9va2VkIGF0IHRoaXMgd2l0aCBhbiBleWUgdG8gdmFsaWRh
+dGluZyBhbiBYRlMKPiBpbXBsZW1lbnRhdGlvbiwgYW5kIEkgY2FtZSB1cCB3aXRoIHRoaXMgbGlz
+dCBvZiBzdHVmZiB0aGF0IHRoZSB0ZXN0Cj4gZG9lcyBub3QgY292ZXIgdGhhdCBJJ2QgbmVlZCB0
+byB0ZXN0IGluIHNvbWUgd2F5Ogo+Cj4gCS0gZmlsZXMgd2l0aCBjbGVhbiB1bndyaXR0ZW4gZXh0
+ZW50cy4gQXJlIHRoZXkgYSBob2xlIG9yCj4gCSAgZGF0YT8gV2hhdCdzIFNFRUtfREFUQSBzdXBw
+b3NlZCB0byByZXR1cm4gb24gbGF5b3V0IGxpa2UKPiAJICBob2xlLXVud3JpdHRlbi1kYXRhPyBp
+LmUuIG5lZWRzIHRvIGFkZCBmYWxsb2NhdGUgdG8gdGhlCj4gCSAgcGljdHVyZS4uLgo+Cj4gCS0g
+ZmlsZXMgd2l0aCBkaXJ0eSB1bndyaXR0ZW4gZXh0ZW50cyAoaS5lLiBkaXJ0eSBpbiBtZW1vcnks
+Cj4gCSAgbm90IG9uIGRpc2spLiBUaGV5IGFyZSBtb3N0IGRlZmluaXRlbHkgZGF0YSwgYW5kIG1v
+c3QKPiAJICBmaWxlc3lzdGVtcyB3aWxsIG5lZWQgYSBzZXBhcmF0ZSBsb29rdXAgcGF0aCB0byBk
+ZXRlY3QKPiAJICBkaXJ0eSB1bndyaXR0ZW4gcmFuZ2VzIGJlY2F1c2UgdGhlIHN0YXRlIGlzIGtl
+cHQKPiAJICBzZXBhcmF0ZWx5IChwYWdlIGNhY2hlIHZzIGV4dGVudCBjYWNoZSkuICBQbGVudHkg
+b2Ygc2NvcGUKPiAJICBmb3IgZmlsZXN5c3RlbSBzcGVjaWZpYyBidWdzIGhlcmUgc28gbmVlZHMg
+YSByb3VidXN0IHRlc3QuCj4KPiAJLSBjb2xkIGNhY2hlIGJlaGF2aW91ciAtIGFsbCBkaXJ0eSBk
+YXRhIHJhbmdlcyB0aGUgdGVzdAo+IAkgIGNyZWF0ZXMgYXJlIGhvdCBpbiBjYWNoZSBhbmQgbm90
+IGV2ZW4gZm9yY2VkIHRvIGRpc2ssIHNvCj4gCSAgaXQgaXMgbm90IHRlc3RpbmcgdGhlIG5vLXBh
+Z2UtY2FjaGUtb3Zlci10aGUtZGF0YS1yYW5nZQo+IAkgIGNhc2UuIGkuZS4gaXQgdGVzdHMgZGVs
+YWxsb2Mgc3RhdGUgdHJhY2tpbmcgYnV0IG5vdAo+IAkgIGRhdGEtZXh0ZW50LWFscmVhZHkgZXhp
+c3RzIGxvb2t1cHMgZHVyaW5nIGEgc2Vlay4KPgo+IAktIGFzc3VtZXMgdGhhdCBhbGxvY2F0aW9u
+IHNpemUgaXMgdGhlIGJsb2NrIHNpemUgYW5kIHRoYXQKPiAJICBob2xlcyBmb2xsb3dzIGJsb2Nr
+IHNpemUgYWxpZ25tZW50LiBXZSBhbHJlYWR5IGtub3cgdGhhdAo+IAkgIGV4dDQgZG9lcyBub3Qg
+Zm9sbG93IHRoYXQgcnVsZSB3aGVuIGRvaW5nIHNtYWxsIHNwYXJzZQo+IAkgIHdyaXRlcyBjbG9z
+ZSB0b2dldGhlciBpbiBhIGZpbGUsIGFuZCBYRlMgaXMgYWxzbyBrbm93biB0bwo+IAkgIGZpbGwg
+aG9sZXMgd2hlbiBkb2luZyBzcGFyc2Ugd3JpdGVzIHBhc3QgRU9GLgo+Cj4gCS0gb25seSB0ZXN0
+cyBzaW5nbGUgYmxvY2sgZGF0YSBleHRlbnRzINGVbyBkb2Vzbid0IGNvdmVyCj4gCSAgY29ybmVy
+IGNhc2VzIGxpa2Ugc2tpcHBpbmcgb3ZlciBtdWx0aXBsZSBmcmFnbWVudGVkIGRhdGEKPiAJICBl
+eHRlbnRzIHRvIHRoZSBuZXh0IGhvbGUuCj4KClllYWggSSBpbnRlbnRpb25hbGx5IGxlZnQgb3V0
+IHByZWFsbG9jYXRlZCBzdHVmZiBiZWNhdXNlIHRoZXNlIGFyZSBnb2luZyAKdG8gYmUgaW1wbGVt
+ZW50YXRpb24gc3BlY2lmaWMsIHNvIEkgd2FzIGdvaW5nIHRvIGxlYXZlIHRoYXQgZm9yIGEgbGF0
+ZXIgCmV4ZXJjaXNlIHdoZW4gcGVvcGxlIGFjdHVhbGx5IHN0YXJ0IGRvaW5nIHByb3BlciBpbXBs
+ZW1lbnRhdGlvbnMuCgo+IFNvbWUgbW9yZSBjb21tZW50cyBpbiBsaW5lLi4uLgo+Cj4+ICtfY2xl
+YW51cCgpCj4+ICt7Cj4+ICsgICAgcm0gLWYgJHRtcC4qCj4+ICt9Cj4+ICsKPj4gK3RyYXAgIl9j
+bGVhbnVwIDsgZXhpdCBcJHN0YXR1cyIgMCAxIDIgMyAxNQo+PiArCj4+ICsjIGdldCBzdGFuZGFy
+ZCBlbnZpcm9ubWVudCwgZmlsdGVycyBhbmQgY2hlY2tzCj4+ICsuIC4vY29tbW9uLnJjCj4+ICsu
+IC4vY29tbW9uLmZpbHRlcgo+PiArCj4+ICsjIHJlYWwgUUEgdGVzdCBzdGFydHMgaGVyZQo+PiAr
+X3N1cHBvcnRlZF9mcyBnZW5lcmljCj4+ICtfc3VwcG9ydGVkX29zIExpbnV4Cj4+ICsKPj4gK3Rl
+c3RmaWxlPSRURVNUX0RJUi9zZWVrX3Rlc3QuJCQKPj4gK2xvZ2ZpbGU9JFRFU1RfRElSL3NlZWtf
+dGVzdC4kJC5sb2cKPgo+IFRoZSBsb2cgZmlsZSBpcyB1c3VhbGx5IG5hbWVkICRzZXEuZnVsbCwg
+YW5kIGRvZXNuJ3QgZ2V0IHBsYWNlZCBpbgo+IHRoZSBmaWxlc3lzdGVtIGJlaW5nIHRlc3RlZC4g
+SXQgZ2V0cyBzYXZlZCBpbiB0aGUgeGZzdGVzdHMgZGlyZWN0b3J5Cj4gYWxvbmcgc2lkZSAkc2Vx
+Lm91dC5iYWQgZm9yIGFuYWx5c2lzIHdoZW50ZWggdGVzdCBmYWlscy4uLgo+CgpJIG9ubHkgd2Fu
+dCBpdCB0byBzZWUgaWYgU0VFS19IT0xFIGZhaWxzIHNvIEkgY2FuIHNheSBpdCBkaWRuJ3QgcnVu
+LiAgSSAKZm9sbG93ZWQgdGhlIHNhbWUgZXhhbXBsZSBhcyB0aGUgZmllbWFwIHRlc3QgdGhhdCBF
+cmljIHdyb3RlLgoKPj4gK1sgLXggJGhlcmUvc3JjL3NlZWstdGVzdGVyIF0gfHwgX25vdHJ1biAi
+c2Vlay10ZXN0ZXIgbm90IGJ1aWx0Igo+PiArCj4+ICtfY2xlYW51cCgpCj4+ICt7Cj4+ICsJcm0g
+LWYgJHRlc3RmaWxlCj4+ICsJcm0gLWYgJGxvZ2ZpbGUKPj4gK30KPj4gK3RyYXAgIl9jbGVhbnVw
+OyBleGl0IFwkc3RhdHVzIiAwIDEgMiAzIDE1Cj4+ICsKPj4gK2VjaG8gIlNpbGVuY2UgaXMgZ29s
+ZGVuIgo+PiArJGhlcmUvc3JjL3NlZWstdGVzdGVyIC1xICR0ZXN0ZmlsZSAyPiYxIHwgdGVlIC1h
+ICRsb2dmaWxlCj4KPiBQZXJzb25hbGx5IEknZCBwcmVmZXIgdGhlIHRlc3QgdG8gYmUgYSBiaXQg
+bm9pc3kgYWJvdXQgd2hhdCBpdCBpcwo+IHJ1bm5pbmcsIGVzcGVjaWFsbHkgd2hlbiB0aGVyZSBh
+cmUgc28gbWFueSBzdWJ0ZXN0cyB0aGUgc2luZ2xlCj4gaW52b2NhdGlvbiBpcyBydW5uaW5nLiBJ
+dCBtYWtlcyBubyBkaWZmZXJlbmNlIHRvIHRoZSBydW4gdGltZSBvZnRoZQo+IHRlc3QsIG9yIHRo
+ZSBvdXRwdXQgd2hlbiBzb21ldGhpbmcgZmFpbHMsIGJ1dCBpdCBhdCBsZWFzdCBhbGxvd3MgeW91
+Cj4gdG8gcnVuIHRoZSB0ZXN0IG1hbnVhbGx5IGFuZCBzZWUgd2hhdCBpdCBpcyBkb2luZyBlYXNp
+bHkuLi4KPgoKUmlnaHQsIHRoZSBwcm9ibGVtIHdpdGggdGhpcyB0ZXN0IGlzIGl0IHdpbGwgcnVu
+IGRpZmZlcmVudGx5IGRlcGVuZGluZyAKb24gdGhlIGltcGxlbWVudGF0aW9uLiAgSSBhZ3JlZSwg
+SSByZWFsbHkgbGlrZSB0aGUgbm9pc3kgb3V0cHV0IHRlc3RzLCAKYnV0IHVuZm9ydHVuYXRlbHkg
+aWYgSSBydW4gdGhpcyB0ZXN0IG9uIGV4dDQgd2hlcmUgaXQgY3VycmVudGx5IHRyZWF0cyAKdGhl
+IGVudGlyZSBmaWxlIGFzIGRhdGEsIGFuZCB0aGVuIHJ1biBpdCBvbiBidHJmcyB3aGVyZSBpdCBp
+cyBzbWFydGVyIAphbmQgYWN0dWFsbHkgcmVjb2duaXplcyBob2xlcywgd2UgZW5kIHVwIHdpdGgg
+dHdvIGRpZmZlcmVudCBvdXRwdXRzIHRoYXQgCmFyZSBib3RoIGNvcnJlY3QuCgo+PiArCj4+ICtp
+ZiBncmVwIC1xICJTRUVLX0hPTEUgaXMgbm90IHN1cHBvcnRlZCIgJGxvZ2ZpbGU7IHRoZW4KPj4g
+Kwlfbm90cnVuICJTRUVLX0hPTEUvU0VFS19EQVRBIG5vdCBzdXBwb3J0ZWQgYnkgdGhpcyBrZXJu
+ZWwiCj4+ICtmaQo+PiArCj4+ICtybSAtZiAkbG9nZmlsZQo+PiArcm0gLWYgJHRlc3RmaWxlCj4+
+ICsKPj4gK3N0YXR1cz0wIDsgZXhpdAo+PiBkaWZmIC0tZ2l0IGEvMjU1Lm91dCBiLzI1NS5vdXQK
+Pj4gbmV3IGZpbGUgbW9kZSAxMDA2NDQKPj4gaW5kZXggMDAwMDAwMC4uN2VlZmI4Mgo+PiAtLS0g
+L2Rldi9udWxsCj4+ICsrKyBiLzI1NS5vdXQKPj4gQEAgLTAsMCArMSwyIEBACj4+ICtRQSBvdXRw
+dXQgY3JlYXRlZCBieSAyNTUKPj4gK1NpbGVuY2UgaXMgZ29sZGVuCj4+IGRpZmYgLS1naXQgYS9n
+cm91cCBiL2dyb3VwCj4+IGluZGV4IDFmODYwNzUuLmMwNDVlNzAgMTAwNjQ0Cj4+IC0tLSBhL2dy
+b3VwCj4+ICsrKyBiL2dyb3VwCj4+IEBAIC0zNjgsMyArMzY4LDQgQEAgZGVwcmVjYXRlZAo+PiAg
+IDI1MiBhdXRvIHF1aWNrIHByZWFsbG9jCj4+ICAgMjUzIGF1dG8gcXVpY2sKPj4gICAyNTQgYXV0
+byBxdWljawo+PiArMjU1IGF1dG8gcXVpY2sKPgo+IEknZCBzdWdnZXN0IHRoYXQgcncgYW5kIHBy
+ZWFsbG9jIChvbmNlIHVud3JpdHRlbiBleHRlbnQKPiB0ZXN0aW5nIGlzIGFkZGVkKSBncm91cHMg
+c2hvdWxkIGFsc28gYmUgZGVmaW5lZCBmb3IgdGhpcyB0ZXN0Lgo+Cj4gT3RoZXJ3aXNlLCB0aGUg
+dGVzdCBjb2RlIGxvb2tzIG9rIGlmIGEgYml0IG92ZXItZW5naW5lZXJlZC4uLi4KPgo+PiArc3Ry
+dWN0IHRlc3RyZWMgewo+PiArCWludAl0ZXN0X251bTsKPj4gKwlpbnQJKCp0ZXN0X2Z1bmMpKGlu
+dCBmZCwgaW50IHRlc3RudW0pOwo+PiArCWNoYXIJKnRlc3RfZGVzYzsKPj4gK307Cj4+ICsKPj4g
+K3N0cnVjdCB0ZXN0cmVjIHNlZWtfdGVzdHNbXSA9IHsKPj4gKwl7ICAxLCB0ZXN0MDEsICJUZXN0
+IGJhc2ljIHN1cHBvcnQiIH0sCj4+ICsJeyAgMiwgdGVzdDAyLCAiVGVzdCBhbiBlbXB0eSBmaWxl
+IiB9LAo+PiArCXsgIDMsIHRlc3QwMywgIlRlc3QgYSBmdWxsIGZpbGUiIH0sCj4+ICsJeyAgNCwg
+dGVzdDA0LCAiVGVzdCBmaWxlIGhvbGUgYXQgYmVnLCBkYXRhIGF0IGVuZCIgfSwKPj4gKwl7ICA1
+LCB0ZXN0MDUsICJUZXN0IGZpbGUgZGF0YSBhdCBiZWcsIGhvbGUgYXQgZW5kIiB9LAo+PiArCXsg
+IDYsIHRlc3QwNiwgIlRlc3QgZmlsZSBob2xlIGRhdGEgaG9sZSBkYXRhIiB9LAo+Cj4gU28sIHRv
+IHRha2UgZnJvbSB0aGUgaG9sZSBwdW5jaCB0ZXN0IG1hdHJpeCwgaXQgY292ZXJzIGEgYnVuY2gg
+bW9yZQo+IGZpbGUgc3RhdGUgdHJhbnNpdGlvbnMgYW5kIGNhc2VzIHRoYXQgYXJlIGp1c3QgYXMg
+cmVsZXZhbnQgdG8KPiBTRUVLX0hPTEUvU0VFS19EQVRBLiBUaG9zZSBjYXNlcyBhcmU6Cj4KPiAj
+ICAgICAgIDEuIGludG8gYSBob2xlCj4gIyAgICAgICAyLiBpbnRvIGFsbG9jYXRlZCBzcGFjZQo+
+ICMgICAgICAgMy4gaW50byB1bndyaXR0ZW4gc3BhY2UKPiAjICAgICAgIDQuIGhvbGUgLT4gIGRh
+dGEKPiAjICAgICAgIDUuIGhvbGUgLT4gIHVud3JpdHRlbgo+ICMgICAgICAgNi4gZGF0YSAtPiAg
+aG9sZQo+ICMgICAgICAgNy4gZGF0YSAtPiAgdW53cml0dGVuCj4gIyAgICAgICA4LiB1bndyaXR0
+ZW4gLT4gIGhvbGUKPiAjICAgICAgIDkuIHVud3JpdHRlbiAtPiAgZGF0YQo+ICMgICAgICAgMTAu
+IGhvbGUgLT4gIGRhdGEgLT4gIGhvbGUKPiAjICAgICAgIDExLiBkYXRhIC0+ICBob2xlIC0+ICBk
+YXRhCj4gIyAgICAgICAxMi4gdW53cml0dGVuIC0+ICBkYXRhIC0+ICB1bndyaXR0ZW4KPiAjICAg
+ICAgIDEzLiBkYXRhIC0+ICB1bndyaXR0ZW4gLT4gIGRhdGEKPiAjICAgICAgIDE0LiBkYXRhIC0+
+ICBob2xlIEAgRU9GCj4gIyAgICAgICAxNS4gZGF0YSAtPiAgaG9sZSBAIDAKPiAjICAgICAgIDE2
+LiBkYXRhIC0+ICBjYWNoZSBjb2xkIC0+aG9sZQo+ICMgICAgICAgMTcuIGRhdGEgLT4gIGhvbGUg
+aW4gc2luZ2xlIGJsb2NrIGZpbGUKPgo+IEkgdGhpa24gd2UgYWxzbyBuZWVkIHRvIGNvdmVyIG1v
+c3Qgb2YgdGhlc2Ugc2FtZSBjYXNlcywgcmlnaHQ/ICBBbmQKPiBTRUVLX0hPTEUvU0VFSyBkYXRh
+IGFsc28gbmVlZCB0byBleHBsaWNpdGx5IHNlcGFyYXRlIHRoZSB1bndyaXR0ZW4KPiB0ZXN0cyBp
+bnRvICJjbGVhbiB1bndyaXR0ZW4iIGFuZCAiZGlydHkgdW53cml0dGVuIiBhbmQgY292ZXIgdGhl
+Cj4gdHJhbnNpdGlvbnMgYmV0d2VlbiByZWdpb25zIG9mIHRob3NlIHN0YXRlcyBhcyB3ZWxsLCBy
+aWdodD8KPgoKWWVhaCB5b3UgYXJlIHJpZ2h0LCBidXQgYWdhaW4gZG9pbmcgcHJlYWxsb2NhdGVk
+IHN0dWZmIGlzIHRyaWNreSwgYnV0IEkgCmNhbiBleHBhbmQgaXQgbm93IGlmIHRoYXQncyB3aGF0
+IHdlIHdhbnQuICBUaGFua3MsCgpKb3NlZgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDov
+L29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
