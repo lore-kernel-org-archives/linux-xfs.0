@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5TE3f4s104823 for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 09:03:41 -0500
+	p5TE3hqX104921 for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 09:03:43 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F0A0E1D7DD2F
-	for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 07:03:38 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 27314409E5
+	for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 07:03:40 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	NLqKziKcDC6ZKNcF for <xfs@oss.sgi.com>;
-	Wed, 29 Jun 2011 07:03:38 -0700 (PDT)
+	hcr2HW9U4qBeGb9i for <xfs@oss.sgi.com>;
+	Wed, 29 Jun 2011 07:03:40 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1QbvMg-0008EY-AG
-	for xfs@oss.sgi.com; Wed, 29 Jun 2011 14:03:38 +0000
-Message-Id: <20110629140338.286808024@bombadil.infradead.org>
-Date: Wed, 29 Jun 2011 10:01:18 -0400
+	Linux)) id 1QbvMi-0008Ji-8z
+	for xfs@oss.sgi.com; Wed, 29 Jun 2011 14:03:40 +0000
+Message-Id: <20110629140340.246204787@bombadil.infradead.org>
+Date: Wed, 29 Jun 2011 10:01:28 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 09/27] xfs: split xfs_itruncate_finish
+Subject: [PATCH 19/27] xfs: avoid usage of struct xfs_dir2_data
 References: <20110629140109.003209430@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-split-xfs_itruncate_finish
+Content-Disposition: inline; filename=xfs-avoid-xfs_dir2_data_t
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,577 +34,1280 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Split the guts of xfs_itruncate_finish that loop over the existing extents
-and calls xfs_bunmapi on them into a new helper, xfs_itruncate_externs.
-Make xfs_attr_inactive call it directly instead of xfs_itruncate_finish,
-which allows to simplify the latter a lot, by only letting it deal with
-the data fork.  As a result xfs_itruncate_finish is renamed to
-xfs_itruncate_data to make its use case more obvious.
-
-Also remove the sync parameter from xfs_itruncate_data, which has been
-unessecary since the introduction of the busy extent list in 2002, and
-completely dead code since 2003 when the XFS_BMAPI_ASYNC parameter was
-made a no-op.
-
-I can't actually see why the xfs_attr_inactive needs to set the transaction
-sync, but let's keep this patch simple and without changes in behaviour.
+In most places we can simply pass around and use the struct xfs_dir2_data_hdr,
+which is the first and most important member of struct xfs_dir2_data instead
+of the full structure.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: xfs/fs/xfs/linux-2.6/xfs_iops.c
+Index: xfs/fs/xfs/xfs_da_btree.c
 ===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_iops.c	2011-06-29 11:35:39.086158618 +0200
-+++ xfs/fs/xfs/linux-2.6/xfs_iops.c	2011-06-29 11:35:45.779455690 +0200
-@@ -880,15 +880,7 @@ xfs_setattr_size(
- 		ip->i_size = iattr->ia_size;
- 	} else if (iattr->ia_size <= ip->i_size ||
- 		   (iattr->ia_size == 0 && ip->i_d.di_nextents)) {
--		/*
--		 * Signal a sync transaction unless we are truncating an
--		 * already unlinked file on a wsync filesystem.
--		 */
--		error = xfs_itruncate_finish(&tp, ip, iattr->ia_size,
--				    XFS_DATA_FORK,
--				    ((ip->i_d.di_nlink != 0 ||
--				      !(mp->m_flags & XFS_MOUNT_WSYNC))
--				     ? 1 : 0));
-+		error = xfs_itruncate_data(&tp, ip, iattr->ia_size);
- 		if (error)
- 			goto out_trans_abort;
- 
-Index: xfs/fs/xfs/quota/xfs_qm_syscalls.c
-===================================================================
---- xfs.orig/fs/xfs/quota/xfs_qm_syscalls.c	2011-06-29 11:35:39.112825141 +0200
-+++ xfs/fs/xfs/quota/xfs_qm_syscalls.c	2011-06-29 11:35:45.782789005 +0200
-@@ -263,7 +263,7 @@ xfs_qm_scall_trunc_qfile(
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 	xfs_trans_ijoin(tp, ip);
- 
--	error = xfs_itruncate_finish(&tp, ip, 0, XFS_DATA_FORK, 1);
-+	error = xfs_itruncate_data(&tp, ip, 0);
- 	if (error) {
- 		xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES |
- 				     XFS_TRANS_ABORT);
-Index: xfs/fs/xfs/xfs_attr.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_attr.c	2011-06-29 11:35:39.126158401 +0200
-+++ xfs/fs/xfs/xfs_attr.c	2011-06-29 11:35:45.782789005 +0200
-@@ -822,17 +822,21 @@ xfs_attr_inactive(xfs_inode_t *dp)
- 	error = xfs_attr_root_inactive(&trans, dp);
- 	if (error)
- 		goto out;
-+
- 	/*
--	 * signal synchronous inactive transactions unless this
--	 * is a synchronous mount filesystem in which case we
--	 * know that we're here because we've been called out of
--	 * xfs_inactive which means that the last reference is gone
--	 * and the unlink transaction has already hit the disk so
--	 * async inactive transactions are safe.
-+	 * Signal synchronous inactive transactions unless this is a
-+	 * synchronous mount filesystem in which case we know that we're here
-+	 * because we've been called out of xfs_inactive which means that the
-+	 * last reference is gone and the unlink transaction has already hit
-+	 * the disk so async inactive transactions are safe.
+--- xfs.orig/fs/xfs/xfs_da_btree.c	2011-06-27 10:47:35.889487280 +0200
++++ xfs/fs/xfs/xfs_da_btree.c	2011-06-27 10:51:33.638199284 +0200
+@@ -2079,16 +2079,13 @@ xfs_da_do_buf(
+ 	 * For read_buf, check the magic number.
  	 */
--	if ((error = xfs_itruncate_finish(&trans, dp, 0LL, XFS_ATTR_FORK,
--				(!(mp->m_flags & XFS_MOUNT_WSYNC)
--				 ? 1 : 0))))
-+	if (!(mp->m_flags & XFS_MOUNT_WSYNC)) {
-+		if (dp->i_d.di_anextents > 0)
-+			xfs_trans_set_sync(trans);
+ 	if (caller == 1) {
+-		xfs_dir2_data_t		*data;
+-		xfs_dir2_free_t		*free;
+-		xfs_da_blkinfo_t	*info;
++		xfs_dir2_data_hdr_t	*hdr = rbp->data;
++		xfs_dir2_free_t		*free = rbp->data;
++		xfs_da_blkinfo_t	*info = rbp->data;
+ 		uint			magic, magic1;
+ 
+-		info = rbp->data;
+-		data = rbp->data;
+-		free = rbp->data;
+ 		magic = be16_to_cpu(info->magic);
+-		magic1 = be32_to_cpu(data->hdr.magic);
++		magic1 = be32_to_cpu(hdr->magic);
+ 		if (unlikely(
+ 		    XFS_TEST_ERROR((magic != XFS_DA_NODE_MAGIC) &&
+ 				   (magic != XFS_ATTR_LEAF_MAGIC) &&
+Index: xfs/fs/xfs/xfs_dir2_block.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_dir2_block.c	2011-06-27 10:49:37.012164015 +0200
++++ xfs/fs/xfs/xfs_dir2_block.c	2011-06-27 10:51:33.641532599 +0200
+@@ -282,7 +282,7 @@ xfs_dir2_block_addname(
+ 		 * This needs to happen before the next call to use_free.
+ 		 */
+ 		if (needscan) {
+-			xfs_dir2_data_freescan(mp, (xfs_dir2_data_t *)hdr, &needlog);
++			xfs_dir2_data_freescan(mp, hdr, &needlog);
+ 			needscan = 0;
+ 		}
+ 	}
+@@ -331,8 +331,7 @@ xfs_dir2_block_addname(
+ 		 * This needs to happen before the next call to use_free.
+ 		 */
+ 		if (needscan) {
+-			xfs_dir2_data_freescan(mp, (xfs_dir2_data_t *)hdr,
+-				&needlog);
++			xfs_dir2_data_freescan(mp, hdr, &needlog);
+ 			needscan = 0;
+ 		}
+ 		/*
+@@ -417,7 +416,7 @@ xfs_dir2_block_addname(
+ 	 * Clean up the bestfree array and log the header, tail, and entry.
+ 	 */
+ 	if (needscan)
+-		xfs_dir2_data_freescan(mp, (xfs_dir2_data_t *)hdr, &needlog);
++		xfs_dir2_data_freescan(mp, hdr, &needlog);
+ 	if (needlog)
+ 		xfs_dir2_data_log_header(tp, bp);
+ 	xfs_dir2_block_log_tail(tp, bp);
+@@ -783,7 +782,7 @@ xfs_dir2_block_removename(
+ 	 * Fix up bestfree, log the header if necessary.
+ 	 */
+ 	if (needscan)
+-		xfs_dir2_data_freescan(mp, (xfs_dir2_data_t *)hdr, &needlog);
++		xfs_dir2_data_freescan(mp, hdr, &needlog);
+ 	if (needlog)
+ 		xfs_dir2_data_log_header(tp, bp);
+ 	xfs_dir2_data_check(dp, bp);
+@@ -982,7 +981,7 @@ xfs_dir2_leaf_to_block(
+ 	 * Scan the bestfree if we need it and log the data block header.
+ 	 */
+ 	if (needscan)
+-		xfs_dir2_data_freescan(mp, (xfs_dir2_data_t *)hdr, &needlog);
++		xfs_dir2_data_freescan(mp, hdr, &needlog);
+ 	if (needlog)
+ 		xfs_dir2_data_log_header(tp, dbp);
+ 	/*
+@@ -1177,8 +1176,7 @@ xfs_dir2_sf_to_block(
+ 			*xfs_dir2_data_unused_tag_p(dup) = cpu_to_be16(
+ 				((char *)dup - (char *)hdr));
+ 			xfs_dir2_data_log_unused(tp, bp, dup);
+-			(void)xfs_dir2_data_freeinsert((xfs_dir2_data_t *)hdr,
+-				dup, &dummy);
++			(void)xfs_dir2_data_freeinsert(hdr, dup, &dummy);
+ 			offset += be16_to_cpu(dup->length);
+ 			continue;
+ 		}
+Index: xfs/fs/xfs/xfs_dir2_data.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_dir2_data.c	2011-06-27 10:47:35.909487170 +0200
++++ xfs/fs/xfs/xfs_dir2_data.c	2011-06-27 10:51:33.644865914 +0200
+@@ -35,6 +35,9 @@
+ #include "xfs_dir2_block.h"
+ #include "xfs_error.h"
+ 
++STATIC xfs_dir2_data_free_t *
++xfs_dir2_data_freefind(xfs_dir2_data_hdr_t *hdr, xfs_dir2_data_unused_t *dup);
++
+ #ifdef DEBUG
+ /*
+  * Check the consistency of the data block.
+@@ -51,6 +54,7 @@ xfs_dir2_data_check(
+ 	xfs_dir2_block_tail_t	*btp=NULL;	/* block tail */
+ 	int			count;		/* count of entries found */
+ 	xfs_dir2_data_t		*d;		/* data block pointer */
++	xfs_dir2_data_hdr_t	*hdr;		/* data block header */
+ 	xfs_dir2_data_entry_t	*dep;		/* data entry */
+ 	xfs_dir2_data_free_t	*dfp;		/* bestfree entry */
+ 	xfs_dir2_data_unused_t	*dup;		/* unused entry */
+@@ -67,16 +71,19 @@ xfs_dir2_data_check(
+ 
+ 	mp = dp->i_mount;
+ 	d = bp->data;
+-	ASSERT(be32_to_cpu(d->hdr.magic) == XFS_DIR2_DATA_MAGIC ||
+-	       be32_to_cpu(d->hdr.magic) == XFS_DIR2_BLOCK_MAGIC);
+-	bf = d->hdr.bestfree;
++	hdr = &d->hdr;
++	bf = hdr->bestfree;
+ 	p = (char *)d->u;
+-	if (be32_to_cpu(d->hdr.magic) == XFS_DIR2_BLOCK_MAGIC) {
+-		btp = xfs_dir2_block_tail_p(mp, &d->hdr);
++
++	if (hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC)) {
++		btp = xfs_dir2_block_tail_p(mp, hdr);
+ 		lep = xfs_dir2_block_leaf_p(btp);
+ 		endp = (char *)lep;
+-	} else
+-		endp = (char *)d + mp->m_dirblksize;
++	} else {
++		ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC));
++		endp = (char *)hdr + mp->m_dirblksize;
 +	}
 +
-+	error = xfs_itruncate_extents(&trans, dp, XFS_ATTR_FORK, 0);
-+	if (error)
- 		goto out;
- 
+ 	count = lastfree = freeseen = 0;
  	/*
-Index: xfs/fs/xfs/xfs_inode.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_inode.c	2011-06-29 11:35:39.136158346 +0200
-+++ xfs/fs/xfs/xfs_inode.c	2011-06-29 11:38:24.515262411 +0200
-@@ -52,7 +52,7 @@ kmem_zone_t *xfs_ifork_zone;
- kmem_zone_t *xfs_inode_zone;
- 
- /*
-- * Used in xfs_itruncate().  This is the maximum number of extents
-+ * Used in xfs_itruncate_extents().  This is the maximum number of extents
-  * freed from a file in a single transaction.
+ 	 * Account for zero bestfree entries.
+@@ -108,8 +115,8 @@ xfs_dir2_data_check(
+ 		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG) {
+ 			ASSERT(lastfree == 0);
+ 			ASSERT(be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup)) ==
+-			       (char *)dup - (char *)d);
+-			dfp = xfs_dir2_data_freefind(d, dup);
++			       (char *)dup - (char *)hdr);
++			dfp = xfs_dir2_data_freefind(hdr, dup);
+ 			if (dfp) {
+ 				i = (int)(dfp - bf);
+ 				ASSERT((freeseen & (1 << i)) == 0);
+@@ -132,13 +139,13 @@ xfs_dir2_data_check(
+ 		ASSERT(dep->namelen != 0);
+ 		ASSERT(xfs_dir_ino_validate(mp, be64_to_cpu(dep->inumber)) == 0);
+ 		ASSERT(be16_to_cpu(*xfs_dir2_data_entry_tag_p(dep)) ==
+-		       (char *)dep - (char *)d);
++		       (char *)dep - (char *)hdr);
+ 		count++;
+ 		lastfree = 0;
+-		if (be32_to_cpu(d->hdr.magic) == XFS_DIR2_BLOCK_MAGIC) {
++		if (hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC)) {
+ 			addr = xfs_dir2_db_off_to_dataptr(mp, mp->m_dirdatablk,
+ 				(xfs_dir2_data_aoff_t)
+-				((char *)dep - (char *)d));
++				((char *)dep - (char *)hdr));
+ 			name.name = dep->name;
+ 			name.len = dep->namelen;
+ 			hash = mp->m_dirnameops->hashname(&name);
+@@ -155,7 +162,7 @@ xfs_dir2_data_check(
+ 	 * Need to have seen all the entries and all the bestfree slots.
+ 	 */
+ 	ASSERT(freeseen == 7);
+-	if (be32_to_cpu(d->hdr.magic) == XFS_DIR2_BLOCK_MAGIC) {
++	if (hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC)) {
+ 		for (i = stale = 0; i < be32_to_cpu(btp->count); i++) {
+ 			if (be32_to_cpu(lep[i].address) == XFS_DIR2_NULL_DATAPTR)
+ 				stale++;
+@@ -172,9 +179,9 @@ xfs_dir2_data_check(
+  * Given a data block and an unused entry from that block,
+  * return the bestfree entry if any that corresponds to it.
   */
- #define	XFS_ITRUNC_MAX_EXTENTS	2
-@@ -1218,7 +1218,9 @@ xfs_isize_check(
- 
- /*
-  * Free up the underlying blocks past new_size.  The new size must be
-- * smaller than the current size.
-+ * smaller than the current size.  This routine can be used both for
-+ * the attribute and data fork, and does not modify the inode size,
-+ * which is left to the caller.
-  *
-  * The transaction passed to this routine must have made a permanent log
-  * reservation of at least XFS_ITRUNCATE_LOG_RES.  This routine may commit the
-@@ -1230,31 +1232,6 @@ xfs_isize_check(
-  * will be "held" within the returned transaction.  This routine does NOT
-  * require any disk space to be reserved for it within the transaction.
-  *
-- * The fork parameter must be either XFS_ATTR_FORK or XFS_DATA_FORK, and it
-- * indicates the fork which is to be truncated.  For the attribute fork we only
-- * support truncation to size 0.
-- *
-- * We use the sync parameter to indicate whether or not the first transaction
-- * we perform might have to be synchronous.  For the attr fork, it needs to be
-- * so if the unlink of the inode is not yet known to be permanent in the log.
-- * This keeps us from freeing and reusing the blocks of the attribute fork
-- * before the unlink of the inode becomes permanent.
-- *
-- * For the data fork, we normally have to run synchronously if we're being
-- * called out of the inactive path or we're being called out of the create path
-- * where we're truncating an existing file.  Either way, the truncate needs to
-- * be sync so blocks don't reappear in the file with altered data in case of a
-- * crash.  wsync filesystems can run the first case async because anything that
-- * shrinks the inode has to run sync so by the time we're called here from
-- * inactive, the inode size is permanently set to 0.
-- *
-- * Calls from the truncate path always need to be sync unless we're in a wsync
-- * filesystem and the file has already been unlinked.
-- *
-- * The caller is responsible for correctly setting the sync parameter.  It gets
-- * too hard for us to guess here which path we're being called out of just
-- * based on inode state.
-- *
-  * If we get an error, we must return with the inode locked and linked into the
-  * current transaction. This keeps things simple for the higher level code,
-  * because it always knows that the inode is locked and held in the transaction
-@@ -1262,124 +1239,30 @@ xfs_isize_check(
-  * dirty on error so that transactions can be easily aborted if possible.
-  */
- int
--xfs_itruncate_finish(
--	xfs_trans_t	**tp,
--	xfs_inode_t	*ip,
--	xfs_fsize_t	new_size,
--	int		fork,
--	int		sync)
-+xfs_itruncate_extents(
-+	struct xfs_trans	**tpp,
-+	struct xfs_inode	*ip,
-+	int			whichfork,
-+	xfs_fsize_t		new_size)
+-xfs_dir2_data_free_t *
++STATIC xfs_dir2_data_free_t *
+ xfs_dir2_data_freefind(
+-	xfs_dir2_data_t		*d,		/* data block */
++	xfs_dir2_data_hdr_t	*hdr,		/* data block */
+ 	xfs_dir2_data_unused_t	*dup)		/* data unused entry */
  {
--	xfs_fsblock_t	first_block;
--	xfs_fileoff_t	first_unmap_block;
--	xfs_fileoff_t	last_block;
--	xfs_filblks_t	unmap_len=0;
--	xfs_mount_t	*mp;
--	xfs_trans_t	*ntp;
--	int		done;
--	int		committed;
--	xfs_bmap_free_t	free_list;
--	int		error;
-+	struct xfs_mount	*mp = ip->i_mount;
-+	struct xfs_trans	*ntp = *tpp;
-+	xfs_bmap_free_t		free_list;
-+	xfs_fsblock_t		first_block;
-+	xfs_fileoff_t		first_unmap_block;
-+	xfs_fileoff_t		last_block;
-+	xfs_filblks_t		unmap_len;
-+	int			committed;
-+	int			error = 0;
-+	int			done = 0;
+ 	xfs_dir2_data_free_t	*dfp;		/* bestfree entry */
+@@ -184,17 +191,17 @@ xfs_dir2_data_freefind(
+ 	int			seenzero;	/* saw a 0 bestfree entry */
+ #endif
  
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_IOLOCK_EXCL));
--	ASSERT((new_size == 0) || (new_size <= ip->i_size));
--	ASSERT(*tp != NULL);
--	ASSERT((*tp)->t_flags & XFS_TRANS_PERM_LOG_RES);
--	ASSERT(ip->i_transp == *tp);
-+	ASSERT(new_size == 0 || new_size <= ip->i_size);
-+	ASSERT((*tpp)->t_flags & XFS_TRANS_PERM_LOG_RES);
-+	ASSERT(ip->i_transp == *tpp);
- 	ASSERT(ip->i_itemp != NULL);
- 	ASSERT(ip->i_itemp->ili_lock_flags == 0);
--
--
--	ntp = *tp;
--	mp = (ntp)->t_mountp;
--	ASSERT(! XFS_NOT_DQATTACHED(mp, ip));
--
--	/*
--	 * We only support truncating the entire attribute fork.
--	 */
--	if (fork == XFS_ATTR_FORK) {
--		new_size = 0LL;
--	}
--	first_unmap_block = XFS_B_TO_FSB(mp, (xfs_ufsize_t)new_size);
--	trace_xfs_itruncate_finish_start(ip, new_size);
--
--	/*
--	 * The first thing we do is set the size to new_size permanently
--	 * on disk.  This way we don't have to worry about anyone ever
--	 * being able to look at the data being freed even in the face
--	 * of a crash.  What we're getting around here is the case where
--	 * we free a block, it is allocated to another file, it is written
--	 * to, and then we crash.  If the new data gets written to the
--	 * file but the log buffers containing the free and reallocation
--	 * don't, then we'd end up with garbage in the blocks being freed.
--	 * As long as we make the new_size permanent before actually
--	 * freeing any blocks it doesn't matter if they get written to.
--	 *
--	 * The callers must signal into us whether or not the size
--	 * setting here must be synchronous.  There are a few cases
--	 * where it doesn't have to be synchronous.  Those cases
--	 * occur if the file is unlinked and we know the unlink is
--	 * permanent or if the blocks being truncated are guaranteed
--	 * to be beyond the inode eof (regardless of the link count)
--	 * and the eof value is permanent.  Both of these cases occur
--	 * only on wsync-mounted filesystems.  In those cases, we're
--	 * guaranteed that no user will ever see the data in the blocks
--	 * that are being truncated so the truncate can run async.
--	 * In the free beyond eof case, the file may wind up with
--	 * more blocks allocated to it than it needs if we crash
--	 * and that won't get fixed until the next time the file
--	 * is re-opened and closed but that's ok as that shouldn't
--	 * be too many blocks.
--	 *
--	 * However, we can't just make all wsync xactions run async
--	 * because there's one call out of the create path that needs
--	 * to run sync where it's truncating an existing file to size
--	 * 0 whose size is > 0.
--	 *
--	 * It's probably possible to come up with a test in this
--	 * routine that would correctly distinguish all the above
--	 * cases from the values of the function parameters and the
--	 * inode state but for sanity's sake, I've decided to let the
--	 * layers above just tell us.  It's simpler to correctly figure
--	 * out in the layer above exactly under what conditions we
--	 * can run async and I think it's easier for others read and
--	 * follow the logic in case something has to be changed.
--	 * cscope is your friend -- rcc.
--	 *
--	 * The attribute fork is much simpler.
--	 *
--	 * For the attribute fork we allow the caller to tell us whether
--	 * the unlink of the inode that led to this call is yet permanent
--	 * in the on disk log.  If it is not and we will be freeing extents
--	 * in this inode then we make the first transaction synchronous
--	 * to make sure that the unlink is permanent by the time we free
--	 * the blocks.
--	 */
--	if (fork == XFS_DATA_FORK) {
--		if (ip->i_d.di_nextents > 0) {
--			/*
--			 * If we are not changing the file size then do
--			 * not update the on-disk file size - we may be
--			 * called from xfs_inactive_free_eofblocks().  If we
--			 * update the on-disk file size and then the system
--			 * crashes before the contents of the file are
--			 * flushed to disk then the files may be full of
--			 * holes (ie NULL files bug).
--			 */
--			if (ip->i_size != new_size) {
--				ip->i_d.di_size = new_size;
--				ip->i_size = new_size;
--				xfs_trans_log_inode(ntp, ip, XFS_ILOG_CORE);
--			}
--		}
--	} else if (sync) {
--		ASSERT(!(mp->m_flags & XFS_MOUNT_WSYNC));
--		if (ip->i_d.di_anextents > 0)
--			xfs_trans_set_sync(ntp);
--	}
--	ASSERT(fork == XFS_DATA_FORK ||
--		(fork == XFS_ATTR_FORK &&
--			((sync && !(mp->m_flags & XFS_MOUNT_WSYNC)) ||
--			 (sync == 0 && (mp->m_flags & XFS_MOUNT_WSYNC)))));
-+	ASSERT(!XFS_NOT_DQATTACHED(mp, ip));
- 
+-	off = (xfs_dir2_data_aoff_t)((char *)dup - (char *)d);
++	off = (xfs_dir2_data_aoff_t)((char *)dup - (char *)hdr);
+ #if defined(DEBUG) && defined(__KERNEL__)
  	/*
- 	 * Since it is possible for space to become allocated beyond
-@@ -1390,70 +1273,34 @@ xfs_itruncate_finish(
- 	 * beyond the maximum file size (ie it is the same as last_block),
- 	 * then there is nothing to do.
+ 	 * Validate some consistency in the bestfree table.
+ 	 * Check order, non-overlapping entries, and if we find the
+ 	 * one we're looking for it has to be exact.
  	 */
-+	first_unmap_block = XFS_B_TO_FSB(mp, (xfs_ufsize_t)new_size);
- 	last_block = XFS_B_TO_FSB(mp, (xfs_ufsize_t)XFS_MAXIOFFSET(mp));
--	ASSERT(first_unmap_block <= last_block);
--	done = 0;
--	if (last_block == first_unmap_block) {
--		done = 1;
--	} else {
--		unmap_len = last_block - first_unmap_block + 1;
--	}
-+	if (first_unmap_block == last_block)
-+		return 0;
-+
-+	ASSERT(first_unmap_block < last_block);
-+	unmap_len = last_block - first_unmap_block + 1;
- 	while (!done) {
--		/*
--		 * Free up up to XFS_ITRUNC_MAX_EXTENTS.  xfs_bunmapi()
--		 * will tell us whether it freed the entire range or
--		 * not.  If this is a synchronous mount (wsync),
--		 * then we can tell bunmapi to keep all the
--		 * transactions asynchronous since the unlink
--		 * transaction that made this inode inactive has
--		 * already hit the disk.  There's no danger of
--		 * the freed blocks being reused, there being a
--		 * crash, and the reused blocks suddenly reappearing
--		 * in this file with garbage in them once recovery
--		 * runs.
--		 */
- 		xfs_bmap_init(&free_list, &first_block);
- 		error = xfs_bunmapi(ntp, ip,
- 				    first_unmap_block, unmap_len,
--				    xfs_bmapi_aflag(fork),
-+				    xfs_bmapi_aflag(whichfork),
- 				    XFS_ITRUNC_MAX_EXTENTS,
- 				    &first_block, &free_list,
- 				    &done);
--		if (error) {
--			/*
--			 * If the bunmapi call encounters an error,
--			 * return to the caller where the transaction
--			 * can be properly aborted.  We just need to
--			 * make sure we're not holding any resources
--			 * that we were not when we came in.
--			 */
--			xfs_bmap_cancel(&free_list);
--			return error;
--		}
-+		if (error)
-+			goto out_bmap_cancel;
- 
- 		/*
- 		 * Duplicate the transaction that has the permanent
- 		 * reservation and commit the old transaction.
- 		 */
--		error = xfs_bmap_finish(tp, &free_list, &committed);
--		ntp = *tp;
-+		error = xfs_bmap_finish(tpp, &free_list, &committed);
-+		ntp = *tpp;
- 		if (committed)
- 			xfs_trans_ijoin(ntp, ip);
--
--		if (error) {
--			/*
--			 * If the bmap finish call encounters an error, return
--			 * to the caller where the transaction can be properly
--			 * aborted.  We just need to make sure we're not
--			 * holding any resources that we were not when we came
--			 * in.
--			 *
--			 * Aborting from this point might lose some blocks in
--			 * the file system, but oh well.
--			 */
--			xfs_bmap_cancel(&free_list);
--			return error;
--		}
-+		if (error)
-+			goto out_bmap_cancel;
- 
- 		if (committed) {
- 			/*
-@@ -1464,15 +1311,16 @@ xfs_itruncate_finish(
- 		}
- 
- 		ntp = xfs_trans_dup(ntp);
--		error = xfs_trans_commit(*tp, 0);
--		*tp = ntp;
-+		error = xfs_trans_commit(*tpp, 0);
-+		*tpp = ntp;
- 
- 		xfs_trans_ijoin(ntp, ip);
- 
- 		if (error)
- 			return error;
-+
- 		/*
--		 * transaction commit worked ok so we can drop the extra ticket
-+		 * Transaction commit worked ok so we can drop the extra ticket
- 		 * reference that we gained in xfs_trans_dup()
- 		 */
- 		xfs_log_ticket_put(ntp->t_ticket);
-@@ -1483,35 +1331,85 @@ xfs_itruncate_finish(
- 		if (error)
- 			return error;
+-	ASSERT(be32_to_cpu(d->hdr.magic) == XFS_DIR2_DATA_MAGIC ||
+-	       be32_to_cpu(d->hdr.magic) == XFS_DIR2_BLOCK_MAGIC);
+-	for (dfp = &d->hdr.bestfree[0], seenzero = matched = 0;
+-	     dfp < &d->hdr.bestfree[XFS_DIR2_DATA_FD_COUNT];
++	ASSERT(be32_to_cpu(hdr->magic) == XFS_DIR2_DATA_MAGIC ||
++	       be32_to_cpu(hdr->magic) == XFS_DIR2_BLOCK_MAGIC);
++	for (dfp = &hdr->bestfree[0], seenzero = matched = 0;
++	     dfp < &hdr->bestfree[XFS_DIR2_DATA_FD_COUNT];
+ 	     dfp++) {
+ 		if (!dfp->offset) {
+ 			ASSERT(!dfp->length);
+@@ -210,7 +217,7 @@ xfs_dir2_data_freefind(
+ 		else
+ 			ASSERT(be16_to_cpu(dfp->offset) + be16_to_cpu(dfp->length) <= off);
+ 		ASSERT(matched || be16_to_cpu(dfp->length) >= be16_to_cpu(dup->length));
+-		if (dfp > &d->hdr.bestfree[0])
++		if (dfp > &hdr->bestfree[0])
+ 			ASSERT(be16_to_cpu(dfp[-1].length) >= be16_to_cpu(dfp[0].length));
  	}
-+
-+	return 0;
-+
-+out_bmap_cancel:
-+	/*
-+	 * If the bunmapi call encounters an error, return to the caller where
-+	 * the transaction can be properly aborted.  We just need to make sure
-+	 * we're not holding any resources that we were not when we came in.
-+	 */
-+	xfs_bmap_cancel(&free_list);
-+	return error;
-+}
-+
-+int
-+xfs_itruncate_data(
-+	struct xfs_trans	**tpp,
-+	struct xfs_inode	*ip,
-+	xfs_fsize_t		new_size)
-+{
-+	struct xfs_mount	*mp = ip->i_mount;
-+	int			error;
-+
-+	trace_xfs_itruncate_data_start(ip, new_size);
+ #endif
+@@ -219,13 +226,13 @@ xfs_dir2_data_freefind(
+ 	 * it can't be there since they're sorted.
+ 	 */
+ 	if (be16_to_cpu(dup->length) <
+-	    be16_to_cpu(d->hdr.bestfree[XFS_DIR2_DATA_FD_COUNT - 1].length))
++	    be16_to_cpu(hdr->bestfree[XFS_DIR2_DATA_FD_COUNT - 1].length))
+ 		return NULL;
+ 	/*
+ 	 * Look at the three bestfree entries for our guy.
+ 	 */
+-	for (dfp = &d->hdr.bestfree[0];
+-	     dfp < &d->hdr.bestfree[XFS_DIR2_DATA_FD_COUNT];
++	for (dfp = &hdr->bestfree[0];
++	     dfp < &hdr->bestfree[XFS_DIR2_DATA_FD_COUNT];
+ 	     dfp++) {
+ 		if (!dfp->offset)
+ 			return NULL;
+@@ -243,7 +250,7 @@ xfs_dir2_data_freefind(
+  */
+ xfs_dir2_data_free_t *				/* entry inserted */
+ xfs_dir2_data_freeinsert(
+-	xfs_dir2_data_t		*d,		/* data block pointer */
++	xfs_dir2_data_hdr_t	*hdr,		/* data block pointer */
+ 	xfs_dir2_data_unused_t	*dup,		/* unused space */
+ 	int			*loghead)	/* log the data header (out) */
+ {
+@@ -251,12 +258,13 @@ xfs_dir2_data_freeinsert(
+ 	xfs_dir2_data_free_t	new;		/* new bestfree entry */
+ 
+ #ifdef __KERNEL__
+-	ASSERT(be32_to_cpu(d->hdr.magic) == XFS_DIR2_DATA_MAGIC ||
+-	       be32_to_cpu(d->hdr.magic) == XFS_DIR2_BLOCK_MAGIC);
++	ASSERT(be32_to_cpu(hdr->magic) == XFS_DIR2_DATA_MAGIC ||
++	       be32_to_cpu(hdr->magic) == XFS_DIR2_BLOCK_MAGIC);
+ #endif
+-	dfp = d->hdr.bestfree;
++	dfp = hdr->bestfree;
+ 	new.length = dup->length;
+-	new.offset = cpu_to_be16((char *)dup - (char *)d);
++	new.offset = cpu_to_be16((char *)dup - (char *)hdr);
 +
  	/*
--	 * Only update the size in the case of the data fork, but
--	 * always re-log the inode so that our permanent transaction
--	 * can keep on rolling it forward in the log.
-+	 * The first thing we do is set the size to new_size permanently on
-+	 * disk.  This way we don't have to worry about anyone ever being able
-+	 * to look at the data being freed even in the face of a crash.
-+	 * What we're getting around here is the case where we free a block, it
-+	 * is allocated to another file, it is written to, and then we crash.
-+	 * If the new data gets written to the file but the log buffers
-+	 * containing the free and reallocation don't, then we'd end up with
-+	 * garbage in the blocks being freed.  As long as we make the new_size
-+	 * permanent before actually freeing any blocks it doesn't matter if
-+	 * they get written to.
+ 	 * Insert at position 0, 1, or 2; or not at all.
  	 */
--	if (fork == XFS_DATA_FORK) {
--		xfs_isize_check(mp, ip, new_size);
-+	if (ip->i_d.di_nextents > 0) {
- 		/*
--		 * If we are not changing the file size then do
--		 * not update the on-disk file size - we may be
--		 * called from xfs_inactive_free_eofblocks().  If we
--		 * update the on-disk file size and then the system
--		 * crashes before the contents of the file are
--		 * flushed to disk then the files may be full of
--		 * holes (ie NULL files bug).
-+		 * If we are not changing the file size then do not update
-+		 * the on-disk file size - we may be called from
-+		 * xfs_inactive_free_eofblocks().  If we update the on-disk
-+		 * file size and then the system crashes before the contents
-+		 * of the file are flushed to disk then the files may be
-+		 * full of holes (ie NULL files bug).
- 		 */
- 		if (ip->i_size != new_size) {
- 			ip->i_d.di_size = new_size;
- 			ip->i_size = new_size;
-+			xfs_trans_log_inode(*tpp, ip, XFS_ILOG_CORE);
- 		}
+@@ -286,36 +294,36 @@ xfs_dir2_data_freeinsert(
+  */
+ STATIC void
+ xfs_dir2_data_freeremove(
+-	xfs_dir2_data_t		*d,		/* data block pointer */
++	xfs_dir2_data_hdr_t	*hdr,		/* data block header */
+ 	xfs_dir2_data_free_t	*dfp,		/* bestfree entry pointer */
+ 	int			*loghead)	/* out: log data header */
+ {
+ #ifdef __KERNEL__
+-	ASSERT(be32_to_cpu(d->hdr.magic) == XFS_DIR2_DATA_MAGIC ||
+-	       be32_to_cpu(d->hdr.magic) == XFS_DIR2_BLOCK_MAGIC);
++	ASSERT(be32_to_cpu(hdr->magic) == XFS_DIR2_DATA_MAGIC ||
++	       be32_to_cpu(hdr->magic) == XFS_DIR2_BLOCK_MAGIC);
+ #endif
+ 	/*
+ 	 * It's the first entry, slide the next 2 up.
+ 	 */
+-	if (dfp == &d->hdr.bestfree[0]) {
+-		d->hdr.bestfree[0] = d->hdr.bestfree[1];
+-		d->hdr.bestfree[1] = d->hdr.bestfree[2];
++	if (dfp == &hdr->bestfree[0]) {
++		hdr->bestfree[0] = hdr->bestfree[1];
++		hdr->bestfree[1] = hdr->bestfree[2];
  	}
--	xfs_trans_log_inode(ntp, ip, XFS_ILOG_CORE);
--	ASSERT((new_size != 0) ||
--	       (fork == XFS_ATTR_FORK) ||
--	       (ip->i_delayed_blks == 0));
--	ASSERT((new_size != 0) ||
--	       (fork == XFS_ATTR_FORK) ||
--	       (ip->i_d.di_nextents == 0));
--	trace_xfs_itruncate_finish_end(ip, new_size);
-+
-+	error = xfs_itruncate_extents(tpp, ip, XFS_DATA_FORK, new_size);
-+	if (error)
-+		return error;
-+
-+	/*
-+	 * If we are not changing the file size then do not update the on-disk
-+	 * file size - we may be called from xfs_inactive_free_eofblocks().
-+	 * If we update the on-disk file size and then the system crashes
-+	 * before the contents of the file are flushed to disk then the files
-+	 * may be full of holes (ie NULL files bug).
-+	 */
-+	xfs_isize_check(mp, ip, new_size);
-+	if (ip->i_size != new_size) {
-+		ip->i_d.di_size = new_size;
-+		ip->i_size = new_size;
-+	}
-+
-+	ASSERT(new_size != 0 || ip->i_delayed_blks == 0);
-+	ASSERT(new_size != 0 || ip->i_d.di_nextents == 0);
-+
-+	/*
-+	 * Always re-log the inode so that our permanent transaction can keep
-+	 * on rolling it forward in the log.
-+	 */
-+	xfs_trans_log_inode(*tpp, ip, XFS_ILOG_CORE);
-+
-+	trace_xfs_itruncate_data_end(ip, new_size);
- 	return 0;
+ 	/*
+ 	 * It's the second entry, slide the 3rd entry up.
+ 	 */
+-	else if (dfp == &d->hdr.bestfree[1])
+-		d->hdr.bestfree[1] = d->hdr.bestfree[2];
++	else if (dfp == &hdr->bestfree[1])
++		hdr->bestfree[1] = hdr->bestfree[2];
+ 	/*
+ 	 * Must be the last entry.
+ 	 */
+ 	else
+-		ASSERT(dfp == &d->hdr.bestfree[2]);
++		ASSERT(dfp == &hdr->bestfree[2]);
+ 	/*
+ 	 * Clear the 3rd entry, must be zero now.
+ 	 */
+-	d->hdr.bestfree[2].length = 0;
+-	d->hdr.bestfree[2].offset = 0;
++	hdr->bestfree[2].length = 0;
++	hdr->bestfree[2].offset = 0;
+ 	*loghead = 1;
  }
  
-Index: xfs/fs/xfs/xfs_inode.h
+@@ -325,9 +333,10 @@ xfs_dir2_data_freeremove(
+ void
+ xfs_dir2_data_freescan(
+ 	xfs_mount_t		*mp,		/* filesystem mount point */
+-	xfs_dir2_data_t		*d,		/* data block pointer */
++	xfs_dir2_data_hdr_t	*hdr,		/* data block header */
+ 	int			*loghead)	/* out: log data header */
+ {
++	xfs_dir2_data_t		*d = (xfs_dir2_data_t *)hdr;
+ 	xfs_dir2_block_tail_t	*btp;		/* block tail */
+ 	xfs_dir2_data_entry_t	*dep;		/* active data entry */
+ 	xfs_dir2_data_unused_t	*dup;		/* unused data entry */
+@@ -335,23 +344,23 @@ xfs_dir2_data_freescan(
+ 	char			*p;		/* current entry pointer */
+ 
+ #ifdef __KERNEL__
+-	ASSERT(be32_to_cpu(d->hdr.magic) == XFS_DIR2_DATA_MAGIC ||
+-	       be32_to_cpu(d->hdr.magic) == XFS_DIR2_BLOCK_MAGIC);
++	ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC) ||
++	       hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC));
+ #endif
+ 	/*
+ 	 * Start by clearing the table.
+ 	 */
+-	memset(d->hdr.bestfree, 0, sizeof(d->hdr.bestfree));
++	memset(hdr->bestfree, 0, sizeof(hdr->bestfree));
+ 	*loghead = 1;
+ 	/*
+ 	 * Set up pointers.
+ 	 */
+ 	p = (char *)d->u;
+-	if (be32_to_cpu(d->hdr.magic) == XFS_DIR2_BLOCK_MAGIC) {
+-		btp = xfs_dir2_block_tail_p(mp, &d->hdr);
++	if (be32_to_cpu(hdr->magic) == XFS_DIR2_BLOCK_MAGIC) {
++		btp = xfs_dir2_block_tail_p(mp, hdr);
+ 		endp = (char *)xfs_dir2_block_leaf_p(btp);
+ 	} else
+-		endp = (char *)d + mp->m_dirblksize;
++		endp = (char *)hdr + mp->m_dirblksize;
+ 	/*
+ 	 * Loop over the block's entries.
+ 	 */
+@@ -361,9 +370,9 @@ xfs_dir2_data_freescan(
+ 		 * If it's a free entry, insert it.
+ 		 */
+ 		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG) {
+-			ASSERT((char *)dup - (char *)d ==
++			ASSERT((char *)dup - (char *)hdr ==
+ 			       be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup)));
+-			xfs_dir2_data_freeinsert(d, dup, loghead);
++			xfs_dir2_data_freeinsert(hdr, dup, loghead);
+ 			p += be16_to_cpu(dup->length);
+ 		}
+ 		/*
+@@ -371,7 +380,7 @@ xfs_dir2_data_freescan(
+ 		 */
+ 		else {
+ 			dep = (xfs_dir2_data_entry_t *)p;
+-			ASSERT((char *)dep - (char *)d ==
++			ASSERT((char *)dep - (char *)hdr ==
+ 			       be16_to_cpu(*xfs_dir2_data_entry_tag_p(dep)));
+ 			p += xfs_dir2_data_entsize(dep->namelen);
+ 		}
+@@ -390,6 +399,7 @@ xfs_dir2_data_init(
+ {
+ 	xfs_dabuf_t		*bp;		/* block buffer */
+ 	xfs_dir2_data_t		*d;		/* pointer to block */
++	xfs_dir2_data_hdr_t	*hdr;		/* data block header */
+ 	xfs_inode_t		*dp;		/* incore directory inode */
+ 	xfs_dir2_data_unused_t	*dup;		/* unused entry pointer */
+ 	int			error;		/* error return value */
+@@ -410,26 +420,29 @@ xfs_dir2_data_init(
+ 		return error;
+ 	}
+ 	ASSERT(bp != NULL);
++
+ 	/*
+ 	 * Initialize the header.
+ 	 */
+ 	d = bp->data;
+-	d->hdr.magic = cpu_to_be32(XFS_DIR2_DATA_MAGIC);
+-	d->hdr.bestfree[0].offset = cpu_to_be16(sizeof(d->hdr));
++	hdr = &d->hdr;
++	hdr->magic = cpu_to_be32(XFS_DIR2_DATA_MAGIC);
++	hdr->bestfree[0].offset = cpu_to_be16(sizeof(*hdr));
+ 	for (i = 1; i < XFS_DIR2_DATA_FD_COUNT; i++) {
+-		d->hdr.bestfree[i].length = 0;
+-		d->hdr.bestfree[i].offset = 0;
++		hdr->bestfree[i].length = 0;
++		hdr->bestfree[i].offset = 0;
+ 	}
++
+ 	/*
+ 	 * Set up an unused entry for the block's body.
+ 	 */
+ 	dup = &d->u[0].unused;
+ 	dup->freetag = cpu_to_be16(XFS_DIR2_DATA_FREE_TAG);
+ 
+-	t=mp->m_dirblksize - (uint)sizeof(d->hdr);
+-	d->hdr.bestfree[0].length = cpu_to_be16(t);
++	t = mp->m_dirblksize - (uint)sizeof(*hdr);
++	hdr->bestfree[0].length = cpu_to_be16(t);
+ 	dup->length = cpu_to_be16(t);
+-	*xfs_dir2_data_unused_tag_p(dup) = cpu_to_be16((char *)dup - (char *)d);
++	*xfs_dir2_data_unused_tag_p(dup) = cpu_to_be16((char *)dup - (char *)hdr);
+ 	/*
+ 	 * Log it and return it.
+ 	 */
+@@ -448,14 +461,14 @@ xfs_dir2_data_log_entry(
+ 	xfs_dabuf_t		*bp,		/* block buffer */
+ 	xfs_dir2_data_entry_t	*dep)		/* data entry pointer */
+ {
+-	xfs_dir2_data_t		*d;		/* data block pointer */
++	xfs_dir2_data_hdr_t	*hdr = bp->data;
+ 
+-	d = bp->data;
+-	ASSERT(be32_to_cpu(d->hdr.magic) == XFS_DIR2_DATA_MAGIC ||
+-	       be32_to_cpu(d->hdr.magic) == XFS_DIR2_BLOCK_MAGIC);
+-	xfs_da_log_buf(tp, bp, (uint)((char *)dep - (char *)d),
++	ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC) ||
++	       hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC));
++
++	xfs_da_log_buf(tp, bp, (uint)((char *)dep - (char *)hdr),
+ 		(uint)((char *)(xfs_dir2_data_entry_tag_p(dep) + 1) -
+-		       (char *)d - 1));
++		       (char *)hdr - 1));
+ }
+ 
+ /*
+@@ -466,13 +479,12 @@ xfs_dir2_data_log_header(
+ 	xfs_trans_t		*tp,		/* transaction pointer */
+ 	xfs_dabuf_t		*bp)		/* block buffer */
+ {
+-	xfs_dir2_data_t		*d;		/* data block pointer */
++	xfs_dir2_data_hdr_t	*hdr = bp->data;
+ 
+-	d = bp->data;
+-	ASSERT(be32_to_cpu(d->hdr.magic) == XFS_DIR2_DATA_MAGIC ||
+-	       be32_to_cpu(d->hdr.magic) == XFS_DIR2_BLOCK_MAGIC);
+-	xfs_da_log_buf(tp, bp, (uint)((char *)&d->hdr - (char *)d),
+-		(uint)(sizeof(d->hdr) - 1));
++	ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC) ||
++	       hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC));
++
++	xfs_da_log_buf(tp, bp, 0, sizeof(*hdr) - 1);
+ }
+ 
+ /*
+@@ -484,23 +496,23 @@ xfs_dir2_data_log_unused(
+ 	xfs_dabuf_t		*bp,		/* block buffer */
+ 	xfs_dir2_data_unused_t	*dup)		/* data unused pointer */
+ {
+-	xfs_dir2_data_t		*d;		/* data block pointer */
++	xfs_dir2_data_hdr_t	*hdr = bp->data;
++
++	ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC) ||
++	       hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC));
+ 
+-	d = bp->data;
+-	ASSERT(be32_to_cpu(d->hdr.magic) == XFS_DIR2_DATA_MAGIC ||
+-	       be32_to_cpu(d->hdr.magic) == XFS_DIR2_BLOCK_MAGIC);
+ 	/*
+ 	 * Log the first part of the unused entry.
+ 	 */
+-	xfs_da_log_buf(tp, bp, (uint)((char *)dup - (char *)d),
++	xfs_da_log_buf(tp, bp, (uint)((char *)dup - (char *)hdr),
+ 		(uint)((char *)&dup->length + sizeof(dup->length) -
+-		       1 - (char *)d));
++		       1 - (char *)hdr));
+ 	/*
+ 	 * Log the end (tag) of the unused entry.
+ 	 */
+ 	xfs_da_log_buf(tp, bp,
+-		(uint)((char *)xfs_dir2_data_unused_tag_p(dup) - (char *)d),
+-		(uint)((char *)xfs_dir2_data_unused_tag_p(dup) - (char *)d +
++		(uint)((char *)xfs_dir2_data_unused_tag_p(dup) - (char *)hdr),
++		(uint)((char *)xfs_dir2_data_unused_tag_p(dup) - (char *)hdr +
+ 		       sizeof(xfs_dir2_data_off_t) - 1));
+ }
+ 
+@@ -517,7 +529,7 @@ xfs_dir2_data_make_free(
+ 	int			*needlogp,	/* out: log header */
+ 	int			*needscanp)	/* out: regen bestfree */
+ {
+-	xfs_dir2_data_t		*d;		/* data block pointer */
++	xfs_dir2_data_hdr_t	*hdr;		/* data block pointer */
+ 	xfs_dir2_data_free_t	*dfp;		/* bestfree pointer */
+ 	char			*endptr;	/* end of data area */
+ 	xfs_mount_t		*mp;		/* filesystem mount point */
+@@ -527,28 +539,29 @@ xfs_dir2_data_make_free(
+ 	xfs_dir2_data_unused_t	*prevdup;	/* unused entry before us */
+ 
+ 	mp = tp->t_mountp;
+-	d = bp->data;
++	hdr = bp->data;
++
+ 	/*
+ 	 * Figure out where the end of the data area is.
+ 	 */
+-	if (be32_to_cpu(d->hdr.magic) == XFS_DIR2_DATA_MAGIC)
+-		endptr = (char *)d + mp->m_dirblksize;
++	if (hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC))
++		endptr = (char *)hdr + mp->m_dirblksize;
+ 	else {
+ 		xfs_dir2_block_tail_t	*btp;	/* block tail */
+ 
+-		ASSERT(be32_to_cpu(d->hdr.magic) == XFS_DIR2_BLOCK_MAGIC);
+-		btp = xfs_dir2_block_tail_p(mp, &d->hdr);
++		ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC));
++		btp = xfs_dir2_block_tail_p(mp, hdr);
+ 		endptr = (char *)xfs_dir2_block_leaf_p(btp);
+ 	}
+ 	/*
+ 	 * If this isn't the start of the block, then back up to
+ 	 * the previous entry and see if it's free.
+ 	 */
+-	if (offset > sizeof(d->hdr)) {
++	if (offset > sizeof(*hdr)) {
+ 		__be16			*tagp;	/* tag just before us */
+ 
+-		tagp = (__be16 *)((char *)d + offset) - 1;
+-		prevdup = (xfs_dir2_data_unused_t *)((char *)d + be16_to_cpu(*tagp));
++		tagp = (__be16 *)((char *)hdr + offset) - 1;
++		prevdup = (xfs_dir2_data_unused_t *)((char *)hdr + be16_to_cpu(*tagp));
+ 		if (be16_to_cpu(prevdup->freetag) != XFS_DIR2_DATA_FREE_TAG)
+ 			prevdup = NULL;
+ 	} else
+@@ -557,9 +570,9 @@ xfs_dir2_data_make_free(
+ 	 * If this isn't the end of the block, see if the entry after
+ 	 * us is free.
+ 	 */
+-	if ((char *)d + offset + len < endptr) {
++	if ((char *)hdr + offset + len < endptr) {
+ 		postdup =
+-			(xfs_dir2_data_unused_t *)((char *)d + offset + len);
++			(xfs_dir2_data_unused_t *)((char *)hdr + offset + len);
+ 		if (be16_to_cpu(postdup->freetag) != XFS_DIR2_DATA_FREE_TAG)
+ 			postdup = NULL;
+ 	} else
+@@ -576,21 +589,21 @@ xfs_dir2_data_make_free(
+ 		/*
+ 		 * See if prevdup and/or postdup are in bestfree table.
+ 		 */
+-		dfp = xfs_dir2_data_freefind(d, prevdup);
+-		dfp2 = xfs_dir2_data_freefind(d, postdup);
++		dfp = xfs_dir2_data_freefind(hdr, prevdup);
++		dfp2 = xfs_dir2_data_freefind(hdr, postdup);
+ 		/*
+ 		 * We need a rescan unless there are exactly 2 free entries
+ 		 * namely our two.  Then we know what's happening, otherwise
+ 		 * since the third bestfree is there, there might be more
+ 		 * entries.
+ 		 */
+-		needscan = (d->hdr.bestfree[2].length != 0);
++		needscan = (hdr->bestfree[2].length != 0);
+ 		/*
+ 		 * Fix up the new big freespace.
+ 		 */
+ 		be16_add_cpu(&prevdup->length, len + be16_to_cpu(postdup->length));
+ 		*xfs_dir2_data_unused_tag_p(prevdup) =
+-			cpu_to_be16((char *)prevdup - (char *)d);
++			cpu_to_be16((char *)prevdup - (char *)hdr);
+ 		xfs_dir2_data_log_unused(tp, bp, prevdup);
+ 		if (!needscan) {
+ 			/*
+@@ -600,18 +613,18 @@ xfs_dir2_data_make_free(
+ 			 * Remove entry 1 first then entry 0.
+ 			 */
+ 			ASSERT(dfp && dfp2);
+-			if (dfp == &d->hdr.bestfree[1]) {
+-				dfp = &d->hdr.bestfree[0];
++			if (dfp == &hdr->bestfree[1]) {
++				dfp = &hdr->bestfree[0];
+ 				ASSERT(dfp2 == dfp);
+-				dfp2 = &d->hdr.bestfree[1];
++				dfp2 = &hdr->bestfree[1];
+ 			}
+-			xfs_dir2_data_freeremove(d, dfp2, needlogp);
+-			xfs_dir2_data_freeremove(d, dfp, needlogp);
++			xfs_dir2_data_freeremove(hdr, dfp2, needlogp);
++			xfs_dir2_data_freeremove(hdr, dfp, needlogp);
+ 			/*
+ 			 * Now insert the new entry.
+ 			 */
+-			dfp = xfs_dir2_data_freeinsert(d, prevdup, needlogp);
+-			ASSERT(dfp == &d->hdr.bestfree[0]);
++			dfp = xfs_dir2_data_freeinsert(hdr, prevdup, needlogp);
++			ASSERT(dfp == &hdr->bestfree[0]);
+ 			ASSERT(dfp->length == prevdup->length);
+ 			ASSERT(!dfp[1].length);
+ 			ASSERT(!dfp[2].length);
+@@ -621,10 +634,10 @@ xfs_dir2_data_make_free(
+ 	 * The entry before us is free, merge with it.
+ 	 */
+ 	else if (prevdup) {
+-		dfp = xfs_dir2_data_freefind(d, prevdup);
++		dfp = xfs_dir2_data_freefind(hdr, prevdup);
+ 		be16_add_cpu(&prevdup->length, len);
+ 		*xfs_dir2_data_unused_tag_p(prevdup) =
+-			cpu_to_be16((char *)prevdup - (char *)d);
++			cpu_to_be16((char *)prevdup - (char *)hdr);
+ 		xfs_dir2_data_log_unused(tp, bp, prevdup);
+ 		/*
+ 		 * If the previous entry was in the table, the new entry
+@@ -632,27 +645,27 @@ xfs_dir2_data_make_free(
+ 		 * the old one and add the new one.
+ 		 */
+ 		if (dfp) {
+-			xfs_dir2_data_freeremove(d, dfp, needlogp);
+-			(void)xfs_dir2_data_freeinsert(d, prevdup, needlogp);
++			xfs_dir2_data_freeremove(hdr, dfp, needlogp);
++			(void)xfs_dir2_data_freeinsert(hdr, prevdup, needlogp);
+ 		}
+ 		/*
+ 		 * Otherwise we need a scan if the new entry is big enough.
+ 		 */
+ 		else {
+ 			needscan = be16_to_cpu(prevdup->length) >
+-				   be16_to_cpu(d->hdr.bestfree[2].length);
++				   be16_to_cpu(hdr->bestfree[2].length);
+ 		}
+ 	}
+ 	/*
+ 	 * The following entry is free, merge with it.
+ 	 */
+ 	else if (postdup) {
+-		dfp = xfs_dir2_data_freefind(d, postdup);
+-		newdup = (xfs_dir2_data_unused_t *)((char *)d + offset);
++		dfp = xfs_dir2_data_freefind(hdr, postdup);
++		newdup = (xfs_dir2_data_unused_t *)((char *)hdr + offset);
+ 		newdup->freetag = cpu_to_be16(XFS_DIR2_DATA_FREE_TAG);
+ 		newdup->length = cpu_to_be16(len + be16_to_cpu(postdup->length));
+ 		*xfs_dir2_data_unused_tag_p(newdup) =
+-			cpu_to_be16((char *)newdup - (char *)d);
++			cpu_to_be16((char *)newdup - (char *)hdr);
+ 		xfs_dir2_data_log_unused(tp, bp, newdup);
+ 		/*
+ 		 * If the following entry was in the table, the new entry
+@@ -660,28 +673,28 @@ xfs_dir2_data_make_free(
+ 		 * the old one and add the new one.
+ 		 */
+ 		if (dfp) {
+-			xfs_dir2_data_freeremove(d, dfp, needlogp);
+-			(void)xfs_dir2_data_freeinsert(d, newdup, needlogp);
++			xfs_dir2_data_freeremove(hdr, dfp, needlogp);
++			(void)xfs_dir2_data_freeinsert(hdr, newdup, needlogp);
+ 		}
+ 		/*
+ 		 * Otherwise we need a scan if the new entry is big enough.
+ 		 */
+ 		else {
+ 			needscan = be16_to_cpu(newdup->length) >
+-				   be16_to_cpu(d->hdr.bestfree[2].length);
++				   be16_to_cpu(hdr->bestfree[2].length);
+ 		}
+ 	}
+ 	/*
+ 	 * Neither neighbor is free.  Make a new entry.
+ 	 */
+ 	else {
+-		newdup = (xfs_dir2_data_unused_t *)((char *)d + offset);
++		newdup = (xfs_dir2_data_unused_t *)((char *)hdr + offset);
+ 		newdup->freetag = cpu_to_be16(XFS_DIR2_DATA_FREE_TAG);
+ 		newdup->length = cpu_to_be16(len);
+ 		*xfs_dir2_data_unused_tag_p(newdup) =
+-			cpu_to_be16((char *)newdup - (char *)d);
++			cpu_to_be16((char *)newdup - (char *)hdr);
+ 		xfs_dir2_data_log_unused(tp, bp, newdup);
+-		(void)xfs_dir2_data_freeinsert(d, newdup, needlogp);
++		(void)xfs_dir2_data_freeinsert(hdr, newdup, needlogp);
+ 	}
+ 	*needscanp = needscan;
+ }
+@@ -699,7 +712,7 @@ xfs_dir2_data_use_free(
+ 	int			*needlogp,	/* out: need to log header */
+ 	int			*needscanp)	/* out: need regen bestfree */
+ {
+-	xfs_dir2_data_t		*d;		/* data block */
++	xfs_dir2_data_hdr_t	*hdr;		/* data block header */
+ 	xfs_dir2_data_free_t	*dfp;		/* bestfree pointer */
+ 	int			matchback;	/* matches end of freespace */
+ 	int			matchfront;	/* matches start of freespace */
+@@ -708,24 +721,24 @@ xfs_dir2_data_use_free(
+ 	xfs_dir2_data_unused_t	*newdup2;	/* another new unused entry */
+ 	int			oldlen;		/* old unused entry's length */
+ 
+-	d = bp->data;
+-	ASSERT(be32_to_cpu(d->hdr.magic) == XFS_DIR2_DATA_MAGIC ||
+-	       be32_to_cpu(d->hdr.magic) == XFS_DIR2_BLOCK_MAGIC);
++	hdr = bp->data;
++	ASSERT(be32_to_cpu(hdr->magic) == XFS_DIR2_DATA_MAGIC ||
++	       be32_to_cpu(hdr->magic) == XFS_DIR2_BLOCK_MAGIC);
+ 	ASSERT(be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG);
+-	ASSERT(offset >= (char *)dup - (char *)d);
+-	ASSERT(offset + len <= (char *)dup + be16_to_cpu(dup->length) - (char *)d);
+-	ASSERT((char *)dup - (char *)d == be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup)));
++	ASSERT(offset >= (char *)dup - (char *)hdr);
++	ASSERT(offset + len <= (char *)dup + be16_to_cpu(dup->length) - (char *)hdr);
++	ASSERT((char *)dup - (char *)hdr == be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup)));
+ 	/*
+ 	 * Look up the entry in the bestfree table.
+ 	 */
+-	dfp = xfs_dir2_data_freefind(d, dup);
++	dfp = xfs_dir2_data_freefind(hdr, dup);
+ 	oldlen = be16_to_cpu(dup->length);
+-	ASSERT(dfp || oldlen <= be16_to_cpu(d->hdr.bestfree[2].length));
++	ASSERT(dfp || oldlen <= be16_to_cpu(hdr->bestfree[2].length));
+ 	/*
+ 	 * Check for alignment with front and back of the entry.
+ 	 */
+-	matchfront = (char *)dup - (char *)d == offset;
+-	matchback = (char *)dup + oldlen - (char *)d == offset + len;
++	matchfront = (char *)dup - (char *)hdr == offset;
++	matchback = (char *)dup + oldlen - (char *)hdr == offset + len;
+ 	ASSERT(*needscanp == 0);
+ 	needscan = 0;
+ 	/*
+@@ -734,9 +747,9 @@ xfs_dir2_data_use_free(
+ 	 */
+ 	if (matchfront && matchback) {
+ 		if (dfp) {
+-			needscan = (d->hdr.bestfree[2].offset != 0);
++			needscan = (hdr->bestfree[2].offset != 0);
+ 			if (!needscan)
+-				xfs_dir2_data_freeremove(d, dfp, needlogp);
++				xfs_dir2_data_freeremove(hdr, dfp, needlogp);
+ 		}
+ 	}
+ 	/*
+@@ -744,27 +757,27 @@ xfs_dir2_data_use_free(
+ 	 * Make a new entry with the remaining freespace.
+ 	 */
+ 	else if (matchfront) {
+-		newdup = (xfs_dir2_data_unused_t *)((char *)d + offset + len);
++		newdup = (xfs_dir2_data_unused_t *)((char *)hdr + offset + len);
+ 		newdup->freetag = cpu_to_be16(XFS_DIR2_DATA_FREE_TAG);
+ 		newdup->length = cpu_to_be16(oldlen - len);
+ 		*xfs_dir2_data_unused_tag_p(newdup) =
+-			cpu_to_be16((char *)newdup - (char *)d);
++			cpu_to_be16((char *)newdup - (char *)hdr);
+ 		xfs_dir2_data_log_unused(tp, bp, newdup);
+ 		/*
+ 		 * If it was in the table, remove it and add the new one.
+ 		 */
+ 		if (dfp) {
+-			xfs_dir2_data_freeremove(d, dfp, needlogp);
+-			dfp = xfs_dir2_data_freeinsert(d, newdup, needlogp);
++			xfs_dir2_data_freeremove(hdr, dfp, needlogp);
++			dfp = xfs_dir2_data_freeinsert(hdr, newdup, needlogp);
+ 			ASSERT(dfp != NULL);
+ 			ASSERT(dfp->length == newdup->length);
+-			ASSERT(be16_to_cpu(dfp->offset) == (char *)newdup - (char *)d);
++			ASSERT(be16_to_cpu(dfp->offset) == (char *)newdup - (char *)hdr);
+ 			/*
+ 			 * If we got inserted at the last slot,
+ 			 * that means we don't know if there was a better
+ 			 * choice for the last slot, or not.  Rescan.
+ 			 */
+-			needscan = dfp == &d->hdr.bestfree[2];
++			needscan = dfp == &hdr->bestfree[2];
+ 		}
+ 	}
+ 	/*
+@@ -773,25 +786,25 @@ xfs_dir2_data_use_free(
+ 	 */
+ 	else if (matchback) {
+ 		newdup = dup;
+-		newdup->length = cpu_to_be16(((char *)d + offset) - (char *)newdup);
++		newdup->length = cpu_to_be16(((char *)hdr + offset) - (char *)newdup);
+ 		*xfs_dir2_data_unused_tag_p(newdup) =
+-			cpu_to_be16((char *)newdup - (char *)d);
++			cpu_to_be16((char *)newdup - (char *)hdr);
+ 		xfs_dir2_data_log_unused(tp, bp, newdup);
+ 		/*
+ 		 * If it was in the table, remove it and add the new one.
+ 		 */
+ 		if (dfp) {
+-			xfs_dir2_data_freeremove(d, dfp, needlogp);
+-			dfp = xfs_dir2_data_freeinsert(d, newdup, needlogp);
++			xfs_dir2_data_freeremove(hdr, dfp, needlogp);
++			dfp = xfs_dir2_data_freeinsert(hdr, newdup, needlogp);
+ 			ASSERT(dfp != NULL);
+ 			ASSERT(dfp->length == newdup->length);
+-			ASSERT(be16_to_cpu(dfp->offset) == (char *)newdup - (char *)d);
++			ASSERT(be16_to_cpu(dfp->offset) == (char *)newdup - (char *)hdr);
+ 			/*
+ 			 * If we got inserted at the last slot,
+ 			 * that means we don't know if there was a better
+ 			 * choice for the last slot, or not.  Rescan.
+ 			 */
+-			needscan = dfp == &d->hdr.bestfree[2];
++			needscan = dfp == &hdr->bestfree[2];
+ 		}
+ 	}
+ 	/*
+@@ -800,15 +813,15 @@ xfs_dir2_data_use_free(
+ 	 */
+ 	else {
+ 		newdup = dup;
+-		newdup->length = cpu_to_be16(((char *)d + offset) - (char *)newdup);
++		newdup->length = cpu_to_be16(((char *)hdr + offset) - (char *)newdup);
+ 		*xfs_dir2_data_unused_tag_p(newdup) =
+-			cpu_to_be16((char *)newdup - (char *)d);
++			cpu_to_be16((char *)newdup - (char *)hdr);
+ 		xfs_dir2_data_log_unused(tp, bp, newdup);
+-		newdup2 = (xfs_dir2_data_unused_t *)((char *)d + offset + len);
++		newdup2 = (xfs_dir2_data_unused_t *)((char *)hdr + offset + len);
+ 		newdup2->freetag = cpu_to_be16(XFS_DIR2_DATA_FREE_TAG);
+ 		newdup2->length = cpu_to_be16(oldlen - len - be16_to_cpu(newdup->length));
+ 		*xfs_dir2_data_unused_tag_p(newdup2) =
+-			cpu_to_be16((char *)newdup2 - (char *)d);
++			cpu_to_be16((char *)newdup2 - (char *)hdr);
+ 		xfs_dir2_data_log_unused(tp, bp, newdup2);
+ 		/*
+ 		 * If the old entry was in the table, we need to scan
+@@ -819,12 +832,12 @@ xfs_dir2_data_use_free(
+ 		 * the 2 new will work.
+ 		 */
+ 		if (dfp) {
+-			needscan = (d->hdr.bestfree[2].length != 0);
++			needscan = (hdr->bestfree[2].length != 0);
+ 			if (!needscan) {
+-				xfs_dir2_data_freeremove(d, dfp, needlogp);
+-				(void)xfs_dir2_data_freeinsert(d, newdup,
++				xfs_dir2_data_freeremove(hdr, dfp, needlogp);
++				(void)xfs_dir2_data_freeinsert(hdr, newdup,
+ 					needlogp);
+-				(void)xfs_dir2_data_freeinsert(d, newdup2,
++				(void)xfs_dir2_data_freeinsert(hdr, newdup2,
+ 					needlogp);
+ 			}
+ 		}
+Index: xfs/fs/xfs/xfs_dir2_data.h
 ===================================================================
---- xfs.orig/fs/xfs/xfs_inode.h	2011-06-29 11:35:39.146158294 +0200
-+++ xfs/fs/xfs/xfs_inode.h	2011-06-29 11:35:45.789455635 +0200
-@@ -491,8 +491,10 @@ uint		xfs_ip2xflags(struct xfs_inode *);
- uint		xfs_dic2xflags(struct xfs_dinode *);
- int		xfs_ifree(struct xfs_trans *, xfs_inode_t *,
- 			   struct xfs_bmap_free *);
--int		xfs_itruncate_finish(struct xfs_trans **, xfs_inode_t *,
--				     xfs_fsize_t, int, int);
-+int		xfs_itruncate_extents(struct xfs_trans **, struct xfs_inode *,
-+				      int, xfs_fsize_t);
-+int		xfs_itruncate_data(struct xfs_trans **, struct xfs_inode *,
-+				   xfs_fsize_t);
- int		xfs_iunlink(struct xfs_trans *, xfs_inode_t *);
- 
- void		xfs_iext_realloc(xfs_inode_t *, int, int);
-Index: xfs/fs/xfs/xfs_vnodeops.c
+--- xfs.orig/fs/xfs/xfs_dir2_data.h	2011-06-27 10:47:35.919487117 +0200
++++ xfs/fs/xfs/xfs_dir2_data.h	2011-06-27 10:51:33.644865914 +0200
+@@ -157,12 +157,10 @@ extern void xfs_dir2_data_check(struct x
+ #else
+ #define	xfs_dir2_data_check(dp,bp)
+ #endif
+-extern xfs_dir2_data_free_t *xfs_dir2_data_freefind(xfs_dir2_data_t *d,
+-				xfs_dir2_data_unused_t *dup);
+-extern xfs_dir2_data_free_t *xfs_dir2_data_freeinsert(xfs_dir2_data_t *d,
++extern xfs_dir2_data_free_t *xfs_dir2_data_freeinsert(xfs_dir2_data_hdr_t *hdr,
+ 				xfs_dir2_data_unused_t *dup, int *loghead);
+-extern void xfs_dir2_data_freescan(struct xfs_mount *mp, xfs_dir2_data_t *d,
+-				int *loghead);
++extern void xfs_dir2_data_freescan(struct xfs_mount *mp,
++				xfs_dir2_data_hdr_t *hdr, int *loghead);
+ extern int xfs_dir2_data_init(struct xfs_da_args *args, xfs_dir2_db_t blkno,
+ 				struct xfs_dabuf **bpp);
+ extern void xfs_dir2_data_log_entry(struct xfs_trans *tp, struct xfs_dabuf *bp,
+Index: xfs/fs/xfs/xfs_dir2_leaf.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_vnodeops.c	2011-06-29 11:35:39.162824869 +0200
-+++ xfs/fs/xfs/xfs_vnodeops.c	2011-06-29 11:35:45.789455635 +0200
-@@ -220,15 +220,12 @@ xfs_free_eofblocks(
- 		xfs_ilock(ip, XFS_ILOCK_EXCL);
- 		xfs_trans_ijoin(tp, ip);
+--- xfs.orig/fs/xfs/xfs_dir2_leaf.c	2011-06-27 10:47:35.932820377 +0200
++++ xfs/fs/xfs/xfs_dir2_leaf.c	2011-06-27 10:51:33.648199229 +0200
+@@ -132,7 +132,7 @@ xfs_dir2_block_to_leaf(
+ 	 */
+ 	hdr->magic = cpu_to_be32(XFS_DIR2_DATA_MAGIC);
+ 	if (needscan)
+-		xfs_dir2_data_freescan(mp, (xfs_dir2_data_t *)hdr, &needlog);
++		xfs_dir2_data_freescan(mp, hdr, &needlog);
+ 	/*
+ 	 * Set up leaf tail and bests table.
+ 	 */
+@@ -273,7 +273,7 @@ xfs_dir2_leaf_addname(
+ {
+ 	__be16			*bestsp;	/* freespace table in leaf */
+ 	int			compact;	/* need to compact leaves */
+-	xfs_dir2_data_t		*data;		/* data block structure */
++	xfs_dir2_data_hdr_t	*hdr;		/* data block header */
+ 	xfs_dabuf_t		*dbp;		/* data block buffer */
+ 	xfs_dir2_data_entry_t	*dep;		/* data block entry */
+ 	xfs_inode_t		*dp;		/* incore directory inode */
+@@ -481,8 +481,8 @@ xfs_dir2_leaf_addname(
+ 		 */
+ 		else
+ 			xfs_dir2_leaf_log_bests(tp, lbp, use_block, use_block);
+-		data = dbp->data;
+-		bestsp[use_block] = data->hdr.bestfree[0].length;
++		hdr = dbp->data;
++		bestsp[use_block] = hdr->bestfree[0].length;
+ 		grown = 1;
+ 	}
+ 	/*
+@@ -496,7 +496,7 @@ xfs_dir2_leaf_addname(
+ 			xfs_da_brelse(tp, lbp);
+ 			return error;
+ 		}
+-		data = dbp->data;
++		hdr = dbp->data;
+ 		grown = 0;
+ 	}
+ 	xfs_dir2_data_check(dp, dbp);
+@@ -504,14 +504,14 @@ xfs_dir2_leaf_addname(
+ 	 * Point to the biggest freespace in our data block.
+ 	 */
+ 	dup = (xfs_dir2_data_unused_t *)
+-	      ((char *)data + be16_to_cpu(data->hdr.bestfree[0].offset));
++	      ((char *)hdr + be16_to_cpu(hdr->bestfree[0].offset));
+ 	ASSERT(be16_to_cpu(dup->length) >= length);
+ 	needscan = needlog = 0;
+ 	/*
+ 	 * Mark the initial part of our freespace in use for the new entry.
+ 	 */
+ 	xfs_dir2_data_use_free(tp, dbp, dup,
+-		(xfs_dir2_data_aoff_t)((char *)dup - (char *)data), length,
++		(xfs_dir2_data_aoff_t)((char *)dup - (char *)hdr), length,
+ 		&needlog, &needscan);
+ 	/*
+ 	 * Initialize our new entry (at last).
+@@ -521,12 +521,12 @@ xfs_dir2_leaf_addname(
+ 	dep->namelen = args->namelen;
+ 	memcpy(dep->name, args->name, dep->namelen);
+ 	tagp = xfs_dir2_data_entry_tag_p(dep);
+-	*tagp = cpu_to_be16((char *)dep - (char *)data);
++	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
+ 	/*
+ 	 * Need to scan fix up the bestfree table.
+ 	 */
+ 	if (needscan)
+-		xfs_dir2_data_freescan(mp, data, &needlog);
++		xfs_dir2_data_freescan(mp, hdr, &needlog);
+ 	/*
+ 	 * Need to log the data block's header.
+ 	 */
+@@ -537,8 +537,8 @@ xfs_dir2_leaf_addname(
+ 	 * If the bests table needs to be changed, do it.
+ 	 * Log the change unless we've already done that.
+ 	 */
+-	if (be16_to_cpu(bestsp[use_block]) != be16_to_cpu(data->hdr.bestfree[0].length)) {
+-		bestsp[use_block] = data->hdr.bestfree[0].length;
++	if (be16_to_cpu(bestsp[use_block]) != be16_to_cpu(hdr->bestfree[0].length)) {
++		bestsp[use_block] = hdr->bestfree[0].length;
+ 		if (!grown)
+ 			xfs_dir2_leaf_log_bests(tp, lbp, use_block, use_block);
+ 	}
+@@ -782,6 +782,7 @@ xfs_dir2_leaf_getdents(
+ 	xfs_dir2_db_t		curdb;		/* db for current block */
+ 	xfs_dir2_off_t		curoff;		/* current overall offset */
+ 	xfs_dir2_data_t		*data;		/* data block structure */
++	xfs_dir2_data_hdr_t	*hdr;		/* data block header */
+ 	xfs_dir2_data_entry_t	*dep;		/* data entry */
+ 	xfs_dir2_data_unused_t	*dup;		/* unused entry */
+ 	int			error = 0;	/* error return value */
+@@ -1040,6 +1041,7 @@ xfs_dir2_leaf_getdents(
+ 				ASSERT(xfs_dir2_byte_to_db(mp, curoff) ==
+ 				       curdb);
+ 			data = bp->data;
++			hdr = &data->hdr;
+ 			xfs_dir2_data_check(dp, bp);
+ 			/*
+ 			 * Find our position in the block.
+@@ -1050,12 +1052,12 @@ xfs_dir2_leaf_getdents(
+ 			 * Skip past the header.
+ 			 */
+ 			if (byteoff == 0)
+-				curoff += (uint)sizeof(data->hdr);
++				curoff += (uint)sizeof(*hdr);
+ 			/*
+ 			 * Skip past entries until we reach our offset.
+ 			 */
+ 			else {
+-				while ((char *)ptr - (char *)data < byteoff) {
++				while ((char *)ptr - (char *)hdr < byteoff) {
+ 					dup = (xfs_dir2_data_unused_t *)ptr;
  
--		error = xfs_itruncate_finish(&tp, ip,
--					     ip->i_size,
--					     XFS_DATA_FORK,
--					     0);
--		/*
--		 * If we get an error at this point we
--		 * simply don't bother truncating the file.
--		 */
-+		error = xfs_itruncate_data(&tp, ip, ip->i_size);
- 		if (error) {
-+			/*
-+			 * If we get an error at this point we simply don't
-+			 * bother truncating the file.
-+			 */
- 			xfs_trans_cancel(tp,
- 					 (XFS_TRANS_RELEASE_LOG_RES |
- 					  XFS_TRANS_ABORT));
-@@ -665,16 +662,7 @@ xfs_inactive(
- 		xfs_ilock(ip, XFS_ILOCK_EXCL);
- 		xfs_trans_ijoin(tp, ip);
+ 					if (be16_to_cpu(dup->freetag)
+@@ -1076,8 +1078,8 @@ xfs_dir2_leaf_getdents(
+ 				curoff =
+ 					xfs_dir2_db_off_to_byte(mp,
+ 					    xfs_dir2_byte_to_db(mp, curoff),
+-					    (char *)ptr - (char *)data);
+-				if (ptr >= (char *)data + mp->m_dirblksize) {
++					    (char *)ptr - (char *)hdr);
++				if (ptr >= (char *)hdr + mp->m_dirblksize) {
+ 					continue;
+ 				}
+ 			}
+@@ -1458,7 +1460,7 @@ xfs_dir2_leaf_removename(
+ 	xfs_da_args_t		*args)		/* operation arguments */
+ {
+ 	__be16			*bestsp;	/* leaf block best freespace */
+-	xfs_dir2_data_t		*data;		/* data block structure */
++	xfs_dir2_data_hdr_t	*hdr;		/* data block header */
+ 	xfs_dir2_db_t		db;		/* data block number */
+ 	xfs_dabuf_t		*dbp;		/* data block buffer */
+ 	xfs_dir2_data_entry_t	*dep;		/* data entry structure */
+@@ -1488,7 +1490,7 @@ xfs_dir2_leaf_removename(
+ 	tp = args->trans;
+ 	mp = dp->i_mount;
+ 	leaf = lbp->data;
+-	data = dbp->data;
++	hdr = dbp->data;
+ 	xfs_dir2_data_check(dp, dbp);
+ 	/*
+ 	 * Point to the leaf entry, use that to point to the data entry.
+@@ -1496,9 +1498,9 @@ xfs_dir2_leaf_removename(
+ 	lep = &leaf->ents[index];
+ 	db = xfs_dir2_dataptr_to_db(mp, be32_to_cpu(lep->address));
+ 	dep = (xfs_dir2_data_entry_t *)
+-	      ((char *)data + xfs_dir2_dataptr_to_off(mp, be32_to_cpu(lep->address)));
++	      ((char *)hdr + xfs_dir2_dataptr_to_off(mp, be32_to_cpu(lep->address)));
+ 	needscan = needlog = 0;
+-	oldbest = be16_to_cpu(data->hdr.bestfree[0].length);
++	oldbest = be16_to_cpu(hdr->bestfree[0].length);
+ 	ltp = xfs_dir2_leaf_tail_p(mp, leaf);
+ 	bestsp = xfs_dir2_leaf_bests_p(ltp);
+ 	ASSERT(be16_to_cpu(bestsp[db]) == oldbest);
+@@ -1506,7 +1508,7 @@ xfs_dir2_leaf_removename(
+ 	 * Mark the former data entry unused.
+ 	 */
+ 	xfs_dir2_data_make_free(tp, dbp,
+-		(xfs_dir2_data_aoff_t)((char *)dep - (char *)data),
++		(xfs_dir2_data_aoff_t)((char *)dep - (char *)hdr),
+ 		xfs_dir2_data_entsize(dep->namelen), &needlog, &needscan);
+ 	/*
+ 	 * We just mark the leaf entry stale by putting a null in it.
+@@ -1520,23 +1522,23 @@ xfs_dir2_leaf_removename(
+ 	 * log the data block header if necessary.
+ 	 */
+ 	if (needscan)
+-		xfs_dir2_data_freescan(mp, data, &needlog);
++		xfs_dir2_data_freescan(mp, hdr, &needlog);
+ 	if (needlog)
+ 		xfs_dir2_data_log_header(tp, dbp);
+ 	/*
+ 	 * If the longest freespace in the data block has changed,
+ 	 * put the new value in the bests table and log that.
+ 	 */
+-	if (be16_to_cpu(data->hdr.bestfree[0].length) != oldbest) {
+-		bestsp[db] = data->hdr.bestfree[0].length;
++	if (be16_to_cpu(hdr->bestfree[0].length) != oldbest) {
++		bestsp[db] = hdr->bestfree[0].length;
+ 		xfs_dir2_leaf_log_bests(tp, lbp, db, db);
+ 	}
+ 	xfs_dir2_data_check(dp, dbp);
+ 	/*
+ 	 * If the data block is now empty then get rid of the data block.
+ 	 */
+-	if (be16_to_cpu(data->hdr.bestfree[0].length) ==
+-	    mp->m_dirblksize - (uint)sizeof(data->hdr)) {
++	if (be16_to_cpu(hdr->bestfree[0].length) ==
++	    mp->m_dirblksize - (uint)sizeof(*hdr)) {
+ 		ASSERT(db != mp->m_dirdatablk);
+ 		if ((error = xfs_dir2_shrink_inode(args, db, dbp))) {
+ 			/*
+@@ -1707,9 +1709,6 @@ xfs_dir2_leaf_trim_data(
+ 	xfs_dir2_db_t		db)		/* data block number */
+ {
+ 	__be16			*bestsp;	/* leaf bests table */
+-#ifdef DEBUG
+-	xfs_dir2_data_t		*data;		/* data block structure */
+-#endif
+ 	xfs_dabuf_t		*dbp;		/* data block buffer */
+ 	xfs_inode_t		*dp;		/* incore directory inode */
+ 	int			error;		/* error return value */
+@@ -1728,20 +1727,21 @@ xfs_dir2_leaf_trim_data(
+ 			XFS_DATA_FORK))) {
+ 		return error;
+ 	}
+-#ifdef DEBUG
+-	data = dbp->data;
+-	ASSERT(be32_to_cpu(data->hdr.magic) == XFS_DIR2_DATA_MAGIC);
+-#endif
+-	/* this seems to be an error
+-	 * data is only valid if DEBUG is defined?
+-	 * RMC 09/08/1999
+-	 */
  
--		/*
--		 * normally, we have to run xfs_itruncate_finish sync.
--		 * But if filesystem is wsync and we're in the inactive
--		 * path, then we know that nlink == 0, and that the
--		 * xaction that made nlink == 0 is permanently committed
--		 * since xfs_remove runs as a synchronous transaction.
--		 */
--		error = xfs_itruncate_finish(&tp, ip, 0, XFS_DATA_FORK,
--				(!(mp->m_flags & XFS_MOUNT_WSYNC) ? 1 : 0));
--
-+		error = xfs_itruncate_data(&tp, ip, 0);
- 		if (error) {
- 			xfs_trans_cancel(tp,
- 				XFS_TRANS_RELEASE_LOG_RES | XFS_TRANS_ABORT);
-Index: xfs/fs/xfs/linux-2.6/xfs_trace.h
+ 	leaf = lbp->data;
+ 	ltp = xfs_dir2_leaf_tail_p(mp, leaf);
+-	ASSERT(be16_to_cpu(data->hdr.bestfree[0].length) ==
+-	       mp->m_dirblksize - (uint)sizeof(data->hdr));
++
++#ifdef DEBUG
++{
++	struct xfs_dir2_data_hdr *hdr = dbp->data;
++
++	ASSERT(be32_to_cpu(hdr->magic) == XFS_DIR2_DATA_MAGIC);
++	ASSERT(be16_to_cpu(hdr->bestfree[0].length) ==
++	       mp->m_dirblksize - (uint)sizeof(*hdr));
+ 	ASSERT(db == be32_to_cpu(ltp->bestcount) - 1);
++}
++#endif
++
+ 	/*
+ 	 * Get rid of the data block.
+ 	 */
+Index: xfs/fs/xfs/xfs_dir2_node.c
 ===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_trace.h	2011-06-29 11:35:39.099491878 +0200
-+++ xfs/fs/xfs/linux-2.6/xfs_trace.h	2011-06-29 11:35:45.792788951 +0200
-@@ -1055,8 +1055,8 @@ DECLARE_EVENT_CLASS(xfs_itrunc_class,
- DEFINE_EVENT(xfs_itrunc_class, name, \
- 	TP_PROTO(struct xfs_inode *ip, xfs_fsize_t new_size), \
- 	TP_ARGS(ip, new_size))
--DEFINE_ITRUNC_EVENT(xfs_itruncate_finish_start);
--DEFINE_ITRUNC_EVENT(xfs_itruncate_finish_end);
-+DEFINE_ITRUNC_EVENT(xfs_itruncate_data_start);
-+DEFINE_ITRUNC_EVENT(xfs_itruncate_data_end);
- 
- TRACE_EVENT(xfs_pagecache_inval,
- 	TP_PROTO(struct xfs_inode *ip, xfs_off_t start, xfs_off_t finish),
+--- xfs.orig/fs/xfs/xfs_dir2_node.c	2011-06-27 10:47:35.946153639 +0200
++++ xfs/fs/xfs/xfs_dir2_node.c	2011-06-27 10:51:33.648199229 +0200
+@@ -843,7 +843,7 @@ xfs_dir2_leafn_remove(
+ 	xfs_da_state_blk_t	*dblk,		/* data block */
+ 	int			*rval)		/* resulting block needs join */
+ {
+-	xfs_dir2_data_t		*data;		/* data block structure */
++	xfs_dir2_data_hdr_t	*hdr;		/* data block header */
+ 	xfs_dir2_db_t		db;		/* data block number */
+ 	xfs_dabuf_t		*dbp;		/* data block buffer */
+ 	xfs_dir2_data_entry_t	*dep;		/* data block entry */
+@@ -888,9 +888,9 @@ xfs_dir2_leafn_remove(
+ 	 * in the data block in case it changes.
+ 	 */
+ 	dbp = dblk->bp;
+-	data = dbp->data;
+-	dep = (xfs_dir2_data_entry_t *)((char *)data + off);
+-	longest = be16_to_cpu(data->hdr.bestfree[0].length);
++	hdr = dbp->data;
++	dep = (xfs_dir2_data_entry_t *)((char *)hdr + off);
++	longest = be16_to_cpu(hdr->bestfree[0].length);
+ 	needlog = needscan = 0;
+ 	xfs_dir2_data_make_free(tp, dbp, off,
+ 		xfs_dir2_data_entsize(dep->namelen), &needlog, &needscan);
+@@ -899,7 +899,7 @@ xfs_dir2_leafn_remove(
+ 	 * Log the data block header if needed.
+ 	 */
+ 	if (needscan)
+-		xfs_dir2_data_freescan(mp, data, &needlog);
++		xfs_dir2_data_freescan(mp, hdr, &needlog);
+ 	if (needlog)
+ 		xfs_dir2_data_log_header(tp, dbp);
+ 	xfs_dir2_data_check(dp, dbp);
+@@ -907,7 +907,7 @@ xfs_dir2_leafn_remove(
+ 	 * If the longest data block freespace changes, need to update
+ 	 * the corresponding freeblock entry.
+ 	 */
+-	if (longest < be16_to_cpu(data->hdr.bestfree[0].length)) {
++	if (longest < be16_to_cpu(hdr->bestfree[0].length)) {
+ 		int		error;		/* error return value */
+ 		xfs_dabuf_t	*fbp;		/* freeblock buffer */
+ 		xfs_dir2_db_t	fdb;		/* freeblock block number */
+@@ -933,19 +933,19 @@ xfs_dir2_leafn_remove(
+ 		 * Calculate which entry we need to fix.
+ 		 */
+ 		findex = xfs_dir2_db_to_fdindex(mp, db);
+-		longest = be16_to_cpu(data->hdr.bestfree[0].length);
++		longest = be16_to_cpu(hdr->bestfree[0].length);
+ 		/*
+ 		 * If the data block is now empty we can get rid of it
+ 		 * (usually).
+ 		 */
+-		if (longest == mp->m_dirblksize - (uint)sizeof(data->hdr)) {
++		if (longest == mp->m_dirblksize - (uint)sizeof(*hdr)) {
+ 			/*
+ 			 * Try to punch out the data block.
+ 			 */
+ 			error = xfs_dir2_shrink_inode(args, db, dbp);
+ 			if (error == 0) {
+ 				dblk->bp = NULL;
+-				data = NULL;
++				hdr = NULL;
+ 			}
+ 			/*
+ 			 * We can get ENOSPC if there's no space reservation.
+@@ -961,7 +961,7 @@ xfs_dir2_leafn_remove(
+ 		 * If we got rid of the data block, we can eliminate that entry
+ 		 * in the free block.
+ 		 */
+-		if (data == NULL) {
++		if (hdr == NULL) {
+ 			/*
+ 			 * One less used entry in the free table.
+ 			 */
+@@ -1357,7 +1357,7 @@ xfs_dir2_node_addname_int(
+ 	xfs_da_args_t		*args,		/* operation arguments */
+ 	xfs_da_state_blk_t	*fblk)		/* optional freespace block */
+ {
+-	xfs_dir2_data_t		*data;		/* data block structure */
++	xfs_dir2_data_hdr_t	*hdr;		/* data block header */
+ 	xfs_dir2_db_t		dbno;		/* data block number */
+ 	xfs_dabuf_t		*dbp;		/* data block buffer */
+ 	xfs_dir2_data_entry_t	*dep;		/* data entry pointer */
+@@ -1642,8 +1642,8 @@ xfs_dir2_node_addname_int(
+ 		 * We haven't allocated the data entry yet so this will
+ 		 * change again.
+ 		 */
+-		data = dbp->data;
+-		free->bests[findex] = data->hdr.bestfree[0].length;
++		hdr = dbp->data;
++		free->bests[findex] = hdr->bestfree[0].length;
+ 		logfree = 1;
+ 	}
+ 	/*
+@@ -1668,21 +1668,21 @@ xfs_dir2_node_addname_int(
+ 				xfs_da_buf_done(fbp);
+ 			return error;
+ 		}
+-		data = dbp->data;
++		hdr = dbp->data;
+ 		logfree = 0;
+ 	}
+-	ASSERT(be16_to_cpu(data->hdr.bestfree[0].length) >= length);
++	ASSERT(be16_to_cpu(hdr->bestfree[0].length) >= length);
+ 	/*
+ 	 * Point to the existing unused space.
+ 	 */
+ 	dup = (xfs_dir2_data_unused_t *)
+-	      ((char *)data + be16_to_cpu(data->hdr.bestfree[0].offset));
++	      ((char *)hdr + be16_to_cpu(hdr->bestfree[0].offset));
+ 	needscan = needlog = 0;
+ 	/*
+ 	 * Mark the first part of the unused space, inuse for us.
+ 	 */
+ 	xfs_dir2_data_use_free(tp, dbp, dup,
+-		(xfs_dir2_data_aoff_t)((char *)dup - (char *)data), length,
++		(xfs_dir2_data_aoff_t)((char *)dup - (char *)hdr), length,
+ 		&needlog, &needscan);
+ 	/*
+ 	 * Fill in the new entry and log it.
+@@ -1692,13 +1692,13 @@ xfs_dir2_node_addname_int(
+ 	dep->namelen = args->namelen;
+ 	memcpy(dep->name, args->name, dep->namelen);
+ 	tagp = xfs_dir2_data_entry_tag_p(dep);
+-	*tagp = cpu_to_be16((char *)dep - (char *)data);
++	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
+ 	xfs_dir2_data_log_entry(tp, dbp, dep);
+ 	/*
+ 	 * Rescan the block for bestfree if needed.
+ 	 */
+ 	if (needscan)
+-		xfs_dir2_data_freescan(mp, data, &needlog);
++		xfs_dir2_data_freescan(mp, hdr, &needlog);
+ 	/*
+ 	 * Log the data block header if needed.
+ 	 */
+@@ -1707,8 +1707,8 @@ xfs_dir2_node_addname_int(
+ 	/*
+ 	 * If the freespace entry is now wrong, update it.
+ 	 */
+-	if (be16_to_cpu(free->bests[findex]) != be16_to_cpu(data->hdr.bestfree[0].length)) {
+-		free->bests[findex] = data->hdr.bestfree[0].length;
++	if (be16_to_cpu(free->bests[findex]) != be16_to_cpu(hdr->bestfree[0].length)) {
++		free->bests[findex] = hdr->bestfree[0].length;
+ 		logfree = 1;
+ 	}
+ 	/*
+@@ -1858,7 +1858,7 @@ xfs_dir2_node_replace(
+ 	xfs_da_args_t		*args)		/* operation arguments */
+ {
+ 	xfs_da_state_blk_t	*blk;		/* leaf block */
+-	xfs_dir2_data_t		*data;		/* data block structure */
++	xfs_dir2_data_hdr_t	*hdr;		/* data block header */
+ 	xfs_dir2_data_entry_t	*dep;		/* data entry changed */
+ 	int			error;		/* error return value */
+ 	int			i;		/* btree level */
+@@ -1902,10 +1902,10 @@ xfs_dir2_node_replace(
+ 		/*
+ 		 * Point to the data entry.
+ 		 */
+-		data = state->extrablk.bp->data;
+-		ASSERT(be32_to_cpu(data->hdr.magic) == XFS_DIR2_DATA_MAGIC);
++		hdr = state->extrablk.bp->data;
++		ASSERT(be32_to_cpu(hdr->magic) == XFS_DIR2_DATA_MAGIC);
+ 		dep = (xfs_dir2_data_entry_t *)
+-		      ((char *)data +
++		      ((char *)hdr +
+ 		       xfs_dir2_dataptr_to_off(state->mp, be32_to_cpu(lep->address)));
+ 		ASSERT(inum != be64_to_cpu(dep->inumber));
+ 		/*
 
 _______________________________________________
 xfs mailing list
