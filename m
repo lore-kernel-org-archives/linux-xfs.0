@@ -1,18 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5TCAA92094616 for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 07:10:10 -0500
-Received: from ipmail07.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5D0291E5526B
-	for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 05:10:06 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	sHh4USdFi7vAZaZS for <xfs@oss.sgi.com>;
-	Wed, 29 Jun 2011 05:10:06 -0700 (PDT)
-Date: Wed, 29 Jun 2011 22:10:01 +1000
-From: Dave Chinner <david@fromorbit.com>
+	p5TCmIhj101236 for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 07:48:18 -0500
+Received: from mail.ud10.udmedia.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 94EEB1EE0F61
+	for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 05:48:16 -0700 (PDT)
+Received: from mail.ud10.udmedia.de (ud10.udmedia.de [194.117.254.50]) by
+	cuda.sgi.com with ESMTP id 9mnAHhzD7CnHXWlE for
+	<xfs@oss.sgi.com>; Wed, 29 Jun 2011 05:48:16 -0700 (PDT)
+Date: Wed, 29 Jun 2011 14:48:14 +0200
+From: Markus Trippelsdorf <markus@trippelsdorf.de>
 Subject: Re: long hangs when deleting large directories (3.0-rc3)
-Message-ID: <20110629121001.GS561@dastard>
+Message-ID: <20110629124814.GA1762@x4.trippels.de>
 References: <20110621212201.GA1755@x4.trippels.de>
 	<20110621185701.GB1723@x4.trippels.de>
 	<20110622000449.GQ32466@dastard>
@@ -21,9 +20,10 @@ References: <20110621212201.GA1755@x4.trippels.de>
 	<20110629061954.GA1711@x4.trippels.de>
 	<20110629072446.GR561@dastard>
 	<20110629074127.GA1746@x4.trippels.de>
+	<20110629121001.GS561@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110629074127.GA1746@x4.trippels.de>
+In-Reply-To: <20110629121001.GS561@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,174 +32,107 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Markus Trippelsdorf <markus@trippelsdorf.de>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-T24gV2VkLCBKdW4gMjksIDIwMTEgYXQgMDk6NDE6MjdBTSArMDIwMCwgTWFya3VzIFRyaXBwZWxz
-ZG9yZiB3cm90ZToKPiBPbiAyMDExLjA2LjI5IGF0IDE3OjI0ICsxMDAwLCBEYXZlIENoaW5uZXIg
-d3JvdGU6Cj4gPiBPbiBXZWQsIEp1biAyOSwgMjAxMSBhdCAwODoxOTo1NEFNICswMjAwLCBNYXJr
-dXMgVHJpcHBlbHNkb3JmIHdyb3RlOgo+ID4gPiBPbiAyMDExLjA2LjI5IGF0IDE0OjMxICsxMDAw
-LCBEYXZlIENoaW5uZXIgd3JvdGU6Cj4gPiA+ID4gT24gV2VkLCBKdW4gMjIsIDIwMTEgYXQgMDU6
-MzA6NDdQTSArMTAwMCwgRGF2ZSBDaGlubmVyIHdyb3RlOgo+ID4gPiA+ID4gSnVuIDIyIDA4OjUz
-OjA5IHg0IGtlcm5lbDogWEZTIChzZGIxKTogYWlsOiBvb28gc3BsaWNlLCB0YWlsIDB4MTIwMDAx
-NTZlNywgaXRlbSAweDEyMDAwMTU2ZTYKPiA+ID4gPiA+IEp1biAyMiAwODo1MzowOSB4NCBrZXJu
-ZWw6IFhGUyAoc2RiMSk6IGFpbDogb29vIHNwbGljZSwgd2Fsa2VkIDE1NTAzIGl0ZW1zICAgICAg
-Cj4gPiA+ID4gPiAuLi4uLgo+ID4gPiA+ID4gSnVuIDIyIDA4OjUzOjEyIHg0IGtlcm5lbDogWEZT
-IChzZGIxKTogYWlsOiBvb28gc3BsaWNlLCB0YWlsIDB4MTIwMDAxNTZlNywgaXRlbSAweDEyMDAw
-MTU2ZTYKPiA+ID4gPiA+IEp1biAyMiAwODo1MzoxMiB4NCBrZXJuZWw6IFhGUyAoc2RiMSk6IGFp
-bDogb29vIHNwbGljZSwgd2Fsa2VkIDE2OTQ1IGl0ZW1zCj4gPiA+ID4gPiAKPiA+ID4gPiA+IElu
-dGVyZXN0aW5nIGlzIHRoZSBMU04gb2YgdGhlIHRhaWwgLSBpdCdzIG9ubHkgb25lIHNlY3RvciBm
-dXJ0aGVyIG9uCj4gPiA+ID4gPiB0aGFuIHRoZSBpdGVtcyBiZWluZyBpbnNlcnRlZC4gVGhhdCdz
-IHdoYXQgSSdkIGV4cGVjdCBmcm9tIGEgY29tbWl0Cj4gPiA+ID4gPiByZWNvcmQgd3JpdGUgcmFj
-ZSBiZXR3ZWVuIHR3byBjaGVja3BvaW50cy4gSSdsbCBoYXZlIGEgZGVlcGVyIGxvb2sKPiA+ID4g
-PiA+IGludG8gd2hldGhlciB0aGlzIGNhbiBiZSBhdm9pZGVkIGxhdGVyIHRvbmlnaHQgYW5kIGFs
-c28gd2hldGhlciBJCj4gPiA+ID4gPiBjYW4gZWFzaWx5IGltcGxlbWVudCBhICJsYXN0IGluc2Vy
-dCBjdXJzb3IiIGVhc2lseSBzbyBzdWJzZXF1ZW50Cj4gPiA+ID4gPiBpbnNlcnRzIGF0IHRoZSBz
-YW1lIExTTiBhdm9pZCB0aGUgd2Fsay4uLi4KPiA+ID4gPiAKPiA+ID4gPiBPaywgc28gaGVyZSdz
-IGEgcGF0Y2ggdGhhdCBkb2VzIGp1c3QgdGhpcy4gSSBzaG91bGQgcHJvYmFibHkgYWxzbyBkbwo+
-ID4gPiA+IGEgbGl0dGxlIGJpdCBvZiBjbGVhbnVwIG9uIHRoZSBjdXJzb3IgY29kZSBhcyB3ZWxs
-LCBidXQgdGhpcyBhdm9pZHMKPiA+ID4gPiB0aGUgcmVwZWF0ZWQgd2Fsa3Mgb2YgdGhlIEFJTCB0
-byBmaW5kIHRoZSBpbnNlcnQgcG9zaXRpb24uCj4gPiA+ID4gCj4gPiA+ID4gQ2FuIHlvdSB0cnkg
-aXQgd2l0aG91dCB0aGUgV1EgY2hhbmdlcyB5b3UgbWFkZSwgTWFyY3VzLCBhbmQgc2VlIGlmCj4g
-PiA+ID4gdGhlIGludGVyYWN0aXZpdHkgcHJvYmxlbXMgZ28gYXdheT8KPiA+ID4gCj4gPiA+IFNv
-cnJ5IHRvIGJlIHRoZSBicmluZ2VyIG9mIGJhZCBuZXdzLCBidXQgdGhpcyBtYWRlIHRoaW5ncyBt
-dWNoIHdvcnNlOgo+ID4gPiAKPiA+ID4gLS0tLS0tLWNwdTAtdXNhZ2UtLS0tLS0tLS0tLS0tLWNw
-dTEtdXNhZ2UtLS0tLS0tLS0tLS0tLWNwdTItdXNhZ2UtLS0tLS0tLS0tLS0tLWNwdTMtdXNhZ2Ut
-LS0tLS0gLS1kc2svc2RjLS0gLS0tc3lzdGVtLS0gLS0tbG9hZC1hdmctLS0gLS1kc2svc2RjLS0K
-PiA+ID4gdXNyIHN5cyBpZGwgd2FpIGhpcSBzaXE6dXNyIHN5cyBpZGwgd2FpIGhpcSBzaXE6dXNy
-IHN5cyBpZGwgd2FpIGhpcSBzaXE6dXNyIHN5cyBpZGwgd2FpIGhpcSBzaXF8IHJlYWQgIHdyaXR8
-IGludCAgIGNzdyB8IDFtICAgNW0gIDE1bSB8cmVhZHMgd3JpdHMKPiA+ID4gICAxICAgMSAgOTgg
-ICAwICAgMCAgIDA6ICAwICAgMSAgOTkgICAwICAgMCAgIDA6ICAwICAgMSAgOTkgICAwICAgMCAg
-IDA6ICAwICAgMSAgOTkgICAwICAgMCAgIDB8ICAgMCAgICAgMCB8IDYwMyAgIDM4MCB8MC42NiAw
-LjU1IDAuMjh8ICAgMCAgICAgMCAKPiA+ID4gICAxICAgMCAgOTkgICAwICAgMCAgIDA6ICAxICAg
-MCAgOTkgICAwICAgMCAgIDA6ICAxICAxOSAgODAgICAwICAgMCAgIDA6ICAwICAgMCAxMDAgICAw
-ICAgMCAgIDB8ICAgMCAgICAgMCB8IDcxOSAgIDM4MyB8MC42NiAwLjU1IDAuMjh8ICAgMCAgICAg
-MCAKPiA+ID4gICAzICAgMSAgOTYgICAwICAgMCAgIDA6ICAzICAgMSAgOTYgICAwICAgMCAgIDA6
-ICAxICA1MiAgNDcgICAwICAgMCAgIDA6ICAwICAgMCAxMDAgICAwICAgMCAgIDB8ICAgMCAgNjQ2
-NGt8MTg0NyAgIDkxOSB8MC42NiAwLjU1IDAuMjh8ICAgMCAgIDIwMiAKPiA+ID4gICAyICAxMyAg
-ODUgICAwICAgMCAgIDA6ICAyICAgMiAgOTYgICAwICAgMCAgIDA6ICAxICA1NiAgNDMgICAwICAg
-MCAgIDA6ICAxICAzMSAgNjkgICAwICAgMCAgIDB8NDA5NkIgIDI1Nmt8MTkxMCAgMTI4MCB8MC42
-OCAwLjU2IDAuMjh8ICAgMSAgICAgOCAKPiA+ID4gPiAwICAgMSAgOTkgICAwICAgMCAgIDA6ICAw
-ICAgMCAxMDAgICAwICAgMCAgIDA6ICAwICAgMSAgOTkgICAwICAgMCAgIDA6ICAwIDEwMCAgIDAg
-ICAwICAgMCAgIDB8ICAgMCAgICAgMCB8MTI1NiAgIDE3MCB8MC42OCAwLjU2IDAuMjh8ICAgMCAg
-ICAgMCAKPiA+ID4gPiAwICAgMSAgOTkgICAwICAgMCAgIDA6ICAxICAgMSAgOTggICAwICAgMCAg
-IDA6ICAxICAgMCAgOTkgICAwICAgMCAgIDA6ICAwICA5OSAgIDAgICAwICAgMCAgIDF8ICAgMCAg
-ICAgMCB8MTM5NSAgIDIyOSB8MC42OCAwLjU2IDAuMjh8ICAgMCAgICAgMCAKPiA+ID4gPiAwICAg
-MCAxMDAgICAwICAgMCAgIDA6ICAwICAgMCAxMDAgICAwICAgMCAgIDA6ICAwICAgMyAgOTcgICAw
-ICAgMCAgIDA6ICAwIDEwMCAgIDAgICAwICAgMCAgIDB8ICAgMCAgIDUxMkJ8MTMwNCAgIDE2NyB8
-MC42OCAwLjU2IDAuMjh8ICAgMCAgICAgMSAKPiA+ID4gPiAxICAgMSAgOTggICAwICAgMCAgIDA6
-ICAxICAgMSAgOTggICAwICAgMCAgIDA6ICAwICAgMCAxMDAgICAwICAgMCAgIDA6ICAwICA5OSAg
-IDAgICAwICAgMCAgIDF8ICAgMCAgICAgMCB8MTIxMSAgIDE0NiB8MC42OCAwLjU2IDAuMjh8ICAg
-MCAgICAgMCAKPiA+ID4gPiAwICAgMCAxMDAgICAwICAgMCAgIDA6ICAwICAgMCAxMDAgICAwICAg
-MCAgIDA6ICAwICAgMSAgOTkgICAwICAgMCAgIDA6ICAwICA5NyAgIDAgICAwICAgMCAgIDN8ICAg
-MCAgICAgMCB8MTI3MCAgIDE0OSB8MC44NyAwLjYwIDAuMzB8ICAgMCAgICAgMCAKPiA+ID4gICA1
-ICAgMiAgNjUgIDI5ICAgMCAgIDA6ICAyICAgMyAgOTUgICAwICAgMCAgIDA6ICAxICAgMCAgOTkg
-ICAwICAgMCAgIDA6ICAyICAyNCAgNzIgICAwICAgMCAgIDF8ICAgMCAgODg2Nmt8MjY1NCAgMjM5
-OCB8MC44NyAwLjYwIDAuMzB8ICAgMCAgIDQ5NiAKPiA+ID4gICA2ICAgMiAgMjUgIDY3ICAgMCAg
-IDA6ICAzICAgMSAgNTkgIDM3ICAgMCAgIDA6ICAwICAgMCAxMDAgICAwICAgMCAgIDA6ICA0ICAg
-NCAgOTIgICAwICAgMCAgIDB8ICAgMCAgNDU1NGt8MjIyNCAgMjQ5NCB8MC44NyAwLjYwIDAuMzB8
-ICAgMCAgIDM5OSAKPiA+ID4gICAxICAgMSAgOTggICAwICAgMCAgIDA6ICAwICAgMCAgODMgIDE3
-ICAgMCAgIDA6ICAxICAgMyAgOTYgICAwICAgMCAgIDA6ICAwICAgMSAgOTkgICAwICAgMCAgIDB8
-ICAgMCAgMjI3MGt8MTA3OSAgMTAzMCB8MC44NyAwLjYwIDAuMzB8ICAgMCAgIDIwMCAKPiA+ID4g
-ICAxICAgMSAgOTggICAwICAgMCAgIDA6ICAxICAgMSAgOTggICAwICAgMCAgIDA6ICAwICAgMSAg
-OTkgICAwICAgMCAgIDA6ICAxICAgMCAgOTkgICAwICAgMCAgIDB8ICAgMCAgOTIxNkJ8IDcxMyAg
-IDU2NyB8MC44NyAwLjYwIDAuMzB8ICAgMCAgICAgMiAKPiA+ID4gICAwICAgMCAxMDAgICAwICAg
-MCAgIDA6ICAxICAgMSAgOTggICAwICAgMCAgIDA6ICAwICAgMCAxMDAgICAwICAgMCAgIDA6ICAw
-ICAgMSAgOTkgICAwICAgMCAgIDB8ICAgMCAgICAgMCB8IDQ5MiAgIDM4NiB8MC44MCAwLjU5IDAu
-MzB8ICAgMCAgICAgMCAKPiA+ID4gCj4gPiA+IEFzIHlvdSBjYW4gc2VlIGluIHRoZSB0YWJsZSBh
-Ym92ZSAocmVzb2x1dGlvbiAxc2VjKSB0aGUgaGFuZyBpcyBub3cKPiA+ID4gNS02IHNlY29uZHMg
-bG9uZywgaW5zdGVhZCBvZiB0aGUgMS0zIHNlY29uZHMgc2VlbiBiZWZvcmUuCj4gPiAKPiA+IElu
-dGVyZXN0aW5nLiBJIGNoZWNrZWQgdGhhdCB0aGUgb3JkZXJpbmcgd2FzIGNvcnJlY3QgaW4gZWFj
-aCBjYXNlCj4gPiBhZG4gdGhhdCBpdCB3YXMgYmVoYXZpbmcgY29ycmVjdGx5IGhlcmUuCj4gPiAK
-PiA+IENhbiB5b3UgYWRkIHRoZSBmb2xsb3dpbmcgcGF0Y2ggYW5kIHNlbmQgbWUgdGhlIGRtZXNn
-IG91dHB1dCBvdmVyIGEKPiA+IGhhbmc/IEl0IHdpbGwgdGVsbCBtZSB3aGVyZSB0aGUgY3Vyc29y
-IGlzIGJlaW5nIGluaXRpYWxpc2VkIGFuZCB3aGVuCj4gPiBpdCBpcyBiZWluZyBkcm9wcGVkLCBz
-byBzaG91bGQgaW5kaWNhdGUgaWYgYSBzcGVjaWZpYyBpbnNlcnQgY2hhaW4KPiA+IGlzIGdldHRp
-bmcgc3R1Y2sgb3IgZG9pbmcgc29tZXRoaW5nIHN0b29waWQuCj4gCj4gVGhlIGtlcm5lbCBsb2cg
-aXMgYXR0YWNoZWQuCj4gcm0gLWZyICYmIHN5bmMgc3RhcnRzIGF0IEp1biAyOSAwOTozMjoyNC4K
-CkFkZCB0aGlzIHBhdGNoIG9uIHRvcCBvZiB0aGUgZmlyc3Qgb25lIEkgc2VudC4gSWYgaXQgZG9l
-c24ndCBmaXggdGhlCnByb2JsZW0sIGNhbiB5b3UgcmVhZGQgdGhlIGRlYnVnIHBhdGNoIGFuZCBz
-ZW5kIHRoZSBsb2cgYWdhaW4/CgpDaGVlcnMsCgpEYXZlLgotLSAKRGF2ZSBDaGlubmVyCmRhdmlk
-QGZyb21vcmJpdC5jb20KCgp4ZnM6IHVucGluIHN0YWxlIGlub2RlcyBkaXJlY3RseSBpbiBJT1Bf
-Q09NTUlUVEVECgpGcm9tOiBEYXZlIENoaW5uZXIgPGRjaGlubmVyQHJlZGhhdC5jb20+CgpXaGVu
-IGlub2RlcyBhcmUgbWFya2VkIHN0YWxlIGluIGEgdHJhbnNhY3Rpb24sIHRoZXkgYXJlIHRyZWF0
-ZWQKc3BlY2lhbGx5IHdoZW4gdGhlIGlpbm9kZSBsb2cgaXRlbSBpcyBiZWluZyBpbnNlcnRlZCBp
-bnRvIHRoZSBBSUwuCkl0IHRyaWXRlSB0byBhdm9pZCBtb3ZpbmcgdGhlIGxvZyBpdGVtIGZvcndh
-cmQgaW4gdGhlIEFJTCBkdWUgdG8gYQpyYWNlIGNvbmRpdGlvbiB3aXRoIHRoZSB3cml0aW5nIHRo
-ZSB1bmRlcmx5aW5nIGJ1ZmZlciBiYWNrIHRvIGRpc2suClRoZSB3YXMgImZpeGVkIiBpbiBjb21t
-aXQgZGUyNWMxOCAoInhmczogYXZvaWQgbW92aW5nIHN0YWxlIGlub2RlcyBpbgp0aGUgQUlMIiku
-CgpUbyBhdm9pZCBtb3ZpbmcgdGhlIGl0ZW0gZm9yd2FyZCwgd2UgcmV0dXJuIGEgTFNOIHNtYWxs
-ZXIgdGhhbiB0aGUKY29tbWl0X2xzbiBvZiB0aGUgY29tcGxldGluZyB0cmFuc2FjdGlvbiwgdGhl
-cmVieSB0cnlpbmcgdG8gdHJpY2sKdGhlIGNvbW1pdCBjb2RlIGludG8gbm90IG1vdmluZyB0aGUg
-aW5vZGUgZm9yd2FyZCBhdCBhbGwuIEknbSBub3QKc3VyZSB0aGlzIGV2ZXIgd29ya2VkIGFzIGlu
-dGVuZGVkIC0gaXQgYXNzdW1lcyB0aGUgaW5vZGUgaXMgYWxyZWFkeQppbiB0aGUgQUlMLCBidXQg
-SSBkb24ndCB0aGluayB0aGUgcmV0dXJuZWQgTFNOIHdvdWxkIGhhdmUgYmVlbiBzbWFsbAplbm91
-Z2ggdG8gcHJldmVudCBtb3ZpbmcgdGhlIGlub2RlLiBJdCBhcHBlYXJzIHRoYXQgdGhlIHJlYXNv
-biBpdAp3b3JrZWQgaXMgdGhhdCB0aGUgbG93ZXIgTFNOIG9mIHRoZSBpbm9kZXMgbWVhbnQgdGhl
-eSB3ZXJlIGluc2VydGVkCmludG8gdGhlIEFJTCBhbmQgZmx1c2hlZCBiZWZvcmUgdGhlIGlub2Rl
-IGJ1ZmZlciAod2hpY2ggd2FzIG1vdmVkIHRvCnRoZSBjb21taXRfbHNuIG9mIHRoZSB0cmFuc2Fj
-dGlvbikuCgpUaGUgYmlnIHByb2JsZW0gaXMgdGhhdCB3aXRoIGRlbGF5ZWQgbG9nZ2luZywgdGhl
-IHJldHVybmluZyBvZiB0aGUKZGlmZmVyZW50IExTTiBtZWFucyBpbnNlcnRpb24gdGFrZXMgdGhl
-IHNsb3csIG5vbi1idWxrIHBhdGguICBXb3JzZQp5ZXQgaXMgdGhhdCBpbnNlcnRpb24gaXMgdG8g
-YSBwb3NpdGlvbiAtYmVmb3JlLSB0aGUgY29tbWl0X2xzbiBzbyBpdAppcyBkb2luZyBhIEFJTCB0
-cmF2ZXJzYWwgb24gZXZlcnkgaW5zZXJ0aW9uLCBhbmQgaGFzIHRvIHdhbGsgb3ZlcgphbGwgdGhl
-IGl0ZW1zIHRoYXQgaGF2ZSBhbHJlYWR5IGJlZW4gaW5zZXJ0ZWQgaW50byB0aGUgQUlMLiBJdCdz
-CmV4cGVuc2l2ZS4KClRvIGNvbXBvdW5kIHRoZSBtYXR0ZXIgZnVydGhlciwgd2l0aCBkZWxheWVk
-IGxvZ2dpbmcgaW5vZGVzIGFyZQpsaWtlbHkgdG8gZ28gZnJvbSBjbGVhbiB0byBzdGFsZSBpbiBh
-IHNpbmdsZSBjaGVja3BvaW50LCB3aGljaCBtZWFucwp0aGV5IGFyZW4ndCBldmVuIGluIHRoZSBB
-SUwgYXQgYWxsIHdoZW4gd2UgY29tZSBhY3Jvc3MgdGhlbSBhdCBBSUwKaW5zZXJ0aW9uIHRpbWUu
-IEhlbmNlIHRoZXNlIHdlcmUgYWxsIGdldHRpbmcgaW5zZXJ0ZWQgaW50byB0aGUgQUlMCndoZW4g
-dGhleSBzaW1wbHkgZG8gbm90IG5lZWQgdG8gYmUgYXMgaW5vZGVzIG1hcmtlZCBYRlNfSVNUQUxF
-IGFyZQpuZXZlciB3cml0dGVuIGJhY2suCgpUcmFuc2FjdGlvbmFsL3JlY292ZXJ5IGludGVncml0
-eSBpcyBtYWludGFpbmVkIGluIHRoaXMgY2FzZSBieSB0aGUKb3RoZXIgaXRlbXMgaW4gdGhlIHVu
-bGluayB0cmFuc2FjdGlvbiB0aGF0IHdlcmUgbW9kaWZpZWQgKGUuZy4gdGhlCkFHSSBidHJlZSBi
-bG9ja3MpIGFuZCBjb21taXR0ZWQgaW4gdGhlIHNhbWUgY2hlY2twb2ludC4KClNvIHRvIGZpeCB0
-aGlzLCBzaW1wbHkgdW5waW4gdGhlIHN0YWxlIGlub2RlcyBkaXJlY3RseSBpbgp4ZnNfaW5vZGVf
-aXRlbV9jb21taXR0ZWQoKSBhbmQgcmV0dXJuIC0xIHRvIGluZGljYXRlIHRoYXQgdGhlIEFJTApp
-bnNlcnRpb24gY29kZSBkb2VzIG5vdCBuZWVkIHRvIGRvIGFueSBmdXJ0aGVyIHByb2Nlc3Npbmcg
-b2YgdGhlc2UKaW5vZGVzLgoKU2lnbmVkLW9mZi1ieTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckBy
-ZWRoYXQuY29tPgotLS0KIGZzL3hmcy94ZnNfaW5vZGVfaXRlbS5jIHwgICAxNCArKysrKysrKy0t
-LS0tLQogZnMveGZzL3hmc190cmFucy5jICAgICAgfCAgICAyICstCiAyIGZpbGVzIGNoYW5nZWQs
-IDkgaW5zZXJ0aW9ucygrKSwgNyBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9mcy94ZnMveGZz
-X2lub2RlX2l0ZW0uYyBiL2ZzL3hmcy94ZnNfaW5vZGVfaXRlbS5jCmluZGV4IDA5OTgzYTMuLmIx
-ZTg4ZDUgMTAwNjQ0Ci0tLSBhL2ZzL3hmcy94ZnNfaW5vZGVfaXRlbS5jCisrKyBiL2ZzL3hmcy94
-ZnNfaW5vZGVfaXRlbS5jCkBAIC02ODEsMTUgKzY4MSwxNSBAQCB4ZnNfaW5vZGVfaXRlbV91bmxv
-Y2soCiAgKiB3aGVyZSB0aGUgY2x1c3RlciBidWZmZXIgbWF5IGJlIHVucGlubmVkIGJlZm9yZSB0
-aGUgaW5vZGUgaXMgaW5zZXJ0ZWQgaW50bwogICogdGhlIEFJTCBkdXJpbmcgdHJhbnNhY3Rpb24g
-Y29tbWl0dGVkIHByb2Nlc3NpbmcuIElmIHRoZSBidWZmZXIgaXMgdW5waW5uZWQKICAqIGJlZm9y
-ZSB0aGUgaW5vZGUgaXRlbSBoYXMgYmVlbiBjb21taXR0ZWQgYW5kIGluc2VydGVkLCB0aGVuIGl0
-IGlzIHBvc3NpYmxlCi0gKiBmb3IgdGhlIGJ1ZmZlciB0byBiZSB3cml0dGVuIGFuZCBJTyBjb21w
-bGV0aW9ucyBiZWZvcmUgdGhlIGlub2RlIGlzIGluc2VydGVkCisgKiBmb3IgdGhlIGJ1ZmZlciB0
-byBiZSB3cml0dGVuIGFuZCBJTyBjb21wbGV0ZXMgYmVmb3JlIHRoZSBpbm9kZSBpcyBpbnNlcnRl
-ZAogICogaW50byB0aGUgQUlMLiBJbiB0aGF0IGNhc2UsIHdlJ2QgYmUgaW5zZXJ0aW5nIGEgY2xl
-YW4sIHN0YWxlIGlub2RlIGludG8gdGhlCiAgKiBBSUwgd2hpY2ggd2lsbCBuZXZlciBnZXQgcmVt
-b3ZlZC4gSXQgd2lsbCwgaG93ZXZlciwgZ2V0IHJlY2xhaW1lZCB3aGljaAogICogdHJpZ2dlcnMg
-YW4gYXNzZXJ0IGluIHhmc19pbm9kZV9mcmVlKCkgY29tcGxhaW5pbmcgYWJvdXQgZnJlZWluIGFu
-IGlub2RlCiAgKiBzdGlsbCBpbiB0aGUgQUlMLgogICoKLSAqIFRvIGF2b2lkIHRoaXMsIHJldHVy
-biBhIGxvd2VyIExTTiB0aGFuIHRoZSBvbmUgcGFzc2VkIGluIHNvIHRoYXQgdGhlCi0gKiB0cmFu
-c2FjdGlvbiBjb21taXR0ZWQgY29kZSB3aWxsIG5vdCBtb3ZlIHRoZSBpbm9kZSBmb3J3YXJkIGlu
-IHRoZSBBSUwgYnV0Ci0gKiB3aWxsIHN0aWxsIHVucGluIGl0IHByb3Blcmx5LgorICogVG8gYXZv
-aWQgdGhpcywganVzdCB1bnBpbiB0aGUgaW5vZGUgZGlyZWN0bHkgYW5kIHJldHVybiBhIExTTiBv
-ZiAtMSBzbyB0aGUKKyAqIHRyYW5zYWN0aW9uIGNvbW1pdHRlZCBjb2RlIGtub3dzIHRoYXQgaXQg
-ZG9lcyBub3QgbmVlZCB0byBkbyBhbnkgZnVydGhlcgorICogcHJvY2Vzc2luZyBvbiB0aGUgaXRl
-bS4KICAqLwogU1RBVElDIHhmc19sc25fdAogeGZzX2lub2RlX2l0ZW1fY29tbWl0dGVkKApAQCAt
-Njk5LDggKzY5OSwxMCBAQCB4ZnNfaW5vZGVfaXRlbV9jb21taXR0ZWQoCiAJc3RydWN0IHhmc19p
-bm9kZV9sb2dfaXRlbSAqaWlwID0gSU5PREVfSVRFTShsaXApOwogCXN0cnVjdCB4ZnNfaW5vZGUJ
-KmlwID0gaWlwLT5pbGlfaW5vZGU7CiAKLQlpZiAoeGZzX2lmbGFnc190ZXN0KGlwLCBYRlNfSVNU
-QUxFKSkKLQkJcmV0dXJuIGxzbiAtIDE7CisJaWYgKHhmc19pZmxhZ3NfdGVzdChpcCwgWEZTX0lT
-VEFMRSkpIHsKKwkJeGZzX2lub2RlX2l0ZW1fdW5waW4obGlwLCAwKTsKKwkJcmV0dXJuIC0xOwor
-CX0KIAlyZXR1cm4gbHNuOwogfQogCmRpZmYgLS1naXQgYS9mcy94ZnMveGZzX3RyYW5zLmMgYi9m
-cy94ZnMveGZzX3RyYW5zLmMKaW5kZXggN2Q2MGQ3ZS4uZDVkNTcwOCAxMDA2NDQKLS0tIGEvZnMv
-eGZzL3hmc190cmFucy5jCisrKyBiL2ZzL3hmcy94ZnNfdHJhbnMuYwpAQCAtMTQ4Nyw3ICsxNDg3
-LDcgQEAgeGZzX3RyYW5zX2NvbW1pdHRlZF9idWxrKAogCQkJbGlwLT5saV9mbGFncyB8PSBYRlNf
-TElfQUJPUlRFRDsKIAkJaXRlbV9sc24gPSBJT1BfQ09NTUlUVEVEKGxpcCwgY29tbWl0X2xzbik7
-CiAKLQkJLyogaXRlbV9sc24gb2YgLTEgbWVhbnMgdGhlIGl0ZW0gd2FzIGZyZWVkICovCisJCS8q
-IGl0ZW1fbHNuIG9mIC0xIG1lYW5zIHRoZSBpdGVtIG5lZWRzIG5vIGZ1cnRoZXIgcHJvY2Vzc2lu
-ZyAqLwogCQlpZiAoWEZTX0xTTl9DTVAoaXRlbV9sc24sICh4ZnNfbHNuX3QpLTEpID09IDApCiAJ
-CQljb250aW51ZTsKIAoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29t
-L21haWxtYW4vbGlzdGluZm8veGZzCg==
+On 2011.06.29 at 22:10 +1000, Dave Chinner wrote:
+> On Wed, Jun 29, 2011 at 09:41:27AM +0200, Markus Trippelsdorf wrote:
+> > On 2011.06.29 at 17:24 +1000, Dave Chinner wrote:
+> > > On Wed, Jun 29, 2011 at 08:19:54AM +0200, Markus Trippelsdorf wrote:
+> > > > On 2011.06.29 at 14:31 +1000, Dave Chinner wrote:
+> > > > > On Wed, Jun 22, 2011 at 05:30:47PM +1000, Dave Chinner wrote:
+> > > > > > Jun 22 08:53:09 x4 kernel: XFS (sdb1): ail: ooo splice, tail 0x12000156e7, item 0x12000156e6
+> > > > > > Jun 22 08:53:09 x4 kernel: XFS (sdb1): ail: ooo splice, walked 15503 items      
+> > > > > > .....
+> > > > > > Jun 22 08:53:12 x4 kernel: XFS (sdb1): ail: ooo splice, tail 0x12000156e7, item 0x12000156e6
+> > > > > > Jun 22 08:53:12 x4 kernel: XFS (sdb1): ail: ooo splice, walked 16945 items
+> > > > > > 
+> > > > > > Interesting is the LSN of the tail - it's only one sector further on
+> > > > > > than the items being inserted. That's what I'd expect from a commit
+> > > > > > record write race between two checkpoints. I'll have a deeper look
+> > > > > > into whether this can be avoided later tonight and also whether I
+> > > > > > can easily implement a "last insert cursor" easily so subsequent
+> > > > > > inserts at the same LSN avoid the walk....
+> > > > > 
+> > > > > Ok, so here's a patch that does just this. I should probably also do
+> > > > > a little bit of cleanup on the cursor code as well, but this avoids
+> > > > > the repeated walks of the AIL to find the insert position.
+> > > > > 
+> > > > > Can you try it without the WQ changes you made, Marcus, and see if
+> > > > > the interactivity problems go away?
+> > > > 
+> > > > Sorry to be the bringer of bad news, but this made things much worse:
+> > > > 
+> > > > -------cpu0-usage--------------cpu1-usage--------------cpu2-usage--------------cpu3-usage------ --dsk/sdc-- ---system-- ---load-avg--- --dsk/sdc--
+> > > > usr sys idl wai hiq siq:usr sys idl wai hiq siq:usr sys idl wai hiq siq:usr sys idl wai hiq siq| read  writ| int   csw | 1m   5m  15m |reads writs
+> > > >   1   1  98   0   0   0:  0   1  99   0   0   0:  0   1  99   0   0   0:  0   1  99   0   0   0|   0     0 | 603   380 |0.66 0.55 0.28|   0     0 
+> > > >   1   0  99   0   0   0:  1   0  99   0   0   0:  1  19  80   0   0   0:  0   0 100   0   0   0|   0     0 | 719   383 |0.66 0.55 0.28|   0     0 
+> > > >   3   1  96   0   0   0:  3   1  96   0   0   0:  1  52  47   0   0   0:  0   0 100   0   0   0|   0  6464k|1847   919 |0.66 0.55 0.28|   0   202 
+> > > >   2  13  85   0   0   0:  2   2  96   0   0   0:  1  56  43   0   0   0:  1  31  69   0   0   0|4096B  256k|1910  1280 |0.68 0.56 0.28|   1     8 
+> > > > > 0   1  99   0   0   0:  0   0 100   0   0   0:  0   1  99   0   0   0:  0 100   0   0   0   0|   0     0 |1256   170 |0.68 0.56 0.28|   0     0 
+> > > > > 0   1  99   0   0   0:  1   1  98   0   0   0:  1   0  99   0   0   0:  0  99   0   0   0   1|   0     0 |1395   229 |0.68 0.56 0.28|   0     0 
+> > > > > 0   0 100   0   0   0:  0   0 100   0   0   0:  0   3  97   0   0   0:  0 100   0   0   0   0|   0   512B|1304   167 |0.68 0.56 0.28|   0     1 
+> > > > > 1   1  98   0   0   0:  1   1  98   0   0   0:  0   0 100   0   0   0:  0  99   0   0   0   1|   0     0 |1211   146 |0.68 0.56 0.28|   0     0 
+> > > > > 0   0 100   0   0   0:  0   0 100   0   0   0:  0   1  99   0   0   0:  0  97   0   0   0   3|   0     0 |1270   149 |0.87 0.60 0.30|   0     0 
+> > > >   5   2  65  29   0   0:  2   3  95   0   0   0:  1   0  99   0   0   0:  2  24  72   0   0   1|   0  8866k|2654  2398 |0.87 0.60 0.30|   0   496 
+> > > >   6   2  25  67   0   0:  3   1  59  37   0   0:  0   0 100   0   0   0:  4   4  92   0   0   0|   0  4554k|2224  2494 |0.87 0.60 0.30|   0   399 
+> > > >   1   1  98   0   0   0:  0   0  83  17   0   0:  1   3  96   0   0   0:  0   1  99   0   0   0|   0  2270k|1079  1030 |0.87 0.60 0.30|   0   200 
+> > > >   1   1  98   0   0   0:  1   1  98   0   0   0:  0   1  99   0   0   0:  1   0  99   0   0   0|   0  9216B| 713   567 |0.87 0.60 0.30|   0     2 
+> > > >   0   0 100   0   0   0:  1   1  98   0   0   0:  0   0 100   0   0   0:  0   1  99   0   0   0|   0     0 | 492   386 |0.80 0.59 0.30|   0     0 
+> > > > 
+> > > > As you can see in the table above (resolution 1sec) the hang is now
+> > > > 5-6 seconds long, instead of the 1-3 seconds seen before.
+> > > 
+> > > Interesting. I checked that the ordering was correct in each case
+> > > adn that it was behaving correctly here.
+> > > 
+> > > Can you add the following patch and send me the dmesg output over a
+> > > hang? It will tell me where the cursor is being initialised and when
+> > > it is being dropped, so should indicate if a specific insert chain
+> > > is getting stuck or doing something stoopid.
+> > 
+> > The kernel log is attached.
+> > rm -fr && sync starts at Jun 29 09:32:24.
+> 
+> Add this patch on top of the first one I sent. If it doesn't fix the
+> problem, can you readd the debug patch and send the log again?
+
+This completely fixes the issue. As a bonus "rm -fr && sync" completes
+much quicker now.
+
+Here are three different examples of the "remove kernel tree" workload:
+
+-------cpu0-usage--------------cpu1-usage--------------cpu2-usage--------------cpu3-usage------ --dsk/sdb-- ---system-- ---load-avg--- --dsk/sdb--
+usr sys idl wai hiq siq:usr sys idl wai hiq siq:usr sys idl wai hiq siq:usr sys idl wai hiq siq| read  writ| int   csw | 1m   5m  15m |reads writs
+
+  0   0 100   0   0   0:  1   0  99   0   0   0:  0   0 100   0   0   0:  1  20  79   0   0   0|   0     0 | 761   254 |0.86 0.29 0.10|   0     0 
+  9   1  90   0   0   0:  3   8  89   0   0   0:  7   5  88   0   0   0:  7  51  41   0   0   0|   0  6464k|3250  2742 |0.86 0.29 0.10|   0   202 
+  1   0  99   0   0   0:  2  51  47   0   0   0:  1   1  98   0   0   0:  0   3  97   0   0   0|4096B 5856k|1895   905 |0.86 0.29 0.10|   1   177 
+  5   1  94   0   0   0:  1   0  99   0   0   0:  4   0  96   0   0   0:  8   9  83   0   0   0|   0   559k|1662  1470 |0.86 0.29 0.10|   0   148 
+  5   1  94   0   0   0:  1   1  98   0   0   0:  1   1  98   0   0   0:  6   5  89   0   0   0|   0     0 |1697  1568 |0.86 0.29 0.10|   0     0 
+
+  1   1  98   0   0   0:  0   0 100   0   0   0:  0   0 100   0   0   0:  0   1  99   0   0   0|   0     0 | 741   392 |1.04 0.43 0.16|   0     0 
+  9   6  85   0   0   0:  6   1  93   0   0   0:  1   1  98   0   0   0:  2  61  37   0   0   0|   0    32k|2070  1383 |0.96 0.42 0.16|   0     0 
+  6   3  91   0   0   0:  3   1  95   0   0   0:  2  44  54   0   0   0:  3   4  92   0   0   0|   0  6432k|2495  1663 |0.96 0.42 0.16|   0   202 
+  2   6  92   0   0   0:  2   1  97   0   0   0:  2   7  91   0   0   0:  3   8  90   0   0   0|4096B 6140k|2394  1805 |0.96 0.42 0.16|   1   258 
+  4   1  95   0   0   0:  3   3  94   0   0   0:  0   0 100   0   0   0:  3   2  95   0   0   0|   0     0 |1473   730 |0.96 0.42 0.16|   0     0 
+
+  1   1  98   0   0   0:  0   1  99   0   0   0:  1   3  96   0   0   0:  1   1  98   0   0   0|   0     0 | 926   433 |0.60 0.42 0.19|   0     0 
+  5   2  93   0   0   0:  3   0  97   0   0   0:  2  60  38   0   0   0:  7   3  90   0   0   0|   0  5312k|2328  1897 |0.60 0.42 0.19|   0   161 
+  2  62  36   0   0   0:  6   2  92   0   0   0:  2   0  98   0   0   0:  8   7  85   0   0   0|4096B 4000k|2439  1827 |0.60 0.42 0.19|   1   129 
+  8   1  91   0   0   0:  3   1  96   0   0   0:  0   0 100   0   0   0: 12  18  69   0   0   1|   0  3293k|2568  2223 |0.63 0.43 0.20|   0   170 
+  4   1  95   0   0   0:  1   2  97   0   0   0:  2   1  97   0   0   0:  6   7  87   0   0   0|   0     0 |1606  1627 |0.63 0.43 0.20|   0     0 
+
+So many thanks Dave. Your prompt help is very much appreciated.
+
+-- 
+Markus
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
