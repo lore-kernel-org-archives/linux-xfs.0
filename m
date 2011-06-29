@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5TE3hkH104918 for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 09:03:43 -0500
+	p5TE3fjF104789 for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 09:03:41 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3406D409EC
-	for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 07:03:41 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 35E7A1D7DD36
+	for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 07:03:40 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	X1MCGkvDM8BZ9n5A for <xfs@oss.sgi.com>;
-	Wed, 29 Jun 2011 07:03:41 -0700 (PDT)
+	ByfzgpYVskFoan9b for <xfs@oss.sgi.com>;
+	Wed, 29 Jun 2011 07:03:40 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1QbvMj-0008NK-Jc
-	for xfs@oss.sgi.com; Wed, 29 Jun 2011 14:03:41 +0000
-Message-Id: <20110629140341.573417594@bombadil.infradead.org>
-Date: Wed, 29 Jun 2011 10:01:35 -0400
+	Linux)) id 1QbvMh-0008IA-N2
+	for xfs@oss.sgi.com; Wed, 29 Jun 2011 14:03:39 +0000
+Message-Id: <20110629140339.678322915@bombadil.infradead.org>
+Date: Wed, 29 Jun 2011 10:01:25 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 26/27] xfs: cleanup I/O-related buffer flags
+Subject: [PATCH 16/27] xfs: cleanup the defintion of struct xfs_dir2_sf_entry
 References: <20110629140109.003209430@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-buf-cleanup-flags
+Content-Disposition: inline; filename=xfs-cleanup-xfs_dir2_sf_entry
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,401 +34,108 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Remove the unused and misnamed _XBF_RUN_QUEUES flag, rename XBF_LOG_BUFFER
-to the more fitting XBF_SYNCIO, and split XBF_ORDERED into XBF_FUA and
-XBF_FLUSH to allow more fine grained control over the bio flags.  Also
-cleanup processing of the flags in _xfs_buf_ioapply to make more sense,
-and renumber the sparse flag number space to group flags by purpose.
+Remove the inumber member which is at a variable offset after the actual
+name, and make name a real variable sized C99 array instead of the incorrect
+one-sized array which confuses (not only) gcc.  Based on this clean up
+the helpers to calculate the entry size.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: xfs/fs/xfs/linux-2.6/xfs_buf.c
+Index: xfs/fs/xfs/xfs_dir2_sf.c
 ===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_buf.c	2011-06-29 14:04:28.084452749 +0200
-+++ xfs/fs/xfs/linux-2.6/xfs_buf.c	2011-06-29 14:13:45.171434748 +0200
-@@ -592,10 +592,8 @@ _xfs_buf_read(
- 	ASSERT(!(flags & (XBF_DELWRI|XBF_WRITE)));
- 	ASSERT(bp->b_bn != XFS_BUF_DADDR_NULL);
- 
--	bp->b_flags &= ~(XBF_WRITE | XBF_ASYNC | XBF_DELWRI | \
--			XBF_READ_AHEAD | _XBF_RUN_QUEUES);
--	bp->b_flags |= flags & (XBF_READ | XBF_ASYNC | \
--			XBF_READ_AHEAD | _XBF_RUN_QUEUES);
-+	bp->b_flags &= ~(XBF_WRITE | XBF_ASYNC | XBF_DELWRI | XBF_READ_AHEAD);
-+	bp->b_flags |= flags & (XBF_READ | XBF_ASYNC | XBF_READ_AHEAD);
- 
- 	status = xfs_buf_iorequest(bp);
- 	if (status || XFS_BUF_ISERROR(bp) || (flags & XBF_ASYNC))
-@@ -1211,23 +1209,21 @@ _xfs_buf_ioapply(
- 	total_nr_pages = bp->b_page_count;
- 	map_i = 0;
- 
--	if (bp->b_flags & XBF_ORDERED) {
--		ASSERT(!(bp->b_flags & XBF_READ));
--		rw = WRITE_FLUSH_FUA;
--	} else if (bp->b_flags & XBF_LOG_BUFFER) {
--		ASSERT(!(bp->b_flags & XBF_READ_AHEAD));
--		bp->b_flags &= ~_XBF_RUN_QUEUES;
--		rw = (bp->b_flags & XBF_WRITE) ? WRITE_SYNC : READ_SYNC;
--	} else if (bp->b_flags & _XBF_RUN_QUEUES) {
--		ASSERT(!(bp->b_flags & XBF_READ_AHEAD));
--		bp->b_flags &= ~_XBF_RUN_QUEUES;
--		rw = (bp->b_flags & XBF_WRITE) ? WRITE_META : READ_META;
-+	if (bp->b_flags & XBF_WRITE) {
-+		if (bp->b_flags & XBF_SYNCIO)
-+			rw = WRITE_SYNC;
-+		else
-+			rw = WRITE;
-+		if (bp->b_flags & XBF_FUA)
-+			rw |= REQ_FUA;
-+		if (bp->b_flags & XBF_FLUSH)
-+			rw |= REQ_FLUSH;
-+	} else if (bp->b_flags & XBF_READ_AHEAD) {
-+		rw = READ;
- 	} else {
--		rw = (bp->b_flags & XBF_WRITE) ? WRITE :
--		     (bp->b_flags & XBF_READ_AHEAD) ? READA : READ;
-+		rw = READ;
- 	}
- 
--
- next_chunk:
- 	atomic_inc(&bp->b_io_remaining);
- 	nr_pages = BIO_MAX_SECTORS >> (PAGE_SHIFT - BBSHIFT);
-@@ -1689,8 +1685,7 @@ xfs_buf_delwri_split(
- 				break;
- 			}
- 
--			bp->b_flags &= ~(XBF_DELWRI|_XBF_DELWRI_Q|
--					 _XBF_RUN_QUEUES);
-+			bp->b_flags &= ~(XBF_DELWRI | _XBF_DELWRI_Q);
- 			bp->b_flags |= XBF_WRITE;
- 			list_move_tail(&bp->b_list, list);
- 			trace_xfs_buf_delwri_split(bp, _RET_IP_);
-Index: xfs/fs/xfs/linux-2.6/xfs_buf.h
+--- xfs.orig/fs/xfs/xfs_dir2_sf.c	2011-06-29 13:15:18.790430446 +0200
++++ xfs/fs/xfs/xfs_dir2_sf.c	2011-06-29 13:15:26.800387051 +0200
+@@ -375,7 +375,7 @@ xfs_dir2_sf_addname(
+ 	/*
+ 	 * Compute entry (and change in) size.
+ 	 */
+-	add_entsize = xfs_dir2_sf_entsize_byname(sfp, args->namelen);
++	add_entsize = xfs_dir2_sf_entsize(sfp, args->namelen);
+ 	incr_isize = add_entsize;
+ 	objchange = 0;
+ #if XFS_BIG_INUMS
+@@ -469,7 +469,7 @@ xfs_dir2_sf_addname_easy(
+ 	/*
+ 	 * Grow the in-inode space.
+ 	 */
+-	xfs_idata_realloc(dp, xfs_dir2_sf_entsize_byname(sfp, args->namelen),
++	xfs_idata_realloc(dp, xfs_dir2_sf_entsize(sfp, args->namelen),
+ 		XFS_DATA_FORK);
+ 	/*
+ 	 * Need to set up again due to realloc of the inode data.
+@@ -1005,7 +1005,7 @@ xfs_dir2_sf_removename(
+ 	 * Calculate sizes.
+ 	 */
+ 	byteoff = (int)((char *)sfep - (char *)sfp);
+-	entsize = xfs_dir2_sf_entsize_byname(sfp, args->namelen);
++	entsize = xfs_dir2_sf_entsize(sfp, args->namelen);
+ 	newsize = oldsize - entsize;
+ 	/*
+ 	 * Copy the part if any after the removed entry, sliding it down.
+Index: xfs/fs/xfs/xfs_dir2_sf.h
 ===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_buf.h	2011-06-29 14:03:57.994615760 +0200
-+++ xfs/fs/xfs/linux-2.6/xfs_buf.h	2011-06-29 14:18:16.806629842 +0200
-@@ -46,43 +46,46 @@ typedef enum {
+--- xfs.orig/fs/xfs/xfs_dir2_sf.h	2011-06-29 13:15:18.807097021 +0200
++++ xfs/fs/xfs/xfs_dir2_sf.h	2011-06-29 13:17:15.143133442 +0200
+@@ -76,10 +76,13 @@ typedef struct xfs_dir2_sf_hdr {
+ } __arch_pack xfs_dir2_sf_hdr_t;
  
- #define XBF_READ	(1 << 0) /* buffer intended for reading from device */
- #define XBF_WRITE	(1 << 1) /* buffer intended for writing to device */
--#define XBF_MAPPED	(1 << 2) /* buffer mapped (b_addr valid) */
-+#define XBF_READ_AHEAD	(1 << 2) /* asynchronous read-ahead */
-+#define XBF_MAPPED	(1 << 3) /* buffer mapped (b_addr valid) */
- #define XBF_ASYNC	(1 << 4) /* initiator will not wait for completion */
- #define XBF_DONE	(1 << 5) /* all pages in the buffer uptodate */
- #define XBF_DELWRI	(1 << 6) /* buffer has dirty pages */
- #define XBF_STALE	(1 << 7) /* buffer has been staled, do not find it */
--#define XBF_ORDERED	(1 << 11)/* use ordered writes */
--#define XBF_READ_AHEAD	(1 << 12)/* asynchronous read-ahead */
--#define XBF_LOG_BUFFER	(1 << 13)/* this is a buffer used for the log */
-+
-+/* I/O hints for the BIO layer */
-+#define XBF_SYNCIO	(1 << 10)/* treat this buffer as synchronous I/O */
-+#define XBF_FUA		(1 << 11)/* force cache write through mode */
-+#define XBF_FLUSH	(1 << 12)/* flush the disk cache before a write */
+ typedef struct xfs_dir2_sf_entry {
+-	__uint8_t		namelen;	/* actual name length */
++	__u8			namelen;	/* actual name length */
+ 	xfs_dir2_sf_off_t	offset;		/* saved offset */
+-	__uint8_t		name[1];	/* name, variable size */
+-	xfs_dir2_inou_t		inumber;	/* inode number, var. offset */
++	__u8			name[];		/* name, variable size */
++	/*
++	 * A xfs_dir2_ino8_t or xfs_dir2_ino4_t follows here, at a
++	 * variable offset after the name.
++	 */
+ } __arch_pack xfs_dir2_sf_entry_t; 
  
- /* flags used only as arguments to access routines */
--#define XBF_LOCK	(1 << 14)/* lock requested */
--#define XBF_TRYLOCK	(1 << 15)/* lock requested, but do not wait */
--#define XBF_DONT_BLOCK	(1 << 16)/* do not block in current thread */
-+#define XBF_LOCK	(1 << 15)/* lock requested */
-+#define XBF_TRYLOCK	(1 << 16)/* lock requested, but do not wait */
-+#define XBF_DONT_BLOCK	(1 << 17)/* do not block in current thread */
- 
- /* flags used only internally */
--#define _XBF_PAGES	(1 << 18)/* backed by refcounted pages */
--#define	_XBF_RUN_QUEUES	(1 << 19)/* run block device task queue	*/
--#define	_XBF_KMEM	(1 << 20)/* backed by heap memory */
--#define _XBF_DELWRI_Q	(1 << 21)/* buffer on delwri queue */
-+#define _XBF_PAGES	(1 << 20)/* backed by refcounted pages */
-+#define	_XBF_KMEM	(1 << 21)/* backed by heap memory */
-+#define _XBF_DELWRI_Q	(1 << 22)/* buffer on delwri queue */
- 
- typedef unsigned int xfs_buf_flags_t;
- 
- #define XFS_BUF_FLAGS \
- 	{ XBF_READ,		"READ" }, \
- 	{ XBF_WRITE,		"WRITE" }, \
-+	{ XBF_READ_AHEAD,	"READ_AHEAD" }, \
- 	{ XBF_MAPPED,		"MAPPED" }, \
- 	{ XBF_ASYNC,		"ASYNC" }, \
- 	{ XBF_DONE,		"DONE" }, \
- 	{ XBF_DELWRI,		"DELWRI" }, \
- 	{ XBF_STALE,		"STALE" }, \
--	{ XBF_ORDERED,		"ORDERED" }, \
--	{ XBF_READ_AHEAD,	"READ_AHEAD" }, \
-+	{ XBF_SYNCIO,		"SYNCIO" }, \
-+	{ XBF_FUA,		"FUA" }, \
-+	{ XBF_FLUSH,		"FLUSH" }, \
- 	{ XBF_LOCK,		"LOCK" },  	/* should never be set */\
- 	{ XBF_TRYLOCK,		"TRYLOCK" }, 	/* ditto */\
- 	{ XBF_DONT_BLOCK,	"DONT_BLOCK" },	/* ditto */\
- 	{ _XBF_PAGES,		"PAGES" }, \
--	{ _XBF_RUN_QUEUES,	"RUN_QUEUES" }, \
- 	{ _XBF_KMEM,		"KMEM" }, \
- 	{ _XBF_DELWRI_Q,	"DELWRI_Q" }
- 
-@@ -230,8 +233,9 @@ extern void xfs_buf_terminate(void);
- 
- 
- #define XFS_BUF_BFLAGS(bp)	((bp)->b_flags)
--#define XFS_BUF_ZEROFLAGS(bp)	((bp)->b_flags &= \
--		~(XBF_READ|XBF_WRITE|XBF_ASYNC|XBF_DELWRI|XBF_ORDERED))
-+#define XFS_BUF_ZEROFLAGS(bp) \
-+	((bp)->b_flags &= ~(XBF_READ|XBF_WRITE|XBF_ASYNC|XBF_DELWRI| \
-+			    XBF_SYNCIO|XBF_FUA|XBF_FLUSH))
- 
- void xfs_buf_stale(struct xfs_buf *bp);
- #define XFS_BUF_STALE(bp)	xfs_buf_stale(bp);
-@@ -263,10 +267,6 @@ void xfs_buf_stale(struct xfs_buf *bp);
- #define XFS_BUF_UNASYNC(bp)	((bp)->b_flags &= ~XBF_ASYNC)
- #define XFS_BUF_ISASYNC(bp)	((bp)->b_flags & XBF_ASYNC)
- 
--#define XFS_BUF_ORDERED(bp)	((bp)->b_flags |= XBF_ORDERED)
--#define XFS_BUF_UNORDERED(bp)	((bp)->b_flags &= ~XBF_ORDERED)
--#define XFS_BUF_ISORDERED(bp)	((bp)->b_flags & XBF_ORDERED)
--
- #define XFS_BUF_HOLD(bp)	xfs_buf_hold(bp)
- #define XFS_BUF_READ(bp)	((bp)->b_flags |= XBF_READ)
- #define XFS_BUF_UNREAD(bp)	((bp)->b_flags &= ~XBF_READ)
-Index: xfs/fs/xfs/xfs_log.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_log.c	2011-06-29 14:04:18.587837528 +0200
-+++ xfs/fs/xfs/xfs_log.c	2011-06-29 14:13:47.761420718 +0200
-@@ -1268,7 +1268,6 @@ xlog_bdstrat(
- 		return 0;
- 	}
- 
--	bp->b_flags |= _XBF_RUN_QUEUES;
- 	xfs_buf_iorequest(bp);
- 	return 0;
+ static inline int xfs_dir2_sf_hdr_size(int i8count)
+@@ -101,32 +104,27 @@ xfs_dir2_sf_put_offset(xfs_dir2_sf_entry
+ 	INT_SET_UNALIGNED_16_BE(&(sfep)->offset.i, off);
  }
-@@ -1369,7 +1368,7 @@ xlog_sync(xlog_t		*log,
- 	XFS_BUF_ZEROFLAGS(bp);
- 	XFS_BUF_BUSY(bp);
- 	XFS_BUF_ASYNC(bp);
--	bp->b_flags |= XBF_LOG_BUFFER;
-+	bp->b_flags |= XBF_SYNCIO;
  
- 	if (log->l_mp->m_flags & XFS_MOUNT_BARRIER) {
- 		/*
-@@ -1380,7 +1379,7 @@ xlog_sync(xlog_t		*log,
- 		 */
- 		if (log->l_mp->m_logdev_targp != log->l_mp->m_ddev_targp)
- 			xfs_blkdev_issue_flush(log->l_mp->m_ddev_targp);
--		XFS_BUF_ORDERED(bp);
-+		bp->b_flags |= XBF_FUA | XBF_FLUSH;
- 	}
- 
- 	ASSERT(XFS_BUF_ADDR(bp) <= log->l_logBBsize-1);
-@@ -1413,9 +1412,9 @@ xlog_sync(xlog_t		*log,
- 		XFS_BUF_ZEROFLAGS(bp);
- 		XFS_BUF_BUSY(bp);
- 		XFS_BUF_ASYNC(bp);
--		bp->b_flags |= XBF_LOG_BUFFER;
-+		bp->b_flags |= XBF_SYNCIO;
- 		if (log->l_mp->m_flags & XFS_MOUNT_BARRIER)
--			XFS_BUF_ORDERED(bp);
-+			bp->b_flags |= XBF_FUA | XBF_FLUSH;
- 		dptr = XFS_BUF_PTR(bp);
- 		/*
- 		 * Bump the cycle numbers at the start of each block
-
-Index: xfs/fs/xfs/linux-2.6/xfs_buf.c
-===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_buf.c	2011-06-29 14:04:28.084452749 +0200
-+++ xfs/fs/xfs/linux-2.6/xfs_buf.c	2011-06-29 14:13:45.171434748 +0200
-@@ -592,10 +592,8 @@ _xfs_buf_read(
- 	ASSERT(!(flags & (XBF_DELWRI|XBF_WRITE)));
- 	ASSERT(bp->b_bn != XFS_BUF_DADDR_NULL);
- 
--	bp->b_flags &= ~(XBF_WRITE | XBF_ASYNC | XBF_DELWRI | \
--			XBF_READ_AHEAD | _XBF_RUN_QUEUES);
--	bp->b_flags |= flags & (XBF_READ | XBF_ASYNC | \
--			XBF_READ_AHEAD | _XBF_RUN_QUEUES);
-+	bp->b_flags &= ~(XBF_WRITE | XBF_ASYNC | XBF_DELWRI | XBF_READ_AHEAD);
-+	bp->b_flags |= flags & (XBF_READ | XBF_ASYNC | XBF_READ_AHEAD);
- 
- 	status = xfs_buf_iorequest(bp);
- 	if (status || XFS_BUF_ISERROR(bp) || (flags & XBF_ASYNC))
-@@ -1211,23 +1209,21 @@ _xfs_buf_ioapply(
- 	total_nr_pages = bp->b_page_count;
- 	map_i = 0;
- 
--	if (bp->b_flags & XBF_ORDERED) {
--		ASSERT(!(bp->b_flags & XBF_READ));
--		rw = WRITE_FLUSH_FUA;
--	} else if (bp->b_flags & XBF_LOG_BUFFER) {
--		ASSERT(!(bp->b_flags & XBF_READ_AHEAD));
--		bp->b_flags &= ~_XBF_RUN_QUEUES;
--		rw = (bp->b_flags & XBF_WRITE) ? WRITE_SYNC : READ_SYNC;
--	} else if (bp->b_flags & _XBF_RUN_QUEUES) {
--		ASSERT(!(bp->b_flags & XBF_READ_AHEAD));
--		bp->b_flags &= ~_XBF_RUN_QUEUES;
--		rw = (bp->b_flags & XBF_WRITE) ? WRITE_META : READ_META;
-+	if (bp->b_flags & XBF_WRITE) {
-+		if (bp->b_flags & XBF_SYNCIO)
-+			rw = WRITE_SYNC;
-+		else
-+			rw = WRITE;
-+		if (bp->b_flags & XBF_FUA)
-+			rw |= REQ_FUA;
-+		if (bp->b_flags & XBF_FLUSH)
-+			rw |= REQ_FLUSH;
-+	} else if (bp->b_flags & XBF_READ_AHEAD) {
-+		rw = READ;
- 	} else {
--		rw = (bp->b_flags & XBF_WRITE) ? WRITE :
--		     (bp->b_flags & XBF_READ_AHEAD) ? READA : READ;
-+		rw = READ;
- 	}
- 
+-static inline int xfs_dir2_sf_entsize_byname(xfs_dir2_sf_hdr_t *sfp, int len)
+-{
+-	return ((uint)sizeof(xfs_dir2_sf_entry_t) - 1 + (len) - \
+-		((sfp)->i8count == 0) * \
+-		((uint)sizeof(xfs_dir2_ino8_t) - (uint)sizeof(xfs_dir2_ino4_t)));
+-}
 -
- next_chunk:
- 	atomic_inc(&bp->b_io_remaining);
- 	nr_pages = BIO_MAX_SECTORS >> (PAGE_SHIFT - BBSHIFT);
-@@ -1689,8 +1685,7 @@ xfs_buf_delwri_split(
- 				break;
- 			}
- 
--			bp->b_flags &= ~(XBF_DELWRI|_XBF_DELWRI_Q|
--					 _XBF_RUN_QUEUES);
-+			bp->b_flags &= ~(XBF_DELWRI | _XBF_DELWRI_Q);
- 			bp->b_flags |= XBF_WRITE;
- 			list_move_tail(&bp->b_list, list);
- 			trace_xfs_buf_delwri_split(bp, _RET_IP_);
-Index: xfs/fs/xfs/linux-2.6/xfs_buf.h
-===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_buf.h	2011-06-29 14:03:57.994615760 +0200
-+++ xfs/fs/xfs/linux-2.6/xfs_buf.h	2011-06-29 14:18:16.806629842 +0200
-@@ -46,43 +46,46 @@ typedef enum {
- 
- #define XBF_READ	(1 << 0) /* buffer intended for reading from device */
- #define XBF_WRITE	(1 << 1) /* buffer intended for writing to device */
--#define XBF_MAPPED	(1 << 2) /* buffer mapped (b_addr valid) */
-+#define XBF_READ_AHEAD	(1 << 2) /* asynchronous read-ahead */
-+#define XBF_MAPPED	(1 << 3) /* buffer mapped (b_addr valid) */
- #define XBF_ASYNC	(1 << 4) /* initiator will not wait for completion */
- #define XBF_DONE	(1 << 5) /* all pages in the buffer uptodate */
- #define XBF_DELWRI	(1 << 6) /* buffer has dirty pages */
- #define XBF_STALE	(1 << 7) /* buffer has been staled, do not find it */
--#define XBF_ORDERED	(1 << 11)/* use ordered writes */
--#define XBF_READ_AHEAD	(1 << 12)/* asynchronous read-ahead */
--#define XBF_LOG_BUFFER	(1 << 13)/* this is a buffer used for the log */
-+
-+/* I/O hints for the BIO layer */
-+#define XBF_SYNCIO	(1 << 10)/* treat this buffer as synchronous I/O */
-+#define XBF_FUA		(1 << 11)/* force cache write through mode */
-+#define XBF_FLUSH	(1 << 12)/* flush the disk cache before a write */
- 
- /* flags used only as arguments to access routines */
--#define XBF_LOCK	(1 << 14)/* lock requested */
--#define XBF_TRYLOCK	(1 << 15)/* lock requested, but do not wait */
--#define XBF_DONT_BLOCK	(1 << 16)/* do not block in current thread */
-+#define XBF_LOCK	(1 << 15)/* lock requested */
-+#define XBF_TRYLOCK	(1 << 16)/* lock requested, but do not wait */
-+#define XBF_DONT_BLOCK	(1 << 17)/* do not block in current thread */
- 
- /* flags used only internally */
--#define _XBF_PAGES	(1 << 18)/* backed by refcounted pages */
--#define	_XBF_RUN_QUEUES	(1 << 19)/* run block device task queue	*/
--#define	_XBF_KMEM	(1 << 20)/* backed by heap memory */
--#define _XBF_DELWRI_Q	(1 << 21)/* buffer on delwri queue */
-+#define _XBF_PAGES	(1 << 20)/* backed by refcounted pages */
-+#define	_XBF_KMEM	(1 << 21)/* backed by heap memory */
-+#define _XBF_DELWRI_Q	(1 << 22)/* buffer on delwri queue */
- 
- typedef unsigned int xfs_buf_flags_t;
- 
- #define XFS_BUF_FLAGS \
- 	{ XBF_READ,		"READ" }, \
- 	{ XBF_WRITE,		"WRITE" }, \
-+	{ XBF_READ_AHEAD,	"READ_AHEAD" }, \
- 	{ XBF_MAPPED,		"MAPPED" }, \
- 	{ XBF_ASYNC,		"ASYNC" }, \
- 	{ XBF_DONE,		"DONE" }, \
- 	{ XBF_DELWRI,		"DELWRI" }, \
- 	{ XBF_STALE,		"STALE" }, \
--	{ XBF_ORDERED,		"ORDERED" }, \
--	{ XBF_READ_AHEAD,	"READ_AHEAD" }, \
-+	{ XBF_SYNCIO,		"SYNCIO" }, \
-+	{ XBF_FUA,		"FUA" }, \
-+	{ XBF_FLUSH,		"FLUSH" }, \
- 	{ XBF_LOCK,		"LOCK" },  	/* should never be set */\
- 	{ XBF_TRYLOCK,		"TRYLOCK" }, 	/* ditto */\
- 	{ XBF_DONT_BLOCK,	"DONT_BLOCK" },	/* ditto */\
- 	{ _XBF_PAGES,		"PAGES" }, \
--	{ _XBF_RUN_QUEUES,	"RUN_QUEUES" }, \
- 	{ _XBF_KMEM,		"KMEM" }, \
- 	{ _XBF_DELWRI_Q,	"DELWRI_Q" }
- 
-@@ -230,8 +233,9 @@ extern void xfs_buf_terminate(void);
- 
- 
- #define XFS_BUF_BFLAGS(bp)	((bp)->b_flags)
--#define XFS_BUF_ZEROFLAGS(bp)	((bp)->b_flags &= \
--		~(XBF_READ|XBF_WRITE|XBF_ASYNC|XBF_DELWRI|XBF_ORDERED))
-+#define XFS_BUF_ZEROFLAGS(bp) \
-+	((bp)->b_flags &= ~(XBF_READ|XBF_WRITE|XBF_ASYNC|XBF_DELWRI| \
-+			    XBF_SYNCIO|XBF_FUA|XBF_FLUSH))
- 
- void xfs_buf_stale(struct xfs_buf *bp);
- #define XFS_BUF_STALE(bp)	xfs_buf_stale(bp);
-@@ -263,10 +267,6 @@ void xfs_buf_stale(struct xfs_buf *bp);
- #define XFS_BUF_UNASYNC(bp)	((bp)->b_flags &= ~XBF_ASYNC)
- #define XFS_BUF_ISASYNC(bp)	((bp)->b_flags & XBF_ASYNC)
- 
--#define XFS_BUF_ORDERED(bp)	((bp)->b_flags |= XBF_ORDERED)
--#define XFS_BUF_UNORDERED(bp)	((bp)->b_flags &= ~XBF_ORDERED)
--#define XFS_BUF_ISORDERED(bp)	((bp)->b_flags & XBF_ORDERED)
--
- #define XFS_BUF_HOLD(bp)	xfs_buf_hold(bp)
- #define XFS_BUF_READ(bp)	((bp)->b_flags |= XBF_READ)
- #define XFS_BUF_UNREAD(bp)	((bp)->b_flags &= ~XBF_READ)
-Index: xfs/fs/xfs/xfs_log.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_log.c	2011-06-29 14:04:18.587837528 +0200
-+++ xfs/fs/xfs/xfs_log.c	2011-06-29 14:13:47.761420718 +0200
-@@ -1268,7 +1268,6 @@ xlog_bdstrat(
- 		return 0;
- 	}
- 
--	bp->b_flags |= _XBF_RUN_QUEUES;
- 	xfs_buf_iorequest(bp);
- 	return 0;
+ static inline int
+-xfs_dir2_sf_entsize_byentry(xfs_dir2_sf_hdr_t *sfp, xfs_dir2_sf_entry_t *sfep)
++xfs_dir2_sf_entsize(xfs_dir2_sf_hdr_t *sfp, int len)
+ {
+-	return ((uint)sizeof(xfs_dir2_sf_entry_t) - 1 + (sfep)->namelen - \
+-		((sfp)->i8count == 0) * \
+-		((uint)sizeof(xfs_dir2_ino8_t) - (uint)sizeof(xfs_dir2_ino4_t)));
++	return sizeof(xfs_dir2_sf_entry_t) +	/* namelen + offset */
++		len +				/* name */
++		(sfp->i8count ?			/* ino */
++		 sizeof(xfs_dir2_ino8_t) :
++		 sizeof(xfs_dir2_ino4_t));
  }
-@@ -1369,7 +1368,7 @@ xlog_sync(xlog_t		*log,
- 	XFS_BUF_ZEROFLAGS(bp);
- 	XFS_BUF_BUSY(bp);
- 	XFS_BUF_ASYNC(bp);
--	bp->b_flags |= XBF_LOG_BUFFER;
-+	bp->b_flags |= XBF_SYNCIO;
  
- 	if (log->l_mp->m_flags & XFS_MOUNT_BARRIER) {
- 		/*
-@@ -1380,7 +1379,7 @@ xlog_sync(xlog_t		*log,
- 		 */
- 		if (log->l_mp->m_logdev_targp != log->l_mp->m_ddev_targp)
- 			xfs_blkdev_issue_flush(log->l_mp->m_ddev_targp);
--		XFS_BUF_ORDERED(bp);
-+		bp->b_flags |= XBF_FUA | XBF_FLUSH;
- 	}
+ static inline xfs_dir2_sf_entry_t *xfs_dir2_sf_firstentry(xfs_dir2_sf_hdr_t *sfp)
+ {
+-	return ((xfs_dir2_sf_entry_t *) \
+-		((char *)(sfp) + xfs_dir2_sf_hdr_size(sfp->i8count)));
++	return (xfs_dir2_sf_entry_t *)
++		((char *)sfp + xfs_dir2_sf_hdr_size(sfp->i8count));
+ }
  
- 	ASSERT(XFS_BUF_ADDR(bp) <= log->l_logBBsize-1);
-@@ -1413,9 +1412,9 @@ xlog_sync(xlog_t		*log,
- 		XFS_BUF_ZEROFLAGS(bp);
- 		XFS_BUF_BUSY(bp);
- 		XFS_BUF_ASYNC(bp);
--		bp->b_flags |= XBF_LOG_BUFFER;
-+		bp->b_flags |= XBF_SYNCIO;
- 		if (log->l_mp->m_flags & XFS_MOUNT_BARRIER)
--			XFS_BUF_ORDERED(bp);
-+			bp->b_flags |= XBF_FUA | XBF_FLUSH;
- 		dptr = XFS_BUF_PTR(bp);
- 		/*
- 		 * Bump the cycle numbers at the start of each block
+ static inline xfs_dir2_sf_entry_t *
+ xfs_dir2_sf_nextentry(xfs_dir2_sf_hdr_t *sfp, xfs_dir2_sf_entry_t *sfep)
+ {
+-	return ((xfs_dir2_sf_entry_t *) \
+-		((char *)(sfep) + xfs_dir2_sf_entsize_byentry(sfp,sfep)));
++	return (xfs_dir2_sf_entry_t *)
++		((char *)sfep + xfs_dir2_sf_entsize(sfp, sfep->namelen));
+ }
+ 
+ /*
 
 _______________________________________________
 xfs mailing list
