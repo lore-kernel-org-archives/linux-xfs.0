@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5TE3gKL104892 for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 09:03:43 -0500
+	p5TE3g3V104882 for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 09:03:42 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 42C77409ED
-	for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 07:03:42 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 01EEF409EA
+	for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 07:03:41 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	t3viMJZqtjaSeOLE for <xfs@oss.sgi.com>;
-	Wed, 29 Jun 2011 07:03:42 -0700 (PDT)
+	AEqayYOezStAf1bj for <xfs@oss.sgi.com>;
+	Wed, 29 Jun 2011 07:03:41 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1QbvMj-0008Nq-PW
+	Linux)) id 1QbvMj-0008Mo-Dp
 	for xfs@oss.sgi.com; Wed, 29 Jun 2011 14:03:41 +0000
-Message-Id: <20110629140341.756763307@bombadil.infradead.org>
-Date: Wed, 29 Jun 2011 10:01:36 -0400
+Message-Id: <20110629140341.393577147@bombadil.infradead.org>
+Date: Wed, 29 Jun 2011 10:01:34 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 27/27] xfs: avoid a few disk cache flushes
+Subject: [PATCH 25/27] xfs: return the buffer locked from xfs_buf_get_uncached
 References: <20110629140109.003209430@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-avoid-cache-flushes
+Content-Disposition: inline; filename=xfs-buf_get_uncached-locked-buffer
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,53 +34,88 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-There is no need for a pre-flush when doing writing the second part of a
-split log buffer, and if we are using an external log there is no need
-to do a full cache flush of the log device at all given that all writes
-to it use the FUA flag.
+All other xfs_buf_get/read-like helpers return the buffer locked, make sure
+xfs_buf_get_uncached isn't different for no reason.  Half of the callers
+already lock it directly after, and the others probably should also keep
+it locked if only for consistency and beeing able to use xfs_buf_rele,
+but I'll leave that for later.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: xfs/fs/xfs/xfs_log.c
+Index: xfs/fs/xfs/linux-2.6/xfs_buf.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_log.c	2011-06-29 14:27:59.166808258 +0200
-+++ xfs/fs/xfs/xfs_log.c	2011-06-29 14:30:22.779363576 +0200
-@@ -1371,15 +1371,21 @@ xlog_sync(xlog_t		*log,
- 	bp->b_flags |= XBF_SYNCIO;
+--- xfs.orig/fs/xfs/linux-2.6/xfs_buf.c	2011-06-29 13:57:15.596795734 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_buf.c	2011-06-29 13:57:32.243372220 +0200
+@@ -679,7 +679,6 @@ xfs_buf_read_uncached(
+ 		return NULL;
  
- 	if (log->l_mp->m_flags & XFS_MOUNT_BARRIER) {
-+		bp->b_flags |= XBF_FUA;
-+
- 		/*
--		 * If we have an external log device, flush the data device
--		 * before flushing the log to make sure all meta data
--		 * written back from the AIL actually made it to disk
--		 * before writing out the new log tail LSN in the log buffer.
-+		 * Flush the data device before flushing the log to make
-+		 * sure all meta data written back from the AIL actually made
-+		 * it to disk before stamping the new log tail LSN into the
-+		 * log buffer.  For an external log we need to issue the
-+		 * flush explicitly, and unfortunately synchronously here;
-+		 * for an internal log we can simply use the block layer
-+		 * state machine for preflushes.
- 		 */
- 		if (log->l_mp->m_logdev_targp != log->l_mp->m_ddev_targp)
- 			xfs_blkdev_issue_flush(log->l_mp->m_ddev_targp);
--		bp->b_flags |= XBF_FUA | XBF_FLUSH;
-+		else
-+			bp->b_flags |= XBF_FLUSH;
+ 	/* set up the buffer for a read IO */
+-	xfs_buf_lock(bp);
+ 	XFS_BUF_SET_ADDR(bp, daddr);
+ 	XFS_BUF_READ(bp);
+ 	XFS_BUF_BUSY(bp);
+@@ -814,8 +813,6 @@ xfs_buf_get_uncached(
+ 		goto fail_free_mem;
  	}
  
- 	ASSERT(XFS_BUF_ADDR(bp) <= log->l_logBBsize-1);
-@@ -1414,7 +1420,7 @@ xlog_sync(xlog_t		*log,
- 		XFS_BUF_ASYNC(bp);
- 		bp->b_flags |= XBF_SYNCIO;
- 		if (log->l_mp->m_flags & XFS_MOUNT_BARRIER)
--			bp->b_flags |= XBF_FUA | XBF_FLUSH;
-+			bp->b_flags |= XBF_FUA;
- 		dptr = XFS_BUF_PTR(bp);
- 		/*
- 		 * Bump the cycle numbers at the start of each block
+-	xfs_buf_unlock(bp);
+-
+ 	trace_xfs_buf_get_uncached(bp, _RET_IP_);
+ 	return bp;
+ 
+Index: xfs/fs/xfs/xfs_log.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_log.c	2011-06-29 13:53:33.954663139 +0200
++++ xfs/fs/xfs/xfs_log.c	2011-06-29 13:57:32.243372220 +0200
+@@ -1090,8 +1090,7 @@ xlog_alloc_log(xfs_mount_t	*mp,
+ 						log->l_iclog_size, 0);
+ 		if (!bp)
+ 			goto out_free_iclog;
+-		if (!xfs_buf_trylock(bp))
+-			ASSERT(0);
++
+ 		XFS_BUF_SET_IODONE_FUNC(bp, xlog_iodone);
+ 		XFS_BUF_SET_FSPRIVATE2(bp, (unsigned long)1);
+ 		iclog->ic_bp = bp;
+Index: xfs/fs/xfs/xfs_log_recover.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_log_recover.c	2011-06-29 13:51:20.425386530 +0200
++++ xfs/fs/xfs/xfs_log_recover.c	2011-06-29 13:57:32.246705535 +0200
+@@ -91,6 +91,8 @@ xlog_get_bp(
+ 	xlog_t		*log,
+ 	int		nbblks)
+ {
++	struct xfs_buf	*bp;
++
+ 	if (!xlog_buf_bbcount_valid(log, nbblks)) {
+ 		xfs_warn(log->l_mp, "Invalid block length (0x%x) for buffer",
+ 			nbblks);
+@@ -118,8 +120,10 @@ xlog_get_bp(
+ 		nbblks += log->l_sectBBsize;
+ 	nbblks = round_up(nbblks, log->l_sectBBsize);
+ 
+-	return xfs_buf_get_uncached(log->l_mp->m_logdev_targp,
+-					BBTOB(nbblks), 0);
++	bp = xfs_buf_get_uncached(log->l_mp->m_logdev_targp, BBTOB(nbblks), 0);
++	if (bp)
++		xfs_buf_unlock(bp);
++	return bp;
+ }
+ 
+ STATIC void
+Index: xfs/fs/xfs/xfs_vnodeops.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_vnodeops.c	2011-06-29 11:35:45.789455635 +0200
++++ xfs/fs/xfs/xfs_vnodeops.c	2011-06-29 13:57:32.250038850 +0200
+@@ -1969,6 +1969,8 @@ xfs_zero_remaining_bytes(
+ 	if (!bp)
+ 		return XFS_ERROR(ENOMEM);
+ 
++	xfs_buf_unlock(bp);
++
+ 	for (offset = startoff; offset <= endoff; offset = lastoffset + 1) {
+ 		offset_fsb = XFS_B_TO_FSBT(mp, offset);
+ 		nimap = 1;
 
 _______________________________________________
 xfs mailing list
