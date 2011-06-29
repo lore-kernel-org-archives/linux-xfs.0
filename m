@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5T6rV4h062882 for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 01:53:31 -0500
-Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 15DA8E41E56
-	for <xfs@oss.sgi.com>; Tue, 28 Jun 2011 23:53:28 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	c4tivuSbp0qUiGxG for <xfs@oss.sgi.com>;
-	Tue, 28 Jun 2011 23:53:28 -0700 (PDT)
-Date: Wed, 29 Jun 2011 16:53:07 +1000
-From: Dave Chinner <david@fromorbit.com>
+	p5T7eRpI065614 for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 02:40:29 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 97619343BA
+	for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 00:40:26 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	jBty9xLF5gXEbZyV for <xfs@oss.sgi.com>;
+	Wed, 29 Jun 2011 00:40:26 -0700 (PDT)
+Date: Wed, 29 Jun 2011 03:40:21 -0400
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: [PATCH] xfstests 255: add a seek_data/seek_hole tester
-Message-ID: <20110629065306.GC1026@dastard>
+Message-ID: <20110629074021.GA26086@infradead.org>
 References: <1309275199-10801-1-git-send-email-josef@redhat.com>
 	<1309275199-10801-5-git-send-email-josef@redhat.com>
+	<20110629065306.GC1026@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1309275199-10801-5-git-send-email-josef@redhat.com>
+In-Reply-To: <20110629065306.GC1026@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,102 +28,48 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Josef Bacik <josef@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, viro@ZenIV.linux.org.uk, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-kernel@vger.kernel.org, Josef Bacik <josef@redhat.com>, xfs@oss.sgi.com, viro@ZenIV.linux.org.uk, linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org
 
-T24gVHVlLCBKdW4gMjgsIDIwMTEgYXQgMTE6MzM6MTlBTSAtMDQwMCwgSm9zZWYgQmFjaWsgd3Jv
-dGU6Cj4gVGhpcyBpcyBhIHRlc3QgdG8gbWFrZSBzdXJlIHNlZWtfZGF0YS9zZWVrX2hvbGUgaXMg
-YWN0aW5nIGxpa2UgaXQgZG9lcyBvbgo+IFNvbGFyaXMuICBJdCB3aWxsIGNoZWNrIHRvIHNlZSBp
-ZiB0aGUgZnMgc3VwcG9ydHMgZmluZGluZyBhIGhvbGUgb3Igbm90IGFuZCB3aWxsCj4gYWRqdXN0
-IGFzIG5lY2Vzc2FyeS4KClNvIEkganVzdCBsb29rZWQgYXQgdGhpcyB3aXRoIGFuIGV5ZSB0byB2
-YWxpZGF0aW5nIGFuIFhGUwppbXBsZW1lbnRhdGlvbiwgYW5kIEkgY2FtZSB1cCB3aXRoIHRoaXMg
-bGlzdCBvZiBzdHVmZiB0aGF0IHRoZSB0ZXN0CmRvZXMgbm90IGNvdmVyIHRoYXQgSSdkIG5lZWQg
-dG8gdGVzdCBpbiBzb21lIHdheToKCgktIGZpbGVzIHdpdGggY2xlYW4gdW53cml0dGVuIGV4dGVu
-dHMuIEFyZSB0aGV5IGEgaG9sZSBvcgoJICBkYXRhPyBXaGF0J3MgU0VFS19EQVRBIHN1cHBvc2Vk
-IHRvIHJldHVybiBvbiBsYXlvdXQgbGlrZQoJICBob2xlLXVud3JpdHRlbi1kYXRhPyBpLmUuIG5l
-ZWRzIHRvIGFkZCBmYWxsb2NhdGUgdG8gdGhlCgkgIHBpY3R1cmUuLi4KCgktIGZpbGVzIHdpdGgg
-ZGlydHkgdW53cml0dGVuIGV4dGVudHMgKGkuZS4gZGlydHkgaW4gbWVtb3J5LAoJICBub3Qgb24g
-ZGlzaykuIFRoZXkgYXJlIG1vc3QgZGVmaW5pdGVseSBkYXRhLCBhbmQgbW9zdAoJICBmaWxlc3lz
-dGVtcyB3aWxsIG5lZWQgYSBzZXBhcmF0ZSBsb29rdXAgcGF0aCB0byBkZXRlY3QKCSAgZGlydHkg
-dW53cml0dGVuIHJhbmdlcyBiZWNhdXNlIHRoZSBzdGF0ZSBpcyBrZXB0CgkgIHNlcGFyYXRlbHkg
-KHBhZ2UgY2FjaGUgdnMgZXh0ZW50IGNhY2hlKS4gIFBsZW50eSBvZiBzY29wZQoJICBmb3IgZmls
-ZXN5c3RlbSBzcGVjaWZpYyBidWdzIGhlcmUgc28gbmVlZHMgYSByb3VidXN0IHRlc3QuCgoJLSBj
-b2xkIGNhY2hlIGJlaGF2aW91ciAtIGFsbCBkaXJ0eSBkYXRhIHJhbmdlcyB0aGUgdGVzdAoJICBj
-cmVhdGVzIGFyZSBob3QgaW4gY2FjaGUgYW5kIG5vdCBldmVuIGZvcmNlZCB0byBkaXNrLCBzbwoJ
-ICBpdCBpcyBub3QgdGVzdGluZyB0aGUgbm8tcGFnZS1jYWNoZS1vdmVyLXRoZS1kYXRhLXJhbmdl
-CgkgIGNhc2UuIGkuZS4gaXQgdGVzdHMgZGVsYWxsb2Mgc3RhdGUgdHJhY2tpbmcgYnV0IG5vdAoJ
-ICBkYXRhLWV4dGVudC1hbHJlYWR5IGV4aXN0cyBsb29rdXBzIGR1cmluZyBhIHNlZWsuCgoJLSBh
-c3N1bWVzIHRoYXQgYWxsb2NhdGlvbiBzaXplIGlzIHRoZSBibG9jayBzaXplIGFuZCB0aGF0Cgkg
-IGhvbGVzIGZvbGxvd3MgYmxvY2sgc2l6ZSBhbGlnbm1lbnQuIFdlIGFscmVhZHkga25vdyB0aGF0
-CgkgIGV4dDQgZG9lcyBub3QgZm9sbG93IHRoYXQgcnVsZSB3aGVuIGRvaW5nIHNtYWxsIHNwYXJz
-ZQoJICB3cml0ZXMgY2xvc2UgdG9nZXRoZXIgaW4gYSBmaWxlLCBhbmQgWEZTIGlzIGFsc28ga25v
-d24gdG8KCSAgZmlsbCBob2xlcyB3aGVuIGRvaW5nIHNwYXJzZSB3cml0ZXMgcGFzdCBFT0YuCgoJ
-LSBvbmx5IHRlc3RzIHNpbmdsZSBibG9jayBkYXRhIGV4dGVudHMg0ZVvIGRvZXNuJ3QgY292ZXIK
-CSAgY29ybmVyIGNhc2VzIGxpa2Ugc2tpcHBpbmcgb3ZlciBtdWx0aXBsZSBmcmFnbWVudGVkIGRh
-dGEKCSAgZXh0ZW50cyB0byB0aGUgbmV4dCBob2xlLgoKU29tZSBtb3JlIGNvbW1lbnRzIGluIGxp
-bmUuLi4uCgo+ICtfY2xlYW51cCgpCj4gK3sKPiArICAgIHJtIC1mICR0bXAuKgo+ICt9Cj4gKwo+
-ICt0cmFwICJfY2xlYW51cCA7IGV4aXQgXCRzdGF0dXMiIDAgMSAyIDMgMTUKPiArCj4gKyMgZ2V0
-IHN0YW5kYXJkIGVudmlyb25tZW50LCBmaWx0ZXJzIGFuZCBjaGVja3MKPiArLiAuL2NvbW1vbi5y
-Ywo+ICsuIC4vY29tbW9uLmZpbHRlcgo+ICsKPiArIyByZWFsIFFBIHRlc3Qgc3RhcnRzIGhlcmUK
-PiArX3N1cHBvcnRlZF9mcyBnZW5lcmljCj4gK19zdXBwb3J0ZWRfb3MgTGludXgKPiArCj4gK3Rl
-c3RmaWxlPSRURVNUX0RJUi9zZWVrX3Rlc3QuJCQKPiArbG9nZmlsZT0kVEVTVF9ESVIvc2Vla190
-ZXN0LiQkLmxvZwoKVGhlIGxvZyBmaWxlIGlzIHVzdWFsbHkgbmFtZWQgJHNlcS5mdWxsLCBhbmQg
-ZG9lc24ndCBnZXQgcGxhY2VkIGluCnRoZSBmaWxlc3lzdGVtIGJlaW5nIHRlc3RlZC4gSXQgZ2V0
-cyBzYXZlZCBpbiB0aGUgeGZzdGVzdHMgZGlyZWN0b3J5CmFsb25nIHNpZGUgJHNlcS5vdXQuYmFk
-IGZvciBhbmFseXNpcyB3aGVudGVoIHRlc3QgZmFpbHMuLi4KCj4gK1sgLXggJGhlcmUvc3JjL3Nl
-ZWstdGVzdGVyIF0gfHwgX25vdHJ1biAic2Vlay10ZXN0ZXIgbm90IGJ1aWx0Igo+ICsKPiArX2Ns
-ZWFudXAoKQo+ICt7Cj4gKwlybSAtZiAkdGVzdGZpbGUKPiArCXJtIC1mICRsb2dmaWxlCj4gK30K
-PiArdHJhcCAiX2NsZWFudXA7IGV4aXQgXCRzdGF0dXMiIDAgMSAyIDMgMTUKPiArCj4gK2VjaG8g
-IlNpbGVuY2UgaXMgZ29sZGVuIgo+ICskaGVyZS9zcmMvc2Vlay10ZXN0ZXIgLXEgJHRlc3RmaWxl
-IDI+JjEgfCB0ZWUgLWEgJGxvZ2ZpbGUKClBlcnNvbmFsbHkgSSdkIHByZWZlciB0aGUgdGVzdCB0
-byBiZSBhIGJpdCBub2lzeSBhYm91dCB3aGF0IGl0IGlzCnJ1bm5pbmcsIGVzcGVjaWFsbHkgd2hl
-biB0aGVyZSBhcmUgc28gbWFueSBzdWJ0ZXN0cyB0aGUgc2luZ2xlCmludm9jYXRpb24gaXMgcnVu
-bmluZy4gSXQgbWFrZXMgbm8gZGlmZmVyZW5jZSB0byB0aGUgcnVuIHRpbWUgb2Z0aGUKdGVzdCwg
-b3IgdGhlIG91dHB1dCB3aGVuIHNvbWV0aGluZyBmYWlscywgYnV0IGl0IGF0IGxlYXN0IGFsbG93
-cyB5b3UKdG8gcnVuIHRoZSB0ZXN0IG1hbnVhbGx5IGFuZCBzZWUgd2hhdCBpdCBpcyBkb2luZyBl
-YXNpbHkuLi4KCj4gKwo+ICtpZiBncmVwIC1xICJTRUVLX0hPTEUgaXMgbm90IHN1cHBvcnRlZCIg
-JGxvZ2ZpbGU7IHRoZW4KPiArCV9ub3RydW4gIlNFRUtfSE9MRS9TRUVLX0RBVEEgbm90IHN1cHBv
-cnRlZCBieSB0aGlzIGtlcm5lbCIKPiArZmkKPiArCj4gK3JtIC1mICRsb2dmaWxlCj4gK3JtIC1m
-ICR0ZXN0ZmlsZQo+ICsKPiArc3RhdHVzPTAgOyBleGl0Cj4gZGlmZiAtLWdpdCBhLzI1NS5vdXQg
-Yi8yNTUub3V0Cj4gbmV3IGZpbGUgbW9kZSAxMDA2NDQKPiBpbmRleCAwMDAwMDAwLi43ZWVmYjgy
-Cj4gLS0tIC9kZXYvbnVsbAo+ICsrKyBiLzI1NS5vdXQKPiBAQCAtMCwwICsxLDIgQEAKPiArUUEg
-b3V0cHV0IGNyZWF0ZWQgYnkgMjU1Cj4gK1NpbGVuY2UgaXMgZ29sZGVuCj4gZGlmZiAtLWdpdCBh
-L2dyb3VwIGIvZ3JvdXAKPiBpbmRleCAxZjg2MDc1Li5jMDQ1ZTcwIDEwMDY0NAo+IC0tLSBhL2dy
-b3VwCj4gKysrIGIvZ3JvdXAKPiBAQCAtMzY4LDMgKzM2OCw0IEBAIGRlcHJlY2F0ZWQKPiAgMjUy
-IGF1dG8gcXVpY2sgcHJlYWxsb2MKPiAgMjUzIGF1dG8gcXVpY2sKPiAgMjU0IGF1dG8gcXVpY2sK
-PiArMjU1IGF1dG8gcXVpY2sKCkknZCBzdWdnZXN0IHRoYXQgcncgYW5kIHByZWFsbG9jIChvbmNl
-IHVud3JpdHRlbiBleHRlbnQKdGVzdGluZyBpcyBhZGRlZCkgZ3JvdXBzIHNob3VsZCBhbHNvIGJl
-IGRlZmluZWQgZm9yIHRoaXMgdGVzdC4KCk90aGVyd2lzZSwgdGhlIHRlc3QgY29kZSBsb29rcyBv
-ayBpZiBhIGJpdCBvdmVyLWVuZ2luZWVyZWQuLi4uCgo+ICtzdHJ1Y3QgdGVzdHJlYyB7Cj4gKwlp
-bnQJdGVzdF9udW07Cj4gKwlpbnQJKCp0ZXN0X2Z1bmMpKGludCBmZCwgaW50IHRlc3RudW0pOwo+
-ICsJY2hhcgkqdGVzdF9kZXNjOwo+ICt9Owo+ICsKPiArc3RydWN0IHRlc3RyZWMgc2Vla190ZXN0
-c1tdID0gewo+ICsJeyAgMSwgdGVzdDAxLCAiVGVzdCBiYXNpYyBzdXBwb3J0IiB9LAo+ICsJeyAg
-MiwgdGVzdDAyLCAiVGVzdCBhbiBlbXB0eSBmaWxlIiB9LAo+ICsJeyAgMywgdGVzdDAzLCAiVGVz
-dCBhIGZ1bGwgZmlsZSIgfSwKPiArCXsgIDQsIHRlc3QwNCwgIlRlc3QgZmlsZSBob2xlIGF0IGJl
-ZywgZGF0YSBhdCBlbmQiIH0sCj4gKwl7ICA1LCB0ZXN0MDUsICJUZXN0IGZpbGUgZGF0YSBhdCBi
-ZWcsIGhvbGUgYXQgZW5kIiB9LAo+ICsJeyAgNiwgdGVzdDA2LCAiVGVzdCBmaWxlIGhvbGUgZGF0
-YSBob2xlIGRhdGEiIH0sCgpTbywgdG8gdGFrZSBmcm9tIHRoZSBob2xlIHB1bmNoIHRlc3QgbWF0
-cml4LCBpdCBjb3ZlcnMgYSBidW5jaCBtb3JlCmZpbGUgc3RhdGUgdHJhbnNpdGlvbnMgYW5kIGNh
-c2VzIHRoYXQgYXJlIGp1c3QgYXMgcmVsZXZhbnQgdG8KU0VFS19IT0xFL1NFRUtfREFUQS4gVGhv
-c2UgY2FzZXMgYXJlOgoKIyAgICAgICAxLiBpbnRvIGEgaG9sZQojICAgICAgIDIuIGludG8gYWxs
-b2NhdGVkIHNwYWNlCiMgICAgICAgMy4gaW50byB1bndyaXR0ZW4gc3BhY2UKIyAgICAgICA0LiBo
-b2xlIC0+IGRhdGEKIyAgICAgICA1LiBob2xlIC0+IHVud3JpdHRlbgojICAgICAgIDYuIGRhdGEg
-LT4gaG9sZQojICAgICAgIDcuIGRhdGEgLT4gdW53cml0dGVuCiMgICAgICAgOC4gdW53cml0dGVu
-IC0+IGhvbGUKIyAgICAgICA5LiB1bndyaXR0ZW4gLT4gZGF0YQojICAgICAgIDEwLiBob2xlIC0+
-IGRhdGEgLT4gaG9sZQojICAgICAgIDExLiBkYXRhIC0+IGhvbGUgLT4gZGF0YQojICAgICAgIDEy
-LiB1bndyaXR0ZW4gLT4gZGF0YSAtPiB1bndyaXR0ZW4KIyAgICAgICAxMy4gZGF0YSAtPiB1bndy
-aXR0ZW4gLT4gZGF0YQojICAgICAgIDE0LiBkYXRhIC0+IGhvbGUgQCBFT0YKIyAgICAgICAxNS4g
-ZGF0YSAtPiBob2xlIEAgMAojICAgICAgIDE2LiBkYXRhIC0+IGNhY2hlIGNvbGQgLT5ob2xlCiMg
-ICAgICAgMTcuIGRhdGEgLT4gaG9sZSBpbiBzaW5nbGUgYmxvY2sgZmlsZQoKSSB0aGlrbiB3ZSBh
-bHNvIG5lZWQgdG8gY292ZXIgbW9zdCBvZiB0aGVzZSBzYW1lIGNhc2VzLCByaWdodD8gIEFuZApT
-RUVLX0hPTEUvU0VFSyBkYXRhIGFsc28gbmVlZCB0byBleHBsaWNpdGx5IHNlcGFyYXRlIHRoZSB1
-bndyaXR0ZW4KdGVzdHMgaW50byAiY2xlYW4gdW53cml0dGVuIiBhbmQgImRpcnR5IHVud3JpdHRl
-biIgYW5kIGNvdmVyIHRoZQp0cmFuc2l0aW9ucyBiZXR3ZWVuIHJlZ2lvbnMgb2YgdGhvc2Ugc3Rh
-dGVzIGFzIHdlbGwsIHJpZ2h0PwoKQ2hlZXJzLAoKRGF2ZS4KCi0tIApEYXZlIENoaW5uZXIKZGF2
-aWRAZnJvbW9yYml0LmNvbQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2ku
-Y29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+On Wed, Jun 29, 2011 at 04:53:07PM +1000, Dave Chinner wrote:
+> On Tue, Jun 28, 2011 at 11:33:19AM -0400, Josef Bacik wrote:
+> > This is a test to make sure seek_data/seek_hole is acting like it does on
+> > Solaris.  It will check to see if the fs supports finding a hole or not and will
+> > adjust as necessary.
+> 
+> So I just looked at this with an eye to validating an XFS
+> implementation, and I came up with this list of stuff that the test
+> does not cover that I'd need to test in some way:
+> 
+> 	- files with clean unwritten extents. Are they a hole or
+> 	  data? What's SEEK_DATA supposed to return on layout like
+> 	  hole-unwritten-data? i.e. needs to add fallocate to the
+> 	  picture...
+>
+> 	- files with dirty unwritten extents (i.e. dirty in memory,
+> 	  not on disk). They are most definitely data, and most
+> 	  filesystems will need a separate lookup path to detect
+> 	  dirty unwritten ranges because the state is kept
+> 	  separately (page cache vs extent cache).  Plenty of scope
+> 	  for filesystem specific bugs here so needs a roubust test.
+
+The discussion leading up to the resurrection of SEEK_HOLE/SEEK_DATA
+was pretty much about that point.  The conclusion based on the Sun
+documentation and common sense was that SEEK_DATA may only consider
+unwritten extents as hole if the filesystem has a way to distinguish
+plain unwritten extents and those that have been dirtied.  Else it
+should be considered data.
+
+Testing for making sure dirty preallocated areas aren't wrongly
+reported sounds relatively easy, the rest falls into implementation
+details, which imho is fine.  Not reporting preallocated extents
+as holes just is a quality of implementation issue and not a bug.
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
