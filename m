@@ -1,35 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5TLsTKg144792 for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 16:54:30 -0500
-Received: from e33.co.us.ibm.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 46A5414FA5D6
-	for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 14:54:28 -0700 (PDT)
-Received: from e33.co.us.ibm.com (e33.co.us.ibm.com [32.97.110.151]) by
-	cuda.sgi.com with ESMTP id CEShJazZPDt8LKmL for
-	<xfs@oss.sgi.com>; Wed, 29 Jun 2011 14:54:28 -0700 (PDT)
-Received: from d03relay03.boulder.ibm.com (d03relay03.boulder.ibm.com
-	[9.17.195.228])
-	by e33.co.us.ibm.com (8.14.4/8.13.1) with ESMTP id p5TLkrmv023556
-	for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 15:46:53 -0600
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay03.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	p5TLsNb9180252 for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 15:54:23 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
-	id p5TFsMdE004232
-	for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 09:54:22 -0600
-Subject: Re: xfstests test case 180 fails often
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-In-Reply-To: <20110629010457.GR32466@dastard>
-References: <1308077464.7661.473.camel@chandra-lucid.beaverton.ibm.com>
-	<1308259762.2717.31.camel@doink>
-	<1309304361.5505.6211.camel@chandra-lucid.beaverton.ibm.com>
-	<20110629010457.GR32466@dastard>
-Date: Wed, 29 Jun 2011 14:54:22 -0700
-Message-ID: <1309384462.5505.6279.camel@chandra-lucid.beaverton.ibm.com>
-Mime-Version: 1.0
-Reply-To: sekharan@us.ibm.com
+	p5TMDK9i145506 for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 17:13:20 -0500
+Subject: Re: [PATCH 06/27] xfs: split xfs_setattr
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <20110629140337.641422449@bombadil.infradead.org>
+References: <20110629140109.003209430@bombadil.infradead.org>
+	<20110629140337.641422449@bombadil.infradead.org>
+Date: Wed, 29 Jun 2011 17:13:16 -0500
+Message-ID: <1309385596.8649.36.camel@doink>
+MIME-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -42,128 +23,235 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: aelder@sgi.com, XFS Mailing List <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Wed, 2011-06-29 at 11:04 +1000, Dave Chinner wrote:
-> On Tue, Jun 28, 2011 at 04:39:21PM -0700, Chandra Seetharaman wrote:
-> > On Thu, 2011-06-16 at 16:29 -0500, Alex Elder wrote:
-> > > On Tue, 2011-06-14 at 11:51 -0700, Chandra Seetharaman wrote:
-> > > > Hello All,
-> > > > 
-> > > > test case 180 fails often (4 out of 5) in my x86_64 system.
-> > > > Any suggestions on how to proceed to debug ?
-> > > 
-> > > I have been seeing failures like that sometimes
-> > > (more often recently I think) for a while.  I
-> > > have not had the chance to really chase it down.
-> > > 
-> > > If you can reproduce it pretty relibly you could
-> > > use "git bisect" to try to find out whether the
-> > > failures started to occur after a particular
-> > > commit.
-> > 
-> > I tried git bisect and it ended up in a qla2xxx fix (and I do not even
-> > have qlogic card in that system).
-> > 
-> > I did it couple more times and landed on different patches.
+On Wed, 2011-06-29 at 10:01 -0400, Christoph Hellwig wrote:
+> plain text document attachment (xfs-split-setattr)
+> Split up xfs_setattr into two functions, one for the complex truncate
+> handling, and one for the trivial attribute updates.  Also move both
+> new routines to xfs_iops.c as they are fairly Linux-specific.
 > 
-> That indicates your test case is not 100% reliable. :/
-> 
-Agreed. That is why I tested the "supposedly"(thru git bisect) good one 
-for about 500 iterations to verfify the failing patch.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-OTOH, can you suggest a test that does what 180 does in a reliable way ?
+Nice simplification (good start anyway...).
 
-> I haven't seen a failure in 180 on any of my test machines for some
-> time (32 or 64 bit).
-> 
-> > My latest (fourth ot fifth, I forgot :) bisect landed on the patch with
-> > commit 546a1924224078c6f582e68f890b05b387b42653 ( writeback:
-> > write_cache_pages doesn't terminate at nr_to_write <= 0)
-> 
-> That was merged in 2.6.36-rc2, and shouldn't have any sync
-> implications at all....
-> 
-> > I verified that this is valid patch by running the test script 180 for
-> > nearly 500 times on the tree just prior to this patch.
-> 
-> Ok, more details about your test setup is needed.  What kernel are
-> you running? What storage are you using? How much RAM/CPU, etc?
-> 
-Kernel: mainline with up to commit #546a1924224078c6f582e68f890b05b387b42653
-Storage: 2TB megaraid (IBM ServeRAID M1015) local storage.
-Partition: only 20GB
-RAM: 25GB
-Proc: Intel(R) Xeon(R) CPU E5607  @ 2.27GHz
-#of procs: 4
+Looks good but I think that you need to mask off the
+ia_valid bits in the calls now made in xfs_vn_setattr().
+Also, I think you may still need to check the file type
+for the size-setting function.  Details below.
 
-> Also, what are the sizes of the files that had reported incorrect
-> size?
-It failed with varied sizes. Here are the 10 failures from 3.0.0-rc5
-kernel:
+Seems like a semi-exhaustive setattr() checker
+test program would be pretty easy to create.
 
-+file /mnt/xfsScratchMntPt/966 has incorrect size - sync failed
-+-rw-------. 1 root root 8663040 Jun 29 13:46 /mnt/xfsScratchMntPt/966
+If you fix these things (or you point out I'm
+mistaken), you can consider this:
+    Reviewed-by: Alex Elder <aelder@sgi.com>
 
-+file /mnt/xfsScratchMntPt/644 has incorrect size - sync failed
-+-rw-------. 1 root root 8724480 Jun 29 13:53 /mnt/xfsScratchMntPt/644
+> Index: xfs/fs/xfs/linux-2.6/xfs_iops.c
+> ===================================================================
+> --- xfs.orig/fs/xfs/linux-2.6/xfs_iops.c	2011-06-29 11:29:02.684972774 +0200
+> +++ xfs/fs/xfs/linux-2.6/xfs_iops.c	2011-06-29 11:29:07.154948558 +0200
+> @@ -39,6 +39,7 @@
+>  #include "xfs_buf_item.h"
+>  #include "xfs_utils.h"
+>  #include "xfs_vnodeops.h"
+> +#include "xfs_inode_item.h"
+>  #include "xfs_trace.h"
+>  
+>  #include <linux/capability.h>
+> @@ -497,12 +498,449 @@ xfs_vn_getattr(
+>  	return 0;
+>  }
+>  
+> +int
+> +xfs_setattr_nonsize(
+> +	struct xfs_inode	*ip,
+> +	struct iattr		*iattr,
+> +	int			flags)
+> +{
+> +	xfs_mount_t		*mp = ip->i_mount;
+> +	struct inode		*inode = VFS_I(ip);
+> +	int			mask = iattr->ia_valid;
+> +	xfs_trans_t		*tp;
+> +	int			error;
+> +	uid_t			uid = 0, iuid = 0;
+> +	gid_t			gid = 0, igid = 0;
+> +	struct xfs_dquot	*udqp = NULL, *gdqp = NULL;
+> +	struct xfs_dquot	*olddquot1 = NULL, *olddquot2 = NULL;
+> +
+> +	trace_xfs_setattr(ip);
+> +
+> +	if (mp->m_flags & XFS_MOUNT_RDONLY)
+> +		return XFS_ERROR(EROFS);
+> +
+> +	if (XFS_FORCED_SHUTDOWN(mp))
+> +		return XFS_ERROR(EIO);
+> +
+> +	error = -inode_change_ok(inode, iattr);
+> +	if (error)
+> +		return XFS_ERROR(error);
+> +
+> +	ASSERT((mask & ATTR_SIZE) == 0);
 
-+file /mnt/xfsScratchMntPt/381 has incorrect size - sync failed
-+-rw-------. 1 root root 10096640 Jun 29 14:03 /mnt/xfsScratchMntPt/381
-+file /mnt/xfsScratchMntPt/569 has incorrect size - sync failed
-+-rw-------. 1 root root 10383360 Jun 29 14:04 /mnt/xfsScratchMntPt/569
-+file /mnt/xfsScratchMntPt/650 has incorrect size - sync failed
-+-rw-------. 1 root root 9216000 Jun 29 14:04 /mnt/xfsScratchMntPt/650
-+file /mnt/xfsScratchMntPt/947 has incorrect size - sync failed
-+-rw-------. 1 root root 8663040 Jun 29 14:04 /mnt/xfsScratchMntPt/947
+You need to mask ATTR_SIZE off in xfs_vn_setattr() if
+you're going to make this assertion.  But you might
+as well just mask it off locally I suppose (though
+it's nice to have the explicitness of the assertion
+here).
 
-+file /mnt/xfsScratchMntPt/569 has incorrect size - sync failed
-+-rw-------. 1 root root 7761920 Jun 29 14:10 /mnt/xfsScratchMntPt/569
-+file /mnt/xfsScratchMntPt/905 has incorrect size - sync failed
-+-rw-------. 1 root root 8417280 Jun 29 14:11 /mnt/xfsScratchMntPt/905
+> +
+> +	/*
+> +	 * If disk quotas is on, we make sure that the dquots do exist on disk,
+> +	 * before we start any other transactions. Trying to do this later
+> +	 * is messy. We don't care to take a readlock to look at the ids
+> +	 * in inode here, because we can't hold it across the trans_reserve.
 
-+file /mnt/xfsScratchMntPt/617 has incorrect size - sync failed
-+-rw-------. 1 root root 10403840 Jun 29 14:13 /mnt/xfsScratchMntPt/617
+. . .
 
-+file /mnt/xfsScratchMntPt/654 has incorrect size - sync failed
-+-rw-------. 1 root root 9216000 Jun 29 14:15 /mnt/xfsScratchMntPt/654
+> +}
+> +
+> +/*
+> + * Truncate file.  Must have write permission and not be a directory.
+> + */
+> +int
+> +xfs_setattr_size(
+> +	struct xfs_inode	*ip,
+> +	struct iattr		*iattr,
+> +	int			flags)
+> +{
+> +	struct xfs_mount	*mp = ip->i_mount;
+> +	struct inode		*inode = VFS_I(ip);
+> +	int			mask = iattr->ia_valid;
+> +	struct xfs_trans	*tp;
+> +	int			error;
+> +	uint			lock_flags;
+> +	uint			commit_flags = 0;
+> +
+> +	trace_xfs_setattr(ip);
+> +
+> +	if (mp->m_flags & XFS_MOUNT_RDONLY)
+> +		return XFS_ERROR(EROFS);
+> +
+> +	if (XFS_FORCED_SHUTDOWN(mp))
+> +		return XFS_ERROR(EIO);
+> +
+> +	error = -inode_change_ok(inode, iattr);
+> +	if (error)
+> +		return XFS_ERROR(error);
+> +
+> +	ASSERT(S_ISREG(ip->i_d.di_mode));
 
-+file /mnt/xfsScratchMntPt/569 has incorrect size - sync failed
-+-rw-------. 1 root root 7802880 Jun 29 14:17 /mnt/xfsScratchMntPt/569
-+file /mnt/xfsScratchMntPt/740 has incorrect size - sync failed
-+-rw-------. 1 root root 9216000 Jun 29 14:17 /mnt/xfsScratchMntPt/740
+There is nothing in xfs_vn_setattr(), nor--as far as
+I can tell--anywhere else that reaches xfs_vn_seattr()
+that will ensure this.  (Maybe it's unreachable for
+a directory or whatever, but that's not obvious.)
 
-+file /mnt/xfsScratchMntPt/574 has incorrect size - sync failed
-+-rw-------. 1 root root 10260480 Jun 29 14:26 /mnt/xfsScratchMntPt/574
-+file /mnt/xfsScratchMntPt/655 has incorrect size - sync failed
-+-rw-------. 1 root root 9216000 Jun 29 14:26 /mnt/xfsScratchMntPt/655
-+file /mnt/xfsScratchMntPt/952 has incorrect size - sync failed
-+-rw-------. 1 root root 8663040 Jun 29 14:27 /mnt/xfsScratchMntPt/952
+You may have to put back the code that returns
+EISDIR or EINVAL based on the file type rather
+than do this assertion.  Seems like inode_change_ok()
+might have been able to do this check for us.
 
-+file /mnt/xfsScratchMntPt/575 has incorrect size - sync failed
-+-rw-------. 1 root root 10260480 Jun 29 14:28 /mnt/xfsScratchMntPt/575
-+file /mnt/xfsScratchMntPt/656 has incorrect size - sync failed
-+-rw-------. 1 root root 9216000 Jun 29 14:28 /mnt/xfsScratchMntPt/656
-+file /mnt/xfsScratchMntPt/926 has incorrect size - sync failed
-+-rw-------. 1 root root 8663040 Jun 29 14:29 /mnt/xfsScratchMntPt/926
+> +	ASSERT((mask & (ATTR_MODE|ATTR_UID|ATTR_GID|ATTR_ATIME|ATTR_ATIME_SET|
+> +			ATTR_MTIME_SET|ATTR_KILL_SUID|ATTR_KILL_SGID|
+> +			ATTR_KILL_PRIV|ATTR_TIMES_SET)) == 0);
 
-+file /mnt/xfsScratchMntPt/941 has incorrect size - sync failed
-+-rw-------. 1 root root 8417280 Jun 29 14:31 /mnt/xfsScratchMntPt/941
+You'll have to mask these off in xfs_vn_setattr() if you're
+going to make this assertion.
 
-+file /mnt/xfsScratchMntPt/544 has incorrect size - sync failed
-+-rw-------. 1 root root 7413760 Jun 29 14:35 /mnt/xfsScratchMntPt/544
+> +
+> +	lock_flags = XFS_ILOCK_EXCL;
+> +	if (!(flags & XFS_ATTR_NOLOCK))
+> +		lock_flags |= XFS_IOLOCK_EXCL;
+> +	xfs_ilock(ip, lock_flags);
+> +
+> +	/*
+> +	 * Short circuit the truncate case for zero length files.
+> +	 */
 
+. . .
 
-> 
-> Cheers,
-> 
-> Dave.
-> 
-> PS: Please don't top post replies. Please quote and reply inline so
-> that the thread flow is easy to follow.
+> +	goto out_unlock;
+> +}
+> +
+>  STATIC int
+>  xfs_vn_setattr(
+>  	struct dentry	*dentry,
+>  	struct iattr	*iattr)
+>  {
+> -	return -xfs_setattr(XFS_I(dentry->d_inode), iattr, 0);
+> +	if (iattr->ia_valid & ATTR_SIZE)
+> +		return -xfs_setattr_size(XFS_I(dentry->d_inode), iattr, 0);
+> +	return -xfs_setattr_nonsize(XFS_I(dentry->d_inode), iattr, 0);
+>  }
 
-sorry :(
+Just leaving this part in so you can see what I'm
+talking about.
+ 
+>  #define XFS_FIEMAP_FLAGS	(FIEMAP_FLAG_SYNC|FIEMAP_FLAG_XATTR)
+
+. . .
+
+> Index: xfs/fs/xfs/xfs_vnodeops.c
+> ===================================================================
+> --- xfs.orig/fs/xfs/xfs_vnodeops.c	2011-06-29 11:29:02.721639242 +0200
+> +++ xfs/fs/xfs/xfs_vnodeops.c	2011-06-29 11:29:07.158281874 +0200
+> @@ -50,430 +50,6 @@
+>  #include "xfs_vnodeops.h"
+>  #include "xfs_trace.h"
+>  
+> -int
+> -xfs_setattr(
+> -	struct xfs_inode	*ip,
+> -	struct iattr		*iattr,
+> -	int			flags)
+> -{
+> -	xfs_mount_t		*mp = ip->i_mount;
+> -	struct inode		*inode = VFS_I(ip);
+> -	int			mask = iattr->ia_valid;
+> -	xfs_trans_t		*tp;
+> -	int			code;
+> -	uint			lock_flags;
+> -	uint			commit_flags=0;
+> -	uid_t			uid=0, iuid=0;
+> -	gid_t			gid=0, igid=0;
+> -	struct xfs_dquot	*udqp, *gdqp, *olddquot1, *olddquot2;
+> -	int			need_iolock = 1;
+> -
+
+. . .
+
+> -	/*
+> -	 * Truncate file.  Must have write permission and not be a directory.
+> -	 */
+> -	if (mask & ATTR_SIZE) {
+> -		/* Short circuit the truncate case for zero length files */
+> -		if (iattr->ia_size == 0 &&
+> -		    ip->i_size == 0 && ip->i_d.di_nextents == 0) {
+> -			xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> -			lock_flags &= ~XFS_ILOCK_EXCL;
+> -			if (mask & ATTR_CTIME) {
+> -				inode->i_mtime = inode->i_ctime =
+> -						current_fs_time(inode->i_sb);
+> -				xfs_mark_inode_dirty_sync(ip);
+> -			}
+> -			code = 0;
+> -			goto error_return;
+> -		}
+> -
+> -		if (S_ISDIR(ip->i_d.di_mode)) {
+> -			code = XFS_ERROR(EISDIR);
+> -			goto error_return;
+> -		} else if (!S_ISREG(ip->i_d.di_mode)) {
+> -			code = XFS_ERROR(EINVAL);
+> -			goto error_return;
+> -		}
+
+This is the file type checking code I referred to above.
+
+> -
+> -		/*
+
 
 _______________________________________________
 xfs mailing list
