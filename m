@@ -1,24 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5THqwHl126522 for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 12:52:59 -0500
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 86529E4C713
-	for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 10:52:58 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id zCq298UH4tHKeYze for
-	<xfs@oss.sgi.com>; Wed, 29 Jun 2011 10:52:58 -0700 (PDT)
-Message-ID: <4E0B666C.4000902@redhat.com>
-Date: Wed, 29 Jun 2011 13:52:44 -0400
-From: Josef Bacik <josef@redhat.com>
+	p5TIabd6128031 for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 13:36:37 -0500
+Subject: Re: sbcount comment change
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <1309366188.5505.6215.camel@chandra-lucid.beaverton.ibm.com>
+References: <1309366188.5505.6215.camel@chandra-lucid.beaverton.ibm.com>
+Date: Wed, 29 Jun 2011 13:36:32 -0500
+Message-ID: <1309372592.4646.45.camel@doink>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests 255: add a seek_data/seek_hole tester
-References: <1309275199-10801-1-git-send-email-josef@redhat.com>
-	<1309275199-10801-5-git-send-email-josef@redhat.com>
-	<20110629065306.GC1026@dastard>
-	<20110629074021.GA26086@infradead.org>
-	<4E0B5C6F.3060803@oracle.com>
-In-Reply-To: <4E0B5C6F.3060803@oracle.com>
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,54 +22,40 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Sunil Mushran <sunil.mushran@oracle.com>
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, viro@ZenIV.linux.org.uk, linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org
+To: sekharan@us.ibm.com
+Cc: xfs@oss.sgi.com
 
-On 06/29/2011 01:10 PM, Sunil Mushran wrote:
-> On 06/29/2011 12:40 AM, Christoph Hellwig wrote:
->> On Wed, Jun 29, 2011 at 04:53:07PM +1000, Dave Chinner wrote:
->>> On Tue, Jun 28, 2011 at 11:33:19AM -0400, Josef Bacik wrote:
->>>> This is a test to make sure seek_data/seek_hole is acting like it
->>>> does on
->>>> Solaris.  It will check to see if the fs supports finding a hole or
->>>> not and will
->>>> adjust as necessary.
->>> So I just looked at this with an eye to validating an XFS
->>> implementation, and I came up with this list of stuff that the test
->>> does not cover that I'd need to test in some way:
->>>
->>>     - files with clean unwritten extents. Are they a hole or
->>>       data? What's SEEK_DATA supposed to return on layout like
->>>       hole-unwritten-data? i.e. needs to add fallocate to the
->>>       picture...
->>>
->>>     - files with dirty unwritten extents (i.e. dirty in memory,
->>>       not on disk). They are most definitely data, and most
->>>       filesystems will need a separate lookup path to detect
->>>       dirty unwritten ranges because the state is kept
->>>       separately (page cache vs extent cache).  Plenty of scope
->>>       for filesystem specific bugs here so needs a roubust test.
->> The discussion leading up to the resurrection of SEEK_HOLE/SEEK_DATA
->> was pretty much about that point.  The conclusion based on the Sun
->> documentation and common sense was that SEEK_DATA may only consider
->> unwritten extents as hole if the filesystem has a way to distinguish
->> plain unwritten extents and those that have been dirtied.  Else it
->> should be considered data.
->>
->> Testing for making sure dirty preallocated areas aren't wrongly
->> reported sounds relatively easy, the rest falls into implementation
->> details, which imho is fine.  Not reporting preallocated extents
->> as holes just is a quality of implementation issue and not a bug.
+On Wed, 2011-06-29 at 09:49 -0700, Chandra Seetharaman wrote:
+> Hi Alex,
 > 
-> I agree. And if I might add my 2 cents that it would be much easier
-> if we added another test that created files with all the worrisome boundary
-> conditions and used SEEK_DATA/HOLE to copy the files and compared
-> using md5sum. This would be far easier than one that expects a certain
-> pos for each operation.
+> Does this look fine ?
 
-That's a great point, I think I will rig something like that up.  Thanks,
+Yes.  But it's small enough that I think you should just
+include this change with another change (especially if you
+decide to drop the "sync" flag from this function as I
+suggested).
 
-Josef
+					-Alex
+
+> --------------
+> @@ -1568,18 +1568,14 @@ xfs_fs_writable(xfs_mount_t *mp)
+>  /*
+>   * xfs_log_sbcount
+>   *
+> - * Called either periodically to keep the on disk superblock values
+> - * roughly up to date or from unmount to make sure the values are
+> - * correct on a clean unmount.
+> + * Sync the superblock counters to disk.
+>   *
+>   * Note this code can be called during the process of freezing, so
+> - * we may need to use the transaction allocator which does not not
+> + * we may need to use the transaction allocator which does not
+>   * block when the transaction subsystem is in its frozen state.
+>   */
+> ----------------
+> 
+
+	
 
 _______________________________________________
 xfs mailing list
