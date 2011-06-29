@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5TE3gSZ104872 for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 09:03:42 -0500
+	p5TE3dBl104750 for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 09:03:39 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5DC38E4B815
-	for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 07:03:40 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1FA621D7DD26
+	for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 07:03:36 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	WqGAPAsKa2I6RWZL for <xfs@oss.sgi.com>;
-	Wed, 29 Jun 2011 07:03:40 -0700 (PDT)
+	rASmvx8Tx4oWotib for <xfs@oss.sgi.com>;
+	Wed, 29 Jun 2011 07:03:36 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1QbvMi-0008KE-F9
-	for xfs@oss.sgi.com; Wed, 29 Jun 2011 14:03:40 +0000
-Message-Id: <20110629140340.434391854@bombadil.infradead.org>
-Date: Wed, 29 Jun 2011 10:01:29 -0400
+	Linux)) id 1QbvMe-0008AQ-IL
+	for xfs@oss.sgi.com; Wed, 29 Jun 2011 14:03:36 +0000
+Message-Id: <20110629140336.532726362@bombadil.infradead.org>
+Date: Wed, 29 Jun 2011 10:01:10 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 20/27] xfs: kill struct xfs_dir2_data
+Subject: [PATCH 01/27] xfs: PF_FSTRANS should never be set in ->writepage
 References: <20110629140109.003209430@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-kill-xfs_dir2_data_t
+Content-Disposition: inline; filename=xfs-writepage-simplify-fstrans-check
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,166 +34,45 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Remove the confusing xfs_dir2_data structure.  It is supposed to describe
-an XFS dir2 data btree block, but due to the variable sized nature of
-almost all elements in it it can't actuall do anything close to that
-job.  In addition to accessing the fixed offset header structure it was
-only used to get a pointer to the first dir or unused entry after it,
-which can be trivially replaced by pointer arithmetics on the header
-pointer.  For most users that is actually more natural anyway, as they
-don't use a typed pointer but rather a character pointer for further
-arithmetics.
+Now that we reject direct reclaim in addition to always using GFP_NOFS
+allocation there's no chance we'll ever end up in ->writepage with
+PF_FSTRANS set.  Add a WARN_ON if we hit this case, and stop checking
+if we'd actually need to start a transaction.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Alex Elder <aelder@sgi.com>
 
-Index: xfs/fs/xfs/xfs_dir2_data.c
+Index: linux-2.6/fs/xfs/linux-2.6/xfs_aops.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_dir2_data.c	2011-06-29 13:41:14.272003679 +0200
-+++ xfs/fs/xfs/xfs_dir2_data.c	2011-06-29 13:41:15.021999615 +0200
-@@ -53,7 +53,6 @@ xfs_dir2_data_check(
- 	xfs_dir2_data_free_t	*bf;		/* bestfree table */
- 	xfs_dir2_block_tail_t	*btp=NULL;	/* block tail */
- 	int			count;		/* count of entries found */
--	xfs_dir2_data_t		*d;		/* data block pointer */
- 	xfs_dir2_data_hdr_t	*hdr;		/* data block header */
- 	xfs_dir2_data_entry_t	*dep;		/* data entry */
- 	xfs_dir2_data_free_t	*dfp;		/* bestfree entry */
-@@ -70,10 +69,9 @@ xfs_dir2_data_check(
- 	struct xfs_name		name;
- 
- 	mp = dp->i_mount;
--	d = bp->data;
--	hdr = &d->hdr;
-+	hdr = bp->data;
- 	bf = hdr->bestfree;
--	p = (char *)d->u;
-+	p = (char *)(hdr + 1);
- 
- 	if (hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC)) {
- 		btp = xfs_dir2_block_tail_p(mp, hdr);
-@@ -336,7 +334,6 @@ xfs_dir2_data_freescan(
- 	xfs_dir2_data_hdr_t	*hdr,		/* data block header */
- 	int			*loghead)	/* out: log data header */
+--- linux-2.6.orig/fs/xfs/linux-2.6/xfs_aops.c	2011-04-27 20:51:57.503817127 +0200
++++ linux-2.6/fs/xfs/linux-2.6/xfs_aops.c	2011-04-27 20:53:02.186800044 +0200
+@@ -906,7 +906,6 @@ xfs_vm_writepage(
+ 	struct writeback_control *wbc)
  {
--	xfs_dir2_data_t		*d = (xfs_dir2_data_t *)hdr;
- 	xfs_dir2_block_tail_t	*btp;		/* block tail */
- 	xfs_dir2_data_entry_t	*dep;		/* active data entry */
- 	xfs_dir2_data_unused_t	*dup;		/* unused data entry */
-@@ -355,7 +352,7 @@ xfs_dir2_data_freescan(
+ 	struct inode		*inode = page->mapping->host;
+-	int			delalloc, unwritten;
+ 	struct buffer_head	*bh, *head;
+ 	struct xfs_bmbt_irec	imap;
+ 	xfs_ioend_t		*ioend = NULL, *iohead = NULL;
+@@ -938,15 +937,10 @@ xfs_vm_writepage(
+ 		goto redirty;
+ 
  	/*
- 	 * Set up pointers.
+-	 * We need a transaction if there are delalloc or unwritten buffers
+-	 * on the page.
+-	 *
+-	 * If we need a transaction and the process flags say we are already
+-	 * in a transaction, or no IO is allowed then mark the page dirty
+-	 * again and leave the page as is.
++	 * Given that we do not allow direct reclaim to call us we should
++	 * never be called while in a filesystem transaction.
  	 */
--	p = (char *)d->u;
-+	p = (char *)(hdr + 1);
- 	if (be32_to_cpu(hdr->magic) == XFS_DIR2_BLOCK_MAGIC) {
- 		btp = xfs_dir2_block_tail_p(mp, hdr);
- 		endp = (char *)xfs_dir2_block_leaf_p(btp);
-@@ -398,7 +395,6 @@ xfs_dir2_data_init(
- 	xfs_dabuf_t		**bpp)		/* output block buffer */
- {
- 	xfs_dabuf_t		*bp;		/* block buffer */
--	xfs_dir2_data_t		*d;		/* pointer to block */
- 	xfs_dir2_data_hdr_t	*hdr;		/* data block header */
- 	xfs_inode_t		*dp;		/* incore directory inode */
- 	xfs_dir2_data_unused_t	*dup;		/* unused entry pointer */
-@@ -424,8 +420,7 @@ xfs_dir2_data_init(
- 	/*
- 	 * Initialize the header.
- 	 */
--	d = bp->data;
--	hdr = &d->hdr;
-+	hdr = bp->data;
- 	hdr->magic = cpu_to_be32(XFS_DIR2_DATA_MAGIC);
- 	hdr->bestfree[0].offset = cpu_to_be16(sizeof(*hdr));
- 	for (i = 1; i < XFS_DIR2_DATA_FD_COUNT; i++) {
-@@ -436,7 +431,7 @@ xfs_dir2_data_init(
- 	/*
- 	 * Set up an unused entry for the block's body.
- 	 */
--	dup = &d->u[0].unused;
-+	dup = (xfs_dir2_data_unused_t *)(hdr + 1);
- 	dup->freetag = cpu_to_be16(XFS_DIR2_DATA_FREE_TAG);
+-	xfs_count_page_state(page, &delalloc, &unwritten);
+-	if ((current->flags & PF_FSTRANS) && (delalloc || unwritten))
++	if (WARN_ON(current->flags & PF_FSTRANS))
+ 		goto redirty;
  
- 	t = mp->m_dirblksize - (uint)sizeof(*hdr);
-Index: xfs/fs/xfs/xfs_dir2_data.h
-===================================================================
---- xfs.orig/fs/xfs/xfs_dir2_data.h	2011-06-29 13:41:14.272003679 +0200
-+++ xfs/fs/xfs/xfs_dir2_data.h	2011-06-29 13:42:35.521563513 +0200
-@@ -20,6 +20,22 @@
- 
- /*
-  * Directory format 2, data block structures.
-+ *
-+ * A pure data block looks like the following drawing on disk:
-+ *
-+ *    +-------------------------------------------------+
-+ *    | xfs_dir2_data_hdr_t                             |
-+ *    +-------------------------------------------------+
-+ *    | xfs_dir2_data_entry_t OR xfs_dir2_data_unused_t |
-+ *    | xfs_dir2_data_entry_t OR xfs_dir2_data_unused_t |
-+ *    | xfs_dir2_data_entry_t OR xfs_dir2_data_unused_t |
-+ *    | ...                                             |
-+ *    +-------------------------------------------------+
-+ *    | unused space                                    |
-+ *    +-------------------------------------------------+
-+ *
-+ * As all the entries are variable sized structures the accessors in this
-+ * file need to be used to iterate over them.
-  */
- 
- struct xfs_dabuf;
-@@ -103,23 +119,6 @@ typedef struct xfs_dir2_data_unused {
- 	__be16			tag;		/* starting offset of us */
- } xfs_dir2_data_unused_t;
- 
--typedef union {
--	xfs_dir2_data_entry_t	entry;
--	xfs_dir2_data_unused_t	unused;
--} xfs_dir2_data_union_t;
--
--/*
-- * Generic data block structure, for xfs_db.
-- */
--typedef struct xfs_dir2_data {
--	xfs_dir2_data_hdr_t	hdr;		/* magic XFS_DIR2_DATA_MAGIC */
--	xfs_dir2_data_union_t	u[1];
--} xfs_dir2_data_t;
--
--/*
-- * Macros.
-- */
--
- /*
-  * Size of a data entry.
-  */
-Index: xfs/fs/xfs/xfs_dir2_leaf.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_dir2_leaf.c	2011-06-29 13:41:14.275336994 +0200
-+++ xfs/fs/xfs/xfs_dir2_leaf.c	2011-06-29 13:41:15.025332931 +0200
-@@ -781,7 +781,6 @@ xfs_dir2_leaf_getdents(
- 	int			byteoff;	/* offset in current block */
- 	xfs_dir2_db_t		curdb;		/* db for current block */
- 	xfs_dir2_off_t		curoff;		/* current overall offset */
--	xfs_dir2_data_t		*data;		/* data block structure */
- 	xfs_dir2_data_hdr_t	*hdr;		/* data block header */
- 	xfs_dir2_data_entry_t	*dep;		/* data entry */
- 	xfs_dir2_data_unused_t	*dup;		/* unused entry */
-@@ -1040,13 +1039,12 @@ xfs_dir2_leaf_getdents(
- 			else if (curoff > newoff)
- 				ASSERT(xfs_dir2_byte_to_db(mp, curoff) ==
- 				       curdb);
--			data = bp->data;
--			hdr = &data->hdr;
-+			hdr = bp->data;
- 			xfs_dir2_data_check(dp, bp);
- 			/*
- 			 * Find our position in the block.
- 			 */
--			ptr = (char *)&data->u;
-+			ptr = (char *)(hdr + 1);
- 			byteoff = xfs_dir2_byte_to_off(mp, curoff);
- 			/*
- 			 * Skip past the header.
+ 	/* Is this page beyond the end of the file? */
 
 _______________________________________________
 xfs mailing list
