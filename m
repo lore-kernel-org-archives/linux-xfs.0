@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5TDKHHV102796 for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 08:20:17 -0500
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3DA4840327
-	for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 06:19:52 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id zHtEk7LVG5s122t7 for
-	<xfs@oss.sgi.com>; Wed, 29 Jun 2011 06:19:52 -0700 (PDT)
-Message-ID: <4E0B266D.30000@redhat.com>
-Date: Wed, 29 Jun 2011 09:19:41 -0400
-From: Josef Bacik <josef@redhat.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests 255: add a seek_data/seek_hole tester
-References: <1309275199-10801-1-git-send-email-josef@redhat.com>
-	<1309275199-10801-5-git-send-email-josef@redhat.com>
-	<20110629065306.GC1026@dastard>
-In-Reply-To: <20110629065306.GC1026@dastard>
+	p5TE3fav104849 for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 09:03:42 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2B56B1D7DD36
+	for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 07:03:40 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	mH8ml6aDwCT1bzDX for <xfs@oss.sgi.com>;
+	Wed, 29 Jun 2011 07:03:40 -0700 (PDT)
+Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
+	Linux)) id 1QbvMi-0008Kk-Kn
+	for xfs@oss.sgi.com; Wed, 29 Jun 2011 14:03:40 +0000
+Message-Id: <20110629140340.611673214@bombadil.infradead.org>
+Date: Wed, 29 Jun 2011 10:01:30 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH 21/27] xfs: cleanup the defintion of struct xfs_dir2_data_entry
+References: <20110629140109.003209430@bombadil.infradead.org>
+Content-Disposition: inline; filename=xfs-cleanup-xfs_dir2_data_entry
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,121 +27,44 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel@vger.kernel.org, viro@ZenIV.linux.org.uk, linux-kernel@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-T24gMDYvMjkvMjAxMSAwMjo1MyBBTSwgRGF2ZSBDaGlubmVyIHdyb3RlOgo+IE9uIFR1ZSwgSnVu
-IDI4LCAyMDExIGF0IDExOjMzOjE5QU0gLTA0MDAsIEpvc2VmIEJhY2lrIHdyb3RlOgo+PiBUaGlz
-IGlzIGEgdGVzdCB0byBtYWtlIHN1cmUgc2Vla19kYXRhL3NlZWtfaG9sZSBpcyBhY3RpbmcgbGlr
-ZSBpdCBkb2VzIG9uCj4+IFNvbGFyaXMuICBJdCB3aWxsIGNoZWNrIHRvIHNlZSBpZiB0aGUgZnMg
-c3VwcG9ydHMgZmluZGluZyBhIGhvbGUgb3Igbm90IGFuZCB3aWxsCj4+IGFkanVzdCBhcyBuZWNl
-c3NhcnkuCj4KPiBTbyBJIGp1c3QgbG9va2VkIGF0IHRoaXMgd2l0aCBhbiBleWUgdG8gdmFsaWRh
-dGluZyBhbiBYRlMKPiBpbXBsZW1lbnRhdGlvbiwgYW5kIEkgY2FtZSB1cCB3aXRoIHRoaXMgbGlz
-dCBvZiBzdHVmZiB0aGF0IHRoZSB0ZXN0Cj4gZG9lcyBub3QgY292ZXIgdGhhdCBJJ2QgbmVlZCB0
-byB0ZXN0IGluIHNvbWUgd2F5Ogo+Cj4gCS0gZmlsZXMgd2l0aCBjbGVhbiB1bndyaXR0ZW4gZXh0
-ZW50cy4gQXJlIHRoZXkgYSBob2xlIG9yCj4gCSAgZGF0YT8gV2hhdCdzIFNFRUtfREFUQSBzdXBw
-b3NlZCB0byByZXR1cm4gb24gbGF5b3V0IGxpa2UKPiAJICBob2xlLXVud3JpdHRlbi1kYXRhPyBp
-LmUuIG5lZWRzIHRvIGFkZCBmYWxsb2NhdGUgdG8gdGhlCj4gCSAgcGljdHVyZS4uLgo+Cj4gCS0g
-ZmlsZXMgd2l0aCBkaXJ0eSB1bndyaXR0ZW4gZXh0ZW50cyAoaS5lLiBkaXJ0eSBpbiBtZW1vcnks
-Cj4gCSAgbm90IG9uIGRpc2spLiBUaGV5IGFyZSBtb3N0IGRlZmluaXRlbHkgZGF0YSwgYW5kIG1v
-c3QKPiAJICBmaWxlc3lzdGVtcyB3aWxsIG5lZWQgYSBzZXBhcmF0ZSBsb29rdXAgcGF0aCB0byBk
-ZXRlY3QKPiAJICBkaXJ0eSB1bndyaXR0ZW4gcmFuZ2VzIGJlY2F1c2UgdGhlIHN0YXRlIGlzIGtl
-cHQKPiAJICBzZXBhcmF0ZWx5IChwYWdlIGNhY2hlIHZzIGV4dGVudCBjYWNoZSkuICBQbGVudHkg
-b2Ygc2NvcGUKPiAJICBmb3IgZmlsZXN5c3RlbSBzcGVjaWZpYyBidWdzIGhlcmUgc28gbmVlZHMg
-YSByb3VidXN0IHRlc3QuCj4KPiAJLSBjb2xkIGNhY2hlIGJlaGF2aW91ciAtIGFsbCBkaXJ0eSBk
-YXRhIHJhbmdlcyB0aGUgdGVzdAo+IAkgIGNyZWF0ZXMgYXJlIGhvdCBpbiBjYWNoZSBhbmQgbm90
-IGV2ZW4gZm9yY2VkIHRvIGRpc2ssIHNvCj4gCSAgaXQgaXMgbm90IHRlc3RpbmcgdGhlIG5vLXBh
-Z2UtY2FjaGUtb3Zlci10aGUtZGF0YS1yYW5nZQo+IAkgIGNhc2UuIGkuZS4gaXQgdGVzdHMgZGVs
-YWxsb2Mgc3RhdGUgdHJhY2tpbmcgYnV0IG5vdAo+IAkgIGRhdGEtZXh0ZW50LWFscmVhZHkgZXhp
-c3RzIGxvb2t1cHMgZHVyaW5nIGEgc2Vlay4KPgo+IAktIGFzc3VtZXMgdGhhdCBhbGxvY2F0aW9u
-IHNpemUgaXMgdGhlIGJsb2NrIHNpemUgYW5kIHRoYXQKPiAJICBob2xlcyBmb2xsb3dzIGJsb2Nr
-IHNpemUgYWxpZ25tZW50LiBXZSBhbHJlYWR5IGtub3cgdGhhdAo+IAkgIGV4dDQgZG9lcyBub3Qg
-Zm9sbG93IHRoYXQgcnVsZSB3aGVuIGRvaW5nIHNtYWxsIHNwYXJzZQo+IAkgIHdyaXRlcyBjbG9z
-ZSB0b2dldGhlciBpbiBhIGZpbGUsIGFuZCBYRlMgaXMgYWxzbyBrbm93biB0bwo+IAkgIGZpbGwg
-aG9sZXMgd2hlbiBkb2luZyBzcGFyc2Ugd3JpdGVzIHBhc3QgRU9GLgo+Cj4gCS0gb25seSB0ZXN0
-cyBzaW5nbGUgYmxvY2sgZGF0YSBleHRlbnRzINGVbyBkb2Vzbid0IGNvdmVyCj4gCSAgY29ybmVy
-IGNhc2VzIGxpa2Ugc2tpcHBpbmcgb3ZlciBtdWx0aXBsZSBmcmFnbWVudGVkIGRhdGEKPiAJICBl
-eHRlbnRzIHRvIHRoZSBuZXh0IGhvbGUuCj4KClllYWggSSBpbnRlbnRpb25hbGx5IGxlZnQgb3V0
-IHByZWFsbG9jYXRlZCBzdHVmZiBiZWNhdXNlIHRoZXNlIGFyZSBnb2luZyAKdG8gYmUgaW1wbGVt
-ZW50YXRpb24gc3BlY2lmaWMsIHNvIEkgd2FzIGdvaW5nIHRvIGxlYXZlIHRoYXQgZm9yIGEgbGF0
-ZXIgCmV4ZXJjaXNlIHdoZW4gcGVvcGxlIGFjdHVhbGx5IHN0YXJ0IGRvaW5nIHByb3BlciBpbXBs
-ZW1lbnRhdGlvbnMuCgo+IFNvbWUgbW9yZSBjb21tZW50cyBpbiBsaW5lLi4uLgo+Cj4+ICtfY2xl
-YW51cCgpCj4+ICt7Cj4+ICsgICAgcm0gLWYgJHRtcC4qCj4+ICt9Cj4+ICsKPj4gK3RyYXAgIl9j
-bGVhbnVwIDsgZXhpdCBcJHN0YXR1cyIgMCAxIDIgMyAxNQo+PiArCj4+ICsjIGdldCBzdGFuZGFy
-ZCBlbnZpcm9ubWVudCwgZmlsdGVycyBhbmQgY2hlY2tzCj4+ICsuIC4vY29tbW9uLnJjCj4+ICsu
-IC4vY29tbW9uLmZpbHRlcgo+PiArCj4+ICsjIHJlYWwgUUEgdGVzdCBzdGFydHMgaGVyZQo+PiAr
-X3N1cHBvcnRlZF9mcyBnZW5lcmljCj4+ICtfc3VwcG9ydGVkX29zIExpbnV4Cj4+ICsKPj4gK3Rl
-c3RmaWxlPSRURVNUX0RJUi9zZWVrX3Rlc3QuJCQKPj4gK2xvZ2ZpbGU9JFRFU1RfRElSL3NlZWtf
-dGVzdC4kJC5sb2cKPgo+IFRoZSBsb2cgZmlsZSBpcyB1c3VhbGx5IG5hbWVkICRzZXEuZnVsbCwg
-YW5kIGRvZXNuJ3QgZ2V0IHBsYWNlZCBpbgo+IHRoZSBmaWxlc3lzdGVtIGJlaW5nIHRlc3RlZC4g
-SXQgZ2V0cyBzYXZlZCBpbiB0aGUgeGZzdGVzdHMgZGlyZWN0b3J5Cj4gYWxvbmcgc2lkZSAkc2Vx
-Lm91dC5iYWQgZm9yIGFuYWx5c2lzIHdoZW50ZWggdGVzdCBmYWlscy4uLgo+CgpJIG9ubHkgd2Fu
-dCBpdCB0byBzZWUgaWYgU0VFS19IT0xFIGZhaWxzIHNvIEkgY2FuIHNheSBpdCBkaWRuJ3QgcnVu
-LiAgSSAKZm9sbG93ZWQgdGhlIHNhbWUgZXhhbXBsZSBhcyB0aGUgZmllbWFwIHRlc3QgdGhhdCBF
-cmljIHdyb3RlLgoKPj4gK1sgLXggJGhlcmUvc3JjL3NlZWstdGVzdGVyIF0gfHwgX25vdHJ1biAi
-c2Vlay10ZXN0ZXIgbm90IGJ1aWx0Igo+PiArCj4+ICtfY2xlYW51cCgpCj4+ICt7Cj4+ICsJcm0g
-LWYgJHRlc3RmaWxlCj4+ICsJcm0gLWYgJGxvZ2ZpbGUKPj4gK30KPj4gK3RyYXAgIl9jbGVhbnVw
-OyBleGl0IFwkc3RhdHVzIiAwIDEgMiAzIDE1Cj4+ICsKPj4gK2VjaG8gIlNpbGVuY2UgaXMgZ29s
-ZGVuIgo+PiArJGhlcmUvc3JjL3NlZWstdGVzdGVyIC1xICR0ZXN0ZmlsZSAyPiYxIHwgdGVlIC1h
-ICRsb2dmaWxlCj4KPiBQZXJzb25hbGx5IEknZCBwcmVmZXIgdGhlIHRlc3QgdG8gYmUgYSBiaXQg
-bm9pc3kgYWJvdXQgd2hhdCBpdCBpcwo+IHJ1bm5pbmcsIGVzcGVjaWFsbHkgd2hlbiB0aGVyZSBh
-cmUgc28gbWFueSBzdWJ0ZXN0cyB0aGUgc2luZ2xlCj4gaW52b2NhdGlvbiBpcyBydW5uaW5nLiBJ
-dCBtYWtlcyBubyBkaWZmZXJlbmNlIHRvIHRoZSBydW4gdGltZSBvZnRoZQo+IHRlc3QsIG9yIHRo
-ZSBvdXRwdXQgd2hlbiBzb21ldGhpbmcgZmFpbHMsIGJ1dCBpdCBhdCBsZWFzdCBhbGxvd3MgeW91
-Cj4gdG8gcnVuIHRoZSB0ZXN0IG1hbnVhbGx5IGFuZCBzZWUgd2hhdCBpdCBpcyBkb2luZyBlYXNp
-bHkuLi4KPgoKUmlnaHQsIHRoZSBwcm9ibGVtIHdpdGggdGhpcyB0ZXN0IGlzIGl0IHdpbGwgcnVu
-IGRpZmZlcmVudGx5IGRlcGVuZGluZyAKb24gdGhlIGltcGxlbWVudGF0aW9uLiAgSSBhZ3JlZSwg
-SSByZWFsbHkgbGlrZSB0aGUgbm9pc3kgb3V0cHV0IHRlc3RzLCAKYnV0IHVuZm9ydHVuYXRlbHkg
-aWYgSSBydW4gdGhpcyB0ZXN0IG9uIGV4dDQgd2hlcmUgaXQgY3VycmVudGx5IHRyZWF0cyAKdGhl
-IGVudGlyZSBmaWxlIGFzIGRhdGEsIGFuZCB0aGVuIHJ1biBpdCBvbiBidHJmcyB3aGVyZSBpdCBp
-cyBzbWFydGVyIAphbmQgYWN0dWFsbHkgcmVjb2duaXplcyBob2xlcywgd2UgZW5kIHVwIHdpdGgg
-dHdvIGRpZmZlcmVudCBvdXRwdXRzIHRoYXQgCmFyZSBib3RoIGNvcnJlY3QuCgo+PiArCj4+ICtp
-ZiBncmVwIC1xICJTRUVLX0hPTEUgaXMgbm90IHN1cHBvcnRlZCIgJGxvZ2ZpbGU7IHRoZW4KPj4g
-Kwlfbm90cnVuICJTRUVLX0hPTEUvU0VFS19EQVRBIG5vdCBzdXBwb3J0ZWQgYnkgdGhpcyBrZXJu
-ZWwiCj4+ICtmaQo+PiArCj4+ICtybSAtZiAkbG9nZmlsZQo+PiArcm0gLWYgJHRlc3RmaWxlCj4+
-ICsKPj4gK3N0YXR1cz0wIDsgZXhpdAo+PiBkaWZmIC0tZ2l0IGEvMjU1Lm91dCBiLzI1NS5vdXQK
-Pj4gbmV3IGZpbGUgbW9kZSAxMDA2NDQKPj4gaW5kZXggMDAwMDAwMC4uN2VlZmI4Mgo+PiAtLS0g
-L2Rldi9udWxsCj4+ICsrKyBiLzI1NS5vdXQKPj4gQEAgLTAsMCArMSwyIEBACj4+ICtRQSBvdXRw
-dXQgY3JlYXRlZCBieSAyNTUKPj4gK1NpbGVuY2UgaXMgZ29sZGVuCj4+IGRpZmYgLS1naXQgYS9n
-cm91cCBiL2dyb3VwCj4+IGluZGV4IDFmODYwNzUuLmMwNDVlNzAgMTAwNjQ0Cj4+IC0tLSBhL2dy
-b3VwCj4+ICsrKyBiL2dyb3VwCj4+IEBAIC0zNjgsMyArMzY4LDQgQEAgZGVwcmVjYXRlZAo+PiAg
-IDI1MiBhdXRvIHF1aWNrIHByZWFsbG9jCj4+ICAgMjUzIGF1dG8gcXVpY2sKPj4gICAyNTQgYXV0
-byBxdWljawo+PiArMjU1IGF1dG8gcXVpY2sKPgo+IEknZCBzdWdnZXN0IHRoYXQgcncgYW5kIHBy
-ZWFsbG9jIChvbmNlIHVud3JpdHRlbiBleHRlbnQKPiB0ZXN0aW5nIGlzIGFkZGVkKSBncm91cHMg
-c2hvdWxkIGFsc28gYmUgZGVmaW5lZCBmb3IgdGhpcyB0ZXN0Lgo+Cj4gT3RoZXJ3aXNlLCB0aGUg
-dGVzdCBjb2RlIGxvb2tzIG9rIGlmIGEgYml0IG92ZXItZW5naW5lZXJlZC4uLi4KPgo+PiArc3Ry
-dWN0IHRlc3RyZWMgewo+PiArCWludAl0ZXN0X251bTsKPj4gKwlpbnQJKCp0ZXN0X2Z1bmMpKGlu
-dCBmZCwgaW50IHRlc3RudW0pOwo+PiArCWNoYXIJKnRlc3RfZGVzYzsKPj4gK307Cj4+ICsKPj4g
-K3N0cnVjdCB0ZXN0cmVjIHNlZWtfdGVzdHNbXSA9IHsKPj4gKwl7ICAxLCB0ZXN0MDEsICJUZXN0
-IGJhc2ljIHN1cHBvcnQiIH0sCj4+ICsJeyAgMiwgdGVzdDAyLCAiVGVzdCBhbiBlbXB0eSBmaWxl
-IiB9LAo+PiArCXsgIDMsIHRlc3QwMywgIlRlc3QgYSBmdWxsIGZpbGUiIH0sCj4+ICsJeyAgNCwg
-dGVzdDA0LCAiVGVzdCBmaWxlIGhvbGUgYXQgYmVnLCBkYXRhIGF0IGVuZCIgfSwKPj4gKwl7ICA1
-LCB0ZXN0MDUsICJUZXN0IGZpbGUgZGF0YSBhdCBiZWcsIGhvbGUgYXQgZW5kIiB9LAo+PiArCXsg
-IDYsIHRlc3QwNiwgIlRlc3QgZmlsZSBob2xlIGRhdGEgaG9sZSBkYXRhIiB9LAo+Cj4gU28sIHRv
-IHRha2UgZnJvbSB0aGUgaG9sZSBwdW5jaCB0ZXN0IG1hdHJpeCwgaXQgY292ZXJzIGEgYnVuY2gg
-bW9yZQo+IGZpbGUgc3RhdGUgdHJhbnNpdGlvbnMgYW5kIGNhc2VzIHRoYXQgYXJlIGp1c3QgYXMg
-cmVsZXZhbnQgdG8KPiBTRUVLX0hPTEUvU0VFS19EQVRBLiBUaG9zZSBjYXNlcyBhcmU6Cj4KPiAj
-ICAgICAgIDEuIGludG8gYSBob2xlCj4gIyAgICAgICAyLiBpbnRvIGFsbG9jYXRlZCBzcGFjZQo+
-ICMgICAgICAgMy4gaW50byB1bndyaXR0ZW4gc3BhY2UKPiAjICAgICAgIDQuIGhvbGUgLT4gIGRh
-dGEKPiAjICAgICAgIDUuIGhvbGUgLT4gIHVud3JpdHRlbgo+ICMgICAgICAgNi4gZGF0YSAtPiAg
-aG9sZQo+ICMgICAgICAgNy4gZGF0YSAtPiAgdW53cml0dGVuCj4gIyAgICAgICA4LiB1bndyaXR0
-ZW4gLT4gIGhvbGUKPiAjICAgICAgIDkuIHVud3JpdHRlbiAtPiAgZGF0YQo+ICMgICAgICAgMTAu
-IGhvbGUgLT4gIGRhdGEgLT4gIGhvbGUKPiAjICAgICAgIDExLiBkYXRhIC0+ICBob2xlIC0+ICBk
-YXRhCj4gIyAgICAgICAxMi4gdW53cml0dGVuIC0+ICBkYXRhIC0+ICB1bndyaXR0ZW4KPiAjICAg
-ICAgIDEzLiBkYXRhIC0+ICB1bndyaXR0ZW4gLT4gIGRhdGEKPiAjICAgICAgIDE0LiBkYXRhIC0+
-ICBob2xlIEAgRU9GCj4gIyAgICAgICAxNS4gZGF0YSAtPiAgaG9sZSBAIDAKPiAjICAgICAgIDE2
-LiBkYXRhIC0+ICBjYWNoZSBjb2xkIC0+aG9sZQo+ICMgICAgICAgMTcuIGRhdGEgLT4gIGhvbGUg
-aW4gc2luZ2xlIGJsb2NrIGZpbGUKPgo+IEkgdGhpa24gd2UgYWxzbyBuZWVkIHRvIGNvdmVyIG1v
-c3Qgb2YgdGhlc2Ugc2FtZSBjYXNlcywgcmlnaHQ/ICBBbmQKPiBTRUVLX0hPTEUvU0VFSyBkYXRh
-IGFsc28gbmVlZCB0byBleHBsaWNpdGx5IHNlcGFyYXRlIHRoZSB1bndyaXR0ZW4KPiB0ZXN0cyBp
-bnRvICJjbGVhbiB1bndyaXR0ZW4iIGFuZCAiZGlydHkgdW53cml0dGVuIiBhbmQgY292ZXIgdGhl
-Cj4gdHJhbnNpdGlvbnMgYmV0d2VlbiByZWdpb25zIG9mIHRob3NlIHN0YXRlcyBhcyB3ZWxsLCBy
-aWdodD8KPgoKWWVhaCB5b3UgYXJlIHJpZ2h0LCBidXQgYWdhaW4gZG9pbmcgcHJlYWxsb2NhdGVk
-IHN0dWZmIGlzIHRyaWNreSwgYnV0IEkgCmNhbiBleHBhbmQgaXQgbm93IGlmIHRoYXQncyB3aGF0
-IHdlIHdhbnQuICBUaGFua3MsCgpKb3NlZgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDov
-L29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+Remove the tag member which is at a variable offset after the actual
+name, and make name a real variable sized C99 array instead of the incorrect
+one-sized array which confuses (not only) gcc.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Index: xfs/fs/xfs/xfs_dir2_data.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_dir2_data.h	2011-06-29 13:42:35.521563513 +0200
++++ xfs/fs/xfs/xfs_dir2_data.h	2011-06-29 13:43:03.284746440 +0200
+@@ -98,14 +98,14 @@ typedef struct xfs_dir2_data_hdr {
+ 
+ /*
+  * Active entry in a data block.  Aligned to 8 bytes.
+- * Tag appears as the last 2 bytes.
++ *
++ * After the variable length name field there is a 2 byte tag field, which
++ * can be accessed using xfs_dir2_data_entry_tag_p.
+  */
+ typedef struct xfs_dir2_data_entry {
+ 	__be64			inumber;	/* inode number */
+ 	__u8			namelen;	/* name length */
+-	__u8			name[1];	/* name bytes, no null */
+-						/* variable offset */
+-	__be16			tag;		/* starting offset of us */
++	__u8			name[];		/* name bytes, no null */
+ } xfs_dir2_data_entry_t;
+ 
+ /*
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
