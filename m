@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5TE3eNA104771 for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 09:03:41 -0500
+	p5TE3e6M104756 for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 09:03:40 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A5111409E3
-	for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 07:03:39 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B9523409DD
+	for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 07:03:38 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	mBvRrYVaZiquh5aN for <xfs@oss.sgi.com>;
-	Wed, 29 Jun 2011 07:03:39 -0700 (PDT)
+	wguBUwyx3SG42mF3 for <xfs@oss.sgi.com>;
+	Wed, 29 Jun 2011 07:03:38 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1QbvMh-0008Gc-3u
-	for xfs@oss.sgi.com; Wed, 29 Jun 2011 14:03:39 +0000
-Message-Id: <20110629140339.086201354@bombadil.infradead.org>
-Date: Wed, 29 Jun 2011 10:01:22 -0400
+	Linux)) id 1QbvMg-0008E2-4M
+	for xfs@oss.sgi.com; Wed, 29 Jun 2011 14:03:38 +0000
+Message-Id: <20110629140338.098991196@bombadil.infradead.org>
+Date: Wed, 29 Jun 2011 10:01:17 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 13/27] xfs: factor out xfs_dir2_leaf_find_entry
+Subject: [PATCH 08/27] xfs: kill xfs_itruncate_start
 References: <20110629140109.003209430@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-factor-dir2-leaf-code
+Content-Disposition: inline; filename=xfs-kill-xfs_itruncate_start
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,356 +34,327 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Add a new xfs_dir2_leaf_find_entry helper to factor out some duplicate code
-from xfs_dir2_leaf_addname xfs_dir2_leafn_add.  Found by Eric Sandeen using
-an automated code duplication checked.
+xfs_itruncate_start is a rather length wrapper that evaluates to a call
+to xfs_ioend_wait and xfs_tosspages, and only has two callers.
+
+Instead of using the complicated checks left over from IRIX where we
+can to truncate the pagecache just call xfs_tosspages
+(aka truncate_inode_pages) directly as we want to get rid of all data
+after i_size, and truncate_inode_pages handles incorrect alignments
+and too large offsets just fine.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-Index: xfs/fs/xfs/xfs_dir2_leaf.c
+Index: xfs/fs/xfs/xfs_inode.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_dir2_leaf.c	2011-06-22 21:56:26.102462981 +0200
-+++ xfs/fs/xfs/xfs_dir2_leaf.c	2011-06-23 12:41:51.716439911 +0200
-@@ -152,6 +152,118 @@ xfs_dir2_block_to_leaf(
- 	return 0;
- }
+--- xfs.orig/fs/xfs/xfs_inode.c	2011-06-29 11:29:02.494973804 +0200
++++ xfs/fs/xfs/xfs_inode.c	2011-06-29 11:29:11.888256249 +0200
+@@ -1217,165 +1217,8 @@ xfs_isize_check(
+ #endif	/* DEBUG */
  
-+xfs_dir2_leaf_entry_t *
-+xfs_dir2_leaf_find_entry(
-+	xfs_dir2_leaf_t		*leaf,		/* leaf structure */
-+	int			index,		/* leaf table position */
-+	int			compact,	/* need to compact leaves */
-+	int			lowstale,	/* index of prev stale leaf */
-+	int			highstale,	/* index of next stale leaf */
-+	int			*lfloglow,	/* low leaf logging index */
-+	int			*lfloghigh)	/* high leaf logging index */
-+{
-+	xfs_dir2_leaf_entry_t	*lep;		/* leaf entry table pointer */
-+
-+	if (!leaf->hdr.stale) {
-+		/*
-+		 * Now we need to make room to insert the leaf entry.
-+		 *
-+		 * If there are no stale entries, just insert a hole at index.
-+		 */
-+		lep = &leaf->ents[index];
-+		if (index < be16_to_cpu(leaf->hdr.count))
-+			memmove(lep + 1, lep,
-+				(be16_to_cpu(leaf->hdr.count) - index) *
-+				 sizeof(*lep));
-+
-+		/*
-+		 * Record low and high logging indices for the leaf.
-+		 */
-+		*lfloglow = index;
-+		*lfloghigh = be16_to_cpu(leaf->hdr.count);
-+		be16_add_cpu(&leaf->hdr.count, 1);
-+	} else {
-+		/*
-+		 * There are stale entries.
-+		 *
-+		 * We will use one of them for the new entry.  It's probably
-+		 * not at the right location, so we'll have to shift some up
-+		 * or down first.
-+		 *
-+		 * If we didn't compact before, we need to find the nearest
-+		 * stale entries before and after our insertion point.
-+		 */
-+		if (compact == 0) {
-+			/*
-+			 * Find the first stale entry before the insertion
-+			 * point, if any.
-+			 */
-+			for (lowstale = index - 1;
-+			     lowstale >= 0 &&
-+				be32_to_cpu(leaf->ents[lowstale].address) !=
-+				XFS_DIR2_NULL_DATAPTR;
-+			     lowstale--)
-+				continue;
-+			/*
-+			 * Find the next stale entry at or after the insertion
-+			 * point, if any.   Stop if we go so far that the
-+			 * lowstale entry would be better.
-+			 */
-+			for (highstale = index;
-+			     highstale < be16_to_cpu(leaf->hdr.count) &&
-+				be32_to_cpu(leaf->ents[highstale].address) !=
-+				XFS_DIR2_NULL_DATAPTR &&
-+				(lowstale < 0 ||
-+				 index - lowstale - 1 >= highstale - index);
-+			     highstale++)
-+				continue;
-+		}
-+		/*
-+		 * If the low one is better, use it.
-+		 */
-+		if (lowstale >= 0 &&
-+		    (highstale == be16_to_cpu(leaf->hdr.count) ||
-+		     index - lowstale - 1 < highstale - index)) {
-+			ASSERT(index - lowstale - 1 >= 0);
-+			ASSERT(be32_to_cpu(leaf->ents[lowstale].address) ==
-+			       XFS_DIR2_NULL_DATAPTR);
-+			/*
-+			 * Copy entries up to cover the stale entry
-+			 * and make room for the new entry.
-+			 */
-+			if (index - lowstale - 1 > 0)
-+				memmove(&leaf->ents[lowstale],
-+					&leaf->ents[lowstale + 1],
-+					(index - lowstale - 1) * sizeof(*lep));
-+			lep = &leaf->ents[index - 1];
-+			*lfloglow = MIN(lowstale, *lfloglow);
-+			*lfloghigh = MAX(index - 1, *lfloghigh);
-+
-+		/*
-+		 * The high one is better, so use that one.
-+		 */
-+		} else {
-+			ASSERT(highstale - index >= 0);
-+			ASSERT(be32_to_cpu(leaf->ents[highstale].address) ==
-+			       XFS_DIR2_NULL_DATAPTR);
-+			/*
-+			 * Copy entries down to cover the stale entry
-+			 * and make room for the new entry.
-+			 */
-+			if (highstale - index > 0)
-+				memmove(&leaf->ents[index + 1],
-+					&leaf->ents[index],
-+					(highstale - index) * sizeof(*lep));
-+			lep = &leaf->ents[index];
-+			*lfloglow = MIN(index, *lfloglow);
-+			*lfloghigh = MAX(highstale, *lfloghigh);
-+		}
-+		be16_add_cpu(&leaf->hdr.stale, -1);
-+	}
-+
-+	return lep;
-+}
-+
  /*
-  * Add an entry to a leaf form directory.
-  */
-@@ -430,102 +542,11 @@ xfs_dir2_leaf_addname(
- 		if (!grown)
- 			xfs_dir2_leaf_log_bests(tp, lbp, use_block, use_block);
- 	}
+- * Calculate the last possible buffered byte in a file.  This must
+- * include data that was buffered beyond the EOF by the write code.
+- * This also needs to deal with overflowing the xfs_fsize_t type
+- * which can happen for sizes near the limit.
+- *
+- * We also need to take into account any blocks beyond the EOF.  It
+- * may be the case that they were buffered by a write which failed.
+- * In that case the pages will still be in memory, but the inode size
+- * will never have been updated.
+- */
+-STATIC xfs_fsize_t
+-xfs_file_last_byte(
+-	xfs_inode_t	*ip)
+-{
+-	xfs_mount_t	*mp;
+-	xfs_fsize_t	last_byte;
+-	xfs_fileoff_t	last_block;
+-	xfs_fileoff_t	size_last_block;
+-	int		error;
+-
+-	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL|XFS_IOLOCK_SHARED));
+-
+-	mp = ip->i_mount;
 -	/*
--	 * Now we need to make room to insert the leaf entry.
--	 * If there are no stale entries, we just insert a hole at index.
+-	 * Only check for blocks beyond the EOF if the extents have
+-	 * been read in.  This eliminates the need for the inode lock,
+-	 * and it also saves us from looking when it really isn't
+-	 * necessary.
 -	 */
--	if (!leaf->hdr.stale) {
--		/*
--		 * lep is still good as the index leaf entry.
--		 */
--		if (index < be16_to_cpu(leaf->hdr.count))
--			memmove(lep + 1, lep,
--				(be16_to_cpu(leaf->hdr.count) - index) * sizeof(*lep));
--		/*
--		 * Record low and high logging indices for the leaf.
--		 */
--		lfloglow = index;
--		lfloghigh = be16_to_cpu(leaf->hdr.count);
--		be16_add_cpu(&leaf->hdr.count, 1);
+-	if (ip->i_df.if_flags & XFS_IFEXTENTS) {
+-		xfs_ilock(ip, XFS_ILOCK_SHARED);
+-		error = xfs_bmap_last_offset(NULL, ip, &last_block,
+-			XFS_DATA_FORK);
+-		xfs_iunlock(ip, XFS_ILOCK_SHARED);
+-		if (error) {
+-			last_block = 0;
+-		}
+-	} else {
+-		last_block = 0;
 -	}
+-	size_last_block = XFS_B_TO_FSB(mp, (xfs_ufsize_t)ip->i_size);
+-	last_block = XFS_FILEOFF_MAX(last_block, size_last_block);
+-
+-	last_byte = XFS_FSB_TO_B(mp, last_block);
+-	if (last_byte < 0) {
+-		return XFS_MAXIOFFSET(mp);
+-	}
+-	last_byte += (1 << mp->m_writeio_log);
+-	if (last_byte < 0) {
+-		return XFS_MAXIOFFSET(mp);
+-	}
+-	return last_byte;
+-}
+-
+-/*
+- * Start the truncation of the file to new_size.  The new size
+- * must be smaller than the current size.  This routine will
+- * clear the buffer and page caches of file data in the removed
+- * range, and xfs_itruncate_finish() will remove the underlying
+- * disk blocks.
+- *
+- * The inode must have its I/O lock locked EXCLUSIVELY, and it
+- * must NOT have the inode lock held at all.  This is because we're
+- * calling into the buffer/page cache code and we can't hold the
+- * inode lock when we do so.
+- *
+- * We need to wait for any direct I/Os in flight to complete before we
+- * proceed with the truncate. This is needed to prevent the extents
+- * being read or written by the direct I/Os from being removed while the
+- * I/O is in flight as there is no other method of synchronising
+- * direct I/O with the truncate operation.  Also, because we hold
+- * the IOLOCK in exclusive mode, we prevent new direct I/Os from being
+- * started until the truncate completes and drops the lock. Essentially,
+- * the xfs_ioend_wait() call forms an I/O barrier that provides strict
+- * ordering between direct I/Os and the truncate operation.
+- *
+- * The flags parameter can have either the value XFS_ITRUNC_DEFINITE
+- * or XFS_ITRUNC_MAYBE.  The XFS_ITRUNC_MAYBE value should be used
+- * in the case that the caller is locking things out of order and
+- * may not be able to call xfs_itruncate_finish() with the inode lock
+- * held without dropping the I/O lock.  If the caller must drop the
+- * I/O lock before calling xfs_itruncate_finish(), then xfs_itruncate_start()
+- * must be called again with all the same restrictions as the initial
+- * call.
+- */
+-int
+-xfs_itruncate_start(
+-	xfs_inode_t	*ip,
+-	uint		flags,
+-	xfs_fsize_t	new_size)
+-{
+-	xfs_fsize_t	last_byte;
+-	xfs_off_t	toss_start;
+-	xfs_mount_t	*mp;
+-	int		error = 0;
+-
+-	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
+-	ASSERT((new_size == 0) || (new_size <= ip->i_size));
+-	ASSERT((flags == XFS_ITRUNC_DEFINITE) ||
+-	       (flags == XFS_ITRUNC_MAYBE));
+-
+-	mp = ip->i_mount;
+-
+-	/* wait for the completion of any pending DIOs */
+-	if (new_size == 0 || new_size < ip->i_size)
+-		xfs_ioend_wait(ip);
+-
 -	/*
--	 * There are stale entries.
--	 * We will use one of them for the new entry.
--	 * It's probably not at the right location, so we'll have to
--	 * shift some up or down first.
+-	 * Call toss_pages or flushinval_pages to get rid of pages
+-	 * overlapping the region being removed.  We have to use
+-	 * the less efficient flushinval_pages in the case that the
+-	 * caller may not be able to finish the truncate without
+-	 * dropping the inode's I/O lock.  Make sure
+-	 * to catch any pages brought in by buffers overlapping
+-	 * the EOF by searching out beyond the isize by our
+-	 * block size. We round new_size up to a block boundary
+-	 * so that we don't toss things on the same block as
+-	 * new_size but before it.
+-	 *
+-	 * Before calling toss_page or flushinval_pages, make sure to
+-	 * call remapf() over the same region if the file is mapped.
+-	 * This frees up mapped file references to the pages in the
+-	 * given range and for the flushinval_pages case it ensures
+-	 * that we get the latest mapped changes flushed out.
 -	 */
--	else {
+-	toss_start = XFS_B_TO_FSB(mp, (xfs_ufsize_t)new_size);
+-	toss_start = XFS_FSB_TO_B(mp, toss_start);
+-	if (toss_start < 0) {
 -		/*
--		 * If we didn't compact before, we need to find the nearest
--		 * stale entries before and after our insertion point.
+-		 * The place to start tossing is beyond our maximum
+-		 * file size, so there is no way that the data extended
+-		 * out there.
 -		 */
--		if (compact == 0) {
--			/*
--			 * Find the first stale entry before the insertion
--			 * point, if any.
--			 */
--			for (lowstale = index - 1;
--			     lowstale >= 0 &&
--				be32_to_cpu(leaf->ents[lowstale].address) !=
--				XFS_DIR2_NULL_DATAPTR;
--			     lowstale--)
--				continue;
--			/*
--			 * Find the next stale entry at or after the insertion
--			 * point, if any.   Stop if we go so far that the
--			 * lowstale entry would be better.
--			 */
--			for (highstale = index;
--			     highstale < be16_to_cpu(leaf->hdr.count) &&
--				be32_to_cpu(leaf->ents[highstale].address) !=
--				XFS_DIR2_NULL_DATAPTR &&
--				(lowstale < 0 ||
--				 index - lowstale - 1 >= highstale - index);
--			     highstale++)
--				continue;
--		}
--		/*
--		 * If the low one is better, use it.
--		 */
--		if (lowstale >= 0 &&
--		    (highstale == be16_to_cpu(leaf->hdr.count) ||
--		     index - lowstale - 1 < highstale - index)) {
--			ASSERT(index - lowstale - 1 >= 0);
--			ASSERT(be32_to_cpu(leaf->ents[lowstale].address) ==
--			       XFS_DIR2_NULL_DATAPTR);
--			/*
--			 * Copy entries up to cover the stale entry
--			 * and make room for the new entry.
--			 */
--			if (index - lowstale - 1 > 0)
--				memmove(&leaf->ents[lowstale],
--					&leaf->ents[lowstale + 1],
--					(index - lowstale - 1) * sizeof(*lep));
--			lep = &leaf->ents[index - 1];
--			lfloglow = MIN(lowstale, lfloglow);
--			lfloghigh = MAX(index - 1, lfloghigh);
--		}
--		/*
--		 * The high one is better, so use that one.
--		 */
--		else {
--			ASSERT(highstale - index >= 0);
--			ASSERT(be32_to_cpu(leaf->ents[highstale].address) ==
--			       XFS_DIR2_NULL_DATAPTR);
--			/*
--			 * Copy entries down to cover the stale entry
--			 * and make room for the new entry.
--			 */
--			if (highstale - index > 0)
--				memmove(&leaf->ents[index + 1],
--					&leaf->ents[index],
--					(highstale - index) * sizeof(*lep));
--			lep = &leaf->ents[index];
--			lfloglow = MIN(index, lfloglow);
--			lfloghigh = MAX(highstale, lfloghigh);
--		}
--		be16_add_cpu(&leaf->hdr.stale, -1);
+-		return 0;
 -	}
-+
-+
-+	lep = xfs_dir2_leaf_find_entry(leaf, index, compact, lowstale,
-+				       highstale, &lfloglow, &lfloghigh);
-+
- 	/*
- 	 * Fill in the new leaf entry.
- 	 */
-Index: xfs/fs/xfs/xfs_dir2_leaf.h
+-	last_byte = xfs_file_last_byte(ip);
+-	trace_xfs_itruncate_start(ip, new_size, flags, toss_start, last_byte);
+-	if (last_byte > toss_start) {
+-		if (flags & XFS_ITRUNC_DEFINITE) {
+-			xfs_tosspages(ip, toss_start,
+-					-1, FI_REMAPF_LOCKED);
+-		} else {
+-			error = xfs_flushinval_pages(ip, toss_start,
+-					-1, FI_REMAPF_LOCKED);
+-		}
+-	}
+-
+-#ifdef DEBUG
+-	if (new_size == 0) {
+-		ASSERT(VN_CACHED(VFS_I(ip)) == 0);
+-	}
+-#endif
+-	return error;
+-}
+-
+-/*
+- * Shrink the file to the given new_size.  The new size must be smaller than
+- * the current size.  This will free up the underlying blocks in the removed
+- * range after a call to xfs_itruncate_start() or xfs_atruncate_start().
++ * Free up the underlying blocks past new_size.  The new size must be
++ * smaller than the current size.
+  *
+  * The transaction passed to this routine must have made a permanent log
+  * reservation of at least XFS_ITRUNCATE_LOG_RES.  This routine may commit the
+@@ -1387,7 +1230,7 @@ xfs_itruncate_start(
+  * will be "held" within the returned transaction.  This routine does NOT
+  * require any disk space to be reserved for it within the transaction.
+  *
+- * The fork parameter must be either xfs_attr_fork or xfs_data_fork, and it
++ * The fork parameter must be either XFS_ATTR_FORK or XFS_DATA_FORK, and it
+  * indicates the fork which is to be truncated.  For the attribute fork we only
+  * support truncation to size 0.
+  *
+Index: xfs/fs/xfs/xfs_vnodeops.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_dir2_leaf.h	2011-06-22 21:56:26.119129649 +0200
-+++ xfs/fs/xfs/xfs_dir2_leaf.h	2011-06-23 12:40:42.889776728 +0200
-@@ -248,6 +248,9 @@ extern int xfs_dir2_leaf_search_hash(str
- 				     struct xfs_dabuf *lbp);
- extern int xfs_dir2_leaf_trim_data(struct xfs_da_args *args,
- 				   struct xfs_dabuf *lbp, xfs_dir2_db_t db);
-+extern xfs_dir2_leaf_entry_t *xfs_dir2_leaf_find_entry(xfs_dir2_leaf_t *, int,
-+						       int, int, int,
-+						       int *, int *);
- extern int xfs_dir2_node_to_leaf(struct xfs_da_state *state);
+--- xfs.orig/fs/xfs/xfs_vnodeops.c	2011-06-29 11:29:07.158281874 +0200
++++ xfs/fs/xfs/xfs_vnodeops.c	2011-06-29 11:29:11.888256249 +0200
+@@ -197,13 +197,6 @@ xfs_free_eofblocks(
+ 		 */
+ 		tp = xfs_trans_alloc(mp, XFS_TRANS_INACTIVE);
  
- #endif	/* __XFS_DIR2_LEAF_H__ */
-Index: xfs/fs/xfs/xfs_dir2_node.c
+-		/*
+-		 * Do the xfs_itruncate_start() call before
+-		 * reserving any log space because
+-		 * itruncate_start will call into the buffer
+-		 * cache and we can't
+-		 * do that within a transaction.
+-		 */
+ 		if (flags & XFS_FREE_EOF_TRYLOCK) {
+ 			if (!xfs_ilock_nowait(ip, XFS_IOLOCK_EXCL)) {
+ 				xfs_trans_cancel(tp, 0);
+@@ -212,13 +205,6 @@ xfs_free_eofblocks(
+ 		} else {
+ 			xfs_ilock(ip, XFS_IOLOCK_EXCL);
+ 		}
+-		error = xfs_itruncate_start(ip, XFS_ITRUNC_DEFINITE,
+-				    ip->i_size);
+-		if (error) {
+-			xfs_trans_cancel(tp, 0);
+-			xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+-			return error;
+-		}
+ 
+ 		error = xfs_trans_reserve(tp, 0,
+ 					  XFS_ITRUNCATE_LOG_RES(mp),
+@@ -660,20 +646,9 @@ xfs_inactive(
+ 
+ 	tp = xfs_trans_alloc(mp, XFS_TRANS_INACTIVE);
+ 	if (truncate) {
+-		/*
+-		 * Do the xfs_itruncate_start() call before
+-		 * reserving any log space because itruncate_start
+-		 * will call into the buffer cache and we can't
+-		 * do that within a transaction.
+-		 */
+ 		xfs_ilock(ip, XFS_IOLOCK_EXCL);
+ 
+-		error = xfs_itruncate_start(ip, XFS_ITRUNC_DEFINITE, 0);
+-		if (error) {
+-			xfs_trans_cancel(tp, 0);
+-			xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+-			return VN_INACTIVE_CACHE;
+-		}
++		xfs_ioend_wait(ip);
+ 
+ 		error = xfs_trans_reserve(tp, 0,
+ 					  XFS_ITRUNCATE_LOG_RES(mp),
+Index: xfs/fs/xfs/linux-2.6/xfs_trace.h
 ===================================================================
---- xfs.orig/fs/xfs/xfs_dir2_node.c	2011-06-22 21:56:26.089129649 +0200
-+++ xfs/fs/xfs/xfs_dir2_node.c	2011-06-23 12:40:42.919776727 +0200
-@@ -244,89 +244,14 @@ xfs_dir2_leafn_add(
- 		lfloglow = be16_to_cpu(leaf->hdr.count);
- 		lfloghigh = -1;
- 	}
--	/*
--	 * No stale entries, just insert a space for the new entry.
--	 */
--	if (!leaf->hdr.stale) {
--		lep = &leaf->ents[index];
--		if (index < be16_to_cpu(leaf->hdr.count))
--			memmove(lep + 1, lep,
--				(be16_to_cpu(leaf->hdr.count) - index) * sizeof(*lep));
--		lfloglow = index;
--		lfloghigh = be16_to_cpu(leaf->hdr.count);
--		be16_add_cpu(&leaf->hdr.count, 1);
--	}
--	/*
--	 * There are stale entries.  We'll use one for the new entry.
--	 */
--	else {
--		/*
--		 * If we didn't do a compact then we need to figure out
--		 * which stale entry will be used.
--		 */
--		if (compact == 0) {
--			/*
--			 * Find first stale entry before our insertion point.
--			 */
--			for (lowstale = index - 1;
--			     lowstale >= 0 &&
--				be32_to_cpu(leaf->ents[lowstale].address) !=
--				XFS_DIR2_NULL_DATAPTR;
--			     lowstale--)
--				continue;
--			/*
--			 * Find next stale entry after insertion point.
--			 * Stop looking if the answer would be worse than
--			 * lowstale already found.
--			 */
--			for (highstale = index;
--			     highstale < be16_to_cpu(leaf->hdr.count) &&
--				be32_to_cpu(leaf->ents[highstale].address) !=
--				XFS_DIR2_NULL_DATAPTR &&
--				(lowstale < 0 ||
--				 index - lowstale - 1 >= highstale - index);
--			     highstale++)
--				continue;
--		}
--		/*
--		 * Using the low stale entry.
--		 * Shift entries up toward the stale slot.
--		 */
--		if (lowstale >= 0 &&
--		    (highstale == be16_to_cpu(leaf->hdr.count) ||
--		     index - lowstale - 1 < highstale - index)) {
--			ASSERT(be32_to_cpu(leaf->ents[lowstale].address) ==
--			       XFS_DIR2_NULL_DATAPTR);
--			ASSERT(index - lowstale - 1 >= 0);
--			if (index - lowstale - 1 > 0)
--				memmove(&leaf->ents[lowstale],
--					&leaf->ents[lowstale + 1],
--					(index - lowstale - 1) * sizeof(*lep));
--			lep = &leaf->ents[index - 1];
--			lfloglow = MIN(lowstale, lfloglow);
--			lfloghigh = MAX(index - 1, lfloghigh);
--		}
--		/*
--		 * Using the high stale entry.
--		 * Shift entries down toward the stale slot.
--		 */
--		else {
--			ASSERT(be32_to_cpu(leaf->ents[highstale].address) ==
--			       XFS_DIR2_NULL_DATAPTR);
--			ASSERT(highstale - index >= 0);
--			if (highstale - index > 0)
--				memmove(&leaf->ents[index + 1],
--					&leaf->ents[index],
--					(highstale - index) * sizeof(*lep));
--			lep = &leaf->ents[index];
--			lfloglow = MIN(index, lfloglow);
--			lfloghigh = MAX(highstale, lfloghigh);
--		}
--		be16_add_cpu(&leaf->hdr.stale, -1);
--	}
-+
-+
- 	/*
- 	 * Insert the new entry, log everything.
- 	 */
-+	lep = xfs_dir2_leaf_find_entry(leaf, index, compact, lowstale,
-+				       highstale, &lfloglow, &lfloghigh);
-+
- 	lep->hashval = cpu_to_be32(args->hashval);
- 	lep->address = cpu_to_be32(xfs_dir2_db_off_to_dataptr(mp,
- 				args->blkno, args->index));
+--- xfs.orig/fs/xfs/linux-2.6/xfs_trace.h	2011-06-29 11:29:02.518307010 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_trace.h	2011-06-29 11:29:11.891589564 +0200
+@@ -1029,40 +1029,6 @@ DEFINE_SIMPLE_IO_EVENT(xfs_delalloc_enos
+ DEFINE_SIMPLE_IO_EVENT(xfs_unwritten_convert);
+ DEFINE_SIMPLE_IO_EVENT(xfs_get_blocks_notfound);
+ 
+-
+-TRACE_EVENT(xfs_itruncate_start,
+-	TP_PROTO(struct xfs_inode *ip, xfs_fsize_t new_size, int flag,
+-		 xfs_off_t toss_start, xfs_off_t toss_finish),
+-	TP_ARGS(ip, new_size, flag, toss_start, toss_finish),
+-	TP_STRUCT__entry(
+-		__field(dev_t, dev)
+-		__field(xfs_ino_t, ino)
+-		__field(xfs_fsize_t, size)
+-		__field(xfs_fsize_t, new_size)
+-		__field(xfs_off_t, toss_start)
+-		__field(xfs_off_t, toss_finish)
+-		__field(int, flag)
+-	),
+-	TP_fast_assign(
+-		__entry->dev = VFS_I(ip)->i_sb->s_dev;
+-		__entry->ino = ip->i_ino;
+-		__entry->size = ip->i_d.di_size;
+-		__entry->new_size = new_size;
+-		__entry->toss_start = toss_start;
+-		__entry->toss_finish = toss_finish;
+-		__entry->flag = flag;
+-	),
+-	TP_printk("dev %d:%d ino 0x%llx %s size 0x%llx new_size 0x%llx "
+-		  "toss start 0x%llx toss finish 0x%llx",
+-		  MAJOR(__entry->dev), MINOR(__entry->dev),
+-		  __entry->ino,
+-		  __print_flags(__entry->flag, "|", XFS_ITRUNC_FLAGS),
+-		  __entry->size,
+-		  __entry->new_size,
+-		  __entry->toss_start,
+-		  __entry->toss_finish)
+-);
+-
+ DECLARE_EVENT_CLASS(xfs_itrunc_class,
+ 	TP_PROTO(struct xfs_inode *ip, xfs_fsize_t new_size),
+ 	TP_ARGS(ip, new_size),
+Index: xfs/fs/xfs/xfs_inode.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_inode.h	2011-06-29 11:29:02.531640272 +0200
++++ xfs/fs/xfs/xfs_inode.h	2011-06-29 11:29:11.891589564 +0200
+@@ -458,16 +458,6 @@ static inline void xfs_ifunlock(xfs_inod
+ extern struct lock_class_key xfs_iolock_reclaimable;
+ 
+ /*
+- * Flags for xfs_itruncate_start().
+- */
+-#define	XFS_ITRUNC_DEFINITE	0x1
+-#define	XFS_ITRUNC_MAYBE	0x2
+-
+-#define XFS_ITRUNC_FLAGS \
+-	{ XFS_ITRUNC_DEFINITE,	"DEFINITE" }, \
+-	{ XFS_ITRUNC_MAYBE,	"MAYBE" }
+-
+-/*
+  * For multiple groups support: if S_ISGID bit is set in the parent
+  * directory, group of new file is set to that of the parent, and
+  * new subdirectory gets S_ISGID bit from parent.
+@@ -501,7 +491,6 @@ uint		xfs_ip2xflags(struct xfs_inode *);
+ uint		xfs_dic2xflags(struct xfs_dinode *);
+ int		xfs_ifree(struct xfs_trans *, xfs_inode_t *,
+ 			   struct xfs_bmap_free *);
+-int		xfs_itruncate_start(xfs_inode_t *, uint, xfs_fsize_t);
+ int		xfs_itruncate_finish(struct xfs_trans **, xfs_inode_t *,
+ 				     xfs_fsize_t, int, int);
+ int		xfs_iunlink(struct xfs_trans *, xfs_inode_t *);
 
 _______________________________________________
 xfs mailing list
