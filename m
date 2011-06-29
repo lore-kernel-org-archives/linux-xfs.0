@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5TE3doT104740 for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 09:03:39 -0500
+	p5TE3e8H104766 for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 09:03:40 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D31851D7DD2C
-	for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 07:03:37 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6CACE409E0
+	for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 07:03:39 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	uxvsRJFAeG0pRqVm for <xfs@oss.sgi.com>;
-	Wed, 29 Jun 2011 07:03:37 -0700 (PDT)
+	N2b2pwJDgMygfMMD for <xfs@oss.sgi.com>;
+	Wed, 29 Jun 2011 07:03:39 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1QbvMf-0008By-5W
-	for xfs@oss.sgi.com; Wed, 29 Jun 2011 14:03:37 +0000
-Message-Id: <20110629140337.137341800@bombadil.infradead.org>
-Date: Wed, 29 Jun 2011 10:01:13 -0400
+	Linux)) id 1QbvMg-0008Fa-ON
+	for xfs@oss.sgi.com; Wed, 29 Jun 2011 14:03:38 +0000
+Message-Id: <20110629140338.719775353@bombadil.infradead.org>
+Date: Wed, 29 Jun 2011 10:01:20 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 04/27] xfs: cleanup xfs_add_to_ioend
+Subject: [PATCH 11/27] xfs: fix filesystsem freeze race in xfs_trans_alloc
 References: <20110629140109.003209430@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-cleanup-xfs_add_to_ioend
+Content-Disposition: inline; filename=xfs-fix-freeze-race
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,90 +34,143 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Pass the writeback context to xfs_add_to_ioend to make the ioend
-chain manipulations self-contained in this function.
+As pointed out by Jan xfs_trans_alloc can race with a concurrent filesystem
+free when it sleeps during the memory allocation.  Fix this by moving the
+wait_for_freeze call after the memory allocation.  This means moving the
+freeze into the low-level _xfs_trans_alloc helper, which thus grows a new
+argument.  Also fix up some comments in that area while at it.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: linux-2.6/fs/xfs/linux-2.6/xfs_aops.c
+Index: xfs/fs/xfs/xfs_fsops.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/linux-2.6/xfs_aops.c	2011-04-28 11:22:42.747447011 +0200
-+++ linux-2.6/fs/xfs/linux-2.6/xfs_aops.c	2011-04-28 11:22:46.124095385 +0200
-@@ -560,39 +560,39 @@ xfs_cancel_ioend(
+--- xfs.orig/fs/xfs/xfs_fsops.c	2011-06-18 17:50:43.477373715 +0200
++++ xfs/fs/xfs/xfs_fsops.c	2011-06-20 09:17:00.933518761 +0200
+@@ -626,7 +626,7 @@ xfs_fs_log_dummy(
+ 	xfs_trans_t	*tp;
+ 	int		error;
+ 
+-	tp = _xfs_trans_alloc(mp, XFS_TRANS_DUMMY1, KM_SLEEP);
++	tp = _xfs_trans_alloc(mp, XFS_TRANS_DUMMY1, KM_SLEEP, false);
+ 	error = xfs_trans_reserve(tp, 0, mp->m_sb.sb_sectsize + 128, 0, 0,
+ 					XFS_DEFAULT_LOG_COUNT);
+ 	if (error) {
+Index: xfs/fs/xfs/xfs_iomap.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_iomap.c	2011-06-18 17:50:43.487373714 +0200
++++ xfs/fs/xfs/xfs_iomap.c	2011-06-20 09:17:00.933518761 +0200
+@@ -688,8 +688,7 @@ xfs_iomap_write_unwritten(
+ 		 * the same inode that we complete here and might deadlock
+ 		 * on the iolock.
+ 		 */
+-		xfs_wait_for_freeze(mp, SB_FREEZE_TRANS);
+-		tp = _xfs_trans_alloc(mp, XFS_TRANS_STRAT_WRITE, KM_NOFS);
++		tp = _xfs_trans_alloc(mp, XFS_TRANS_STRAT_WRITE, KM_NOFS, true);
+ 		tp->t_flags |= XFS_TRANS_RESERVE;
+ 		error = xfs_trans_reserve(tp, resblks,
+ 				XFS_WRITE_LOG_RES(mp), 0,
+Index: xfs/fs/xfs/xfs_trans.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_trans.h	2011-06-18 17:50:43.497373713 +0200
++++ xfs/fs/xfs/xfs_trans.h	2011-06-21 10:57:04.908840421 +0200
+@@ -447,8 +447,14 @@ typedef struct xfs_trans {
+ /*
+  * XFS transaction mechanism exported interfaces.
+  */
+-xfs_trans_t	*xfs_trans_alloc(struct xfs_mount *, uint);
+-xfs_trans_t	*_xfs_trans_alloc(struct xfs_mount *, uint, uint);
++xfs_trans_t	*_xfs_trans_alloc(struct xfs_mount *, uint, uint, bool);
++
++static inline struct xfs_trans *
++xfs_trans_alloc(struct xfs_mount *mp, uint type)
++{
++	return _xfs_trans_alloc(mp, type, KM_SLEEP, true);
++}
++
+ xfs_trans_t	*xfs_trans_dup(xfs_trans_t *);
+ int		xfs_trans_reserve(xfs_trans_t *, uint, uint, uint,
+ 				  uint, uint);
+Index: xfs/fs/xfs/xfs_mount.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_mount.c	2011-06-18 17:50:43.510707047 +0200
++++ xfs/fs/xfs/xfs_mount.c	2011-06-20 09:17:00.936852094 +0200
+@@ -1566,15 +1566,9 @@ xfs_fs_writable(xfs_mount_t *mp)
  }
  
  /*
-- * Test to see if we've been building up a completion structure for
-- * earlier buffers -- if so, we try to append to this ioend if we
-- * can, otherwise we finish off any current ioend and start another.
-- * Return true if we've finished the given ioend.
-+ * Test to see if we've been building up a completion structure for earlier
-+ * buffers -- if so, we try to append to this ioend if we can, otherwise we
-+ * finish off any current ioend and start another.
+- * xfs_log_sbcount
+- *
+  * Called either periodically to keep the on disk superblock values
+  * roughly up to date or from unmount to make sure the values are
+  * correct on a clean unmount.
+- *
+- * Note this code can be called during the process of freezing, so
+- * we may need to use the transaction allocator which does not not
+- * block when the transaction subsystem is in its frozen state.
   */
- STATIC void
- xfs_add_to_ioend(
-+	struct xfs_writeback_ctx *ctx,
- 	struct inode		*inode,
- 	struct buffer_head	*bh,
- 	xfs_off_t		offset,
- 	unsigned int		type,
--	xfs_ioend_t		**result,
- 	int			need_ioend)
+ int
+ xfs_log_sbcount(
+@@ -1596,7 +1590,13 @@ xfs_log_sbcount(
+ 	if (!xfs_sb_version_haslazysbcount(&mp->m_sb))
+ 		return 0;
+ 
+-	tp = _xfs_trans_alloc(mp, XFS_TRANS_SB_COUNT, KM_SLEEP);
++	/*
++	 * We can be called during the process of freezing, so make sure
++	 * we go ahead even if the frozen for new transactions.  We will
++	 * always use a sync transaction in the freeze path to make sure
++	 * the transaction has completed by the time we return.
++	 */
++	tp = _xfs_trans_alloc(mp, XFS_TRANS_SB_COUNT, KM_SLEEP, false);
+ 	error = xfs_trans_reserve(tp, 0, mp->m_sb.sb_sectsize + 128, 0, 0,
+ 					XFS_DEFAULT_LOG_COUNT);
+ 	if (error) {
+Index: xfs/fs/xfs/xfs_trans.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_trans.c	2011-06-18 17:50:43.524040379 +0200
++++ xfs/fs/xfs/xfs_trans.c	2011-06-21 10:56:25.305509042 +0200
+@@ -566,31 +566,24 @@ xfs_trans_init(
+ 
+ /*
+  * This routine is called to allocate a transaction structure.
++ *
+  * The type parameter indicates the type of the transaction.  These
+  * are enumerated in xfs_trans.h.
+- *
+- * Dynamically allocate the transaction structure from the transaction
+- * zone, initialize it, and return it to the caller.
+  */
+-xfs_trans_t *
+-xfs_trans_alloc(
+-	xfs_mount_t	*mp,
+-	uint		type)
+-{
+-	xfs_wait_for_freeze(mp, SB_FREEZE_TRANS);
+-	return _xfs_trans_alloc(mp, type, KM_SLEEP);
+-}
+-
+-xfs_trans_t *
++struct xfs_trans *
+ _xfs_trans_alloc(
+-	xfs_mount_t	*mp,
+-	uint		type,
+-	uint		memflags)
++	struct xfs_mount	*mp,
++	uint			type,
++	uint			memflags,
++	bool			wait_for_freeze)
  {
--	xfs_ioend_t		*ioend = *result;
-+	if (!ctx->ioend || need_ioend || type != ctx->ioend->io_type) {
-+		struct xfs_ioend	*new;
+-	xfs_trans_t	*tp;
++	struct xfs_trans	*tp;
  
--	if (!ioend || need_ioend || type != ioend->io_type) {
--		xfs_ioend_t	*previous = *result;
--
--		ioend = xfs_alloc_ioend(inode, type);
--		ioend->io_offset = offset;
--		ioend->io_buffer_head = bh;
--		ioend->io_buffer_tail = bh;
--		if (previous)
--			previous->io_list = ioend;
--		*result = ioend;
-+		new = xfs_alloc_ioend(inode, type);
-+		new->io_offset = offset;
-+		new->io_buffer_head = bh;
-+		new->io_buffer_tail = bh;
+ 	atomic_inc(&mp->m_active_trans);
+ 
++	if (wait_for_freeze)
++		xfs_wait_for_freeze(mp, SB_FREEZE_TRANS);
 +
-+		if (ctx->ioend)
-+			ctx->ioend->io_list = new;
-+		ctx->ioend = new;
-+		if (!ctx->iohead)
-+			ctx->iohead = new;
- 	} else {
--		ioend->io_buffer_tail->b_private = bh;
--		ioend->io_buffer_tail = bh;
-+		ctx->ioend->io_buffer_tail->b_private = bh;
-+		ctx->ioend->io_buffer_tail = bh;
- 	}
- 
- 	bh->b_private = NULL;
--	ioend->io_size += bh->b_size;
-+	ctx->ioend->io_size += bh->b_size;
- }
- 
- STATIC void
-@@ -874,14 +874,9 @@ __xfs_vm_writepage(
- 				xfs_map_at_offset(inode, bh, &ctx->imap,
- 						  offset);
- 			}
--			xfs_add_to_ioend(inode, bh, offset, type, &ctx->ioend,
--					 new_ioend);
-+			xfs_add_to_ioend(ctx, inode, bh, offset, type, new_ioend);
- 			count++;
- 		}
--
--		if (!ctx->iohead)
--			ctx->iohead = ctx->ioend;
--
- 	} while (offset += len, ((bh = bh->b_this_page) != head));
- 
- 	if (uptodate && bh == head)
+ 	tp = kmem_zone_zalloc(xfs_trans_zone, memflags);
+ 	tp->t_magic = XFS_TRANS_MAGIC;
+ 	tp->t_type = type;
 
 _______________________________________________
 xfs mailing list
