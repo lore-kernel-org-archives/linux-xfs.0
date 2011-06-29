@@ -1,31 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5TKXoKD140392 for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 15:33:51 -0500
-Received: from e1.ny.us.ibm.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6777741778
-	for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 13:33:49 -0700 (PDT)
-Received: from e1.ny.us.ibm.com (e1.ny.us.ibm.com [32.97.182.141]) by
-	cuda.sgi.com with ESMTP id h1YpRdlmBYWe7UDX for
-	<xfs@oss.sgi.com>; Wed, 29 Jun 2011 13:33:49 -0700 (PDT)
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e1.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p5TKLmA5028570
-	for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 16:21:48 -0400
-Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	p5TKXmvV054426 for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 16:33:48 -0400
-Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
-	by d01av01.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
-	p5TKXj9O000572 for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 16:33:47 -0400
-Subject: Re: [PATCH] xfs: replace bp->flags usage with predefined macros
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-In-Reply-To: <20110629063001.GA12554@infradead.org>
-References: <1309308784.5505.6214.camel@chandra-lucid.beaverton.ibm.com>
-	<20110629044616.GB1026@dastard> <20110629063001.GA12554@infradead.org>
-Date: Wed, 29 Jun 2011 13:33:43 -0700
-Message-ID: <1309379623.5505.6222.camel@chandra-lucid.beaverton.ibm.com>
-Mime-Version: 1.0
-Reply-To: sekharan@us.ibm.com
+	p5TLUdG6143963 for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 16:30:39 -0500
+Received: from mail1.slb.deg.dub.stisp.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with SMTP id AFAAE17801BF
+	for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 14:30:38 -0700 (PDT)
+Received: from mail1.slb.deg.dub.stisp.net (mail1.slb.deg.dub.stisp.net
+	[84.203.253.98]) by cuda.sgi.com with SMTP id HHfv9nNg5EBBBazF
+	for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 14:30:38 -0700 (PDT)
+Message-ID: <4E0B9955.3040905@draigBrady.com>
+Date: Wed, 29 Jun 2011 22:29:57 +0100
+From: =?ISO-8859-1?Q?P=E1draig_Brady?= <P@draigBrady.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH] xfstests 255: add a seek_data/seek_hole tester
+References: <1309275199-10801-1-git-send-email-josef@redhat.com>
+	<1309275199-10801-5-git-send-email-josef@redhat.com>
+	<20110629065306.GC1026@dastard>
+	<20110629074021.GA26086@infradead.org>
+	<4E0B019E.8080800@draigBrady.com> <4E0B60DE.50908@oracle.com>
+In-Reply-To: <4E0B60DE.50908@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,29 +27,50 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: XFS Mailing List <xfs@oss.sgi.com>, Alex Elder <aelder@sgi.com>
+To: Sunil Mushran <sunil.mushran@oracle.com>
+Cc: linux-btrfs@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, viro@ZenIV.linux.org.uk, linux-fsdevel@vger.kernel.org, Josef Bacik <josef@redhat.com>
 
-On Wed, 2011-06-29 at 02:30 -0400, Christoph Hellwig wrote:
-> On Wed, Jun 29, 2011 at 02:46:16PM +1000, Dave Chinner wrote:
-> > On Tue, Jun 28, 2011 at 05:53:04PM -0700, Chandra Seetharaman wrote:
-> > > Cleanup: Replace bp->flags usage with predefined macros.
-> > > 
-> > > Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
-> > 
-> > Christoph can correct me if I'm wrong, but I'm pretty sure his long term
-> > direction is to remove the XFS_BUF_* macros completely.
-> 
-> Yes, at least those that are simpler flags get/set/clear wrappers.
+On 29/06/11 18:29, Sunil Mushran wrote:
+> On 06/29/2011 03:42 AM, P=E1draig Brady wrote:
+>> There is the argument, that if this interface can distinguish
+>> these dirty unwritten extents, then why can't the fiemap interface too?
+>> The advantage of the fiemap interface is that it can distinguish
+>> empty extents vs holes. Empty extents will become increasingly common
+>> I think, given the fragmentation and space guarantee benefits they give.
+>> It would be cool for cp for example to be able to efficiently copy
+>> empty extents from source to dest.
+> =
 
-So, the suggestion is to go the other way and remove all the wrappers
-and use bp->flags directly ?
-> 
+> I'm not too sure about that. Atleast not enabled by default. Most users
+> use cp to backup data. Not empty space. In this case, this empty extent
+> may not even be de-dupable.
 
+That's a fair point. On the other hand if
+you wanted to start working with the backup copy,
+you might want it allocated to avoid fragmentation and ENOSPC issues.
+What we were going with was empty -> hole with cp --sparse=3Dalways
+and empty -> empty otherwise. If empty and hole can not be
+distinguished though, then this process will be impacted.
+
+> =
+
+> Frankly I'd be happier of cp started to exploited fallocate() to create
+> larger
+> extents before copying data into them. Atleast for the large files.
+
+Yes we definitely will start doing that.
+That will help fragmentation and give early ENOSPC.
+We can't use fiemap for this at the moment
+(on XSF or ext4 (without a sync))
+but the seek_data interface should allow us
+to do this to some extent (pardon the pun).
+
+cheers,
+P=E1draig.
 
 _______________________________________________
 xfs mailing list
