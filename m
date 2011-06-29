@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5TE3e6M104756 for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 09:03:40 -0500
+	p5TE3fFM104850 for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 09:03:42 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B9523409DD
-	for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 07:03:38 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B28DD1D7DD37
+	for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 07:03:40 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	wguBUwyx3SG42mF3 for <xfs@oss.sgi.com>;
-	Wed, 29 Jun 2011 07:03:38 -0700 (PDT)
+	EQVcCp0vnoAsVE0R for <xfs@oss.sgi.com>;
+	Wed, 29 Jun 2011 07:03:40 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1QbvMg-0008E2-4M
-	for xfs@oss.sgi.com; Wed, 29 Jun 2011 14:03:38 +0000
-Message-Id: <20110629140338.098991196@bombadil.infradead.org>
-Date: Wed, 29 Jun 2011 10:01:17 -0400
+	Linux)) id 1QbvMi-0008JC-3i
+	for xfs@oss.sgi.com; Wed, 29 Jun 2011 14:03:40 +0000
+Message-Id: <20110629140340.079801018@bombadil.infradead.org>
+Date: Wed, 29 Jun 2011 10:01:27 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 08/27] xfs: kill xfs_itruncate_start
+Subject: [PATCH 18/27] xfs: kill struct xfs_dir2_block
 References: <20110629140109.003209430@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-kill-xfs_itruncate_start
+Content-Disposition: inline; filename=xfs-kill-xfs_dir2_block_t
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,327 +34,197 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-xfs_itruncate_start is a rather length wrapper that evaluates to a call
-to xfs_ioend_wait and xfs_tosspages, and only has two callers.
-
-Instead of using the complicated checks left over from IRIX where we
-can to truncate the pagecache just call xfs_tosspages
-(aka truncate_inode_pages) directly as we want to get rid of all data
-after i_size, and truncate_inode_pages handles incorrect alignments
-and too large offsets just fine.
+Remove the confusing xfs_dir2_block structure.  It is supposed to describe
+an XFS dir2 block format btree block, but due to the variable sized nature
+of almost all elements in it it can't actuall do anything close to that
+job.  In addition to accessing the fixed offset header structure it was
+only used to get a pointer to the first dir or unused entry after it,
+which can be trivially replaced by pointer arithmetics on the header
+pointer.  For most users that is actually more natural anyway, as they
+don't use a typed pointer but rather a character pointer for further
+arithmetics.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-Index: xfs/fs/xfs/xfs_inode.c
+Index: xfs/fs/xfs/xfs_dir2_block.h
 ===================================================================
---- xfs.orig/fs/xfs/xfs_inode.c	2011-06-29 11:29:02.494973804 +0200
-+++ xfs/fs/xfs/xfs_inode.c	2011-06-29 11:29:11.888256249 +0200
-@@ -1217,165 +1217,8 @@ xfs_isize_check(
- #endif	/* DEBUG */
+--- xfs.orig/fs/xfs/xfs_dir2_block.h	2011-06-29 13:19:30.639066065 +0200
++++ xfs/fs/xfs/xfs_dir2_block.h	2011-06-29 13:22:03.604904045 +0200
+@@ -19,10 +19,30 @@
+ #define	__XFS_DIR2_BLOCK_H__
  
  /*
-- * Calculate the last possible buffered byte in a file.  This must
-- * include data that was buffered beyond the EOF by the write code.
-- * This also needs to deal with overflowing the xfs_fsize_t type
-- * which can happen for sizes near the limit.
-- *
-- * We also need to take into account any blocks beyond the EOF.  It
-- * may be the case that they were buffered by a write which failed.
-- * In that case the pages will still be in memory, but the inode size
-- * will never have been updated.
-- */
--STATIC xfs_fsize_t
--xfs_file_last_byte(
--	xfs_inode_t	*ip)
--{
--	xfs_mount_t	*mp;
--	xfs_fsize_t	last_byte;
--	xfs_fileoff_t	last_block;
--	xfs_fileoff_t	size_last_block;
--	int		error;
+- * xfs_dir2_block.h
+- * Directory version 2, single block format structures
++ * Directory version 2, single block format structures.
++ *
++ * The single block format looks like the following drawing on disk:
++ *
++ *    +-------------------------------------------------+
++ *    | xfs_dir2_data_hdr_t                             |
++ *    +-------------------------------------------------+
++ *    | xfs_dir2_data_entry_t OR xfs_dir2_data_unused_t |
++ *    | xfs_dir2_data_entry_t OR xfs_dir2_data_unused_t |
++ *    | xfs_dir2_data_entry_t OR xfs_dir2_data_unused_t |
++ *    | ...                                             |
++ *    +-------------------------------------------------+
++ *    | unused space                                    |
++ *    +-------------------------------------------------+
++ *    | ...                                             |
++ *    | xfs_dir2_leaf_entry_t                           |
++ *    | xfs_dir2_leaf_entry_t                           |
++ *    +-------------------------------------------------+
++ *    | xfs_dir2_block_tail_t                           |
++ *    +-------------------------------------------------+
++ *
++ * As all the entries are variable sized structures the accessors in this
++ * file and xfs_dir2_data.h need to be used to iterate over them.
+  */
 -
--	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL|XFS_IOLOCK_SHARED));
--
--	mp = ip->i_mount;
--	/*
--	 * Only check for blocks beyond the EOF if the extents have
--	 * been read in.  This eliminates the need for the inode lock,
--	 * and it also saves us from looking when it really isn't
--	 * necessary.
--	 */
--	if (ip->i_df.if_flags & XFS_IFEXTENTS) {
--		xfs_ilock(ip, XFS_ILOCK_SHARED);
--		error = xfs_bmap_last_offset(NULL, ip, &last_block,
--			XFS_DATA_FORK);
--		xfs_iunlock(ip, XFS_ILOCK_SHARED);
--		if (error) {
--			last_block = 0;
--		}
--	} else {
--		last_block = 0;
--	}
--	size_last_block = XFS_B_TO_FSB(mp, (xfs_ufsize_t)ip->i_size);
--	last_block = XFS_FILEOFF_MAX(last_block, size_last_block);
--
--	last_byte = XFS_FSB_TO_B(mp, last_block);
--	if (last_byte < 0) {
--		return XFS_MAXIOFFSET(mp);
--	}
--	last_byte += (1 << mp->m_writeio_log);
--	if (last_byte < 0) {
--		return XFS_MAXIOFFSET(mp);
--	}
--	return last_byte;
--}
--
+ struct uio;
+ struct xfs_dabuf;
+ struct xfs_da_args;
+@@ -32,14 +52,6 @@ struct xfs_inode;
+ struct xfs_mount;
+ struct xfs_trans;
+ 
 -/*
-- * Start the truncation of the file to new_size.  The new size
-- * must be smaller than the current size.  This routine will
-- * clear the buffer and page caches of file data in the removed
-- * range, and xfs_itruncate_finish() will remove the underlying
-- * disk blocks.
-- *
-- * The inode must have its I/O lock locked EXCLUSIVELY, and it
-- * must NOT have the inode lock held at all.  This is because we're
-- * calling into the buffer/page cache code and we can't hold the
-- * inode lock when we do so.
-- *
-- * We need to wait for any direct I/Os in flight to complete before we
-- * proceed with the truncate. This is needed to prevent the extents
-- * being read or written by the direct I/Os from being removed while the
-- * I/O is in flight as there is no other method of synchronising
-- * direct I/O with the truncate operation.  Also, because we hold
-- * the IOLOCK in exclusive mode, we prevent new direct I/Os from being
-- * started until the truncate completes and drops the lock. Essentially,
-- * the xfs_ioend_wait() call forms an I/O barrier that provides strict
-- * ordering between direct I/Os and the truncate operation.
-- *
-- * The flags parameter can have either the value XFS_ITRUNC_DEFINITE
-- * or XFS_ITRUNC_MAYBE.  The XFS_ITRUNC_MAYBE value should be used
-- * in the case that the caller is locking things out of order and
-- * may not be able to call xfs_itruncate_finish() with the inode lock
-- * held without dropping the I/O lock.  If the caller must drop the
-- * I/O lock before calling xfs_itruncate_finish(), then xfs_itruncate_start()
-- * must be called again with all the same restrictions as the initial
-- * call.
+- * The single block format is as follows:
+- * xfs_dir2_data_hdr_t structure
+- * xfs_dir2_data_entry_t and xfs_dir2_data_unused_t structures
+- * xfs_dir2_leaf_entry_t structures
+- * xfs_dir2_block_tail_t structure
 - */
--int
--xfs_itruncate_start(
--	xfs_inode_t	*ip,
--	uint		flags,
--	xfs_fsize_t	new_size)
--{
--	xfs_fsize_t	last_byte;
--	xfs_off_t	toss_start;
--	xfs_mount_t	*mp;
--	int		error = 0;
 -
--	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
--	ASSERT((new_size == 0) || (new_size <= ip->i_size));
--	ASSERT((flags == XFS_ITRUNC_DEFINITE) ||
--	       (flags == XFS_ITRUNC_MAYBE));
--
--	mp = ip->i_mount;
--
--	/* wait for the completion of any pending DIOs */
--	if (new_size == 0 || new_size < ip->i_size)
--		xfs_ioend_wait(ip);
--
--	/*
--	 * Call toss_pages or flushinval_pages to get rid of pages
--	 * overlapping the region being removed.  We have to use
--	 * the less efficient flushinval_pages in the case that the
--	 * caller may not be able to finish the truncate without
--	 * dropping the inode's I/O lock.  Make sure
--	 * to catch any pages brought in by buffers overlapping
--	 * the EOF by searching out beyond the isize by our
--	 * block size. We round new_size up to a block boundary
--	 * so that we don't toss things on the same block as
--	 * new_size but before it.
--	 *
--	 * Before calling toss_page or flushinval_pages, make sure to
--	 * call remapf() over the same region if the file is mapped.
--	 * This frees up mapped file references to the pages in the
--	 * given range and for the flushinval_pages case it ensures
--	 * that we get the latest mapped changes flushed out.
--	 */
--	toss_start = XFS_B_TO_FSB(mp, (xfs_ufsize_t)new_size);
--	toss_start = XFS_FSB_TO_B(mp, toss_start);
--	if (toss_start < 0) {
--		/*
--		 * The place to start tossing is beyond our maximum
--		 * file size, so there is no way that the data extended
--		 * out there.
--		 */
--		return 0;
--	}
--	last_byte = xfs_file_last_byte(ip);
--	trace_xfs_itruncate_start(ip, new_size, flags, toss_start, last_byte);
--	if (last_byte > toss_start) {
--		if (flags & XFS_ITRUNC_DEFINITE) {
--			xfs_tosspages(ip, toss_start,
--					-1, FI_REMAPF_LOCKED);
--		} else {
--			error = xfs_flushinval_pages(ip, toss_start,
--					-1, FI_REMAPF_LOCKED);
--		}
--	}
--
--#ifdef DEBUG
--	if (new_size == 0) {
--		ASSERT(VN_CACHED(VFS_I(ip)) == 0);
--	}
--#endif
--	return error;
--}
--
--/*
-- * Shrink the file to the given new_size.  The new size must be smaller than
-- * the current size.  This will free up the underlying blocks in the removed
-- * range after a call to xfs_itruncate_start() or xfs_atruncate_start().
-+ * Free up the underlying blocks past new_size.  The new size must be
-+ * smaller than the current size.
-  *
-  * The transaction passed to this routine must have made a permanent log
-  * reservation of at least XFS_ITRUNCATE_LOG_RES.  This routine may commit the
-@@ -1387,7 +1230,7 @@ xfs_itruncate_start(
-  * will be "held" within the returned transaction.  This routine does NOT
-  * require any disk space to be reserved for it within the transaction.
-  *
-- * The fork parameter must be either xfs_attr_fork or xfs_data_fork, and it
-+ * The fork parameter must be either XFS_ATTR_FORK or XFS_DATA_FORK, and it
-  * indicates the fork which is to be truncated.  For the attribute fork we only
-  * support truncation to size 0.
-  *
-Index: xfs/fs/xfs/xfs_vnodeops.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_vnodeops.c	2011-06-29 11:29:07.158281874 +0200
-+++ xfs/fs/xfs/xfs_vnodeops.c	2011-06-29 11:29:11.888256249 +0200
-@@ -197,13 +197,6 @@ xfs_free_eofblocks(
- 		 */
- 		tp = xfs_trans_alloc(mp, XFS_TRANS_INACTIVE);
+ #define	XFS_DIR2_BLOCK_MAGIC	0x58443242	/* XD2B: for one block dirs */
  
--		/*
--		 * Do the xfs_itruncate_start() call before
--		 * reserving any log space because
--		 * itruncate_start will call into the buffer
--		 * cache and we can't
--		 * do that within a transaction.
--		 */
- 		if (flags & XFS_FREE_EOF_TRYLOCK) {
- 			if (!xfs_ilock_nowait(ip, XFS_IOLOCK_EXCL)) {
- 				xfs_trans_cancel(tp, 0);
-@@ -212,13 +205,6 @@ xfs_free_eofblocks(
- 		} else {
- 			xfs_ilock(ip, XFS_IOLOCK_EXCL);
- 		}
--		error = xfs_itruncate_start(ip, XFS_ITRUNC_DEFINITE,
--				    ip->i_size);
--		if (error) {
--			xfs_trans_cancel(tp, 0);
--			xfs_iunlock(ip, XFS_IOLOCK_EXCL);
--			return error;
--		}
- 
- 		error = xfs_trans_reserve(tp, 0,
- 					  XFS_ITRUNCATE_LOG_RES(mp),
-@@ -660,20 +646,9 @@ xfs_inactive(
- 
- 	tp = xfs_trans_alloc(mp, XFS_TRANS_INACTIVE);
- 	if (truncate) {
--		/*
--		 * Do the xfs_itruncate_start() call before
--		 * reserving any log space because itruncate_start
--		 * will call into the buffer cache and we can't
--		 * do that within a transaction.
--		 */
- 		xfs_ilock(ip, XFS_IOLOCK_EXCL);
- 
--		error = xfs_itruncate_start(ip, XFS_ITRUNC_DEFINITE, 0);
--		if (error) {
--			xfs_trans_cancel(tp, 0);
--			xfs_iunlock(ip, XFS_IOLOCK_EXCL);
--			return VN_INACTIVE_CACHE;
--		}
-+		xfs_ioend_wait(ip);
- 
- 		error = xfs_trans_reserve(tp, 0,
- 					  XFS_ITRUNCATE_LOG_RES(mp),
-Index: xfs/fs/xfs/linux-2.6/xfs_trace.h
-===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_trace.h	2011-06-29 11:29:02.518307010 +0200
-+++ xfs/fs/xfs/linux-2.6/xfs_trace.h	2011-06-29 11:29:11.891589564 +0200
-@@ -1029,40 +1029,6 @@ DEFINE_SIMPLE_IO_EVENT(xfs_delalloc_enos
- DEFINE_SIMPLE_IO_EVENT(xfs_unwritten_convert);
- DEFINE_SIMPLE_IO_EVENT(xfs_get_blocks_notfound);
- 
--
--TRACE_EVENT(xfs_itruncate_start,
--	TP_PROTO(struct xfs_inode *ip, xfs_fsize_t new_size, int flag,
--		 xfs_off_t toss_start, xfs_off_t toss_finish),
--	TP_ARGS(ip, new_size, flag, toss_start, toss_finish),
--	TP_STRUCT__entry(
--		__field(dev_t, dev)
--		__field(xfs_ino_t, ino)
--		__field(xfs_fsize_t, size)
--		__field(xfs_fsize_t, new_size)
--		__field(xfs_off_t, toss_start)
--		__field(xfs_off_t, toss_finish)
--		__field(int, flag)
--	),
--	TP_fast_assign(
--		__entry->dev = VFS_I(ip)->i_sb->s_dev;
--		__entry->ino = ip->i_ino;
--		__entry->size = ip->i_d.di_size;
--		__entry->new_size = new_size;
--		__entry->toss_start = toss_start;
--		__entry->toss_finish = toss_finish;
--		__entry->flag = flag;
--	),
--	TP_printk("dev %d:%d ino 0x%llx %s size 0x%llx new_size 0x%llx "
--		  "toss start 0x%llx toss finish 0x%llx",
--		  MAJOR(__entry->dev), MINOR(__entry->dev),
--		  __entry->ino,
--		  __print_flags(__entry->flag, "|", XFS_ITRUNC_FLAGS),
--		  __entry->size,
--		  __entry->new_size,
--		  __entry->toss_start,
--		  __entry->toss_finish)
--);
--
- DECLARE_EVENT_CLASS(xfs_itrunc_class,
- 	TP_PROTO(struct xfs_inode *ip, xfs_fsize_t new_size),
- 	TP_ARGS(ip, new_size),
-Index: xfs/fs/xfs/xfs_inode.h
-===================================================================
---- xfs.orig/fs/xfs/xfs_inode.h	2011-06-29 11:29:02.531640272 +0200
-+++ xfs/fs/xfs/xfs_inode.h	2011-06-29 11:29:11.891589564 +0200
-@@ -458,16 +458,6 @@ static inline void xfs_ifunlock(xfs_inod
- extern struct lock_class_key xfs_iolock_reclaimable;
+ typedef struct xfs_dir2_block_tail {
+@@ -48,16 +60,6 @@ typedef struct xfs_dir2_block_tail {
+ } xfs_dir2_block_tail_t;
  
  /*
-- * Flags for xfs_itruncate_start().
+- * Generic single-block structure, for xfs_db.
 - */
--#define	XFS_ITRUNC_DEFINITE	0x1
--#define	XFS_ITRUNC_MAYBE	0x2
--
--#define XFS_ITRUNC_FLAGS \
--	{ XFS_ITRUNC_DEFINITE,	"DEFINITE" }, \
--	{ XFS_ITRUNC_MAYBE,	"MAYBE" }
+-typedef struct xfs_dir2_block {
+-	xfs_dir2_data_hdr_t	hdr;		/* magic XFS_DIR2_BLOCK_MAGIC */
+-	xfs_dir2_data_union_t	u[1];
+-	xfs_dir2_leaf_entry_t	leaf[1];
+-	xfs_dir2_block_tail_t	tail;
+-} xfs_dir2_block_t;
 -
 -/*
-  * For multiple groups support: if S_ISGID bit is set in the parent
-  * directory, group of new file is set to that of the parent, and
-  * new subdirectory gets S_ISGID bit from parent.
-@@ -501,7 +491,6 @@ uint		xfs_ip2xflags(struct xfs_inode *);
- uint		xfs_dic2xflags(struct xfs_dinode *);
- int		xfs_ifree(struct xfs_trans *, xfs_inode_t *,
- 			   struct xfs_bmap_free *);
--int		xfs_itruncate_start(xfs_inode_t *, uint, xfs_fsize_t);
- int		xfs_itruncate_finish(struct xfs_trans **, xfs_inode_t *,
- 				     xfs_fsize_t, int, int);
- int		xfs_iunlink(struct xfs_trans *, xfs_inode_t *);
+  * Pointer to the leaf header embedded in a data block (1-block format)
+  */
+ static inline xfs_dir2_block_tail_t *
+Index: xfs/fs/xfs/xfs_dir2_block.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_dir2_block.c	2011-06-29 13:19:30.649066010 +0200
++++ xfs/fs/xfs/xfs_dir2_block.c	2011-06-29 13:19:45.908983340 +0200
+@@ -437,7 +437,6 @@ xfs_dir2_block_getdents(
+ 	xfs_off_t		*offset,
+ 	filldir_t		filldir)
+ {
+-	xfs_dir2_block_t	*block;		/* directory block structure */
+ 	xfs_dir2_data_hdr_t	*hdr;		/* block header */
+ 	xfs_dabuf_t		*bp;		/* buffer for block */
+ 	xfs_dir2_block_tail_t	*btp;		/* block tail */
+@@ -471,14 +470,13 @@ xfs_dir2_block_getdents(
+ 	 * We'll skip entries before this.
+ 	 */
+ 	wantoff = xfs_dir2_dataptr_to_off(mp, *offset);
+-	block = bp->data;
+-	hdr = &block->hdr;
++	hdr = bp->data;
+ 	xfs_dir2_data_check(dp, bp);
+ 	/*
+ 	 * Set up values for the loop.
+ 	 */
+ 	btp = xfs_dir2_block_tail_p(mp, hdr);
+-	ptr = (char *)block->u;
++	ptr = (char *)(hdr + 1);
+ 	endptr = (char *)xfs_dir2_block_leaf_p(btp);
+ 
+ 	/*
+@@ -1020,7 +1018,6 @@ xfs_dir2_sf_to_block(
+ 	xfs_da_args_t		*args)		/* operation arguments */
+ {
+ 	xfs_dir2_db_t		blkno;		/* dir-relative block # (0) */
+-	xfs_dir2_block_t	*block;		/* block structure */
+ 	xfs_dir2_data_hdr_t	*hdr;		/* block header */
+ 	xfs_dir2_leaf_entry_t	*blp;		/* block leaf entries */
+ 	xfs_dabuf_t		*bp;		/* block buffer */
+@@ -1091,8 +1088,7 @@ xfs_dir2_sf_to_block(
+ 		kmem_free(sfp);
+ 		return error;
+ 	}
+-	block = bp->data;
+-	hdr = &block->hdr;
++	hdr = bp->data;
+ 	hdr->magic = cpu_to_be32(XFS_DIR2_BLOCK_MAGIC);
+ 	/*
+ 	 * Compute size of block "tail" area.
+@@ -1103,7 +1099,7 @@ xfs_dir2_sf_to_block(
+ 	 * The whole thing is initialized to free by the init routine.
+ 	 * Say we're using the leaf and tail area.
+ 	 */
+-	dup = (xfs_dir2_data_unused_t *)block->u;
++	dup = (xfs_dir2_data_unused_t *)(hdr + 1);
+ 	needlog = needscan = 0;
+ 	xfs_dir2_data_use_free(tp, bp, dup, mp->m_dirblksize - i, i, &needlog,
+ 		&needscan);
+Index: xfs/fs/xfs/xfs_dir2_sf.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_dir2_sf.c	2011-06-29 13:19:30.662399271 +0200
++++ xfs/fs/xfs/xfs_dir2_sf.c	2011-06-29 13:19:45.912316655 +0200
+@@ -230,7 +230,7 @@ xfs_dir2_block_to_sf(
+ 	int			size,		/* shortform directory size */
+ 	xfs_dir2_sf_hdr_t	*sfhp)		/* shortform directory hdr */
+ {
+-	xfs_dir2_block_t	*block;		/* block structure */
++	xfs_dir2_data_hdr_t	*hdr;		/* block header */
+ 	xfs_dir2_block_tail_t	*btp;		/* block tail pointer */
+ 	xfs_dir2_data_entry_t	*dep;		/* data entry pointer */
+ 	xfs_inode_t		*dp;		/* incore directory inode */
+@@ -252,8 +252,8 @@ xfs_dir2_block_to_sf(
+ 	 * Make a copy of the block data, so we can shrink the inode
+ 	 * and add local data.
+ 	 */
+-	block = kmem_alloc(mp->m_dirblksize, KM_SLEEP);
+-	memcpy(block, bp->data, mp->m_dirblksize);
++	hdr = kmem_alloc(mp->m_dirblksize, KM_SLEEP);
++	memcpy(hdr, bp->data, mp->m_dirblksize);
+ 	logflags = XFS_ILOG_CORE;
+ 	if ((error = xfs_dir2_shrink_inode(args, mp->m_dirdatablk, bp))) {
+ 		ASSERT(error != ENOSPC);
+@@ -281,8 +281,8 @@ xfs_dir2_block_to_sf(
+ 	/*
+ 	 * Set up to loop over the block's entries.
+ 	 */
+-	btp = xfs_dir2_block_tail_p(mp, &block->hdr);
+-	ptr = (char *)block->u;
++	btp = xfs_dir2_block_tail_p(mp, hdr);
++	ptr = (char *)(hdr + 1);
+ 	endptr = (char *)xfs_dir2_block_leaf_p(btp);
+ 	sfep = xfs_dir2_sf_firstentry(sfp);
+ 	/*
+@@ -318,7 +318,7 @@ xfs_dir2_block_to_sf(
+ 			sfep->namelen = dep->namelen;
+ 			xfs_dir2_sf_put_offset(sfep,
+ 				(xfs_dir2_data_aoff_t)
+-				((char *)dep - (char *)block));
++				((char *)dep - (char *)hdr));
+ 			memcpy(sfep->name, dep->name, dep->namelen);
+ 			xfs_dir2_sfe_put_ino(sfp, sfep,
+ 					     be64_to_cpu(dep->inumber));
+@@ -331,7 +331,7 @@ xfs_dir2_block_to_sf(
+ 	xfs_dir2_sf_check(args);
+ out:
+ 	xfs_trans_log_inode(args->trans, dp, logflags);
+-	kmem_free(block);
++	kmem_free(hdr);
+ 	return error;
+ }
+ 
 
 _______________________________________________
 xfs mailing list
