@@ -1,27 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5TF8Amx109123 for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 10:08:10 -0500
-Received: from firestarter.dermichi.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 572301D7DB49
-	for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 08:08:08 -0700 (PDT)
-Received: from firestarter.dermichi.com (firestarter.dermichi.com
-	[78.41.115.230]) by cuda.sgi.com with ESMTP id iTvTQ0MlNYDNpjnI
-	for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 08:08:08 -0700 (PDT)
-Received: from dermichi-2-pt.tunnel.tserv23.zrh1.ipv6.he.net
-	([2001:470:25:4f4::2])
-	by firestarter.dermichi.com with esmtpsa (TLSv1:CAMELLIA256-SHA:256)
-	(Exim 4.76) (envelope-from <mw@dermichi.com>) id 1QbwN4-0005s0-M8
-	for xfs@oss.sgi.com; Wed, 29 Jun 2011 17:08:06 +0200
-Message-ID: <4E0B3FD4.4090704@dermichi.com>
-Date: Wed, 29 Jun 2011 17:08:04 +0200
-From: Michael Weissenbacher <mw@dermichi.com>
-MIME-Version: 1.0
-Subject: Re: long hangs when deleting large directories (3.0-rc3)
-References: <20110621212201.GA1755@x4.trippels.de>	<20110621185701.GB1723@x4.trippels.de>	<20110622000449.GQ32466@dastard>	<20110622070647.GA1744@x4.trippels.de>	<20110622073047.GT32466@dastard>
-	<20110629043143.GA1026@dastard>	<20110629061954.GA1711@x4.trippels.de>	<20110629072446.GR561@dastard>	<20110629074127.GA1746@x4.trippels.de>	<20110629121001.GS561@dastard>
-	<20110629124814.GA1762@x4.trippels.de>
-In-Reply-To: <20110629124814.GA1762@x4.trippels.de>
+	p5TG4ltj117983 for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 11:04:47 -0500
+Received: from mx2.suse.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8C6EB1673493
+	for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 09:04:44 -0700 (PDT)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id NZEP2Ezo6MbCBqS8 for <xfs@oss.sgi.com>;
+	Wed, 29 Jun 2011 09:04:44 -0700 (PDT)
+Received: from relay2.suse.de (charybdis-ext.suse.de [195.135.221.2])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mx2.suse.de (Postfix) with ESMTP id C5B788AC33
+	for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 18:04:43 +0200 (CEST)
+From: Jan Kara <jack@suse.cz>
+Subject: [PATCH v3] xfstests: Improve test 219 to work with different
+	filesystems
+Date: Wed, 29 Jun 2011 18:04:40 +0200
+Message-Id: <1309363480-22268-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,27 +26,104 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: Jan Kara <jack@suse.cz>
 
-Hi Marcus / Dave!
-> 
-> This completely fixes the issue. As a bonus "rm -fr && sync" completes
-> much quicker now.
-> ...
-> So many thanks Dave. Your prompt help is very much appreciated.
-> 
-I just wanna add that i've seen these kinds of hangs too when removing
-directories with millions of files. My "solution" was to recreate the
-filesystem - which was several years old at that time. Looking forward
-to the fix. Thanks for the great work going on here - both for the
-in-depth investigation and the fix.
+Different filesystems account different amount of metadata in quota. Thus it is
+impractical to check for a particular amount of space occupied by a file
+because there is no right value. Change the test to verify whether the amount
+of space is between the expected amount of space and the expected amount +5%.
+The number of files is checked exactly as previously.
 
-cheers,
-Michael
+Signed-off-by: Jan Kara <jack@suse.cz>
+---
+ 219     |   25 +++++++++++++++++++++++--
+ 219.out |   18 ++----------------
+ 2 files changed, 25 insertions(+), 18 deletions(-)
+
+diff --git a/219 b/219
+index 836d703..ad4e64d 100755
+--- a/219
++++ b/219
+@@ -58,6 +58,23 @@ test_files()
+ 	done
+ }
+ 
++check_usage()
++{
++	wroteblocks=$1
++	wrotefiles=$2
++	read id exceed blocks bsoft bhard inodes isoft ihard
++	if [ "$blocks" -lt "$wroteblocks" ]; then
++		echo "Too few blocks used (type=$type)"
++	# Save 5% for overhead of metadata or different block size
++	elif [ "$blocks" -gt $((wroteblocks+wroteblocks/20)) ]; then
++		echo "Too many blocks used (type=$type)"
++	elif [ "$inodes" != "$wrotefiles" ]; then
++		echo "Bad number of inodes used (type=$type)"
++	else
++		echo "Usage OK (type=$type)"
++	fi
++}
++
+ test_accounting()
+ {
+ 	echo "### some controlled buffered, direct and mmapd IO (type=$type)"
+@@ -77,8 +94,12 @@ test_accounting()
+ 		$here/src/lstat64 $file | head -3 | _filter_scratch
+ 	done
+ 
+-	repquota -$type -n $SCRATCH_MNT  | grep -v "^#0" | _filter_scratch |
+-	awk '/^#/ { if (seen[$1]) next; seen[$1]++; } { print; }'
++	if [ $type == 'u' ]; then
++		id=$uid
++	else
++		id=$gid
++	fi
++	repquota -$type -n $SCRATCH_MNT  | grep "^#$id" | check_usage 144 3
+ }
+ 
+ # real QA test starts here
+diff --git a/219.out b/219.out
+index fadfafc..23ec57c 100644
+--- a/219.out
++++ b/219.out
+@@ -22,14 +22,7 @@ QA output created by 219
+   File: "SCRATCH_MNT/mmap"
+   Size: 49152        Filetype: Regular File
+   Mode: (0644/-rw-r--r--)         Uid: (1)  Gid: (2)
+-*** Report for user quotas on device SCRATCH_DEV
+-Block grace time: 7days; Inode grace time: 7days
+-                        Block limits                File limits
+-User            used    soft    hard  grace    used  soft  hard  grace
+-----------------------------------------------------------------------
+-#1        --     144       0       0              3     0     0       
+-
+-
++Usage OK (type=u)
+ 
+ ### test group accounting
+ 
+@@ -53,11 +46,4 @@ User            used    soft    hard  grace    used  soft  hard  grace
+   File: "SCRATCH_MNT/mmap"
+   Size: 49152        Filetype: Regular File
+   Mode: (0644/-rw-r--r--)         Uid: (1)  Gid: (2)
+-*** Report for group quotas on device SCRATCH_DEV
+-Block grace time: 7days; Inode grace time: 7days
+-                        Block limits                File limits
+-Group           used    soft    hard  grace    used  soft  hard  grace
+-----------------------------------------------------------------------
+-#2        --     144       0       0              3     0     0       
+-
+-
++Usage OK (type=g)
+-- 
+1.7.1
 
 _______________________________________________
 xfs mailing list
