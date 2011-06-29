@@ -1,25 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5T7eRpI065614 for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 02:40:29 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 97619343BA
-	for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 00:40:26 -0700 (PDT)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	jBty9xLF5gXEbZyV for <xfs@oss.sgi.com>;
-	Wed, 29 Jun 2011 00:40:26 -0700 (PDT)
-Date: Wed, 29 Jun 2011 03:40:21 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfstests 255: add a seek_data/seek_hole tester
-Message-ID: <20110629074021.GA26086@infradead.org>
-References: <1309275199-10801-1-git-send-email-josef@redhat.com>
-	<1309275199-10801-5-git-send-email-josef@redhat.com>
-	<20110629065306.GC1026@dastard>
+	p5T7Opk8064589 for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 02:24:51 -0500
+Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C7BF23DB08
+	for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 00:24:49 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	Xh8Hdr5ydbyhHcj3 for <xfs@oss.sgi.com>;
+	Wed, 29 Jun 2011 00:24:49 -0700 (PDT)
+Date: Wed, 29 Jun 2011 17:24:46 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: long hangs when deleting large directories (3.0-rc3)
+Message-ID: <20110629072446.GR561@dastard>
+References: <20110621212201.GA1755@x4.trippels.de>
+	<20110621185701.GB1723@x4.trippels.de>
+	<20110622000449.GQ32466@dastard>
+	<20110622070647.GA1744@x4.trippels.de>
+	<20110622073047.GT32466@dastard> <20110629043143.GA1026@dastard>
+	<20110629061954.GA1711@x4.trippels.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110629065306.GC1026@dastard>
+In-Reply-To: <20110629061954.GA1711@x4.trippels.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,42 +34,95 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-kernel@vger.kernel.org, Josef Bacik <josef@redhat.com>, xfs@oss.sgi.com, viro@ZenIV.linux.org.uk, linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org
+To: Markus Trippelsdorf <markus@trippelsdorf.de>
+Cc: xfs@oss.sgi.com
 
-On Wed, Jun 29, 2011 at 04:53:07PM +1000, Dave Chinner wrote:
-> On Tue, Jun 28, 2011 at 11:33:19AM -0400, Josef Bacik wrote:
-> > This is a test to make sure seek_data/seek_hole is acting like it does on
-> > Solaris.  It will check to see if the fs supports finding a hole or not and will
-> > adjust as necessary.
+On Wed, Jun 29, 2011 at 08:19:54AM +0200, Markus Trippelsdorf wrote:
+> On 2011.06.29 at 14:31 +1000, Dave Chinner wrote:
+> > On Wed, Jun 22, 2011 at 05:30:47PM +1000, Dave Chinner wrote:
+> > > Jun 22 08:53:09 x4 kernel: XFS (sdb1): ail: ooo splice, tail 0x12000156e7, item 0x12000156e6
+> > > Jun 22 08:53:09 x4 kernel: XFS (sdb1): ail: ooo splice, walked 15503 items      
+> > > .....
+> > > Jun 22 08:53:12 x4 kernel: XFS (sdb1): ail: ooo splice, tail 0x12000156e7, item 0x12000156e6
+> > > Jun 22 08:53:12 x4 kernel: XFS (sdb1): ail: ooo splice, walked 16945 items
+> > > 
+> > > Interesting is the LSN of the tail - it's only one sector further on
+> > > than the items being inserted. That's what I'd expect from a commit
+> > > record write race between two checkpoints. I'll have a deeper look
+> > > into whether this can be avoided later tonight and also whether I
+> > > can easily implement a "last insert cursor" easily so subsequent
+> > > inserts at the same LSN avoid the walk....
+> > 
+> > Ok, so here's a patch that does just this. I should probably also do
+> > a little bit of cleanup on the cursor code as well, but this avoids
+> > the repeated walks of the AIL to find the insert position.
+> > 
+> > Can you try it without the WQ changes you made, Marcus, and see if
+> > the interactivity problems go away?
 > 
-> So I just looked at this with an eye to validating an XFS
-> implementation, and I came up with this list of stuff that the test
-> does not cover that I'd need to test in some way:
+> Sorry to be the bringer of bad news, but this made things much worse:
 > 
-> 	- files with clean unwritten extents. Are they a hole or
-> 	  data? What's SEEK_DATA supposed to return on layout like
-> 	  hole-unwritten-data? i.e. needs to add fallocate to the
-> 	  picture...
->
-> 	- files with dirty unwritten extents (i.e. dirty in memory,
-> 	  not on disk). They are most definitely data, and most
-> 	  filesystems will need a separate lookup path to detect
-> 	  dirty unwritten ranges because the state is kept
-> 	  separately (page cache vs extent cache).  Plenty of scope
-> 	  for filesystem specific bugs here so needs a roubust test.
+> -------cpu0-usage--------------cpu1-usage--------------cpu2-usage--------------cpu3-usage------ --dsk/sdc-- ---system-- ---load-avg--- --dsk/sdc--
+> usr sys idl wai hiq siq:usr sys idl wai hiq siq:usr sys idl wai hiq siq:usr sys idl wai hiq siq| read  writ| int   csw | 1m   5m  15m |reads writs
+>   1   1  98   0   0   0:  0   1  99   0   0   0:  0   1  99   0   0   0:  0   1  99   0   0   0|   0     0 | 603   380 |0.66 0.55 0.28|   0     0 
+>   1   0  99   0   0   0:  1   0  99   0   0   0:  1  19  80   0   0   0:  0   0 100   0   0   0|   0     0 | 719   383 |0.66 0.55 0.28|   0     0 
+>   3   1  96   0   0   0:  3   1  96   0   0   0:  1  52  47   0   0   0:  0   0 100   0   0   0|   0  6464k|1847   919 |0.66 0.55 0.28|   0   202 
+>   2  13  85   0   0   0:  2   2  96   0   0   0:  1  56  43   0   0   0:  1  31  69   0   0   0|4096B  256k|1910  1280 |0.68 0.56 0.28|   1     8 
+> > 0   1  99   0   0   0:  0   0 100   0   0   0:  0   1  99   0   0   0:  0 100   0   0   0   0|   0     0 |1256   170 |0.68 0.56 0.28|   0     0 
+> > 0   1  99   0   0   0:  1   1  98   0   0   0:  1   0  99   0   0   0:  0  99   0   0   0   1|   0     0 |1395   229 |0.68 0.56 0.28|   0     0 
+> > 0   0 100   0   0   0:  0   0 100   0   0   0:  0   3  97   0   0   0:  0 100   0   0   0   0|   0   512B|1304   167 |0.68 0.56 0.28|   0     1 
+> > 1   1  98   0   0   0:  1   1  98   0   0   0:  0   0 100   0   0   0:  0  99   0   0   0   1|   0     0 |1211   146 |0.68 0.56 0.28|   0     0 
+> > 0   0 100   0   0   0:  0   0 100   0   0   0:  0   1  99   0   0   0:  0  97   0   0   0   3|   0     0 |1270   149 |0.87 0.60 0.30|   0     0 
+>   5   2  65  29   0   0:  2   3  95   0   0   0:  1   0  99   0   0   0:  2  24  72   0   0   1|   0  8866k|2654  2398 |0.87 0.60 0.30|   0   496 
+>   6   2  25  67   0   0:  3   1  59  37   0   0:  0   0 100   0   0   0:  4   4  92   0   0   0|   0  4554k|2224  2494 |0.87 0.60 0.30|   0   399 
+>   1   1  98   0   0   0:  0   0  83  17   0   0:  1   3  96   0   0   0:  0   1  99   0   0   0|   0  2270k|1079  1030 |0.87 0.60 0.30|   0   200 
+>   1   1  98   0   0   0:  1   1  98   0   0   0:  0   1  99   0   0   0:  1   0  99   0   0   0|   0  9216B| 713   567 |0.87 0.60 0.30|   0     2 
+>   0   0 100   0   0   0:  1   1  98   0   0   0:  0   0 100   0   0   0:  0   1  99   0   0   0|   0     0 | 492   386 |0.80 0.59 0.30|   0     0 
+> 
+> As you can see in the table above (resolution 1sec) the hang is now
+> 5-6 seconds long, instead of the 1-3 seconds seen before.
 
-The discussion leading up to the resurrection of SEEK_HOLE/SEEK_DATA
-was pretty much about that point.  The conclusion based on the Sun
-documentation and common sense was that SEEK_DATA may only consider
-unwritten extents as hole if the filesystem has a way to distinguish
-plain unwritten extents and those that have been dirtied.  Else it
-should be considered data.
+Interesting. I checked that the ordering was correct in each case
+adn that it was behaving correctly here.
 
-Testing for making sure dirty preallocated areas aren't wrongly
-reported sounds relatively easy, the rest falls into implementation
-details, which imho is fine.  Not reporting preallocated extents
-as holes just is a quality of implementation issue and not a bug.
+Can you add the following patch and send me the dmesg output over a
+hang? It will tell me where the cursor is being initialised and when
+it is being dropped, so should indicate if a specific insert chain
+is getting stuck or doing something stoopid.
+
+Cheers,
+
+Dave
+-- 
+Dave Chinner
+david@fromorbit.com
+
+---
+ fs/xfs/xfs_trans_ail.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
+
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index 272e7fa..a087cbb 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -234,6 +234,8 @@ xfs_trans_ail_cursor_done(
+ 	struct xfs_ail_cursor	*prev = NULL;
+ 	struct xfs_ail_cursor	*cur;
+ 
++	printk(KERN_WARNING "done cur %p, lip %p/0x%llx\n",
++		done, done->item, done->item ? done->item->li_lsn : 0);
+ 	done->item = NULL;
+ 	if (done == &ailp->xa_cursors)
+ 		return;
+@@ -323,6 +325,8 @@ __xfs_trans_ail_cursor_last(
+ 			break;
+ 	}
+ out:
++	printk(KERN_WARNING "last cur %p, init %d lsn 0x%llx, lip %p/0x%llx\n",
++		cur, do_init, lsn, lip, lip ? lip->li_lsn : 0);
+ 	if (cur)
+ 		cur->item = lip;
+ 	return lip;
 
 _______________________________________________
 xfs mailing list
