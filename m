@@ -1,27 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5U5Lhbk183988 for <xfs@oss.sgi.com>; Thu, 30 Jun 2011 00:21:43 -0500
-Received: from e5.ny.us.ibm.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 627664C28A6
-	for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 22:21:43 -0700 (PDT)
-Received: from e5.ny.us.ibm.com (e5.ny.us.ibm.com [32.97.182.145]) by
-	cuda.sgi.com with ESMTP id DyIS0hrZcLxnIXbA for
-	<xfs@oss.sgi.com>; Wed, 29 Jun 2011 22:21:43 -0700 (PDT)
-Received: from d01relay07.pok.ibm.com (d01relay07.pok.ibm.com [9.56.227.147])
-	by e5.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p5U4rOIT024160
-	for <xfs@oss.sgi.com>; Thu, 30 Jun 2011 00:53:24 -0400
+	p5U5LgIq183971 for <xfs@oss.sgi.com>; Thu, 30 Jun 2011 00:21:43 -0500
+Received: from e2.ny.us.ibm.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 77A91E53544
+	for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 22:21:41 -0700 (PDT)
+Received: from e2.ny.us.ibm.com (e2.ny.us.ibm.com [32.97.182.142]) by
+	cuda.sgi.com with ESMTP id lOro1mBpLNuK4EOB for
+	<xfs@oss.sgi.com>; Wed, 29 Jun 2011 22:21:41 -0700 (PDT)
+Received: from d01relay03.pok.ibm.com (d01relay03.pok.ibm.com [9.56.227.235])
+	by e2.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p5U50t9I028803
+	for <xfs@oss.sgi.com>; Thu, 30 Jun 2011 01:00:55 -0400
 Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay07.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	p5U5LgCO1585370
-	for <xfs@oss.sgi.com>; Thu, 30 Jun 2011 01:21:42 -0400
+	by d01relay03.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	p5U5LeB2125212 for <xfs@oss.sgi.com>; Thu, 30 Jun 2011 01:21:40 -0400
 Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
 	by d01av04.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
-	p5U5Lg1H031731 for <xfs@oss.sgi.com>; Thu, 30 Jun 2011 01:21:42 -0400
+	p5U5LeLs031688 for <xfs@oss.sgi.com>; Thu, 30 Jun 2011 01:21:40 -0400
 From: Allison Henderson <achender@linux.vnet.ibm.com>
-Subject: [PATCH 3/4 v3] XFS TESTS: Fix 252 Failure: Update 242 Golden Output
-Date: Wed, 29 Jun 2011 22:24:00 -0700
-Message-Id: <1309411441-2491-4-git-send-email-achender@linux.vnet.ibm.com>
+Subject: [PATCH 1/4 v3] XFS TESTS: Fix 252 Failure: Make 252 xfs only with MD5
+	checksum
+Date: Wed, 29 Jun 2011 22:23:58 -0700
+Message-Id: <1309411441-2491-2-git-send-email-achender@linux.vnet.ibm.com>
 In-Reply-To: <1309411441-2491-1-git-send-email-achender@linux.vnet.ibm.com>
 References: <1309411441-2491-1-git-send-email-achender@linux.vnet.ibm.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -40,99 +40,182 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 Cc: Allison Henderson <achender@linux.vnet.ibm.com>
 
-New filtered golden output for test 242. Another patch
-has been sumbitted that also modifies the 242 output, and
-this set has been adjusted to apply on top of it.
-
-This patch requires Christoph's
-"[PATCH] xfstests: update test 042 golden output" (06/20/2011)
+This patch modifies test 252 to run for only xfs, and also
+adds an md5 checksum to each of the punch hole tests
 
 Signed-off-by: Allison Henderson <achender@linux.vnet.ibm.com>
 ---
-:100644 100644 e69382c... 649ac04... M	242.out
- 242.out |   17 +++++++++++++++++
- 1 files changed, 17 insertions(+), 0 deletions(-)
+:100755 100755 5efa243... 441bed0... M	252
+:100644 100644 ddf63b0... c18f88a... M	common.punch
+ 252          |    2 +-
+ common.punch |   23 +++++++++++++++++++++++
+ 2 files changed, 24 insertions(+), 1 deletions(-)
 
-diff --git a/242.out b/242.out
-index e69382c..649ac04 100644
---- a/242.out
-+++ b/242.out
-@@ -3,58 +3,75 @@ QA output created by 242
- 0: [0..7]: hole
- 1: [8..23]: unwritten
- 2: [24..39]: hole
-+daa100df6e6711906b61c9ab5aa16032
- 	2. into allocated space
- 0: [0..7]: data
- 1: [8..23]: unwritten
- 2: [24..39]: data
-+cc58a7417c2d7763adc45b6fcd3fa024
- 	3. into unwritten space
- 0: [0..39]: unwritten
-+daa100df6e6711906b61c9ab5aa16032
- 	4. hole -> data
- 0: [0..7]: hole
- 1: [8..23]: unwritten
- 2: [24..31]: data
- 3: [32..39]: hole
-+cc63069677939f69a6e8f68cae6a6dac
- 	5. hole -> unwritten
- 0: [0..7]: hole
- 1: [8..31]: unwritten
- 2: [32..39]: hole
-+daa100df6e6711906b61c9ab5aa16032
- 	6. data -> hole
- 0: [0..7]: data
- 1: [8..23]: unwritten
- 2: [24..39]: hole
-+1b3779878366498b28c702ef88c4a773
- 	7. data -> unwritten
- 0: [0..7]: data
- 1: [8..31]: unwritten
- 2: [32..39]: hole
-+1b3779878366498b28c702ef88c4a773
- 	8. unwritten -> hole
- 0: [0..23]: unwritten
- 1: [24..39]: hole
-+daa100df6e6711906b61c9ab5aa16032
- 	9. unwritten -> data
- 0: [0..23]: unwritten
- 1: [24..31]: data
- 2: [32..39]: hole
-+cc63069677939f69a6e8f68cae6a6dac
- 	10. hole -> data -> hole
- 0: [0..7]: hole
- 1: [8..31]: unwritten
- 2: [32..39]: hole
-+daa100df6e6711906b61c9ab5aa16032
- 	11. data -> hole -> data
- 0: [0..7]: data
- 1: [8..31]: unwritten
- 2: [32..39]: data
-+f6aeca13ec49e5b266cd1c913cd726e3
- 	12. unwritten -> data -> unwritten
- 0: [0..39]: unwritten
-+daa100df6e6711906b61c9ab5aa16032
- 	13. data -> unwritten -> data
- 0: [0..7]: data
- 1: [8..31]: unwritten
- 2: [32..39]: data
-+f6aeca13ec49e5b266cd1c913cd726e3
- 	14. data -> hole @ EOF
- 0: [0..23]: data
- 1: [24..39]: unwritten
-+e1f024eedd27ea6b1c3e9b841c850404
- 	15. data -> hole @ 0
- 0: [0..15]: unwritten
- 1: [16..39]: data
-+eecb7aa303d121835de05028751d301c
- 	16. data -> cache cold ->hole
- 0: [0..15]: unwritten
- 1: [16..39]: data
-+eecb7aa303d121835de05028751d301c
- 	17. data -> hole in single block file
- 0: [0..7]: unwritten
-+56819989ef2d9f40785adce8c06b64d0
+diff --git a/252 b/252
+index 5efa243..441bed0 100755
+--- a/252
++++ b/252
+@@ -44,7 +44,7 @@ trap "_cleanup ; exit \$status" 0 1 2 3 15
+ . ./common.punch
+ 
+ # real QA test starts here
+-_supported_fs generic
++_supported_fs xfs 
+ _supported_os Linux
+ 
+ _require_xfs_io_falloc_punch
+diff --git a/common.punch b/common.punch
+index ddf63b0..c18f88a 100644
+--- a/common.punch
++++ b/common.punch
+@@ -218,6 +218,12 @@ _filter_fiemap()
+ 	_coalesce_extents
+ }
+ 
++# Prints the md5 checksum of a given file
++_md5_checksum()
++{
++	md5sum $1 | cut -d ' ' -f1
++}
++
+ _filter_bmap()
+ {
+ 	awk '
+@@ -305,6 +311,7 @@ _test_generic_punch()
+ 		-c "$zero_cmd 4k 8k" \
+ 		-c "$map_cmd -v" $testfile | $filter_cmd
+ 	[ $? -ne 0 ] && die_now
++	_md5_checksum $testfile
+ 
+ 	echo "	2. into allocated space"
+ 	if [ "$remove_testfile" ]; then
+@@ -315,6 +322,7 @@ _test_generic_punch()
+ 		-c "$zero_cmd 4k 8k" \
+ 		-c "$map_cmd -v" $testfile | $filter_cmd
+ 	[ $? -ne 0 ] && die_now
++	_md5_checksum $testfile
+ 
+ 	echo "	3. into unwritten space"
+ 	if [ "$remove_testfile" ]; then
+@@ -325,6 +333,7 @@ _test_generic_punch()
+ 		-c "$zero_cmd 4k 8k" \
+ 		-c "$map_cmd -v" $testfile | $filter_cmd
+ 	[ $? -ne 0 ] && die_now
++	_md5_checksum $testfile
+ 
+ 	echo "	4. hole -> data"
+ 	if [ "$remove_testfile" ]; then
+@@ -335,6 +344,7 @@ _test_generic_punch()
+ 		-c "$zero_cmd 4k 8k" \
+ 		-c "$map_cmd -v" $testfile | $filter_cmd
+ 	[ $? -ne 0 ] && die_now
++	_md5_checksum $testfile
+ 
+ 	echo "	5. hole -> unwritten"
+ 	if [ "$remove_testfile" ]; then
+@@ -345,6 +355,7 @@ _test_generic_punch()
+ 		-c "$zero_cmd 4k 8k" \
+ 		-c "$map_cmd -v" $testfile | $filter_cmd
+ 	[ $? -ne 0 ] && die_now
++	_md5_checksum $testfile
+ 
+ 	echo "	6. data -> hole"
+ 	if [ "$remove_testfile" ]; then
+@@ -355,6 +366,7 @@ _test_generic_punch()
+ 		-c "$zero_cmd 4k 8k" \
+ 		-c "$map_cmd -v" $testfile | $filter_cmd
+ 	[ $? -ne 0 ] && die_now
++	_md5_checksum $testfile
+ 
+ 	echo "	7. data -> unwritten"
+ 	if [ "$remove_testfile" ]; then
+@@ -366,6 +378,7 @@ _test_generic_punch()
+ 		-c "$zero_cmd 4k 8k" \
+ 		-c "$map_cmd -v" $testfile | $filter_cmd
+ 	[ $? -ne 0 ] && die_now
++	_md5_checksum $testfile
+ 
+ 	echo "	8. unwritten -> hole"
+ 	if [ "$remove_testfile" ]; then
+@@ -376,6 +389,7 @@ _test_generic_punch()
+ 		-c "$zero_cmd 4k 8k" \
+ 		-c "$map_cmd -v" $testfile | $filter_cmd
+ 	[ $? -ne 0 ] && die_now
++	_md5_checksum $testfile
+ 
+ 	echo "	9. unwritten -> data"
+ 	if [ "$remove_testfile" ]; then
+@@ -387,6 +401,7 @@ _test_generic_punch()
+ 		-c "$zero_cmd 4k 8k" \
+ 		-c "$map_cmd -v" $testfile | $filter_cmd
+ 	[ $? -ne 0 ] && die_now
++	_md5_checksum $testfile
+ 
+ 	echo "	10. hole -> data -> hole"
+ 	if [ "$remove_testfile" ]; then
+@@ -397,6 +412,7 @@ _test_generic_punch()
+ 		-c "$zero_cmd 4k 12k" \
+ 		-c "$map_cmd -v" $testfile | $filter_cmd
+ 	[ $? -ne 0 ] && die_now
++	_md5_checksum $testfile
+ 
+ 	echo "	11. data -> hole -> data"
+ 	if [ "$remove_testfile" ]; then
+@@ -410,6 +426,7 @@ _test_generic_punch()
+ 		-c "$zero_cmd 4k 12k" \
+ 		-c "$map_cmd -v" $testfile | $filter_cmd
+ 	[ $? -ne 0 ] && die_now
++	_md5_checksum $testfile
+ 
+ 	echo "	12. unwritten -> data -> unwritten"
+ 	if [ "$remove_testfile" ]; then
+@@ -421,6 +438,7 @@ _test_generic_punch()
+ 		-c "$zero_cmd 4k 12k" \
+ 		-c "$map_cmd -v" $testfile | $filter_cmd
+ 	[ $? -ne 0 ] && die_now
++	_md5_checksum $testfile
+ 
+ 	echo "	13. data -> unwritten -> data"
+ 	if [ "$remove_testfile" ]; then
+@@ -433,6 +451,7 @@ _test_generic_punch()
+ 		-c "$zero_cmd 4k 12k" \
+ 		-c "$map_cmd -v" $testfile | $filter_cmd
+ 	[ $? -ne 0 ] && die_now
++	_md5_checksum $testfile
+ 
+ 	echo "	14. data -> hole @ EOF"
+ 	rm -f $testfile
+@@ -441,6 +460,7 @@ _test_generic_punch()
+ 		-c "$zero_cmd 12k 8k" \
+ 		-c "$map_cmd -v" $testfile | $filter_cmd
+ 	[ $? -ne 0 ] && die_now
++	_md5_checksum $testfile
+ 
+ 	echo "	15. data -> hole @ 0"
+ 	if [ "$remove_testfile" ]; then
+@@ -451,6 +471,7 @@ _test_generic_punch()
+ 		-c "$zero_cmd 0k 8k" \
+ 		-c "$map_cmd -v" $testfile | $filter_cmd
+ 	[ $? -ne 0 ] && die_now
++	_md5_checksum $testfile
+ 
+ 	echo "	16. data -> cache cold ->hole"
+ 	if [ "$remove_testfile" ]; then
+@@ -470,6 +491,7 @@ _test_generic_punch()
+ 	diff $testfile $testfile.2
+ 	[ $? -ne 0 ] && die_now
+ 	rm -f $testfile.2
++	_md5_checksum $testfile
+ 
+ 	echo "	17. data -> hole in single block file"
+ 	if [ "$remove_testfile" ]; then
+@@ -481,5 +503,6 @@ _test_generic_punch()
+ 		-c "$zero_cmd 128 128" \
+ 		-c "$map_cmd -v" $testfile | $filter_cmd
+ 	[ $? -ne 0 ] && die_now
++	_md5_checksum $testfile
+ 
+ }
 -- 
 1.7.1
 
