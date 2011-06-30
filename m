@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5U1YESg163987 for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 20:34:14 -0500
+	p5U1R2pi163729 for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 20:27:03 -0500
 Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 90C5C4C2548
-	for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 18:34:12 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E901EE524B9
+	for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 18:27:01 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	VDPurO6rC4G51C07 for <xfs@oss.sgi.com>;
-	Wed, 29 Jun 2011 18:34:12 -0700 (PDT)
-Date: Thu, 30 Jun 2011 11:34:10 +1000
+	8iYE1Y6kGn5p1RWk for <xfs@oss.sgi.com>;
+	Wed, 29 Jun 2011 18:27:01 -0700 (PDT)
+Date: Thu, 30 Jun 2011 11:26:58 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 01/27] xfs: PF_FSTRANS should never be set in ->writepage
-Message-ID: <20110630013410.GW561@dastard>
+Subject: Re: [PATCH 02/27] xfs: remove the unused ilock_nowait codepath in
+	writepage
+Message-ID: <20110630012658.GV561@dastard>
 References: <20110629140109.003209430@bombadil.infradead.org>
-	<20110629140336.532726362@bombadil.infradead.org>
+	<20110629140336.717434334@bombadil.infradead.org>
+	<20110630001525.GU561@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110629140336.532726362@bombadil.infradead.org>
+In-Reply-To: <20110630001525.GU561@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,17 +35,37 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Wed, Jun 29, 2011 at 10:01:10AM -0400, Christoph Hellwig wrote:
-> Now that we reject direct reclaim in addition to always using GFP_NOFS
-> allocation there's no chance we'll ever end up in ->writepage with
-> PF_FSTRANS set.  Add a WARN_ON if we hit this case, and stop checking
-> if we'd actually need to start a transaction.
+On Thu, Jun 30, 2011 at 10:15:25AM +1000, Dave Chinner wrote:
+> On Wed, Jun 29, 2011 at 10:01:11AM -0400, Christoph Hellwig wrote:
+> > wbc->nonblocking is never set, so this whole code has been unreachable
+> > for a long time.  I'm also not sure it would make a lot of sense -
+> > we'd rather finish our writeout after a short wait for the ilock
+> > instead of cancelling the whole ioend.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Alex Elder <aelder@sgi.com>
+> The problem that the non-blocking code is trying to solve is only
+> obvious when the disk subsystem is fast enough to drive the flusher
+> thread to being CPU bound.
+> 
+> e.g. when you have a disk subsystem doing background writeback
+> 10GB/s and the flusher thread is put to sleep for 50ms while we wait
+> for the lock, it can now only push 9.5GB/s. If we just move on, then
+> we'll spend that 50ms doing useful work on another dirty inode
+> rather than sleeping onthis one and hence maintaining a 10GB/s
+> background write rate.
+> 
+> I'd suggest that the only thing that should be dropped is the
+> wbc->nonblocking check. Numbers would be good to validate that this
+> is still relevant, but I don't have a storage subsystem with enough
+> bandwidth to drive a flusher thread to being CPU bound...
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+I just confirmed that I don't have a fast enough storage system to
+test this - the flusher thread uses only ~15% of a CPU @ 800MB/s
+writeback, so I'd need somewhere above 5GB/s of throughput to see
+any sort of artifact from this change....
 
+Cheers,
+
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
