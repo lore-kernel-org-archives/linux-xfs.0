@@ -1,29 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5U5LgIq183971 for <xfs@oss.sgi.com>; Thu, 30 Jun 2011 00:21:43 -0500
-Received: from e2.ny.us.ibm.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 77A91E53544
-	for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 22:21:41 -0700 (PDT)
-Received: from e2.ny.us.ibm.com (e2.ny.us.ibm.com [32.97.182.142]) by
-	cuda.sgi.com with ESMTP id lOro1mBpLNuK4EOB for
-	<xfs@oss.sgi.com>; Wed, 29 Jun 2011 22:21:41 -0700 (PDT)
-Received: from d01relay03.pok.ibm.com (d01relay03.pok.ibm.com [9.56.227.235])
-	by e2.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p5U50t9I028803
-	for <xfs@oss.sgi.com>; Thu, 30 Jun 2011 01:00:55 -0400
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay03.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	p5U5LeB2125212 for <xfs@oss.sgi.com>; Thu, 30 Jun 2011 01:21:40 -0400
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
-	p5U5LeLs031688 for <xfs@oss.sgi.com>; Thu, 30 Jun 2011 01:21:40 -0400
-From: Allison Henderson <achender@linux.vnet.ibm.com>
-Subject: [PATCH 1/4 v3] XFS TESTS: Fix 252 Failure: Make 252 xfs only with MD5
-	checksum
-Date: Wed, 29 Jun 2011 22:23:58 -0700
-Message-Id: <1309411441-2491-2-git-send-email-achender@linux.vnet.ibm.com>
-In-Reply-To: <1309411441-2491-1-git-send-email-achender@linux.vnet.ibm.com>
-References: <1309411441-2491-1-git-send-email-achender@linux.vnet.ibm.com>
+	p5U6B8lp186126 for <xfs@oss.sgi.com>; Thu, 30 Jun 2011 01:11:09 -0500
+Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B9FD91E57017
+	for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 23:11:05 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	YMMYnvCSiDpBydmc for <xfs@oss.sgi.com>;
+	Wed, 29 Jun 2011 23:11:05 -0700 (PDT)
+Date: Thu, 30 Jun 2011 16:11:02 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 13/27] xfs: factor out xfs_dir2_leaf_find_entry
+Message-ID: <20110630061102.GG561@dastard>
+References: <20110629140109.003209430@bombadil.infradead.org>
+	<20110629140339.086201354@bombadil.infradead.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20110629140339.086201354@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,192 +26,197 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
-Cc: Allison Henderson <achender@linux.vnet.ibm.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-This patch modifies test 252 to run for only xfs, and also
-adds an md5 checksum to each of the punch hole tests
+On Wed, Jun 29, 2011 at 10:01:22AM -0400, Christoph Hellwig wrote:
+> Add a new xfs_dir2_leaf_find_entry helper to factor out some duplicate code
+> from xfs_dir2_leaf_addname xfs_dir2_leafn_add.  Found by Eric Sandeen using
+> an automated code duplication checked.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Signed-off-by: Allison Henderson <achender@linux.vnet.ibm.com>
----
-:100755 100755 5efa243... 441bed0... M	252
-:100644 100644 ddf63b0... c18f88a... M	common.punch
- 252          |    2 +-
- common.punch |   23 +++++++++++++++++++++++
- 2 files changed, 24 insertions(+), 1 deletions(-)
+Looks sane - a couple of minor whitespacy comments, otherwise:
 
-diff --git a/252 b/252
-index 5efa243..441bed0 100755
---- a/252
-+++ b/252
-@@ -44,7 +44,7 @@ trap "_cleanup ; exit \$status" 0 1 2 3 15
- . ./common.punch
- 
- # real QA test starts here
--_supported_fs generic
-+_supported_fs xfs 
- _supported_os Linux
- 
- _require_xfs_io_falloc_punch
-diff --git a/common.punch b/common.punch
-index ddf63b0..c18f88a 100644
---- a/common.punch
-+++ b/common.punch
-@@ -218,6 +218,12 @@ _filter_fiemap()
- 	_coalesce_extents
- }
- 
-+# Prints the md5 checksum of a given file
-+_md5_checksum()
-+{
-+	md5sum $1 | cut -d ' ' -f1
-+}
-+
- _filter_bmap()
- {
- 	awk '
-@@ -305,6 +311,7 @@ _test_generic_punch()
- 		-c "$zero_cmd 4k 8k" \
- 		-c "$map_cmd -v" $testfile | $filter_cmd
- 	[ $? -ne 0 ] && die_now
-+	_md5_checksum $testfile
- 
- 	echo "	2. into allocated space"
- 	if [ "$remove_testfile" ]; then
-@@ -315,6 +322,7 @@ _test_generic_punch()
- 		-c "$zero_cmd 4k 8k" \
- 		-c "$map_cmd -v" $testfile | $filter_cmd
- 	[ $? -ne 0 ] && die_now
-+	_md5_checksum $testfile
- 
- 	echo "	3. into unwritten space"
- 	if [ "$remove_testfile" ]; then
-@@ -325,6 +333,7 @@ _test_generic_punch()
- 		-c "$zero_cmd 4k 8k" \
- 		-c "$map_cmd -v" $testfile | $filter_cmd
- 	[ $? -ne 0 ] && die_now
-+	_md5_checksum $testfile
- 
- 	echo "	4. hole -> data"
- 	if [ "$remove_testfile" ]; then
-@@ -335,6 +344,7 @@ _test_generic_punch()
- 		-c "$zero_cmd 4k 8k" \
- 		-c "$map_cmd -v" $testfile | $filter_cmd
- 	[ $? -ne 0 ] && die_now
-+	_md5_checksum $testfile
- 
- 	echo "	5. hole -> unwritten"
- 	if [ "$remove_testfile" ]; then
-@@ -345,6 +355,7 @@ _test_generic_punch()
- 		-c "$zero_cmd 4k 8k" \
- 		-c "$map_cmd -v" $testfile | $filter_cmd
- 	[ $? -ne 0 ] && die_now
-+	_md5_checksum $testfile
- 
- 	echo "	6. data -> hole"
- 	if [ "$remove_testfile" ]; then
-@@ -355,6 +366,7 @@ _test_generic_punch()
- 		-c "$zero_cmd 4k 8k" \
- 		-c "$map_cmd -v" $testfile | $filter_cmd
- 	[ $? -ne 0 ] && die_now
-+	_md5_checksum $testfile
- 
- 	echo "	7. data -> unwritten"
- 	if [ "$remove_testfile" ]; then
-@@ -366,6 +378,7 @@ _test_generic_punch()
- 		-c "$zero_cmd 4k 8k" \
- 		-c "$map_cmd -v" $testfile | $filter_cmd
- 	[ $? -ne 0 ] && die_now
-+	_md5_checksum $testfile
- 
- 	echo "	8. unwritten -> hole"
- 	if [ "$remove_testfile" ]; then
-@@ -376,6 +389,7 @@ _test_generic_punch()
- 		-c "$zero_cmd 4k 8k" \
- 		-c "$map_cmd -v" $testfile | $filter_cmd
- 	[ $? -ne 0 ] && die_now
-+	_md5_checksum $testfile
- 
- 	echo "	9. unwritten -> data"
- 	if [ "$remove_testfile" ]; then
-@@ -387,6 +401,7 @@ _test_generic_punch()
- 		-c "$zero_cmd 4k 8k" \
- 		-c "$map_cmd -v" $testfile | $filter_cmd
- 	[ $? -ne 0 ] && die_now
-+	_md5_checksum $testfile
- 
- 	echo "	10. hole -> data -> hole"
- 	if [ "$remove_testfile" ]; then
-@@ -397,6 +412,7 @@ _test_generic_punch()
- 		-c "$zero_cmd 4k 12k" \
- 		-c "$map_cmd -v" $testfile | $filter_cmd
- 	[ $? -ne 0 ] && die_now
-+	_md5_checksum $testfile
- 
- 	echo "	11. data -> hole -> data"
- 	if [ "$remove_testfile" ]; then
-@@ -410,6 +426,7 @@ _test_generic_punch()
- 		-c "$zero_cmd 4k 12k" \
- 		-c "$map_cmd -v" $testfile | $filter_cmd
- 	[ $? -ne 0 ] && die_now
-+	_md5_checksum $testfile
- 
- 	echo "	12. unwritten -> data -> unwritten"
- 	if [ "$remove_testfile" ]; then
-@@ -421,6 +438,7 @@ _test_generic_punch()
- 		-c "$zero_cmd 4k 12k" \
- 		-c "$map_cmd -v" $testfile | $filter_cmd
- 	[ $? -ne 0 ] && die_now
-+	_md5_checksum $testfile
- 
- 	echo "	13. data -> unwritten -> data"
- 	if [ "$remove_testfile" ]; then
-@@ -433,6 +451,7 @@ _test_generic_punch()
- 		-c "$zero_cmd 4k 12k" \
- 		-c "$map_cmd -v" $testfile | $filter_cmd
- 	[ $? -ne 0 ] && die_now
-+	_md5_checksum $testfile
- 
- 	echo "	14. data -> hole @ EOF"
- 	rm -f $testfile
-@@ -441,6 +460,7 @@ _test_generic_punch()
- 		-c "$zero_cmd 12k 8k" \
- 		-c "$map_cmd -v" $testfile | $filter_cmd
- 	[ $? -ne 0 ] && die_now
-+	_md5_checksum $testfile
- 
- 	echo "	15. data -> hole @ 0"
- 	if [ "$remove_testfile" ]; then
-@@ -451,6 +471,7 @@ _test_generic_punch()
- 		-c "$zero_cmd 0k 8k" \
- 		-c "$map_cmd -v" $testfile | $filter_cmd
- 	[ $? -ne 0 ] && die_now
-+	_md5_checksum $testfile
- 
- 	echo "	16. data -> cache cold ->hole"
- 	if [ "$remove_testfile" ]; then
-@@ -470,6 +491,7 @@ _test_generic_punch()
- 	diff $testfile $testfile.2
- 	[ $? -ne 0 ] && die_now
- 	rm -f $testfile.2
-+	_md5_checksum $testfile
- 
- 	echo "	17. data -> hole in single block file"
- 	if [ "$remove_testfile" ]; then
-@@ -481,5 +503,6 @@ _test_generic_punch()
- 		-c "$zero_cmd 128 128" \
- 		-c "$map_cmd -v" $testfile | $filter_cmd
- 	[ $? -ne 0 ] && die_now
-+	_md5_checksum $testfile
- 
- }
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+
+> 
+> Index: xfs/fs/xfs/xfs_dir2_leaf.c
+> ===================================================================
+> --- xfs.orig/fs/xfs/xfs_dir2_leaf.c	2011-06-22 21:56:26.102462981 +0200
+> +++ xfs/fs/xfs/xfs_dir2_leaf.c	2011-06-23 12:41:51.716439911 +0200
+> @@ -152,6 +152,118 @@ xfs_dir2_block_to_leaf(
+>  	return 0;
+>  }
+>  
+> +xfs_dir2_leaf_entry_t *
+> +xfs_dir2_leaf_find_entry(
+> +	xfs_dir2_leaf_t		*leaf,		/* leaf structure */
+> +	int			index,		/* leaf table position */
+> +	int			compact,	/* need to compact leaves */
+> +	int			lowstale,	/* index of prev stale leaf */
+> +	int			highstale,	/* index of next stale leaf */
+> +	int			*lfloglow,	/* low leaf logging index */
+> +	int			*lfloghigh)	/* high leaf logging index */
+> +{
+> +	xfs_dir2_leaf_entry_t	*lep;		/* leaf entry table pointer */
+> +
+> +	if (!leaf->hdr.stale) {
+> +		/*
+> +		 * Now we need to make room to insert the leaf entry.
+> +		 *
+> +		 * If there are no stale entries, just insert a hole at index.
+> +		 */
+> +		lep = &leaf->ents[index];
+> +		if (index < be16_to_cpu(leaf->hdr.count))
+> +			memmove(lep + 1, lep,
+> +				(be16_to_cpu(leaf->hdr.count) - index) *
+> +				 sizeof(*lep));
+> +
+> +		/*
+> +		 * Record low and high logging indices for the leaf.
+> +		 */
+> +		*lfloglow = index;
+> +		*lfloghigh = be16_to_cpu(leaf->hdr.count);
+> +		be16_add_cpu(&leaf->hdr.count, 1);
+
+You could probably just return here, and that would remove the:
+
+> +	} else {
+
+and the indenting that the else branch causes.
+
+> +		/*
+> +		 * There are stale entries.
+> +		 *
+> +		 * We will use one of them for the new entry.  It's probably
+> +		 * not at the right location, so we'll have to shift some up
+> +		 * or down first.
+> +		 *
+> +		 * If we didn't compact before, we need to find the nearest
+> +		 * stale entries before and after our insertion point.
+> +		 */
+> +		if (compact == 0) {
+> +			/*
+> +			 * Find the first stale entry before the insertion
+> +			 * point, if any.
+> +			 */
+> +			for (lowstale = index - 1;
+> +			     lowstale >= 0 &&
+> +				be32_to_cpu(leaf->ents[lowstale].address) !=
+> +				XFS_DIR2_NULL_DATAPTR;
+> +			     lowstale--)
+> +				continue;
+> +			/*
+> +			 * Find the next stale entry at or after the insertion
+> +			 * point, if any.   Stop if we go so far that the
+> +			 * lowstale entry would be better.
+> +			 */
+> +			for (highstale = index;
+> +			     highstale < be16_to_cpu(leaf->hdr.count) &&
+> +				be32_to_cpu(leaf->ents[highstale].address) !=
+> +				XFS_DIR2_NULL_DATAPTR &&
+> +				(lowstale < 0 ||
+> +				 index - lowstale - 1 >= highstale - index);
+> +			     highstale++)
+> +				continue;
+> +		}
+> +		/*
+> +		 * If the low one is better, use it.
+> +		 */
+
+Line of whitespace before the comment.
+
+> +		if (lowstale >= 0 &&
+> +		    (highstale == be16_to_cpu(leaf->hdr.count) ||
+> +		     index - lowstale - 1 < highstale - index)) {
+> +			ASSERT(index - lowstale - 1 >= 0);
+> +			ASSERT(be32_to_cpu(leaf->ents[lowstale].address) ==
+> +			       XFS_DIR2_NULL_DATAPTR);
+> +			/*
+> +			 * Copy entries up to cover the stale entry
+> +			 * and make room for the new entry.
+> +			 */
+> +			if (index - lowstale - 1 > 0)
+> +				memmove(&leaf->ents[lowstale],
+> +					&leaf->ents[lowstale + 1],
+> +					(index - lowstale - 1) * sizeof(*lep));
+> +			lep = &leaf->ents[index - 1];
+> +			*lfloglow = MIN(lowstale, *lfloglow);
+> +			*lfloghigh = MAX(index - 1, *lfloghigh);
+> +
+> +		/*
+> +		 * The high one is better, so use that one.
+> +		 */
+> +		} else {
+
+I prefer comments inside the else branch...
+
+> +			ASSERT(highstale - index >= 0);
+> +			ASSERT(be32_to_cpu(leaf->ents[highstale].address) ==
+> +			       XFS_DIR2_NULL_DATAPTR);
+> +			/*
+> +			 * Copy entries down to cover the stale entry
+> +			 * and make room for the new entry.
+> +			 */
+> +			if (highstale - index > 0)
+> +				memmove(&leaf->ents[index + 1],
+> +					&leaf->ents[index],
+> +					(highstale - index) * sizeof(*lep));
+> +			lep = &leaf->ents[index];
+> +			*lfloglow = MIN(index, *lfloglow);
+> +			*lfloghigh = MAX(highstale, *lfloghigh);
+> +		}
+> +		be16_add_cpu(&leaf->hdr.stale, -1);
+> +	}
+> +
+> +	return lep;
+> +}
+> +
+>  /*
+>   * Add an entry to a leaf form directory.
+>   */
+> @@ -430,102 +542,11 @@ xfs_dir2_leaf_addname(
+.....
+> -		}
+> -		be16_add_cpu(&leaf->hdr.stale, -1);
+> -	}
+> +
+> +
+> +	lep = xfs_dir2_leaf_find_entry(leaf, index, compact, lowstale,
+> +				       highstale, &lfloglow, &lfloghigh);
+> +
+
+Only need one line of whitespace before the function call.
+
+.....
+> -			lep = &leaf->ents[index];
+> -			lfloglow = MIN(index, lfloglow);
+> -			lfloghigh = MAX(highstale, lfloghigh);
+> -		}
+> -		be16_add_cpu(&leaf->hdr.stale, -1);
+> -	}
+> +
+> +
+>  	/*
+>  	 * Insert the new entry, log everything.
+>  	 */
+> +	lep = xfs_dir2_leaf_find_entry(leaf, index, compact, lowstale,
+> +				       highstale, &lfloglow, &lfloghigh);
+> +
+
+Same for the whitespace before the comment.
+
+Cheers,
+
+Dave.
 -- 
-1.7.1
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
