@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p5U20Jjr164889 for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 21:00:19 -0500
+	p5U2iXFC166289 for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 21:44:33 -0500
 Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A74854C25CF
-	for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 19:00:17 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id AC7984C2739
+	for <xfs@oss.sgi.com>; Wed, 29 Jun 2011 19:44:31 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	cUyqOikSE5xpjGEz for <xfs@oss.sgi.com>;
-	Wed, 29 Jun 2011 19:00:17 -0700 (PDT)
-Date: Thu, 30 Jun 2011 12:00:13 +1000
+	DzID4BUJoQLpaL2e for <xfs@oss.sgi.com>;
+	Wed, 29 Jun 2011 19:44:31 -0700 (PDT)
+Date: Thu, 30 Jun 2011 12:44:28 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 03/27] xfs: use write_cache_pages for writeback clustering
-Message-ID: <20110630020013.GX561@dastard>
+Subject: Re: [PATCH 09/27] xfs: split xfs_itruncate_finish
+Message-ID: <20110630024428.GB561@dastard>
 References: <20110629140109.003209430@bombadil.infradead.org>
-	<20110629140336.950805096@bombadil.infradead.org>
+	<20110629140338.286808024@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110629140336.950805096@bombadil.infradead.org>
+In-Reply-To: <20110629140338.286808024@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,79 +33,77 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Wed, Jun 29, 2011 at 10:01:12AM -0400, Christoph Hellwig wrote:
-> Instead of implementing our own writeback clustering use write_cache_pages
-> to do it for us.  This means the guts of the current writepage implementation
-> become a new helper used both for implementing ->writepage and as a callback
-> to write_cache_pages for ->writepages.  A new struct xfs_writeback_ctx
-> is used to track block mapping state and the ioend chain over multiple
-> invocation of it.
+On Wed, Jun 29, 2011 at 10:01:18AM -0400, Christoph Hellwig wrote:
+> Split the guts of xfs_itruncate_finish that loop over the existing extents
+> and calls xfs_bunmapi on them into a new helper, xfs_itruncate_externs.
+> Make xfs_attr_inactive call it directly instead of xfs_itruncate_finish,
+> which allows to simplify the latter a lot, by only letting it deal with
+> the data fork.  As a result xfs_itruncate_finish is renamed to
+> xfs_itruncate_data to make its use case more obvious.
 > 
-> The advantage over the old code is that we avoid a double pagevec lookup,
-> and a more efficient handling of extent boundaries inside a page for
-> small blocksize filesystems, as well as having less XFS specific code.
+> Also remove the sync parameter from xfs_itruncate_data, which has been
+> unessecary since the introduction of the busy extent list in 2002, and
+> completely dead code since 2003 when the XFS_BMAPI_ASYNC parameter was
+> made a no-op.
+> 
+> I can't actually see why the xfs_attr_inactive needs to set the transaction
+> sync, but let's keep this patch simple and without changes in behaviour.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Yes, it should be, but I can't actually measure any noticable CPU
-usage difference @800MB/s writeback. The profiles change shape
-around the changed code, but overall cpu usage does not change. I
-think this is because the second pagevec lookup is pretty much free
-because the radix tree is already hot in cache when we do the second
-lookup...
+Overall, looks good. A few minor comments in line, but consider it
 
-> The downside is that we don't do writeback clustering when called from
-> kswapd anyore, but that is a case that should be avoided anyway.  Note
-> that we still convert the whole delalloc range from ->writepage, so
-> the on-disk allocation pattern is not affected.
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-All the more reason to ensure the mm subsystem doesn't do this....
+> +	struct xfs_mount	*mp = ip->i_mount;
+> +	struct xfs_trans	*ntp = *tpp;
+> +	xfs_bmap_free_t		free_list;
+> +	xfs_fsblock_t		first_block;
+> +	xfs_fileoff_t		first_unmap_block;
+> +	xfs_fileoff_t		last_block;
+> +	xfs_filblks_t		unmap_len;
+> +	int			committed;
+> +	int			error = 0;
+> +	int			done = 0;
+>  
+>  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_IOLOCK_EXCL));
+> -	ASSERT((new_size == 0) || (new_size <= ip->i_size));
+> -	ASSERT(*tp != NULL);
+> -	ASSERT((*tp)->t_flags & XFS_TRANS_PERM_LOG_RES);
+> -	ASSERT(ip->i_transp == *tp);
+> +	ASSERT(new_size == 0 || new_size <= ip->i_size);
 
-.....
->  error:
-> -	if (iohead)
-> -		xfs_cancel_ioend(iohead);
-> -
-> -	if (err == -EAGAIN)
-> -		goto redirty;
-> -
+If new_size == 0, then it will always be <= ip->i_size, so that's
+kind of a redundant check. I think this really should be two
+different asserts, one that validates the data fork new_size range,
+and one that validates the attr fork truncate to zero length only
+condition:
 
-Should this EAGAIN handling be dealt with in the removing-the-non-
-blocking-mode patch?
+	ASSERT(new_size <= ip->i_size);
+	ASSERT(whichfork != XFS_ATTR_FORK || new_size == 0);
 
-> +STATIC int
->  xfs_vm_writepages(
->  	struct address_space	*mapping,
->  	struct writeback_control *wbc)
->  {
-> +	struct xfs_writeback_ctx ctx = { };
-> +	int ret;
-> +
->  	xfs_iflags_clear(XFS_I(mapping->host), XFS_ITRUNCATED);
-> -	return generic_writepages(mapping, wbc);
-> +
-> +	ret = write_cache_pages(mapping, wbc, __xfs_vm_writepage, &ctx);
-> +
-> +	if (ctx.iohead) {
-> +		if (ret)
-> +			xfs_cancel_ioend(ctx.iohead);
-> +		else
-> +			xfs_submit_ioend(wbc, ctx.iohead);
-> +	}
 
-I think this error handling does not work. If we have put pages into
-the ioend (i.e. successful ->writepage calls) and then have a
-->writepage call fail, we'll get all the pages under writeback (i.e.
-those on the ioend) remain in that state, and not ever get written
-back (so move into the clean state) or redirtied (so written again
-later)
+> @@ -1464,15 +1311,16 @@ xfs_itruncate_finish(
+>  		}
+>  
+>  		ntp = xfs_trans_dup(ntp);
+> -		error = xfs_trans_commit(*tp, 0);
+> -		*tp = ntp;
+> +		error = xfs_trans_commit(*tpp, 0);
+> +		*tpp = ntp;
 
-xfs_cancel_ioend() was only ever called for the first page sent down
-to ->writepage, and on error that page was redirtied separately.
-Hence it doesn't handle this case at all as it never occurs in the
-existing code.
+I've always found this a mess to follow which transaction is which
+because of the rewriting of ntp. This is easier to follow:
 
-I'd suggest that regardless of whether an error is returned here,
-the existence of ctx.iohead indicates a valid ioend that needs to be
-submitted....
+		ntp = xfs_trans_dup(*tpp);
+		error = xfs_trans_commit(*tpp, 0);
+		*tpp = ntp;
+
+Now it's clear that we are duplicating *tpp, then committing it, and
+then setting it to the duplicated transaction. Now I don't have to
+go look at all the surrounding code to remind myself what ntp
+contains to validate that the fragment of code is doing the right
+thing.....
 
 Cheers,
 
