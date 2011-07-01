@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p619k5Nh056038 for <xfs@oss.sgi.com>; Fri, 1 Jul 2011 04:46:06 -0500
+	p619k9t0056154 for <xfs@oss.sgi.com>; Fri, 1 Jul 2011 04:46:09 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0E897466A1
-	for <xfs@oss.sgi.com>; Fri,  1 Jul 2011 02:46:04 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CAF3F1EE3239
+	for <xfs@oss.sgi.com>; Fri,  1 Jul 2011 02:46:07 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	wh5RbfXRhvoVS5jR for <xfs@oss.sgi.com>;
-	Fri, 01 Jul 2011 02:46:04 -0700 (PDT)
+	oFIQyawyde3wJ21C for <xfs@oss.sgi.com>;
+	Fri, 01 Jul 2011 02:46:07 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1QcaIW-0001uf-Eg
-	for xfs@oss.sgi.com; Fri, 01 Jul 2011 09:46:04 +0000
-Message-Id: <20110701094604.425053359@bombadil.infradead.org>
-Date: Fri, 01 Jul 2011 05:43:31 -0400
+	Linux)) id 1QcaIZ-00021w-6F
+	for xfs@oss.sgi.com; Fri, 01 Jul 2011 09:46:07 +0000
+Message-Id: <20110701094607.155544131@bombadil.infradead.org>
+Date: Fri, 01 Jul 2011 05:43:45 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 10/27] xfs: remove i_transp
+Subject: [PATCH 24/27] xfs: clean up buffer locking helpers
 References: <20110701094321.936534538@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-kill-i_transp
+Content-Disposition: inline; filename=xfs-cleanup-buffer-locking
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,259 +34,336 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Remove the transaction pointer in the inode.  It's only used to avoid
-passing down an argument in the bmap code, and for a few asserts in
-the transaction code right now.
+Rename xfs_buf_cond_lock and reverse it's return value to fit most other
+trylock operations in the Kernel and XFS (with the exception of down_trylock,
+after which xfs_buf_cond_lock was modelled), and replace xfs_buf_lock_val
+with an xfs_buf_islocked for use in asserts, or and opencoded variant in
+tracing.  remove the XFS_BUF_* wrappers for all the locking helpers.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-Index: xfs/fs/xfs/quota/xfs_trans_dquot.c
+Index: xfs/fs/xfs/linux-2.6/xfs_buf.c
 ===================================================================
---- xfs.orig/fs/xfs/quota/xfs_trans_dquot.c	2011-06-29 19:45:24.000000000 +0200
-+++ xfs/fs/xfs/quota/xfs_trans_dquot.c	2011-06-30 09:16:44.710083825 +0200
-@@ -59,7 +59,7 @@ xfs_trans_dqjoin(
- 	xfs_trans_add_item(tp, &dqp->q_logitem.qli_item);
+--- xfs.orig/fs/xfs/linux-2.6/xfs_buf.c	2011-06-29 11:26:14.000000000 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_buf.c	2011-06-29 13:57:15.596795734 +0200
+@@ -499,16 +499,14 @@ found:
+ 	spin_unlock(&pag->pag_buf_lock);
+ 	xfs_perag_put(pag);
+ 
+-	if (xfs_buf_cond_lock(bp)) {
+-		/* failed, so wait for the lock if requested. */
+-		if (!(flags & XBF_TRYLOCK)) {
+-			xfs_buf_lock(bp);
+-			XFS_STATS_INC(xb_get_locked_waited);
+-		} else {
++	if (!xfs_buf_trylock(bp)) {
++		if (flags & XBF_TRYLOCK) {
+ 			xfs_buf_rele(bp);
+ 			XFS_STATS_INC(xb_busy_locked);
+ 			return NULL;
+ 		}
++		xfs_buf_lock(bp);
++		XFS_STATS_INC(xb_get_locked_waited);
+ 	}
  
  	/*
--	 * Initialize i_transp so we can later determine if this dquot is
-+	 * Initialize d_transp so we can later determine if this dquot is
- 	 * associated with this transaction.
- 	 */
- 	dqp->q_transp = tp;
-Index: xfs/fs/xfs/xfs_bmap.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_bmap.c	2011-06-29 19:45:24.000000000 +0200
-+++ xfs/fs/xfs/xfs_bmap.c	2011-06-30 09:16:44.713417161 +0200
-@@ -94,6 +94,7 @@ xfs_bmap_add_attrfork_local(
+@@ -896,8 +894,8 @@ xfs_buf_rele(
+  *	to push on stale inode buffers.
   */
- STATIC int				/* error */
- xfs_bmap_add_extent_delay_real(
-+	struct xfs_trans	*tp,	/* transaction pointer */
- 	xfs_inode_t		*ip,	/* incore inode pointer */
- 	xfs_extnum_t		*idx,	/* extent number to update/insert */
- 	xfs_btree_cur_t		**curp,	/* if *curp is null, not a btree */
-@@ -439,6 +440,7 @@ xfs_bmap_add_attrfork_local(
-  */
- STATIC int				/* error */
- xfs_bmap_add_extent(
-+	struct xfs_trans	*tp,	/* transaction pointer */
- 	xfs_inode_t		*ip,	/* incore inode pointer */
- 	xfs_extnum_t		*idx,	/* extent number to update/insert */
- 	xfs_btree_cur_t		**curp,	/* if *curp is null, not a btree */
-@@ -524,7 +526,7 @@ xfs_bmap_add_extent(
- 				if (cur)
- 					ASSERT(cur->bc_private.b.flags &
- 						XFS_BTCUR_BPRV_WASDEL);
--				error = xfs_bmap_add_extent_delay_real(ip,
-+				error = xfs_bmap_add_extent_delay_real(tp, ip,
- 						idx, &cur, new, &da_new,
- 						first, flist, &logflags);
- 			} else {
-@@ -561,7 +563,7 @@ xfs_bmap_add_extent(
- 		int	tmp_logflags;	/* partial log flag return val */
- 
- 		ASSERT(cur == NULL);
--		error = xfs_bmap_extents_to_btree(ip->i_transp, ip, first,
-+		error = xfs_bmap_extents_to_btree(tp, ip, first,
- 			flist, &cur, da_old > 0, &tmp_logflags, whichfork);
- 		logflags |= tmp_logflags;
- 		if (error)
-@@ -604,6 +606,7 @@ done:
-  */
- STATIC int				/* error */
- xfs_bmap_add_extent_delay_real(
-+	struct xfs_trans	*tp,	/* transaction pointer */
- 	xfs_inode_t		*ip,	/* incore inode pointer */
- 	xfs_extnum_t		*idx,	/* extent number to update/insert */
- 	xfs_btree_cur_t		**curp,	/* if *curp is null, not a btree */
-@@ -901,7 +904,7 @@ xfs_bmap_add_extent_delay_real(
- 		}
- 		if (ip->i_d.di_format == XFS_DINODE_FMT_EXTENTS &&
- 		    ip->i_d.di_nextents > ip->i_df.if_ext_max) {
--			error = xfs_bmap_extents_to_btree(ip->i_transp, ip,
-+			error = xfs_bmap_extents_to_btree(tp, ip,
- 					first, flist, &cur, 1, &tmp_rval,
- 					XFS_DATA_FORK);
- 			rval |= tmp_rval;
-@@ -984,7 +987,7 @@ xfs_bmap_add_extent_delay_real(
- 		}
- 		if (ip->i_d.di_format == XFS_DINODE_FMT_EXTENTS &&
- 		    ip->i_d.di_nextents > ip->i_df.if_ext_max) {
--			error = xfs_bmap_extents_to_btree(ip->i_transp, ip,
-+			error = xfs_bmap_extents_to_btree(tp, ip,
- 				first, flist, &cur, 1, &tmp_rval,
- 				XFS_DATA_FORK);
- 			rval |= tmp_rval;
-@@ -1052,7 +1055,7 @@ xfs_bmap_add_extent_delay_real(
- 		}
- 		if (ip->i_d.di_format == XFS_DINODE_FMT_EXTENTS &&
- 		    ip->i_d.di_nextents > ip->i_df.if_ext_max) {
--			error = xfs_bmap_extents_to_btree(ip->i_transp, ip,
-+			error = xfs_bmap_extents_to_btree(tp, ip,
- 					first, flist, &cur, 1, &tmp_rval,
- 					XFS_DATA_FORK);
- 			rval |= tmp_rval;
-@@ -2871,8 +2874,8 @@ xfs_bmap_del_extent(
- 			len = del->br_blockcount;
- 			do_div(bno, mp->m_sb.sb_rextsize);
- 			do_div(len, mp->m_sb.sb_rextsize);
--			if ((error = xfs_rtfree_extent(ip->i_transp, bno,
--					(xfs_extlen_t)len)))
-+			error = xfs_rtfree_extent(tp, bno, (xfs_extlen_t)len);
-+			if (error)
- 				goto done;
- 			do_fx = 0;
- 			nblks = len * mp->m_sb.sb_rextsize;
-@@ -4662,7 +4665,7 @@ xfs_bmapi(
- 				if (!wasdelay && (flags & XFS_BMAPI_PREALLOC))
- 					got.br_state = XFS_EXT_UNWRITTEN;
- 			}
--			error = xfs_bmap_add_extent(ip, &lastx, &cur, &got,
-+			error = xfs_bmap_add_extent(tp, ip, &lastx, &cur, &got,
- 				firstblock, flist, &tmp_logflags,
- 				whichfork);
- 			logflags |= tmp_logflags;
-@@ -4763,7 +4766,7 @@ xfs_bmapi(
- 			mval->br_state = (mval->br_state == XFS_EXT_UNWRITTEN)
- 						? XFS_EXT_NORM
- 						: XFS_EXT_UNWRITTEN;
--			error = xfs_bmap_add_extent(ip, &lastx, &cur, mval,
-+			error = xfs_bmap_add_extent(tp, ip, &lastx, &cur, mval,
- 				firstblock, flist, &tmp_logflags,
- 				whichfork);
- 			logflags |= tmp_logflags;
-@@ -5117,7 +5120,7 @@ xfs_bunmapi(
- 				del.br_blockcount = mod;
- 			}
- 			del.br_state = XFS_EXT_UNWRITTEN;
--			error = xfs_bmap_add_extent(ip, &lastx, &cur, &del,
-+			error = xfs_bmap_add_extent(tp, ip, &lastx, &cur, &del,
- 				firstblock, flist, &logflags,
- 				XFS_DATA_FORK);
- 			if (error)
-@@ -5175,18 +5178,18 @@ xfs_bunmapi(
- 				}
- 				prev.br_state = XFS_EXT_UNWRITTEN;
- 				lastx--;
--				error = xfs_bmap_add_extent(ip, &lastx, &cur,
--					&prev, firstblock, flist, &logflags,
--					XFS_DATA_FORK);
-+				error = xfs_bmap_add_extent(tp, ip, &lastx,
-+						&cur, &prev, firstblock, flist,
-+						&logflags, XFS_DATA_FORK);
- 				if (error)
- 					goto error0;
- 				goto nodelete;
- 			} else {
- 				ASSERT(del.br_state == XFS_EXT_NORM);
- 				del.br_state = XFS_EXT_UNWRITTEN;
--				error = xfs_bmap_add_extent(ip, &lastx, &cur,
--					&del, firstblock, flist, &logflags,
--					XFS_DATA_FORK);
-+				error = xfs_bmap_add_extent(tp, ip, &lastx,
-+						&cur, &del, firstblock, flist,
-+						&logflags, XFS_DATA_FORK);
- 				if (error)
- 					goto error0;
- 				goto nodelete;
-Index: xfs/fs/xfs/xfs_inode.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_inode.c	2011-06-30 09:15:11.000000000 +0200
-+++ xfs/fs/xfs/xfs_inode.c	2011-06-30 09:16:57.120083690 +0200
-@@ -1260,7 +1260,6 @@ xfs_itruncate_extents(
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_IOLOCK_EXCL));
- 	ASSERT(new_size <= ip->i_size);
- 	ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
--	ASSERT(ip->i_transp == tp);
- 	ASSERT(ip->i_itemp != NULL);
- 	ASSERT(ip->i_itemp->ili_lock_flags == 0);
- 	ASSERT(!XFS_NOT_DQATTACHED(mp, ip));
-@@ -1436,7 +1435,6 @@ xfs_iunlink(
- 
- 	ASSERT(ip->i_d.di_nlink == 0);
- 	ASSERT(ip->i_d.di_mode != 0);
--	ASSERT(ip->i_transp == tp);
- 
- 	mp = tp->t_mountp;
- 
-@@ -1828,7 +1826,6 @@ xfs_ifree(
- 	xfs_buf_t       	*ibp;
- 
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
--	ASSERT(ip->i_transp == tp);
- 	ASSERT(ip->i_d.di_nlink == 0);
- 	ASSERT(ip->i_d.di_nextents == 0);
- 	ASSERT(ip->i_d.di_anextents == 0);
-Index: xfs/fs/xfs/xfs_inode.h
-===================================================================
---- xfs.orig/fs/xfs/xfs_inode.h	2011-06-30 09:05:30.000000000 +0200
-+++ xfs/fs/xfs/xfs_inode.h	2011-06-30 09:16:44.720083829 +0200
-@@ -241,7 +241,6 @@ typedef struct xfs_inode {
- 	xfs_ifork_t		i_df;		/* data fork */
- 
- 	/* Transaction and locking information. */
--	struct xfs_trans	*i_transp;	/* ptr to owning transaction*/
- 	struct xfs_inode_log_item *i_itemp;	/* logging information */
- 	mrlock_t		i_lock;		/* inode lock */
- 	mrlock_t		i_iolock;	/* inode IO lock */
-Index: xfs/fs/xfs/xfs_inode_item.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_inode_item.c	2011-06-29 19:45:24.960295005 +0200
-+++ xfs/fs/xfs/xfs_inode_item.c	2011-06-30 09:16:44.723417161 +0200
-@@ -636,11 +636,6 @@ xfs_inode_item_unlock(
- 	ASSERT(xfs_isilocked(iip->ili_inode, XFS_ILOCK_EXCL));
- 
- 	/*
--	 * Clear the transaction pointer in the inode.
--	 */
--	ip->i_transp = NULL;
--
--	/*
- 	 * If the inode needed a separate buffer with which to log
- 	 * its extents, then free it now.
- 	 */
-Index: xfs/fs/xfs/xfs_trans_inode.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_trans_inode.c	2011-06-29 19:45:24.973628266 +0200
-+++ xfs/fs/xfs/xfs_trans_inode.c	2011-06-30 09:16:44.723417161 +0200
-@@ -55,7 +55,6 @@ xfs_trans_ijoin(
+ int
+-xfs_buf_cond_lock(
+-	xfs_buf_t		*bp)
++xfs_buf_trylock(
++	struct xfs_buf		*bp)
  {
- 	xfs_inode_log_item_t	*iip;
+ 	int			locked;
  
--	ASSERT(ip->i_transp == NULL);
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
- 	if (ip->i_itemp == NULL)
- 		xfs_inode_item_init(ip, ip->i_mount);
-@@ -68,12 +67,6 @@ xfs_trans_ijoin(
- 	xfs_trans_add_item(tp, &iip->ili_item);
+@@ -907,15 +905,8 @@ xfs_buf_cond_lock(
+ 	else if (atomic_read(&bp->b_pin_count) && (bp->b_flags & XBF_STALE))
+ 		xfs_log_force(bp->b_target->bt_mount, 0);
  
- 	xfs_trans_inode_broot_debug(ip);
+-	trace_xfs_buf_cond_lock(bp, _RET_IP_);
+-	return locked ? 0 : -EBUSY;
+-}
 -
--	/*
--	 * Initialize i_transp so we can find it with xfs_inode_incore()
--	 * in xfs_trans_iget() above.
--	 */
--	ip->i_transp = tp;
+-int
+-xfs_buf_lock_value(
+-	xfs_buf_t		*bp)
+-{
+-	return bp->b_sema.count;
++	trace_xfs_buf_trylock(bp, _RET_IP_);
++	return locked;
  }
  
  /*
-@@ -111,7 +104,6 @@ xfs_trans_ichgtime(
+@@ -929,7 +920,7 @@ xfs_buf_lock_value(
+  */
+ void
+ xfs_buf_lock(
+-	xfs_buf_t		*bp)
++	struct xfs_buf		*bp)
+ {
+ 	trace_xfs_buf_lock(bp, _RET_IP_);
+ 
+@@ -950,7 +941,7 @@ xfs_buf_lock(
+  */
+ void
+ xfs_buf_unlock(
+-	xfs_buf_t		*bp)
++	struct xfs_buf		*bp)
+ {
+ 	if ((bp->b_flags & (XBF_DELWRI|_XBF_DELWRI_Q)) == XBF_DELWRI) {
+ 		atomic_inc(&bp->b_hold);
+@@ -1694,7 +1685,7 @@ xfs_buf_delwri_split(
+ 	list_for_each_entry_safe(bp, n, dwq, b_list) {
+ 		ASSERT(bp->b_flags & XBF_DELWRI);
+ 
+-		if (!XFS_BUF_ISPINNED(bp) && !xfs_buf_cond_lock(bp)) {
++		if (!XFS_BUF_ISPINNED(bp) && xfs_buf_trylock(bp)) {
+ 			if (!force &&
+ 			    time_before(jiffies, bp->b_queuetime + age)) {
+ 				xfs_buf_unlock(bp);
+Index: xfs/fs/xfs/linux-2.6/xfs_buf.h
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_buf.h	2011-06-29 13:50:40.000000000 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_buf.h	2011-06-29 13:54:35.250997736 +0200
+@@ -187,10 +187,11 @@ extern void xfs_buf_free(xfs_buf_t *);
+ extern void xfs_buf_rele(xfs_buf_t *);
+ 
+ /* Locking and Unlocking Buffers */
+-extern int xfs_buf_cond_lock(xfs_buf_t *);
+-extern int xfs_buf_lock_value(xfs_buf_t *);
++extern int xfs_buf_trylock(xfs_buf_t *);
+ extern void xfs_buf_lock(xfs_buf_t *);
+ extern void xfs_buf_unlock(xfs_buf_t *);
++#define xfs_buf_islocked(bp) \
++	((bp)->b_sema.count <= 0)
+ 
+ /* Buffer Read and Write Routines */
+ extern int xfs_bwrite(struct xfs_mount *mp, struct xfs_buf *bp);
+@@ -308,10 +309,6 @@ xfs_buf_set_ref(
+ 
+ #define XFS_BUF_ISPINNED(bp)	atomic_read(&((bp)->b_pin_count))
+ 
+-#define XFS_BUF_VALUSEMA(bp)	xfs_buf_lock_value(bp)
+-#define XFS_BUF_CPSEMA(bp)	(xfs_buf_cond_lock(bp) == 0)
+-#define XFS_BUF_VSEMA(bp)	xfs_buf_unlock(bp)
+-#define XFS_BUF_PSEMA(bp,x)	xfs_buf_lock(bp)
+ #define XFS_BUF_FINISH_IOWAIT(bp)	complete(&bp->b_iowait);
+ 
+ #define XFS_BUF_SET_TARGET(bp, target)	((bp)->b_target = (target))
+Index: xfs/fs/xfs/linux-2.6/xfs_trace.h
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_trace.h	2011-06-29 11:35:45.000000000 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_trace.h	2011-06-29 13:54:32.974343403 +0200
+@@ -293,7 +293,7 @@ DECLARE_EVENT_CLASS(xfs_buf_class,
+ 		__entry->buffer_length = bp->b_buffer_length;
+ 		__entry->hold = atomic_read(&bp->b_hold);
+ 		__entry->pincount = atomic_read(&bp->b_pin_count);
+-		__entry->lockval = xfs_buf_lock_value(bp);
++		__entry->lockval = bp->b_sema.count;
+ 		__entry->flags = bp->b_flags;
+ 		__entry->caller_ip = caller_ip;
+ 	),
+@@ -323,7 +323,7 @@ DEFINE_BUF_EVENT(xfs_buf_bawrite);
+ DEFINE_BUF_EVENT(xfs_buf_bdwrite);
+ DEFINE_BUF_EVENT(xfs_buf_lock);
+ DEFINE_BUF_EVENT(xfs_buf_lock_done);
+-DEFINE_BUF_EVENT(xfs_buf_cond_lock);
++DEFINE_BUF_EVENT(xfs_buf_trylock);
+ DEFINE_BUF_EVENT(xfs_buf_unlock);
+ DEFINE_BUF_EVENT(xfs_buf_iowait);
+ DEFINE_BUF_EVENT(xfs_buf_iowait_done);
+@@ -366,7 +366,7 @@ DECLARE_EVENT_CLASS(xfs_buf_flags_class,
+ 		__entry->flags = flags;
+ 		__entry->hold = atomic_read(&bp->b_hold);
+ 		__entry->pincount = atomic_read(&bp->b_pin_count);
+-		__entry->lockval = xfs_buf_lock_value(bp);
++		__entry->lockval = bp->b_sema.count;
+ 		__entry->caller_ip = caller_ip;
+ 	),
+ 	TP_printk("dev %d:%d bno 0x%llx len 0x%zx hold %d pincount %d "
+@@ -409,7 +409,7 @@ TRACE_EVENT(xfs_buf_ioerror,
+ 		__entry->buffer_length = bp->b_buffer_length;
+ 		__entry->hold = atomic_read(&bp->b_hold);
+ 		__entry->pincount = atomic_read(&bp->b_pin_count);
+-		__entry->lockval = xfs_buf_lock_value(bp);
++		__entry->lockval = bp->b_sema.count;
+ 		__entry->error = error;
+ 		__entry->flags = bp->b_flags;
+ 		__entry->caller_ip = caller_ip;
+@@ -454,7 +454,7 @@ DECLARE_EVENT_CLASS(xfs_buf_item_class,
+ 		__entry->buf_flags = bip->bli_buf->b_flags;
+ 		__entry->buf_hold = atomic_read(&bip->bli_buf->b_hold);
+ 		__entry->buf_pincount = atomic_read(&bip->bli_buf->b_pin_count);
+-		__entry->buf_lockval = xfs_buf_lock_value(bip->bli_buf);
++		__entry->buf_lockval = bip->bli_buf->b_sema.count;
+ 		__entry->li_desc = bip->bli_item.li_desc;
+ 		__entry->li_flags = bip->bli_item.li_flags;
+ 	),
+Index: xfs/fs/xfs/quota/xfs_dquot.c
+===================================================================
+--- xfs.orig/fs/xfs/quota/xfs_dquot.c	2011-05-11 08:41:56.000000000 +0200
++++ xfs/fs/xfs/quota/xfs_dquot.c	2011-06-29 13:53:07.801471491 +0200
+@@ -318,7 +318,7 @@ xfs_qm_init_dquot_blk(
  
  	ASSERT(tp);
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
--	ASSERT(ip->i_transp == tp);
+ 	ASSERT(XFS_BUF_ISBUSY(bp));
+-	ASSERT(XFS_BUF_VALUSEMA(bp) <= 0);
++	ASSERT(xfs_buf_islocked(bp));
  
- 	tv = current_fs_time(inode->i_sb);
+ 	d = (xfs_dqblk_t *)XFS_BUF_PTR(bp);
  
-@@ -140,7 +132,6 @@ xfs_trans_log_inode(
- 	xfs_inode_t	*ip,
- 	uint		flags)
+@@ -534,7 +534,7 @@ xfs_qm_dqtobp(
+ 	}
+ 
+ 	ASSERT(XFS_BUF_ISBUSY(bp));
+-	ASSERT(XFS_BUF_VALUSEMA(bp) <= 0);
++	ASSERT(xfs_buf_islocked(bp));
+ 
+ 	/*
+ 	 * calculate the location of the dquot inside the buffer.
+@@ -622,7 +622,7 @@ xfs_qm_dqread(
+ 	 * brelse it because we have the changes incore.
+ 	 */
+ 	ASSERT(XFS_BUF_ISBUSY(bp));
+-	ASSERT(XFS_BUF_VALUSEMA(bp) <= 0);
++	ASSERT(xfs_buf_islocked(bp));
+ 	xfs_trans_brelse(tp, bp);
+ 
+ 	return (error);
+Index: xfs/fs/xfs/xfs_buf_item.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_buf_item.c	2011-04-22 06:21:45.000000000 +0200
++++ xfs/fs/xfs/xfs_buf_item.c	2011-06-29 13:53:20.938066990 +0200
+@@ -420,7 +420,7 @@ xfs_buf_item_unpin(
+ 
+ 	if (freed && stale) {
+ 		ASSERT(bip->bli_flags & XFS_BLI_STALE);
+-		ASSERT(XFS_BUF_VALUSEMA(bp) <= 0);
++		ASSERT(xfs_buf_islocked(bp));
+ 		ASSERT(!(XFS_BUF_ISDELAYWRITE(bp)));
+ 		ASSERT(XFS_BUF_ISSTALE(bp));
+ 		ASSERT(bip->bli_format.blf_flags & XFS_BLF_CANCEL);
+@@ -483,7 +483,7 @@ xfs_buf_item_trylock(
+ 
+ 	if (XFS_BUF_ISPINNED(bp))
+ 		return XFS_ITEM_PINNED;
+-	if (!XFS_BUF_CPSEMA(bp))
++	if (!xfs_buf_trylock(bp))
+ 		return XFS_ITEM_LOCKED;
+ 
+ 	/* take a reference to the buffer.  */
+@@ -905,7 +905,7 @@ xfs_buf_attach_iodone(
+ 	xfs_log_item_t	*head_lip;
+ 
+ 	ASSERT(XFS_BUF_ISBUSY(bp));
+-	ASSERT(XFS_BUF_VALUSEMA(bp) <= 0);
++	ASSERT(xfs_buf_islocked(bp));
+ 
+ 	lip->li_cb = cb;
+ 	if (XFS_BUF_FSPRIVATE(bp, void *) != NULL) {
+Index: xfs/fs/xfs/xfs_log.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_log.c	2011-06-17 14:07:57.000000000 +0200
++++ xfs/fs/xfs/xfs_log.c	2011-06-29 13:53:33.954663139 +0200
+@@ -1059,7 +1059,7 @@ xlog_alloc_log(xfs_mount_t	*mp,
+ 	XFS_BUF_SET_IODONE_FUNC(bp, xlog_iodone);
+ 	XFS_BUF_SET_FSPRIVATE2(bp, (unsigned long)1);
+ 	ASSERT(XFS_BUF_ISBUSY(bp));
+-	ASSERT(XFS_BUF_VALUSEMA(bp) <= 0);
++	ASSERT(xfs_buf_islocked(bp));
+ 	log->l_xbuf = bp;
+ 
+ 	spin_lock_init(&log->l_icloglock);
+@@ -1090,7 +1090,7 @@ xlog_alloc_log(xfs_mount_t	*mp,
+ 						log->l_iclog_size, 0);
+ 		if (!bp)
+ 			goto out_free_iclog;
+-		if (!XFS_BUF_CPSEMA(bp))
++		if (!xfs_buf_trylock(bp))
+ 			ASSERT(0);
+ 		XFS_BUF_SET_IODONE_FUNC(bp, xlog_iodone);
+ 		XFS_BUF_SET_FSPRIVATE2(bp, (unsigned long)1);
+@@ -1118,7 +1118,7 @@ xlog_alloc_log(xfs_mount_t	*mp,
+ 		iclog->ic_datap = (char *)iclog->ic_data + log->l_iclog_hsize;
+ 
+ 		ASSERT(XFS_BUF_ISBUSY(iclog->ic_bp));
+-		ASSERT(XFS_BUF_VALUSEMA(iclog->ic_bp) <= 0);
++		ASSERT(xfs_buf_islocked(iclog->ic_bp));
+ 		init_waitqueue_head(&iclog->ic_force_wait);
+ 		init_waitqueue_head(&iclog->ic_write_wait);
+ 
+Index: xfs/fs/xfs/xfs_log_recover.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_log_recover.c	2011-05-20 15:25:52.000000000 +0200
++++ xfs/fs/xfs/xfs_log_recover.c	2011-06-29 13:51:20.425386530 +0200
+@@ -264,7 +264,7 @@ xlog_bwrite(
+ 	XFS_BUF_ZEROFLAGS(bp);
+ 	XFS_BUF_BUSY(bp);
+ 	XFS_BUF_HOLD(bp);
+-	XFS_BUF_PSEMA(bp, PRIBIO);
++	xfs_buf_lock(bp);
+ 	XFS_BUF_SET_COUNT(bp, BBTOB(nbblks));
+ 	XFS_BUF_SET_TARGET(bp, log->l_mp->m_logdev_targp);
+ 
+Index: xfs/fs/xfs/xfs_mount.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_mount.c	2011-06-29 11:38:53.000000000 +0200
++++ xfs/fs/xfs/xfs_mount.c	2011-06-29 13:51:20.425386530 +0200
+@@ -1941,22 +1941,19 @@ unwind:
+  * the superblock buffer if it can be locked without sleeping.
+  * If it can't then we'll return NULL.
+  */
+-xfs_buf_t *
++struct xfs_buf *
+ xfs_getsb(
+-	xfs_mount_t	*mp,
+-	int		flags)
++	struct xfs_mount	*mp,
++	int			flags)
  {
--	ASSERT(ip->i_transp == tp);
- 	ASSERT(ip->i_itemp != NULL);
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+-	xfs_buf_t	*bp;
++	struct xfs_buf		*bp = mp->m_sb_bp;
  
+-	ASSERT(mp->m_sb_bp != NULL);
+-	bp = mp->m_sb_bp;
+-	if (flags & XBF_TRYLOCK) {
+-		if (!XFS_BUF_CPSEMA(bp)) {
++	if (!xfs_buf_trylock(bp)) {
++		if (flags & XBF_TRYLOCK)
+ 			return NULL;
+-		}
+-	} else {
+-		XFS_BUF_PSEMA(bp, PRIBIO);
++		xfs_buf_lock(bp);
+ 	}
++
+ 	XFS_BUF_HOLD(bp);
+ 	ASSERT(XFS_BUF_ISDONE(bp));
+ 	return bp;
+Index: xfs/fs/xfs/xfs_trans_buf.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_trans_buf.c	2011-03-27 23:52:57.000000000 +0200
++++ xfs/fs/xfs/xfs_trans_buf.c	2011-06-29 13:53:47.084592005 +0200
+@@ -160,7 +160,7 @@ xfs_trans_get_buf(xfs_trans_t	*tp,
+ 	 */
+ 	bp = xfs_trans_buf_item_match(tp, target_dev, blkno, len);
+ 	if (bp != NULL) {
+-		ASSERT(XFS_BUF_VALUSEMA(bp) <= 0);
++		ASSERT(xfs_buf_islocked(bp));
+ 		if (XFS_FORCED_SHUTDOWN(tp->t_mountp))
+ 			XFS_BUF_SUPER_STALE(bp);
+ 
+@@ -327,7 +327,7 @@ xfs_trans_read_buf(
+ 	 */
+ 	bp = xfs_trans_buf_item_match(tp, target, blkno, len);
+ 	if (bp != NULL) {
+-		ASSERT(XFS_BUF_VALUSEMA(bp) <= 0);
++		ASSERT(xfs_buf_islocked(bp));
+ 		ASSERT(XFS_BUF_FSPRIVATE2(bp, xfs_trans_t *) == tp);
+ 		ASSERT(XFS_BUF_FSPRIVATE(bp, void *) != NULL);
+ 		ASSERT((XFS_BUF_ISERROR(bp)) == 0);
 
 _______________________________________________
 xfs mailing list
