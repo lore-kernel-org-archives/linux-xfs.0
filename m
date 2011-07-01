@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p612Ms1t017511 for <xfs@oss.sgi.com>; Thu, 30 Jun 2011 21:22:55 -0500
+	p614Iwqw028257 for <xfs@oss.sgi.com>; Thu, 30 Jun 2011 23:18:58 -0500
 Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2615614FB70F
-	for <xfs@oss.sgi.com>; Thu, 30 Jun 2011 19:22:51 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E5206178ADED
+	for <xfs@oss.sgi.com>; Thu, 30 Jun 2011 21:18:54 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	HfwDbHtEu9z5tNPl for <xfs@oss.sgi.com>;
-	Thu, 30 Jun 2011 19:22:51 -0700 (PDT)
-Date: Fri, 1 Jul 2011 12:22:48 +1000
+	OdA17FrAyDNF2ha0 for <xfs@oss.sgi.com>;
+	Thu, 30 Jun 2011 21:18:54 -0700 (PDT)
+Date: Fri, 1 Jul 2011 14:18:51 +1000
 From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH 03/27] xfs: use write_cache_pages for writeback clustering
-Message-ID: <20110701022248.GM561@dastard>
+Message-ID: <20110701041851.GN561@dastard>
 References: <20110629140109.003209430@bombadil.infradead.org>
 	<20110629140336.950805096@bombadil.infradead.org>
+	<20110701022248.GM561@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110629140336.950805096@bombadil.infradead.org>
+In-Reply-To: <20110701022248.GM561@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,167 +27,254 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-T24gV2VkLCBKdW4gMjksIDIwMTEgYXQgMTA6MDE6MTJBTSAtMDQwMCwgQ2hyaXN0b3BoIEhlbGx3
-aWcgd3JvdGU6Cj4gSW5zdGVhZCBvZiBpbXBsZW1lbnRpbmcgb3VyIG93biB3cml0ZWJhY2sgY2x1
-c3RlcmluZyB1c2Ugd3JpdGVfY2FjaGVfcGFnZXMKPiB0byBkbyBpdCBmb3IgdXMuICBUaGlzIG1l
-YW5zIHRoZSBndXRzIG9mIHRoZSBjdXJyZW50IHdyaXRlcGFnZSBpbXBsZW1lbnRhdGlvbgo+IGJl
-Y29tZSBhIG5ldyBoZWxwZXIgdXNlZCBib3RoIGZvciBpbXBsZW1lbnRpbmcgLT53cml0ZXBhZ2Ug
-YW5kIGFzIGEgY2FsbGJhY2sKPiB0byB3cml0ZV9jYWNoZV9wYWdlcyBmb3IgLT53cml0ZXBhZ2Vz
-LiAgQSBuZXcgc3RydWN0IHhmc193cml0ZWJhY2tfY3R4Cj4gaXMgdXNlZCB0byB0cmFjayBibG9j
-ayBtYXBwaW5nIHN0YXRlIGFuZCB0aGUgaW9lbmQgY2hhaW4gb3ZlciBtdWx0aXBsZQo+IGludm9j
-YXRpb24gb2YgaXQuCj4gCj4gVGhlIGFkdmFudGFnZSBvdmVyIHRoZSBvbGQgY29kZSBpcyB0aGF0
-IHdlIGF2b2lkIGEgZG91YmxlIHBhZ2V2ZWMgbG9va3VwLAo+IGFuZCBhIG1vcmUgZWZmaWNpZW50
-IGhhbmRsaW5nIG9mIGV4dGVudCBib3VuZGFyaWVzIGluc2lkZSBhIHBhZ2UgZm9yCj4gc21hbGwg
-YmxvY2tzaXplIGZpbGVzeXN0ZW1zLCBhcyB3ZWxsIGFzIGhhdmluZyBsZXNzIFhGUyBzcGVjaWZp
-YyBjb2RlLgoKSXQncyBub3QgbW9yZSBlZmZpY2llbnQgcmlnaHQgbm93LCBkdWUgdG8gYSBsaXR0
-bGUgYnVnOgoKPiBAQCAtOTczLDM2ICs4MjEsMzggQEAgeGZzX3ZtX3dyaXRlcGFnZSgKPiAgCQkg
-KiBidWZmZXJzIGNvdmVyaW5nIGhvbGVzIGhlcmUuCj4gIAkJICovCj4gIAkJaWYgKCFidWZmZXJf
-bWFwcGVkKGJoKSAmJiBidWZmZXJfdXB0b2RhdGUoYmgpKSB7Cj4gLQkJCWltYXBfdmFsaWQgPSAw
-Owo+ICsJCQljdHgtPmltYXBfdmFsaWQgPSAwOwo+ICAJCQljb250aW51ZTsKPiAgCQl9Cj4gIAo+
-ICAJCWlmIChidWZmZXJfdW53cml0dGVuKGJoKSkgewo+ICAJCQlpZiAodHlwZSAhPSBJT19VTldS
-SVRURU4pIHsKPiAgCQkJCXR5cGUgPSBJT19VTldSSVRURU47Cj4gLQkJCQlpbWFwX3ZhbGlkID0g
-MDsKPiArCQkJCWN0eC0+aW1hcF92YWxpZCA9IDA7Cj4gIAkJCX0KPiAgCQl9IGVsc2UgaWYgKGJ1
-ZmZlcl9kZWxheShiaCkpIHsKPiAgCQkJaWYgKHR5cGUgIT0gSU9fREVMQUxMT0MpIHsKPiAgCQkJ
-CXR5cGUgPSBJT19ERUxBTExPQzsKPiAtCQkJCWltYXBfdmFsaWQgPSAwOwo+ICsJCQkJY3R4LT5p
-bWFwX3ZhbGlkID0gMDsKPiAgCQkJfQo+ICAJCX0gZWxzZSBpZiAoYnVmZmVyX3VwdG9kYXRlKGJo
-KSkgewo+ICAJCQlpZiAodHlwZSAhPSBJT19PVkVSV1JJVEUpIHsKPiAgCQkJCXR5cGUgPSBJT19P
-VkVSV1JJVEU7Cj4gLQkJCQlpbWFwX3ZhbGlkID0gMDsKPiArCQkJCWN0eC0+aW1hcF92YWxpZCA9
-IDA7Cj4gIAkJCX0KPiAgCQl9IGVsc2Ugewo+ICAJCQlpZiAoUGFnZVVwdG9kYXRlKHBhZ2UpKSB7
-Cj4gIAkJCQlBU1NFUlQoYnVmZmVyX21hcHBlZChiaCkpOwo+IC0JCQkJaW1hcF92YWxpZCA9IDA7
-Cj4gKwkJCQljdHgtPmltYXBfdmFsaWQgPSAwOwo+ICAJCQl9Cj4gIAkJCWNvbnRpbnVlOwo+ICAJ
-CX0KClRoaXMgcGllY2Ugb2YgbG9naWMgY2hlY2tzIGlzIHRoZSB0eXBlIG9mIGJ1ZmZlciBoYXMg
-Y2hhbmdlZCBmcm9tIHRoZQpwcmV2aW91cyBidWZmZXIuIFRoaXMgdXNlZCB0byB3b3JrIGp1c3Qg
-ZmluZSwgYnV0IG5vdyAidHlwZSIgaXMKbG9jYWwgdG8gdGhlIF9feGZzX3ZtX3dyaXRlcGFnZSgp
-IGZ1bmN0aW9uLCB3aGlsZSB0aGUgaW1hcCBsaWZlCnNwYW7RlSBtdWx0aXBsZSBjYWxscyB0byB0
-aGUgX194ZnNfdm1fd3JpdGVwYWdlKCkgZnVuY3Rpb24uIEhlbmNlCnR5cGUgaXMgcmVpbml0aWFs
-aXNlZCB0byBJT19PVkVSV1JJVEUgb24gZXZlcnkgcGFnZSB0aGF0IHdyaXR0ZW4sCmFuZCBzbyBm
-b3IgZGVsYWxsb2Mgd2UgYXJlIGludmFsaWRhdGluZyB0aGUgaW1hcCBhbmQgbG9va2luZyBpdCB1
-cAphZ2FpbiBvbiBldmVyeSBwYWdlLiBUcmFjZXMgc2hvdyB0aGlzIHNvcnQgb2YgYmVoYXZpb3Vy
-OgoKICAgICAgICAgICA8Li4uPi01MTQgICBbMDAwXSA2ODk2NDAuODgxOTUzOiB4ZnNfd3JpdGVw
-YWdlOiAgICAgICAgZGV2IDI1MzoxNiBpbm8gMHg1NTIyNDggcGdvZmYgMHhmNzAwMCBzaXplIDB4
-YTAwMDAwIG9mZnNldCAwIGRlbGFsbG9jIDEgdW53cml0dGVuIDAKICAgICAgICAgICA8Li4uPi01
-MTQgICBbMDAwXSA2ODk2NDAuODgxOTU0OiB4ZnNfaWxvY2s6ICAgICAgICAgICAgZGV2IDI1Mzox
-NiBpbm8gMHg1NTIyNDggZmxhZ3MgSUxPQ0tfU0hBUkVEIGNhbGxlciB4ZnNfbWFwX2Jsb2Nrcwog
-ICAgICAgICAgIDwuLi4+LTUxNCAgIFswMDBdIDY4OTY0MC44ODE5NTQ6IHhmc19pdW5sb2NrOiAg
-ICAgICAgICBkZXYgMjUzOjE2IGlubyAweDU1MjI0OCBmbGFncyBJTE9DS19TSEFSRUQgY2FsbGVy
-IHhmc19tYXBfYmxvY2tzCiAgICAgICAgICAgPC4uLj4tNTE0ICAgWzAwMF0gNjg5NjQwLjg4MTk1
-NDogeGZzX21hcF9ibG9ja3NfZm91bmQ6IGRldiAyNTM6MTYgaW5vIDB4NTUyMjQ4IHNpemUgMHgw
-IG5ld19zaXplIDB4MCBvZmZzZXQgMHhmNzAwMCBjb3VudCAxMDI0IHR5cGUgIHN0YXJ0b2ZmIDB4
-MCBzdGFydGJsb2NrIDYyOTc2MDkgYmxvY2tjb3VudCAweDI4MDAKICAgICAgICAgICA8Li4uPi01
-MTQgICBbMDAwXSA2ODk2NDAuODgxOTU2OiB4ZnNfd3JpdGVwYWdlOiAgICAgICAgZGV2IDI1Mzox
-NiBpbm8gMHg1NTIyNDggcGdvZmYgMHhmODAwMCBzaXplIDB4YTAwMDAwIG9mZnNldCAwIGRlbGFs
-bG9jIDEgdW53cml0dGVuIDAKICAgICAgICAgICA8Li4uPi01MTQgICBbMDAwXSA2ODk2NDAuODgx
-OTU3OiB4ZnNfaWxvY2s6ICAgICAgICAgICAgZGV2IDI1MzoxNiBpbm8gMHg1NTIyNDggZmxhZ3Mg
-SUxPQ0tfU0hBUkVEIGNhbGxlciB4ZnNfbWFwX2Jsb2NrcwogICAgICAgICAgIDwuLi4+LTUxNCAg
-IFswMDBdIDY4OTY0MC44ODE5NTc6IHhmc19pdW5sb2NrOiAgICAgICAgICBkZXYgMjUzOjE2IGlu
-byAweDU1MjI0OCBmbGFncyBJTE9DS19TSEFSRUQgY2FsbGVyIHhmc19tYXBfYmxvY2tzCiAgICAg
-ICAgICAgPC4uLj4tNTE0ICAgWzAwMF0gNjg5NjQwLjg4MTk1NzogeGZzX21hcF9ibG9ja3NfZm91
-bmQ6IGRldiAyNTM6MTYgaW5vIDB4NTUyMjQ4IHNpemUgMHgwIG5ld19zaXplIDB4MCBvZmZzZXQg
-MHhmODAwMCBjb3VudCAxMDI0IHR5cGUgIHN0YXJ0b2ZmIDB4MCBzdGFydGJsb2NrIDYyOTc2MDkg
-YmxvY2tjb3VudCAweDI4MDAKICAgICAgICAgICA8Li4uPi01MTQgICBbMDAwXSA2ODk2NDAuODgx
-OTYwOiB4ZnNfd3JpdGVwYWdlOiAgICAgICAgZGV2IDI1MzoxNiBpbm8gMHg1NTIyNDggcGdvZmYg
-MHhmOTAwMCBzaXplIDB4YTAwMDAwIG9mZnNldCAwIGRlbGFsbG9jIDEgdW53cml0dGVuIDAKICAg
-ICAgICAgICA8Li4uPi01MTQgICBbMDAwXSA2ODk2NDAuODgxOTYwOiB4ZnNfaWxvY2s6ICAgICAg
-ICAgICAgZGV2IDI1MzoxNiBpbm8gMHg1NTIyNDggZmxhZ3MgSUxPQ0tfU0hBUkVEIGNhbGxlciB4
-ZnNfbWFwX2Jsb2NrcwogICAgICAgICAgIDwuLi4+LTUxNCAgIFswMDBdIDY4OTY0MC44ODE5NjE6
-IHhmc19pdW5sb2NrOiAgICAgICAgICBkZXYgMjUzOjE2IGlubyAweDU1MjI0OCBmbGFncyBJTE9D
-S19TSEFSRUQgY2FsbGVyIHhmc19tYXBfYmxvY2tzCiAgICAgICAgICAgPC4uLj4tNTE0ICAgWzAw
-MF0gNjg5NjQwLjg4MTk2MTogeGZzX21hcF9ibG9ja3NfZm91bmQ6IGRldiAyNTM6MTYgaW5vIDB4
-NTUyMjQ4IHNpemUgMHgwIG5ld19zaXplIDB4MCBvZmZzZXQgMHhmOTAwMCBjb3VudCAxMDI0IHR5
-cGUgIHN0YXJ0b2ZmIDB4MCBzdGFydGJsb2NrIDYyOTc2MDkgYmxvY2tjb3VudCAweDI4MDAKCklP
-V3MsIHRoZSB0eXBlIGZpZWxkIGFsc28gbmVlZHMgdG8gYmUgbW92ZWQgaW50byB0aGUgd3JpdGVw
-YWdlCmNvbnRleHQgc3RydWN0dXJlIHNvIHRoYXQgd2UgZG9uJ3Qga2VlcCBkb2luZyBuZWVkbGVz
-cyBleHRlbnQgbWFwCmxvb2t1cHMuCgpXaXRoIHRoZSBmb2xsb3dpbmcgcGF0Y2gsIHRoZSB0cmFj
-ZSBvdXRwdXQgbm93IGxvb2tzIGxpa2UgdGhpcyBmb3IKZGVsYWxsb2Mgd3JpdGViYWNrOgoKICAg
-ICAgICAgICA8Li4uPi0xMjYyMyBbMDAwXSA2OTQwOTMuNTk0ODgzOiB4ZnNfd3JpdGVwYWdlOiAg
-ICAgICAgZGV2IDI1MzoxNiBpbm8gMHgyMzAwYTUgcGdvZmYgMHg1MDUwMDAgc2l6ZSAweGEwMDAw
-MCBvZmZzZXQgMCBkZWxhbGxvYyAxIHVud3JpdHRlbiAwCiAgICAgICAgICAgPC4uLj4tMTI2MjMg
-WzAwMF0gNjk0MDkzLjU5NDg4NDogeGZzX3dyaXRlcGFnZTogICAgICAgIGRldiAyNTM6MTYgaW5v
-IDB4MjMwMGE1IHBnb2ZmIDB4NTA2MDAwIHNpemUgMHhhMDAwMDAgb2Zmc2V0IDAgZGVsYWxsb2Mg
-MSB1bndyaXR0ZW4gMAogICAgICAgICAgIDwuLi4+LTEyNjIzIFswMDBdIDY5NDA5My41OTQ4ODQ6
-IHhmc193cml0ZXBhZ2U6ICAgICAgICBkZXYgMjUzOjE2IGlubyAweDIzMDBhNSBwZ29mZiAweDUw
-NzAwMCBzaXplIDB4YTAwMDAwIG9mZnNldCAwIGRlbGFsbG9jIDEgdW53cml0dGVuIDAKICAgICAg
-ICAgICA8Li4uPi0xMjYyMyBbMDAwXSA2OTQwOTMuNTk0ODg1OiB4ZnNfd3JpdGVwYWdlOiAgICAg
-ICAgZGV2IDI1MzoxNiBpbm8gMHgyMzAwYTUgcGdvZmYgMHg1MDgwMDAgc2l6ZSAweGEwMDAwMCBv
-ZmZzZXQgMCBkZWxhbGxvYyAxIHVud3JpdHRlbiAwCiAgICAgICAgICAgPC4uLj4tMTI2MjMgWzAw
-MF0gNjk0MDkzLjU5NDg4NTogeGZzX3dyaXRlcGFnZTogICAgICAgIGRldiAyNTM6MTYgaW5vIDB4
-MjMwMGE1IHBnb2ZmIDB4NTA5MDAwIHNpemUgMHhhMDAwMDAgb2Zmc2V0IDAgZGVsYWxsb2MgMSB1
-bndyaXR0ZW4gMAogICAgICAgICAgIDwuLi4+LTEyNjIzIFswMDBdIDY5NDA5My41OTQ4ODY6IHhm
-c193cml0ZXBhZ2U6ICAgICAgICBkZXYgMjUzOjE2IGlubyAweDIzMDBhNSBwZ29mZiAweDUwYTAw
-MCBzaXplIDB4YTAwMDAwIG9mZnNldCAwIGRlbGFsbG9jIDEgdW53cml0dGVuIDAKICAgICAgICAg
-ICA8Li4uPi0xMjYyMyBbMDAwXSA2OTQwOTMuNTk0ODg3OiB4ZnNfd3JpdGVwYWdlOiAgICAgICAg
-ZGV2IDI1MzoxNiBpbm8gMHgyMzAwYTUgcGdvZmYgMHg1MGIwMDAgc2l6ZSAweGEwMDAwMCBvZmZz
-ZXQgMCBkZWxhbGxvYyAxIHVud3JpdHRlbiAwCiAgICAgICAgICAgPC4uLj4tMTI2MjMgWzAwMF0g
-Njk0MDkzLjU5NDg4ODogeGZzX3dyaXRlcGFnZTogICAgICAgIGRldiAyNTM6MTYgaW5vIDB4MjMw
-MGE1IHBnb2ZmIDB4NTBjMDAwIHNpemUgMHhhMDAwMDAgb2Zmc2V0IDAgZGVsYWxsb2MgMSB1bndy
-aXR0ZW4gMAoKCmkuZS4gdGhlcmUgbWFwcGluZyBsb29rdXAgaXMgbm8gbG9uZ2VyIG9jY3Vycmlu
-ZyBmb3IgZXZlcnkgcGFnZS4KCkFzIGEgc2lkZSBlZmZlY3QsIHRoZSBmYWlsdXJlIGNhc2UgSSdt
-IHNlZWluZyB3aXRoIHRlc3QgMTgwIGhhcyBnb25lCmZyb20gNS0xMCBmaWxlcyB3aXRoIHRoZSB3
-cm9uZyBzaXplIHRvID4yMDAgZmlsZXMgd2l0aCB0aGUgd3JvbmcKc2l6ZSB3aXRoIHRoaXMgcGF0
-Y2gsIHNvIGNsZWFybHkgdGhlcmUgaXMgc29tZXRoaW5nIHdyb25nIHdpdGggZmlsZQpzaXplIHVw
-ZGF0ZXMgZ2V0dGluZyB0byBkaXNrIHRoYXQgdGhpcyBwYXRjaCBzZXQgbWFrZXMgd29yc2UuCgpD
-aGVlcnMsCgpEYXZlLgotLSAKRGF2ZSBDaGlubmVyCmRhdmlkQGZyb21vcmJpdC5jb20KCnhmczog
-aW8gdHlwZSBuZWVkcyB0byBiZSBwYXJ0IG9mIHRoZSB3cml0ZXBhZ2UgY29udGV4dAoKRnJvbTog
-RGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgoKSWYgd2UgZG9uJ3QgcGFzcyB0aGUg
-SU8gdHlwZSB3ZSBhcmUgbWFwcGluZyB3aXRoIHRoZSB3cml0ZWFnZQpjb250ZXh0LCB0aGVuIHRo
-ZSBpbWFwIGlzIHJlY2FsY3VsYXRlZCBvbiBldmVyeSBkZWxhbGxvYyBwYWdlIHRoYXQKaXMgcGFz
-c2VkIHRvIF94ZnNfdm1fd3JpdGVwYWdlKCkuIFRoaXMgZGVmZWF0cyB0aGUgcHVycG9zZSBvZiBo
-YXZpbmcKYSBjYWNoZWQgaW1hcCBiZXR3ZWVuIGNhbGxzIGFuZCBpbmNyZWFzZXMgdGhlIG92ZXJo
-ZWFkIG9mIGRlbGFsbG9jCndyaXRlYmFjayBzaWduaWZpY2FudGx5LgoKRml4IHRoaXMgYnkgbW92
-aW5nIHRoZSBpbyB0eXBlIGludG8gdGhlIHdyaXRlcGFnZSBjb250ZXh0IHN0cnVjdHVyZQpzbyB0
-aGF0IGl0IG1vdmVzIHdpdGggdGhlIGNhY2hlZCBpbWFwIHRocm91Z2ggdGhlIHN0YWNrLgoKU2ln
-bmVkLW9mZi1ieTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgotLS0KIGZzL3hm
-cy9saW51eC0yLjYveGZzX2FvcHMuYyB8ICAgMzAgKysrKysrKysrKysrKysrKysrLS0tLS0tLS0t
-LS0tCiAxIGZpbGVzIGNoYW5nZWQsIDE4IGluc2VydGlvbnMoKyksIDEyIGRlbGV0aW9ucygtKQoK
-ZGlmZiAtLWdpdCBhL2ZzL3hmcy9saW51eC0yLjYveGZzX2FvcHMuYyBiL2ZzL3hmcy9saW51eC0y
-LjYveGZzX2FvcHMuYwppbmRleCA3M2RhYzRiLi4yNWI2M2NkIDEwMDY0NAotLS0gYS9mcy94ZnMv
-bGludXgtMi42L3hmc19hb3BzLmMKKysrIGIvZnMveGZzL2xpbnV4LTIuNi94ZnNfYW9wcy5jCkBA
-IC00MCw2ICs0MCw3IEBACiAKIHN0cnVjdCB4ZnNfd3JpdGViYWNrX2N0eCB7CiAJdW5zaWduZWQg
-aW50CQlpbWFwX3ZhbGlkOworCXVuc2lnbmVkIGludAkJaW9fdHlwZTsKIAlzdHJ1Y3QgeGZzX2Jt
-YnRfaXJlYwlpbWFwOwogCXN0cnVjdCB4ZnNfaW9lbmQJKmlvaGVhZDsKIAlzdHJ1Y3QgeGZzX2lv
-ZW5kCSppb2VuZDsKQEAgLTgwNCw3ICs4MDUsNiBAQCBfX3hmc192bV93cml0ZXBhZ2UoCiAKIAli
-aCA9IGhlYWQgPSBwYWdlX2J1ZmZlcnMocGFnZSk7CiAJb2Zmc2V0ID0gcGFnZV9vZmZzZXQocGFn
-ZSk7Ci0JdHlwZSA9IElPX09WRVJXUklURTsKIAogCWRvIHsKIAkJaW50IG5ld19pb2VuZCA9IDA7
-CkBAIC04MjYsMTggKzgyNiwxOCBAQCBfX3hmc192bV93cml0ZXBhZ2UoCiAJCX0KIAogCQlpZiAo
-YnVmZmVyX3Vud3JpdHRlbihiaCkpIHsKLQkJCWlmICh0eXBlICE9IElPX1VOV1JJVFRFTikgewot
-CQkJCXR5cGUgPSBJT19VTldSSVRURU47CisJCQlpZiAoY3R4LT5pb190eXBlICE9IElPX1VOV1JJ
-VFRFTikgeworCQkJCWN0eC0+aW9fdHlwZSA9IElPX1VOV1JJVFRFTjsKIAkJCQljdHgtPmltYXBf
-dmFsaWQgPSAwOwogCQkJfQogCQl9IGVsc2UgaWYgKGJ1ZmZlcl9kZWxheShiaCkpIHsKLQkJCWlm
-ICh0eXBlICE9IElPX0RFTEFMTE9DKSB7Ci0JCQkJdHlwZSA9IElPX0RFTEFMTE9DOworCQkJaWYg
-KGN0eC0+aW9fdHlwZSAhPSBJT19ERUxBTExPQykgeworCQkJCWN0eC0+aW9fdHlwZSA9IElPX0RF
-TEFMTE9DOwogCQkJCWN0eC0+aW1hcF92YWxpZCA9IDA7CiAJCQl9CiAJCX0gZWxzZSBpZiAoYnVm
-ZmVyX3VwdG9kYXRlKGJoKSkgewotCQkJaWYgKHR5cGUgIT0gSU9fT1ZFUldSSVRFKSB7Ci0JCQkJ
-dHlwZSA9IElPX09WRVJXUklURTsKKwkJCWlmIChjdHgtPmlvX3R5cGUgIT0gSU9fT1ZFUldSSVRF
-KSB7CisJCQkJY3R4LT5pb190eXBlID0gSU9fT1ZFUldSSVRFOwogCQkJCWN0eC0+aW1hcF92YWxp
-ZCA9IDA7CiAJCQl9CiAJCX0gZWxzZSB7CkBAIC04NjIsNyArODYyLDggQEAgX194ZnNfdm1fd3Jp
-dGVwYWdlKAogCQkJICogdGltZS4KIAkJCSAqLwogCQkJbmV3X2lvZW5kID0gMTsKLQkJCWVyciA9
-IHhmc19tYXBfYmxvY2tzKGlub2RlLCBvZmZzZXQsICZjdHgtPmltYXAsIHR5cGUpOworCQkJZXJy
-ID0geGZzX21hcF9ibG9ja3MoaW5vZGUsIG9mZnNldCwgJmN0eC0+aW1hcCwKKwkJCQkJICAgICBj
-dHgtPmlvX3R5cGUpOwogCQkJaWYgKGVycikKIAkJCQlnb3RvIGVycm9yOwogCQkJY3R4LT5pbWFw
-X3ZhbGlkID0KQEAgLTg3MCwxMSArODcxLDEyIEBAIF9feGZzX3ZtX3dyaXRlcGFnZSgKIAkJfQog
-CQlpZiAoY3R4LT5pbWFwX3ZhbGlkKSB7CiAJCQlsb2NrX2J1ZmZlcihiaCk7Ci0JCQlpZiAodHlw
-ZSAhPSBJT19PVkVSV1JJVEUpIHsKKwkJCWlmIChjdHgtPmlvX3R5cGUgIT0gSU9fT1ZFUldSSVRF
-KSB7CiAJCQkJeGZzX21hcF9hdF9vZmZzZXQoaW5vZGUsIGJoLCAmY3R4LT5pbWFwLAogCQkJCQkJ
-ICBvZmZzZXQpOwogCQkJfQotCQkJeGZzX2FkZF90b19pb2VuZChjdHgsIGlub2RlLCBiaCwgb2Zm
-c2V0LCB0eXBlLCBuZXdfaW9lbmQpOworCQkJeGZzX2FkZF90b19pb2VuZChjdHgsIGlub2RlLCBi
-aCwgb2Zmc2V0LCBjdHgtPmlvX3R5cGUsCisJCQkJCSBuZXdfaW9lbmQpOwogCQkJY291bnQrKzsK
-IAkJfQogCX0gd2hpbGUgKG9mZnNldCArPSBsZW4sICgoYmggPSBiaC0+Yl90aGlzX3BhZ2UpICE9
-IGhlYWQpKTsKQEAgLTkwMiw3ICs5MDQsOSBAQCB4ZnNfdm1fd3JpdGVwYWdlKAogCXN0cnVjdCBw
-YWdlCQkqcGFnZSwKIAlzdHJ1Y3Qgd3JpdGViYWNrX2NvbnRyb2wgKndiYykKIHsKLQlzdHJ1Y3Qg
-eGZzX3dyaXRlYmFja19jdHggY3R4ID0geyB9OworCXN0cnVjdCB4ZnNfd3JpdGViYWNrX2N0eCBj
-dHggPSB7CisJCS5pb190eXBlID0gSU9fT1ZFUldSSVRFLAorCX07CiAJaW50IHJldDsKIAogCS8q
-CkBAIC05MzksNyArOTQzLDkgQEAgeGZzX3ZtX3dyaXRlcGFnZXMoCiAJc3RydWN0IGFkZHJlc3Nf
-c3BhY2UJKm1hcHBpbmcsCiAJc3RydWN0IHdyaXRlYmFja19jb250cm9sICp3YmMpCiB7Ci0Jc3Ry
-dWN0IHhmc193cml0ZWJhY2tfY3R4IGN0eCA9IHsgfTsKKwlzdHJ1Y3QgeGZzX3dyaXRlYmFja19j
-dHggY3R4ID0geworCQkuaW9fdHlwZSA9IElPX09WRVJXUklURSwKKwl9OwogCWludCByZXQ7CiAK
-IAl4ZnNfaWZsYWdzX2NsZWFyKFhGU19JKG1hcHBpbmctPmhvc3QpLCBYRlNfSVRSVU5DQVRFRCk7
-CgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFp
-bGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0
-aW5mby94ZnMK
+On Fri, Jul 01, 2011 at 12:22:48PM +1000, Dave Chinner wrote:
+> On Wed, Jun 29, 2011 at 10:01:12AM -0400, Christoph Hellwig wrote:
+> > Instead of implementing our own writeback clustering use write_cache_pages
+> > to do it for us.  This means the guts of the current writepage implementation
+> > become a new helper used both for implementing ->writepage and as a callback
+> > to write_cache_pages for ->writepages.  A new struct xfs_writeback_ctx
+> > is used to track block mapping state and the ioend chain over multiple
+> > invocation of it.
+> > 
+> > The advantage over the old code is that we avoid a double pagevec lookup,
+> > and a more efficient handling of extent boundaries inside a page for
+> > small blocksize filesystems, as well as having less XFS specific code.
+> 
+> It's not more efficient right now, due to a little bug:
+.....
+> With the following patch, the trace output now looks like this for
+> delalloc writeback:
+> 
+>            <...>-12623 [000] 694093.594883: xfs_writepage:        dev 253:16 ino 0x2300a5 pgoff 0x505000 size 0xa00000 offset 0 delalloc 1 unwritten 0
+>            <...>-12623 [000] 694093.594884: xfs_writepage:        dev 253:16 ino 0x2300a5 pgoff 0x506000 size 0xa00000 offset 0 delalloc 1 unwritten 0
+>            <...>-12623 [000] 694093.594884: xfs_writepage:        dev 253:16 ino 0x2300a5 pgoff 0x507000 size 0xa00000 offset 0 delalloc 1 unwritten 0
+>            <...>-12623 [000] 694093.594885: xfs_writepage:        dev 253:16 ino 0x2300a5 pgoff 0x508000 size 0xa00000 offset 0 delalloc 1 unwritten 0
+>            <...>-12623 [000] 694093.594885: xfs_writepage:        dev 253:16 ino 0x2300a5 pgoff 0x509000 size 0xa00000 offset 0 delalloc 1 unwritten 0
+>            <...>-12623 [000] 694093.594886: xfs_writepage:        dev 253:16 ino 0x2300a5 pgoff 0x50a000 size 0xa00000 offset 0 delalloc 1 unwritten 0
+>            <...>-12623 [000] 694093.594887: xfs_writepage:        dev 253:16 ino 0x2300a5 pgoff 0x50b000 size 0xa00000 offset 0 delalloc 1 unwritten 0
+>            <...>-12623 [000] 694093.594888: xfs_writepage:        dev 253:16 ino 0x2300a5 pgoff 0x50c000 size 0xa00000 offset 0 delalloc 1 unwritten 0
+> 
+> 
+> i.e. there mapping lookup is no longer occurring for every page.
+> 
+> As a side effect, the failure case I'm seeing with test 180 has gone
+> from 5-10 files with the wrong size to >200 files with the wrong
+> size with this patch, so clearly there is something wrong with file
+> size updates getting to disk that this patch set makes worse.
+
+I'm now only running test 180 on 100 files rather than the 1000 the
+test normally runs on, because it's faster and still shows the
+problem.  That means the test is only using 1GB of disk space, and
+I'm running on a VM with 1GB RAM. It appears to be related to the VM
+triggering random page writeback from the LRU - 100x10MB files more
+than fills memory, hence it being the smallest test case i could
+reproduce the problem on.
+
+My triage notes are as follows, and the patch that fixes the bug is
+attached below.
+
+--- 180.out     2010-04-28 15:00:22.000000000 +1000
++++ 180.out.bad 2011-07-01 12:44:12.000000000 +1000
+@@ -1 +1,9 @@
+ QA output created by 180
++file /mnt/scratch/81 has incorrect size 10473472 - sync failed
++file /mnt/scratch/86 has incorrect size 10371072 - sync failed
++file /mnt/scratch/87 has incorrect size 10104832 - sync failed
++file /mnt/scratch/88 has incorrect size 10125312 - sync failed
++file /mnt/scratch/89 has incorrect size 10469376 - sync failed
++file /mnt/scratch/90 has incorrect size 10240000 - sync failed
++file /mnt/scratch/91 has incorrect size 10362880 - sync failed
++file /mnt/scratch/92 has incorrect size 10366976 - sync failed
+
+$ ls -li /mnt/scratch/ | awk '/rw/ { printf("0x%x %d %d\n", $1, $6, $10); }'
+0x244093 10473472 81
+0x244098 10371072 86
+0x244099 10104832 87
+0x24409a 10125312 88
+0x24409b 10469376 89
+0x24409c 10240000 90
+0x24409d 10362880 91
+0x24409e 10366976 92
+
+So looking at inode 0x244099 (/mnt/scratch/87), the last setfilesize
+call in the trace (got a separate patch for that) is:
+
+           <...>-393   [000] 696245.229559: xfs_ilock_nowait:     dev 253:16 ino 0x244099 flags ILOCK_EXCL caller xfs_setfilesize
+           <...>-393   [000] 696245.229560: xfs_setfilesize:      dev 253:16 ino 0x244099 isize 0xa00000 disize 0x94e000 new_size 0x0 offset 0x600000 count 3813376
+           <...>-393   [000] 696245.229561: xfs_iunlock:          dev 253:16 ino 0x244099 flags ILOCK_EXCL caller xfs_setfilesize
+
+For an IO that was from offset 0x600000 for just under 4MB. The end
+of that IO is at byte 10104832, which is _exactly_ what the inode
+size says it is.
+
+It is very clear that from the IO completions that we are getting a
+*lot* of kswapd driven writeback directly through .writepage:
+
+$ grep "xfs_setfilesize:" t.t |grep "4096$" | wc -l
+801
+$ grep "xfs_setfilesize:" t.t |grep -v "4096$" | wc -l
+78
+
+So there's ~900 IO completions that change the file size, and 90% of
+them are single page updates.
+
+$ ps -ef |grep [k]swap
+root       514     2  0 12:43 ?        00:00:00 [kswapd0]
+$ grep "writepage:" t.t | grep "514 " |wc -l
+799
+
+Oh, now that is too close to just be a co-incidence. We're getting
+significant amounts of random page writeback from the the ends of
+the LRUs done by the VM.
+
+<sigh>
+
+back on topic:
+
+           <...>-393   [000] 696245.511905: xfs_ilock_nowait:     dev 253:16 ino 0x24409e flags ILOCK_EXCL caller xfs_setfilesize
+           <...>-393   [000] 696245.511906: xfs_setfilesize:      dev 253:16 ino 0x24409e isize 0xa00000 disize 0x99e000 new_size 0x0 offset 0x99e000 count 4096
+           <...>-393   [000] 696245.511906: xfs_iunlock:          dev 253:16 ino 0x24409e flags ILOCK_EXCL caller xfs_setfilesize
+
+Completion that updated the file size
+
+           <...>-393   [000] 696245.515279: xfs_ilock_nowait:     dev 253:16 ino 0x24409e flags ILOCK_EXCL caller xfs_setfilesize
+           <...>-393   [000] 696245.515280: xfs_iunlock:          dev 253:16 ino 0x24409e flags ILOCK_EXCL caller xfs_setfilesize
+
+Immediately followed by one that didn't.
+
+           <...>-2619  [000] 696245.806576: xfs_writepage:        dev 253:16 ino 0x24409e pgoff 0x858000 size 0xa00000 offset 0 delalloc 1 unwritten 0
+           <...>-2619  [000] 696245.806578: xfs_ilock:            dev 253:16 ino 0x24409e flags ILOCK_SHARED caller xfs_map_blocks
+           <...>-2619  [000] 696245.806579: xfs_iunlock:          dev 253:16 ino 0x24409e flags ILOCK_SHARED caller xfs_map_blocks
+           <...>-2619  [000] 696245.806579: xfs_map_blocks_found: dev 253:16 ino 0x24409e size 0x99f000 new_size 0x0 offset 0x858000 count 1024 type  startoff 0x0 startblock 931888 blockcount 0x2800
+
+New writepage call, showing the on disk file size matches with the last  xfs_setfilesize call.
+
+           <...>-2619  [000] 696245.806581: xfs_writepage:        dev 253:16 ino 0x24409e pgoff 0x859000 size 0xa00000 offset 0 delalloc 1 unwritten 0
+           <...>-2619  [000] 696245.806582: xfs_writepage:        dev 253:16 ino 0x24409e pgoff 0x85a000 size 0xa00000 offset 0 delalloc 1 unwritten 0
+.....
+           <...>-2619  [000] 696245.806825: xfs_writepage:        dev 253:16 ino 0x24409e pgoff 0x9fc000 size 0xa00000 offset 0 delalloc 1 unwritten 0
+           <...>-2619  [000] 696245.806826: xfs_writepage:        dev 253:16 ino 0x24409e pgoff 0x9fd000 size 0xa00000 offset 0 delalloc 1 unwritten 0
+           <...>-2619  [000] 696245.806827: xfs_writepage:        dev 253:16 ino 0x24409e pgoff 0x9fe000 size 0xa00000 offset 0 delalloc 1 unwritten 0
+           <...>-2619  [000] 696245.806828: xfs_writepage:        dev 253:16 ino 0x24409e pgoff 0x9ff000 size 0xa00000 offset 0 delalloc 1 unwritten 0
+
+Ummmm, hold on just a second there. We've already written the page
+at pgoff 0x9fe000: how else did we get that completion and file size
+update?  So how come that page is still considered to be dirty *and*
+delalloc?  WTF?
+
+Ok, so limit the tracing to writepage, block map and setfilesize
+events to try to see what is going on.
+
+           <...>-514   [000] 699227.049423: xfs_writepage:        dev 253:16 ino 0x21c098 pgoff 0x88a000 size 0xa00000 offset 0 delalloc 1 unwritten 0
+           <...>-514   [000] 699227.049426: xfs_map_blocks_found: dev 253:16 ino 0x21c098 size 0x0 new_size 0x0 offset 0x88a000 count 1024 type  startoff 0x0 startblock 870448 blockcount 0x2800
+           <...>-393   [000] 699227.229449: xfs_setfilesize:      dev 253:16 ino 0x21c098 isize 0xa00000 disize 0x0 new_size 0x0 offset 0x0 count 2097152
+           <...>-514   [000] 699227.251726: xfs_writepage:        dev 253:16 ino 0x21c098 pgoff 0x88b000 size 0xa00000 offset 0 delalloc 1 unwritten 0
+           <...>-514   [000] 699227.251729: xfs_map_blocks_found: dev 253:16 ino 0x21c098 size 0x200000 new_size 0x0 offset 0x88b000 count 1024 type  startoff 0x0 startblock 870448 blockcount 0x2800
+.....
+
+Ok, a bunch of kswapd writeback, then:
+
+           <...>-4070  [000] 699227.987373: xfs_writepage:        dev 253:16 ino 0x21c098 pgoff 0x800000 size 0xa00000 offset 0 delalloc 1 unwritten 0
+           <...>-4070  [000] 699227.987376: xfs_map_blocks_found: dev 253:16 ino 0x21c098 size 0x8ab000 new_size 0x0 offset 0x800000 count 1024 type  startoff 0x0 startblock 870448 blockcount 0x2800
+           <...>-4070  [000] 699227.987377: xfs_writepage:        dev 253:16 ino 0x21c098 pgoff 0x801000 size 0xa00000 offset 0 delalloc 1 unwritten 0
+.....
+           <...>-4070  [000] 699227.987706: xfs_writepage:        dev 253:16 ino 0x21c098 pgoff 0x9fe000 size 0xa00000 offset 0 delalloc 1 unwritten 0
+           <...>-4070  [000] 699227.987707: xfs_writepage:        dev 253:16 ino 0x21c098 pgoff 0x9ff000 size 0xa00000 offset 0 delalloc 1 unwritten 0
+           <...>-393   [000] 699228.154118: xfs_setfilesize:      dev 253:16 ino 0x21c098 isize 0xa00000 disize 0x8ab000 new_size 0x0 offset 0x800000 count 1961984
+ 
+Normal writeback. Ok, writeback there spanned a range of 0x200000
+(2^21 bytes or 2MiB) pages, but we get an ioend count of on 1961984
+bytes, which is 136KiB short. Ok, looking back at the kswapd
+writeback, it fell right in the middle of this range, and what we
+see is this during the scanning:
+
+           <...>-4070  [000] 699227.987474: xfs_writepage:        dev 253:16 ino 0x21c098 pgoff 0x888000 size 0xa00000 offset 0 delalloc 1 unwritten 0
+           <...>-4070  [000] 699227.987475: xfs_writepage:        dev 253:16 ino 0x21c098 pgoff 0x889000 size 0xa00000 offset 0 delalloc 1 unwritten 0
+           <...>-4070  [000] 699227.987476: xfs_writepage:        dev 253:16 ino 0x21c098 pgoff 0x8ab000 size 0xa00000 offset 0 delalloc 1 unwritten 0
+           <...>-4070  [000] 699227.987477: xfs_writepage:        dev 253:16 ino 0x21c098 pgoff 0x8ac000 size 0xa00000 offset 0 delalloc 1 unwritten 0
+
+A non contiguous page range. That's 132KiB long, so matches the
+incorrect ioned value pretty closely. There's probably another
+single page hole in the scan somewhere.
+
+What this means is that the ioend is aggregating a non-contiguous
+range of pages, which is being submitted as multiple IO so the data
+is being written to the correct place. The problem is that the ioend
+size doesn't include the holes, so doesn't reflect the range of IO
+correctly and so if not setting the file size correctly.
+
+The old code used to terminate an ioend when a discontiguity in the
+mapping was discovered by the clustering page cache lookup. The
+callback we have now doesn't do this discontiguity discovery, so is
+simply placing discontiguous pages in the same ioend. We need to
+start a new ioend when we get a discontiguity.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+xfs: writepage context needs to handle discontiguous page ranges
+
+From: Dave Chinner <dchinner@redhat.com>
+
+If the pages sent down by write_cache_pages to the writepage
+callback are discontiguous, we need to detect this and put each
+discontiguous page range into individual ioends. This is needed to
+ensure that the ioend accurately represents the range of the file
+that it covers so that file size updates during IO completion set
+the size correctly. Failure to take into account the discontiguous
+ranges results in files being too small when writeback patterns are
+non-sequential.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/linux-2.6/xfs_aops.c |    7 ++++++-
+ 1 files changed, 6 insertions(+), 1 deletions(-)
+
+diff --git a/fs/xfs/linux-2.6/xfs_aops.c b/fs/xfs/linux-2.6/xfs_aops.c
+index 9f3f387..eadff82 100644
+--- a/fs/xfs/linux-2.6/xfs_aops.c
++++ b/fs/xfs/linux-2.6/xfs_aops.c
+@@ -44,6 +44,7 @@ struct xfs_writeback_ctx {
+ 	struct xfs_bmbt_irec	imap;
+ 	struct xfs_ioend	*iohead;
+ 	struct xfs_ioend	*ioend;
++	sector_t		last_block;
+ };
+ 
+ /*
+@@ -575,7 +576,10 @@ xfs_add_to_ioend(
+ 	unsigned int		type,
+ 	int			need_ioend)
+ {
+-	if (!ctx->ioend || need_ioend || type != ctx->ioend->io_type) {
++	if (!ctx->ioend ||
++	     need_ioend ||
++	     type != ctx->ioend->io_type ||
++	     bh->b_blocknr != ctx->last_block + 1) {
+ 		struct xfs_ioend	*new;
+ 
+ 		new = xfs_alloc_ioend(inode, type);
+@@ -595,6 +599,7 @@ xfs_add_to_ioend(
+ 
+ 	bh->b_private = NULL;
+ 	ctx->ioend->io_size += bh->b_size;
++	ctx->last_block = bh->b_blocknr;
+ }
+ 
+ STATIC void
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
