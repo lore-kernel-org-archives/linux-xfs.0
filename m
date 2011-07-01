@@ -1,22 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p61Gik6u081287 for <xfs@oss.sgi.com>; Fri, 1 Jul 2011 11:44:46 -0500
-Received: from a.mail.sonic.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 70EC81675FC5
-	for <xfs@oss.sgi.com>; Fri,  1 Jul 2011 09:44:41 -0700 (PDT)
-Received: from a.mail.sonic.net (a.mail.sonic.net [64.142.16.245]) by
-	cuda.sgi.com with ESMTP id paKyhxtQSaRO6Zy0 for
-	<xfs@oss.sgi.com>; Fri, 01 Jul 2011 09:44:41 -0700 (PDT)
-Received: from webmail.sonic.net (b.webmail.sonic.net [69.12.208.80])
-	by a.mail.sonic.net (8.13.8.Beta0-Sonic/8.13.7) with ESMTP id
-	p61GifeR000730 for <xfs@oss.sgi.com>; Fri, 1 Jul 2011 09:44:41 -0700
+	p61KrHY1101199 for <xfs@oss.sgi.com>; Fri, 1 Jul 2011 15:53:17 -0500
+Received: from smtp-out.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8E0B1178D5EE
+	for <xfs@oss.sgi.com>; Fri,  1 Jul 2011 13:53:15 -0700 (PDT)
+Received: from smtp-out.google.com (smtp-out.google.com [74.125.121.67]) by
+	cuda.sgi.com with ESMTP id fwqv20ckLcOOcYBZ for
+	<xfs@oss.sgi.com>; Fri, 01 Jul 2011 13:53:15 -0700 (PDT)
+Received: from wpaz1.hot.corp.google.com (wpaz1.hot.corp.google.com
+	[172.24.198.65]) by smtp-out.google.com with ESMTP id p61KrE3G028338
+	for <xfs@oss.sgi.com>; Fri, 1 Jul 2011 13:53:14 -0700
+Received: from gwaa12 (gwaa12.prod.google.com [10.200.27.12])
+	by wpaz1.hot.corp.google.com with ESMTP id p61KqgtM022250
+	(version=TLSv1/SSLv3 cipher=RC4-SHA bits=128 verify=NOT)
+	for <xfs@oss.sgi.com>; Fri, 1 Jul 2011 13:53:13 -0700
+Received: by gwaa12 with SMTP id a12so1803119gwa.0
+	for <xfs@oss.sgi.com>; Fri, 01 Jul 2011 13:53:13 -0700 (PDT)
 MIME-Version: 1.0
-Message-ID: <51043.1309538681@sonic.net>
-Date: Fri, 01 Jul 2011 09:44:41 -0700
-Subject: Re: xfs_growfs doesn't resize
-From: kkeller@sonic.net
-Reply-To: kkeller@sonic.net
+From: Akshay Lal <akshaylal@google.com>
+Date: Fri, 1 Jul 2011 13:52:43 -0700
+Message-ID: <CAP57jx5TWxwaDhp6yY+b_tBb8_WTBaRPDCfdQ3pV4Bs-S869QQ@mail.gmail.com>
+Subject: [PATCH 1/1] Fix the ltp Makefile to allow for installation of all
+	non-c (scripts) files
+Reply-To: alal@google.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,32 +38,42 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Thanks for the response, Dave!  I have some additional questions inline.
+Current the Makefile only builds the .c files and installs
+them in the $INSTALL path. However, the ltp directory contains a shell script,
+which doen't get copied over (installed) when a "make install"is invoked.
 
+This behaviour causes test 080 to fail since it requires rwtest.sh to be
+present in the ltp/ directory.
 
-On Fri 01/07/11  3:46 AM , Dave Chinner <david@fromorbit.com> wrote:
+Tested: Updated the Makefile and ran a static build script & test
+080.
 
-> So either way, you will have to unmount the filesystem.
+Signed-off-by: Akshay Lal <akshaylal@google.com>
+---
+ ltp/Makefile |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-Yikes!  I am guessing that may put the filesystem at risk of not being able to re-mount without xfs_db commands, as happened to the other posters I cited.  If I want to minimize the amount of downtime if umounting does cause the fs not to be mountable, is there a way for me to look at the xfs_db output after I umount, and calculate any new parameters myself?  Or is that considered generally unwise, and xfs_db needs an expert to look at the output?  I want to minimize downtime, but I also want to minimize the risk of data loss, so I wouldn't want to derive my own xfs_db commands unless it was very safe.  (Even with backups available, it's more work to switch over or restore if I do lose the filesystem; we're a small group so we don't have an automatic failover server.)
+diff --git a/ltp/Makefile b/ltp/Makefile
+index 32cd380..d47247b 100644
+--- a/ltp/Makefile
++++ b/ltp/Makefile
+@@ -6,6 +6,7 @@ TOPDIR = ..
+ include $(TOPDIR)/include/builddefs
 
-Are there any other docs concerning using xfs_db?  I saw a post from last year that said that there weren't, but I'm wondering if that's changed since then.  There is of course the man page, but that doesn't describe how to interpret what's going on from its output (or what the correct steps to take are if there's a problem).
+ TARGETS = doio fsstress fsx growfiles iogen
++SCRIPTS = rwtest.sh
+ CFILES = $(TARGETS:=.c)
+ HFILES = doio.h
+ LDIRT = $(TARGETS)
+@@ -44,5 +45,6 @@ $(TARGETS): $(LIBTEST)
+ install: default
+       $(INSTALL) -m 755 -d $(PKG_LIB_DIR)/ltp
+       $(INSTALL) -m 755 $(TARGETS) $(PKG_LIB_DIR)/ltp
++       $(INSTALL) -m 755 $(SCRIPTS) $(PKG_LIB_DIR)/ltp
 
-> > ==Assuming my filesystem is healthy, will a simple kernel update
-> > (and reboot of course!) allow me to resize the filesystem in one
-> > step, instead of 2TB increments?
-> 
-> I'd upgrade both kernel and userspace.
-
-Would you recommend upgrading userspace from source?  CentOS 5 still calls the version available (from their centosplus repo) 2.9.4, but I haven't investigated what sort of patches they may have applied.
-
-
---keith
-
-
--- 
-kkeller@sonic.net
-
+ -include .dep
+--
+1.7.3.1
 
 _______________________________________________
 xfs mailing list
