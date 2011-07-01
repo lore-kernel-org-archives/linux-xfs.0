@@ -1,24 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p619k6KL056071 for <xfs@oss.sgi.com>; Fri, 1 Jul 2011 04:46:07 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 456DF16748C3
-	for <xfs@oss.sgi.com>; Fri,  1 Jul 2011 02:46:06 -0700 (PDT)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	6bYGowgrj17BNOAq for <xfs@oss.sgi.com>;
-	Fri, 01 Jul 2011 02:46:06 -0700 (PDT)
-Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1QcaIX-0001xG-Eo
-	for xfs@oss.sgi.com; Fri, 01 Jul 2011 09:46:05 +0000
-Message-Id: <20110701094605.415405585@bombadil.infradead.org>
-Date: Fri, 01 Jul 2011 05:43:36 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 15/27] xfs: cleanup the defintion of struct xfs_dir2_sf_entry
-References: <20110701094321.936534538@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-cleanup-xfs_dir2_sf_entry
+	p61AbttB060858 for <xfs@oss.sgi.com>; Fri, 1 Jul 2011 05:37:55 -0500
+Received: from mail-ey0-f181.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E26CA46271
+	for <xfs@oss.sgi.com>; Fri,  1 Jul 2011 03:37:52 -0700 (PDT)
+Received: from mail-ey0-f181.google.com (mail-ey0-f181.google.com
+	[209.85.215.181]) by cuda.sgi.com with ESMTP id
+	WDa1amEX8OeP2Lcl for <xfs@oss.sgi.com>;
+	Fri, 01 Jul 2011 03:37:52 -0700 (PDT)
+Received: by eyh5 with SMTP id 5so1106919eyh.26
+	for <xfs@oss.sgi.com>; Fri, 01 Jul 2011 03:37:50 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20110701090332.GO561@dastard>
+References: <BANLkTikhE+N3GByMKnKJU=Tn1CTYHoNRUg@mail.gmail.com>
+	<20110630121918.GK561@dastard>
+	<BANLkTimyhDJeuNo_L-xc=yEc_EtyH5NTVg@mail.gmail.com>
+	<20110701090332.GO561@dastard>
+Date: Fri, 1 Jul 2011 16:07:49 +0530
+Message-ID: <BANLkTim7OMYdD8xsLg4dL-2UaENRDe8j5A@mail.gmail.com>
+Subject: Re: XFS and USB Hang on 2.6.35.13
+From: Amit Sahrawat <amit.sahrawat83@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,115 +29,164 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Remove the inumber member which is at a variable offset after the actual
-name, and make name a real variable sized C99 array instead of the incorrect
-one-sized array which confuses (not only) gcc.  Based on this clean up
-the helpers to calculate the entry size.
+On Fri, Jul 1, 2011 at 2:33 PM, Dave Chinner <david@fromorbit.com> wrote:
+> On Fri, Jul 01, 2011 at 10:00:54AM +0530, Amit Sahrawat wrote:
+>> On Thu, Jun 30, 2011 at 5:49 PM, Dave Chinner <david@fromorbit.com> wrot=
+e:
+>> > On Thu, Jun 30, 2011 at 04:57:42PM +0530, Amit Sahrawat wrote:
+>> > > Hi All,
+>> > > I encountered a hang on XFS during unplug.
+>> > > *Test Case:*
+>> > > #!/bin/sh
+>> > > index=3D0
+>> > > while [ "$?" =3D=3D 0 ]
+>> > > do
+>> > > =A0 =A0 =A0 =A0 index=3D$(($index+1))
+>> > > =A0 =A0 =A0 =A0 sync
+>> > > =A0 =A0 =A0 =A0 cp /mnt/1KB.txt /tmp/"$index".test
+>> > > done
+>> > > Where /mnt - mount point for vfat and /tmp mount point for XFS, both=
+ can be
+>> > > XFS also.
+>> > >
+>> > > During this operation, unplug the USB. I am getting HANG almost ever=
+ytime I
+>> > > unplug.
+>> >
+>> > Well, that's no surprise. The unplug appears to be losing IOs in
+>> > progress.
+>> >
+>> > > *Kernel Version:* 2.6.35.13 (extremely sorry, I know next question w=
+ill be
+>> > > why am I not using TOT kernel - I tried but my PC does not boot up w=
+ith the
+>> > > latest one)
+> .....
+>> > > *INFO: task khubd:*33 blocked for more than 120 seconds.
+>> > > "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this mes=
+sage.
+>> > > khubd =A0 =A0 =A0 =A0 D c06c261c =A0 =A0 0 =A0 =A033 =A0 =A0 =A02 0x=
+00000000
+>> > > Backtrace:
+>> > > [<c06c2210>] (schedule+0x0/0x500) from [<c0523f4c>]
+>> > > (_xfs_log_force+0x230/0x284)
+>> >
+>> > You need to turn off line wrapping for stuff you paste into email.
+>> > The cleaned up (i.e. relevant part) trace is:
+>> >
+>> > [<c06c2210>] (schedule+0x0/0x500)
+>> > [<c0523d1c>] (_xfs_log_force+0x0/0x284)
+>> > [<c052417c>] (xfs_log_force+0x0/0x38)
+>> > [<c0544e94>] (xfs_sync_data+0x0/0x58)
+>> > [<c0544f20>] (xfs_quiesce_data+0x0/0x80)
+>> > [<c05421e4>] (xfs_fs_sync_fs+0x0/0xe0)
+>> > [<c048fa74>] (__sync_filesystem+0x0/0xa0)
+>> > [<c048fb88>] (sync_filesystem+0x0/0x60)
+>> > [<c0499104>] (fsync_bdev+0x0/0x44)
+>> > [<c056c680>] (invalidate_partition+0x0/0x3c)
+>> > [<c04b88e0>] (del_gendisk+0x0/0x140)
+>> > [<c05c78a0>] (sd_remove+0x0/0x84)
+>> > [<c05b27f4>] (__device_release_driver+0x0/0xac)
+>> > [<c05b2954>] (device_release_driver+0x0/0x30)
+>> > [<c05b1ddc>] (bus_remove_device+0x0/0x8c)
+>> > [<c05b02d8>] (device_del+0x0/0x170)
+>> > [<c05c4d5c>] (__scsi_remove_device+0x0/0x90)
+>> > [<c05c23bc>] (scsi_forget_host+0x0/0x6c)
+>> > [<c05bc38c>] (scsi_remove_host+0x0/0x104)
+>> > [<c0612f94>] (quiesce_and_remove_host+0x0/0x9c)
+>> > [<c06130b4>] (usb_stor_disconnect+0x0/0x28)
+>> > [<c0601614>] (usb_unbind_interface+0x0/0xdc)
+>> > [<c05b27f4>] (__device_release_driver+0x0/0xac)
+>> > [<c05b2954>] (device_release_driver+0x0/0x30)
+>> > [<c05b1ddc>] (bus_remove_device+0x0/0x8c)
+>> > [<c05b02d8>] (device_del+0x0/0x170)
+>> > [<c05ff06c>] (usb_disable_device+0x0/0xf8)
+>> > [<c05fa8e0>] (usb_disconnect+0x0/0xf4)
+>> > [<c05fabd8>] (hub_thread+0x0/0xd78)
+>> > [<c041e61c>] (kthread+0x0/0x8c)
+>> >
+>> > Well, that just looks utterly braindamaged to me.
+>> >
+>> > We just had the device containing the filesystem removed from the
+>> > system, so the error handling routine ends up trying to sync the
+>> > filesystem to the device that doesn't exist anymore. WTF?
+>> >
+>>
+>> >>> This is what I think, why is syncing taking place when the
+>
+> Amit, you don't need to quote your own reply. That just confuses
+> mail readers that understand the ">" quoting convention and
+> highlight appropriately, and made me wonder if you'd even
+> replied....
+Ok will take care of this in future.
+>
+>> This is what I think, why is syncing taking place when the
+>> device doesn't exist anymore. What is the gain in doing so?
+>
+> I doubt the person who wrote the error handling even realised that
+> it ended up in such a mess.
+That means there is no review going on for that path.
+>
+>> I
+>> will try and propose this feature.
+>
+> Not sure what you mean by this....
+I wanted to revise this error leg where-in sync is taking place. I can
+only propose the suggestion for these error condition at the moment.
+>
+> ....
+>> > AFAICT, this problem doesn't exist in TOT - the conversion of the
+>>
+>> Again I have a problem which seems fixed in TOT :)
+>>
+>> > xfslogd workqueue to CMWQ allows processing of other xfslogd
+>> > workqueue events to continue even though this one has gone to sleep.
+>> >
+>> > You probably need to change the shutdown type to
+>> > SHUTDOWN_LOG_IO_ERROR to prevent a log flush from occurring in this
+>> > shutdown context.
+>>
+>> This will fix the error for this kernel version, I will give this a try.
+>> Is this the patchwork for CMWQ:
+>> http://patchwork.xfs.org/patch/2037/ (xfs: improve sync behaviour
+>> in face of aggressive dirtying) ? Please let me know.
+>
+> No. 2.6.35 doesn't have the CMWQ infrastructure, it was introduced
+> in 2.6.38 IIRC.
+>
+> IOWs, there isn't a fix you can just backport - you're going to need
+> to write and test your own fix, and my suggestion for doing that is
+> above.
+Yes, I went through the lwn.net and the kernel patches survey, CMWQ is
+new infrastructure and cannot be adopted to 2.6.35. At first I thought
+changes might be related only to XFS, but it is not like that.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Regarding your fix - I tried out the change by setting the
+flag(SHUTDOWN_LOG_IO_ERROR) in this condition and it is working fine.
+There is a comment also in the function : xfs_do_force_shutdown()
+which appropriately mentions the very same thing. But since in our
+case it was returning due to flag not set, we ended up putting xfslogd
+to infinite sleep.
 
-Index: xfs/fs/xfs/xfs_dir2_sf.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_dir2_sf.c	2011-06-30 09:37:41.120068219 +0200
-+++ xfs/fs/xfs/xfs_dir2_sf.c	2011-06-30 09:38:34.303400889 +0200
-@@ -371,7 +371,7 @@ xfs_dir2_sf_addname(
- 	/*
- 	 * Compute entry (and change in) size.
- 	 */
--	add_entsize = xfs_dir2_sf_entsize_byname(sfp, args->namelen);
-+	add_entsize = xfs_dir2_sf_entsize(sfp, args->namelen);
- 	incr_isize = add_entsize;
- 	objchange = 0;
- #if XFS_BIG_INUMS
-@@ -465,7 +465,7 @@ xfs_dir2_sf_addname_easy(
- 	/*
- 	 * Grow the in-inode space.
- 	 */
--	xfs_idata_realloc(dp, xfs_dir2_sf_entsize_byname(sfp, args->namelen),
-+	xfs_idata_realloc(dp, xfs_dir2_sf_entsize(sfp, args->namelen),
- 		XFS_DATA_FORK);
- 	/*
- 	 * Need to set up again due to realloc of the inode data.
-@@ -1001,7 +1001,7 @@ xfs_dir2_sf_removename(
- 	 * Calculate sizes.
- 	 */
- 	byteoff = (int)((char *)sfep - (char *)sfp);
--	entsize = xfs_dir2_sf_entsize_byname(sfp, args->namelen);
-+	entsize = xfs_dir2_sf_entsize(sfp, args->namelen);
- 	newsize = oldsize - entsize;
- 	/*
- 	 * Copy the part if any after the removed entry, sliding it down.
-Index: xfs/fs/xfs/xfs_dir2_sf.h
-===================================================================
---- xfs.orig/fs/xfs/xfs_dir2_sf.h	2011-06-30 09:35:55.813402859 +0200
-+++ xfs/fs/xfs/xfs_dir2_sf.h	2011-06-30 09:38:34.303400889 +0200
-@@ -76,10 +76,13 @@ typedef struct xfs_dir2_sf_hdr {
- } __arch_pack xfs_dir2_sf_hdr_t;
- 
- typedef struct xfs_dir2_sf_entry {
--	__uint8_t		namelen;	/* actual name length */
-+	__u8			namelen;	/* actual name length */
- 	xfs_dir2_sf_off_t	offset;		/* saved offset */
--	__uint8_t		name[1];	/* name, variable size */
--	xfs_dir2_inou_t		inumber;	/* inode number, var. offset */
-+	__u8			name[];		/* name, variable size */
-+	/*
-+	 * A xfs_dir2_ino8_t or xfs_dir2_ino4_t follows here, at a
-+	 * variable offset after the name.
-+	 */
- } __arch_pack xfs_dir2_sf_entry_t; 
- 
- static inline int xfs_dir2_sf_hdr_size(int i8count)
-@@ -101,32 +104,27 @@ xfs_dir2_sf_put_offset(xfs_dir2_sf_entry
- 	INT_SET_UNALIGNED_16_BE(&(sfep)->offset.i, off);
- }
- 
--static inline int xfs_dir2_sf_entsize_byname(xfs_dir2_sf_hdr_t *sfp, int len)
--{
--	return ((uint)sizeof(xfs_dir2_sf_entry_t) - 1 + (len) - \
--		((sfp)->i8count == 0) * \
--		((uint)sizeof(xfs_dir2_ino8_t) - (uint)sizeof(xfs_dir2_ino4_t)));
--}
--
- static inline int
--xfs_dir2_sf_entsize_byentry(xfs_dir2_sf_hdr_t *sfp, xfs_dir2_sf_entry_t *sfep)
-+xfs_dir2_sf_entsize(xfs_dir2_sf_hdr_t *sfp, int len)
- {
--	return ((uint)sizeof(xfs_dir2_sf_entry_t) - 1 + (sfep)->namelen - \
--		((sfp)->i8count == 0) * \
--		((uint)sizeof(xfs_dir2_ino8_t) - (uint)sizeof(xfs_dir2_ino4_t)));
-+	return sizeof(xfs_dir2_sf_entry_t) +	/* namelen + offset */
-+		len +				/* name */
-+		(sfp->i8count ?			/* ino */
-+		 sizeof(xfs_dir2_ino8_t) :
-+		 sizeof(xfs_dir2_ino4_t));
- }
- 
- static inline xfs_dir2_sf_entry_t *xfs_dir2_sf_firstentry(xfs_dir2_sf_hdr_t *sfp)
- {
--	return ((xfs_dir2_sf_entry_t *) \
--		((char *)(sfp) + xfs_dir2_sf_hdr_size(sfp->i8count)));
-+	return (xfs_dir2_sf_entry_t *)
-+		((char *)sfp + xfs_dir2_sf_hdr_size(sfp->i8count));
- }
- 
- static inline xfs_dir2_sf_entry_t *
- xfs_dir2_sf_nextentry(xfs_dir2_sf_hdr_t *sfp, xfs_dir2_sf_entry_t *sfep)
- {
--	return ((xfs_dir2_sf_entry_t *) \
--		((char *)(sfep) + xfs_dir2_sf_entsize_byentry(sfp,sfep)));
-+	return (xfs_dir2_sf_entry_t *)
-+		((char *)sfep + xfs_dir2_sf_entsize(sfp, sfep->namelen));
- }
- 
- /*
+Thanks for your help.
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
+>
+
+Regards,
+Amit Sahrawat
 
 _______________________________________________
 xfs mailing list
