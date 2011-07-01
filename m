@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p619k5C3056039 for <xfs@oss.sgi.com>; Fri, 1 Jul 2011 04:46:06 -0500
+	p619k3sd055977 for <xfs@oss.sgi.com>; Fri, 1 Jul 2011 04:46:04 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0ADBD16748BB
-	for <xfs@oss.sgi.com>; Fri,  1 Jul 2011 02:46:04 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2C3F1178BD62
+	for <xfs@oss.sgi.com>; Fri,  1 Jul 2011 02:46:03 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	uqnslvBCHybFN30d for <xfs@oss.sgi.com>;
-	Fri, 01 Jul 2011 02:46:04 -0700 (PDT)
+	3SG9XsiG8E7Hi5qh for <xfs@oss.sgi.com>;
+	Fri, 01 Jul 2011 02:46:03 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1QcaIV-0001tb-Qv
-	for xfs@oss.sgi.com; Fri, 01 Jul 2011 09:46:04 +0000
-Message-Id: <20110701094603.789209280@bombadil.infradead.org>
-Date: Fri, 01 Jul 2011 05:43:29 -0400
+	Linux)) id 1QcaIU-0001qt-M6
+	for xfs@oss.sgi.com; Fri, 01 Jul 2011 09:46:02 +0000
+Message-Id: <20110701094602.647499467@bombadil.infradead.org>
+Date: Fri, 01 Jul 2011 05:43:24 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 08/27] xfs: improve sync behaviour in the fact of aggressive
-	dirtying
+Subject: [PATCH 03/27] xfs: work around bogus gcc warning in
+	xfs_allocbt_init_cursor
 References: <20110701094321.936534538@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-simplify-sync
+Content-Disposition: inline; filename=xfs-fix-xfs_allocbt_init_cursor-warning
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,80 +35,42 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-The following script from Wu Fengguang shows very bad behaviour in XFS
-when aggressively dirtying data during a sync on XFS, with sync times
-up to almost 10 times as long as ext4.
+GCC 4.6 complains about an array subscript is above array bounds when
+using the btree index to index into the agf_levels array.  The only
+two indices passed in are 0 and 1, and we have an assert insuring that.
 
-A large part of the issue is that XFS writes data out itself two times
-in the ->sync_fs method, overriding the lifelock protection in the core
-writeback code, and another issue is the lock-less xfs_ioend_wait call,
-which doesn't prevent new ioend from beeing queue up while waiting for
-the count to reach zero.
-
-This patch removes the XFS-internal sync calls and relies on the VFS
-to do it's work just like all other filesystems do.  Note that the
-i_iocount wait which is rather suboptimal is simply removed here.
-We already do it in ->write_inode, which keeps the current supoptimal
-behaviour.  We'll eventually need to remove that as well, but that's
-material for a separate commit.
-
------------------------------- snip ------------------------------
-#!/bin/sh
-
-umount /dev/sda7
-mkfs.xfs -f /dev/sda7
-# mkfs.ext4 /dev/sda7
-# mkfs.btrfs /dev/sda7
-mount /dev/sda7 /fs
-
-echo $((50<<20)) > /proc/sys/vm/dirty_bytes
-
-pid=
-for i in `seq 10`
-do
-	dd if=/dev/zero of=/fs/zero-$i bs=1M count=1000 &
-	pid="$pid $!"
-done
-
-sleep 1
-
-tic=$(date +'%s')
-sync
-tac=$(date +'%s')
-
-echo
-echo sync time: $((tac-tic))
-egrep '(Dirty|Writeback|NFS_Unstable)' /proc/meminfo
-
-pidof dd > /dev/null && { kill -9 $pid; echo sync NOT livelocked; }
------------------------------- snip ------------------------------
+Replace the trick of using the array index directly with using constants
+in the already existing branch for assigning the XFS_BTREE_LASTREC_UPDATE
+flag.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reported-by: Wu Fengguang <fengguang.wu@intel.com>
+Reviewed-by: Alex Elder <aelder@sgi.com>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-Index: xfs/fs/xfs/linux-2.6/xfs_sync.c
+Index: xfs/fs/xfs/xfs_alloc_btree.c
 ===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_sync.c	2011-06-29 11:26:14.109219361 +0200
-+++ xfs/fs/xfs/linux-2.6/xfs_sync.c	2011-06-29 11:37:20.642275110 +0200
-@@ -359,14 +359,12 @@ xfs_quiesce_data(
- {
- 	int			error, error2 = 0;
+--- xfs.orig/fs/xfs/xfs_alloc_btree.c	2011-06-17 14:16:27.929065669 +0200
++++ xfs/fs/xfs/xfs_alloc_btree.c	2011-06-17 14:17:22.145729599 +0200
+@@ -427,13 +427,16 @@ xfs_allocbt_init_cursor(
  
--	/* push non-blocking */
--	xfs_sync_data(mp, 0);
- 	xfs_qm_sync(mp, SYNC_TRYLOCK);
+ 	cur->bc_tp = tp;
+ 	cur->bc_mp = mp;
+-	cur->bc_nlevels = be32_to_cpu(agf->agf_levels[btnum]);
+ 	cur->bc_btnum = btnum;
+ 	cur->bc_blocklog = mp->m_sb.sb_blocklog;
 -
--	/* push and block till complete */
--	xfs_sync_data(mp, SYNC_WAIT);
- 	xfs_qm_sync(mp, SYNC_WAIT);
- 
-+	/* force out the newly dirtied log buffers */
-+	xfs_log_force(mp, XFS_LOG_SYNC);
+ 	cur->bc_ops = &xfs_allocbt_ops;
+-	if (btnum == XFS_BTNUM_CNT)
 +
- 	/* write superblock and hoover up shutdown errors */
- 	error = xfs_sync_fsdata(mp);
++	if (btnum == XFS_BTNUM_CNT) {
++		cur->bc_nlevels = be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNT]);
+ 		cur->bc_flags = XFS_BTREE_LASTREC_UPDATE;
++	} else {
++		cur->bc_nlevels = be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNO]);
++	}
  
+ 	cur->bc_private.a.agbp = agbp;
+ 	cur->bc_private.a.agno = agno;
 
 _______________________________________________
 xfs mailing list
