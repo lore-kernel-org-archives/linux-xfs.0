@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p619k7q5056076 for <xfs@oss.sgi.com>; Fri, 1 Jul 2011 04:46:07 -0500
+	p619XBEZ055590 for <xfs@oss.sgi.com>; Fri, 1 Jul 2011 04:33:12 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EE92C16748BB
-	for <xfs@oss.sgi.com>; Fri,  1 Jul 2011 02:46:05 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EB43E1D1E2AA
+	for <xfs@oss.sgi.com>; Fri,  1 Jul 2011 02:33:10 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	OE10Qoiygve6uQXW for <xfs@oss.sgi.com>;
-	Fri, 01 Jul 2011 02:46:05 -0700 (PDT)
-Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1QcaIX-0001wD-0T
-	for xfs@oss.sgi.com; Fri, 01 Jul 2011 09:46:05 +0000
-Message-Id: <20110701094604.976400061@bombadil.infradead.org>
-Date: Fri, 01 Jul 2011 05:43:34 -0400
+	no5pCib0bXNxE1Qi for <xfs@oss.sgi.com>;
+	Fri, 01 Jul 2011 02:33:10 -0700 (PDT)
+Date: Fri, 1 Jul 2011 05:33:05 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 13/27] xfs: cleanup shortform directory inode number handling
-References: <20110701094321.936534538@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-dir2_sf-cleanup-inum-handling
+Subject: Re: [PATCH 03/27] xfs: use write_cache_pages for writeback clustering
+Message-ID: <20110701093305.GA28531@infradead.org>
+References: <20110629140109.003209430@bombadil.infradead.org>
+	<20110629140336.950805096@bombadil.infradead.org>
+	<20110701022248.GM561@dastard> <20110701041851.GN561@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20110701041851.GN561@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,414 +28,119 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Mel Gorman <mgorman@suse.de>, Johannes Weiner <jweiner@redhat.com>, Wu Fengguang <fengguang.wu@intel.com>
+Cc: linux-mm@kvack.org, xfs@oss.sgi.com
 
-Refactor the shortform directory helpers that deal with the 32-bit vs
-64-bit wide inode numbers into more sensible helpers, and kill the
-xfs_intino_t typedef that is now superflous.
+Johannes, Mel, Wu,
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Dave has been stressing some XFS patches of mine that remove the XFS
+internal writeback clustering in favour of using write_cache_pages.
 
-Index: xfs/fs/xfs/xfs_dir2_sf.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_dir2_sf.c	2011-06-30 09:31:15.330073010 +0200
-+++ xfs/fs/xfs/xfs_dir2_sf.c	2011-06-30 09:34:46.640070544 +0200
-@@ -59,6 +59,79 @@ static void xfs_dir2_sf_toino4(xfs_da_ar
- static void xfs_dir2_sf_toino8(xfs_da_args_t *args);
- #endif /* XFS_BIG_INUMS */
- 
-+
-+/*
-+ * Inode numbers in short-form directories can come in two versions,
-+ * either 4 bytes or 8 bytes wide.  These helpers deal with the
-+ * two forms transparently by looking at the headers i8count field.
-+ */
-+static xfs_ino_t
-+xfs_dir2_sf_get_ino(
-+	struct xfs_dir2_sf	*sfp,
-+	xfs_dir2_inou_t		*from)
-+{
-+	if (sfp->hdr.i8count)
-+		return XFS_GET_DIR_INO8(from->i8);
-+	else
-+		return XFS_GET_DIR_INO4(from->i4);
-+}
-+
-+static void
-+xfs_dir2_sf_put_ino(
-+	struct xfs_dir2_sf	*sfp,
-+	xfs_dir2_inou_t		*to,
-+	xfs_ino_t		ino)
-+{
-+	if (sfp->hdr.i8count)
-+		XFS_PUT_DIR_INO8(ino, to->i8);
-+	else
-+		XFS_PUT_DIR_INO4(ino, to->i4);
-+}
-+
-+xfs_ino_t
-+xfs_dir2_sf_get_parent_ino(
-+	struct xfs_dir2_sf	*sfp)
-+{
-+	return xfs_dir2_sf_get_ino(sfp, &sfp->hdr.parent);
-+}
-+
-+static void
-+xfs_dir2_sf_put_parent_ino(
-+	struct xfs_dir2_sf	*sfp,
-+	xfs_ino_t		ino)
-+{
-+	xfs_dir2_sf_put_ino(sfp, &sfp->hdr.parent, ino);
-+}
-+
-+/*
-+ * In short-form directory entries the inode numbers are stored at variable
-+ * offset behind the entry name.  The inode numbers may only be accessed
-+ * through the helpers below.
-+ */
-+static xfs_dir2_inou_t *
-+xfs_dir2_sfe_inop(
-+	struct xfs_dir2_sf_entry *sfep)
-+{
-+	return (xfs_dir2_inou_t *)&sfep->name[sfep->namelen];
-+}
-+
-+xfs_ino_t
-+xfs_dir2_sfe_get_ino(
-+	struct xfs_dir2_sf	*sfp,
-+	struct xfs_dir2_sf_entry *sfep)
-+{
-+	return xfs_dir2_sf_get_ino(sfp, xfs_dir2_sfe_inop(sfep));
-+}
-+
-+static void
-+xfs_dir2_sfe_put_ino(
-+	struct xfs_dir2_sf	*sfp,
-+	struct xfs_dir2_sf_entry *sfep,
-+	xfs_ino_t		ino)
-+{
-+	xfs_dir2_sf_put_ino(sfp, xfs_dir2_sfe_inop(sfep), ino);
-+}
-+
- /*
-  * Given a block directory (dp/block), calculate its size as a shortform (sf)
-  * directory and a header for the sf directory, if it will fit it the
-@@ -138,7 +211,7 @@ xfs_dir2_block_sfsize(
- 	 */
- 	sfhp->count = count;
- 	sfhp->i8count = i8count;
--	xfs_dir2_sf_put_inumber((xfs_dir2_sf_t *)sfhp, &parent, &sfhp->parent);
-+	xfs_dir2_sf_put_parent_ino((xfs_dir2_sf_t *)sfhp, parent);
- 	return size;
- }
- 
-@@ -165,7 +238,6 @@ xfs_dir2_block_to_sf(
- 	char			*ptr;		/* current data pointer */
- 	xfs_dir2_sf_entry_t	*sfep;		/* shortform entry */
- 	xfs_dir2_sf_t		*sfp;		/* shortform structure */
--	xfs_ino_t               temp;
- 
- 	trace_xfs_dir2_block_to_sf(args);
- 
-@@ -233,7 +305,7 @@ xfs_dir2_block_to_sf(
- 		else if (dep->namelen == 2 &&
- 			 dep->name[0] == '.' && dep->name[1] == '.')
- 			ASSERT(be64_to_cpu(dep->inumber) ==
--			       xfs_dir2_sf_get_inumber(sfp, &sfp->hdr.parent));
-+			       xfs_dir2_sf_get_parent_ino(sfp));
- 		/*
- 		 * Normal entry, copy it into shortform.
- 		 */
-@@ -243,9 +315,9 @@ xfs_dir2_block_to_sf(
- 				(xfs_dir2_data_aoff_t)
- 				((char *)dep - (char *)block));
- 			memcpy(sfep->name, dep->name, dep->namelen);
--			temp = be64_to_cpu(dep->inumber);
--			xfs_dir2_sf_put_inumber(sfp, &temp,
--				xfs_dir2_sf_inumberp(sfep));
-+			xfs_dir2_sfe_put_ino(sfp, sfep,
-+					     be64_to_cpu(dep->inumber));
-+
- 			sfep = xfs_dir2_sf_nextentry(sfp, sfep);
- 		}
- 		ptr += xfs_dir2_data_entsize(dep->namelen);
-@@ -406,8 +478,7 @@ xfs_dir2_sf_addname_easy(
- 	sfep->namelen = args->namelen;
- 	xfs_dir2_sf_put_offset(sfep, offset);
- 	memcpy(sfep->name, args->name, sfep->namelen);
--	xfs_dir2_sf_put_inumber(sfp, &args->inumber,
--		xfs_dir2_sf_inumberp(sfep));
-+	xfs_dir2_sfe_put_ino(sfp, sfep, args->inumber);
- 	/*
- 	 * Update the header and inode.
- 	 */
-@@ -498,8 +569,7 @@ xfs_dir2_sf_addname_hard(
- 	sfep->namelen = args->namelen;
- 	xfs_dir2_sf_put_offset(sfep, offset);
- 	memcpy(sfep->name, args->name, sfep->namelen);
--	xfs_dir2_sf_put_inumber(sfp, &args->inumber,
--		xfs_dir2_sf_inumberp(sfep));
-+	xfs_dir2_sfe_put_ino(sfp, sfep, args->inumber);
- 	sfp->hdr.count++;
- #if XFS_BIG_INUMS
- 	if (args->inumber > XFS_DIR2_MAX_SHORT_INUM && !objchange)
-@@ -618,14 +688,14 @@ xfs_dir2_sf_check(
- 
- 	sfp = (xfs_dir2_sf_t *)dp->i_df.if_u1.if_data;
- 	offset = XFS_DIR2_DATA_FIRST_OFFSET;
--	ino = xfs_dir2_sf_get_inumber(sfp, &sfp->hdr.parent);
-+	ino = xfs_dir2_sf_get_parent_ino(sfp);
- 	i8count = ino > XFS_DIR2_MAX_SHORT_INUM;
- 
- 	for (i = 0, sfep = xfs_dir2_sf_firstentry(sfp);
- 	     i < sfp->hdr.count;
- 	     i++, sfep = xfs_dir2_sf_nextentry(sfp, sfep)) {
- 		ASSERT(xfs_dir2_sf_get_offset(sfep) >= offset);
--		ino = xfs_dir2_sf_get_inumber(sfp, xfs_dir2_sf_inumberp(sfep));
-+		ino = xfs_dir2_sfe_get_ino(sfp, sfep);
- 		i8count += ino > XFS_DIR2_MAX_SHORT_INUM;
- 		offset =
- 			xfs_dir2_sf_get_offset(sfep) +
-@@ -686,7 +756,7 @@ xfs_dir2_sf_create(
- 	/*
- 	 * Now can put in the inode number, since i8count is set.
- 	 */
--	xfs_dir2_sf_put_inumber(sfp, &pino, &sfp->hdr.parent);
-+	xfs_dir2_sf_put_parent_ino(sfp, pino);
- 	sfp->hdr.count = 0;
- 	dp->i_d.di_size = size;
- 	xfs_dir2_sf_check(args);
-@@ -759,7 +829,7 @@ xfs_dir2_sf_getdents(
- 	 * Put .. entry unless we're starting past it.
- 	 */
- 	if (*offset <= dotdot_offset) {
--		ino = xfs_dir2_sf_get_inumber(sfp, &sfp->hdr.parent);
-+		ino = xfs_dir2_sf_get_parent_ino(sfp);
- 		if (filldir(dirent, "..", 2, dotdot_offset & 0x7fffffff, ino, DT_DIR)) {
- 			*offset = dotdot_offset & 0x7fffffff;
- 			return 0;
-@@ -779,7 +849,7 @@ xfs_dir2_sf_getdents(
- 			continue;
- 		}
- 
--		ino = xfs_dir2_sf_get_inumber(sfp, xfs_dir2_sf_inumberp(sfep));
-+		ino = xfs_dir2_sfe_get_ino(sfp, sfep);
- 		if (filldir(dirent, (char *)sfep->name, sfep->namelen,
- 			    off & 0x7fffffff, ino, DT_UNKNOWN)) {
- 			*offset = off & 0x7fffffff;
-@@ -839,7 +909,7 @@ xfs_dir2_sf_lookup(
- 	 */
- 	if (args->namelen == 2 &&
- 	    args->name[0] == '.' && args->name[1] == '.') {
--		args->inumber = xfs_dir2_sf_get_inumber(sfp, &sfp->hdr.parent);
-+		args->inumber = xfs_dir2_sf_get_parent_ino(sfp);
- 		args->cmpresult = XFS_CMP_EXACT;
- 		return XFS_ERROR(EEXIST);
- 	}
-@@ -858,8 +928,7 @@ xfs_dir2_sf_lookup(
- 								sfep->namelen);
- 		if (cmp != XFS_CMP_DIFFERENT && cmp != args->cmpresult) {
- 			args->cmpresult = cmp;
--			args->inumber = xfs_dir2_sf_get_inumber(sfp,
--						xfs_dir2_sf_inumberp(sfep));
-+			args->inumber = xfs_dir2_sfe_get_ino(sfp, sfep);
- 			if (cmp == XFS_CMP_EXACT)
- 				return XFS_ERROR(EEXIST);
- 			ci_sfep = sfep;
-@@ -918,9 +987,8 @@ xfs_dir2_sf_removename(
- 				i++, sfep = xfs_dir2_sf_nextentry(sfp, sfep)) {
- 		if (xfs_da_compname(args, sfep->name, sfep->namelen) ==
- 								XFS_CMP_EXACT) {
--			ASSERT(xfs_dir2_sf_get_inumber(sfp,
--						xfs_dir2_sf_inumberp(sfep)) ==
--								args->inumber);
-+			ASSERT(xfs_dir2_sfe_get_ino(sfp, sfep) ==
-+			       args->inumber);
- 			break;
- 		}
- 	}
-@@ -1040,10 +1108,10 @@ xfs_dir2_sf_replace(
- 	if (args->namelen == 2 &&
- 	    args->name[0] == '.' && args->name[1] == '.') {
- #if XFS_BIG_INUMS || defined(DEBUG)
--		ino = xfs_dir2_sf_get_inumber(sfp, &sfp->hdr.parent);
-+		ino = xfs_dir2_sf_get_parent_ino(sfp);
- 		ASSERT(args->inumber != ino);
- #endif
--		xfs_dir2_sf_put_inumber(sfp, &args->inumber, &sfp->hdr.parent);
-+		xfs_dir2_sf_put_parent_ino(sfp, args->inumber);
- 	}
- 	/*
- 	 * Normal entry, look for the name.
-@@ -1055,12 +1123,10 @@ xfs_dir2_sf_replace(
- 			if (xfs_da_compname(args, sfep->name, sfep->namelen) ==
- 								XFS_CMP_EXACT) {
- #if XFS_BIG_INUMS || defined(DEBUG)
--				ino = xfs_dir2_sf_get_inumber(sfp,
--					xfs_dir2_sf_inumberp(sfep));
-+				ino = xfs_dir2_sfe_get_ino(sfp, sfep);
- 				ASSERT(args->inumber != ino);
- #endif
--				xfs_dir2_sf_put_inumber(sfp, &args->inumber,
--					xfs_dir2_sf_inumberp(sfep));
-+				xfs_dir2_sfe_put_ino(sfp, sfep, args->inumber);
- 				break;
- 			}
- 		}
-@@ -1121,7 +1187,6 @@ xfs_dir2_sf_toino4(
- 	char			*buf;		/* old dir's buffer */
- 	xfs_inode_t		*dp;		/* incore directory inode */
- 	int			i;		/* entry index */
--	xfs_ino_t		ino;		/* entry inode number */
- 	int			newsize;	/* new inode size */
- 	xfs_dir2_sf_entry_t	*oldsfep;	/* old sf entry */
- 	xfs_dir2_sf_t		*oldsfp;	/* old sf directory */
-@@ -1162,8 +1227,7 @@ xfs_dir2_sf_toino4(
- 	 */
- 	sfp->hdr.count = oldsfp->hdr.count;
- 	sfp->hdr.i8count = 0;
--	ino = xfs_dir2_sf_get_inumber(oldsfp, &oldsfp->hdr.parent);
--	xfs_dir2_sf_put_inumber(sfp, &ino, &sfp->hdr.parent);
-+	xfs_dir2_sf_put_parent_ino(sfp, xfs_dir2_sf_get_parent_ino(oldsfp));
- 	/*
- 	 * Copy the entries field by field.
- 	 */
-@@ -1175,9 +1239,8 @@ xfs_dir2_sf_toino4(
- 		sfep->namelen = oldsfep->namelen;
- 		sfep->offset = oldsfep->offset;
- 		memcpy(sfep->name, oldsfep->name, sfep->namelen);
--		ino = xfs_dir2_sf_get_inumber(oldsfp,
--			xfs_dir2_sf_inumberp(oldsfep));
--		xfs_dir2_sf_put_inumber(sfp, &ino, xfs_dir2_sf_inumberp(sfep));
-+		xfs_dir2_sfe_put_ino(sfp, sfep,
-+			xfs_dir2_sfe_get_ino(oldsfp, oldsfep));
- 	}
- 	/*
- 	 * Clean up the inode.
-@@ -1199,7 +1262,6 @@ xfs_dir2_sf_toino8(
- 	char			*buf;		/* old dir's buffer */
- 	xfs_inode_t		*dp;		/* incore directory inode */
- 	int			i;		/* entry index */
--	xfs_ino_t		ino;		/* entry inode number */
- 	int			newsize;	/* new inode size */
- 	xfs_dir2_sf_entry_t	*oldsfep;	/* old sf entry */
- 	xfs_dir2_sf_t		*oldsfp;	/* old sf directory */
-@@ -1240,8 +1302,7 @@ xfs_dir2_sf_toino8(
- 	 */
- 	sfp->hdr.count = oldsfp->hdr.count;
- 	sfp->hdr.i8count = 1;
--	ino = xfs_dir2_sf_get_inumber(oldsfp, &oldsfp->hdr.parent);
--	xfs_dir2_sf_put_inumber(sfp, &ino, &sfp->hdr.parent);
-+	xfs_dir2_sf_put_parent_ino(sfp, xfs_dir2_sf_get_parent_ino(oldsfp));
- 	/*
- 	 * Copy the entries field by field.
- 	 */
-@@ -1253,9 +1314,8 @@ xfs_dir2_sf_toino8(
- 		sfep->namelen = oldsfep->namelen;
- 		sfep->offset = oldsfep->offset;
- 		memcpy(sfep->name, oldsfep->name, sfep->namelen);
--		ino = xfs_dir2_sf_get_inumber(oldsfp,
--			xfs_dir2_sf_inumberp(oldsfep));
--		xfs_dir2_sf_put_inumber(sfp, &ino, xfs_dir2_sf_inumberp(sfep));
-+		xfs_dir2_sfe_put_ino(sfp, sfep,
-+			xfs_dir2_sfe_get_ino(oldsfp, oldsfep));
- 	}
- 	/*
- 	 * Clean up the inode.
-Index: xfs/fs/xfs/xfs_dir2_sf.h
-===================================================================
---- xfs.orig/fs/xfs/xfs_dir2_sf.h	2011-06-30 09:31:15.343406344 +0200
-+++ xfs/fs/xfs/xfs_dir2_sf.h	2011-06-30 09:32:00.390072451 +0200
-@@ -90,28 +90,6 @@ static inline int xfs_dir2_sf_hdr_size(i
- 		((uint)sizeof(xfs_dir2_ino8_t) - (uint)sizeof(xfs_dir2_ino4_t)));
- }
- 
--static inline xfs_dir2_inou_t *xfs_dir2_sf_inumberp(xfs_dir2_sf_entry_t *sfep)
--{
--	return (xfs_dir2_inou_t *)&(sfep)->name[(sfep)->namelen];
--}
--
--static inline xfs_intino_t
--xfs_dir2_sf_get_inumber(xfs_dir2_sf_t *sfp, xfs_dir2_inou_t *from)
--{
--	return ((sfp)->hdr.i8count == 0 ? \
--		(xfs_intino_t)XFS_GET_DIR_INO4((from)->i4) : \
--		(xfs_intino_t)XFS_GET_DIR_INO8((from)->i8));
--}
--
--static inline void xfs_dir2_sf_put_inumber(xfs_dir2_sf_t *sfp, xfs_ino_t *from,
--						xfs_dir2_inou_t *to)
--{
--	if ((sfp)->hdr.i8count == 0)
--		XFS_PUT_DIR_INO4(*(from), (to)->i4);
--	else
--		XFS_PUT_DIR_INO8(*(from), (to)->i8);
--}
--
- static inline xfs_dir2_data_aoff_t
- xfs_dir2_sf_get_offset(xfs_dir2_sf_entry_t *sfep)
- {
-@@ -155,6 +133,9 @@ xfs_dir2_sf_nextentry(xfs_dir2_sf_t *sfp
- /*
-  * Functions.
-  */
-+extern xfs_ino_t xfs_dir2_sf_get_parent_ino(struct xfs_dir2_sf *sfp);
-+extern xfs_ino_t xfs_dir2_sfe_get_ino(struct xfs_dir2_sf *sfp,
-+				      struct xfs_dir2_sf_entry *sfep);
- extern int xfs_dir2_block_sfsize(struct xfs_inode *dp,
- 				 struct xfs_dir2_block *block,
- 				 xfs_dir2_sf_hdr_t *sfhp);
-Index: xfs/fs/xfs/xfs_inum.h
-===================================================================
---- xfs.orig/fs/xfs/xfs_inum.h	2011-06-30 09:31:15.353406344 +0200
-+++ xfs/fs/xfs/xfs_inum.h	2011-06-30 09:32:00.390072451 +0200
-@@ -28,17 +28,6 @@
- 
- typedef	__uint32_t	xfs_agino_t;	/* within allocation grp inode number */
- 
--/*
-- * Useful inode bits for this kernel.
-- * Used in some places where having 64-bits in the 32-bit kernels
-- * costs too much.
-- */
--#if XFS_BIG_INUMS
--typedef	xfs_ino_t	xfs_intino_t;
--#else
--typedef	__uint32_t	xfs_intino_t;
--#endif
--
- #define	NULLFSINO	((xfs_ino_t)-1)
- #define	NULLAGINO	((xfs_agino_t)-1)
- 
-Index: xfs/fs/xfs/xfs_dir2_block.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_dir2_block.c	2011-06-30 09:31:15.000000000 +0200
-+++ xfs/fs/xfs/xfs_dir2_block.c	2011-06-30 09:32:00.393405784 +0200
-@@ -1146,7 +1146,7 @@ xfs_dir2_sf_to_block(
- 	 */
- 	dep = (xfs_dir2_data_entry_t *)
- 		((char *)block + XFS_DIR2_DATA_DOTDOT_OFFSET);
--	dep->inumber = cpu_to_be64(xfs_dir2_sf_get_inumber(sfp, &sfp->hdr.parent));
-+	dep->inumber = cpu_to_be64(xfs_dir2_sf_get_parent_ino(sfp));
- 	dep->namelen = 2;
- 	dep->name[0] = dep->name[1] = '.';
- 	tagp = xfs_dir2_data_entry_tag_p(dep);
-@@ -1195,8 +1195,7 @@ xfs_dir2_sf_to_block(
- 		 * Copy a real entry.
- 		 */
- 		dep = (xfs_dir2_data_entry_t *)((char *)block + newoffset);
--		dep->inumber = cpu_to_be64(xfs_dir2_sf_get_inumber(sfp,
--				xfs_dir2_sf_inumberp(sfep)));
-+		dep->inumber = cpu_to_be64(xfs_dir2_sfe_get_ino(sfp, sfep));
- 		dep->namelen = sfep->namelen;
- 		memcpy(dep->name, sfep->name, dep->namelen);
- 		tagp = xfs_dir2_data_entry_tag_p(dep);
+As part of investigating the behaviour he found out that we're still
+doing lots of I/O from the end of the LRU in kswapd.  Not only is that
+pretty bad behaviour in general, but it also means we really can't
+just remove the writeback clustering in writepage given how much
+I/O is still done through that.
+
+Any chance we could the writeback vs kswap behaviour sorted out a bit
+better finally?
+
+Some excerpts from the previous discussion:
+
+On Fri, Jul 01, 2011 at 02:18:51PM +1000, Dave Chinner wrote:
+> I'm now only running test 180 on 100 files rather than the 1000 the
+> test normally runs on, because it's faster and still shows the
+> problem.  That means the test is only using 1GB of disk space, and
+> I'm running on a VM with 1GB RAM. It appears to be related to the VM
+> triggering random page writeback from the LRU - 100x10MB files more
+> than fills memory, hence it being the smallest test case i could
+> reproduce the problem on.
+> 
+> My triage notes are as follows, and the patch that fixes the bug is
+> attached below.
+> 
+> --- 180.out     2010-04-28 15:00:22.000000000 +1000
+> +++ 180.out.bad 2011-07-01 12:44:12.000000000 +1000
+> @@ -1 +1,9 @@
+>  QA output created by 180
+> +file /mnt/scratch/81 has incorrect size 10473472 - sync failed
+> +file /mnt/scratch/86 has incorrect size 10371072 - sync failed
+> +file /mnt/scratch/87 has incorrect size 10104832 - sync failed
+> +file /mnt/scratch/88 has incorrect size 10125312 - sync failed
+> +file /mnt/scratch/89 has incorrect size 10469376 - sync failed
+> +file /mnt/scratch/90 has incorrect size 10240000 - sync failed
+> +file /mnt/scratch/91 has incorrect size 10362880 - sync failed
+> +file /mnt/scratch/92 has incorrect size 10366976 - sync failed
+> 
+> $ ls -li /mnt/scratch/ | awk '/rw/ { printf("0x%x %d %d\n", $1, $6, $10); }'
+> 0x244093 10473472 81
+> 0x244098 10371072 86
+> 0x244099 10104832 87
+> 0x24409a 10125312 88
+> 0x24409b 10469376 89
+> 0x24409c 10240000 90
+> 0x24409d 10362880 91
+> 0x24409e 10366976 92
+> 
+> So looking at inode 0x244099 (/mnt/scratch/87), the last setfilesize
+> call in the trace (got a separate patch for that) is:
+> 
+>            <...>-393   [000] 696245.229559: xfs_ilock_nowait:     dev 253:16 ino 0x244099 flags ILOCK_EXCL caller xfs_setfilesize
+>            <...>-393   [000] 696245.229560: xfs_setfilesize:      dev 253:16 ino 0x244099 isize 0xa00000 disize 0x94e000 new_size 0x0 offset 0x600000 count 3813376
+>            <...>-393   [000] 696245.229561: xfs_iunlock:          dev 253:16 ino 0x244099 flags ILOCK_EXCL caller xfs_setfilesize
+> 
+> For an IO that was from offset 0x600000 for just under 4MB. The end
+> of that IO is at byte 10104832, which is _exactly_ what the inode
+> size says it is.
+> 
+> It is very clear that from the IO completions that we are getting a
+> *lot* of kswapd driven writeback directly through .writepage:
+> 
+> $ grep "xfs_setfilesize:" t.t |grep "4096$" | wc -l
+> 801
+> $ grep "xfs_setfilesize:" t.t |grep -v "4096$" | wc -l
+> 78
+> 
+> So there's ~900 IO completions that change the file size, and 90% of
+> them are single page updates.
+> 
+> $ ps -ef |grep [k]swap
+> root       514     2  0 12:43 ?        00:00:00 [kswapd0]
+> $ grep "writepage:" t.t | grep "514 " |wc -l
+> 799
+> 
+> Oh, now that is too close to just be a co-incidence. We're getting
+> significant amounts of random page writeback from the the ends of
+> the LRUs done by the VM.
+> 
+> <sigh>
+
+
+On Fri, Jul 01, 2011 at 07:20:21PM +1000, Dave Chinner wrote:
+> > Looks good.  I still wonder why I haven't been able to hit this.
+> > Haven't seen any 180 failure for a long time, with both 4k and 512 byte
+> > filesystems and since yesterday 1k as well.
+> 
+> It requires the test to run the VM out of RAM and then force enough
+> memory pressure for kswapd to start writeback from the LRU. The
+> reproducer I have is a 1p, 1GB RAM VM with it's disk image on a
+> 100MB/s HW RAID1 w/ 512MB BBWC disk subsystem.
+> 
+> When kswapd starts doing writeback from the LRU, the iops rate goes
+> through the roof (from ~300iops @~320k/io to ~7000iops @4k/io) and
+> throughput drops from 100MB/s to ~30MB/s. BBWC is the only reason
+> the IOPS stays as high as it does - maybe that is why I saw this and
+> you haven't.
+> 
+> As it is, the kswapd writeback behaviour is utterly atrocious and,
+> ultimately, quite easy to provoke. I wish the MM folk would fix that
+> goddamn problem already - we've only been complaining about it for
+> the last 6 or 7 years. As such, I'm wondering if it's a bad idea to
+> even consider removing the .writepage clustering...
 
 _______________________________________________
 xfs mailing list
