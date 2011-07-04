@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p648hHSs127615 for <xfs@oss.sgi.com>; Mon, 4 Jul 2011 03:43:18 -0500
+	p648W7aC125883 for <xfs@oss.sgi.com>; Mon, 4 Jul 2011 03:32:08 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 102895246A3
-	for <xfs@oss.sgi.com>; Mon,  4 Jul 2011 01:43:16 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 35DB71678D19
+	for <xfs@oss.sgi.com>; Mon,  4 Jul 2011 01:32:06 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	MNwos1iawA6UlidQ for <xfs@oss.sgi.com>;
-	Mon, 04 Jul 2011 01:43:16 -0700 (PDT)
-Date: Mon, 4 Jul 2011 04:43:16 -0400
+	DAjcWAuoAH6UxbV9 for <xfs@oss.sgi.com>;
+	Mon, 04 Jul 2011 01:32:06 -0700 (PDT)
+Date: Mon, 4 Jul 2011 04:32:06 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 4/5] xfs: convert AIL cursors to use struct list_head
-Message-ID: <20110704084316.GA5907@infradead.org>
+Subject: Re: [PATCH 2/5] xfs: use a cursor for bulk AIL insertion
+Message-ID: <20110704083206.GA28858@infradead.org>
 References: <1309757260-5484-1-git-send-email-david@fromorbit.com>
-	<1309757260-5484-5-git-send-email-david@fromorbit.com>
+	<1309757260-5484-3-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1309757260-5484-5-git-send-email-david@fromorbit.com>
+In-Reply-To: <1309757260-5484-3-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,39 +34,42 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, Jul 04, 2011 at 03:27:39PM +1000, Dave Chinner wrote:
 >  /*
->   * AIL traversal cursor initialisation.
->   *
-> + * The cursor keeps track of where our current traversal is up to by tracking
-> + * the next ??tem in the list for us. However, for this to be safe, removing an
-               ^^
-Non-ASCSI character.
-
-> + * object from the AIL needs to invalidate any cursor that points to it. hence
-> + * the traversal cursor needs to be linked to the struct xfs_ail so that
-> + * deletion can search all the active cursors for invalidation.
+> + * Initialise the cursor to the last item in the AIL with the given @lsn.
+> + * This searches the list from highest LSN to lowest.
 >   */
->  STATIC void
->  xfs_trans_ail_cursor_init(
-> @@ -181,17 +177,13 @@ xfs_trans_ail_cursor_init(
->  	struct xfs_ail_cursor	*cur)
+> +static struct xfs_log_item *
+> +__xfs_trans_ail_cursor_last(
+> +	struct xfs_ail		*ailp,
+> +	struct xfs_ail_cursor	*cur,
+> +	xfs_lsn_t		lsn,
+> +	bool			do_init)
 >  {
->  	cur->item = NULL;
-> -	if (cur == &ailp->xa_cursors)
-> -		return;
-> -
-> -	cur->next = ailp->xa_cursors.next;
-> -	ailp->xa_cursors.next = cur;
-> +	INIT_LIST_HEAD(&cur->list);
-> +	list_add_tail(&cur->list, &ailp->xa_cursors);
->  }
+> +	xfs_log_item_t		*lip = NULL;
+>  
+> +	if (do_init)
+> +		xfs_trans_ail_cursor_init(ailp, cur);
+> +
+> +	if (list_empty(&ailp->xa_ail)) 
+> +		goto out;
+>  
+> +	list_for_each_entry_reverse(lip, &ailp->xa_ail, li_ail) {
+> +		if (XFS_LSN_CMP(lip->li_lsn, lsn) <= 0)
+>  			break;
+>  	}
+> +out:
+> +	if (cur)
+> +		cur->item = lip;
+> +	return lip;
+> +}
 
-There is no need to initialize a list_head before adding it to a list.
+Please just move the xfs_trans_ail_cursor_init call to
+xfs_trans_ail_cursor_init instead of adding the do_init parameter.
+Also the list_empty check is not needed due to the list_for_each*
+macros handling that case just fine.
 
-Otherwise looks good,
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+I haven't looked at the details of the new xfs_ail_splice code yet, so
+more updates later.
 
 _______________________________________________
 xfs mailing list
