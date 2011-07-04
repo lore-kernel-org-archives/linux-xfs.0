@@ -1,20 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p64ANv3L139682 for <xfs@oss.sgi.com>; Mon, 4 Jul 2011 05:23:57 -0500
-Received: from mail-fx0-f47.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5B0974C3605
-	for <xfs@oss.sgi.com>; Mon,  4 Jul 2011 03:23:56 -0700 (PDT)
-Received: from mail-fx0-f47.google.com (mail-fx0-f47.google.com
-	[209.85.161.47]) by cuda.sgi.com with ESMTP id sZu7EqjfwUoRiotT
-	for <xfs@oss.sgi.com>; Mon, 04 Jul 2011 03:23:56 -0700 (PDT)
-Received: by fxg11 with SMTP id 11so5242794fxg.6
-	for <xfs@oss.sgi.com>; Mon, 04 Jul 2011 03:23:55 -0700 (PDT)
+	p64BG9j7141432 for <xfs@oss.sgi.com>; Mon, 4 Jul 2011 06:16:10 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D55C8E714BA
+	for <xfs@oss.sgi.com>; Mon,  4 Jul 2011 04:16:07 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	zi4n5F8u5l0XJBny for <xfs@oss.sgi.com>;
+	Mon, 04 Jul 2011 04:16:07 -0700 (PDT)
+Date: Mon, 4 Jul 2011 07:16:05 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 2/5] xfs: use a cursor for bulk AIL insertion
+Message-ID: <20110704111605.GA5513@infradead.org>
+References: <1309757260-5484-1-git-send-email-david@fromorbit.com>
+	<1309757260-5484-3-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-Date: Mon, 4 Jul 2011 10:23:55 +0000
-Message-ID: <CAP7pH7uVASQQ60PSBmKWonaOMPJP5fTthheFzjxgdHp5DUBuOw@mail.gmail.com>
-Subject: Recovering XFS Partition of Type FAT16
-From: Volkan YAZICI <volkan.yazici@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <1309757260-5484-3-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,60 +31,48 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Hi,
+> +	do {
+> +		/* no placeholder, so get our insert location */
+> +		if (!lip)
+> +			lip = __xfs_trans_ail_cursor_last(ailp, cur,
+> +								lsn, false);
+> +
+> +		if (!lip) {
+> +			/*
+> +			 * The list is empty, so just splice and return.  Our
+> +			 * cursor is already guaranteed to be up to date, so we
+> +			 * don't need to touch it here.
+> +			 */
+> +			list_splice(list, &ailp->xa_ail);
+> +			return;
+> +		}
+> +
+> +		/* The placeholder was invalidated, need to get a new cursor */
+> +		if ((__psint_t)lip & 1)
+> +			lip = NULL;
+> +
+> +	} while (lip == NULL);
 
-I have an XFS partition, which is
+Why do we even need a loop here?  Given that we're under xa_lock
+no new cursor will get invalidated.  Isn't the simple code below
+equivalent?
 
-1) Mistakenly quick formatted as FAT16.
-2) At first, I couldn't see in "fdisk -l" that it is set to FAT16,
-instead of Linux. Hence, tried to fix it with xfs_recover. xfs_recover
-returned 0, and mount operation succeeded; but mounted fs size
-appeared as 20GB (despite it is 350GB) and almost every file was
-missing.
-3) Later, I set the type of /dev/sda1 (the only partition in /dev/sda)
-to Linux, re-run xfs_recover, but nothing changed: Same fs size (20GB)
-and same missing files.
+	/* no valid placeholder, get us a useful one */
+	if (!lip || (__psint_t)lip & 1))
+		lip = __xfs_trans_ail_cursor_last(ailp, cur, lsn, false);
 
-I open the system with Knoppix, and below are the partition
-diagnostics. I need urgent help to recover the files. I will be
-really, really appreciated for any help! (If you need further
-information, just drop me a mail.)
-
-
-Best.
-
-
-# fdisk -l
-
-Disk /dev/sda: 320.1 GB, 320072933376 bytes
-255 heads, 63 sectors/track, 38913 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
-Sector size (logical/physical): 512 bytes / 512 bytes
-I/O size (minimum/optimal): 512 bytes / 512 bytes
-Disk identifier: 0x447c435f
-
-   Device Boot      Start         End      Blocks   Id  System
-/dev/sda1   *           1       38913   312568641   83  Linux
-
-
-# mount | grep /dev/sda1
-/dev/sda1 on /media/sda1 type xfs (rw,relatime,attr2,noquota)
-
-
-# df -h | grep /dev/sda1
-/dev/sda1              19G  4,2G   15G  23% /media/sda1
-
-# xfs_info /mnt/sda1
-meta-data=/dev/sda1              isize=256    agcount=4, agsize=1226963 blks
-         =                       sectsz=512   attr=2
-data     =                       bsize=4096   blocks=4907849, imaxpct=25
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0
-log      =internal               bsize=4096   blocks=2560, version=2
-         =                       sectsz=512   sunit=0 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
+	if (!lip) {
+		/*
+		 * The list is empty, so just splice and return.  Our
+		 * cursor is already guaranteed to be up to date, so we
+		 * don't need to touch it here.
+		 */
+		list_splice(list, &ailp->xa_ail);
+		return;
+	}
 
 _______________________________________________
 xfs mailing list
