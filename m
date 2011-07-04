@@ -1,25 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p644wQjn109456 for <xfs@oss.sgi.com>; Sun, 3 Jul 2011 23:58:26 -0500
+	p645RxCs115619 for <xfs@oss.sgi.com>; Mon, 4 Jul 2011 00:27:59 -0500
 Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 293DA5240FD
-	for <xfs@oss.sgi.com>; Sun,  3 Jul 2011 21:58:23 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4AC1C1678463
+	for <xfs@oss.sgi.com>; Sun,  3 Jul 2011 22:27:57 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	T9EovvdBztwtPBqB for <xfs@oss.sgi.com>;
-	Sun, 03 Jul 2011 21:58:23 -0700 (PDT)
-Date: Mon, 4 Jul 2011 14:58:20 +1000
+	kw5rjZ0fju8qr5IW for <xfs@oss.sgi.com>;
+	Sun, 03 Jul 2011 22:27:57 -0700 (PDT)
+Received: from chute ([192.168.1.1] helo=disappointment)
+	by dastard with esmtp (Exim 4.72)
+	(envelope-from <dave@fromorbit.com>) id 1Qdbh8-0002yC-VK
+	for xfs@oss.sgi.com; Mon, 04 Jul 2011 15:27:43 +1000
+Received: from dave by disappointment with local (Exim 4.76)
+	(envelope-from <dave@disappointment.disaster>) id 1Qdbh8-0001RG-HA
+	for xfs@oss.sgi.com; Mon, 04 Jul 2011 15:27:42 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 3/7] xfs: there is no CONFIG_KDB_MODULES
-Message-ID: <20110704045820.GE1026@dastard>
-References: <1309643272-364-1-git-send-email-ext-phil.2.carmody@nokia.com>
-	<1309643272-364-2-git-send-email-ext-phil.2.carmody@nokia.com>
-	<1309643272-364-3-git-send-email-ext-phil.2.carmody@nokia.com>
-	<1309643272-364-4-git-send-email-ext-phil.2.carmody@nokia.com>
+Subject: [PATCH 1/5] xfs: unpin stale inodes directly in IOP_COMMITTED
+Date: Mon,  4 Jul 2011 15:27:36 +1000
+Message-Id: <1309757260-5484-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1309757260-5484-1-git-send-email-david@fromorbit.com>
+References: <1309757260-5484-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1309643272-364-4-git-send-email-ext-phil.2.carmody@nokia.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,90 +31,87 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Phil Carmody <ext-phil.2.carmody@nokia.com>
-Cc: trivial@kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Sun, Jul 03, 2011 at 12:47:48AM +0300, Phil Carmody wrote:
-
-Hi Phil,
-
-You should probably cc the relevant lists with such patchsets so the
-developers actually see the patches go by....
-
-> Seems like there was a decade ago, but no longer, so this block
-> is dead code. The list being returned disappeared back in commit
-> ff57ab21995a8636cfc72efeebb09cc6034d756f.
-
-When you quote a commit, short form followed by the name (i.e.
-one-line form) is preferable because it gives context to the commit
-without needing to go look it up in a git tree. Commit IDs are not
-human readable, while commit log should be.
-
-The commit in question - ff57ab2 ("xfs: convert xfsbud shrinker to a
-per-buftarg shrinker.") - removed the list but the code being
-removed was already long dead. FWIW, I know just by reading the
-commit description when the list went away and who was responsible
-for missing that. i.e. me. ;)
-
-> Part of a shotgun patchset; found by greps, seds, and diffs
-> rather than actual understanding.
-
-Not necessary in a commit description - the zero patch of a series,
-yes, to describe how the issues were found, but it doesn't need to
-be recorded forever in the commit log. ;)
-
-> Signed-off-by: Phil Carmody <ext-phil.2.carmody@nokia.com>
-> ---
->  fs/xfs/linux-2.6/xfs_buf.c |    8 --------
->  fs/xfs/linux-2.6/xfs_buf.h |    4 ----
->  2 files changed, 0 insertions(+), 12 deletions(-)
-> 
-> diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
-> index 5e68099..5bccae0 100644
-> --- a/fs/xfs/linux-2.6/xfs_buf.c
-> +++ b/fs/xfs/linux-2.6/xfs_buf.c
-> @@ -1889,11 +1889,3 @@ xfs_buf_terminate(void)
->  	destroy_workqueue(xfslogd_workqueue);
->  	kmem_zone_destroy(xfs_buf_zone);
->  }
-> -
-> -#ifdef CONFIG_KDB_MODULES
-> -struct list_head *
-> -xfs_get_buftarg_list(void)
-> -{
-> -	return &xfs_buftarg_list;
-> -}
-> -#endif
-> diff --git a/fs/xfs/linux-2.6/xfs_buf.h b/fs/xfs/linux-2.6/xfs_buf.h
-> index 50a7d5f..6881321 100644
-> --- a/fs/xfs/linux-2.6/xfs_buf.h
-> +++ b/fs/xfs/linux-2.6/xfs_buf.h
-> @@ -339,10 +339,6 @@ extern void xfs_wait_buftarg(xfs_buftarg_t *);
->  extern int xfs_setsize_buftarg(xfs_buftarg_t *, unsigned int, unsigned int);
->  extern int xfs_flush_buftarg(xfs_buftarg_t *, int);
->  
-> -#ifdef CONFIG_KDB_MODULES
-> -extern struct list_head *xfs_get_buftarg_list(void);
-> -#endif
-> -
->  #define xfs_getsize_buftarg(buftarg)	block_size((buftarg)->bt_bdev)
->  #define xfs_readonly_buftarg(buftarg)	bdev_read_only((buftarg)->bt_bdev)
-
-Code changes look good. Can you fix the commit description and
-resend to xfs@oss.sgi.com?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+RnJvbTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgoKV2hlbiBpbm9kZXMgYXJl
+IG1hcmtlZCBzdGFsZSBpbiBhIHRyYW5zYWN0aW9uLCB0aGV5IGFyZSB0cmVhdGVkCnNwZWNpYWxs
+eSB3aGVuIHRoZSBpaW5vZGUgbG9nIGl0ZW0gaXMgYmVpbmcgaW5zZXJ0ZWQgaW50byB0aGUgQUlM
+LgpJdCB0cmll0ZUgdG8gYXZvaWQgbW92aW5nIHRoZSBsb2cgaXRlbSBmb3J3YXJkIGluIHRoZSBB
+SUwgZHVlIHRvIGEKcmFjZSBjb25kaXRpb24gd2l0aCB0aGUgd3JpdGluZyB0aGUgdW5kZXJseWlu
+ZyBidWZmZXIgYmFjayB0byBkaXNrLgpUaGUgd2FzICJmaXhlZCIgaW4gY29tbWl0IGRlMjVjMTgg
+KCJ4ZnM6IGF2b2lkIG1vdmluZyBzdGFsZSBpbm9kZXMgaW4KdGhlIEFJTCIpLgoKVG8gYXZvaWQg
+bW92aW5nIHRoZSBpdGVtIGZvcndhcmQsIHdlIHJldHVybiBhIExTTiBzbWFsbGVyIHRoYW4gdGhl
+CmNvbW1pdF9sc24gb2YgdGhlIGNvbXBsZXRpbmcgdHJhbnNhY3Rpb24sIHRoZXJlYnkgdHJ5aW5n
+IHRvIHRyaWNrCnRoZSBjb21taXQgY29kZSBpbnRvIG5vdCBtb3ZpbmcgdGhlIGlub2RlIGZvcndh
+cmQgYXQgYWxsLiBJJ20gbm90CnN1cmUgdGhpcyBldmVyIHdvcmtlZCBhcyBpbnRlbmRlZCAtIGl0
+IGFzc3VtZXMgdGhlIGlub2RlIGlzIGFscmVhZHkKaW4gdGhlIEFJTCwgYnV0IEkgZG9uJ3QgdGhp
+bmsgdGhlIHJldHVybmVkIExTTiB3b3VsZCBoYXZlIGJlZW4gc21hbGwKZW5vdWdoIHRvIHByZXZl
+bnQgbW92aW5nIHRoZSBpbm9kZS4gSXQgYXBwZWFycyB0aGF0IHRoZSByZWFzb24gaXQKd29ya2Vk
+IGlzIHRoYXQgdGhlIGxvd2VyIExTTiBvZiB0aGUgaW5vZGVzIG1lYW50IHRoZXkgd2VyZSBpbnNl
+cnRlZAppbnRvIHRoZSBBSUwgYW5kIGZsdXNoZWQgYmVmb3JlIHRoZSBpbm9kZSBidWZmZXIgKHdo
+aWNoIHdhcyBtb3ZlZCB0bwp0aGUgY29tbWl0X2xzbiBvZiB0aGUgdHJhbnNhY3Rpb24pLgoKVGhl
+IGJpZyBwcm9ibGVtIGlzIHRoYXQgd2l0aCBkZWxheWVkIGxvZ2dpbmcsIHRoZSByZXR1cm5pbmcg
+b2YgdGhlCmRpZmZlcmVudCBMU04gbWVhbnMgaW5zZXJ0aW9uIHRha2VzIHRoZSBzbG93LCBub24t
+YnVsayBwYXRoLiAgV29yc2UKeWV0IGlzIHRoYXQgaW5zZXJ0aW9uIGlzIHRvIGEgcG9zaXRpb24g
+LWJlZm9yZS0gdGhlIGNvbW1pdF9sc24gc28gaXQKaXMgZG9pbmcgYSBBSUwgdHJhdmVyc2FsIG9u
+IGV2ZXJ5IGluc2VydGlvbiwgYW5kIGhhcyB0byB3YWxrIG92ZXIKYWxsIHRoZSBpdGVtcyB0aGF0
+IGhhdmUgYWxyZWFkeSBiZWVuIGluc2VydGVkIGludG8gdGhlIEFJTC4gSXQncwpleHBlbnNpdmUu
+CgpUbyBjb21wb3VuZCB0aGUgbWF0dGVyIGZ1cnRoZXIsIHdpdGggZGVsYXllZCBsb2dnaW5nIGlu
+b2RlcyBhcmUKbGlrZWx5IHRvIGdvIGZyb20gY2xlYW4gdG8gc3RhbGUgaW4gYSBzaW5nbGUgY2hl
+Y2twb2ludCwgd2hpY2ggbWVhbnMKdGhleSBhcmVuJ3QgZXZlbiBpbiB0aGUgQUlMIGF0IGFsbCB3
+aGVuIHdlIGNvbWUgYWNyb3NzIHRoZW0gYXQgQUlMCmluc2VydGlvbiB0aW1lLiBIZW5jZSB0aGVz
+ZSB3ZXJlIGFsbCBnZXR0aW5nIGluc2VydGVkIGludG8gdGhlIEFJTAp3aGVuIHRoZXkgc2ltcGx5
+IGRvIG5vdCBuZWVkIHRvIGJlIGFzIGlub2RlcyBtYXJrZWQgWEZTX0lTVEFMRSBhcmUKbmV2ZXIg
+d3JpdHRlbiBiYWNrLgoKVHJhbnNhY3Rpb25hbC9yZWNvdmVyeSBpbnRlZ3JpdHkgaXMgbWFpbnRh
+aW5lZCBpbiB0aGlzIGNhc2UgYnkgdGhlCm90aGVyIGl0ZW1zIGluIHRoZSB1bmxpbmsgdHJhbnNh
+Y3Rpb24gdGhhdCB3ZXJlIG1vZGlmaWVkIChlLmcuIHRoZQpBR0kgYnRyZWUgYmxvY2tzKSBhbmQg
+Y29tbWl0dGVkIGluIHRoZSBzYW1lIGNoZWNrcG9pbnQuCgpTbyB0byBmaXggdGhpcywgc2ltcGx5
+IHVucGluIHRoZSBzdGFsZSBpbm9kZXMgZGlyZWN0bHkgaW4KeGZzX2lub2RlX2l0ZW1fY29tbWl0
+dGVkKCkgYW5kIHJldHVybiAtMSB0byBpbmRpY2F0ZSB0aGF0IHRoZSBBSUwKaW5zZXJ0aW9uIGNv
+ZGUgZG9lcyBub3QgbmVlZCB0byBkbyBhbnkgZnVydGhlciBwcm9jZXNzaW5nIG9mIHRoZXNlCmlu
+b2Rlcy4KClNpZ25lZC1vZmYtYnk6IERhdmUgQ2hpbm5lciA8ZGNoaW5uZXJAcmVkaGF0LmNvbT4K
+LS0tCiBmcy94ZnMveGZzX2lub2RlX2l0ZW0uYyB8ICAgMTQgKysrKysrKystLS0tLS0KIGZzL3hm
+cy94ZnNfdHJhbnMuYyAgICAgIHwgICAgMiArLQogMiBmaWxlcyBjaGFuZ2VkLCA5IGluc2VydGlv
+bnMoKyksIDcgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvZnMveGZzL3hmc19pbm9kZV9pdGVt
+LmMgYi9mcy94ZnMveGZzX2lub2RlX2l0ZW0uYwppbmRleCAwOTk4M2EzLi5iMWU4OGQ1IDEwMDY0
+NAotLS0gYS9mcy94ZnMveGZzX2lub2RlX2l0ZW0uYworKysgYi9mcy94ZnMveGZzX2lub2RlX2l0
+ZW0uYwpAQCAtNjgxLDE1ICs2ODEsMTUgQEAgeGZzX2lub2RlX2l0ZW1fdW5sb2NrKAogICogd2hl
+cmUgdGhlIGNsdXN0ZXIgYnVmZmVyIG1heSBiZSB1bnBpbm5lZCBiZWZvcmUgdGhlIGlub2RlIGlz
+IGluc2VydGVkIGludG8KICAqIHRoZSBBSUwgZHVyaW5nIHRyYW5zYWN0aW9uIGNvbW1pdHRlZCBw
+cm9jZXNzaW5nLiBJZiB0aGUgYnVmZmVyIGlzIHVucGlubmVkCiAgKiBiZWZvcmUgdGhlIGlub2Rl
+IGl0ZW0gaGFzIGJlZW4gY29tbWl0dGVkIGFuZCBpbnNlcnRlZCwgdGhlbiBpdCBpcyBwb3NzaWJs
+ZQotICogZm9yIHRoZSBidWZmZXIgdG8gYmUgd3JpdHRlbiBhbmQgSU8gY29tcGxldGlvbnMgYmVm
+b3JlIHRoZSBpbm9kZSBpcyBpbnNlcnRlZAorICogZm9yIHRoZSBidWZmZXIgdG8gYmUgd3JpdHRl
+biBhbmQgSU8gY29tcGxldGVzIGJlZm9yZSB0aGUgaW5vZGUgaXMgaW5zZXJ0ZWQKICAqIGludG8g
+dGhlIEFJTC4gSW4gdGhhdCBjYXNlLCB3ZSdkIGJlIGluc2VydGluZyBhIGNsZWFuLCBzdGFsZSBp
+bm9kZSBpbnRvIHRoZQogICogQUlMIHdoaWNoIHdpbGwgbmV2ZXIgZ2V0IHJlbW92ZWQuIEl0IHdp
+bGwsIGhvd2V2ZXIsIGdldCByZWNsYWltZWQgd2hpY2gKICAqIHRyaWdnZXJzIGFuIGFzc2VydCBp
+biB4ZnNfaW5vZGVfZnJlZSgpIGNvbXBsYWluaW5nIGFib3V0IGZyZWVpbiBhbiBpbm9kZQogICog
+c3RpbGwgaW4gdGhlIEFJTC4KICAqCi0gKiBUbyBhdm9pZCB0aGlzLCByZXR1cm4gYSBsb3dlciBM
+U04gdGhhbiB0aGUgb25lIHBhc3NlZCBpbiBzbyB0aGF0IHRoZQotICogdHJhbnNhY3Rpb24gY29t
+bWl0dGVkIGNvZGUgd2lsbCBub3QgbW92ZSB0aGUgaW5vZGUgZm9yd2FyZCBpbiB0aGUgQUlMIGJ1
+dAotICogd2lsbCBzdGlsbCB1bnBpbiBpdCBwcm9wZXJseS4KKyAqIFRvIGF2b2lkIHRoaXMsIGp1
+c3QgdW5waW4gdGhlIGlub2RlIGRpcmVjdGx5IGFuZCByZXR1cm4gYSBMU04gb2YgLTEgc28gdGhl
+CisgKiB0cmFuc2FjdGlvbiBjb21taXR0ZWQgY29kZSBrbm93cyB0aGF0IGl0IGRvZXMgbm90IG5l
+ZWQgdG8gZG8gYW55IGZ1cnRoZXIKKyAqIHByb2Nlc3Npbmcgb24gdGhlIGl0ZW0uCiAgKi8KIFNU
+QVRJQyB4ZnNfbHNuX3QKIHhmc19pbm9kZV9pdGVtX2NvbW1pdHRlZCgKQEAgLTY5OSw4ICs2OTks
+MTAgQEAgeGZzX2lub2RlX2l0ZW1fY29tbWl0dGVkKAogCXN0cnVjdCB4ZnNfaW5vZGVfbG9nX2l0
+ZW0gKmlpcCA9IElOT0RFX0lURU0obGlwKTsKIAlzdHJ1Y3QgeGZzX2lub2RlCSppcCA9IGlpcC0+
+aWxpX2lub2RlOwogCi0JaWYgKHhmc19pZmxhZ3NfdGVzdChpcCwgWEZTX0lTVEFMRSkpCi0JCXJl
+dHVybiBsc24gLSAxOworCWlmICh4ZnNfaWZsYWdzX3Rlc3QoaXAsIFhGU19JU1RBTEUpKSB7CisJ
+CXhmc19pbm9kZV9pdGVtX3VucGluKGxpcCwgMCk7CisJCXJldHVybiAtMTsKKwl9CiAJcmV0dXJu
+IGxzbjsKIH0KIApkaWZmIC0tZ2l0IGEvZnMveGZzL3hmc190cmFucy5jIGIvZnMveGZzL3hmc190
+cmFucy5jCmluZGV4IDdjN2JjMmIuLjM3NDQzMzcgMTAwNjQ0Ci0tLSBhL2ZzL3hmcy94ZnNfdHJh
+bnMuYworKysgYi9mcy94ZnMveGZzX3RyYW5zLmMKQEAgLTE0NzQsNyArMTQ3NCw3IEBAIHhmc190
+cmFuc19jb21taXR0ZWRfYnVsaygKIAkJCWxpcC0+bGlfZmxhZ3MgfD0gWEZTX0xJX0FCT1JURUQ7
+CiAJCWl0ZW1fbHNuID0gSU9QX0NPTU1JVFRFRChsaXAsIGNvbW1pdF9sc24pOwogCi0JCS8qIGl0
+ZW1fbHNuIG9mIC0xIG1lYW5zIHRoZSBpdGVtIHdhcyBmcmVlZCAqLworCQkvKiBpdGVtX2xzbiBv
+ZiAtMSBtZWFucyB0aGUgaXRlbSBuZWVkcyBubyBmdXJ0aGVyIHByb2Nlc3NpbmcgKi8KIAkJaWYg
+KFhGU19MU05fQ01QKGl0ZW1fbHNuLCAoeGZzX2xzbl90KS0xKSA9PSAwKQogCQkJY29udGludWU7
+CiAKLS0gCjEuNy41LjEKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNv
+bS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
