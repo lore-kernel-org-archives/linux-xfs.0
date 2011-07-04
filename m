@@ -1,28 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p645S0V7115638 for <xfs@oss.sgi.com>; Mon, 4 Jul 2011 00:28:00 -0500
+	p645Rxc6115627 for <xfs@oss.sgi.com>; Mon, 4 Jul 2011 00:28:00 -0500
 Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AAC2F1EE745B
-	for <xfs@oss.sgi.com>; Sun,  3 Jul 2011 22:27:58 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 07A5352413B
+	for <xfs@oss.sgi.com>; Sun,  3 Jul 2011 22:27:57 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	HFRbfD6UFQjDBN3Z for <xfs@oss.sgi.com>;
-	Sun, 03 Jul 2011 22:27:58 -0700 (PDT)
+	EkDlqT9UgHL6gN9f for <xfs@oss.sgi.com>;
+	Sun, 03 Jul 2011 22:27:57 -0700 (PDT)
 Received: from chute ([192.168.1.1] helo=disappointment)
 	by dastard with esmtp (Exim 4.72)
-	(envelope-from <dave@fromorbit.com>) id 1Qdbh9-0002yF-26
-	for xfs@oss.sgi.com; Mon, 04 Jul 2011 15:27:43 +1000
+	(envelope-from <dave@fromorbit.com>) id 1QdbhI-0002yD-Sn
+	for xfs@oss.sgi.com; Mon, 04 Jul 2011 15:27:52 +1000
 Received: from dave by disappointment with local (Exim 4.76)
-	(envelope-from <dave@disappointment.disaster>) id 1Qdbh8-0001RO-OI
+	(envelope-from <dave@disappointment.disaster>) id 1Qdbh8-0001RI-K3
 	for xfs@oss.sgi.com; Mon, 04 Jul 2011 15:27:42 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: =?UTF-8?q?=5BPATCH=204/5=5D=20xfs=3A=20convert=20AIL=20cursors=20to=20use=20struct=20list=5Fhead?=
-Date: Mon,  4 Jul 2011 15:27:39 +1000
-Message-Id: <1309757260-5484-5-git-send-email-david@fromorbit.com>
+Subject: [PATCH 2/5] xfs: use a cursor for bulk AIL insertion
+Date: Mon,  4 Jul 2011 15:27:37 +1000
+Message-Id: <1309757260-5484-3-git-send-email-david@fromorbit.com>
 In-Reply-To: <1309757260-5484-1-git-send-email-david@fromorbit.com>
 References: <1309757260-5484-1-git-send-email-david@fromorbit.com>
-MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,121 +30,324 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-RnJvbTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgoKVGhlIGxpc3Qgb2YgYWN0
-aXZlIEFJTCBjdXJzb3JzIHVzZXMgYSByb2xsLXlvdXItb3duIGxpbmtlZCBsaXN0IHdpdGgKc3Bl
-Y2lhbCBjYXNpbmcgZm9yIHRoZSBBSUwgcHVzaCBjdXJzb3IuIFNpbXBsaWZ5IHRoaXMgY29kZSBi
-eQpyZXBsYWNpbmcgdGhlIGxpc3Qgd2l0aCBzdGFuZGFyZCBzdHJ1Y3QgbGlzdF9oZWFkIGxpc3Rz
-LCBhbmQgdXNlIGEKc2VwYXJhdGUgbGlzdF9oZWFkIHRvIHRyYWNrIHRoZSBhY3RpdmUgY3Vyc29y
-cyBzbyB0aGF0IHRoZSBjb2RlIGNhbgpqdXN0IHRyZWF0IHRoZSBBSUwgcHVzaCBjdXJzb3IgKHdo
-aWNoIGlzIHN0aWxsIGVtYmVkZGVkIGludG8gdGhlCnN0cnVjdCB4ZnNfYWlsKSBhcyBhIGdlbmVy
-aWMgY3Vyc29yLgoKRnVydGhlciwgZml4IHRoZSBkdXBsaWNhdGUgcHVzaCBjdXJzb3IgaW5pdGlh
-bGlzYXRpb24gdGhhdCB0aGUKc3BlY2lhbCBjYXNlIGhhbmRsaW5nIHdhcyBoaWRpbmcsIGFuZCBj
-bGVhbiB1cCBhbGwgdGhlIGNvbW1lbnRzCmFyb3VuZCB0aGUgYWN0aXZlIGN1cnNvciBsaXN0IGhh
-bmRsaW5nLgoKU2lnbmVkLW9mZi1ieTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29t
-PgotLS0KIGZzL3hmcy94ZnNfdHJhbnNfYWlsLmMgIHwgICA2OCArKysrKysrKysrKysrKystLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCiBmcy94ZnMveGZzX3RyYW5zX3ByaXYuaCB8ICAg
-IDUgKystCiAyIGZpbGVzIGNoYW5nZWQsIDI1IGluc2VydGlvbnMoKyksIDQ4IGRlbGV0aW9ucygt
-KQoKZGlmZiAtLWdpdCBhL2ZzL3hmcy94ZnNfdHJhbnNfYWlsLmMgYi9mcy94ZnMveGZzX3RyYW5z
-X2FpbC5jCmluZGV4IGRlN2E1MmEuLjNiNWI1ZTQgMTAwNjQ0Ci0tLSBhL2ZzL3hmcy94ZnNfdHJh
-bnNfYWlsLmMKKysrIGIvZnMveGZzL3hmc190cmFuc19haWwuYwpAQCAtMTY1LDE1ICsxNjUsMTEg
-QEAgeGZzX2FpbF9tYXhfbHNuKAogLyoKICAqIEFJTCB0cmF2ZXJzYWwgY3Vyc29yIGluaXRpYWxp
-c2F0aW9uLgogICoKLSAqIFRoZSBjdXJzb3Iga2VlcHMgdHJhY2sgb2Ygd2hlcmUgb3VyIGN1cnJl
-bnQgdHJhdmVyc2FsIGlzIHVwCi0gKiB0byBieSB0cmFja2luZyB0aGUgbmV4dCDGo3RlbSBpbiB0
-aGUgbGlzdCBmb3IgdXMuIEhvd2V2ZXIsIGZvcgotICogdGhpcyB0byBiZSBzYWZlLCByZW1vdmlu
-ZyBhbiBvYmplY3QgZnJvbSB0aGUgQUlMIG5lZWRzIHRvIGludmFsaWRhdGUKLSAqIGFueSBjdXJz
-b3IgdGhhdCBwb2ludHMgdG8gaXQuIGhlbmNlIHRoZSB0cmF2ZXJzYWwgY3Vyc29yIG5lZWRzIHRv
-Ci0gKiBiZSBsaW5rZWQgdG8gdGhlIHN0cnVjdCB4ZnNfYWlsIHNvIHRoYXQgZGVsZXRpb24gY2Fu
-IHNlYXJjaCBhbGwgdGhlCi0gKiBhY3RpdmUgY3Vyc29ycyBmb3IgaW52YWxpZGF0aW9uLgotICoK
-LSAqIFdlIGRvbid0IGxpbmsgdGhlIHB1c2ggY3Vyc29yIGJlY2F1c2UgaXQgaXMgZW1iZWRkZWQg
-aW4gdGhlIHN0cnVjdAotICogeGZzX2FpbCBhbmQgaGVuY2UgZWFzaWx5IGZpbmRhYmxlLgorICog
-VGhlIGN1cnNvciBrZWVwcyB0cmFjayBvZiB3aGVyZSBvdXIgY3VycmVudCB0cmF2ZXJzYWwgaXMg
-dXAgdG8gYnkgdHJhY2tpbmcKKyAqIHRoZSBuZXh0IMajdGVtIGluIHRoZSBsaXN0IGZvciB1cy4g
-SG93ZXZlciwgZm9yIHRoaXMgdG8gYmUgc2FmZSwgcmVtb3ZpbmcgYW4KKyAqIG9iamVjdCBmcm9t
-IHRoZSBBSUwgbmVlZHMgdG8gaW52YWxpZGF0ZSBhbnkgY3Vyc29yIHRoYXQgcG9pbnRzIHRvIGl0
-LiBoZW5jZQorICogdGhlIHRyYXZlcnNhbCBjdXJzb3IgbmVlZHMgdG8gYmUgbGlua2VkIHRvIHRo
-ZSBzdHJ1Y3QgeGZzX2FpbCBzbyB0aGF0CisgKiBkZWxldGlvbiBjYW4gc2VhcmNoIGFsbCB0aGUg
-YWN0aXZlIGN1cnNvcnMgZm9yIGludmFsaWRhdGlvbi4KICAqLwogU1RBVElDIHZvaWQKIHhmc190
-cmFuc19haWxfY3Vyc29yX2luaXQoCkBAIC0xODEsMTcgKzE3NywxMyBAQCB4ZnNfdHJhbnNfYWls
-X2N1cnNvcl9pbml0KAogCXN0cnVjdCB4ZnNfYWlsX2N1cnNvcgkqY3VyKQogewogCWN1ci0+aXRl
-bSA9IE5VTEw7Ci0JaWYgKGN1ciA9PSAmYWlscC0+eGFfY3Vyc29ycykKLQkJcmV0dXJuOwotCi0J
-Y3VyLT5uZXh0ID0gYWlscC0+eGFfY3Vyc29ycy5uZXh0OwotCWFpbHAtPnhhX2N1cnNvcnMubmV4
-dCA9IGN1cjsKKwlJTklUX0xJU1RfSEVBRCgmY3VyLT5saXN0KTsKKwlsaXN0X2FkZF90YWlsKCZj
-dXItPmxpc3QsICZhaWxwLT54YV9jdXJzb3JzKTsKIH0KIAogLyoKLSAqIEdldCB0aGUgbmV4dCBp
-dGVtIGluIHRoZSB0cmF2ZXJzYWwgYW5kIGFkdmFuY2UgdGhlIGN1cnNvci4KLSAqIElmIHRoZSBj
-dXJzb3Igd2FzIGludmFsaWRhdGVkIChpbmlkaWNhdGVkIGJ5IGEgbGlwIG9mIDEpLAotICogcmVz
-dGFydCB0aGUgdHJhdmVyc2FsLgorICogR2V0IHRoZSBuZXh0IGl0ZW0gaW4gdGhlIHRyYXZlcnNh
-bCBhbmQgYWR2YW5jZSB0aGUgY3Vyc29yLiAgSWYgdGhlIGN1cnNvcgorICogd2FzIGludmFsaWRh
-dGVkIChpbmlkaWNhdGVkIGJ5IGEgbGlwIG9mIDEpLCByZXN0YXJ0IHRoZSB0cmF2ZXJzYWwuCiAg
-Ki8KIHN0cnVjdCB4ZnNfbG9nX2l0ZW0gKgogeGZzX3RyYW5zX2FpbF9jdXJzb3JfbmV4dCgKQEAg
-LTIwOCwzOSArMjAwLDI0IEBAIHhmc190cmFuc19haWxfY3Vyc29yX25leHQoCiB9CiAKIC8qCi0g
-KiBOb3cgdGhhdCB0aGUgdHJhdmVyc2FsIGlzIGNvbXBsZXRlLCB3ZSBuZWVkIHRvIHJlbW92ZSB0
-aGUgY3Vyc29yCi0gKiBmcm9tIHRoZSBsaXN0IG9mIHRyYXZlcnNpbmcgY3Vyc29ycy4gQXZvaWQg
-cmVtb3ZpbmcgdGhlIGVtYmVkZGVkCi0gKiBwdXNoIGN1cnNvciwgYnV0IHVzZSB0aGUgZmFjdCBp
-dCBpcyBhbHdheXMgcHJlc2VudCB0byBtYWtlIHRoZQotICogbGlzdCBkZWxldGlvbiBzaW1wbGUu
-CisgKiBXaGVuIHRoZSB0cmF2ZXJzYWwgaXMgY29tcGxldGUsIHdlIG5lZWQgdG8gcmVtb3ZlIHRo
-ZSBjdXJzb3IgZnJvbSB0aGUgbGlzdAorICogb2YgdHJhdmVyc2luZyBjdXJzb3JzLgogICovCiB2
-b2lkCiB4ZnNfdHJhbnNfYWlsX2N1cnNvcl9kb25lKAogCXN0cnVjdCB4ZnNfYWlsCQkqYWlscCwK
-LQlzdHJ1Y3QgeGZzX2FpbF9jdXJzb3IJKmRvbmUpCisJc3RydWN0IHhmc19haWxfY3Vyc29yCSpj
-dXIpCiB7Ci0Jc3RydWN0IHhmc19haWxfY3Vyc29yCSpwcmV2ID0gTlVMTDsKLQlzdHJ1Y3QgeGZz
-X2FpbF9jdXJzb3IJKmN1cjsKLQotCWRvbmUtPml0ZW0gPSBOVUxMOwotCWlmIChkb25lID09ICZh
-aWxwLT54YV9jdXJzb3JzKQotCQlyZXR1cm47Ci0JcHJldiA9ICZhaWxwLT54YV9jdXJzb3JzOwot
-CWZvciAoY3VyID0gcHJldi0+bmV4dDsgY3VyOyBwcmV2ID0gY3VyLCBjdXIgPSBwcmV2LT5uZXh0
-KSB7Ci0JCWlmIChjdXIgPT0gZG9uZSkgewotCQkJcHJldi0+bmV4dCA9IGN1ci0+bmV4dDsKLQkJ
-CWJyZWFrOwotCQl9Ci0JfQotCUFTU0VSVChjdXIpOworCWN1ci0+aXRlbSA9IE5VTEw7CisJbGlz
-dF9kZWxfaW5pdCgmY3VyLT5saXN0KTsKIH0KIAogLyoKLSAqIEludmFsaWRhdGUgYW55IGN1cnNv
-ciB0aGF0IGlzIHBvaW50aW5nIHRvIHRoaXMgaXRlbS4gVGhpcyBpcwotICogY2FsbGVkIHdoZW4g
-YW4gaXRlbSBpcyByZW1vdmVkIGZyb20gdGhlIEFJTC4gQW55IGN1cnNvciBwb2ludGluZwotICog
-dG8gdGhpcyBvYmplY3QgaXMgbm93IGludmFsaWQgYW5kIHRoZSB0cmF2ZXJzYWwgbmVlZHMgdG8g
-YmUKLSAqIHRlcm1pbmF0ZWQgc28gaXQgZG9lc24ndCByZWZlcmVuY2UgYSBmcmVlZCBvYmplY3Qu
-IFdlIHNldCB0aGUKLSAqIGN1cnNvciBpdGVtIHRvIGEgdmFsdWUgb2YgMSBzbyB3ZSBjYW4gZGlz
-dGluZ3Vpc2ggYmV0d2VlbiBhbgotICogaW52YWxpZGF0aW9uIGFuZCB0aGUgZW5kIG9mIHRoZSBs
-aXN0IHdoZW4gZ2V0dGluZyB0aGUgbmV4dCBpdGVtCisgKiBJbnZhbGlkYXRlIGFueSBjdXJzb3Ig
-dGhhdCBpcyBwb2ludGluZyB0byB0aGlzIGl0ZW0uIFRoaXMgaXMgY2FsbGVkIHdoZW4gYW4KKyAq
-IGl0ZW0gaXMgcmVtb3ZlZCBmcm9tIHRoZSBBSUwuIEFueSBjdXJzb3IgcG9pbnRpbmcgdG8gdGhp
-cyBvYmplY3QgaXMgbm93CisgKiBpbnZhbGlkIGFuZCB0aGUgdHJhdmVyc2FsIG5lZWRzIHRvIGJl
-IHRlcm1pbmF0ZWQgc28gaXQgZG9lc24ndCByZWZlcmVuY2UgYQorICogZnJlZWQgb2JqZWN0LiBX
-ZSBzZXQgdGhlIGN1cnNvciBpdGVtIHRvIGEgdmFsdWUgb2YgMSBzbyB3ZSBjYW4gZGlzdGluZ3Vp
-c2gKKyAqIGJldHdlZW4gYW4gaW52YWxpZGF0aW9uIGFuZCB0aGUgZW5kIG9mIHRoZSBsaXN0IHdo
-ZW4gZ2V0dGluZyB0aGUgbmV4dCBpdGVtCiAgKiBmcm9tIHRoZSBjdXJzb3IuCiAgKi8KIFNUQVRJ
-QyB2b2lkCkBAIC0yNTAsOCArMjI3LDcgQEAgeGZzX3RyYW5zX2FpbF9jdXJzb3JfY2xlYXIoCiB7
-CiAJc3RydWN0IHhmc19haWxfY3Vyc29yCSpjdXI7CiAKLQkvKiBuZWVkIHRvIHNlYXJjaCBhbGwg
-Y3Vyc29ycyAqLwotCWZvciAoY3VyID0gJmFpbHAtPnhhX2N1cnNvcnM7IGN1cjsgY3VyID0gY3Vy
-LT5uZXh0KSB7CisJbGlzdF9mb3JfZWFjaF9lbnRyeShjdXIsICZhaWxwLT54YV9jdXJzb3JzLCBs
-aXN0KSB7CiAJCWlmIChjdXItPml0ZW0gPT0gbGlwKQogCQkJY3VyLT5pdGVtID0gKHN0cnVjdCB4
-ZnNfbG9nX2l0ZW0gKikKIAkJCQkJKChfX3BzaW50X3QpY3VyLT5pdGVtIHwgMSk7CkBAIC00MTYs
-NyArMzkyLDcgQEAgeGZzX2FpbF93b3JrZXIoCiAJc3RydWN0IHhmc19haWwJCSphaWxwID0gY29u
-dGFpbmVyX29mKHRvX2RlbGF5ZWRfd29yayh3b3JrKSwKIAkJCQkJc3RydWN0IHhmc19haWwsIHhh
-X3dvcmspOwogCXhmc19tb3VudF90CQkqbXAgPSBhaWxwLT54YV9tb3VudDsKLQlzdHJ1Y3QgeGZz
-X2FpbF9jdXJzb3IJKmN1ciA9ICZhaWxwLT54YV9jdXJzb3JzOworCXN0cnVjdCB4ZnNfYWlsX2N1
-cnNvcgkqY3VyID0gJmFpbHAtPnhhX3B1c2hfY3Vyc29yOwogCXhmc19sb2dfaXRlbV90CQkqbGlw
-OwogCXhmc19sc25fdAkJbHNuOwogCXhmc19sc25fdAkJdGFyZ2V0OwpAQCAtNDI4LDcgKzQwNCw2
-IEBAIHhmc19haWxfd29ya2VyKAogCiAJc3Bpbl9sb2NrKCZhaWxwLT54YV9sb2NrKTsKIAl0YXJn
-ZXQgPSBhaWxwLT54YV90YXJnZXQ7Ci0JeGZzX3RyYW5zX2FpbF9jdXJzb3JfaW5pdChhaWxwLCBj
-dXIpOwogCWxpcCA9IHhmc190cmFuc19haWxfY3Vyc29yX2ZpcnN0KGFpbHAsIGN1ciwgYWlscC0+
-eGFfbGFzdF9wdXNoZWRfbHNuKTsKIAlpZiAoIWxpcCB8fCBYRlNfRk9SQ0VEX1NIVVRET1dOKG1w
-KSkgewogCQkvKgpAQCAtODU5LDYgKzgzNCw3IEBAIHhmc190cmFuc19haWxfaW5pdCgKIAogCWFp
-bHAtPnhhX21vdW50ID0gbXA7CiAJSU5JVF9MSVNUX0hFQUQoJmFpbHAtPnhhX2FpbCk7CisJSU5J
-VF9MSVNUX0hFQUQoJmFpbHAtPnhhX2N1cnNvcnMpOwogCXNwaW5fbG9ja19pbml0KCZhaWxwLT54
-YV9sb2NrKTsKIAlJTklUX0RFTEFZRURfV09SSygmYWlscC0+eGFfd29yaywgeGZzX2FpbF93b3Jr
-ZXIpOwogCW1wLT5tX2FpbCA9IGFpbHA7CmRpZmYgLS1naXQgYS9mcy94ZnMveGZzX3RyYW5zX3By
-aXYuaCBiL2ZzL3hmcy94ZnNfdHJhbnNfcHJpdi5oCmluZGV4IGMwY2I0MDguLmEzOTRlMmMgMTAw
-NjQ0Ci0tLSBhL2ZzL3hmcy94ZnNfdHJhbnNfcHJpdi5oCisrKyBiL2ZzL3hmcy94ZnNfdHJhbnNf
-cHJpdi5oCkBAIC01Myw3ICs1Myw3IEBAIHZvaWQJeGZzX3RyYW5zX2NvbW1pdHRlZF9idWxrKHN0
-cnVjdCB4ZnNfYWlsICphaWxwLCBzdHJ1Y3QgeGZzX2xvZ192ZWMgKmx2LAogICogb2YgdGhlIGxp
-c3QgdG8gdHJpZ2dlciB0cmF2ZXJzYWwgcmVzdGFydHMuCiAgKi8KIHN0cnVjdCB4ZnNfYWlsX2N1
-cnNvciB7Ci0Jc3RydWN0IHhmc19haWxfY3Vyc29yCSpuZXh0OworCXN0cnVjdCBsaXN0X2hlYWQJ
-bGlzdDsKIAlzdHJ1Y3QgeGZzX2xvZ19pdGVtCSppdGVtOwogfTsKIApAQCAtNjYsNyArNjYsOCBA
-QCBzdHJ1Y3QgeGZzX2FpbCB7CiAJc3RydWN0IHhmc19tb3VudAkqeGFfbW91bnQ7CiAJc3RydWN0
-IGxpc3RfaGVhZAl4YV9haWw7CiAJeGZzX2xzbl90CQl4YV90YXJnZXQ7Ci0Jc3RydWN0IHhmc19h
-aWxfY3Vyc29yCXhhX2N1cnNvcnM7CisJc3RydWN0IGxpc3RfaGVhZAl4YV9jdXJzb3JzOworCXN0
-cnVjdCB4ZnNfYWlsX2N1cnNvcgl4YV9wdXNoX2N1cnNvcjsKIAlzcGlubG9ja190CQl4YV9sb2Nr
-OwogCXN0cnVjdCBkZWxheWVkX3dvcmsJeGFfd29yazsKIAl4ZnNfbHNuX3QJCXhhX2xhc3RfcHVz
-aGVkX2xzbjsKLS0gCjEuNy41LjEKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Mu
-c2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+From: Dave Chinner <dchinner@redhat.com>
+
+Delayed logging can insert tens of thousands of log items into the
+AIL at the same LSN. When the committing of log commit records
+occur, we can get insertions occurring at an LSN that is not at the
+end of the AIL. If there are thousands of items in the AIL on the
+tail LSN, each insertion has to walk the AIL to find the correct
+place to insert the new item into the AIL. This can consume large
+amounts of CPU time and block other operations from occurring while
+the traversals are in progress.
+
+To avoid this repeated walk, use a AIL cursor to record
+where we should be inserting the new items into the AIL without
+having to repeat the walk. The cursor infrastructure already
+provides this functionality for push walks, so is a simple extension
+of existing code. While this will not avoid the initial walk, it
+will avoid repeating it tens of thousands of times during a single
+checkpoint commit.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_trans.c      |   27 +++++++++--
+ fs/xfs/xfs_trans_ail.c  |  122 +++++++++++++++++++++++++++++++++++++++--------
+ fs/xfs/xfs_trans_priv.h |   10 +++-
+ 3 files changed, 131 insertions(+), 28 deletions(-)
+
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index 3744337..d5d5708 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -1426,6 +1426,7 @@ xfs_trans_committed(
+ static inline void
+ xfs_log_item_batch_insert(
+ 	struct xfs_ail		*ailp,
++	struct xfs_ail_cursor	*cur,
+ 	struct xfs_log_item	**log_items,
+ 	int			nr_items,
+ 	xfs_lsn_t		commit_lsn)
+@@ -1434,7 +1435,7 @@ xfs_log_item_batch_insert(
+ 
+ 	spin_lock(&ailp->xa_lock);
+ 	/* xfs_trans_ail_update_bulk drops ailp->xa_lock */
+-	xfs_trans_ail_update_bulk(ailp, log_items, nr_items, commit_lsn);
++	xfs_trans_ail_update_bulk(ailp, cur, log_items, nr_items, commit_lsn);
+ 
+ 	for (i = 0; i < nr_items; i++)
+ 		IOP_UNPIN(log_items[i], 0);
+@@ -1452,6 +1453,13 @@ xfs_log_item_batch_insert(
+  * as an iclog write error even though we haven't started any IO yet. Hence in
+  * this case all we need to do is IOP_COMMITTED processing, followed by an
+  * IOP_UNPIN(aborted) call.
++ *
++ * The AIL cursor is used to optimise the insert process. If commit_lsn is not
++ * at the end of the AIL, the insert cursor avoids the need to walk
++ * the AIL to find the insertion point on every xfs_log_item_batch_insert()
++ * call. This saves a lot of needless list walking and is a net win, even
++ * though it slightly increases that amount of AIL lock traffic to set it up
++ * and tear it down.
+  */
+ void
+ xfs_trans_committed_bulk(
+@@ -1463,8 +1471,13 @@ xfs_trans_committed_bulk(
+ #define LOG_ITEM_BATCH_SIZE	32
+ 	struct xfs_log_item	*log_items[LOG_ITEM_BATCH_SIZE];
+ 	struct xfs_log_vec	*lv;
++	struct xfs_ail_cursor	cur;
+ 	int			i = 0;
+ 
++	spin_lock(&ailp->xa_lock);
++	xfs_trans_ail_cursor_last(ailp, &cur, commit_lsn);
++	spin_unlock(&ailp->xa_lock);
++
+ 	/* unpin all the log items */
+ 	for (lv = log_vector; lv; lv = lv->lv_next ) {
+ 		struct xfs_log_item	*lip = lv->lv_item;
+@@ -1493,7 +1506,9 @@ xfs_trans_committed_bulk(
+ 			/*
+ 			 * Not a bulk update option due to unusual item_lsn.
+ 			 * Push into AIL immediately, rechecking the lsn once
+-			 * we have the ail lock. Then unpin the item.
++			 * we have the ail lock. Then unpin the item. This does
++			 * not affect the AIL cursor the bulk insert path is
++			 * using.
+ 			 */
+ 			spin_lock(&ailp->xa_lock);
+ 			if (XFS_LSN_CMP(item_lsn, lip->li_lsn) > 0)
+@@ -1507,7 +1522,7 @@ xfs_trans_committed_bulk(
+ 		/* Item is a candidate for bulk AIL insert.  */
+ 		log_items[i++] = lv->lv_item;
+ 		if (i >= LOG_ITEM_BATCH_SIZE) {
+-			xfs_log_item_batch_insert(ailp, log_items,
++			xfs_log_item_batch_insert(ailp, &cur, log_items,
+ 					LOG_ITEM_BATCH_SIZE, commit_lsn);
+ 			i = 0;
+ 		}
+@@ -1515,7 +1530,11 @@ xfs_trans_committed_bulk(
+ 
+ 	/* make sure we insert the remainder! */
+ 	if (i)
+-		xfs_log_item_batch_insert(ailp, log_items, i, commit_lsn);
++		xfs_log_item_batch_insert(ailp, &cur, log_items, i, commit_lsn);
++
++	spin_lock(&ailp->xa_lock);
++	xfs_trans_ail_cursor_done(ailp, &cur);
++	spin_unlock(&ailp->xa_lock);
+ }
+ 
+ /*
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index 5fc2380..272e7fa 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -272,9 +272,9 @@ xfs_trans_ail_cursor_clear(
+ }
+ 
+ /*
+- * Return the item in the AIL with the current lsn.
+- * Return the current tree generation number for use
+- * in calls to xfs_trans_next_ail().
++ * Initialise the cursor to the first item in the AIL with the given @lsn.
++ * This searches the list from lowest LSN to highest. Pass a @lsn of zero
++ * to initialise the cursor to the first item in the AIL.
+  */
+ xfs_log_item_t *
+ xfs_trans_ail_cursor_first(
+@@ -300,31 +300,110 @@ out:
+ }
+ 
+ /*
+- * splice the log item list into the AIL at the given LSN.
++ * Initialise the cursor to the last item in the AIL with the given @lsn.
++ * This searches the list from highest LSN to lowest.
+  */
+-static void
+-xfs_ail_splice(
+-	struct xfs_ail  *ailp,
+-	struct list_head *list,
+-	xfs_lsn_t       lsn)
++static struct xfs_log_item *
++__xfs_trans_ail_cursor_last(
++	struct xfs_ail		*ailp,
++	struct xfs_ail_cursor	*cur,
++	xfs_lsn_t		lsn,
++	bool			do_init)
+ {
+-	xfs_log_item_t  *next_lip;
++	xfs_log_item_t		*lip = NULL;
+ 
+-	/* If the list is empty, just insert the item.  */
+-	if (list_empty(&ailp->xa_ail)) {
+-		list_splice(list, &ailp->xa_ail);
+-		return;
+-	}
++	if (do_init)
++		xfs_trans_ail_cursor_init(ailp, cur);
++
++	if (list_empty(&ailp->xa_ail)) 
++		goto out;
+ 
+-	list_for_each_entry_reverse(next_lip, &ailp->xa_ail, li_ail) {
+-		if (XFS_LSN_CMP(next_lip->li_lsn, lsn) <= 0)
++	list_for_each_entry_reverse(lip, &ailp->xa_ail, li_ail) {
++		if (XFS_LSN_CMP(lip->li_lsn, lsn) <= 0)
+ 			break;
+ 	}
++out:
++	if (cur)
++		cur->item = lip;
++	return lip;
++}
+ 
+-	ASSERT(&next_lip->li_ail == &ailp->xa_ail ||
+-	       XFS_LSN_CMP(next_lip->li_lsn, lsn) <= 0);
++/*
++ * Initialise the cursor to the last item in the AIL with the given @lsn.
++ * This searches the list from highest LSN to lowest.
++ */
++struct xfs_log_item *
++xfs_trans_ail_cursor_last(
++	struct xfs_ail		*ailp,
++	struct xfs_ail_cursor	*cur,
++	xfs_lsn_t		lsn)
++{
++	return __xfs_trans_ail_cursor_last(ailp, cur, lsn, true);
++}
+ 
+-	list_splice_init(list, &next_lip->li_ail);
++/*
++ * splice the log item list into the AIL at the given LSN. We splice to the
++ * tail of the given LSN to maintain insert order for push traversals. The
++ * cursor is optional, allowing repeated updates to the same LSN to avoid
++ * repeated traversals.
++ */
++static void
++xfs_ail_splice(
++	struct xfs_ail		*ailp,
++	struct xfs_ail_cursor	*cur,
++	struct list_head	*list,
++	xfs_lsn_t		lsn)
++{
++	struct xfs_log_item	*lip = cur ? cur->item : NULL;
++	struct xfs_log_item	*next_lip;
++
++	do {
++		/* no placeholder, so get our insert location */
++		if (!lip)
++			lip = __xfs_trans_ail_cursor_last(ailp, cur,
++								lsn, false);
++
++		if (!lip) {
++			/*
++			 * The list is empty, so just splice and return.  Our
++			 * cursor is already guaranteed to be up to date, so we
++			 * don't need to touch it here.
++			 */
++			list_splice(list, &ailp->xa_ail);
++			return;
++		}
++
++		/* The placeholder was invalidated, need to get a new cursor */
++		if ((__psint_t)lip & 1)
++			lip = NULL;
++
++	} while (lip == NULL);
++
++	/*
++	 * Our cursor points to the item we want to insert _after_, so we have
++	 * to update the cursor to point to the end of the list we are splicing
++	 * in so that it points to the correct location for the next splice.
++	 * i.e. before the splice
++	 *
++	 *  lsn -> lsn -> lsn + x -> lsn + x ...
++	 *          ^
++	 *          | cursor points here
++	 *
++	 * After the splice we have:
++	 *
++	 *  lsn -> lsn -> lsn -> lsn -> .... -> lsn -> lsn + x -> lsn + x ...
++	 *          ^                            ^
++	 *          | cursor points here         | needs to move here
++	 *
++	 * So we set the cursor to the last item in the list to be spliced
++	 * before we execute the splice, resulting in the cursor pointing to
++	 * the correct item after the splice occurs.
++	 */
++	if (cur) {
++		next_lip = list_entry(list->prev, struct xfs_log_item, li_ail);
++		cur->item = next_lip;
++	}
++	list_splice_init(list, &lip->li_ail);
+ }
+ 
+ /*
+@@ -645,6 +724,7 @@ xfs_trans_unlocked_item(
+ void
+ xfs_trans_ail_update_bulk(
+ 	struct xfs_ail		*ailp,
++	struct xfs_ail_cursor	*cur,
+ 	struct xfs_log_item	**log_items,
+ 	int			nr_items,
+ 	xfs_lsn_t		lsn) __releases(ailp->xa_lock)
+@@ -674,7 +754,7 @@ xfs_trans_ail_update_bulk(
+ 		list_add(&lip->li_ail, &tmp);
+ 	}
+ 
+-	xfs_ail_splice(ailp, &tmp, lsn);
++	xfs_ail_splice(ailp, cur, &tmp, lsn);
+ 
+ 	if (!mlip_changed) {
+ 		spin_unlock(&ailp->xa_lock);
+diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
+index 6b164e9..c0cb408 100644
+--- a/fs/xfs/xfs_trans_priv.h
++++ b/fs/xfs/xfs_trans_priv.h
+@@ -82,6 +82,7 @@ struct xfs_ail {
+ extern struct workqueue_struct	*xfs_ail_wq;	/* AIL workqueue */
+ 
+ void	xfs_trans_ail_update_bulk(struct xfs_ail *ailp,
++				struct xfs_ail_cursor *cur,
+ 				struct xfs_log_item **log_items, int nr_items,
+ 				xfs_lsn_t lsn) __releases(ailp->xa_lock);
+ static inline void
+@@ -90,7 +91,7 @@ xfs_trans_ail_update(
+ 	struct xfs_log_item	*lip,
+ 	xfs_lsn_t		lsn) __releases(ailp->xa_lock)
+ {
+-	xfs_trans_ail_update_bulk(ailp, &lip, 1, lsn);
++	xfs_trans_ail_update_bulk(ailp, NULL, &lip, 1, lsn);
+ }
+ 
+ void	xfs_trans_ail_delete_bulk(struct xfs_ail *ailp,
+@@ -111,10 +112,13 @@ xfs_lsn_t		xfs_ail_min_lsn(struct xfs_ail *ailp);
+ void			xfs_trans_unlocked_item(struct xfs_ail *,
+ 					xfs_log_item_t *);
+ 
+-struct xfs_log_item	*xfs_trans_ail_cursor_first(struct xfs_ail *ailp,
++struct xfs_log_item *	xfs_trans_ail_cursor_first(struct xfs_ail *ailp,
+ 					struct xfs_ail_cursor *cur,
+ 					xfs_lsn_t lsn);
+-struct xfs_log_item	*xfs_trans_ail_cursor_next(struct xfs_ail *ailp,
++struct xfs_log_item *	xfs_trans_ail_cursor_last(struct xfs_ail *ailp,
++					struct xfs_ail_cursor *cur,
++					xfs_lsn_t lsn);
++struct xfs_log_item *	xfs_trans_ail_cursor_next(struct xfs_ail *ailp,
+ 					struct xfs_ail_cursor *cur);
+ void			xfs_trans_ail_cursor_done(struct xfs_ail *ailp,
+ 					struct xfs_ail_cursor *cur);
+-- 
+1.7.5.1
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
