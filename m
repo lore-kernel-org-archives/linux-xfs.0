@@ -1,26 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p643Pfhr103471 for <xfs@oss.sgi.com>; Sun, 3 Jul 2011 22:25:42 -0500
-Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7E9D016786E4
-	for <xfs@oss.sgi.com>; Sun,  3 Jul 2011 20:25:38 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	28nh0FrbkO0XDQv7 for <xfs@oss.sgi.com>;
-	Sun, 03 Jul 2011 20:25:38 -0700 (PDT)
-Date: Mon, 4 Jul 2011 13:25:34 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 03/27] xfs: use write_cache_pages for writeback clustering
-Message-ID: <20110704032534.GD1026@dastard>
-References: <20110629140109.003209430@bombadil.infradead.org>
-	<20110629140336.950805096@bombadil.infradead.org>
-	<20110701022248.GM561@dastard> <20110701041851.GN561@dastard>
-	<20110701093305.GA28531@infradead.org>
-	<20110701154136.GA17881@localhost>
+	p644YtvM106558 for <xfs@oss.sgi.com>; Sun, 3 Jul 2011 23:34:55 -0500
+Received: from b.mail.sonic.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 13405524070
+	for <xfs@oss.sgi.com>; Sun,  3 Jul 2011 21:34:54 -0700 (PDT)
+Received: from b.mail.sonic.net (b.mail.sonic.net [64.142.19.5]) by
+	cuda.sgi.com with ESMTP id OZZQ4DUV2x6KFxd3 for
+	<xfs@oss.sgi.com>; Sun, 03 Jul 2011 21:34:54 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110701154136.GA17881@localhost>
+Message-ID: <44866.1309754093@sonic.net>
+Date: Sun, 03 Jul 2011 21:34:53 -0700
+Subject: Re: xfs_growfs doesn't resize
+From: kkeller@sonic.net
+Reply-To: kkeller@sonic.net
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,103 +22,57 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Wu Fengguang <fengguang.wu@intel.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, Mel Gorman <mgorman@suse.de>, Johannes Weiner <jweiner@redhat.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com
 
-T24gRnJpLCBKdWwgMDEsIDIwMTEgYXQgMTE6NDE6MzZQTSArMDgwMCwgV3UgRmVuZ2d1YW5nIHdy
-b3RlOgo+IENocmlzdG9waCwKPiAKPiBPbiBGcmksIEp1bCAwMSwgMjAxMSBhdCAwNTozMzowNVBN
-ICswODAwLCBDaHJpc3RvcGggSGVsbHdpZyB3cm90ZToKPiA+IEpvaGFubmVzLCBNZWwsIFd1LAo+
-ID4gCj4gPiBEYXZlIGhhcyBiZWVuIHN0cmVzc2luZyBzb21lIFhGUyBwYXRjaGVzIG9mIG1pbmUg
-dGhhdCByZW1vdmUgdGhlIFhGUwo+ID4gaW50ZXJuYWwgd3JpdGViYWNrIGNsdXN0ZXJpbmcgaW4g
-ZmF2b3VyIG9mIHVzaW5nIHdyaXRlX2NhY2hlX3BhZ2VzLgo+ID4gCj4gPiBBcyBwYXJ0IG9mIGlu
-dmVzdGlnYXRpbmcgdGhlIGJlaGF2aW91ciBoZSBmb3VuZCBvdXQgdGhhdCB3ZSdyZSBzdGlsbAo+
-ID4gZG9pbmcgbG90cyBvZiBJL08gZnJvbSB0aGUgZW5kIG9mIHRoZSBMUlUgaW4ga3N3YXBkLiAg
-Tm90IG9ubHkgaXMgdGhhdAo+ID4gcHJldHR5IGJhZCBiZWhhdmlvdXIgaW4gZ2VuZXJhbCwgYnV0
-IGl0IGFsc28gbWVhbnMgd2UgcmVhbGx5IGNhbid0Cj4gPiBqdXN0IHJlbW92ZSB0aGUgd3JpdGVi
-YWNrIGNsdXN0ZXJpbmcgaW4gd3JpdGVwYWdlIGdpdmVuIGhvdyBtdWNoCj4gPiBJL08gaXMgc3Rp
-bGwgZG9uZSB0aHJvdWdoIHRoYXQuCj4gPiAKPiA+IEFueSBjaGFuY2Ugd2UgY291bGQgdGhlIHdy
-aXRlYmFjayB2cyBrc3dhcCBiZWhhdmlvdXIgc29ydGVkIG91dCBhIGJpdAo+ID4gYmV0dGVyIGZp
-bmFsbHk/Cj4gCj4gSSBvbmNlIHRyaWVkIHRoaXMgYXBwcm9hY2g6Cj4gCj4gaHR0cDovL3d3dy5z
-cGluaWNzLm5ldC9saXN0cy9saW51eC1tbS9tc2cwOTIwMi5odG1sCj4gCj4gSXQgdXNlZCBhIGxp
-c3Qgc3RydWN0dXJlIHRoYXQgaXMgbm90IGxpbmVhcmx5IHNjYWxhYmxlLCBob3dldmVyIHRoYXQK
-PiBwYXJ0IHNob3VsZCBiZSBpbmRlcGVuZGVudGx5IGltcHJvdmFibGUgd2hlbiBuZWNlc3Nhcnku
-CgpJIGRvbid0IHRoaW5rIHRoYXQgaGFuZGluZyByYW5kb20gd3JpdGViYWNrIHRvIHRoZSBmbHVz
-aGVyIHRocmVhZCBpcwptdWNoIGJldHRlciB0aGFuIGRvaW5nIHJhbmRvbSB3cml0ZWJhY2sgZGly
-ZWN0bHkuICBZZXMsIHlvdSBhZGRlZApzb21lIGNsdXN0ZXJpbmcsIGJ1dCBJJ20gc3RpbGwgZG9u
-J3QgdGhpbmsgd3JpdGluZyBzcGVjaWZpYyBwYWdlcyBpcwp0aGUgYmVzdCBzb2x1dGlvbi4KCj4g
-VGhlIHJlYWwgcHJvYmxlbSB3YXMsIGl0IHNlZW0gdG8gbm90IHZlcnkgZWZmZWN0aXZlIGluIG15
-IHRlc3QgcnVucy4KPiBJIGZvdW5kIG1hbnkgLT5ucl9wYWdlcyB3b3JrcyBxdWV1ZWQgYmVmb3Jl
-IHRoZSAtPmlub2RlIHdvcmtzLCB3aGljaAo+IGVmZmVjdGl2ZWx5IG1ha2VzIHRoZSBmbHVzaGVy
-IHdvcmtpbmcgb24gbW9yZSBkaXNwZXJzZWQgcGFnZXMgcmF0aGVyCj4gdGhhbiBmb2N1c2luZyBv
-biB0aGUgZGlydHkgcGFnZXMgZW5jb3VudGVyZWQgaW4gTFJVIHJlY2xhaW0uCgpCdXQgdGhhdCdz
-IHJlYWxseSBqdXN0IGFuIGltcGxlbWVudGF0aW9uIGlzc3VlIHJlbGF0ZWQgdG8gaG93IHlvdQp0
-cmllZCB0byBzb2x2ZSB0aGUgcHJvYmxlbS4gVGhhdCBjb3VsZCBiZSBhZGRyZXNzZWQuCgpIb3dl
-dmVyLCB3aGF0IEknbSBxdWVzdGlvbmluZyBpcyB3aGV0aGVyIHdlIHNob3VsZCBldmVuIGNhcmUg
-d2hhdApwYWdlIG1lbW9yeSByZWNsYWltIHdhbnRzIHRvIHdyaXRlIC0gaXQgc2VlbXMgdG8gbWFr
-ZSBmdW5kYW1lbnRhbGx5CmJhZCBkZWNpc2lvbnMgZnJvbSBhbiBJTyBwZXJzZXBjdGl2ZS4KCldl
-IGhhdmUgdG8gcmVtZW1iZXIgdGhhdCBtZW1vcnkgcmVjbGFpbSBpcyBkb2luZyBMUlUgcmVjbGFp
-bSBhbmQgdGhlCmZsdXNoZXIgdGhyZWFkcyBhcmUgZG9pbmcgIm9sZGVzdCBmaXJzdCIgd3JpdGVi
-YWNrLiBJT1dzLCBib3RoIGFyZSB0cnlpbmcKdG8gb3BlcmF0ZSBpbiB0aGUgc2FtZSBkaXJlY3Rp
-b24gKG9sZGVzdCB0byB5b3VuZ2VzdCkgZm9yIHRoZSBzYW1lCnB1cnBvc2UuICBUaGUgZnVuZGFt
-ZW50YWwgcHJvYmxlbSB0aGF0IG9jY3VycyB3aGVuIG1lbW9yeSByZWNsYWltCnN0YXJ0cyB3cml0
-aW5nIHBhZ2VzIGJhY2sgZnJvbSB0aGUgTFJVIGlzIHRoaXM6CgoJLSBtZW1vcnkgcmVjbGFpbSBo
-YXMgcnVuIGFoZWFkIG9mIElPIHdyaXRlYmFjayAtCgpUaGUgTFJVIHVzdWFsbHkgbG9va3MgbGlr
-ZSB0aGlzOgoKCW9sZGVzdAkJCQkJeW91bmdlc3QKCSstLS0tLS0tLS0tLS0tLS0rLS0tLS0tLS0t
-LS0tLS0tKy0tLS0tLS0tLS0tLS0tKwoJY2xlYW4JCXdyaXRlYmFjawlkaXJ0eQoJCQleCQleCgkJ
-CXwJCXwKCQkJfAkJV2hlcmUgZmx1c2hlciB3aWxsIG5leHQgd29yayBmcm9tCgkJCXwJCVdoZXJl
-IGtzd2FwZCBpcyB3b3JraW5nIGZyb20KCQkJfAoJCQlJTyBzdWJtaXR0ZWQgYnkgZmx1c2hlciwg
-d2FpdGluZyBvbiBjb21wbGV0aW9uCgoKSWYgbWVtb3J5IHJlY2xhaW0gaXMgaGl0dGluZyBkaXJ0
-eSBwYWdlcyBvbiB0aGUgTFJVLCBpdCBtZWFucyBpdCBoYXMKZ290IGFoZWFkIG9mIHdyaXRlYmFj
-ayB3aXRob3V0IGJlaW5nIHRocm90dGxlZCAtIGl0J3MgcGFzc2VkIG92ZXIKYWxsIHRoZSBwYWdl
-cyBjdXJyZW50bHkgdW5kZXIgd3JpdGViYWNrIGFuZCBpcyB0cnlpbmcgdG8gd3JpdGUgYmFjawpw
-YWdlcyB0aGF0IGFyZSAqbmV3ZXIqIHRoYW4gd2hhdCB3cml0ZWJhY2sgaXMgd29ya2luZyBvbi4g
-SU9XcywgaXQKc3RhcnRzIHRyeWluZyB0byBkbyB0aGUgam9iIG9mIHRoZSBmbHVzaGVyIHRocmVh
-ZHMsIGFuZCBpdCBkb2VzIHRoYXQKdmVyeSBiYWRseS4KClRoZSAkMTAwIHF1ZXN0aW9uIGlzIOKI
-l3doeSBpcyBpdCBnZXR0aW5nIGFoZWFkIG9mIHdyaXRlYmFjayo/CgpGcm9tIGEgYnJpZWYgbG9v
-ayBhdCB0aGUgdm1zY2FuIGNvZGUsIGl0IGFwcGVhcnMgdGhhdCBzY2FubmluZyBkb2VzCm5vdCB0
-aHJvdHRsZS9ibG9jayB1bnRpbCByZWNsYWltIHByaW9yaXR5IGhhcyBnb3QgcHJldHR5IGhpZ2gu
-IFRoYXQKbWVhbnMgYXQgbG93IHByaW9yaXR5IHJlY2xhaW0sIGl0ICpza2lwcyBwYWdlcyB1bmRl
-ciB3cml0ZWJhY2sqLgpIb3dldmVyLCBpZiBpdCBjb21lcyBhY3Jvc3MgYSBkaXJ0eSBwYWdlLCBp
-dCB3aWxsIHRyaWdnZXIgd3JpdGViYWNrCm9mIHRoZSBwYWdlLgoKTm93IGNhbGwgbWUgY3Jhenks
-IGJ1dCBpZiB3ZSd2ZSBhbHJlYWR5IGdvdCBhIGxhcmdlIG51bWJlciBvZiBwYWdlcwp1bmRlciB3
-cml0ZWJhY2ssIHdoeSB3b3VsZCB3ZSB3YW50IHRvICpzdGFydCBtb3JlIElPKiB3aGVuIGNsZWFy
-bHkKdGhlIHN5c3RlbSBpcyB0YWtpbmcgY2FyZSBvZiBjbGVhbmluZyBwYWdlcyBhbHJlYWR5IGFu
-ZCBhbGwgd2UgaGF2ZQp0byBkbyBpcyB3YWl0IGZvciBhIHNob3J0IHdoaWxlIHRvIGdldCBjbGVh
-biBwYWdlcyByZWFkeSBmb3IKcmVjbGFpbT8KCkluZGVlZCwgSSBhZGRlZCB0aGlzIHF1aWNrIGhh
-Y2sgdG8gcHJldmVudCB0aGUgVk0gZnJvbSBkb2luZwp3cml0ZWJhY2sgdmlhIHBhZ2VvdXQgdW50
-aWwgYWZ0ZXIgaXQgc3RhcnRzIGJsb2NraW5nIG9uIHdyaXRlYmFjawpwYWdlczoKCkBAIC04MjUs
-NiArODI1LDggQEAgc3RhdGljIHVuc2lnbmVkIGxvbmcgc2hyaW5rX3BhZ2VfbGlzdChzdHJ1Y3Qg
-bGlzdF9oZWFkICpwYWdlX2wKIAkJaWYgKFBhZ2VEaXJ0eShwYWdlKSkgewogCQkJbnJfZGlydHkr
-KzsKIAorCQkJaWYgKCEoc2MtPnJlY2xhaW1fbW9kZSAmIFJFQ0xBSU1fTU9ERV9TWU5DKSkKKwkJ
-CQlnb3RvIGtlZXBfbG9ja2VkOwogCQkJaWYgKHJlZmVyZW5jZXMgPT0gUEFHRVJFRl9SRUNMQUlN
-X0NMRUFOKQogCQkJCWdvdG8ga2VlcF9sb2NrZWQ7CiAJCQlpZiAoIW1heV9lbnRlcl9mcykKCklP
-V3MsIHdlIGRvbid0IHdyaXRlIHBhZ2VzIGZyb20ga3N3YXBkIHVubGVzcyB0aGVyZSBpcyBubyBJ
-Twp3cml0ZWJhY2sgZ29pbmcgb24gYXQgYWxsICh3YWl0ZWQgb24gYWxsIHRoZSB3cml0ZWJhY2sg
-cGFnZXMgb3Igbm9uZQpleGlzdCkgYW5kIHRoZXJlIGFyZSBkaXJ0eSBwYWdlcyBvbiB0aGUgTFJV
-LgoKVGhpcyBkb2Vzbid0IGNvbXBsZXRlbHkgc3RvcCB0aGUgSU8gY29sbGFwc2UsIChsb29rcyBs
-aWtlIGZvcmVncm91bmQKdGhyb3R0bGluZyBpcyB0aGUgb3RoZXIgY2F1c2UsIHdoaWNoIElPLWxl
-c3Mgd3JpdGUgdGhyb3R0bGluZyBmaXhlcykKYnV0IHRoZSBjb2xsYXBzZSB3YXMgc2lnbmlmaWNh
-bnRseSByZWR1Y2VkIGluIGR1cmF0aW9uIGFuZCBpbnRlbnNpdHkKYnkgcmVtb3Zpbmcga3N3YXBk
-IHdyaXRlYmFjay4gSW4gZmFjdCwgdGhlIElPIHJhdGUgb25seSBkcm9wcGVkIHRvCn42ME1CL3Mg
-aW5zdGVhZCBvZiAzME1CL3MsIGFuZCB0aGUgaW1wcm92ZW1lbnQgaXMgZWFzaWx5IG1lYXN1cmVk
-IGJ5CnRoZSBydW50aW1lIG9mIHRoZSB0ZXN0OgoKCQkJcnVuIDEJcnVuIDIJcnVuIDMKMy4wLXJj
-NS12YW5pbGxhCQkxMzVzCTEzN3MJMTM4cwozLjAtcmM1LXBhdGNoZWQJCTExN3MJMTE1cwkxMTVz
-CgpUaGF0J3MgYSBwcmV0dHkgbWFzc2l2ZSBpbXByb3ZlbWVudCBmb3IgYSAyLWxpbmUgcGF0Y2gu
-IDspIEkgZXhwZWN0CnRoZSBJTy1sZXNzIHdyaXRlIHRocm90dGxpbmcgcGF0Y2hzZXQgd2lsbCBm
-dXJ0aGVyIGltcHJvdmUgdGhpcy4KCkZXSVcsIHRoZSBucl92bXNjYW5fd3JpdGUgdmFsdWVzIGNo
-YW5nZWQgbGlrZSB0aGlzOgoKCQkJcnVuIDEJcnVuIDIJcnVuIDMKMy4wLXJjNS12YW5pbGxhCQk2
-NzUxCTY4OTMJNjQ2NQozLjAtcmM1LXBhdGNoZWQJCTAJMAkwCgpUaGVzZSByZXN1bHRzIHN1cHBv
-cnQgbXkgYXJndW1lbnQgdGhhdCBtZW1vcnkgcmVjbGFpbSBzaG91bGQgbm90IGJlCmRvaW5nIGRp
-cnR5IHBhZ2Ugd3JpdGViYWNrIGF0IGFsbCAtIGRlZmVyaW5nIHdyaXRlYmFjayB0byB0aGUKd3Jp
-dGViYWNrIGluZnJhc3RydWN0dXJlIGFuZCBqdXN0IHdhaXRpbmcgZm9yIGl0IHRvIGNvbXBsZXRl
-CmFwcHJvcHJpYXRlbHkgaXMgdGhlIFJpZ2h0IFRoaW5nIFRvIERvLiBpLmUuIElPLWxlc3MgbWVt
-b3J5IHJlY2xhaW0Kd29ya3MgYmV0dGVyIHRoYW4gdGhlIGN1cnJlbnQgY29kZSBmb3IgdGhlIHNh
-bWUgcmVhc29uIElPLWxlc3Mgd3JpdGUKdGhyb3R0bGluZyB3b3JrcyBiZXR0ZXIgdGhhbiB0aGUg
-Y3VycmVudCBjb2RlLi4uLgoKQ2hlZXJzLAoKRGF2ZS4KLS0gCkRhdmUgQ2hpbm5lcgpkYXZpZEBm
-cm9tb3JiaXQuY29tCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20v
-bWFpbG1hbi9saXN0aW5mby94ZnMK
+
+
+On Sun 03/07/11  3:14 PM , Eric Sandeen <sandeen@sandeen.net> wrote:
+
+[some rearranging]
+
+> You're welcome but here's the obligatory plug in return - running RHEL5
+> proper would have gotten you up to date, fully supported xfs, and you
+> wouldn't have run into this mess. Just sayin' ... ;)
+
+Yep, that's definitely a lesson learned.  Though I don't think I can blame CentOS either--from what I can tell the bug has been available from yum for some time now.  So it's pretty much entirely my own fault.  :(
+
+I also am sorry for not preserving threading--for some reason, the SGI mailserver rejected mail from my normal host (which is odd, as it's not in any blacklists I know of), so I am using an unfamiliar mail client.
+
+> You probably hit this bug:
+> http://oss.sgi.com/archives/xfs/2007-01/msg00053.html [1]
+> 
+> See also:
+> http://oss.sgi.com/archives/xfs/2009-07/msg00087.html [2]
+> 
+> I can't remember how much damage the original bug did ...
+
+If any?  I'm a bit amazed that, if there was damage, that the filesystem is still usable.  Perhaps if I were to fill it it would show signs of inconsistency?  Or remounting would read the now-incorrect values from the superblock 0?
+
+> is it still mounted I guess?
+
+Yes, it's still mounted, and as far as I can tell perfectly fine.  But I won't really know till I can throw xfs_repair -n and/or xfs_db and/or remount it; I'm choosing to get as much data off as I can before I try these things, just in case.
+
+How safe is running xfs_db with -r on my mounted filesystem?  I understand that results might not be consistent, but on the off chance that they are I am hoping that it might be at least a little helpful.
+
+I was re-reading some of the threads I posted in my original messages, in particular these posts:
+
+http://oss.sgi.com/archives/xfs/2009-09/msg00210.html
+http://oss.sgi.com/archives/xfs/2009-09/msg00211.html
+
+If I am reading those, plus the xfs_db man page, correctly, it seems like what Russell suggested was to look at superblock 1 (or some other one?) and use those values to correct superblock 0.  At what points (if any) are the other superblocks updated?  I was testing on another machine, on a filesystem that I had successfully grown using xfs_growfs, and of the two values Russell suggested the OP to change, dblocks is different between sb 0 and sb 1, but agcount is not.  Could that just be that I did not grow the filesystem too much, so that agcount didn't need to change?  That seems a bit counterintuitive, but (as should be obvious) I don't know XFS all that well.  I am hoping to know because, in re-reading those messages, I got a better idea of what those particular xfs_db commands do, so that if I did run into problems remounting, I might be able to determine the appropriate new values myself and reduce my downtime.  But I want to understand more what I'm doing before I try!
+  that!
+
+--keith
+
+-- 
+kkeller@sonic.net
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
