@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p640lW7B084974 for <xfs@oss.sgi.com>; Sun, 3 Jul 2011 19:47:33 -0500
+	p643Pfhr103471 for <xfs@oss.sgi.com>; Sun, 3 Jul 2011 22:25:42 -0500
 Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9AF011EE7012
-	for <xfs@oss.sgi.com>; Sun,  3 Jul 2011 17:47:30 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7E9D016786E4
+	for <xfs@oss.sgi.com>; Sun,  3 Jul 2011 20:25:38 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	nD3OvFWbZ1PZpvjB for <xfs@oss.sgi.com>;
-	Sun, 03 Jul 2011 17:47:30 -0700 (PDT)
-Date: Mon, 4 Jul 2011 10:47:26 +1000
+	28nh0FrbkO0XDQv7 for <xfs@oss.sgi.com>;
+	Sun, 03 Jul 2011 20:25:38 -0700 (PDT)
+Date: Mon, 4 Jul 2011 13:25:34 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: 2.6.39.1: (2.6.35+ probably): delaylog bug
-Message-ID: <20110704004726.GU561@dastard>
-References: <alpine.DEB.2.02.1107031702380.13519@p34.internal.lan>
+Subject: Re: [PATCH 03/27] xfs: use write_cache_pages for writeback clustering
+Message-ID: <20110704032534.GD1026@dastard>
+References: <20110629140109.003209430@bombadil.infradead.org>
+	<20110629140336.950805096@bombadil.infradead.org>
+	<20110701022248.GM561@dastard> <20110701041851.GN561@dastard>
+	<20110701093305.GA28531@infradead.org>
+	<20110701154136.GA17881@localhost>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.02.1107031702380.13519@p34.internal.lan>
+In-Reply-To: <20110701154136.GA17881@localhost>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,49 +29,103 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: Alan Piszcz <ap@solarrain.com>, xfs@oss.sgi.com
+To: Wu Fengguang <fengguang.wu@intel.com>
+Cc: Christoph Hellwig <hch@infradead.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, Mel Gorman <mgorman@suse.de>, Johannes Weiner <jweiner@redhat.com>
 
-On Sun, Jul 03, 2011 at 05:24:09PM -0400, Justin Piszcz wrote:
-> Hello,
-> 
-> I help to support a system (similar to mine) with a 3ware 9750-24i4e
-> and when you rm -rf a directory with too many files, the system will
-> act lagged, lock up for periods of time and drop connections
-> (including samba shares) to and from the host.  Its so bad it cannot
-> even talk to the UPS for example (ups: communications lost, e.g.
-> from nut).  This is pretty bad and I've remounted my XFS FS w/out
-> delaylog but for the xfstests package, it really needs to test with
-> a few million files in a directory or two, and you should easily be
-> able to reproduce the problem.
-
-http://oss.sgi.com/archives/xfs/2011-06/msg00259.html
-
-FYI, the problem is not easy to reproduce - it requires a specific
-set of conditions to exist with interrupt configuration (i.e. all on
-the same CPU that the log IO completions are running) to expose the
-workqueue priority inversion that the filesystem level issue
-triggers.
-
-> When the delaylog option is removed, the files are removed slowly,
-> but there are no errors, SSH/samba connections do NOT drop, etc,
-> please look into this, thanks.
-
-http://oss.sgi.com/archives/xfs/2011-06/msg00463.html
-http://oss.sgi.com/archives/xfs/2011-06/msg00473.html
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gRnJpLCBKdWwgMDEsIDIwMTEgYXQgMTE6NDE6MzZQTSArMDgwMCwgV3UgRmVuZ2d1YW5nIHdy
+b3RlOgo+IENocmlzdG9waCwKPiAKPiBPbiBGcmksIEp1bCAwMSwgMjAxMSBhdCAwNTozMzowNVBN
+ICswODAwLCBDaHJpc3RvcGggSGVsbHdpZyB3cm90ZToKPiA+IEpvaGFubmVzLCBNZWwsIFd1LAo+
+ID4gCj4gPiBEYXZlIGhhcyBiZWVuIHN0cmVzc2luZyBzb21lIFhGUyBwYXRjaGVzIG9mIG1pbmUg
+dGhhdCByZW1vdmUgdGhlIFhGUwo+ID4gaW50ZXJuYWwgd3JpdGViYWNrIGNsdXN0ZXJpbmcgaW4g
+ZmF2b3VyIG9mIHVzaW5nIHdyaXRlX2NhY2hlX3BhZ2VzLgo+ID4gCj4gPiBBcyBwYXJ0IG9mIGlu
+dmVzdGlnYXRpbmcgdGhlIGJlaGF2aW91ciBoZSBmb3VuZCBvdXQgdGhhdCB3ZSdyZSBzdGlsbAo+
+ID4gZG9pbmcgbG90cyBvZiBJL08gZnJvbSB0aGUgZW5kIG9mIHRoZSBMUlUgaW4ga3N3YXBkLiAg
+Tm90IG9ubHkgaXMgdGhhdAo+ID4gcHJldHR5IGJhZCBiZWhhdmlvdXIgaW4gZ2VuZXJhbCwgYnV0
+IGl0IGFsc28gbWVhbnMgd2UgcmVhbGx5IGNhbid0Cj4gPiBqdXN0IHJlbW92ZSB0aGUgd3JpdGVi
+YWNrIGNsdXN0ZXJpbmcgaW4gd3JpdGVwYWdlIGdpdmVuIGhvdyBtdWNoCj4gPiBJL08gaXMgc3Rp
+bGwgZG9uZSB0aHJvdWdoIHRoYXQuCj4gPiAKPiA+IEFueSBjaGFuY2Ugd2UgY291bGQgdGhlIHdy
+aXRlYmFjayB2cyBrc3dhcCBiZWhhdmlvdXIgc29ydGVkIG91dCBhIGJpdAo+ID4gYmV0dGVyIGZp
+bmFsbHk/Cj4gCj4gSSBvbmNlIHRyaWVkIHRoaXMgYXBwcm9hY2g6Cj4gCj4gaHR0cDovL3d3dy5z
+cGluaWNzLm5ldC9saXN0cy9saW51eC1tbS9tc2cwOTIwMi5odG1sCj4gCj4gSXQgdXNlZCBhIGxp
+c3Qgc3RydWN0dXJlIHRoYXQgaXMgbm90IGxpbmVhcmx5IHNjYWxhYmxlLCBob3dldmVyIHRoYXQK
+PiBwYXJ0IHNob3VsZCBiZSBpbmRlcGVuZGVudGx5IGltcHJvdmFibGUgd2hlbiBuZWNlc3Nhcnku
+CgpJIGRvbid0IHRoaW5rIHRoYXQgaGFuZGluZyByYW5kb20gd3JpdGViYWNrIHRvIHRoZSBmbHVz
+aGVyIHRocmVhZCBpcwptdWNoIGJldHRlciB0aGFuIGRvaW5nIHJhbmRvbSB3cml0ZWJhY2sgZGly
+ZWN0bHkuICBZZXMsIHlvdSBhZGRlZApzb21lIGNsdXN0ZXJpbmcsIGJ1dCBJJ20gc3RpbGwgZG9u
+J3QgdGhpbmsgd3JpdGluZyBzcGVjaWZpYyBwYWdlcyBpcwp0aGUgYmVzdCBzb2x1dGlvbi4KCj4g
+VGhlIHJlYWwgcHJvYmxlbSB3YXMsIGl0IHNlZW0gdG8gbm90IHZlcnkgZWZmZWN0aXZlIGluIG15
+IHRlc3QgcnVucy4KPiBJIGZvdW5kIG1hbnkgLT5ucl9wYWdlcyB3b3JrcyBxdWV1ZWQgYmVmb3Jl
+IHRoZSAtPmlub2RlIHdvcmtzLCB3aGljaAo+IGVmZmVjdGl2ZWx5IG1ha2VzIHRoZSBmbHVzaGVy
+IHdvcmtpbmcgb24gbW9yZSBkaXNwZXJzZWQgcGFnZXMgcmF0aGVyCj4gdGhhbiBmb2N1c2luZyBv
+biB0aGUgZGlydHkgcGFnZXMgZW5jb3VudGVyZWQgaW4gTFJVIHJlY2xhaW0uCgpCdXQgdGhhdCdz
+IHJlYWxseSBqdXN0IGFuIGltcGxlbWVudGF0aW9uIGlzc3VlIHJlbGF0ZWQgdG8gaG93IHlvdQp0
+cmllZCB0byBzb2x2ZSB0aGUgcHJvYmxlbS4gVGhhdCBjb3VsZCBiZSBhZGRyZXNzZWQuCgpIb3dl
+dmVyLCB3aGF0IEknbSBxdWVzdGlvbmluZyBpcyB3aGV0aGVyIHdlIHNob3VsZCBldmVuIGNhcmUg
+d2hhdApwYWdlIG1lbW9yeSByZWNsYWltIHdhbnRzIHRvIHdyaXRlIC0gaXQgc2VlbXMgdG8gbWFr
+ZSBmdW5kYW1lbnRhbGx5CmJhZCBkZWNpc2lvbnMgZnJvbSBhbiBJTyBwZXJzZXBjdGl2ZS4KCldl
+IGhhdmUgdG8gcmVtZW1iZXIgdGhhdCBtZW1vcnkgcmVjbGFpbSBpcyBkb2luZyBMUlUgcmVjbGFp
+bSBhbmQgdGhlCmZsdXNoZXIgdGhyZWFkcyBhcmUgZG9pbmcgIm9sZGVzdCBmaXJzdCIgd3JpdGVi
+YWNrLiBJT1dzLCBib3RoIGFyZSB0cnlpbmcKdG8gb3BlcmF0ZSBpbiB0aGUgc2FtZSBkaXJlY3Rp
+b24gKG9sZGVzdCB0byB5b3VuZ2VzdCkgZm9yIHRoZSBzYW1lCnB1cnBvc2UuICBUaGUgZnVuZGFt
+ZW50YWwgcHJvYmxlbSB0aGF0IG9jY3VycyB3aGVuIG1lbW9yeSByZWNsYWltCnN0YXJ0cyB3cml0
+aW5nIHBhZ2VzIGJhY2sgZnJvbSB0aGUgTFJVIGlzIHRoaXM6CgoJLSBtZW1vcnkgcmVjbGFpbSBo
+YXMgcnVuIGFoZWFkIG9mIElPIHdyaXRlYmFjayAtCgpUaGUgTFJVIHVzdWFsbHkgbG9va3MgbGlr
+ZSB0aGlzOgoKCW9sZGVzdAkJCQkJeW91bmdlc3QKCSstLS0tLS0tLS0tLS0tLS0rLS0tLS0tLS0t
+LS0tLS0tKy0tLS0tLS0tLS0tLS0tKwoJY2xlYW4JCXdyaXRlYmFjawlkaXJ0eQoJCQleCQleCgkJ
+CXwJCXwKCQkJfAkJV2hlcmUgZmx1c2hlciB3aWxsIG5leHQgd29yayBmcm9tCgkJCXwJCVdoZXJl
+IGtzd2FwZCBpcyB3b3JraW5nIGZyb20KCQkJfAoJCQlJTyBzdWJtaXR0ZWQgYnkgZmx1c2hlciwg
+d2FpdGluZyBvbiBjb21wbGV0aW9uCgoKSWYgbWVtb3J5IHJlY2xhaW0gaXMgaGl0dGluZyBkaXJ0
+eSBwYWdlcyBvbiB0aGUgTFJVLCBpdCBtZWFucyBpdCBoYXMKZ290IGFoZWFkIG9mIHdyaXRlYmFj
+ayB3aXRob3V0IGJlaW5nIHRocm90dGxlZCAtIGl0J3MgcGFzc2VkIG92ZXIKYWxsIHRoZSBwYWdl
+cyBjdXJyZW50bHkgdW5kZXIgd3JpdGViYWNrIGFuZCBpcyB0cnlpbmcgdG8gd3JpdGUgYmFjawpw
+YWdlcyB0aGF0IGFyZSAqbmV3ZXIqIHRoYW4gd2hhdCB3cml0ZWJhY2sgaXMgd29ya2luZyBvbi4g
+SU9XcywgaXQKc3RhcnRzIHRyeWluZyB0byBkbyB0aGUgam9iIG9mIHRoZSBmbHVzaGVyIHRocmVh
+ZHMsIGFuZCBpdCBkb2VzIHRoYXQKdmVyeSBiYWRseS4KClRoZSAkMTAwIHF1ZXN0aW9uIGlzIOKI
+l3doeSBpcyBpdCBnZXR0aW5nIGFoZWFkIG9mIHdyaXRlYmFjayo/CgpGcm9tIGEgYnJpZWYgbG9v
+ayBhdCB0aGUgdm1zY2FuIGNvZGUsIGl0IGFwcGVhcnMgdGhhdCBzY2FubmluZyBkb2VzCm5vdCB0
+aHJvdHRsZS9ibG9jayB1bnRpbCByZWNsYWltIHByaW9yaXR5IGhhcyBnb3QgcHJldHR5IGhpZ2gu
+IFRoYXQKbWVhbnMgYXQgbG93IHByaW9yaXR5IHJlY2xhaW0sIGl0ICpza2lwcyBwYWdlcyB1bmRl
+ciB3cml0ZWJhY2sqLgpIb3dldmVyLCBpZiBpdCBjb21lcyBhY3Jvc3MgYSBkaXJ0eSBwYWdlLCBp
+dCB3aWxsIHRyaWdnZXIgd3JpdGViYWNrCm9mIHRoZSBwYWdlLgoKTm93IGNhbGwgbWUgY3Jhenks
+IGJ1dCBpZiB3ZSd2ZSBhbHJlYWR5IGdvdCBhIGxhcmdlIG51bWJlciBvZiBwYWdlcwp1bmRlciB3
+cml0ZWJhY2ssIHdoeSB3b3VsZCB3ZSB3YW50IHRvICpzdGFydCBtb3JlIElPKiB3aGVuIGNsZWFy
+bHkKdGhlIHN5c3RlbSBpcyB0YWtpbmcgY2FyZSBvZiBjbGVhbmluZyBwYWdlcyBhbHJlYWR5IGFu
+ZCBhbGwgd2UgaGF2ZQp0byBkbyBpcyB3YWl0IGZvciBhIHNob3J0IHdoaWxlIHRvIGdldCBjbGVh
+biBwYWdlcyByZWFkeSBmb3IKcmVjbGFpbT8KCkluZGVlZCwgSSBhZGRlZCB0aGlzIHF1aWNrIGhh
+Y2sgdG8gcHJldmVudCB0aGUgVk0gZnJvbSBkb2luZwp3cml0ZWJhY2sgdmlhIHBhZ2VvdXQgdW50
+aWwgYWZ0ZXIgaXQgc3RhcnRzIGJsb2NraW5nIG9uIHdyaXRlYmFjawpwYWdlczoKCkBAIC04MjUs
+NiArODI1LDggQEAgc3RhdGljIHVuc2lnbmVkIGxvbmcgc2hyaW5rX3BhZ2VfbGlzdChzdHJ1Y3Qg
+bGlzdF9oZWFkICpwYWdlX2wKIAkJaWYgKFBhZ2VEaXJ0eShwYWdlKSkgewogCQkJbnJfZGlydHkr
+KzsKIAorCQkJaWYgKCEoc2MtPnJlY2xhaW1fbW9kZSAmIFJFQ0xBSU1fTU9ERV9TWU5DKSkKKwkJ
+CQlnb3RvIGtlZXBfbG9ja2VkOwogCQkJaWYgKHJlZmVyZW5jZXMgPT0gUEFHRVJFRl9SRUNMQUlN
+X0NMRUFOKQogCQkJCWdvdG8ga2VlcF9sb2NrZWQ7CiAJCQlpZiAoIW1heV9lbnRlcl9mcykKCklP
+V3MsIHdlIGRvbid0IHdyaXRlIHBhZ2VzIGZyb20ga3N3YXBkIHVubGVzcyB0aGVyZSBpcyBubyBJ
+Twp3cml0ZWJhY2sgZ29pbmcgb24gYXQgYWxsICh3YWl0ZWQgb24gYWxsIHRoZSB3cml0ZWJhY2sg
+cGFnZXMgb3Igbm9uZQpleGlzdCkgYW5kIHRoZXJlIGFyZSBkaXJ0eSBwYWdlcyBvbiB0aGUgTFJV
+LgoKVGhpcyBkb2Vzbid0IGNvbXBsZXRlbHkgc3RvcCB0aGUgSU8gY29sbGFwc2UsIChsb29rcyBs
+aWtlIGZvcmVncm91bmQKdGhyb3R0bGluZyBpcyB0aGUgb3RoZXIgY2F1c2UsIHdoaWNoIElPLWxl
+c3Mgd3JpdGUgdGhyb3R0bGluZyBmaXhlcykKYnV0IHRoZSBjb2xsYXBzZSB3YXMgc2lnbmlmaWNh
+bnRseSByZWR1Y2VkIGluIGR1cmF0aW9uIGFuZCBpbnRlbnNpdHkKYnkgcmVtb3Zpbmcga3N3YXBk
+IHdyaXRlYmFjay4gSW4gZmFjdCwgdGhlIElPIHJhdGUgb25seSBkcm9wcGVkIHRvCn42ME1CL3Mg
+aW5zdGVhZCBvZiAzME1CL3MsIGFuZCB0aGUgaW1wcm92ZW1lbnQgaXMgZWFzaWx5IG1lYXN1cmVk
+IGJ5CnRoZSBydW50aW1lIG9mIHRoZSB0ZXN0OgoKCQkJcnVuIDEJcnVuIDIJcnVuIDMKMy4wLXJj
+NS12YW5pbGxhCQkxMzVzCTEzN3MJMTM4cwozLjAtcmM1LXBhdGNoZWQJCTExN3MJMTE1cwkxMTVz
+CgpUaGF0J3MgYSBwcmV0dHkgbWFzc2l2ZSBpbXByb3ZlbWVudCBmb3IgYSAyLWxpbmUgcGF0Y2gu
+IDspIEkgZXhwZWN0CnRoZSBJTy1sZXNzIHdyaXRlIHRocm90dGxpbmcgcGF0Y2hzZXQgd2lsbCBm
+dXJ0aGVyIGltcHJvdmUgdGhpcy4KCkZXSVcsIHRoZSBucl92bXNjYW5fd3JpdGUgdmFsdWVzIGNo
+YW5nZWQgbGlrZSB0aGlzOgoKCQkJcnVuIDEJcnVuIDIJcnVuIDMKMy4wLXJjNS12YW5pbGxhCQk2
+NzUxCTY4OTMJNjQ2NQozLjAtcmM1LXBhdGNoZWQJCTAJMAkwCgpUaGVzZSByZXN1bHRzIHN1cHBv
+cnQgbXkgYXJndW1lbnQgdGhhdCBtZW1vcnkgcmVjbGFpbSBzaG91bGQgbm90IGJlCmRvaW5nIGRp
+cnR5IHBhZ2Ugd3JpdGViYWNrIGF0IGFsbCAtIGRlZmVyaW5nIHdyaXRlYmFjayB0byB0aGUKd3Jp
+dGViYWNrIGluZnJhc3RydWN0dXJlIGFuZCBqdXN0IHdhaXRpbmcgZm9yIGl0IHRvIGNvbXBsZXRl
+CmFwcHJvcHJpYXRlbHkgaXMgdGhlIFJpZ2h0IFRoaW5nIFRvIERvLiBpLmUuIElPLWxlc3MgbWVt
+b3J5IHJlY2xhaW0Kd29ya3MgYmV0dGVyIHRoYW4gdGhlIGN1cnJlbnQgY29kZSBmb3IgdGhlIHNh
+bWUgcmVhc29uIElPLWxlc3Mgd3JpdGUKdGhyb3R0bGluZyB3b3JrcyBiZXR0ZXIgdGhhbiB0aGUg
+Y3VycmVudCBjb2RlLi4uLgoKQ2hlZXJzLAoKRGF2ZS4KLS0gCkRhdmUgQ2hpbm5lcgpkYXZpZEBm
+cm9tb3JiaXQuY29tCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20v
+bWFpbG1hbi9saXN0aW5mby94ZnMK
