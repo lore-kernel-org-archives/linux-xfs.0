@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p64BQ7SY142012 for <xfs@oss.sgi.com>; Mon, 4 Jul 2011 06:26:07 -0500
+	p64CDCh2143540 for <xfs@oss.sgi.com>; Mon, 4 Jul 2011 07:13:12 -0500
 Received: from ipmail07.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 287C7496A9
-	for <xfs@oss.sgi.com>; Mon,  4 Jul 2011 04:26:05 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6285C1EE814A
+	for <xfs@oss.sgi.com>; Mon,  4 Jul 2011 05:13:10 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	6o6Z57nGheC7OCn5 for <xfs@oss.sgi.com>;
-	Mon, 04 Jul 2011 04:26:05 -0700 (PDT)
-Date: Mon, 4 Jul 2011 21:26:01 +1000
+	LnolnAaA6Xq3413H for <xfs@oss.sgi.com>;
+	Mon, 04 Jul 2011 05:13:10 -0700 (PDT)
+Date: Mon, 4 Jul 2011 22:13:07 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 0/5] xfs: fix AIL bulk insert issues and cleanups
-Message-ID: <20110704112601.GV561@dastard>
-References: <1309757260-5484-1-git-send-email-david@fromorbit.com>
-	<20110704081312.GA22496@infradead.org>
+Subject: Re: question about xfs_repair
+Message-ID: <20110704121307.GX561@dastard>
+References: <CAHyte2beL-dkGJa=tFy2DV+reYqPSTVH-VOPyRdPZMaho7Hh4Q@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110704081312.GA22496@infradead.org>
+In-Reply-To: <CAHyte2beL-dkGJa=tFy2DV+reYqPSTVH-VOPyRdPZMaho7Hh4Q@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,36 +25,38 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: =?utf-8?Q?=C5=81ukasz?= Korczyk <korczyk.l@gmail.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, Jul 04, 2011 at 04:13:12AM -0400, Christoph Hellwig wrote:
-> On Mon, Jul 04, 2011 at 03:27:35PM +1000, Dave Chinner wrote:
-> > The first two patches fix the recently reported rm -rf performance
-> > and interactivity problems when using delay??d logging. These should
-> > probably be considered for 3.0-rc5.
-> 
-> I think it's a bit late for patch 2.  Patch 1 is triviall, and helps
-> with a regression introduced in 2.6.39 by switching to the delaylog
-> mode, but patch 2 is a bit too large for this in the merge window
-> unless absolutely nessecary. 
-
-Yeah, that's fair enough. The first patch should prevent the
-majority of the problematic occurrences of out-of-order AIL
-insertion, so we can live without the second one for the moment.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gTW9uLCBKdWwgMDQsIDIwMTEgYXQgMTE6NDE6NDlBTSArMDIwMCwgxYF1a2FzeiBLb3Jjenlr
+IHdyb3RlOgo+IEhlbG8KPiAKPiBJIGhhdmUgYSBxdWVzdGlvbiBJIHdhc24ndCBhYmxlIHRvIGZp
+bmQgYW5zd2VyIGZvci4KPiAKPiBXaGljaCBmYWN0b3JzIGluZmx1ZW5jZSBtZW1vcnkgdXNhZ2Ug
+b2YgeGZzX3JlcGFpcj8KPiBEb2VzIGFueSBmb3JtdWxhIGV4aXN0IHRvIGNvdW50IHBvc3NpYmxl
+IG1lbW9yeSB1c2FnZT8KCiMgeGZzX3JlcGFpciAtbiAtdnYgLW0gMSAvZGV2L3ZkYQpQaGFzZSAx
+IC0gZmluZCBhbmQgdmVyaWZ5IHN1cGVyYmxvY2suLi4KICAgICAgICAtIG1heF9tZW0gPSAxMDI0
+LCBpY291bnQgPSA2NCwgaW1lbSA9IDAsIGRibG9jayA9IDQyOTQ5NjcyOTYsIGRtZW0gPSAyMDk3
+MTUyClJlcXVpcmVkIG1lbW9yeSBmb3IgcmVwYWlyIGlzIGdyZWF0ZXIgdGhhdCB0aGUgbWF4aW11
+bSBzcGVjaWZpZWQKd2l0aCB0aGUgLW0gb3B0aW9uLiBQbGVhc2UgaW5jcmVhc2UgaXQgdG8gYXQg
+bGVhc3QgMjA5Ni4KClNvIGl0J3MgdGVsbGluZyBtZSBJIG5lZWQgYXQgbGVhc3QgMjA5Nk1CIG9m
+IFJBTSB0byByZXBhaXIgbXkgMTZUQgpmaWxlc3lzdGVtLCBvZiB3aGljaCAyMDk3MTUyS0IgaXMg
+bmVlZGVkIGZvciB0cmFja2luZyBmcmVlIHNwYWNlLi4uCgpJIGp1c3QgYWRkZWQgNTAgbWlsbGlv
+biBpbm9kZXMgdG8gdGhlIGZpbGVzeXN0ZW0gKGl0IG5vdyBoYXMgNTBNICsKMTAgaW5vZGVzIGlu
+IGl0KSwgYW5kIHRoZSByZXN1bHQgaXM6CgojIHhmc19yZXBhaXIgLXZ2IC1tIDEgL2Rldi92ZGEK
+UGhhc2UgMSAtIGZpbmQgYW5kIHZlcmlmeSBzdXBlcmJsb2NrLi4uCiAgICAgICAgLSBtYXhfbWVt
+ID0gMTAyNCwgaWNvdW50ID0gNTA0MDE3OTIsIGltZW0gPSAxOTY4ODIsIGRibG9jayA9IDQyOTQ5
+NjcyOTYsIGRtZW0gPSAyMDk3MTUyClJlcXVpcmVkIG1lbW9yeSBmb3IgcmVwYWlyIGlzIGdyZWF0
+ZXIgdGhhdCB0aGUgbWF4aW11bSBzcGVjaWZpZWQKd2l0aCB0aGUgLW0gb3B0aW9uLiBQbGVhc2Ug
+aW5jcmVhc2UgaXQgdG8gYXQgbGVhc3QgMjI4OS4KClRoYXQgaXMgbm93IG5lZWRzIGF0IGxlYXN0
+IGFub3RoZXIgMjAwTUIgb2YgUkFNIHRvIHJ1bi4KCkl0IGlzIHdvcnRoIG5vdGluZyB0aGF0IHRo
+ZXNlIG51bWJlcnMgYXJlIHRoZSBhYnNvbHV0ZSBtaW5pbXVtCnJlcXVpcmVkIGFuZCByZXBhaXIg
+bWF5IHJlcXVpcmUgbW9yZSBSQU0gdGhhbiB0aGlzIHRvIGNvbXBsZXRlCnN1Y2Nlc3NmdWxseS4g
+SWYgeW91IG9ubHkgZ2l2ZSBpdCB0aGlzIG11Y2ggUkFNLCBpdCB3aWxsIGJlIHNsb3c7CmZvciBi
+ZXN0IHJlcGFpciBwZXJmb3JtYW5jZSwgdGhlIG1vcmUgUkFNIHlvdSBjYW4gZ2l2ZSBpdCB0aGUK
+YmV0dGVyLgoKQ2hlZXJzLAoKRGF2ZS4KLS0gCkRhdmUgQ2hpbm5lcgpkYXZpZEBmcm9tb3JiaXQu
+Y29tCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMg
+bWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9s
+aXN0aW5mby94ZnMK
