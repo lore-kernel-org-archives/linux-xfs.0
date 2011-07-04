@@ -1,20 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p644f9IN107039 for <xfs@oss.sgi.com>; Sun, 3 Jul 2011 23:41:09 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 04B5E1EE73B5
-	for <xfs@oss.sgi.com>; Sun,  3 Jul 2011 21:41:07 -0700 (PDT)
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id BKXJpXGxcKS2V2CB for <xfs@oss.sgi.com>;
-	Sun, 03 Jul 2011 21:41:07 -0700 (PDT)
-Message-ID: <4E114462.70503@sandeen.net>
-Date: Sun, 03 Jul 2011 23:41:06 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	p644wQjn109456 for <xfs@oss.sgi.com>; Sun, 3 Jul 2011 23:58:26 -0500
+Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 293DA5240FD
+	for <xfs@oss.sgi.com>; Sun,  3 Jul 2011 21:58:23 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	T9EovvdBztwtPBqB for <xfs@oss.sgi.com>;
+	Sun, 03 Jul 2011 21:58:23 -0700 (PDT)
+Date: Mon, 4 Jul 2011 14:58:20 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 3/7] xfs: there is no CONFIG_KDB_MODULES
+Message-ID: <20110704045820.GE1026@dastard>
+References: <1309643272-364-1-git-send-email-ext-phil.2.carmody@nokia.com>
+	<1309643272-364-2-git-send-email-ext-phil.2.carmody@nokia.com>
+	<1309643272-364-3-git-send-email-ext-phil.2.carmody@nokia.com>
+	<1309643272-364-4-git-send-email-ext-phil.2.carmody@nokia.com>
 MIME-Version: 1.0
-Subject: Re: xfs_growfs doesn't resize
-References: <44866.1309754093@sonic.net>
-In-Reply-To: <44866.1309754093@sonic.net>
+Content-Disposition: inline
+In-Reply-To: <1309643272-364-4-git-send-email-ext-phil.2.carmody@nokia.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,105 +32,84 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: kkeller@sonic.net
-Cc: xfs@oss.sgi.com
+To: Phil Carmody <ext-phil.2.carmody@nokia.com>
+Cc: trivial@kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On 7/3/11 11:34 PM, kkeller@sonic.net wrote:
+On Sun, Jul 03, 2011 at 12:47:48AM +0300, Phil Carmody wrote:
+
+Hi Phil,
+
+You should probably cc the relevant lists with such patchsets so the
+developers actually see the patches go by....
+
+> Seems like there was a decade ago, but no longer, so this block
+> is dead code. The list being returned disappeared back in commit
+> ff57ab21995a8636cfc72efeebb09cc6034d756f.
+
+When you quote a commit, short form followed by the name (i.e.
+one-line form) is preferable because it gives context to the commit
+without needing to go look it up in a git tree. Commit IDs are not
+human readable, while commit log should be.
+
+The commit in question - ff57ab2 ("xfs: convert xfsbud shrinker to a
+per-buftarg shrinker.") - removed the list but the code being
+removed was already long dead. FWIW, I know just by reading the
+commit description when the list went away and who was responsible
+for missing that. i.e. me. ;)
+
+> Part of a shotgun patchset; found by greps, seds, and diffs
+> rather than actual understanding.
+
+Not necessary in a commit description - the zero patch of a series,
+yes, to describe how the issues were found, but it doesn't need to
+be recorded forever in the commit log. ;)
+
+> Signed-off-by: Phil Carmody <ext-phil.2.carmody@nokia.com>
+> ---
+>  fs/xfs/linux-2.6/xfs_buf.c |    8 --------
+>  fs/xfs/linux-2.6/xfs_buf.h |    4 ----
+>  2 files changed, 0 insertions(+), 12 deletions(-)
 > 
-> 
-> On Sun 03/07/11  3:14 PM , Eric Sandeen <sandeen@sandeen.net> wrote:
-> 
-> [some rearranging]
-> 
->> You're welcome but here's the obligatory plug in return - running
->> RHEL5 proper would have gotten you up to date, fully supported xfs,
->> and you wouldn't have run into this mess. Just sayin' ... ;)
-> 
-> Yep, that's definitely a lesson learned.  Though I don't think I can
-> blame CentOS either--from what I can tell the bug has been available
-> from yum for some time now.  So it's pretty much entirely my own
-> fault.  :(
+> diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
+> index 5e68099..5bccae0 100644
+> --- a/fs/xfs/linux-2.6/xfs_buf.c
+> +++ b/fs/xfs/linux-2.6/xfs_buf.c
+> @@ -1889,11 +1889,3 @@ xfs_buf_terminate(void)
+>  	destroy_workqueue(xfslogd_workqueue);
+>  	kmem_zone_destroy(xfs_buf_zone);
+>  }
+> -
+> -#ifdef CONFIG_KDB_MODULES
+> -struct list_head *
+> -xfs_get_buftarg_list(void)
+> -{
+> -	return &xfs_buftarg_list;
+> -}
+> -#endif
+> diff --git a/fs/xfs/linux-2.6/xfs_buf.h b/fs/xfs/linux-2.6/xfs_buf.h
+> index 50a7d5f..6881321 100644
+> --- a/fs/xfs/linux-2.6/xfs_buf.h
+> +++ b/fs/xfs/linux-2.6/xfs_buf.h
+> @@ -339,10 +339,6 @@ extern void xfs_wait_buftarg(xfs_buftarg_t *);
+>  extern int xfs_setsize_buftarg(xfs_buftarg_t *, unsigned int, unsigned int);
+>  extern int xfs_flush_buftarg(xfs_buftarg_t *, int);
+>  
+> -#ifdef CONFIG_KDB_MODULES
+> -extern struct list_head *xfs_get_buftarg_list(void);
+> -#endif
+> -
+>  #define xfs_getsize_buftarg(buftarg)	block_size((buftarg)->bt_bdev)
+>  #define xfs_readonly_buftarg(buftarg)	bdev_read_only((buftarg)->bt_bdev)
 
-well it's unfortunate that that kmod persists.  I'll admit to providing
-it, years and years ago... Centos should find a way to deprecate it...
+Code changes look good. Can you fix the commit description and
+resend to xfs@oss.sgi.com?
 
-> I also am sorry for not preserving threading--for some reason, the
-> SGI mailserver rejected mail from my normal host (which is odd, as
-> it's not in any blacklists I know of), so I am using an unfamiliar
-> mail client.
+Cheers,
 
-sgi email ... sucks ;)
-
->> You probably hit this bug: 
->> http://oss.sgi.com/archives/xfs/2007-01/msg00053.html [1]
->> 
->> See also: http://oss.sgi.com/archives/xfs/2009-07/msg00087.html
->> [2]
->> 
->> I can't remember how much damage the original bug did ...
-> 
-> If any?  I'm a bit amazed that, if there was damage, that the
-> filesystem is still usable.  Perhaps if I were to fill it it would
-> show signs of inconsistency?  Or remounting would read the
-> now-incorrect values from the superblock 0?
-> 
->> is it still mounted I guess?
-> 
-> Yes, it's still mounted, and as far as I can tell perfectly fine.
-> But I won't really know till I can throw xfs_repair -n and/or xfs_db
-> and/or remount it; I'm choosing to get as much data off as I can
-> before I try these things, just in case.
-> 
-> How safe is running xfs_db with -r on my mounted filesystem?  I
-
-it's safe.  At worst it might read inconsistent data, but it's
-perfectly safe.
-
-> understand that results might not be consistent, but on the off
-> chance that they are I am hoping that it might be at least a little
-> helpful.
-> 
-> I was re-reading some of the threads I posted in my original
-> messages, in particular these posts:
-> 
-> http://oss.sgi.com/archives/xfs/2009-09/msg00210.html 
-> http://oss.sgi.com/archives/xfs/2009-09/msg00211.html
-> 
-> If I am reading those, plus the xfs_db man page, correctly, it seems
-> like what Russell suggested was to look at superblock 1 (or some
-> other one?) and use those values to correct superblock 0.  At what
-
-don't worry about correcting anything until you know there is a problem :)
-
-> points (if any) are the other superblocks updated?  I was testing on
-> another machine, on a filesystem that I had successfully grown using
-> xfs_growfs, and of the two values Russell suggested the OP to change,
-> dblocks is different between sb 0 and sb 1, but agcount is not.
-> Could that just be that I did not grow the filesystem too much, so
-> that agcount didn't need to change?  That seems a bit
-> counterintuitive, but (as should be obvious) I don't know XFS all
-
-if you grew it 9T, you would have almost certainly gotten more AGs.
-If you did a smaller test then you might see that.  To be honest
-I don't remember when the backup superblocks get updated.
-
-> that well.  I am hoping to know because, in re-reading those
-> messages, I got a better idea of what those particular xfs_db
-> commands do, so that if I did run into problems remounting, I might
-> be able to determine the appropriate new values myself and reduce my
-> downtime.  But I want to understand more what I'm doing before I try
-> that!
-
-I think finding a way to do a dry-run xfs_repair would be the best
-place to start ...
-
-Get a recent xfsprogs too, if you haven't already, it scales better
-than the really old versions.
-
--Eric
- 
-> --keith
-> 
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
