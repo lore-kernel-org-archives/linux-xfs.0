@@ -1,25 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p65EYGbf008902 for <xfs@oss.sgi.com>; Tue, 5 Jul 2011 09:34:16 -0500
-Received: from mx2.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 744F0179447A
-	for <xfs@oss.sgi.com>; Tue,  5 Jul 2011 07:34:13 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id fexFomtJfgvOIT4F for <xfs@oss.sgi.com>;
-	Tue, 05 Jul 2011 07:34:13 -0700 (PDT)
-Date: Tue, 5 Jul 2011 15:34:10 +0100
-From: Mel Gorman <mgorman@suse.de>
+	p65FtmAU011116 for <xfs@oss.sgi.com>; Tue, 5 Jul 2011 10:55:48 -0500
+Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C0FCAE7749C
+	for <xfs@oss.sgi.com>; Tue,  5 Jul 2011 08:55:45 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	YAxd3BhuOIRCeaeM for <xfs@oss.sgi.com>;
+	Tue, 05 Jul 2011 08:55:45 -0700 (PDT)
+Date: Wed, 6 Jul 2011 01:55:42 +1000
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH 03/27] xfs: use write_cache_pages for writeback clustering
-Message-ID: <20110705143409.GB15285@suse.de>
+Message-ID: <20110705155542.GG1026@dastard>
 References: <20110629140109.003209430@bombadil.infradead.org>
 	<20110629140336.950805096@bombadil.infradead.org>
 	<20110701022248.GM561@dastard> <20110701041851.GN561@dastard>
 	<20110701093305.GA28531@infradead.org>
-	<20110701154136.GA17881@localhost> <20110704032534.GD1026@dastard>
+	<20110701145935.GB29530@suse.de> <20110702024219.GT561@dastard>
+	<20110705141016.GA15285@suse.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110704032534.GD1026@dastard>
+In-Reply-To: <20110705141016.GA15285@suse.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,149 +34,204 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, Wu Fengguang <fengguang.wu@intel.com>, Johannes Weiner <jweiner@redhat.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Mel Gorman <mgorman@suse.de>
+Cc: jack@suse.cz, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, Wu Fengguang <fengguang.wu@intel.com>, Johannes Weiner <jweiner@redhat.com>
 
-On Mon, Jul 04, 2011 at 01:25:34PM +1000, Dave Chinner wrote:
-> On Fri, Jul 01, 2011 at 11:41:36PM +0800, Wu Fengguang wrote:
-> > Christoph,
+On Tue, Jul 05, 2011 at 03:10:16PM +0100, Mel Gorman wrote:
+> On Sat, Jul 02, 2011 at 12:42:19PM +1000, Dave Chinner wrote:
+> > On Fri, Jul 01, 2011 at 03:59:35PM +0100, Mel Gorman wrote:
+> > BTW, called a workload "fsmark" tells us nothing about the workload
+> > being tested - fsmark can do a lot of interesting things. IOWs, you
+> > need to quote the command line for it to be meaningful to anyone...
 > > 
-> > On Fri, Jul 01, 2011 at 05:33:05PM +0800, Christoph Hellwig wrote:
-> > > Johannes, Mel, Wu,
+> 
+> My bad.
+> 
+> ./fs_mark -d /tmp/fsmark-14880 -D 225  -N  22500  -n  3125  -L  15 -t  16  -S0  -s  131072
+
+Ok, so 16 threads, 3125 files per thread, 128k per file, all created
+in to the same directory which rolls over when it gets to 22500
+files in the directory. Yeah, it generates a bit of memory pressure,
+but I think the file sizes are too small to really stress writeback
+much. You need to use files that are at least 10MB in size to really
+start to mix up the writeback lists and the way they juggle new and
+old inodes to try not to starve any particular inode of writeback
+bandwidth....
+
+Also, I don't use the "-t <num>" threading mechanism because all it
+does is bash on the directory mutex without really improving
+parallelism for creates. perf top on my system shows:
+
+           samples  pcnt function                           DSO
+             _______ _____ __________________________________ __________________________________
+
+             2799.00  9.3% mutex_spin_on_owner                [kernel.kallsyms]
+             2049.00  6.8% copy_user_generic_string           [kernel.kallsyms]
+             1912.00  6.3% _raw_spin_unlock_irqrestore        [kernel.kallsyms]
+
+A contended mutex as the prime CPU consumer. That's more CPU than
+copying 750MB/s of data.
+
+Hence I normally drive parallelism with fsmark by using multiple "-d
+<dir>" options, which runs a thread per directory and a workload
+unit per directory and so you don't get directory mutex contention
+causing serialisation and interference with what you are really
+trying to measure....
+
+> > > As I look through the results I have at the moment, the number of
+> > > pages written back was simply really low which is why the problem fell
+> > > off my radar.
+> > 
+> > It doesn't take many to completely screw up writeback IO patterns.
+> > Write a few random pages to a 10MB file well before writeback would
+> > get to the file, and instead of getting optimal sequential writeback
+> > patterns when writeback gets to it, we get multiple disjoint IOs
+> > that require multiple seeks to complete.
+> > 
+> > Slower, less efficient writeback IO causes memory pressure to last
+> > longer and hence more likely to result in kswapd writeback, and it's
+> > just a downward spiral from there....
+> > 
+> 
+> Yes, I see the negative feedback loop. This has always been a struggle
+> in that kswapd needs pages from a particular zone to be cleaned and
+> freed but calling writepage can make things slower. There were
+> prototypes in the past to give hints to the flusher threads on what
+> inode and pages to be freed and they were never met with any degree of
+> satisfaction.
+> 
+> The consensus (amount VM people at least) was as long as that number was
+> low, it wasn't much of a problem.
+
+Therein lies the problem. You've got storage people telling you
+there is an IO problem with memory reclaim, but the mm community
+then put their heads together somewhere private, decide it isn't
+a problem worth fixing and do nothing. Rinse, lather, repeat.
+
+I expect memory reclaim to play nicely with writeback that is
+already in progress. These subsystems do not work in isolation, yet
+memory reclaim treats it that way - as though it is the most
+important IO submitter and everything else can suffer while memory
+reclaim does it's stuff.  Memory reclaim needs to co-ordinate with
+writeback effectively for the system as a whole to work well
+together.
+
+> I know you disagree.
+
+Right, that's because it doesn't have to be a very high number to be
+a problem. IO is orders of magnitude slower than the CPU time it
+takes to flush a page, so the cost of making a bad flush decision is
+very high. And single page writeback from the LRU is almost always a
+bad flush decision.
+
+> > > > > Oh, now that is too close to just be a co-incidence. We're getting
+> > > > > significant amounts of random page writeback from the the ends of
+> > > > > the LRUs done by the VM.
+> > > > > 
+> > > > > <sigh>
 > > > 
-> > > Dave has been stressing some XFS patches of mine that remove the XFS
-> > > internal writeback clustering in favour of using write_cache_pages.
-> > > 
-> > > As part of investigating the behaviour he found out that we're still
-> > > doing lots of I/O from the end of the LRU in kswapd.  Not only is that
-> > > pretty bad behaviour in general, but it also means we really can't
-> > > just remove the writeback clustering in writepage given how much
-> > > I/O is still done through that.
-> > > 
-> > > Any chance we could the writeback vs kswap behaviour sorted out a bit
-> > > better finally?
+> > > Does the value for nr_vmscan_write in /proc/vmstat correlate? It must
+> > > but lets me sure because I'm using that figure rather than ftrace to
+> > > count writebacks at the moment.
 > > 
-> > I once tried this approach:
+> > The number in /proc/vmstat is higher. Much higher.  I just ran the
+> > test at 1000 files (only collapsed to ~3000 iops this time because I
+> > ran it on a plain 3.0-rc4 kernel that still has the .writepage
+> > clustering in XFS), and I see:
 > > 
-> > http://www.spinics.net/lists/linux-mm/msg09202.html
+> > nr_vmscan_write 6723
 > > 
-> > It used a list structure that is not linearly scalable, however that
-> > part should be independently improvable when necessary.
+> > after the test. The event trace only capture ~1400 writepage events
+> > from kswapd, but it tends to miss a lot of events as the system is
+> > quite unresponsive at times under this workload - it's not uncommon
+> > to have ssh sessions not echo a character for 10s... e.g: I started
+> > the workload ~11:08:22:
+> > 
 > 
-> I don't think that handing random writeback to the flusher thread is
-> much better than doing random writeback directly.  Yes, you added
-> some clustering, but I'm still don't think writing specific pages is
-> the best solution.
-> 
-> > The real problem was, it seem to not very effective in my test runs.
-> > I found many ->nr_pages works queued before the ->inode works, which
-> > effectively makes the flusher working on more dispersed pages rather
-> > than focusing on the dirty pages encountered in LRU reclaim.
-> 
-> But that's really just an implementation issue related to how you
-> tried to solve the problem. That could be addressed.
-> 
-> However, what I'm questioning is whether we should even care what
-> page memory reclaim wants to write - it seems to make fundamentally
-> bad decisions from an IO persepctive.
-> 
+> Ok, I'll be looking at nr_vmscan_write as the basis for "badness".
 
-It sucks from an IO perspective but from the perspective of the VM that
-needs memory to be free in a particular zone or node, it's a reasonable
-request.
+Perhaps you should look at my other reply (and two line "fix") in
+the thread about stopping dirty page writeback until after waiting
+on pages under writeback.....
 
-> We have to remember that memory reclaim is doing LRU reclaim and the
-> flusher threads are doing "oldest first" writeback. IOWs, both are trying
-> to operate in the same direction (oldest to youngest) for the same
-> purpose.  The fundamental problem that occurs when memory reclaim
-> starts writing pages back from the LRU is this:
+> > > A more relevant question is this -
+> > > how many pages were reclaimed by kswapd and what percentage is 799
+> > > pages of that? What do you consider an acceptable percentage?
+> > 
+> > I don't care what the percentage is or what the number is. kswapd is
+> > reclaiming pages most of the time without affect IO patterns, and
+> > when that happens I just don't care because it is working just fine.
+> > 
 > 
-> 	- memory reclaim has run ahead of IO writeback -
+> I do care. I'm looking at some early XFS results here based on a laptop
+> (4G). For fsmark with the command line above, the number of pages
+> written back by kswapd was 0. The worst test by far was sysbench using a
+> particularly large database. The number of writes was 48745 which is
+> 0.27% of pages scanned or 0.28% of pages reclaimed. Ordinarily I would
+> ignore that.
 > 
+> If I run this at 1G and get a similar ratio, I will assume that I
+> am not reproducing your problem at all unless I know what ratio you
+> are seeing.
 
-This reasoning was the basis for this patch
-http://www.gossamer-threads.com/lists/linux/kernel/1251235?do=post_view_threaded#1251235
+Single threaded writing of files should -never- cause writeback from
+the LRUs. If that is happening, then the memory reclaim throttling
+is broken. See my other email.
 
-i.e. if old pages are dirty then the flusher threads are either not
-awake or not doing enough work so wake them. It was flawed in a number
-of respects and never finished though.
+> So .... How many pages were reclaimed by kswapd and what percentage
+> is 799 pages of that?
 
-> The LRU usually looks like this:
-> 
-> 	oldest					youngest
-> 	+---------------+---------------+--------------+
-> 	clean		writeback	dirty
-> 			^		^
-> 			|		|
-> 			|		Where flusher will next work from
-> 			|		Where kswapd is working from
-> 			|
-> 			IO submitted by flusher, waiting on completion
-> 
-> 
-> If memory reclaim is hitting dirty pages on the LRU, it means it has
-> got ahead of writeback without being throttled - it's passed over
-> all the pages currently under writeback and is trying to write back
-> pages that are *newer* than what writeback is working on. IOWs, it
-> starts trying to do the job of the flusher threads, and it does that
-> very badly.
-> 
-> The $100 question is ???why is it getting ahead of writeback*?
-> 
+No idea. That information is long gone....
 
-Allocating and dirtying memory faster than writeback. Large dd to USB
-stick would also trigger it.
+> You answered my second question. You consider 0% to be the acceptable
+> percentage.
 
-> From a brief look at the vmscan code, it appears that scanning does
-> not throttle/block until reclaim priority has got pretty high. That
-> means at low priority reclaim, it *skips pages under writeback*.
-> However, if it comes across a dirty page, it will trigger writeback
-> of the page.
+No, I expect memory reclaim to behave nicely with writeback that is
+already in progress. This subsystems do not work in isolation - they
+need to co-ordinate 
+
+> > What I care about is what kswapd is doing when it finds dirty pages
+> > and it decides they need to be written back. It's not a problem that
+> > they are found or need to be written, the problem is the utterly
+> > crap way that memory reclaim is throwing the pages at the filesystem.
+> > 
+> > I'm not sure how to get through to you guys that single, random page
+> > writeback is *BAD*.
 > 
-> Now call me crazy, but if we've already got a large number of pages
-> under writeback, why would we want to *start more IO* when clearly
-> the system is taking care of cleaning pages already and all we have
-> to do is wait for a short while to get clean pages ready for
-> reclaim?
+> It got through. The feedback during discussions on the VM side was
+> that as long as the percentage was sufficiently low it wasn't a problem
+> because on occasion, the VM really needs pages from a particular zone.
+> A solution that addressed both problems has never been agreed on and
+> energy and time runs out before it gets fixed each time.
+
+<sigh>
+
+> > And while I'm ranting, when on earth is the issue-writeback-from-
+> > direct-reclaim problem going to be fixed so we can remove the hacks
+> > in the filesystem .writepage implementations to prevent this from
+> > occurring?
+> > 
 > 
+> Prototyped that too, same thread. Same type of problem, writeback
+> from direct reclaim should happen so rarely that it should not be
+> optimised for. See https://lkml.org/lkml/2010/6/11/32
 
-It doesnt' check how many pages are under writeback. Direct reclaim
-will check if the block device is congested but that is about
-it. Otherwise the expectation was the elevator would handle the
-merging of requests into a sensible patter. Also, while filesystem
-pages are getting cleaned by flushs, that does not cover anonymous
-pages being written to swap.
+Writeback from direct reclaim crashes systems by causing stack
+overruns - that's why we've disabled it. It's not an "optimisation"
+problem - it's a _memory corruption_ bug that needs to be fixed.....
 
-> Indeed, I added this quick hack to prevent the VM from doing
-> writeback via pageout until after it starts blocking on writeback
-> pages:
-> 
-> @@ -825,6 +825,8 @@ static unsigned long shrink_page_list(struct list_head *page_l
->  		if (PageDirty(page)) {
->  			nr_dirty++;
->  
-> +			if (!(sc->reclaim_mode & RECLAIM_MODE_SYNC))
-> +				goto keep_locked;
->  			if (references == PAGEREF_RECLAIM_CLEAN)
->  				goto keep_locked;
->  			if (!may_enter_fs)
-> 
-> IOWs, we don't write pages from kswapd unless there is no IO
-> writeback going on at all (waited on all the writeback pages or none
-> exist) and there are dirty pages on the LRU.
-> 
+> At the risk of pissing you off, this isn't new information so I'll
+> consider myself duly nudged into revisiting.
 
-A side effect of this patch is that kswapd is no longer writing
-anonymous pages to swap and possibly never will. RECLAIM_MODE_SYNC is
-only set for lumpy reclaim which if you have CONFIG_COMPACTION set, will
-never happen.
+No, I've had a rant to express my displeasure at the lack of
+progress on this front.
 
-I see your figures and know why you want this but it never was that
-straight-forward :/
+Cheers,
 
+Dave.
 -- 
-Mel Gorman
-SUSE Labs
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
