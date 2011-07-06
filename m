@@ -1,16 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p663axKx063796 for <xfs@oss.sgi.com>; Tue, 5 Jul 2011 22:37:00 -0500
-Subject: Re: [PATCH 17/27] xfs: kill struct xfs_dir2_block
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110701094605.827598983@bombadil.infradead.org>
+	p663mhVE064313 for <xfs@oss.sgi.com>; Tue, 5 Jul 2011 22:48:43 -0500
+Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 137E31BF6E0F
+	for <xfs@oss.sgi.com>; Tue,  5 Jul 2011 20:48:42 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	n5PFaUvNl2cOgKHd for <xfs@oss.sgi.com>;
+	Tue, 05 Jul 2011 20:48:42 -0700 (PDT)
+Date: Wed, 6 Jul 2011 13:48:40 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 25/27] xfs: return the buffer locked from
+	xfs_buf_get_uncached
+Message-ID: <20110706034840.GT1026@dastard>
 References: <20110701094321.936534538@bombadil.infradead.org>
-	<20110701094605.827598983@bombadil.infradead.org>
-Date: Tue, 5 Jul 2011 22:36:54 -0500
-Message-ID: <1309923414.3381.32.camel@doink>
+	<20110701094607.356791525@bombadil.infradead.org>
 MIME-Version: 1.0
-Reply-To: aelder@sgi.com
+Content-Disposition: inline
+In-Reply-To: <20110701094607.356791525@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,23 +34,20 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Fri, 2011-07-01 at 05:43 -0400, Christoph Hellwig wrote:
-> Remove the confusing xfs_dir2_block structure.  It is supposed to describe
-> an XFS dir2 block format btree block, but due to the variable sized nature
-> of almost all elements in it it can't actuall do anything close to that
-> job.  In addition to accessing the fixed offset header structure it was
-> only used to get a pointer to the first dir or unused entry after it,
-> which can be trivially replaced by pointer arithmetics on the header
-> pointer.  For most users that is actually more natural anyway, as they
-> don't use a typed pointer but rather a character pointer for further
-> arithmetics.
+On Fri, Jul 01, 2011 at 05:43:46AM -0400, Christoph Hellwig wrote:
+> All other xfs_buf_get/read-like helpers return the buffer locked, make sure
+> xfs_buf_get_uncached isn't different for no reason.  Half of the callers
+> already lock it directly after, and the others probably should also keep
+> it locked if only for consistency and beeing able to use xfs_buf_rele,
+> but I'll leave that for later.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Yes, I think this is an improvement.
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-Reviewed-by: Alex Elder <aelder@sgi.com>
-
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
