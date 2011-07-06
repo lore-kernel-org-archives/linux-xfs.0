@@ -1,18 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p668YTjB093796 for <xfs@oss.sgi.com>; Wed, 6 Jul 2011 03:34:29 -0500
-Date: Wed, 6 Jul 2011 04:34:27 -0400
+	p668ZrhV094086 for <xfs@oss.sgi.com>; Wed, 6 Jul 2011 03:35:53 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EA41813207BC
+	for <xfs@oss.sgi.com>; Wed,  6 Jul 2011 01:35:31 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	2nCvtREdM6VbXqMB for <xfs@oss.sgi.com>;
+	Wed, 06 Jul 2011 01:35:31 -0700 (PDT)
+Date: Wed, 6 Jul 2011 04:35:30 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 15/27] xfs: cleanup the defintion of struct
-	xfs_dir2_sf_entry
-Message-ID: <20110706083427.GC19861@infradead.org>
+Subject: Re: [PATCH 16/27] xfs: avoid usage of struct xfs_dir2_block
+Message-ID: <20110706083530.GD19861@infradead.org>
 References: <20110701094321.936534538@bombadil.infradead.org>
-	<20110701094605.415405585@bombadil.infradead.org>
-	<1309923211.3381.27.camel@doink>
+	<20110701094605.621819832@bombadil.infradead.org>
+	<20110706021935.GK1026@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1309923211.3381.27.camel@doink>
+In-Reply-To: <20110706021935.GK1026@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,22 +32,19 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Tue, Jul 05, 2011 at 10:33:31PM -0500, Alex Elder wrote:
-> On Fri, 2011-07-01 at 05:43 -0400, Christoph Hellwig wrote:
-> > Remove the inumber member which is at a variable offset after the actual
-> > name, and make name a real variable sized C99 array instead of the incorrect
-> > one-sized array which confuses (not only) gcc.  Based on this clean up
-> > the helpers to calculate the entry size.
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Wed, Jul 06, 2011 at 12:19:35PM +1000, Dave Chinner wrote:
+> Took me a moment to realise what this does - turns the byte swap
+> into a compile-time operation rather than a runtime operation.
+> Nice.
 > 
-> Why was the inode put after then name in the
-> first place?
+> Perhaps we should do that same optimisation in other magic number
+> checks around the place?
 
-I've wondered that, too.  But it's been long before my time.
+We should, and I should have been more consistant about it.  In fact
+I probably should split it into a separate patch.
 
 _______________________________________________
 xfs mailing list
