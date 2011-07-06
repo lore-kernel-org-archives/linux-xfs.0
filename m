@@ -1,17 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p668Xl8k093757 for <xfs@oss.sgi.com>; Wed, 6 Jul 2011 03:33:48 -0500
-Date: Wed, 6 Jul 2011 04:33:45 -0400
+	p668ScFK093208 for <xfs@oss.sgi.com>; Wed, 6 Jul 2011 03:28:38 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1778D15EB182
+	for <xfs@oss.sgi.com>; Wed,  6 Jul 2011 01:28:37 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	uZB3WHmYEjsLwYNC for <xfs@oss.sgi.com>;
+	Wed, 06 Jul 2011 01:28:37 -0700 (PDT)
+Date: Wed, 6 Jul 2011 04:28:35 -0400
 From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: [PATCH 14/27] xfs: kill struct xfs_dir2_sf
-Message-ID: <20110706083345.GB19861@infradead.org>
+Message-ID: <20110706082835.GA19861@infradead.org>
 References: <20110701094321.936534538@bombadil.infradead.org>
 	<20110701094605.197942925@bombadil.infradead.org>
-	<1309922658.3381.22.camel@doink>
+	<20110706015705.GI1026@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1309922658.3381.22.camel@doink>
+In-Reply-To: <20110706015705.GI1026@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,46 +32,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Tue, Jul 05, 2011 at 10:24:18PM -0500, Alex Elder wrote:
-> On Fri, 2011-07-01 at 05:43 -0400, Christoph Hellwig wrote:
-> > The list field of it is never cactually used, so all uses can simply be
-> > replaced with the xfs_dir2_sf_hdr_t type that it has as first member.
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Wed, Jul 06, 2011 at 11:57:05AM +1000, Dave Chinner wrote:
+> > - * fit into the literal area of the inode.
+> > + * Small directories are packed as tightly as possible so as to fit into the
+> > + * literal area of the inode.  They consist of a single xfs_dir2_sf_hdr header
+> > + * followed by zero or more xfs_dir2_sf_entry structures.  Due the different
+> > + * inode number storage sized and the variable length name filed in
+>                            size                               field
+> > + * the xfs_dir2_sf_entry all these structure are variable length, and the
+>                                       structures
+> > + * accessors in this file need to be used to iterate over them.
+>                              should be
+
+Thanks!
+
+> > -static inline xfs_dir2_sf_entry_t *xfs_dir2_sf_firstentry(xfs_dir2_sf_t *sfp)
+> > +static inline xfs_dir2_sf_entry_t *xfs_dir2_sf_firstentry(xfs_dir2_sf_hdr_t *sfp)
 > 
-> Looks like a lot of places could be converted to use
-> "struct xfs_dir2_sf_hdr" rather than the typedef, but
-> it's not worth re-posting for that.  (Plus I suspect
-> such changes may be in forthcoming patches...)
+> Probably should split this onto two lines.
 
-In general they should, but I try to avoid that where it means
-massive formatting changes, as that just clutters up the patch.
-
-> > +	oldsfp = (xfs_dir2_sf_hdr_t *)dp->i_df.if_u1.if_data;
-> > +
-> >  	ASSERT(dp->i_df.if_bytes == dp->i_d.di_size);
-> >  	ASSERT(dp->i_df.if_u1.if_data != NULL);
-> 
-> 	ASSERT(oldsfp != NULL);
-
-What for?  We'll just dereference it later anyway.
-
-> >  static xfs_ino_t
-> >  xfs_dir2_sf_get_ino(
-> > -	struct xfs_dir2_sf	*sfp,
-> > +	struct xfs_dir2_sf_hdr	*hdr,
-> 
-> I think I like the name "hdr" better than "sfp";
-> was it just too widespread a change to do a
-> similar rename elsewhere?  (xfs_dir2_block_to_sf()
-> uses "sfhp" already, though I like just "hdr".)
-
-Yeah, I tried to keep the change small in general.  If people like it
-I can do a big sweep to convert stuff to struct types and common names
-as a follow-on.
+I'll make sure it'll be fine in the end, not sure which patch it'll get
+folded into.
 
 _______________________________________________
 xfs mailing list
