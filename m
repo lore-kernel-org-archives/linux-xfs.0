@@ -1,26 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p66JUvSf147943 for <xfs@oss.sgi.com>; Wed, 6 Jul 2011 14:30:57 -0500
-Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4095D50E69
-	for <xfs@oss.sgi.com>; Wed,  6 Jul 2011 12:30:56 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id g971xFdksMgpqLJn
-	for <xfs@oss.sgi.com>; Wed, 06 Jul 2011 12:30:56 -0700 (PDT)
-Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
-	by greer.hardwarefreak.com (Postfix) with ESMTP id 41CA26C119
-	for <xfs@oss.sgi.com>; Wed,  6 Jul 2011 14:30:56 -0500 (CDT)
-Message-ID: <4E14B7EE.2060005@hardwarefreak.com>
-Date: Wed, 06 Jul 2011 14:30:54 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	p66KjXcj159555 for <xfs@oss.sgi.com>; Wed, 6 Jul 2011 15:45:33 -0500
+Subject: Re: [PATCH 1/5] xfs: unpin stale inodes directly in IOP_COMMITTED
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <1309757260-5484-2-git-send-email-david@fromorbit.com>
+References: <1309757260-5484-1-git-send-email-david@fromorbit.com>
+	<1309757260-5484-2-git-send-email-david@fromorbit.com>
+Date: Wed, 6 Jul 2011 15:45:29 -0500
+Message-ID: <1309985129.1931.71.camel@doink>
 MIME-Version: 1.0
-Subject: Re: XFS internal error (memory corruption)
-References: <4E12A927.9020102@gmail.com>
-	<20110705130932.GF1026@dastard>	<4E1313C1.6020309@gmail.com>
-	<20110706040403.GW1026@dastard>	<20110706070756.GA25800@infradead.org>
-	<20110706072221.GZ1026@dastard>
-In-Reply-To: <20110706072221.GZ1026@dastard>
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,25 +19,70 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On 7/6/2011 2:22 AM, Dave Chinner wrote:
-
-> log on a 2-disk RAID0 mirror.....
-
-Is that a typo Dave or a configuration I just hadn't heard of?  Or did
-you intend a slash between RAID0/mirror meaning either/or?
-
-Just trying to prevent confusion of future Googlers.
-
--- 
-Stan
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gTW9uLCAyMDExLTA3LTA0IGF0IDE1OjI3ICsxMDAwLCBEYXZlIENoaW5uZXIgd3JvdGU6Cj4g
+RnJvbTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgo+IAo+IFdoZW4gaW5vZGVz
+IGFyZSBtYXJrZWQgc3RhbGUgaW4gYSB0cmFuc2FjdGlvbiwgdGhleSBhcmUgdHJlYXRlZAo+IHNw
+ZWNpYWxseSB3aGVuIHRoZSBpaW5vZGUgbG9nIGl0ZW0gaXMgYmVpbmcgaW5zZXJ0ZWQgaW50byB0
+aGUgQUlMLgo+IEl0IHRyaWXRlSB0byBhdm9pZCBtb3ZpbmcgdGhlIGxvZyBpdGVtIGZvcndhcmQg
+aW4gdGhlIEFJTCBkdWUgdG8gYQo+IHJhY2UgY29uZGl0aW9uIHdpdGggdGhlIHdyaXRpbmcgdGhl
+IHVuZGVybHlpbmcgYnVmZmVyIGJhY2sgdG8gZGlzay4KPiBUaGUgd2FzICJmaXhlZCIgaW4gY29t
+bWl0IGRlMjVjMTggKCJ4ZnM6IGF2b2lkIG1vdmluZyBzdGFsZSBpbm9kZXMgaW4KPiB0aGUgQUlM
+IikuCj4gCj4gVG8gYXZvaWQgbW92aW5nIHRoZSBpdGVtIGZvcndhcmQsIHdlIHJldHVybiBhIExT
+TiBzbWFsbGVyIHRoYW4gdGhlCj4gY29tbWl0X2xzbiBvZiB0aGUgY29tcGxldGluZyB0cmFuc2Fj
+dGlvbiwgdGhlcmVieSB0cnlpbmcgdG8gdHJpY2sKPiB0aGUgY29tbWl0IGNvZGUgaW50byBub3Qg
+bW92aW5nIHRoZSBpbm9kZSBmb3J3YXJkIGF0IGFsbC4gSSdtIG5vdAo+IHN1cmUgdGhpcyBldmVy
+IHdvcmtlZCBhcyBpbnRlbmRlZCAtIGl0IGFzc3VtZXMgdGhlIGlub2RlIGlzIGFscmVhZHkKPiBp
+biB0aGUgQUlMLCBidXQgSSBkb24ndCB0aGluayB0aGUgcmV0dXJuZWQgTFNOIHdvdWxkIGhhdmUg
+YmVlbiBzbWFsbAo+IGVub3VnaCB0byBwcmV2ZW50IG1vdmluZyB0aGUgaW5vZGUuIEl0IGFwcGVh
+cnMgdGhhdCB0aGUgcmVhc29uIGl0Cj4gd29ya2VkIGlzIHRoYXQgdGhlIGxvd2VyIExTTiBvZiB0
+aGUgaW5vZGVzIG1lYW50IHRoZXkgd2VyZSBpbnNlcnRlZAo+IGludG8gdGhlIEFJTCBhbmQgZmx1
+c2hlZCBiZWZvcmUgdGhlIGlub2RlIGJ1ZmZlciAod2hpY2ggd2FzIG1vdmVkIHRvCj4gdGhlIGNv
+bW1pdF9sc24gb2YgdGhlIHRyYW5zYWN0aW9uKS4KPiAKPiBUaGUgYmlnIHByb2JsZW0gaXMgdGhh
+dCB3aXRoIGRlbGF5ZWQgbG9nZ2luZywgdGhlIHJldHVybmluZyBvZiB0aGUKPiBkaWZmZXJlbnQg
+TFNOIG1lYW5zIGluc2VydGlvbiB0YWtlcyB0aGUgc2xvdywgbm9uLWJ1bGsgcGF0aC4gIFdvcnNl
+Cj4geWV0IGlzIHRoYXQgaW5zZXJ0aW9uIGlzIHRvIGEgcG9zaXRpb24gLWJlZm9yZS0gdGhlIGNv
+bW1pdF9sc24gc28gaXQKPiBpcyBkb2luZyBhIEFJTCB0cmF2ZXJzYWwgb24gZXZlcnkgaW5zZXJ0
+aW9uLCBhbmQgaGFzIHRvIHdhbGsgb3Zlcgo+IGFsbCB0aGUgaXRlbXMgdGhhdCBoYXZlIGFscmVh
+ZHkgYmVlbiBpbnNlcnRlZCBpbnRvIHRoZSBBSUwuIEl0J3MKPiBleHBlbnNpdmUuCj4gCj4gVG8g
+Y29tcG91bmQgdGhlIG1hdHRlciBmdXJ0aGVyLCB3aXRoIGRlbGF5ZWQgbG9nZ2luZyBpbm9kZXMg
+YXJlCj4gbGlrZWx5IHRvIGdvIGZyb20gY2xlYW4gdG8gc3RhbGUgaW4gYSBzaW5nbGUgY2hlY2tw
+b2ludCwgd2hpY2ggbWVhbnMKPiB0aGV5IGFyZW4ndCBldmVuIGluIHRoZSBBSUwgYXQgYWxsIHdo
+ZW4gd2UgY29tZSBhY3Jvc3MgdGhlbSBhdCBBSUwKPiBpbnNlcnRpb24gdGltZS4gSGVuY2UgdGhl
+c2Ugd2VyZSBhbGwgZ2V0dGluZyBpbnNlcnRlZCBpbnRvIHRoZSBBSUwKPiB3aGVuIHRoZXkgc2lt
+cGx5IGRvIG5vdCBuZWVkIHRvIGJlIGFzIGlub2RlcyBtYXJrZWQgWEZTX0lTVEFMRSBhcmUKPiBu
+ZXZlciB3cml0dGVuIGJhY2suCj4gCj4gVHJhbnNhY3Rpb25hbC9yZWNvdmVyeSBpbnRlZ3JpdHkg
+aXMgbWFpbnRhaW5lZCBpbiB0aGlzIGNhc2UgYnkgdGhlCj4gb3RoZXIgaXRlbXMgaW4gdGhlIHVu
+bGluayB0cmFuc2FjdGlvbiB0aGF0IHdlcmUgbW9kaWZpZWQgKGUuZy4gdGhlCj4gQUdJIGJ0cmVl
+IGJsb2NrcykgYW5kIGNvbW1pdHRlZCBpbiB0aGUgc2FtZSBjaGVja3BvaW50Lgo+IAo+IFNvIHRv
+IGZpeCB0aGlzLCBzaW1wbHkgdW5waW4gdGhlIHN0YWxlIGlub2RlcyBkaXJlY3RseSBpbgo+IHhm
+c19pbm9kZV9pdGVtX2NvbW1pdHRlZCgpIGFuZCByZXR1cm4gLTEgdG8gaW5kaWNhdGUgdGhhdCB0
+aGUgQUlMCj4gaW5zZXJ0aW9uIGNvZGUgZG9lcyBub3QgbmVlZCB0byBkbyBhbnkgZnVydGhlciBw
+cm9jZXNzaW5nIG9mIHRoZXNlCj4gaW5vZGVzLgo+IAo+IFNpZ25lZC1vZmYtYnk6IERhdmUgQ2hp
+bm5lciA8ZGNoaW5uZXJAcmVkaGF0LmNvbT4KCkkgc3VnZ2VzdCBvbmUgY29tbWVudCB1cGRhdGUs
+IHdoaWNoIEkgY2FuIGRvIGZvcgp5b3Ugb3IgaXQgY2FuIGJlIGRvbmUgYXQgYW5vdGhlciB0aW1l
+LgoKQnV0IHRoaXMgbG9va3MgZ29vZC4gIEknbGwgc2VuZCBpdCB0byBMaW51cwp0b21vcnJvdy4K
+ClJldmlld2VkLWJ5OiBBbGV4IEVsZGVyIDxhZWxkZXJAc2dpLmNvbT4KCj4gLS0tCj4gIGZzL3hm
+cy94ZnNfaW5vZGVfaXRlbS5jIHwgICAxNCArKysrKysrKy0tLS0tLQo+ICBmcy94ZnMveGZzX3Ry
+YW5zLmMgICAgICB8ICAgIDIgKy0KPiAgMiBmaWxlcyBjaGFuZ2VkLCA5IGluc2VydGlvbnMoKyks
+IDcgZGVsZXRpb25zKC0pCj4gCj4gZGlmZiAtLWdpdCBhL2ZzL3hmcy94ZnNfaW5vZGVfaXRlbS5j
+IGIvZnMveGZzL3hmc19pbm9kZV9pdGVtLmMKPiBpbmRleCAwOTk4M2EzLi5iMWU4OGQ1IDEwMDY0
+NAoKLiAuIC4KCj4gZGlmZiAtLWdpdCBhL2ZzL3hmcy94ZnNfdHJhbnMuYyBiL2ZzL3hmcy94ZnNf
+dHJhbnMuYwo+IGluZGV4IDdjN2JjMmIuLjM3NDQzMzcgMTAwNjQ0Cj4gLS0tIGEvZnMveGZzL3hm
+c190cmFucy5jCj4gKysrIGIvZnMveGZzL3hmc190cmFucy5jCj4gQEAgLTE0NzQsNyArMTQ3NCw3
+IEBAIHhmc190cmFuc19jb21taXR0ZWRfYnVsaygKPiAgCQkJbGlwLT5saV9mbGFncyB8PSBYRlNf
+TElfQUJPUlRFRDsKPiAgCQlpdGVtX2xzbiA9IElPUF9DT01NSVRURUQobGlwLCBjb21taXRfbHNu
+KTsKPiAgCj4gLQkJLyogaXRlbV9sc24gb2YgLTEgbWVhbnMgdGhlIGl0ZW0gd2FzIGZyZWVkICov
+Cj4gKwkJLyogaXRlbV9sc24gb2YgLTEgbWVhbnMgdGhlIGl0ZW0gbmVlZHMgbm8gZnVydGhlciBw
+cm9jZXNzaW5nICovCgpQcm9iYWJseSBzaG91bGQgdXBkYXRlIHRoZSBjb3JyZXNwb25kaW5nIGNv
+bW1lbnQgaW4KeGZzX3RyYW5zX2l0ZW1fY29tbWl0dGVkKCkgdG9vLiAgSSBoYXZlIGRvbmUgdGhp
+cyBpbgpteSBsb2NhbCBjb3B5LgoKPiAgCQlpZiAoWEZTX0xTTl9DTVAoaXRlbV9sc24sICh4ZnNf
+bHNuX3QpLTEpID09IDApCj4gIAkJCWNvbnRpbnVlOwo+ICAKCgoKX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNn
+aS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
