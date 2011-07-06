@@ -1,15 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p663vRSS065009 for <xfs@oss.sgi.com>; Tue, 5 Jul 2011 22:57:28 -0500
-Subject: Re: [PATCH 25/27] xfs: return the buffer locked from
-	xfs_buf_get_uncached
+	p6641Js7065392 for <xfs@oss.sgi.com>; Tue, 5 Jul 2011 23:01:20 -0500
+Subject: Re: [PATCH 24/27] xfs: clean up buffer locking helpers
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110701094607.356791525@bombadil.infradead.org>
+In-Reply-To: <20110701094607.155544131@bombadil.infradead.org>
 References: <20110701094321.936534538@bombadil.infradead.org>
-	<20110701094607.356791525@bombadil.infradead.org>
-Date: Tue, 5 Jul 2011 22:57:25 -0500
-Message-ID: <1309924645.3381.50.camel@doink>
+	<20110701094607.155544131@bombadil.infradead.org>
+Date: Tue, 5 Jul 2011 22:55:06 -0500
+Message-ID: <1309924506.3381.48.camel@doink>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -28,15 +27,15 @@ To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
 On Fri, 2011-07-01 at 05:43 -0400, Christoph Hellwig wrote:
-> All other xfs_buf_get/read-like helpers return the buffer locked, make sure
-> xfs_buf_get_uncached isn't different for no reason.  Half of the callers
-> already lock it directly after, and the others probably should also keep
-> it locked if only for consistency and beeing able to use xfs_buf_rele,
-> but I'll leave that for later.
+> Rename xfs_buf_cond_lock and reverse it's return value to fit most other
+> trylock operations in the Kernel and XFS (with the exception of down_trylock,
+> after which xfs_buf_cond_lock was modelled), and replace xfs_buf_lock_val
+> with an xfs_buf_islocked for use in asserts, or and opencoded variant in
+> tracing.  remove the XFS_BUF_* wrappers for all the locking helpers.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Looks good.
+Nice change.  More readable.
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
 
