@@ -1,22 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p666W9dY087750 for <xfs@oss.sgi.com>; Wed, 6 Jul 2011 01:32:10 -0500
-Received: from smtp-relay.maven.pl (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A34161EE90DF
-	for <xfs@oss.sgi.com>; Tue,  5 Jul 2011 23:32:06 -0700 (PDT)
-Received: from smtp-relay.maven.pl (smtp-relay.maven.pl [193.239.45.138]) by
-	cuda.sgi.com with ESMTP id BZtME59KGEceT4Fp for
-	<xfs@oss.sgi.com>; Tue, 05 Jul 2011 23:32:06 -0700 (PDT)
-Received: from [83.238.65.58] (port=33741 helo=t400.localnet ident=matrix157)
-	by smtp-relay.maven.pl with esmtpsa (TLSv1:DHE-RSA-AES256-SHA:256)
-	(Exim 4.76) (envelope-from <arekm@maven.pl>) id 1QeLeX-0000wl-Ez
-	for xfs@oss.sgi.com; Wed, 06 Jul 2011 08:32:05 +0200
-From: Arkadiusz Miskiewicz <arekm@maven.pl>
-Subject: 2.6.38.8: quota check oops
-Date: Wed, 6 Jul 2011 08:32:03 +0200
+	p666gB0q088083 for <xfs@oss.sgi.com>; Wed, 6 Jul 2011 01:42:11 -0500
+Date: Wed, 6 Jul 2011 02:42:09 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 00/27] patch queue for Linux 3.1, V2
+Message-ID: <20110706064209.GB4508@infradead.org>
+References: <20110701094321.936534538@bombadil.infradead.org>
+	<1309927217.3381.65.camel@doink>
 MIME-Version: 1.0
-Message-Id: <201107060832.03640.arekm@maven.pl>
+Content-Disposition: inline
+In-Reply-To: <1309927217.3381.65.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,79 +19,37 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Alex Elder <aelder@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-CnF1b3RhIGNoZWNrIGNvZGUgKG1vdW50IHdpdGggdXNlcitncm91cCBxdW90YSkgbGlrZXMgdG8g
-b29wcwpmb3IgbWUgKHVzdWFsbHkgYWZ0ZXIgc3lzdGVtIGhhbmcgYW5kIGhhcmQgcmVzZXQpLiAK
-ClRoaXMgaXMgb24gMi42LjM4Ljggb24gdG9wIG9mIHJhaWQxMCBzb2Z0IHJhaWQuIE1vdW50IHdp
-dGhvdXQKcXVvdGEgc3VjY2VlZHMgd2l0aG91dCBhIHByb2JsZW0uCgpbICAgNzMuMzQ4MzE2XSBY
-RlMgbW91bnRpbmcgZmlsZXN5c3RlbSBtZDMKWyAgIDczLjYxMjU4OF0gU3RhcnRpbmcgWEZTIHJl
-Y292ZXJ5IG9uIGZpbGVzeXN0ZW06IG1kMyAobG9nZGV2OiBpbnRlcm5hbCkKWyAgIDk5Ljk3NDM0
-NF0gZGV2aWNlLW1hcHBlcjogdWV2ZW50OiB2ZXJzaW9uIDEuMC4zClsgICA5OS45OTAxODZdIGRl
-dmljZS1tYXBwZXI6IGlvY3RsOiA0LjE5LjEtaW9jdGwgKDIwMTEtMDEtMDcpIGluaXRpYWxpc2Vk
-OiBkbS1kZXZlbEByZWRoYXQuY29tClsgIDEwMy4zMjM4MzZdIEJVRzogdW5hYmxlIHRvIGhhbmRs
-ZSBrZXJuZWwgTlVMTCBwb2ludGVyIGRlcmVmZXJlbmNlIGF0IDAwMDAwMDAwMDAwMDAwMjAKWyAg
-MTAzLjM0NTY0OF0gSVA6IFs8ZmZmZmZmZmY4MTQ1MzUzYz5dIG11dGV4X2xvY2srMHgxYy8weDQw
-ClsgIDEwMy4zNTMyNjFdIFBHRCAxMGE5MGQwNjcgUFVEIDEwNmVmODA2NyBQTUQgMApbICAxMDMu
-MzUzMjYxXSBPb3BzOiAwMDAyIFsjMV0gU01QClsgIDEwMy4zNTMyNjFdIGxhc3Qgc3lzZnMgZmls
-ZTogL3N5cy9kZXZpY2VzL3N5c3RlbS9jcHUvb25saW5lClsgIDEwMy4zNTMyNjFdIENQVSAwClsg
-IDEwMy4zNTMyNjFdIE1vZHVsZXMgbGlua2VkIGluOiBkbV9tb2QgaXBtaV93YXRjaGRvZyBpcG1p
-X3NpIGlwbWlfZGV2aW50ZiBpcG1pX21zZ2hhbmRsZXIgeHRfdGNwdWRwIG5mX2Nvbm50cmFja19p
-cHY0IG5mX2RlZnJhZ19pcHY0IHh0X3N0YXRlIG5mX2Nvbm50cmFjayBpcHRfUkVKRUNUIGlwdGFi
-bGVfZmlsdGVyIAp4dF9DTEFTU0lGWSBpcHRhYmxlX21hbmdsZSBpcF90YWJsZXMgeF90YWJsZXMg
-c2NoX3NmcSBmb3JjZWRldGggZXh0MyBqYmQgbWJjYWNoZSByYWlkNDU2IGFzeW5jX3JhaWQ2X3Jl
-Y292IGFzeW5jX3BxIHJhaWQ2X3BxIGFzeW5jX3hvciB4b3IgYXN5bmNfbWVtY3B5IGFzeW5jX3R4
-IHJhaWQxIHVzYmhpZCBoaWQgb2hjaV9oY2QgCnNzYiBtbWNfY29yZSBwY21jaWEgcGNtY2lhX2Nv
-cmUgZWhjaV9oY2QgdXNiY29yZSB4ZnMgZXhwb3J0ZnMgc2RfbW9kIGNyY190MTBkaWYgc2F0YV9u
-diBsaWJhdGEgc2NzaV9tb2QgcmFpZDEwIG1kX21vZCBbbGFzdCB1bmxvYWRlZDogc2NzaV93YWl0
-X3NjYW5dClsgIDEwMy40NDIwMzZdClsgIDEwMy40NDIwMzZdIFBpZDogMTIzMDgsIHhpZDogIzAs
-IGNvbW06IHhmc3N5bmNkL21kMyBOb3QgdGFpbnRlZCAyLjYuMzguOC0xICMxIFN1cGVybWljcm8g
-SDhETVUvSDhETVUKWyAgMTAzLjQ0MjAzNl0gUklQOiAwMDEwOls8ZmZmZmZmZmY4MTQ1MzUzYz5d
-ICBbPGZmZmZmZmZmODE0NTM1M2M+XSBtdXRleF9sb2NrKzB4MWMvMHg0MApbICAxMDMuNDQyMDM2
-XSBSU1A6IDAwMTg6ZmZmZjg4MDEwZDI2N2RkMCAgRUZMQUdTOiAwMDAxMDI0NgpbICAxMDMuNDQy
-MDM2XSBSQVg6IDAwMDAwMDAwMDAwMDAwMDAgUkJYOiAwMDAwMDAwMDAwMDAwMDIwIFJDWDogMDAw
-MDAwMDAwMDAwMDAxNwpbICAxMDMuNDQyMDM2XSBSRFg6IGZmZmY4ODAxMGJhZjViYjggUlNJOiAw
-MDAwMDAwMDAwMDAwMDAyIFJESTogMDAwMDAwMDAwMDAwMDAyMApbICAxMDMuNDQyMDM2XSBSQlA6
-IGZmZmY4ODAxMGQyNjdkZTAgUjA4OiAwMDAwMDAwMDAwMDAwMDAwIFIwOTogZmZmZjg4MDExMzhj
-OGY4OApbICAxMDMuNDQyMDM2XSBSMTA6IDAwMDAwMDAwMDAwMDAwMDAgUjExOiAwMDAwMDAwMDAw
-MDAwMDAxIFIxMjogMDAwMDAwMDAwMDAwMDAwMgpbICAxMDMuNDQyMDM2XSBSMTM6IDAwMDAwMDAw
-MDAwMDAwMTAgUjE0OiAwMDAwMDAwMDAwMDAwMDAwIFIxNTogMDAwMDAwMDAwMDAwMDAyMApbICAx
-MDMuNDQyMDM2XSBGUzogIDAwMDA3ZjAwMTNkZjE3MDAoMDAwMCkgR1M6ZmZmZjg4MDBkZmMwMDAw
-MCgwMDAwKSBrbmxHUzowMDAwMDAwMDAwMDAwMDAwClsgIDEwMy40NDIwMzZdIENTOiAgMDAxMCBE
-UzogMDAwMCBFUzogMDAwMCBDUjA6IDAwMDAwMDAwODAwNTAwM2IKWyAgMTAzLjQ0MjAzNl0gQ1Iy
-OiAwMDAwMDAwMDAwMDAwMDIwIENSMzogMDAwMDAwMDEwYWEyNTAwMCBDUjQ6IDAwMDAwMDAwMDAw
-MDA2ZjAKWyAgMTAzLjQ0MjAzNl0gRFIwOiAwMDAwMDAwMDAwMDAwMDAwIERSMTogMDAwMDAwMDAw
-MDAwMDAwMCBEUjI6IDAwMDAwMDAwMDAwMDAwMDAKWyAgMTAzLjQ0MjAzNl0gRFIzOiAwMDAwMDAw
-MDAwMDAwMDAwIERSNjogMDAwMDAwMDBmZmZmMGZmMCBEUjc6IDAwMDAwMDAwMDAwMDA0MDAKWyAg
-MTAzLjQ0MjAzNl0gUHJvY2VzcyB4ZnNzeW5jZC9tZDMgKHBpZDogMTIzMDgsIHRocmVhZGluZm8g
-ZmZmZjg4MDEwYmFmNWJiOCwgdGFzayBmZmZmODgwMTBiYWY1N2MwKQpbICAxMDMuNDQyMDM2XSBT
-dGFjazoKWyAgMTAzLjQ0MjAzNl0gIGZmZmY4ODAxMGM2N2YwMDAgMDAwMDAwMDAwMDAwMDAwMiBm
-ZmZmODgwMTBkMjY3ZTQwIGZmZmZmZmZmYTAwZDc3MjcKWyAgMTAzLjQ0MjAzNl0gIGZmZmZmZmZm
-ZmZmZmZmZmYgMDAwMDAwMDAwYzY3ZjAwMCBmZmZmODgwMTAwMDAwMDAyIGZmZmY4ODAxMGM2N2Yw
-MDAKWyAgMTAzLjQ0MjAzNl0gIGZmZmY4ODAxMGQyNjdlOTAgZmZmZjg4MDEwYzY3ZjAwMCBmZmZm
-ODgwMTBjNjdmM2EwIGZmZmY4ODAxMGM2N2YzYjAKWyAgMTAzLjQ0MjAzNl0gQ2FsbCBUcmFjZToK
-WyAgMTAzLjQ0MjAzNl0gIFs8ZmZmZmZmZmZhMDBkNzcyNz5dIHhmc19xbV9zeW5jKzB4NTcvMHgx
-YTAgW3hmc10KWyAgMTAzLjQ0MjAzNl0gIFs8ZmZmZmZmZmZhMDEzYjNjNT5dIHhmc19yZWNsYWlt
-X2lub2RlcysweDY1LzB4MTMwIFt4ZnNdClsgIDEwMy40NDIwMzZdICBbPGZmZmZmZmZmYTAxM2Ex
-NmE+XSB4ZnNhaWxkX3N0b3ArMHgzMWEvMHhjODAgW3hmc10KWyAgMTAzLjQ0MjAzNl0gIFs8ZmZm
-ZmZmZmZhMDEzYTAwMD5dID8geGZzYWlsZF9zdG9wKzB4MWIwLzB4YzgwIFt4ZnNdClsgIDEwMy40
-NDIwMzZdICBbPGZmZmZmZmZmODEwNmQ0NjY+XSBrdGhyZWFkKzB4OTYvMHhhMApbICAxMDMuNDQy
-MDM2XSAgWzxmZmZmZmZmZjgxMDAzYTk0Pl0ga2VybmVsX3RocmVhZF9oZWxwZXIrMHg0LzB4MTAK
-WyAgMTAzLjQ0MjAzNl0gIFs8ZmZmZmZmZmY4MTA2ZDNkMD5dID8ga3RocmVhZCsweDAvMHhhMApb
-ICAxMDMuNDQyMDM2XSAgWzxmZmZmZmZmZjgxMDAzYTkwPl0gPyBrZXJuZWxfdGhyZWFkX2hlbHBl
-cisweDAvMHgxMApbICAxMDMuNDQyMDM2XSBDb2RlOiBlYiBkYyA2NiA2NiA2NiA2NiAyZSAwZiAx
-ZiA4NCAwMCAwMCAwMCAwMCAwMCA1NSA0OCA4OSBlNSA0OCA4MyBlYyAxMCA0OCA4OSAxYyAyNCA0
-OCA4OSBmYiA0YyA4OSA2NCAyNCAwOCBlOCAxNyBmMSBmZiBmZiA0OCA4OSBkZiA8ZjA+IGZmIDBm
-IDc5IDA1IGU4IDZhIGZhIGZmIGZmIDY1IDQ4IDhiIDA0IDI1IGMwIGE1IDAwIDAwIDRjIDhiClsg
-IDEwMy40NDIwMzZdIFJJUCAgWzxmZmZmZmZmZjgxNDUzNTNjPl0gbXV0ZXhfbG9jaysweDFjLzB4
-NDAKWyAgMTAzLjQ0MjAzNl0gIFJTUCA8ZmZmZjg4MDEwZDI2N2RkMD4KWyAgMTAzLjQ0MjAzNl0g
-Q1IyOiAwMDAwMDAwMDAwMDAwMDIwClsgIDEwNC4xODA2MjNdIC0tLVsgZW5kIHRyYWNlIGRkOWI2
-NzVhYTJkYmE4YzUgXS0tLQoKLS0gCkFya2FkaXVzeiBNacWba2lld2ljeiAgICAgICAgUExEL0xp
-bnV4IFRlYW0KYXJla20gLyBtYXZlbi5wbCAgICAgICAgICAgIGh0dHA6Ly9mdHAucGxkLWxpbnV4
-Lm9yZy8KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhm
-cyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFu
-L2xpc3RpbmZvL3hmcwo=
+On Tue, Jul 05, 2011 at 11:40:17PM -0500, Alex Elder wrote:
+> On Fri, 2011-07-01 at 05:43 -0400, Christoph Hellwig wrote:
+> > This is my current patch queue for Linux 3.1.  Compared to the last
+> > posting all review comments were incorporated and two additional trivial
+> > patches were added.  The ->writepages implementation was dropped for now,
+> > given the bad situation of kswap-originating writeback, but I'll repost
+> > the fixed version separately to get feedback on the updated version.
+> 
+> I mentioned a bunch of fairly minor issues with
+> this series; I don't believe I found anything
+> that was actually incorrect.  Quite a few of
+> them consist of small but good cleanups.
+> 
+> I'll give you a chance to re-post them (or
+> point me at a repository to pull from).  At
+> this point I trust you'll do the right thing
+> so I'm ready to use what you give me.
+> 
+> For now I'm testing overnight with this
+> latest version of the patches.
+
+I'll redo the series after going through your and Daves comments.
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
