@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p66FDD5Y129008 for <xfs@oss.sgi.com>; Wed, 6 Jul 2011 10:13:13 -0500
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2B59E1EE993D
-	for <xfs@oss.sgi.com>; Wed,  6 Jul 2011 08:13:12 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id pF5ASxA1syovPzPn for
-	<xfs@oss.sgi.com>; Wed, 06 Jul 2011 08:13:12 -0700 (PDT)
-Date: Wed, 6 Jul 2011 17:12:29 +0200
-From: Johannes Weiner <jweiner@redhat.com>
-Subject: Re: [PATCH 03/27] xfs: use write_cache_pages for writeback clustering
-Message-ID: <20110706151229.GA1998@redhat.com>
-References: <20110629140109.003209430@bombadil.infradead.org>
-	<20110629140336.950805096@bombadil.infradead.org>
-	<20110701022248.GM561@dastard> <20110701041851.GN561@dastard>
-	<20110701093305.GA28531@infradead.org>
-	<20110701154136.GA17881@localhost> <20110704032534.GD1026@dastard>
+	p66JUvSf147943 for <xfs@oss.sgi.com>; Wed, 6 Jul 2011 14:30:57 -0500
+Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4095D50E69
+	for <xfs@oss.sgi.com>; Wed,  6 Jul 2011 12:30:56 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id g971xFdksMgpqLJn
+	for <xfs@oss.sgi.com>; Wed, 06 Jul 2011 12:30:56 -0700 (PDT)
+Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
+	by greer.hardwarefreak.com (Postfix) with ESMTP id 41CA26C119
+	for <xfs@oss.sgi.com>; Wed,  6 Jul 2011 14:30:56 -0500 (CDT)
+Message-ID: <4E14B7EE.2060005@hardwarefreak.com>
+Date: Wed, 06 Jul 2011 14:30:54 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110704032534.GD1026@dastard>
+Subject: Re: XFS internal error (memory corruption)
+References: <4E12A927.9020102@gmail.com>
+	<20110705130932.GF1026@dastard>	<4E1313C1.6020309@gmail.com>
+	<20110706040403.GW1026@dastard>	<20110706070756.GA25800@infradead.org>
+	<20110706072221.GZ1026@dastard>
+In-Reply-To: <20110706072221.GZ1026@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,86 +29,25 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, Wu Fengguang <fengguang.wu@intel.com>, Mel Gorman <mgorman@suse.de>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-T24gTW9uLCBKdWwgMDQsIDIwMTEgYXQgMDE6MjU6MzRQTSArMTAwMCwgRGF2ZSBDaGlubmVyIHdy
-b3RlOgo+IE9uIEZyaSwgSnVsIDAxLCAyMDExIGF0IDExOjQxOjM2UE0gKzA4MDAsIFd1IEZlbmdn
-dWFuZyB3cm90ZToKPiA+IENocmlzdG9waCwKPiA+IAo+ID4gT24gRnJpLCBKdWwgMDEsIDIwMTEg
-YXQgMDU6MzM6MDVQTSArMDgwMCwgQ2hyaXN0b3BoIEhlbGx3aWcgd3JvdGU6Cj4gPiA+IEpvaGFu
-bmVzLCBNZWwsIFd1LAo+ID4gPiAKPiA+ID4gRGF2ZSBoYXMgYmVlbiBzdHJlc3Npbmcgc29tZSBY
-RlMgcGF0Y2hlcyBvZiBtaW5lIHRoYXQgcmVtb3ZlIHRoZSBYRlMKPiA+ID4gaW50ZXJuYWwgd3Jp
-dGViYWNrIGNsdXN0ZXJpbmcgaW4gZmF2b3VyIG9mIHVzaW5nIHdyaXRlX2NhY2hlX3BhZ2VzLgo+
-ID4gPiAKPiA+ID4gQXMgcGFydCBvZiBpbnZlc3RpZ2F0aW5nIHRoZSBiZWhhdmlvdXIgaGUgZm91
-bmQgb3V0IHRoYXQgd2UncmUgc3RpbGwKPiA+ID4gZG9pbmcgbG90cyBvZiBJL08gZnJvbSB0aGUg
-ZW5kIG9mIHRoZSBMUlUgaW4ga3N3YXBkLiAgTm90IG9ubHkgaXMgdGhhdAo+ID4gPiBwcmV0dHkg
-YmFkIGJlaGF2aW91ciBpbiBnZW5lcmFsLCBidXQgaXQgYWxzbyBtZWFucyB3ZSByZWFsbHkgY2Fu
-J3QKPiA+ID4ganVzdCByZW1vdmUgdGhlIHdyaXRlYmFjayBjbHVzdGVyaW5nIGluIHdyaXRlcGFn
-ZSBnaXZlbiBob3cgbXVjaAo+ID4gPiBJL08gaXMgc3RpbGwgZG9uZSB0aHJvdWdoIHRoYXQuCj4g
-PiA+IAo+ID4gPiBBbnkgY2hhbmNlIHdlIGNvdWxkIHRoZSB3cml0ZWJhY2sgdnMga3N3YXAgYmVo
-YXZpb3VyIHNvcnRlZCBvdXQgYSBiaXQKPiA+ID4gYmV0dGVyIGZpbmFsbHk/Cj4gPiAKPiA+IEkg
-b25jZSB0cmllZCB0aGlzIGFwcHJvYWNoOgo+ID4gCj4gPiBodHRwOi8vd3d3LnNwaW5pY3MubmV0
-L2xpc3RzL2xpbnV4LW1tL21zZzA5MjAyLmh0bWwKPiA+IAo+ID4gSXQgdXNlZCBhIGxpc3Qgc3Ry
-dWN0dXJlIHRoYXQgaXMgbm90IGxpbmVhcmx5IHNjYWxhYmxlLCBob3dldmVyIHRoYXQKPiA+IHBh
-cnQgc2hvdWxkIGJlIGluZGVwZW5kZW50bHkgaW1wcm92YWJsZSB3aGVuIG5lY2Vzc2FyeS4KPiAK
-PiBJIGRvbid0IHRoaW5rIHRoYXQgaGFuZGluZyByYW5kb20gd3JpdGViYWNrIHRvIHRoZSBmbHVz
-aGVyIHRocmVhZCBpcwo+IG11Y2ggYmV0dGVyIHRoYW4gZG9pbmcgcmFuZG9tIHdyaXRlYmFjayBk
-aXJlY3RseS4gIFllcywgeW91IGFkZGVkCj4gc29tZSBjbHVzdGVyaW5nLCBidXQgSSdtIHN0aWxs
-IGRvbid0IHRoaW5rIHdyaXRpbmcgc3BlY2lmaWMgcGFnZXMgaXMKPiB0aGUgYmVzdCBzb2x1dGlv
-bi4KPiAKPiA+IFRoZSByZWFsIHByb2JsZW0gd2FzLCBpdCBzZWVtIHRvIG5vdCB2ZXJ5IGVmZmVj
-dGl2ZSBpbiBteSB0ZXN0IHJ1bnMuCj4gPiBJIGZvdW5kIG1hbnkgLT5ucl9wYWdlcyB3b3JrcyBx
-dWV1ZWQgYmVmb3JlIHRoZSAtPmlub2RlIHdvcmtzLCB3aGljaAo+ID4gZWZmZWN0aXZlbHkgbWFr
-ZXMgdGhlIGZsdXNoZXIgd29ya2luZyBvbiBtb3JlIGRpc3BlcnNlZCBwYWdlcyByYXRoZXIKPiA+
-IHRoYW4gZm9jdXNpbmcgb24gdGhlIGRpcnR5IHBhZ2VzIGVuY291bnRlcmVkIGluIExSVSByZWNs
-YWltLgo+IAo+IEJ1dCB0aGF0J3MgcmVhbGx5IGp1c3QgYW4gaW1wbGVtZW50YXRpb24gaXNzdWUg
-cmVsYXRlZCB0byBob3cgeW91Cj4gdHJpZWQgdG8gc29sdmUgdGhlIHByb2JsZW0uIFRoYXQgY291
-bGQgYmUgYWRkcmVzc2VkLgo+IAo+IEhvd2V2ZXIsIHdoYXQgSSdtIHF1ZXN0aW9uaW5nIGlzIHdo
-ZXRoZXIgd2Ugc2hvdWxkIGV2ZW4gY2FyZSB3aGF0Cj4gcGFnZSBtZW1vcnkgcmVjbGFpbSB3YW50
-cyB0byB3cml0ZSAtIGl0IHNlZW1zIHRvIG1ha2UgZnVuZGFtZW50YWxseQo+IGJhZCBkZWNpc2lv
-bnMgZnJvbSBhbiBJTyBwZXJzZXBjdGl2ZS4KPiAKPiBXZSBoYXZlIHRvIHJlbWVtYmVyIHRoYXQg
-bWVtb3J5IHJlY2xhaW0gaXMgZG9pbmcgTFJVIHJlY2xhaW0gYW5kIHRoZQo+IGZsdXNoZXIgdGhy
-ZWFkcyBhcmUgZG9pbmcgIm9sZGVzdCBmaXJzdCIgd3JpdGViYWNrLiBJT1dzLCBib3RoIGFyZSB0
-cnlpbmcKPiB0byBvcGVyYXRlIGluIHRoZSBzYW1lIGRpcmVjdGlvbiAob2xkZXN0IHRvIHlvdW5n
-ZXN0KSBmb3IgdGhlIHNhbWUKPiBwdXJwb3NlLiAgVGhlIGZ1bmRhbWVudGFsIHByb2JsZW0gdGhh
-dCBvY2N1cnMgd2hlbiBtZW1vcnkgcmVjbGFpbQo+IHN0YXJ0cyB3cml0aW5nIHBhZ2VzIGJhY2sg
-ZnJvbSB0aGUgTFJVIGlzIHRoaXM6Cj4gCj4gCS0gbWVtb3J5IHJlY2xhaW0gaGFzIHJ1biBhaGVh
-ZCBvZiBJTyB3cml0ZWJhY2sgLQo+IAo+IFRoZSBMUlUgdXN1YWxseSBsb29rcyBsaWtlIHRoaXM6
-Cj4gCj4gCW9sZGVzdAkJCQkJeW91bmdlc3QKPiAJKy0tLS0tLS0tLS0tLS0tLSstLS0tLS0tLS0t
-LS0tLS0rLS0tLS0tLS0tLS0tLS0rCj4gCWNsZWFuCQl3cml0ZWJhY2sJZGlydHkKPiAJCQleCQle
-Cj4gCQkJfAkJfAo+IAkJCXwJCVdoZXJlIGZsdXNoZXIgd2lsbCBuZXh0IHdvcmsgZnJvbQo+IAkJ
-CXwJCVdoZXJlIGtzd2FwZCBpcyB3b3JraW5nIGZyb20KPiAJCQl8Cj4gCQkJSU8gc3VibWl0dGVk
-IGJ5IGZsdXNoZXIsIHdhaXRpbmcgb24gY29tcGxldGlvbgo+IAo+IAo+IElmIG1lbW9yeSByZWNs
-YWltIGlzIGhpdHRpbmcgZGlydHkgcGFnZXMgb24gdGhlIExSVSwgaXQgbWVhbnMgaXQgaGFzCj4g
-Z290IGFoZWFkIG9mIHdyaXRlYmFjayB3aXRob3V0IGJlaW5nIHRocm90dGxlZCAtIGl0J3MgcGFz
-c2VkIG92ZXIKPiBhbGwgdGhlIHBhZ2VzIGN1cnJlbnRseSB1bmRlciB3cml0ZWJhY2sgYW5kIGlz
-IHRyeWluZyB0byB3cml0ZSBiYWNrCj4gcGFnZXMgdGhhdCBhcmUgKm5ld2VyKiB0aGFuIHdoYXQg
-d3JpdGViYWNrIGlzIHdvcmtpbmcgb24uIElPV3MsIGl0Cj4gc3RhcnRzIHRyeWluZyB0byBkbyB0
-aGUgam9iIG9mIHRoZSBmbHVzaGVyIHRocmVhZHMsIGFuZCBpdCBkb2VzIHRoYXQKPiB2ZXJ5IGJh
-ZGx5Lgo+IAo+IFRoZSAkMTAwIHF1ZXN0aW9uIGlzIOKIl3doeSBpcyBpdCBnZXR0aW5nIGFoZWFk
-IG9mIHdyaXRlYmFjayo/CgpVbmxlc3MgeW91IGhhdmUgYSBwdXJlbHkgc2VxdWVudGlhbCB3cml0
-ZXIsIHRoZSBMUlUgb3JkZXIgaXMgLSBhdApsZWFzdCBpbiB0aGVvcnkgLSBkaXZlcmdpbmcgYXdh
-eSBmcm9tIHRoZSB3cml0ZWJhY2sgb3JkZXIuCgpBY2NvcmRpbmcgdG8gdGhlIHJlYXNvbmluZyBi
-ZWhpbmQgZ2VuZXJhdGlvbmFsIGdhcmJhZ2UgY29sbGVjdGlvbiwKdGhleSBzaG91bGQgaW4gZmFj
-dCBiZSBpbnZlcnNlIHRvIGVhY2ggb3RoZXIuICBUaGUgb2xkZXN0IHBhZ2VzIHN0aWxsCmluIHVz
-ZSBhcmUgdGhlIG1vc3QgbGlrZWx5IHRvIGJlIHN0aWxsIG5lZWRlZCBpbiB0aGUgZnV0dXJlLgoK
-SW4gcHJhY3RpY2Ugd2Ugb25seSBtYWtlIGEgZ2VuZXJhdGlvbmFsIGRpc3RpbmN0aW9uIGJldHdl
-ZW4gdXNlZC1vbmNlCmFuZCB1c2VkLW1hbnksIHdoaWNoIG1hbmlmZXN0cyBpbiB0aGUgaW5hY3Rp
-dmUgYW5kIHRoZSBhY3RpdmUgbGlzdC4KQnV0IHN0aWxsLCB3aGVuIHJlY2xhaW0gc3RhcnRzIG9m
-ZiB3aXRoIGEgbG9jYWxpemVkIHdyaXRlciwgdGhlIG9sZGVzdApwYWdlcyBhcmUgbGlrZWx5IHRv
-IGJlIGF0IHRoZSBlbmQgb2YgdGhlIGFjdGl2ZSBsaXN0LgoKU28gcGFnZXMgZnJvbSB0aGUgaW5h
-Y3RpdmUgbGlzdCBhcmUgbGlrZWx5IHRvIGJlIHdyaXR0ZW4gaW4gdGhlIHJpZ2h0Cm9yZGVyLCBi
-dXQgYXQgdGhlIHNhbWUgdGltZSBhY3RpdmUgcGFnZXMgYXJlIGV2ZW4gb2xkZXIsIHRodXMgd3Jp
-dHRlbgpiZWZvcmUgdGhlbS4gIE1lbW9yeSByZWNsYWltIHN0YXJ0cyB3aXRoIHRoZSBpbmFjdGl2
-ZSBwYWdlcywgYW5kIHRoaXMKaXMgd2h5IGl0IGdldHMgYWhlYWQuCgpUaGVuIHRoZXJlIGlzIGFs
-c28gdGhlIGNhc2Ugd2hlcmUgYSBmYXN0IHdyaXRlciBwdXNoZXMgZGlydHkgcGFnZXMgdG8KdGhl
-IGVuZCBvZiB0aGUgTFJVIGxpc3QsIG9mIGNvdXJzZSwgYnV0IHlvdSBhbHJlYWR5IHNhaWQgdGhh
-dCB0aGlzIGlzCm5vdCBhcHBsaWNhYmxlIHRvIHlvdXIgd29ya2xvYWQuCgpNeSBwb2ludCBpcyB0
-aGF0IEkgZG9uJ3QgdGhpbmsgaXQncyB1bmV4cGVjdGVkIHRoYXQgZGlydHkgcGFnZXMgY29tZQpv
-ZmYgdGhlIGluYWN0aXZlIGxpc3QgaW4gcHJhY3RpY2UuICBJdCBqdXN0IHN1Y2tzIGhvdyB3ZSBo
-YW5kbGUgdGhlbS4KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9t
-YWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On 7/6/2011 2:22 AM, Dave Chinner wrote:
+
+> log on a 2-disk RAID0 mirror.....
+
+Is that a typo Dave or a configuration I just hadn't heard of?  Or did
+you intend a slash between RAID0/mirror meaning either/or?
+
+Just trying to prevent confusion of future Googlers.
+
+-- 
+Stan
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
