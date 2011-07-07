@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p67B6hDS159851 for <xfs@oss.sgi.com>; Thu, 7 Jul 2011 06:06:43 -0500
+	p67B6hgS159859 for <xfs@oss.sgi.com>; Thu, 7 Jul 2011 06:06:43 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 44AFF15ECD5A
-	for <xfs@oss.sgi.com>; Thu,  7 Jul 2011 04:06:41 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E708115ECD91
+	for <xfs@oss.sgi.com>; Thu,  7 Jul 2011 04:06:42 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	CYDdpwUtqqoUxDIA for <xfs@oss.sgi.com>;
-	Thu, 07 Jul 2011 04:06:41 -0700 (PDT)
+	JDEFC7z5QFGgVjvW for <xfs@oss.sgi.com>;
+	Thu, 07 Jul 2011 04:06:42 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1QemPo-0003pY-Me
-	for xfs@oss.sgi.com; Thu, 07 Jul 2011 11:06:40 +0000
-Message-Id: <20110707110640.660374016@bombadil.infradead.org>
-Date: Thu, 07 Jul 2011 07:05:36 -0400
+	Linux)) id 1QemPq-0003tG-4K
+	for xfs@oss.sgi.com; Thu, 07 Jul 2011 11:06:42 +0000
+Message-Id: <20110707110642.097790385@bombadil.infradead.org>
+Date: Thu, 07 Jul 2011 07:05:43 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 01/28] xfs: PF_FSTRANS should never be set in ->writepage
+Subject: [PATCH 08/28] xfs: improve sync behaviour in the face of aggressive
+	dirtying
 References: <20110707110535.205001532@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-writepage-simplify-fstrans-check
+Content-Disposition: inline; filename=xfs-simplify-sync
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,58 +35,81 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Now that we reject direct reclaim in addition to always using GFP_NOFS
-allocation there's no chance we'll ever end up in ->writepage with
-PF_FSTRANS set.  Add a WARN_ON if we hit this case, and stop checking
-if we'd actually need to start a transaction.
+The following script from Wu Fengguang shows very bad behaviour in XFS
+when aggressively dirtying data during a sync on XFS, with sync times
+up to almost 10 times as long as ext4.
+
+A large part of the issue is that XFS writes data out itself two times
+in the ->sync_fs method, overriding the livelock protection in the core
+writeback code, and another issue is the lock-less xfs_ioend_wait call,
+which doesn't prevent new ioend from being queue up while waiting for
+the count to reach zero.
+
+This patch removes the XFS-internal sync calls and relies on the VFS
+to do it's work just like all other filesystems do.  Note that the
+i_iocount wait which is rather suboptimal is simply removed here.
+We already do it in ->write_inode, which keeps the current supoptimal
+behaviour.  We'll eventually need to remove that as well, but that's
+material for a separate commit.
+
+------------------------------ snip ------------------------------
+#!/bin/sh
+
+umount /dev/sda7
+mkfs.xfs -f /dev/sda7
+# mkfs.ext4 /dev/sda7
+# mkfs.btrfs /dev/sda7
+mount /dev/sda7 /fs
+
+echo $((50<<20)) > /proc/sys/vm/dirty_bytes
+
+pid=
+for i in `seq 10`
+do
+	dd if=/dev/zero of=/fs/zero-$i bs=1M count=1000 &
+	pid="$pid $!"
+done
+
+sleep 1
+
+tic=$(date +'%s')
+sync
+tac=$(date +'%s')
+
+echo
+echo sync time: $((tac-tic))
+egrep '(Dirty|Writeback|NFS_Unstable)' /proc/meminfo
+
+pidof dd > /dev/null && { kill -9 $pid; echo sync NOT livelocked; }
+------------------------------ snip ------------------------------
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reported-by: Wu Fengguang <fengguang.wu@intel.com>
 Reviewed-by: Alex Elder <aelder@sgi.com>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-Index: xfs/fs/xfs/linux-2.6/xfs_aops.c
+Index: xfs/fs/xfs/linux-2.6/xfs_sync.c
 ===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_aops.c	2011-07-06 09:11:58.963268764 +0200
-+++ xfs/fs/xfs/linux-2.6/xfs_aops.c	2011-07-06 09:12:22.466600907 +0200
-@@ -895,11 +895,6 @@ out_invalidate:
-  * For unwritten space on the page we need to start the conversion to
-  * regular allocated space.
-  * For any other dirty buffer heads on the page we should flush them.
-- *
-- * If we detect that a transaction would be required to flush the page, we
-- * have to check the process flags first, if we are already in a transaction
-- * or disk I/O during allocations is off, we need to fail the writepage and
-- * redirty the page.
-  */
- STATIC int
- xfs_vm_writepage(
-@@ -907,7 +902,6 @@ xfs_vm_writepage(
- 	struct writeback_control *wbc)
+--- xfs.orig/fs/xfs/linux-2.6/xfs_sync.c	2011-06-29 11:26:14.109219361 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_sync.c	2011-06-29 11:37:20.642275110 +0200
+@@ -359,14 +359,12 @@ xfs_quiesce_data(
  {
- 	struct inode		*inode = page->mapping->host;
--	int			delalloc, unwritten;
- 	struct buffer_head	*bh, *head;
- 	struct xfs_bmbt_irec	imap;
- 	xfs_ioend_t		*ioend = NULL, *iohead = NULL;
-@@ -939,15 +933,10 @@ xfs_vm_writepage(
- 		goto redirty;
+ 	int			error, error2 = 0;
  
- 	/*
--	 * We need a transaction if there are delalloc or unwritten buffers
--	 * on the page.
--	 *
--	 * If we need a transaction and the process flags say we are already
--	 * in a transaction, or no IO is allowed then mark the page dirty
--	 * again and leave the page as is.
-+	 * Given that we do not allow direct reclaim to call us, we should
-+	 * never be called while in a filesystem transaction.
- 	 */
--	xfs_count_page_state(page, &delalloc, &unwritten);
--	if ((current->flags & PF_FSTRANS) && (delalloc || unwritten))
-+	if (WARN_ON(current->flags & PF_FSTRANS))
- 		goto redirty;
+-	/* push non-blocking */
+-	xfs_sync_data(mp, 0);
+ 	xfs_qm_sync(mp, SYNC_TRYLOCK);
+-
+-	/* push and block till complete */
+-	xfs_sync_data(mp, SYNC_WAIT);
+ 	xfs_qm_sync(mp, SYNC_WAIT);
  
- 	/* Is this page beyond the end of the file? */
++	/* force out the newly dirtied log buffers */
++	xfs_log_force(mp, XFS_LOG_SYNC);
++
+ 	/* write superblock and hoover up shutdown errors */
+ 	error = xfs_sync_fsdata(mp);
+ 
 
 _______________________________________________
 xfs mailing list
