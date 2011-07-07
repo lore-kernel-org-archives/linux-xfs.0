@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p67B6iIu159912 for <xfs@oss.sgi.com>; Thu, 7 Jul 2011 06:06:45 -0500
+	p67B6ivj159908 for <xfs@oss.sgi.com>; Thu, 7 Jul 2011 06:06:44 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 74796176A7FC
+	by cuda.sgi.com (Spam Firewall) with ESMTP id AE52652E4F
 	for <xfs@oss.sgi.com>; Thu,  7 Jul 2011 04:06:43 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	BgcuRIRghCqZnj0Y for <xfs@oss.sgi.com>;
+	rpdWTkp4NC7BlsSF for <xfs@oss.sgi.com>;
 	Thu, 07 Jul 2011 04:06:43 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1QemPq-0003vM-TD
-	for xfs@oss.sgi.com; Thu, 07 Jul 2011 11:06:42 +0000
-Message-Id: <20110707110642.867001361@bombadil.infradead.org>
-Date: Thu, 07 Jul 2011 07:05:47 -0400
+	Linux)) id 1QemPr-0003vu-3y
+	for xfs@oss.sgi.com; Thu, 07 Jul 2011 11:06:43 +0000
+Message-Id: <20110707110643.081937786@bombadil.infradead.org>
+Date: Thu, 07 Jul 2011 07:05:48 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 12/28] xfs: factor out xfs_dir2_leaf_find_entry
+Subject: [PATCH 13/28] xfs: cleanup shortform directory inode number handling
 References: <20110707110535.205001532@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-factor-dir2-leaf-code
+Content-Disposition: inline; filename=xfs-dir2_sf-cleanup-inum-handling
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,361 +34,408 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Add a new xfs_dir2_leaf_find_entry helper to factor out some duplicate code
-from xfs_dir2_leaf_addname xfs_dir2_leafn_add.  Found by Eric Sandeen using
-an automated code duplication checker.
+Refactor the shortform directory helpers that deal with the 32-bit vs
+64-bit wide inode numbers into more sensible helpers, and kill the
+xfs_intino_t typedef that is now superflous.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Alex Elder <aelder@sgi.com>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-Index: xfs/fs/xfs/xfs_dir2_leaf.c
+Index: xfs/fs/xfs/xfs_dir2_sf.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_dir2_leaf.c	2011-06-29 19:45:24.846962285 +0200
-+++ xfs/fs/xfs/xfs_dir2_leaf.c	2011-06-30 09:29:24.446740960 +0200
-@@ -152,6 +152,123 @@ xfs_dir2_block_to_leaf(
- 	return 0;
- }
+--- xfs.orig/fs/xfs/xfs_dir2_sf.c	2011-06-30 09:31:15.330073010 +0200
++++ xfs/fs/xfs/xfs_dir2_sf.c	2011-06-30 09:34:46.640070544 +0200
+@@ -59,6 +59,79 @@ static void xfs_dir2_sf_toino4(xfs_da_ar
+ static void xfs_dir2_sf_toino8(xfs_da_args_t *args);
+ #endif /* XFS_BIG_INUMS */
  
-+struct xfs_dir2_leaf_entry *
-+xfs_dir2_leaf_find_entry(
-+	xfs_dir2_leaf_t		*leaf,		/* leaf structure */
-+	int			index,		/* leaf table position */
-+	int			compact,	/* need to compact leaves */
-+	int			lowstale,	/* index of prev stale leaf */
-+	int			highstale,	/* index of next stale leaf */
-+	int			*lfloglow,	/* low leaf logging index */
-+	int			*lfloghigh)	/* high leaf logging index */
++
++/*
++ * Inode numbers in short-form directories can come in two versions,
++ * either 4 bytes or 8 bytes wide.  These helpers deal with the
++ * two forms transparently by looking at the headers i8count field.
++ */
++static xfs_ino_t
++xfs_dir2_sf_get_ino(
++	struct xfs_dir2_sf	*sfp,
++	xfs_dir2_inou_t		*from)
 +{
-+	if (!leaf->hdr.stale) {
-+		xfs_dir2_leaf_entry_t	*lep;	/* leaf entry table pointer */
++	if (sfp->hdr.i8count)
++		return XFS_GET_DIR_INO8(from->i8);
++	else
++		return XFS_GET_DIR_INO4(from->i4);
++}
 +
-+		/*
-+		 * Now we need to make room to insert the leaf entry.
-+		 *
-+		 * If there are no stale entries, just insert a hole at index.
-+		 */
-+		lep = &leaf->ents[index];
-+		if (index < be16_to_cpu(leaf->hdr.count))
-+			memmove(lep + 1, lep,
-+				(be16_to_cpu(leaf->hdr.count) - index) *
-+				 sizeof(*lep));
++static void
++xfs_dir2_sf_put_ino(
++	struct xfs_dir2_sf	*sfp,
++	xfs_dir2_inou_t		*to,
++	xfs_ino_t		ino)
++{
++	if (sfp->hdr.i8count)
++		XFS_PUT_DIR_INO8(ino, to->i8);
++	else
++		XFS_PUT_DIR_INO4(ino, to->i4);
++}
 +
-+		/*
-+		 * Record low and high logging indices for the leaf.
-+		 */
-+		*lfloglow = index;
-+		*lfloghigh = be16_to_cpu(leaf->hdr.count);
-+		be16_add_cpu(&leaf->hdr.count, 1);
-+		return lep;
-+	}
++xfs_ino_t
++xfs_dir2_sf_get_parent_ino(
++	struct xfs_dir2_sf	*sfp)
++{
++	return xfs_dir2_sf_get_ino(sfp, &sfp->hdr.parent);
++}
 +
-+	/*
-+	 * There are stale entries.
-+	 *
-+	 * We will use one of them for the new entry.  It's probably not at
-+	 * the right location, so we'll have to shift some up or down first.
-+	 *
-+	 * If we didn't compact before, we need to find the nearest stale
-+	 * entries before and after our insertion point.
-+	 */
-+	if (compact == 0) {
-+		/*
-+		 * Find the first stale entry before the insertion point,
-+		 * if any.
-+		 */
-+		for (lowstale = index - 1;
-+		     lowstale >= 0 &&
-+			be32_to_cpu(leaf->ents[lowstale].address) !=
-+			XFS_DIR2_NULL_DATAPTR;
-+		     lowstale--)
-+			continue;
++static void
++xfs_dir2_sf_put_parent_ino(
++	struct xfs_dir2_sf	*sfp,
++	xfs_ino_t		ino)
++{
++	xfs_dir2_sf_put_ino(sfp, &sfp->hdr.parent, ino);
++}
 +
-+		/*
-+		 * Find the next stale entry at or after the insertion point,
-+		 * if any.   Stop if we go so far that the lowstale entry
-+		 * would be better.
-+		 */
-+		for (highstale = index;
-+		     highstale < be16_to_cpu(leaf->hdr.count) &&
-+			be32_to_cpu(leaf->ents[highstale].address) !=
-+			XFS_DIR2_NULL_DATAPTR &&
-+			(lowstale < 0 ||
-+			 index - lowstale - 1 >= highstale - index);
-+		     highstale++)
-+			continue;
-+	}
++/*
++ * In short-form directory entries the inode numbers are stored at variable
++ * offset behind the entry name.  The inode numbers may only be accessed
++ * through the helpers below.
++ */
++static xfs_dir2_inou_t *
++xfs_dir2_sfe_inop(
++	struct xfs_dir2_sf_entry *sfep)
++{
++	return (xfs_dir2_inou_t *)&sfep->name[sfep->namelen];
++}
 +
-+	/*
-+	 * If the low one is better, use it.
-+	 */
-+	if (lowstale >= 0 &&
-+	    (highstale == be16_to_cpu(leaf->hdr.count) ||
-+	     index - lowstale - 1 < highstale - index)) {
-+		ASSERT(index - lowstale - 1 >= 0);
-+		ASSERT(be32_to_cpu(leaf->ents[lowstale].address) ==
-+		       XFS_DIR2_NULL_DATAPTR);
++xfs_ino_t
++xfs_dir2_sfe_get_ino(
++	struct xfs_dir2_sf	*sfp,
++	struct xfs_dir2_sf_entry *sfep)
++{
++	return xfs_dir2_sf_get_ino(sfp, xfs_dir2_sfe_inop(sfep));
++}
 +
-+		/*
-+		 * Copy entries up to cover the stale entry and make room
-+		 * for the new entry.
-+		 */
-+		if (index - lowstale - 1 > 0) {
-+			memmove(&leaf->ents[lowstale],
-+				&leaf->ents[lowstale + 1],
-+				(index - lowstale - 1) *
-+				sizeof(xfs_dir2_leaf_entry_t));
-+		}
-+		*lfloglow = MIN(lowstale, *lfloglow);
-+		*lfloghigh = MAX(index - 1, *lfloghigh);
-+		be16_add_cpu(&leaf->hdr.stale, -1);
-+		return &leaf->ents[index - 1];
-+	}
-+
-+	/*
-+	 * The high one is better, so use that one.
-+	 */
-+	ASSERT(highstale - index >= 0);
-+	ASSERT(be32_to_cpu(leaf->ents[highstale].address) ==
-+	       XFS_DIR2_NULL_DATAPTR);
-+
-+	/*
-+	 * Copy entries down to cover the stale entry and make room for the
-+	 * new entry.
-+	 */
-+	if (highstale - index > 0) {
-+		memmove(&leaf->ents[index + 1],
-+			&leaf->ents[index],
-+			(highstale - index) * sizeof(xfs_dir2_leaf_entry_t));
-+	}
-+	*lfloglow = MIN(index, *lfloglow);
-+	*lfloghigh = MAX(highstale, *lfloghigh);
-+	be16_add_cpu(&leaf->hdr.stale, -1);
-+	return &leaf->ents[index];
++static void
++xfs_dir2_sfe_put_ino(
++	struct xfs_dir2_sf	*sfp,
++	struct xfs_dir2_sf_entry *sfep,
++	xfs_ino_t		ino)
++{
++	xfs_dir2_sf_put_ino(sfp, xfs_dir2_sfe_inop(sfep), ino);
 +}
 +
  /*
-  * Add an entry to a leaf form directory.
-  */
-@@ -430,102 +547,10 @@ xfs_dir2_leaf_addname(
- 		if (!grown)
- 			xfs_dir2_leaf_log_bests(tp, lbp, use_block, use_block);
- 	}
--	/*
--	 * Now we need to make room to insert the leaf entry.
--	 * If there are no stale entries, we just insert a hole at index.
--	 */
--	if (!leaf->hdr.stale) {
--		/*
--		 * lep is still good as the index leaf entry.
--		 */
--		if (index < be16_to_cpu(leaf->hdr.count))
--			memmove(lep + 1, lep,
--				(be16_to_cpu(leaf->hdr.count) - index) * sizeof(*lep));
--		/*
--		 * Record low and high logging indices for the leaf.
--		 */
--		lfloglow = index;
--		lfloghigh = be16_to_cpu(leaf->hdr.count);
--		be16_add_cpu(&leaf->hdr.count, 1);
--	}
--	/*
--	 * There are stale entries.
--	 * We will use one of them for the new entry.
--	 * It's probably not at the right location, so we'll have to
--	 * shift some up or down first.
--	 */
--	else {
--		/*
--		 * If we didn't compact before, we need to find the nearest
--		 * stale entries before and after our insertion point.
--		 */
--		if (compact == 0) {
--			/*
--			 * Find the first stale entry before the insertion
--			 * point, if any.
--			 */
--			for (lowstale = index - 1;
--			     lowstale >= 0 &&
--				be32_to_cpu(leaf->ents[lowstale].address) !=
--				XFS_DIR2_NULL_DATAPTR;
--			     lowstale--)
--				continue;
--			/*
--			 * Find the next stale entry at or after the insertion
--			 * point, if any.   Stop if we go so far that the
--			 * lowstale entry would be better.
--			 */
--			for (highstale = index;
--			     highstale < be16_to_cpu(leaf->hdr.count) &&
--				be32_to_cpu(leaf->ents[highstale].address) !=
--				XFS_DIR2_NULL_DATAPTR &&
--				(lowstale < 0 ||
--				 index - lowstale - 1 >= highstale - index);
--			     highstale++)
--				continue;
--		}
--		/*
--		 * If the low one is better, use it.
--		 */
--		if (lowstale >= 0 &&
--		    (highstale == be16_to_cpu(leaf->hdr.count) ||
--		     index - lowstale - 1 < highstale - index)) {
--			ASSERT(index - lowstale - 1 >= 0);
--			ASSERT(be32_to_cpu(leaf->ents[lowstale].address) ==
--			       XFS_DIR2_NULL_DATAPTR);
--			/*
--			 * Copy entries up to cover the stale entry
--			 * and make room for the new entry.
--			 */
--			if (index - lowstale - 1 > 0)
--				memmove(&leaf->ents[lowstale],
--					&leaf->ents[lowstale + 1],
--					(index - lowstale - 1) * sizeof(*lep));
--			lep = &leaf->ents[index - 1];
--			lfloglow = MIN(lowstale, lfloglow);
--			lfloghigh = MAX(index - 1, lfloghigh);
--		}
--		/*
--		 * The high one is better, so use that one.
--		 */
--		else {
--			ASSERT(highstale - index >= 0);
--			ASSERT(be32_to_cpu(leaf->ents[highstale].address) ==
--			       XFS_DIR2_NULL_DATAPTR);
--			/*
--			 * Copy entries down to cover the stale entry
--			 * and make room for the new entry.
--			 */
--			if (highstale - index > 0)
--				memmove(&leaf->ents[index + 1],
--					&leaf->ents[index],
--					(highstale - index) * sizeof(*lep));
--			lep = &leaf->ents[index];
--			lfloglow = MIN(index, lfloglow);
--			lfloghigh = MAX(highstale, lfloghigh);
--		}
--		be16_add_cpu(&leaf->hdr.stale, -1);
--	}
-+
-+	lep = xfs_dir2_leaf_find_entry(leaf, index, compact, lowstale,
-+				       highstale, &lfloglow, &lfloghigh);
-+
- 	/*
- 	 * Fill in the new leaf entry.
+  * Given a block directory (dp/block), calculate its size as a shortform (sf)
+  * directory and a header for the sf directory, if it will fit it the
+@@ -138,7 +211,7 @@ xfs_dir2_block_sfsize(
  	 */
-Index: xfs/fs/xfs/xfs_dir2_leaf.h
-===================================================================
---- xfs.orig/fs/xfs/xfs_dir2_leaf.h	2011-06-29 19:45:24.856962230 +0200
-+++ xfs/fs/xfs/xfs_dir2_leaf.h	2011-06-30 09:18:07.263416117 +0200
-@@ -248,6 +248,9 @@ extern int xfs_dir2_leaf_search_hash(str
- 				     struct xfs_dabuf *lbp);
- extern int xfs_dir2_leaf_trim_data(struct xfs_da_args *args,
- 				   struct xfs_dabuf *lbp, xfs_dir2_db_t db);
-+extern xfs_dir2_leaf_entry_t *xfs_dir2_leaf_find_entry(xfs_dir2_leaf_t *, int,
-+						       int, int, int,
-+						       int *, int *);
- extern int xfs_dir2_node_to_leaf(struct xfs_da_state *state);
+ 	sfhp->count = count;
+ 	sfhp->i8count = i8count;
+-	xfs_dir2_sf_put_inumber((xfs_dir2_sf_t *)sfhp, &parent, &sfhp->parent);
++	xfs_dir2_sf_put_parent_ino((xfs_dir2_sf_t *)sfhp, parent);
+ 	return size;
+ }
  
- #endif	/* __XFS_DIR2_LEAF_H__ */
-Index: xfs/fs/xfs/xfs_dir2_node.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_dir2_node.c	2011-06-29 19:45:24.870295493 +0200
-+++ xfs/fs/xfs/xfs_dir2_node.c	2011-06-30 09:27:19.103409194 +0200
-@@ -244,89 +244,13 @@ xfs_dir2_leafn_add(
- 		lfloglow = be16_to_cpu(leaf->hdr.count);
- 		lfloghigh = -1;
- 	}
--	/*
--	 * No stale entries, just insert a space for the new entry.
--	 */
--	if (!leaf->hdr.stale) {
--		lep = &leaf->ents[index];
--		if (index < be16_to_cpu(leaf->hdr.count))
--			memmove(lep + 1, lep,
--				(be16_to_cpu(leaf->hdr.count) - index) * sizeof(*lep));
--		lfloglow = index;
--		lfloghigh = be16_to_cpu(leaf->hdr.count);
--		be16_add_cpu(&leaf->hdr.count, 1);
--	}
--	/*
--	 * There are stale entries.  We'll use one for the new entry.
--	 */
--	else {
--		/*
--		 * If we didn't do a compact then we need to figure out
--		 * which stale entry will be used.
--		 */
--		if (compact == 0) {
--			/*
--			 * Find first stale entry before our insertion point.
--			 */
--			for (lowstale = index - 1;
--			     lowstale >= 0 &&
--				be32_to_cpu(leaf->ents[lowstale].address) !=
--				XFS_DIR2_NULL_DATAPTR;
--			     lowstale--)
--				continue;
--			/*
--			 * Find next stale entry after insertion point.
--			 * Stop looking if the answer would be worse than
--			 * lowstale already found.
--			 */
--			for (highstale = index;
--			     highstale < be16_to_cpu(leaf->hdr.count) &&
--				be32_to_cpu(leaf->ents[highstale].address) !=
--				XFS_DIR2_NULL_DATAPTR &&
--				(lowstale < 0 ||
--				 index - lowstale - 1 >= highstale - index);
--			     highstale++)
--				continue;
--		}
--		/*
--		 * Using the low stale entry.
--		 * Shift entries up toward the stale slot.
--		 */
--		if (lowstale >= 0 &&
--		    (highstale == be16_to_cpu(leaf->hdr.count) ||
--		     index - lowstale - 1 < highstale - index)) {
--			ASSERT(be32_to_cpu(leaf->ents[lowstale].address) ==
--			       XFS_DIR2_NULL_DATAPTR);
--			ASSERT(index - lowstale - 1 >= 0);
--			if (index - lowstale - 1 > 0)
--				memmove(&leaf->ents[lowstale],
--					&leaf->ents[lowstale + 1],
--					(index - lowstale - 1) * sizeof(*lep));
--			lep = &leaf->ents[index - 1];
--			lfloglow = MIN(lowstale, lfloglow);
--			lfloghigh = MAX(index - 1, lfloghigh);
--		}
--		/*
--		 * Using the high stale entry.
--		 * Shift entries down toward the stale slot.
--		 */
--		else {
--			ASSERT(be32_to_cpu(leaf->ents[highstale].address) ==
--			       XFS_DIR2_NULL_DATAPTR);
--			ASSERT(highstale - index >= 0);
--			if (highstale - index > 0)
--				memmove(&leaf->ents[index + 1],
--					&leaf->ents[index],
--					(highstale - index) * sizeof(*lep));
--			lep = &leaf->ents[index];
--			lfloglow = MIN(index, lfloglow);
--			lfloghigh = MAX(highstale, lfloghigh);
--		}
--		be16_add_cpu(&leaf->hdr.stale, -1);
--	}
+@@ -165,7 +238,6 @@ xfs_dir2_block_to_sf(
+ 	char			*ptr;		/* current data pointer */
+ 	xfs_dir2_sf_entry_t	*sfep;		/* shortform entry */
+ 	xfs_dir2_sf_t		*sfp;		/* shortform structure */
+-	xfs_ino_t               temp;
+ 
+ 	trace_xfs_dir2_block_to_sf(args);
+ 
+@@ -233,7 +305,7 @@ xfs_dir2_block_to_sf(
+ 		else if (dep->namelen == 2 &&
+ 			 dep->name[0] == '.' && dep->name[1] == '.')
+ 			ASSERT(be64_to_cpu(dep->inumber) ==
+-			       xfs_dir2_sf_get_inumber(sfp, &sfp->hdr.parent));
++			       xfs_dir2_sf_get_parent_ino(sfp));
+ 		/*
+ 		 * Normal entry, copy it into shortform.
+ 		 */
+@@ -243,9 +315,9 @@ xfs_dir2_block_to_sf(
+ 				(xfs_dir2_data_aoff_t)
+ 				((char *)dep - (char *)block));
+ 			memcpy(sfep->name, dep->name, dep->namelen);
+-			temp = be64_to_cpu(dep->inumber);
+-			xfs_dir2_sf_put_inumber(sfp, &temp,
+-				xfs_dir2_sf_inumberp(sfep));
++			xfs_dir2_sfe_put_ino(sfp, sfep,
++					     be64_to_cpu(dep->inumber));
 +
+ 			sfep = xfs_dir2_sf_nextentry(sfp, sfep);
+ 		}
+ 		ptr += xfs_dir2_data_entsize(dep->namelen);
+@@ -406,8 +478,7 @@ xfs_dir2_sf_addname_easy(
+ 	sfep->namelen = args->namelen;
+ 	xfs_dir2_sf_put_offset(sfep, offset);
+ 	memcpy(sfep->name, args->name, sfep->namelen);
+-	xfs_dir2_sf_put_inumber(sfp, &args->inumber,
+-		xfs_dir2_sf_inumberp(sfep));
++	xfs_dir2_sfe_put_ino(sfp, sfep, args->inumber);
  	/*
- 	 * Insert the new entry, log everything.
+ 	 * Update the header and inode.
  	 */
-+	lep = xfs_dir2_leaf_find_entry(leaf, index, compact, lowstale,
-+				       highstale, &lfloglow, &lfloghigh);
-+
- 	lep->hashval = cpu_to_be32(args->hashval);
- 	lep->address = cpu_to_be32(xfs_dir2_db_off_to_dataptr(mp,
- 				args->blkno, args->index));
+@@ -498,8 +569,7 @@ xfs_dir2_sf_addname_hard(
+ 	sfep->namelen = args->namelen;
+ 	xfs_dir2_sf_put_offset(sfep, offset);
+ 	memcpy(sfep->name, args->name, sfep->namelen);
+-	xfs_dir2_sf_put_inumber(sfp, &args->inumber,
+-		xfs_dir2_sf_inumberp(sfep));
++	xfs_dir2_sfe_put_ino(sfp, sfep, args->inumber);
+ 	sfp->hdr.count++;
+ #if XFS_BIG_INUMS
+ 	if (args->inumber > XFS_DIR2_MAX_SHORT_INUM && !objchange)
+@@ -618,14 +688,14 @@ xfs_dir2_sf_check(
+ 
+ 	sfp = (xfs_dir2_sf_t *)dp->i_df.if_u1.if_data;
+ 	offset = XFS_DIR2_DATA_FIRST_OFFSET;
+-	ino = xfs_dir2_sf_get_inumber(sfp, &sfp->hdr.parent);
++	ino = xfs_dir2_sf_get_parent_ino(sfp);
+ 	i8count = ino > XFS_DIR2_MAX_SHORT_INUM;
+ 
+ 	for (i = 0, sfep = xfs_dir2_sf_firstentry(sfp);
+ 	     i < sfp->hdr.count;
+ 	     i++, sfep = xfs_dir2_sf_nextentry(sfp, sfep)) {
+ 		ASSERT(xfs_dir2_sf_get_offset(sfep) >= offset);
+-		ino = xfs_dir2_sf_get_inumber(sfp, xfs_dir2_sf_inumberp(sfep));
++		ino = xfs_dir2_sfe_get_ino(sfp, sfep);
+ 		i8count += ino > XFS_DIR2_MAX_SHORT_INUM;
+ 		offset =
+ 			xfs_dir2_sf_get_offset(sfep) +
+@@ -686,7 +756,7 @@ xfs_dir2_sf_create(
+ 	/*
+ 	 * Now can put in the inode number, since i8count is set.
+ 	 */
+-	xfs_dir2_sf_put_inumber(sfp, &pino, &sfp->hdr.parent);
++	xfs_dir2_sf_put_parent_ino(sfp, pino);
+ 	sfp->hdr.count = 0;
+ 	dp->i_d.di_size = size;
+ 	xfs_dir2_sf_check(args);
+@@ -759,7 +829,7 @@ xfs_dir2_sf_getdents(
+ 	 * Put .. entry unless we're starting past it.
+ 	 */
+ 	if (*offset <= dotdot_offset) {
+-		ino = xfs_dir2_sf_get_inumber(sfp, &sfp->hdr.parent);
++		ino = xfs_dir2_sf_get_parent_ino(sfp);
+ 		if (filldir(dirent, "..", 2, dotdot_offset & 0x7fffffff, ino, DT_DIR)) {
+ 			*offset = dotdot_offset & 0x7fffffff;
+ 			return 0;
+@@ -779,7 +849,7 @@ xfs_dir2_sf_getdents(
+ 			continue;
+ 		}
+ 
+-		ino = xfs_dir2_sf_get_inumber(sfp, xfs_dir2_sf_inumberp(sfep));
++		ino = xfs_dir2_sfe_get_ino(sfp, sfep);
+ 		if (filldir(dirent, (char *)sfep->name, sfep->namelen,
+ 			    off & 0x7fffffff, ino, DT_UNKNOWN)) {
+ 			*offset = off & 0x7fffffff;
+@@ -839,7 +909,7 @@ xfs_dir2_sf_lookup(
+ 	 */
+ 	if (args->namelen == 2 &&
+ 	    args->name[0] == '.' && args->name[1] == '.') {
+-		args->inumber = xfs_dir2_sf_get_inumber(sfp, &sfp->hdr.parent);
++		args->inumber = xfs_dir2_sf_get_parent_ino(sfp);
+ 		args->cmpresult = XFS_CMP_EXACT;
+ 		return XFS_ERROR(EEXIST);
+ 	}
+@@ -858,8 +928,7 @@ xfs_dir2_sf_lookup(
+ 								sfep->namelen);
+ 		if (cmp != XFS_CMP_DIFFERENT && cmp != args->cmpresult) {
+ 			args->cmpresult = cmp;
+-			args->inumber = xfs_dir2_sf_get_inumber(sfp,
+-						xfs_dir2_sf_inumberp(sfep));
++			args->inumber = xfs_dir2_sfe_get_ino(sfp, sfep);
+ 			if (cmp == XFS_CMP_EXACT)
+ 				return XFS_ERROR(EEXIST);
+ 			ci_sfep = sfep;
+@@ -918,9 +987,8 @@ xfs_dir2_sf_removename(
+ 				i++, sfep = xfs_dir2_sf_nextentry(sfp, sfep)) {
+ 		if (xfs_da_compname(args, sfep->name, sfep->namelen) ==
+ 								XFS_CMP_EXACT) {
+-			ASSERT(xfs_dir2_sf_get_inumber(sfp,
+-						xfs_dir2_sf_inumberp(sfep)) ==
+-								args->inumber);
++			ASSERT(xfs_dir2_sfe_get_ino(sfp, sfep) ==
++			       args->inumber);
+ 			break;
+ 		}
+ 	}
+@@ -1040,10 +1108,10 @@ xfs_dir2_sf_replace(
+ 	if (args->namelen == 2 &&
+ 	    args->name[0] == '.' && args->name[1] == '.') {
+ #if XFS_BIG_INUMS || defined(DEBUG)
+-		ino = xfs_dir2_sf_get_inumber(sfp, &sfp->hdr.parent);
++		ino = xfs_dir2_sf_get_parent_ino(sfp);
+ 		ASSERT(args->inumber != ino);
+ #endif
+-		xfs_dir2_sf_put_inumber(sfp, &args->inumber, &sfp->hdr.parent);
++		xfs_dir2_sf_put_parent_ino(sfp, args->inumber);
+ 	}
+ 	/*
+ 	 * Normal entry, look for the name.
+@@ -1055,12 +1123,10 @@ xfs_dir2_sf_replace(
+ 			if (xfs_da_compname(args, sfep->name, sfep->namelen) ==
+ 								XFS_CMP_EXACT) {
+ #if XFS_BIG_INUMS || defined(DEBUG)
+-				ino = xfs_dir2_sf_get_inumber(sfp,
+-					xfs_dir2_sf_inumberp(sfep));
++				ino = xfs_dir2_sfe_get_ino(sfp, sfep);
+ 				ASSERT(args->inumber != ino);
+ #endif
+-				xfs_dir2_sf_put_inumber(sfp, &args->inumber,
+-					xfs_dir2_sf_inumberp(sfep));
++				xfs_dir2_sfe_put_ino(sfp, sfep, args->inumber);
+ 				break;
+ 			}
+ 		}
+@@ -1121,7 +1187,6 @@ xfs_dir2_sf_toino4(
+ 	char			*buf;		/* old dir's buffer */
+ 	xfs_inode_t		*dp;		/* incore directory inode */
+ 	int			i;		/* entry index */
+-	xfs_ino_t		ino;		/* entry inode number */
+ 	int			newsize;	/* new inode size */
+ 	xfs_dir2_sf_entry_t	*oldsfep;	/* old sf entry */
+ 	xfs_dir2_sf_t		*oldsfp;	/* old sf directory */
+@@ -1162,8 +1227,7 @@ xfs_dir2_sf_toino4(
+ 	 */
+ 	sfp->hdr.count = oldsfp->hdr.count;
+ 	sfp->hdr.i8count = 0;
+-	ino = xfs_dir2_sf_get_inumber(oldsfp, &oldsfp->hdr.parent);
+-	xfs_dir2_sf_put_inumber(sfp, &ino, &sfp->hdr.parent);
++	xfs_dir2_sf_put_parent_ino(sfp, xfs_dir2_sf_get_parent_ino(oldsfp));
+ 	/*
+ 	 * Copy the entries field by field.
+ 	 */
+@@ -1175,9 +1239,8 @@ xfs_dir2_sf_toino4(
+ 		sfep->namelen = oldsfep->namelen;
+ 		sfep->offset = oldsfep->offset;
+ 		memcpy(sfep->name, oldsfep->name, sfep->namelen);
+-		ino = xfs_dir2_sf_get_inumber(oldsfp,
+-			xfs_dir2_sf_inumberp(oldsfep));
+-		xfs_dir2_sf_put_inumber(sfp, &ino, xfs_dir2_sf_inumberp(sfep));
++		xfs_dir2_sfe_put_ino(sfp, sfep,
++			xfs_dir2_sfe_get_ino(oldsfp, oldsfep));
+ 	}
+ 	/*
+ 	 * Clean up the inode.
+@@ -1199,7 +1262,6 @@ xfs_dir2_sf_toino8(
+ 	char			*buf;		/* old dir's buffer */
+ 	xfs_inode_t		*dp;		/* incore directory inode */
+ 	int			i;		/* entry index */
+-	xfs_ino_t		ino;		/* entry inode number */
+ 	int			newsize;	/* new inode size */
+ 	xfs_dir2_sf_entry_t	*oldsfep;	/* old sf entry */
+ 	xfs_dir2_sf_t		*oldsfp;	/* old sf directory */
+@@ -1240,8 +1302,7 @@ xfs_dir2_sf_toino8(
+ 	 */
+ 	sfp->hdr.count = oldsfp->hdr.count;
+ 	sfp->hdr.i8count = 1;
+-	ino = xfs_dir2_sf_get_inumber(oldsfp, &oldsfp->hdr.parent);
+-	xfs_dir2_sf_put_inumber(sfp, &ino, &sfp->hdr.parent);
++	xfs_dir2_sf_put_parent_ino(sfp, xfs_dir2_sf_get_parent_ino(oldsfp));
+ 	/*
+ 	 * Copy the entries field by field.
+ 	 */
+@@ -1253,9 +1314,8 @@ xfs_dir2_sf_toino8(
+ 		sfep->namelen = oldsfep->namelen;
+ 		sfep->offset = oldsfep->offset;
+ 		memcpy(sfep->name, oldsfep->name, sfep->namelen);
+-		ino = xfs_dir2_sf_get_inumber(oldsfp,
+-			xfs_dir2_sf_inumberp(oldsfep));
+-		xfs_dir2_sf_put_inumber(sfp, &ino, xfs_dir2_sf_inumberp(sfep));
++		xfs_dir2_sfe_put_ino(sfp, sfep,
++			xfs_dir2_sfe_get_ino(oldsfp, oldsfep));
+ 	}
+ 	/*
+ 	 * Clean up the inode.
+Index: xfs/fs/xfs/xfs_dir2_sf.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_dir2_sf.h	2011-06-30 09:31:15.343406344 +0200
++++ xfs/fs/xfs/xfs_dir2_sf.h	2011-06-30 09:32:00.390072451 +0200
+@@ -90,28 +90,6 @@ static inline int xfs_dir2_sf_hdr_size(i
+ 		((uint)sizeof(xfs_dir2_ino8_t) - (uint)sizeof(xfs_dir2_ino4_t)));
+ }
+ 
+-static inline xfs_dir2_inou_t *xfs_dir2_sf_inumberp(xfs_dir2_sf_entry_t *sfep)
+-{
+-	return (xfs_dir2_inou_t *)&(sfep)->name[(sfep)->namelen];
+-}
+-
+-static inline xfs_intino_t
+-xfs_dir2_sf_get_inumber(xfs_dir2_sf_t *sfp, xfs_dir2_inou_t *from)
+-{
+-	return ((sfp)->hdr.i8count == 0 ? \
+-		(xfs_intino_t)XFS_GET_DIR_INO4((from)->i4) : \
+-		(xfs_intino_t)XFS_GET_DIR_INO8((from)->i8));
+-}
+-
+-static inline void xfs_dir2_sf_put_inumber(xfs_dir2_sf_t *sfp, xfs_ino_t *from,
+-						xfs_dir2_inou_t *to)
+-{
+-	if ((sfp)->hdr.i8count == 0)
+-		XFS_PUT_DIR_INO4(*(from), (to)->i4);
+-	else
+-		XFS_PUT_DIR_INO8(*(from), (to)->i8);
+-}
+-
+ static inline xfs_dir2_data_aoff_t
+ xfs_dir2_sf_get_offset(xfs_dir2_sf_entry_t *sfep)
+ {
+@@ -155,6 +133,9 @@ xfs_dir2_sf_nextentry(xfs_dir2_sf_t *sfp
+ /*
+  * Functions.
+  */
++extern xfs_ino_t xfs_dir2_sf_get_parent_ino(struct xfs_dir2_sf *sfp);
++extern xfs_ino_t xfs_dir2_sfe_get_ino(struct xfs_dir2_sf *sfp,
++				      struct xfs_dir2_sf_entry *sfep);
+ extern int xfs_dir2_block_sfsize(struct xfs_inode *dp,
+ 				 struct xfs_dir2_block *block,
+ 				 xfs_dir2_sf_hdr_t *sfhp);
+Index: xfs/fs/xfs/xfs_inum.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_inum.h	2011-06-30 09:31:15.353406344 +0200
++++ xfs/fs/xfs/xfs_inum.h	2011-06-30 09:32:00.390072451 +0200
+@@ -28,17 +28,6 @@
+ 
+ typedef	__uint32_t	xfs_agino_t;	/* within allocation grp inode number */
+ 
+-/*
+- * Useful inode bits for this kernel.
+- * Used in some places where having 64-bits in the 32-bit kernels
+- * costs too much.
+- */
+-#if XFS_BIG_INUMS
+-typedef	xfs_ino_t	xfs_intino_t;
+-#else
+-typedef	__uint32_t	xfs_intino_t;
+-#endif
+-
+ #define	NULLFSINO	((xfs_ino_t)-1)
+ #define	NULLAGINO	((xfs_agino_t)-1)
+ 
+Index: xfs/fs/xfs/xfs_dir2_block.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_dir2_block.c	2011-06-30 09:31:15.000000000 +0200
++++ xfs/fs/xfs/xfs_dir2_block.c	2011-06-30 09:32:00.393405784 +0200
+@@ -1146,7 +1146,7 @@ xfs_dir2_sf_to_block(
+ 	 */
+ 	dep = (xfs_dir2_data_entry_t *)
+ 		((char *)block + XFS_DIR2_DATA_DOTDOT_OFFSET);
+-	dep->inumber = cpu_to_be64(xfs_dir2_sf_get_inumber(sfp, &sfp->hdr.parent));
++	dep->inumber = cpu_to_be64(xfs_dir2_sf_get_parent_ino(sfp));
+ 	dep->namelen = 2;
+ 	dep->name[0] = dep->name[1] = '.';
+ 	tagp = xfs_dir2_data_entry_tag_p(dep);
+@@ -1195,8 +1195,7 @@ xfs_dir2_sf_to_block(
+ 		 * Copy a real entry.
+ 		 */
+ 		dep = (xfs_dir2_data_entry_t *)((char *)block + newoffset);
+-		dep->inumber = cpu_to_be64(xfs_dir2_sf_get_inumber(sfp,
+-				xfs_dir2_sf_inumberp(sfep)));
++		dep->inumber = cpu_to_be64(xfs_dir2_sfe_get_ino(sfp, sfep));
+ 		dep->namelen = sfep->namelen;
+ 		memcpy(dep->name, sfep->name, dep->namelen);
+ 		tagp = xfs_dir2_data_entry_tag_p(dep);
 
 _______________________________________________
 xfs mailing list
