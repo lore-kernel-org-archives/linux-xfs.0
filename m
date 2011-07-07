@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p67B6hjE159855 for <xfs@oss.sgi.com>; Thu, 7 Jul 2011 06:06:43 -0500
+	p67B6iW7159899 for <xfs@oss.sgi.com>; Thu, 7 Jul 2011 06:06:44 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5B2E852CE4
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 52071176A7FA
 	for <xfs@oss.sgi.com>; Thu,  7 Jul 2011 04:06:42 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	ZcJ2sDi59nMFskXO for <xfs@oss.sgi.com>;
+	hrZkjH2d2qdnDRAC for <xfs@oss.sgi.com>;
 	Thu, 07 Jul 2011 04:06:42 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1QemPp-0003sD-Np
-	for xfs@oss.sgi.com; Thu, 07 Jul 2011 11:06:41 +0000
-Message-Id: <20110707110641.698878823@bombadil.infradead.org>
-Date: Thu, 07 Jul 2011 07:05:41 -0400
+	Linux)) id 1QemPq-0003uK-Hi
+	for xfs@oss.sgi.com; Thu, 07 Jul 2011 11:06:42 +0000
+Message-Id: <20110707110642.515845017@bombadil.infradead.org>
+Date: Thu, 07 Jul 2011 07:05:45 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 06/28] xfs: kill xfs_itruncate_start
+Subject: [PATCH 10/28] xfs: remove i_transp
 References: <20110707110535.205001532@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-kill-xfs_itruncate_start
+Content-Disposition: inline; filename=xfs-kill-i_transp
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,328 +34,260 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-xfs_itruncate_start is a rather length wrapper that evaluates to a call
-to xfs_ioend_wait and xfs_tosspages, and only has two callers.
-
-Instead of using the complicated checks left over from IRIX where we
-can to truncate the pagecache just call xfs_tosspages
-(aka truncate_inode_pages) directly as we want to get rid of all data
-after i_size, and truncate_inode_pages handles incorrect alignments
-and too large offsets just fine.
+Remove the transaction pointer in the inode.  It's only used to avoid
+passing down an argument in the bmap code, and for a few asserts in
+the transaction code right now.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Alex Elder <aelder@sgi.com>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
+Index: xfs/fs/xfs/quota/xfs_trans_dquot.c
+===================================================================
+--- xfs.orig/fs/xfs/quota/xfs_trans_dquot.c	2011-07-06 09:11:57.933268816 +0200
++++ xfs/fs/xfs/quota/xfs_trans_dquot.c	2011-07-06 10:10:36.749757324 +0200
+@@ -59,7 +59,7 @@ xfs_trans_dqjoin(
+ 	xfs_trans_add_item(tp, &dqp->q_logitem.qli_item);
+ 
+ 	/*
+-	 * Initialize i_transp so we can later determine if this dquot is
++	 * Initialize d_transp so we can later determine if this dquot is
+ 	 * associated with this transaction.
+ 	 */
+ 	dqp->q_transp = tp;
+Index: xfs/fs/xfs/xfs_bmap.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_bmap.c	2011-07-06 09:11:57.946602150 +0200
++++ xfs/fs/xfs/xfs_bmap.c	2011-07-06 10:10:36.753090661 +0200
+@@ -94,6 +94,7 @@ xfs_bmap_add_attrfork_local(
+  */
+ STATIC int				/* error */
+ xfs_bmap_add_extent_delay_real(
++	struct xfs_trans	*tp,	/* transaction pointer */
+ 	xfs_inode_t		*ip,	/* incore inode pointer */
+ 	xfs_extnum_t		*idx,	/* extent number to update/insert */
+ 	xfs_btree_cur_t		**curp,	/* if *curp is null, not a btree */
+@@ -439,6 +440,7 @@ xfs_bmap_add_attrfork_local(
+  */
+ STATIC int				/* error */
+ xfs_bmap_add_extent(
++	struct xfs_trans	*tp,	/* transaction pointer */
+ 	xfs_inode_t		*ip,	/* incore inode pointer */
+ 	xfs_extnum_t		*idx,	/* extent number to update/insert */
+ 	xfs_btree_cur_t		**curp,	/* if *curp is null, not a btree */
+@@ -524,7 +526,7 @@ xfs_bmap_add_extent(
+ 				if (cur)
+ 					ASSERT(cur->bc_private.b.flags &
+ 						XFS_BTCUR_BPRV_WASDEL);
+-				error = xfs_bmap_add_extent_delay_real(ip,
++				error = xfs_bmap_add_extent_delay_real(tp, ip,
+ 						idx, &cur, new, &da_new,
+ 						first, flist, &logflags);
+ 			} else {
+@@ -561,7 +563,7 @@ xfs_bmap_add_extent(
+ 		int	tmp_logflags;	/* partial log flag return val */
+ 
+ 		ASSERT(cur == NULL);
+-		error = xfs_bmap_extents_to_btree(ip->i_transp, ip, first,
++		error = xfs_bmap_extents_to_btree(tp, ip, first,
+ 			flist, &cur, da_old > 0, &tmp_logflags, whichfork);
+ 		logflags |= tmp_logflags;
+ 		if (error)
+@@ -604,6 +606,7 @@ done:
+  */
+ STATIC int				/* error */
+ xfs_bmap_add_extent_delay_real(
++	struct xfs_trans	*tp,	/* transaction pointer */
+ 	xfs_inode_t		*ip,	/* incore inode pointer */
+ 	xfs_extnum_t		*idx,	/* extent number to update/insert */
+ 	xfs_btree_cur_t		**curp,	/* if *curp is null, not a btree */
+@@ -901,7 +904,7 @@ xfs_bmap_add_extent_delay_real(
+ 		}
+ 		if (ip->i_d.di_format == XFS_DINODE_FMT_EXTENTS &&
+ 		    ip->i_d.di_nextents > ip->i_df.if_ext_max) {
+-			error = xfs_bmap_extents_to_btree(ip->i_transp, ip,
++			error = xfs_bmap_extents_to_btree(tp, ip,
+ 					first, flist, &cur, 1, &tmp_rval,
+ 					XFS_DATA_FORK);
+ 			rval |= tmp_rval;
+@@ -984,7 +987,7 @@ xfs_bmap_add_extent_delay_real(
+ 		}
+ 		if (ip->i_d.di_format == XFS_DINODE_FMT_EXTENTS &&
+ 		    ip->i_d.di_nextents > ip->i_df.if_ext_max) {
+-			error = xfs_bmap_extents_to_btree(ip->i_transp, ip,
++			error = xfs_bmap_extents_to_btree(tp, ip,
+ 				first, flist, &cur, 1, &tmp_rval,
+ 				XFS_DATA_FORK);
+ 			rval |= tmp_rval;
+@@ -1052,7 +1055,7 @@ xfs_bmap_add_extent_delay_real(
+ 		}
+ 		if (ip->i_d.di_format == XFS_DINODE_FMT_EXTENTS &&
+ 		    ip->i_d.di_nextents > ip->i_df.if_ext_max) {
+-			error = xfs_bmap_extents_to_btree(ip->i_transp, ip,
++			error = xfs_bmap_extents_to_btree(tp, ip,
+ 					first, flist, &cur, 1, &tmp_rval,
+ 					XFS_DATA_FORK);
+ 			rval |= tmp_rval;
+@@ -2871,8 +2874,8 @@ xfs_bmap_del_extent(
+ 			len = del->br_blockcount;
+ 			do_div(bno, mp->m_sb.sb_rextsize);
+ 			do_div(len, mp->m_sb.sb_rextsize);
+-			if ((error = xfs_rtfree_extent(ip->i_transp, bno,
+-					(xfs_extlen_t)len)))
++			error = xfs_rtfree_extent(tp, bno, (xfs_extlen_t)len);
++			if (error)
+ 				goto done;
+ 			do_fx = 0;
+ 			nblks = len * mp->m_sb.sb_rextsize;
+@@ -4662,7 +4665,7 @@ xfs_bmapi(
+ 				if (!wasdelay && (flags & XFS_BMAPI_PREALLOC))
+ 					got.br_state = XFS_EXT_UNWRITTEN;
+ 			}
+-			error = xfs_bmap_add_extent(ip, &lastx, &cur, &got,
++			error = xfs_bmap_add_extent(tp, ip, &lastx, &cur, &got,
+ 				firstblock, flist, &tmp_logflags,
+ 				whichfork);
+ 			logflags |= tmp_logflags;
+@@ -4763,7 +4766,7 @@ xfs_bmapi(
+ 			mval->br_state = (mval->br_state == XFS_EXT_UNWRITTEN)
+ 						? XFS_EXT_NORM
+ 						: XFS_EXT_UNWRITTEN;
+-			error = xfs_bmap_add_extent(ip, &lastx, &cur, mval,
++			error = xfs_bmap_add_extent(tp, ip, &lastx, &cur, mval,
+ 				firstblock, flist, &tmp_logflags,
+ 				whichfork);
+ 			logflags |= tmp_logflags;
+@@ -5117,7 +5120,7 @@ xfs_bunmapi(
+ 				del.br_blockcount = mod;
+ 			}
+ 			del.br_state = XFS_EXT_UNWRITTEN;
+-			error = xfs_bmap_add_extent(ip, &lastx, &cur, &del,
++			error = xfs_bmap_add_extent(tp, ip, &lastx, &cur, &del,
+ 				firstblock, flist, &logflags,
+ 				XFS_DATA_FORK);
+ 			if (error)
+@@ -5175,18 +5178,18 @@ xfs_bunmapi(
+ 				}
+ 				prev.br_state = XFS_EXT_UNWRITTEN;
+ 				lastx--;
+-				error = xfs_bmap_add_extent(ip, &lastx, &cur,
+-					&prev, firstblock, flist, &logflags,
+-					XFS_DATA_FORK);
++				error = xfs_bmap_add_extent(tp, ip, &lastx,
++						&cur, &prev, firstblock, flist,
++						&logflags, XFS_DATA_FORK);
+ 				if (error)
+ 					goto error0;
+ 				goto nodelete;
+ 			} else {
+ 				ASSERT(del.br_state == XFS_EXT_NORM);
+ 				del.br_state = XFS_EXT_UNWRITTEN;
+-				error = xfs_bmap_add_extent(ip, &lastx, &cur,
+-					&del, firstblock, flist, &logflags,
+-					XFS_DATA_FORK);
++				error = xfs_bmap_add_extent(tp, ip, &lastx,
++						&cur, &del, firstblock, flist,
++						&logflags, XFS_DATA_FORK);
+ 				if (error)
+ 					goto error0;
+ 				goto nodelete;
 Index: xfs/fs/xfs/xfs_inode.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_inode.c	2011-06-29 11:29:02.494973804 +0200
-+++ xfs/fs/xfs/xfs_inode.c	2011-06-29 11:29:11.888256249 +0200
-@@ -1217,165 +1217,8 @@ xfs_isize_check(
- #endif	/* DEBUG */
+--- xfs.orig/fs/xfs/xfs_inode.c	2011-07-06 10:05:37.323105820 +0200
++++ xfs/fs/xfs/xfs_inode.c	2011-07-06 10:10:36.756423995 +0200
+@@ -1259,7 +1259,6 @@ xfs_itruncate_extents(
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_IOLOCK_EXCL));
+ 	ASSERT(new_size <= ip->i_size);
+ 	ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
+-	ASSERT(ip->i_transp == tp);
+ 	ASSERT(ip->i_itemp != NULL);
+ 	ASSERT(ip->i_itemp->ili_lock_flags == 0);
+ 	ASSERT(!XFS_NOT_DQATTACHED(mp, ip));
+@@ -1435,7 +1434,6 @@ xfs_iunlink(
  
- /*
-- * Calculate the last possible buffered byte in a file.  This must
-- * include data that was buffered beyond the EOF by the write code.
-- * This also needs to deal with overflowing the xfs_fsize_t type
-- * which can happen for sizes near the limit.
-- *
-- * We also need to take into account any blocks beyond the EOF.  It
-- * may be the case that they were buffered by a write which failed.
-- * In that case the pages will still be in memory, but the inode size
-- * will never have been updated.
-- */
--STATIC xfs_fsize_t
--xfs_file_last_byte(
--	xfs_inode_t	*ip)
--{
--	xfs_mount_t	*mp;
--	xfs_fsize_t	last_byte;
--	xfs_fileoff_t	last_block;
--	xfs_fileoff_t	size_last_block;
--	int		error;
--
--	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL|XFS_IOLOCK_SHARED));
--
--	mp = ip->i_mount;
--	/*
--	 * Only check for blocks beyond the EOF if the extents have
--	 * been read in.  This eliminates the need for the inode lock,
--	 * and it also saves us from looking when it really isn't
--	 * necessary.
--	 */
--	if (ip->i_df.if_flags & XFS_IFEXTENTS) {
--		xfs_ilock(ip, XFS_ILOCK_SHARED);
--		error = xfs_bmap_last_offset(NULL, ip, &last_block,
--			XFS_DATA_FORK);
--		xfs_iunlock(ip, XFS_ILOCK_SHARED);
--		if (error) {
--			last_block = 0;
--		}
--	} else {
--		last_block = 0;
--	}
--	size_last_block = XFS_B_TO_FSB(mp, (xfs_ufsize_t)ip->i_size);
--	last_block = XFS_FILEOFF_MAX(last_block, size_last_block);
--
--	last_byte = XFS_FSB_TO_B(mp, last_block);
--	if (last_byte < 0) {
--		return XFS_MAXIOFFSET(mp);
--	}
--	last_byte += (1 << mp->m_writeio_log);
--	if (last_byte < 0) {
--		return XFS_MAXIOFFSET(mp);
--	}
--	return last_byte;
--}
--
--/*
-- * Start the truncation of the file to new_size.  The new size
-- * must be smaller than the current size.  This routine will
-- * clear the buffer and page caches of file data in the removed
-- * range, and xfs_itruncate_finish() will remove the underlying
-- * disk blocks.
-- *
-- * The inode must have its I/O lock locked EXCLUSIVELY, and it
-- * must NOT have the inode lock held at all.  This is because we're
-- * calling into the buffer/page cache code and we can't hold the
-- * inode lock when we do so.
-- *
-- * We need to wait for any direct I/Os in flight to complete before we
-- * proceed with the truncate. This is needed to prevent the extents
-- * being read or written by the direct I/Os from being removed while the
-- * I/O is in flight as there is no other method of synchronising
-- * direct I/O with the truncate operation.  Also, because we hold
-- * the IOLOCK in exclusive mode, we prevent new direct I/Os from being
-- * started until the truncate completes and drops the lock. Essentially,
-- * the xfs_ioend_wait() call forms an I/O barrier that provides strict
-- * ordering between direct I/Os and the truncate operation.
-- *
-- * The flags parameter can have either the value XFS_ITRUNC_DEFINITE
-- * or XFS_ITRUNC_MAYBE.  The XFS_ITRUNC_MAYBE value should be used
-- * in the case that the caller is locking things out of order and
-- * may not be able to call xfs_itruncate_finish() with the inode lock
-- * held without dropping the I/O lock.  If the caller must drop the
-- * I/O lock before calling xfs_itruncate_finish(), then xfs_itruncate_start()
-- * must be called again with all the same restrictions as the initial
-- * call.
-- */
--int
--xfs_itruncate_start(
--	xfs_inode_t	*ip,
--	uint		flags,
--	xfs_fsize_t	new_size)
--{
--	xfs_fsize_t	last_byte;
--	xfs_off_t	toss_start;
--	xfs_mount_t	*mp;
--	int		error = 0;
--
--	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
--	ASSERT((new_size == 0) || (new_size <= ip->i_size));
--	ASSERT((flags == XFS_ITRUNC_DEFINITE) ||
--	       (flags == XFS_ITRUNC_MAYBE));
--
--	mp = ip->i_mount;
--
--	/* wait for the completion of any pending DIOs */
--	if (new_size == 0 || new_size < ip->i_size)
--		xfs_ioend_wait(ip);
--
--	/*
--	 * Call toss_pages or flushinval_pages to get rid of pages
--	 * overlapping the region being removed.  We have to use
--	 * the less efficient flushinval_pages in the case that the
--	 * caller may not be able to finish the truncate without
--	 * dropping the inode's I/O lock.  Make sure
--	 * to catch any pages brought in by buffers overlapping
--	 * the EOF by searching out beyond the isize by our
--	 * block size. We round new_size up to a block boundary
--	 * so that we don't toss things on the same block as
--	 * new_size but before it.
--	 *
--	 * Before calling toss_page or flushinval_pages, make sure to
--	 * call remapf() over the same region if the file is mapped.
--	 * This frees up mapped file references to the pages in the
--	 * given range and for the flushinval_pages case it ensures
--	 * that we get the latest mapped changes flushed out.
--	 */
--	toss_start = XFS_B_TO_FSB(mp, (xfs_ufsize_t)new_size);
--	toss_start = XFS_FSB_TO_B(mp, toss_start);
--	if (toss_start < 0) {
--		/*
--		 * The place to start tossing is beyond our maximum
--		 * file size, so there is no way that the data extended
--		 * out there.
--		 */
--		return 0;
--	}
--	last_byte = xfs_file_last_byte(ip);
--	trace_xfs_itruncate_start(ip, new_size, flags, toss_start, last_byte);
--	if (last_byte > toss_start) {
--		if (flags & XFS_ITRUNC_DEFINITE) {
--			xfs_tosspages(ip, toss_start,
--					-1, FI_REMAPF_LOCKED);
--		} else {
--			error = xfs_flushinval_pages(ip, toss_start,
--					-1, FI_REMAPF_LOCKED);
--		}
--	}
--
--#ifdef DEBUG
--	if (new_size == 0) {
--		ASSERT(VN_CACHED(VFS_I(ip)) == 0);
--	}
--#endif
--	return error;
--}
--
--/*
-- * Shrink the file to the given new_size.  The new size must be smaller than
-- * the current size.  This will free up the underlying blocks in the removed
-- * range after a call to xfs_itruncate_start() or xfs_atruncate_start().
-+ * Free up the underlying blocks past new_size.  The new size must be
-+ * smaller than the current size.
-  *
-  * The transaction passed to this routine must have made a permanent log
-  * reservation of at least XFS_ITRUNCATE_LOG_RES.  This routine may commit the
-@@ -1387,7 +1230,7 @@ xfs_itruncate_start(
-  * will be "held" within the returned transaction.  This routine does NOT
-  * require any disk space to be reserved for it within the transaction.
-  *
-- * The fork parameter must be either xfs_attr_fork or xfs_data_fork, and it
-+ * The fork parameter must be either XFS_ATTR_FORK or XFS_DATA_FORK, and it
-  * indicates the fork which is to be truncated.  For the attribute fork we only
-  * support truncation to size 0.
-  *
-Index: xfs/fs/xfs/xfs_vnodeops.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_vnodeops.c	2011-06-29 11:29:07.158281874 +0200
-+++ xfs/fs/xfs/xfs_vnodeops.c	2011-06-29 11:29:11.888256249 +0200
-@@ -197,13 +197,6 @@ xfs_free_eofblocks(
- 		 */
- 		tp = xfs_trans_alloc(mp, XFS_TRANS_INACTIVE);
+ 	ASSERT(ip->i_d.di_nlink == 0);
+ 	ASSERT(ip->i_d.di_mode != 0);
+-	ASSERT(ip->i_transp == tp);
  
--		/*
--		 * Do the xfs_itruncate_start() call before
--		 * reserving any log space because
--		 * itruncate_start will call into the buffer
--		 * cache and we can't
--		 * do that within a transaction.
--		 */
- 		if (flags & XFS_FREE_EOF_TRYLOCK) {
- 			if (!xfs_ilock_nowait(ip, XFS_IOLOCK_EXCL)) {
- 				xfs_trans_cancel(tp, 0);
-@@ -212,13 +205,6 @@ xfs_free_eofblocks(
- 		} else {
- 			xfs_ilock(ip, XFS_IOLOCK_EXCL);
- 		}
--		error = xfs_itruncate_start(ip, XFS_ITRUNC_DEFINITE,
--				    ip->i_size);
--		if (error) {
--			xfs_trans_cancel(tp, 0);
--			xfs_iunlock(ip, XFS_IOLOCK_EXCL);
--			return error;
--		}
+ 	mp = tp->t_mountp;
  
- 		error = xfs_trans_reserve(tp, 0,
- 					  XFS_ITRUNCATE_LOG_RES(mp),
-@@ -660,20 +646,9 @@ xfs_inactive(
+@@ -1827,7 +1825,6 @@ xfs_ifree(
+ 	xfs_buf_t       	*ibp;
  
- 	tp = xfs_trans_alloc(mp, XFS_TRANS_INACTIVE);
- 	if (truncate) {
--		/*
--		 * Do the xfs_itruncate_start() call before
--		 * reserving any log space because itruncate_start
--		 * will call into the buffer cache and we can't
--		 * do that within a transaction.
--		 */
- 		xfs_ilock(ip, XFS_IOLOCK_EXCL);
- 
--		error = xfs_itruncate_start(ip, XFS_ITRUNC_DEFINITE, 0);
--		if (error) {
--			xfs_trans_cancel(tp, 0);
--			xfs_iunlock(ip, XFS_IOLOCK_EXCL);
--			return VN_INACTIVE_CACHE;
--		}
-+		xfs_ioend_wait(ip);
- 
- 		error = xfs_trans_reserve(tp, 0,
- 					  XFS_ITRUNCATE_LOG_RES(mp),
-Index: xfs/fs/xfs/linux-2.6/xfs_trace.h
-===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_trace.h	2011-06-29 11:29:02.518307010 +0200
-+++ xfs/fs/xfs/linux-2.6/xfs_trace.h	2011-06-29 11:29:11.891589564 +0200
-@@ -1029,40 +1029,6 @@ DEFINE_SIMPLE_IO_EVENT(xfs_delalloc_enos
- DEFINE_SIMPLE_IO_EVENT(xfs_unwritten_convert);
- DEFINE_SIMPLE_IO_EVENT(xfs_get_blocks_notfound);
- 
--
--TRACE_EVENT(xfs_itruncate_start,
--	TP_PROTO(struct xfs_inode *ip, xfs_fsize_t new_size, int flag,
--		 xfs_off_t toss_start, xfs_off_t toss_finish),
--	TP_ARGS(ip, new_size, flag, toss_start, toss_finish),
--	TP_STRUCT__entry(
--		__field(dev_t, dev)
--		__field(xfs_ino_t, ino)
--		__field(xfs_fsize_t, size)
--		__field(xfs_fsize_t, new_size)
--		__field(xfs_off_t, toss_start)
--		__field(xfs_off_t, toss_finish)
--		__field(int, flag)
--	),
--	TP_fast_assign(
--		__entry->dev = VFS_I(ip)->i_sb->s_dev;
--		__entry->ino = ip->i_ino;
--		__entry->size = ip->i_d.di_size;
--		__entry->new_size = new_size;
--		__entry->toss_start = toss_start;
--		__entry->toss_finish = toss_finish;
--		__entry->flag = flag;
--	),
--	TP_printk("dev %d:%d ino 0x%llx %s size 0x%llx new_size 0x%llx "
--		  "toss start 0x%llx toss finish 0x%llx",
--		  MAJOR(__entry->dev), MINOR(__entry->dev),
--		  __entry->ino,
--		  __print_flags(__entry->flag, "|", XFS_ITRUNC_FLAGS),
--		  __entry->size,
--		  __entry->new_size,
--		  __entry->toss_start,
--		  __entry->toss_finish)
--);
--
- DECLARE_EVENT_CLASS(xfs_itrunc_class,
- 	TP_PROTO(struct xfs_inode *ip, xfs_fsize_t new_size),
- 	TP_ARGS(ip, new_size),
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+-	ASSERT(ip->i_transp == tp);
+ 	ASSERT(ip->i_d.di_nlink == 0);
+ 	ASSERT(ip->i_d.di_nextents == 0);
+ 	ASSERT(ip->i_d.di_anextents == 0);
 Index: xfs/fs/xfs/xfs_inode.h
 ===================================================================
---- xfs.orig/fs/xfs/xfs_inode.h	2011-06-29 11:29:02.531640272 +0200
-+++ xfs/fs/xfs/xfs_inode.h	2011-06-29 11:29:11.891589564 +0200
-@@ -458,16 +458,6 @@ static inline void xfs_ifunlock(xfs_inod
- extern struct lock_class_key xfs_iolock_reclaimable;
+--- xfs.orig/fs/xfs/xfs_inode.h	2011-07-06 10:05:37.326439153 +0200
++++ xfs/fs/xfs/xfs_inode.h	2011-07-06 10:10:36.756423995 +0200
+@@ -241,7 +241,6 @@ typedef struct xfs_inode {
+ 	xfs_ifork_t		i_df;		/* data fork */
+ 
+ 	/* Transaction and locking information. */
+-	struct xfs_trans	*i_transp;	/* ptr to owning transaction*/
+ 	struct xfs_inode_log_item *i_itemp;	/* logging information */
+ 	mrlock_t		i_lock;		/* inode lock */
+ 	mrlock_t		i_iolock;	/* inode IO lock */
+Index: xfs/fs/xfs/xfs_inode_item.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_inode_item.c	2011-07-06 09:11:57.976602147 +0200
++++ xfs/fs/xfs/xfs_inode_item.c	2011-07-06 10:10:36.759757328 +0200
+@@ -636,11 +636,6 @@ xfs_inode_item_unlock(
+ 	ASSERT(xfs_isilocked(iip->ili_inode, XFS_ILOCK_EXCL));
+ 
+ 	/*
+-	 * Clear the transaction pointer in the inode.
+-	 */
+-	ip->i_transp = NULL;
+-
+-	/*
+ 	 * If the inode needed a separate buffer with which to log
+ 	 * its extents, then free it now.
+ 	 */
+Index: xfs/fs/xfs/xfs_trans_inode.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_trans_inode.c	2011-07-06 09:11:57.993268813 +0200
++++ xfs/fs/xfs/xfs_trans_inode.c	2011-07-06 10:10:36.763090660 +0200
+@@ -55,7 +55,6 @@ xfs_trans_ijoin(
+ {
+ 	xfs_inode_log_item_t	*iip;
+ 
+-	ASSERT(ip->i_transp == NULL);
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+ 	if (ip->i_itemp == NULL)
+ 		xfs_inode_item_init(ip, ip->i_mount);
+@@ -68,12 +67,6 @@ xfs_trans_ijoin(
+ 	xfs_trans_add_item(tp, &iip->ili_item);
+ 
+ 	xfs_trans_inode_broot_debug(ip);
+-
+-	/*
+-	 * Initialize i_transp so we can find it with xfs_inode_incore()
+-	 * in xfs_trans_iget() above.
+-	 */
+-	ip->i_transp = tp;
+ }
  
  /*
-- * Flags for xfs_itruncate_start().
-- */
--#define	XFS_ITRUNC_DEFINITE	0x1
--#define	XFS_ITRUNC_MAYBE	0x2
--
--#define XFS_ITRUNC_FLAGS \
--	{ XFS_ITRUNC_DEFINITE,	"DEFINITE" }, \
--	{ XFS_ITRUNC_MAYBE,	"MAYBE" }
--
--/*
-  * For multiple groups support: if S_ISGID bit is set in the parent
-  * directory, group of new file is set to that of the parent, and
-  * new subdirectory gets S_ISGID bit from parent.
-@@ -501,7 +491,6 @@ uint		xfs_ip2xflags(struct xfs_inode *);
- uint		xfs_dic2xflags(struct xfs_dinode *);
- int		xfs_ifree(struct xfs_trans *, xfs_inode_t *,
- 			   struct xfs_bmap_free *);
--int		xfs_itruncate_start(xfs_inode_t *, uint, xfs_fsize_t);
- int		xfs_itruncate_finish(struct xfs_trans **, xfs_inode_t *,
- 				     xfs_fsize_t, int, int);
- int		xfs_iunlink(struct xfs_trans *, xfs_inode_t *);
+@@ -111,7 +104,6 @@ xfs_trans_ichgtime(
+ 
+ 	ASSERT(tp);
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+-	ASSERT(ip->i_transp == tp);
+ 
+ 	tv = current_fs_time(inode->i_sb);
+ 
+@@ -140,7 +132,6 @@ xfs_trans_log_inode(
+ 	xfs_inode_t	*ip,
+ 	uint		flags)
+ {
+-	ASSERT(ip->i_transp == tp);
+ 	ASSERT(ip->i_itemp != NULL);
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+ 
 
 _______________________________________________
 xfs mailing list
