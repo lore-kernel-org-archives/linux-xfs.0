@@ -1,25 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p67B6gjX159845 for <xfs@oss.sgi.com>; Thu, 7 Jul 2011 06:06:42 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 92C4E52CE4
-	for <xfs@oss.sgi.com>; Thu,  7 Jul 2011 04:06:41 -0700 (PDT)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	Aujr4he8WiUtTG1N for <xfs@oss.sgi.com>;
-	Thu, 07 Jul 2011 04:06:41 -0700 (PDT)
-Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1QemPp-0003qa-3K
-	for xfs@oss.sgi.com; Thu, 07 Jul 2011 11:06:41 +0000
-Message-Id: <20110707110641.054317848@bombadil.infradead.org>
-Date: Thu, 07 Jul 2011 07:05:38 -0400
+	p67B6hvk159850 for <xfs@oss.sgi.com>; Thu, 7 Jul 2011 06:06:43 -0500
+Message-Id: <20110707110640.863389024@bombadil.infradead.org>
+Date: Thu, 07 Jul 2011 07:05:37 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 03/28] xfs: work around bogus gcc warning in
-	xfs_allocbt_init_cursor
+Subject: [PATCH 02/28] xfs: re-enable non-blocking behaviour in xfs_map_blocks
 References: <20110707110535.205001532@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-fix-xfs_allocbt_init_cursor-warning
+Content-Disposition: inline; filename=xfs-writepage-repair-nolock-support
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,43 +22,33 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: Alex Elder <aelder@sgi.com>
 
-GCC 4.6 complains about an array subscript is above array bounds when
-using the btree index to index into the agf_levels array.  The only
-two indices passed in are 0 and 1, and we have an assert insuring that.
+The non-blockig behaviour in xfs_vm_writepage currently is conditional on
+having both the WB_SYNC_NONE sync_mode and the nonblocking flag set.
+The latter used to be used by both pdflush, kswapd and a few other places
+in older kernels, but has been fading out starting with the introduction
+of the per-bdi flusher threads.
 
-Replace the trick of using the array index directly with using constants
-in the already existing branch for assigning the XFS_BTREE_LASTREC_UPDATE
-flag.
+Enable the non-blocking behaviour for all WB_SYNC_NONE calls to get back
+the behaviour we want.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Alex Elder <aelder@sgi.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Alex Elder <aelder@sgi.com>
 
-Index: xfs/fs/xfs/xfs_alloc_btree.c
+Index: xfs/fs/xfs/linux-2.6/xfs_aops.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_alloc_btree.c	2011-06-17 14:16:27.929065669 +0200
-+++ xfs/fs/xfs/xfs_alloc_btree.c	2011-06-17 14:17:22.145729599 +0200
-@@ -427,13 +427,16 @@ xfs_allocbt_init_cursor(
+--- xfs.orig/fs/xfs/linux-2.6/xfs_aops.c	2011-07-06 09:12:22.466600907 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_aops.c	2011-07-06 09:12:26.069934110 +0200
+@@ -960,7 +960,7 @@ xfs_vm_writepage(
+ 	offset = page_offset(page);
+ 	type = IO_OVERWRITE;
  
- 	cur->bc_tp = tp;
- 	cur->bc_mp = mp;
--	cur->bc_nlevels = be32_to_cpu(agf->agf_levels[btnum]);
- 	cur->bc_btnum = btnum;
- 	cur->bc_blocklog = mp->m_sb.sb_blocklog;
--
- 	cur->bc_ops = &xfs_allocbt_ops;
--	if (btnum == XFS_BTNUM_CNT)
-+
-+	if (btnum == XFS_BTNUM_CNT) {
-+		cur->bc_nlevels = be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNT]);
- 		cur->bc_flags = XFS_BTREE_LASTREC_UPDATE;
-+	} else {
-+		cur->bc_nlevels = be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNO]);
-+	}
+-	if (wbc->sync_mode == WB_SYNC_NONE && wbc->nonblocking)
++	if (wbc->sync_mode == WB_SYNC_NONE)
+ 		nonblocking = 1;
  
- 	cur->bc_private.a.agbp = agbp;
- 	cur->bc_private.a.agno = agno;
+ 	do {
 
 _______________________________________________
 xfs mailing list
