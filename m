@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p67KY1BF194086 for <xfs@oss.sgi.com>; Thu, 7 Jul 2011 15:34:01 -0500
-Subject: Re: [PATCH 3/5] xfs: remove confusing ail cursor wrapper
+	p67LIJZX195504 for <xfs@oss.sgi.com>; Thu, 7 Jul 2011 16:18:19 -0500
+Subject: Re: [PATCH 5/5] xfs: add size update tracepoint to IO completion
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1309757260-5484-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1309757260-5484-6-git-send-email-david@fromorbit.com>
 References: <1309757260-5484-1-git-send-email-david@fromorbit.com>
-	<1309757260-5484-4-git-send-email-david@fromorbit.com>
-Date: Thu, 7 Jul 2011 15:33:56 -0500
-Message-ID: <1310070836.1980.66.camel@doink>
+	<1309757260-5484-6-git-send-email-david@fromorbit.com>
+Date: Thu, 7 Jul 2011 16:18:14 -0500
+Message-ID: <1310073494.1980.80.camel@doink>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -29,19 +29,11 @@ Cc: xfs@oss.sgi.com
 On Mon, 2011-07-04 at 15:27 +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> xfs_trans_ail_cursor_set() doesn't set the cursor to the current log
-> item, it sets it to the next item. There is already a function for
-> doing this - xfs_trans_ail_cursor_next() - and the _set function is
-> simply a two line wrapper.  Remove it and open code the setting of
-> the cursor in the two locations that call it to remove the
-> confusion.
+> For improving insight into IO completion behaviour.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-Good idea.  I also appreciate the comment improvement;
-the "returns NULL" is something I wanted to suggest
-while looking at the previous patch, but that section
-of the file wasn't in that patch.
+Looks good.
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
 
