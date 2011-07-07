@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p67B6lBS160047 for <xfs@oss.sgi.com>; Thu, 7 Jul 2011 06:06:47 -0500
+	p67B6kdT159989 for <xfs@oss.sgi.com>; Thu, 7 Jul 2011 06:06:46 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 740CE176A80B
-	for <xfs@oss.sgi.com>; Thu,  7 Jul 2011 04:06:46 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7CA4F15ECDA7
+	for <xfs@oss.sgi.com>; Thu,  7 Jul 2011 04:06:45 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	QY2utrqxuMWmcf6y for <xfs@oss.sgi.com>;
-	Thu, 07 Jul 2011 04:06:46 -0700 (PDT)
+	KsRGYstyYb0VaFUX for <xfs@oss.sgi.com>;
+	Thu, 07 Jul 2011 04:06:45 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1QemPt-000439-Tc
-	for xfs@oss.sgi.com; Thu, 07 Jul 2011 11:06:45 +0000
-Message-Id: <20110707110645.880386962@bombadil.infradead.org>
-Date: Thu, 07 Jul 2011 07:06:02 -0400
+	Linux)) id 1QemPs-000402-Mg
+	for xfs@oss.sgi.com; Thu, 07 Jul 2011 11:06:44 +0000
+Message-Id: <20110707110644.667342204@bombadil.infradead.org>
+Date: Thu, 07 Jul 2011 07:05:56 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 27/28] xfs: cleanup I/O-related buffer flags
+Subject: [PATCH 21/28] xfs: cleanup struct xfs_dir2_leaf
 References: <20110707110535.205001532@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-buf-cleanup-flags
+Content-Disposition: inline; filename=xfs-cleanup-xfs_dir2_leaf_t
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,209 +34,152 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Remove the unused and misnamed _XBF_RUN_QUEUES flag, rename XBF_LOG_BUFFER
-to the more fitting XBF_SYNCIO, and split XBF_ORDERED into XBF_FUA and
-XBF_FLUSH to allow more fine grained control over the bio flags.  Also
-cleanup processing of the flags in _xfs_buf_ioapply to make more sense,
-and renumber the sparse flag number space to group flags by purpose.
+Simplify the confusing xfs_dir2_leaf structure.  It is supposed to describe
+an XFS dir2 leaf format btree block, but due to the variable sized nature
+of almost all elements in it it can't actuall do anything close to that
+job.   Remove the members that are after the first variable sized array,
+given that they could only be used for sizeof expressions that can as well
+just use the underlying types directly, and make the ents array a real
+C99 variable sized array.
+
+Also factor out the xfs_dir2_leaf_size, to make the sizing of a leaf
+entry which already was convoluted somewhat readable after using the
+longer type names in the sizeof expressions.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Alex Elder <aelder@sgi.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-Index: xfs/fs/xfs/linux-2.6/xfs_buf.c
+Index: xfs/fs/xfs/xfs_dir2_leaf.c
 ===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_buf.c	2011-07-06 11:04:09.576261329 +0200
-+++ xfs/fs/xfs/linux-2.6/xfs_buf.c	2011-07-06 11:05:29.006257308 +0200
-@@ -592,10 +592,8 @@ _xfs_buf_read(
- 	ASSERT(!(flags & (XBF_DELWRI|XBF_WRITE)));
- 	ASSERT(bp->b_bn != XFS_BUF_DADDR_NULL);
- 
--	bp->b_flags &= ~(XBF_WRITE | XBF_ASYNC | XBF_DELWRI | \
--			XBF_READ_AHEAD | _XBF_RUN_QUEUES);
--	bp->b_flags |= flags & (XBF_READ | XBF_ASYNC | \
--			XBF_READ_AHEAD | _XBF_RUN_QUEUES);
-+	bp->b_flags &= ~(XBF_WRITE | XBF_ASYNC | XBF_DELWRI | XBF_READ_AHEAD);
-+	bp->b_flags |= flags & (XBF_READ | XBF_ASYNC | XBF_READ_AHEAD);
- 
- 	status = xfs_buf_iorequest(bp);
- 	if (status || XFS_BUF_ISERROR(bp) || (flags & XBF_ASYNC))
-@@ -1211,23 +1209,21 @@ _xfs_buf_ioapply(
- 	total_nr_pages = bp->b_page_count;
- 	map_i = 0;
- 
--	if (bp->b_flags & XBF_ORDERED) {
--		ASSERT(!(bp->b_flags & XBF_READ));
--		rw = WRITE_FLUSH_FUA;
--	} else if (bp->b_flags & XBF_LOG_BUFFER) {
--		ASSERT(!(bp->b_flags & XBF_READ_AHEAD));
--		bp->b_flags &= ~_XBF_RUN_QUEUES;
--		rw = (bp->b_flags & XBF_WRITE) ? WRITE_SYNC : READ_SYNC;
--	} else if (bp->b_flags & _XBF_RUN_QUEUES) {
--		ASSERT(!(bp->b_flags & XBF_READ_AHEAD));
--		bp->b_flags &= ~_XBF_RUN_QUEUES;
--		rw = (bp->b_flags & XBF_WRITE) ? WRITE_META : READ_META;
-+	if (bp->b_flags & XBF_WRITE) {
-+		if (bp->b_flags & XBF_SYNCIO)
-+			rw = WRITE_SYNC;
-+		else
-+			rw = WRITE;
-+		if (bp->b_flags & XBF_FUA)
-+			rw |= REQ_FUA;
-+		if (bp->b_flags & XBF_FLUSH)
-+			rw |= REQ_FLUSH;
-+	} else if (bp->b_flags & XBF_READ_AHEAD) {
-+		rw = READA;
- 	} else {
--		rw = (bp->b_flags & XBF_WRITE) ? WRITE :
--		     (bp->b_flags & XBF_READ_AHEAD) ? READA : READ;
-+		rw = READ;
- 	}
- 
--
- next_chunk:
- 	atomic_inc(&bp->b_io_remaining);
- 	nr_pages = BIO_MAX_SECTORS >> (PAGE_SHIFT - BBSHIFT);
-@@ -1689,8 +1685,7 @@ xfs_buf_delwri_split(
- 				break;
- 			}
- 
--			bp->b_flags &= ~(XBF_DELWRI|_XBF_DELWRI_Q|
--					 _XBF_RUN_QUEUES);
-+			bp->b_flags &= ~(XBF_DELWRI | _XBF_DELWRI_Q);
- 			bp->b_flags |= XBF_WRITE;
- 			list_move_tail(&bp->b_list, list);
- 			trace_xfs_buf_delwri_split(bp, _RET_IP_);
-Index: xfs/fs/xfs/linux-2.6/xfs_buf.h
-===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_buf.h	2011-07-06 11:03:48.826262375 +0200
-+++ xfs/fs/xfs/linux-2.6/xfs_buf.h	2011-07-06 11:05:48.826256301 +0200
-@@ -46,43 +46,46 @@ typedef enum {
- 
- #define XBF_READ	(1 << 0) /* buffer intended for reading from device */
- #define XBF_WRITE	(1 << 1) /* buffer intended for writing to device */
--#define XBF_MAPPED	(1 << 2) /* buffer mapped (b_addr valid) */
-+#define XBF_READ_AHEAD	(1 << 2) /* asynchronous read-ahead */
-+#define XBF_MAPPED	(1 << 3) /* buffer mapped (b_addr valid) */
- #define XBF_ASYNC	(1 << 4) /* initiator will not wait for completion */
- #define XBF_DONE	(1 << 5) /* all pages in the buffer uptodate */
- #define XBF_DELWRI	(1 << 6) /* buffer has dirty pages */
- #define XBF_STALE	(1 << 7) /* buffer has been staled, do not find it */
--#define XBF_ORDERED	(1 << 11)/* use ordered writes */
--#define XBF_READ_AHEAD	(1 << 12)/* asynchronous read-ahead */
--#define XBF_LOG_BUFFER	(1 << 13)/* this is a buffer used for the log */
+--- xfs.orig/fs/xfs/xfs_dir2_leaf.c	2011-07-07 10:06:54.418727503 +0200
++++ xfs/fs/xfs/xfs_dir2_leaf.c	2011-07-07 10:10:13.968717400 +0200
+@@ -367,9 +367,12 @@ xfs_dir2_leaf_addname(
+ 	/*
+ 	 * How many bytes do we need in the leaf block?
+ 	 */
+-	needbytes =
+-		(leaf->hdr.stale ? 0 : (uint)sizeof(leaf->ents[0])) +
+-		(use_block != -1 ? 0 : (uint)sizeof(leaf->bests[0]));
++	needbytes = 0;
++	if (!leaf->hdr.stale)
++		needbytes += sizeof(xfs_dir2_leaf_entry_t);
++	if (use_block == -1)
++		needbytes += sizeof(xfs_dir2_data_off_t);
 +
-+/* I/O hints for the BIO layer */
-+#define XBF_SYNCIO	(1 << 10)/* treat this buffer as synchronous I/O */
-+#define XBF_FUA		(1 << 11)/* force cache write through mode */
-+#define XBF_FLUSH	(1 << 12)/* flush the disk cache before a write */
- 
- /* flags used only as arguments to access routines */
--#define XBF_LOCK	(1 << 14)/* lock requested */
--#define XBF_TRYLOCK	(1 << 15)/* lock requested, but do not wait */
--#define XBF_DONT_BLOCK	(1 << 16)/* do not block in current thread */
-+#define XBF_LOCK	(1 << 15)/* lock requested */
-+#define XBF_TRYLOCK	(1 << 16)/* lock requested, but do not wait */
-+#define XBF_DONT_BLOCK	(1 << 17)/* do not block in current thread */
- 
- /* flags used only internally */
--#define _XBF_PAGES	(1 << 18)/* backed by refcounted pages */
--#define	_XBF_RUN_QUEUES	(1 << 19)/* run block device task queue	*/
--#define	_XBF_KMEM	(1 << 20)/* backed by heap memory */
--#define _XBF_DELWRI_Q	(1 << 21)/* buffer on delwri queue */
-+#define _XBF_PAGES	(1 << 20)/* backed by refcounted pages */
-+#define _XBF_KMEM	(1 << 21)/* backed by heap memory */
-+#define _XBF_DELWRI_Q	(1 << 22)/* buffer on delwri queue */
- 
- typedef unsigned int xfs_buf_flags_t;
- 
- #define XFS_BUF_FLAGS \
- 	{ XBF_READ,		"READ" }, \
- 	{ XBF_WRITE,		"WRITE" }, \
-+	{ XBF_READ_AHEAD,	"READ_AHEAD" }, \
- 	{ XBF_MAPPED,		"MAPPED" }, \
- 	{ XBF_ASYNC,		"ASYNC" }, \
- 	{ XBF_DONE,		"DONE" }, \
- 	{ XBF_DELWRI,		"DELWRI" }, \
- 	{ XBF_STALE,		"STALE" }, \
--	{ XBF_ORDERED,		"ORDERED" }, \
--	{ XBF_READ_AHEAD,	"READ_AHEAD" }, \
-+	{ XBF_SYNCIO,		"SYNCIO" }, \
-+	{ XBF_FUA,		"FUA" }, \
-+	{ XBF_FLUSH,		"FLUSH" }, \
- 	{ XBF_LOCK,		"LOCK" },  	/* should never be set */\
- 	{ XBF_TRYLOCK,		"TRYLOCK" }, 	/* ditto */\
- 	{ XBF_DONT_BLOCK,	"DONT_BLOCK" },	/* ditto */\
- 	{ _XBF_PAGES,		"PAGES" }, \
--	{ _XBF_RUN_QUEUES,	"RUN_QUEUES" }, \
- 	{ _XBF_KMEM,		"KMEM" }, \
- 	{ _XBF_DELWRI_Q,	"DELWRI_Q" }
- 
-@@ -230,8 +233,9 @@ extern void xfs_buf_terminate(void);
- 
- 
- #define XFS_BUF_BFLAGS(bp)	((bp)->b_flags)
--#define XFS_BUF_ZEROFLAGS(bp)	((bp)->b_flags &= \
--		~(XBF_READ|XBF_WRITE|XBF_ASYNC|XBF_DELWRI|XBF_ORDERED))
-+#define XFS_BUF_ZEROFLAGS(bp) \
-+	((bp)->b_flags &= ~(XBF_READ|XBF_WRITE|XBF_ASYNC|XBF_DELWRI| \
-+			    XBF_SYNCIO|XBF_FUA|XBF_FLUSH))
- 
- void xfs_buf_stale(struct xfs_buf *bp);
- #define XFS_BUF_STALE(bp)	xfs_buf_stale(bp);
-@@ -263,10 +267,6 @@ void xfs_buf_stale(struct xfs_buf *bp);
- #define XFS_BUF_UNASYNC(bp)	((bp)->b_flags &= ~XBF_ASYNC)
- #define XFS_BUF_ISASYNC(bp)	((bp)->b_flags & XBF_ASYNC)
- 
--#define XFS_BUF_ORDERED(bp)	((bp)->b_flags |= XBF_ORDERED)
--#define XFS_BUF_UNORDERED(bp)	((bp)->b_flags &= ~XBF_ORDERED)
--#define XFS_BUF_ISORDERED(bp)	((bp)->b_flags & XBF_ORDERED)
--
- #define XFS_BUF_HOLD(bp)	xfs_buf_hold(bp)
- #define XFS_BUF_READ(bp)	((bp)->b_flags |= XBF_READ)
- #define XFS_BUF_UNREAD(bp)	((bp)->b_flags &= ~XBF_READ)
-Index: xfs/fs/xfs/xfs_log.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_log.c	2011-07-06 11:04:09.576261329 +0200
-+++ xfs/fs/xfs/xfs_log.c	2011-07-06 15:29:10.062122957 +0200
-@@ -1268,7 +1268,6 @@ xlog_bdstrat(
- 		return 0;
- 	}
- 
--	bp->b_flags |= _XBF_RUN_QUEUES;
- 	xfs_buf_iorequest(bp);
+ 	/*
+ 	 * Now kill use_block if it refers to a missing block, so we
+ 	 * can use it as an indication of allocation needed.
+@@ -1763,6 +1766,20 @@ xfs_dir2_leaf_trim_data(
  	return 0;
  }
-@@ -1369,7 +1368,7 @@ xlog_sync(xlog_t		*log,
- 	XFS_BUF_ZEROFLAGS(bp);
- 	XFS_BUF_BUSY(bp);
- 	XFS_BUF_ASYNC(bp);
--	bp->b_flags |= XBF_LOG_BUFFER;
-+	bp->b_flags |= XBF_SYNCIO;
  
- 	if (log->l_mp->m_flags & XFS_MOUNT_BARRIER) {
- 		/*
-@@ -1380,7 +1379,7 @@ xlog_sync(xlog_t		*log,
- 		 */
- 		if (log->l_mp->m_logdev_targp != log->l_mp->m_ddev_targp)
- 			xfs_blkdev_issue_flush(log->l_mp->m_ddev_targp);
--		XFS_BUF_ORDERED(bp);
-+		bp->b_flags |= XBF_FUA | XBF_FLUSH;
++static inline size_t
++xfs_dir2_leaf_size(
++	struct xfs_dir2_leaf_hdr	*hdr,
++	int				counts)
++{
++	int			entries;
++
++	entries = be16_to_cpu(hdr->count) - be16_to_cpu(hdr->stale);
++	return sizeof(xfs_dir2_leaf_hdr_t) +
++	    entries * sizeof(xfs_dir2_leaf_entry_t) +
++	    counts * sizeof(xfs_dir2_data_off_t) +
++	    sizeof(xfs_dir2_leaf_tail_t);
++}
++
+ /*
+  * Convert node form directory to leaf form directory.
+  * The root of the node form dir needs to already be a LEAFN block.
+@@ -1844,18 +1861,17 @@ xfs_dir2_node_to_leaf(
+ 	free = fbp->data;
+ 	ASSERT(be32_to_cpu(free->hdr.magic) == XFS_DIR2_FREE_MAGIC);
+ 	ASSERT(!free->hdr.firstdb);
++
+ 	/*
+ 	 * Now see if the leafn and free data will fit in a leaf1.
+ 	 * If not, release the buffer and give up.
+ 	 */
+-	if ((uint)sizeof(leaf->hdr) +
+-	    (be16_to_cpu(leaf->hdr.count) - be16_to_cpu(leaf->hdr.stale)) * (uint)sizeof(leaf->ents[0]) +
+-	    be32_to_cpu(free->hdr.nvalid) * (uint)sizeof(leaf->bests[0]) +
+-	    (uint)sizeof(leaf->tail) >
+-	    mp->m_dirblksize) {
++	if (xfs_dir2_leaf_size(&leaf->hdr, be32_to_cpu(free->hdr.nvalid)) >
++			mp->m_dirblksize) {
+ 		xfs_da_brelse(tp, fbp);
+ 		return 0;
  	}
++
+ 	/*
+ 	 * If the leaf has any stale entries in it, compress them out.
+ 	 * The compact routine will log the header.
+@@ -1874,7 +1890,7 @@ xfs_dir2_node_to_leaf(
+ 	 * Set up the leaf bests table.
+ 	 */
+ 	memcpy(xfs_dir2_leaf_bests_p(ltp), free->bests,
+-		be32_to_cpu(ltp->bestcount) * sizeof(leaf->bests[0]));
++		be32_to_cpu(ltp->bestcount) * sizeof(xfs_dir2_data_off_t));
+ 	xfs_dir2_leaf_log_bests(tp, lbp, 0, be32_to_cpu(ltp->bestcount) - 1);
+ 	xfs_dir2_leaf_log_tail(tp, lbp);
+ 	xfs_dir2_leaf_check(dp, lbp);
+Index: xfs/fs/xfs/xfs_dir2_leaf.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_dir2_leaf.h	2011-07-07 10:06:54.432060837 +0200
++++ xfs/fs/xfs/xfs_dir2_leaf.h	2011-07-07 10:14:04.795372387 +0200
+@@ -18,6 +18,36 @@
+ #ifndef __XFS_DIR2_LEAF_H__
+ #define	__XFS_DIR2_LEAF_H__
  
- 	ASSERT(XFS_BUF_ADDR(bp) <= log->l_logBBsize-1);
-@@ -1413,9 +1412,9 @@ xlog_sync(xlog_t		*log,
- 		XFS_BUF_ZEROFLAGS(bp);
- 		XFS_BUF_BUSY(bp);
- 		XFS_BUF_ASYNC(bp);
--		bp->b_flags |= XBF_LOG_BUFFER;
-+		bp->b_flags |= XBF_SYNCIO;
- 		if (log->l_mp->m_flags & XFS_MOUNT_BARRIER)
--			XFS_BUF_ORDERED(bp);
-+			bp->b_flags |= XBF_FUA | XBF_FLUSH;
- 		dptr = XFS_BUF_PTR(bp);
- 		/*
- 		 * Bump the cycle numbers at the start of each block
++/*
++ * Directory format 2, leaf block structures.
++ *
++ * A pure data block looks like the following drawing on disk:
++ *
++ *    +---------------------------+
++ *    | xfs_dir2_leaf_hdr_t       |
++ *    +---------------------------+
++ *    | xfs_dir2_leaf_entry_t     |
++ *    | xfs_dir2_leaf_entry_t     |
++ *    | xfs_dir2_leaf_entry_t     |
++ *    | xfs_dir2_leaf_entry_t     |
++ *    | ...                       |
++ *    +---------------------------+
++ *    | xfs_dir2_data_off_t       |
++ *    | xfs_dir2_data_off_t       |
++ *    | xfs_dir2_data_off_t       |
++ *    | ...                       |
++ *    +---------------------------+
++ *    | xfs_dir2_leaf_tail_t      |
++ *    +---------------------------+
++ *
++ * The bests (xfs_dir2_data_off_t members) and tail are at the end of the
++ * block for single-leaf only (magic = XFS_DIR2_LEAF1_MAGIC not
++ * XFS_DIR2_LEAFN_MAGIC).
++ *
++ * As all the entries are variable size structures the accessors in this
++ * file should be used to iterate over them.
++ */
++
+ struct uio;
+ struct xfs_dabuf;
+ struct xfs_da_args;
+@@ -67,15 +97,10 @@ typedef struct xfs_dir2_leaf_tail {
+ 
+ /*
+  * Leaf block.
+- * bests and tail are at the end of the block for single-leaf only
+- * (magic = XFS_DIR2_LEAF1_MAGIC not XFS_DIR2_LEAFN_MAGIC).
+  */
+ typedef struct xfs_dir2_leaf {
+ 	xfs_dir2_leaf_hdr_t	hdr;		/* leaf header */
+-	xfs_dir2_leaf_entry_t	ents[1];	/* entries */
+-						/* ... */
+-	xfs_dir2_data_off_t	bests[1];	/* best free counts */
+-	xfs_dir2_leaf_tail_t	tail;		/* leaf tail */
++	xfs_dir2_leaf_entry_t	ents[];	/* entries */
+ } xfs_dir2_leaf_t;
+ 
+ /*
 
 _______________________________________________
 xfs mailing list
