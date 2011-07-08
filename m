@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p68ALPRB233463 for <xfs@oss.sgi.com>; Fri, 8 Jul 2011 05:21:25 -0500
+	p68AIqhX233327 for <xfs@oss.sgi.com>; Fri, 8 Jul 2011 05:18:53 -0500
 Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F26F714FFA84
-	for <xfs@oss.sgi.com>; Fri,  8 Jul 2011 03:21:24 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3E1D81E5D6C1
+	for <xfs@oss.sgi.com>; Fri,  8 Jul 2011 03:18:50 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	zXDYiPNxu88NiE8p for <xfs@oss.sgi.com>;
-	Fri, 08 Jul 2011 03:21:24 -0700 (PDT)
-Date: Fri, 8 Jul 2011 20:21:22 +1000
+	TUfwjFoMHvvQmhr7 for <xfs@oss.sgi.com>;
+	Fri, 08 Jul 2011 03:18:50 -0700 (PDT)
+Date: Fri, 8 Jul 2011 20:18:48 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 21/28] xfs: cleanup struct xfs_dir2_leaf
-Message-ID: <20110708102122.GN1026@dastard>
+Subject: Re: [PATCH 00/28] patch queue for Linux 3.1, V3
+Message-ID: <20110708101848.GJ1026@dastard>
 References: <20110707110535.205001532@bombadil.infradead.org>
-	<20110707110644.667342204@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110707110644.667342204@bombadil.infradead.org>
+In-Reply-To: <20110707110535.205001532@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,36 +25,25 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Thu, Jul 07, 2011 at 07:05:56AM -0400, Christoph Hellwig wrote:
-> Simplify the confusing xfs_dir2_leaf structure.  It is supposed to describe
-> an XFS dir2 leaf format btree block, but due to the variable sized nature
-> of almost all elements in it it can't actuall do anything close to that
-> job.   Remove the members that are after the first variable sized array,
-> given that they could only be used for sizeof expressions that can as well
-> just use the underlying types directly, and make the ents array a real
-> C99 variable sized array.
-> 
-> Also factor out the xfs_dir2_leaf_size, to make the sizing of a leaf
-> entry which already was convoluted somewhat readable after using the
-> longer type names in the sizeof expressions.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Alex Elder <aelder@sgi.com>
-
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVGh1LCBKdWwgMDcsIDIwMTEgYXQgMDc6MDU6MzVBTSAtMDQwMCwgQ2hyaXN0b3BoIEhlbGx3
+aWcgd3JvdGU6Cj4gVGhpcyB2ZXJzaW9uIGFkZHJlc3NlcyB0aGUgcmV2aWV3IGNvbW1lbnRzLiAg
+VGhlIGJpZ2dlc3QgY2hhbmdlIGlzIHRoYXQKPiB0aGUgYnl0ZXN3YXBzIG9mIGNvbnN0YW50cyBh
+cmUgbm93IG1vdmVkIGludG8gYSBkaWZmZXJlbnQgcGF0Y2ggYW5kCj4gYXBwbGllZCBtb3JlIGJy
+b2FkbHkuCgpOb3Qgc3VyZSB5b3UndmUgbm90aWNlZCB0aGVzZSBuZXcgd2FybmluZ3MgZnJvbSB0
+aGUgcGF0Y2hzZXQKKGdjYyA0LjQuNC02IGRlYmlhbik6Cgpmcy94ZnMveGZzX2lub2RlLmM6IElu
+IGZ1bmN0aW9uIOKAmHhmc19pdHJ1bmNhdGVfZGF0YeKAmToKZnMveGZzL3hmc19pbm9kZS5jOjEz
+NTI6IHdhcm5pbmc6IHVudXNlZCB2YXJpYWJsZSDigJhtcOKAmQpmcy94ZnMveGZzX2lub2RlX2l0
+ZW0uYzogSW4gZnVuY3Rpb24g4oCYeGZzX2lub2RlX2l0ZW1fdW5sb2Nr4oCZOgpmcy94ZnMveGZz
+X2lub2RlX2l0ZW0uYzo2MzI6IHdhcm5pbmc6IHVudXNlZCB2YXJpYWJsZSDigJhpcOKAmQoKVGhl
+eSB3ZXJlIGluIHRoZSBwcmV2aW91cyB2ZXJzaW9uLCB0b28sIHNvIHRoZXkgYXJlIG5vdCBuZXcg
+dG8gdGhpcwppdGVyYXRpb24uCgpDaGVlcnMsCgpEYXZlLgotLSAKRGF2ZSBDaGlubmVyCmRhdmlk
+QGZyb21vcmJpdC5jb20KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNv
+bS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
