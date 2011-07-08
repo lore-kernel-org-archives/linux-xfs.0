@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p68J2ujh262009 for <xfs@oss.sgi.com>; Fri, 8 Jul 2011 14:02:56 -0500
-Subject: Re: [PATCH 3/4] xfstests: fix brain-o in fallocate log dump
+	p68L7hJD006408 for <xfs@oss.sgi.com>; Fri, 8 Jul 2011 16:07:43 -0500
+Subject: Re: [RFC] remove filestreams support?
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1310086426-30605-4-git-send-email-david@fromorbit.com>
-References: <1310086426-30605-1-git-send-email-david@fromorbit.com>
-	<1310086426-30605-4-git-send-email-david@fromorbit.com>
-Date: Fri, 8 Jul 2011 14:02:52 -0500
-Message-ID: <1310151772.3024.38.camel@doink>
+In-Reply-To: <20110705110127.GA27102@infradead.org>
+References: <20110704153443.GA21501@infradead.org>
+	<20110705015458.GZ561@dastard> <20110705110127.GA27102@infradead.org>
+Date: Fri, 8 Jul 2011 16:07:39 -0500
+Message-ID: <1310159259.3024.63.camel@doink>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -23,24 +23,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Fri, 2011-07-08 at 10:53 +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Tue, 2011-07-05 at 07:01 -0400, Christoph Hellwig wrote:
+> On Tue, Jul 05, 2011 at 11:54:58AM +1000, Dave Chinner wrote:
+> > So rather than deprecating the functionality, perhaps we should look
+> > at implementing it through a simpler, more generic, better
+> > integrated interface? That will increase the usefulness of the
+> > functionality for a much wider audience than it has now, and also
+> > provide the virt/blk throttling folk with exactly the "don't cross
+> > the streams" functionality they suggest filesystems are unable to
+> > support easily.....
 > 
-> fsx segvs when dumping fallocate log entries. Fix magic string
-> array index parameters to be zero based rather than one based.
-> 
-> While touching log string related stuff, make the format consistent
-> with read and write operations so the log dump is easier to look at
-> with the human eye.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> That does indeed sound simpler, and also more useful.  Do the users
+> who have chimed in here (and off list) think such a scheme would be
+> useful for them?
 
-Looks good.
+We have customers that make good use of filestreams.
+I don't think it matters whether they use CXFS or XFS,
+it's a very useful allocation strategy, and an important
+feature for certain applications.  I like the idea of
+generalizing it and/or improving its interface though.
 
-Reviewed-by: Alex Elder <aelder@sgi.com>
+					-Alex
 
 
 _______________________________________________
