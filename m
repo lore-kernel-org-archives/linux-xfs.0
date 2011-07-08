@@ -1,28 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p680s7Ng204493 for <xfs@oss.sgi.com>; Thu, 7 Jul 2011 19:54:07 -0500
+	p680s5K6204474 for <xfs@oss.sgi.com>; Thu, 7 Jul 2011 19:54:06 -0500
 Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7A11D559D0
-	for <xfs@oss.sgi.com>; Thu,  7 Jul 2011 17:54:04 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E2D87E8E8BA
+	for <xfs@oss.sgi.com>; Thu,  7 Jul 2011 17:54:03 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	tFEim6YF7On5Eg8f for <xfs@oss.sgi.com>;
-	Thu, 07 Jul 2011 17:54:04 -0700 (PDT)
+	xsl0cPcCuRvvDYWb for <xfs@oss.sgi.com>;
+	Thu, 07 Jul 2011 17:54:03 -0700 (PDT)
 Received: from chute ([192.168.1.1] helo=disappointment)
 	by dastard with esmtp (Exim 4.72)
-	(envelope-from <dave@fromorbit.com>) id 1QezKR-0003R8-OD
-	for xfs@oss.sgi.com; Fri, 08 Jul 2011 10:53:59 +1000
+	(envelope-from <dave@fromorbit.com>) id 1QezKI-0003R7-4s
+	for xfs@oss.sgi.com; Fri, 08 Jul 2011 10:53:50 +1000
 Received: from dave by disappointment with local (Exim 4.76)
-	(envelope-from <dave@disappointment.disaster>) id 1QezKH-0007yP-AI
+	(envelope-from <dave@disappointment.disaster>) id 1QezKH-0007yN-6c
 	for xfs@oss.sgi.com; Fri, 08 Jul 2011 10:53:49 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/4] xfstests: fsx fallocate support is b0rked
-Date: Fri,  8 Jul 2011 10:53:44 +1000
-Message-Id: <1310086426-30605-3-git-send-email-david@fromorbit.com>
+Subject: [PATCH 1/4] xfstests: fix fsx fpunch test to actually test for fpunch
+Date: Fri,  8 Jul 2011 10:53:43 +1000
+Message-Id: <1310086426-30605-2-git-send-email-david@fromorbit.com>
 In-Reply-To: <1310086426-30605-1-git-send-email-david@fromorbit.com>
 References: <1310086426-30605-1-git-send-email-david@fromorbit.com>
-MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,128 +30,69 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-RnJvbTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgoKVGhlIHJlY2VudCBmYWxs
-b2NhdGUvZnB1bmNoIGFkZGl0aW9ucyB0byBmc3ggaGF2ZSBub3QgYWN0dWFsbHkgYmUKZXhlY3V0
-aW5nIGZhbGxvY2F0ZS9mcHVuY2ggb3BlcmF0aW9ucy4gVGhlIGxvZ2ljIHRvIHNlbGVjdCB3aGF0
-Cm9wZXJhdGlvbiB0byBydW4gaXMgYnJva2VuIGluIHN1Y2ggYSB3YXkgdGhhdCBmc3ggaGFzIGJl
-ZW4gZXhlY3V0aW5nCm1hcHBlZCB3cml0ZXMgYW5kIHRydW5jYXRlcyBpbnN0ZWFkIG9mIGZhbGxv
-Y2F0ZSBhbmQgZnB1bmNoCm9wZXJhdGlvbnMuCgpSZW1vdmUgYWxsIHRoZSAoYjBya2VuKSBzbWFy
-dHktcGFudHMgc2VsZWN0aW9uIGxvZ2ljIGZyb20gdGhlIHRlc3QoKQpmdW5jdGlvbi4gUmVwbGFj
-ZSBpdCB3aXRoIGEgY2xlYXJseSBkZWZpbmVkIHNldCBvZiBvcGVyYXRpb25zIGZvcgplYWNoIG1v
-ZGUgYW5kIHVzZSB1bmRlcnN0YW5kYWJsZSBmYWxsYmFjayBsb2dpYyB3aGVuIHZhcmlvdXMKb3Bl
-cmF0aW9uIHR5cGVzIGhhdmUgYmVlbiBkaXNhYmxlZC4gVGhlbiB1c2UgYSBzaW1wbGUgc3dpdGNo
-CnN0YXRlbWVudCB0byBleGVjdXRlIGVhY2ggb2YgdGhlIGRpZmZlcmVudCBvcGVyYXRpb25zLCBy
-ZW1vdmluZyB0aGUKdG9ydHVyZWQgbmVzdGluZyBvZiBpZi9lbHNlIHN0YXRlbWVudHMgdGhhdCBv
-bmx5IHNlcnZlIHRvIG9iZnVzY2F0ZQp0aGUgY29kZS4KCkFzIGEgcmVzdWx0LCBmc3ggdXNlcyBm
-YWxsb2NhdGUvZnB1bmNoIGFwcHJvcHJpYXRlbHkgZHVyaW5nCm9wZXJhdGlvbnMgYW5kIHVzZXMv
-ZGlzYWJsZdGVIHRoZSBvcGVyYXRpb25zIGFzIGRlZmluZWQgb24gdGhlCmNvbW1hbmQgbGluZSBj
-b3JyZWN0bHkuCgpTaWduZWQtb2ZmLWJ5OiBEYXZlIENoaW5uZXIgPGRjaGlubmVyQHJlZGhhdC5j
-b20+Ci0tLQogbHRwL2ZzeC5jIHwgIDE5MiArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
-KysrKysrKystLS0tLS0tLS0tLS0tLS0tLS0tLS0tCiAxIGZpbGVzIGNoYW5nZWQsIDEyMyBpbnNl
-cnRpb25zKCspLCA2OSBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9sdHAvZnN4LmMgYi9sdHAv
-ZnN4LmMKaW5kZXggYTM3ZTIyMy4uNDFkN2MyMCAxMDA2NDQKLS0tIGEvbHRwL2ZzeC5jCisrKyBi
-L2x0cC9mc3guYwpAQCAtNTgsMTggKzU4LDQ3IEBAIGludAkJCWxvZ3B0ciA9IDA7CS8qIGN1cnJl
-bnQgcG9zaXRpb24gaW4gbG9nICovCiBpbnQJCQlsb2djb3VudCA9IDA7CS8qIHRvdGFsIG9wcyAq
-LwogCiAvKgotICoJRGVmaW5lIG9wZXJhdGlvbnMKKyAqIFRoZSBvcGVyYXRpb24gbWF0cml4IGlz
-IGNvbXBsZXggZHVlIHRvIGNvbmRpdGlvbmFsIGV4ZWN1dGlvbiBvZiBkaWZmZXJlbnQKKyAqIGZl
-YXR1cmVzLiBIZW5jZSB3aGVuIHdlIGNvbWUgdG8gZGVjaWRpbmcgd2hhdCBvcGVyYXRpb24gdG8g
-cnVuLCB3ZSBuZWVkIHRvCisgKiBiZSBjYXJlZnVsIGluIGhvdyB3ZSBzZWxlY3QgdGhlIGRpZmZl
-cmVudCBvcGVyYXRpb25zLiBUaGUgYWN0aXZlIG9wZXJhdGlvbnMKKyAqIGFyZSBtYXBwZWQgdG8g
-bnVtYmVycyBhcyBmb2xsb3dzOgorICoKKyAqCQlsaXRlCSFsaXRlCisgKiBSRUFEOgkwCTAKKyAq
-IFdSSVRFOgkxCTEKKyAqIE1BUFJFQUQ6CTIJMgorICogTUFQV1JJVEU6CTMJMworICogVFJVTkNB
-VEU6CS0JNAorICogRkFMTE9DQVRFOgktCTUKKyAqIFBVTkNIIEhPTEU6CS0JNgorICoKKyAqIFdo
-ZW4gbWFwcGVkIHJlYWQvd3JpdGVzIGFyZSBkaXNhYmxlZCwgdGhleSBhcmUgc2ltcGx5IGNvbnZl
-cnRlZCB0byBub3JtYWwKKyAqIHJlYWRzIGFuZCB3cml0ZXMuIFdoZW4gZmFsbG9jYXRlL2ZwdW5j
-aCBjYWxscyBhcmUgZGlzYWJsZWQsIHRoZXkgYXJlCisgKiBjb252ZXJ0ZWQgdG8gT1BfU0tJUFBF
-RC4gSGVuY2UgT1BfU0tJUFBFRCBuZWVkcyB0byBoYXZlIGEgbnVtYmVyIGhpZ2hlciB0aGFuCisg
-KiB0aGUgb3BlcmF0aW9uIHNlbGN0aW9uIG1hdHJpeCwgYXMgZG9lcyB0aGUgT1BfQ0xPU0VPUEVO
-IHdoaWNoIGlzIGFuCisgKiBvcGVyYXRpb24gbW9kaWZpZXIgcmF0aGVyIHRoYW4gYW4gb3BlcmF0
-aW9uIGluIGl0c2VsZi4KKyAqCisgKiBCZWNhdXNlIG9mIHRoZSAibGl0ZSIgdmVyc2lvbiwgd2Ug
-YWxzbyBuZWVkIHRvIGhhdmUgZGlmZmVyZW50ICJtYXhpbXVtCisgKiBvcGVyYXRpb24iIGRlZmlu
-ZXMgdG8gYWxsb3cgdGhlIG9wcyB0byBiZSBzZWxlY3RlZCBjb3JyZWN0bHkgYmFzZWQgb24gdGhl
-CisgKiBtb2RlIGJlaW5nIHJ1bi4KICAqLwogCi0jZGVmaW5lCU9QX1JFQUQJCTEKLSNkZWZpbmUg
-T1BfV1JJVEUJMgotI2RlZmluZSBPUF9UUlVOQ0FURQkzCi0jZGVmaW5lIE9QX0NMT1NFT1BFTgk0
-Ci0jZGVmaW5lIE9QX01BUFJFQUQJNQotI2RlZmluZSBPUF9NQVBXUklURQk2Ci0jZGVmaW5lIE9Q
-X1NLSVBQRUQJNwotI2RlZmluZSBPUF9GQUxMT0NBVEUJOAotI2RlZmluZSBPUF9QVU5DSF9IT0xF
-CTkKKy8qIGNvbW1vbiBvcGVyYXRpb25zICovCisjZGVmaW5lCU9QX1JFQUQJCTAKKyNkZWZpbmUg
-T1BfV1JJVEUJMQorI2RlZmluZSBPUF9NQVBSRUFECTIKKyNkZWZpbmUgT1BfTUFQV1JJVEUJMwor
-I2RlZmluZSBPUF9NQVhfTElURQk0CisKKy8qICFsaXRlIG9wZXJhdGlvbnMgKi8KKyNkZWZpbmUg
-T1BfVFJVTkNBVEUJNAorI2RlZmluZSBPUF9GQUxMT0NBVEUJNQorI2RlZmluZSBPUF9QVU5DSF9I
-T0xFCTYKKyNkZWZpbmUgT1BfTUFYX0ZVTEwJNworCisvKiBvcGVyYXRpb24gbW9kaWZpZXJzICov
-CisjZGVmaW5lIE9QX0NMT1NFT1BFTgkxMDAKKyNkZWZpbmUgT1BfU0tJUFBFRAkxMDEKIAogI3Vu
-ZGVmIFBBR0VfU0laRQogI2RlZmluZSBQQUdFX1NJWkUgICAgICAgZ2V0cGFnZXNpemUoKQpAQCAt
-OTU1LDYgKzk4NCwxNSBAQCBkb2Nsb3Nlb3Blbih2b2lkKQogCX0KIH0KIAorI2RlZmluZSBUUklN
-X09GRl9MRU4ob2ZmLCBsZW4sIHNpemUpCVwKK2RvIHsJCQkJCVwKKwlpZiAoZmlsZV9zaXplKQkJ
-CVwKKwkJb2Zmc2V0ICU9IHNpemU7CQlcCisJZWxzZQkJCQlcCisJCW9mZnNldCA9IDA7CQlcCisJ
-aWYgKG9mZnNldCArIGxlbiA+IHNpemUpCVwKKwkJbGVuID0gc2l6ZSAtIG9mZnNldDsJXAorfSB3
-aGlsZSAoMCkKIAogdm9pZAogdGVzdCh2b2lkKQpAQCAtOTYyLDExICsxMDAwLDcgQEAgdGVzdCh2
-b2lkKQogCXVuc2lnbmVkIGxvbmcJb2Zmc2V0OwogCXVuc2lnbmVkIGxvbmcJc2l6ZSA9IG1heG9w
-bGVuOwogCXVuc2lnbmVkIGxvbmcJcnYgPSByYW5kb20oKTsKLQl1bnNpZ25lZCBsb25nCW9wID0g
-cnYgJSAoMyArICFsaXRlICsgbWFwcGVkX3dyaXRlcyArIGZhbGxvY2F0ZV9jYWxscyArIHB1bmNo
-X2hvbGVfY2FsbHMpOwotICAgICAgICAvKiB0dXJuIG9mZiB0aGUgbWFwIHJlYWQgaWYgbmVjZXNz
-YXJ5ICovCi0KLSAgICAgICAgaWYgKG9wID09IDIgJiYgIW1hcHBlZF9yZWFkcykKLSAgICAgICAg
-ICAgIG9wID0gMDsKKwl1bnNpZ25lZCBsb25nCW9wOwogCiAJaWYgKHNpbXVsYXRlZG9wY291bnQg
-PiAwICYmIHRlc3RjYWxscyA9PSBzaW11bGF0ZWRvcGNvdW50KQogCQl3cml0ZWZpbGVpbWFnZSgp
-OwpAQCAtOTgyLDYyICsxMDE2LDgyIEBAIHRlc3Qodm9pZCkKIAlpZiAoIXF1aWV0ICYmIHRlc3Rj
-YWxscyA8IHNpbXVsYXRlZG9wY291bnQgJiYgdGVzdGNhbGxzICUgMTAwMDAwID09IDApCiAJCXBy
-dCgiJWx1Li4uXG4iLCB0ZXN0Y2FsbHMpOwogCi0JLyoKLQkgKiAgICAgICAgICAgICAgICAgbGl0
-ZSAgIWxpdGUKLQkgKiBSRUFEOglvcCA9IDAJICAgMAotCSAqIFdSSVRFOglvcCA9IDEgICAgIDEK
-LQkgKiBNQVBSRUFEOiAgICAgb3AgPSAyICAgICAyCi0JICogVFJVTkNBVEU6CW9wID0gLSAgICAg
-MwotCSAqIE1BUFdSSVRFOiAgICBvcCA9IDMgICAgIDQKLQkgKiBGQUxMT0NBVEU6ICAgb3AgPSAt
-ICAgICA1Ci0JICogUFVOQ0ggSE9MRTogIG9wID0gLSAgICAgNgotCSAqLwotCWlmIChsaXRlID8g
-MCA6IG9wID09IDMgJiYgKHN0eWxlICYgMSkgPT0gMCkgLyogdmFuaWxsYSB0cnVuY2F0ZT8gKi8K
-LQkJZG90cnVuY2F0ZShyYW5kb20oKSAlIG1heGZpbGVsZW4pOwotCWVsc2UgewotCQlpZiAocmFu
-ZG9tb3BsZW4pCi0JCQlzaXplID0gcmFuZG9tKCkgJSAobWF4b3BsZW4rMSk7Ci0KLQkJaWYgKGxp
-dGUgPyAwIDogb3AgPT0gMykgewotCQkJLyogdHJ1bmNhdGUgKi8KLQkJCWRvdHJ1bmNhdGUoc2l6
-ZSk7Ci0JCX0gZWxzZSB7Ci0JCQlvZmZzZXQgPSByYW5kb20oKTsKLQkJCWlmIChvcCA9PSA1KSB7
-Ci0JCQkJLyogZmFsbG9jYXRlICovCi0JCQkJb2Zmc2V0ICU9IG1heGZpbGVsZW47Ci0JCQkJaWYg
-KG9mZnNldCArIHNpemUgPiBtYXhmaWxlbGVuKQotCQkJCQlzaXplID0gbWF4ZmlsZWxlbiAtIG9m
-ZnNldDsKLQkJCQlkb19wcmVhbGxvY2F0ZShvZmZzZXQsIHNpemUpOwotCQkJfSBlbHNlIGlmIChv
-cCA9PSA2KSB7Ci0JCQkJb2Zmc2V0ICU9IG1heGZpbGVsZW47Ci0JCQkJaWYgKG9mZnNldCArIHNp
-emUgPiBtYXhmaWxlbGVuKQotCQkJCQlzaXplID0gbWF4ZmlsZWxlbiAtIG9mZnNldDsKLQkJCQlk
-b19wdW5jaF9ob2xlKG9mZnNldCwgc2l6ZSk7Ci0JCQl9IGVsc2UgaWYgKG9wID09IDEgfHwgb3Ag
-PT0gKGxpdGUgPyAzIDogNCkpIHsKLQkJCQkvKiB3cml0ZSAvIG1hcHdyaXRlICovCi0JCQkJb2Zm
-c2V0ICU9IG1heGZpbGVsZW47Ci0JCQkJaWYgKG9mZnNldCArIHNpemUgPiBtYXhmaWxlbGVuKQot
-CQkJCQlzaXplID0gbWF4ZmlsZWxlbiAtIG9mZnNldDsKLQkJCQlpZiAob3AgIT0gMSkKLQkJCQkJ
-ZG9tYXB3cml0ZShvZmZzZXQsIHNpemUpOwotCQkJCWVsc2UKLQkJCQkJZG93cml0ZShvZmZzZXQs
-IHNpemUpOwotCQkJfSBlbHNlIHsKLQkJCQkvKiByZWFkIC8gbWFwcmVhZCAqLwotCQkJCWlmIChm
-aWxlX3NpemUpCi0JCQkJCW9mZnNldCAlPSBmaWxlX3NpemU7Ci0JCQkJZWxzZQotCQkJCQlvZmZz
-ZXQgPSAwOwotCQkJCWlmIChvZmZzZXQgKyBzaXplID4gZmlsZV9zaXplKQotCQkJCQlzaXplID0g
-ZmlsZV9zaXplIC0gb2Zmc2V0OwotCQkJCWlmIChvcCAhPSAwKQotCQkJCQlkb21hcHJlYWQob2Zm
-c2V0LCBzaXplKTsKLQkJCQllbHNlCi0JCQkJCWRvcmVhZChvZmZzZXQsIHNpemUpOwotCQkJfQor
-CW9mZnNldCA9IHJhbmRvbSgpOworCWlmIChyYW5kb21vcGxlbikKKwkJc2l6ZSA9IHJhbmRvbSgp
-ICUgKG1heG9wbGVuICsgMSk7CisKKwkvKiBjYWxjdWxhdGUgYXBwcm9wcmlhdGUgb3AgdG8gcnVu
-ICovCisJaWYgKGxpdGUpCisJCW9wID0gcnYgJSBPUF9NQVhfTElURTsKKwllbHNlCisJCW9wID0g
-cnYgJSBPUF9NQVhfRlVMTDsKKworCXN3aXRjaCAob3ApIHsKKwljYXNlIE9QX01BUFJFQUQ6CisJ
-CWlmICghbWFwcGVkX3JlYWRzKQorCQkJb3AgPSBPUF9SRUFEOworCQlicmVhazsKKwljYXNlIE9Q
-X01BUFdSSVRFOgorCQlpZiAoIW1hcHBlZF93cml0ZXMpCisJCQlvcCA9IE9QX1dSSVRFOworCQli
-cmVhazsKKwljYXNlIE9QX0ZBTExPQ0FURToKKwkJaWYgKCFmYWxsb2NhdGVfY2FsbHMpIHsKKwkJ
-CWxvZzQoT1BfU0tJUFBFRCwgT1BfRkFMTE9DQVRFLCBvZmZzZXQsIHNpemUpOworCQkJZ290byBv
-dXQ7CisJCX0KKwkJYnJlYWs7CisJY2FzZSBPUF9QVU5DSF9IT0xFOgorCQlpZiAoIXB1bmNoX2hv
-bGVfY2FsbHMpIHsKKwkJCWxvZzQoT1BfU0tJUFBFRCwgT1BfUFVOQ0hfSE9MRSwgb2Zmc2V0LCBz
-aXplKTsKKwkJCWdvdG8gb3V0OwogCQl9CisJCWJyZWFrOwogCX0KKworCXN3aXRjaCAob3ApIHsK
-KwljYXNlIE9QX1JFQUQ6CisJCVRSSU1fT0ZGX0xFTihvZmZzZXQsIHNpemUsIGZpbGVfc2l6ZSk7
-CisJCWRvcmVhZChvZmZzZXQsIHNpemUpOworCQlicmVhazsKKworCWNhc2UgT1BfV1JJVEU6CisJ
-CVRSSU1fT0ZGX0xFTihvZmZzZXQsIHNpemUsIG1heGZpbGVsZW4pOworCQlkb3dyaXRlKG9mZnNl
-dCwgc2l6ZSk7CisJCWJyZWFrOworCisJY2FzZSBPUF9NQVBSRUFEOgorCQlUUklNX09GRl9MRU4o
-b2Zmc2V0LCBzaXplLCBmaWxlX3NpemUpOworCQlkb21hcHJlYWQob2Zmc2V0LCBzaXplKTsKKwkJ
-YnJlYWs7CisKKwljYXNlIE9QX01BUFdSSVRFOgorCQlUUklNX09GRl9MRU4ob2Zmc2V0LCBzaXpl
-LCBtYXhmaWxlbGVuKTsKKwkJZG9tYXB3cml0ZShvZmZzZXQsIHNpemUpOworCQlicmVhazsKKwor
-CWNhc2UgT1BfVFJVTkNBVEU6CisJCWlmICghc3R5bGUpCisJCQlzaXplID0gcmFuZG9tKCkgJSBt
-YXhmaWxlbGVuOworCQlkb3RydW5jYXRlKHNpemUpOworCQlicmVhazsKKworCWNhc2UgT1BfRkFM
-TE9DQVRFOgorCQlUUklNX09GRl9MRU4ob2Zmc2V0LCBzaXplLCBtYXhmaWxlbGVuKTsKKwkJZG9f
-cHJlYWxsb2NhdGUob2Zmc2V0LCBzaXplKTsKKwkJYnJlYWs7CisKKwljYXNlIE9QX1BVTkNIX0hP
-TEU6CisJCVRSSU1fT0ZGX0xFTihvZmZzZXQsIHNpemUsIG1heGZpbGVsZW4pOworCQlkb19wdW5j
-aF9ob2xlKG9mZnNldCwgc2l6ZSk7CisJCWJyZWFrOworCWRlZmF1bHQ6CisJCXBydGVycigidGVz
-dDogdW5rbm93biBvcGVyYXRpb24iKTsKKwkJcmVwb3J0X2ZhaWx1cmUoNDIpOworCQlicmVhazsK
-Kwl9CisKK291dDoKIAlpZiAoc2l6ZWNoZWNrcyAmJiB0ZXN0Y2FsbHMgPiBzaW11bGF0ZWRvcGNv
-dW50KQogCQljaGVja19zaXplKCk7CiAJaWYgKGNsb3Nlb3BlbikKLS0gCjEuNy41LjEKCl9fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxp
-c3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hm
-cwo=
+From: Dave Chinner <dchinner@redhat.com>
+
+The operation flags parameter to fallocate is the second parameter,
+not the last. Hence the fpunch test is actually testing for falloc
+support, not fpunch. Somebody needs a brown paper bag.
+
+Also, add a ftruncate call whenthe fpunch succeeds just in case the
+file was not already zero sized. Failing to ensure we start with a
+zero length file can cause read ops to fail size checks if they
+occur before the file is written to be the main test loop.
+
+While there, observe the quiet flag the same as the falloc test
+does and have them both emit the warning at the same error level.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ ltp/fsx.c |   14 +++++++-------
+ 1 files changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/ltp/fsx.c b/ltp/fsx.c
+index 0683853..a37e223 100644
+--- a/ltp/fsx.c
++++ b/ltp/fsx.c
+@@ -1243,7 +1243,7 @@ test_fallocate()
+ 	if (!lite && fallocate_calls) {
+ 		if (fallocate(fd, 0, 0, 1) && errno == EOPNOTSUPP) {
+ 			if(!quiet)
+-				prt("fsx: main: filesystem does not support fallocate, disabling\n");
++				warn("main: filesystem does not support fallocate, disabling\n");
+ 			fallocate_calls = 0;
+ 		} else {
+ 			ftruncate(fd, 0);
+@@ -1260,13 +1260,13 @@ test_punch_hole()
+ {
+ #ifdef FALLOC_FL_PUNCH_HOLE
+ 	if (!lite && punch_hole_calls) {
+-		if (fallocate(fd, 0, 0,
+-			FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE) &&
+-			errno == EOPNOTSUPP) {
+-
+-			warn("main: filesystem does not support fallocate punch hole, disabling");
++		if (fallocate(fd, FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE,
++				0, 1) && errno == EOPNOTSUPP) {
++			if(!quiet)
++				warn("main: filesystem does not support fallocate punch hole, disabling");
+ 			punch_hole_calls = 0;
+-		}
++		} else
++			ftruncate(fd, 0);
+ 	}
+ #else /* ! PUNCH HOLE */
+ 	punch_hole_calls = 0;
+-- 
+1.7.5.1
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
