@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6AKoLkp153466 for <xfs@oss.sgi.com>; Sun, 10 Jul 2011 15:50:21 -0500
+	p6AKoLTP153463 for <xfs@oss.sgi.com>; Sun, 10 Jul 2011 15:50:21 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AEADA1797873
-	for <xfs@oss.sgi.com>; Sun, 10 Jul 2011 13:50:18 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7FFF65CCC4
+	for <xfs@oss.sgi.com>; Sun, 10 Jul 2011 13:50:19 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	ws2wpJtqtTWe6nHg for <xfs@oss.sgi.com>;
-	Sun, 10 Jul 2011 13:50:18 -0700 (PDT)
+	YN3u3ST1QitzffOp for <xfs@oss.sgi.com>;
+	Sun, 10 Jul 2011 13:50:19 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1Qg0xG-0002wL-5d
-	for xfs@oss.sgi.com; Sun, 10 Jul 2011 20:50:18 +0000
-Message-Id: <20110710205018.136515335@bombadil.infradead.org>
-Date: Sun, 10 Jul 2011 16:49:23 -0400
+	Linux)) id 1Qg0xG-0002yQ-Ul
+	for xfs@oss.sgi.com; Sun, 10 Jul 2011 20:50:19 +0000
+Message-Id: <20110710205018.915767211@bombadil.infradead.org>
+Date: Sun, 10 Jul 2011 16:49:27 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 07/11] xfs: remove wrappers around b_iodone
+Subject: [PATCH 11/11] xfs: kill the dead XFS_DABUF debug code
 References: <20110710204916.856267100@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-kill-XFS_BUF_SET_BRELSE_FUNC
+Content-Disposition: inline; filename=xfs-kill-XFS_DABUF_DEBUG
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,197 +36,183 @@ To: xfs@oss.sgi.com
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: xfs/fs/xfs/linux-2.6/xfs_buf.c
+Index: xfs/fs/xfs/xfs_da_btree.c
 ===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_buf.c	2011-07-09 09:16:00.995688385 +0200
-+++ xfs/fs/xfs/linux-2.6/xfs_buf.c	2011-07-09 09:34:17.985632833 +0200
-@@ -1107,7 +1107,7 @@ xfs_bioerror_relse(
- 	XFS_BUF_UNDELAYWRITE(bp);
- 	XFS_BUF_DONE(bp);
- 	XFS_BUF_STALE(bp);
--	XFS_BUF_CLR_IODONE_FUNC(bp);
-+	bp->b_iodone = NULL;
- 	if (!(fl & XBF_ASYNC)) {
- 		/*
- 		 * Mark b_error and B_ERROR _both_.
-Index: xfs/fs/xfs/xfs_buf_item.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_buf_item.c	2011-07-09 09:34:13.252299751 +0200
-+++ xfs/fs/xfs/xfs_buf_item.c	2011-07-09 09:34:17.985632833 +0200
-@@ -453,7 +453,7 @@ xfs_buf_item_unpin(
- 		if (bip->bli_flags & XFS_BLI_STALE_INODE) {
- 			xfs_buf_do_callbacks(bp);
- 			bp->b_fspriv = NULL;
--			XFS_BUF_CLR_IODONE_FUNC(bp);
-+			bp->b_iodone = NULL;
- 		} else {
- 			spin_lock(&ailp->xa_lock);
- 			xfs_trans_ail_delete(ailp, (xfs_log_item_t *)bip);
-@@ -870,8 +870,8 @@ xfs_buf_item_relse(
- 
- 	bip = bp->b_fspriv;
- 	bp->b_fspriv = bip->bli_item.li_bio_list;
--	if (bp->b_fspriv == NULL && XFS_BUF_IODONE_FUNC(bp) != NULL)
--		XFS_BUF_CLR_IODONE_FUNC(bp);
-+	if (bp->b_fspriv == NULL)
-+		bp->b_iodone = NULL;
- 
- 	xfs_buf_rele(bp);
- 	xfs_buf_item_free(bip);
-@@ -907,9 +907,9 @@ xfs_buf_attach_iodone(
- 		bp->b_fspriv = lip;
- 	}
- 
--	ASSERT((XFS_BUF_IODONE_FUNC(bp) == xfs_buf_iodone_callbacks) ||
--	       (XFS_BUF_IODONE_FUNC(bp) == NULL));
--	XFS_BUF_SET_IODONE_FUNC(bp, xfs_buf_iodone_callbacks);
-+	ASSERT(bp->b_iodone == NULL ||
-+	       bp->b_iodone == xfs_buf_iodone_callbacks);
-+	bp->b_iodone = xfs_buf_iodone_callbacks;
+--- xfs.orig/fs/xfs/xfs_da_btree.c	2011-07-09 12:26:07.098444231 +0200
++++ xfs/fs/xfs/xfs_da_btree.c	2011-07-09 12:26:44.665108995 +0200
+@@ -86,7 +86,7 @@ STATIC void xfs_da_node_unbalance(xfs_da
+  */
+ STATIC uint	xfs_da_node_lasthash(xfs_dabuf_t *bp, int *count);
+ STATIC int	xfs_da_node_order(xfs_dabuf_t *node1_bp, xfs_dabuf_t *node2_bp);
+-STATIC xfs_dabuf_t *xfs_da_buf_make(int nbuf, xfs_buf_t **bps, inst_t *ra);
++STATIC xfs_dabuf_t *xfs_da_buf_make(int nbuf, xfs_buf_t **bps);
+ STATIC int	xfs_da_blk_unlink(xfs_da_state_t *state,
+ 				  xfs_da_state_blk_t *drop_blk,
+ 				  xfs_da_state_blk_t *save_blk);
+@@ -1939,8 +1939,7 @@ xfs_da_do_buf(
+ 	xfs_daddr_t	*mappedbnop,
+ 	xfs_dabuf_t	**bpp,
+ 	int		whichfork,
+-	int		caller,
+-	inst_t		*ra)
++	int		caller)
+ {
+ 	xfs_buf_t	*bp = NULL;
+ 	xfs_buf_t	**bplist;
+@@ -2079,9 +2078,9 @@ xfs_da_do_buf(
+ 	 * Build a dabuf structure.
+ 	 */
+ 	if (bplist) {
+-		rbp = xfs_da_buf_make(nbplist, bplist, ra);
++		rbp = xfs_da_buf_make(nbplist, bplist);
+ 	} else if (bp)
+-		rbp = xfs_da_buf_make(1, &bp, ra);
++		rbp = xfs_da_buf_make(1, &bp);
+ 	else
+ 		rbp = NULL;
+ 	/*
+@@ -2149,8 +2148,7 @@ xfs_da_get_buf(
+ 	xfs_dabuf_t	**bpp,
+ 	int		whichfork)
+ {
+-	return xfs_da_do_buf(trans, dp, bno, &mappedbno, bpp, whichfork, 0,
+-						 (inst_t *)__return_address);
++	return xfs_da_do_buf(trans, dp, bno, &mappedbno, bpp, whichfork, 0);
  }
  
  /*
-@@ -998,7 +998,7 @@ xfs_buf_iodone_callbacks(
- 			XFS_BUF_DONE(bp);
- 			XFS_BUF_SET_START(bp);
- 		}
--		ASSERT(XFS_BUF_IODONE_FUNC(bp));
-+		ASSERT(bp->b_iodone != NULL);
- 		trace_xfs_buf_item_iodone_async(bp, _RET_IP_);
- 		xfs_buf_relse(bp);
- 		return;
-@@ -1018,7 +1018,7 @@ xfs_buf_iodone_callbacks(
- do_callbacks:
- 	xfs_buf_do_callbacks(bp);
- 	bp->b_fspriv = NULL;
--	XFS_BUF_CLR_IODONE_FUNC(bp);
-+	bp->b_iodone = NULL;
- 	xfs_buf_ioend(bp, 0);
+@@ -2165,8 +2163,7 @@ xfs_da_read_buf(
+ 	xfs_dabuf_t	**bpp,
+ 	int		whichfork)
+ {
+-	return xfs_da_do_buf(trans, dp, bno, &mappedbno, bpp, whichfork, 1,
+-		(inst_t *)__return_address);
++	return xfs_da_do_buf(trans, dp, bno, &mappedbno, bpp, whichfork, 1);
  }
  
-Index: xfs/fs/xfs/xfs_inode.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_inode.c	2011-07-09 09:34:13.255633083 +0200
-+++ xfs/fs/xfs/xfs_inode.c	2011-07-09 09:34:17.985632833 +0200
-@@ -2471,7 +2471,7 @@ cluster_corrupt_out:
- 		 * mark the buffer as an error and call them.  Otherwise
- 		 * mark it as stale and brelse.
- 		 */
--		if (XFS_BUF_IODONE_FUNC(bp)) {
-+		if (bp->b_iodone) {
- 			XFS_BUF_UNDONE(bp);
- 			XFS_BUF_STALE(bp);
- 			XFS_BUF_ERROR(bp,EIO);
-@@ -2812,7 +2812,7 @@ xfs_iflush_int(
- 		xfs_buf_attach_iodone(bp, xfs_iflush_done, &iip->ili_item);
+ /*
+@@ -2182,8 +2179,7 @@ xfs_da_reada_buf(
+ 	xfs_daddr_t		rval;
  
- 		ASSERT(bp->b_fspriv != NULL);
--		ASSERT(XFS_BUF_IODONE_FUNC(bp) != NULL);
-+		ASSERT(bp->b_iodone != NULL);
- 	} else {
- 		/*
- 		 * We're flushing an inode which is not in the AIL and has
-Index: xfs/fs/xfs/xfs_log.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_log.c	2011-07-09 09:34:13.258966416 +0200
-+++ xfs/fs/xfs/xfs_log.c	2011-07-09 09:34:17.992299515 +0200
-@@ -1050,7 +1050,7 @@ xlog_alloc_log(xfs_mount_t	*mp,
- 	bp = xfs_buf_get_empty(log->l_iclog_size, mp->m_logdev_targp);
- 	if (!bp)
- 		goto out_free_log;
--	XFS_BUF_SET_IODONE_FUNC(bp, xlog_iodone);
-+	bp->b_iodone = xlog_iodone;
- 	ASSERT(XFS_BUF_ISBUSY(bp));
- 	ASSERT(xfs_buf_islocked(bp));
- 	log->l_xbuf = bp;
-@@ -1084,7 +1084,7 @@ xlog_alloc_log(xfs_mount_t	*mp,
- 		if (!bp)
- 			goto out_free_iclog;
- 
--		XFS_BUF_SET_IODONE_FUNC(bp, xlog_iodone);
-+		bp->b_iodone = xlog_iodone;
- 		iclog->ic_bp = bp;
- 		iclog->ic_data = bp->b_addr;
- #ifdef DEBUG
-Index: xfs/fs/xfs/xfs_log_recover.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_log_recover.c	2011-07-09 09:16:01.015688384 +0200
-+++ xfs/fs/xfs/xfs_log_recover.c	2011-07-09 09:34:17.995632851 +0200
-@@ -371,7 +371,7 @@ xlog_recover_iodone(
- 		xfs_force_shutdown(bp->b_target->bt_mount,
- 					SHUTDOWN_META_IO_ERROR);
- 	}
--	XFS_BUF_CLR_IODONE_FUNC(bp);
-+	bp->b_iodone = NULL;
- 	xfs_buf_ioend(bp, 0);
+ 	rval = -1;
+-	if (xfs_da_do_buf(trans, dp, bno, &rval, NULL, whichfork, 3,
+-			(inst_t *)__return_address))
++	if (xfs_da_do_buf(trans, dp, bno, &rval, NULL, whichfork, 3))
+ 		return -1;
+ 	else
+ 		return rval;
+@@ -2241,17 +2237,12 @@ xfs_da_state_free(xfs_da_state_t *state)
+ 	kmem_zone_free(xfs_da_state_zone, state);
  }
  
-@@ -2178,7 +2178,7 @@ xlog_recover_buffer_pass2(
- 		error = xfs_bwrite(mp, bp);
- 	} else {
- 		ASSERT(bp->b_target->bt_mount == mp);
--		XFS_BUF_SET_IODONE_FUNC(bp, xlog_recover_iodone);
-+		bp->b_iodone = xlog_recover_iodone;
- 		xfs_bdwrite(mp, bp);
- 	}
- 
-@@ -2438,7 +2438,7 @@ xlog_recover_inode_pass2(
- 
- write_inode_buffer:
- 	ASSERT(bp->b_target->bt_mount == mp);
--	XFS_BUF_SET_IODONE_FUNC(bp, xlog_recover_iodone);
-+	bp->b_iodone = xlog_recover_iodone;
- 	xfs_bdwrite(mp, bp);
- error:
- 	if (need_free)
-@@ -2560,7 +2560,7 @@ xlog_recover_dquot_pass2(
- 
- 	ASSERT(dq_f->qlf_size == 2);
- 	ASSERT(bp->b_target->bt_mount == mp);
--	XFS_BUF_SET_IODONE_FUNC(bp, xlog_recover_iodone);
-+	bp->b_iodone = xlog_recover_iodone;
- 	xfs_bdwrite(mp, bp);
- 
- 	return (0);
-Index: xfs/fs/xfs/xfs_trans_buf.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_trans_buf.c	2011-07-09 09:34:13.258966416 +0200
-+++ xfs/fs/xfs/xfs_trans_buf.c	2011-07-09 09:34:17.995632851 +0200
-@@ -635,8 +635,8 @@ xfs_trans_log_buf(xfs_trans_t	*tp,
- 	ASSERT(bp->b_transp == tp);
- 	ASSERT(bip != NULL);
- 	ASSERT((first <= last) && (last < XFS_BUF_COUNT(bp)));
--	ASSERT((XFS_BUF_IODONE_FUNC(bp) == NULL) ||
--	       (XFS_BUF_IODONE_FUNC(bp) == xfs_buf_iodone_callbacks));
-+	ASSERT(bp->b_iodone == NULL ||
-+	       bp->b_iodone == xfs_buf_iodone_callbacks);
- 
- 	/*
- 	 * Mark the buffer as needing to be written out eventually,
-@@ -652,7 +652,7 @@ xfs_trans_log_buf(xfs_trans_t	*tp,
- 	XFS_BUF_DONE(bp);
- 
- 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
--	XFS_BUF_SET_IODONE_FUNC(bp, xfs_buf_iodone_callbacks);
-+	bp->b_iodone = xfs_buf_iodone_callbacks;
- 	bip->bli_item.li_cb = xfs_buf_iodone;
- 
- 	trace_xfs_trans_log_buf(bip);
-Index: xfs/fs/xfs/linux-2.6/xfs_buf.h
-===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_buf.h	2011-07-09 09:34:13.248966419 +0200
-+++ xfs/fs/xfs/linux-2.6/xfs_buf.h	2011-07-09 09:34:17.995632851 +0200
-@@ -276,10 +276,6 @@ void xfs_buf_stale(struct xfs_buf *bp);
- #define XFS_BUF_UNWRITE(bp)	((bp)->b_flags &= ~XBF_WRITE)
- #define XFS_BUF_ISWRITE(bp)	((bp)->b_flags & XBF_WRITE)
- 
--#define XFS_BUF_IODONE_FUNC(bp)			((bp)->b_iodone)
--#define XFS_BUF_SET_IODONE_FUNC(bp, func)	((bp)->b_iodone = (func))
--#define XFS_BUF_CLR_IODONE_FUNC(bp)		((bp)->b_iodone = NULL)
+-#ifdef XFS_DABUF_DEBUG
+-xfs_dabuf_t	*xfs_dabuf_global_list;
+-static DEFINE_SPINLOCK(xfs_dabuf_global_lock);
+-#endif
 -
- #define XFS_BUF_SET_START(bp)			do { } while (0)
+ /*
+  * Create a dabuf.
+  */
+ /* ARGSUSED */
+ STATIC xfs_dabuf_t *
+-xfs_da_buf_make(int nbuf, xfs_buf_t **bps, inst_t *ra)
++xfs_da_buf_make(int nbuf, xfs_buf_t **bps)
+ {
+ 	xfs_buf_t	*bp;
+ 	xfs_dabuf_t	*dabuf;
+@@ -2263,11 +2254,6 @@ xfs_da_buf_make(int nbuf, xfs_buf_t **bp
+ 	else
+ 		dabuf = kmem_alloc(XFS_DA_BUF_SIZE(nbuf), KM_NOFS);
+ 	dabuf->dirty = 0;
+-#ifdef XFS_DABUF_DEBUG
+-	dabuf->ra = ra;
+-	dabuf->target = XFS_BUF_TARGET(bps[0]);
+-	dabuf->blkno = XFS_BUF_ADDR(bps[0]);
+-#endif
+ 	if (nbuf == 1) {
+ 		dabuf->nbuf = 1;
+ 		bp = bps[0];
+@@ -2287,23 +2273,6 @@ xfs_da_buf_make(int nbuf, xfs_buf_t **bp
+ 				XFS_BUF_COUNT(bp));
+ 		}
+ 	}
+-#ifdef XFS_DABUF_DEBUG
+-	{
+-		xfs_dabuf_t	*p;
+-
+-		spin_lock(&xfs_dabuf_global_lock);
+-		for (p = xfs_dabuf_global_list; p; p = p->next) {
+-			ASSERT(p->blkno != dabuf->blkno ||
+-			       p->target != dabuf->target);
+-		}
+-		dabuf->prev = NULL;
+-		if (xfs_dabuf_global_list)
+-			xfs_dabuf_global_list->prev = dabuf;
+-		dabuf->next = xfs_dabuf_global_list;
+-		xfs_dabuf_global_list = dabuf;
+-		spin_unlock(&xfs_dabuf_global_lock);
+-	}
+-#endif
+ 	return dabuf;
+ }
  
- #define XFS_BUF_PTR(bp)			(xfs_caddr_t)((bp)->b_addr)
+@@ -2339,25 +2308,12 @@ xfs_da_buf_done(xfs_dabuf_t *dabuf)
+ 	ASSERT(dabuf->nbuf && dabuf->data && dabuf->bbcount && dabuf->bps[0]);
+ 	if (dabuf->dirty)
+ 		xfs_da_buf_clean(dabuf);
+-	if (dabuf->nbuf > 1)
++	if (dabuf->nbuf > 1) {
+ 		kmem_free(dabuf->data);
+-#ifdef XFS_DABUF_DEBUG
+-	{
+-		spin_lock(&xfs_dabuf_global_lock);
+-		if (dabuf->prev)
+-			dabuf->prev->next = dabuf->next;
+-		else
+-			xfs_dabuf_global_list = dabuf->next;
+-		if (dabuf->next)
+-			dabuf->next->prev = dabuf->prev;
+-		spin_unlock(&xfs_dabuf_global_lock);
+-	}
+-	memset(dabuf, 0, XFS_DA_BUF_SIZE(dabuf->nbuf));
+-#endif
+-	if (dabuf->nbuf == 1)
+-		kmem_zone_free(xfs_dabuf_zone, dabuf);
+-	else
+ 		kmem_free(dabuf);
++	} else {
++		kmem_zone_free(xfs_dabuf_zone, dabuf);
++	}
+ }
+ 
+ /*
+Index: xfs/fs/xfs/xfs_da_btree.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_da_btree.h	2011-07-09 12:26:07.115110896 +0200
++++ xfs/fs/xfs/xfs_da_btree.h	2011-07-09 12:26:44.665108995 +0200
+@@ -145,22 +145,11 @@ typedef struct xfs_dabuf {
+ 	short		dirty;		/* data needs to be copied back */
+ 	short		bbcount;	/* how large is data in bbs */
+ 	void		*data;		/* pointer for buffers' data */
+-#ifdef XFS_DABUF_DEBUG
+-	inst_t		*ra;		/* return address of caller to make */
+-	struct xfs_dabuf *next;		/* next in global chain */
+-	struct xfs_dabuf *prev;		/* previous in global chain */
+-	struct xfs_buftarg *target;	/* device for buffer */
+-	xfs_daddr_t	blkno;		/* daddr first in bps[0] */
+-#endif
+ 	struct xfs_buf	*bps[1];	/* actually nbuf of these */
+ } xfs_dabuf_t;
+ #define	XFS_DA_BUF_SIZE(n)	\
+ 	(sizeof(xfs_dabuf_t) + sizeof(struct xfs_buf *) * ((n) - 1))
+ 
+-#ifdef XFS_DABUF_DEBUG
+-extern xfs_dabuf_t	*xfs_dabuf_global_list;
+-#endif
+-
+ /*
+  * Storage for holding state during Btree searches and split/join ops.
+  *
 
 _______________________________________________
 xfs mailing list
