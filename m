@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6AKoLfQ153486 for <xfs@oss.sgi.com>; Sun, 10 Jul 2011 15:50:21 -0500
+	p6AKoLNb153487 for <xfs@oss.sgi.com>; Sun, 10 Jul 2011 15:50:21 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 89E2417955AE
-	for <xfs@oss.sgi.com>; Sun, 10 Jul 2011 13:50:18 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5D5535CCBD
+	for <xfs@oss.sgi.com>; Sun, 10 Jul 2011 13:50:19 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	3CXvc6ptoIfHa3bK for <xfs@oss.sgi.com>;
-	Sun, 10 Jul 2011 13:50:18 -0700 (PDT)
+	7FGNH6aEyNnKG8Cy for <xfs@oss.sgi.com>;
+	Sun, 10 Jul 2011 13:50:19 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1Qg0xF-0002vp-T9
-	for xfs@oss.sgi.com; Sun, 10 Jul 2011 20:50:17 +0000
-Message-Id: <20110710205017.863949257@bombadil.infradead.org>
-Date: Sun, 10 Jul 2011 16:49:22 -0400
+	Linux)) id 1Qg0xG-0002xu-OQ
+	for xfs@oss.sgi.com; Sun, 10 Jul 2011 20:50:18 +0000
+Message-Id: <20110710205018.724144355@bombadil.infradead.org>
+Date: Sun, 10 Jul 2011 16:49:26 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 06/11] xfs: remove wrappers around b_fspriv
+Subject: [PATCH 10/11] xfs: remove leftovers of the old btree tracing code
 References: <20110710204916.856267100@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-simplify-b_fspriv
+Content-Disposition: inline; filename=xfs-kill-dead-btree-trace-code
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,489 +34,820 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
+Remove various bits left over from the old kdb-only btree tracing code, but
+leave the actual trace point stubs in place to ease adding new event based
+btree tracing.
+
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: xfs/fs/xfs/linux-2.6/xfs_buf.h
+Index: xfs/fs/xfs/Makefile
 ===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_buf.h	2011-07-09 09:34:12.288966468 +0200
-+++ xfs/fs/xfs/linux-2.6/xfs_buf.h	2011-07-09 09:34:13.248966419 +0200
-@@ -280,8 +280,6 @@ void xfs_buf_stale(struct xfs_buf *bp);
- #define XFS_BUF_SET_IODONE_FUNC(bp, func)	((bp)->b_iodone = (func))
- #define XFS_BUF_CLR_IODONE_FUNC(bp)		((bp)->b_iodone = NULL)
+--- xfs.orig/fs/xfs/Makefile	2011-07-09 13:29:17.081585678 +0200
++++ xfs/fs/xfs/Makefile	2011-07-09 14:02:30.378151424 +0200
+@@ -88,8 +88,6 @@ xfs-y				+= xfs_alloc.o \
+ 				   xfs_vnodeops.o \
+ 				   xfs_rw.o
  
--#define XFS_BUF_FSPRIVATE(bp, type)		((type)(bp)->b_fspriv)
--#define XFS_BUF_SET_FSPRIVATE(bp, val)		((bp)->b_fspriv = (void*)(val))
- #define XFS_BUF_SET_START(bp)			do { } while (0)
- 
- #define XFS_BUF_PTR(bp)			(xfs_caddr_t)((bp)->b_addr)
-Index: xfs/fs/xfs/xfs_buf_item.c
+-xfs-$(CONFIG_XFS_TRACE)		+= xfs_btree_trace.o
+-
+ # Objects in linux/
+ xfs-y				+= $(addprefix $(XFS_LINUX)/, \
+ 				   kmem.o \
+Index: xfs/fs/xfs/linux-2.6/xfs_super.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_buf_item.c	2011-07-09 09:34:12.292299803 +0200
-+++ xfs/fs/xfs/xfs_buf_item.c	2011-07-09 09:34:13.252299751 +0200
-@@ -90,13 +90,11 @@ xfs_buf_item_flush_log_debug(
- 	uint		first,
- 	uint		last)
- {
--	xfs_buf_log_item_t	*bip;
-+	xfs_buf_log_item_t	*bip = bp->b_fspriv;
- 	uint			nbytes;
- 
--	bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t*);
--	if ((bip == NULL) || (bip->bli_item.li_type != XFS_LI_BUF)) {
-+	if (bip == NULL || (bip->bli_item.li_type != XFS_LI_BUF))
- 		return;
--	}
- 
- 	ASSERT(bip->bli_logged != NULL);
- 	nbytes = last - first + 1;
-@@ -408,7 +406,7 @@ xfs_buf_item_unpin(
- 	int		stale = bip->bli_flags & XFS_BLI_STALE;
- 	int		freed;
- 
--	ASSERT(XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t *) == bip);
-+	ASSERT(bp->b_fspriv == bip);
- 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
- 
- 	trace_xfs_buf_item_unpin(bip);
-@@ -454,13 +452,13 @@ xfs_buf_item_unpin(
- 		 */
- 		if (bip->bli_flags & XFS_BLI_STALE_INODE) {
- 			xfs_buf_do_callbacks(bp);
--			XFS_BUF_SET_FSPRIVATE(bp, NULL);
-+			bp->b_fspriv = NULL;
- 			XFS_BUF_CLR_IODONE_FUNC(bp);
- 		} else {
- 			spin_lock(&ailp->xa_lock);
- 			xfs_trans_ail_delete(ailp, (xfs_log_item_t *)bip);
- 			xfs_buf_item_relse(bp);
--			ASSERT(XFS_BUF_FSPRIVATE(bp, void *) == NULL);
-+			ASSERT(bp->b_fspriv == NULL);
- 		}
- 		xfs_buf_relse(bp);
- 	}
-@@ -684,7 +682,7 @@ xfs_buf_item_init(
- 	xfs_buf_t	*bp,
- 	xfs_mount_t	*mp)
- {
--	xfs_log_item_t		*lip;
-+	xfs_log_item_t		*lip = bp->b_fspriv;
- 	xfs_buf_log_item_t	*bip;
- 	int			chunks;
- 	int			map_size;
-@@ -696,12 +694,8 @@ xfs_buf_item_init(
- 	 * nothing to do here so return.
- 	 */
- 	ASSERT(bp->b_target->bt_mount == mp);
--	if (XFS_BUF_FSPRIVATE(bp, void *) != NULL) {
--		lip = XFS_BUF_FSPRIVATE(bp, xfs_log_item_t *);
--		if (lip->li_type == XFS_LI_BUF) {
--			return;
--		}
--	}
-+	if (lip != NULL && lip->li_type == XFS_LI_BUF)
-+		return;
- 
- 	/*
- 	 * chunks is the number of XFS_BLF_CHUNK size pieces
-@@ -740,11 +734,9 @@ xfs_buf_item_init(
- 	 * Put the buf item into the list of items attached to the
- 	 * buffer at the front.
- 	 */
--	if (XFS_BUF_FSPRIVATE(bp, void *) != NULL) {
--		bip->bli_item.li_bio_list =
--				XFS_BUF_FSPRIVATE(bp, xfs_log_item_t *);
--	}
--	XFS_BUF_SET_FSPRIVATE(bp, bip);
-+	if (bp->b_fspriv)
-+		bip->bli_item.li_bio_list = bp->b_fspriv;
-+	bp->b_fspriv = bip;
+--- xfs.orig/fs/xfs/linux-2.6/xfs_super.c	2011-07-09 13:29:17.091585678 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_super.c	2011-07-09 14:02:30.378151424 +0200
+@@ -33,7 +33,6 @@
+ #include "xfs_dinode.h"
+ #include "xfs_inode.h"
+ #include "xfs_btree.h"
+-#include "xfs_btree_trace.h"
+ #include "xfs_ialloc.h"
+ #include "xfs_bmap.h"
+ #include "xfs_rtalloc.h"
+Index: xfs/fs/xfs/xfs_alloc_btree.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_alloc_btree.c	2011-07-09 13:29:17.101585677 +0200
++++ xfs/fs/xfs/xfs_alloc_btree.c	2011-07-09 14:05:23.471475993 +0200
+@@ -31,7 +31,6 @@
+ #include "xfs_dinode.h"
+ #include "xfs_inode.h"
+ #include "xfs_btree.h"
+-#include "xfs_btree_trace.h"
+ #include "xfs_alloc.h"
+ #include "xfs_error.h"
+ #include "xfs_trace.h"
+@@ -311,72 +310,6 @@ xfs_allocbt_recs_inorder(
  }
+ #endif	/* DEBUG */
  
+-#ifdef XFS_BTREE_TRACE
+-ktrace_t	*xfs_allocbt_trace_buf;
+-
+-STATIC void
+-xfs_allocbt_trace_enter(
+-	struct xfs_btree_cur	*cur,
+-	const char		*func,
+-	char			*s,
+-	int			type,
+-	int			line,
+-	__psunsigned_t		a0,
+-	__psunsigned_t		a1,
+-	__psunsigned_t		a2,
+-	__psunsigned_t		a3,
+-	__psunsigned_t		a4,
+-	__psunsigned_t		a5,
+-	__psunsigned_t		a6,
+-	__psunsigned_t		a7,
+-	__psunsigned_t		a8,
+-	__psunsigned_t		a9,
+-	__psunsigned_t		a10)
+-{
+-	ktrace_enter(xfs_allocbt_trace_buf, (void *)(__psint_t)type,
+-		(void *)func, (void *)s, NULL, (void *)cur,
+-		(void *)a0, (void *)a1, (void *)a2, (void *)a3,
+-		(void *)a4, (void *)a5, (void *)a6, (void *)a7,
+-		(void *)a8, (void *)a9, (void *)a10);
+-}
+-
+-STATIC void
+-xfs_allocbt_trace_cursor(
+-	struct xfs_btree_cur	*cur,
+-	__uint32_t		*s0,
+-	__uint64_t		*l0,
+-	__uint64_t		*l1)
+-{
+-	*s0 = cur->bc_private.a.agno;
+-	*l0 = cur->bc_rec.a.ar_startblock;
+-	*l1 = cur->bc_rec.a.ar_blockcount;
+-}
+-
+-STATIC void
+-xfs_allocbt_trace_key(
+-	struct xfs_btree_cur	*cur,
+-	union xfs_btree_key	*key,
+-	__uint64_t		*l0,
+-	__uint64_t		*l1)
+-{
+-	*l0 = be32_to_cpu(key->alloc.ar_startblock);
+-	*l1 = be32_to_cpu(key->alloc.ar_blockcount);
+-}
+-
+-STATIC void
+-xfs_allocbt_trace_record(
+-	struct xfs_btree_cur	*cur,
+-	union xfs_btree_rec	*rec,
+-	__uint64_t		*l0,
+-	__uint64_t		*l1,
+-	__uint64_t		*l2)
+-{
+-	*l0 = be32_to_cpu(rec->alloc.ar_startblock);
+-	*l1 = be32_to_cpu(rec->alloc.ar_blockcount);
+-	*l2 = 0;
+-}
+-#endif /* XFS_BTREE_TRACE */
+-
+ static const struct xfs_btree_ops xfs_allocbt_ops = {
+ 	.rec_len		= sizeof(xfs_alloc_rec_t),
+ 	.key_len		= sizeof(xfs_alloc_key_t),
+@@ -393,18 +326,10 @@ static const struct xfs_btree_ops xfs_al
+ 	.init_rec_from_cur	= xfs_allocbt_init_rec_from_cur,
+ 	.init_ptr_from_cur	= xfs_allocbt_init_ptr_from_cur,
+ 	.key_diff		= xfs_allocbt_key_diff,
+-
+ #ifdef DEBUG
+ 	.keys_inorder		= xfs_allocbt_keys_inorder,
+ 	.recs_inorder		= xfs_allocbt_recs_inorder,
+ #endif
+-
+-#ifdef XFS_BTREE_TRACE
+-	.trace_enter		= xfs_allocbt_trace_enter,
+-	.trace_cursor		= xfs_allocbt_trace_cursor,
+-	.trace_key		= xfs_allocbt_trace_key,
+-	.trace_record		= xfs_allocbt_trace_record,
+-#endif
+ };
  
-@@ -876,12 +868,11 @@ xfs_buf_item_relse(
+ /*
+Index: xfs/fs/xfs/xfs_bmap_btree.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_bmap_btree.c	2011-07-09 13:29:17.108252343 +0200
++++ xfs/fs/xfs/xfs_bmap_btree.c	2011-07-09 14:04:48.868144412 +0200
+@@ -33,7 +33,6 @@
+ #include "xfs_inode_item.h"
+ #include "xfs_alloc.h"
+ #include "xfs_btree.h"
+-#include "xfs_btree_trace.h"
+ #include "xfs_itable.h"
+ #include "xfs_bmap.h"
+ #include "xfs_error.h"
+@@ -732,95 +731,6 @@ xfs_bmbt_recs_inorder(
+ }
+ #endif	/* DEBUG */
  
- 	trace_xfs_buf_item_relse(bp, _RET_IP_);
+-#ifdef XFS_BTREE_TRACE
+-ktrace_t	*xfs_bmbt_trace_buf;
+-
+-STATIC void
+-xfs_bmbt_trace_enter(
+-	struct xfs_btree_cur	*cur,
+-	const char		*func,
+-	char			*s,
+-	int			type,
+-	int			line,
+-	__psunsigned_t		a0,
+-	__psunsigned_t		a1,
+-	__psunsigned_t		a2,
+-	__psunsigned_t		a3,
+-	__psunsigned_t		a4,
+-	__psunsigned_t		a5,
+-	__psunsigned_t		a6,
+-	__psunsigned_t		a7,
+-	__psunsigned_t		a8,
+-	__psunsigned_t		a9,
+-	__psunsigned_t		a10)
+-{
+-	struct xfs_inode	*ip = cur->bc_private.b.ip;
+-	int			whichfork = cur->bc_private.b.whichfork;
+-
+-	ktrace_enter(xfs_bmbt_trace_buf,
+-		(void *)((__psint_t)type | (whichfork << 8) | (line << 16)),
+-		(void *)func, (void *)s, (void *)ip, (void *)cur,
+-		(void *)a0, (void *)a1, (void *)a2, (void *)a3,
+-		(void *)a4, (void *)a5, (void *)a6, (void *)a7,
+-		(void *)a8, (void *)a9, (void *)a10);
+-}
+-
+-STATIC void
+-xfs_bmbt_trace_cursor(
+-	struct xfs_btree_cur	*cur,
+-	__uint32_t		*s0,
+-	__uint64_t		*l0,
+-	__uint64_t		*l1)
+-{
+-	struct xfs_bmbt_rec_host r;
+-
+-	xfs_bmbt_set_all(&r, &cur->bc_rec.b);
+-
+-	*s0 = (cur->bc_nlevels << 24) |
+-	      (cur->bc_private.b.flags << 16) |
+-	       cur->bc_private.b.allocated;
+-	*l0 = r.l0;
+-	*l1 = r.l1;
+-}
+-
+-STATIC void
+-xfs_bmbt_trace_key(
+-	struct xfs_btree_cur	*cur,
+-	union xfs_btree_key	*key,
+-	__uint64_t		*l0,
+-	__uint64_t		*l1)
+-{
+-	*l0 = be64_to_cpu(key->bmbt.br_startoff);
+-	*l1 = 0;
+-}
+-
+-/* Endian flipping versions of the bmbt extraction functions */
+-STATIC void
+-xfs_bmbt_disk_get_all(
+-	xfs_bmbt_rec_t	*r,
+-	xfs_bmbt_irec_t *s)
+-{
+-	__xfs_bmbt_get_all(get_unaligned_be64(&r->l0),
+-				get_unaligned_be64(&r->l1), s);
+-}
+-
+-STATIC void
+-xfs_bmbt_trace_record(
+-	struct xfs_btree_cur	*cur,
+-	union xfs_btree_rec	*rec,
+-	__uint64_t		*l0,
+-	__uint64_t		*l1,
+-	__uint64_t		*l2)
+-{
+-	struct xfs_bmbt_irec	irec;
+-
+-	xfs_bmbt_disk_get_all(&rec->bmbt, &irec);
+-	*l0 = irec.br_startoff;
+-	*l1 = irec.br_startblock;
+-	*l2 = irec.br_blockcount;
+-}
+-#endif /* XFS_BTREE_TRACE */
+-
+ static const struct xfs_btree_ops xfs_bmbt_ops = {
+ 	.rec_len		= sizeof(xfs_bmbt_rec_t),
+ 	.key_len		= sizeof(xfs_bmbt_key_t),
+@@ -837,18 +747,10 @@ static const struct xfs_btree_ops xfs_bm
+ 	.init_rec_from_cur	= xfs_bmbt_init_rec_from_cur,
+ 	.init_ptr_from_cur	= xfs_bmbt_init_ptr_from_cur,
+ 	.key_diff		= xfs_bmbt_key_diff,
+-
+ #ifdef DEBUG
+ 	.keys_inorder		= xfs_bmbt_keys_inorder,
+ 	.recs_inorder		= xfs_bmbt_recs_inorder,
+ #endif
+-
+-#ifdef XFS_BTREE_TRACE
+-	.trace_enter		= xfs_bmbt_trace_enter,
+-	.trace_cursor		= xfs_bmbt_trace_cursor,
+-	.trace_key		= xfs_bmbt_trace_key,
+-	.trace_record		= xfs_bmbt_trace_record,
+-#endif
+ };
  
--	bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t*);
--	XFS_BUF_SET_FSPRIVATE(bp, bip->bli_item.li_bio_list);
--	if ((XFS_BUF_FSPRIVATE(bp, void *) == NULL) &&
--	    (XFS_BUF_IODONE_FUNC(bp) != NULL)) {
-+	bip = bp->b_fspriv;
-+	bp->b_fspriv = bip->bli_item.li_bio_list;
-+	if (bp->b_fspriv == NULL && XFS_BUF_IODONE_FUNC(bp) != NULL)
- 		XFS_BUF_CLR_IODONE_FUNC(bp);
--	}
+ /*
+Index: xfs/fs/xfs/xfs_btree.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_btree.c	2011-07-09 13:29:17.121585675 +0200
++++ xfs/fs/xfs/xfs_btree.c	2011-07-09 14:02:30.381484757 +0200
+@@ -32,7 +32,6 @@
+ #include "xfs_inode.h"
+ #include "xfs_inode_item.h"
+ #include "xfs_btree.h"
+-#include "xfs_btree_trace.h"
+ #include "xfs_error.h"
+ #include "xfs_trace.h"
+ 
+Index: xfs/fs/xfs/xfs_btree.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_btree.h	2011-07-09 13:29:17.131585674 +0200
++++ xfs/fs/xfs/xfs_btree.h	2011-07-09 14:05:39.511475182 +0200
+@@ -199,25 +199,6 @@ struct xfs_btree_ops {
+ 				union xfs_btree_rec *r1,
+ 				union xfs_btree_rec *r2);
+ #endif
+-
+-	/* btree tracing */
+-#ifdef XFS_BTREE_TRACE
+-	void		(*trace_enter)(struct xfs_btree_cur *, const char *,
+-				       char *, int, int, __psunsigned_t,
+-				       __psunsigned_t, __psunsigned_t,
+-				       __psunsigned_t, __psunsigned_t,
+-				       __psunsigned_t, __psunsigned_t,
+-				       __psunsigned_t, __psunsigned_t,
+-				       __psunsigned_t, __psunsigned_t);
+-	void		(*trace_cursor)(struct xfs_btree_cur *, __uint32_t *,
+-					__uint64_t *, __uint64_t *);
+-	void		(*trace_key)(struct xfs_btree_cur *,
+-				     union xfs_btree_key *, __uint64_t *,
+-				     __uint64_t *);
+-	void		(*trace_record)(struct xfs_btree_cur *,
+-					union xfs_btree_rec *, __uint64_t *,
+-					__uint64_t *, __uint64_t *);
+-#endif
+ };
+ 
+ /*
+@@ -452,4 +433,23 @@ static inline int xfs_btree_get_level(st
+ 	(XFS_FSB_TO_AGNO(mp, fsb) < mp->m_sb.sb_agcount && \
+ 		XFS_FSB_TO_AGBNO(mp, fsb) < mp->m_sb.sb_agblocks)
+ 
++/*
++ * Trace hooks.  Currently not implemented as they need to be ported
++ * over to the generic tracing functionality, which is some effort.
++ *
++ * i,j = integer (32 bit)
++ * b = btree block buffer (xfs_buf_t)
++ * p = btree ptr
++ * r = btree record
++ * k = btree key
++ */
++#define	XFS_BTREE_TRACE_ARGBI(c, b, i)
++#define	XFS_BTREE_TRACE_ARGBII(c, b, i, j)
++#define	XFS_BTREE_TRACE_ARGI(c, i)
++#define	XFS_BTREE_TRACE_ARGIPK(c, i, p, s)
++#define	XFS_BTREE_TRACE_ARGIPR(c, i, p, r)
++#define	XFS_BTREE_TRACE_ARGIK(c, i, k)
++#define XFS_BTREE_TRACE_ARGR(c, r)
++#define	XFS_BTREE_TRACE_CURSOR(c, t)
 +
- 	xfs_buf_rele(bp);
- 	xfs_buf_item_free(bip);
+ #endif	/* __XFS_BTREE_H__ */
+Index: xfs/fs/xfs/xfs_btree_trace.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_btree_trace.c	2011-07-09 13:29:17.138252341 +0200
++++ /dev/null	1970-01-01 00:00:00.000000000 +0000
+@@ -1,249 +0,0 @@
+-/*
+- * Copyright (c) 2008 Silicon Graphics, Inc.
+- * All Rights Reserved.
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it would be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write the Free Software Foundation,
+- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+- */
+-#include "xfs.h"
+-#include "xfs_types.h"
+-#include "xfs_inum.h"
+-#include "xfs_bmap_btree.h"
+-#include "xfs_alloc_btree.h"
+-#include "xfs_ialloc_btree.h"
+-#include "xfs_inode.h"
+-#include "xfs_btree.h"
+-#include "xfs_btree_trace.h"
+-
+-STATIC void
+-xfs_btree_trace_ptr(
+-	struct xfs_btree_cur	*cur,
+-	union xfs_btree_ptr	ptr,
+-	__psunsigned_t		*high,
+-	__psunsigned_t		*low)
+-{
+-	if (cur->bc_flags & XFS_BTREE_LONG_PTRS) {
+-		__u64 val = be64_to_cpu(ptr.l);
+-		*high = val >> 32;
+-		*low = (int)val;
+-	} else {
+-		*high = 0;
+-		*low = be32_to_cpu(ptr.s);
+-	}
+-}
+-
+-/*
+- * Add a trace buffer entry for arguments, for a buffer & 1 integer arg.
+- */
+-void
+-xfs_btree_trace_argbi(
+-	const char		*func,
+-	struct xfs_btree_cur	*cur,
+-	struct xfs_buf		*b,
+-	int			i,
+-	int			line)
+-{
+-	cur->bc_ops->trace_enter(cur, func, XBT_ARGS, XFS_BTREE_KTRACE_ARGBI,
+-				 line, (__psunsigned_t)b, i, 0, 0, 0, 0, 0,
+-				 0, 0, 0, 0);
+-}
+-
+-/*
+- * Add a trace buffer entry for arguments, for a buffer & 2 integer args.
+- */
+-void
+-xfs_btree_trace_argbii(
+-	const char		*func,
+-	struct xfs_btree_cur	*cur,
+-	struct xfs_buf		*b,
+-	int			i0,
+-	int			i1,
+-	int			line)
+-{
+-	cur->bc_ops->trace_enter(cur, func, XBT_ARGS, XFS_BTREE_KTRACE_ARGBII,
+-				 line, (__psunsigned_t)b, i0, i1, 0, 0, 0, 0,
+-				 0, 0, 0, 0);
+-}
+-
+-/*
+- * Add a trace buffer entry for arguments, for 3 block-length args
+- * and an integer arg.
+- */
+-void
+-xfs_btree_trace_argfffi(
+-	const char		*func,
+-	struct xfs_btree_cur	*cur,
+-	xfs_dfiloff_t		o,
+-	xfs_dfsbno_t		b,
+-	xfs_dfilblks_t		i,
+-	int			j,
+-	int			line)
+-{
+-	cur->bc_ops->trace_enter(cur, func, XBT_ARGS, XFS_BTREE_KTRACE_ARGFFFI,
+-				 line,
+-				 o >> 32, (int)o,
+-				 b >> 32, (int)b,
+-				 i >> 32, (int)i,
+-				 (int)j, 0, 0, 0, 0);
+-}
+-
+-/*
+- * Add a trace buffer entry for arguments, for one integer arg.
+- */
+-void
+-xfs_btree_trace_argi(
+-	const char		*func,
+-	struct xfs_btree_cur	*cur,
+-	int			i,
+-	int			line)
+-{
+-	cur->bc_ops->trace_enter(cur, func, XBT_ARGS, XFS_BTREE_KTRACE_ARGI,
+-				 line, i, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+-}
+-
+-/*
+- * Add a trace buffer entry for arguments, for int, fsblock, key.
+- */
+-void
+-xfs_btree_trace_argipk(
+-	const char		*func,
+-	struct xfs_btree_cur	*cur,
+-	int			i,
+-	union xfs_btree_ptr	ptr,
+-	union xfs_btree_key	*key,
+-	int			line)
+-{
+-	__psunsigned_t		high, low;
+-	__uint64_t		l0, l1;
+-
+-	xfs_btree_trace_ptr(cur, ptr, &high, &low);
+-	cur->bc_ops->trace_key(cur, key, &l0, &l1);
+-	cur->bc_ops->trace_enter(cur, func, XBT_ARGS, XFS_BTREE_KTRACE_ARGIPK,
+-				 line, i, high, low,
+-				 l0 >> 32, (int)l0,
+-				 l1 >> 32, (int)l1,
+-				 0, 0, 0, 0);
+-}
+-
+-/*
+- * Add a trace buffer entry for arguments, for int, fsblock, rec.
+- */
+-void
+-xfs_btree_trace_argipr(
+-	const char		*func,
+-	struct xfs_btree_cur	*cur,
+-	int			i,
+-	union xfs_btree_ptr	ptr,
+-	union xfs_btree_rec	*rec,
+-	int			line)
+-{
+-	__psunsigned_t		high, low;
+-	__uint64_t		l0, l1, l2;
+-
+-	xfs_btree_trace_ptr(cur, ptr, &high, &low);
+-	cur->bc_ops->trace_record(cur, rec, &l0, &l1, &l2);
+-	cur->bc_ops->trace_enter(cur, func, XBT_ARGS, XFS_BTREE_KTRACE_ARGIPR,
+-			      line, i,
+-			      high, low,
+-			      l0 >> 32, (int)l0,
+-			      l1 >> 32, (int)l1,
+-			      l2 >> 32, (int)l2,
+-			      0, 0);
+-}
+-
+-/*
+- * Add a trace buffer entry for arguments, for int, key.
+- */
+-void
+-xfs_btree_trace_argik(
+-	const char		*func,
+-	struct xfs_btree_cur	*cur,
+-	int			i,
+-	union xfs_btree_key	*key,
+-	int			line)
+-{
+-	__uint64_t		l0, l1;
+-
+-	cur->bc_ops->trace_key(cur, key, &l0, &l1);
+-	cur->bc_ops->trace_enter(cur, func, XBT_ARGS, XFS_BTREE_KTRACE_ARGIK,
+-				 line, i,
+-				 l0 >> 32, (int)l0,
+-				 l1 >> 32, (int)l1,
+-				 0, 0, 0, 0, 0, 0);
+-}
+-
+-/*
+- * Add a trace buffer entry for arguments, for record.
+- */
+-void
+-xfs_btree_trace_argr(
+-	const char		*func,
+-	struct xfs_btree_cur	*cur,
+-	union xfs_btree_rec	*rec,
+-	int			line)
+-{
+-	__uint64_t		l0, l1, l2;
+-
+-	cur->bc_ops->trace_record(cur, rec, &l0, &l1, &l2);
+-	cur->bc_ops->trace_enter(cur, func, XBT_ARGS, XFS_BTREE_KTRACE_ARGR,
+-			      line,
+-			      l0 >> 32, (int)l0,
+-			      l1 >> 32, (int)l1,
+-			      l2 >> 32, (int)l2,
+-			      0, 0, 0, 0, 0);
+-}
+-
+-/*
+- * Add a trace buffer entry for the cursor/operation.
+- */
+-void
+-xfs_btree_trace_cursor(
+-	const char		*func,
+-	struct xfs_btree_cur	*cur,
+-	int			type,
+-	int			line)
+-{
+-	__uint32_t		s0;
+-	__uint64_t		l0, l1;
+-	char			*s;
+-
+-	switch (type) {
+-	case XBT_ARGS:
+-		s = "args";
+-		break;
+-	case XBT_ENTRY:
+-		s = "entry";
+-		break;
+-	case XBT_ERROR:
+-		s = "error";
+-		break;
+-	case XBT_EXIT:
+-		s = "exit";
+-		break;
+-	default:
+-		s = "unknown";
+-		break;
+-	}
+-
+-	cur->bc_ops->trace_cursor(cur, &s0, &l0, &l1);
+-	cur->bc_ops->trace_enter(cur, func, s, XFS_BTREE_KTRACE_CUR, line,
+-				 s0,
+-				 l0 >> 32, (int)l0,
+-				 l1 >> 32, (int)l1,
+-				 (__psunsigned_t)cur->bc_bufs[0],
+-				 (__psunsigned_t)cur->bc_bufs[1],
+-				 (__psunsigned_t)cur->bc_bufs[2],
+-				 (__psunsigned_t)cur->bc_bufs[3],
+-				 (cur->bc_ptrs[0] << 16) | cur->bc_ptrs[1],
+-				 (cur->bc_ptrs[2] << 16) | cur->bc_ptrs[3]);
+-}
+Index: xfs/fs/xfs/xfs_btree_trace.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_btree_trace.h	2011-07-09 13:29:17.148252342 +0200
++++ /dev/null	1970-01-01 00:00:00.000000000 +0000
+@@ -1,99 +0,0 @@
+-/*
+- * Copyright (c) 2008 Silicon Graphics, Inc.
+- * All Rights Reserved.
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it would be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write the Free Software Foundation,
+- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+- */
+-#ifndef __XFS_BTREE_TRACE_H__
+-#define	__XFS_BTREE_TRACE_H__
+-
+-struct xfs_btree_cur;
+-struct xfs_buf;
+-
+-
+-/*
+- * Trace hooks.
+- * i,j = integer (32 bit)
+- * b = btree block buffer (xfs_buf_t)
+- * p = btree ptr
+- * r = btree record
+- * k = btree key
+- */
+-
+-#ifdef XFS_BTREE_TRACE
+-
+-/*
+- * Trace buffer entry types.
+- */
+-#define XFS_BTREE_KTRACE_ARGBI   1
+-#define XFS_BTREE_KTRACE_ARGBII  2
+-#define XFS_BTREE_KTRACE_ARGFFFI 3
+-#define XFS_BTREE_KTRACE_ARGI    4
+-#define XFS_BTREE_KTRACE_ARGIPK  5
+-#define XFS_BTREE_KTRACE_ARGIPR  6
+-#define XFS_BTREE_KTRACE_ARGIK   7
+-#define XFS_BTREE_KTRACE_ARGR	 8
+-#define XFS_BTREE_KTRACE_CUR     9
+-
+-/*
+- * Sub-types for cursor traces.
+- */
+-#define XBT_ARGS	0
+-#define XBT_ENTRY	1
+-#define XBT_ERROR	2
+-#define XBT_EXIT	3
+-
+-void xfs_btree_trace_argbi(const char *, struct xfs_btree_cur *,
+-		struct xfs_buf *, int, int);
+-void xfs_btree_trace_argbii(const char *, struct xfs_btree_cur *,
+-		struct xfs_buf *, int, int, int);
+-void xfs_btree_trace_argi(const char *, struct xfs_btree_cur *, int, int);
+-void xfs_btree_trace_argipk(const char *, struct xfs_btree_cur *, int,
+-		union xfs_btree_ptr, union xfs_btree_key *, int);
+-void xfs_btree_trace_argipr(const char *, struct xfs_btree_cur *, int,
+-		union xfs_btree_ptr, union xfs_btree_rec *, int);
+-void xfs_btree_trace_argik(const char *, struct xfs_btree_cur *, int,
+-		union xfs_btree_key *, int);
+-void xfs_btree_trace_argr(const char *, struct xfs_btree_cur *,
+-		union xfs_btree_rec *, int);
+-void xfs_btree_trace_cursor(const char *, struct xfs_btree_cur *, int, int);
+-
+-#define	XFS_BTREE_TRACE_ARGBI(c, b, i)	\
+-	xfs_btree_trace_argbi(__func__, c, b, i, __LINE__)
+-#define	XFS_BTREE_TRACE_ARGBII(c, b, i, j)	\
+-	xfs_btree_trace_argbii(__func__, c, b, i, j, __LINE__)
+-#define	XFS_BTREE_TRACE_ARGI(c, i)	\
+-	xfs_btree_trace_argi(__func__, c, i, __LINE__)
+-#define	XFS_BTREE_TRACE_ARGIPK(c, i, p, k)	\
+-	xfs_btree_trace_argipk(__func__, c, i, p, k, __LINE__)
+-#define	XFS_BTREE_TRACE_ARGIPR(c, i, p, r)	\
+-	xfs_btree_trace_argipr(__func__, c, i, p, r, __LINE__)
+-#define	XFS_BTREE_TRACE_ARGIK(c, i, k)	\
+-	xfs_btree_trace_argik(__func__, c, i, k, __LINE__)
+-#define XFS_BTREE_TRACE_ARGR(c, r)	\
+-	xfs_btree_trace_argr(__func__, c, r, __LINE__)
+-#define	XFS_BTREE_TRACE_CURSOR(c, t)	\
+-	xfs_btree_trace_cursor(__func__, c, t, __LINE__)
+-#else
+-#define	XFS_BTREE_TRACE_ARGBI(c, b, i)
+-#define	XFS_BTREE_TRACE_ARGBII(c, b, i, j)
+-#define	XFS_BTREE_TRACE_ARGI(c, i)
+-#define	XFS_BTREE_TRACE_ARGIPK(c, i, p, s)
+-#define	XFS_BTREE_TRACE_ARGIPR(c, i, p, r)
+-#define	XFS_BTREE_TRACE_ARGIK(c, i, k)
+-#define XFS_BTREE_TRACE_ARGR(c, r)
+-#define	XFS_BTREE_TRACE_CURSOR(c, t)
+-#endif	/* XFS_BTREE_TRACE */
+-
+-#endif /* __XFS_BTREE_TRACE_H__ */
+Index: xfs/fs/xfs/xfs_ialloc_btree.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_ialloc_btree.c	2011-07-09 13:29:17.154919008 +0200
++++ xfs/fs/xfs/xfs_ialloc_btree.c	2011-07-09 14:05:21.608142756 +0200
+@@ -31,7 +31,6 @@
+ #include "xfs_dinode.h"
+ #include "xfs_inode.h"
+ #include "xfs_btree.h"
+-#include "xfs_btree_trace.h"
+ #include "xfs_ialloc.h"
+ #include "xfs_alloc.h"
+ #include "xfs_error.h"
+@@ -205,72 +204,6 @@ xfs_inobt_recs_inorder(
  }
-@@ -908,12 +899,12 @@ xfs_buf_attach_iodone(
- 	ASSERT(xfs_buf_islocked(bp));
+ #endif	/* DEBUG */
  
- 	lip->li_cb = cb;
--	if (XFS_BUF_FSPRIVATE(bp, void *) != NULL) {
--		head_lip = XFS_BUF_FSPRIVATE(bp, xfs_log_item_t *);
-+	head_lip = bp->b_fspriv;
-+	if (head_lip) {
- 		lip->li_bio_list = head_lip->li_bio_list;
- 		head_lip->li_bio_list = lip;
- 	} else {
--		XFS_BUF_SET_FSPRIVATE(bp, lip);
-+		bp->b_fspriv = lip;
- 	}
+-#ifdef XFS_BTREE_TRACE
+-ktrace_t	*xfs_inobt_trace_buf;
+-
+-STATIC void
+-xfs_inobt_trace_enter(
+-	struct xfs_btree_cur	*cur,
+-	const char		*func,
+-	char			*s,
+-	int			type,
+-	int			line,
+-	__psunsigned_t		a0,
+-	__psunsigned_t		a1,
+-	__psunsigned_t		a2,
+-	__psunsigned_t		a3,
+-	__psunsigned_t		a4,
+-	__psunsigned_t		a5,
+-	__psunsigned_t		a6,
+-	__psunsigned_t		a7,
+-	__psunsigned_t		a8,
+-	__psunsigned_t		a9,
+-	__psunsigned_t		a10)
+-{
+-	ktrace_enter(xfs_inobt_trace_buf, (void *)(__psint_t)type,
+-		(void *)func, (void *)s, NULL, (void *)cur,
+-		(void *)a0, (void *)a1, (void *)a2, (void *)a3,
+-		(void *)a4, (void *)a5, (void *)a6, (void *)a7,
+-		(void *)a8, (void *)a9, (void *)a10);
+-}
+-
+-STATIC void
+-xfs_inobt_trace_cursor(
+-	struct xfs_btree_cur	*cur,
+-	__uint32_t		*s0,
+-	__uint64_t		*l0,
+-	__uint64_t		*l1)
+-{
+-	*s0 = cur->bc_private.a.agno;
+-	*l0 = cur->bc_rec.i.ir_startino;
+-	*l1 = cur->bc_rec.i.ir_free;
+-}
+-
+-STATIC void
+-xfs_inobt_trace_key(
+-	struct xfs_btree_cur	*cur,
+-	union xfs_btree_key	*key,
+-	__uint64_t		*l0,
+-	__uint64_t		*l1)
+-{
+-	*l0 = be32_to_cpu(key->inobt.ir_startino);
+-	*l1 = 0;
+-}
+-
+-STATIC void
+-xfs_inobt_trace_record(
+-	struct xfs_btree_cur	*cur,
+-	union xfs_btree_rec	*rec,
+-	__uint64_t		*l0,
+-	__uint64_t		*l1,
+-	__uint64_t		*l2)
+-{
+-	*l0 = be32_to_cpu(rec->inobt.ir_startino);
+-	*l1 = be32_to_cpu(rec->inobt.ir_freecount);
+-	*l2 = be64_to_cpu(rec->inobt.ir_free);
+-}
+-#endif /* XFS_BTREE_TRACE */
+-
+ static const struct xfs_btree_ops xfs_inobt_ops = {
+ 	.rec_len		= sizeof(xfs_inobt_rec_t),
+ 	.key_len		= sizeof(xfs_inobt_key_t),
+@@ -286,18 +219,10 @@ static const struct xfs_btree_ops xfs_in
+ 	.init_rec_from_cur	= xfs_inobt_init_rec_from_cur,
+ 	.init_ptr_from_cur	= xfs_inobt_init_ptr_from_cur,
+ 	.key_diff		= xfs_inobt_key_diff,
+-
+ #ifdef DEBUG
+ 	.keys_inorder		= xfs_inobt_keys_inorder,
+ 	.recs_inorder		= xfs_inobt_recs_inorder,
+ #endif
+-
+-#ifdef XFS_BTREE_TRACE
+-	.trace_enter		= xfs_inobt_trace_enter,
+-	.trace_cursor		= xfs_inobt_trace_cursor,
+-	.trace_key		= xfs_inobt_trace_key,
+-	.trace_record		= xfs_inobt_trace_record,
+-#endif
+ };
  
- 	ASSERT((XFS_BUF_IODONE_FUNC(bp) == xfs_buf_iodone_callbacks) ||
-@@ -939,8 +930,8 @@ xfs_buf_do_callbacks(
- {
- 	struct xfs_log_item	*lip;
+ /*
+Index: xfs/fs/xfs/xfs_iget.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_iget.c	2011-07-09 13:29:17.164919007 +0200
++++ xfs/fs/xfs/xfs_iget.c	2011-07-09 14:02:30.388151423 +0200
+@@ -38,7 +38,6 @@
+ #include "xfs_trans_priv.h"
+ #include "xfs_inode_item.h"
+ #include "xfs_bmap.h"
+-#include "xfs_btree_trace.h"
+ #include "xfs_trace.h"
  
--	while ((lip = XFS_BUF_FSPRIVATE(bp, xfs_log_item_t *)) != NULL) {
--		XFS_BUF_SET_FSPRIVATE(bp, lip->li_bio_list);
-+	while ((lip = bp->b_fspriv) != NULL) {
-+		bp->b_fspriv = lip->li_bio_list;
- 		ASSERT(lip->li_cb != NULL);
- 		/*
- 		 * Clear the next pointer so we don't have any
-@@ -1026,7 +1017,7 @@ xfs_buf_iodone_callbacks(
  
- do_callbacks:
- 	xfs_buf_do_callbacks(bp);
--	XFS_BUF_SET_FSPRIVATE(bp, NULL);
-+	bp->b_fspriv = NULL;
- 	XFS_BUF_CLR_IODONE_FUNC(bp);
- 	xfs_buf_ioend(bp, 0);
- }
 Index: xfs/fs/xfs/xfs_inode.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_inode.c	2011-07-09 09:16:01.012355050 +0200
-+++ xfs/fs/xfs/xfs_inode.c	2011-07-09 09:34:13.255633083 +0200
-@@ -1698,7 +1698,7 @@ xfs_ifree_cluster(
- 		 * stale first, we will not attempt to lock them in the loop
- 		 * below as the XFS_ISTALE flag will be set.
- 		 */
--		lip = XFS_BUF_FSPRIVATE(bp, xfs_log_item_t *);
-+		lip = bp->b_fspriv;
- 		while (lip) {
- 			if (lip->li_type == XFS_LI_INODE) {
- 				iip = (xfs_inode_log_item_t *)lip;
-@@ -2811,7 +2811,7 @@ xfs_iflush_int(
- 		 */
- 		xfs_buf_attach_iodone(bp, xfs_iflush_done, &iip->ili_item);
- 
--		ASSERT(XFS_BUF_FSPRIVATE(bp, void *) != NULL);
-+		ASSERT(bp->b_fspriv != NULL);
- 		ASSERT(XFS_BUF_IODONE_FUNC(bp) != NULL);
- 	} else {
- 		/*
-Index: xfs/fs/xfs/xfs_log.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_log.c	2011-07-09 09:34:12.292299803 +0200
-+++ xfs/fs/xfs/xfs_log.c	2011-07-09 09:34:13.258966416 +0200
-@@ -871,13 +871,9 @@ xlog_space_left(
- void
- xlog_iodone(xfs_buf_t *bp)
- {
--	xlog_in_core_t	*iclog;
--	xlog_t		*l;
--	int		aborted;
--
--	iclog = XFS_BUF_FSPRIVATE(bp, xlog_in_core_t *);
--	aborted = 0;
--	l = iclog->ic_log;
-+	xlog_in_core_t	*iclog = bp->b_fspriv;
-+	xlog_t		*l = iclog->ic_log;
-+	int		aborted = 0;
- 
- 	/*
- 	 * Race to shutdown the filesystem if we see an error.
-@@ -1249,9 +1245,8 @@ STATIC int
- xlog_bdstrat(
- 	struct xfs_buf		*bp)
- {
--	struct xlog_in_core	*iclog;
-+	struct xlog_in_core	*iclog = bp->b_fspriv;
- 
--	iclog = XFS_BUF_FSPRIVATE(bp, xlog_in_core_t *);
- 	if (iclog->ic_state & XLOG_STATE_IOERROR) {
- 		XFS_BUF_ERROR(bp, EIO);
- 		XFS_BUF_STALE(bp);
-@@ -1358,7 +1353,7 @@ xlog_sync(xlog_t		*log,
- 		iclog->ic_bwritecnt = 1;
- 	}
- 	XFS_BUF_SET_COUNT(bp, count);
--	XFS_BUF_SET_FSPRIVATE(bp, iclog);	/* save for later */
-+	bp->b_fspriv = iclog;
- 	XFS_BUF_ZEROFLAGS(bp);
- 	XFS_BUF_BUSY(bp);
- 	XFS_BUF_ASYNC(bp);
-@@ -1405,7 +1400,7 @@ xlog_sync(xlog_t		*log,
- 		XFS_BUF_SET_ADDR(bp, 0);	     /* logical 0 */
- 		XFS_BUF_SET_PTR(bp, (xfs_caddr_t)((__psint_t)&(iclog->ic_header)+
- 					    (__psint_t)count), split);
--		XFS_BUF_SET_FSPRIVATE(bp, iclog);
-+		bp->b_fspriv = iclog;
- 		XFS_BUF_ZEROFLAGS(bp);
- 		XFS_BUF_BUSY(bp);
- 		XFS_BUF_ASYNC(bp);
-Index: xfs/fs/xfs/xfs_trans_buf.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_trans_buf.c	2011-07-09 09:34:12.295633137 +0200
-+++ xfs/fs/xfs/xfs_trans_buf.c	2011-07-09 09:34:13.258966416 +0200
-@@ -89,7 +89,7 @@ _xfs_trans_bjoin(
- 	 * The checks to see if one is there are in xfs_buf_item_init().
- 	 */
- 	xfs_buf_item_init(bp, tp->t_mountp);
--	bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t *);
-+	bip = bp->b_fspriv;
- 	ASSERT(!(bip->bli_flags & XFS_BLI_STALE));
- 	ASSERT(!(bip->bli_format.blf_flags & XFS_BLF_CANCEL));
- 	ASSERT(!(bip->bli_flags & XFS_BLI_LOGGED));
-@@ -173,7 +173,7 @@ xfs_trans_get_buf(xfs_trans_t	*tp,
- 			ASSERT(!XFS_BUF_ISDELAYWRITE(bp));
- 
- 		ASSERT(bp->b_transp == tp);
--		bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t *);
-+		bip = bp->b_fspriv;
- 		ASSERT(bip != NULL);
- 		ASSERT(atomic_read(&bip->bli_refcount) > 0);
- 		bip->bli_recur++;
-@@ -233,7 +233,7 @@ xfs_trans_getsb(xfs_trans_t	*tp,
- 	 */
- 	bp = mp->m_sb_bp;
- 	if (bp->b_transp == tp) {
--		bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t*);
-+		bip = bp->b_fspriv;
- 		ASSERT(bip != NULL);
- 		ASSERT(atomic_read(&bip->bli_refcount) > 0);
- 		bip->bli_recur++;
-@@ -329,7 +329,7 @@ xfs_trans_read_buf(
- 	if (bp != NULL) {
- 		ASSERT(xfs_buf_islocked(bp));
- 		ASSERT(bp->b_transp == tp);
--		ASSERT(XFS_BUF_FSPRIVATE(bp, void *) != NULL);
-+		ASSERT(bp->b_fspriv != NULL);
- 		ASSERT((XFS_BUF_ISERROR(bp)) == 0);
- 		if (!(XFS_BUF_ISDONE(bp))) {
- 			trace_xfs_trans_read_buf_io(bp, _RET_IP_);
-@@ -363,7 +363,7 @@ xfs_trans_read_buf(
- 		}
- 
- 
--		bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t*);
-+		bip = bp->b_fspriv;
- 		bip->bli_recur++;
- 
- 		ASSERT(atomic_read(&bip->bli_refcount) > 0);
-@@ -460,32 +460,30 @@ xfs_trans_brelse(xfs_trans_t	*tp,
- 		 xfs_buf_t	*bp)
- {
- 	xfs_buf_log_item_t	*bip;
--	xfs_log_item_t		*lip;
- 
- 	/*
- 	 * Default to a normal brelse() call if the tp is NULL.
- 	 */
- 	if (tp == NULL) {
-+		struct xfs_log_item	*lip = bp->b_fspriv;
-+
- 		ASSERT(bp->b_transp == NULL);
-+
- 		/*
- 		 * If there's a buf log item attached to the buffer,
- 		 * then let the AIL know that the buffer is being
- 		 * unlocked.
- 		 */
--		if (XFS_BUF_FSPRIVATE(bp, void *) != NULL) {
--			lip = XFS_BUF_FSPRIVATE(bp, xfs_log_item_t *);
--			if (lip->li_type == XFS_LI_BUF) {
--				bip = XFS_BUF_FSPRIVATE(bp,xfs_buf_log_item_t*);
--				xfs_trans_unlocked_item(bip->bli_item.li_ailp,
--							lip);
--			}
-+		if (lip != NULL && lip->li_type == XFS_LI_BUF) {
-+			bip = bp->b_fspriv;
-+			xfs_trans_unlocked_item(bip->bli_item.li_ailp, lip);
- 		}
- 		xfs_buf_relse(bp);
- 		return;
- 	}
- 
- 	ASSERT(bp->b_transp == tp);
--	bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t *);
-+	bip = bp->b_fspriv;
- 	ASSERT(bip->bli_item.li_type == XFS_LI_BUF);
- 	ASSERT(!(bip->bli_flags & XFS_BLI_STALE));
- 	ASSERT(!(bip->bli_format.blf_flags & XFS_BLF_CANCEL));
-@@ -581,16 +579,15 @@ void
- xfs_trans_bhold(xfs_trans_t	*tp,
- 		xfs_buf_t	*bp)
- {
--	xfs_buf_log_item_t	*bip;
-+	xfs_buf_log_item_t	*bip = bp->b_fspriv;
- 
- 	ASSERT(XFS_BUF_ISBUSY(bp));
- 	ASSERT(bp->b_transp == tp);
--	ASSERT(XFS_BUF_FSPRIVATE(bp, void *) != NULL);
--
--	bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t *);
-+	ASSERT(bip != NULL);
- 	ASSERT(!(bip->bli_flags & XFS_BLI_STALE));
- 	ASSERT(!(bip->bli_format.blf_flags & XFS_BLF_CANCEL));
- 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
-+
- 	bip->bli_flags |= XFS_BLI_HOLD;
- 	trace_xfs_trans_bhold(bip);
- }
-@@ -603,19 +600,17 @@ void
- xfs_trans_bhold_release(xfs_trans_t	*tp,
- 			xfs_buf_t	*bp)
- {
--	xfs_buf_log_item_t	*bip;
-+	xfs_buf_log_item_t	*bip = bp->b_fspriv;
- 
- 	ASSERT(XFS_BUF_ISBUSY(bp));
- 	ASSERT(bp->b_transp == tp);
--	ASSERT(XFS_BUF_FSPRIVATE(bp, void *) != NULL);
--
--	bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t *);
-+	ASSERT(bip != NULL);
- 	ASSERT(!(bip->bli_flags & XFS_BLI_STALE));
- 	ASSERT(!(bip->bli_format.blf_flags & XFS_BLF_CANCEL));
- 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
- 	ASSERT(bip->bli_flags & XFS_BLI_HOLD);
--	bip->bli_flags &= ~XFS_BLI_HOLD;
- 
-+	bip->bli_flags &= ~XFS_BLI_HOLD;
- 	trace_xfs_trans_bhold_release(bip);
- }
- 
-@@ -634,11 +629,11 @@ xfs_trans_log_buf(xfs_trans_t	*tp,
- 		  uint		first,
- 		  uint		last)
- {
--	xfs_buf_log_item_t	*bip;
-+	xfs_buf_log_item_t	*bip = bp->b_fspriv;
- 
- 	ASSERT(XFS_BUF_ISBUSY(bp));
- 	ASSERT(bp->b_transp == tp);
--	ASSERT(XFS_BUF_FSPRIVATE(bp, void *) != NULL);
-+	ASSERT(bip != NULL);
- 	ASSERT((first <= last) && (last < XFS_BUF_COUNT(bp)));
- 	ASSERT((XFS_BUF_IODONE_FUNC(bp) == NULL) ||
- 	       (XFS_BUF_IODONE_FUNC(bp) == xfs_buf_iodone_callbacks));
-@@ -656,7 +651,6 @@ xfs_trans_log_buf(xfs_trans_t	*tp,
- 	XFS_BUF_DELAYWRITE(bp);
- 	XFS_BUF_DONE(bp);
- 
--	bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t *);
- 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
- 	XFS_BUF_SET_IODONE_FUNC(bp, xfs_buf_iodone_callbacks);
- 	bip->bli_item.li_cb = xfs_buf_iodone;
-@@ -706,13 +700,11 @@ xfs_trans_binval(
- 	xfs_trans_t	*tp,
- 	xfs_buf_t	*bp)
- {
--	xfs_buf_log_item_t	*bip;
-+	xfs_buf_log_item_t	*bip = bp->b_fspriv;
- 
- 	ASSERT(XFS_BUF_ISBUSY(bp));
- 	ASSERT(bp->b_transp == tp);
--	ASSERT(XFS_BUF_FSPRIVATE(bp, void *) != NULL);
--
--	bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t *);
-+	ASSERT(bip != NULL);
- 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
- 
- 	trace_xfs_trans_binval(bip);
-@@ -780,13 +772,11 @@ xfs_trans_inode_buf(
- 	xfs_trans_t	*tp,
- 	xfs_buf_t	*bp)
- {
--	xfs_buf_log_item_t	*bip;
-+	xfs_buf_log_item_t	*bip = bp->b_fspriv;
- 
- 	ASSERT(XFS_BUF_ISBUSY(bp));
- 	ASSERT(bp->b_transp == tp);
--	ASSERT(XFS_BUF_FSPRIVATE(bp, void *) != NULL);
--
--	bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t *);
-+	ASSERT(bip != NULL);
- 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
- 
- 	bip->bli_flags |= XFS_BLI_INODE_BUF;
-@@ -806,13 +796,11 @@ xfs_trans_stale_inode_buf(
- 	xfs_trans_t	*tp,
- 	xfs_buf_t	*bp)
- {
--	xfs_buf_log_item_t	*bip;
-+	xfs_buf_log_item_t	*bip = bp->b_fspriv;
- 
- 	ASSERT(XFS_BUF_ISBUSY(bp));
- 	ASSERT(bp->b_transp == tp);
--	ASSERT(XFS_BUF_FSPRIVATE(bp, void *) != NULL);
--
--	bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t *);
-+	ASSERT(bip != NULL);
- 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
- 
- 	bip->bli_flags |= XFS_BLI_STALE_INODE;
-@@ -833,13 +821,11 @@ xfs_trans_inode_alloc_buf(
- 	xfs_trans_t	*tp,
- 	xfs_buf_t	*bp)
- {
--	xfs_buf_log_item_t	*bip;
-+	xfs_buf_log_item_t	*bip = bp->b_fspriv;
- 
- 	ASSERT(XFS_BUF_ISBUSY(bp));
- 	ASSERT(bp->b_transp == tp);
--	ASSERT(XFS_BUF_FSPRIVATE(bp, void *) != NULL);
--
--	bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t *);
-+	ASSERT(bip != NULL);
- 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
- 
- 	bip->bli_flags |= XFS_BLI_INODE_ALLOC_BUF;
-@@ -863,16 +849,14 @@ xfs_trans_dquot_buf(
- 	xfs_buf_t	*bp,
- 	uint		type)
- {
--	xfs_buf_log_item_t	*bip;
-+	xfs_buf_log_item_t	*bip = bp->b_fspriv;
- 
- 	ASSERT(XFS_BUF_ISBUSY(bp));
- 	ASSERT(bp->b_transp == tp);
--	ASSERT(XFS_BUF_FSPRIVATE(bp, void *) != NULL);
-+	ASSERT(bip != NULL);
- 	ASSERT(type == XFS_BLF_UDQUOT_BUF ||
- 	       type == XFS_BLF_PDQUOT_BUF ||
- 	       type == XFS_BLF_GDQUOT_BUF);
--
--	bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t *);
- 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
- 
- 	bip->bli_format.blf_flags |= type;
-Index: xfs/fs/xfs/xfs_inode_item.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_inode_item.c	2011-07-09 09:16:01.012355050 +0200
-+++ xfs/fs/xfs/xfs_inode_item.c	2011-07-09 09:34:13.262299750 +0200
-@@ -874,7 +874,7 @@ xfs_iflush_done(
- 	 * Scan the buffer IO completions for other inodes being completed and
- 	 * attach them to the current inode log item.
- 	 */
--	blip = XFS_BUF_FSPRIVATE(bp, xfs_log_item_t *);
-+	blip = bp->b_fspriv;
- 	prev = NULL;
- 	while (blip != NULL) {
- 		if (lip->li_cb != xfs_iflush_done) {
-@@ -886,7 +886,7 @@ xfs_iflush_done(
- 		/* remove from list */
- 		next = blip->li_bio_list;
- 		if (!prev) {
--			XFS_BUF_SET_FSPRIVATE(bp, next);
-+			bp->b_fspriv = next;
- 		} else {
- 			prev->li_bio_list = next;
- 		}
+--- xfs.orig/fs/xfs/xfs_inode.c	2011-07-09 14:00:08.094825294 +0200
++++ xfs/fs/xfs/xfs_inode.c	2011-07-09 14:02:30.391484756 +0200
+@@ -37,7 +37,6 @@
+ #include "xfs_buf_item.h"
+ #include "xfs_inode_item.h"
+ #include "xfs_btree.h"
+-#include "xfs_btree_trace.h"
+ #include "xfs_alloc.h"
+ #include "xfs_ialloc.h"
+ #include "xfs_bmap.h"
 
 _______________________________________________
 xfs mailing list
