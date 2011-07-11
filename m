@@ -1,26 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6BJ9jOE240879 for <xfs@oss.sgi.com>; Mon, 11 Jul 2011 14:09:45 -0500
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 03974605B0
-	for <xfs@oss.sgi.com>; Mon, 11 Jul 2011 12:09:44 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id bsbjvMCAxoJ6RLqS for
-	<xfs@oss.sgi.com>; Mon, 11 Jul 2011 12:09:44 -0700 (PDT)
-Message-ID: <4E1B4A64.6040403@redhat.com>
-Date: Mon, 11 Jul 2011 15:09:24 -0400
-From: Rik van Riel <riel@redhat.com>
+	p6BMX2ZQ256235 for <xfs@oss.sgi.com>; Mon, 11 Jul 2011 17:33:02 -0500
+Subject: Re: [PATCH 04/11] xfs: factor out xfs_da_grow_inode_int
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <20110710205017.485558926@bombadil.infradead.org>
+References: <20110710204916.856267100@bombadil.infradead.org>
+	<20110710205017.485558926@bombadil.infradead.org>
+Date: Mon, 11 Jul 2011 17:32:58 -0500
+Message-ID: <1310423578.7019.56.camel@doink>
 MIME-Version: 1.0
-Subject: Re: [PATCH 03/27] xfs: use write_cache_pages for writeback clustering
-References: <20110629140109.003209430@bombadil.infradead.org>
-	<20110629140336.950805096@bombadil.infradead.org>
-	<20110701022248.GM561@dastard> <20110701041851.GN561@dastard>
-	<20110701093305.GA28531@infradead.org>
-	<20110701154136.GA17881@localhost> <20110704032534.GD1026@dastard>
-	<20110706151229.GA1998@redhat.com> <20110708095456.GI1026@dastard>
-	<20110711172050.GA2849@redhat.com>
-In-Reply-To: <20110711172050.GA2849@redhat.com>
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,63 +19,23 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Johannes Weiner <jweiner@redhat.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, Mel Gorman <mgorman@suse.de>, Wu Fengguang <fengguang.wu@intel.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On 07/11/2011 01:20 PM, Johannes Weiner wrote:
+On Sun, 2011-07-10 at 16:49 -0400, Christoph Hellwig wrote:
+> xfs_da_grow_inode and xfs_dir2_grow_inode are mostly duplicate code.  Factor
+> the meat of those two functions into a new common helper.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-> I CC'd Rik for reclaim-wizardry.  But if I am not completly off with
-> this there is a chance that the change that let the active list grow
-> unscanned may actually have contributed to this single-page writing
-> problem becoming worse?
+Looks good.
 
-Yes, the patch probably contributed.
+Reviewed-by: Alex Elder <aelder@sgi.com>
 
-However, the patch does help protect the working set in
-the page cache from streaming IO, so on balance I believe
-we need to keep this change.
-
-What it changes is that the size of the inactive file list
-can no longer grow unbounded, keeping it a little smaller
-than it could have grown in the past.
-
-> commit 56e49d218890f49b0057710a4b6fef31f5ffbfec
-> Author: Rik van Riel<riel@redhat.com>
-> Date:   Tue Jun 16 15:32:28 2009 -0700
->
->      vmscan: evict use-once pages first
->
->      When the file LRU lists are dominated by streaming IO pages, evict those
->      pages first, before considering evicting other pages.
->
->      This should be safe from deadlocks or performance problems
->      because only three things can happen to an inactive file page:
->
->      1) referenced twice and promoted to the active list
->      2) evicted by the pageout code
->      3) under IO, after which it will get evicted or promoted
->
->      The pages freed in this way can either be reused for streaming IO, or
->      allocated for something else.  If the pages are used for streaming IO,
->      this pageout pattern continues.  Otherwise, we will fall back to the
->      normal pageout pattern.
->
->      Signed-off-by: Rik van Riel<riel@redhat.com>
->      Reported-by: Elladan<elladan@eskimo.com>
->      Cc: KOSAKI Motohiro<kosaki.motohiro@jp.fujitsu.com>
->      Cc: Peter Zijlstra<peterz@infradead.org>
->      Cc: Lee Schermerhorn<lee.schermerhorn@hp.com>
->      Acked-by: Johannes Weiner<hannes@cmpxchg.org>
->      Signed-off-by: Andrew Morton<akpm@linux-foundation.org>
->      Signed-off-by: Linus Torvalds<torvalds@linux-foundation.org>
-
-
--- 
-All rights reversed
 
 _______________________________________________
 xfs mailing list
