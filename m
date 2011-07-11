@@ -1,39 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6B43D4N172460
-	for <linux-xfs@oss.sgi.com>; Sun, 10 Jul 2011 23:03:17 -0500
-Received: from lo.gmane.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4605517AA7F0
-	for <linux-xfs@oss.sgi.com>; Sun, 10 Jul 2011 21:03:12 -0700 (PDT)
-Received: from lo.gmane.org (lo.gmane.org [80.91.229.12]) by cuda.sgi.com with
-	ESMTP id 3qwZQNtfCFSuuHn0 for <linux-xfs@oss.sgi.com>;
-	Sun, 10 Jul 2011 21:03:12 -0700 (PDT)
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1Qg7iA-00067v-OV
-	for linux-xfs@oss.sgi.com; Mon, 11 Jul 2011 06:03:11 +0200
-Received: from c-71-194-192-160.hsd1.il.comcast.net ([71.194.192.160])
-	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-	id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Mon, 11 Jul 2011 06:03:10 +0200
-Received: from brianmduncan by c-71-194-192-160.hsd1.il.comcast.net with local
-	(Gmexim 0.1 (Debian)) id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Mon, 11 Jul 2011 06:03:10 +0200
-From: Brian Duncan <brianmduncan@gmail.com>
-Subject: Re: xfssyncd and disk spin down
-Date: Mon, 11 Jul 2011 04:02:59 +0000 (UTC)
-Message-ID: <loom.20110711T055016-944@post.gmane.org>
-References: <20101227140750.GB24828@dastard>
-	<20101227171939.GA7759@pandora.simplex.ro>
-	<20101231001323.GD15179@dastard>
-	<20110120100143.GA2007@peter.simplex.ro>
-	<20110120234310.GV16267@dastard>
-	<20110210204254.GA10451@peter.simplex.ro>
-	<20110210221851.GG2559@dastard>
-	<loom.20110214T185310-606@post.gmane.org>
-	<loom.20110531T163459-953@post.gmane.org>
-	<4DE5064D.1010203@dermichi.com> <20110601233702.GJ561@dastard>
-Mime-Version: 1.0
+	p6B5OCIe178317 for <xfs@oss.sgi.com>; Mon, 11 Jul 2011 00:24:14 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C07315D6DC
+	for <xfs@oss.sgi.com>; Sun, 10 Jul 2011 22:24:08 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	i3laVFZMapadAPQf for <xfs@oss.sgi.com>;
+	Sun, 10 Jul 2011 22:24:08 -0700 (PDT)
+Date: Mon, 11 Jul 2011 01:24:06 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 04/11] xfs: factor out xfs_da_grow_inode_int
+Message-ID: <20110711052406.GA13266@infradead.org>
+References: <20110710204916.856267100@bombadil.infradead.org>
+	<20110710205017.485558926@bombadil.infradead.org>
+	<20110711003743.GC23038@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20110711003743.GC23038@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -46,22 +32,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-Thanks Dave for the confirmation that this was patched.
+On Mon, Jul 11, 2011 at 10:37:43AM +1000, Dave Chinner wrote:
+> On Sun, Jul 10, 2011 at 04:49:20PM -0400, Christoph Hellwig wrote:
+> > xfs_da_grow_inode and xfs_dir2_grow_inode are mostly duplicate code.  Factor
+> > the meat of those two functions into a new common helper.
+> 
+> Hmmmm. I'm in the process of splitting xfs_dir2_grow_inode() into
+> data space vs free space variants so I can play speculative
+> preallocation tricks in the directory data space to reduce dataspace
+> fragmentation for large directories. Combined with a rework of the
+> readir readahead code, it significantly reduces IO count and seeks
+> for readdir calls...
+> 
+> I'll probably just rebase on top of this patch, though, because I did
+> notice that the two functions were very similar to begin with. ;)
 
-Can anyone confirm that this patch is working within 2.6.39?
-
-The post above Dave's last says the bug is still present in 2.6.39 from their
-own testing.. but I see in the changelog for 2.6.39 that Dave's patch/commit ID
-is listed as being part of that Kernel update.  
-
-http://www.kernel.org/pub/linux/kernel/v2.6/ChangeLog-2.6.39
-
-Thanks
-
-
-
+Are you two variants still sharing the core code? If yes rebasing sounds
+like the better idea.  If the two dir2 variants are different enough
+from the da variant I'm fine with postponing this one for now.
 
 _______________________________________________
 xfs mailing list
