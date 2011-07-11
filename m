@@ -1,28 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6BBAksp217520 for <xfs@oss.sgi.com>; Mon, 11 Jul 2011 06:10:46 -0500
+	p6BDxx1Q226052 for <xfs@oss.sgi.com>; Mon, 11 Jul 2011 09:00:00 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9CB75527DA4
-	for <xfs@oss.sgi.com>; Mon, 11 Jul 2011 04:10:45 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4601A17B3107
+	for <xfs@oss.sgi.com>; Mon, 11 Jul 2011 06:59:58 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	TohOV8WcA0E8Ef36 for <xfs@oss.sgi.com>;
-	Mon, 11 Jul 2011 04:10:45 -0700 (PDT)
-Date: Mon, 11 Jul 2011 07:10:39 -0400
+	LyLKIFoSUDv2MaLC for <xfs@oss.sgi.com>;
+	Mon, 11 Jul 2011 06:59:58 -0700 (PDT)
+Date: Mon, 11 Jul 2011 09:59:57 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 03/27] xfs: use write_cache_pages for writeback clustering
-Message-ID: <20110711111039.GA3139@infradead.org>
-References: <20110629140109.003209430@bombadil.infradead.org>
-	<20110629140336.950805096@bombadil.infradead.org>
-	<20110701022248.GM561@dastard> <20110701041851.GN561@dastard>
-	<20110701093305.GA28531@infradead.org>
-	<20110701154136.GA17881@localhost> <20110704032534.GD1026@dastard>
-	<20110705143409.GB15285@suse.de>
+Subject: [PATCH] xfs: start periodic workers later
+Message-ID: <20110711135957.GA23737@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110705143409.GB15285@suse.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,66 +28,94 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mel Gorman <mgorman@suse.de>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, Wu Fengguang <fengguang.wu@intel.com>, Johannes Weiner <jweiner@redhat.com>
+To: xfs@oss.sgi.com
 
-On Tue, Jul 05, 2011 at 03:34:10PM +0100, Mel Gorman wrote:
-> > However, what I'm questioning is whether we should even care what
-> > page memory reclaim wants to write - it seems to make fundamentally
-> > bad decisions from an IO persepctive.
-> > 
-> 
-> It sucks from an IO perspective but from the perspective of the VM that
-> needs memory to be free in a particular zone or node, it's a reasonable
-> request.
+Start the periodic sync workers only after we have finished xfs_mountfs
+and thus fully set up the filesystem structures.  Without this we can
+call into xfs_qm_sync before the quotainfo strucute is set up if the
+mount takes unusually long, and probably hit other incomplete states
+as well.
 
-It might appear reasonable, but it's not.
+Also clean up the xfs_fs_fill_super error path by using consistent
+label names, and removing an impossible to reach case.
 
-What the VM wants underneath is generally (1):
+Reported-by: Arkadiusz Miskiewicz <arekm@maven.pl>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
- - free N pages in zone Z
-
-and it then goes own to free the pages one one by one though kswapd,
-which leads to freeing those N pages, but unless they already were
-clean it will take very long to get there and bog down the whole
-system.
-
-So we need a better way to actually perform that underlying request.
-Dave's suggestion of keeping different lists for clean vs dirty pages
-in the VM and preferably reclaiming for the clean ones when having
-zone pressure is one first step.  The second one will be to tell the
-writeback threads to preferably reclaim from a zone.  I'm actually
-not sure how do that yet, as we could have memory from different
-zones on a single inode.  Taking an inode that has memory from the
-right zone and the writing that out will probably work fine for
-different zones in a 64-bit NUMA systems where zones more or less
-equal nodes.  It probably won't work very well if we need to free
-up memory in the various low memory zones, as those will be spread
-over random inodes.
-
-> It doesnt' check how many pages are under writeback. Direct reclaim
-> will check if the block device is congested but that is about
-> it. Otherwise the expectation was the elevator would handle the
-> merging of requests into a sensible patter.
-
-It can't.  The elevator has a relatively small window it can operate
-on, and can never fix up a bad large scale writeback pattern. 
-
-> Also, while filesystem
-> pages are getting cleaned by flushs, that does not cover anonymous
-> pages being written to swap.
-
-At least for now we will have to keep kswapd writeback for swap.  It
-is just as inefficient a on a filesystem, but given that people don't
-rely on swap performance we can probably live with it.  Note that we
-can't simply use background flushing for swap, as that would mean
-we'd need backing space allocated for all main memory, which isn't
-very practical with todays memory sized.  The whole concept of demand
-paging anonymous memory leads to pretty bad I/O patterns.  If you're
-actually making heavy use of it the old-school unix full process paging
-would be a lot faster.
-
-(1) moulo things like compaction
+Index: xfs/fs/xfs/linux-2.6/xfs_super.c
+===================================================================
+--- xfs.orig/fs/xfs/linux-2.6/xfs_super.c	2011-07-11 12:02:56.762758869 +0200
++++ xfs/fs/xfs/linux-2.6/xfs_super.c	2011-07-11 12:09:20.817344934 +0200
+@@ -1411,37 +1411,35 @@ xfs_fs_fill_super(
+ 	sb->s_time_gran = 1;
+ 	set_posix_acl_flag(sb);
+ 
+-	error = xfs_syncd_init(mp);
+-	if (error)
+-		goto out_filestream_unmount;
+-
+ 	xfs_inode_shrinker_register(mp);
+ 
+ 	error = xfs_mountfs(mp);
+ 	if (error)
+-		goto out_syncd_stop;
++		goto out_filestream_unmount;
++
++	error = xfs_syncd_init(mp);
++	if (error)
++		goto out_unmount;
+ 
+ 	root = igrab(VFS_I(mp->m_rootip));
+ 	if (!root) {
+ 		error = ENOENT;
+-		goto fail_unmount;
++		goto out_syncd_stop;
+ 	}
+ 	if (is_bad_inode(root)) {
+ 		error = EINVAL;
+-		goto fail_vnrele;
++		goto out_syncd_stop;
+ 	}
+ 	sb->s_root = d_alloc_root(root);
+ 	if (!sb->s_root) {
+ 		error = ENOMEM;
+-		goto fail_vnrele;
++		goto out_iput;
+ 	}
+ 
+ 	return 0;
+ 
+- out_syncd_stop:
+-	xfs_inode_shrinker_unregister(mp);
+-	xfs_syncd_stop(mp);
+  out_filestream_unmount:
++	xfs_inode_shrinker_unregister(mp);
+ 	xfs_filestream_unmount(mp);
+  out_free_sb:
+ 	xfs_freesb(mp);
+@@ -1455,17 +1453,12 @@ xfs_fs_fill_super(
+  out:
+ 	return -error;
+ 
+- fail_vnrele:
+-	if (sb->s_root) {
+-		dput(sb->s_root);
+-		sb->s_root = NULL;
+-	} else {
+-		iput(root);
+-	}
+-
+- fail_unmount:
+-	xfs_inode_shrinker_unregister(mp);
++ out_iput:
++	iput(root);
++ out_syncd_stop:
+ 	xfs_syncd_stop(mp);
++ out_unmount:
++	xfs_inode_shrinker_unregister(mp);
+ 
+ 	/*
+ 	 * Blow away any referenced inode in the filestreams cache.
 
 _______________________________________________
 xfs mailing list
