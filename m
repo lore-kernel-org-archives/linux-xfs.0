@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6BMYaqZ256346 for <xfs@oss.sgi.com>; Mon, 11 Jul 2011 17:34:36 -0500
-Subject: Re: [PATCH 07/11] xfs: remove wrappers around b_iodone
+	p6BMYc5R256354 for <xfs@oss.sgi.com>; Mon, 11 Jul 2011 17:34:38 -0500
+Subject: Re: [PATCH 08/11] xfs: remove the unused xfs_buf_delwri_sort function
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110710205018.136515335@bombadil.infradead.org>
+In-Reply-To: <20110710205018.325145774@bombadil.infradead.org>
 References: <20110710204916.856267100@bombadil.infradead.org>
-	<20110710205018.136515335@bombadil.infradead.org>
-Date: Mon, 11 Jul 2011 17:33:13 -0500
-Message-ID: <1310423593.7019.60.camel@doink>
+	<20110710205018.325145774@bombadil.infradead.org>
+Date: Mon, 11 Jul 2011 17:33:17 -0500
+Message-ID: <1310423597.7019.61.camel@doink>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -32,7 +32,6 @@ On Sun, 2011-07-10 at 16:49 -0400, Christoph Hellwig wrote:
 Looks good.
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
-
 
 
 _______________________________________________
