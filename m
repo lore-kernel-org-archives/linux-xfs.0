@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6C0kxRT000650 for <xfs@oss.sgi.com>; Mon, 11 Jul 2011 19:47:00 -0500
+	p6C0xVL8001351 for <xfs@oss.sgi.com>; Mon, 11 Jul 2011 19:59:31 -0500
 Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 55443EA2AB8
-	for <xfs@oss.sgi.com>; Mon, 11 Jul 2011 17:46:58 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5E40717B61F9
+	for <xfs@oss.sgi.com>; Mon, 11 Jul 2011 17:59:29 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	c3YEVSAFezNBLLr1 for <xfs@oss.sgi.com>;
-	Mon, 11 Jul 2011 17:46:58 -0700 (PDT)
-Date: Tue, 12 Jul 2011 10:46:55 +1000
+	R5KymjfjNQGy00NM for <xfs@oss.sgi.com>;
+	Mon, 11 Jul 2011 17:59:29 -0700 (PDT)
+Date: Tue, 12 Jul 2011 10:59:27 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [regression, 3.0-rc] xfs: freeze hang in 068
-Message-ID: <20110712004655.GI23038@dastard>
-References: <20110711010357.GD23038@dastard>
-	<20110711095147.GA19354@infradead.org>
+Subject: Re: [PATCH 09/11] xfs: remove the dead QUOTADEBUG debug
+Message-ID: <20110712005927.GK23038@dastard>
+References: <20110710204916.856267100@bombadil.infradead.org>
+	<20110710205018.525481665@bombadil.infradead.org>
+	<1310423602.7019.62.camel@doink>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110711095147.GA19354@infradead.org>
+In-Reply-To: <1310423602.7019.62.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,22 +31,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: hch@lst.de, xfs@oss.sgi.com
+To: Alex Elder <aelder@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Mon, Jul 11, 2011 at 05:51:47AM -0400, Christoph Hellwig wrote:
-> On Mon, Jul 11, 2011 at 11:03:57AM +1000, Dave Chinner wrote:
-> > Christoph,
+On Mon, Jul 11, 2011 at 05:33:22PM -0500, Alex Elder wrote:
+> On Sun, 2011-07-10 at 16:49 -0400, Christoph Hellwig wrote:
+> > Remove the dead hash table test rid which has been rotting away under
+> > QUOTADEBUG, including some code that was compiled for normal debug
+> > builds, but not actually called without QUOTADEBUG, and enable a few
+> > cheap debug checks that were hidden under QUOTADEBUG for normal
+> > debug builds.
 > > 
-> > The recent changes to the active transaction accounting to close a
-> > race on freeze can hang the freeze process and hence the filesystem.
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > 
-> That commit isn't in 3.0-rc, but I guess it's just the subject line
-> that is incorrect.
+> I've never used it and I don't suppose anyone else has
+> been (or will any time soon).  So I guess it might as
+> well go.
 
-Ah, yes. I'd merged everything into a common test tree based on
-3.0-rc6, and then forgot I'd merged all the pending 3.1 stuff
-when I'd tracked down the bug and wrote the email....
+I have actually used it in the past year or so, but that was only
+because I changed locking and needed to verify that the QUOTADEBUG
+code still worked. But if it wasn't there, i wouldn't have had to do
+that, so I'm happy to see it go.
 
 Cheers,
 
