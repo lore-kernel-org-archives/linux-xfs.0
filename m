@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6C9FDIa023906 for <xfs@oss.sgi.com>; Tue, 12 Jul 2011 04:15:13 -0500
-Date: Tue, 12 Jul 2011 05:15:09 -0400
+	p6C99uDK023736 for <xfs@oss.sgi.com>; Tue, 12 Jul 2011 04:09:57 -0500
+Date: Tue, 12 Jul 2011 05:09:54 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 06/11] xfs: remove wrappers around b_fspriv
-Message-ID: <20110712091509.GD8364@infradead.org>
+Subject: Re: [PATCH 03/11] xfs: factor out xfs_dir2_leaf_find_stale
+Message-ID: <20110712090954.GB8364@infradead.org>
 References: <20110710204916.856267100@bombadil.infradead.org>
-	<20110710205017.863949257@bombadil.infradead.org>
-	<1310423589.7019.59.camel@doink> <20110712010257.GL23038@dastard>
+	<20110710205017.293539533@bombadil.infradead.org>
+	<1310423573.7019.55.camel@doink>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110712010257.GL23038@dastard>
+In-Reply-To: <1310423573.7019.55.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,32 +24,38 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com, Alex Elder <aelder@sgi.com>
+To: Alex Elder <aelder@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Tue, Jul 12, 2011 at 11:02:57AM +1000, Dave Chinner wrote:
-> On Mon, Jul 11, 2011 at 05:33:09PM -0500, Alex Elder wrote:
-> > On Sun, 2011-07-10 at 16:49 -0400, Christoph Hellwig wrote:
-> > > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > 
-> > I never did understand exactly why these things
-> > were macro-ized, but figured it must have hidden
-> > some sort of conditional debug or development aid
-> > long ago.  In any case, good riddance.
+On Mon, Jul 11, 2011 at 05:32:53PM -0500, Alex Elder wrote:
+> > +		continue;
+> > +
+> > +	/*
+> > +	 * Find the first stale entry at or after our index, if any.
+> > +	 * Stop if the answer would be worse than lowstale.
 > 
-> It was part of the original Linux port. Both the Irix and Linux XFS
-> code was converted to use these XFS_BUF macros. Hence the core XFS
-> code was identical on both platforms and easy to move changes from
-> Irix to Linux because the macros hid the differences in buffer cache
-> implementations.
+>               Stop if the result would require moving more
+>               entries than using lowstale.
+> 
+> (I realize you didn't change this comment, you just moved
+> it into this helper function.)
 
-That was the theory, but these portability changes never got merged
-back to IRIX.  On the other hand XFS/Linux actually had two different
-buffer implementations in it's early days and the macros allowed
-switching between them.  Back then the area was an even bigger mess,
-as the buffer cache implementation that survived was called pagebuf,
-and used page_buf_/pb_/PB_/ prefixes, which not only got mapped to
-various different and often duplicate xfs_buf or similar names.
+I'll change it.
+
+> Actually it seems like this searching of the stale
+> entries and moving things around among them could
+> be broken into a few even finer-grained utility
+> routines.  It just seems like what this code is
+> doing is simpler than what the code complexity
+> suggests (though I haven't really looked at this
+> stuff much before).
+
+Some of this code could use some refactoring, but it's going to be
+more complex than this patch.  Additionally a lot of the logic is
+duplicate in the block format code, but that format has the freespace
+"header" at the end in struct xfs_dir2_block_tail, which for the fun
+of it uses 32-bit count and stale fields instead of the 16-bit values
+in struct xfs_dir2_leaf_hdr.
 
 _______________________________________________
 xfs mailing list
