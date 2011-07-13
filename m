@@ -1,21 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6DExgxY088349 for <xfs@oss.sgi.com>; Wed, 13 Jul 2011 09:59:43 -0500
-Received: from Ishtar.tlinx.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2A13B69128
-	for <xfs@oss.sgi.com>; Wed, 13 Jul 2011 07:59:41 -0700 (PDT)
-Received: from Ishtar.tlinx.org (ishtar.tlinx.org [173.164.175.65]) by
-	cuda.sgi.com with ESMTP id ZoOWJU57equnDxMQ for
-	<xfs@oss.sgi.com>; Wed, 13 Jul 2011 07:59:41 -0700 (PDT)
-Received: from [192.168.3.12] (Athenae [192.168.3.12])
-	by Ishtar.tlinx.org (8.14.4/8.14.4/SuSE Linux 0.8) with ESMTP id
-	p6DExbFI019045 for <xfs@oss.sgi.com>; Wed, 13 Jul 2011 07:59:39 -0700
-Message-ID: <4E1DB2D9.4060900@tlinx.org>
-Date: Wed, 13 Jul 2011 07:59:37 -0700
-From: "Linda A. Walsh" <xfs@tlinx.org>
+	p6DFmmpX090366 for <xfs@oss.sgi.com>; Wed, 13 Jul 2011 10:48:48 -0500
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 38E1117C156F
+	for <xfs@oss.sgi.com>; Wed, 13 Jul 2011 08:48:46 -0700 (PDT)
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id tOJlab4yWaDGLBUx for <xfs@oss.sgi.com>;
+	Wed, 13 Jul 2011 08:48:46 -0700 (PDT)
+Message-ID: <4E1DBE5E.3060308@sandeen.net>
+Date: Wed, 13 Jul 2011 10:48:46 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: suse cp copies 'acls' and extended attrs....
+Subject: [PATCH] xfs [stable only]: restart busy extent search after node
+	removal
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,27 +22,65 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: stable@kernel.org, xfs-oss <xfs@oss.sgi.com>
 
-I'm not sure if it is in mainline cp (would tend to guess it is likely), 
-but the default
-cp -a mode will copy all file attributes now, as well, by default.  (You 
-can turn it off, but
-the default for -a(rchive) mode is to copy everything...)...
+A user on #xfs reported that a log replay was oopsing in
+__rb_rotate_left() with a null pointer deref, and provided
+an xfs_metadump image for reproduction and testing.
 
+I traced this down to the fact that in xfs_alloc_busy_insert(),
+we erased a node with rb_erase() when the new node overlapped,
+but left the erased node specified as the parent node for the
+new insertion.
 
-So you can use 'cp' now to copy xfs files around and not lose 
-capabilities, acls or other ext_attrs,
-as well as rsync....
+So when we try to insert a new node with an erased node as
+its parent, obviously things go very wrong.
 
+Upstream,
+97d3ac75e5e0ebf7ca38ae74cebd201c09b97ab2 xfs: exact busy extent tracking
+actually fixed this, but as part of a much larger change.  Here's
+the relevant code from that commit:
 
-Just an FYI from someone who just found out recently  -- it may be old 
-news...if so, sorry,
-first I heard of it!
+                * We also need to restart the busy extent search from the
+                * tree root, because erasing the node can rearrange the
+                * tree topology.
+                */
+               rb_erase(&busyp->rb_node, &pag->pagb_tree);
+               busyp->length = 0;
+               return false;
+
+We can do essentially the same thing to older codebases by restarting
+the tree search after the erase.
+
+This should apply to .35.y through .39.y, and was tested on .39
+with the oopsing replay reproducer.
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Alex Elder <aelder@sgi.com>
+---
+
+Index: linux-2.6/fs/xfs/xfs_alloc.c
+===================================================================
+--- linux-2.6.orig/fs/xfs/xfs_alloc.c
++++ linux-2.6/fs/xfs/xfs_alloc.c
+@@ -2664,6 +2664,12 @@ restart:
+ 					new->bno + new->length) -
+ 				min(busyp->bno, new->bno);
+ 		new->bno = min(busyp->bno, new->bno);
++		/*
++		 * Start the search over from the tree root, because
++		 * erasing the node can rearrange the tree topology.
++		 */
++		spin_unlock(&pag->pagb_lock);
++		goto restart;
+ 	} else
+ 		busyp = NULL;
+ 
 
 
 _______________________________________________
