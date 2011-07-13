@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6D03dJq056629 for <xfs@oss.sgi.com>; Tue, 12 Jul 2011 19:03:40 -0500
-Received: from ipmail07.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F1C3A1BA1C4C
-	for <xfs@oss.sgi.com>; Tue, 12 Jul 2011 17:03:36 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	aG1QENxtJNhrRAgL for <xfs@oss.sgi.com>;
-	Tue, 12 Jul 2011 17:03:36 -0700 (PDT)
-Date: Wed, 13 Jul 2011 10:03:32 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: PM / hibernate xfs lock up / xfs_reclaim_inodes_ag
-Message-ID: <20110713000332.GM23038@dastard>
-References: <4E1C70AD.1010101@u-club.de>
+	p6D1RRSh059264 for <xfs@oss.sgi.com>; Tue, 12 Jul 2011 20:27:27 -0500
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 668EB1E6006D
+	for <xfs@oss.sgi.com>; Tue, 12 Jul 2011 18:27:26 -0700 (PDT)
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id 3TY5WOxZQvA8Or66 for <xfs@oss.sgi.com>;
+	Tue, 12 Jul 2011 18:27:26 -0700 (PDT)
+Message-ID: <4E1CF47D.7080909@sandeen.net>
+Date: Tue, 12 Jul 2011 20:27:25 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4E1C70AD.1010101@u-club.de>
+Subject: Re: [PATCH] stable: restart busy extent search after node removal
+References: <4E1CC4BA.1010107@redhat.com>
+	<20110713001234.GN23038@dastard>	<4E1CE35B.4010404@redhat.com>
+	<20110713002022.GO23038@dastard>
+In-Reply-To: <20110713002022.GO23038@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,161 +29,100 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph <cr2005@u-club.de>
-Cc: rjw@sisk.pl, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Tue, Jul 12, 2011 at 06:05:01PM +0200, Christoph wrote:
-> Hi!
+On 7/12/11 7:20 PM, Dave Chinner wrote:
+> On Tue, Jul 12, 2011 at 07:14:19PM -0500, Eric Sandeen wrote:
+>> On 7/12/11 7:12 PM, Dave Chinner wrote:
+>>> On Tue, Jul 12, 2011 at 05:03:38PM -0500, Eric Sandeen wrote:
+>>>> Sending this for review prior to stable submission...
+>>>>
+>>>> A user on #xfs reported that a log replay was oopsing in
+>>>> __rb_rotate_left() with a null pointer deref.
+>>>>
+>>>> I traced this down to the fact that in xfs_alloc_busy_insert(),
+>>>> we erased a node with rb_erase() when the new node overlapped,
+>>>> but left it specified as the parent node for the new insertion.
+>>>>
+>>>> So when we try to insert a new node with an erased node as
+>>>> its parent, obviously things go very wrong.
+>>>>
+>>>> Upstream,
+>>>> 97d3ac75e5e0ebf7ca38ae74cebd201c09b97ab2 xfs: exact busy extent tracking
+>>>> actually fixed this, but as part of a much larger change.  Here's
+>>>> the relevant bit:
+>>>>
+>>>>                 * We also need to restart the busy extent search from the
+>>>>                 * tree root, because erasing the node can rearrange the
+>>>>                 * tree topology.
+>>>>                 */
+>>>>                rb_erase(&busyp->rb_node, &pag->pagb_tree);
+>>>>                busyp->length = 0;
+>>>>                return false;
+>>>>
+>>>> We can do essentially the same thing to older codebases by restarting
+>>>> the search after the erase.
+>>>>
+>>>> This should apply to .35 through .39, and was tested on .39
+>>>> with the oopsing replay reproducer.
+>>>>
+>>>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+>>>> ---
+>>>>
+>>>> Index: linux-2.6/fs/xfs/xfs_alloc.c
+>>>> ===================================================================
+>>>> --- linux-2.6.orig/fs/xfs/xfs_alloc.c
+>>>> +++ linux-2.6/fs/xfs/xfs_alloc.c
+>>>> @@ -2664,6 +2664,12 @@ restart:
+>>>>  					new->bno + new->length) -
+>>>>  				min(busyp->bno, new->bno);
+>>>>  		new->bno = min(busyp->bno, new->bno);
+>>>> +		/*
+>>>> +		 * Start the search over from the tree root, because
+>>>> +		 * erasing the node can rearrange the tree topology.
+>>>> +		 */
+>>>> +		spin_unlock(&pag->pagb_lock);
+>>>> +		goto restart;
+>>>>  	} else
+>>>>  		busyp = NULL;
+>>>
+>>> Looks good.
+>>>
+>>> I'm guessing that the only case I was able to hit during testing of
+>>> this code originally was the "overlap with exact start block match",
+>>> otherwise I would have seen this. I'm not sure that there really is
+>>> much we can do to improve the test coverage of this code, though.
+>>> Hell, just measuring our test coverage so we know what we aren't
+>>> testing would probably be a good start. :/
+>>
+>> Apparently the original oops, and the subsequent replay oopses,
+>> were on a filesystem VERY busy with torrents.
+>>
+>> Might be a testcase ;)
 > 
-> I'd like you to have a look into this issue:
+> That just means large files. And fragmentation levels are
+> effectively dependent on whether the torrent client uses
+> preallocation or not. Just creating a set of large fragmented file
+> using preallocation, shutting the filesystem down in the middle
+> of it and then doing log replay might do the trick...
+
+well yeah, my point was, it was in fact badly fragmented.
+
+To quote my favorite meaningless xfs_db statistic,
+
+actual 29700140, ideal 185230, fragmentation factor 99.38%
+
+I guess that's "only" 160 extents per file.
+
+But one of the 2.2G files had 44,000 extents, as an example.
+I am guessing the client did not preallocate.  :)
+
+-Eric
+
+> Cheers,
 > 
-> pm-hibernate locks up when using xfs while "Preallocating image memory".
-> 
-> https://bugzilla.kernel.org/show_bug.cgi?id=33622
-> 
-> I got at least this backtrace (2.6.39.3)
-> 
-> tia
-> 
-> chris
-> 
-> 
-> 
-> SysRq : Show Blocked State
-> 
-> pm-hibernate    D 0000000000000000     0  3638   3637 0x00000000
->  ffff8800017bf918 0000000000000082 ffff8800017be010 ffff880000000000
->  ffff8800017be010 ffff88000b8a6170 0000000000013900 ffff8800017bffd8
->  ffff8800017bffd8 0000000000013900 ffffffff8148b020 ffff88000b8a6170
-> Call Trace:
->  [<ffffffff81344ce2>] schedule_timeout+0x22/0xbb
->  [<ffffffff81344b64>] wait_for_common+0xcb/0x148
->  [<ffffffff810408ea>] ? try_to_wake_up+0x18c/0x18c
->  [<ffffffff81345527>] ? down_write+0x2d/0x31
->  [<ffffffff81344c7b>] wait_for_completion+0x18/0x1a
->  [<ffffffffa02374da>] xfs_reclaim_inode+0x74/0x258 [xfs]
->  [<ffffffffa0237853>] xfs_reclaim_inodes_ag+0x195/0x264 [xfs]
->  [<ffffffffa0237974>] xfs_reclaim_inode_shrink+0x52/0x90 [xfs]
->  [<ffffffff810c4e21>] shrink_slab+0xdb/0x151
->  [<ffffffff810c625a>] do_try_to_free_pages+0x204/0x39a
->  [<ffffffff8134ce4e>] ? apic_timer_interrupt+0xe/0x20
->  [<ffffffff810c647f>] shrink_all_memory+0x8f/0xa8
->  [<ffffffff810cc41a>] ? next_online_pgdat+0x20/0x41
->  [<ffffffff8107937d>] hibernate_preallocate_memory+0x1c4/0x30f
->  [<ffffffff811a8fa2>] ? kobject_put+0x47/0x4b
->  [<ffffffff81077eb2>] hibernation_snapshot+0x45/0x281
->  [<ffffffff810781bf>] hibernate+0xd1/0x1b8
->  [<ffffffff81076c58>] state_store+0x57/0xce
->  [<ffffffff811a8d0b>] kobj_attr_store+0x17/0x19
->  [<ffffffff81152bda>] sysfs_write_file+0xfc/0x138
->  [<ffffffff810fca74>] vfs_write+0xa9/0x105
->  [<ffffffff810fcb89>] sys_write+0x45/0x6c
->  [<ffffffff8134c492>] system_call_fastpath+0x16/0x1b
-
-It's waiting for IO completion, and holding an AG scan lock.
-
-And IO completion requires a workqueue to run. Just FYI, this
-process of inode reclaim can dirty the filesystem, long after
-hibernate have assumed that it is clean due to the sys_sync() call
-you do after freezing the processes. I pointed out this flaw in
-using sync to write dirty data prior to hibernate a couple of years
-ago.
-
-Anyway, it's a good thing that XFS doesn't use freezable work
-queues, otherwise it would hang on every hibernate. Perhaps I should
-do that to force hibernate to do things properly in filesystems
-land.
-
-However, it is entirely possible that something else that XFS relies
-on for IO completion has been put to sleep by this point.
-
-/me finds the smoking cannon:
-
-[  648.794455] xfsbufd/sda3    D 0000000000000000     0   192      2 0x00000000
-[  648.794455]  ffff88003720be00 0000000000000046 ffff88003720bd90 ffffffff00000000
-[  648.794455]  ffff88003720a010 ffff880056bc3580 0000000000013900 ffff88003720bfd8
-[  648.794455]  ffff88003720bfd8 0000000000013900 ffffffff8148b020 ffff880056bc3580
-[  648.794455] Call Trace:
-[  648.794455]  [<ffffffff81065c0a>] refrigerator+0xbd/0xd3
-[  648.794455]  [<ffffffffa022d072>] xfsbufd+0x93/0x14d [xfs]
-[  648.794455]  [<ffffffffa022cfdf>] ? xfs_free_buftarg+0x4c/0x4c [xfs]
-[  648.794455]  [<ffffffff8105f25a>] kthread+0x7d/0x85
-[  648.794455]  [<ffffffff8134d6e4>] kernel_thread_helper+0x4/0x10
-[  648.794455]  [<ffffffff8105f1dd>] ? kthread_worker_fn+0x148/0x148
-[  648.794455]  [<ffffffff8134d6e0>] ? gs_change+0x13/0x13
-
-The xfsbufd, responsible for pushing out dirty metadata, has been
-been frozen. sys_sync() does not push out dirty metadata because it
-is already on stable storage in the journal. If the flush lock is
-already held on the inode, then inode reclaim will wait for the
-xfsbufd to flush the backing buffer because reclaim can't do it
-directly. And hibernate has already frozen the xfsbufd.
-
-IOWs, what hibernate does is:
-
-	freeze_processes()
-	sys_sync()
-	allocate a large amount of memory
-
-Freezing the processes causes parts of filesystems to be put in the
-fridge, which means there is no guarantee that sys_sync() actually
-does what it is supposed to. As it is, sys_sync() really only
-guarantees file data is clean in memory - metadata does not need to
-be clean as long s it has been journalled and the journal is safe on
-disk.
-
-Further, allocating memory can cause memory reclaim to enter the
-filesystem and try to free memory held by the filesystem. In XFS (at
-least) this can cause the filesystem to issue tranactions and
-metadata IO to clean the dirty metadata to enable it to be
-reclaimed. So hibernate is effectively guaranteed to dirty the
-filesystem after it has frozen all the worker threads the filesystem
-might rely on.
-
-Also, by this point kswapd has already been frozen, so hibernate is
-relying totally on direct memory reclaim to free up the memory it
-requires. I'm not sure that's a good idea.
-
-IOWs, hibernate is still broken by design - and broken in exactly
-the way that was pointed out a couple of years ago by myself and
-others in the filesystem world: sys_sync() does not quiesce or
-guarantee a clean filesystem in memory after it completes.
-
-There is a solution to this, and it already exists - it's called
-freezing the filesystem. Effectively hibernate needs to allocate
-memory before it freezes kernel/filesystem worker threads:
-
-	freeze_userspace_processes()
-
-	// just to clean the page cache quickly
-	sys_sync()
-
-	// optionally to free page/inode/dentry caches:
-		iterate_supers(drop_pagecache_sb, NULL);
-		drop_slab()
-
-	allocate a large amount of memory
-
-	// Now quiesce the filesystems and clean remaining metadata
-	iterate_supers(freeze_super, NULL);
-
-	freeze_remaining_processes()
-
-This guarantees that filesystems are still working when memory
-reclaim comes along to free memory for the hibernate image, and that
-once it is allocated that filesystems will not be changed until
-thawed on the hibernate wakeup.
-
-So, like I said a couple of years ago: fix hibernate to quiesce
-filesystems properly, and the hibernate will be much more reliable
-and robust and less likely to break randomly in the future.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> Dave.
 
 _______________________________________________
 xfs mailing list
