@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6DEVbdi087209 for <xfs@oss.sgi.com>; Wed, 13 Jul 2011 09:31:37 -0500
+	p6DEVYmf087196 for <xfs@oss.sgi.com>; Wed, 13 Jul 2011 09:31:34 -0500
 Received: from mx2.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 526A5682C2
-	for <xfs@oss.sgi.com>; Wed, 13 Jul 2011 07:31:35 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CE1F5143F9F4
+	for <xfs@oss.sgi.com>; Wed, 13 Jul 2011 07:31:33 -0700 (PDT)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id f3ipEC4Czbe6fHYv for <xfs@oss.sgi.com>;
-	Wed, 13 Jul 2011 07:31:35 -0700 (PDT)
+	with ESMTP id SdMRdYGy9TOPoufN for <xfs@oss.sgi.com>;
+	Wed, 13 Jul 2011 07:31:33 -0700 (PDT)
 From: Mel Gorman <mgorman@suse.de>
-Subject: [PATCH 5/5] mm: writeback: Prioritise dirty inodes encountered by
-	direct reclaim for background flushing
-Date: Wed, 13 Jul 2011 15:31:27 +0100
-Message-Id: <1310567487-15367-6-git-send-email-mgorman@suse.de>
+Subject: [PATCH 3/5] mm: vmscan: Throttle reclaim if encountering too many
+	dirty pages under writeback
+Date: Wed, 13 Jul 2011 15:31:25 +0100
+Message-Id: <1310567487-15367-4-git-send-email-mgorman@suse.de>
 In-Reply-To: <1310567487-15367-1-git-send-email-mgorman@suse.de>
 References: <1310567487-15367-1-git-send-email-mgorman@suse.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,189 +31,122 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Linux-MM <linux-mm@kvack.org>
 Cc: Rik van Riel <riel@redhat.com>, Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, XFS <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, Minchan Kim <minchan.kim@gmail.com>, Wu Fengguang <fengguang.wu@intel.com>, Johannes Weiner <jweiner@redhat.com>, Mel Gorman <mgorman@suse.de>
 
-It is preferable that no dirty pages are dispatched from the page
-reclaim path. If reclaim is encountering dirty pages, it implies that
-either reclaim is getting ahead of writeback or use-once logic has
-prioritise pages for reclaiming that are young relative to when the
-inode was dirtied.
+Workloads that are allocating frequently and writing files place a
+large number of dirty pages on the LRU. With use-once logic, it is
+possible for them to reach the end of the LRU quickly requiring the
+reclaimer to scan more to find clean pages. Ordinarily, processes that
+are dirtying memory will get throttled by dirty balancing but this
+is a global heuristic and does not take into account that LRUs are
+maintained on a per-zone basis. This can lead to a situation whereby
+reclaim is scanning heavily, skipping over a large number of pages
+under writeback and recycling them around the LRU consuming CPU.
 
-When dirty pages are encounted on the LRU, this patch marks the inodes
-I_DIRTY_RECLAIM and wakes the background flusher. When the background
-flusher runs, it moves such inodes immediately to the dispatch queue
-regardless of inode age. There is no guarantee that pages reclaim
-cares about will be cleaned first but the expectation is that the
-flusher threads will clean the page quicker than if reclaim tried to
-clean a single page.
+This patch checks how many of the number of pages isolated from the
+LRU were dirty. If a percentage of them are dirty, the process will be
+throttled if a blocking device is congested or the zone being scanned
+is marked congested. The percentage that must be dirty depends on
+the priority. At default priority, all of them must be dirty. At
+DEF_PRIORITY-1, 50% of them must be dirty, DEF_PRIORITY-2, 25%
+etc. i.e.  as pressure increases the greater the likelihood the process
+will get throttled to allow the flusher threads to make some progress.
 
 Signed-off-by: Mel Gorman <mgorman@suse.de>
 ---
- fs/fs-writeback.c         |   56 ++++++++++++++++++++++++++++++++++++++++++++-
- include/linux/fs.h        |    5 ++-
- include/linux/writeback.h |    1 +
- mm/vmscan.c               |   16 ++++++++++++-
- 4 files changed, 74 insertions(+), 4 deletions(-)
+ include/linux/mmzone.h |    1 +
+ mm/vmscan.c            |   23 ++++++++++++++++++++---
+ mm/vmstat.c            |    1 +
+ 3 files changed, 22 insertions(+), 3 deletions(-)
 
-diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index 0f015a0..1201052 100644
---- a/fs/fs-writeback.c
-+++ b/fs/fs-writeback.c
-@@ -257,9 +257,23 @@ static void move_expired_inodes(struct list_head *delaying_queue,
- 	LIST_HEAD(tmp);
- 	struct list_head *pos, *node;
- 	struct super_block *sb = NULL;
--	struct inode *inode;
-+	struct inode *inode, *tinode;
- 	int do_sb_sort = 0;
- 
-+	/* Move inodes reclaim found at end of LRU to dispatch queue */
-+	list_for_each_entry_safe(inode, tinode, delaying_queue, i_wb_list) {
-+		/* Move any inode found at end of LRU to dispatch queue */
-+		if (inode->i_state & I_DIRTY_RECLAIM) {
-+			inode->i_state &= ~I_DIRTY_RECLAIM;
-+			list_move(&inode->i_wb_list, &tmp);
-+
-+			if (sb && sb != inode->i_sb)
-+				do_sb_sort = 1;
-+			sb = inode->i_sb;
-+		}
-+	}
-+
-+	sb = NULL;
- 	while (!list_empty(delaying_queue)) {
- 		inode = wb_inode(delaying_queue->prev);
- 		if (older_than_this &&
-@@ -968,6 +982,46 @@ void wakeup_flusher_threads(long nr_pages)
- 	rcu_read_unlock();
- }
- 
-+/*
-+ * Similar to wakeup_flusher_threads except prioritise inodes contained
-+ * in the page_list regardless of age
-+ */
-+void wakeup_flusher_threads_pages(long nr_pages, struct list_head *page_list)
-+{
-+	struct page *page;
-+	struct address_space *mapping;
-+	struct inode *inode;
-+
-+	list_for_each_entry(page, page_list, lru) {
-+		if (!PageDirty(page))
-+			continue;
-+
-+		if (PageSwapBacked(page))
-+			continue;
-+
-+		lock_page(page);
-+		mapping = page_mapping(page);
-+		if (!mapping)
-+			goto unlock;
-+
-+		/*
-+		 * Test outside the lock to see as if it is already set. Inode
-+		 * should be pinned by the lock_page
-+		 */
-+		inode = page->mapping->host;
-+		if (inode->i_state & I_DIRTY_RECLAIM)
-+			goto unlock;
-+
-+		spin_lock(&inode->i_lock);
-+		inode->i_state |= I_DIRTY_RECLAIM;
-+		spin_unlock(&inode->i_lock);
-+unlock:
-+		unlock_page(page);
-+	}
-+
-+	wakeup_flusher_threads(nr_pages);
-+}
-+
- static noinline void block_dump___mark_inode_dirty(struct inode *inode)
- {
- 	if (inode->i_ino || strcmp(inode->i_sb->s_id, "bdev")) {
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index b5b9792..bb0f4c2 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1650,8 +1650,8 @@ struct super_operations {
- /*
-  * Inode state bits.  Protected by inode->i_lock
-  *
-- * Three bits determine the dirty state of the inode, I_DIRTY_SYNC,
-- * I_DIRTY_DATASYNC and I_DIRTY_PAGES.
-+ * Four bits determine the dirty state of the inode, I_DIRTY_SYNC,
-+ * I_DIRTY_DATASYNC, I_DIRTY_PAGES and I_DIRTY_RECLAIM.
-  *
-  * Four bits define the lifetime of an inode.  Initially, inodes are I_NEW,
-  * until that flag is cleared.  I_WILL_FREE, I_FREEING and I_CLEAR are set at
-@@ -1706,6 +1706,7 @@ struct super_operations {
- #define __I_SYNC		7
- #define I_SYNC			(1 << __I_SYNC)
- #define I_REFERENCED		(1 << 8)
-+#define I_DIRTY_RECLAIM		(1 << 9)
- 
- #define I_DIRTY (I_DIRTY_SYNC | I_DIRTY_DATASYNC | I_DIRTY_PAGES)
- 
-diff --git a/include/linux/writeback.h b/include/linux/writeback.h
-index 17e7ccc..1e77793 100644
---- a/include/linux/writeback.h
-+++ b/include/linux/writeback.h
-@@ -66,6 +66,7 @@ void writeback_inodes_wb(struct bdi_writeback *wb,
- 		struct writeback_control *wbc);
- long wb_do_writeback(struct bdi_writeback *wb, int force_wait);
- void wakeup_flusher_threads(long nr_pages);
-+void wakeup_flusher_threads_pages(long nr_pages, struct list_head *page_list);
- 
- /* writeback.h requires fs.h; it, too, is not included from here. */
- static inline void wait_on_inode(struct inode *inode)
+diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
+index b70a0c0..c4508a2 100644
+--- a/include/linux/mmzone.h
++++ b/include/linux/mmzone.h
+@@ -101,6 +101,7 @@ enum zone_stat_item {
+ 	NR_BOUNCE,
+ 	NR_VMSCAN_WRITE,
+ 	NR_VMSCAN_WRITE_SKIP,
++	NR_VMSCAN_THROTTLED,
+ 	NR_WRITEBACK_TEMP,	/* Writeback using temporary buffers */
+ 	NR_ISOLATED_ANON,	/* Temporary isolated pages from anon lru */
+ 	NR_ISOLATED_FILE,	/* Temporary isolated pages from file lru */
 diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 8e00aee..db62af1 100644
+index e272951..9826086 100644
 --- a/mm/vmscan.c
 +++ b/mm/vmscan.c
-@@ -725,8 +725,11 @@ static unsigned long shrink_page_list(struct list_head *page_list,
+@@ -720,7 +720,8 @@ static noinline_for_stack void free_page_list(struct list_head *free_pages)
+ static unsigned long shrink_page_list(struct list_head *page_list,
+ 				      struct zone *zone,
+ 				      struct scan_control *sc,
+-				      int priority)
++				      int priority,
++				      unsigned long *ret_nr_dirty)
  {
  	LIST_HEAD(ret_pages);
  	LIST_HEAD(free_pages);
-+	LIST_HEAD(dirty_pages);
-+
- 	int pgactivate = 0;
- 	unsigned long nr_dirty = 0;
-+	unsigned long nr_unqueued_dirty = 0;
- 	unsigned long nr_congested = 0;
- 	unsigned long nr_reclaimed = 0;
+@@ -971,6 +972,7 @@ keep_lumpy:
  
-@@ -830,7 +833,9 @@ static unsigned long shrink_page_list(struct list_head *page_list,
- 			/*
- 			 * Only kswapd can writeback filesystem pages to
- 			 * avoid risk of stack overflow but do not writeback
--			 * unless under significant pressure.
-+			 * unless under significant pressure. For dirty pages
-+			 * not under writeback, create a list and pass the
-+			 * inodes to the flusher threads later
- 			 */
- 			if (page_is_file_cache(page) &&
- 					(!current_is_kswapd() || priority >= DEF_PRIORITY - 2)) {
-@@ -840,6 +845,10 @@ static unsigned long shrink_page_list(struct list_head *page_list,
- 				unlock_page(page);
- 				deactivate_page(page);
- 
-+				/* Prioritise the backing inodes later */
-+				nr_unqueued_dirty++;
-+				list_add(&page->lru, &dirty_pages);
-+
- 				goto keep_dirty;
- 			}
- 
-@@ -976,6 +985,11 @@ keep_dirty:
- 
- 	free_page_list(&free_pages);
- 
-+	if (!list_empty(&dirty_pages)) {
-+		wakeup_flusher_threads_pages(nr_unqueued_dirty, &dirty_pages);
-+		list_splice(&ret_pages, &dirty_pages);
-+	}
-+
  	list_splice(&ret_pages, page_list);
  	count_vm_events(PGACTIVATE, pgactivate);
- 	*ret_nr_dirty += nr_dirty;
++	*ret_nr_dirty += nr_dirty;
+ 	return nr_reclaimed;
+ }
+ 
+@@ -1420,6 +1422,7 @@ shrink_inactive_list(unsigned long nr_to_scan, struct zone *zone,
+ 	unsigned long nr_taken;
+ 	unsigned long nr_anon;
+ 	unsigned long nr_file;
++	unsigned long nr_dirty = 0;
+ 
+ 	while (unlikely(too_many_isolated(zone, file, sc))) {
+ 		congestion_wait(BLK_RW_ASYNC, HZ/10);
+@@ -1468,12 +1471,14 @@ shrink_inactive_list(unsigned long nr_to_scan, struct zone *zone,
+ 
+ 	spin_unlock_irq(&zone->lru_lock);
+ 
+-	nr_reclaimed = shrink_page_list(&page_list, zone, sc, priority);
++	nr_reclaimed = shrink_page_list(&page_list, zone, sc,
++							priority, &nr_dirty);
+ 
+ 	/* Check if we should syncronously wait for writeback */
+ 	if (should_reclaim_stall(nr_taken, nr_reclaimed, priority, sc)) {
+ 		set_reclaim_mode(priority, sc, true);
+-		nr_reclaimed += shrink_page_list(&page_list, zone, sc, priority);
++		nr_reclaimed += shrink_page_list(&page_list, zone, sc,
++							priority, &nr_dirty);
+ 	}
+ 
+ 	local_irq_disable();
+@@ -1483,6 +1488,18 @@ shrink_inactive_list(unsigned long nr_to_scan, struct zone *zone,
+ 
+ 	putback_lru_pages(zone, sc, nr_anon, nr_file, &page_list);
+ 
++	/*
++	 * If we have encountered a high number of dirty pages then they
++	 * are reaching the end of the LRU too quickly and global limits are
++	 * not enough to throttle processes due to the page distribution
++	 * throughout zones. Scale the number of dirty pages that must be
++	 * dirty before being throttled to priority.
++	 */
++	if (nr_dirty && nr_dirty >= (nr_taken >> (DEF_PRIORITY-priority))) {
++		inc_zone_state(zone, NR_VMSCAN_THROTTLED);
++		wait_iff_congested(zone, BLK_RW_ASYNC, HZ/10);
++	}
++
+ 	trace_mm_vmscan_lru_shrink_inactive(zone->zone_pgdat->node_id,
+ 		zone_idx(zone),
+ 		nr_scanned, nr_reclaimed,
+diff --git a/mm/vmstat.c b/mm/vmstat.c
+index fd109f3..59ee17c 100644
+--- a/mm/vmstat.c
++++ b/mm/vmstat.c
+@@ -703,6 +703,7 @@ const char * const vmstat_text[] = {
+ 	"nr_bounce",
+ 	"nr_vmscan_write",
+ 	"nr_vmscan_write_skip",
++	"nr_vmscan_throttled",
+ 	"nr_writeback_temp",
+ 	"nr_isolated_anon",
+ 	"nr_isolated_file",
 -- 
 1.7.3.4
 
