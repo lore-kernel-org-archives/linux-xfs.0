@@ -1,21 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6DCqn4U084033 for <xfs@oss.sgi.com>; Wed, 13 Jul 2011 07:52:49 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 786611E605DA
-	for <xfs@oss.sgi.com>; Wed, 13 Jul 2011 05:52:48 -0700 (PDT)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	NkMdnlCRbOuR6FrB for <xfs@oss.sgi.com>;
-	Wed, 13 Jul 2011 05:52:48 -0700 (PDT)
-Date: Wed, 13 Jul 2011 08:52:47 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: XFS status update for June 2011
-Message-ID: <20110713125247.GA27049@infradead.org>
+	p6DDo5FS085839 for <xfs@oss.sgi.com>; Wed, 13 Jul 2011 08:50:05 -0500
+Subject: Re: [PATCH] stable: restart busy extent search after node removal
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <4E1CC4BA.1010107@redhat.com>
+References: <4E1CC4BA.1010107@redhat.com>
+Date: Wed, 13 Jul 2011 08:50:01 -0500
+Message-ID: <1310565001.1998.7.camel@doink>
 MIME-Version: 1.0
-Content-Disposition: inline
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,17 +22,47 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-In June we saw more release candidates for Linux 3.0, which contain a few
-XFS fixes but no major updates.  No updates were committed to the XFS
-development tree for Linux 3.1 either, although the mailing list has been
-rather busy with updates for that merge window.
+On Tue, 2011-07-12 at 17:03 -0500, Eric Sandeen wrote:
+> Sending this for review prior to stable submission...
+> 
+> A user on #xfs reported that a log replay was oopsing in
+> __rb_rotate_left() with a null pointer deref.
+> 
+> I traced this down to the fact that in xfs_alloc_busy_insert(),
+> we erased a node with rb_erase() when the new node overlapped,
+> but left it specified as the parent node for the new insertion.
+> 
+> So when we try to insert a new node with an erased node as
+> its parent, obviously things go very wrong.
+> 
+> Upstream,
+> 97d3ac75e5e0ebf7ca38ae74cebd201c09b97ab2 xfs: exact busy extent tracking
+> actually fixed this, but as part of a much larger change.  Here's
+> the relevant bit:
+> 
+>                 * We also need to restart the busy extent search from the
+>                 * tree root, because erasing the node can rearrange the
+>                 * tree topology.
+>                 */
+>                rb_erase(&busyp->rb_node, &pag->pagb_tree);
+>                busyp->length = 0;
+>                return false;
+> 
+> We can do essentially the same thing to older codebases by restarting
+> the search after the erase.
+> 
+> This should apply to .35 through .39, and was tested on .39
+> with the oopsing replay reproducer.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-On the user space side the xfsprogs and xfsdump repositories didn't see
-any updates, while xfstests has been rather busy with a lot of fixes
-to various test cases.
+Looks good.
+
+Reviewed-by: Alex Elder <aelder@sgi.com>
+
 
 _______________________________________________
 xfs mailing list
