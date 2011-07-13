@@ -1,19 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6DFmmpX090366 for <xfs@oss.sgi.com>; Wed, 13 Jul 2011 10:48:48 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 38E1117C156F
-	for <xfs@oss.sgi.com>; Wed, 13 Jul 2011 08:48:46 -0700 (PDT)
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id tOJlab4yWaDGLBUx for <xfs@oss.sgi.com>;
-	Wed, 13 Jul 2011 08:48:46 -0700 (PDT)
-Message-ID: <4E1DBE5E.3060308@sandeen.net>
-Date: Wed, 13 Jul 2011 10:48:46 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	p6DFVbv1089640 for <xfs@oss.sgi.com>; Wed, 13 Jul 2011 10:31:37 -0500
+Received: from mx2.suse.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 353231501B78
+	for <xfs@oss.sgi.com>; Wed, 13 Jul 2011 08:31:35 -0700 (PDT)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id hcsB3wFum8hT7kqY for <xfs@oss.sgi.com>;
+	Wed, 13 Jul 2011 08:31:35 -0700 (PDT)
+Date: Wed, 13 Jul 2011 16:31:30 +0100
+From: Mel Gorman <mgorman@suse.de>
+Subject: Re: [RFC PATCH 0/5] Reduce filesystem writeback from page reclaim
+	(again)
+Message-ID: <20110713153130.GH7529@suse.de>
+References: <1310567487-15367-1-git-send-email-mgorman@suse.de>
 MIME-Version: 1.0
-Subject: [PATCH] xfs [stable only]: restart busy extent search after node
-	removal
+Content-Disposition: inline
+In-Reply-To: <1310567487-15367-1-git-send-email-mgorman@suse.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,62 +29,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: stable@kernel.org, xfs-oss <xfs@oss.sgi.com>
+To: Linux-MM <linux-mm@kvack.org>
+Cc: Rik van Riel <riel@redhat.com>, Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, XFS <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, Minchan Kim <minchan.kim@gmail.com>, Wu Fengguang <fengguang.wu@intel.com>, Johannes Weiner <jweiner@redhat.com>
 
-A user on #xfs reported that a log replay was oopsing in
-__rb_rotate_left() with a null pointer deref, and provided
-an xfs_metadump image for reproduction and testing.
+On Wed, Jul 13, 2011 at 03:31:22PM +0100, Mel Gorman wrote:
+> <SNIP>
+> The objective of the series - reducing writes from reclaim - is
+> met with filesystem writes from reclaim reduced to 0 with reclaim
+> in general doing less work. ext3, ext4 and xfs all showed marked
+> improvements for fs_mark in this configuration. btrfs looked worse
+> but it's within the noise and I'd expect the patches to have little
+> or no impact there due it ignoring ->writepage from reclaim.
+> 
 
-I traced this down to the fact that in xfs_alloc_busy_insert(),
-we erased a node with rb_erase() when the new node overlapped,
-but left the erased node specified as the parent node for the
-new insertion.
+My bad, I accidentally looked at an old report for btrfs based on
+older patches. In the report posted with all patches applied, the
+performance of btrfs does look better but as the patches should make
+no difference, it's still in the noise.
 
-So when we try to insert a new node with an erased node as
-its parent, obviously things go very wrong.
-
-Upstream,
-97d3ac75e5e0ebf7ca38ae74cebd201c09b97ab2 xfs: exact busy extent tracking
-actually fixed this, but as part of a much larger change.  Here's
-the relevant code from that commit:
-
-                * We also need to restart the busy extent search from the
-                * tree root, because erasing the node can rearrange the
-                * tree topology.
-                */
-               rb_erase(&busyp->rb_node, &pag->pagb_tree);
-               busyp->length = 0;
-               return false;
-
-We can do essentially the same thing to older codebases by restarting
-the tree search after the erase.
-
-This should apply to .35.y through .39.y, and was tested on .39
-with the oopsing replay reproducer.
-
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Alex Elder <aelder@sgi.com>
----
-
-Index: linux-2.6/fs/xfs/xfs_alloc.c
-===================================================================
---- linux-2.6.orig/fs/xfs/xfs_alloc.c
-+++ linux-2.6/fs/xfs/xfs_alloc.c
-@@ -2664,6 +2664,12 @@ restart:
- 					new->bno + new->length) -
- 				min(busyp->bno, new->bno);
- 		new->bno = min(busyp->bno, new->bno);
-+		/*
-+		 * Start the search over from the tree root, because
-+		 * erasing the node can rearrange the tree topology.
-+		 */
-+		spin_unlock(&pag->pagb_lock);
-+		goto restart;
- 	} else
- 		busyp = NULL;
- 
-
+-- 
+Mel Gorman
+SUSE Labs
 
 _______________________________________________
 xfs mailing list
