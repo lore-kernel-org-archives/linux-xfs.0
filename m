@@ -1,37 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6E1jIQm109441 for <xfs@oss.sgi.com>; Wed, 13 Jul 2011 20:45:19 -0500
-Received: from fgwmail5.fujitsu.co.jp (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4ED626B6E0
-	for <xfs@oss.sgi.com>; Wed, 13 Jul 2011 18:45:17 -0700 (PDT)
-Received: from fgwmail5.fujitsu.co.jp (fgwmail5.fujitsu.co.jp [192.51.44.35])
-	by cuda.sgi.com with ESMTP id DWhI83m22G3va2a0 for
-	<xfs@oss.sgi.com>; Wed, 13 Jul 2011 18:45:17 -0700 (PDT)
-Received: from m1.gw.fujitsu.co.jp (unknown [10.0.50.71])
-	by fgwmail5.fujitsu.co.jp (Postfix) with ESMTP id 81F5C3EE0C7
-	for <xfs@oss.sgi.com>; Thu, 14 Jul 2011 10:45:15 +0900 (JST)
-Received: from smail (m1 [127.0.0.1])
-	by outgoing.m1.gw.fujitsu.co.jp (Postfix) with ESMTP id 654C845DE56
-	for <xfs@oss.sgi.com>; Thu, 14 Jul 2011 10:45:15 +0900 (JST)
-Received: from s1.gw.fujitsu.co.jp (s1.gw.fujitsu.co.jp [10.0.50.91])
-	by m1.gw.fujitsu.co.jp (Postfix) with ESMTP id 3AF5445DE55
-	for <xfs@oss.sgi.com>; Thu, 14 Jul 2011 10:45:15 +0900 (JST)
-Received: from s1.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
-	by s1.gw.fujitsu.co.jp (Postfix) with ESMTP id 182DB1DB805B
-	for <xfs@oss.sgi.com>; Thu, 14 Jul 2011 10:45:15 +0900 (JST)
-Received: from ml14.s.css.fujitsu.com (ml14.s.css.fujitsu.com [10.240.81.134])
-	by s1.gw.fujitsu.co.jp (Postfix) with ESMTP id B16981DB8054
-	for <xfs@oss.sgi.com>; Thu, 14 Jul 2011 10:45:14 +0900 (JST)
-Date: Thu, 14 Jul 2011 10:38:01 +0900
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Subject: Re: [PATCH 1/5] mm: vmscan: Do not writeback filesystem pages in
-	direct reclaim
-Message-Id: <20110714103801.83e10fdb.kamezawa.hiroyu@jp.fujitsu.com>
-In-Reply-To: <1310567487-15367-2-git-send-email-mgorman@suse.de>
-References: <1310567487-15367-1-git-send-email-mgorman@suse.de>
-	<1310567487-15367-2-git-send-email-mgorman@suse.de>
-Mime-Version: 1.0
+	p6E3heDj112998 for <xfs@oss.sgi.com>; Wed, 13 Jul 2011 22:43:40 -0500
+Date: Wed, 13 Jul 2011 23:43:36 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/1] Fix the ltp Makefile to allow for installation of
+	all non-c (scripts) files
+Message-ID: <20110714034336.GA30541@infradead.org>
+References: <CAP57jx5TWxwaDhp6yY+b_tBb8_WTBaRPDCfdQ3pV4Bs-S869QQ@mail.gmail.com>
+	<20110713121320.GA28126@infradead.org>
+	<1310581564.1998.38.camel@doink>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1310581564.1998.38.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -44,91 +25,10 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mel Gorman <mgorman@suse.de>
-Cc: Rik van Riel <riel@redhat.com>, Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, XFS <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, Linux-MM <linux-mm@kvack.org>, Minchan Kim <minchan.kim@gmail.com>, Wu Fengguang <fengguang.wu@intel.com>, Johannes Weiner <jweiner@redhat.com>
+To: Alex Elder <aelder@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com, alal@google.com
 
-On Wed, 13 Jul 2011 15:31:23 +0100
-Mel Gorman <mgorman@suse.de> wrote:
-
-> From: Mel Gorman <mel@csn.ul.ie>
-> 
-> When kswapd is failing to keep zones above the min watermark, a process
-> will enter direct reclaim in the same manner kswapd does. If a dirty
-> page is encountered during the scan, this page is written to backing
-> storage using mapping->writepage.
-> 
-> This causes two problems. First, it can result in very deep call
-> stacks, particularly if the target storage or filesystem are complex.
-> Some filesystems ignore write requests from direct reclaim as a result.
-> The second is that a single-page flush is inefficient in terms of IO.
-> While there is an expectation that the elevator will merge requests,
-> this does not always happen. Quoting Christoph Hellwig;
-> 
-> 	The elevator has a relatively small window it can operate on,
-> 	and can never fix up a bad large scale writeback pattern.
-> 
-> This patch prevents direct reclaim writing back filesystem pages by
-> checking if current is kswapd. Anonymous pages are still written to
-> swap as there is not the equivalent of a flusher thread for anonymos
-> pages. If the dirty pages cannot be written back, they are placed
-> back on the LRU lists.
-> 
-> Signed-off-by: Mel Gorman <mgorman@suse.de>
-
-Hm.
-
-
-> ---
->  include/linux/mmzone.h |    1 +
->  mm/vmscan.c            |    9 +++++++++
->  mm/vmstat.c            |    1 +
->  3 files changed, 11 insertions(+), 0 deletions(-)
-> 
-> diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
-> index 9f7c3eb..b70a0c0 100644
-> --- a/include/linux/mmzone.h
-> +++ b/include/linux/mmzone.h
-> @@ -100,6 +100,7 @@ enum zone_stat_item {
->  	NR_UNSTABLE_NFS,	/* NFS unstable pages */
->  	NR_BOUNCE,
->  	NR_VMSCAN_WRITE,
-> +	NR_VMSCAN_WRITE_SKIP,
->  	NR_WRITEBACK_TEMP,	/* Writeback using temporary buffers */
->  	NR_ISOLATED_ANON,	/* Temporary isolated pages from anon lru */
->  	NR_ISOLATED_FILE,	/* Temporary isolated pages from file lru */
-> diff --git a/mm/vmscan.c b/mm/vmscan.c
-> index 4f49535..2d3e5b6 100644
-> --- a/mm/vmscan.c
-> +++ b/mm/vmscan.c
-> @@ -825,6 +825,15 @@ static unsigned long shrink_page_list(struct list_head *page_list,
->  		if (PageDirty(page)) {
->  			nr_dirty++;
->  
-> +			/*
-> +			 * Only kswapd can writeback filesystem pages to
-> +			 * avoid risk of stack overflow
-> +			 */
-> +			if (page_is_file_cache(page) && !current_is_kswapd()) {
-> +				inc_zone_page_state(page, NR_VMSCAN_WRITE_SKIP);
-> +				goto keep_locked;
-> +			}
-> +
-
-
-This will cause tons of memcg OOM kill because we have no help of kswapd (now).
-
-Could you make this
-
-	if (scanning_global_lru(sc) && page_is_file_cache(page) && !current_is_kswapd())
-...
-
-
-Then...sorry, please keep file system hook for a while. I'll do memcg dirty_ratio work
-by myself if Greg will not post new version until the next month. After that, we can
-remove scanning_global_lru(sc), I think.
-
-Thanks,
--Kame
+I'm fine with enabling 080 by default, it passes for me.
 
 _______________________________________________
 xfs mailing list
