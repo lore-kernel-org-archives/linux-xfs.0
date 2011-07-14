@@ -1,25 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6EDHsjL136821 for <xfs@oss.sgi.com>; Thu, 14 Jul 2011 08:17:54 -0500
-Received: from mx2.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B3C3EEA22F3
-	for <xfs@oss.sgi.com>; Thu, 14 Jul 2011 06:17:50 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id htT4FsshRgaOQKgM for <xfs@oss.sgi.com>;
-	Thu, 14 Jul 2011 06:17:50 -0700 (PDT)
-Date: Thu, 14 Jul 2011 14:17:45 +0100
-From: Mel Gorman <mgorman@suse.de>
-Subject: Re: [PATCH 2/5] mm: vmscan: Do not writeback filesystem pages in
-	kswapd except in high priority
-Message-ID: <20110714131745.GU7529@suse.de>
-References: <1310567487-15367-1-git-send-email-mgorman@suse.de>
-	<1310567487-15367-3-git-send-email-mgorman@suse.de>
-	<20110713233743.GV23038@dastard> <20110714062947.GO7529@suse.de>
-	<20110714115220.GB21663@dastard>
+	p6EEbrlu141312 for <xfs@oss.sgi.com>; Thu, 14 Jul 2011 09:37:53 -0500
+Subject: Re: [PATCH 4/4 v3] XFS TESTS: Fix 252 Failure: Add Generic FS
+	Punch Hole Test 255
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <4E1E1E41.30106@linux.vnet.ibm.com>
+References: <1309411441-2491-1-git-send-email-achender@linux.vnet.ibm.com>
+	<1309411441-2491-5-git-send-email-achender@linux.vnet.ibm.com>
+	<1310574716.1998.25.camel@doink>  <4E1E1E41.30106@linux.vnet.ibm.com>
+Date: Thu, 14 Jul 2011 09:37:48 -0500
+Message-ID: <1310654268.2067.5.camel@doink>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110714115220.GB21663@dastard>
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,157 +25,87 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Rik van Riel <riel@redhat.com>, Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, XFS <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, Linux-MM <linux-mm@kvack.org>, Minchan Kim <minchan.kim@gmail.com>, Wu Fengguang <fengguang.wu@intel.com>, Johannes Weiner <jweiner@redhat.com>
+To: Allison Henderson <achender@linux.vnet.ibm.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
 
-On Thu, Jul 14, 2011 at 09:52:21PM +1000, Dave Chinner wrote:
-> On Thu, Jul 14, 2011 at 07:29:47AM +0100, Mel Gorman wrote:
-> > On Thu, Jul 14, 2011 at 09:37:43AM +1000, Dave Chinner wrote:
-> > > On Wed, Jul 13, 2011 at 03:31:24PM +0100, Mel Gorman wrote:
-> > > > It is preferable that no dirty pages are dispatched for cleaning from
-> > > > the page reclaim path. At normal priorities, this patch prevents kswapd
-> > > > writing pages.
-> > > > 
-> > > > However, page reclaim does have a requirement that pages be freed
-> > > > in a particular zone. If it is failing to make sufficient progress
-> > > > (reclaiming < SWAP_CLUSTER_MAX at any priority priority), the priority
-> > > > is raised to scan more pages. A priority of DEF_PRIORITY - 3 is
-> > > > considered to tbe the point where kswapd is getting into trouble
-> > > > reclaiming pages. If this priority is reached, kswapd will dispatch
-> > > > pages for writing.
-> > > > 
-> > > > Signed-off-by: Mel Gorman <mgorman@suse.de>
-> > > 
-> > > Seems reasonable, but btrfs still will ignore this writeback from
-> > > kswapd, and it doesn't fall over.
-> > 
-> > At least there are no reports of it falling over :)
+On Wed, 2011-07-13 at 15:37 -0700, Allison Henderson wrote:
+> On 07/13/2011 09:31 AM, Alex Elder wrote:
+> > On Wed, 2011-06-29 at 22:24 -0700, Allison Henderson wrote:
+> >> This patch adds a new test 255 that tests fallocate punch hole,
+> >> but is for use by generic filesystems.  It is similar to 252,
+> >> but uses a weaker fiemap filter that only displays the location
+> >> of the hole, and not the extent types.
+> >>
+> >> Signed-off-by: Allison Henderson<achender@linux.vnet.ibm.com>
+> >
+> > I realize Christoph already committed this but I
+> > spotted something so I thought I might as well
+> > mention it.  I haven't tested any of this, so
+> > it may be OK after all, but if it's not then
+> > the filter_hole_fiemap() function ought to be
+> > updated.
+> >
+> > 					-Alex
+> >
+> > . . .
+> >
+> >> diff --git a/common.punch b/common.punch
+> >> index c18f88a..a48b7ae 100644
+> >> --- a/common.punch
+> >> +++ b/common.punch
+> >> @@ -218,6 +218,23 @@ _filter_fiemap()
+> >>   	_coalesce_extents
+> >>   }
+> >>
+> >> +# Filters fiemap output to only print the
+> >> +# file offset column and whether or not
+> >> +# it is an extent or a hole
+> >> +_filter_hole_fiemap()
+> >> +{
+> >> +	awk --posix '
+> >> +		$3 ~ /hole/ {
+> >> +			print $1, $2, $3;
+> >> +			next;
+> >> +		}
+> >> +		$5 ~ /0x[[:digit:]]+/ {
+> >
+> > I believe this should be:
+> >                   $5 ~ /0x[[:xdigit:]]+/ {
+> >
+> > (I.e., hex digits, not just decimals.)
+> >
 > 
-> However you want to spin it.
+> Hi Alex,
 > 
+> I think you are right.  The extent flags are printed in hex, so it 
+> should be xdigit.  The existing _filter_fiemap routine that I modeled 
+> this code from is also only parsing decimal digits.  Even though the 
+> tests are not showing any problems right now, it should probably be 
+> fixed.  Should I submit a patch to correct it?
 
-I regret that it is coming across as spin. My primary concern is
-that if we get OOM-related bugs due to this series later that it'll
-be difficult to pinpoint whether the whole series is at fault or whether
-preventing kswapd writing any pages was at fault.
 
-> > > Given that data point, I'd like to
-> > > see the results when you stop kswapd from doing writeback altogether
-> > > as well.
-> > > 
-> > 
-> > The results for this test will be identical because the ftrace results
-> > show that kswapd is already writing 0 filesystem pages.
+Please, yes--to fix both.  And please verify the problem
+while you're at it if possible.  Thank you.
+
+					-Alex
+
+> Allison Henderson
 > 
-> You mean these numbers:
-> 
-> Kswapd reclaim write file async I/O           4483       4286 0          1          0          0
-> 
-> Which shows that kswapd, under this workload has been improved to
-> the point that it doesn't need to do IO. Yes, you've addressed the
-> one problematic workload, but the numbers do not provide the answers
-> to the fundamental question that have been raised during
-> discussions. i.e. do we even need IO at all from reclaim?
-> 
-
-I don't know and at best will only be able to test with a single
-disk which is why I wanted to separate this series from a complete
-preventing of kswapd writing pages. I may be able to get access to
-a machine with more disks but it'll take time.
-
-> > Where it makes a difference is when the system is under enough
-> > pressure that it is failing to reclaim any memory and is in danger
-> > of prematurely triggering the OOM killer. Andrea outlined some of
-> > the concerns before at http://lkml.org/lkml/2010/6/15/246
-> 
-> So put the system under more pressure such that with this patch
-> series memory reclaim still writes from kswapd. Can you even get it
-> to that stage, and if you can, does the system OOM more or less if
-> you don't do file IO from reclaim?
-> 
-
-I can setup such a tests, it'll be at least next week before I
-configure such a test and get it queued. It'll probably take a few
-days to run then because more iterations will be required to pinpoint
-where the OOM threshold is.  I know from the past that pushing a
-system near OOM causes a non-deterministic number of triggers that
-depend heavily on what was killed so the only real choice is to start
-light and increase the load until boom which is time consuming.
-
-Even then, the test will be inconclusive because it'll be just one
-or two machines that I'll have to test on. There will be important
-corner cases that I won't be able to test for.  For example;
-
-  o small lowest zone that is critical for operation of some reason and
-    the pages must be cleaned from there even though there is a large
-    amount of memory overall
-
-  o small highest zone causing high kswapd usage as it fails to balance
-    continually due to pages being dirtied constantly and the window
-    between when flushers clean the page and kswapd reclaim the page
-    being too big. I might be able to simulate this one but bugs of
-    this nature tend to be workload specific and affect some machines
-    worse than others
-
-  o Machines with many nodes and dirty pages spread semi-randomly
-    on all nodes. If the flusher thread is not cleaning pages from
-    a particular node that is under memory pressure due to affinity,
-    processes will stall for long periods of time until the relevant
-    inodes expire and gets cleaned. This will be particularly
-    problematic if zone_reclaim is enabled
-
-Questions about scenarios like this are going to cause problems in
-review because it's reasonable to ask if any of them can occur and
-we can't give an iron-clad answer.
-
-> > > Can you try removing it altogether and seeing what that does to your
-> > > test results? i.e
-> > > 
-> > > 			if (page_is_file_cache(page)) {
-> > > 				inc_zone_page_state(page, NR_VMSCAN_WRITE_SKIP);
-> > > 				goto keep_locked;
-> > > 			}
-> > 
-> > It won't do anything, it'll still be writing 0 filesystem-backed pages.
-> > 
-> > Because of the possibility for the OOM killer triggering prematurely due
-> > to the inability of kswapd to write pages, I'd prefer to separate such a
-> > change by at least one release so that if there is an increase in OOM
-> > reports, it'll be obvious what was the culprit.
-> 
-> I'm not asking for release quality patches or even when such fixes
-> would roll out.
+> >> +			print $1, $2, "extent";
+> >> +		}' |
+> >> +	_coalesce_extents
+> >> +}
+> >> +
+> >> +
+> >>   # Prints the md5 checksum of a given file
+> >>   _md5_checksum()
+> >>   {
+> >
+> > . . .
+> >
 > 
 
-Very well. I was hoping to start with just this series and handle the
-complete disabling of writing later but it can wait a few weeks too. It
-was always a stretch that the next merge window was going to be hit.
 
-> What you've shown here is that memory reclaim can be more efficient
-> without issuing IO itself under medium memory pressure. Now the
-> question is whether it can do so under heavy, sustained, near OOM
-> memory pressure?
-> 
-> IOWs, what I want to see is whether the fundamental principle of
-> IO-less reclaim can be validated as workable or struck down.  This
-> patchset demonstrates that IO-less reclaim is superior for a
-> workload that produces medium levels of sustained IO-based memory
-> pressure, which leads to the conclusion that the approach has merit
-> and needs further investigation.
-> 
-> It's that next step that I'm asking you to test now. What form
-> potential changes take or when they are released is irrelevant to me
-> at this point, because we still haven't determined if the
-> fundamental concept is completely sound or not. If the concept is
-> sound I'm quite happy to wait until the implementation is fully
-> baked before it gets rolled out....
-> 
-
-I'll setup a suitable test next week then.
-
--- 
-Mel Gorman
-SUSE Labs
 
 _______________________________________________
 xfs mailing list
