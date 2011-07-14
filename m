@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6E6XcgW121112 for <xfs@oss.sgi.com>; Thu, 14 Jul 2011 01:33:38 -0500
+	p6E73GSr122530 for <xfs@oss.sgi.com>; Thu, 14 Jul 2011 02:03:16 -0500
 Received: from mx2.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 72984EC1E98
-	for <xfs@oss.sgi.com>; Wed, 13 Jul 2011 23:33:36 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B4D4717C64D6
+	for <xfs@oss.sgi.com>; Thu, 14 Jul 2011 00:03:14 -0700 (PDT)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id 50eG1B9azI5qJDTx for <xfs@oss.sgi.com>;
-	Wed, 13 Jul 2011 23:33:36 -0700 (PDT)
-Date: Thu, 14 Jul 2011 07:33:32 +0100
+	with ESMTP id DVu9ioZk4P4HPtH5 for <xfs@oss.sgi.com>;
+	Thu, 14 Jul 2011 00:03:14 -0700 (PDT)
+Date: Thu, 14 Jul 2011 08:03:10 +0100
 From: Mel Gorman <mgorman@suse.de>
-Subject: Re: [PATCH 3/5] mm: vmscan: Throttle reclaim if encountering too
-	many dirty pages under writeback
-Message-ID: <20110714063332.GP7529@suse.de>
+Subject: Re: [PATCH 5/5] mm: writeback: Prioritise dirty inodes encountered
+	by direct reclaim for background flushing
+Message-ID: <20110714070310.GQ7529@suse.de>
 References: <1310567487-15367-1-git-send-email-mgorman@suse.de>
-	<1310567487-15367-4-git-send-email-mgorman@suse.de>
-	<20110713234150.GW23038@dastard>
+	<1310567487-15367-6-git-send-email-mgorman@suse.de>
+	<20110713213947.GC21787@quack.suse.cz>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110713234150.GW23038@dastard>
+In-Reply-To: <20110713213947.GC21787@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,40 +31,77 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Rik van Riel <riel@redhat.com>, Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, XFS <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, Linux-MM <linux-mm@kvack.org>, Minchan Kim <minchan.kim@gmail.com>, Wu Fengguang <fengguang.wu@intel.com>, Johannes Weiner <jweiner@redhat.com>
+To: Jan Kara <jack@suse.cz>
+Cc: Rik van Riel <riel@redhat.com>, LKML <linux-kernel@vger.kernel.org>, XFS <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, Linux-MM <linux-mm@kvack.org>, Minchan Kim <minchan.kim@gmail.com>, Wu Fengguang <fengguang.wu@intel.com>, Johannes Weiner <jweiner@redhat.com>
 
-On Thu, Jul 14, 2011 at 09:41:50AM +1000, Dave Chinner wrote:
-> On Wed, Jul 13, 2011 at 03:31:25PM +0100, Mel Gorman wrote:
-> > Workloads that are allocating frequently and writing files place a
-> > large number of dirty pages on the LRU. With use-once logic, it is
-> > possible for them to reach the end of the LRU quickly requiring the
-> > reclaimer to scan more to find clean pages. Ordinarily, processes that
-> > are dirtying memory will get throttled by dirty balancing but this
-> > is a global heuristic and does not take into account that LRUs are
-> > maintained on a per-zone basis. This can lead to a situation whereby
-> > reclaim is scanning heavily, skipping over a large number of pages
-> > under writeback and recycling them around the LRU consuming CPU.
+On Wed, Jul 13, 2011 at 11:39:47PM +0200, Jan Kara wrote:
+> On Wed 13-07-11 15:31:27, Mel Gorman wrote:
+> > It is preferable that no dirty pages are dispatched from the page
+> > reclaim path. If reclaim is encountering dirty pages, it implies that
+> > either reclaim is getting ahead of writeback or use-once logic has
+> > prioritise pages for reclaiming that are young relative to when the
+> > inode was dirtied.
 > > 
-> > This patch checks how many of the number of pages isolated from the
-> > LRU were dirty. If a percentage of them are dirty, the process will be
-> > throttled if a blocking device is congested or the zone being scanned
-> > is marked congested. The percentage that must be dirty depends on
-> > the priority. At default priority, all of them must be dirty. At
-> > DEF_PRIORITY-1, 50% of them must be dirty, DEF_PRIORITY-2, 25%
-> > etc. i.e.  as pressure increases the greater the likelihood the process
-> > will get throttled to allow the flusher threads to make some progress.
-> 
-> It still doesn't take into account how many pages under writeback
-> were skipped. If there are lots of pages that are under writeback, I
-> think we still want to throttle to give IO a chance to complete and
-> clean those pages before scanning again....
+> > When dirty pages are encounted on the LRU, this patch marks the inodes
+> > I_DIRTY_RECLAIM and wakes the background flusher. When the background
+> > flusher runs, it moves such inodes immediately to the dispatch queue
+> > regardless of inode age. There is no guarantee that pages reclaim
+> > cares about will be cleaned first but the expectation is that the
+> > flusher threads will clean the page quicker than if reclaim tried to
+> > clean a single page.
+>   Hmm, I was looking through your numbers but I didn't see any significant
+> difference this patch would make. Do you?
 > 
 
-An earlier revision did take them into account but in these tests at
-least, 0 pages at the end of the LRU were PageWriteback. I expect this
-to change when multiple processes and CPUs were in use but am ignoring
-it for the moment.
+Marginal and well within noise. I'm very skeptical about the patch
+but the VM needs some way of prioritising what pages are getting
+written back to that pages in a particular zone can be cleaned.
+
+> I was thinking about the problem and actually doing IO from kswapd would be
+> a small problem if we submitted more than just a single page. Just to give
+> you idea - time to write a single page on plain SATA drive might be like 4
+> ms. Time to write sequential 4 MB of data is like 80 ms (I just made up
+> these numbers but the orders should be right).
+
+It's as good as number as any for arguements sake. It's not the
+first time such a patch has done the rounds. The last one I did along
+similar lines was http://lkml.org/lkml/2010/6/8/85 although I mucked
+it up with respect to racing with iput.
+
+Wu posted a patch that deferred the writing of ranges to a
+flusher thread http://www.spinics.net/lists/xfs/msg05659.html
+which Dave has already commented on at
+http://www.spinics.net/lists/xfs/msg05665.html. The clustering size
+could be easily fixed but the scalability problem he pointed out is
+a far greater problem.
+
+> So to write 1000 times more
+> data you just need like 20 times longer. That's a factor of 50 in IO
+> efficiency. So when reclaim/kswapd submits a single page IO once every
+> couple of miliseconds, your IO throughput just went close to zero...
+> BTW: I just checked your numbers in fsmark test with vanilla kernel.  You
+> wrote like 14500 pages from reclaim in 567 seconds. That is about one page
+> per 39 ms. That is going to have noticeable impact on IO throughput (not
+> with XFS because it plays tricks with writing more than asked but with ext2
+> or ext3 you would see it I guess).
+> 
+> So when kswapd sees high percentage of dirty pages at the end of LRU, it
+> could call something like fdatawrite_range() for the range of 4 MB
+> (provided the file is large enough) containing that page and IO thoughput
+> would not be hit that much and you will get reasonably bounded time when
+> the page gets cleaned... If you wanted to be clever, you could possibly be
+> more sophisticated in picking the file and range to write so that you get
+> rid of the most pages at the end of LRU but I'm not sure it's worth the CPU
+> cycles. Does this sound reasonable to you?
+> 
+
+Semi-reasonable and it's along the same lines as what
+http://lkml.org/lkml/2010/6/8/85 tried to achieve but maybe the effort
+of fixing it up with respect to racing with iput() just isn't worth it.
+
+I think I'll leave it as kswapd will call writepage if the priority is
+high enough until a good solution for how the VM can tell the flusher to
+prioritise a particular page is devised.
 
 -- 
 Mel Gorman
