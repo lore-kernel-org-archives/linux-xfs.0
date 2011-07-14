@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6E0hwAm107546 for <xfs@oss.sgi.com>; Wed, 13 Jul 2011 19:43:58 -0500
+	p6E0XlZF107278 for <xfs@oss.sgi.com>; Wed, 13 Jul 2011 19:33:47 -0500
 Received: from ipmail07.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B7605EBAB44
-	for <xfs@oss.sgi.com>; Wed, 13 Jul 2011 17:43:54 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3CD476B283
+	for <xfs@oss.sgi.com>; Wed, 13 Jul 2011 17:33:43 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	zzYewVUeQMmM2Rbj for <xfs@oss.sgi.com>;
-	Wed, 13 Jul 2011 17:43:54 -0700 (PDT)
-Date: Thu, 14 Jul 2011 10:43:50 +1000
+	nZeHMJOzKsVlzHOX for <xfs@oss.sgi.com>;
+	Wed, 13 Jul 2011 17:33:43 -0700 (PDT)
+Date: Thu, 14 Jul 2011 10:33:40 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Trying xfstest 075 and 112, both are failing
-Message-ID: <20110714004350.GA23038@dastard>
-References: <CAGpXXZLvvP+idqxCb8a5r1pkO9WhQcjVKGQeK+MGQp-dAp0Ztw@mail.gmail.com>
+Subject: Re: [RFC PATCH 0/5] Reduce filesystem writeback from page reclaim
+	(again)
+Message-ID: <20110714003340.GZ23038@dastard>
+References: <1310567487-15367-1-git-send-email-mgorman@suse.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAGpXXZLvvP+idqxCb8a5r1pkO9WhQcjVKGQeK+MGQp-dAp0Ztw@mail.gmail.com>
+In-Reply-To: <1310567487-15367-1-git-send-email-mgorman@suse.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,68 +30,77 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Greg Freemyer <greg.freemyer@gmail.com>
-Cc: xfs@oss.sgi.com
+To: Mel Gorman <mgorman@suse.de>
+Cc: Rik van Riel <riel@redhat.com>, Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, XFS <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, Linux-MM <linux-mm@kvack.org>, Minchan Kim <minchan.kim@gmail.com>, Wu Fengguang <fengguang.wu@intel.com>, Johannes Weiner <jweiner@redhat.com>
 
-On Wed, Jul 13, 2011 at 04:28:00PM -0400, Greg Freemyer wrote:
-> All,
-> 
-> I'm trying to get xfstests running in my setup for the first time in years.
-> 
-> I've trying with a btrfs test partition.
-> 
-> ./check mostly runs, but 3 tests are failing: 075, 112, and 127
-> 
-> 075 and 112 look like very basic errors in the 075.out info.  Makes me
-> wonder if they work for anyone with a current git pull.
-> 
-> ==== example failure of test 075
-> # ./check 075
-> FSTYP         -- btrfs
-> PLATFORM      -- Linux/x86_64 tiger3-64bit 2.6.39.2-36-default
-> MKFS_OPTIONS  -- /dev/sda1
-> MOUNT_OPTIONS -- /dev/sda1 /xfstests_mnt_scratch
-> 
-> 075 11s ... [failed, exit status 1] - output mismatch (see 075.out.bad)
-> --- 075.out     2011-06-30 18:41:17.000000000 -0400
-> +++ 075.out.bad 2011-07-13 16:25:55.000000000 -0400
-> @@ -4,15 +4,4 @@
->  -----------------------------------------------
->  fsx.0 : -d -N numops -S 0
->  -----------------------------------------------
-> -
-> ------------------------------------------------
-> -fsx.1 : -d -N numops -S 0 -x
-> ------------------------------------------------
-> -
-> ------------------------------------------------
-> -fsx.2 : -d -N numops -l filelen -S 0
-> ------------------------------------------------
-> -
-> ------------------------------------------------
-> -fsx.3 : -d -N numops -l filelen -S 0 -x
-> ------------------------------------------------
-> +    fsx (-d -N 1000 -S 0) failed, 0 - compare 075.0.{good,bad,fsxlog}
-> Ran: 075
-> Failures: 075
-> Failed 1 of 1 tests
-> ===
+On Wed, Jul 13, 2011 at 03:31:22PM +0100, Mel Gorman wrote:
+> (Revisting this from a year ago and following on from the thread
+> "Re: [PATCH 03/27] xfs: use write_cache_pages for writeback
+> clustering". Posting an prototype to see if anything obvious is
+> being missed)
 
-Nothing wrong with the test at all. That's telling you that btrfs
-failed the fsx test run. i.e. that there is a problem with btrfs
-that needs to be fixed.
+Hi Mel,
 
-> (by chance, I also documented what I was doing in the openSUSE wiki,
-> so you can see the exact steps at;
-> http://en.opensuse.org/SDB:XFStests)
+Thanks for picking this up again. The results are definitely
+promising, but I'd like to see a comparison against simply not doing
+IO from memory reclaim at all combined with the enhancements in this
+patchset. After all, that's what I keep asking for (so we can get
+rid of .writepage altogether), and if the numbers don't add up, then
+I'll shut up about it. ;)
 
-You probably should be pulling the -dev versions of the trees hosted
-on git.kernel.org rather than the ones from oss.sgi.com.
+.....
 
-And you want to be running the auto test group, not all tests as
-some of the tests are broken or require specific environments to run
-in or take a long, long time to run. Instead, you should be using
-"./check -g auto" by default.
+> use-once LRU logic). The command line for fs_mark looked something like
+> 
+> ./fs_mark  -d  /tmp/fsmark-2676  -D  100  -N  150  -n  150  -L  25  -t  1  -S0  -s  10485760
+> 
+> The machine was booted with "nr_cpus=1 mem=512M" as according to Dave
+> this triggers the worst behaviour.
+....
+> During testing, a number of monitors were running to gather information
+> from ftrace in particular. This disrupts the results of course because
+> recording the information generates IO in itself but I'm ignoring
+> that for the moment so the effect of the patches can be seen.
+> 
+> I've posted the raw reports for each filesystem at
+> 
+> http://www.csn.ul.ie/~mel/postings/reclaim-20110713/writeback-ext3/sandy/comparison.html
+> http://www.csn.ul.ie/~mel/postings/reclaim-20110713/writeback-ext4/sandy/comparison.html
+> http://www.csn.ul.ie/~mel/postings/reclaim-20110713/writeback-btrfs/sandy/comparison.html
+> http://www.csn.ul.ie/~mel/postings/reclaim-20110713/writeback-xfs/sandy/comparison.html
+.....
+> Average files per second is increased by a nice percentage albeit
+> just within the standard deviation. Consider the type of test this is,
+> variability was inevitable but will double check without monitoring.
+> 
+> The overhead (time spent in non-filesystem-related activities) is
+> reduced a *lot* and is a lot less variable.
+
+Given that userspace is doing the same amount of work in all test
+runs, that implies that the userspace process is retaining it's
+working set hot in the cache over syscalls with this patchset.
+
+> Direct reclaim work is significantly reduced going from 37% of all
+> pages scanned to 1% with all patches applied. This implies that
+> processes are getting stalled less.
+
+And that directly implicates page scanning during direct reclaim as
+the prime contributor to turfing the application's working set out
+of the CPU cache....
+
+> Page writes by reclaim is what is motivating this series. It goes
+> from 14511 pages to 4084 which is a big improvement. We'll see later
+> if these were anonymous or file-backed pages.
+
+Which were anon pages, so this is a major improvement. However,
+given that there were no dirty pages writen directly by memory
+reclaim, perhaps we don't need to do IO at all from here and
+throttling is all that is needed?  ;)
+
+> Direct reclaim writes were never a problem according to this.
+
+That's true. but we disable direct reclaim for other reasons, namely
+that writeback from direct reclaim blows the stack.
 
 Cheers,
 
