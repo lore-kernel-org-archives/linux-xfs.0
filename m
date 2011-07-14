@@ -1,21 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6EIeLNe154115 for <xfs@oss.sgi.com>; Thu, 14 Jul 2011 13:40:21 -0500
-Subject: Re: XFS Test Case:252 - Shows Wrong Output
+	p6EIRFFO153317 for <xfs@oss.sgi.com>; Thu, 14 Jul 2011 13:27:16 -0500
+Subject: Re: [PATCH] xfsprogs: don't hard code the shell binary
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <BANLkTi=yk3Z2KUnwtr6-H1BNhWG-XvJZPw@mail.gmail.com>
-References: <BANLkTinBNa9ox+jDaorBoKdhoQQzTUA58A@mail.gmail.com>
-	<BANLkTi=wHAxYuLE33AVsc2rp0eEm5GB40w@mail.gmail.com>
-	<4E022818.7030406@linux.vnet.ibm.com>
-	<BANLkTimuv183W0ef0aYCySWPnv9rLqNuww@mail.gmail.com>
-	<20110623062030.GY32466@dastard>
-	<BANLkTi=2rTU2R_hGGeMhLYzM6FKPOW0L8w@mail.gmail.com>
-	<BANLkTinQig04y6Rc9MHGSfpbTSKZpmtHpQ@mail.gmail.com>
-	<BANLkTin8oJi04CCrtGVsxFGiA9PLQEEtpA@mail.gmail.com>
-	<BANLkTi=yk3Z2KUnwtr6-H1BNhWG-XvJZPw@mail.gmail.com>
-Date: Thu, 14 Jul 2011 13:40:15 -0500
-Message-ID: <1310668815.2067.53.camel@doink>
+In-Reply-To: <20110628074137.GA6123@infradead.org>
+References: <1309245348-12638-1-git-send-email-david@fromorbit.com>
+	<20110628074137.GA6123@infradead.org>
+Date: Thu, 14 Jul 2011 13:27:11 -0500
+Message-ID: <1310668031.2067.44.camel@doink>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -30,48 +23,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Amit Sahrawat <amit.sahrawat83@gmail.com>
-Cc: Allison Henderson <achender@linux.vnet.ibm.com>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Fri, 2011-06-24 at 12:45 +0530, Amit Sahrawat wrote:
-> This has to be an issue with everyone who is using XFS version which is not
-> supporting "fpunch" but still none has raised this. As per my view, the
-> support checking function *_require_xfs_io_falloc_punch() *is not working
-> correctly otherwise it should return from that point.
+On Tue, 2011-06-28 at 03:41 -0400, Christoph Hellwig wrote:
+> On Tue, Jun 28, 2011 at 05:15:48PM +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Recent changes to debian unstable user space have caused the
+> > xfsprogs build to break as certain shell functionality is being
+> > assumed by libtool and friends.  The configure scripts test and
+> > select the correct shell, but the input files ignore this and hard
+> > code the shell to use and hence now break.
+> > 
+> > Fix this by using the shell that the configure scripts decide is the
+> > right one to use.
 > 
-> *Instead of:*
-> echo $testio | grep -q "not found"
-> If we are sure of a *"hole"* from that command, then we can grep for "hole"
-> in $testio.
-> 
-> Please correct me if I am wrong.
-> 
-> Thanks & Regards,
-> Amit Sahrawat
+> Looks good.  The same fix should also be applied to xfsdump, xfstests
+> and dmapi.
 
-I think what you are saying is that in your environment,
-_require_xfs_io_falloc_punch() is not properly deciding
-whether the fpunch operation is supported.  And you are
-suggesting a way to determine it properly, is that right?
+Agree.
 
-Unfortunately it is difficult to know whether your
-suggestion is a proper fix without knowing details of
-your current system, as well as details about what
-you are seeing that is incorrect.
+Reviewed-by: Alex Elder <aelder@sgi.com>
 
-We welcome suggested fixes from people.  Often that
-takes the form of a patch that proposes a fix, but
-if enough precise information is provided about the
-problem we can sometimes develop a fix for you.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Can you supply either a patch with a proposed fix,
-or else provide more information about exactly
-what you are seeing?  Otherwise I don't think
-we're going to be able to help.
-
-Thanks.
-
-					-Alex
 
 _______________________________________________
 xfs mailing list
