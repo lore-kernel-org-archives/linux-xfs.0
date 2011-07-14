@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6E7bpx2123719 for <xfs@oss.sgi.com>; Thu, 14 Jul 2011 02:37:51 -0500
-Received: from mx2.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 26AED6BE56
-	for <xfs@oss.sgi.com>; Thu, 14 Jul 2011 00:37:46 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id SJtaXsRBDMZ0ETCp for <xfs@oss.sgi.com>;
-	Thu, 14 Jul 2011 00:37:46 -0700 (PDT)
-Date: Thu, 14 Jul 2011 08:37:42 +0100
-From: Mel Gorman <mgorman@suse.de>
-Subject: Re: [RFC PATCH 0/5] Reduce filesystem writeback from page reclaim
-	(again)
-Message-ID: <20110714073742.GS7529@suse.de>
+	p6EBqR4c133166 for <xfs@oss.sgi.com>; Thu, 14 Jul 2011 06:52:27 -0500
+Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 150D7D000AA
+	for <xfs@oss.sgi.com>; Thu, 14 Jul 2011 04:52:25 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	0f80vd9YzExIY2o1 for <xfs@oss.sgi.com>;
+	Thu, 14 Jul 2011 04:52:25 -0700 (PDT)
+Date: Thu, 14 Jul 2011 21:52:21 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/5] mm: vmscan: Do not writeback filesystem pages in
+	kswapd except in high priority
+Message-ID: <20110714115220.GB21663@dastard>
 References: <1310567487-15367-1-git-send-email-mgorman@suse.de>
-	<20110714003340.GZ23038@dastard>
+	<1310567487-15367-3-git-send-email-mgorman@suse.de>
+	<20110713233743.GV23038@dastard> <20110714062947.GO7529@suse.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110714003340.GZ23038@dastard>
+In-Reply-To: <20110714062947.GO7529@suse.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,108 +32,104 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Mel Gorman <mgorman@suse.de>
 Cc: Rik van Riel <riel@redhat.com>, Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, XFS <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, Linux-MM <linux-mm@kvack.org>, Minchan Kim <minchan.kim@gmail.com>, Wu Fengguang <fengguang.wu@intel.com>, Johannes Weiner <jweiner@redhat.com>
 
-On Thu, Jul 14, 2011 at 10:33:40AM +1000, Dave Chinner wrote:
-> On Wed, Jul 13, 2011 at 03:31:22PM +0100, Mel Gorman wrote:
-> > (Revisting this from a year ago and following on from the thread
-> > "Re: [PATCH 03/27] xfs: use write_cache_pages for writeback
-> > clustering". Posting an prototype to see if anything obvious is
-> > being missed)
-> 
-> Hi Mel,
-> 
-> Thanks for picking this up again. The results are definitely
-> promising, but I'd like to see a comparison against simply not doing
-> IO from memory reclaim at all combined with the enhancements in this
-> patchset.
-
-Convered elsewhere. In these tests we are already writing 0 pages so it
-won't make a difference and I'm wary of eliminating writes entirely
-unless kswapd has a way of priotising pages the flusher writes back
-because of the risk of premature OOM kill.
-
-> After all, that's what I keep asking for (so we can get
-> rid of .writepage altogether), and if the numbers don't add up, then
-> I'll shut up about it. ;)
-> 
-
-Christoph covered this.
-
-> .....
-> 
-> > use-once LRU logic). The command line for fs_mark looked something like
+On Thu, Jul 14, 2011 at 07:29:47AM +0100, Mel Gorman wrote:
+> On Thu, Jul 14, 2011 at 09:37:43AM +1000, Dave Chinner wrote:
+> > On Wed, Jul 13, 2011 at 03:31:24PM +0100, Mel Gorman wrote:
+> > > It is preferable that no dirty pages are dispatched for cleaning from
+> > > the page reclaim path. At normal priorities, this patch prevents kswapd
+> > > writing pages.
+> > > 
+> > > However, page reclaim does have a requirement that pages be freed
+> > > in a particular zone. If it is failing to make sufficient progress
+> > > (reclaiming < SWAP_CLUSTER_MAX at any priority priority), the priority
+> > > is raised to scan more pages. A priority of DEF_PRIORITY - 3 is
+> > > considered to tbe the point where kswapd is getting into trouble
+> > > reclaiming pages. If this priority is reached, kswapd will dispatch
+> > > pages for writing.
+> > > 
+> > > Signed-off-by: Mel Gorman <mgorman@suse.de>
 > > 
-> > ./fs_mark  -d  /tmp/fsmark-2676  -D  100  -N  150  -n  150  -L  25  -t  1  -S0  -s  10485760
+> > Seems reasonable, but btrfs still will ignore this writeback from
+> > kswapd, and it doesn't fall over.
+> 
+> At least there are no reports of it falling over :)
+
+However you want to spin it.
+
+> > Given that data point, I'd like to
+> > see the results when you stop kswapd from doing writeback altogether
+> > as well.
 > > 
-> > The machine was booted with "nr_cpus=1 mem=512M" as according to Dave
-> > this triggers the worst behaviour.
-> ....
-> > During testing, a number of monitors were running to gather information
-> > from ftrace in particular. This disrupts the results of course because
-> > recording the information generates IO in itself but I'm ignoring
-> > that for the moment so the effect of the patches can be seen.
+> 
+> The results for this test will be identical because the ftrace results
+> show that kswapd is already writing 0 filesystem pages.
+
+You mean these numbers:
+
+Kswapd reclaim write file async I/O           4483       4286 0          1          0          0
+
+Which shows that kswapd, under this workload has been improved to
+the point that it doesn't need to do IO. Yes, you've addressed the
+one problematic workload, but the numbers do not provide the answers
+to the fundamental question that have been raised during
+discussions. i.e. do we even need IO at all from reclaim?
+
+> Where it makes a difference is when the system is under enough
+> pressure that it is failing to reclaim any memory and is in danger
+> of prematurely triggering the OOM killer. Andrea outlined some of
+> the concerns before at http://lkml.org/lkml/2010/6/15/246
+
+So put the system under more pressure such that with this patch
+series memory reclaim still writes from kswapd. Can you even get it
+to that stage, and if you can, does the system OOM more or less if
+you don't do file IO from reclaim?
+
+> > Can you try removing it altogether and seeing what that does to your
+> > test results? i.e
 > > 
-> > I've posted the raw reports for each filesystem at
-> > 
-> > http://www.csn.ul.ie/~mel/postings/reclaim-20110713/writeback-ext3/sandy/comparison.html
-> > http://www.csn.ul.ie/~mel/postings/reclaim-20110713/writeback-ext4/sandy/comparison.html
-> > http://www.csn.ul.ie/~mel/postings/reclaim-20110713/writeback-btrfs/sandy/comparison.html
-> > http://www.csn.ul.ie/~mel/postings/reclaim-20110713/writeback-xfs/sandy/comparison.html
-> .....
-> > Average files per second is increased by a nice percentage albeit
-> > just within the standard deviation. Consider the type of test this is,
-> > variability was inevitable but will double check without monitoring.
-> > 
-> > The overhead (time spent in non-filesystem-related activities) is
-> > reduced a *lot* and is a lot less variable.
+> > 			if (page_is_file_cache(page)) {
+> > 				inc_zone_page_state(page, NR_VMSCAN_WRITE_SKIP);
+> > 				goto keep_locked;
+> > 			}
 > 
-> Given that userspace is doing the same amount of work in all test
-> runs, that implies that the userspace process is retaining it's
-> working set hot in the cache over syscalls with this patchset.
+> It won't do anything, it'll still be writing 0 filesystem-backed pages.
 > 
+> Because of the possibility for the OOM killer triggering prematurely due
+> to the inability of kswapd to write pages, I'd prefer to separate such a
+> change by at least one release so that if there is an increase in OOM
+> reports, it'll be obvious what was the culprit.
 
-It's one possibility. The more likely one is that the fs_marks anonymous
-pages are getting swapped out leading to variability. If IO is less
-seeky as a result of the change, the swap in/outs would be faster.
+I'm not asking for release quality patches or even when such fixes
+would roll out.
 
-> > Direct reclaim work is significantly reduced going from 37% of all
-> > pages scanned to 1% with all patches applied. This implies that
-> > processes are getting stalled less.
-> 
-> And that directly implicates page scanning during direct reclaim as
-> the prime contributor to turfing the application's working set out
-> of the CPU cache....
-> 
+What you've shown here is that memory reclaim can be more efficient
+without issuing IO itself under medium memory pressure. Now the
+question is whether it can do so under heavy, sustained, near OOM
+memory pressure?
 
-It's a possibility.
+IOWs, what I want to see is whether the fundamental principle of
+IO-less reclaim can be validated as workable or struck down.  This
+patchset demonstrates that IO-less reclaim is superior for a
+workload that produces medium levels of sustained IO-based memory
+pressure, which leads to the conclusion that the approach has merit
+and needs further investigation.
 
-> > Page writes by reclaim is what is motivating this series. It goes
-> > from 14511 pages to 4084 which is a big improvement. We'll see later
-> > if these were anonymous or file-backed pages.
-> 
-> Which were anon pages, so this is a major improvement. However,
-> given that there were no dirty pages writen directly by memory
-> reclaim, perhaps we don't need to do IO at all from here and
-> throttling is all that is needed?  ;)
-> 
+It's that next step that I'm asking you to test now. What form
+potential changes take or when they are released is irrelevant to me
+at this point, because we still haven't determined if the
+fundamental concept is completely sound or not. If the concept is
+sound I'm quite happy to wait until the implementation is fully
+baked before it gets rolled out....
 
-I wouldn't bet my life on it due to potential premature OOM kill problem
-if we cannot reclaim pages at all :)
+Cheers,
 
-> > Direct reclaim writes were never a problem according to this.
-> 
-> That's true. but we disable direct reclaim for other reasons, namely
-> that writeback from direct reclaim blows the stack.
-> 
-
-Correct. I should have been clearer and said direct reclaim wasn't
-a problem in terms of queueing pages for IO.
-
+Dave.
 -- 
-Mel Gorman
-SUSE Labs
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
