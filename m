@@ -1,18 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6EEbrlu141312 for <xfs@oss.sgi.com>; Thu, 14 Jul 2011 09:37:53 -0500
-Subject: Re: [PATCH 4/4 v3] XFS TESTS: Fix 252 Failure: Add Generic FS
-	Punch Hole Test 255
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <4E1E1E41.30106@linux.vnet.ibm.com>
-References: <1309411441-2491-1-git-send-email-achender@linux.vnet.ibm.com>
-	<1309411441-2491-5-git-send-email-achender@linux.vnet.ibm.com>
-	<1310574716.1998.25.camel@doink>  <4E1E1E41.30106@linux.vnet.ibm.com>
-Date: Thu, 14 Jul 2011 09:37:48 -0500
-Message-ID: <1310654268.2067.5.camel@doink>
+	p6EEwEjG142240 for <xfs@oss.sgi.com>; Thu, 14 Jul 2011 09:58:15 -0500
+Date: Thu, 14 Jul 2011 10:58:10 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/1] Fix the ltp Makefile to allow for installation of
+	all non-c (scripts) files
+Message-ID: <20110714145809.GB23587@infradead.org>
+References: <CAP57jx5TWxwaDhp6yY+b_tBb8_WTBaRPDCfdQ3pV4Bs-S869QQ@mail.gmail.com>
+	<20110713121320.GA28126@infradead.org>
+	<1310581564.1998.38.camel@doink>
+	<20110714034336.GA30541@infradead.org>
+	<20110714040326.GB31294@dastard>
 MIME-Version: 1.0
-Reply-To: aelder@sgi.com
+Content-Disposition: inline
+In-Reply-To: <20110714040326.GB31294@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,87 +27,17 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Allison Henderson <achender@linux.vnet.ibm.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com, alal@google.com, Alex Elder <aelder@sgi.com>
 
-On Wed, 2011-07-13 at 15:37 -0700, Allison Henderson wrote:
-> On 07/13/2011 09:31 AM, Alex Elder wrote:
-> > On Wed, 2011-06-29 at 22:24 -0700, Allison Henderson wrote:
-> >> This patch adds a new test 255 that tests fallocate punch hole,
-> >> but is for use by generic filesystems.  It is similar to 252,
-> >> but uses a weaker fiemap filter that only displays the location
-> >> of the hole, and not the extent types.
-> >>
-> >> Signed-off-by: Allison Henderson<achender@linux.vnet.ibm.com>
-> >
-> > I realize Christoph already committed this but I
-> > spotted something so I thought I might as well
-> > mention it.  I haven't tested any of this, so
-> > it may be OK after all, but if it's not then
-> > the filter_hole_fiemap() function ought to be
-> > updated.
-> >
-> > 					-Alex
-> >
-> > . . .
-> >
-> >> diff --git a/common.punch b/common.punch
-> >> index c18f88a..a48b7ae 100644
-> >> --- a/common.punch
-> >> +++ b/common.punch
-> >> @@ -218,6 +218,23 @@ _filter_fiemap()
-> >>   	_coalesce_extents
-> >>   }
-> >>
-> >> +# Filters fiemap output to only print the
-> >> +# file offset column and whether or not
-> >> +# it is an extent or a hole
-> >> +_filter_hole_fiemap()
-> >> +{
-> >> +	awk --posix '
-> >> +		$3 ~ /hole/ {
-> >> +			print $1, $2, $3;
-> >> +			next;
-> >> +		}
-> >> +		$5 ~ /0x[[:digit:]]+/ {
-> >
-> > I believe this should be:
-> >                   $5 ~ /0x[[:xdigit:]]+/ {
-> >
-> > (I.e., hex digits, not just decimals.)
-> >
+On Thu, Jul 14, 2011 at 02:03:26PM +1000, Dave Chinner wrote:
+> On Wed, Jul 13, 2011 at 11:43:36PM -0400, Christoph Hellwig wrote:
+> > I'm fine with enabling 080 by default, it passes for me.
 > 
-> Hi Alex,
-> 
-> I think you are right.  The extent flags are printed in hex, so it 
-> should be xdigit.  The existing _filter_fiemap routine that I modeled 
-> this code from is also only parsing decimal digits.  Even though the 
-> tests are not showing any problems right now, it should probably be 
-> fixed.  Should I submit a patch to correct it?
+> It needs /bin/sh -> /bin/bash conversion first - the current version
+> fails miserably without that on all my test systems....
 
-
-Please, yes--to fix both.  And please verify the problem
-while you're at it if possible.  Thank you.
-
-					-Alex
-
-> Allison Henderson
-> 
-> >> +			print $1, $2, "extent";
-> >> +		}' |
-> >> +	_coalesce_extents
-> >> +}
-> >> +
-> >> +
-> >>   # Prints the md5 checksum of a given file
-> >>   _md5_checksum()
-> >>   {
-> >
-> > . . .
-> >
-> 
-
-
+Does the simple s/sh/bash/ fix it for you?
 
 _______________________________________________
 xfs mailing list
