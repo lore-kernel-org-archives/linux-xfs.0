@@ -1,15 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6EIM0ds152849 for <xfs@oss.sgi.com>; Thu, 14 Jul 2011 13:22:01 -0500
-Subject: Re: [PATCH 1/2 v7] XFS TESTS: ENOSPC Punch Hole: Move su routines
-	in 123 to common.rc
+	p6EIeLNe154115 for <xfs@oss.sgi.com>; Thu, 14 Jul 2011 13:40:21 -0500
+Subject: Re: XFS Test Case:252 - Shows Wrong Output
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1309272301-5742-2-git-send-email-achender@linux.vnet.ibm.com>
-References: <1309272301-5742-1-git-send-email-achender@linux.vnet.ibm.com>
-	<1309272301-5742-2-git-send-email-achender@linux.vnet.ibm.com>
-Date: Thu, 14 Jul 2011 13:21:55 -0500
-Message-ID: <1310667715.2067.42.camel@doink>
+In-Reply-To: <BANLkTi=yk3Z2KUnwtr6-H1BNhWG-XvJZPw@mail.gmail.com>
+References: <BANLkTinBNa9ox+jDaorBoKdhoQQzTUA58A@mail.gmail.com>
+	<BANLkTi=wHAxYuLE33AVsc2rp0eEm5GB40w@mail.gmail.com>
+	<4E022818.7030406@linux.vnet.ibm.com>
+	<BANLkTimuv183W0ef0aYCySWPnv9rLqNuww@mail.gmail.com>
+	<20110623062030.GY32466@dastard>
+	<BANLkTi=2rTU2R_hGGeMhLYzM6FKPOW0L8w@mail.gmail.com>
+	<BANLkTinQig04y6Rc9MHGSfpbTSKZpmtHpQ@mail.gmail.com>
+	<BANLkTin8oJi04CCrtGVsxFGiA9PLQEEtpA@mail.gmail.com>
+	<BANLkTi=yk3Z2KUnwtr6-H1BNhWG-XvJZPw@mail.gmail.com>
+Date: Thu, 14 Jul 2011 13:40:15 -0500
+Message-ID: <1310668815.2067.53.camel@doink>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -24,19 +30,48 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Allison Henderson <achender@linux.vnet.ibm.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
+To: Amit Sahrawat <amit.sahrawat83@gmail.com>
+Cc: Allison Henderson <achender@linux.vnet.ibm.com>, xfs@oss.sgi.com
 
-On Tue, 2011-06-28 at 07:45 -0700, Allison Henderson wrote:
-> This patch moves the su routines in test 123 to common.rc
-> so that they can also be used in the new test 255
+On Fri, 2011-06-24 at 12:45 +0530, Amit Sahrawat wrote:
+> This has to be an issue with everyone who is using XFS version which is not
+> supporting "fpunch" but still none has raised this. As per my view, the
+> support checking function *_require_xfs_io_falloc_punch() *is not working
+> correctly otherwise it should return from that point.
 > 
-> Signed-off-by: Allison Henderson <achender@linux.vnet.ibm.com>
+> *Instead of:*
+> echo $testio | grep -q "not found"
+> If we are sure of a *"hole"* from that command, then we can grep for "hole"
+> in $testio.
+> 
+> Please correct me if I am wrong.
+> 
+> Thanks & Regards,
+> Amit Sahrawat
 
-This looks good.
+I think what you are saying is that in your environment,
+_require_xfs_io_falloc_punch() is not properly deciding
+whether the fpunch operation is supported.  And you are
+suggesting a way to determine it properly, is that right?
 
-Reviewed-by: Alex Elder <aelder@sgi.com>
+Unfortunately it is difficult to know whether your
+suggestion is a proper fix without knowing details of
+your current system, as well as details about what
+you are seeing that is incorrect.
 
+We welcome suggested fixes from people.  Often that
+takes the form of a patch that proposes a fix, but
+if enough precise information is provided about the
+problem we can sometimes develop a fix for you.
+
+Can you supply either a patch with a proposed fix,
+or else provide more information about exactly
+what you are seeing?  Otherwise I don't think
+we're going to be able to help.
+
+Thanks.
+
+					-Alex
 
 _______________________________________________
 xfs mailing list
