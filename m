@@ -1,25 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6EBqR4c133166 for <xfs@oss.sgi.com>; Thu, 14 Jul 2011 06:52:27 -0500
-Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 150D7D000AA
-	for <xfs@oss.sgi.com>; Thu, 14 Jul 2011 04:52:25 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	0f80vd9YzExIY2o1 for <xfs@oss.sgi.com>;
-	Thu, 14 Jul 2011 04:52:25 -0700 (PDT)
-Date: Thu, 14 Jul 2011 21:52:21 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/5] mm: vmscan: Do not writeback filesystem pages in
-	kswapd except in high priority
-Message-ID: <20110714115220.GB21663@dastard>
-References: <1310567487-15367-1-git-send-email-mgorman@suse.de>
-	<1310567487-15367-3-git-send-email-mgorman@suse.de>
-	<20110713233743.GV23038@dastard> <20110714062947.GO7529@suse.de>
+	p6EBNSDA132080 for <xfs@oss.sgi.com>; Thu, 14 Jul 2011 06:23:28 -0500
+Received: from arianus.sliepen.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1402C15F42B3
+	for <xfs@oss.sgi.com>; Thu, 14 Jul 2011 04:23:26 -0700 (PDT)
+Received: from arianus.sliepen.org (arianus.sliepen.org [92.243.30.131]) by
+	cuda.sgi.com with ESMTP id zHO3X8MNIes88jCq for
+	<xfs@oss.sgi.com>; Thu, 14 Jul 2011 04:23:26 -0700 (PDT)
+Date: Thu, 14 Jul 2011 13:23:24 +0200
+From: Guus Sliepen <Guus.Sliepen@astro.su.se>
+Subject: Re: BUG: soft lockup - is this XFS problem?
+Message-ID: <20110714112324.GM30145@sliepen.org>
+References: <20090105064838.GA5209@wotan.suse.de>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110714062947.GO7529@suse.de>
+In-Reply-To: <20090105064838.GA5209@wotan.suse.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,110 +23,176 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============5428332539705186350=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mel Gorman <mgorman@suse.de>
-Cc: Rik van Riel <riel@redhat.com>, Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, XFS <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, Linux-MM <linux-mm@kvack.org>, Minchan Kim <minchan.kim@gmail.com>, Wu Fengguang <fengguang.wu@intel.com>, Johannes Weiner <jweiner@redhat.com>
+To: Nick Piggin <npiggin@suse.de>
+Cc: Christoph Hellwig <hch@infradead.org>, Peter Klotz <peter.klotz@aon.at>, linux-kernel@vger.kernel.org, Roman Kononov <kernel@kononov.ftml.net>, xfs@oss.sgi.com
 
-On Thu, Jul 14, 2011 at 07:29:47AM +0100, Mel Gorman wrote:
-> On Thu, Jul 14, 2011 at 09:37:43AM +1000, Dave Chinner wrote:
-> > On Wed, Jul 13, 2011 at 03:31:24PM +0100, Mel Gorman wrote:
-> > > It is preferable that no dirty pages are dispatched for cleaning from
-> > > the page reclaim path. At normal priorities, this patch prevents kswapd
-> > > writing pages.
-> > > 
-> > > However, page reclaim does have a requirement that pages be freed
-> > > in a particular zone. If it is failing to make sufficient progress
-> > > (reclaiming < SWAP_CLUSTER_MAX at any priority priority), the priority
-> > > is raised to scan more pages. A priority of DEF_PRIORITY - 3 is
-> > > considered to tbe the point where kswapd is getting into trouble
-> > > reclaiming pages. If this priority is reached, kswapd will dispatch
-> > > pages for writing.
-> > > 
-> > > Signed-off-by: Mel Gorman <mgorman@suse.de>
-> > 
-> > Seems reasonable, but btrfs still will ignore this writeback from
-> > kswapd, and it doesn't fall over.
-> 
-> At least there are no reports of it falling over :)
 
-However you want to spin it.
+--===============5428332539705186350==
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="LG0Ll82vYr46+VA1"
+Content-Disposition: inline
 
-> > Given that data point, I'd like to
-> > see the results when you stop kswapd from doing writeback altogether
-> > as well.
-> > 
-> 
-> The results for this test will be identical because the ftrace results
-> show that kswapd is already writing 0 filesystem pages.
 
-You mean these numbers:
+--LG0Ll82vYr46+VA1
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Kswapd reclaim write file async I/O           4483       4286 0          1          0          0
+Hello,
 
-Which shows that kswapd, under this workload has been improved to
-the point that it doesn't need to do IO. Yes, you've addressed the
-one problematic workload, but the numbers do not provide the answers
-to the fundamental question that have been raised during
-discussions. i.e. do we even need IO at all from reclaim?
+I'm having a problem with a system having an XFS filesystem on RAID locking=
+ up
+fairly consistently when writing large amounts of data to it, with several
+kernels, including 2.6.38.2 and 2.6.39.3, on both AMD and Intel multi-core
+processors. The kernel always logs this several times:
 
-> Where it makes a difference is when the system is under enough
-> pressure that it is failing to reclaim any memory and is in danger
-> of prematurely triggering the OOM killer. Andrea outlined some of
-> the concerns before at http://lkml.org/lkml/2010/6/15/246
+BUG: soft lockup - CPU#2 stuck for 67s! [kswapd0:33]
 
-So put the system under more pressure such that with this patch
-series memory reclaim still writes from kswapd. Can you even get it
-to that stage, and if you can, does the system OOM more or less if
-you don't do file IO from reclaim?
+With different CPU# numbers, but always in kswapd0. Eventually the system w=
+ill
+really lock up, requiring a reset. During soft lockups (when file transfer
+apparently stalled), merely typing "ps aux" would often cause the lockup to=
+ end
+immediately. After googling I found this page:
 
-> > Can you try removing it altogether and seeing what that does to your
-> > test results? i.e
-> > 
-> > 			if (page_is_file_cache(page)) {
-> > 				inc_zone_page_state(page, NR_VMSCAN_WRITE_SKIP);
-> > 				goto keep_locked;
-> > 			}
-> 
-> It won't do anything, it'll still be writing 0 filesystem-backed pages.
-> 
-> Because of the possibility for the OOM killer triggering prematurely due
-> to the inability of kswapd to write pages, I'd prefer to separate such a
-> change by at least one release so that if there is an increase in OOM
-> reports, it'll be obvious what was the culprit.
+https://patchwork.kernel.org/patch/789/
 
-I'm not asking for release quality patches or even when such fixes
-would roll out.
+An unpatched vanilla 2.6.39.3 consistently locked up, however after patchin=
+g it
+(adding a barrier() after all 4 instances of if
+(!page_cache_get_speculative(page))) the lockups never happened anymore, and
+file transfer has been steady.
 
-What you've shown here is that memory reclaim can be more efficient
-without issuing IO itself under medium memory pressure. Now the
-question is whether it can do so under heavy, sustained, near OOM
-memory pressure?
+I also tested it with ext4, which doesn't give lockups on unpatched kernels,
+but unfortunately mkfs.ext4 cannot create filesystems larger than 16TB yet,=
+ so
+I have to use XFS instead.
 
-IOWs, what I want to see is whether the fundamental principle of
-IO-less reclaim can be validated as workable or struck down.  This
-patchset demonstrates that IO-less reclaim is superior for a
-workload that produces medium levels of sustained IO-based memory
-pressure, which leads to the conclusion that the approach has merit
-and needs further investigation.
+On Mon, Jan 05, 2009 at 06:48:38AM -0000, Nick Piggin wrote:
 
-It's that next step that I'm asking you to test now. What form
-potential changes take or when they are released is irrelevant to me
-at this point, because we still haven't determined if the
-fundamental concept is completely sound or not. If the concept is
-sound I'm quite happy to wait until the implementation is fully
-baked before it gets rolled out....
+> I believe this patch should solve it. Please test and confirm before
+> I send it upstream.
 
-Cheers,
+Further comments on that thread in 2009 indicated the patch was very useful,
+but it doesn't seem to have been applied upstream. Is there any reason this
+patch should not be applied?
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+If necessary I can submit a reworked patch for 2.6.39.3 or 3.0 when that co=
+mes
+out.
+
+> ---
+> An XFS workload showed up a bug in the lockless pagecache patch. Basicall=
+y it
+> would go into an "infinite" loop, although it would sometimes be able to =
+break
+> out of the loop! The reason is a missing compiler barrier in the "increme=
+nt
+> reference count unless it was zero" case of the lockless pagecache protoc=
+ol in
+> the gang lookup functions.
+>=20
+> This would cause the compiler to use a cached value of struct page pointe=
+r to
+> retry the operation with, rather than reload it. So the page might have b=
+een
+> removed from pagecache and freed (refcount=3D=3D0) but the lookup would n=
+ot correctly
+> notice the page is no longer in pagecache, and keep attempting to increme=
+nt the
+> refcount and failing, until the page gets reallocated for something else.=
+ This
+> isn't a data corruption because the condition will be detected if the pag=
+e has
+> been reallocated. However it can result in a lockup.=20
+>=20
+> Add a the required compiler barrier and comment to fix this.
+[...]
+> Index: linux-2.6/mm/filemap.c
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- linux-2.6.orig/mm/filemap.c	2009-01-05 17:22:57.000000000 +1100
+> +++ linux-2.6/mm/filemap.c	2009-01-05 17:28:40.000000000 +1100
+> @@ -794,8 +794,19 @@ repeat:
+>  		if (unlikely(page =3D=3D RADIX_TREE_RETRY))
+>  			goto restart;
+> =20
+> -		if (!page_cache_get_speculative(page))
+> +		if (!page_cache_get_speculative(page)) {
+> +			/*
+> +			 * A failed page_cache_get_speculative operation does
+> +			 * not imply any barriers (Documentation/atomic_ops.txt),
+> +			 * and as such, we must force the compiler to deref the
+> +			 * radix-tree slot again rather than using the cached
+> +			 * value (because we need to give up if the page has been
+> +			 * removed from the radix-tree, rather than looping until
+> +			 * it gets reused for something else).
+> +			 */
+> +			barrier();
+>  			goto repeat;
+> +		}
+> =20
+>  		/* Has the page moved? */
+>  		if (unlikely(page !=3D *((void **)pages[i]))) {
+> @@ -850,8 +861,11 @@ repeat:
+>  		if (page->mapping =3D=3D NULL || page->index !=3D index)
+>  			break;
+> =20
+> -		if (!page_cache_get_speculative(page))
+> +		if (!page_cache_get_speculative(page)) {
+> +			/* barrier: see find_get_pages() */
+> +			barrier();
+>  			goto repeat;
+> +		}
+> =20
+>  		/* Has the page moved? */
+>  		if (unlikely(page !=3D *((void **)pages[i]))) {
+> @@ -904,8 +918,11 @@ repeat:
+>  		if (unlikely(page =3D=3D RADIX_TREE_RETRY))
+>  			goto restart;
+> =20
+> -		if (!page_cache_get_speculative(page))
+> +		if (!page_cache_get_speculative(page)) {
+> +			/* barrier: see find_get_pages() */
+> +			barrier();
+>  			goto repeat;
+> +		}
+> =20
+>  		/* Has the page moved? */
+>  		if (unlikely(page !=3D *((void **)pages[i]))) {
+
+--=20
+Met vriendelijke groet / with kind regards,
+Guus Sliepen <Guus.Sliepen@astro.su.se>
+
+--LG0Ll82vYr46+VA1
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iEYEARECAAYFAk4e0asACgkQAxLow12M2ntW5ACdH07WlqFnnnq2QL6enmc2yLsJ
+Rr4Ani+J3a5vC6WfcQOf2MebiJaq/gtj
+=X4Tp
+-----END PGP SIGNATURE-----
+
+--LG0Ll82vYr46+VA1--
+
+
+--===============5428332539705186350==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============5428332539705186350==--
