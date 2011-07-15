@@ -1,16 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6FKXMhc218867 for <xfs@oss.sgi.com>; Fri, 15 Jul 2011 15:33:22 -0500
-Date: Fri, 15 Jul 2011 16:33:17 -0400
-From: "J. Bruce Fields" <bfields@fieldses.org>
-Subject: Re: [PATCH] xfs: failure mapping nfs fh to inode should return ESTALE
-Message-ID: <20110715203317.GA25772@fieldses.org>
-References: <20110714205036.GA19457@fieldses.org>
-	<20110714223126.GA28694@infradead.org>
+	p6FKwh9P219683 for <xfs@oss.sgi.com>; Fri, 15 Jul 2011 15:58:44 -0500
+Subject: Re: [PATCH] xfs_repair: add printf format checking and fix the fallout
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <20110630201628.GA20239@infradead.org>
+References: <20110630201628.GA20239@infradead.org>
+Date: Fri, 15 Jul 2011 15:50:33 -0500
+Message-ID: <1310763033.2921.94.camel@doink>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110714223126.GA28694@infradead.org>
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,83 +23,130 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs-masters@oss.sgi.com, linux-nfs@vger.kernel.org, xfs@oss.sgi.com, Alex Elder <aelder@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Thu, Jul 14, 2011 at 06:31:26PM -0400, Christoph Hellwig wrote:
-> On Thu, Jul 14, 2011 at 04:50:36PM -0400, J. Bruce Fields wrote:
-> > From: J. Bruce Fields <bfields@redhat.com>
-> > 
-> > On xfs exports, nfsd is incorrectly returning ENOENT instead of ESTALE
-> > on attempts to use a filehandle of a deleted file (spotted with pynfs
-> > test PUTFH3).  The ENOENT was coming from xfs_iget.
+On Thu, 2011-06-30 at 16:16 -0400, Christoph Hellwig wrote:
+> Add the gcc printf like attribute to the xfs_repair-internal logging helpers,
+> and fix the massive fallout.  A large part of it is dealing with the correct
+> format for fixed size 64-bit types, but there were a lot of real bug in there,
+> including some that lead to crashed when repairing certain corrupted
+> filesystems on ARM based systems.
 > 
-> With that you mean the ip->i_d.di_mode checks?  Given that we should
-> only be bale to get these from NFS or the handle ioctls I suspect just
-> turning them into ESTALE should be fine.
-> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reported-by: Anisse Astier <anisse@astier.eu>
 
-Like the following?  That passes my test.  I wouldn't have thought of
-doing it that way because I wouldn't know how to check that
+Eric did the first hunk of this patch in March of 2010,
+although he also added __attribute__((noreturn)) to
+the abort and error functions.  Thank you for completing
+the rest of it...
 
-	- the change will only affect nfsd and the handle ioctls, and
-	- those are the only two places under xfs_iget that will
-	  generate an ENOENT (which will never be the right error return
-	  on failure to find a filehandle).
+In any case, I have built xfsprogs using this in
+x86_64 and i386 environments and don't get warnings
+due to printf compatibility issues.  So because
+of that I'm fine with your patch.
 
-If those are true, great.
+However when I build on ia64 I still get a bunch of
+warnings.  Some of them are just additional fallout
+from adding the printf attribute.  Others are similar
+problems found in actual printf() calls.
 
---b.
+I will create a patch on top of yours and will
+send it to you.  It think it will be best to
+just merge the two together; but I'll leave it
+up to you to do as you see fit.
 
-commit 94578e7d1c3e00ad29608c70fae314f85a465840
-Author: J. Bruce Fields <bfields@redhat.com>
-Date:   Thu Jul 14 15:39:49 2011 -0400
 
-    xfs: failure mapping nfs fh to inode should return ESTALE
-    
-    On xfs exports, nfsd is incorrectly returning ENOENT instead of ESTALE
-    on attempts to use a filehandle of a deleted file (spotted with pynfs
-    test PUTFH3).  The ENOENT was coming from xfs_iget.
-    
-    While we're at it, the other return of ENOENT in xfs_nfs_get_inode()
-    also looks wrong.
-    
-    Signed-off-by: J. Bruce Fields <bfields@redhat.com>
+Below I describe why we get some of these warnings,
+and how using the PRI* format specifiers isn't
+always the right fix.
 
-diff --git a/fs/xfs/linux-2.6/xfs_export.c b/fs/xfs/linux-2.6/xfs_export.c
-index f4f878f..9e94d57 100644
---- a/fs/xfs/linux-2.6/xfs_export.c
-+++ b/fs/xfs/linux-2.6/xfs_export.c
-@@ -158,7 +158,7 @@ xfs_nfs_get_inode(
- 
- 	if (ip->i_d.di_gen != generation) {
- 		IRELE(ip);
--		return ERR_PTR(-ENOENT);
-+		return ERR_PTR(-ESTALE);
- 	}
- 
- 	return VFS_I(ip);
-diff --git a/fs/xfs/xfs_iget.c b/fs/xfs/xfs_iget.c
-index 3631783..19752451 100644
---- a/fs/xfs/xfs_iget.c
-+++ b/fs/xfs/xfs_iget.c
-@@ -222,7 +222,7 @@ xfs_iget_cache_hit(
- 	 * If lookup is racing with unlink return an error immediately.
- 	 */
- 	if (ip->i_d.di_mode == 0 && !(flags & XFS_IGET_CREATE)) {
--		error = ENOENT;
-+		error = ESTALE;
- 		goto out_error;
- 	}
- 
-@@ -333,7 +333,7 @@ xfs_iget_cache_miss(
- 	trace_xfs_iget_miss(ip);
- 
- 	if ((ip->i_d.di_mode == 0) && !(flags & XFS_IGET_CREATE)) {
--		error = ENOENT;
-+		error = ESTALE;
- 		goto out_destroy;
- 	}
- 
+This whole thing is complicated by inconsistent use
+of types for defining 64-bit values--or really, by
+the way the Linux kernel is inconsistent.
+
+
+In xfsprogs, an xfs_ino_t is __uint64_t, which is
+u_int64_t, which is defined via <sys/types.h> as:
+    i386:	typedef unsigned long long int u_int64_t;
+    x86_64:	typedef unsigned long int u_int64_t;
+    ia64:	typedef unsigned long int u_int64_t;
+
+The various format specifier macros are defined in
+in <inttypes.h> based on __PRI64_PREFIX, which is:
+    i386:	"ll"
+    x86_64:	"l"
+    ia64:	"l"
+
+So in user space, any inode number defined using
+xfs_ino_t (and more generally, anything defined
+using u_int64_t) can be formatted using (for
+example) PRIu64 and it comes out fine.
+
+
+In the Linux kernel xfs has xfs_ino_t defined as
+__u64, which is defined via <linux/types.h> as:
+    typedef         __u64           u_int64_t;
+and __u64 is then defined via inclusion of
+<asm/types.h>.  For ia64, <asm/types.h> includes
+<asm-generic/int-l64.h>, which defines __u64 this
+way:
+    typedef unsigned long __u64;
+
+But for x86_64, <asm_types.h> includes
+<asm-generic/int-ll64.h>, meaning __u64 is:
+    typedef unsigned long long __u64;
+
+(My i386 ends up with the same definition as
+x86_64, but through a slightly different route.)
+
+
+Anyway, in the kernel, the specific type defined
+for an xfs_ino_t (because it's based on __u64)
+is either unsigned long or unsigned long long.
+Which one you get depends on the architecture.
+
+On native 64-bit systems both are likely to be
+the same size, but whether long or long long is
+used is still architecture dependent.
+
+Also note that all the byte swap macros (like
+be64_to_cpu()) are defined using __u64 the type.
+
+
+Now __u64 is also a type visible in user
+space, and it's one we make use of.  But
+because of the inconsistency described above,
+if you use __u64 to define a 64-bit type,
+you can't use things like PRIu64 to determine
+the right format specifier to use, because
+it's not predictable whether it will match
+the underlying type.  (On ia64 it works, but
+on x86_64 it will not.)  And of course you
+can't just use %llu either.
+
+
+So whenever you want to format something
+defined as __u64 (or, which is the result
+of a byte swap macro), the best you can do
+is use %llu in the format string, then cast
+the value being printed to (unsigned long long).
+
+Kind of a mess.
+
+					-Alex
+
+>  			mp->m_sb.sb_rootino,
+>  			(mp->m_sb.sb_rootino == NULLFSINO ? "(NULLFSINO) ":""),
+>  			first_prealloc_ino);
+>  
+>  		if (!no_modify)
+>  			do_warn(
+> -		_("resetting superblock root inode pointer to %lu\n"),
+> +		_("resetting superblock root inode pointer to %u\n"),
+>  				first_prealloc_ino);
+
+. . .
+
 
 _______________________________________________
 xfs mailing list
