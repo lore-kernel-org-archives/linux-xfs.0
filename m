@@ -1,26 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6F3CHcw182521 for <xfs@oss.sgi.com>; Thu, 14 Jul 2011 22:12:17 -0500
-Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D387917CC116
-	for <xfs@oss.sgi.com>; Thu, 14 Jul 2011 20:12:14 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	2WFOaTHWRWDbyEmR for <xfs@oss.sgi.com>;
-	Thu, 14 Jul 2011 20:12:14 -0700 (PDT)
-Date: Fri, 15 Jul 2011 13:12:10 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/5] mm: vmscan: Do not writeback filesystem pages in
-	kswapd except in high priority
-Message-ID: <20110715031210.GD21663@dastard>
-References: <1310567487-15367-1-git-send-email-mgorman@suse.de>
-	<1310567487-15367-3-git-send-email-mgorman@suse.de>
-	<20110713233743.GV23038@dastard> <20110714062947.GO7529@suse.de>
-	<20110714115220.GB21663@dastard> <20110714131745.GU7529@suse.de>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110714131745.GU7529@suse.de>
+	p6F3neSK183641 for <xfs@oss.sgi.com>; Thu, 14 Jul 2011 22:49:40 -0500
+Received: from e5.ny.us.ibm.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E9BCF6FA17
+	for <xfs@oss.sgi.com>; Thu, 14 Jul 2011 20:49:39 -0700 (PDT)
+Received: from e5.ny.us.ibm.com (e5.ny.us.ibm.com [32.97.182.145]) by
+	cuda.sgi.com with ESMTP id G8tABfgainXkj8cR for
+	<xfs@oss.sgi.com>; Thu, 14 Jul 2011 20:49:39 -0700 (PDT)
+Received: from d01relay05.pok.ibm.com (d01relay05.pok.ibm.com [9.56.227.237])
+	by e5.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p6F3KqCN003297
+	for <xfs@oss.sgi.com>; Thu, 14 Jul 2011 23:20:52 -0400
+Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
+	by d01relay05.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	p6F3nc1b165128 for <xfs@oss.sgi.com>; Thu, 14 Jul 2011 23:49:38 -0400
+Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
+	by d01av01.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
+	p6F3ncuF006868 for <xfs@oss.sgi.com>; Thu, 14 Jul 2011 23:49:38 -0400
+From: Allison Henderson <achender@linux.vnet.ibm.com>
+Subject: [PATCH 1/1] XFS TESTS: Correct extent flag parsing for punch hole
+	tests
+Date: Thu, 14 Jul 2011 20:52:13 -0700
+Message-Id: <1310701933-18988-1-git-send-email-achender@linux.vnet.ibm.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,173 +30,58 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mel Gorman <mgorman@suse.de>
-Cc: Rik van Riel <riel@redhat.com>, Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, XFS <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, Linux-MM <linux-mm@kvack.org>, Minchan Kim <minchan.kim@gmail.com>, Wu Fengguang <fengguang.wu@intel.com>, Johannes Weiner <jweiner@redhat.com>
+To: linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
+Cc: Allison Henderson <achender@linux.vnet.ibm.com>
 
-On Thu, Jul 14, 2011 at 02:17:45PM +0100, Mel Gorman wrote:
-> On Thu, Jul 14, 2011 at 09:52:21PM +1000, Dave Chinner wrote:
-> > On Thu, Jul 14, 2011 at 07:29:47AM +0100, Mel Gorman wrote:
-> > > On Thu, Jul 14, 2011 at 09:37:43AM +1000, Dave Chinner wrote:
-> > > > On Wed, Jul 13, 2011 at 03:31:24PM +0100, Mel Gorman wrote:
-> > > > > It is preferable that no dirty pages are dispatched for cleaning from
-> > > > > the page reclaim path. At normal priorities, this patch prevents kswapd
-> > > > > writing pages.
-> > > > > 
-> > > > > However, page reclaim does have a requirement that pages be freed
-> > > > > in a particular zone. If it is failing to make sufficient progress
-> > > > > (reclaiming < SWAP_CLUSTER_MAX at any priority priority), the priority
-> > > > > is raised to scan more pages. A priority of DEF_PRIORITY - 3 is
-> > > > > considered to tbe the point where kswapd is getting into trouble
-> > > > > reclaiming pages. If this priority is reached, kswapd will dispatch
-> > > > > pages for writing.
-> > > > > 
-> > > > > Signed-off-by: Mel Gorman <mgorman@suse.de>
-> > > > 
-> > > > Seems reasonable, but btrfs still will ignore this writeback from
-> > > > kswapd, and it doesn't fall over.
-> > > 
-> > > At least there are no reports of it falling over :)
-> > 
-> > However you want to spin it.
-> 
-> I regret that it is coming across as spin.
+The fiemap filters used in the punch hole tests parse the
+extent flags in the fiemap to determine the extent type.
+They are currently parsing them as decimal values, but
+they should be parsing hex values.
 
-Shit, sorry, I didn't mean it that way. I forgot to add the smiley
-at the end of that comment. It was meant in jest and not to be
-derogatory - I do understand your concerns.
+Signed-off-by: Allison Henderson <achender@linux.vnet.ibm.com>
+---
+:100644 100755 0083963... 0083963... M	255
+:100644 100644 a48b7ae... 7337298... M	common.punch
+ common.punch |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-> > > > Given that data point, I'd like to
-> > > > see the results when you stop kswapd from doing writeback altogether
-> > > > as well.
-> > > > 
-> > > 
-> > > The results for this test will be identical because the ftrace results
-> > > show that kswapd is already writing 0 filesystem pages.
-> > 
-> > You mean these numbers:
-> > 
-> > Kswapd reclaim write file async I/O           4483       4286 0          1          0          0
-> > 
-> > Which shows that kswapd, under this workload has been improved to
-> > the point that it doesn't need to do IO. Yes, you've addressed the
-> > one problematic workload, but the numbers do not provide the answers
-> > to the fundamental question that have been raised during
-> > discussions. i.e. do we even need IO at all from reclaim?
-> 
-> I don't know and at best will only be able to test with a single
-> disk which is why I wanted to separate this series from a complete
-> preventing of kswapd writing pages. I may be able to get access to
-> a machine with more disks but it'll take time.
-
-That, to me, seems like a major problem, and explains why swapping
-was affecting your results - you've got your test filesystem and
-your swap partition on the same spindle. In the server admin world,
-that's the first thing anyone concerned with performance avoids and
-as such I tend to avoid doing that, too.
-
-The lack of spindles/bandwidth used in testing the mm code is also
-potentially another reason why XFS tends to show up mm problems.
-That is, most testing and production use of XFS occurs on disk
-subsystems much more bandwidth than a single spindle, and hence the
-effects of bad IO show up much more obviously than for a single
-spindle.
-
-> > > Where it makes a difference is when the system is under enough
-> > > pressure that it is failing to reclaim any memory and is in danger
-> > > of prematurely triggering the OOM killer. Andrea outlined some of
-> > > the concerns before at http://lkml.org/lkml/2010/6/15/246
-> > 
-> > So put the system under more pressure such that with this patch
-> > series memory reclaim still writes from kswapd. Can you even get it
-> > to that stage, and if you can, does the system OOM more or less if
-> > you don't do file IO from reclaim?
-> 
-> I can setup such a tests, it'll be at least next week before I
-> configure such a test and get it queued. It'll probably take a few
-> days to run then because more iterations will be required to pinpoint
-> where the OOM threshold is.  I know from the past that pushing a
-> system near OOM causes a non-deterministic number of triggers that
-> depend heavily on what was killed so the only real choice is to start
-> light and increase the load until boom which is time consuming.
-> 
-> Even then, the test will be inconclusive because it'll be just one
-> or two machines that I'll have to test on.
-
-Which is why I have a bunch of test VMs with different
-CPU/RAM/platform configs.  I regularly use 1p/1GB x86-64, 1p/2GB
-i686 (to stress highmem), 2p/2GB, 8p/4GB and 8p/16GB x86-64 VMs. I
-have a bunch of different disk images for the VMs to work off,
-located on storage from shared single SATA spindles to a 16TB volume
-to a short-stroked, 1GB/s, 5kiops, 12 disk dm RAID-0 setup.
-
-I mix and match the VMs with the disk images all the time - this is
-one of the benefits of using a virtualised test environment. One
-slightly beefy piece of hardware that costs $10k can be used to test
-many, many different configurations. That's why I complain about
-corner cases all the time ;)
-
-> There will be important
-> corner cases that I won't be able to test for.  For example;
-> 
->   o small lowest zone that is critical for operation of some reason and
->     the pages must be cleaned from there even though there is a large
->     amount of memory overall
-
-That's the i686 highmem case, using a large amount of memory (e.g.
-4GB or more) to make sure that the highmem zone is much larger than
-the lowmem zone. inode caching uses low memory, so directory
-intensive operations on large sets of files (e.g. 10 million)
-tend to stress low memory availability.
-
->   o small highest zone causing high kswapd usage as it fails to balance
->     continually due to pages being dirtied constantly and the window
->     between when flushers clean the page and kswapd reclaim the page
->     being too big. I might be able to simulate this one but bugs of
->     this nature tend to be workload specific and affect some machines
->     worse than others
-
-And that is also testable with i686 highmem, but simply use smaller
-amounts of ram (say 1.5GB). Use page cache pressure to fill and
-dirty highmem, and inode cache pressure to fill lowmem.
-
-Guess what one of my ad hoc tests for XFS shrinker balancing is.  :)
-
->   o Machines with many nodes and dirty pages spread semi-randomly
->     on all nodes. If the flusher thread is not cleaning pages from
->     a particular node that is under memory pressure due to affinity,
->     processes will stall for long periods of time until the relevant
->     inodes expire and gets cleaned. This will be particularly
->     problematic if zone_reclaim is enabled
-
-And you can create large node-count virtual machines via the kvm
--numa option. I haven't been doing this as yet because getting stuff
-working well on single node SMP needs to be done first.
-
-So, like you, I really only have one or two tests machine available
-locally, but I've been creative in working around that
-limitation.... :/
-
-> > It's that next step that I'm asking you to test now. What form
-> > potential changes take or when they are released is irrelevant to me
-> > at this point, because we still haven't determined if the
-> > fundamental concept is completely sound or not. If the concept is
-> > sound I'm quite happy to wait until the implementation is fully
-> > baked before it gets rolled out....
-> 
-> I'll setup a suitable test next week then.
-
-Sounds great. Thanks Mel.
-
-Cheers,
-
-Dave.
+diff --git a/255 b/255
+old mode 100644
+new mode 100755
+diff --git a/common.punch b/common.punch
+index a48b7ae..7337298 100644
+--- a/common.punch
++++ b/common.punch
+@@ -208,11 +208,11 @@ _filter_fiemap()
+ 			print $1, $2, $3;
+ 			next;
+ 		}
+-		$5 ~ /0x[[:digit:]]*8[[:digit:]]{2}/ {
++		$5 ~ /0x[[:xdigit:]]*8[[:xdigit:]]{2}/ {
+ 			print $1, $2, "unwritten";
+ 			next;
+ 		}
+-		$5 ~ /0x[[:digit:]]+/ {
++		$5 ~ /0x[[:xdigit:]]+/ {
+ 			print $1, $2, "data";
+ 		}' |
+ 	_coalesce_extents
+@@ -228,7 +228,7 @@ _filter_hole_fiemap()
+ 			print $1, $2, $3; 
+ 			next;
+ 		}   
+-		$5 ~ /0x[[:digit:]]+/ {
++		$5 ~ /0x[[:xdigit:]]+/ {
+ 			print $1, $2, "extent";
+ 		}' |
+ 	_coalesce_extents
 -- 
-Dave Chinner
-david@fromorbit.com
+1.7.1
 
 _______________________________________________
 xfs mailing list
