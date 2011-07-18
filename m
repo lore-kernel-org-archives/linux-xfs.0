@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6IFaZQK107151 for <xfs@oss.sgi.com>; Mon, 18 Jul 2011 10:36:35 -0500
-Received: from mx2.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B32541509E8A
-	for <xfs@oss.sgi.com>; Mon, 18 Jul 2011 08:36:33 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id j2DDrsw6tEh3m1zq for <xfs@oss.sgi.com>;
-	Mon, 18 Jul 2011 08:36:33 -0700 (PDT)
-Date: Mon, 18 Jul 2011 17:36:31 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH v3] xfstests: Improve test 219 to work with different
-	filesystems
-Message-ID: <20110718153631.GA5842@quack.suse.cz>
-References: <1309363480-22268-1-git-send-email-jack@suse.cz>
-	<1310744354.2921.20.camel@doink>
+	p6IG1Uvu108262 for <xfs@oss.sgi.com>; Mon, 18 Jul 2011 11:01:30 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EA9AF7A035
+	for <xfs@oss.sgi.com>; Mon, 18 Jul 2011 09:01:29 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	8EAtFaHyMaVc7NEw for <xfs@oss.sgi.com>;
+	Mon, 18 Jul 2011 09:01:29 -0700 (PDT)
+Date: Mon, 18 Jul 2011 12:01:29 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 2/3] xfs: convert xfsbufd to use a workqueue
+Message-ID: <20110718160129.GB14094@infradead.org>
+References: <1310960989-10284-1-git-send-email-david@fromorbit.com>
+	<1310960989-10284-3-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1310744354.2921.20.camel@doink>
+In-Reply-To: <1310960989-10284-3-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,29 +31,17 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
-Cc: Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Fri 15-07-11 10:39:14, Alex Elder wrote:
-> On Wed, 2011-06-29 at 18:04 +0200, Jan Kara wrote:
-> > Different filesystems account different amount of metadata in quota. Thus it is
-> > impractical to check for a particular amount of space occupied by a file
-> > because there is no right value. Change the test to verify whether the amount
-> > of space is between the expected amount of space and the expected amount +5%.
-> > The number of files is checked exactly as previously.
-> > 
-> > Signed-off-by: Jan Kara <jack@suse.cz>
-> 
-> Looks good.  After verifying it (at least on XFS), I
-> will commit this for you.
-> 
-> Reviewed-by: Alex Elder <aelder@sgi.com>
-  Thanks for testing and committing!
+On Mon, Jul 18, 2011 at 01:49:48PM +1000, Dave Chinner wrote:
+> control flushing. While there, group all the delayed write list and
+> buffer handling functions into the same section of code to make it
+> easier to find all the relevant code.
 
-								Honza
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+Any chance you could make the re-grouping a separate patch?  It's
+really hard to read it right now as the actual changes are hidden too
+much.
 
 _______________________________________________
 xfs mailing list
