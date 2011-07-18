@@ -1,24 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6IG0otS108211 for <xfs@oss.sgi.com>; Mon, 18 Jul 2011 11:00:53 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7A668AB6E11
-	for <xfs@oss.sgi.com>; Mon, 18 Jul 2011 09:00:49 -0700 (PDT)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	MLZFSo5Tr1QVSnur for <xfs@oss.sgi.com>;
-	Mon, 18 Jul 2011 09:00:49 -0700 (PDT)
-Date: Mon, 18 Jul 2011 12:00:46 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/3] xfs: introduce an allocation workqueue
-Message-ID: <20110718160046.GA14094@infradead.org>
-References: <1310960989-10284-1-git-send-email-david@fromorbit.com>
-	<1310960989-10284-2-git-send-email-david@fromorbit.com>
+	p6IIEGwt115629 for <xfs@oss.sgi.com>; Mon, 18 Jul 2011 13:14:16 -0500
+From: Alex Elder <aelder@sgi.com>
+Message-Id: <201107181814.p6IIEAZm028909@stout.americas.sgi.com>
+Date: Mon, 18 Jul 2011 13:14:09 -0500
+Subject: xfs: encapsulate a block of debug code
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1310960989-10284-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,33 +19,73 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mon, Jul 18, 2011 at 01:49:47PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> We currently have significant issues with the amount of stack that
-> allocation in XFS uses, especially in the writeback path. We can
-> easily consume 4k of stack between mapping the page, manipulating
-> the bmap btree and allocating blocks from the free list. Not to
-> mention btree block readahead and other functionality that issues IO
-> in the allocation path.
-> 
-> As a result, we can no longer fit allocation in the writeback path
-> in the stack space provided on x86_64. To alleviate this problem,
-> introduce an allocation workqueue and move all allocations to a
-> seperate context. This can be easily added as an interposing layer
-> into xfs_alloc_vextent(), which takes a single argument structure
-> and does not return until the allocation is complete or has failed.
+Pull into a helper function some debug-only code that validates a
+xfs_da_blkinfo structure that's been read from disk.
 
-I've mentioned before that I really don't like it, but I suspect there's
-not much of an way around it giving the small stacks, and significant
-amount of stacks that's already used above and below XFS.
+Signed-off-by: Alex Elder <aelder@sgi.com>
 
-Can we at least have a sysctl nob or mount option to switch back to
-direct allocator calls so that we can still debug any performance
-or other issues with this one?
+---
+ fs/xfs/xfs_da_btree.c |   31 ++++++++++++++++++++-----------
+ 1 file changed, 20 insertions(+), 11 deletions(-)
+
+Index: b/fs/xfs/xfs_da_btree.c
+===================================================================
+--- a/fs/xfs/xfs_da_btree.c
++++ b/fs/xfs/xfs_da_btree.c
+@@ -692,6 +692,24 @@ xfs_da_join(xfs_da_state_t *state)
+ 	return(error);
+ }
+ 
++#ifdef	DEBUG
++static void
++xfs_da_blkinfo_validate(struct xfs_da_blkinfo *blkinfo, __u16 level)
++{
++	__be16	magic = blkinfo->magic;
++
++	if (level == 1) {
++		ASSERT(magic == cpu_to_be16(XFS_DIR2_LEAFN_MAGIC) ||
++		       magic == cpu_to_be16(XFS_ATTR_LEAF_MAGIC));
++	} else
++		ASSERT(magic == cpu_to_be16(XFS_DA_NODE_MAGIC));
++	ASSERT(!blkinfo->forw);
++	ASSERT(!blkinfo->back);
++}
++#else	/* !DEBUG */
++#define	xfs_da_blkinfo_validate(blkinfo, level)
++#endif	/* !DEBUG */
++
+ /*
+  * We have only one entry in the root.  Copy the only remaining child of
+  * the old root to block 0 as the new root node.
+@@ -700,8 +718,6 @@ STATIC int
+ xfs_da_root_join(xfs_da_state_t *state, xfs_da_state_blk_t *root_blk)
+ {
+ 	xfs_da_intnode_t *oldroot;
+-	/* REFERENCED */
+-	xfs_da_blkinfo_t *blkinfo;
+ 	xfs_da_args_t *args;
+ 	xfs_dablk_t child;
+ 	xfs_dabuf_t *bp;
+@@ -732,15 +748,8 @@ xfs_da_root_join(xfs_da_state_t *state, 
+ 	if (error)
+ 		return(error);
+ 	ASSERT(bp != NULL);
+-	blkinfo = bp->data;
+-	if (be16_to_cpu(oldroot->hdr.level) == 1) {
+-		ASSERT(blkinfo->magic == cpu_to_be16(XFS_DIR2_LEAFN_MAGIC) ||
+-		       blkinfo->magic == cpu_to_be16(XFS_ATTR_LEAF_MAGIC));
+-	} else {
+-		ASSERT(blkinfo->magic == cpu_to_be16(XFS_DA_NODE_MAGIC));
+-	}
+-	ASSERT(!blkinfo->forw);
+-	ASSERT(!blkinfo->back);
++	xfs_da_blkinfo_validate(bp->data, be16_to_cpu(oldroot->hdr.level));
++
+ 	memcpy(root_blk->bp->data, bp->data, state->blocksize);
+ 	xfs_da_log_buf(args->trans, root_blk->bp, 0, state->blocksize - 1);
+ 	error = xfs_da_shrink_inode(args, child, bp);
 
 _______________________________________________
 xfs mailing list
