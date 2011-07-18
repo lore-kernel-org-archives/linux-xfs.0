@@ -1,20 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6I44r5s079185 for <xfs@oss.sgi.com>; Sun, 17 Jul 2011 23:04:53 -0500
-Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id ACC2A1D88232
-	for <xfs@oss.sgi.com>; Sun, 17 Jul 2011 21:04:51 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	h4o5cttPTpUWP9kW for <xfs@oss.sgi.com>;
-	Sun, 17 Jul 2011 21:04:51 -0700 (PDT)
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/2] vfs: split generic splice code from i_mutex locking
-Date: Mon, 18 Jul 2011 14:04:43 +1000
-Message-Id: <1310961884-11634-2-git-send-email-david@fromorbit.com>
-In-Reply-To: <1310961884-11634-1-git-send-email-david@fromorbit.com>
-References: <1310961884-11634-1-git-send-email-david@fromorbit.com>
+	p6IDbNok103188 for <xfs@oss.sgi.com>; Mon, 18 Jul 2011 08:37:24 -0500
+Date: Mon, 18 Jul 2011 09:37:10 -0400
+From: "J. Bruce Fields" <bfields@fieldses.org>
+Subject: Re: [xfs-masters] [PATCH] xfs: failure mapping nfs fh to inode
+	should return ESTALE
+Message-ID: <20110718133710.GB9741@fieldses.org>
+References: <20110714205036.GA19457@fieldses.org>
+	<20110714223126.GA28694@infradead.org>
+	<20110716015014.GF21663@dastard>
+	<20110716015346.GA589@infradead.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20110716015346.GA589@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,118 +22,33 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-fsdevel@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs-masters@oss.sgi.com, linux-nfs@vger.kernel.org, xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+On Fri, Jul 15, 2011 at 09:53:46PM -0400, Christoph Hellwig wrote:
+> On Sat, Jul 16, 2011 at 11:50:14AM +1000, Dave Chinner wrote:
+> > Bulkstat also checks for ENOENT returns from xfs_iget() as the
+> > lookup it does is inherently racy. That is, if the inode is
+> > allocated when it is read from the IBT, but then has been unlinked
+> > before the actual xfs_iget() call, it expects to get back an ENOENT
+> > to tell it the inode has been unlinked and shouldn't be included in
+> > the bulkstat output. Otherwise, it returns the error to userspace.
+> > 
+> > So converting the mode checks to return ESTALE definitely has the
+> > chance of breaking stuff that uses bulkstat (e.g. xfsdump) because
+> > it will return errors now where it previously just skipped the
+> > (unlinked) inode.
+> 
+> Sounds like we should simply go with the original version of the patch
+> then.
 
-XFS holds locks that should be nested inside the inode->i_mutex when
-generic_file_splice_write is called. This function takes the
-i_mutex, and so we get a lock inversion that triggers lockdep
-warnings and has been found to cause real deadlocks.
+OK.  Let me know if someone needs that resent....
 
-XFS does not need the splice code to take the i_mutex to do the page
-cache manipulation, so add a new function
-generic_file_splice_write_unlocked() that avoids the locking of the
-i_mutex for XFS to call.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/splice.c        |   39 +++++++++++++++++++++++++++++++++++----
- include/linux/fs.h |    2 ++
- 2 files changed, 37 insertions(+), 4 deletions(-)
-
-diff --git a/fs/splice.c b/fs/splice.c
-index aa866d3..c15137d 100644
---- a/fs/splice.c
-+++ b/fs/splice.c
-@@ -980,8 +980,9 @@ ssize_t splice_from_pipe(struct pipe_inode_info *pipe, struct file *out,
-  *
-  */
- ssize_t
--generic_file_splice_write(struct pipe_inode_info *pipe, struct file *out,
--			  loff_t *ppos, size_t len, unsigned int flags)
-+__generic_file_splice_write(struct pipe_inode_info *pipe, struct file *out,
-+			  loff_t *ppos, size_t len, unsigned int flags,
-+			  int need_imutex)
- {
- 	struct address_space *mapping = out->f_mapping;
- 	struct inode *inode = mapping->host;
-@@ -1001,13 +1002,15 @@ generic_file_splice_write(struct pipe_inode_info *pipe, struct file *out,
- 		if (ret <= 0)
- 			break;
- 
--		mutex_lock_nested(&inode->i_mutex, I_MUTEX_CHILD);
-+		if (need_imutex)
-+			mutex_lock_nested(&inode->i_mutex, I_MUTEX_CHILD);
- 		ret = file_remove_suid(out);
- 		if (!ret) {
- 			file_update_time(out);
- 			ret = splice_from_pipe_feed(pipe, &sd, pipe_to_file);
- 		}
--		mutex_unlock(&inode->i_mutex);
-+		if (need_imutex)
-+			mutex_unlock(&inode->i_mutex);
- 	} while (ret > 0);
- 	splice_from_pipe_end(pipe, &sd);
- 
-@@ -1033,8 +1036,36 @@ generic_file_splice_write(struct pipe_inode_info *pipe, struct file *out,
- 	return ret;
- }
- 
-+/**
-+ * generic_file_splice_write - splice data from a pipe to a file
-+ * @pipe:	pipe info
-+ * @out:	file to write to
-+ * @ppos:	position in @out
-+ * @len:	number of bytes to splice
-+ * @flags:	splice modifier flags
-+ *
-+ * Description:
-+ *    Will either move or copy pages (determined by @flags options) from
-+ *    the given pipe inode to the given file.
-+ *
-+ */
-+ssize_t
-+generic_file_splice_write(struct pipe_inode_info *pipe, struct file *out,
-+			  loff_t *ppos, size_t len, unsigned int flags)
-+{
-+	return __generic_file_splice_write(pipe, out, ppos, len, flags, 1);
-+}
- EXPORT_SYMBOL(generic_file_splice_write);
- 
-+ssize_t
-+generic_file_splice_write_unlocked(struct pipe_inode_info *pipe,
-+				   struct file *out, loff_t *ppos,
-+				   size_t len, unsigned int flags)
-+{
-+	return __generic_file_splice_write(pipe, out, ppos, len, flags, 0);
-+}
-+EXPORT_SYMBOL(generic_file_splice_write_unlocked);
-+
- static int write_pipe_buf(struct pipe_inode_info *pipe, struct pipe_buffer *buf,
- 			  struct splice_desc *sd)
- {
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 54c49e5..3a8b984 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -2368,6 +2368,8 @@ extern ssize_t default_file_splice_read(struct file *, loff_t *,
- 		struct pipe_inode_info *, size_t, unsigned int);
- extern ssize_t generic_file_splice_write(struct pipe_inode_info *,
- 		struct file *, loff_t *, size_t, unsigned int);
-+extern ssize_t generic_file_splice_write_unlocked(struct pipe_inode_info *,
-+		struct file *, loff_t *, size_t, unsigned int);
- extern ssize_t generic_splice_sendpage(struct pipe_inode_info *pipe,
- 		struct file *out, loff_t *, size_t len, unsigned int flags);
- extern long do_splice_direct(struct file *in, loff_t *ppos, struct file *out,
--- 
-1.7.5.1
+--b.
 
 _______________________________________________
 xfs mailing list
