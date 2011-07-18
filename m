@@ -1,28 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6I36ErA076913 for <xfs@oss.sgi.com>; Sun, 17 Jul 2011 22:06:15 -0500
+	p6I3eSTN077990 for <xfs@oss.sgi.com>; Sun, 17 Jul 2011 22:40:28 -0500
 Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EEC2E17E1797
-	for <xfs@oss.sgi.com>; Sun, 17 Jul 2011 20:06:12 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 80FA0ECA969
+	for <xfs@oss.sgi.com>; Sun, 17 Jul 2011 20:40:26 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	YPsD6cqGNKYAqDWa for <xfs@oss.sgi.com>;
-	Sun, 17 Jul 2011 20:06:12 -0700 (PDT)
-Date: Mon, 18 Jul 2011 13:06:08 +1000
+	PgwjG8tXHSz0LzYu for <xfs@oss.sgi.com>;
+	Sun, 17 Jul 2011 20:40:26 -0700 (PDT)
+Received: from chute ([192.168.1.1] helo=disappointment)
+	by dastard with esmtp (Exim 4.72)
+	(envelope-from <dave@fromorbit.com>) id 1Qiegx-0008Be-70
+	for xfs@oss.sgi.com; Mon, 18 Jul 2011 13:40:23 +1000
+Received: from dave by disappointment with local (Exim 4.76)
+	(envelope-from <dave@disappointment.disaster>) id 1Qiegw-0002aC-Uj
+	for xfs@oss.sgi.com; Mon, 18 Jul 2011 13:40:22 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/5] mm: vmscan: Do not writeback filesystem pages in
-	direct reclaim
-Message-ID: <20110718030608.GD30254@dastard>
-References: <1310567487-15367-1-git-send-email-mgorman@suse.de>
-	<1310567487-15367-2-git-send-email-mgorman@suse.de>
-	<20110714103801.83e10fdb.kamezawa.hiroyu@jp.fujitsu.com>
-	<20110714044643.GA3203@infradead.org>
-	<20110714134634.4a7a15c8.kamezawa.hiroyu@jp.fujitsu.com>
-	<20110715022226.GD31294@dastard> <20110718022226.GC30254@dastard>
+Subject: =?UTF-8?q?=5BPATCH=203/4=5D=20xfs=3A=20convert=20AIL=20cursors=20to=20use=20struct=20list=5Fhead?=
+Date: Mon, 18 Jul 2011 13:40:18 +1000
+Message-Id: <1310960419-9875-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1310960419-9875-1-git-send-email-david@fromorbit.com>
+References: <1310960419-9875-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110718022226.GC30254@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,130 +31,132 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Cc: Rik van Riel <riel@redhat.com>, Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, XFS <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, Linux-MM <linux-mm@kvack.org>, Mel Gorman <mgorman@suse.de>, Wu Fengguang <fengguang.wu@intel.com>, Johannes Weiner <jweiner@redhat.com>, Minchan Kim <minchan.kim@gmail.com>
+To: xfs@oss.sgi.com
 
-On Mon, Jul 18, 2011 at 12:22:26PM +1000, Dave Chinner wrote:
-> On Fri, Jul 15, 2011 at 12:22:26PM +1000, Dave Chinner wrote:
-> > On Thu, Jul 14, 2011 at 01:46:34PM +0900, KAMEZAWA Hiroyuki wrote:
-> > > On Thu, 14 Jul 2011 00:46:43 -0400
-> > > Christoph Hellwig <hch@infradead.org> wrote:
-> > > 
-> > > > On Thu, Jul 14, 2011 at 10:38:01AM +0900, KAMEZAWA Hiroyuki wrote:
-> > > > > > +			/*
-> > > > > > +			 * Only kswapd can writeback filesystem pages to
-> > > > > > +			 * avoid risk of stack overflow
-> > > > > > +			 */
-> > > > > > +			if (page_is_file_cache(page) && !current_is_kswapd()) {
-> > > > > > +				inc_zone_page_state(page, NR_VMSCAN_WRITE_SKIP);
-> > > > > > +				goto keep_locked;
-> > > > > > +			}
-> > > > > > +
-> > > > > 
-> > > > > 
-> > > > > This will cause tons of memcg OOM kill because we have no help of kswapd (now).
-> > > > 
-> > > > XFS and btrfs already disable writeback from memcg context, as does ext4
-> > > > for the typical non-overwrite workloads, and none has fallen apart.
-> > > > 
-> > > > In fact there's no way we can enable them as the memcg calling contexts
-> > > > tend to have massive stack usage.
-> > > > 
-> > > 
-> > > Hmm, XFS/btrfs adds pages to radix-tree in deep stack ?
-> > 
-> > Here's an example writeback stack trace. Notice how deep it is from
-> > the __writepage() call?
-> ....
-> > 
-> > So from ->writepage, there is about 3.5k of stack usage here.  2.5k
-> > of that is in XFS, and the worst I've seen is around 4k before
-> > getting to the IO subsystem, which in the worst case I've seen
-> > consumed 2.5k of stack. IOWs, I've seen stack usage from .writepage
-> > down to IO take over 6k of stack space on x86_64....
-> 
-> BTW, here's a stack frame that indicates swap IO:
-> 
-> dave@test-4:~$ cat /sys/kernel/debug/tracing/stack_trace
->         Depth    Size   Location    (46 entries)
->         -----    ----   --------
->   0)     5080      40   zone_statistics+0xad/0xc0
->   1)     5040     272   get_page_from_freelist+0x2ad/0x7e0
->   2)     4768     288   __alloc_pages_nodemask+0x133/0x7b0
->   3)     4480      48   kmem_getpages+0x62/0x160
->   4)     4432     112   cache_grow+0x2d1/0x300
->   5)     4320      80   cache_alloc_refill+0x219/0x260
->   6)     4240      64   kmem_cache_alloc+0x182/0x190
->   7)     4176      16   mempool_alloc_slab+0x15/0x20
->   8)     4160     144   mempool_alloc+0x63/0x140
->   9)     4016      16   scsi_sg_alloc+0x4c/0x60
->  10)     4000     112   __sg_alloc_table+0x66/0x140
->  11)     3888      32   scsi_init_sgtable+0x33/0x90
->  12)     3856      48   scsi_init_io+0x31/0xc0
->  13)     3808      32   scsi_setup_fs_cmnd+0x79/0xe0
->  14)     3776     112   sd_prep_fn+0x150/0xa90
->  15)     3664      64   blk_peek_request+0xc7/0x230
->  16)     3600      96   scsi_request_fn+0x68/0x500
->  17)     3504      16   __blk_run_queue+0x1b/0x20
->  18)     3488      96   __make_request+0x2cb/0x310
->  19)     3392     192   generic_make_request+0x26d/0x500
->  20)     3200      96   submit_bio+0x64/0xe0
->  21)     3104      48   swap_writepage+0x83/0xd0
->  22)     3056     112   pageout+0x122/0x2f0
->  23)     2944     192   shrink_page_list+0x458/0x5f0
->  24)     2752     192   shrink_inactive_list+0x1ec/0x410
->  25)     2560     224   shrink_zone+0x468/0x500
->  26)     2336     144   do_try_to_free_pages+0x2b7/0x3f0
->  27)     2192     176   try_to_free_pages+0xa4/0x120
->  28)     2016     288   __alloc_pages_nodemask+0x43f/0x7b0
->  29)     1728      48   kmem_getpages+0x62/0x160
->  30)     1680     128   fallback_alloc+0x192/0x240
->  31)     1552      96   ____cache_alloc_node+0x9a/0x170
->  32)     1456      16   __kmalloc+0x17d/0x200
->  33)     1440     128   kmem_alloc+0x77/0xf0
->  34)     1312     128   xfs_log_commit_cil+0x95/0x3d0
->  35)     1184      96   _xfs_trans_commit+0x1e9/0x2a0
->  36)     1088     208   xfs_create+0x57a/0x640
->  37)      880      96   xfs_vn_mknod+0xa1/0x1b0
->  38)      784      16   xfs_vn_create+0x10/0x20
->  39)      768      64   vfs_create+0xb1/0xe0
->  40)      704      96   do_last+0x5f5/0x770
->  41)      608     144   path_openat+0xd5/0x400
->  42)      464     224   do_filp_open+0x49/0xa0
->  43)      240      96   do_sys_open+0x107/0x1e0
->  44)      144      16   sys_open+0x20/0x30
->  45)      128     128   system_call_fastpath+0x16/0x1b
-> 
-> 
-> That's pretty damn bad. From kmem_alloc to the top of the stack is
-> more than 3.5k through the direct reclaim swap IO path. That, to me,
-> kind of indicates that even doing swap IO on dirty anonymous pages
-> from direct reclaim risks overflowing the 8k stack on x86_64....
-> 
-> Umm, hold on a second, WTF is my standard create-lots-of-zero-length
-> inodes-in-parallel doing swapping? Oh, shit, it's also running about
-> 50% slower (50-60k files/s instead of 110-120l files/s)....
-
-It's the memory demand caused by the stack tracer causing the
-swapping, and the slowdown is just the overhead of tracer.  2.6.38
-doesn't swap very much at all, 2.6.39 swaps a bit more more and
-3.0-rc7 is about the same....
-
-IOWs the act of measuring stack usage causes the worst case stack
-usage for that workload on 2.6.39 and 3.0-rc7.
-
-Cheers,
-
-Dave
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+RnJvbTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgoKVGhlIGxpc3Qgb2YgYWN0
+aXZlIEFJTCBjdXJzb3JzIHVzZXMgYSByb2xsLXlvdXItb3duIGxpbmtlZCBsaXN0IHdpdGgKc3Bl
+Y2lhbCBjYXNpbmcgZm9yIHRoZSBBSUwgcHVzaCBjdXJzb3IuIFNpbXBsaWZ5IHRoaXMgY29kZSBi
+eQpyZXBsYWNpbmcgdGhlIGxpc3Qgd2l0aCBzdGFuZGFyZCBzdHJ1Y3QgbGlzdF9oZWFkIGxpc3Rz
+LCBhbmQgdXNlIGEKc2VwYXJhdGUgbGlzdF9oZWFkIHRvIHRyYWNrIHRoZSBhY3RpdmUgY3Vyc29y
+cy4gVGhpcyBhbGxvd3MgdXMgdG8KdHJlYXQgdGhlIEFJTCBwdXNoIGN1cnNvciBhcyBhIGdlbmVy
+aWMgY3Vyc29yIHJhdGhlciB0aGFuIGFzIGEKc3BlY2lhbCBjYXNlLCBmdXJ0aGVyIHNpbXBsaWZ5
+aW5nIHRoZSBjb2RlLgoKRnVydGhlciwgZml4IHRoZSBkdXBsaWNhdGUgcHVzaCBjdXJzb3IgaW5p
+dGlhbGlzYXRpb24gdGhhdCB0aGUKc3BlY2lhbCBjYXNlIGhhbmRsaW5nIHdhcyBoaWRpbmcsIGFu
+ZCBjbGVhbiB1cCBhbGwgdGhlIGNvbW1lbnRzCmFyb3VuZCB0aGUgYWN0aXZlIGN1cnNvciBsaXN0
+IGhhbmRsaW5nLgoKU2lnbmVkLW9mZi1ieTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQu
+Y29tPgpSZXZpZXdlZC1ieTogQ2hyaXN0b3BoIEhlbGx3aWcgPGhjaEBsc3QuZGU+Ci0tLQogZnMv
+eGZzL3hmc190cmFuc19haWwuYyAgfCAgIDc3ICsrKysrKysrKysrKysrKystLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tCiBmcy94ZnMveGZzX3RyYW5zX3ByaXYuaCB8ICAgIDQgKy0KIDIg
+ZmlsZXMgY2hhbmdlZCwgMjggaW5zZXJ0aW9ucygrKSwgNTMgZGVsZXRpb25zKC0pCgpkaWZmIC0t
+Z2l0IGEvZnMveGZzL3hmc190cmFuc19haWwuYyBiL2ZzL3hmcy94ZnNfdHJhbnNfYWlsLmMKaW5k
+ZXggNzkwOGM3OS4uOGNkMzI5YiAxMDA2NDQKLS0tIGEvZnMveGZzL3hmc190cmFuc19haWwuYwor
+KysgYi9mcy94ZnMveGZzX3RyYW5zX2FpbC5jCkBAIC0xNjUsMTUgKzE2NSwxMSBAQCB4ZnNfYWls
+X21heF9sc24oCiAvKgogICogQUlMIHRyYXZlcnNhbCBjdXJzb3IgaW5pdGlhbGlzYXRpb24uCiAg
+KgotICogVGhlIGN1cnNvciBrZWVwcyB0cmFjayBvZiB3aGVyZSBvdXIgY3VycmVudCB0cmF2ZXJz
+YWwgaXMgdXAKLSAqIHRvIGJ5IHRyYWNraW5nIHRoZSBuZXh0IMajdGVtIGluIHRoZSBsaXN0IGZv
+ciB1cy4gSG93ZXZlciwgZm9yCi0gKiB0aGlzIHRvIGJlIHNhZmUsIHJlbW92aW5nIGFuIG9iamVj
+dCBmcm9tIHRoZSBBSUwgbmVlZHMgdG8gaW52YWxpZGF0ZQotICogYW55IGN1cnNvciB0aGF0IHBv
+aW50cyB0byBpdC4gaGVuY2UgdGhlIHRyYXZlcnNhbCBjdXJzb3IgbmVlZHMgdG8KLSAqIGJlIGxp
+bmtlZCB0byB0aGUgc3RydWN0IHhmc19haWwgc28gdGhhdCBkZWxldGlvbiBjYW4gc2VhcmNoIGFs
+bCB0aGUKLSAqIGFjdGl2ZSBjdXJzb3JzIGZvciBpbnZhbGlkYXRpb24uCi0gKgotICogV2UgZG9u
+J3QgbGluayB0aGUgcHVzaCBjdXJzb3IgYmVjYXVzZSBpdCBpcyBlbWJlZGRlZCBpbiB0aGUgc3Ry
+dWN0Ci0gKiB4ZnNfYWlsIGFuZCBoZW5jZSBlYXNpbHkgZmluZGFibGUuCisgKiBUaGUgY3Vyc29y
+IGtlZXBzIHRyYWNrIG9mIHdoZXJlIG91ciBjdXJyZW50IHRyYXZlcnNhbCBpcyB1cCB0byBieSB0
+cmFja2luZworICogdGhlIG5leHQgaXRlbSBpbiB0aGUgbGlzdCBmb3IgdXMuIEhvd2V2ZXIsIGZv
+ciB0aGlzIHRvIGJlIHNhZmUsIHJlbW92aW5nIGFuCisgKiBvYmplY3QgZnJvbSB0aGUgQUlMIG5l
+ZWRzIHRvIGludmFsaWRhdGUgYW55IGN1cnNvciB0aGF0IHBvaW50cyB0byBpdC4gaGVuY2UKKyAq
+IHRoZSB0cmF2ZXJzYWwgY3Vyc29yIG5lZWRzIHRvIGJlIGxpbmtlZCB0byB0aGUgc3RydWN0IHhm
+c19haWwgc28gdGhhdAorICogZGVsZXRpb24gY2FuIHNlYXJjaCBhbGwgdGhlIGFjdGl2ZSBjdXJz
+b3JzIGZvciBpbnZhbGlkYXRpb24uCiAgKi8KIFNUQVRJQyB2b2lkCiB4ZnNfdHJhbnNfYWlsX2N1
+cnNvcl9pbml0KApAQCAtMTgxLDE3ICsxNzcsMTIgQEAgeGZzX3RyYW5zX2FpbF9jdXJzb3JfaW5p
+dCgKIAlzdHJ1Y3QgeGZzX2FpbF9jdXJzb3IJKmN1cikKIHsKIAljdXItPml0ZW0gPSBOVUxMOwot
+CWlmIChjdXIgPT0gJmFpbHAtPnhhX2N1cnNvcnMpCi0JCXJldHVybjsKLQotCWN1ci0+bmV4dCA9
+IGFpbHAtPnhhX2N1cnNvcnMubmV4dDsKLQlhaWxwLT54YV9jdXJzb3JzLm5leHQgPSBjdXI7CisJ
+bGlzdF9hZGRfdGFpbCgmY3VyLT5saXN0LCAmYWlscC0+eGFfY3Vyc29ycyk7CiB9CiAKIC8qCi0g
+KiBHZXQgdGhlIG5leHQgaXRlbSBpbiB0aGUgdHJhdmVyc2FsIGFuZCBhZHZhbmNlIHRoZSBjdXJz
+b3IuCi0gKiBJZiB0aGUgY3Vyc29yIHdhcyBpbnZhbGlkYXRlZCAoaW5pZGljYXRlZCBieSBhIGxp
+cCBvZiAxKSwKLSAqIHJlc3RhcnQgdGhlIHRyYXZlcnNhbC4KKyAqIEdldCB0aGUgbmV4dCBpdGVt
+IGluIHRoZSB0cmF2ZXJzYWwgYW5kIGFkdmFuY2UgdGhlIGN1cnNvci4gIElmIHRoZSBjdXJzb3IK
+KyAqIHdhcyBpbnZhbGlkYXRlZCAoaW5kaWNhdGVkIGJ5IGEgbGlwIG9mIDEpLCByZXN0YXJ0IHRo
+ZSB0cmF2ZXJzYWwuCiAgKi8KIHN0cnVjdCB4ZnNfbG9nX2l0ZW0gKgogeGZzX3RyYW5zX2FpbF9j
+dXJzb3JfbmV4dCgKQEAgLTIwOCw0MCArMTk5LDI1IEBAIHhmc190cmFuc19haWxfY3Vyc29yX25l
+eHQoCiB9CiAKIC8qCi0gKiBOb3cgdGhhdCB0aGUgdHJhdmVyc2FsIGlzIGNvbXBsZXRlLCB3ZSBu
+ZWVkIHRvIHJlbW92ZSB0aGUgY3Vyc29yCi0gKiBmcm9tIHRoZSBsaXN0IG9mIHRyYXZlcnNpbmcg
+Y3Vyc29ycy4gQXZvaWQgcmVtb3ZpbmcgdGhlIGVtYmVkZGVkCi0gKiBwdXNoIGN1cnNvciwgYnV0
+IHVzZSB0aGUgZmFjdCBpdCBpcyBhbHdheXMgcHJlc2VudCB0byBtYWtlIHRoZQotICogbGlzdCBk
+ZWxldGlvbiBzaW1wbGUuCisgKiBXaGVuIHRoZSB0cmF2ZXJzYWwgaXMgY29tcGxldGUsIHdlIG5l
+ZWQgdG8gcmVtb3ZlIHRoZSBjdXJzb3IgZnJvbSB0aGUgbGlzdAorICogb2YgdHJhdmVyc2luZyBj
+dXJzb3JzLgogICovCiB2b2lkCiB4ZnNfdHJhbnNfYWlsX2N1cnNvcl9kb25lKAogCXN0cnVjdCB4
+ZnNfYWlsCQkqYWlscCwKLQlzdHJ1Y3QgeGZzX2FpbF9jdXJzb3IJKmRvbmUpCisJc3RydWN0IHhm
+c19haWxfY3Vyc29yCSpjdXIpCiB7Ci0Jc3RydWN0IHhmc19haWxfY3Vyc29yCSpwcmV2ID0gTlVM
+TDsKLQlzdHJ1Y3QgeGZzX2FpbF9jdXJzb3IJKmN1cjsKLQotCWRvbmUtPml0ZW0gPSBOVUxMOwot
+CWlmIChkb25lID09ICZhaWxwLT54YV9jdXJzb3JzKQotCQlyZXR1cm47Ci0JcHJldiA9ICZhaWxw
+LT54YV9jdXJzb3JzOwotCWZvciAoY3VyID0gcHJldi0+bmV4dDsgY3VyOyBwcmV2ID0gY3VyLCBj
+dXIgPSBwcmV2LT5uZXh0KSB7Ci0JCWlmIChjdXIgPT0gZG9uZSkgewotCQkJcHJldi0+bmV4dCA9
+IGN1ci0+bmV4dDsKLQkJCWJyZWFrOwotCQl9Ci0JfQotCUFTU0VSVChjdXIpOworCWN1ci0+aXRl
+bSA9IE5VTEw7CisJbGlzdF9kZWxfaW5pdCgmY3VyLT5saXN0KTsKIH0KIAogLyoKLSAqIEludmFs
+aWRhdGUgYW55IGN1cnNvciB0aGF0IGlzIHBvaW50aW5nIHRvIHRoaXMgaXRlbS4gVGhpcyBpcwot
+ICogY2FsbGVkIHdoZW4gYW4gaXRlbSBpcyByZW1vdmVkIGZyb20gdGhlIEFJTC4gQW55IGN1cnNv
+ciBwb2ludGluZwotICogdG8gdGhpcyBvYmplY3QgaXMgbm93IGludmFsaWQgYW5kIHRoZSB0cmF2
+ZXJzYWwgbmVlZHMgdG8gYmUKLSAqIHRlcm1pbmF0ZWQgc28gaXQgZG9lc24ndCByZWZlcmVuY2Ug
+YSBmcmVlZCBvYmplY3QuIFdlIHNldCB0aGUKLSAqIGN1cnNvciBpdGVtIHRvIGEgdmFsdWUgb2Yg
+MSBzbyB3ZSBjYW4gZGlzdGluZ3Vpc2ggYmV0d2VlbiBhbgotICogaW52YWxpZGF0aW9uIGFuZCB0
+aGUgZW5kIG9mIHRoZSBsaXN0IHdoZW4gZ2V0dGluZyB0aGUgbmV4dCBpdGVtCi0gKiBmcm9tIHRo
+ZSBjdXJzb3IuCisgKiBJbnZhbGlkYXRlIGFueSBjdXJzb3IgdGhhdCBpcyBwb2ludGluZyB0byB0
+aGlzIGl0ZW0uIFRoaXMgaXMgY2FsbGVkIHdoZW4gYW4KKyAqIGl0ZW0gaXMgcmVtb3ZlZCBmcm9t
+IHRoZSBBSUwuIEFueSBjdXJzb3IgcG9pbnRpbmcgdG8gdGhpcyBvYmplY3QgaXMgbm93CisgKiBp
+bnZhbGlkIGFuZCB0aGUgdHJhdmVyc2FsIG5lZWRzIHRvIGJlIHRlcm1pbmF0ZWQgc28gaXQgZG9l
+c24ndCByZWZlcmVuY2UgYQorICogZnJlZWQgb2JqZWN0LiBXZSBzZXQgdGhlIGxvdyBiaXQgb2Yg
+dGhlIGN1cnNvciBpdGVtIHBvaW50ZXIgc28gd2UgY2FuCisgKiBkaXN0aW5ndWlzaCBiZXR3ZWVu
+IGFuIGludmFsaWRhdGlvbiBhbmQgdGhlIGVuZCBvZiB0aGUgbGlzdCB3aGVuIGdldHRpbmcgdGhl
+CisgKiBuZXh0IGl0ZW0gZnJvbSB0aGUgY3Vyc29yLgogICovCiBTVEFUSUMgdm9pZAogeGZzX3Ry
+YW5zX2FpbF9jdXJzb3JfY2xlYXIoCkBAIC0yNTAsOCArMjI2LDcgQEAgeGZzX3RyYW5zX2FpbF9j
+dXJzb3JfY2xlYXIoCiB7CiAJc3RydWN0IHhmc19haWxfY3Vyc29yCSpjdXI7CiAKLQkvKiBuZWVk
+IHRvIHNlYXJjaCBhbGwgY3Vyc29ycyAqLwotCWZvciAoY3VyID0gJmFpbHAtPnhhX2N1cnNvcnM7
+IGN1cjsgY3VyID0gY3VyLT5uZXh0KSB7CisJbGlzdF9mb3JfZWFjaF9lbnRyeShjdXIsICZhaWxw
+LT54YV9jdXJzb3JzLCBsaXN0KSB7CiAJCWlmIChjdXItPml0ZW0gPT0gbGlwKQogCQkJY3VyLT5p
+dGVtID0gKHN0cnVjdCB4ZnNfbG9nX2l0ZW0gKikKIAkJCQkJKChfX3BzaW50X3QpY3VyLT5pdGVt
+IHwgMSk7CkBAIC00MDUsNyArMzgwLDcgQEAgeGZzX2FpbF93b3JrZXIoCiAJc3RydWN0IHhmc19h
+aWwJCSphaWxwID0gY29udGFpbmVyX29mKHRvX2RlbGF5ZWRfd29yayh3b3JrKSwKIAkJCQkJc3Ry
+dWN0IHhmc19haWwsIHhhX3dvcmspOwogCXhmc19tb3VudF90CQkqbXAgPSBhaWxwLT54YV9tb3Vu
+dDsKLQlzdHJ1Y3QgeGZzX2FpbF9jdXJzb3IJKmN1ciA9ICZhaWxwLT54YV9jdXJzb3JzOworCXN0
+cnVjdCB4ZnNfYWlsX2N1cnNvcgljdXI7CiAJeGZzX2xvZ19pdGVtX3QJCSpsaXA7CiAJeGZzX2xz
+bl90CQlsc247CiAJeGZzX2xzbl90CQl0YXJnZXQ7CkBAIC00MTcsMTMgKzM5MiwxMiBAQCB4ZnNf
+YWlsX3dvcmtlcigKIAogCXNwaW5fbG9jaygmYWlscC0+eGFfbG9jayk7CiAJdGFyZ2V0ID0gYWls
+cC0+eGFfdGFyZ2V0OwotCXhmc190cmFuc19haWxfY3Vyc29yX2luaXQoYWlscCwgY3VyKTsKLQls
+aXAgPSB4ZnNfdHJhbnNfYWlsX2N1cnNvcl9maXJzdChhaWxwLCBjdXIsIGFpbHAtPnhhX2xhc3Rf
+cHVzaGVkX2xzbik7CisJbGlwID0geGZzX3RyYW5zX2FpbF9jdXJzb3JfZmlyc3QoYWlscCwgJmN1
+ciwgYWlscC0+eGFfbGFzdF9wdXNoZWRfbHNuKTsKIAlpZiAoIWxpcCB8fCBYRlNfRk9SQ0VEX1NI
+VVRET1dOKG1wKSkgewogCQkvKgogCQkgKiBBSUwgaXMgZW1wdHkgb3Igb3VyIHB1c2ggaGFzIHJl
+YWNoZWQgdGhlIGVuZC4KIAkJICovCi0JCXhmc190cmFuc19haWxfY3Vyc29yX2RvbmUoYWlscCwg
+Y3VyKTsKKwkJeGZzX3RyYW5zX2FpbF9jdXJzb3JfZG9uZShhaWxwLCAmY3VyKTsKIAkJc3Bpbl91
+bmxvY2soJmFpbHAtPnhhX2xvY2spOwogCQlnb3RvIG91dF9kb25lOwogCX0KQEAgLTUxMSwxMiAr
+NDg1LDEyIEBAIHhmc19haWxfd29ya2VyKAogCQlpZiAoc3R1Y2sgPiAxMDApCiAJCQlicmVhazsK
+IAotCQlsaXAgPSB4ZnNfdHJhbnNfYWlsX2N1cnNvcl9uZXh0KGFpbHAsIGN1cik7CisJCWxpcCA9
+IHhmc190cmFuc19haWxfY3Vyc29yX25leHQoYWlscCwgJmN1cik7CiAJCWlmIChsaXAgPT0gTlVM
+TCkKIAkJCWJyZWFrOwogCQlsc24gPSBsaXAtPmxpX2xzbjsKIAl9Ci0JeGZzX3RyYW5zX2FpbF9j
+dXJzb3JfZG9uZShhaWxwLCBjdXIpOworCXhmc190cmFuc19haWxfY3Vyc29yX2RvbmUoYWlscCwg
+JmN1cik7CiAJc3Bpbl91bmxvY2soJmFpbHAtPnhhX2xvY2spOwogCiAJaWYgKGZsdXNoX2xvZykg
+ewpAQCAtODQ4LDYgKzgyMiw3IEBAIHhmc190cmFuc19haWxfaW5pdCgKIAogCWFpbHAtPnhhX21v
+dW50ID0gbXA7CiAJSU5JVF9MSVNUX0hFQUQoJmFpbHAtPnhhX2FpbCk7CisJSU5JVF9MSVNUX0hF
+QUQoJmFpbHAtPnhhX2N1cnNvcnMpOwogCXNwaW5fbG9ja19pbml0KCZhaWxwLT54YV9sb2NrKTsK
+IAlJTklUX0RFTEFZRURfV09SSygmYWlscC0+eGFfd29yaywgeGZzX2FpbF93b3JrZXIpOwogCW1w
+LT5tX2FpbCA9IGFpbHA7CmRpZmYgLS1naXQgYS9mcy94ZnMveGZzX3RyYW5zX3ByaXYuaCBiL2Zz
+L3hmcy94ZnNfdHJhbnNfcHJpdi5oCmluZGV4IGMwY2I0MDguLjIxMjk0NmIgMTAwNjQ0Ci0tLSBh
+L2ZzL3hmcy94ZnNfdHJhbnNfcHJpdi5oCisrKyBiL2ZzL3hmcy94ZnNfdHJhbnNfcHJpdi5oCkBA
+IC01Myw3ICs1Myw3IEBAIHZvaWQJeGZzX3RyYW5zX2NvbW1pdHRlZF9idWxrKHN0cnVjdCB4ZnNf
+YWlsICphaWxwLCBzdHJ1Y3QgeGZzX2xvZ192ZWMgKmx2LAogICogb2YgdGhlIGxpc3QgdG8gdHJp
+Z2dlciB0cmF2ZXJzYWwgcmVzdGFydHMuCiAgKi8KIHN0cnVjdCB4ZnNfYWlsX2N1cnNvciB7Ci0J
+c3RydWN0IHhmc19haWxfY3Vyc29yCSpuZXh0OworCXN0cnVjdCBsaXN0X2hlYWQJbGlzdDsKIAlz
+dHJ1Y3QgeGZzX2xvZ19pdGVtCSppdGVtOwogfTsKIApAQCAtNjYsNyArNjYsNyBAQCBzdHJ1Y3Qg
+eGZzX2FpbCB7CiAJc3RydWN0IHhmc19tb3VudAkqeGFfbW91bnQ7CiAJc3RydWN0IGxpc3RfaGVh
+ZAl4YV9haWw7CiAJeGZzX2xzbl90CQl4YV90YXJnZXQ7Ci0Jc3RydWN0IHhmc19haWxfY3Vyc29y
+CXhhX2N1cnNvcnM7CisJc3RydWN0IGxpc3RfaGVhZAl4YV9jdXJzb3JzOwogCXNwaW5sb2NrX3QJ
+CXhhX2xvY2s7CiAJc3RydWN0IGRlbGF5ZWRfd29yawl4YV93b3JrOwogCXhmc19sc25fdAkJeGFf
+bGFzdF9wdXNoZWRfbHNuOwotLSAKMS43LjUuMQoKX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0
+cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
