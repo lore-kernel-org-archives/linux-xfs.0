@@ -1,21 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6IJwuKq125006 for <xfs@oss.sgi.com>; Mon, 18 Jul 2011 14:58:57 -0500
-Received: from johnbokma.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 42D6F7C318
-	for <xfs@oss.sgi.com>; Mon, 18 Jul 2011 12:58:55 -0700 (PDT)
-Received: from johnbokma.com (johnbokma.com [174.143.254.155]) by cuda.sgi.com
-	with ESMTP id TWBSBQlYEYi6JNlE for <xfs@oss.sgi.com>;
-	Mon, 18 Jul 2011 12:58:55 -0700 (PDT)
-Received: from [192.168.1.100] (unknown [200.92.64.33])
-	by johnbokma.com (Postfix) with ESMTPSA id 87BB4120051
-	for <xfs@oss.sgi.com>; Mon, 18 Jul 2011 19:58:55 +0000 (UTC)
-Message-ID: <4E24907F.6020903@johnbokma.com>
-Date: Mon, 18 Jul 2011 14:58:55 -0500
-From: John Bokma <contact@johnbokma.com>
+	p6IM9HBJ130444 for <xfs@oss.sgi.com>; Mon, 18 Jul 2011 17:09:17 -0500
+Subject: Re: [PATCH 0/2 v8] XFS TESTS: ENOSPC Punch Hole Test
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <1310946766-30217-1-git-send-email-achender@linux.vnet.ibm.com>
+References: <1310946766-30217-1-git-send-email-achender@linux.vnet.ibm.com>
+Date: Mon, 18 Jul 2011 17:09:13 -0500
+Message-ID: <1311026953.2790.49.camel@doink>
 MIME-Version: 1.0
-Subject: 30 TB RAID6 + XFS slow write performance
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,54 +18,53 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="iso-8859-1"; Format="flowed"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Allison Henderson <achender@linux.vnet.ibm.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
 
-Dear list members,
+On Sun, 2011-07-17 at 16:52 -0700, Allison Henderson wrote:
+> This patch set adds the ENOSPC test that was used for ext4 punch hole testing.
+> This test will verify that a hole can be punched even when the disk is full.
+> Reserved blocks should be used to complete the operation when there is not blocks
+> to further fragment the file.
+> 
+> Because punching a hole does not always require extra blocks, there needs to 
+> be several iterations of punching holes, and then filling the file system to 100% 
+> usage before it is forced to grow the tree in order to handle the fragmentation. 
+> The growing of the tree is what would cause ENOSPC if not for the use of reserved blocks.
 
-A customer of mine is currently struggling with the performance of a 30 =
+I have reviewed both of your updated patches.  They
+both look good to me.  I'll give it another day or
+two for others to comment if they like, but unless
+someone suggests changes I'll commit this for you.
 
-TB RAID6 which uses XFS as the filing system. I am somewhat sure it's =
+Reviewed-by: Alex Elder <aelder@sgi.com>
 
-not XFS that's causing the performance issue but my expertise is not XFS =
 
-nor RAID; I just wrote the software that after moving to the larger RAID =
 
-(from a much smaller one, ~ 3TB, using ext3) suddenly seems to have a =
 
-huge drop in write performance.
+> Allison Henderson (2):
+>   XFS TESTS: ENOSPC Punch Hole: Move su routines in 123 to common.rc
+>   XFS TESTS: Add ENOSPC Hole Punch Test
+> 
+>  123       |   24 ------------
+>  256       |  120 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  256.out   |    1 +
+>  common.rc |   81 +++++++++++++++++++++++++++++++++++++++++
+>  group     |   12 ++++--
+>  5 files changed, 210 insertions(+), 28 deletions(-)
+>  create mode 100644 256
+>  create mode 100644 256.out
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-The software I wrote writes many small (50-150K) files in parallel (100+ =
 
-processes), thousands of times per hour. Writing a file of 50-150K now =
-
-and then seems to take between 30 and 90 seconds, and more rarely can =
-
-take over 200 seconds (several times an hour).
-
-When all processes are stopped and restarted again the 30-90 seconds =
-
-delay start happening when about 16-20+ processes are running.
-
-To me this sounds like something has been configured wrong. I already =
-
-recommended my customer to find someone who is capable of configuring =
-
-the RAID correctly; to me it sounds like a hardware/configuration issue.
-
-Any insights are very welcome.
-
-Hardware:
-card: MegaRAID SAS 9260-16i
-disks: 14x Barracuda=AE XT ST33000651AS 3TB (2 hot spares).
-RAID6
-~ 30TB
-
-Thanks for reading,
-John
 
 _______________________________________________
 xfs mailing list
