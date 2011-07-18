@@ -1,27 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6I3edG9078016 for <xfs@oss.sgi.com>; Sun, 17 Jul 2011 22:40:39 -0500
+	p6I3nwnV078332 for <xfs@oss.sgi.com>; Sun, 17 Jul 2011 22:49:58 -0500
 Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 94A091D88095
-	for <xfs@oss.sgi.com>; Sun, 17 Jul 2011 20:40:37 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2486BECC732
+	for <xfs@oss.sgi.com>; Sun, 17 Jul 2011 20:49:56 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	XkP5hDbymAMCJNYD for <xfs@oss.sgi.com>;
-	Sun, 17 Jul 2011 20:40:37 -0700 (PDT)
+	OaoZeMY0tag22RFV for <xfs@oss.sgi.com>;
+	Sun, 17 Jul 2011 20:49:56 -0700 (PDT)
 Received: from chute ([192.168.1.1] helo=disappointment)
 	by dastard with esmtp (Exim 4.72)
-	(envelope-from <dave@fromorbit.com>) id 1Qieh7-0008Bd-72
-	for xfs@oss.sgi.com; Mon, 18 Jul 2011 13:40:33 +1000
+	(envelope-from <dave@fromorbit.com>) id 1Qieq9-0008Cw-0d
+	for xfs@oss.sgi.com; Mon, 18 Jul 2011 13:49:53 +1000
 Received: from dave by disappointment with local (Exim 4.76)
-	(envelope-from <dave@disappointment.disaster>) id 1Qiegw-0002a9-SR
-	for xfs@oss.sgi.com; Mon, 18 Jul 2011 13:40:22 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1Qieq8-0002hV-P2
+	for xfs@oss.sgi.com; Mon, 18 Jul 2011 13:49:52 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/4] xfs: remove confusing ail cursor wrapper
-Date: Mon, 18 Jul 2011 13:40:17 +1000
-Message-Id: <1310960419-9875-3-git-send-email-david@fromorbit.com>
-In-Reply-To: <1310960419-9875-1-git-send-email-david@fromorbit.com>
-References: <1310960419-9875-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 1/3] xfs: introduce an allocation workqueue
+Date: Mon, 18 Jul 2011 13:49:47 +1000
+Message-Id: <1310960989-10284-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1310960989-10284-1-git-send-email-david@fromorbit.com>
+References: <1310960989-10284-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,125 +39,145 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-xfs_trans_ail_cursor_set() doesn't set the cursor to the current log
-item, it sets it to the next item. There is already a function for
-doing this - xfs_trans_ail_cursor_next() - and the _set function is
-simply a two line wrapper.  Remove it and open code the setting of
-the cursor in the two locations that call it to remove the
-confusion.
+We currently have significant issues with the amount of stack that
+allocation in XFS uses, especially in the writeback path. We can
+easily consume 4k of stack between mapping the page, manipulating
+the bmap btree and allocating blocks from the free list. Not to
+mention btree block readahead and other functionality that issues IO
+in the allocation path.
+
+As a result, we can no longer fit allocation in the writeback path
+in the stack space provided on x86_64. To alleviate this problem,
+introduce an allocation workqueue and move all allocations to a
+seperate context. This can be easily added as an interposing layer
+into xfs_alloc_vextent(), which takes a single argument structure
+and does not return until the allocation is complete or has failed.
+
+To do this, add a work structure and a completion to the allocation
+args structure. This allows xfs_alloc_vextent to queue the args onto
+the workqueue and wait for it to be completed by the worker. This
+can be done completely transparently to the caller.
+
+The worker function needs to ensure that it sets and clears the
+PF_TRANS flag appropriately as it is being run in an active
+transaction context. Work can also be queued in a memory reclaim
+context, so a rescuer is needed for the workqueue.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_trans_ail.c |   50 ++++++++++++++++++-----------------------------
- 1 files changed, 19 insertions(+), 31 deletions(-)
+ fs/xfs/linux-2.6/xfs_super.c |   13 +++++++++++++
+ fs/xfs/xfs_alloc.c           |   34 +++++++++++++++++++++++++++++++++-
+ fs/xfs/xfs_alloc.h           |    5 +++++
+ 3 files changed, 51 insertions(+), 1 deletions(-)
 
-diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-index 9a69dc0..7908c79 100644
---- a/fs/xfs/xfs_trans_ail.c
-+++ b/fs/xfs/xfs_trans_ail.c
-@@ -189,20 +189,6 @@ xfs_trans_ail_cursor_init(
- }
+diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
+index 9a72dda..6a6d4d9 100644
+--- a/fs/xfs/linux-2.6/xfs_super.c
++++ b/fs/xfs/linux-2.6/xfs_super.c
+@@ -1672,8 +1672,21 @@ xfs_init_workqueues(void)
+ 	if (!xfs_ail_wq)
+ 		goto out_destroy_syncd;
  
- /*
-- * Set the cursor to the next item, because when we look
-- * up the cursor the current item may have been freed.
-- */
--STATIC void
--xfs_trans_ail_cursor_set(
--	struct xfs_ail		*ailp,
--	struct xfs_ail_cursor	*cur,
--	struct xfs_log_item	*lip)
--{
--	if (lip)
--		cur->item = xfs_ail_next(ailp, lip);
--}
--
--/*
-  * Get the next item in the traversal and advance the cursor.
-  * If the cursor was invalidated (inidicated by a lip of 1),
-  * restart the traversal.
-@@ -216,7 +202,8 @@ xfs_trans_ail_cursor_next(
- 
- 	if ((__psint_t)lip & 1)
- 		lip = xfs_ail_min(ailp);
--	xfs_trans_ail_cursor_set(ailp, cur, lip);
-+	if (lip)
-+		cur->item = xfs_ail_next(ailp, lip);
- 	return lip;
- }
- 
-@@ -272,9 +259,10 @@ xfs_trans_ail_cursor_clear(
- }
- 
- /*
-- * Initialise the cursor to the first item in the AIL with the given @lsn.
-- * This searches the list from lowest LSN to highest. Pass a @lsn of zero
-- * to initialise the cursor to the first item in the AIL.
-+ * Find the first item in the AIL with the given @lsn by searching in ascending
-+ * LSN order and initialise the cursor to point to the next item for a
-+ * ascending traversal.  Pass a @lsn of zero to initialise the cursor to the
-+ * first item in the AIL. Returns NULL if the list is empty.
-  */
- xfs_log_item_t *
- xfs_trans_ail_cursor_first(
-@@ -285,26 +273,24 @@ xfs_trans_ail_cursor_first(
- 	xfs_log_item_t		*lip;
- 
- 	xfs_trans_ail_cursor_init(ailp, cur);
--	lip = xfs_ail_min(ailp);
--	if (lsn == 0)
++	/*
++	 * The allocation workqueue can be used in memory reclaim situations
++	 * (writepage path), and parallelism is only limited by the number of
++	 * AGs in all the filesystems mounted. Hence maxactive is set very
++	 * high.
++	 */
++	xfs_alloc_wq = alloc_workqueue("xfsalloc",
++				WQ_CPU_INTENSIVE | WQ_MEM_RECLAIM, 128);
++	if (!xfs_alloc_wq)
++		goto out_destroy_ail;
 +
-+	if (lsn == 0) {
-+		lip = xfs_ail_min(ailp);
- 		goto out;
-+	}
+ 	return 0;
  
- 	list_for_each_entry(lip, &ailp->xa_ail, li_ail) {
- 		if (XFS_LSN_CMP(lip->li_lsn, lsn) >= 0)
- 			goto out;
- 	}
--	lip = NULL;
-+	return NULL;
-+
++out_destroy_ail:
++	destroy_workqueue(xfs_ail_wq);
+ out_destroy_syncd:
+ 	destroy_workqueue(xfs_syncd_wq);
  out:
--	xfs_trans_ail_cursor_set(ailp, cur, lip);
-+	if (lip)
-+		cur->item = xfs_ail_next(ailp, lip);
- 	return lip;
- }
+diff --git a/fs/xfs/xfs_alloc.c b/fs/xfs/xfs_alloc.c
+index 1e00b3e..5883972 100644
+--- a/fs/xfs/xfs_alloc.c
++++ b/fs/xfs/xfs_alloc.c
+@@ -35,6 +35,7 @@
+ #include "xfs_error.h"
+ #include "xfs_trace.h"
  
--/*
-- * Initialise the cursor to the last item in the AIL with the given @lsn.
-- * This searches the list from highest LSN to lowest. If there is no item with
-- * the value of @lsn, then it sets the cursor to the last item with an LSN lower
-- * than @lsn.
-- */
- static struct xfs_log_item *
- __xfs_trans_ail_cursor_last(
- 	struct xfs_ail		*ailp,
-@@ -320,8 +306,10 @@ __xfs_trans_ail_cursor_last(
- }
++struct workqueue_struct *xfs_alloc_wq;
  
- /*
-- * Initialise the cursor to the last item in the AIL with the given @lsn.
-- * This searches the list from highest LSN to lowest.
-+ * Find the last item in the AIL with the given @lsn by searching in descending
-+ * LSN order and initialise the cursor to point to that item.  If there is no
-+ * item with the value of @lsn, then it sets the cursor to the last item with an
-+ * LSN lower than @lsn.  Returns NULL if the list is empty.
+ #define XFS_ABSDIFF(a,b)	(((a) <= (b)) ? ((b) - (a)) : ((a) - (b)))
+ 
+@@ -2208,7 +2209,7 @@ xfs_alloc_read_agf(
+  * group or loop over the allocation groups to find the result.
   */
- struct xfs_log_item *
- xfs_trans_ail_cursor_last(
-@@ -335,7 +323,7 @@ xfs_trans_ail_cursor_last(
+ int				/* error */
+-xfs_alloc_vextent(
++__xfs_alloc_vextent(
+ 	xfs_alloc_arg_t	*args)	/* allocation argument structure */
+ {
+ 	xfs_agblock_t	agsize;	/* allocation group size */
+@@ -2418,6 +2419,37 @@ error0:
+ 	return error;
  }
  
++static void
++xfs_alloc_vextent_worker(
++	struct work_struct	*work)
++{
++	struct xfs_alloc_arg	*args = container_of(work,
++						struct xfs_alloc_arg, work);
++	unsigned long		pflags;
++
++	/* we are in a transaction context here */
++	current_set_flags_nested(&pflags, PF_FSTRANS);
++
++	args->result = __xfs_alloc_vextent(args);
++	complete(args->done);
++
++	current_restore_flags_nested(&pflags, PF_FSTRANS);
++}
++
++
++int				/* error */
++xfs_alloc_vextent(
++	xfs_alloc_arg_t	*args)	/* allocation argument structure */
++{
++	DECLARE_COMPLETION_ONSTACK(done);
++
++	args->done = &done;
++	INIT_WORK(&args->work, xfs_alloc_vextent_worker);
++	queue_work(xfs_alloc_wq, &args->work);
++	wait_for_completion(&done);
++	return args->result;
++}
++
  /*
-- * splice the log item list into the AIL at the given LSN. We splice to the
-+ * Splice the log item list into the AIL at the given LSN. We splice to the
-  * tail of the given LSN to maintain insert order for push traversals. The
-  * cursor is optional, allowing repeated updates to the same LSN to avoid
-  * repeated traversals.
+  * Free an extent.
+  * Just break up the extent address and hand off to xfs_free_ag_extent
+diff --git a/fs/xfs/xfs_alloc.h b/fs/xfs/xfs_alloc.h
+index 2f52b92..ab5d0fd 100644
+--- a/fs/xfs/xfs_alloc.h
++++ b/fs/xfs/xfs_alloc.h
+@@ -25,6 +25,8 @@ struct xfs_perag;
+ struct xfs_trans;
+ struct xfs_busy_extent;
+ 
++extern struct workqueue_struct *xfs_alloc_wq;
++
+ /*
+  * Freespace allocation types.  Argument to xfs_alloc_[v]extent.
+  */
+@@ -119,6 +121,9 @@ typedef struct xfs_alloc_arg {
+ 	char		isfl;		/* set if is freelist blocks - !acctg */
+ 	char		userdata;	/* set if this is user data */
+ 	xfs_fsblock_t	firstblock;	/* io first block allocated */
++	struct completion *done;
++	struct work_struct work;
++	int		result;
+ } xfs_alloc_arg_t;
+ 
+ /*
 -- 
 1.7.5.1
 
