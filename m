@@ -1,28 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6I3eSTN077990 for <xfs@oss.sgi.com>; Sun, 17 Jul 2011 22:40:28 -0500
+	p6I3edG9078016 for <xfs@oss.sgi.com>; Sun, 17 Jul 2011 22:40:39 -0500
 Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 80FA0ECA969
-	for <xfs@oss.sgi.com>; Sun, 17 Jul 2011 20:40:26 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 94A091D88095
+	for <xfs@oss.sgi.com>; Sun, 17 Jul 2011 20:40:37 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	PgwjG8tXHSz0LzYu for <xfs@oss.sgi.com>;
-	Sun, 17 Jul 2011 20:40:26 -0700 (PDT)
+	XkP5hDbymAMCJNYD for <xfs@oss.sgi.com>;
+	Sun, 17 Jul 2011 20:40:37 -0700 (PDT)
 Received: from chute ([192.168.1.1] helo=disappointment)
 	by dastard with esmtp (Exim 4.72)
-	(envelope-from <dave@fromorbit.com>) id 1Qiegx-0008Be-70
-	for xfs@oss.sgi.com; Mon, 18 Jul 2011 13:40:23 +1000
+	(envelope-from <dave@fromorbit.com>) id 1Qieh7-0008Bd-72
+	for xfs@oss.sgi.com; Mon, 18 Jul 2011 13:40:33 +1000
 Received: from dave by disappointment with local (Exim 4.76)
-	(envelope-from <dave@disappointment.disaster>) id 1Qiegw-0002aC-Uj
+	(envelope-from <dave@disappointment.disaster>) id 1Qiegw-0002a9-SR
 	for xfs@oss.sgi.com; Mon, 18 Jul 2011 13:40:22 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: =?UTF-8?q?=5BPATCH=203/4=5D=20xfs=3A=20convert=20AIL=20cursors=20to=20use=20struct=20list=5Fhead?=
-Date: Mon, 18 Jul 2011 13:40:18 +1000
-Message-Id: <1310960419-9875-4-git-send-email-david@fromorbit.com>
+Subject: [PATCH 2/4] xfs: remove confusing ail cursor wrapper
+Date: Mon, 18 Jul 2011 13:40:17 +1000
+Message-Id: <1310960419-9875-3-git-send-email-david@fromorbit.com>
 In-Reply-To: <1310960419-9875-1-git-send-email-david@fromorbit.com>
 References: <1310960419-9875-1-git-send-email-david@fromorbit.com>
-MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,132 +30,138 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-RnJvbTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgoKVGhlIGxpc3Qgb2YgYWN0
-aXZlIEFJTCBjdXJzb3JzIHVzZXMgYSByb2xsLXlvdXItb3duIGxpbmtlZCBsaXN0IHdpdGgKc3Bl
-Y2lhbCBjYXNpbmcgZm9yIHRoZSBBSUwgcHVzaCBjdXJzb3IuIFNpbXBsaWZ5IHRoaXMgY29kZSBi
-eQpyZXBsYWNpbmcgdGhlIGxpc3Qgd2l0aCBzdGFuZGFyZCBzdHJ1Y3QgbGlzdF9oZWFkIGxpc3Rz
-LCBhbmQgdXNlIGEKc2VwYXJhdGUgbGlzdF9oZWFkIHRvIHRyYWNrIHRoZSBhY3RpdmUgY3Vyc29y
-cy4gVGhpcyBhbGxvd3MgdXMgdG8KdHJlYXQgdGhlIEFJTCBwdXNoIGN1cnNvciBhcyBhIGdlbmVy
-aWMgY3Vyc29yIHJhdGhlciB0aGFuIGFzIGEKc3BlY2lhbCBjYXNlLCBmdXJ0aGVyIHNpbXBsaWZ5
-aW5nIHRoZSBjb2RlLgoKRnVydGhlciwgZml4IHRoZSBkdXBsaWNhdGUgcHVzaCBjdXJzb3IgaW5p
-dGlhbGlzYXRpb24gdGhhdCB0aGUKc3BlY2lhbCBjYXNlIGhhbmRsaW5nIHdhcyBoaWRpbmcsIGFu
-ZCBjbGVhbiB1cCBhbGwgdGhlIGNvbW1lbnRzCmFyb3VuZCB0aGUgYWN0aXZlIGN1cnNvciBsaXN0
-IGhhbmRsaW5nLgoKU2lnbmVkLW9mZi1ieTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQu
-Y29tPgpSZXZpZXdlZC1ieTogQ2hyaXN0b3BoIEhlbGx3aWcgPGhjaEBsc3QuZGU+Ci0tLQogZnMv
-eGZzL3hmc190cmFuc19haWwuYyAgfCAgIDc3ICsrKysrKysrKysrKysrKystLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tCiBmcy94ZnMveGZzX3RyYW5zX3ByaXYuaCB8ICAgIDQgKy0KIDIg
-ZmlsZXMgY2hhbmdlZCwgMjggaW5zZXJ0aW9ucygrKSwgNTMgZGVsZXRpb25zKC0pCgpkaWZmIC0t
-Z2l0IGEvZnMveGZzL3hmc190cmFuc19haWwuYyBiL2ZzL3hmcy94ZnNfdHJhbnNfYWlsLmMKaW5k
-ZXggNzkwOGM3OS4uOGNkMzI5YiAxMDA2NDQKLS0tIGEvZnMveGZzL3hmc190cmFuc19haWwuYwor
-KysgYi9mcy94ZnMveGZzX3RyYW5zX2FpbC5jCkBAIC0xNjUsMTUgKzE2NSwxMSBAQCB4ZnNfYWls
-X21heF9sc24oCiAvKgogICogQUlMIHRyYXZlcnNhbCBjdXJzb3IgaW5pdGlhbGlzYXRpb24uCiAg
-KgotICogVGhlIGN1cnNvciBrZWVwcyB0cmFjayBvZiB3aGVyZSBvdXIgY3VycmVudCB0cmF2ZXJz
-YWwgaXMgdXAKLSAqIHRvIGJ5IHRyYWNraW5nIHRoZSBuZXh0IMajdGVtIGluIHRoZSBsaXN0IGZv
-ciB1cy4gSG93ZXZlciwgZm9yCi0gKiB0aGlzIHRvIGJlIHNhZmUsIHJlbW92aW5nIGFuIG9iamVj
-dCBmcm9tIHRoZSBBSUwgbmVlZHMgdG8gaW52YWxpZGF0ZQotICogYW55IGN1cnNvciB0aGF0IHBv
-aW50cyB0byBpdC4gaGVuY2UgdGhlIHRyYXZlcnNhbCBjdXJzb3IgbmVlZHMgdG8KLSAqIGJlIGxp
-bmtlZCB0byB0aGUgc3RydWN0IHhmc19haWwgc28gdGhhdCBkZWxldGlvbiBjYW4gc2VhcmNoIGFs
-bCB0aGUKLSAqIGFjdGl2ZSBjdXJzb3JzIGZvciBpbnZhbGlkYXRpb24uCi0gKgotICogV2UgZG9u
-J3QgbGluayB0aGUgcHVzaCBjdXJzb3IgYmVjYXVzZSBpdCBpcyBlbWJlZGRlZCBpbiB0aGUgc3Ry
-dWN0Ci0gKiB4ZnNfYWlsIGFuZCBoZW5jZSBlYXNpbHkgZmluZGFibGUuCisgKiBUaGUgY3Vyc29y
-IGtlZXBzIHRyYWNrIG9mIHdoZXJlIG91ciBjdXJyZW50IHRyYXZlcnNhbCBpcyB1cCB0byBieSB0
-cmFja2luZworICogdGhlIG5leHQgaXRlbSBpbiB0aGUgbGlzdCBmb3IgdXMuIEhvd2V2ZXIsIGZv
-ciB0aGlzIHRvIGJlIHNhZmUsIHJlbW92aW5nIGFuCisgKiBvYmplY3QgZnJvbSB0aGUgQUlMIG5l
-ZWRzIHRvIGludmFsaWRhdGUgYW55IGN1cnNvciB0aGF0IHBvaW50cyB0byBpdC4gaGVuY2UKKyAq
-IHRoZSB0cmF2ZXJzYWwgY3Vyc29yIG5lZWRzIHRvIGJlIGxpbmtlZCB0byB0aGUgc3RydWN0IHhm
-c19haWwgc28gdGhhdAorICogZGVsZXRpb24gY2FuIHNlYXJjaCBhbGwgdGhlIGFjdGl2ZSBjdXJz
-b3JzIGZvciBpbnZhbGlkYXRpb24uCiAgKi8KIFNUQVRJQyB2b2lkCiB4ZnNfdHJhbnNfYWlsX2N1
-cnNvcl9pbml0KApAQCAtMTgxLDE3ICsxNzcsMTIgQEAgeGZzX3RyYW5zX2FpbF9jdXJzb3JfaW5p
-dCgKIAlzdHJ1Y3QgeGZzX2FpbF9jdXJzb3IJKmN1cikKIHsKIAljdXItPml0ZW0gPSBOVUxMOwot
-CWlmIChjdXIgPT0gJmFpbHAtPnhhX2N1cnNvcnMpCi0JCXJldHVybjsKLQotCWN1ci0+bmV4dCA9
-IGFpbHAtPnhhX2N1cnNvcnMubmV4dDsKLQlhaWxwLT54YV9jdXJzb3JzLm5leHQgPSBjdXI7CisJ
-bGlzdF9hZGRfdGFpbCgmY3VyLT5saXN0LCAmYWlscC0+eGFfY3Vyc29ycyk7CiB9CiAKIC8qCi0g
-KiBHZXQgdGhlIG5leHQgaXRlbSBpbiB0aGUgdHJhdmVyc2FsIGFuZCBhZHZhbmNlIHRoZSBjdXJz
-b3IuCi0gKiBJZiB0aGUgY3Vyc29yIHdhcyBpbnZhbGlkYXRlZCAoaW5pZGljYXRlZCBieSBhIGxp
-cCBvZiAxKSwKLSAqIHJlc3RhcnQgdGhlIHRyYXZlcnNhbC4KKyAqIEdldCB0aGUgbmV4dCBpdGVt
-IGluIHRoZSB0cmF2ZXJzYWwgYW5kIGFkdmFuY2UgdGhlIGN1cnNvci4gIElmIHRoZSBjdXJzb3IK
-KyAqIHdhcyBpbnZhbGlkYXRlZCAoaW5kaWNhdGVkIGJ5IGEgbGlwIG9mIDEpLCByZXN0YXJ0IHRo
-ZSB0cmF2ZXJzYWwuCiAgKi8KIHN0cnVjdCB4ZnNfbG9nX2l0ZW0gKgogeGZzX3RyYW5zX2FpbF9j
-dXJzb3JfbmV4dCgKQEAgLTIwOCw0MCArMTk5LDI1IEBAIHhmc190cmFuc19haWxfY3Vyc29yX25l
-eHQoCiB9CiAKIC8qCi0gKiBOb3cgdGhhdCB0aGUgdHJhdmVyc2FsIGlzIGNvbXBsZXRlLCB3ZSBu
-ZWVkIHRvIHJlbW92ZSB0aGUgY3Vyc29yCi0gKiBmcm9tIHRoZSBsaXN0IG9mIHRyYXZlcnNpbmcg
-Y3Vyc29ycy4gQXZvaWQgcmVtb3ZpbmcgdGhlIGVtYmVkZGVkCi0gKiBwdXNoIGN1cnNvciwgYnV0
-IHVzZSB0aGUgZmFjdCBpdCBpcyBhbHdheXMgcHJlc2VudCB0byBtYWtlIHRoZQotICogbGlzdCBk
-ZWxldGlvbiBzaW1wbGUuCisgKiBXaGVuIHRoZSB0cmF2ZXJzYWwgaXMgY29tcGxldGUsIHdlIG5l
-ZWQgdG8gcmVtb3ZlIHRoZSBjdXJzb3IgZnJvbSB0aGUgbGlzdAorICogb2YgdHJhdmVyc2luZyBj
-dXJzb3JzLgogICovCiB2b2lkCiB4ZnNfdHJhbnNfYWlsX2N1cnNvcl9kb25lKAogCXN0cnVjdCB4
-ZnNfYWlsCQkqYWlscCwKLQlzdHJ1Y3QgeGZzX2FpbF9jdXJzb3IJKmRvbmUpCisJc3RydWN0IHhm
-c19haWxfY3Vyc29yCSpjdXIpCiB7Ci0Jc3RydWN0IHhmc19haWxfY3Vyc29yCSpwcmV2ID0gTlVM
-TDsKLQlzdHJ1Y3QgeGZzX2FpbF9jdXJzb3IJKmN1cjsKLQotCWRvbmUtPml0ZW0gPSBOVUxMOwot
-CWlmIChkb25lID09ICZhaWxwLT54YV9jdXJzb3JzKQotCQlyZXR1cm47Ci0JcHJldiA9ICZhaWxw
-LT54YV9jdXJzb3JzOwotCWZvciAoY3VyID0gcHJldi0+bmV4dDsgY3VyOyBwcmV2ID0gY3VyLCBj
-dXIgPSBwcmV2LT5uZXh0KSB7Ci0JCWlmIChjdXIgPT0gZG9uZSkgewotCQkJcHJldi0+bmV4dCA9
-IGN1ci0+bmV4dDsKLQkJCWJyZWFrOwotCQl9Ci0JfQotCUFTU0VSVChjdXIpOworCWN1ci0+aXRl
-bSA9IE5VTEw7CisJbGlzdF9kZWxfaW5pdCgmY3VyLT5saXN0KTsKIH0KIAogLyoKLSAqIEludmFs
-aWRhdGUgYW55IGN1cnNvciB0aGF0IGlzIHBvaW50aW5nIHRvIHRoaXMgaXRlbS4gVGhpcyBpcwot
-ICogY2FsbGVkIHdoZW4gYW4gaXRlbSBpcyByZW1vdmVkIGZyb20gdGhlIEFJTC4gQW55IGN1cnNv
-ciBwb2ludGluZwotICogdG8gdGhpcyBvYmplY3QgaXMgbm93IGludmFsaWQgYW5kIHRoZSB0cmF2
-ZXJzYWwgbmVlZHMgdG8gYmUKLSAqIHRlcm1pbmF0ZWQgc28gaXQgZG9lc24ndCByZWZlcmVuY2Ug
-YSBmcmVlZCBvYmplY3QuIFdlIHNldCB0aGUKLSAqIGN1cnNvciBpdGVtIHRvIGEgdmFsdWUgb2Yg
-MSBzbyB3ZSBjYW4gZGlzdGluZ3Vpc2ggYmV0d2VlbiBhbgotICogaW52YWxpZGF0aW9uIGFuZCB0
-aGUgZW5kIG9mIHRoZSBsaXN0IHdoZW4gZ2V0dGluZyB0aGUgbmV4dCBpdGVtCi0gKiBmcm9tIHRo
-ZSBjdXJzb3IuCisgKiBJbnZhbGlkYXRlIGFueSBjdXJzb3IgdGhhdCBpcyBwb2ludGluZyB0byB0
-aGlzIGl0ZW0uIFRoaXMgaXMgY2FsbGVkIHdoZW4gYW4KKyAqIGl0ZW0gaXMgcmVtb3ZlZCBmcm9t
-IHRoZSBBSUwuIEFueSBjdXJzb3IgcG9pbnRpbmcgdG8gdGhpcyBvYmplY3QgaXMgbm93CisgKiBp
-bnZhbGlkIGFuZCB0aGUgdHJhdmVyc2FsIG5lZWRzIHRvIGJlIHRlcm1pbmF0ZWQgc28gaXQgZG9l
-c24ndCByZWZlcmVuY2UgYQorICogZnJlZWQgb2JqZWN0LiBXZSBzZXQgdGhlIGxvdyBiaXQgb2Yg
-dGhlIGN1cnNvciBpdGVtIHBvaW50ZXIgc28gd2UgY2FuCisgKiBkaXN0aW5ndWlzaCBiZXR3ZWVu
-IGFuIGludmFsaWRhdGlvbiBhbmQgdGhlIGVuZCBvZiB0aGUgbGlzdCB3aGVuIGdldHRpbmcgdGhl
-CisgKiBuZXh0IGl0ZW0gZnJvbSB0aGUgY3Vyc29yLgogICovCiBTVEFUSUMgdm9pZAogeGZzX3Ry
-YW5zX2FpbF9jdXJzb3JfY2xlYXIoCkBAIC0yNTAsOCArMjI2LDcgQEAgeGZzX3RyYW5zX2FpbF9j
-dXJzb3JfY2xlYXIoCiB7CiAJc3RydWN0IHhmc19haWxfY3Vyc29yCSpjdXI7CiAKLQkvKiBuZWVk
-IHRvIHNlYXJjaCBhbGwgY3Vyc29ycyAqLwotCWZvciAoY3VyID0gJmFpbHAtPnhhX2N1cnNvcnM7
-IGN1cjsgY3VyID0gY3VyLT5uZXh0KSB7CisJbGlzdF9mb3JfZWFjaF9lbnRyeShjdXIsICZhaWxw
-LT54YV9jdXJzb3JzLCBsaXN0KSB7CiAJCWlmIChjdXItPml0ZW0gPT0gbGlwKQogCQkJY3VyLT5p
-dGVtID0gKHN0cnVjdCB4ZnNfbG9nX2l0ZW0gKikKIAkJCQkJKChfX3BzaW50X3QpY3VyLT5pdGVt
-IHwgMSk7CkBAIC00MDUsNyArMzgwLDcgQEAgeGZzX2FpbF93b3JrZXIoCiAJc3RydWN0IHhmc19h
-aWwJCSphaWxwID0gY29udGFpbmVyX29mKHRvX2RlbGF5ZWRfd29yayh3b3JrKSwKIAkJCQkJc3Ry
-dWN0IHhmc19haWwsIHhhX3dvcmspOwogCXhmc19tb3VudF90CQkqbXAgPSBhaWxwLT54YV9tb3Vu
-dDsKLQlzdHJ1Y3QgeGZzX2FpbF9jdXJzb3IJKmN1ciA9ICZhaWxwLT54YV9jdXJzb3JzOworCXN0
-cnVjdCB4ZnNfYWlsX2N1cnNvcgljdXI7CiAJeGZzX2xvZ19pdGVtX3QJCSpsaXA7CiAJeGZzX2xz
-bl90CQlsc247CiAJeGZzX2xzbl90CQl0YXJnZXQ7CkBAIC00MTcsMTMgKzM5MiwxMiBAQCB4ZnNf
-YWlsX3dvcmtlcigKIAogCXNwaW5fbG9jaygmYWlscC0+eGFfbG9jayk7CiAJdGFyZ2V0ID0gYWls
-cC0+eGFfdGFyZ2V0OwotCXhmc190cmFuc19haWxfY3Vyc29yX2luaXQoYWlscCwgY3VyKTsKLQls
-aXAgPSB4ZnNfdHJhbnNfYWlsX2N1cnNvcl9maXJzdChhaWxwLCBjdXIsIGFpbHAtPnhhX2xhc3Rf
-cHVzaGVkX2xzbik7CisJbGlwID0geGZzX3RyYW5zX2FpbF9jdXJzb3JfZmlyc3QoYWlscCwgJmN1
-ciwgYWlscC0+eGFfbGFzdF9wdXNoZWRfbHNuKTsKIAlpZiAoIWxpcCB8fCBYRlNfRk9SQ0VEX1NI
-VVRET1dOKG1wKSkgewogCQkvKgogCQkgKiBBSUwgaXMgZW1wdHkgb3Igb3VyIHB1c2ggaGFzIHJl
-YWNoZWQgdGhlIGVuZC4KIAkJICovCi0JCXhmc190cmFuc19haWxfY3Vyc29yX2RvbmUoYWlscCwg
-Y3VyKTsKKwkJeGZzX3RyYW5zX2FpbF9jdXJzb3JfZG9uZShhaWxwLCAmY3VyKTsKIAkJc3Bpbl91
-bmxvY2soJmFpbHAtPnhhX2xvY2spOwogCQlnb3RvIG91dF9kb25lOwogCX0KQEAgLTUxMSwxMiAr
-NDg1LDEyIEBAIHhmc19haWxfd29ya2VyKAogCQlpZiAoc3R1Y2sgPiAxMDApCiAJCQlicmVhazsK
-IAotCQlsaXAgPSB4ZnNfdHJhbnNfYWlsX2N1cnNvcl9uZXh0KGFpbHAsIGN1cik7CisJCWxpcCA9
-IHhmc190cmFuc19haWxfY3Vyc29yX25leHQoYWlscCwgJmN1cik7CiAJCWlmIChsaXAgPT0gTlVM
-TCkKIAkJCWJyZWFrOwogCQlsc24gPSBsaXAtPmxpX2xzbjsKIAl9Ci0JeGZzX3RyYW5zX2FpbF9j
-dXJzb3JfZG9uZShhaWxwLCBjdXIpOworCXhmc190cmFuc19haWxfY3Vyc29yX2RvbmUoYWlscCwg
-JmN1cik7CiAJc3Bpbl91bmxvY2soJmFpbHAtPnhhX2xvY2spOwogCiAJaWYgKGZsdXNoX2xvZykg
-ewpAQCAtODQ4LDYgKzgyMiw3IEBAIHhmc190cmFuc19haWxfaW5pdCgKIAogCWFpbHAtPnhhX21v
-dW50ID0gbXA7CiAJSU5JVF9MSVNUX0hFQUQoJmFpbHAtPnhhX2FpbCk7CisJSU5JVF9MSVNUX0hF
-QUQoJmFpbHAtPnhhX2N1cnNvcnMpOwogCXNwaW5fbG9ja19pbml0KCZhaWxwLT54YV9sb2NrKTsK
-IAlJTklUX0RFTEFZRURfV09SSygmYWlscC0+eGFfd29yaywgeGZzX2FpbF93b3JrZXIpOwogCW1w
-LT5tX2FpbCA9IGFpbHA7CmRpZmYgLS1naXQgYS9mcy94ZnMveGZzX3RyYW5zX3ByaXYuaCBiL2Zz
-L3hmcy94ZnNfdHJhbnNfcHJpdi5oCmluZGV4IGMwY2I0MDguLjIxMjk0NmIgMTAwNjQ0Ci0tLSBh
-L2ZzL3hmcy94ZnNfdHJhbnNfcHJpdi5oCisrKyBiL2ZzL3hmcy94ZnNfdHJhbnNfcHJpdi5oCkBA
-IC01Myw3ICs1Myw3IEBAIHZvaWQJeGZzX3RyYW5zX2NvbW1pdHRlZF9idWxrKHN0cnVjdCB4ZnNf
-YWlsICphaWxwLCBzdHJ1Y3QgeGZzX2xvZ192ZWMgKmx2LAogICogb2YgdGhlIGxpc3QgdG8gdHJp
-Z2dlciB0cmF2ZXJzYWwgcmVzdGFydHMuCiAgKi8KIHN0cnVjdCB4ZnNfYWlsX2N1cnNvciB7Ci0J
-c3RydWN0IHhmc19haWxfY3Vyc29yCSpuZXh0OworCXN0cnVjdCBsaXN0X2hlYWQJbGlzdDsKIAlz
-dHJ1Y3QgeGZzX2xvZ19pdGVtCSppdGVtOwogfTsKIApAQCAtNjYsNyArNjYsNyBAQCBzdHJ1Y3Qg
-eGZzX2FpbCB7CiAJc3RydWN0IHhmc19tb3VudAkqeGFfbW91bnQ7CiAJc3RydWN0IGxpc3RfaGVh
-ZAl4YV9haWw7CiAJeGZzX2xzbl90CQl4YV90YXJnZXQ7Ci0Jc3RydWN0IHhmc19haWxfY3Vyc29y
-CXhhX2N1cnNvcnM7CisJc3RydWN0IGxpc3RfaGVhZAl4YV9jdXJzb3JzOwogCXNwaW5sb2NrX3QJ
-CXhhX2xvY2s7CiAJc3RydWN0IGRlbGF5ZWRfd29yawl4YV93b3JrOwogCXhmc19sc25fdAkJeGFf
-bGFzdF9wdXNoZWRfbHNuOwotLSAKMS43LjUuMQoKX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0
-cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+From: Dave Chinner <dchinner@redhat.com>
+
+xfs_trans_ail_cursor_set() doesn't set the cursor to the current log
+item, it sets it to the next item. There is already a function for
+doing this - xfs_trans_ail_cursor_next() - and the _set function is
+simply a two line wrapper.  Remove it and open code the setting of
+the cursor in the two locations that call it to remove the
+confusion.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_trans_ail.c |   50 ++++++++++++++++++-----------------------------
+ 1 files changed, 19 insertions(+), 31 deletions(-)
+
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index 9a69dc0..7908c79 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -189,20 +189,6 @@ xfs_trans_ail_cursor_init(
+ }
+ 
+ /*
+- * Set the cursor to the next item, because when we look
+- * up the cursor the current item may have been freed.
+- */
+-STATIC void
+-xfs_trans_ail_cursor_set(
+-	struct xfs_ail		*ailp,
+-	struct xfs_ail_cursor	*cur,
+-	struct xfs_log_item	*lip)
+-{
+-	if (lip)
+-		cur->item = xfs_ail_next(ailp, lip);
+-}
+-
+-/*
+  * Get the next item in the traversal and advance the cursor.
+  * If the cursor was invalidated (inidicated by a lip of 1),
+  * restart the traversal.
+@@ -216,7 +202,8 @@ xfs_trans_ail_cursor_next(
+ 
+ 	if ((__psint_t)lip & 1)
+ 		lip = xfs_ail_min(ailp);
+-	xfs_trans_ail_cursor_set(ailp, cur, lip);
++	if (lip)
++		cur->item = xfs_ail_next(ailp, lip);
+ 	return lip;
+ }
+ 
+@@ -272,9 +259,10 @@ xfs_trans_ail_cursor_clear(
+ }
+ 
+ /*
+- * Initialise the cursor to the first item in the AIL with the given @lsn.
+- * This searches the list from lowest LSN to highest. Pass a @lsn of zero
+- * to initialise the cursor to the first item in the AIL.
++ * Find the first item in the AIL with the given @lsn by searching in ascending
++ * LSN order and initialise the cursor to point to the next item for a
++ * ascending traversal.  Pass a @lsn of zero to initialise the cursor to the
++ * first item in the AIL. Returns NULL if the list is empty.
+  */
+ xfs_log_item_t *
+ xfs_trans_ail_cursor_first(
+@@ -285,26 +273,24 @@ xfs_trans_ail_cursor_first(
+ 	xfs_log_item_t		*lip;
+ 
+ 	xfs_trans_ail_cursor_init(ailp, cur);
+-	lip = xfs_ail_min(ailp);
+-	if (lsn == 0)
++
++	if (lsn == 0) {
++		lip = xfs_ail_min(ailp);
+ 		goto out;
++	}
+ 
+ 	list_for_each_entry(lip, &ailp->xa_ail, li_ail) {
+ 		if (XFS_LSN_CMP(lip->li_lsn, lsn) >= 0)
+ 			goto out;
+ 	}
+-	lip = NULL;
++	return NULL;
++
+ out:
+-	xfs_trans_ail_cursor_set(ailp, cur, lip);
++	if (lip)
++		cur->item = xfs_ail_next(ailp, lip);
+ 	return lip;
+ }
+ 
+-/*
+- * Initialise the cursor to the last item in the AIL with the given @lsn.
+- * This searches the list from highest LSN to lowest. If there is no item with
+- * the value of @lsn, then it sets the cursor to the last item with an LSN lower
+- * than @lsn.
+- */
+ static struct xfs_log_item *
+ __xfs_trans_ail_cursor_last(
+ 	struct xfs_ail		*ailp,
+@@ -320,8 +306,10 @@ __xfs_trans_ail_cursor_last(
+ }
+ 
+ /*
+- * Initialise the cursor to the last item in the AIL with the given @lsn.
+- * This searches the list from highest LSN to lowest.
++ * Find the last item in the AIL with the given @lsn by searching in descending
++ * LSN order and initialise the cursor to point to that item.  If there is no
++ * item with the value of @lsn, then it sets the cursor to the last item with an
++ * LSN lower than @lsn.  Returns NULL if the list is empty.
+  */
+ struct xfs_log_item *
+ xfs_trans_ail_cursor_last(
+@@ -335,7 +323,7 @@ xfs_trans_ail_cursor_last(
+ }
+ 
+ /*
+- * splice the log item list into the AIL at the given LSN. We splice to the
++ * Splice the log item list into the AIL at the given LSN. We splice to the
+  * tail of the given LSN to maintain insert order for push traversals. The
+  * cursor is optional, allowing repeated updates to the same LSN to avoid
+  * repeated traversals.
+-- 
+1.7.5.1
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
