@@ -1,30 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6HNr1J7065391 for <xfs@oss.sgi.com>; Sun, 17 Jul 2011 18:53:01 -0500
-Received: from e7.ny.us.ibm.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C9ADB1508EF0
-	for <xfs@oss.sgi.com>; Sun, 17 Jul 2011 16:52:59 -0700 (PDT)
-Received: from e7.ny.us.ibm.com (e7.ny.us.ibm.com [32.97.182.137]) by
-	cuda.sgi.com with ESMTP id UldU6aa8VPIMOxkM for
-	<xfs@oss.sgi.com>; Sun, 17 Jul 2011 16:52:59 -0700 (PDT)
-Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com
-	[9.17.195.227])
-	by e7.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p6HNRdIG015172
-	for <xfs@oss.sgi.com>; Sun, 17 Jul 2011 19:27:39 -0400
-Received: from d03av05.boulder.ibm.com (d03av05.boulder.ibm.com [9.17.195.85])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id
-	p6HNpg1W176526 for <xfs@oss.sgi.com>; Sun, 17 Jul 2011 17:51:42 -0600
-Received: from d03av05.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av05.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
-	id p6HNpgg6027723
-	for <xfs@oss.sgi.com>; Sun, 17 Jul 2011 17:51:42 -0600
-From: Allison Henderson <achender@linux.vnet.ibm.com>
-Subject: [PATCH 2/2 v8] XFS TESTS: Add ENOSPC Hole Punch Test
-Date: Sun, 17 Jul 2011 16:52:46 -0700
-Message-Id: <1310946766-30217-3-git-send-email-achender@linux.vnet.ibm.com>
-In-Reply-To: <1310946766-30217-1-git-send-email-achender@linux.vnet.ibm.com>
-References: <1310946766-30217-1-git-send-email-achender@linux.vnet.ibm.com>
+	p6I2MWKh075377 for <xfs@oss.sgi.com>; Sun, 17 Jul 2011 21:22:32 -0500
+Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id AD8E0DB38FD
+	for <xfs@oss.sgi.com>; Sun, 17 Jul 2011 19:22:29 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	rC68uOGy0GzM7aq1 for <xfs@oss.sgi.com>;
+	Sun, 17 Jul 2011 19:22:29 -0700 (PDT)
+Date: Mon, 18 Jul 2011 12:22:26 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/5] mm: vmscan: Do not writeback filesystem pages in
+	direct reclaim
+Message-ID: <20110718022226.GC30254@dastard>
+References: <1310567487-15367-1-git-send-email-mgorman@suse.de>
+	<1310567487-15367-2-git-send-email-mgorman@suse.de>
+	<20110714103801.83e10fdb.kamezawa.hiroyu@jp.fujitsu.com>
+	<20110714044643.GA3203@infradead.org>
+	<20110714134634.4a7a15c8.kamezawa.hiroyu@jp.fujitsu.com>
+	<20110715022226.GD31294@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20110715022226.GD31294@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,301 +31,119 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
-Cc: Allison Henderson <achender@linux.vnet.ibm.com>
+To: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Cc: Rik van Riel <riel@redhat.com>, Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, XFS <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, Linux-MM <linux-mm@kvack.org>, Mel Gorman <mgorman@suse.de>, Wu Fengguang <fengguang.wu@intel.com>, Johannes Weiner <jweiner@redhat.com>, Minchan Kim <minchan.kim@gmail.com>
 
-This patch adds a new test 255 that tests that a hole can be punched even when the
-disk is full.  Reserved blocks should be used to allow a punch hole to proceed even
-when there is not enough blocks to further fragment the file. To test this, the
-file system is fragmented by punching holes in regular intervals and filling
-the file system between punches. This will eventually force the file system to use
-reserved blocks to proceed with the punch hole operation.
+On Fri, Jul 15, 2011 at 12:22:26PM +1000, Dave Chinner wrote:
+> On Thu, Jul 14, 2011 at 01:46:34PM +0900, KAMEZAWA Hiroyuki wrote:
+> > On Thu, 14 Jul 2011 00:46:43 -0400
+> > Christoph Hellwig <hch@infradead.org> wrote:
+> > 
+> > > On Thu, Jul 14, 2011 at 10:38:01AM +0900, KAMEZAWA Hiroyuki wrote:
+> > > > > +			/*
+> > > > > +			 * Only kswapd can writeback filesystem pages to
+> > > > > +			 * avoid risk of stack overflow
+> > > > > +			 */
+> > > > > +			if (page_is_file_cache(page) && !current_is_kswapd()) {
+> > > > > +				inc_zone_page_state(page, NR_VMSCAN_WRITE_SKIP);
+> > > > > +				goto keep_locked;
+> > > > > +			}
+> > > > > +
+> > > > 
+> > > > 
+> > > > This will cause tons of memcg OOM kill because we have no help of kswapd (now).
+> > > 
+> > > XFS and btrfs already disable writeback from memcg context, as does ext4
+> > > for the typical non-overwrite workloads, and none has fallen apart.
+> > > 
+> > > In fact there's no way we can enable them as the memcg calling contexts
+> > > tend to have massive stack usage.
+> > > 
+> > 
+> > Hmm, XFS/btrfs adds pages to radix-tree in deep stack ?
+> 
+> Here's an example writeback stack trace. Notice how deep it is from
+> the __writepage() call?
+....
+> 
+> So from ->writepage, there is about 3.5k of stack usage here.  2.5k
+> of that is in XFS, and the worst I've seen is around 4k before
+> getting to the IO subsystem, which in the worst case I've seen
+> consumed 2.5k of stack. IOWs, I've seen stack usage from .writepage
+> down to IO take over 6k of stack space on x86_64....
 
-The work in this patch is a continuation from a previous patch set that has been
-partially accepted.
+BTW, here's a stack frame that indicates swap IO:
 
-Signed-off-by: Allison Henderson <achender@linux.vnet.ibm.com>
----
-v5->v6
+dave@test-4:~$ cat /sys/kernel/debug/tracing/stack_trace
+        Depth    Size   Location    (46 entries)
+        -----    ----   --------
+  0)     5080      40   zone_statistics+0xad/0xc0
+  1)     5040     272   get_page_from_freelist+0x2ad/0x7e0
+  2)     4768     288   __alloc_pages_nodemask+0x133/0x7b0
+  3)     4480      48   kmem_getpages+0x62/0x160
+  4)     4432     112   cache_grow+0x2d1/0x300
+  5)     4320      80   cache_alloc_refill+0x219/0x260
+  6)     4240      64   kmem_cache_alloc+0x182/0x190
+  7)     4176      16   mempool_alloc_slab+0x15/0x20
+  8)     4160     144   mempool_alloc+0x63/0x140
+  9)     4016      16   scsi_sg_alloc+0x4c/0x60
+ 10)     4000     112   __sg_alloc_table+0x66/0x140
+ 11)     3888      32   scsi_init_sgtable+0x33/0x90
+ 12)     3856      48   scsi_init_io+0x31/0xc0
+ 13)     3808      32   scsi_setup_fs_cmnd+0x79/0xe0
+ 14)     3776     112   sd_prep_fn+0x150/0xa90
+ 15)     3664      64   blk_peek_request+0xc7/0x230
+ 16)     3600      96   scsi_request_fn+0x68/0x500
+ 17)     3504      16   __blk_run_queue+0x1b/0x20
+ 18)     3488      96   __make_request+0x2cb/0x310
+ 19)     3392     192   generic_make_request+0x26d/0x500
+ 20)     3200      96   submit_bio+0x64/0xe0
+ 21)     3104      48   swap_writepage+0x83/0xd0
+ 22)     3056     112   pageout+0x122/0x2f0
+ 23)     2944     192   shrink_page_list+0x458/0x5f0
+ 24)     2752     192   shrink_inactive_list+0x1ec/0x410
+ 25)     2560     224   shrink_zone+0x468/0x500
+ 26)     2336     144   do_try_to_free_pages+0x2b7/0x3f0
+ 27)     2192     176   try_to_free_pages+0xa4/0x120
+ 28)     2016     288   __alloc_pages_nodemask+0x43f/0x7b0
+ 29)     1728      48   kmem_getpages+0x62/0x160
+ 30)     1680     128   fallback_alloc+0x192/0x240
+ 31)     1552      96   ____cache_alloc_node+0x9a/0x170
+ 32)     1456      16   __kmalloc+0x17d/0x200
+ 33)     1440     128   kmem_alloc+0x77/0xf0
+ 34)     1312     128   xfs_log_commit_cil+0x95/0x3d0
+ 35)     1184      96   _xfs_trans_commit+0x1e9/0x2a0
+ 36)     1088     208   xfs_create+0x57a/0x640
+ 37)      880      96   xfs_vn_mknod+0xa1/0x1b0
+ 38)      784      16   xfs_vn_create+0x10/0x20
+ 39)      768      64   vfs_create+0xb1/0xe0
+ 40)      704      96   do_last+0x5f5/0x770
+ 41)      608     144   path_openat+0xd5/0x400
+ 42)      464     224   do_filp_open+0x49/0xa0
+ 43)      240      96   do_sys_open+0x107/0x1e0
+ 44)      144      16   sys_open+0x20/0x30
+ 45)      128     128   system_call_fastpath+0x16/0x1b
 
-Test moved out of 252 and put in its own test 255
 
-_fill_fs and _test_full_fs_punch have been moved from common.punch
-to test 255 and modified to use the _user_do routines in common.rc
+That's pretty damn bad. From kmem_alloc to the top of the stack is
+more than 3.5k through the direct reclaim swap IO path. That, to me,
+kind of indicates that even doing swap IO on dirty anonymous pages
+from direct reclaim risks overflowing the 8k stack on x86_64....
 
-_fill_fs has been optimized to stop once files smaller than a block
-cannot be created.
+Umm, hold on a second, WTF is my standard create-lots-of-zero-length
+inodes-in-parallel doing swapping? Oh, shit, it's also running about
+50% slower (50-60k files/s instead of 110-120l files/s)....
 
-v6->v7
-Fixed bad file add
+Cheers,
 
-v7->v8
-Removed "quick" tag from new test and added new "punch" tag
-Corrected bad variable assignment
-Moved _fill_fs to common.rc
-Changed all "> &> /dev/null" to "> /dev/null 2>&1"
-Changed all $(...) to `...` for sub-commands
-Invoke _fill_fs with a only %50 filesystem size
-Split up lengthy lines onto multiple lines
-
-:000000 100644 0000000... 761bb5a... A	256
-:000000 100644 0000000... e1b0437... A	256.out
-:100644 100644 9d68574... 2ee4a4a... M	common.rc
-:100644 100644 9558bc7... 91d8b10... M	group
- 256       |  120 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 256.out   |    1 +
- common.rc |   61 +++++++++++++++++++++++++++++++
- group     |   12 ++++--
- 4 files changed, 190 insertions(+), 4 deletions(-)
-
-diff --git a/256 b/256
-new file mode 100644
-index 0000000..761bb5a
---- /dev/null
-+++ b/256
-@@ -0,0 +1,120 @@
-+#! /bin/bash
-+# FS QA Test No. 256
-+#
-+# Test Full File System Hole Punching
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2011 IBM Corporation.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#
-+#-----------------------------------------------------------------------
-+#
-+# creator
-+owner=achender@linux.vnet.ibm.com
-+
-+seq=`basename $0`
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+
-+_cleanup()
-+{
-+    rm -f $tmp.*
-+}
-+
-+trap "_cleanup ; exit \$status" 0 1 2 3 15
-+
-+# get standard environment, filters and checks
-+. ./common.rc
-+. ./common.filter
-+. ./common.punch
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
-+
-+_require_xfs_io_falloc_punch
-+_require_scratch
-+_require_user
-+
-+testfile=$SCRATCH_MNT/$seq.$$
-+fs_size=$(( 1024 * 1024 * 1024 ))
-+
-+# _test_full_fs_punch()
-+#
-+# This function will test that a hole may be punched
-+# even when the file system is full.  Reserved blocks
-+# should be used to allow a punch hole to proceed even
-+# when there is not enough blocks to further fragment the
-+# file. To test this, this function will fragment the file
-+# system by punching holes in regular intervals and filling
-+# the file system between punches. 
-+#
-+_test_full_fs_punch()
-+{
-+	local hole_len=$1      # The length of the holes to punch
-+	local hole_interval=$2 # The interval between the holes
-+	local iterations=$3    # The number of holes to punch
-+	local file_name=$4     # File to punch holes in
-+	local block_size=$5    # File system block size
-+	local file_len=$(( $(( $hole_len + $hole_interval )) * $iterations ))
-+	local path=$(dirname $file_name)
-+	local hole_offset=0
-+
-+	if [ $# -ne 5 ] 
-+	then
-+		echo "USAGE: _test_full_fs_punch hole_len hole_interval iterations file_name block_size"
-+		exit 1
-+	fi
-+
-+	rm -f $file_name > /dev/null 2>&1
-+
-+	$XFS_IO_PROG -F -f -c "pwrite 0 $file_len" \
-+		-c "fsync" $file_name > /dev/null 2>&1
-+	chmod 666 $file_name
-+
-+	_fill_fs $(( $fs_size / 2 )) $path/fill $block_size
-+
-+	for (( i=0; i<$iterations; i++ ))
-+	do
-+		# This part must not be done as root in order to
-+		# test that reserved blocks are used when needed
-+		_user_do "$XFS_IO_PROG -F -f -c \"fpunch $hole_offset $hole_len\" $file_name"
-+		rc=$?
-+		if [ $? -ne 0 ] ; then
-+			echo Punch hole failed
-+			break
-+		fi
-+
-+		hole_offset=$(( $hole_offset + $hole_len + $hole_interval ))
-+
-+		_fill_fs $hole_len $path/fill.$i $block_size
-+
-+	done
-+}
-+
-+# Make a small file system to fill
-+umount $SCRATCH_DEV > /dev/null 2>&1
-+_scratch_mkfs_sized $fs_size > /dev/null 2>&1
-+_scratch_mount
-+# Test must be able to write files with non-root permissions
-+chmod 777 $SCRATCH_MNT
-+
-+block_size=`stat -f $SCRATCH_DEV | grep "Block size" | cut -d " " -f3`
-+_test_full_fs_punch $(( $block_size * 2 )) $block_size 500 $testfile $block_size
-+
-+status=0 ; exit
-diff --git a/256.out b/256.out
-new file mode 100644
-index 0000000..e1b0437
---- /dev/null
-+++ b/256.out
-@@ -0,0 +1 @@
-+QA output created by 256
-diff --git a/common.rc b/common.rc
-index 9d68574..2ee4a4a 100644
---- a/common.rc
-+++ b/common.rc
-@@ -887,6 +887,67 @@ _user_do()
-     fi  
- }
- 
-+# _fill_fs()
-+#
-+# Fills a file system by repeatedly creating files in the given folder
-+# starting with the given file size.  Files are reduced in size when
-+# they can no longer fit untill no more files can be created.
-+#
-+# This routine is used by _test_full_fs_punch to test that a hole may
-+# still be punched when the disk is full by borrowing reserved blocks.
-+# All files are created as a non root user to prevent reserved blocks
-+# from being consumed.
-+#
-+_fill_fs() {
-+	local file_size=$1
-+	local dir=$2
-+	local block_size=$3
-+	local file_count=1
-+	local bytes_written=0
-+	
-+	if [ $# -ne 3 ] 
-+	then
-+		echo "USAGE: _fill_fs filesize dir block_size"
-+		exit 1
-+	fi  
-+	
-+	# Creation of files or folders
-+	# must not be done as root or
-+	# reserved blocks will be consumed
-+	_user_do "mkdir -p $dir > /dev/null 2>&1"
-+	if [ $? -ne 0 ] ; then
-+		return 0
-+	fi  
-+
-+	if [ $file_size -lt $block_size ]
-+	then
-+		file_size=$block_size
-+	fi  
-+
-+	while [ $file_size -ge $block_size ]
-+	do
-+		bytes_written=0
-+		_user_do "$XFS_IO_PROG -F -f -c \
-+			\"pwrite 0 $file_size\" \
-+			$dir/$file_count.bin > /dev/null 2>&1"
-+		
-+		if [ -f $dir/$file_count.bin ]
-+		then
-+			bytes_written=$($XFS_IO_PROG -F -c "stat" \
-+				$dir/$file_count.bin | grep size | cut -d ' ' -f3)
-+		fi  
-+		
-+		# If there was no room to make the file,
-+		# then divide it in half, and keep going
-+		if [ $bytes_written -lt $file_size ]
-+		then
-+			file_size=$(( $file_size / 2 ))
-+		fi     
-+		file_count=$(( $file_count + 1 ))
-+
-+	done
-+}
-+
- # check that xfs_io, glibc, kernel, and filesystem all (!) support
- # fallocate
- #
-diff --git a/group b/group
-index 9558bc7..91d8b10 100644
---- a/group
-+++ b/group
-@@ -108,6 +108,9 @@ prealloc
- # on current systems
- deprecated
- 
-+# Punch Hole Tests
-+punch
-+
- #
- # test-group association ... one line per test
- #
-@@ -288,8 +291,8 @@ deprecated
- 172 rw filestreams
- 173 rw filestreams
- 174 rw filestreams auto
--175 dmapi auto
--176 dmapi auto
-+175 dmapi auto punch
-+176 dmapi auto punch
- 177 rw other auto
- 178 mkfs other auto
- 179 metadata rw auto
-@@ -365,7 +368,8 @@ deprecated
- 249 auto quick rw 
- 250 auto quick rw prealloc metadata
- 251 ioctl trim
--252 auto quick prealloc
-+252 auto quick prealloc punch
- 253 auto quick
- 254 auto quick
--255 auto quick prealloc
-+255 auto quick prealloc punch
-+256 auto punch
+Dave.
 -- 
-1.7.1
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
