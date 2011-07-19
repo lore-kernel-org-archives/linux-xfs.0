@@ -1,23 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6JHAwJ4182696 for <xfs@oss.sgi.com>; Tue, 19 Jul 2011 12:10:58 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0AADD16825C5
-	for <xfs@oss.sgi.com>; Tue, 19 Jul 2011 10:10:57 -0700 (PDT)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	R9B9BPA1PU0STmdb for <xfs@oss.sgi.com>;
-	Tue, 19 Jul 2011 10:10:57 -0700 (PDT)
-Date: Tue, 19 Jul 2011 13:10:54 -0400
+	p6JHAVwu182672 for <xfs@oss.sgi.com>; Tue, 19 Jul 2011 12:10:32 -0500
+Date: Tue, 19 Jul 2011 13:10:28 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfstests: fix modulo-by-zero error in fsx
-Message-ID: <20110719171054.GB31088@infradead.org>
-References: <1311047353-23925-1-git-send-email-david@fromorbit.com>
+Subject: Re: xfs: encapsulate a block of debug code
+Message-ID: <20110719171028.GA31088@infradead.org>
+References: <201107181814.p6IIEAZm028909@stout.americas.sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1311047353-23925-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <201107181814.p6IIEAZm028909@stout.americas.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,26 +22,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Alex Elder <aelder@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Jul 19, 2011 at 01:49:13PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Mon, Jul 18, 2011 at 01:14:09PM -0500, Alex Elder wrote:
+> Pull into a helper function some debug-only code that validates a
+> xfs_da_blkinfo structure that's been read from disk.
 > 
-> The recent fsx fixes has a logic error in the offset trimming code.
-> If a read is done when the file size is zero, then the logic error
-> causes a offset % 0 opertaion to occur. This causes fsx to get a
-> SIGFPE and die.
+> Signed-off-by: Alex Elder <aelder@sgi.com>
 > 
-> This was not discovered during my testing because I was using a
-> random seed that didn't trip this condition. Changing the seed to
-> that which test 091 uses (the default of 1) causes such an operation
-> to occur....
+> ---
+>  fs/xfs/xfs_da_btree.c |   31 ++++++++++++++++++++-----------
+>  1 file changed, 20 insertions(+), 11 deletions(-)
+> 
+> Index: b/fs/xfs/xfs_da_btree.c
+> ===================================================================
+> --- a/fs/xfs/xfs_da_btree.c
+> +++ b/fs/xfs/xfs_da_btree.c
+> @@ -692,6 +692,24 @@ xfs_da_join(xfs_da_state_t *state)
+>  	return(error);
+>  }
+>  
+> +#ifdef	DEBUG
+> +static void
+> +xfs_da_blkinfo_validate(struct xfs_da_blkinfo *blkinfo, __u16 level)
 
-Looks good,
+I'm not sure the name is a good one.  E.g. the forw/backw pointers
+really rely on this node not having any siblings.  Which they shoudn't
+have here, but that's not generally true of any blkinfo.
 
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Otherwise looks fine.
 
 _______________________________________________
 xfs mailing list
