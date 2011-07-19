@@ -1,16 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6JJnG3D191802 for <xfs@oss.sgi.com>; Tue, 19 Jul 2011 14:49:16 -0500
-Subject: Re: xfs: encapsulate a block of debug code
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110719171028.GA31088@infradead.org>
-References: <201107181814.p6IIEAZm028909@stout.americas.sgi.com>
-	<20110719171028.GA31088@infradead.org>
-Date: Tue, 19 Jul 2011 14:49:12 -0500
-Message-ID: <1311104952.1964.24.camel@doink>
+	p6JMbTD0197009 for <xfs@oss.sgi.com>; Tue, 19 Jul 2011 17:37:29 -0500
+Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0D54817FE61D
+	for <xfs@oss.sgi.com>; Tue, 19 Jul 2011 15:37:27 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id vYLTG2GcBpOzDyhk
+	for <xfs@oss.sgi.com>; Tue, 19 Jul 2011 15:37:27 -0700 (PDT)
+Message-ID: <4E260725.4040003@hardwarefreak.com>
+Date: Tue, 19 Jul 2011 17:37:25 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Reply-To: aelder@sgi.com
+Subject: Re: 30 TB RAID6 + XFS slow write performance
+References: <4E24907F.6020903@johnbokma.com>
+	<20110719103719.18c4773f@galadriel.home>
+In-Reply-To: <20110719103719.18c4773f@galadriel.home>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,53 +24,70 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Emmanuel Florac <eflorac@intellique.com>
+Cc: xfs@oss.sgi.com, John Bokma <contact@johnbokma.com>
 
-On Tue, 2011-07-19 at 13:10 -0400, Christoph Hellwig wrote:
-> On Mon, Jul 18, 2011 at 01:14:09PM -0500, Alex Elder wrote:
-> > Pull into a helper function some debug-only code that validates a
-> > xfs_da_blkinfo structure that's been read from disk.
-> > 
-> > Signed-off-by: Alex Elder <aelder@sgi.com>
-> > 
-> > ---
-> >  fs/xfs/xfs_da_btree.c |   31 ++++++++++++++++++++-----------
-> >  1 file changed, 20 insertions(+), 11 deletions(-)
-> > 
-> > Index: b/fs/xfs/xfs_da_btree.c
-> > ===================================================================
-> > --- a/fs/xfs/xfs_da_btree.c
-> > +++ b/fs/xfs/xfs_da_btree.c
-> > @@ -692,6 +692,24 @@ xfs_da_join(xfs_da_state_t *state)
-> >  	return(error);
-> >  }
-> >  
-> > +#ifdef	DEBUG
-> > +static void
-> > +xfs_da_blkinfo_validate(struct xfs_da_blkinfo *blkinfo, __u16 level)
-> 
-> I'm not sure the name is a good one.  E.g. the forw/backw pointers
-> really rely on this node not having any siblings.  Which they shoudn't
-> have here, but that's not generally true of any blkinfo.
-> 
-> Otherwise looks fine.
-> 
-
-What about xfs_da_blkinfo_onlychild_validate()?
-
-It's pushing the limits of acceptable name length
-as far as I'm concerned though.  Let me know if
-this is good enough, or if you have another idea.
-Thanks.
-
-					-Alex
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gNy8xOS8yMDExIDM6MzcgQU0sIEVtbWFudWVsIEZsb3JhYyB3cm90ZToKPiBMZSBNb24sIDE4
+IEp1bCAyMDExIDE0OjU4OjU1IC0wNTAwIHZvdXMgw6ljcml2aWV6Ogo+IAo+PiBjYXJkOiBNZWdh
+UkFJRCBTQVMgOTI2MC0xNmkKPj4gZGlza3M6IDE0eCBCYXJyYWN1ZGHCriBYVCBTVDMzMDAwNjUx
+QVMgM1RCICgyIGhvdCBzcGFyZXMpLgo+PiBSQUlENgo+PiB+IDMwVEIKCj4gVGhpcyBjYXJkIGRv
+ZXNuJ3QgYWN0aXZhdGUgdGhlIHdyaXRlIGNhY2hlIHdpdGhvdXQgYSBCQlUgcHJlc2VudC4gQmUK
+PiBzdXJlIHlvdSBoYXZlIGEgQkJVIG9yIHRoZSBwZXJmb3JtYW5jZSB3aWxsIGFsd2F5cyBiZSB1
+bmJlYXJhYmx5IGF3ZnVsLgoKSW4gYWRkaXRpb24gdG8gYWxsIHRoZSBvdGhlciByZWNvbW1lbmRh
+dGlvbnMsIG9uY2UgdGhlIEJCVSBpcyBpbnN0YWxsZWQsCmRpc2FibGUgdGhlIGluZGl2aWR1YWwg
+ZHJpdmUgY2FjaGVzIChpZiB0aGlzIGlzbid0IGRvbmUgYXV0b21hdGljYWxseSksCmFuZCBzZXQg
+dGhlIGNvbnRyb2xsZXIgY2FjaGUgbW9kZSB0byAnd3JpdGUgYmFjaycuICBUaGUgd3JpdGUgdGhy
+b3VnaAphbmQgZGlyZWN0IEkvTyBjYWNoZSBtb2RlcyB3aWxsIGRlbGl2ZXIgaG9ycmlibGUgUkFJ
+RDYgd3JpdGUgcGVyZm9ybWFuY2UuCgpBbmQsIEJUVywgUkFJRDYgaXMgYSBob3JyaWJsZSBjaG9p
+Y2UgZm9yIGEgcGFyYWxsZWwsIHNtYWxsIGZpbGUsIGhpZ2gKcmFuZG9tIEkvTyB3b3JrbG9hZCBz
+dWNoIGFzIHlvdSd2ZSBkZXNjcmliZWQuICBSQUlEMTAgd291bGQgYmUgbXVjaCBtb3JlCnN1aXRh
+YmxlLiAgQWN0dWFsbHksIGFueSBzdHJpcGVkIFJBSUQgaXMgbGVzcyB0aGFuIG9wdGltYWwgZm9y
+IHN1Y2ggYQpzbWFsbCBmaWxlIHdvcmtsb2FkLiAgVGhlIGRlZmF1bHQgc3RyaXBlIHNpemUgZm9y
+IHRoZSBMU0kgUkFJRApjb250cm9sbGVycywgSUlSQywgaXMgNjRLQi4gIFdpdGggMTQgc3BpbmRs
+ZXMgb2Ygc3RyaXBlIHdpZHRoIHlvdSBlbmQgdXAKd2l0aCA2NCoxNCA9IDg5NktCLiAgWEZTIHdp
+bGwgdHJ5IHRvIHBhY2sgYXMgbWFueSBvZiB0aGVzZSA1MC0xNTBLIGZpbGVzCmludG8gYSBzaW5n
+bGUgZXh0ZW50LCBidXQgeW91J3JlIHRhbGtpbmcgNiB0byAxOCBmaWxlcyBwZXIgZXh0ZW50LCBh
+bmQKdGhpcyBpcyB3aG9sbHkgZGVwZW5kZW50IG9uIHRoZSBwYXJhbGxlbCB3cml0ZSBwYXR0ZXJu
+LCBhbmQgaW4gd2hpY2ggb2YKdGhlIGFsbG9jYXRpb24gZ3JvdXBzIFhGUyBkZWNpZGVzIHRvIHdy
+aXRlIGVhY2ggZmlsZS4gIFhGUyBpc24ndCBnb2luZwp0byBiZSAxMDAlIGVmZmljaWVudCBpbiB0
+aGlzIGNhc2UuICBUaHVzLCB5b3Ugd2lsbCBlbmQgdXAgd2l0aCBtYW55CnBhcnRpYWwgc3RyaXBl
+IHdpZHRoIHdyaXRlcywgZWxpbWluYXRpbmcgbXVjaCBvZiB0aGUgcGVyZm9ybWFuY2UKYWR2YW50
+YWdlIG9mIHN0cmlwaW5nLgoKVGhlc2UgYXJlIGxhcmdlIDcyMDAgcnBtIFNBVEEgZHJpdmVzIHdo
+aWNoIGhhdmUgcG9vciBzZWVrIHBlcmZvcm1hbmNlIHRvCmJlZ2luIHdpdGgsIHVubGlrZSB0aGUg
+J3NtYWxsJyAzMDBHQiAxNWsgU0FTIGRyaXZlcy4gIFlvdSdyZSByb2JiaW5nCnRoYXQgcG9vciBz
+ZWVrIHBlcmZvcm1hbmNlIGZ1cnRoZXIgYnk6CgoxLiAgVXNpbmcgZG91YmxlIHBhcml0eSBzdHJp
+cGVkIFJBSUQKMi4gIFdyaXRpbmcgdGhvdXNhbmRzIG9mIHNtYWxsIGZpbGVzIGluIHBhcmFsbGVs
+CgpUaGlzIHdvcmtsb2FkIGlzIHZlcnkgc2ltaWxhciB0byB0aGUgY2FzZSBvZiBhIG1haWwgc2Vy
+dmVyIHVzaW5nIHRoZQptYWlsZGlyIHN0b3JhZ2UgZm9ybWF0LiAgSWYgeW91IHJlYWQgdGhlIGxp
+c3QgYXJjaGl2ZXMgeW91J2xsIHNlZQpyZWNvbW1lbmRhdGlvbnMgZm9yIGFuIG9wdGltYWwgc3Rv
+cmFnZSBzdGFjayBzZXR1cCBmb3IgdGhpcyB3b3JrbG9hZC4KSXQgZ29lcyBzb21ldGhpbmcgbGlr
+ZSB0aGlzOgoKMS4gIENyZWF0ZSBhIGxpbmVhciBhcnJheSBvZiBoYXJkd2FyZSBSQUlEMSBtaXJy
+b3Igc2V0cy4KICAgIERvIHRoaXMgYWxsIGluIHRoZSBjb250cm9sbGVyIGlmIGl0IGNhbiBkbyBp
+dC4KICAgIElmIG5vdCwgdXNlIExpbnV4IFJBSUQgKG1kYWRtKSB0byBjcmVhdGUgYSAnLS1saW5l
+YXInIGFycmF5IG9mIHRoZQogICAgbXVsdGlwbGUgKDcgaW4geW91ciBjYXNlLCBhcHBhcmVudGx5
+KSBoYXJkd2FyZSBSQUlEMSBtaXJyb3Igc2V0cwoKMi4gIE5vdyBsZXQgWEZTIGhhbmRsZSB0aGUg
+d3JpdGUgcGFyYWxsZWxpc20uICBGb3JtYXQgdGhlIHJlc3VsdGluZwogICAgNyBzcGluZGxlIExp
+bnV4IFJBSUQgZGV2aWNlIHdpdGgsIGZvciBleGFtcGxlOgoKICAgIG1rZnMueGZzIC1kIGFnY291
+bnQ9MTQgL2Rldi9tZDAKCkJ5IHVzaW5nIHRoaXMgY29uZmlndXJhdGlvbiB5b3UgZWxpbWluYXRl
+IHRoZSBleGNlc3NpdmUgaGVhZCBzZWVraW5nCmFzc29jaWF0ZWQgd2l0aCB0aGUgcGFydGlhbCBz
+dHJpcGUgd3JpdGUgcHJvYmxlbXMgb2YgUkFJRDYsIHJlc3RvcmluZwpwZXJmb3JtYW5jZSBlZmZp
+Y2llbmN5IHRvIHRoZSBhcnJheS4gIFVzaW5nIDE0IGFsbG9jYXRpb24gZ3JvdXBzIGFsbG93cwpY
+RlMgdG8gd3JpdGUgd3JpdGUsIGF0IG1pbmltdW0sIDE0IHN1Y2ggZmlsZXMgaW4gcGFyYWxsZWwu
+ICBUaGlzIG1heSBub3QKc2VlbSBsaWtlIGEgbG90IGdpdmVuIHlvdSBoYXZlIH4yMDAgd3JpdGVy
+cywgYnV0IGl0J3MgYWN0dWFsbHkgZmFyIG1vcmUKdGhhbiB3aGF0IHlvdSdyZSBnZXR0aW5nIG5v
+dywgb3Igd2hhdCB5b3UnbGwgZ2V0IHdpdGggc3RyaXBlZCBwYXJpdHkKUkFJRC4gIENvbnNpZGVy
+IHRoZSAxNTBLQiBmaWxlIGNhc2U6ICAxNCoxNTBLQiA9IDIuMU1CL3MuICBBc3N1bWluZyB0aGlz
+CmhhcmR3YXJlIGFuZCBzb2Z0d2FyZSBzdGFjayBjYW4gc2luayAyMTBNQi9zIHdpdGggdGhpcyB3
+b3JrbG9hZCwgdGhhdCdzCn4xNDAwIGZpbGVzIHdyaXR0ZW4gcGVyIHNlY29uZCwgb3IgODQsMDAw
+IGZpbGVzIHBlciBob3VyLiAgV291bGQgdGhpcyBiZQpzdWZmaWNpZW50IGZvciB5b3VyIGFwcGxp
+Y2F0aW9uPwoKTm93IHRoYXQgd2UndmUgY292ZXJlZCB0aGUgWEZTIGFuZCBoYXJkd2FyZSBSQUlE
+IHNpZGUgb2YgdGhpcyBlcXVhdGlvbiwKZG9lcyB5b3VyIGFwcGxpY2F0aW9uIHJ1biBkaXJlY3Rs
+eSBvbiB0aGUgdGhpcyBtYWNoaW5lLCBvciBhcmUgeW91CndyaXRpbmcgb3ZlciBORlMgb3IgQ0lG
+UyB0byB0aGlzIFhGUyBmaWxlc3lzdGVtPyAgSWYgc28sIHRoYXQncyBhbm90aGVyCmZseSBpbiB0
+aGUgb2ludG1lbnQgd2UgbWF5IGhhdmUgdG8gZGVhbCB3aXRoLgoKLS0gClN0YW4KCl9fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QK
+eGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
