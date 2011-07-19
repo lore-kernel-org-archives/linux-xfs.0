@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Subject: Re: [xfs-masters] [PATCH] xfs: failure mapping nfs fh to inode
-	should return ESTALE
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
+	p6JJnG3D191802 for <xfs@oss.sgi.com>; Tue, 19 Jul 2011 14:49:16 -0500
+Subject: Re: xfs: encapsulate a block of debug code
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110718133710.GB9741@fieldses.org>
-References: <20110714205036.GA19457@fieldses.org>
-	<20110714223126.GA28694@infradead.org> <20110716015014.GF21663@dastard>
-	<20110716015346.GA589@infradead.org>
-	<20110718133710.GB9741@fieldses.org>
-Date: Tue, 19 Jul 2011 14:29:25 -0500
-Message-ID: <1311103765.1964.20.camel@doink>
+In-Reply-To: <20110719171028.GA31088@infradead.org>
+References: <201107181814.p6IIEAZm028909@stout.americas.sgi.com>
+	<20110719171028.GA31088@infradead.org>
+Date: Tue, 19 Jul 2011 14:49:12 -0500
+Message-ID: <1311104952.1964.24.camel@doink>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -23,32 +23,47 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: "J. Bruce Fields" <bfields@fieldses.org>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs-masters@oss.sgi.com, linux-nfs@vger.kernel.org, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Mon, 2011-07-18 at 09:37 -0400, J. Bruce Fields wrote:
-> On Fri, Jul 15, 2011 at 09:53:46PM -0400, Christoph Hellwig wrote:
-> > On Sat, Jul 16, 2011 at 11:50:14AM +1000, Dave Chinner wrote:
-> > > Bulkstat also checks for ENOENT returns from xfs_iget() as the
-> > > lookup it does is inherently racy. That is, if the inode is
-> > > allocated when it is read from the IBT, but then has been unlinked
-> > > before the actual xfs_iget() call, it expects to get back an ENOENT
-> > > to tell it the inode has been unlinked and shouldn't be included in
-> > > the bulkstat output. Otherwise, it returns the error to userspace.
-> > > 
-> > > So converting the mode checks to return ESTALE definitely has the
-> > > chance of breaking stuff that uses bulkstat (e.g. xfsdump) because
-> > > it will return errors now where it previously just skipped the
-> > > (unlinked) inode.
+On Tue, 2011-07-19 at 13:10 -0400, Christoph Hellwig wrote:
+> On Mon, Jul 18, 2011 at 01:14:09PM -0500, Alex Elder wrote:
+> > Pull into a helper function some debug-only code that validates a
+> > xfs_da_blkinfo structure that's been read from disk.
 > > 
-> > Sounds like we should simply go with the original version of the patch
-> > then.
+> > Signed-off-by: Alex Elder <aelder@sgi.com>
+> > 
+> > ---
+> >  fs/xfs/xfs_da_btree.c |   31 ++++++++++++++++++++-----------
+> >  1 file changed, 20 insertions(+), 11 deletions(-)
+> > 
+> > Index: b/fs/xfs/xfs_da_btree.c
+> > ===================================================================
+> > --- a/fs/xfs/xfs_da_btree.c
+> > +++ b/fs/xfs/xfs_da_btree.c
+> > @@ -692,6 +692,24 @@ xfs_da_join(xfs_da_state_t *state)
+> >  	return(error);
+> >  }
+> >  
+> > +#ifdef	DEBUG
+> > +static void
+> > +xfs_da_blkinfo_validate(struct xfs_da_blkinfo *blkinfo, __u16 level)
 > 
-> OK.  Let me know if someone needs that resent....
+> I'm not sure the name is a good one.  E.g. the forw/backw pointers
+> really rely on this node not having any siblings.  Which they shoudn't
+> have here, but that's not generally true of any blkinfo.
 > 
-> --b.
+> Otherwise looks fine.
+> 
 
-No need.  I'll use the original one.  Thanks.	-Alex
+What about xfs_da_blkinfo_onlychild_validate()?
+
+It's pushing the limits of acceptable name length
+as far as I'm concerned though.  Let me know if
+this is good enough, or if you have another idea.
+Thanks.
+
+					-Alex
 
 _______________________________________________
 xfs mailing list
