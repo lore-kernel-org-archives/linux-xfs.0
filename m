@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6K9fZmi223076 for <xfs@oss.sgi.com>; Wed, 20 Jul 2011 04:41:36 -0500
+	p6K9mB5S223301 for <xfs@oss.sgi.com>; Wed, 20 Jul 2011 04:48:12 -0500
 Received: from sour.ops.eusc.inter.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D82B982B37
-	for <xfs@oss.sgi.com>; Wed, 20 Jul 2011 02:41:33 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 638C482BC9
+	for <xfs@oss.sgi.com>; Wed, 20 Jul 2011 02:48:10 -0700 (PDT)
 Received: from sour.ops.eusc.inter.net (sour.ops.eusc.inter.net
-	[84.23.254.154]) by cuda.sgi.com with ESMTP id Kz9E3K6eWqfmQMoe
-	for <xfs@oss.sgi.com>; Wed, 20 Jul 2011 02:41:33 -0700 (PDT)
+	[84.23.254.154]) by cuda.sgi.com with ESMTP id PWRpk3JqQW5H3kaE
+	for <xfs@oss.sgi.com>; Wed, 20 Jul 2011 02:48:10 -0700 (PDT)
 Received: from sour.ops.eusc.inter.net ([10.154.10.22] helo=localhost)
 	by sour.ops.eusc.inter.net with esmtpsa (Exim 4.72)
-	id 1QjTHU-000DT9-NC
-	for xfs@oss.sgi.com; Wed, 20 Jul 2011 11:41:28 +0200
-Message-ID: <4E26A2C8.1010900@koeln.de>
-Date: Wed, 20 Jul 2011 11:41:28 +0200
+	id 1QjTNx-000EEt-Ku
+	for xfs@oss.sgi.com; Wed, 20 Jul 2011 11:48:09 +0200
+Message-ID: <4E26A458.6000103@koeln.de>
+Date: Wed, 20 Jul 2011 11:48:08 +0200
 From: Markus Uckelmann <markus.uckelmann@koeln.de>
 MIME-Version: 1.0
 Subject: Re: Corruption of in-memory data detected. Shutting down filesystem
