@@ -1,23 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6KE3acb232742 for <xfs@oss.sgi.com>; Wed, 20 Jul 2011 09:03:36 -0500
-Received: from mail-iy0-f181.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B43CFEE3DF8
-	for <xfs@oss.sgi.com>; Wed, 20 Jul 2011 07:03:34 -0700 (PDT)
-Received: from mail-iy0-f181.google.com (mail-iy0-f181.google.com
-	[209.85.210.181]) by cuda.sgi.com with ESMTP id
-	bDNy2jp7kLvvQLEt for <xfs@oss.sgi.com>;
-	Wed, 20 Jul 2011 07:03:34 -0700 (PDT)
-Received: by iyf40 with SMTP id 40so210376iyf.26
-	for <xfs@oss.sgi.com>; Wed, 20 Jul 2011 07:03:34 -0700 (PDT)
+	p6KFJaEJ235488 for <xfs@oss.sgi.com>; Wed, 20 Jul 2011 10:19:36 -0500
+Subject: Re: [PATCH 3/4] xfs: convert AIL cursors to use struct list_head
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <20110719234324.GC9359@dastard>
+References: <1310960419-9875-1-git-send-email-david@fromorbit.com>
+	<1310960419-9875-4-git-send-email-david@fromorbit.com>
+	<1311116636.1964.40.camel@doink>  <20110719234324.GC9359@dastard>
+Date: Wed, 20 Jul 2011 10:19:35 -0500
+Message-ID: <1311175175.2906.8.camel@doink>
 MIME-Version: 1.0
-In-Reply-To: <CAOJJ1Zp821vD0JbGf5PuNGcW4VX4E_3SfcWYxVA4es2o0pyJXQ@mail.gmail.com>
-References: <CAOJJ1Zp821vD0JbGf5PuNGcW4VX4E_3SfcWYxVA4es2o0pyJXQ@mail.gmail.com>
-Date: Wed, 20 Jul 2011 22:03:33 +0800
-Message-ID: <CAOJJ1ZpL89-3xrhJTQgO97AebSSgnmfyM+mah75XOWiyi-wHwQ@mail.gmail.com>
-Subject: 1 Gb Ethernet based HPC storage deployment plan
-From: Lee Eric <openlinuxsource@gmail.com>
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,29 +24,29 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Hi all,
+On Wed, 2011-07-20 at 09:43 +1000, Dave Chinner wrote:
+> On Tue, Jul 19, 2011 at 06:03:56PM -0500, Alex Elder wrote:
+> > On Mon, 2011-07-18 at 13:40 +1000, Dave Chinne
+. . .
+> > > + * Get the next item in the traversal and advance the cursor.  If the cursor
+> > > + * was invalidated (indicated by a lip of 1), restart the traversal.
+> >  * was invalidated (indicated by its item pointer's low bit being set),
+> >  * restart the traversal.
+> 
+> I thought I fixed that. Hmmmm, I did fix a comment that said the
+> same thing - just it wasn't the one you noticed. :/ I'll fix it up
+> when I redo the splice code again.
 
-I got 20 nodes cluster(1 Gb Ethernet connected) and gonna build a
-small storage system with it. Because of the low budget I'm thinking
-to use 1 Gb Ethernet as physical layer for the storage part. Here's
-what I planed.
+Don't worry about it.  I'll change it (as I did here)
+in my own copy and will use that (unless you give me
+something newer before I'm ready to publish it).
 
-There 8 SATA hard drivers so I wanna use AoE or iSCSI to export the
-block devices to the master node over Ethernet. Then the master node
-will use NFS to export block devices to compute nodes. The upper layer
-file system I will use XFS.
+You are welcome to update it later, of course.
 
-I know it would be better if I can use Lustre but my interconnection
-is a little slow. I suspect if it is feasible if using such parallel
-file system.
-
-Does anyone has good idea on this deployment?
-
-Thanks very much.
-
-Eric
+					-Alex
 
 _______________________________________________
 xfs mailing list
