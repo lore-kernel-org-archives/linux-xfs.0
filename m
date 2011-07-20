@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6KFE3fv235198 for <xfs@oss.sgi.com>; Wed, 20 Jul 2011 10:14:03 -0500
-Subject: Re: [PATCH 1/4] xfs: use a cursor for bulk AIL insertion
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110720001530.GA13475@infradead.org>
-References: <1310960419-9875-1-git-send-email-david@fromorbit.com>
-	<1310960419-9875-2-git-send-email-david@fromorbit.com>
-	<1311116624.1964.38.camel@doink> <20110719233644.GB9359@dastard>
-	<20110720001530.GA13475@infradead.org>
-Date: Wed, 20 Jul 2011 10:13:55 -0500
-Message-ID: <1311174835.2906.5.camel@doink>
+	p6KHxLwB241330 for <xfs@oss.sgi.com>; Wed, 20 Jul 2011 12:59:21 -0500
+Received: from test.thunk.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 64654EE835E
+	for <xfs@oss.sgi.com>; Wed, 20 Jul 2011 10:59:20 -0700 (PDT)
+Received: from test.thunk.org (li9-11.members.linode.com [67.18.176.11]) by
+	cuda.sgi.com with ESMTP id U5alsEt5xreHbeyq for
+	<xfs@oss.sgi.com>; Wed, 20 Jul 2011 10:59:20 -0700 (PDT)
+Date: Wed, 20 Jul 2011 13:59:18 -0400
+From: "Ted Ts'o" <tytso@mit.edu>
+Subject: Problems building xfsprogs
+Message-ID: <20110720175918.GB17971@thunk.org>
 MIME-Version: 1.0
-Reply-To: aelder@sgi.com
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,20 +26,37 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
 
-On Tue, 2011-07-19 at 20:15 -0400, Christoph Hellwig wrote:
-> On Wed, Jul 20, 2011 at 09:36:44AM +1000, Dave Chinner wrote:
-> > Looks cleaner, but I'll need to test it. Right now all my test
-> > resources are busy with non-mainline stuff, so it's going to be next
-> > week sometime before I can do this.
-> 
-> Given that the merge window is about to open how about putting in the
-> current version for now and doing a cleanup patch on top later on?
-> 
+I was trying to build xfsprogs in preparation for building xfstests in
+an hermetic environment (as opposed to depending on magic XFS headers
+being installed in /usr/include...)
 
-Will do.
+What I found first of all (building on Ubuntu 10.10) was
+
+a) "make configure" doesn't work until I patch the top-level Makefile:
+
+diff --git a/Makefile b/Makefile
+index c40fb2c..37973f5 100644
+--- a/Makefile
++++ b/Makefile
+@@ -82,7 +82,7 @@ configure:
+ 	libtoolize -c $(LIBTOOLIZE_INSTALL) -f
+ 	cp include/install-sh .
+ 	aclocal -I m4
+-	autoconf
++	autoconf -I m4
+ 
+ include/builddefs: configure
+ 	./configure $$LOCAL_CONFIGURE_OPTIONS
+
+b) By default xfsprogs builds with DEBUG, and this causes building
+libxfs/xfs_ialloc.c to blow up since there a reference of
+xfs_stack_trace() which is undefined under a #ifdef DEBUG.  The way to
+fix this is to build with DEBUG=-DNDEBUG, but it took me an hour or
+two figure this out....
+
+					- Ted
 
 _______________________________________________
 xfs mailing list
