@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6LGTD29035816 for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 11:29:13 -0500
+	p6LGT5Ct035776 for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 11:29:05 -0500
 Received: from mx2.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D82828B652
-	for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 09:29:12 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7B78D15110D1
+	for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 09:29:04 -0700 (PDT)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id Sq0o2hWYInp0pMaO for <xfs@oss.sgi.com>;
-	Thu, 21 Jul 2011 09:29:12 -0700 (PDT)
+	with ESMTP id vyUFRVQxilYyxAYC for <xfs@oss.sgi.com>;
+	Thu, 21 Jul 2011 09:29:04 -0700 (PDT)
 From: Mel Gorman <mgorman@suse.de>
-Subject: [PATCH 4/8] btrfs: Warn if direct reclaim tries to writeback pages
-Date: Thu, 21 Jul 2011 17:28:46 +0100
-Message-Id: <1311265730-5324-5-git-send-email-mgorman@suse.de>
+Subject: [PATCH 2/8] xfs: Warn if direct reclaim tries to writeback pages
+Date: Thu, 21 Jul 2011 17:28:44 +0100
+Message-Id: <1311265730-5324-3-git-send-email-mgorman@suse.de>
 In-Reply-To: <1311265730-5324-1-git-send-email-mgorman@suse.de>
 References: <1311265730-5324-1-git-send-email-mgorman@suse.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -30,43 +30,36 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Linux-MM <linux-mm@kvack.org>
 Cc: Rik van Riel <riel@redhat.com>, Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, XFS <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, Minchan Kim <minchan.kim@gmail.com>, Wu Fengguang <fengguang.wu@intel.com>, Johannes Weiner <jweiner@redhat.com>, Mel Gorman <mgorman@suse.de>
 
-Direct reclaim should never writeback pages. Warn if an attempt is
-made. By rights, btrfs should be allowing writepage from kswapd if
-it is failing to reclaim pages by any other means but it's outside
-the scope of this patch.
+Direct reclaim should never writeback pages. For now, handle the
+situation and warn about it. Ultimately, this will be a BUG_ON.
 
 Signed-off-by: Mel Gorman <mgorman@suse.de>
 ---
- fs/btrfs/disk-io.c |    2 ++
- fs/btrfs/inode.c   |    2 ++
- 2 files changed, 4 insertions(+), 0 deletions(-)
+ fs/xfs/linux-2.6/xfs_aops.c |    9 +++++----
+ 1 files changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/fs/btrfs/disk-io.c b/fs/btrfs/disk-io.c
-index 1ac8db5d..cc9c9cf 100644
---- a/fs/btrfs/disk-io.c
-+++ b/fs/btrfs/disk-io.c
-@@ -829,6 +829,8 @@ static int btree_writepage(struct page *page, struct writeback_control *wbc)
+diff --git a/fs/xfs/linux-2.6/xfs_aops.c b/fs/xfs/linux-2.6/xfs_aops.c
+index 79ce38b..c33a439 100644
+--- a/fs/xfs/linux-2.6/xfs_aops.c
++++ b/fs/xfs/linux-2.6/xfs_aops.c
+@@ -930,12 +930,13 @@ xfs_vm_writepage(
+ 	 * random callers for direct reclaim or memcg reclaim.  We explicitly
+ 	 * allow reclaim from kswapd as the stack usage there is relatively low.
+ 	 *
+-	 * This should really be done by the core VM, but until that happens
+-	 * filesystems like XFS, btrfs and ext4 have to take care of this
+-	 * by themselves.
++	 * This should never happen except in the case of a VM regression so
++	 * warn about it.
+ 	 */
+-	if ((current->flags & (PF_MEMALLOC|PF_KSWAPD)) == PF_MEMALLOC)
++	if ((current->flags & (PF_MEMALLOC|PF_KSWAPD)) == PF_MEMALLOC) {
++		WARN_ON_ONCE(1);
+ 		goto redirty;
++	}
  
- 	tree = &BTRFS_I(page->mapping->host)->io_tree;
- 	if (!(current->flags & PF_MEMALLOC)) {
-+		WARN_ON_ONCE((current->flags & (PF_MEMALLOC|PF_KSWAPD)) ==
-+								PF_MEMALLOC);
- 		return extent_write_full_page(tree, page,
- 					      btree_get_extent, wbc);
- 	}
-diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
-index 3601f0a..07d6c27 100644
---- a/fs/btrfs/inode.c
-+++ b/fs/btrfs/inode.c
-@@ -6259,6 +6259,8 @@ static int btrfs_writepage(struct page *page, struct writeback_control *wbc)
- 
- 
- 	if (current->flags & PF_MEMALLOC) {
-+		WARN_ON_ONCE((current->flags & (PF_MEMALLOC|PF_KSWAPD)) ==
-+								PF_MEMALLOC);
- 		redirty_page_for_writepage(wbc, page);
- 		unlock_page(page);
- 		return 0;
+ 	/*
+ 	 * We need a transaction if there are delalloc or unwritten buffers
 -- 
 1.7.3.4
 
