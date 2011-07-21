@@ -1,18 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6LGT4is035774 for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 11:29:04 -0500
+	p6LGTD29035816 for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 11:29:13 -0500
 Received: from mx2.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 51FA915110D1
-	for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 09:29:02 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D82828B652
+	for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 09:29:12 -0700 (PDT)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id PI6KFP1kE7gl7MAA for <xfs@oss.sgi.com>;
-	Thu, 21 Jul 2011 09:29:02 -0700 (PDT)
+	with ESMTP id Sq0o2hWYInp0pMaO for <xfs@oss.sgi.com>;
+	Thu, 21 Jul 2011 09:29:12 -0700 (PDT)
 From: Mel Gorman <mgorman@suse.de>
-Subject: [PATCH 1/8] mm: vmscan: Do not writeback filesystem pages in direct
-	reclaim
-Date: Thu, 21 Jul 2011 17:28:43 +0100
-Message-Id: <1311265730-5324-2-git-send-email-mgorman@suse.de>
+Subject: [PATCH 4/8] btrfs: Warn if direct reclaim tries to writeback pages
+Date: Thu, 21 Jul 2011 17:28:46 +0100
+Message-Id: <1311265730-5324-5-git-send-email-mgorman@suse.de>
 In-Reply-To: <1311265730-5324-1-git-send-email-mgorman@suse.de>
 References: <1311265730-5324-1-git-send-email-mgorman@suse.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,82 +30,43 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Linux-MM <linux-mm@kvack.org>
 Cc: Rik van Riel <riel@redhat.com>, Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, XFS <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, Minchan Kim <minchan.kim@gmail.com>, Wu Fengguang <fengguang.wu@intel.com>, Johannes Weiner <jweiner@redhat.com>, Mel Gorman <mgorman@suse.de>
 
-From: Mel Gorman <mel@csn.ul.ie>
-
-When kswapd is failing to keep zones above the min watermark, a process
-will enter direct reclaim in the same manner kswapd does. If a dirty
-page is encountered during the scan, this page is written to backing
-storage using mapping->writepage.
-
-This causes two problems. First, it can result in very deep call
-stacks, particularly if the target storage or filesystem are complex.
-Some filesystems ignore write requests from direct reclaim as a result.
-The second is that a single-page flush is inefficient in terms of IO.
-While there is an expectation that the elevator will merge requests,
-this does not always happen. Quoting Christoph Hellwig;
-
-	The elevator has a relatively small window it can operate on,
-	and can never fix up a bad large scale writeback pattern.
-
-This patch prevents direct reclaim writing back filesystem pages by
-checking if current is kswapd. Anonymous pages are still written to
-swap as there is not the equivalent of a flusher thread for anonymous
-pages. If the dirty pages cannot be written back, they are placed
-back on the LRU lists. There is now a direct dependency on dirty page
-balancing to prevent too many pages in the system being dirtied which
-would prevent reclaim making forward progress.
+Direct reclaim should never writeback pages. Warn if an attempt is
+made. By rights, btrfs should be allowing writepage from kswapd if
+it is failing to reclaim pages by any other means but it's outside
+the scope of this patch.
 
 Signed-off-by: Mel Gorman <mgorman@suse.de>
 ---
- include/linux/mmzone.h |    1 +
- mm/vmscan.c            |    9 +++++++++
- mm/vmstat.c            |    1 +
- 3 files changed, 11 insertions(+), 0 deletions(-)
+ fs/btrfs/disk-io.c |    2 ++
+ fs/btrfs/inode.c   |    2 ++
+ 2 files changed, 4 insertions(+), 0 deletions(-)
 
-diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
-index 9f7c3eb..b70a0c0 100644
---- a/include/linux/mmzone.h
-+++ b/include/linux/mmzone.h
-@@ -100,6 +100,7 @@ enum zone_stat_item {
- 	NR_UNSTABLE_NFS,	/* NFS unstable pages */
- 	NR_BOUNCE,
- 	NR_VMSCAN_WRITE,
-+	NR_VMSCAN_WRITE_SKIP,
- 	NR_WRITEBACK_TEMP,	/* Writeback using temporary buffers */
- 	NR_ISOLATED_ANON,	/* Temporary isolated pages from anon lru */
- 	NR_ISOLATED_FILE,	/* Temporary isolated pages from file lru */
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 5ed24b9..ee00c94 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -825,6 +825,15 @@ static unsigned long shrink_page_list(struct list_head *page_list,
- 		if (PageDirty(page)) {
- 			nr_dirty++;
+diff --git a/fs/btrfs/disk-io.c b/fs/btrfs/disk-io.c
+index 1ac8db5d..cc9c9cf 100644
+--- a/fs/btrfs/disk-io.c
++++ b/fs/btrfs/disk-io.c
+@@ -829,6 +829,8 @@ static int btree_writepage(struct page *page, struct writeback_control *wbc)
  
-+			/*
-+			 * Only kswapd can writeback filesystem pages to
-+			 * avoid risk of stack overflow
-+			 */
-+			if (page_is_file_cache(page) && !current_is_kswapd()) {
-+				inc_zone_page_state(page, NR_VMSCAN_WRITE_SKIP);
-+				goto keep_locked;
-+			}
-+
- 			if (references == PAGEREF_RECLAIM_CLEAN)
- 				goto keep_locked;
- 			if (!may_enter_fs)
-diff --git a/mm/vmstat.c b/mm/vmstat.c
-index 20c18b7..fd109f3 100644
---- a/mm/vmstat.c
-+++ b/mm/vmstat.c
-@@ -702,6 +702,7 @@ const char * const vmstat_text[] = {
- 	"nr_unstable",
- 	"nr_bounce",
- 	"nr_vmscan_write",
-+	"nr_vmscan_write_skip",
- 	"nr_writeback_temp",
- 	"nr_isolated_anon",
- 	"nr_isolated_file",
+ 	tree = &BTRFS_I(page->mapping->host)->io_tree;
+ 	if (!(current->flags & PF_MEMALLOC)) {
++		WARN_ON_ONCE((current->flags & (PF_MEMALLOC|PF_KSWAPD)) ==
++								PF_MEMALLOC);
+ 		return extent_write_full_page(tree, page,
+ 					      btree_get_extent, wbc);
+ 	}
+diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
+index 3601f0a..07d6c27 100644
+--- a/fs/btrfs/inode.c
++++ b/fs/btrfs/inode.c
+@@ -6259,6 +6259,8 @@ static int btrfs_writepage(struct page *page, struct writeback_control *wbc)
+ 
+ 
+ 	if (current->flags & PF_MEMALLOC) {
++		WARN_ON_ONCE((current->flags & (PF_MEMALLOC|PF_KSWAPD)) ==
++								PF_MEMALLOC);
+ 		redirty_page_for_writepage(wbc, page);
+ 		unlock_page(page);
+ 		return 0;
 -- 
 1.7.3.4
 
