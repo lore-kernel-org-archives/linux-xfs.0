@@ -1,19 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6LGT5Ct035776 for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 11:29:05 -0500
-Received: from mx2.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7B78D15110D1
-	for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 09:29:04 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id vyUFRVQxilYyxAYC for <xfs@oss.sgi.com>;
-	Thu, 21 Jul 2011 09:29:04 -0700 (PDT)
-From: Mel Gorman <mgorman@suse.de>
-Subject: [PATCH 2/8] xfs: Warn if direct reclaim tries to writeback pages
-Date: Thu, 21 Jul 2011 17:28:44 +0100
-Message-Id: <1311265730-5324-3-git-send-email-mgorman@suse.de>
-In-Reply-To: <1311265730-5324-1-git-send-email-mgorman@suse.de>
-References: <1311265730-5324-1-git-send-email-mgorman@suse.de>
+	p6LGVSwj036007 for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 11:31:28 -0500
+Received: from test.thunk.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7C06C1E6923A
+	for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 09:31:27 -0700 (PDT)
+Received: from test.thunk.org (li9-11.members.linode.com [67.18.176.11]) by
+	cuda.sgi.com with ESMTP id fqo3nL23tmFcHXIY for
+	<xfs@oss.sgi.com>; Thu, 21 Jul 2011 09:31:27 -0700 (PDT)
+Date: Thu, 21 Jul 2011 12:31:22 -0400
+From: "Ted Ts'o" <tytso@mit.edu>
+Subject: Re: Problems building xfsprogs
+Message-ID: <20110721163122.GD3304@thunk.org>
+References: <20110720175918.GB17971@thunk.org>
+	<20110721090619.GA26263@infradead.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20110721090619.GA26263@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,46 +25,43 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Linux-MM <linux-mm@kvack.org>
-Cc: Rik van Riel <riel@redhat.com>, Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, XFS <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, Minchan Kim <minchan.kim@gmail.com>, Wu Fengguang <fengguang.wu@intel.com>, Johannes Weiner <jweiner@redhat.com>, Mel Gorman <mgorman@suse.de>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
 
-Direct reclaim should never writeback pages. For now, handle the
-situation and warn about it. Ultimately, this will be a BUG_ON.
+On Thu, Jul 21, 2011 at 05:06:19AM -0400, Christoph Hellwig wrote:
+> I works fine for me on various releases of Debian, Fedsora, RHEL and
+> SLES.  But all he machines I've quickly checked seem to have an autoconf
+> that can handle -I, so could you please send this pach with a proper
+> signoff and description?
 
-Signed-off-by: Mel Gorman <mgorman@suse.de>
----
- fs/xfs/linux-2.6/xfs_aops.c |    9 +++++----
- 1 files changed, 5 insertions(+), 4 deletions(-)
+Sure, will do.
 
-diff --git a/fs/xfs/linux-2.6/xfs_aops.c b/fs/xfs/linux-2.6/xfs_aops.c
-index 79ce38b..c33a439 100644
---- a/fs/xfs/linux-2.6/xfs_aops.c
-+++ b/fs/xfs/linux-2.6/xfs_aops.c
-@@ -930,12 +930,13 @@ xfs_vm_writepage(
- 	 * random callers for direct reclaim or memcg reclaim.  We explicitly
- 	 * allow reclaim from kswapd as the stack usage there is relatively low.
- 	 *
--	 * This should really be done by the core VM, but until that happens
--	 * filesystems like XFS, btrfs and ext4 have to take care of this
--	 * by themselves.
-+	 * This should never happen except in the case of a VM regression so
-+	 * warn about it.
- 	 */
--	if ((current->flags & (PF_MEMALLOC|PF_KSWAPD)) == PF_MEMALLOC)
-+	if ((current->flags & (PF_MEMALLOC|PF_KSWAPD)) == PF_MEMALLOC) {
-+		WARN_ON_ONCE(1);
- 		goto redirty;
-+	}
- 
- 	/*
- 	 * We need a transaction if there are delalloc or unwritten buffers
--- 
-1.7.3.4
+> > b) By default xfsprogs builds with DEBUG, and this causes building
+> > libxfs/xfs_ialloc.c to blow up since there a reference of
+> > xfs_stack_trace() which is undefined under a #ifdef DEBUG.  The way to
+> > fix this is to build with DEBUG=-DNDEBUG, but it took me an hour or
+> > two figure this out....
+> 
+> The defaul actually is DEBUG=-DNDEBUG.  No sure how you go he debug
+> build. but we surely should fix it.  I'll add the stub as soon as I get
+> some time.
+
+Well, the default from xfstest-dev/m4/package_globals.m4 is:
+
+    DEBUG=${DEBUG:-'-DDEBUG'}					dnl  -DNDEBUG
+    debug_build="$DEBUG"
+    AC_SUBST(debug_build)
+
+I'm guessing you're getting the default of DEBUG=-DNDEBUG because
+you're getting the package_globals.m4 package from some other m4
+directory....
+
+						- Ted
+
 
 _______________________________________________
 xfs mailing list
