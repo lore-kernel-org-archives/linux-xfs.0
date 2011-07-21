@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6L96L3s017743 for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 04:06:23 -0500
-Received: from busoni.debian.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AEC0F8857C
-	for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 02:06:20 -0700 (PDT)
-Received: from busoni.debian.org (busoni.debian.org [140.211.15.34]) by
-	cuda.sgi.com with ESMTP id TjJOwvYKGkYEDziW for
-	<xfs@oss.sgi.com>; Thu, 21 Jul 2011 02:06:20 -0700 (PDT)
-Subject: Bug#634952: xfsprogs: xfs_quota commands are internationalized
-Resent-To: debian-bugs-dist@lists.debian.org
-Resent-Message-ID: <handler.634952.B.131123902829445@bugs.debian.org>
-From: Cajus Pollmeier <pollmeier@gonicus.de>
-Date: Thu, 21 Jul 2011 10:56:13 +0200
-Message-ID: <1311238573.13553.17.camel@ws-2.muc.intranet.gonicus.de>
-Mime-Version: 1.0
-Reply-To: Cajus Pollmeier <pollmeier@gonicus.de>, 634952@bugs.debian.org
+	p6L96OC5017748 for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 04:06:24 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 514FA8857E
+	for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 02:06:21 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	zRpo5ZYMNX9aeHub for <xfs@oss.sgi.com>;
+	Thu, 21 Jul 2011 02:06:21 -0700 (PDT)
+Date: Thu, 21 Jul 2011 05:06:19 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Problems building xfsprogs
+Message-ID: <20110721090619.GA26263@infradead.org>
+References: <20110720175918.GB17971@thunk.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20110720175918.GB17971@thunk.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,28 +26,46 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Debian Bug Tracking System <submit@bugs.debian.org>
+To: Ted Ts'o <tytso@mit.edu>
+Cc: Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
 
-ClBhY2thZ2U6IHhmc3Byb2dzClZlcnNpb246IDMuMS41ClNldmVyaXR5OiBub3JtYWwKCgpJZiB5
-b3VyIHN5c3RlbSBsb2NhbGUgaXMgbm9uIGVuZ2xpc2ggYW5kIHlvdSB1c2UgdGhlIHhmc19xdW90
-YSB0b29sLCB5b3UKcnVuIGludG8gcHJvYmxlbXMgaWYgeW91IGRvIG5vdCBzZXQgTENfQUxMPUMg
-aW4gZnJvbnQgb2YgeW91ciBjb21tYW5kOgoKIyB4ZnNfcXVvdGEgLXggLWMgcmVwb3J0IC9ob21l
-CkJlZmVobCDCu3JlcG9ydMKrIG5pY2h0IGdlZnVuZGVuCgp2cwoKIyBMQ19BTEw9QyB4ZnNfcXVv
-dGEgLXggLWMgcmVwb3J0IC9ob21lCi4uLgoKVGhlIGNvbW1hbmQgcmVnaXN0cmF0aW9uIHVzZXMg
-Z2V0dGV4dCBmb3IgdGhlIGNvbW1hbmQgJ25hbWUnLCB3aGljaAptYWtlcyBpdCB3b3JrIGxpa2Ug
-dGhpczoKCiMgeGZzX3F1b3RhIC14IC1jIEJlcmljaHQgL2hvbWUKLi4uCgpUaGUgbWFudWFscGFn
-ZSBkb2VzIG5vdCBnaXZlIGFueSBoaW50cyB0byB0aGUgZmFjdCB0aGF0IGNvbW1hbmRzIGFyZQp0
-cmFuc2xhdGVkIGFuZCBJJ2QgcmVjb21tZW5kIHRvIHJlbW92ZSB0aGUgXygpIGFyb3VuZCB0aGUg
-cmVnaXN0ZXJlZApuYW1lcyB0byBub3QgY29uZnVzZSB1c2Vycy4KCi0tIFN5c3RlbSBJbmZvcm1h
-dGlvbjoKRGViaWFuIFJlbGVhc2U6IDYuMC4yCiAgQVBUIHByZWZlcnMgc3RhYmxlLXVwZGF0ZXMK
-ICBBUFQgcG9saWN5OiAoNTAwLCAnc3RhYmxlLXVwZGF0ZXMnKSwgKDUwMCwgJ3N0YWJsZScpCkFy
-Y2hpdGVjdHVyZTogYW1kNjQgKHg4Nl82NCkKCktlcm5lbDogTGludXggMi42LjMyLTUtYW1kNjQg
-KFNNUCB3LzIgQ1BVIGNvcmVzKQpMb2NhbGU6IExBTkc9ZGVfREUuVVRGLTgsIExDX0NUWVBFPWRl
-X0RFLlVURi04IChjaGFybWFwPVVURi04KQpTaGVsbDogL2Jpbi9zaCBsaW5rZWQgdG8gL2Jpbi9k
-YXNoCgoKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhm
-cyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFu
-L2xpc3RpbmZvL3hmcwo=
+On Wed, Jul 20, 2011 at 01:59:18PM -0400, Ted Ts'o wrote:
+> a) "make configure" doesn't work until I patch the top-level Makefile:
+> 
+> diff --git a/Makefile b/Makefile
+> index c40fb2c..37973f5 100644
+> --- a/Makefile
+> +++ b/Makefile
+> @@ -82,7 +82,7 @@ configure:
+>  	libtoolize -c $(LIBTOOLIZE_INSTALL) -f
+>  	cp include/install-sh .
+>  	aclocal -I m4
+> -	autoconf
+> +	autoconf -I m4
+>  
+>  include/builddefs: configure
+>  	./configure $$LOCAL_CONFIGURE_OPTIONS
+
+I works fine for me on various releases of Debian, Fedsora, RHEL and
+SLES.  But all he machines I've quickly checked seem to have an autoconf
+that can handle -I, so could you please send this pach with a proper
+signoff and description?
+
+> b) By default xfsprogs builds with DEBUG, and this causes building
+> libxfs/xfs_ialloc.c to blow up since there a reference of
+> xfs_stack_trace() which is undefined under a #ifdef DEBUG.  The way to
+> fix this is to build with DEBUG=-DNDEBUG, but it took me an hour or
+> two figure this out....
+
+The defaul actually is DEBUG=-DNDEBUG.  No sure how you go he debug
+build. but we surely should fix it.  I'll add the stub as soon as I get
+some time.
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
