@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6L9oxa4019370 for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 04:50:59 -0500
-Received: from smtp-relay.maven.pl (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 84E0815F6766
-	for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 02:50:57 -0700 (PDT)
-Received: from smtp-relay.maven.pl (smtp-relay.maven.pl [193.239.45.138]) by
-	cuda.sgi.com with ESMTP id MyvcgkCXwKgy2hKQ for
-	<xfs@oss.sgi.com>; Thu, 21 Jul 2011 02:50:57 -0700 (PDT)
-From: Arkadiusz Miskiewicz <arekm@maven.pl>
-Subject: Re: Bug#634952: xfsprogs: xfs_quota commands are internationalized
-Date: Thu, 21 Jul 2011 11:50:49 +0200
-References: <1311238573.13553.17.camel@ws-2.muc.intranet.gonicus.de>
-In-Reply-To: <1311238573.13553.17.camel@ws-2.muc.intranet.gonicus.de>
-MIME-Version: 1.0
-Message-Id: <201107211150.50148.arekm@maven.pl>
+	p6LGT4is035774 for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 11:29:04 -0500
+Received: from mx2.suse.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 51FA915110D1
+	for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 09:29:02 -0700 (PDT)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id PI6KFP1kE7gl7MAA for <xfs@oss.sgi.com>;
+	Thu, 21 Jul 2011 09:29:02 -0700 (PDT)
+From: Mel Gorman <mgorman@suse.de>
+Subject: [PATCH 1/8] mm: vmscan: Do not writeback filesystem pages in direct
+	reclaim
+Date: Thu, 21 Jul 2011 17:28:43 +0100
+Message-Id: <1311265730-5324-2-git-send-email-mgorman@suse.de>
+In-Reply-To: <1311265730-5324-1-git-send-email-mgorman@suse.de>
+References: <1311265730-5324-1-git-send-email-mgorman@suse.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,20 +23,94 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, Cajus Pollmeier <pollmeier@gonicus.de>, 634952@bugs.debian.org
-Cc: Debian Bug Tracking System <submit@bugs.debian.org>
+To: Linux-MM <linux-mm@kvack.org>
+Cc: Rik van Riel <riel@redhat.com>, Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, XFS <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, Minchan Kim <minchan.kim@gmail.com>, Wu Fengguang <fengguang.wu@intel.com>, Johannes Weiner <jweiner@redhat.com>, Mel Gorman <mgorman@suse.de>
 
-T24gVGh1cnNkYXkgMjEgb2YgSnVseSAyMDExLCBDYWp1cyBQb2xsbWVpZXIgd3JvdGU6Cj4gUGFj
-a2FnZTogeGZzcHJvZ3MKPiBWZXJzaW9uOiAzLjEuNQo+IFNldmVyaXR5OiBub3JtYWwKCldpbGwg
-YmUgZml4ZWQgaW4gbmV4dCByZWxlYXNlLiBJbiBtZWFudGltZSBiYWNrcG9ydCB0aGlzIHBhdGNo
-IGZyb20gZ2l0Cmh0dHA6Ly9vc3Muc2dpLmNvbS9jZ2ktCmJpbi9naXR3ZWIuY2dpP3A9eGZzL2Nt
-ZHMveGZzcHJvZ3MuZ2l0O2E9Y29tbWl0O2g9YWQ3NjU1OTU4ODA4NWE2MTQ0MDJlZjZmZWNiYWVl
-MGFjYzQxYzAzMwoKLS0gCkFya2FkaXVzeiBNacWba2lld2ljeiAgICAgICAgUExEL0xpbnV4IFRl
-YW0KYXJla20gLyBtYXZlbi5wbCAgICAgICAgICAgIGh0dHA6Ly9mdHAucGxkLWxpbnV4Lm9yZy8K
-Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWls
-aW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3Rp
-bmZvL3hmcwo=
+From: Mel Gorman <mel@csn.ul.ie>
+
+When kswapd is failing to keep zones above the min watermark, a process
+will enter direct reclaim in the same manner kswapd does. If a dirty
+page is encountered during the scan, this page is written to backing
+storage using mapping->writepage.
+
+This causes two problems. First, it can result in very deep call
+stacks, particularly if the target storage or filesystem are complex.
+Some filesystems ignore write requests from direct reclaim as a result.
+The second is that a single-page flush is inefficient in terms of IO.
+While there is an expectation that the elevator will merge requests,
+this does not always happen. Quoting Christoph Hellwig;
+
+	The elevator has a relatively small window it can operate on,
+	and can never fix up a bad large scale writeback pattern.
+
+This patch prevents direct reclaim writing back filesystem pages by
+checking if current is kswapd. Anonymous pages are still written to
+swap as there is not the equivalent of a flusher thread for anonymous
+pages. If the dirty pages cannot be written back, they are placed
+back on the LRU lists. There is now a direct dependency on dirty page
+balancing to prevent too many pages in the system being dirtied which
+would prevent reclaim making forward progress.
+
+Signed-off-by: Mel Gorman <mgorman@suse.de>
+---
+ include/linux/mmzone.h |    1 +
+ mm/vmscan.c            |    9 +++++++++
+ mm/vmstat.c            |    1 +
+ 3 files changed, 11 insertions(+), 0 deletions(-)
+
+diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
+index 9f7c3eb..b70a0c0 100644
+--- a/include/linux/mmzone.h
++++ b/include/linux/mmzone.h
+@@ -100,6 +100,7 @@ enum zone_stat_item {
+ 	NR_UNSTABLE_NFS,	/* NFS unstable pages */
+ 	NR_BOUNCE,
+ 	NR_VMSCAN_WRITE,
++	NR_VMSCAN_WRITE_SKIP,
+ 	NR_WRITEBACK_TEMP,	/* Writeback using temporary buffers */
+ 	NR_ISOLATED_ANON,	/* Temporary isolated pages from anon lru */
+ 	NR_ISOLATED_FILE,	/* Temporary isolated pages from file lru */
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 5ed24b9..ee00c94 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -825,6 +825,15 @@ static unsigned long shrink_page_list(struct list_head *page_list,
+ 		if (PageDirty(page)) {
+ 			nr_dirty++;
+ 
++			/*
++			 * Only kswapd can writeback filesystem pages to
++			 * avoid risk of stack overflow
++			 */
++			if (page_is_file_cache(page) && !current_is_kswapd()) {
++				inc_zone_page_state(page, NR_VMSCAN_WRITE_SKIP);
++				goto keep_locked;
++			}
++
+ 			if (references == PAGEREF_RECLAIM_CLEAN)
+ 				goto keep_locked;
+ 			if (!may_enter_fs)
+diff --git a/mm/vmstat.c b/mm/vmstat.c
+index 20c18b7..fd109f3 100644
+--- a/mm/vmstat.c
++++ b/mm/vmstat.c
+@@ -702,6 +702,7 @@ const char * const vmstat_text[] = {
+ 	"nr_unstable",
+ 	"nr_bounce",
+ 	"nr_vmscan_write",
++	"nr_vmscan_write_skip",
+ 	"nr_writeback_temp",
+ 	"nr_isolated_anon",
+ 	"nr_isolated_file",
+-- 
+1.7.3.4
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
