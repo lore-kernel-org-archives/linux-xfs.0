@@ -1,13 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6LM5hvv046968 for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 17:05:43 -0500
-From: Alex Elder <aelder@sgi.com>
-Message-Id: <201107212205.p6LM5dxF016460@stout.americas.sgi.com>
-Date: Thu, 21 Jul 2011 17:05:39 -0500
-Subject: [PATCH] xfs: set cursor in xfs_ail_splice() even when AIL was
- empty
+	p6LMvk3Q048431 for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 17:57:46 -0500
+Received: from test.thunk.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 55D5BEED6E7
+	for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 15:57:44 -0700 (PDT)
+Received: from test.thunk.org (li9-11.members.linode.com [67.18.176.11]) by
+	cuda.sgi.com with ESMTP id g1OrIutiTglSJ8hy for
+	<xfs@oss.sgi.com>; Thu, 21 Jul 2011 15:57:44 -0700 (PDT)
+Date: Thu, 21 Jul 2011 18:57:38 -0400
+From: "Ted Ts'o" <tytso@mit.edu>
+Subject: Re: Problems building xfsprogs
+Message-ID: <20110721225738.GA25092@thunk.org>
+References: <20110720175918.GB17971@thunk.org>
+	<20110721090619.GA26263@infradead.org>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20110721090619.GA26263@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,118 +29,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
 
-In xfs_ail_splice(), if a cursor is provided it is updated
-to point to the last item on the list to be spliced into
-the AIL.  But if the AIL was found to be empty, the cursor
-(if provided) is just initialized instead.
+On Thu, Jul 21, 2011 at 05:06:19AM -0400, Christoph Hellwig wrote:
+> 
+> I works fine for me on various releases of Debian, Fedsora, RHEL and
+> SLES.  But all he machines I've quickly checked seem to have an autoconf
+> that can handle -I, so could you please send this pach with a proper
+> signoff and description?
 
-There is no reason the null AIL case needs to be any different.
-And treating it the same way allows this code to be rearranged
-a bit, with a somewhat tidier result.
+I figured what the core problem is.  There's a subtle and hidden
+dependency in xfsprogs for an autoconf version which is 2.50 or above.
+In Debian and Ubuntu, if autoconf 2.13 is installed, autoconf will try
+to automatically figure out whether the configure.in requires 2.13 or
+2.50 (since the autoconf maintainers didn't understand the concept of
+"backwards compatibility").  Unfortunately, it got this wrong.
 
-Signed-off-by: Alex Elder <aelder@sgi.com>
+Using an explicit AC_PREREQ(2.50) fixes this.  I'll be sending patches
+shortly....
 
----
- fs/xfs/xfs_trans_ail.c |   68 ++++++++++++++++++++-----------------------------
- 1 file changed, 28 insertions(+), 40 deletions(-)
-
-Index: b/fs/xfs/xfs_trans_ail.c
-===================================================================
---- a/fs/xfs/xfs_trans_ail.c
-+++ b/fs/xfs/xfs_trans_ail.c
-@@ -303,55 +303,42 @@ xfs_trans_ail_cursor_last(
-  */
- static void
- xfs_ail_splice(
--	struct xfs_ail		*ailp,
--	struct xfs_ail_cursor	*cur,
--	struct list_head	*list,
--	xfs_lsn_t		lsn)
-+	struct xfs_ail          *ailp,
-+	struct xfs_ail_cursor   *cur,
-+	struct list_head        *list,
-+	xfs_lsn_t               lsn)
- {
--	struct xfs_log_item	*lip = cur ? cur->item : NULL;
--	struct xfs_log_item	*next_lip;
-+	struct xfs_log_item     *lip;
- 
- 	/*
--	 * Get a new cursor if we don't have a placeholder or the existing one
--	 * has been invalidated.
-+	 * Use the cursor to determine the insertion point if one is
-+	 * provided.  If not, or if the one we got is not valid,
-+	 * find the place in the AIL where the items belong.
- 	 */
--	if (!lip || (__psint_t)lip & 1) {
-+	lip = cur ? cur->item : NULL;
-+	if (!lip || (__psint_t) lip & 1)
- 		lip = __xfs_trans_ail_cursor_last(ailp, lsn);
- 
--		if (!lip) {
--			/* The list is empty, so just splice and return.  */
--			if (cur)
--				cur->item = NULL;
--			list_splice(list, &ailp->xa_ail);
--			return;
--		}
--	}
-+	/*
-+	 * If a cursor is provided, we know we're processing the AIL
-+	 * in lsn order, and future items to be spliced in will
-+	 * follow the last one being inserted now.  Update the
-+	 * cursor to point to that last item, now while we have a
-+	 * reliable pointer to it.
-+	 */
-+	if (cur)
-+		cur->item = list_entry(list->prev, struct xfs_log_item, li_ail);
- 
- 	/*
--	 * Our cursor points to the item we want to insert _after_, so we have
--	 * to update the cursor to point to the end of the list we are splicing
--	 * in so that it points to the correct location for the next splice.
--	 * i.e. before the splice
--	 *
--	 *  lsn -> lsn -> lsn + x -> lsn + x ...
--	 *          ^
--	 *          | cursor points here
--	 *
--	 * After the splice we have:
--	 *
--	 *  lsn -> lsn -> lsn -> lsn -> .... -> lsn -> lsn + x -> lsn + x ...
--	 *          ^                            ^
--	 *          | cursor points here         | needs to move here
--	 *
--	 * So we set the cursor to the last item in the list to be spliced
--	 * before we execute the splice, resulting in the cursor pointing to
--	 * the correct item after the splice occurs.
-+	 * Finally perform the splice.  Unless the AIL was empty,
-+	 * lip points to the item in the AIL _after_ which the new
-+	 * items should go.  If lip is null the AIL was empty, so
-+	 * the new items go at the head of the AIL.
- 	 */
--	if (cur) {
--		next_lip = list_entry(list->prev, struct xfs_log_item, li_ail);
--		cur->item = next_lip;
--	}
--	list_splice(list, &lip->li_ail);
-+	if (lip)
-+		list_splice(list, &lip->li_ail);
-+	else
-+		list_splice(list, &ailp->xa_ail);
- }
- 
- /*
-@@ -682,6 +669,7 @@ xfs_trans_ail_update_bulk(
- 	int			i;
- 	LIST_HEAD(tmp);
- 
-+	ASSERT(nr_items > 0);		/* Not required, but true. */
- 	mlip = xfs_ail_min(ailp);
- 
- 	for (i = 0; i < nr_items; i++) {
+						- Ted
 
 _______________________________________________
 xfs mailing list
