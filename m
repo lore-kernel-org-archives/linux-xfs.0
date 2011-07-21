@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6LNq6eI049989 for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 18:52:06 -0500
+	p6LNogUE049900 for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 18:50:43 -0500
 Received: from test.thunk.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D10F31D8A71F
-	for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 16:52:05 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 90BE0EEDEED
+	for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 16:50:41 -0700 (PDT)
 Received: from test.thunk.org (li9-11.members.linode.com [67.18.176.11]) by
-	cuda.sgi.com with ESMTP id CyJCqsLr21uf2HaA for
-	<xfs@oss.sgi.com>; Thu, 21 Jul 2011 16:52:05 -0700 (PDT)
+	cuda.sgi.com with ESMTP id qASNZGu18MuzVcgg for
+	<xfs@oss.sgi.com>; Thu, 21 Jul 2011 16:50:41 -0700 (PDT)
 From: "Theodore Ts'o" <tytso@mit.edu>
-Subject: [PATCH XFSTESTS 2/3] Build without enabling DEBUG by default
-Date: Thu, 21 Jul 2011 19:52:03 -0400
-Message-Id: <1311292324-4348-2-git-send-email-tytso@mit.edu>
-In-Reply-To: <1311292324-4348-1-git-send-email-tytso@mit.edu>
-References: <1311292324-4348-1-git-send-email-tytso@mit.edu>
+Subject: [PATCH XFSPROGS 1/3] configure.in: Declare a requirement for at least
+	autoconf 2.50
+Date: Thu, 21 Jul 2011 19:50:35 -0400
+Message-Id: <1311292237-4155-1-git-send-email-tytso@mit.edu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,24 +29,33 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs@oss.sgi.com
 Cc: Theodore Ts'o <tytso@mit.edu>
 
+On Debian/Ubuntu systems, if autoconf version 2.13 is installed,
+autoconf will try to automatically figure out whether autoconf 2.13 or
+something more modern is required (since the autoconf maintainers,
+curses be upon them, didn't bother to maintain compatibility between
+autoconf 2.13 and 2.50).  Unfortunately, the hueristics aren't
+perfect, and although the configure.in file looks superficially like
+it will be compatible with autoconf 2.13, it isn't.  You will end up
+with a number of very subtle compilation failures if you use autoconf
+2.13.
+
+So declare a requirement for autoconf 2.50 using AC_PREREQ(2.50).
+
 Signed-off-by: "Theodore Ts'o" <tytso@mit.edu>
 ---
- m4/package_globals.m4 |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ configure.in |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/m4/package_globals.m4 b/m4/package_globals.m4
-index 72fbbb7..f468f50 100644
---- a/m4/package_globals.m4
-+++ b/m4/package_globals.m4
-@@ -15,7 +15,7 @@ AC_DEFUN([AC_PACKAGE_GLOBALS],
-     test -z "$BUILD_VERSION" || pkg_release="$BUILD_VERSION"
-     AC_SUBST(pkg_release)
- 
--    DEBUG=${DEBUG:-'-DDEBUG'}		dnl  -DNDEBUG
-+    DEBUG=${DEBUG:-'-DNDEBUG'}		dnl  -DNDEBUG
-     debug_build="$DEBUG"
-     AC_SUBST(debug_build)
- 
+diff --git a/configure.in b/configure.in
+index 10c4c61..664c0e9 100644
+--- a/configure.in
++++ b/configure.in
+@@ -1,4 +1,5 @@
+ AC_INIT(include/libxfs.h)
++AC_PREREQ(2.50)
+ AC_CONFIG_AUX_DIR([.])
+ AC_CONFIG_MACRO_DIR([m4])
+ AC_CONFIG_HEADER(include/platform_defs.h)
 -- 
 1.7.4.1.22.gec8e1.dirty
 
