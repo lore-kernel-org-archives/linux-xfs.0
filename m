@@ -1,17 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6MEsBZ2090008 for <xfs@oss.sgi.com>; Fri, 22 Jul 2011 09:54:11 -0500
-Subject: Re: [PATCH, RFC] xfs: rename "linux-2.6" subdirectory to be simply
-	"linux"
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110722143420.GE19681@infradead.org>
-References: <201107211804.p6LI4Rvf006075@stout.americas.sgi.com>
-	<20110722143420.GE19681@infradead.org>
-Date: Fri, 22 Jul 2011 09:53:54 -0500
-Message-ID: <1311346434.2771.17.camel@doink>
+	p6MFverA092705 for <xfs@oss.sgi.com>; Fri, 22 Jul 2011 10:57:40 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4E557EF50F2
+	for <xfs@oss.sgi.com>; Fri, 22 Jul 2011 08:57:38 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	y5V6l1C8DUnnWEAY for <xfs@oss.sgi.com>;
+	Fri, 22 Jul 2011 08:57:38 -0700 (PDT)
+Date: Fri, 22 Jul 2011 11:57:37 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Updated xfsprogs 2.6.38 merge
+Message-ID: <20110722155737.GA7261@infradead.org>
+References: <20110705024855.GA561@dastard>
 MIME-Version: 1.0
-Reply-To: aelder@sgi.com
+Content-Disposition: inline
+In-Reply-To: <20110705024855.GA561@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,21 +30,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, 2011-07-22 at 10:34 -0400, Christoph Hellwig wrote:
-> Actually it should just go away.  It's a leftover from when we had
-> code for Linux 2.4 and Linux 2.6 in the same ptools repository. 
+On Tue, Jul 05, 2011 at 12:48:55PM +1000, Dave Chinner wrote:
+> Folks,
+> 
+> I pushed out an updated 2.6.38 kernel merge to xfsprogs patchset a
+> couple of days ago. I've been doing quite a bit of testing on it,
+> both 32 bit and 64 bit, with 512 byte, 1k and 4k block size
+> filesystems and I haven't come across any regressions. The patchset
+> can be found here:
+> 
+>   git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev kernel-2.6.38-sync
+> 
+> It's pretty much unchanged from the last set of patches I sent,
+> except for one minor fix to the radix tree code for an off by one in
+> the path array size for item and tag deletes.
+> 
+> I'm pretty much ready to commit this update so I can then move
+> forward with updating it to the 3.0 kernel code base as a smaller
+> incremental series.
 
-So this is an admission that XFS has gone from an
-Irix-only to a Linux-only filesystem?  We have
-strayed from it but I think there is value in
-trying to separate the core platform-independent
-part of the code from the part that interfaces
-with the OS environment.
+With the xfs_imap.h changes in, and the radix-tree bits fixed up I'm
+fine with this merge and you can add my reviewed-by tags to all commits.
 
-					-Alex
+I'd also suggest removing the testing details in the main patch commit
+log, as it seems a bit misplaced in there.
 
 _______________________________________________
 xfs mailing list
