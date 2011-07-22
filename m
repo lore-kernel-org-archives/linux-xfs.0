@@ -1,19 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6M0BgQV050763 for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 19:11:42 -0500
-Received: from test.thunk.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AC9341D8A728
-	for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 16:54:43 -0700 (PDT)
-Received: from test.thunk.org (li9-11.members.linode.com [67.18.176.11]) by
-	cuda.sgi.com with ESMTP id OuCyEQHsviZcmRhE for
-	<xfs@oss.sgi.com>; Thu, 21 Jul 2011 16:54:43 -0700 (PDT)
-Date: Thu, 21 Jul 2011 19:54:41 -0400
-From: "Ted Ts'o" <tytso@mit.edu>
-Subject: Build script for a hermetic build of xfstests
-Message-ID: <20110721235441.GB25092@thunk.org>
-MIME-Version: 1.0
-Content-Disposition: inline
+	p6M0WYud051362 for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 19:32:35 -0500
+Received: from e34.co.us.ibm.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3FFE51D8A80E
+	for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 17:32:33 -0700 (PDT)
+Received: from e34.co.us.ibm.com (e34.co.us.ibm.com [32.97.110.152]) by
+	cuda.sgi.com with ESMTP id 3rJSSAWV6xmhXnMr for
+	<xfs@oss.sgi.com>; Thu, 21 Jul 2011 17:32:33 -0700 (PDT)
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com
+	[9.17.195.106])
+	by e34.co.us.ibm.com (8.14.4/8.13.1) with ESMTP id p6M0WUPu014876
+	for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 18:32:30 -0600
+Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	p6M0WUO1142148 for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 18:32:30 -0600
+Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av01.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
+	id p6M0WTTE015371
+	for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 18:32:29 -0600
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Date: Thu, 21 Jul 2011 17:32:26 -0700
+Message-Id: <20110722003226.21069.58401.sendpatchset@chandra-lucid.beaverton.ibm.com>
+Subject: [PATCH 00/12] Remove number of macros from xfs_buf.h
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,55 +31,24 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
+Cc: Chandra Seetharaman <sekharan@us.ibm.com>
 
-With the six patches which I just sent (3 for xfsprogs, 3 for
-xfstests), I'm now able to build xfstests hermetically using the
-following script.  It's still a bit rough, but I offer it up if anyone
-else wants to be able to build xfstests without having to worry about
-hidden dependencies in the distro-supplied /usr/include/xfs
-directories, etc.
+Hello All,
 
-						- Ted
+Here are few patchset to remove some of the macro definitions from 
+fs/xfs/linux-2.6/xfs_buf.h.
 
-#!/bin/bash -vx
+Please review and comment.
 
-DESTDIR=$(pwd)/bld
+Thanks & Regards,
 
-mkdir -p $DESTDIR
-
-export CFLAGS="-I$DESTDIR/include"
-export LDFLAGS="-static -L$DESTDIR/lib"
-
-(cd e2fsprogs-libs; ./configure --prefix=/; make ; make DESTDIR=$DESTDIR install)
-
-(cd attr; ./configure --prefix=$DESTDIR; make LLDFLAGS=-all-static ; make install-dev ; make install)
-
-(cd acl; ./configure --prefix=$DESTDIR; make LLDFLAGS=-all-static; make install-dev; make install)
-
-(cd libaio; make prefix=$DESTDIR install)
-
-export DIST_ROOT=$DESTDIR
-export LIBS=-lpthread
-(cd xfsprogs-dev; make realclean ; make configure ; ./configure --prefix=/; make LLDFLAGS=-all-static BUILD_VERBOSE=1; make install; make install-dev)
-unset LIBS
-unset DIST_ROOT
-
-export LIBTOOL="/usr/bin/libtool --tag=CC"
-(cd dmapi; CFLAGS="-I$DESTDIR/include  -L$DESTDIR/lib" LDFLAGS=-static ./configure --prefix=$DESTDIR; make LLDFLAGS=-all-static; make install-dev; make install)
-unset LIBTOOL
-
-find . -name \*.la | xargs rm -f      # Die, libtool, die!!!!
-cp $DESTDIR/include/xfs/dmapi.h $DESTDIR/include
-set
-
-export LIBS=-lpthread
-export CFLAGS="-I$DESTDIR/include  -fno-stack-protector"
-(cd xfstests-dev; ./configure ; make LLDFLAGS=-all-static BUILD_VERBOSE=1)
+chandra
 
 _______________________________________________
 xfs mailing list
