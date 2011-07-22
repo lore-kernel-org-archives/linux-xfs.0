@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6MJktAf102598 for <xfs@oss.sgi.com>; Fri, 22 Jul 2011 14:46:56 -0500
-Subject: Re: [PATCH 11/12] xfs: Remove the macro XFS_BUF_TARGET
+	p6MJcfTZ102170 for <xfs@oss.sgi.com>; Fri, 22 Jul 2011 14:38:41 -0500
+Subject: Re: [PATCH 10/12] xfs: Remove the macro XFS_BUF_SET_TARGET
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110722003402.21069.36631.sendpatchset@chandra-lucid.beaverton.ibm.com>
+In-Reply-To: <20110722003352.21069.89866.sendpatchset@chandra-lucid.beaverton.ibm.com>
 References: <20110722003226.21069.58401.sendpatchset@chandra-lucid.beaverton.ibm.com>
-	<20110722003402.21069.36631.sendpatchset@chandra-lucid.beaverton.ibm.com>
-Date: Fri, 22 Jul 2011 14:46:17 -0500
-Message-ID: <1311363977.2771.112.camel@doink>
+	<20110722003352.21069.89866.sendpatchset@chandra-lucid.beaverton.ibm.com>
+Date: Fri, 22 Jul 2011 14:38:39 -0500
+Message-ID: <1311363519.2771.105.camel@doink>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -26,11 +26,15 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Chandra Seetharaman <sekharan@us.ibm.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, 2011-07-21 at 17:34 -0700, Chandra Seetharaman wrote:
-> Remove the definition and usages of the macro XFS_BUF_TARGET
+On Thu, 2011-07-21 at 17:33 -0700, Chandra Seetharaman wrote:
+> Remove the macro XFS_BUF_SET_TARGET.
 > 
+> hch: As all the buffer allocator already set ->b_target it should be safe
+> to simply remove these calls.
+
+Yes, in _xfs_buf_initialize().
+
 > Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 Looks good.
 
