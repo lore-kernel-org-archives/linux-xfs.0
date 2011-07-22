@@ -1,13 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6MG4kkL093005 for <xfs@oss.sgi.com>; Fri, 22 Jul 2011 11:04:46 -0500
-From: Alex Elder <aelder@sgi.com>
-Message-Id: <201107221604.p6MG4ghs011316@stout.americas.sgi.com>
-Date: Fri, 22 Jul 2011 11:04:41 -0500
-Subject: [PATCH,
-	v2] xfs: set cursor in xfs_ail_splice() even when AIL was empty
+	p6MFq5OP092388 for <xfs@oss.sgi.com>; Fri, 22 Jul 2011 10:52:05 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 750C917ACCF4
+	for <xfs@oss.sgi.com>; Fri, 22 Jul 2011 08:52:01 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	JZJZ7eksLlqfD70f for <xfs@oss.sgi.com>;
+	Fri, 22 Jul 2011 08:52:01 -0700 (PDT)
+Date: Fri, 22 Jul 2011 11:52:00 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] adding example with xfs_info output decryption
+Message-ID: <20110722155200.GA31867@infradead.org>
+References: <BANLkTikjPhKNBVUamccXbAropDw=oBSRgg@mail.gmail.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <BANLkTikjPhKNBVUamccXbAropDw=oBSRgg@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,132 +30,87 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: CoolCold <coolthecold@gmail.com>
+Cc: xfs@oss.sgi.com
 
-In xfs_ail_splice(), if a cursor is provided it is updated to
-point to the last item on the list being spliced into the AIL.
-But if the AIL was found to be empty, the cursor (if provided)
-is just initialized instead.
+On Mon, May 23, 2011 at 02:34:54AM +0400, CoolCold wrote:
+> Basing on irc discussions and questions about reading xfs_info output
+> I've added example in xfs_growfs manpage.
 
-There is no reason the empty AIL case needs to be treated any
-differently.  And treating it the same way allows this code
-to be rearranged a bit, with a somewhat tidier result.
+Alex, Dave, Eric, do you guys have any comments on this?  Language
+nitpicks from the native speakers?  Otherwise I'd be inclined to put it
+in.
 
-Signed-off-by: Alex Elder <aelder@sgi.com>
-
-Updated to avoid passing an empty list to xfs_ail_splice().
-
----
- fs/xfs/xfs_trans_ail.c |   67 +++++++++++++++++++++----------------------------
- 1 file changed, 29 insertions(+), 38 deletions(-)
-
-Index: b/fs/xfs/xfs_trans_ail.c
-===================================================================
---- a/fs/xfs/xfs_trans_ail.c
-+++ b/fs/xfs/xfs_trans_ail.c
-@@ -299,7 +299,7 @@ xfs_trans_ail_cursor_last(
-  * Splice the log item list into the AIL at the given LSN. We splice to the
-  * tail of the given LSN to maintain insert order for push traversals. The
-  * cursor is optional, allowing repeated updates to the same LSN to avoid
-- * repeated traversals.
-+ * repeated traversals.  This should not be called with an empty list.
-  */
- static void
- xfs_ail_splice(
-@@ -308,50 +308,39 @@ xfs_ail_splice(
- 	struct list_head	*list,
- 	xfs_lsn_t		lsn)
- {
--	struct xfs_log_item	*lip = cur ? cur->item : NULL;
--	struct xfs_log_item	*next_lip;
-+	struct xfs_log_item	*lip;
-+
-+	ASSERT(!list_empty(list));
- 
- 	/*
--	 * Get a new cursor if we don't have a placeholder or the existing one
--	 * has been invalidated.
-+	 * Use the cursor to determine the insertion point if one is
-+	 * provided.  If not, or if the one we got is not valid,
-+	 * find the place in the AIL where the items belong.
- 	 */
--	if (!lip || (__psint_t)lip & 1) {
-+	lip = cur ? cur->item : NULL;
-+	if (!lip || (__psint_t) lip & 1)
- 		lip = __xfs_trans_ail_cursor_last(ailp, lsn);
- 
--		if (!lip) {
--			/* The list is empty, so just splice and return.  */
--			if (cur)
--				cur->item = NULL;
--			list_splice(list, &ailp->xa_ail);
--			return;
--		}
--	}
-+	/*
-+	 * If a cursor is provided, we know we're processing the AIL
-+	 * in lsn order, and future items to be spliced in will
-+	 * follow the last one being inserted now.  Update the
-+	 * cursor to point to that last item, now while we have a
-+	 * reliable pointer to it.
-+	 */
-+	if (cur)
-+		cur->item = list_entry(list->prev, struct xfs_log_item, li_ail);
- 
- 	/*
--	 * Our cursor points to the item we want to insert _after_, so we have
--	 * to update the cursor to point to the end of the list we are splicing
--	 * in so that it points to the correct location for the next splice.
--	 * i.e. before the splice
--	 *
--	 *  lsn -> lsn -> lsn + x -> lsn + x ...
--	 *          ^
--	 *          | cursor points here
--	 *
--	 * After the splice we have:
--	 *
--	 *  lsn -> lsn -> lsn -> lsn -> .... -> lsn -> lsn + x -> lsn + x ...
--	 *          ^                            ^
--	 *          | cursor points here         | needs to move here
--	 *
--	 * So we set the cursor to the last item in the list to be spliced
--	 * before we execute the splice, resulting in the cursor pointing to
--	 * the correct item after the splice occurs.
-+	 * Finally perform the splice.  Unless the AIL was empty,
-+	 * lip points to the item in the AIL _after_ which the new
-+	 * items should go.  If lip is null the AIL was empty, so
-+	 * the new items go at the head of the AIL.
- 	 */
--	if (cur) {
--		next_lip = list_entry(list->prev, struct xfs_log_item, li_ail);
--		cur->item = next_lip;
--	}
--	list_splice(list, &lip->li_ail);
-+	if (lip)
-+		list_splice(list, &lip->li_ail);
-+	else
-+		list_splice(list, &ailp->xa_ail);
- }
- 
- /*
-@@ -682,6 +671,7 @@ xfs_trans_ail_update_bulk(
- 	int			i;
- 	LIST_HEAD(tmp);
- 
-+	ASSERT(nr_items > 0);		/* Not required, but true. */
- 	mlip = xfs_ail_min(ailp);
- 
- 	for (i = 0; i < nr_items; i++) {
-@@ -701,7 +691,8 @@ xfs_trans_ail_update_bulk(
- 		list_add(&lip->li_ail, &tmp);
- 	}
- 
--	xfs_ail_splice(ailp, cur, &tmp, lsn);
-+	if (!list_empty(&tmp))
-+		xfs_ail_splice(ailp, cur, &tmp, lsn);
- 
- 	if (!mlip_changed) {
- 		spin_unlock(&ailp->xa_lock);
+> Signed-off-by: Roman Ovchinnikov <coolthecold@gmail.com>
+> ---
+>  man/man8/xfs_growfs.8 |   34 ++++++++++++++++++++++++++++++++++
+>  1 files changed, 34 insertions(+), 0 deletions(-)
+> 
+> diff --git a/man/man8/xfs_growfs.8 b/man/man8/xfs_growfs.8
+> index 02793ae..c782fc1 100644
+> --- a/man/man8/xfs_growfs.8
+> +++ b/man/man8/xfs_growfs.8
+> @@ -1,3 +1,14 @@
+> +.\" Verbatim blocks taken from openssl req manpage content
+> +.de Vb \" Begin verbatim text
+> +.ft CW
+> +.nf
+> +.ne \\$1
+> +..
+> +.de Ve \" End verbatim text
+> +.ft R
+> +.fi
+> +..
+> +
+>  .TH xfs_growfs 8
+>  .SH NAME
+>  xfs_growfs, xfs_info \- expand an XFS filesystem
+> @@ -105,6 +116,7 @@ this is specified with
+>  Specifies that no change to the filesystem is to be made.
+>  The filesystem geometry is printed, and argument checking is performed,
+>  but no growth occurs.
+> +.B See output examples below.
+>  .TP
+>  .BI "\-r | \-R " size
+>  Specifies that the real-time section of the filesystem should be grown. If the
+> @@ -152,6 +164,28 @@ reside. In order to grow a filesystem, it is
+> necessary to provide added
+>  space for it to occupy. Therefore there must be at least one spare new
+>  disk partition available. Adding the space is often done through the use
+>  of a logical volume manager.
+> +.SH "EXAMPLES"
+> +
+> +Examining xfs_info output.
+> +.PP
+> +Let's assume one have the next xfs_info output:
+> +.PP
+> +.Vb 1
+> +\& meta-data=/dev/sda      isize=256    agcount=32, agsize=16777184 blks
+> +\&          =              sectsz=512   attr=2
+> +\& data     =              bsize=4096   blocks=536869888, imaxpct=5
+> +\&          =              sunit=32     swidth=128 blks
+> +\& naming   =version 2     bsize=4096
+> +\& log      =internal      bsize=4096   blocks=32768, version=2
+> +\&          =              sectsz=512   sunit=32 blks, lazy-count=1
+> +\& realtime =none          extsz=524288 blocks=0, rtextents=0
+> +.Ve
+> +.PP
+> +
+> +Here, data section block size (bsize) is 4096 bytes. Therefore
+> +"sunit=32 swidth=128 blks" means stripe unit is 32*4096 bytes = 128 kibibytes
+> +and stripe width is 128*4096 bytes = 512 kibibytes. Filesystem is striped
+> +over 4 ( 128 / 32 ) stripes.
+>  .SH SEE ALSO
+>  .BR mkfs.xfs (8),
+>  .BR md (4),
+> -- 
+> 1.7.2.5
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+---end quoted text---
 
 _______________________________________________
 xfs mailing list
