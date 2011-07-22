@@ -1,30 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6M0WtJI051398 for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 19:32:55 -0500
-Received: from e37.co.us.ibm.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C68B68C737
-	for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 17:32:54 -0700 (PDT)
-Received: from e37.co.us.ibm.com (e37.co.us.ibm.com [32.97.110.158]) by
-	cuda.sgi.com with ESMTP id AVWD8jzcSQTCyZfJ for
-	<xfs@oss.sgi.com>; Thu, 21 Jul 2011 17:32:54 -0700 (PDT)
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com
-	[9.17.195.106])
-	by e37.co.us.ibm.com (8.14.4/8.13.1) with ESMTP id p6M0TjG1013420
-	for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 18:29:45 -0600
+	p6M0Y7hb051560 for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 19:34:07 -0500
+Received: from e34.co.us.ibm.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1FD11EF0C18
+	for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 17:34:06 -0700 (PDT)
+Received: from e34.co.us.ibm.com (e34.co.us.ibm.com [32.97.110.152]) by
+	cuda.sgi.com with ESMTP id VFuR2PDaLMrFMQy4 for
+	<xfs@oss.sgi.com>; Thu, 21 Jul 2011 17:34:06 -0700 (PDT)
+Received: from d03relay01.boulder.ibm.com (d03relay01.boulder.ibm.com
+	[9.17.195.226])
+	by e34.co.us.ibm.com (8.14.4/8.13.1) with ESMTP id p6M0Y4FQ015976
+	for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 18:34:04 -0600
 Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	p6M0WnTf112632 for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 18:32:49 -0600
+	by d03relay01.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	p6M0Y3Z1197316 for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 18:34:03 -0600
 Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
 	by d03av04.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
-	id p6LIWm9s006352
-	for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 12:32:48 -0600
+	id p6LIY330010484
+	for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 12:34:03 -0600
 From: Chandra Seetharaman <sekharan@us.ibm.com>
-Date: Thu, 21 Jul 2011 17:32:48 -0700
-Message-Id: <20110722003248.21069.10452.sendpatchset@chandra-lucid.beaverton.ibm.com>
+Date: Thu, 21 Jul 2011 17:34:02 -0700
+Message-Id: <20110722003402.21069.36631.sendpatchset@chandra-lucid.beaverton.ibm.com>
 In-Reply-To: <20110722003226.21069.58401.sendpatchset@chandra-lucid.beaverton.ibm.com>
 References: <20110722003226.21069.58401.sendpatchset@chandra-lucid.beaverton.ibm.com>
-Subject: [PATCH 02/12] xfs: Remove the macro XFS_BUF_ZEROFLAGS
+Subject: [PATCH 11/12] xfs: Remove the macro XFS_BUF_TARGET
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -41,79 +41,91 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Chandra Seetharaman <sekharan@us.ibm.com>
 
-Remove the definition and usage of the macro XFS_BUF_ZEROFLAGS.
-
-In the specific contexts, not all flags need to be cleared. Hence the
-simplification.
-
-Rationale for xfs_log.c:
-from hch: XBF_READ and XBF_DELWRI will never be set here, XBF_WRITE
-XBF_ASYNC, and XBF_SYNCIO are set just below.
-Hence clearing only XBF_FUA and XBF_FLUSH would suffice.
-
-Rationale for xfs_log_recover.c
-from hch: XBF_READ, XBF_WRITE, XBF_ASYNC and XBF_DELWRI already get dealt with
-in xfs_bwrite a few lines down.
-Hence clearing only XBF_SYNCIO, XBF_FUA and XBF_FLUSH would suffice.
+Remove the definition and usages of the macro XFS_BUF_TARGET
 
 Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/linux-2.6/xfs_buf.h |    5 -----
- fs/xfs/xfs_log.c           |    4 ++--
- fs/xfs/xfs_log_recover.c   |    2 +-
- 3 files changed, 3 insertions(+), 8 deletions(-)
+ fs/xfs/linux-2.6/xfs_buf.h |    1 -
+ fs/xfs/xfs_buf_item.c      |    6 +++---
+ fs/xfs/xfs_mount.c         |    2 +-
+ fs/xfs/xfs_rw.c            |    2 +-
+ fs/xfs/xfs_trans_buf.c     |    2 +-
+ 5 files changed, 6 insertions(+), 7 deletions(-)
 
 diff --git a/fs/xfs/linux-2.6/xfs_buf.h b/fs/xfs/linux-2.6/xfs_buf.h
-index 6b6c25f..d7df7b6 100644
+index 31495cf..075f567 100644
 --- a/fs/xfs/linux-2.6/xfs_buf.h
 +++ b/fs/xfs/linux-2.6/xfs_buf.h
-@@ -231,11 +231,6 @@ extern void xfs_buf_terminate(void);
- #define xfs_buf_target_name(target)	\
- 	({ char __b[BDEVNAME_SIZE]; bdevname((target)->bt_bdev, __b); __b; })
+@@ -287,7 +287,6 @@ static inline int xfs_buf_ispinned(struct xfs_buf *bp)
  
--
--#define XFS_BUF_ZEROFLAGS(bp) \
--	((bp)->b_flags &= ~(XBF_READ|XBF_WRITE|XBF_ASYNC|XBF_DELWRI| \
--			    XBF_SYNCIO|XBF_FUA|XBF_FLUSH))
--
- void xfs_buf_stale(struct xfs_buf *bp);
- #define XFS_BUF_STALE(bp)	xfs_buf_stale(bp);
- #define XFS_BUF_UNSTALE(bp)	((bp)->b_flags &= ~XBF_STALE)
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 06ff843..5319a95 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -1354,7 +1354,7 @@ xlog_sync(xlog_t		*log,
+ #define XFS_BUF_FINISH_IOWAIT(bp)	complete(&bp->b_iowait);
+ 
+-#define XFS_BUF_TARGET(bp)		((bp)->b_target)
+ #define XFS_BUFTARG_NAME(target)	xfs_buf_target_name(target)
+ 
+ static inline void xfs_buf_relse(xfs_buf_t *bp)
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index a3d2bbc..5c2b554 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -971,14 +971,14 @@ xfs_buf_iodone_callbacks(
+ 		goto do_callbacks;
  	}
- 	XFS_BUF_SET_COUNT(bp, count);
- 	bp->b_fspriv = iclog;
--	XFS_BUF_ZEROFLAGS(bp);
-+	bp->b_flags &= ~(XBF_FUA|XBF_FLUSH);
- 	XFS_BUF_BUSY(bp);
- 	XFS_BUF_ASYNC(bp);
- 	bp->b_flags |= XBF_SYNCIO;
-@@ -1401,7 +1401,7 @@ xlog_sync(xlog_t		*log,
- 		XFS_BUF_SET_PTR(bp, (xfs_caddr_t)((__psint_t)&(iclog->ic_header)+
- 					    (__psint_t)count), split);
- 		bp->b_fspriv = iclog;
--		XFS_BUF_ZEROFLAGS(bp);
-+		bp->b_flags &= ~(XBF_FUA|XBF_FLUSH);
- 		XFS_BUF_BUSY(bp);
- 		XFS_BUF_ASYNC(bp);
- 		bp->b_flags |= XBF_SYNCIO;
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 8fe4206..3913b2f 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -265,7 +265,7 @@ xlog_bwrite(
- 	ASSERT(BBTOB(nbblks) <= XFS_BUF_SIZE(bp));
  
- 	XFS_BUF_SET_ADDR(bp, log->l_logBBstart + blk_no);
--	XFS_BUF_ZEROFLAGS(bp);
-+	bp->b_flags &= ~(XBF_SYNCIO|XBF_FUA|XBF_FLUSH);
- 	XFS_BUF_BUSY(bp);
- 	XFS_BUF_HOLD(bp);
- 	xfs_buf_lock(bp);
+-	if (XFS_BUF_TARGET(bp) != lasttarg ||
++	if (bp->b_target != lasttarg ||
+ 	    time_after(jiffies, (lasttime + 5*HZ))) {
+ 		lasttime = jiffies;
+ 		xfs_alert(mp, "Device %s: metadata write error block 0x%llx",
+-			XFS_BUFTARG_NAME(XFS_BUF_TARGET(bp)),
++			XFS_BUFTARG_NAME(bp->b_target),
+ 		      (__uint64_t)XFS_BUF_ADDR(bp));
+ 	}
+-	lasttarg = XFS_BUF_TARGET(bp);
++	lasttarg = bp->b_target;
+ 
+ 	/*
+ 	 * If the write was asynchronous then no one will be looking for the
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index b00c808..49ecc17 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -1615,7 +1615,7 @@ xfs_unmountfs_writesb(xfs_mount_t *mp)
+ 		XFS_BUF_UNDELAYWRITE(sbp);
+ 		XFS_BUF_WRITE(sbp);
+ 		XFS_BUF_UNASYNC(sbp);
+-		ASSERT(XFS_BUF_TARGET(sbp) == mp->m_ddev_targp);
++		ASSERT(sbp->b_target == mp->m_ddev_targp);
+ 		xfsbdstrat(mp, sbp);
+ 		error = xfs_buf_iowait(sbp);
+ 		if (error)
+diff --git a/fs/xfs/xfs_rw.c b/fs/xfs/xfs_rw.c
+index d1f76f8..7382bfe 100644
+--- a/fs/xfs/xfs_rw.c
++++ b/fs/xfs/xfs_rw.c
+@@ -104,7 +104,7 @@ xfs_ioerror_alert(
+ 	xfs_alert(mp,
+ 		 "I/O error occurred: meta-data dev %s block 0x%llx"
+ 		 "       (\"%s\") error %d buf count %zd",
+-		XFS_BUFTARG_NAME(XFS_BUF_TARGET(bp)),
++		XFS_BUFTARG_NAME(bp->b_target),
+ 		(__uint64_t)blkno, func,
+ 		bp->b_error, XFS_BUF_COUNT(bp));
+ }
+diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+index 7dd62e2..137e2b9 100644
+--- a/fs/xfs/xfs_trans_buf.c
++++ b/fs/xfs/xfs_trans_buf.c
+@@ -54,7 +54,7 @@ xfs_trans_buf_item_match(
+ 	list_for_each_entry(lidp, &tp->t_items, lid_trans) {
+ 		blip = (struct xfs_buf_log_item *)lidp->lid_item;
+ 		if (blip->bli_item.li_type == XFS_LI_BUF &&
+-		    XFS_BUF_TARGET(blip->bli_buf) == target &&
++		    blip->bli_buf->b_target == target &&
+ 		    XFS_BUF_ADDR(blip->bli_buf) == blkno &&
+ 		    XFS_BUF_COUNT(blip->bli_buf) == len)
+ 			return blip->bli_buf;
 -- 
 1.7.1
 
