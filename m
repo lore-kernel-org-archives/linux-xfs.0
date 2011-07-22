@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6MIcYOJ099657 for <xfs@oss.sgi.com>; Fri, 22 Jul 2011 13:38:34 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9D5AF1D8AA5C
-	for <xfs@oss.sgi.com>; Fri, 22 Jul 2011 11:38:33 -0700 (PDT)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	YetAJJ8fDaPJHTWd for <xfs@oss.sgi.com>;
-	Fri, 22 Jul 2011 11:38:33 -0700 (PDT)
-Date: Fri, 22 Jul 2011 14:38:30 -0400
-From: Christoph Hellwig <hch@infradead.org>
+	p6MIUrQZ099342 for <xfs@oss.sgi.com>; Fri, 22 Jul 2011 13:30:53 -0500
+Received: from test.thunk.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B9A078ECC4
+	for <xfs@oss.sgi.com>; Fri, 22 Jul 2011 11:30:52 -0700 (PDT)
+Received: from test.thunk.org (li9-11.members.linode.com [67.18.176.11]) by
+	cuda.sgi.com with ESMTP id 9mt9RKa5qlYFAcKi for
+	<xfs@oss.sgi.com>; Fri, 22 Jul 2011 11:30:52 -0700 (PDT)
+Date: Fri, 22 Jul 2011 14:30:48 -0400
+From: "Ted Ts'o" <tytso@mit.edu>
 Subject: Re: [PATCH XFSPROGS 2/3] Build without enabling DEBUG by default
-Message-ID: <20110722183830.GA21744@infradead.org>
+Message-ID: <20110722183048.GC25092@thunk.org>
 References: <1311292237-4155-1-git-send-email-tytso@mit.edu>
 	<1311292237-4155-2-git-send-email-tytso@mit.edu>
 	<20110722141753.GA19681@infradead.org>
-	<20110722183048.GC25092@thunk.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110722183048.GC25092@thunk.org>
+In-Reply-To: <20110722141753.GA19681@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,35 +30,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ted Ts'o <tytso@mit.edu>
-Cc: Christoph Hellwig <hch@infradead.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs@oss.sgi.com
 
-On Fri, Jul 22, 2011 at 02:30:48PM -0400, Ted Ts'o wrote:
-> I added some debugging statements in libxfs/Makefile, and found this
-> (see below).
-
-You can get most of this by simply using make V=1, not just in xfsprogs,
-but in most projects using silent make output (including those using
-automake)
-
-> It looks like the problem is that GNU make 3.81 is doing an immediate
-> expansion of this line in builddefs:
-
-I'm having GNU make 3.81 on most of my test systems as well, so that
-alone can't be the whole issue.
-
-> CFLAGS += $(FCFLAGS) $(GCFLAGS) $(PCFLAGS) $(LCFLAGS)
+On Fri, Jul 22, 2011 at 10:17:53AM -0400, Christoph Hellwig wrote:
+> On Thu, Jul 21, 2011 at 07:50:36PM -0400, Theodore Ts'o wrote:
+> > The tree currently will blow out with a build failure if -DDEBUG is
+> > specified.
 > 
+> This still doesn't make sense to me.  libxfs explicily overrides
+> DEBUG in the makefile:
+> 
+> # don't try linking xfs_repair with a debug libxfs.
+> DEBUG = -DNDEBUG
 
-> LTCOMPILE is /bin/sh ../libtool --quiet --tag=CC --mode=compile gcc -I/kbuild/xfstests/bld/include -g -O2 -DDEBUG -DVERSION="3.1.5" -DLOCALEDIR="//share/locale" -DPACKAGE="xfsprogs" -I./include -DENABLE_GETTEXT -D_GNU_SOURCE -D_XOPEN_SOURCE=500 -D_FILE_OFFSET_BITS=64 -funsigned-char -fno-strict-aliasing -Wall -g -O2 -DDEBUG -DVERSION="3.1.5" -DLOCALEDIR="//share/locale" -DPACKAGE="xfsprogs" -I./include -DENABLE_GETTEXT -D_GNU_SOURCE -D_XOPEN_SOURCE=500 -D_FILE_OFFSET_BITS=64 -funsigned-char -fno-strict-aliasing -Wall -I. -g -O2 -DNDEBUG -DVERSION="3.1.5" -DLOCALEDIR="//share/locale" -DPACKAGE="xfsprogs" -I../include -DENABLE_GETTEXT -D_GNU_SOURCE -D_XOPEN_SOURCE=500 -D_FILE_OFFSET_BITS=64 -funsigned-char -fno-strict-aliasing -Wall
+I added some debugging statements in libxfs/Makefile, and found this
+(see below).
 
-A typical V=1 compile line looks like:
+It looks like the problem is that GNU make 3.81 is doing an immediate
+expansion of this line in builddefs:
 
-/bin/bash ../libtool --quiet --tag=CC --mode=compile gcc -I. -g -O2 -DNDEBUG -DVERSION=\"3.1.5\" -DLOCALEDIR=\"/usr/share/locale\" -DPACKAGE=\"xfsprogs\" -I../include -DENABLE_GETTEXT -D_GNU_SOURCE -D_XOPEN_SOURCE=500 -D_FILE_OFFSET_BITS=64 -funsigned-char -fno-strict-aliasing -Wall    -c xfs_dir2_sf.c
+CFLAGS += $(FCFLAGS) $(GCFLAGS) $(PCFLAGS) $(LCFLAGS)
 
-for me.  The biggest thing is that you have another directory in your
-include path.  How did you add that one? Did you add anything else
-special to the ./configure or make command lines?
+							- Ted
+
+LTCOMPILE is /bin/sh ../libtool --quiet --tag=CC --mode=compile gcc -I/kbuild/xfstests/bld/include -g -O2 -DDEBUG -DVERSION="3.1.5" -DLOCALEDIR="//share/locale" -DPACKAGE="xfsprogs" -I./include -DENABLE_GETTEXT -D_GNU_SOURCE -D_XOPEN_SOURCE=500 -D_FILE_OFFSET_BITS=64 -funsigned-char -fno-strict-aliasing -Wall -g -O2 -DDEBUG -DVERSION="3.1.5" -DLOCALEDIR="//share/locale" -DPACKAGE="xfsprogs" -I./include -DENABLE_GETTEXT -D_GNU_SOURCE -D_XOPEN_SOURCE=500 -D_FILE_OFFSET_BITS=64 -funsigned-char -fno-strict-aliasing -Wall -I. -g -O2 -DNDEBUG -DVERSION="3.1.5" -DLOCALEDIR="//share/locale" -DPACKAGE="xfsprogs" -I../include -DENABLE_GETTEXT -D_GNU_SOURCE -D_XOPEN_SOURCE=500 -D_FILE_OFFSET_BITS=64 -funsigned-char -fno-strict-aliasing -Wall
+FCFLAGS is -I.
+GCFLAGS is -g -O2 -DNDEBUG -DVERSION="3.1.5" -DLOCALEDIR="//share/locale" -DPACKAGE="xfsprogs" -I../include -DENABLE_GETTEXT
+PCFLAGS is -D_GNU_SOURCE -D_XOPEN_SOURCE=500 -D_FILE_OFFSET_BITS=64 -funsigned-char -fno-strict-aliasing -Wall
+CFLAGS is -I/kbuild/xfstests/bld/include -g -O2 -DDEBUG -DVERSION="3.1.5" -DLOCALEDIR="//share/locale" -DPACKAGE="xfsprogs" -I./include -DENABLE_GETTEXT -D_GNU_SOURCE -D_XOPEN_SOURCE=500 -D_FILE_OFFSET_BITS=64 -funsigned-char -fno-strict-aliasing -Wall -g -O2 -DDEBUG -DVERSION="3.1.5" -DLOCALEDIR="//share/locale" -DPACKAGE="xfsprogs" -I./include -DENABLE_GETTEXT -D_GNU_SOURCE -D_XOPEN_SOURCE=500 -D_FILE_OFFSET_BITS=64 -funsigned-char -fno-strict-aliasing -Wall -I. -g -O2 -DNDEBUG -DVERSION="3.1.5" -DLOCALEDIR="//share/locale" -DPACKAGE="xfsprogs" -I../include -DENABLE_GETTEXT -D_GNU_SOURCE -D_XOPEN_SOURCE=500 -D_FILE_OFFSET_BITS=64 -funsigned-char -fno-strict-aliasing -Wall
+CCF is gcc -I/kbuild/xfstests/bld/include -g -O2 -DDEBUG -DVERSION="3.1.5" -DLOCALEDIR="//share/locale" -DPACKAGE="xfsprogs" -I./include -DENABLE_GETTEXT -D_GNU_SOURCE -D_XOPEN_SOURCE=500 -D_FILE_OFFSET_BITS=64 -funsigned-char -fno-strict-aliasing -Wall -g -O2 -DDEBUG -DVERSION="3.1.5" -DLOCALEDIR="//share/locale" -DPACKAGE="xfsprogs" -I./include -DENABLE_GETTEXT -D_GNU_SOURCE -D_XOPEN_SOURCE=500 -D_FILE_OFFSET_BITS=64 -funsigned-char -fno-strict-aliasing -Wall -I. -g -O2 -DNDEBUG -DVERSION="3.1.5" -DLOCALEDIR="//share/locale" -DPACKAGE="xfsprogs" -I../include -DENABLE_GETTEXT -D_GNU_SOURCE -D_XOPEN_SOURCE=500 -D_FILE_OFFSET_BITS=64 -funsigned-char -fno-strict-aliasing -Wall
 
 _______________________________________________
 xfs mailing list
