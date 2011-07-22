@@ -1,16 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6MEYMTq089009 for <xfs@oss.sgi.com>; Fri, 22 Jul 2011 09:34:22 -0500
-Date: Fri, 22 Jul 2011 10:34:20 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH, RFC] xfs: rename "linux-2.6" subdirectory to be simply
-	"linux"
-Message-ID: <20110722143420.GE19681@infradead.org>
-References: <201107211804.p6LI4Rvf006075@stout.americas.sgi.com>
+	p6MEPNrw088562 for <xfs@oss.sgi.com>; Fri, 22 Jul 2011 09:25:23 -0500
+Received: from xmail.sgi.com (pv-excas3-dc21.corp.sgi.com [137.38.102.206])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B17BBAC005
+	for <xfs@oss.sgi.com>; Fri, 22 Jul 2011 07:25:19 -0700 (PDT)
+Subject: Re: [PATCH] xfs: set cursor in xfs_ail_splice() even when AIL was
+	empty
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <201107212205.p6LM5dxF016460@stout.americas.sgi.com>
+References: <201107212205.p6LM5dxF016460@stout.americas.sgi.com>
+Date: Fri, 22 Jul 2011 09:24:28 -0500
+Message-ID: <1311344668.2771.13.camel@doink>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <201107211804.p6LI4Rvf006075@stout.americas.sgi.com>
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,25 +26,40 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, Jul 21, 2011 at 01:04:26PM -0500, Alex Elder wrote:
-> Rename the "linux-2.6" platform-specific subdirectory in XFS to just
-> be "linux".  This is consistent with the "new" Linux development
-> model (regular stable releases rather than the old even/odd cycle
-> with long periods between stable releases).  It was also inspired by
-> Linus' recent rename of top-level git repository for the Linux code.
+On Thu, 2011-07-21 at 17:05 -0500, Alex Elder wrote:
+> In xfs_ail_splice(), if a cursor is provided it is updated
+> to point to the last item on the list to be spliced into
+> the AIL.  But if the AIL was found to be empty, the cursor
+> (if provided) is just initialized instead.
+> 
+> There is no reason the null AIL case needs to be any different.
+> And treating it the same way allows this code to be rearranged
+> a bit, with a somewhat tidier result.
+> 
+> Signed-off-by: Alex Elder <aelder@sgi.com>
 
-Actually it should just go away.  It's a leftover from when we had
-code for Linux 2.4 and Linux 2.6 in the same ptools repository.
+I discovered a problem as I was thinking about this
+last night.  I'll send an update shortly.
 
-I was going to suggest near the end of the merge window that we'll
-simply apply a big git rename to kill all the subdirectories which
-create nothing but pain.  Now that the modular quota options (which
-never made it to mainline anyway) is gone there's absolutely no need
-for the quota directly, and support/ only has the uuid helpers left,
-which are about to get mostly replaced by common code anyway.
+The problem is that my proposed xfs_ail_splice()
+shouldn't update the cursor if an empty list is
+passed, because the result won't produce a valid
+item pointer.  An earlier edition of this patch
+asserted no empty list would get passed, but that
+fired fairly quickly.  Looking carefully at the
+code as it stands now, an empty list will actually
+do no harm, but that's just lucky, more or less.
+
+And because the list_splice() after that ends up
+being a no-op, there is really no point in
+scanning the AIL to re-validate lip.  Therefore
+we should just avoid calling xfs_ail_splice()
+at all with an empty item list.
+
+					-Alex
+
 
 _______________________________________________
 xfs mailing list
