@@ -1,30 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6M0ZX4b051616 for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 19:35:33 -0500
-Received: from e39.co.us.ibm.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C597E1D8A869
-	for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 17:35:31 -0700 (PDT)
-Received: from e39.co.us.ibm.com (e39.co.us.ibm.com [32.97.110.160]) by
-	cuda.sgi.com with ESMTP id v2U1WBPH3dFrrcyE for
-	<xfs@oss.sgi.com>; Thu, 21 Jul 2011 17:35:31 -0700 (PDT)
-Received: from d03relay03.boulder.ibm.com (d03relay03.boulder.ibm.com
-	[9.17.195.228])
-	by e39.co.us.ibm.com (8.14.4/8.13.1) with ESMTP id p6M0KdDC001250
-	for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 18:20:41 -0600
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay03.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	p6M0YAtm169684 for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 18:34:10 -0600
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
-	id p6LIXhFs000523
-	for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 12:33:43 -0600
+	p6M0WtJI051398 for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 19:32:55 -0500
+Received: from e37.co.us.ibm.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C68B68C737
+	for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 17:32:54 -0700 (PDT)
+Received: from e37.co.us.ibm.com (e37.co.us.ibm.com [32.97.110.158]) by
+	cuda.sgi.com with ESMTP id AVWD8jzcSQTCyZfJ for
+	<xfs@oss.sgi.com>; Thu, 21 Jul 2011 17:32:54 -0700 (PDT)
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com
+	[9.17.195.106])
+	by e37.co.us.ibm.com (8.14.4/8.13.1) with ESMTP id p6M0TjG1013420
+	for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 18:29:45 -0600
+Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	p6M0WnTf112632 for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 18:32:49 -0600
+Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av04.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
+	id p6LIWm9s006352
+	for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 12:32:48 -0600
 From: Chandra Seetharaman <sekharan@us.ibm.com>
-Date: Thu, 21 Jul 2011 17:34:09 -0700
-Message-Id: <20110722003408.21069.44409.sendpatchset@chandra-lucid.beaverton.ibm.com>
+Date: Thu, 21 Jul 2011 17:32:48 -0700
+Message-Id: <20110722003248.21069.10452.sendpatchset@chandra-lucid.beaverton.ibm.com>
 In-Reply-To: <20110722003226.21069.58401.sendpatchset@chandra-lucid.beaverton.ibm.com>
 References: <20110722003226.21069.58401.sendpatchset@chandra-lucid.beaverton.ibm.com>
-Subject: [PATCH 12/12] xfs: Remove the macro XFS_BUFTARG_NAME
+Subject: [PATCH 02/12] xfs: Remove the macro XFS_BUF_ZEROFLAGS
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -41,69 +41,79 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Chandra Seetharaman <sekharan@us.ibm.com>
 
-Remove the definition and usages of the macro XFS_BUFTARG_NAME.
+Remove the definition and usage of the macro XFS_BUF_ZEROFLAGS.
+
+In the specific contexts, not all flags need to be cleared. Hence the
+simplification.
+
+Rationale for xfs_log.c:
+from hch: XBF_READ and XBF_DELWRI will never be set here, XBF_WRITE
+XBF_ASYNC, and XBF_SYNCIO are set just below.
+Hence clearing only XBF_FUA and XBF_FLUSH would suffice.
+
+Rationale for xfs_log_recover.c
+from hch: XBF_READ, XBF_WRITE, XBF_ASYNC and XBF_DELWRI already get dealt with
+in xfs_bwrite a few lines down.
+Hence clearing only XBF_SYNCIO, XBF_FUA and XBF_FLUSH would suffice.
 
 Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/linux-2.6/xfs_buf.c |    2 +-
- fs/xfs/linux-2.6/xfs_buf.h |    2 --
- fs/xfs/xfs_buf_item.c      |    2 +-
- fs/xfs/xfs_rw.c            |    2 +-
- 4 files changed, 3 insertions(+), 5 deletions(-)
+ fs/xfs/linux-2.6/xfs_buf.h |    5 -----
+ fs/xfs/xfs_log.c           |    4 ++--
+ fs/xfs/xfs_log_recover.c   |    2 +-
+ 3 files changed, 3 insertions(+), 8 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
-index 5e929f0..6bddce4 100644
---- a/fs/xfs/linux-2.6/xfs_buf.c
-+++ b/fs/xfs/linux-2.6/xfs_buf.c
-@@ -1480,7 +1480,7 @@ xfs_setsize_buftarg_flags(
- 	if (set_blocksize(btp->bt_bdev, sectorsize)) {
- 		xfs_warn(btp->bt_mount,
- 			"Cannot set_blocksize to %u on device %s\n",
--			sectorsize, XFS_BUFTARG_NAME(btp));
-+			sectorsize, xfs_buf_target_name(btp));
- 		return EINVAL;
- 	}
- 
 diff --git a/fs/xfs/linux-2.6/xfs_buf.h b/fs/xfs/linux-2.6/xfs_buf.h
-index 075f567..3a421da 100644
+index 6b6c25f..d7df7b6 100644
 --- a/fs/xfs/linux-2.6/xfs_buf.h
 +++ b/fs/xfs/linux-2.6/xfs_buf.h
-@@ -287,8 +287,6 @@ static inline int xfs_buf_ispinned(struct xfs_buf *bp)
+@@ -231,11 +231,6 @@ extern void xfs_buf_terminate(void);
+ #define xfs_buf_target_name(target)	\
+ 	({ char __b[BDEVNAME_SIZE]; bdevname((target)->bt_bdev, __b); __b; })
  
- #define XFS_BUF_FINISH_IOWAIT(bp)	complete(&bp->b_iowait);
- 
--#define XFS_BUFTARG_NAME(target)	xfs_buf_target_name(target)
 -
- static inline void xfs_buf_relse(xfs_buf_t *bp)
- {
- 	xfs_buf_unlock(bp);
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index 5c2b554..0402173 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -975,7 +975,7 @@ xfs_buf_iodone_callbacks(
- 	    time_after(jiffies, (lasttime + 5*HZ))) {
- 		lasttime = jiffies;
- 		xfs_alert(mp, "Device %s: metadata write error block 0x%llx",
--			XFS_BUFTARG_NAME(bp->b_target),
-+			xfs_buf_target_name(bp->b_target),
- 		      (__uint64_t)XFS_BUF_ADDR(bp));
+-#define XFS_BUF_ZEROFLAGS(bp) \
+-	((bp)->b_flags &= ~(XBF_READ|XBF_WRITE|XBF_ASYNC|XBF_DELWRI| \
+-			    XBF_SYNCIO|XBF_FUA|XBF_FLUSH))
+-
+ void xfs_buf_stale(struct xfs_buf *bp);
+ #define XFS_BUF_STALE(bp)	xfs_buf_stale(bp);
+ #define XFS_BUF_UNSTALE(bp)	((bp)->b_flags &= ~XBF_STALE)
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 06ff843..5319a95 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -1354,7 +1354,7 @@ xlog_sync(xlog_t		*log,
  	}
- 	lasttarg = bp->b_target;
-diff --git a/fs/xfs/xfs_rw.c b/fs/xfs/xfs_rw.c
-index 7382bfe..c96a8a0 100644
---- a/fs/xfs/xfs_rw.c
-+++ b/fs/xfs/xfs_rw.c
-@@ -104,7 +104,7 @@ xfs_ioerror_alert(
- 	xfs_alert(mp,
- 		 "I/O error occurred: meta-data dev %s block 0x%llx"
- 		 "       (\"%s\") error %d buf count %zd",
--		XFS_BUFTARG_NAME(bp->b_target),
-+		xfs_buf_target_name(bp->b_target),
- 		(__uint64_t)blkno, func,
- 		bp->b_error, XFS_BUF_COUNT(bp));
- }
+ 	XFS_BUF_SET_COUNT(bp, count);
+ 	bp->b_fspriv = iclog;
+-	XFS_BUF_ZEROFLAGS(bp);
++	bp->b_flags &= ~(XBF_FUA|XBF_FLUSH);
+ 	XFS_BUF_BUSY(bp);
+ 	XFS_BUF_ASYNC(bp);
+ 	bp->b_flags |= XBF_SYNCIO;
+@@ -1401,7 +1401,7 @@ xlog_sync(xlog_t		*log,
+ 		XFS_BUF_SET_PTR(bp, (xfs_caddr_t)((__psint_t)&(iclog->ic_header)+
+ 					    (__psint_t)count), split);
+ 		bp->b_fspriv = iclog;
+-		XFS_BUF_ZEROFLAGS(bp);
++		bp->b_flags &= ~(XBF_FUA|XBF_FLUSH);
+ 		XFS_BUF_BUSY(bp);
+ 		XFS_BUF_ASYNC(bp);
+ 		bp->b_flags |= XBF_SYNCIO;
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 8fe4206..3913b2f 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -265,7 +265,7 @@ xlog_bwrite(
+ 	ASSERT(BBTOB(nbblks) <= XFS_BUF_SIZE(bp));
+ 
+ 	XFS_BUF_SET_ADDR(bp, log->l_logBBstart + blk_no);
+-	XFS_BUF_ZEROFLAGS(bp);
++	bp->b_flags &= ~(XBF_SYNCIO|XBF_FUA|XBF_FLUSH);
+ 	XFS_BUF_BUSY(bp);
+ 	XFS_BUF_HOLD(bp);
+ 	xfs_buf_lock(bp);
 -- 
 1.7.1
 
