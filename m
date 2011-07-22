@@ -1,28 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6M0XTAW051494 for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 19:33:30 -0500
-Received: from e7.ny.us.ibm.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7B2A2EF0C09
-	for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 17:33:28 -0700 (PDT)
-Received: from e7.ny.us.ibm.com (e7.ny.us.ibm.com [32.97.182.137]) by
-	cuda.sgi.com with ESMTP id 1ht5wjooHZJIwqGa for
-	<xfs@oss.sgi.com>; Thu, 21 Jul 2011 17:33:28 -0700 (PDT)
-Received: from d01relay05.pok.ibm.com (d01relay05.pok.ibm.com [9.56.227.237])
-	by e7.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p6M080YH030350
-	for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 20:08:00 -0400
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay05.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	p6M0XSEo104650 for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 20:33:28 -0400
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
-	p6M0XRsQ017442 for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 21:33:28 -0300
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-Date: Thu, 21 Jul 2011 17:33:23 -0700
-Message-Id: <20110722003322.21069.83785.sendpatchset@chandra-lucid.beaverton.ibm.com>
-In-Reply-To: <20110722003226.21069.58401.sendpatchset@chandra-lucid.beaverton.ibm.com>
-References: <20110722003226.21069.58401.sendpatchset@chandra-lucid.beaverton.ibm.com>
-Subject: [PATCH 07/12] xfs: Remove the macro XFS_BUF_PTR
+	p6M6A7rw068326 for <xfs@oss.sgi.com>; Fri, 22 Jul 2011 01:10:07 -0500
+Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5B3D48CE1A
+	for <xfs@oss.sgi.com>; Thu, 21 Jul 2011 23:10:04 -0700 (PDT)
+Received: from mailsrv14.zmi.at (mailsrv14.zmi.at [212.69.164.54]) by
+	cuda.sgi.com with ESMTP id 6YrQnwnwdNIEDf7w for
+	<xfs@oss.sgi.com>; Thu, 21 Jul 2011 23:10:04 -0700 (PDT)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: Re: 30 TB RAID6 + XFS slow write performance
+Date: Fri, 22 Jul 2011 08:10:00 +0200
+References: <4E24907F.6020903@johnbokma.com> <201107210820.01019@zmi.at>
+	<20110721064838.GA13963@dastard>
+In-Reply-To: <20110721064838.GA13963@dastard>
+MIME-Version: 1.0
+Message-Id: <201107220810.01889@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,499 +24,113 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============3615817310793328324=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: Chandra Seetharaman <sekharan@us.ibm.com>
+Cc: Stan Hoeppner <stan@hardwarefreak.com>, John Bokma <contact@johnbokma.com>
 
-Remove the definition and usages of the macro XFS_BUF_PTR.
+--===============3615817310793328324==
+Content-Type: multipart/signed;
+  boundary="nextPart5729045.t7mSBjdUt8";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 
-Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/linux-2.6/xfs_buf.c |    2 +-
- fs/xfs/linux-2.6/xfs_buf.h |    1 -
- fs/xfs/quota/xfs_dquot.c   |    6 +++---
- fs/xfs/quota/xfs_qm.c      |    2 +-
- fs/xfs/xfs_ag.h            |    6 +++---
- fs/xfs/xfs_bmap.c          |    3 +--
- fs/xfs/xfs_btree.h         |    2 +-
- fs/xfs/xfs_buf_item.c      |    6 +++---
- fs/xfs/xfs_da_btree.c      |   10 +++++-----
- fs/xfs/xfs_dinode.h        |    2 +-
- fs/xfs/xfs_log.c           |    2 +-
- fs/xfs/xfs_log_recover.c   |   10 +++++-----
- fs/xfs/xfs_rtalloc.c       |   30 +++++++++++++++---------------
- fs/xfs/xfs_rtalloc.h       |    2 +-
- fs/xfs/xfs_sb.h            |    2 +-
- fs/xfs/xfs_vnodeops.c      |    6 +++---
- 16 files changed, 45 insertions(+), 47 deletions(-)
+--nextPart5729045.t7mSBjdUt8
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
-index ae2c2e7..6a42f71 100644
---- a/fs/xfs/linux-2.6/xfs_buf.c
-+++ b/fs/xfs/linux-2.6/xfs_buf.c
-@@ -1320,7 +1320,7 @@ xfs_buf_offset(
- 	struct page		*page;
- 
- 	if (bp->b_flags & XBF_MAPPED)
--		return XFS_BUF_PTR(bp) + offset;
-+		return bp->b_addr + offset;
- 
- 	offset += bp->b_offset;
- 	page = bp->b_pages[offset >> PAGE_SHIFT];
-diff --git a/fs/xfs/linux-2.6/xfs_buf.h b/fs/xfs/linux-2.6/xfs_buf.h
-index 6758697..6ae7bde 100644
---- a/fs/xfs/linux-2.6/xfs_buf.h
-+++ b/fs/xfs/linux-2.6/xfs_buf.h
-@@ -261,7 +261,6 @@ void xfs_buf_stale(struct xfs_buf *bp);
- #define XFS_BUF_UNWRITE(bp)	((bp)->b_flags &= ~XBF_WRITE)
- #define XFS_BUF_ISWRITE(bp)	((bp)->b_flags & XBF_WRITE)
- 
--#define XFS_BUF_PTR(bp)			(xfs_caddr_t)((bp)->b_addr)
- #define XFS_BUF_SET_PTR(bp, val, cnt)	xfs_buf_associate_memory(bp, val, cnt)
- #define XFS_BUF_ADDR(bp)		((bp)->b_bn)
- #define XFS_BUF_SET_ADDR(bp, bno)	((bp)->b_bn = (xfs_daddr_t)(bno))
-diff --git a/fs/xfs/quota/xfs_dquot.c b/fs/xfs/quota/xfs_dquot.c
-index 772ae2a..fccde4a 100644
---- a/fs/xfs/quota/xfs_dquot.c
-+++ b/fs/xfs/quota/xfs_dquot.c
-@@ -320,7 +320,7 @@ xfs_qm_init_dquot_blk(
- 	ASSERT(tp);
- 	ASSERT(xfs_buf_islocked(bp));
- 
--	d = (xfs_dqblk_t *)XFS_BUF_PTR(bp);
-+	d = bp->b_addr;
- 
- 	/*
- 	 * ID of the first dquot in the block - id's are zero based.
-@@ -539,7 +539,7 @@ xfs_qm_dqtobp(
- 	/*
- 	 * calculate the location of the dquot inside the buffer.
- 	 */
--	ddq = (struct xfs_disk_dquot *)(XFS_BUF_PTR(bp) + dqp->q_bufoffset);
-+	ddq = bp->b_addr + dqp->q_bufoffset;
- 
- 	/*
- 	 * A simple sanity check in case we got a corrupted dquot...
-@@ -1201,7 +1201,7 @@ xfs_qm_dqflush(
- 	/*
- 	 * Calculate the location of the dquot inside the buffer.
- 	 */
--	ddqp = (struct xfs_disk_dquot *)(XFS_BUF_PTR(bp) + dqp->q_bufoffset);
-+	ddqp = bp->b_addr + dqp->q_bufoffset;
- 
- 	/*
- 	 * A simple sanity check in case we got a corrupted dquot..
-diff --git a/fs/xfs/quota/xfs_qm.c b/fs/xfs/quota/xfs_qm.c
-index 46e54ad..9a0aa76 100644
---- a/fs/xfs/quota/xfs_qm.c
-+++ b/fs/xfs/quota/xfs_qm.c
-@@ -1240,7 +1240,7 @@ xfs_qm_reset_dqcounts(
- 	do_div(j, sizeof(xfs_dqblk_t));
- 	ASSERT(mp->m_quotainfo->qi_dqperchunk == j);
- #endif
--	ddq = (xfs_disk_dquot_t *)XFS_BUF_PTR(bp);
-+	ddq = bp->b_addr;
- 	for (j = 0; j < mp->m_quotainfo->qi_dqperchunk; j++) {
- 		/*
- 		 * Do a sanity check, and if needed, repair the dqblk. Don't
-diff --git a/fs/xfs/xfs_ag.h b/fs/xfs/xfs_ag.h
-index 6530769..4805f00 100644
---- a/fs/xfs/xfs_ag.h
-+++ b/fs/xfs/xfs_ag.h
-@@ -103,7 +103,7 @@ typedef struct xfs_agf {
- /* disk block (xfs_daddr_t) in the AG */
- #define XFS_AGF_DADDR(mp)	((xfs_daddr_t)(1 << (mp)->m_sectbb_log))
- #define	XFS_AGF_BLOCK(mp)	XFS_HDR_BLOCK(mp, XFS_AGF_DADDR(mp))
--#define	XFS_BUF_TO_AGF(bp)	((xfs_agf_t *)XFS_BUF_PTR(bp))
-+#define	XFS_BUF_TO_AGF(bp)	((xfs_agf_t *)((bp)->b_addr))
- 
- extern int xfs_read_agf(struct xfs_mount *mp, struct xfs_trans *tp,
- 			xfs_agnumber_t agno, int flags, struct xfs_buf **bpp);
-@@ -156,7 +156,7 @@ typedef struct xfs_agi {
- /* disk block (xfs_daddr_t) in the AG */
- #define XFS_AGI_DADDR(mp)	((xfs_daddr_t)(2 << (mp)->m_sectbb_log))
- #define	XFS_AGI_BLOCK(mp)	XFS_HDR_BLOCK(mp, XFS_AGI_DADDR(mp))
--#define	XFS_BUF_TO_AGI(bp)	((xfs_agi_t *)XFS_BUF_PTR(bp))
-+#define	XFS_BUF_TO_AGI(bp)	((xfs_agi_t *)((bp)->b_addr))
- 
- extern int xfs_read_agi(struct xfs_mount *mp, struct xfs_trans *tp,
- 				xfs_agnumber_t agno, struct xfs_buf **bpp);
-@@ -168,7 +168,7 @@ extern int xfs_read_agi(struct xfs_mount *mp, struct xfs_trans *tp,
- #define XFS_AGFL_DADDR(mp)	((xfs_daddr_t)(3 << (mp)->m_sectbb_log))
- #define	XFS_AGFL_BLOCK(mp)	XFS_HDR_BLOCK(mp, XFS_AGFL_DADDR(mp))
- #define XFS_AGFL_SIZE(mp)	((mp)->m_sb.sb_sectsize / sizeof(xfs_agblock_t))
--#define	XFS_BUF_TO_AGFL(bp)	((xfs_agfl_t *)XFS_BUF_PTR(bp))
-+#define	XFS_BUF_TO_AGFL(bp)	((xfs_agfl_t *)((bp)->b_addr))
- 
- typedef struct xfs_agfl {
- 	__be32		agfl_bno[1];	/* actually XFS_AGFL_SIZE(mp) */
-diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
-index c51a3f9..25cb2b2 100644
---- a/fs/xfs/xfs_bmap.c
-+++ b/fs/xfs/xfs_bmap.c
-@@ -3384,8 +3384,7 @@ xfs_bmap_local_to_extents(
- 		ASSERT(args.len == 1);
- 		*firstblock = args.fsbno;
- 		bp = xfs_btree_get_bufl(args.mp, tp, args.fsbno, 0);
--		memcpy((char *)XFS_BUF_PTR(bp), ifp->if_u1.if_data,
--			ifp->if_bytes);
-+		memcpy(bp->b_addr, ifp->if_u1.if_data, ifp->if_bytes);
- 		xfs_trans_log_buf(tp, bp, 0, ifp->if_bytes - 1);
- 		xfs_bmap_forkoff_reset(args.mp, ip, whichfork);
- 		xfs_idata_realloc(ip, -ifp->if_bytes, whichfork);
-diff --git a/fs/xfs/xfs_btree.h b/fs/xfs/xfs_btree.h
-index 8d05a6a..5b240de 100644
---- a/fs/xfs/xfs_btree.h
-+++ b/fs/xfs/xfs_btree.h
-@@ -262,7 +262,7 @@ typedef struct xfs_btree_cur
- /*
-  * Convert from buffer to btree block header.
-  */
--#define	XFS_BUF_TO_BLOCK(bp)	((struct xfs_btree_block *)XFS_BUF_PTR(bp))
-+#define	XFS_BUF_TO_BLOCK(bp)	((struct xfs_btree_block *)((bp)->b_addr))
- 
- 
- /*
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index bd4c62b..a16c24c 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -124,9 +124,9 @@ xfs_buf_item_log_check(
- 
- 	bp = bip->bli_buf;
- 	ASSERT(XFS_BUF_COUNT(bp) > 0);
--	ASSERT(XFS_BUF_PTR(bp) != NULL);
-+	ASSERT(bp->b_addr != NULL);
- 	orig = bip->bli_orig;
--	buffer = XFS_BUF_PTR(bp);
-+	buffer = bp->b_addr;
- 	for (x = 0; x < XFS_BUF_COUNT(bp); x++) {
- 		if (orig[x] != buffer[x] && !btst(bip->bli_logged, x)) {
- 			xfs_emerg(bp->b_mount,
-@@ -725,7 +725,7 @@ xfs_buf_item_init(
- 	 * to have logged.
- 	 */
- 	bip->bli_orig = (char *)kmem_alloc(XFS_BUF_COUNT(bp), KM_SLEEP);
--	memcpy(bip->bli_orig, XFS_BUF_PTR(bp), XFS_BUF_COUNT(bp));
-+	memcpy(bip->bli_orig, bp->b_addr, XFS_BUF_COUNT(bp));
- 	bip->bli_logged = (char *)kmem_zalloc(XFS_BUF_COUNT(bp) / NBBY, KM_SLEEP);
- #endif
- 
-diff --git a/fs/xfs/xfs_da_btree.c b/fs/xfs/xfs_da_btree.c
-index 5d9290d..d56ccb7 100644
---- a/fs/xfs/xfs_da_btree.c
-+++ b/fs/xfs/xfs_da_btree.c
-@@ -2258,7 +2258,7 @@ xfs_da_buf_make(int nbuf, xfs_buf_t **bps)
- 		dabuf->nbuf = 1;
- 		bp = bps[0];
- 		dabuf->bbcount = (short)BTOBB(XFS_BUF_COUNT(bp));
--		dabuf->data = XFS_BUF_PTR(bp);
-+		dabuf->data = bp->b_addr;
- 		dabuf->bps[0] = bp;
- 	} else {
- 		dabuf->nbuf = nbuf;
-@@ -2269,7 +2269,7 @@ xfs_da_buf_make(int nbuf, xfs_buf_t **bps)
- 		dabuf->data = kmem_alloc(BBTOB(dabuf->bbcount), KM_SLEEP);
- 		for (i = off = 0; i < nbuf; i++, off += XFS_BUF_COUNT(bp)) {
- 			bp = bps[i];
--			memcpy((char *)dabuf->data + off, XFS_BUF_PTR(bp),
-+			memcpy((char *)dabuf->data + off, bp->b_addr,
- 				XFS_BUF_COUNT(bp));
- 		}
- 	}
-@@ -2292,8 +2292,8 @@ xfs_da_buf_clean(xfs_dabuf_t *dabuf)
- 		for (i = off = 0; i < dabuf->nbuf;
- 				i++, off += XFS_BUF_COUNT(bp)) {
- 			bp = dabuf->bps[i];
--			memcpy(XFS_BUF_PTR(bp), (char *)dabuf->data + off,
--				XFS_BUF_COUNT(bp));
-+			memcpy(bp->b_addr, dabuf->data + off,
-+						XFS_BUF_COUNT(bp));
- 		}
- 	}
- }
-@@ -2330,7 +2330,7 @@ xfs_da_log_buf(xfs_trans_t *tp, xfs_dabuf_t *dabuf, uint first, uint last)
- 
- 	ASSERT(dabuf->nbuf && dabuf->data && dabuf->bbcount && dabuf->bps[0]);
- 	if (dabuf->nbuf == 1) {
--		ASSERT(dabuf->data == (void *)XFS_BUF_PTR(dabuf->bps[0]));
-+		ASSERT(dabuf->data == dabuf->bps[0]->b_addr);
- 		xfs_trans_log_buf(tp, dabuf->bps[0], first, last);
- 		return;
- 	}
-diff --git a/fs/xfs/xfs_dinode.h b/fs/xfs/xfs_dinode.h
-index dffba9b..a372163 100644
---- a/fs/xfs/xfs_dinode.h
-+++ b/fs/xfs/xfs_dinode.h
-@@ -148,7 +148,7 @@ typedef enum xfs_dinode_fmt {
- 		be32_to_cpu((dip)->di_nextents) : \
- 		be16_to_cpu((dip)->di_anextents))
- 
--#define	XFS_BUF_TO_DINODE(bp)	((xfs_dinode_t *)XFS_BUF_PTR(bp))
-+#define	XFS_BUF_TO_DINODE(bp)	((xfs_dinode_t *)((bp)->b_addr))
- 
- /*
-  * For block and character special files the 32bit dev_t is stored at the
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 5805a3a..4255a1c 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -1403,7 +1403,7 @@ xlog_sync(xlog_t		*log,
- 		bp->b_flags |= XBF_SYNCIO;
- 		if (log->l_mp->m_flags & XFS_MOUNT_BARRIER)
- 			bp->b_flags |= XBF_FUA;
--		dptr = XFS_BUF_PTR(bp);
-+		dptr = bp->b_addr;
- 		/*
- 		 * Bump the cycle numbers at the start of each block
- 		 * since this part of the buffer is at the start of
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 8b02dca..11ff19c 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -147,7 +147,7 @@ xlog_align(
- 	xfs_daddr_t	offset = blk_no & ((xfs_daddr_t)log->l_sectBBsize - 1);
- 
- 	ASSERT(BBTOB(offset + nbblks) <= XFS_BUF_SIZE(bp));
--	return XFS_BUF_PTR(bp) + BBTOB(offset);
-+	return bp->b_addr + BBTOB(offset);
- }
- 
- 
-@@ -219,7 +219,7 @@ xlog_bread_offset(
- 	xfs_buf_t	*bp,
- 	xfs_caddr_t	offset)
- {
--	xfs_caddr_t	orig_offset = XFS_BUF_PTR(bp);
-+	xfs_caddr_t	orig_offset = bp->b_addr;
- 	int		orig_len = bp->b_buffer_length;
- 	int		error, error2;
- 
-@@ -1260,7 +1260,7 @@ xlog_write_log_records(
- 		 */
- 		ealign = round_down(end_block, sectbb);
- 		if (j == 0 && (start_block + endcount > ealign)) {
--			offset = XFS_BUF_PTR(bp) + BBTOB(ealign - start_block);
-+			offset = bp->b_addr + BBTOB(ealign - start_block);
- 			error = xlog_bread_offset(log, ealign, sectbb,
- 							bp, offset);
- 			if (error)
-@@ -3433,7 +3433,7 @@ xlog_do_recovery_pass(
- 			/*
- 			 * Check for header wrapping around physical end-of-log
- 			 */
--			offset = XFS_BUF_PTR(hbp);
-+			offset = hbp->b_addr;
- 			split_hblks = 0;
- 			wrapped_hblks = 0;
- 			if (blk_no + hblks <= log->l_logBBsize) {
-@@ -3493,7 +3493,7 @@ xlog_do_recovery_pass(
- 			} else {
- 				/* This log record is split across the
- 				 * physical end of log */
--				offset = XFS_BUF_PTR(dbp);
-+				offset = dbp->b_addr;
- 				split_bblks = 0;
- 				if (blk_no != log->l_logBBsize) {
- 					/* some data is before the physical
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index cb8132c..35561a5 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -168,7 +168,7 @@ error_cancel:
- 				xfs_trans_cancel(tp, cancelflags);
- 				goto error;
- 			}
--			memset(XFS_BUF_PTR(bp), 0, mp->m_sb.sb_blocksize);
-+			memset(bp->b_addr, 0, mp->m_sb.sb_blocksize);
- 			xfs_trans_log_buf(tp, bp, 0, mp->m_sb.sb_blocksize - 1);
- 			/*
- 			 * Commit the transaction.
-@@ -943,7 +943,7 @@ xfs_rtcheck_range(
- 	if (error) {
- 		return error;
- 	}
--	bufp = (xfs_rtword_t *)XFS_BUF_PTR(bp);
-+	bufp = bp->b_addr;
- 	/*
- 	 * Compute the starting word's address, and starting bit.
- 	 */
-@@ -994,7 +994,7 @@ xfs_rtcheck_range(
- 			if (error) {
- 				return error;
- 			}
--			b = bufp = (xfs_rtword_t *)XFS_BUF_PTR(bp);
-+			b = bufp = bp->b_addr;
- 			word = 0;
- 		} else {
- 			/*
-@@ -1040,7 +1040,7 @@ xfs_rtcheck_range(
- 			if (error) {
- 				return error;
- 			}
--			b = bufp = (xfs_rtword_t *)XFS_BUF_PTR(bp);
-+			b = bufp = bp->b_addr;
- 			word = 0;
- 		} else {
- 			/*
-@@ -1158,7 +1158,7 @@ xfs_rtfind_back(
- 	if (error) {
- 		return error;
- 	}
--	bufp = (xfs_rtword_t *)XFS_BUF_PTR(bp);
-+	bufp = bp->b_addr;
- 	/*
- 	 * Get the first word's index & point to it.
- 	 */
-@@ -1210,7 +1210,7 @@ xfs_rtfind_back(
- 			if (error) {
- 				return error;
- 			}
--			bufp = (xfs_rtword_t *)XFS_BUF_PTR(bp);
-+			bufp = bp->b_addr;
- 			word = XFS_BLOCKWMASK(mp);
- 			b = &bufp[word];
- 		} else {
-@@ -1256,7 +1256,7 @@ xfs_rtfind_back(
- 			if (error) {
- 				return error;
- 			}
--			bufp = (xfs_rtword_t *)XFS_BUF_PTR(bp);
-+			bufp = bp->b_addr;
- 			word = XFS_BLOCKWMASK(mp);
- 			b = &bufp[word];
- 		} else {
-@@ -1333,7 +1333,7 @@ xfs_rtfind_forw(
- 	if (error) {
- 		return error;
- 	}
--	bufp = (xfs_rtword_t *)XFS_BUF_PTR(bp);
-+	bufp = bp->b_addr;
- 	/*
- 	 * Get the first word's index & point to it.
- 	 */
-@@ -1384,7 +1384,7 @@ xfs_rtfind_forw(
- 			if (error) {
- 				return error;
- 			}
--			b = bufp = (xfs_rtword_t *)XFS_BUF_PTR(bp);
-+			b = bufp = bp->b_addr;
- 			word = 0;
- 		} else {
- 			/*
-@@ -1429,7 +1429,7 @@ xfs_rtfind_forw(
- 			if (error) {
- 				return error;
- 			}
--			b = bufp = (xfs_rtword_t *)XFS_BUF_PTR(bp);
-+			b = bufp = bp->b_addr;
- 			word = 0;
- 		} else {
- 			/*
-@@ -1649,7 +1649,7 @@ xfs_rtmodify_range(
- 	if (error) {
- 		return error;
- 	}
--	bufp = (xfs_rtword_t *)XFS_BUF_PTR(bp);
-+	bufp = bp->b_addr;
- 	/*
- 	 * Compute the starting word's address, and starting bit.
- 	 */
-@@ -1694,7 +1694,7 @@ xfs_rtmodify_range(
- 			if (error) {
- 				return error;
- 			}
--			first = b = bufp = (xfs_rtword_t *)XFS_BUF_PTR(bp);
-+			first = b = bufp = bp->b_addr;
- 			word = 0;
- 		} else {
- 			/*
-@@ -1734,7 +1734,7 @@ xfs_rtmodify_range(
- 			if (error) {
- 				return error;
- 			}
--			first = b = bufp = (xfs_rtword_t *)XFS_BUF_PTR(bp);
-+			first = b = bufp = bp->b_addr;
- 			word = 0;
- 		} else {
- 			/*
-@@ -1832,8 +1832,8 @@ xfs_rtmodify_summary(
- 	 */
- 	sp = XFS_SUMPTR(mp, bp, so);
- 	*sp += delta;
--	xfs_trans_log_buf(tp, bp, (uint)((char *)sp - (char *)XFS_BUF_PTR(bp)),
--		(uint)((char *)sp - (char *)XFS_BUF_PTR(bp) + sizeof(*sp) - 1));
-+	xfs_trans_log_buf(tp, bp, (uint)((char *)sp - (char *)bp->b_addr),
-+		(uint)((char *)sp - (char *)bp->b_addr + sizeof(*sp) - 1));
- 	return 0;
- }
- 
-diff --git a/fs/xfs/xfs_rtalloc.h b/fs/xfs/xfs_rtalloc.h
-index 09e1f4f..f7f3a35 100644
---- a/fs/xfs/xfs_rtalloc.h
-+++ b/fs/xfs/xfs_rtalloc.h
-@@ -47,7 +47,7 @@ struct xfs_trans;
- #define	XFS_SUMOFFSTOBLOCK(mp,s)	\
- 	(((s) * (uint)sizeof(xfs_suminfo_t)) >> (mp)->m_sb.sb_blocklog)
- #define	XFS_SUMPTR(mp,bp,so)	\
--	((xfs_suminfo_t *)((char *)XFS_BUF_PTR(bp) + \
-+	((xfs_suminfo_t *)((bp)->b_addr + \
- 		(((so) * (uint)sizeof(xfs_suminfo_t)) & XFS_BLOCKMASK(mp))))
- 
- #define	XFS_BITTOBLOCK(mp,bi)	((bi) >> (mp)->m_blkbit_log)
-diff --git a/fs/xfs/xfs_sb.h b/fs/xfs/xfs_sb.h
-index 1eb2ba5..cb6ae71 100644
---- a/fs/xfs/xfs_sb.h
-+++ b/fs/xfs/xfs_sb.h
-@@ -509,7 +509,7 @@ static inline int xfs_sb_version_hasprojid32bit(xfs_sb_t *sbp)
- 
- #define XFS_SB_DADDR		((xfs_daddr_t)0) /* daddr in filesystem/ag */
- #define	XFS_SB_BLOCK(mp)	XFS_HDR_BLOCK(mp, XFS_SB_DADDR)
--#define XFS_BUF_TO_SBP(bp)	((xfs_dsb_t *)XFS_BUF_PTR(bp))
-+#define XFS_BUF_TO_SBP(bp)	((xfs_dsb_t *)((bp)->b_addr))
- 
- #define	XFS_HDR_BLOCK(mp,d)	((xfs_agblock_t)XFS_BB_TO_FSBT(mp,d))
- #define	XFS_DADDR_TO_FSB(mp,d)	XFS_AGB_TO_FSB(mp, \
-diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
-index 97daa35..07f480a 100644
---- a/fs/xfs/xfs_vnodeops.c
-+++ b/fs/xfs/xfs_vnodeops.c
-@@ -94,7 +94,7 @@ xfs_readlink_bmap(
- 			byte_cnt = pathlen;
- 		pathlen -= byte_cnt;
- 
--		memcpy(link, XFS_BUF_PTR(bp), byte_cnt);
-+		memcpy(link, bp->b_addr, byte_cnt);
- 		xfs_buf_relse(bp);
- 	}
- 
-@@ -1654,7 +1654,7 @@ xfs_symlink(
- 			}
- 			pathlen -= byte_cnt;
- 
--			memcpy(XFS_BUF_PTR(bp), cur_chunk, byte_cnt);
-+			memcpy(bp->b_addr, cur_chunk, byte_cnt);
- 			cur_chunk += byte_cnt;
- 
- 			xfs_trans_log_buf(tp, bp, 0, byte_cnt - 1);
-@@ -1999,7 +1999,7 @@ xfs_zero_remaining_bytes(
- 					  mp, bp, XFS_BUF_ADDR(bp));
- 			break;
- 		}
--		memset(XFS_BUF_PTR(bp) +
-+		memset(bp->b_addr +
- 			(offset - XFS_FSB_TO_B(mp, imap.br_startoff)),
- 		      0, lastoffset - offset + 1);
- 		XFS_BUF_UNDONE(bp);
--- 
-1.7.1
+On Donnerstag, 21. Juli 2011 Dave Chinner wrote:
+> If you are writing files that grow like this, then you are doing
+> something wrong. If the app can't do it's IO differently, then this
+> is exactly the reason we have userspace-controlled preallocation
+> interfaces.
+>=20
+> Filesystems cannot prevent user stupidity from screwing something
+> up....
+
+This can happen if you copy a syslog server over to a new disk, then let=20
+it start it's work again. Many files that start small and grow. Luckily,=20
+the logs are rotated latest monthly, so it shouldn't be too bad.
+=20
+> > And files >64KiB are immediately fragmented
+> > then. At this time, there are only 16384 * 2KiB =3D 32MiB used, which
+> > is 3,125% of the disk. I can't believe my numbers, are they true?
+>=20
+> No, because most filesystems have a 4k block size.=20
+
+I just meant pure disk usage. Of 1GB, only 32MB are used, and this worst=20
+case example hits us badly.
+
+> Not to mention
+> that fragmentation is likely to be limited to the single AG the files
+> in the directory belong to. i.e. even if we can't allocation a sunit
+> aligned chunk in an AG, we won't switch to another AG just to do
+> sunit aligned allocation.
+
+This is good to know also, thanks.
+=20
+> > OK, this is a worst case scenario, and as you've said before, any
+> > filesystem can be considered full at 85% fill grade. But it's
+> > incredible how quickly you could fuck up a filesystem when using
+> > su/sw and writing small files.
+>=20
+> Well, don't use a filesystem that is optimised for storing large
+> sizes, large files and high bandwidth for storing lots of small
+> files, then.  Indeed, the point of not packing the files is so they
+> -don't fragemnt as they grow-. XFS is not designed to be optimal
+> for small filesystems or small files. In most cases it will deal
+> with them just fine, so in reality your concerns are mostly
+> unfounded...
+
+Yes, I just wanted to know about the corner cases, and how XFS behaves.=20
+Actually, we're changing over to using NetApps, and with their WAFL=20
+anyway I should drop all su/sw usage and just use 4KB blocks.
+
+And even when XFS is optimized for large files, there are often small=20
+ones. Think of a mysql server with hundreds of DBs and=20
+innodb_file_per_table set. Even when some DBs are large, there are many=20
+small files.
+
+But this thread has drifted a bit. XFS does great work, and now I=20
+understand the background a bit more. Thanks, Dave.
+
+=2D-=20
+mit freundlichen Gr=FCssen,
+Michael Monnerie, Ing. BSc
+
+it-management Internet Services: Prot=E9ger
+http://proteger.at [gesprochen: Prot-e-schee]
+Tel: +43 660 / 415 6531
+
+// Haus zu verkaufen: http://zmi.at/langegg/
+
+--nextPart5729045.t7mSBjdUt8
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.16 (GNU/Linux)
+
+iEYEABECAAYFAk4pFDkACgkQzhSR9xwSCbRW8ACfY0yQ7V1jodyIujcoJIylzA+M
+aS4AoKMkdMiebpTo3bz5zHxQluo8tvG4
+=3h4T
+-----END PGP SIGNATURE-----
+
+--nextPart5729045.t7mSBjdUt8--
+
+
+--===============3615817310793328324==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============3615817310793328324==--
