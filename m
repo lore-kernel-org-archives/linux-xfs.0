@@ -1,35 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6MKqVuU105810 for <xfs@oss.sgi.com>; Fri, 22 Jul 2011 15:52:31 -0500
-Received: from e36.co.us.ibm.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 932C31511A2C
-	for <xfs@oss.sgi.com>; Fri, 22 Jul 2011 13:52:30 -0700 (PDT)
-Received: from e36.co.us.ibm.com (e36.co.us.ibm.com [32.97.110.154]) by
-	cuda.sgi.com with ESMTP id MCurBZlIjrhvtfN0 for
-	<xfs@oss.sgi.com>; Fri, 22 Jul 2011 13:52:30 -0700 (PDT)
-Received: from d03relay03.boulder.ibm.com (d03relay03.boulder.ibm.com
-	[9.17.195.228])
-	by e36.co.us.ibm.com (8.14.4/8.13.1) with ESMTP id p6MKkHUw032646
-	for <xfs@oss.sgi.com>; Fri, 22 Jul 2011 14:46:17 -0600
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay03.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	p6MKpEYs175572 for <xfs@oss.sgi.com>; Fri, 22 Jul 2011 14:51:14 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
-	id p6MEpDJe018826
-	for <xfs@oss.sgi.com>; Fri, 22 Jul 2011 08:51:13 -0600
-Subject: Re: [PATCH 09/12] Replace the macro XFS_BUF_ISPINNED with helper
-	xfs_buf_ispinned
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-In-Reply-To: <1311363514.2771.104.camel@doink>
+	p6MLCfuA106556 for <xfs@oss.sgi.com>; Fri, 22 Jul 2011 16:12:41 -0500
+Subject: Re: [PATCH 03/12] xfs: Remove the macro XFS_BUF_ERROR and family
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <1311367796.3210.971.camel@chandra-lucid.beaverton.ibm.com>
 References: <20110722003226.21069.58401.sendpatchset@chandra-lucid.beaverton.ibm.com>
-	<20110722003343.21069.95122.sendpatchset@chandra-lucid.beaverton.ibm.com>
-	<1311363514.2771.104.camel@doink>
-Date: Fri, 22 Jul 2011 13:51:13 -0700
-Message-ID: <1311367873.3210.973.camel@chandra-lucid.beaverton.ibm.com>
-Mime-Version: 1.0
-Reply-To: sekharan@us.ibm.com
+	<20110722003254.21069.27101.sendpatchset@chandra-lucid.beaverton.ibm.com>
+	<1311363490.2771.98.camel@doink>
+	<1311367796.3210.971.camel@chandra-lucid.beaverton.ibm.com>
+Date: Fri, 22 Jul 2011 16:10:55 -0500
+Message-ID: <1311369055.2771.139.camel@doink>
+MIME-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -42,47 +25,137 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: aelder@sgi.com
+To: sekharan@us.ibm.com
 Cc: xfs@oss.sgi.com
 
-On Fri, 2011-07-22 at 14:38 -0500, Alex Elder wrote:
-> On Thu, 2011-07-21 at 17:33 -0700, Chandra Seetharaman wrote:
-> > Replace the macro XFS_BUF_ISPINNED with an inline helper function
-> > xfs_buf_ispinned, and change all its usages.
+On Fri, 2011-07-22 at 13:49 -0700, Chandra Seetharaman wrote:
+> Thanks for the review Alex.
+> 
+> See below for comments.
+> 
+> On Fri, 2011-07-22 at 14:38 -0500, Alex Elder wrote:
+> > On Thu, 2011-07-21 at 17:32 -0700, Chandra Seetharaman wrote:
+> > > Remove the definitions and usage of the macros XFS_BUF_ERROR,
+
+. . .
+
+> > > diff --git a/fs/xfs/quota/xfs_dquot.c b/fs/xfs/quota/xfs_dquot.c
+> > > index 837f311..e7e35fb 100644
+> > > --- a/fs/xfs/quota/xfs_dquot.c
+> > > +++ b/fs/xfs/quota/xfs_dquot.c
+> > > @@ -403,7 +403,8 @@ xfs_qm_dqalloc(
+> > >  			       dqp->q_blkno,
+> > >  			       mp->m_quotainfo->qi_dqchunklen,
+> > >  			       0);
+> > > -	if (!bp || (error = XFS_BUF_GETERROR(bp)))
+> > > +	error = xfs_buf_geterror(bp);
+> > > +	if (error)
+> > >  		goto error1;
+> > >  	/*
+> > >  	 * Make a chunk of dquots out of this buffer and log
 > > 
-> > Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
-> > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > This results in behavior that differs from before.
+> > Previously, error would have value 0 following
+> > the call to xfs_trans_get_buf() here, meaning that
+> > (at error1:) xfs_qm_dqalloc() would return 0 in
+> > this case.  Now it will return ENOMEM.
+> > 
+> > I think what you have done may be correct, but
+> > since the change does more than the simple
+> > macro transformation you intend, this change
+> > should be done in a separate commit.
+> > 
+> > So either:
+> > - post a new patch (preferably before this
+> >   whole series) that makes this code return
+> >   ENOMEM if xfs_trans_get_buf() returns a
+> >   null pointer, then update this patch accordingly;
 > 
-> One simple suggestion below.  Otherwise:
-> 
-> Reviewed-by: Alex Elder <aelder@sgi.com>
-> 
-> > diff --git a/fs/xfs/linux-2.6/xfs_buf.h b/fs/xfs/linux-2.6/xfs_buf.h
-> > index 7b1f484..71e1d6f 100644
-> > --- a/fs/xfs/linux-2.6/xfs_buf.h
-> > +++ b/fs/xfs/linux-2.6/xfs_buf.h
-> > @@ -280,7 +280,10 @@ xfs_buf_set_ref(
-> >  #define XFS_BUF_SET_VTYPE_REF(bp, type, ref)	xfs_buf_set_ref(bp, ref)
-> >  #define XFS_BUF_SET_VTYPE(bp, type)		do { } while (0)
-> >  
-> > -#define XFS_BUF_ISPINNED(bp)	atomic_read(&((bp)->b_pin_count))
-> > +static inline int xfs_buf_ispinned(struct xfs_buf *bp)
-> > +{
-> > +	return atomic_read(&(bp->b_pin_count));
-> 
-> Good idea.  But drop the extra parentheses:
-> 
-> 	return atomic_read(&bp->b_pin_count);
+> Will it this way and resent the patch
+> xfs_buf_geterror
 
-will do
-> 
-> > +}
-> >  
-> >  #define XFS_BUF_FINISH_IOWAIT(bp)	complete(&bp->b_iowait);
-> >  
-> 
-> 
+I don't grok that "sentence" and I'm not sure whether
+you are referring to the one above or below.
 
+> > - or just change this patch to return 0 instead
+> >   of  ENOMEM if xfs_trans_get_buf() returns a
+> >   null pointer.
+> > 
+> > . . .
+> > 
+> > > diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
+> > > index 88d1214..97daa35 100644
+> > > --- a/fs/xfs/xfs_vnodeops.c
+> > > +++ b/fs/xfs/xfs_vnodeops.c
+> > > @@ -83,7 +83,7 @@ xfs_readlink_bmap(
+> > >  
+> > >  		bp = xfs_buf_read(mp->m_ddev_targp, d, BTOBB(byte_cnt),
+> > >  				  XBF_LOCK | XBF_MAPPED | XBF_DONT_BLOCK);
+> > 
+> > xfs_buf_read() can return NULL here, so to match
+> > the existing behavior you should call xfs_buf_geterror()
+> > here.
+> > 
+> > > -		error = XFS_BUF_GETERROR(bp);
+> > > +		error = bp->b_error;
+> > >  		if (error) {
+> > >  			xfs_ioerror_alert("xfs_readlink",
+> > >  				  ip->i_mount, bp, XFS_BUF_ADDR(bp));
+> 
+> I did the change consciously. If bp were NULL, error would have been set
+> to ENOMEM, and xfs_ioerror_alert() and xfs_buf_relse(), would have
+> accessed bp and tripped anyways. So, I felt using the indirection
+> (xfs_buf_geterror()) is not adding any value, hence set error by
+> directly accessing b_error.
+
+But you are dereferencing a possibly null pointer in the
+code you added.  Yes, the code that was already there
+should not dereference it either, but that's no excuse
+for you to do it.  (And fix the other code while you're
+there, or make a note to get it fixed later.)
+
+The reason it's important here is that the value of error
+gets passed back to the caller, and although I didn't
+go very far back to see what effect it has, a quick look
+showed that it might lead to different behavior.  As I
+said, it might be *correct* behavior, but in any case it's
+different, so it belongs in its own commit.
+
+> There are more place like these.
+
+I noticed you doing this sort of thing in a bunch of other
+spots in your patch, and in all of them they seemed to
+follow a test that ensured the buffer pointer was non-null
+(or it was implicit, because some *prior* dereference of
+the pointer would have been a problem) therefore simply
+checking bp->b_error was a fine replacement.
+
+But in this one spot, it's a bit different, so I called
+attention to it.
+
+If you are convinced I'm mistaken and this will produce
+results identical to before, say so and I'll take a
+closer look. 
+
+> What do you think of this option
+> 
+> Leave this as is (with b_error), and send another patch to check for bp
+> after xfs_buf_read() in all places (if you want this option, what do you
+> think error should be set to, I see both EIO and ENOMEM used. I think it
+> should be the same always).
+> 
+> If you don't like that option I can revert to xfs_buf_geterror() too.
+
+I think using xfs_buf_geterror() is the easiest thing
+to do right now.  Changing it such that xfs_readlink_bmap()
+returns ENOMEM in the event xfs_buf_read() here returns a null
+pointer sounds like a reasonable thing to do, but do it in
+a separate patch that focuses on that change and why it's
+correct.  And (despite what I said earlier) I guess do it
+*after* we've got this series in.  I'm about ready to get
+it committed once you get it updated.
+
+					-Alex
 
 _______________________________________________
 xfs mailing list
