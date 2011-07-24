@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6OBKPZO205252 for <xfs@oss.sgi.com>; Sun, 24 Jul 2011 06:20:26 -0500
+	p6OBeslW206217 for <xfs@oss.sgi.com>; Sun, 24 Jul 2011 06:40:54 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 068B61358586
-	for <xfs@oss.sgi.com>; Sun, 24 Jul 2011 04:20:24 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 81E03135861E
+	for <xfs@oss.sgi.com>; Sun, 24 Jul 2011 04:40:53 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	o7kGLuYrC5BuCI9A for <xfs@oss.sgi.com>;
-	Sun, 24 Jul 2011 04:20:24 -0700 (PDT)
-Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1QkwjP-0004yn-Sy
-	for xfs@oss.sgi.com; Sun, 24 Jul 2011 11:20:23 +0000
-Date: Sun, 24 Jul 2011 07:20:23 -0400
+	wiG39Lx3gtkCKw7l for <xfs@oss.sgi.com>;
+	Sun, 24 Jul 2011 04:40:53 -0700 (PDT)
+Date: Sun, 24 Jul 2011 07:40:52 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] xfstests: fix fsx build with the new xfs headers
-Message-ID: <20110724112023.GA16125@infradead.org>
+Subject: Re: [PATCH 03/12 v3] xfs: Remove the macro XFS_BUF_ERROR and family
+Message-ID: <20110724114052.GE26332@infradead.org>
+References: <20110722233933.14612.65879.sendpatchset@chandra-lucid.beaverton.ibm.com>
+	<20110722233951.14612.3794.sendpatchset@chandra-lucid.beaverton.ibm.com>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <20110722233951.14612.3794.sendpatchset@chandra-lucid.beaverton.ibm.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,40 +31,16 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Chandra Seetharaman <sekharan@us.ibm.com>
+Cc: xfs@oss.sgi.com
 
-The libxfs resync brought in a new round_up macro that conflicts with the
-round_up function in fsx.  Rename the latter to allow building against the
-new headers.
+On Fri, Jul 22, 2011 at 04:39:51PM -0700, Chandra Seetharaman wrote:
+> Remove the definitions and usage of the macros XFS_BUF_ERROR,
+> XFS_BUF_GETERROR and XFS_BUF_ISERROR.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Looks good to me,
 
-Index: xfstests-dev/ltp/fsx.c
-===================================================================
---- xfstests-dev.orig/ltp/fsx.c	2011-07-23 14:27:27.000000000 +0000
-+++ xfstests-dev/ltp/fsx.c	2011-07-23 14:28:10.000000000 +0000
-@@ -165,7 +165,7 @@ FILE *	fsxlogf = NULL;
- int badoff = -1;
- int closeopen = 0;
- 
--static void *round_up(void *ptr, unsigned long align, unsigned long offset)
-+static void *round_ptr_up(void *ptr, unsigned long align, unsigned long offset)
- {
- 	unsigned long ret = (unsigned long)ptr;
- 
-@@ -1570,10 +1570,10 @@ main(int argc, char **argv)
- 	for (i = 0; i < maxfilelen; i++)
- 		original_buf[i] = random() % 256;
- 	good_buf = (char *) malloc(maxfilelen + writebdy);
--	good_buf = round_up(good_buf, writebdy, 0);
-+	good_buf = round_ptr_up(good_buf, writebdy, 0);
- 	memset(good_buf, '\0', maxfilelen);
- 	temp_buf = (char *) malloc(maxoplen + readbdy);
--	temp_buf = round_up(temp_buf, readbdy, 0);
-+	temp_buf = round_ptr_up(temp_buf, readbdy, 0);
- 	memset(temp_buf, '\0', maxoplen);
- 	if (lite) {	/* zero entire existing file */
- 		ssize_t written;
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
