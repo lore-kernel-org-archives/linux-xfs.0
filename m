@@ -1,21 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6O8lPqV199827 for <xfs@oss.sgi.com>; Sun, 24 Jul 2011 03:47:26 -0500
-Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 92D98914BA
-	for <xfs@oss.sgi.com>; Sun, 24 Jul 2011 01:47:22 -0700 (PDT)
-Received: from mailsrv14.zmi.at (mailsrv14.zmi.at [212.69.164.54]) by
-	cuda.sgi.com with ESMTP id 6mM3y5y0K0DnRvtW for
-	<xfs@oss.sgi.com>; Sun, 24 Jul 2011 01:47:22 -0700 (PDT)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: Re: 30 TB RAID6 + XFS slow write performance
-Date: Sun, 24 Jul 2011 10:47:14 +0200
-References: <4E24907F.6020903@johnbokma.com> <20110722231040.GD13963@dastard>
-	<4E2BB859.1050200@hardwarefreak.com>
-In-Reply-To: <4E2BB859.1050200@hardwarefreak.com>
+	p6OBGl6g205118 for <xfs@oss.sgi.com>; Sun, 24 Jul 2011 06:16:50 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B7CEF1E6A669
+	for <xfs@oss.sgi.com>; Sun, 24 Jul 2011 04:16:44 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	BHzQwmCBv0QeSd6B for <xfs@oss.sgi.com>;
+	Sun, 24 Jul 2011 04:16:44 -0700 (PDT)
+Date: Sun, 24 Jul 2011 07:16:26 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] fs: push i_mutex and filemap_write_and_wait down into
+	->fsync() handlers
+Message-ID: <20110724111625.GA12658@infradead.org>
+References: <1309370716-12235-1-git-send-email-josef@redhat.com>
+	<20110723180942.GA1616@x4.trippels.de>
+	<4E2B2E88.8080006@redhat.com>
+	<20110723203824.GB1652@x4.trippels.de>
+	<20110723220212.GA1648@x4.trippels.de>
 MIME-Version: 1.0
-Message-Id: <201107241047.19745@zmi.at>
+Content-Disposition: inline
+In-Reply-To: <20110723220212.GA1648@x4.trippels.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,81 +31,44 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============9088312199819216526=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Stan Hoeppner <stan@hardwarefreak.com>, John Bokma <contact@johnbokma.com>
+To: Markus Trippelsdorf <markus@trippelsdorf.de>
+Cc: jack@suse.cz, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, Josef Bacik <josef@redhat.com>
 
---===============9088312199819216526==
-Content-Type: multipart/signed;
-  boundary="nextPart11608949.DTXs0jgHZ8";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+On Sun, Jul 24, 2011 at 12:02:12AM +0200, Markus Trippelsdorf wrote:
+> The following patch fixes the problem for me:
 
---nextPart11608949.DTXs0jgHZ8
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Good catch, can you send it with a proper signoff and description?
 
-On Sonntag, 24. Juli 2011 Stan Hoeppner wrote:
-> Is the NetApp FC/iSCSI attachment performance still competitive for
-> large file/streaming IO, given that one can't optimize XFS stripe
-> alignment, and with no indication of where the file fragments are
-> actually written on the media?  Or does it lag behind something like
-> a roughly equivalent class Infinite Storage array, or IBM DS?
+> 
+> diff --git a/fs/xfs/linux-2.6/xfs_file.c b/fs/xfs/linux-2.6/xfs_file.c
+> index cca00f4..2e23e3d 100644
+> --- a/fs/xfs/linux-2.6/xfs_file.c
+> +++ b/fs/xfs/linux-2.6/xfs_file.c
+> @@ -881,11 +881,14 @@ xfs_file_aio_write(
+>  	/* Handle various SYNC-type writes */
+>  	if ((file->f_flags & O_DSYNC) || IS_SYNC(inode)) {
+>  		loff_t end = pos + ret - 1;
+> +		int error;
+>  
+>  		xfs_rw_iunlock(ip, iolock);
+> -		ret = -xfs_file_fsync(file, pos, end,
+> +		error = -xfs_file_fsync(file, pos, end,
+>  				      (file->f_flags & __O_SYNC) ? 0 : 1);
 
-I can't tell about performance difference. But I'd like to explain two=20
-fundamental differences to all other storages:
+In addition xfs_file_fsync actually returns a normal negative error,
+but that bug already existed before the fsync prototype change.  If you
+resend the patch, can you fix it as well?
 
-1) WAFL *never* overwrites an existing block. Whenver there's a write to=20
-an existing block, that block is instead written to a new location,=20
-afterwards the old block mapped to the new one. This is a key factor to=20
-keeping performance up when using snapshots and deduplication.
-
-2) WAFL never does small or random writes. All writes are collected in=20
-NVRAM, and then written as one large sequential write, always one full=20
-stripe is written.
-
-That means for workloads with lots of small random writes, NetApp=20
-storages beat the hell out of the disks, compared to other storages.
-I can't tell for large seq. writes, though, I don't have such workload.
-
-=2D-=20
-mit freundlichen Gr=FCssen,
-Michael Monnerie, Ing. BSc
-
-it-management Internet Services: Prot=E9ger
-http://proteger.at [gesprochen: Prot-e-schee]
-Tel: +43 660 / 415 6531
-
-// Haus zu verkaufen: http://zmi.at/langegg/
-
---nextPart11608949.DTXs0jgHZ8
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.16 (GNU/Linux)
-
-iEYEABECAAYFAk4r3BcACgkQzhSR9xwSCbRVyACcCpU4gtuSkBzlG03EvgBpNQEa
-ftAAoOKdKHdugUNpvfMoRsKfunJzaApS
-=kyZP
------END PGP SIGNATURE-----
-
---nextPart11608949.DTXs0jgHZ8--
-
-
---===============9088312199819216526==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+>  		xfs_rw_ilock(ip, iolock);
+> +		if (error)
+> +			ret = error;
+>  	}
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============9088312199819216526==--
