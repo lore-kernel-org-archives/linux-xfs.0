@@ -1,17 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6PFvbvH009053 for <xfs@oss.sgi.com>; Mon, 25 Jul 2011 10:57:37 -0500
-Subject: Re: [PATCH 02/12 v3] xfs: Remove the macro XFS_BUF_ZEROFLAGS
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110724113959.GD26332@infradead.org>
-References: <20110722233933.14612.65879.sendpatchset@chandra-lucid.beaverton.ibm.com>
-	<20110722233945.14612.1955.sendpatchset@chandra-lucid.beaverton.ibm.com>
-	<20110724113959.GD26332@infradead.org>
-Date: Mon, 25 Jul 2011 10:57:32 -0500
-Message-ID: <1311609452.2914.23.camel@doink>
+	p6PGPJtI011519 for <xfs@oss.sgi.com>; Mon, 25 Jul 2011 11:25:19 -0500
+Date: Mon, 25 Jul 2011 12:25:13 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 08/12] xfs: Remove the macro XFS_BUF_SET_PTR
+Message-ID: <20110725162513.GA2434@infradead.org>
+References: <20110722003226.21069.58401.sendpatchset@chandra-lucid.beaverton.ibm.com>
+	<20110722003333.21069.32295.sendpatchset@chandra-lucid.beaverton.ibm.com>
+	<1311363510.2771.103.camel@doink>
+	<20110724113543.GB26332@infradead.org>
+	<1311609456.2914.24.camel@doink>
 MIME-Version: 1.0
-Reply-To: aelder@sgi.com
+Content-Disposition: inline
+In-Reply-To: <1311609456.2914.24.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,28 +26,22 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Chandra Seetharaman <sekharan@us.ibm.com>, xfs@oss.sgi.com
+To: Alex Elder <aelder@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Chandra Seetharaman <sekharan@us.ibm.com>, xfs@oss.sgi.com
 
-On Sun, 2011-07-24 at 07:39 -0400, Christoph Hellwig wrote:
-> > @@ -1247,6 +1247,7 @@ xlog_bdstrat(
-> >  {
-> >  	struct xlog_in_core	*iclog = bp->b_fspriv;
-> >  
-> > +	bp->b_flags &= ~(XBF_FUA|XBF_FLUSH);
+On Mon, Jul 25, 2011 at 10:57:36AM -0500, Alex Elder wrote:
+> > Btw, nice follow-on cleanups would be to kill off the xfs_caddr_t and
+> > __psint_t/__psunsigned_t types entirely.
 > 
-> I don't think this is correct, we set these before calling into
-> xlog_bdstrat, so this means we'll always stip it off after that.
-> 
-> Given that this area is more complicated than the pure macro removal
-> how about letting it as-is for now?  I have some bigger refactoring
-> in this area in my queue, and I'll just incorporate the
-> XFS_BUF_ZEROFLAGS into it.
+> Yes.  What do you suggest to use for a pointer-sized
+> type?  Just cast to (long) and rely on the usual arithmetic
+> conversions to do the right thing?
 
-Christoph, are you suggesting that this one hunk just
-be excluded from the series?  Or the entire patch?
-
-					-Alex
+The correct C99 type is (u)intptr_t.  In the kernel we only have
+uintptr_t, with ACPI defining a local version of intptr_t.  I'd suggest
+trying to stick to uintptr_t if we can, and if we really need a signed
+version add intptr_t to the common headers - it can unconditionally be
+typedef to long in Linux anyway.
 
 _______________________________________________
 xfs mailing list
