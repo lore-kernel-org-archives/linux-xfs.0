@@ -1,23 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6P8JR4R252516 for <xfs@oss.sgi.com>; Mon, 25 Jul 2011 03:19:27 -0500
-Received: from mx2.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9AD7792BF1
-	for <xfs@oss.sgi.com>; Mon, 25 Jul 2011 01:19:25 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id UoxRsLff8ClbGBDS for <xfs@oss.sgi.com>;
-	Mon, 25 Jul 2011 01:19:25 -0700 (PDT)
-Date: Mon, 25 Jul 2011 09:19:18 +0100
-From: Mel Gorman <mgorman@suse.de>
-Subject: Re: [PATCH 2/8] xfs: Warn if direct reclaim tries to writeback pages
-Message-ID: <20110725081918.GZ5349@suse.de>
-References: <1311265730-5324-1-git-send-email-mgorman@suse.de>
-	<1311265730-5324-3-git-send-email-mgorman@suse.de>
-	<20110724113200.GA26332@infradead.org>
+	p6PBqr5M261376 for <xfs@oss.sgi.com>; Mon, 25 Jul 2011 06:52:53 -0500
+Received: from mail-iy0-f181.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B5F09181B4EE
+	for <xfs@oss.sgi.com>; Mon, 25 Jul 2011 04:52:52 -0700 (PDT)
+Received: from mail-iy0-f181.google.com (mail-iy0-f181.google.com
+	[209.85.210.181]) by cuda.sgi.com with ESMTP id
+	wg03kYpg958tm68h for <xfs@oss.sgi.com>;
+	Mon, 25 Jul 2011 04:52:52 -0700 (PDT)
+Received: by iyf40 with SMTP id 40so4918347iyf.26
+	for <xfs@oss.sgi.com>; Mon, 25 Jul 2011 04:52:52 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110724113200.GA26332@infradead.org>
+In-Reply-To: <4E2BBC00.50902@hardwarefreak.com>
+References: <CAOJJ1Zp821vD0JbGf5PuNGcW4VX4E_3SfcWYxVA4es2o0pyJXQ@mail.gmail.com>
+	<CAOJJ1ZpL89-3xrhJTQgO97AebSSgnmfyM+mah75XOWiyi-wHwQ@mail.gmail.com>
+	<20110723113027.162de009@galadriel.home>
+	<4E2BBC00.50902@hardwarefreak.com>
+Date: Mon, 25 Jul 2011 19:52:52 +0800
+Message-ID: <CAOJJ1Zod9BgFCOZkav3zYy3k2wR9ohiN0U0R0sr1QdW5CWzV6g@mail.gmail.com>
+Subject: Re: 1 Gb Ethernet based HPC storage deployment plan
+From: Lee Eric <openlinuxsource@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,46 +29,58 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Rik van Riel <riel@redhat.com>, Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, XFS <xfs@oss.sgi.com>, Linux-MM <linux-mm@kvack.org>, Minchan Kim <minchan.kim@gmail.com>, Wu Fengguang <fengguang.wu@intel.com>, Johannes Weiner <jweiner@redhat.com>
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: xfs@oss.sgi.com
 
-On Sun, Jul 24, 2011 at 07:32:00AM -0400, Christoph Hellwig wrote:
-> On Thu, Jul 21, 2011 at 05:28:44PM +0100, Mel Gorman wrote:
-> > --- a/fs/xfs/linux-2.6/xfs_aops.c
-> > +++ b/fs/xfs/linux-2.6/xfs_aops.c
-> > @@ -930,12 +930,13 @@ xfs_vm_writepage(
-> >  	 * random callers for direct reclaim or memcg reclaim.  We explicitly
-> >  	 * allow reclaim from kswapd as the stack usage there is relatively low.
-> >  	 *
-> > -	 * This should really be done by the core VM, but until that happens
-> > -	 * filesystems like XFS, btrfs and ext4 have to take care of this
-> > -	 * by themselves.
-> > +	 * This should never happen except in the case of a VM regression so
-> > +	 * warn about it.
-> >  	 */
-> > -	if ((current->flags & (PF_MEMALLOC|PF_KSWAPD)) == PF_MEMALLOC)
-> > +	if ((current->flags & (PF_MEMALLOC|PF_KSWAPD)) == PF_MEMALLOC) {
-> > +		WARN_ON_ONCE(1);
-> >  		goto redirty;
-> 
-> The nicer way to write this is
-> 
-> 	if (WARN_ON(current->flags & (PF_MEMALLOC|PF_KSWAPD)) == PF_MEMALLOC)
-> 		goto redirty;
-> 
+Thanks mates. So the typical storage solution for the small size
+cluster may use IP SAN as I know before. Yes, I can export the data by
+using NFS directly without iSCSI/AoE but is there any good point to
+use XFS? I just know XFS is better for parallelized read/write
+operations in local disks.
 
-I wanted to avoid side effects if WARN_ON was compiled out similar to
-the care that is normally taken for BUG_ON but it's unnecessary and
-your version is far tidier. Do you really want WARN_ON used instead
-of WARN_ON_ONCE()?
+By the way, is there any good advantage to use XFS as the underlying
+local filesystem for cluster/distributed/parallel filesystem?
 
--- 
-Mel Gorman
-SUSE Labs
+Thanks very much.
+
+Eric
+
+On Sun, Jul 24, 2011 at 2:30 PM, Stan Hoeppner <stan@hardwarefreak.com> wro=
+te:
+> On 7/23/2011 4:30 AM, Emmanuel Florac wrote:
+>> Le Wed, 20 Jul 2011 22:03:33 +0800 vous =E9criviez:
+>>
+>>> I know it would be better if I can use Lustre but my interconnection
+>>> is a little slow. I suspect if it is feasible if using such parallel
+>>> file system.
+>>>
+>>> Does anyone has good idea on this deployment?
+>>>
+>>
+>> For this kind of setup, true cluster filesystems like Lustre,
+>> PVFS2/OrangeFS, Gluster, Ceph... would be much better. Striping 20
+>> iSCSI volumes across would be awfully dangerous.
+>>
+>> I'd go with OrangeFS (pvfs.org) because I'm pretty happy with it so far
+>> (using XFS as the underlying local filesystem). It's precisely made to
+>> agreggate computing clusters storage.
+>
+> Typically one starts looking at hardware solutions after identifying the
+> needs of the target application/workload.
+>
+> Is the proposed storage cluster system simply a proof of concept
+> testbed, or will it actually be tasked with real work? =A0If the latter
+> I'd rethink your iSCSI export to NFS server idea. =A0You mentioned only 8
+> disks. =A0Just drop them directly into the NFS host and avoid many
+> potential headaches down the road.
+>
+> --
+> Stan
+>
 
 _______________________________________________
 xfs mailing list
