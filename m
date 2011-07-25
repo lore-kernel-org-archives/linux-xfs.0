@@ -1,19 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6PDAK45002548 for <xfs@oss.sgi.com>; Mon, 25 Jul 2011 08:10:20 -0500
-Subject: Re: [PATCH XFSPROGS 2/3] Build without enabling DEBUG by default
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110722183830.GA21744@infradead.org>
-References: <1311292237-4155-1-git-send-email-tytso@mit.edu>
-	<1311292237-4155-2-git-send-email-tytso@mit.edu>
-	<20110722141753.GA19681@infradead.org>
-	<20110722183048.GC25092@thunk.org>
-	<20110722183830.GA21744@infradead.org>
-Date: Fri, 22 Jul 2011 17:30:48 -0500
-Message-ID: <1311373848.2771.164.camel@doink>
+	p6PE6PGT004659 for <xfs@oss.sgi.com>; Mon, 25 Jul 2011 09:06:25 -0500
+Date: Mon, 25 Jul 2011 16:06:09 +0200 (CEST)
+From: Lukas Czerner <lczerner@redhat.com>
+Subject: Re: [PATCH v3] xfs_repair: Check if agno is inside the filesystem
+In-Reply-To: <1310742423.2921.17.camel@doink>
+Message-ID: <alpine.LFD.2.00.1107251604580.9742@dhcp-27-109.brq.redhat.com>
+References: <1309271164-29794-1-git-send-email-lczerner@redhat.com>
+	<1310742423.2921.17.camel@doink>
 MIME-Version: 1.0
-Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,28 +22,156 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Ext4 Developers List <linux-ext4@vger.kernel.org>, Ted Ts'o <tytso@mit.edu>, xfs@oss.sgi.com
+To: Alex Elder <aelder@sgi.com>
+Cc: Lukas Czerner <lczerner@redhat.com>, xfs@oss.sgi.com
 
-On Fri, 2011-07-22 at 14:38 -0400, Christoph Hellwig wrote:
-> On Fri, Jul 22, 2011 at 02:30:48PM -0400, Ted Ts'o wrote:
+On Fri, 15 Jul 2011, Alex Elder wrote:
 
-. . .
-
-> A typical V=1 compile line looks like:
+> On Tue, 2011-06-28 at 16:26 +0200, Lukas Czerner wrote:
+> > When getting an inode tree pointer from an array inode_tree_ptrs, we
+> > should check if agno, which is used as a pointer to the array, lives
+> > within the file system, because if it is not, we can end up touching
+> > uninitialized memory. This may happen if we have corrupted directory
+> > entry.
+> > 
+> > This commit fixes it by passing xfs_mount to affected functions and
+> > checking if agno really is inside the file system.
+> > 
+> > This solves Red Hat bug #694706
+> > 
+> > Signed-off-by: Lukas Czerner <lczerner@redhat.com>
 > 
-> /bin/bash ../libtool --quiet --tag=CC --mode=compile gcc -I. -g -O2
-> -DNDEBUG -DVERSION=\"3.1.5\" -DLOCALEDIR=\"/usr/share/locale\"
-> -DPACKAGE=\"xfsprogs\" -I../include -DENABLE_GETTEXT -D_GNU_SOURCE
-> -D_XOPEN_SOURCE=500 -D_FILE_OFFSET_BITS=64 -funsigned-char
-> -fno-strict-aliasing -Wall    -c xfs_dir2_sf.c
+> OK, it looks like there are basically four changes
+> here--adding the mount point argument to four functions
+> and using it to verify (or assert the validity of) the
+> an AG number.  The rest of the changes are simply the
+> rippling-back effect of adding the mount point.
+> 
+> The change looks good to me.  If nobody else objects to
+> the change I will commit this for you.
+> 
+> Reviewed-by: Alex Elder <aelder@sgi.com>
 
-FWIW, I get a compile line for xfs_dir2_sf.c identical to
-what Christoph supplied.
+Thanks Alex!
 
-> for me.  The biggest thing is that you have another directory in your
-> include path.  How did you add that one? Did you add anything else
-> special to the ./configure or make command lines?
+I still can not see it in the git though, so what is the status of this
+patch ?
+
+Thanks!
+-Lukas
+
+> 
+> . . .
+> 
+> > diff --git a/repair/incore.h b/repair/incore.h
+> > index 99853fb..5e3d95d 100644
+> > --- a/repair/incore.h
+> > +++ b/repair/incore.h
+> 
+> . . .
+> 
+> > @@ -316,12 +317,17 @@ findfirst_inode_rec(xfs_agnumber_t agno)
+> >  	return((ino_tree_node_t *) inode_tree_ptrs[agno]->avl_firstino);
+> >  }
+> >  static inline ino_tree_node_t *
+> > -find_inode_rec(xfs_agnumber_t agno, xfs_agino_t ino)
+> > +find_inode_rec(struct xfs_mount *mp, xfs_agnumber_t agno, xfs_agino_t ino)
+> >  {
+> > +	/*
+> > +	 * Is the AG inside the file system
+> > +	 */
+> > +	if (agno >= mp->m_sb.sb_agcount)
+> > +		return NULL;
+> 
+> Here is one--validate the agno using the new mp argument.
+> 
+> >  	return((ino_tree_node_t *)
+> >  		avl_findrange(inode_tree_ptrs[agno], ino));
+> >  }
+> > -void		find_inode_rec_range(xfs_agnumber_t agno,
+> > +void		find_inode_rec_range(struct xfs_mount *mp, xfs_agnumber_t agno,
+> >  			xfs_agino_t start_ino, xfs_agino_t end_ino,
+> >  			ino_tree_node_t **first, ino_tree_node_t **last);
+> >  
+> 
+> . . .
+> 
+> > diff --git a/repair/incore_ino.c b/repair/incore_ino.c
+> > index febe0c9..7827ff5 100644
+> > --- a/repair/incore_ino.c
+> > +++ b/repair/incore_ino.c
+> > @@ -418,9 +418,11 @@ add_inode_uncertain(xfs_mount_t *mp, xfs_ino_t ino, int free)
+> >   * pull the indicated inode record out of the uncertain inode tree
+> >   */
+> >  void
+> > -get_uncertain_inode_rec(xfs_agnumber_t agno, ino_tree_node_t *ino_rec)
+> > +get_uncertain_inode_rec(struct xfs_mount *mp, xfs_agnumber_t agno,
+> > +			ino_tree_node_t *ino_rec)
+> >  {
+> >  	ASSERT(inode_tree_ptrs != NULL);
+> > +	ASSERT(agno < mp->m_sb.sb_agcount);
+> 
+> Here is the second.
+> 
+> >  	ASSERT(inode_tree_ptrs[agno] != NULL);
+> >  
+> >  	avl_delete(inode_uncertain_tree_ptrs[agno], &ino_rec->avl_node);
+> 
+> . . .
+> 
+> > @@ -495,9 +497,10 @@ add_inode(xfs_agnumber_t agno, xfs_agino_t ino)
+> >   * pull the indicated inode record out of the inode tree
+> >   */
+> >  void
+> > -get_inode_rec(xfs_agnumber_t agno, ino_tree_node_t *ino_rec)
+> > +get_inode_rec(struct xfs_mount *mp, xfs_agnumber_t agno, ino_tree_node_t *ino_rec)
+> >  {
+> >  	ASSERT(inode_tree_ptrs != NULL);
+> > +	ASSERT(agno < mp->m_sb.sb_agcount);
+> 
+> Here is the third.
+> 
+> >  	ASSERT(inode_tree_ptrs[agno] != NULL);
+> >  
+> >  	avl_delete(inode_tree_ptrs[agno], &ino_rec->avl_node);
+> 
+> . . .
+> 
+> > @@ -518,14 +521,18 @@ free_inode_rec(xfs_agnumber_t agno, ino_tree_node_t *ino_rec)
+> >  }
+> >  
+> >  void
+> > -find_inode_rec_range(xfs_agnumber_t agno, xfs_agino_t start_ino,
+> > -			xfs_agino_t end_ino, ino_tree_node_t **first,
+> > -			ino_tree_node_t **last)
+> > +find_inode_rec_range(struct xfs_mount *mp, xfs_agnumber_t agno,
+> > +			xfs_agino_t start_ino, xfs_agino_t end_ino,
+> > +			ino_tree_node_t **first, ino_tree_node_t **last)
+> >  {
+> >  	*first = *last = NULL;
+> >  
+> > -	avl_findranges(inode_tree_ptrs[agno], start_ino,
+> > -		end_ino, (avlnode_t **) first, (avlnode_t **) last);
+> > +	/*
+> > +	 * Is the AG inside the file system ?
+> > +	 */
+> > +	if (agno < mp->m_sb.sb_agcount)
+> > +		avl_findranges(inode_tree_ptrs[agno], start_ino,
+> > +			end_ino, (avlnode_t **) first, (avlnode_t **) last);
+> 
+> And here is the fourth.
+> 
+> >  }
+> >  
+> >  /*
+> 
+> . . .
+> 
+> 
+> 
+> 
+
+-- 
 
 _______________________________________________
 xfs mailing list
