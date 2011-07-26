@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6QF6l9p131496 for <xfs@oss.sgi.com>; Tue, 26 Jul 2011 10:06:47 -0500
+	p6QF7CX4131519 for <xfs@oss.sgi.com>; Tue, 26 Jul 2011 10:07:13 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D5E481684A7E
-	for <xfs@oss.sgi.com>; Tue, 26 Jul 2011 08:06:51 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 68F8D984A2
+	for <xfs@oss.sgi.com>; Tue, 26 Jul 2011 08:07:12 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	HihJ7pY0H9hqU2zl for <xfs@oss.sgi.com>;
-	Tue, 26 Jul 2011 08:06:51 -0700 (PDT)
+	MOCMv2DFSCTKkoh1 for <xfs@oss.sgi.com>;
+	Tue, 26 Jul 2011 08:07:12 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1QljDY-0004gm-Ie
-	for xfs@oss.sgi.com; Tue, 26 Jul 2011 15:06:44 +0000
-Date: Tue, 26 Jul 2011 11:06:44 -0400
+	Linux)) id 1QljDz-0004ic-Ub
+	for xfs@oss.sgi.com; Tue, 26 Jul 2011 15:07:11 +0000
+Date: Tue, 26 Jul 2011 11:07:11 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 1/3] xfs: flag all buffers as metadata
-Message-ID: <20110726150644.GA18000@infradead.org>
+Subject: [PATCH 2/3] xfs: prevent against ioend livelocks in xfs_file_fsync
+Message-ID: <20110726150711.GB18000@infradead.org>
 References: <20110726150633.GA17400@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
@@ -35,29 +35,28 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Now that REQ_META bios aren't treated specially in the CFQ I/O schedule
-anymore, we can tag all buffers as metadata to make blktrace traces more
-meaningful.  Note that we use buffers also to zero out partial blocks
-in the preallocation / hole punching code, and while they operate on
-data blocks the zeros written certainly aren't data.  I think this case
-is borderline metadata enough to not bother special casing it.
+We need to take some locks to prevent new ioends from coming in when we wait
+for all existing ones to go away.  Up to Linux 3.0 that was done using the
+i_mutex held by the VFS fsync code, but now that we are called without
+it we need to take care of it ourselves.  Use the I/O lock instead of
+i_mutex just like we do in other places.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: linux-2.6/fs/xfs/linux-2.6/xfs_buf.c
+Index: linux-2.6/fs/xfs/linux-2.6/xfs_file.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/linux-2.6/xfs_buf.c	2011-07-25 23:50:03.288230279 +0200
-+++ linux-2.6/fs/xfs/linux-2.6/xfs_buf.c	2011-07-25 23:50:22.208230167 +0200
-@@ -1224,6 +1224,9 @@ _xfs_buf_ioapply(
- 		rw = READ;
- 	}
+--- linux-2.6.orig/fs/xfs/linux-2.6/xfs_file.c	2011-07-25 23:50:35.081563423 +0200
++++ linux-2.6/fs/xfs/linux-2.6/xfs_file.c	2011-07-25 23:51:18.098229833 +0200
+@@ -149,7 +149,9 @@ xfs_file_fsync(
  
-+	/* we only use the buffer cache for meta-data */
-+	rw |= REQ_META;
-+
- next_chunk:
- 	atomic_inc(&bp->b_io_remaining);
- 	nr_pages = BIO_MAX_SECTORS >> (PAGE_SHIFT - BBSHIFT);
+ 	xfs_iflags_clear(ip, XFS_ITRUNCATED);
+ 
++	xfs_ilock(ip, XFS_IOLOCK_SHARED);
+ 	xfs_ioend_wait(ip);
++	xfs_iunlock(ip, XFS_IOLOCK_SHARED);
+ 
+ 	if (mp->m_flags & XFS_MOUNT_BARRIER) {
+ 		/*
 
 _______________________________________________
 xfs mailing list
