@@ -1,17 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6QMeJlH146235 for <xfs@oss.sgi.com>; Tue, 26 Jul 2011 17:40:20 -0500
-Date: Tue, 26 Jul 2011 18:40:16 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/3] xfs: flag all buffers as metadata
-Message-ID: <20110726224016.GA10394@infradead.org>
+	p6QMdBNp146166 for <xfs@oss.sgi.com>; Tue, 26 Jul 2011 17:39:11 -0500
+Subject: Re: [PATCH 2/3] xfs: prevent against ioend livelocks in xfs_file_fsync
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <20110726150711.GB18000@infradead.org>
 References: <20110726150633.GA17400@infradead.org>
-	<20110726150644.GA18000@infradead.org>
-	<1311719935.11557.12.camel@doink>
+	<20110726150711.GB18000@infradead.org>
+Date: Tue, 26 Jul 2011 17:39:02 -0500
+Message-ID: <1311719942.11557.14.camel@doink>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1311719935.11557.12.camel@doink>
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,27 +23,22 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Tue, Jul 26, 2011 at 05:38:55PM -0500, Alex Elder wrote:
-> On Tue, 2011-07-26 at 11:06 -0400, Christoph Hellwig wrote: 
-> > Now that REQ_META bios aren't treated specially in the CFQ I/O schedule
-> > anymore, we can tag all buffers as metadata to make blktrace traces more
-> > meaningful.  Note that we use buffers also to zero out partial blocks
-> > in the preallocation / hole punching code, and while they operate on
-> > data blocks the zeros written certainly aren't data.  I think this case
-> > is borderline metadata enough to not bother special casing it.
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Tue, 2011-07-26 at 11:07 -0400, Christoph Hellwig wrote:
+> We need to take some locks to prevent new ioends from coming in when we wait
+> for all existing ones to go away.  Up to Linux 3.0 that was done using the
+> i_mutex held by the VFS fsync code, but now that we are called without
+> it we need to take care of it ourselves.  Use the I/O lock instead of
+> i_mutex just like we do in other places.
 > 
-> This looks good.  I plan to re-base the xfs master branch
-> after 3.1-rc1 is out, so I'll wait until after that to
-> commit this (and the others in this series).
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-I'd prefer to get it out to Linus ASAP after some review.  Just
-committing it to for-linus for now and later rebasing master on top
-should do fine for that.
+Looks good.
+
+Reviewed-by: Alex Elder <aelder@sgi.com>
+
 
 _______________________________________________
 xfs mailing list
