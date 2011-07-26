@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6QFLro9131994 for <xfs@oss.sgi.com>; Tue, 26 Jul 2011 10:21:53 -0500
-Subject: Re: [PATCH] xfs: Fix wrong return value of xfs_file_aio_write
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110724120330.GC1626@x4.trippels.de>
-References: <1309370716-12235-1-git-send-email-josef@redhat.com>
-	<20110723180942.GA1616@x4.trippels.de> <4E2B2E88.8080006@redhat.com>
-	<20110723203824.GB1652@x4.trippels.de>
-	<20110723220212.GA1648@x4.trippels.de>
-	<20110724111625.GA12658@infradead.org>
-	<20110724115420.GA1626@x4.trippels.de>
-	<20110724115826.GB1626@x4.trippels.de>
-	<20110724120330.GC1626@x4.trippels.de>
-Date: Tue, 26 Jul 2011 10:21:48 -0500
-Message-ID: <1311693708.2890.5.camel@doink>
+	p6QF7Upd131542 for <xfs@oss.sgi.com>; Tue, 26 Jul 2011 10:07:31 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 766C51684A96
+	for <xfs@oss.sgi.com>; Tue, 26 Jul 2011 08:07:35 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	BEZSbV89g6ng47XI for <xfs@oss.sgi.com>;
+	Tue, 26 Jul 2011 08:07:35 -0700 (PDT)
+Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
+	Linux)) id 1QljEH-0004ip-Hu
+	for xfs@oss.sgi.com; Tue, 26 Jul 2011 15:07:29 +0000
+Date: Tue, 26 Jul 2011 11:07:29 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH 3/3] xfs: optimize the negative xattr caching
+Message-ID: <20110726150729.GC18000@infradead.org>
+References: <20110726150633.GA17400@infradead.org>
 MIME-Version: 1.0
-Reply-To: aelder@sgi.com
+Content-Disposition: inline
+In-Reply-To: <20110726150633.GA17400@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,26 +33,38 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Markus Trippelsdorf <markus@trippelsdorf.de>
-Cc: jack@suse.cz, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, Josef Bacik <josef@redhat.com>
+To: xfs@oss.sgi.com
 
-On Sun, 2011-07-24 at 14:03 +0200, Markus Trippelsdorf wrote:
-> The fsync prototype change commit 02c24a82187d accidentally overwrote
-> the ssize_t return value of xfs_file_aio_write with 0 for SYNC type
-> writes. Fix this by checking if an error occured when calling
-> xfs_file_fsync and only change the return value in this case.
-> In addition xfs_file_fsync actually returns a normal negative error, so
-> fix this, too.
-> 
-> Signed-off-by: Markus Trippelsdorf <markus@trippelsdorf.de>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> Tested-by: Christoph Hellwig <hch@lst.de>
+Since the addition of file capabilities every write needs to read xattrs to
+check if we have any capabilities to clear.  In Linux 3.0 Andi Kleen added
+a flag to cache the fact that we do not have any attributes on an inode.
+Make sure to already mark a file as not having any attributes when reading
+it from disk in case it doesn't even have an attribute fork.  Based on an
+earlier patch from Andi Kleen.
 
-Finally looking at this I noticed the same thing Christoph
-did; thanks for fixing both.  Your change got committed
-yesterday via Al Viro's VFS tree.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-					-Alex
+Index: linux-2.6/fs/xfs/linux-2.6/xfs_iops.c
+===================================================================
+--- linux-2.6.orig/fs/xfs/linux-2.6/xfs_iops.c	2011-07-25 23:49:23.011563852 +0200
++++ linux-2.6/fs/xfs/linux-2.6/xfs_iops.c	2011-07-25 23:49:50.281563691 +0200
+@@ -1194,9 +1194,14 @@ xfs_setup_inode(
+ 		break;
+ 	}
+ 
+-	/* if there is no attribute fork no ACL can exist on this inode */
+-	if (!XFS_IFORK_Q(ip))
++	/*
++	 * If there is no attribute fork no ACL can exist on this inode,
++	 * and it can't have any file capabilities attached to it either.
++	 */
++	if (!XFS_IFORK_Q(ip)) {
++		inode_has_no_xattr(inode);
+ 		cache_no_acl(inode);
++	}
+ 
+ 	xfs_iflags_clear(ip, XFS_INEW);
+ 	barrier();
 
 _______________________________________________
 xfs mailing list
