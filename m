@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6Q3X8gB079492 for <xfs@oss.sgi.com>; Mon, 25 Jul 2011 22:33:09 -0500
-Received: from ipmail07.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A84C41359BEE
-	for <xfs@oss.sgi.com>; Mon, 25 Jul 2011 20:33:08 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	PfOD8kJuBrADMYP5 for <xfs@oss.sgi.com>;
-	Mon, 25 Jul 2011 20:33:08 -0700 (PDT)
-Date: Tue, 26 Jul 2011 13:33:02 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS internal error XFS_WANT_CORRUPTED_GOTO
-Message-ID: <20110726033302.GB8048@dastard>
+	p6Q9lol8117986 for <xfs@oss.sgi.com>; Tue, 26 Jul 2011 04:47:50 -0500
+Received: from mail-vx0-f181.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EAEBE13593F8
+	for <xfs@oss.sgi.com>; Tue, 26 Jul 2011 02:47:52 -0700 (PDT)
+Received: from mail-vx0-f181.google.com (mail-vx0-f181.google.com
+	[209.85.220.181]) by cuda.sgi.com with ESMTP id
+	Hxe0Y29LrVT4uqtB for <xfs@oss.sgi.com>;
+	Tue, 26 Jul 2011 02:47:52 -0700 (PDT)
+Received: by vxh17 with SMTP id 17so207638vxh.26
+	for <xfs@oss.sgi.com>; Tue, 26 Jul 2011 02:47:48 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20110726033302.GB8048@dastard>
 References: <CADDb1s3X5PANPrrz=GRZZyKmSK1=xiBQ8+zz3WNTW6xN=c80PQ@mail.gmail.com>
 	<CADDb1s04zm48uQ0mZAUsNZ_rDX-KnSHNeFsYb06Hg10k59ijOQ@mail.gmail.com>
 	<CADDb1s2rcEvik3Tb4zooq93A6BSP+W9K87VdJEWLN9iHY1StMQ@mail.gmail.com>
@@ -20,9 +20,11 @@ References: <CADDb1s3X5PANPrrz=GRZZyKmSK1=xiBQ8+zz3WNTW6xN=c80PQ@mail.gmail.com>
 	<CADDb1s1MpajXEHhMVf-h2K1JKQqaDLZ0QQY41seURUpde8D7Sg@mail.gmail.com>
 	<20110724013457.GB31951@dastard>
 	<CADDb1s3JnFQiKqjD6ANDkUUyCtVwg=LDeKe4piK3ZwzQ6FK83w@mail.gmail.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CADDb1s3JnFQiKqjD6ANDkUUyCtVwg=LDeKe4piK3ZwzQ6FK83w@mail.gmail.com>
+	<20110726033302.GB8048@dastard>
+Date: Tue, 26 Jul 2011 15:17:48 +0530
+Message-ID: <CAB4K4y7SYX6AW45aYsM3243VSq=jJ6LErQP8SPrxgGOFtJVrrw@mail.gmail.com>
+Subject: Re: XFS internal error XFS_WANT_CORRUPTED_GOTO
+From: Ajeet Yadav <ajeet.yadav.77@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,156 +33,136 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Amit Sahrawat <amit.sahrawat83@gmail.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Amit Sahrawat <amit.sahrawat83@gmail.com>, xfs@oss.sgi.com
 
-On Mon, Jul 25, 2011 at 10:56:01AM +0530, Amit Sahrawat wrote:
-> On Sun, Jul 24, 2011 at 7:04 AM, Dave Chinner <david@fromorbit.com> wrote:
-> > On Fri, Jul 22, 2011 at 04:03:53PM +0530, Amit Sahrawat wrote:
-> >> On Fri, Jul 22, 2011 at 2:04 PM, Dave Chinner <david@fromorbit.com> wrote:
-> >> > [<c0023000>] (dump_backtrace+0x0/0x110)
-> >> > [<c02dd668>] (dump_stack+0x0/0x1c)
-> >> > [<c0176b84>] (xfs_error_report+0x0/0x5c)
-> >> > [<c0150cd4>] (xfs_free_ag_extent+0x0/0x600)
-> >> > [<c0152b78>] (xfs_free_extent+0x0/0xa4)
-> >> > [<c015fea0>] (xfs_bmap_finish+0x0/0x194)
-> >> > [<c017e664>] (xfs_itruncate_finish+0x0/0x30c)
-> >> > [<c0197bbc>] (xfs_inactive+0x0/0x40c)
-> >> > [<c01a3d50>] (xfs_fs_clear_inode+0x0/0x60)
-> >> > [<c00bdcf8>] (clear_inode+0x0/0xe8)
-> >> > [<c00be4a8>] (generic_delete_inode+0x0/0x178)
-> >> > [<c00be620>] (generic_drop_inode+0x0/0x68)
-> >> > [<c00bd2fc>] (iput+0x0/0x7c)
-> >> > [<c00b4b44>] (do_unlinkat+0x0/0x154)
-> >> > [<c00b4c98>] (sys_unlink+0x0/0x1c)
-> >> >
-> >> > So, you powered off an active machine while writing to it, and after
-> >> > it started back up it hit a free space between corruption. And then
-> >> > you couldn't mount it because log replay was trying to replay the
-> >> > last committed transaction to the log. That transaction shows inode
-> >> > 132 being unlinked, added to the AGI unliked list, and then being
-> >> > inactivated. There is an EFI committed for 1 extent. There is no EFD
-> >> > committed, so the shutdown occurred during that operation. Log
-> >> > replay then hits the corruption repeatedly by trying to replay the
-> >> > EFI to complete the extent free operation.
-> >> >
-> >> Yes, it happened exactly as you mentioned above. But the problem
-> >> happened much earlier.
-> >
-> > Obviously.
-> >
-> >> While writing the 'reset' happened. At the next reboot - the
-> >> filesystem mounted even though there
-> >> was corruption - the file and journal did not match.
-> >
-> > You found this how?
-> Just before removing the file on next 'reboot' - I checked the values
-> for file extents and the 'by-block' tree free length.
-> File extents - no. of blocks was correct but the neighbouring blocks
-> do not match with the occupied blocks in the allocation group.
-> If a file of 'N' blocks is present in an allocation group, then the
-> allocation group should now have (X-N) free blocks, where 'X' is the
-> size of allocation group in blocks.
-> But in this case - free size of allocation group is (X - M), where M
-> is greater than 'N'.
-
-Sure - there might be other metadata blocks that had to be allocated
-so there may be more used space than just what is allocated to the
-inode itself. e.g. bmap btree blocks, free space btree blocks due to
-a btree node split, etc. You can't just look at the the number of
-data blocks in an inode and the number of free blocks in an AG and
-expect them to match exactly...
-
-> which means when there is a free request for that file and then
-> corresponsing blocks are checked in the allocation group - it will
-> show the blocks as already free and point to corruption.
-> Is the above observation  correct?
-> >
-> >> And it did not
-> >> show any error either.
-> >
-> > Well, no. If the journal format is intact, then it's contents are
-> > trusted.
-> >
-> >> The moment the issue happened and then if checked through xfs_logprint
-> >> - the blocks free in the allocation group does not match up properly.
-> >> I checked by taking the print from xfs_free_ag_extent - it showed the
-> >> wrong blocks contigous to that file.
-> >
-> > Yes, which is why I suspect that the journal contained something it
-> > shouldn't have.
-> >
-> >> Original file which was to be deleted is of '255' blocks and started
-> >> from physical block number - 12.
-> >
-> > Yes, I saw that in the EFI record in the logprint output I quoted.
-> >
-> >> While the free space tree has free
-> >> blocks larger than what it should be. it returns the length starting
-> >> from block number and the length which is last committed to the log.
-> >>
-> >> As I mentioned in the last mail - the details about the observation.
-> >> Please check.
-> >
-> > Going back to the transaction you quoted first: it doesn't match the
-> > entries in the log print you attached in your second email. I can't
-> > comment on it at all.
-> In the last mail - I attached the log where-in 'reset' happened but
-> there was no corruption. Just to check that what all is recorded in
-> journal, and this time journal matched with the data on the disk.
-> >
-> >> > So, the log and the repair output are useless for determining what
-> >> > caused the problem - you need the log from the mount *before* the
-> >> > first shutdown occurred, and to have run repair *before* you
-> >> > tried to unlink anything.
-> >>
-> >> It is only after 'first shutdown' I came to know about the corruption.
-> >> Since, there was no error shown at the mount time, it did not seemed
-> >> reasonable enough to run "repair" on the disk.
-> >
-> > It's standard practice for power failure integrity testing.
-> Yes, Even I agree to this. But why was there a mount at first hand? I
-> guess if it returned some error - xfs_repair could be run.
-
-Sorry, I'm not sure what you are asking.
-
-If you're doing power failure testing, then after the power failure
-you should always run a mount/unmount/repair cycle before doing
-anything else to check the filesystem and the journal were not
-corrupted by the power failure. You can't test the integrity of the
-journal any other way at this point in time....
-
-> > The transaction was never committed completely in the journal. The
-> > last complete transaction in the journal matches up with the inode
-> > size in your ls -l output about.
-> Yes, this is what I wanted to show using the latest log prints. But
-> this is not case when there is an issue.
-
-Then please tell me that what you attached is for a working case so
-I won't waste my time analysing it. I don't care about the case
-where everything works - I care about the case where it doesn't
-work.
-
-In that case, I want to be able to validate your analysis of the
-case where the filesystem gets broken, and I need the log contents
-from prior to the first mount after the power failure has occurred
-to determine that. And to tell the truth, it's better if you don't
-tell me what you think is wrong in the first place so my analysis is
-independent of yours. Hence if they both point to the same problem,
-then we've got a fairly good indication of where the bug lies.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+SGVsbG8gRGF2ZSwKSSBoYXZlIHNlZW4gdGhpcyBwcm9ibGVtIGNvbWVzIG9ubHkgd2l0aCBVU0Ig
+SEREICh3ZSBoYXZlIHRpcmVkCmRpZmZlcmVudCBVU0IgSERELCBidXQgaXQgc2VlbXMgY29tbW9u
+IHdpdGggSEREKSwgd2hpbGUgVVNCIEZMQVNICndvcmtzIGZpbmUuCgpPbiBUdWUsIEp1bCAyNiwg
+MjAxMSBhdCA5OjAzIEFNLCBEYXZlIENoaW5uZXIgPGRhdmlkQGZyb21vcmJpdC5jb20+IHdyb3Rl
+Ogo+IE9uIE1vbiwgSnVsIDI1LCAyMDExIGF0IDEwOjU2OjAxQU0gKzA1MzAsIEFtaXQgU2FocmF3
+YXQgd3JvdGU6Cj4+IE9uIFN1biwgSnVsIDI0LCAyMDExIGF0IDc6MDQgQU0sIERhdmUgQ2hpbm5l
+ciA8ZGF2aWRAZnJvbW9yYml0LmNvbT4gd3JvdGU6Cj4+ID4gT24gRnJpLCBKdWwgMjIsIDIwMTEg
+YXQgMDQ6MDM6NTNQTSArMDUzMCwgQW1pdCBTYWhyYXdhdCB3cm90ZToKPj4gPj4gT24gRnJpLCBK
+dWwgMjIsIDIwMTEgYXQgMjowNCBQTSwgRGF2ZSBDaGlubmVyIDxkYXZpZEBmcm9tb3JiaXQuY29t
+PiB3cm90ZToKPj4gPj4gPiBbPGMwMDIzMDAwPl0gKGR1bXBfYmFja3RyYWNlKzB4MC8weDExMCkK
+Pj4gPj4gPiBbPGMwMmRkNjY4Pl0gKGR1bXBfc3RhY2srMHgwLzB4MWMpCj4+ID4+ID4gWzxjMDE3
+NmI4ND5dICh4ZnNfZXJyb3JfcmVwb3J0KzB4MC8weDVjKQo+PiA+PiA+IFs8YzAxNTBjZDQ+XSAo
+eGZzX2ZyZWVfYWdfZXh0ZW50KzB4MC8weDYwMCkKPj4gPj4gPiBbPGMwMTUyYjc4Pl0gKHhmc19m
+cmVlX2V4dGVudCsweDAvMHhhNCkKPj4gPj4gPiBbPGMwMTVmZWEwPl0gKHhmc19ibWFwX2Zpbmlz
+aCsweDAvMHgxOTQpCj4+ID4+ID4gWzxjMDE3ZTY2ND5dICh4ZnNfaXRydW5jYXRlX2ZpbmlzaCsw
+eDAvMHgzMGMpCj4+ID4+ID4gWzxjMDE5N2JiYz5dICh4ZnNfaW5hY3RpdmUrMHgwLzB4NDBjKQo+
+PiA+PiA+IFs8YzAxYTNkNTA+XSAoeGZzX2ZzX2NsZWFyX2lub2RlKzB4MC8weDYwKQo+PiA+PiA+
+IFs8YzAwYmRjZjg+XSAoY2xlYXJfaW5vZGUrMHgwLzB4ZTgpCj4+ID4+ID4gWzxjMDBiZTRhOD5d
+IChnZW5lcmljX2RlbGV0ZV9pbm9kZSsweDAvMHgxNzgpCj4+ID4+ID4gWzxjMDBiZTYyMD5dIChn
+ZW5lcmljX2Ryb3BfaW5vZGUrMHgwLzB4NjgpCj4+ID4+ID4gWzxjMDBiZDJmYz5dIChpcHV0KzB4
+MC8weDdjKQo+PiA+PiA+IFs8YzAwYjRiNDQ+XSAoZG9fdW5saW5rYXQrMHgwLzB4MTU0KQo+PiA+
+PiA+IFs8YzAwYjRjOTg+XSAoc3lzX3VubGluaysweDAvMHgxYykKPj4gPj4gPgo+PiA+PiA+IFNv
+LCB5b3UgcG93ZXJlZCBvZmYgYW4gYWN0aXZlIG1hY2hpbmUgd2hpbGUgd3JpdGluZyB0byBpdCwg
+YW5kIGFmdGVyCj4+ID4+ID4gaXQgc3RhcnRlZCBiYWNrIHVwIGl0IGhpdCBhIGZyZWUgc3BhY2Ug
+YmV0d2VlbiBjb3JydXB0aW9uLiBBbmQgdGhlbgo+PiA+PiA+IHlvdSBjb3VsZG4ndCBtb3VudCBp
+dCBiZWNhdXNlIGxvZyByZXBsYXkgd2FzIHRyeWluZyB0byByZXBsYXkgdGhlCj4+ID4+ID4gbGFz
+dCBjb21taXR0ZWQgdHJhbnNhY3Rpb24gdG8gdGhlIGxvZy4gVGhhdCB0cmFuc2FjdGlvbiBzaG93
+cyBpbm9kZQo+PiA+PiA+IDEzMiBiZWluZyB1bmxpbmtlZCwgYWRkZWQgdG8gdGhlIEFHSSB1bmxp
+a2VkIGxpc3QsIGFuZCB0aGVuIGJlaW5nCj4+ID4+ID4gaW5hY3RpdmF0ZWQuIFRoZXJlIGlzIGFu
+IEVGSSBjb21taXR0ZWQgZm9yIDEgZXh0ZW50LiBUaGVyZSBpcyBubyBFRkQKPj4gPj4gPiBjb21t
+aXR0ZWQsIHNvIHRoZSBzaHV0ZG93biBvY2N1cnJlZCBkdXJpbmcgdGhhdCBvcGVyYXRpb24uIExv
+Zwo+PiA+PiA+IHJlcGxheSB0aGVuIGhpdHMgdGhlIGNvcnJ1cHRpb24gcmVwZWF0ZWRseSBieSB0
+cnlpbmcgdG8gcmVwbGF5IHRoZQo+PiA+PiA+IEVGSSB0byBjb21wbGV0ZSB0aGUgZXh0ZW50IGZy
+ZWUgb3BlcmF0aW9uLgo+PiA+PiA+Cj4+ID4+IFllcywgaXQgaGFwcGVuZWQgZXhhY3RseSBhcyB5
+b3UgbWVudGlvbmVkIGFib3ZlLiBCdXQgdGhlIHByb2JsZW0KPj4gPj4gaGFwcGVuZWQgbXVjaCBl
+YXJsaWVyLgo+PiA+Cj4+ID4gT2J2aW91c2x5Lgo+PiA+Cj4+ID4+IFdoaWxlIHdyaXRpbmcgdGhl
+ICdyZXNldCcgaGFwcGVuZWQuIEF0IHRoZSBuZXh0IHJlYm9vdCAtIHRoZQo+PiA+PiBmaWxlc3lz
+dGVtIG1vdW50ZWQgZXZlbiB0aG91Z2ggdGhlcmUKPj4gPj4gd2FzIGNvcnJ1cHRpb24gLSB0aGUg
+ZmlsZSBhbmQgam91cm5hbCBkaWQgbm90IG1hdGNoLgo+PiA+Cj4+ID4gWW91IGZvdW5kIHRoaXMg
+aG93Pwo+PiBKdXN0IGJlZm9yZSByZW1vdmluZyB0aGUgZmlsZSBvbiBuZXh0ICdyZWJvb3QnIC0g
+SSBjaGVja2VkIHRoZSB2YWx1ZXMKPj4gZm9yIGZpbGUgZXh0ZW50cyBhbmQgdGhlICdieS1ibG9j
+aycgdHJlZSBmcmVlIGxlbmd0aC4KPj4gRmlsZSBleHRlbnRzIC0gbm8uIG9mIGJsb2NrcyB3YXMg
+Y29ycmVjdCBidXQgdGhlIG5laWdoYm91cmluZyBibG9ja3MKPj4gZG8gbm90IG1hdGNoIHdpdGgg
+dGhlIG9jY3VwaWVkIGJsb2NrcyBpbiB0aGUgYWxsb2NhdGlvbiBncm91cC4KPj4gSWYgYSBmaWxl
+IG9mICdOJyBibG9ja3MgaXMgcHJlc2VudCBpbiBhbiBhbGxvY2F0aW9uIGdyb3VwLCB0aGVuIHRo
+ZQo+PiBhbGxvY2F0aW9uIGdyb3VwIHNob3VsZCBub3cgaGF2ZSAoWC1OKSBmcmVlIGJsb2Nrcywg
+d2hlcmUgJ1gnIGlzIHRoZQo+PiBzaXplIG9mIGFsbG9jYXRpb24gZ3JvdXAgaW4gYmxvY2tzLgo+
+PiBCdXQgaW4gdGhpcyBjYXNlIC0gZnJlZSBzaXplIG9mIGFsbG9jYXRpb24gZ3JvdXAgaXMgKFgg
+LSBNKSwgd2hlcmUgTQo+PiBpcyBncmVhdGVyIHRoYW4gJ04nLgo+Cj4gU3VyZSAtIHRoZXJlIG1p
+Z2h0IGJlIG90aGVyIG1ldGFkYXRhIGJsb2NrcyB0aGF0IGhhZCB0byBiZSBhbGxvY2F0ZWQKPiBz
+byB0aGVyZSBtYXkgYmUgbW9yZSB1c2VkIHNwYWNlIHRoYW4ganVzdCB3aGF0IGlzIGFsbG9jYXRl
+ZCB0byB0aGUKPiBpbm9kZSBpdHNlbGYuIGUuZy4gYm1hcCBidHJlZSBibG9ja3MsIGZyZWUgc3Bh
+Y2UgYnRyZWUgYmxvY2tzIGR1ZSB0bwo+IGEgYnRyZWUgbm9kZSBzcGxpdCwgZXRjLiBZb3UgY2Fu
+J3QganVzdCBsb29rIGF0IHRoZSB0aGUgbnVtYmVyIG9mCj4gZGF0YSBibG9ja3MgaW4gYW4gaW5v
+ZGUgYW5kIHRoZSBudW1iZXIgb2YgZnJlZSBibG9ja3MgaW4gYW4gQUcgYW5kCj4gZXhwZWN0IHRo
+ZW0gdG8gbWF0Y2ggZXhhY3RseS4uLgo+Cj4+IHdoaWNoIG1lYW5zIHdoZW4gdGhlcmUgaXMgYSBm
+cmVlIHJlcXVlc3QgZm9yIHRoYXQgZmlsZSBhbmQgdGhlbgo+PiBjb3JyZXNwb25zaW5nIGJsb2Nr
+cyBhcmUgY2hlY2tlZCBpbiB0aGUgYWxsb2NhdGlvbiBncm91cCAtIGl0IHdpbGwKPj4gc2hvdyB0
+aGUgYmxvY2tzIGFzIGFscmVhZHkgZnJlZSBhbmQgcG9pbnQgdG8gY29ycnVwdGlvbi4KPj4gSXMg
+dGhlIGFib3ZlIG9ic2VydmF0aW9uIMKgY29ycmVjdD8KPj4gPgo+PiA+PiBBbmQgaXQgZGlkIG5v
+dAo+PiA+PiBzaG93IGFueSBlcnJvciBlaXRoZXIuCj4+ID4KPj4gPiBXZWxsLCBuby4gSWYgdGhl
+IGpvdXJuYWwgZm9ybWF0IGlzIGludGFjdCwgdGhlbiBpdCdzIGNvbnRlbnRzIGFyZQo+PiA+IHRy
+dXN0ZWQuCj4+ID4KPj4gPj4gVGhlIG1vbWVudCB0aGUgaXNzdWUgaGFwcGVuZWQgYW5kIHRoZW4g
+aWYgY2hlY2tlZCB0aHJvdWdoIHhmc19sb2dwcmludAo+PiA+PiAtIHRoZSBibG9ja3MgZnJlZSBp
+biB0aGUgYWxsb2NhdGlvbiBncm91cCBkb2VzIG5vdCBtYXRjaCB1cCBwcm9wZXJseS4KPj4gPj4g
+SSBjaGVja2VkIGJ5IHRha2luZyB0aGUgcHJpbnQgZnJvbSB4ZnNfZnJlZV9hZ19leHRlbnQgLSBp
+dCBzaG93ZWQgdGhlCj4+ID4+IHdyb25nIGJsb2NrcyBjb250aWdvdXMgdG8gdGhhdCBmaWxlLgo+
+PiA+Cj4+ID4gWWVzLCB3aGljaCBpcyB3aHkgSSBzdXNwZWN0IHRoYXQgdGhlIGpvdXJuYWwgY29u
+dGFpbmVkIHNvbWV0aGluZyBpdAo+PiA+IHNob3VsZG4ndCBoYXZlLgo+PiA+Cj4+ID4+IE9yaWdp
+bmFsIGZpbGUgd2hpY2ggd2FzIHRvIGJlIGRlbGV0ZWQgaXMgb2YgJzI1NScgYmxvY2tzIGFuZCBz
+dGFydGVkCj4+ID4+IGZyb20gcGh5c2ljYWwgYmxvY2sgbnVtYmVyIC0gMTIuCj4+ID4KPj4gPiBZ
+ZXMsIEkgc2F3IHRoYXQgaW4gdGhlIEVGSSByZWNvcmQgaW4gdGhlIGxvZ3ByaW50IG91dHB1dCBJ
+IHF1b3RlZC4KPj4gPgo+PiA+PiBXaGlsZSB0aGUgZnJlZSBzcGFjZSB0cmVlIGhhcyBmcmVlCj4+
+ID4+IGJsb2NrcyBsYXJnZXIgdGhhbiB3aGF0IGl0IHNob3VsZCBiZS4gaXQgcmV0dXJucyB0aGUg
+bGVuZ3RoIHN0YXJ0aW5nCj4+ID4+IGZyb20gYmxvY2sgbnVtYmVyIGFuZCB0aGUgbGVuZ3RoIHdo
+aWNoIGlzIGxhc3QgY29tbWl0dGVkIHRvIHRoZSBsb2cuCj4+ID4+Cj4+ID4+IEFzIEkgbWVudGlv
+bmVkIGluIHRoZSBsYXN0IG1haWwgLSB0aGUgZGV0YWlscyBhYm91dCB0aGUgb2JzZXJ2YXRpb24u
+Cj4+ID4+IFBsZWFzZSBjaGVjay4KPj4gPgo+PiA+IEdvaW5nIGJhY2sgdG8gdGhlIHRyYW5zYWN0
+aW9uIHlvdSBxdW90ZWQgZmlyc3Q6IGl0IGRvZXNuJ3QgbWF0Y2ggdGhlCj4+ID4gZW50cmllcyBp
+biB0aGUgbG9nIHByaW50IHlvdSBhdHRhY2hlZCBpbiB5b3VyIHNlY29uZCBlbWFpbC4gSSBjYW4n
+dAo+PiA+IGNvbW1lbnQgb24gaXQgYXQgYWxsLgo+PiBJbiB0aGUgbGFzdCBtYWlsIC0gSSBhdHRh
+Y2hlZCB0aGUgbG9nIHdoZXJlLWluICdyZXNldCcgaGFwcGVuZWQgYnV0Cj4+IHRoZXJlIHdhcyBu
+byBjb3JydXB0aW9uLiBKdXN0IHRvIGNoZWNrIHRoYXQgd2hhdCBhbGwgaXMgcmVjb3JkZWQgaW4K
+Pj4gam91cm5hbCwgYW5kIHRoaXMgdGltZSBqb3VybmFsIG1hdGNoZWQgd2l0aCB0aGUgZGF0YSBv
+biB0aGUgZGlzay4KPj4gPgo+PiA+PiA+IFNvLCB0aGUgbG9nIGFuZCB0aGUgcmVwYWlyIG91dHB1
+dCBhcmUgdXNlbGVzcyBmb3IgZGV0ZXJtaW5pbmcgd2hhdAo+PiA+PiA+IGNhdXNlZCB0aGUgcHJv
+YmxlbSAtIHlvdSBuZWVkIHRoZSBsb2cgZnJvbSB0aGUgbW91bnQgKmJlZm9yZSogdGhlCj4+ID4+
+ID4gZmlyc3Qgc2h1dGRvd24gb2NjdXJyZWQsIGFuZCB0byBoYXZlIHJ1biByZXBhaXIgKmJlZm9y
+ZSogeW91Cj4+ID4+ID4gdHJpZWQgdG8gdW5saW5rIGFueXRoaW5nLgo+PiA+Pgo+PiA+PiBJdCBp
+cyBvbmx5IGFmdGVyICdmaXJzdCBzaHV0ZG93bicgSSBjYW1lIHRvIGtub3cgYWJvdXQgdGhlIGNv
+cnJ1cHRpb24uCj4+ID4+IFNpbmNlLCB0aGVyZSB3YXMgbm8gZXJyb3Igc2hvd24gYXQgdGhlIG1v
+dW50IHRpbWUsIGl0IGRpZCBub3Qgc2VlbWVkCj4+ID4+IHJlYXNvbmFibGUgZW5vdWdoIHRvIHJ1
+biAicmVwYWlyIiBvbiB0aGUgZGlzay4KPj4gPgo+PiA+IEl0J3Mgc3RhbmRhcmQgcHJhY3RpY2Ug
+Zm9yIHBvd2VyIGZhaWx1cmUgaW50ZWdyaXR5IHRlc3RpbmcuCj4+IFllcywgRXZlbiBJIGFncmVl
+IHRvIHRoaXMuIEJ1dCB3aHkgd2FzIHRoZXJlIGEgbW91bnQgYXQgZmlyc3QgaGFuZD8gSQo+PiBn
+dWVzcyBpZiBpdCByZXR1cm5lZCBzb21lIGVycm9yIC0geGZzX3JlcGFpciBjb3VsZCBiZSBydW4u
+Cj4KPiBTb3JyeSwgSSdtIG5vdCBzdXJlIHdoYXQgeW91IGFyZSBhc2tpbmcuCj4KPiBJZiB5b3Un
+cmUgZG9pbmcgcG93ZXIgZmFpbHVyZSB0ZXN0aW5nLCB0aGVuIGFmdGVyIHRoZSBwb3dlciBmYWls
+dXJlCj4geW91IHNob3VsZCBhbHdheXMgcnVuIGEgbW91bnQvdW5tb3VudC9yZXBhaXIgY3ljbGUg
+YmVmb3JlIGRvaW5nCj4gYW55dGhpbmcgZWxzZSB0byBjaGVjayB0aGUgZmlsZXN5c3RlbSBhbmQg
+dGhlIGpvdXJuYWwgd2VyZSBub3QKPiBjb3JydXB0ZWQgYnkgdGhlIHBvd2VyIGZhaWx1cmUuIFlv
+dSBjYW4ndCB0ZXN0IHRoZSBpbnRlZ3JpdHkgb2YgdGhlCj4gam91cm5hbCBhbnkgb3RoZXIgd2F5
+IGF0IHRoaXMgcG9pbnQgaW4gdGltZS4uLi4KPgo+PiA+IFRoZSB0cmFuc2FjdGlvbiB3YXMgbmV2
+ZXIgY29tbWl0dGVkIGNvbXBsZXRlbHkgaW4gdGhlIGpvdXJuYWwuIFRoZQo+PiA+IGxhc3QgY29t
+cGxldGUgdHJhbnNhY3Rpb24gaW4gdGhlIGpvdXJuYWwgbWF0Y2hlcyB1cCB3aXRoIHRoZSBpbm9k
+ZQo+PiA+IHNpemUgaW4geW91ciBscyAtbCBvdXRwdXQgYWJvdXQuCj4+IFllcywgdGhpcyBpcyB3
+aGF0IEkgd2FudGVkIHRvIHNob3cgdXNpbmcgdGhlIGxhdGVzdCBsb2cgcHJpbnRzLiBCdXQKPj4g
+dGhpcyBpcyBub3QgY2FzZSB3aGVuIHRoZXJlIGlzIGFuIGlzc3VlLgo+Cj4gVGhlbiBwbGVhc2Ug
+dGVsbCBtZSB0aGF0IHdoYXQgeW91IGF0dGFjaGVkIGlzIGZvciBhIHdvcmtpbmcgY2FzZSBzbwo+
+IEkgd29uJ3Qgd2FzdGUgbXkgdGltZSBhbmFseXNpbmcgaXQuIEkgZG9uJ3QgY2FyZSBhYm91dCB0
+aGUgY2FzZQo+IHdoZXJlIGV2ZXJ5dGhpbmcgd29ya3MgLSBJIGNhcmUgYWJvdXQgdGhlIGNhc2Ug
+d2hlcmUgaXQgZG9lc24ndAo+IHdvcmsuCj4KPiBJbiB0aGF0IGNhc2UsIEkgd2FudCB0byBiZSBh
+YmxlIHRvIHZhbGlkYXRlIHlvdXIgYW5hbHlzaXMgb2YgdGhlCj4gY2FzZSB3aGVyZSB0aGUgZmls
+ZXN5c3RlbSBnZXRzIGJyb2tlbiwgYW5kIEkgbmVlZCB0aGUgbG9nIGNvbnRlbnRzCj4gZnJvbSBw
+cmlvciB0byB0aGUgZmlyc3QgbW91bnQgYWZ0ZXIgdGhlIHBvd2VyIGZhaWx1cmUgaGFzIG9jY3Vy
+cmVkCj4gdG8gZGV0ZXJtaW5lIHRoYXQuIEFuZCB0byB0ZWxsIHRoZSB0cnV0aCwgaXQncyBiZXR0
+ZXIgaWYgeW91IGRvbid0Cj4gdGVsbCBtZSB3aGF0IHlvdSB0aGluayBpcyB3cm9uZyBpbiB0aGUg
+Zmlyc3QgcGxhY2Ugc28gbXkgYW5hbHlzaXMgaXMKPiBpbmRlcGVuZGVudCBvZiB5b3Vycy4gSGVu
+Y2UgaWYgdGhleSBib3RoIHBvaW50IHRvIHRoZSBzYW1lIHByb2JsZW0sCj4gdGhlbiB3ZSd2ZSBn
+b3QgYSBmYWlybHkgZ29vZCBpbmRpY2F0aW9uIG9mIHdoZXJlIHRoZSBidWcgbGllcy4KPgo+IENo
+ZWVycywKPgo+IERhdmUuCj4gLS0KPiBEYXZlIENoaW5uZXIKPiBkYXZpZEBmcm9tb3JiaXQuY29t
+Cj4KPiBfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwo+IHhm
+cyBtYWlsaW5nIGxpc3QKPiB4ZnNAb3NzLnNnaS5jb20KPiBodHRwOi8vb3NzLnNnaS5jb20vbWFp
+bG1hbi9saXN0aW5mby94ZnMKPgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5z
+Z2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
