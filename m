@@ -1,26 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6QF7CX4131519 for <xfs@oss.sgi.com>; Tue, 26 Jul 2011 10:07:13 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 68F8D984A2
-	for <xfs@oss.sgi.com>; Tue, 26 Jul 2011 08:07:12 -0700 (PDT)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	MOCMv2DFSCTKkoh1 for <xfs@oss.sgi.com>;
-	Tue, 26 Jul 2011 08:07:12 -0700 (PDT)
-Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1QljDz-0004ic-Ub
-	for xfs@oss.sgi.com; Tue, 26 Jul 2011 15:07:11 +0000
-Date: Tue, 26 Jul 2011 11:07:11 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 2/3] xfs: prevent against ioend livelocks in xfs_file_fsync
-Message-ID: <20110726150711.GB18000@infradead.org>
-References: <20110726150633.GA17400@infradead.org>
+	p6QFLro9131994 for <xfs@oss.sgi.com>; Tue, 26 Jul 2011 10:21:53 -0500
+Subject: Re: [PATCH] xfs: Fix wrong return value of xfs_file_aio_write
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <20110724120330.GC1626@x4.trippels.de>
+References: <1309370716-12235-1-git-send-email-josef@redhat.com>
+	<20110723180942.GA1616@x4.trippels.de> <4E2B2E88.8080006@redhat.com>
+	<20110723203824.GB1652@x4.trippels.de>
+	<20110723220212.GA1648@x4.trippels.de>
+	<20110724111625.GA12658@infradead.org>
+	<20110724115420.GA1626@x4.trippels.de>
+	<20110724115826.GB1626@x4.trippels.de>
+	<20110724120330.GC1626@x4.trippels.de>
+Date: Tue, 26 Jul 2011 10:21:48 -0500
+Message-ID: <1311693708.2890.5.camel@doink>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110726150633.GA17400@infradead.org>
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,30 +29,26 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Markus Trippelsdorf <markus@trippelsdorf.de>
+Cc: jack@suse.cz, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, Josef Bacik <josef@redhat.com>
 
-We need to take some locks to prevent new ioends from coming in when we wait
-for all existing ones to go away.  Up to Linux 3.0 that was done using the
-i_mutex held by the VFS fsync code, but now that we are called without
-it we need to take care of it ourselves.  Use the I/O lock instead of
-i_mutex just like we do in other places.
+On Sun, 2011-07-24 at 14:03 +0200, Markus Trippelsdorf wrote:
+> The fsync prototype change commit 02c24a82187d accidentally overwrote
+> the ssize_t return value of xfs_file_aio_write with 0 for SYNC type
+> writes. Fix this by checking if an error occured when calling
+> xfs_file_fsync and only change the return value in this case.
+> In addition xfs_file_fsync actually returns a normal negative error, so
+> fix this, too.
+> 
+> Signed-off-by: Markus Trippelsdorf <markus@trippelsdorf.de>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Tested-by: Christoph Hellwig <hch@lst.de>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Finally looking at this I noticed the same thing Christoph
+did; thanks for fixing both.  Your change got committed
+yesterday via Al Viro's VFS tree.
 
-Index: linux-2.6/fs/xfs/linux-2.6/xfs_file.c
-===================================================================
---- linux-2.6.orig/fs/xfs/linux-2.6/xfs_file.c	2011-07-25 23:50:35.081563423 +0200
-+++ linux-2.6/fs/xfs/linux-2.6/xfs_file.c	2011-07-25 23:51:18.098229833 +0200
-@@ -149,7 +149,9 @@ xfs_file_fsync(
- 
- 	xfs_iflags_clear(ip, XFS_ITRUNCATED);
- 
-+	xfs_ilock(ip, XFS_IOLOCK_SHARED);
- 	xfs_ioend_wait(ip);
-+	xfs_iunlock(ip, XFS_IOLOCK_SHARED);
- 
- 	if (mp->m_flags & XFS_MOUNT_BARRIER) {
- 		/*
+					-Alex
 
 _______________________________________________
 xfs mailing list
