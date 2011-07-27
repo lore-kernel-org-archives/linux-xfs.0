@@ -1,22 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6RGeIRR212343 for <xfs@oss.sgi.com>; Wed, 27 Jul 2011 11:40:18 -0500
-Received: from mx2.netapp.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 185E452CF7C
-	for <xfs@oss.sgi.com>; Wed, 27 Jul 2011 09:40:17 -0700 (PDT)
-Received: from mx2.netapp.com (mx2.netapp.com [216.240.18.37]) by cuda.sgi.com
-	with ESMTP id FbJSVqwszYTz4pTi for <xfs@oss.sgi.com>;
-	Wed, 27 Jul 2011 09:40:17 -0700 (PDT)
-Message-ID: <4E303F6F.8010706@netapp.com>
-Date: Wed, 27 Jul 2011 12:40:15 -0400
-From: Bryan Schumaker <bjschuma@netapp.com>
-MIME-Version: 1.0
-Subject: Re: 2.6.xx: NFS: directory motion/cam2 contains a readdir loop
-References: <alpine.DEB.2.02.1107270952270.1451@p34.internal.lan>
-	<20110727160752.GC974@fieldses.org>
-	<alpine.DEB.2.02.1107271227340.1451@p34.internal.lan>
-In-Reply-To: <alpine.DEB.2.02.1107271227340.1451@p34.internal.lan>
+	p6RGhDxR212451 for <xfs@oss.sgi.com>; Wed, 27 Jul 2011 11:43:13 -0500
+From: Bill Kendall <wkendall@sgi.com>
+Subject: [PATCH] xfsdump: allow multi-digit dialog prompts
+Date: Wed, 27 Jul 2011 11:41:53 -0500
+Message-Id: <1311784913-14191-1-git-send-email-wkendall@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,47 +14,78 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 07/27/2011 12:28 PM, Justin Piszcz wrote:
-> 
-> 
-> On Wed, 27 Jul 2011, J. Bruce Fields wrote:
-> 
->> On Wed, Jul 27, 2011 at 09:54:09AM -0400, Justin Piszcz wrote:
->>> Hi,
->>>
->>> Kernel 2.6.30 on client.
->>> Kernel 2.6.28 on server.
->>>
->>> p34 kernel: [92223.918892] NFS: directory motion/cam2 contains a
->>> readdir loop.  Please contact your server vendor.  Offending cookie: 10272
->>
->> What filesystem on the server are you exporting?
-> 
-> Hi,
-> 
-> xfs.
-> /dev/sda1 on / type xfs (rw,noatime)
-> 
-> Nothing special, thoughts?
+xfsdump issues a multiple-choice dialog in various circumstances
+(e.g., media change request). An assert incorrectly limits this to
+at most 8 choices even though the code can handle up to 9.  Remove
+the assert and change the code to handle multi-digit responses.
 
-Are there a lot of files in the directory you're exporting?  It looks like cookie 10272 is mapped to multiple files. When the client tries to resume reading from this cookie, xfs will reply from the first matching file and cause the client to enter a loop.
+Signed-off-by: Bill Kendall <wkendall@sgi.com>
+---
+ common/dlog.c |   21 +++++++++------------
+ 1 files changed, 9 insertions(+), 12 deletions(-)
 
-- Bryan
-
-> 
-> Justin.
-> 
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/common/dlog.c b/common/dlog.c
+index 6a243ef..c81edc6 100644
+--- a/common/dlog.c
++++ b/common/dlog.c
+@@ -19,6 +19,7 @@
+ #include <xfs/xfs.h>
+ #include <xfs/jdm.h>
+ 
++#include <stdlib.h>
+ #include <sys/stat.h>
+ #include <fcntl.h>
+ #include <time.h>
+@@ -186,7 +187,6 @@ dlog_multi_query( char *querystr[ ],
+ 	/* sanity
+ 	 */
+ 	ASSERT( dlog_allowed_flag );
+-	ASSERT( choicecnt < 9 );
+ 
+ 	/* display query description strings
+ 	 */
+@@ -245,24 +245,21 @@ dlog_multi_query( char *querystr[ ],
+ 				  prepromptstr,
+ 				  choicecnt );
+ 		if ( ok ) {
++			long int val;
++			char *end = buf;
++
+ 			if ( ! strlen( buf )) {
+ 				return defaultix;
+ 			}
+-			if ( strlen( buf ) != 1 ) {
+-				prepromptstr = _(
+-				    "please enter a single "
+-				    "digit response (1 to %d)");
+-				continue;
+-			}
+-			if ( buf[ 0 ] < '1'
+-			     ||
+-			     buf[ 0 ] >= '1' + ( u_char_t )choicecnt ) {
++
++			val = strtol( buf, &end, 10 );
++			if ( *end != '\0' || val < 1 || val > choicecnt ) {
+ 				prepromptstr = _(
+-				      "please enter a single digit "
++				      "please enter a value "
+ 				      "between 1 and %d inclusive ");
+ 				continue;
+ 			}
+-			return ( size_t )( buf[ 0 ] - '1' );
++			return val - 1; // return value is a 0-based index
+ 		} else {
+ 			return exceptionix;
+ 		}
+-- 
+1.7.0.4
 
 _______________________________________________
 xfs mailing list
