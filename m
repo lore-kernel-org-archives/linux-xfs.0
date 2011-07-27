@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6R4WKd9159102 for <xfs@oss.sgi.com>; Tue, 26 Jul 2011 23:32:21 -0500
-Received: from mail-qw0-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F3CE01686549
-	for <xfs@oss.sgi.com>; Tue, 26 Jul 2011 21:32:26 -0700 (PDT)
-Received: from mail-qw0-f53.google.com (mail-qw0-f53.google.com
-	[209.85.216.53]) by cuda.sgi.com with ESMTP id yGLCqz1A64yJCvvA
-	for <xfs@oss.sgi.com>; Tue, 26 Jul 2011 21:32:26 -0700 (PDT)
-Received: by qwb7 with SMTP id 7so707233qwb.26
-	for <xfs@oss.sgi.com>; Tue, 26 Jul 2011 21:32:17 -0700 (PDT)
+	p6R6a20q165459 for <xfs@oss.sgi.com>; Wed, 27 Jul 2011 01:36:03 -0500
+Received: from mail.ud10.udmedia.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E3270F0B34D
+	for <xfs@oss.sgi.com>; Tue, 26 Jul 2011 23:36:10 -0700 (PDT)
+Received: from mail.ud10.udmedia.de (ud10.udmedia.de [194.117.254.50]) by
+	cuda.sgi.com with ESMTP id 4UMS3DZsvCHxafjy for
+	<xfs@oss.sgi.com>; Tue, 26 Jul 2011 23:36:10 -0700 (PDT)
+Date: Wed, 27 Jul 2011 08:35:59 +0200
+From: Markus Trippelsdorf <markus@trippelsdorf.de>
+Subject: Re: xfs compile error with the latest -git
+Message-ID: <20110727063559.GB1641@x4.trippels.de>
+References: <20110726233246.GA8168@fujiko>
 MIME-Version: 1.0
-In-Reply-To: <1311265730-5324-1-git-send-email-mgorman@suse.de>
-References: <1311265730-5324-1-git-send-email-mgorman@suse.de>
-Date: Wed, 27 Jul 2011 13:32:17 +0900
-Message-ID: <CAEwNFnA_OGUYfCQrLCMt9NuU0O0ftWWBB4_Si8NypKyaeuRg2A@mail.gmail.com>
-Subject: Re: [RFC PATCH 0/8] Reduce filesystem writeback from page reclaim v2
-From: Minchan Kim <minchan.kim@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20110726233246.GA8168@fujiko>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,145 +24,46 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mel Gorman <mgorman@suse.de>
-Cc: Rik van Riel <riel@redhat.com>, Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, XFS <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, Linux-MM <linux-mm@kvack.org>, Wu Fengguang <fengguang.wu@intel.com>, Johannes Weiner <jweiner@redhat.com>
+To: Francesco Allertsen <fallertsen@gmail.com>
+Cc: Alex Elder <aelder@sgi.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, xfs-masters@oss.sgi.com, Al Viro <viro@zeniv.linux.org.uk>, Dave Chinner <dchinner@redhat.com>, Christoph Hellwig <hch@lst.de>
 
-SGkgTWVsLAoKT24gRnJpLCBKdWwgMjIsIDIwMTEgYXQgMToyOCBBTSwgTWVsIEdvcm1hbiA8bWdv
-cm1hbkBzdXNlLmRlPiB3cm90ZToKPiBXYXJuaW5nOiBMb25nIHBvc3Qgd2l0aCBsb3RzIG9mIGZp
-Z3VyZXMuIElmIHlvdSBub3JtYWxseSBkcmluayBjb2ZmZWUKPiBhbmQgeW91IGRvbid0IGhhdmUg
-YSBjdXAsIGdldCBvbmUgb3IgeW91IG1heSBlbmQgdXAgd2l0aCBhIGNhc2Ugb2YKPiBrZXlib2Fy
-ZCBmYWNlLgo+Cj4gQ2hhbmdlbG9nIHNpbmNlIHYxCj4gwqBvIERyb3AgcHJpby1pbm9kZSBwYXRj
-aC4gVGhlcmUgaXMgbm93IGEgZGVwZW5kZW5jeSB0aGF0IHRoZSBmbHVzaGVyCj4gwqAgwqB0aHJl
-YWRzIGZpbmQgdGhlc2UgZGlydHkgcGFnZXMgcXVpY2tseS4KPiDCoG8gRHJvcCBucl92bXNjYW5f
-dGhyb3R0bGVkIGNvdW50ZXIKPiDCoG8gU2V0UGFnZVJlY2xhaW0gaW5zdGVhZCBvZiBkZWFjdGl2
-YXRlX3BhZ2Ugd2hpY2ggd2FzIHdyb25nCj4gwqBvIEFkZCB3YXJuaW5nIHRvIG1haW4gZmlsZXN5
-c3RlbXMgaWYgY2FsbGVkIGZyb20gZGlyZWN0IHJlY2xhaW0gY29udGV4dAo+IMKgbyBBZGQgcGF0
-Y2ggdG8gY29tcGxldGVseSBkaXNhYmxlIGZpbGVzeXN0ZW0gd3JpdGViYWNrIGZyb20gcmVjbGFp
-bQo+Cj4gVGVzdGluZyBmcm9tIHRoZSBYRlMgZm9sayByZXZlYWxlZCB0aGF0IHRoZXJlIGlzIHN0
-aWxsIHRvbyBtdWNoCj4gSS9PIGZyb20gdGhlIGVuZCBvZiB0aGUgTFJVIGluIGtzd2FwZC4gUHJl
-dmlvdXNseSBpdCB3YXMgY29uc2lkZXJlZAo+IGFjY2VwdGFibGUgYnkgVk0gcGVvcGxlIGZvciBh
-IHNtYWxsIG51bWJlciBvZiBwYWdlcyB0byBiZSB3cml0dGVuCj4gYmFjayBmcm9tIHJlY2xhaW0g
-d2l0aCB0ZXN0aW5nIGdlbmVyYWxseSBzaG93aW5nIGFib3V0IDAuMyUgb2YgcGFnZXMKPiByZWNs
-YWltZWQgd2VyZSB3cml0dGVuIGJhY2sgKGhpZ2hlciBpZiBtZW1vcnkgd2FzIGxvdykuIFRoYXQg
-d3JpdGluZwo+IGJhY2sgYSBzbWFsbCBudW1iZXIgb2YgcGFnZXMgaXMgb2sgaGFzIGJlZW4gaGVh
-dmlseSBkaXNwdXRlZCBmb3IKPiBxdWl0ZSBzb21lIHRpbWUgYW5kIERhdmUgQ2hpbm5lciBleHBs
-YWluZWQgaXQgd2VsbDsKPgo+IMKgIMKgIMKgIMKgSXQgZG9lc24ndCBoYXZlIHRvIGJlIGEgdmVy
-eSBoaWdoIG51bWJlciB0byBiZSBhIHByb2JsZW0uIElPCj4gwqAgwqAgwqAgwqBpcyBvcmRlcnMg
-b2YgbWFnbml0dWRlIHNsb3dlciB0aGFuIHRoZSBDUFUgdGltZSBpdCB0YWtlcyB0bwo+IMKgIMKg
-IMKgIMKgZmx1c2ggYSBwYWdlLCBzbyB0aGUgY29zdCBvZiBtYWtpbmcgYSBiYWQgZmx1c2ggZGVj
-aXNpb24gaXMKPiDCoCDCoCDCoCDCoHZlcnkgaGlnaC4gQW5kIHNpbmdsZSBwYWdlIHdyaXRlYmFj
-ayBmcm9tIHRoZSBMUlUgaXMgYWxtb3N0Cj4gwqAgwqAgwqAgwqBhbHdheXMgYSBiYWQgZmx1c2gg
-ZGVjaXNpb24uCj4KPiBUbyBjb21wbGljYXRlIG1hdHRlcnMsIGZpbGVzeXN0ZW1zIHJlc3BvbmQg
-dmVyeSBkaWZmZXJlbnRseSB0byByZXF1ZXN0cwo+IGZyb20gcmVjbGFpbSBhY2NvcmRpbmcgdG8g
-Q2hyaXN0b3BoIEhlbGx3aWc7Cj4KPiDCoCDCoCDCoCDCoHhmcyB0cmllcyB0byB3cml0ZSBpdCBi
-YWNrIGlmIHRoZSByZXF1ZXN0ZXIgaXMga3N3YXBkCj4gwqAgwqAgwqAgwqBleHQ0IGlnbm9yZXMg
-dGhlIHJlcXVlc3QgaWYgaXQncyBhIGRlbGF5ZWQgYWxsb2NhdGlvbgo+IMKgIMKgIMKgIMKgYnRy
-ZnMgaWdub3JlcyB0aGUgcmVxdWVzdAo+Cj4gQXMgYSByZXN1bHQsIGVhY2ggZmlsZXN5c3RlbSBo
-YXMgZGlmZmVyZW50IHBlcmZvcm1hbmNlIGNoYXJhY3RlcmlzdGljcwo+IHdoZW4gdW5kZXIgbWVt
-b3J5IHByZXNzdXJlIGFuZCB0aGVyZSBhcmUgbWFueSBwYWdlcyBiZWluZyBkaXJ0aWVzLiBJbgo+
-IHNvbWUgY2FzZXMsIHRoZSByZXF1ZXN0IGlzIGlnbm9yZWQgZW50aXJlbHkgc28gdGhlIFZNIGNh
-bm5vdCBkZXBlbmQKPiBvbiB0aGUgSU8gYmVpbmcgZGlzcGF0Y2hlZC4KPgo+IFRoZSBvYmplY3Rp
-dmUgb2YgdGhpcyBzZXJpZXMgdG8gdG8gcmVkdWNlIHdyaXRpbmcgb2YgZmlsZXN5c3RlbS1iYWNr
-ZWQKPiBwYWdlcyBmcm9tIHJlY2xhaW0sIHBsYXkgbmljZWx5IHdpdGggd3JpdGViYWNrIHRoYXQg
-aXMgYWxyZWFkeSBpbgo+IHByb2dyZXNzIGFuZCB0aHJvdHRsZSByZWNsYWltIGFwcHJvcHJpYXRl
-bHkgd2hlbiBkaXJ0eSBwYWdlcyBhcmUKPiBlbmNvdW50ZXJlZC4gVGhlIGFzc3VtcHRpb24gaXMg
-dGhhdCB0aGUgZmx1c2hlcnMgd2lsbCBhbHdheXMgd3JpdGUKPiBwYWdlcyBmYXN0ZXIgdGhhbiBp
-ZiByZWNsYWltIGlzc3VlcyB0aGUgSU8uIFRoZSBuZXcgcHJvYmxlbSBpcyB0aGF0Cj4gcmVjbGFp
-bSBoYXMgdmVyeSBsaXR0bGUgY29udHJvbCBvdmVyIGhvdyBsb25nIGJlZm9yZSBhIHBhZ2UgaW4g
-YQo+IHBhcnRpY3VsYXIgem9uZSBvciBjb250YWluZXIgaXMgY2xlYW5lZCB3aGljaCBpcyBkaXNj
-dXNzZWQgbGF0ZXIuIEEKPiBzZWNvbmRhcnkgZ29hbCBpcyB0byBhdm9pZCB0aGUgcHJvYmxlbSB3
-aGVyZWJ5IGRpcmVjdCByZWNsYWltIHNwbGljZXMKPiB0d28gcG90ZW50aWFsbHkgZGVlcCBjYWxs
-IHN0YWNrcyB0b2dldGhlci4KPgo+IFBhdGNoIDEgZGlzYWJsZXMgd3JpdGViYWNrIG9mIGZpbGVz
-eXN0ZW0gcGFnZXMgZnJvbSBkaXJlY3QgcmVjbGFpbQo+IMKgIMKgIMKgIMKgZW50aXJlbHkuIEFu
-b255bW91cyBwYWdlcyBhcmUgc3RpbGwgd3JpdHRlbi4KPgo+IFBhdGNoZXMgMi00IGFkZCB3YXJu
-aW5ncyB0byBYRlMsIGV4dDQgYW5kIGJ0cmZzIGlmIGNhbGxlZCBmcm9tCj4gwqAgwqAgwqAgwqBk
-aXJlY3QgcmVjbGFpbS4gV2l0aCBwYXRjaCAxLCB0aGlzICJuZXZlciBoYXBwZW5zIiBhbmQKPiDC
-oCDCoCDCoCDCoGlzIGludGVuZGVkIHRvIGNhdGNoIHJlZ3Jlc3Npb25zIGluIHRoaXMgbG9naWMg
-aW4gdGhlCj4gwqAgwqAgwqAgwqBmdXR1cmUuCj4KPiBQYXRjaCA1IGRpc2FibGVzIHdyaXRlYmFj
-ayBvZiBmaWxlc3lzdGVtIHBhZ2VzIGZyb20ga3N3YXBkIHVubGVzcwo+IMKgIMKgIMKgIMKgdGhl
-IHByaW9yaXR5IGlzIHJhaXNlZCB0byB0aGUgcG9pbnQgd2hlcmUga3N3YXBkIGlzIGNvbnNpZGVy
-ZWQKPiDCoCDCoCDCoCDCoHRvIGJlIGluIHRyb3VibGUuCj4KPiBQYXRjaCA2IHRocm90dGxlcyBy
-ZWNsYWltZXJzIGlmIHRvbyBtYW55IGRpcnR5IHBhZ2VzIGFyZSBiZWluZwo+IMKgIMKgIMKgIMKg
-ZW5jb3VudGVyZWQgYW5kIHRoZSB6b25lcyBvciBiYWNraW5nIGRldmljZXMgYXJlIGNvbmdlc3Rl
-ZC4KPgo+IFBhdGNoIDcgaW52YWxpZGF0ZXMgZGlydHkgcGFnZXMgZm91bmQgYXQgdGhlIGVuZCBv
-ZiB0aGUgTFJVIHNvIHRoZXkKPiDCoCDCoCDCoCDCoGFyZSByZWNsYWltZWQgcXVpY2tseSBhZnRl
-ciBiZWluZyB3cml0dGVuIGJhY2sgcmF0aGVyIHRoYW4KPiDCoCDCoCDCoCDCoHdhaXRpbmcgZm9y
-IGEgcmVjbGFpbWVyIHRvIGZpbmQgdGhlbQo+Cj4gUGF0Y2ggOCBkaXNhYmxlcyB3cml0ZWJhY2sg
-b2YgZmlsZXN5c3RlbSBwYWdlcyBmcm9tIGtzd2FwZCBhbmQKPiDCoCDCoCDCoCDCoGRlcGVuZHMg
-ZW50aXJlbHkgb24gdGhlIGZsdXNoZXIgdGhyZWFkcyBmb3IgY2xlYW5pbmcgcGFnZXMuCj4gwqAg
-wqAgwqAgwqBUaGlzIGlzIHBvdGVudGlhbGx5IGEgcHJvYmxlbSBpZiB0aGUgZmx1c2hlciB0aHJl
-YWRzIHRha2UgYQo+IMKgIMKgIMKgIMKgbG9uZyB0aW1lIHRvIHdha2Ugb3IgYXJlIG5vdCBkaXNj
-b3ZlcmluZyB0aGUgcGFnZXMgd2UgbmVlZAo+IMKgIMKgIMKgIMKgY2xlYW5lZC4gQnkgcGxhY2lu
-ZyB0aGUgcGF0Y2ggbGFzdCwgaXQncyBtb3JlIGxpa2VseSB0aGF0Cj4gwqAgwqAgwqAgwqBiaXNl
-Y3Rpb24gY2FuIGNhdGNoIGlmIHRoaXMgc2l0dWF0aW9uIG9jY3VycyBhbmQgY2FuIGJlCj4gwqAg
-wqAgwqAgwqBlYXNpbHkgcmV2ZXJ0ZWQuCj4KPiBJIGNvbnNpZGVyIHRoaXMgc2VyaWVzIHRvIGJl
-IG9ydGhvZ29uYWwgdG8gdGhlIHdyaXRlYmFjayB3b3JrIGJ1dAo+IGl0IGlzIHdvcnRoIG5vdGlu
-ZyB0aGF0IHRoZSB3cml0ZWJhY2sgd29yayBhZmZlY3RzIHRoZSB2aWFiaWxpdHkgb2YKPiBwYXRj
-aCA4IGluIHBhcnRpY3VsYXIuCj4KPiBJIHRlc3RlZCB0aGlzIG9uIGV4dDQgYW5kIHhmcyB1c2lu
-ZyBmc19tYXJrIGFuZCBhIG1pY3JvIGJlbmNobWFyawo+IHRoYXQgZG9lcyBhIHN0cmVhbWluZyB3
-cml0ZSB0byBhIGxhcmdlIG1hcHBpbmcgKGV4ZXJjaXNlcyB1c2Utb25jZQo+IExSVSBsb2dpYykg
-Zm9sbG93ZWQgYnkgc3RyZWFtaW5nIHdyaXRlcyB0byBhIG1peCBvZiBhbm9ueW1vdXMgYW5kCj4g
-ZmlsZS1iYWNrZWQgbWFwcGluZ3MuIFRoZSBjb21tYW5kIGxpbmUgZm9yIGZzX21hcmsgd2hlbiBi
-b3R0ZWQgd2l0aAo+IDUxMk0gbG9va2VkIHNvbWV0aGluZyBsaWtlCj4KPiAuL2ZzX21hcmsgwqAt
-ZCDCoC90bXAvZnNtYXJrLTI2NzYgwqAtRCDCoDEwMCDCoC1OIMKgMTUwIMKgLW4gwqAxNTAgwqAt
-TCDCoDI1IMKgLXQgwqAxIMKgLVMwIMKgLXMgwqAxMDQ4NTc2MAo+Cj4gVGhlIG51bWJlciBvZiBm
-aWxlcyB3YXMgYWRqdXN0ZWQgZGVwZW5kaW5nIG9uIHRoZSBhbW91bnQgb2YgYXZhaWxhYmxlCj4g
-bWVtb3J5IHNvIHRoYXQgdGhlIGZpbGVzIGNyZWF0ZWQgd2FzIGFib3V0IDN4UkFNLiBGb3IgbXVs
-dGlwbGUgdGhyZWFkcywKPiB0aGUgLWQgc3dpdGNoIGlzIHNwZWNpZmllZCBtdWx0aXBsZSB0aW1l
-cy4KPgo+IDMga2VybmVscyBhcmUgdGVzdGVkLgo+Cj4gdmFuaWxsYSAzLjAtcmM2Cj4ga3N3YXBk
-d2ItdjJyNSDCoCDCoCDCoCDCoCDCoCBwYXRjaGVzIDEtNwo+IG5va3N3YXBkd2ItdjJyNSDCoCDC
-oCDCoCDCoCBwYXRjaGVzIDEtOAo+Cj4gVGhlIHRlc3QgbWFjaGluZSBpcyB4ODYtNjQgd2l0aCBh
-biBvbGRlciBnZW5lcmF0aW9uIG9mIEFNRCBwcm9jZXNzb3IKPiB3aXRoIDQgY29yZXMuIFRoZSB1
-bmRlcmx5aW5nIHN0b3JhZ2Ugd2FzIDQgZGlza3MgY29uZmlndXJlZCBhcyBSQUlELTAKPiBhcyB0
-aGlzIHdhcyB0aGUgYmVzdCBjb25maWd1cmF0aW9uIG9mIHN0b3JhZ2UgSSBoYWQgYXZhaWxhYmxl
-LiBTd2FwCj4gaXMgb24gYSBzZXBhcmF0ZSBkaXNrLiBEaXJ0eSByYXRpbyB3YXMgdHVuZWQgdG8g
-NDAlIGluc3RlYWQgb2YgdGhlCj4gZGVmYXVsdCBvZiAyMCUuCj4KPiBUZXN0aW5nIHdhcyBydW4g
-d2l0aCBhbmQgd2l0aG91dCBtb25pdG9ycyB0byBib3RoIHZlcmlmeSB0aGF0IHRoZQo+IHBhdGNo
-ZXMgd2VyZSBvcGVyYXRpbmcgYXMgZXhwZWN0ZWQgYW5kIHRoYXQgYW55IHBlcmZvcm1hbmNlIGdh
-aW4gd2FzCj4gcmVhbCBhbmQgbm90IGR1ZSB0byBpbnRlcmZlcmVuY2UgZnJvbSBtb25pdG9ycy4K
-Pgo+IEkndmUgcG9zdGVkIHRoZSByYXcgcmVwb3J0cyBmb3IgZWFjaCBmaWxlc3lzdGVtIGF0Cj4K
-PiBodHRwOi8vd3d3LmNzbi51bC5pZS9+bWVsL3Bvc3RpbmdzL3JlY2xhaW0tMjAxMTA3MjEKPgo+
-IFVuZm9ydHVuYXRlbHksIHRoZSB2b2x1bWUgb2YgZGF0YSBpcyBleGNlc3NpdmUgYnV0IGhlcmUg
-aXMgYSBwYXJ0aWFsCj4gc3VtbWFyeSBvZiB3aGF0IHdhcyBpbnRlcmVzdGluZyBmb3IgWEZTLgoK
-Q291bGQgeW91IGNsYXJpZnkgdGhlIG5vdGF0aW9uPwoxUCA6ICAxIFByb2Nlc3Nvcj8KNTEyTTog
-c3lzdGVtIG1lbW9yeSBzaXplPwoyWCAsIDRYLCAxNlg6IHRoZSBzaXplIG9mIGZpbGVzIGNyZWF0
-ZWQgZHVyaW5nIHRlc3QKCj4KPiA1MTJNMVAteGZzIMKgIMKgIMKgIMKgIMKgIEZpbGVzL3MgwqBt
-ZWFuIMKgIMKgIMKgIMKgIDMyLjk5ICggMC4wMCUpIMKgIMKgIMKgIDM1LjE2ICggNi4xOCUpIMKg
-IMKgIMKgIDM1LjA4ICggNS45NCUpCj4gNTEyTTFQLXhmcyDCoCDCoCDCoCDCoCDCoCBFbGFwc2Vk
-IFRpbWUgZnNtYXJrIMKgIMKgIMKgIMKgIMKgIDEyMi41NCDCoCDCoCDCoCDCoCDCoCDCoCDCoCAx
-MTUuNTQgwqAgwqAgwqAgwqAgwqAgwqAgwqAgMTE1LjIxCj4gNTEyTTFQLXhmcyDCoCDCoCDCoCDC
-oCDCoCBFbGFwc2VkIFRpbWUgbW1hcC1zdHJtIMKgIMKgIMKgIMKgMTA1LjA5IMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIDEwNC40NCDCoCDCoCDCoCDCoCDCoCDCoCDCoCAxMDYuMTIKPiA1MTJNLXhmcyDC
-oCDCoCDCoCDCoCDCoCDCoCBGaWxlcy9zIMKgbWVhbiDCoCDCoCDCoCDCoCAzMC41MCAoIDAuMDAl
-KSDCoCDCoCDCoCAzMy4zMCAoIDguNDAlKSDCoCDCoCDCoCAzNC42OCAoMTIuMDYlKQo+IDUxMk0t
-eGZzIMKgIMKgIMKgIMKgIMKgIMKgIEVsYXBzZWQgVGltZSBmc21hcmsgwqAgwqAgwqAgwqAgwqAg
-MTM2LjE0IMKgIMKgIMKgIMKgIMKgIMKgIMKgIDEyNC4yNiDCoCDCoCDCoCDCoCDCoCDCoCDCoCAx
-MjAuMzMKPiA1MTJNLXhmcyDCoCDCoCDCoCDCoCDCoCDCoCBFbGFwc2VkIFRpbWUgbW1hcC1zdHJt
-IMKgIMKgIMKgIMKgMTU0LjY4IMKgIMKgIMKgIMKgIMKgIMKgIMKgIDE0NS45MSDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCAxMzguODMKPiA1MTJNLTJYLXhmcyDCoCDCoCDCoCDCoCDCoEZpbGVzL3MgwqBt
-ZWFuIMKgIMKgIMKgIMKgIDI4LjQ4ICggMC4wMCUpIMKgIMKgIMKgIDMyLjkwICgxMy40NSUpIMKg
-IMKgIMKgIDMyLjgzICgxMy4yNiUpCj4gNTEyTS0yWC14ZnMgwqAgwqAgwqAgwqAgwqBFbGFwc2Vk
-IFRpbWUgZnNtYXJrIMKgIMKgIMKgIMKgIMKgIDE0NS42NCDCoCDCoCDCoCDCoCDCoCDCoCDCoCAx
-MjguNjcgwqAgwqAgwqAgwqAgwqAgwqAgwqAgMTI4LjY3Cj4gNTEyTS0yWC14ZnMgwqAgwqAgwqAg
-wqAgwqBFbGFwc2VkIFRpbWUgbW1hcC1zdHJtIMKgIMKgIMKgIMKgMTQ1LjkyIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIDEzNi42NSDCoCDCoCDCoCDCoCDCoCDCoCDCoCAxMzcuNjcKPiA1MTJNLTRYLXhm
-cyDCoCDCoCDCoCDCoCDCoEZpbGVzL3MgwqBtZWFuIMKgIMKgIMKgIMKgIDI5LjA2ICggMC4wMCUp
-IMKgIMKgIMKgIDMyLjgyICgxMS40NiUpIMKgIMKgIMKgIDMzLjMyICgxMi44MSUpCj4gNTEyTS00
-WC14ZnMgwqAgwqAgwqAgwqAgwqBFbGFwc2VkIFRpbWUgZnNtYXJrIMKgIMKgIMKgIMKgIMKgIDE1
-My42OSDCoCDCoCDCoCDCoCDCoCDCoCDCoCAxMzYuNzQgwqAgwqAgwqAgwqAgwqAgwqAgwqAgMTM1
-LjExCj4gNTEyTS00WC14ZnMgwqAgwqAgwqAgwqAgwqBFbGFwc2VkIFRpbWUgbW1hcC1zdHJtIMKg
-IMKgIMKgIMKgMTU5LjQ3IMKgIMKgIMKgIMKgIMKgIMKgIMKgIDEyOC42NCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCAxMzIuNTkKPiA1MTJNLTE2WC14ZnMgwqAgwqAgwqAgwqAgRmlsZXMvcyDCoG1lYW4g
-wqAgwqAgwqAgwqAgNDguODAgKCAwLjAwJSkgwqAgwqAgwqAgNDEuODAgKC0xNi43NyUpIMKgIMKg
-IMKgIDU2LjYxICgxMy43OSUpCj4gNTEyTS0xNlgteGZzIMKgIMKgIMKgIMKgIEVsYXBzZWQgVGlt
-ZSBmc21hcmsgwqAgwqAgwqAgwqAgwqAgMTYxLjQ4IMKgIMKgIMKgIMKgIMKgIMKgIMKgIDE0NC42
-MSDCoCDCoCDCoCDCoCDCoCDCoCDCoCAxNDEuMTkKPiA1MTJNLTE2WC14ZnMgwqAgwqAgwqAgwqAg
-RWxhcHNlZCBUaW1lIG1tYXAtc3RybSDCoCDCoCDCoCDCoDE2Ny4wNCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCAxNTAuNjIgwqAgwqAgwqAgwqAgwqAgwqAgwqAgMTQ3LjgzCj4KCgoKLS0gCktpbmQgcmVn
-YXJkcywKTWluY2hhbiBLaW0KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dp
-LmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On 2011.07.27 at 01:32 +0200, Francesco Allertsen wrote:
+> Hi all,
+>  I have tried to compile the latest -git today and I got the following
+> error while compiling the xfs filesystem.
+> 
+>   CC      fs/xfs/linux-2.6/xfs_iops.o
+>   fs/xfs/linux-2.6/xfs_iops.c:1025:14: error: 'xfs_get_acl' undeclared here (not in a function)
+> 
+> I have bisected the problem and the first bad commit is this one
+> 
+>   commit 4e34e719e457f2e031297175410fc0bd4016a085
+>   Author: Christoph Hellwig <hch@lst.de>
+>   Date:   Sat Jul 23 17:37:31 2011 +0200
+> 
+>   fs: take the ACL checks to common code
+> 
+>   Replace the ->check_acl method with a ->get_acl method that simply reads an
+>   ACL from disk after having a cache miss.  This means we can replace the ACL
+>   checking boilerplate code with a single implementation in namei.c.
+> 
+>   Signed-off-by: Christoph Hellwig <hch@lst.de>
+>   Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
+> 
+> Could you please solve this problem?  I have attached also the .config
+> file if you need it.
+
+It's already solved:  http://lkml.org/lkml/2011/7/26/94
+But somehow Linus didn't notice this patch yet.
+
+-- 
+Markus
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
