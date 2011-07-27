@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6RJv9BK218734 for <xfs@oss.sgi.com>; Wed, 27 Jul 2011 14:57:10 -0500
-Received: from lucidpixels.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7F05F1687829
-	for <xfs@oss.sgi.com>; Wed, 27 Jul 2011 12:57:19 -0700 (PDT)
-Received: from lucidpixels.com (lucidpixels.com [72.73.18.11]) by cuda.sgi.com
-	with ESMTP id ClEH64X3rZpV1vei for <xfs@oss.sgi.com>;
-	Wed, 27 Jul 2011 12:57:19 -0700 (PDT)
-Date: Wed, 27 Jul 2011 15:57:07 -0400 (EDT)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
+	p6RJsrep218667 for <xfs@oss.sgi.com>; Wed, 27 Jul 2011 14:54:53 -0500
+Received: from mx2.netapp.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 91622151490B
+	for <xfs@oss.sgi.com>; Wed, 27 Jul 2011 12:55:04 -0700 (PDT)
+Received: from mx2.netapp.com (mx2.netapp.com [216.240.18.37]) by cuda.sgi.com
+	with ESMTP id 9AFPxGeBdMXgSaor for <xfs@oss.sgi.com>;
+	Wed, 27 Jul 2011 12:55:04 -0700 (PDT)
+Message-ID: <4E306D09.5030704@netapp.com>
+Date: Wed, 27 Jul 2011 15:54:49 -0400
+From: Bryan Schumaker <bjschuma@netapp.com>
+MIME-Version: 1.0
 Subject: Re: 2.6.xx: NFS: directory motion/cam2 contains a readdir loop
-In-Reply-To: <20110727194722.GA9345@infradead.org>
-Message-ID: <alpine.DEB.2.02.1107271553290.1451@p34.internal.lan>
 References: <alpine.DEB.2.02.1107270952270.1451@p34.internal.lan>
 	<20110727160752.GC974@fieldses.org>
 	<alpine.DEB.2.02.1107271227340.1451@p34.internal.lan>
@@ -21,7 +21,7 @@ References: <alpine.DEB.2.02.1107270952270.1451@p34.internal.lan>
 	<20110727193937.GA5354@infradead.org>
 	<alpine.DEB.2.02.1107271540100.1451@p34.internal.lan>
 	<20110727194722.GA9345@infradead.org>
-MIME-Version: 1.0
+In-Reply-To: <20110727194722.GA9345@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,17 +30,14 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, xfs@oss.sgi.com, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-kernel@vger.kernel.org
 
-
-
-On Wed, 27 Jul 2011, Christoph Hellwig wrote:
-
+On 07/27/2011 03:47 PM, Christoph Hellwig wrote:
 > On Wed, Jul 27, 2011 at 03:44:20PM -0400, Justin Piszcz wrote:
 >>
 >>
@@ -66,46 +63,24 @@ On Wed, 27 Jul 2011, Christoph Hellwig wrote:
 >> atom:/d1/motion# find cam3|wc
 >>    5594    5594  178981
 >> atom:/d1/motion#
->
+> 
 > This sounds a lot like xfs simply filling up the directory index slots
 > of files that you just moved out with new files, and nfs falsely
 > claiming that this is a problem.
->
+> 
 > Any chance to figure out if the file you hit the printk with was one
 > that got either recently added or moved when you hit it?  (I can't
 > follow the nfs code enough to check if it prints the first or second hit
 > of the same cookie)
->
 
-It seems to happen across all directories, these are from the past 24 hours.
+It should be printing on the second hit of a cookie.
 
-[41901.041923] NFS: directory motion/cam2 contains a readdir loop.  Please contact your server vendor.  Offending cookie: 14368
-[41901.275284] NFS: directory motion/cam3 contains a readdir loop.  Please contact your server vendor.  Offending cookie: 17435
-[45497.265250] NFS: directory motion/cam1 contains a readdir loop.  Please contact your server vendor.  Offending cookie: 14488
-[45498.832696] NFS: directory motion/cam1 contains a readdir loop.  Please contact your server vendor.  Offending cookie: 16416
-[45507.812712] NFS: directory motion/cam2 contains a readdir loop.  Please contact your server vendor.  Offending cookie: 14778
-[45508.458785] NFS: directory motion/cam2 contains a readdir loop.  Please contact your server vendor.  Offending cookie: 14778
-[92223.918892] NFS: directory motion/cam2 contains a readdir loop.  Please contact your server vendor.  Offending cookie: 10272
-[99413.259688] NFS: directory motion/cam1 contains a readdir loop.  Please contact your server vendor.  Offending cookie: 10272
-[113791.004006] NFS: directory motion/cam1 contains a readdir loop.  Please contact your server vendor.  Offending cookie: 6848
+- Bryan
 
-Interestingly, I have two machines that perform this function, both XFS and it 
-only affects the client running 2.6.38:
-
-$ df -h
-2.6.38 - Has a kernel driver that was removed in 2.6.39 (rt2870sta) which
-works really well.
-atomw:/d1              30G   13G   18G  43% /nfs/atomw/d1
-
-2.6.39:
-d630w:/d1              75G  2.6G   72G   4% /nfs/d630w/d1
-
-However, to rule out any kernel issues I'll try 3.0 and see if the problem recurs with a newer version as it is _NOT_ happening with 2.6.39 (similar setup) on both; however:
-
-d630 => 32bit installation (core2duo t7500)
-atomw => 64-bit atom
-
-Justin.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 _______________________________________________
 xfs mailing list
