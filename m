@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6SEoOMY260943 for <xfs@oss.sgi.com>; Thu, 28 Jul 2011 09:50:25 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2B19F16892D3
-	for <xfs@oss.sgi.com>; Thu, 28 Jul 2011 07:50:39 -0700 (PDT)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	FZZVfefPFJoeDqBH for <xfs@oss.sgi.com>;
-	Thu, 28 Jul 2011 07:50:39 -0700 (PDT)
-Date: Thu, 28 Jul 2011 10:50:20 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: "xfs: fix error handling for synchronous writes" revisited
-Message-ID: <20110728145020.GA30785@infradead.org>
-References: <CAB4K4y6-2odbRhqn6q7ZDOxqF9oUcj2zKvyCEV6374QGyM-ddA@mail.gmail.com>
+	p6SHpx69004592 for <xfs@oss.sgi.com>; Thu, 28 Jul 2011 12:52:00 -0500
+Received: from mo-p00-ob.rzone.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D6D1F10B3DA5
+	for <xfs@oss.sgi.com>; Thu, 28 Jul 2011 10:52:14 -0700 (PDT)
+Received: from mo-p00-ob.rzone.de (mo-p00-ob.rzone.de [81.169.146.161]) by
+	cuda.sgi.com with ESMTP id PfAMUz8iCVAkqU9B for
+	<xfs@oss.sgi.com>; Thu, 28 Jul 2011 10:52:14 -0700 (PDT)
+Message-ID: <4E31A19E.3040404@giantdisaster.de>
+Date: Thu, 28 Jul 2011 19:51:26 +0200
+From: Stefan Behrens <sbehrens@giantdisaster.de>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAB4K4y6-2odbRhqn6q7ZDOxqF9oUcj2zKvyCEV6374QGyM-ddA@mail.gmail.com>
+Subject: Re: [PATCH 1/4] xfstests: Add support for btrfs in 062
+References: <cover.1311776403.git.sbehrens@giantdisaster.de>
+	<d42f34a30289157f262ffe31760a54cc1b5d3d4b.1311776403.git.sbehrens@giantdisaster.de>
+	<20110728084504.GA3407@infradead.org>
+In-Reply-To: <20110728084504.GA3407@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,32 +29,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ajeet Yadav <ajeet.yadav.77@gmail.com>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Thu, Jul 28, 2011 at 04:21:01PM +0530, Ajeet Yadav wrote:
-> Just to recall, last year we have reported one hang issue in 2.6.30.9
-> wherein we get hang if we remove the device while synchronous write was underway
-> It was because synchronous buffer remain locked in case of EIO error.
+On 7/28/2011 10:45 AM, Christoph Hellwig wrote:
+> On Thu, Jul 28, 2011 at 10:27:58AM +0200, Stefan Behrens wrote:
+>> Added btrfs to the list of supported filesystems for this test.
+>> Remove output of mkfs since this is specific to mkfs.xfs and now filtered
+>> out.
 > 
-> In response to that a fix commit: bfc60177f8ab509bc225becbb58f7e53a0e33e81
->  "xfs: fix error handling for synchronous writes" for 2.6.38 was given
-> by community
-> Unfortunately I did not use this patch and therefore did not test it.
-> 
-> Coming to present, I run the same test case again, and I got different
-> hang pasted below.
-> While debugging I compared with my own solution, wherein I did not
-> have any issue
-> Kindly review the solution patch
+> Why can't it be generic?  Any reason this one doesn't work on e.g. ext2
+> or reiserfs?
 
-Given that xfs_bwrite actually does the shutdown already after
-waiting for the b_iodone completion this looks fine to me.  And given
-that we actually found that calling xfs_force_shutdown from inside
-xfs_buf_iodone_callbacks was a major contributor the problem it looks
-like an onversight that we didn't drop this call.
-
-Can you re-send the patch with a proper changelog and signoff?
+The only reason for not making the tests 015, 062, 083, 117, 120 and
+192 "_supported_fs generic" was to keep the effect of the changes
+minimal.
+But I agree that they are generic ones and I have now changed it
+accordingly in the revised patch series that I will send soon.
+Thanks for your comments!
 
 _______________________________________________
 xfs mailing list
