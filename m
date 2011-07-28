@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6SHt6sR004763 for <xfs@oss.sgi.com>; Thu, 28 Jul 2011 12:55:06 -0500
-Received: from mo-p00-ob.rzone.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 55E14A04BD
-	for <xfs@oss.sgi.com>; Thu, 28 Jul 2011 10:55:02 -0700 (PDT)
-Received: from mo-p00-ob.rzone.de (mo-p00-ob.rzone.de [81.169.146.160]) by
-	cuda.sgi.com with ESMTP id FjV0GJnTpJ4cNlhx for
-	<xfs@oss.sgi.com>; Thu, 28 Jul 2011 10:55:02 -0700 (PDT)
-Message-ID: <4E31A265.5050909@giantdisaster.de>
-Date: Thu, 28 Jul 2011 19:54:45 +0200
-From: Stefan Behrens <sbehrens@giantdisaster.de>
-MIME-Version: 1.0
+	p6SK5ktC008833 for <xfs@oss.sgi.com>; Thu, 28 Jul 2011 15:05:46 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 35F841EF0254
+	for <xfs@oss.sgi.com>; Thu, 28 Jul 2011 13:05:40 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	qqHQLS6moxQEO4WM for <xfs@oss.sgi.com>;
+	Thu, 28 Jul 2011 13:05:40 -0700 (PDT)
+Date: Thu, 28 Jul 2011 16:05:37 -0400
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: [PATCH 3/4] xfstests: Add support for btrfs in 015
+Message-ID: <20110728200537.GA12758@infradead.org>
 References: <cover.1311776403.git.sbehrens@giantdisaster.de>
 	<bebfc5c98e0fb878f55c1312d8750ce7b7f82e07.1311776403.git.sbehrens@giantdisaster.de>
 	<20110728084756.GC3407@infradead.org>
-In-Reply-To: <20110728084756.GC3407@infradead.org>
+	<4E31A265.5050909@giantdisaster.de>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4E31A265.5050909@giantdisaster.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,62 +33,20 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: Stefan Behrens <sbehrens@giantdisaster.de>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-On 7/28/2011 10:47 AM, Christoph Hellwig wrote:
-> On Thu, Jul 28, 2011 at 10:28:00AM +0200, Stefan Behrens wrote:
->> Added btrfs to the list of supported filesystems for test 015, and
->> increased free space reporting tolerance to 10% for btrfs.
->> Replaced the call to _scratch_mkfs_xfs with the XFS specific size
->> parameter by the generic one for sized filesystem creation which is
->> _scratch_mkfs_sized.
-> 
-> ACK for the _scratch_mkfs_sized changed, but I'm really curious why
-> we would allow so much more tolerance for btrfs.
-> 
-> And again, why can't these be marked generic?
+On Thu, Jul 28, 2011 at 07:54:45PM +0200, Stefan Behrens wrote:
+> To add a 10% tolerance for btrfs was a bad idea.
+> Since the output of df(1) is not yet reliable on btrfs volumes while
+> data is not flushed to disk, the better implementation would be to
+> either let this test fail, or to force a flush to disk before taking
+> the output of df(1).
+> The latter is what I have implemented now.
 
-To add a 10% tolerance for btrfs was a bad idea.
-Since the output of df(1) is not yet reliable on btrfs volumes while
-data is not flushed to disk, the better implementation would be to
-either let this test fail, or to force a flush to disk before taking
-the output of df(1).
-The latter is what I have implemented now.
-
-This is a demo of what currently happens:
-# mkfs.btrfs -b 2048M --mixed $SCRATCH_DEV
-WARNING! - Btrfs v0.19-104-gd0fa1a8-dirty IS EXPERIMENTAL
-WARNING! - see http://btrfs.wiki.kernel.org before using
-
-Created a data/metadata chunk of size 8388608
-fs created label (null) on /dev/sdu1
-        nodesize 4096 leafsize 4096 sectorsize 4096 size 2.00GB
-Btrfs v0.19-104-gd0fa1a8-dirty
-# mount $SCRATCH_DEV $SCRATCH_MNT
-# df -k $SCRATCH_MNT
-Filesystem           1K-blocks      Used Available Use% Mounted on
-/dev/sdu1              2097152        28   2093040   1% /mnt3
-# dd if=/dev/zero of=$SCRATCH_MNT/foo bs=1M
-dd: writing `/mnt3/foo': No space left on device
-1881+0 records in
-1880+0 records out
-1971322880 bytes (2.0 GB) copied, 7.61947 s, 259 MB/s
-# df -k $SCRATCH_MNT
-Filesystem           1K-blocks      Used Available Use% Mounted on
-/dev/sdu1              2097152       756   2092304   1% /mnt3
-# sync
-# df -k $SCRATCH_MNT
-Filesystem           1K-blocks      Used Available Use% Mounted on
-/dev/sdu1              2097152   1928420    164640  93% /mnt3
-# rm -f $SCRATCH_MNT/foo
-# df -k $SCRATCH_MNT
-Filesystem           1K-blocks      Used Available Use% Mounted on
-/dev/sdu1              2097152   1928420    164640  93% /mnt3
-# sync
-# df -k $SCRATCH_MNT
-Filesystem           1K-blocks      Used Available Use% Mounted on
-/dev/sdu1              2097152       676   2092384   1% /mnt3
+I don't think it's correct either.  dellalloc blocks should be included
+in the statfs output, else it it is pretty pointless.  Can you send the
+patch to make it generic without that adjustment for now.
 
 _______________________________________________
 xfs mailing list
