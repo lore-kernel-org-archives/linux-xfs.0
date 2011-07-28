@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6SHpx69004592 for <xfs@oss.sgi.com>; Thu, 28 Jul 2011 12:52:00 -0500
+	p6SHt6sR004763 for <xfs@oss.sgi.com>; Thu, 28 Jul 2011 12:55:06 -0500
 Received: from mo-p00-ob.rzone.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D6D1F10B3DA5
-	for <xfs@oss.sgi.com>; Thu, 28 Jul 2011 10:52:14 -0700 (PDT)
-Received: from mo-p00-ob.rzone.de (mo-p00-ob.rzone.de [81.169.146.161]) by
-	cuda.sgi.com with ESMTP id PfAMUz8iCVAkqU9B for
-	<xfs@oss.sgi.com>; Thu, 28 Jul 2011 10:52:14 -0700 (PDT)
-Message-ID: <4E31A19E.3040404@giantdisaster.de>
-Date: Thu, 28 Jul 2011 19:51:26 +0200
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 55E14A04BD
+	for <xfs@oss.sgi.com>; Thu, 28 Jul 2011 10:55:02 -0700 (PDT)
+Received: from mo-p00-ob.rzone.de (mo-p00-ob.rzone.de [81.169.146.160]) by
+	cuda.sgi.com with ESMTP id FjV0GJnTpJ4cNlhx for
+	<xfs@oss.sgi.com>; Thu, 28 Jul 2011 10:55:02 -0700 (PDT)
+Message-ID: <4E31A265.5050909@giantdisaster.de>
+Date: Thu, 28 Jul 2011 19:54:45 +0200
 From: Stefan Behrens <sbehrens@giantdisaster.de>
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/4] xfstests: Add support for btrfs in 062
+Subject: Re: [PATCH 3/4] xfstests: Add support for btrfs in 015
 References: <cover.1311776403.git.sbehrens@giantdisaster.de>
-	<d42f34a30289157f262ffe31760a54cc1b5d3d4b.1311776403.git.sbehrens@giantdisaster.de>
-	<20110728084504.GA3407@infradead.org>
-In-Reply-To: <20110728084504.GA3407@infradead.org>
+	<bebfc5c98e0fb878f55c1312d8750ce7b7f82e07.1311776403.git.sbehrens@giantdisaster.de>
+	<20110728084756.GC3407@infradead.org>
+In-Reply-To: <20110728084756.GC3407@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,21 +32,59 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-On 7/28/2011 10:45 AM, Christoph Hellwig wrote:
-> On Thu, Jul 28, 2011 at 10:27:58AM +0200, Stefan Behrens wrote:
->> Added btrfs to the list of supported filesystems for this test.
->> Remove output of mkfs since this is specific to mkfs.xfs and now filtered
->> out.
+On 7/28/2011 10:47 AM, Christoph Hellwig wrote:
+> On Thu, Jul 28, 2011 at 10:28:00AM +0200, Stefan Behrens wrote:
+>> Added btrfs to the list of supported filesystems for test 015, and
+>> increased free space reporting tolerance to 10% for btrfs.
+>> Replaced the call to _scratch_mkfs_xfs with the XFS specific size
+>> parameter by the generic one for sized filesystem creation which is
+>> _scratch_mkfs_sized.
 > 
-> Why can't it be generic?  Any reason this one doesn't work on e.g. ext2
-> or reiserfs?
+> ACK for the _scratch_mkfs_sized changed, but I'm really curious why
+> we would allow so much more tolerance for btrfs.
+> 
+> And again, why can't these be marked generic?
 
-The only reason for not making the tests 015, 062, 083, 117, 120 and
-192 "_supported_fs generic" was to keep the effect of the changes
-minimal.
-But I agree that they are generic ones and I have now changed it
-accordingly in the revised patch series that I will send soon.
-Thanks for your comments!
+To add a 10% tolerance for btrfs was a bad idea.
+Since the output of df(1) is not yet reliable on btrfs volumes while
+data is not flushed to disk, the better implementation would be to
+either let this test fail, or to force a flush to disk before taking
+the output of df(1).
+The latter is what I have implemented now.
+
+This is a demo of what currently happens:
+# mkfs.btrfs -b 2048M --mixed $SCRATCH_DEV
+WARNING! - Btrfs v0.19-104-gd0fa1a8-dirty IS EXPERIMENTAL
+WARNING! - see http://btrfs.wiki.kernel.org before using
+
+Created a data/metadata chunk of size 8388608
+fs created label (null) on /dev/sdu1
+        nodesize 4096 leafsize 4096 sectorsize 4096 size 2.00GB
+Btrfs v0.19-104-gd0fa1a8-dirty
+# mount $SCRATCH_DEV $SCRATCH_MNT
+# df -k $SCRATCH_MNT
+Filesystem           1K-blocks      Used Available Use% Mounted on
+/dev/sdu1              2097152        28   2093040   1% /mnt3
+# dd if=/dev/zero of=$SCRATCH_MNT/foo bs=1M
+dd: writing `/mnt3/foo': No space left on device
+1881+0 records in
+1880+0 records out
+1971322880 bytes (2.0 GB) copied, 7.61947 s, 259 MB/s
+# df -k $SCRATCH_MNT
+Filesystem           1K-blocks      Used Available Use% Mounted on
+/dev/sdu1              2097152       756   2092304   1% /mnt3
+# sync
+# df -k $SCRATCH_MNT
+Filesystem           1K-blocks      Used Available Use% Mounted on
+/dev/sdu1              2097152   1928420    164640  93% /mnt3
+# rm -f $SCRATCH_MNT/foo
+# df -k $SCRATCH_MNT
+Filesystem           1K-blocks      Used Available Use% Mounted on
+/dev/sdu1              2097152   1928420    164640  93% /mnt3
+# sync
+# df -k $SCRATCH_MNT
+Filesystem           1K-blocks      Used Available Use% Mounted on
+/dev/sdu1              2097152       676   2092384   1% /mnt3
 
 _______________________________________________
 xfs mailing list
