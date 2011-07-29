@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6T7h1MS033918 for <xfs@oss.sgi.com>; Fri, 29 Jul 2011 02:43:01 -0500
-Received: from mail-vw0-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B1E1CA29FB
-	for <xfs@oss.sgi.com>; Fri, 29 Jul 2011 00:43:00 -0700 (PDT)
-Received: from mail-vw0-f53.google.com (mail-vw0-f53.google.com
-	[209.85.212.53]) by cuda.sgi.com with ESMTP id dxmfK34XNCdM4UDR
-	for <xfs@oss.sgi.com>; Fri, 29 Jul 2011 00:43:00 -0700 (PDT)
-Received: by vws13 with SMTP id 13so3040403vws.26
-	for <xfs@oss.sgi.com>; Fri, 29 Jul 2011 00:43:00 -0700 (PDT)
+	p6T9mQP4037118 for <xfs@oss.sgi.com>; Fri, 29 Jul 2011 04:48:26 -0500
+Received: from mail-pz0-f43.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 88BA41D91570
+	for <xfs@oss.sgi.com>; Fri, 29 Jul 2011 02:48:24 -0700 (PDT)
+Received: from mail-pz0-f43.google.com (mail-pz0-f43.google.com
+	[209.85.210.43]) by cuda.sgi.com with ESMTP id ouB08EEThyfL4zYA
+	for <xfs@oss.sgi.com>; Fri, 29 Jul 2011 02:48:24 -0700 (PDT)
+Received: by pzk1 with SMTP id 1so4833428pzk.2
+	for <xfs@oss.sgi.com>; Fri, 29 Jul 2011 02:48:24 -0700 (PDT)
+Date: Fri, 29 Jul 2011 18:48:16 +0900
+From: Minchan Kim <minchan.kim@gmail.com>
+Subject: Re: [RFC PATCH 0/8] Reduce filesystem writeback from page reclaim v2
+Message-ID: <20110729094816.GG1843@barrios-desktop>
+References: <1311265730-5324-1-git-send-email-mgorman@suse.de>
+	<20110727161821.GA1738@barrios-desktop>
+	<20110728113852.GN3010@suse.de>
 MIME-Version: 1.0
-In-Reply-To: <20110728145020.GA30785@infradead.org>
-References: <CAB4K4y6-2odbRhqn6q7ZDOxqF9oUcj2zKvyCEV6374QGyM-ddA@mail.gmail.com>
-	<20110728145020.GA30785@infradead.org>
-Date: Fri, 29 Jul 2011 13:12:59 +0530
-Message-ID: <CAB4K4y4Ns5woUJyPv_NuW0GYSb5ZcFkqnF-DxRB1MESibc1Knw@mail.gmail.com>
-Subject: Re: "xfs: fix error handling for synchronous writes" revisited
-From: Ajeet Yadav <ajeet.yadav.77@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20110728113852.GN3010@suse.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,39 +32,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Mel Gorman <mgorman@suse.de>
+Cc: Rik van Riel <riel@redhat.com>, Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, XFS <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, Linux-MM <linux-mm@kvack.org>, Wu Fengguang <fengguang.wu@intel.com>, Johannes Weiner <jweiner@redhat.com>
 
-xfs: fix for hang during synchronous buffer write error
+On Thu, Jul 28, 2011 at 12:38:52PM +0100, Mel Gorman wrote:
+> On Thu, Jul 28, 2011 at 01:18:21AM +0900, Minchan Kim wrote:
+> > On Thu, Jul 21, 2011 at 05:28:42PM +0100, Mel Gorman wrote:
+> > > Note how preventing kswapd reclaiming dirty pages pushes up its CPU
 
-If removed storage while synchronous buffer write underway,
-"xfslogd" hangs.
+<snip>
 
-Detailed log http://oss.sgi.com/archives/xfs/2011-07/msg00740.html
+> > > usage as it scans more pages but it does not get excessive due to
+> > > the throttling.
+> > 
+> > Good to hear.
+> > The concern of this patchset was early OOM kill with too many scanning.
+> > I can throw such concern out from now on.
+> > 
+> 
+> At least, I haven't been able to trigger a premature OOM.
 
-Related work bfc60177f8ab509bc225becbb58f7e53a0e33e81
-"xfs: fix error handling for synchronous writes"
+AFAIR, Andrew had a premature OOM problem[1] but I couldn't track down at that time.
+I think this patch series might solve his problem. Although it doesn't, it should not accelerate
+his problem, at least.
 
-Given that xfs_bwrite actually does the shutdown already after
-waiting for the b_iodone completion and given that we actually
-found that calling xfs_force_shutdown from inside
-xfs_buf_iodone_callbacks was a major contributor the problem
-it better to drop this call.
+Andrew, Could you test this patchset?
 
-Signed-off-by: Ajeet Yadav <ajeet.yadav.77@gmail.com>
-
-diff -Nurp -X linux/Documentation/dontdiff linux/fs/xfs/xfs_buf_item.c
-linux-Dirty/fs/xfs/xfs_buf_item.c
---- linux/fs/xfs/xfs_buf_item.c 2011-06-09 10:05:18.000000000 +0530
-+++ linux-Dirty/fs/xfs/xfs_buf_item.c   2011-07-28 15:53:51.000000000 +0530
-@@ -1028,7 +1028,6 @@ xfs_buf_iodone_callbacks(
-        XFS_BUF_UNDELAYWRITE(bp);
-
-        trace_xfs_buf_error_relse(bp, _RET_IP_);
--       xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
-
- do_callbacks:
-        xfs_buf_do_callbacks(bp, lip);
+[1] https://lkml.org/lkml/2011/5/25/415
+-- 
+Kind regards,
+Minchan Kim
 
 _______________________________________________
 xfs mailing list
