@@ -1,15 +1,35 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6TMCxIR071183 for <xfs@oss.sgi.com>; Fri, 29 Jul 2011 17:12:59 -0500
-Subject: Re: Updated xfsprogs 2.6.38 merge
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110705024855.GA561@dastard>
-References: <20110705024855.GA561@dastard>
-Date: Fri, 29 Jul 2011 17:12:44 -0500
-Message-ID: <1311977564.2790.67.camel@doink>
-MIME-Version: 1.0
-Reply-To: aelder@sgi.com
+	p6TM3xfI070444 for <xfs@oss.sgi.com>; Fri, 29 Jul 2011 17:04:00 -0500
+Received: from mx2.netapp.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C0F9FF20C17
+	for <xfs@oss.sgi.com>; Fri, 29 Jul 2011 15:04:22 -0700 (PDT)
+Received: from mx2.netapp.com (mx2.netapp.com [216.240.18.37]) by cuda.sgi.com
+	with ESMTP id drNayTfvPu0HhNli for <xfs@oss.sgi.com>;
+	Fri, 29 Jul 2011 15:04:22 -0700 (PDT)
+Subject: Re: 2.6.xx: NFS: directory motion/cam2 contains a readdir loop
+From: Trond Myklebust <Trond.Myklebust@netapp.com>
+Date: Fri, 29 Jul 2011 18:03:36 -0400
+In-Reply-To: <alpine.DEB.2.02.1107291656340.25432@p34.internal.lan>
+References: <alpine.DEB.2.02.1107270952270.1451@p34.internal.lan>
+	<20110727160752.GC974@fieldses.org>
+	<alpine.DEB.2.02.1107271227340.1451@p34.internal.lan>
+	<20110727181111.GA23009@infradead.org>
+	<alpine.DEB.2.02.1107271530340.1451@p34.internal.lan>
+	<20110727193937.GA5354@infradead.org>
+	<alpine.DEB.2.02.1107271540100.1451@p34.internal.lan>
+	<20110727194722.GA9345@infradead.org>
+	<1311799021.25645.41.camel@lade.trondhjem.org>
+	<1311800051.25645.43.camel@lade.trondhjem.org>
+	<1311800195.25645.45.camel@lade.trondhjem.org>
+	<alpine.DEB.2.02.1107271723500.25432@p34.internal.lan>
+	<alpine.DEB.2.02.1107271844100.25432@p34.internal.lan>
+	<1311886137.27285.2.camel@lade.trondhjem.org>
+	<4E331D86.7060801@netapp.com>
+	<alpine.DEB.2.02.1107291656340.25432@p34.internal.lan>
+Message-ID: <1311977016.16078.10.camel@lade.trondhjem.org>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,59 +42,54 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Bryan Schumaker <bjschuma@netapp.com>
 
-On Tue, 2011-07-05 at 12:48 +1000, Dave Chinner wrote:
-> Folks,
+On Fri, 2011-07-29 at 16:59 -0400, Justin Piszcz wrote: 
+> On Fri, 29 Jul 2011, Bryan Schumaker wrote:
 > 
-> I pushed out an updated 2.6.38 kernel merge to xfsprogs patchset a
-> couple of days ago. I've been doing quite a bit of testing on it,
-> both 32 bit and 64 bit, with 512 byte, 1k and 4k block size
-> filesystems and I haven't come across any regressions. The patchset
-> can be found here:
+> > How does this look for printing out more information when a cookie loop is detected?  Is there anything else that should be printed out?  My patch applies on top of Trond's from yesterday.
 > 
->   git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev kernel-2.6.38-sync
 > 
-> It's pretty much unchanged from the last set of patches I sent,
-> except for one minor fix to the radix tree code for an off by one in
-> the path array size for item and tag deletes.
+> Hi,
 > 
-> I'm pretty much ready to commit this update so I can then move
-> forward with updating it to the 3.0 kernel code base as a smaller
-> incremental series.
+> This fails against 2.6.38:
 > 
-> Cheers,
+> patching file fs/nfs/dir.c
+> Hunk #1 FAILED at 134.
+> Hunk #2 FAILED at 173.
+> Hunk #3 FAILED at 323.
+> Hunk #4 FAILED at 336.
+> Hunk #5 FAILED at 349.
+> Hunk #6 succeeded at 320 (offset -48 lines).
+> Hunk #7 FAILED at 741.
+> Hunk #8 succeeded at 716 (offset -59 lines).
+> Hunk #9 succeeded at 749 (offset -59 lines).
+> Hunk #10 succeeded at 763 (offset -59 lines).
+> 6 out of 10 hunks FAILED -- saving rejects to file fs/nfs/dir.c.rej
+> patching file include/linux/nfs_fs.h
+> Hunk #1 FAILED at 99.
+> 1 out of 1 hunk FAILED -- saving rejects to file include/linux/nfs_fs.h.rej
+> atom:/usr/src/linux#
 > 
-> Dave.
+> And the 3.0 kernel is broken for my wireless adapter:
+> http://www.gossamer-threads.com/lists/linux/kernel/1411576
+> 
+> If you can make a combined patch for 2.6.38 I can try it, 2.6.39+ have a
+> horrible driver (rt2800usb) and 1 person emailed me as well stating the
+> same thing off-list (they stick with the manufacturer's driver or the *sta
+> one).
 
-I looked over the changes--the third one really since
-the first two already indicated I'd signed off on them.
+I don't understand. The readdir loop detection code was first merged
+upstream in 2.6.39. 2.6.38 doesn't report any loops...
 
-It is a very large patch, and most of the changes are
-pretty easily seen to be straightforward transformations.
-So my "review" consisted of a full-but-quick scan through
-it.
+-- 
+Trond Myklebust
+Linux NFS client maintainer
 
-More importantly, you report no regressions and I can
-confirm that I haven't seen any myself either so far,
-except that the golden output for test 122 needs to be
-updated:
-  - to reflect that xfs_bmbt_rec_{32,64}_t have now
-    been replaced by xfs_bmbt_rec_t
-  - to reflect that xfs_dinode_core_t no longer exists
-  - and that xfs_alloctype_t isn't shown any more,
-    because it's no longer an enum type.
-It looks to me like that test could be updated so it
-looks for structure definitions rather than typedef's,
-and possibly review the list of ignored types.
-
-Anyway, I really want to see this committed so we can move
-forward without further ado.  So I say get it in...
-
-Signed-off-by: Alex Elder <aelder@sgi.com>
-
-
+NetApp
+Trond.Myklebust@netapp.com
+www.netapp.com
 
 _______________________________________________
 xfs mailing list
