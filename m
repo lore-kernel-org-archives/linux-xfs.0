@@ -1,23 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6UGXT8Z146846 for <xfs@oss.sgi.com>; Sat, 30 Jul 2011 11:33:29 -0500
+	p6UGtK8d148399 for <xfs@oss.sgi.com>; Sat, 30 Jul 2011 11:55:20 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7DDD852DCF2
-	for <xfs@oss.sgi.com>; Sat, 30 Jul 2011 09:33:28 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C9B1A1EF1191
+	for <xfs@oss.sgi.com>; Sat, 30 Jul 2011 09:55:19 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	LnU5NpVg6E6OdSHD for <xfs@oss.sgi.com>;
-	Sat, 30 Jul 2011 09:33:28 -0700 (PDT)
-Date: Sat, 30 Jul 2011 12:33:26 -0400
+	Ai0oYCAMIk25q1jI for <xfs@oss.sgi.com>;
+	Sat, 30 Jul 2011 09:55:19 -0700 (PDT)
+Date: Sat, 30 Jul 2011 12:55:17 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: xfstests fails on nfs4 file system
-Message-ID: <20110730163326.GA19290@infradead.org>
-References: <20110730151604.GA26285@merit.edu>
+Subject: Re: [PATCH XFSPROGS 2/3] Build without enabling DEBUG by default
+Message-ID: <20110730165517.GA13918@infradead.org>
+References: <1311292237-4155-1-git-send-email-tytso@mit.edu>
+	<1311292237-4155-2-git-send-email-tytso@mit.edu>
+	<20110722141753.GA19681@infradead.org>
+	<20110722183048.GC25092@thunk.org>
+	<20110722183830.GA21744@infradead.org>
+	<20110722223458.GD25092@thunk.org>
+	<20110723013214.GA22837@infradead.org>
+	<20110726151033.GA18311@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110730151604.GA26285@merit.edu>
+In-Reply-To: <20110726151033.GA18311@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,52 +37,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jim Rees <rees@umich.edu>
-Cc: xfs@oss.sgi.com
+To: Ted Ts'o <tytso@mit.edu>
+Cc: Christoph Hellwig <hch@infradead.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs@oss.sgi.com
 
-On Sat, Jul 30, 2011 at 11:16:04AM -0400, Jim Rees wrote:
-> xfstests fails on nfs4 file system:
+On Tue, Jul 26, 2011 at 11:10:33AM -0400, Christoph Hellwig wrote:
+> > This looks much better, and is indeed similar to some other fixes we
+> > recently had to put in, probably due to changing make behaviour.
+> > 
+> > If you add a signoff and a proper description I'll put it into all the
+> > repositories.
 > 
-> rhcl1# mount -t nfs -o nfsvers=4,minorversion=1 emc-1:/pnfs2 /mnt/emc-1
-> rhcl1# cd /home/rees/xfstests
-> rhcl1# setenv TEST_DEV emc-1:/pnfs2
-> rhcl1# setenv TEST_DIR /mnt/emc-1/rees/xfstests
-> rhcl1# ./check -nfs
-> common.rc: Error: $TEST_DEV (emc-1:/pnfs2) is not a MOUNTED nfs filesystem
-> /bin/df: `emc-1:/pnfs2': No such file or directory
-> /bin/df: no file systems processed
-> 
-> Originally nfs4 was a separate file system type, and it still shows up that
-> way in mtab:
-> emc-1:/pnfs2/ on /mnt/emc-1 type nfs4 (rw,relatime,vers=4,...
-> 
-> I fixed this by commenting out the type check at the end of common.rc.  I
-> don't know enough about the innards of xfstests to know what the proper fix
-> is.  Maybe a substring match, or explicit check for nfs4?
+> Can you at least provide the signoff?  I can take care of the rest if
+> this means I can get it in ASAP.
 
-What about the following patch?  I makes sure the nfs4 output gets
-normalized to nfs as early as possible.
+Ted,
 
-
-Index: xfstests-dev/common.rc
-===================================================================
---- xfstests-dev.orig/common.rc	2011-07-30 18:24:55.253997462 +0200
-+++ xfstests-dev/common.rc	2011-07-30 18:26:41.216756745 +0200
-@@ -555,7 +555,13 @@ _fs_type()
- 	exit 1
-     fi
- 
--    _df_device $1 | $AWK_PROG '{ print $2 }'
-+    #
-+    # The Linux kernel shows NFSv4 filesystems in df output as
-+    # filesystem type nfs4, although we mounted it as nfs earlier.
-+    # Fix the filesystem type up here so that the callers don't
-+    # have to bother with this quirk.
-+    #
-+    _df_device $1 | $AWK_PROG '{ print $2 }' | sed -e 's/nfs4/nfs/'
- }
- 
- # return the FS mount options of a mounted device
+can you please give me a signoff for this patch?  I could probably just
+put it in anyway given how trivial it is.  But let's just stick to the
+proper protocol if we can.
 
 _______________________________________________
 xfs mailing list
