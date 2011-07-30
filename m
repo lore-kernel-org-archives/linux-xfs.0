@@ -1,30 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6UFG9xf141713 for <xfs@oss.sgi.com>; Sat, 30 Jul 2011 10:16:09 -0500
-Received: from merit-proxy02.merit.edu (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BDD511EF126B
-	for <xfs@oss.sgi.com>; Sat, 30 Jul 2011 08:16:07 -0700 (PDT)
-Received: from merit-proxy02.merit.edu (merit-proxy02.merit.edu
-	[207.75.116.194]) by cuda.sgi.com with ESMTP id
-	DLF7UNyKkXlDAuOW for <xfs@oss.sgi.com>;
-	Sat, 30 Jul 2011 08:16:07 -0700 (PDT)
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by merit-proxy02.merit.edu (Postfix) with ESMTP id 261B02039874
-	for <xfs@oss.sgi.com>; Sat, 30 Jul 2011 11:16:07 -0400 (EDT)
-Received: from merit-proxy02.merit.edu ([127.0.0.1])
-	by localhost (merit-proxy02.merit.edu [127.0.0.1]) (amavisd-new,
-	port 10024) with ESMTP id ru5LhIaLySjh for <xfs@oss.sgi.com>;
-	Sat, 30 Jul 2011 11:16:06 -0400 (EDT)
-Received: from merit.edu (74-126-0-171.static.123.net [74.126.0.171])
-	by merit-proxy02.merit.edu (Postfix) with ESMTPSA id BB287203986F
-	for <xfs@oss.sgi.com>; Sat, 30 Jul 2011 11:16:05 -0400 (EDT)
-Date: Sat, 30 Jul 2011 11:16:04 -0400
-From: Jim Rees <rees@umich.edu>
-Subject: xfstests fails on nfs4 file system
-Message-ID: <20110730151604.GA26285@merit.edu>
+	p6UGXT8Z146846 for <xfs@oss.sgi.com>; Sat, 30 Jul 2011 11:33:29 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7DDD852DCF2
+	for <xfs@oss.sgi.com>; Sat, 30 Jul 2011 09:33:28 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	LnU5NpVg6E6OdSHD for <xfs@oss.sgi.com>;
+	Sat, 30 Jul 2011 09:33:28 -0700 (PDT)
+Date: Sat, 30 Jul 2011 12:33:26 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: xfstests fails on nfs4 file system
+Message-ID: <20110730163326.GA19290@infradead.org>
+References: <20110730151604.GA26285@merit.edu>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <20110730151604.GA26285@merit.edu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,43 +30,52 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Jim Rees <rees@umich.edu>
+Cc: xfs@oss.sgi.com
 
-xfstests fails on nfs4 file system:
+On Sat, Jul 30, 2011 at 11:16:04AM -0400, Jim Rees wrote:
+> xfstests fails on nfs4 file system:
+> 
+> rhcl1# mount -t nfs -o nfsvers=4,minorversion=1 emc-1:/pnfs2 /mnt/emc-1
+> rhcl1# cd /home/rees/xfstests
+> rhcl1# setenv TEST_DEV emc-1:/pnfs2
+> rhcl1# setenv TEST_DIR /mnt/emc-1/rees/xfstests
+> rhcl1# ./check -nfs
+> common.rc: Error: $TEST_DEV (emc-1:/pnfs2) is not a MOUNTED nfs filesystem
+> /bin/df: `emc-1:/pnfs2': No such file or directory
+> /bin/df: no file systems processed
+> 
+> Originally nfs4 was a separate file system type, and it still shows up that
+> way in mtab:
+> emc-1:/pnfs2/ on /mnt/emc-1 type nfs4 (rw,relatime,vers=4,...
+> 
+> I fixed this by commenting out the type check at the end of common.rc.  I
+> don't know enough about the innards of xfstests to know what the proper fix
+> is.  Maybe a substring match, or explicit check for nfs4?
 
-rhcl1# mount -t nfs -o nfsvers=4,minorversion=1 emc-1:/pnfs2 /mnt/emc-1
-rhcl1# cd /home/rees/xfstests
-rhcl1# setenv TEST_DEV emc-1:/pnfs2
-rhcl1# setenv TEST_DIR /mnt/emc-1/rees/xfstests
-rhcl1# ./check -nfs
-common.rc: Error: $TEST_DEV (emc-1:/pnfs2) is not a MOUNTED nfs filesystem
-/bin/df: `emc-1:/pnfs2': No such file or directory
-/bin/df: no file systems processed
+What about the following patch?  I makes sure the nfs4 output gets
+normalized to nfs as early as possible.
 
-Originally nfs4 was a separate file system type, and it still shows up that
-way in mtab:
-emc-1:/pnfs2/ on /mnt/emc-1 type nfs4 (rw,relatime,vers=4,...
 
-I fixed this by commenting out the type check at the end of common.rc.  I
-don't know enough about the innards of xfstests to know what the proper fix
-is.  Maybe a substring match, or explicit check for nfs4?
-
-rhcl1# diff -u common.rc common.rc-ok
---- common.rc   2011-07-29 12:11:34.118251109 -0400
-+++ common.rc-ok        2011-07-29 12:33:58.384749553 -0400
-@@ -1588,12 +1588,6 @@
-         fi
+Index: xfstests-dev/common.rc
+===================================================================
+--- xfstests-dev.orig/common.rc	2011-07-30 18:24:55.253997462 +0200
++++ xfstests-dev/common.rc	2011-07-30 18:26:41.216756745 +0200
+@@ -555,7 +555,13 @@ _fs_type()
+ 	exit 1
      fi
  
--    if [ "`_fs_type $TEST_DEV`" != "$FSTYP" ]
--    then
--        echo "common.rc: Error: \$TEST_DEV ($TEST_DEV) is not a MOUNTED $FSTYP filesystem"
--        $DF_PROG $TEST_DEV
--        exit 1
--    fi
- fi
+-    _df_device $1 | $AWK_PROG '{ print $2 }'
++    #
++    # The Linux kernel shows NFSv4 filesystems in df output as
++    # filesystem type nfs4, although we mounted it as nfs earlier.
++    # Fix the filesystem type up here so that the callers don't
++    # have to bother with this quirk.
++    #
++    _df_device $1 | $AWK_PROG '{ print $2 }' | sed -e 's/nfs4/nfs/'
+ }
  
- # make sure this script returns success
+ # return the FS mount options of a mounted device
 
 _______________________________________________
 xfs mailing list
