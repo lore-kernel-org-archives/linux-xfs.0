@@ -1,25 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6UEPcUj138058 for <xfs@oss.sgi.com>; Sat, 30 Jul 2011 09:25:38 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1712C15F7F08
-	for <xfs@oss.sgi.com>; Sat, 30 Jul 2011 07:26:00 -0700 (PDT)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	w0tVs8hlPBTJLR3n for <xfs@oss.sgi.com>;
-	Sat, 30 Jul 2011 07:26:00 -0700 (PDT)
-Date: Sat, 30 Jul 2011 10:25:30 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2 1/4] xfstests: Changed test 062 to be generic for all
-	filesystems
-Message-ID: <20110730142530.GA31200@infradead.org>
-References: <cover.1311953979.git.sbehrens@giantdisaster.de>
-	<95dfa968c48d2bd1095876a6db3369672e76db5f.1311953979.git.sbehrens@giantdisaster.de>
+	p6UFG9xf141713 for <xfs@oss.sgi.com>; Sat, 30 Jul 2011 10:16:09 -0500
+Received: from merit-proxy02.merit.edu (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BDD511EF126B
+	for <xfs@oss.sgi.com>; Sat, 30 Jul 2011 08:16:07 -0700 (PDT)
+Received: from merit-proxy02.merit.edu (merit-proxy02.merit.edu
+	[207.75.116.194]) by cuda.sgi.com with ESMTP id
+	DLF7UNyKkXlDAuOW for <xfs@oss.sgi.com>;
+	Sat, 30 Jul 2011 08:16:07 -0700 (PDT)
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by merit-proxy02.merit.edu (Postfix) with ESMTP id 261B02039874
+	for <xfs@oss.sgi.com>; Sat, 30 Jul 2011 11:16:07 -0400 (EDT)
+Received: from merit-proxy02.merit.edu ([127.0.0.1])
+	by localhost (merit-proxy02.merit.edu [127.0.0.1]) (amavisd-new,
+	port 10024) with ESMTP id ru5LhIaLySjh for <xfs@oss.sgi.com>;
+	Sat, 30 Jul 2011 11:16:06 -0400 (EDT)
+Received: from merit.edu (74-126-0-171.static.123.net [74.126.0.171])
+	by merit-proxy02.merit.edu (Postfix) with ESMTPSA id BB287203986F
+	for <xfs@oss.sgi.com>; Sat, 30 Jul 2011 11:16:05 -0400 (EDT)
+Date: Sat, 30 Jul 2011 11:16:04 -0400
+From: Jim Rees <rees@umich.edu>
+Subject: xfstests fails on nfs4 file system
+Message-ID: <20110730151604.GA26285@merit.edu>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <95dfa968c48d2bd1095876a6db3369672e76db5f.1311953979.git.sbehrens@giantdisaster.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,22 +37,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Stefan Behrens <sbehrens@giantdisaster.de>
-Cc: linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Fri, Jul 29, 2011 at 06:06:58PM +0200, Stefan Behrens wrote:
-> Changed the test 062 to be generic for all filesystems and to be
-> executed for all filesystems.
-> Remove output of mkfs since this is specific to mkfs.xfs and now
-> filtered out.
+xfstests fails on nfs4 file system:
 
-The first three patches look good, but can you please merge them into
-on.  And maybe make the subject description a bit less verbose, e.g.
+rhcl1# mount -t nfs -o nfsvers=4,minorversion=1 emc-1:/pnfs2 /mnt/emc-1
+rhcl1# cd /home/rees/xfstests
+rhcl1# setenv TEST_DEV emc-1:/pnfs2
+rhcl1# setenv TEST_DIR /mnt/emc-1/rees/xfstests
+rhcl1# ./check -nfs
+common.rc: Error: $TEST_DEV (emc-1:/pnfs2) is not a MOUNTED nfs filesystem
+/bin/df: `emc-1:/pnfs2': No such file or directory
+/bin/df: no file systems processed
 
-xfstests: make more tests generic
+Originally nfs4 was a separate file system type, and it still shows up that
+way in mtab:
+emc-1:/pnfs2/ on /mnt/emc-1 type nfs4 (rw,relatime,vers=4,...
 
-Use _scratch_mkfs / _scratch_mkfs_sized instead of _scratch_mkfs_xfs
-where possible. 
+I fixed this by commenting out the type check at the end of common.rc.  I
+don't know enough about the innards of xfstests to know what the proper fix
+is.  Maybe a substring match, or explicit check for nfs4?
+
+rhcl1# diff -u common.rc common.rc-ok
+--- common.rc   2011-07-29 12:11:34.118251109 -0400
++++ common.rc-ok        2011-07-29 12:33:58.384749553 -0400
+@@ -1588,12 +1588,6 @@
+         fi
+     fi
+ 
+-    if [ "`_fs_type $TEST_DEV`" != "$FSTYP" ]
+-    then
+-        echo "common.rc: Error: \$TEST_DEV ($TEST_DEV) is not a MOUNTED $FSTYP filesystem"
+-        $DF_PROG $TEST_DEV
+-        exit 1
+-    fi
+ fi
+ 
+ # make sure this script returns success
 
 _______________________________________________
 xfs mailing list
