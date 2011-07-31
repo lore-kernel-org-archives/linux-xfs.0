@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6UH8PN6149222 for <xfs@oss.sgi.com>; Sat, 30 Jul 2011 12:08:25 -0500
-Received: from merit-proxy01.merit.edu (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 74EF31EF130F
-	for <xfs@oss.sgi.com>; Sat, 30 Jul 2011 10:08:24 -0700 (PDT)
-Received: from merit-proxy01.merit.edu (merit-proxy01.merit.edu
-	[207.75.116.193]) by cuda.sgi.com with ESMTP id
-	ht4UIgqLZeGav7BB for <xfs@oss.sgi.com>;
-	Sat, 30 Jul 2011 10:08:24 -0700 (PDT)
-Date: Sat, 30 Jul 2011 13:08:22 -0400
-From: Jim Rees <rees@umich.edu>
-Subject: Re: xfstests fails on nfs4 file system
-Message-ID: <20110730170822.GA27493@merit.edu>
-References: <20110730151604.GA26285@merit.edu>
-	<20110730163326.GA19290@infradead.org>
+	p6VF6Iqs220169 for <xfs@oss.sgi.com>; Sun, 31 Jul 2011 10:06:19 -0500
+Received: from mail-pz0-f43.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C36B2F25457
+	for <xfs@oss.sgi.com>; Sun, 31 Jul 2011 08:06:49 -0700 (PDT)
+Received: from mail-pz0-f43.google.com (mail-pz0-f43.google.com
+	[209.85.210.43]) by cuda.sgi.com with ESMTP id SCeTko6vrsys516j
+	for <xfs@oss.sgi.com>; Sun, 31 Jul 2011 08:06:49 -0700 (PDT)
+Received: by pzk1 with SMTP id 1so7722671pzk.2
+	for <xfs@oss.sgi.com>; Sun, 31 Jul 2011 08:06:16 -0700 (PDT)
+Date: Mon, 1 Aug 2011 00:06:06 +0900
+From: Minchan Kim <minchan.kim@gmail.com>
+Subject: Re: [PATCH 1/8] mm: vmscan: Do not writeback filesystem pages in
+	direct reclaim
+Message-ID: <20110731150606.GB1735@barrios-desktop>
+References: <1311265730-5324-1-git-send-email-mgorman@suse.de>
+	<1311265730-5324-2-git-send-email-mgorman@suse.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110730163326.GA19290@infradead.org>
+In-Reply-To: <1311265730-5324-2-git-send-email-mgorman@suse.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,37 +32,48 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Mel Gorman <mgorman@suse.de>
+Cc: Rik van Riel <riel@redhat.com>, Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, XFS <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, Linux-MM <linux-mm@kvack.org>, Wu Fengguang <fengguang.wu@intel.com>, Johannes Weiner <jweiner@redhat.com>
 
-Christoph Hellwig wrote:
+On Thu, Jul 21, 2011 at 05:28:43PM +0100, Mel Gorman wrote:
+> From: Mel Gorman <mel@csn.ul.ie>
+> 
+> When kswapd is failing to keep zones above the min watermark, a process
+> will enter direct reclaim in the same manner kswapd does. If a dirty
+> page is encountered during the scan, this page is written to backing
+> storage using mapping->writepage.
+> 
+> This causes two problems. First, it can result in very deep call
+> stacks, particularly if the target storage or filesystem are complex.
+> Some filesystems ignore write requests from direct reclaim as a result.
+> The second is that a single-page flush is inefficient in terms of IO.
+> While there is an expectation that the elevator will merge requests,
+> this does not always happen. Quoting Christoph Hellwig;
+> 
+> 	The elevator has a relatively small window it can operate on,
+> 	and can never fix up a bad large scale writeback pattern.
+> 
+> This patch prevents direct reclaim writing back filesystem pages by
+> checking if current is kswapd. Anonymous pages are still written to
+> swap as there is not the equivalent of a flusher thread for anonymous
+> pages. If the dirty pages cannot be written back, they are placed
+> back on the LRU lists. There is now a direct dependency on dirty page
+> balancing to prevent too many pages in the system being dirtied which
+> would prevent reclaim making forward progress.
+> 
+> Signed-off-by: Mel Gorman <mgorman@suse.de>
+Reviewed-by: Minchan Kim <minchan.kim@gmail.com>
 
-  On Sat, Jul 30, 2011 at 11:16:04AM -0400, Jim Rees wrote:
-  > xfstests fails on nfs4 file system:
-  > 
-  > rhcl1# mount -t nfs -o nfsvers=4,minorversion=1 emc-1:/pnfs2 /mnt/emc-1
-  > rhcl1# cd /home/rees/xfstests
-  > rhcl1# setenv TEST_DEV emc-1:/pnfs2
-  > rhcl1# setenv TEST_DIR /mnt/emc-1/rees/xfstests
-  > rhcl1# ./check -nfs
-  > common.rc: Error: $TEST_DEV (emc-1:/pnfs2) is not a MOUNTED nfs filesystem
-  > /bin/df: `emc-1:/pnfs2': No such file or directory
-  > /bin/df: no file systems processed
-  > 
-  > Originally nfs4 was a separate file system type, and it still shows up that
-  > way in mtab:
-  > emc-1:/pnfs2/ on /mnt/emc-1 type nfs4 (rw,relatime,vers=4,...
-  > 
-  > I fixed this by commenting out the type check at the end of common.rc.  I
-  > don't know enough about the innards of xfstests to know what the proper fix
-  > is.  Maybe a substring match, or explicit check for nfs4?
-  
-  What about the following patch?  I makes sure the nfs4 output gets
-  normalized to nfs as early as possible.
+Nitpick.
+We can change description of should_reclaim_stall.
 
-Makes sense, and it works.
+"Returns true if the caller should wait to clean dirty/writeback pages"
+->
+"Returns true if direct reclaimer should wait to clean writeback pages"
 
-Tested-by: Jim Rees <rees@umich.edu>
+-- 
+Kind regards,
+Minchan Kim
 
 _______________________________________________
 xfs mailing list
