@@ -1,26 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p6VFOCH9220857 for <xfs@oss.sgi.com>; Sun, 31 Jul 2011 10:24:13 -0500
-Received: from mail-pz0-f43.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 761F5F0DFEA
-	for <xfs@oss.sgi.com>; Sun, 31 Jul 2011 08:24:45 -0700 (PDT)
-Received: from mail-pz0-f43.google.com (mail-pz0-f43.google.com
-	[209.85.210.43]) by cuda.sgi.com with ESMTP id FT4Hq08ntk6E7g4m
-	for <xfs@oss.sgi.com>; Sun, 31 Jul 2011 08:24:45 -0700 (PDT)
-Received: by pzk1 with SMTP id 1so7738243pzk.2
-	for <xfs@oss.sgi.com>; Sun, 31 Jul 2011 08:24:11 -0700 (PDT)
-Date: Mon, 1 Aug 2011 00:24:01 +0900
-From: Minchan Kim <minchan.kim@gmail.com>
-Subject: Re: [PATCH 7/8] mm: vmscan: Immediately reclaim end-of-LRU dirty
-	pages when writeback completes
-Message-ID: <20110731152401.GE1735@barrios-desktop>
-References: <1311265730-5324-1-git-send-email-mgorman@suse.de>
-	<1311265730-5324-8-git-send-email-mgorman@suse.de>
-	<1311339228.27400.34.camel@twins> <20110722132319.GX5349@suse.de>
-MIME-Version: 1.0
+	p714kwAL244964 for <xfs@oss.sgi.com>; Sun, 31 Jul 2011 23:46:58 -0500
+Received: from a.mail.sonic.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 78261B0126
+	for <xfs@oss.sgi.com>; Sun, 31 Jul 2011 21:46:57 -0700 (PDT)
+Received: from a.mail.sonic.net (a.mail.sonic.net [64.142.16.245]) by
+	cuda.sgi.com with ESMTP id WDBTLrNjw2c5bjr7 for
+	<xfs@oss.sgi.com>; Sun, 31 Jul 2011 21:46:57 -0700 (PDT)
+Received: from localhost.localdomain (wombat.san-francisco.ca.us
+	[75.101.60.64])
+	by a.mail.sonic.net (8.13.8.Beta0-Sonic/8.13.7) with ESMTP id
+	p714kus2007689 for <xfs@oss.sgi.com>; Sun, 31 Jul 2011 21:46:56 -0700
+Date: Sun, 31 Jul 2011 21:46:54 -0700
+From: Keith Keller <kkeller@sonic.net>
+Subject: Re: xfs_growfs doesn't resize (partial resolution)
+Message-ID: <20110801044654.GA1853@sonic.net>
+References: <20110707182532.GA31319@sonic.net> <4E160A34.20902@sandeen.net>
+	<20110707222350.GA776@sonic.net> <4E163396.2010707@sandeen.net>
+	<20110720190819.GA14910@sonic.net>
+	<20110725182851.GA30626@sonic.net>
+Mime-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110722132319.GX5349@suse.de>
+In-Reply-To: <20110725182851.GA30626@sonic.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,51 +35,46 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mel Gorman <mgorman@suse.de>
-Cc: Rik van Riel <riel@redhat.com>, Jan Kara <jack@suse.cz>, Peter Zijlstra <peterz@infradead.org>, LKML <linux-kernel@vger.kernel.org>, XFS <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, Linux-MM <linux-mm@kvack.org>, Wu Fengguang <fengguang.wu@intel.com>, Johannes Weiner <jweiner@redhat.com>
+To: xfs@oss.sgi.com
 
-On Fri, Jul 22, 2011 at 02:23:19PM +0100, Mel Gorman wrote:
-> On Fri, Jul 22, 2011 at 02:53:48PM +0200, Peter Zijlstra wrote:
-> > On Thu, 2011-07-21 at 17:28 +0100, Mel Gorman wrote:
-> > > When direct reclaim encounters a dirty page, it gets recycled around
-> > > the LRU for another cycle. This patch marks the page PageReclaim
-> > > similar to deactivate_page() so that the page gets reclaimed almost
-> > > immediately after the page gets cleaned. This is to avoid reclaiming
-> > > clean pages that are younger than a dirty page encountered at the
-> > > end of the LRU that might have been something like a use-once page.
-> > > 
-> > 
-> > > @@ -834,7 +834,15 @@ static unsigned long shrink_page_list(struct list_head *page_list,
-> > >  			 */
-> > >  			if (page_is_file_cache(page) &&
-> > >  					(!current_is_kswapd() || priority >= DEF_PRIORITY - 2)) {
-> > > -				inc_zone_page_state(page, NR_VMSCAN_WRITE_SKIP);
-> > > +				/*
-> > > +				 * Immediately reclaim when written back.
-> > > +				 * Similar in principal to deactivate_page()
-> > > +				 * except we already have the page isolated
-> > > +				 * and know it's dirty
-> > > +				 */
-> > > +				inc_zone_page_state(page, NR_VMSCAN_INVALIDATE);
-> > > +				SetPageReclaim(page);
-> > > +
-> > 
-> > I find the invalidate name somewhat confusing. It makes me think we'll
-> > drop the page without writeback, like invalidatepage().
-> 
-> I wasn't that happy with it either to be honest but didn't think of a
-> better one at the time. nr_reclaim_deferred?
+Hello again everyone,
 
-How about "NR_VMSCAN_IMMEDIATE_RECLAIM" like comment rotate_reclaimable_page?
+I was able to perform the steps I proposed last week:
 
-> 
-> -- 
-> Mel Gorman
-> SUSE Labs
+On Mon, Jul 25, 2011 at 11:28:51AM -0700, Keith Keller wrote:
+> --take another backup
+> --umount all XFS filesystems (the OS filesystems are ext3)
+> --remove the kmod-xfs CentOS package
+> --update to the latest CentOS kernel and reboot, making sure
+>   the target XFS fs does not have a mount attempted
+> --run xfs_repair from xfsprogs-3.1.5
+> --cross fingers :)
+> --mount and check what's in lost+found
+
+For posterity sake, I thought I should post my results.  Everything went
+very smoothly, actually--even though the repair of the metadump I took
+reported errors, when I worked with the actual filesystem, it fixed
+superblock 0 but otherwise found no errors.  The xfs_repair took about
+42 minutes, compared to about 35-40 minutes to operate (on similar but
+different hardware) on the metadump.  That's really nice performance--I
+had to e2fsck a ~5TB filesystem the other day, and it took about 5 hours
+total.
+
+> --if all seems well, attempt another xfs_growfs using xfsprogs-3.1.5
+
+I haven't yet attempted this final step.  I am going to wait till I
+return from another vacation to do so.  :)  But I am hopeful that with
+the latest kernel available from the CentOS repos that I should be fine.
+Is there a way to directly query the running module for version
+information, so that I can try to verify that I have a version that will
+work?  Here's my uname, if it's helpful:
+
+Linux xxxxxxxxxx 2.6.18-238.19.1.el5 #1 SMP Fri Jul 15 07:31:24 EDT 2011 x86_64 x86_64 x86_64 GNU/Linux
+
+--keith
 
 -- 
-Kind regards,
-Minchan Kim
+kkeller@wombat.san-francisco.ca.us
 
 _______________________________________________
 xfs mailing list
