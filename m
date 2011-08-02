@@ -1,19 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p71NRs7f046042 for <xfs@oss.sgi.com>; Mon, 1 Aug 2011 18:27:54 -0500
-Received: from mx2.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 15437124B0B4
-	for <xfs@oss.sgi.com>; Mon,  1 Aug 2011 16:28:32 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id iwwiDqXZT5XXMBhR for <xfs@oss.sgi.com>;
-	Mon, 01 Aug 2011 16:28:32 -0700 (PDT)
-Message-Id: <20110801232056.712213193@clark.kroah.org>
-Date: Mon, 01 Aug 2011 16:19:16 -0700
-From: Greg KH <gregkh@suse.de>
-Subject: [61/70] xfs [stable only]: restart busy extent search after node
-	removal
-In-Reply-To: <20110801232124.GA15313@kroah.com>
+	p720oIDu053927 for <xfs@oss.sgi.com>; Mon, 1 Aug 2011 19:50:18 -0500
+Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C1F30124F028
+	for <xfs@oss.sgi.com>; Mon,  1 Aug 2011 17:50:56 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	7iW67oJWyyTEtxWn for <xfs@oss.sgi.com>;
+	Mon, 01 Aug 2011 17:50:56 -0700 (PDT)
+Date: Tue, 2 Aug 2011 10:50:12 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: 2.6.39 and 3.0 scalability measurement results
+Message-ID: <20110802005012.GD12870@dastard>
+References: <4E361630.9060907@hp.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4E361630.9060907@hp.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,77 +25,55 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-kernel@vger.kernel.org, stable@kernel.org, xfs-oss <xfs@oss.sgi.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, akpm@linux-foundation.org, torvalds@linux-foundation.org, stable-review@kernel.org, alan@lxorguk.ukuu.org.uk
+To: Eric Whitney <eric.whitney@hp.com>
+Cc: Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs@oss.sgi.com
 
-2.6.39-stable review patch.  If anyone has any objections, please let us know.
+On Sun, Jul 31, 2011 at 10:57:52PM -0400, Eric Whitney wrote:
+> I've posted the results of my 2.6.38/2.6.39 and 2.6.39/3.0 ext4
+> scalability measurements and comparisons on a 48 core x86_64 server
+> at:
+> 
+> http://free.linux.hp.com/~enw/ext4/2.6.39
+> 
+> http://free.linux.hp.com/~enw/ext4/3.0
+> 
+> The results include throughput and CPU efficiency graphs for five
+> simple workloads, the raw data for same, and lockstats as well.
+> 
+> The data cover ext4 filesystems with and without journals.  For
+> reference, ext3, xfs, and btrfs are included as well.
 
-------------------
+Can you include the output of the mkfs programs so that we can see
+what the structure of the filesystems are? That makes a big
+difference when interpreting the XFS results.
 
-From: Eric Sandeen <sandeen@sandeen.net>
+And FWIW, I'd be really interested to see the XFS results using the
+inode64 mount option, rather then the not-really-ideal-for-multi-TB-
+filesystems-but-used-historically-for-32-bit-application-
+compatibility-reasons default of inode32.
 
-A user on #xfs reported that a log replay was oopsing in
-__rb_rotate_left() with a null pointer deref, and provided
-an xfs_metadump image for reproduction and testing.
+inode64 drastically changes the layout of files and directories in
+the filesystems, so I'd expect to see significant differences (good
+and bad!) in the workloads using that option. We've been considering
+changing it to be the default, so having some idea of how it
+compares on your worklaods woul dbe an interesting discussion
+point...
 
-I traced this down to the fact that in xfs_alloc_busy_insert(),
-we erased a node with rb_erase() when the new node overlapped,
-but left the erased node specified as the parent node for the
-new insertion.
+BTW, seeing as you are running against multiple diffferent
+filesytems, can you cc these emails to linux-fsdevel rather than
+just the ext4 list? There is wider interest in your results than
+just ext4 developers...
 
-So when we try to insert a new node with an erased node as
-its parent, obviously things go very wrong.
+Cheers,
 
-Upstream,
-97d3ac75e5e0ebf7ca38ae74cebd201c09b97ab2 xfs: exact busy extent tracking
-actually fixed this, but as part of a much larger change.  Here's
-the relevant code from that commit:
-
-                * We also need to restart the busy extent search from the
-                * tree root, because erasing the node can rearrange the
-                * tree topology.
-                */
-               rb_erase(&busyp->rb_node, &pag->pagb_tree);
-               busyp->length = 0;
-               return false;
-
-We can do essentially the same thing to older codebases by restarting
-the tree search after the erase.
-
-This should apply to .35.y through .39.y, and was tested on .39
-with the oopsing replay reproducer.
-
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Alex Elder <aelder@sgi.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
----
-
----
- fs/xfs/xfs_alloc.c |    6 ++++++
- 1 file changed, 6 insertions(+)
-
---- a/fs/xfs/xfs_alloc.c
-+++ b/fs/xfs/xfs_alloc.c
-@@ -2610,6 +2610,12 @@ restart:
- 					new->bno + new->length) -
- 				min(busyp->bno, new->bno);
- 		new->bno = min(busyp->bno, new->bno);
-+		/*
-+		 * Start the search over from the tree root, because
-+		 * erasing the node can rearrange the tree topology.
-+		 */
-+		spin_unlock(&pag->pagb_lock);
-+		goto restart;
- 	} else
- 		busyp = NULL;
- 
-
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
