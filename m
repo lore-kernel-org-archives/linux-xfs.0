@@ -1,27 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p72APNJg097769 for <xfs@oss.sgi.com>; Tue, 2 Aug 2011 05:25:23 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 17B9812F4322
-	for <xfs@oss.sgi.com>; Tue,  2 Aug 2011 03:26:05 -0700 (PDT)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	jKDO85AEDkK6MQtL for <xfs@oss.sgi.com>;
-	Tue, 02 Aug 2011 03:26:05 -0700 (PDT)
-Date: Tue, 2 Aug 2011 06:25:16 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] jfs: flush journal completely before releasing metadata
-	inodes
-Message-ID: <20110802102516.GA24575@infradead.org>
-References: <20110729155039.GA28306@infradead.org>
-	<4E32D9EB.9020406@oracle.com> <4E36F086.4070900@oracle.com>
-	<20110801183255.GA30985@infradead.org>
-	<4E3706D0.1000304@oracle.com>
+	p72BLr5E099543 for <xfs@oss.sgi.com>; Tue, 2 Aug 2011 06:21:54 -0500
+Received: from mx2.suse.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B46FD12F4167
+	for <xfs@oss.sgi.com>; Tue,  2 Aug 2011 04:22:35 -0700 (PDT)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id KxdEkbWo7vt4eC0J for <xfs@oss.sgi.com>;
+	Tue, 02 Aug 2011 04:22:35 -0700 (PDT)
+Date: Tue, 2 Aug 2011 12:21:46 +0100
+From: Mel Gorman <mgorman@suse.de>
+Subject: Re: [PATCH 1/8] mm: vmscan: Do not writeback filesystem pages in
+	direct reclaim
+Message-ID: <20110802112146.GD10436@suse.de>
+References: <1311265730-5324-1-git-send-email-mgorman@suse.de>
+	<1311265730-5324-2-git-send-email-mgorman@suse.de>
+	<20110731150606.GB1735@barrios-desktop>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4E3706D0.1000304@oracle.com>
+In-Reply-To: <20110731150606.GB1735@barrios-desktop>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,16 +31,57 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Kleikamp <dave.kleikamp@oracle.com>
-Cc: jfs-discussion@lists.sourceforge.net, xfs@oss.sgi.com
+To: Minchan Kim <minchan.kim@gmail.com>
+Cc: Rik van Riel <riel@redhat.com>, Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, XFS <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, Linux-MM <linux-mm@kvack.org>, Wu Fengguang <fengguang.wu@intel.com>, Johannes Weiner <jweiner@redhat.com>
 
-On Mon, Aug 01, 2011 at 03:04:32PM -0500, Dave Kleikamp wrote:
-> It runs through them all. A lot of tests get skipped claiming not to be
-> supported on jfs. A failure because jfs doesn't support fallocate and
-> hole-punch, but no crashes.
+On Mon, Aug 01, 2011 at 12:06:06AM +0900, Minchan Kim wrote:
+> On Thu, Jul 21, 2011 at 05:28:43PM +0100, Mel Gorman wrote:
+> > From: Mel Gorman <mel@csn.ul.ie>
+> > 
+> > When kswapd is failing to keep zones above the min watermark, a process
+> > will enter direct reclaim in the same manner kswapd does. If a dirty
+> > page is encountered during the scan, this page is written to backing
+> > storage using mapping->writepage.
+> > 
+> > This causes two problems. First, it can result in very deep call
+> > stacks, particularly if the target storage or filesystem are complex.
+> > Some filesystems ignore write requests from direct reclaim as a result.
+> > The second is that a single-page flush is inefficient in terms of IO.
+> > While there is an expectation that the elevator will merge requests,
+> > this does not always happen. Quoting Christoph Hellwig;
+> > 
+> > 	The elevator has a relatively small window it can operate on,
+> > 	and can never fix up a bad large scale writeback pattern.
+> > 
+> > This patch prevents direct reclaim writing back filesystem pages by
+> > checking if current is kswapd. Anonymous pages are still written to
+> > swap as there is not the equivalent of a flusher thread for anonymous
+> > pages. If the dirty pages cannot be written back, they are placed
+> > back on the LRU lists. There is now a direct dependency on dirty page
+> > balancing to prevent too many pages in the system being dirtied which
+> > would prevent reclaim making forward progress.
+> > 
+> > Signed-off-by: Mel Gorman <mgorman@suse.de>
+> Reviewed-by: Minchan Kim <minchan.kim@gmail.com>
+> 
 
-Looks like the fallocate feature tests are broken, I'll look into fixing
-it.
+Thanks
+
+> Nitpick.
+> We can change description of should_reclaim_stall.
+> 
+> "Returns true if the caller should wait to clean dirty/writeback pages"
+> ->
+> "Returns true if direct reclaimer should wait to clean writeback pages"
+> 
+
+Not a nitpick. At least one check for RECLAIM_MODE_SYNC is no longer
+reachable. I've added a new patch that updates the comment and has
+synchronous direct reclaim wait on pages under writeback.
+
+-- 
+Mel Gorman
+SUSE Labs
 
 _______________________________________________
 xfs mailing list
