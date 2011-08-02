@@ -1,15 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p729tfHU095693 for <xfs@oss.sgi.com>; Tue, 2 Aug 2011 04:55:41 -0500
-Date: Tue, 2 Aug 2011 05:55:37 -0400
+	p72AFWtu096513 for <xfs@oss.sgi.com>; Tue, 2 Aug 2011 05:15:33 -0500
+Date: Tue, 2 Aug 2011 06:15:30 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfsdump: allow multi-digit dialog prompts
-Message-ID: <20110802095537.GA1248@infradead.org>
-References: <1311784913-14191-1-git-send-email-wkendall@sgi.com>
+Subject: Re: [PATCH 2/4] xfsdump: process EPIPE instead of catching SIGPIPE
+Message-ID: <20110802101530.GB16239@infradead.org>
+References: <1311972011-1446-1-git-send-email-wkendall@sgi.com>
+	<1311972011-1446-3-git-send-email-wkendall@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1311784913-14191-1-git-send-email-wkendall@sgi.com>
+In-Reply-To: <1311972011-1446-3-git-send-email-wkendall@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,15 +26,16 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Bill Kendall <wkendall@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, Jul 27, 2011 at 11:41:53AM -0500, Bill Kendall wrote:
-> xfsdump issues a multiple-choice dialog in various circumstances
-> (e.g., media change request). An assert incorrectly limits this to
-> at most 8 choices even though the code can handle up to 9.  Remove
-> the assert and change the code to handle multi-digit responses.
-> 
-> Signed-off-by: Bill Kendall <wkendall@sgi.com>
+On Fri, Jul 29, 2011 at 03:40:09PM -0500, Bill Kendall wrote:
+> Looking forward towards a multi-threaded xfsdump, it's simpler to
+> handle pipe failures as a system call failure (EPIPE) rather than
+> through a signal handler which may run in a separate thread. The
+> existing error handling code handles EPIPE just fine, so the only
+> required change is to ignore SIGPIPE. Some sections of code already
+> temporarily ignore SIGPIPE -- they no longer need to do so since it
+> will already be ignored.
 
-Looks good,
+Looks good, and the less we do with signals, the better.
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 
