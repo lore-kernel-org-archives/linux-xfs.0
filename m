@@ -1,25 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p72BPO6e099700 for <xfs@oss.sgi.com>; Tue, 2 Aug 2011 06:25:24 -0500
-Received: from mx2.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5980A185E285
-	for <xfs@oss.sgi.com>; Tue,  2 Aug 2011 04:25:22 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id f7sVhmnoWlDldjG2 for <xfs@oss.sgi.com>;
-	Tue, 02 Aug 2011 04:25:22 -0700 (PDT)
-Date: Tue, 2 Aug 2011 12:25:18 +0100
-From: Mel Gorman <mgorman@suse.de>
-Subject: Re: [PATCH 7/8] mm: vmscan: Immediately reclaim end-of-LRU dirty
-	pages when writeback completes
-Message-ID: <20110802112518.GE10436@suse.de>
-References: <1311265730-5324-1-git-send-email-mgorman@suse.de>
-	<1311265730-5324-8-git-send-email-mgorman@suse.de>
-	<1311339228.27400.34.camel@twins> <20110722132319.GX5349@suse.de>
-	<20110731152401.GE1735@barrios-desktop>
+	p72EDs1N105288 for <xfs@oss.sgi.com>; Tue, 2 Aug 2011 09:13:54 -0500
+Message-ID: <4E38061E.1070206@sgi.com>
+Date: Tue, 02 Aug 2011 09:13:50 -0500
+From: Bill Kendall <wkendall@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110731152401.GE1735@barrios-desktop>
+Subject: Re: [PATCH 3/4] xfsdump: remove SIGCHLD handling
+References: <1311972011-1446-1-git-send-email-wkendall@sgi.com>
+	<1311972011-1446-4-git-send-email-wkendall@sgi.com>
+	<20110802102245.GA22979@infradead.org>
+In-Reply-To: <20110802102245.GA22979@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,56 +19,38 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Minchan Kim <minchan.kim@gmail.com>
-Cc: Rik van Riel <riel@redhat.com>, Jan Kara <jack@suse.cz>, Peter Zijlstra <peterz@infradead.org>, LKML <linux-kernel@vger.kernel.org>, XFS <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, Linux-MM <linux-mm@kvack.org>, Wu Fengguang <fengguang.wu@intel.com>, Johannes Weiner <jweiner@redhat.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Mon, Aug 01, 2011 at 12:24:01AM +0900, Minchan Kim wrote:
-> On Fri, Jul 22, 2011 at 02:23:19PM +0100, Mel Gorman wrote:
-> > On Fri, Jul 22, 2011 at 02:53:48PM +0200, Peter Zijlstra wrote:
-> > > On Thu, 2011-07-21 at 17:28 +0100, Mel Gorman wrote:
-> > > > When direct reclaim encounters a dirty page, it gets recycled around
-> > > > the LRU for another cycle. This patch marks the page PageReclaim
-> > > > similar to deactivate_page() so that the page gets reclaimed almost
-> > > > immediately after the page gets cleaned. This is to avoid reclaiming
-> > > > clean pages that are younger than a dirty page encountered at the
-> > > > end of the LRU that might have been something like a use-once page.
-> > > > 
-> > > 
-> > > > @@ -834,7 +834,15 @@ static unsigned long shrink_page_list(struct list_head *page_list,
-> > > >  			 */
-> > > >  			if (page_is_file_cache(page) &&
-> > > >  					(!current_is_kswapd() || priority >= DEF_PRIORITY - 2)) {
-> > > > -				inc_zone_page_state(page, NR_VMSCAN_WRITE_SKIP);
-> > > > +				/*
-> > > > +				 * Immediately reclaim when written back.
-> > > > +				 * Similar in principal to deactivate_page()
-> > > > +				 * except we already have the page isolated
-> > > > +				 * and know it's dirty
-> > > > +				 */
-> > > > +				inc_zone_page_state(page, NR_VMSCAN_INVALIDATE);
-> > > > +				SetPageReclaim(page);
-> > > > +
-> > > 
-> > > I find the invalidate name somewhat confusing. It makes me think we'll
-> > > drop the page without writeback, like invalidatepage().
-> > 
-> > I wasn't that happy with it either to be honest but didn't think of a
-> > better one at the time. nr_reclaim_deferred?
+Christoph Hellwig wrote:
+> On Fri, Jul 29, 2011 at 03:40:10PM -0500, Bill Kendall wrote:
+>> The multi-stream version of xfsdump for IRIX used sprocs for
+>> threading. When a "thread" exits with sprocs, a SIGCHLD is sent to
+>> the main thread just as if a regular child process exited. A future
+>> multi-stream version of xfsdump would use pthreads, so the SIGCHLD
+>> code is no longer needed. So:
+>>
+>> - No longer register for or handle SIGCHLD (SIGCLD).
+>> - Remove signal handling code for child processes.
+>> - Remove cldmgr_killall() as there are no children.
+>>
+>> Signed-off-by: Bill Kendall <wkendall@sgi.com>
 > 
-> How about "NR_VMSCAN_IMMEDIATE_RECLAIM" like comment rotate_reclaimable_page?
+> Looks good,
 > 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> 
+> does this mean you're actively working on multi-threaded dump for Linux?
 
-Yeah, I guess. I find it a little misleading because the reclaim does
-not happen immediately at the time the counter is incremented but it's
-better than "invalidate".
+Indeed...I didn't want to come right out and say it, in case I get side
+tracked. :) But hoping to have patches up for review in the next week or
+two.
 
--- 
-Mel Gorman
-SUSE Labs
+Bill
 
 _______________________________________________
 xfs mailing list
