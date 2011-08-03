@@ -1,24 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p73DwhZd156228 for <xfs@oss.sgi.com>; Wed, 3 Aug 2011 08:58:45 -0500
-Received: from mx2.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CD216F3A3A1
-	for <xfs@oss.sgi.com>; Wed,  3 Aug 2011 06:59:32 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id XReUkaoAtW3W6331 for <xfs@oss.sgi.com>;
-	Wed, 03 Aug 2011 06:59:32 -0700 (PDT)
-Date: Wed, 3 Aug 2011 14:58:39 +0100
-From: Mel Gorman <mgorman@suse.de>
-Subject: Re: [PATCH 8/8] mm: vmscan: Do not writeback filesystem pages from
-	kswapd
-Message-ID: <20110803135839.GL19099@suse.de>
+	p73EII2M156934 for <xfs@oss.sgi.com>; Wed, 3 Aug 2011 09:18:23 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 584BC186767D
+	for <xfs@oss.sgi.com>; Wed,  3 Aug 2011 07:18:17 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	8DMCaWnOfC5UqOkq for <xfs@oss.sgi.com>;
+	Wed, 03 Aug 2011 07:18:17 -0700 (PDT)
+Date: Wed, 3 Aug 2011 10:18:07 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 3/8] ext4: Warn if direct reclaim tries to writeback pages
+Message-ID: <20110803141807.GA7676@infradead.org>
 References: <1311265730-5324-1-git-send-email-mgorman@suse.de>
-	<1311265730-5324-9-git-send-email-mgorman@suse.de>
-	<20110803113706.GF27199@redhat.com>
+	<1311265730-5324-4-git-send-email-mgorman@suse.de>
+	<20110803105819.GA27199@redhat.com>
+	<20110803110629.GB27199@redhat.com>
+	<20110803134420.GH19099@suse.de>
+	<20110803140019.GA31026@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110803113706.GF27199@redhat.com>
+In-Reply-To: <20110803140019.GA31026@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,47 +36,26 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Johannes Weiner <jweiner@redhat.com>
-Cc: Rik van Riel <riel@redhat.com>, Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, XFS <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, Linux-MM <linux-mm@kvack.org>, Minchan Kim <minchan.kim@gmail.com>, Wu Fengguang <fengguang.wu@intel.com>
+Cc: Rik van Riel <riel@redhat.com>, Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, XFS <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, Linux-MM <linux-mm@kvack.org>, Mel Gorman <mgorman@suse.de>, Wu Fengguang <fengguang.wu@intel.com>, josef@redhat.com, Minchan Kim <minchan.kim@gmail.com>
 
-On Wed, Aug 03, 2011 at 01:37:06PM +0200, Johannes Weiner wrote:
-> On Thu, Jul 21, 2011 at 05:28:50PM +0100, Mel Gorman wrote:
-> > Assuming that flusher threads will always write back dirty pages promptly
-> > then it is always faster for reclaimers to wait for flushers. This patch
-> > prevents kswapd writing back any filesystem pages.
-> > 
-> > Signed-off-by: Mel Gorman <mgorman@suse.de>
+On Wed, Aug 03, 2011 at 04:00:19PM +0200, Johannes Weiner wrote:
+> > That said, in my current revision of the series, I've dropped these
+> > patches altogether as page migration should be able to trigger the same
+> > warnings but be called from paths that are of less concern for stack
+> > overflows (or at the very least be looked at as a separate series).
 > 
-> Relying on the flushers may mean that every dirty page in the system
-> has to be written back before the pages from the zone of interest are
-> clean.
+> Doesn't this only apply to btrfs which has no own .migratepage aop for
+> file pages?  The others use buffer_migrate_page.
 > 
+> But if you dropped them anyway, it does not matter :)
 
-Yes.
+Note that the mid-term plan is to kill ->writepage as an address space
+method.  Besides the usage from reclaim as as callbacks to
+write_cache_pages and write_one_page (which can be made explicit
+arguments) the only remaining user is the above mentioned fallback.
 
-> De-facto we have only one mechanism to stay on top of the dirty pages
-> from a per-zone perspective, and that is single-page writeout from
-> reclaim.
-> 
-
-Yes.
-
-> While we all agree that this sucks, we can not remove it unless we
-> have a replacement that makes zones reclaimable in a reasonable time
-> frame (or keep them reclaimable in the first place, what per-zone
-> dirty limits attempt to do).
-> 
-> As such, please include
-> 
-> Nacked-by: Johannes Weiner <jweiner@redhat.com>
-
-I've already dropped the patch. If I could, I would have signed this at
-the time as
-
-Signed-off-but-naking-it-anyway: Mel Gorman <mgorman@suse.de
-
--- 
-Mel Gorman
-SUSE Labs
+Josef, any chance you could switch btrfs over to implement a proper
+->migratepage?
 
 _______________________________________________
 xfs mailing list
