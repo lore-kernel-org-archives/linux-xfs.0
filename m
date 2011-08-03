@@ -1,16 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p73C2u5Z151665 for <xfs@oss.sgi.com>; Wed, 3 Aug 2011 07:02:56 -0500
-Date: Wed, 3 Aug 2011 08:02:45 -0400
+	p73CdbWe153418 for <xfs@oss.sgi.com>; Wed, 3 Aug 2011 07:39:38 -0500
+Date: Wed, 3 Aug 2011 08:39:34 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 0/4] xfsdump: convert to using the POSIX signal API
-Message-ID: <20110803120245.GA25335@infradead.org>
+Subject: Re: [PATCH 4/4] xfsdump: convert to the POSIX signal API
+Message-ID: <20110803123934.GA13447@infradead.org>
 References: <1311972011-1446-1-git-send-email-wkendall@sgi.com>
-	<20110803105911.GA7226@infradead.org> <4E3937B1.7050207@sgi.com>
+	<1311972011-1446-5-git-send-email-wkendall@sgi.com>
+	<20110803104813.GA3575@infradead.org> <4E393AE3.70505@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4E3937B1.7050207@sgi.com>
+In-Reply-To: <4E393AE3.70505@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,25 +27,52 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Bill Kendall <wkendall@sgi.com>
 Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Wed, Aug 03, 2011 at 06:57:37AM -0500, Bill Kendall wrote:
-> Christoph Hellwig wrote:
-> >Bill,
-> >
-> >one thing I noticed looking over the code to understand your changes
-> >is that there still is a lot of dead code in xfsdump.  One that
-> >has a lot of implications and seems fairly useless for any non-IRIX
-> >version is the miniroot mode.  Any chance we can rip that out?  There's
+On Wed, Aug 03, 2011 at 07:11:15AM -0500, Bill Kendall wrote:
+> Right. I wanted to submit the signal changes separately from the
+> threading changes, as the changes were mostly independent except
+> in a couple of areas like this.
+
+Sounds fine - it's just something I noticed when looking over the code.
+
+> The original code in ring_slave_entry() changed the (process-wide) signal
+> dispositions. My patch converts these to just block the signals, so I
+> think this is fine?
+
+It probably is fine, but still not very nice code.  Let's hope we
+can get this sorted out.
+
+> >I don't think you'll get around splitting drive_init1, so that we can
+> >first open the devices, then do the is pipe check and do the signal
+> >setup based on that, then move on to the remaining drive setup.
 > 
-> Yes, that's being used to disable multi-stream code in the Linux version.
-> The end of my multi-stream patch series removes the miniroot code.
+> I thought it might be possible to avoid treating the pipeline case
+> separately. It's not obvious to me why xfsdump has to change its
+> signal handling just because it's in a pipeline. This was something
+> I was planning to look at.
 
-Ooops, I didn't notice miniroot is actually defined to true.  Now that
-I look deeper that also answers my comment about the duplicate signal
-setup in main - one it's done for the miniroot case, and once for the
-!miniroot case.
+Good to know.  Maybe the ptools history is able to explain something
+about it?
 
-Now that we uses EPIPE instead of SIGPIPE is there actually any good
-reason to do this setup in two different places?
+> >Why yare all these sigaction calls needed?   As far as I can see
+> >there is no way we'll ever use a different signal handler than
+> >"sigaction" for any signal, so simply modifying the signal mask
+> >should be enough.
+> 
+> There's actually 2 "sighandler" routines. One in main.c and one in
+> dlog.c. So this does change the handler, it's just that they're
+> poorly named. I'll rename the dlog version when I resubmit.
+
+You're right.  But looking at the dlog handler I still don't
+like the code there very much.  It just saves the caught signal
+in a global variable.  What if we got more than one signal
+in that section?    Moreover I don't really understand the point
+of the code at all, maybe the lack of existance of the mlog lock
+referred to in your comment in the current is part of that.
+
+I suspect the problem is that the normal signal handler may acquite
+that lock?  Given that pthread locking primitives are not allowed
+to be called from signal handlers that means there is a bigger
+problem to solve.
 
 _______________________________________________
 xfs mailing list
