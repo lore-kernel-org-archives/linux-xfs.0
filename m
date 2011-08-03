@@ -1,23 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p73BJpeS149750 for <xfs@oss.sgi.com>; Wed, 3 Aug 2011 06:19:51 -0500
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6313915F8F7D
-	for <xfs@oss.sgi.com>; Wed,  3 Aug 2011 04:20:39 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id TEUWZNGwGd5wFBFi for
-	<xfs@oss.sgi.com>; Wed, 03 Aug 2011 04:20:39 -0700 (PDT)
-Date: Wed, 3 Aug 2011 13:19:40 +0200
-From: Johannes Weiner <jweiner@redhat.com>
-Subject: Re: [PATCH 6/8] mm: vmscan: Throttle reclaim if encountering too
-	many dirty pages under writeback
-Message-ID: <20110803111940.GD27199@redhat.com>
-References: <1311265730-5324-1-git-send-email-mgorman@suse.de>
-	<1311265730-5324-7-git-send-email-mgorman@suse.de>
+	p73AmH2v148381 for <xfs@oss.sgi.com>; Wed, 3 Aug 2011 05:48:17 -0500
+Date: Wed, 3 Aug 2011 06:48:13 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 4/4] xfsdump: convert to the POSIX signal API
+Message-ID: <20110803104813.GA3575@infradead.org>
+References: <1311972011-1446-1-git-send-email-wkendall@sgi.com>
+	<1311972011-1446-5-git-send-email-wkendall@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1311265730-5324-7-git-send-email-mgorman@suse.de>
+In-Reply-To: <1311972011-1446-5-git-send-email-wkendall@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,64 +23,180 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mel Gorman <mgorman@suse.de>
-Cc: Rik van Riel <riel@redhat.com>, Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, XFS <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, Linux-MM <linux-mm@kvack.org>, Minchan Kim <minchan.kim@gmail.com>, Wu Fengguang <fengguang.wu@intel.com>
+To: Bill Kendall <wkendall@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Thu, Jul 21, 2011 at 05:28:48PM +0100, Mel Gorman wrote:
-> Workloads that are allocating frequently and writing files place a
-> large number of dirty pages on the LRU. With use-once logic, it is
-> possible for them to reach the end of the LRU quickly requiring the
-> reclaimer to scan more to find clean pages. Ordinarily, processes that
-> are dirtying memory will get throttled by dirty balancing but this
-> is a global heuristic and does not take into account that LRUs are
-> maintained on a per-zone basis. This can lead to a situation whereby
-> reclaim is scanning heavily, skipping over a large number of pages
-> under writeback and recycling them around the LRU consuming CPU.
+On Fri, Jul 29, 2011 at 03:40:11PM -0500, Bill Kendall wrote:
+> Convert from using the System V signal API to the POSIX API. For
+> xfsdump, this mostly means replacing sigrelse/sighold with
+> sigprocmask, sigset with sigaction, and sigpause with sigsuspend.
 > 
-> This patch checks how many of the number of pages isolated from the
-> LRU were dirty. If a percentage of them are dirty, the process will be
-> throttled if a blocking device is congested or the zone being scanned
-> is marked congested. The percentage that must be dirty depends on
-> the priority. At default priority, all of them must be dirty. At
-> DEF_PRIORITY-1, 50% of them must be dirty, DEF_PRIORITY-2, 25%
-> etc. i.e.  as pressure increases the greater the likelihood the process
-> will get throttled to allow the flusher threads to make some progress.
-> 
-> Signed-off-by: Mel Gorman <mgorman@suse.de>
-> ---
->  mm/vmscan.c |   21 ++++++++++++++++++---
->  1 files changed, 18 insertions(+), 3 deletions(-)
-> 
-> diff --git a/mm/vmscan.c b/mm/vmscan.c
-> index cf7b501..b0060f8 100644
-> --- a/mm/vmscan.c
-> +++ b/mm/vmscan.c
-> @@ -720,7 +720,8 @@ static noinline_for_stack void free_page_list(struct list_head *free_pages)
->  static unsigned long shrink_page_list(struct list_head *page_list,
->  				      struct zone *zone,
->  				      struct scan_control *sc,
-> -				      int priority)
-> +				      int priority,
-> +				      unsigned long *ret_nr_dirty)
+> childmain() and cldmgr_entry() are thread entry points. By the time
+> they are spawned the main thread will have already set its signal
+> mask, so no need to setup signals in these threads as the mask is
+> inherited.
+
+>From reading the code that means they actually can't be reached in
+a Linux build at the moment, given that the sproc stub will always
+return -1.
+
+> ring_slave_entry() is a thread entry point but is spawned before the
+> main thread has its signal mask setup. Setup the thread's mask to
+> block the same signals that the main thread will block.  The main
+> thread should be reworked to set its mask earlier, but that will
+> require a fair amount of refactoring that is beyond the scope of
+> this patch.
+
+What thread model are you going to use for the multithreaded xfsdump?
+
+If it's pthreads the signal handlers and the main signal mask are shared
+by all threads, so setting them in ring_slave_entry will affect the whole
+process.  We can do per-thread blocking/unblocking using pthread_sigmask,
+but we can't have per-signal handlers.
+
+I don't think you'll get around splitting drive_init1, so that we can
+first open the devices, then do the is pipe check and do the signal
+setup based on that, then move on to the remaining drive setup.
+
+Any chance you could throw in a patch to clean that area up a bit?
+Currently ring_create gets a threadfunc argument, which has two
+different but identical implementations.  Moving the small content
+of the two ring_thread implementations directly into ring_create
+would make this a tad more readable.
+
+> @@ -374,13 +371,14 @@ promptinput( char *buf,
 >  {
->  	LIST_HEAD(ret_pages);
->  	LIST_HEAD(free_pages);
-> @@ -971,6 +972,7 @@ keep_lumpy:
+>  	va_list args;
+>  	u_intgen_t alarm_save = 0;
+> -	void (* sigalrm_save)(int) = NULL;
+> -	void (* sigint_save)(int) = NULL;
+> -	void (* sighup_save)(int) = NULL;
+> -	void (* sigterm_save)(int) = NULL;
+> -	void (* sigquit_save)(int) = NULL;
+> +	sigset_t dlog_set, orig_set;
+> +	struct sigaction sa;
+> +	struct sigaction sigalrm_save;
+> +	struct sigaction sigint_save;
+> +	struct sigaction sighup_save;
+> +	struct sigaction sigterm_save;
+> +	struct sigaction sigquit_save;
+>  	intgen_t nread;
+> -	pid_t pid = getpid( );
 >  
->  	list_splice(&ret_pages, page_list);
->  	count_vm_events(PGACTIVATE, pgactivate);
-> +	*ret_nr_dirty += nr_dirty;
+>  	/* display the pre-prompt
+>  	 */
+> @@ -400,38 +398,39 @@ promptinput( char *buf,
+>  	mlog( MLOG_NORMAL | MLOG_NOLOCK | MLOG_BARE, promptstr );
+>  
+>  	/* set up signal handling
+> +	 * the mlog lock is held for the life of the dialog and it's possible
+> +	 * the main thread, which normally does the signal handling, is now
+> +	 * waiting on the mlog lock trying to log a message. so we unblock
+> +	 * the relevant signals for this thread. note this means the current
+> +	 * thread or the main thread might handle one of these signals.
+>  	 */
+> +	sigemptyset( &dlog_set );
+> +	sa.sa_handler = sighandler;
+> +	sigfillset( &sa.sa_mask );
+> +	sa.sa_flags = 0;
+>  	dlog_signo_received = -1;
+>  	if ( dlog_timeouts_flag && timeoutix != IXMAX ) {
+> +		sigaddset( &dlog_set, SIGALRM );
+> +		sigaction( SIGALRM, &sa, &sigalrm_save );
 
-Note that this includes anon pages, which means that swapping is
-throttled as well.
+Why yare all these sigaction calls needed?   As far as I can see
+there is no way we'll ever use a different signal handler than
+"sigaction" for any signal, so simply modifying the signal mask
+should be enough.
 
-I don't think it is a downside to throttle swapping during IO
-congestion - waiting for pages under writeback to become reclaimable
-is better than kicking off even more IO in this case as well - but the
-changelog and the comments should include it, I guess.
+> @@ -554,22 +557,32 @@ main( int argc, char *argv[] )
+>  		sigquit_received = BOOL_FALSE;
+>  		sigstray_received = BOOL_FALSE;
+>  		prbcld_cnt = 0;
+> +
+>  		alarm( 0 );
+> +
+> +		sigemptyset( &blocked_set );
+> +		sigaddset( &blocked_set, SIGINT );
+> +		sigaddset( &blocked_set, SIGHUP );
+> +		sigaddset( &blocked_set, SIGTERM );
+> +		sigaddset( &blocked_set, SIGQUIT );
+> +		sigaddset( &blocked_set, SIGALRM );
+> +		sigprocmask( SIG_SETMASK, &blocked_set, NULL );
+> +
+> +		sa.sa_handler = sighandler;
+> +		sigfillset(&sa.sa_mask);
+> +		sa.sa_flags = 0;
+> +
+> +		sigaction( SIGINT, &sa, NULL );
+> +		sigaction( SIGHUP, &sa, NULL );
+> +		sigaction( SIGTERM, &sa, NULL );
+> +		sigaction( SIGQUIT, &sa, NULL );
+> +		sigaction( SIGALRM, &sa, NULL );
+>  
+>  		/* ignore SIGPIPE, instead handle EPIPE as part
+>  		 * of normal sys call error handling
+>  		 */
+> -		sigset( SIGPIPE, SIG_IGN );
+> +		sa.sa_handler = SIG_IGN;
+> +		sigaction( SIGPIPE, &sa, NULL );
+>  	}
+>  
+>  	/* do content initialization.
+> @@ -588,16 +601,22 @@ main( int argc, char *argv[] )
+>  	 * with just one stream.
+>  	 */
+>  	if ( miniroot || pipeline ) {
+> +		struct sigaction sa;
+>  		intgen_t exitcode;
+>  
+> -		sigset( SIGINT, sighandler );
+> -		sigset( SIGHUP, sighandler );
+> -		sigset( SIGTERM, sighandler );
+> +		sa.sa_handler = sighandler;
+> +		sigfillset(&sa.sa_mask);
+> +		sa.sa_flags = 0;
+> +
+> +		sigaction( SIGINT, &sa, NULL );
+> +		sigaction( SIGHUP, &sa, NULL );
+> +		sigaction( SIGTERM, &sa, NULL );
+>  
+>  		/* ignore SIGPIPE, instead handle EPIPE as part
+>  		 * of normal sys call error handling
+>  		 */
+> -		sigset( SIGPIPE, SIG_IGN );
+> +		sa.sa_handler = SIG_IGN;
+> +		sigaction( SIGPIPE, &sa, NULL );
 
-Otherwise,
-Acked-by: Johannes Weiner <jweiner@redhat.com>
+Why do we have to do this setup here again?  We just did it a few
+lines above, just separated by the content_init call.  While the dump
+content_init seems to temporarily enabled these signals, it also
+seems to undo that properly.  Given that structure of content_init
+it's not easy to verify that it doesn't miss any, but the right fix
+is to restructure that code using goto based unwinding and return
+to the caller inthe state iwas left in.
+
+I don't think there is a point to re-ignore SIGPIPE either way.
+
+
+
+> +			sigprocmask( SIG_SETMASK, &orig_set, NULL );
+>  			return BOOL_FALSE;
+>  		}
+>  
+> @@ -1782,16 +1783,12 @@ baseuuidbypass:
+>  				free( ( void * )drvpath );
+>  			}
+>  			if ( sc_inv_stmtokenp[ strmix ] == INV_TOKEN_NULL ) {
+> -				( void )sigrelse( SIGINT );
+> -				( void )sigrelse( SIGQUIT );
+> -				( void )sigrelse( SIGHUP );
+> +				sigprocmask( SIG_SETMASK, &orig_set, NULL );
+>  				return BOOL_FALSE;
+
+As mentioned before adding an out_unmask label to this function which
+restores the mask and then returns the boolean retval variable would
+make the code a lot easier to audit.
 
 _______________________________________________
 xfs mailing list
