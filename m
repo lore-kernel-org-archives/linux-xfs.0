@@ -1,23 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p73A7rwt145918 for <xfs@oss.sgi.com>; Wed, 3 Aug 2011 05:07:53 -0500
-Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1D40C186729D
-	for <xfs@oss.sgi.com>; Wed,  3 Aug 2011 03:07:51 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id F9LRD1XYx3SUgMdv
-	for <xfs@oss.sgi.com>; Wed, 03 Aug 2011 03:07:51 -0700 (PDT)
-Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
-	by greer.hardwarefreak.com (Postfix) with ESMTP id 34B236C0D6
-	for <xfs@oss.sgi.com>; Wed,  3 Aug 2011 05:07:51 -0500 (CDT)
-Message-ID: <4E391DF5.8050600@hardwarefreak.com>
-Date: Wed, 03 Aug 2011 05:07:49 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	p73AxDoO148861 for <xfs@oss.sgi.com>; Wed, 3 Aug 2011 05:59:13 -0500
+Date: Wed, 3 Aug 2011 06:59:11 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 0/4] xfsdump: convert to using the POSIX signal API
+Message-ID: <20110803105911.GA7226@infradead.org>
+References: <1311972011-1446-1-git-send-email-wkendall@sgi.com>
 MIME-Version: 1.0
-Subject: Re: Help: XFS failure in AoE environment
-References: <CAOJJ1Zp9YTKxCr2H-betxrTWSdQ0joWCBQXJFyOQm364RLFHJg@mail.gmail.com>
-In-Reply-To: <CAOJJ1Zp9YTKxCr2H-betxrTWSdQ0joWCBQXJFyOQm364RLFHJg@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <1311972011-1446-1-git-send-email-wkendall@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,19 +22,18 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Bill Kendall <wkendall@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On 8/3/2011 12:31 AM, Lee Eric wrote:
-> Hi,
-> 
-> I encounter following error when I do rw operate(touch afile) in a
-> mounted AoE device.
+Bill,
 
-Seems you have picked the one architecture that most/all of us told you
-to avoid.  Interesting...
-
--- 
-Stan
+one thing I noticed looking over the code to understand your changes
+is that there still is a lot of dead code in xfsdump.  One that
+has a lot of implications and seems fairly useless for any non-IRIX
+version is the miniroot mode.  Any chance we can rip that out?  There's
+also a lot of code under #ifdef HIDDEN - it would be good to go through
+these and see we can just be removed, and if anything is still useful
+moved under more self-explaining ifdefs.
 
 _______________________________________________
 xfs mailing list
