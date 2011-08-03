@@ -1,23 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p73BR2sx150189 for <xfs@oss.sgi.com>; Wed, 3 Aug 2011 06:27:03 -0500
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6CBA315F8FD5
-	for <xfs@oss.sgi.com>; Wed,  3 Aug 2011 04:27:51 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 2y0CaFXtypd58FMj for
-	<xfs@oss.sgi.com>; Wed, 03 Aug 2011 04:27:51 -0700 (PDT)
-Date: Wed, 3 Aug 2011 13:26:30 +0200
-From: Johannes Weiner <jweiner@redhat.com>
-Subject: Re: [PATCH 7/8] mm: vmscan: Immediately reclaim end-of-LRU dirty
-	pages when writeback completes
-Message-ID: <20110803112630.GE27199@redhat.com>
-References: <1311265730-5324-1-git-send-email-mgorman@suse.de>
-	<1311265730-5324-8-git-send-email-mgorman@suse.de>
+	p73C7ulp151853 for <xfs@oss.sgi.com>; Wed, 3 Aug 2011 07:07:56 -0500
+Message-ID: <4E393A18.1050607@sgi.com>
+Date: Wed, 03 Aug 2011 07:07:52 -0500
+From: Bill Kendall <wkendall@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1311265730-5324-8-git-send-email-mgorman@suse.de>
+Subject: Re: [PATCH 0/4] xfsdump: convert to using the POSIX signal API
+References: <1311972011-1446-1-git-send-email-wkendall@sgi.com>
+	<20110803105911.GA7226@infradead.org> <4E3937B1.7050207@sgi.com>
+	<20110803120245.GA25335@infradead.org>
+In-Reply-To: <20110803120245.GA25335@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,26 +19,36 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mel Gorman <mgorman@suse.de>
-Cc: Rik van Riel <riel@redhat.com>, Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, XFS <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, Linux-MM <linux-mm@kvack.org>, Minchan Kim <minchan.kim@gmail.com>, Wu Fengguang <fengguang.wu@intel.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Thu, Jul 21, 2011 at 05:28:49PM +0100, Mel Gorman wrote:
-> When direct reclaim encounters a dirty page, it gets recycled around
-> the LRU for another cycle. This patch marks the page PageReclaim
-> similar to deactivate_page() so that the page gets reclaimed almost
-> immediately after the page gets cleaned. This is to avoid reclaiming
-> clean pages that are younger than a dirty page encountered at the
-> end of the LRU that might have been something like a use-once page.
+Christoph Hellwig wrote:
+> On Wed, Aug 03, 2011 at 06:57:37AM -0500, Bill Kendall wrote:
+>> Christoph Hellwig wrote:
+>>> Bill,
+>>>
+>>> one thing I noticed looking over the code to understand your changes
+>>> is that there still is a lot of dead code in xfsdump.  One that
+>>> has a lot of implications and seems fairly useless for any non-IRIX
+>>> version is the miniroot mode.  Any chance we can rip that out?  There's
+>> Yes, that's being used to disable multi-stream code in the Linux version.
+>> The end of my multi-stream patch series removes the miniroot code.
 > 
-> Signed-off-by: Mel Gorman <mgorman@suse.de>
+> Ooops, I didn't notice miniroot is actually defined to true.  Now that
+> I look deeper that also answers my comment about the duplicate signal
+> setup in main - one it's done for the miniroot case, and once for the
+> !miniroot case.
+> 
+> Now that we uses EPIPE instead of SIGPIPE is there actually any good
+> reason to do this setup in two different places?
 
-Apart from the naming of the counter (I like nr_reclaim_preferred),
+Nope, I'll resubmit with this change.
 
-Acked-by: Johannes Weiner <jweiner@redhat.com>
+Bill
 
 _______________________________________________
 xfs mailing list
