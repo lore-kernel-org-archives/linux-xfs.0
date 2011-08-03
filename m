@@ -1,26 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p73EZYcM157782 for <xfs@oss.sgi.com>; Wed, 3 Aug 2011 09:35:34 -0500
-Received: from mx2.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E0628F3A703
-	for <xfs@oss.sgi.com>; Wed,  3 Aug 2011 07:36:22 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id dpzyBZ0k8zEDKiCy for <xfs@oss.sgi.com>;
-	Wed, 03 Aug 2011 07:36:22 -0700 (PDT)
-Date: Wed, 3 Aug 2011 15:35:27 +0100
-From: Mel Gorman <mgorman@suse.de>
-Subject: Re: [PATCH 3/8] ext4: Warn if direct reclaim tries to writeback pages
-Message-ID: <20110803143527.GM19099@suse.de>
-References: <1311265730-5324-1-git-send-email-mgorman@suse.de>
-	<1311265730-5324-4-git-send-email-mgorman@suse.de>
-	<20110803105819.GA27199@redhat.com>
-	<20110803110629.GB27199@redhat.com>
-	<20110803134420.GH19099@suse.de>
-	<20110803140019.GA31026@redhat.com>
+	p73Ig2jS170958 for <xfs@oss.sgi.com>; Wed, 3 Aug 2011 13:42:02 -0500
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5E79E1869301
+	for <xfs@oss.sgi.com>; Wed,  3 Aug 2011 11:42:01 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 0DtxV65RoSjcUd4t for
+	<xfs@oss.sgi.com>; Wed, 03 Aug 2011 11:42:01 -0700 (PDT)
+Received: from int-mx02.intmail.prod.int.phx2.redhat.com
+	(int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id p73Ig1Px024853
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Wed, 3 Aug 2011 14:42:01 -0400
+Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
+	[10.5.9.1])
+	by int-mx02.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
+	id p73Ig0HM011764
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Wed, 3 Aug 2011 14:42:01 -0400
+Message-ID: <4E399677.1010508@redhat.com>
+Date: Wed, 03 Aug 2011 13:41:59 -0500
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110803140019.GA31026@redhat.com>
+Subject: [PATCH] xfsprogs: skip over "rootfs" entry if mtab links to
+	/proc/mounts
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,50 +37,40 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Johannes Weiner <jweiner@redhat.com>
-Cc: Rik van Riel <riel@redhat.com>, Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, XFS <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, Linux-MM <linux-mm@kvack.org>, Minchan Kim <minchan.kim@gmail.com>, Wu Fengguang <fengguang.wu@intel.com>
+To: xfs-oss <xfs@oss.sgi.com>
 
-On Wed, Aug 03, 2011 at 04:00:19PM +0200, Johannes Weiner wrote:
-> On Wed, Aug 03, 2011 at 02:44:20PM +0100, Mel Gorman wrote:
-> > On Wed, Aug 03, 2011 at 01:06:29PM +0200, Johannes Weiner wrote:
-> > > On Wed, Aug 03, 2011 at 12:58:19PM +0200, Johannes Weiner wrote:
-> > > > On Thu, Jul 21, 2011 at 05:28:45PM +0100, Mel Gorman wrote:
-> > > > > Direct reclaim should never writeback pages. Warn if an attempt
-> > > > > is made.
-> > > > > 
-> > > > > Signed-off-by: Mel Gorman <mgorman@suse.de>
-> > > > 
-> > > > Acked-by: Johannes Weiner <jweiner@redhat.com>
-> > > 
-> > > Oops, too fast.
-> > > 
-> > > Shouldn't the WARN_ON() be at the top of the function, rather than
-> > > just warn when the write is deferred due to delalloc?
-> > 
-> > I thought it made more sense to put the warning at the point where ext4
-> > would normally ignore ->writepage.
-> > 
-> > That said, in my current revision of the series, I've dropped these
-> > patches altogether as page migration should be able to trigger the same
-> > warnings but be called from paths that are of less concern for stack
-> > overflows (or at the very least be looked at as a separate series).
-> 
-> Doesn't this only apply to btrfs which has no own .migratepage aop for
-> file pages?  The others use buffer_migrate_page.
-> 
+This is for RH bug 727938, xfs_fsr regression for root file system
 
-Bah, you're right. It was btrfs I was looking at during the time I
-decided to drop the patches and I didn't think it through. I only
-needed to drop the btrfs one.
+Fedora has made /etc/mtab a symlink to /proc/mounts, but when
+we issue "xfs_fsr /" and fsr's getmntany() goes looking for
+the "/" entry, the first one it finds is
 
-> But if you dropped them anyway, it does not matter :)
+rootfs / rootfs rw 0 0
 
-I put back in the xfs and ext4 checks. The ext4 check is still in the
-same place.
+it says no way, that's a rootfs filesystem type, not xfs!
+And it never finds this later:
 
--- 
-Mel Gorman
-SUSE Labs
+/dev/sda2 / xfs rw,relatime,attr2,noquota 0 0
+
+This patch to skip over the rootfs entry seems to fix it.
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+
+diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
+index 40c2e6f..eaf8ac7 100644
+--- a/fsr/xfs_fsr.c
++++ b/fsr/xfs_fsr.c
+@@ -1648,6 +1648,9 @@ getmntany(FILE *fp, struct mntent *mp, struct mntent *mpref, struct stat64 *s)
+ 	struct stat64 ms;
+ 
+ 	while ((t = getmntent(fp))) {
++		/* skip over "rootfs / rootfs" if mtab is really /proc/mounts */
++		if (strcmp(t->mnt_type, "rootfs") == 0)
++			continue;
+ 		if (mpref->mnt_fsname) {	/* device */
+ 			if (stat64(t->mnt_fsname, &ms) < 0)
+ 				continue;
 
 _______________________________________________
 xfs mailing list
