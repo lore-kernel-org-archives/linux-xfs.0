@@ -1,18 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p74CZ8KV068891 for <xfs@oss.sgi.com>; Thu, 4 Aug 2011 07:35:08 -0500
-Message-ID: <4E3A91F8.3080606@sgi.com>
-Date: Thu, 04 Aug 2011 07:35:04 -0500
-From: Bill Kendall <wkendall@sgi.com>
+	p74CbPRC068982 for <xfs@oss.sgi.com>; Thu, 4 Aug 2011 07:37:26 -0500
+Received: from mx2.suse.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E5AD0F42644
+	for <xfs@oss.sgi.com>; Thu,  4 Aug 2011 05:38:19 -0700 (PDT)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id y3QFu2r0IablQ3Cq for <xfs@oss.sgi.com>;
+	Thu, 04 Aug 2011 05:38:19 -0700 (PDT)
+Date: Thu, 4 Aug 2011 14:37:22 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 0/2] Improve writeout pattern from xfs_flush_pages()
+Message-ID: <20110804123722.GB20800@quack.suse.cz>
+References: <1312404545-15400-1-git-send-email-jack@suse.cz>
+	<20110803214206.GA20477@infradead.org>
+	<20110804103616.GF17196@quack.suse.cz>
+	<20110804104210.GA30823@infradead.org>
+	<20110804120724.GA20800@quack.suse.cz>
+	<20110804121916.GA17783@infradead.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH 4/4] xfsdump: convert to the POSIX signal API
-References: <1311972011-1446-1-git-send-email-wkendall@sgi.com>
-	<1311972011-1446-5-git-send-email-wkendall@sgi.com>
-	<20110803104813.GA3575@infradead.org> <4E393AE3.70505@sgi.com>
-	<20110803123934.GA13447@infradead.org> <4E39A176.7000906@sgi.com>
-	<20110804075331.GA8836@infradead.org>
-In-Reply-To: <20110804075331.GA8836@infradead.org>
+Content-Disposition: inline
+In-Reply-To: <20110804121916.GA17783@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,75 +29,44 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+Cc: linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
 
-On 08/04/2011 02:53 AM, Christoph Hellwig wrote:
-> On Wed, Aug 03, 2011 at 02:28:54PM -0500, Bill Kendall wrote:
->> Here's some background explaining why things are done as they
->> are now, from my understanding of the code.
->>
->> The regular handler won't acquire a lock. The signal handler is
->> replaced because the rules are different when receiving a signal
->> while in a dialog. For instance, SIGINT normally means interrupt
->> the dump session, but in a dialog we just return a caller-supplied
->> value indicating the interrupt.
->>
->> When a dialog is required, the caller does this:
->>
->>     dlog_begin();   // grabs mlog_lock
->>     dlog_*_query(); // ends up in promptinput()
->>     dlog_end();     // releases mlog_lock
->>
->> I think the purpose of holding the lock is simply to prevent
->> other output on the terminal while waiting for a response.
->
-> Ok, that makes some sense.
->
->> Any thread may issue a dialog, and it's possible that while
->> a thread is sitting in a dialog, the main thread may try to
->> log a message (e.g., progress report) and get blocked on the
->> mlog lock. At this point nobody would be able to handle signals --
->> the main thread blocks all signals except while in sigsuspend,
->> and other threads always block signals. So we unblock the
->> signals in the current thread to ensure some thread is available
->> to handle them.
->
-> Unblocking the signals during the dialog, but still using the normal
-> signal handler for it would solve that problem, right?
+On Thu 04-08-11 08:19:16, Christoph Hellwig wrote:
+> On Thu, Aug 04, 2011 at 02:07:24PM +0200, Jan Kara wrote:
+> >   Hmm, BTW, shouldn't the call to xfs_flush_pages() in
+> > xfs_file_buffered_aio_write() be converted to an asynchronous one? I don't
+> > quite see a point in waiting for io completion... Generally, flushing of
+> > the inode there seems of limited usefulness to me since that inode could be
+> > just a tiny victim not holding much delayallocated blocks.
+> 
+> This comes from commit
+> 
+> 	xfs: make inode flush at ENOSPC synchronous
+> 
+> from Dave - before that it was asynchronous and in weird context, so
+> it seems we defintively need it to be synchronous.
+  From the changelog it seems it needs to be synchronous in the sense that
+we don't offload flushing to a different thread as we used to. Also the
+reason why previously flushing didn't work was that we held page locks and
+IO lock but it's not the case in xfs_file_buffered_aio_write() anymore. So
+filemap_flush() still looks like an appropriate thing to me.
 
-Right, with some rework of that handler. It would have to do
-something like:
+> I agree that just flushing this inode seems like a rather odd handling
+> for ENOSPC.  It's even more odd as we already use the big hammer before
+> in when we git ENOSPC in ->write_begin.  The only thing I can imagine is
+> that this is the last attempt to get anything freed.
+  OK, I'll leave it there then. I just wonder whether I should convert it
+to filemap_flush() or to filemap_write_and_wait()...
 
-   case SIGINT:
-       if (is_dialog_active(SIGINT))
-           dlg_sigterm_received = BOOL_TRUE;
-       else
-           sigterm_received = BOOL_TRUE;
-
-(The SIGINT param is needed because it's optional whether a
-dialog handles a particular signal.)
-
-Otherwise we'd race between main's use of sigterm_received and
-the dialog's need to use it.
-
-Do you prefer this over the signal handler swap?
-
->
-> Btw, I looked over the main sighandler a bit, and it seems like most
-> of it can simply go away for a pthreaded variant - there is no need
-> to handle SIGCLD, and all threads have the same pid, so basically
-> what is left is SIGHUP/SIGTERM/SIGINT/SIGQUIT handling, which does
-> nothing but a dlog_desist in most cases and setting the sigfoo_received
-> variable.
-
-Yes, the previous patch in this series takes care of that. :)
-
-Bill
+								Honza
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
