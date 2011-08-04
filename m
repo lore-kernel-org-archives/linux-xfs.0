@@ -1,23 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p73MYlmo218874 for <xfs@oss.sgi.com>; Wed, 3 Aug 2011 17:34:47 -0500
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 47CD4B8D46
-	for <xfs@oss.sgi.com>; Wed,  3 Aug 2011 15:34:46 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id DiFnpMKhIt7W2a17 for
-	<xfs@oss.sgi.com>; Wed, 03 Aug 2011 15:34:46 -0700 (PDT)
-Date: Wed, 3 Aug 2011 18:34:39 -0400
-From: Vivek Goyal <vgoyal@redhat.com>
-Subject: Re: [PATCH 2/2] xfs: Call filemap_flush_range() for async
-	xfs_flush_pages() call
-Message-ID: <20110803223439.GH32385@redhat.com>
-References: <1312404545-15400-1-git-send-email-jack@suse.cz>
-	<1312404545-15400-3-git-send-email-jack@suse.cz>
+	p747rZL3054416 for <xfs@oss.sgi.com>; Thu, 4 Aug 2011 02:53:36 -0500
+Date: Thu, 4 Aug 2011 03:53:31 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 4/4] xfsdump: convert to the POSIX signal API
+Message-ID: <20110804075331.GA8836@infradead.org>
+References: <1311972011-1446-1-git-send-email-wkendall@sgi.com>
+	<1311972011-1446-5-git-send-email-wkendall@sgi.com>
+	<20110803104813.GA3575@infradead.org> <4E393AE3.70505@sgi.com>
+	<20110803123934.GA13447@infradead.org> <4E39A176.7000906@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1312404545-15400-3-git-send-email-jack@suse.cz>
+In-Reply-To: <4E39A176.7000906@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,84 +25,48 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: hch@infradead.org, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
+To: Bill Kendall <wkendall@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Wed, Aug 03, 2011 at 10:49:05PM +0200, Jan Kara wrote:
-> XFS does its own data writeout from several places using xfs_flush_pages().
-> When this writeout is racing with flusher thread writing the same inode the
-> performance gets bad because flusher thread submits writes as normal WRITE
-> commands while xfs_flush_pages() submits them as WRITE_SYNC (as it uses
-> filemap_fdatawrite_range()) and CFQ does not merge such requests. So we end up
-> with relatively small requests from the flusher thread and sync interleaved.
-> Short excerpt from blktrace:
-> 254,16   2    16949   103.786278461 25233  Q   W 54479888 + 424 [flush-254:16]
-> 254,16   4    20662   103.786386751 25232  Q  WS 54492920 + 1024 [dd]
-> 254,16   4    20665   103.786444241 25232  Q  WS 54493944 + 104 [dd]
-> 254,16   2    16952   103.786533451 25233  Q   W 54494048 + 288 [flush-254:16]
-> 254,16   4    20668   103.787295241 25232  Q  WS 54494336 + 1024 [dd]
-> 254,16   4    20671   103.787332801 25232  Q  WS 54495360 + 216 [dd]
-> 254,16   2    16955   103.789062500 25233  Q   W 54495576 + 1024 [flush-254:16]
-> (actually, I was observing even smaller requests on a different HW which isn't
-> available to me now).
-
-Jan,
-
-Do you have rest of the blktrace messages? I am curious that apart from
-smaller request size, is it CFQ idling also which might hurt in this
-IO pattern. (grep for "fired" in your blktrace and see how many times
-idle timer fired). 
-
-We probably are idling on "dd" thread. As long as dd writes are not dependent
-on async writes, things will still be fine as dd will continue to make
-progress and async writes will not make much progress.
-
-But if that's not the case and after submitting bunch of synchronous
-writes dd waits for some writes to finish (writes submitted by flusher
-threds), then idling will start hurting.
-
-Thanks
-Vivek
- 
-
+On Wed, Aug 03, 2011 at 02:28:54PM -0500, Bill Kendall wrote:
+> Here's some background explaining why things are done as they
+> are now, from my understanding of the code.
 > 
-> Although we cannot fix all the cases (e.g. when fsync is called), we can use
-> filemap_flush_range() for the case when xfs_flush_pages() is called with
-> XFS_B_ASYNC flag which fixes the problem at least for some common cases like
-> the first round of sync writeback or flushing of data during truncate or after
-> file is closed.
+> The regular handler won't acquire a lock. The signal handler is
+> replaced because the rules are different when receiving a signal
+> while in a dialog. For instance, SIGINT normally means interrupt
+> the dump session, but in a dialog we just return a caller-supplied
+> value indicating the interrupt.
 > 
-> Signed-off-by: Jan Kara <jack@suse.cz>
-> ---
->  fs/xfs/linux-2.6/xfs_fs_subr.c |    6 ++++--
->  1 files changed, 4 insertions(+), 2 deletions(-)
+> When a dialog is required, the caller does this:
 > 
-> diff --git a/fs/xfs/linux-2.6/xfs_fs_subr.c b/fs/xfs/linux-2.6/xfs_fs_subr.c
-> index ed88ed1..6f33164 100644
-> --- a/fs/xfs/linux-2.6/xfs_fs_subr.c
-> +++ b/fs/xfs/linux-2.6/xfs_fs_subr.c
-> @@ -70,10 +70,12 @@ xfs_flush_pages(
->  	int		ret2;
->  
->  	xfs_iflags_clear(ip, XFS_ITRUNCATED);
-> +	if (flags & XBF_ASYNC) {
-> +		return -filemap_flush_range(mapping, first,
-> +				last == -1 ? LLONG_MAX : last);
-> +	}
->  	ret = -filemap_fdatawrite_range(mapping, first,
->  				last == -1 ? LLONG_MAX : last);
-> -	if (flags & XBF_ASYNC)
-> -		return ret;
->  	ret2 = xfs_wait_on_pages(ip, first, last);
->  	if (!ret)
->  		ret = ret2;
-> -- 
-> 1.7.1
+>    dlog_begin();   // grabs mlog_lock
+>    dlog_*_query(); // ends up in promptinput()
+>    dlog_end();     // releases mlog_lock
 > 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> I think the purpose of holding the lock is simply to prevent
+> other output on the terminal while waiting for a response.
+
+Ok, that makes some sense.
+
+> Any thread may issue a dialog, and it's possible that while
+> a thread is sitting in a dialog, the main thread may try to
+> log a message (e.g., progress report) and get blocked on the
+> mlog lock. At this point nobody would be able to handle signals --
+> the main thread blocks all signals except while in sigsuspend,
+> and other threads always block signals. So we unblock the
+> signals in the current thread to ensure some thread is available
+> to handle them.
+
+Unblocking the signals during the dialog, but still using the normal
+signal handler for it would solve that problem, right?
+
+Btw, I looked over the main sighandler a bit, and it seems like most
+of it can simply go away for a pthreaded variant - there is no need
+to handle SIGCLD, and all threads have the same pid, so basically
+what is left is SIGHUP/SIGTERM/SIGINT/SIGQUIT handling, which does
+nothing but a dlog_desist in most cases and setting the sigfoo_received
+variable.
 
 _______________________________________________
 xfs mailing list
