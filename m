@@ -1,26 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p74CbPRC068982 for <xfs@oss.sgi.com>; Thu, 4 Aug 2011 07:37:26 -0500
+	p74EE6oS071765 for <xfs@oss.sgi.com>; Thu, 4 Aug 2011 09:14:06 -0500
 Received: from mx2.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E5AD0F42644
-	for <xfs@oss.sgi.com>; Thu,  4 Aug 2011 05:38:19 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1A9D31BAF481
+	for <xfs@oss.sgi.com>; Thu,  4 Aug 2011 07:14:04 -0700 (PDT)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id y3QFu2r0IablQ3Cq for <xfs@oss.sgi.com>;
-	Thu, 04 Aug 2011 05:38:19 -0700 (PDT)
-Date: Thu, 4 Aug 2011 14:37:22 +0200
+	with ESMTP id pbsuWiCOXdzVmGkE for <xfs@oss.sgi.com>;
+	Thu, 04 Aug 2011 07:14:04 -0700 (PDT)
 From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 0/2] Improve writeout pattern from xfs_flush_pages()
-Message-ID: <20110804123722.GB20800@quack.suse.cz>
-References: <1312404545-15400-1-git-send-email-jack@suse.cz>
-	<20110803214206.GA20477@infradead.org>
-	<20110804103616.GF17196@quack.suse.cz>
-	<20110804104210.GA30823@infradead.org>
-	<20110804120724.GA20800@quack.suse.cz>
-	<20110804121916.GA17783@infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110804121916.GA17783@infradead.org>
+Subject: [PATCH 1/2] xfs: Replace async callers of xfs_flush_pages()
+Date: Thu,  4 Aug 2011 16:13:55 +0200
+Message-Id: <1312467236-31341-2-git-send-email-jack@suse.cz>
+In-Reply-To: <1312467236-31341-1-git-send-email-jack@suse.cz>
+References: <1312467236-31341-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,44 +22,91 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
+Cc: Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
 
-On Thu 04-08-11 08:19:16, Christoph Hellwig wrote:
-> On Thu, Aug 04, 2011 at 02:07:24PM +0200, Jan Kara wrote:
-> >   Hmm, BTW, shouldn't the call to xfs_flush_pages() in
-> > xfs_file_buffered_aio_write() be converted to an asynchronous one? I don't
-> > quite see a point in waiting for io completion... Generally, flushing of
-> > the inode there seems of limited usefulness to me since that inode could be
-> > just a tiny victim not holding much delayallocated blocks.
-> 
-> This comes from commit
-> 
-> 	xfs: make inode flush at ENOSPC synchronous
-> 
-> from Dave - before that it was asynchronous and in weird context, so
-> it seems we defintively need it to be synchronous.
-  From the changelog it seems it needs to be synchronous in the sense that
-we don't offload flushing to a different thread as we used to. Also the
-reason why previously flushing didn't work was that we held page locks and
-IO lock but it's not the case in xfs_file_buffered_aio_write() anymore. So
-filemap_flush() still looks like an appropriate thing to me.
+There are three places calling xfs_flush_pages() with XBF_ASYNC flag.  Two of
+them - xfs_release() and xfs_sync_inode_data() - want just to start writeback
+of all inode pages thus change them to use filemap_flush() so that they don't
+unnecessarily use WB_SYNC_ALL writeback. The third place in xfs_setattr_size()
+is starting a synchronous writeback in fact so keep using
+filemap_fdatawrite_range() there.  This way we can also get rid of abusing
+XBF_ASYNC flag.
 
-> I agree that just flushing this inode seems like a rather odd handling
-> for ENOSPC.  It's even more odd as we already use the big hammer before
-> in when we git ENOSPC in ->write_begin.  The only thing I can imagine is
-> that this is the last attempt to get anything freed.
-  OK, I'll leave it there then. I just wonder whether I should convert it
-to filemap_flush() or to filemap_write_and_wait()...
+Signed-off-by: Jan Kara <jack@suse.cz>
+---
+ fs/xfs/linux-2.6/xfs_fs_subr.c |    2 --
+ fs/xfs/linux-2.6/xfs_iops.c    |    4 ++--
+ fs/xfs/linux-2.6/xfs_sync.c    |    7 +++++--
+ fs/xfs/xfs_vnodeops.c          |    2 +-
+ 4 files changed, 8 insertions(+), 7 deletions(-)
 
-								Honza
+diff --git a/fs/xfs/linux-2.6/xfs_fs_subr.c b/fs/xfs/linux-2.6/xfs_fs_subr.c
+index ed88ed1..4888b78 100644
+--- a/fs/xfs/linux-2.6/xfs_fs_subr.c
++++ b/fs/xfs/linux-2.6/xfs_fs_subr.c
+@@ -72,8 +72,6 @@ xfs_flush_pages(
+ 	xfs_iflags_clear(ip, XFS_ITRUNCATED);
+ 	ret = -filemap_fdatawrite_range(mapping, first,
+ 				last == -1 ? LLONG_MAX : last);
+-	if (flags & XBF_ASYNC)
+-		return ret;
+ 	ret2 = xfs_wait_on_pages(ip, first, last);
+ 	if (!ret)
+ 		ret = ret2;
+diff --git a/fs/xfs/linux-2.6/xfs_iops.c b/fs/xfs/linux-2.6/xfs_iops.c
+index b9c172b..ea935fc 100644
+--- a/fs/xfs/linux-2.6/xfs_iops.c
++++ b/fs/xfs/linux-2.6/xfs_iops.c
+@@ -825,8 +825,8 @@ xfs_setattr_size(
+ 	 * care about here.
+ 	 */
+ 	if (ip->i_size != ip->i_d.di_size && iattr->ia_size > ip->i_d.di_size) {
+-		error = xfs_flush_pages(ip, ip->i_d.di_size, iattr->ia_size,
+-					XBF_ASYNC, FI_NONE);
++		error = -filemap_fdatawrite_range(inode->i_mapping,
++					ip->i_d.di_size, iattr->ia_size);
+ 		if (error)
+ 			goto out_unlock;
+ 	}
+diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
+index e4c938a..cce4d58 100644
+--- a/fs/xfs/linux-2.6/xfs_sync.c
++++ b/fs/xfs/linux-2.6/xfs_sync.c
+@@ -235,8 +235,11 @@ xfs_sync_inode_data(
+ 		xfs_ilock(ip, XFS_IOLOCK_SHARED);
+ 	}
+ 
+-	error = xfs_flush_pages(ip, 0, -1, (flags & SYNC_WAIT) ?
+-				0 : XBF_ASYNC, FI_NONE);
++	xfs_iflags_clear(ip, XFS_ITRUNCATED);
++	if (flags & SYNC_WAIT)
++		error = xfs_flush_pages(ip, 0, -1, 0, FI_NONE);
++	else
++		error = -filemap_flush(mapping);
+ 	xfs_iunlock(ip, XFS_IOLOCK_SHARED);
+ 
+  out_wait:
+diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
+index 9322e13..71d066c 100644
+--- a/fs/xfs/xfs_vnodeops.c
++++ b/fs/xfs/xfs_vnodeops.c
+@@ -522,7 +522,7 @@ xfs_release(
+ 		if (truncated) {
+ 			xfs_iflags_clear(ip, XFS_IDIRTY_RELEASE);
+ 			if (VN_DIRTY(VFS_I(ip)) && ip->i_delayed_blks > 0)
+-				xfs_flush_pages(ip, 0, -1, XBF_ASYNC, FI_NONE);
++				filemap_flush(VFS_I(ip)->i_mapping);
+ 		}
+ 	}
+ 
 -- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+1.7.1
 
 _______________________________________________
 xfs mailing list
