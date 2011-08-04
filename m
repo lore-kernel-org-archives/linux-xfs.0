@@ -1,22 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p74MHgFk088782 for <xfs@oss.sgi.com>; Thu, 4 Aug 2011 17:17:43 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D398D168ED3A
-	for <xfs@oss.sgi.com>; Thu,  4 Aug 2011 15:18:38 -0700 (PDT)
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id UsbsWpdDbcA2DyuU for <xfs@oss.sgi.com>;
-	Thu, 04 Aug 2011 15:18:38 -0700 (PDT)
-Message-ID: <4E3B1A84.10708@sandeen.net>
-Date: Thu, 04 Aug 2011 17:17:40 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: [PATCH] xfsprogs: skip over "rootfs" entry if mtab links to
-	/proc/mounts
-References: <4E399677.1010508@redhat.com>
-	<20110803190216.GA31421@infradead.org>
-In-Reply-To: <20110803190216.GA31421@infradead.org>
+	p74MV9YQ089320 for <xfs@oss.sgi.com>; Thu, 4 Aug 2011 17:31:10 -0500
+From: Bill Kendall <wkendall@sgi.com>
+Subject: [PATCH v2 7/7] xfsdump: refactor inventory session creation
+Date: Thu,  4 Aug 2011 17:30:11 -0500
+Message-Id: <1312497011-24840-8-git-send-email-wkendall@sgi.com>
+In-Reply-To: <1312497011-24840-1-git-send-email-wkendall@sgi.com>
+References: <1312497011-24840-1-git-send-email-wkendall@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,78 +16,237 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On 8/3/11 2:02 PM, Christoph Hellwig wrote:
-> On Wed, Aug 03, 2011 at 01:41:59PM -0500, Eric Sandeen wrote:
->> This is for RH bug 727938, xfs_fsr regression for root file system
->>
->> Fedora has made /etc/mtab a symlink to /proc/mounts, but when
->> we issue "xfs_fsr /" and fsr's getmntany() goes looking for
->> the "/" entry, the first one it finds is
->>
->> rootfs / rootfs rw 0 0
->>
->> it says no way, that's a rootfs filesystem type, not xfs!
->> And it never finds this later:
->>
->> /dev/sda2 / xfs rw,relatime,attr2,noquota 0 0
->>
->> This patch to skip over the rootfs entry seems to fix it.
-> 
-> I don't like this.  rootfs is the symptom, but the underlying problem
-> is that in Linux we're perfectly fine to have multiple filesystems
-> mounted on a single mountpoint, and the getmntany can't deal with it.
-> 
-> I think the right fix is to simply remove the break from the loop,
+Move the inventory session creation out of content_init and into a
+new function, create_inv_session, in order to simplify restoration
+of the signal mask. TTY-related signals are blocked prior to calling
+create_inv_session and restored afterwards.
 
-It's not quite that simple.
+Signed-off-by: Bill Kendall <wkendall@sgi.com>
+---
+ dump/content.c |  175 +++++++++++++++++++++++++++++--------------------------
+ 1 files changed, 92 insertions(+), 83 deletions(-)
 
-when we do
-
-	*mp = *t;
-	/* break; */
-
-we are pointing the mp string pointers at the strings in the getmntent entry,
-which will keep moving as we iterate.  We'll need a strdup or something
-to copy it out on each good find, with appropriate frees etc, I guess.
-
-Is there a better way to do it?  This seems pretty ugly.
-
-        memset(mp, 0, sizeof(struct mntent));
-        while ((t = getmntent(fp))) {
-                if (mpref->mnt_fsname) {        /* device */
-                        if (stat64(t->mnt_fsname, &ms) < 0)
-                                continue;
-                        if (s->st_rdev != ms.st_rdev)
-                                continue;
-                }
-                if (mpref->mnt_dir) {           /* mount point */
-                        if (stat64(t->mnt_dir, &ms) < 0)
-                                continue;
-                        if (s->st_ino != ms.st_ino || s->st_dev != ms.st_dev)
-                                continue;
-                }
-                /* This one matches */
-                found = 1;
-                free(mp->mnt_fsname);
-                free(mp->mnt_dir);
-                free(mp->mnt_type);
-                mp->mnt_fsname = strdup(t->mnt_fsname);
-                mp->mnt_dir = strdup(t->mnt_dir);
-                mp->mnt_type = strdup(t->mnt_type);
-        }
-        return (found);
-
-
-(and then free the strings in the caller when we're done ...)
-
--Eric
+diff --git a/dump/content.c b/dump/content.c
+index fcc952e..9905c88 100644
+--- a/dump/content.c
++++ b/dump/content.c
+@@ -507,7 +507,13 @@ static quota_info_t quotas[] = {
+ 
+ 
+ /* definition of locally defined static functions ****************************/
+-
++static bool_t create_inv_session(
++		global_hdr_t *gwhdrtemplatep,
++		uuid_t *fsidp,
++		const char *mntpnt,
++		const char *fsdevice,
++		ix_t subtreecnt,
++		size_t strmix);
+ 
+ bool_t
+ content_init( intgen_t argc,
+@@ -1695,100 +1701,27 @@ baseuuidbypass:
+ 	}
+ 
+ 	/* open the dump inventory and a dump inventory write session
+-	 * if an inventory update is to be done. first create a cleanup
+-	 * handler, to close the inventory on exit.
++	 * if an inventory update is to be done.
+ 	 */
+ 	if ( sc_inv_updatepr ) {
+-		char *qmntpnt;
+-		char *qfsdevice;
++		bool_t result;
+ 		sigset_t tty_set, orig_set;
+ 
+-		rval = atexit( inv_cleanup );
+-		ASSERT( ! rval );
+-		sc_inv_idbtoken = inv_open( ( inv_predicate_t )INV_BY_UUID,
+-					    INV_SEARCH_N_MOD,
+-					    ( void * )&fsid );
+-		if ( sc_inv_idbtoken == INV_TOKEN_NULL ) {
+-			return BOOL_FALSE;
+-		}
+-		qmntpnt = ( char * )calloc( 1, strlen( gwhdrtemplatep->gh_hostname )
+-					       +
+-					       1
+-					       +
+-					       strlen( mntpnt )
+-					       +
+-					       1 );
+-		ASSERT( qmntpnt );
+-		ASSERT( strlen( gwhdrtemplatep->gh_hostname ));
+-		( void )sprintf( qmntpnt,
+-				 "%s:%s",
+-				 gwhdrtemplatep->gh_hostname,
+-				 mntpnt );
+-		qfsdevice = ( char * )calloc( 1, strlen( gwhdrtemplatep->gh_hostname )
+-					       +
+-					       1
+-					       +
+-					       strlen( fsdevice )
+-					       +
+-					       1 );
+-		ASSERT( qfsdevice );
+-		( void )sprintf( qfsdevice,
+-				 "%s:%s",
+-				 gwhdrtemplatep->gh_hostname,
+-				 fsdevice );
+-
+-		/* hold tty signals while creating a new inventory session
+-		 */
++		/* hold tty signals while creating a new inventory session */
+ 		sigemptyset( &tty_set );
+ 		sigaddset( &tty_set, SIGINT );
+ 		sigaddset( &tty_set, SIGQUIT );
+ 		sigaddset( &tty_set, SIGHUP );
+ 		sigprocmask( SIG_BLOCK, &tty_set, &orig_set );
+ 
+-		sc_inv_sestoken = inv_writesession_open( sc_inv_idbtoken,
+-						&fsid,
+-						&gwhdrtemplatep->gh_dumpid,
+-						gwhdrtemplatep->gh_dumplabel,
+-						subtreecnt ? BOOL_TRUE
+-							   : BOOL_FALSE,
+-						sc_resumepr,
+-						( u_char_t )sc_level,
+-						drivecnt,
+-						gwhdrtemplatep->gh_timestamp,
+-						qmntpnt,
+-						qfsdevice );
+-		if( sc_inv_sestoken == INV_TOKEN_NULL ) {
+-			sigprocmask( SIG_SETMASK, &orig_set, NULL );
+-			return BOOL_FALSE;
+-		}
+-
+-		/* open an inventory stream for each stream
+-		 */
+-		sc_inv_stmtokenp = ( inv_stmtoken_t * )calloc( drivecnt,
+-							       sizeof( inv_stmtoken_t ));
+-		ASSERT( sc_inv_stmtokenp );
+-		for ( strmix = 0 ; strmix < drivecnt ; strmix++ ) {
+-			drive_t *drivep = drivepp[ strmix ];
+-			char *drvpath;
+-
+-			if ( strcmp( drivep->d_pathname, "stdio" )) {
+-				drvpath = path_reltoabs( drivep->d_pathname,
+-							 homedir );
+-			} else {
+-				drvpath = drivep->d_pathname;
+-			}
+-			sc_inv_stmtokenp[ strmix ] = inv_stream_open( sc_inv_sestoken,
+-								      drvpath );
+-			if ( strcmp( drivep->d_pathname, "stdio" )) {
+-				free( ( void * )drvpath );
+-			}
+-			if ( sc_inv_stmtokenp[ strmix ] == INV_TOKEN_NULL ) {
+-				sigprocmask( SIG_SETMASK, &orig_set, NULL );
+-				return BOOL_FALSE;
+-			}
+-		}
++		result = create_inv_session( gwhdrtemplatep, &fsid, mntpnt,
++					     fsdevice, subtreecnt, strmix );
+ 
+ 		sigprocmask( SIG_SETMASK, &orig_set, NULL );
++
++		if ( !result ) {
++			return BOOL_FALSE;
++		}
+ 	}
+ 
+ 	/* set media change flags to FALSE;
+@@ -2012,6 +1945,82 @@ content_statline( char **linespp[ ] )
+ 	return statlinecnt;
+ }
+ 
++static bool_t
++create_inv_session(
++		global_hdr_t *gwhdrtemplatep,
++		uuid_t *fsidp,
++		const char *mntpnt,
++		const char *fsdevice,
++		ix_t subtreecnt,
++		size_t strmix)
++{
++	intgen_t rval;
++	char *qmntpnt;
++	char *qfsdevice;
++
++	/* create a cleanup handler to close the inventory on exit. */
++	rval = atexit( inv_cleanup );
++	ASSERT( ! rval );
++
++	sc_inv_idbtoken = inv_open( ( inv_predicate_t )INV_BY_UUID,
++					INV_SEARCH_N_MOD,
++					( void * )fsidp );
++	if ( sc_inv_idbtoken == INV_TOKEN_NULL ) {
++		return BOOL_FALSE;
++	}
++	qmntpnt = ( char * )calloc( 1, strlen( gwhdrtemplatep->gh_hostname )
++					+ 1 + strlen( mntpnt ) + 1 );
++	ASSERT( qmntpnt );
++	ASSERT( strlen( gwhdrtemplatep->gh_hostname ));
++	sprintf( qmntpnt, "%s:%s", gwhdrtemplatep->gh_hostname, mntpnt );
++	qfsdevice = ( char * )calloc( 1, strlen( gwhdrtemplatep->gh_hostname )
++					 + 1 + strlen( fsdevice ) + 1 );
++	ASSERT( qfsdevice );
++	sprintf( qfsdevice, "%s:%s", gwhdrtemplatep->gh_hostname, fsdevice );
++
++	sc_inv_sestoken = inv_writesession_open( sc_inv_idbtoken,
++						fsidp,
++						&gwhdrtemplatep->gh_dumpid,
++						gwhdrtemplatep->gh_dumplabel,
++						subtreecnt ? BOOL_TRUE
++							   : BOOL_FALSE,
++						sc_resumepr,
++						( u_char_t )sc_level,
++						drivecnt,
++						gwhdrtemplatep->gh_timestamp,
++						qmntpnt,
++						qfsdevice );
++	if ( sc_inv_sestoken == INV_TOKEN_NULL ) {
++		return BOOL_FALSE;
++	}
++
++	/* open an inventory stream for each stream
++	*/
++	sc_inv_stmtokenp = ( inv_stmtoken_t * )
++				calloc( drivecnt, sizeof( inv_stmtoken_t ));
++	ASSERT( sc_inv_stmtokenp );
++	for ( strmix = 0 ; strmix < drivecnt ; strmix++ ) {
++		drive_t *drivep = drivepp[ strmix ];
++		char *drvpath;
++
++		if ( strcmp( drivep->d_pathname, "stdio" )) {
++			drvpath = path_reltoabs( drivep->d_pathname, homedir );
++		} else {
++			drvpath = drivep->d_pathname;
++		}
++		sc_inv_stmtokenp[ strmix ] = inv_stream_open( sc_inv_sestoken,
++								drvpath );
++		if ( strcmp( drivep->d_pathname, "stdio" )) {
++			free( ( void * )drvpath );
++		}
++		if ( sc_inv_stmtokenp[ strmix ] == INV_TOKEN_NULL ) {
++			return BOOL_FALSE;
++		}
++	}
++
++	return BOOL_TRUE;
++}
++
+ static void
+ mark_set( drive_t *drivep, xfs_ino_t ino, off64_t offset, int32_t flags )
+ {
+-- 
+1.7.0.4
 
 _______________________________________________
 xfs mailing list
