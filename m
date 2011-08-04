@@ -1,11 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p74MVAwQ089323 for <xfs@oss.sgi.com>; Thu, 4 Aug 2011 17:31:10 -0500
+	p74MV6WS089284 for <xfs@oss.sgi.com>; Thu, 4 Aug 2011 17:31:06 -0500
 From: Bill Kendall <wkendall@sgi.com>
-Subject: [PATCH v2 5/7] xfsdump: rework dialog to use main signal handler
-Date: Thu,  4 Aug 2011 17:30:09 -0500
-Message-Id: <1312497011-24840-6-git-send-email-wkendall@sgi.com>
+Subject: [PATCH v2 4/7] xfsdump: rework dialog timeout and EINTR reliance
+Date: Thu,  4 Aug 2011 17:30:08 -0500
+Message-Id: <1312497011-24840-5-git-send-email-wkendall@sgi.com>
 In-Reply-To: <1312497011-24840-1-git-send-email-wkendall@sgi.com>
 References: <1312497011-24840-1-git-send-email-wkendall@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -23,181 +23,147 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-xfsdump currently swaps in a different signal handler for the duration
-of a dialog. This patch changes the code to have a global signal
-handler which will first give the dialog a chance to process the
-signal. If a dialog is not active or if it is not interested in the
-signal, the signal will be processed as usual.
+The current dialog code uses alarm(2) to implement the dialog timeout.
+This is suboptimal as the main loop already makes use of alarm.
 
-There is one side effect to this change. SIGQUIT is now caught in the
-miniroot/pipeline case as the handler needs to be setup in case a
-dialog needs it. The signal handler will exit in this case just as
-if SIGQUIT was not caught, the only real difference being that a
-core file will not be generated.
+Additionally the existing code relies on its blocking read(2) being
+interrupted if a signal is received. This is not guaranteed to work
+as a signal may be delivered to a different thread.
+
+Both of these issues can be resolved by using select(2) rather than
+a blocking read.
+
+This also changes dlog_desist() to not change 'dlog_ttyfd', as that
+could impact a dialog already in progress. Clearing 'dlog_allowed_flag'
+is sufficient to disable dialogs.
 
 Signed-off-by: Bill Kendall <wkendall@sgi.com>
 ---
- common/dlog.c |   32 +++++++++++++++++---------------
- common/dlog.h |    3 +++
- common/main.c |    6 ++++++
- 3 files changed, 26 insertions(+), 15 deletions(-)
+ common/dlog.c |   57 +++++++++++++++++++++++++++++++++------------------------
+ 1 files changed, 33 insertions(+), 24 deletions(-)
 
 diff --git a/common/dlog.c b/common/dlog.c
-index cbaa5cb..749de1b 100644
+index 6a243ef..cbaa5cb 100644
 --- a/common/dlog.c
 +++ b/common/dlog.c
-@@ -39,6 +39,8 @@ static bool_t dlog_allowed_flag = BOOL_FALSE;
- static bool_t dlog_timeouts_flag = BOOL_FALSE;
- static char *promptstr = " -> ";
+@@ -20,6 +20,7 @@
+ #include <xfs/jdm.h>
  
-+static sigset_t dlog_registered_sigs;
-+
- static bool_t promptinput( char *buf,
- 			   size_t bufsz,
- 			   ix_t *exceptionixp,
-@@ -49,7 +51,6 @@ static bool_t promptinput( char *buf,
- 			   ix_t sigquitix,
- 			   char *fmt, ... );
- static void dlog_string_query_print( void *ctxp, char *fmt, ... );
--static void sighandler( int );
- 
- bool_t
- dlog_init( int argc, char *argv[ ] )
-@@ -66,6 +67,8 @@ dlog_init( int argc, char *argv[ ] )
- 	dlog_allowed_flag = BOOL_TRUE;
- 	dlog_timeouts_flag = BOOL_TRUE;
- 
-+	sigemptyset( &dlog_registered_sigs );
-+
- 	/* look for command line option claiming the operator knows
- 	 * what's up.
- 	 */
-@@ -341,10 +344,15 @@ dlog_string_ack( char *ackstr[ ], size_t ackcnt )
-  */
- static int dlog_signo_received;
- 
--static void
--sighandler( int signo )
-+bool_t
-+dlog_sighandler( int signo )
+ #include <sys/stat.h>
++#include <sys/select.h>
+ #include <fcntl.h>
+ #include <time.h>
+ #include <errno.h>
+@@ -131,7 +132,6 @@ void
+ dlog_desist( void )
  {
-+	if ( sigismember( &dlog_registered_sigs, signo ) < 1 )
-+		return BOOL_FALSE;
-+	// only process the first signal
-+	sigemptyset( &dlog_registered_sigs );
- 	dlog_signo_received = signo;
-+	return BOOL_TRUE;
+ 	dlog_allowed_flag = BOOL_FALSE;
+-	dlog_ttyfd = -1;
  }
  
- /* ARGSUSED */
-@@ -373,10 +381,6 @@ promptinput( char *buf,
+ intgen_t
+@@ -373,13 +373,12 @@ promptinput( char *buf,
  	     ... )
  {
  	va_list args;
--	void (* sigint_save)(int) = NULL;
--	void (* sighup_save)(int) = NULL;
--	void (* sigterm_save)(int) = NULL;
--	void (* sigquit_save)(int) = NULL;
- 	time32_t now = time( NULL );
- 	intgen_t nread = -1;
+-	u_intgen_t alarm_save = 0;
+-	void (* sigalrm_save)(int) = NULL;
+ 	void (* sigint_save)(int) = NULL;
+ 	void (* sighup_save)(int) = NULL;
+ 	void (* sigterm_save)(int) = NULL;
+ 	void (* sigquit_save)(int) = NULL;
+-	intgen_t nread;
++	time32_t now = time( NULL );
++	intgen_t nread = -1;
  	pid_t pid = getpid( );
-@@ -409,27 +413,28 @@ promptinput( char *buf,
- 	/* set up signal handling
+ 
+ 	/* display the pre-prompt
+@@ -399,16 +398,17 @@ promptinput( char *buf,
+ #endif /* NOTYET */
+ 	mlog( MLOG_NORMAL | MLOG_NOLOCK | MLOG_BARE, promptstr );
+ 
+-	/* set up signal handling
++	/* set up timeout
  	 */
- 	dlog_signo_received = -1;
-+	sigemptyset( &dlog_registered_sigs );
+-	dlog_signo_received = -1;
+ 	if ( dlog_timeouts_flag && timeoutix != IXMAX ) {
+-		if ( pid == parentpid && ! miniroot ) {
+-			( void )sigrelse( SIGALRM );
+-		}
+-		sigalrm_save = sigset( SIGALRM, sighandler );
+-		alarm_save = alarm( ( u_intgen_t )timeout );
++		timeout += now;
++	} else {
++		timeout = TIMEMAX;
+ 	}
++
++	/* set up signal handling
++	 */
++	dlog_signo_received = -1;
  	if ( sigintix != IXMAX ) {
  		if ( pid == parentpid && ! miniroot ) {
  			( void )sigrelse( SIGINT );
- 		}
--		sigint_save = sigset( SIGINT, sighandler );
-+		sigaddset( &dlog_registered_sigs, SIGINT );
- 	}
- 	if ( sighupix != IXMAX ) {
- 		if ( pid == parentpid && ! miniroot ) {
- 			( void )sigrelse( SIGHUP );
- 		}
--		sighup_save = sigset( SIGHUP, sighandler );
-+		sigaddset( &dlog_registered_sigs, SIGHUP );
- 		if ( pid == parentpid && ! miniroot ) {
- 			( void )sigrelse( SIGTERM );
- 		}
--		sigterm_save = sigset( SIGTERM, sighandler );
-+		sigaddset( &dlog_registered_sigs, SIGTERM );
- 	}
- 	if ( sigquitix != IXMAX ) {
- 		if ( pid == parentpid && ! miniroot ) {
- 			( void )sigrelse( SIGQUIT );
- 		}
--		sigquit_save = sigset( SIGQUIT, sighandler );
-+		sigaddset( &dlog_registered_sigs, SIGQUIT );
+@@ -432,10 +432,27 @@ promptinput( char *buf,
+ 		sigquit_save = sigset( SIGQUIT, sighandler );
  	}
  
- 	/* wait for input, timeout, or interrupt.
-@@ -456,24 +461,21 @@ promptinput( char *buf,
+-	/* wait for input, timeout, or interrupt
++	/* wait for input, timeout, or interrupt.
++	 * note we come out of the select() frequently in order to
++	 * check for a signal. the signal may have been handled by the
++	 * the main thread, so we can't rely on the signal waking us
++	 * up from the select().
+ 	 */
+-	ASSERT( dlog_ttyfd >= 0 );
+-	nread = read( dlog_ttyfd, buf, bufsz - 1 );
++	while ( now < timeout && dlog_signo_received == -1 && dlog_allowed_flag ) {
++		int rc;
++		fd_set rfds;
++		struct timeval tv = { 0, 100000 }; // 100 ms
++
++		FD_ZERO( &rfds );
++		FD_SET( dlog_ttyfd, &rfds );
++
++		rc = select( dlog_ttyfd + 1, &rfds, NULL, NULL, &tv );
++		if ( rc > 0 && FD_ISSET( dlog_ttyfd, &rfds ) ) {
++			nread = read( dlog_ttyfd, buf, bufsz - 1 );
++			break;
++		}
++		now = time( NULL );
++	}
  
  	/* restore signal handling
  	 */
-+	sigemptyset( &dlog_registered_sigs );
- 	if ( sigquitix != IXMAX ) {
--		( void )sigset( SIGQUIT, sigquit_save );
- 		if ( pid == parentpid && ! miniroot ) {
- 			( void )sighold( SIGQUIT );
- 		}
- 	}
- 	if ( sighupix != IXMAX ) {
--		( void )sigset( SIGHUP, sighup_save );
- 		if ( pid == parentpid && ! miniroot ) {
- 			( void )sighold( SIGHUP );
- 		}
--		( void )sigset( SIGTERM, sigterm_save );
- 		if ( pid == parentpid && ! miniroot ) {
- 			( void )sighold( SIGTERM );
- 		}
- 	}
- 	if ( sigintix != IXMAX ) {
--		( void )sigset( SIGINT, sigint_save );
- 		if ( pid == parentpid && ! miniroot ) {
+@@ -461,18 +478,11 @@ promptinput( char *buf,
  			( void )sighold( SIGINT );
  		}
-diff --git a/common/dlog.h b/common/dlog.h
-index 0ee6331..bc17c41 100644
---- a/common/dlog.h
-+++ b/common/dlog.h
-@@ -41,6 +41,9 @@ extern void dlog_desist( void );
-  */
- extern intgen_t dlog_fd( void );
- 
-+/* returns BOOL_TRUE if a dialog consumed the given signal
-+ */
-+extern bool_t dlog_sighandler( int signo );
- 
- /* bracket a dialog session
-  */
-diff --git a/common/main.c b/common/main.c
-index b6674f9..825c894 100644
---- a/common/main.c
-+++ b/common/main.c
-@@ -594,6 +594,7 @@ main( int argc, char *argv[] )
- 		sigset( SIGINT, sighandler );
- 		sigset( SIGHUP, sighandler );
- 		sigset( SIGTERM, sighandler );
-+		sigset( SIGQUIT, sighandler );
- 
- 		ok = drive_init2( argc,
- 				  argv,
-@@ -1482,6 +1483,11 @@ mrh_sighandler( int signo )
- static void
- sighandler( int signo )
- {
-+	/* dialog gets first crack at the signal
-+	 */
-+	if ( dlog_sighandler( signo ) )
-+		return;
-+
- 	/* if in miniroot, don't do anything risky. just quit.
+ 	}
+-	if ( dlog_timeouts_flag && timeoutix != IXMAX ) {
+-		( void )alarm( alarm_save );
+-		( void )sigset( SIGALRM, sigalrm_save );
+-		if ( pid == parentpid && ! miniroot ) {
+-			( void )sighold( SIGALRM );
+-		}
+-	}
+ 	
+ 	/* check for timeout or interrupt
  	 */
- 	if ( miniroot || pipeline ) {
+ 	if ( nread < 0 ) {
+-		if ( dlog_signo_received == SIGALRM ) {
++		if ( now >= timeout ) {
+ 			mlog( MLOG_NORMAL | MLOG_NOLOCK | MLOG_BARE,
+ 			      _("timeout\n") );
+ 			*exceptionixp = timeoutix;
+@@ -496,8 +506,7 @@ promptinput( char *buf,
+ 			*exceptionixp = sigquitix;
+ 		} else {
+ 			mlog( MLOG_NORMAL | MLOG_NOLOCK | MLOG_BARE,
+-			      _("unknown signal during dialog: %d\n"),
+-			      dlog_signo_received );
++			      _("abnormal dialog termination\n"));
+ 			*exceptionixp = sigquitix;
+ 		}
+ 		return BOOL_FALSE;
 -- 
 1.7.0.4
 
