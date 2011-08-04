@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p749QPqj059496 for <xfs@oss.sgi.com>; Thu, 4 Aug 2011 04:26:25 -0500
-Received: from ogre.sisk.pl (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3C2EA1E6FD47
-	for <xfs@oss.sgi.com>; Thu,  4 Aug 2011 02:26:23 -0700 (PDT)
-Received: from ogre.sisk.pl (ogre.sisk.pl [217.79.144.158]) by cuda.sgi.com
-	with ESMTP id jq9rMHYjg2BWlbSa for <xfs@oss.sgi.com>;
-	Thu, 04 Aug 2011 02:26:23 -0700 (PDT)
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [RFC][PATCH] PM / Freezer: Freeze filesystems along with freezing
-	processes (was: Re: PM / hibernate xfs lock up /
-	xfs_reclaim_inodes_ag)
-Date: Thu, 4 Aug 2011 11:27:30 +0200
-References: <4E1C70AD.1010101@u-club.de> <201108032315.06012.rjw@sisk.pl>
-	<20110803172922.GA2126@ucw.cz>
-In-Reply-To: <20110803172922.GA2126@ucw.cz>
+	p74A40U3062073 for <xfs@oss.sgi.com>; Thu, 4 Aug 2011 05:04:00 -0500
+Received: from mx2.suse.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 284531868CC5
+	for <xfs@oss.sgi.com>; Thu,  4 Aug 2011 03:03:58 -0700 (PDT)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id 7nrFEQok0ztsN8VB for <xfs@oss.sgi.com>;
+	Thu, 04 Aug 2011 03:03:58 -0700 (PDT)
+Date: Thu, 4 Aug 2011 12:03:57 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 2/2] xfs: Call filemap_flush_range() for async
+	xfs_flush_pages() call
+Message-ID: <20110804100357.GE17196@quack.suse.cz>
+References: <1312404545-15400-1-git-send-email-jack@suse.cz>
+	<1312404545-15400-3-git-send-email-jack@suse.cz>
+	<20110803223439.GH32385@redhat.com>
 MIME-Version: 1.0
-Message-Id: <201108041127.30944.rjw@sisk.pl>
+Content-Disposition: inline
+In-Reply-To: <20110803223439.GH32385@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,78 +31,91 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Pavel Machek <pavel@ucw.cz>
-Cc: Christoph <cr2005@u-club.de>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Nigel Cunningham <nigel@tuxonice.net>, Linux PM mailing list <linux-pm@lists.linux-foundation.org>
+To: Vivek Goyal <vgoyal@redhat.com>
+Cc: hch@infradead.org, linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
 
-On Wednesday, August 03, 2011, Pavel Machek wrote:
-> Hi!
+On Wed 03-08-11 18:34:39, Vivek Goyal wrote:
+> On Wed, Aug 03, 2011 at 10:49:05PM +0200, Jan Kara wrote:
+> > XFS does its own data writeout from several places using xfs_flush_pages().
+> > When this writeout is racing with flusher thread writing the same inode the
+> > performance gets bad because flusher thread submits writes as normal WRITE
+> > commands while xfs_flush_pages() submits them as WRITE_SYNC (as it uses
+> > filemap_fdatawrite_range()) and CFQ does not merge such requests. So we end up
+> > with relatively small requests from the flusher thread and sync interleaved.
+> > Short excerpt from blktrace:
+> > 254,16   2    16949   103.786278461 25233  Q   W 54479888 + 424 [flush-254:16]
+> > 254,16   4    20662   103.786386751 25232  Q  WS 54492920 + 1024 [dd]
+> > 254,16   4    20665   103.786444241 25232  Q  WS 54493944 + 104 [dd]
+> > 254,16   2    16952   103.786533451 25233  Q   W 54494048 + 288 [flush-254:16]
+> > 254,16   4    20668   103.787295241 25232  Q  WS 54494336 + 1024 [dd]
+> > 254,16   4    20671   103.787332801 25232  Q  WS 54495360 + 216 [dd]
+> > 254,16   2    16955   103.789062500 25233  Q   W 54495576 + 1024 [flush-254:16]
+> > (actually, I was observing even smaller requests on a different HW which isn't
+> > available to me now).
 > 
-> > Freeze all filesystems during the freezing of tasks by calling
-> > freeze_bdev() for each of them and thaw them during the thawing
-> > of tasks with the help of thaw_bdev().
+> Do you have rest of the blktrace messages? I am curious that apart from
+> smaller request size, is it CFQ idling also which might hurt in this
+> IO pattern. (grep for "fired" in your blktrace and see how many times
+> idle timer fired). 
+  At least in the trace I have (which is sadly not from the machine where
+the problem was really bad - but that was with 2.6.32 kernel anyway)
+idle timer is not a problem. Apparently we are not idling because I see
+messages like
+254,16   1        0   103.816811760     0  m   N cfq25232 Not idling. st->count:1
+
+
+> We probably are idling on "dd" thread. As long as dd writes are not dependent
+> on async writes, things will still be fine as dd will continue to make
+> progress and async writes will not make much progress.
+> 
+> But if that's not the case and after submitting bunch of synchronous
+> writes dd waits for some writes to finish (writes submitted by flusher
+> threds), then idling will start hurting.
+  Umm, we have to wait for writes submitted by the flusher thread only when
+we went through the whole file and are in fdatawait() now. So at least for
+big files this won't be an issue. But thanks for your suggestions anyway.
+
+									Honza
+> > Although we cannot fix all the cases (e.g. when fsync is called), we can use
+> > filemap_flush_range() for the case when xfs_flush_pages() is called with
+> > XFS_B_ASYNC flag which fixes the problem at least for some common cases like
+> > the first round of sync writeback or flushing of data during truncate or after
+> > file is closed.
 > > 
-> > This is needed by hibernation, because some filesystems (e.g. XFS)
-> > deadlock with the preallocation of memory used by it if the memory
-> > pressure caused by it is too heavy.
+> > Signed-off-by: Jan Kara <jack@suse.cz>
+> > ---
+> >  fs/xfs/linux-2.6/xfs_fs_subr.c |    6 ++++--
+> >  1 files changed, 4 insertions(+), 2 deletions(-)
 > > 
-> > The additional benefit of this change is that, if something goes
-> > wrong after filesystems have been frozen, they will stay in a
-> > consistent state and journal replays won't be necessary (e.g. after
-> > a failing suspend or resume).  In particular, this should help to
-> > solve a long-standing issue that in some cases during resume from
-> > hibernation the boot loader causes the journal to be replied for the
-> > filesystem containing the kernel image and initrd causing it to
-> > become inconsistent with the information stored in the hibernation
-> > image.
-> 
-> > +/**
-> > + * freeze_filesystems - Force all filesystems into a consistent state.
-> > + */
-> > +void freeze_filesystems(void)
-> > +{
-> > +	struct super_block *sb;
-> > +
-> > +	lockdep_off();
-> 
-> Ouch. So... why do we need to silence this?
-
-So that it doesn't complain? :-)
-
-I'll need some time to get the exact details here.
-
-> > +	/*
-> > +	 * Freeze in reverse order so filesystems dependant upon others are
-> > +	 * frozen in the right order (eg. loopback on ext3).
-> > +	 */
-> > +	list_for_each_entry_reverse(sb, &super_blocks, s_list) {
-> > +		if (!sb->s_root || !sb->s_bdev ||
-> > +		    (sb->s_frozen == SB_FREEZE_TRANS) ||
-> > +		    (sb->s_flags & MS_RDONLY) ||
-> > +		    (sb->s_flags & MS_FROZEN))
-> > +			continue;
-> 
-> Should we stop NFS from modifying remote server, too?
-
-What do you mean exactly?
-
-> Plus... ext3 writes to read-only filesystems on mount; not sure if it
-> does it later. But RDONLY means 'user cant write to it' not 'bdev will
-> not be modified'. Should we freeze all?
-> 
-> How can 'already frozen' happen?
-> 
-> > +	list_for_each_entry(sb, &super_blocks, s_list)
-> > +		if (sb->s_flags & MS_FROZEN) {
-> > +			sb->s_flags &= ~MS_FROZEN;
-> > +			thaw_bdev(sb->s_bdev, sb);
-> > +		}
-> 
-> ...because we'll unfreeze it even if we did not freeze it...
-
-So we need not check MS_FROZEN in freeze_filesystems().  OK
-
-Thanks,
-Rafael
+> > diff --git a/fs/xfs/linux-2.6/xfs_fs_subr.c b/fs/xfs/linux-2.6/xfs_fs_subr.c
+> > index ed88ed1..6f33164 100644
+> > --- a/fs/xfs/linux-2.6/xfs_fs_subr.c
+> > +++ b/fs/xfs/linux-2.6/xfs_fs_subr.c
+> > @@ -70,10 +70,12 @@ xfs_flush_pages(
+> >  	int		ret2;
+> >  
+> >  	xfs_iflags_clear(ip, XFS_ITRUNCATED);
+> > +	if (flags & XBF_ASYNC) {
+> > +		return -filemap_flush_range(mapping, first,
+> > +				last == -1 ? LLONG_MAX : last);
+> > +	}
+> >  	ret = -filemap_fdatawrite_range(mapping, first,
+> >  				last == -1 ? LLONG_MAX : last);
+> > -	if (flags & XBF_ASYNC)
+> > -		return ret;
+> >  	ret2 = xfs_wait_on_pages(ip, first, last);
+> >  	if (!ret)
+> >  		ret = ret2;
+> > -- 
+> > 1.7.1
+> > 
+> > _______________________________________________
+> > xfs mailing list
+> > xfs@oss.sgi.com
+> > http://oss.sgi.com/mailman/listinfo/xfs
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
