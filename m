@@ -1,23 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p753xxid099150 for <xfs@oss.sgi.com>; Thu, 4 Aug 2011 22:59:59 -0500
-Received: from acsinet53.oracleeblast.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A3D76531D60
-	for <xfs@oss.sgi.com>; Thu,  4 Aug 2011 20:59:58 -0700 (PDT)
-Received: from acsinet53.oracleeblast.com (acsinet53.oracleeblast.com
-	[141.146.5.53]) by cuda.sgi.com with ESMTP id hhFoRm8DGtXEaSFO
-	for <xfs@oss.sgi.com>; Thu, 04 Aug 2011 20:59:58 -0700 (PDT)
-Received: from amts748.us.oracle.com (amts748.us.oracle.com [140.84.104.66])
-	by acsinet53.oracleeblast.com (8.14.4+Sun/8.14.4) with ESMTP id
-	p753uXPs004331 for <xfs@oss.sgi.com>; Fri, 5 Aug 2011 03:57:14 GMT
-Date: Thu, 4 Aug 2011 20:56:33 -0700
+	p757orwD108614 for <xfs@oss.sgi.com>; Fri, 5 Aug 2011 02:50:53 -0500
+Received: from acsinet15.oracle.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5BE44F4DBC0
+	for <xfs@oss.sgi.com>; Fri,  5 Aug 2011 00:51:49 -0700 (PDT)
+Received: from acsinet15.oracle.com (acsinet15.oracle.com [141.146.126.227])
+	by cuda.sgi.com with ESMTP id zJti01xWgq6KdO3N for
+	<xfs@oss.sgi.com>; Fri, 05 Aug 2011 00:51:49 -0700 (PDT)
+Message-ID: <4E3BA2F7.4080500@oracle.com>
+Date: Fri, 05 Aug 2011 15:59:51 +0800
+From: Anand Jain <Anand.Jain@oracle.com>
 MIME-Version: 1.0
-Subject: Attend an OTN Architect Day =?utf-8?q?=E2=80=93?= by Architects, for
-	Architects on August 30
-From: "Oracle" <reply@oracle-mail.com>
-Message-ID: <SEMA-CR-3-269BWP8@bounce.oracle-mail.com>
-Reply-To: reply@oracle-mail.com
+Subject: [PATCH] snapshot, defragment and raid test cases for btrfs
+Content-Type: multipart/mixed; boundary="------------030109030109040807040307"
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,602 +22,1205 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============8069914128722198124=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+Cc: Chris Mason <chris.mason@oracle.com>
+
+This is a multi-part message in MIME format.
+--------------030109030109040807040307
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
 
---===============8069914128722198124==
-Content-Type: multipart/alternative; boundary=BF_1312516587903_1294701597
+Hi,
+
+  Attached is the patch for the xfstests, which adds snapshot,
+  defragment and volume management test cases for the btrfs
+  (257, 258 and 259 respectively).
+
+  This introduces a new user variable 'DISK_POOL' which should
+  be set to disks for the raid tests.
+
+  An example of usage of these tests is as below.
+------------
+[root@localhost xfstests]# cat local.config
+TEST_DEV="/dev/sdd"
+TEST_DIR=/btrfs
+SCRATCH_DEV="/dev/sde"
+SCRATCH_MNT=/btrfs1
+DISK_POOL="/dev/sdf /dev/sdg"
+[root@localhost xfstests]#
+
+[root@localhost xfstests]# ./check 257 258 259
+FSTYP -- btrfs
+PLATFORM -- Linux/i686 localhost 3.0.0-rc6+
+MKFS_OPTIONS -- /dev/sde
+MOUNT_OPTIONS -- -o context=system_u:object_r:nfs_t:s0 /dev/sde /btrfs1
+
+257 8s
+258 3s
+259 33s
+Ran: 257 258 259
+Passed all 3 tests
+----------------
+
+  Thank you.
+
+Anand
+
+--------------030109030109040807040307
+Content-Type: text/x-patch;
+ name="0001-Adding-257-258-259-to-test-snapshot-defragment-and-r.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename*0="0001-Adding-257-258-259-to-test-snapshot-defragment-and-r.pa";
+ filename*1="tch"
+
+>From 62d90cd24afc192e091d9b81fb78d7c666237e97 Mon Sep 17 00:00:00 2001
+From: Anand Jain <Anand.Jain@oracle.com>
+Date: Fri, 5 Aug 2011 15:36:25 +0800
+Subject: [PATCH] Adding 257, 258, 259 to test snapshot, defragment and raid in btrfs
+
+Adding test case number 257, 258 and 259 to test snapshot, defragment
+and raid support in btrfs. This also adds a user input variable
+'DISK_POOL'.
+
+Signed-off-by: Anand Jain <Anand.Jain@oracle.com>
+---
+ 257               |  198 ++++++++++++++++++++++++++++++++++++++++++
+ 257.out           |    8 ++
+ 258               |   75 ++++++++++++++++
+ 258.out           |    2 +
+ 259               |  220 +++++++++++++++++++++++++++++++++++++++++++++++
+ 259.out           |    9 ++
+ common.rc         |   58 +++++++++++++
+ group             |    3 +
+ src/checksum_misc |   28 ++++++
+ src/devmgt        |   25 ++++++
+ src/fsmisc        |  247 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ src/randmisc      |   70 +++++++++++++++
+ src/snapmisc      |   73 ++++++++++++++++
+ 13 files changed, 1016 insertions(+), 0 deletions(-)
+ create mode 100755 257
+ create mode 100644 257.out
+ create mode 100755 258
+ create mode 100644 258.out
+ create mode 100755 259
+ create mode 100644 259.out
+ create mode 100644 src/checksum_misc
+ create mode 100644 src/devmgt
+ create mode 100644 src/fsmisc
+ create mode 100644 src/randmisc
+ create mode 100644 src/snapmisc
+
+diff --git a/257 b/257
+new file mode 100755
+index 0000000..2a75944
+--- /dev/null
++++ b/257
+@@ -0,0 +1,198 @@
++#! /bin/bash
++# FS QA Test No. 257
++#
++# Extented btrfs snapshot test cases
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2011 Oracle  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#
++#-----------------------------------------------------------------------
++#
++# creator
++owner=anand.jain@oracle.com
++
++seq=`basename $0`
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++
++_cleanup()
++{
++    rm -f $tmp.*
++}
++
++trap "_cleanup ; exit \$status" 0 1 2 3 15
++
++# get standard environment, filters and checks
++. ./common.rc
++. ./common.filter
++
++_need_to_be_root
++_supported_fs btrfs
++_supported_os Linux
++_require_scratch
++
++. ./src/checksum_misc
++. ./src/randmisc
++. ./src/fsmisc
++. ./src/snapmisc
++
++_scratch_mkfs > /dev/null 2>&1
++_scratch_mount
++
++#FS fill size
++#name="DirDepth MinFiles MaxFiles MinFileSz MaxFileSz"
++QUICK="1 4 4 4096 4096"
++SMALL="1 10 100 4096 8192"
++MEDIUM="10 30 1000 4096 8192"
++LARGE="1000 1 1000 4096 1048576"
++FDPROF=$QUICK
++dolog=1
++
++# compare check sum of $1 with $2
++_testa_snap_check()
++{
++	local volname
++	volname=`echo $1 | rev | cut -d"/" -f1 | rev`
++	#$here/src/checksum_misc save_checksum $1 $tmp.$volname.sum
++	save_checksum $1 $tmp.$volname.sum
++	#$here/src/checksum_misc verify_checksum $2 $tmp.$volname.sum
++	verify_checksum $2 $tmp.$volname.sum
++	[ $dolog = 1 ] && echo "testa_snap_check ok"
++}
++
++_testb_file_append_check()
++{
++	local volname
++
++	volname=`echo $1 | rev | cut -d"/" -f1 | rev`
++	#$here/src/checksum_misc save_checksum $1 $tmp.$volname.sum
++	save_checksum $1 $tmp.$volname.sum
++
++	# modify the snap
++	# $here/src/fsmisc modifyfs_fillblk ${2}
++	modifyfs_fillblk ${2}
++
++	#$here/src/fsmisc check_sum $1 $tmp.$volname.sum
++	verify_checksum $1 $tmp.$volname.sum
++	echo "testb_file_append_check ok"
++}
++
++
++# arg1: Original subvolume
++# arg2 : its snapshot
++_testc_file_append2_check()
++{
++	local volname
++
++	volname=`echo $1 | rev | cut -d"/" -f1 | rev`
++	#$here/src/checksum_misc save_checksum $1 $tmp.$volname.sum
++	save_checksum $1 $tmp.$volname.sum
++
++	#$here/src/fsmisc modifyfs_append $2
++	modifyfs_append $2
++
++	#$here/src/checksum_misc verify_checksum $1 $tmp.$volname.sum
++	verify_checksum $1 $tmp.$volname.sum
++	echo "testc_file_append2_check ok"
++}
++
++# arg1: Original subvolume
++# arg2 : its snapshot
++_testd_read_modify_check()
++{
++	local volname
++
++	volname=`echo $1 | rev | cut -d"/" -f1 | rev`
++	#$here/src/checksum_misc save_checksum $1 $tmp.$volname.sum
++	save_checksum $1 $tmp.$volname.sum
++	#$here/src/fsmisc modifyfs_readmodifywrite ${2}
++	modifyfs_readmodifywrite ${2}
++
++	#$here/src/checksum_misc verify_checksum $1 $tmp.$volname.sum
++	verify_checksum $1 $tmp.$volname.sum
++	echo "testd_read_modify_check ok"
++}
++
++# arg 1: depth
++# arg 2: base vol
++_teste_nested_snap_check()
++{
++	local n
++	local x
++
++	# we need two additional snapshot to compare
++	#$here/src/snapmisc create_nestedclones $(($1+2)) $2
++	create_nestedclones $(($1+2)) $2
++	#$here/src/snapmisc update_clonelist
++	update_clonelist
++
++	n=${#CLONE_LIST[*]}
++	if [ $n -lt $1 ]; then echo Clone List Error; status=1; exit; fi
++
++	dolog=0
++	for i in `seq 1 $1`
++	do
++		n=$(($n-1))
++		_testa_snap_check ${CLONE_LIST[$(($n-1))]} ${CLONE_LIST[$n]}
++	done
++	dolog=1
++	echo "teste_nested_snap_check ok"
++}
++
++_testf_delete_file_check()
++{
++	local org=$1
++	local org_n=`echo $org | rev | cut -d"/" -f1 | rev`
++	local afile
++
++	#$here/src/checksum_misc save_checksum $org $tmp.${org_n}.sum
++	save_checksum $org $tmp.${org_n}.sum
++
++	#afile=`$here/src/randmisc picka rfile ${2}`
++	afile=`picka rfile ${2}`
++	#$here/src/fsmisc modifyfs_delete $afile
++	modifyfs_delete $afile
++
++	#$here/src/checksum_misc verify_checksum $org $tmp.${org_n}.sum
++	verify_checksum $org $tmp.${org_n}.sum
++
++	echo "testf_delete_file_check ok"
++}
++
++# real QA test starts here
++
++firstvol="$SCRATCH_MNT/sv1"
++btrfs subvolume create $firstvol | _filter_scratch
++#$here/src/fsmisc fillfs $firstvol $FDPROF
++fillfs $firstvol $FDPROF
++SNAPNAME=0
++#$here/src/snapmisc create_snap $firstvol $SCRATCH_MNT
++create_snap $firstvol $SCRATCH_MNT
++# Single clone test
++_testa_snap_check $firstvol $SNAPNAME
++_testb_file_append_check $firstvol $SNAPNAME
++_testc_file_append2_check $firstvol $SNAPNAME
++_testd_read_modify_check $firstvol $SNAPNAME
++# nested clone test
++_teste_nested_snap_check  7 $firstvol  # as of now don't do beyond 7 - btrfs bug
++SNAPNAME=0
++create_snap $firstvol $SCRATCH_MNT
++_testf_delete_file_check $firstvol $SNAPNAME
++
++status=0 ; exit
+diff --git a/257.out b/257.out
+new file mode 100644
+index 0000000..ad91d67
+--- /dev/null
++++ b/257.out
+@@ -0,0 +1,8 @@
++QA output created by 257
++Create subvolume 'SCRATCH_MNT/sv1'
++testa_snap_check ok
++testb_file_append_check ok
++testc_file_append2_check ok
++testd_read_modify_check ok
++teste_nested_snap_check ok
++testf_delete_file_check ok
+diff --git a/258 b/258
+new file mode 100755
+index 0000000..000d505
+--- /dev/null
++++ b/258
+@@ -0,0 +1,75 @@
++#! /bin/bash
++# FS QA Test No. 258
++#
++# btrfs defragmentation tests
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2011 Oracle.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++# creator
++owner=anand.jain@oracle.com
++
++seq=`basename $0`
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    cd /
++    rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common.rc
++. ./common.filter
++
++_need_to_be_root
++_supported_fs btrfs
++_supported_os Linux
++_require_scratch
++
++. ./src/checksum_misc
++. ./src/randmisc
++. ./src/fsmisc
++
++_scratch_mkfs > /dev/null 2>&1
++_scratch_mount
++
++#FS fill size
++#name="DirDepth MinFiles MaxFiles MinFileSz MaxFileSz"
++QUICK="1 4 4 4096 4096"
++SMALL="1 10 100 4096 8192"
++MEDIUM="10 30 1000 4096 8192"
++LARGE="1000 1 1000 4096 1048576"
++FDPROF=$QUICK
++
++_testa_defrag()
++{
++        btrfs filesystem defragment $1
++        if [ ! $? ]; then echo "Error: Defrag failed"; exit; fi
++        echo "testa_defrag.... ok"
++}
++
++fillfs $SCRATCH_MNT $FDPROF
++_testa_defrag $SCRATCH_MNT
++
++status=0
++exit
+diff --git a/258.out b/258.out
+new file mode 100644
+index 0000000..6ccf5cf
+--- /dev/null
++++ b/258.out
+@@ -0,0 +1,2 @@
++QA output created by 258
++testa_defrag.... ok
+diff --git a/259 b/259
+new file mode 100755
+index 0000000..770d61b
+--- /dev/null
++++ b/259
+@@ -0,0 +1,220 @@
++#! /bin/bash
++# FS QA Test No. 259
++#
++# btrfs vol tests
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2011 Oracle.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++# creator
++owner=anand.jain@oracle.com
++
++seq=`basename $0`
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    cd /
++    rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common.rc
++. ./common.filter
++
++_need_to_be_root
++_supported_fs btrfs
++_supported_os Linux
++_require_scratch
++_require_disk_pool
++
++. ./src/checksum_misc
++. ./src/randmisc
++. ./src/fsmisc
++. ./src/devmgt
++
++#FS fill size
++#name="DirDepth MinFiles MaxFiles MinFileSz MaxFileSz"
++QUICK="1 4 4 4096 4096"
++SMALL="1 10 100 4096 8192"
++MEDIUM="10 30 1000 4096 8192"
++LARGE="1000 1 1000 4096 1048576"
++FDPROF=$QUICK
++
++FSDEV="$SCRATCH_DEV $DISK_POOL"
++
++if_error()
++{
++        if [[ $? -ne 0 ]]; then
++                echo "$1"
++                exit
++        fi
++}
++
++
++fun_error()
++{
++        echo $1
++        exit
++}
++
++
++test1_default()
++{
++	local i
++	mk_fs $1 "$2"
++	fillfs $1 $FDPROF
++        echo "test1_default ok"
++}
++
++test2_raid0()
++{
++	mk_fs $1 raid0 raid0 "$2"
++	fillfs $1 $FDPROF
++	echo "test2_raid0 ok"
++}
++
++test3_raid1()
++{
++	mk_fs $1 raid1 raid1 "$2"
++	fillfs $1 $FDPROF
++	echo "test3_raid1 ok"
++}
++
++test4_raid10()
++{
++	mk_fs $1 raid10 raid10 "$2"
++	fillfs $1 $FDPROF
++	echo "test4_raid10 ok"
++}
++
++test5_single()
++{
++	mk_fs $1 single single "$2"
++	fillfs $1 $FDPROF
++	echo "test5_single ok"
++}
++
++test6_add()
++{
++	local i
++	local devs[]="( $2 )"
++	local n=${#devs[@]}
++
++	n=$(($n-1))
++
++	_trace_wipe "$2"
++	mk_fs $1 "${devs[0]}"
++	fillfs $1 $FDPROF
++	for i in `seq 1 $n`
++	do
++		# echo i=$i ${devs[$i]} $1
++		btrfs device add ${devs[$i]} $1 2>&1 > /dev/null
++	done
++	btrfs filesystem balance $1
++	btrfs filesystem show 2>&1 | egrep devid |awk '{
++		if ( $6 == "0.00" ) {
++			print "Error: Device "$8" balance failed"
++			exit
++		}
++	}'
++	if_error "Error: test6_add... failed"
++	echo "test6_add ok"
++}
++
++test7_replace()
++{
++	local i
++	local x
++	local devs=( $2 )
++	local n=${#devs[@]}
++	local ds
++	local DEVHTL=""
++
++	if [ $n -lt 3 ]; then echo "Error: Need atleast 3 physical disks for the vol:test7_replace"; exit; fi
++	n=$(($n-1))
++	ds=${devs[@]:0:$n}
++	_trace_wipe "$2"
++	mk_fs $1 "$ds"
++	fillfs $1 $FDPROF
++
++	#fail a disk
++	ds=${devs[@]:$(($n-1)):1}
++	devmgt remove ${ds}
++
++	btrfs fi show | egrep "Some devices missing" > /dev/null 2>&1
++	if_error "Error: btrfs did not report device missing"
++	# if [ ! $? ]; then echo "Error: btrfs did not report device missing"; exit; fi
++
++	# add a new disk to btrfs
++	ds=${devs[@]:$(($n)):1}
++	btrfs device add ${ds} ${1}
++	btrfs fi balance $1
++	btrfs filesystem show 2>&1 | egrep devid |awk '{
++		if ( $6 == "0.00" ) {
++			print "Error: Device "$8" balance failed"
++			exit
++		}
++	}'
++	if_error "Error: test7_repalce... failed"
++	echo "test7_replace ok"
++
++	# cleaup. add the removed disk
++	umount $1 > /dev/null 2>&1
++	devmgt add "${DEVHTL}"
++}
++
++function test8_remove
++{
++	local res="ok"
++	_trace_wipe "$2"
++	mk_fs $1 "$2"
++	fillfs $1 $FDPROF
++
++	dev_del=`echo ${2} | awk '{print $NF}'`
++
++	btrfs device delete $dev_del $1 || if_error "Error: delete failed"
++
++	btrfs fi balance $1
++	btrfs filesystem show 2>&1 | egrep devid |awk '{
++		if ( $6 == "0.00" ) {
++			print "Error: Device "$8" balance failed"
++			exit
++		}
++	} '
++	if_error "test8_remove... failed"
++	echo "test8_remove ok"
++	umount $1 > /dev/null 2>&1
++	_trace_wipe "$2"
++}
++
++test1_default $SCRATCH_MNT "$FSDEV"
++test2_raid0 $SCRATCH_MNT "$FSDEV"
++test3_raid1 $SCRATCH_MNT "$FSDEV"
++test4_raid10 $SCRATCH_MNT "$FSDEV"
++test5_single $SCRATCH_MNT "$FSDEV"
++test6_add $SCRATCH_MNT "$FSDEV"
++test7_replace $SCRATCH_MNT "$FSDEV"
++test8_remove $SCRATCH_MNT "$FSDEV"
++
++status=0
++exit
+diff --git a/259.out b/259.out
+new file mode 100644
+index 0000000..b3bd62a
+--- /dev/null
++++ b/259.out
+@@ -0,0 +1,9 @@
++QA output created by 259
++test1_default ok
++test2_raid0 ok
++test3_raid1 ok
++test4_raid10 ok
++test5_single ok
++test6_add ok
++test7_replace ok
++test8_remove ok
+diff --git a/common.rc b/common.rc
+index cb23a02..a354f69 100644
+--- a/common.rc
++++ b/common.rc
+@@ -1559,7 +1559,65 @@ _test_inode_extsz()
+     echo $blocks
+ }
+ 
++_require_disk_pool()
++{
++	local i
++	case "$FSTYP" in
++	btrfs)
++		if [ -z "$DISK_POOL" ]
++		then
++			_notrun "this test requires a valid \$DISK_POOL"
++		fi
++		if [ "`echo $DISK_POOL|wc -w`" -lt 2 ]
++		then
++			_notrun "this test needs more than 1 disk in DISK_POOL"
++		fi
++
++		for i in $DISK_POOL
++		do
++			if [ "`_is_block_dev $i`" = "" ]
++			then
++				_notrun "this test requires valid block disk $i"
++			fi
++			if [ "`_is_block_dev $i`" = "`_is_block_dev $TEST_DEV`" ]
++			then
++				_notrun "$i is part of TEST_DEV, this test requires unique disks"
++			fi
++			if [ "`_is_block_dev $i`" = "`_is_block_dev $SCRATCH_DEV`" ]
++			then
++				_notrun "$i is part of SCRATCH_DEV, this test requires unique disks"
++			fi
++			if _mount | grep -q $i
++			then
++				if ! $UMOUNT_PROG $i
++			        then
++			            echo "failed to unmount $i - aborting"
++			            exit 1
++			        fi
++			fi
++			dd if=/dev/zero of=$i bs=4096 count=100 > /dev/null 2>&1
++		done
++	;;
++	esac
++}
+ 
++_trace_wipe()
++{
++	local i
++	case "$FSTYP" in
++	btrfs)
++		for i in $1
++		do
++			dd if=/dev/zero of=$i bs=4096 count=100 > /dev/null 2>&1
++			if [ $? != 0 ]
++			then
++				echo "disk $i access failed"
++				exit 1
++			fi
++		done
++	;;
++	esac
++}
+ ################################################################################
+ 
+ if [ "$iam" != new -a "$iam" != bench ]
+diff --git a/group b/group
+index 0c746c8..62eebfb 100644
+--- a/group
++++ b/group
+@@ -370,3 +370,6 @@ deprecated
+ 254 auto quick
+ 255 auto quick prealloc
+ 256 auto quick
++257 auto quick
++258 auto quick
++259 auto quick
+diff --git a/src/checksum_misc b/src/checksum_misc
+new file mode 100644
+index 0000000..42488cb
+--- /dev/null
++++ b/src/checksum_misc
+@@ -0,0 +1,28 @@
++#! /bin/bash
++# To Create the sha256 sum for the arg1
++# arg1 FS to generate sha256
++# arg2 File name to save the sha256 output
++function save_checksum()
++{
++	local i=0
++	>$2
++	cd $1
++	#echo "$1"
++	for i in `find . -type f`; do sha256sum $i >> $2; done
++	cd $OLDPWD
++}
++
++
++
++# To check the sha256 for the TESTFS
++# arg1 FS to be tested
++# arg2 sha256 file
++function verify_checksum()
++{
++	cd $1
++	if [ ! -f $2 ]; then echo "$2 file not found"; status=1;exit; fi
++	#$SHA256SUM --status -c $2 | $GREP "FAILED"
++	sha256sum -c $2 | grep "FAILED"
++	if [ $? == 0 ]; then status=1;exit; fi
++	cd $OLDPWD
++}
+diff --git a/src/devmgt b/src/devmgt
+new file mode 100644
+index 0000000..d86b5c9
+--- /dev/null
++++ b/src/devmgt
+@@ -0,0 +1,25 @@
++#! /bin/bash
++# arg 1 remove/add
++# arg 2 /dev/sdx or return of devmgt resply
++function devmgt
++{
++	local x
++	local d
++
++	if [ ${1} == "remove" ]; then
++		d=`echo $2|cut -d"/" -f3`
++		x=`ls -l /sys/class/block/${d} | cut -d "/" -f12 | sed 's/:/ /g'`
++		#log_event log "Removing the disk ${d} ${x} ..."
++		echo "scsi remove-single-device ${x}" > /proc/scsi/scsi
++		if [ ! $? ]; then echo "Error: Remove a disk failed"; exit 1; fi
++		DEVHTL=${x}
++		#log_event done
++		return
++	else
++		#log_event log "cleaning.. adding back the removed disk ${2} .. "
++		echo "scsi add-single-device ${2}" > /proc/scsi/scsi
++		if [ ! $? ]; then echo "Error: Remove a disk failed"; exit 1; fi
++		#log_event done
++		return
++	fi
++}
+diff --git a/src/fsmisc b/src/fsmisc
+new file mode 100644
+index 0000000..2ee942d
+--- /dev/null
++++ b/src/fsmisc
+@@ -0,0 +1,247 @@
++#! /bin/bash
++# Create Dir tree and files in it.
++# arg1 basedir
++# arg2 dir depth
++# arg3 nfile_min
++# arg4 nfile_max
++# arg5 fsize_min
++# arg6 fsize_max
++
++function fillfs()
++{
++	umask 000
++	local j
++	local i
++	local DIRP
++	local FCNT
++	local FILEP
++	local SCNT
++	local BCNT
++	#log_event log "filling $1 with dir=$2 files=$3 to $4 of size=$5 to $6....."
++	DIRP=$1
++	for ((j=0; j<$2; j++))
++	do
++		DIRP=`mktemp -dq $DIRP/dir.XXXXXX`
++		FCNT=$(r_ranged $3 $4)
++		for ((i=0; i<$FCNT; i++))
++		do
++			FILEP=`mktemp -q $DIRP/file.XXXXXX`
++			SCNT=$(r_ranged $5 $6)
++			dd if=/dev/urandom of=$FILEP bs=$SCNT count=1 status=noxfer 2>/dev/null &
++			# if some kernel may not support non aligned blocks well
++			#BCNT=$(($SCNT/4096))
++			#dd if=/dev/urandom of=$FILEP bs=4096 count=$BCNT status=noxfer 2>/dev/null &
++		done
++	done
++	wait $!
++	#log_event done
++}
++
++
++# Reads and writes new data but does not allocate new blocks
++# arg1 FS to be modified
++
++function modifyfs_readmodifywrite()
++{
++	local i
++	local FSIZE
++	#log_event log "doing read modify write on $1....."
++	for i in `find $1 -type f`
++	do
++		FSIZE=`stat -t $i | cut -d" " -f2`
++		dd if=$i of=/dev/null obs=$FSIZE count=1 status=noxfer 2>/dev/null &
++		dd if=/dev/urandom of=$i obs=$FSIZE count=1 status=noxfer 2>/dev/null &
++	done
++	wait $!
++	#log_event done
++
++}
++
++# Fills up the allocated blocks
++# arg1 FS in question
++
++function modifyfs_fillblk()
++{
++	local FSIZE
++	local BLKS
++	local NBLK
++	local FALLOC
++	local WS
++
++	#log_event log "filling the allocated blocks....."
++	for i in `find /$1 -type f`
++	do
++		FSIZE=`stat -t $i | cut -d" " -f2`
++		BLKS=`stat -c "%B" $i`
++		NBLK=`stat -c "%b" $i`
++		FALLOC=$(($BLKS * $NBLK))
++		WS=$(($FALLOC - $FSIZE))
++		#echo $FSIZE $BLKS $NBLK $FALLOC $WS
++		dd if=/dev/urandom of=$i obs=$FALLOC count=1 status=noxfer 2>/dev/null &
++	done
++	wait $!
++	#log_event done
++}
++
++
++# Append a random size to the files
++# arg1 : FS in question
++
++function modifyfs_append()
++{
++	local FSIZE
++	local X
++	local N
++	local i
++	#log_event log "appending the files......"
++	N=0
++	for i in `find $1 -type f`
++	do
++		if [ $N == 0 ]; then
++			N=$(($N+1))
++			X=$i
++			FSIZE=`stat -t $X | cut -d" " -f2`
++			dd if=$X of=$X seek=1 bs=$FSIZE obs=$FSIZE count=1 status=noxfer 2>/dev/null &
++			continue
++		fi
++		FSIZE=`stat -t $i | cut -d" " -f2`
++		dd if=$X of=$i seek=1 bs=$FSIZE obs=$FSIZE count=1 status=noxfer 2>/dev/null &
++		X=$i
++	done
++	wait $!
++	#log_event done
++}
++
++# Deletes files in a dir
++# arg 1: remove a file  OR files in the dir
++
++function modifyfs_delete()
++{
++	if [ -f $1 ]; then
++		#log_event log "delete a file ${1} ....."
++		\rm -rf $1
++	else
++		#log_event log "delete all files in the dir ${1} ....."
++		\rm -rf $1/*
++	fi
++	#log_event done
++}
++
++# To have a clean FS to test
++# arg 1: mount point
++# arg 2: metadata Raid Type/devs
++# arg 3: data Raid Type/none
++# arg 4: devices/none
++#or
++# arg 1: mount point
++# arg 2: devices
++function mk_fs()
++{
++	local ndev
++
++	umount $1 > /dev/null 2>&1
++
++	if [ $# == 2 ]; then
++		# use default options to create the FS.
++		ndev=( $2 )
++		#echo ${ndev[@]}
++		mkfs.btrfs ${ndev[@]} > /dev/null 2>&1
++		#mkfs.btrfs ${ndev[@]} 2>&1 | _filter_scratch
++		if [ $? != 0 ]; then echo mkfs failed ; exit; fi
++	else if [ $# == 4 ]; then
++		ndev=( $4 )
++		mkfs.btrfs -m $2 -d $3 ${ndev[@]} > /dev/null 2>&1
++		#mkfs.btrfs -m $2 -d $3 ${ndev[@]} 2>&1 | _filter_scratch
++		if [ $? != 0 ]; then echo mkfs failed; exit; fi
++	else
++		echo "Coding Error 234: xfstests alias would like to hear about it"
++	fi
++	fi
++
++	mount -t btrfs ${ndev[0]} $1
++}
++
++# arg1: mntpoint
++# arg2: Number of devs to use
++# arg3: devs in array
++function mk_fs_loopdev()
++{
++	local ndev
++
++	#log_event log "creating a new btrfs fs on $3...."
++	umount $1 > /dev/null 2>&1
++
++	ndev=( $3 )
++	#mkfs.btrfs -m $2 -d $3 ${ndev[@]} > ./tmp/out
++	#if [ $? != 0 ]; then echo mkfs failed ; cat ./tmp/out; exit 1; fi
++	#mount -t btrfs ${ndev[0]} $1
++
++#	echo
++#	echo $# ndev=${ndev[@]}
++	#log_event done
++}
++
++
++function leaned_fs
++{
++	echo $1 $2
++}
++
++#arg 1: mntpt
++#arg 2: phy disks
++#arg 3: Number of total loop devs
++#arg 4: initial mkfs devs
++
++function fs_on_loopdev()
++{
++	local sz
++	local n=0
++	local devname
++	local devs
++
++	mk_fs $1 "$2"
++
++	sz=$((`df -k $1 | egrep "$1" | awk '{print $4}'`/$(($3+1))))
++	sz=$(($sz*1024))
++	if [ $sz -lt 2671771648 ]; then echo "Error: Need at least 2G space for this test"; exit 1; fi
++
++	for n in $(seq 1 $3)
++	do
++		devname=`mktemp -q $1/dev.XXXXXX`
++		dd if=/dev/zero of=$devname bs=8192 count=64000 status=noxfer 2>/dev/null
++		losetup -f $devname
++		if [ $? != 0 ]; then echo "Error losetup failed";exit 1;fi
++		LOOPDEV[$(($n-1))]=`losetup -a | grep $devname|cut -d":" -f1`
++		LOOPFILE[$(($n-1))]=$devname
++	done
++
++	mkdir -p $1/mnt
++	devs=${LOOPDEV[@]:0:$4}
++	mk_fs $1/mnt "$devs"
++}
++
++#arg 1: mntpt
++function clean_loopdev()
++{
++	local i
++
++	#log_event log "Cleaning loop devices....."
++
++	local n=${#LOOPDEV[@]}
++	if [ ! $n ]; then return; fi
++
++	n=$(($n-1))
++
++	umount ${LOOPDEV[0]}
++	if [ $? != 0 ]; then echo "Error: umount loopdev failed"; exit 1;fi
++
++	for i in `seq 0 $n`
++	do
++		losetup -d ${LOOPDEV[$i]}
++		unlink ${LOOPFILE[$i]}
++		#echo ${LOOPDEVS[$i]}
++		#ls -l $MNTPT/fd$i
++	done
++
++	#log_event done
++}
+diff --git a/src/randmisc b/src/randmisc
+new file mode 100644
+index 0000000..a0a065b
+--- /dev/null
++++ b/src/randmisc
+@@ -0,0 +1,70 @@
++#! /bin/bash
++
++# Generate Random number in a range
++# arg1 min
++# arg2 max
++
++function r_ranged()
++{
++	local X
++	local Y
++	local S
++	if [ $2 == 0 ]; then echo 0; return; fi
++	Y=$RANDOM
++	((X = $2 - $1 + 1))
++	((X = $Y % $X))
++	((X = $X + $1))
++	echo $X
++}
++
++# Picks a rand(r)/first(f)/last(l) file or subvol
++# arg1: what
++# arg2: FS
++function picka()
++{
++	local MAX
++	local X
++	local R
++	local i
++
++	case $1 in
++	rfile)
++		MAX=`find $2 -type f | wc -l`
++		X=`r_ranged 1 $MAX`
++		R=0
++		for i in `find $2 -type f`; do
++			if [ "$X" == "$R" ]; then echo $i; return; fi
++			R=$(($R+1))
++		done
++	;;
++	rsnap)
++		MAX=`$BTRFS subvolume list $2 | wc -l`
++		X=`r_ranged 1 $MAX`
++		R=0
++		for i in `$BTRFS subvolume list $2`; do
++			if [ $X == $R ]; then echo $i; return; fi
++			R=$(($R+1))
++		done
++	;;
++	ffile)
++		for i in `find $2 -type f`; do
++			echo $i
++			break
++		done
++	;;
++	fsnap)
++		for i in `$BTRFS subvolume list $2`; do
++			echo $i;
++			break
++		done
++	;;
++	lfile)
++		for i in `find $2 -type f`; do
++			sleep 1
++		done
++		echo $i
++	;;
++	lsnap)
++	;;
++	esac
++}
+diff --git a/src/snapmisc b/src/snapmisc
+new file mode 100644
+index 0000000..7bd059f
+--- /dev/null
++++ b/src/snapmisc
+@@ -0,0 +1,73 @@
++#! /bin/bash
++# Create a snapshot
++# arg1 source
++# arg2 dest dir
++
++# Return snapshot name in the SNAPNAME
++function create_snap()
++{
++	local x
++	if [ ! -d $2 ]; then echo Destination dir $2 not present; fi
++	SNAPNAME=`mktemp -u $2/snap.XXXXXX`
++	btrfs subvolume snapshot $1 $SNAPNAME > /dev/null
++	if [ $? != 0 ]; then echo Error snapshot create failed; status=1;exit; fi
++	return
++}
++
++# Destroy a snapshot
++# arg 1: snapshot to be deleted
++
++function destroy_snap()
++{
++	#log_event log "deleting snapshot $1....."
++	btrfs subvolume delete $1
++	#log_event done done
++}
++
++# Creates n clones
++# arg 1: number of clones required
++# arg 2: soruce of which clone has to be taken
++
++function create_nclones()
++{
++	local i
++
++	for i in `seq 1 $1`
++	do
++		create_snap $2 $SCRATCH_MNT
++	done
++}
++
++function update_clonelist()
++{
++	local i
++	# Is there a way btrfs can distinguish sv and ss ?
++	local n=0
++	for i in `btrfs subvolume list $SCRATCH_MNT | rev|cut -d" " -f1|rev`
++	do
++		#echo i=$i n=$n
++		CLONE_LIST[$n]="${SCRATCH_MNT}/${i}"
++                n=$((n+1))
++        done
++	#echo n=$n
++	#for i in `seq 0 $((n-1))`; do echo i=$i ${CLONE_LIST[$i]}; done
++}
++
++# arg1: number of clones required
++# arg2: base subvol
++function create_nestedclones()
++{
++	local i
++	local x
++	local w
++	local SNAPNAME=0
++
++	x=$2
++	for i in `seq 1 $1`
++	do
++		create_snap $x $SCRATCH_MNT
++		x=$SNAPNAME
++		#w=`btrfs subvolume list $SCRATCH_MNT|wc -l`
++		#echo i=$i x=$x w=$w
++	done
++}
+-- 
+1.7.1
 
 
---BF_1312516587903_1294701597
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: Quoted-Printable
-
-REGISTER NOW
-Goto: https://gcmprm.oracle.com/ctd/lu?RID=3D=
-3-269BWP8=
-&CON=3D=
-&PRO=3D=
-3-2694A0J=
-&AID=3D=
-&OID=3D3-25VG81V&CID=3D3-25VG7YD&COID=3D3-25VG81S&T=3Dhttp%3a%2f%2fwww.oracl=
-e.com%2fgo%2f%3f%26Src%3d7328803%26Act%3d25%26pcode%3dWWMK11054222MPP011&TN=
-=3DREGISTER+NOW&RT=3DClicked+On+URL
-
-In second decade of the 21st Century the world of enterprise IT is
-changing faster than ever. In this environment the role of the
-software architect is more important and more challenging than ever
-before.
-
-Oracle Technology Network (OTN) is pleased to announce the 2011 series
-of OTN Architect Day events, offering a rich schedule of interactive
-keynotes and breakout sessions, all created specifically with software
-architects in mind.
-
-The live one-day event in Redwood Shores brings together architects from
-a broad range of disciplines and domains to share insights and
-expertise in the use of Oracle technologies to meet the challenges
-today's architects regularly face.
-
-Don't miss this opportunity to learn from your peers and share your
-expertise. Seating is limited, so register now!
-Goto: https://gcmprm.oracle.com/ctd/lu?RID=3D=
-3-269BWP8=
-&CON=3D=
-&PRO=3D=
-3-2694A0J=
-&AID=3D=
-&OID=3D3-25VG81V&CID=3D3-25VG7YD&COID=3D3-25VG81S&T=3Dhttp%3a%2f%2fwww.oracl=
-e.com%2fgo%2f%3f%26Src%3d7328803%26Act%3d25%26pcode%3dWWMK11054222MPP011&TN=
-=3Dregister+now!&RT=3DClicked+On+URL
-
-Click here to view Agenda.
-Goto: https://gcmprm.oracle.com/ctd/lu?RID=3D=
-3-269BWP8=
-&CON=3D=
-&PRO=3D=
-3-2694A0J=
-&AID=3D=
-&OID=3D3-25VG81V&CID=3D3-25VG7YD&COID=3D3-25VG81S&T=3Dhttp%3a%2f%2fwww.oracl=
-e.com%2fus%2fdm%2fh2fy11%2f77314-wwmk11054222mpp011-dtag-450019.html&TN=3DAg=
-enda&RT=3DClicked+On+URL
-
-----------------------------------------------------------------------
-Tuesday August 30, 2011
-8:00 a.m. - 5:00 p.m.
-
-Oracle Conference Center
-350 Oracle Parkway
-Redwood Shores, CA 94065
-----------------------------------------------------------------------
-If you are an employee or official of a government organization,
-please click here for important ethics information regarding this event.
-Goto:http://www.oracle.com/us/dm/emaildisclaimer-214931.html?msgid=3D3-47087=
-20579~evite=3DWWMK11054222MPP011~Disclaimer=3DEnglish/US/ownEvent~EName=3DOr=
-acle%20Technology%20Network%20Architect%20Day%20=E2=80=93%20by%20Architects,=
-%20for%20Architects,%20Redwood%20Shores%20~Items=3DDay%20Package~Cost=3D$55.=
-00~Cname=3DOracle%20Events~CNo=3D+1.650.507.4749~Email=3DOracle-EventComplia=
-nce_US@oracle.com
-
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-Hardware and Software, Engineered to Work Together
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-77313
-
-Oracle Corporation - Worldwide Headquarters, 500 Oracle Parkway, OPL - E-mai=
-l Services, Redwood Shores, CA 94065, United States
-
-Create or update your profile to receive customized e-mail about Oracle prod=
-ucts and services.
-http://myprofile.oracle.com/
-
-If you do not wish to receive any further electronic marketing communication=
-s from Oracle you can Opt-Out completely, please note you will no longer rec=
-eive newsletters and product information you may have subscribed to.
-https://dne.oracle.com/pls/uns/OPT_OUT.th?coid=3D=
-&prid=3D=
-3-2694A0J=
-&trid=3D=
-3-25VG81V=
-&cmid=3D=
-3-25VG7YD=
-&ccid=3D=
-3-269BWP8=
-&LC=3Den
-
---BF_1312516587903_1294701597
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: Quoted-Printable
-
-<html><head><title>Oracle Technology Network - Architect Day =E2=80=93 by Ar=
-chitects, for Architects</title></head><body><div align=3D"center"><font fac=
-e=3D"Arial, Helvetica, sans-serif" size=3D"1"><A HREF=3D"https://gcmprm.orac=
-le.com/ctd/lu?RID=3D=
-3-269BWP8=
-&CON=3D=
-&PRO=3D=
-3-2694A0J=
-&AID=3D=
-&OID=3D3-25VG81V&CID=3D3-25VG7YD&COID=3D3-25VG81S&T=3Dhttp%3a%2f%2fwww.oracl=
-e.com%2fus%2fdm%2fh2fy11%2f77313-wwmk11054222mpp011c003-oem-450029.html&TN=
-=3D%26lt%3bfont+color%3d%22%23FF0000%22+size%3d%221%22%26gt%3bView+this+mess=
-age+in+a+browser%26lt%3b%2ffont%26gt%3b&RT=3DClicked+On+URL"><font color=3D"=
-#FF0000" size=3D"1">View this message in a browser</font></A>.</font></div><=
-table style=3D"BORDER-RIGHT: #000000 1px solid; BORDER-TOP: #000000 1px soli=
-d; BORDER-LEFT: #000000 1px solid; BORDER-BOTTOM: #000000 1px solid" cellspa=
-cing=3D"0" cellpadding=3D"0" width=3D"614" align=3D"center" border=3D"0">
-<tbody>
-<tr>
-<td bgcolor=3D"#ff0000"><img title=3D"Oracle Corporation" height=3D"30" alt=
-=3D"Oracle Corporation" hspace=3D"18" src=3D"http://www.oracle.com/us/design=
-/oracle-sig-white-196878.gif" width=3D"123" /></td>
-</tr>
-<tr>
-<td style=3D"PADDING-TOP: 1px"><img title=3D"Oracle Technology Network - Arc=
-hitect Day =E2=80=93 by Architects, for Architects" height=3D"154" alt=3D"Or=
-acle Technology Network - Architect Day =E2=80=93 by Architects, for Archite=
-cts" src=3D"http://www.oracleimg.com/ocom/groups/public/@ocom/documents/digi=
-talasset/450026.gif" width=3D"612" /></td>
-</tr>
-<tr>
-<td><table cellspacing=3D"0" cellpadding=3D"0" width=3D"100%" border=3D"0">
-<tbody>
-<tr>
-<td style=3D"PADDING-RIGHT: 10px; PADDING-LEFT: 20px; PADDING-BOTTOM: 20px; =
-PADDING-TOP: 20px" valign=3D"top" width=3D"402"><p><font face=3D"Arial, Helv=
-etica, sans-serif" color=3D"#000000" size=3D"2">In second decade of the 21st=
- Century the world of enterprise IT is changing faster than ever. In this en=
-vironment the role of the software architect is more important and more chal=
-lenging than ever before.<br /><br />
-Oracle Technology Network (OTN) is pleased to announce the 2011 series of OT=
-N Architect Day events, offering a rich schedule of interactive keynotes and=
- breakout sessions, all created specifically with software architects in min=
-d.<br /><br />
-The live one-day event in <strong>Redwood Shores</strong> brings together ar=
-chitects from a broad range of disciplines and domains to share insights and=
- expertise in the use of Oracle technologies to meet the challenges today=E2=
-=80=99s architects regularly face.<br /><br />
-Don=E2=80=99t miss this opportunity to learn from your peers and share your =
-expertise. Seating is limited, so <font color=3D"#ff0000"><A HREF=3D"https:/=
-/gcmprm.oracle.com/ctd/lu?RID=3D=
-3-269BWP8=
-&CON=3D=
-&PRO=3D=
-3-2694A0J=
-&AID=3D=
-&OID=3D3-25VG81V&CID=3D3-25VG7YD&COID=3D3-25VG81S&T=3Dhttp%3a%2f%2fwww.oracl=
-e.com%2fgo%2f%3f%26Src%3d7328803%26Act%3d25%26pcode%3dWWMK11054222MPP011&TN=
-=3D%26lt%3bfont+color%3d%22%23FF0000%22%26gt%3bregister+now!%26lt%3b%2ffont%=
-26gt%3b&RT=3DClicked+On+URL"><font color=3D"#FF0000">register now!</font></A=
-></font></font></p>
-</td>
-<td style=3D"PADDING-BOTTOM: 13px; PADDING-TOP: 0px" valign=3D"top" width=3D=
-"210"><div><img height=3D"7" alt=3D"" src=3D"http://www.oracleimg.com/admin/=
-images/stretch.gif" width=3D"1" border=3D"0" /></div><div><img height=3D"7" =
-alt=3D"" src=3D"http://www.oracleimg.com/admin/images/stretch.gif" width=3D"=
-1" border=3D"0" /></div><table cellspacing=3D"0" cellpadding=3D"0" width=3D"=
-178" align=3D"center" bgcolor=3D"#ff0000" border=3D"0">
-<tbody>
-<tr>
-<td style=3D"FONT-SIZE: 1px; LINE-HEIGHT: 0px" height=3D"8"><img height=3D"8=
-" src=3D"http://www.oracleimg.com/ocom/groups/public/@ocom/documents/digital=
-asset/400625.gif" width=3D"178" /></td>
-</tr>
-<tr>
-<td style=3D"FONT-SIZE: 14px" align=3D"center"><b><font face=3D"Arial, Helve=
-tica, sans-serif" color=3D"#ffffff"><A HREF=3D"https://gcmprm.oracle.com/ctd=
-/lu?RID=3D=
-3-269BWP8=
-&CON=3D=
-&PRO=3D=
-3-2694A0J=
-&AID=3D=
-&OID=3D3-25VG81V&CID=3D3-25VG7YD&COID=3D3-25VG81S&T=3Dhttp%3a%2f%2fwww.oracl=
-e.com%2fgo%2f%3f%26Src%3d7328803%26Act%3d25%26pcode%3dWWMK11054222MPP011&TN=
-=3D%26lt%3bfont+color%3d%22%23FFFFFF%22%26gt%3bREGISTER+NOW%26lt%3b%2ffont%2=
-6gt%3b&RT=3DClicked+On+URL"><font color=3D"#FFFFFF">REGISTER NOW</font></A><=
-/font></b></td>
-</tr>
-<tr>
-<td style=3D"FONT-SIZE: 1px; LINE-HEIGHT: 0px" height=3D"12"><img height=3D"=
-12" src=3D"http://www.oracleimg.com/ocom/groups/public/@ocom/documents/digit=
-alasset/400624.gif" width=3D"178" /></td>
-</tr>
-</tbody>
-</table>
-<div><img height=3D"7" alt=3D"" src=3D"http://www.oracleimg.com/admin/images=
-/stretch.gif" width=3D"1" border=3D"0" /></div><table cellspacing=3D"0" cell=
-padding=3D"0" width=3D"177" align=3D"center" border=3D"0">
-<tbody>
-<tr>
-<td style=3D"BORDER-RIGHT: #b3b3b3 1px solid; PADDING-RIGHT: 10px; BORDER-TO=
-P: #b3b3b3 1px solid; PADDING-LEFT: 10px; PADDING-BOTTOM: 10px; BORDER-LEFT:=
- #b3b3b3 1px solid; PADDING-TOP: 10px; BORDER-BOTTOM: #b3b3b3 1px solid"><p>=
-<font face=3D"Arial, Helvetica, sans-serif" color=3D"#000000" size=3D"2"><st=
-rong>Tuesday August 30, 2011</strong><br />
-8:00 a.m. =E2=80=93 5:00 p.m.<br /><br /><strong>Oracle Conference Center</s=
-trong><br />
-350 Oracle Parkway<br />
-Redwood Shores, CA 94065</font></p>
-</td>
-</tr>
-</tbody>
-</table>
-<div><img height=3D"7" alt=3D"" src=3D"http://www.oracleimg.com/admin/images=
-/stretch.gif" width=3D"1" border=3D"0" /></div><div style=3D"PADDING-TOP: 10=
-px"></div></td>
-</tr>
-</tbody>
-</table>
-<table style=3D"BORDER-RIGHT: #cccccc 1px solid; BORDER-TOP: #cccccc 1px sol=
-id; FONT-SIZE: 10px; BORDER-LEFT: #cccccc 1px solid; BORDER-BOTTOM: #cccccc =
-1px solid; FONT-FAMILY: Arial, Helvetica, sans-serif" cellspacing=3D"0" cell=
-padding=3D"0" width=3D"100%" bgcolor=3D"#f7f7f7" border=3D"0">
-<tbody>
-<tr>
-<td style=3D"PADDING-RIGHT: 6px; PADDING-LEFT: 15px; PADDING-BOTTOM: 6px; PA=
-DDING-TOP: 6px; BORDER-BOTTOM: #cccccc 1px solid" valign=3D"top" bgcolor=3D"=
-#fafafa" colspan=3D"3"><font face=3D"Arial, Helvetica, sans-serif" color=3D"=
-#333333" size=3D"2"><b>Agenda</b></font></td>
-</tr>
-<tr>
-<td style=3D"PADDING-RIGHT: 6px; PADDING-LEFT: 15px; PADDING-BOTTOM: 6px; PA=
-DDING-TOP: 6px; BORDER-BOTTOM: #cccccc 1px solid" valign=3D"top" width=3D"26=
-%"><strong>Time</strong></td>
-<td style=3D"PADDING-RIGHT: 6px; PADDING-LEFT: 10px; PADDING-BOTTOM: 6px; BO=
-RDER-LEFT: #cccccc 1px solid; PADDING-TOP: 6px; BORDER-BOTTOM: #cccccc 1px s=
-olid" valign=3D"top" width=3D"74%"><strong>Session Title</strong></td>
-</tr>
-<tr>
-<td style=3D"PADDING-RIGHT: 6px; PADDING-LEFT: 15px; PADDING-BOTTOM: 6px; PA=
-DDING-TOP: 6px; BORDER-BOTTOM: #cccccc 1px solid" valign=3D"top">8:30 a.m. =
-=E2=80=93 9:00 a.m.</td>
-<td style=3D"PADDING-RIGHT: 6px; PADDING-LEFT: 10px; PADDING-BOTTOM: 6px; BO=
-RDER-LEFT: #cccccc 1px solid; PADDING-TOP: 6px; BORDER-BOTTOM: #cccccc 1px s=
-olid" valign=3D"top"><strong>Registration and Continental Breakfast</strong>=
-=C2=A0</td>
-</tr>
-<tr>
-<td style=3D"PADDING-RIGHT: 6px; PADDING-LEFT: 15px; PADDING-BOTTOM: 6px; PA=
-DDING-TOP: 6px; BORDER-BOTTOM: #cccccc 1px solid" valign=3D"top">9:00 a.m. =
-=E2=80=93 9:15 a.m.</td>
-<td style=3D"PADDING-RIGHT: 6px; PADDING-LEFT: 10px; PADDING-BOTTOM: 6px; BO=
-RDER-LEFT: #cccccc 1px solid; PADDING-TOP: 6px; BORDER-BOTTOM: #cccccc 1px s=
-olid" valign=3D"top"><strong>Welcome and Opening Comments</strong></td>
-</tr>
-<tr>
-<td style=3D"PADDING-RIGHT: 6px; PADDING-LEFT: 15px; PADDING-BOTTOM: 6px; PA=
-DDING-TOP: 6px; BORDER-BOTTOM: #cccccc 1px solid" valign=3D"top">9:15 a.m. =
-=E2=80=93 10:00 a.m.</td>
-<td style=3D"PADDING-RIGHT: 6px; PADDING-LEFT: 10px; PADDING-BOTTOM: 6px; BO=
-RDER-LEFT: #cccccc 1px solid; PADDING-TOP: 6px; BORDER-BOTTOM: #cccccc 1px s=
-olid" valign=3D"top"><p><strong>Engineered Systems: Oracle=E2=80=99s Vision =
-for the Future</strong></p>
-
-
-Oracle=E2=80=99s Exadata and Exalogic are impressive products in their own r=
-ight. But working in combination they deliver unparalleled transaction proce=
-ssing performance with up to a 30x increase over existing legacy systems, wi=
-th the lowest cost of ownership over a 3 or 5 year basis than any other hard=
-ware. In this session you=E2=80=99ll learn how to leverage Oracle=E2=80=99s =
-Engineered Systems within your enterprise to deliver record-breaking perform=
-ance at the lowest TCO.</td>
-</tr>
-<tr>
-<td style=3D"PADDING-RIGHT: 6px; PADDING-LEFT: 15px; PADDING-BOTTOM: 6px; PA=
-DDING-TOP: 6px; BORDER-BOTTOM: #cccccc 1px solid" valign=3D"top">10:00 a.m. =
-=E2=80=93 10:30 a.m.</td>
-<td style=3D"PADDING-RIGHT: 6px; PADDING-LEFT: 10px; PADDING-BOTTOM: 6px; BO=
-RDER-LEFT: #cccccc 1px solid; PADDING-TOP: 6px; BORDER-BOTTOM: #cccccc 1px s=
-olid" valign=3D"top"><p><strong>Diagnosability vs. The Cloud</strong></p>
-
-
-In our increasingly virtualized environments, it's ever more difficult to di=
-agnose application defects =E2=80=93 especially performance defects that aff=
-ect response time or throughput expectations. Runtime diagnosis of defects c=
-an be an unbearably complicated problem to solve once the application is sea=
-led up and put into production use. But having excellent runtime diagnostics=
- is surprisingly easy if you design the diagnostic features into the applica=
-tion from its inception, as it is being grown, like you would with any other=
- desired application feature.</td>
-</tr>
-<tr>
-<td style=3D"PADDING-RIGHT: 6px; PADDING-LEFT: 15px; PADDING-BOTTOM: 6px; PA=
-DDING-TOP: 6px; BORDER-BOTTOM: #cccccc 1px solid" valign=3D"top">10:30 a.m. =
-=E2=80=93 10:45 a.m.</td>
-<td style=3D"PADDING-RIGHT: 6px; PADDING-LEFT: 10px; PADDING-BOTTOM: 6px; BO=
-RDER-LEFT: #cccccc 1px solid; PADDING-TOP: 6px; BORDER-BOTTOM: #cccccc 1px s=
-olid" valign=3D"top"><strong>Break</strong>=C2=A0</td>
-</tr>
-<tr>
-<td style=3D"PADDING-RIGHT: 6px; PADDING-LEFT: 15px; PADDING-BOTTOM: 6px; PA=
-DDING-TOP: 6px; BORDER-BOTTOM: #cccccc 1px solid" valign=3D"top">10:45 a.m. =
-=E2=80=93 11:30 a.m.</td>
-<td style=3D"PADDING-RIGHT: 6px; PADDING-LEFT: 10px; PADDING-BOTTOM: 6px; BO=
-RDER-LEFT: #cccccc 1px solid; PADDING-TOP: 6px; BORDER-BOTTOM: #cccccc 1px s=
-olid" valign=3D"top"><strong>Breakout Sessions (pick one)</strong><br /><br =
-/><ul>
-<li type=3D"disc"><strong>Cloud Computing - Making IT Simple</strong></li>
-</ul>
-
-
-The road to Cloud Computing is not without a few bumps. This session will he=
-lp to smooth out your journey by tackling some of the potential complication=
-s. We=E2=80=99ll examine whether standardization is a prerequisite for the C=
-loud. We=E2=80=99ll look at why refactoring isn=E2=80=99t just for applicati=
-on code. We=E2=80=99ll check out deployable entities and their simplificatio=
-n via higher levels of abstraction. And we=E2=80=99ll close out the session =
-with a look at engineered systems and modular clouds.</td>
-</tr>
-<tr>
-<td style=3D"PADDING-RIGHT: 6px; PADDING-LEFT: 15px; PADDING-BOTTOM: 6px; PA=
-DDING-TOP: 6px; BORDER-BOTTOM: #cccccc 1px solid" valign=3D"top">=C2=A0</td>
-<td style=3D"PADDING-RIGHT: 6px; PADDING-LEFT: 10px; PADDING-BOTTOM: 6px; BO=
-RDER-LEFT: #cccccc 1px solid; PADDING-TOP: 6px; BORDER-BOTTOM: #cccccc 1px s=
-olid" valign=3D"top"><ul>
-<li type=3D"disc"><strong>Innovations in Grid Computing with Oracle Coherenc=
-e</strong></li>
-</ul>
-
-
-Learn how Coherence can increase the availability, scalability and performan=
-ce of your existing applications with its advanced low-latency data-grid tec=
-hnologies. Also hear some interesting industry-specific use cases that custo=
-mers had implemented and how Oracle is integrating Coherence into its Enterp=
-rise Java stack.</td>
-</tr>
-<tr>
-<td style=3D"PADDING-RIGHT: 6px; PADDING-LEFT: 15px; PADDING-BOTTOM: 6px; PA=
-DDING-TOP: 6px; BORDER-BOTTOM: #cccccc 1px solid" valign=3D"top">11:30 a.m. =
-=E2=80=93 12:15 p.m.</td>
-<td style=3D"PADDING-RIGHT: 6px; PADDING-LEFT: 10px; PADDING-BOTTOM: 6px; BO=
-RDER-LEFT: #cccccc 1px solid; PADDING-TOP: 6px; BORDER-BOTTOM: #cccccc 1px s=
-olid" valign=3D"top"><strong>Breakout Sessions (pick one)</strong><br /><br =
-/><ul>
-<li type=3D"disc"><strong>Rationalization and Defense in Depth - Two Steps C=
-loser to the Clouds</strong></li>
-</ul>
-
-
-Security represents one of the biggest concerns about cloud computing. In th=
-is session we=E2=80=99ll get past the FUD with a real-world look at some key=
- issues. We=E2=80=99ll discuss the infrastructure necessary to support ratio=
-nalization and security services, explore architecture for defense =E2=80=93=
-in-depth, and deal frankly with the good, the bad, and the ugly in Cloud sec=
-urity.</td>
-</tr>
-<tr>
-<td style=3D"PADDING-RIGHT: 6px; PADDING-LEFT: 15px; PADDING-BOTTOM: 6px; PA=
-DDING-TOP: 6px; BORDER-BOTTOM: #cccccc 1px solid" valign=3D"top">=C2=A0</td>
-<td style=3D"PADDING-RIGHT: 6px; PADDING-LEFT: 10px; PADDING-BOTTOM: 6px; BO=
-RDER-LEFT: #cccccc 1px solid; PADDING-TOP: 6px; BORDER-BOTTOM: #cccccc 1px s=
-olid" valign=3D"top"><ul>
-<li type=3D"disc"><strong>21st Century SOA</strong>=C2=A0</li>
-</ul>
-
-
-Service Oriented Architecture has evolved from concept to reality in the las=
-t decade. The right methodology coupled with mature SOA technologies has hel=
-ped customers demonstrate success in both innovation and ROI. In this sessio=
-n you will learn how Oracle SOA Suite=E2=80=99s orchestration, virtualizatio=
-n, and governance capabilities provide the infrastructure to run mission cri=
-tical business and system applications. And we=E2=80=99ll take a special loo=
-k at the convergence of SOA &amp; BPM using Oracle=E2=80=99s Unified technol=
-ogy stack.</td>
-</tr>
-<tr>
-<td style=3D"PADDING-RIGHT: 6px; PADDING-LEFT: 15px; PADDING-BOTTOM: 6px; PA=
-DDING-TOP: 6px; BORDER-BOTTOM: #cccccc 1px solid" valign=3D"top">12:15 p.m. =
-=E2=80=93 1:15 p.m.</td>
-<td style=3D"PADDING-RIGHT: 6px; PADDING-LEFT: 10px; PADDING-BOTTOM: 6px; BO=
-RDER-LEFT: #cccccc 1px solid; PADDING-TOP: 6px; BORDER-BOTTOM: #cccccc 1px s=
-olid" valign=3D"top"><strong>Lunch</strong></td>
-</tr>
-<tr>
-<td style=3D"PADDING-RIGHT: 6px; PADDING-LEFT: 15px; PADDING-BOTTOM: 6px; PA=
-DDING-TOP: 6px; BORDER-BOTTOM: #cccccc 1px solid" valign=3D"top">1:15 p.m. =
-=E2=80=93 2:00 p.m.</td>
-<td style=3D"PADDING-RIGHT: 6px; PADDING-LEFT: 10px; PADDING-BOTTOM: 6px; BO=
-RDER-LEFT: #cccccc 1px solid; PADDING-TOP: 6px; BORDER-BOTTOM: #cccccc 1px s=
-olid" valign=3D"top"><strong>Panel Discussion: Open Q&amp;A with Session Spe=
-akers</strong></td>
-</tr>
-<tr>
-<td style=3D"PADDING-RIGHT: 6px; PADDING-LEFT: 15px; PADDING-BOTTOM: 6px; PA=
-DDING-TOP: 6px; BORDER-BOTTOM: #cccccc 1px solid" valign=3D"top">2:00 p.m. =
-=E2=80=93 2:45 p.m.</td>
-<td style=3D"PADDING-RIGHT: 6px; PADDING-LEFT: 10px; PADDING-BOTTOM: 6px; BO=
-RDER-LEFT: #cccccc 1px solid; PADDING-TOP: 6px; BORDER-BOTTOM: #cccccc 1px s=
-olid" valign=3D"top"><strong>Breakout Sessions (pick one)</strong><br /><br =
-/><ul>
-<li type=3D"disc"><strong>Event Driven Architecture (EDA) Reference</strong>=
-</li>
-</ul>
-
-
-Today=E2=80=99s leading organizations are extending their applications to in=
-corporate business events to achieve real-time analysis and response. This s=
-ession will present a reference architecture for event-driven architecture (=
-EDA). The presentation will include an EDA Market analysis with a look at bu=
-siness and technology drivers. It will explain key EDA definitions, and illu=
-strate an EDA maturity model and roadmap.</td>
-</tr>
-<tr>
-<td style=3D"PADDING-RIGHT: 6px; PADDING-LEFT: 15px; PADDING-BOTTOM: 6px; PA=
-DDING-TOP: 6px; BORDER-BOTTOM: #cccccc 1px solid" valign=3D"top">=C2=A0</td>
-<td style=3D"PADDING-RIGHT: 6px; PADDING-LEFT: 10px; PADDING-BOTTOM: 6px; BO=
-RDER-LEFT: #cccccc 1px solid; PADDING-TOP: 6px; BORDER-BOTTOM: #cccccc 1px s=
-olid" valign=3D"top"><ul>
-<li type=3D"disc"><strong>Oracle Enterprise Manager</strong></li>
-</ul>
-
-
-Oracle Enterprise Manager (EM) provides complete lifecycle management for th=
-e cloud - from automated cloud setup to self-service delivery to cloud opera=
-tions. In this session you=E2=80=99ll learn how to take control of your clou=
-d infrastructure with EM features including Consolidation Planning and Self-=
-Service provisioning with Metering and Chargeback. Come hear how Oracle is e=
-xpanding its management capabilities into the cloud!</td>
-</tr>
-<tr>
-<td style=3D"PADDING-RIGHT: 6px; PADDING-LEFT: 15px; PADDING-BOTTOM: 6px; PA=
-DDING-TOP: 6px; BORDER-BOTTOM: #cccccc 1px solid" valign=3D"top">2:45 p.m. =
-=E2=80=93 3:00 p.m.</td>
-<td style=3D"PADDING-RIGHT: 6px; PADDING-LEFT: 10px; PADDING-BOTTOM: 6px; BO=
-RDER-LEFT: #cccccc 1px solid; PADDING-TOP: 6px; BORDER-BOTTOM: #cccccc 1px s=
-olid" valign=3D"top"><strong>Break</strong></td>
-</tr>
-<tr>
-<td style=3D"PADDING-RIGHT: 6px; PADDING-LEFT: 15px; PADDING-BOTTOM: 6px; PA=
-DDING-TOP: 6px; BORDER-BOTTOM: #cccccc 1px solid" valign=3D"top">3:00 p.m. =
-=E2=80=93 4:00 p.m.</td>
-<td style=3D"PADDING-RIGHT: 6px; PADDING-LEFT: 10px; PADDING-BOTTOM: 6px; BO=
-RDER-LEFT: #cccccc 1px solid; PADDING-TOP: 6px; BORDER-BOTTOM: #cccccc 1px s=
-olid" valign=3D"top"><strong>Roundtable Discussion</strong></td>
-</tr>
-<tr>
-<td style=3D"PADDING-RIGHT: 6px; PADDING-LEFT: 15px; PADDING-BOTTOM: 6px; PA=
-DDING-TOP: 6px; BORDER-BOTTOM: #cccccc 1px solid" valign=3D"top">4:00 p.m. =
-=E2=80=93 4:15 p.m.</td>
-<td style=3D"PADDING-RIGHT: 6px; PADDING-LEFT: 10px; PADDING-BOTTOM: 6px; BO=
-RDER-LEFT: #cccccc 1px solid; PADDING-TOP: 6px; BORDER-BOTTOM: #cccccc 1px s=
-olid" valign=3D"top"><strong>Closing Comments &amp; Readouts from Roundtable=
-s</strong></td>
-</tr>
-<tr>
-<td style=3D"PADDING-RIGHT: 6px; PADDING-LEFT: 15px; PADDING-BOTTOM: 6px; PA=
-DDING-TOP: 6px; BORDER-BOTTOM: #cccccc 1px solid" valign=3D"top">4:15 p.m. =
-=E2=80=93 5:00 p.m.</td>
-<td style=3D"PADDING-RIGHT: 6px; PADDING-LEFT: 10px; PADDING-BOTTOM: 6px; BO=
-RDER-LEFT: #cccccc 1px solid; PADDING-TOP: 6px; BORDER-BOTTOM: #cccccc 1px s=
-olid" valign=3D"top"><strong>Networking</strong> / <strong>Cocktail Receptio=
-n</strong></td>
-</tr>
-</tbody>
-</table>
-<table cellspacing=3D"0" cellpadding=3D"0" width=3D"100%" border=3D"0">
-<tbody>
-<tr>
-<td style=3D"PADDING-RIGHT: 20px; PADDING-LEFT: 20px; PADDING-BOTTOM: 20px; =
-PADDING-TOP: 20px; BORDER-BOTTOM: #000000 0px solid" height=3D"35"><p><font =
-face=3D"Arial, Helvetica, sans-serif" color=3D"#000000" size=3D"1">If you ar=
-e an employee or official of a government organization, please <a href=3D"ht=
-tp://www.oracle.com/us/dm/emaildisclaimer-214931.html?msgid=3D3-4708720579~e=
-vite=3DWWMK11054222MPP011~Disclaimer=3DEnglish/US/ownEvent~EName=3DOracle Te=
-chnology Network Architect Day =E2=80=93 by Architects, for Architects, Redw=
-ood Shores ~Items=3DDay Package~Cost=3D$55.00~Cname=3DOracle Events~CNo=3D+1=
-.650.507.4749~Email=3DOracle-EventCompliance_US@oracle.com" target=3D"_blank=
-"><font face=3D"Arial, Helvetica, sans-serif" color=3D"#ff0000" size=3D"1">c=
-lick here</font></a> for important ethics information regarding this event.<=
-/font></p>
-</td>
-</tr>
-</tbody>
-</table>
-</td>
-</tr>
-<tr>
-<td style=3D"PADDING-RIGHT: 20px; BORDER-TOP: #000000 1px solid; PADDING-LEF=
-T: 20px; PADDING-BOTTOM: 20px; PADDING-TOP: 20px; BORDER-BOTTOM: #000000 1px=
- solid"><img title=3D"Hardware and Software, Engineered to Work Together" al=
-t=3D"Hardware and Software, Engineered to Work Together" src=3D"http://www.o=
-racle.com/us/design/oracle-tagline-196877.gif" /></td>
-</tr>
-<tr>
-<td style=3D"PADDING-RIGHT: 5px; PADDING-LEFT: 5px; PADDING-BOTTOM: 5px; PAD=
-DING-TOP: 5px"><table cellspacing=3D"0" cellpadding=3D"5" width=3D"100%" bor=
-der=3D"0">
-<tbody>
-<tr>
-<td valign=3D"middle" height=3D"35"><font face=3D"Arial, Helvetica, sans-ser=
-if" size=3D"1">Copyright =C2=A9 2011, Oracle and/or its affiliates.<br />
-All rights reserved.</font></td>
-<td align=3D"right"><font face=3D"Arial, Helvetica, sans-serif" size=3D"1"><=
-A HREF=3D"https://gcmprm.oracle.com/ctd/lu?RID=3D=
-3-269BWP8=
-&CON=3D=
-&PRO=3D=
-3-2694A0J=
-&AID=3D=
-&OID=3D3-25VG81V&CID=3D3-25VG7YD&COID=3D3-25VG81S&T=3Dhttp%3a%2f%2fwww.oracl=
-e.com%2fus%2fcorporate%2fcontact%2findex.htm&TN=3D%26lt%3bfont+color%3d%22%2=
-3FF0000%22+size%3d%221%22%26gt%3bContact+Us%26lt%3b%2ffont%26gt%3b&RT=3DClic=
-ked+On+URL"><font color=3D"#FF0000" size=3D"1">Contact Us</font></A> | <A HR=
-EF=3D"https://gcmprm.oracle.com/ctd/lu?RID=3D=
-3-269BWP8=
-&CON=3D=
-&PRO=3D=
-3-2694A0J=
-&AID=3D=
-&OID=3D3-25VG81V&CID=3D3-25VG7YD&COID=3D3-25VG81S&T=3Dhttp%3a%2f%2fwww.oracl=
-e.com%2fus%2flegal%2findex.html&TN=3D%26lt%3bfont+color%3d%22%23FF0000%22+si=
-ze%3d%221%22%26gt%3bLegal+Notices+and+Terms+of+Use%26lt%3b%2ffont%26gt%3b&RT=
-=3DClicked+On+URL"><font color=3D"#FF0000" size=3D"1">Legal Notices and Term=
-s of Use</font></A> | <A HREF=3D"https://gcmprm.oracle.com/ctd/lu?RID=3D=
-3-269BWP8=
-&CON=3D=
-&PRO=3D=
-3-2694A0J=
-&AID=3D=
-&OID=3D3-25VG81V&CID=3D3-25VG7YD&COID=3D3-25VG81S&T=3Dhttp%3a%2f%2fwww.oracl=
-e.com%2fus%2flegal%2fprivacy%2findex.html&TN=3D%26lt%3bfont+color%3d%22%23FF=
-0000%22+size%3d%221%22%26gt%3bPrivacy+Statement%26lt%3b%2ffont%26gt%3b&RT=3D=
-Clicked+On+URL"><font color=3D"#FF0000" size=3D"1">Privacy Statement</font><=
-/A></font></td>
-</tr>
-</tbody>
-</table>
-</td>
-</tr>
-</tbody>
-</table>
-<table cellspacing=3D"0" cellpadding=3D"0" width=3D"614" align=3D"center" bo=
-rder=3D"0">
-<tbody>
-<tr>
-<td><p><font face=3D"Arial, Helvetica, sans-serif" size=3D"1">77313<br /></f=
-ont><br /><font face=3D"Arial, Helvetica, sans-serif" size=3D"1">Oracle Corp=
-oration - Worldwide Headquarters, 500 Oracle Parkway, OPL - E-mail Services,=
- Redwood Shores, CA 94065, United States<br /><br /><a href=3D"http://myprof=
-ile.oracle.com/" target=3D"_blank"><font face=3D"Arial, Helvetica, sans-seri=
-f" color=3D"#ff0000" size=3D"1"><u>Create or update your profile</u></font><=
-/a> to receive customized e-mail about Oracle products and services.<br /><b=
-r />
-If you do not wish to receive any further electronic marketing communication=
-s from Oracle you can <a href=3D"https://dne.oracle.com/pls/uns/OPT_OUT.th?c=
-oid=3D=
-&amp;prid=3D=
-3-2694A0J=
-&amp;trid=3D=
-3-25VG81V=
-&amp;cmid=3D=
-3-25VG7YD=
-&amp;ccid=3D=
-3-269BWP8=
-&amp;LC=3Den"><font face=3D"Arial, Helvetica, sans-serif" color=3D"#ff0000" =
-size=3D"1"><u>Opt-Out</u></font></a> completely, please note you will no lon=
-ger receive newsletters and product information you may have subscribed to.<=
-/font></p>
-<p><img src=3D"https://gcmprm.oracle.com/ctd/tmo?RID=3D=
-3-269BWP8=
-" width=3D1 height=3D1></p>
-</td>
-</tr>
-</tbody>
-</table>
-</body></html>
-
---BF_1312516587903_1294701597--
-
-
---===============8069914128722198124==
+--------------030109030109040807040307
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -632,4 +1231,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============8069914128722198124==--
+--------------030109030109040807040307--
