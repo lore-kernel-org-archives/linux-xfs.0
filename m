@@ -1,29 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p76CHXwb163034 for <xfs@oss.sgi.com>; Sat, 6 Aug 2011 07:17:33 -0500
+	p76CPxKm163387 for <xfs@oss.sgi.com>; Sat, 6 Aug 2011 07:25:59 -0500
 Received: from mail.nethype.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3F9DB12030A2
-	for <xfs@oss.sgi.com>; Sat,  6 Aug 2011 05:18:36 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0E59A151CA8A
+	for <xfs@oss.sgi.com>; Sat,  6 Aug 2011 05:27:03 -0700 (PDT)
 Received: from mail.nethype.de (mail.nethype.de [78.47.73.129]) by
-	cuda.sgi.com with ESMTP id UbIbcUqQNaFOqV64 for
-	<xfs@oss.sgi.com>; Sat, 06 Aug 2011 05:18:36 -0700 (PDT)
+	cuda.sgi.com with ESMTP id l5YDuDMB4j4YYyWp for
+	<xfs@oss.sgi.com>; Sat, 06 Aug 2011 05:27:03 -0700 (PDT)
 Received: from [10.0.0.5] (helo=doom.schmorp.de)
 	by mail.nethype.de with esmtp (Exim 4.72)
-	(envelope-from <schmorp@schmorp.de>) id 1Qpfom-0000pk-FH
-	for xfs@oss.sgi.com; Sat, 06 Aug 2011 12:17:28 +0000
+	(envelope-from <schmorp@schmorp.de>) id 1Qpfwy-0000sK-Nl
+	for xfs@oss.sgi.com; Sat, 06 Aug 2011 12:25:56 +0000
 Received: from [10.0.0.1] (helo=cerebro.laendle)
 	by doom.schmorp.de with esmtp (Exim 4.72)
-	(envelope-from <schmorp@schmorp.de>) id 1Qpfom-0003PC-9W
-	for xfs@oss.sgi.com; Sat, 06 Aug 2011 12:17:28 +0000
+	(envelope-from <schmorp@schmorp.de>) id 1Qpfwy-0003Zz-I8
+	for xfs@oss.sgi.com; Sat, 06 Aug 2011 12:25:56 +0000
 Received: from root by cerebro.laendle with local (Exim 4.72)
-	(envelope-from <root@schmorp.de>) id 1Qpfom-0005II-90
-	for xfs@oss.sgi.com; Sat, 06 Aug 2011 14:17:28 +0200
-Date: Sat, 6 Aug 2011 14:17:28 +0200
+	(envelope-from <root@schmorp.de>) id 1Qpfwy-0005JE-HY
+	for xfs@oss.sgi.com; Sat, 06 Aug 2011 14:25:56 +0200
+Date: Sat, 6 Aug 2011 14:25:56 +0200
 From: Marc Lehmann <schmorp@schmorp.de>
-Subject: xfs_repair 3.1.4/3.1.5: fatal error -- couldn't malloc dir2 buffer
-	data
-Message-ID: <20110806121728.GA20341@schmorp.de>
+Subject: frequent kernel BUG and lockups - 2.6.39 + xfs_fsr
+Message-ID: <20110806122556.GB20341@schmorp.de>
 MIME-Version: 1.0
 Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -40,20 +39,26 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-When trying to xfs_repair a 15GB image file, I get this:
+I get frequent (for servers) lockups and crashes when using 2.6.39. I saw the
+same problems using 3.0.0rc5, 5 and 6, and I think also 2.6.38. I don't see
+this lockups on 2.6.30 or 2.6.26 (all the respetcive latest debian kernels).
 
-Phase 3 - for each AG...
-        - scan and clear agi unlinked lists...
-        - process known inodes and perform inode discovery...
+The symtpom slightly differs - sometimes I get thousands of backtraces
+before the machine locks up, usually I get only one, and either the
+machine locks up completely, or only the processes using the filesystem in
+question (presumably) lock - all unkillable.
 
-fatal error -- couldn't malloc dir2 buffer data
+The backtraces look all very similar:
 
-this is 3.1.5 - 3.1.4 simply segfaults. using ltrace shows this as
-last call to malloc:
+   http://ue.tst.eu/85b9c9f66e36dda81be46892661c5bd0.txt
 
-   malloc(18446744073708732928)                                  = NULL
+this is from a desktop system - it tends to be harder to get these from
+servers.
 
-I think thats a bit unreasonable of xfs_repair :)
+all the backtraces crash with a null pointer dereference in xfs_iget, or
+in xfs_trans_log_inode, and always for process xfs_fsr.
+
+I haven't seen a crash without xfs_fsr.
 
 -- 
                 The choice of a       Deliantra, the free code+content MORPG
