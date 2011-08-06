@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p76ECilu168082 for <xfs@oss.sgi.com>; Sat, 6 Aug 2011 09:12:45 -0500
-Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 6A00A1EF75A6
-	for <xfs@oss.sgi.com>; Sat,  6 Aug 2011 07:12:43 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	8GOEVr0S7Fhn3pK7 for <xfs@oss.sgi.com>;
-	Sat, 06 Aug 2011 07:12:43 -0700 (PDT)
-Date: Sun, 7 Aug 2011 00:12:41 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs_repair 3.1.4/3.1.5: fatal error -- couldn't malloc dir2
-	buffer data
-Message-ID: <20110806141241.GF3162@dastard>
-References: <20110806121728.GA20341@schmorp.de>
+	p76FNgaj171277 for <xfs@oss.sgi.com>; Sat, 6 Aug 2011 10:23:42 -0500
+Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 72FD64C92E9
+	for <xfs@oss.sgi.com>; Sat,  6 Aug 2011 08:23:41 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id S58VkTGMYqZSNDgE
+	for <xfs@oss.sgi.com>; Sat, 06 Aug 2011 08:23:41 -0700 (PDT)
+Message-ID: <4E3D5C7A.8080707@hardwarefreak.com>
+Date: Sat, 06 Aug 2011 10:23:38 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110806121728.GA20341@schmorp.de>
+Subject: Re: Errors mounting xfs file system
+References: <CAPH64aG=uqdcyxaHQq1Phbmn-xs_rPmhJVoerKKSHG+wumGdrg@mail.gmail.com>
+In-Reply-To: <CAPH64aG=uqdcyxaHQq1Phbmn-xs_rPmhJVoerKKSHG+wumGdrg@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,33 +27,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Marc Lehmann <schmorp@schmorp.de>
+To: Warrick Howieson <whowieson@gmail.com>
 Cc: xfs@oss.sgi.com
 
-On Sat, Aug 06, 2011 at 02:17:28PM +0200, Marc Lehmann wrote:
-> When trying to xfs_repair a 15GB image file, I get this:
+On 8/6/2011 5:01 AM, Warrick Howieson wrote:
+> Hi:
 > 
-> Phase 3 - for each AG...
->         - scan and clear agi unlinked lists...
->         - process known inodes and perform inode discovery...
+> I have a couple of disks out of a NAS unit that I cannot mount.
 > 
-> fatal error -- couldn't malloc dir2 buffer data
+> They were in a Thecus N2200 NAS
 > 
-> this is 3.1.5 - 3.1.4 simply segfaults. using ltrace shows this as
-> last call to malloc:
-> 
->    malloc(18446744073708732928)                                  = NULL
-> 
-> I think thats a bit unreasonable of xfs_repair :)
+> When I look at the in gParted, they happily show up as xfs disks, but when I
+> rty to mount them, Iget a hole bunch of errors.
 
-Can you share a metadump of the image in question?
+Those "hole bunch of errors" may prove useful.  Maybe you could share
+them with us.
 
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Stan
 
 _______________________________________________
 xfs mailing list
