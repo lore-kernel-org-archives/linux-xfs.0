@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p76EKA8p168370 for <xfs@oss.sgi.com>; Sat, 6 Aug 2011 09:20:10 -0500
+	p76ECilu168082 for <xfs@oss.sgi.com>; Sat, 6 Aug 2011 09:12:45 -0500
 Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5A661151CCE1
-	for <xfs@oss.sgi.com>; Sat,  6 Aug 2011 07:21:14 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6A00A1EF75A6
+	for <xfs@oss.sgi.com>; Sat,  6 Aug 2011 07:12:43 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	3dc5DRjnK0b8Kv5v for <xfs@oss.sgi.com>;
-	Sat, 06 Aug 2011 07:21:14 -0700 (PDT)
-Date: Sun, 7 Aug 2011 00:20:05 +1000
+	8GOEVr0S7Fhn3pK7 for <xfs@oss.sgi.com>;
+	Sat, 06 Aug 2011 07:12:43 -0700 (PDT)
+Date: Sun, 7 Aug 2011 00:12:41 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: frequent kernel BUG and lockups - 2.6.39 + xfs_fsr
-Message-ID: <20110806142005.GG3162@dastard>
-References: <20110806122556.GB20341@schmorp.de>
+Subject: Re: xfs_repair 3.1.4/3.1.5: fatal error -- couldn't malloc dir2
+	buffer data
+Message-ID: <20110806141241.GF3162@dastard>
+References: <20110806121728.GA20341@schmorp.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110806122556.GB20341@schmorp.de>
+In-Reply-To: <20110806121728.GA20341@schmorp.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,47 +33,27 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Marc Lehmann <schmorp@schmorp.de>
 Cc: xfs@oss.sgi.com
 
-On Sat, Aug 06, 2011 at 02:25:56PM +0200, Marc Lehmann wrote:
-> I get frequent (for servers) lockups and crashes when using 2.6.39. I saw the
-> same problems using 3.0.0rc5, 5 and 6, and I think also 2.6.38. I don't see
-> this lockups on 2.6.30 or 2.6.26 (all the respetcive latest debian kernels).
+On Sat, Aug 06, 2011 at 02:17:28PM +0200, Marc Lehmann wrote:
+> When trying to xfs_repair a 15GB image file, I get this:
 > 
-> The symtpom slightly differs - sometimes I get thousands of backtraces
-> before the machine locks up, usually I get only one, and either the
-> machine locks up completely, or only the processes using the filesystem in
-> question (presumably) lock - all unkillable.
+> Phase 3 - for each AG...
+>         - scan and clear agi unlinked lists...
+>         - process known inodes and perform inode discovery...
 > 
-> The backtraces look all very similar:
+> fatal error -- couldn't malloc dir2 buffer data
 > 
->    http://ue.tst.eu/85b9c9f66e36dda81be46892661c5bd0.txt
-
-Tainted kernel. Please reproduce without the NVidia binary drivers.
-
-> this is from a desktop system - it tends to be harder to get these from
-> servers.
+> this is 3.1.5 - 3.1.4 simply segfaults. using ltrace shows this as
+> last call to malloc:
 > 
-> all the backtraces crash with a null pointer dereference in xfs_iget, or
-> in xfs_trans_log_inode, and always for process xfs_fsr.
+>    malloc(18446744073708732928)                                  = NULL
+> 
+> I think thats a bit unreasonable of xfs_repair :)
 
-and when you do, please record an event trace of the
-xfs_swap_extent* trace points while xfs_fsr is running and triggers
-a crash. That will tell me if xfs_fsr is corrupting inodes,
-
-> I haven't seen a crash without xfs_fsr.
-
-Then don't use xfs_fsr until we know if it is the cause of the
-problem (except to reproduce the problem).
-
-And as I always ask - why do you need to run xfs_fsr so often?  Do
-you really have filesystems that get quickly fragmented (or are you
-just running it from a cron-job because having on-line
-defragmentation is what all the cool kids do ;)? If you are getting
-fragmentation, what is the workload that is causing it?
+Can you share a metadump of the image in question?
 
 Cheers,
 
 Dave.
-
 -- 
 Dave Chinner
 david@fromorbit.com
