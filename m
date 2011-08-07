@@ -1,24 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p770EqJg197030 for <xfs@oss.sgi.com>; Sat, 6 Aug 2011 19:14:52 -0500
-Received: from ipmail07.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A199AC299C
-	for <xfs@oss.sgi.com>; Sat,  6 Aug 2011 17:14:49 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	1SfGTO2dA5cjebNi for <xfs@oss.sgi.com>;
-	Sat, 06 Aug 2011 17:14:49 -0700 (PDT)
-Date: Sun, 7 Aug 2011 10:14:46 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] PM / Freezer: Freeze filesystems while freezing
-	processes (v2)
-Message-ID: <20110807001446.GI3162@dastard>
-References: <4E1C70AD.1010101@u-club.de> <201108041127.30944.rjw@sisk.pl>
-	<201108050025.09792.rjw@sisk.pl> <201108062317.19033.rjw@sisk.pl>
+	p771gt7s201865 for <xfs@oss.sgi.com>; Sat, 6 Aug 2011 20:42:56 -0500
+Received: from mail.nethype.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D975553441C
+	for <xfs@oss.sgi.com>; Sat,  6 Aug 2011 18:42:41 -0700 (PDT)
+Received: from mail.nethype.de (mail.nethype.de [78.47.73.129]) by
+	cuda.sgi.com with ESMTP id un9cMDtnbzaduf3E for
+	<xfs@oss.sgi.com>; Sat, 06 Aug 2011 18:42:41 -0700 (PDT)
+Date: Sun, 7 Aug 2011 03:42:38 +0200
+From: Marc Lehmann <schmorp@schmorp.de>
+Subject: Re: frequent kernel BUG and lockups - 2.6.39 + xfs_fsr
+Message-ID: <20110807014237.GA18909@schmorp.de>
+References: <20110806122556.GB20341@schmorp.de> <20110806142005.GG3162@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <201108062317.19033.rjw@sisk.pl>
+In-Reply-To: <20110806142005.GG3162@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,189 +28,155 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Christoph <cr2005@u-club.de>, Theodore Ts'o <tytso@mit.edu>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Nigel Cunningham <nigel@tuxonice.net>, Pavel Machek <pavel@ucw.cz>, linux-fsdevel@vger.kernel.org, Linux PM mailing list <linux-pm@lists.linux-foundation.org>, linux-ext4@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Sat, Aug 06, 2011 at 11:17:18PM +0200, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rjw@sisk.pl>
+On Sun, Aug 07, 2011 at 12:20:05AM +1000, Dave Chinner <david@fromorbit.com> wrote:
+> > The backtraces look all very similar:
+> > 
+> >    http://ue.tst.eu/85b9c9f66e36dda81be46892661c5bd0.txt
 > 
-> Freeze all filesystems during the freezing of tasks by calling
-> freeze_bdev() for each of them and thaw them during the thawing
-> of tasks with the help of thaw_bdev().
+> Tainted kernel. Please reproduce without the NVidia binary drivers.
+
+This is just because it is form my desktop system. None of my other
+machines have a tainted kernel, but getting backtraces from there is much
+harder.
+
+> > all the backtraces crash with a null pointer dereference in xfs_iget, or
+> > in xfs_trans_log_inode, and always for process xfs_fsr.
 > 
-> This is needed by hibernation, because some filesystems (e.g. XFS)
-> deadlock with the preallocation of memory used by it if the memory
-> pressure caused by it is too heavy.
+> and when you do, please record an event trace of the
+> xfs_swap_extent* trace points while xfs_fsr is running and triggers
+> a crash. That will tell me if xfs_fsr is corrupting inodes,
+
+Ah - how do I do that?
+
+> > I haven't seen a crash without xfs_fsr.
 > 
-> The additional benefit of this change is that, if something goes
-> wrong after filesystems have been frozen, they will stay in a
-> consistent state and journal replays won't be necessary (e.g. after
-> a failing suspend or resume).  In particular, this should help to
-> solve a long-standing issue that in some cases during resume from
-> hibernation the boot loader causes the journal to be replied for the
-> filesystem containing the kernel image and initrd causing it to
-> become inconsistent with the information stored in the hibernation
-> image.
-> 
-> This change is based on earlier work by Nigel Cunningham.
-> 
-> Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
-> ---
-> 
-> OK, so nobody except for Pavel appears to have any comments, so I assume
-> that everyone except for Pavel is fine with the approach, interestingly enough.
-> 
-> I've removed the MS_FROZEN Pavel complained about from freeze_filesystems()
-> and added comments explaining why lockdep_off/on() are used.
-> 
-> Thanks,
-> Rafael
-> 
-> ---
->  fs/block_dev.c         |   56 +++++++++++++++++++++++++++++++++++++++++++++++++
->  include/linux/fs.h     |    6 +++++
->  kernel/power/process.c |    7 +++++-
->  3 files changed, 68 insertions(+), 1 deletion(-)
-> 
-> Index: linux-2.6/include/linux/fs.h
-> ===================================================================
-> --- linux-2.6.orig/include/linux/fs.h
-> +++ linux-2.6/include/linux/fs.h
-> @@ -211,6 +211,7 @@ struct inodes_stat_t {
->  #define MS_KERNMOUNT	(1<<22) /* this is a kern_mount call */
->  #define MS_I_VERSION	(1<<23) /* Update inode I_version field */
->  #define MS_STRICTATIME	(1<<24) /* Always perform atime updates */
-> +#define MS_FROZEN	(1<<25) /* bdev has been frozen */
->  #define MS_NOSEC	(1<<28)
->  #define MS_BORN		(1<<29)
->  #define MS_ACTIVE	(1<<30)
-> @@ -2047,6 +2048,8 @@ extern struct super_block *freeze_bdev(s
->  extern void emergency_thaw_all(void);
->  extern int thaw_bdev(struct block_device *bdev, struct super_block *sb);
->  extern int fsync_bdev(struct block_device *);
-> +extern void freeze_filesystems(void);
-> +extern void thaw_filesystems(void);
->  #else
->  static inline void bd_forget(struct inode *inode) {}
->  static inline int sync_blockdev(struct block_device *bdev) { return 0; }
-> @@ -2061,6 +2064,9 @@ static inline int thaw_bdev(struct block
->  {
->  	return 0;
->  }
-> +
-> +static inline void freeze_filesystems(void) {}
-> +static inline void thaw_filesystems(void) {}
->  #endif
->  extern int sync_filesystem(struct super_block *);
->  extern const struct file_operations def_blk_fops;
-> Index: linux-2.6/fs/block_dev.c
-> ===================================================================
-> --- linux-2.6.orig/fs/block_dev.c
-> +++ linux-2.6/fs/block_dev.c
-> @@ -314,6 +314,62 @@ out:
->  }
->  EXPORT_SYMBOL(thaw_bdev);
->  
-> +/**
-> + * freeze_filesystems - Force all filesystems into a consistent state.
-> + */
-> +void freeze_filesystems(void)
-> +{
-> +	struct super_block *sb;
-> +
-> +	/*
-> +	 * This is necessary, because some filesystems (e.g. ext3) lock
-> +	 * mutexes in their .freeze_fs() callbacks and leave them locked for
-> +	 * their .unfreeze_fs() callbacks to unlock.  This is done under
-> +	 * bdev->bd_fsfreeze_mutex, which is then released, but it makes
-> +	 * lockdep think something may be wrong when freeze_bdev() attempts
-> +	 * to acquire bdev->bd_fsfreeze_mutex for the next filesystem.
-> +	 */
-> +	lockdep_off();
+> Then don't use xfs_fsr until we know if it is the cause of the
+> problem (except to reproduce the problem).
 
-I thought those problems were fixed. If they aren't, then they most
-certainly need to be because holding mutexes over system calls is a
-bug.
+Why so defensive? xfs_fsr is an advertised feature and should just work
+(and does so with older kernels).
 
-Well, well:
+> And as I always ask - why do you need to run xfs_fsr so often?  Do
 
-[252182.603134] ================================================
-[252182.604832] [ BUG: lock held when returning to user space! ]
-[252182.606086] ------------------------------------------------
-[252182.607400] xfs_io/4917 is leaving the kernel with locks still held!
-[252182.608905] 1 lock held by xfs_io/4917:
-[252182.609739]  #0:  (&journal->j_barrier){+.+...}, at: [<ffffffff812a2aaf>] journal_lock_updates+0xef/0x100
+Did I say I am running it often? IT typically runs once a day for an hour.
 
-<sigh>
+> you really have filesystems that get quickly fragmented (or are you
 
-Looks like the problem was fixed for ext4, but not ext3.  Please
-report this to the ext3/4 list and get it fixed, don't work around
-it here.
+Yes, fragmentation with xfs is enourmous - I have yet to see whether
+the changes in recent kernels make a big difference, but for log files,
+reading through a log file with 60000 fragments tends to be much slower
+than reading through one with just a few fragments (or just one...).
 
-> +	/*
-> +	 * Freeze in reverse order so filesystems depending on others are
-> +	 * frozen in the right order (eg. loopback on ext3).
-> +	 */
-> +	list_for_each_entry_reverse(sb, &super_blocks, s_list) {
-> +		if (!sb->s_root || !sb->s_bdev ||
-> +		    (sb->s_frozen == SB_FREEZE_TRANS) ||
-> +		    (sb->s_flags & MS_RDONLY))
-> +			continue;
-> +
-> +		freeze_bdev(sb->s_bdev);
-> +		sb->s_flags |= MS_FROZEN;
-> +	}
+Freenet and other daemons are also creating enourmous fragmentation.
 
-AFAIK, that won't work for btrfs - you have to call freeze_super()
-directly for btrfs because it has a special relationship with
-sb->s_bdev. And besides, all freeze_bdev does is get an active
-reference on the superblock and call freeze_super().
+As such. xfs is much much worse at fragmentation than ext4, but at least
+it has xfs_fsr, which at least reduces file fragmentation.
 
-Also, that's traversing the list of superblock with locking and
-dereferencing the superblock without properly checking that the
-superblock is not being torn down. You should probably use
-iterate_supers (or at least copy the code), with a function that
-drops the s_umount read lock befor calling freeze_super() and then
-picks it back up afterwards.
+> just running it from a cron-job because having on-line
+> defragmentation is what all the cool kids do ;)?
 
-> +
-> +	lockdep_on();
-> +}
-> +
-> +/**
-> + * thaw_filesystems - Make all filesystems active again.
-> + */
-> +void thaw_filesystems(void)
-> +{
-> +	struct super_block *sb;
-> +
-> +	/*
-> +	 * This is necessary for the same reason as in freeze_filesystems()
-> +	 * above.
-> +	 */
-> +	lockdep_off();
-> +
-> +	list_for_each_entry(sb, &super_blocks, s_list)
-> +		if (sb->s_flags & MS_FROZEN) {
-> +			sb->s_flags &= ~MS_FROZEN;
-> +			thaw_bdev(sb->s_bdev, sb);
-> +		}
+Didn't know that, maybe I should run it more often then... Or maybe not,
+now that you tell me I shouldn't because xfs implementation quality is so
+much lower than for other filesystems?
 
-And once again, iterate_supers() is what you want here. And you
-should only call thaw_bdev() as it needs to do checks other than
-checking MS_FROZEN e.g. the above will unfreeze filesystems that
-were already frozen at the time a suspend occurs, and that could
-lead to corruption depending on why the filesystem was frozen...
+> If you are getting fragmentation, what is the workload that is causing
+> it?
 
-Also, you still need to check for a valid sb->s_bdev here, otherwise
-<splat>.
+Basically, anything but the OS itself. Copying large video files while the
+disk is busy with other things causes lots of fragmentation (usually 30
+fragments for a 100mb file), which in turn slows down things enourmously once
+the disk reaches 95% full.
 
-Cheers,
+Freenet is also a good test case.
 
-Dave.
+As are logfiles.
+
+Or a news spool.
+
+Or database files for databases that grow files (such as mysql myisam) -
+fortunately I could move of all those to SSDs this year.
+
+Or simply unpacking an archive.
+
+Simple example - the www.deliantra.net gameserver writes logs to a logfile
+and stdout, which is redirected to another logfile in the same directory
+(which gets truncated on each restart).
+
+Today I had to reboot the server because of buggy xfs (which prompted the
+bugreport, as I am seeing this bug for a while now, but so far didn't want
+to exclude e.g. bad ram or simply a corrupt filesystem), and in the 4
+hours uptime, I got a 4MB logfile with 8 fragments.
+
+This is clearly an improvement over the 2.6.26 kernel I used before on
+that machine. But over a few months this still leads to thousands of
+fragments, and scanning through a few gigabytes of log file that has 60000
+fragments on a disk that isn't completely idle is not exactly fast.
+
+The webserver accesslog on that machine which is a file on its own in its
+own directory is 15MB big (it was restarted beginning last month) and has
+1043 fragments (it doesn't get defragmented by xfs_fsr because it is in
+use).
+
+OTOH, that filesystem isn't used much and has 300gb free out of 500, so
+it is surprising that I still get so many fragments (the files are only
+closed when runing xfs_fsr on them, which is once every few weeks).
+
+Freenet fares much worse. The persistent blob has 1757 fragments for 13gb
+(not that bad), and the download database has 22756 for 600mb, fragments
+(that sucks).
+
+On my tv, the recorded video files that haven't been defragmented yet
+have between 11 and 63 fragments (all smaller than 2gb), which is almost
+acceptable, but I do not think that without a regular xfs_fsr the fs would
+be in that good shape after one or two years of usage.
+
+The cool thing about xfs_fsr is not that the cool kids run it, but that,
+unlike other filesystems that also fragment a lot (ext3 is absolutely
+horrible for example), it can mostly be fixed.
+
+Given that xfs is clearly the lowest quality of the common filesystems
+on linux (which I mean to be reiserfs, ext2/3/4 - and before you ask,
+literally each time I run a file system check xfs_repair crashes or hangs,
+and the filesystems have some issues, on all my numerous machines, and
+the number of bugs I have hit with xfs is easily twice the amount of
+bugs I hit with reiserfs and extX together, and I was an early adopter
+of reiserfs, before it even had a fsck), it is important to have some
+features left that cancel this general lack of quality.
+
+Right now, these features for me are the very tunable nature of xfs (for
+example, 512b block size for news spools), the very fast xfs_repair and
+the long-term maintainability of the filesystem - a heavily used ext3
+filesystem basically becomes unusable after a year.
+
+Another feature was the very good feedback I got from this list in the
+past w.r.t. bugs and fixes (while nowadays I have to listen to "xfs is
+optimised for nfs not for your use" or "then don't use it" replies to bug
+reports).
+
+All that and the fact that I haven't lost a single important file and the
+steady improvements to performance in XFS make xfs currently my filesystem
+of choice, especially for heavy-duty applications.
+
+PS: I run xfs on a total of about 40TB of filesystems at the moment.
+
+PPS: sorry for being so forcefully truthful about xfs above, but you
+really need an attitude change - don't tell people to not use a feature,
+or tell them they probably just want to be cool kids - the implementation
+quality of xfs is far from that of reiserfs or ext3 (not sure about ext4
+yet, but I do expect e2fsck to not let me down as often as xfs_repair),
+there are things to do, and I contribute what little I can by testing xfs
+with actual workloads.
+
 -- 
-Dave Chinner
-david@fromorbit.com
+                The choice of a       Deliantra, the free code+content MORPG
+      -----==-     _GNU_              http://www.deliantra.net
+      ----==-- _       generation
+      ---==---(_)__  __ ____  __      Marc Lehmann
+      --==---/ / _ \/ // /\ \/ /      schmorp@schmorp.de
+      -=====/_/_//_/\_,_/ /_/\_\
 
 _______________________________________________
 xfs mailing list
