@@ -1,29 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from oss.sgi.com (localhost [127.0.0.1])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id p782xfSZ007698;
-	Sun, 7 Aug 2011 21:59:41 -0500
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p782xXWg007681 for <xfs@oss.sgi.com>; Sun, 7 Aug 2011 21:59:33 -0500
-Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F04E11EF7F81
-	for <xfs@oss.sgi.com>; Sun,  7 Aug 2011 19:59:30 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	F8syDTnXNcdjGNAp for <xfs@oss.sgi.com>;
-	Sun, 07 Aug 2011 19:59:30 -0700 (PDT)
+	p786ekjx019584 for <xfs@oss.sgi.com>; Mon, 8 Aug 2011 01:40:46 -0500
+Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5E8175359E0
+	for <xfs@oss.sgi.com>; Sun,  7 Aug 2011 23:40:43 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	x228kLYPTAy2dwa7 for <xfs@oss.sgi.com>;
+	Sun, 07 Aug 2011 23:40:43 -0700 (PDT)
 Received: from chute ([192.168.1.1] helo=disappointment)
 	by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1QqG3f-0001ni-86
-	for xfs@oss.sgi.com; Mon, 08 Aug 2011 12:59:15 +1000
+	(envelope-from <dave@fromorbit.com>) id 1QqJVo-000273-BK
+	for xfs@oss.sgi.com; Mon, 08 Aug 2011 16:40:32 +1000
 Received: from dave by disappointment with local (Exim 4.76)
-	(envelope-from <dave@disappointment.disaster>) id 1QqG3e-0002Mf-KF
-	for xfs@oss.sgi.com; Mon, 08 Aug 2011 12:59:14 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1QqJVo-0002l2-4F
+	for xfs@oss.sgi.com; Mon, 08 Aug 2011 16:40:32 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] repair: handle repair of image files on large sector size
-	filesystems
-Date: Mon,  8 Aug 2011 12:59:14 +1000
-Message-Id: <1312772354-9059-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 2/2] xfs: don't serialise adjacent concurrent direct IO
+	appending writes
+Date: Mon,  8 Aug 2011 16:40:28 +1000
+Message-Id: <1312785628-10561-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1312785628-10561-1-git-send-email-david@fromorbit.com>
+References: <1312785628-10561-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,99 +38,264 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+For append write workloads, extending the file requires a certain
+amount of exclusive locking to be done up front to ensure sanity in
+things like ensuring that we've zeroed any allocated regions
+between the old EOF and the start of the new IO.
 
-Because repair uses direct IO, it cannot do IO smaller than a sector
-on the underlying device. When repairing a filesystem image, the
-filesystem hosting the image may have a sector size larger than the
-sector size of the image, and so single image sector reads and
-writes will fail.
+For single threads, this typically isn't a problem, and for large
+IOs we don't serialise enough for it to be a problem for two
+threads on really fast block devices. However for smaller IO and
+larger thread counts we have a problem.
 
-To avoid this, when checking a file and there is a sector size
-mismatch like this, turn off direct IO. While there, fix a compile
-bug in the IO_DEBUG option for libxfs which was found during triage.
+Take 4 concurrent sequential, single block sized and aligned IOs.
+After the first IO is submitted but before it completes, we end up
+with this state:
+
+        IO 1    IO 2    IO 3    IO 4
+      +-------+-------+-------+-------+
+      ^       ^
+      |       |
+      |       |
+      |       |
+      |       \- ip->i_new_size
+      \- ip->i_size
+
+And the IO is done without exclusive locking because offset <=
+ip->i_size. When we submit IO 2, we see offset > ip->i_size, and
+grab the IO lock exclusive, because there is a chance we need to do
+EOF zeroing. However, there is already an IO in progress that avoids
+the need for IO zeroing because offset <= ip->i_new_size. hence we
+could avoid holding the IO lock exlcusive for this. Hence after
+submission of the second IO, we'd end up this state:
+
+        IO 1    IO 2    IO 3    IO 4
+      +-------+-------+-------+-------+
+      ^               ^
+      |               |
+      |               |
+      |               |
+      |               \- ip->i_new_size
+      \- ip->i_size
+
+There is no need to grab the i_mutex of the IO lock in exclusive
+mode if we don't need to invalidate the page cache. Taking these
+locks on every direct IO effective serialises them as taking the IO
+lock in exclusive mode has to wait for all shared holders to drop
+the lock. That only happens when IO is complete, so effective it
+prevents dispatch of concurrent direct IO writes to the same inode.
+
+And so you can see that for the third concurrent IO, we'd avoid
+exclusive locking for the same reason we avoided the exclusive lock
+for the second IO.
+
+Fixing this is a bit more complex than that, because we need to hold
+a write-submission local value of ip->i_new_size to that clearing
+the value is only done if no other thread has updated it before our
+IO completes.....
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- libxfs/rdwr.c       |    2 +-
- repair/sb.c         |    9 ++++++++-
- repair/xfs_repair.c |   30 ++++++++++++++++++++++++++++++
- 3 files changed, 39 insertions(+), 2 deletions(-)
+ fs/xfs/linux-2.6/xfs_aops.c |    7 ++++
+ fs/xfs/linux-2.6/xfs_file.c |   73 +++++++++++++++++++++++++++++++++---------
+ 2 files changed, 64 insertions(+), 16 deletions(-)
 
-diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-index ec2675e..a656851 100644
---- a/libxfs/rdwr.c
-+++ b/libxfs/rdwr.c
-@@ -364,7 +364,7 @@ libxfs_getbufr(dev_t device, xfs_daddr_t blkno, int bblen)
- 		libxfs_initbuf(bp, device, blkno, blen);
- #ifdef IO_DEBUG
- 	printf("%lx: %s: allocated %u bytes buffer, key=%llu(%llu), %p\n",
--		pthread_self(), __FUNCTION__, BBTOB(len),
-+		pthread_self(), __FUNCTION__, blen,
- 		(long long)LIBXFS_BBTOOFF64(blkno), (long long)blkno, bp);
- #endif
+diff --git a/fs/xfs/linux-2.6/xfs_aops.c b/fs/xfs/linux-2.6/xfs_aops.c
+index 63e971e..dda9a9e 100644
+--- a/fs/xfs/linux-2.6/xfs_aops.c
++++ b/fs/xfs/linux-2.6/xfs_aops.c
+@@ -176,6 +176,13 @@ xfs_setfilesize(
+ 	if (unlikely(ioend->io_error))
+ 		return 0;
  
-diff --git a/repair/sb.c b/repair/sb.c
-index 0ee2345..c8df076 100644
---- a/repair/sb.c
-+++ b/repair/sb.c
-@@ -689,7 +689,14 @@ verify_set_primary_sb(xfs_sb_t		*rsb,
++	/*
++	 * If the IO is clearly not beyond the on-disk inode size,
++	 * return before we take locks.
++	 */
++	if (ioend->io_offset + ioend->io_size <= ip->i_d.di_size)
++		return 0;
++
+ 	if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL))
+ 		return EAGAIN;
+ 
+diff --git a/fs/xfs/linux-2.6/xfs_file.c b/fs/xfs/linux-2.6/xfs_file.c
+index a1dea10..62a5022 100644
+--- a/fs/xfs/linux-2.6/xfs_file.c
++++ b/fs/xfs/linux-2.6/xfs_file.c
+@@ -418,11 +418,13 @@ xfs_aio_write_isize_update(
+  */
+ STATIC void
+ xfs_aio_write_newsize_update(
+-	struct xfs_inode	*ip)
++	struct xfs_inode	*ip,
++	xfs_fsize_t		new_size)
+ {
+-	if (ip->i_new_size) {
++	if (new_size == ip->i_new_size) {
+ 		xfs_rw_ilock(ip, XFS_ILOCK_EXCL);
+-		ip->i_new_size = 0;
++		if (new_size == ip->i_new_size)
++			ip->i_new_size = 0;
+ 		if (ip->i_d.di_size > ip->i_size)
+ 			ip->i_d.di_size = ip->i_size;
+ 		xfs_rw_iunlock(ip, XFS_ILOCK_EXCL);
+@@ -473,7 +475,7 @@ xfs_file_splice_write(
+ 	ret = generic_file_splice_write(pipe, outfilp, ppos, count, flags);
+ 
+ 	xfs_aio_write_isize_update(inode, ppos, ret);
+-	xfs_aio_write_newsize_update(ip);
++	xfs_aio_write_newsize_update(ip, new_size);
+ 	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+ 	return ret;
+ }
+@@ -670,6 +672,7 @@ xfs_file_aio_write_checks(
+ 	struct file		*file,
+ 	loff_t			*pos,
+ 	size_t			*count,
++	xfs_fsize_t		*new_sizep,
+ 	int			*iolock)
+ {
+ 	struct inode		*inode = file->f_mapping->host;
+@@ -677,6 +680,8 @@ xfs_file_aio_write_checks(
+ 	xfs_fsize_t		new_size;
+ 	int			error = 0;
+ 
++restart:
++	*new_sizep = 0;
+ 	error = generic_write_checks(file, pos, count, S_ISBLK(inode->i_mode));
+ 	if (error) {
+ 		xfs_rw_iunlock(ip, XFS_ILOCK_EXCL | *iolock);
+@@ -684,20 +689,41 @@ xfs_file_aio_write_checks(
+ 		return error;
+ 	}
+ 
+-	new_size = *pos + *count;
+-	if (new_size > ip->i_size)
+-		ip->i_new_size = new_size;
+-
+ 	if (likely(!(file->f_mode & FMODE_NOCMTIME)))
+ 		file_update_time(file);
+ 
+ 	/*
+ 	 * If the offset is beyond the size of the file, we need to zero any
+ 	 * blocks that fall between the existing EOF and the start of this
+-	 * write.
++	 * write. Don't issue zeroing if this IO is adjacent to an IO already in
++	 * flight. If we are currently holding the iolock shared, we need to
++	 * update it to exclusive which involves dropping all locks and
++	 * relocking to maintain correct locking order. If we do this, restart
++	 * the function to ensure all checks and values are still valid.
  	 */
- 	num_sbs = MIN(NUM_SBS, rsb->sb_agcount);
- 	skip = howmany(num_sbs, rsb->sb_agcount);
--	size = NUM_AGH_SECTS * rsb->sb_sectsize;
-+
-+	/*
-+	 * We haven't been able to validate the sector size yet properly
-+	 * (e.g. in the case of repairing an image in a file), so we need to
-+	 * take into account sector mismatches and so use the maximum possible
-+	 * sector size rather than that in @rsb.
-+	 */
-+	size = NUM_AGH_SECTS * (1 << (XFS_MAX_SECTORSIZE_LOG));
- 	retval = 0;
- 	list = NULL;
- 	num_ok = 0;
-diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-index 4707b83..dda9daa 100644
---- a/repair/xfs_repair.c
-+++ b/repair/xfs_repair.c
-@@ -569,6 +569,36 @@ main(int argc, char **argv)
- 	memset(&xfs_m, 0, sizeof(xfs_mount_t));
- 	libxfs_sb_from_disk(&xfs_m.m_sb, XFS_BUF_TO_SBP(sbp));
- 
-+	/*
-+	 * if the sector size of the filesystem we are trying to repair is
-+	 * smaller than that of the underlying filesystem (i.e. we are repairing
-+	 * an image), the we have to turn off direct IO because we cannot do IO
-+	 * smaller than the host filesystem's sector size.
-+	 */
-+	if (isa_file) {
-+		int     fd = libxfs_device_to_fd(x.ddev);
-+		struct xfs_fsop_geom_v1 geom = {
-+			.sectsize = BBSIZE,
-+		};
-+
-+		if (ioctl(fd, XFS_IOC_FSGEOMETRY_V1, &geom) < 0) {
-+			do_warn(_("Cannot get host fiesystem geometry.\n"
-+		"Repair may fail if there is a sector size mismatch between "
-+		"the image and the host filesystem.\n"));
+-	if (*pos > ip->i_size)
++	if ((ip->i_new_size && *pos > ip->i_new_size) ||
++	    (!ip->i_new_size && *pos > ip->i_size)) {
++		if (*iolock == XFS_IOLOCK_SHARED) {
++			xfs_rw_iunlock(ip, XFS_ILOCK_EXCL | *iolock);
++			*iolock = XFS_IOLOCK_EXCL;
++			xfs_rw_ilock(ip, XFS_ILOCK_EXCL | *iolock);
++			goto restart;
 +		}
-+
-+		if (xfs_m.m_sb.sb_sectsize < geom.sectsize) {
-+			long	old_flags;
-+
-+			old_flags = fcntl(fd, F_GETFL, 0);
-+			if (fcntl(fd, F_SETFL, old_flags & ~O_DIRECT) < 0) {
-+				do_warn(_(
-+		"Sector size on host filesystem larger than image sector size.\n"
-+		"Cannot turn off direct IO, so exiting.\n"));
-+				exit(1);
-+			}
-+		}
+ 		error = -xfs_zero_eof(ip, *pos, ip->i_size);
 +	}
- 	mp = libxfs_mount(&xfs_m, &xfs_m.m_sb, x.ddev, x.logdev, x.rtdev, 0);
++
++	/*
++	 * Now we have zeroed beyond EOF as necessary, update the ip->i_new_size
++	 * only if it is larger than any other concurrent write beyond EOF.
++	 * Regardless of whether we update ip->i_new_size, return the updated
++	 * new_size to the caller.
++	 */
++	new_size = *pos + *count;
++	if (new_size > ip->i_size) {
++		if (new_size > ip->i_new_size)
++			ip->i_new_size = new_size;
++		*new_sizep = new_size;
++	}
  
- 	if (!mp)  {
+ 	xfs_rw_iunlock(ip, XFS_ILOCK_EXCL);
+ 	if (error)
+@@ -744,6 +770,7 @@ xfs_file_dio_aio_write(
+ 	unsigned long		nr_segs,
+ 	loff_t			pos,
+ 	size_t			ocount,
++	xfs_fsize_t		*new_size,
+ 	int			*iolock)
+ {
+ 	struct file		*file = iocb->ki_filp;
+@@ -764,13 +791,25 @@ xfs_file_dio_aio_write(
+ 	if ((pos & mp->m_blockmask) || ((pos + count) & mp->m_blockmask))
+ 		unaligned_io = 1;
+ 
+-	if (unaligned_io || mapping->nrpages || pos > ip->i_size)
++	/*
++	 * Tricky locking alert: if we are doing multiple concurrent sequential
++	 * writes (e.g. via aio), we don't need to do EOF zeroing if the current
++	 * IO is adjacent to an in-flight IO. That means for such IO we can
++	 * avoid taking the IOLOCK exclusively. Hence we avoid checking for
++	 * writes beyond EOF at this point when deciding what lock to take.
++	 * We will take the IOLOCK exclusive later if necessary.
++	 *
++	 * This, however, means that we need a local copy of the ip->i_new_size
++	 * value from this IO if we change it so that we can determine if we can
++	 * clear the value from the inode when this IO completes.
++	 */
++	if (unaligned_io || mapping->nrpages)
+ 		*iolock = XFS_IOLOCK_EXCL;
+ 	else
+ 		*iolock = XFS_IOLOCK_SHARED;
+ 	xfs_rw_ilock(ip, XFS_ILOCK_EXCL | *iolock);
+ 
+-	ret = xfs_file_aio_write_checks(file, &pos, &count, iolock);
++	ret = xfs_file_aio_write_checks(file, &pos, &count, new_size, iolock);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -809,6 +848,7 @@ xfs_file_buffered_aio_write(
+ 	unsigned long		nr_segs,
+ 	loff_t			pos,
+ 	size_t			ocount,
++	xfs_fsize_t		*new_size,
+ 	int			*iolock)
+ {
+ 	struct file		*file = iocb->ki_filp;
+@@ -822,7 +862,7 @@ xfs_file_buffered_aio_write(
+ 	*iolock = XFS_IOLOCK_EXCL;
+ 	xfs_rw_ilock(ip, XFS_ILOCK_EXCL | *iolock);
+ 
+-	ret = xfs_file_aio_write_checks(file, &pos, &count, iolock);
++	ret = xfs_file_aio_write_checks(file, &pos, &count, new_size, iolock);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -862,6 +902,7 @@ xfs_file_aio_write(
+ 	ssize_t			ret;
+ 	int			iolock;
+ 	size_t			ocount = 0;
++	xfs_fsize_t		new_size = 0;
+ 
+ 	XFS_STATS_INC(xs_write_calls);
+ 
+@@ -881,10 +922,10 @@ xfs_file_aio_write(
+ 
+ 	if (unlikely(file->f_flags & O_DIRECT))
+ 		ret = xfs_file_dio_aio_write(iocb, iovp, nr_segs, pos,
+-						ocount, &iolock);
++						ocount, &new_size, &iolock);
+ 	else
+ 		ret = xfs_file_buffered_aio_write(iocb, iovp, nr_segs, pos,
+-						ocount, &iolock);
++						ocount, &new_size, &iolock);
+ 
+ 	xfs_aio_write_isize_update(inode, &iocb->ki_pos, ret);
+ 
+@@ -905,7 +946,7 @@ xfs_file_aio_write(
+ 	}
+ 
+ out_unlock:
+-	xfs_aio_write_newsize_update(ip);
++	xfs_aio_write_newsize_update(ip, new_size);
+ 	xfs_rw_iunlock(ip, iolock);
+ 	return ret;
+ }
 -- 
 1.7.5.4
 
