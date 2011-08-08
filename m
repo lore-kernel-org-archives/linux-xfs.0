@@ -1,28 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p786pQGd020212 for <xfs@oss.sgi.com>; Mon, 8 Aug 2011 01:51:27 -0500
+	p786jl1Q019850 for <xfs@oss.sgi.com>; Mon, 8 Aug 2011 01:45:47 -0500
 Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 296291EF844B
-	for <xfs@oss.sgi.com>; Sun,  7 Aug 2011 23:51:25 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 03578535A04
+	for <xfs@oss.sgi.com>; Sun,  7 Aug 2011 23:45:46 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	Hzc3xm7VZygE7bsT for <xfs@oss.sgi.com>;
-	Sun, 07 Aug 2011 23:51:25 -0700 (PDT)
-Received: from chute ([192.168.1.1] helo=disappointment)
-	by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1QqJgA-00028Y-8w
-	for xfs@oss.sgi.com; Mon, 08 Aug 2011 16:51:14 +1000
-Received: from dave by disappointment with local (Exim 4.76)
-	(envelope-from <dave@disappointment.disaster>) id 1QqJgA-0002qD-1J
-	for xfs@oss.sgi.com; Mon, 08 Aug 2011 16:51:14 +1000
+	giZImNF9JAfn7Jpp for <xfs@oss.sgi.com>;
+	Sun, 07 Aug 2011 23:45:46 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/2] xfs: Don't allocate new buffers on every call to
-	_xfs_buf_find
-Date: Mon,  8 Aug 2011 16:51:10 +1000
-Message-Id: <1312786271-10871-2-git-send-email-david@fromorbit.com>
-In-Reply-To: <1312786271-10871-1-git-send-email-david@fromorbit.com>
-References: <1312786271-10871-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 1/2] vfs: split generic splice code from i_mutex locking
+Date: Mon,  8 Aug 2011 16:45:26 +1000
+Message-Id: <1312785927-10662-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1312785927-10662-1-git-send-email-david@fromorbit.com>
+References: <1312785927-10662-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,128 +29,148 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: linux-fsdevel@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Stats show that for an 8-way unlink @ ~80,000 unlinks/s we are doing
-~1 million cache hit lookups to ~3000 buffer creates. That's almost
-3 orders of magnitude more cahce hits than misses, so optimising for
-cache hits is quite important. In the cache hit case, we do not need
-to allocate a new buffer in case of a cache miss, so we are
-effectively hitting the allocator for no good reason for vast the
-majority of calls to _xfs_buf_find. 8-way create workloads are
-showing similar cache hit/miss ratios.
+XFS holds locks that should be nested inside the inode->i_mutex when
+generic_file_splice_write is called. This function takes the
+i_mutex, and so we get a lock inversion that triggers lockdep
+warnings and has been found to cause real deadlocks.
 
-The result is profiles that look like this:
-
-     samples  pcnt function                        DSO
-     _______ _____ _______________________________ _________________
-
-     1036.00 10.0% _xfs_buf_find                   [kernel.kallsyms]
-      582.00  5.6% kmem_cache_alloc                [kernel.kallsyms]
-      519.00  5.0% __memcpy                        [kernel.kallsyms]
-      468.00  4.5% __ticket_spin_lock              [kernel.kallsyms]
-      388.00  3.7% kmem_cache_free                 [kernel.kallsyms]
-      331.00  3.2% xfs_log_commit_cil              [kernel.kallsyms]
-
-
-Further, there is a fair bit of work involved in initialising a new
-buffer once a cache miss has occurred and we currently do that under
-the rbtree spinlock. That increases spinlock hold time on what are
-heavily used trees.
-
-To fix this, remove the initialisation of the buffer from
-_xfs_buf_find() and only allocate the new buffer once we've had a
-cache miss. Initialise the buffer immediately after allocating it in
-xfs_buf_get, too, so that is it ready for insert if we get another
-cache miss after allocation. This minimises lock hold time and
-avoids unnecessary allocator churn. The resulting profiles look
-like:
-
-     samples  pcnt function                    DSO
-     _______ _____ ___________________________ _________________
-
-     8111.00  9.1% _xfs_buf_find               [kernel.kallsyms]
-     4380.00  4.9% __memcpy                    [kernel.kallsyms]
-     4341.00  4.8% __ticket_spin_lock          [kernel.kallsyms]
-     3401.00  3.8% kmem_cache_alloc            [kernel.kallsyms]
-     2856.00  3.2% xfs_log_commit_cil          [kernel.kallsyms]
-     2625.00  2.9% __kmalloc                   [kernel.kallsyms]
-     2380.00  2.7% kfree                       [kernel.kallsyms]
-     2016.00  2.3% kmem_cache_free             [kernel.kallsyms]
-
-Showing a significant reduction in time spent doing allocation and
-freeing from slabs (kmem_cache_alloc and kmem_cache_free).
+XFS does not need the splice code to take the i_mutex to do the page
+cache manipulation, so modify the generic splice code to use an
+actor function for the code that currently requires the i_mutex to
+be taken.  Convert generic_file_splice_write() to use this new
+interface supplying a generic actor function that performs the same
+actions as the existing code.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/linux-2.6/xfs_buf.c |   34 ++++++++++++++++++++--------------
- 1 files changed, 20 insertions(+), 14 deletions(-)
+ fs/splice.c            |   58 ++++++++++++++++++++++++++++++++++++++----------
+ include/linux/splice.h |    5 ++++
+ 2 files changed, 51 insertions(+), 12 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
-index c57836d..56c685c 100644
---- a/fs/xfs/linux-2.6/xfs_buf.c
-+++ b/fs/xfs/linux-2.6/xfs_buf.c
-@@ -481,8 +481,6 @@ _xfs_buf_find(
+diff --git a/fs/splice.c b/fs/splice.c
+index fa2defa..a02dddc 100644
+--- a/fs/splice.c
++++ b/fs/splice.c
+@@ -967,24 +967,24 @@ ssize_t splice_from_pipe(struct pipe_inode_info *pipe, struct file *out,
+ }
  
- 	/* No match found */
- 	if (new_bp) {
--		_xfs_buf_initialize(new_bp, btp, range_base,
--				range_length, flags);
- 		rb_link_node(&new_bp->b_rbnode, parent, rbp);
- 		rb_insert_color(&new_bp->b_rbnode, &pag->pag_buf_tree);
- 		/* the buffer keeps the perag reference until it is freed */
-@@ -529,30 +527,38 @@ found:
-  *	Storage in memory for all portions of the buffer will be allocated,
-  *	although backing storage may not be.
+ /**
+- * generic_file_splice_write - splice data from a pipe to a file
++ * splice_write_to_file - splice data from a pipe to a file
+  * @pipe:	pipe info
+  * @out:	file to write to
+  * @ppos:	position in @out
+  * @len:	number of bytes to splice
+  * @flags:	splice modifier flags
++ * @actor:	worker that does the splicing from the pipe to the file
+  *
+  * Description:
+  *    Will either move or copy pages (determined by @flags options) from
+  *    the given pipe inode to the given file.
+  *
   */
--xfs_buf_t *
-+struct xfs_buf *
- xfs_buf_get(
--	xfs_buftarg_t		*target,/* target for buffer		*/
-+	struct xfs_buftarg	*target,/* target for buffer		*/
- 	xfs_off_t		ioff,	/* starting offset of range	*/
- 	size_t			isize,	/* length of range		*/
- 	xfs_buf_flags_t		flags)
+-ssize_t
+-generic_file_splice_write(struct pipe_inode_info *pipe, struct file *out,
+-			  loff_t *ppos, size_t len, unsigned int flags)
++ssize_t splice_write_to_file(struct pipe_inode_info *pipe, struct file *out,
++			     loff_t *ppos, size_t len, unsigned int flags,
++			     splice_write_actor actor)
  {
--	xfs_buf_t		*bp, *new_bp;
-+	struct xfs_buf		*bp;
-+	struct xfs_buf		*new_bp = NULL;
- 	int			error = 0;
+ 	struct address_space *mapping = out->f_mapping;
+-	struct inode *inode = mapping->host;
+ 	struct splice_desc sd = {
+ 		.total_len = len,
+ 		.flags = flags,
+@@ -1001,13 +1001,8 @@ generic_file_splice_write(struct pipe_inode_info *pipe, struct file *out,
+ 		if (ret <= 0)
+ 			break;
  
--	new_bp = xfs_buf_allocate(flags);
--	if (unlikely(!new_bp))
--		return NULL;
--
-+again:
- 	bp = _xfs_buf_find(target, ioff, isize, flags, new_bp);
--	if (bp == new_bp) {
-+	if (!(bp || new_bp)) {
-+		new_bp = xfs_buf_allocate(flags);
-+		if (unlikely(!new_bp))
-+			return NULL;
+-		mutex_lock_nested(&inode->i_mutex, I_MUTEX_CHILD);
+-		ret = file_remove_suid(out);
+-		if (!ret) {
+-			file_update_time(out);
+-			ret = splice_from_pipe_feed(pipe, &sd, pipe_to_file);
+-		}
+-		mutex_unlock(&inode->i_mutex);
++		ret = actor(pipe, &sd);
 +
-+		_xfs_buf_initialize(new_bp, target, ioff << BBSHIFT,
-+				isize << BBSHIFT, flags);
-+		goto again;
+ 	} while (ret > 0);
+ 	splice_from_pipe_end(pipe, &sd);
+ 
+@@ -1032,7 +1027,46 @@ generic_file_splice_write(struct pipe_inode_info *pipe, struct file *out,
+ 
+ 	return ret;
+ }
++EXPORT_SYMBOL(splice_write_to_file);
+ 
++static ssize_t generic_file_splice_write_actor(struct pipe_inode_info *pipe,
++					       struct splice_desc *sd)
++{
++	struct file *out = sd->u.file;
++	struct inode *inode = out->f_mapping->host;
++	ssize_t ret;
++
++	mutex_lock_nested(&inode->i_mutex, I_MUTEX_CHILD);
++	ret = file_remove_suid(out);
++	if (!ret) {
++		file_update_time(out);
++		ret = splice_from_pipe_feed(pipe, sd, pipe_to_file);
 +	}
++	mutex_unlock(&inode->i_mutex);
 +
-+	if (!bp) {
-+		xfs_buf_deallocate(new_bp);
-+		return NULL;
-+	} else if (bp == new_bp) {
- 		error = xfs_buf_allocate_memory(bp, flags);
- 		if (error)
- 			goto no_buffer;
--	} else {
-+	} else if (new_bp)
- 		xfs_buf_deallocate(new_bp);
--		if (unlikely(bp == NULL))
--			return NULL;
--	}
++	return ret;
++}
++
++/**
++ * generic_file_splice_write - splice data from a pipe to a file
++ * @pipe:	pipe info
++ * @out:	file to write to
++ * @ppos:	position in @out
++ * @len:	number of bytes to splice
++ * @flags:	splice modifier flags
++ *
++ * Description:
++ *    Will either move or copy pages (determined by @flags options) from
++ *    the given pipe inode to the given file.
++ *
++ */
++ssize_t
++generic_file_splice_write(struct pipe_inode_info *pipe, struct file *out,
++			  loff_t *ppos, size_t len, unsigned int flags)
++{
++	return splice_write_to_file(pipe, out, ppos, len, flags,
++				    generic_file_splice_write_actor);
++}
+ EXPORT_SYMBOL(generic_file_splice_write);
  
- 	if (!(bp->b_flags & XBF_MAPPED)) {
- 		error = _xfs_buf_map_pages(bp, flags);
+ static int write_pipe_buf(struct pipe_inode_info *pipe, struct pipe_buffer *buf,
+diff --git a/include/linux/splice.h b/include/linux/splice.h
+index 26e5b61..bd14281 100644
+--- a/include/linux/splice.h
++++ b/include/linux/splice.h
+@@ -61,6 +61,8 @@ typedef int (splice_actor)(struct pipe_inode_info *, struct pipe_buffer *,
+ 			   struct splice_desc *);
+ typedef int (splice_direct_actor)(struct pipe_inode_info *,
+ 				  struct splice_desc *);
++typedef ssize_t (splice_write_actor)(struct pipe_inode_info *,
++				  struct splice_desc *);
+ 
+ extern ssize_t splice_from_pipe(struct pipe_inode_info *, struct file *,
+ 				loff_t *, size_t, unsigned int,
+@@ -82,6 +84,9 @@ extern ssize_t splice_to_pipe(struct pipe_inode_info *,
+ extern ssize_t splice_direct_to_actor(struct file *, struct splice_desc *,
+ 				      splice_direct_actor *);
+ 
++extern ssize_t splice_write_to_file(struct pipe_inode_info *, struct file *,
++				    loff_t *, size_t, unsigned int,
++				    splice_write_actor *);
+ /*
+  * for dynamic pipe sizing
+  */
 -- 
 1.7.5.4
 
