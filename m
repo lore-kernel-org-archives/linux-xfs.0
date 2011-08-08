@@ -1,24 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p78A5DUw027705 for <xfs@oss.sgi.com>; Mon, 8 Aug 2011 05:05:14 -0500
-Received: from fileserver.binf.ku.dk (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 22C31C53C9
-	for <xfs@oss.sgi.com>; Mon,  8 Aug 2011 03:05:11 -0700 (PDT)
-Received: from fileserver.binf.ku.dk (174.binf.ku.dk [130.225.125.174]) by
-	cuda.sgi.com with ESMTP id T4OlV2LDI4EZQz2g for
-	<xfs@oss.sgi.com>; Mon, 08 Aug 2011 03:05:11 -0700 (PDT)
-Received: from ASSP.nospam (firewall.binf.ku.dk [10.10.0.254])
-	by fileserver.binf.ku.dk (Postfix) with ESMTP id D2C62E4367
-	for <xfs@oss.sgi.com>; Mon,  8 Aug 2011 12:05:09 +0200 (CEST)
-Received: from pegasus.binf.ku.dk (pegasus.binf.ku.dk [10.10.3.242])
-	by fileserver.binf.ku.dk (Postfix) with ESMTPSA
-	for <xfs@oss.sgi.com>; Mon,  8 Aug 2011 12:05:09 +0200 (CEST)
-Date: Mon, 8 Aug 2011 12:05:09 +0200 (CEST)
-From: Hanne Munkholm <hanne@binf.ku.dk>
-Subject: "Corrupt dinode 6242615, (btree extents).  This is a bug."
-Message-ID: <alpine.OSX.1.00.1108081203550.26464@pegasus.binf.ku.dk>
+	p78Bwnfs033166 for <xfs@oss.sgi.com>; Mon, 8 Aug 2011 06:58:49 -0500
+Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 26172536042
+	for <xfs@oss.sgi.com>; Mon,  8 Aug 2011 04:58:46 -0700 (PDT)
+Received: from mailsrv14.zmi.at (mailsrv14.zmi.at [212.69.164.54]) by
+	cuda.sgi.com with ESMTP id 7kKxOUiWcf7O7rOH for
+	<xfs@oss.sgi.com>; Mon, 08 Aug 2011 04:58:46 -0700 (PDT)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: Re: "Corrupt dinode 6242615, (btree extents).  This is a bug."
+Date: Mon, 8 Aug 2011 13:58:38 +0200
+References: <alpine.OSX.1.00.1108081203550.26464@pegasus.binf.ku.dk>
+In-Reply-To: <alpine.OSX.1.00.1108081203550.26464@pegasus.binf.ku.dk>
 MIME-Version: 1.0
+Message-Id: <201108081358.43727@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,129 +23,83 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="iso-8859-15"; Format="flowed"
+Content-Type: multipart/mixed; boundary="===============6832527651301567733=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: Hanne Munkholm <hanne@binf.ku.dk>
 
-Hi list.
+--===============6832527651301567733==
+Content-Type: multipart/signed;
+  boundary="nextPart3080799.1J2zpOdLuz";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 
-I have an xfs file system which got damaged due to not being
-properly unmounted before the iSCSI connection terminated (I
-think. Corrupted it is).
+--nextPart3080799.1J2zpOdLuz
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: quoted-printable
 
-I cannot mount it. =
+On Montag, 8. August 2011 Hanne Munkholm wrote:
+> a) Does it look like clearing the log with -L would be a good
+> idea? To me it looks like a lot of errors that are not log
+> errors is found?
 
-mount: wrong fs type, bad option, bad superblock on /dev/sdd,
-         missing codepage or helper program, or other error
-         In some cases useful info is found in syslog - try
-         dmesg | tail  or so
+Yes, mount -L/umount once to replay the log, when you are sure the block=20
+device works correctly again.
+=20
+> b) What's with the segfault? What happens when the "real" repair
+> with no -n gets to the segfault? Is it dangerous to try it if it
+> segfaults somewhere halfway? (More dangerous than it would
+> normally be).
+>=20
+> It is a 6TB file system and I am running a terribly old Xen
+> kernel: 2.6.26-2-xen-amd64 #1 SMP Mon Jun 13 18:44:16 UTC 2011
+> x86_64 GNU/Linux
 
-xfs_check suggests running xfs_repair -L. =
+Try to get the newest xfsprogs, maybe that's a bug in xfs_repair itself=20
+that has been fixed. If that doesn't help, a newer kernel might solve=20
+your problem.
 
-ERROR: The filesystem has valuable metadata changes in a log
-which needs to be replayed.  Mount the filesystem to replay the log, and
-unmount it before re-running xfs_check.  If you are unable to mount the
-filesystem, then use the xfs_repair -L option to destroy the log and attemp=
-t a
-repair.  Note that destroying the log may cause corruption -- please
-attempt a mount of the filesystem before doing this.
+Generally I've been able to fix all problems, and if not, xfsprogs has=20
+received an update to fix a bug. But it's been a long time since the=20
+latest bug, so an actual xfs_repair might help you.
 
-I haven't done that yet.
+=2D-=20
+mit freundlichen Gr=FCssen,
+Michael Monnerie, Ing. BSc
 
-Instead I ran
-xfs_repair -n.
-I got a lot of output that looks promising for a repair IMO, at
-least it acknowleges an xfs system beoing there:
+it-management Internet Services: Prot=E9ger
+http://proteger.at [gesprochen: Prot-e-schee]
+Tel: +43 660 / 415 6531
 
-xfs_repair -n /dev/sdd
-Phase 1 - find and verify superblock...
-Phase 2 - using internal log
-          - scan filesystem freespace and inode maps...
-          - found root inode chunk
-Phase 3 - for each AG...
-          - scan (but don't clear) agi unlinked lists...
-          - process known inodes and perform inode discovery...
-          - agno =3D 0
-bad nblocks 952 for inode 6242615, would reset to 972
-bad nextents 182 for inode 6242615, would reset to 185
-imap claims a free inode 13352640 is in use, would correct imap and clear i=
-node
-imap claims a free inode 13352641 is in use, would correct imap and clear i=
-node
-<snip>
-         - agno =3D 1
-          - agno =3D 2
-          - agno =3D 3
-          - process newly discovered inodes...
-Phase 4 - check for duplicate blocks...
-          - setting up duplicate extent list...
-          - check for inodes claiming duplicate blocks...
-          - agno =3D 0
-          - agno =3D 3
-          - agno =3D 2
-          - agno =3D 1
-bad nblocks 952 for inode 6242615, would reset to 972
-bad nextents 182 for inode 6242615, would reset to 185
-entry "sample_000001299840_0_0.000000.pdb" at block 764 offset
-2512 in directory inode 6242615 references free inode 13352640
-  	would clear inode number in entry at offset 2512...
-entry "sample_000001299860_0_0.000000.pdb" at block 764 offset
-2560 in directory inode 6242615 references free inode 13352641
-<snip>
-No modify flag set, skipping phase 5
-Phase 6 - check inode connectivity...
-          - traversing filesystem ...
-corrupt dinode 6242615, (btree extents).  This is a bug.
-Please capture the filesystem metadata with xfs_metadump and
-report it to xfs@oss.sgi.com.
-corrupt dinode 6242615, (btree extents).  This is a bug.
-Please capture the filesystem metadata with xfs_metadump and
-report it to xfs@oss.sgi.com.
-corrupt dinode 6242615, (btree extents).  This is a bug.
-Please capture the filesystem metadata with xfs_metadump and
-report it to xfs@oss.sgi.com.
-Segmentation fault
+// Haus zu verkaufen: http://zmi.at/langegg/
 
-But then it fails in phase 6, as shown above.
+--nextPart3080799.1J2zpOdLuz
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
-My questions are now:
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.16 (GNU/Linux)
 
-a) Does it look like clearing the log with -L would be a good
-idea? To me it looks like a lot of errors that are not log
-errors is found?
+iEYEABECAAYFAk4/z3MACgkQzhSR9xwSCbSz7ACg7Vm6msT3XnxiE3u1cBJiYITQ
+dsoAnjSoIf2mA09NS5vmf29Wk2emd8AW
+=Ph9L
+-----END PGP SIGNATURE-----
 
-b) What's with the segfault? What happens when the "real" repair
-with no -n gets to the segfault? Is it dangerous to try it if it
-segfaults somewhere halfway? (More dangerous than it would
-normally be).
-
-It is a 6TB file system and I am running a terribly old Xen
-kernel: 2.6.26-2-xen-amd64 #1 SMP Mon Jun 13 18:44:16 UTC 2011
-x86_64 GNU/Linux
-
-I have placed a xfs_metadump here:
-http://people.binf.ku.dk/hanne/tmp/metadata.gz
-
-Thanks in advance for some help in interpreting what the xfs
-tools are telling me.
-
-PS We do have some backup so I am not interested in smug
-comments about backup :) only in technical help in repairing
-this file system or concluding that we cannot).
+--nextPart3080799.1J2zpOdLuz--
 
 
-Med venlig hilsen / Best regards
---
-Hanne Munkholm                      Email: hanne@binf.ku.dk
-Systemadministrator                 Tlf: +45 35 32 13 49
-
-Bioinformatik-centret
-K=F8benhavns Biocenter, Biologisk Institut
-Ole Maal=F8es Vej 5, 2200 K=F8benhavn N
+--===============6832527651301567733==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============6832527651301567733==--
