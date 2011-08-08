@@ -1,17 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p78Fw2Hn042198 for <xfs@oss.sgi.com>; Mon, 8 Aug 2011 10:58:02 -0500
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 534CAC58FA
-	for <xfs@oss.sgi.com>; Mon,  8 Aug 2011 08:58:01 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id KI7sQYjAhq6EzjFc for
-	<xfs@oss.sgi.com>; Mon, 08 Aug 2011 08:58:01 -0700 (PDT)
-From: Josef Bacik <josef@redhat.com>
-Subject: [PATCH] xfstests: fsx: fix the hole punching test
-Date: Mon,  8 Aug 2011 11:58:00 -0400
-Message-Id: <1312819080-10083-1-git-send-email-josef@redhat.com>
+	p78HnIB4046154 for <xfs@oss.sgi.com>; Mon, 8 Aug 2011 12:49:19 -0500
+Received: from mail.nethype.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BE65BC6242
+	for <xfs@oss.sgi.com>; Mon,  8 Aug 2011 10:49:15 -0700 (PDT)
+Received: from mail.nethype.de (mail.nethype.de [78.47.73.129]) by
+	cuda.sgi.com with ESMTP id 1rsTrIe8s9APhPYS for
+	<xfs@oss.sgi.com>; Mon, 08 Aug 2011 10:49:15 -0700 (PDT)
+Date: Mon, 8 Aug 2011 19:49:11 +0200
+From: Marc Lehmann <schmorp@schmorp.de>
+Subject: Re: xfs_repair 3.1.4/3.1.5: fatal error -- couldn't malloc dir2
+	buffer data
+Message-ID: <20110808174911.GA7087@schmorp.de>
+References: <20110806121728.GA20341@schmorp.de> <20110806141241.GF3162@dastard>
+	<20110806175428.GA1900@schmorp.de> <20110806233913.GH3162@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20110806233913.GH3162@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,47 +26,66 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-The test to make sure we support hole punching is just wrong.  First it passes
-the mode options into the len argument, and secondly it uses 0 for what I assume
-was meant for the length, which doesn't work right.  Also it uses warn instead
-of just normal prt, which will cause xfstests to blow up for no reason.  So fix
-the arguments and the error message so that we can actually run xfstests with
-fsx on fs's that don't support hole punching yet.  Thanks,
+On Sun, Aug 07, 2011 at 09:39:13AM +1000, Dave Chinner <david@fromorbit.com> wrote:
+> > Then I unmounmted it and re-ran xfs_repair
+> > (http://ue.tst.eu/3cbc07150eb6b69c63361937c6c3044f.txt) which got much
+> > farther, but failed with the same error.
+> 
+> Looks lke corrupt directory blocks are causing it.
+> 
+> > Then I re-ran xfs_repair one last time, which ran through without any "error"
+> > messages.
+> > 
+> > An xfs_metadata -o is here (gzipped):
+> > http://data.plan9.de/smoker-chroot.bin.gz
+> 
+> I'll have a look at it.
 
-Signed-off-by: Josef Bacik <josef@redhat.com>
----
- ltp/fsx.c |    9 ++++-----
- 1 files changed, 4 insertions(+), 5 deletions(-)
+I had another lockup, no xfs_fsr involved this time.
 
-diff --git a/ltp/fsx.c b/ltp/fsx.c
-index 662af38..692ad58 100644
---- a/ltp/fsx.c
-+++ b/ltp/fsx.c
-@@ -1261,11 +1261,10 @@ test_punch_hole()
- {
- #ifdef FALLOC_FL_PUNCH_HOLE
- 	if (!lite && punch_hole_calls) {
--		if (fallocate(fd, 0, 0,
--			FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE) &&
--			errno == EOPNOTSUPP) {
--
--			warn("main: filesystem does not support fallocate punch hole, disabling");
-+		if (fallocate(fd, FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE, 0, 1) &&
-+		    errno == EOPNOTSUPP) {
-+			if (!quiet)
-+				prt("main: filesystem does not support fallocate punch hole, disabling\n");
- 			punch_hole_calls = 0;
- 		}
- 	}
+After rebooting, xfs_repair on the filesystem I mkfs'ed yesterday had the
+same problem, here is the metadump:
+
+   http://data.plan9.de/metadump-smoker-new.gz
+   
+(if it's not accessible right now then this is because thats the server
+that locked up, it should be up and running in an hour again).
+
+And here is the output of xfs_repair:
+
+   Phase 1 - find and verify superblock...
+   Phase 2 - using internal log
+           - zero log...
+           - scan filesystem freespace and inode maps...
+           - found root inode chunk
+   Phase 3 - for each AG...
+           - scan and clear agi unlinked lists...
+           - process known inodes and perform inode discovery...
+           - agno = 0
+           - agno = 1
+           - agno = 2
+           - agno = 3
+           - agno = 4
+           - agno = 5
+           - agno = 6
+           - agno = 7
+
+   fatal error -- couldn't malloc dir2 buffer data
+
 -- 
-1.7.5.2
+                The choice of a       Deliantra, the free code+content MORPG
+      -----==-     _GNU_              http://www.deliantra.net
+      ----==-- _       generation
+      ---==---(_)__  __ ____  __      Marc Lehmann
+      --==---/ / _ \/ // /\ \/ /      schmorp@schmorp.de
+      -=====/_/_//_/\_,_/ /_/\_\
 
 _______________________________________________
 xfs mailing list
