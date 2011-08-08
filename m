@@ -1,20 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p786jk86019840 for <xfs@oss.sgi.com>; Mon, 8 Aug 2011 01:45:46 -0500
+	p786eieO019576 for <xfs@oss.sgi.com>; Mon, 8 Aug 2011 01:40:45 -0500
 Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BD8B8535A00
-	for <xfs@oss.sgi.com>; Sun,  7 Aug 2011 23:45:44 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E10431EF858D
+	for <xfs@oss.sgi.com>; Sun,  7 Aug 2011 23:40:43 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	a0IsqajzHR2PWkp2 for <xfs@oss.sgi.com>;
-	Sun, 07 Aug 2011 23:45:44 -0700 (PDT)
+	WI8eImzUWQdOPd6W for <xfs@oss.sgi.com>;
+	Sun, 07 Aug 2011 23:40:43 -0700 (PDT)
+Received: from chute ([192.168.1.1] helo=disappointment)
+	by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1QqJVo-000272-9g
+	for xfs@oss.sgi.com; Mon, 08 Aug 2011 16:40:32 +1000
+Received: from dave by disappointment with local (Exim 4.76)
+	(envelope-from <dave@disappointment.disaster>) id 1QqJVo-0002l0-1m
+	for xfs@oss.sgi.com; Mon, 08 Aug 2011 16:40:32 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/2] xfs: fix splice/direct-IO deadlock
-Date: Mon,  8 Aug 2011 16:45:27 +1000
-Message-Id: <1312785927-10662-3-git-send-email-david@fromorbit.com>
-In-Reply-To: <1312785927-10662-1-git-send-email-david@fromorbit.com>
-References: <1312785927-10662-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 1/2] xfs: don't serialise direct IO reads on page cache checks
+Date: Mon,  8 Aug 2011 16:40:27 +1000
+Message-Id: <1312785628-10561-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1312785628-10561-1-git-send-email-david@fromorbit.com>
+References: <1312785628-10561-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,97 +36,61 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: linux-fsdevel@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-lockdep reports splice vs direct-io write lock inversions due to
-generic_file_splice_write() taking the inode->i_mutex inside
-XFS_IOLOCK_EXCL context. These lock contexts are inverted, hence can
-deadlock.  Use splice_write_to_file() with an actor that does not
-take the i_mutex to avoid these problems.
+There is no need to grab the i_mutex of the IO lock in exclusive
+mode if we don't need to invalidate the page cache. Taking these
+locks on every direct IO effective serialises them as taking the IO
+lock in exclusive mode has to wait for all shared holders to drop
+the lock. That only happens when IO is complete, so effective it
+prevents dispatch of concurrent direct IO reads to the same inode.
+
+Fix this by taking the IO lock shared to check the page cache state,
+and only then drop it and take the IO lock exclusively if there is
+work to be done. Hence for the normal direct IO case, no exclusive
+locking will occur.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Tested-by: Joern Engel <joern@logfs.org>
 ---
- fs/xfs/linux-2.6/xfs_file.c |   41 +++++++++++++++++++++++++++++------------
- 1 files changed, 29 insertions(+), 12 deletions(-)
+ fs/xfs/linux-2.6/xfs_file.c |   17 ++++++++++++++---
+ 1 files changed, 14 insertions(+), 3 deletions(-)
 
 diff --git a/fs/xfs/linux-2.6/xfs_file.c b/fs/xfs/linux-2.6/xfs_file.c
-index 62a5022..959d8b2 100644
+index 2fdc6d1..a1dea10 100644
 --- a/fs/xfs/linux-2.6/xfs_file.c
 +++ b/fs/xfs/linux-2.6/xfs_file.c
-@@ -38,6 +38,7 @@
- 
- #include <linux/dcache.h>
- #include <linux/falloc.h>
-+#include <linux/splice.h>
- 
- static const struct vm_operations_struct xfs_file_vm_ops;
- 
-@@ -431,13 +432,29 @@ xfs_aio_write_newsize_update(
- 	}
- }
- 
-+static ssize_t
-+xfs_file_splice_write_actor(
-+	struct pipe_inode_info	*pipe,
-+	struct splice_desc	*sd)
-+{
-+	struct file		*out = sd->u.file;
-+	ssize_t ret;
-+
-+	ret = file_remove_suid(out);
-+	if (!ret) {
-+		file_update_time(out);
-+		ret = splice_from_pipe_feed(pipe, sd, pipe_to_file);
-+	}
-+
-+	return ret;
-+}
-+
- /*
-- * xfs_file_splice_write() does not use xfs_rw_ilock() because
-- * generic_file_splice_write() takes the i_mutex itself. This, in theory,
-- * couuld cause lock inversions between the aio_write path and the splice path
-- * if someone is doing concurrent splice(2) based writes and write(2) based
-- * writes to the same inode. The only real way to fix this is to re-implement
-- * the generic code here with correct locking orders.
-+ * xfs_file_splice_write() does not use the generic file splice write path
-+ * because that takes the i_mutex, causing lock inversions with the IOLOCK.
-+ * Instead, we call splice_write_to_file() directly with our own actor that does
-+ * not take the i_mutex. This allows us to use the xfs_rw_ilock() functions like
-+ * the rest of the code and hence avoid lock inversions and deadlocks.
-  */
- STATIC ssize_t
- xfs_file_splice_write(
-@@ -461,22 +478,22 @@ xfs_file_splice_write(
- 	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
+@@ -317,7 +317,19 @@ xfs_file_aio_read(
+ 	if (XFS_FORCED_SHUTDOWN(mp))
  		return -EIO;
  
--	xfs_ilock(ip, XFS_IOLOCK_EXCL);
-+	xfs_rw_ilock(ip, XFS_IOLOCK_EXCL | XFS_ILOCK_EXCL);
+-	if (unlikely(ioflags & IO_ISDIRECT)) {
++	/*
++	 * Locking is a bit tricky here. If we take an exclusive lock
++	 * for direct IO, we effectively serialise all new concurrent
++	 * read IO to this file and block it behind IO that is currently in
++	 * progress because IO in progress holds the IO lock shared. We only
++	 * need to hold the lock exclusive to blow away the page cache, so
++	 * only take lock exclusively if the page cache needs invalidation.
++	 * This allows the normal direct IO case of no page cache pages to
++	 * proceeed concurrently without serialisation.
++	 */
++	xfs_rw_ilock(ip, XFS_IOLOCK_SHARED);
++	if ((ioflags & IO_ISDIRECT) && inode->i_mapping->nrpages) {
++		xfs_rw_iunlock(ip, XFS_IOLOCK_SHARED);
+ 		xfs_rw_ilock(ip, XFS_IOLOCK_EXCL);
  
- 	new_size = *ppos + count;
--
--	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 	if (new_size > ip->i_size)
- 		ip->i_new_size = new_size;
--	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+
-+	xfs_rw_iunlock(ip, XFS_ILOCK_EXCL);
+ 		if (inode->i_mapping->nrpages) {
+@@ -330,8 +342,7 @@ xfs_file_aio_read(
+ 			}
+ 		}
+ 		xfs_rw_ilock_demote(ip, XFS_IOLOCK_EXCL);
+-	} else
+-		xfs_rw_ilock(ip, XFS_IOLOCK_SHARED);
++	}
  
- 	trace_xfs_file_splice_write(ip, count, *ppos, ioflags);
- 
--	ret = generic_file_splice_write(pipe, outfilp, ppos, count, flags);
-+	ret = splice_write_to_file(pipe, outfilp, ppos, count, flags,
-+					xfs_file_splice_write_actor);
- 
- 	xfs_aio_write_isize_update(inode, ppos, ret);
- 	xfs_aio_write_newsize_update(ip, new_size);
--	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
-+	xfs_rw_iunlock(ip, XFS_IOLOCK_EXCL);
- 	return ret;
- }
+ 	trace_xfs_file_read(ip, size, iocb->ki_pos, ioflags);
  
 -- 
 1.7.5.4
