@@ -1,27 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p786pSU5020215 for <xfs@oss.sgi.com>; Mon, 8 Aug 2011 01:51:28 -0500
+	p786jk86019840 for <xfs@oss.sgi.com>; Mon, 8 Aug 2011 01:45:46 -0500
 Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 647791EF844B
-	for <xfs@oss.sgi.com>; Sun,  7 Aug 2011 23:51:26 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BD8B8535A00
+	for <xfs@oss.sgi.com>; Sun,  7 Aug 2011 23:45:44 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	fQFo7VFadZyfJylM for <xfs@oss.sgi.com>;
-	Sun, 07 Aug 2011 23:51:26 -0700 (PDT)
-Received: from chute ([192.168.1.1] helo=disappointment)
-	by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1QqJgA-00028Z-Ae
-	for xfs@oss.sgi.com; Mon, 08 Aug 2011 16:51:14 +1000
-Received: from dave by disappointment with local (Exim 4.76)
-	(envelope-from <dave@disappointment.disaster>) id 1QqJgA-0002qF-3b
-	for xfs@oss.sgi.com; Mon, 08 Aug 2011 16:51:14 +1000
+	a0IsqajzHR2PWkp2 for <xfs@oss.sgi.com>;
+	Sun, 07 Aug 2011 23:45:44 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/2] xfs: reduce the number of log forces from tail pushing
-Date: Mon,  8 Aug 2011 16:51:11 +1000
-Message-Id: <1312786271-10871-3-git-send-email-david@fromorbit.com>
-In-Reply-To: <1312786271-10871-1-git-send-email-david@fromorbit.com>
-References: <1312786271-10871-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 2/2] xfs: fix splice/direct-IO deadlock
+Date: Mon,  8 Aug 2011 16:45:27 +1000
+Message-Id: <1312785927-10662-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1312785927-10662-1-git-send-email-david@fromorbit.com>
+References: <1312785927-10662-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,99 +29,98 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: linux-fsdevel@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The AIL push code will issue a log force on ever single push loop
-that it exits and has encountered pinned items. It doesn't rescan
-these pinned items until it revisits the AIL from the start. Hence
-we only need to force the log once per walk from the start of the
-AIL to the target LSN.
-
-This results in numbers like this:
-
-	xs_push_ail_flush.....         1456
-	xs_log_force.........          1485
-
-For an 8-way 50M inode create workload - almost all the log forces
-are coming from the AIL pushing code.
-
-Reduce the number of log forces by only forcing the log if the
-previous walk found pinned buffers. This reduces the numbers to:
-
-	xs_push_ail_flush.....          665
-	xs_log_force.........           682
-
-For the same test.
+lockdep reports splice vs direct-io write lock inversions due to
+generic_file_splice_write() taking the inode->i_mutex inside
+XFS_IOLOCK_EXCL context. These lock contexts are inverted, hence can
+deadlock.  Use splice_write_to_file() with an actor that does not
+take the i_mutex to avoid these problems.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_trans_ail.c  |   18 +++++++++++++++++-
- fs/xfs/xfs_trans_priv.h |    1 +
- 2 files changed, 18 insertions(+), 1 deletions(-)
+ fs/xfs/linux-2.6/xfs_file.c |   41 +++++++++++++++++++++++++++++------------
+ 1 files changed, 29 insertions(+), 12 deletions(-)
 
-diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-index c15aa29..7a74bca 100644
---- a/fs/xfs/xfs_trans_ail.c
-+++ b/fs/xfs/xfs_trans_ail.c
-@@ -377,6 +377,7 @@ xfs_ail_worker(
- 	int			count = 0;
- 	int			push_xfsbufd = 0;
+diff --git a/fs/xfs/linux-2.6/xfs_file.c b/fs/xfs/linux-2.6/xfs_file.c
+index 62a5022..959d8b2 100644
+--- a/fs/xfs/linux-2.6/xfs_file.c
++++ b/fs/xfs/linux-2.6/xfs_file.c
+@@ -38,6 +38,7 @@
  
-+again:
- 	spin_lock(&ailp->xa_lock);
- 	target = ailp->xa_target;
- 	lip = xfs_trans_ail_cursor_first(ailp, &cur, ailp->xa_last_pushed_lsn);
-@@ -392,6 +393,20 @@ xfs_ail_worker(
- 	XFS_STATS_INC(xs_push_ail);
+ #include <linux/dcache.h>
+ #include <linux/falloc.h>
++#include <linux/splice.h>
  
- 	/*
-+	 * If last time we ran we encountered pinned items, force the log first,
-+	 * wait for it and then push again.
-+	 */
-+	if (ailp->xa_last_pushed_lsn == 0 &&
-+	    ailp->xa_log_flush) {
-+		ailp->xa_log_flush = 0;
-+		xfs_trans_ail_cursor_done(ailp, &cur);
-+		spin_unlock(&ailp->xa_lock);
-+		XFS_STATS_INC(xs_push_ail_flush);
-+		xfs_log_force(mp, SYNC_WAIT);
-+		goto again;
+ static const struct vm_operations_struct xfs_file_vm_ops;
+ 
+@@ -431,13 +432,29 @@ xfs_aio_write_newsize_update(
+ 	}
+ }
+ 
++static ssize_t
++xfs_file_splice_write_actor(
++	struct pipe_inode_info	*pipe,
++	struct splice_desc	*sd)
++{
++	struct file		*out = sd->u.file;
++	ssize_t ret;
++
++	ret = file_remove_suid(out);
++	if (!ret) {
++		file_update_time(out);
++		ret = splice_from_pipe_feed(pipe, sd, pipe_to_file);
 +	}
 +
-+	/*
- 	 * While the item we are looking at is below the given threshold
- 	 * try to flush it out. We'd like not to stop until we've at least
- 	 * tried to push on everything in the AIL with an LSN less than
-@@ -435,7 +450,7 @@ xfs_ail_worker(
- 		case XFS_ITEM_PINNED:
- 			XFS_STATS_INC(xs_push_ail_pinned);
- 			stuck++;
--			flush_log = 1;
-+			ailp->xa_log_flush++;
- 			break;
++	return ret;
++}
++
+ /*
+- * xfs_file_splice_write() does not use xfs_rw_ilock() because
+- * generic_file_splice_write() takes the i_mutex itself. This, in theory,
+- * couuld cause lock inversions between the aio_write path and the splice path
+- * if someone is doing concurrent splice(2) based writes and write(2) based
+- * writes to the same inode. The only real way to fix this is to re-implement
+- * the generic code here with correct locking orders.
++ * xfs_file_splice_write() does not use the generic file splice write path
++ * because that takes the i_mutex, causing lock inversions with the IOLOCK.
++ * Instead, we call splice_write_to_file() directly with our own actor that does
++ * not take the i_mutex. This allows us to use the xfs_rw_ilock() functions like
++ * the rest of the code and hence avoid lock inversions and deadlocks.
+  */
+ STATIC ssize_t
+ xfs_file_splice_write(
+@@ -461,22 +478,22 @@ xfs_file_splice_write(
+ 	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
+ 		return -EIO;
  
- 		case XFS_ITEM_LOCKED:
-@@ -500,6 +515,7 @@ out_done:
- 	if (!count) {
- 		/* We're past our target or empty, so idle */
- 		ailp->xa_last_pushed_lsn = 0;
-+		ailp->xa_log_flush = 0;
+-	xfs_ilock(ip, XFS_IOLOCK_EXCL);
++	xfs_rw_ilock(ip, XFS_IOLOCK_EXCL | XFS_ILOCK_EXCL);
  
- 		/*
- 		 * We clear the XFS_AIL_PUSHING_BIT first before checking
-diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
-index 212946b..0a6eec6 100644
---- a/fs/xfs/xfs_trans_priv.h
-+++ b/fs/xfs/xfs_trans_priv.h
-@@ -71,6 +71,7 @@ struct xfs_ail {
- 	struct delayed_work	xa_work;
- 	xfs_lsn_t		xa_last_pushed_lsn;
- 	unsigned long		xa_flags;
-+	int			xa_log_flush;
- };
+ 	new_size = *ppos + count;
+-
+-	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 	if (new_size > ip->i_size)
+ 		ip->i_new_size = new_size;
+-	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++
++	xfs_rw_iunlock(ip, XFS_ILOCK_EXCL);
  
- #define XFS_AIL_PUSHING_BIT	0
+ 	trace_xfs_file_splice_write(ip, count, *ppos, ioflags);
+ 
+-	ret = generic_file_splice_write(pipe, outfilp, ppos, count, flags);
++	ret = splice_write_to_file(pipe, outfilp, ppos, count, flags,
++					xfs_file_splice_write_actor);
+ 
+ 	xfs_aio_write_isize_update(inode, ppos, ret);
+ 	xfs_aio_write_newsize_update(ip, new_size);
+-	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
++	xfs_rw_iunlock(ip, XFS_IOLOCK_EXCL);
+ 	return ret;
+ }
+ 
 -- 
 1.7.5.4
 
