@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p78NxKaG062053 for <xfs@oss.sgi.com>; Mon, 8 Aug 2011 18:59:21 -0500
+	p7904TBK062212 for <xfs@oss.sgi.com>; Mon, 8 Aug 2011 19:04:29 -0500
 Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 476C2151E277
-	for <xfs@oss.sgi.com>; Mon,  8 Aug 2011 17:00:38 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 38606537337
+	for <xfs@oss.sgi.com>; Mon,  8 Aug 2011 17:04:28 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	BxQm1gfupVmyCLki for <xfs@oss.sgi.com>;
-	Mon, 08 Aug 2011 17:00:38 -0700 (PDT)
-Date: Tue, 9 Aug 2011 09:58:59 +1000
+	AoIc7omko45MYYuq for <xfs@oss.sgi.com>;
+	Mon, 08 Aug 2011 17:04:28 -0700 (PDT)
+Date: Tue, 9 Aug 2011 10:04:17 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: "Corrupt dinode 6242615, (btree extents).  This is a bug."
-Message-ID: <20110808235859.GN3162@dastard>
-References: <alpine.OSX.1.00.1108081203550.26464@pegasus.binf.ku.dk>
+Subject: Re: xfs: xfs_swap_extents needs to handle dynamic fork offsets
+Message-ID: <20110809000417.GO3162@dastard>
+References: <4E406ECD.2020708@tlinx.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <alpine.OSX.1.00.1108081203550.26464@pegasus.binf.ku.dk>
+In-Reply-To: <4E406ECD.2020708@tlinx.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,107 +29,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Hanne Munkholm <hanne@binf.ku.dk>
-Cc: xfs@oss.sgi.com
+To: "Linda A. Walsh" <xfs@tlinx.org>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Mon, Aug 08, 2011 at 12:05:09PM +0200, Hanne Munkholm wrote:
-> Hi list.
+On Mon, Aug 08, 2011 at 04:18:37PM -0700, Linda A. Walsh wrote:
+> I'm seeing several of these in 'dmesg':
 > 
-> I have an xfs file system which got damaged due to not being
-> properly unmounted before the iSCSI connection terminated (I
-> think. Corrupted it is).
+> [873569.328221] Filesystem dm-6: fs/xfs/xfs_dfrag.c: inode
+> 0x8227a310 format is incompatible for exchanging.
+> [873623.752724] Filesystem dm-6: fs/xfs/xfs_dfrag.c: inode
+> 0x8227a310 format is incompatible for exchanging.
+> [873669.721127] Filesystem dm-6: fs/xfs/xfs_dfrag.c: inode
+> 0x8227a310 format is incompatible for exchanging.
+> ...
 > 
-> I cannot mount it. mount: wrong fs type, bad option, bad superblock
-> on /dev/sdd,
->         missing codepage or helper program, or other error
->         In some cases useful info is found in syslog - try
->         dmesg | tail  or so
-
-That is the default error message from mount when the kernel throws
-and error. The error message in dmesg will tell you exactly what the
-error was - can you post that?
-
-> xfs_check suggests running xfs_repair -L. ERROR: The filesystem has
-> valuable metadata changes in a log
-> which needs to be replayed.  Mount the filesystem to replay the log, and
-> unmount it before re-running xfs_check.  If you are unable to mount the
-> filesystem, then use the xfs_repair -L option to destroy the log and attempt a
-> repair.  Note that destroying the log may cause corruption -- please
-> attempt a mount of the filesystem before doing this.
+> ----
+> am running 2.6.38.3,
 > 
-> I haven't done that yet.
+> & version 3.1.4-2.1 of 'xfsprogs'....
 
-You won't be able to because mounting is failing. Hence you only
-option for recovery is to use xfs_repair -L to zero the log.
-
-> Instead I ran
-> xfs_repair -n.
-> I got a lot of output that looks promising for a repair IMO, at
-> least it acknowleges an xfs system beoing there:
-> 
-> xfs_repair -n /dev/sdd
-> Phase 1 - find and verify superblock...
-> Phase 2 - using internal log
->          - scan filesystem freespace and inode maps...
->          - found root inode chunk
-> Phase 3 - for each AG...
->          - scan (but don't clear) agi unlinked lists...
->          - process known inodes and perform inode discovery...
->          - agno = 0
-> bad nblocks 952 for inode 6242615, would reset to 972
-> bad nextents 182 for inode 6242615, would reset to 185
-> imap claims a free inode 13352640 is in use, would correct imap and clear inode
-> imap claims a free inode 13352641 is in use, would correct imap and clear inode
-> <snip>
->         - agno = 1
->          - agno = 2
->          - agno = 3
->          - process newly discovered inodes...
-> Phase 4 - check for duplicate blocks...
->          - setting up duplicate extent list...
->          - check for inodes claiming duplicate blocks...
->          - agno = 0
->          - agno = 3
->          - agno = 2
->          - agno = 1
-> bad nblocks 952 for inode 6242615, would reset to 972
-> bad nextents 182 for inode 6242615, would reset to 185
-> entry "sample_000001299840_0_0.000000.pdb" at block 764 offset
-> 2512 in directory inode 6242615 references free inode 13352640
->  	would clear inode number in entry at offset 2512...
-> entry "sample_000001299860_0_0.000000.pdb" at block 764 offset
-> 2560 in directory inode 6242615 references free inode 13352641
-> <snip>
-> No modify flag set, skipping phase 5
-> Phase 6 - check inode connectivity...
->          - traversing filesystem ...
-> corrupt dinode 6242615, (btree extents).  This is a bug.
-
-That's one of the inodes that has already been found to be bad, and
-woul dhave had parts of it fixed before getting to phase 6. Hence
-this problem may have already been fixed by this stage.
-
-> Please capture the filesystem metadata with xfs_metadump and
-> report it to xfs@oss.sgi.com.
-> corrupt dinode 6242615, (btree extents).  This is a bug.
-> Please capture the filesystem metadata with xfs_metadump and
-> report it to xfs@oss.sgi.com.
-> corrupt dinode 6242615, (btree extents).  This is a bug.
-> Please capture the filesystem metadata with xfs_metadump and
-> report it to xfs@oss.sgi.com.
-> Segmentation fault
-
-And the chance is that this won't happen.
-
-> I have placed a xfs_metadump here:
-> http://people.binf.ku.dk/hanne/tmp/metadata.gz
-
-Downloading it now. it's about 550MB, so will take a little while...
+That's no surprise - there are still some formats of inodes that we
+cannot exchange because the code in xfs_fsr cannot precisely control
+the format of the inode forks from userspace. If you use the event
+tracing to capture the before and after swap extent trace points, I
+can tell you why they were incompatible for exchange, and whether
+xfs_fsr can be further modified to enable those files to be
+defragmented....
 
 Cheers,
 
 Dave.
-
 -- 
 Dave Chinner
 david@fromorbit.com
