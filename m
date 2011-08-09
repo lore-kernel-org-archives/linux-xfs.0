@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p79Bajoo092024 for <xfs@oss.sgi.com>; Tue, 9 Aug 2011 06:36:46 -0500
-Received: from mx2.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2B97F151EE44
-	for <xfs@oss.sgi.com>; Tue,  9 Aug 2011 04:38:06 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id 55qt4cpe0t2II1jd for <xfs@oss.sgi.com>;
-	Tue, 09 Aug 2011 04:38:06 -0700 (PDT)
-Date: Tue, 9 Aug 2011 13:36:41 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 1/2] vfs: split generic splice code from i_mutex locking
-Message-ID: <20110809113641.GC5466@quack.suse.cz>
-References: <1312785927-10662-1-git-send-email-david@fromorbit.com>
-	<1312785927-10662-2-git-send-email-david@fromorbit.com>
+	p79C3rvZ093653 for <xfs@oss.sgi.com>; Tue, 9 Aug 2011 07:03:54 -0500
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8E795C835A
+	for <xfs@oss.sgi.com>; Tue,  9 Aug 2011 05:03:52 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id nQIKZvMTdyaKkEO6 for
+	<xfs@oss.sgi.com>; Tue, 09 Aug 2011 05:03:52 -0700 (PDT)
+Message-ID: <4E41221A.1030608@redhat.com>
+Date: Tue, 09 Aug 2011 08:03:38 -0400
+From: Josef Bacik <josef@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1312785927-10662-2-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH] xfstests: fsx: fix fallocate logging
+References: <1312818914-9950-1-git-send-email-josef@redhat.com>
+	<20110809100658.GQ3162@dastard>
+In-Reply-To: <20110809100658.GQ3162@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,161 +31,25 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-On Mon 08-08-11 16:45:26, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On 08/09/2011 06:06 AM, Dave Chinner wrote:
+> On Mon, Aug 08, 2011 at 11:55:14AM -0400, Josef Bacik wrote:
+>> I've been getting segfaults on fsx tests with btrfs because we're using the
+>> wrong values for the logging with fallocate.  We were using the numbers 1,2 and
+>> 3 to indicate the type of preallocate we were doing, however we use these to
+>> point to an array, so obviously array[3] for a 3 element array is wrong, so fix
+>> these to do 0,1, and 2.  Also spit out of we're using KEEP_SIZE in the log to
+>> make it easier to figure out what's going on.  Thanks,
+>>
+>> Signed-off-by: Josef Bacik <josef@redhat.com>
 > 
-> XFS holds locks that should be nested inside the inode->i_mutex when
-> generic_file_splice_write is called. This function takes the
-> i_mutex, and so we get a lock inversion that triggers lockdep
-> warnings and has been found to cause real deadlocks.
+> Already fixed.
 > 
-> XFS does not need the splice code to take the i_mutex to do the page
-> cache manipulation, so modify the generic splice code to use an
-> actor function for the code that currently requires the i_mutex to
-> be taken.  Convert generic_file_splice_write() to use this new
-> interface supplying a generic actor function that performs the same
-> actions as the existing code.
+> http://git.kernel.org/?p=fs/xfs/xfstests-dev.git;a=commit;h=77c06202484237e26774efbd1774c251b6bef0a9
 > 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-  The patch looks good to me.
-Reviewed-by: Jan Kara <jack@suse.cz>
 
-								Honza
-> ---
->  fs/splice.c            |   58 ++++++++++++++++++++++++++++++++++++++----------
->  include/linux/splice.h |    5 ++++
->  2 files changed, 51 insertions(+), 12 deletions(-)
-> 
-> diff --git a/fs/splice.c b/fs/splice.c
-> index fa2defa..a02dddc 100644
-> --- a/fs/splice.c
-> +++ b/fs/splice.c
-> @@ -967,24 +967,24 @@ ssize_t splice_from_pipe(struct pipe_inode_info *pipe, struct file *out,
->  }
->  
->  /**
-> - * generic_file_splice_write - splice data from a pipe to a file
-> + * splice_write_to_file - splice data from a pipe to a file
->   * @pipe:	pipe info
->   * @out:	file to write to
->   * @ppos:	position in @out
->   * @len:	number of bytes to splice
->   * @flags:	splice modifier flags
-> + * @actor:	worker that does the splicing from the pipe to the file
->   *
->   * Description:
->   *    Will either move or copy pages (determined by @flags options) from
->   *    the given pipe inode to the given file.
->   *
->   */
-> -ssize_t
-> -generic_file_splice_write(struct pipe_inode_info *pipe, struct file *out,
-> -			  loff_t *ppos, size_t len, unsigned int flags)
-> +ssize_t splice_write_to_file(struct pipe_inode_info *pipe, struct file *out,
-> +			     loff_t *ppos, size_t len, unsigned int flags,
-> +			     splice_write_actor actor)
->  {
->  	struct address_space *mapping = out->f_mapping;
-> -	struct inode *inode = mapping->host;
->  	struct splice_desc sd = {
->  		.total_len = len,
->  		.flags = flags,
-> @@ -1001,13 +1001,8 @@ generic_file_splice_write(struct pipe_inode_info *pipe, struct file *out,
->  		if (ret <= 0)
->  			break;
->  
-> -		mutex_lock_nested(&inode->i_mutex, I_MUTEX_CHILD);
-> -		ret = file_remove_suid(out);
-> -		if (!ret) {
-> -			file_update_time(out);
-> -			ret = splice_from_pipe_feed(pipe, &sd, pipe_to_file);
-> -		}
-> -		mutex_unlock(&inode->i_mutex);
-> +		ret = actor(pipe, &sd);
-> +
->  	} while (ret > 0);
->  	splice_from_pipe_end(pipe, &sd);
->  
-> @@ -1032,7 +1027,46 @@ generic_file_splice_write(struct pipe_inode_info *pipe, struct file *out,
->  
->  	return ret;
->  }
-> +EXPORT_SYMBOL(splice_write_to_file);
->  
-> +static ssize_t generic_file_splice_write_actor(struct pipe_inode_info *pipe,
-> +					       struct splice_desc *sd)
-> +{
-> +	struct file *out = sd->u.file;
-> +	struct inode *inode = out->f_mapping->host;
-> +	ssize_t ret;
-> +
-> +	mutex_lock_nested(&inode->i_mutex, I_MUTEX_CHILD);
-> +	ret = file_remove_suid(out);
-> +	if (!ret) {
-> +		file_update_time(out);
-> +		ret = splice_from_pipe_feed(pipe, sd, pipe_to_file);
-> +	}
-> +	mutex_unlock(&inode->i_mutex);
-> +
-> +	return ret;
-> +}
-> +
-> +/**
-> + * generic_file_splice_write - splice data from a pipe to a file
-> + * @pipe:	pipe info
-> + * @out:	file to write to
-> + * @ppos:	position in @out
-> + * @len:	number of bytes to splice
-> + * @flags:	splice modifier flags
-> + *
-> + * Description:
-> + *    Will either move or copy pages (determined by @flags options) from
-> + *    the given pipe inode to the given file.
-> + *
-> + */
-> +ssize_t
-> +generic_file_splice_write(struct pipe_inode_info *pipe, struct file *out,
-> +			  loff_t *ppos, size_t len, unsigned int flags)
-> +{
-> +	return splice_write_to_file(pipe, out, ppos, len, flags,
-> +				    generic_file_splice_write_actor);
-> +}
->  EXPORT_SYMBOL(generic_file_splice_write);
->  
->  static int write_pipe_buf(struct pipe_inode_info *pipe, struct pipe_buffer *buf,
-> diff --git a/include/linux/splice.h b/include/linux/splice.h
-> index 26e5b61..bd14281 100644
-> --- a/include/linux/splice.h
-> +++ b/include/linux/splice.h
-> @@ -61,6 +61,8 @@ typedef int (splice_actor)(struct pipe_inode_info *, struct pipe_buffer *,
->  			   struct splice_desc *);
->  typedef int (splice_direct_actor)(struct pipe_inode_info *,
->  				  struct splice_desc *);
-> +typedef ssize_t (splice_write_actor)(struct pipe_inode_info *,
-> +				  struct splice_desc *);
->  
->  extern ssize_t splice_from_pipe(struct pipe_inode_info *, struct file *,
->  				loff_t *, size_t, unsigned int,
-> @@ -82,6 +84,9 @@ extern ssize_t splice_to_pipe(struct pipe_inode_info *,
->  extern ssize_t splice_direct_to_actor(struct file *, struct splice_desc *,
->  				      splice_direct_actor *);
->  
-> +extern ssize_t splice_write_to_file(struct pipe_inode_info *, struct file *,
-> +				    loff_t *, size_t, unsigned int,
-> +				    splice_write_actor *);
->  /*
->   * for dynamic pipe sizing
->   */
-> -- 
-> 1.7.5.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+Damnit, this is what I get for not git pulling first.  Thanks,
+
+Josef
 
 _______________________________________________
 xfs mailing list
