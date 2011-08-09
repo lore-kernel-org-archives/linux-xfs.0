@@ -1,13 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p79Kt9nt124090 for <xfs@oss.sgi.com>; Tue, 9 Aug 2011 15:55:09 -0500
-Subject: Re: [PATCH] xfsdump: allow multi-digit dialog prompts
+	p79Me5A8130843 for <xfs@oss.sgi.com>; Tue, 9 Aug 2011 17:40:05 -0500
+Subject: Re: [PATCH v2 1/7] xfsdump: remove conditional OPENMASKED code
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1311784913-14191-1-git-send-email-wkendall@sgi.com>
-References: <1311784913-14191-1-git-send-email-wkendall@sgi.com>
-Date: Tue, 9 Aug 2011 15:55:05 -0500
-Message-ID: <1312923305.9482.0.camel@doink>
+In-Reply-To: <1312497011-24840-2-git-send-email-wkendall@sgi.com>
+References: <1312497011-24840-1-git-send-email-wkendall@sgi.com>
+	<1312497011-24840-2-git-send-email-wkendall@sgi.com>
+Date: Tue, 9 Aug 2011 17:40:01 -0500
+Message-ID: <1312929601.9482.19.camel@doink>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -25,19 +26,16 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Bill Kendall <wkendall@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, 2011-07-27 at 11:41 -0500, Bill Kendall wrote:
-> xfsdump issues a multiple-choice dialog in various circumstances
-> (e.g., media change request). An assert incorrectly limits this to
-> at most 8 choices even though the code can handle up to 9.  Remove
-> the assert and change the code to handle multi-digit responses.
+On Thu, 2011-08-04 at 17:30 -0500, Bill Kendall wrote:
+> xfsdump contains a couple wrapper functions which block signals
+> during an open(2) call. This code is conditionally compiled and has
+> not been enabled for a long time. Remove the wrappers rather than
+> converting them to use the POSIX signal API.
 > 
 > Signed-off-by: Bill Kendall <wkendall@sgi.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-Sorry I didn't get to this sooner.
-
-I had a few minor quibbles, but I'm not going to even bother
-mentioning them.  Your change looks good.  I'll commit this
-for you.
+Looks good.
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
 
