@@ -1,23 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7ALhVL1210297 for <xfs@oss.sgi.com>; Wed, 10 Aug 2011 16:43:32 -0500
-Received: from artax.karlin.mff.cuni.cz (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B5A6618A2E93
-	for <xfs@oss.sgi.com>; Wed, 10 Aug 2011 14:43:28 -0700 (PDT)
-Received: from artax.karlin.mff.cuni.cz (artax.karlin.mff.cuni.cz
-	[195.113.26.195]) by cuda.sgi.com with ESMTP id
-	cGxEdMEj5VWGDO8s for <xfs@oss.sgi.com>;
-	Wed, 10 Aug 2011 14:43:28 -0700 (PDT)
-Date: Wed, 10 Aug 2011 23:43:27 +0200
-From: Pavel Machek <pavel@ucw.cz>
-Subject: Re: PM / hibernate xfs lock up / xfs_reclaim_inodes_ag
-Message-ID: <20110810214327.GA9320@atrey.karlin.mff.cuni.cz>
-References: <4E1C70AD.1010101@u-club.de> <201107262228.12099.rjw@sisk.pl>
-	<20110727004543.GE8048@dastard> <201107271135.13297.rjw@sisk.pl>
+	p7ALmAVk210526 for <xfs@oss.sgi.com>; Wed, 10 Aug 2011 16:48:10 -0500
+Subject: Re: [PATCH v2 7/7] xfsdump: refactor inventory session creation
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <1312497011-24840-8-git-send-email-wkendall@sgi.com>
+References: <1312497011-24840-1-git-send-email-wkendall@sgi.com>
+	<1312497011-24840-8-git-send-email-wkendall@sgi.com>
+Date: Wed, 10 Aug 2011 16:48:09 -0500
+Message-ID: <1313012889.2865.140.camel@doink>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <201107271135.13297.rjw@sisk.pl>
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,25 +23,21 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Christoph <cr2005@u-club.de>, Linux PM mailing list <linux-pm@lists.linux-foundation.org>, Nigel Cunningham <nigel@tuxonice.net>, xfs@oss.sgi.com
+To: Bill Kendall <wkendall@sgi.com>
+Cc: xfs@oss.sgi.com
 
-Hi!
+On Thu, 2011-08-04 at 17:30 -0500, Bill Kendall wrote:
+> Move the inventory session creation out of content_init and into a
+> new function, create_inv_session, in order to simplify restoration
+> of the signal mask. TTY-related signals are blocked prior to calling
+> create_inv_session and restored afterwards.
+> 
+> Signed-off-by: Bill Kendall <wkendall@sgi.com>
 
-> > > Why don't you simply submit a patch to do that?
-> > 
-> > a) I don't know how to test suspend/hibernate
-> > b) I don't have any hardware I can test it on.
+Looks good.
 
-hibernation should work on any hardware. Just add cmdline parameter
-resume=<your swap> and use echo disk > /sys/power/state.
+Reviewed-by: Alex Elder <aelder@sgi.com>
 
-suspend is supported on most PCs, and certainly on any notebook. Just
-echo mem > /sys/power/state.
-									Pavel
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
 
 _______________________________________________
 xfs mailing list
