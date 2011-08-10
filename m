@@ -1,16 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7ALlXdV210453 for <xfs@oss.sgi.com>; Wed, 10 Aug 2011 16:47:33 -0500
-Subject: Re: [PATCH v2 3/7] xfsdump: remove SIGCHLD handling
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1312497011-24840-4-git-send-email-wkendall@sgi.com>
-References: <1312497011-24840-1-git-send-email-wkendall@sgi.com>
-	<1312497011-24840-4-git-send-email-wkendall@sgi.com>
-Date: Wed, 10 Aug 2011 16:47:29 -0500
-Message-ID: <1313012849.2865.135.camel@doink>
+	p7ALhVL1210297 for <xfs@oss.sgi.com>; Wed, 10 Aug 2011 16:43:32 -0500
+Received: from artax.karlin.mff.cuni.cz (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B5A6618A2E93
+	for <xfs@oss.sgi.com>; Wed, 10 Aug 2011 14:43:28 -0700 (PDT)
+Received: from artax.karlin.mff.cuni.cz (artax.karlin.mff.cuni.cz
+	[195.113.26.195]) by cuda.sgi.com with ESMTP id
+	cGxEdMEj5VWGDO8s for <xfs@oss.sgi.com>;
+	Wed, 10 Aug 2011 14:43:28 -0700 (PDT)
+Date: Wed, 10 Aug 2011 23:43:27 +0200
+From: Pavel Machek <pavel@ucw.cz>
+Subject: Re: PM / hibernate xfs lock up / xfs_reclaim_inodes_ag
+Message-ID: <20110810214327.GA9320@atrey.karlin.mff.cuni.cz>
+References: <4E1C70AD.1010101@u-club.de> <201107262228.12099.rjw@sisk.pl>
+	<20110727004543.GE8048@dastard> <201107271135.13297.rjw@sisk.pl>
 MIME-Version: 1.0
-Reply-To: aelder@sgi.com
+Content-Disposition: inline
+In-Reply-To: <201107271135.13297.rjw@sisk.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,35 +30,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Bill Kendall <wkendall@sgi.com>
-Cc: xfs@oss.sgi.com
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Christoph <cr2005@u-club.de>, Linux PM mailing list <linux-pm@lists.linux-foundation.org>, Nigel Cunningham <nigel@tuxonice.net>, xfs@oss.sgi.com
 
-On Thu, 2011-08-04 at 17:30 -0500, Bill Kendall wrote:
-> The multi-stream version of xfsdump for IRIX used sprocs for
-> threading. When a "thread" exits with sprocs, a SIGCHLD is sent to
-> the main thread just as if a regular child process exited. A future
-> multi-stream version of xfsdump would use pthreads, so the SIGCHLD
-> code is no longer needed. So:
-> 
-> - No longer register for or handle SIGCHLD (SIGCLD).
-> - Remove signal handling code for child processes.
-> - Remove cldmgr_killall() as there are no children.
+Hi!
 
-OK, it took a bit to verify this, but it looks to
-me like most of the child thread stuff is inoperative,
-because the "is miniroot" flag gets unconditionally
-set, and with that set everything is single-threaded.
+> > > Why don't you simply submit a patch to do that?
+> > 
+> > a) I don't know how to test suspend/hibernate
+> > b) I don't have any hardware I can test it on.
 
-By not registering a handler for SIGCHLD you are
-assuming the default, which is to ignore it.  It
-might be better to explicitly set it to SIG_IGN.
+hibernation should work on any hardware. Just add cmdline parameter
+resume=<your swap> and use echo disk > /sys/power/state.
 
-Other than that, this looks good.
-
-Reviewed-by: Alex Elder <aelder@sgi.com>
-
-> Signed-off-by: Bill Kendall <wkendall@sgi.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+suspend is supported on most PCs, and certainly on any notebook. Just
+echo mem > /sys/power/state.
+									Pavel
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
 
 _______________________________________________
 xfs mailing list
