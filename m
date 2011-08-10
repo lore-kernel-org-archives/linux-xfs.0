@@ -1,25 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7A5mWuT161402 for <xfs@oss.sgi.com>; Wed, 10 Aug 2011 00:48:33 -0500
-Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 23CFC6CB87
-	for <xfs@oss.sgi.com>; Tue,  9 Aug 2011 22:49:57 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	lbSaocHoAJjoaOAs for <xfs@oss.sgi.com>;
-	Tue, 09 Aug 2011 22:49:57 -0700 (PDT)
-Date: Wed, 10 Aug 2011 15:48:27 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/2] xfs: Don't allocate new buffers on every call to
-	_xfs_buf_find
-Message-ID: <20110810054827.GZ3162@dastard>
-References: <1312786271-10871-1-git-send-email-david@fromorbit.com>
-	<1312786271-10871-2-git-send-email-david@fromorbit.com>
-	<20110809075151.GA22968@infradead.org>
+	p7A6xWbI165088 for <xfs@oss.sgi.com>; Wed, 10 Aug 2011 01:59:33 -0500
+Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9B00B1E72E58
+	for <xfs@oss.sgi.com>; Tue,  9 Aug 2011 23:59:29 -0700 (PDT)
+Received: from mailsrv14.zmi.at (mailsrv14.zmi.at [212.69.164.54]) by
+	cuda.sgi.com with ESMTP id iCI6QgnFQOvgf9Nl for
+	<xfs@oss.sgi.com>; Tue, 09 Aug 2011 23:59:29 -0700 (PDT)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: Re: frequent kernel BUG and lockups - 2.6.39 + xfs_fsr
+Date: Wed, 10 Aug 2011 08:59:26 +0200
+References: <20110806122556.GB20341@schmorp.de> <201108091210.50204@zmi.at>
+	<20110809111526.GA7631@schmorp.de>
+In-Reply-To: <20110809111526.GA7631@schmorp.de>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110809075151.GA22968@infradead.org>
+Message-Id: <201108100859.27576@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,121 +24,108 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============3100277545412468677=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Marc Lehmann <schmorp@schmorp.de>
 
-On Tue, Aug 09, 2011 at 03:51:51AM -0400, Christoph Hellwig wrote:
-> On Mon, Aug 08, 2011 at 04:51:10PM +1000, Dave Chinner wrote:
-> > -xfs_buf_t *
-> > +struct xfs_buf *
-> >  xfs_buf_get(
-> > -	xfs_buftarg_t		*target,/* target for buffer		*/
-> > +	struct xfs_buftarg	*target,/* target for buffer		*/
-> >  	xfs_off_t		ioff,	/* starting offset of range	*/
-> >  	size_t			isize,	/* length of range		*/
-> >  	xfs_buf_flags_t		flags)
-> >  {
-> > -	xfs_buf_t		*bp, *new_bp;
-> > +	struct xfs_buf		*bp;
-> > +	struct xfs_buf		*new_bp = NULL;
-> >  	int			error = 0;
-> >  
-> > -	new_bp = xfs_buf_allocate(flags);
-> > -	if (unlikely(!new_bp))
-> > -		return NULL;
-> > -
-> > +again:
-> >  	bp = _xfs_buf_find(target, ioff, isize, flags, new_bp);
-> > -	if (bp == new_bp) {
-> > +	if (!(bp || new_bp)) {
-> > +		new_bp = xfs_buf_allocate(flags);
-> > +		if (unlikely(!new_bp))
-> > +			return NULL;
-> > +
-> > +		_xfs_buf_initialize(new_bp, target, ioff << BBSHIFT,
-> > +				isize << BBSHIFT, flags);
-> > +		goto again;
-> > +	}
-> > +
-> > +	if (!bp) {
-> > +		xfs_buf_deallocate(new_bp);
-> > +		return NULL;
-> > +	} else if (bp == new_bp) {
-> >  		error = xfs_buf_allocate_memory(bp, flags);
-> >  		if (error)
-> >  			goto no_buffer;
-> > -	} else {
-> > +	} else if (new_bp)
-> >  		xfs_buf_deallocate(new_bp);
-> > -		if (unlikely(bp == NULL))
-> > -			return NULL;
-> > -	}
-> 
-> The while loop looks a bit confusing to me.  Why not unroll it similar
-> to how it's done for the VFS inode cache:
-> 
-> 	bp = _xfs_buf_find(target, ioff, isize, flags, new_bp);
-> 	if (bp)
-> 		goto found;
-> 
-> 	new_bp = xfs_buf_allocate(flags);
-> 	if (unlikely(!new_bp))
-> 		return NULL;
-> 	_xfs_buf_initialize(new_bp, target, ioff << BBSHIFT, isize << BBSHIFT,
-> 			    flags);
-> 	bp = _xfs_buf_find(target, ioff, isize, flags, new_bp);
-> 	if (!bp) {
-> 		xfs_buf_deallocate(new_bp);
-> 		return NULL;
-> 	}
-> 
-> 	if (bp == new_bp) {
->   		error = xfs_buf_allocate_memory(bp, flags);
->   		if (error)
->   			goto no_buffer;
-> 	}
-> found:
+--===============3100277545412468677==
+Content-Type: multipart/signed;
+  boundary="nextPart9013522.CcGkeH8okR";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 
-Makes sense.
+--nextPart9013522.CcGkeH8okR
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 
-> or even better make sure all buffer initialization is done either as
-> part of xfs_buf_find or the caller - although we'd need a variant
-> with caller locking if we want to go down the latter route.  This
-> variant would be nessecary if we ever want to add shared/exclusive or
-> RCU locking for buffer lookup anyway.
+On Dienstag, 9. August 2011 Marc Lehmann wrote:
+> On Tue, Aug 09, 2011 at 12:10:48PM +0200, Michael Monnerie=20
+<michael.monnerie@is.it-management.at> wrote:
+> > First of all, please calm down. Getting personal is not bringing us
+> > anywhere.
+>=20
+> Well, it's not me who's getting personal, so...?
 
-I'll leave that problem for when RCU-izing the lookup - I haven't
-quite worked out what the best way of doing that is yet, anyway.
+A single rant from a dev shouldn't hurt one too much. He might have been=20
+sitting in front of some code during 72 hours, his eyes already being in=20
+16:9 format staring at a weird bug... It's OK to strike back once, but=20
+then be cool again and work at the problem.
+=20
+> As has been reported on this list, this option is really harmful on
+> current xfs - in my case, it lead to xfs causing ENOSPC even when the
+> disk was 40% empty (~188gb).
 
-> There's also some other weird things here that should be cleaned up
-> when touching it:
-> 
->  - we should never be able to find a buffer with the wrong mapped
->    state, so this could be replaced by an assert
+Was this the "NFS optimization" stuff? I don't like that either.
+=20
+> Well, if it were one fragment, you could read that in 4-5 seconds, at
+> 374 fragments, it's probably around 6-7 seconds. Thats not harmful,
+> but if you extrapolate this to a few gigabytes and a lot of files,
+> it becomes quite the overhead.
 
-OK.
+True, if you have to read tons of log files all day. That's not my=20
+normal use case, so I didn't bother about that until now.
 
->  - there should be no need to re-assign b_bn and b_count_desired
->    when we find a buffer
+> That allocsize option is no longer reasonable with newer kernels, as
+> the kernel will reserve 64m diskspace even for 1kb files
+> indefinitely.
 
-Yes, definitely.
+Just "as long as the inode is cached" or something, I remember that=20
+"echo 3 >drop_caches" cleans that up. Still ugly, I'd say.
+=20
+> If you find a way of recreating files without appending to them, let
+> me know.
 
-I'm also tempted to rename some variables to make it more obvious
-what units they are in and to reduce the conversions we do from
-one type to another.
+Seems we have a different meaning of "append". For me, append is when an=20
+existing file is re-opened, and data added just to the end of it.
+=20
+> > And maybe he could use it for optimizations. Is there any tool on
+> > Linux to record such I/O patterns?
+>=20
+> I presume strace would do, but thats where the "lot of work" comes
+> in. If there is a ready-to-use tool, that would of course make it
+> easy.
 
-Cheers,
+It's a pity that such a generic tool doesn't existing. I can't believe=20
+that. Doesn't anybody have such a tool at hand?
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+=2D-=20
+mit freundlichen Gr=FCssen,
+Michael Monnerie, Ing. BSc
+
+it-management Internet Services: Prot=E9ger
+http://proteger.at [gesprochen: Prot-e-schee]
+Tel: +43 660 / 415 6531
+
+// Haus zu verkaufen: http://zmi.at/langegg/
+
+--nextPart9013522.CcGkeH8okR
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.16 (GNU/Linux)
+
+iEYEABECAAYFAk5CLE8ACgkQzhSR9xwSCbQGkACgsAo4i4Lsn6UUx1ZfKHPESD7i
+LogAniUg7LJYI2c2WABx7qF4TQ1VGIy2
+=r07S
+-----END PGP SIGNATURE-----
+
+--nextPart9013522.CcGkeH8okR--
+
+
+--===============3100277545412468677==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============3100277545412468677==--
