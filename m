@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7AAlTSO181071 for <xfs@oss.sgi.com>; Wed, 10 Aug 2011 05:47:29 -0500
+	p7AAlR1t181028 for <xfs@oss.sgi.com>; Wed, 10 Aug 2011 05:47:27 -0500
 Received: from mx2.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 18EB61E7335B
-	for <xfs@oss.sgi.com>; Wed, 10 Aug 2011 03:47:28 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id ECEA53774F2
+	for <xfs@oss.sgi.com>; Wed, 10 Aug 2011 03:48:53 -0700 (PDT)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id 2GxeKALuwN8ySkRA for <xfs@oss.sgi.com>;
-	Wed, 10 Aug 2011 03:47:28 -0700 (PDT)
+	with ESMTP id o8oKLYQQdFCdYzsc for <xfs@oss.sgi.com>;
+	Wed, 10 Aug 2011 03:48:53 -0700 (PDT)
 From: Mel Gorman <mgorman@suse.de>
-Subject: [PATCH 5/7] mm: vmscan: Do not writeback filesystem pages in kswapd
-	except in high priority
-Date: Wed, 10 Aug 2011 11:47:18 +0100
-Message-Id: <1312973240-32576-6-git-send-email-mgorman@suse.de>
+Subject: [PATCH 2/7] mm: vmscan: Remove dead code related to lumpy reclaim
+	waiting on pages under writeback
+Date: Wed, 10 Aug 2011 11:47:15 +0100
+Message-Id: <1312973240-32576-3-git-send-email-mgorman@suse.de>
 In-Reply-To: <1312973240-32576-1-git-send-email-mgorman@suse.de>
 References: <1312973240-32576-1-git-send-email-mgorman@suse.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,67 +31,63 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Linux-MM <linux-mm@kvack.org>
 Cc: Rik van Riel <riel@redhat.com>, Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, XFS <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, Minchan Kim <minchan.kim@gmail.com>, Wu Fengguang <fengguang.wu@intel.com>, Johannes Weiner <jweiner@redhat.com>, Mel Gorman <mgorman@suse.de>
 
-It is preferable that no dirty pages are dispatched for cleaning from
-the page reclaim path. At normal priorities, this patch prevents kswapd
-writing pages.
-
-However, page reclaim does have a requirement that pages be freed
-in a particular zone. If it is failing to make sufficient progress
-(reclaiming < SWAP_CLUSTER_MAX at any priority priority), the priority
-is raised to scan more pages. A priority of DEF_PRIORITY - 3 is
-considered to be the point where kswapd is getting into trouble
-reclaiming pages. If this priority is reached, kswapd will dispatch
-pages for writing.
+Lumpy reclaim worked with two passes - the first which queued pages for
+IO and the second which waited on writeback. As direct reclaim can no
+longer write pages there is some dead code. This patch removes it but
+direct reclaim will continue to wait on pages under writeback while in
+synchronous reclaim mode.
 
 Signed-off-by: Mel Gorman <mgorman@suse.de>
-Reviewed-by: Minchan Kim <minchan.kim@gmail.com>
 ---
- mm/vmscan.c |   13 ++++++++-----
- 1 files changed, 8 insertions(+), 5 deletions(-)
+ mm/vmscan.c |   21 +++++----------------
+ 1 files changed, 5 insertions(+), 16 deletions(-)
 
 diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 7863f8e..6d7c696 100644
+index 1522b0f..7863f8e 100644
 --- a/mm/vmscan.c
 +++ b/mm/vmscan.c
-@@ -710,7 +710,8 @@ static noinline_for_stack void free_page_list(struct list_head *free_pages)
-  */
- static unsigned long shrink_page_list(struct list_head *page_list,
- 				      struct zone *zone,
--				      struct scan_control *sc)
-+				      struct scan_control *sc,
-+				      int priority)
- {
- 	LIST_HEAD(ret_pages);
- 	LIST_HEAD(free_pages);
-@@ -816,9 +817,11 @@ static unsigned long shrink_page_list(struct list_head *page_list,
+@@ -455,15 +455,6 @@ static pageout_t pageout(struct page *page, struct address_space *mapping,
+ 			return PAGE_ACTIVATE;
+ 		}
  
+-		/*
+-		 * Wait on writeback if requested to. This happens when
+-		 * direct reclaiming a large contiguous area and the
+-		 * first attempt to free a range of pages fails.
+-		 */
+-		if (PageWriteback(page) &&
+-		    (sc->reclaim_mode & RECLAIM_MODE_SYNC))
+-			wait_on_page_writeback(page);
+-
+ 		if (!PageWriteback(page)) {
+ 			/* synchronous write or broken a_ops? */
+ 			ClearPageReclaim(page);
+@@ -764,12 +755,10 @@ static unsigned long shrink_page_list(struct list_head *page_list,
+ 
+ 		if (PageWriteback(page)) {
  			/*
- 			 * Only kswapd can writeback filesystem pages to
--			 * avoid risk of stack overflow
-+			 * avoid risk of stack overflow but do not writeback
-+			 * unless under significant pressure.
+-			 * Synchronous reclaim is performed in two passes,
+-			 * first an asynchronous pass over the list to
+-			 * start parallel writeback, and a second synchronous
+-			 * pass to wait for the IO to complete.  Wait here
+-			 * for any page for which writeback has already
+-			 * started.
++			 * Synchronous reclaim cannot queue pages for
++			 * writeback due to the possibility of stack overflow
++			 * but if it encounters a page under writeback, wait
++			 * for the IO to complete.
  			 */
--			if (page_is_file_cache(page) && !current_is_kswapd()) {
-+			if (page_is_file_cache(page) &&
-+					(!current_is_kswapd() || priority >= DEF_PRIORITY - 2)) {
- 				inc_zone_page_state(page, NR_VMSCAN_WRITE_SKIP);
- 				goto keep_locked;
- 			}
-@@ -1454,12 +1457,12 @@ shrink_inactive_list(unsigned long nr_to_scan, struct zone *zone,
+ 			if ((sc->reclaim_mode & RECLAIM_MODE_SYNC) &&
+ 			    may_enter_fs)
+@@ -1363,7 +1352,7 @@ static noinline_for_stack void update_isolated_counts(struct zone *zone,
+ }
  
- 	spin_unlock_irq(&zone->lru_lock);
- 
--	nr_reclaimed = shrink_page_list(&page_list, zone, sc);
-+	nr_reclaimed = shrink_page_list(&page_list, zone, sc, priority);
- 
- 	/* Check if we should syncronously wait for writeback */
- 	if (should_reclaim_stall(nr_taken, nr_reclaimed, priority, sc)) {
- 		set_reclaim_mode(priority, sc, true);
--		nr_reclaimed += shrink_page_list(&page_list, zone, sc);
-+		nr_reclaimed += shrink_page_list(&page_list, zone, sc, priority);
- 	}
- 
- 	local_irq_disable();
+ /*
+- * Returns true if the caller should wait to clean dirty/writeback pages.
++ * Returns true if a direct reclaim should wait on pages under writeback.
+  *
+  * If we are direct reclaiming for contiguous pages and we do not reclaim
+  * everything in the list, try again and wait for writeback IO to complete.
 -- 
 1.7.3.4
 
