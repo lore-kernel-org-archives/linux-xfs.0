@@ -1,18 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7ADKJNO189512 for <xfs@oss.sgi.com>; Wed, 10 Aug 2011 08:20:19 -0500
-Subject: Re: "xfs: fix error handling for synchronous writes" revisited
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110810100916.GA27094@infradead.org>
-References: <CAB4K4y6-2odbRhqn6q7ZDOxqF9oUcj2zKvyCEV6374QGyM-ddA@mail.gmail.com>
-	<20110728145020.GA30785@infradead.org>
-	<CAB4K4y4Ns5woUJyPv_NuW0GYSb5ZcFkqnF-DxRB1MESibc1Knw@mail.gmail.com>
-	<20110810100916.GA27094@infradead.org>
-Date: Wed, 10 Aug 2011 08:20:11 -0500
-Message-ID: <1312982411.2865.1.camel@doink>
+	p7AEGPK8192239 for <xfs@oss.sgi.com>; Wed, 10 Aug 2011 09:16:26 -0500
+Received: from ipmail07.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A2EA51BB3CF4
+	for <xfs@oss.sgi.com>; Wed, 10 Aug 2011 07:16:23 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	RQHiCavpDQpLw5gi for <xfs@oss.sgi.com>;
+	Wed, 10 Aug 2011 07:16:23 -0700 (PDT)
+Date: Thu, 11 Aug 2011 00:16:19 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: frequent kernel BUG and lockups - 2.6.39 + xfs_fsr
+Message-ID: <20110810141619.GA26978@dastard>
+References: <20110806122556.GB20341@schmorp.de> <20110807102625.GJ3162@dastard>
+	<20110808190222.GB7087@schmorp.de> <201108091210.50204@zmi.at>
+	<20110809111526.GA7631@schmorp.de>
 MIME-Version: 1.0
-Reply-To: aelder@sgi.com
+Content-Disposition: inline
+In-Reply-To: <20110809111526.GA7631@schmorp.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,19 +31,29 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Ajeet Yadav <ajeet.yadav.77@gmail.com>, xfs@oss.sgi.com
+To: Marc Lehmann <schmorp@schmorp.de>
+Cc: Michael Monnerie <michael.monnerie@is.it-management.at>, xfs@oss.sgi.com
 
-On Wed, 2011-08-10 at 06:09 -0400, Christoph Hellwig wrote:
-> Looks good.
+On Tue, Aug 09, 2011 at 01:15:27PM +0200, Marc Lehmann wrote:
+> On Tue, Aug 09, 2011 at 12:10:48PM +0200, Michael Monnerie <michael.monnerie@is.it-management.at> wrote:
+> > (rw,nodiratime,relatime,logbufs=8,logbsize=256k,attr2,barrier,largeio,swalloc)
+> > and sometimes also 
+> > ,allocsize=64m
 > 
-> Alex, any chance to pick this one up for 3.1?
+> As has been reported on this list, this option is really harmful on
+> current xfs - in my case, it lead to xfs causing ENOSPC even when the disk
+> was 40% empty (~188gb).
 
-Yes.  I'm working through patches today.  I'll make
-sure this gets included in what I'm working with and
-I should have it to Linus by Friday.
+Seeing you keep stating this is a problem, I'll ask again whether
+commit 778e24b ("xfs: reset inode per-lifetime state when recycling
+it") fixed this problem for you?
 
-					-Alex
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
