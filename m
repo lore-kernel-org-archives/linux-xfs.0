@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7BFvt4l254641 for <xfs@oss.sgi.com>; Thu, 11 Aug 2011 10:57:55 -0500
+	p7BH7Vsf258173 for <xfs@oss.sgi.com>; Thu, 11 Aug 2011 12:07:31 -0500
 Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 762181694C70
-	for <xfs@oss.sgi.com>; Thu, 11 Aug 2011 08:59:29 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id F09FB13669BA
+	for <xfs@oss.sgi.com>; Thu, 11 Aug 2011 10:09:04 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id wNlpOWGSCCY9iIKU for
-	<xfs@oss.sgi.com>; Thu, 11 Aug 2011 08:59:29 -0700 (PDT)
-Message-ID: <4E43FBF0.1010607@redhat.com>
-Date: Thu, 11 Aug 2011 11:57:36 -0400
+	cuda.sgi.com with ESMTP id H2heSJ5dGLDxfXui for
+	<xfs@oss.sgi.com>; Thu, 11 Aug 2011 10:09:04 -0700 (PDT)
+Message-ID: <4E440C44.2040600@redhat.com>
+Date: Thu, 11 Aug 2011 13:07:16 -0400
 From: Rik van Riel <riel@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/7] mm: vmscan: Do not writeback filesystem pages in
-	direct reclaim
+Subject: Re: [PATCH 4/7] ext4: Warn if direct reclaim tries to writeback pages
 References: <1312973240-32576-1-git-send-email-mgorman@suse.de>
-	<1312973240-32576-2-git-send-email-mgorman@suse.de>
-In-Reply-To: <1312973240-32576-2-git-send-email-mgorman@suse.de>
+	<1312973240-32576-5-git-send-email-mgorman@suse.de>
+In-Reply-To: <1312973240-32576-5-git-send-email-mgorman@suse.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,33 +32,10 @@ To: Mel Gorman <mgorman@suse.de>
 Cc: Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, XFS <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, Linux-MM <linux-mm@kvack.org>, Minchan Kim <minchan.kim@gmail.com>, Wu Fengguang <fengguang.wu@intel.com>, Johannes Weiner <jweiner@redhat.com>
 
 On 08/10/2011 06:47 AM, Mel Gorman wrote:
-> From: Mel Gorman<mel@csn.ul.ie>
->
-> When kswapd is failing to keep zones above the min watermark, a process
-> will enter direct reclaim in the same manner kswapd does. If a dirty
-> page is encountered during the scan, this page is written to backing
-> storage using mapping->writepage.
->
-> This causes two problems. First, it can result in very deep call
-> stacks, particularly if the target storage or filesystem are complex.
-> Some filesystems ignore write requests from direct reclaim as a result.
-> The second is that a single-page flush is inefficient in terms of IO.
-> While there is an expectation that the elevator will merge requests,
-> this does not always happen. Quoting Christoph Hellwig;
->
-> 	The elevator has a relatively small window it can operate on,
-> 	and can never fix up a bad large scale writeback pattern.
->
-> This patch prevents direct reclaim writing back filesystem pages by
-> checking if current is kswapd. Anonymous pages are still written to
-> swap as there is not the equivalent of a flusher thread for anonymous
-> pages. If the dirty pages cannot be written back, they are placed
-> back on the LRU lists. There is now a direct dependency on dirty page
-> balancing to prevent too many pages in the system being dirtied which
-> would prevent reclaim making forward progress.
+> Direct reclaim should never writeback pages. Warn if an attempt
+> is made.
 >
 > Signed-off-by: Mel Gorman<mgorman@suse.de>
-> Reviewed-by: Minchan Kim<minchan.kim@gmail.com>
 
 Reviewed-by: Rik van Riel <riel@redhat.com>
 
