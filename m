@@ -1,16 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7BM4vFL008083 for <xfs@oss.sgi.com>; Thu, 11 Aug 2011 17:04:57 -0500
-Subject: Re: [PATCH 2/2] xfs: replace xfs_buf_geterror() with bp->b_error
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110803021834.29700.40199.sendpatchset@chandra-lucid.beaverton.ibm.com>
-References: <20110803021823.29700.71553.sendpatchset@chandra-lucid.beaverton.ibm.com>
-	<20110803021834.29700.40199.sendpatchset@chandra-lucid.beaverton.ibm.com>
-Date: Thu, 11 Aug 2011 17:04:42 -0500
-Message-ID: <1313100282.2899.99.camel@doink>
+	p7BNjM0K011828 for <xfs@oss.sgi.com>; Thu, 11 Aug 2011 18:45:25 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 40362136833C
+	for <xfs@oss.sgi.com>; Thu, 11 Aug 2011 16:46:57 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	HKHEEwTOZ4KYTABq for <xfs@oss.sgi.com>;
+	Thu, 11 Aug 2011 16:46:57 -0700 (PDT)
+Date: Thu, 11 Aug 2011 19:45:16 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 0/7] Reduce filesystem writeback from page reclaim v3
+Message-ID: <20110811234516.GA21649@infradead.org>
+References: <1312973240-32576-1-git-send-email-mgorman@suse.de>
+	<20110810110056.GA31756@infradead.org>
+	<20110810111547.GZ19099@suse.de>
 MIME-Version: 1.0
-Reply-To: aelder@sgi.com
+Content-Disposition: inline
+In-Reply-To: <20110810111547.GZ19099@suse.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,19 +32,18 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Chandra Seetharaman <sekharan@us.ibm.com>
-Cc: xfs@oss.sgi.com
+To: Mel Gorman <mgorman@suse.de>
+Cc: Rik van Riel <riel@redhat.com>, Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, XFS <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, Linux-MM <linux-mm@kvack.org>, Minchan Kim <minchan.kim@gmail.com>, Wu Fengguang <fengguang.wu@intel.com>, Johannes Weiner <jweiner@redhat.com>
 
-On Tue, 2011-08-02 at 19:18 -0700, Chandra Seetharaman wrote:
-> Since we just checked bp for NULL, it is ok to replace xfs_buf_geterror()
-> with bp->b_error in these places.
+On Wed, Aug 10, 2011 at 12:15:47PM +0100, Mel Gorman wrote:
+> > The right fix is to simply remove that fallback, possibly in combination
+> > with implementating real migration support for btrfs.
+> > 
 > 
-> Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
+> Removing the fallback entirely is overkill as proper migration support
+> is not going to get 100% coverage
 
-Looks good.
-
-Reviewed-by: Alex Elder <aelder@sgi.com>
-
+It seems like btrfs is indeed the only important one missing.
 
 _______________________________________________
 xfs mailing list
