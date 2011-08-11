@@ -1,37 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7B9QhZk239358 for <xfs@oss.sgi.com>; Thu, 11 Aug 2011 04:26:43 -0500
-Received: from fgwmail6.fujitsu.co.jp (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 30DB81364E74
-	for <xfs@oss.sgi.com>; Thu, 11 Aug 2011 02:28:15 -0700 (PDT)
-Received: from fgwmail6.fujitsu.co.jp (fgwmail6.fujitsu.co.jp [192.51.44.36])
-	by cuda.sgi.com with ESMTP id pe99Dvvv17brvtqI for
-	<xfs@oss.sgi.com>; Thu, 11 Aug 2011 02:28:15 -0700 (PDT)
-Received: from m3.gw.fujitsu.co.jp (unknown [10.0.50.73])
-	by fgwmail6.fujitsu.co.jp (Postfix) with ESMTP id 948763EE0AE
-	for <xfs@oss.sgi.com>; Thu, 11 Aug 2011 18:26:41 +0900 (JST)
-Received: from smail (m3 [127.0.0.1])
-	by outgoing.m3.gw.fujitsu.co.jp (Postfix) with ESMTP id 7B1A245DE7E
-	for <xfs@oss.sgi.com>; Thu, 11 Aug 2011 18:26:38 +0900 (JST)
-Received: from s3.gw.fujitsu.co.jp (s3.gw.fujitsu.co.jp [10.0.50.93])
-	by m3.gw.fujitsu.co.jp (Postfix) with ESMTP id 57D7345DEA6
-	for <xfs@oss.sgi.com>; Thu, 11 Aug 2011 18:26:38 +0900 (JST)
-Received: from s3.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
-	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id 4A89A1DB803C
-	for <xfs@oss.sgi.com>; Thu, 11 Aug 2011 18:26:38 +0900 (JST)
-Received: from m106.s.css.fujitsu.com (m106.s.css.fujitsu.com [10.240.81.146])
-	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id 0BC151DB803B
-	for <xfs@oss.sgi.com>; Thu, 11 Aug 2011 18:26:38 +0900 (JST)
-Date: Thu, 11 Aug 2011 18:19:13 +0900
-From: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
-Subject: Re: [PATCH 7/7] mm: vmscan: Immediately reclaim end-of-LRU dirty
-	pages when writeback completes
-Message-Id: <20110811181913.ea81b7e0.kamezawa.hiroyu@jp.fujitsu.com>
-In-Reply-To: <1312973240-32576-8-git-send-email-mgorman@suse.de>
-References: <1312973240-32576-1-git-send-email-mgorman@suse.de>
-	<1312973240-32576-8-git-send-email-mgorman@suse.de>
-Mime-Version: 1.0
+	p7BC1V66245056 for <xfs@oss.sgi.com>; Thu, 11 Aug 2011 07:01:32 -0500
+Received: from mail-iy0-f171.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 87A5B5391AB
+	for <xfs@oss.sgi.com>; Thu, 11 Aug 2011 05:01:30 -0700 (PDT)
+Received: from mail-iy0-f171.google.com (mail-iy0-f171.google.com
+	[209.85.210.171]) by cuda.sgi.com with ESMTP id
+	uIKdAhvuEe87IFpd for <xfs@oss.sgi.com>;
+	Thu, 11 Aug 2011 05:01:30 -0700 (PDT)
+Received: by iyf13 with SMTP id 13so389753iyf.2
+	for <xfs@oss.sgi.com>; Thu, 11 Aug 2011 05:01:30 -0700 (PDT)
+Message-ID: <4e43c499.09a32a0a.13f7.ffff9ab6@mx.google.com>
+Date: Thu, 11 Aug 2011 05:01:29 -0700 (PDT)
+MIME-Version: 1.0
+Subject: Are you an arabic translator?
+From: Heather Madison <madisonh@thumbtackmail7.com>
+Reply-To: support@thumbtack.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -40,29 +25,79 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============5610776936917642087=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mel Gorman <mgorman@suse.de>
-Cc: Rik van Riel <riel@redhat.com>, Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, XFS <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, Linux-MM <linux-mm@kvack.org>, Minchan Kim <minchan.kim@gmail.com>, Wu Fengguang <fengguang.wu@intel.com>, Johannes Weiner <jweiner@redhat.com>
+To: xfs@oss.sgi.com
 
-On Wed, 10 Aug 2011 11:47:20 +0100
-Mel Gorman <mgorman@suse.de> wrote:
+--===============5610776936917642087==
+Content-Type: multipart/alternative;
+	boundary="===============8035777728245221549=="
 
-> When direct reclaim encounters a dirty page, it gets recycled around
-> the LRU for another cycle. This patch marks the page PageReclaim
-> similar to deactivate_page() so that the page gets reclaimed almost
-> immediately after the page gets cleaned. This is to avoid reclaiming
-> clean pages that are younger than a dirty page encountered at the
-> end of the LRU that might have been something like a use-once page.
-> 
-> Signed-off-by: Mel Gorman <mgorman@suse.de>
-> Acked-by: Johannes Weiner <jweiner@redhat.com>
+--===============8035777728245221549==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
 
-Reviewed-by: KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com>
+Hey there,
+
+I'm reaching out to you because Thumbtack is getting a lot of job leads for arabic translators, and I'm looking for another arabic translator who is interested in taking on more clients.
+
+After checking out your website I think you are a great fit for Thumbtack and I'd love to start sending you job leads.  Please visit https://www.thumbtack.com/welcome and fill out a few details about your skills and rates, and I'll start forwarding you potential new clients.
+
+If you have any questions about what Thumbtack can provide, please don't hesitate to ask.
+
+Thanks,
+Heather
+
+--
+
+Please visit the link below to unsubscribe:
+http://www.thumbtack.com/unsubscribe?e=xfs@oss.sgi.com&action=unsubscribe
+1001 Page St, Suite #45, San Francisco, CA
+This message is an advertisement.
+--===============8035777728245221549==
+Content-Type: text/html; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+
+
+
+Hey there,
+
+<br><br>
+
+I'm reaching out to you because <a href="https://www.thumbtack.com/welcome?r=3139820620&utm_campaign=new_provider&amp;utm_medium=email&amp;utm_source=marketing&amp;utm_content=23&h=1a102eGZzQG9zcy5zZ2kuY29t">Thumbtack</a> is getting a lot of job leads for arabic translators, and I'm looking for another arabic translator who is interested in taking on more clients.<br>
+<br>
+After checking out your website I think you are a great fit for Thumbtack and <b>I'd love to start sending you job leads</b>.  <a href="https://www.thumbtack.com/welcome?r=3139820620&utm_campaign=new_provider&amp;utm_medium=email&amp;utm_source=marketing&amp;utm_content=23&h=1a102eGZzQG9zcy5zZ2kuY29t">Please fill out a few details about your skills and rates</a>, and I'll start forwarding you potential new clients.<br>
+<br>
+If you have any questions about what Thumbtack can provide, please don't hesitate to ask.<br>
+<br>
+Thanks,<br>
+Heather
+
+
+<br>
+--<br>
+
+<br>
+
+Unsubscribe Link: <a href="http://www.thumbtack.com/unsubscribe?e=xfs@oss.sgi.com&action=unsubscribe&utm_campaign=new_provider&amp;utm_medium=email&amp;utm_source=marketing&amp;utm_content=23">One-click unsubscribe</a>.<br>
+1001 Page St, Suite #45, San Francisco, CA<br>
+This message is an advertisement.
+
+--===============8035777728245221549==--
+
+
+--===============5610776936917642087==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============5610776936917642087==--
