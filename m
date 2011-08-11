@@ -1,24 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7BKcBRZ004499 for <xfs@oss.sgi.com>; Thu, 11 Aug 2011 15:38:12 -0500
-Received: from mx2.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 393491367AFD
-	for <xfs@oss.sgi.com>; Thu, 11 Aug 2011 13:39:45 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id ojdadm0HbP4LiPsa for <xfs@oss.sgi.com>;
-	Thu, 11 Aug 2011 13:39:45 -0700 (PDT)
-Date: Thu, 11 Aug 2011 21:38:05 +0100
-From: Mel Gorman <mgorman@suse.de>
-Subject: Re: [PATCH 5/7] mm: vmscan: Do not writeback filesystem pages in
-	kswapd except in high priority
-Message-ID: <20110811203805.GC4844@suse.de>
-References: <1312973240-32576-1-git-send-email-mgorman@suse.de>
-	<1312973240-32576-6-git-send-email-mgorman@suse.de>
-	<4E441D0E.6020602@redhat.com>
+	p7BM4rCQ008070 for <xfs@oss.sgi.com>; Thu, 11 Aug 2011 17:04:53 -0500
+Subject: Re: [PATCH 1/2] xfs: Check the return value of xfs_buf_read() for NULL
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <20110803021829.29700.98205.sendpatchset@chandra-lucid.beaverton.ibm.com>
+References: <20110803021823.29700.71553.sendpatchset@chandra-lucid.beaverton.ibm.com>
+	<20110803021829.29700.98205.sendpatchset@chandra-lucid.beaverton.ibm.com>
+Date: Thu, 11 Aug 2011 17:04:40 -0500
+Message-ID: <1313100280.2899.98.camel@doink>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4E441D0E.6020602@redhat.com>
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,59 +23,87 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Rik van Riel <riel@redhat.com>
-Cc: Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, XFS <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, Linux-MM <linux-mm@kvack.org>, Minchan Kim <minchan.kim@gmail.com>, Wu Fengguang <fengguang.wu@intel.com>, Johannes Weiner <jweiner@redhat.com>
+To: Chandra Seetharaman <sekharan@us.ibm.com>
+Cc: xfs@oss.sgi.com
 
-On Thu, Aug 11, 2011 at 02:18:54PM -0400, Rik van Riel wrote:
-> On 08/10/2011 06:47 AM, Mel Gorman wrote:
-> >It is preferable that no dirty pages are dispatched for cleaning from
-> >the page reclaim path. At normal priorities, this patch prevents kswapd
-> >writing pages.
-> >
-> >However, page reclaim does have a requirement that pages be freed
-> >in a particular zone. If it is failing to make sufficient progress
-> >(reclaiming<  SWAP_CLUSTER_MAX at any priority priority), the priority
-> >is raised to scan more pages. A priority of DEF_PRIORITY - 3 is
-> >considered to be the point where kswapd is getting into trouble
-> >reclaiming pages. If this priority is reached, kswapd will dispatch
-> >pages for writing.
-> >
-> >Signed-off-by: Mel Gorman<mgorman@suse.de>
-> >Reviewed-by: Minchan Kim<minchan.kim@gmail.com>
+On Tue, 2011-08-02 at 19:18 -0700, Chandra Seetharaman wrote:
+> Check the return value of xfs_buf_read() for NULL and return ENOMEM if it is NULL.
+
+You might add that the reason for doing this is that in
+these spots the null buffer pointer would be blindly
+dereferenced otherwise.
+
+One piece of this patch needs to go, so please post an
+updated version.  But you can consider this reviewed by me.
+
+Reviewed-by: Alex Elder <aelder@sgi.com>
+
+> Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
+> ---
+>  fs/xfs/xfs_log_recover.c |    6 ++++++
+>  fs/xfs/xfs_rw.c          |    2 +-
+>  fs/xfs/xfs_vnodeops.c    |    2 ++
+>  3 files changed, 9 insertions(+), 1 deletions(-)
 > 
-> My only worry with this patch is that maybe we'll burn too
-> much CPU time freeing pages from a zone. 
+> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> index 93786e5..8478532 100644
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+> @@ -2131,6 +2131,8 @@ xlog_recover_buffer_pass2(
+>  
+>  	bp = xfs_buf_read(mp->m_ddev_targp, buf_f->blf_blkno, buf_f->blf_len,
+>  			  buf_flags);
+> +	if (!bp)
+> +		return XFS_ERROR(ENOMEM);
+>  	error = xfs_buf_geterror(bp);
+>  	if (error) {
+>  		xfs_ioerror_alert("xlog_recover_do..(read#1)", mp,
+> @@ -2222,6 +2224,10 @@ xlog_recover_inode_pass2(
+>  
+>  	bp = xfs_buf_read(mp->m_ddev_targp, in_f->ilf_blkno, in_f->ilf_len,
+>  			  XBF_LOCK);
+> +	if (!bp) {
+> +		error = ENOMEM;
+> +		goto error;
+> +	}
+>  	error = xfs_buf_geterror(bp);
+>  	if (error) {
+>  		xfs_ioerror_alert("xlog_recover_do..(read#2)", mp,
+> diff --git a/fs/xfs/xfs_rw.c b/fs/xfs/xfs_rw.c
+> index c96a8a0..ecaa60e 100644
+> --- a/fs/xfs/xfs_rw.c
+> +++ b/fs/xfs/xfs_rw.c
+> @@ -136,7 +136,7 @@ xfs_read_buf(
+>  
+>  	bp = xfs_buf_read(target, blkno, len, flags);
+>  	if (!bp)
+> -		return XFS_ERROR(EIO);
+> +		return (flags & XBF_TRYLOCK) ?  0 : XFS_ERROR(EIO);
 
-The throttling patch prevents too much CPU being used if pages under
-writeback are being encountered during scanning. That said, I shared
-your concern and recorded kswapd CPU usage over time.
+This change doesn't belong in this patch.
 
-> However, chances
-> are we'll have freed pages from other zones when scanning
-> one zone multiple times (the page cache dirty limit is global,
-> the clean pages have to be _somewhere_).
-> 
-> Since the bulk of the allocators are not too picky about
-> which zone they get their pages from, I suspect this patch
-> will be an overall improvement pretty much all the time.
-> 
+As far as I can tell, no call to xfs_read_buf()
+ever passes XBF_TRYLOCK in flags anyway (only
+XBF_LOCK, XBF_DONT_BLOCK, and XBF_MAPPED).
 
-This is roughly similar to my own reasoning.
+>  	error = bp->b_error;
+>  	if (!error && !XFS_FORCED_SHUTDOWN(mp)) {
+>  		*bpp = bp;
+> diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
+> index 3ee5f8a..64a5835 100644
+> --- a/fs/xfs/xfs_vnodeops.c
+> +++ b/fs/xfs/xfs_vnodeops.c
+> @@ -83,6 +83,8 @@ xfs_readlink_bmap(
+>  
+>  		bp = xfs_buf_read(mp->m_ddev_targp, d, BTOBB(byte_cnt),
+>  				  XBF_LOCK | XBF_MAPPED | XBF_DONT_BLOCK);
+> +		if (!bp)
+> +			return XFS_ERROR(ENOMEM);
+>  		error = xfs_buf_geterror(bp);
+>  		if (error) {
+>  			xfs_ioerror_alert("xfs_readlink",
 
-I uploaded all the kswapd CPU usage charts to
-http://www.csn.ul.ie/~mel/postings/riel-20110811
 
-These are smoothened as the raw figures are barely readable. If you
-go through them, you'll see that kswapd CPU usage is sometimes higher
-but generally within 2-3%.
-
-> Acked-by: Rik van Riel <riel@redhat.com>
-
-Thanks.
-
--- 
-Mel Gorman
-SUSE Labs
 
 _______________________________________________
 xfs mailing list
