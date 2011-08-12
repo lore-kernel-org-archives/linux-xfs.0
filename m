@@ -1,12 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7CKqTF8086779 for <xfs@oss.sgi.com>; Fri, 12 Aug 2011 15:52:29 -0500
-From: Alex Elder <aelder@sgi.com>
-Message-Id: <201108122052.p7CKqPMl022987@stout.americas.sgi.com>
-Date: Fri, 12 Aug 2011 15:52:24 -0500
-Subject: [GIT PULL] XFS update for 3.1-rc2
+	p7CKln2N086414
+	for <linux-xfs@oss.sgi.com>; Fri, 12 Aug 2011 15:47:49 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D90AD18B90C2
+	for <linux-xfs@oss.sgi.com>; Fri, 12 Aug 2011 13:47:48 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	sH49sV7orq7BuT18 for <linux-xfs@oss.sgi.com>;
+	Fri, 12 Aug 2011 13:47:48 -0700 (PDT)
+Date: Fri, 12 Aug 2011 16:47:46 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Deleting files with extended attributes is dead slow
+Message-ID: <20110812204746.GB30615@infradead.org>
+References: <j23qs9$1c3$1@dough.gmane.org>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <j23qs9$1c3$1@dough.gmane.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,75 +31,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
+Cc: linux-xfs@oss.sgi.com
 
-Linus, please pull the following updates for XFS for 3.1-rc2.
+On Fri, Aug 12, 2011 at 08:19:53PM +0200, Bernd Schubert wrote:
+> Hi there,
+> 
+> with FhGFS we may use extended attributes to store file meta data
+> and with ext3/ext4 that also works very well and the rate to create
+> files and to write those EAs (create() + fsetxattr()  is about 2.5
+> to 3 times faster than with a create() + write(). Size of those EA
+> data is about 256 bytes depending on the number of storage stripes.
+> However, with XFS using extended attributes is *extremely* slow.
+> Here are some numbers with ext4 and xfs using a patched [1] bonnie++
 
-FYI  We are eliminating the subdirectory structure under fs/xfs/.
-The changes are simple but I'm holding off sending them until next
-week sometime (unless you have another preference).
-
-Thanks.
-
-					-Alex
-
-The following changes since commit 72fa59970f8698023045ab0713d66f3f4f96945c:
-
-  move RLIMIT_NPROC check from set_user() to do_execve_common() (2011-08-11 11:24:42 -0700)
-
-are available in the git repository at:
-  git://oss.sgi.com/xfs/xfs for-linus
-
-Ajeet Yadav (1):
-      "xfs: fix error handling for synchronous writes" revisited
-
-Alex Elder (2):
-      Merge branch 'master' of git://git.kernel.org/.../torvalds/linux
-      xfs: set cursor in xfs_ail_splice() even when AIL was empty
-
-Chandra Seetharaman (13):
-      xfs: Remove the macro XFS_BUF_BFLAGS
-      xfs: Remove the macro XFS_BUF_ERROR and family
-      xfs: Remove macro XFS_BUF_BUSY and family
-      xfs: Remove macro XFS_BUF_HOLD
-      xfs: Remove macro XFS_BUF_SET_START
-      xfs: Remove the macro XFS_BUF_PTR
-      xfs: Remove the macro XFS_BUF_SET_PTR
-      Replace the macro XFS_BUF_ISPINNED with helper xfs_buf_ispinned
-      xfs: Remove the macro XFS_BUF_SET_TARGET
-      xfs: Remove the macro XFS_BUF_TARGET
-      xfs: Remove the macro XFS_BUFTARG_NAME
-      xfs: Check the return value of xfs_buf_read() for NULL
-      xfs: replace xfs_buf_geterror() with bp->b_error
-
- fs/xfs/linux-2.6/xfs_buf.c  |   15 ++++-----
- fs/xfs/linux-2.6/xfs_buf.h  |   32 +++++++-------------
- fs/xfs/linux-2.6/xfs_sync.c |    2 +-
- fs/xfs/quota/xfs_dquot.c    |   16 ++++------
- fs/xfs/quota/xfs_qm.c       |    2 +-
- fs/xfs/xfs_ag.h             |    6 ++--
- fs/xfs/xfs_alloc.c          |    7 ++--
- fs/xfs/xfs_attr.c           |    3 +-
- fs/xfs/xfs_bmap.c           |    3 +-
- fs/xfs/xfs_btree.c          |   17 ++++-------
- fs/xfs/xfs_btree.h          |    2 +-
- fs/xfs/xfs_buf_item.c       |   24 ++++++---------
- fs/xfs/xfs_da_btree.c       |   12 ++++----
- fs/xfs/xfs_dinode.h         |    2 +-
- fs/xfs/xfs_ialloc.c         |    5 +--
- fs/xfs/xfs_inode.c          |    4 +-
- fs/xfs/xfs_log.c            |   14 +++------
- fs/xfs/xfs_log_recover.c    |   38 ++++++++++++------------
- fs/xfs/xfs_mount.c          |    4 +-
- fs/xfs/xfs_rtalloc.c        |   32 ++++++++++----------
- fs/xfs/xfs_rtalloc.h        |    2 +-
- fs/xfs/xfs_rw.c             |    8 ++--
- fs/xfs/xfs_sb.h             |    2 +-
- fs/xfs/xfs_trans_ail.c      |   67 ++++++++++++++++++------------------------
- fs/xfs/xfs_trans_buf.c      |   28 ++++++------------
- fs/xfs/xfs_vnodeops.c       |   12 ++++---
- 26 files changed, 155 insertions(+), 204 deletions(-)
+Currently XFS uses synchronous transactions when retiring inodes with
+xattrs on them.  So far I've not actually found a good reason for that,
+so I suspect we can remove it.  I'll do another audit of it, and will
+send you a patch for it after doing basic QA.
 
 _______________________________________________
 xfs mailing list
