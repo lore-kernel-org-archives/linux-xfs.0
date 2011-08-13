@@ -1,18 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7DEcwTM141815 for <xfs@oss.sgi.com>; Sat, 13 Aug 2011 09:38:58 -0500
-Received: from test.thunk.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3531D1EFC197
-	for <xfs@oss.sgi.com>; Sat, 13 Aug 2011 07:38:57 -0700 (PDT)
-Received: from test.thunk.org (li9-11.members.linode.com [67.18.176.11]) by
-	cuda.sgi.com with ESMTP id GlkodkU5ZwK5fyP3 for
-	<xfs@oss.sgi.com>; Sat, 13 Aug 2011 07:38:57 -0700 (PDT)
-Date: Sat, 13 Aug 2011 10:38:51 -0400
-Message-Id: <E1QsFMR-0001iq-Vt@tytso-glaptop>
-Subject: xfstests #62 broken on ext4
-From: "Theodore Ts'o" <tytso@mit.edu>
-MIME-version: 1.0
+	p7DG1Cf6147910 for <xfs@oss.sgi.com>; Sat, 13 Aug 2011 11:01:12 -0500
+Received: from mo-p00-ob.rzone.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4EFCB1EFC3F0
+	for <xfs@oss.sgi.com>; Sat, 13 Aug 2011 09:01:10 -0700 (PDT)
+Received: from mo-p00-ob.rzone.de (mo-p00-ob.rzone.de [81.169.146.160]) by
+	cuda.sgi.com with ESMTP id Hbx5LF9FOwGMFx8C for
+	<xfs@oss.sgi.com>; Sat, 13 Aug 2011 09:01:10 -0700 (PDT)
+Message-ID: <4E469EFD.7070407@giantdisaster.de>
+Date: Sat, 13 Aug 2011 17:57:49 +0200
+From: Stefan Behrens <sbehrens@giantdisaster.de>
+MIME-Version: 1.0
+Subject: Re: xfstests #62 broken on ext4
+References: <E1QsFMR-0001iq-Vt@tytso-glaptop>
+In-Reply-To: <E1QsFMR-0001iq-Vt@tytso-glaptop>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,63 +23,29 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-ext4@vger.kernel.org, xfs@oss.sgi.com
-Cc: Stefan Behrens <sbehrens@giantdisaster.de>
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: linux-ext4@vger.kernel.org, xfs@oss.sgi.com
 
-Clhmc3Rlc3RzICM2MiB3YXMgcmVjZW50bHkgZW5hYmxlZCBieSBjb21taXQgYjJiMzZkMGE0LgoK
-SG93ZXZlciwgdGhpcyB0ZXN0IGlzIGZhaWxpbmcgZm9yIGV4dDQgYmVjYXVzZSBleHQ0IGRvZXNu
-J3Qgc3VwcG9ydApleHRlbmRlZCBhdHRyaWJ1dGVzIG9uIGFueXRoaW5nIG90aGVyIHRoYW4gcmVn
-dWxhciBmaWxlcyBhbmQKZGlyZWN0b3JpZXMuICBUaGlzIGlzIGJlaGF2aW9yIGlzIGRvY3VtZW50
-ZWQgaW4gdGhlIGF0dHIoNSkgbWFuIHBhZ2U6CgogICBFeHRlbmRlZCB1c2VyIGF0dHJpYnV0ZXMK
-ICAgICAgIEV4dGVuZGVkIHVzZXIgYXR0cmlidXRlcyBtYXkgYmUgYXNzaWduZWQgdG8gZmlsZXMg
-YW5kICBkaXJlY3RvcmllcyAgZm9yCiAgICAgICBzdG9yaW5nIGFyYml0cmFyeSBhZGRpdGlvbmFs
-IGluZm9ybWF0aW9uIHN1Y2ggYXMgdGhlIG1pbWUgdHlwZSwgY2hhcmFj4oCQCiAgICAgICB0ZXIg
-c2V0IG9yICBlbmNvZGluZyAgb2YgIGEgIGZpbGUuICBUaGUgIGFjY2VzcyAgcGVybWlzc2lvbnMg
-IGZvciAgdXNlcgogICAgICAgYXR0cmlidXRlcyBhcmUgZGVmaW5lZCBieSB0aGUgZmlsZSBwZXJt
-aXNzaW9uIGJpdHMuCgogICAgICAgVGhlICBmaWxlICBwZXJtaXNzaW9uICBiaXRzIG9mIHJlZ3Vs
-YXIgZmlsZXMgYW5kIGRpcmVjdG9yaWVzIGFyZSBpbnRlcuKAkAogICAgICAgcHJldGVkIGRpZmZl
-cmVudGx5IGZyb20gdGhlIGZpbGUgcGVybWlzc2lvbiBiaXRzIG9mIHNwZWNpYWwgIGZpbGVzICBh
-bmQKICAgICAgIHN5bWJvbGljICBsaW5rcy4gIEZvciByZWd1bGFyIGZpbGVzIGFuZCBkaXJlY3Rv
-cmllcyB0aGUgZmlsZSBwZXJtaXNzaW9uCiAgICAgICBiaXRzIGRlZmluZSBhY2Nlc3MgdG8gdGhl
-IGZpbGUncyBjb250ZW50cywgIHdoaWxlICBmb3IgIGRldmljZSAgc3BlY2lhbAogICAgICAgZmls
-ZXMgIHRoZXkgIGRlZmluZSBhY2Nlc3MgdG8gdGhlIGRldmljZSBkZXNjcmliZWQgYnkgdGhlIHNw
-ZWNpYWwgZmlsZS4KICAgICAgIFRoZSBmaWxlIHBlcm1pc3Npb25zIG9mIHN5bWJvbGljIGxpbmtz
-IGFyZSBub3QgdXNlZCBpbiAgYWNjZXNzICBjaGVja3MuCiAgICAgICBUaGVzZSAgZGlmZmVyZW5j
-ZXMgd291bGQgYWxsb3cgdXNlcnMgdG8gY29uc3VtZSBmaWxlc3lzdGVtIHJlc291cmNlcyBpbgog
-ICAgICAgYSB3YXkgbm90IGNvbnRyb2xsYWJsZSBieSBkaXNrIHF1b3RhcyBmb3IgZ3JvdXAgb3Ig
-d29ybGQgd3JpdGFibGUgIHNwZeKAkAogICAgICAgY2lhbCBmaWxlcyBhbmQgZGlyZWN0b3JpZXMu
-CgogICAgICAgRm9yICB0aGlzIHJlYXNvbiwgZXh0ZW5kZWQgdXNlciBhdHRyaWJ1dGVzIGFyZSBv
-bmx5IGFsbG93ZWQgZm9yIHJlZ3VsYXIKICAgICAgIGZpbGVzIGFuZCBkaXJlY3RvcmllcywgIGFu
-ZCAgYWNjZXNzICB0byAgZXh0ZW5kZWQgIHVzZXIgIGF0dHJpYnV0ZXMgIGlzCiAgICAgICByZXN0
-cmljdGVkICB0byB0aGUgb3duZXIgYW5kIHRvIHVzZXJzIHdpdGggYXBwcm9wcmlhdGUgY2FwYWJp
-bGl0aWVzIGZvcgogICAgICAgZGlyZWN0b3JpZXMgd2l0aCB0aGUgc3RpY2t5IGJpdCBzZXQgKHNl
-ZSB0aGUgY2htb2QoMSkgbWFudWFsICBwYWdlICBmb3IKICAgICAgIGFuIGV4cGxhbmF0aW9uIG9m
-IFN0aWNreSBEaXJlY3RvcmllcykuCgouLi4gYW5kIGl0IGlzIGVuZm9yY2VkIGJ5IHRoZSBnZW5l
-cmljIGZzL3hhdHRyLmMgY29kZSBpbgp4YXR0cl9wZXJtaXNzaW9uKCk6CgoJLyoKCSAqIEluIHRo
-ZSB1c2VyLiogbmFtZXNwYWNlLCBvbmx5IHJlZ3VsYXIgZmlsZXMgYW5kIGRpcmVjdG9yaWVzIGNh
-biBoYXZlCgkgKiBleHRlbmRlZCBhdHRyaWJ1dGVzLiBGb3Igc3RpY2t5IGRpcmVjdG9yaWVzLCBv
-bmx5IHRoZSBvd25lciBhbmQKCSAqIHByaXZpbGVnZWQgdXNlcnMgY2FuIHdyaXRlIGF0dHJpYnV0
-ZXMuCgkgKi8KCWlmICghc3RybmNtcChuYW1lLCBYQVRUUl9VU0VSX1BSRUZJWCwgWEFUVFJfVVNF
-Ul9QUkVGSVhfTEVOKSkgewoJCWlmICghU19JU1JFRyhpbm9kZS0+aV9tb2RlKSAmJiAhU19JU0RJ
-Uihpbm9kZS0+aV9tb2RlKSkKCQkJcmV0dXJuIChtYXNrICYgTUFZX1dSSVRFKSA/IC1FUEVSTSA6
-IC1FTk9EQVRBOwoJCWlmIChTX0lTRElSKGlub2RlLT5pX21vZGUpICYmIChpbm9kZS0+aV9tb2Rl
-ICYgU19JU1ZUWCkgJiYKCQkgICAgKG1hc2sgJiBNQVlfV1JJVEUpICYmICFpbm9kZV9vd25lcl9v
-cl9jYXBhYmxlKGlub2RlKSkKCQkJcmV0dXJuIC1FUEVSTTsKCX0KCgoKSXQgbG9va3MgbGlrZSBY
-RlMgaXMgbm90IGNvbmZvcm1hbnQgdG8gZG9jdW1lbnRlZCBiZWhhdmlvdXIgYW5kIHRoZSBmaWxl
-CnN5c3RlbSBnZW5lcmljIGNvZGUuICAgVGhlIHF1ZXN0aW9uIGlzIGhvdyBzaG91bGQgd2UgZml4
-IHRoaXM/ICBJIGNhbgp0aGluayBvZiBhIGNvdXBsZSBvZiBkaWZmZXJlbnQgb3B0aW9ucwoKKDEp
-IEJhY2sgb3V0IGNvbW1pdCBiMmIzNmQwYTQgYW5kIG1ha2UgdGVzdCAjNjIgWEZTLXNwZWNpZmlj
-IGFnYWluLgoKKDIpIE9wdGlvbiAjMSwgYWJvdmUsIGFuZCB0aGVuIGFsc28gY3JlYXRlIGFub3Ro
-ZXIgdGVzdCBmb3IgZmlsZSBzeXN0ZW1zCndpdGggdGhlIHN0YW5kYXJkL2dlbmVyaWMgTGludXgg
-YmVoYXZpb3IKCigzKSBNb2RpZnkgdGVzdCAjNjIgc28gdGhhdCBpdCBjYW4gc3VwcG9ydCBib3Ro
-IHRoZSBYRlMgYW5kIExpbnV4CmdlbmVyaWMgYmVoYXZpb3IuCgooNCkgQ2hhbmdlIHRoZSBnZW5l
-cmljIGNvZGUgdG8gbWF0Y2ggd2hhdCBYRlMgZG9lcyAoZGVzcGl0ZSB0aGUgZGVzaWduCnJhdGlv
-bmFsZSBtZW50aW9uZWQgaW4gdGhlIGF0dHIoNSkgbWFuIHBhZ2UpLgoKKDUpIENoYW5nZSBYRlMg
-dG8gbWF0Y2ggdGhlIGdlbmVyaWMgYmVoYXZpb3IsIGFuZCB0aGVuIGNoYW5nZSB0ZXN0ICM2Mi4K
-CldoYXQgZG8gcGVvcGxlIHRoaW5rPwoKCQkJCQkJLSBUZWQKCl9fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2ku
-Y29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On 13.08.2011 16:38, Theodore Ts'o wrote:
+> Xfstests #62 was recently enabled by commit b2b36d0a4.
+>
+> However, this test is failing for ext4 because ext4 doesn't support
+> extended attributes on anything other than regular files and
+> directories.  This is behavior is documented in the attr(5) man page:
+
+> (3) Modify test #62 so that it can support both the XFS and Linux
+> generic behavior.
+
+> (5) Change XFS to match the generic behavior, and then change test #62.
+
+I would volunteer for implementing the required changes for option #3 
+and start next week except people favour option #5.
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
