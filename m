@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7E0iPYX175989 for <xfs@oss.sgi.com>; Sat, 13 Aug 2011 19:44:25 -0500
-Received: from test.thunk.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7BA82136E8E8
-	for <xfs@oss.sgi.com>; Sat, 13 Aug 2011 17:46:11 -0700 (PDT)
-Received: from test.thunk.org (li9-11.members.linode.com [67.18.176.11]) by
-	cuda.sgi.com with ESMTP id IMdyoc1YNSeOZMGb for
-	<xfs@oss.sgi.com>; Sat, 13 Aug 2011 17:46:11 -0700 (PDT)
-Date: Sat, 13 Aug 2011 20:44:17 -0400
-From: "Ted Ts'o" <tytso@mit.edu>
-Subject: Re: xfstests #62 broken on ext4
-Message-ID: <20110814004417.GA3524@thunk.org>
-References: <E1QsFMR-0001iq-Vt@tytso-glaptop>
-	<20110813201419.GA6442@infradead.org>
+	p7EGIoQg245889 for <xfs@oss.sgi.com>; Sun, 14 Aug 2011 11:18:50 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E94F453B9B9
+	for <xfs@oss.sgi.com>; Sun, 14 Aug 2011 09:18:49 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	EZEewmngmAanLK0w for <xfs@oss.sgi.com>;
+	Sun, 14 Aug 2011 09:18:49 -0700 (PDT)
+Date: Sun, 14 Aug 2011 12:18:44 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfstests: fsx: fix fallocate logging
+Message-ID: <20110814161844.GC29428@infradead.org>
+References: <1312818914-9950-1-git-send-email-josef@redhat.com>
+	<20110809100658.GQ3162@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110813201419.GA6442@infradead.org>
+In-Reply-To: <20110809100658.GQ3162@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,34 +31,13 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-ext4@vger.kernel.org, Stefan Behrens <sbehrens@giantdisaster.de>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-fsdevel@vger.kernel.org, Josef Bacik <josef@redhat.com>, xfs@oss.sgi.com
 
-On Sat, Aug 13, 2011 at 04:14:19PM -0400, Christoph Hellwig wrote:
-> On Sat, Aug 13, 2011 at 10:38:51AM -0400, Theodore Ts'o wrote:
-> > 
-> > Xfstests #62 was recently enabled by commit b2b36d0a4.
-> > 
-> > However, this test is failing for ext4 because ext4 doesn't support
-> > extended attributes on anything other than regular files and
-> > directories.  This is behavior is documented in the attr(5) man page:
-> 
-> As explained to you before that is not the reason why it fails.  The
-> reason is that Andreas Gruenbacher changed return values for certain
-> xattr operations in commit 55b23bde19c08f14127a27d461a4e079942c7258.
+On Tue, Aug 09, 2011 at 08:06:58PM +1000, Dave Chinner wrote:
+> Already fixed.
 
-Apologies, I hadn't yet read your mail message while I started digging
-into this failure this morning, and the fact that the files got
-reordered from what was expected in the output file confused me into
-thinking ext4 was failing tests that where the 062.out file expected
-successes, and I juped to conclusions.
-
-I see there's an sort command at the very end of _extend_test_bed(), I
-presume we should also add a similar "LC_COLLATE=POSIX sort" to the
-other "find" command pipelines, and it's easy enough to filter out the
-lost+found directory by adding a "! -name lost+found".
-
-     	  	       		    		 - Ted
+Note that since these fixes test 091 keeps failing for me. 
 
 _______________________________________________
 xfs mailing list
