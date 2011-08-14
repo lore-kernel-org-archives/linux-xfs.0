@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7EG9WPN245280 for <xfs@oss.sgi.com>; Sun, 14 Aug 2011 11:09:34 -0500
+	p7EGVklI246806 for <xfs@oss.sgi.com>; Sun, 14 Aug 2011 11:31:46 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CCB2E53B687
-	for <xfs@oss.sgi.com>; Sun, 14 Aug 2011 09:09:30 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id AD9781C01969
+	for <xfs@oss.sgi.com>; Sun, 14 Aug 2011 09:31:45 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	UE07xCGHag0kPz8g for <xfs@oss.sgi.com>;
-	Sun, 14 Aug 2011 09:09:30 -0700 (PDT)
-Date: Sun, 14 Aug 2011 12:09:25 -0400
+	HNPleFWtFbBvCs5J for <xfs@oss.sgi.com>;
+	Sun, 14 Aug 2011 09:31:45 -0700 (PDT)
+Date: Sun, 14 Aug 2011 12:31:44 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: xfstests #62 broken on ext4
-Message-ID: <20110814160925.GA29428@infradead.org>
-References: <E1QsFMR-0001iq-Vt@tytso-glaptop>
-	<20110813201419.GA6442@infradead.org>
-	<20110814004417.GA3524@thunk.org>
+Subject: Re: [PATCH 2/2] xfs: reduce the number of log forces from tail pushing
+Message-ID: <20110814163144.GD29428@infradead.org>
+References: <1312786271-10871-1-git-send-email-david@fromorbit.com>
+	<1312786271-10871-3-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110814004417.GA3524@thunk.org>
+In-Reply-To: <1312786271-10871-3-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,18 +31,35 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ted Ts'o <tytso@mit.edu>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-ext4@vger.kernel.org, Stefan Behrens <sbehrens@giantdisaster.de>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Sat, Aug 13, 2011 at 08:44:17PM -0400, Ted Ts'o wrote:
-> I see there's an sort command at the very end of _extend_test_bed(), I
-> presume we should also add a similar "LC_COLLATE=POSIX sort" to the
-> other "find" command pipelines, and it's easy enough to filter out the
-> lost+found directory by adding a "! -name lost+found".
+The flush_log variable in xfs_ail_worker is non-zero after your
+patch, and can be removed.
 
-A patch from you or Stefan would be very welcome.  Note that at least
-for btrfs I see problems with the user.name2 attribute in that test too,
-so it might be a bit of effort to sort out what actually is going on.
+The second argument for xfs_log_force to force a sync log force is
+XFS_LOG_SYNC, not SYNC_WAIT.
+
+I also don't really like the goto again style - we can just move the log
+push at the beggining of the function, the only thing it requires is
+adding an additional list_empty check, e.g.:
+
+	spin_lock(&ailp->xa_lock);
+ 	/*
+	 * If last time we ran we encountered pinned items, force the log
+	 * first, wait for it and then push again.
+	 */
+	if (ailp->xa_last_pushed_lsn == 0 && ailp->xa_log_flush &&
+	    !list_empty(&ailp->xa_ail)) {
+		ailp->xa_log_flush = 0;
+		spin_unlock(&ailp->xa_lock);
+		XFS_STATS_INC(xs_push_ail_flush);
+		xfs_log_force(mp, SYNC_WAIT);
+		spin_lock(&ailp->xa_lock);
+	}
+
+	target = ailp->xa_target;
+        lip = xfs_trans_ail_cursor_first(ailp, &cur, ailp->xa_last_pushed_lsn);
 
 _______________________________________________
 xfs mailing list
