@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7EHGsrB248876 for <xfs@oss.sgi.com>; Sun, 14 Aug 2011 12:16:55 -0500
+	p7EHGs3w248860 for <xfs@oss.sgi.com>; Sun, 14 Aug 2011 12:16:54 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 44EDF136B206
-	for <xfs@oss.sgi.com>; Sun, 14 Aug 2011 10:18:45 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1764A136B1FF
+	for <xfs@oss.sgi.com>; Sun, 14 Aug 2011 10:18:44 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	4s3BGFJXtPjvZWnu for <xfs@oss.sgi.com>;
-	Sun, 14 Aug 2011 10:18:45 -0700 (PDT)
+	NVEkkNYLzBLpUOo5 for <xfs@oss.sgi.com>;
+	Sun, 14 Aug 2011 10:18:44 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1QseIu-0007qk-Rb
+	Linux)) id 1QseIt-0007og-UE
 	for xfs@oss.sgi.com; Sun, 14 Aug 2011 17:16:52 +0000
-Message-Id: <20110814171652.809674388@bombadil.infradead.org>
-Date: Sun, 14 Aug 2011 13:15:23 -0400
+Message-Id: <20110814171651.889248041@bombadil.infradead.org>
+Date: Sun, 14 Aug 2011 13:15:19 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 6/6] xfs: use the "delwri" terminology consistently
+Subject: [PATCH 2/6] xfs: remove the unlock argument to xfs_buf_delwri_queue
 References: <20110814171517.174040686@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-cleanup-delwrite
+Content-Disposition: inline; filename=xfs-simplify-xfs_buf_delwri_queue
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,162 +34,72 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-And also remove the strange local lock and delwri list pointers in a few
-functions.
+We can just unlock the buffer in the caller, and the decrement of b_hold
+would also be needed in the !unlock, we just never hit that case currently
+given that the caller handles that case.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: xfs/fs/xfs/xfs_buf.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_buf.c	2011-08-11 22:37:58.616710453 +0200
-+++ xfs/fs/xfs/xfs_buf.c	2011-08-11 22:41:08.463367486 +0200
-@@ -1489,12 +1489,12 @@ xfs_setsize_buftarg(
- }
+--- xfs.orig/fs/xfs/xfs_buf.c	2011-08-11 22:29:23.490069868 +0200
++++ xfs/fs/xfs/xfs_buf.c	2011-08-11 22:31:10.196731133 +0200
+@@ -43,7 +43,7 @@
  
- STATIC int
--xfs_alloc_delwrite_queue(
-+xfs_alloc_delwri_queue(
- 	xfs_buftarg_t		*btp,
- 	const char		*fsname)
- {
--	INIT_LIST_HEAD(&btp->bt_delwrite_queue);
--	spin_lock_init(&btp->bt_delwrite_lock);
-+	INIT_LIST_HEAD(&btp->bt_delwri_queue);
-+	spin_lock_init(&btp->bt_delwri_lock);
- 	btp->bt_flags = 0;
- 	btp->bt_task = kthread_run(xfsbufd, btp, "xfsbufd/%s", fsname);
- 	if (IS_ERR(btp->bt_task))
-@@ -1524,7 +1524,7 @@ xfs_alloc_buftarg(
- 	spin_lock_init(&btp->bt_lru_lock);
- 	if (xfs_setsize_buftarg_early(btp, bdev))
- 		goto error;
--	if (xfs_alloc_delwrite_queue(btp, fsname))
-+	if (xfs_alloc_delwri_queue(btp, fsname))
- 		goto error;
- 	btp->bt_shrinker.shrink = xfs_buftarg_shrink;
- 	btp->bt_shrinker.seeks = DEFAULT_SEEKS;
-@@ -1544,46 +1544,44 @@ STATIC void
- xfs_buf_delwri_queue(
- 	xfs_buf_t		*bp)
- {
--	struct list_head	*dwq = &bp->b_target->bt_delwrite_queue;
--	spinlock_t		*dwlk = &bp->b_target->bt_delwrite_lock;
-+	struct xfs_buftarg	*btp = bp->b_target;
+ static kmem_zone_t *xfs_buf_zone;
+ STATIC int xfsbufd(void *);
+-STATIC void xfs_buf_delwri_queue(xfs_buf_t *, int);
++STATIC void xfs_buf_delwri_queue(xfs_buf_t *);
  
- 	trace_xfs_buf_delwri_queue(bp, _RET_IP_);
- 
- 	ASSERT(!(bp->b_flags & XBF_READ));
- 
--	spin_lock(dwlk);
-+	spin_lock(&btp->bt_delwri_lock);
- 	if (!list_empty(&bp->b_list)) {
- 		/* if already in the queue, move it to the tail */
- 		ASSERT(bp->b_flags & _XBF_DELWRI_Q);
--		list_move_tail(&bp->b_list, dwq);
-+		list_move_tail(&bp->b_list, &btp->bt_delwri_queue);
- 	} else {
- 		/* start xfsbufd as it is about to have something to do */
--		if (list_empty(dwq))
-+		if (list_empty(&btp->bt_delwri_queue))
- 			wake_up_process(bp->b_target->bt_task);
- 
+ static struct workqueue_struct *xfslogd_workqueue;
+ struct workqueue_struct *xfsdatad_workqueue;
+@@ -940,7 +940,7 @@ xfs_buf_unlock(
+ 	if ((bp->b_flags & (XBF_DELWRI|_XBF_DELWRI_Q)) == XBF_DELWRI) {
  		atomic_inc(&bp->b_hold);
- 		bp->b_flags |= XBF_DELWRI | _XBF_DELWRI_Q | XBF_ASYNC;
--		list_add_tail(&bp->b_list, dwq);
-+		list_add_tail(&bp->b_list, &btp->bt_delwri_queue);
+ 		bp->b_flags |= XBF_ASYNC;
+-		xfs_buf_delwri_queue(bp, 0);
++		xfs_buf_delwri_queue(bp);
  	}
- 	bp->b_queuetime = jiffies;
--	spin_unlock(dwlk);
-+	spin_unlock(&btp->bt_delwri_lock);
- }
  
- void
- xfs_buf_delwri_dequeue(
- 	xfs_buf_t		*bp)
- {
--	spinlock_t		*dwlk = &bp->b_target->bt_delwrite_lock;
- 	int			dequeued = 0;
+ 	XB_CLEAR_OWNER(bp);
+@@ -1049,7 +1049,8 @@ xfs_bdwrite(
+ 	bp->b_flags &= ~XBF_READ;
+ 	bp->b_flags |= (XBF_DELWRI | XBF_ASYNC);
  
--	spin_lock(dwlk);
-+	spin_lock(&bp->b_target->bt_delwri_lock);
- 	if ((bp->b_flags & XBF_DELWRI) && !list_empty(&bp->b_list)) {
- 		ASSERT(bp->b_flags & _XBF_DELWRI_Q);
- 		list_del_init(&bp->b_list);
- 		dequeued = 1;
- 	}
- 	bp->b_flags &= ~(XBF_DELWRI|_XBF_DELWRI_Q);
--	spin_unlock(dwlk);
-+	spin_unlock(&bp->b_target->bt_delwri_lock);
- 
- 	if (dequeued)
- 		xfs_buf_rele(bp);
-@@ -1615,9 +1613,9 @@ xfs_buf_delwri_promote(
- 	if (bp->b_queuetime < jiffies - age)
- 		return;
- 	bp->b_queuetime = jiffies - age;
--	spin_lock(&btp->bt_delwrite_lock);
--	list_move(&bp->b_list, &btp->bt_delwrite_queue);
--	spin_unlock(&btp->bt_delwrite_lock);
-+	spin_lock(&btp->bt_delwri_lock);
-+	list_move(&bp->b_list, &btp->bt_delwri_queue);
-+	spin_unlock(&btp->bt_delwri_lock);
- }
- 
- STATIC void
-@@ -1638,15 +1636,13 @@ xfs_buf_delwri_split(
- 	unsigned long	age)
- {
- 	xfs_buf_t	*bp, *n;
--	struct list_head *dwq = &target->bt_delwrite_queue;
--	spinlock_t	*dwlk = &target->bt_delwrite_lock;
- 	int		skipped = 0;
- 	int		force;
- 
- 	force = test_and_clear_bit(XBT_FORCE_FLUSH, &target->bt_flags);
- 	INIT_LIST_HEAD(list);
--	spin_lock(dwlk);
--	list_for_each_entry_safe(bp, n, dwq, b_list) {
-+	spin_lock(&target->bt_delwri_lock);
-+	list_for_each_entry_safe(bp, n, &target->bt_delwri_queue, b_list) {
- 		ASSERT(bp->b_flags & XBF_DELWRI);
- 
- 		if (!xfs_buf_ispinned(bp) && xfs_buf_trylock(bp)) {
-@@ -1663,10 +1659,9 @@ xfs_buf_delwri_split(
- 		} else
- 			skipped++;
- 	}
--	spin_unlock(dwlk);
- 
-+	spin_unlock(&target->bt_delwri_lock);
- 	return skipped;
--
+-	xfs_buf_delwri_queue(bp, 1);
++	xfs_buf_delwri_queue(bp);
++	xfs_buf_unlock(bp);
  }
  
  /*
-@@ -1716,7 +1711,7 @@ xfsbufd(
- 		}
+@@ -1562,8 +1563,7 @@ error:
+  */
+ STATIC void
+ xfs_buf_delwri_queue(
+-	xfs_buf_t		*bp,
+-	int			unlock)
++	xfs_buf_t		*bp)
+ {
+ 	struct list_head	*dwq = &bp->b_target->bt_delwrite_queue;
+ 	spinlock_t		*dwlk = &bp->b_target->bt_delwrite_lock;
+@@ -1576,8 +1576,7 @@ xfs_buf_delwri_queue(
+ 	/* If already in the queue, dequeue and place at tail */
+ 	if (!list_empty(&bp->b_list)) {
+ 		ASSERT(bp->b_flags & _XBF_DELWRI_Q);
+-		if (unlock)
+-			atomic_dec(&bp->b_hold);
++		atomic_dec(&bp->b_hold);
+ 		list_del(&bp->b_list);
+ 	}
  
- 		/* sleep for a long time if there is nothing to do. */
--		if (list_empty(&target->bt_delwrite_queue))
-+		if (list_empty(&target->bt_delwri_queue))
- 			tout = MAX_SCHEDULE_TIMEOUT;
- 		schedule_timeout_interruptible(tout);
+@@ -1590,9 +1589,6 @@ xfs_buf_delwri_queue(
+ 	list_add_tail(&bp->b_list, dwq);
+ 	bp->b_queuetime = jiffies;
+ 	spin_unlock(dwlk);
+-
+-	if (unlock)
+-		xfs_buf_unlock(bp);
+ }
  
-Index: xfs/fs/xfs/xfs_buf.h
-===================================================================
---- xfs.orig/fs/xfs/xfs_buf.h	2011-08-11 22:37:58.620043786 +0200
-+++ xfs/fs/xfs/xfs_buf.h	2011-08-11 22:39:35.703372204 +0200
-@@ -105,8 +105,8 @@ typedef struct xfs_buftarg {
- 
- 	/* per device delwri queue */
- 	struct task_struct	*bt_task;
--	struct list_head	bt_delwrite_queue;
--	spinlock_t		bt_delwrite_lock;
-+	struct list_head	bt_delwri_queue;
-+	spinlock_t		bt_delwri_lock;
- 	unsigned long		bt_flags;
- 
- 	/* LRU control structures */
+ void
 
 _______________________________________________
 xfs mailing list
