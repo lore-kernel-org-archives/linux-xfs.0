@@ -1,11 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7FDtdHR085670 for <xfs@oss.sgi.com>; Mon, 15 Aug 2011 08:55:39 -0500
+	p7FDtW3g085629 for <xfs@oss.sgi.com>; Mon, 15 Aug 2011 08:55:32 -0500
 From: Bill Kendall <wkendall@sgi.com>
-Subject: [PATCH v3 2/7] xfsdump: process EPIPE instead of catching SIGPIPE
-Date: Mon, 15 Aug 2011 08:55:01 -0500
-Message-Id: <1313416506-3666-3-git-send-email-wkendall@sgi.com>
+Subject: [PATCH v3 1/7] xfsdump: remove conditional OPENMASKED code
+Date: Mon, 15 Aug 2011 08:55:00 -0500
+Message-Id: <1313416506-3666-2-git-send-email-wkendall@sgi.com>
 In-Reply-To: <1313416506-3666-1-git-send-email-wkendall@sgi.com>
 References: <1313416506-3666-1-git-send-email-wkendall@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -23,254 +23,216 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Looking forward towards a multi-threaded xfsdump, it's simpler to
-handle pipe failures as a system call failure (EPIPE) rather than
-through a signal handler which may run in a separate thread. The
-existing error handling code handles EPIPE just fine, so the only
-required change is to ignore SIGPIPE. Some sections of code already
-temporarily ignore SIGPIPE -- they no longer need to do so since it
-will already be ignored.
+xfsdump contains a couple wrapper functions which block signals
+during an open(2) call. This code is conditionally compiled and has
+not been enabled for a long time. Remove the wrappers rather than
+converting them to use the POSIX signal API.
 
 Signed-off-by: Bill Kendall <wkendall@sgi.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Alex Elder <aelder@sgi.com>
 ---
- common/main.c       |   49 ++++++-------------------------------------------
- common/ring.c       |    1 -
- librmt/rmtcommand.c |    7 +------
- librmt/rmtwrite.c   |    5 -----
- 4 files changed, 7 insertions(+), 55 deletions(-)
+ common/drive_minrmt.c   |   58 +---------------------------------------------
+ common/drive_scsitape.c |   58 +---------------------------------------------
+ 2 files changed, 4 insertions(+), 112 deletions(-)
 
-diff --git a/common/main.c b/common/main.c
-index c4d6878..d21b559 100644
---- a/common/main.c
-+++ b/common/main.c
-@@ -135,7 +135,6 @@ static time32_t stop_deadline;
- static bool_t stop_in_progress;
- static bool_t sighup_received;
- static bool_t sigterm_received;
--static bool_t sigpipe_received;
- static bool_t sigquit_received;
- static bool_t sigint_received;
- static size_t prbcld_cnt;
-@@ -547,13 +546,18 @@ main( int argc, char *argv[] )
- 	 * be released at pre-emption points and upon pausing in the main
- 	 * loop.
- 	 */
-+
-+	/* always ignore SIGPIPE, instead handle EPIPE as part
-+	 * of normal sys call error handling
-+	 */
-+	sigset( SIGPIPE, SIG_IGN );
-+
- 	if ( ! miniroot && ! pipeline ) {
- 		stop_in_progress = BOOL_FALSE;
- 		coredump_requested = BOOL_FALSE;
- 		sighup_received = BOOL_FALSE;
- 		sigterm_received = BOOL_FALSE;
- 		sigint_received = BOOL_FALSE;
--		sigpipe_received = BOOL_FALSE;
- 		sigquit_received = BOOL_FALSE;
- 		sigstray_received = BOOL_FALSE;
- 		prbcld_cnt = 0;
-@@ -563,8 +567,6 @@ main( int argc, char *argv[] )
- 		sighold( SIGHUP );
- 		sigset( SIGTERM, sighandler );
- 		sighold( SIGTERM );
--		sigset( SIGPIPE, sighandler );
--		sighold( SIGPIPE );
- 		sigset( SIGQUIT, sighandler );
- 		sighold( SIGQUIT );
- 		alarm( 0 );
-@@ -596,7 +598,6 @@ main( int argc, char *argv[] )
- 		sigset( SIGINT, sighandler );
- 		sigset( SIGHUP, sighandler );
- 		sigset( SIGTERM, sighandler );
--		sigset( SIGPIPE, sighandler );
+diff --git a/common/drive_minrmt.c b/common/drive_minrmt.c
+index 94795e2..eb7876a 100644
+--- a/common/drive_minrmt.c
++++ b/common/drive_minrmt.c
+@@ -24,11 +24,9 @@
+ #include <sys/sem.h>
+ #include <sys/prctl.h>
+ #include <time.h>
+-#include <signal.h>
+ #include <fcntl.h>
+ #include <errno.h>
+ #include <sys/sysmacros.h>
+-#include <sys/signal.h>
+ #include <malloc.h>
+ #include <sched.h>
  
- 		ok = drive_init2( argc,
- 				  argv,
-@@ -804,16 +805,6 @@ main( int argc, char *argv[] )
- 			sigterm_received = BOOL_FALSE;
- 		}
+@@ -59,12 +57,6 @@
  
--		/* request a stop on loss of write pipe
--		 */
--		if ( sigpipe_received ) {
--			mlog( MLOG_DEBUG | MLOG_PROC,
--			      "SIGPIPE received\n" );
--			stop_requested = BOOL_TRUE;
--			stop_timeout = STOP_TIMEOUT;
--			sigpipe_received = BOOL_FALSE;
--		}
--		
- 		/* operator send SIGQUIT. treat like an interrupt,
- 		 * but force a core dump
- 		 */
-@@ -889,14 +880,12 @@ main( int argc, char *argv[] )
- 		sigrelse( SIGINT );
- 		sigrelse( SIGHUP );
- 		sigrelse( SIGTERM );
--		sigrelse( SIGPIPE );
- 		sigrelse( SIGQUIT );
- 		sigrelse( SIGALRM );
- 		( void )sigpause( SIGCLD );
- 		sighold( SIGCLD );
- 		sighold( SIGALRM );
- 		sighold( SIGQUIT );
--		sighold( SIGPIPE );
- 		sighold( SIGTERM );
- 		sighold( SIGHUP );
- 		sighold( SIGINT );
-@@ -1130,11 +1119,9 @@ preemptchk( int flg )
- 	sigrelse( SIGINT );
- 	sigrelse( SIGHUP );
- 	sigrelse( SIGTERM );
--	sigrelse( SIGPIPE );
- 	sigrelse( SIGQUIT );
+ /* remote tape protocol debug
+  */
+-#ifdef OPENMASKED
+-static intgen_t open_masked_signals( char *path, int oflags );
+-#else /* OPENMASKED */
+-#define open_masked_signals(p,f)	open(p,f)
+-#endif /* OPENMASKED */
+-
+ #ifdef RMT
+ #ifdef RMTDBG
+ #define	open(p,f)		dbgrmtopen(p,f)
+@@ -455,7 +447,7 @@ ds_match( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
+ 		    	    }
+ 			    cmdlineblksize = ( u_int32_t )atoi( optarg );
+ 		            errno = 0;
+-		            fd = open_masked_signals( drivep->d_pathname, O_RDONLY );
++		            fd = open( drivep->d_pathname, O_RDONLY );
+ 		            if ( fd < 0 ) 
+ 			            return -10;
+ 		            close( fd );
+@@ -3435,7 +3427,7 @@ Open( drive_t *drivep )
+ 	ASSERT( contextp->dc_fd == -1 );
  
- 	sighold( SIGQUIT );
--	sighold( SIGPIPE );
- 	sighold( SIGTERM );
- 	sighold( SIGHUP );
- 	sighold( SIGINT );
-@@ -1170,13 +1157,6 @@ preemptchk( int flg )
- 		sigterm_received = BOOL_FALSE;
- 	}
+ 	errno = 0;
+-	contextp->dc_fd = open_masked_signals( drivep->d_pathname, oflags );
++	contextp->dc_fd = open( drivep->d_pathname, oflags );
  
--	if ( sigpipe_received ) {
--		mlog( MLOG_DEBUG | MLOG_PROC,
--		      "SIGPIPE received\n" );
--		preempt_requested = BOOL_TRUE;
--		sigpipe_received = BOOL_FALSE;
+ 	if ( contextp->dc_fd <= 0 ) {
+ 		return BOOL_FALSE;
+@@ -4039,49 +4031,3 @@ isxfsdumperasetape( drive_t *drivep )
+ 	else 
+ 		return BOOL_FALSE;
+ }
+-
+-#ifdef OPENMASKED
+-
+-static intgen_t
+-open_masked_signals( char *pathname, int oflags )
+-{
+-	bool_t isrmtpr;
+-	SIG_PF sigalrm_save;
+-	SIG_PF sigint_save;
+-	SIG_PF sighup_save;
+-	SIG_PF sigquit_save;
+-	SIG_PF sigcld_save;
+-	intgen_t rval;
+-	intgen_t saved_errno;
+-
+-	if ( strchr( pathname, ':') ) {
+-		isrmtpr = BOOL_TRUE;
+-	} else {
+-		isrmtpr = BOOL_FALSE;
 -	}
--	
- 	if ( sigquit_received ) {
- 		mlog( MLOG_DEBUG | MLOG_PROC,
- 		      "SIGQUIT received (preempt)\n" );
-@@ -1602,14 +1582,6 @@ sighandler( int signo )
- 			dlog_desist( );
- 			sigquit_received = BOOL_TRUE;
- 			return;
--		case SIGPIPE:
--			/* immediately disable further dialogs,
--			 * and ignore subsequent signals
--			 */
--			dlog_desist( );
--			sigpipe_received = BOOL_TRUE;
--			( void )sigset( signo, SIG_IGN );
--			return;
- 		case SIGALRM:
- 			return;
- 		default:
-@@ -1638,14 +1610,6 @@ sighandler( int signo )
- 			/* can get SIGQUIT during dialog: just dismiss
- 			 */
- 			return;
--		case SIGPIPE:
--			/* forward write pipe failures to parent,
--			 * and ignore subsequent failures
--			 */
--			dlog_desist( );
--			kill( parentpid, SIGPIPE );
--			( void )sigset( signo, SIG_IGN );
--			return;
- 		case SIGALRM:
- 			/* accept and do nothing about alarm signals
- 			 */
-@@ -1678,7 +1642,6 @@ childmain( void *arg1 )
- 	sigset( SIGTERM, SIG_IGN );
- 	sigset( SIGINT, SIG_IGN );
- 	sigset( SIGQUIT, SIG_IGN );
--	sigset( SIGPIPE, SIG_IGN );
- 	sigset( SIGALRM, SIG_IGN );
- 	sigset( SIGCLD, SIG_IGN );
- 
-diff --git a/common/ring.c b/common/ring.c
-index f6fc64d..b132ab9 100644
---- a/common/ring.c
-+++ b/common/ring.c
-@@ -412,7 +412,6 @@ ring_slave_entry( void *ringctxp )
- 	sigset( SIGHUP, SIG_IGN );
- 	sigset( SIGINT, SIG_IGN );
- 	sigset( SIGQUIT, SIG_IGN );
--	sigset( SIGPIPE, SIG_IGN );
- 	sigset( SIGALRM, SIG_IGN );
- 	sigset( SIGCLD, SIG_IGN );
- 
-diff --git a/librmt/rmtcommand.c b/librmt/rmtcommand.c
-index 42587e4..fbd7a6a 100644
---- a/librmt/rmtcommand.c
-+++ b/librmt/rmtcommand.c
-@@ -21,7 +21,6 @@
-  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-  */
- 
+-
+-	if ( isrmtpr ) {
+-		sigalrm_save = sigset( SIGALRM, SIG_IGN );
+-		sigint_save = sigset( SIGINT, SIG_IGN );
+-		sighup_save = sigset( SIGHUP, SIG_IGN );
+-		sigquit_save = sigset( SIGQUIT, SIG_IGN );
+-		sigcld_save = sigset( SIGCLD, SIG_IGN );
+-	}
+-
+-	errno = 0;
+-	rval = open( pathname, oflags );
+-	saved_errno = errno;
+-
+-	if ( isrmtpr ) {
+-		( void )sigset( SIGCLD, sigcld_save );
+-		( void )sigset( SIGQUIT, sigquit_save );
+-		( void )sigset( SIGHUP, sighup_save );
+-		( void )sigset( SIGINT, sigint_save );
+-		( void )sigset( SIGALRM, sigalrm_save );
+-	}
+-
+-	errno = saved_errno;
+-	return rval;
+-}
+-
+-#endif /* OPENMASKED */
+diff --git a/common/drive_scsitape.c b/common/drive_scsitape.c
+index 0f034b7..d72ba69 100644
+--- a/common/drive_scsitape.c
++++ b/common/drive_scsitape.c
+@@ -24,11 +24,9 @@
+ #include <sys/sem.h>
+ #include <sys/prctl.h>
+ #include <time.h>
 -#include <signal.h>
+ #include <fcntl.h>
  #include <errno.h>
+ #include <sys/sysmacros.h>
+-#include <sys/signal.h>
+ #include <malloc.h>
+ #include <sched.h>
  
- #include "rmtlib.h"
-@@ -36,19 +35,16 @@ int fildes;
- char *buf;
- {
- 	register int blen;
--	void (*pstat)();
+@@ -55,12 +53,6 @@
  
- 	_rmt_msg(RMTDBG, "rmtcommand: fd = %d, buf = %s\n", fildes, buf);
+ /* remote tape protocol debug
+  */
+-#ifdef OPENMASKED
+-static intgen_t open_masked_signals( char *path, int oflags );
+-#else /* OPENMASKED */
+-#define open_masked_signals(p,f)	open(p,f)
+-#endif /* OPENMASKED */
+-
+ #ifdef RMT
+ #ifdef RMTDBG
+ #define	open(p,f)		dbgrmtopen(p,f)
+@@ -539,7 +531,7 @@ ds_match( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
  
+ 	if ( strchr( drivep->d_pathname, ':')) {
+ 		errno = 0;
+-		fd = open_masked_signals( drivep->d_pathname, O_RDONLY );
++		fd = open( drivep->d_pathname, O_RDONLY );
+ 		if ( fd < 0 ) {
+ 			return -10;
+ 		}
+@@ -4682,7 +4674,7 @@ Open( drive_t *drivep )
+ 	ASSERT( contextp->dc_fd == -1 );
+ 
+ 	errno = 0;
+-	contextp->dc_fd = open_masked_signals( drivep->d_pathname, oflags );
++	contextp->dc_fd = open( drivep->d_pathname, oflags );
+ 
+ 	if ( contextp->dc_fd <= 0 ) {
+ 		return BOOL_FALSE;
+@@ -5426,52 +5418,6 @@ isefsdump( drive_t *drivep )
+ 	}
+ }
+ 
+-#ifdef OPENMASKED
+-
+-static intgen_t
+-open_masked_signals( char *pathname, int oflags )
+-{
+-	bool_t isrmtpr;
+-	SIG_PF sigalrm_save;
+-	SIG_PF sigint_save;
+-	SIG_PF sighup_save;
+-	SIG_PF sigquit_save;
+-	SIG_PF sigcld_save;
+-	intgen_t rval;
+-	intgen_t saved_errno;
+-
+-	if ( strchr( pathname, ':') ) {
+-		isrmtpr = BOOL_TRUE;
+-	} else {
+-		isrmtpr = BOOL_FALSE;
+-	}
+-
+-	if ( isrmtpr ) {
+-		sigalrm_save = sigset( SIGALRM, SIG_IGN );
+-		sigint_save = sigset( SIGINT, SIG_IGN );
+-		sighup_save = sigset( SIGHUP, SIG_IGN );
+-		sigquit_save = sigset( SIGQUIT, SIG_IGN );
+-		sigcld_save = sigset( SIGCLD, SIG_IGN );
+-	}
+-
+-	errno = 0;
+-	rval = open( pathname, oflags );
+-	saved_errno = errno;
+-
+-	if ( isrmtpr ) {
+-		( void )sigset( SIGCLD, sigcld_save );
+-		( void )sigset( SIGQUIT, sigquit_save );
+-		( void )sigset( SIGHUP, sighup_save );
+-		( void )sigset( SIGINT, sigint_save );
+-		( void )sigset( SIGALRM, sigalrm_save );
+-	}
+-
+-	errno = saved_errno;
+-	return rval;
+-}
+-
+-#endif /* OPENMASKED */
+-
  /*
-- *	save current pipe status and try to make the request
-+ *	try to make the request
-  */
- 
- 	blen = strlen(buf);
--	pstat = signal(SIGPIPE, SIG_IGN);
- 	if (write(WRITE(fildes), buf, blen) == blen)
- 	{
--		signal(SIGPIPE, pstat);
- 		return(0);
- 	}
- 
-@@ -56,7 +52,6 @@ char *buf;
-  *	something went wrong. close down and go home
-  */
- 
--	signal(SIGPIPE, pstat);
- 	_rmt_abort(fildes);
- 
- 	setoserror( EIO );
-diff --git a/librmt/rmtwrite.c b/librmt/rmtwrite.c
-index 7f373ee..c42b1ab 100644
---- a/librmt/rmtwrite.c
-+++ b/librmt/rmtwrite.c
-@@ -21,7 +21,6 @@
-  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-  */
- 
--#include <signal.h>
- #include <errno.h>
- 
- #include "rmtlib.h"
-@@ -55,20 +54,16 @@ unsigned int nbyte;
- static int _rmt_write(int fildes, char *buf, unsigned int nbyte)
- {
- 	char buffer[BUFMAGIC];
--	void (*pstat)();
- 
- 	sprintf(buffer, "W%d\n", nbyte);
- 	if (_rmt_command(fildes, buffer) == -1)
- 		return(-1);
- 
--	pstat = signal(SIGPIPE, SIG_IGN);
- 	if (write(WRITE(fildes), buf, nbyte) == nbyte)
- 	{
--		signal (SIGPIPE, pstat);
- 		return(_rmt_status(fildes));
- 	}
- 
--	signal (SIGPIPE, pstat);
- 	_rmt_abort(fildes);
- 	setoserror( EIO );
- 	return(-1);
+  * General purpose routine which dredges through procfs trying to
+  * match up device driver names with the associated major numbers
 -- 
 1.7.0.4
 
