@@ -1,13 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7FDteCW085684 for <xfs@oss.sgi.com>; Mon, 15 Aug 2011 08:55:40 -0500
+	p7FFiKjx095947 for <xfs@oss.sgi.com>; Mon, 15 Aug 2011 10:44:20 -0500
 From: Bill Kendall <wkendall@sgi.com>
-Subject: [PATCH v3 6/7] xfsdump: convert to the POSIX signal API
-Date: Mon, 15 Aug 2011 08:55:05 -0500
-Message-Id: <1313416506-3666-7-git-send-email-wkendall@sgi.com>
-In-Reply-To: <1313416506-3666-1-git-send-email-wkendall@sgi.com>
-References: <1313416506-3666-1-git-send-email-wkendall@sgi.com>
+Subject: [PATCH] xfsdump: refactor ring_create
+Date: Mon, 15 Aug 2011 10:43:18 -0500
+Message-Id: <1313422998-7263-1-git-send-email-wkendall@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,425 +21,186 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Convert from using the System V signal API to the POSIX API. For
-xfsdump, this mostly means replacing sigrelse/sighold with
-sigprocmask, sigset with sigaction and sigpause with sigsuspend.
-
-Note that sigprocmask calls will be replaced with pthread_sigmask
-when pthread support is added to xfsdump.
-
-childmain() and cldmgr_entry() are thread entry points. By the time
-they are spawned the main thread will have already set its signal
-mask, so no need to setup signals in the thread as the mask is
-inherited.
-
-ring_slave_entry() is a thread entry point but is spawned before the
-main thread has its signal mask setup. Setup the thread's mask to
-block the same signals that the main thread will block.  The main
-thread should be reworked to set its mask earlier, but that will
-require a fair amount of refactoring that is beyond the scope of
-this patch.
-
-Also simplify code to generate a core file to just use abort()
-rather than sending SIGQUIT and then waiting for it to arrive.
+ring_create() takes a thread creation function pointer. The two
+callers of ring_create() pass pointers to identical but separate
+functions. This can be simplified by moving the thread creation
+code into ring_create() itself.
 
 Signed-off-by: Bill Kendall <wkendall@sgi.com>
-Reviewed-by: Alex Elder <aelder@sgi.com>
 ---
- common/cldmgr.c |    5 ---
- common/dlog.c   |   44 +++++-----------------
- common/main.c   |  106 ++++++++++++++++++++++++++----------------------------
- common/ring.c   |   14 +++++---
- dump/content.c  |   21 +++++------
- 5 files changed, 79 insertions(+), 111 deletions(-)
+ common/drive_minrmt.c   |   23 +----------------------
+ common/drive_scsitape.c |   23 +----------------------
+ common/ring.c           |   13 +++++++++----
+ common/ring.h           |   10 ++++------
+ 4 files changed, 15 insertions(+), 54 deletions(-)
 
-diff --git a/common/cldmgr.c b/common/cldmgr.c
-index 3520c6e..7784a15 100644
---- a/common/cldmgr.c
-+++ b/common/cldmgr.c
-@@ -23,7 +23,6 @@
- #include <sys/ipc.h>
- #include <sys/sem.h>
- #include <sys/prctl.h>
--#include <signal.h>
- #include <errno.h>
+diff --git a/common/drive_minrmt.c b/common/drive_minrmt.c
+index 94795e2..a61dfff 100644
+--- a/common/drive_minrmt.c
++++ b/common/drive_minrmt.c
+@@ -324,9 +324,6 @@ static intgen_t Write( drive_t *drivep,
+ static intgen_t record_hdr_validate( drive_t *drivep,
+ 				     char *bufp,
+ 				     bool_t chkoffpr );
+-static void ring_thread( void *clientctxp,
+-			 int ( * entryp )( void *ringctxp ),
+-			 void *ringctxp );
+ static int ring_read( void *clientctxp, char *bufp );
+ static int ring_write( void *clientctxp, char *bufp );
+ static double percent64( off64_t num, off64_t denom );
+@@ -610,7 +607,7 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
+ 		contextp->dc_ringp = ring_create( contextp->dc_ringlen,
+ 						  STAPE_MAX_RECSZ,
+ 						  contextp->dc_ringpinnedpr,
+-						  ring_thread,
++						  drivep->d_index,
+ 						  ring_read,
+ 						  ring_write,
+ 						  ( void * )drivep,
+@@ -3808,24 +3805,6 @@ ring_write( void *clientctxp, char *bufp )
+ 	return write_record( ( drive_t * )clientctxp, bufp, BOOL_TRUE, BOOL_TRUE );
+ }
  
- #include "types.h"
-@@ -217,10 +216,6 @@ cldmgr_entry( void *arg1 )
- 	/* REFERENCED */
- 	bool_t ok;
- 
--	signal( SIGHUP, SIG_IGN );
--	signal( SIGINT, SIG_IGN );
--	signal( SIGQUIT, SIG_IGN );
--	alarm( 0 );
- 	cldp->c_pid = pid;
- 	ok = qlock_thrdinit( );
- 	ASSERT( ok );
-diff --git a/common/dlog.c b/common/dlog.c
-index a49aab5..8cf9a65 100644
---- a/common/dlog.c
-+++ b/common/dlog.c
-@@ -32,9 +32,6 @@
- #include "dlog.h"
- #include "getopt.h"
- 
--extern bool_t miniroot;
--extern pid_t parentpid;
+-static void
+-ring_thread( void *clientctxp,
+-	     int ( * entryp )( void *ringctxp ),
+-	     void *ringctxp )
+-{
+-	drive_t *drivep = ( drive_t * )clientctxp;
+-	/* REFERENCED */
+-	bool_t ok;
 -
- static int dlog_ttyfd = -1;
- static volatile bool_t dlog_allowed_flag = BOOL_FALSE;
- static bool_t dlog_timeouts_flag = BOOL_FALSE;
-@@ -384,7 +381,7 @@ promptinput( char *buf,
- 	va_list args;
- 	time32_t now = time( NULL );
- 	intgen_t nread = -1;
--	pid_t pid = getpid( );
-+	sigset_t orig_set;
- 
- 	/* display the pre-prompt
- 	 */
-@@ -412,32 +409,28 @@ promptinput( char *buf,
- 	}
- 
- 	/* set up signal handling
-+	 * the mlog lock is held for the life of the dialog (see dlog_begin)
-+	 * and it's possible the main thread, which normally does the signal
-+	 * handling, is now waiting on the mlog lock trying to log a message.
-+	 * so unblock the relevant signals for this thread. note this means
-+	 * the current thread or the main thread might handle one of these
-+	 * signals.
- 	 */
- 	dlog_signo_received = -1;
- 	sigemptyset( &dlog_registered_sigs );
- 	if ( sigintix != IXMAX ) {
--		if ( pid == parentpid && ! miniroot ) {
--			( void )sigrelse( SIGINT );
--		}
- 		sigaddset( &dlog_registered_sigs, SIGINT );
- 	}
- 	if ( sighupix != IXMAX ) {
--		if ( pid == parentpid && ! miniroot ) {
--			( void )sigrelse( SIGHUP );
--		}
- 		sigaddset( &dlog_registered_sigs, SIGHUP );
--		if ( pid == parentpid && ! miniroot ) {
--			( void )sigrelse( SIGTERM );
--		}
- 		sigaddset( &dlog_registered_sigs, SIGTERM );
- 	}
- 	if ( sigquitix != IXMAX ) {
--		if ( pid == parentpid && ! miniroot ) {
--			( void )sigrelse( SIGQUIT );
--		}
- 		sigaddset( &dlog_registered_sigs, SIGQUIT );
- 	}
- 
-+	sigprocmask( SIG_UNBLOCK, &dlog_registered_sigs, &orig_set );
-+
- 	/* wait for input, timeout, or interrupt.
- 	 * note we come out of the select() frequently in order to
- 	 * check for a signal. the signal may have been handled by the
-@@ -462,25 +455,8 @@ promptinput( char *buf,
- 
- 	/* restore signal handling
- 	 */
-+	sigprocmask( SIG_SETMASK, &orig_set, NULL );
- 	sigemptyset( &dlog_registered_sigs );
--	if ( sigquitix != IXMAX ) {
--		if ( pid == parentpid && ! miniroot ) {
--			( void )sighold( SIGQUIT );
--		}
--	}
--	if ( sighupix != IXMAX ) {
--		if ( pid == parentpid && ! miniroot ) {
--			( void )sighold( SIGHUP );
--		}
--		if ( pid == parentpid && ! miniroot ) {
--			( void )sighold( SIGTERM );
--		}
--	}
--	if ( sigintix != IXMAX ) {
--		if ( pid == parentpid && ! miniroot ) {
--			( void )sighold( SIGINT );
--		}
--	}
- 	
- 	/* check for timeout or interrupt
- 	 */
-diff --git a/common/main.c b/common/main.c
-index 41df975..f67ed3d 100644
---- a/common/main.c
-+++ b/common/main.c
-@@ -167,6 +167,7 @@ main( int argc, char *argv[] )
- 	bool_t coredump_requested = BOOL_FALSE;
- 	intgen_t exitcode;
- 	rlim64_t tmpstacksz;
-+	struct sigaction sa;
- 	bool_t ok;
- 	/* REFERENCED */
- 	int rval;
-@@ -545,18 +546,23 @@ main( int argc, char *argv[] )
- 	 * be released at pre-emption points and upon pausing in the main
- 	 * loop.
- 	 */
-+	
-+	sigfillset(&sa.sa_mask);
-+	sa.sa_flags = 0;
- 
- 	/* always ignore SIGPIPE, instead handle EPIPE as part
--	 * of normal sys call error handling
--	 */
--	sigset( SIGPIPE, SIG_IGN );
+-	ok = cldmgr_create( entryp,
+-			    CLONE_VM,
+-			    drivep->d_index,
+-			    _("slave"),
+-			    ringctxp );
+-	ASSERT( ok );
+-}
 -
--	/* explicitly ignore SIGCHLD so that if librmt rsh sessions exit
--	 * early they do not become zombies
-+	 * of normal sys call error handling.
-+	 *
-+	 * explicitly ignore SIGCHLD so that if librmt rsh sessions
-+	 * exit early they do not become zombies.
- 	 */
--	sigset( SIGCHLD, SIG_IGN );
-+	sa.sa_handler = SIG_IGN;
-+	sigaction( SIGPIPE, &sa, NULL );
-+	sigaction( SIGCHLD, &sa, NULL );
- 
- 	if ( ! miniroot && ! pipeline ) {
-+		sigset_t blocked_set;
-+
- 		stop_in_progress = BOOL_FALSE;
- 		coredump_requested = BOOL_FALSE;
- 		sighup_received = BOOL_FALSE;
-@@ -565,17 +571,23 @@ main( int argc, char *argv[] )
- 		sigquit_received = BOOL_FALSE;
- 		sigstray_received = BOOL_FALSE;
- 		prbcld_cnt = 0;
--		sigset( SIGINT, sighandler );
--		sighold( SIGINT );
--		sigset( SIGHUP, sighandler );
--		sighold( SIGHUP );
--		sigset( SIGTERM, sighandler );
--		sighold( SIGTERM );
--		sigset( SIGQUIT, sighandler );
--		sighold( SIGQUIT );
-+
- 		alarm( 0 );
--		sigset( SIGALRM, sighandler );
--		sighold( SIGALRM );
-+
-+		sigemptyset( &blocked_set );
-+		sigaddset( &blocked_set, SIGINT );
-+		sigaddset( &blocked_set, SIGHUP );
-+		sigaddset( &blocked_set, SIGTERM );
-+		sigaddset( &blocked_set, SIGQUIT );
-+		sigaddset( &blocked_set, SIGALRM );
-+		sigprocmask( SIG_SETMASK, &blocked_set, NULL );
-+
-+		sa.sa_handler = sighandler;
-+		sigaction( SIGINT, &sa, NULL );
-+		sigaction( SIGHUP, &sa, NULL );
-+		sigaction( SIGTERM, &sa, NULL );
-+		sigaction( SIGQUIT, &sa, NULL );
-+		sigaction( SIGALRM, &sa, NULL );
- 	}
- 
- 	/* do content initialization.
-@@ -596,10 +608,11 @@ main( int argc, char *argv[] )
- 	if ( miniroot || pipeline ) {
- 		intgen_t exitcode;
- 
--		sigset( SIGINT, sighandler );
--		sigset( SIGHUP, sighandler );
--		sigset( SIGTERM, sighandler );
--		sigset( SIGQUIT, sighandler );
-+		sa.sa_handler = sighandler;
-+		sigaction( SIGINT, &sa, NULL );
-+		sigaction( SIGHUP, &sa, NULL );
-+		sigaction( SIGTERM, &sa, NULL );
-+		sigaction( SIGQUIT, &sa, NULL );
- 
- 		ok = drive_init2( argc,
- 				  argv,
-@@ -691,6 +704,7 @@ main( int argc, char *argv[] )
- 		time32_t now;
- 		bool_t stop_requested = BOOL_FALSE;
- 		intgen_t stop_timeout = -1;
-+		sigset_t empty_set;
- 
- 		/* if there was an initialization error,
- 		 * immediately stop all children.
-@@ -879,16 +893,8 @@ main( int argc, char *argv[] )
- 
- 		/* sleep until next signal
- 		 */
--		sigrelse( SIGINT );
--		sigrelse( SIGHUP );
--		sigrelse( SIGTERM );
--		sigrelse( SIGQUIT );
--		( void )sigpause( SIGALRM );
--		sighold( SIGALRM );
--		sighold( SIGQUIT );
--		sighold( SIGTERM );
--		sighold( SIGHUP );
--		sighold( SIGINT );
-+		sigemptyset( &empty_set );
-+		sigsuspend( &empty_set );
- 		( void )alarm( 0 );
- 	}
- 
-@@ -896,14 +902,9 @@ main( int argc, char *argv[] )
- 	 */
- 	if ( coredump_requested ) {
- 		mlog( MLOG_DEBUG | MLOG_PROC,
--		      "parent sending SIGQUIT to self (pid %d)\n",
-+		      "core dump requested, aborting (pid %d)\n",
- 		      parentpid );
--		sigrelse( SIGQUIT );
--		sigset( SIGQUIT, SIG_DFL );
--		kill( parentpid, SIGQUIT );
--		for ( ; ; ) {
--			sleep( 1 );
--		}
-+		abort();
- 	}
- 
- 	/* determine if dump or restore was interrupted
-@@ -1076,6 +1077,10 @@ bool_t
- preemptchk( int flg )
+-
+ static ring_msg_t *
+ Ring_get( ring_t *ringp )
  {
- 	bool_t preempt_requested;
-+	int i;
-+	int sigs[] = { SIGINT, SIGHUP, SIGTERM, SIGQUIT };
-+	int num_sigs = sizeof(sigs) / sizeof(sigs[0]);
-+	sigset_t pending_set, handle_set;
+diff --git a/common/drive_scsitape.c b/common/drive_scsitape.c
+index 0f034b7..e08c5b5 100644
+--- a/common/drive_scsitape.c
++++ b/common/drive_scsitape.c
+@@ -374,9 +374,6 @@ static intgen_t quick_backup( drive_t *drivep,
+ static intgen_t record_hdr_validate( drive_t *drivep,
+ 				     char *bufp,
+ 				     bool_t chkoffpr );
+-static void ring_thread( void *clientctxp,
+-			 int ( * entryp )( void *ringctxp ),
+-			 void *ringctxp );
+ static int ring_read( void *clientctxp, char *bufp );
+ static int ring_write( void *clientctxp, char *bufp );
+ static double percent64( off64_t num, off64_t denom );
+@@ -700,7 +697,7 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
+ 		contextp->dc_ringp = ring_create( contextp->dc_ringlen,
+ 						  STAPE_MAX_RECSZ,
+ 						  contextp->dc_ringpinnedpr,
+-						  ring_thread,
++						  drivep->d_index,
+ 						  ring_read,
+ 						  ring_write,
+ 						  ( void * )drivep,
+@@ -5088,24 +5085,6 @@ ring_write( void *clientctxp, char *bufp )
+ 	return write_record( ( drive_t * )clientctxp, bufp, BOOL_TRUE, BOOL_TRUE );
+ }
  
- 	/* see if a progress report needed
- 	 */
-@@ -1112,15 +1117,14 @@ preemptchk( int flg )
- 	/* release signals momentarily to let any pending ones
- 	 * invoke signal handler and set flags
- 	 */
--	sigrelse( SIGINT );
--	sigrelse( SIGHUP );
--	sigrelse( SIGTERM );
--	sigrelse( SIGQUIT );
+-static void
+-ring_thread( void *clientctxp,
+-	     int ( * entryp )( void *ringctxp ),
+-	     void *ringctxp )
+-{
+-	drive_t *drivep = ( drive_t * )clientctxp;
+-	/* REFERENCED */
+-	bool_t ok;
 -
--	sighold( SIGQUIT );
--	sighold( SIGTERM );
--	sighold( SIGHUP );
--	sighold( SIGINT );
-+	sigpending( &pending_set );
-+	for ( i = 0; i < num_sigs; i++ ) {
-+		if ( sigismember( &pending_set, sigs[i] ) == 1 ) {
-+			sigfillset( &handle_set );
-+			sigdelset( &handle_set, sigs[i] );
-+			sigsuspend( &handle_set );
-+		}
-+	}
- 
- 	preempt_requested = BOOL_FALSE;
- 
-@@ -1549,14 +1553,6 @@ childmain( void *arg1 )
- 	intgen_t exitcode;
- 	drive_t *drivep;
- 
--	/* ignore signals
--	 */
--	sigset( SIGHUP, SIG_IGN );
--	sigset( SIGTERM, SIG_IGN );
--	sigset( SIGINT, SIG_IGN );
--	sigset( SIGQUIT, SIG_IGN );
--	sigset( SIGALRM, SIG_IGN );
+-	ok = cldmgr_create( entryp,
+-			    CLONE_VM,
+-			    drivep->d_index,
+-			    "slave",
+-			    ringctxp );
+-	ASSERT( ok );
+-}
 -
- 	/* Determine which stream I am.
- 	 */
- 	stix = ( ix_t )arg1;
+-
+ static ring_msg_t *
+ Ring_get( ring_t *ringp )
+ {
 diff --git a/common/ring.c b/common/ring.c
-index 237d884..f6e95e8 100644
+index f6fc64d..2fe7dc2 100644
 --- a/common/ring.c
 +++ b/common/ring.c
-@@ -404,15 +404,19 @@ ring_slave_put( ring_t *ringp, ring_msg_t *msgp )
- static int
- ring_slave_entry( void *ringctxp )
+@@ -30,6 +30,7 @@
+ 
+ #include "types.h"
+ #include "qlock.h"
++#include "cldmgr.h"
+ #include "ring.h"
+ 
+ static int ring_slave_entry( void *ringctxp );
+@@ -38,14 +39,13 @@ ring_t *
+ ring_create( size_t ringlen,
+ 	     size_t bufsz,
+ 	     bool_t pinpr,
+-	     void ( *threadfunc )( void *clientctxp,
+-				   int ( * entry )( void *ringctxp ),
+-				   void *ringctxp ),
++	     ix_t drive_index,
+ 	     int ( *readfunc )( void *clientctxp, char *bufp ),
+ 	     int ( *writefunc )( void *clientctxp, char *bufp ),
+ 	     void *clientctxp,
+ 	     intgen_t *rvalp )
  {
-+	sigset_t blocked_set;
- 	ring_t *ringp = ( ring_t * )ringctxp;
- 	enum { LOOPMODE_NORMAL, LOOPMODE_IGNORE, LOOPMODE_DIE } loopmode;
++	bool_t ok;
+ 	ring_t *ringp;
+ 	size_t mix;
  
--	/* ignore signals
-+	/* block signals, let the main thread handle them
+@@ -122,7 +122,12 @@ ring_create( size_t ringlen,
+ 
+ 	/* kick off the slave thread
  	 */
--	sigset( SIGHUP, SIG_IGN );
--	sigset( SIGINT, SIG_IGN );
--	sigset( SIGQUIT, SIG_IGN );
--	sigset( SIGALRM, SIG_IGN );
-+	sigemptyset( &blocked_set );
-+	sigaddset( &blocked_set, SIGINT );
-+	sigaddset( &blocked_set, SIGHUP );
-+	sigaddset( &blocked_set, SIGTERM );
-+	sigaddset( &blocked_set, SIGQUIT );
-+	sigaddset( &blocked_set, SIGALRM );
-+	sigprocmask( SIG_SETMASK, &blocked_set, NULL );
+-	( *threadfunc )( clientctxp, ring_slave_entry, ( void * )ringp );
++	ok = cldmgr_create( ring_slave_entry,
++			    CLONE_VM,
++			    drive_index,
++			    _("slave"),
++			    ringp );
++	ASSERT( ok );
  
- 	/* record slave pid to be used to kill slave
- 	 */
-diff --git a/dump/content.c b/dump/content.c
-index c6840e5..fcc952e 100644
---- a/dump/content.c
-+++ b/dump/content.c
-@@ -1701,6 +1701,7 @@ baseuuidbypass:
- 	if ( sc_inv_updatepr ) {
- 		char *qmntpnt;
- 		char *qfsdevice;
-+		sigset_t tty_set, orig_set;
+ 	return ringp;
+ }
+diff --git a/common/ring.h b/common/ring.h
+index 387f65f..56e3924 100644
+--- a/common/ring.h
++++ b/common/ring.h
+@@ -154,9 +154,9 @@ typedef struct ring ring_t;
+ 	
  
- 		rval = atexit( inv_cleanup );
- 		ASSERT( ! rval );
-@@ -1738,9 +1739,11 @@ baseuuidbypass:
- 
- 		/* hold tty signals while creating a new inventory session
- 		 */
--		( void )sighold( SIGINT );
--		( void )sighold( SIGQUIT );
--		( void )sighold( SIGHUP );
-+		sigemptyset( &tty_set );
-+		sigaddset( &tty_set, SIGINT );
-+		sigaddset( &tty_set, SIGQUIT );
-+		sigaddset( &tty_set, SIGHUP );
-+		sigprocmask( SIG_BLOCK, &tty_set, &orig_set );
- 
- 		sc_inv_sestoken = inv_writesession_open( sc_inv_idbtoken,
- 						&fsid,
-@@ -1755,9 +1758,7 @@ baseuuidbypass:
- 						qmntpnt,
- 						qfsdevice );
- 		if( sc_inv_sestoken == INV_TOKEN_NULL ) {
--			( void )sigrelse( SIGINT );
--			( void )sigrelse( SIGQUIT );
--			( void )sigrelse( SIGHUP );
-+			sigprocmask( SIG_SETMASK, &orig_set, NULL );
- 			return BOOL_FALSE;
- 		}
- 
-@@ -1782,16 +1783,12 @@ baseuuidbypass:
- 				free( ( void * )drvpath );
- 			}
- 			if ( sc_inv_stmtokenp[ strmix ] == INV_TOKEN_NULL ) {
--				( void )sigrelse( SIGINT );
--				( void )sigrelse( SIGQUIT );
--				( void )sigrelse( SIGHUP );
-+				sigprocmask( SIG_SETMASK, &orig_set, NULL );
- 				return BOOL_FALSE;
- 			}
- 		}
- 
--		( void )sigrelse( SIGINT );
--		( void )sigrelse( SIGQUIT );
--		( void )sigrelse( SIGHUP );
-+		sigprocmask( SIG_SETMASK, &orig_set, NULL );
- 	}
- 
- 	/* set media change flags to FALSE;
+ /* ring_create - creates a ring. parameters supply the length of the ring,
+- * the read/write buffer size, a function for creating a thread, a function
+- * for reading, a function for writing, and a pointer to client context for the
+- * read and write functions. returns a pointer to a ring if successful, a NULL
++ * the read/write buffer size, the drive index, a function for reading, a
++ * function for writing, and a pointer to client context for the read and
++ * write functions. returns a pointer to a ring if successful, a NULL
+  * pointer if not. the read and write functions should return 0 on success,
+  * or an error code on failure which will be recorded in the rm_rval field
+  * of the message invoking the failed operation. if null pointer returned,
+@@ -168,9 +168,7 @@ typedef struct ring ring_t;
+ extern ring_t *ring_create( size_t ringlen,
+ 			    size_t bufsz,
+ 			    bool_t pinpr,
+-			    void ( * threadfunc )( void *clientctxp,
+-					    int ( * entryp )( void *ringctxp ),
+-						   void *ringctxp ),
++			    ix_t drive_index,
+ 			    int ( * readfunc )( void *clientctxp, char *bufp ),
+ 			    int ( * writefunc )( void *clientctxp, char *bufp ),
+ 			    void *clientctxp,
 -- 
 1.7.0.4
 
