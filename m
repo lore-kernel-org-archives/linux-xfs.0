@@ -1,17 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7FDtRrF085603 for <xfs@oss.sgi.com>; Mon, 15 Aug 2011 08:55:27 -0500
-Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 6BF62304059
-	for <xfs@oss.sgi.com>; Mon, 15 Aug 2011 06:55:27 -0700 (PDT)
-Received: from augusta (augusta.americas.sgi.com [128.162.233.117])
-	by estes.americas.sgi.com (Postfix) with ESMTP id 5D1477000706
-	for <xfs@oss.sgi.com>; Mon, 15 Aug 2011 08:55:27 -0500 (CDT)
+	p7FDtc3Z085659 for <xfs@oss.sgi.com>; Mon, 15 Aug 2011 08:55:38 -0500
 From: Bill Kendall <wkendall@sgi.com>
-Subject: [PATCH v3 0/7] xfsdump: convert to using the POSIX signal API
-Date: Mon, 15 Aug 2011 08:54:59 -0500
-Message-Id: <1313416506-3666-1-git-send-email-wkendall@sgi.com>
+Subject: [PATCH v3 4/7] xfsdump: rework dialog timeout and EINTR reliance
+Date: Mon, 15 Aug 2011 08:55:03 -0500
+Message-Id: <1313416506-3666-5-git-send-email-wkendall@sgi.com>
+In-Reply-To: <1313416506-3666-1-git-send-email-wkendall@sgi.com>
+References: <1313416506-3666-1-git-send-email-wkendall@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,76 +23,186 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
+The current dialog code uses alarm(2) to implement the dialog timeout.
+This is suboptimal as the main loop already makes use of alarm.
 
-Changes from v2:
+Additionally the existing code relies on its blocking read(2) being
+interrupted if a signal is received. This is not guaranteed to work
+as a signal may be delivered to a different thread.
 
-[v3 3/7] xfsdump: remove SIGCHLD handling
-    - Explicitly ignore SIGCHLD. This has the benefit of causing
-      any librmt rsh sessions that exit early to be reaped
-      automatically.
+Both of these issues can be resolved by using select(2) rather than
+a blocking read.
 
-[v3 4/7] xfsdump: rework dialog timeout and EINTR reliance
-    - Add 'volatile' qualifier to 'dlog_signo_received' and
-      'dlog_allowed_flag', which are set in signal handlers,
-      to prevent compiler from optimizing them out from being
-      checked during a loop.
-    - Add an ASSERT(dlog_allowed_flag) to dlog_string_query()
-      to be consistent with other callers of promptinput().
+'dlog_allowed_flag' and 'dlog_signo_received' are now marked 'volatile'
+to prevent them from being optimized out from being checked during
+a loop.
 
-[v3 6/7] xfsdump: convert to the POSIX signal API
-    - Move struct sigaction declaration to top of block.
+This also changes dlog_desist() to not change 'dlog_ttyfd', as that
+could impact a dialog already in progress. Clearing 'dlog_allowed_flag'
+is sufficient to disable dialogs.
 
+Finally add an assert to dlog_string_query() to check that dialogs
+are allowed to make it consistent with other promptinput() callers.
 
-Changes from v1:
+Signed-off-by: Bill Kendall <wkendall@sgi.com>
+Reviewed-by: Alex Elder <aelder@sgi.com>
+---
+ common/dlog.c |   65 ++++++++++++++++++++++++++++++++++----------------------
+ 1 files changed, 39 insertions(+), 26 deletions(-)
 
-[v2 1/7] xfsdump: remove conditional OPENMASKED code
-    - No changes since v1.
-
-[v2 2/7] xfsdump: process EPIPE instead of catching SIGPIPE
-    - Minor change to ignore SIGPIPE in one location rather
-      than separately for the miniroot and !miniroot cases.
-
-[v2 3/7] xfsdump: remove SIGCHLD handling
-    - No changes since v1.
-
-[v2 4/7] xfsdump: rework dialog timeout and EINTR reliance
-    - New patch to cleanup signal handling in dialog code.
-      No longer use alarm() and don't depend on a particular
-      thread receiving a signal to break out of a blocking
-      read().
-
-[v2 5/7] xfsdump: rework dialog to use main signal handler
-    - New patch to avoid swapping signal handlers when
-      entering a dialog.
-
-[v2 6/7] xfsdump: convert to the POSIX signal API
-    - Was patch #4 from v1 series. Essentially the same,
-      but changes in dlog.c are simpler since the signal
-      handler doesn't get swapped.
-
-[v2 7/7] xfsdump: refactor inventory session creation
-    - New patch to make it obvious that the signal mask
-      is properly restored after creating the inventory.
-
-
-This patch series converts xfsdump from using the System V signal
-API to using the POSIX API. The first 3 patches remove/rework some
-of the existing signal code, and the final patch does the actual
-conversion.
-
-The primary motivatation for this change is a currently unused
-section of code in xfsdump's main():
-
-    /* sleep until next signal
-     */
-    sigrelse(SIGINT);
-    sigrelse(SIGHUP);
-    ...
-    sigpause(SIGARLM);
-
-The intention is to wake up if any of the signals is received, but
-this will only wake up if SIGALRM is received. Using sigsuspend()
-with the appropriate mask fixes the issue.
+diff --git a/common/dlog.c b/common/dlog.c
+index c81edc6..79f2818 100644
+--- a/common/dlog.c
++++ b/common/dlog.c
+@@ -21,6 +21,7 @@
+ 
+ #include <stdlib.h>
+ #include <sys/stat.h>
++#include <sys/select.h>
+ #include <fcntl.h>
+ #include <time.h>
+ #include <errno.h>
+@@ -35,7 +36,7 @@ extern bool_t miniroot;
+ extern pid_t parentpid;
+ 
+ static int dlog_ttyfd = -1;
+-static bool_t dlog_allowed_flag = BOOL_FALSE;
++static volatile bool_t dlog_allowed_flag = BOOL_FALSE;
+ static bool_t dlog_timeouts_flag = BOOL_FALSE;
+ static char *promptstr = " -> ";
+ 
+@@ -132,7 +133,6 @@ void
+ dlog_desist( void )
+ {
+ 	dlog_allowed_flag = BOOL_FALSE;
+-	dlog_ttyfd = -1;
+ }
+ 
+ intgen_t
+@@ -293,6 +293,10 @@ dlog_string_query( dlog_ucbp_t ucb, /* user's print func */
+ 	ix_t exceptionix;
+ 	bool_t ok;
+ 
++	/* sanity
++	 */
++	ASSERT( dlog_allowed_flag );
++
+ 	/* call the caller's callback with his context, print context, and
+ 	 * print operator
+ 	 */
+@@ -336,7 +340,7 @@ dlog_string_ack( char *ackstr[ ], size_t ackcnt )
+ 
+ /* ok that this is a static, since used under mutual exclusion lock
+  */
+-static int dlog_signo_received;
++static volatile int dlog_signo_received;
+ 
+ static void
+ sighandler( int signo )
+@@ -370,13 +374,12 @@ promptinput( char *buf,
+ 	     ... )
+ {
+ 	va_list args;
+-	u_intgen_t alarm_save = 0;
+-	void (* sigalrm_save)(int) = NULL;
+ 	void (* sigint_save)(int) = NULL;
+ 	void (* sighup_save)(int) = NULL;
+ 	void (* sigterm_save)(int) = NULL;
+ 	void (* sigquit_save)(int) = NULL;
+-	intgen_t nread;
++	time32_t now = time( NULL );
++	intgen_t nread = -1;
+ 	pid_t pid = getpid( );
+ 
+ 	/* display the pre-prompt
+@@ -396,16 +399,17 @@ promptinput( char *buf,
+ #endif /* NOTYET */
+ 	mlog( MLOG_NORMAL | MLOG_NOLOCK | MLOG_BARE, promptstr );
+ 
+-	/* set up signal handling
++	/* set up timeout
+ 	 */
+-	dlog_signo_received = -1;
+ 	if ( dlog_timeouts_flag && timeoutix != IXMAX ) {
+-		if ( pid == parentpid && ! miniroot ) {
+-			( void )sigrelse( SIGALRM );
+-		}
+-		sigalrm_save = sigset( SIGALRM, sighandler );
+-		alarm_save = alarm( ( u_intgen_t )timeout );
++		timeout += now;
++	} else {
++		timeout = TIMEMAX;
+ 	}
++
++	/* set up signal handling
++	 */
++	dlog_signo_received = -1;
+ 	if ( sigintix != IXMAX ) {
+ 		if ( pid == parentpid && ! miniroot ) {
+ 			( void )sigrelse( SIGINT );
+@@ -429,10 +433,27 @@ promptinput( char *buf,
+ 		sigquit_save = sigset( SIGQUIT, sighandler );
+ 	}
+ 
+-	/* wait for input, timeout, or interrupt
++	/* wait for input, timeout, or interrupt.
++	 * note we come out of the select() frequently in order to
++	 * check for a signal. the signal may have been handled by the
++	 * the main thread, so we can't rely on the signal waking us
++	 * up from the select().
+ 	 */
+-	ASSERT( dlog_ttyfd >= 0 );
+-	nread = read( dlog_ttyfd, buf, bufsz - 1 );
++	while ( now < timeout && dlog_signo_received == -1 && dlog_allowed_flag ) {
++		int rc;
++		fd_set rfds;
++		struct timeval tv = { 0, 100000 }; // 100 ms
++
++		FD_ZERO( &rfds );
++		FD_SET( dlog_ttyfd, &rfds );
++
++		rc = select( dlog_ttyfd + 1, &rfds, NULL, NULL, &tv );
++		if ( rc > 0 && FD_ISSET( dlog_ttyfd, &rfds ) ) {
++			nread = read( dlog_ttyfd, buf, bufsz - 1 );
++			break;
++		}
++		now = time( NULL );
++	}
+ 
+ 	/* restore signal handling
+ 	 */
+@@ -458,18 +479,11 @@ promptinput( char *buf,
+ 			( void )sighold( SIGINT );
+ 		}
+ 	}
+-	if ( dlog_timeouts_flag && timeoutix != IXMAX ) {
+-		( void )alarm( alarm_save );
+-		( void )sigset( SIGALRM, sigalrm_save );
+-		if ( pid == parentpid && ! miniroot ) {
+-			( void )sighold( SIGALRM );
+-		}
+-	}
+ 	
+ 	/* check for timeout or interrupt
+ 	 */
+ 	if ( nread < 0 ) {
+-		if ( dlog_signo_received == SIGALRM ) {
++		if ( now >= timeout ) {
+ 			mlog( MLOG_NORMAL | MLOG_NOLOCK | MLOG_BARE,
+ 			      _("timeout\n") );
+ 			*exceptionixp = timeoutix;
+@@ -493,8 +507,7 @@ promptinput( char *buf,
+ 			*exceptionixp = sigquitix;
+ 		} else {
+ 			mlog( MLOG_NORMAL | MLOG_NOLOCK | MLOG_BARE,
+-			      _("unknown signal during dialog: %d\n"),
+-			      dlog_signo_received );
++			      _("abnormal dialog termination\n"));
+ 			*exceptionixp = sigquitix;
+ 		}
+ 		return BOOL_FALSE;
+-- 
+1.7.0.4
 
 _______________________________________________
 xfs mailing list
