@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7GF2GV6212814 for <xfs@oss.sgi.com>; Tue, 16 Aug 2011 10:02:16 -0500
-Received: from mx2.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 24C5418D410E
-	for <xfs@oss.sgi.com>; Tue, 16 Aug 2011 08:02:14 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id YLxXx0lnmZQXEYMn for <xfs@oss.sgi.com>;
-	Tue, 16 Aug 2011 08:02:14 -0700 (PDT)
-Date: Tue, 16 Aug 2011 16:02:08 +0100
-From: Mel Gorman <mgorman@suse.de>
-Subject: Re: [PATCH 6/7] mm: vmscan: Throttle reclaim if encountering too
-	many dirty pages under writeback
-Message-ID: <20110816150208.GD4844@suse.de>
-References: <1312973240-32576-1-git-send-email-mgorman@suse.de>
-	<1312973240-32576-7-git-send-email-mgorman@suse.de>
-	<20110816140652.GC13391@localhost>
+	p7GGE0Bw218329
+	for <linux-xfs@oss.sgi.com>; Tue, 16 Aug 2011 11:14:01 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D780BE9A54
+	for <linux-xfs@oss.sgi.com>; Tue, 16 Aug 2011 09:13:59 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	wQwaZsZXJKbdmHZV for <linux-xfs@oss.sgi.com>;
+	Tue, 16 Aug 2011 09:13:59 -0700 (PDT)
+Date: Tue, 16 Aug 2011 12:13:58 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Deleting files with extended attributes is dead slow
+Message-ID: <20110816161357.GA18201@infradead.org>
+References: <j23qs9$1c3$1@dough.gmane.org>
+	<20110812204746.GB30615@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110816140652.GC13391@localhost>
+In-Reply-To: <20110812204746.GB30615@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,63 +32,78 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Wu Fengguang <fengguang.wu@intel.com>
-Cc: Rik van Riel <riel@redhat.com>, Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, XFS <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, Linux-MM <linux-mm@kvack.org>, Minchan Kim <minchan.kim@gmail.com>, Johannes Weiner <jweiner@redhat.com>
+To: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
+Cc: linux-xfs@oss.sgi.com
 
-On Tue, Aug 16, 2011 at 10:06:52PM +0800, Wu Fengguang wrote:
-> Mel,
-> 
-> I tend to agree with the whole patchset except for this one.
-> 
-> The worry comes from the fact that there are always the very possible
-> unevenly distribution of dirty pages throughout the LRU lists.
+The patch below should help with the performance of deleting files
+that have external attributes.  But I still wonder why you see
+attributes outside the inode if you are using 512 byte inodes and around
+256k of attrs.  Can you check tat you really have external blocks for
+attributes using xfs_bmap -a on the files in your workload.  Can you
+also check if this goes away using 1k or 2k inode sizes?
 
-It is pages under writeback that determines if throttling is considered
-not dirty pages. The distinction is important. I agree with you that if
-it was dirty pages that throttling would be considered too regularly.
 
-> This
-> patch works on local information and may unnecessarily throttle page
-> reclaim when running into small spans of dirty pages.
-> 
+---
+From: Christoph Hellwig <hch@lst.de>
+Subject: xfs: avoid synchronous transactions when deleting attr blocks
 
-It's also calling wait_iff_congested() not congestion_wait(). This
-takes BDI congestion and zone congestion into account with this check.
+Currently xfs_attr_inactive causes a synchronous transactions if we are
+removing a file that has any extents allocated to the attribute fork.  The
+code looks a like a relict from the days before the busy extent list, but
+with the busy extent list we avoid reusing data and attr extents that have
+been freed but not commited yet, so this code is just as superflous as
+the synchronous transactions for data blocks.
 
-       /*
-         * If there is no congestion, or heavy congestion is not being
-         * encountered in the current zone, yield if necessary instead
-         * of sleeping on the congestion queue
-         */
-        if (atomic_read(&nr_bdi_congested[sync]) == 0 ||
-                        !zone_is_reclaim_congested(zone)) {
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-So global information is being taken into account.
-
-> One possible scheme of global throttling is to first tag the skipped
-> page with PG_reclaim (as you already do). And to throttle page reclaim
-> only when running into pages with both PG_dirty and PG_reclaim set,
-
-It's PG_writeback that is looked at, not PG_dirty.
-
-> which means we have cycled through the _whole_ LRU list (which is the
-> global and adaptive feedback we want) and run into that dirty page for
-> the second time.
-> 
-
-This potentially results in more scanning from kswapd before it starts
-throttling which could consume a lot of CPU. If pages under writeback
-are reaching the end of the LRU, it's already the case that kswapd is
-scanning faster than pages can be cleaned. Even then, it only really
-throttles if the zone or a BDI is congested.
-
-Taking that into consideration, do you still think there is a big
-advantage to having writeback pages take another lap around the LRU
-that is justifies the expected increase in CPU usage?
-
--- 
-Mel Gorman
-SUSE Labs
+Index: xfs/fs/xfs/xfs_attr.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_attr.c	2011-08-15 14:31:15.485329718 -0700
++++ xfs/fs/xfs/xfs_attr.c	2011-08-15 14:31:32.025240113 -0700
+@@ -823,18 +823,6 @@ xfs_attr_inactive(xfs_inode_t *dp)
+ 	if (error)
+ 		goto out;
+ 
+-	/*
+-	 * Signal synchronous inactive transactions unless this is a
+-	 * synchronous mount filesystem in which case we know that we're here
+-	 * because we've been called out of xfs_inactive which means that the
+-	 * last reference is gone and the unlink transaction has already hit
+-	 * the disk so async inactive transactions are safe.
+-	 */
+-	if (!(mp->m_flags & XFS_MOUNT_WSYNC)) {
+-		if (dp->i_d.di_anextents > 0)
+-			xfs_trans_set_sync(trans);
+-	}
+-
+ 	error = xfs_itruncate_extents(&trans, dp, XFS_ATTR_FORK, 0);
+ 	if (error)
+ 		goto out;
+Index: xfs/fs/xfs/xfs_bmap.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_bmap.c	2011-08-15 14:33:59.801106208 -0700
++++ xfs/fs/xfs/xfs_bmap.c	2011-08-16 09:01:24.716497619 -0700
+@@ -3782,19 +3782,11 @@ xfs_bmap_compute_maxlevels(
+  * Routine to be called at transaction's end by xfs_bmapi, xfs_bunmapi
+  * caller.  Frees all the extents that need freeing, which must be done
+  * last due to locking considerations.  We never free any extents in
+- * the first transaction.  This is to allow the caller to make the first
+- * transaction a synchronous one so that the pointers to the data being
+- * broken in this transaction will be permanent before the data is actually
+- * freed.  This is necessary to prevent blocks from being reallocated
+- * and written to before the free and reallocation are actually permanent.
+- * We do not just make the first transaction synchronous here, because
+- * there are more efficient ways to gain the same protection in some cases
+- * (see the file truncation code).
++ * the first transaction.
+  *
+  * Return 1 if the given transaction was committed and a new one
+  * started, and 0 otherwise in the committed parameter.
+  */
+-/*ARGSUSED*/
+ int						/* error */
+ xfs_bmap_finish(
+ 	xfs_trans_t		**tp,		/* transaction pointer addr */
 
 _______________________________________________
 xfs mailing list
