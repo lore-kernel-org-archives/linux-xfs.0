@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7GGoYBg220836 for <xfs@oss.sgi.com>; Tue, 16 Aug 2011 11:50:34 -0500
-Received: from mx2.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 695381376C0C
-	for <xfs@oss.sgi.com>; Tue, 16 Aug 2011 09:52:35 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id dJsFtrLrXpjJgehg for <xfs@oss.sgi.com>;
-	Tue, 16 Aug 2011 09:52:35 -0700 (PDT)
-Received: from relay1.suse.de (charybdis-ext.suse.de [195.135.221.2])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mx2.suse.de (Postfix) with ESMTP id 61D288891E
-	for <xfs@oss.sgi.com>; Tue, 16 Aug 2011 18:50:31 +0200 (CEST)
-From: David Sterba <dsterba@suse.cz>
-Subject: [PATCH] xfstests: setup and run non-generic mkfs for btrfs
-Date: Tue, 16 Aug 2011 18:50:23 +0200
-Message-Id: <1313513423-7888-1-git-send-email-dsterba@suse.cz>
+	p7GHTpOo224187 for <xfs@oss.sgi.com>; Tue, 16 Aug 2011 12:29:51 -0500
+Received: from mail-qw0-f53.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 66C7918D8499
+	for <xfs@oss.sgi.com>; Tue, 16 Aug 2011 10:29:49 -0700 (PDT)
+Received: from mail-qw0-f53.google.com (mail-qw0-f53.google.com
+	[209.85.216.53]) by cuda.sgi.com with ESMTP id GvkGsALJQNqIvQjW
+	for <xfs@oss.sgi.com>; Tue, 16 Aug 2011 10:29:49 -0700 (PDT)
+Received: by qwb7 with SMTP id 7so86461qwb.26
+	for <xfs@oss.sgi.com>; Tue, 16 Aug 2011 10:29:49 -0700 (PDT)
+MIME-Version: 1.0
+Date: Tue, 16 Aug 2011 10:29:49 -0700
+Message-ID: <CAE-kmAw1m8HNn_sHpVx6DtTGCr4XdsiG5KM3FNnMe_fibjyaVw@mail.gmail.com>
+Subject: xfs_quota unable to create project id's over 65535
+From: brian wince <bswince@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,74 +23,73 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============1006802815200961183=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: David Sterba <dsterba@suse.cz>
 
-Signed-off-by: David Sterba <dsterba@suse.cz>
----
- common        |    3 +++
- common.config |    1 +
- common.rc     |    5 ++++-
- 3 files changed, 8 insertions(+), 1 deletions(-)
+--===============1006802815200961183==
+Content-Type: multipart/alternative; boundary=20cf303b3e7f08cbeb04aaa2ba3b
 
-diff --git a/common b/common
-index 817c003..0723224 100644
---- a/common
-+++ b/common
-@@ -306,6 +306,9 @@ case "$FSTYP" in
-     udf)
- 	 [ "$MKFS_UDF_PROG" = "" ] && _fatal "mkfs_udf/mkudffs not found"
- 	 ;;
-+    btrfs)
-+	 [ "$MKFS_BTRFS_PROG" = "" ] && _fatal "mkfs.btrfs not found"
-+	 ;;
-     nfs)
- 	 ;;
- esac
-diff --git a/common.config b/common.config
-index 3642139..e94624e 100644
---- a/common.config
-+++ b/common.config
-@@ -184,6 +184,7 @@ case "$HOSTOS" in
-     Linux)
-         export MKFS_XFS_PROG="`set_prog_path mkfs.xfs`"
-         export MKFS_UDF_PROG="`set_prog_path mkudffs`"
-+        export MKFS_BTRFS_PROG="`set_prog_path mkfs.btrfs`"
-         export XFS_FSR_PROG="`set_prog_path xfs_fsr`"
-         export MKFS_NFS_PROG="false"
-         ;;
-diff --git a/common.rc b/common.rc
-index 2cbcb73..35f782b 100644
---- a/common.rc
-+++ b/common.rc
-@@ -310,6 +310,9 @@ _scratch_mkfs()
-     udf)
-         $MKFS_UDF_PROG $MKFS_OPTIONS $* $SCRATCH_DEV > /dev/null
- 	;;
-+    btrfs)
-+        $MKFS_BTRFS_PROG $MKFS_OPTIONS $* $SCRATCH_DEV > /dev/null
-+	;;
-     *)
- 	/sbin/mkfs -t $FSTYP -- $MKFS_OPTIONS $* $SCRATCH_DEV
- 	;;
-@@ -333,7 +336,7 @@ _scratch_mkfs_sized()
- 	/sbin/mkfs.$FSTYP $MKFS_OPTIONS -b $blocksize $SCRATCH_DEV $blocks
- 	;;
-     btrfs)
--	/sbin/mkfs.$FSTYP $MKFS_OPTIONS $SCRATCH_DEV -b $fssize
-+	$MKFS_BTRFS_PROG $MKFS_OPTIONS -b $fssize $SCRATCH_DEV
- 	;;
-     *)
- 	_notrun "Filesystem $FSTYP not supported in _scratch_mkfs_sized"
--- 
-1.7.6.233.gd79bc
+--20cf303b3e7f08cbeb04aaa2ba3b
+Content-Type: text/plain; charset=ISO-8859-1
+
+Hello,
+We use unix uids for project ids andnow have uids well over 65535.
+Is there a way to force xfs_quota to use project id's above the 64k
+boundary?
+If not how are others getting past this limitation.
+I have tried searching and could not find anything that states this is a
+xfs_quota issue but not sure where else to start.
+
+When setting project quota using the command xfs_quota -x -c "project -s
+projectname" it returns and "Invalid argument".
+
+Setting up project projectname (path /usr/tftpboot/users/projectname)...
+xfs_quota: cannot set project on /usr/tftpboot/users/projectname: Invalid
+argument
+Processed 1 (/etc/projects and cmdline) paths for project projectname with
+recursion depth infinite (-1).
+
+
+
+Any help would be greatly appreciated.
+
+TIA,
+
+brian
+
+--20cf303b3e7f08cbeb04aaa2ba3b
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+
+Hello,<br>We use unix uids for project ids andnow have uids well over 65535=
+.<br>Is there a way to force xfs_quota to use project id&#39;s above the 64=
+k boundary?<br>If not how are others getting past this limitation.<br>I hav=
+e tried searching and could not find anything that states this is a xfs_quo=
+ta issue but not sure where else to start.<br>
+<br>When setting project quota using the command xfs_quota -x -c &quot;proj=
+ect -s projectname&quot; it returns and &quot;Invalid argument&quot;.<br><b=
+r>Setting up project projectname (path /usr/tftpboot/users/projectname)...<=
+br>
+xfs_quota: cannot set project on /usr/tftpboot/users/projectname: Invalid a=
+rgument<br>Processed 1 (/etc/projects and cmdline) paths for project projec=
+tname with recursion depth infinite (-1).<br><br><br><br>Any help would be =
+greatly appreciated.<br>
+<br>TIA,<br><br>brian<br>
+
+--20cf303b3e7f08cbeb04aaa2ba3b--
+
+
+--===============1006802815200961183==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============1006802815200961183==--
