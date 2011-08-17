@@ -1,30 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7HHd54S087009
-	for <linux-xfs@oss.sgi.com>; Wed, 17 Aug 2011 12:39:05 -0500
-Received: from mailgw1.uni-kl.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DEFD91521127
-	for <linux-xfs@oss.sgi.com>; Wed, 17 Aug 2011 10:41:12 -0700 (PDT)
-Received: from mailgw1.uni-kl.de (mailgw1.uni-kl.de [131.246.120.220]) by
-	cuda.sgi.com with ESMTP id vK2mMfAEUNN63hsh for
-	<linux-xfs@oss.sgi.com>; Wed, 17 Aug 2011 10:41:12 -0700 (PDT)
-Received: from itwm2.itwm.fhg.de (itwm2.itwm.fhg.de [131.246.191.3])
-	by mailgw1.uni-kl.de (8.14.3/8.14.3/Debian-5+lenny1) with ESMTP id
-	p7HHd2N4012854
-	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NOT)
-	for <linux-xfs@oss.sgi.com>; Wed, 17 Aug 2011 19:39:02 +0200
-Message-ID: <4E4BFCB5.4010808@itwm.fraunhofer.de>
-Date: Wed, 17 Aug 2011 19:39:01 +0200
-From: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
-MIME-Version: 1.0
-Subject: Re: Deleting files with extended attributes is dead slow
-References: <j23qs9$1c3$1@dough.gmane.org>
-	<20110812204746.GB30615@infradead.org>
-	<20110816161357.GA18201@infradead.org>
-	<4E4BBC98.7020501@itwm.fraunhofer.de>
-	<20110817170251.GB28650@infradead.org>
-In-Reply-To: <20110817170251.GB28650@infradead.org>
+	p7HMEEiG108812 for <xfs@oss.sgi.com>; Wed, 17 Aug 2011 17:14:14 -0500
+Received: from mail09.linbit.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B6AB61698697
+	for <xfs@oss.sgi.com>; Wed, 17 Aug 2011 15:16:21 -0700 (PDT)
+Received: from mail09.linbit.com (mail09.linbit.com [212.69.161.110]) by
+	cuda.sgi.com with ESMTP id FJavPwTn1NuqFIOJ for
+	<xfs@oss.sgi.com>; Wed, 17 Aug 2011 15:16:21 -0700 (PDT)
+Subject: [PATCH] xfstests: Also accept "no such attribute" errors for
+	invalid extended attributes
+From: Andreas Gruenbacher <agruen@kernel.org>
+Date: Thu, 18 Aug 2011 00:14:08 +0200
+Message-ID: <1313619249.18763.3.camel@schurl.linbit>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,79 +22,212 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>, linux-xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: hch@infradead.org
 
-On 08/17/2011 07:02 PM, Christoph Hellwig wrote:
-> On Wed, Aug 17, 2011 at 03:05:28PM +0200, Bernd Schubert wrote:
->>> (squeeze-x86_64)fslab2:~# xfs_bmap -a /mnt/xfs/Bonnie.29243/00000/00000027faJxifNb0n
->>> /mnt/xfs/Bonnie.29243/00000/00000027faJxifNb0n:
->>>         0: [0..7]: 92304..92311
->>
->> (Sorry, I have no idea what "0: [0..7]: 92304..9231" is supposed to
->> tell me).
->
-> It means that you are having an extent spanning 8 blocks for xattr
-> storage, that map to physical blocks 92304 to 9231 in the filesystem.
->
-> It sounds to me like your workload has a lot more than 256 bytes of
-> xattrs, or the underlying code is doing something rather stupid.
+In older Linux kernels, requesting an extended attribute which cannot exist
+failed with EPERM.  In version 3.0, this was changed to ENODATA so that
+programs can distinguish between missing attributes and permission problems
+independent of the file type.
 
-Well, the workload I described here is a controlled bonnie test, so 
-there cannot be more than 256 bytes (unless there is a bug in the code, 
-will double check later on).
+For example, lgetxattr("file", "user.name", NULL, 0) will now return ENODATA if
+no such attribute exists even if "file" is a symbolic link.
 
->
->> Looking at 'top' and 'iostat -x' outout, I noticed we are actually
->> not limited by io to disk, but CPU bound. If you should be
->> interested, I have attached 'perf record -g' and 'perf report -g'
->> outout, of the bonnie file create (create + fsetfattr() ) phase.
->
-> It's mostly spending a lot of time on copying things into the CIL
-> buffers, which is expected and intentional as that allows for additional
-> parallelity.  I you'd switch the workload to multiple intances doing
-> the create in parallel you should be able to scale to better numbers.
+In test 062, to make it work on kernels before and after 3.0, accept either of
+the two error results from getfattr.
 
-I just tried to bonnies in parallel and that didn't improve anything. 
-FhGFS code has several threads anyway. But it would be good, if the 
-underlying file system wouldn't take all the CPU time...
+Signed-off-by: Andreas Gruenbacher <agruen@kernel.org>
+---
+ 062     |   12 +++++++++---
+ 062.out |   40 ++++++++++++++++++++--------------------
+ 2 files changed, 29 insertions(+), 23 deletions(-)
 
->
->>>      100:256:256/10 37026  91 +++++ +++ 43691  93 35960  92 +++++ +++ 40708  92
->>> Latency              4328us     765us    2960us     527us     440us    1075us
->>> 1.96,1.96,fslab2,1,1313594619,,,,,,,,,,,,,,100,256,256,,10,37026,91,+++++,+++,43691,93,35960,92,+++++,+++,40708,92,,,,,,,4328us,765us,2960us,527us,440us,1075us
->>
->>
->> xfs:
->> mkfs.xfs -f -i size=512 -i maxpct=90  -l lazy-count=1 -n size=64k /dev/sdd
->
-> Do 64k dir blocks actually help you with the workload?  They also tend
-
-Also just tested, with or without doesn't improve anything.
-
-> to do a lot of useless memcpys in their current form, although these
-> didn't show up on your profile.  Did you try using a larger inode size
-> as suggested in my previous mail?
-
-I just tried and now that I understand the xfs_bmap output, it is 
-interesting to see, that an xattr size up to 128 byte does not need an 
-extent + blocks, but 256 byte do have one extent and 8 blocks even with 
-an inode size of 2K. xfs_info tells me that isize=2048 was accepted. I 
-didn't test any sizes in between 128 and 256 byte yet.
-Now while I can set the data/xattr size for the bonnie test to less than 
-256 byte, that is not so easy with our real target FhGFS ;)
-
-
-Btw, the create() + fsetfattr() reate with 128B xattr data is between 
-13000 and 17000, so due to inlining much better than with 256 xattr.
-
-
-Thanks,
-Bernd
+diff --git a/062 b/062
+index a6e4bc8..f666e1b 100755
+--- a/062
++++ b/062
+@@ -84,6 +84,12 @@ _scratch_mkfs > /dev/null 2>&1 || _fail "mkfs failed"
+ _scratch_mount || _fail "mount failed"
+ _create_test_bed
+ 
++# In kernels before 3.0, getxattr() fails with EPERM for an attribute which
++# cannot exist.  Later kernels fail with ENODATA.  Accept both results.
++invalid_attribute_filter() {
++	sed -e "s:\(No such attribute\|Operation not permitted\):No such attribute or operation not permitted:"
++}
++
+ if [ "$USE_ATTR_SECURE" = yes ]; then
+     ATTR_MODES="user security trusted"
+ else
+@@ -119,15 +125,15 @@ for nsp in $ATTR_MODES; do
+ 		
+ 		echo "*** set an empty value for second attribute"
+ 		setfattr -h -n $nsp.name2 $SCRATCH_MNT/$inode
+-		getfattr -m $nsp -n $nsp.name2 $SCRATCH_MNT/$inode
++		getfattr -m $nsp -n $nsp.name2 $SCRATCH_MNT/$inode 2>&1 | invalid_attribute_filter
+ 
+ 		echo "*** overwrite empty value"
+ 		setfattr -h -n $nsp.name2 -v 0xcafe $SCRATCH_MNT/$inode
+-		getfattr -m $nsp -e hex -n $nsp.name2 $SCRATCH_MNT/$inode
++		getfattr -m $nsp -e hex -n $nsp.name2 $SCRATCH_MNT/$inode 2>&1 | invalid_attribute_filter
+ 
+ 		echo "*** remove attribute"
+ 		setfattr -h -x $nsp.name2 $SCRATCH_MNT/$inode
+-		getfattr -m $nsp -e hex -n $nsp.name2 $SCRATCH_MNT/$inode
++		getfattr -m $nsp -e hex -n $nsp.name2 $SCRATCH_MNT/$inode 2>&1 | invalid_attribute_filter
+ 
+ 		echo "*** final list (strings, type=$inode, nsp=$nsp)"
+ 		getfattr -m '.' -e hex $SCRATCH_MNT/$inode
+diff --git a/062.out b/062.out
+index 1d5a094..699254a 100644
+--- a/062.out
++++ b/062.out
+@@ -49,7 +49,7 @@ user.name2
+ user.name2=0xcafe
+ 
+ *** remove attribute
+-SCRATCH_MNT/reg: user.name2: No such attribute
++SCRATCH_MNT/reg: user.name2: No such attribute or operation not permitted
+ *** final list (strings, type=reg, nsp=user)
+ # file: SCRATCH_MNT/reg
+ user.name=0xbabe
+@@ -96,7 +96,7 @@ user.name2
+ user.name2=0xcafe
+ 
+ *** remove attribute
+-SCRATCH_MNT/dir: user.name2: No such attribute
++SCRATCH_MNT/dir: user.name2: No such attribute or operation not permitted
+ *** final list (strings, type=dir, nsp=user)
+ # file: SCRATCH_MNT/dir
+ user.name=0xbabe
+@@ -119,13 +119,13 @@ setfattr: SCRATCH_MNT/lnk: Operation not permitted
+ setfattr: SCRATCH_MNT/lnk: Operation not permitted
+ *** set an empty value for second attribute
+ setfattr: SCRATCH_MNT/lnk: Operation not permitted
+-SCRATCH_MNT/lnk: user.name2: Operation not permitted
++SCRATCH_MNT/lnk: user.name2: No such attribute or operation not permitted
+ *** overwrite empty value
+ setfattr: SCRATCH_MNT/lnk: Operation not permitted
+-SCRATCH_MNT/lnk: user.name2: Operation not permitted
++SCRATCH_MNT/lnk: user.name2: No such attribute or operation not permitted
+ *** remove attribute
+ setfattr: SCRATCH_MNT/lnk: Operation not permitted
+-SCRATCH_MNT/lnk: user.name2: Operation not permitted
++SCRATCH_MNT/lnk: user.name2: No such attribute or operation not permitted
+ *** final list (strings, type=lnk, nsp=user)
+ 
+ === TYPE dev/b; NAMESPACE user
+@@ -144,13 +144,13 @@ setfattr: SCRATCH_MNT/dev/b: Operation not permitted
+ setfattr: SCRATCH_MNT/dev/b: Operation not permitted
+ *** set an empty value for second attribute
+ setfattr: SCRATCH_MNT/dev/b: Operation not permitted
+-SCRATCH_MNT/dev/b: user.name2: Operation not permitted
++SCRATCH_MNT/dev/b: user.name2: No such attribute or operation not permitted
+ *** overwrite empty value
+ setfattr: SCRATCH_MNT/dev/b: Operation not permitted
+-SCRATCH_MNT/dev/b: user.name2: Operation not permitted
++SCRATCH_MNT/dev/b: user.name2: No such attribute or operation not permitted
+ *** remove attribute
+ setfattr: SCRATCH_MNT/dev/b: Operation not permitted
+-SCRATCH_MNT/dev/b: user.name2: Operation not permitted
++SCRATCH_MNT/dev/b: user.name2: No such attribute or operation not permitted
+ *** final list (strings, type=dev/b, nsp=user)
+ 
+ === TYPE dev/c; NAMESPACE user
+@@ -169,13 +169,13 @@ setfattr: SCRATCH_MNT/dev/c: Operation not permitted
+ setfattr: SCRATCH_MNT/dev/c: Operation not permitted
+ *** set an empty value for second attribute
+ setfattr: SCRATCH_MNT/dev/c: Operation not permitted
+-SCRATCH_MNT/dev/c: user.name2: Operation not permitted
++SCRATCH_MNT/dev/c: user.name2: No such attribute or operation not permitted
+ *** overwrite empty value
+ setfattr: SCRATCH_MNT/dev/c: Operation not permitted
+-SCRATCH_MNT/dev/c: user.name2: Operation not permitted
++SCRATCH_MNT/dev/c: user.name2: No such attribute or operation not permitted
+ *** remove attribute
+ setfattr: SCRATCH_MNT/dev/c: Operation not permitted
+-SCRATCH_MNT/dev/c: user.name2: Operation not permitted
++SCRATCH_MNT/dev/c: user.name2: No such attribute or operation not permitted
+ *** final list (strings, type=dev/c, nsp=user)
+ 
+ === TYPE dev/p; NAMESPACE user
+@@ -194,13 +194,13 @@ setfattr: SCRATCH_MNT/dev/p: Operation not permitted
+ setfattr: SCRATCH_MNT/dev/p: Operation not permitted
+ *** set an empty value for second attribute
+ setfattr: SCRATCH_MNT/dev/p: Operation not permitted
+-SCRATCH_MNT/dev/p: user.name2: Operation not permitted
++SCRATCH_MNT/dev/p: user.name2: No such attribute or operation not permitted
+ *** overwrite empty value
+ setfattr: SCRATCH_MNT/dev/p: Operation not permitted
+-SCRATCH_MNT/dev/p: user.name2: Operation not permitted
++SCRATCH_MNT/dev/p: user.name2: No such attribute or operation not permitted
+ *** remove attribute
+ setfattr: SCRATCH_MNT/dev/p: Operation not permitted
+-SCRATCH_MNT/dev/p: user.name2: Operation not permitted
++SCRATCH_MNT/dev/p: user.name2: No such attribute or operation not permitted
+ *** final list (strings, type=dev/p, nsp=user)
+ 
+ === TYPE reg; NAMESPACE trusted
+@@ -243,7 +243,7 @@ trusted.name2
+ trusted.name2=0xcafe
+ 
+ *** remove attribute
+-SCRATCH_MNT/reg: trusted.name2: No such attribute
++SCRATCH_MNT/reg: trusted.name2: No such attribute or operation not permitted
+ *** final list (strings, type=reg, nsp=trusted)
+ # file: SCRATCH_MNT/reg
+ trusted.name=0xbabe
+@@ -292,7 +292,7 @@ trusted.name2
+ trusted.name2=0xcafe
+ 
+ *** remove attribute
+-SCRATCH_MNT/dir: trusted.name2: No such attribute
++SCRATCH_MNT/dir: trusted.name2: No such attribute or operation not permitted
+ *** final list (strings, type=dir, nsp=trusted)
+ # file: SCRATCH_MNT/dir
+ trusted.name=0xbabe
+@@ -341,7 +341,7 @@ trusted.name2
+ trusted.name2=0xcafe
+ 
+ *** remove attribute
+-SCRATCH_MNT/lnk: trusted.name2: No such attribute
++SCRATCH_MNT/lnk: trusted.name2: No such attribute or operation not permitted
+ *** final list (strings, type=lnk, nsp=trusted)
+ # file: SCRATCH_MNT/lnk
+ trusted.name=0xbabe
+@@ -388,7 +388,7 @@ trusted.name2
+ trusted.name2=0xcafe
+ 
+ *** remove attribute
+-SCRATCH_MNT/dev/b: trusted.name2: No such attribute
++SCRATCH_MNT/dev/b: trusted.name2: No such attribute or operation not permitted
+ *** final list (strings, type=dev/b, nsp=trusted)
+ # file: SCRATCH_MNT/dev/b
+ trusted.name=0xbabe
+@@ -435,7 +435,7 @@ trusted.name2
+ trusted.name2=0xcafe
+ 
+ *** remove attribute
+-SCRATCH_MNT/dev/c: trusted.name2: No such attribute
++SCRATCH_MNT/dev/c: trusted.name2: No such attribute or operation not permitted
+ *** final list (strings, type=dev/c, nsp=trusted)
+ # file: SCRATCH_MNT/dev/c
+ trusted.name=0xbabe
+@@ -482,7 +482,7 @@ trusted.name2
+ trusted.name2=0xcafe
+ 
+ *** remove attribute
+-SCRATCH_MNT/dev/p: trusted.name2: No such attribute
++SCRATCH_MNT/dev/p: trusted.name2: No such attribute or operation not permitted
+ *** final list (strings, type=dev/p, nsp=trusted)
+ # file: SCRATCH_MNT/dev/p
+ trusted.name=0xbabe
+-- 
+1.7.6
 
 _______________________________________________
 xfs mailing list
