@@ -1,21 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7HDIxqL060585 for <xfs@oss.sgi.com>; Wed, 17 Aug 2011 08:18:59 -0500
-Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 519DA1E74A4F
-	for <xfs@oss.sgi.com>; Wed, 17 Aug 2011 06:18:56 -0700 (PDT)
-Received: from mailsrv14.zmi.at (mailsrv14.zmi.at [212.69.164.54]) by
-	cuda.sgi.com with ESMTP id HB4tV433MyMPSAYu for
-	<xfs@oss.sgi.com>; Wed, 17 Aug 2011 06:18:56 -0700 (PDT)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: Re: Bug#638158: xfsprogs: Damaged filesystem causes xfs_repair to
-	sometimes (but not always) segfault
-Date: Wed, 17 Aug 2011 15:18:52 +0200
-References: <E1QtbO1-0005u8-5N@eamp.org>
-In-Reply-To: <E1QtbO1-0005u8-5N@eamp.org>
+	p7HH31qq083556
+	for <linux-xfs@oss.sgi.com>; Wed, 17 Aug 2011 12:03:02 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BEF3C15FDA3E
+	for <linux-xfs@oss.sgi.com>; Wed, 17 Aug 2011 10:05:02 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	DNUc0Jm8S90SHlvk for <linux-xfs@oss.sgi.com>;
+	Wed, 17 Aug 2011 10:05:02 -0700 (PDT)
+Date: Wed, 17 Aug 2011 13:02:52 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Deleting files with extended attributes is dead slow
+Message-ID: <20110817170251.GB28650@infradead.org>
+References: <j23qs9$1c3$1@dough.gmane.org>
+	<20110812204746.GB30615@infradead.org>
+	<20110816161357.GA18201@infradead.org>
+	<4E4BBC98.7020501@itwm.fraunhofer.de>
 MIME-Version: 1.0
-Message-Id: <201108171518.53374@zmi.at>
+Content-Disposition: inline
+In-Reply-To: <4E4BBC98.7020501@itwm.fraunhofer.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,64 +30,51 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============6159528999237117938=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, Robert Jacobs <debbtsb06@eamp.org>
+To: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@oss.sgi.com
 
---===============6159528999237117938==
-Content-Type: multipart/signed;
-  boundary="nextPart3115770.xd3Vz2ds0f";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+On Wed, Aug 17, 2011 at 03:05:28PM +0200, Bernd Schubert wrote:
+> >(squeeze-x86_64)fslab2:~# xfs_bmap -a /mnt/xfs/Bonnie.29243/00000/00000027faJxifNb0n
+> >/mnt/xfs/Bonnie.29243/00000/00000027faJxifNb0n:
+> >        0: [0..7]: 92304..92311
+> 
+> (Sorry, I have no idea what "0: [0..7]: 92304..9231" is supposed to
+> tell me).
 
---nextPart3115770.xd3Vz2ds0f
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+It means that you are having an extent spanning 8 blocks for xattr
+storage, that map to physical blocks 92304 to 9231 in the filesystem.
 
-On Mittwoch, 17. August 2011 Robert Jacobs wrote:
-> I've attached the outputs of xfs_check and three different runs of
-> xfs_repair (with backtrace, when available).
+It sounds to me like your workload has a lot more than 256 bytes of
+xattrs, or the underlying code is doing something rather stupid.
 
-Can you provide a XFS metadump? That should help devs to reproduce the=20
-error.=20
+> Looking at 'top' and 'iostat -x' outout, I noticed we are actually
+> not limited by io to disk, but CPU bound. If you should be
+> interested, I have attached 'perf record -g' and 'perf report -g'
+> outout, of the bonnie file create (create + fsetfattr() ) phase.
 
-=2D-=20
-mit freundlichen Gr=C3=BCssen,
-Michael Monnerie, Ing. BSc
+It's mostly spending a lot of time on copying things into the CIL
+buffers, which is expected and intentional as that allows for additional
+parallelity.  I you'd switch the workload to multiple intances doing
+the create in parallel you should be able to scale to better numbers.
 
-it-management Internet Services: Prot=C3=A9ger
-http://proteger.at [gesprochen: Prot-e-schee]
-Tel: +43 660 / 415 6531
+> >     100:256:256/10 37026  91 +++++ +++ 43691  93 35960  92 +++++ +++ 40708  92
+> >Latency              4328us     765us    2960us     527us     440us    1075us
+> >1.96,1.96,fslab2,1,1313594619,,,,,,,,,,,,,,100,256,256,,10,37026,91,+++++,+++,43691,93,35960,92,+++++,+++,40708,92,,,,,,,4328us,765us,2960us,527us,440us,1075us
+> 
+> 
+> xfs:
+> mkfs.xfs -f -i size=512 -i maxpct=90  -l lazy-count=1 -n size=64k /dev/sdd
 
-// Haus zu verkaufen: http://zmi.at/langegg/
-
---nextPart3115770.xd3Vz2ds0f
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.16 (GNU/Linux)
-
-iEYEABECAAYFAk5Lv70ACgkQzhSR9xwSCbR0AACgoSmKFF0FybSyNxhFPzOEpO6a
-hmsAoLG/3UTdcAbdprHqlJo5cKKO5J1p
-=EQ39
------END PGP SIGNATURE-----
-
---nextPart3115770.xd3Vz2ds0f--
-
-
---===============6159528999237117938==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Do 64k dir blocks actually help you with the workload?  They also tend
+to do a lot of useless memcpys in their current form, although these
+didn't show up on your profile.  Did you try using a larger inode size
+as suggested in my previous mail?
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============6159528999237117938==--
