@@ -1,29 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7I35OL7131813
-	for <linux-xfs@oss.sgi.com>; Wed, 17 Aug 2011 22:05:24 -0500
-Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 84B6518ECC44
-	for <linux-xfs@oss.sgi.com>; Wed, 17 Aug 2011 20:05:22 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	3xUr2EWNojsmWC23 for <linux-xfs@oss.sgi.com>;
-	Wed, 17 Aug 2011 20:05:22 -0700 (PDT)
-Date: Thu, 18 Aug 2011 13:05:19 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Deleting files with extended attributes is dead slow
-Message-ID: <20110818030519.GP26978@dastard>
-References: <j23qs9$1c3$1@dough.gmane.org>
-	<20110812204746.GB30615@infradead.org>
-	<20110816161357.GA18201@infradead.org>
-	<4E4BBC98.7020501@itwm.fraunhofer.de>
-	<20110817170251.GB28650@infradead.org>
-	<4E4BFCB5.4010808@itwm.fraunhofer.de>
-	<20110818020848.GO26978@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110818020848.GO26978@dastard>
+	p7ICJTHT166601 for <xfs@oss.sgi.com>; Thu, 18 Aug 2011 07:19:29 -0500
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1EBC7F0C6A
+	for <xfs@oss.sgi.com>; Thu, 18 Aug 2011 05:19:28 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id bwrHESSgRgGQTIyi for
+	<xfs@oss.sgi.com>; Thu, 18 Aug 2011 05:19:28 -0700 (PDT)
+From: Lukas Czerner <lczerner@redhat.com>
+Subject: [PATCH 4/5] xfs: use fs netlink interface for ENOSPC conditions
+Date: Thu, 18 Aug 2011 14:18:25 +0200
+Message-Id: <1313669906-14931-5-git-send-email-lczerner@redhat.com>
+In-Reply-To: <1313669906-14931-1-git-send-email-lczerner@redhat.com>
+References: <1313669906-14931-1-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,144 +22,95 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@oss.sgi.com
+To: linux-kernel@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, Lukas Czerner <lczerner@redhat.com>, Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
 
-On Thu, Aug 18, 2011 at 12:08:48PM +1000, Dave Chinner wrote:
-> On Wed, Aug 17, 2011 at 07:39:01PM +0200, Bernd Schubert wrote:
-> > On 08/17/2011 07:02 PM, Christoph Hellwig wrote:
-> > >On Wed, Aug 17, 2011 at 03:05:28PM +0200, Bernd Schubert wrote:
-> > >>>(squeeze-x86_64)fslab2:~# xfs_bmap -a /mnt/xfs/Bonnie.29243/00000/00000027faJxifNb0n
-> > >>>/mnt/xfs/Bonnie.29243/00000/00000027faJxifNb0n:
-> > >>>        0: [0..7]: 92304..92311
-> > >>
-> > >>(Sorry, I have no idea what "0: [0..7]: 92304..9231" is supposed to
-> > >>tell me).
-> > >
-> > >It means that you are having an extent spanning 8 blocks for xattr
-> > >storage, that map to physical blocks 92304 to 9231 in the filesystem.
-> > >
-> > >It sounds to me like your workload has a lot more than 256 bytes of
-> > >xattrs, or the underlying code is doing something rather stupid.
-> > 
-> > Well, the workload I described here is a controlled bonnie test, so
-> > there cannot be more than 256 bytes (unless there is a bug in the
-> > code, will double check later on).
-> > 
-> > >
-> > >>Looking at 'top' and 'iostat -x' outout, I noticed we are actually
-> > >>not limited by io to disk, but CPU bound. If you should be
-> > >>interested, I have attached 'perf record -g' and 'perf report -g'
-> > >>outout, of the bonnie file create (create + fsetfattr() ) phase.
-> > >
-> > >It's mostly spending a lot of time on copying things into the CIL
-> > >buffers, which is expected and intentional as that allows for additional
-> > >parallelity.  I you'd switch the workload to multiple intances doing
-> > >the create in parallel you should be able to scale to better numbers.
-> > 
-> > I just tried to bonnies in parallel and that didn't improve
-> > anything. FhGFS code has several threads anyway. But it would be
-> > good, if the underlying file system wouldn't take all the CPU
-> > time...
-> 
-> XFS directory algorithms are significantly more complex than ext4.
-> They trade off CPU usage for significantly better layout and
-> scalability at large sizes. i.e. CPU costs less than IO so we burn
-> more CPU to reduce IO. You don't see the benefits of that until
-> directories start to get large (e.g. > 100k entries) and you are
-> doing cold cache lookups.
-> 
-> > >>xfs:
-> > >>mkfs.xfs -f -i size=512 -i maxpct=90  -l lazy-count=1 -n size=64k /dev/sdd
-> 
-> What is the output of this command?
-> 
-> > >Do 64k dir blocks actually help you with the workload?  They also tend
-> > 
-> > Also just tested, with or without doesn't improve anything.
-> 
-> Right, 64k directory blocks make a difference on cold cache
-> traversals and lookups by flattening the btrees. They also make a
-> difference in create/unlink performance once you get over a few
-> million files in the one directory (once again due to reduced IO).
-> 
-> > >to do a lot of useless memcpys in their current form, although these
-> > >didn't show up on your profile.  Did you try using a larger inode size
-> > >as suggested in my previous mail?
-> > 
-> > I just tried and now that I understand the xfs_bmap output, it is
-> > interesting to see, that an xattr size up to 128 byte does not need
-> > an extent + blocks, but 256 byte do have one extent and 8 blocks
-> > even with an inode size of 2K. xfs_info tells me that isize=2048 was
-> > accepted. I didn't test any sizes in between 128 and 256 byte yet.
-> > Now while I can set the data/xattr size for the bonnie test to less
-> > than 256 byte, that is not so easy with our real target FhGFS ;)
-> 
-> That tells me your filesystem is either not using dynamic attribute
-> fork offsets or that code is broken.
+Register fs netlink interface and send proper warning if ENOSPC is
+encountered. Note that we differentiate between enospc for metadata and
+enospc for data.
 
-It is neither of these.
+Signed-off-by: Lukas Czerner <lczerner@redhat.com>
+CC: Christoph Hellwig <hch@lst.de>
+CC: xfs@oss.sgi.com
+---
+ fs/xfs/linux-2.6/xfs_file.c  |    2 ++
+ fs/xfs/linux-2.6/xfs_super.c |    1 +
+ fs/xfs/xfs_vnodeops.c        |   10 ++++++++--
+ 3 files changed, 11 insertions(+), 2 deletions(-)
 
-> The output of the above mkfs
-> command will tell us what attribute fork behaviour is expected, so 
-> which of the two cases you are seeing.
-> 
-> Also, what kernel are you testing on?
-
-Ok, I've reproduced it on a 3.0-rc2 kernel with attr=2 and 2k
-inodes. An attribute of 254 bytes stays in line:
-
-....
-u = (empty)
-a.sfattr.hdr.totsize = 270
-a.sfattr.hdr.count = 1
-a.sfattr.list[0].namelen = 9
-a.sfattr.list[0].valuelen = 254
-a.sfattr.list[0].root = 0
-a.sfattr.list[0].secure = 0
-a.sfattr.list[0].name = "user.test"
-a.sfattr.list[0].value = " ten chars ten chars ten chars ten chars
-ten chars ten chars ten chars ten chars ten chars ten chars ten
-chars ten chars ten chars ten chars ten chars ten chars ten chars
-ten chars ten chars ten chars ten chars ten chars ten chars ten
-chars ten chars ten"
-
-but at 255 bytes:
-
-u = (empty)
-a.bmx[0] = [startoff,startblock,blockcount,extentflag] 0:[0,40,1,0]
-
-it goes out of line. There's something strange happening there....
-
-/me looks
-
-#define XFS_ATTR_SF_ENTSIZE_MAX                 /* max space for name&value */ \
-        ((1 << (NBBY*(int)sizeof(__uint8_t))) - 1)
-
-There's the issue - shortform attribute structures (i.e. inline
-attributes) have only 8 bits for the value/name lengths, so the
-attribute is going out of line at a value length of 255 bytes.
-
-So, the reason you are seeing this is that in line attributes must
-be 254 bytes or smaller to remain in line regardless of the inode
-size. If FhGFS is using multiple attributes smaller than 254 bytes,
-then they will all stay inline until all the inode attribute fork
-space is used. However, the first one that goes over this limit will
-push them all out of line.
-
-Unfortunately, that limit is fixed into the on-disk format for
-attributes, so is kind of hard to change. :/
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/linux-2.6/xfs_file.c b/fs/xfs/linux-2.6/xfs_file.c
+index 7f7b424..ab41603 100644
+--- a/fs/xfs/linux-2.6/xfs_file.c
++++ b/fs/xfs/linux-2.6/xfs_file.c
+@@ -896,6 +896,8 @@ xfs_file_aio_write(
+ out_unlock:
+ 	xfs_aio_write_newsize_update(ip);
+ 	xfs_rw_iunlock(ip, iolock);
++	if (unlikely(-ENOSPC == ret))
++		fs_nl_send_warning(inode->i_sb->s_dev, FS_NL_ENOSPC_WARN);
+ 	return ret;
+ }
+ 
+diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
+index 9a72dda..dd167a0 100644
+--- a/fs/xfs/linux-2.6/xfs_super.c
++++ b/fs/xfs/linux-2.6/xfs_super.c
+@@ -1731,6 +1731,7 @@ init_xfs_fs(void)
+ 	error = register_filesystem(&xfs_fs_type);
+ 	if (error)
+ 		goto out_sysctl_unregister;
++	init_fs_nl_family();
+ 	return 0;
+ 
+  out_sysctl_unregister:
+diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
+index 51fc429..1a95115 100644
+--- a/fs/xfs/xfs_vnodeops.c
++++ b/fs/xfs/xfs_vnodeops.c
+@@ -996,6 +996,8 @@ xfs_create(
+  out_trans_abort:
+ 	cancel_flags |= XFS_TRANS_ABORT;
+  out_trans_cancel:
++	if (ENOSPC == error)
++		fs_nl_send_warning(mp->m_super->s_dev, FS_NL_META_ENOSPC_WARN);
+ 	xfs_trans_cancel(tp, cancel_flags);
+  out_release_inode:
+ 	/*
+@@ -2302,7 +2304,7 @@ xfs_change_file_space(
+ 		error = xfs_alloc_file_space(ip, startoffset, bf->l_len,
+ 						prealloc_type, attr_flags);
+ 		if (error)
+-			return error;
++			goto alloc_failed;
+ 		setprealloc = 1;
+ 		break;
+ 
+@@ -2321,7 +2323,7 @@ xfs_change_file_space(
+ 			error = xfs_alloc_file_space(ip, fsize,
+ 					startoffset - fsize, 0, attr_flags);
+ 			if (error)
+-				break;
++				goto alloc_failed;
+ 		}
+ 
+ 		iattr.ia_valid = ATTR_SIZE;
+@@ -2384,5 +2386,9 @@ xfs_change_file_space(
+ 
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 
++alloc_failed:
++	if (unlikely(ENOSPC == error))
++		fs_nl_send_warning(mp->m_super->s_dev, FS_NL_ENOSPC_WARN);
++
+ 	return error;
+ }
 -- 
-Dave Chinner
-david@fromorbit.com
+1.7.4.4
 
 _______________________________________________
 xfs mailing list
