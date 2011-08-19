@@ -1,21 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7JEkWf2025348 for <xfs@oss.sgi.com>; Fri, 19 Aug 2011 09:46:33 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DE1F1137DE8D
-	for <xfs@oss.sgi.com>; Fri, 19 Aug 2011 07:48:50 -0700 (PDT)
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id wn0bEi0KWCeK0u5W for <xfs@oss.sgi.com>;
-	Fri, 19 Aug 2011 07:48:50 -0700 (PDT)
-Message-ID: <4E4E7746.9030505@sandeen.net>
-Date: Fri, 19 Aug 2011 09:46:30 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	p7JGb8l2031115 for <xfs@oss.sgi.com>; Fri, 19 Aug 2011 11:37:09 -0500
+Received: from crunch.scalableinformatics.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 49C4CF4FDB
+	for <xfs@oss.sgi.com>; Fri, 19 Aug 2011 09:37:02 -0700 (PDT)
+Received: from crunch.scalableinformatics.com
+	(173-10-54-97-Michigan.hfc.comcastbusiness.net [173.10.54.97])
+	by cuda.sgi.com with ESMTP id 9uVkJt1HsbAEb30X for
+	<xfs@oss.sgi.com>; Fri, 19 Aug 2011 09:37:02 -0700 (PDT)
+Received: from crunch.scalableinformatics.com (localhost [127.0.0.1])
+	by crunch.scalableinformatics.com (Postfix) with ESMTP id 633358059DEF
+	for <xfs@oss.sgi.com>; Fri, 19 Aug 2011 12:37:02 -0400 (EDT)
+Received: from [192.168.1.171] (metal.scalableinformatics.com [192.168.1.171])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by crunch.scalableinformatics.com (Postfix) with ESMTPSA id
+	542B880095BD
+	for <xfs@oss.sgi.com>; Fri, 19 Aug 2011 12:37:02 -0400 (EDT)
+Message-ID: <4E4E9131.2050807@scalableinformatics.com>
+Date: Fri, 19 Aug 2011 12:37:05 -0400
+From: Joe Landman <landman@scalableinformatics.com>
 MIME-Version: 1.0
-Subject: Re: xfstests #62 broken on ext4
-References: <E1QsFMR-0001iq-Vt@tytso-glaptop>
-	<20110813201419.GA6442@infradead.org>
-In-Reply-To: <20110813201419.GA6442@infradead.org>
+Subject: bug: xfs_repair becomes very slow when file system has a large sparse
+	file
+Reply-To: landman@scalableinformatics.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,203 +33,85 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-ext4@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Stefan Behrens <sbehrens@giantdisaster.de>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-> Below is the patch from Andreas that makes the test work properly again
-> on Linux 3.0+ on XFS, although other filesystem still have some issues
-> with it.  For ext4 that mostly seems the presence of the lost+found
-> directory, and a different ordering from readdir than expected.
+(If you prefer we file this on a bug reporting system, please let me 
+know where and I'll do this).
 
-yeah this looks a little cleaner than mine.
+Scenario:  xfs_repair being run against an about 17TB volume, containing 
+1 large sparse file.  Logical size of 7 PB, actual size, a few hundred GB.
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Metadata:  Kernel = 2.6.32.41, 2.6.39.4, and others. Xfstools 3.1.5. 
+Hardware RAID ~17TB LUN.  Base OS: Centos 5.6 + updates + updated xfs 
+tools + our kernels.  Using external journal on a different device
 
-On 8/13/11 3:14 PM, Christoph Hellwig wrote:
-> diff --git a/062 b/062
-> index 5cb6f92..df29e7a 100755
-> --- a/062
-> +++ b/062
-> @@ -84,6 +84,12 @@ _scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs
->  _scratch_mount || _fail "mount failed"
->  _create_test_bed
->  
-> +# In kernels before 3.0.0, getxattr() returns -EPERM for an attribute which
-> +# cannot exist.  Later kernels return -ENODATA.
-> +invalid_attribute_filter() {
-> +	sed -e "s:\(No such attribute\|Operation not permitted\):No such attribute or operation not permitted:"
-> +}
-> +
->  if [ "$USE_ATTR_SECURE" = yes ]; then
->      ATTR_MODES="user security trusted"
->  else
-> @@ -119,15 +125,15 @@ for nsp in $ATTR_MODES; do
->  		
->  		echo "*** set an empty value for second attribute"
->  		setfattr -h -n $nsp.name2 $SCRATCH_MNT/$inode
-> -		getfattr -m $nsp -n $nsp.name2 $SCRATCH_MNT/$inode
-> +		getfattr -m $nsp -n $nsp.name2 $SCRATCH_MNT/$inode 2>&1 | invalid_attribute_filter
->  
->  		echo "*** overwrite empty value"
->  		setfattr -h -n $nsp.name2 -v 0xcafe $SCRATCH_MNT/$inode
-> -		getfattr -m $nsp -e hex -n $nsp.name2 $SCRATCH_MNT/$inode
-> +		getfattr -m $nsp -e hex -n $nsp.name2 $SCRATCH_MNT/$inode 2>&1 | invalid_attribute_filter
->  
->  		echo "*** remove attribute"
->  		setfattr -h -x $nsp.name2 $SCRATCH_MNT/$inode
-> -		getfattr -m $nsp -e hex -n $nsp.name2 $SCRATCH_MNT/$inode
-> +		getfattr -m $nsp -e hex -n $nsp.name2 $SCRATCH_MNT/$inode 2>&1 | invalid_attribute_filter
->  
->  		echo "*** final list (strings, type=$inode, nsp=$nsp)"
->  		getfattr -m '.' -e hex $SCRATCH_MNT/$inode
-> diff --git a/062.out b/062.out
-> index 73fd628..5e3f5d9 100644
-> --- a/062.out
-> +++ b/062.out
-> @@ -55,7 +55,7 @@ user.name2
->  user.name2=0xcafe
->  
->  *** remove attribute
-> -SCRATCH_MNT/reg: user.name2: No such attribute
-> +SCRATCH_MNT/reg: user.name2: No such attribute or operation not permitted
->  *** final list (strings, type=reg, nsp=user)
->  # file: SCRATCH_MNT/reg
->  user.name=0xbabe
-> @@ -102,7 +102,7 @@ user.name2
->  user.name2=0xcafe
->  
->  *** remove attribute
-> -SCRATCH_MNT/dir: user.name2: No such attribute
-> +SCRATCH_MNT/dir: user.name2: No such attribute or operation not permitted
->  *** final list (strings, type=dir, nsp=user)
->  # file: SCRATCH_MNT/dir
->  user.name=0xbabe
-> @@ -125,13 +125,13 @@ setfattr: SCRATCH_MNT/lnk: Operation not permitted
->  setfattr: SCRATCH_MNT/lnk: Operation not permitted
->  *** set an empty value for second attribute
->  setfattr: SCRATCH_MNT/lnk: Operation not permitted
-> -SCRATCH_MNT/lnk: user.name2: Operation not permitted
-> +SCRATCH_MNT/lnk: user.name2: No such attribute or operation not permitted
->  *** overwrite empty value
->  setfattr: SCRATCH_MNT/lnk: Operation not permitted
-> -SCRATCH_MNT/lnk: user.name2: Operation not permitted
-> +SCRATCH_MNT/lnk: user.name2: No such attribute or operation not permitted
->  *** remove attribute
->  setfattr: SCRATCH_MNT/lnk: Operation not permitted
-> -SCRATCH_MNT/lnk: user.name2: Operation not permitted
-> +SCRATCH_MNT/lnk: user.name2: No such attribute or operation not permitted
->  *** final list (strings, type=lnk, nsp=user)
->  
->  === TYPE dev/b; NAMESPACE user
-> @@ -150,13 +150,13 @@ setfattr: SCRATCH_MNT/dev/b: Operation not permitted
->  setfattr: SCRATCH_MNT/dev/b: Operation not permitted
->  *** set an empty value for second attribute
->  setfattr: SCRATCH_MNT/dev/b: Operation not permitted
-> -SCRATCH_MNT/dev/b: user.name2: Operation not permitted
-> +SCRATCH_MNT/dev/b: user.name2: No such attribute or operation not permitted
->  *** overwrite empty value
->  setfattr: SCRATCH_MNT/dev/b: Operation not permitted
-> -SCRATCH_MNT/dev/b: user.name2: Operation not permitted
-> +SCRATCH_MNT/dev/b: user.name2: No such attribute or operation not permitted
->  *** remove attribute
->  setfattr: SCRATCH_MNT/dev/b: Operation not permitted
-> -SCRATCH_MNT/dev/b: user.name2: Operation not permitted
-> +SCRATCH_MNT/dev/b: user.name2: No such attribute or operation not permitted
->  *** final list (strings, type=dev/b, nsp=user)
->  
->  === TYPE dev/c; NAMESPACE user
-> @@ -175,13 +175,13 @@ setfattr: SCRATCH_MNT/dev/c: Operation not permitted
->  setfattr: SCRATCH_MNT/dev/c: Operation not permitted
->  *** set an empty value for second attribute
->  setfattr: SCRATCH_MNT/dev/c: Operation not permitted
-> -SCRATCH_MNT/dev/c: user.name2: Operation not permitted
-> +SCRATCH_MNT/dev/c: user.name2: No such attribute or operation not permitted
->  *** overwrite empty value
->  setfattr: SCRATCH_MNT/dev/c: Operation not permitted
-> -SCRATCH_MNT/dev/c: user.name2: Operation not permitted
-> +SCRATCH_MNT/dev/c: user.name2: No such attribute or operation not permitted
->  *** remove attribute
->  setfattr: SCRATCH_MNT/dev/c: Operation not permitted
-> -SCRATCH_MNT/dev/c: user.name2: Operation not permitted
-> +SCRATCH_MNT/dev/c: user.name2: No such attribute or operation not permitted
->  *** final list (strings, type=dev/c, nsp=user)
->  
->  === TYPE dev/p; NAMESPACE user
-> @@ -200,13 +200,13 @@ setfattr: SCRATCH_MNT/dev/p: Operation not permitted
->  setfattr: SCRATCH_MNT/dev/p: Operation not permitted
->  *** set an empty value for second attribute
->  setfattr: SCRATCH_MNT/dev/p: Operation not permitted
-> -SCRATCH_MNT/dev/p: user.name2: Operation not permitted
-> +SCRATCH_MNT/dev/p: user.name2: No such attribute or operation not permitted
->  *** overwrite empty value
->  setfattr: SCRATCH_MNT/dev/p: Operation not permitted
-> -SCRATCH_MNT/dev/p: user.name2: Operation not permitted
-> +SCRATCH_MNT/dev/p: user.name2: No such attribute or operation not permitted
->  *** remove attribute
->  setfattr: SCRATCH_MNT/dev/p: Operation not permitted
-> -SCRATCH_MNT/dev/p: user.name2: Operation not permitted
-> +SCRATCH_MNT/dev/p: user.name2: No such attribute or operation not permitted
->  *** final list (strings, type=dev/p, nsp=user)
->  
->  === TYPE reg; NAMESPACE trusted
-> @@ -249,7 +249,7 @@ trusted.name2
->  trusted.name2=0xcafe
->  
->  *** remove attribute
-> -SCRATCH_MNT/reg: trusted.name2: No such attribute
-> +SCRATCH_MNT/reg: trusted.name2: No such attribute or operation not permitted
->  *** final list (strings, type=reg, nsp=trusted)
->  # file: SCRATCH_MNT/reg
->  trusted.name=0xbabe
-> @@ -298,7 +298,7 @@ trusted.name2
->  trusted.name2=0xcafe
->  
->  *** remove attribute
-> -SCRATCH_MNT/dir: trusted.name2: No such attribute
-> +SCRATCH_MNT/dir: trusted.name2: No such attribute or operation not permitted
->  *** final list (strings, type=dir, nsp=trusted)
->  # file: SCRATCH_MNT/dir
->  trusted.name=0xbabe
-> @@ -347,7 +347,7 @@ trusted.name2
->  trusted.name2=0xcafe
->  
->  *** remove attribute
-> -SCRATCH_MNT/lnk: trusted.name2: No such attribute
-> +SCRATCH_MNT/lnk: trusted.name2: No such attribute or operation not permitted
->  *** final list (strings, type=lnk, nsp=trusted)
->  # file: SCRATCH_MNT/lnk
->  trusted.name=0xbabe
-> @@ -394,7 +394,7 @@ trusted.name2
->  trusted.name2=0xcafe
->  
->  *** remove attribute
-> -SCRATCH_MNT/dev/b: trusted.name2: No such attribute
-> +SCRATCH_MNT/dev/b: trusted.name2: No such attribute or operation not permitted
->  *** final list (strings, type=dev/b, nsp=trusted)
->  # file: SCRATCH_MNT/dev/b
->  trusted.name=0xbabe
-> @@ -441,7 +441,7 @@ trusted.name2
->  trusted.name2=0xcafe
->  
->  *** remove attribute
-> -SCRATCH_MNT/dev/c: trusted.name2: No such attribute
-> +SCRATCH_MNT/dev/c: trusted.name2: No such attribute or operation not permitted
->  *** final list (strings, type=dev/c, nsp=trusted)
->  # file: SCRATCH_MNT/dev/c
->  trusted.name=0xbabe
-> @@ -488,7 +488,7 @@ trusted.name2
->  trusted.name2=0xcafe
->  
->  *** remove attribute
-> -SCRATCH_MNT/dev/p: trusted.name2: No such attribute
-> +SCRATCH_MNT/dev/p: trusted.name2: No such attribute or operation not permitted
->  *** final list (strings, type=dev/p, nsp=trusted)
->  # file: SCRATCH_MNT/dev/p
->  trusted.name=0xbabe
+What we observe:
+
+Running xfs_repair
+
+	xfs_repair -l /dev/md2 -vv /dev/sdd2
+
+the system gets to stage 3 and the first ag.  Then it appears to stop. 
+After an hour or so, we strace it, and we see
+
+	pread(...) = 4096
+
+occurring about 2-3 per second.  An hour later, its down to 1 per 
+second.   An hour after that, its once every 2 seconds.
+
+Also, somewhere on this disk, someone has created an unfortunately large 
+file
+
+[root@jr4-2 ~]# ls -alF /data/brick-sdd2/dht/scratch/xyzpdq
+total 4652823496
+d---------   2 1232 1000               86 Jun 27 20:31 ./
+drwx------ 104 1232 1000            65536 Aug 17 23:53 ../
+-rw-------   1 1232 1000               21 Jun 27 09:57 Default.Route
+-rw-------   1 1232 1000              250 Jun 27 09:57 Gau-00000.inp
+-rw-------   1 1232 1000                0 Jun 27 09:57 Gau-00000.d2e
+-rw-------   1 1232 1000 7800416534233088 Jun 27 20:18 Gau-00000.rwf
+
+[root@jr4-2 ~]# ls -ahlF /data/brick-sdd2/dht/scratch/xyzpdq
+total 4.4T
+d---------   2 1232 1000   86 Jun 27 20:31 ./
+drwx------ 104 1232 1000  64K Aug 17 23:53 ../
+-rw-------   1 1232 1000   21 Jun 27 09:57 Default.Route
+-rw-------   1 1232 1000  250 Jun 27 09:57 Gau-00000.inp
+-rw-------   1 1232 1000    0 Jun 27 09:57 Gau-00000.d2e
+-rw-------   1 1232 1000 7.0P Jun 27 20:18 Gau-00000.rwf
+
+This isn't a 7PB file system, its a 100TB file system across 3 machines, 
+roughly 17TB per brick or OSS.  The Gau-00000.rwf is obviously a sparse 
+file, as could be seen with an ls -alsF
+
+Upon removing that file, the xfs_repair completes within ~10 minutes. 
+Leaving that file on there, the xfs_repair does not terminate, it just 
+gets asymptotically slower.
+
+I suspect it is looking for extents which are not there as part of the 
+repair.
+
+Please let me know if you need more information, or if you would like me 
+to file this somewhere else for official reportage.
+
+Regards,
+
+Joe
+
+-- 
+Joseph Landman, Ph.D
+Founder and CEO
+Scalable Informatics Inc.
+email: landman@scalableinformatics.com
+web  : http://scalableinformatics.com
+        http://scalableinformatics.com/sicluster
+phone: +1 734 786 8423 x121
+fax  : +1 866 888 3112
+cell : +1 734 612 4615
 
 _______________________________________________
 xfs mailing list
