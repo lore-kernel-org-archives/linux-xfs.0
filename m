@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7KM7Aq8177706 for <xfs@oss.sgi.com>; Sat, 20 Aug 2011 17:07:10 -0500
-Received: from franck.debian.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 997D81377560
-	for <xfs@oss.sgi.com>; Sat, 20 Aug 2011 15:09:35 -0700 (PDT)
-Received: from franck.debian.org (franck.debian.org [128.148.34.3]) by
-	cuda.sgi.com with ESMTP id dhItYGZWVrWGI4rp for
-	<xfs@oss.sgi.com>; Sat, 20 Aug 2011 15:09:35 -0700 (PDT)
-Received: from dak by franck.debian.org with local (Exim 4.72)
-	(envelope-from <dak@franck.debian.org>) id 1Quth6-0005CM-1Y
-	for xfs@oss.sgi.com; Sat, 20 Aug 2011 22:07:08 +0000
-Message-Id: <E1Quth6-0005CM-1Y@franck.debian.org>
-From: Debian FTP Masters <ftpmaster@ftp-master.debian.org>
-Subject: Processing of xfsprogs_3.1.5+nmu1_amd64.changes
-Date: Sat, 20 Aug 2011 22:07:08 +0000
+	p7KM1To6177469 for <xfs@oss.sgi.com>; Sat, 20 Aug 2011 17:01:29 -0500
+Received: from hall.aurel32.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E286E1DA0132
+	for <xfs@oss.sgi.com>; Sat, 20 Aug 2011 15:01:26 -0700 (PDT)
+Received: from hall.aurel32.net (hall.aurel32.net [88.191.126.93]) by
+	cuda.sgi.com with ESMTP id yPFk6aoaFwhZfGdQ for
+	<xfs@oss.sgi.com>; Sat, 20 Aug 2011 15:01:26 -0700 (PDT)
+Date: Sun, 21 Aug 2011 00:01:23 +0200
+From: Aurelien Jarno <aurelien@aurel32.net>
+Subject: Bug#553875: replacing libreadline5-dev build dependency with
+	libreadline-dev
+Message-ID: <20110820220123.GA27252@volta.aurel32.net>
+MIME-Version: 1.0
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,24 +23,53 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: XFS Development Team <xfs@oss.sgi.com>
+Cc: 553875@bugs.debian.org
 
-xfsprogs_3.1.5+nmu1_amd64.changes uploaded successfully to localhost
-along with the files:
-  xfsprogs_3.1.5+nmu1.dsc
-  xfsprogs_3.1.5+nmu1.tar.gz
-  xfsprogs_3.1.5+nmu1_amd64.deb
-  xfslibs-dev_3.1.5+nmu1_amd64.deb
-  xfsprogs-udeb_3.1.5+nmu1_amd64.udeb
+Hi,
 
-Greetings,
+I have just done an NMU of xfsprogs to fix this longstanding issue. You
+will find below the diff of the NMU.
 
-	Your Debian queue daemon (running on host franck.debian.org)
+Regards,
+Aurelien
+
+
+diff -Nru xfsprogs-3.1.5/debian/changelog xfsprogs-3.1.5+nmu1/debian/changelog
+--- xfsprogs-3.1.5/debian/changelog	2011-03-31 06:37:28.000000000 +0200
++++ xfsprogs-3.1.5+nmu1/debian/changelog	2011-08-20 23:27:40.000000000 +0200
+@@ -1,3 +1,12 @@
++xfsprogs (3.1.5+nmu1) unstable; urgency=low
++
++  * Non-maintainer upload, breaking the assumption: "the upstream
++    release is also the Debian release" (see bug#144876).
++  * Build-depends on libreadline-gplv2-dev instead of libreadline5-dev
++    as the code is not compatible with GPL v3 (closes: #553875).
++
++ -- Aurelien Jarno <aurel32@debian.org>  Sat, 20 Aug 2011 23:14:01 +0200
++
+ xfsprogs (3.1.5) unstable; urgency=low
+ 
+   * New upstream release
+diff -Nru xfsprogs-3.1.5/debian/control xfsprogs-3.1.5+nmu1/debian/control
+--- xfsprogs-3.1.5/debian/control	2010-11-09 12:40:44.000000000 +0100
++++ xfsprogs-3.1.5+nmu1/debian/control	2011-08-20 23:10:53.000000000 +0200
+@@ -3,7 +3,7 @@
+ Priority: optional
+ Maintainer: XFS Development Team <xfs@oss.sgi.com>
+ Uploaders: Nathan Scott <nathans@debian.org>, Anibal Monsalve Salazar <anibal@debian.org>
+-Build-Depends: uuid-dev, autoconf, debhelper (>= 5), gettext, libtool, libreadline5-dev, libblkid-dev (>= 2.17)
++Build-Depends: uuid-dev, autoconf, debhelper (>= 5), gettext, libtool, libreadline-gplv2-dev, libblkid-dev (>= 2.17)
+ Standards-Version: 3.9.1
+ Homepage: http://oss.sgi.com/projects/xfs/
+
+-- 
+Aurelien Jarno                          GPG: 1024D/F1BCDB73
+aurelien@aurel32.net                 http://www.aurel32.net
 
 _______________________________________________
 xfs mailing list
