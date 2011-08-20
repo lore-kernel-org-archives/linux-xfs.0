@@ -1,24 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7KHIcdB166205 for <xfs@oss.sgi.com>; Sat, 20 Aug 2011 12:18:39 -0500
-Received: from mail-yi0-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0FE771DA0C72
-	for <xfs@oss.sgi.com>; Sat, 20 Aug 2011 10:18:37 -0700 (PDT)
-Received: from mail-yi0-f53.google.com (mail-yi0-f53.google.com
-	[209.85.218.53]) by cuda.sgi.com with ESMTP id zLGXb9DlPtUxGEqn
-	for <xfs@oss.sgi.com>; Sat, 20 Aug 2011 10:18:37 -0700 (PDT)
-Received: by yia13 with SMTP id 13so3716377yia.26
-	for <xfs@oss.sgi.com>; Sat, 20 Aug 2011 10:18:37 -0700 (PDT)
+	p7KJcOfP171850 for <xfs@oss.sgi.com>; Sat, 20 Aug 2011 14:38:25 -0500
+Received: from lucidpixels.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 39A9A1377464
+	for <xfs@oss.sgi.com>; Sat, 20 Aug 2011 12:40:48 -0700 (PDT)
+Received: from lucidpixels.com (lucidpixels.com [72.73.18.11]) by cuda.sgi.com
+	with ESMTP id 1xJC7eZ3FVfX5mBX for <xfs@oss.sgi.com>;
+	Sat, 20 Aug 2011 12:40:48 -0700 (PDT)
+Date: Sat, 20 Aug 2011 15:38:21 -0400 (EDT)
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: 3.0.1: xfs hang
+Message-ID: <alpine.DEB.2.02.1108201536510.14176@p34.internal.lan>
 MIME-Version: 1.0
-In-Reply-To: <CAGpXXZ+xjhadprkc_LiP3qUypLLkCxdeEmo8+K+6mOnBuNhmLg@mail.gmail.com>
-References: <1309275199-10801-1-git-send-email-josef@redhat.com>
-	<4E4F814B.5070202@gmail.com>
-	<CAGpXXZ+xjhadprkc_LiP3qUypLLkCxdeEmo8+K+6mOnBuNhmLg@mail.gmail.com>
-Date: Sat, 20 Aug 2011 13:18:37 -0400
-Message-ID: <CAGpXXZLa-YgCaTyx4TjORb_vsm-LDV0sinthjMNeb=mR4HqsgA@mail.gmail.com>
-Subject: Re: [PATCH 1/4] fs: add SEEK_HOLE and SEEK_DATA flags
-From: Greg Freemyer <greg.freemyer@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,133 +21,55 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============3274621313571033471=="
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Marco Stornelli <marco.stornelli@gmail.com>
-Cc: linux-btrfs@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, Josef Bacik <josef@redhat.com>
+To: xfs@oss.sgi.com
 
---===============3274621313571033471==
-Content-Type: multipart/alternative; boundary=90e6ba61440653309804aaf3093b
+Hi,
 
---90e6ba61440653309804aaf3093b
-Content-Type: text/plain; charset=ISO-8859-1
+Forgot to remove 'delaylog' from my fstab on one of my machines, while rm 
+-rf a large directory with many files:
 
-On Aug 20, 2011 5:52 AM, "Marco Stornelli" <marco.stornelli@gmail.com>
-wrote:
->
-> Hi,
->
->
-> Il 28/06/2011 17:33, Josef Bacik ha scritto:
->>
->> This just gets us ready to support the SEEK_HOLE and SEEK_DATA flags.
- Turns out
->> using fiemap in things like cp cause more problems than it solves, so
-lets try
->> and give userspace an interface that doesn't suck.  We need to match
-solaris
->> here, and the definitions are
->>
->> *o* If /whence/ is SEEK_HOLE, the offset of the start of the
->> next hole greater than or equal to the supplied offset
->> is returned. The definition of a hole is provided near
->> the end of the DESCRIPTION.
->>
->> *o* If /whence/ is SEEK_DATA, the file pointer is set to the
->> start of the next non-hole file region greater than or
->> equal to the supplied offset.
->>
->
-> I'm implementing the SEEK_DATA/SEEK_HOLE management for pramfs and I've
-got some doubts about the right behavior:
->
-> 1) when we use SEEK_DATA/SEEK_HOLE, the offset used in lseek means always
-the offset from the start of the file, right?
->
-> 2) in case of a file with hole at the beginning and data at the end, if I
-do lseek(fd, 0, SEEK_HOLE) I should receive the end of the file because the
-idea is to search the *next* hole and we have always a virtual hole at the
-end of the file, right?
->
-> 3) about the last sentence of point 2), is it always true even if we have
-a case of block allocation beyond the end of file (fallocate with keep size
-option)?
->
+[ 2880.313073] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[ 2880.313147] rm              D 0000000100255dc1     0  2270   2253 0x00000000
+[ 2880.313198]  ffff88012b4f9810 0000000000000086 ffff8800bd632010 0000000000004000
+[ 2880.313276]  ffff88012b4f9810 ffff8800bd633fd8 ffff8800bd633fd8 0000000000000001
+[ 2880.313352]  ffff88012b4bf790 ffff88012b4f9a78 0000000412eec110 00000008bd633a58
+[ 2880.313428] Call Trace:
+[ 2880.313467]  [<ffffffff810ceeb0>] ? mempool_alloc+0x60/0x140
+[ 2880.313513]  [<ffffffff812d272e>] ? submit_bio+0x5e/0xe0
+[ 2880.313557]  [<ffffffff815ded05>] ? schedule_timeout+0x1f5/0x250
+[ 2880.313603]  [<ffffffff812ab174>] ? xfs_buf_rele+0x74/0x110
+[ 2880.313645]  [<ffffffff815dfbd1>] ? __down+0x61/0xa0
+[ 2880.313688]  [<ffffffff812abf73>] ? _xfs_buf_find+0x163/0x260
+[ 2880.313733]  [<ffffffff81092666>] ? down+0x46/0x50
+[ 2880.313775]  [<ffffffff812aa459>] ? xfs_buf_lock+0x59/0xc0
+[ 2880.313817]  [<ffffffff812abf73>] ? _xfs_buf_find+0x163/0x260
+[ 2880.313861]  [<ffffffff812ac0da>] ? xfs_buf_get+0x6a/0x1b0
+[ 2880.313906]  [<ffffffff812ac244>] ? xfs_buf_read+0x24/0x110
+[ 2880.313951]  [<ffffffff812a2366>] ? xfs_trans_read_buf+0x206/0x400
+[ 2880.313999]  [<ffffffff8127577f>] ? xfs_da_do_buf+0x2af/0x770
+[ 2880.314057]  [<ffffffff81117869>] ? dput+0x39/0x310
+[ 2880.314100]  [<ffffffff81275cb4>] ? xfs_da_read_buf+0x24/0x30
+[ 2880.314145]  [<ffffffff8127a5db>] ? xfs_dir2_block_getdents+0xab/0x220
+[ 2880.314193]  [<ffffffff8127a5db>] ? xfs_dir2_block_getdents+0xab/0x220
+[ 2880.314240]  [<ffffffff81113e50>] ? filldir64+0xe0/0xe0
+[ 2880.314283]  [<ffffffff81113e50>] ? filldir64+0xe0/0xe0
+[ 2880.314324]  [<ffffffff81113e50>] ? filldir64+0xe0/0xe0
+[ 2880.314366]  [<ffffffff81278eea>] ? xfs_readdir+0xca/0x130
+[ 2880.314410]  [<ffffffff81113e50>] ? filldir64+0xe0/0xe0
+[ 2880.314452]  [<ffffffff812acfa4>] ? xfs_file_readdir+0x34/0x50
+[ 2880.314497]  [<ffffffff811140c8>] ? vfs_readdir+0xb8/0xd0
+[ 2880.314542]  [<ffffffff81114244>] ? sys_getdents+0x84/0xe0
+[ 2880.314586]  [<ffffffff815e0cbb>] ? system_call_fastpath+0x16/0x1b
 
-Marco,
+(will remove delaylog, (but FYI))
 
-You may want to enable the xfstests test(s) for SEEK_HOLE and SEEK_DATA for
-pramfs.  That should give you some confidence your implementing the api like
-other filesystems are.
-
-Greg
-
---90e6ba61440653309804aaf3093b
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-
-<p><br>
-On Aug 20, 2011 5:52 AM, &quot;Marco Stornelli&quot; &lt;<a href=3D"mailto:=
-marco.stornelli@gmail.com">marco.stornelli@gmail.com</a>&gt; wrote:<br>
-&gt;<br>
-&gt; Hi,<br>
-&gt;<br>
-&gt;<br>
-&gt; Il 28/06/2011 17:33, Josef Bacik ha scritto:<br>
-&gt;&gt;<br>
-&gt;&gt; This just gets us ready to support the SEEK_HOLE and SEEK_DATA fla=
-gs. =A0Turns out<br>
-&gt;&gt; using fiemap in things like cp cause more problems than it solves,=
- so lets try<br>
-&gt;&gt; and give userspace an interface that doesn&#39;t suck. =A0We need =
-to match solaris<br>
-&gt;&gt; here, and the definitions are<br>
-&gt;&gt;<br>
-&gt;&gt; *o* If /whence/ is SEEK_HOLE, the offset of the start of the<br>
-&gt;&gt; next hole greater than or equal to the supplied offset<br>
-&gt;&gt; is returned. The definition of a hole is provided near<br>
-&gt;&gt; the end of the DESCRIPTION.<br>
-&gt;&gt;<br>
-&gt;&gt; *o* If /whence/ is SEEK_DATA, the file pointer is set to the<br>
-&gt;&gt; start of the next non-hole file region greater than or<br>
-&gt;&gt; equal to the supplied offset.<br>
-&gt;&gt;<br>
-&gt;<br>
-&gt; I&#39;m implementing the SEEK_DATA/SEEK_HOLE management for pramfs and=
- I&#39;ve got some doubts about the right behavior:<br>
-&gt;<br>
-&gt; 1) when we use SEEK_DATA/SEEK_HOLE, the offset used in lseek means alw=
-ays the offset from the start of the file, right?<br>
-&gt;<br>
-&gt; 2) in case of a file with hole at the beginning and data at the end, i=
-f I do lseek(fd, 0, SEEK_HOLE) I should receive the end of the file because=
- the idea is to search the *next* hole and we have always a virtual hole at=
- the end of the file, right?<br>
-
-&gt;<br>
-&gt; 3) about the last sentence of point 2), is it always true even if we h=
-ave a case of block allocation beyond the end of file (fallocate with keep =
-size option)?<br>
-&gt;</p>
-<p>Marco,</p>
-<p>You may want to enable the xfstests test(s) for SEEK_HOLE and SEEK_DATA =
-for pramfs.=A0 That should give you some confidence your implementing the a=
-pi like other filesystems are.</p>
-<p>Greg</p>
-
---90e6ba61440653309804aaf3093b--
-
-
---===============3274621313571033471==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Justin.
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============3274621313571033471==--
