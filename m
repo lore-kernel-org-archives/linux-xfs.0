@@ -1,24 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7M69vla034740 for <xfs@oss.sgi.com>; Mon, 22 Aug 2011 01:09:57 -0500
-Received: from ipmail07.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 363EDFC214
-	for <xfs@oss.sgi.com>; Sun, 21 Aug 2011 23:09:54 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	2qhC31fFwndja186 for <xfs@oss.sgi.com>;
-	Sun, 21 Aug 2011 23:09:54 -0700 (PDT)
-Date: Mon, 22 Aug 2011 16:09:50 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/6] xfs: remove delwri buffer handling from
-	xfs_buf_iorequest
-Message-ID: <20110822060950.GE3162@dastard>
-References: <20110814171517.174040686@bombadil.infradead.org>
-	<20110814171651.707270455@bombadil.infradead.org>
+	p7M6I7Tk035133 for <xfs@oss.sgi.com>; Mon, 22 Aug 2011 01:18:08 -0500
+Received: from busoni.debian.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9F83A1386581
+	for <xfs@oss.sgi.com>; Sun, 21 Aug 2011 23:20:40 -0700 (PDT)
+Received: from busoni.debian.org (busoni.debian.org [140.211.15.34]) by
+	cuda.sgi.com with ESMTP id QeDcCuAJaobvuaj9 for
+	<xfs@oss.sgi.com>; Sun, 21 Aug 2011 23:20:40 -0700 (PDT)
+Subject: Bug#553875: replacing libreadline5-dev build dependency with
+	libreadline-dev
+Resent-To: debian-bugs-dist@lists.debian.org
+Resent-Message-ID: <handler.553875.B553875.131399302726130@bugs.debian.org>
+Date: Mon, 22 Aug 2011 08:03:39 +0200
+From: Aurelien Jarno <aurelien@aurel32.net>
+Message-ID: <20110822060339.GA28146@hall.aurel32.net>
+References: <20110820220123.GA27252@volta.aurel32.net>
+	<20110821232913.GA3162@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110814171651.707270455@bombadil.infradead.org>
+In-Reply-To: <20110821232913.GA3162@dastard>
+Reply-To: Aurelien Jarno <aurelien@aurel32.net>, 553875@bugs.debian.org
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,22 +33,49 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: 553875@bugs.debian.org, XFS Development Team <xfs@oss.sgi.com>
 
-On Sun, Aug 14, 2011 at 01:15:18PM -0400, Christoph Hellwig wrote:
-> We cannot ever reach xfs_buf_iorequest for a buffer with XBF_DELWRI set,
-> given that all write handlers make sure that the buffer is remove from
-> the delwri queue before, and we never do reads with the XBF_DELWRI flag
-> set (which the code would not handle correctly anyway).
+On Mon, Aug 22, 2011 at 09:29:13AM +1000, Dave Chinner wrote:
+> On Sun, Aug 21, 2011 at 12:01:23AM +0200, Aurelien Jarno wrote:
+> > Hi,
+> > 
+> > I have just done an NMU of xfsprogs to fix this longstanding issue. You
+> > will find below the diff of the NMU.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> That was resolved in the upstream repository back in April:
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+But never uploaded to Debian, where the package has been unbuildable
+for months due to this issue.
+
+> commit 9de4c6df018f029d9266536a0ae961929a4a76ae
+> Author: Nathan Scott <nathans@aconex.com>
+> Date:   Thu Apr 28 23:15:30 2011 +0000
+> 
+>     xfsprogs: resolve Debian readline build issue
+>     
+>     Address the recently reported build issue with libreadline5/6, via
+>     the gplv2 route.  Since this appears to be a relatively recent pkg,
+>     I made its use conditional so the deb build continues to work for
+>     everyone not running a bleeding edge distro.  Works For Me (tm).
+>     
+>     This addresses Debian bug 553875: libreadline5-dev removal pending
+>     
+>     Signed-off-by: Nathan Scott <nathans@debian.org>
+>     Signed-off-by: Alex Elder <aelder@sgi.com>
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
 
 -- 
-Dave Chinner
-david@fromorbit.com
+Aurelien Jarno	                        GPG: 1024D/F1BCDB73
+aurelien@aurel32.net                 http://www.aurel32.net
+
 
 _______________________________________________
 xfs mailing list
