@@ -1,25 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7NHoU2w206423 for <xfs@oss.sgi.com>; Tue, 23 Aug 2011 12:50:30 -0500
-Received: from mail-wy0-f181.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 000F71394868
-	for <xfs@oss.sgi.com>; Tue, 23 Aug 2011 10:53:09 -0700 (PDT)
+	p7NIkvCk211020 for <xfs@oss.sgi.com>; Tue, 23 Aug 2011 13:46:57 -0500
+Received: from smtp1.linux-foundation.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E48D2191A8F5
+	for <xfs@oss.sgi.com>; Tue, 23 Aug 2011 11:46:55 -0700 (PDT)
+Received: from smtp1.linux-foundation.org (smtp1.linux-foundation.org
+	[140.211.169.13]) by cuda.sgi.com with ESMTP id
+	tlSIe1lcDn1AxCqE for <xfs@oss.sgi.com>;
+	Tue, 23 Aug 2011 11:46:55 -0700 (PDT)
 Received: from mail-wy0-f181.google.com (mail-wy0-f181.google.com
-	[74.125.82.181]) by cuda.sgi.com with ESMTP id ijrM8Y62P04AuXDA
-	for <xfs@oss.sgi.com>; Tue, 23 Aug 2011 10:53:09 -0700 (PDT)
-Received: by wyg36 with SMTP id 36so299271wyg.26
-	for <xfs@oss.sgi.com>; Tue, 23 Aug 2011 10:50:27 -0700 (PDT)
-Message-ID: <4E53E6F4.1040006@gmail.com>
-Date: Tue, 23 Aug 2011 19:44:20 +0200
-From: Marco Stornelli <marco.stornelli@gmail.com>
+	[74.125.82.181]) (authenticated bits=0)
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with
+	ESMTP id p7NIkqnR016816
+	(version=TLSv1/SSLv3 cipher=RC4-SHA bits=128 verify=FAIL)
+	for <xfs@oss.sgi.com>; Tue, 23 Aug 2011 11:46:54 -0700
+Received: by wyg36 with SMTP id 36so338932wyg.26
+	for <xfs@oss.sgi.com>; Tue, 23 Aug 2011 11:46:51 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/4] fs: add SEEK_HOLE and SEEK_DATA flags
-References: <1309275199-10801-1-git-send-email-josef@redhat.com>	<4E4F814B.5070202@gmail.com>	<4E4F865B.2010608@gmail.com>	<4E4FD48B.8030101@oracle.com>	<4E4FE1B1.7010601@gmail.com>	<4E51F24F.1050503@oracle.com>
-	<CANGUGtCi85Sgrr5R0E8iuN75ubbMX9txZMwnsvp4Wv3Xh+938g@mail.gmail.com>
-	<4E527C7F.9040807@oracle.com> <4E52984F.8050702@gmail.com>
-	<4E52C890.1060600@oracle.com>
-In-Reply-To: <4E52C890.1060600@oracle.com>
+In-Reply-To: <201108231739.p7NHdXQ8008360@stout.americas.sgi.com>
+References: <201108231739.p7NHdXQ8008360@stout.americas.sgi.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Tue, 23 Aug 2011 11:46:30 -0700
+Message-ID: <CA+55aFxEyj8qJnr9QR3Scy7SFocEr2BNA9z4PXs7q9rpkXM1vQ@mail.gmail.com>
+Subject: Re: [GIT PULL] XFS update for 3.1-rc4
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,39 +32,39 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Sunil Mushran <sunil.mushran@oracle.com>
-Cc: linux-kernel@vger.kernel.org, Josef Bacik <josef@redhat.com>, xfs@oss.sgi.com, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org
+To: Alex Elder <aelder@sgi.com>
+Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-Il 22/08/2011 23:22, Sunil Mushran ha scritto:
-> On 08/22/2011 10:56 AM, Marco Stornelli wrote:
->> Il 22/08/2011 17:57, Sunil Mushran ha scritto:
->>>
->>> The following test was used to test the early implementations.
->>> http://oss.oracle.com/~smushran/seek_data/
->>>
->>
->> Thank you very much!! I found another point. Your test fails with my
->> implementation because here
->> (http://www.austingroupbugs.net/view.php?id=415) says: "If whence is
->> SEEK_DATA, the file offset shall be set to the smallest location of a
->> byte not within a hole and not less than offset. It shall be an error
->> if no such byte exists." So in this case I return ENXIO but the test
->> expects another value. I have to say that there is a bit of confusion
->> about the real behavior of this new feature :)
->>
+On Tue, Aug 23, 2011 at 10:39 AM, Alex Elder <aelder@sgi.com> wrote:
 >
-> That's test 5.10, 5.12, 5.14. And it expects -ENXIO.
->
-> Which test is failing for you?
->
+> Linus, please pull the following XFS changes. =A0Their effect is to
+> remove the subdirectory structure from the XFS source hierarchy.
+> There are no functional changes to the XFS code itself. =A0Thanks.
 
-Sorry, I was reading the results in a wrong way.
+Pulled.
 
-Marco
+Any plans to further sanitize the namespace?
+
+It's kind of crazy to have filenames like
+
+   fs/xfs/xfs_trace.c
+
+which just duplicate the "xfs" part for no good reason. Why not just
+do something like
+
+  for i in xfs_*; do j=3D$(echo $i | sed 's/^xfs_//'); git mv $i $j; done
+
+to get rid of the silly "xfs_" prefix that adds nothing?
+
+You could use the bytes you save to rename "qm.c" to "quota_manager.c"
+instead. Wouldn't it be nice to have *good* names, instead of a jumble
+of crazy and mostly redundant letters?
+
+                        Linus
 
 _______________________________________________
 xfs mailing list
