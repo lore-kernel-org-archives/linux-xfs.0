@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7O66gXj014411 for <xfs@oss.sgi.com>; Wed, 24 Aug 2011 01:06:42 -0500
+	p7O66iRw014477 for <xfs@oss.sgi.com>; Wed, 24 Aug 2011 01:06:44 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 730AE10518D
-	for <xfs@oss.sgi.com>; Tue, 23 Aug 2011 23:06:41 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5042510519B
+	for <xfs@oss.sgi.com>; Tue, 23 Aug 2011 23:06:43 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	CyUm3HXqzr3LRcYR for <xfs@oss.sgi.com>;
-	Tue, 23 Aug 2011 23:06:41 -0700 (PDT)
-Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1Qw6bo-00058F-Sz
-	for xfs@oss.sgi.com; Wed, 24 Aug 2011 06:06:40 +0000
-Message-Id: <20110824060640.860409169@bombadil.infradead.org>
-Date: Wed, 24 Aug 2011 02:04:31 -0400
+	XPjUzKIjmN12vCqa for <xfs@oss.sgi.com>;
+	Tue, 23 Aug 2011 23:06:43 -0700 (PDT)
+Message-Id: <20110824060642.672916365@bombadil.infradead.org>
+Date: Wed, 24 Aug 2011 02:04:39 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 03/25] xfs: remove the nextents variable in xfs_bmapi
+Subject: [PATCH 11/25] xfs: factor unwritten extent map manipulations out of
+	xfs_bmapi
 References: <20110824060428.789245205@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-bmapi-cleanup-nextents
+Content-Disposition: inline;
+	filename=xfs-bmapi-factor-unwrittent-extent-conversion
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,57 +32,150 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: Dave Chinner <dchinner@redhat.com>
 
-Instead of using a local variable that needs to updated when we modify
-the extent map just check ifp->if_bytes directly where we use it.
+To further improve the readability of xfs_bmapi(), factor the unwritten
+extent conversion out into a separate function. This removes
+large block of logic from the xfs_bmapi() code loop and makes it
+easier to see the operational logic flow for xfs_bmapi().
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
 Index: xfs/fs/xfs/xfs_bmap.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_bmap.c	2011-08-23 21:07:50.707607838 +0200
-+++ xfs/fs/xfs/xfs_bmap.c	2011-08-23 21:07:51.327604480 +0200
-@@ -4294,7 +4294,6 @@ xfs_bmapi(
- 	xfs_mount_t	*mp;		/* xfs mount structure */
- 	int		n;		/* current extent index */
- 	int		nallocs;	/* number of extents alloc'd */
--	xfs_extnum_t	nextents;	/* number of extents in file */
- 	xfs_fileoff_t	obno;		/* old block number (offset) */
- 	xfs_bmbt_irec_t	prev;		/* previous file extent record */
- 	int		tmp_logflags;	/* temp flags holder */
-@@ -4380,7 +4379,6 @@ xfs_bmapi(
- 		goto error0;
- 	ep = xfs_bmap_search_extents(ip, bno, whichfork, &eof, &lastx, &got,
- 		&prev);
--	nextents = ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
- 	n = 0;
- 	end = bno + len;
- 	obno = bno;
-@@ -4622,7 +4620,6 @@ xfs_bmapi(
+--- xfs.orig/fs/xfs/xfs_bmap.c	2011-08-23 21:13:33.855748845 +0200
++++ xfs/fs/xfs/xfs_bmap.c	2011-08-23 21:13:35.465740123 +0200
+@@ -4089,7 +4089,6 @@ xfs_bmap_read_extents(
+ 		xfs_extnum_t	num_recs;
+ 		xfs_extnum_t	start;
+ 
+-
+ 		num_recs = xfs_btree_get_numrecs(block);
+ 		if (unlikely(i + num_recs > room)) {
+ 			ASSERT(i + num_recs <= room);
+@@ -4743,6 +4742,69 @@ xfs_bmapi_allocate(
+ 	return 0;
+ }
+ 
++STATIC int
++xfs_bmapi_convert_unwritten(
++	struct xfs_bmalloca	*bma,
++	struct xfs_bmbt_irec	*mval,
++	xfs_filblks_t		len,
++	xfs_extnum_t		*lastx,
++	struct xfs_btree_cur	**cur,
++	xfs_fsblock_t		*firstblock,
++	struct xfs_bmap_free	*flist,
++	int			flags,
++	int			*logflags)
++{
++	int			whichfork = (flags & XFS_BMAPI_ATTRFORK) ?
++						XFS_ATTR_FORK : XFS_DATA_FORK;
++	struct xfs_ifork	*ifp = XFS_IFORK_PTR(bma->ip, whichfork);
++	int			error;
++
++	*logflags = 0;
++
++	/* check if we need to do unwritten->real conversion */
++	if (mval->br_state == XFS_EXT_UNWRITTEN &&
++	    (flags & XFS_BMAPI_PREALLOC))
++		return 0;
++
++	/* check if we need to do real->unwritten conversion */
++	if (mval->br_state == XFS_EXT_NORM &&
++	    (flags & (XFS_BMAPI_PREALLOC | XFS_BMAPI_CONVERT)) !=
++			(XFS_BMAPI_PREALLOC | XFS_BMAPI_CONVERT))
++		return 0;
++
++	/*
++	 * Modify (by adding) the state flag, if writing.
++	 */
++	ASSERT(mval->br_blockcount <= len);
++	if ((ifp->if_flags & XFS_IFBROOT) && !*cur) {
++		*cur = xfs_bmbt_init_cursor(bma->ip->i_mount, bma->tp,
++					bma->ip, whichfork);
++		(*cur)->bc_private.b.firstblock = *firstblock;
++		(*cur)->bc_private.b.flist = flist;
++	}
++	mval->br_state = (mval->br_state == XFS_EXT_UNWRITTEN)
++				? XFS_EXT_NORM : XFS_EXT_UNWRITTEN;
++
++	error = xfs_bmap_add_extent(bma->tp, bma->ip, lastx, cur, mval,
++				firstblock, flist, logflags, whichfork);
++	if (error)
++		return error;
++
++	/*
++	 * Update our extent pointer, given that xfs_bmap_add_extent  might
++	 * have merged it into one of the neighbouring ones.
++	 */
++	xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *lastx), bma->gotp);
++
++	/*
++	 * We may have combined previously unwritten space with written space,
++	 * so generate another request.
++	 */
++	if (mval->br_blockcount < len)
++		return EAGAIN;
++	return 0;
++}
++
+ /*
+  * Map file blocks to filesystem blocks.
+  * File range is given by the bno/len pair.
+@@ -4937,45 +4999,16 @@ xfs_bmapi(
+ 		/* Deal with the allocated space we found.  */
+ 		xfs_bmapi_trim_map(mval, &got, &bno, len, obno, end, n, flags);
+ 
+-		/*
+-		 * Check if writing previously allocated but
+-		 * unwritten extents.
+-		 */
+-		if (wr &&
+-		    ((mval->br_state == XFS_EXT_UNWRITTEN &&
+-		      ((flags & XFS_BMAPI_PREALLOC) == 0)) ||
+-		     (mval->br_state == XFS_EXT_NORM &&
+-		      ((flags & (XFS_BMAPI_PREALLOC|XFS_BMAPI_CONVERT)) ==
+-				(XFS_BMAPI_PREALLOC|XFS_BMAPI_CONVERT))))) {
+-			/*
+-			 * Modify (by adding) the state flag, if writing.
+-			 */
+-			ASSERT(mval->br_blockcount <= len);
+-			if ((ifp->if_flags & XFS_IFBROOT) && !cur) {
+-				cur = xfs_bmbt_init_cursor(mp,
+-					tp, ip, whichfork);
+-				cur->bc_private.b.firstblock =
+-					*firstblock;
+-				cur->bc_private.b.flist = flist;
+-			}
+-			mval->br_state = (mval->br_state == XFS_EXT_UNWRITTEN)
+-						? XFS_EXT_NORM
+-						: XFS_EXT_UNWRITTEN;
+-			error = xfs_bmap_add_extent(tp, ip, &lastx, &cur, mval,
+-				firstblock, flist, &tmp_logflags,
+-				whichfork);
++		/* Execute unwritten extent conversion if necessary */
++		if (wr) {
++			error = xfs_bmapi_convert_unwritten(&bma, mval, len,
++						&lastx, &cur, firstblock, flist, flags,
++						&tmp_logflags);
+ 			logflags |= tmp_logflags;
++			if (error == EAGAIN)
++				continue;
  			if (error)
  				goto error0;
- 			ep = xfs_iext_get_ext(ifp, lastx);
--			nextents = ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
- 			xfs_bmbt_get_all(ep, &got);
- 			ASSERT(got.br_startoff <= aoff);
- 			ASSERT(got.br_startoff + got.br_blockcount >=
-@@ -4723,7 +4720,6 @@ xfs_bmapi(
- 			if (error)
- 				goto error0;
- 			ep = xfs_iext_get_ext(ifp, lastx);
--			nextents = ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
- 			xfs_bmbt_get_all(ep, &got);
- 			/*
- 			 * We may have combined previously unwritten
-@@ -4781,7 +4777,7 @@ xfs_bmapi(
- 		 * Else go on to the next record.
- 		 */
- 		prev = got;
--		if (++lastx < nextents) {
-+		if (++lastx < ifp->if_bytes / sizeof(xfs_bmbt_rec_t)) {
- 			ep = xfs_iext_get_ext(ifp, lastx);
- 			xfs_bmbt_get_all(ep, &got);
- 		} else {
+-			ep = xfs_iext_get_ext(ifp, lastx);
+-			xfs_bmbt_get_all(ep, &got);
+-			/*
+-			 * We may have combined previously unwritten
+-			 * space with written space, so generate
+-			 * another request.
+-			 */
+-			if (mval->br_blockcount < len)
+-				continue;
+ 		}
+ 
+ 		/* update the extent map to return */
 
 _______________________________________________
 xfs mailing list
