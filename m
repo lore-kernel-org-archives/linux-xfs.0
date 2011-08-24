@@ -1,16 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7NJw0pt219874 for <xfs@oss.sgi.com>; Tue, 23 Aug 2011 14:58:00 -0500
-Subject: Re: [GIT PULL] XFS update for 3.1-rc4
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <CA+55aFxEyj8qJnr9QR3Scy7SFocEr2BNA9z4PXs7q9rpkXM1vQ@mail.gmail.com>
-References: <201108231739.p7NHdXQ8008360@stout.americas.sgi.com>
-	<CA+55aFxEyj8qJnr9QR3Scy7SFocEr2BNA9z4PXs7q9rpkXM1vQ@mail.gmail.com>
-Date: Tue, 23 Aug 2011 14:57:56 -0500
-Message-ID: <1314129476.2898.28.camel@doink>
+	p7O01VS6243222 for <xfs@oss.sgi.com>; Tue, 23 Aug 2011 19:01:32 -0500
+Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 80E8918D9446
+	for <xfs@oss.sgi.com>; Tue, 23 Aug 2011 17:01:29 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	SB4lLqyLHLuwcMxI for <xfs@oss.sgi.com>;
+	Tue, 23 Aug 2011 17:01:29 -0700 (PDT)
+Date: Wed, 24 Aug 2011 10:01:26 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 08/11] xfs: defer AIO/DIO completions
+Message-ID: <20110824000125.GF3162@dastard>
+References: <20110823082802.335389799@bombadil.infradead.org>
+	<20110823082913.270459702@bombadil.infradead.org>
 MIME-Version: 1.0
-Reply-To: aelder@sgi.com
+Content-Disposition: inline
+In-Reply-To: <20110823082913.270459702@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,43 +30,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Tue, 2011-08-23 at 11:46 -0700, Linus Torvalds wrote:
-> On Tue, Aug 23, 2011 at 10:39 AM, Alex Elder <aelder@sgi.com> wrote:
-> >
-> > Linus, please pull the following XFS changes.  Their effect is to
-> > remove the subdirectory structure from the XFS source hierarchy.
-> > There are no functional changes to the XFS code itself.  Thanks.
+On Tue, Aug 23, 2011 at 04:28:10AM -0400, Christoph Hellwig wrote:
+> We really shouldn't complete AIO or DIO requests until we have finished
+> the unwritten extent conversion and size update.  This means fsync never
+> has to pick up any ioends as all work has been completed when signalling
+> I/O completion.
 > 
-> Pulled.
-> 
-> Any plans to further sanitize the namespace?
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-We haven't discussed it but it's not a bad idea.
+Much nicer ;)
 
-> It's kind of crazy to have filenames like
-> 
->    fs/xfs/xfs_trace.c
-> 
-> which just duplicate the "xfs" part for no good reason. Why not just
-> do something like
-> 
->   for i in xfs_*; do j=$(echo $i | sed 's/^xfs_//'); git mv $i $j; done
-> 
-> to get rid of the silly "xfs_" prefix that adds nothing?
-> 
-> You could use the bytes you save to rename "qm.c" to "quota_manager.c"
-> instead. Wouldn't it be nice to have *good* names, instead of a jumble
-> of crazy and mostly redundant letters?
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-We're getting there, gradually.  The code is certainly
-evolving in that direction, though that hasn't happened
-in the file names.  Doing that would require my fingers
-to get used to skipping over the "xfs_" spasm though...
-
-					-Alex
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
