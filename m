@@ -1,23 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7O0gB2x246487 for <xfs@oss.sgi.com>; Tue, 23 Aug 2011 19:42:11 -0500
-Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 81AE2191BA09
-	for <xfs@oss.sgi.com>; Tue, 23 Aug 2011 17:42:09 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	UioQxku9hH1qWS66 for <xfs@oss.sgi.com>;
-	Tue, 23 Aug 2011 17:42:09 -0700 (PDT)
-Date: Wed, 24 Aug 2011 10:42:06 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [GIT PULL] XFS update for 3.1-rc4
-Message-ID: <20110824004206.GG3162@dastard>
+	p7O10fO8248471 for <xfs@oss.sgi.com>; Tue, 23 Aug 2011 20:00:41 -0500
+Received: from smtp1.linux-foundation.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1BCCD13970C6
+	for <xfs@oss.sgi.com>; Tue, 23 Aug 2011 18:03:23 -0700 (PDT)
+Received: from smtp1.linux-foundation.org (smtp1.linux-foundation.org
+	[140.211.169.13]) by cuda.sgi.com with ESMTP id
+	zyYMQ3XaesHi4oS2 for <xfs@oss.sgi.com>;
+	Tue, 23 Aug 2011 18:03:23 -0700 (PDT)
+Received: from mail-ww0-f51.google.com (mail-ww0-f51.google.com [74.125.82.51])
+	(authenticated bits=0)
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with
+	ESMTP id p7O1072a016820
+	(version=TLSv1/SSLv3 cipher=RC4-SHA bits=128 verify=FAIL)
+	for <xfs@oss.sgi.com>; Tue, 23 Aug 2011 18:00:08 -0700
+Received: by wwi18 with SMTP id 18so536458wwi.32
+	for <xfs@oss.sgi.com>; Tue, 23 Aug 2011 18:00:06 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20110824004206.GG3162@dastard>
 References: <201108231739.p7NHdXQ8008360@stout.americas.sgi.com>
 	<CA+55aFxEyj8qJnr9QR3Scy7SFocEr2BNA9z4PXs7q9rpkXM1vQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CA+55aFxEyj8qJnr9QR3Scy7SFocEr2BNA9z4PXs7q9rpkXM1vQ@mail.gmail.com>
+	<20110824004206.GG3162@dastard>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Tue, 23 Aug 2011 17:59:46 -0700
+Message-ID: <CA+55aFwJAPN=EgTo-2iarhe4cFSArqB6AZAHDsuEK5EPBZVn+A@mail.gmail.com>
+Subject: Re: [GIT PULL] XFS update for 3.1-rc4
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,123 +34,31 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Linus Torvalds <torvalds@linux-foundation.org>
+To: Dave Chinner <david@fromorbit.com>
 Cc: akpm@linux-foundation.org, xfs@oss.sgi.com, linux-kernel@vger.kernel.org, Alex Elder <aelder@sgi.com>
 
-On Tue, Aug 23, 2011 at 11:46:30AM -0700, Linus Torvalds wrote:
-> On Tue, Aug 23, 2011 at 10:39 AM, Alex Elder <aelder@sgi.com> wrote:
-> >
-> > Linus, please pull the following XFS changes. =A0Their effect is to
-> > remove the subdirectory structure from the XFS source hierarchy.
-> > There are no functional changes to the XFS code itself. =A0Thanks.
-> =
+On Tue, Aug 23, 2011 at 5:42 PM, Dave Chinner <david@fromorbit.com> wrote:
+>
+> I consider the context it adds to cscope searches a damn good reason
+> for keeping it.
 
-> Pulled.
-> =
+Umm. I suggest you start learning to use the tools you have, rather
+than blame your inability to use them for then making crap decisions
+in file naming.
 
-> Any plans to further sanitize the namespace?
-> =
+Read up on the "-pN" thing to cscope.
 
-> It's kind of crazy to have filenames like
-> =
+So here's a trick of the day:
 
->    fs/xfs/xfs_trace.c
-> =
+  export CSCOPEOPTIONS=-p2
 
-> which just duplicate the "xfs" part for no good reason.
+or something like that. And stop using crap to excuse bad decisions.
 
-I consider the context it adds to cscope searches a damn good reason
-for keeping it.
-
-> Why not just
-> do something like
-> =
-
->   for i in xfs_*; do j=3D$(echo $i | sed 's/^xfs_//'); git mv $i $j; done
-> =
-
-> to get rid of the silly "xfs_" prefix that adds nothing?
-
-Because that then kills context that is actually useful in cscope
-searches. That is, every filesystem has the file "inode.c",
-"super.c", etc and so you can't tell from the cscope searchs which
-filesystem function calls belong to. =
-
-
-Duplicate name spaces are evil, and we have a lot of them in the
-filesystem tree - if they all had explicit namespacing like XFS
-does, then the world would be a better place. ;)
-
-
-> You could use the bytes you save to rename "qm.c" to "quota_manager.c"
-> instead. Wouldn't it be nice to have *good* names, instead of a jumble
-> of crazy and mostly redundant letters?
-
-The names make sense to anyone who has spent any time in the XFS
-code. The name of the file reflects the namespace of the code inside
-the file itself. e.g. to use the xfs_qm.c as an example:
-
-$ grep ^xfs_qm_  fs/xfs/xfs_qm.c
-xfs_qm_destroy(
-xfs_qm_hold_quotafs_ref(
-xfs_qm_rele_quotafs_ref(
-xfs_qm_unmount(
-xfs_qm_mount_quotas(
-xfs_qm_unmount_quotas(
-xfs_qm_dqflush_all(
-xfs_qm_detach_gdquots(
-xfs_qm_dqpurge_int(
-xfs_qm_dqpurge_all(
-xfs_qm_dqattach_one(
-xfs_qm_dqattach_grouphint(
-xfs_qm_dqattach_locked(
-xfs_qm_dqattach(
-xfs_qm_dqdetach(
-xfs_qm_sync(
-xfs_qm_init_quotainfo(
-xfs_qm_destroy_quotainfo(
-xfs_qm_list_init(
-xfs_qm_list_destroy(
-xfs_qm_qino_alloc(
-xfs_qm_reset_dqcounts(
-xfs_qm_dqiter_bufs(
-xfs_qm_dqiterate(
-xfs_qm_quotacheck_dqadjust(
-xfs_qm_get_rtblks(
-xfs_qm_dqusage_adjust(
-xfs_qm_quotacheck(
-xfs_qm_init_quotainos(
-xfs_qm_dqreclaim_one(void)
-xfs_qm_shake_freelist(
-xfs_qm_shake_scan(
-xfs_qm_shake_count(
-xfs_qm_dqalloc_incore(
-xfs_qm_write_sb_changes(
-xfs_qm_vop_dqalloc(
-xfs_qm_vop_chown(
-xfs_qm_vop_chown_reserve(
-xfs_qm_vop_rename_dqattach(
-xfs_qm_vop_create_dqattach(
-
-So there is a certain methodic sanity to the naming convention that
-is not immediately obvious from just looking at the file names, and
-that's a good reason not to change them.
-
-Besides, I don't want to have to spend 3 months reprogramming
-my muscle memory just because we painted the bikeshed a different
-colour. ;)
-
-Cheers,
-
-Dave.
--- =
-
-Dave Chinner
-david@fromorbit.com
+                      Linus
 
 _______________________________________________
 xfs mailing list
