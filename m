@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7P0B8Y7127530 for <xfs@oss.sgi.com>; Wed, 24 Aug 2011 19:11:08 -0500
-Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E58B6113ED2
-	for <xfs@oss.sgi.com>; Wed, 24 Aug 2011 17:11:06 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	tn254WAsKhLLxNsF for <xfs@oss.sgi.com>;
-	Wed, 24 Aug 2011 17:11:06 -0700 (PDT)
-Date: Thu, 25 Aug 2011 10:10:39 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH, RFC] xfs: deprecate the nodelaylog mount option
-Message-ID: <20110825001039.GJ3162@dastard>
-References: <20110824055750.GA11175@infradead.org>
+	p7P5DXpn163295 for <xfs@oss.sgi.com>; Thu, 25 Aug 2011 00:13:33 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C1C061C02C0E
+	for <xfs@oss.sgi.com>; Wed, 24 Aug 2011 22:13:32 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	nKrMIfvg2ho6XpTv for <xfs@oss.sgi.com>;
+	Wed, 24 Aug 2011 22:13:32 -0700 (PDT)
+Date: Thu, 25 Aug 2011 01:13:31 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfstests: setup and run non-generic mkfs for btrfs
+Message-ID: <20110825051331.GA1869@infradead.org>
+References: <1313513423-7888-1-git-send-email-dsterba@suse.cz>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110824055750.GA11175@infradead.org>
+In-Reply-To: <1313513423-7888-1-git-send-email-dsterba@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,56 +30,10 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: David Sterba <dsterba@suse.cz>
 Cc: xfs@oss.sgi.com
 
-On Wed, Aug 24, 2011 at 01:57:51AM -0400, Christoph Hellwig wrote:
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
-> Index: xfs/Documentation/feature-removal-schedule.txt
-> ===================================================================
-> --- xfs.orig/Documentation/feature-removal-schedule.txt	2011-08-24 07:45:56.450196165 +0200
-> +++ xfs/Documentation/feature-removal-schedule.txt	2011-08-24 07:47:17.049759519 +0200
-> @@ -592,3 +592,11 @@ Why:    In 3.0, we can now autodetect in
->  	interface that was used by acer-wmi driver. It will replaced by
->  	information log when acer-wmi initial.
->  Who:    Lee, Chun-Yi <jlee@novell.com>
-> +
-> +----------------------------
-> +What:	The XFS nodelaylog mount option
-> +When:	3.3
-> +Why:	The delaylog mode that has been the default since 2.6.39 has proven
-> +	stable, and the old code is in the way of additional improvements in
-> +	the log code.
-> +Who:	Christoph Hellwig <hch@lst.de>
-> Index: xfs/fs/xfs/xfs_super.c
-> ===================================================================
-> --- xfs.orig/fs/xfs/xfs_super.c	2011-08-24 07:47:53.696227656 +0200
-> +++ xfs/fs/xfs/xfs_super.c	2011-08-24 07:48:53.249238363 +0200
-> @@ -356,6 +356,8 @@ xfs_parseargs(
->  			mp->m_flags |= XFS_MOUNT_DELAYLOG;
->  		} else if (!strcmp(this_char, MNTOPT_NODELAYLOG)) {
->  			mp->m_flags &= ~XFS_MOUNT_DELAYLOG;
-> +			xfs_warn(mp,
-> +	"nodelaylog is deprecated and will be removed in Linux 3.3");
->  		} else if (!strcmp(this_char, MNTOPT_DISCARD)) {
->  			mp->m_flags |= XFS_MOUNT_DISCARD;
->  		} else if (!strcmp(this_char, MNTOPT_NODISCARD)) {
-
-No argument here. Getting rid of the old transaction commit code
-would both siginficantly cleanup the code and enable lots of
-interesting transaction optimisations to be made....
-
-So it gets my thumbs-up.
-
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks, applied.
 
 _______________________________________________
 xfs mailing list
