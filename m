@@ -1,16 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7P51Kr5161940 for <xfs@oss.sgi.com>; Thu, 25 Aug 2011 00:01:20 -0500
-Date: Thu, 25 Aug 2011 01:01:18 -0400
+	p7P53SKG162036 for <xfs@oss.sgi.com>; Thu, 25 Aug 2011 00:03:28 -0500
+Date: Thu, 25 Aug 2011 01:03:26 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/3] xfsprogs: xfs_quota: don't double project block counts
-Message-ID: <20110825050118.GC23901@infradead.org>
-References: <adcfe5e08d1c060ea95a8aa43e1abade24957dd0.1314222483.git.aelder@sgi.com>
-	<e874ff01906d10e2ff4812b6badcc246f6a43af4.1314222483.git.aelder@sgi.com>
+Subject: Re: [PATCH] xfsdump: call mlog_exit in content_stream_restore
+Message-ID: <20110825050326.GE23901@infradead.org>
+References: <1313434763-22340-1-git-send-email-wkendall@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <e874ff01906d10e2ff4812b6badcc246f6a43af4.1314222483.git.aelder@sgi.com>
+In-Reply-To: <1313434763-22340-1-git-send-email-wkendall@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,26 +22,20 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
+To: Bill Kendall <wkendall@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, Aug 24, 2011 at 04:53:42PM -0500, Alex Elder wrote:
-> In projects_free_space_data() all of the block counts returned are
-> doubled.  This was probably a mistaken attempt to convert to or from
-> 512-byte basic block units.  The caller expects the value returned
-> to be in 512-byte units, which is exactly what the fs_disk_quota
-> structure holds, so there should be no doubling.
+On Mon, Aug 15, 2011 at 01:59:23PM -0500, Bill Kendall wrote:
+> This patch adds mlog_exit() calls to all the return paths in
+> content_stream_restore(). mlog_exit() is supposed to be called before
+> returning from content_stream_dump() and content_stream_restore(), but
+> many paths in the latter did not do so, allowing for the stream exit
+> status to be incorrect.
 > 
-> The effect of this bug is that the disk space used by the "df"
-> xfs_quota command shows block counts twice what they should be.
-> 
-> SGI PV 1015651
-> 
-> Signed-off-by: Alex Elder <aelder@sgi.com>
+> Signed-off-by: Bill Kendall <wkendall@sgi.com>
 
-Looks good,
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Looks okay, but once again I'd prefer to use goto labels so that
+we have a logical grouping of that required exit.
 
 _______________________________________________
 xfs mailing list
