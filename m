@@ -1,15 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7PKuNwv238159 for <xfs@oss.sgi.com>; Thu, 25 Aug 2011 15:56:24 -0500
-Subject: Re: [PATCH 3/6] xfs: Don't allocate new buffers on every call to
-	_xfs_buf_find
+	p7PKvwcJ238421 for <xfs@oss.sgi.com>; Thu, 25 Aug 2011 15:57:58 -0500
+Subject: Re: [PATCH 6/6] xfs: convert xfsbufd to use a workqueue
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1314256626-11136-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1314256626-11136-7-git-send-email-david@fromorbit.com>
 References: <1314256626-11136-1-git-send-email-david@fromorbit.com>
-	<1314256626-11136-4-git-send-email-david@fromorbit.com>
-Date: Thu, 25 Aug 2011 15:56:18 -0500
-Message-ID: <1314305778.3136.100.camel@doink>
+	<1314256626-11136-7-git-send-email-david@fromorbit.com>
+Date: Thu, 25 Aug 2011 15:57:19 -0500
+Message-ID: <1314305839.3136.104.camel@doink>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -30,206 +29,242 @@ Cc: xfs@oss.sgi.com
 On Thu, 2011-08-25 at 17:17 +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> Stats show that for an 8-way unlink @ ~80,000 unlinks/s we are doing
-> ~1 million cache hit lookups to ~3000 buffer creates. That's almost
-> 3 orders of magnitude more cahce hits than misses, so optimising for
-> cache hits is quite important. In the cache hit case, we do not need
-> to allocate a new buffer in case of a cache miss, so we are
-> effectively hitting the allocator for no good reason for vast the
-> majority of calls to _xfs_buf_find. 8-way create workloads are
-> showing similar cache hit/miss ratios.
+> There is no reason we need a thread per filesystem to do the
+> flushing of the delayed write buffer queue. This can be easily
+> handled by a global concurrency managed workqueue.
 > 
-> The result is profiles that look like this:
-> 
->      samples  pcnt function                        DSO
->      _______ _____ _______________________________ _________________
-> 
->      1036.00 10.0% _xfs_buf_find                   [kernel.kallsyms]
->       582.00  5.6% kmem_cache_alloc                [kernel.kallsyms]
->       519.00  5.0% __memcpy                        [kernel.kallsyms]
->       468.00  4.5% __ticket_spin_lock              [kernel.kallsyms]
->       388.00  3.7% kmem_cache_free                 [kernel.kallsyms]
->       331.00  3.2% xfs_log_commit_cil              [kernel.kallsyms]
-> 
-> 
-> Further, there is a fair bit of work involved in initialising a new
-> buffer once a cache miss has occurred and we currently do that under
-> the rbtree spinlock. That increases spinlock hold time on what are
-> heavily used trees.
-> 
-> To fix this, remove the initialisation of the buffer from
-> _xfs_buf_find() and only allocate the new buffer once we've had a
-> cache miss. Initialise the buffer immediately after allocating it in
-> xfs_buf_get, too, so that is it ready for insert if we get another
-> cache miss after allocation. This minimises lock hold time and
-> avoids unnecessary allocator churn. The resulting profiles look
-> like:
-> 
->      samples  pcnt function                    DSO
->      _______ _____ ___________________________ _________________
-> 
->      8111.00  9.1% _xfs_buf_find               [kernel.kallsyms]
->      4380.00  4.9% __memcpy                    [kernel.kallsyms]
->      4341.00  4.8% __ticket_spin_lock          [kernel.kallsyms]
->      3401.00  3.8% kmem_cache_alloc            [kernel.kallsyms]
->      2856.00  3.2% xfs_log_commit_cil          [kernel.kallsyms]
->      2625.00  2.9% __kmalloc                   [kernel.kallsyms]
->      2380.00  2.7% kfree                       [kernel.kallsyms]
->      2016.00  2.3% kmem_cache_free             [kernel.kallsyms]
-> 
-> Showing a significant reduction in time spent doing allocation and
-> freeing from slabs (kmem_cache_alloc and kmem_cache_free).
-> 
+> Convert the delayed write buffer handling to use workqueues and
+> workqueue flushes to implement buffer writeback by embedding a
+> delayed work structure into the struct xfs_buftarg and using that to
+> control flushing.  This greatly simplifes the process of flushing
+> and also removes a bunch of duplicated code between buftarg flushing
+> and delwri buffer writeback.
+
+I point out one bug below.  I also question one of the
+changes and have some suggestions.  I'd like to see this
+updated and get another chance to review the result.
+
+					-Alex
+
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-
-This is a good change, but I found one bug (of omission).
-I also have a pretty harmless suggestion, plus suggest
-some type changes.
-
-For now I have corrected the bug and implemented the
-one suggestion but not the type changes in my own copy
-of this patch and am testing with it.  If you are
-comfortable with that, I can commit my modified version.
-The type changes can go in separately (they might expand
-a bit to affect other code anyway).
-
-Otherwise if you fix the bug you can consider this
-reviewed by me.
-
-Reviewed-by: Alex Elder <aelder@sgi.com>
-
 > ---
->  fs/xfs/xfs_buf.c |   87 +++++++++++++++++++++++++++++++-----------------------
->  1 files changed, 50 insertions(+), 37 deletions(-)
+>  fs/xfs/xfs_buf.c       |  165 ++++++++++++++++++++----------------------------
+>  fs/xfs/xfs_buf.h       |    5 +-
+>  fs/xfs/xfs_dquot.c     |    1 -
+>  fs/xfs/xfs_trans_ail.c |    2 +-
+>  4 files changed, 72 insertions(+), 101 deletions(-)
 > 
 > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index c57836d..6fffa06 100644
+> index 410de9f..b1b8c0c 100644
 > --- a/fs/xfs/xfs_buf.c
 > +++ b/fs/xfs/xfs_buf.c
-> @@ -171,10 +171,16 @@ STATIC void
->  _xfs_buf_initialize(
->  	xfs_buf_t		*bp,
->  	xfs_buftarg_t		*target,
-> -	xfs_off_t		range_base,
-> -	size_t			range_length,
-> +	xfs_off_t		bno,
-> +	size_t			num_blocks,
-
-Since you are now passing block numbers and block counts
-rather than byte offsets and counts the types of these
-arguments should be changed accordingly.  I believe the
-right types are xfs_daddr_t and xfs_filblks_t; the latter
-doesn't exactly fit the usage but it's consistent with
-how it's used elsewhere.
-
-This is the type change I mentioned above.  It applies
-in several places below (where I'll just mention them
-briefly).
-
->  	xfs_buf_flags_t		flags)
->  {
-> +	xfs_off_t		range_base;
-> +	size_t			range_length;
-> +
-> +	range_base = BBTOB(bno);
-> +	range_length = BBTOB(num_blocks);
-> +
->  	/*
->  	 * We don't want certain flags to appear in b_flags.
->  	 */
-> @@ -423,9 +429,9 @@ _xfs_buf_map_pages(
->   */
->  xfs_buf_t *
->  _xfs_buf_find(
-> -	xfs_buftarg_t		*btp,	/* block device target		*/
-> -	xfs_off_t		ioff,	/* starting offset of range	*/
-> -	size_t			isize,	/* length of range		*/
-> +	xfs_buftarg_t		*btp,
-> +	xfs_off_t		bno,
-> +	size_t			num_blocks,
-
-Type change.  (I know in this case you only changed the name,
-but the type was wrong to begin with.)
-
->  	xfs_buf_flags_t		flags,
->  	xfs_buf_t		*new_bp)
->  {
 
 . . .
 
-> @@ -525,34 +529,43 @@ found:
+> @@ -1407,8 +1407,9 @@ xfs_buf_delwri_queue(
+>  	}
+>  
+>  	if (list_empty(dwq)) {
+> -		/* start xfsbufd as it is about to have something to do */
+> -		wake_up_process(bp->b_target->bt_task);
+> +		/* queue a delayed flush as we are about to queue a buffer */
+> +		queue_delayed_work(xfs_buf_wq, &bp->b_target->bt_delwrite_work,
+> +			xfs_buf_timer_centisecs * msecs_to_jiffies(10));
+
+I think this should be done *after* the buffer has been
+added to the delayed work queue.  I realize there will be
+a small delay so it should be fine, but...  It also doesn't
+have to be done with bt_delwrite_lock held.
+
+>  	}
+>  
+>  	bp->b_flags |= _XBF_DELWRI_Q;
+> @@ -1486,13 +1487,13 @@ STATIC int
+>  xfs_buf_delwri_split(
+>  	xfs_buftarg_t	*target,
+>  	struct list_head *list,
+> -	unsigned long	age)
+> +	unsigned long	age,
+> +	int		force)
+>  {
+>  	xfs_buf_t	*bp, *n;
+>  	struct list_head *dwq = &target->bt_delwrite_queue;
+>  	spinlock_t	*dwlk = &target->bt_delwrite_lock;
+>  	int		skipped = 0;
+> -	int		force;
+>  
+>  	force = test_and_clear_bit(XBT_FORCE_FLUSH, &target->bt_flags);
+
+You forgot to delete this line when you made "force" be
+an argument to this function.
+
+The (now sole) caller--xfs_buf_delwri_work()--uses the
+value of force it computes after this function returns,
+so it's clear you want to use the passed-in value.
+
+But given that the caller will have already cleared
+the bit, the value of "force" will now be 0.  Which
+means that with this code xfs_flush_buftarg() does
+not work as it should.
+
+I think if you delete this line all is well, but you
+need to test this.
+
+>  	INIT_LIST_HEAD(list);
+> @@ -1543,90 +1544,36 @@ xfs_buf_cmp(
+>  	return 0;
+>  }
+>  
+> -STATIC int
+> -xfsbufd(
+> -	void		*data)
+> -{
+> -	xfs_buftarg_t   *target = (xfs_buftarg_t *)data;
+
+. . .
+
+>  /*
+> - *	Go through all incore buffers, and release buffers if they belong to
+> - *	the given device. This is used in filesystem error handling to
+> - *	preserve the consistency of its metadata.
+> + * If we are doing a forced flush, then we need to wait for the IO that we
+> + * issue to complete.
+>   */
+> -int
+> -xfs_flush_buftarg(
+> -	xfs_buftarg_t	*target,
+> -	int		wait)
+> +static void
+> +xfs_buf_delwri_work(
+> +	struct work_struct *work)
+>  {
+> -	xfs_buf_t	*bp;
+> -	int		pincount = 0;
+> +	struct xfs_buftarg *btp = container_of(to_delayed_work(work),
+> +					struct xfs_buftarg, bt_delwrite_work);
+> +	struct xfs_buf	*bp;
+> +	struct blk_plug	plug;
+>  	LIST_HEAD(tmp_list);
+>  	LIST_HEAD(wait_list);
+> -	struct blk_plug plug;
+> -
+> -	xfs_buf_runall_queues(xfsconvertd_workqueue);
+> -	xfs_buf_runall_queues(xfsdatad_workqueue);
+> -	xfs_buf_runall_queues(xfslogd_workqueue);
+> +	long		age = xfs_buf_age_centisecs * msecs_to_jiffies(10);
+> +	int		force = 0;
+>  
+> -	set_bit(XBT_FORCE_FLUSH, &target->bt_flags);
+> -	pincount = xfs_buf_delwri_split(target, &tmp_list, 0);
+> +	if (test_and_clear_bit(XBT_FORCE_FLUSH, &btp->bt_flags)) {
+> +		force = 1;
+> +		age = 0;
+> +	}
+
+xfs_buf_delwri_split() ignores its "age" argument if "force"
+is set.  This function never uses "age" otherwise.  So the
+above can just be:
+
+	force = test_and_clear_bit(XBT_FORCE_FLUSH, &btp->bt_flags);
+
+>  
+> -	/*
+> -	 * Dropped the delayed write list lock, now walk the temporary list.
+> -	 * All I/O is issued async and then if we need to wait for completion
+> -	 * we do that after issuing all the IO.
+> -	 */
+> +	xfs_buf_delwri_split(btp, &tmp_list, age, force);
+>  	list_sort(NULL, &tmp_list, xfs_buf_cmp);
+>  
+>  	blk_start_plug(&plug);
+>  	while (!list_empty(&tmp_list)) {
+>  		bp = list_first_entry(&tmp_list, struct xfs_buf, b_list);
+> -		ASSERT(target == bp->b_target);
+>  		list_del_init(&bp->b_list);
+> -		if (wait) {
+> +		if (force) {
+>  			bp->b_flags &= ~XBF_ASYNC;
+>  			list_add(&bp->b_list, &wait_list);
+>  		}
+
+. . .
+
+> @@ -1645,7 +1592,39 @@ xfs_flush_buftarg(
+>  		}
+>  	}
+>  
+> -	return pincount;
+> +	if (list_empty(&btp->bt_delwrite_queue))
+> +		return;
+> +
+> +	queue_delayed_work(xfs_buf_wq, &btp->bt_delwrite_work,
+> +			xfs_buf_timer_centisecs * msecs_to_jiffies(10));
+> +}
+> +
+> +/*
+> + *	Handling of buffer targets (buftargs).
+> + */
+> +
+> +/*
+> + * Flush all the queued buffer work, then flush any remaining dirty buffers
+> + * and wait for them to complete. If there are buffers remaining on the delwri
+> + * queue, then they were pinned so couldn't be flushed. Return a value of 1 to
+> + * indicate that there were pinned buffers and the caller needs to retry the
+> + * flush.
+> + */
+> +int
+> +xfs_flush_buftarg(
+> +	xfs_buftarg_t	*target,
+> +	int		wait)
+
+Since this function now ignores its "wait" argument,
+you could eliminate it, and perhaps get rid of the
+one (first) call in xfs_quiesce_fs() that passes 0.
+
+> +{
+> +	xfs_buf_runall_queues(xfsconvertd_workqueue);
+> +	xfs_buf_runall_queues(xfsdatad_workqueue);
+> +	xfs_buf_runall_queues(xfslogd_workqueue);
+> +
+> +	set_bit(XBT_FORCE_FLUSH, &target->bt_flags);
+> +	flush_delayed_work_sync(&target->bt_delwrite_work);
+> +
+> +	if (!list_empty(&target->bt_delwrite_queue))
+> +		return 1;
+> +	return 0;
+ 
+Maybe just:
+	return !list_empty(&target->bt_delwrite_queue);
+
+(But I understand why you might prefer what you did.)
+
 >  }
 >  
 >  /*
-> - *	Assembles a buffer covering the specified range.
-> - *	Storage in memory for all portions of the buffer will be allocated,
-> - *	although backing storage may not be.
-> + * Assembles a buffer covering the specified range. The code needs to be
-
-Maybe say "is" rather than "needs to be" here.
-
-> + * optimised for cache hits, as metadata intensive workloads will see 3 orders
-> + * of magnitude more hits than misses.
->   */
-> -xfs_buf_t *
-> +struct xfs_buf *
->  xfs_buf_get(
-> -	xfs_buftarg_t		*target,/* target for buffer		*/
-> -	xfs_off_t		ioff,	/* starting offset of range	*/
-> -	size_t			isize,	/* length of range		*/
-> +	struct xfs_buftarg	*target,
-> +	xfs_off_t		bno,
-> +	size_t			num_blocks,
-
-Type change.  (Again, types weren't really right to begin with.)
-Fixing this maybe ought to be done more pervasively; the types
-for values passed in the num_blocks argument are a mix of __u64,
-int and size_t.
-
-
->  	xfs_buf_flags_t		flags)
->  {
-> -	xfs_buf_t		*bp, *new_bp;
-> +	struct xfs_buf		*bp;
-> +	struct xfs_buf		*new_bp = NULL;
->  	int			error = 0;
->  
-> +	bp = _xfs_buf_find(target, bno, num_blocks, flags, new_bp);
-
-I'd rather an explicit NULL be used above for the last argument.
-(I've made this change to my own version of this patch.)
-
-> +	if (likely(bp))
-> +		goto found;
-> +
->  	new_bp = xfs_buf_allocate(flags);
->  	if (unlikely(!new_bp))
->  		return NULL;
->  
-> -	bp = _xfs_buf_find(target, ioff, isize, flags, new_bp);
-> +	_xfs_buf_initialize(new_bp, target, bno, num_blocks, flags);
-> +
 
 . . .
 
-> @@ -790,7 +803,7 @@ xfs_buf_get_uncached(
->  	bp = xfs_buf_allocate(0);
->  	if (unlikely(bp == NULL))
->  		goto fail;
-> -	_xfs_buf_initialize(bp, target, 0, len, 0);
-> +	_xfs_buf_initialize(bp, target, 0, BTOBB(len), 0);
->  
->  	error = _xfs_buf_get_pages(bp, page_count, 0);
->  	if (error)
+> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+> index db62959..1fb9d93 100644
+> --- a/fs/xfs/xfs_dquot.c
+> +++ b/fs/xfs/xfs_dquot.c
+> @@ -1446,7 +1446,6 @@ xfs_qm_dqflock_pushbuf_wait(
+>  		if (xfs_buf_ispinned(bp))
+>  			xfs_log_force(mp, 0);
+>  		xfs_buf_delwri_promote(bp);
+> -		wake_up_process(bp->b_target->bt_task);
 
-And the only remaining problem is the bug.  You need to make
-a change comparable to what's right here in xfs_buf_get_empty().
-I.e., that function needs to pass a block count rather than
-a byte length.  (I have made this change in my own copy.)
+Why does this not need to be replaced with a
+flush_delayed_work() call?  Was this wake_up_process()
+not needed before?  If that's the case it seems like
+that change is independent of the switch to work queues
+and should be done separately (first).
 
+>  	}
+>  	xfs_buf_relse(bp);
+>  out_lock:
 
-
-
+. . .
 
 _______________________________________________
 xfs mailing list
