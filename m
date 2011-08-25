@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7P66ban165799 for <xfs@oss.sgi.com>; Thu, 25 Aug 2011 01:06:38 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DF4541924296
-	for <xfs@oss.sgi.com>; Wed, 24 Aug 2011 23:06:34 -0700 (PDT)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	oE8ARB8qnY4tB15P for <xfs@oss.sgi.com>;
-	Wed, 24 Aug 2011 23:06:34 -0700 (PDT)
-Date: Thu, 25 Aug 2011 02:06:32 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfstests 255: add a seek_data/seek_hole tester
-Message-ID: <20110825060632.GA9933@infradead.org>
-References: <1309275199-10801-1-git-send-email-josef@redhat.com>
-	<1309275199-10801-5-git-send-email-josef@redhat.com>
+	p7P6K3WT167314 for <xfs@oss.sgi.com>; Thu, 25 Aug 2011 01:20:03 -0500
+Received: from ipmail07.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4FEC1139C128
+	for <xfs@oss.sgi.com>; Wed, 24 Aug 2011 23:22:52 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	L1BjrF8xS0vvqs6S for <xfs@oss.sgi.com>;
+	Wed, 24 Aug 2011 23:22:52 -0700 (PDT)
+Date: Thu, 25 Aug 2011 16:19:59 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: preparing a new xfsprogs release?
+Message-ID: <20110825061959.GN3162@dastard>
+References: <20110825050828.GA30775@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1309275199-10801-5-git-send-email-josef@redhat.com>
+In-Reply-To: <20110825050828.GA30775@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,18 +29,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Josef Bacik <josef@redhat.com>
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com, viro@ZenIV.linux.org.uk, dchinner@redhat.com, linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Tue, Jun 28, 2011 at 11:33:19AM -0400, Josef Bacik wrote:
-> This is a test to make sure seek_data/seek_hole is acting like it does on
-> Solaris.  It will check to see if the fs supports finding a hole or not and will
-> adjust as necessary.
+On Thu, Aug 25, 2011 at 01:08:28AM -0400, Christoph Hellwig wrote:
+> We have the libxfs resync and a healthy amount of fixes in xfsprogs,
+> what about cutting a release in about 1-2 weeks from now?
 
-Can you resend this with any updates that happened in the meantime?
+Probably a good idea.
 
-Dave also still had some comments about semantics, so it might be worth
-to incorporate that as well.
+Once it is release, I'll look at doing another kernel code sync -
+this one will be a lot smaller than the last - and then we can start
+adding all the new stuff we've got on top of it...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
