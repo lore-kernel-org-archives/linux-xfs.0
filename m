@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7P7HFXw172867 for <xfs@oss.sgi.com>; Thu, 25 Aug 2011 02:17:15 -0500
+	p7P7HRf7172933 for <xfs@oss.sgi.com>; Thu, 25 Aug 2011 02:17:27 -0500
 Received: from ipmail07.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DC795113354
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2011 00:17:13 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id F3D711922E9E
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2011 00:17:24 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	rq0cmwCEgSavbbLe for <xfs@oss.sgi.com>;
-	Thu, 25 Aug 2011 00:17:13 -0700 (PDT)
-Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1QwUBZ-00049U-Vn
-	for xfs@oss.sgi.com; Thu, 25 Aug 2011 17:17:10 +1000
+	ACzEgAxgr5blEPW5 for <xfs@oss.sgi.com>;
+	Thu, 25 Aug 2011 00:17:24 -0700 (PDT)
+Received: from [192.168.1.1] (helo=disappointment)
+	by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1QwUBj-00049W-W7
+	for xfs@oss.sgi.com; Thu, 25 Aug 2011 17:17:20 +1000
 Received: from dave by disappointment with local (Exim 4.76)
-	(envelope-from <dave@disappointment.disaster>) id 1QwUBZ-0002v4-Oo
+	(envelope-from <dave@disappointment.disaster>) id 1QwUBZ-0002vB-SU
 	for xfs@oss.sgi.com; Thu, 25 Aug 2011 17:17:09 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 3/6] xfs: Don't allocate new buffers on every call to
-	_xfs_buf_find
-Date: Thu, 25 Aug 2011 17:17:03 +1000
-Message-Id: <1314256626-11136-4-git-send-email-david@fromorbit.com>
+Subject: [PATCH 5/6] xfs: re-arrange all the xfsbufd delwri queue code
+Date: Thu, 25 Aug 2011 17:17:05 +1000
+Message-Id: <1314256626-11136-6-git-send-email-david@fromorbit.com>
 In-Reply-To: <1314256626-11136-1-git-send-email-david@fromorbit.com>
 References: <1314256626-11136-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,255 +39,429 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Stats show that for an 8-way unlink @ ~80,000 unlinks/s we are doing
-~1 million cache hit lookups to ~3000 buffer creates. That's almost
-3 orders of magnitude more cahce hits than misses, so optimising for
-cache hits is quite important. In the cache hit case, we do not need
-to allocate a new buffer in case of a cache miss, so we are
-effectively hitting the allocator for no good reason for vast the
-majority of calls to _xfs_buf_find. 8-way create workloads are
-showing similar cache hit/miss ratios.
-
-The result is profiles that look like this:
-
-     samples  pcnt function                        DSO
-     _______ _____ _______________________________ _________________
-
-     1036.00 10.0% _xfs_buf_find                   [kernel.kallsyms]
-      582.00  5.6% kmem_cache_alloc                [kernel.kallsyms]
-      519.00  5.0% __memcpy                        [kernel.kallsyms]
-      468.00  4.5% __ticket_spin_lock              [kernel.kallsyms]
-      388.00  3.7% kmem_cache_free                 [kernel.kallsyms]
-      331.00  3.2% xfs_log_commit_cil              [kernel.kallsyms]
-
-
-Further, there is a fair bit of work involved in initialising a new
-buffer once a cache miss has occurred and we currently do that under
-the rbtree spinlock. That increases spinlock hold time on what are
-heavily used trees.
-
-To fix this, remove the initialisation of the buffer from
-_xfs_buf_find() and only allocate the new buffer once we've had a
-cache miss. Initialise the buffer immediately after allocating it in
-xfs_buf_get, too, so that is it ready for insert if we get another
-cache miss after allocation. This minimises lock hold time and
-avoids unnecessary allocator churn. The resulting profiles look
-like:
-
-     samples  pcnt function                    DSO
-     _______ _____ ___________________________ _________________
-
-     8111.00  9.1% _xfs_buf_find               [kernel.kallsyms]
-     4380.00  4.9% __memcpy                    [kernel.kallsyms]
-     4341.00  4.8% __ticket_spin_lock          [kernel.kallsyms]
-     3401.00  3.8% kmem_cache_alloc            [kernel.kallsyms]
-     2856.00  3.2% xfs_log_commit_cil          [kernel.kallsyms]
-     2625.00  2.9% __kmalloc                   [kernel.kallsyms]
-     2380.00  2.7% kfree                       [kernel.kallsyms]
-     2016.00  2.3% kmem_cache_free             [kernel.kallsyms]
-
-Showing a significant reduction in time spent doing allocation and
-freeing from slabs (kmem_cache_alloc and kmem_cache_free).
+In preparation for converting the xfsbufd to a workqueue, re-arrange
+all the delayed write queue manipulation code above the buftarg
+sections.  This allows us to avoid the need for forward declarations
+of the new xfsbufd worker functions. This is pure code movement, not
+changes to the code have been made.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_buf.c |   87 +++++++++++++++++++++++++++++++-----------------------
- 1 files changed, 50 insertions(+), 37 deletions(-)
+ fs/xfs/xfs_buf.c |  387 +++++++++++++++++++++++++++---------------------------
+ 1 files changed, 194 insertions(+), 193 deletions(-)
 
 diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index c57836d..6fffa06 100644
+index 6fffa06..410de9f 100644
 --- a/fs/xfs/xfs_buf.c
 +++ b/fs/xfs/xfs_buf.c
-@@ -171,10 +171,16 @@ STATIC void
- _xfs_buf_initialize(
- 	xfs_buf_t		*bp,
- 	xfs_buftarg_t		*target,
--	xfs_off_t		range_base,
--	size_t			range_length,
-+	xfs_off_t		bno,
-+	size_t			num_blocks,
- 	xfs_buf_flags_t		flags)
- {
-+	xfs_off_t		range_base;
-+	size_t			range_length;
-+
-+	range_base = BBTOB(bno);
-+	range_length = BBTOB(num_blocks);
-+
- 	/*
- 	 * We don't want certain flags to appear in b_flags.
- 	 */
-@@ -423,9 +429,9 @@ _xfs_buf_map_pages(
-  */
- xfs_buf_t *
- _xfs_buf_find(
--	xfs_buftarg_t		*btp,	/* block device target		*/
--	xfs_off_t		ioff,	/* starting offset of range	*/
--	size_t			isize,	/* length of range		*/
-+	xfs_buftarg_t		*btp,
-+	xfs_off_t		bno,
-+	size_t			num_blocks,
- 	xfs_buf_flags_t		flags,
- 	xfs_buf_t		*new_bp)
- {
-@@ -436,8 +442,8 @@ _xfs_buf_find(
- 	struct rb_node		*parent;
- 	xfs_buf_t		*bp;
- 
--	range_base = (ioff << BBSHIFT);
--	range_length = (isize << BBSHIFT);
-+	range_base = BBTOB(bno);
-+	range_length = BBTOB(num_blocks);
- 
- 	/* Check for IOs smaller than the sector size / not sector aligned */
- 	ASSERT(!(range_length < (1 << btp->bt_sshift)));
-@@ -445,7 +451,7 @@ _xfs_buf_find(
- 
- 	/* get tree root */
- 	pag = xfs_perag_get(btp->bt_mount,
--				xfs_daddr_to_agno(btp->bt_mount, ioff));
-+				xfs_daddr_to_agno(btp->bt_mount, bno));
- 
- 	/* walk tree */
- 	spin_lock(&pag->pag_buf_lock);
-@@ -481,8 +487,6 @@ _xfs_buf_find(
- 
- 	/* No match found */
- 	if (new_bp) {
--		_xfs_buf_initialize(new_bp, btp, range_base,
--				range_length, flags);
- 		rb_link_node(&new_bp->b_rbnode, parent, rbp);
- 		rb_insert_color(&new_bp->b_rbnode, &pag->pag_buf_tree);
- 		/* the buffer keeps the perag reference until it is freed */
-@@ -525,34 +529,43 @@ found:
+@@ -1383,199 +1383,6 @@ xfs_buf_iomove(
  }
  
  /*
-- *	Assembles a buffer covering the specified range.
-- *	Storage in memory for all portions of the buffer will be allocated,
-- *	although backing storage may not be.
-+ * Assembles a buffer covering the specified range. The code needs to be
-+ * optimised for cache hits, as metadata intensive workloads will see 3 orders
-+ * of magnitude more hits than misses.
-  */
--xfs_buf_t *
-+struct xfs_buf *
- xfs_buf_get(
--	xfs_buftarg_t		*target,/* target for buffer		*/
--	xfs_off_t		ioff,	/* starting offset of range	*/
--	size_t			isize,	/* length of range		*/
-+	struct xfs_buftarg	*target,
-+	xfs_off_t		bno,
-+	size_t			num_blocks,
- 	xfs_buf_flags_t		flags)
- {
--	xfs_buf_t		*bp, *new_bp;
-+	struct xfs_buf		*bp;
-+	struct xfs_buf		*new_bp = NULL;
- 	int			error = 0;
- 
-+	bp = _xfs_buf_find(target, bno, num_blocks, flags, new_bp);
-+	if (likely(bp))
-+		goto found;
-+
- 	new_bp = xfs_buf_allocate(flags);
- 	if (unlikely(!new_bp))
- 		return NULL;
- 
--	bp = _xfs_buf_find(target, ioff, isize, flags, new_bp);
-+	_xfs_buf_initialize(new_bp, target, bno, num_blocks, flags);
-+
-+	bp = _xfs_buf_find(target, bno, num_blocks, flags, new_bp);
-+	if (!bp) {
-+		xfs_buf_deallocate(new_bp);
-+		return NULL;
-+	}
-+
- 	if (bp == new_bp) {
- 		error = xfs_buf_allocate_memory(bp, flags);
- 		if (error)
- 			goto no_buffer;
--	} else {
-+	} else
- 		xfs_buf_deallocate(new_bp);
--		if (unlikely(bp == NULL))
--			return NULL;
--	}
- 
- 	if (!(bp->b_flags & XBF_MAPPED)) {
- 		error = _xfs_buf_map_pages(bp, flags);
-@@ -563,19 +576,19 @@ xfs_buf_get(
- 		}
- 	}
- 
--	XFS_STATS_INC(xb_get);
+- *	Handling of buffer targets (buftargs).
+- */
 -
- 	/*
--	 * Always fill in the block number now, the mapped cases can do
--	 * their own overlay of this later.
-+	 * Now we have a workable buffer, fill in the block number so
-+	 * that we can do IO on it.
- 	 */
--	bp->b_bn = ioff;
--	bp->b_count_desired = bp->b_buffer_length;
-+	bp->b_bn = bno;
- 
-+found:
-+	ASSERT(bp->b_flags & XBF_MAPPED);
-+	XFS_STATS_INC(xb_get);
- 	trace_xfs_buf_get(bp, flags, _RET_IP_);
- 	return bp;
- 
-- no_buffer:
-+no_buffer:
- 	if (flags & (XBF_LOCK | XBF_TRYLOCK))
- 		xfs_buf_unlock(bp);
- 	xfs_buf_rele(bp);
-@@ -604,15 +617,15 @@ _xfs_buf_read(
- xfs_buf_t *
- xfs_buf_read(
- 	xfs_buftarg_t		*target,
--	xfs_off_t		ioff,
--	size_t			isize,
-+	xfs_off_t		bno,
-+	size_t			num_blocks,
- 	xfs_buf_flags_t		flags)
- {
- 	xfs_buf_t		*bp;
- 
- 	flags |= XBF_READ;
- 
--	bp = xfs_buf_get(target, ioff, isize, flags);
-+	bp = xfs_buf_get(target, bno, num_blocks, flags);
- 	if (bp) {
- 		trace_xfs_buf_read(bp, flags, _RET_IP_);
- 
-@@ -647,13 +660,13 @@ xfs_buf_read(
- void
- xfs_buf_readahead(
- 	xfs_buftarg_t		*target,
--	xfs_off_t		ioff,
--	size_t			isize)
-+	xfs_off_t		bno,
-+	size_t			num_blocks)
- {
- 	if (bdi_read_congested(target->bt_bdi))
- 		return;
- 
--	xfs_buf_read(target, ioff, isize,
-+	xfs_buf_read(target, bno, num_blocks,
- 		     XBF_TRYLOCK|XBF_ASYNC|XBF_READ_AHEAD|XBF_DONT_BLOCK);
+-/*
+- * Wait for any bufs with callbacks that have been submitted but have not yet
+- * returned. These buffers will have an elevated hold count, so wait on those
+- * while freeing all the buffers only held by the LRU.
+- */
+-void
+-xfs_wait_buftarg(
+-	struct xfs_buftarg	*btp)
+-{
+-	struct xfs_buf		*bp;
+-
+-restart:
+-	spin_lock(&btp->bt_lru_lock);
+-	while (!list_empty(&btp->bt_lru)) {
+-		bp = list_first_entry(&btp->bt_lru, struct xfs_buf, b_lru);
+-		if (atomic_read(&bp->b_hold) > 1) {
+-			spin_unlock(&btp->bt_lru_lock);
+-			delay(100);
+-			goto restart;
+-		}
+-		/*
+-		 * clear the LRU reference count so the bufer doesn't get
+-		 * ignored in xfs_buf_rele().
+-		 */
+-		atomic_set(&bp->b_lru_ref, 0);
+-		spin_unlock(&btp->bt_lru_lock);
+-		xfs_buf_rele(bp);
+-		spin_lock(&btp->bt_lru_lock);
+-	}
+-	spin_unlock(&btp->bt_lru_lock);
+-}
+-
+-int
+-xfs_buftarg_shrink(
+-	struct shrinker		*shrink,
+-	struct shrink_control	*sc)
+-{
+-	struct xfs_buftarg	*btp = container_of(shrink,
+-					struct xfs_buftarg, bt_shrinker);
+-	struct xfs_buf		*bp;
+-	int nr_to_scan = sc->nr_to_scan;
+-	LIST_HEAD(dispose);
+-
+-	if (!nr_to_scan)
+-		return btp->bt_lru_nr;
+-
+-	spin_lock(&btp->bt_lru_lock);
+-	while (!list_empty(&btp->bt_lru)) {
+-		if (nr_to_scan-- <= 0)
+-			break;
+-
+-		bp = list_first_entry(&btp->bt_lru, struct xfs_buf, b_lru);
+-
+-		/*
+-		 * Decrement the b_lru_ref count unless the value is already
+-		 * zero. If the value is already zero, we need to reclaim the
+-		 * buffer, otherwise it gets another trip through the LRU.
+-		 */
+-		if (!atomic_add_unless(&bp->b_lru_ref, -1, 0)) {
+-			list_move_tail(&bp->b_lru, &btp->bt_lru);
+-			continue;
+-		}
+-
+-		/*
+-		 * remove the buffer from the LRU now to avoid needing another
+-		 * lock round trip inside xfs_buf_rele().
+-		 */
+-		list_move(&bp->b_lru, &dispose);
+-		btp->bt_lru_nr--;
+-	}
+-	spin_unlock(&btp->bt_lru_lock);
+-
+-	while (!list_empty(&dispose)) {
+-		bp = list_first_entry(&dispose, struct xfs_buf, b_lru);
+-		list_del_init(&bp->b_lru);
+-		xfs_buf_rele(bp);
+-	}
+-
+-	return btp->bt_lru_nr;
+-}
+-
+-void
+-xfs_free_buftarg(
+-	struct xfs_mount	*mp,
+-	struct xfs_buftarg	*btp)
+-{
+-	unregister_shrinker(&btp->bt_shrinker);
+-
+-	xfs_flush_buftarg(btp, 1);
+-	if (mp->m_flags & XFS_MOUNT_BARRIER)
+-		xfs_blkdev_issue_flush(btp);
+-
+-	kthread_stop(btp->bt_task);
+-	kmem_free(btp);
+-}
+-
+-STATIC int
+-xfs_setsize_buftarg_flags(
+-	xfs_buftarg_t		*btp,
+-	unsigned int		blocksize,
+-	unsigned int		sectorsize,
+-	int			verbose)
+-{
+-	btp->bt_bsize = blocksize;
+-	btp->bt_sshift = ffs(sectorsize) - 1;
+-	btp->bt_smask = sectorsize - 1;
+-
+-	if (set_blocksize(btp->bt_bdev, sectorsize)) {
+-		xfs_warn(btp->bt_mount,
+-			"Cannot set_blocksize to %u on device %s\n",
+-			sectorsize, xfs_buf_target_name(btp));
+-		return EINVAL;
+-	}
+-
+-	return 0;
+-}
+-
+-/*
+- *	When allocating the initial buffer target we have not yet
+- *	read in the superblock, so don't know what sized sectors
+- *	are being used is at this early stage.  Play safe.
+- */
+-STATIC int
+-xfs_setsize_buftarg_early(
+-	xfs_buftarg_t		*btp,
+-	struct block_device	*bdev)
+-{
+-	return xfs_setsize_buftarg_flags(btp,
+-			PAGE_SIZE, bdev_logical_block_size(bdev), 0);
+-}
+-
+-int
+-xfs_setsize_buftarg(
+-	xfs_buftarg_t		*btp,
+-	unsigned int		blocksize,
+-	unsigned int		sectorsize)
+-{
+-	return xfs_setsize_buftarg_flags(btp, blocksize, sectorsize, 1);
+-}
+-
+-STATIC int
+-xfs_alloc_delwrite_queue(
+-	xfs_buftarg_t		*btp,
+-	const char		*fsname)
+-{
+-	INIT_LIST_HEAD(&btp->bt_delwrite_queue);
+-	spin_lock_init(&btp->bt_delwrite_lock);
+-	btp->bt_flags = 0;
+-	btp->bt_task = kthread_run(xfsbufd, btp, "xfsbufd/%s", fsname);
+-	if (IS_ERR(btp->bt_task))
+-		return PTR_ERR(btp->bt_task);
+-	return 0;
+-}
+-
+-xfs_buftarg_t *
+-xfs_alloc_buftarg(
+-	struct xfs_mount	*mp,
+-	struct block_device	*bdev,
+-	int			external,
+-	const char		*fsname)
+-{
+-	xfs_buftarg_t		*btp;
+-
+-	btp = kmem_zalloc(sizeof(*btp), KM_SLEEP);
+-
+-	btp->bt_mount = mp;
+-	btp->bt_dev =  bdev->bd_dev;
+-	btp->bt_bdev = bdev;
+-	btp->bt_bdi = blk_get_backing_dev_info(bdev);
+-	if (!btp->bt_bdi)
+-		goto error;
+-
+-	INIT_LIST_HEAD(&btp->bt_lru);
+-	spin_lock_init(&btp->bt_lru_lock);
+-	if (xfs_setsize_buftarg_early(btp, bdev))
+-		goto error;
+-	if (xfs_alloc_delwrite_queue(btp, fsname))
+-		goto error;
+-	btp->bt_shrinker.shrink = xfs_buftarg_shrink;
+-	btp->bt_shrinker.seeks = DEFAULT_SEEKS;
+-	register_shrinker(&btp->bt_shrinker);
+-	return btp;
+-
+-error:
+-	kmem_free(btp);
+-	return NULL;
+-}
+-
+-
+-/*
+  *	Delayed write buffer handling
+  */
+ STATIC void
+@@ -1781,6 +1588,10 @@ xfsbufd(
  }
  
-@@ -790,7 +803,7 @@ xfs_buf_get_uncached(
- 	bp = xfs_buf_allocate(0);
- 	if (unlikely(bp == NULL))
- 		goto fail;
--	_xfs_buf_initialize(bp, target, 0, len, 0);
-+	_xfs_buf_initialize(bp, target, 0, BTOBB(len), 0);
+ /*
++ *	Handling of buffer targets (buftargs).
++ */
++
++/*
+  *	Go through all incore buffers, and release buffers if they belong to
+  *	the given device. This is used in filesystem error handling to
+  *	preserve the consistency of its metadata.
+@@ -1837,6 +1648,196 @@ xfs_flush_buftarg(
+ 	return pincount;
+ }
  
- 	error = _xfs_buf_get_pages(bp, page_count, 0);
- 	if (error)
++/*
++ * Wait for any bufs with callbacks that have been submitted but have not yet
++ * returned. These buffers will have an elevated hold count, so wait on those
++ * while freeing all the buffers only held by the LRU.
++ */
++void
++xfs_wait_buftarg(
++	struct xfs_buftarg	*btp)
++{
++	struct xfs_buf		*bp;
++
++restart:
++	spin_lock(&btp->bt_lru_lock);
++	while (!list_empty(&btp->bt_lru)) {
++		bp = list_first_entry(&btp->bt_lru, struct xfs_buf, b_lru);
++		if (atomic_read(&bp->b_hold) > 1) {
++			spin_unlock(&btp->bt_lru_lock);
++			delay(100);
++			goto restart;
++		}
++		/*
++		 * clear the LRU reference count so the bufer doesn't get
++		 * ignored in xfs_buf_rele().
++		 */
++		atomic_set(&bp->b_lru_ref, 0);
++		spin_unlock(&btp->bt_lru_lock);
++		xfs_buf_rele(bp);
++		spin_lock(&btp->bt_lru_lock);
++	}
++	spin_unlock(&btp->bt_lru_lock);
++}
++
++int
++xfs_buftarg_shrink(
++	struct shrinker		*shrink,
++	struct shrink_control	*sc)
++{
++	struct xfs_buftarg	*btp = container_of(shrink,
++					struct xfs_buftarg, bt_shrinker);
++	struct xfs_buf		*bp;
++	int nr_to_scan = sc->nr_to_scan;
++	LIST_HEAD(dispose);
++
++	if (!nr_to_scan)
++		return btp->bt_lru_nr;
++
++	spin_lock(&btp->bt_lru_lock);
++	while (!list_empty(&btp->bt_lru)) {
++		if (nr_to_scan-- <= 0)
++			break;
++
++		bp = list_first_entry(&btp->bt_lru, struct xfs_buf, b_lru);
++
++		/*
++		 * Decrement the b_lru_ref count unless the value is already
++		 * zero. If the value is already zero, we need to reclaim the
++		 * buffer, otherwise it gets another trip through the LRU.
++		 */
++		if (!atomic_add_unless(&bp->b_lru_ref, -1, 0)) {
++			list_move_tail(&bp->b_lru, &btp->bt_lru);
++			continue;
++		}
++
++		/*
++		 * remove the buffer from the LRU now to avoid needing another
++		 * lock round trip inside xfs_buf_rele().
++		 */
++		list_move(&bp->b_lru, &dispose);
++		btp->bt_lru_nr--;
++	}
++	spin_unlock(&btp->bt_lru_lock);
++
++	while (!list_empty(&dispose)) {
++		bp = list_first_entry(&dispose, struct xfs_buf, b_lru);
++		list_del_init(&bp->b_lru);
++		xfs_buf_rele(bp);
++	}
++
++	return btp->bt_lru_nr;
++}
++
++void
++xfs_free_buftarg(
++	struct xfs_mount	*mp,
++	struct xfs_buftarg	*btp)
++{
++	unregister_shrinker(&btp->bt_shrinker);
++
++	xfs_flush_buftarg(btp, 1);
++	if (mp->m_flags & XFS_MOUNT_BARRIER)
++		xfs_blkdev_issue_flush(btp);
++
++	kthread_stop(btp->bt_task);
++	kmem_free(btp);
++}
++
++STATIC int
++xfs_setsize_buftarg_flags(
++	xfs_buftarg_t		*btp,
++	unsigned int		blocksize,
++	unsigned int		sectorsize,
++	int			verbose)
++{
++	btp->bt_bsize = blocksize;
++	btp->bt_sshift = ffs(sectorsize) - 1;
++	btp->bt_smask = sectorsize - 1;
++
++	if (set_blocksize(btp->bt_bdev, sectorsize)) {
++		xfs_warn(btp->bt_mount,
++			"Cannot set_blocksize to %u on device %s\n",
++			sectorsize, xfs_buf_target_name(btp));
++		return EINVAL;
++	}
++
++	return 0;
++}
++
++/*
++ *	When allocating the initial buffer target we have not yet
++ *	read in the superblock, so don't know what sized sectors
++ *	are being used is at this early stage.  Play safe.
++ */
++STATIC int
++xfs_setsize_buftarg_early(
++	xfs_buftarg_t		*btp,
++	struct block_device	*bdev)
++{
++	return xfs_setsize_buftarg_flags(btp,
++			PAGE_SIZE, bdev_logical_block_size(bdev), 0);
++}
++
++int
++xfs_setsize_buftarg(
++	xfs_buftarg_t		*btp,
++	unsigned int		blocksize,
++	unsigned int		sectorsize)
++{
++	return xfs_setsize_buftarg_flags(btp, blocksize, sectorsize, 1);
++}
++
++STATIC int
++xfs_alloc_delwrite_queue(
++	xfs_buftarg_t		*btp,
++	const char		*fsname)
++{
++	INIT_LIST_HEAD(&btp->bt_delwrite_queue);
++	spin_lock_init(&btp->bt_delwrite_lock);
++	btp->bt_flags = 0;
++	btp->bt_task = kthread_run(xfsbufd, btp, "xfsbufd/%s", fsname);
++	if (IS_ERR(btp->bt_task))
++		return PTR_ERR(btp->bt_task);
++	return 0;
++}
++
++xfs_buftarg_t *
++xfs_alloc_buftarg(
++	struct xfs_mount	*mp,
++	struct block_device	*bdev,
++	int			external,
++	const char		*fsname)
++{
++	xfs_buftarg_t		*btp;
++
++	btp = kmem_zalloc(sizeof(*btp), KM_SLEEP);
++
++	btp->bt_mount = mp;
++	btp->bt_dev =  bdev->bd_dev;
++	btp->bt_bdev = bdev;
++	btp->bt_bdi = blk_get_backing_dev_info(bdev);
++	if (!btp->bt_bdi)
++		goto error;
++
++	INIT_LIST_HEAD(&btp->bt_lru);
++	spin_lock_init(&btp->bt_lru_lock);
++	if (xfs_setsize_buftarg_early(btp, bdev))
++		goto error;
++	if (xfs_alloc_delwrite_queue(btp, fsname))
++		goto error;
++	btp->bt_shrinker.shrink = xfs_buftarg_shrink;
++	btp->bt_shrinker.seeks = DEFAULT_SEEKS;
++	register_shrinker(&btp->bt_shrinker);
++	return btp;
++
++error:
++	kmem_free(btp);
++	return NULL;
++}
++
++
++
+ int __init
+ xfs_buf_init(void)
+ {
 -- 
 1.7.5.4
 
