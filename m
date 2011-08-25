@@ -1,17 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7P4xWfM159526 for <xfs@oss.sgi.com>; Wed, 24 Aug 2011 23:59:32 -0500
-Date: Thu, 25 Aug 2011 00:59:29 -0400
+	p7P58UnB162548 for <xfs@oss.sgi.com>; Thu, 25 Aug 2011 00:08:30 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9C4BA1C02BEB
+	for <xfs@oss.sgi.com>; Wed, 24 Aug 2011 22:08:29 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	4OacceO680cyQ1UW for <xfs@oss.sgi.com>;
+	Wed, 24 Aug 2011 22:08:29 -0700 (PDT)
+Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
+	Linux)) id 1QwSB2-00080y-SV
+	for xfs@oss.sgi.com; Thu, 25 Aug 2011 05:08:28 +0000
+Date: Thu, 25 Aug 2011 01:08:28 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/3] xfsprogs: xfs_quota: return real-time used data as
-	intended
-Message-ID: <20110825045929.GB23901@infradead.org>
-References: <1314222823-24101-1-git-send-email-aelder@sgi.com>
-	<adcfe5e08d1c060ea95a8aa43e1abade24957dd0.1314222483.git.aelder@sgi.com>
+Subject: preparing a new xfsprogs release?
+Message-ID: <20110825050828.GA30775@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <adcfe5e08d1c060ea95a8aa43e1abade24957dd0.1314222483.git.aelder@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,20 +31,10 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Wed, Aug 24, 2011 at 04:53:41PM -0500, Alex Elder wrote:
-> In projects_free_space_data() the real-time used space consumption
-> is never set.  Instead, that value is returned in the field that
-> should hold the quota limit.
-> 
-> Found by inspection.  Never seen/noticed because we currently don't
-> support quotas when a filesystem has a realtime volume.
-
-Looks good,
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+We have the libxfs resync and a healthy amount of fixes in xfsprogs,
+what about cutting a release in about 1-2 weeks from now?
 
 _______________________________________________
 xfs mailing list
