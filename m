@@ -1,25 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7Q2JbCG011073 for <xfs@oss.sgi.com>; Thu, 25 Aug 2011 21:19:37 -0500
-Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F3C3011A194
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2011 19:19:35 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	8LHcdAPxZea6ZMy7 for <xfs@oss.sgi.com>;
-	Thu, 25 Aug 2011 19:19:35 -0700 (PDT)
-Date: Fri, 26 Aug 2011 12:19:32 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/6] xfs: don't serialise adjacent concurrent direct IO
-	appending writes
-Message-ID: <20110826021932.GX3162@dastard>
-References: <1314256626-11136-1-git-send-email-david@fromorbit.com>
-	<1314256626-11136-3-git-send-email-david@fromorbit.com>
-	<1314306483.3136.105.camel@doink>
+	p7Q6Oktm041695 for <xfs@oss.sgi.com>; Fri, 26 Aug 2011 01:24:46 -0500
+Received: from mail-qy0-f174.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id F23BE1DA4D82
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2011 23:24:45 -0700 (PDT)
+Received: from mail-qy0-f174.google.com (mail-qy0-f174.google.com
+	[209.85.216.174]) by cuda.sgi.com with ESMTP id
+	rursRyhLIUhSGKCt for <xfs@oss.sgi.com>;
+	Thu, 25 Aug 2011 23:24:45 -0700 (PDT)
+Received: by qyk38 with SMTP id 38so133916qyk.5
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2011 23:24:45 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1314306483.3136.105.camel@doink>
+In-Reply-To: <20110826013528.GW3162@dastard>
+References: <1309275199-10801-1-git-send-email-josef@redhat.com>
+	<1309275199-10801-5-git-send-email-josef@redhat.com>
+	<20110825060632.GA9933@infradead.org>
+	<20110825064039.GO3162@dastard>
+	<0A267E55-7772-438D-B6A7-89B73020F311@dilger.ca>
+	<20110826013528.GW3162@dastard>
+Date: Fri, 26 Aug 2011 08:24:45 +0200
+Message-ID: <CANGUGtC1qk2Tkv42fvibUKiEJz_MnNiV-nQ7T-_woppVhjQK-Q@mail.gmail.com>
+Subject: Re: [PATCH] xfstests 255: add a seek_data/seek_hole tester
+From: Marco Stornelli <marco.stornelli@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,86 +31,106 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Andreas Dilger <adilger@dilger.ca>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Josef Bacik <josef@redhat.com>, dchinner@redhat.com, linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, viro@zeniv.linux.org.uk
 
-On Thu, Aug 25, 2011 at 04:08:03PM -0500, Alex Elder wrote:
-> On Thu, 2011-08-25 at 17:17 +1000, Dave Chinner wrote:
-> > For append write workloads, extending the file requires a certain
-> > amount of exclusive locking to be done up front to ensure sanity in
-> > things like ensuring that we've zeroed any allocated regions
-> > between the old EOF and the start of the new IO.
-> > 
-> > For single threads, this typically isn't a problem, and for large
-> > IOs we don't serialise enough for it to be a problem for two
-> > threads on really fast block devices. However for smaller IO and
-> > larger thread counts we have a problem.
-> > 
-> > Take 4 concurrent sequential, single block sized and aligned IOs.
-> > After the first IO is submitted but before it completes, we end up
-> > with this state:
-> > 
-> >         IO 1    IO 2    IO 3    IO 4
-> >       +-------+-------+-------+-------+
-> >       ^       ^
-> >       |       |
-> >       |       |
-> >       |       |
-> >       |       \- ip->i_new_size
-> >       \- ip->i_size
-> > 
-> > And the IO is done without exclusive locking because offset <=
-> > ip->i_size. When we submit IO 2, we see offset > ip->i_size, and
-> > grab the IO lock exclusive, because there is a chance we need to do
-> > EOF zeroing. However, there is already an IO in progress that avoids
-> > the need for IO zeroing because offset <= ip->i_new_size. hence we
-> > could avoid holding the IO lock exlcusive for this. Hence after
-> > submission of the second IO, we'd end up this state:
-> > 
-> >         IO 1    IO 2    IO 3    IO 4
-> >       +-------+-------+-------+-------+
-> >       ^               ^
-> >       |               |
-> >       |               |
-> >       |               |
-> >       |               \- ip->i_new_size
-> >       \- ip->i_size
-> > 
-> > There is no need to grab the i_mutex of the IO lock in exclusive
-> > mode if we don't need to invalidate the page cache. Taking these
-> > locks on every direct IO effective serialises them as taking the IO
-> > lock in exclusive mode has to wait for all shared holders to drop
-> > the lock. That only happens when IO is complete, so effective it
-> > prevents dispatch of concurrent direct IO writes to the same inode.
-> > 
-> > And so you can see that for the third concurrent IO, we'd avoid
-> > exclusive locking for the same reason we avoided the exclusive lock
-> > for the second IO.
-> > 
-> > Fixing this is a bit more complex than that, because we need to hold
-> > a write-submission local value of ip->i_new_size to that clearing
-> > the value is only done if no other thread has updated it before our
-> > IO completes.....
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> 
-> This looks good.  What did you do with the little
-> "If the IO is clearly not beyond the on-disk inode size,
-> return before we take locks" optimization in xfs_setfilesize()
-> from the last time you posted this?
+2011/8/26 Dave Chinner <david@fromorbit.com>:
+> On Thu, Aug 25, 2011 at 12:51:56AM -0600, Andreas Dilger wrote:
+>> On 2011-08-25, at 12:40 AM, Dave Chinner wrote:
+>> > On Thu, Aug 25, 2011 at 02:06:32AM -0400, Christoph Hellwig wrote:
+>> >> On Tue, Jun 28, 2011 at 11:33:19AM -0400, Josef Bacik wrote:
+>> >>> This is a test to make sure seek_data/seek_hole is acting like it do=
+es on
+>> >>> Solaris. =A0It will check to see if the fs supports finding a hole o=
+r not and will adjust as necessary.
+>> >>
+>> >> Can you resend this with any updates that happened in the meantime?
+>> >>
+>> >> Dave also still had some comments about semantics, so it might be wor=
+th
+>> >> to incorporate that as well.
+>> >
+>> > The main questions I had when looking at this was how we should
+>> > handle unwritten extents - the only answer I got was along the lines
+>> > of "we'll deal with that once filesystems have implemented
+>> > something". That's a bit of a chicken-and-egg situation, and doesn't
+>> > help me decide what is the best thing to do. I don't want to have to
+>> > re-implement this code when it's decided i did the wrong thing
+>> > initially.
+>>
+>> Let's first clarify what you mean by an unwritten extent? =A0Do you mean=
+ a
+>> preallocated extent that returns 0 when read,
+>
+> Exactly that.
+>
+>> or do you mean a delayed
+>> allocation extent that was written by the application that is still in
+>> memory but not yet written to disk?
+>
+> That's not an unwritten extent - that's a delayed allocation extent ;)
+>
+>> Unfortunately, ZFS has no concept of preallocated extents, so we can't
+>> look to it for precedent, but it definitely has delayed allocation.
+>> Possibly if UFS on Solaris has SEEK_HOLE and also preallocated extents
+>> (I have no idea) it could be tested?
+>>
+>> > The most basic question I really want answered is this:
+>> >
+>> > =A0 =A0 - is preallocated space a HOLE, or is it DATA?
+>> >
+>> > Whatever the answer, I think it should be consistently
+>> > presented by all filesystems that support preallocation, and it
+>> > should be encoded into the generic SEEK_HOLE/SEEK_DATA tests....
+>>
+>> My thought would be that a preallocated extent is still a HOLE, because
+>> it doesn't contain data that an application actually cares about. =A0On
+>> the other hand, a delalloc extent is DATA because it has something that
+>> an application cares about.
+>
+> OK, that's the way I'd expect to treat both preallocated and
+> delalloc space.
+>
+>> > Answering that question then helps answer the more complex questions
+>> > I had, like:
+>> >
+>> > =A0 =A0 - what does SEEK_DATA return when you have a file layout
+>> > =A0 =A0 =A0 like "hole-prealloc-data"?
+>>
+>> I would think only the "data" part, since that is what the definition
+>> of "SEEK_DATA" is IMHO.
+>
+> Agreed, that's the way I'd interpret it, too. So perhaps we need to
+> ensure that this interpretation is actually tested by this test?
+>
+> How about some definitions to work by:
+>
+> Data: a range of the file that contains valid data, regardless of
+> whether it exists in memory or on disk. The valid data can be
+> preceeded and/or followed by an arbitrary number of zero bytes
+> dependent on the underlying implementation of hole detection.
+>
+> Hole: a range of the file that contains no data or is made up
+> entirely of =A0NULL (zero) data. Holes include preallocated ranges of
+> files that have not had actual data written to them.
+>
+> Does that make sense? It has sufficient flexibility in it for the
 
-That's take care of in Christoph's recent patch set.
+No for me. A hole is made up of zero data? It's a strange definition
+for me. A hole is simply no data. With this definition a hole can be
+start from a block with data but partially filled, and fs should check
+instead of presence of a block, the data content. I don't like it very
+much. For the fallocate case, we need only a simple rule: no check is
+done beyond eof. At this point it's clear that we can check the file
+block allocation till i_size, don't care if there are other blocks
+allocated. I don't know if it's applicable even for unwritten extents
+case.
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Marco
 
 _______________________________________________
 xfs mailing list
