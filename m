@@ -1,13 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7QFgY2f114734 for <xfs@oss.sgi.com>; Fri, 26 Aug 2011 10:42:35 -0500
-Subject: Re: [PATCH] xfsdump: refactor exit_codestring()
+	p7QGFvoA121069 for <xfs@oss.sgi.com>; Fri, 26 Aug 2011 11:15:57 -0500
+Subject: Re: [PATCH] xfsdump: call mlog_exit in content_stream_restore
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1313430212-20028-1-git-send-email-wkendall@sgi.com>
-References: <1313430212-20028-1-git-send-email-wkendall@sgi.com>
-Date: Fri, 26 Aug 2011 10:42:30 -0500
-Message-ID: <1314373350.2821.28.camel@doink>
+In-Reply-To: <1313434763-22340-1-git-send-email-wkendall@sgi.com>
+References: <1313434763-22340-1-git-send-email-wkendall@sgi.com>
+Date: Fri, 26 Aug 2011 11:15:44 -0500
+Message-ID: <1314375344.2821.47.camel@doink>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -25,115 +25,111 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Bill Kendall <wkendall@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, 2011-08-15 at 12:43 -0500, Bill Kendall wrote:
-> Simplify exit_codestring(), which maps an exit code into a string.
-> Make it available to all code which includes "exit.h".
-> 
-> Also remove the unused type "exit_t".
+On Mon, 2011-08-15 at 13:59 -0500, Bill Kendall wrote:
+> This patch adds mlog_exit() calls to all the return paths in
+> content_stream_restore(). mlog_exit() is supposed to be called before
+> returning from content_stream_dump() and content_stream_restore(), but
+> many paths in the latter did not do so, allowing for the stream exit
+> status to be incorrect.
 > 
 > Signed-off-by: Bill Kendall <wkendall@sgi.com>
 
-Nice simplification.
+It looks like content_stream_restore() *never* used it.
 
-For something like this I might have done:
+Looking at _mlog_exit(), it looks to me like it could
+benefit from using exit_codestring() rather than the
+exit_strings[] array (which could be deleted).  This
+would report "EXIT_ERROR" instead of just "ERROR" though,
+and normal exit would be reported as "EXIT_NORMAL"
+rather than "SUCCESS".   The function call is more
+resilient though because it handles any value it's
+passed (whereas one could conceivably index beyond
+the end of the exit_strings[] array).
 
-	switch (code) {
-#define	CASE(x)	CASE EXIT_ ## x: return #x
-	CASE(NORMAL);
-	CASE(ERROR);
-	CASE(INTERRUPT);
-	CASE(FAULT);
-	default:
-		return "???";
-#undef	CASE
-	}
+Just a thought--a suggestion for a future patch.
 
-But I don't know how others feel about that--they
-could understandably hate it.
-
-In any case I'm taking yours just as you posted it.
-
-Reviewed-by: Alex Elder <aelder@sgi.com>
-
+More suggestions below.  They apply to pretty much
+the whole thing so I've put it all at the bottom.
 
 > ---
->  common/exit.h |   12 +++++++++++-
->  common/main.c |   33 ---------------------------------
->  2 files changed, 11 insertions(+), 34 deletions(-)
+>  restore/content.c |   64 ++++++++++++++++++++++++++--------------------------
+>  1 files changed, 32 insertions(+), 32 deletions(-)
 > 
-> diff --git a/common/exit.h b/common/exit.h
-> index 276562d..ef01684 100644
-> --- a/common/exit.h
-> +++ b/common/exit.h
-> @@ -25,6 +25,16 @@
->  #define EXIT_INTERRUPT	2	/* interrupted (operator or device error) */
->  #define EXIT_FAULT	4	/* code fault */
+> diff --git a/restore/content.c b/restore/content.c
+> index e3e4994..a2f20e3 100644
+> --- a/restore/content.c
+> +++ b/restore/content.c
+> @@ -1930,7 +1930,7 @@ content_stream_restore( ix_t thrdix )
+>  		      "chdir %s failed: %s\n"),
+>  		      persp->a.dstdir,
+>  		      strerror( errno ));
+> -		return EXIT_ERROR;
+> +		return mlog_exit(EXIT_ERROR, RV_ERROR);
+>  	}
 >  
-> -typedef size_t exit_t;
-> +static inline const char *
-> +exit_codestring( intgen_t code )
-> +{
-> +	switch ( code ) {
-> +	case EXIT_NORMAL:    return "EXIT_NORMAL";
-> +	case EXIT_ERROR:     return "EXIT_ERROR";
-> +	case EXIT_INTERRUPT: return "EXIT_INTERRUPT";
-> +	case EXIT_FAULT:     return "EXIT_FAULT";
-> +	}
-> +	return "???";
-> +}
->  
->  #endif /* EXIT_H */
-> diff --git a/common/main.c b/common/main.c
-> index c4d6878..5567d44 100644
-> --- a/common/main.c
-> +++ b/common/main.c
-> @@ -100,7 +100,6 @@ static bool_t set_rlimits( void );
->  #ifdef RESTORE
->  static bool_t set_rlimits( size64_t * );
->  #endif /* RESTORE */
-> -static char *exit_codestring( intgen_t code );
->  static char *sig_numstring( intgen_t num );
->  static char *strpbrkquotes( char *p, const char *sep );
->  
-> @@ -2448,38 +2447,6 @@ set_rlimits( size64_t *vmszp )
->  	return BOOL_TRUE;
+>  	/* set my file creation mask to zero, to avoid modifying the
+
+. . .
+ 
+> @@ -2545,7 +2545,7 @@ content_stream_restore( ix_t thrdix )
+>  #ifndef EOMFIX
+>  		Media_end( Mediap );
+>  #endif /* ! EOMFIX */
+
+These #ifdef's are pretty yucky.
+
+Another suggested future cleanup:  Add a flag to Media_end() to
+indicate whether this is one of those #ifdef's calls, and
+within Media_end() use a single #ifdef to determine whether
+simply return or actually do it, based on that passed-in value.
+Then just call Media_end() in all spots without the #ifdef's.
+
+> -		return EXIT_NORMAL;
+> +		return mlog_exit(EXIT_NORMAL, RV_DONE);
+>  	}
+>  	tranp->t_sync5 = SYNC_BUSY;
+>  	unlock( );
+
+. . .
+
+> @@ -2588,7 +2588,7 @@ content_stream_restore( ix_t thrdix )
+>  #ifndef EOMFIX
+>  	Media_end( Mediap );
+>  #endif /* ! EOMFIX */
+> -	return EXIT_NORMAL;
+> +	return mlog_exit(EXIT_NORMAL, rv);
+
+If you kept this line as-is, use RV_OK rather than rv,
+since it makes it more explicit we know that's what's
+getting returned.  The same would hold in many spots
+above as well.
+
+But...
+
+The end of this function is a whole bunch of repetitive
+code.  It would be cleaner to assign a "ret" variable
+(or whatever name you think fits the existing code)
+and then after this last switch statement call:
+
+	return mlog_exit(ret, rv);
+
+(If Media_end() got a flag, you might not need the
+switch statement at all...)
+
+Christoph suggested a goto which would be similar
+but would affect the whole function.  And in fact
+I think it might simplify a lot--possibly eliminating
+whole switch statements entirely--so I think that's
+an idea worth considering.
+
+I think you should re-post your patch after considering
+these suggestions.  Thanks.
+
+					-Alex
+
 >  }
 >  
-> -struct exit_printmap {
-> -	intgen_t code;
-> -	char *string;
-> -};
-> -
-> -typedef struct exit_printmap exit_printmap_t;
-> -
-> -static exit_printmap_t exit_printmap[ ] = {
-> -	{EXIT_NORMAL,	"EXIT_NORMAL"},
-> -	{EXIT_ERROR,	"EXIT_ERROR"},
-> -	{EXIT_INTERRUPT,"EXIT_INTERRUPT"},
-> -	{EXIT_FAULT,	"EXIT_FAULT"}
-> -};
-> -
-> -static char *
-> -exit_codestring( intgen_t code )
-> -{
-> -	exit_printmap_t *p = exit_printmap;
-> -	exit_printmap_t *endp = exit_printmap
-> -				+
-> -				( sizeof( exit_printmap )
-> -				  /
-> -				  sizeof( exit_printmap[ 0 ] ));
-> -	for ( ; p < endp ; p++ ) {
-> -		if ( p->code == code ) {
-> -			return p->string;
-> -		}
-> -	}
-> -
-> -	return "???";
-> -}
-> -
->  struct sig_printmap {
->  	intgen_t num;
->  	char *string;
+>  /* called after all threads have exited. scans state to decide
 
 
 
