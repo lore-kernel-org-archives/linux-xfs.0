@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7Q88liB054718 for <xfs@oss.sgi.com>; Fri, 26 Aug 2011 03:08:48 -0500
-Received: from mail.nethype.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C324D11AB18
-	for <xfs@oss.sgi.com>; Fri, 26 Aug 2011 01:08:45 -0700 (PDT)
-Received: from mail.nethype.de (mail.nethype.de [78.47.73.129]) by
-	cuda.sgi.com with ESMTP id nZKbRFvvrIy7TAmJ for
-	<xfs@oss.sgi.com>; Fri, 26 Aug 2011 01:08:45 -0700 (PDT)
-Date: Fri, 26 Aug 2011 10:08:41 +0200
-From: Marc Lehmann <schmorp@schmorp.de>
-Subject: Re: frequent kernel BUG and lockups - 2.6.39 + xfs_fsr
-Message-ID: <20110826080841.GA24948@schmorp.de>
-References: <20110806122556.GB20341@schmorp.de> <201108091210.50204@zmi.at>
-	<20110809111526.GA7631@schmorp.de> <201108100859.27576@zmi.at>
-	<20110811220418.GB12808@schmorp.de>
-	<20110812040530.GB26978@dastard>
+	p7Q8PHVf056370 for <xfs@oss.sgi.com>; Fri, 26 Aug 2011 03:25:18 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3783513A37BF
+	for <xfs@oss.sgi.com>; Fri, 26 Aug 2011 01:28:12 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	dvII7Tcakt81QIeh for <xfs@oss.sgi.com>;
+	Fri, 26 Aug 2011 01:28:12 -0700 (PDT)
+Date: Fri, 26 Aug 2011 04:25:15 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 4/4] xfs: convert xfsbufd to use a workqueue
+Message-ID: <20110826082515.GD3551@infradead.org>
+References: <1314341497-23910-1-git-send-email-david@fromorbit.com>
+	<1314341497-23910-5-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110812040530.GB26978@dastard>
+In-Reply-To: <1314341497-23910-5-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,205 +34,95 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, Aug 12, 2011 at 02:05:30PM +1000, Dave Chinner <david@fromorbit.com> wrote:
-> It only does that if the pattern of writes are such that keeping the
-> preallocation around for longer periods of time will reduce
-> potential fragmentation.
+> -STATIC void xfs_buf_delwri_queue(xfs_buf_t *, int);
+> +STATIC void xfs_buf_delwri_queue(xfs_buf_t *bp, int unlock);
 
-That can only be false. Here is a an example that I saw *just now*:
+spuriously changing this prototype just makes merging with other
+pending changes in this are harder :P
 
-I have a process that takes a directory with jpg files (in this case,
-all around 64kb in size) and loslessly recompresses them. This works
-by reading a file, writing it under another name (single write() call)
-and using rename to replace the original file *iff* it got smaller. The
-typical reduction is 5%. no allocsize option is used. Kernel used was
-2.6.39.
+>  /*
+> + * If we are doing a forced flush, then we need to wait for the IO that we
+> + * issue to complete.
+>   */
+> +static void
+> +xfs_buf_delwri_work(
+> +	struct work_struct *work)
+>  {
+> +	struct xfs_buftarg *btp = container_of(to_delayed_work(work),
+> +					struct xfs_buftarg, bt_delwrite_work);
+> +	struct xfs_buf	*bp;
+> +	struct blk_plug	plug;
+>  	LIST_HEAD(tmp_list);
+>  	LIST_HEAD(wait_list);
+> +	long		age = xfs_buf_age_centisecs * msecs_to_jiffies(10);
+> +	int		force = 0;
+>  
+> +	force = test_and_clear_bit(XBT_FORCE_FLUSH, &btp->bt_flags);
+>  
+> +	xfs_buf_delwri_split(btp, &tmp_list, age, force);
+>  	list_sort(NULL, &tmp_list, xfs_buf_cmp);
+>  
+>  	blk_start_plug(&plug);
+>  	while (!list_empty(&tmp_list)) {
+>  		bp = list_first_entry(&tmp_list, struct xfs_buf, b_list);
+> -		ASSERT(target == bp->b_target);
+>  		list_del_init(&bp->b_list);
+> -		if (wait) {
+> +		if (force) {
+>  			bp->b_flags &= ~XBF_ASYNC;
+>  			list_add(&bp->b_list, &wait_list);
+>  		}
+> @@ -1634,7 +1577,7 @@ xfs_flush_buftarg(
+>  	}
+>  	blk_finish_plug(&plug);
+>  
+> +	if (force) {
+>  		/* Wait for IO to complete. */
+>  		while (!list_empty(&wait_list)) {
+>  			bp = list_first_entry(&wait_list, struct xfs_buf, b_list);
+> @@ -1645,7 +1588,48 @@ xfs_flush_buftarg(
+>  		}
+>  	}
+>  
 
-This workload would obviously benefit most by having no preallocaiton
-anywhere, i.e. have all files tightly packed.
+> +/*
+> + *	Handling of buffer targets (buftargs).
+> + */
 
-Here is a "du" on a big directory where this process is running, every few
-minutes:
+I think we can just kill this comment.
 
-   6439892 .
-   6439888 .
-   6620168 .
-   6633156 .
-   6697588 .
-   6729092 .
-   6755808 .
-   6852192 .
-   6816632 .
-   6250824 .
+> +/*
+> + * Flush all the queued buffer work, then flush any remaining dirty buffers
+> + * and wait for them to complete. If there are buffers remaining on the delwri
+> + * queue, then they were pinned so couldn't be flushed. Return a value of 1 to
+> + * indicate that there were pinned buffers and the caller needs to retry the
+> + * flush.
+> + */
 
-Instead of decreasing, the size increased, until just before the last
-du. Thats where I did echo 3 >drop_caches, which presumably cleared all
-those inodes that have not been used for an hour and would never have been
-used again for writing.
+Not directly related to your patch, but only one caller ever checks the
+return value and retries.  This means e.g. during sync or umount we
+don't bother with trying to push pinned buffers.
 
-Since XFS obviously keeps quite a bit of preallocation here (or some other
-magic, but what?), and this workload definitely does not benefit from any
-preallocaiton (because xfs has perfect knowledge about the file size at
-every point in time), what you say is simply not true: The files will not
-be touched anymore, neither read, nor written, so preallocation is just
-bad.
+> +int
+> +xfs_flush_buftarg(
+> +	xfs_buftarg_t	*target,
 
-Also, bickering about extra fragmentation caused by xfs_fsr when running
-it daily instead of weekly is weird - the amount of external fragmentation
-caused by preallocation must be overwhelming with large amounts of ram.
+Please use the non-typedef version of new or largely changed code.
 
-> Indeed, it's not a NFS specific optimisation, but it is one that
-> directly benefits NFS server IO patterns.
+> index 13188df..a3d1784 100644
+> --- a/fs/xfs/xfs_trans_ail.c
+> +++ b/fs/xfs/xfs_trans_ail.c
+> @@ -494,7 +494,7 @@ xfs_ail_worker(
+>  
+>  	if (push_xfsbufd) {
+>  		/* we've got delayed write buffers to flush */
+> -		wake_up_process(mp->m_ddev_targp->bt_task);
+> +		flush_delayed_work(&mp->m_ddev_targp->bt_delwrite_work);
 
-I'd say it's a grotesque deoptimisation, and definitely doesn't work the
-way you describe it.
-
-In fact, it can't work the way you describe it, because XFS would have
-to be clairvoyant to make it work. How else would it know that keeping
-preallocation indefinitely will be useful?
-
-In any case, XFS detects a typical "open write, file file, close
-file, never tochu it again" pattern as something that somehow needs
-preallocation.
-
-I can see how that helps NFS, but in all other cases, this is simply a
-bug.
-
-> about). Given that inodes for log files will almost always remain in
-> memory as they are regularly referenced, it seems like the right
-> solution to that problem, too...
-
-Given that, with enough ram, everything stays in ram, most of which is
-not log files, this behaviour is simply broken.
-
-> FWIW, you make it sound like "benchmark-improved" is a bad thing.
-
-If it costs regular performance or eats diskspace like mad, it's clearly a
-bad thing yes.
-
-Benchmark performance is irrelevant, what counts is actual performance.
-
-If the two coincide, thats great. This is clearly not the case here, of
-course.
-
-> However, I don't hear you complaining about the delayed logging
-> optimisations at all.
-
-I wouldn't be surprised if the new xfs_fsr crashes are caused by these
-changes, actually. But yes, otherwise they are great - I do keep external
-journals for most of my filesystems, and the write load for these has
-decreased by a factor of 10-100 in some metadata-heavy cases (such as lots
-of renames).
-
-Of course, XFS is still way behind other filesystems in managing journal
-devices.
-
-> I'll let you in on a dirty little secret: I tested delayed logging on
-> nothing but benchmarks - it is -entirely- a "benchmark-improved" class
-> optimisation.
-
-As a good engineer one would expect you to actually think about whether
-this optimiation is useful outside of some benchmark setup, too. I am sure
-you did that, how else would you have come up with the idea in the first
-place?
-
-> But despite how delayed logging was developed and optimised, it
-
-The difference to the new preallocation is that it's not obviously a bad
-algorithm.
-
-However, the preallocation strategy of wasting some diskspace for every
-file that has been opened in the last 24 hours or so (depending on ram) is
-*obviously* wrong, regardless of what your microbenchmarks say.
-
-What it does is basically introduce big clusters allocation, just like
-with god old FAT, except that people with more RAM get punished more.
-
-> different workloads. That's because the  benchmarks I use accurately
-> model the workloads that cause the problem that needs to be solved.
-
-That means you will optimise a single problem at the expense of any other
-workload. This indeed seems to be the case here.
-
-Good engineering would make sure that typical use cases that were not the
-"problem" before wouldn't get unduly affected.
-
-Apart from potentially helping with NFS in your benchmarks, I cannot
-see any positive aspect of this change. However, I keep hitting the bad
-aspects of it. It seems that with this change, XFS will degrade much
-faster due to the insane amounts of useless preallocation tied to files
-that have been closed and will never be written again, which is by far
-*most* files.
-
-In the example above, roughly 32kb (+-50%) overallocation are associated
-with each file. FAT, here we come :(
-
-Don't get me wrong, it is great that XFS is now optimised for slow log
-writing over NFS, and this surely is important for some people, but this
-comes at an enourmous cost to every other workload.
-
-A benchmark that measures additional fragmentation introduced by all those
-32kb blocks over some months would be nice.
-
-> Similarly, the "NFS optimisation" in a significant and measurable
-> reduction in fragmentation on NFS-exported XFS filesystems across a
-
-It's the dirtiest hack I have seen in a filesystem. Making an optimisaiton
-that only helps with the extremely bad access patterns of NFS (and only
-sometimes) and forcing this on even for non-NFS filesystems where it only
-causes negative effects.
-
-It's a typical case of "a is broken, so apply some hack to b", while good
-engineering dictates "a is broken, let's fix a".
-
-Again: Your rationale is that NFS doesn't give you enough information about
-whether a file is in use, because it doesn't keep it open.
-
-This leads you to consider all files whose inode is cached in memory as
-being "in use" for unlimited amounts of time.
-
-Sure, those idiot applications such as cp or mv cannot be trusted. Surely,
-when mv'ing a file, this means the file will be appended later. Because if
-not, XFS wouldn't keep the preallocation.
-
-> Yes, there have been regressions caused by both changes (though
-
-The whole thing is a regression - slow appender processes that close a
-file after each write basically don't exist - close is an extremely good
-hint that a file has been finalised, and because NFS doesn't give the
-notion of close (nfsv4 has it, to some extent), suddenly it's ignored for
-all applications.
-
-This is simply a completely, utterly, totally broken algorithm.
-
-> regressions does not take anything away from the significant
-> real-world improvements that are the result of the changes.
-
-I gave plenty of real-world examples where these changes are nothing but
-bad. I have yet to see a *single* real-world example where this isn't the
-case.
-
-All you achieved is that now every workload works as bad as NFS, lots
-and lots of disk space is wasted, and an enourmous amount of external
-fragmentation is introduced. And thats just with an 8GB box. I can only
-imagine how many months files will be considered "in use" just because the
-box has enough ram to cache their inodes.
-
-> http://code.google.com/p/ioapps/wiki/ioreplay
-
-Since "cp" and "mv" already cause problems in current versions of
-XFS, I guess we are far from needing those. It seems XFS has been so
-fundamentally deoptimised w.r.t. preallocation now that there are much
-bigger fish to catch than freenet. Basically anything thct creates files,
-even when it's just a single open/write/close, is now affected.
-
--- 
-                The choice of a       Deliantra, the free code+content MORPG
-      -----==-     _GNU_              http://www.deliantra.net
-      ----==-- _       generation
-      ---==---(_)__  __ ____  __      Marc Lehmann
-      --==---/ / _ \/ // /\ \/ /      schmorp@schmorp.de
-      -=====/_/_//_/\_,_/ /_/\_\
+This is a huge change in behaviour.  wake_up_process just kicks the
+thread to wakeup from sleep as soon as the schedule selects it, while
+flush_delayed_work does not only queue a pending delayed work, but also
+waits for it to finish.
 
 _______________________________________________
 xfs mailing list
