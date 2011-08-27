@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7R5vwiW179149 for <xfs@oss.sgi.com>; Sat, 27 Aug 2011 00:57:58 -0500
+	p7R5vjF8179126 for <xfs@oss.sgi.com>; Sat, 27 Aug 2011 00:57:45 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0FE6313A67A0
-	for <xfs@oss.sgi.com>; Fri, 26 Aug 2011 23:00:58 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BBD2311E25C
+	for <xfs@oss.sgi.com>; Fri, 26 Aug 2011 22:57:44 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	xYgGFT0bbpNELPLF for <xfs@oss.sgi.com>;
-	Fri, 26 Aug 2011 23:00:58 -0700 (PDT)
+	O62bu5ebIpDuxpd6 for <xfs@oss.sgi.com>;
+	Fri, 26 Aug 2011 22:57:44 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1QxBtz-0007Ng-Tf
-	for xfs@oss.sgi.com; Sat, 27 Aug 2011 05:57:55 +0000
-Date: Sat, 27 Aug 2011 01:57:55 -0400
+	Linux)) id 1QxBto-0007NT-5r
+	for xfs@oss.sgi.com; Sat, 27 Aug 2011 05:57:44 +0000
+Date: Sat, 27 Aug 2011 01:57:44 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 2/2] xfs: fix ->write_inode return values
-Message-ID: <20110827055755.GB28351@infradead.org>
+Subject: [PATCH 1/2] xfs: fix xfs_mark_inode_dirty during umount
+Message-ID: <20110827055744.GA28351@infradead.org>
 References: <20110827055731.GA24159@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
@@ -35,84 +35,61 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Currently we always redirty an inode that was attempted to be written out
-synchronously but has been cleaned by an AIL pushed internall, which is
-rather bogus.  Fix that by doing the i_update_core check early on and
-return 0 for it.  Also include async calls for it, as doing any work for
-those is just as pointless.  While we're at it also fix the sign for the
-EIO return in case of a filesystem shutdown, and fix the completely
-non-sensical locking around xfs_log_inode.
+During umount we do not add a dirty inode to the lru and wait for it to
+become clean first, but force writeback of data and metadata with
+I_WILL_FREE set.  Currently there is no way for XFS to detect that the
+inode has been redirtied for metadata operations, as we skip the
+mark_inode_dirty call during teardown.  Fix this by setting i_update_core
+nanually in that case, so that the inode gets flushed during inode reclaim.
+
+Alternatively we could enable calling mark_inode_dirty for inodes in
+I_WILL_FREE state, and let the VFS dirty tracking handle this.  I decided
+against this as we will get better I/O patterns from reclaim compared to
+the synchronous writeout in write_inode_now, and always marking the inode
+dirty in some way from xfs_mark_inode_dirty is a better safetly net in
+either case.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: linux-2.6/fs/xfs/xfs_super.c
+Index: linux-2.6/fs/xfs/xfs_iops.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_super.c	2011-08-26 14:47:54.320317391 +0200
-+++ linux-2.6/fs/xfs/xfs_super.c	2011-08-26 14:51:46.095728421 +0200
-@@ -877,33 +877,17 @@ xfs_log_inode(
- 	struct xfs_trans	*tp;
- 	int			error;
- 
--	xfs_iunlock(ip, XFS_ILOCK_SHARED);
- 	tp = xfs_trans_alloc(mp, XFS_TRANS_FSYNC_TS);
- 	error = xfs_trans_reserve(tp, 0, XFS_FSYNC_TS_LOG_RES(mp), 0, 0, 0);
--
- 	if (error) {
- 		xfs_trans_cancel(tp, 0);
--		/* we need to return with the lock hold shared */
--		xfs_ilock(ip, XFS_ILOCK_SHARED);
- 		return error;
- 	}
- 
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
--
--	/*
--	 * Note - it's possible that we might have pushed ourselves out of the
--	 * way during trans_reserve which would flush the inode.  But there's
--	 * no guarantee that the inode buffer has actually gone out yet (it's
--	 * delwri).  Plus the buffer could be pinned anyway if it's part of
--	 * an inode in another recent transaction.  So we play it safe and
--	 * fire off the transaction anyway.
--	 */
--	xfs_trans_ijoin(tp, ip);
-+	xfs_trans_ijoin_ref(tp, ip, XFS_ILOCK_EXCL);
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
--	error = xfs_trans_commit(tp, 0);
--	xfs_ilock_demote(ip, XFS_ILOCK_EXCL);
--
--	return error;
-+	return xfs_trans_commit(tp, 0);
+--- linux-2.6.orig/fs/xfs/xfs_iops.c	2011-08-26 12:31:19.090631739 +0200
++++ linux-2.6/fs/xfs/xfs_iops.c	2011-08-26 12:35:43.692531800 +0200
+@@ -70,9 +70,8 @@ xfs_synchronize_times(
  }
  
- STATIC int
-@@ -918,7 +902,9 @@ xfs_fs_write_inode(
- 	trace_xfs_write_inode(ip);
+ /*
+- * If the linux inode is valid, mark it dirty.
+- * Used when committing a dirty inode into a transaction so that
+- * the inode will get written back by the linux code
++ * If the linux inode is valid, mark it dirty, else mark the dirty state
++ * in the XFS inode to make sure we pick it up when reclaiming the inode.
+  */
+ void
+ xfs_mark_inode_dirty_sync(
+@@ -82,6 +81,10 @@ xfs_mark_inode_dirty_sync(
  
- 	if (XFS_FORCED_SHUTDOWN(mp))
--		return XFS_ERROR(EIO);
-+		return -XFS_ERROR(EIO);
-+	if (!ip->i_update_core)
-+		return 0;
+ 	if (!(inode->i_state & (I_WILL_FREE|I_FREEING)))
+ 		mark_inode_dirty_sync(inode);
++	else {
++		barrier();
++		ip->i_update_core = 1;
++	}
+ }
  
- 	if (wbc->sync_mode == WB_SYNC_ALL) {
- 		/*
-@@ -929,12 +915,10 @@ xfs_fs_write_inode(
- 		 * of synchronous log foces dramatically.
- 		 */
- 		xfs_ioend_wait(ip);
--		xfs_ilock(ip, XFS_ILOCK_SHARED);
--		if (ip->i_update_core) {
--			error = xfs_log_inode(ip);
--			if (error)
--				goto out_unlock;
--		}
-+		error = xfs_log_inode(ip);
-+		if (error)
-+			goto out;
-+		return 0;
- 	} else {
- 		/*
- 		 * We make this non-blocking if the inode is contended, return
+ void
+@@ -92,6 +95,11 @@ xfs_mark_inode_dirty(
+ 
+ 	if (!(inode->i_state & (I_WILL_FREE|I_FREEING)))
+ 		mark_inode_dirty(inode);
++	else {
++		barrier();
++		ip->i_update_core = 1;
++	}
++
+ }
+ 
+ /*
 
 _______________________________________________
 xfs mailing list
