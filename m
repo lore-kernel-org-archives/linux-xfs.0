@@ -1,15 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7QGFvoA121069 for <xfs@oss.sgi.com>; Fri, 26 Aug 2011 11:15:57 -0500
-Subject: Re: [PATCH] xfsdump: call mlog_exit in content_stream_restore
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1313434763-22340-1-git-send-email-wkendall@sgi.com>
-References: <1313434763-22340-1-git-send-email-wkendall@sgi.com>
-Date: Fri, 26 Aug 2011 11:15:44 -0500
-Message-ID: <1314375344.2821.47.camel@doink>
+	p7R5vaoS179097 for <xfs@oss.sgi.com>; Sat, 27 Aug 2011 00:57:37 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D59FF11E25A
+	for <xfs@oss.sgi.com>; Fri, 26 Aug 2011 22:57:32 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	U5XZlwxWi6v8Yzuw for <xfs@oss.sgi.com>;
+	Fri, 26 Aug 2011 22:57:32 -0700 (PDT)
+Date: Sat, 27 Aug 2011 01:57:31 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH 0/2] make sure to always update the inode size on umount
+Message-ID: <20110827055731.GA24159@infradead.org>
 MIME-Version: 1.0
-Reply-To: aelder@sgi.com
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,116 +28,21 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Bill Kendall <wkendall@sgi.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mon, 2011-08-15 at 13:59 -0500, Bill Kendall wrote:
-> This patch adds mlog_exit() calls to all the return paths in
-> content_stream_restore(). mlog_exit() is supposed to be called before
-> returning from content_stream_dump() and content_stream_restore(), but
-> many paths in the latter did not do so, allowing for the stream exit
-> status to be incorrect.
-> 
-> Signed-off-by: Bill Kendall <wkendall@sgi.com>
+This series addresses an issue where XFS might not actually flush the
+inode size if we wrote out the inode data during umount, which was
+recently reported on #xfs on irc.  (If the reported is active on the
+list please chime in so that I can add your reported-by tag!).
 
-It looks like content_stream_restore() *never* used it.
+The first patch is the guts of the fix, and the second fixes various
+issues with ->write_inode that I found during the audit.  To me patch
+1 is a clear Linux 3.1 candidate, and I would tend to nominate patch 2
+as well.
 
-Looking at _mlog_exit(), it looks to me like it could
-benefit from using exit_codestring() rather than the
-exit_strings[] array (which could be deleted).  This
-would report "EXIT_ERROR" instead of just "ERROR" though,
-and normal exit would be reported as "EXIT_NORMAL"
-rather than "SUCCESS".   The function call is more
-resilient though because it handles any value it's
-passed (whereas one could conceivably index beyond
-the end of the exit_strings[] array).
-
-Just a thought--a suggestion for a future patch.
-
-More suggestions below.  They apply to pretty much
-the whole thing so I've put it all at the bottom.
-
-> ---
->  restore/content.c |   64 ++++++++++++++++++++++++++--------------------------
->  1 files changed, 32 insertions(+), 32 deletions(-)
-> 
-> diff --git a/restore/content.c b/restore/content.c
-> index e3e4994..a2f20e3 100644
-> --- a/restore/content.c
-> +++ b/restore/content.c
-> @@ -1930,7 +1930,7 @@ content_stream_restore( ix_t thrdix )
->  		      "chdir %s failed: %s\n"),
->  		      persp->a.dstdir,
->  		      strerror( errno ));
-> -		return EXIT_ERROR;
-> +		return mlog_exit(EXIT_ERROR, RV_ERROR);
->  	}
->  
->  	/* set my file creation mask to zero, to avoid modifying the
-
-. . .
- 
-> @@ -2545,7 +2545,7 @@ content_stream_restore( ix_t thrdix )
->  #ifndef EOMFIX
->  		Media_end( Mediap );
->  #endif /* ! EOMFIX */
-
-These #ifdef's are pretty yucky.
-
-Another suggested future cleanup:  Add a flag to Media_end() to
-indicate whether this is one of those #ifdef's calls, and
-within Media_end() use a single #ifdef to determine whether
-simply return or actually do it, based on that passed-in value.
-Then just call Media_end() in all spots without the #ifdef's.
-
-> -		return EXIT_NORMAL;
-> +		return mlog_exit(EXIT_NORMAL, RV_DONE);
->  	}
->  	tranp->t_sync5 = SYNC_BUSY;
->  	unlock( );
-
-. . .
-
-> @@ -2588,7 +2588,7 @@ content_stream_restore( ix_t thrdix )
->  #ifndef EOMFIX
->  	Media_end( Mediap );
->  #endif /* ! EOMFIX */
-> -	return EXIT_NORMAL;
-> +	return mlog_exit(EXIT_NORMAL, rv);
-
-If you kept this line as-is, use RV_OK rather than rv,
-since it makes it more explicit we know that's what's
-getting returned.  The same would hold in many spots
-above as well.
-
-But...
-
-The end of this function is a whole bunch of repetitive
-code.  It would be cleaner to assign a "ret" variable
-(or whatever name you think fits the existing code)
-and then after this last switch statement call:
-
-	return mlog_exit(ret, rv);
-
-(If Media_end() got a flag, you might not need the
-switch statement at all...)
-
-Christoph suggested a goto which would be similar
-but would affect the whole function.  And in fact
-I think it might simplify a lot--possibly eliminating
-whole switch statements entirely--so I think that's
-an idea worth considering.
-
-I think you should re-post your patch after considering
-these suggestions.  Thanks.
-
-					-Alex
-
->  }
->  
->  /* called after all threads have exited. scans state to decide
-
-
+I think we also have some issue with the VFS writeback code not handling
+inode redirtying from the I/O completion handler nicely, but I'll send
+another patch for that.
 
 _______________________________________________
 xfs mailing list
