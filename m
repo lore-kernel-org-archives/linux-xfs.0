@@ -1,24 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7REjCqw207380 for <xfs@oss.sgi.com>; Sat, 27 Aug 2011 09:45:13 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0F7BF1E7D106
-	for <xfs@oss.sgi.com>; Sat, 27 Aug 2011 07:45:11 -0700 (PDT)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	If3J4eUHruaSQvQL for <xfs@oss.sgi.com>;
-	Sat, 27 Aug 2011 07:45:11 -0700 (PDT)
-Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1QxK8F-0005AY-7z
-	for xfs@oss.sgi.com; Sat, 27 Aug 2011 14:45:11 +0000
-Date: Sat, 27 Aug 2011 10:45:11 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] xfs: avoid synchronous transactions when deleting attr blocks
-Message-ID: <20110827144511.GB16381@infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
+	p7RHhRcn215332 for <xfs@oss.sgi.com>; Sat, 27 Aug 2011 12:43:27 -0500
+Received: from test.thunk.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A06691F0558B
+	for <xfs@oss.sgi.com>; Sat, 27 Aug 2011 10:43:25 -0700 (PDT)
+Received: from test.thunk.org (li9-11.members.linode.com [67.18.176.11]) by
+	cuda.sgi.com with ESMTP id 5KldeZDIXava1rTc for
+	<xfs@oss.sgi.com>; Sat, 27 Aug 2011 10:43:25 -0700 (PDT)
+From: "Theodore Ts'o" <tytso@mit.edu>
+Subject: [PATCH] xfstests: don't print "do not support" warnings unless
+	verbose is specified
+Date: Sat, 27 Aug 2011 13:43:22 -0400
+Message-Id: <1314467002-20297-1-git-send-email-tytso@mit.edu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,71 +21,82 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: xfs@oss.sgi.com, Ext4 Developers List <linux-ext4@vger.kernel.org>
+Cc: Theodore Ts'o <tytso@mit.edu>
 
-Currently xfs_attr_inactive causes a synchronous transactions if we are
-removing a file that has any extents allocated to the attribute fork, and
-thus makes XFS extremely slow at removing files with out of line extended
-attributes. The code looks a like a relict from the days before the busy
-extent list, but with the busy extent list we avoid reusing data and attr
-extents that have been freed but not commited yet, so this code is just
-as superflous as the synchronous transactions for data blocks.
+Commit 630421f6d449 attempts to avoid printing the "fallocate not
+supported" warning if the -q (quiet) option is specified on the
+command-line.  Unfortunately tests 75 and 112 don't set the -q flag.
+This causes test failures for file systems that don't support
+fallocate or the punch hole functionality.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reported-by: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
+I considered changing tests 75 and 112 to pass -q to fsx, but that
+would suppress other warning messages that could be legitimate test
+failures, so I decided to add a new -v (vebose) flag.
 
-Index: xfs/fs/xfs/xfs_attr.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_attr.c	2011-08-15 14:31:15.485329718 -0700
-+++ xfs/fs/xfs/xfs_attr.c	2011-08-15 14:31:32.025240113 -0700
-@@ -823,18 +823,6 @@ xfs_attr_inactive(xfs_inode_t *dp)
- 	if (error)
- 		goto out;
+Signed-off-by: "Theodore Ts'o" <tytso@mit.edu>
+---
+ ltp/fsx.c |   12 ++++++++----
+ 1 files changed, 8 insertions(+), 4 deletions(-)
+
+diff --git a/ltp/fsx.c b/ltp/fsx.c
+index 36b38f7..cef2c7d 100644
+--- a/ltp/fsx.c
++++ b/ltp/fsx.c
+@@ -132,6 +132,7 @@ int	readbdy = 1;			/* -r flag */
+ int	style = 0;			/* -s flag */
+ int	prealloc = 0;			/* -x flag */
+ int	truncbdy = 1;			/* -t flag */
++int	verbose = 0;			/* -v flag */
+ int	writebdy = 1;			/* -w flag */
+ long	monitorstart = -1;		/* -m flag */
+ long	monitorend = -1;		/* -m flag */
+@@ -1299,8 +1300,8 @@ test_fallocate()
+ #ifdef FALLOCATE
+ 	if (!lite && fallocate_calls) {
+ 		if (fallocate(fd, 0, 0, 1) && errno == EOPNOTSUPP) {
+-			if(!quiet)
+-				warn("main: filesystem does not support fallocate, disabling\n");
++			if (verbose)
++				warn("main: filesystem does not support fallocate, disabling");
+ 			fallocate_calls = 0;
+ 		} else {
+ 			ftruncate(fd, 0);
+@@ -1319,7 +1320,7 @@ test_punch_hole()
+ 	if (!lite && punch_hole_calls) {
+ 		if (fallocate(fd, FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE,
+ 				0, 1) && errno == EOPNOTSUPP) {
+-			if(!quiet)
++			if (verbose)
+ 				warn("main: filesystem does not support fallocate punch hole, disabling");
+ 			punch_hole_calls = 0;
+ 		} else
+@@ -1348,7 +1349,7 @@ main(int argc, char **argv)
  
--	/*
--	 * Signal synchronous inactive transactions unless this is a
--	 * synchronous mount filesystem in which case we know that we're here
--	 * because we've been called out of xfs_inactive which means that the
--	 * last reference is gone and the unlink transaction has already hit
--	 * the disk so async inactive transactions are safe.
--	 */
--	if (!(mp->m_flags & XFS_MOUNT_WSYNC)) {
--		if (dp->i_d.di_anextents > 0)
--			xfs_trans_set_sync(trans);
--	}
--
- 	error = xfs_itruncate_extents(&trans, dp, XFS_ATTR_FORK, 0);
- 	if (error)
- 		goto out;
-Index: xfs/fs/xfs/xfs_bmap.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_bmap.c	2011-08-15 14:33:59.801106208 -0700
-+++ xfs/fs/xfs/xfs_bmap.c	2011-08-16 09:01:24.716497619 -0700
-@@ -3782,19 +3782,11 @@ xfs_bmap_compute_maxlevels(
-  * Routine to be called at transaction's end by xfs_bmapi, xfs_bunmapi
-  * caller.  Frees all the extents that need freeing, which must be done
-  * last due to locking considerations.  We never free any extents in
-- * the first transaction.  This is to allow the caller to make the first
-- * transaction a synchronous one so that the pointers to the data being
-- * broken in this transaction will be permanent before the data is actually
-- * freed.  This is necessary to prevent blocks from being reallocated
-- * and written to before the free and reallocation are actually permanent.
-- * We do not just make the first transaction synchronous here, because
-- * there are more efficient ways to gain the same protection in some cases
-- * (see the file truncation code).
-+ * the first transaction.
-  *
-  * Return 1 if the given transaction was committed and a new one
-  * started, and 0 otherwise in the committed parameter.
-  */
--/*ARGSUSED*/
- int						/* error */
- xfs_bmap_finish(
- 	xfs_trans_t		**tp,		/* transaction pointer addr */
+ 	setvbuf(stdout, (char *)0, _IOLBF, 0); /* line buffered stdout */
+ 
+-	while ((ch = getopt(argc, argv, "b:c:dfl:m:no:p:qr:s:t:w:xyAD:FHLN:OP:RS:WZ"))
++	while ((ch = getopt(argc, argv, "b:c:dfl:m:no:p:qr:s:t:vw:xyAD:FHLN:OP:RS:WZ"))
+ 	       != EOF)
+ 		switch (ch) {
+ 		case 'b':
+@@ -1423,6 +1424,9 @@ main(int argc, char **argv)
+ 			if (truncbdy <= 0)
+ 				usage();
+ 			break;
++		case 'v':
++			verbose = 1;
++			break;
+ 		case 'w':
+ 			writebdy = getnum(optarg, &endp);
+ 			if (writebdy <= 0)
+-- 
+1.7.4.1.22.gec8e1.dirty
 
 _______________________________________________
 xfs mailing list
