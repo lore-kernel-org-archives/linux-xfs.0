@@ -1,30 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7SANivW257166 for <xfs@oss.sgi.com>; Sun, 28 Aug 2011 05:23:44 -0500
-Received: from mail-wy0-f181.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DBE03121374
-	for <xfs@oss.sgi.com>; Sun, 28 Aug 2011 03:23:43 -0700 (PDT)
-Received: from mail-wy0-f181.google.com (mail-wy0-f181.google.com
-	[74.125.82.181]) by cuda.sgi.com with ESMTP id 4N1WqLvJ4jfr2iF7
-	for <xfs@oss.sgi.com>; Sun, 28 Aug 2011 03:23:43 -0700 (PDT)
-Received: by wyg36 with SMTP id 36so3846866wyg.26
-	for <xfs@oss.sgi.com>; Sun, 28 Aug 2011 03:23:42 -0700 (PDT)
-Message-ID: <4E5A15C0.3020205@gmail.com>
-Date: Sun, 28 Aug 2011 12:17:36 +0200
-From: Marco Stornelli <marco.stornelli@gmail.com>
+	p7SCVh2E261759 for <xfs@oss.sgi.com>; Sun, 28 Aug 2011 07:31:44 -0500
+Received: from nm5.bullet.mail.sg1.yahoo.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with SMTP id 13FBF12148E
+	for <xfs@oss.sgi.com>; Sun, 28 Aug 2011 05:31:41 -0700 (PDT)
+Received: from nm5.bullet.mail.sg1.yahoo.com (nm5.bullet.mail.sg1.yahoo.com
+	[115.178.12.249]) by cuda.sgi.com with SMTP id Zr0K0aMvnxb9Oghv
+	for <xfs@oss.sgi.com>; Sun, 28 Aug 2011 05:31:41 -0700 (PDT)
+Message-ID: <1314534700.48540.YahooMailClassic@web77701.mail.sg1.yahoo.com>
+Date: Sun, 28 Aug 2011 20:31:40 +0800 (SGT)
+From: Gim Leong Chin <chingimleong@yahoo.com.sg>
+Subject: xfsrestore Does Only Only Partial Restore
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests 255: add a seek_data/seek_hole tester
-References: <1309275199-10801-1-git-send-email-josef@redhat.com>
-	<1309275199-10801-5-git-send-email-josef@redhat.com>
-	<20110825060632.GA9933@infradead.org>
-	<20110825064039.GO3162@dastard>
-	<0A267E55-7772-438D-B6A7-89B73020F311@dilger.ca>
-	<20110826013528.GW3162@dastard>
-	<CANGUGtC1qk2Tkv42fvibUKiEJz_MnNiV-nQ7T-_woppVhjQK-Q@mail.gmail.com>
-	<20110826144124.GA17519@lulu.zabbo.net>
-	<4E58AB28.1080009@gmail.com>
-In-Reply-To: <4E58AB28.1080009@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,50 +21,135 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Zach Brown <zab@zabbo.net>
-Cc: Andreas Dilger <adilger@dilger.ca>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, linux-btrfs@vger.kernel.org, dchinner@redhat.com, linux-fsdevel@vger.kernel.org, Josef Bacik <josef@redhat.com>, viro@zeniv.linux.org.uk
+To: xfs@oss.sgi.com
 
-Il 27/08/2011 10:30, Marco Stornelli ha scritto:
-> Il 26/08/2011 16:41, Zach Brown ha scritto:
->>>> Hole: a range of the file that contains no data or is made up
->>>> entirely of NULL (zero) data. Holes include preallocated ranges of
->>>> files that have not had actual data written to them.
->>
->>> No for me. A hole is made up of zero data? It's a strange definition
->>> for me.
->>
->> It's a very natural definition for me. It mirrors the behaviour of
->> read() of sparse data inside i_size that file system authors already
->> have to consider.
->>
->> It's also a reminder for people that this interface is about avoiding
->> reading zeros. Systems that track contents can do this for files that
->> had tons of zeros written. The data is there but the app is
->> specifically asking us to skip it by using SEEK_DATA.
->>
->> - z
->>
->
-> I think we need to consider a hole and "data not present/not written
-> yet" as two different cases even they are related. For example, if I do
-> an fallocate without keep size option, then I do a read, I have the same
-> behavior of sparse data inside i_size, but the blocks are allocated so
-> no sparse data in this case. Simply there are no difference from app
-> point of view.
->
-> Marco
+Hi,
 
-Please don't care about the last part, when reading in this case the app 
-will have a return value different from zero obviously, I was under the 
-effect of a beer :) However I'd add to the definition, that we consider 
-holes only inside i_size, as Zack said. In this way, we haven't got any 
-ambiguity for preallocated space beyond eof.
+This is the very first time I tried doing a xfsrestore of a back up and I hit some serious trouble.
 
-Marco
+I had openSUSE 11.1 (kernel 2.6.27) on my Acer notebook.  I did a xfsdump of /home to a WD My Passport external USB hard drive with XFS on it.
+
+I installed openSUSE 11.4 (kernel 2.6.37), then tried to do xfsrestore from the WD USB drive.  The dump file is 121 GB.
+
+I tried two times on two different days, but each time the xfsrestore would stop writing at the exact same point, 49 GB and say success at the end.
+
+I then copied the dump file to one hard drive on my desk top, and did a dump to another hard drive, to /tmp/mnt3.  I get back identical messages:
+
+chingl@optimus:~> df
+  Filesystem           1K-blocks      Used Available Use% Mounted on
+  rootfs               104878048  42063828  62814220  41% /
+  devtmpfs               1021032       480   1020552   1% /dev
+  tmpfs                  1027960      1064   1026896   1% /dev/shm
+  /dev/sda2            104878048  42063828  62814220  41% /
+  /dev/sda3            863017248 730313100 132704148  85% /home
+  /dev/sdb2             73363456   6071484  67291972   9% /tmp/mnt2
+  /dev/sdb3            869382652  50612736 818769916   6% /tmp/mnt3
+  chingl@optimus:~> df -h
+  Filesystem            Size  Used Avail Use% Mounted on
+  rootfs                101G   41G   60G  41% /
+  devtmpfs              998M  480K  997M   1% /dev
+  tmpfs                1004M  1.1M 1003M   1% /dev/shm
+  /dev/sda2             101G   41G   60G  41% /
+  /dev/sda3             824G  697G  127G  85% /home
+  /dev/sdb2              70G  5.8G   65G   9% /tmp/mnt2
+  /dev/sdb3             830G   49G  781G   6% /tmp/mnt3
+  chingl@optimus:~> cd archive/rat
+  chingl@optimus:~/archive/rat> ll
+  total 126638256
+  -rw-r--r-- 1 chingl users 129677563808 Aug 18 14:41 rat18Aug2011
+  chingl@optimus:~/archive/rat>
+{>
+(>optimus:~ # xfsrestore -f /home/chingl/archive/rat/rat18Aug2011 /tmp/mnt3
+  xfsrestore: using file dump (drive_simple) strategy
+  xfsrestore: version 3.0.1 (dump format 3.0) - Running single-threaded
+  xfsrestore: searching media for dump
+  xfsrestore: examining media file 0
+  xfsrestore: dump description:
+  xfsrestore: hostname: rat
+  xfsrestore: mount point: /home
+  xfsrestore: volume: /dev/sdb3
+  xfsrestore: session time: Thu Aug 18 12:57:36 2011
+2>xfsrestore: level: 0
+  xfsrestore: session label: "rat_18Aug2011"
+  xfsrestore: media label: "rat18Aug2011"
+  xfsrestore: file system id: f3b08587-cf98-4b7b-99b0-dc9d4e77b631
+  xfsrestore: session id: d8069cd0-a092-4fb2-b378-0eda33474aae
+  xfsrestore: media id: 96370000-6e2c-40eb-9c3c-93ca42de7524
+  xfsrestore: searching media for directory dump
+  xfsrestore: reading directories
+  xfsrestore: 90820 directories and 539579 entries processed
+  xfsrestore: directory post-processing
+1>xfsrestore: restoring non-directory files
+9>xfsrestore: attempt to read 1008286921 bytes failed: end of recorded data
+  xfsrestore: user quota information written to '/tmp/mnt3/xfsdump_quotas'
+7>xfsrestore: group quota information written to '/tmp/mnt3/xfsdump_quotas_group'
+4>xfsrestore: use 'xfs_quota' to restore quotas
+  xfsrestore: restore complete: 2522 seconds elapsed
+  xfsrestore: Restore Status: SUCCESS
+  optimus:~ #
+
+I downloaded xfsdump-3.0.5.tar.gz, did a build, and tried to do a restore using the newly built xfsrestore:
+
+chingl@optimus:~/testdump> df -h
+  Filesystem            Size  Used Avail Use% Mounted on
+  rootfs                101G   41G   60G  41% /
+  devtmpfs              998M  480K  997M   1% /dev
+  tmpfs                1004M  1.1M 1003M   1% /dev/shm
+  /dev/sda2             101G   41G   60G  41% /
+  /dev/sda3             824G  697G  127G  85% /home
+  /dev/sdb2              70G  5.8G   65G   9% /tmp/mnt2
+  /dev/sdb3             830G   49G  781G   6% /tmp/mnt3
+  chingl@optimus:~/testdump> df
+  Filesystem           1K-blocks      Used Available Use% Mounted on
+  rootfs               104878048  42063828  62814220  41% /
+  devtmpfs               1021032       480   1020552   1% /dev
+  tmpfs                  1027960      1064   1026896   1% /dev/shm
+  /dev/sda2            104878048  42063828  62814220  41% /
+  /dev/sda3            863017248 730313900 132703348  85% /home
+  /dev/sdb2             73363456   6071484  67291972   9% /tmp/mnt2
+  /dev/sdb3            869382652  50612640 818770012   6% /tmp/mnt3
+  chingl@optimus:~/testdump>
+  
+{>
+  optimus:/home/chingl/archive/rat # /home/chingl/XFS/xfsdump-3.0.5/restore/xfsrestore -f ./rat18Aug2011 /tmp/mnt3
+  /home/chingl/XFS/xfsdump-3.0.5/restore/xfsrestore: using file dump (drive_simple) strategy
+  /home/chingl/XFS/xfsdump-3.0.5/restore/xfsrestore: version 3.0.5 (dump format 3.0) - Running single-threaded
+  /home/chingl/XFS/xfsdump-3.0.5/restore/xfsrestore: searching media for dump
+  /home/chingl/XFS/xfsdump-3.0.5/restore/xfsrestore: examining media file 0
+  /home/chingl/XFS/xfsdump-3.0.5/restore/xfsrestore: dump description:
+  /home/chingl/XFS/xfsdump-3.0.5/restore/xfsrestore: hostname: rat
+  /home/chingl/XFS/xfsdump-3.0.5/restore/xfsrestore: mount point: /home
+  /home/chingl/XFS/xfsdump-3.0.5/restore/xfsrestore: volume: /dev/sdb3
+  /home/chingl/XFS/xfsdump-3.0.5/restore/xfsrestore: session time: Thu Aug 18 12:57:36 2011
+  /home/chingl/XFS/xfsdump-3.0.5/restore/xfsrestore: level: 0
+  /home/chingl/XFS/xfsdump-3.0.5/restore/xfsrestore: session label: "rat_18Aug2011"
+  /home/chingl/XFS/xfsdump-3.0.5/restore/xfsrestore: media label: "rat18Aug2011"
+3>/home/chingl/XFS/xfsdump-3.0.5/restore/xfsrestore: file system id: f3b08587-cf98-4b7b-99b0-dc9d4e77b631
+  /home/chingl/XFS/xfsdump-3.0.5/restore/xfsrestore: session id: d8069cd0-a092-4fb2-b378-0eda33474aae
+  /home/chingl/XFS/xfsdump-3.0.5/restore/xfsrestore: media id: 96370000-6e2c-40eb-9c3c-93ca42de7524
+  /home/chingl/XFS/xfsdump-3.0.5/restore/xfsrestore: searching media for directory dump
+  /home/chingl/XFS/xfsdump-3.0.5/restore/xfsrestore: reading directories
+  /home/chingl/XFS/xfsdump-3.0.5/restore/xfsrestore: 90820 directories and 539579 entries processed
+  /home/chingl/XFS/xfsdump-3.0.5/restore/xfsrestore: directory post-processing
+  /home/chingl/XFS/xfsdump-3.0.5/restore/xfsrestore: restoring non-directory files
+  xfsrestore: content.c:7510: restore_extent_group: Assertion `ehdr.eh_type == 4' failed.
+(>Aborted
+2>optimus:/home/chingl/archive/rat #
+
+
+Could some one please assist to enlighten me what is going on, why does the restoration fail?  The xfsdump session looked OK.
+
+Is there any way I can extract back my /home back up?  This is my only back up copy.  i have two other xfsdump dump files taken earlier, I have not tried those.
+
+Is xfsdump and xfsrestore really robust for dump to regular file, or should I have done a tar instead?
+
+Thank you.
+
+GL
 
 _______________________________________________
 xfs mailing list
