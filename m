@@ -1,18 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7RHhRcn215332 for <xfs@oss.sgi.com>; Sat, 27 Aug 2011 12:43:27 -0500
-Received: from test.thunk.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A06691F0558B
-	for <xfs@oss.sgi.com>; Sat, 27 Aug 2011 10:43:25 -0700 (PDT)
-Received: from test.thunk.org (li9-11.members.linode.com [67.18.176.11]) by
-	cuda.sgi.com with ESMTP id 5KldeZDIXava1rTc for
-	<xfs@oss.sgi.com>; Sat, 27 Aug 2011 10:43:25 -0700 (PDT)
-From: "Theodore Ts'o" <tytso@mit.edu>
-Subject: [PATCH] xfstests: don't print "do not support" warnings unless
-	verbose is specified
-Date: Sat, 27 Aug 2011 13:43:22 -0400
-Message-Id: <1314467002-20297-1-git-send-email-tytso@mit.edu>
+	p7SANivW257166 for <xfs@oss.sgi.com>; Sun, 28 Aug 2011 05:23:44 -0500
+Received: from mail-wy0-f181.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DBE03121374
+	for <xfs@oss.sgi.com>; Sun, 28 Aug 2011 03:23:43 -0700 (PDT)
+Received: from mail-wy0-f181.google.com (mail-wy0-f181.google.com
+	[74.125.82.181]) by cuda.sgi.com with ESMTP id 4N1WqLvJ4jfr2iF7
+	for <xfs@oss.sgi.com>; Sun, 28 Aug 2011 03:23:43 -0700 (PDT)
+Received: by wyg36 with SMTP id 36so3846866wyg.26
+	for <xfs@oss.sgi.com>; Sun, 28 Aug 2011 03:23:42 -0700 (PDT)
+Message-ID: <4E5A15C0.3020205@gmail.com>
+Date: Sun, 28 Aug 2011 12:17:36 +0200
+From: Marco Stornelli <marco.stornelli@gmail.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH] xfstests 255: add a seek_data/seek_hole tester
+References: <1309275199-10801-1-git-send-email-josef@redhat.com>
+	<1309275199-10801-5-git-send-email-josef@redhat.com>
+	<20110825060632.GA9933@infradead.org>
+	<20110825064039.GO3162@dastard>
+	<0A267E55-7772-438D-B6A7-89B73020F311@dilger.ca>
+	<20110826013528.GW3162@dastard>
+	<CANGUGtC1qk2Tkv42fvibUKiEJz_MnNiV-nQ7T-_woppVhjQK-Q@mail.gmail.com>
+	<20110826144124.GA17519@lulu.zabbo.net>
+	<4E58AB28.1080009@gmail.com>
+In-Reply-To: <4E58AB28.1080009@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,82 +33,50 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, Ext4 Developers List <linux-ext4@vger.kernel.org>
-Cc: Theodore Ts'o <tytso@mit.edu>
+To: Zach Brown <zab@zabbo.net>
+Cc: Andreas Dilger <adilger@dilger.ca>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, linux-btrfs@vger.kernel.org, dchinner@redhat.com, linux-fsdevel@vger.kernel.org, Josef Bacik <josef@redhat.com>, viro@zeniv.linux.org.uk
 
-Commit 630421f6d449 attempts to avoid printing the "fallocate not
-supported" warning if the -q (quiet) option is specified on the
-command-line.  Unfortunately tests 75 and 112 don't set the -q flag.
-This causes test failures for file systems that don't support
-fallocate or the punch hole functionality.
+Il 27/08/2011 10:30, Marco Stornelli ha scritto:
+> Il 26/08/2011 16:41, Zach Brown ha scritto:
+>>>> Hole: a range of the file that contains no data or is made up
+>>>> entirely of NULL (zero) data. Holes include preallocated ranges of
+>>>> files that have not had actual data written to them.
+>>
+>>> No for me. A hole is made up of zero data? It's a strange definition
+>>> for me.
+>>
+>> It's a very natural definition for me. It mirrors the behaviour of
+>> read() of sparse data inside i_size that file system authors already
+>> have to consider.
+>>
+>> It's also a reminder for people that this interface is about avoiding
+>> reading zeros. Systems that track contents can do this for files that
+>> had tons of zeros written. The data is there but the app is
+>> specifically asking us to skip it by using SEEK_DATA.
+>>
+>> - z
+>>
+>
+> I think we need to consider a hole and "data not present/not written
+> yet" as two different cases even they are related. For example, if I do
+> an fallocate without keep size option, then I do a read, I have the same
+> behavior of sparse data inside i_size, but the blocks are allocated so
+> no sparse data in this case. Simply there are no difference from app
+> point of view.
+>
+> Marco
 
-I considered changing tests 75 and 112 to pass -q to fsx, but that
-would suppress other warning messages that could be legitimate test
-failures, so I decided to add a new -v (vebose) flag.
+Please don't care about the last part, when reading in this case the app 
+will have a return value different from zero obviously, I was under the 
+effect of a beer :) However I'd add to the definition, that we consider 
+holes only inside i_size, as Zack said. In this way, we haven't got any 
+ambiguity for preallocated space beyond eof.
 
-Signed-off-by: "Theodore Ts'o" <tytso@mit.edu>
----
- ltp/fsx.c |   12 ++++++++----
- 1 files changed, 8 insertions(+), 4 deletions(-)
-
-diff --git a/ltp/fsx.c b/ltp/fsx.c
-index 36b38f7..cef2c7d 100644
---- a/ltp/fsx.c
-+++ b/ltp/fsx.c
-@@ -132,6 +132,7 @@ int	readbdy = 1;			/* -r flag */
- int	style = 0;			/* -s flag */
- int	prealloc = 0;			/* -x flag */
- int	truncbdy = 1;			/* -t flag */
-+int	verbose = 0;			/* -v flag */
- int	writebdy = 1;			/* -w flag */
- long	monitorstart = -1;		/* -m flag */
- long	monitorend = -1;		/* -m flag */
-@@ -1299,8 +1300,8 @@ test_fallocate()
- #ifdef FALLOCATE
- 	if (!lite && fallocate_calls) {
- 		if (fallocate(fd, 0, 0, 1) && errno == EOPNOTSUPP) {
--			if(!quiet)
--				warn("main: filesystem does not support fallocate, disabling\n");
-+			if (verbose)
-+				warn("main: filesystem does not support fallocate, disabling");
- 			fallocate_calls = 0;
- 		} else {
- 			ftruncate(fd, 0);
-@@ -1319,7 +1320,7 @@ test_punch_hole()
- 	if (!lite && punch_hole_calls) {
- 		if (fallocate(fd, FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE,
- 				0, 1) && errno == EOPNOTSUPP) {
--			if(!quiet)
-+			if (verbose)
- 				warn("main: filesystem does not support fallocate punch hole, disabling");
- 			punch_hole_calls = 0;
- 		} else
-@@ -1348,7 +1349,7 @@ main(int argc, char **argv)
- 
- 	setvbuf(stdout, (char *)0, _IOLBF, 0); /* line buffered stdout */
- 
--	while ((ch = getopt(argc, argv, "b:c:dfl:m:no:p:qr:s:t:w:xyAD:FHLN:OP:RS:WZ"))
-+	while ((ch = getopt(argc, argv, "b:c:dfl:m:no:p:qr:s:t:vw:xyAD:FHLN:OP:RS:WZ"))
- 	       != EOF)
- 		switch (ch) {
- 		case 'b':
-@@ -1423,6 +1424,9 @@ main(int argc, char **argv)
- 			if (truncbdy <= 0)
- 				usage();
- 			break;
-+		case 'v':
-+			verbose = 1;
-+			break;
- 		case 'w':
- 			writebdy = getnum(optarg, &endp);
- 			if (writebdy <= 0)
--- 
-1.7.4.1.22.gec8e1.dirty
+Marco
 
 _______________________________________________
 xfs mailing list
