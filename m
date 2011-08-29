@@ -1,22 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7T123IF027934 for <xfs@oss.sgi.com>; Sun, 28 Aug 2011 20:02:03 -0500
-Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3318013A8DBD
-	for <xfs@oss.sgi.com>; Sun, 28 Aug 2011 18:05:07 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	CBUPIjSI37eOBwVF for <xfs@oss.sgi.com>;
-	Sun, 28 Aug 2011 18:05:07 -0700 (PDT)
-Date: Mon, 29 Aug 2011 11:01:49 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS metadata flushing design - current and future
-Message-ID: <20110829010149.GE3162@dastard>
-References: <20110827080321.GA16661@infradead.org>
+	p7T3rKi0038591 for <xfs@oss.sgi.com>; Sun, 28 Aug 2011 22:53:20 -0500
+Received: from nm5.bullet.mail.sg1.yahoo.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with SMTP id 0B9F01E7D845
+	for <xfs@oss.sgi.com>; Sun, 28 Aug 2011 20:53:17 -0700 (PDT)
+Received: from nm5.bullet.mail.sg1.yahoo.com (nm5.bullet.mail.sg1.yahoo.com
+	[115.178.12.249]) by cuda.sgi.com with SMTP id eIfRpkYlFgnStBGf
+	for <xfs@oss.sgi.com>; Sun, 28 Aug 2011 20:53:17 -0700 (PDT)
+Message-ID: <1314589995.20010.YahooMailClassic@web77719.mail.sg1.yahoo.com>
+Date: Mon, 29 Aug 2011 11:53:15 +0800 (SGT)
+From: Gim Leong Chin <chingimleong@yahoo.com.sg>
+Subject: Re: xfsrestore Does Only Only Partial Restore
+In-Reply-To: <1314544549.34681.YahooMailClassic@web77712.mail.sg1.yahoo.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110827080321.GA16661@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,212 +22,494 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Sat, Aug 27, 2011 at 04:03:21AM -0400, Christoph Hellwig wrote:
-> Here is a little writeup I did about how we handle dirty metadata
-> flushing in XFS currently, and how we can improve on it in the
-> relatively short term:
-> 
-> 
-> ---
-> Metadata flushing in XFS
-> ========================
-> 
-> This document describes the state of the handling of dirty XFS in-core
-> metadata, and how it gets flushed to disk, as well as ideas how to
-> simplify it in the future.
-> 
-> 
-> Buffers
-> -------
-> 
-> All metadata is XFS is read and written using buffers as the lowest layer.
-> There are two ways to write a buffer back to disk: delwri and sync.
-> Delwri means the buffers gets added to a delayed write list, which a
-> background thread writes back periodically or when forced to.  Synchronous
-> writes means the buffer is written back immediately, and the callers waits
-> for completion synchronously.
+Thinking that it might be a xfsdump version incompatibility, I dug out the =
+openSUSE 11.1 installation DVD, got the xfsdump-2.2.48-1.59 rpm and extract=
+ed the xfsdump and xfsrestore from it.  I then attempted a restore using it=
+, but I still have only 49 GB of 121 GB extracted:
 
-Right, that's how buffers are flushed, but for some metadata there
-is a layer above this - the in-memory object that needs to be
-flushed to the buffer before the buffer can be written. Inodes and
-dquots fall into this category, so describing how they are flushed
-would also be a good idea. something like:
+chingl@optimus:~> df -h
+  Filesystem            Size  Used Avail Use% Mounted on
+  rootfs                101G   41G   60G  41% /
+  devtmpfs              998M  484K  997M   1% /dev
+  tmpfs                1004M  1.1M 1003M   1% /dev/shm
+  /dev/sda2             101G   41G   60G  41% /
+  /dev/sda3             824G  697G  127G  85% /home
+  /dev/sdb2              70G  5.8G   65G   9% /tmp/mnt2
+  /dev/sr0              4.4G  4.4G     0 100% /media/SU1110.001
+  /dev/sdb3             830G   49G  781G   6% /tmp/mnt3
+  chingl@optimus:~>
+  chingl@optimus:~> df
+  Filesystem           1K-blocks      Used Available Use% Mounted on
+  rootfs               104878048  42055420  62822628  41% /
+  devtmpfs               1021032       484   1020548   1% /dev
+  tmpfs                  1027960      1060   1026900   1% /dev/shm
+  /dev/sda2            104878048  42055420  62822628  41% /
+  /dev/sda3            863017248 730332548 132684700  85% /home
+  /dev/sdb2             73363456   6071484  67291972   9% /tmp/mnt2
+  /dev/sr0               4549218   4549218         0 100% /media/SU1110.001
+  /dev/sdb3            869382652  50566648 818816004   6% /tmp/mnt3
+  chingl@optimus:~>
+{>
+(>optimus:/home/chingl/archive/rat # /home/chingl/XFS/xfsdump-2.2.48-1.59/s=
+bin/xfsrestore -f ./rat18Aug2011 /tmp/mnt3
+  /home/chingl/XFS/xfsdump-2.2.48-1.59/sbin/xfsrestore: using file dump (dr=
+ive_simple) strategy
+  /home/chingl/XFS/xfsdump-2.2.48-1.59/sbin/xfsrestore: version 2.2.48 (dum=
+p format 3.0) - Running single-threaded                                    =
+                                =
 
-----
+  /home/chingl/XFS/xfsdump-2.2.48-1.59/sbin/xfsrestore: searching media for=
+ dump
+  /home/chingl/XFS/xfsdump-2.2.48-1.59/sbin/xfsrestore: examining media fil=
+e 0
+  /home/chingl/XFS/xfsdump-2.2.48-1.59/sbin/xfsrestore: dump description:
+  /home/chingl/XFS/xfsdump-2.2.48-1.59/sbin/xfsrestore: hostname: rat
+  /home/chingl/XFS/xfsdump-2.2.48-1.59/sbin/xfsrestore: mount point: /home
+  /home/chingl/XFS/xfsdump-2.2.48-1.59/sbin/xfsrestore: volume: /dev/sdb3
+  /home/chingl/XFS/xfsdump-2.2.48-1.59/sbin/xfsrestore: session time: Thu A=
+ug 18 12:57:36 2011
+  /home/chingl/XFS/xfsdump-2.2.48-1.59/sbin/xfsrestore: level: 0
+6>/home/chingl/XFS/xfsdump-2.2.48-1.59/sbin/xfsrestore: session label: "rat=
+_18Aug2011"
+  /home/chingl/XFS/xfsdump-2.2.48-1.59/sbin/xfsrestore: media label: "rat18=
+Aug2011"
+  /home/chingl/XFS/xfsdump-2.2.48-1.59/sbin/xfsrestore: file system id: f3b=
+08587-cf98-4b7b-99b0-dc9d4e77b631                                          =
+                                =
 
-High Level Objects
-------------------
+  /home/chingl/XFS/xfsdump-2.2.48-1.59/sbin/xfsrestore: session id: d8069cd=
+0-a092-4fb2-b378-0eda33474aae                                              =
+                                =
 
-Some objects are logged directly when changed, rather than modified
-in buffers first. When these items are written back, then first need
-to b flushed to the backing buffer, and then IO issued on the
-backing buffer. These objects can be written in two ways: delwri and
-sync.
-
-Delwri means the object is locked and written to the backing buffer,
-and the buffer is then written via it's delwri mechanism. The object
-remains locked (and so cannot be written to the buffer again) until
-the backing buffer is written to disk and marked clean. This allows
-multiple objects in the one buffer to be written at different times
-but be cleaned in a single buffer IO.
-
-Delwri means the object is locked and written to the backing buffer,
-and the buffer is written immediately to disk via it's sync
-mechanism. The object remains locked until the buffer IO completes.
-
-Objects need to be attached to the buffer with a callback so that
-they can be updated and unlocked when buffer IO completes. Buffer IO
-completion will walk the callback list to do this processing.
-
-----
-
-
-> Logging and the Active Item List (AIL)
-> --------------------------------------
-> 
-> The prime method of metadata writeback in XFS is by logging the changes
-> into the transaction log, and writing back the changes to the original
-> location in the background.  The prime data structure to drive the
-> asynchronous write back is the Active Item List or AIL.  The AIL contains
-> a list of all changes in the log that need to be written back, ordered
-> by on the time they were committed to the log using the Log Sequence
-> Number (LSN).  The AIL is periodically pushed out to try to move the
-> log tail LSN forward.  In addition periodically the sync worker attempts
-> to push out all items in the AIL.
-> 
-> Non-transaction metadata updates
-> --------------------------------
-> 
-> XFS still has a few updates where update metadata non-transactional.
-> 
-> The prime cause for non-transaction metadata updates are timestamps in the
-> inode, and inode size updates from extending writes.  These are handled
-> by marking the inode dirty in the VFS and XFS inodes, and either relying
-> on transactional updates to piggy-back these updates, or on the VFS
-> periodic writeback thread to call into the ->write_inode method in
-> XFS to write these changes back.  ->write_inode either starts delwri
-> buffer writeback on the inode, or starts a new transaction to log
-> the inode core containing these changes.
-> 
-> The dquot structures may be scheduled for delwri writeback after a
-> quota check during an unclean mount.
-> 
-> Extended attribute payloads that are stored outside the main attribute
-> btree are written back synchronously using buffers.
-> 
-> New allocation group headers written during a filesystem resizing are
-> written synchronously using buffers.
-> 
-> The superblock is written synchronously using buffers during umount
-> and sync operations.
-> 
-> Log recovery writes back various pieces of metadata synchronously
-> or using delwri buffers.
-> 
-> 
-> Other flushing methods
-> ----------------------
-> 
-> For historical reasons we still have a few places that flush XFS metadata
-> using others methods than logging and the AIL or explicit synchronous
-> or delwri writes.
-> 
-> Filesystem freezing loops over all inodes in the system to flush out
-> inodes marked dirty directly using xfs_iflush.
-> 
-> The quotacheck code marks dquots dirty, just to flush them at the end of
-> the quotacheck operation.
-
-This is safe because the filesystem isn't "open for business" until
-the quotacheck completes. The quotacheck needed flags aren't cleared
-until all the updates are on disk, so this doesn't need tobe done
-transactionally.
-
-> The periodic and explicit sync code walks through all dqouts and writes
-> back all dirty dquots directly.
->
-> Future directions
-> -----------------
-> 
-> We should get rid of both the reliance of the VFS writeback tracking, and
-> XFS-internal non-AIL metadata flushing.
-
-I'm assuming you mean VFS level dirty inode writeback tracking, not
-dirty page cache tracking?
-
-> To get rid of the VFS writeback we'll just need to log all time stamps and size
-> updates explicitly when they happens.  This could be done today, but the
-> overhead for frequent transactions in that area is deemed to high, especially
-> with delayed logging enabled.  We plan to deprecate the non-delaylog mode
-> by Linux 3.3, and introduce a new fast-path for inode core updates that
-> will allow to use direct logging for this updates without introducing
-> large overhead.
-> 
-> The explicit inode flushing using xfs_sync_attr looks like an attempt to
-> make sure we do not have any inodes in the AIL when freezing a filesystem.
-> A better replacement would be a call into the AIL code that allows to
-> completely empty the AIL before a freeze.
-
-Agreed, good simplification, and would enable us to get rid of some
-of the kludgy code in freeze.
-
-> The explicit quota flushing needs a bit more work.  First quota check needs
-> to be converted to queue up inodes to the delwri list immediately when
-> updating the dquot for each inode.  Second the code in xfs_qm_scall_setqlim
-> that attached a dquot to the transaction, but marks it dirty manually instead
-> of through the transaction interface needs a detailed audit.  After this
-> we should be able to get rid of all explicit xfs_qm_sync calls.
-
-Yes, it would be great to remove theneed for explicit quota
-flushing.
+  /home/chingl/XFS/xfsdump-2.2.48-1.59/sbin/xfsrestore: media id: 96370000-=
+6e2c-40eb-9c3c-93ca42de7524
+  /home/chingl/XFS/xfsdump-2.2.48-1.59/sbin/xfsrestore: searching media for=
+ directory dump
+  /home/chingl/XFS/xfsdump-2.2.48-1.59/sbin/xfsrestore: reading directories
+  /home/chingl/XFS/xfsdump-2.2.48-1.59/sbin/xfsrestore: 90820 directories a=
+nd 539579 entries processed
+  /home/chingl/XFS/xfsdump-2.2.48-1.59/sbin/xfsrestore: directory post-proc=
+essing
+  /home/chingl/XFS/xfsdump-2.2.48-1.59/sbin/xfsrestore: restoring non-direc=
+tory files
+4>/home/chingl/XFS/xfsdump-2.2.48-1.59/sbin/xfsrestore: attempt to read 100=
+8286921 bytes failed: end of recorded data
+1>/home/chingl/XFS/xfsdump-2.2.48-1.59/sbin/xfsrestore: user quota informat=
+ion written to '/tmp/mnt3/xfsdump_quotas'
+  /home/chingl/XFS/xfsdump-2.2.48-1.59/sbin/xfsrestore: group quota informa=
+tion written to '/tmp/mnt3/xfsdump_quotas_group'
+  /home/chingl/XFS/xfsdump-2.2.48-1.59/sbin/xfsrestore: use 'xfs_quota' to =
+restore quotas
+8>/home/chingl/XFS/xfsdump-2.2.48-1.59/sbin/xfsrestore: restore complete: 2=
+546 seconds elapsed
+  /home/chingl/XFS/xfsdump-2.2.48-1.59/sbin/xfsrestore: Restore Status: SUC=
+CESS
+0>optimus:/home/chingl/archive/rat #
 
 
-Another thing I've noticed is that AIL pushing of dirty inodes can
-be quite inefficient from a CPU usage perspective. Inodes that have
-already been flushed to their backing buffer results in a
-IOP_PUSHBUF call when the AIL tries to push them. Pushing the buffer
-requires a buffer cache search, followed by a delwri list promotion.
-However, the initial xfs_iflush() call on a dirty inode also
-clusters all the other remaining dirty inodes in the buffer to the
-buffer. When the AIl hits those other dirty inodes, they are already
-locked and so we do a IOP_PUSHBUF call. On every other dirty inode.
-So on a completely dirty inode cluster, we do ~30 needless buffer
-cache searches and buffer delwri promotions all for the same buffer.
-That's a lot of extra work we don't need to be doing - ~10% of the
-buffer cache lookups come from IOP_PUSHBUF under inode intensive
-metadata workloads:
+Is this a case of xfsdump bug that causes null data to be written, or xfsre=
+store bug that is unable to read back the data?
 
-	xs_push_ail_pushbuf...       5665434
-	xs_iflush_count.......        173551
-	xs_icluster_flushcnt..        171554
-	xs_icluster_flushinode       5316393
-	pb_get................      63362891
 
-This shows we've done 171k explicit inode cluster flushes when
-writing inodes, and we've clustered 5.3M inodes in those cluster
-writes. We've also have 5.6M IOP_PUSHBUF calls, which indicates most
-of them are coming from finding flush locked inodes. There's been
-63M buffer cache lookups, so we're causing roughly 8% of buffer
-cache lookups just through flushing inodes from the AIL.
+Thanks!
 
-Also, larger inode buffers to reduce the amount of IO we do to both
-read and write inodes might also provide significant benefits by
-reducing the amount of IO and number of buffers we need to track in
-the cache...
 
-Cheers,
+GL
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+
+
+
+
+
+--- On Sun, 28/8/11, Gim Leong Chin <chingimleong@yahoo.com.sg> wrote:
+
+> From: Gim Leong Chin <chingimleong@yahoo.com.sg>
+> Subject: Re: xfsrestore Does Only Only Partial Restore
+> To: xfs@oss.sgi.com
+> Date: Sunday, 28 August, 2011, 11:15 PM
+> Hi,
+> =
+
+> I just tried an older back up to test, and the restore is
+> again partial, looks like I am screwed, only 44 GB of 113 GB
+> got restored:
+> =
+
+> optimus:/mnt/rat # ll
+> total 345143448
+> -rw-r--r-- 1 root root=A0 =A0 =A0
+> =A0=A0=A01085 Sep 19=A0 2010 fstab
+> -rw-r--r-- 1 root root 103295383456 Jul 10 04:02
+> rat10July2011
+> -rw-r--r-- 1 root root 129677563808 Aug 18 14:41
+> rat18Aug2011
+> -rw-r--r-- 1 root root 120453920672 Jul 31 02:06
+> rat30July2011
+> optimus:/mnt/rat # xfsrestore -f ./rat30July2011=A0
+> /tmp/mnt3
+> xfsrestore: using file dump (drive_simple) strategy
+> xfsrestore: version 3.0.1 (dump format 3.0) - Running
+> single-threaded
+> xfsrestore: searching media for dump
+> xfsrestore: examining media file 0
+> xfsrestore: dump description: =
+
+> xfsrestore: hostname: rat
+> xfsrestore: mount point: /home
+> xfsrestore: volume: /dev/sdb3
+> xfsrestore: session time: Sun Jul 31 00:24:34 2011
+> xfsrestore: level: 0
+> xfsrestore: session label: "rat30July2011"
+> xfsrestore: media label: "rat30July2011"
+> xfsrestore: file system id:
+> f3b08587-cf98-4b7b-99b0-dc9d4e77b631
+> xfsrestore: session id:
+> 8c0a0114-dc68-4e10-a48f-106c4aceecc6
+> xfsrestore: media id: d8f1694a-b641-43bc-a7eb-5f86a2a84221
+> xfsrestore: searching media for directory dump
+> xfsrestore: reading directories
+> xfsrestore: 90681 directories and 539455 entries processed
+> xfsrestore: directory post-processing
+> xfsrestore: restoring non-directory files
+> xfsrestore: attempt to read 388926665 bytes failed: end of
+> recorded data
+> xfsrestore: user quota information written to
+> '/tmp/mnt3/xfsdump_quotas'
+> xfsrestore: group quota information written to
+> '/tmp/mnt3/xfsdump_quotas_group'
+> xfsrestore: use 'xfs_quota' to restore quotas
+> xfsrestore: restore complete: 4235 seconds elapsed
+> xfsrestore: Restore Status: SUCCESS
+> optimus:/mnt/rat # df -h
+> Filesystem=A0 =A0 =A0 =A0 =A0 =A0
+> Size=A0 Used Avail Use% Mounted on
+> rootfs=A0 =A0 =A0 =A0 =A0 =A0 =A0
+> =A0 101G=A0=A0=A041G=A0=A0=A060G=A0
+> 41% /
+> devtmpfs=A0 =A0 =A0 =A0 =A0 =A0 =A0
+> 998M=A0 496K=A0 997M=A0=A0=A01% /dev
+> tmpfs=A0 =A0 =A0 =A0 =A0 =A0 =A0
+> =A0 1004M=A0 1.1M 1003M=A0=A0=A01% /dev/shm
+> /dev/sda2=A0 =A0 =A0 =A0 =A0
+> =A0=A0=A0101G=A0=A0=A041G=A0=A0=A060G=A0
+> 41% /
+> /dev/sda3=A0 =A0 =A0 =A0 =A0
+> =A0=A0=A0824G=A0 697G=A0 127G=A0 85%
+> /home
+> /dev/sdb2=A0 =A0 =A0 =A0 =A0 =A0 =A0
+> 70G=A0 5.8G=A0=A0=A065G=A0=A0=A09%
+> /tmp/mnt2
+> /dev/sdb3=A0 =A0 =A0 =A0 =A0
+> =A0=A0=A0830G=A0=A0=A044G=A0
+> 786G=A0=A0=A06% /tmp/mnt3
+> /dev/sdc1=A0 =A0 =A0 =A0 =A0
+> =A0=A0=A0698G=A0 504G=A0 195G=A0 73% /mnt
+> optimus:/mnt/rat # ll -h
+> total 330G
+> -rw-r--r-- 1 root root 1.1K Sep 19=A0 2010 fstab
+> -rw-r--r-- 1 root root=A0 97G Jul 10 04:02
+> rat10July2011
+> -rw-r--r-- 1 root root 121G Aug 18 14:41 rat18Aug2011
+> -rw-r--r-- 1 root root 113G Jul 31 02:06 rat30July2011
+> optimus:/mnt/rat #
+> =
+
+> =
+
+> =
+
+> --- On Sun, 28/8/11, Gim Leong Chin <chingimleong@yahoo.com.sg>
+> wrote:
+> =
+
+> > From: Gim Leong Chin <chingimleong@yahoo.com.sg>
+> > Subject: xfsrestore Does Only Only Partial Restore
+> > To: xfs@oss.sgi.com
+> > Date: Sunday, 28 August, 2011, 8:31 PM
+> > Hi,
+> > =
+
+> > This is the very first time I tried doing a xfsrestore
+> of a
+> > back up and I hit some serious trouble.
+> > =
+
+> > I had openSUSE 11.1 (kernel 2.6.27) on my Acer
+> > notebook.=A0 I did a xfsdump of /home to a WD My
+> Passport
+> > external USB hard drive with XFS on it.
+> > =
+
+> > I installed openSUSE 11.4 (kernel 2.6.37), then tried
+> to do
+> > xfsrestore from the WD USB drive.=A0 The dump file is
+> 121
+> > GB.
+> > =
+
+> > I tried two times on two different days, but each time
+> the
+> > xfsrestore would stop writing at the exact same point,
+> 49 GB
+> > and say success at the end.
+> > =
+
+> > I then copied the dump file to one hard drive on my
+> desk
+> > top, and did a dump to another hard drive, to
+> > /tmp/mnt3.=A0 I get back identical messages:
+> > =
+
+> > chingl@optimus:~> df
+> > =A0 Filesystem=A0 =A0 =A0 =A0
+> > =A0=A0=A01K-blocks=A0 =A0 =A0 Used
+> > Available Use% Mounted on
+> > =A0 rootfs=A0 =A0 =A0 =A0 =A0 =A0
+> > =A0=A0=A0104878048=A0 42063828=A0
+> > 62814220=A0 41% /
+> > =A0 devtmpfs=A0 =A0 =A0 =A0 =A0 =A0
+> > =A0=A0=A01021032=A0 =A0
+> > =A0=A0=A0480=A0=A0=A01020552=A0=A0=A01%
+> > /dev
+> > =A0 tmpfs=A0 =A0 =A0 =A0 =A0 =A0
+> > =A0 =A0 =A0 1027960=A0 =A0 =A0
+> > 1064=A0=A0=A01026896=A0=A0=A01% /dev/shm
+> > =A0 /dev/sda2=A0 =A0 =A0 =A0 =A0 =A0
+> > 104878048=A0 42063828=A0 62814220=A0 41% /
+> > =A0 /dev/sda3=A0 =A0 =A0 =A0 =A0 =A0
+> > 863017248 730313100 132704148=A0 85% /home
+> > =A0 /dev/sdb2=A0 =A0 =A0 =A0 =A0
+> > =A0=A0=A073363456=A0=A0=A06071484=A0
+> > 67291972=A0=A0=A09% /tmp/mnt2
+> > =A0 /dev/sdb3=A0 =A0 =A0 =A0 =A0 =A0
+> > 869382652=A0 50612736 818769916=A0=A0=A06%
+> > /tmp/mnt3
+> > =A0 chingl@optimus:~> df -h
+> > =A0 Filesystem=A0 =A0 =A0 =A0 =A0 =A0
+> > Size=A0 Used Avail Use% Mounted on
+> > =A0 rootfs=A0 =A0 =A0 =A0 =A0 =A0
+> > =A0 =A0
+> > 101G=A0=A0=A041G=A0=A0=A060G=A0 41% /
+> > =A0 devtmpfs=A0 =A0 =A0 =A0 =A0 =A0
+> > =A0 998M=A0 480K=A0 997M=A0=A0=A01% /dev
+> > =A0 tmpfs=A0 =A0 =A0 =A0 =A0 =A0
+> > =A0 =A0 1004M=A0 1.1M 1003M=A0=A0=A01%
+> > /dev/shm
+> > =A0 /dev/sda2=A0 =A0 =A0 =A0 =A0
+> > =A0=A0=A0101G=A0=A0=A041G=A0=A0=A060G=A0
+> > 41% /
+> > =A0 /dev/sda3=A0 =A0 =A0 =A0 =A0
+> > =A0=A0=A0824G=A0 697G=A0 127G=A0 85%
+> > /home
+> > =A0 /dev/sdb2=A0 =A0 =A0 =A0 =A0 =A0
+> > =A0 70G=A0
+> > 5.8G=A0=A0=A065G=A0=A0=A09% /tmp/mnt2
+> > =A0 /dev/sdb3=A0 =A0 =A0 =A0 =A0
+> > =A0=A0=A0830G=A0=A0=A049G=A0
+> > 781G=A0=A0=A06% /tmp/mnt3
+> > =A0 chingl@optimus:~> cd archive/rat
+> > =A0 chingl@optimus:~/archive/rat> ll
+> > =A0 total 126638256
+> > =A0 -rw-r--r-- 1 chingl users 129677563808 Aug 18
+> 14:41
+> > rat18Aug2011
+> > =A0 chingl@optimus:~/archive/rat>
+> > {>
+> > (>optimus:~ # xfsrestore -f
+> > /home/chingl/archive/rat/rat18Aug2011 /tmp/mnt3
+> > =A0 xfsrestore: using file dump (drive_simple)
+> strategy
+> > =A0 xfsrestore: version 3.0.1 (dump format 3.0) -
+> > Running single-threaded
+> > =A0 xfsrestore: searching media for dump
+> > =A0 xfsrestore: examining media file 0
+> > =A0 xfsrestore: dump description:
+> > =A0 xfsrestore: hostname: rat
+> > =A0 xfsrestore: mount point: /home
+> > =A0 xfsrestore: volume: /dev/sdb3
+> > =A0 xfsrestore: session time: Thu Aug 18 12:57:36 2011
+> > 2>xfsrestore: level: 0
+> > =A0 xfsrestore: session label: "rat_18Aug2011"
+> > =A0 xfsrestore: media label: "rat18Aug2011"
+> > =A0 xfsrestore: file system id:
+> > f3b08587-cf98-4b7b-99b0-dc9d4e77b631
+> > =A0 xfsrestore: session id:
+> > d8069cd0-a092-4fb2-b378-0eda33474aae
+> > =A0 xfsrestore: media id:
+> > 96370000-6e2c-40eb-9c3c-93ca42de7524
+> > =A0 xfsrestore: searching media for directory dump
+> > =A0 xfsrestore: reading directories
+> > =A0 xfsrestore: 90820 directories and 539579 entries
+> > processed
+> > =A0 xfsrestore: directory post-processing
+> > 1>xfsrestore: restoring non-directory files
+> > 9>xfsrestore: attempt to read 1008286921 bytes
+> failed:
+> > end of recorded data
+> > =A0 xfsrestore: user quota information written to
+> > '/tmp/mnt3/xfsdump_quotas'
+> > 7>xfsrestore: group quota information written to
+> > '/tmp/mnt3/xfsdump_quotas_group'
+> > 4>xfsrestore: use 'xfs_quota' to restore quotas
+> > =A0 xfsrestore: restore complete: 2522 seconds elapsed
+> > =A0 xfsrestore: Restore Status: SUCCESS
+> > =A0 optimus:~ #
+> > =
+
+> > I downloaded xfsdump-3.0.5.tar.gz, did a build, and
+> tried
+> > to do a restore using the newly built xfsrestore:
+> > =
+
+> > chingl@optimus:~/testdump> df -h
+> > =A0 Filesystem=A0 =A0 =A0 =A0 =A0 =A0
+> > Size=A0 Used Avail Use% Mounted on
+> > =A0 rootfs=A0 =A0 =A0 =A0 =A0 =A0
+> > =A0 =A0
+> > 101G=A0=A0=A041G=A0=A0=A060G=A0 41% /
+> > =A0 devtmpfs=A0 =A0 =A0 =A0 =A0 =A0
+> > =A0 998M=A0 480K=A0 997M=A0=A0=A01% /dev
+> > =A0 tmpfs=A0 =A0 =A0 =A0 =A0 =A0
+> > =A0 =A0 1004M=A0 1.1M 1003M=A0=A0=A01%
+> > /dev/shm
+> > =A0 /dev/sda2=A0 =A0 =A0 =A0 =A0
+> > =A0=A0=A0101G=A0=A0=A041G=A0=A0=A060G=A0
+> > 41% /
+> > =A0 /dev/sda3=A0 =A0 =A0 =A0 =A0
+> > =A0=A0=A0824G=A0 697G=A0 127G=A0 85%
+> > /home
+> > =A0 /dev/sdb2=A0 =A0 =A0 =A0 =A0 =A0
+> > =A0 70G=A0
+> > 5.8G=A0=A0=A065G=A0=A0=A09% /tmp/mnt2
+> > =A0 /dev/sdb3=A0 =A0 =A0 =A0 =A0
+> > =A0=A0=A0830G=A0=A0=A049G=A0
+> > 781G=A0=A0=A06% /tmp/mnt3
+> > =A0 chingl@optimus:~/testdump> df
+> > =A0 Filesystem=A0 =A0 =A0 =A0
+> > =A0=A0=A01K-blocks=A0 =A0 =A0 Used
+> > Available Use% Mounted on
+> > =A0 rootfs=A0 =A0 =A0 =A0 =A0 =A0
+> > =A0=A0=A0104878048=A0 42063828=A0
+> > 62814220=A0 41% /
+> > =A0 devtmpfs=A0 =A0 =A0 =A0 =A0 =A0
+> > =A0=A0=A01021032=A0 =A0
+> > =A0=A0=A0480=A0=A0=A01020552=A0=A0=A01%
+> > /dev
+> > =A0 tmpfs=A0 =A0 =A0 =A0 =A0 =A0
+> > =A0 =A0 =A0 1027960=A0 =A0 =A0
+> > 1064=A0=A0=A01026896=A0=A0=A01% /dev/shm
+> > =A0 /dev/sda2=A0 =A0 =A0 =A0 =A0 =A0
+> > 104878048=A0 42063828=A0 62814220=A0 41% /
+> > =A0 /dev/sda3=A0 =A0 =A0 =A0 =A0 =A0
+> > 863017248 730313900 132703348=A0 85% /home
+> > =A0 /dev/sdb2=A0 =A0 =A0 =A0 =A0
+> > =A0=A0=A073363456=A0=A0=A06071484=A0
+> > 67291972=A0=A0=A09% /tmp/mnt2
+> > =A0 /dev/sdb3=A0 =A0 =A0 =A0 =A0 =A0
+> > 869382652=A0 50612640 818770012=A0=A0=A06%
+> > /tmp/mnt3
+> > =A0 chingl@optimus:~/testdump>
+> > =A0 =
+
+> > {>
+> > =A0 optimus:/home/chingl/archive/rat #
+> > /home/chingl/XFS/xfsdump-3.0.5/restore/xfsrestore -f
+> > ./rat18Aug2011 /tmp/mnt3
+> > =A0 /home/chingl/XFS/xfsdump-3.0.5/restore/xfsrestore:
+> > using file dump (drive_simple) strategy
+> > =A0 /home/chingl/XFS/xfsdump-3.0.5/restore/xfsrestore:
+> > version 3.0.5 (dump format 3.0) - Running
+> single-threaded
+> > =A0 /home/chingl/XFS/xfsdump-3.0.5/restore/xfsrestore:
+> > searching media for dump
+> > =A0 /home/chingl/XFS/xfsdump-3.0.5/restore/xfsrestore:
+> > examining media file 0
+> > =A0 /home/chingl/XFS/xfsdump-3.0.5/restore/xfsrestore:
+> > dump description:
+> > =A0 /home/chingl/XFS/xfsdump-3.0.5/restore/xfsrestore:
+> > hostname: rat
+> > =A0 /home/chingl/XFS/xfsdump-3.0.5/restore/xfsrestore:
+> > mount point: /home
+> > =A0 /home/chingl/XFS/xfsdump-3.0.5/restore/xfsrestore:
+> > volume: /dev/sdb3
+> > =A0 /home/chingl/XFS/xfsdump-3.0.5/restore/xfsrestore:
+> > session time: Thu Aug 18 12:57:36 2011
+> > =A0 /home/chingl/XFS/xfsdump-3.0.5/restore/xfsrestore:
+> > level: 0
+> > =A0 /home/chingl/XFS/xfsdump-3.0.5/restore/xfsrestore:
+> > session label: "rat_18Aug2011"
+> > =A0 /home/chingl/XFS/xfsdump-3.0.5/restore/xfsrestore:
+> > media label: "rat18Aug2011"
+> >
+> 3>/home/chingl/XFS/xfsdump-3.0.5/restore/xfsrestore:
+> > file system id: f3b08587-cf98-4b7b-99b0-dc9d4e77b631
+> > =A0 /home/chingl/XFS/xfsdump-3.0.5/restore/xfsrestore:
+> > session id: d8069cd0-a092-4fb2-b378-0eda33474aae
+> > =A0 /home/chingl/XFS/xfsdump-3.0.5/restore/xfsrestore:
+> > media id: 96370000-6e2c-40eb-9c3c-93ca42de7524
+> > =A0 /home/chingl/XFS/xfsdump-3.0.5/restore/xfsrestore:
+> > searching media for directory dump
+> > =A0 /home/chingl/XFS/xfsdump-3.0.5/restore/xfsrestore:
+> > reading directories
+> > =A0 /home/chingl/XFS/xfsdump-3.0.5/restore/xfsrestore:
+> > 90820 directories and 539579 entries processed
+> > =A0 /home/chingl/XFS/xfsdump-3.0.5/restore/xfsrestore:
+> > directory post-processing
+> > =A0 /home/chingl/XFS/xfsdump-3.0.5/restore/xfsrestore:
+> > restoring non-directory files
+> > =A0 xfsrestore: content.c:7510: restore_extent_group:
+> > Assertion `ehdr.eh_type =3D=3D 4' failed.
+> > (>Aborted
+> > 2>optimus:/home/chingl/archive/rat #
+> > =
+
+> > =
+
+> > Could some one please assist to enlighten me what is
+> going
+> > on, why does the restoration fail?=A0 The xfsdump
+> session
+> > looked OK.
+> > =
+
+> > Is there any way I can extract back my /home back
+> up?=A0
+> > This is my only back up copy.=A0 i have two other
+> xfsdump
+> > dump files taken earlier, I have not tried those.
+> > =
+
+> > Is xfsdump and xfsrestore really robust for dump to
+> regular
+> > file, or should I have done a tar instead?
+> > =
+
+> > Thank you.
+> > =
+
+> > GL
+> > =
+
+> > _______________________________________________
+> > xfs mailing list
+> > xfs@oss.sgi.com
+> > http://oss.sgi.com/mailman/listinfo/xfs
+> > =
+
+> =
+
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> =
+
 
 _______________________________________________
 xfs mailing list
