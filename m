@@ -1,23 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7TDbM68073952 for <xfs@oss.sgi.com>; Mon, 29 Aug 2011 08:37:22 -0500
-Received: from test.thunk.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 101FB543A5F
-	for <xfs@oss.sgi.com>; Mon, 29 Aug 2011 06:37:21 -0700 (PDT)
-Received: from test.thunk.org (li9-11.members.linode.com [67.18.176.11]) by
-	cuda.sgi.com with ESMTP id lJyDndIlh2mp7JQB for
-	<xfs@oss.sgi.com>; Mon, 29 Aug 2011 06:37:21 -0700 (PDT)
-Date: Mon, 29 Aug 2011 09:37:18 -0400
-From: "Ted Ts'o" <tytso@mit.edu>
-Subject: Re: [PATCH] xfstests: don't print "do not support" warnings unless
-	verbose is specified
-Message-ID: <20110829133718.GD12187@thunk.org>
-References: <1314467002-20297-1-git-send-email-tytso@mit.edu>
-	<20110829053621.GH32358@dastard>
+	p7TEBdNO075102 for <xfs@oss.sgi.com>; Mon, 29 Aug 2011 09:11:39 -0500
+Message-ID: <4E5B9E17.4010504@sgi.com>
+Date: Mon, 29 Aug 2011 09:11:35 -0500
+From: Bill Kendall <wkendall@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110829053621.GH32358@dastard>
+Subject: Re: xfsrestore Does Only Only Partial Restore
+References: <1314534700.48540.YahooMailClassic@web77701.mail.sg1.yahoo.com>
+In-Reply-To: <1314534700.48540.YahooMailClassic@web77701.mail.sg1.yahoo.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,40 +17,47 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs@oss.sgi.com
+To: Gim Leong Chin <chingimleong@yahoo.com.sg>
+Cc: xfs@oss.sgi.com
 
-On Mon, Aug 29, 2011 at 03:36:21PM +1000, Dave Chinner wrote:
-> On Sat, Aug 27, 2011 at 01:43:22PM -0400, Theodore Ts'o wrote:
-> > Commit 630421f6d449 attempts to avoid printing the "fallocate not
-> > supported" warning if the -q (quiet) option is specified on the
-> > command-line.  Unfortunately tests 75 and 112 don't set the -q flag.
-> > This causes test failures for file systems that don't support
-> > fallocate or the punch hole functionality.
-> > 
-> > I considered changing tests 75 and 112 to pass -q to fsx, but that
-> > would suppress other warning messages that could be legitimate test
-> > failures, so I decided to add a new -v (vebose) flag.
+Gim Leong Chin wrote:
+> Hi,
 > 
-> Oh, so now we can have verbose quietness? Or is it quiet verbosity?
-> That quickly leads to insanity.... :/
+> This is the very first time I tried doing a xfsrestore of a back up and I hit some serious trouble.
 > 
-> The quiet flag only suppresses output that is otherwise logged and
-> output when a failure occurs. Hence setting the quiet won't cause
-> any loss of functionality or error detection for these tests so you
-> should just add the quiet flag to the tests.
+> I had openSUSE 11.1 (kernel 2.6.27) on my Acer notebook.  I did a xfsdump of /home to a WD My Passport external USB hard drive with XFS on it.
+> 
+> I installed openSUSE 11.4 (kernel 2.6.37), then tried to do xfsrestore from the WD USB drive.  The dump file is 121 GB.
+> 
+> I tried two times on two different days, but each time the xfsrestore would stop writing at the exact same point, 49 GB and say success at the end.
+> 
+> I then copied the dump file to one hard drive on my desk top, and did a dump to another hard drive, to /tmp/mnt3.  I get back identical messages:
+> 
 
-OK, I'll resubmit a patch which changes the tests (i.e., 75 and 112)
-to pass the -q flag to fsx.  I had thought _not_ passing -q was
-deliberate, but reviewing the output, it does seem that none of the
-!quiet messages are all that important.
+...
 
-					- Ted
+> 9>xfsrestore: attempt to read 1008286921 bytes failed: end of recorded data
 
+xfsdump breaks a file's data into "extents" that are a max size of 16 MB.
+The fact that this is trying to read almost 1 GB here indicates that
+the extend header is corrupt.
+
+...
+
+>   xfsrestore: content.c:7510: restore_extent_group: Assertion `ehdr.eh_type == 4' failed.
+
+As Dave said, this also indicates a corrupt extent header.
+
+I'd recommend adding "-v 5" to your xfsrestore command line and redirecting the
+(very verbose) output to a file, and send that compressed output to me or the
+list. It'd be best to do this with more than one of your dumps so we can see
+if there's a pattern to where the corruption occurs.
+
+Bill
 
 _______________________________________________
 xfs mailing list
