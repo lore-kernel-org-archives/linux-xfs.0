@@ -1,15 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7TFKuML077834 for <xfs@oss.sgi.com>; Mon, 29 Aug 2011 10:20:56 -0500
-Message-ID: <4E5BAE54.9070401@sgi.com>
-Date: Mon, 29 Aug 2011 10:20:52 -0500
-From: Bill Kendall <wkendall@sgi.com>
+	p7TGaOND081052 for <xfs@oss.sgi.com>; Mon, 29 Aug 2011 11:36:24 -0500
+Received: from nm4-vm0.bullet.mail.sg1.yahoo.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with SMTP id 7C926122525
+	for <xfs@oss.sgi.com>; Mon, 29 Aug 2011 09:36:22 -0700 (PDT)
+Received: from nm4-vm0.bullet.mail.sg1.yahoo.com
+	(nm4-vm0.bullet.mail.sg1.yahoo.com [115.178.12.244]) by
+	cuda.sgi.com with SMTP id PN2BVAFIAqOJhjYU for
+	<xfs@oss.sgi.com>; Mon, 29 Aug 2011 09:36:22 -0700 (PDT)
+Message-ID: <1314635781.16065.YahooMailClassic@web77703.mail.sg1.yahoo.com>
+Date: Tue, 30 Aug 2011 00:36:21 +0800 (SGT)
+From: Gim Leong Chin <chingimleong@yahoo.com.sg>
+Subject: Re: xfsrestore Does Only Only Partial Restore
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfsdump: call mlog_exit in content_stream_restore
-References: <1313434763-22340-1-git-send-email-wkendall@sgi.com>
-	<1314375344.2821.47.camel@doink>
-In-Reply-To: <1314375344.2821.47.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,111 +22,102 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: aelder@sgi.com
+To: Bill Kendall <wkendall@sgi.com>
 Cc: xfs@oss.sgi.com
 
-Alex Elder wrote:
-> On Mon, 2011-08-15 at 13:59 -0500, Bill Kendall wrote:
->> This patch adds mlog_exit() calls to all the return paths in
->> content_stream_restore(). mlog_exit() is supposed to be called before
->> returning from content_stream_dump() and content_stream_restore(), but
->> many paths in the latter did not do so, allowing for the stream exit
->> status to be incorrect.
->>
->> Signed-off-by: Bill Kendall <wkendall@sgi.com>
-> 
-> It looks like content_stream_restore() *never* used it.
+Hi Bill,
 
-You are right. I was thinking of calls to mlog_exit_hint() from functions
-called by content_stream_restore().
+Right now the log file is already over 500 MB and growing.=A0 Even after co=
+mpression I do not think I can mail it as an attachment.
 
-> 
-> Looking at _mlog_exit(), it looks to me like it could
-> benefit from using exit_codestring() rather than the
-> exit_strings[] array (which could be deleted).  This
-> would report "EXIT_ERROR" instead of just "ERROR" though,
-> and normal exit would be reported as "EXIT_NORMAL"
-> rather than "SUCCESS".   The function call is more
-> resilient though because it handles any value it's
-> passed (whereas one could conceivably index beyond
-> the end of the exit_strings[] array).
-> 
-> Just a thought--a suggestion for a future patch.
+Is there any other way that I can send you the log files?
 
-Currently the stream exit status ("EXIT_*") is not printed on Linux, due
-to only supporting a single stream. So we have some flexibility there.
-i.e., exit_codestring() could return "ERROR" instead of "EXIT_ERROR".
 
-> 
-> More suggestions below.  They apply to pretty much
-> the whole thing so I've put it all at the bottom.
+GL
 
-...
+--- On Mon, 29/8/11, Bill Kendall <wkendall@sgi.com> wrote:
 
->> @@ -2545,7 +2545,7 @@ content_stream_restore( ix_t thrdix )
->>  #ifndef EOMFIX
->>  		Media_end( Mediap );
->>  #endif /* ! EOMFIX */
-> 
-> These #ifdef's are pretty yucky.
-> 
-> Another suggested future cleanup:  Add a flag to Media_end() to
-> indicate whether this is one of those #ifdef's calls, and
-> within Media_end() use a single #ifdef to determine whether
-> simply return or actually do it, based on that passed-in value.
-> Then just call Media_end() in all spots without the #ifdef's.
-> 
->> -		return EXIT_NORMAL;
->> +		return mlog_exit(EXIT_NORMAL, RV_DONE);
->>  	}
->>  	tranp->t_sync5 = SYNC_BUSY;
->>  	unlock( );
+> From: Bill Kendall <wkendall@sgi.com>
+> Subject: Re: xfsrestore Does Only Only Partial Restore
+> To: "Gim Leong Chin" <chingimleong@yahoo.com.sg>
+> Cc: xfs@oss.sgi.com
+> Date: Monday, 29 August, 2011, 10:11 PM
+> Gim Leong Chin wrote:
+> > Hi,
+> > =
 
-EOMFIX is always defined, it really shouldn't be conditional code anymore.
-I was planning to take care of that in a future patch, but since it may
-cleanup this patch a bit I'll do the EOMFIX patch first and resubmit this
-afterwards. There's also a number of other #defines that should go away,
-I'll look at those as well.
+> > This is the very first time I tried doing a xfsrestore
+> of a back up and I hit some serious trouble.
+> > =
 
-> 
-> . . .
-> 
->> @@ -2588,7 +2588,7 @@ content_stream_restore( ix_t thrdix )
->>  #ifndef EOMFIX
->>  	Media_end( Mediap );
->>  #endif /* ! EOMFIX */
->> -	return EXIT_NORMAL;
->> +	return mlog_exit(EXIT_NORMAL, rv);
-> 
-> If you kept this line as-is, use RV_OK rather than rv,
-> since it makes it more explicit we know that's what's
-> getting returned.  The same would hold in many spots
-> above as well.
+> > I had openSUSE 11.1 (kernel 2.6.27) on my Acer
+> notebook.=A0 I did a xfsdump of /home to a WD My Passport
+> external USB hard drive with XFS on it.
+> > =
 
-I'll take a look at doing this.
+> > I installed openSUSE 11.4 (kernel 2.6.37), then tried
+> to do xfsrestore from the WD USB drive.=A0 The dump file
+> is 121 GB.
+> > =
 
-> 
-> But...
-> 
-> The end of this function is a whole bunch of repetitive
-> code.  It would be cleaner to assign a "ret" variable
-> (or whatever name you think fits the existing code)
-> and then after this last switch statement call:
-> 
-> 	return mlog_exit(ret, rv);
-> 
-> (If Media_end() got a flag, you might not need the
-> switch statement at all...)
+> > I tried two times on two different days, but each time
+> the xfsrestore would stop writing at the exact same point,
+> 49 GB and say success at the end.
+> > =
 
-Still need to map the RVAL_* value from finalize() to
-the right EXIT_*, so the switch cannot be removed
-altogether but can be simplified.
+> > I then copied the dump file to one hard drive on my
+> desk top, and did a dump to another hard drive, to
+> /tmp/mnt3.=A0 I get back identical messages:
+> > =
 
-Bill
+> =
+
+> ...
+> =
+
+> > 9>xfsrestore: attempt to read 1008286921 bytes
+> failed: end of recorded data
+> =
+
+> xfsdump breaks a file's data into "extents" that are a max
+> size of 16 MB.
+> The fact that this is trying to read almost 1 GB here
+> indicates that
+> the extend header is corrupt.
+> =
+
+> ...
+> =
+
+> >=A0=A0=A0xfsrestore: content.c:7510:
+> restore_extent_group: Assertion `ehdr.eh_type =3D=3D 4' failed.
+> =
+
+> As Dave said, this also indicates a corrupt extent header.
+> =
+
+> I'd recommend adding "-v 5" to your xfsrestore command line
+> and redirecting the
+> (very verbose) output to a file, and send that compressed
+> output to me or the
+> list. It'd be best to do this with more than one of your
+> dumps so we can see
+> if there's a pattern to where the corruption occurs.
+> =
+
+> Bill
+> =
+
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+>
+
 
 _______________________________________________
 xfs mailing list
