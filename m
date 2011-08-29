@@ -1,14 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7TGiIvC081372 for <xfs@oss.sgi.com>; Mon, 29 Aug 2011 11:44:18 -0500
-Message-ID: <4E5BC1DE.6080506@sgi.com>
-Date: Mon, 29 Aug 2011 11:44:14 -0500
-From: Bill Kendall <wkendall@sgi.com>
+	p7TIs5cH086297 for <xfs@oss.sgi.com>; Mon, 29 Aug 2011 13:54:06 -0500
+Date: Mon, 29 Aug 2011 14:53:51 -0400 (EDT)
+From: Mikulas Patocka <mpatocka@redhat.com>
+Subject: Re: [dm-devel] new dm-bufio
+In-Reply-To: <20110823185423.GA10936@infradead.org>
+Message-ID: <Pine.LNX.4.64.1108291445460.7825@hs20-bc2-1.build.redhat.com>
+References: <Pine.LNX.4.64.1108221600510.26651@hs20-bc2-1.build.redhat.com>
+	<20110823113048.GC5442@ubuntu>
+	<Pine.LNX.4.64.1108231012560.2629@hs20-bc2-1.build.redhat.com>
+	<20110823185423.GA10936@infradead.org>
 MIME-Version: 1.0
-Subject: Re: xfsrestore Does Only Only Partial Restore
-References: <1314635781.16065.YahooMailClassic@web77703.mail.sg1.yahoo.com>
-In-Reply-To: <1314635781.16065.YahooMailClassic@web77703.mail.sg1.yahoo.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -17,88 +20,30 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Gim Leong Chin <chingimleong@yahoo.com.sg>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com, xfs-masters@oss.sgi.com, Christoph Hellwig <hch@infradead.org>
+Cc: device-mapper development <dm-devel@redhat.com>, Joe Thornber <thornber@redhat.com>, Mike Snitzer <snitzer@redhat.com>, "Alasdair G. Kergon" <agk@redhat.com>
 
-Gim Leong Chin wrote:
-> Hi Bill,
-> 
-> Right now the log file is already over 500 MB and growing.  Even after compression I do not think I can mail it as an attachment.
-> 
-> Is there any other way that I can send you the log files?
 
-If you could just send the last few thousand lines that should be sufficient.
-If I do end up needing more than that I can provide an ftp drop for you.
 
-Thanks,
-Bill
+On Tue, 23 Aug 2011, Christoph Hellwig wrote:
 
-> 
-> 
-> GL
-> 
-> --- On Mon, 29/8/11, Bill Kendall <wkendall@sgi.com> wrote:
-> 
->> From: Bill Kendall <wkendall@sgi.com>
->> Subject: Re: xfsrestore Does Only Only Partial Restore
->> To: "Gim Leong Chin" <chingimleong@yahoo.com.sg>
->> Cc: xfs@oss.sgi.com
->> Date: Monday, 29 August, 2011, 10:11 PM
->> Gim Leong Chin wrote:
->>> Hi,
->>>
->>> This is the very first time I tried doing a xfsrestore
->> of a back up and I hit some serious trouble.
->>> I had openSUSE 11.1 (kernel 2.6.27) on my Acer
->> notebook.  I did a xfsdump of /home to a WD My Passport
->> external USB hard drive with XFS on it.
->>> I installed openSUSE 11.4 (kernel 2.6.37), then tried
->> to do xfsrestore from the WD USB drive.  The dump file
->> is 121 GB.
->>> I tried two times on two different days, but each time
->> the xfsrestore would stop writing at the exact same point,
->> 49 GB and say success at the end.
->>> I then copied the dump file to one hard drive on my
->> desk top, and did a dump to another hard drive, to
->> /tmp/mnt3.  I get back identical messages:
->> ...
->>
->>> 9>xfsrestore: attempt to read 1008286921 bytes
->> failed: end of recorded data
->>
->> xfsdump breaks a file's data into "extents" that are a max
->> size of 16 MB.
->> The fact that this is trying to read almost 1 GB here
->> indicates that
->> the extend header is corrupt.
->>
->> ...
->>
->>>    xfsrestore: content.c:7510:
->> restore_extent_group: Assertion `ehdr.eh_type == 4' failed.
->>
->> As Dave said, this also indicates a corrupt extent header.
->>
->> I'd recommend adding "-v 5" to your xfsrestore command line
->> and redirecting the
->> (very verbose) output to a file, and send that compressed
->> output to me or the
->> list. It'd be best to do this with more than one of your
->> dumps so we can see
->> if there's a pattern to where the corruption occurs.
->>
->> Bill
->>
->> _______________________________________________
->> xfs mailing list
->> xfs@oss.sgi.com
->> http://oss.sgi.com/mailman/listinfo/xfs
->>
-> 
+> FYI, the "shrinker" interface in include/linux/shrinker.h is how the
+> VM tells subsystems to shrink their memory usage.  It is used for
+> various slab caches, and the XFS buffercache in
+> fs/xfs/linux-2.6/xfs_buf.c
+
+BTW. shrinker functions from xfs_qm.c - xfs_qm_shake and 
+xfs_qm_shake_freelist - look completely bogus. They don't read 
+sc->nr_to_scan to determine how many values they should scan (and compare 
+it with zero to test if they should scan at all) and they return the 
+number of entries freed - the interface specifies that they should return 
+the number of entries remaining the in cache.
+
+Mikulas
 
 _______________________________________________
 xfs mailing list
