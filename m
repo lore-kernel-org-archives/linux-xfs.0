@@ -1,24 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7UDnCrq138897 for <xfs@oss.sgi.com>; Tue, 30 Aug 2011 08:49:13 -0500
-Received: from mx2.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C31BC13AF65D
-	for <xfs@oss.sgi.com>; Tue, 30 Aug 2011 06:52:31 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id N8rjMdCCpxz1WuIP for <xfs@oss.sgi.com>;
-	Tue, 30 Aug 2011 06:52:31 -0700 (PDT)
-Date: Tue, 30 Aug 2011 14:49:00 +0100
-From: Mel Gorman <mgorman@suse.de>
-Subject: Re: [PATCH 6/7] mm: vmscan: Throttle reclaim if encountering too
-	many dirty pages under writeback
-Message-ID: <20110830134900.GC14369@suse.de>
-References: <1312973240-32576-1-git-send-email-mgorman@suse.de>
-	<1312973240-32576-7-git-send-email-mgorman@suse.de>
-	<20110818165428.4f01a1b9.akpm@linux-foundation.org>
+	p7UHjglI149559 for <xfs@oss.sgi.com>; Tue, 30 Aug 2011 12:45:42 -0500
+Received: from rcsinet15.oracle.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 68B10126DC4
+	for <xfs@oss.sgi.com>; Tue, 30 Aug 2011 10:45:40 -0700 (PDT)
+Received: from rcsinet15.oracle.com (rcsinet15.oracle.com [148.87.113.117]) by
+	cuda.sgi.com with ESMTP id EmQNhHaJUAfQdU0T for
+	<xfs@oss.sgi.com>; Tue, 30 Aug 2011 10:45:40 -0700 (PDT)
+Message-ID: <4E5D210D.3040608@oracle.com>
+Date: Tue, 30 Aug 2011 10:42:37 -0700
+From: Sunil Mushran <sunil.mushran@oracle.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110818165428.4f01a1b9.akpm@linux-foundation.org>
+Subject: Re: [PATCH] xfstests 255: add a seek_data/seek_hole tester
+References: <1309275199-10801-1-git-send-email-josef@redhat.com>
+	<1309275199-10801-5-git-send-email-josef@redhat.com>
+	<20110825060632.GA9933@infradead.org>
+	<20110825064039.GO3162@dastard>
+	<0A267E55-7772-438D-B6A7-89B73020F311@dilger.ca>
+	<20110826013528.GW3162@dastard>
+	<CANGUGtC1qk2Tkv42fvibUKiEJz_MnNiV-nQ7T-_woppVhjQK-Q@mail.gmail.com>
+	<20110826144124.GA17519@lulu.zabbo.net>
+	<4E58AB28.1080009@gmail.com>
+In-Reply-To: <4E58AB28.1080009@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,58 +31,44 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Rik van Riel <riel@redhat.com>, Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, XFS <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, Linux-MM <linux-mm@kvack.org>, Minchan Kim <minchan.kim@gmail.com>, Wu Fengguang <fengguang.wu@intel.com>, Johannes Weiner <jweiner@redhat.com>
+To: Marco Stornelli <marco.stornelli@gmail.com>
+Cc: Andreas Dilger <adilger@dilger.ca>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, linux-btrfs@vger.kernel.org, dchinner@redhat.com, linux-fsdevel@vger.kernel.org, Zach Brown <zab@zabbo.net>, Josef Bacik <josef@redhat.com>, viro@zeniv.linux.org.uk
 
-On Thu, Aug 18, 2011 at 04:54:28PM -0700, Andrew Morton wrote:
-> On Wed, 10 Aug 2011 11:47:19 +0100
-> Mel Gorman <mgorman@suse.de> wrote:
-> 
-> > The percentage that must be in writeback depends on the priority. At
-> > default priority, all of them must be dirty. At DEF_PRIORITY-1, 50%
-> > of them must be, DEF_PRIORITY-2, 25% etc. i.e. as pressure increases
-> > the greater the likelihood the process will get throttled to allow
-> > the flusher threads to make some progress.
-> 
-> It'd be nice if the code comment were to capture this piece of implicit
-> arithmetic.  After all, it's a magic number and magic numbers should
-> stick out like sore thumbs.
-> 
-> And.. how do we know that the chosen magic numbers were optimal?
+On 08/27/2011 01:30 AM, Marco Stornelli wrote:
+> Il 26/08/2011 16:41, Zach Brown ha scritto:
+>>>> Hole: a range of the file that contains no data or is made up
+>>>> entirely of  NULL (zero) data. Holes include preallocated ranges of
+>>>> files that have not had actual data written to them.
+>>
+>>> No for me. A hole is made up of zero data? It's a strange definition
+>>> for me.
+>>
+>> It's a very natural definition for me.  It mirrors the behaviour of
+>> read() of sparse data inside i_size that file system authors already
+>> have to consider.
+>>
+>> It's also a reminder for people that this interface is about avoiding
+>> reading zeros.  Systems that track contents can do this for files that
+>> had tons of zeros written.  The data is there but the app is
+>> specifically asking us to skip it by using SEEK_DATA.
+>>
+>> - z
+>>
+>
+> I think we need to consider a hole and "data not present/not written yet" as two different cases even they are related. For example, if I do an fallocate without keep size option, then I do a read, I have the same behavior of sparse data inside i_size, but the blocks are allocated so no sparse data in this case. Simply there are no difference from app point of view.
 
-Good question. The short answer "we don't know but it's not important
-to get this particular decision perfect because the real throttling
-should happen earlier".
+Exactly. That's why seek_hole should identify them alike, if possible.
+But that should not be a requirement because the sole aim here is
+to improve performance. Identifying a hole as data is not the end of
+the world. In some cases it may be more efficient. We just have to
+ensure that we don't identify data as a hole.
 
-Now the long answer;
-
-For the value to be used, pages under writeback must be reaching the
-end of the LRU. This implies that the rate of page consumption is
-exceeding the writing speed of the backing storage. Regardless of
-what decision is made, the rate of page allocation must be reduced
-as the the system is already in a sub-optimal state of requiring more
-resources than are available.
-
-The values are based on a simple expontial backoff function with useful
-ranges of DEF_PRIORITY to DEF_PRIORITY-2 which is the point where
-"kswapd is getting into trouble". However, any decreasing function
-within that range is sufficient because while there might be an optimal
-choice, it makes little difference overall as the decision is made
-too late with no guarantee the process doing the dirtying is throttled.
-
-The truly optimal decision is to throttle writers to slow storage
-earlier in balance_dirty_pages() and have dirty_ratio scaled
-proportional to the estimate writeback speed of the underlying storage
-but we do not have that yet. This patches throttling decision is
-fairly close to the best we can do from reclaim context.
-
--- 
-Mel Gorman
-SUSE Labs
+BTW, we still have the fiemap interface that allows users to identify
+unwritten extents, etc. Use that if you want that kind of detail.
 
 _______________________________________________
 xfs mailing list
