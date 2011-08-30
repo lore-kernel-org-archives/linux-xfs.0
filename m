@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7U5Rxkk114093 for <xfs@oss.sgi.com>; Tue, 30 Aug 2011 00:27:59 -0500
-Date: Tue, 30 Aug 2011 01:27:55 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [xfs-masters] [dm-devel] new dm-bufio
-Message-ID: <20110830052755.GA30730@infradead.org>
-References: <Pine.LNX.4.64.1108221600510.26651@hs20-bc2-1.build.redhat.com>
-	<20110823113048.GC5442@ubuntu>
-	<Pine.LNX.4.64.1108231012560.2629@hs20-bc2-1.build.redhat.com>
-	<20110823185423.GA10936@infradead.org>
-	<Pine.LNX.4.64.1108291445460.7825@hs20-bc2-1.build.redhat.com>
-	<20110830014906.GJ3162@dastard>
+	p7U6OOnI117280 for <xfs@oss.sgi.com>; Tue, 30 Aug 2011 01:24:25 -0500
+Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CE981124CE9
+	for <xfs@oss.sgi.com>; Mon, 29 Aug 2011 23:24:22 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	QCE6xBtIa3VZ9wFS for <xfs@oss.sgi.com>;
+	Mon, 29 Aug 2011 23:24:22 -0700 (PDT)
+Date: Tue, 30 Aug 2011 16:24:16 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/2] xfs: fix xfs_mark_inode_dirty during umount
+Message-ID: <20110830062416.GN3162@dastard>
+References: <20110827055731.GA24159@infradead.org>
+	<20110827055744.GA28351@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110830014906.GJ3162@dastard>
+In-Reply-To: <20110827055744.GA28351@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,29 +30,62 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Joe Thornber <thornber@redhat.com>, Mike Snitzer <snitzer@redhat.com>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, xfs-masters@oss.sgi.com, device-mapper development <dm-devel@redhat.com>, Mikulas Patocka <mpatocka@redhat.com>, "Alasdair G. Kergon" <agk@redhat.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Tue, Aug 30, 2011 at 11:49:06AM +1000, Dave Chinner wrote:
+On Sat, Aug 27, 2011 at 01:57:44AM -0400, Christoph Hellwig wrote:
+> During umount we do not add a dirty inode to the lru and wait for it to
+> become clean first, but force writeback of data and metadata with
+> I_WILL_FREE set.  Currently there is no way for XFS to detect that the
+> inode has been redirtied for metadata operations, as we skip the
+> mark_inode_dirty call during teardown.  Fix this by setting i_update_core
+> nanually in that case, so that the inode gets flushed during inode reclaim.
 > 
-> It's a relic from the days of Irix that we've kept around and never
-> really touched because it's never shown up as a problem. Such code
-> is cleaned up as we go along or as problems arise.
+> Alternatively we could enable calling mark_inode_dirty for inodes in
+> I_WILL_FREE state, and let the VFS dirty tracking handle this.  I decided
+> against this as we will get better I/O patterns from reclaim compared to
+> the synchronous writeout in write_inode_now, and always marking the inode
+> dirty in some way from xfs_mark_inode_dirty is a better safetly net in
+> either case.
 > 
-> As it is, this patchset:
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > 
-> http://thread.gmane.org/gmane.linux.kernel.mm/67326
-> 
-> that I'm currently working on changes the shrinker API to be much
-> more sane - the shrinker now has a separate "count objects"
-> operation and the "scan objects" operation now returns the number of
-> items freed rather than the number of items left in the cache.
+> Index: linux-2.6/fs/xfs/xfs_iops.c
+> ===================================================================
+> --- linux-2.6.orig/fs/xfs/xfs_iops.c	2011-08-26 12:31:19.090631739 +0200
+> +++ linux-2.6/fs/xfs/xfs_iops.c	2011-08-26 12:35:43.692531800 +0200
+> @@ -70,9 +70,8 @@ xfs_synchronize_times(
+>  }
+>  
+>  /*
+> - * If the linux inode is valid, mark it dirty.
+> - * Used when committing a dirty inode into a transaction so that
+> - * the inode will get written back by the linux code
+> + * If the linux inode is valid, mark it dirty, else mark the dirty state
+> + * in the XFS inode to make sure we pick it up when reclaiming the inode.
+>   */
+>  void
+>  xfs_mark_inode_dirty_sync(
+> @@ -82,6 +81,10 @@ xfs_mark_inode_dirty_sync(
+>  
+>  	if (!(inode->i_state & (I_WILL_FREE|I_FREEING)))
+>  		mark_inode_dirty_sync(inode);
+> +	else {
+> +		barrier();
+> +		ip->i_update_core = 1;
+> +	}
+>  }
 
-I think if you find bugs like that they should be in patches separate
-from the main conversion.  Especially given that the 3.2 merge window
-is getting closer a first batch of patches with these fixes and some
-of the preparatory icache/dcache changes that can go into linux-next
-ASAP would be nice.
+Why the barrier()? Isn't that just a compiler barrier? If you are
+worried about catching the update vs clearing it in transaction
+commit, shouldn't that use smp_mb() instead (in both places)?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
