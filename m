@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7U6UijW117611 for <xfs@oss.sgi.com>; Tue, 30 Aug 2011 01:30:44 -0500
-Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id ACA3113AD4FE
-	for <xfs@oss.sgi.com>; Mon, 29 Aug 2011 23:34:02 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	vIyWEZbMDzds3Wtm for <xfs@oss.sgi.com>;
-	Mon, 29 Aug 2011 23:34:02 -0700 (PDT)
-Date: Tue, 30 Aug 2011 16:30:35 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: avoid synchronous transactions when deleting attr
-	blocks
-Message-ID: <20110830063035.GQ3162@dastard>
-References: <20110827144511.GB16381@infradead.org>
+	p7U6dq3c118035 for <xfs@oss.sgi.com>; Tue, 30 Aug 2011 01:39:53 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5BD4E13AD537
+	for <xfs@oss.sgi.com>; Mon, 29 Aug 2011 23:43:09 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	TYeklDOlYcjcNZyo for <xfs@oss.sgi.com>;
+	Mon, 29 Aug 2011 23:43:09 -0700 (PDT)
+Date: Tue, 30 Aug 2011 02:39:49 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/2] xfs: fix xfs_mark_inode_dirty during umount
+Message-ID: <20110830063949.GA19262@infradead.org>
+References: <20110827055731.GA24159@infradead.org>
+	<20110827055744.GA28351@infradead.org>
+	<20110830062416.GN3162@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110827144511.GB16381@infradead.org>
+In-Reply-To: <20110830062416.GN3162@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,26 +32,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Sat, Aug 27, 2011 at 10:45:11AM -0400, Christoph Hellwig wrote:
-> Currently xfs_attr_inactive causes a synchronous transactions if we are
-> removing a file that has any extents allocated to the attribute fork, and
-> thus makes XFS extremely slow at removing files with out of line extended
-> attributes. The code looks a like a relict from the days before the busy
-> extent list, but with the busy extent list we avoid reusing data and attr
-> extents that have been freed but not commited yet, so this code is just
-> as superflous as the synchronous transactions for data blocks.
+On Tue, Aug 30, 2011 at 04:24:16PM +1000, Dave Chinner wrote:
+> >  xfs_mark_inode_dirty_sync(
+> > @@ -82,6 +81,10 @@ xfs_mark_inode_dirty_sync(
+> >  
+> >  	if (!(inode->i_state & (I_WILL_FREE|I_FREEING)))
+> >  		mark_inode_dirty_sync(inode);
+> > +	else {
+> > +		barrier();
+> > +		ip->i_update_core = 1;
+> > +	}
+> >  }
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reported-by: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
+> Why the barrier()? Isn't that just a compiler barrier? If you are
+> worried about catching the update vs clearing it in transaction
+> commit, shouldn't that use smp_mb() instead (in both places)?
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
--- 
-Dave Chinner
-david@fromorbit.com
+It's a blind copy & past from xfs_fs_dirty_inode.  The comments
+there suggests it is for update ordering.
 
 _______________________________________________
 xfs mailing list
