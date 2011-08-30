@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7U6dq3c118035 for <xfs@oss.sgi.com>; Tue, 30 Aug 2011 01:39:53 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5BD4E13AD537
-	for <xfs@oss.sgi.com>; Mon, 29 Aug 2011 23:43:09 -0700 (PDT)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	TYeklDOlYcjcNZyo for <xfs@oss.sgi.com>;
-	Mon, 29 Aug 2011 23:43:09 -0700 (PDT)
-Date: Tue, 30 Aug 2011 02:39:49 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/2] xfs: fix xfs_mark_inode_dirty during umount
-Message-ID: <20110830063949.GA19262@infradead.org>
+	p7U6PZFo117362 for <xfs@oss.sgi.com>; Tue, 30 Aug 2011 01:25:36 -0500
+Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 26DA41E7F3CF
+	for <xfs@oss.sgi.com>; Mon, 29 Aug 2011 23:25:34 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	ujVx6F0BiPLkcQKf for <xfs@oss.sgi.com>;
+	Mon, 29 Aug 2011 23:25:34 -0700 (PDT)
+Date: Tue, 30 Aug 2011 16:25:32 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/2] xfs: fix ->write_inode return values
+Message-ID: <20110830062532.GO3162@dastard>
 References: <20110827055731.GA24159@infradead.org>
-	<20110827055744.GA28351@infradead.org>
-	<20110830062416.GN3162@dastard>
+	<20110827055755.GB28351@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110830062416.GN3162@dastard>
+In-Reply-To: <20110827055755.GB28351@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,27 +30,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Tue, Aug 30, 2011 at 04:24:16PM +1000, Dave Chinner wrote:
-> >  xfs_mark_inode_dirty_sync(
-> > @@ -82,6 +81,10 @@ xfs_mark_inode_dirty_sync(
-> >  
-> >  	if (!(inode->i_state & (I_WILL_FREE|I_FREEING)))
-> >  		mark_inode_dirty_sync(inode);
-> > +	else {
-> > +		barrier();
-> > +		ip->i_update_core = 1;
-> > +	}
-> >  }
+On Sat, Aug 27, 2011 at 01:57:55AM -0400, Christoph Hellwig wrote:
+> Currently we always redirty an inode that was attempted to be written out
+> synchronously but has been cleaned by an AIL pushed internall, which is
+> rather bogus.  Fix that by doing the i_update_core check early on and
+> return 0 for it.  Also include async calls for it, as doing any work for
+> those is just as pointless.  While we're at it also fix the sign for the
+> EIO return in case of a filesystem shutdown, and fix the completely
+> non-sensical locking around xfs_log_inode.
 > 
-> Why the barrier()? Isn't that just a compiler barrier? If you are
-> worried about catching the update vs clearing it in transaction
-> commit, shouldn't that use smp_mb() instead (in both places)?
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-It's a blind copy & past from xfs_fs_dirty_inode.  The comments
-there suggests it is for update ordering.
+Makes sense.
+
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
