@@ -1,24 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7V5Kqiq181838 for <xfs@oss.sgi.com>; Wed, 31 Aug 2011 00:20:52 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C2BFC1248AA
-	for <xfs@oss.sgi.com>; Tue, 30 Aug 2011 22:20:51 -0700 (PDT)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	7RGD9xizarYo0QCH for <xfs@oss.sgi.com>;
-	Tue, 30 Aug 2011 22:20:51 -0700 (PDT)
-Date: Wed, 31 Aug 2011 01:20:49 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: RFC: merging the quota source files
-Message-ID: <20110831052049.GA29511@infradead.org>
-References: <20110830121112.GA19509@infradead.org>
-	<20110831002236.GV3162@dastard>
+	p7V95PTo196170 for <xfs@oss.sgi.com>; Wed, 31 Aug 2011 04:05:25 -0500
+Received: from mail3.vodafone.ie (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9615D128D67
+	for <xfs@oss.sgi.com>; Wed, 31 Aug 2011 02:05:23 -0700 (PDT)
+Received: from mail3.vodafone.ie (mail3.vodafone.ie [213.233.128.45]) by
+	cuda.sgi.com with ESMTP id GPXDZsOyu5qhmrW2 for
+	<xfs@oss.sgi.com>; Wed, 31 Aug 2011 02:05:23 -0700 (PDT)
+Message-ID: <4E5DF951.4010804@draigBrady.com>
+Date: Wed, 31 Aug 2011 10:05:21 +0100
+From: =?ISO-8859-1?Q?P=E1draig_Brady?= <P@draigBrady.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110831002236.GV3162@dastard>
+Subject: Re: [PATCH] xfstests 255: add a seek_data/seek_hole tester
+References: <1309275199-10801-1-git-send-email-josef@redhat.com>
+	<1309275199-10801-5-git-send-email-josef@redhat.com>
+	<20110825060632.GA9933@infradead.org>
+	<20110825064039.GO3162@dastard>
+	<0A267E55-7772-438D-B6A7-89B73020F311@dilger.ca>
+	<20110826013528.GW3162@dastard> <4E5D8B8E.8030401@oracle.com>
+	<20110831032932.GI32358@dastard> <4E5DBBFD.5020202@oracle.com>
+In-Reply-To: <4E5DBBFD.5020202@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,108 +29,54 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Sunil Mushran <sunil.mushran@oracle.com>
+Cc: Andreas Dilger <adilger@dilger.ca>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, linux-btrfs@vger.kernel.org, dchinner@redhat.com, linux-fsdevel@vger.kernel.org, Josef Bacik <josef@redhat.com>, viro@ZenIV.linux.org.uk
 
-On Wed, Aug 31, 2011 at 10:22:36AM +1000, Dave Chinner wrote:
-> > I've started a bit work on the quota code, and the split between the
-> > implementation files is rather annoying.  I'd suggest we merge at least
-> > xfs_dquot.c and xfs_qm.c into a single file, as there is no visible
-> > split.
-> 
-> It seems to me to be a reasonable separation - xfs_qm.c is mostly
-> global management functions e.g. quota cache initialisation,
-> reclaim, quotacheck, etc, which xfs_dquot.c is all single dquot
-> specific operations which don't have global scope.
-> 
-> I'd argue that there are parts of xfs_qm.c that could be moved into
-> xfs_dquot.c (like the xfs_qm_vop_* and xfs_qm_dq*attach* functions
-> that only act on a specific dquots) which would make this separation
-> much clearer. This would also reflect the same sort of separation as
-> we have with inode operations vs cache infrastructure....
+On 08/31/2011 05:43 AM, Sunil Mushran wrote:
+> On 8/30/2011 8:29 PM, Dave Chinner wrote:
+>> And that's -exactly- the ambiguous, vague definition that has raised
+>> all these questions in the first place. I was in doubt about whether
+>> unwritten extents can be considered a hole, and by your definition
+>> that means it should be data. But Andreas seems to be in no doubt it
+>> should be considered a hole.
+> =
 
-That and things like quota reclaim which tends to operate on the single
-dquot, but mostly sit in xfs_qm.c. 
+> Fair enough. Let me rephrase.
+> =
 
-> > Does this a) sound good to others, and b) does anyone have a preference
-> > for the name of the new quota implementation file?
-> 
-> If you are going to rename xfs_qm.c, then xfs_quota.c seems like the
-> best name to me.
+> Data:
+> A range in a file when read could return something other than nulls.
+> =
 
-Ok.
+> Hole:
+> A range in a file when read only returns nulls.
+> =
 
-> FWIW, this is what I'd like to seen done with the quota
-> infrastructure in the medium term:
-> 
-> 
-> 	4. clearly document the locking model and simplify it to
-> 	remove all the unnecessary nested locking and try-locking
-> 	that the current deeply nested model requires. This is
-> 	appears to just be a replication of the locking model pattern
-> 	already defined by the VFS dentry and inode caches...
+> Considering preallocated extents only return null, they should
+> be considered holes.
 
-This is the queue I plan to submit for Linux 3.2 if we get any progress
-on getting the current pending queue reviewed and applied.
+I would concur with this.
+Treating preallocated extents as holes will allow them to be
+processed quickly by `cp` etc.
 
-> 
-> 	2. remove the lookup hash tables and replace it with
-> 	something more flexible (btree/radix-tree/rbtree) for
-> 	different cache sizes.
+What we lose is the ability to copy the allocation from src to dst.
+But that's less important in comparison, and could probably be done
+on a per file rather than per extent basis anyway.
+Note preallocation would be good for disk layout and timely ENOSPC.
 
-I have a prototype to use a radix tree.  You said before you didn't like
-it as the radix tree assumeds the quota ids are clustered, but so are
-the actual dqouts in the quota file, so I do not think it is a problem.
-We'll probably need testing at a big quota user site to decided this.
+Note fiemap gives us greater control by distinguishing
+holes and empty extents, thus allowing us to both
+efficiently copy and maintain allocation.  But that
+interface currently requires a sync of the file on some
+file systems, which we couldn't enable for performance
+reasons in cp.
 
-> 
-> 	4. change the shrinker implementation to be "normal" so that
-> 	the dquot cache sizes respond to memory pressure correctly
-
-I'm waiting for your shrinker interface changes to start with as there
-will be too many conflicts otherwise.
-
-> 	3. replace the weird, complex freelist and dquot recycling
-> 	code with a standard LRU implementation.
-
-I have ptrototypes / WIP patches for this, but it doesn't make sense
-before item 3 is done.
-
-> The gets rid of roughly ~50% of the infrastructure code that
-
-> 	1. break up the global quota manager into per-xfs_mount
-> 	structures (move into the quotainfo structure).
-
-Moving to the radix tree remove the hashtable and some accounting
-from the global quota manager.  After that we only have the freelist
-and assorted accounting and the slab caches left.  The freelist can
-fairly easily be changed to be per-mount at this point, but the slab
-caches should remain global.  We probably could just create them
-unconditionally if quota support is compiled in and kill the global
-quota manager at this point.
-
-
-> currently exists in xfs_qm.c, and remaining stuff like the sync
-> infrastructure mostly goes away with AIL driven writeback, too.
-
-Most of the sync infrastructure is already gone in my series, we only
-do one non-trylocking but delwri pass after quotacheck, after that
-all quota updates are logged.
-
-> Some
-> of the functionality remaining (like the shrinkers) can be placed in
-> xfs_sync.c with the inode cache shrinkers, which further reduces the
-> code in xfs_qm.c.
-> 
-> At that point the delineation between xfs_qm.c and xfs_dquot.c will
-> be much clearer, I think, especially if the changes I suggested
-> above were made...
-
-So that's one vote for keeping them separate.
+cheers,
+P=E1draig.
 
 _______________________________________________
 xfs mailing list
