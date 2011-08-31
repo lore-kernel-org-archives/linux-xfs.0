@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7VCbaov207769 for <xfs@oss.sgi.com>; Wed, 31 Aug 2011 07:37:36 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 38C161E80867
-	for <xfs@oss.sgi.com>; Wed, 31 Aug 2011 05:37:34 -0700 (PDT)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	lEdk7RFs3di4C109 for <xfs@oss.sgi.com>;
-	Wed, 31 Aug 2011 05:37:34 -0700 (PDT)
-Date: Wed, 31 Aug 2011 08:37:34 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: RFC: merging the quota source files
-Message-ID: <20110831123734.GA30478@infradead.org>
-References: <20110830121112.GA19509@infradead.org>
-	<20110831002236.GV3162@dastard>
-	<20110831052049.GA29511@infradead.org>
-	<20110831121746.GJ32358@dastard>
+	p7VCk22e208202 for <xfs@oss.sgi.com>; Wed, 31 Aug 2011 07:46:02 -0500
+Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 51A8F54452D
+	for <xfs@oss.sgi.com>; Wed, 31 Aug 2011 05:46:01 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	xSOtFYTGOy1ioLhL for <xfs@oss.sgi.com>;
+	Wed, 31 Aug 2011 05:46:01 -0700 (PDT)
+Date: Wed, 31 Aug 2011 22:45:58 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: frequent kernel BUG and lockups - 2.6.39 + xfs_fsr
+Message-ID: <20110831124558.GK32358@dastard>
+References: <20110806122556.GB20341@schmorp.de> <201108091210.50204@zmi.at>
+	<20110809111526.GA7631@schmorp.de> <201108100859.27576@zmi.at>
+	<20110811220418.GB12808@schmorp.de>
+	<20110812040530.GB26978@dastard>
+	<20110826080841.GA24948@schmorp.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110831121746.GJ32358@dastard>
+In-Reply-To: <20110826080841.GA24948@schmorp.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,85 +33,58 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Marc Lehmann <schmorp@schmorp.de>
+Cc: xfs@oss.sgi.com
 
-On Wed, Aug 31, 2011 at 10:17:46PM +1000, Dave Chinner wrote:
-> > This is the queue I plan to submit for Linux 3.2 if we get any progress
-> > on getting the current pending queue reviewed and applied.
+On Fri, Aug 26, 2011 at 10:08:41AM +0200, Marc Lehmann wrote:
+> On Fri, Aug 12, 2011 at 02:05:30PM +1000, Dave Chinner <david@fromorbit.com> wrote:
+> > It only does that if the pattern of writes are such that keeping the
+> > preallocation around for longer periods of time will reduce
+> > potential fragmentation.
 > 
-> I'm slowly working my way through the queue. I've got plenty of
-> stuff on my plate at the moment, though, and I'll be on holidays
-> for a couple of weeks starting next week, so don't rely on me to get
-> stuff reviewed in the near term....
-
-Ok.  It would be good to get the bmapi refactor off the plate - the
-series is huge and has chances to get a major pain to rebase.  Been
-through it once from your original series, and I don't want to do it
-again.  I don't think there is much else that you haven't reviewed yet.
-
-> > I have a prototype to use a radix tree.  You said before you didn't like
-> > it as the radix tree assumeds the quota ids are clustered, but so are
-> > the actual dqouts in the quota file, so I do not think it is a problem.
-> > We'll probably need testing at a big quota user site to decided this.
+> That can only be false. Here is a an example that I saw *just now*:
 > 
-> I'd just use the generic btree code in lib/btree.c. That way we
-> simply don't have to care what quota ids are in use and how sparse
-> they are....
-
-I do not trust code that is used by a single fringe filesystem as
-much code used all over the core VM/VFS.  Nevermind that the radix
-tree has a lot of features that do come in handy for quotas.
-
-I've also done a survey of large users systems I have access to and all
-of them absolutely do cluster uids. Less so for GIDs, but none of them
-has a lot of those.
-
-> > I have ptrototypes / WIP patches for this, but it doesn't make sense
-> > before item 3 is done.
+> I have a process that takes a directory with jpg files (in this case,
+> all around 64kb in size) and loslessly recompresses them. This works
+> by reading a file, writing it under another name (single write() call)
+> and using rename to replace the original file *iff* it got smaller. The
+> typical reduction is 5%. no allocsize option is used. Kernel used was
+> 2.6.39.
 > 
-> Similarly I was planning ondoingthis to use the generic LRU code
-> I've proposed...
-
-That is the idea.  We'll need a few iterations before getting there,
-though.
-
-> > 
-> > So that's one vote for keeping them separate.
+> This workload would obviously benefit most by having no preallocaiton
+> anywhere, i.e. have all files tightly packed.
 > 
-> Yeah. the dquot design pattern is based on the pattern that inodes
-> use, so having the code structured in a similar manner makes sense
-> to me.
+> Here is a "du" on a big directory where this process is running, every few
+> minutes:
+> 
+>    6439892 .
+>    6439888 .
+>    6620168 .
+>    6633156 .
+>    6697588 .
+>    6729092 .
+>    6755808 .
+>    6852192 .
+>    6816632 .
+>    6250824 .
+> 
+> Instead of decreasing, the size increased, until just before the last
+> du. Thats where I did echo 3 >drop_caches, which presumably cleared all
+> those inodes that have not been used for an hour and would never have been
+> used again for writing.
 
-I don't really see a similar split for the inode.  What would be the
-equivalent to xfs_qm.c by your previous split?
+That's the case of the unlinked inode being reused immediately and
+no having all it's state cleared correctly when recycled. That's the
+problem that was diagnosed and fixed when you reported the first
+problem. Can you tell me if your kernel has the bug fix or not, and
+if not, does applying the fix make the problem go away?
 
-Btw, if we look at xfs_qm.c in current minaline, lines:
+Cheers,
 
-    0 -   63:	boilerplate
-   64 -  272:	handling of xfs_Gqm		(will go away)
-  273 -  410:	mount / unmount handling
-  411 -  604:	dquot flushing / reclaim
-  605 -  879:	dquot attach / detach		(belongs into xfs_dquot.c?)
-  880 -  973:	xfs_qm_sync			(will go away)
-  974 - 1540:	mount / umount handling
- 1541 - 1793:	quotacheck / quota inode allocation
- 1794 - 2043:	quota reclaim / reuse
- 2044 - 2072:	sb write helper
- 2073 - 2416:	vop helpers
-
-So less than half of the code is thing that do belong into xfs_qm.c
-by your previous defintion.  I think we'd be simpler off with a merge.
-
-> Speaking of which (and going well and truly OT), I don't see much
-> reason for keeping xfs_iget.c separate from xfs_inode.c anymore -
-> there isn't really much code left in xfs_iget.c now, and stuff like
-> all the locking code isn't really related to the inode lookup
-> function of xfs_iget(), anyway...
-
-No real reason.  If we want to resplit these I'd split the about 2/3
-of xfs_inode.c that are shared with userspace into a separate file,
-though.
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
