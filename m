@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7VGdHaC220117 for <xfs@oss.sgi.com>; Wed, 31 Aug 2011 11:39:17 -0500
-Received: from powell.debian.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9EFB2129B39
-	for <xfs@oss.sgi.com>; Wed, 31 Aug 2011 09:39:16 -0700 (PDT)
-Received: from powell.debian.org (powell.debian.org [87.106.64.223]) by
-	cuda.sgi.com with ESMTP id CUTQI6bgIMXKTZxA for
-	<xfs@oss.sgi.com>; Wed, 31 Aug 2011 09:39:16 -0700 (PDT)
-Received: from franck.debian.org ([128.148.34.3])
-	from C=NA, ST=NA, L=Ankh Morpork, O=Debian SMTP, OU=Debian SMTP CA,
-	CN=franck.debian.org, EMAIL=hostmaster@franck.debian.org (verified)
-	by powell.debian.org with esmtps (TLS1.0:RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.69) (envelope-from <noreply@release.debian.org>)
-	id 1Qynop-0006M4-DN
-	for xfsprogs@packages.debian.org; Wed, 31 Aug 2011 16:39:15 +0000
-Date: Wed, 31 Aug 2011 16:39:14 +0000
-Message-Id: <E1Qynoo-000399-6i@franck.debian.org>
-From: Debian testing watch <noreply@release.debian.org>
-Subject: xfsprogs 3.1.5+nmu1 MIGRATED to testing
+	p7VKcMMS226713 for <xfs@oss.sgi.com>; Wed, 31 Aug 2011 15:38:22 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D347D13B55A6
+	for <xfs@oss.sgi.com>; Wed, 31 Aug 2011 13:41:48 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	a2mYTci4QAkX8A5C for <xfs@oss.sgi.com>;
+	Wed, 31 Aug 2011 13:41:48 -0700 (PDT)
+Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
+	Linux)) id 1QyrYC-000734-Fn
+	for xfs@oss.sgi.com; Wed, 31 Aug 2011 20:38:20 +0000
+Message-Id: <20110831203820.432098002@bombadil.infradead.org>
+Date: Wed, 31 Aug 2011 16:36:58 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH 11/14] xfs: add a xfs_dqhold helper
+References: <20110831203647.455809764@bombadil.infradead.org>
+Content-Disposition: inline; filename=xfs-quota-add-xfs_dqhold
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,19 +32,174 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfsprogs@packages.debian.org
+To: xfs@oss.sgi.com
 
-FYI: The status of the xfsprogs source package
-in Debian's testing distribution has changed.
+Factor the common:
 
-  Previous version: 3.1.5
-  Current version:  3.1.5+nmu1
+	xfs_dqlock(dqp);
+	XFS_DQHOLD(dqp);
+	xfs_dqunlock(dqp);
 
--- 
-This email is automatically generated once a day.  As the installation of
-new packages into testing happens multiple times a day you will receive
-later changes on the next day.
-See http://release.debian.org/testing-watch/ for more information.
+pattern into a new helper, and remove XFS_DQHOLD now that only two callers
+are left.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Index: xfs/fs/xfs/xfs_qm.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_qm.c	2011-08-31 12:59:21.296725467 +0200
++++ xfs/fs/xfs/xfs_qm.c	2011-08-31 12:59:37.253392030 +0200
+@@ -607,12 +607,9 @@ xfs_qm_dqattach_one(
+ 		 */
+ 		dqp = udqhint->q_gdquot;
+ 		if (dqp && be32_to_cpu(dqp->q_core.d_id) == id) {
+-			xfs_dqlock(dqp);
+-			XFS_DQHOLD(dqp);
+ 			ASSERT(*IO_idqpp == NULL);
+-			*IO_idqpp = dqp;
+ 
+-			xfs_dqunlock(dqp);
++			*IO_idqpp = xfs_qm_dqhold(dqp);
+ 			xfs_dqunlock(udqhint);
+ 			return 0;
+ 		}
+@@ -671,11 +668,7 @@ xfs_qm_dqattach_grouphint(
+ 		xfs_qm_dqrele(tmp);
+ 	}
+ 
+-	xfs_dqlock(gdq);
+-	XFS_DQHOLD(gdq);
+-	xfs_dqunlock(gdq);
+-
+-	udq->q_gdquot = gdq;
++	udq->q_gdquot = xfs_qm_dqhold(gdq);
+ done:
+ 	xfs_dqunlock(udq);
+ }
+@@ -1940,10 +1933,7 @@ xfs_qm_vop_dqalloc(
+ 			 * this to caller
+ 			 */
+ 			ASSERT(ip->i_udquot);
+-			uq = ip->i_udquot;
+-			xfs_dqlock(uq);
+-			XFS_DQHOLD(uq);
+-			xfs_dqunlock(uq);
++			uq = xfs_qm_dqhold(ip->i_udquot);
+ 		}
+ 	}
+ 	if ((flags & XFS_QMOPT_GQUOTA) && XFS_IS_GQUOTA_ON(mp)) {
+@@ -1964,10 +1954,7 @@ xfs_qm_vop_dqalloc(
+ 			xfs_ilock(ip, lockflags);
+ 		} else {
+ 			ASSERT(ip->i_gdquot);
+-			gq = ip->i_gdquot;
+-			xfs_dqlock(gq);
+-			XFS_DQHOLD(gq);
+-			xfs_dqunlock(gq);
++			gq = xfs_qm_dqhold(ip->i_gdquot);
+ 		}
+ 	} else if ((flags & XFS_QMOPT_PQUOTA) && XFS_IS_PQUOTA_ON(mp)) {
+ 		if (xfs_get_projid(ip) != prid) {
+@@ -1987,10 +1974,7 @@ xfs_qm_vop_dqalloc(
+ 			xfs_ilock(ip, lockflags);
+ 		} else {
+ 			ASSERT(ip->i_gdquot);
+-			gq = ip->i_gdquot;
+-			xfs_dqlock(gq);
+-			XFS_DQHOLD(gq);
+-			xfs_dqunlock(gq);
++			gq = xfs_qm_dqhold(ip->i_gdquot);
+ 		}
+ 	}
+ 	if (uq)
+@@ -2040,14 +2024,10 @@ xfs_qm_vop_chown(
+ 	xfs_trans_mod_dquot(tp, newdq, XFS_TRANS_DQ_ICOUNT, 1);
+ 
+ 	/*
+-	 * Take an extra reference, because the inode
+-	 * is going to keep this dquot pointer even
+-	 * after the trans_commit.
+-	 */
+-	xfs_dqlock(newdq);
+-	XFS_DQHOLD(newdq);
+-	xfs_dqunlock(newdq);
+-	*IO_olddq = newdq;
++	 * Take an extra reference, because the inode is going to keep
++	 * this dquot pointer even after the trans_commit.
++	 */
++	*IO_olddq = xfs_qm_dqhold(newdq);
+ 
+ 	return prevdq;
+ }
+@@ -2179,25 +2159,21 @@ xfs_qm_vop_create_dqattach(
+ 	ASSERT(XFS_IS_QUOTA_RUNNING(mp));
+ 
+ 	if (udqp) {
+-		xfs_dqlock(udqp);
+-		XFS_DQHOLD(udqp);
+-		xfs_dqunlock(udqp);
+ 		ASSERT(ip->i_udquot == NULL);
+-		ip->i_udquot = udqp;
+ 		ASSERT(XFS_IS_UQUOTA_ON(mp));
+ 		ASSERT(ip->i_d.di_uid == be32_to_cpu(udqp->q_core.d_id));
++
++		ip->i_udquot = xfs_qm_dqhold(udqp);
+ 		xfs_trans_mod_dquot(tp, udqp, XFS_TRANS_DQ_ICOUNT, 1);
+ 	}
+ 	if (gdqp) {
+-		xfs_dqlock(gdqp);
+-		XFS_DQHOLD(gdqp);
+-		xfs_dqunlock(gdqp);
+ 		ASSERT(ip->i_gdquot == NULL);
+-		ip->i_gdquot = gdqp;
+ 		ASSERT(XFS_IS_OQUOTA_ON(mp));
+ 		ASSERT((XFS_IS_GQUOTA_ON(mp) ?
+ 			ip->i_d.di_gid : xfs_get_projid(ip)) ==
+ 				be32_to_cpu(gdqp->q_core.d_id));
++
++		ip->i_gdquot = xfs_qm_dqhold(gdqp);
+ 		xfs_trans_mod_dquot(tp, gdqp, XFS_TRANS_DQ_ICOUNT, 1);
+ 	}
+ }
+Index: xfs/fs/xfs/xfs_dquot.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_dquot.c	2011-08-31 12:59:21.306725452 +0200
++++ xfs/fs/xfs/xfs_dquot.c	2011-08-31 12:59:37.256725364 +0200
+@@ -731,7 +731,7 @@ xfs_qm_dqlookup(
+ 			return -1;
+ 		}
+ 
+-		XFS_DQHOLD(dqp);
++		dqp->q_nrefs++;
+ 
+ 		/*
+ 		 * move the dquot to the front of the hashchain
+Index: xfs/fs/xfs/xfs_dquot.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_dquot.h	2011-08-31 12:59:21.316725463 +0200
++++ xfs/fs/xfs/xfs_dquot.h	2011-08-31 12:59:37.260058697 +0200
+@@ -80,8 +80,6 @@ enum {
+ 	XFS_QLOCK_NESTED,
+ };
+ 
+-#define XFS_DQHOLD(dqp)		((dqp)->q_nrefs++)
+-
+ /*
+  * Manage the q_flush completion queue embedded in the dquot.  This completion
+  * queue synchronizes processes attempting to flush the in-core dquot back to
+@@ -147,4 +145,12 @@ extern void		xfs_dqlock2(struct xfs_dquo
+ extern void		xfs_dqunlock(struct xfs_dquot *);
+ extern void		xfs_dqflock_pushbuf_wait(struct xfs_dquot *dqp);
+ 
++static inline struct xfs_dquot *xfs_qm_dqhold(struct xfs_dquot *dqp)
++{
++	xfs_dqlock(dqp);
++	dqp->q_nrefs++;
++	xfs_dqunlock(dqp);
++	return dqp;
++}
++
+ #endif /* __XFS_DQUOT_H__ */
 
 _______________________________________________
 xfs mailing list
