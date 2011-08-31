@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7VKcMG8226722 for <xfs@oss.sgi.com>; Wed, 31 Aug 2011 15:38:22 -0500
+	p7VKcL0h226683 for <xfs@oss.sgi.com>; Wed, 31 Aug 2011 15:38:21 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9AAF612A5D4
-	for <xfs@oss.sgi.com>; Wed, 31 Aug 2011 13:38:21 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 809BC1E81C23
+	for <xfs@oss.sgi.com>; Wed, 31 Aug 2011 13:38:20 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	eGHM0To0YxEoTX80 for <xfs@oss.sgi.com>;
-	Wed, 31 Aug 2011 13:38:21 -0700 (PDT)
+	iAfH2sU220TTdYFB for <xfs@oss.sgi.com>;
+	Wed, 31 Aug 2011 13:38:20 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1QyrYD-00074n-4M
-	for xfs@oss.sgi.com; Wed, 31 Aug 2011 20:38:21 +0000
-Message-Id: <20110831203821.057004755@bombadil.infradead.org>
-Date: Wed, 31 Aug 2011 16:37:01 -0400
+	Linux)) id 1QyrYC-00071z-1E
+	for xfs@oss.sgi.com; Wed, 31 Aug 2011 20:38:20 +0000
+Message-Id: <20110831203819.983355724@bombadil.infradead.org>
+Date: Wed, 31 Aug 2011 16:36:56 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 14/14] xfs: remove XFS_QMOPT_DQSUSER
+Subject: [PATCH 09/14] xfs: nest the qm_dqfrlist_lock insise the dquot qlock
 References: <20110831203647.455809764@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-quota-kill-XFS_QMOPT_DQSUSER
+Content-Disposition: inline; filename=xfs-change-quota-freelist-lock-ordering
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,133 +34,161 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Just read the id 0 dquot from disk directly in xfs_qm_init_quotainfo, instead
-of going through dqget and having a special flag to not add the dquot to any
-lists.
+Make sure the xfs_qm_dqput fast path works without trylock loops by nesting
+the freelist lock inside the dquot qlock, and do the trylock in dquot reclaim
+and purge instead.  Document our new lock ordering now that it has settled.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 Index: xfs/fs/xfs/xfs_dquot.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_dquot.c	2011-08-31 13:35:47.993379064 +0200
-+++ xfs/fs/xfs/xfs_dquot.c	2011-08-31 13:45:57.426708765 +0200
-@@ -550,7 +550,7 @@ xfs_qm_dqtobp(
-  *
-  * If XFS_QMOPT_DQALLOC is set, allocate a dquot on disk if it needed.
-  */
--STATIC int
-+int
- xfs_qm_dqread(
- 	struct xfs_mount	*mp,
- 	xfs_dqid_t   		id,
-@@ -798,32 +798,17 @@ restart:
- 	mutex_unlock(&h->qh_lock);
+--- xfs.orig/fs/xfs/xfs_dquot.c	2011-08-31 10:17:41.829108522 +0200
++++ xfs/fs/xfs/xfs_dquot.c	2011-08-31 10:20:33.594112076 +0200
+@@ -39,20 +39,20 @@
+ #include "xfs_qm.h"
+ #include "xfs_trace.h"
  
- 	error = xfs_qm_dqread(mp, id, type, flags, &dqp);
--	if (error) {
--		if (ip)
--			xfs_ilock(ip, XFS_ILOCK_EXCL);
--		return error;
--	}
+-
+ /*
+-   LOCK ORDER
++ * Lock ordering:
++ *
++ * ip->i_lock
++ *   qh->qh_lock
++ *     qi->qi_dqlist_lock
++ *       dquot->q_qlock
++ *         dquot->q_flush
++ *         xfs_Gqm->qm_dqfrlist_lock
++ *
++ * If two dquots need to be locked the order is user before group/project,
++ * otherwise by the lowest id first, see xfs_dqlock2.
++ */
+ 
+-   inode lock		    (ilock)
+-   dquot hash-chain lock    (hashlock)
+-   xqm dquot freelist lock  (freelistlock
+-   mount's dquot list lock  (mplistlock)
+-   user dquot lock - lock ordering among dquots is based on the uid or gid
+-   group dquot lock - similar to udquots. Between the two dquots, the udquot
+-		      has to be locked first.
+-   pin lock - the dquot lock must be held to take this lock.
+-   flush lock - ditto.
+-*/
+ 
+ #ifdef DEBUG
+ xfs_buftarg_t *xfs_dqerror_target;
+@@ -980,69 +980,49 @@ restart:
+  */
+ void
+ xfs_qm_dqput(
+-	xfs_dquot_t	*dqp)
++	struct xfs_dquot	*dqp)
+ {
+-	xfs_dquot_t	*gdqp;
++	struct xfs_dquot	*gdqp;
+ 
+ 	ASSERT(dqp->q_nrefs > 0);
+ 	ASSERT(XFS_DQ_IS_LOCKED(dqp));
+ 
+ 	trace_xfs_dqput(dqp);
+ 
+-	if (dqp->q_nrefs != 1) {
+-		dqp->q_nrefs--;
++recurse:
++	if (--dqp->q_nrefs > 0) {
+ 		xfs_dqunlock(dqp);
+ 		return;
+ 	}
  
 -	/*
--	 * See if this is mount code calling to look at the overall quota limits
--	 * which are stored in the id == 0 user or group's dquot.
--	 * Since we may not have done a quotacheck by this point, just return
--	 * the dquot without attaching it to any hashtables, lists, etc, or even
--	 * taking a reference.
--	 * The caller must dqdestroy this once done.
+-	 * drop the dqlock and acquire the freelist and dqlock
+-	 * in the right order; but try to get it out-of-order first
 -	 */
--	if (flags & XFS_QMOPT_DQSUSER) {
--		ASSERT(id == 0);
--		ASSERT(! ip);
--		goto dqret;
+-	if (!mutex_trylock(&xfs_Gqm->qm_dqfrlist_lock)) {
+-		trace_xfs_dqput_wait(dqp);
+-		xfs_dqunlock(dqp);
+-		mutex_lock(&xfs_Gqm->qm_dqfrlist_lock);
+-		xfs_dqlock(dqp);
 -	}
-+	if (ip)
-+		xfs_ilock(ip, XFS_ILOCK_EXCL);
-+
-+	if (error)
-+		return error;
- 
- 	/*
- 	 * Dquot lock comes after hashlock in the lock ordering
- 	 */
- 	if (ip) {
--		xfs_ilock(ip, XFS_ILOCK_EXCL);
 -
- 		/*
- 		 * A dquot could be attached to this inode by now, since
- 		 * we had dropped the ilock.
-Index: xfs/fs/xfs/xfs_dquot.h
-===================================================================
---- xfs.orig/fs/xfs/xfs_dquot.h	2011-08-31 13:35:48.013379063 +0200
-+++ xfs/fs/xfs/xfs_dquot.h	2011-08-31 13:39:19.016711122 +0200
-@@ -129,6 +129,8 @@ static inline void xfs_dqunlock_nonotify
- 				     (XFS_IS_UQUOTA_ON((d)->q_mount)) : \
- 				     (XFS_IS_OQUOTA_ON((d)->q_mount))))
+-	while (1) {
+-		gdqp = NULL;
++	trace_xfs_dqput_free(dqp);
  
-+extern int		xfs_qm_dqread(struct xfs_mount *, xfs_dqid_t, uint,
-+					uint, struct xfs_dquot	**);
- extern void		xfs_qm_dqdestroy(xfs_dquot_t *);
- extern int		xfs_qm_dqflush(xfs_dquot_t *, uint);
- extern void		xfs_qm_dqpurge(xfs_dquot_t *);
+-		/* We can't depend on nrefs being == 1 here */
+-		if (--dqp->q_nrefs == 0) {
+-			trace_xfs_dqput_free(dqp);
+-
+-			if (list_empty(&dqp->q_freelist)) {
+-				list_add_tail(&dqp->q_freelist, &xfs_Gqm->qm_dqfrlist);
+-				xfs_Gqm->qm_dqfrlist_cnt++;
+-			}
++	mutex_lock(&xfs_Gqm->qm_dqfrlist_lock);
++	if (list_empty(&dqp->q_freelist)) {
++		list_add_tail(&dqp->q_freelist, &xfs_Gqm->qm_dqfrlist);
++		xfs_Gqm->qm_dqfrlist_cnt++;
++	}
++	mutex_unlock(&xfs_Gqm->qm_dqfrlist_lock);
+ 
+-			/*
+-			 * If we just added a udquot to the freelist, then
+-			 * we want to release the gdquot reference that
+-			 * it (probably) has. Otherwise it'll keep the
+-			 * gdquot from getting reclaimed.
+-			 */
+-			if ((gdqp = dqp->q_gdquot)) {
+-				/*
+-				 * Avoid a recursive dqput call
+-				 */
+-				xfs_dqlock(gdqp);
+-				dqp->q_gdquot = NULL;
+-			}
+-		}
+-		xfs_dqunlock(dqp);
++	/*
++	 * If we just added a udquot to the freelist, then we want to release
++	 * the gdquot reference that it (probably) has. Otherwise it'll keep
++	 * the gdquot from getting reclaimed.
++	 */
++	gdqp = dqp->q_gdquot;
++	if (gdqp) {
++		xfs_dqlock(gdqp);
++		dqp->q_gdquot = NULL;
++	}
++	xfs_dqunlock(dqp);
+ 
+-		/*
+-		 * If we had a group quota inside the user quota as a hint,
+-		 * release it now.
+-		 */
+-		if (! gdqp)
+-			break;
++	/*
++	 * If we had a group quota hint, release it now.
++	 */
++	if (gdqp) {
+ 		dqp = gdqp;
++		goto recurse;
+ 	}
+-	mutex_unlock(&xfs_Gqm->qm_dqfrlist_lock);
+ }
+ 
+ /*
 Index: xfs/fs/xfs/xfs_qm.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_qm.c	2011-08-31 13:35:48.030045730 +0200
-+++ xfs/fs/xfs/xfs_qm.c	2011-08-31 13:44:19.213375993 +0200
-@@ -859,18 +859,21 @@ xfs_qm_init_quotainfo(
- 	/*
- 	 * We try to get the limits from the superuser's limits fields.
- 	 * This is quite hacky, but it is standard quota practice.
-+	 *
- 	 * We look at the USR dquot with id == 0 first, but if user quotas
- 	 * are not enabled we goto the GRP dquot with id == 0.
- 	 * We don't really care to keep separate default limits for user
- 	 * and group quotas, at least not at this point.
-+	 *
-+	 * Since we may not have done a quotacheck by this point, just read
-+	 * the dquot without attaching it to any hashtables or lists.
- 	 */
--	error = xfs_qm_dqget(mp, NULL, (xfs_dqid_t)0,
--			     XFS_IS_UQUOTA_RUNNING(mp) ? XFS_DQ_USER : 
--			     (XFS_IS_GQUOTA_RUNNING(mp) ? XFS_DQ_GROUP :
--				XFS_DQ_PROJ),
--			     XFS_QMOPT_DQSUSER|XFS_QMOPT_DOWARN,
--			     &dqp);
--	if (! error) {
-+	error = xfs_qm_dqread(mp, 0,
-+			XFS_IS_UQUOTA_RUNNING(mp) ? XFS_DQ_USER :
-+			 (XFS_IS_GQUOTA_RUNNING(mp) ? XFS_DQ_GROUP :
-+			  XFS_DQ_PROJ),
-+			XFS_QMOPT_DOWARN, &dqp);
-+	if (!error) {
- 		xfs_disk_dquot_t	*ddqp = &dqp->q_core;
+--- xfs.orig/fs/xfs/xfs_qm.c	2011-08-31 10:20:16.401169019 +0200
++++ xfs/fs/xfs/xfs_qm.c	2011-08-31 10:20:33.594112076 +0200
+@@ -1669,7 +1669,9 @@ xfs_qm_dqreclaim_one(void)
+ restart:
+ 	list_for_each_entry(dqp, &xfs_Gqm->qm_dqfrlist, q_freelist) {
+ 		struct xfs_mount *mp = dqp->q_mount;
+-		xfs_dqlock(dqp);
++
++		if (!xfs_dqlock_nowait(dqp))
++			continue;
  
  		/*
-@@ -897,11 +900,6 @@ xfs_qm_init_quotainfo(
- 		qinf->qi_rtbhardlimit = be64_to_cpu(ddqp->d_rtb_hardlimit);
- 		qinf->qi_rtbsoftlimit = be64_to_cpu(ddqp->d_rtb_softlimit);
-  
--		/*
--		 * We sent the XFS_QMOPT_DQSUSER flag to dqget because
--		 * we don't want this dquot cached. We haven't done a
--		 * quotacheck yet, and quotacheck doesn't like incore dquots.
--		 */
- 		xfs_qm_dqdestroy(dqp);
- 	} else {
- 		qinf->qi_btimelimit = XFS_QM_BTIMELIMIT;
-Index: xfs/fs/xfs/xfs_quota.h
-===================================================================
---- xfs.orig/fs/xfs/xfs_quota.h	2011-08-31 13:39:37.193377694 +0200
-+++ xfs/fs/xfs/xfs_quota.h	2011-08-31 13:40:17.826710784 +0200
-@@ -197,7 +197,6 @@ typedef struct xfs_qoff_logformat {
- #define XFS_QMOPT_UQUOTA	0x0000004 /* user dquot requested */
- #define XFS_QMOPT_PQUOTA	0x0000008 /* project dquot requested */
- #define XFS_QMOPT_FORCE_RES	0x0000010 /* ignore quota limits */
--#define XFS_QMOPT_DQSUSER	0x0000020 /* don't cache super users dquot */
- #define XFS_QMOPT_SBVERSION	0x0000040 /* change superblock version num */
- #define XFS_QMOPT_DOWARN        0x0000400 /* increase warning cnt if needed */
- #define XFS_QMOPT_DQREPAIR	0x0001000 /* repair dquot if damaged */
+ 		 * This dquot has already been grabbed by dqlookup.
 
 _______________________________________________
 xfs mailing list
