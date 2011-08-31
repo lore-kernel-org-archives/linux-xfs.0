@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7VKcMiO226733 for <xfs@oss.sgi.com>; Wed, 31 Aug 2011 15:38:22 -0500
+	p7VKcLMX226686 for <xfs@oss.sgi.com>; Wed, 31 Aug 2011 15:38:22 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 326371E81C24
-	for <xfs@oss.sgi.com>; Wed, 31 Aug 2011 13:38:21 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4DFD713B559E
+	for <xfs@oss.sgi.com>; Wed, 31 Aug 2011 13:41:47 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	QCPR2vBEvrE2hqRo for <xfs@oss.sgi.com>;
-	Wed, 31 Aug 2011 13:38:21 -0700 (PDT)
+	7A1by8yBrROfyfZD for <xfs@oss.sgi.com>;
+	Wed, 31 Aug 2011 13:41:47 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1QyrYC-00073a-MZ
-	for xfs@oss.sgi.com; Wed, 31 Aug 2011 20:38:20 +0000
-Message-Id: <20110831203820.636912187@bombadil.infradead.org>
-Date: Wed, 31 Aug 2011 16:36:59 -0400
+	Linux)) id 1QyrYA-0006zN-WF
+	for xfs@oss.sgi.com; Wed, 31 Aug 2011 20:38:19 +0000
+Message-Id: <20110831203818.942880635@bombadil.infradead.org>
+Date: Wed, 31 Aug 2011 16:36:51 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 12/14] xfs: kill xfs_qm_dqinit_core
+Subject: [PATCH 04/14] xfs: cleanup dquot locking helpers
 References: <20110831203647.455809764@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-quota-kill-xfs_qm_dqinit_core
+Content-Disposition: inline; filename=xfs-quota-clenaup-locking-helpers
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,55 +34,151 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Merge into it's only caller, which also obsoletes the comments.
+Mark the trivial lock wrappers as inline, and make the naming consistent
+for all of them.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 Index: xfs/fs/xfs/xfs_dquot.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_dquot.c	2011-08-31 13:07:52.243389072 +0200
-+++ xfs/fs/xfs/xfs_dquot.c	2011-08-31 13:09:36.613388405 +0200
-@@ -155,24 +155,6 @@ xfs_qm_dqdestroy(
+--- xfs.orig/fs/xfs/xfs_dquot.c	2011-08-30 10:52:41.000000000 +0200
++++ xfs/fs/xfs/xfs_dquot.c	2011-08-30 10:53:36.128527714 +0200
+@@ -1254,40 +1254,17 @@ xfs_qm_dqflush(
+ 
  }
  
- /*
-- * This is what a 'fresh' dquot inside a dquot chunk looks like on disk.
-- */
--STATIC void
--xfs_qm_dqinit_core(
--	xfs_dqid_t	id,
--	uint		type,
--	xfs_dqblk_t	*d)
+-int
+-xfs_qm_dqlock_nowait(
+-	xfs_dquot_t *dqp)
 -{
--	/*
--	 * Caller has zero'd the entire dquot 'chunk' already.
--	 */
--	d->dd_diskdq.d_magic = cpu_to_be16(XFS_DQUOT_MAGIC);
--	d->dd_diskdq.d_version = XFS_DQUOT_VERSION;
--	d->dd_diskdq.d_id = cpu_to_be32(id);
--	d->dd_diskdq.d_flags = type;
+-	return mutex_trylock(&dqp->q_qlock);
 -}
 -
--/*
-  * If default limits are in force, push them into the dquot now.
-  * We overwrite the dquot limits only if they are zero and this
-  * is not the root dquot.
-@@ -328,8 +310,13 @@ xfs_qm_init_dquot_blk(
- 	curid = id - (id % q->qi_dqperchunk);
- 	ASSERT(curid >= 0);
- 	memset(d, 0, BBTOB(q->qi_dqchunklen));
--	for (i = 0; i < q->qi_dqperchunk; i++, d++, curid++)
--		xfs_qm_dqinit_core(curid, type, d);
-+	for (i = 0; i < q->qi_dqperchunk; i++, d++, curid++) {
-+		d->dd_diskdq.d_magic = cpu_to_be16(XFS_DQUOT_MAGIC);
-+		d->dd_diskdq.d_version = XFS_DQUOT_VERSION;
-+		d->dd_diskdq.d_id = cpu_to_be32(curid);
-+		d->dd_diskdq.d_flags = type;
-+	}
+-void
+-xfs_dqlock(
+-	xfs_dquot_t *dqp)
+-{
+-	mutex_lock(&dqp->q_qlock);
+-}
+-
+ void
+ xfs_dqunlock(
+ 	xfs_dquot_t *dqp)
+ {
+-	mutex_unlock(&(dqp->q_qlock));
++	xfs_dqunlock_nonotify(dqp);
+ 	if (dqp->q_logitem.qli_dquot == dqp) {
+-		/* Once was dqp->q_mount, but might just have been cleared */
+ 		xfs_trans_unlocked_item(dqp->q_logitem.qli_item.li_ailp,
+-					(xfs_log_item_t*)&(dqp->q_logitem));
++					&dqp->q_logitem.qli_item);
+ 	}
+ }
+ 
+-
+-void
+-xfs_dqunlock_nonotify(
+-	xfs_dquot_t *dqp)
+-{
+-	mutex_unlock(&(dqp->q_qlock));
+-}
+-
+ /*
+  * Lock two xfs_dquot structures.
+  *
+@@ -1367,7 +1344,7 @@ xfs_qm_dqpurge(
+ 		 * Block on the flush lock after nudging dquot buffer,
+ 		 * if it is incore.
+ 		 */
+-		xfs_qm_dqflock_pushbuf_wait(dqp);
++		xfs_dqflock_pushbuf_wait(dqp);
+ 	}
+ 
+ 	/*
+@@ -1424,7 +1401,7 @@ xfs_qm_dqpurge(
+  * wait on the flush lock.
+  */
+ void
+-xfs_qm_dqflock_pushbuf_wait(
++xfs_dqflock_pushbuf_wait(
+ 	xfs_dquot_t	*dqp)
+ {
+ 	xfs_mount_t	*mp = dqp->q_mount;
+Index: xfs/fs/xfs/xfs_dquot.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_dquot.h	2011-08-30 10:52:10.000000000 +0200
++++ xfs/fs/xfs/xfs_dquot.h	2011-08-30 10:52:51.348529983 +0200
+@@ -102,6 +102,21 @@ static inline void xfs_dqfunlock(xfs_dqu
+ 	complete(&dqp->q_flush);
+ }
+ 
++static inline int xfs_dqlock_nowait(struct xfs_dquot *dqp)
++{
++	return mutex_trylock(&dqp->q_qlock);
++}
 +
- 	xfs_trans_dquot_buf(tp, bp,
- 			    (type & XFS_DQ_USER ? XFS_BLF_UDQUOT_BUF :
- 			    ((type & XFS_DQ_PROJ) ? XFS_BLF_PDQUOT_BUF :
++static inline void xfs_dqlock(struct xfs_dquot *dqp)
++{
++	mutex_lock(&dqp->q_qlock);
++}
++
++static inline void xfs_dqunlock_nonotify(struct xfs_dquot *dqp)
++{
++	mutex_unlock(&dqp->q_qlock);
++}
++
+ #define XFS_DQ_IS_LOCKED(dqp)	(mutex_is_locked(&((dqp)->q_qlock)))
+ #define XFS_DQ_IS_DIRTY(dqp)	((dqp)->dq_flags & XFS_DQ_DIRTY)
+ #define XFS_QM_ISUDQ(dqp)	((dqp)->dq_flags & XFS_DQ_USER)
+@@ -120,8 +135,6 @@ extern void		xfs_qm_dqdestroy(xfs_dquot_
+ extern int		xfs_qm_dqflush(xfs_dquot_t *, uint);
+ extern int		xfs_qm_dqpurge(xfs_dquot_t *);
+ extern void		xfs_qm_dqunpin_wait(xfs_dquot_t *);
+-extern int		xfs_qm_dqlock_nowait(xfs_dquot_t *);
+-extern void		xfs_qm_dqflock_pushbuf_wait(xfs_dquot_t *dqp);
+ extern void		xfs_qm_adjust_dqtimers(xfs_mount_t *,
+ 					xfs_disk_dquot_t *);
+ extern void		xfs_qm_adjust_dqlimits(xfs_mount_t *,
+@@ -129,9 +142,9 @@ extern void		xfs_qm_adjust_dqlimits(xfs_
+ extern int		xfs_qm_dqget(xfs_mount_t *, xfs_inode_t *,
+ 					xfs_dqid_t, uint, uint, xfs_dquot_t **);
+ extern void		xfs_qm_dqput(xfs_dquot_t *);
+-extern void		xfs_dqlock(xfs_dquot_t *);
+-extern void		xfs_dqlock2(xfs_dquot_t *, xfs_dquot_t *);
+-extern void		xfs_dqunlock(xfs_dquot_t *);
+-extern void		xfs_dqunlock_nonotify(xfs_dquot_t *);
++
++extern void		xfs_dqlock2(struct xfs_dquot *, struct xfs_dquot *);
++extern void		xfs_dqunlock(struct xfs_dquot *);
++extern void		xfs_dqflock_pushbuf_wait(struct xfs_dquot *dqp);
+ 
+ #endif /* __XFS_DQUOT_H__ */
+Index: xfs/fs/xfs/xfs_dquot_item.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_dquot_item.c	2011-08-30 08:19:03.000000000 +0200
++++ xfs/fs/xfs/xfs_dquot_item.c	2011-08-30 10:52:51.348529983 +0200
+@@ -233,7 +233,7 @@ xfs_qm_dquot_logitem_trylock(
+ 	if (atomic_read(&dqp->q_pincount) > 0)
+ 		return XFS_ITEM_PINNED;
+ 
+-	if (!xfs_qm_dqlock_nowait(dqp))
++	if (!xfs_dqlock_nowait(dqp))
+ 		return XFS_ITEM_LOCKED;
+ 
+ 	if (!xfs_dqflock_nowait(dqp)) {
+Index: xfs/fs/xfs/xfs_qm.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_qm.c	2011-08-30 10:52:12.000000000 +0200
++++ xfs/fs/xfs/xfs_qm.c	2011-08-30 10:52:51.351863316 +0200
+@@ -444,7 +444,7 @@ again:
+ 			 * out immediately.  We'll be able to acquire
+ 			 * the flush lock when the I/O completes.
+ 			 */
+-			xfs_qm_dqflock_pushbuf_wait(dqp);
++			xfs_dqflock_pushbuf_wait(dqp);
+ 		}
+ 		/*
+ 		 * Let go of the mplist lock. We don't want to hold it
 
 _______________________________________________
 xfs mailing list
