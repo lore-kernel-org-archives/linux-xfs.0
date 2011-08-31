@@ -1,26 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p7V95PTo196170 for <xfs@oss.sgi.com>; Wed, 31 Aug 2011 04:05:25 -0500
-Received: from mail3.vodafone.ie (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9615D128D67
-	for <xfs@oss.sgi.com>; Wed, 31 Aug 2011 02:05:23 -0700 (PDT)
-Received: from mail3.vodafone.ie (mail3.vodafone.ie [213.233.128.45]) by
-	cuda.sgi.com with ESMTP id GPXDZsOyu5qhmrW2 for
-	<xfs@oss.sgi.com>; Wed, 31 Aug 2011 02:05:23 -0700 (PDT)
-Message-ID: <4E5DF951.4010804@draigBrady.com>
-Date: Wed, 31 Aug 2011 10:05:21 +0100
-From: =?ISO-8859-1?Q?P=E1draig_Brady?= <P@draigBrady.com>
+	p7V9rYFt199189 for <xfs@oss.sgi.com>; Wed, 31 Aug 2011 04:53:35 -0500
+Received: from mx2.suse.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BBF6A1522DE7
+	for <xfs@oss.sgi.com>; Wed, 31 Aug 2011 02:56:57 -0700 (PDT)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id aw0r4skzbofa8HcP for <xfs@oss.sgi.com>;
+	Wed, 31 Aug 2011 02:56:57 -0700 (PDT)
+Date: Wed, 31 Aug 2011 10:53:26 +0100
+From: Mel Gorman <mgorman@suse.de>
+Subject: Re: [PATCH 6/7] mm: vmscan: Throttle reclaim if encountering too
+	many dirty pages under writeback
+Message-ID: <20110831095326.GD14369@suse.de>
+References: <1312973240-32576-1-git-send-email-mgorman@suse.de>
+	<1312973240-32576-7-git-send-email-mgorman@suse.de>
+	<20110818165428.4f01a1b9.akpm@linux-foundation.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests 255: add a seek_data/seek_hole tester
-References: <1309275199-10801-1-git-send-email-josef@redhat.com>
-	<1309275199-10801-5-git-send-email-josef@redhat.com>
-	<20110825060632.GA9933@infradead.org>
-	<20110825064039.GO3162@dastard>
-	<0A267E55-7772-438D-B6A7-89B73020F311@dilger.ca>
-	<20110826013528.GW3162@dastard> <4E5D8B8E.8030401@oracle.com>
-	<20110831032932.GI32358@dastard> <4E5DBBFD.5020202@oracle.com>
-In-Reply-To: <4E5DBBFD.5020202@oracle.com>
+Content-Disposition: inline
+In-Reply-To: <20110818165428.4f01a1b9.akpm@linux-foundation.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,54 +27,77 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Sunil Mushran <sunil.mushran@oracle.com>
-Cc: Andreas Dilger <adilger@dilger.ca>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, linux-btrfs@vger.kernel.org, dchinner@redhat.com, linux-fsdevel@vger.kernel.org, Josef Bacik <josef@redhat.com>, viro@ZenIV.linux.org.uk
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Rik van Riel <riel@redhat.com>, Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, XFS <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, Linux-MM <linux-mm@kvack.org>, Minchan Kim <minchan.kim@gmail.com>, Wu Fengguang <fengguang.wu@intel.com>, Johannes Weiner <jweiner@redhat.com>
 
-On 08/31/2011 05:43 AM, Sunil Mushran wrote:
-> On 8/30/2011 8:29 PM, Dave Chinner wrote:
->> And that's -exactly- the ambiguous, vague definition that has raised
->> all these questions in the first place. I was in doubt about whether
->> unwritten extents can be considered a hole, and by your definition
->> that means it should be data. But Andreas seems to be in no doubt it
->> should be considered a hole.
-> =
+On Thu, Aug 18, 2011 at 04:54:28PM -0700, Andrew Morton wrote:
+> On Wed, 10 Aug 2011 11:47:19 +0100
+> Mel Gorman <mgorman@suse.de> wrote:
+> 
+> > The percentage that must be in writeback depends on the priority. At
+> > default priority, all of them must be dirty. At DEF_PRIORITY-1, 50%
+> > of them must be, DEF_PRIORITY-2, 25% etc. i.e. as pressure increases
+> > the greater the likelihood the process will get throttled to allow
+> > the flusher threads to make some progress.
+> 
+> It'd be nice if the code comment were to capture this piece of implicit
+> arithmetic.
 
-> Fair enough. Let me rephrase.
-> =
+How about this?
 
-> Data:
-> A range in a file when read could return something other than nulls.
-> =
+==== CUT HERE ====
+mm: vmscan: Throttle reclaim if encountering too many dirty pages under writeback -fix1
 
-> Hole:
-> A range in a file when read only returns nulls.
-> =
+This patch expands on a comment on how we throttle from reclaim context.
+It should be merged with
+mm-vmscan-throttle-reclaim-if-encountering-too-many-dirty-pages-under-writeback.patch
 
-> Considering preallocated extents only return null, they should
-> be considered holes.
+Signed-off-by: Mel Gorman <mgorman@suse.de>
+---
+ mm/vmscan.c |   26 +++++++++++++++++++++-----
+ 1 files changed, 21 insertions(+), 5 deletions(-)
 
-I would concur with this.
-Treating preallocated extents as holes will allow them to be
-processed quickly by `cp` etc.
-
-What we lose is the ability to copy the allocation from src to dst.
-But that's less important in comparison, and could probably be done
-on a per file rather than per extent basis anyway.
-Note preallocation would be good for disk layout and timely ENOSPC.
-
-Note fiemap gives us greater control by distinguishing
-holes and empty extents, thus allowing us to both
-efficiently copy and maintain allocation.  But that
-interface currently requires a sync of the file on some
-file systems, which we couldn't enable for performance
-reasons in cp.
-
-cheers,
-P=E1draig.
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 33882a3..5ff3e26 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -1491,11 +1491,27 @@ shrink_inactive_list(unsigned long nr_to_scan, struct zone *zone,
+ 	putback_lru_pages(zone, sc, nr_anon, nr_file, &page_list);
+ 
+ 	/*
+-	 * If we have encountered a high number of dirty pages under writeback
+-	 * then we are reaching the end of the LRU too quickly and global
+-	 * limits are not enough to throttle processes due to the page
+-	 * distribution throughout zones. Scale the number of dirty pages that
+-	 * must be under writeback before being throttled to priority.
++	 * If reclaim is isolating dirty pages under writeback, it implies
++	 * that the long-lived page allocation rate is exceeding the page
++	 * laundering rate. Either the global limits are not being effective
++	 * at throttling processes due to the page distribution throughout
++	 * zones or there is heavy usage of a slow backing device. The
++	 * only option is to throttle from reclaim context which is not ideal
++	 * as there is no guarantee the dirtying process is throttled in the
++	 * same way balance_dirty_pages() manages.
++	 *
++	 * This scales the number of dirty pages that must be under writeback
++	 * before throttling depending on priority. It is a simple backoff
++	 * function that has the most effect in the range DEF_PRIORITY to
++	 * DEF_PRIORITY-2 which is the priority reclaim is considered to be
++	 * in trouble and reclaim is considered to be in trouble.
++	 *
++	 * DEF_PRIORITY   100% isolated pages must be PageWriteback to throttle
++	 * DEF_PRIORITY-1  50% must be PageWriteback
++	 * DEF_PRIORITY-2  25% must be PageWriteback, kswapd in trouble
++	 * ...
++	 * DEF_PRIORITY-6 For SWAP_CLUSTER_MAX isolated pages, throttle if any
++	 *                     isolated page is PageWriteback
+ 	 */
+ 	if (nr_writeback && nr_writeback >= (nr_taken >> (DEF_PRIORITY-priority)))
+ 		wait_iff_congested(zone, BLK_RW_ASYNC, HZ/10);
 
 _______________________________________________
 xfs mailing list
