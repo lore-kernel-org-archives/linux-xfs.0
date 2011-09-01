@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p81JMum6035472 for <xfs@oss.sgi.com>; Thu, 1 Sep 2011 14:22:56 -0500
-Subject: Re: [PATCH 10/11] xfs: wait for I/O completion when writing out
-	pages in xfs_setattr_size
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110823082913.640125155@bombadil.infradead.org>
+	p81Lkf0I041290 for <xfs@oss.sgi.com>; Thu, 1 Sep 2011 16:46:42 -0500
+Date: Thu, 1 Sep 2011 17:46:40 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 04/11] xfs: call xfs_buf_delwri_queue directly
+Message-ID: <20110901214640.GB4579@infradead.org>
 References: <20110823082802.335389799@bombadil.infradead.org>
-	<20110823082913.640125155@bombadil.infradead.org>
-Date: Thu, 1 Sep 2011 14:22:52 -0500
-Message-ID: <1314904972.2903.69.camel@doink>
+	<20110823082912.512830398@bombadil.infradead.org>
+	<1314904935.2903.62.camel@doink>
 MIME-Version: 1.0
-Reply-To: aelder@sgi.com
+Content-Disposition: inline
+In-Reply-To: <1314904935.2903.62.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,21 +24,16 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Alex Elder <aelder@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Tue, 2011-08-23 at 04:28 -0400, Christoph Hellwig wrote:
-> The current code relies on the xfs_ioend_wait call later on to make sure
-> all I/O actually has completed.  The xfs_ioend_wait call will go away soon,
-> so prepare for that by using the waiting filemap function.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+On Thu, Sep 01, 2011 at 02:22:15PM -0500, Alex Elder wrote:
+> that the buffer should be queued at unlock time, we now
+> just put it in the queue right away.  Seems reasonable.
+> Do you know why enqueueing it was delayed before?
 
-Looks good.
-
-Reviewed-by: Alex Elder <aelder@sgi.com>
-
+I don't know why - it's a carryover from IRIX days, so long before my
+time.
 
 _______________________________________________
 xfs mailing list
