@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p81JMi2E035193 for <xfs@oss.sgi.com>; Thu, 1 Sep 2011 14:22:44 -0500
-Subject: Re: [PATCH 07/11] xfs: remove dead ENODEV handling in
-	xfs_destroy_ioend
+	p81JM5X1035096 for <xfs@oss.sgi.com>; Thu, 1 Sep 2011 14:22:05 -0500
+Subject: Re: [PATCH 02/11] xfs: remove the unlock argument to
+	xfs_buf_delwri_queue
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110823082913.085652089@bombadil.infradead.org>
+In-Reply-To: <20110823082912.127871770@bombadil.infradead.org>
 References: <20110823082802.335389799@bombadil.infradead.org>
-	<20110823082913.085652089@bombadil.infradead.org>
-Date: Thu, 1 Sep 2011 14:22:35 -0500
-Message-ID: <1314904955.2903.66.camel@doink>
+	<20110823082912.127871770@bombadil.infradead.org>
+Date: Thu, 1 Sep 2011 14:22:04 -0500
+Message-ID: <1314904924.2903.60.camel@doink>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -28,16 +28,24 @@ To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
 On Tue, 2011-08-23 at 04:28 -0400, Christoph Hellwig wrote:
-> No driver returns ENODEV from it bio completion handler, not has this
-> ever been documented.  Remove the dead code dealing with it.
-> 
+> We can just unlock the buffer in the caller, and the decrement of b_hold
+> would also be needed in the !unlock, we just never hit that case currently
+> given that the caller handles that case.
+
+More specifically, the only way we'd hit that case would
+involve an unqueued buffer (in xfs_buf_unlock()) getting
+queued before bt_delwrite_lock could be acquired (in
+xfs_buf_delwri_queue()).  But that can't happen because
+the buffer is locked the entire time between the check
+in xfs_buf_unlock() and the one in xfs_buf_delwri_queue().
+(Right?)
+
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
 Looks good.
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
-
 
 _______________________________________________
 xfs mailing list
