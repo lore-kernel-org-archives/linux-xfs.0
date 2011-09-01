@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p81JMKtp035144 for <xfs@oss.sgi.com>; Thu, 1 Sep 2011 14:22:20 -0500
-Subject: Re: [PATCH 04/11] xfs: call xfs_buf_delwri_queue directly
+	p81JMmZX035231 for <xfs@oss.sgi.com>; Thu, 1 Sep 2011 14:22:48 -0500
+Subject: Re: [PATCH 09/11] xfs: reduce ioend latency
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110823082912.512830398@bombadil.infradead.org>
+In-Reply-To: <20110823082913.453050111@bombadil.infradead.org>
 References: <20110823082802.335389799@bombadil.infradead.org>
-	<20110823082912.512830398@bombadil.infradead.org>
-Date: Thu, 1 Sep 2011 14:22:15 -0500
-Message-ID: <1314904935.2903.62.camel@doink>
+	<20110823082913.453050111@bombadil.infradead.org>
+Date: Thu, 1 Sep 2011 14:22:44 -0500
+Message-ID: <1314904964.2903.68.camel@doink>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -27,23 +27,15 @@ To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
 On Tue, 2011-08-23 at 04:28 -0400, Christoph Hellwig wrote:
-> Unify the ways we add buffers to the delwri queue by always calling
-> xfs_buf_delwri_queue directly.  The xfs_bdwrite functions is removed and
-> opencoded in its callers, and the two places setting XBF_DELWRI while a
-> buffer is locked and expecting xfs_buf_unlock to pick it up are converted
-> to call xfs_buf_delwri_queue directly, too.  Also replace the
-> XFS_BUF_UNDELAYWRITE macro with direct calls to xfs_buf_delwri_dequeue
-> to make the explicit queuing/dequeuing more obvious.
+> There is no reason to queue up ioends for processing in user context
+> unless we actually need it.  Just complete ioends that do not convert
+> unwritten extents or need a size update from the end_io context.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-So instead of just marking XBF_DELWRI to flag to signal
-that the buffer should be queued at unlock time, we now
-just put it in the queue right away.  Seems reasonable.
-Do you know why enqueueing it was delayed before?
+Looks good.
 
-In any case:
 Reviewed-by: Alex Elder <aelder@sgi.com>
 
 
