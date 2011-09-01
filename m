@@ -1,15 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p81JM5X1035096 for <xfs@oss.sgi.com>; Thu, 1 Sep 2011 14:22:05 -0500
-Subject: Re: [PATCH 02/11] xfs: remove the unlock argument to
-	xfs_buf_delwri_queue
+	p81JMKtp035144 for <xfs@oss.sgi.com>; Thu, 1 Sep 2011 14:22:20 -0500
+Subject: Re: [PATCH 04/11] xfs: call xfs_buf_delwri_queue directly
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110823082912.127871770@bombadil.infradead.org>
+In-Reply-To: <20110823082912.512830398@bombadil.infradead.org>
 References: <20110823082802.335389799@bombadil.infradead.org>
-	<20110823082912.127871770@bombadil.infradead.org>
-Date: Thu, 1 Sep 2011 14:22:04 -0500
-Message-ID: <1314904924.2903.60.camel@doink>
+	<20110823082912.512830398@bombadil.infradead.org>
+Date: Thu, 1 Sep 2011 14:22:15 -0500
+Message-ID: <1314904935.2903.62.camel@doink>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -28,24 +27,25 @@ To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
 On Tue, 2011-08-23 at 04:28 -0400, Christoph Hellwig wrote:
-> We can just unlock the buffer in the caller, and the decrement of b_hold
-> would also be needed in the !unlock, we just never hit that case currently
-> given that the caller handles that case.
-
-More specifically, the only way we'd hit that case would
-involve an unqueued buffer (in xfs_buf_unlock()) getting
-queued before bt_delwrite_lock could be acquired (in
-xfs_buf_delwri_queue()).  But that can't happen because
-the buffer is locked the entire time between the check
-in xfs_buf_unlock() and the one in xfs_buf_delwri_queue().
-(Right?)
-
+> Unify the ways we add buffers to the delwri queue by always calling
+> xfs_buf_delwri_queue directly.  The xfs_bdwrite functions is removed and
+> opencoded in its callers, and the two places setting XBF_DELWRI while a
+> buffer is locked and expecting xfs_buf_unlock to pick it up are converted
+> to call xfs_buf_delwri_queue directly, too.  Also replace the
+> XFS_BUF_UNDELAYWRITE macro with direct calls to xfs_buf_delwri_dequeue
+> to make the explicit queuing/dequeuing more obvious.
+> 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-Looks good.
+So instead of just marking XBF_DELWRI to flag to signal
+that the buffer should be queued at unlock time, we now
+just put it in the queue right away.  Seems reasonable.
+Do you know why enqueueing it was delayed before?
 
+In any case:
 Reviewed-by: Alex Elder <aelder@sgi.com>
+
 
 _______________________________________________
 xfs mailing list
