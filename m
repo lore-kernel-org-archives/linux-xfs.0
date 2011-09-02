@@ -1,24 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p82D27NU071256 for <xfs@oss.sgi.com>; Fri, 2 Sep 2011 08:02:07 -0500
-Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B26A219698CC
-	for <xfs@oss.sgi.com>; Fri,  2 Sep 2011 06:02:06 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id VGDnNV0eLgnKNGsC
-	for <xfs@oss.sgi.com>; Fri, 02 Sep 2011 06:02:06 -0700 (PDT)
-Received: from [192.168.100.200] (dales-rocket.hardwarefreak.com
-	[192.168.100.200])
-	by greer.hardwarefreak.com (Postfix) with ESMTP id 906226C0EF
-	for <xfs@oss.sgi.com>; Fri,  2 Sep 2011 08:02:05 -0500 (CDT)
-Message-ID: <4E60D3CD.5030806@hardwarefreak.com>
-Date: Fri, 02 Sep 2011 08:02:05 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
-MIME-Version: 1.0
-Subject: Re: nginx blocked task when XFS partition is very full
-References: <3972BA0F-0E95-4758-9DDB-BC6197621C87@ci-info.com>
-In-Reply-To: <3972BA0F-0E95-4758-9DDB-BC6197621C87@ci-info.com>
+	p82EMQls073424 for <xfs@oss.sgi.com>; Fri, 2 Sep 2011 09:22:26 -0500
+From: Bill Kendall <wkendall@sgi.com>
+Subject: [PATCH] xfsdump: remove redundant error code mapping
+Date: Fri,  2 Sep 2011 09:22:18 -0500
+Message-Id: <1314973338-20520-1-git-send-email-wkendall@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,27 +14,88 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-On 9/2/2011 7:23 AM, Sean Purdy wrote:
-> Hi,
->
->
-> This is on 2.6.32-32-server from Ubuntu Lucid 10.04 LTS
->
-> We have nginx fileserving from four disks on a machine.  We're using mogilefs as a distributed file system.  We've come across an issue where when the filesystem is very full, and nginx tries to write to it, we get "task blocked for more than 120 seconds" messages from the kernel, nginx hangs and we can no longer access the fs.  When a file is uploaded via nginx, nginx writes to a .tmp directory on the disk before moving the file to its destination.  nginx can't be kill -9ed, it needs a reboot.
->
-> Has this sort of issue been fixed since 2.6.32?
+Currently there is both an exit_strings array and an exit_codestring()
+function for mapping an exit code to a string. They are very similar
+except the latter prefaces every string with "EXIT_" and the former
+uses "SUCCESS" instead of "NORMAL", and cannot handle an invalid exit
+code. exit_codestring() is not currently used in active code (it's for
+multi-stream), so its values can be changed to allow the exit_strings
+array to be removed.
+---
+ common/exit.h |   10 +++++-----
+ common/mlog.c |   14 ++------------
+ 2 files changed, 7 insertions(+), 17 deletions(-)
 
-It would help to see df output for space and inodes of the XFS 
-filesystem in question.
-
+diff --git a/common/exit.h b/common/exit.h
+index ef01684..f7e4878 100644
+--- a/common/exit.h
++++ b/common/exit.h
+@@ -29,12 +29,12 @@ static inline const char *
+ exit_codestring( intgen_t code )
+ {
+ 	switch ( code ) {
+-	case EXIT_NORMAL:    return "EXIT_NORMAL";
+-	case EXIT_ERROR:     return "EXIT_ERROR";
+-	case EXIT_INTERRUPT: return "EXIT_INTERRUPT";
+-	case EXIT_FAULT:     return "EXIT_FAULT";
++	case EXIT_NORMAL:    return "SUCCESS";
++	case EXIT_ERROR:     return "ERROR";
++	case EXIT_INTERRUPT: return "INTERRUPT";
++	case EXIT_FAULT:     return "FAULT";
+ 	}
+-	return "???";
++	return "UNKNOWN";
+ }
+ 
+ #endif /* EXIT_H */
+diff --git a/common/mlog.c b/common/mlog.c
+index 55cb5cd..2265895 100644
+--- a/common/mlog.c
++++ b/common/mlog.c
+@@ -457,11 +457,6 @@ mlog_va( intgen_t levelarg, char *fmt, va_list args )
+ 	}
+ }
+ 
+-
+-static const char *exit_strings[] =
+-	{ "SUCCESS", "ERROR", "INTERRUPT", "", "FAULT" };
+-
+-
+ /*
+  * Map RV codes to actual error messages.
+  */
+@@ -584,7 +579,7 @@ _mlog_exit( const char *file, int line, int exit_code, rv_t rv )
+ 	      "%s: %d: mlog_exit called: "
+ 	      "exit_code: %s return: %s (%s)\n",
+ 	      file, line,
+-	      exit_strings[exit_code],
++	      exit_codestring(exit_code),
+ 	      rvp->rv_string, rvp->rv_desc);
+ 
+ 	if (rv < 0 || rv >= _RV_NUM) {
+@@ -780,12 +775,7 @@ mlog_exit_flush(void)
+ 	if (interrupt) status_str = "INTERRUPT";
+ 	else if (quit) status_str = "QUIT";
+ 	else if (incomplete) status_str = "INCOMPLETE";
+-#ifdef NDEBUG
+-	/* We should never get here, but if we do make sure we don't die
+-	   horribly when not running debug. */
+-	else if (! VALID_EXIT_CODE(mlog_main_exit_code)) status_str = "UNKNOWN";
+-#endif /* NDEBUG */
+-	else status_str = exit_strings[mlog_main_exit_code];
++	else status_str = exit_codestring(mlog_main_exit_code);
+ 
+ 	/* now print the overall state of the dump/restore */
+ 	fprintf(mlog_fp, "%s: %s Status: %s\n", progname, PROGSTR_CAPS, status_str);
 -- 
-Stan
+1.7.0.4
 
 _______________________________________________
 xfs mailing list
