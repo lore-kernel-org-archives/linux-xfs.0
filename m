@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p86FJasn087614 for <xfs@oss.sgi.com>; Tue, 6 Sep 2011 10:19:36 -0500
-Subject: Re: [PATCH 07/25] xfs: factor delalloc reservations out of xfs_bmapi
+	p86FJZY4087603 for <xfs@oss.sgi.com>; Tue, 6 Sep 2011 10:19:35 -0500
+Subject: Re: [PATCH 06/25] xfs: remove xfs_bmapi_single()
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110824060641.737798883@bombadil.infradead.org>
+In-Reply-To: <20110824060641.541211477@bombadil.infradead.org>
 References: <20110824060428.789245205@bombadil.infradead.org>
-	<20110824060641.737798883@bombadil.infradead.org>
-Date: Fri, 2 Sep 2011 17:23:23 -0500
-Message-ID: <1315002203.2069.87.camel@doink>
+	<20110824060641.541211477@bombadil.infradead.org>
+Date: Fri, 2 Sep 2011 17:23:18 -0500
+Message-ID: <1315002198.2069.86.camel@doink>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -24,18 +24,15 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+Cc: Dave Chinner <dchinner@redhat.com>, xfs@oss.sgi.com
 
 On Wed, 2011-08-24 at 02:04 -0400, Christoph Hellwig wrote:
-> plain text document attachment (xfs-bmapi-factor-delalloc-reservation)
-> Move the reservation of delayed allocations, and addition of delalloc
-> regions to the extent trees into a new helper function.  For now
-> this adds some twisted goto logic to xfs_bmapi, but that will be
-> cleaned up in the following patches.
+> Now we have xfs_bmapi_read, there is no need for xfs_bmapi_single().
+> Change the remaining caller over and kill the function.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-Looks good.
+Nice.
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
 
