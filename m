@@ -1,15 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p82MNC5e092485 for <xfs@oss.sgi.com>; Fri, 2 Sep 2011 17:23:12 -0500
-Subject: Re: [PATCH 04/25] xfs: factor extent map manipulations out of
-	xfs_bmapi
+	p82MN76p092458 for <xfs@oss.sgi.com>; Fri, 2 Sep 2011 17:23:07 -0500
+Subject: Re: [PATCH 03/25] xfs: remove the nextents variable in xfs_bmapi
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110824060641.102703569@bombadil.infradead.org>
+In-Reply-To: <20110824060640.860409169@bombadil.infradead.org>
 References: <20110824060428.789245205@bombadil.infradead.org>
-	<20110824060641.102703569@bombadil.infradead.org>
-Date: Fri, 2 Sep 2011 17:23:11 -0500
-Message-ID: <1315002191.2069.84.camel@doink>
+	<20110824060640.860409169@bombadil.infradead.org>
+Date: Fri, 2 Sep 2011 17:23:06 -0500
+Message-ID: <1315002186.2069.83.camel@doink>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -25,24 +24,17 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: Dave Chinner <dchinner@redhat.com>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
 On Wed, 2011-08-24 at 02:04 -0400, Christoph Hellwig wrote:
+> Instead of using a local variable that needs to updated when we modify
+> the extent map just check ifp->if_bytes directly where we use it.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Unfortunately the content of the new xfs_bmapi_update_map()
-is as hideous as it was before, but at least it's isolated.
-The -1 index values are just awful, even if we do know from
-the logic that they're indexing non-negative offsets into the
-underlying array.  I do think it's good that you encapsulated
-this without changing the existing logic, but someday maybe
-this function can be improved.
+Looks good.
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
-
-You included no signoff.  I am going to assume it included
-this like the rest of the series:
-
-    Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 
 _______________________________________________
