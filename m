@@ -1,12 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p82F2fw2075293 for <xfs@oss.sgi.com>; Fri, 2 Sep 2011 10:02:41 -0500
+	p82MN6Zp092450 for <xfs@oss.sgi.com>; Fri, 2 Sep 2011 17:23:06 -0500
+Subject: Re: [PATCH 02/25] xfs: remove impossible to read code in
+	xfs_bmap_add_extent_delay_real
 From: Alex Elder <aelder@sgi.com>
-Message-Id: <201109021502.p82F2W3w003902@stout.americas.sgi.com>
-Date: Fri, 02 Sep 2011 10:02:32 -0500
-Subject: [GIT PULL] XFS update for 3.1-rc5
+In-Reply-To: <20110824060640.625806258@bombadil.infradead.org>
+References: <20110824060428.789245205@bombadil.infradead.org>
+	<20110824060640.625806258@bombadil.infradead.org>
+Date: Fri, 2 Sep 2011 17:23:02 -0500
+Message-ID: <1315002182.2069.82.camel@doink>
 MIME-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,39 +24,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-Linus, please pull the following XFS changes for 3.1-rc5.  The first
-documents a feature that we plan to remove in 3.3.  The second fixes
-a problem related to inode dirtying during unmount, and the third
-fixes some other problems found in that region of code.
+On Wed, 2011-08-24 at 02:04 -0400, Christoph Hellwig wrote:
+> We already have the worst case blocks reserved, so xfs_icsb_modify_counters
+> won't fail in xfs_bmap_add_extent_delay_real.  In fact we've had an assert
+> to catch this case since day and it never triggered.  So remove the code
+> to try smaller reservations, and just return the error for that case in
+> addition to keeping the assert.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-The last two have not been through a -next build because of the
-recent kernel.org issues, but I've done testing with a local pull
-into your current master branch and all looks well.
+It was a very weird block of code that I never did
+really understand.  It appears to be trying to recover
+from running out of space by reserving less and
+retrying.  But that means you're not reserving enough
+to cover worst case, which wouldn't be safe.
 
-Thank you.
+Anyway, given this function already has an error
+return path that could handle it if we actually
+had not pre-reserved enough blocks, this looks good.
 
-					-Alex
+Reviewed-by: Alex Elder <aelder@sgi.com>
 
-The following changes since commit 9e79e3e9dd9672b37ac9412e9a926714306551fe:
-
-  Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/sparc (2011-08-30 11:28:18 -0700)
-
-are available in the git repository at:
-
-  git://oss.sgi.com/xfs/xfs for-linus
-
-Christoph Hellwig (3):
-      xfs: deprecate the nodelaylog mount option
-      xfs: fix xfs_mark_inode_dirty during umount
-      xfs: fix ->write_inode return values
-
- Documentation/feature-removal-schedule.txt |    8 ++++++
- fs/xfs/xfs_iops.c                          |   14 ++++++++--
- fs/xfs/xfs_super.c                         |   36 ++++++++-------------------
- 3 files changed, 30 insertions(+), 28 deletions(-)
 
 _______________________________________________
 xfs mailing list
