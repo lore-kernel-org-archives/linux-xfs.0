@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p838WF6v116055 for <xfs@oss.sgi.com>; Sat, 3 Sep 2011 03:32:16 -0500
+	p838XSXe116125 for <xfs@oss.sgi.com>; Sat, 3 Sep 2011 03:33:29 -0500
 Received: from mail-pz0-f65.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F176FD7798A
-	for <xfs@oss.sgi.com>; Sat,  3 Sep 2011 01:35:55 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4D5545468AB
+	for <xfs@oss.sgi.com>; Sat,  3 Sep 2011 01:33:28 -0700 (PDT)
 Received: from mail-pz0-f65.google.com (mail-pz0-f65.google.com
-	[209.85.210.65]) by cuda.sgi.com with ESMTP id AtgJC4xlQZZU470e
-	for <xfs@oss.sgi.com>; Sat, 03 Sep 2011 01:35:55 -0700 (PDT)
-Received: by pzk2 with SMTP id 2so2479909pzk.8
-	for <xfs@oss.sgi.com>; Sat, 03 Sep 2011 01:32:13 -0700 (PDT)
+	[209.85.210.65]) by cuda.sgi.com with ESMTP id quTsgzSxbJIHOD90
+	for <xfs@oss.sgi.com>; Sat, 03 Sep 2011 01:33:28 -0700 (PDT)
+Received: by pzk2 with SMTP id 2so2480506pzk.8
+	for <xfs@oss.sgi.com>; Sat, 03 Sep 2011 01:33:27 -0700 (PDT)
 From: Prasad Joshi <prasadjoshi.linux@gmail.com>
-Subject: [PATCH] Assume yes when test device is not partitioned
-Date: Sat,  3 Sep 2011 14:02:03 +0530
-Message-Id: <1315038723-2009-1-git-send-email-prasadjoshi.linux@gmail.com>
+Subject: [PATCH] xfstests: Assume yes when test device is not partitioned
+Date: Sat,  3 Sep 2011 14:03:19 +0530
+Message-Id: <1315038799-2150-1-git-send-email-prasadjoshi.linux@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
