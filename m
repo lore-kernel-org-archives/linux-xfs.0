@@ -1,13 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p85ESwpa018132 for <xfs@oss.sgi.com>; Mon, 5 Sep 2011 09:28:58 -0500
+	p85ESvIY018122 for <xfs@oss.sgi.com>; Mon, 5 Sep 2011 09:28:57 -0500
 From: Lukas Czerner <lczerner@redhat.com>
-Subject: [PATCH 2/2][xfstests] fstrim: Use strtoull instead of strtoul
-Date: Mon,  5 Sep 2011 16:28:51 +0200
-Message-Id: <1315232931-26770-2-git-send-email-lczerner@redhat.com>
-In-Reply-To: <1315232931-26770-1-git-send-email-lczerner@redhat.com>
-References: <1315232931-26770-1-git-send-email-lczerner@redhat.com>
+Subject: [PATCH 1/2][xfstests] Add test 257: Check proper FITRIM argument
+	handling
+Date: Mon,  5 Sep 2011 16:28:50 +0200
+Message-Id: <1315232931-26770-1-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,29 +23,181 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Lukas Czerner <lczerner@redhat.com>, aelder@sgi.com
 
-When we are parsing input arguments we should really use stroull to get
-unsigned long long numbers, since this is what we can specify on the
-command line. With this fix it should parse long numbers on the 32 bit
-architecture correctly.
+This test suppose to validate that file systems are using the fitrim
+arguments right. It checks that the fstrim returns EINVAl in case that
+the start of the range is beyond the end of the file system, and also
+that the fstrim works without an error if the length of the range is
+bigger than the file system (it should be truncated to the file system
+length automatically within the fitrim implementation).
+
+This test should also catch common problem with overflow of start+len.
 
 Signed-off-by: Lukas Czerner <lczerner@redhat.com>
 ---
- src/fstrim.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ 257     |  122 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 257.out |   14 +++++++
+ group   |    1 +
+ 3 files changed, 137 insertions(+), 0 deletions(-)
+ create mode 100755 257
+ create mode 100644 257.out
 
-diff --git a/src/fstrim.c b/src/fstrim.c
-index f1f37ec..e23bcb3 100644
---- a/src/fstrim.c
-+++ b/src/fstrim.c
-@@ -97,7 +97,7 @@ static unsigned long long get_number(char **optarg)
- 	}
- 
- 	errno = 0;
--	number = strtoul(opt, &end , 0);
-+	number = strtoull(opt, &end , 0);
- 	if (errno)
- 		err_exit("%s: %s (%s)\n", program_name,
- 			 strerror(errno), *optarg);
+diff --git a/257 b/257
+new file mode 100755
+index 0000000..a61a2f9
+--- /dev/null
++++ b/257
+@@ -0,0 +1,122 @@
++#!/bin/bash
++# FS QA Test No. 251
++#
++# This test was created in order to verify filesystem FITRIM implementation.
++# By many concurrent copy and remove operations and checking that files
++# does not change after copied into SCRATCH_MNT test if FITRIM implementation
++# corrupts the filesystem (data/metadata).
++#
++#-----------------------------------------------------------------------
++# Copyright 2010 (C) Red Hat, Inc., Lukas Czerner <lczerner@redhat.com>
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++
++owner=lczerner@redhat.com
++
++seq=`basename $0`
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=`mktemp -d`
++status=0
++trap "exit \$status" 0 1 3
++trap "exit \$status" 2 15
++chpid=0
++mypid=$$
++
++# get standard environment, filters and checks
++. ./common.rc
++. ./common.filter
++
++# real QA test starts here
++_supported_fs generic
++_supported_os Linux
++_require_scratch
++_scratch_mkfs >/dev/null 2>&1
++_scratch_mount
++
++
++$here/src/fstrim -l 10M $SCRATCH_MNT &> /dev/null || _notrun "FSTRIM is not supported"
++
++fsize=$(df -k | grep "$SCRATCH_MNT" | grep "$SCRATCH_DEV"  | awk '{print $2}')
++
++# All these tests should return EINVAL
++# since the start is beyond the end of
++# the file system
++
++echo "[+] Start beyond the end of fs (should fail)"
++$here/src/fstrim -s$(($fsize*2048)) $SCRATCH_MNT
++[ $? -eq 0 ] && status=1
++
++echo "[+] Start beyond the end of fs with len set (should fail)"
++$here/src/fstrim -s$(($fsize*2048)) -l1M $SCRATCH_MNT
++[ $? -eq 0 ] && status=1
++
++echo "[+] Start = 2^64-1 (should fail)"
++$here/src/fstrim -s18446744073709551615 $SCRATCH_MNT
++[ $? -eq 0 ] && status=1
++
++echo "[+] Start = 2^64-1 and len is set (should fail)"
++$here/src/fstrim -s18446744073709551615 -l1M $SCRATCH_MNT
++[ $? -eq 0 ] && status=1
++
++_scratch_unmount
++_scratch_mkfs >/dev/null 2>&1
++_scratch_mount
++
++# All these tests should succeed
++# since the length should be truncated
++
++echo "[+] Default length (should succeed)"
++$here/src/fstrim $SCRATCH_MNT
++[ $? -ne 0 ] && status=1
++echo "[+] Default length with start set (should succeed)"
++$here/src/fstrim -s10M $SCRATCH_MNT
++[ $? -ne 0 ] && status=1
++echo "[+] Length beyond the end of fs (should succeed)"
++$here/src/fstrim -l$((fsize*2048)) $SCRATCH_MNT
++[ $? -ne 0 ] && status=1
++echo "[+] Length beyond the end of fs wich start set (should succeed)"
++$here/src/fstrim -s10M -l$((fsize*2048)) $SCRATCH_MNT
++[ $? -ne 0 ] && status=1
++
++_scratch_unmount
++_scratch_mkfs >/dev/null 2>&1
++_scratch_mount
++
++# This is a bit fuzzy, but since the file system is fresh
++# there should be at least (fsize/2) free space to trim.
++# This is supposed to catch wrong range.len handling and overflows.
++
++out=$($here/src/fstrim -v -s10M $SCRATCH_MNT)
++bytes=${out%% *}
++
++if [ $bytes -gt $(($fsize*1024)) ]; then
++	status=1
++	echo "After the full fs discard $bytes bytes were discarded"\
++	     "however the file system is $(($fsize*1024)) bytes long."\
++	     "This is suspicious."
++fi
++
++# Btrfs is special and this test does not apply to it
++if [ $bytes -le $(($fsize*512)) ] && [ $FSTYP != "btrfs" ]; then
++	status=1
++	echo "After the full fs discard $bytes bytes were discarded"\
++	     "however the file system is $(($fsize*1024)) bytes long."\
++	     "This is suspicious."
++fi
++
++echo "Test done"
++exit
+diff --git a/257.out b/257.out
+new file mode 100644
+index 0000000..86a5246
+--- /dev/null
++++ b/257.out
+@@ -0,0 +1,14 @@
++QA output created by 257
++[+] Start beyond the end of fs (should fail)
++fstrim: FSTRIM: Invalid argument
++[+] Start beyond the end of fs with len set (should fail)
++fstrim: FSTRIM: Invalid argument
++[+] Start = 2^64-1 (should fail)
++fstrim: FSTRIM: Invalid argument
++[+] Start = 2^64-1 and len is set (should fail)
++fstrim: FSTRIM: Invalid argument
++[+] Default length (should succeed)
++[+] Default length with start set (should succeed)
++[+] Length beyond the end of fs (should succeed)
++[+] Length beyond the end of fs wich start set (should succeed)
++Test done
+diff --git a/group b/group
+index 0c746c8..b742f91 100644
+--- a/group
++++ b/group
+@@ -370,3 +370,4 @@ deprecated
+ 254 auto quick
+ 255 auto quick prealloc
+ 256 auto quick
++257 auto quick trim
 -- 
 1.7.4.4
 
