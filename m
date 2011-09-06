@@ -1,12 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p85ESvIY018122 for <xfs@oss.sgi.com>; Mon, 5 Sep 2011 09:28:57 -0500
-From: Lukas Czerner <lczerner@redhat.com>
-Subject: [PATCH 1/2][xfstests] Add test 257: Check proper FITRIM argument
-	handling
-Date: Mon,  5 Sep 2011 16:28:50 +0200
-Message-Id: <1315232931-26770-1-git-send-email-lczerner@redhat.com>
+	p86BIINh073941 for <xfs@oss.sgi.com>; Tue, 6 Sep 2011 06:18:18 -0500
+Received: from mailhost.ldc.fr (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3EDFE1E8534E
+	for <xfs@oss.sgi.com>; Tue,  6 Sep 2011 04:18:15 -0700 (PDT)
+Received: from mailhost.ldc.fr (mailhost.ldc.fr [86.65.205.244]) by
+	cuda.sgi.com with ESMTP id 4OHpUtSUqlZRLQa6 for
+	<xfs@oss.sgi.com>; Tue, 06 Sep 2011 04:18:15 -0700 (PDT)
+Received: from localhost (unknown [192.168.2.128])
+	by mailback.ldc.fr (Postfix::smtpd) with ESMTP id C760424B613
+	for <xfs@oss.sgi.com>; Tue,  6 Sep 2011 13:18:14 +0200 (CEST)
+Received: from mailhost.ldc.fr ([127.0.0.1])
+	by localhost (mailhost.ldc.fr [127.0.0.1]) (amavisd-new, port 10025)
+	with LMTP id FjRmIikdome1 for <xfs@oss.sgi.com>;
+	Tue,  6 Sep 2011 13:18:14 +0200 (CEST)
+Received: from lnx054009.grpldc.com (domino3101.grpldc.com [192.168.11.112])
+	by mailhost.ldc.fr (Postfix::smtpd) with ESMTP id 71D0024B5F9
+	for <xfs@oss.sgi.com>; Tue,  6 Sep 2011 13:18:14 +0200 (CEST)
+Received: from domino3101.grpldc.com (domino3101 [172.20.3.111])
+	by lnx054009.grpldc.com (Postfix) with ESMTP id 6C34233B79
+	for <xfs@oss.sgi.com>; Tue,  6 Sep 2011 13:18:14 +0200 (CEST)
+Subject: XFS frozen on one directory
+Message-ID: <OF62081B23.59A4BF92-ONC1257903.003AB613-C1257903.003D9151@grpldc.com>
+From: Boris.SANEGRE@agis-sa.fr
+Date: Tue, 6 Sep 2011 13:12:28 +0200
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -15,191 +34,91 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: Lukas Czerner <lczerner@redhat.com>, aelder@sgi.com
 
-This test suppose to validate that file systems are using the fitrim
-arguments right. It checks that the fstrim returns EINVAl in case that
-the start of the range is beyond the end of the file system, and also
-that the fstrim works without an error if the length of the range is
-bigger than the file system (it should be truncated to the file system
-length automatically within the fitrim implementation).
 
-This test should also catch common problem with overflow of start+len.
+Hi,
 
-Signed-off-by: Lukas Czerner <lczerner@redhat.com>
----
- 257     |  122 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 257.out |   14 +++++++
- group   |    1 +
- 3 files changed, 137 insertions(+), 0 deletions(-)
- create mode 100755 257
- create mode 100644 257.out
+Since last week, I'm trying to use XFS Project Quota feature. My server has
+crashed two times.
 
-diff --git a/257 b/257
-new file mode 100755
-index 0000000..a61a2f9
---- /dev/null
-+++ b/257
-@@ -0,0 +1,122 @@
-+#!/bin/bash
-+# FS QA Test No. 251
-+#
-+# This test was created in order to verify filesystem FITRIM implementation.
-+# By many concurrent copy and remove operations and checking that files
-+# does not change after copied into SCRATCH_MNT test if FITRIM implementation
-+# corrupts the filesystem (data/metadata).
-+#
-+#-----------------------------------------------------------------------
-+# Copyright 2010 (C) Red Hat, Inc., Lukas Czerner <lczerner@redhat.com>
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+
-+owner=lczerner@redhat.com
-+
-+seq=`basename $0`
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=`mktemp -d`
-+status=0
-+trap "exit \$status" 0 1 3
-+trap "exit \$status" 2 15
-+chpid=0
-+mypid=$$
-+
-+# get standard environment, filters and checks
-+. ./common.rc
-+. ./common.filter
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
-+_require_scratch
-+_scratch_mkfs >/dev/null 2>&1
-+_scratch_mount
-+
-+
-+$here/src/fstrim -l 10M $SCRATCH_MNT &> /dev/null || _notrun "FSTRIM is not supported"
-+
-+fsize=$(df -k | grep "$SCRATCH_MNT" | grep "$SCRATCH_DEV"  | awk '{print $2}')
-+
-+# All these tests should return EINVAL
-+# since the start is beyond the end of
-+# the file system
-+
-+echo "[+] Start beyond the end of fs (should fail)"
-+$here/src/fstrim -s$(($fsize*2048)) $SCRATCH_MNT
-+[ $? -eq 0 ] && status=1
-+
-+echo "[+] Start beyond the end of fs with len set (should fail)"
-+$here/src/fstrim -s$(($fsize*2048)) -l1M $SCRATCH_MNT
-+[ $? -eq 0 ] && status=1
-+
-+echo "[+] Start = 2^64-1 (should fail)"
-+$here/src/fstrim -s18446744073709551615 $SCRATCH_MNT
-+[ $? -eq 0 ] && status=1
-+
-+echo "[+] Start = 2^64-1 and len is set (should fail)"
-+$here/src/fstrim -s18446744073709551615 -l1M $SCRATCH_MNT
-+[ $? -eq 0 ] && status=1
-+
-+_scratch_unmount
-+_scratch_mkfs >/dev/null 2>&1
-+_scratch_mount
-+
-+# All these tests should succeed
-+# since the length should be truncated
-+
-+echo "[+] Default length (should succeed)"
-+$here/src/fstrim $SCRATCH_MNT
-+[ $? -ne 0 ] && status=1
-+echo "[+] Default length with start set (should succeed)"
-+$here/src/fstrim -s10M $SCRATCH_MNT
-+[ $? -ne 0 ] && status=1
-+echo "[+] Length beyond the end of fs (should succeed)"
-+$here/src/fstrim -l$((fsize*2048)) $SCRATCH_MNT
-+[ $? -ne 0 ] && status=1
-+echo "[+] Length beyond the end of fs wich start set (should succeed)"
-+$here/src/fstrim -s10M -l$((fsize*2048)) $SCRATCH_MNT
-+[ $? -ne 0 ] && status=1
-+
-+_scratch_unmount
-+_scratch_mkfs >/dev/null 2>&1
-+_scratch_mount
-+
-+# This is a bit fuzzy, but since the file system is fresh
-+# there should be at least (fsize/2) free space to trim.
-+# This is supposed to catch wrong range.len handling and overflows.
-+
-+out=$($here/src/fstrim -v -s10M $SCRATCH_MNT)
-+bytes=${out%% *}
-+
-+if [ $bytes -gt $(($fsize*1024)) ]; then
-+	status=1
-+	echo "After the full fs discard $bytes bytes were discarded"\
-+	     "however the file system is $(($fsize*1024)) bytes long."\
-+	     "This is suspicious."
-+fi
-+
-+# Btrfs is special and this test does not apply to it
-+if [ $bytes -le $(($fsize*512)) ] && [ $FSTYP != "btrfs" ]; then
-+	status=1
-+	echo "After the full fs discard $bytes bytes were discarded"\
-+	     "however the file system is $(($fsize*1024)) bytes long."\
-+	     "This is suspicious."
-+fi
-+
-+echo "Test done"
-+exit
-diff --git a/257.out b/257.out
-new file mode 100644
-index 0000000..86a5246
---- /dev/null
-+++ b/257.out
-@@ -0,0 +1,14 @@
-+QA output created by 257
-+[+] Start beyond the end of fs (should fail)
-+fstrim: FSTRIM: Invalid argument
-+[+] Start beyond the end of fs with len set (should fail)
-+fstrim: FSTRIM: Invalid argument
-+[+] Start = 2^64-1 (should fail)
-+fstrim: FSTRIM: Invalid argument
-+[+] Start = 2^64-1 and len is set (should fail)
-+fstrim: FSTRIM: Invalid argument
-+[+] Default length (should succeed)
-+[+] Default length with start set (should succeed)
-+[+] Length beyond the end of fs (should succeed)
-+[+] Length beyond the end of fs wich start set (should succeed)
-+Test done
-diff --git a/group b/group
-index 0c746c8..b742f91 100644
---- a/group
-+++ b/group
-@@ -370,3 +370,4 @@ deprecated
- 254 auto quick
- 255 auto quick prealloc
- 256 auto quick
-+257 auto quick trim
--- 
-1.7.4.4
+I'have the same server using XFS with exactly same
+configuration/version/hardware without project quota enabled. This server
+run nice since 1 month
+
+When my server crash, one directory becomes unabled. I can't acces to it. I
+can't find any error. No error reporting in /var/log/syslog, /var/log/dmesg
+or /var/log/kern.log
+I find the process with command lsof, but can't kill it.
+All other directories are avaibled
+
+
+Example: if directory /a/b/c freeze:
+
+	Clic with Samba on directoy failed (waitting long time, next Windows
+says server doesn't reply only on this directory)
+	ls /a/b/c  --> Ok
+	vdir /a/b/c --> failed (frozen. CTRL + C don't work. Not possible to
+kill process "vdir")
+	getfacl /a/b/c -->  failed (frozen. CTRL + C don't work. Not possible
+to kill process "getfacl")
+	ls /a/b/c/d --> Ok (I can read subdir with this command)
+
+	iotop --> Traffic on my disk not busy
+
+	htop --> CPU or RAM not busy
+
+	ps aux | grep /a/b/c --> process flag "D" (so can't be killed -->
+kill -9 no =3D effect)
+
+
+Information about my server:
+	uname -a: Linux lnx043002 2.6.26-2-amd64 #1 SMP Tue Jan 25 05:59:43
+UTC 2011 x86_64 GNU/Linux
+
+	OS: Debian 5.0.8
+
+	dpkg -l | grep samba
+		ii  libcrypt-smbhash-perl                0.12-2
+generate LM/NT hash of a password for samba
+		ii  samba                                2:3.5.6~dfsg-3~bpo50+1
+SMB/CIFS file, print, and login server for Unix
+		ii  samba-common                         2:3.5.6~dfsg-3~bpo50+1
+common files used by both the Samba server and client
+		ii  samba-common-bin                     2:3.5.6~dfsg-3~bpo50+1
+common files used by both the Samba server and client
+
+	dpkg -l | grep xfs
+		ii  x11-xfs-utils                        7.3+1
+X font server utilities
+		ii  xfsdump                              2.2.48-1
+Administrative utilities for the XFS filesystem
+		ii  xfsprogs                             2.9.8-1lenny1
+Utilities for managing the XFS filesystem
+
+
+	dpkg -l | grep lvm
+		ii  lvm2                                 2.02.39-8
+The Linux Logical Volume Manager
+
+
+When server freeze a directory, I can't reboot server. I must reboot
+machine on button.
+
+Any help to find "why" and "how to resolve" will be very nice.
+Tell me what more informations you want.
+Next crash I could take screenshot of commands
+
+Best regard.
+Boris San=E8gre.
+
+
+
+
 
 _______________________________________________
 xfs mailing list
