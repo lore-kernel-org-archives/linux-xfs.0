@@ -1,21 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p86Estak085707 for <xfs@oss.sgi.com>; Tue, 6 Sep 2011 09:54:55 -0500
+	p86FTlkP088442 for <xfs@oss.sgi.com>; Tue, 6 Sep 2011 10:29:47 -0500
 Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 699A51E85C46
-	for <xfs@oss.sgi.com>; Tue,  6 Sep 2011 07:54:55 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B8FB01E84386
+	for <xfs@oss.sgi.com>; Tue,  6 Sep 2011 08:29:46 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id vmF6eep3peeepmmJ for
-	<xfs@oss.sgi.com>; Tue, 06 Sep 2011 07:54:55 -0700 (PDT)
-Date: Tue, 6 Sep 2011 16:54:46 +0200 (CEST)
+	cuda.sgi.com with ESMTP id wgT6Pf8moNpTDl6J for
+	<xfs@oss.sgi.com>; Tue, 06 Sep 2011 08:29:46 -0700 (PDT)
 From: Lukas Czerner <lczerner@redhat.com>
-Subject: Re: [PATCH] xfs: fix possible overflow in xfs_ioc_trim()
-In-Reply-To: <20110906140238.GA11643@infradead.org>
-Message-ID: <alpine.LFD.2.00.1109061629490.6026@dhcp-27-109.brq.redhat.com>
-References: <1315233205-27093-1-git-send-email-lczerner@redhat.com>
-	<20110906140238.GA11643@infradead.org>
-MIME-Version: 1.0
+Subject: [PATCH v2] xfs: fix possible overflow in xfs_ioc_trim()
+Date: Tue,  6 Sep 2011 17:29:37 +0200
+Message-Id: <1315322977-22736-1-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,40 +20,49 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Lukas Czerner <lczerner@redhat.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: hch@infradead.org, Lukas Czerner <lczerner@redhat.com>
 
-On Tue, 6 Sep 2011, Christoph Hellwig wrote:
+In xfs_ioc_trim it is possible that start+len might overflow. Fix it by
+decrementing the len so that start+len equals to the file system size in
+the worst case.
 
-> On Mon, Sep 05, 2011 at 04:33:25PM +0200, Lukas Czerner wrote:
-> > In xfs_ioc_trim it is possible that start+len might overflow. Fix it by
-> > decrementing the len so that start+len equals to the file system size in
-> > the worst case.
-> 
-> The idea of the check looks reasonable, but I think it needs to be done
-> a bit different.  Was this caught by the new testcase you just sent?
+Signed-off-by: Lukas Czerner <lczerner@redhat.com>
+---
+v2: Use sb_dblocks instead of XFS_MAX_DBLOCKS to get max block count
 
-Actually I have found the problem in other file systems too (ext4 and
-btrfs) while doing test similar to the one sent recently to xfstests.
-Then I fixed the problems, and then I have created the xfstests test for
-it so it is clear what the correct behaviour should look like. So yes,
-the testcase would have caught the problem.
+ fs/xfs/xfs_discard.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
-> 
-> > +	xfs_fsblock_t		max_blks =  XFS_MAX_DBLOCKS(&(mp->m_sb));
-> 
-> XFS_MAX_DBLOCKS is the maximum number of blocks that the given
-> geometry could support.  But the last AG could be shorter than the
-> others.  I think you really want to check against mp->m_sb.sb_dblocks.
-> 
-
-ah, ok, I'll change that. Thanks!
-
--Lukas
+diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
+index 244e797..b45e3c9 100644
+--- a/fs/xfs/xfs_discard.c
++++ b/fs/xfs/xfs_discard.c
+@@ -146,6 +146,7 @@ xfs_ioc_trim(
+ 	unsigned int		granularity = q->limits.discard_granularity;
+ 	struct fstrim_range	range;
+ 	xfs_fsblock_t		start, len, minlen;
++	xfs_fsblock_t		max_blks = mp->m_sb.sb_dblocks;
+ 	xfs_agnumber_t		start_agno, end_agno, agno;
+ 	__uint64_t		blocks_trimmed = 0;
+ 	int			error, last_error = 0;
+@@ -171,7 +172,8 @@ xfs_ioc_trim(
+ 	start_agno = XFS_FSB_TO_AGNO(mp, start);
+ 	if (start_agno >= mp->m_sb.sb_agcount)
+ 		return -XFS_ERROR(EINVAL);
+-
++	if (len > max_blks)
++		len = max_blks - start;
+ 	end_agno = XFS_FSB_TO_AGNO(mp, start + len);
+ 	if (end_agno >= mp->m_sb.sb_agcount)
+ 		end_agno = mp->m_sb.sb_agcount - 1;
+-- 
+1.7.4.4
 
 _______________________________________________
 xfs mailing list
