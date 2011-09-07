@@ -1,24 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p87BbQmm155347 for <xfs@oss.sgi.com>; Wed, 7 Sep 2011 06:37:26 -0500
+	p87Br4xW156270 for <xfs@oss.sgi.com>; Wed, 7 Sep 2011 06:53:05 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1A40213CCC58
-	for <xfs@oss.sgi.com>; Wed,  7 Sep 2011 04:41:29 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9305813B5110
+	for <xfs@oss.sgi.com>; Wed,  7 Sep 2011 04:57:08 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	GA2LzO1YAMRNbNGH for <xfs@oss.sgi.com>;
-	Wed, 07 Sep 2011 04:41:29 -0700 (PDT)
-Date: Wed, 7 Sep 2011 07:37:23 -0400
+	xEdqFhCo3yT7hxR9 for <xfs@oss.sgi.com>;
+	Wed, 07 Sep 2011 04:57:08 -0700 (PDT)
+Date: Wed, 7 Sep 2011 07:52:37 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: CPU stuck for 67s (kernel BUG) + in xfs_trans_committed_bulk
-	while deleting lots a files (mostly hard-links)
-Message-ID: <20110907113723.GA1701@infradead.org>
-References: <4E674FD6.8030408@unfix.org>
+Subject: Re: [PATCH, RFC] writeback: avoid redirtying when ->write_inode
+	failed to clear I_DIRTY
+Message-ID: <20110907115237.GA21478@infradead.org>
+References: <20110827061409.GA6854@infradead.org>
+	<20110827135825.GA22575@localhost>
+	<20110903011315.GJ12182@quack.suse.cz>
+	<20110903213527.GB10529@localhost>
+	<20110905111153.GD5466@quack.suse.cz>
+	<20110905132216.GB1349@localhost>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4E674FD6.8030408@unfix.org>
+In-Reply-To: <20110905132216.GB1349@localhost>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,27 +36,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jeroen Massar <jeroen@unfix.org>
-Cc: xfs@oss.sgi.com
+To: Wu Fengguang <fengguang.wu@intel.com>
+Cc: Christoph Hellwig <hch@infradead.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Jan Kara <jack@suse.cz>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Wed, Sep 07, 2011 at 01:04:54PM +0200, Jeroen Massar wrote:
-> As partially mentioned in the kernel BUG message this is Debian's
-> edition of linux-image-2.6.39-2-amd64 and according to the Debian
-> changelogs nothing new has been introduced. 3.0.0-3 is available, but as
-> kernel.org is down, bit hard to figure out what changes where made
-> between those versions and if they can affect this at all...
+On Mon, Sep 05, 2011 at 09:22:16PM +0800, Wu Fengguang wrote:
+> > > That's a reasonable robust option, however at the cost of keeping the
+> > > writeback code in some ambiguous state ;)
+> >   What do you exactly mean by ambiguous state?
 > 
-> Anybody any ideas? :)
+> I mean in Christoph's case, it will be calling requeue_io() and at the
+> same time rely on your suggested unconditional sleep at the end of
+> wb_writeback() loop to avoid busy loop. Or in other words, b_more_io
+> will be holding both inodes that should be busy retried and the inodes
+> to be opportunistically retried.  However I admit it's not a big
+> problem if we take b_more_io as general "to be retried ASAP".
+> 
+> > I don't see anything ambiguous in waiting for a jiffie or so. Not
+> > that I'd be completely happy about "just wait for a while and see if
+> > things are better" but your solution does not seem ideal either... 
+> 
+> There are no big differences (that matter) in terms of "how much exact
+> time to wait" in this XFS case.  What make me prefer b_more_io_wait is
+> that it looks a more general solution to replace the majority
+> redirty_tail() calls to avoid modifying dirtied_when.
 
-You'll want at least commit 1316d4da3f632d5843d5a446203e73067dc40f09
-
-	xfs: unpin stale inodes directly in IOP_COMMITTED
-
-from kernel 3.0.  In addition commit 1d8c95a363bf8cd4d4182dd19c01693b635311c2
-
-	xfs: use a cursor for bulk AIL insertion
-
-from 3.1-rc should help even more with this workload.
+FYI, we had a few more users hit this issue recently.  I'm not sure why,
+but we are seeing this fairly often now.  I'd really like to get some
+sort of fix for this in ASAP as it causes data loss for users.  
 
 _______________________________________________
 xfs mailing list
