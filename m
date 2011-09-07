@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p879AWAG145108 for <xfs@oss.sgi.com>; Wed, 7 Sep 2011 04:10:32 -0500
-Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1C14213C2EBF
-	for <xfs@oss.sgi.com>; Wed,  7 Sep 2011 02:14:33 -0700 (PDT)
-Received: from mailsrv14.zmi.at (mailsrv14.zmi.at [212.69.164.54]) by
-	cuda.sgi.com with ESMTP id FyjKLxcjoGEjC8CF for
-	<xfs@oss.sgi.com>; Wed, 07 Sep 2011 02:14:33 -0700 (PDT)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: Re: XFS frozen on one directory
-Date: Wed, 7 Sep 2011 11:10:25 +0200
-References: <OF62081B23.59A4BF92-ONC1257903.003AB613-C1257903.003D9151@grpldc.com>
-In-Reply-To: <OF62081B23.59A4BF92-ONC1257903.003AB613-C1257903.003D9151@grpldc.com>
+	p87A6du8147851 for <xfs@oss.sgi.com>; Wed, 7 Sep 2011 05:06:39 -0500
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0C6381992C86
+	for <xfs@oss.sgi.com>; Wed,  7 Sep 2011 03:06:38 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 8JrQBJm4w397WJpL for
+	<xfs@oss.sgi.com>; Wed, 07 Sep 2011 03:06:38 -0700 (PDT)
+Date: Wed, 7 Sep 2011 12:05:14 +0200 (CEST)
+From: Lukas Czerner <lczerner@redhat.com>
+Subject: Re: [PATCH v2] xfs: fix possible overflow in xfs_ioc_trim()
+In-Reply-To: <20110906153301.GA21675@infradead.org>
+Message-ID: <alpine.LFD.2.00.1109071200480.4579@dhcp-27-109.brq.redhat.com>
+References: <1315322977-22736-1-git-send-email-lczerner@redhat.com>
+	<20110906153301.GA21675@infradead.org>
 MIME-Version: 1.0
-Message-Id: <201109071110.26655@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,64 +24,63 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============4270031298567385162=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, Boris.SANEGRE@agis-sa.fr
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Lukas Czerner <lczerner@redhat.com>, xfs@oss.sgi.com
 
---===============4270031298567385162==
-Content-Type: multipart/signed;
-  boundary="nextPart2197084.fzT0hdGSSu";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+On Tue, 6 Sep 2011, Christoph Hellwig wrote:
 
---nextPart2197084.fzT0hdGSSu
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+> On Tue, Sep 06, 2011 at 05:29:37PM +0200, Lukas Czerner wrote:
+> > In xfs_ioc_trim it is possible that start+len might overflow. Fix it by
+> > decrementing the len so that start+len equals to the file system size in
+> > the worst case.
+> > 
+> > Signed-off-by: Lukas Czerner <lczerner@redhat.com>
+> 
+> > @@ -146,6 +146,7 @@ xfs_ioc_trim(
+> >  	unsigned int		granularity = q->limits.discard_granularity;
+> >  	struct fstrim_range	range;
+> >  	xfs_fsblock_t		start, len, minlen;
+> > +	xfs_fsblock_t		max_blks = mp->m_sb.sb_dblocks;
+> >  	xfs_agnumber_t		start_agno, end_agno, agno;
+> >  	__uint64_t		blocks_trimmed = 0;
+> >  	int			error, last_error = 0;
+> > @@ -171,7 +172,8 @@ xfs_ioc_trim(
+> >  	start_agno = XFS_FSB_TO_AGNO(mp, start);
+> >  	if (start_agno >= mp->m_sb.sb_agcount)
+> >  		return -XFS_ERROR(EINVAL);
+> > -
+> > +	if (len > max_blks)
+> > +		len = max_blks - start;
+> 
+> Is this really the correct check?
+> 
+> Shouldn't it be
+> 
+> 	if (start + len > max_blks)
+> 		len = max_blks - start;
+> 
+> I'd also just use the mp->m_sb.sb_dblocks value directly instead
+> of assigning it to a local variable.
+> 
 
-On Dienstag, 6. September 2011 Boris.SANEGRE@agis-sa.fr wrote:
-> Any help to find "why" and "how to resolve" will be very nice.
+Agh, you're right. I am bit too hasty I guess. I thought that
 
-Did you try to run xfs_repair? If that doesn't solve it, try upgrading=20
-it, the actual version is 3.1.5, you have a stone-old 2.9.8 version.=20
-Then run xfs_repair again.
+if (start_agno >= mp->m_sb.sb_agcount)
+	return -XFS_ERROR(EINVAL);
 
-=2D-=20
-mit freundlichen Gr=FCssen,
-Michael Monnerie, Ing. BSc
+will cover us from the unreasonably big start, however if the file
+system has really huge number of AGs than it will fail to prevent the
+overflow, I am not sure if that is possible to happen, but what you
+proposed is definitely better.
 
-it-management Internet Services: Prot=E9ger
-http://proteger.at [gesprochen: Prot-e-schee]
-Tel: +43 660 / 415 6531
-
-// Haus zu verkaufen: http://zmi.at/langegg/
-
---nextPart2197084.fzT0hdGSSu
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.16 (GNU/Linux)
-
-iEYEABECAAYFAk5nNQIACgkQzhSR9xwSCbT05ACgyrbBGOtZL2tDLnCdlfFEEdQ2
-UpQAoLUx9JXlrvJxssHLbJXJj5iuhbe5
-=MfUJ
------END PGP SIGNATURE-----
-
---nextPart2197084.fzT0hdGSSu--
-
-
---===============4270031298567385162==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Thanks!
+-Lukas
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============4270031298567385162==--
