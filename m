@@ -1,15 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p87HLPLW173432 for <xfs@oss.sgi.com>; Wed, 7 Sep 2011 12:21:25 -0500
-Subject: Re: [PATCH 08/25] xfs: introduce xfs_bmapi_delay()
+	p87HLnJ8173462 for <xfs@oss.sgi.com>; Wed, 7 Sep 2011 12:21:49 -0500
+Subject: Re: [PATCH 04/25] xfs: factor extent map manipulations out of
+	xfs_bmapi
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110906152706.GA14728@infradead.org>
+In-Reply-To: <20110906115517.GB12931@infradead.org>
 References: <20110824060428.789245205@bombadil.infradead.org>
-	<20110824060641.979845427@bombadil.infradead.org>
-	<1315002238.2069.88.camel@doink> <20110906152706.GA14728@infradead.org>
-Date: Wed, 7 Sep 2011 12:21:20 -0500
-Message-ID: <1315416080.2988.58.camel@doink>
+	<20110824060641.102703569@bombadil.infradead.org>
+	<1315002191.2069.84.camel@doink> <20110906115517.GB12931@infradead.org>
+Date: Wed, 7 Sep 2011 12:21:44 -0500
+Message-ID: <1315416104.2988.59.camel@doink>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -25,49 +26,23 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+Cc: Dave Chinner <dchinner@redhat.com>, xfs@oss.sgi.com
 
-On Tue, 2011-09-06 at 11:27 -0400, Christoph Hellwig wrote:
-> > > +	xfs_extnum_t		lastx;	/* last useful extent number */
-> > > +	int			eof;	/* we've hit the end of extents */
-> > > +	int			n = 0;	/* current extent index */
-> > > +	int			error = 0;
-> > > +
-> > > +	ASSERT(*nmap >= 1);
-> > > +	ASSERT(*nmap <= XFS_BMAP_MAX_NMAP);
-> > > +	ASSERT(!(flags & ~XFS_BMAPI_ENTIRE));
-> > > +
+On Tue, 2011-09-06 at 07:55 -0400, Christoph Hellwig wrote:
+> On Fri, Sep 02, 2011 at 05:23:11PM -0500, Alex Elder wrote:
+> > You included no signoff.  I am going to assume it included
+> > this like the rest of the series:
 > > 
-> > Rearrange the following test to use the pattern (assigning error)
-> > used in xfs_bmapi_read().
+> >     Signed-off-by: Christoph Hellwig <hch@lst.de>
 > 
-> Hmm - given that error is used as a boolean there I don't actually like
-> that pattern very much as error is generally used to hold an errno
-> value.
-
-My main thought was "make them consistent."  But
-looking at it again I agree that "error" is not
-the right name.  It doesn't really need changing
-but could be beautified in some later patch.
-
-> > 
-> > > +	if (unlikely(XFS_TEST_ERROR(
-> > > +	    (XFS_IFORK_FORMAT(ip, XFS_DATA_FORK) != XFS_DINODE_FMT_EXTENTS &&
-> > > +	     XFS_IFORK_FORMAT(ip, XFS_DATA_FORK) != XFS_DINODE_FMT_BTREE),
-> > 
-> > Are you certain that XFS_DINODE_FMT_LOCAL is not possible here?
-> > I tried to trace it back but I'm still not sure.  The transaction
-> > pointer passed is null, so it would have tripped an assertion
-> > in the previous code.  (A simple explanation would reassure me.)
+> It's actually a patch from Dave that I didn't modify in any significant
+> way, so it should have his signoff.
 > 
-> We can't hit it because we do not support the local format for regular
-> files at all, and we do not support delayed allocations for anything
-> but regular files.
 
-OK.  That's another thing I didn't realize about XFS...
+OK.  I won't commit it without recording that.
+Do you want your own signoff included also?
 
 					-Alex
-
 
 _______________________________________________
 xfs mailing list
