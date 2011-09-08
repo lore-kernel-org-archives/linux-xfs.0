@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p88B5U4J221274 for <xfs@oss.sgi.com>; Thu, 8 Sep 2011 06:05:31 -0500
-Received: from mail-fx0-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4B6DC1F0CA59
-	for <xfs@oss.sgi.com>; Thu,  8 Sep 2011 04:05:28 -0700 (PDT)
-Received: from mail-fx0-f53.google.com (mail-fx0-f53.google.com
-	[209.85.161.53]) by cuda.sgi.com with ESMTP id zV85CFbYX1nFegSY
-	for <xfs@oss.sgi.com>; Thu, 08 Sep 2011 04:05:28 -0700 (PDT)
-Received: by fxd23 with SMTP id 23so1431456fxd.26
-	for <xfs@oss.sgi.com>; Thu, 08 Sep 2011 04:05:28 -0700 (PDT)
+	p88FDAna235855 for <xfs@oss.sgi.com>; Thu, 8 Sep 2011 10:13:10 -0500
+Received: from mail09.linbit.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 555EE4CC667
+	for <xfs@oss.sgi.com>; Thu,  8 Sep 2011 08:13:07 -0700 (PDT)
+Received: from mail09.linbit.com (mail09.linbit.com [212.69.161.110]) by
+	cuda.sgi.com with ESMTP id TWPyduzh8Hl8BCDm for
+	<xfs@oss.sgi.com>; Thu, 08 Sep 2011 08:13:07 -0700 (PDT)
+Date: Thu, 8 Sep 2011 17:13:05 +0200
+From: Lars Ellenberg <lars.ellenberg@linbit.com>
+Subject: Re: [Drbd-dev] [3.1-rc4] XFS+DRBD hangs
+Message-ID: <20110908151305.GJ14243@barkeeper1-xen.linbit>
+References: <20110907221505.GC21603@hostway.ca>
 MIME-Version: 1.0
-Date: Thu, 8 Sep 2011 16:35:28 +0530
-Message-ID: <CADDb1s2QDk7y+JgMikoje35LviYQwzpgFihndUPuZx2VXYV4Ew@mail.gmail.com>
-Subject: XFS: Observed Crash followed by deadlock of khubd/sync/XFS
-From: Amit Sahrawat <amit.sahrawat83@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20110907221505.GC21603@hostway.ca>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,84 +24,165 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: drbd-dev@lists.linbit.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-S2VybmVsIFZlcnNpb246IDIuNi4zOS40ClRhcmdldDogQVJNCgpPYnNlcnZlZCB3aGlsZSBkb2lu
-ZzoKQ29weSBzb21lIGZpbGUgKGFueSBzaXplLCBJIHRyaWVkIHdpdGggMTBNQiwgMTAwTUIpIHRv
-IFhGUyBwYXJ0aXRpb24KQWZ0ZXIgQ29weSBkb+KAmHN5bmPigJkKTm93IGltbWVkaWF0ZWx5LCB1
-bnBsdWcgdGhlIGRldmljZS4KCnVzYiAyLTEuNDogVVNCIGRpc2Nvbm5lY3QsIGFkZHJlc3MgNApl
-bmRfcmVxdWVzdDogSS9PIGVycm9yLCBkZXYgc2RhLCBzZWN0b3IgNTY5NjkwOApJL08gZXJyb3Ig
-aW4gZmlsZXN5c3RlbSAoInNkYTMiKSBtZXRhLWRhdGEgZGV2IHNkYTMgYmxvY2sgMHg1NmVkOGMK
-ICAoInhsb2dfaW9kb25lIikgZXJyb3IgNSBidWYgY291bnQgMTAyNAp4ZnNfZm9yY2Vfc2h1dGRv
-d24oc2RhMywweDIpIGNhbGxlZCBmcm9tIGxpbmUgOTQ1IG9mIGZpbGUKZnMveGZzL3hmc19sb2cu
-Yy4gIFJldHVybiBhZGRyZXNzID0gMHhjMDE4YWMyMApGaWxlc3lzdGVtICJzZGEzIjogTG9nIEkv
-TyBFcnJvciBEZXRlY3RlZC4gIFNodXR0aW5nIGRvd24gZmlsZXN5c3RlbTogc2RhMwpQbGVhc2Ug
-dW1vdW50IHRoZSBmaWxlc3lzdGVtLCBhbmQgcmVjdGlmeSB0aGUgcHJvYmxlbShzKQpYRlM6IFVu
-YWJsZSB0byB1cGRhdGUgc3VwZXJibG9jayBjb3VudGVycy4gRnJlZXNwYWNlIG1heSBub3QgYmUK
-Y29ycmVjdCBvbiBuZXh0IG1vdW50LgpVbmFibGUgdG8gaGFuZGxlIGtlcm5lbCBOVUxMIHBvaW50
-ZXIgZGVyZWZlcmVuY2UgYXQgdmlydHVhbCBhZGRyZXNzIDAwMDAwMDE0CnBnZCA9IGU0MmQ0MDAw
-ClswMDAwMDAxNF0gKnBnZD04YjhkODAzMSwgKnB0ZT0wMDAwMDAwMCwgKnBwdGU9MDAwMDAwMDAK
-Ck1haW4gQmFja3RyYWNlOgpbPGMwMTg5ZDg4Pl0gKHhmc19sb2dfbW92ZV90YWlsKzB4MC8weDFi
-NCkKWzxjMDE5OGI3OD5dICh4ZnNfdHJhbnNfYWlsX2RlbGV0ZSsweDAvMHgxN2MpCls8YzAxNmVh
-Zjg+XSAoeGZzX2J1Zl9pb2RvbmUrMHgwLzB4NDgpCls8YzAxNmVhOTg+XSAoeGZzX2J1Zl9kb19j
-YWxsYmFja3MrMHgwLzB4M2MpCls8YzAxNmViN2M+XSAoeGZzX2J1Zl9pb2RvbmVfY2FsbGJhY2tz
-KzB4MC8weDE4YykKWzxjMDFhMmY5OD5dICh4ZnNfYnVmX2lvZG9uZV93b3JrKzB4MC8weDdjKQpb
-PGMwMWEzMDE0Pl0gKHhmc19idWZfaW9lbmQrMHgwLzB4OWMpCls8YzAxYTM2Zjg+XSAoeGZzX2Jp
-b2Vycm9yKzB4MC8weDU0KQpbPGMwMWEzNzRjPl0gKHhmc19iZHN0cmF0X2NiKzB4MC8weDZjKQpb
-PGMwMWEzMTU4Pl0gKHhmc19mbHVzaF9idWZ0YXJnKzB4MC8weDE4YykKWzxjMDFhMzJlND5dICh4
-ZnNfZnJlZV9idWZ0YXJnKzB4MC8weDc4KQpbPGMwMWFhOGQwPl0gKHhmc19jbG9zZV9kZXZpY2Vz
-KzB4MC8weDY4KQpbPGMwMWFhOTM4Pl0gKHhmc19mc19wdXRfc3VwZXIrMHgwLzB4ODgpCls8YzAw
-YWIyYjQ+XSAoZ2VuZXJpY19zaHV0ZG93bl9zdXBlcisweDAvMHgxMjApCls8YzAwYWIzZDQ+XSAo
-a2lsbF9ibG9ja19zdXBlcisweDAvMHg0YykKWzxjMDBhYTNhYz5dIChkZWFjdGl2YXRlX2xvY2tl
-ZF9zdXBlcisweDAvMHg1YykKWzxjMDBhYTU5OD5dIChkZWFjdGl2YXRlX3N1cGVyKzB4MC8weDYw
-KQpbPGMwMGMxZmVjPl0gKG1udHB1dF9ub19leHBpcmUrMHgwLzB4ZTgpCls8YzAwYzI0MjQ+XSAo
-c3lzX3Vtb3VudCsweDAvMHgzMzQpIGZyb20gWzxjMDAxZWY4MD5dCihyZXRfZmFzdF9zeXNjYWxs
-KzB4MC8weDMwKQotLS1bIGVuZCB0cmFjZSA2YmY5NWJlZGIzMDkyMTYyIF0tLS0KU2VnbWVudGF0
-aW9uIGZhdWx0CiM+CgpBZ2FpbiBwbHVnZ2luZyB0aGUgVVNCIGRvZXMgbm90IHdvcmsgYmVjYXVz
-ZSDigJh1bW91bnTigJkgcHJvY2VzcyB3aGljaApyZXN1bHRlZCBpbiB0aGUgY3Jhc2ggaGFzIG5v
-dCByZXR1cm5lZCBwcm9wZXJseSBhbmQgdGhlIGxvY2sgaXMga2VwdApoZWxkLgpXaGVuIEkgY2hl
-Y2sgdGhlIHN0YXRlIG9mIOKAmGtodWJk4oCZIGFuZCDigJhzeW5j4oCZIHRoZXkgYm90aCBsaWUg
-aW4g4oCYRCDigJMKVEFTS19VTklOVEVSUlVQVElCTEXigJkgc3RhdGUgYW5kIGlmIHRoZWlyIGJh
-Y2stdHJhY2UgaXMgY2hlY2tlZCBhdCB0aGF0CnBvaW50LgoKRm9yIEtodWJkOgpCYWNrdHJhY2U6
-Cls8YzAyZjY1MjQ+XSAoc2NoZWR1bGUrMHgwLzB4NTBjKQpbPGMwMmY4OTg4Pl0gKF9fZG93bl9y
-ZWFkKzB4MC8weDEzMCkKWzxjMDJmN2VlND5dIChkb3duX3JlYWQrMHgwLzB4MTQpCls8YzAwYzMw
-YTQ+XSAoZ2V0X3N1cGVyKzB4MC8weDEwNCkKWzxjMDBlZWQ3MD5dIChmc3luY19iZGV2KzB4MC8w
-eDQ0KQpbPGMwMWRmOTE0Pl0gKGludmFsaWRhdGVfcGFydGl0aW9uKzB4MC8weDNjKQpbPGMwMTBh
-Mzg0Pl0gKGRlbF9nZW5kaXNrKzB4MC8weGVjKQpbPGMwMjI4YmI4Pl0gKHNkX3JlbW92ZSsweDAv
-MHhjOCkKCls8YzAyMTQ3Zjg+XSAoX19kZXZpY2VfcmVsZWFzZV9kcml2ZXIrMHgwLzB4YWMpCls8
-YzAyMTQ5OTQ+XSAoZGV2aWNlX3JlbGVhc2VfZHJpdmVyKzB4MC8weDMwKQpbPGMwMjEzZGU0Pl0g
-KGJ1c19yZW1vdmVfZGV2aWNlKzB4MC8weDhjKQpbPGMwMjEyMzA4Pl0gKGRldmljZV9kZWwrMHgw
-LzB4MTYwKQpbPGMwMjI1ZmJjPl0gKF9fc2NzaV9yZW1vdmVfZGV2aWNlKzB4MC8weDkwKQpbPGMw
-MjIzMzI4Pl0gKHNjc2lfZm9yZ2V0X2hvc3QrMHgwLzB4YmMpCls8YzAyMWNjY2M+XSAoc2NzaV9y
-ZW1vdmVfaG9zdCsweDAvMHgxOGMpCls8YmYxNWZlMTQ+XSAocXVpZXNjZV9hbmRfcmVtb3ZlX2hv
-c3QrMHgwLzB4ZTQKWzxiZjE1ZmY3Yz5dICh1c2Jfc3Rvcl9kaXNjb25uZWN0KzB4MC8weDI4Cls8
-YmYxMWU1OTQ+XSAodXNiX3VuYmluZF9pbnRlcmZhY2UrMHgwLzB4ZGMKWzxjMDIxNDdmOD5dIChf
-X2RldmljZV9yZWxlYXNlX2RyaXZlcisweDAvMHhhYykKWzxjMDIxNDk5ND5dIChkZXZpY2VfcmVs
-ZWFzZV9kcml2ZXIrMHgwLzB4MzApCls8YzAyMTNkZTQ+XSAoYnVzX3JlbW92ZV9kZXZpY2UrMHgw
-LzB4OGMpCls8YzAyMTIzMDg+XSAoZGV2aWNlX2RlbCsweDAvMHgxNjApCls8YmYxMWJjNDg+XSAo
-dXNiX2Rpc2FibGVfZGV2aWNlKzB4MC8weDE3YwpbPGJmMTE2NDg4Pl0gKHVzYl9kaXNjb25uZWN0
-KzB4MC8weDE1OApbPGJmMTE2N2I4Pl0gKGh1Yl90aHJlYWQrMHgwLzB4MTA5NApbPGMwMDVhN2Q4
-Pl0gKGt0aHJlYWQrMHgwLzB4OGMpCgoKCkZvciBTeW5jOgpCYWNrdHJhY2U6Cls8YzAyZjY1MjQ+
-XSAoc2NoZWR1bGUrMHgwLzB4NTBjKQpbPGMwMmY4OTg4Pl0gKF9fZG93bl9yZWFkKzB4MC8weDEz
-MCkKWzxjMDJmN2VlND5dIChkb3duX3JlYWQrMHgwLzB4MTQpCls8YzAwYzMxYTg+XSAoaXRlcmF0
-ZV9zdXBlcnMrMHgwLzB4ZmMpCls8YzAwZTQ2OTA+XSAoc3luY19maWxlc3lzdGVtcysweDAvMHgy
-YykKWzxjMDBlNDdjND5dIChzeXNfc3luYysweDAvMHg0NCkKCkJvdGggYXJlIHN0dWNrLCB3YWl0
-aW5nIHRvIGFjcXVpcmUgYSBzZW1hcGhvcmUg4oCYc2ItPnNfdW1vdW504oCZCkR1cmluZyB1bW91
-bnQg4oCTIHdoaWNoIGdldHMgY2FsbGVkIHdoZW4gYSBkZXZpY2UgaXMgdW5wbHVnZ2VkIGZsb3cg
-aXM6ClN5c191bW91bnQoKe+DoOKApmRlYWN0aXZhdGVfc3VwZXIoKe+DoGRlYWN0aXZhdGVfbG9j
-a2VkX3N1cGVyKCnvg6BraWxsX2Jsb2NrX3N1cGVyKCnvg6BnZW5lcmljX3NodXRkb3duX3N1cGVy
-KCkKVGhpcyBzZW1hcGhvcmUgaXMgdGFrZW4gaW4gZGVhY3RpdmF0ZSBzdXBlciBhbmQgcmVsZWFz
-ZWQgaW4KZ2VuZXJpY19zaHV0ZG93bl9zdXBlcigpIOKAkyDigJh1cF93cml0ZSgmc2ItPnNfdW1v
-dW50KeKAmSwgYnV0IGR1ZSB0byDigJxOVUxMCnBvaW50ZXIgZGVyZWZlcmVuY2XigJ0gY3Jhc2gg
-aXQgaXMgbm90IGNhbGxlZC4KCldoaWxlIGZvciDigJxOVUxMIHBvaW50ZXIgZGVmZXJlbmNl4oCd
-IGNyYXNoIGl0IHNob3dzIHRoZSBQQyBhdDoKWGZzX2xvZ19tb3ZlX3RhaWwoKSB3aGlsZSBhY2Nl
-c3Npbmcg4oCYbG9n4oCZ74OgCQppZiAoWExPR19GT1JDRURfU0hVVERPV04obG9nKSkKCQlyZXR1
-cm47CgpDaGFuZ2luZyB0aGUgY29uZGl0aW9uIHRha2VzIGNyYXNoIHRvIG90aGVyIHBsYWNlcy4K
-CkhhcyBhbnlvbmUgb2JzZXJ2ZWQgdGhpcyBzY2VuYXJpbz8gUGxlYXNlIGFkdmljZSBzb21ldGhp
-bmcgb24gdGhpcy4KClRoYW5rcyAmIFJlZ2FyZHMsCkFtaXQgU2FocmF3YXQKCl9fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZz
-QG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+Sorry for double posting on drbd-dev, I managed to strip the other lists from Cc.
+
+On Wed, Sep 07, 2011 at 03:15:05PM -0700, Simon Kirby wrote:
+> We will try again with most recent Linus HEAD, but with a build of Linus
+> e9208a4eec8acbde7ede6516c39dea05f3b700dc (3.1-rc4), we are seeing awesome
+> VM performance (low memory fragmentation, good caching), followed quickly
+> by a hard lockup. APEI and pstore stuff just doesn't seem to like this
+> PowerEdge 2950 (ERST: Failed to get Error Log Address Range.), so this
+> was captured over an old-fashioned serial cable:
+> 
+> [   93.004364] block drbd0: Resync done (total 52 sec; paused 0 sec; 3884 K/sec)
+> [   93.008004] block drbd0: updated UUIDs D1D6A96AAE5E394E:0000000000000000:264787A8207F2376:7E86E22A1F92B7FB
+> [   93.008004] block drbd0: conn( SyncTarget -> Connected ) disk( Inconsistent -> UpToDate ) 
+> [   93.030394] block drbd0: helper command: /sbin/drbdadm after-resync-target minor-0
+> [   93.044631] block drbd0: helper command: /sbin/drbdadm after-resync-target minor-0 exit code 0 (0x0)
+> [   93.102981] block drbd0: bitmap WRITE of 3382 pages took 10 jiffies
+> [   93.109462] block drbd0: 0 KB (0 bits) marked out-of-sync by on disk bit-map.
+> [ 1114.600102] block drbd0: peer( Primary -> Secondary ) 
+> [ 1114.904031] block drbd0: role( Secondary -> Primary ) 
+> [ 1115.284503] XFS (drbd0): Mounting Filesystem
+> [ 1115.928766] XFS (drbd0): Ending clean mount
+> [ 1116.324036] NFSD: Using /var/lib/nfs/v4recovery as the NFSv4 state recovery directory
+> [ 1116.336050] NFSD: starting 90-second grace period
+> [ 1532.427149] Kernel panic - not syncing: Watchdog detected hard LOCKUP on cpu 1
+> [ 1532.427149] Pid: 3590, comm: lmtp Not tainted 3.1.0-rc4-hw+ #28
+> [ 1532.427149] Call Trace:
+> [ 1532.427149]  <NMI>  [<ffffffff816aa954>] panic+0xba/0x1f5
+> [ 1532.427149]  [<ffffffff8108f6d1>] watchdog_overflow_callback+0xb1/0xc0
+> [ 1532.427149]  [<ffffffff810bb442>] __perf_event_overflow+0xa2/0x1f0
+> [ 1532.427149]  [<ffffffff810b4981>] ? perf_event_update_userpage+0x11/0xc0
+> [ 1532.427149]  [<ffffffff810bb994>] perf_event_overflow+0x14/0x20
+> [ 1532.427149]  [<ffffffff81014bcb>] intel_pmu_handle_irq+0x21b/0x460
+> [ 1532.427149]  [<ffffffff816af286>] perf_event_nmi_handler+0x36/0xb0
+> [ 1532.427149]  [<ffffffff816b132f>] notifier_call_chain+0x3f/0x80
+> [ 1532.427149]  [<ffffffff816b1395>] atomic_notifier_call_chain+0x15/0x20
+> [ 1532.427149]  [<ffffffff816b13ce>] notify_die+0x2e/0x30
+> [ 1532.427149]  [<ffffffff816ae9e2>] do_nmi+0xa2/0x250
+> [ 1532.427149]  [<ffffffff816ae3ca>] nmi+0x1a/0x20
+> [ 1532.427149]  [<ffffffff8103d512>] ? try_to_wake_up+0xc2/0x270
+> [ 1532.427149]  <<EOE>>  <IRQ>  [<ffffffff8103d6cd>] default_wake_function+0xd/0x10
+> [ 1532.427149]  [<ffffffff81067041>] autoremove_wake_function+0x11/0x40
+> [ 1532.427149]  [<ffffffff8103075a>] __wake_up_common+0x5a/0x90
+> [ 1532.427149]  [<ffffffff81037c43>] __wake_up+0x43/0x70
+> [ 1532.427149]  [<ffffffffa0060579>] drbd_al_complete_io+0x99/0xd0 [drbd]
+> [ 1532.427149]  [<ffffffffa005b9b5>] _req_may_be_done+0x325/0x560 [drbd]
+> [ 1532.427149]  [<ffffffff810fabe1>] ? kmem_cache_free+0xe1/0xf0
+> [ 1532.427149]  [<ffffffffa005bc0d>] _req_may_be_done_not_susp+0x1d/0x30 [drbd]
+> [ 1532.427149]  [<ffffffffa005c0cb>] __req_mod+0x4ab/0xee0 [drbd]
+> [ 1532.427149]  [<ffffffffa004f22e>] drbd_endio_pri+0xae/0x120 [drbd]
+> [ 1532.427149]  [<ffffffff81130b6c>] bio_endio+0x1c/0x40
+> [ 1532.427149]  [<ffffffff813737d3>] req_bio_endio+0x83/0xb0
+> [ 1532.427149]  [<ffffffff81373900>] blk_update_request+0x100/0x470
+> [ 1532.427149]  [<ffffffff81373c92>] blk_update_bidi_request+0x22/0x90
+> [ 1532.427149]  [<ffffffff81374e5a>] blk_end_bidi_request+0x2a/0x80
+> [ 1532.427149]  [<ffffffff81374efb>] blk_end_request+0xb/0x10
+> [ 1532.427149]  [<ffffffff8146744d>] scsi_io_completion+0x11d/0x620
+> [ 1532.427149]  [<ffffffff8145f2ff>] scsi_finish_command+0xbf/0x120
+> [ 1532.427149]  [<ffffffff81467a9e>] scsi_softirq_done+0x13e/0x160
+> [ 1532.427149]  [<ffffffff8137ab7d>] blk_done_softirq+0x6d/0x80
+> [ 1532.427149]  [<ffffffff8104d0f0>] __do_softirq+0xd0/0x1c0
+> [ 1532.427149]  [<ffffffff816b726c>] call_softirq+0x1c/0x30
+> [ 1532.427149]  [<ffffffff81004035>] do_softirq+0x55/0x90
+> [ 1532.427149]  [<ffffffff8104ce2d>] irq_exit+0xad/0xe0
+> [ 1532.427149]  [<ffffffff81003824>] do_IRQ+0x64/0xe0
+> [ 1532.427149]  [<ffffffff816adf6b>] common_interrupt+0x6b/0x6b
+> [ 1532.427149]  <EOI> 
+> [ 1545.171011] Kernel panic - not syncing: Watchdog detected hard LOCKUP on cpu 0
+> [ 1545.171011] Pid: 20283, comm: xfsbufd/drbd0 Not tainted 3.1.0-rc4-hw+ #28
+> [ 1545.171011] Call Trace:
+> [ 1545.171011]  <NMI>  [<ffffffff816aa954>] panic+0xba/0x1f5
+> [ 1545.171011]  [<ffffffff8108f6d1>] watchdog_overflow_callback+0xb1/0xc0
+> [ 1545.171011]  [<ffffffff810bb442>] __perf_event_overflow+0xa2/0x1f0
+> [ 1545.171011]  [<ffffffff810b4981>] ? perf_event_update_userpage+0x11/0xc0
+> [ 1545.171011]  [<ffffffff810bb994>] perf_event_overflow+0x14/0x20
+> [ 1545.171011]  [<ffffffff81014bcb>] intel_pmu_handle_irq+0x21b/0x460
+> [ 1545.171011]  [<ffffffff816af286>] perf_event_nmi_handler+0x36/0xb0
+> [ 1545.171011]  [<ffffffff816b132f>] notifier_call_chain+0x3f/0x80
+> [ 1545.171011]  [<ffffffff816b1395>] atomic_notifier_call_chain+0x15/0x20
+> [ 1545.171011]  [<ffffffff816b13ce>] notify_die+0x2e/0x30
+> [ 1545.171011]  [<ffffffff816ae9e2>] do_nmi+0xa2/0x250
+> [ 1545.171011]  [<ffffffff816ae3ca>] nmi+0x1a/0x20
+> [ 1545.171011]  [<ffffffff816adb07>] ? _raw_spin_lock_irqsave+0x17/0x20
+> [ 1545.171011]  <<EOE>>  <IRQ>  [<ffffffffa004f21c>] drbd_endio_pri+0x9c/0x120 [drbd]
+> [ 1545.171011]  [<ffffffff814302d2>] ? put_device+0x12/0x20
+> [ 1545.171011]  [<ffffffff81130b6c>] bio_endio+0x1c/0x40
+> [ 1545.171011]  [<ffffffff813737d3>] req_bio_endio+0x83/0xb0
+> [ 1545.171011]  [<ffffffff81373900>] blk_update_request+0x100/0x470
+> [ 1545.171011]  [<ffffffff81373c92>] blk_update_bidi_request+0x22/0x90
+> [ 1545.171011]  [<ffffffff81374e5a>] blk_end_bidi_request+0x2a/0x80
+> [ 1545.171011]  [<ffffffff81374efb>] blk_end_request+0xb/0x10
+> [ 1545.171011]  [<ffffffff8146744d>] scsi_io_completion+0x11d/0x620
+> [ 1545.171011]  [<ffffffff8145f2ff>] scsi_finish_command+0xbf/0x120
+> [ 1545.171011]  [<ffffffff81467a9e>] scsi_softirq_done+0x13e/0x160
+> [ 1545.171011]  [<ffffffff8137ab7d>] blk_done_softirq+0x6d/0x80
+> [ 1545.171011]  [<ffffffff8104d0f0>] __do_softirq+0xd0/0x1c0
+> [ 1545.171011]  [<ffffffff816b726c>] call_softirq+0x1c/0x30
+> [ 1545.171011]  [<ffffffff81004035>] do_softirq+0x55/0x90
+> [ 1545.171011]  [<ffffffff8104ce2d>] irq_exit+0xad/0xe0
+> [ 1545.171011]  [<ffffffff8101cd0f>] smp_call_function_single_interrupt+0x2f/0x40
+> [ 1545.171011]  [<ffffffff816b6d4b>] call_function_single_interrupt+0x6b/0x70
+> [ 1545.171011]  <EOI>  [<ffffffff8146635c>] ? scsi_request_fn+0xec/0x510
+> [ 1545.171011]  [<ffffffff8136fd25>] __blk_run_queue+0x15/0x20
+> [ 1545.171011]  [<ffffffff813876ec>] cfq_insert_request+0x49c/0x5c0
+> [ 1545.171011]  [<ffffffff8136f658>] __elv_add_request+0x198/0x2a0
+> [ 1545.171011]  [<ffffffff81376410>] blk_flush_plug_list+0x1d0/0x210
+> [ 1545.171011]  [<ffffffff816ab70a>] schedule+0x62a/0xad0
+> [ 1545.171011]  [<ffffffff810fb26e>] ? kmem_cache_alloc+0xee/0x100
+> [ 1545.171011]  [<ffffffffa0042199>] ? lc_get+0x49/0x250 [lru_cache]
+> [ 1545.171011]  [<ffffffffa0061815>] drbd_al_begin_io+0x1c5/0x200 [drbd]
+> [ 1545.171011]  [<ffffffff81132784>] ? bio_alloc_bioset+0x54/0xe0
+> [ 1545.171011]  [<ffffffff81067030>] ? wake_up_bit+0x40/0x40
+> [ 1545.171011]  [<ffffffff81131591>] ? __bio_clone+0x21/0x60
+> [ 1545.171011]  [<ffffffffa005d825>] drbd_make_request_common+0xd25/0x1650 [drbd]
+> [ 1545.171011]  [<ffffffff8136e916>] ? elv_set_request+0x16/0x40
+> [ 1545.171011]  [<ffffffffa005e48a>] drbd_make_request+0x33a/0x1150 [drbd]
+> [ 1545.171011]  [<ffffffff8137a175>] ? blk_recount_segments+0x25/0x40
+> [ 1545.171011]  [<ffffffff81131b81>] ? bio_phys_segments+0x21/0x30
+> [ 1545.171011]  [<ffffffff8137410e>] ? drive_stat_acct+0x11e/0x180
+> [ 1545.171011]  [<ffffffff8137665d>] ? __make_request+0x1bd/0x330
+> [ 1545.171011]  [<ffffffff81374713>] generic_make_request+0x3f3/0x540
+> [ 1545.171011]  [<ffffffff8138c327>] ? kobject_put+0x27/0x60
+> [ 1545.171011]  [<ffffffff813748d6>] submit_bio+0x76/0xf0
+> [ 1545.171011]  [<ffffffff81278a57>] _xfs_buf_ioapply+0xb7/0x1f0
+> [ 1545.171011]  [<ffffffff8127a3a5>] ? xfs_bdstrat_cb+0x85/0xb0
+> [ 1545.171011]  [<ffffffff8127a251>] xfs_buf_iorequest+0x71/0xc0
+> [ 1545.171011]  [<ffffffff8127a3a5>] xfs_bdstrat_cb+0x85/0xb0
+> [ 1545.171011]  [<ffffffff8127a4c6>] xfsbufd+0xf6/0x130
+> [ 1545.171011]  [<ffffffff8127a3d0>] ? xfs_bdstrat_cb+0xb0/0xb0
+> [ 1545.171011]  [<ffffffff81066b16>] kthread+0x96/0xb0
+> [ 1545.171011]  [<ffffffff816b7174>] kernel_thread_helper+0x4/0x10
+> [ 1545.171011]  [<ffffffff81066a80>] ? kthread_worker_fn+0x130/0x130
+> [ 1545.171011]  [<ffffffff816b7170>] ? gs_change+0xb/0xb
+> 
+> We upgraded from 2.6.36 which seemed to have a page leak (file pages left
+> on the LRU) and so would eventually perform very poorly. 2.6.37 and
+> 2.6.38 seemed to have some unix socket issue that caused heartbeat to
+> wedge. Shall we enable lock debugging or something here?
+
+That could help us understand that stack trace.
+
+It looks like cpu 1 blocks in
+
+> [ 1532.427149]  [<ffffffff8103d512>] ? try_to_wake_up+0xc2/0x270
+> [ 1532.427149]  <<EOE>>  <IRQ>  [<ffffffff8103d6cd>] default_wake_function+0xd/0x10
+
+Which does not make sense to me at all.
+
+-- 
+: Lars Ellenberg
+: LINBIT | Your Way to High Availability
+: DRBD/HA support and consulting http://www.linbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
