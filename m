@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p88HSb2S242260 for <xfs@oss.sgi.com>; Thu, 8 Sep 2011 12:28:37 -0500
-Received: from mail-fx0-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 80CE254B4BE
-	for <xfs@oss.sgi.com>; Thu,  8 Sep 2011 10:28:35 -0700 (PDT)
-Received: from mail-fx0-f53.google.com (mail-fx0-f53.google.com
-	[209.85.161.53]) by cuda.sgi.com with ESMTP id IPxTVz3zRAXgQXBi
-	for <xfs@oss.sgi.com>; Thu, 08 Sep 2011 10:28:35 -0700 (PDT)
-Received: by fxd23 with SMTP id 23so1761652fxd.26
-	for <xfs@oss.sgi.com>; Thu, 08 Sep 2011 10:28:35 -0700 (PDT)
+	p88Hi1R6242785 for <xfs@oss.sgi.com>; Thu, 8 Sep 2011 12:44:01 -0500
+Received: from peace.netnation.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DC4A354B657
+	for <xfs@oss.sgi.com>; Thu,  8 Sep 2011 10:44:00 -0700 (PDT)
+Received: from peace.netnation.com (peace.netnation.com [204.174.223.2]) by
+	cuda.sgi.com with ESMTP id SDEnUCaCSvupt6Ul for
+	<xfs@oss.sgi.com>; Thu, 08 Sep 2011 10:44:00 -0700 (PDT)
+Date: Thu, 8 Sep 2011 10:43:24 -0700
+From: Simon Kirby <sim@hostway.ca>
+Subject: Re: [Drbd-dev] [3.1-rc4] XFS+DRBD hangs
+Message-ID: <20110908174324.GA8043@hostway.ca>
+References: <20110907221505.GC21603@hostway.ca>
+	<20110908151305.GJ14243@barkeeper1-xen.linbit>
 MIME-Version: 1.0
-In-Reply-To: <CADDb1s2QDk7y+JgMikoje35LviYQwzpgFihndUPuZx2VXYV4Ew@mail.gmail.com>
-References: <CADDb1s2QDk7y+JgMikoje35LviYQwzpgFihndUPuZx2VXYV4Ew@mail.gmail.com>
-Date: Thu, 8 Sep 2011 22:58:35 +0530
-Message-ID: <CADDb1s2S9R5RoaJ2NGSbCXORngx8PQVB6r3-QVJbjCUYh+B63Q@mail.gmail.com>
-Subject: Re: XFS: Observed Crash followed by deadlock of khubd/sync/XFS
-From: Amit Sahrawat <amit.sahrawat83@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20110908151305.GJ14243@barkeeper1-xen.linbit>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,101 +25,48 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: drbd-dev@lists.linbit.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-U2luY2UgdGhpcyBpcyB2ZXJ5IGhhcmQgdG8gcmVwcm9kdWNlLCB0byBtYWtlIGl0IGVhc3kgdG8g
-ZGVidWcuIFRoaXMKY2FuIGJlIHJlcHJvZHVjZSBieSBpbnRyb2R1Y2luZyBtc2xlZXAgaW4gdGhl
-IGtlcm5lbCB4ZnNfdW1vdW50ZnMoKQpiZWZvcmUgeGZzX2xvZ19zYmNvdW50KCksIGp1c3QgYWRk
-IGEgcHJpbnQgYmVmb3JlIHRoaXMgZnVuY3Rpb24gYW5kCnNsZWVwIGFuZCB0aGUgbW9tZW50IHRo
-ZSBwcmludCBhcHBlYXIgdW5wbHVnIHRoZSBVU0IgZGV2aWNlLCBzYW1lCnNjZW5hcmlvIHdpbGwg
-YmUgcmVwcm9kdWNlZC4KQ1JBU0ggd2lsbCBzaG93IHRoZSBiYWNrdHJhY2UgYW5kIHJldHVybiB0
-byBub3JtYWwgc2hlbGwsIGJ1dCB3aGVuCnByb2Nlc3Mgc3RhdGUgaXMgY2hlY2tlZCwga2h1YmQg
-d2lsbCBiZSBzaG93biBpbiBUQVNLLVVOSU5URVJSVVBUSUJMRQpzdGF0ZSAnRCcuCkZ1cnRoZXIg
-aWYgc3luYyBpcyBpc3N1ZWQgdGhhdCB3aWxsIGFsc28gZ2V0IGNvbnZlcnRlZCB0byAnRCcgc3Rh
-dGUsCnRoZSBiYWNrLXRyYWNlIGZvciBlYWNoIG9mIHRoZSB0YXNrIGlzIHNhbWUgYXMgbWVudGlv
-bmVkIGluIHRoZQpwcmV2aW91cyBtYWlsLgoKVGhhbmtzICYgUmVnYXJkcywKQW1pdCBTYWhyYXdh
-dAoKT24gVGh1LCBTZXAgOCwgMjAxMSBhdCA0OjM1IFBNLCBBbWl0IFNhaHJhd2F0IDxhbWl0LnNh
-aHJhd2F0ODNAZ21haWwuY29tPiB3cm90ZToKPiBLZXJuZWwgVmVyc2lvbjogMi42LjM5LjQKPiBU
-YXJnZXQ6IEFSTQo+Cj4gT2JzZXJ2ZWQgd2hpbGUgZG9pbmc6Cj4gQ29weSBzb21lIGZpbGUgKGFu
-eSBzaXplLCBJIHRyaWVkIHdpdGggMTBNQiwgMTAwTUIpIHRvIFhGUyBwYXJ0aXRpb24KPiBBZnRl
-ciBDb3B5IGRv4oCYc3luY+KAmQo+IE5vdyBpbW1lZGlhdGVseSwgdW5wbHVnIHRoZSBkZXZpY2Uu
-Cj4KPiB1c2IgMi0xLjQ6IFVTQiBkaXNjb25uZWN0LCBhZGRyZXNzIDQKPiBlbmRfcmVxdWVzdDog
-SS9PIGVycm9yLCBkZXYgc2RhLCBzZWN0b3IgNTY5NjkwOAo+IEkvTyBlcnJvciBpbiBmaWxlc3lz
-dGVtICgic2RhMyIpIG1ldGEtZGF0YSBkZXYgc2RhMyBibG9jayAweDU2ZWQ4Ywo+IMKgKCJ4bG9n
-X2lvZG9uZSIpIGVycm9yIDUgYnVmIGNvdW50IDEwMjQKPiB4ZnNfZm9yY2Vfc2h1dGRvd24oc2Rh
-MywweDIpIGNhbGxlZCBmcm9tIGxpbmUgOTQ1IG9mIGZpbGUKPiBmcy94ZnMveGZzX2xvZy5jLiDC
-oFJldHVybiBhZGRyZXNzID0gMHhjMDE4YWMyMAo+IEZpbGVzeXN0ZW0gInNkYTMiOiBMb2cgSS9P
-IEVycm9yIERldGVjdGVkLiDCoFNodXR0aW5nIGRvd24gZmlsZXN5c3RlbTogc2RhMwo+IFBsZWFz
-ZSB1bW91bnQgdGhlIGZpbGVzeXN0ZW0sIGFuZCByZWN0aWZ5IHRoZSBwcm9ibGVtKHMpCj4gWEZT
-OiBVbmFibGUgdG8gdXBkYXRlIHN1cGVyYmxvY2sgY291bnRlcnMuIEZyZWVzcGFjZSBtYXkgbm90
-IGJlCj4gY29ycmVjdCBvbiBuZXh0IG1vdW50Lgo+IFVuYWJsZSB0byBoYW5kbGUga2VybmVsIE5V
-TEwgcG9pbnRlciBkZXJlZmVyZW5jZSBhdCB2aXJ0dWFsIGFkZHJlc3MgMDAwMDAwMTQKPiBwZ2Qg
-PSBlNDJkNDAwMAo+IFswMDAwMDAxNF0gKnBnZD04YjhkODAzMSwgKnB0ZT0wMDAwMDAwMCwgKnBw
-dGU9MDAwMDAwMDAKPgo+IE1haW4gQmFja3RyYWNlOgo+IFs8YzAxODlkODg+XSAoeGZzX2xvZ19t
-b3ZlX3RhaWwrMHgwLzB4MWI0KQo+IFs8YzAxOThiNzg+XSAoeGZzX3RyYW5zX2FpbF9kZWxldGUr
-MHgwLzB4MTdjKQo+IFs8YzAxNmVhZjg+XSAoeGZzX2J1Zl9pb2RvbmUrMHgwLzB4NDgpCj4gWzxj
-MDE2ZWE5OD5dICh4ZnNfYnVmX2RvX2NhbGxiYWNrcysweDAvMHgzYykKPiBbPGMwMTZlYjdjPl0g
-KHhmc19idWZfaW9kb25lX2NhbGxiYWNrcysweDAvMHgxOGMpCj4gWzxjMDFhMmY5OD5dICh4ZnNf
-YnVmX2lvZG9uZV93b3JrKzB4MC8weDdjKQo+IFs8YzAxYTMwMTQ+XSAoeGZzX2J1Zl9pb2VuZCsw
-eDAvMHg5YykKPiBbPGMwMWEzNmY4Pl0gKHhmc19iaW9lcnJvcisweDAvMHg1NCkKPiBbPGMwMWEz
-NzRjPl0gKHhmc19iZHN0cmF0X2NiKzB4MC8weDZjKQo+IFs8YzAxYTMxNTg+XSAoeGZzX2ZsdXNo
-X2J1ZnRhcmcrMHgwLzB4MThjKQo+IFs8YzAxYTMyZTQ+XSAoeGZzX2ZyZWVfYnVmdGFyZysweDAv
-MHg3OCkKPiBbPGMwMWFhOGQwPl0gKHhmc19jbG9zZV9kZXZpY2VzKzB4MC8weDY4KQo+IFs8YzAx
-YWE5Mzg+XSAoeGZzX2ZzX3B1dF9zdXBlcisweDAvMHg4OCkKPiBbPGMwMGFiMmI0Pl0gKGdlbmVy
-aWNfc2h1dGRvd25fc3VwZXIrMHgwLzB4MTIwKQo+IFs8YzAwYWIzZDQ+XSAoa2lsbF9ibG9ja19z
-dXBlcisweDAvMHg0YykKPiBbPGMwMGFhM2FjPl0gKGRlYWN0aXZhdGVfbG9ja2VkX3N1cGVyKzB4
-MC8weDVjKQo+IFs8YzAwYWE1OTg+XSAoZGVhY3RpdmF0ZV9zdXBlcisweDAvMHg2MCkKPiBbPGMw
-MGMxZmVjPl0gKG1udHB1dF9ub19leHBpcmUrMHgwLzB4ZTgpCj4gWzxjMDBjMjQyND5dIChzeXNf
-dW1vdW50KzB4MC8weDMzNCkgZnJvbSBbPGMwMDFlZjgwPl0KPiAocmV0X2Zhc3Rfc3lzY2FsbCsw
-eDAvMHgzMCkKPiAtLS1bIGVuZCB0cmFjZSA2YmY5NWJlZGIzMDkyMTYyIF0tLS0KPiBTZWdtZW50
-YXRpb24gZmF1bHQKPiAjPgo+Cj4gQWdhaW4gcGx1Z2dpbmcgdGhlIFVTQiBkb2VzIG5vdCB3b3Jr
-IGJlY2F1c2Ug4oCYdW1vdW504oCZIHByb2Nlc3Mgd2hpY2gKPiByZXN1bHRlZCBpbiB0aGUgY3Jh
-c2ggaGFzIG5vdCByZXR1cm5lZCBwcm9wZXJseSBhbmQgdGhlIGxvY2sgaXMga2VwdAo+IGhlbGQu
-Cj4gV2hlbiBJIGNoZWNrIHRoZSBzdGF0ZSBvZiDigJhraHViZOKAmSBhbmQg4oCYc3luY+KAmSB0
-aGV5IGJvdGggbGllIGluIOKAmEQg4oCTCj4gVEFTS19VTklOVEVSUlVQVElCTEXigJkgc3RhdGUg
-YW5kIGlmIHRoZWlyIGJhY2stdHJhY2UgaXMgY2hlY2tlZCBhdCB0aGF0Cj4gcG9pbnQuCj4KPiBG
-b3IgS2h1YmQ6Cj4gQmFja3RyYWNlOgo+IFs8YzAyZjY1MjQ+XSAoc2NoZWR1bGUrMHgwLzB4NTBj
-KQo+IFs8YzAyZjg5ODg+XSAoX19kb3duX3JlYWQrMHgwLzB4MTMwKQo+IFs8YzAyZjdlZTQ+XSAo
-ZG93bl9yZWFkKzB4MC8weDE0KQo+IFs8YzAwYzMwYTQ+XSAoZ2V0X3N1cGVyKzB4MC8weDEwNCkK
-PiBbPGMwMGVlZDcwPl0gKGZzeW5jX2JkZXYrMHgwLzB4NDQpCj4gWzxjMDFkZjkxND5dIChpbnZh
-bGlkYXRlX3BhcnRpdGlvbisweDAvMHgzYykKPiBbPGMwMTBhMzg0Pl0gKGRlbF9nZW5kaXNrKzB4
-MC8weGVjKQo+IFs8YzAyMjhiYjg+XSAoc2RfcmVtb3ZlKzB4MC8weGM4KQo+Cj4gWzxjMDIxNDdm
-OD5dIChfX2RldmljZV9yZWxlYXNlX2RyaXZlcisweDAvMHhhYykKPiBbPGMwMjE0OTk0Pl0gKGRl
-dmljZV9yZWxlYXNlX2RyaXZlcisweDAvMHgzMCkKPiBbPGMwMjEzZGU0Pl0gKGJ1c19yZW1vdmVf
-ZGV2aWNlKzB4MC8weDhjKQo+IFs8YzAyMTIzMDg+XSAoZGV2aWNlX2RlbCsweDAvMHgxNjApCj4g
-WzxjMDIyNWZiYz5dIChfX3Njc2lfcmVtb3ZlX2RldmljZSsweDAvMHg5MCkKPiBbPGMwMjIzMzI4
-Pl0gKHNjc2lfZm9yZ2V0X2hvc3QrMHgwLzB4YmMpCj4gWzxjMDIxY2NjYz5dIChzY3NpX3JlbW92
-ZV9ob3N0KzB4MC8weDE4YykKPiBbPGJmMTVmZTE0Pl0gKHF1aWVzY2VfYW5kX3JlbW92ZV9ob3N0
-KzB4MC8weGU0Cj4gWzxiZjE1ZmY3Yz5dICh1c2Jfc3Rvcl9kaXNjb25uZWN0KzB4MC8weDI4Cj4g
-WzxiZjExZTU5ND5dICh1c2JfdW5iaW5kX2ludGVyZmFjZSsweDAvMHhkYwo+IFs8YzAyMTQ3Zjg+
-XSAoX19kZXZpY2VfcmVsZWFzZV9kcml2ZXIrMHgwLzB4YWMpCj4gWzxjMDIxNDk5ND5dIChkZXZp
-Y2VfcmVsZWFzZV9kcml2ZXIrMHgwLzB4MzApCj4gWzxjMDIxM2RlND5dIChidXNfcmVtb3ZlX2Rl
-dmljZSsweDAvMHg4YykKPiBbPGMwMjEyMzA4Pl0gKGRldmljZV9kZWwrMHgwLzB4MTYwKQo+IFs8
-YmYxMWJjNDg+XSAodXNiX2Rpc2FibGVfZGV2aWNlKzB4MC8weDE3Ywo+IFs8YmYxMTY0ODg+XSAo
-dXNiX2Rpc2Nvbm5lY3QrMHgwLzB4MTU4Cj4gWzxiZjExNjdiOD5dIChodWJfdGhyZWFkKzB4MC8w
-eDEwOTQKPiBbPGMwMDVhN2Q4Pl0gKGt0aHJlYWQrMHgwLzB4OGMpCj4KPgo+Cj4gRm9yIFN5bmM6
-Cj4gQmFja3RyYWNlOgo+IFs8YzAyZjY1MjQ+XSAoc2NoZWR1bGUrMHgwLzB4NTBjKQo+IFs8YzAy
-Zjg5ODg+XSAoX19kb3duX3JlYWQrMHgwLzB4MTMwKQo+IFs8YzAyZjdlZTQ+XSAoZG93bl9yZWFk
-KzB4MC8weDE0KQo+IFs8YzAwYzMxYTg+XSAoaXRlcmF0ZV9zdXBlcnMrMHgwLzB4ZmMpCj4gWzxj
-MDBlNDY5MD5dIChzeW5jX2ZpbGVzeXN0ZW1zKzB4MC8weDJjKQo+IFs8YzAwZTQ3YzQ+XSAoc3lz
-X3N5bmMrMHgwLzB4NDQpCj4KPiBCb3RoIGFyZSBzdHVjaywgd2FpdGluZyB0byBhY3F1aXJlIGEg
-c2VtYXBob3JlIOKAmHNiLT5zX3Vtb3VudOKAmQo+IER1cmluZyB1bW91bnQg4oCTIHdoaWNoIGdl
-dHMgY2FsbGVkIHdoZW4gYSBkZXZpY2UgaXMgdW5wbHVnZ2VkIGZsb3cgaXM6Cj4gU3lzX3Vtb3Vu
-dCgp74Og4oCmZGVhY3RpdmF0ZV9zdXBlcigp74OgZGVhY3RpdmF0ZV9sb2NrZWRfc3VwZXIoKe+D
-oGtpbGxfYmxvY2tfc3VwZXIoKe+DoGdlbmVyaWNfc2h1dGRvd25fc3VwZXIoKQo+IFRoaXMgc2Vt
-YXBob3JlIGlzIHRha2VuIGluIGRlYWN0aXZhdGUgc3VwZXIgYW5kIHJlbGVhc2VkIGluCj4gZ2Vu
-ZXJpY19zaHV0ZG93bl9zdXBlcigpIOKAkyDigJh1cF93cml0ZSgmc2ItPnNfdW1vdW50KeKAmSwg
-YnV0IGR1ZSB0byDigJxOVUxMCj4gcG9pbnRlciBkZXJlZmVyZW5jZeKAnSBjcmFzaCBpdCBpcyBu
-b3QgY2FsbGVkLgo+Cj4gV2hpbGUgZm9yIOKAnE5VTEwgcG9pbnRlciBkZWZlcmVuY2XigJ0gY3Jh
-c2ggaXQgc2hvd3MgdGhlIFBDIGF0Ogo+IFhmc19sb2dfbW92ZV90YWlsKCkgd2hpbGUgYWNjZXNz
-aW5nIOKAmGxvZ+KAme+DoAo+IGlmIChYTE9HX0ZPUkNFRF9TSFVURE9XTihsb2cpKQo+IMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgcmV0dXJuOwo+Cj4gQ2hhbmdpbmcgdGhlIGNvbmRpdGlvbiB0YWtl
-cyBjcmFzaCB0byBvdGhlciBwbGFjZXMuCj4KPiBIYXMgYW55b25lIG9ic2VydmVkIHRoaXMgc2Nl
-bmFyaW8/IFBsZWFzZSBhZHZpY2Ugc29tZXRoaW5nIG9uIHRoaXMuCj4KPiBUaGFua3MgJiBSZWdh
-cmRzLAo+IEFtaXQgU2FocmF3YXQKPgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29z
-cy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+On Thu, Sep 08, 2011 at 05:13:05PM +0200, Lars Ellenberg wrote:
+
+> Sorry for double posting on drbd-dev, I managed to strip the other lists from Cc.
+> 
+> > We upgraded from 2.6.36 which seemed to have a page leak (file pages left
+> > on the LRU) and so would eventually perform very poorly. 2.6.37 and
+> > 2.6.38 seemed to have some unix socket issue that caused heartbeat to
+> > wedge. Shall we enable lock debugging or something here?
+> 
+> That could help us understand that stack trace.
+> 
+> It looks like cpu 1 blocks in
+> 
+> > [ 1532.427149]  [<ffffffff8103d512>] ? try_to_wake_up+0xc2/0x270
+> > [ 1532.427149]  <<EOE>>  <IRQ>  [<ffffffff8103d6cd>] default_wake_function+0xd/0x10
+> 
+> Which does not make sense to me at all.
+
+Well, good news, I think.. I believe this may be related to
+"PCI: Set PCI-E Max Payload Size on fabric", added by b03e7495a862b02829.
+3.1-rc5 is running now with a patch to basically disable those changes,
+and has been stable for 12 hours. It usually hung in a few minutes
+before.
+
+The XFS peoples say it was very likely not 58d84c4ee0389ddeb86238d5 which
+is the only other thing that changed between these versions that seems to
+be at all in the hang path.
+
+Also, when the thing hangs, it stops pinging immediately, and with the
+PCI-E max payload thing active, the device that raises a bus error is
+actually the PCI-E to PCI-X bridge chip used to support the BCM5708 NICs,
+so that all seems related.
+
+Simon-
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
