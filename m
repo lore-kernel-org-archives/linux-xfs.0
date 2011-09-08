@@ -1,24 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p88BA0mx221410 for <xfs@oss.sgi.com>; Thu, 8 Sep 2011 06:10:01 -0500
-Received: from mail-gx0-f182.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CCF2E15239D6
-	for <xfs@oss.sgi.com>; Thu,  8 Sep 2011 04:14:08 -0700 (PDT)
-Received: from mail-gx0-f182.google.com (mail-gx0-f182.google.com
-	[209.85.161.182]) by cuda.sgi.com with ESMTP id
-	v8UItjeqTx8e53BZ for <xfs@oss.sgi.com>;
-	Thu, 08 Sep 2011 04:14:08 -0700 (PDT)
-Received: by gxk28 with SMTP id 28so1186977gxk.41
-	for <xfs@oss.sgi.com>; Thu, 08 Sep 2011 04:09:58 -0700 (PDT)
+	p88B5U4J221274 for <xfs@oss.sgi.com>; Thu, 8 Sep 2011 06:05:31 -0500
+Received: from mail-fx0-f53.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4B6DC1F0CA59
+	for <xfs@oss.sgi.com>; Thu,  8 Sep 2011 04:05:28 -0700 (PDT)
+Received: from mail-fx0-f53.google.com (mail-fx0-f53.google.com
+	[209.85.161.53]) by cuda.sgi.com with ESMTP id zV85CFbYX1nFegSY
+	for <xfs@oss.sgi.com>; Thu, 08 Sep 2011 04:05:28 -0700 (PDT)
+Received: by fxd23 with SMTP id 23so1431456fxd.26
+	for <xfs@oss.sgi.com>; Thu, 08 Sep 2011 04:05:28 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20110905074734.GA18504@infradead.org>
-References: <CAKxAxjFgBd0Vt02m7FJKq_ZWNBBJ5B=N4u7kS69FKtOKT4UowA@mail.gmail.com>
-	<20110905074734.GA18504@infradead.org>
-Date: Thu, 8 Sep 2011 19:09:55 +0800
-Message-ID: <CAKxAxjFUMrQpb5kQUdpRdt2wx83oKxaLZPTVTR_j43dkhcOyyw@mail.gmail.com>
-Subject: Re: ENOSPC and filesystem shutdowns
-From: Bernard Chan <bernard@goanimate.com>
+Date: Thu, 8 Sep 2011 16:35:28 +0530
+Message-ID: <CADDb1s2QDk7y+JgMikoje35LviYQwzpgFihndUPuZx2VXYV4Ew@mail.gmail.com>
+Subject: XFS: Observed Crash followed by deadlock of khubd/sync/XFS
+From: Amit Sahrawat <amit.sahrawat83@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,221 +23,84 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============1812489156926831849=="
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: Christoph Hellwig <hch@infradead.org>
 
---===============1812489156926831849==
-Content-Type: multipart/alternative; boundary=001517510e3aee925304ac6c1932
-
---001517510e3aee925304ac6c1932
-Content-Type: text/plain; charset=ISO-8859-1
-
-Hi Christoph and everybody else,
-
-Thanks so much for your response.
-
-We are running this on a customized CentOS image on AWS and thus had a
-different kernel version. We learned from the image vendors that these are
-based on CentOS and indeed they seem to be, although we do not know the
-exact CentOS versions on which those images were based.
-
-We switched to another image that offers a newer kernel version (2.6.35.11),
-and re-mounted the LVM with XFS volumes. Earlier on we performed xfs_repair
-and did not find any problems, and fragmentation was found to be low.
-We retried those mkdir operations that previously resulted in ENOSPC which
-in turn shut down the XFS. There is no longer any XFS shutdown now and the
-same operations are successful. We feel curious and do not quite understand
-why, and we haven't enabled inode64 either with the new setup and remain on
-a 32-bit architecture. Essentially we only changed the kernel and a slightly
-different 32-bit image.
-
-So should we bother with inode64 and 64-bit servers with NFS4, and should we
-anticipate any other issues running on this setup with a 4TB volume without
-enabling inode64?
-
-Thanks so much for any possible insights.
-
-
-On Mon, Sep 5, 2011 at 3:47 PM, Christoph Hellwig <hch@infradead.org> wrote:
-
-> On Sun, Sep 04, 2011 at 02:09:49PM +0800, Bernard Chan wrote:
-> > We have an XFS filesystem (on LVM, probably doesn't matter anyway) that
-> is
-> > 4TB running on CentOS kernel 2.6.21.7,
->
-> Isn't Centos based on RHEL and thus running either 2.6.9, 2.6.18 or
-> 2.6.32-ish kernels?
->
-> > We searched and found this list, and a few patches around kernel
-> > 2.6.26-2.6.27 that seem to match our scenario. We were able to log the
-> > specific mkdir command that failed and confirmed it consistently fails
-> that
-> > way that gives "no space left on device", while we did not reproduce the
-> > same issue mkdir in other directories with large inode numbers. We
-> haven't
-> > tried patching or upgrading the kernel yet, but we will do that later.
-> >
-> > As the root cause of that patch points to a bug triggered by ENOSPC, we
-> > checked the inode numbers created for some directories and files with "ls
-> > -li" and some of them are pretty close to 2^32.
-> >
-> > So, we would like to ascertain if that is the cause for ENOSPC in our
-> case,
-> > and does that mean 32-bit inodes are no longer adequate for us and we
-> should
-> > switch to 64-bit inodes? Will switching it avoid this kind of shutdowns
-> with
-> > successful writes in the future?
-> >
-> > And is it true that we don't need a 64-bit OS for 64-bit inodes? How can
-> we
-> > tell if our system supports 64-bit inodes?
->
-> It doesn't.  On Linux XFS only supports inode64 on 32-bit systems since
-> Linux 3.0.
->
-> > Finally, although we all know that "df -i" is sort of nonsense on XFS,
-> how
-> > can we get the output of 5% inode while having inode numbers that are
-> close
-> > to 2^32? So what does that 5% exactly mean, or were I looking at inodes
-> the
-> > wrong way?
->
-> It's based on the available space given that XFS can theoretically use
-> any inode block for data.
->
-> > Thanks in advance for any insights anyone may shed on this one.
->
-> I'd move off a 4.5-year old unsupposed kernel.  The real RHEL/Centos
-> kernel have fairly good xfs support these days if you want a backporting
-> option.  Even RHEL5 might have inode64 on 32-bit systems as it has a lot
-> of XFS updates backport, but in doubt I would recommend to move to
-> a RHEL6/Centos6 kernel at least.
->
->
-
-
--- 
-
-Regards,
-Bernard Chan.
-GoAnimate.
-
---001517510e3aee925304ac6c1932
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-
-<div><br></div><div>Hi Christoph and everybody else,</div><div><br></div><d=
-iv>Thanks so much for your response.</div><div><br></div>We are running thi=
-s on a customized CentOS image on AWS and thus had a different kernel versi=
-on. We learned from the image vendors that these are based on CentOS and in=
-deed they seem to be, although we do not know the exact CentOS versions on =
-which those images were based.<div>
-<br></div><div>We switched to another image that offers a newer kernel vers=
-ion (2.6.35.11), and re-mounted the LVM with XFS volumes. Earlier on we per=
-formed xfs_repair and did not find any problems, and fragmentation was foun=
-d to be low. We=A0retried those mkdir operations that previously resulted i=
-n ENOSPC which in turn shut down the XFS. There is no longer any XFS shutdo=
-wn now and the same operations are successful. We feel curious and do not q=
-uite understand why, and we haven&#39;t enabled inode64 either with the new=
- setup and remain on a 32-bit architecture. Essentially we only changed the=
- kernel and a slightly different 32-bit image.</div>
-<div><br></div><div>So should we bother with inode64 and 64-bit servers wit=
-h NFS4, and should we anticipate any other issues running on this setup wit=
-h a 4TB volume without enabling inode64?</div><div><br></div><div>Thanks so=
- much for any possible insights.</div>
-<div><br></div><div><br><div class=3D"gmail_quote">On Mon, Sep 5, 2011 at 3=
-:47 PM, Christoph Hellwig <span dir=3D"ltr">&lt;<a href=3D"mailto:hch@infra=
-dead.org">hch@infradead.org</a>&gt;</span> wrote:<br><blockquote class=3D"g=
-mail_quote" style=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-l=
-eft:1ex;">
-<div class=3D"im">On Sun, Sep 04, 2011 at 02:09:49PM +0800, Bernard Chan wr=
-ote:<br>
-&gt; We have an XFS filesystem (on LVM, probably doesn&#39;t matter anyway)=
- that is<br>
-&gt; 4TB running on CentOS kernel 2.6.21.7,<br>
-<br>
-</div>Isn&#39;t Centos based on RHEL and thus running either 2.6.9, 2.6.18 =
-or<br>
-2.6.32-ish kernels?<br>
-<div class=3D"im"><br>
-&gt; We searched and found this list, and a few patches around kernel<br>
-&gt; 2.6.26-2.6.27 that seem to match our scenario. We were able to log the=
-<br>
-&gt; specific mkdir command that failed and confirmed it consistently fails=
- that<br>
-&gt; way that gives &quot;no space left on device&quot;, while we did not r=
-eproduce the<br>
-&gt; same issue mkdir in other directories with large inode numbers. We hav=
-en&#39;t<br>
-&gt; tried patching or upgrading the kernel yet, but we will do that later.=
-<br>
-&gt;<br>
-&gt; As the root cause of that patch points to a bug triggered by ENOSPC, w=
-e<br>
-&gt; checked the inode numbers created for some directories and files with =
-&quot;ls<br>
-&gt; -li&quot; and some of them are pretty close to 2^32.<br>
-&gt;<br>
-&gt; So, we would like to ascertain if that is the cause for ENOSPC in our =
-case,<br>
-&gt; and does that mean 32-bit inodes are no longer adequate for us and we =
-should<br>
-&gt; switch to 64-bit inodes? Will switching it avoid this kind of shutdown=
-s with<br>
-&gt; successful writes in the future?<br>
-&gt;<br>
-&gt; And is it true that we don&#39;t need a 64-bit OS for 64-bit inodes? H=
-ow can we<br>
-&gt; tell if our system supports 64-bit inodes?<br>
-<br>
-</div>It doesn&#39;t. =A0On Linux XFS only supports inode64 on 32-bit syste=
-ms since<br>
-Linux 3.0.<br>
-<div class=3D"im"><br>
-&gt; Finally, although we all know that &quot;df -i&quot; is sort of nonsen=
-se on XFS, how<br>
-&gt; can we get the output of 5% inode while having inode numbers that are =
-close<br>
-&gt; to 2^32? So what does that 5% exactly mean, or were I looking at inode=
-s the<br>
-&gt; wrong way?<br>
-<br>
-</div>It&#39;s based on the available space given that XFS can theoreticall=
-y use<br>
-any inode block for data.<br>
-<div class=3D"im"><br>
-&gt; Thanks in advance for any insights anyone may shed on this one.<br>
-<br>
-</div>I&#39;d move off a 4.5-year old unsupposed kernel. =A0The real RHEL/C=
-entos<br>
-kernel have fairly good xfs support these days if you want a backporting<br=
->
-option. =A0Even RHEL5 might have inode64 on 32-bit systems as it has a lot<=
-br>
-of XFS updates backport, but in doubt I would recommend to move to<br>
-a RHEL6/Centos6 kernel at least.<br>
-<br>
-</blockquote></div><br><br clear=3D"all"><div><br></div>-- <br><br><div>Reg=
-ards,</div><div>Bernard Chan.</div><div>GoAnimate.</div><br>
-</div>
-
---001517510e3aee925304ac6c1932--
-
-
---===============1812489156926831849==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
-
---===============1812489156926831849==--
+S2VybmVsIFZlcnNpb246IDIuNi4zOS40ClRhcmdldDogQVJNCgpPYnNlcnZlZCB3aGlsZSBkb2lu
+ZzoKQ29weSBzb21lIGZpbGUgKGFueSBzaXplLCBJIHRyaWVkIHdpdGggMTBNQiwgMTAwTUIpIHRv
+IFhGUyBwYXJ0aXRpb24KQWZ0ZXIgQ29weSBkb+KAmHN5bmPigJkKTm93IGltbWVkaWF0ZWx5LCB1
+bnBsdWcgdGhlIGRldmljZS4KCnVzYiAyLTEuNDogVVNCIGRpc2Nvbm5lY3QsIGFkZHJlc3MgNApl
+bmRfcmVxdWVzdDogSS9PIGVycm9yLCBkZXYgc2RhLCBzZWN0b3IgNTY5NjkwOApJL08gZXJyb3Ig
+aW4gZmlsZXN5c3RlbSAoInNkYTMiKSBtZXRhLWRhdGEgZGV2IHNkYTMgYmxvY2sgMHg1NmVkOGMK
+ICAoInhsb2dfaW9kb25lIikgZXJyb3IgNSBidWYgY291bnQgMTAyNAp4ZnNfZm9yY2Vfc2h1dGRv
+d24oc2RhMywweDIpIGNhbGxlZCBmcm9tIGxpbmUgOTQ1IG9mIGZpbGUKZnMveGZzL3hmc19sb2cu
+Yy4gIFJldHVybiBhZGRyZXNzID0gMHhjMDE4YWMyMApGaWxlc3lzdGVtICJzZGEzIjogTG9nIEkv
+TyBFcnJvciBEZXRlY3RlZC4gIFNodXR0aW5nIGRvd24gZmlsZXN5c3RlbTogc2RhMwpQbGVhc2Ug
+dW1vdW50IHRoZSBmaWxlc3lzdGVtLCBhbmQgcmVjdGlmeSB0aGUgcHJvYmxlbShzKQpYRlM6IFVu
+YWJsZSB0byB1cGRhdGUgc3VwZXJibG9jayBjb3VudGVycy4gRnJlZXNwYWNlIG1heSBub3QgYmUK
+Y29ycmVjdCBvbiBuZXh0IG1vdW50LgpVbmFibGUgdG8gaGFuZGxlIGtlcm5lbCBOVUxMIHBvaW50
+ZXIgZGVyZWZlcmVuY2UgYXQgdmlydHVhbCBhZGRyZXNzIDAwMDAwMDE0CnBnZCA9IGU0MmQ0MDAw
+ClswMDAwMDAxNF0gKnBnZD04YjhkODAzMSwgKnB0ZT0wMDAwMDAwMCwgKnBwdGU9MDAwMDAwMDAK
+Ck1haW4gQmFja3RyYWNlOgpbPGMwMTg5ZDg4Pl0gKHhmc19sb2dfbW92ZV90YWlsKzB4MC8weDFi
+NCkKWzxjMDE5OGI3OD5dICh4ZnNfdHJhbnNfYWlsX2RlbGV0ZSsweDAvMHgxN2MpCls8YzAxNmVh
+Zjg+XSAoeGZzX2J1Zl9pb2RvbmUrMHgwLzB4NDgpCls8YzAxNmVhOTg+XSAoeGZzX2J1Zl9kb19j
+YWxsYmFja3MrMHgwLzB4M2MpCls8YzAxNmViN2M+XSAoeGZzX2J1Zl9pb2RvbmVfY2FsbGJhY2tz
+KzB4MC8weDE4YykKWzxjMDFhMmY5OD5dICh4ZnNfYnVmX2lvZG9uZV93b3JrKzB4MC8weDdjKQpb
+PGMwMWEzMDE0Pl0gKHhmc19idWZfaW9lbmQrMHgwLzB4OWMpCls8YzAxYTM2Zjg+XSAoeGZzX2Jp
+b2Vycm9yKzB4MC8weDU0KQpbPGMwMWEzNzRjPl0gKHhmc19iZHN0cmF0X2NiKzB4MC8weDZjKQpb
+PGMwMWEzMTU4Pl0gKHhmc19mbHVzaF9idWZ0YXJnKzB4MC8weDE4YykKWzxjMDFhMzJlND5dICh4
+ZnNfZnJlZV9idWZ0YXJnKzB4MC8weDc4KQpbPGMwMWFhOGQwPl0gKHhmc19jbG9zZV9kZXZpY2Vz
+KzB4MC8weDY4KQpbPGMwMWFhOTM4Pl0gKHhmc19mc19wdXRfc3VwZXIrMHgwLzB4ODgpCls8YzAw
+YWIyYjQ+XSAoZ2VuZXJpY19zaHV0ZG93bl9zdXBlcisweDAvMHgxMjApCls8YzAwYWIzZDQ+XSAo
+a2lsbF9ibG9ja19zdXBlcisweDAvMHg0YykKWzxjMDBhYTNhYz5dIChkZWFjdGl2YXRlX2xvY2tl
+ZF9zdXBlcisweDAvMHg1YykKWzxjMDBhYTU5OD5dIChkZWFjdGl2YXRlX3N1cGVyKzB4MC8weDYw
+KQpbPGMwMGMxZmVjPl0gKG1udHB1dF9ub19leHBpcmUrMHgwLzB4ZTgpCls8YzAwYzI0MjQ+XSAo
+c3lzX3Vtb3VudCsweDAvMHgzMzQpIGZyb20gWzxjMDAxZWY4MD5dCihyZXRfZmFzdF9zeXNjYWxs
+KzB4MC8weDMwKQotLS1bIGVuZCB0cmFjZSA2YmY5NWJlZGIzMDkyMTYyIF0tLS0KU2VnbWVudGF0
+aW9uIGZhdWx0CiM+CgpBZ2FpbiBwbHVnZ2luZyB0aGUgVVNCIGRvZXMgbm90IHdvcmsgYmVjYXVz
+ZSDigJh1bW91bnTigJkgcHJvY2VzcyB3aGljaApyZXN1bHRlZCBpbiB0aGUgY3Jhc2ggaGFzIG5v
+dCByZXR1cm5lZCBwcm9wZXJseSBhbmQgdGhlIGxvY2sgaXMga2VwdApoZWxkLgpXaGVuIEkgY2hl
+Y2sgdGhlIHN0YXRlIG9mIOKAmGtodWJk4oCZIGFuZCDigJhzeW5j4oCZIHRoZXkgYm90aCBsaWUg
+aW4g4oCYRCDigJMKVEFTS19VTklOVEVSUlVQVElCTEXigJkgc3RhdGUgYW5kIGlmIHRoZWlyIGJh
+Y2stdHJhY2UgaXMgY2hlY2tlZCBhdCB0aGF0CnBvaW50LgoKRm9yIEtodWJkOgpCYWNrdHJhY2U6
+Cls8YzAyZjY1MjQ+XSAoc2NoZWR1bGUrMHgwLzB4NTBjKQpbPGMwMmY4OTg4Pl0gKF9fZG93bl9y
+ZWFkKzB4MC8weDEzMCkKWzxjMDJmN2VlND5dIChkb3duX3JlYWQrMHgwLzB4MTQpCls8YzAwYzMw
+YTQ+XSAoZ2V0X3N1cGVyKzB4MC8weDEwNCkKWzxjMDBlZWQ3MD5dIChmc3luY19iZGV2KzB4MC8w
+eDQ0KQpbPGMwMWRmOTE0Pl0gKGludmFsaWRhdGVfcGFydGl0aW9uKzB4MC8weDNjKQpbPGMwMTBh
+Mzg0Pl0gKGRlbF9nZW5kaXNrKzB4MC8weGVjKQpbPGMwMjI4YmI4Pl0gKHNkX3JlbW92ZSsweDAv
+MHhjOCkKCls8YzAyMTQ3Zjg+XSAoX19kZXZpY2VfcmVsZWFzZV9kcml2ZXIrMHgwLzB4YWMpCls8
+YzAyMTQ5OTQ+XSAoZGV2aWNlX3JlbGVhc2VfZHJpdmVyKzB4MC8weDMwKQpbPGMwMjEzZGU0Pl0g
+KGJ1c19yZW1vdmVfZGV2aWNlKzB4MC8weDhjKQpbPGMwMjEyMzA4Pl0gKGRldmljZV9kZWwrMHgw
+LzB4MTYwKQpbPGMwMjI1ZmJjPl0gKF9fc2NzaV9yZW1vdmVfZGV2aWNlKzB4MC8weDkwKQpbPGMw
+MjIzMzI4Pl0gKHNjc2lfZm9yZ2V0X2hvc3QrMHgwLzB4YmMpCls8YzAyMWNjY2M+XSAoc2NzaV9y
+ZW1vdmVfaG9zdCsweDAvMHgxOGMpCls8YmYxNWZlMTQ+XSAocXVpZXNjZV9hbmRfcmVtb3ZlX2hv
+c3QrMHgwLzB4ZTQKWzxiZjE1ZmY3Yz5dICh1c2Jfc3Rvcl9kaXNjb25uZWN0KzB4MC8weDI4Cls8
+YmYxMWU1OTQ+XSAodXNiX3VuYmluZF9pbnRlcmZhY2UrMHgwLzB4ZGMKWzxjMDIxNDdmOD5dIChf
+X2RldmljZV9yZWxlYXNlX2RyaXZlcisweDAvMHhhYykKWzxjMDIxNDk5ND5dIChkZXZpY2VfcmVs
+ZWFzZV9kcml2ZXIrMHgwLzB4MzApCls8YzAyMTNkZTQ+XSAoYnVzX3JlbW92ZV9kZXZpY2UrMHgw
+LzB4OGMpCls8YzAyMTIzMDg+XSAoZGV2aWNlX2RlbCsweDAvMHgxNjApCls8YmYxMWJjNDg+XSAo
+dXNiX2Rpc2FibGVfZGV2aWNlKzB4MC8weDE3YwpbPGJmMTE2NDg4Pl0gKHVzYl9kaXNjb25uZWN0
+KzB4MC8weDE1OApbPGJmMTE2N2I4Pl0gKGh1Yl90aHJlYWQrMHgwLzB4MTA5NApbPGMwMDVhN2Q4
+Pl0gKGt0aHJlYWQrMHgwLzB4OGMpCgoKCkZvciBTeW5jOgpCYWNrdHJhY2U6Cls8YzAyZjY1MjQ+
+XSAoc2NoZWR1bGUrMHgwLzB4NTBjKQpbPGMwMmY4OTg4Pl0gKF9fZG93bl9yZWFkKzB4MC8weDEz
+MCkKWzxjMDJmN2VlND5dIChkb3duX3JlYWQrMHgwLzB4MTQpCls8YzAwYzMxYTg+XSAoaXRlcmF0
+ZV9zdXBlcnMrMHgwLzB4ZmMpCls8YzAwZTQ2OTA+XSAoc3luY19maWxlc3lzdGVtcysweDAvMHgy
+YykKWzxjMDBlNDdjND5dIChzeXNfc3luYysweDAvMHg0NCkKCkJvdGggYXJlIHN0dWNrLCB3YWl0
+aW5nIHRvIGFjcXVpcmUgYSBzZW1hcGhvcmUg4oCYc2ItPnNfdW1vdW504oCZCkR1cmluZyB1bW91
+bnQg4oCTIHdoaWNoIGdldHMgY2FsbGVkIHdoZW4gYSBkZXZpY2UgaXMgdW5wbHVnZ2VkIGZsb3cg
+aXM6ClN5c191bW91bnQoKe+DoOKApmRlYWN0aXZhdGVfc3VwZXIoKe+DoGRlYWN0aXZhdGVfbG9j
+a2VkX3N1cGVyKCnvg6BraWxsX2Jsb2NrX3N1cGVyKCnvg6BnZW5lcmljX3NodXRkb3duX3N1cGVy
+KCkKVGhpcyBzZW1hcGhvcmUgaXMgdGFrZW4gaW4gZGVhY3RpdmF0ZSBzdXBlciBhbmQgcmVsZWFz
+ZWQgaW4KZ2VuZXJpY19zaHV0ZG93bl9zdXBlcigpIOKAkyDigJh1cF93cml0ZSgmc2ItPnNfdW1v
+dW50KeKAmSwgYnV0IGR1ZSB0byDigJxOVUxMCnBvaW50ZXIgZGVyZWZlcmVuY2XigJ0gY3Jhc2gg
+aXQgaXMgbm90IGNhbGxlZC4KCldoaWxlIGZvciDigJxOVUxMIHBvaW50ZXIgZGVmZXJlbmNl4oCd
+IGNyYXNoIGl0IHNob3dzIHRoZSBQQyBhdDoKWGZzX2xvZ19tb3ZlX3RhaWwoKSB3aGlsZSBhY2Nl
+c3Npbmcg4oCYbG9n4oCZ74OgCQppZiAoWExPR19GT1JDRURfU0hVVERPV04obG9nKSkKCQlyZXR1
+cm47CgpDaGFuZ2luZyB0aGUgY29uZGl0aW9uIHRha2VzIGNyYXNoIHRvIG90aGVyIHBsYWNlcy4K
+CkhhcyBhbnlvbmUgb2JzZXJ2ZWQgdGhpcyBzY2VuYXJpbz8gUGxlYXNlIGFkdmljZSBzb21ldGhp
+bmcgb24gdGhpcy4KClRoYW5rcyAmIFJlZ2FyZHMsCkFtaXQgU2FocmF3YXQKCl9fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZz
+QG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
