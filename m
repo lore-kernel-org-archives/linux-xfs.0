@@ -1,25 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8980udX026863 for <xfs@oss.sgi.com>; Fri, 9 Sep 2011 03:00:57 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E794454BCDE
-	for <xfs@oss.sgi.com>; Fri,  9 Sep 2011 01:00:52 -0700 (PDT)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	pOGhGmzYhGHrzm13 for <xfs@oss.sgi.com>;
-	Fri, 09 Sep 2011 01:00:52 -0700 (PDT)
-Date: Fri, 9 Sep 2011 04:00:51 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: ENOSPC and filesystem shutdowns
-Message-ID: <20110909080051.GB31050@infradead.org>
-References: <CAKxAxjFgBd0Vt02m7FJKq_ZWNBBJ5B=N4u7kS69FKtOKT4UowA@mail.gmail.com>
-	<20110905074734.GA18504@infradead.org>
-	<CAKxAxjFUMrQpb5kQUdpRdt2wx83oKxaLZPTVTR_j43dkhcOyyw@mail.gmail.com>
+	p898hgae028835 for <xfs@oss.sgi.com>; Fri, 9 Sep 2011 03:43:42 -0500
+Received: from mail-fx0-f53.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3093013D8CE9
+	for <xfs@oss.sgi.com>; Fri,  9 Sep 2011 01:47:55 -0700 (PDT)
+Received: from mail-fx0-f53.google.com (mail-fx0-f53.google.com
+	[209.85.161.53]) by cuda.sgi.com with ESMTP id yo1xHf2nlOTvZuK8
+	for <xfs@oss.sgi.com>; Fri, 09 Sep 2011 01:47:55 -0700 (PDT)
+Received: by fxd23 with SMTP id 23so2365845fxd.26
+	for <xfs@oss.sgi.com>; Fri, 09 Sep 2011 01:43:39 -0700 (PDT)
+Message-ID: <4E69D1B9.8070201@nasza-klasa.pl>
+Date: Fri, 09 Sep 2011 10:43:37 +0200
+From: Bartosz Cisek <bartosz.cisek@nasza-klasa.pl>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAKxAxjFUMrQpb5kQUdpRdt2wx83oKxaLZPTVTR_j43dkhcOyyw@mail.gmail.com>
+Subject: xfs_repair segfaut in stage 6
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,23 +23,30 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Bernard Chan <bernard@goanimate.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, Sep 08, 2011 at 07:09:55PM +0800, Bernard Chan wrote:
-> So should we bother with inode64 and 64-bit servers with NFS4, and should we
-> anticipate any other issues running on this setup with a 4TB volume without
-> enabling inode64?
-
-I would absolutely recommend using inode64 if your are running a pure
-64-bit environment.  Even if you are not running out of inodes it will
-give you a much better allocation pattern.
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+SGksCgpSZWNlbnRseSB3ZSBoYWQgc29tZSBwcm9ibGVtcyB3aXRoIDJUQiBwYXJ0aXRpb24gdXNp
+bmcgeGZzLgoKSS9PIGVycm9yIGluIGZpbGVzeXN0ZW0gKCJjY2lzcy9jMGQ1cDEiKSBtZXRhLWRh
+dGEgZGV2IGNjaXNzL2MwZDVwMQpibG9jayAweDEyMGEwICAgICAgICgieGZzX3RyYW5zX3JlYWRf
+YnVmIikgZXJyb3IgNSBidWYgY291bnQgNDA5NgoKQXQgZmlyc3QgSSBzdXNwZWN0ZWQgZmFpbGVk
+IGhhcmR3YXJlLCBidXQgZGlzayBhcnJheSB3YXNuJ3QgcmVwb3J0aW5nCmFueXRoaW5nLgoKRGlz
+dHJvIChEZWJpYW4gNS4wKSB2ZXJzaW9uIG9mIHhmc19yZXBhaXIgZmluaXNoZWQgd2l0aCBzZWdm
+YXVsdC4gU2FtZQp3aXRoIGNvbXBpbGVkIGZyb20gZ2l0LiBJIGZpbGxlZCBidWcgcmVwb3J0IFsx
+XS4gQ2FuIHNvbWVvbmUgcG9zc2libHkKbG9vayBpbnRvIGl0PyBBcyBpdCdzIGhhZG9vcCBoZWF2
+eSByZXBsaWNhdGVkIHBhcnRpdGlvbiBJIGtlZXAgaXQgb25seQp0byBwcm92aWRlIGFkZGl0aW9u
+YWwgaW5mb3JtYXRpb24gdG8gcmVzb2x2ZSB0aGlzIHNlZ2ZhdWx0LiBJIHdvdWxkIGJlCmhhcHB5
+IHRvIHByb3ZpZGUgYXMgbXVjaCBkZXRhaWxlZCBpbmZvIGFzIHJlcXVpcmVkLCBidXQgSSBuZWVk
+IHRvIGtub3cKd2hhdCA6KQoKWzFdIGh0dHA6Ly9vc3Muc2dpLmNvbS9idWd6aWxsYS9zaG93X2J1
+Zy5jZ2k/aWQ9OTE0CgpLaW5kIHJlZ2FyZHMsCgpCYXJ0ZWsKLS0gCkJhcnRvc3ogQ2lzZWsKQWRt
+aW4KCmVtYWlsOiBiYXJ0b3N6LmNpc2VrQG5hc3phLWtsYXNhLnBsCnRlbDogKzQ4IDUxOSAzMDAg
+MTIyCgpOYXN6YSBLbGFzYSBTcC4geiBvLm8uLAp1bC4gR2VuLiBKLiBCZW1hIDIsIDUwLTI2NSBX
+cm9jxYJhdwoKU8SFZCBSZWpvbm93eSBkbGEgV3JvY8WCYXdpYSAtIEZhYnJ5Y3puZWogd2UgV3Jv
+Y8WCYXdpdSwKVkkgV3lkemlhxYIgR29zcG9kYXJjenkgS3Jham93ZWdvIFJlamVzdHJ1IFPEhWRv
+d2VnbywKbnIgS1JTOjAwMDAyODk2MjksIE5JUDo4OTgtMjEtMjItMTA0IFJFR09OOjAyMDU4NjAy
+MCwKS2FwaXRhxYIgemFrxYJhZG93eTogNjcgODUwLDAwIFBMTgoKX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNn
+aS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
