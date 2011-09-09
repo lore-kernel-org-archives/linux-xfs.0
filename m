@@ -1,32 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p88MaJMo259992 for <xfs@oss.sgi.com>; Thu, 8 Sep 2011 17:36:19 -0500
-Received: from e8.ny.us.ibm.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B40D316A4537
-	for <xfs@oss.sgi.com>; Thu,  8 Sep 2011 15:40:30 -0700 (PDT)
-Received: from e8.ny.us.ibm.com (e8.ny.us.ibm.com [32.97.182.138]) by
-	cuda.sgi.com with ESMTP id xxzVhd9pHZmDypqY for
-	<xfs@oss.sgi.com>; Thu, 08 Sep 2011 15:40:30 -0700 (PDT)
-Received: from d01relay05.pok.ibm.com (d01relay05.pok.ibm.com [9.56.227.237])
-	by e8.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p88K4c6N023740
-	for <xfs@oss.sgi.com>; Thu, 8 Sep 2011 16:04:38 -0400
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d01relay05.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	p88KIrCd092252 for <xfs@oss.sgi.com>; Thu, 8 Sep 2011 16:18:53 -0400
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
-	id p88EIo7P021033
-	for <xfs@oss.sgi.com>; Thu, 8 Sep 2011 08:18:50 -0600
-Received: from [9.53.40.164] (chandra-lucid.austin.ibm.com [9.53.40.164])
-	by d03av03.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVin) with ESMTP id
-	p88EInbn021017 for <xfs@oss.sgi.com>; Thu, 8 Sep 2011 08:18:49 -0600
-Subject: [PATCH] xfs: Fix the incorrect comment in the header of _xfs_buf_find
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-Date: Thu, 08 Sep 2011 15:18:50 -0500
-Message-ID: <1315513130.9298.13.camel@chandra-lucid.austin.ibm.com>
-Mime-Version: 1.0
-Reply-To: sekharan@us.ibm.com
+	p897KDgC024931 for <xfs@oss.sgi.com>; Fri, 9 Sep 2011 02:20:13 -0500
+Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 74BDA14953E
+	for <xfs@oss.sgi.com>; Fri,  9 Sep 2011 00:19:58 -0700 (PDT)
+Received: from mailsrv14.zmi.at (mailsrv14.zmi.at [212.69.164.54]) by
+	cuda.sgi.com with ESMTP id Ei0eUGaofQYXEXQX for
+	<xfs@oss.sgi.com>; Fri, 09 Sep 2011 00:19:58 -0700 (PDT)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: Re: ENOSPC and filesystem shutdowns
+Date: Fri, 9 Sep 2011 09:19:54 +0200
+References: <CAKxAxjFgBd0Vt02m7FJKq_ZWNBBJ5B=N4u7kS69FKtOKT4UowA@mail.gmail.com>
+	<20110905074734.GA18504@infradead.org>
+	<CAKxAxjFUMrQpb5kQUdpRdt2wx83oKxaLZPTVTR_j43dkhcOyyw@mail.gmail.com>
+In-Reply-To: <CAKxAxjFUMrQpb5kQUdpRdt2wx83oKxaLZPTVTR_j43dkhcOyyw@mail.gmail.com>
+MIME-Version: 1.0
+Message-Id: <201109090919.56571@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,41 +25,73 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============0045772589955353804=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: XFS Mailing List <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
+Cc: Bernard Chan <bernard@goanimate.com>
 
-Fix the incorrect comment in the header of the function _xfs_buf_find()
+--===============0045772589955353804==
+Content-Type: multipart/signed;
+  boundary="nextPart1391161.n0aCtLg6df";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 
-Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
----
- fs/xfs/xfs_buf.c |    5 +----
- 1 files changed, 1 insertions(+), 4 deletions(-)
+--nextPart1391161.n0aCtLg6df
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index d3c2b58..e3af850 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -415,10 +415,7 @@ _xfs_buf_map_pages(
- /*
-  *	Look up, and creates if absent, a lockable buffer for
-  *	a given range of an inode.  The buffer is returned
-- *	locked.	 If other overlapping buffers exist, they are
-- *	released before the new buffer is created and locked,
-- *	which may imply that this call will block until those buffers
-- *	are unlocked.  No I/O is implied by this call.
-+ *	locked.	No I/O is implied by this call.
-  */
- xfs_buf_t *
- _xfs_buf_find(
--- 
-1.7.1
+On Donnerstag, 8. September 2011 Bernard Chan wrote:
+> ENOSPC
+
+There have been some "optimizations" for NFS in earlier kernel, leading=20
+to large space reservation per open file. Marc Lehman yelled at that=20
+early August in thread "frequent kernel BUG and lockups - 2.6.39 +=20
+xfs_fsr". Maybe that's your problem too? Do you use "allocsize=3D" mount=20
+option? It could be your new kernel version fixed that, but I can't=20
+tell, as I'm not a dev.
+
+inode64 helps in case there is no more space in the area <1TB. As you=20
+have "only" 4TB, chances are it wouldn't make a difference for you.=20
+Somebody once posted a [perl?] script on this list to find out how much=20
+space is left at <1TB, maybe that can be of help.
+
+=2D-=20
+mit freundlichen Gr=C3=BCssen,
+Michael Monnerie, Ing. BSc
+
+it-management Internet Services: Prot=C3=A9ger
+http://proteger.at [gesprochen: Prot-e-schee]
+Tel: +43 660 / 415 6531
+
+// Haus zu verkaufen: http://zmi.at/langegg/
+
+--nextPart1391161.n0aCtLg6df
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.16 (GNU/Linux)
+
+iEYEABECAAYFAk5pvhwACgkQzhSR9xwSCbQPHACeN/2OUmNaZbeoBexGY8BfmBCz
+jxkAmwd9pEz1F42F0KKGhLW0Cp+LePkc
+=+GxI
+-----END PGP SIGNATURE-----
+
+--nextPart1391161.n0aCtLg6df--
 
 
+--===============0045772589955353804==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============0045772589955353804==--
