@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p89NuISb066590 for <xfs@oss.sgi.com>; Fri, 9 Sep 2011 18:56:18 -0500
-Subject: Re: [PATCH 18/25] xfs: move allocation ranges inode bmalloca structure
+	p89NwUnh066694 for <xfs@oss.sgi.com>; Fri, 9 Sep 2011 18:58:30 -0500
+Subject: Re: [PATCH 23/25] xfs: pass bmalloca to xfs_bmap_add_extent_hole_real
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110824060644.392598929@bombadil.infradead.org>
+In-Reply-To: <20110824060645.499990026@bombadil.infradead.org>
 References: <20110824060428.789245205@bombadil.infradead.org>
-	<20110824060644.392598929@bombadil.infradead.org>
-Date: Fri, 9 Sep 2011 18:56:16 -0500
-Message-ID: <1315612576.1999.134.camel@doink>
+	<20110824060645.499990026@bombadil.infradead.org>
+Date: Fri, 9 Sep 2011 18:58:21 -0500
+Message-ID: <1315612701.1999.139.camel@doink>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -24,24 +24,16 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: Dave Chinner <dchinner@redhat.com>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
 On Wed, 2011-08-24 at 02:04 -0400, Christoph Hellwig wrote:
-> Most of the allocation functions take the offset length and block
-> number as parameters for allocation. often they are modified so are
-> passed by reference.  Make the version in the bmalloca structure the
-> primary version and stop passing them around individually.
+> All the parameters passed to xfs_bmap_add_extent_hole_real() are in the
+> xfs_bmalloca structure now. Just pass the bmalloca parameter to the
+> function instead of 8 separate parameters.
 > 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Lots of this patch is simply renaming xfs_bmalloca fields
-"off" -> "offset", "rval" -> "blkno", and "alen" -> "length".
-Those are very much appreciated changes.  I know there are
-already a lot of patches in this series but it would have
-been easier to see the "real" change had that part been
-pulled out as a trivial extra one.
-
-But it looks good, anyway.
+Looks good.
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
 
