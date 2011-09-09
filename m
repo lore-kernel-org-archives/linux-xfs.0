@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p898hgae028835 for <xfs@oss.sgi.com>; Fri, 9 Sep 2011 03:43:42 -0500
-Received: from mail-fx0-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3093013D8CE9
-	for <xfs@oss.sgi.com>; Fri,  9 Sep 2011 01:47:55 -0700 (PDT)
-Received: from mail-fx0-f53.google.com (mail-fx0-f53.google.com
-	[209.85.161.53]) by cuda.sgi.com with ESMTP id yo1xHf2nlOTvZuK8
-	for <xfs@oss.sgi.com>; Fri, 09 Sep 2011 01:47:55 -0700 (PDT)
-Received: by fxd23 with SMTP id 23so2365845fxd.26
-	for <xfs@oss.sgi.com>; Fri, 09 Sep 2011 01:43:39 -0700 (PDT)
-Message-ID: <4E69D1B9.8070201@nasza-klasa.pl>
-Date: Fri, 09 Sep 2011 10:43:37 +0200
-From: Bartosz Cisek <bartosz.cisek@nasza-klasa.pl>
+	p89C1a5X038562 for <xfs@oss.sgi.com>; Fri, 9 Sep 2011 07:01:36 -0500
+Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C2F6319AAAD8
+	for <xfs@oss.sgi.com>; Fri,  9 Sep 2011 05:01:34 -0700 (PDT)
+Received: from mailsrv14.zmi.at (mailsrv14.zmi.at [212.69.164.54]) by
+	cuda.sgi.com with ESMTP id QOCC06aZrnhCh05A for
+	<xfs@oss.sgi.com>; Fri, 09 Sep 2011 05:01:34 -0700 (PDT)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: Re: xfs_repair segfaut in stage 6
+Date: Fri, 9 Sep 2011 14:01:29 +0200
+References: <4E69D1B9.8070201@nasza-klasa.pl>
+In-Reply-To: <4E69D1B9.8070201@nasza-klasa.pl>
 MIME-Version: 1.0
-Subject: xfs_repair segfaut in stage 6
+Message-Id: <201109091401.31422@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,30 +23,71 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: multipart/mixed; boundary="===============1893782197357241172=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: Bartosz Cisek <bartosz.cisek@nasza-klasa.pl>
 
-SGksCgpSZWNlbnRseSB3ZSBoYWQgc29tZSBwcm9ibGVtcyB3aXRoIDJUQiBwYXJ0aXRpb24gdXNp
-bmcgeGZzLgoKSS9PIGVycm9yIGluIGZpbGVzeXN0ZW0gKCJjY2lzcy9jMGQ1cDEiKSBtZXRhLWRh
-dGEgZGV2IGNjaXNzL2MwZDVwMQpibG9jayAweDEyMGEwICAgICAgICgieGZzX3RyYW5zX3JlYWRf
-YnVmIikgZXJyb3IgNSBidWYgY291bnQgNDA5NgoKQXQgZmlyc3QgSSBzdXNwZWN0ZWQgZmFpbGVk
-IGhhcmR3YXJlLCBidXQgZGlzayBhcnJheSB3YXNuJ3QgcmVwb3J0aW5nCmFueXRoaW5nLgoKRGlz
-dHJvIChEZWJpYW4gNS4wKSB2ZXJzaW9uIG9mIHhmc19yZXBhaXIgZmluaXNoZWQgd2l0aCBzZWdm
-YXVsdC4gU2FtZQp3aXRoIGNvbXBpbGVkIGZyb20gZ2l0LiBJIGZpbGxlZCBidWcgcmVwb3J0IFsx
-XS4gQ2FuIHNvbWVvbmUgcG9zc2libHkKbG9vayBpbnRvIGl0PyBBcyBpdCdzIGhhZG9vcCBoZWF2
-eSByZXBsaWNhdGVkIHBhcnRpdGlvbiBJIGtlZXAgaXQgb25seQp0byBwcm92aWRlIGFkZGl0aW9u
-YWwgaW5mb3JtYXRpb24gdG8gcmVzb2x2ZSB0aGlzIHNlZ2ZhdWx0LiBJIHdvdWxkIGJlCmhhcHB5
-IHRvIHByb3ZpZGUgYXMgbXVjaCBkZXRhaWxlZCBpbmZvIGFzIHJlcXVpcmVkLCBidXQgSSBuZWVk
-IHRvIGtub3cKd2hhdCA6KQoKWzFdIGh0dHA6Ly9vc3Muc2dpLmNvbS9idWd6aWxsYS9zaG93X2J1
-Zy5jZ2k/aWQ9OTE0CgpLaW5kIHJlZ2FyZHMsCgpCYXJ0ZWsKLS0gCkJhcnRvc3ogQ2lzZWsKQWRt
-aW4KCmVtYWlsOiBiYXJ0b3N6LmNpc2VrQG5hc3phLWtsYXNhLnBsCnRlbDogKzQ4IDUxOSAzMDAg
-MTIyCgpOYXN6YSBLbGFzYSBTcC4geiBvLm8uLAp1bC4gR2VuLiBKLiBCZW1hIDIsIDUwLTI2NSBX
-cm9jxYJhdwoKU8SFZCBSZWpvbm93eSBkbGEgV3JvY8WCYXdpYSAtIEZhYnJ5Y3puZWogd2UgV3Jv
-Y8WCYXdpdSwKVkkgV3lkemlhxYIgR29zcG9kYXJjenkgS3Jham93ZWdvIFJlamVzdHJ1IFPEhWRv
-d2VnbywKbnIgS1JTOjAwMDAyODk2MjksIE5JUDo4OTgtMjEtMjItMTA0IFJFR09OOjAyMDU4NjAy
-MCwKS2FwaXRhxYIgemFrxYJhZG93eTogNjcgODUwLDAwIFBMTgoKX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNn
-aS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+--===============1893782197357241172==
+Content-Type: multipart/signed;
+  boundary="nextPart2144949.NHM0dsYjkF";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
+
+--nextPart2144949.NHM0dsYjkF
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+On Freitag, 9. September 2011 Bartosz Cisek wrote:
+> Distro (Debian 5.0) version of xfs_repair finished with segfault.
+> Same with compiled from git. I filled bug report [1]. Can someone
+> possibly look into it? As it's hadoop heavy replicated partition I
+> keep it only to provide additional information to resolve this
+> segfault. I would be happy to provide as much detailed info as
+> required, but I need to know what :)
+
+Can you provide a metadump of that partition? By this, the devs can=20
+reproduce the bug on their machine, and resolve issues much quicker.
+
+Which kernel and architecture are you on?
+
+=2D-=20
+mit freundlichen Gr=C3=BCssen,
+Michael Monnerie, Ing. BSc
+
+it-management Internet Services: Prot=C3=A9ger
+http://proteger.at [gesprochen: Prot-e-schee]
+Tel: +43 660 / 415 6531
+
+// Haus zu verkaufen: http://zmi.at/langegg/
+
+--nextPart2144949.NHM0dsYjkF
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.16 (GNU/Linux)
+
+iEYEABECAAYFAk5qABsACgkQzhSR9xwSCbTy8ACeM4FgdV6a12+zPmfln+HjksCc
+JlUAoNyfyAaIY+2N/LEFsnMpNsulIXee
+=BLrY
+-----END PGP SIGNATURE-----
+
+--nextPart2144949.NHM0dsYjkF--
+
+
+--===============1893782197357241172==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============1893782197357241172==--
