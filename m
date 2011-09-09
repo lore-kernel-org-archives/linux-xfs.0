@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p89NwUnh066694 for <xfs@oss.sgi.com>; Fri, 9 Sep 2011 18:58:30 -0500
-Subject: Re: [PATCH 23/25] xfs: pass bmalloca to xfs_bmap_add_extent_hole_real
+	p89NwP2b066661 for <xfs@oss.sgi.com>; Fri, 9 Sep 2011 18:58:25 -0500
+Subject: Re: [PATCH 21/25] xfs: move logflags into bmalloca
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110824060645.499990026@bombadil.infradead.org>
+In-Reply-To: <20110824060645.058158817@bombadil.infradead.org>
 References: <20110824060428.789245205@bombadil.infradead.org>
-	<20110824060645.499990026@bombadil.infradead.org>
-Date: Fri, 9 Sep 2011 18:58:21 -0500
-Message-ID: <1315612701.1999.139.camel@doink>
+	<20110824060645.058158817@bombadil.infradead.org>
+Date: Fri, 9 Sep 2011 18:56:26 -0500
+Message-ID: <1315612586.1999.137.camel@doink>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -27,16 +27,11 @@ To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
 On Wed, 2011-08-24 at 02:04 -0400, Christoph Hellwig wrote:
-> All the parameters passed to xfs_bmap_add_extent_hole_real() are in the
-> xfs_bmalloca structure now. Just pass the bmalloca parameter to the
-> function instead of 8 separate parameters.
-> 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 Looks good.
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
-
 
 _______________________________________________
 xfs mailing list
