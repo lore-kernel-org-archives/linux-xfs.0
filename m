@@ -1,20 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p89MV3l6063716 for <xfs@oss.sgi.com>; Fri, 9 Sep 2011 17:31:03 -0500
-Received: from kaylee.flamingspork.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C59AB14C465
-	for <xfs@oss.sgi.com>; Fri,  9 Sep 2011 15:31:02 -0700 (PDT)
-Received: from kaylee.flamingspork.com (kaylee.flamingspork.com
-	[74.207.245.61]) by cuda.sgi.com with ESMTP id OVqnzIcprE206Srb
-	for <xfs@oss.sgi.com>; Fri, 09 Sep 2011 15:31:02 -0700 (PDT)
-From: Stewart Smith <stewart@flamingspork.com>
-Subject: Re: XFS metadata flushing design - current and future
-In-Reply-To: <20110827080321.GA16661@infradead.org>
-References: <20110827080321.GA16661@infradead.org>
-Date: Fri, 09 Sep 2011 15:31:01 -0700
-Message-ID: <87litx73h6.fsf@flamingspork.com>
+	p89Ntr1c066526 for <xfs@oss.sgi.com>; Fri, 9 Sep 2011 18:55:53 -0500
+Subject: Re: [PATCH 14/25] xfs: remove xfs_bmap_add_extent
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <20110824060643.401685261@bombadil.infradead.org>
+References: <20110824060428.789245205@bombadil.infradead.org>
+	<20110824060643.401685261@bombadil.infradead.org>
+Date: Fri, 9 Sep 2011 18:55:49 -0500
+Message-ID: <1315612549.1999.129.camel@doink>
 MIME-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,18 +23,40 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Sat, 27 Aug 2011 04:03:21 -0400, Christoph Hellwig <hch@infradead.org> wrote:
-> All metadata is XFS is read and written using buffers as the lowest
-> layer.
+On Wed, 2011-08-24 at 02:04 -0400, Christoph Hellwig wrote:
+> plain text document attachment (xfs-bmapi-split-xfs_bmap_extent-2)
+> There is no real need to the xfs_bmap_add_extent, as the callers know what
+> kind of extents they need to it.  Removing it means duplicating the
+> extents to btree conversion logic in three places, but overall it's still
+> a lot less, and much simpler code.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-s/is/in/
+Not really a *lot* less code, but it is an improvement.
 
-pretty minor :)
+Simple question below (coding style) but this looks good.
 
--- 
-Stewart Smith
+Reviewed-by: Alex Elder <aelder@sgi.com>
+
+
+. . .
+
+>  
+> +#ifdef DEBUG
+> +STATIC void
+> +xfs_bmap_check_leaf_extents(
+> +	struct xfs_btree_cur	*cur,
+> +	struct xfs_inode	*ip,
+> +	int			whichfork);
+> +#else
+> +#define xfs_bmap_check_leaf_extents(cur, ip, whichfork)		do { } while (0)
+> +#endif
+
+Why do you use "do {} while (0)" rather than just an empty right
+hand side? 
 
 _______________________________________________
 xfs mailing list
