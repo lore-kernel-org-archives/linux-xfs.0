@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p89C1a5X038562 for <xfs@oss.sgi.com>; Fri, 9 Sep 2011 07:01:36 -0500
-Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C2F6319AAAD8
-	for <xfs@oss.sgi.com>; Fri,  9 Sep 2011 05:01:34 -0700 (PDT)
-Received: from mailsrv14.zmi.at (mailsrv14.zmi.at [212.69.164.54]) by
-	cuda.sgi.com with ESMTP id QOCC06aZrnhCh05A for
-	<xfs@oss.sgi.com>; Fri, 09 Sep 2011 05:01:34 -0700 (PDT)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
+	p89CciR9040040 for <xfs@oss.sgi.com>; Fri, 9 Sep 2011 07:38:44 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B18F71E889A1
+	for <xfs@oss.sgi.com>; Fri,  9 Sep 2011 05:38:43 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	gE4v5KtuiYkXlrvJ for <xfs@oss.sgi.com>;
+	Fri, 09 Sep 2011 05:38:43 -0700 (PDT)
+Date: Fri, 9 Sep 2011 08:38:42 -0400
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: xfs_repair segfaut in stage 6
-Date: Fri, 9 Sep 2011 14:01:29 +0200
+Message-ID: <20110909123842.GA28343@infradead.org>
 References: <4E69D1B9.8070201@nasza-klasa.pl>
-In-Reply-To: <4E69D1B9.8070201@nasza-klasa.pl>
 MIME-Version: 1.0
-Message-Id: <201109091401.31422@zmi.at>
+Content-Disposition: inline
+In-Reply-To: <4E69D1B9.8070201@nasza-klasa.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,71 +26,40 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============1893782197357241172=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Bartosz Cisek <bartosz.cisek@nasza-klasa.pl>
+To: Bartosz Cisek <bartosz.cisek@nasza-klasa.pl>
+Cc: xfs@oss.sgi.com
 
---===============1893782197357241172==
-Content-Type: multipart/signed;
-  boundary="nextPart2144949.NHM0dsYjkF";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+On Fri, Sep 09, 2011 at 10:43:37AM +0200, Bartosz Cisek wrote:
+> Hi,
+> 
+> Recently we had some problems with 2TB partition using xfs.
+> 
+> I/O error in filesystem ("cciss/c0d5p1") meta-data dev cciss/c0d5p1
+> block 0x120a0       ("xfs_trans_read_buf") error 5 buf count 4096
+> 
+> At first I suspected failed hardware, but disk array wasn't reporting
+> anything.
 
---nextPart2144949.NHM0dsYjkF
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+But that error really means that we got an error from the device.
 
-On Freitag, 9. September 2011 Bartosz Cisek wrote:
-> Distro (Debian 5.0) version of xfs_repair finished with segfault.
-> Same with compiled from git. I filled bug report [1]. Can someone
-> possibly look into it? As it's hadoop heavy replicated partition I
-> keep it only to provide additional information to resolve this
-> segfault. I would be happy to provide as much detailed info as
-> required, but I need to know what :)
+> Distro (Debian 5.0) version of xfs_repair finished with segfault. Same
+> with compiled from git. I filled bug report [1]. Can someone possibly
+> look into it? As it's hadoop heavy replicated partition I keep it only
+> to provide additional information to resolve this segfault. I would be
+> happy to provide as much detailed info as required, but I need to know
+> what :)
 
-Can you provide a metadump of that partition? By this, the devs can=20
-reproduce the bug on their machine, and resolve issues much quicker.
+The above pretty much guarantees a hardware (or maybe driver) issue,
+as XFS only gets the EIO from the lower layers.
 
-Which kernel and architecture are you on?
-
-=2D-=20
-mit freundlichen Gr=C3=BCssen,
-Michael Monnerie, Ing. BSc
-
-it-management Internet Services: Prot=C3=A9ger
-http://proteger.at [gesprochen: Prot-e-schee]
-Tel: +43 660 / 415 6531
-
-// Haus zu verkaufen: http://zmi.at/langegg/
-
---nextPart2144949.NHM0dsYjkF
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.16 (GNU/Linux)
-
-iEYEABECAAYFAk5qABsACgkQzhSR9xwSCbTy8ACeM4FgdV6a12+zPmfln+HjksCc
-JlUAoNyfyAaIY+2N/LEFsnMpNsulIXee
-=BLrY
------END PGP SIGNATURE-----
-
---nextPart2144949.NHM0dsYjkF--
-
-
---===============1893782197357241172==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Of course that does not mean that xfs_repair should crash.  I'll look
+into it.  As already mentioned a metadump image would be very helpful.
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============1893782197357241172==--
