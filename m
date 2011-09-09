@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p89KNQEU058310 for <xfs@oss.sgi.com>; Fri, 9 Sep 2011 15:23:26 -0500
-Subject: Re: [PATCH 10/25] xfs: factor extent allocation out of xfs_bmapi
+	p89KNljS058381 for <xfs@oss.sgi.com>; Fri, 9 Sep 2011 15:23:47 -0500
+Subject: Re: [PATCH 13/25] xfs: introduce xfs_bmap_last_extent
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110824060642.429315933@bombadil.infradead.org>
+In-Reply-To: <20110824060643.154462765@bombadil.infradead.org>
 References: <20110824060428.789245205@bombadil.infradead.org>
-	<20110824060642.429315933@bombadil.infradead.org>
-Date: Fri, 9 Sep 2011 15:23:24 -0500
-Message-ID: <1315599804.1999.54.camel@doink>
+	<20110824060643.154462765@bombadil.infradead.org>
+Date: Fri, 9 Sep 2011 15:23:46 -0500
+Message-ID: <1315599826.1999.58.camel@doink>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -24,85 +24,110 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: Dave Chinner <dchinner@redhat.com>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
 On Wed, 2011-08-24 at 02:04 -0400, Christoph Hellwig wrote:
-> To further improve the readability of xfs_bmapi(), factor the extent
-> allocation out into a separate function. This removes a large block
-> of logic from the xfs_bmapi() code loop and makes it easier to see
-> the operational logic flow for xfs_bmapi().
+> plain text document attachment (xfs-simplify-xfs_bmap_isaeof)
+> Add a common helper for finding the last extent in a file.
 > 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Largely based on a patch from Dave Chinner.
 
-OK, this looks very good.  I have a spot that I chased
-for a while to verify it produced the same functionality
-as before, but I just gave up because it was just taking
-much too much time.  I'll point it out below, just for
-the record, but I'm not too concerned about it.  Everything
-else looks good.
+
+The new version of xfs_bmap_isaeof() no longer asserts
+that the data fork is the one being operated on.  Why?
+
+I have a couple of suggested comment clarifications,
+and a suggested logic simplification below.
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
 
+(Still reviewing the rest, but thought I'd fire off
+a batch of the ones that I'm done with.)
+
+
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
 > Index: xfs/fs/xfs/xfs_bmap.c
-> ===================================================================
 
 . . .
 
-> @@ -4750,144 +4893,31 @@ xfs_bmapi(
->  		 * that we found, if any.
->  		 */
->  		if (wr && (inhole || wasdelay)) {
-> -			/*
-> -			 * For the wasdelay case, we could also just
-> -			 * allocate the stuff asked for in this bmap call
-
-. . .
-
-> -						ip, whichfork);
-> -					cur->bc_private.b.firstblock =
-> -						*firstblock;
-> -					cur->bc_private.b.flist = flist;
-> +			bma.eof = eof;
-> +			bma.conv = !!(flags & XFS_BMAPI_CONVERT);
-> +			bma.wasdel = wasdelay;
-> +			bma.alen = len;
-> +			bma.off = bno;
-> +			bma.minleft = minleft;
 > +
-> +			error = xfs_bmapi_allocate(&bma, &lastx, &cur,
-> +					firstblock, flist, flags, &nallocs,
-> +					&tmp_logflags);
+> +/*
+> + * Check the last inode extent to determine whether this allocation will result
+> + * in blocks being allocated at the end of the file. When we allocate new data
+> + * blocks at the end of the file which do not start at the previous data block,
+> + * we will try to align the new blocks at stripe unit boundaries.
 
-> +			if (error == ENOSPC || error == EDQUOT) {
-> +				if (n == 0) {
-> +					*nmap = 0;
-> +					ASSERT(cur == NULL);
-> +					return error;
->  				}
+It is not obvious what value will be returned when the
+fork is empty, so mention that case in the comment header:
+ 
+    Returns 0 in *aeof if the file (fork) is empty.
 
-Here is the spot I mentioned above.  I was trying to find out
-the circumstances under which ENOSPC or EDQUOT could get returned
-by xfs_bmapi_allocate() in order to confirm that this in fact
-produces the same effect as before.
+(Maybe you could explain why this is true at a more
+abstract level though.)
 
-I also had a little trouble because there were spots--such
-as calling xfs_bmap_isaeof()--that are now encapsulated within
-xfs_bmapi_allocate() that previously jumped to error0, but now
-will produce an error return from that function.  So now this
-doesn't execute the code at error0 in this case.  I didn't
-work through it but I trust that the code there would end
-up being a series of no-ops anyway.
+> + */
+> +STATIC int
+> +xfs_bmap_isaeof(
+> +	struct xfs_inode	*ip,
+> +	xfs_fileoff_t		off,
+> +	int			whichfork,
+> +	char			*aeof)
+> +{
+> +	struct xfs_bmbt_irec	rec;
+> +	int			is_empty;
+> +	int			error;
+> +
+> +	*aeof = 0;
+> +	error = xfs_bmap_last_extent(NULL, ip, whichfork, &rec, &is_empty);
+> +	if (error || is_empty)
+> +		return error;
+> +
+> +	/*
+> +	 * Check we are allocating in the last extent (for delayed allocations)
+> +	 * or past the last extent for non-delayed allocations.
+> +	 */
+> +	*aeof = (off >= rec.br_startoff &&
+> +		 off < rec.br_startoff + rec.br_blockcount &&
+> +		 isnullstartblock(rec.br_startblock)) ||
+> +		off >= rec.br_startoff + rec.br_blockcount;
 
+This logic could be shortened:
 
+		*aeof = off >= rec.br_startoff + rec.br_blockcount ||
+			(off >= rec.br_startoff &&
+				 isnullstartblock(rec.br_startblock);
 
-> -				/*
-> -				 * Bump the number of extents we've allocated
-> -				 * in this call.
-> -				 */
-> -				nallocs++;
-> -			}
+> +	return 0;
+> +}
+> +
+> +/*
+> + * Check if the endoff is outside the last extent. If so the caller will grow
+> + * the allocation to a stripe unit boundary.
 
-. . . .
+    All offsets are considered outside the end of file for an
+    empty file (fork), so 1 is returned in *eof in that case.
+
+> + */
+> +int
+> +xfs_bmap_eof(
+> +	struct xfs_inode	*ip,
+> +	xfs_fileoff_t		endoff,
+> +	int			whichfork,
+> +	int			*eof)
+> +{
+> +	struct xfs_bmbt_irec	rec;
+> +	int			error;
+> +
+> +	error = xfs_bmap_last_extent(NULL, ip, whichfork, &rec, eof);
+> +	if (error || *eof)
+> +		return error;
+> +
+> +	*eof = endoff >= rec.br_startoff + rec.br_blockcount;
+> +	return 0;
+> +}
+> +
+. . .
 
 _______________________________________________
 xfs mailing list
