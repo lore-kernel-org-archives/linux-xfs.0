@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p89F7OxS045665 for <xfs@oss.sgi.com>; Fri, 9 Sep 2011 10:07:25 -0500
-Received: from mail-fx0-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DC856152437F
-	for <xfs@oss.sgi.com>; Fri,  9 Sep 2011 08:11:39 -0700 (PDT)
-Received: from mail-fx0-f53.google.com (mail-fx0-f53.google.com
-	[209.85.161.53]) by cuda.sgi.com with ESMTP id vNbZfbTUyworIHAy
-	for <xfs@oss.sgi.com>; Fri, 09 Sep 2011 08:11:39 -0700 (PDT)
-Received: by fxd23 with SMTP id 23so2663014fxd.26
-	for <xfs@oss.sgi.com>; Fri, 09 Sep 2011 08:07:21 -0700 (PDT)
-Message-ID: <4E6A2B73.50503@nasza-klasa.pl>
-Date: Fri, 09 Sep 2011 17:06:27 +0200
-From: Bartosz Cisek <bartosz.cisek@nasza-klasa.pl>
+	p89KDRbj057914 for <xfs@oss.sgi.com>; Fri, 9 Sep 2011 15:13:27 -0500
+Received: from peace.netnation.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 98C2914B642
+	for <xfs@oss.sgi.com>; Fri,  9 Sep 2011 13:13:26 -0700 (PDT)
+Received: from peace.netnation.com (peace.netnation.com [204.174.223.2]) by
+	cuda.sgi.com with ESMTP id AHYGASvUtIbnC24i for
+	<xfs@oss.sgi.com>; Fri, 09 Sep 2011 13:13:26 -0700 (PDT)
+Date: Fri, 9 Sep 2011 13:13:24 -0700
+From: Simon Kirby <sim@hostway.ca>
+Subject: Re: [Drbd-dev] [3.1-rc4] XFS+DRBD hangs
+Message-ID: <20110909201324.GD6195@hostway.ca>
+References: <20110907221505.GC21603@hostway.ca>
+	<20110908151305.GJ14243@barkeeper1-xen.linbit>
+	<20110908174324.GA8043@hostway.ca>
 MIME-Version: 1.0
-Subject: Re: xfs_repair segfaut in stage 6
-References: <4E69D1B9.8070201@nasza-klasa.pl> <201109091401.31422@zmi.at>
-In-Reply-To: <201109091401.31422@zmi.at>
+Content-Disposition: inline
+In-Reply-To: <20110908174324.GA8043@hostway.ca>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,26 +26,55 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Michael Monnerie <michael.monnerie@is.it-management.at>
-Cc: xfs@oss.sgi.com
+To: drbd-dev@lists.linbit.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-VyBkbml1IDA5LjA5LjIwMTEgMTQ6MDEsIE1pY2hhZWwgTW9ubmVyaWUgcGlzemU6CgpUaGFua3Mg
-Zm9yIHJlcGx5IDopCgo+IENhbiB5b3UgcHJvdmlkZSBhIG1ldGFkdW1wIG9mIHRoYXQgcGFydGl0
-aW9uPyBCeSB0aGlzLCB0aGUgZGV2cyBjYW4gCj4gcmVwcm9kdWNlIHRoZSBidWcgb24gdGhlaXIg
-bWFjaGluZSwgYW5kIHJlc29sdmUgaXNzdWVzIG11Y2ggcXVpY2tlci4KCnhmc19tZXRhZHVtcCAt
-ZyAvZGV2L2NjaXNzL2MwZDVwMSAtIHwgYnppcDIgID4gbWV0YWR1bXAuYnoyCgpodHRwOi8vYmFy
-dG9zemNpc2VrLnBsL21ldGFkdW1wLmJ6MgoKPiBXaGljaCBrZXJuZWwgYW5kIGFyY2hpdGVjdHVy
-ZSBhcmUgeW91IG9uPwoKTGludXggaGQtc2xhdmU1IDIuNi4zMC0xLWFtZDY0ICMxIFNNUCBUdWUg
-QXVnIDE4IDE3OjM5OjIzIENFU1QgMjAwOQp4ODZfNjQgR05VL0xpbnV4CgotLSAKQmFydG9zeiBD
-aXNlawpBZG1pbgoKZW1haWw6IGJhcnRvc3ouY2lzZWtAbmFzemEta2xhc2EucGwKdGVsOiArNDgg
-NTE5IDMwMCAxMjIKCk5hc3phIEtsYXNhIFNwLiB6IG8uby4sCnVsLiBHZW4uIEouIEJlbWEgMiwg
-NTAtMjY1IFdyb2PFgmF3CgpTxIVkIFJlam9ub3d5IGRsYSBXcm9jxYJhd2lhIC0gRmFicnljem5l
-aiB3ZSBXcm9jxYJhd2l1LApWSSBXeWR6aWHFgiBHb3Nwb2RhcmN6eSBLcmFqb3dlZ28gUmVqZXN0
-cnUgU8SFZG93ZWdvLApuciBLUlM6MDAwMDI4OTYyOSwgTklQOjg5OC0yMS0yMi0xMDQgUkVHT046
-MDIwNTg2MDIwLApLYXBpdGHFgiB6YWvFgmFkb3d5OiA2NyA4NTAsMDAgUExOCgpfX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhm
-c0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+On Thu, Sep 08, 2011 at 10:43:24AM -0700, Simon Kirby wrote:
+
+> On Thu, Sep 08, 2011 at 05:13:05PM +0200, Lars Ellenberg wrote:
+> 
+> > Sorry for double posting on drbd-dev, I managed to strip the other lists from Cc.
+> > 
+> > > We upgraded from 2.6.36 which seemed to have a page leak (file pages left
+> > > on the LRU) and so would eventually perform very poorly. 2.6.37 and
+> > > 2.6.38 seemed to have some unix socket issue that caused heartbeat to
+> > > wedge. Shall we enable lock debugging or something here?
+> > 
+> > That could help us understand that stack trace.
+> > 
+> > It looks like cpu 1 blocks in
+> > 
+> > > [ 1532.427149]  [<ffffffff8103d512>] ? try_to_wake_up+0xc2/0x270
+> > > [ 1532.427149]  <<EOE>>  <IRQ>  [<ffffffff8103d6cd>] default_wake_function+0xd/0x10
+> > 
+> > Which does not make sense to me at all.
+> 
+> Well, good news, I think.. I believe this may be related to
+> "PCI: Set PCI-E Max Payload Size on fabric", added by b03e7495a862b02829.
+> 3.1-rc5 is running now with a patch to basically disable those changes,
+> and has been stable for 12 hours. It usually hung in a few minutes
+> before.
+> 
+> The XFS peoples say it was very likely not 58d84c4ee0389ddeb86238d5 which
+> is the only other thing that changed between these versions that seems to
+> be at all in the hang path.
+> 
+> Also, when the thing hangs, it stops pinging immediately, and with the
+> PCI-E max payload thing active, the device that raises a bus error is
+> actually the PCI-E to PCI-X bridge chip used to support the BCM5708 NICs,
+> so that all seems related.
+
+Except that I accidentally git reset out the patch, and so it's been
+running unmodified 79016f648872549392d232cd648bd02298c2d2bb (past -rc5),
+and still hasn't crashed, so I guess it _was_ the XFS changes, or
+something else. Boggle. In any event, it's still running well. :)
+
+Simon-
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
