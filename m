@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p89Nu4KC066558 for <xfs@oss.sgi.com>; Fri, 9 Sep 2011 18:56:04 -0500
-Subject: Re: [PATCH 16/25] xfs: move extent records into bmalloca structure
+	p8A00gCZ066794 for <xfs@oss.sgi.com>; Fri, 9 Sep 2011 19:00:42 -0500
+Subject: Re: [PATCH 25/25] xfs: cleanup xfs_bmap.h
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110824060643.900337846@bombadil.infradead.org>
+In-Reply-To: <20110824060645.920227383@bombadil.infradead.org>
 References: <20110824060428.789245205@bombadil.infradead.org>
-	<20110824060643.900337846@bombadil.infradead.org>
-Date: Fri, 9 Sep 2011 18:55:59 -0500
-Message-ID: <1315612559.1999.131.camel@doink>
+	<20110824060645.920227383@bombadil.infradead.org>
+Date: Fri, 9 Sep 2011 18:58:25 -0500
+Message-ID: <1315612705.1999.141.camel@doink>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -24,23 +24,18 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: Dave Chinner <dchinner@redhat.com>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
 On Wed, 2011-08-24 at 02:04 -0400, Christoph Hellwig wrote:
-> Rather that putting extent records on the stack and then pointing to
-> them in the bmalloca structure which is in the same stack frame, put
-> the extent records directly in the bmalloca structure. This reduces
-> the number of args that need to be passed around.
+> Convert all function prototypes to the short form used elsewhere, and
+> remove duplicates of comments already placed at the function body.
 > 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Interesting that the only place that uses that
-structure (defines an object of that type anyway)
-is xfs_bmapi_write().
-
-Looks good.
+Sounds good to me.
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
+
 
 _______________________________________________
 xfs mailing list
