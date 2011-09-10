@@ -1,16 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p89NwTUr066686 for <xfs@oss.sgi.com>; Fri, 9 Sep 2011 18:58:29 -0500
-Subject: Re: [PATCH 22/25] xfs: pass bmalloca to xfs_bmap_add_extent_delay_real
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110824060645.290805402@bombadil.infradead.org>
-References: <20110824060428.789245205@bombadil.infradead.org>
-	<20110824060645.290805402@bombadil.infradead.org>
-Date: Fri, 9 Sep 2011 18:56:31 -0500
-Message-ID: <1315612591.1999.138.camel@doink>
+	p8A65Rkb082765 for <xfs@oss.sgi.com>; Sat, 10 Sep 2011 01:05:29 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A549B13DC6DD
+	for <xfs@oss.sgi.com>; Fri,  9 Sep 2011 23:09:45 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	UpNQRG6BHaXTfsCq for <xfs@oss.sgi.com>;
+	Fri, 09 Sep 2011 23:09:45 -0700 (PDT)
+Date: Sat, 10 Sep 2011 02:05:23 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Performance regression between 2.6.32 and 2.6.38
+Message-ID: <20110910060522.GA26968@infradead.org>
+References: <F70D1B6A-0387-4646-B97B-98ED895F7759@fusionio.com>
 MIME-Version: 1.0
-Reply-To: aelder@sgi.com
+Content-Disposition: inline
+In-Reply-To: <F70D1B6A-0387-4646-B97B-98ED895F7759@fusionio.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,20 +30,15 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Joshua Aune <luken@fusionio.com>
+Cc: Paul Saab <ps@fb.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Wed, 2011-08-24 at 02:04 -0400, Christoph Hellwig wrote:
-> All the parameters passed to xfs_bmap_add_extent_delay_real() are in the
-> xfs_bmalloca structure now. Just pass the bmalloca parameter to the
-> function instead of 8 separate parameters.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Fri, Sep 09, 2011 at 06:23:54PM -0600, Joshua Aune wrote:
+> Are there any mount options or other tests that can be run in the failing configuration that would be helpful to isolate this further?
 
-Looks good.  Maybe xfs_bmalloca field "got" could be renamed
-but I can't think of a good one.
-
-Reviewed-by: Alex Elder <aelder@sgi.com>
+The best thing would be to bisect it down to at least a kernel release,
+and if possible to a -rc or individual change (the latter might start
+to get hard due to various instabilities in early -rc kernels)
 
 _______________________________________________
 xfs mailing list
