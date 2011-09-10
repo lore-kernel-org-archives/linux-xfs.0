@@ -1,23 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8A65Rkb082765 for <xfs@oss.sgi.com>; Sat, 10 Sep 2011 01:05:29 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A549B13DC6DD
-	for <xfs@oss.sgi.com>; Fri,  9 Sep 2011 23:09:45 -0700 (PDT)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	UpNQRG6BHaXTfsCq for <xfs@oss.sgi.com>;
-	Fri, 09 Sep 2011 23:09:45 -0700 (PDT)
-Date: Sat, 10 Sep 2011 02:05:23 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Performance regression between 2.6.32 and 2.6.38
-Message-ID: <20110910060522.GA26968@infradead.org>
-References: <F70D1B6A-0387-4646-B97B-98ED895F7759@fusionio.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <F70D1B6A-0387-4646-B97B-98ED895F7759@fusionio.com>
+	p8ACNRft100853 for <xfs@oss.sgi.com>; Sat, 10 Sep 2011 07:23:28 -0500
+Received: from server655-han.de-nserver.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5469D13DCD86
+	for <xfs@oss.sgi.com>; Sat, 10 Sep 2011 05:27:45 -0700 (PDT)
+Received: from server655-han.de-nserver.de (server655-han.de-nserver.de
+	[85.158.177.45]) by cuda.sgi.com with ESMTP id zMP9cTHLNRUlOxM2
+	for <xfs@oss.sgi.com>; Sat, 10 Sep 2011 05:27:45 -0700 (PDT)
+Subject: xfs deadlock in stable kernel 3.0.4
+From: Stefan Priebe <s.priebe@profihost.ag>
+Message-Id: <1D2B34A7-7BB9-4E4E-9CA2-382C210E125F@profihost.ag>
+Date: Sat, 10 Sep 2011 14:23:12 +0200
+Mime-Version: 1.0 (iPhone Mail 8H7)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,15 +25,22 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Joshua Aune <luken@fusionio.com>
-Cc: Paul Saab <ps@fb.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+Cc: "xfs-masters@oss.sgi.com" <xfs-masters@oss.sgi.com>
 
-On Fri, Sep 09, 2011 at 06:23:54PM -0600, Joshua Aune wrote:
-> Are there any mount options or other tests that can be run in the failing configuration that would be helpful to isolate this further?
+Hello List,
 
-The best thing would be to bisect it down to at least a kernel release,
-and if possible to a -rc or individual change (the latter might start
-to get hard due to various instabilities in early -rc kernels)
+on some of our heavy loaded servers using xfs we're seeing a deadlock where reading/writing to the xfs filesystem suddenly stops working.
+
+Here you can find sysrq w triggered log messages of the locked processes.
+
+http://pastebin.com/JWjrbrh4
+
+Please help! Thanks!
+
+Please cc me i'm not subscribed.
+
+Stefan
 
 _______________________________________________
 xfs mailing list
