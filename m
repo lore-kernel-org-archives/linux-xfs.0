@@ -1,17 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8CEo0h8000992 for <xfs@oss.sgi.com>; Mon, 12 Sep 2011 09:50:00 -0500
-Date: Mon, 12 Sep 2011 10:49:29 -0400
-From: Christoph Hellwig <hch@infradead.org>
+	p8CEedHS000569 for <xfs@oss.sgi.com>; Mon, 12 Sep 2011 09:40:39 -0500
 Subject: Re: [PATCH 1/3] xfs: improve ioend error handling
-Message-ID: <20110912144929.GA2127@infradead.org>
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <20110824060149.777198300@bombadil.infradead.org>
 References: <20110824055924.139283426@bombadil.infradead.org>
 	<20110824060149.777198300@bombadil.infradead.org>
-	<1315838435.2916.41.camel@doink>
+Date: Mon, 12 Sep 2011 09:40:35 -0500
+Message-ID: <1315838435.2916.41.camel@doink>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1315838435.2916.41.camel@doink>
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,34 +23,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Mon, Sep 12, 2011 at 09:40:35AM -0500, Alex Elder wrote:
-> On Wed, 2011-08-24 at 01:59 -0400, Christoph Hellwig wrote:
-> > Return unwritten extent conversion errors to aio_complete.
+On Wed, 2011-08-24 at 01:59 -0400, Christoph Hellwig wrote:
+> Return unwritten extent conversion errors to aio_complete.
+
+It might have been good to call attention to the fact that
+you were fixing it so ioend->io_error is consistently a
+negative errno value now, thereby making the above change
+possible.
+
+Are we going to drop the last argument to aio_complete() now?
+
+Anyway, this looks good, and as you privately requested
+I will commit this patch without waiting for resolution
+of issues in the other two in this series.
+
+> Skip both unwritten extent conversion and size updates if we had an I/O error
+> or the filesystem has been shut down.
 > 
-> It might have been good to call attention to the fact that
-> you were fixing it so ioend->io_error is consistently a
-> negative errno value now, thereby making the above change
-> possible.
+> Return -EIO to the aio/buffer completion handlers in case of a forced shutdown.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Indeed, freel free to fix up the commit message if you want.
+Reviewed-by: Alex Elder <aelder@sgi.com>
 
-> Are we going to drop the last argument to aio_complete() now?
-
-I don't think anything related to it changed.  The argument is passed
-on directly to userspace, and the usb gadget caller actually sets it.
-
-No idea what the point of it is.
-
-> Anyway, this looks good, and as you privately requested
-> I will commit this patch without waiting for resolution
-> of issues in the other two in this series.
-
-The other two in this series are postponed - this one just happened to
-be in the series because I found the issues while working on the other
-two.
 
 _______________________________________________
 xfs mailing list
