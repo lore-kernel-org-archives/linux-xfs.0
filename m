@@ -1,15 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8CIhdGE011458 for <xfs@oss.sgi.com>; Mon, 12 Sep 2011 13:43:39 -0500
-Subject: Re: [PATCH] xfs: avoid direct I/O write vs buffered I/O race
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110827144253.GA16381@infradead.org>
-References: <20110827144253.GA16381@infradead.org>
-Date: Mon, 12 Sep 2011 13:43:36 -0500
-Message-ID: <1315853016.2898.64.camel@doink>
+	p8CK5k37015657 for <xfs@oss.sgi.com>; Mon, 12 Sep 2011 15:05:47 -0500
+Date: Mon, 12 Sep 2011 16:05:43 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: xfs deadlock in stable kernel 3.0.4
+Message-ID: <20110912200543.GA22409@infradead.org>
+References: <1D2B34A7-7BB9-4E4E-9CA2-382C210E125F@profihost.ag>
+	<20110912152133.GA8345@infradead.org>
+	<C6515E45-5724-43DD-95A8-1F89AFE29601@profihost.ag>
 MIME-Version: 1.0
-Reply-To: aelder@sgi.com
+Content-Disposition: inline
+In-Reply-To: <C6515E45-5724-43DD-95A8-1F89AFE29601@profihost.ag>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,25 +24,20 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Stefan Priebe <s.priebe@profihost.ag>
+Cc: Christoph Hellwig <hch@infradead.org>, "xfs-masters@oss.sgi.com" <xfs-masters@oss.sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Sat, 2011-08-27 at 10:42 -0400, Christoph Hellwig wrote:
-> Currently a buffered reader or writer can add pages to the pagecache
-> while we are waiting for the iolock in xfs_file_dio_aio_write.  Prevent
-> this by re-checking mapping->nrpages after we got the iolock, and if
-> nessecary upgrade the lock to exclusive mode.  To simplify this a bit
-> only take the ilock inside of xfs_file_aio_write_checks.
+On Mon, Sep 12, 2011 at 06:46:26PM +0200, Stefan Priebe wrote:
+> > What kind of workload are you running?  Also did the workload run fine
+> > with an older kernel, and if yes which one?
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Mysql, Web, Mail, ftp ;-) yes it was with 2.6.32. I upgraded from that version.
 
-I agree with Dave, moving the ILOCK acquisition into
-xfs_file_aio_write_checks() is very nice.
 
-In any case the core change looks good.
-
-Reviewed-by: Alex Elder <aelder@sgi.com>
-
+Just curious, is this the same system that also shows the freezes
+reported to the scsi list?  If I/Os don't get completed by lower layers
+I can see how we get everything in XFS waiting on the log reservations,
+given that we never get the log tail pushed.
 
 _______________________________________________
 xfs mailing list
