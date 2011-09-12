@@ -1,19 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8C0JDUK220610 for <xfs@oss.sgi.com>; Sun, 11 Sep 2011 19:19:13 -0500
+	p8CBFHUa251609 for <xfs@oss.sgi.com>; Mon, 12 Sep 2011 06:15:17 -0500
 Received: from mail-fx0-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CAF951BC2D5B
-	for <xfs@oss.sgi.com>; Sun, 11 Sep 2011 17:19:11 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8DC171F0D7C7
+	for <xfs@oss.sgi.com>; Mon, 12 Sep 2011 04:15:15 -0700 (PDT)
 Received: from mail-fx0-f53.google.com (mail-fx0-f53.google.com
-	[209.85.161.53]) by cuda.sgi.com with ESMTP id yKAjS2Hy4Q1KDmAP
-	for <xfs@oss.sgi.com>; Sun, 11 Sep 2011 17:19:11 -0700 (PDT)
-Received: by fxh2 with SMTP id 2so970144fxh.26
-	for <xfs@oss.sgi.com>; Sun, 11 Sep 2011 17:19:10 -0700 (PDT)
-From: Grazvydas Ignotas <notasas@gmail.com>
-Subject: [PATCH] xfstests: add new getdents test
-Date: Mon, 12 Sep 2011 03:19:07 +0300
-Message-Id: <1315786747-12109-1-git-send-email-notasas@gmail.com>
+	[209.85.161.53]) by cuda.sgi.com with ESMTP id LGGk10nf8bEegAxk
+	for <xfs@oss.sgi.com>; Mon, 12 Sep 2011 04:15:15 -0700 (PDT)
+Received: by fxh2 with SMTP id 2so1420977fxh.26
+	for <xfs@oss.sgi.com>; Mon, 12 Sep 2011 04:15:15 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CADDb1s3WbZr7aqOAs13vu6Z+QOd7f+JtLyHXqhnM7foqUVar9Q@mail.gmail.com>
+References: <CADDb1s2QDk7y+JgMikoje35LviYQwzpgFihndUPuZx2VXYV4Ew@mail.gmail.com>
+	<20110910183028.GA23537@infradead.org>
+	<CADDb1s1fr8fiRMAUTvnSqpKeLGJdUPAbEfLNpwb2-iVd+mjw4w@mail.gmail.com>
+	<CADDb1s3WbZr7aqOAs13vu6Z+QOd7f+JtLyHXqhnM7foqUVar9Q@mail.gmail.com>
+Date: Mon, 12 Sep 2011 16:45:15 +0530
+Message-ID: <CADDb1s2MhVnJkauMTq7pF+C7NmwRcqKKNo_QFBaC7_CtVy+HKQ@mail.gmail.com>
+Subject: Re: XFS: Observed Crash followed by deadlock of khubd/sync/XFS
+From: Amit Sahrawat <amit.sahrawat83@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,266 +28,173 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============0864990448562178800=="
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Grazvydas Ignotas <notasas@gmail.com>, linux-btrfs@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
---===============0864990448562178800==
-Content-Type: text/plain
+Kernel Version:
+Linux version 3.0.3 (root@localhost.localdomain) (gcc version 4.4.4
+20100503 (Red Hat 4.4.4-2) (GCC) ) #5 SMP Fri Sep 9 11:00:53 IST 2011
+Target: x86
 
-The test checks if no duplicate d_off values are returned and that
-those values are seekable to the right inodes.
+XFS (sdb3): Mounting Filesystem
+XFS (sdb3): Ending clean mount
+usb 2-6: USB disconnect, device number 3
+XFS (sdb3): I/O error occurred: meta-data dev sdb3 block 0x56f159
+ ("xlog_iodone") error 5 buf count 1024
+XFS (sdb3): xfs_do_force_shutdown(0x2) called from line 891 of file
+fs/xfs/xfs_log.c.  Return address =3D 0xf7b20ae1
+XFS (sdb3): Log I/O Error Detected.  Shutting down filesystem
+XFS (sdb3): Please umount the filesystem and rectify the problem(s)
+XFS (sdb3): Unable to update superblock counters. Freespace may not be
+correct on next mount.
+XFS (=80): xfs_trans_ail_delete_bulk: attempting to delete a log item
+that is not in the AIL
+XFS (=80): xfs_do_force_shutdown(0x8) called from line 740 of file
+fs/xfs/xfs_trans_ail.c.  Return address =3D 0xf7b2dc7a
+BUG: unable to handle kernel NULL pointer dereference at 00000208
+IP: [<f7b20f73>] xfs_log_force_umount+0x1d/0x1b5 [xfs]
+*pde =3D 00000000
+Oops: 0000 [#1] SMP
+Modules linked in: vfat fat usb_storage xfs exportfs fuse sunrpc
+cpufreq_ondemand acpi_cpufreq mperf ip6t_REJECT nf_conntrack_ipv6
+nf_defrag_ipv6 ip6table_filter ip6_tables ipv6 uinput r8169 microcode
+snd_hda_codec_realtek snd_hda_intel snd_hda_codec snd_hwdep i2c_i801
+snd_seq snd_seq_device snd_pcm snd_timer snd soundcore snd_page_alloc
+mii ppdev parport_pc parport iTCO_wdt iTCO_vendor_support pcspkr i915
+drm_kms_helper drm i2c_algo_bit i2c_core video [last unloaded:
+scsi_wait_scan]
 
-Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
----
- 257                 |   56 +++++++++++++++++++++++
- 257.out             |    2 +
- group               |    1 +
- src/Makefile        |    2 +-
- src/t_dir_offset2.c |  124 +++++++++++++++++++++++++++++++++++++++++++++++++++
- 5 files changed, 184 insertions(+), 1 deletions(-)
- create mode 100755 257
- create mode 100644 257.out
- create mode 100644 src/t_dir_offset2.c
-
-diff --git a/257 b/257
-new file mode 100755
-index 0000000..fb81e07
---- /dev/null
-+++ b/257
-@@ -0,0 +1,56 @@
-+#! /bin/bash
-+#
-+# Check that no duplicate d_off values are returned and that those
-+# values are seekable. Most work is done by the C program here.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2011 Gražvydas Ignotas
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+# creator
-+owner=notasas@gmail.com
-+
-+seq=`basename $0`
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+
-+_cleanup()
-+{
-+	rm -rf $TEST_DIR/ttt
-+}
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+# get standard environment, filters and checks
-+. ./common.rc
-+. ./common.filter
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
-+
-+mkdir $TEST_DIR/ttt
-+for n in {1..168}; do
-+    touch $TEST_DIR/ttt/$n;
-+done
-+src/t_dir_offset2 $TEST_DIR/ttt
-+
-+# success, all done
-+echo "*** done"
-+rm -f $seq.full
-+status=0
-diff --git a/257.out b/257.out
-new file mode 100644
-index 0000000..ac232ec
---- /dev/null
-+++ b/257.out
-@@ -0,0 +1,2 @@
-+QA output created by 257
-+*** done
-diff --git a/group b/group
-index 0c746c8..a742495 100644
---- a/group
-+++ b/group
-@@ -370,3 +370,4 @@ deprecated
- 254 auto quick
- 255 auto quick prealloc
- 256 auto quick
-+257 dir auto quick
-diff --git a/src/Makefile b/src/Makefile
-index 91088bf..67250ee 100644
---- a/src/Makefile
-+++ b/src/Makefile
-@@ -17,7 +17,7 @@ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
- 	preallo_rw_pattern_writer ftrunc trunc fs_perms testx looptest \
- 	locktest unwritten_mmap bulkstat_unlink_test t_stripealign \
- 	bulkstat_unlink_test_modified t_dir_offset t_futimens t_immutable \
--	stale_handle pwrite_mmap_blocked fstrim
-+	stale_handle pwrite_mmap_blocked fstrim t_dir_offset2
- 
- SUBDIRS =
- 
-diff --git a/src/t_dir_offset2.c b/src/t_dir_offset2.c
-new file mode 100644
-index 0000000..1375c3b
---- /dev/null
-+++ b/src/t_dir_offset2.c
-@@ -0,0 +1,124 @@
-+/*
-+ * Copyright (c) 2011 Gražvydas Ignotas
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ */
-+
-+/*
-+ * This test checks if no duplicate d_off values are returned and
-+ * that these offsets are seekable to entry with the right inode.
-+ */
-+
-+#include <fcntl.h>
-+#include <stdio.h>
-+#include <unistd.h>
-+#include <stdint.h>
-+#include <stdlib.h>
-+#include <sys/stat.h>
-+#include <sys/syscall.h>
-+
-+struct linux_dirent64 {
-+	uint64_t	d_ino;
-+	uint64_t	d_off;
-+	unsigned short	d_reclen;
-+	unsigned char	d_type;
-+	char		d_name[0];
-+};
-+
-+#define BUF_SIZE 4096
-+#define HISTORY_LEN 1024
-+
-+static uint64_t d_off_histoty[HISTORY_LEN];
-+static uint64_t d_ino_histoty[HISTORY_LEN];
-+
-+int
-+main(int argc, char *argv[])
-+{
-+	int fd, nread;
-+	char buf[BUF_SIZE];
-+	struct linux_dirent64 *d;
-+	int bpos, total, i;
-+	off_t lret;
-+	int retval = EXIT_SUCCESS;
-+
-+	fd = open(argv[1], O_RDONLY | O_DIRECTORY);
-+	if (fd < 0) {
-+		perror("open");
-+		exit(EXIT_FAILURE);
-+	}
-+
-+	total = 0;
-+	for ( ; ; ) {
-+		nread = syscall(SYS_getdents64, fd, buf, BUF_SIZE);
-+		if (nread == -1) {
-+			perror("getdents");
-+			exit(EXIT_FAILURE);
-+		}
-+
-+		if (nread == 0)
-+			break;
-+
-+		for (bpos = 0; bpos < nread; total++) {
-+			d = (struct linux_dirent64 *) (buf + bpos);
-+
-+			if (total >= HISTORY_LEN) {
-+				fprintf(stderr, "too many files\n");
-+				break;
-+			}
-+
-+			for (i = 0; i < total; i++)
-+			{
-+				if (d_off_histoty[i] == d->d_off) {
-+					fprintf(stderr, "entries %d and %d have duplicate d_off %lld\n",
-+						i, total, (long long int)d->d_off);
-+					retval = EXIT_FAILURE;
-+				}
-+			}
-+			d_off_histoty[total] = d->d_off;
-+			d_ino_histoty[total] = d->d_ino;
-+			bpos += d->d_reclen;
-+		}
-+	}
-+
-+	/* check if seek works correctly */
-+	d = (struct linux_dirent64 *)buf;
-+	for (i = total - 1; i >= 0; i--)
-+	{
-+		lret = lseek(fd, i > 0 ? d_off_histoty[i - 1] : 0, SEEK_SET);
-+		if (lret == -1) {
-+			perror("lseek");
-+			exit(EXIT_FAILURE);
-+		}
-+
-+		nread = syscall(SYS_getdents64, fd, buf, BUF_SIZE);
-+		if (nread == -1) {
-+			perror("getdents");
-+			exit(EXIT_FAILURE);
-+		}
-+
-+		if (nread == 0) {
-+			fprintf(stderr, "getdents returned 0 on entry %d\n", i);
-+			retval = EXIT_FAILURE;
-+		}
-+
-+		if (d->d_ino != d_ino_histoty[i]) {
-+			fprintf(stderr, "entry %d has inode %lld, expected %lld\n",
-+				i, (long long int)d->d_ino, (long long int)d_ino_histoty[i]);
-+			retval = EXIT_FAILURE;
-+		}
-+	}
-+
-+	close(fd);
-+	exit(retval);
-+}
--- 
-1.7.0.4
+Pid: 2233, comm: umount Not tainted 3.0.3 #5 Hewlett-Packard HP dx2480
+MT(KL969AV)/0B08h
+EIP: 0060:[<f7b20f73>] EFLAGS: 00210202 CPU: 1
+EIP is at xfs_log_force_umount+0x1d/0x1b5 [xfs]
+EAX: f2a1b380 EBX: 000001f4 ECX: f3ccdd5c EDX: 00000000
+ESI: f2a1b380 EDI: 00000000 EBP: f3ccdd98 ESP: f3ccdd80
+DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
+Process umount (pid: 2233, ti=3Df3ccc000 task=3Df1f957f0 task.ti=3Df3ccc000)
+Stack:
+ f7b32547 f2a1b380 00000000 f2a1b380 00000008 00000000 f3ccddb0 f7b32564
+ 00000000 f2a1b000 f2a1b380 00000000 f3ccddec f7b2dc7a 000002e4 f2a1b380
+ 00000004 f7b48bbf f7b42efc f7b2364d 00000001 f3ccddf4 f2a1b004 00000000
+Call Trace:
+ [<f7b32547>] ? xfs_do_force_shutdown+0x39/0xd6 [xfs]
+ [<f7b32564>] xfs_do_force_shutdown+0x56/0xd6 [xfs]
+ [<f7b2dc7a>] xfs_trans_ail_delete_bulk+0x83/0xfa [xfs]
+ [<f7b2364d>] ? xlog_cil_push+0x2d1/0x2f6 [xfs]
+ [<f7b35623>] ? xfs_buf_iodone_work+0x14/0x23 [xfs]
+ [<f7b09d6f>] xfs_buf_iodone+0x31/0x3d [xfs]
+ [<f7b09d1b>] xfs_buf_do_callbacks+0x24/0x31 [xfs]
+ [<f7b0a5b7>] xfs_buf_iodone_callbacks+0x16f/0x1a2 [xfs]
+ [<f7b35623>] xfs_buf_iodone_work+0x14/0x23 [xfs]
+ [<f7b357ec>] xfs_buf_ioend+0x95/0xa5 [xfs]
+ [<f7b35954>] ? xfs_bioerror+0x34/0x3c [xfs]
+ [<f7b36217>] ? xfs_flush_buftarg+0x9e/0xe9 [xfs]
+ [<f7b35954>] xfs_bioerror+0x34/0x3c [xfs]
+ [<f7b36169>] xfs_bdstrat_cb+0x5f/0x6f [xfs]
+ [<f7b36217>] xfs_flush_buftarg+0x9e/0xe9 [xfs]
+ [<f7b36284>] xfs_free_buftarg+0x22/0x45 [xfs]
+ [<f7b3c390>] xfs_close_devices+0x55/0x59 [xfs]
+ [<f7b3c3e4>] xfs_fs_put_super+0x50/0x61 [xfs]
+ [<c04e1432>] generic_shutdown_super+0x52/0xb0
+ [<c04e14b2>] kill_block_super+0x22/0x5e
+ [<c04e1997>] deactivate_locked_super+0x1f/0x40
+ [<c04e21bf>] deactivate_super+0x37/0x3c
+ [<c04f40c3>] mntput_no_expire+0x114/0x11a
+ [<c04f4a2b>] sys_umount+0x26e/0x295
+ [<c04f4a64>] sys_oldumount+0x12/0x14
+ [<c07c401f>] sysenter_do_call+0x12/0x28
+Code: 05 b8 05 00 00 00 83 c4 10 5b 5e 5f 5d c3 55 89 e5 57 56 53 83
+ec 0c 3e 8d 74 26 00 89 55 f0 8b 98 18 01 00 00 89 c6 85 db 74 06 <f6>
+43 14 02 74 27 8b 86 e0 00 00 00 31 ff 83 8e cc 01 00 00 10
+EIP: [<f7b20f73>] xfs_log_force_umount+0x1d/0x1b5 [xfs] SS:ESP 0068:f3ccdd80
+CR2: 0000000000000208
+ ---[ end trace f3af361b30e84114 ]---
+------------[ cut here ]------------
+WARNING: at kernel/exit.c:909 do_exit+0x37/0x621()
+Hardware name: HP dx2480 MT(KL969AV)
+Modules linked in: vfat fat usb_storage xfs exportfs fuse sunrpc
+cpufreq_ondemand acpi_cpufreq mperf ip6t_REJECT nf_conntrack_ipv6
+nf_defrag_ipv6 ip6table_filter ip6_tables ipv6 uinput r8169 microcode
+snd_hda_codec_realtek snd_hda_intel snd_hda_codec snd_hwdep i2c_i801
+snd_seq snd_seq_device snd_pcm snd_timer snd soundcore snd_page_alloc
+mii ppdev parport_pc parport iTCO_wdt iTCO_vendor_support pcspkr i915
+drm_kms_helper drm i2c_algo_bit i2c_core video [last unloaded:
+scsi_wait_scan]
+Pid: 2233, comm: umount Tainted: G      D     3.0.3 #5
+Call Trace:
+ [<c0437f03>] warn_slowpath_common+0x6a/0x7f
+ [<c043b016>] ? do_exit+0x37/0x621
+ [<c0437f2c>] warn_slowpath_null+0x14/0x18
+ [<c043b016>] do_exit+0x37/0x621
+ [<c043840d>] ? kmsg_dump+0x3a/0xb3
+ [<c07bfd15>] oops_end+0x9d/0xa5
+ [<c042155b>] no_context+0x115/0x11f
+ [<c0421659>] __bad_area_nosemaphore+0xf4/0xfc
+ [<c04216b0>] bad_area+0x3a/0x40
+ [<c07c15db>] do_page_fault+0x227/0x376
+ [<c07c13b4>] ? spurious_fault+0xba/0xba
+ [<c07bf3d7>] error_code+0x67/0x6c
+ [<f7b20f73>] ? xfs_log_force_umount+0x1d/0x1b5 [xfs]
+ [<f7b32547>] ? xfs_do_force_shutdown+0x39/0xd6 [xfs]
+ [<f7b32564>] xfs_do_force_shutdown+0x56/0xd6 [xfs]
+ [<f7b2dc7a>] xfs_trans_ail_delete_bulk+0x83/0xfa [xfs]
+ [<f7b2364d>] ? xlog_cil_push+0x2d1/0x2f6 [xfs]
+ [<f7b35623>] ? xfs_buf_iodone_work+0x14/0x23 [xfs]
+ [<f7b09d6f>] xfs_buf_iodone+0x31/0x3d [xfs]
+ [<f7b09d1b>] xfs_buf_do_callbacks+0x24/0x31 [xfs]
+ [<f7b0a5b7>] xfs_buf_iodone_callbacks+0x16f/0x1a2 [xfs]
+ [<f7b35623>] xfs_buf_iodone_work+0x14/0x23 [xfs]
+ [<f7b357ec>] xfs_buf_ioend+0x95/0xa5 [xfs]
+ [<f7b35954>] ? xfs_bioerror+0x34/0x3c [xfs]
+ [<f7b36217>] ? xfs_flush_buftarg+0x9e/0xe9 [xfs]
+ [<f7b35954>] xfs_bioerror+0x34/0x3c [xfs]
+ [<f7b36169>] xfs_bdstrat_cb+0x5f/0x6f [xfs]
+ [<f7b36217>] xfs_flush_buftarg+0x9e/0xe9 [xfs]
+ [<f7b36284>] xfs_free_buftarg+0x22/0x45 [xfs]
+ [<f7b3c390>] xfs_close_devices+0x55/0x59 [xfs]
+ [<f7b3c3e4>] xfs_fs_put_super+0x50/0x61 [xfs]
+ [<c04e1432>] generic_shutdown_super+0x52/0xb0
+ [<c04e14b2>] kill_block_super+0x22/0x5e
+ [<c04e1997>] deactivate_locked_super+0x1f/0x40
+ [<c04e21bf>] deactivate_super+0x37/0x3c
+ [<c04f40c3>] mntput_no_expire+0x114/0x11a
+ [<c04f4a2b>] sys_umount+0x26e/0x295
+ [<c04f4a64>] sys_oldumount+0x12/0x14
+ [<c07c401f>] sysenter_do_call+0x12/0x28
+---[ end trace f3af361b30e84115 ]---
 
 
---===============0864990448562178800==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+On Mon, Sep 12, 2011 at 4:36 PM, Amit Sahrawat
+<amit.sahrawat83@gmail.com> wrote:
+> Please ignore previous message, there is formatting issue with the
+> back trace. I will post again.
+>
+> On Sun, Sep 11, 2011 at 10:16 PM, Amit Sahrawat
+> <amit.sahrawat83@gmail.com> wrote:
+>> Yes, the patch is applied and the crash is still appearing easily.
+>>
+>> On Sun, Sep 11, 2011 at 12:00 AM, Christoph Hellwig <hch@infradead.org> =
+wrote:
+>>> On Thu, Sep 08, 2011 at 04:35:28PM +0530, Amit Sahrawat wrote:
+>>>> Kernel Version: 2.6.39.4
+>>>> Target: ARM
+>>>>
+>>>> Observed while doing:
+>>>> Copy some file (any size, I tried with 10MB, 100MB) to XFS partition
+>>>> After Copy do???sync???
+>>>> Now immediately, unplug the device.
+>>>
+>>> Does this still happen with the patch below applied?
+>>>
+>>>
+>>
+>
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============0864990448562178800==--
