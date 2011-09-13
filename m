@@ -1,24 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8DFRC2f067668 for <xfs@oss.sgi.com>; Tue, 13 Sep 2011 10:27:12 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C73A71525E93
-	for <xfs@oss.sgi.com>; Tue, 13 Sep 2011 08:31:49 -0700 (PDT)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	FVlptxR3s3H1GDgz for <xfs@oss.sgi.com>;
-	Tue, 13 Sep 2011 08:31:49 -0700 (PDT)
-Date: Tue, 13 Sep 2011 11:27:06 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Code Changes [Review Request]: xfs_trans_ail_delete() gets
-	invoked with corrupted values ? Causing Crash and Deadlock.
-Message-ID: <20110913152706.GB21460@infradead.org>
-References: <CADDb1s0HwQtno3qWJd5CDriGD+m1EJ3fKihrRXuGmqayzwb_Pw@mail.gmail.com>
+	p8DGWMg5070728 for <xfs@oss.sgi.com>; Tue, 13 Sep 2011 11:32:22 -0500
+Received: from lucidpixels.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7781915933D
+	for <xfs@oss.sgi.com>; Tue, 13 Sep 2011 09:32:21 -0700 (PDT)
+Received: from lucidpixels.com (lucidpixels.com [72.73.18.11]) by cuda.sgi.com
+	with ESMTP id jdPOFaYROK1OUDbC for <xfs@oss.sgi.com>;
+	Tue, 13 Sep 2011 09:32:21 -0700 (PDT)
+Date: Tue, 13 Sep 2011 12:32:20 -0400 (EDT)
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: 3.1-rc4: spectacular kernel errors / filesystem crash
+In-Reply-To: <CAMaF-rMxTWRAO7WRdYoEM57k66MC6Vuwk1mcfgCgMO6Z+KBvzQ@mail.gmail.com>
+Message-ID: <alpine.DEB.2.02.1109131156050.7113@p34.internal.lan>
+References: <alpine.DEB.2.02.1109110511250.8626@p34.internal.lan>
+	<CAEuXFEzs1f7n5taYzupux3AtKmRcY4P0m7yjkUQA8aLyS8eujw@mail.gmail.com>
+	<1315886706.2556.11.camel@edumazet-laptop>
+	<alpine.DEB.2.02.1109130722210.21380@p34.internal.lan>
+	<CAMaF-rN-qeXBDoc9=7kwu40Wj8=G8YuPKWXPRhOuhdYX_VO34w@mail.gmail.com>
+	<alpine.DEB.2.02.1109131142010.7113@p34.internal.lan>
+	<CAMaF-rMxTWRAO7WRdYoEM57k66MC6Vuwk1mcfgCgMO6Z+KBvzQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CADDb1s0HwQtno3qWJd5CDriGD+m1EJ3fKihrRXuGmqayzwb_Pw@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,95 +29,45 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Amit Sahrawat <amit.sahrawat83@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Jon Mason <mason@myri.com>
+Cc: Eric Dumazet <eric.dumazet@gmail.com>, NetDEV list <netdev@vger.kernel.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Jesse Brandeburg <jesse.brandeburg@gmail.com>, Alan Piszcz <ap@solarrain.com>
 
-Hmm, I don't think this is the correct fix.  We should never have
-buffers still around once we unmount the log.  Can you try the patch
-below?
 
----
-From: Christoph Hellwig <hch@lst.de>
-Subject: xfs: fix buffer flushing during unmount
 
-The code to flush buffers in the umount code is a bit iffy: we first flush
-all delwri buffers out, but then might be able to queue up a new one when
-logging the sb counts.  On a normal shutdown that one would get flushed
-out when doing the synchronous superblock write in xfs_unmountfs_writesb,
-but we skip that one if the filesystem has been shut down.
+On Tue, 13 Sep 2011, Jon Mason wrote:
 
-Fix this by moving the delwri list flushing until just before unmounting
-the log, and while we're at it also remove the superflous delwri list
-and buffer lru flusing for the rt and log device that can never have
-cached or delwri buffers.
+> On Tue, Sep 13, 2011 at 10:42 AM, Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
+>>
+>>
+>> On Tue, 13 Sep 2011, Jon Mason wrote:
+>>
+>>> On Tue, Sep 13, 2011 at 9:54 AM, Justin Piszcz <jpiszcz@lucidpixels.com>
+>>> wrote:
+>>>>
+>>>>
+>>>> On Tue, 13 Sep 2011, Eric Dumazet wrote:
+>>>>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Thanks,
 
-Index: xfs/fs/xfs/xfs_mount.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_mount.c	2011-09-13 10:55:20.748087866 -0400
-+++ xfs/fs/xfs/xfs_mount.c	2011-09-13 10:56:19.108088343 -0400
-@@ -44,9 +44,6 @@
- #include "xfs_trace.h"
- 
- 
--STATIC void	xfs_unmountfs_wait(xfs_mount_t *);
--
--
- #ifdef HAVE_PERCPU_SB
- STATIC void	xfs_icsb_balance_counter(xfs_mount_t *, xfs_sb_field_t,
- 						int);
-@@ -1496,11 +1493,6 @@ xfs_unmountfs(
- 	 */
- 	xfs_log_force(mp, XFS_LOG_SYNC);
- 
--	xfs_binval(mp->m_ddev_targp);
--	if (mp->m_rtdev_targp) {
--		xfs_binval(mp->m_rtdev_targp);
--	}
--
- 	/*
- 	 * Unreserve any blocks we have so that when we unmount we don't account
- 	 * the reserved free space as used. This is really only necessary for
-@@ -1526,7 +1518,16 @@ xfs_unmountfs(
- 		xfs_warn(mp, "Unable to update superblock counters. "
- 				"Freespace may not be correct on next mount.");
- 	xfs_unmountfs_writesb(mp);
--	xfs_unmountfs_wait(mp); 		/* wait for async bufs */
-+
-+	/*
-+	 * Make sure all buffers have been flushed and completed before
-+	 * unmounting the log.
-+	 */
-+	error = xfs_flush_buftarg(mp->m_ddev_targp, 1);
-+	if (error)
-+		xfs_warn(mp, "%d busy buffers during unmount.", error);
-+	xfs_wait_buftarg(mp->m_ddev_targp);
-+
- 	xfs_log_unmount_write(mp);
- 	xfs_log_unmount(mp);
- 	xfs_uuid_unmount(mp);
-@@ -1537,16 +1538,6 @@ xfs_unmountfs(
- 	xfs_free_perag(mp);
- }
- 
--STATIC void
--xfs_unmountfs_wait(xfs_mount_t *mp)
--{
--	if (mp->m_logdev_targp != mp->m_ddev_targp)
--		xfs_wait_buftarg(mp->m_logdev_targp);
--	if (mp->m_rtdev_targp)
--		xfs_wait_buftarg(mp->m_rtdev_targp);
--	xfs_wait_buftarg(mp->m_ddev_targp);
--}
--
- int
- xfs_fs_writable(xfs_mount_t *mp)
- {
+# patch -p1 < ../0001-Fix-pointer-dereference-before-call-to-pcie_bus_conf.patch
+patching file arch/x86/pci/acpi.c
+patching file drivers/pci/hotplug/pcihp_slot.c
+patching file drivers/pci/probe.c
+# patch -p1 < ../0002-PCI-Remove-MRRS-modification-from-MPS-setting-code.patch
+patching file drivers/pci/pci.c
+patching file drivers/pci/probe.c
+#
+
+Rebooted & running with new patches for 3.1-rc4.
+Will let you know if any further issues, I wonder if this will fix
+the RCU/SLAB issues too, thanks.
+
+Justin.
 
 _______________________________________________
 xfs mailing list
