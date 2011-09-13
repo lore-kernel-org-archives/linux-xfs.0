@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8D45FVa035465 for <xfs@oss.sgi.com>; Mon, 12 Sep 2011 23:05:16 -0500
-Received: from mail-wy0-f181.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 49577158816
-	for <xfs@oss.sgi.com>; Mon, 12 Sep 2011 21:05:13 -0700 (PDT)
-Received: from mail-wy0-f181.google.com (mail-wy0-f181.google.com
-	[74.125.82.181]) by cuda.sgi.com with ESMTP id FZvzvWhkpZy3ubUs
-	for <xfs@oss.sgi.com>; Mon, 12 Sep 2011 21:05:13 -0700 (PDT)
-Received: by wyg36 with SMTP id 36so118772wyg.26
-	for <xfs@oss.sgi.com>; Mon, 12 Sep 2011 21:05:13 -0700 (PDT)
-Subject: Re: 3.1-rc4: spectacular kernel errors / filesystem crash
-From: Eric Dumazet <eric.dumazet@gmail.com>
-In-Reply-To: <CAEuXFEzs1f7n5taYzupux3AtKmRcY4P0m7yjkUQA8aLyS8eujw@mail.gmail.com>
+	p8D3xfwI035240 for <xfs@oss.sgi.com>; Mon, 12 Sep 2011 22:59:41 -0500
+Received: from mail-bw0-f53.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3044C1E8B44E
+	for <xfs@oss.sgi.com>; Mon, 12 Sep 2011 20:59:39 -0700 (PDT)
+Received: from mail-bw0-f53.google.com (mail-bw0-f53.google.com
+	[209.85.214.53]) by cuda.sgi.com with ESMTP id B31S09FVaGo0F5cb
+	for <xfs@oss.sgi.com>; Mon, 12 Sep 2011 20:59:39 -0700 (PDT)
+Received: by bkbzt12 with SMTP id zt12so117213bkb.26
+	for <xfs@oss.sgi.com>; Mon, 12 Sep 2011 20:59:39 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <alpine.DEB.2.02.1109110511250.8626@p34.internal.lan>
 References: <alpine.DEB.2.02.1109110511250.8626@p34.internal.lan>
-	<CAEuXFEzs1f7n5taYzupux3AtKmRcY4P0m7yjkUQA8aLyS8eujw@mail.gmail.com>
-Date: Tue, 13 Sep 2011 06:05:06 +0200
-Message-ID: <1315886706.2556.11.camel@edumazet-laptop>
-Mime-Version: 1.0
+Date: Mon, 12 Sep 2011 20:59:38 -0700
+Message-ID: <CAEuXFEzs1f7n5taYzupux3AtKmRcY4P0m7yjkUQA8aLyS8eujw@mail.gmail.com>
+Subject: Re: 3.1-rc4: spectacular kernel errors / filesystem crash
+From: Jesse Brandeburg <jesse.brandeburg@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,157 +25,208 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jesse Brandeburg <jesse.brandeburg@gmail.com>
-Cc: Alan Piszcz <ap@solarrain.com>, NetDEV list <netdev@vger.kernel.org>, xfs@oss.sgi.com, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-kernel@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: NetDEV list <netdev@vger.kernel.org>, Alan Piszcz <ap@solarrain.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-TGUgbHVuZGkgMTIgc2VwdGVtYnJlIDIwMTEgw6AgMjA6NTkgLTA3MDAsIEplc3NlIEJyYW5kZWJ1
-cmcgYSDDqWNyaXQgOgo+IGFkZGVkIG5ldGRldiBiZWNhdXNlIGl0IGFwcGVhcnMgdG8gc3RhcnQg
-d2l0aCBhbiBpZ2IgdHggaGFuZwo+IAo+IE9uIFN1biwgU2VwIDExLCAyMDExIGF0IDI6NDAgQU0s
-IEp1c3RpbiBQaXN6Y3ogPGpwaXN6Y3pAbHVjaWRwaXhlbHMuY29tPiB3cm90ZToKPiA+IEhpLAo+
-ID4KPiA+IE92ZXIgdGhlIHBhc3QgMjQtNDggaG91cnMgSSB3YXMgcnVubmluZyBzb21lIENQVS1p
-bnRlbnN0aXZlIGpvYnMgYW5kIHRoZXJlCj4gPiB3YXMgaGVhdnkgSS9PIG9uIHRoZSBSQUlEICg5
-NzUwLTI0aTRlICsgYSBSQUlENikuLgo+ID4KPiA+IEkgYmVsaWV2ZSBtb3N0IG9mIHRoZSBwcm9i
-bGVtIHN0YXJ0ZWQgd2hlbiBJIGluY2x1ZGVkIG1hbnkga2VybmVsIG9wdGlvbnMgYXMKPiA+IG1v
-ZHVsZXMgKGJlZm9yZSBJIG9ubHkgY29tcGlsZWQgaW4gWypdIHRoZSBkcml2ZXJzIEkgdXNlZCks
-IHRoZXJlIGFwcGVhcnMgdG8KPiA+IGhhdmUgc29tZXRoaW5nIHRvIGdvbmUgYXdyeSBpbiB0aGUg
-a2VybmVsIGFuZCB0aGVuIGFmdGVyd2FyZHMsIGRpc2tzIHN0YXJ0ZWQKPiA+IGdvaW5nIGluIGFu
-ZCBvdXQsIFhGUyBzaHV0IGRvd24sIGV0Y2VyYS4KPiA+Cj4gPiBJJ20gb3BlbmluZyBhIGNhc2Ug
-d2l0aCBMU0kgdG8gc2VlIHdoYXQgaGFwcGVuZWQgd2l0aCB0aGUgM3dhcmUgY2FyZDsKPiA+IGhv
-d2V2ZXIsIGFmdGVyIGEgcG93ZXIgY3ljbGUsIGV2ZXJ5dGhpbmcgY2FtZSBiYWNrIE9LICh0aGUg
-ZHJpdmVzIGFuZCBIVykgaXMKPiA+IHBoeXNpY2FsbHkgT0ssIGl0IGlzIHJlYnVpbGRpbmcgb250
-byB0aG9zZSB0d28gZHJpdmVzIHdpdGggQ0ZHLU9QLUZBSUwgYnV0Cj4gPiBvdGhlciB0aGFuIHRo
-YXQsIGV2ZXJ5dGhpbmcgJ3NlZW1zJyBPSywgc3RpbGwgbmVlZCB0byBkbyBhbiBmc2NrLgo+ID4K
-PiA+IFNvbWV0aGluZyB3ZW50IHdyb25nIGluIHRoZSBrZXJuZWwgYW5kIGNhdXNlZCBhIGNhc2Nh
-ZGluZyBlZmZlY3Qgb2YgZXJyb3JzLAo+ID4gdGhpcyBvY2N1cnJlZCAoSSBiZWxpZXZlKSB3aGVu
-IEkgc3RhcnRlZCB0byBydW4gYSBsb3Qgb2YgZW5jb2Rpbmcgam9iczsKPiA+IGhvd2V2ZXIsIEkg
-d2FzIGRvaW5nIGEgbG90IG9mIGRhdGEgdHJhbnNmZXIgZm9yIHRoZSBwYXN0IDI0LTQ4IGhvdXJz
-IG9uIHRoZQo+ID4gUkFJRCBhcnJheSwgdGhlIHN5c3RlbSAoc2VwYXJhdGUgU1NEL0VYVDQpIHJl
-bWFpbmVkIHVuYWZmZWN0ZWQgYnV0IG90aGVyCj4gPiB3ZWlyZCBzdHVmZiBoYXBwZW5lZCBhcyB3
-ZWxsLi4KPiA+Cj4gPiBJIHN0aWxsIHNlZSB0aGVzZSBpbiB0aGUgbG9ncyBhcyB3ZWxsIGFmdGVy
-IHRoZSByZWJvb3QgKG5vdCBvZnRlbjsgYnV0IGUuZy4sCj4gPiB0aGUgUkFJRCBjb250cm9sbGVy
-IGlzIHJlYnVpbGRpbmcgZnJvbSB0aGUgdHdvIGRyaXZlcyB3aXRoIENGRy1PUFQtRkFJTCAodGhl
-Cj4gPiBwaHlzaWNhbCBkcml2ZXMgYXJlIDEwMCUgaGVhbHRoeSk6Cj4gPgo+ID4gWyAxMDYyLjky
-NTkwNF0gM3ctc2FzIDAwMDA6ODM6MDAuMDogdnBkIHIvdyBmYWlsZWQuICBUaGlzIGlzIGxpa2Vs
-eSBhCj4gPiBmaXJtd2FyZSBidWcgb24gdGhpcyBkZXZpY2UuICBDb250YWN0IHRoZSBjYXJkIHZl
-bmRvciBmb3IgYSBmaXJtd2FyZSB1cGRhdGUuCj4gPgo+ID4gU28sIG15IHBsYW46Cj4gPgo+ID4g
-MS4gUmVwb3J0IHRoaXMgZXJyb3IgdG8gTEtNTCtYRlMgbWFpbGluZyBsaXN0cy4KPiA+IDIuIE9w
-ZW4gY2FzZSB3aXRoIExTSSBzdXBwb3J0Lgo+ID4gMy4gUmVjb21waWxlIHRoZSBrZXJuZWwgaG93
-IEkgdXNlZCBmb3IgbWFueSB5ZWFycyBbb25seSBjb21waWxlIGluIG9wdGlvbnMKPiA+ICAgdGhh
-dCB5b3UgbmVlZCBbKl0gYW5kIGRvIG5vdCBjb21waWxlIGRyaXZlcnMgYXMgbW9kdWxlc10KPiA+
-IDQuIFJlYm9vdCBMaW51eCBzeXN0ZW1zIGFuZCBzZWUgaWYgdGhpcyByZWN1cnMgYWdhaW4gdW5k
-ZXIgdGhlIHNhbWUKPiA+ICAgd29ya2xvYWQsIGFmdGVyIHRoZSBSQUlEIGlzIGRvbmUgcmVidWls
-ZGluZy4KPiA+Cj4gPiAtLQo+ID4KPiA+IFNvIHRoZXNlIGVycm9ycyBhcmUgcXVpdGUgbG9uZywg
-d2lsbCB1cGxvYWQgdG8gSFRUUCBhbmQgcGFzdGUgdGhlIHJlbGV2YW50Cj4gPiBiaXRzIGJlbG93
-Lgo+ID4KPiA+IC0tCj4gPgo+ID4gVVJMcyBmb3IgRlVMTCBsb2dzOgo+ID4KPiA+IDEuIHR3X2Ns
-aSAvY1ggc2hvdyBkaWFnOgo+ID4gICBodHRwOi8vaG9tZS5jb21jYXN0Lm5ldC9+anBpc3pjei8y
-MDExMDkxMS9zaG93X2RpYWcudHh0Cj4gPgo+ID4gMi4gRnVsbCBrZXJuZWwgbG9nIChhbmQgcHJl
-dmlvdXMgbW9ybmluZyBvZiBrZXJuZWwgY3Jhc2gpCj4gPiAgIGh0dHA6Ly9ob21lLmNvbWNhc3Qu
-bmV0L35qcGlzemN6LzIwMTEwOTExL2tlcm4ubG9nLnR4dAo+ID4KPiA+IDMuIHR3X2NsaSAvY1gg
-c2hvdyBhbGwKPiA+ICAgaHR0cDovL2hvbWUuY29tY2FzdC5uZXQvfmpwaXN6Y3ovMjAxMTA5MTEv
-Y2ZnLWZhaWwudHh0Cj4gPgo+ID4gLS0KPiA+Cj4gPiBTdW1tYXJ5ICh3aGF0IHNlZW1zIHRvIGhh
-dmUgb2NjdXJyZWQsIGhhdmUgbm90IGRvbmUgYSBmdWxsIGFuYWx5c2lzIHlldCkKPiA+Cj4gPiAx
-LiAzd2FyZSBjYXJkIGZyZWFrZWQgb3V0IGR1ZSB0byBrZXJuZWwvUkNVL0FQSUMoPykgZXJyb3Jz
-Cj4gPgo+ID4gMi4gVGhlbiwgdGhlIHRpbWUgc291cmNlIHdlbnQgdW5zdGFibGUgKHRoaXMgaGFw
-cGVucyB3aXRoIHdlaXJkIGtlcm5lbCBidWdzCj4gPiAgIG9uIG1hbnkgZGlmZmVyZW50IGhvc3Rz
-LCBJIGhhdmUgc2VlbiB0aGlzIG92ZXIgdGltZSkuCj4gPgo+ID4gMy4gVGhlbiwgb24gdGhlIDN3
-YXJkIGNhcmRlLCBkcml2ZXMgc3RhcnRlZCBsZWF2aW5nIGFuZCBiZWluZyByZS1pbnNlcnRlZAo+
-ID4gICBieSB0aGVtc2V2bGVzLCBYRlMgd2VudCBvZmYtbGluZSB0byBwcm90ZWN0IHRoZSBmaWxl
-c3lzdGVtIGR1ZSB0byB0aGUKPiA+ICAgM3dhcmUgaXNzdWVzCj4gPgo+ID4gLS0KPiA+Cj4gPiAz
-d2FyZS9SQUlELS0gSW50ZXJlc3RpbmcgZXJyb3JzOgo+ID4KPiA+IEkndmUgbmV2ZXIgc2VlbiB0
-aGlzIGJlZm9yZSBvbiBhIDN3YXJlIFJBSUQgY29udHJvbGxlciwgYXQgbGVhc3QgZnJvbSB3aGF0
-Cj4gPiBJIGNhbiByZW1lbWJlciBhbmQgSSd2ZSBiZWVuIHVzaW5nIDN3YXJlIGNhcmRzIGZvciBt
-YW55IHllYXJzLi4KPiA+Cj4gPiBwMiAgICBDRkctT1AtRkFJTCAgICAtICAgIDIuNzMgVEIgICBT
-QVRBICAyICAgLSAgICAgICAgICAgIEhpdGFjaGkKPiA+IEhEUzcyMzAzMEFMIHAzICAgIENGRy1P
-UC1GQUlMICAgIC0gICAgMi43MyBUQiAgIFNBVEEgIDMgICAtCj4gPiAgSGl0YWNoaSBIRFM3MjMw
-MzBBTAo+ID4KPiA+IC0tCj4gPgo+ID4gS2VybmVsL0VSUk9SUzoKPiA+Cj4gPiBGV0lXIGl0IGFs
-bCBzZWVtIHRvIHN0YXJ0IGR1cmluZyBhbiBlbmNvZGluZyBqb2IgYXJvdW5kIDIxOjAwOgo+ID4K
-PiA+IFNlcCAxMCAxODowMDowMCBwMzQga2VybmVsOiBbNTIwNDI3LjE0MzA1NF0gaXhnYmUgMDAw
-MDowMzowMC4wOiBldGg2OiBOSUMKPiA+IExpbmsgaXMgRG93bgo+ID4gU2VwIDEwIDE5OjIwOjA0
-IHAzNCBrZXJuZWw6IFs1MjUyMjMuMjU2MDk4XSAzdy1zYXM6IHNjc2kxOiBBRU46IElORk8KPiA+
-ICgweDA0OjB4MDAyQik6IFZlcmlmeSBjb21wbGV0ZWQ6dW5pdD0wLgo+ID4gU2VwIDEwIDIwOjU5
-OjM5IHAzNCBrZXJuZWw6IFs1MzExODkuNjcxMzYxXSAtLS0tLS0tLS0tLS1bIGN1dCBoZXJlCj4g
-PiBdLS0tLS0tLS0tLS0tCj4gPiBTZXAgMTAgMjA6NTk6MzkgcDM0IGtlcm5lbDogWzUzMTE4OS42
-NzEzNzZdIFdBUk5JTkc6IGF0Cj4gPiBuZXQvc2NoZWQvc2NoX2dlbmVyaWMuYzoyNTUgZGV2X3dh
-dGNoZG9nKzB4MjNmLzB4MjUwKCkKPiA+IFNlcCAxMCAyMDo1OTozOSBwMzQga2VybmVsOiBbNTMx
-MTg5LjY3MTM3OF0gSGFyZHdhcmUgbmFtZTogWDhEVEgtaS82L2lGLzZGCj4gPiBTZXAgMTAgMjA6
-NTk6MzkgcDM0IGtlcm5lbDogWzUzMTE4OS42NzEzODBdIE5FVERFViBXQVRDSERPRzogZXRoMSAo
-aWdiKToKPiA+IHRyYW5zbWl0IHF1ZXVlIDUgdGltZWQgb3V0Cj4gPiBTZXAgMTAgMjA6NTk6Mzkg
-cDM0IGtlcm5lbDogWzUzMTE4OS42NzEzODJdIE1vZHVsZXMgbGlua2VkIGluOiBkbV9tb2QKPiA+
-IHRjcF9kaWFnIHBhcnBvcnRfcGMgcHBkZXYgbHAgcGFycG9ydCBpbmV0X2RpYWcgcGwyMzAzIGZ0
-ZGlfc2lvIHNuZF91c2JfYXVkaW8KPiA+IHNuZF9wY21fb3NzIHNuZF9taXhlcl9vc3Mgc25kX3Bj
-bSBzbmRfcGFnZV9hbGxvYyBzbmRfaHdkZXAgc25kX3VzYm1pZGlfbGliCj4gPiBzbmRfc2VxX2R1
-bW15IHNuZF9zZXFfb3NzIHNuZF9zZXFfbWlkaSBzbmRfcmF3bWlkaSBzbmRfc2VxX21pZGlfZXZl
-bnQKPiA+IHNuZF9zZXEgc25kX3RpbWVyIHNuZF9zZXFfZGV2aWNlIHNuZCBzb3VuZGNvcmUgdWIg
-Y2RjX2FjbSB1c2JzZXJpYWwgam95ZGV2Cj4gPiBzZXJpb19yYXcgbm91dmVhdSB0dG0gZHJtX2tt
-c19oZWxwZXIgZHJtIGFncGdhcnQgaTJjX2FsZ29fYml0IG14bV93bWkgd21pCj4gPiBpN2NvcmVf
-ZWRhYyBlZGFjX2NvcmUgdmlkZW8KPiA+IFNlcCAxMCAyMDo1OTozOSBwMzQga2VybmVsOiBbNTMx
-MTg5LjY3MTQxNF0gUGlkOiA4MywgY29tbToga3NvZnRpcnFkLzE5IE5vdAo+ID4gdGFpbnRlZCAz
-LjEuMC1yYzQgIzEKPiA+IFNlcCAxMCAyMDo1OTozOSBwMzQga2VybmVsOiBbNTMxMTg5LjY3MTQx
-NV0gQ2FsbCBUcmFjZToKPiA+IFNlcCAxMCAyMDo1OTozOSBwMzQga2VybmVsOiBbNTMxMTg5LjY3
-MTQyNF0gIFs8ZmZmZmZmZmY4MTAzNzliYT5dCj4gPiB3YXJuX3Nsb3dwYXRoX2NvbW1vbisweDdh
-LzB4YjAKPiA+IFNlcCAxMCAyMDo1OTozOSBwMzQga2VybmVsOiBbNTMxMTg5LjY3MTQyN10gIFs8
-ZmZmZmZmZmY4MTAzN2E5MT5dCj4gPiB3YXJuX3Nsb3dwYXRoX2ZtdCsweDQxLzB4NTAKPiA+IFNl
-cCAxMCAyMDo1OTozOSBwMzQga2VybmVsOiBbNTMxMTg5LjY3MTQzM10gIFs8ZmZmZmZmZmY4MTVk
-Nzg3ND5dID8KPiA+IHNjaGVkdWxlKzB4MmU0LzB4OTUwCj4gPiBTZXAgMTAgMjA6NTk6MzkgcDM0
-IGtlcm5lbDogWzUzMTE4OS42NzE0MzZdICBbPGZmZmZmZmZmODE0ZTVhZmY+XQo+ID4gZGV2X3dh
-dGNoZG9nKzB4MjNmLzB4MjUwCj4gPiBTZXAgMTAgMjA6NTk6MzkgcDM0IGtlcm5lbDogWzUzMTE4
-OS42NzE0NDBdICBbPGZmZmZmZmZmODEwNDM4NzI+XQo+ID4gcnVuX3RpbWVyX3NvZnRpcnErMHhm
-Mi8weDIyMAo+ID4gU2VwIDEwIDIwOjU5OjM5IHAzNCBrZXJuZWw6IFs1MzExODkuNjcxNDQzXSAg
-WzxmZmZmZmZmZjgxNGU1OGMwPl0gPwo+ID4gcWRpc2NfcmVzZXQrMHg1MC8weDUwCj4gPiBTZXAg
-MTAgMjA6NTk6MzkgcDM0IGtlcm5lbDogWzUzMTE4OS42NzE0NDZdICBbPGZmZmZmZmZmODEwM2Qy
-MDg+XQo+ID4gX19kb19zb2Z0aXJxKzB4OTgvMHgxMjAKPiA+IFNlcCAxMCAyMDo1OTozOSBwMzQg
-a2VybmVsOiBbNTMxMTg5LjY3MTQ0OF0gIFs8ZmZmZmZmZmY4MTAzZDM0NT5dCj4gPiBydW5fa3Nv
-ZnRpcnFkKzB4YjUvMHgxNjAKPiA+IFNlcCAxMCAyMDo1OTozOSBwMzQga2VybmVsOiBbNTMxMTg5
-LjY3MTQ1NF0gIFs8ZmZmZmZmZmY4MTAzZDI5MD5dID8KPiA+IF9fZG9fc29mdGlycSsweDEyMC8w
-eDEyMAo+ID4gU2VwIDEwIDIwOjU5OjM5IHAzNCBrZXJuZWw6IFs1MzExODkuNjcxNDU4XSAgWzxm
-ZmZmZmZmZjgxMDUyM2I3Pl0KPiA+IGt0aHJlYWQrMHg4Ny8weDkwCj4gPiBTZXAgMTAgMjA6NTk6
-MzkgcDM0IGtlcm5lbDogWzUzMTE4OS42NzE0NjJdICBbPGZmZmZmZmZmODE1ZGJkYjQ+XQo+ID4g
-a2VybmVsX3RocmVhZF9oZWxwZXIrMHg0LzB4MTAKPiA+IFNlcCAxMCAyMDo1OTozOSBwMzQga2Vy
-bmVsOiBbNTMxMTg5LjY3MTQ2NV0gIFs8ZmZmZmZmZmY4MTA1MjMzMD5dID8KPiA+IGt0aHJlYWRf
-d29ya2VyX2ZuKzB4MTMwLzB4MTMwCj4gPiBTZXAgMTAgMjA6NTk6MzkgcDM0IGtlcm5lbDogWzUz
-MTE4OS42NzE0NjddICBbPGZmZmZmZmZmODE1ZGJkYjA+XSA/Cj4gPiBnc19jaGFuZ2UrMHhiLzB4
-Ygo+ID4gU2VwIDEwIDIwOjU5OjM5IHAzNCBrZXJuZWw6IFs1MzExODkuNjcxNDY4XSAtLS1bIGVu
-ZCB0cmFjZSA1NTNkZmU3MzFmY2U5MWJhCj4gPiBdLS0tCj4gPiBTZXAgMTAgMjA6NTk6MzkgcDM0
-IGtlcm5lbDogWzUzMTE4OS42NzE0NzhdIGlnYiAwMDAwOjAxOjAwLjE6IGV0aDE6IFJlc2V0Cj4g
-PiBhZGFwdGVyCj4gPiBTZXAgMTAgMjA6NTk6NDIgcDM0IGtlcm5lbDogWzUzMTE5Mi44MjYwNThd
-IGlnYjogZXRoMSBOSUMgTGluayBpcyBVcCAxMDAwCj4gPiBNYnBzIEZ1bGwgRHVwbGV4LCBGbG93
-IENvbnRyb2w6IFJYL1RYCj4gPiBTZXAgMTAgMjE6MDA6MDAgcDM0IGtlcm5lbDogWzUzMTIxMC4w
-MzQ1MDZdIEJVRzogc29mdCBsb2NrdXAgLSBDUFUjMCBzdHVjawo+ID4gZm9yIDIycyEgW2tzd2Fw
-ZDA6OTQ3XQo+ID4KPiA+IC0tCj4gPgo+ID4gVVJMcyBmb3IgRlVMTCBsb2dzOgo+ID4KPiA+IDEu
-IHR3X2NsaSAvY1ggc2hvdyBkaWFnOgo+ID4gICBodHRwOi8vaG9tZS5jb21jYXN0Lm5ldC9+anBp
-c3pjei8yMDExMDkxMS9zaG93X2RpYWcudHh0Cj4gPgo+ID4gMi4gRnVsbCBrZXJuZWwgbG9nIChh
-bmQgcHJldmlvdXMgbW9ybmluZyBvZiBrZXJuZWwgY3Jhc2gpCj4gPiAgIGh0dHA6Ly9ob21lLmNv
-bWNhc3QubmV0L35qcGlzemN6LzIwMTEwOTExL2tlcm4ubG9nLnR4dAo+ID4KPiA+IDMuIHR3X2Ns
-aSAvY1ggc2hvdyBhbGwKPiA+ICAgaHR0cDovL2hvbWUuY29tY2FzdC5uZXQvfmpwaXN6Y3ovMjAx
-MTA5MTEvY2ZnLWZhaWwudHh0Cj4gPgo+ID4gLS0KPiA+Cj4gPiBDdXJyZW50bHkuLi4KPiA+Cj4g
-PiBBZnRlciBhbGwgb2YgdGhpcyBoYXBwZW5lZCwgSSBzdG9wcGVkIGFsbCBJL08gb24gdGhlIHN5
-c3RlbS9hbGwgcHJvY2Vzc2VzLAo+ID4gZXRjCj4gPiBJIHNodXRkb3duIHRoZSBob3N0LCByZW1v
-dmVkIHRoZSBwb3dlciwgcG93ZXJlZCBpdCBiYWNrIHVwLCBub3cgdGhlIGRyaXZlcwo+ID4gdGhh
-dCBzaG93ZWQgQ0ZHLU9QLUZBSUwgYmVmb3JlIG5vdyBzaG93IGFzIFJFQlVJTERJTkcsIEkgYW0g
-d2FpdGluZyBmb3IgdGhlbQo+ID4gdG8gcmVidWlsZCBiZWZvcmUgZG9pbmcgYW55dGhpbmcgZWxz
-ZS4KPiA+Cj4gPiBKdXN0aW4uCj4gPgo+ID4KClBsZWFzZSBKdXN0aW4gbWFrZSBzdXJlIHlvdSBw
-dWxsZWQgY29tbWl0IAoKY29tbWl0IGVkMjg4OGU5MDZiNTY3NjliNGZmYWJiOWM1NzcxOTA0Mzhh
-YTY4YjgKQXV0aG9yOiBKb24gTWFzb24gPG1hc29uQG15cmkuY29tPgpEYXRlOiAgIFRodSBTZXAg
-OCAxNjo0MToxOCAyMDExIC0wNTAwCgogICAgUENJOiBSZW1vdmUgTVJSUyBtb2RpZmljYXRpb24g
-ZnJvbSBNUFMgc2V0dGluZyBjb2RlCiAgICAKICAgIE1vZGlmeWluZyB0aGUgTWF4aW11bSBSZWFk
-IFJlcXVlc3QgU2l6ZSB0byAwICh2YWx1ZSBvZiAxMjhCeXRlcykgaGFzCiAgICBtYXNzaXZlIG5l
-Z2F0aXZlIHJhbWlmaWNhdGlvbnMgb24gc29tZSBkZXZpY2VzLiAgV2l0aG91dCBrbm93aW5nIHdo
-aWNoCiAgICBkZXZpY2VzIGhhdmUgdGhpcyBpc3N1ZSwgZG8gbm90IG1vZGlmeSBmcm9tIHRoZSBk
-ZWZhdWx0IHZhbHVlIHdoZW4KICAgIHdhbGtpbmcgdGhlIFBDSS1FIGJ1cyBpbiBwY2llX2J1c19z
-YWZlIG1vZGUuICBBbHNvLCBtYWtlIHBjaWVfYnVzX3NhZmUKICAgIHRoZSBkZWZhdWx0IHByb2Nl
-ZHVyZS4KICAgIAogICAgVGVzdGVkLWJ5OiBTdmVuIFNjaG5lbGxlIDxzdmVuc0BzdGFja2ZyYW1l
-Lm9yZz4KICAgIFRlc3RlZC1ieTogU2ltb24gS2lyYnkgPHNpbUBob3N0d2F5LmNhPgogICAgVGVz
-dGVkLWJ5OiBTdGVwaGVuIE0uIENhbWVyb24gPHNjYW1lcm9uQGJlYXJkb2cuY2NlLmhwLmNvbT4K
-ICAgIFJlcG9ydGVkLWFuZC10ZXN0ZWQtYnk6IEVyaWMgRHVtYXpldCA8ZXJpYy5kdW1hemV0QGdt
-YWlsLmNvbT4KICAgIFJlcG9ydGVkLWFuZC10ZXN0ZWQtYnk6IE5pZWxzIE9sZSBTYWxzY2hlaWRl
-ciA8bmllbHNfb2xlQHNhbHNjaGVpZGVyLW9ubGluZS4KICAgIFJlZmVyZW5jZXM6IGh0dHBzOi8v
-YnVnemlsbGEua2VybmVsLm9yZy9zaG93X2J1Zy5jZ2k/aWQ9NDIxNjIKICAgIFNpZ25lZC1vZmYt
-Ynk6IEpvbiBNYXNvbiA8bWFzb25AbXlyaS5jb20+CiAgICBBY2tlZC1ieTogSmVzc2UgQmFybmVz
-IDxqYmFybmVzQHZpcnR1b3VzZ2Vlay5vcmc+CiAgICBTaWduZWQtb2ZmLWJ5OiBMaW51cyBUb3J2
-YWxkcyA8dG9ydmFsZHNAbGludXgtZm91bmRhdGlvbi5vcmc+CgoKX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNn
-aS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+added netdev because it appears to start with an igb tx hang
+
+On Sun, Sep 11, 2011 at 2:40 AM, Justin Piszcz <jpiszcz@lucidpixels.com> wr=
+ote:
+> Hi,
+>
+> Over the past 24-48 hours I was running some CPU-intenstive jobs and there
+> was heavy I/O on the RAID (9750-24i4e + a RAID6)..
+>
+> I believe most of the problem started when I included many kernel options=
+ as
+> modules (before I only compiled in [*] the drivers I used), there appears=
+ to
+> have something to gone awry in the kernel and then afterwards, disks star=
+ted
+> going in and out, XFS shut down, etcera.
+>
+> I'm opening a case with LSI to see what happened with the 3ware card;
+> however, after a power cycle, everything came back OK (the drives and HW)=
+ is
+> physically OK, it is rebuilding onto those two drives with CFG-OP-FAIL but
+> other than that, everything 'seems' OK, still need to do an fsck.
+>
+> Something went wrong in the kernel and caused a cascading effect of error=
+s,
+> this occurred (I believe) when I started to run a lot of encoding jobs;
+> however, I was doing a lot of data transfer for the past 24-48 hours on t=
+he
+> RAID array, the system (separate SSD/EXT4) remained unaffected but other
+> weird stuff happened as well..
+>
+> I still see these in the logs as well after the reboot (not often; but e.=
+g.,
+> the RAID controller is rebuilding from the two drives with CFG-OPT-FAIL (=
+the
+> physical drives are 100% healthy):
+>
+> [ 1062.925904] 3w-sas 0000:83:00.0: vpd r/w failed. =A0This is likely a
+> firmware bug on this device. =A0Contact the card vendor for a firmware up=
+date.
+>
+> So, my plan:
+>
+> 1. Report this error to LKML+XFS mailing lists.
+> 2. Open case with LSI support.
+> 3. Recompile the kernel how I used for many years [only compile in options
+> =A0 that you need [*] and do not compile drivers as modules]
+> 4. Reboot Linux systems and see if this recurs again under the same
+> =A0 workload, after the RAID is done rebuilding.
+>
+> --
+>
+> So these errors are quite long, will upload to HTTP and paste the relevant
+> bits below.
+>
+> --
+>
+> URLs for FULL logs:
+>
+> 1. tw_cli /cX show diag:
+> =A0 http://home.comcast.net/~jpiszcz/20110911/show_diag.txt
+>
+> 2. Full kernel log (and previous morning of kernel crash)
+> =A0 http://home.comcast.net/~jpiszcz/20110911/kern.log.txt
+>
+> 3. tw_cli /cX show all
+> =A0 http://home.comcast.net/~jpiszcz/20110911/cfg-fail.txt
+>
+> --
+>
+> Summary (what seems to have occurred, have not done a full analysis yet)
+>
+> 1. 3ware card freaked out due to kernel/RCU/APIC(?) errors
+>
+> 2. Then, the time source went unstable (this happens with weird kernel bu=
+gs
+> =A0 on many different hosts, I have seen this over time).
+>
+> 3. Then, on the 3ward carde, drives started leaving and being re-inserted
+> =A0 by themsevles, XFS went off-line to protect the filesystem due to the
+> =A0 3ware issues
+>
+> --
+>
+> 3ware/RAID-- Interesting errors:
+>
+> I've never seen this before on a 3ware RAID controller, at least from what
+> I can remember and I've been using 3ware cards for many years..
+>
+> p2 =A0 =A0CFG-OP-FAIL =A0 =A0- =A0 =A02.73 TB =A0 SATA =A02 =A0 - =A0 =A0=
+ =A0 =A0 =A0 =A0Hitachi
+> HDS723030AL p3 =A0 =A0CFG-OP-FAIL =A0 =A0- =A0 =A02.73 TB =A0 SATA =A03 =
+=A0 -
+> =A0Hitachi HDS723030AL
+>
+> --
+>
+> Kernel/ERRORS:
+>
+> FWIW it all seem to start during an encoding job around 21:00:
+>
+> Sep 10 18:00:00 p34 kernel: [520427.143054] ixgbe 0000:03:00.0: eth6: NIC
+> Link is Down
+> Sep 10 19:20:04 p34 kernel: [525223.256098] 3w-sas: scsi1: AEN: INFO
+> (0x04:0x002B): Verify completed:unit=3D0.
+> Sep 10 20:59:39 p34 kernel: [531189.671361] ------------[ cut here
+> ]------------
+> Sep 10 20:59:39 p34 kernel: [531189.671376] WARNING: at
+> net/sched/sch_generic.c:255 dev_watchdog+0x23f/0x250()
+> Sep 10 20:59:39 p34 kernel: [531189.671378] Hardware name: X8DTH-i/6/iF/6F
+> Sep 10 20:59:39 p34 kernel: [531189.671380] NETDEV WATCHDOG: eth1 (igb):
+> transmit queue 5 timed out
+> Sep 10 20:59:39 p34 kernel: [531189.671382] Modules linked in: dm_mod
+> tcp_diag parport_pc ppdev lp parport inet_diag pl2303 ftdi_sio snd_usb_au=
+dio
+> snd_pcm_oss snd_mixer_oss snd_pcm snd_page_alloc snd_hwdep snd_usbmidi_lib
+> snd_seq_dummy snd_seq_oss snd_seq_midi snd_rawmidi snd_seq_midi_event
+> snd_seq snd_timer snd_seq_device snd soundcore ub cdc_acm usbserial joydev
+> serio_raw nouveau ttm drm_kms_helper drm agpgart i2c_algo_bit mxm_wmi wmi
+> i7core_edac edac_core video
+> Sep 10 20:59:39 p34 kernel: [531189.671414] Pid: 83, comm: ksoftirqd/19 N=
+ot
+> tainted 3.1.0-rc4 #1
+> Sep 10 20:59:39 p34 kernel: [531189.671415] Call Trace:
+> Sep 10 20:59:39 p34 kernel: [531189.671424] =A0[<ffffffff810379ba>]
+> warn_slowpath_common+0x7a/0xb0
+> Sep 10 20:59:39 p34 kernel: [531189.671427] =A0[<ffffffff81037a91>]
+> warn_slowpath_fmt+0x41/0x50
+> Sep 10 20:59:39 p34 kernel: [531189.671433] =A0[<ffffffff815d7874>] ?
+> schedule+0x2e4/0x950
+> Sep 10 20:59:39 p34 kernel: [531189.671436] =A0[<ffffffff814e5aff>]
+> dev_watchdog+0x23f/0x250
+> Sep 10 20:59:39 p34 kernel: [531189.671440] =A0[<ffffffff81043872>]
+> run_timer_softirq+0xf2/0x220
+> Sep 10 20:59:39 p34 kernel: [531189.671443] =A0[<ffffffff814e58c0>] ?
+> qdisc_reset+0x50/0x50
+> Sep 10 20:59:39 p34 kernel: [531189.671446] =A0[<ffffffff8103d208>]
+> __do_softirq+0x98/0x120
+> Sep 10 20:59:39 p34 kernel: [531189.671448] =A0[<ffffffff8103d345>]
+> run_ksoftirqd+0xb5/0x160
+> Sep 10 20:59:39 p34 kernel: [531189.671454] =A0[<ffffffff8103d290>] ?
+> __do_softirq+0x120/0x120
+> Sep 10 20:59:39 p34 kernel: [531189.671458] =A0[<ffffffff810523b7>]
+> kthread+0x87/0x90
+> Sep 10 20:59:39 p34 kernel: [531189.671462] =A0[<ffffffff815dbdb4>]
+> kernel_thread_helper+0x4/0x10
+> Sep 10 20:59:39 p34 kernel: [531189.671465] =A0[<ffffffff81052330>] ?
+> kthread_worker_fn+0x130/0x130
+> Sep 10 20:59:39 p34 kernel: [531189.671467] =A0[<ffffffff815dbdb0>] ?
+> gs_change+0xb/0xb
+> Sep 10 20:59:39 p34 kernel: [531189.671468] ---[ end trace 553dfe731fce91=
+ba
+> ]---
+> Sep 10 20:59:39 p34 kernel: [531189.671478] igb 0000:01:00.1: eth1: Reset
+> adapter
+> Sep 10 20:59:42 p34 kernel: [531192.826058] igb: eth1 NIC Link is Up 1000
+> Mbps Full Duplex, Flow Control: RX/TX
+> Sep 10 21:00:00 p34 kernel: [531210.034506] BUG: soft lockup - CPU#0 stuck
+> for 22s! [kswapd0:947]
+>
+> --
+>
+> URLs for FULL logs:
+>
+> 1. tw_cli /cX show diag:
+> =A0 http://home.comcast.net/~jpiszcz/20110911/show_diag.txt
+>
+> 2. Full kernel log (and previous morning of kernel crash)
+> =A0 http://home.comcast.net/~jpiszcz/20110911/kern.log.txt
+>
+> 3. tw_cli /cX show all
+> =A0 http://home.comcast.net/~jpiszcz/20110911/cfg-fail.txt
+>
+> --
+>
+> Currently...
+>
+> After all of this happened, I stopped all I/O on the system/all processes,
+> etc
+> I shutdown the host, removed the power, powered it back up, now the drives
+> that showed CFG-OP-FAIL before now show as REBUILDING, I am waiting for t=
+hem
+> to rebuild before doing anything else.
+>
+> Justin.
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at =A0http://www.tux.org/lkml/
+>
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
