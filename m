@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8D64dxC042702 for <xfs@oss.sgi.com>; Tue, 13 Sep 2011 01:04:39 -0500
-Received: from server655-han.de-nserver.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4CFC2159079
-	for <xfs@oss.sgi.com>; Mon, 12 Sep 2011 23:04:37 -0700 (PDT)
-Received: from server655-han.de-nserver.de (server655-han.de-nserver.de
-	[85.158.177.45]) by cuda.sgi.com with ESMTP id 9VIKnzhP8vFdN68w
-	for <xfs@oss.sgi.com>; Mon, 12 Sep 2011 23:04:37 -0700 (PDT)
-Message-ID: <4E6EF274.7050007@profihost.ag>
-Date: Tue, 13 Sep 2011 08:04:36 +0200
-From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+	p8DC7SZ5058962 for <xfs@oss.sgi.com>; Tue, 13 Sep 2011 07:07:28 -0500
+Received: from mail-fx0-f53.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9CA68159C62
+	for <xfs@oss.sgi.com>; Tue, 13 Sep 2011 05:07:26 -0700 (PDT)
+Received: from mail-fx0-f53.google.com (mail-fx0-f53.google.com
+	[209.85.161.53]) by cuda.sgi.com with ESMTP id sJpKC7BxVZ7Cmep7
+	for <xfs@oss.sgi.com>; Tue, 13 Sep 2011 05:07:26 -0700 (PDT)
+Received: by fxh2 with SMTP id 2so493407fxh.26
+	for <xfs@oss.sgi.com>; Tue, 13 Sep 2011 05:07:26 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: xfs deadlock in stable kernel 3.0.4
-References: <1D2B34A7-7BB9-4E4E-9CA2-382C210E125F@profihost.ag>
-	<20110912152133.GA8345@infradead.org>
-	<C6515E45-5724-43DD-95A8-1F89AFE29601@profihost.ag>
-	<20110912200543.GA22409@infradead.org>
-In-Reply-To: <20110912200543.GA22409@infradead.org>
+Date: Tue, 13 Sep 2011 17:37:25 +0530
+Message-ID: <CADDb1s0HwQtno3qWJd5CDriGD+m1EJ3fKihrRXuGmqayzwb_Pw@mail.gmail.com>
+Subject: =?windows-1252?Q?Code_Changes_=5BReview_Request=5D=3A_xfs=5Ftrans=5Fail=5Fdelete=28?=
+	=?windows-1252?Q?=29_gets_invoked_with_corrupted_values_=96_Causing_Crash_and_D?=
+	=?windows-1252?Q?eadlock=2E?=
+From: Amit Sahrawat <amit.sahrawat83@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,89 +25,109 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "xfs-masters@oss.sgi.com" <xfs-masters@oss.sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com
 
-Hi,
+Architecture: ARM
+Kernel: 2.6.38.13 (observed on 3.0.3 also)
+Test Case: Unplug device during umount
 
-> On Mon, Sep 12, 2011 at 06:46:26PM +0200, Stefan Priebe wrote:
->>> What kind of workload are you running?  Also did the workload run fine
->>> with an older kernel, and if yes which one?
->>
->> Mysql, Web, Mail, ftp ;-) yes it was with 2.6.32. I upgraded from that version.
->
-> Just curious, is this the same system that also shows the freezes
-> reported to the scsi list?  If I/Os don't get completed by lower layers
-> I can see how we get everything in XFS waiting on the log reservations,
-> given that we never get the log tail pushed.
+BackTrace:
+Unable to handle kernel NULL pointer dereference at virtual address 00000023
+Process umount (pid: 220, stack limit =3D 0xe45f22e8)
+Backtrace:
+(xfs_log_move_tail+0x0/0x280) from [<c01ac3b0>]
+(xfs_trans_ail_delete+0xbc/0x17c)
+(xfs_trans_ail_delete+0x0/0x17c) from [<c01830c0>] (xfs_buf_iodone+0x64/0x7=
+c)
+(xfs_buf_iodone+0x0/0x7c) from [<c0183028>] (xfs_buf_do_callbacks+0x2c/0x3c)
+(xfs_buf_do_callbacks+0x0/0x3c) from [<c0183260>]
+(xfs_buf_iodone_callbacks+0x14c/0x174)
+(xfs_buf_iodone_callbacks+0x0/0x174) from [<c01b660c>]
+(xfs_buf_iodone_work+0x58/0x7c)
+(xfs_buf_iodone_work+0x0/0x7c) from [<c01b66b4>] (xfs_buf_ioend+0x84/0x9c)
+(xfs_buf_ioend+0x0/0x9c) from [<c01b6d60>] (xfs_bioerror+0x4c/0x54)
+(xfs_bioerror+0x0/0x54) from [<c01b6dc4>] (xfs_bdstrat_cb+0x5c/0x6c)
+(xfs_bdstrat_cb+0x0/0x6c) from [<c01b6858>] (xfs_flush_buftarg+0xe4/0x18c)
+(xfs_flush_buftarg+0x0/0x18c) from [<c01b6920>] (xfs_free_buftarg+0x20/0x78)
+(xfs_free_buftarg+0x0/0x78) from [<c01bdecc>] (xfs_close_devices+0x64/0x68)
+(xfs_close_devices+0x0/0x68) from [<c01bdf44>] (xfs_fs_put_super+0x74/0x88)
+(xfs_fs_put_super+0x0/0x88) from [<c00c3a9c>]
+(generic_shutdown_super+0x7c/0x120)
+(generic_shutdown_super+0x0/0x120) from [<c00c3b74>]
+(kill_block_super+0x34/0x4c)
+(kill_block_super+0x0/0x4c) from [<c00c2b54>]
+(deactivate_locked_super+0x3c/0x5c)
+(deactivate_locked_super+0x0/0x5c) from [<c00c2d60>]
+(deactivate_super+0x5c/0x60)
+(deactivate_super+0x0/0x60) from [<c00da79c>] (mntput_no_expire+0x9c/0xe8)
+(mntput_no_expire+0x0/0xe8) from [<c00dae40>] (sys_umount+0x308/0x334)
+(sys_umount+0x0/0x334) from [<c001ef80>] (ret_fast_syscall+0x0/0x30)
+Code: e1a02007 e59f00bc e1a01006 eb055bd7 (e5d53023)
+---[ end trace ddd9103bce1b5eae ]---
+------------[ cut here ]------------
 
-I just reported it to the scsi list as i didn't knew where the problems 
-is. But then some people told be it must be a XFS problem.
+In the case of crash (back trace as shown), the log structure is
+de-allocated as part of the xfs_log_unmount(), but there was a pending
+callback which gets called after all these un-mount routine. Since,
+log structure doesn=92t hold valid values it causes OOPS when accessed.
 
-Some more informations:
-1.) It's running with 2.6.32 and 2.6.38
-2.) I can also write to another ext2 part on the same disk array(aacraid 
-driver) while xfs stucks - so i think it must be an xfs problem
-3.) I've also tried running 3.1-rc5 but then i'm seeing this error:
+In the function xfs_buf_iodone() : file xfs_buf_item.c
 
-BUG: unable to handle kernel NULL pointer dereference at 000000000000012c
-IP: [] inode_dio_done+0x4/0x25
-PGD 293724067 PUD 292930067 PMD 0
-Oops: 0002 [#1] SMP
-CPU 5
-Modules linked in: ipt_REJECT xt_tcpudp iptable_filter ip_tables 
-x_tables coretemp k8temp
+If Mount point and the log structure addresses are checked through
+xfs_buf_t *bp, it shows correct values =96 valid address for mount point
+and NULL for log(bp->b_mount,bp->b_mount->m_log). While if the same
+are accessed through =93ailp->xa_mount,ailp->xa_mount->m_log=94 =96 these
+hold garbage values.
 
-Pid: 4775, comm: mysqld Not tainted 3.1-rc5 #1 Supermicro X8DT3/X8DT3
-RIP: 0010:[] [] inode_dio_done+0x4/0x25
-RSP: 0018:ffff880292b5fad8 EFLAGS: 00010286
-RAX: 0000000000000000 RBX: ffff8806ab4927e0 RCX: 0000000000007524
-RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000000
-RBP: ffff880292b5fad8 R08: ffff880292b5e000 R09: 0000000000000000
-R10: ffff88047f85e040 R11: ffff88042ddb5d88 R12: ffff88002b7f8800
-R13: ffff88002b7f8800 R14: 0000000000000000 R15: ffff88042d896040
-FS: 0000000045c79950(0063) GS:ffff88083fc40000(0000) knlGS:0000000000000000
-CS: 0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 000000000000012c CR3: 0000000293408000 CR4: 00000000000006e0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-Process mysqld (pid: 4775, threadinfo ffff880292b5e000, task 
-ffff88042d896040)
-Stack:
-ffff880292b5faf8 ffffffff811938cd 0000000192b5fb18 0000000000004000
-ffff880292b5fb18 ffffffff810feba2 0000000000000000 ffff88002b7f8920
-ffff880292b5fbf8 ffffffff810ff4fb ffff880292b5fb78 ffff880292b5e000
-Call Trace:
-[] xfs_end_io_direct_write+0x6a/0x6e
-[] dio_complete+0x90/0xbb
-[] __blockdev_direct_IO+0x92e/0x964
-[] ? mempool_alloc_slab+0x11/0x13
-[] xfs_vm_direct_IO+0x90/0x101
-[] ? __xfs_get_blocks+0x395/0x395
-[] ? xfs_finish_ioend_sync+0x1a/0x1a
-[] generic_file_direct_write+0xd7/0x147
-[] xfs_file_dio_aio_write+0x1b9/0x1d1
-[] ? wake_up_state+0xb/0xd
-[] xfs_file_aio_write+0x16a/0x21d
-[] ? do_futex+0xc0/0x988
-[] do_sync_write+0xc7/0x10d
-[] vfs_write+0xab/0x103
-[] sys_pwrite64+0x5c/0x7d
-[] system_call_fastpath+0x16/0x1b
-Code: 00 48 8d 34 30 89 d9 4c 89 e7 e8 3a fe ff ff 85 c0 75 0b 44 89 e8 
-49 01 84 24 90 00 00 00 41 5a 5b 41 5c 41 5d c9 c3 55 48 89 e5 ff 8f 2c 
-01 00 00 0f 94 c0 84 c0 74 11 48 81 c7 90 00 00 00
-RIP [] inode_dio_done+0x4/0x25
-RSP
-CR2: 000000000000012c
----[ end trace 79ce33ac2f7c10bd ]---
+I have made few changes:
+diff -Nurp linux-orig/fs/xfs/xfs_buf_item.c linux-Modified/fs/xfs/xfs_buf_i=
+tem.c
+--- linux-orig/fs/xfs/xfs_buf_item.c	2011-09-13 17:08:13.000000000 +0530
++++ linux-Modified/fs/xfs/xfs_buf_item.c	2011-09-13 17:05:43.000000000 +0530
+@@ -1065,7 +1065,9 @@ xfs_buf_iodone(
+ 	 *
+ 	 * Either way, AIL is useless if we're forcing a shutdown.
+ 	 */
+-	spin_lock(&ailp->xa_lock);
+-	xfs_trans_ail_delete(ailp, (xfs_log_item_t *)bip);
+-	xfs_buf_item_free(bip);
++	if(bp->b_mount->m_log){
++		spin_lock(&ailp->xa_lock);
++		xfs_trans_ail_delete(ailp, (xfs_log_item_t *)bip);
++		xfs_buf_item_free(bip);
++	}
+ }
+diff -Nurp linux-orig/fs/xfs/xfs_trans_ail.c
+linux-Modified/fs/xfs/xfs_trans_ail.c
+--- linux-orig/fs/xfs/xfs_trans_ail.c	2011-06-02 12:10:52.000000000 +0530
++++ linux-Modified/fs/xfs/xfs_trans_ail.c	2011-09-13 17:06:31.000000000 +05=
+30
+@@ -27,6 +27,7 @@
+ #include "xfs_mount.h"
+ #include "xfs_trans_priv.h"
+ #include "xfs_error.h"
++#include "xfs_log_priv.h"
 
+ STATIC void xfs_ail_insert(struct xfs_ail *, xfs_log_item_t *);
+ STATIC xfs_log_item_t * xfs_ail_delete(struct xfs_ail *, xfs_log_item_t *);
+@@ -619,6 +619,9 @@ xfs_trans_ail_destroy(
+ 	struct xfs_ail	*ailp =3D mp->m_ail;
 
-Stefan
+ 	xfsaild_stop(ailp);
++	mp->m_ail->xa_mount =3D NULL;
++        mp->m_ail =3D NULL;
++        mp->m_log->l_ailp =3D NULL;
+ 	kmem_free(ailp);
+ }
+
+Please share your opinion on these changes.
+
+Thanks & Regards,
+Amit Sahrawat
 
 _______________________________________________
 xfs mailing list
