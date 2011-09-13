@@ -1,26 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8DGWMg5070728 for <xfs@oss.sgi.com>; Tue, 13 Sep 2011 11:32:22 -0500
-Received: from lucidpixels.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7781915933D
-	for <xfs@oss.sgi.com>; Tue, 13 Sep 2011 09:32:21 -0700 (PDT)
-Received: from lucidpixels.com (lucidpixels.com [72.73.18.11]) by cuda.sgi.com
-	with ESMTP id jdPOFaYROK1OUDbC for <xfs@oss.sgi.com>;
-	Tue, 13 Sep 2011 09:32:21 -0700 (PDT)
-Date: Tue, 13 Sep 2011 12:32:20 -0400 (EDT)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: 3.1-rc4: spectacular kernel errors / filesystem crash
-In-Reply-To: <CAMaF-rMxTWRAO7WRdYoEM57k66MC6Vuwk1mcfgCgMO6Z+KBvzQ@mail.gmail.com>
-Message-ID: <alpine.DEB.2.02.1109131156050.7113@p34.internal.lan>
-References: <alpine.DEB.2.02.1109110511250.8626@p34.internal.lan>
-	<CAEuXFEzs1f7n5taYzupux3AtKmRcY4P0m7yjkUQA8aLyS8eujw@mail.gmail.com>
-	<1315886706.2556.11.camel@edumazet-laptop>
-	<alpine.DEB.2.02.1109130722210.21380@p34.internal.lan>
-	<CAMaF-rN-qeXBDoc9=7kwu40Wj8=G8YuPKWXPRhOuhdYX_VO34w@mail.gmail.com>
-	<alpine.DEB.2.02.1109131142010.7113@p34.internal.lan>
-	<CAMaF-rMxTWRAO7WRdYoEM57k66MC6Vuwk1mcfgCgMO6Z+KBvzQ@mail.gmail.com>
+	p8DJVbBD078566 for <xfs@oss.sgi.com>; Tue, 13 Sep 2011 14:31:37 -0500
+Received: from server655-han.de-nserver.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2E7FD15AFD5
+	for <xfs@oss.sgi.com>; Tue, 13 Sep 2011 12:31:35 -0700 (PDT)
+Received: from server655-han.de-nserver.de (server655-han.de-nserver.de
+	[85.158.177.45]) by cuda.sgi.com with ESMTP id AHzRUI9dSj2tSjc3
+	for <xfs@oss.sgi.com>; Tue, 13 Sep 2011 12:31:35 -0700 (PDT)
+Message-ID: <4E6FAF81.6060904@profihost.ag>
+Date: Tue, 13 Sep 2011 21:31:13 +0200
+From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
 MIME-Version: 1.0
+Subject: Re: xfs deadlock in stable kernel 3.0.4
+References: <1D2B34A7-7BB9-4E4E-9CA2-382C210E125F@profihost.ag>
+	<20110912152133.GA8345@infradead.org>
+	<C6515E45-5724-43DD-95A8-1F89AFE29601@profihost.ag>
+	<20110912200543.GA22409@infradead.org>
+	<4E6EF274.7050007@profihost.ag>
+In-Reply-To: <4E6EF274.7050007@profihost.ag>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,41 +31,43 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jon Mason <mason@myri.com>
-Cc: Eric Dumazet <eric.dumazet@gmail.com>, NetDEV list <netdev@vger.kernel.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Jesse Brandeburg <jesse.brandeburg@gmail.com>, Alan Piszcz <ap@solarrain.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "xfs-masters@oss.sgi.com" <xfs-masters@oss.sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
 
-
-On Tue, 13 Sep 2011, Jon Mason wrote:
-
-> On Tue, Sep 13, 2011 at 10:42 AM, Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
+Am 13.09.2011 08:04, schrieb Stefan Priebe - Profihost AG:
+> Hi,
+>
+>> On Mon, Sep 12, 2011 at 06:46:26PM +0200, Stefan Priebe wrote:
+>>>> What kind of workload are you running? Also did the workload run fine
+>>>> with an older kernel, and if yes which one?
+>>>
+>>> Mysql, Web, Mail, ftp ;-) yes it was with 2.6.32. I upgraded from
+>>> that version.
 >>
->>
->> On Tue, 13 Sep 2011, Jon Mason wrote:
->>
->>> On Tue, Sep 13, 2011 at 9:54 AM, Justin Piszcz <jpiszcz@lucidpixels.com>
->>> wrote:
->>>>
->>>>
->>>> On Tue, 13 Sep 2011, Eric Dumazet wrote:
->>>>
+>> Just curious, is this the same system that also shows the freezes
+>> reported to the scsi list? If I/Os don't get completed by lower layers
+>> I can see how we get everything in XFS waiting on the log reservations,
+>> given that we never get the log tail pushed.
+>
+> I just reported it to the scsi list as i didn't knew where the problems
+> is. But then some people told be it must be a XFS problem.
+>
+> Some more informations:
+> 1.) It's running with 2.6.32 and 2.6.38
+> 2.) I can also write to another ext2 part on the same disk array(aacraid
+> driver) while xfs stucks - so i think it must be an xfs problem
+> 3.) I've also tried running 3.1-rc5 but then i'm seeing this error:
+>
+ > ...
+>
 
-Thanks,
+Any idea what we could try next or how to find the problem? At least 
+this is happening with different devices and writing to other partitions 
+is still working.
 
-# patch -p1 < ../0001-Fix-pointer-dereference-before-call-to-pcie_bus_conf.patch
-patching file arch/x86/pci/acpi.c
-patching file drivers/pci/hotplug/pcihp_slot.c
-patching file drivers/pci/probe.c
-# patch -p1 < ../0002-PCI-Remove-MRRS-modification-from-MPS-setting-code.patch
-patching file drivers/pci/pci.c
-patching file drivers/pci/probe.c
-#
-
-Rebooted & running with new patches for 3.1-rc4.
-Will let you know if any further issues, I wonder if this will fix
-the RCU/SLAB issues too, thanks.
-
-Justin.
+Greets
+Stefan
 
 _______________________________________________
 xfs mailing list
