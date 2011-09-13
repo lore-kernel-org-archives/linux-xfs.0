@@ -1,24 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8DMQ1xH094519 for <xfs@oss.sgi.com>; Tue, 13 Sep 2011 17:26:02 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 12D1415C5FF
-	for <xfs@oss.sgi.com>; Tue, 13 Sep 2011 15:26:00 -0700 (PDT)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	pEsvUAvRJxkPPZhe for <xfs@oss.sgi.com>;
-	Tue, 13 Sep 2011 15:26:00 -0700 (PDT)
-Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1R3bQW-0006wZ-7h
-	for xfs@oss.sgi.com; Tue, 13 Sep 2011 22:26:00 +0000
-Date: Tue, 13 Sep 2011 18:26:00 -0400
+	p8DMQvms094631 for <xfs@oss.sgi.com>; Tue, 13 Sep 2011 17:26:57 -0500
+Date: Tue, 13 Sep 2011 18:26:49 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: xfs: fix a use after free in xfs_end_io_direct_write
-Message-ID: <20110913222600.GA26677@infradead.org>
+Subject: Re: [xfs-masters] xfs deadlock in stable kernel 3.0.4
+Message-ID: <20110913222649.GB26677@infradead.org>
+References: <1D2B34A7-7BB9-4E4E-9CA2-382C210E125F@profihost.ag>
+	<20110912152133.GA8345@infradead.org>
+	<C6515E45-5724-43DD-95A8-1F89AFE29601@profihost.ag>
+	<20110912200543.GA22409@infradead.org>
+	<4E6EF274.7050007@profihost.ag>
+	<20110913205018.GA8543@infradead.org>
+	<1315950742.2159.89.camel@doink> <1315951093.2159.92.camel@doink>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <1315951093.2159.92.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,38 +28,17 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Alex Elder <aelder@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, "xfs-masters@oss.sgi.com" <xfs-masters@oss.sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
 
-There is a window in which the ioend that we call inode_dio_wake on
-in xfs_end_io_direct_write is already free.  Fix this by storing
-the inode pointer in a local variable.
+On Tue, Sep 13, 2011 at 04:58:13PM -0500, Alex Elder wrote:
+> > Reviewed-by: Alex Elder <aelder@sgi.com>
+> 
+> Nevermind--the latest code doesn't look quite
+> like that and doesn't suffer the same problem.
 
-This is a fix for the regression introduced in 3.1-rc by
-"fs: move inode_dio_done to the end_io handler".
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Index: linux-2.6/fs/xfs/xfs_aops.c
-===================================================================
---- linux-2.6.orig/fs/xfs/xfs_aops.c	2011-09-13 16:38:47.141089046 -0400
-+++ linux-2.6/fs/xfs/xfs_aops.c	2011-09-13 16:39:09.991647077 -0400
-@@ -1300,6 +1300,7 @@ xfs_end_io_direct_write(
- 	bool			is_async)
- {
- 	struct xfs_ioend	*ioend = iocb->private;
-+	struct inode		*inode = ioend->io_inode;
- 
- 	/*
- 	 * blockdev_direct_IO can return an error even after the I/O
-@@ -1331,7 +1332,7 @@ xfs_end_io_direct_write(
- 	}
- 
- 	/* XXX: probably should move into the real I/O completion handler */
--	inode_dio_done(ioend->io_inode);
-+	inode_dio_done(inode);
- }
- 
- STATIC ssize_t
+It needs to go into 3.1, where this bug was introduced.  In the
+3.2 queue it already has been fixed by different means
 
 _______________________________________________
 xfs mailing list
