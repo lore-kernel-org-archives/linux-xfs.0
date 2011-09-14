@@ -1,21 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8EEUNdm145442 for <xfs@oss.sgi.com>; Wed, 14 Sep 2011 09:30:23 -0500
-Date: Wed, 14 Sep 2011 10:30:21 -0400
+	p8EEOZSh145152 for <xfs@oss.sgi.com>; Wed, 14 Sep 2011 09:24:36 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E22B7152810F
+	for <xfs@oss.sgi.com>; Wed, 14 Sep 2011 07:29:18 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	Hw2wONEldWbi3oRP for <xfs@oss.sgi.com>;
+	Wed, 14 Sep 2011 07:29:18 -0700 (PDT)
+Date: Wed, 14 Sep 2011 10:24:30 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: xfs deadlock in stable kernel 3.0.4
-Message-ID: <20110914143021.GB28496@infradead.org>
-References: <1D2B34A7-7BB9-4E4E-9CA2-382C210E125F@profihost.ag>
-	<20110912152133.GA8345@infradead.org>
-	<C6515E45-5724-43DD-95A8-1F89AFE29601@profihost.ag>
-	<20110912200543.GA22409@infradead.org>
-	<4E6EF274.7050007@profihost.ag>
-	<20110913205018.GA8543@infradead.org> <4E70571A.80108@profihost.ag>
-	<4E705C42.6020909@profihost.ag> <4E706A90.9080200@profihost.ag>
+Subject: Re: xfs_repair segfaut in stage 6
+Message-ID: <20110914142430.GA28049@infradead.org>
+References: <4E69D1B9.8070201@nasza-klasa.pl> <201109091401.31422@zmi.at>
+	<4E6A2B73.50503@nasza-klasa.pl>
+	<20110912161215.GA17798@infradead.org>
+	<4E707624.9030703@nasza-klasa.pl>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4E706A90.9080200@profihost.ag>
+In-Reply-To: <4E707624.9030703@nasza-klasa.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,20 +33,42 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
-Cc: Christoph Hellwig <hch@infradead.org>, "xfs-masters@oss.sgi.com" <xfs-masters@oss.sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, aelder@sgi.com
+To: Bartosz Cisek <bartosz.cisek@nasza-klasa.pl>
+Cc: Christoph Hellwig <hch@infradead.org>, Michael Monnerie <michael.monnerie@is.it-management.at>, xfs@oss.sgi.com
 
-On Wed, Sep 14, 2011 at 10:49:20AM +0200, Stefan Priebe - Profihost AG wrote:
-> >Sadly it was now crashing with 3.1 rc-6 + patch again. Sorry i was to
-> >fast to write you an email.
+On Wed, Sep 14, 2011 at 11:38:44AM +0200, Bartosz Cisek wrote:
+> W dniu 12.09.2011 18:12, Christoph Hellwig pisze:
+> > I've repaired the image fine using xfs_repair from the Debian testing
+> > xfsprogs 3.1.5+nmu1 package.  It found two invalid blocks in a
+> > directory, which look like the result from the hardware error you saw.
+> > 
+> > You should be able to just rebuild the current xfsprogs (from
+> > testing/unstable or git) on Lenny and get the same result.
 > 
-> So might it be that the problem at least in 3.1 lies in:
-> [] ? mark_held_locks+0xc9/0xef
-> [] ? _raw_spin_unlock_irqrestore+0x3f/0x47
-> 
-> and not in XFS?
+> I've build xfs_repair from git on lenny and got segfault before my first
+> email to this list (please refer to first email in this thread) :)
 
-That's the lockdep code.
+Ooops.
+
+> What else I can do to find what differ our two cases?
+
+The hardware?  Given that you were getting read I/O errors from the
+hardware when shutting the fs down you probably got those as well when
+running repair and that caused the segfault.   Can you run xfs_repair
+under gdb for me, that is:
+
+gdb /path/to.xfs_repair
+
+(gdb) set args /dev/cciss/c0d5p1
+(gdb) run
+
+and see what backtrace it gives you?
+
+Please make sure to build xfs_repair in the git tree manually using
+make and not the Debian packaging, as that removes the debug symbols.
+
+You can run gdb on the xfs_repair binary just built in the tree, no
+need to install it first.
 
 _______________________________________________
 xfs mailing list
