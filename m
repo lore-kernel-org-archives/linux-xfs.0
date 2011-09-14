@@ -1,25 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8EFNZbu147608 for <xfs@oss.sgi.com>; Wed, 14 Sep 2011 10:23:35 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4971A1614DE
-	for <xfs@oss.sgi.com>; Wed, 14 Sep 2011 08:23:34 -0700 (PDT)
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id FBk29h2Uyu3SjAe5 for <xfs@oss.sgi.com>;
-	Wed, 14 Sep 2011 08:23:34 -0700 (PDT)
-Message-ID: <4E70C6F8.3020906@sandeen.net>
-Date: Wed, 14 Sep 2011 10:23:36 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	p8EG63W7149399 for <xfs@oss.sgi.com>; Wed, 14 Sep 2011 11:06:04 -0500
+Received: from server655-han.de-nserver.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 854461C0FB19
+	for <xfs@oss.sgi.com>; Wed, 14 Sep 2011 09:06:01 -0700 (PDT)
+Received: from server655-han.de-nserver.de (server655-han.de-nserver.de
+	[85.158.177.45]) by cuda.sgi.com with ESMTP id YEcBGIqfPq2ffZbd
+	for <xfs@oss.sgi.com>; Wed, 14 Sep 2011 09:06:01 -0700 (PDT)
+Message-ID: <4E70D0E8.4000708@profihost.ag>
+Date: Wed, 14 Sep 2011 18:06:00 +0200
+From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
 MIME-Version: 1.0
-Subject: Re: xfs_repair segfaut in stage 6
-References: <4E69D1B9.8070201@nasza-klasa.pl> <201109091401.31422@zmi.at>
-	<4E6A2B73.50503@nasza-klasa.pl>
-	<20110912161215.GA17798@infradead.org>
-	<4E707624.9030703@nasza-klasa.pl>
-	<20110914142430.GA28049@infradead.org>
-	<4E70C0C5.1080100@sandeen.net> <4E70C3CA.7010103@nasza-klasa.pl>
-In-Reply-To: <4E70C3CA.7010103@nasza-klasa.pl>
+Subject: Re: xfs deadlock in stable kernel 3.0.4
+References: <1D2B34A7-7BB9-4E4E-9CA2-382C210E125F@profihost.ag>
+	<20110912152133.GA8345@infradead.org>
+	<C6515E45-5724-43DD-95A8-1F89AFE29601@profihost.ag>
+	<20110912200543.GA22409@infradead.org>
+	<4E6EF274.7050007@profihost.ag>
+	<20110913205018.GA8543@infradead.org>
+	<4E70571A.80108@profihost.ag> <4E705C42.6020909@profihost.ag>
+	<20110914143005.GA28496@infradead.org>
+In-Reply-To: <20110914143005.GA28496@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,39 +30,78 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Bartosz Cisek <bartosz.cisek@nasza-klasa.pl>
-Cc: Christoph Hellwig <hch@infradead.org>, Michael Monnerie <michael.monnerie@is.it-management.at>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "xfs-masters@oss.sgi.com" <xfs-masters@oss.sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, aelder@sgi.com
 
-On 9/14/11 10:10 AM, Bartosz Cisek wrote:
-> W dniu 14.09.2011 16:57, Eric Sandeen pisze:
->> If it worked for Christoph and not for Bartosz ....
->>
->> Is the -DDEBUG / -DNDEBUG type setting the same in both cases?
->> Maybe Fedora is the only one doing -DNDEBUG :( but maybe worth
->> checking.
-> 
-> Tested both. I was wodering why I got 'value optimized out' in gdb, so
-> compiled with DEBUG=-DNDBEUG and DEBUG=-DDEBUG. Both crashed, both had
-> 'optimized out' values in gdb backtrace.
-> 
-> I found two placed where DEBUG may be overwritten:
-> 
-> hd-slave5 ~/devel/xfsprogs # ack-grep NDEBUG
-> libxfs/Makefile
-> 39:DEBUG = -DNDEBUG
-> 
-> libxlog/Makefile
-> 16:DEBUG = -DNDEBUG
-> 
-> When I changed -DNDEBUG to -DDEBUG/ compilation failed.
+Hi,
 
-yeah, that's why it's overridden in those places.  :)
+Am 14.09.2011 16:30, schrieb Christoph Hellwig:
+> On Wed, Sep 14, 2011 at 09:48:18AM +0200, Stefan Priebe - Profihost AG wrote:
+>> #0: (&sb->s_type->i_mutex_key#5){+.+.+.}, at: [] do_last+0x287/0x693
+>
+> This means you are running your heavy load with lockdep enabled.  I
+> can't see how it directly causes your issues, but it will slow anything
+> down to almost a grinding halt on systems with more than say two cores.
+>
+> Can you run with CONFIG_DEBUG_LOCK_ALLOC / and CONFIG_PROVE_LOCKING
+> disabled/  It might be worth if you have other really heavy debugging
+> options enabled, too.
 
--Eric
+i just enabled it while trying to find out the cause of my problems.
+
+My actual config has:
+# grep -i 'DEBUG' .config|egrep -v "^# "
+CONFIG_ARCH_SUPPORTS_DEBUG_PAGEALLOC=y
+CONFIG_SLUB_DEBUG=y
+CONFIG_HAVE_DMA_API_DEBUG=y
+CONFIG_X86_DEBUGCTLMSR=y
+CONFIG_PNP_DEBUG_MESSAGES=y
+CONFIG_AIC7XXX_DEBUG_ENABLE=y
+CONFIG_AIC7XXX_DEBUG_MASK=0
+CONFIG_AIC79XX_DEBUG_ENABLE=y
+CONFIG_AIC79XX_DEBUG_MASK=0
+CONFIG_OCFS2_DEBUG_MASKLOG=y
+CONFIG_DEBUG_FS=y
+CONFIG_DEBUG_KERNEL=y
+CONFIG_DEBUG_SHIRQ=y
+CONFIG_SCHED_DEBUG=y
+CONFIG_DEBUG_SPINLOCK=y
+CONFIG_DEBUG_MUTEXES=y
+CONFIG_DEBUG_LOCK_ALLOC=y
+CONFIG_DEBUG_BUGVERBOSE=y
+CONFIG_DEBUG_MEMORY_INIT=y
+CONFIG_DEBUG_RODATA=y
+CONFIG_KEYS_DEBUG_PROC_KEYS=y
+
+
+my original config had:
+# grep -i 'DEBUG' .config_stillnotworking|egrep -v "^# "
+CONFIG_ARCH_SUPPORTS_DEBUG_PAGEALLOC=y
+CONFIG_HAVE_DMA_API_DEBUG=y
+CONFIG_X86_DEBUGCTLMSR=y
+CONFIG_PNP_DEBUG_MESSAGES=y
+CONFIG_AIC7XXX_DEBUG_ENABLE=y
+CONFIG_AIC7XXX_DEBUG_MASK=0
+CONFIG_AIC79XX_DEBUG_ENABLE=y
+CONFIG_AIC79XX_DEBUG_MASK=0
+CONFIG_OCFS2_DEBUG_MASKLOG=y
+CONFIG_DEBUG_FS=y
+CONFIG_DEBUG_KERNEL=y
+CONFIG_SCHED_DEBUG=y
+CONFIG_DEBUG_BUGVERBOSE=y
+CONFIG_DEBUG_MEMORY_INIT=y
+CONFIG_DEBUG_RODATA=y
+CONFIG_KEYS_DEBUG_PROC_KEYS=y
+
+With both configs i'm seeing the SAME symptoms after a while.
+
+Which options should i disable?
+
+Stefan
 
 _______________________________________________
 xfs mailing list
