@@ -1,24 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8E9coLs131883 for <xfs@oss.sgi.com>; Wed, 14 Sep 2011 04:38:50 -0500
-Received: from mail-fx0-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F1B5215F472
-	for <xfs@oss.sgi.com>; Wed, 14 Sep 2011 02:38:48 -0700 (PDT)
-Received: from mail-fx0-f53.google.com (mail-fx0-f53.google.com
-	[209.85.161.53]) by cuda.sgi.com with ESMTP id vpVWflEbqbEU23jy
-	for <xfs@oss.sgi.com>; Wed, 14 Sep 2011 02:38:48 -0700 (PDT)
-Received: by fxh2 with SMTP id 2so1475832fxh.26
-	for <xfs@oss.sgi.com>; Wed, 14 Sep 2011 02:38:48 -0700 (PDT)
-Message-ID: <4E707624.9030703@nasza-klasa.pl>
-Date: Wed, 14 Sep 2011 11:38:44 +0200
-From: Bartosz Cisek <bartosz.cisek@nasza-klasa.pl>
+	p8ECaLN3140311 for <xfs@oss.sgi.com>; Wed, 14 Sep 2011 07:36:22 -0500
+Subject: Re: xfs: fix a use after free in xfs_end_io_direct_write
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <20110913222600.GA26677@infradead.org>
+References: <20110913222600.GA26677@infradead.org>
+Date: Wed, 14 Sep 2011 07:36:16 -0500
+Message-ID: <1316003776.4030.1.camel@doink>
 MIME-Version: 1.0
-Subject: Re: xfs_repair segfaut in stage 6
-References: <4E69D1B9.8070201@nasza-klasa.pl> <201109091401.31422@zmi.at>
-	<4E6A2B73.50503@nasza-klasa.pl>
-	<20110912161215.GA17798@infradead.org>
-In-Reply-To: <20110912161215.GA17798@infradead.org>
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,59 +18,29 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: Michael Monnerie <michael.monnerie@is.it-management.at>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-VyBkbml1IDEyLjA5LjIwMTEgMTg6MTIsIENocmlzdG9waCBIZWxsd2lnIHBpc3plOgo+IEkndmUg
-cmVwYWlyZWQgdGhlIGltYWdlIGZpbmUgdXNpbmcgeGZzX3JlcGFpciBmcm9tIHRoZSBEZWJpYW4g
-dGVzdGluZwo+IHhmc3Byb2dzIDMuMS41K25tdTEgcGFja2FnZS4gIEl0IGZvdW5kIHR3byBpbnZh
-bGlkIGJsb2NrcyBpbiBhCj4gZGlyZWN0b3J5LCB3aGljaCBsb29rIGxpa2UgdGhlIHJlc3VsdCBm
-cm9tIHRoZSBoYXJkd2FyZSBlcnJvciB5b3Ugc2F3Lgo+IAo+IFlvdSBzaG91bGQgYmUgYWJsZSB0
-byBqdXN0IHJlYnVpbGQgdGhlIGN1cnJlbnQgeGZzcHJvZ3MgKGZyb20KPiB0ZXN0aW5nL3Vuc3Rh
-YmxlIG9yIGdpdCkgb24gTGVubnkgYW5kIGdldCB0aGUgc2FtZSByZXN1bHQuCgpJJ3ZlIGJ1aWxk
-IHhmc19yZXBhaXIgZnJvbSBnaXQgb24gbGVubnkgYW5kIGdvdCBzZWdmYXVsdCBiZWZvcmUgbXkg
-Zmlyc3QKZW1haWwgdG8gdGhpcyBsaXN0IChwbGVhc2UgcmVmZXIgdG8gZmlyc3QgZW1haWwgaW4g
-dGhpcyB0aHJlYWQpIDopCgpXaGF0IGVsc2UgSSBjYW4gZG8gdG8gZmluZCB3aGF0IGRpZmZlciBv
-dXIgdHdvIGNhc2VzPwoKCmhkLXNsYXZlNSB+L2RldmVsL3hmc3Byb2dzL3JlcGFpciAjIExDX0FM
-TD1lbl9FTiAuL3hmc19yZXBhaXIgLXYKL2Rldi9jY2lzcy9jMGQ1cDEKUGhhc2UgMSAtIGZpbmQg
-YW5kIHZlcmlmeSBzdXBlcmJsb2NrLi4uCiAgICAgICAgLSBibG9jayBjYWNoZSBzaXplIHNldCB0
-byAzNDQ2MzEyIGVudHJpZXMKUGhhc2UgMiAtIHVzaW5nIGludGVybmFsIGxvZwogICAgICAgIC0g
-emVybyBsb2cuLi4KemVyb19sb2c6IGhlYWQgYmxvY2sgMiB0YWlsIGJsb2NrIDIKICAgICAgICAt
-IHNjYW4gZmlsZXN5c3RlbSBmcmVlc3BhY2UgYW5kIGlub2RlIG1hcHMuLi4KICAgICAgICAtIGZv
-dW5kIHJvb3QgaW5vZGUgY2h1bmsKUGhhc2UgMyAtIGZvciBlYWNoIEFHLi4uCiAgICAgICAgLSBz
-Y2FuIGFuZCBjbGVhciBhZ2kgdW5saW5rZWQgbGlzdHMuLi4KICAgICAgICAtIHByb2Nlc3Mga25v
-d24gaW5vZGVzIGFuZCBwZXJmb3JtIGlub2RlIGRpc2NvdmVyeS4uLgogICAgICAgIC0gYWdubyA9
-IDAKeGZzX3JlcGFpcjogcmVhZCBmYWlsZWQ6IElucHV0L291dHB1dCBlcnJvcgpjYW4ndCByZWFk
-IGJsb2NrIDAgZm9yIGRpcmVjdG9yeSBpbm9kZSAxNDY0NTMKbm8gLiBlbnRyeSBmb3IgZGlyZWN0
-b3J5IDE0NjQ1MwpubyAuLiBlbnRyeSBmb3IgZGlyZWN0b3J5IDE0NjQ1MwogICAgICAgIC0gYWdu
-byA9IDEKICAgICAgICAtIGFnbm8gPSAyCiAgICAgICAgLSBhZ25vID0gMwogICAgICAgIC0gcHJv
-Y2VzcyBuZXdseSBkaXNjb3ZlcmVkIGlub2Rlcy4uLgpQaGFzZSA0IC0gY2hlY2sgZm9yIGR1cGxp
-Y2F0ZSBibG9ja3MuLi4KICAgICAgICAtIHNldHRpbmcgdXAgZHVwbGljYXRlIGV4dGVudCBsaXN0
-Li4uCiAgICAgICAgLSBjaGVjayBmb3IgaW5vZGVzIGNsYWltaW5nIGR1cGxpY2F0ZSBibG9ja3Mu
-Li4KICAgICAgICAtIGFnbm8gPSAwCiAgICAgICAgLSBhZ25vID0gMgogICAgICAgIC0gYWdubyA9
-IDMKICAgICAgICAtIGFnbm8gPSAxCnhmc19yZXBhaXI6IHJlYWQgZmFpbGVkOiBJbnB1dC9vdXRw
-dXQgZXJyb3IKY2FuJ3QgcmVhZCBibG9jayAwIGZvciBkaXJlY3RvcnkgaW5vZGUgMTQ2NDUzCm5v
-IC4gZW50cnkgZm9yIGRpcmVjdG9yeSAxNDY0NTMKbm8gLi4gZW50cnkgZm9yIGRpcmVjdG9yeSAx
-NDY0NTMKUGhhc2UgNSAtIHJlYnVpbGQgQUcgaGVhZGVycyBhbmQgdHJlZXMuLi4KICAgICAgICAt
-IGFnbm8gPSAwCiAgICAgICAgLSBhZ25vID0gMQogICAgICAgIC0gYWdubyA9IDIKICAgICAgICAt
-IGFnbm8gPSAzCiAgICAgICAgLSByZXNldCBzdXBlcmJsb2NrLi4uClBoYXNlIDYgLSBjaGVjayBp
-bm9kZSBjb25uZWN0aXZpdHkuLi4KICAgICAgICAtIHJlc2V0dGluZyBjb250ZW50cyBvZiByZWFs
-dGltZSBiaXRtYXAgYW5kIHN1bW1hcnkgaW5vZGVzCiAgICAgICAgLSB0cmF2ZXJzaW5nIGZpbGVz
-eXN0ZW0gLi4uCiAgICAgICAgLSBhZ25vID0gMAplbnRyeSAic3ViZGlyNDkiIGluIGRpciBpbm8g
-NDM3IGRvZXNuJ3QgaGF2ZSBhIC4uIGVudHJ5LCB3aWxsIHNldCBpdCBpbgppbm8gMTQ2NDUzLgp4
-ZnNfcmVwYWlyOiByZWFkIGZhaWxlZDogSW5wdXQvb3V0cHV0IGVycm9yCk5hcnVzemVuaWUgb2No
-cm9ueSBwYW1pxJljaSAoc2VnZmF1bHQpCmhkLXNsYXZlNSB+L2RldmVsL3hmc3Byb2dzL3JlcGFp
-ciAjIExDX0FMTD1lbl9FTiAuL3hmc19yZXBhaXIgLVYKeGZzX3JlcGFpciB2ZXJzaW9uIDMuMS41
-CgotLSAKQmFydG9zeiBDaXNlawpBZG1pbgoKZW1haWw6IGJhcnRvc3ouY2lzZWtAbmFzemEta2xh
-c2EucGwKdGVsOiArNDggNTE5IDMwMCAxMjIKCk5hc3phIEtsYXNhIFNwLiB6IG8uby4sCnVsLiBH
-ZW4uIEouIEJlbWEgMiwgNTAtMjY1IFdyb2PFgmF3CgpTxIVkIFJlam9ub3d5IGRsYSBXcm9jxYJh
-d2lhIC0gRmFicnljem5laiB3ZSBXcm9jxYJhd2l1LApWSSBXeWR6aWHFgiBHb3Nwb2RhcmN6eSBL
-cmFqb3dlZ28gUmVqZXN0cnUgU8SFZG93ZWdvLApuciBLUlM6MDAwMDI4OTYyOSwgTklQOjg5OC0y
-MS0yMi0xMDQgUkVHT046MDIwNTg2MDIwLApLYXBpdGHFgiB6YWvFgmFkb3d5OiA2NyA4NTAsMDAg
-UExOCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMg
-bWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9s
-aXN0aW5mby94ZnMK
+On Tue, 2011-09-13 at 18:26 -0400, Christoph Hellwig wrote:
+> There is a window in which the ioend that we call inode_dio_wake on
+> in xfs_end_io_direct_write is already free.  Fix this by storing
+> the inode pointer in a local variable.
+> 
+> This is a fix for the regression introduced in 3.1-rc by
+> "fs: move inode_dio_done to the end_io handler".
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Looks good.
+
+Reviewed-by: Alex Elder <aelder@sgi.com>
+
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
