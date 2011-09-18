@@ -1,24 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8IKnBsn201709 for <xfs@oss.sgi.com>; Sun, 18 Sep 2011 15:49:11 -0500
+	p8IKfmBY201011 for <xfs@oss.sgi.com>; Sun, 18 Sep 2011 15:41:48 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CD4C4172085
-	for <xfs@oss.sgi.com>; Sun, 18 Sep 2011 13:49:10 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id AA66217206C
+	for <xfs@oss.sgi.com>; Sun, 18 Sep 2011 13:41:47 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	ANUw7AIPzL8tCs3T for <xfs@oss.sgi.com>;
-	Sun, 18 Sep 2011 13:49:10 -0700 (PDT)
-Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1R5OIX-0005x2-T7
-	for xfs@oss.sgi.com; Sun, 18 Sep 2011 20:49:09 +0000
-Message-Id: <20110918204909.860669185@bombadil.infradead.org>
-Date: Sun, 18 Sep 2011 16:47:49 -0400
+	GrFyIXRbhPvPeyXn for <xfs@oss.sgi.com>;
+	Sun, 18 Sep 2011 13:41:47 -0700 (PDT)
+Message-Id: <20110918204147.015140236@bombadil.infradead.org>
+Date: Sun, 18 Sep 2011 16:41:03 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 1/3] xfs: unlock the inode before log force in xfs_fsync
-References: <20110918204748.547510183@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-optimize-fsync-2
+Subject: [PATCH 23/27] rearrange bmapi and bmalloca structures for best packing
+References: <20110918204040.266805129@bombadil.infradead.org>
+Content-Disposition: inline; filename=xfs-bmalloca-shrink
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,113 +30,169 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: Dave Chinner <dchinner@redhat.com>
 
-Only read the LSN we need to push to with the ilock held, and then release
-it before we do the log force to improve concurrency.
+Minimise the stack overhead of the remaining stack variables and
+structures placed on the stack by packing them without holes. pahole
+is used to optimise allocation args structures, stack variables are
+done manually.
 
-This also removes the only direct caller of _xfs_trans_commit, thus
-allowing it to be merged into the plain xfs_trans_commit again.
+[hch: various updates while forward porting the changes]
 
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: xfs/fs/xfs/xfs_file.c
+Index: xfs/fs/xfs/xfs_bmap.h
 ===================================================================
---- xfs.orig/fs/xfs/xfs_file.c	2011-09-07 10:59:55.742961175 +0200
-+++ xfs/fs/xfs/xfs_file.c	2011-09-07 11:08:12.830462974 +0200
-@@ -137,6 +137,7 @@ xfs_file_fsync(
- 	struct xfs_trans	*tp;
- 	int			error = 0;
- 	int			log_flushed = 0;
-+	xfs_lsn_t		lsn = 0;
+--- xfs.orig/fs/xfs/xfs_bmap.h	2011-09-11 08:46:48.000000000 -0400
++++ xfs/fs/xfs/xfs_bmap.h	2011-09-11 09:06:45.279781419 -0400
+@@ -118,6 +118,7 @@ typedef struct xfs_bmalloca {
  
- 	trace_xfs_file_fsync(ip);
+ 	xfs_fileoff_t		offset;	/* offset in file filling in */
+ 	xfs_extlen_t		length;	/* i/o length asked/allocated */
++	xfs_extlen_t		total;	/* total blocks needed for xaction */
+ 	xfs_fsblock_t		blkno;	/* starting block of new extent */
  
-@@ -214,8 +215,10 @@ xfs_file_fsync(
- 		 */
- 		xfs_trans_ijoin(tp, ip);
- 		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
--		xfs_trans_set_sync(tp);
--		error = _xfs_trans_commit(tp, 0, &log_flushed);
-+		error = xfs_trans_commit(tp, 0);
-+
-+		ASSERT(xfs_ipincount(ip));
-+		lsn = ip->i_itemp->ili_last_lsn;
+ 	struct xfs_btree_cur	*cur;	/* btree cursor */
+@@ -125,14 +126,13 @@ typedef struct xfs_bmalloca {
+ 	int			nallocs;/* number of extents alloc'd */
+ 	int			logflags;/* flags for transaction logging */
  
- 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 	} else {
-@@ -227,14 +230,14 @@ xfs_file_fsync(
- 		 * disk yet, the inode will be still be pinned.  If it is,
- 		 * force the log.
- 		 */
--		if (xfs_ipincount(ip)) {
--			error = _xfs_log_force_lsn(mp,
--					ip->i_itemp->ili_last_lsn,
--					XFS_LOG_SYNC, &log_flushed);
--		}
-+		if (xfs_ipincount(ip))
-+			lsn = ip->i_itemp->ili_last_lsn;
- 		xfs_iunlock(ip, XFS_ILOCK_SHARED);
- 	}
- 
-+	if (!error && lsn)
-+		error = _xfs_log_force_lsn(mp, lsn, XFS_LOG_SYNC, &log_flushed);
-+
- 	/*
- 	 * If we only have a single device, and the log force about was
- 	 * a no-op we might have to flush the data device cache here.
-Index: xfs/fs/xfs/xfs_trans.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_trans.c	2011-09-07 10:59:55.702959720 +0200
-+++ xfs/fs/xfs/xfs_trans.c	2011-09-07 11:06:20.686461455 +0200
-@@ -1790,9 +1790,7 @@ xfs_trans_commit_cil(
- }
+-	xfs_extlen_t		total;	/* total blocks needed for xaction */
+ 	xfs_extlen_t		minlen;	/* minimum allocation size (blocks) */
+-	xfs_extlen_t		minleft; /* amount must be left after alloc */
+-	char			eof;	/* set if allocating past last extent */
+-	char			wasdel;	/* replacing a delayed allocation */
+-	char			userdata;/* set if is user data */
+-	char			aeof;	/* allocated space at eof */
+-	char			conv;	/* overwriting unwritten extents */
++	xfs_extlen_t		minleft;/* amount must be left after alloc */
++	unsigned int		eof : 1;/* set if allocating past last extent */
++	unsigned int		wasdel : 1;  /* replacing a delayed allocation */
++	unsigned int		userdata : 1;/* set if is user data */
++	unsigned int		aeof : 1;/* allocated space at eof */
++	unsigned int		conv : 1;/* overwriting unwritten extents */
+ } xfs_bmalloca_t;
  
  /*
-- * xfs_trans_commit
-- *
-- * Commit the given transaction to the log a/synchronously.
-+ * Commit the given transaction to the log.
-  *
-  * XFS disk error handling mechanism is not based on a typical
-  * transaction abort mechanism. Logically after the filesystem
-@@ -1804,10 +1802,9 @@ xfs_trans_commit_cil(
-  * Do not reference the transaction structure after this call.
-  */
- int
--_xfs_trans_commit(
-+xfs_trans_commit(
- 	struct xfs_trans	*tp,
--	uint			flags,
--	int			*log_flushed)
-+	uint			flags)
- {
- 	struct xfs_mount	*mp = tp->t_mountp;
- 	xfs_lsn_t		commit_lsn = -1;
-@@ -1866,7 +1863,7 @@ _xfs_trans_commit(
- 	if (sync) {
- 		if (!error) {
- 			error = _xfs_log_force_lsn(mp, commit_lsn,
--				      XFS_LOG_SYNC, log_flushed);
-+				      XFS_LOG_SYNC, NULL);
- 		}
- 		XFS_STATS_INC(xs_trans_sync);
- 	} else {
-Index: xfs/fs/xfs/xfs_trans.h
+Index: xfs/fs/xfs/xfs_bmap.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_trans.h	2011-09-07 10:59:55.722959398 +0200
-+++ xfs/fs/xfs/xfs_trans.h	2011-09-07 11:05:11.766461375 +0200
-@@ -487,10 +487,7 @@ void		xfs_trans_log_efd_extent(xfs_trans
- 					 struct xfs_efd_log_item *,
- 					 xfs_fsblock_t,
- 					 xfs_extlen_t);
--int		_xfs_trans_commit(xfs_trans_t *,
--				  uint flags,
--				  int *);
--#define xfs_trans_commit(tp, flags)	_xfs_trans_commit(tp, flags, NULL)
-+int		xfs_trans_commit(xfs_trans_t *, uint flags);
- void		xfs_trans_cancel(xfs_trans_t *, int);
- int		xfs_trans_ail_init(struct xfs_mount *);
- void		xfs_trans_ail_destroy(struct xfs_mount *);
+--- xfs.orig/fs/xfs/xfs_bmap.c	2011-09-11 08:47:11.743121736 -0400
++++ xfs/fs/xfs/xfs_bmap.c	2011-09-11 09:05:37.706448434 -0400
+@@ -2359,11 +2359,11 @@ xfs_bmap_btalloc(
+ 	xfs_bmalloca_t	*ap)		/* bmap alloc argument struct */
+ {
+ 	xfs_mount_t	*mp;		/* mount point structure */
++	xfs_alloc_arg_t	args;
+ 	xfs_alloctype_t	atype = 0;	/* type for allocation routines */
+ 	xfs_extlen_t	align;		/* minimum allocation alignment */
+ 	xfs_agnumber_t	fb_agno;	/* ag number of ap->firstblock */
+ 	xfs_agnumber_t	ag;
+-	xfs_alloc_arg_t	args;
+ 	xfs_extlen_t	blen;
+ 	xfs_extlen_t	nextminlen = 0;
+ 	int		nullfb;		/* true if ap->firstblock isn't set */
+@@ -4813,30 +4813,19 @@ xfs_bmapi_write(
+ 	int			*nmap,		/* i/o: mval size/count */
+ 	struct xfs_bmap_free	*flist)		/* i/o: list extents to free */
+ {
++	struct xfs_bmalloca	bma = { 0 };	/* args for xfs_bmap_alloc */
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	struct xfs_ifork	*ifp;
+-	struct xfs_bmalloca	bma = { 0 };	/* args for xfs_bmap_alloc */
+ 	xfs_fileoff_t		end;		/* end of mapped file region */
+-	int			eof;		/* after the end of extents */
+-	int			error;		/* error return */
+-	int			n;		/* current extent index */
+ 	xfs_fileoff_t		obno;		/* old block number (offset) */
++	int			error;		/* error return */
++	int			n = 0;		/* current extent index */
+ 	int			whichfork;	/* data or attr fork */
+-	char			inhole;		/* current location is hole in file */
+-	char			wasdelay;	/* old extent was delayed */
+-
+ #ifdef DEBUG
+-	xfs_fileoff_t		orig_bno;	/* original block number value */
+-	int			orig_flags;	/* original flags arg value */
+-	xfs_filblks_t		orig_len;	/* original value of len arg */
+-	struct xfs_bmbt_irec	*orig_mval;	/* original value of mval */
+-	int			orig_nmap;	/* original value of *nmap */
+-
+-	orig_bno = bno;
+-	orig_len = len;
+-	orig_flags = flags;
+-	orig_mval = mval;
+-	orig_nmap = *nmap;
++	xfs_fileoff_t		orig_bno = bno;
++	xfs_filblks_t		orig_len = len;
++	struct xfs_bmbt_irec	*orig_mval = mval;
++	int			orig_nmap = *nmap;
+ #endif
+ 
+ 	ASSERT(*nmap >= 1);
+@@ -4887,11 +4876,9 @@ xfs_bmapi_write(
+ 			goto error0;
+ 	}
+ 
+-	xfs_bmap_search_extents(ip, bno, whichfork, &eof, &bma.idx, &bma.got,
++	/* we abuse n as a local variable for eof, as bma.eof is a bitfield */
++	xfs_bmap_search_extents(ip, bno, whichfork, &n, &bma.idx, &bma.got,
+ 				&bma.prev);
+-	n = 0;
+-	end = bno + len;
+-	obno = bno;
+ 
+ 	bma.tp = tp;
+ 	bma.ip = ip;
+@@ -4899,19 +4886,21 @@ xfs_bmapi_write(
+ 	bma.userdata = 0;
+ 	bma.flist = flist;
+ 	bma.firstblock = firstblock;
++	bma.eof = n;
++	bma.conv = !!(flags & XFS_BMAPI_CONVERT);
+ 
++	n = 0;
++	end = bno + len;
++	obno = bno;
+ 	while (bno < end && n < *nmap) {
+-		inhole = eof || bma.got.br_startoff > bno;
+-		wasdelay = !inhole && isnullstartblock(bma.got.br_startblock);
+-
+ 		/*
+-		 * First, deal with the hole before the allocated space
+-		 * that we found, if any.
++		 * If we are past EOF, in a hole in a delayed allocation call
++		 * the allocator to get us a real allocation first.
+ 		 */
+-		if (inhole || wasdelay) {
+-			bma.eof = eof;
+-			bma.conv = !!(flags & XFS_BMAPI_CONVERT);
+-			bma.wasdel = wasdelay;
++		if (bma.eof || bma.got.br_startoff > bno ||
++		    isnullstartblock(bma.got.br_startblock)) {
++			bma.wasdel = isnullstartblock(bma.got.br_startblock) &&
++					!bma.eof && bma.got.br_startoff <= bno;
+ 			bma.length = len;
+ 			bma.offset = bno;
+ 
+@@ -4950,7 +4939,7 @@ xfs_bmapi_write(
+ 			xfs_bmbt_get_all(xfs_iext_get_ext(ifp, bma.idx),
+ 					 &bma.got);
+ 		} else
+-			eof = 1;
++			bma.eof = 1;
+ 	}
+ 	*nmap = n;
+ 
+@@ -5008,7 +4997,7 @@ error0:
+ 			error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
+ 	}
+ 	if (!error)
+-		xfs_bmap_validate_ret(orig_bno, orig_len, orig_flags, orig_mval,
++		xfs_bmap_validate_ret(orig_bno, orig_len, flags, orig_mval,
+ 			orig_nmap, *nmap);
+ 	return error;
+ }
 
 _______________________________________________
 xfs mailing list
