@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8IN0ufx209746 for <xfs@oss.sgi.com>; Sun, 18 Sep 2011 18:00:56 -0500
+	p8IN0Xmg209702 for <xfs@oss.sgi.com>; Sun, 18 Sep 2011 18:00:33 -0500
 Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D9F961C227B7
-	for <xfs@oss.sgi.com>; Sun, 18 Sep 2011 16:00:53 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D5B924EE861
+	for <xfs@oss.sgi.com>; Sun, 18 Sep 2011 16:00:31 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	5wXS8tfqe8fMVjku for <xfs@oss.sgi.com>;
-	Sun, 18 Sep 2011 16:00:53 -0700 (PDT)
-Date: Mon, 19 Sep 2011 09:00:51 +1000
+	cT5Hl0jCA7yQOKIn for <xfs@oss.sgi.com>;
+	Sun, 18 Sep 2011 16:00:31 -0700 (PDT)
+Date: Mon, 19 Sep 2011 09:00:29 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 3/3] xfs: unlock the inode before log force in
-	xfs_change_file_space
-Message-ID: <20110918230051.GE15688@dastard>
+Subject: Re: [PATCH 2/3] xfs: unlock the inode before log force in
+	xfs_fs_nfs_commit_metadata
+Message-ID: <20110918230029.GD15688@dastard>
 References: <20110918204748.547510183@bombadil.infradead.org>
-	<20110918204910.285475671@bombadil.infradead.org>
+	<20110918204910.076049421@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110918204910.285475671@bombadil.infradead.org>
+In-Reply-To: <20110918204910.076049421@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,9 +34,9 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Sun, Sep 18, 2011 at 04:47:51PM -0400, Christoph Hellwig wrote:
-> Let the transaction commit unlock the inode before it potentially causes
-> a synchronous log force.
+On Sun, Sep 18, 2011 at 04:47:50PM -0400, Christoph Hellwig wrote:
+> Only read the LSN we need to push to with the ilock held, and then release
+> it before we do the log force to improve concurrency.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
