@@ -1,25 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8IKfh8M200866 for <xfs@oss.sgi.com>; Sun, 18 Sep 2011 15:41:44 -0500
+	p8IKfkvJ200938 for <xfs@oss.sgi.com>; Sun, 18 Sep 2011 15:41:47 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 57A4A17205B
-	for <xfs@oss.sgi.com>; Sun, 18 Sep 2011 13:41:42 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 10D9017205C
+	for <xfs@oss.sgi.com>; Sun, 18 Sep 2011 13:41:45 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	XYf7PRetx1h6X79Q for <xfs@oss.sgi.com>;
-	Sun, 18 Sep 2011 13:41:42 -0700 (PDT)
-Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1R5OBK-0004e3-M7
-	for xfs@oss.sgi.com; Sun, 18 Sep 2011 20:41:42 +0000
-Message-Id: <20110918204142.636946737@bombadil.infradead.org>
-Date: Sun, 18 Sep 2011 16:40:41 -0400
+	oXMMjVvBKdsY1Ayc for <xfs@oss.sgi.com>;
+	Sun, 18 Sep 2011 13:41:45 -0700 (PDT)
+Message-Id: <20110918204145.403773861@bombadil.infradead.org>
+Date: Sun, 18 Sep 2011 16:40:55 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 01/27] xfs: remove the first extent special case in
-	xfs_bmap_add_extent
+Subject: [PATCH 15/27] xfs: pass bmalloca structure to xfs_bmap_isaeof
 References: <20110918204040.266805129@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-bmap_add_extent-remove-special-cases
+Content-Disposition: inline; filename=xfs-bmalloca-isaeof
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,46 +30,72 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: Dave Chinner <dchinner@redhat.com>
 
-Both xfs_bmap_add_extent_hole_delay and xfs_bmap_add_extent_hole_real
-already contain code to handle the case where there is no extent to
-merge with, which is effectively the same as the code duplicated here.
+From: Dave Chinner <dchinner@redhat.com>
 
+All the variables xfs_bmap_isaeof() is passed are contained within
+the xfs_bmalloca structure. Pass that instead.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Alex Elder <aelder@sgi.com>
 
 Index: xfs/fs/xfs/xfs_bmap.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_bmap.c	2011-07-13 09:14:14.375340664 +0200
-+++ xfs/fs/xfs/xfs_bmap.c	2011-07-13 09:16:07.041396967 +0200
-@@ -466,26 +466,9 @@ xfs_bmap_add_extent(
- 	ASSERT(*idx <= nextents);
+--- xfs.orig/fs/xfs/xfs_bmap.c	2011-09-11 08:45:06.206455848 -0400
++++ xfs/fs/xfs/xfs_bmap.c	2011-09-11 08:45:07.546455840 -0400
+@@ -3867,22 +3867,21 @@ xfs_bmap_last_extent(
+  * blocks at the end of the file which do not start at the previous data block,
+  * we will try to align the new blocks at stripe unit boundaries.
+  *
+- * Returns 0 in *aeof if the file (fork) is empty as any new write will be at,
+- * or past the EOF.
++ * Returns 0 in bma->aeof if the file (fork) is empty as any new write will be
++ * at, or past the EOF.
+  */
+ STATIC int
+ xfs_bmap_isaeof(
+-	struct xfs_inode	*ip,
+-	xfs_fileoff_t		off,
+-	int			whichfork,
+-	char			*aeof)
++	struct xfs_bmalloca	*bma,
++	int			whichfork)
+ {
+ 	struct xfs_bmbt_irec	rec;
+ 	int			is_empty;
+ 	int			error;
  
- 	/*
--	 * This is the first extent added to a new/empty file.
--	 * Special case this one, so other routines get to assume there are
--	 * already extents in the list.
--	 */
--	if (nextents == 0) {
--		xfs_iext_insert(ip, *idx, 1, new,
--				whichfork == XFS_ATTR_FORK ? BMAP_ATTRFORK : 0);
--
--		ASSERT(cur == NULL);
--
--		if (!isnullstartblock(new->br_startblock)) {
--			XFS_IFORK_NEXT_SET(ip, whichfork, 1);
--			logflags = XFS_ILOG_CORE | xfs_ilog_fext(whichfork);
--		} else
--			logflags = 0;
--	}
--	/*
- 	 * Any kind of new delayed allocation goes here.
+-	*aeof = 0;
+-	error = xfs_bmap_last_extent(NULL, ip, whichfork, &rec, &is_empty);
++	bma->aeof = 0;
++	error = xfs_bmap_last_extent(NULL, bma->ip, whichfork, &rec,
++				     &is_empty);
+ 	if (error || is_empty)
+ 		return error;
+ 
+@@ -3890,8 +3889,9 @@ xfs_bmap_isaeof(
+ 	 * Check if we are allocation or past the last extent, or at least into
+ 	 * the last delayed allocated extent.
  	 */
--	else if (isnullstartblock(new->br_startblock)) {
-+	if (isnullstartblock(new->br_startblock)) {
- 		if (cur)
- 			ASSERT((cur->bc_private.b.flags &
- 				XFS_BTCUR_BPRV_WASDEL) == 0);
+-	*aeof = off >= rec.br_startoff + rec.br_blockcount ||
+-		(off >= rec.br_startoff && isnullstartblock(rec.br_startblock));
++	bma->aeof = bma->off >= rec.br_startoff + rec.br_blockcount ||
++		(bma->off >= rec.br_startoff &&
++		 isnullstartblock(rec.br_startblock));
+ 	return 0;
+ }
+ 
+@@ -4658,7 +4658,7 @@ xfs_bmapi_allocate(
+ 	 */
+ 	if (mp->m_dalign && alen >= mp->m_dalign &&
+ 	    !(flags & XFS_BMAPI_METADATA) && whichfork == XFS_DATA_FORK) {
+-		error = xfs_bmap_isaeof(bma->ip, aoff, whichfork, &bma->aeof);
++		error = xfs_bmap_isaeof(bma, whichfork);
+ 		if (error)
+ 			return error;
+ 	}
 
 _______________________________________________
 xfs mailing list
