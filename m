@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8IKflGV200979 for <xfs@oss.sgi.com>; Sun, 18 Sep 2011 15:41:48 -0500
+	p8IKfnTk201030 for <xfs@oss.sgi.com>; Sun, 18 Sep 2011 15:41:58 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 16BAA16A92F1
-	for <xfs@oss.sgi.com>; Sun, 18 Sep 2011 13:46:54 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 996BF172069
+	for <xfs@oss.sgi.com>; Sun, 18 Sep 2011 13:41:48 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	6tcaBQpeZMphbUEG for <xfs@oss.sgi.com>;
-	Sun, 18 Sep 2011 13:46:54 -0700 (PDT)
-Message-Id: <20110918204145.594044833@bombadil.infradead.org>
-Date: Sun, 18 Sep 2011 16:40:56 -0400
+	3ca7j3bgdaQ8yixA for <xfs@oss.sgi.com>;
+	Sun, 18 Sep 2011 13:41:48 -0700 (PDT)
+Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
+	Linux)) id 1R5OBP-0004s0-Uu
+	for xfs@oss.sgi.com; Sun, 18 Sep 2011 20:41:48 +0000
+Message-Id: <20110918204147.908801720@bombadil.infradead.org>
+Date: Sun, 18 Sep 2011 16:41:07 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 16/27] xfs: move extent records into bmalloca structure
+Subject: [PATCH 27/27] xfs: cleanup xfs_bmap.h
 References: <20110918204040.266805129@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-bmalloca-extents
+Content-Disposition: inline; filename=xfs-bmap-header-cleanup
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,282 +33,268 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: Dave Chinner <dchinner@redhat.com>
 
-From: Dave Chinner <david@fromorbit.com>
+Convert all function prototypes to the short form used elsewhere, and
+remove duplicates of comments already placed at the function body.
 
-Rather that putting extent records on the stack and then pointing to
-them in the bmalloca structure which is in the same stack frame, put
-the extent records directly in the bmalloca structure. This reduces
-the number of args that need to be passed around.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Alex Elder <aelder@sgi.com>
 
-Index: xfs/fs/xfs/xfs_bmap.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_bmap.c	2011-09-11 08:45:07.546455840 -0400
-+++ xfs/fs/xfs/xfs_bmap.c	2011-09-11 08:45:08.793122498 -0400
-@@ -2013,18 +2013,18 @@ xfs_bmap_adjacent(
- 	 * If allocating at eof, and there's a previous real block,
- 	 * try to use its last block as our starting point.
- 	 */
--	if (ap->eof && ap->prevp->br_startoff != NULLFILEOFF &&
--	    !isnullstartblock(ap->prevp->br_startblock) &&
--	    ISVALID(ap->prevp->br_startblock + ap->prevp->br_blockcount,
--		    ap->prevp->br_startblock)) {
--		ap->rval = ap->prevp->br_startblock + ap->prevp->br_blockcount;
-+	if (ap->eof && ap->prev.br_startoff != NULLFILEOFF &&
-+	    !isnullstartblock(ap->prev.br_startblock) &&
-+	    ISVALID(ap->prev.br_startblock + ap->prev.br_blockcount,
-+		    ap->prev.br_startblock)) {
-+		ap->rval = ap->prev.br_startblock + ap->prev.br_blockcount;
- 		/*
- 		 * Adjust for the gap between prevp and us.
- 		 */
- 		adjust = ap->off -
--			(ap->prevp->br_startoff + ap->prevp->br_blockcount);
-+			(ap->prev.br_startoff + ap->prev.br_blockcount);
- 		if (adjust &&
--		    ISVALID(ap->rval + adjust, ap->prevp->br_startblock))
-+		    ISVALID(ap->rval + adjust, ap->prev.br_startblock))
- 			ap->rval += adjust;
- 	}
- 	/*
-@@ -2042,17 +2042,17 @@ xfs_bmap_adjacent(
- 		 * If there's a previous (left) block, select a requested
- 		 * start block based on it.
- 		 */
--		if (ap->prevp->br_startoff != NULLFILEOFF &&
--		    !isnullstartblock(ap->prevp->br_startblock) &&
--		    (prevbno = ap->prevp->br_startblock +
--			       ap->prevp->br_blockcount) &&
--		    ISVALID(prevbno, ap->prevp->br_startblock)) {
-+		if (ap->prev.br_startoff != NULLFILEOFF &&
-+		    !isnullstartblock(ap->prev.br_startblock) &&
-+		    (prevbno = ap->prev.br_startblock +
-+			       ap->prev.br_blockcount) &&
-+		    ISVALID(prevbno, ap->prev.br_startblock)) {
- 			/*
- 			 * Calculate gap to end of previous block.
- 			 */
- 			adjust = prevdiff = ap->off -
--				(ap->prevp->br_startoff +
--				 ap->prevp->br_blockcount);
-+				(ap->prev.br_startoff +
-+				 ap->prev.br_blockcount);
- 			/*
- 			 * Figure the startblock based on the previous block's
- 			 * end and the gap size.
-@@ -2063,7 +2063,7 @@ xfs_bmap_adjacent(
- 			 */
- 			if (prevdiff <= XFS_ALLOC_GAP_UNITS * ap->alen &&
- 			    ISVALID(prevbno + prevdiff,
--				    ap->prevp->br_startblock))
-+				    ap->prev.br_startblock))
- 				prevbno += adjust;
- 			else
- 				prevdiff += adjust;
-@@ -2084,16 +2084,16 @@ xfs_bmap_adjacent(
- 		 * If there's a following (right) block, select a requested
- 		 * start block based on it.
- 		 */
--		if (!isnullstartblock(ap->gotp->br_startblock)) {
-+		if (!isnullstartblock(ap->got.br_startblock)) {
- 			/*
- 			 * Calculate gap to start of next block.
- 			 */
--			adjust = gotdiff = ap->gotp->br_startoff - ap->off;
-+			adjust = gotdiff = ap->got.br_startoff - ap->off;
- 			/*
- 			 * Figure the startblock based on the next block's
- 			 * start and the gap size.
- 			 */
--			gotbno = ap->gotp->br_startblock;
-+			gotbno = ap->got.br_startblock;
- 			/*
- 			 * Heuristic!
- 			 * If the gap is large relative to the piece we're
-@@ -2151,7 +2151,7 @@ xfs_bmap_rtalloc(
- 	mp = ap->ip->i_mount;
- 	align = xfs_get_extsz_hint(ap->ip);
- 	prod = align / mp->m_sb.sb_rextsize;
--	error = xfs_bmap_extsize_align(mp, ap->gotp, ap->prevp,
-+	error = xfs_bmap_extsize_align(mp, &ap->got, &ap->prev,
- 					align, 1, ap->eof, 0,
- 					ap->conv, &ap->off, &ap->alen);
- 	if (error)
-@@ -2374,7 +2374,7 @@ xfs_bmap_btalloc(
- 	mp = ap->ip->i_mount;
- 	align = ap->userdata ? xfs_get_extsz_hint(ap->ip) : 0;
- 	if (unlikely(align)) {
--		error = xfs_bmap_extsize_align(mp, ap->gotp, ap->prevp,
-+		error = xfs_bmap_extsize_align(mp, &ap->got, &ap->prev,
- 						align, 0, ap->eof, 0, ap->conv,
- 						&ap->off, &ap->alen);
- 		ASSERT(!error);
-@@ -4619,17 +4619,17 @@ xfs_bmapi_allocate(
- 	 * for in this bmap call but that wouldn't be as good.
- 	 */
- 	if (bma->wasdel) {
--		alen = (xfs_extlen_t)bma->gotp->br_blockcount;
--		aoff = bma->gotp->br_startoff;
-+		alen = (xfs_extlen_t)bma->got.br_blockcount;
-+		aoff = bma->got.br_startoff;
- 		if (*lastx != NULLEXTNUM && *lastx) {
- 			xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *lastx - 1),
--					 bma->prevp);
-+					 &bma->prev);
- 		}
- 	} else {
- 		alen = (xfs_extlen_t)XFS_FILBLKS_MIN(bma->alen, MAXEXTLEN);
- 		if (!bma->eof)
- 			alen = (xfs_extlen_t)XFS_FILBLKS_MIN(alen,
--					bma->gotp->br_startoff - bma->off);
-+					bma->got.br_startoff - bma->off);
- 		aoff = bma->off;
- 	}
- 
-@@ -4700,10 +4700,10 @@ xfs_bmapi_allocate(
- 		(*cur)->bc_private.b.flags =
- 			bma->wasdel ? XFS_BTCUR_BPRV_WASDEL : 0;
- 
--	bma->gotp->br_startoff = aoff;
--	bma->gotp->br_startblock = abno;
--	bma->gotp->br_blockcount = alen;
--	bma->gotp->br_state = XFS_EXT_NORM;
-+	bma->got.br_startoff = aoff;
-+	bma->got.br_startblock = abno;
-+	bma->got.br_blockcount = alen;
-+	bma->got.br_state = XFS_EXT_NORM;
- 
- 	/*
- 	 * A wasdelay extent has been initialized, so shouldn't be flagged
-@@ -4711,14 +4711,14 @@ xfs_bmapi_allocate(
- 	 */
- 	if (!bma->wasdel && (flags & XFS_BMAPI_PREALLOC) &&
- 	    xfs_sb_version_hasextflgbit(&mp->m_sb))
--		bma->gotp->br_state = XFS_EXT_UNWRITTEN;
-+		bma->got.br_state = XFS_EXT_UNWRITTEN;
- 
- 	if (bma->wasdel) {
- 		error = xfs_bmap_add_extent_delay_real(bma->tp, bma->ip, lastx,
--				cur, bma->gotp, firstblock, flist, logflags);
-+				cur, &bma->got, firstblock, flist, logflags);
- 	} else {
- 		error = xfs_bmap_add_extent_hole_real(bma->tp, bma->ip, lastx,
--				cur, bma->gotp, firstblock, flist, logflags,
-+				cur, &bma->got, firstblock, flist, logflags,
- 				whichfork);
- 	}
- 
-@@ -4730,13 +4730,12 @@ xfs_bmapi_allocate(
- 	 * or xfs_bmap_add_extent_hole_real might have merged it into one of
- 	 * the neighbouring ones.
- 	 */
--	xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *lastx), bma->gotp);
-+	xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *lastx), &bma->got);
- 
--	ASSERT(bma->gotp->br_startoff <= aoff);
--	ASSERT(bma->gotp->br_startoff + bma->gotp->br_blockcount >=
--		aoff + alen);
--	ASSERT(bma->gotp->br_state == XFS_EXT_NORM ||
--	       bma->gotp->br_state == XFS_EXT_UNWRITTEN);
-+	ASSERT(bma->got.br_startoff <= aoff);
-+	ASSERT(bma->got.br_startoff + bma->got.br_blockcount >= aoff + alen);
-+	ASSERT(bma->got.br_state == XFS_EXT_NORM ||
-+	       bma->got.br_state == XFS_EXT_UNWRITTEN);
- 	return 0;
- }
- 
-@@ -4793,7 +4792,7 @@ xfs_bmapi_convert_unwritten(
- 	 * xfs_bmap_add_extent_unwritten_real might have merged it into one
- 	 * of the neighbouring ones.
- 	 */
--	xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *lastx), bma->gotp);
-+	xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *lastx), &bma->got);
- 
- 	/*
- 	 * We may have combined previously unwritten space with written space,
-@@ -4837,14 +4836,12 @@ xfs_bmapi_write(
- 	xfs_fileoff_t		end;		/* end of mapped file region */
- 	int			eof;		/* after the end of extents */
- 	int			error;		/* error return */
--	struct xfs_bmbt_irec	got;		/* current file extent record */
- 	xfs_extnum_t		lastx;		/* last useful extent number */
- 	int			logflags;	/* flags for transaction logging */
- 	xfs_extlen_t		minleft;	/* min blocks left after allocation */
- 	int			n;		/* current extent index */
- 	int			nallocs;	/* number of extents alloc'd */
- 	xfs_fileoff_t		obno;		/* old block number (offset) */
--	struct xfs_bmbt_irec	prev;		/* previous file extent record */
- 	int			tmp_logflags;	/* temp flags holder */
- 	int			whichfork;	/* data or attr fork */
- 	char			inhole;		/* current location is hole in file */
-@@ -4916,21 +4913,20 @@ xfs_bmapi_write(
- 			goto error0;
- 	}
- 
--	xfs_bmap_search_extents(ip, bno, whichfork, &eof, &lastx, &got, &prev);
-+	xfs_bmap_search_extents(ip, bno, whichfork, &eof, &lastx, &bma.got,
-+				&bma.prev);
- 	n = 0;
- 	end = bno + len;
- 	obno = bno;
- 
- 	bma.tp = tp;
- 	bma.ip = ip;
--	bma.prevp = &prev;
--	bma.gotp = &got;
- 	bma.total = total;
- 	bma.userdata = 0;
- 
- 	while (bno < end && n < *nmap) {
--		inhole = eof || got.br_startoff > bno;
--		wasdelay = !inhole && isnullstartblock(got.br_startblock);
-+		inhole = eof || bma.got.br_startoff > bno;
-+		wasdelay = !inhole && isnullstartblock(bma.got.br_startblock);
- 
- 		/*
- 		 * First, deal with the hole before the allocated space
-@@ -4957,7 +4953,8 @@ xfs_bmapi_write(
- 		}
- 
- 		/* Deal with the allocated space we found.  */
--		xfs_bmapi_trim_map(mval, &got, &bno, len, obno, end, n, flags);
-+		xfs_bmapi_trim_map(mval, &bma.got, &bno, len, obno,
-+							end, n, flags);
- 
- 		/* Execute unwritten extent conversion if necessary */
- 		error = xfs_bmapi_convert_unwritten(&bma, mval, len, &lastx,
-@@ -4981,9 +4978,9 @@ xfs_bmapi_write(
- 			break;
- 
- 		/* Else go on to the next record. */
--		prev = got;
-+		bma.prev = bma.got;
- 		if (++lastx < ifp->if_bytes / sizeof(xfs_bmbt_rec_t))
--			xfs_bmbt_get_all(xfs_iext_get_ext(ifp, lastx), &got);
-+			xfs_bmbt_get_all(xfs_iext_get_ext(ifp, lastx), &bma.got);
- 		else
- 			eof = 1;
- 	}
 Index: xfs/fs/xfs/xfs_bmap.h
 ===================================================================
---- xfs.orig/fs/xfs/xfs_bmap.h	2011-09-11 08:43:40.629789689 -0400
-+++ xfs/fs/xfs/xfs_bmap.h	2011-09-11 08:45:08.793122498 -0400
-@@ -114,8 +114,8 @@ typedef struct xfs_bmalloca {
- 	xfs_fileoff_t		off;	/* offset in file filling in */
- 	struct xfs_trans	*tp;	/* transaction pointer */
- 	struct xfs_inode	*ip;	/* incore inode pointer */
--	struct xfs_bmbt_irec	*prevp;	/* extent before the new one */
--	struct xfs_bmbt_irec	*gotp;	/* extent after, or delayed */
-+	struct xfs_bmbt_irec	prev;	/* extent before the new one */
-+	struct xfs_bmbt_irec	got;	/* extent after, or delayed */
- 	xfs_extlen_t		alen;	/* i/o length asked/allocated */
- 	xfs_extlen_t		total;	/* total blocks needed for xaction */
- 	xfs_extlen_t		minlen;	/* minimum allocation size (blocks) */
+--- xfs.orig/fs/xfs/xfs_bmap.h	2011-09-11 09:06:45.279781419 -0400
++++ xfs/fs/xfs/xfs_bmap.h	2011-09-11 09:07:15.646447912 -0400
+@@ -155,121 +155,29 @@ typedef struct xfs_bmalloca {
+ 	{ BMAP_RIGHT_FILLING,	"RF" }, \
+ 	{ BMAP_ATTRFORK,	"ATTR" }
+ 
+-/*
+- * Add bmap trace insert entries for all the contents of the extent list.
+- *
+- * Quite excessive tracing.  Only do this for debug builds.
+- */
+ #if defined(__KERNEL) && defined(DEBUG)
+-void
+-xfs_bmap_trace_exlist(
+-	struct xfs_inode	*ip,		/* incore inode pointer */
+-	xfs_extnum_t		cnt,		/* count of entries in list */
+-	int			whichfork,
+-	unsigned long		caller_ip);	/* data or attr fork */
++void	xfs_bmap_trace_exlist(struct xfs_inode *ip, xfs_extnum_t cnt,
++		int whichfork, unsigned long caller_ip);
+ #define	XFS_BMAP_TRACE_EXLIST(ip,c,w)	\
+ 	xfs_bmap_trace_exlist(ip,c,w, _THIS_IP_)
+ #else
+ #define	XFS_BMAP_TRACE_EXLIST(ip,c,w)
+ #endif
+ 
+-/*
+- * Convert inode from non-attributed to attributed.
+- * Must not be in a transaction, ip must not be locked.
+- */
+-int					/* error code */
+-xfs_bmap_add_attrfork(
+-	struct xfs_inode	*ip,	/* incore inode pointer */
+-	int			size,	/* space needed for new attribute */
+-	int			rsvd);	/* flag for reserved block allocation */
+-
+-/*
+- * Add the extent to the list of extents to be free at transaction end.
+- * The list is maintained sorted (by block number).
+- */
+-void
+-xfs_bmap_add_free(
+-	xfs_fsblock_t		bno,		/* fs block number of extent */
+-	xfs_filblks_t		len,		/* length of extent */
+-	xfs_bmap_free_t		*flist,		/* list of extents */
+-	struct xfs_mount	*mp);		/* mount point structure */
+-
+-/*
+- * Routine to clean up the free list data structure when
+- * an error occurs during a transaction.
+- */
+-void
+-xfs_bmap_cancel(
+-	xfs_bmap_free_t		*flist);	/* free list to clean up */
+-
+-/*
+- * Compute and fill in the value of the maximum depth of a bmap btree
+- * in this filesystem.  Done once, during mount.
+- */
+-void
+-xfs_bmap_compute_maxlevels(
+-	struct xfs_mount	*mp,	/* file system mount structure */
+-	int			whichfork);	/* data or attr fork */
+-
+-/*
+- * Returns the file-relative block number of the first unused block in the file.
+- * This is the lowest-address hole if the file has holes, else the first block
+- * past the end of file.
+- */
+-int						/* error */
+-xfs_bmap_first_unused(
+-	struct xfs_trans	*tp,		/* transaction pointer */
+-	struct xfs_inode	*ip,		/* incore inode */
+-	xfs_extlen_t		len,		/* size of hole to find */
+-	xfs_fileoff_t		*unused,	/* unused block num */
+-	int			whichfork);	/* data or attr fork */
+-
+-/*
+- * Returns the file-relative block number of the last block + 1 before
+- * last_block (input value) in the file.
+- * This is not based on i_size, it is based on the extent list.
+- * Returns 0 for local files, as they do not have an extent list.
+- */
+-int						/* error */
+-xfs_bmap_last_before(
+-	struct xfs_trans	*tp,		/* transaction pointer */
+-	struct xfs_inode	*ip,		/* incore inode */
+-	xfs_fileoff_t		*last_block,	/* last block */
+-	int			whichfork);	/* data or attr fork */
+-
+-/*
+- * Returns the file-relative block number of the first block past eof in
+- * the file.  This is not based on i_size, it is based on the extent list.
+- * Returns 0 for local files, as they do not have an extent list.
+- */
+-int						/* error */
+-xfs_bmap_last_offset(
+-	struct xfs_trans	*tp,		/* transaction pointer */
+-	struct xfs_inode	*ip,		/* incore inode */
+-	xfs_fileoff_t		*unused,	/* last block num */
+-	int			whichfork);	/* data or attr fork */
+-
+-/*
+- * Returns whether the selected fork of the inode has exactly one
+- * block or not.  For the data fork we check this matches di_size,
+- * implying the file's range is 0..bsize-1.
+- */
+-int
+-xfs_bmap_one_block(
+-	struct xfs_inode	*ip,		/* incore inode */
+-	int			whichfork);	/* data or attr fork */
+-
+-/*
+- * Read in the extents to iu_extents.
+- * All inode fields are set up by caller, we just traverse the btree
+- * and copy the records in.
+- */
+-int						/* error */
+-xfs_bmap_read_extents(
+-	struct xfs_trans	*tp,		/* transaction pointer */
+-	struct xfs_inode	*ip,		/* incore inode */
+-	int			whichfork);	/* data or attr fork */
+-
++int	xfs_bmap_add_attrfork(struct xfs_inode *ip, int size, int rsvd);
++void	xfs_bmap_add_free(xfs_fsblock_t bno, xfs_filblks_t len,
++		struct xfs_bmap_free *flist, struct xfs_mount *mp);
++void	xfs_bmap_cancel(struct xfs_bmap_free *flist);
++void	xfs_bmap_compute_maxlevels(struct xfs_mount *mp, int whichfork);
++int	xfs_bmap_first_unused(struct xfs_trans *tp, struct xfs_inode *ip,
++		xfs_extlen_t len, xfs_fileoff_t *unused, int whichfork);
++int	xfs_bmap_last_before(struct xfs_trans *tp, struct xfs_inode *ip,
++		xfs_fileoff_t *last_block, int whichfork);
++int	xfs_bmap_last_offset(struct xfs_trans *tp, struct xfs_inode *ip,
++		xfs_fileoff_t *unused, int whichfork);
++int	xfs_bmap_one_block(struct xfs_inode *ip, int whichfork);
++int	xfs_bmap_read_extents(struct xfs_trans *tp, struct xfs_inode *ip,
++		int whichfork);
+ int	xfs_bmapi_read(struct xfs_inode *ip, xfs_fileoff_t bno,
+ 		xfs_filblks_t len, struct xfs_bmbt_irec *mval,
+ 		int *nmap, int flags);
+@@ -281,95 +189,28 @@ int	xfs_bmapi_write(struct xfs_trans *tp
+ 		xfs_fsblock_t *firstblock, xfs_extlen_t total,
+ 		struct xfs_bmbt_irec *mval, int *nmap,
+ 		struct xfs_bmap_free *flist);
+-
+-/*
+- * Unmap (remove) blocks from a file.
+- * If nexts is nonzero then the number of extents to remove is limited to
+- * that value.  If not all extents in the block range can be removed then
+- * *done is set.
+- */
+-int						/* error */
+-xfs_bunmapi(
+-	struct xfs_trans	*tp,		/* transaction pointer */
+-	struct xfs_inode	*ip,		/* incore inode */
+-	xfs_fileoff_t		bno,		/* starting offset to unmap */
+-	xfs_filblks_t		len,		/* length to unmap in file */
+-	int			flags,		/* XFS_BMAPI_... */
+-	xfs_extnum_t		nexts,		/* number of extents max */
+-	xfs_fsblock_t		*firstblock,	/* first allocated block
+-						   controls a.g. for allocs */
+-	xfs_bmap_free_t		*flist,		/* i/o: list extents to free */
+-	int			*done);		/* set if not done yet */
+-
+-/*
+- * Check an extent list, which has just been read, for
+- * any bit in the extent flag field.
+- */
+-int
+-xfs_check_nostate_extents(
+-	struct xfs_ifork	*ifp,
+-	xfs_extnum_t		idx,
+-	xfs_extnum_t		num);
+-
+-uint
+-xfs_default_attroffset(
+-	struct xfs_inode	*ip);
++int	xfs_bunmapi(struct xfs_trans *tp, struct xfs_inode *ip,
++		xfs_fileoff_t bno, xfs_filblks_t len, int flags,
++		xfs_extnum_t nexts, xfs_fsblock_t *firstblock,
++		struct xfs_bmap_free *flist, int *done);
++int	xfs_check_nostate_extents(struct xfs_ifork *ifp, xfs_extnum_t idx,
++		xfs_extnum_t num);
++uint	xfs_default_attroffset(struct xfs_inode *ip);
+ 
+ #ifdef __KERNEL__
+-
+-/*
+- * Routine to be called at transaction's end by xfs_bmapi, xfs_bunmapi
+- * caller.  Frees all the extents that need freeing, which must be done
+- * last due to locking considerations.
+- *
+- * Return 1 if the given transaction was committed and a new one allocated,
+- * and 0 otherwise.
+- */
+-int						/* error */
+-xfs_bmap_finish(
+-	struct xfs_trans	**tp,		/* transaction pointer addr */
+-	xfs_bmap_free_t		*flist,		/* i/o: list extents to free */
+-	int			*committed);	/* xact committed or not */
+-
+ /* bmap to userspace formatter - copy to user & advance pointer */
+ typedef int (*xfs_bmap_format_t)(void **, struct getbmapx *, int *);
+ 
+-/*
+- * Get inode's extents as described in bmv, and format for output.
+- */
+-int						/* error code */
+-xfs_getbmap(
+-	xfs_inode_t		*ip,
+-	struct getbmapx		*bmv,		/* user bmap structure */
+-	xfs_bmap_format_t	formatter,	/* format to user */
+-	void			*arg);		/* formatter arg */
+-
+-/*
+- * Check if the endoff is outside the last extent. If so the caller will grow
+- * the allocation to a stripe unit boundary
+- */
+-int
+-xfs_bmap_eof(
+-	struct xfs_inode        *ip,
+-	xfs_fileoff_t           endoff,
+-	int                     whichfork,
+-	int                     *eof);
+-
+-/*
+- * Count fsblocks of the given fork.
+- */
+-int
+-xfs_bmap_count_blocks(
+-	xfs_trans_t		*tp,
+-	struct xfs_inode	*ip,
+-	int			whichfork,
+-	int			*count);
+-
+-int
+-xfs_bmap_punch_delalloc_range(
+-	struct xfs_inode	*ip,
+-	xfs_fileoff_t		start_fsb,
+-	xfs_fileoff_t		length);
++int	xfs_bmap_finish(struct xfs_trans **tp, struct xfs_bmap_free *flist,
++		int *committed);
++int	xfs_getbmap(struct xfs_inode *ip, struct getbmapx *bmv,
++		xfs_bmap_format_t formatter, void *arg);
++int	xfs_bmap_eof(struct xfs_inode *ip, xfs_fileoff_t endoff,
++		int whichfork, int *eof);
++int	xfs_bmap_count_blocks(struct xfs_trans *tp, struct xfs_inode *ip,
++		int whichfork, int *count);
++int	xfs_bmap_punch_delalloc_range(struct xfs_inode *ip,
++		xfs_fileoff_t start_fsb, xfs_fileoff_t length);
+ #endif	/* __KERNEL__ */
+ 
+ #endif	/* __XFS_BMAP_H__ */
 
 _______________________________________________
 xfs mailing list
