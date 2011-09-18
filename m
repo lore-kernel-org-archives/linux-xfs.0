@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8IKfl87200957 for <xfs@oss.sgi.com>; Sun, 18 Sep 2011 15:41:47 -0500
+	p8IKfk2O200920 for <xfs@oss.sgi.com>; Sun, 18 Sep 2011 15:41:46 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B36EE172069
-	for <xfs@oss.sgi.com>; Sun, 18 Sep 2011 13:41:46 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4FAF4172060
+	for <xfs@oss.sgi.com>; Sun, 18 Sep 2011 13:41:44 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	CgY2eLlXlebs0CUH for <xfs@oss.sgi.com>;
-	Sun, 18 Sep 2011 13:41:46 -0700 (PDT)
-Message-Id: <20110918204146.168111527@bombadil.infradead.org>
-Date: Sun, 18 Sep 2011 16:40:59 -0400
+	nf9rPCdz79qIuoI2 for <xfs@oss.sgi.com>;
+	Sun, 18 Sep 2011 13:41:44 -0700 (PDT)
+Message-Id: <20110918204144.554438123@bombadil.infradead.org>
+Date: Sun, 18 Sep 2011 16:40:51 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 19/27] xfs: do not keep local copies of allocation ranges in
-	xfs_bmapi_allocate
+Subject: [PATCH 11/27] xfs: factor unwritten extent map manipulations out of
+	xfs_bmapi
 References: <20110918204040.266805129@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-bmapi_allocate-cleanup
+Content-Disposition: inline;
+	filename=xfs-bmapi-factor-unwrittent-extent-conversion
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,118 +36,150 @@ Cc: Dave Chinner <dchinner@redhat.com>
 
 From: Dave Chinner <dchinner@redhat.com>
 
+To further improve the readability of xfs_bmapi(), factor the unwritten
+extent conversion out into a separate function. This removes
+large block of logic from the xfs_bmapi() code loop and makes it
+easier to see the operational logic flow for xfs_bmapi().
+
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Alex Elder <aelder@sgi.com>
 
 Index: xfs/fs/xfs/xfs_bmap.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_bmap.c	2011-09-11 08:45:11.126455817 -0400
-+++ xfs/fs/xfs/xfs_bmap.c	2011-09-11 08:45:12.276455812 -0400
-@@ -4617,9 +4617,6 @@ xfs_bmapi_allocate(
- 	int			whichfork = (flags & XFS_BMAPI_ATTRFORK) ?
- 						XFS_ATTR_FORK : XFS_DATA_FORK;
- 	struct xfs_ifork	*ifp = XFS_IFORK_PTR(bma->ip, whichfork);
--	xfs_fsblock_t		abno;
--	xfs_extlen_t		alen;
--	xfs_fileoff_t		aoff;
- 	int			error;
- 	int			rt;
+--- xfs.orig/fs/xfs/xfs_bmap.c	2011-09-11 08:43:13.169789855 -0400
++++ xfs/fs/xfs/xfs_bmap.c	2011-09-11 08:43:14.726456511 -0400
+@@ -4089,7 +4089,6 @@ xfs_bmap_read_extents(
+ 		xfs_extnum_t	num_recs;
+ 		xfs_extnum_t	start;
  
-@@ -4630,18 +4627,17 @@ xfs_bmapi_allocate(
- 	 * for in this bmap call but that wouldn't be as good.
- 	 */
- 	if (bma->wasdel) {
--		alen = (xfs_extlen_t)bma->got.br_blockcount;
--		aoff = bma->got.br_startoff;
-+		bma->length = (xfs_extlen_t)bma->got.br_blockcount;
-+		bma->offset = bma->got.br_startoff;
- 		if (*lastx != NULLEXTNUM && *lastx) {
- 			xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *lastx - 1),
- 					 &bma->prev);
- 		}
- 	} else {
--		alen = (xfs_extlen_t)XFS_FILBLKS_MIN(bma->length, MAXEXTLEN);
-+		bma->length = XFS_FILBLKS_MIN(bma->length, MAXEXTLEN);
- 		if (!bma->eof)
--			alen = (xfs_extlen_t)XFS_FILBLKS_MIN(alen,
-+			bma->length = XFS_FILBLKS_MIN(bma->length,
- 					bma->got.br_startoff - bma->offset);
--		aoff = bma->offset;
- 	}
- 
- 	/*
-@@ -4649,23 +4645,17 @@ xfs_bmapi_allocate(
- 	 * user data.
- 	 */
- 	if (!(flags & XFS_BMAPI_METADATA)) {
--		bma->userdata = (aoff == 0) ?
-+		bma->userdata = (bma->offset == 0) ?
- 			XFS_ALLOC_INITIAL_USER_DATA : XFS_ALLOC_USERDATA;
- 	}
- 
--	/*
--	 * Fill in changeable bma fields.
--	 */
--	bma->length = alen;
--	bma->offset = aoff;
--	bma->minlen = (flags & XFS_BMAPI_CONTIG) ? alen : 1;
--	bma->aeof = 0;
-+	bma->minlen = (flags & XFS_BMAPI_CONTIG) ? bma->length : 1;
- 
- 	/*
- 	 * Only want to do the alignment at the eof if it is userdata and
- 	 * allocation length is larger than a stripe unit.
- 	 */
--	if (mp->m_dalign && alen >= mp->m_dalign &&
-+	if (mp->m_dalign && bma->length >= mp->m_dalign &&
- 	    !(flags & XFS_BMAPI_METADATA) && whichfork == XFS_DATA_FORK) {
- 		error = xfs_bmap_isaeof(bma, whichfork);
- 		if (error)
-@@ -4676,17 +4666,11 @@ xfs_bmapi_allocate(
- 	if (error)
- 		return error;
- 
--	/*
--	 * Copy out result fields.
--	 */
--	abno = bma->blkno;
--	alen = bma->length;
--	aoff = bma->offset;
- 	if (bma->flist->xbf_low)
- 		bma->minleft = 0;
- 	if (*cur)
- 		(*cur)->bc_private.b.firstblock = *bma->firstblock;
--	if (abno == NULLFSBLOCK)
-+	if (bma->blkno == NULLFSBLOCK)
- 		return 0;
- 	if ((ifp->if_flags & XFS_IFBROOT) && !*cur) {
- 		(*cur) = xfs_bmbt_init_cursor(mp, bma->tp, bma->ip, whichfork);
-@@ -4703,9 +4687,9 @@ xfs_bmapi_allocate(
- 		(*cur)->bc_private.b.flags =
- 			bma->wasdel ? XFS_BTCUR_BPRV_WASDEL : 0;
- 
--	bma->got.br_startoff = aoff;
--	bma->got.br_startblock = abno;
--	bma->got.br_blockcount = alen;
-+	bma->got.br_startoff = bma->offset;
-+	bma->got.br_startblock = bma->blkno;
-+	bma->got.br_blockcount = bma->length;
- 	bma->got.br_state = XFS_EXT_NORM;
- 
- 	/*
-@@ -4736,8 +4720,9 @@ xfs_bmapi_allocate(
- 	 */
- 	xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *lastx), &bma->got);
- 
--	ASSERT(bma->got.br_startoff <= aoff);
--	ASSERT(bma->got.br_startoff + bma->got.br_blockcount >= aoff + alen);
-+	ASSERT(bma->got.br_startoff <= bma->offset);
-+	ASSERT(bma->got.br_startoff + bma->got.br_blockcount >=
-+	       bma->offset + bma->length);
- 	ASSERT(bma->got.br_state == XFS_EXT_NORM ||
- 	       bma->got.br_state == XFS_EXT_UNWRITTEN);
+-
+ 		num_recs = xfs_btree_get_numrecs(block);
+ 		if (unlikely(i + num_recs > room)) {
+ 			ASSERT(i + num_recs <= room);
+@@ -4746,6 +4745,69 @@ xfs_bmapi_allocate(
  	return 0;
+ }
+ 
++STATIC int
++xfs_bmapi_convert_unwritten(
++	struct xfs_bmalloca	*bma,
++	struct xfs_bmbt_irec	*mval,
++	xfs_filblks_t		len,
++	xfs_extnum_t		*lastx,
++	struct xfs_btree_cur	**cur,
++	xfs_fsblock_t		*firstblock,
++	struct xfs_bmap_free	*flist,
++	int			flags,
++	int			*logflags)
++{
++	int			whichfork = (flags & XFS_BMAPI_ATTRFORK) ?
++						XFS_ATTR_FORK : XFS_DATA_FORK;
++	struct xfs_ifork	*ifp = XFS_IFORK_PTR(bma->ip, whichfork);
++	int			error;
++
++	*logflags = 0;
++
++	/* check if we need to do unwritten->real conversion */
++	if (mval->br_state == XFS_EXT_UNWRITTEN &&
++	    (flags & XFS_BMAPI_PREALLOC))
++		return 0;
++
++	/* check if we need to do real->unwritten conversion */
++	if (mval->br_state == XFS_EXT_NORM &&
++	    (flags & (XFS_BMAPI_PREALLOC | XFS_BMAPI_CONVERT)) !=
++			(XFS_BMAPI_PREALLOC | XFS_BMAPI_CONVERT))
++		return 0;
++
++	/*
++	 * Modify (by adding) the state flag, if writing.
++	 */
++	ASSERT(mval->br_blockcount <= len);
++	if ((ifp->if_flags & XFS_IFBROOT) && !*cur) {
++		*cur = xfs_bmbt_init_cursor(bma->ip->i_mount, bma->tp,
++					bma->ip, whichfork);
++		(*cur)->bc_private.b.firstblock = *firstblock;
++		(*cur)->bc_private.b.flist = flist;
++	}
++	mval->br_state = (mval->br_state == XFS_EXT_UNWRITTEN)
++				? XFS_EXT_NORM : XFS_EXT_UNWRITTEN;
++
++	error = xfs_bmap_add_extent(bma->tp, bma->ip, lastx, cur, mval,
++				firstblock, flist, logflags, whichfork);
++	if (error)
++		return error;
++
++	/*
++	 * Update our extent pointer, given that xfs_bmap_add_extent  might
++	 * have merged it into one of the neighbouring ones.
++	 */
++	xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *lastx), bma->gotp);
++
++	/*
++	 * We may have combined previously unwritten space with written space,
++	 * so generate another request.
++	 */
++	if (mval->br_blockcount < len)
++		return EAGAIN;
++	return 0;
++}
++
+ /*
+  * Map file blocks to filesystem blocks.
+  * File range is given by the bno/len pair.
+@@ -4932,45 +4994,16 @@ xfs_bmapi(
+ 		/* Deal with the allocated space we found.  */
+ 		xfs_bmapi_trim_map(mval, &got, &bno, len, obno, end, n, flags);
+ 
+-		/*
+-		 * Check if writing previously allocated but
+-		 * unwritten extents.
+-		 */
+-		if (wr &&
+-		    ((mval->br_state == XFS_EXT_UNWRITTEN &&
+-		      ((flags & XFS_BMAPI_PREALLOC) == 0)) ||
+-		     (mval->br_state == XFS_EXT_NORM &&
+-		      ((flags & (XFS_BMAPI_PREALLOC|XFS_BMAPI_CONVERT)) ==
+-				(XFS_BMAPI_PREALLOC|XFS_BMAPI_CONVERT))))) {
+-			/*
+-			 * Modify (by adding) the state flag, if writing.
+-			 */
+-			ASSERT(mval->br_blockcount <= len);
+-			if ((ifp->if_flags & XFS_IFBROOT) && !cur) {
+-				cur = xfs_bmbt_init_cursor(mp,
+-					tp, ip, whichfork);
+-				cur->bc_private.b.firstblock =
+-					*firstblock;
+-				cur->bc_private.b.flist = flist;
+-			}
+-			mval->br_state = (mval->br_state == XFS_EXT_UNWRITTEN)
+-						? XFS_EXT_NORM
+-						: XFS_EXT_UNWRITTEN;
+-			error = xfs_bmap_add_extent(tp, ip, &lastx, &cur, mval,
+-				firstblock, flist, &tmp_logflags,
+-				whichfork);
++		/* Execute unwritten extent conversion if necessary */
++		if (wr) {
++			error = xfs_bmapi_convert_unwritten(&bma, mval, len,
++						&lastx, &cur, firstblock, flist, flags,
++						&tmp_logflags);
+ 			logflags |= tmp_logflags;
++			if (error == EAGAIN)
++				continue;
+ 			if (error)
+ 				goto error0;
+-			ep = xfs_iext_get_ext(ifp, lastx);
+-			xfs_bmbt_get_all(ep, &got);
+-			/*
+-			 * We may have combined previously unwritten
+-			 * space with written space, so generate
+-			 * another request.
+-			 */
+-			if (mval->br_blockcount < len)
+-				continue;
+ 		}
+ 
+ 		/* update the extent map to return */
 
 _______________________________________________
 xfs mailing list
