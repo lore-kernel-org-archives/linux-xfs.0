@@ -1,23 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8JHAme6002401 for <xfs@oss.sgi.com>; Mon, 19 Sep 2011 12:10:49 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D4D2F550A55
-	for <xfs@oss.sgi.com>; Mon, 19 Sep 2011 10:10:47 -0700 (PDT)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	ldXSuN6vs3vXAjuW for <xfs@oss.sgi.com>;
-	Mon, 19 Sep 2011 10:10:47 -0700 (PDT)
-Date: Mon, 19 Sep 2011 13:10:47 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: The xfsprogs debian package
-Message-ID: <20110919171047.GA3092@infradead.org>
-References: <20110919170936.GA27014@infradead.org>
+	p8JHXOrq003740 for <xfs@oss.sgi.com>; Mon, 19 Sep 2011 12:33:24 -0500
+Subject: Re: [PATCH] xfs: fix buffer flushing during unmount
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <20110914140826.GA25729@infradead.org>
+References: <20110914140826.GA25729@infradead.org>
+Date: Mon, 19 Sep 2011 12:33:20 -0500
+Message-ID: <1316453600.2941.37.camel@doink>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110919170936.GA27014@infradead.org>
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,30 +22,42 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: aurel32@debian.org, nathans@debian.org, anibal@debian.org
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-[and now with the correct Cc list]
+On Wed, 2011-09-14 at 10:08 -0400, Christoph Hellwig wrote:
+> The code to flush buffers in the umount code is a bit iffy: we first flush
+> all delwri buffers out, but then might be able to queue up a new one when
+> logging the sb counts.  On a normal shutdown that one would get flushed
+> out when doing the synchronous superblock write in xfs_unmountfs_writesb,
+> but we skip that one if the filesystem has been shut down.
+> 
+> Fix this by moving the delwri list flushing until just before unmounting
+> the log, and while we're at it also remove the superflous delwri list
+> and buffer lru flusing for the rt and log device that can never have
+> cached or delwri buffers.
 
-On Mon, Sep 19, 2011 at 01:09:36PM -0400, Christoph Hellwig wrote:
-> Hi Aurelien, Nathan & Anibal,
-> 
-> is there any chance we can get to a defintive agreement on how to
-> maintain the xfsprogs package?  So far the idea of releasing the
-> upstream releases as Debian packages at the same time has worked
-> great for both Debian, and us xfs developers (which to a large
-> extents are heavy Debian users), but "inner" Debian circles heave
-> always complained about it.
-> 
-> Can we please get an explanation of why it is so in proper written
-> englush, instead of doing by forced nmus?
-> 
-> Also Nathan & Anibal - if there is no consesus for keeping the old
-> scheme what about dropping it?  We can still keep the main Debian
-> packaging in the tree, and find a way to generate a normally NULL
-> Debian diff for it.  I'm not quite sure how to do it, but there
-> must be some way.
----end quoted text---
+What prevents blocks on a realtime device from being cached?
+
+I haven't looked exhaustively, but it looks like the summary
+and bitmap data are operated on without caching, but the
+realtime data itself is treated no different from "normal"
+data blocks.
+
+Please correct me if I'm wrong about that.
+
+I do agree about the log device not having delwri cached
+buffers.  Still, it might be good to have this change
+done in a different commit from the one that changes
+the order of things in xfs_unmountfs().
+
+					-Alex
+
+
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reported-by: Amit Sahrawat <amit.sahrawat83@gmail.com>
+> Tested-by: Amit Sahrawat <amit.sahrawat83@gmail.com>
+
 
 _______________________________________________
 xfs mailing list
