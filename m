@@ -1,29 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8JAsef6245620 for <xfs@oss.sgi.com>; Mon, 19 Sep 2011 05:54:40 -0500
-Received: from server655-han.de-nserver.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 935274EE982
-	for <xfs@oss.sgi.com>; Mon, 19 Sep 2011 03:54:38 -0700 (PDT)
-Received: from server655-han.de-nserver.de (server655-han.de-nserver.de
-	[85.158.177.45]) by cuda.sgi.com with ESMTP id fRkxfl1MLoF08BvI
-	for <xfs@oss.sgi.com>; Mon, 19 Sep 2011 03:54:38 -0700 (PDT)
-Message-ID: <4E771F6D.5090005@profihost.ag>
-Date: Mon, 19 Sep 2011 12:54:37 +0200
-From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+	p8JCSQVa249396 for <xfs@oss.sgi.com>; Mon, 19 Sep 2011 07:28:26 -0500
+Received: from seldrel01.sonyericsson.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 479DA16A9C74
+	for <xfs@oss.sgi.com>; Mon, 19 Sep 2011 05:33:37 -0700 (PDT)
+Received: from seldrel01.sonyericsson.com (seldrel01.sonyericsson.com
+	[212.209.106.2]) by cuda.sgi.com with ESMTP id i7yNHuVuyab5U6Wz
+	for <xfs@oss.sgi.com>; Mon, 19 Sep 2011 05:33:37 -0700 (PDT)
+From: "Assarsson, Emil" <Emil.Assarsson@sonyericsson.com>
+Date: Mon, 19 Sep 2011 14:28:23 +0200
+Subject: silent corruption after kernel panic?
+Message-ID: <2BF070A7A2375D46BA1B6087F8D5DCB68BEA722B40@seldmbx01.corpusers.net>
+Content-Language: en-US
 MIME-Version: 1.0
-Subject: Re: xfs deadlock in stable kernel 3.0.4
-References: <1D2B34A7-7BB9-4E4E-9CA2-382C210E125F@profihost.ag>
-	<20110912152133.GA8345@infradead.org>
-	<C6515E45-5724-43DD-95A8-1F89AFE29601@profihost.ag>
-	<20110912200543.GA22409@infradead.org>
-	<4E6EF274.7050007@profihost.ag>
-	<20110913205018.GA8543@infradead.org>
-	<4E70571A.80108@profihost.ag> <4E705C42.6020909@profihost.ag>
-	<20110914143005.GA28496@infradead.org>
-	<4E75B660.1030502@profihost.ag>
-	<20110918200438.GC14899@infradead.org>
-In-Reply-To: <20110918200438.GC14899@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,64 +22,73 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "xfs-masters@oss.sgi.com" <xfs-masters@oss.sgi.com>, aelder@sgi.com, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Am 18.09.2011 22:04, schrieb Christoph Hellwig:
-> On Sun, Sep 18, 2011 at 11:14:08AM +0200, Stefan Priebe - Profihost AG wrote:
->> Hi,
->>
->> at least i'm now able to reproduce the issue. I hope this will help
->> to investigate the issue and hopefully you can reproduce it as well.
->>
->> I'm using vanilla 3.0.4 kernel + xfs as root filesystem and had
->> detect hanging taks with 120s set. You'll then see that the bonnie++
->> command get's stuck in xlog_grant_log_space while creating or
->> deleting files. I was using a SSD or a fast Raid 10 (24x SAS Disks)
->> - i was not able to reproduce it on normal SATA disks even a 20x
->> SATA Raid 10 didn't work.
->
-> Thanks a lot for the reproducer!
->
-> I've tried it on my laptop SSD and that didn't reproduce it yet.  I'll
-> try it on monday on a real high end setup.
+Hi,
 
-Sadly my SSD briked tonight while doing heavy testing ;-( I was not able 
-to reproduce it on every partition. Only on some. Sadly i was not able 
-to find the common point which causes this.
+We are running a 20TB XFS filesystem on top of LVM2 and SAN storage (HP
+Open-V) with multipathd. Ubuntu Lucid. The disk write cache is enabled
+and we use mount options rw.
 
-I've now to setup a new machine and try to reproduce it again.
+This is a log of events taken from my memory and can have missed out
+things :-P
 
-What i got so far is that bonnie++ is always hanging here:
+The system panicked and automatically restarted after 30 seconds.
 
-[] ? radix_tree_gang_lookup_slot+0x6a/0x8d
-[] ? xfs_bmap_search_extents+0x56/0xb9
-[] ? find_get_pages+0x39/0xd8
-[] xlog_wait+0x58/0x70
-[] ? try_to_wake_up+0x1c6/0x1c6
-[] ? xlog_grant_push_ail+0xb7/0xbf
-[] xlog_grant_log_space+0x162/0x2b1
-[] xfs_log_reserve+0xbb/0xc4
-[] xfs_trans_reserve+0xd6/0x1b1
-[] xfs_free_eofblocks+0x16b/0x1fb
-[] xfs_release+0x1c7/0x202
-[] xfs_file_release+0x10/0x14
-[] fput+0xfd/0x1eb
-[] filp_close+0x6d/0x78
-[] sys_close+0x9a/0xd4
-[] system_call_fastpath+0x16/0x1b
+It seemed to be ok but after awhile we got cases where users got files
+with zero length. We tried to run xfs_check on the filesystem but it
+couldn't find any problems with it. After that we restarted the system
+and the files (even the files that was zero length) seemed ok again. But
+then we got messages (short version):
+-----
+Sep 16 06:40:34 seldlnx034 kernel: [54607.977261] XFS internal error
+XFS_WANT_CORRUPTED_RETURN at line 381 of
+file /build/buildd/linux-2.6.32/fs/xfs/xfs_alloc.c.  Caller
+0xffffffffa01eed36
+Sep 16 06:40:34 seldlnx034 kernel: [54607.996676]  [<ffffffffa0215383>]
+xfs_error_report+0x43/0x50 [xfs]
+Sep 16 06:40:34 seldlnx034 kernel: [54607.996689]
+-----
 
-The traces we had in the past were difficult to check which process was 
-causing the lookup. So it doesn't seem to be the xlog_grant_log_space 
-itself it seems that it is more xfs_bmap_search_extents or 
-radix_tree_gang_lookup_slot?
+... and files written during this period became corrupt (zero length).
 
-Stefan
+We did a xfs_repair on the filesystem (short version):
+-----
+entry "fw-radmp_all.deb" at block 0 offset 944 in directory inode
+157891962 references free inode 195983876
+	clearing inode number in entry at offset 944...
+Phase 5 - rebuild AG headers and trees...
+        - reset superblock...
+Phase 6 - check inode connectivity...
+        - resetting contents of realtime bitmap and summary inodes
+        - traversing filesystem ...
+bad hash table for directory inode 13786 (no data entry): rebuilding
+rebuilding directory inode 13786
+bad hash table for directory inode 2130829772 (no data entry):
+rebuilding
+rebuilding directory inode 2130829772
+        - traversal finished ...
+        - moving disconnected inodes to lost+found ...
+Phase 7 - verify and correct link counts...
+done
+------
 
+We have made a verification of the files now I we don't have any known
+problems with the file system now but the files created when the file
+system was broken needed to be recreated.
+
+
+
+How can I avoid this in the future and how can I ensure that I get
+informed about a problem? Do I do anything wrong with the setup that you
+can see?
+
+--
+Emil Assarsson
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
