@@ -1,23 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8JLj9Yj016299 for <xfs@oss.sgi.com>; Mon, 19 Sep 2011 16:45:09 -0500
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4215415B999
-	for <xfs@oss.sgi.com>; Mon, 19 Sep 2011 14:45:08 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id tOy9d1gXssOGvonR for
-	<xfs@oss.sgi.com>; Mon, 19 Sep 2011 14:45:08 -0700 (PDT)
-Received: from int-mx12.intmail.prod.int.phx2.redhat.com
-	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id p8JLj70x017186
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Mon, 19 Sep 2011 17:45:07 -0400
-Message-ID: <4E77B7E2.6020805@redhat.com>
-Date: Mon, 19 Sep 2011 16:45:06 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+	p8JLVcBl015888 for <xfs@oss.sgi.com>; Mon, 19 Sep 2011 16:31:38 -0500
+Message-ID: <4E77B4B6.4080102@sgi.com>
+Date: Mon, 19 Sep 2011 16:31:34 -0500
+From: Bill Kendall <wkendall@sgi.com>
 MIME-Version: 1.0
-Subject: [PATCH] mkfs.xfs: don't increase agblocks past maximum
+Subject: Re: [PATCH] xfsdump: remove redundant error code mapping
+References: <1314973338-20520-1-git-send-email-wkendall@sgi.com>
+	<1316466127.2941.80.camel@doink>
+In-Reply-To: <1316466127.2941.80.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,48 +18,37 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
-Cc: Boris Ranto <branto@redhat.com>
+To: aelder@sgi.com
+Cc: xfs@oss.sgi.com
 
-RH QA discovered this bug:
+On 09/19/2011 04:02 PM, Alex Elder wrote:
+> On Fri, 2011-09-02 at 09:22 -0500, Bill Kendall wrote:
+>> Currently there is both an exit_strings array and an exit_codestring()
+>> function for mapping an exit code to a string. They are very similar
+>> except the latter prefaces every string with "EXIT_" and the former
+>> uses "SUCCESS" instead of "NORMAL", and cannot handle an invalid exit
+>> code. exit_codestring() is not currently used in active code (it's for
+>> multi-stream), so its values can be changed to allow the exit_strings
+>> array to be removed.
+>
+> Looks good.  You need to add your signoff on these things, i.e.:
+>      Signed-off-by: Bill Kendall<wkendall@sgi.com>
+> We follow the signoff process used in the Linux kernel.  See
+> sections 12-14 in this document:
+> https://github.com/torvalds/linux/blob/master/Documentation/SubmittingPatches
+>
+>
+> Reviewed-by: Alex Elder<aeldre@sgi.com>
+>
 
-Steps to Reproduce:
-1. Create 4 TB - 1 B partition
-dd if=/dev/zero of=x.img bs=1 count=0 seek=4398046511103
-2. Create xfs fs with 512 B block size on the partition
-mkfs.xfs -b size=512 xfs.img
+Sorry, forgot the --signoff when formatting the patch. Need me to
+resubmit?
 
-Actual results:
-Agsize is computed incorrectly resulting in fs creation fail:
-agsize (2147483648b) too big, maximum is 2147483647 blocks
-
-This is due to the "rounding up" at the very end of the calculations;
-there may be other places to alleviate the problem, but it seems
-most obvious to simply skip the rounding up if it would create too
-many blocks in the AG.  Worst case, we lose 1 block per AG.
-
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 5b3b9a7..856a261 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -658,7 +659,9 @@ calc_default_ag_geometry(
- 	 * last bit of the filesystem. The same principle applies
- 	 * to the AG count, so we don't lose the last AG!
- 	 */
--	blocks = (dblocks >> shift) + ((dblocks & xfs_mask32lo(shift)) != 0);
-+	blocks = (dblocks >> shift);
-+	if (blocks < XFS_AG_MAX_BLOCKS(blocklog))
-+		blocks += ((dblocks & xfs_mask32lo(shift)) != 0);
- 
- done:
- 	*agsize = blocks;
+Bill
 
 _______________________________________________
 xfs mailing list
