@@ -1,13 +1,10 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8JGb02O261956 for <xfs@oss.sgi.com>; Mon, 19 Sep 2011 11:37:01 -0500
-Subject: Re: [PATCH] xfs: Check the return value of xfs_buf_get()
+Subject: Re: [PATCH] Return -EIO when xfs_vn_getattr() failed
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1315424274.9298.10.camel@chandra-lucid.austin.ibm.com>
-References: <1315424274.9298.10.camel@chandra-lucid.austin.ibm.com>
-Date: Mon, 19 Sep 2011 11:36:55 -0500
-Message-ID: <1316450215.2941.21.camel@doink>
+In-Reply-To: <20110917133838.27791.63070.stgit@ltc219.sdl.hitachi.co.jp>
+References: <20110917133838.27791.63070.stgit@ltc219.sdl.hitachi.co.jp>
+Date: Mon, 19 Sep 2011 11:54:37 -0500
+Message-ID: <1316451277.2941.30.camel@doink>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -22,13 +19,22 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: sekharan@us.ibm.com
-Cc: XFS Mailing List <xfs@oss.sgi.com>
+To: Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs-masters@oss.sgi.com, yrl.pp-manager.tt@hitachi.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Wed, 2011-09-07 at 14:37 -0500, Chandra Seetharaman wrote:
-> Check the return value of xfs_buf_get() and fail appropriately.
+On Sat, 2011-09-17 at 22:38 +0900, Mitsuo Hayasaka wrote:
+> An attribute of inode can be fetched via xfs_vn_getattr() in XFS.
+> Currently it returns EIO, not negative value, when it failed.
+> As a result, the system call returns not negative value even though
+> an error occured. The stat(2), ls and mv commands cannot handle this
+> error and do not work correctly.
 > 
-> Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
+> This patch fixes this bug, and returns -EIO, not EIO when an error
+> is detected in xfs_vn_getattr().
+> 
+> Signed-off-by: Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>
+> Cc: Alex Elder <aelder@sgi.com>
+> Cc: Christoph Hellwig <hch@infradead.org>
 
 Looks good.
 
