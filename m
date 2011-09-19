@@ -1,15 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8JLHJCd015282 for <xfs@oss.sgi.com>; Mon, 19 Sep 2011 16:17:19 -0500
-Subject: Re: [PATCH] xfsdump: remove unnecessary #ifdefs
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1314740824-4231-1-git-send-email-wkendall@sgi.com>
-References: <1314740824-4231-1-git-send-email-wkendall@sgi.com>
-Date: Mon, 19 Sep 2011 16:17:15 -0500
-Message-ID: <1316467035.2941.87.camel@doink>
+	p8JLj9Yj016299 for <xfs@oss.sgi.com>; Mon, 19 Sep 2011 16:45:09 -0500
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4215415B999
+	for <xfs@oss.sgi.com>; Mon, 19 Sep 2011 14:45:08 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id tOy9d1gXssOGvonR for
+	<xfs@oss.sgi.com>; Mon, 19 Sep 2011 14:45:08 -0700 (PDT)
+Received: from int-mx12.intmail.prod.int.phx2.redhat.com
+	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id p8JLj70x017186
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Mon, 19 Sep 2011 17:45:07 -0400
+Message-ID: <4E77B7E2.6020805@redhat.com>
+Date: Mon, 19 Sep 2011 16:45:06 -0500
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Reply-To: aelder@sgi.com
+Subject: [PATCH] mkfs.xfs: don't increase agblocks past maximum
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,37 +30,44 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Bill Kendall <wkendall@sgi.com>
-Cc: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
+Cc: Boris Ranto <branto@redhat.com>
 
-On Tue, 2011-08-30 at 16:47 -0500, Bill Kendall wrote:
-> There are a number of #defines in xfsdump that are always enabled and
-> no longer need to be conditional code. This patch removes the
-> following macros and enables the related code unconditionally:
-> 
-> - SIZEEST is required for multi-stream dumps for determining split
->   points.
-> 
-> - RMT, BASED and SESSCPLT are tied to command line options
->   (dump/restore -m, dump -B and restore -Q, respectively).
-> 
-> - INVCONVFIX, PIPEINVFIX, and EOMFIX are all related to fixes that
->   went in a long time ago.
-> 
-> - WHITEPARSE allows for filenames with spaces and special chars to be
->   properly parsed during an interactive restore session.
-> 
-> - DOSOCKS allows Unix domain sockets to be backed up and restored.
->   Other special files (block/char devs, FIFOs) are always backed up,
->   so do the same for sockets.
-> 
-> Additionally the definition of F_FSSETDM has been removed from
-> restore/Makefile since it is never referenced.
+RH QA discovered this bug:
 
-Looks good.  Sorry it took so long to get to this.
+Steps to Reproduce:
+1. Create 4 TB - 1 B partition
+dd if=/dev/zero of=x.img bs=1 count=0 seek=4398046511103
+2. Create xfs fs with 512 B block size on the partition
+mkfs.xfs -b size=512 xfs.img
 
-Reviewed-by: Alex Elder <aelder@sgi.com>
+Actual results:
+Agsize is computed incorrectly resulting in fs creation fail:
+agsize (2147483648b) too big, maximum is 2147483647 blocks
 
+This is due to the "rounding up" at the very end of the calculations;
+there may be other places to alleviate the problem, but it seems
+most obvious to simply skip the rounding up if it would create too
+many blocks in the AG.  Worst case, we lose 1 block per AG.
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 5b3b9a7..856a261 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -658,7 +659,9 @@ calc_default_ag_geometry(
+ 	 * last bit of the filesystem. The same principle applies
+ 	 * to the AG count, so we don't lose the last AG!
+ 	 */
+-	blocks = (dblocks >> shift) + ((dblocks & xfs_mask32lo(shift)) != 0);
++	blocks = (dblocks >> shift);
++	if (blocks < XFS_AG_MAX_BLOCKS(blocklog))
++		blocks += ((dblocks & xfs_mask32lo(shift)) != 0);
+ 
+ done:
+ 	*agsize = blocks;
 
 _______________________________________________
 xfs mailing list
