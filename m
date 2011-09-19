@@ -1,18 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8JIdLDh007124 for <xfs@oss.sgi.com>; Mon, 19 Sep 2011 13:39:22 -0500
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0B1A413FE843
-	for <xfs@oss.sgi.com>; Mon, 19 Sep 2011 11:44:34 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 8U9FUvomrtE2cstg for
-	<xfs@oss.sgi.com>; Mon, 19 Sep 2011 11:44:34 -0700 (PDT)
-Message-ID: <4E778C51.7040100@redhat.com>
-Date: Mon, 19 Sep 2011 13:39:13 -0500
-From: Eric Sandeen <sandeen@redhat.com>
-MIME-Version: 1.0
-Subject: [PATCH] xfstests: test timestamps before the epoch
+	p8JIYmJf006924 for <xfs@oss.sgi.com>; Mon, 19 Sep 2011 13:34:48 -0500
+Received: from e39.co.us.ibm.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DB50A550C28
+	for <xfs@oss.sgi.com>; Mon, 19 Sep 2011 11:34:47 -0700 (PDT)
+Received: from e39.co.us.ibm.com (e39.co.us.ibm.com [32.97.110.160]) by
+	cuda.sgi.com with ESMTP id ghd8zjOmhsrw5Q7E for
+	<xfs@oss.sgi.com>; Mon, 19 Sep 2011 11:34:47 -0700 (PDT)
+Received: from d03relay01.boulder.ibm.com (d03relay01.boulder.ibm.com
+	[9.17.195.226])
+	by e39.co.us.ibm.com (8.14.4/8.13.1) with ESMTP id p8JIJ2IA007591
+	for <xfs@oss.sgi.com>; Mon, 19 Sep 2011 12:19:02 -0600
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d03relay01.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	p8JIYaQY193274 for <xfs@oss.sgi.com>; Mon, 19 Sep 2011 12:34:36 -0600
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
+	id p8JIYLxg014118
+	for <xfs@oss.sgi.com>; Mon, 19 Sep 2011 12:34:21 -0600
+Subject: Re: [PATCH] xfs: check the return value of xfs_trans_get_buf()
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+In-Reply-To: <1316450213.2941.20.camel@doink>
+References: <1315411298.9298.5.camel@chandra-lucid.austin.ibm.com>
+	<1316450213.2941.20.camel@doink>
+Date: Mon, 19 Sep 2011 13:34:34 -0500
+Message-ID: <1316457274.9298.52.camel@chandra-lucid.austin.ibm.com>
+Mime-Version: 1.0
+Reply-To: sekharan@us.ibm.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,114 +40,95 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>
+To: aelder@sgi.com
+Cc: XFS Mailing List <xfs@oss.sgi.com>
 
-ext2/3/4 was sign-extending times before the timestamp when read
-from disk on 64-bit systems.  This was fixed by:
+Thanks for the review, Alex.
 
-4d7bf11d649c72621ca31b8ea12b9c94af380e63
-ext2/3/4: fix file date underflow on ext2 3 filesystems on 64 bit systems
+On Mon, 2011-09-19 at 11:36 -0500, Alex Elder wrote:
+> On Wed, 2011-09-07 at 11:01 -0500, Chandra Seetharaman wrote:
+> > Check the return value of xfs_trans_get_buf() and fail appropriately.
+> > 
+> > Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
+> 
+> Sorry it took a while to get to this.
+> 
+> I started following back some of the paths that
+> now (with your patch) return ENOMEM where they
+> might not have before.  But I soon gave up because
+> it explodes a bit in the number of possibilities.
+> I did verify that the places that now return ENOMEM
 
-Here's a generic regression test.
+Yes, I did check the callers to verify that they handle errors.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+> have callers that check for an error return, so I'm
+> going to just trust that's OK and that you have
+> ensured there aren't any spots that do something
+> unwanted in the event ENOMEM gets returned.
+> 
+> I did find something that may be a problem, so
+> I'd like you to take another look and either
+> explain why it's OK, or send an update to correct
+> it.
+> 
+> Thanks.
+> 
+> 					-Alex
+> 
+> . . .
+> 
+> > diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
+> > index c2ff0fc..a4f3624 100644
+> > --- a/fs/xfs/xfs_vnodeops.c
+> > +++ b/fs/xfs/xfs_vnodeops.c
+> > @@ -308,6 +308,8 @@ xfs_inactive_symlink_rmt(
+> >  		bp = xfs_trans_get_buf(tp, mp->m_ddev_targp,
+> >  			XFS_FSB_TO_DADDR(mp, mval[i].br_startblock),
+> >  			XFS_FSB_TO_BB(mp, mval[i].br_blockcount), 0);
+> > +		if (!bp) 
+> > +			goto error1;
+> 
+> In this function, simply going to error1 will result
+> in a 0 getting returned to the caller, because error
+> had value 0 at this point.  I think you want something
+> more like:
 
-diff --git a/257 b/257
-new file mode 100644
-index 0000000..e837bef
---- /dev/null
-+++ b/257
-@@ -0,0 +1,68 @@
-+#! /bin/bash
-+# FS QA Test No. 257
-+#
-+# Test timestamps prior to epoch
-+# On 64-bit, ext2/3/4 was sign-extending when read from disk
-+# See also commit 4d7bf11d649c72621ca31b8ea12b9c94af380e63
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2011 Red Hat, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#
-+#-----------------------------------------------------------------------
-+#
-+# creator
-+owner=sandeen@redhat.com
-+
-+seq=`basename $0`
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+
-+_cleanup()
-+{
-+    rm -f $tmp.*
-+}
-+
-+trap "_cleanup ; exit \$status" 0 1 2 3 15
-+
-+# get standard environment, filters and checks
-+. ./common.rc
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
-+
-+TESTFILE=$TEST_DIR/timestamp-test.txt
-+
-+# Create a file with a timestamp prior to the epoch
-+echo "Creating file with timestamp of Jan 1, 1960"
-+touch -t 196001010101 $TESTFILE
-+# Should yield -315593940 (prior to epoch)
-+echo -n "Stat of file yields: "
-+stat -c %X $TESTFILE
-+
-+# unmount, remount, and check the timestamp
-+echo "Remounting to flush cache"
-+umount $TEST_DEV
-+mount $TEST_DEV $TEST_DIR
-+
-+# Should yield -315593940 (prior to epoch)
-+echo -n "Stat of file yields: "
-+stat -c %X $TESTFILE
-+
-+status=0 ; exit
-diff --git a/257.out b/257.out
-new file mode 100644
-index 0000000..c584b70
---- /dev/null
-+++ b/257.out
-@@ -0,0 +1,5 @@
-+QA output created by 257
-+Creating file with timestamp of Jan 1, 1960
-+Stat of file yields: -315593940
-+Remounting to flush cache
-+Stat of file yields: -315593940
-diff --git a/group b/group
-index 0c746c8..84c45da 100644
---- a/group
-+++ b/group
-@@ -370,3 +370,4 @@ deprecated
- 254 auto quick
- 255 auto quick prealloc
- 256 auto quick
-+257 auto quick
+oops. overlook on my part. Sorry, about that. will fix it.
+
+> 			if (!bp) {
+> 				error = ENOMEM;
+> 				goto error1;
+> 			}
+> 
+> 
+> >  		xfs_trans_binval(tp, bp);
+> >  	}
+> >  	/*
+> > @@ -1648,7 +1650,8 @@ xfs_symlink(
+> >  			byte_cnt = XFS_FSB_TO_B(mp, mval[n].br_blockcount);
+> >  			bp = xfs_trans_get_buf(tp, mp->m_ddev_targp, d,
+> >  					       BTOBB(byte_cnt), 0);
+> > -			ASSERT(!xfs_buf_geterror(bp));
+> > +			if (!bp)
+> > +				goto error2;
+> 
+> Same thing here.  I think you want to set error to
+> something before the "goto error2".
+
+Same here.
+> 
+> >  			if (pathlen < byte_cnt) {
+> >  				byte_cnt = pathlen;
+> >  			}
+> > 
+> > 
+> > _______________________________________________
+> > xfs mailing list
+> > xfs@oss.sgi.com
+> > http://oss.sgi.com/mailman/listinfo/xfs
+> 
+> 
+> 
 
 
 _______________________________________________
