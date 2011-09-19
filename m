@@ -1,33 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8JIYmJf006924 for <xfs@oss.sgi.com>; Mon, 19 Sep 2011 13:34:48 -0500
-Received: from e39.co.us.ibm.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DB50A550C28
-	for <xfs@oss.sgi.com>; Mon, 19 Sep 2011 11:34:47 -0700 (PDT)
-Received: from e39.co.us.ibm.com (e39.co.us.ibm.com [32.97.110.160]) by
-	cuda.sgi.com with ESMTP id ghd8zjOmhsrw5Q7E for
-	<xfs@oss.sgi.com>; Mon, 19 Sep 2011 11:34:47 -0700 (PDT)
-Received: from d03relay01.boulder.ibm.com (d03relay01.boulder.ibm.com
-	[9.17.195.226])
-	by e39.co.us.ibm.com (8.14.4/8.13.1) with ESMTP id p8JIJ2IA007591
-	for <xfs@oss.sgi.com>; Mon, 19 Sep 2011 12:19:02 -0600
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay01.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	p8JIYaQY193274 for <xfs@oss.sgi.com>; Mon, 19 Sep 2011 12:34:36 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
-	id p8JIYLxg014118
-	for <xfs@oss.sgi.com>; Mon, 19 Sep 2011 12:34:21 -0600
-Subject: Re: [PATCH] xfs: check the return value of xfs_trans_get_buf()
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-In-Reply-To: <1316450213.2941.20.camel@doink>
-References: <1315411298.9298.5.camel@chandra-lucid.austin.ibm.com>
-	<1316450213.2941.20.camel@doink>
-Date: Mon, 19 Sep 2011 13:34:34 -0500
-Message-ID: <1316457274.9298.52.camel@chandra-lucid.austin.ibm.com>
-Mime-Version: 1.0
-Reply-To: sekharan@us.ibm.com
+	p8JKCQAO012207 for <xfs@oss.sgi.com>; Mon, 19 Sep 2011 15:12:26 -0500
+Subject: Re: [PATCH] xfsdump: enable dump header checksums
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <1314654106-28548-1-git-send-email-wkendall@sgi.com>
+References: <1314654106-28548-1-git-send-email-wkendall@sgi.com>
+Date: Mon, 19 Sep 2011 15:12:21 -0500
+Message-ID: <1316463141.2941.75.camel@doink>
+MIME-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -40,95 +22,132 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: aelder@sgi.com
-Cc: XFS Mailing List <xfs@oss.sgi.com>
+To: Bill Kendall <wkendall@sgi.com>
+Cc: xfs@oss.sgi.com
 
-Thanks for the review, Alex.
+On Mon, 2011-08-29 at 16:41 -0500, Bill Kendall wrote:
+> Various structures in a dump file optionally contain a checksum, but
+> the code to compute and validate the checksum has not been enabled.
+> The checksum code has a negligible performance impact and so this
+> patch enables the checksum code unconditionally. Also:
+> 
+> - make sure all header sizes are multiples of 4 bytes
+>   (a requirement of the checksum routine)
+> - zero structures to ensure internal padding has a known value
+> - fix a bug in dump_extattr_buildrecord() which checksummed
+>   the wrong header structure
+> - add calc_checksum() and is_checksum_valid() routines to
+>   cut down on duplicate code
+> 
+> Signed-off-by: Bill Kendall <wkendall@sgi.com>
 
-On Mon, 2011-09-19 at 11:36 -0500, Alex Elder wrote:
-> On Wed, 2011-09-07 at 11:01 -0500, Chandra Seetharaman wrote:
-> > Check the return value of xfs_trans_get_buf() and fail appropriately.
-> > 
-> > Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
-> 
-> Sorry it took a while to get to this.
-> 
-> I started following back some of the paths that
-> now (with your patch) return ENOMEM where they
-> might not have before.  But I soon gave up because
-> it explodes a bit in the number of possibilities.
-> I did verify that the places that now return ENOMEM
+I have a bunch of questions, and a few minor suggestions.
+This is a really good thing to get back into dumps.  The
+change looks OK to me, but I'd like to hear back from you
+and maybe have you submit a new version with minor tweaks
+before I commit this.
 
-Yes, I did check the callers to verify that they handle errors.
+					-Alex
 
-> have callers that check for an error return, so I'm
-> going to just trust that's OK and that you have
-> ensured there aren't any spots that do something
-> unwanted in the event ENOMEM gets returned.
-> 
-> I did find something that may be a problem, so
-> I'd like you to take another look and either
-> explain why it's OK, or send an update to correct
-> it.
-> 
-> Thanks.
-> 
-> 					-Alex
-> 
-> . . .
-> 
-> > diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
-> > index c2ff0fc..a4f3624 100644
-> > --- a/fs/xfs/xfs_vnodeops.c
-> > +++ b/fs/xfs/xfs_vnodeops.c
-> > @@ -308,6 +308,8 @@ xfs_inactive_symlink_rmt(
-> >  		bp = xfs_trans_get_buf(tp, mp->m_ddev_targp,
-> >  			XFS_FSB_TO_DADDR(mp, mval[i].br_startblock),
-> >  			XFS_FSB_TO_BB(mp, mval[i].br_blockcount), 0);
-> > +		if (!bp) 
-> > +			goto error1;
-> 
-> In this function, simply going to error1 will result
-> in a 0 getting returned to the caller, because error
-> had value 0 at this point.  I think you want something
-> more like:
+How did you select your checksum algorithm?  As long as you're
+computing one, perhaps you should use one of the established
+standard ones with well-understood properties (like CRC-32).
 
-oops. overlook on my part. Sorry, about that. will fix it.
+Oh, now I see it was there in the code already.  Thank you for
+encapsulating that...
 
-> 			if (!bp) {
-> 				error = ENOMEM;
-> 				goto error1;
-> 			}
-> 
-> 
-> >  		xfs_trans_binval(tp, bp);
-> >  	}
-> >  	/*
-> > @@ -1648,7 +1650,8 @@ xfs_symlink(
-> >  			byte_cnt = XFS_FSB_TO_B(mp, mval[n].br_blockcount);
-> >  			bp = xfs_trans_get_buf(tp, mp->m_ddev_targp, d,
-> >  					       BTOBB(byte_cnt), 0);
-> > -			ASSERT(!xfs_buf_geterror(bp));
-> > +			if (!bp)
-> > +				goto error2;
-> 
-> Same thing here.  I think you want to set error to
-> something before the "goto error2".
+Was this used previously in Irix, and thus needs to be done in
+a compatible way?  Maybe you could implement this but at a
+future date implement EXTENTHDR_FLAGS_CRC32 as another flag
+that could provide a better checksum.
 
-Same here.
+The theory in doing this unconditionally is that we might as
+well record it, even if the restore program chooses to ignore
+it, right?
+
+Interesting that struct direnthdr has no flags field.  It
+looks like the flag that signals it is in use is in the
+content_inode_hdr structure.  Any idea why the others
+include a flag with each structure instance indicating
+they are checksummed?
+
+> ---
+>  common/content_inode.h |   20 +++++++++++
+>  dump/content.c         |   85 +++++++++++-------------------------------------
+>  restore/Makefile       |    2 +-
+>  restore/content.c      |   40 ++--------------------
+>  4 files changed, 44 insertions(+), 103 deletions(-)
 > 
-> >  			if (pathlen < byte_cnt) {
-> >  				byte_cnt = pathlen;
-> >  			}
-> > 
-> > 
-> > _______________________________________________
-> > xfs mailing list
-> > xfs@oss.sgi.com
-> > http://oss.sgi.com/mailman/listinfo/xfs
-> 
-> 
-> 
+> diff --git a/common/content_inode.h b/common/content_inode.h
+> index 479fdfc..e119354 100644
+> --- a/common/content_inode.h
+> +++ b/common/content_inode.h
+> @@ -347,4 +347,24 @@ typedef struct extattrhdr extattrhdr_t;
+>  	/* a linux "secure" mode attribute
+>  	 */
+>  
+> +/* Routines for calculating and validating checksums on xfsdump headers
+> + */
+
+I know it's fairly obvious on these simple functions, but it
+might be nice to state in the header that the number of bytes
+used in the checksum is a multiple of 4, and that endp marks
+a point *beyond* the last byte used.
+
+> +static inline u_int32_t
+> +calc_checksum(void *startp, void *endp)
+> +{
+> +	u_int32_t sum;
+> +	u_int32_t *sump = (u_int32_t *)startp;
+> +	for (sum = 0; sump < (u_int32_t *)endp; sum += *sump++);
+
+Put the semicolon on its own line to make it more obvious.
+
+> +	return ~sum + 1;
+> +}
+> +
+> +static inline bool_t
+> +is_checksum_valid(void *startp, void *endp)
+> +{
+> +	u_int32_t sum;
+> +	u_int32_t *sump = (u_int32_t *)startp;
+> +	for (sum = 0; sump < (u_int32_t *)endp; sum += *sump++);
+
+Here too.
+
+> +	return sum == 0 ? BOOL_TRUE : BOOL_FALSE;
+> +}
+> +
+>  #endif /* CONTENT_INODE_H */
+> diff --git a/dump/content.c b/dump/content.c
+> index 9905c88..2cf15ba 100644
+> --- a/dump/content.c
+> +++ b/dump/content.c
+> @@ -585,6 +585,13 @@ content_init( intgen_t argc,
+>  		sizeof( content_inode_hdr_t ));
+>  	ASSERT( sizeof( extattrhdr_t ) == EXTATTRHDR_SZ );
+>  
+> +	/* must be a multiple of 32-bits for checksums
+> +	 */
+> +	ASSERT( FILEHDR_SZ % sizeof( u_int32_t ) == 0 );
+> +	ASSERT( EXTENTHDR_SZ  % sizeof( u_int32_t ) == 0 );
+> +	ASSERT( DIRENTHDR_SZ % sizeof( u_int32_t ) == 0 );
+> +	ASSERT( EXTATTRHDR_SZ % sizeof( u_int32_t ) == 0 );
+
+If you take the mental leap to assume sizeof(u_int32_t) == 4,
+then these checks can be made at compile time.  Others might
+not like that mental leap, however.
+
+#if (FILEHDR_SZ % 4)
+# error "FILEHDR_SZ must be a multiple of 4 (for checksumming)"
+#endif
+
+> +
+>  	/* calculate offsets of portions of the write hdr template
+>  	 */
+>  	dwhdrtemplatep = ( drive_hdr_t * )gwhdrtemplatep->gh_upper;
+
+. . .
 
 
 _______________________________________________
