@@ -1,17 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8KIhMEt076860 for <xfs@oss.sgi.com>; Tue, 20 Sep 2011 13:43:23 -0500
-Subject: xfsprogs: fix some printf() warnings that show up for ia64 builds
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110830085737.GA24793@infradead.org>
-References: <20110814201239.GA26453@infradead.org>
-	<20110829083852.GA31515@infradead.org> <20110830052226.GM3162@dastard>
-	<20110830085737.GA24793@infradead.org>
-Date: Tue, 20 Sep 2011 13:43:13 -0500
-Message-ID: <1316544193.2912.34.camel@doink>
+	p8KIgEtJ076803 for <xfs@oss.sgi.com>; Tue, 20 Sep 2011 13:42:14 -0500
+Received: from na3sys009aog104.obsmtp.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EC0161403C78
+	for <xfs@oss.sgi.com>; Tue, 20 Sep 2011 11:47:32 -0700 (PDT)
+Received: from na3sys009aog104.obsmtp.com (na3sys009aog104.obsmtp.com
+	[74.125.149.73]) by cuda.sgi.com with ESMTP id vK20t57FT3cXrnaR
+	for <xfs@oss.sgi.com>; Tue, 20 Sep 2011 11:47:32 -0700 (PDT)
+Received: by mail-yw0-f42.google.com with SMTP id 8so683834ywa.29
+	for <xfs@oss.sgi.com>; Tue, 20 Sep 2011 11:42:12 -0700 (PDT)
+Date: Tue, 20 Sep 2011 13:42:08 -0500
+From: Shawn Bohrer <sbohrer@rgmadvisors.com>
+Subject: Re: Stalls during writeback for mmaped I/O on XFS in 3.0
+Message-ID: <20110920184208.GB2119@BohrerMBP.rgmadvisors.com>
+References: <20110915144755.GB2235@BohrerMBP.rgmadvisors.com>
+	<20110915145556.GA19902@infradead.org>
+	<20110915154748.GC2235@BohrerMBP.rgmadvisors.com>
+	<20110916002557.GN11984@tux1.beaverton.ibm.com>
+	<20110916163232.GA2109@BohrerMBP.rgmadvisors.com>
+	<20110920163034.GB18914@infradead.org>
 MIME-Version: 1.0
-Reply-To: aelder@sgi.com
+Content-Disposition: inline
+In-Reply-To: <20110920163034.GB18914@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,352 +36,66 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, linux-kernel@vger.kernel.org, "Darrick J. Wong" <djwong@us.ibm.com>
 
-This applies on top of Christoph Hellwig's recent "xfs_repair: add
-printf format checking and fix the fallout" patch.  It extends the
-fixes for warnings beyond just xfs_repair and across everything in
-xfsprogs.
+On Tue, Sep 20, 2011 at 12:30:34PM -0400, Christoph Hellwig wrote:
+> On Fri, Sep 16, 2011 at 11:32:32AM -0500, Shawn Bohrer wrote:
+> > So for the most part it sounds like this change is needed for DIF/DIX.
+> > Could we only enable the wait_on_page_writeback() if
+> > CONFIG_BLK_DEV_INTEGRITY is set?  Does it make sense to tie these
+> > together?
+> 
+> It will also allow for huge efficiency gains on software raid.  There
+> have been some Lustre patches for that.
+> 
+> > The other thread in this case is the [flush-8:0] daemon writing back
+> > the pages.  So in our case you could see the spikes every time it wakes
+> > up to write back dirty pages.  While we can control this to some
+> > extent with vm.dirty_writeback_centisecs and vm.dirty_expire_centisecs
+> > it essentially impossible to ensure the writeback doesn't coincide
+> > with us writing to the page again.
+> 
+> Can you explain how your use case looks in more details?  Right now
 
-It builds cleanly on ia64 and x86_64, and builds without any
-printf() format-related warnings on i386.
+In one case we have an app that receives multicast data from a socket
+and appends it to one of many memory mapped files.  Once it writes the
+data to the end of the file it updates the header to record the new
+size.  Since we update the header page frequently we are very likely
+to encounter a stall here as the header page gets flushed in the
+background.  We also have reader processes that check the file header
+to find the new data since the last time they checked.  A stall in
+updating the header means the readers do not get the latest data.
 
-Signed-off-by: Alex Elder <aelder@sgi.com>
+It is also possible that as we append the data to the file a partially
+filled page at the end of the file could get flushed in the background
+causing a stall since we append in chunks smaller than 4K.  This is
+less likely though because we have tuned our
+vm.dirty_writeback_centisecs and vm.dirty_expire_centisecs so that we
+normally completely fill a page before the OS flushes it.
 
----
- io/parent.c              |   28 ++++++++++++++++------------
- logprint/log_misc.c      |   34 ++++++++++++++++++++--------------
- logprint/log_print_all.c |   16 ++++++++++------
- repair/dinode.c          |   20 ++++++++++++--------
- repair/scan.c            |   14 +++++++++-----
- 5 files changed, 67 insertions(+), 45 deletions(-)
+> for example a mlock removes the page from the lru list and thus stops
+> VM writeback.  If such an interface would be useful for you we could
+> offer an fadvice call that stops writeback entirely, and requires you
+> to force it when you want it.
 
-Index: b/io/parent.c
-===================================================================
---- a/io/parent.c
-+++ b/io/parent.c
-@@ -52,12 +52,12 @@ check_parent_entry(xfs_bstat_t *bstatp,
-        if (sts != 0) {
-                fprintf(stderr,
-                        _("inode-path for inode: %llu is incorrect - path \"%s\" non-existent\n"),
--                       bstatp->bs_ino, fullpath);
-+                       (unsigned long long) bstatp->bs_ino, fullpath);
-                if (verbose_flag) {
-                        fprintf(stderr,
-                                _("path \"%s\" does not stat for inode: %llu; err = %s\n"),
-                                fullpath,
--                               bstatp->bs_ino,
-+                               (unsigned long long) bstatp->bs_ino,
-                                strerror(errno));
-                }
-                err_status++;
-@@ -71,7 +71,7 @@ check_parent_entry(xfs_bstat_t *bstatp,
-        if (statbuf.st_ino != bstatp->bs_ino) {
-                fprintf(stderr,
-                        _("inode-path for inode: %llu is incorrect - wrong inode#\n"),
--                       bstatp->bs_ino);
-+                       (unsigned long long) bstatp->bs_ino);
-                if (verbose_flag) {
-                        fprintf(stderr,
-                                _("ino mismatch for path \"%s\" %llu vs %llu\n"),
-@@ -101,7 +101,7 @@ check_parent_entry(xfs_bstat_t *bstatp,
-                if (parent->p_ino != statbuf.st_ino) {
-                        fprintf(stderr,
-                                _("inode-path for inode: %llu is incorrect - wrong parent inode#\n"),
--                               bstatp->bs_ino);
-+                               (unsigned long long) bstatp->bs_ino);
-                        if (verbose_flag) {
-                                fprintf(stderr,
-                                        _("ino mismatch for path \"%s\" %llu vs %llu\n"),
-@@ -113,7 +113,8 @@ check_parent_entry(xfs_bstat_t *bstatp,
-                        return;
-                } else {
-                        if (verbose_flag > 1) {
--                               printf(_("parent ino match for %llu\n"), parent->p_ino);
-+                               printf(_("parent ino match for %llu\n"),
-+                                       (unsigned long long) parent->p_ino);
-                        }
-                }
-        }
-@@ -135,7 +136,7 @@ check_parents(parent_t *parentbuf, size_
-                        parentbuf = (parent_t *)realloc(parentbuf, *parentbuf_size);
-                } else if (error) {
-                        fprintf(stderr, _("parentpaths failed for ino %llu: %s\n"),
--                               statp->bs_ino,
-+                               (unsigned long long) statp->bs_ino,
-                                strerror(errno));
-                        err_status++;
-                        break;
-@@ -145,7 +146,8 @@ check_parents(parent_t *parentbuf, size_
- 
-        if (count == 0) {
-                /* no links for inode - something wrong here */
--               fprintf(stderr, _("inode-path for inode: %llu is missing\n"), statp->bs_ino);
-+               fprintf(stderr, _("inode-path for inode: %llu is missing\n"),
-+                               (unsigned long long) statp->bs_ino);
-                err_status++;
-        }
- 
-@@ -190,13 +192,13 @@ do_bulkstat(parent_t *parentbuf, size_t
-                                if (xfsctl(mntpt, fsfd, XFS_IOC_FSBULKSTAT_SINGLE, &bulkreq) < 0) {
-                                    fprintf(stderr,
-                                          _("failed to get bulkstat information for inode %llu\n"),
--                                         p->bs_ino );
-+                                         (unsigned long long) p->bs_ino);
-                                    continue;
-                                }
-                                if (!p->bs_nlink || !p->bs_mode || !p->bs_ino) {
-                                    fprintf(stderr,
-                                          _("failed to get valid bulkstat information for inode %llu\n"),
--                                         p->bs_ino );
-+                                         (unsigned long long) p->bs_ino);
-                                    continue;
-                                }
-                        }
-@@ -207,7 +209,8 @@ do_bulkstat(parent_t *parentbuf, size_t
-                        }
- 
-                        if (verbose_flag > 1) {
--                               printf(_("checking inode %llu\n"), p->bs_ino);
-+                               printf(_("checking inode %llu\n"),
-+                                       (unsigned long long) p->bs_ino);
-                        }
- 
-                        /* print dotted progress */
-@@ -264,7 +267,8 @@ parent_check(void)
-        if (err_status > 0)
-                fprintf(stderr, _("num errors: %d\n"), err_status);
-        else
--               printf(_("succeeded checking %llu inodes\n"), inodes_checked);
-+               printf(_("succeeded checking %llu inodes\n"),
-+                       (unsigned long long) inodes_checked);
- 
-        free(bstatbuf);
-        free(parentbuf);
-@@ -274,7 +278,7 @@ parent_check(void)
- static void
- print_parent_entry(parent_t *parent, int fullpath)
- {
--       printf(_("p_ino    = %llu\n"),  parent->p_ino);
-+       printf(_("p_ino    = %llu\n"),  (unsigned long long) parent->p_ino);
-        printf(_("p_gen    = %u\n"),    parent->p_gen);
-        printf(_("p_reclen = %u\n"),    parent->p_reclen);
-        if (fullpath)
-Index: b/logprint/log_misc.c
-===================================================================
---- a/logprint/log_misc.c
-+++ b/logprint/log_misc.c
-@@ -307,12 +307,14 @@ xlog_print_trans_buffer(xfs_caddr_t *ptr
-                         */
-                        memmove(&x, *ptr, sizeof(__be64));
-                        memmove(&y, *ptr+8, sizeof(__be64));
--                       printf(_("icount: %lld  ifree: %lld  "),
--                               be64_to_cpu(x), be64_to_cpu(y));
-+                       printf(_("icount: %llu  ifree: %llu  "),
-+                               (unsigned long long) be64_to_cpu(x),
-+                               (unsigned long long) be64_to_cpu(y));
-                        memmove(&x, *ptr+16, sizeof(__be64));
-                        memmove(&y, *ptr+24, sizeof(__be64));
--                       printf(_("fdblks: %lld  frext: %lld\n"),
--                               be64_to_cpu(x), be64_to_cpu(y));
-+                       printf(_("fdblks: %llu  frext: %llu\n"),
-+                               (unsigned long long) be64_to_cpu(x),
-+                               (unsigned long long) be64_to_cpu(y));
-                }
-                super_block = 0;
-        } else if (be32_to_cpu(*(__be32 *)(*ptr)) == XFS_AGI_MAGIC) {
-@@ -395,18 +397,22 @@ xlog_print_trans_buffer(xfs_caddr_t *ptr
-                                dq->d_version, dq->d_flags,
-                                be32_to_cpu(dq->d_id));
-                        printf(_("blk limits  hard: %llu  soft: %llu\n"),
--                               be64_to_cpu(dq->d_blk_hardlimit),
--                               be64_to_cpu(dq->d_blk_softlimit));
-+                               (unsigned long long)
-+                                       be64_to_cpu(dq->d_blk_hardlimit),
-+                               (unsigned long long)
-+                                       be64_to_cpu(dq->d_blk_softlimit));
-                        printf(_("blk  count: %llu  warns: %d  timer: %d\n"),
--                               be64_to_cpu(dq->d_bcount),
--                               be16_to_cpu(dq->d_bwarns),
--                               be32_to_cpu(dq->d_btimer));
-+                               (unsigned long long) be64_to_cpu(dq->d_bcount),
-+                               (int) be16_to_cpu(dq->d_bwarns),
-+                                be32_to_cpu(dq->d_btimer));
-                        printf(_("ino limits  hard: %llu  soft: %llu\n"),
--                               be64_to_cpu(dq->d_ino_hardlimit),
--                               be64_to_cpu(dq->d_ino_softlimit));
-+                               (unsigned long long)
-+                                       be64_to_cpu(dq->d_ino_hardlimit),
-+                               (unsigned long long)
-+                                       be64_to_cpu(dq->d_ino_softlimit));
-                        printf(_("ino  count: %llu  warns: %d  timer: %d\n"),
--                               be64_to_cpu(dq->d_icount),
--                               be16_to_cpu(dq->d_iwarns),
-+                               (unsigned long long) be64_to_cpu(dq->d_icount),
-+                               (int) be16_to_cpu(dq->d_iwarns),
-                                be32_to_cpu(dq->d_itimer));
-                }
-        } else {
-@@ -574,7 +580,7 @@ xlog_print_dir_sf(xfs_dir_shortform_t *s
-        printf(_("SHORTFORM DIRECTORY size %d count %d\n"),
-               size, sfp->hdr.count);
-        memmove(&ino, &(sfp->hdr.parent), sizeof(ino));
--       printf(_(".. ino 0x%llx\n"), be64_to_cpu(*(__be64 *)&ino));
-+       printf(_(".. ino 0x%llx\n"), (unsigned long long) be64_to_cpu(ino));
- 
-        count = (uint)(sfp->hdr.count);
-        sfep = &(sfp->list[0]);
-Index: b/logprint/log_print_all.c
-===================================================================
---- a/logprint/log_print_all.c
-+++ b/logprint/log_print_all.c
-@@ -108,12 +108,16 @@ xlog_recover_print_buffer(
-                        printf(_("      SUPER Block Buffer:\n"));
-                        if (!print_buffer) 
-                                continue;
--                       printf(_("              icount:%Ld  ifree:%Ld  "),
--                              be64_to_cpu(*(__be64 *)(p)),
--                              be64_to_cpu(*(__be64 *)(p+8)));
--                       printf(_("fdblks:%Ld  frext:%Ld\n"),
--                              be64_to_cpu(*(__be64 *)(p+16)),
--                              be64_to_cpu(*(__be64 *)(p+24)));
-+                       printf(_("              icount:%llu ifree:%llu  "),
-+                               (unsigned long long)
-+                                       be64_to_cpu(*(__be64 *)(p)),
-+                               (unsigned long long)
-+                                       be64_to_cpu(*(__be64 *)(p+8)));
-+                       printf(_("fdblks:%llu  frext:%llu\n"),
-+                               (unsigned long long)
-+                                       be64_to_cpu(*(__be64 *)(p+16)),
-+                               (unsigned long long)
-+                                       be64_to_cpu(*(__be64 *)(p+24)));
-                        printf(_("              sunit:%u  swidth:%u\n"),
-                               be32_to_cpu(*(__be32 *)(p+56)),
-                               be32_to_cpu(*(__be32 *)(p+60)));
-Index: b/repair/dinode.c
-===================================================================
---- a/repair/dinode.c
-+++ b/repair/dinode.c
-@@ -1229,7 +1229,7 @@ _("bad numrecs 0 in inode %" PRIu64 " bm
-                 */
-                if (!verify_dfsbno(mp, be64_to_cpu(pp[i])))  {
-                        do_warn(_("bad bmap btree ptr 0x%llx in ino %" PRIu64 "\n"),
--                               be64_to_cpu(pp[i]), lino);
-+                               (unsigned long long) be64_to_cpu(pp[i]), lino);
-                        return(1);
-                }
- 
-@@ -1249,7 +1249,8 @@ _("bad numrecs 0 in inode %" PRIu64 " bm
-                                do_warn(
-        _("correcting key in bmbt root (was %llu, now %" PRIu64") in inode "
-          "%" PRIu64" %s fork\n"),
--                                       be64_to_cpu(pkey[i].br_startoff),
-+                                       (unsigned long long)
-+                                               be64_to_cpu(pkey[i].br_startoff),
-                                        cursor.level[level-1].first_key,
-                                        XFS_AGINO_TO_INO(mp, agno, ino),
-                                        forkname);
-@@ -1260,7 +1261,8 @@ _("bad numrecs 0 in inode %" PRIu64 " bm
-                                do_warn(
-        _("bad key in bmbt root (is %llu, would reset to %" PRIu64 ") in inode "
-          "%" PRIu64 " %s fork\n"),
--                                       be64_to_cpu(pkey[i].br_startoff),
-+                                       (unsigned long long)
-+                                               be64_to_cpu(pkey[i].br_startoff),
-                                        cursor.level[level-1].first_key,
-                                        XFS_AGINO_TO_INO(mp, agno, ino),
-                                        forkname);
-@@ -1374,7 +1376,7 @@ process_lclinode(
-                                                XFS_DFORK_DSIZE(dip, mp)) {
-                do_warn(
-        _("local inode %" PRIu64 " data fork is too large (size = %lld, max = %d)\n"),
--                       lino, be64_to_cpu(dip->di_size),
-+                       lino, (unsigned long long) be64_to_cpu(dip->di_size),
-                        XFS_DFORK_DSIZE(dip, mp));
-                return(1);
-        } else if (whichfork == XFS_ATTR_FORK) {
-@@ -1508,8 +1510,8 @@ process_symlink(
-         * for that
-         */
-        if (be64_to_cpu(dino->di_size) >= MAXPATHLEN)  {
--               do_warn(_("symlink in inode %" PRIu64 " too long (%lld chars)\n"),
--                       lino, be64_to_cpu(dino->di_size));
-+               do_warn(_("symlink in inode %" PRIu64 " too long (%llu chars)\n"),
-+                       lino, (unsigned long long) be64_to_cpu(dino->di_size));
-                return(1);
-        }
- 
-@@ -1987,13 +1989,15 @@ process_inode_blocks_and_extents(
-                if (!no_modify)  {
-                        do_warn(
- _("correcting nblocks for inode %" PRIu64 ", was %llu - counted %" PRIu64 "\n"), lino,
--                               be64_to_cpu(dino->di_nblocks), nblocks);
-+                               (unsigned long long) be64_to_cpu(dino->di_nblocks),
-+                               nblocks);
-                        dino->di_nblocks = cpu_to_be64(nblocks);
-                        *dirty = 1;
-                } else  {
-                        do_warn(
- _("bad nblocks %llu for inode %" PRIu64 ", would reset to %" PRIu64 "\n"),
--                               be64_to_cpu(dino->di_nblocks), lino, nblocks);
-+                               (unsigned long long) be64_to_cpu(dino->di_nblocks),
-+                               lino, nblocks);
-                }
-        }
- 
-Index: b/repair/scan.c
-===================================================================
---- a/repair/scan.c
-+++ b/repair/scan.c
-@@ -235,7 +235,8 @@ _("bad fwd (right) sibling pointer (saw
-                                do_warn(
- _("bad back (left) sibling pointer (saw %llu parent block says %" PRIu64 ")\n"
-   "\tin inode %" PRIu64 " (%s fork) bmap btree block %" PRIu64 "\n"),
--                                       be64_to_cpu(block->bb_u.l.bb_leftsib),
-+                                       (unsigned long long)
-+                                               be64_to_cpu(block->bb_u.l.bb_leftsib),
-                                        bm_cursor->level[level].fsbno,
-                                        ino, forkname, bno);
-                                return(1);
-@@ -249,7 +250,8 @@ _("bad back (left) sibling pointer (saw
-                                do_warn(
- _("bad back (left) sibling pointer (saw %llu should be NULL (0))\n"
-   "\tin inode %" PRIu64 " (%s fork) bmap btree block %" PRIu64 "\n"),
--                                       be64_to_cpu(block->bb_u.l.bb_leftsib),
-+                                       (unsigned long long)
-+                                               be64_to_cpu(block->bb_u.l.bb_leftsib),
-                                        ino, forkname, bno);
-                                return(1);
-                        }
-@@ -404,7 +406,7 @@ _("inode 0x%" PRIu64 " bad # of bmap rec
-                if (!verify_dfsbno(mp, be64_to_cpu(pp[i])))  {
-                        do_warn(
- _("bad bmap btree ptr 0x%llx in ino %" PRIu64 "\n"),
--                               be64_to_cpu(pp[i]), ino);
-+                               (unsigned long long) be64_to_cpu(pp[i]), ino);
-                        return(1);
-                }
- 
-@@ -432,7 +434,8 @@ _("bad bmap btree ptr 0x%llx in ino %" P
-                                do_warn(
- _("correcting bt key (was %llu, now %" PRIu64 ") in inode %" PRIu64 "\n"
-   "\t\t%s fork, btree block %" PRIu64 "\n"),
--                                       be64_to_cpu(pkey[i].br_startoff),
-+                                       (unsigned long long)
-+                                               be64_to_cpu(pkey[i].br_startoff),
-                                        bm_cursor->level[level-1].first_key,
-                                        ino,
-                                        forkname, bno);
-@@ -443,7 +446,8 @@ _("correcting bt key (was %llu, now %" P
-                                do_warn(
- _("bad btree key (is %llu, should be %" PRIu64 ") in inode %" PRIu64 "\n"
-   "\t\t%s fork, btree block %" PRIu64 "\n"),
--                                       be64_to_cpu(pkey[i].br_startoff),
-+                                       (unsigned long long)
-+                                               be64_to_cpu(pkey[i].br_startoff),
-                                        bm_cursor->level[level-1].first_key,
-                                        ino, forkname, bno);
-                        }
+For the case I described above I'm not sure this would help because
+we don't know the incoming rate of data so even if we force the sync
+it could still cause a stall.
+
+I do have a second application that is also suffering from these
+stalls and I believe we could avoid the stalls by using fadvise to
+disable writeback for a portion of the file and manually sync it
+ourselves.  So this could potentially solve one of my problems.
+
+Thanks,
+Shawn
+
+
+---------------------------------------------------------------
+This email, along with any attachments, is confidential. If you 
+believe you received this message in error, please contact the 
+sender immediately and delete all copies of the message.  
+Thank you.
 
 _______________________________________________
 xfs mailing list
