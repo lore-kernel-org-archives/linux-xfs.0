@@ -1,15 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8KFbera068335 for <xfs@oss.sgi.com>; Tue, 20 Sep 2011 10:37:40 -0500
-Subject: Re: [PATCH v2] xfs: Check the return value of xfs_trans_get_buf()
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1316527015.9298.60.camel@chandra-lucid.austin.ibm.com>
-References: <1316527015.9298.60.camel@chandra-lucid.austin.ibm.com>
-Date: Tue, 20 Sep 2011 10:37:36 -0500
-Message-ID: <1316533056.2912.19.camel@doink>
+	p8KG2XOY069479 for <xfs@oss.sgi.com>; Tue, 20 Sep 2011 11:02:33 -0500
+Date: Tue, 20 Sep 2011 12:02:26 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: xfs deadlock in stable kernel 3.0.4
+Message-ID: <20110920160226.GA25542@infradead.org>
+References: <C6515E45-5724-43DD-95A8-1F89AFE29601@profihost.ag>
+	<20110912200543.GA22409@infradead.org>
+	<4E6EF274.7050007@profihost.ag>
+	<20110913205018.GA8543@infradead.org> <4E70571A.80108@profihost.ag>
+	<4E705C42.6020909@profihost.ag>
+	<20110914143005.GA28496@infradead.org>
+	<4E75B660.1030502@profihost.ag> <20110918230245.GF15688@dastard>
+	<4E78665E.8030409@profihost.ag>
 MIME-Version: 1.0
-Reply-To: aelder@sgi.com
+Content-Disposition: inline
+In-Reply-To: <4E78665E.8030409@profihost.ag>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,21 +29,37 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: sekharan@us.ibm.com
-Cc: XFS Mailing List <xfs@oss.sgi.com>
+To: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+Cc: Christoph Hellwig <hch@infradead.org>, "xfs-masters@oss.sgi.com" <xfs-masters@oss.sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, aelder@sgi.com
 
-On Tue, 2011-09-20 at 08:56 -0500, Chandra Seetharaman wrote:
-> Ran the xfstests (auto) overnight and didn't see any new issues.
+On Tue, Sep 20, 2011 at 12:09:34PM +0200, Stefan Priebe - Profihost AG wrote:
+> Hi,
 > 
-> --
-> Check the return value of xfs_trans_get_buf() and fail appropriately.
+> any idea how to get deeper into this? I've tried using kgdb but
+> strangely the error does not occur when kgdb is remote attached.
+> When i unattach kgdb and restart bonnie the error happens again.
 > 
-> Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
+> So it seems to me a little bit like a timing issue?
 
-Looks good.
+Sounds like it.
 
-Reviewed-by: Alex Elder <aelder@sgi.com>
+Can you summarize all the data that we gather over this thread into one
+summary, e.g.
 
+ - what kernel does it happens?  Seems like 3.0 and 3.1 hit it easily,
+   2.6.38 some times, 2.6.32 is fine.  Did you test anything between
+   2.6.32 and 2.6.38?
+ - what hardware hits it often/sometimes/never?
+ - what is the fs geometry?
+ - what is the hardware?
+ - is this a 32 or 64-bit kernel, or do you run both?
+
+I'm pretty sure most got posted somewhere, but let's get a summary
+as things was a bit confusing sometimes.
+
+Note that 2.6.38 moved the whole log grant code to a lockless algorithm,
+so this might be a likely culprit if you're managing to hit race windows
+no one else does, i.e. this really is a timing issue.
 
 _______________________________________________
 xfs mailing list
