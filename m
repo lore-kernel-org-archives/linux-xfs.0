@@ -1,15 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8K0I5jc022646 for <xfs@oss.sgi.com>; Mon, 19 Sep 2011 19:18:05 -0500
-Message-ID: <4E77DBB9.7060400@sgi.com>
-Date: Mon, 19 Sep 2011 19:18:01 -0500
-From: Bill Kendall <wkendall@sgi.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH] xfsdump: enable dump header checksums
-References: <1314654106-28548-1-git-send-email-wkendall@sgi.com>
-	<1316463141.2941.75.camel@doink>
-In-Reply-To: <1316463141.2941.75.camel@doink>
+	p8K0lKT3023772 for <xfs@oss.sgi.com>; Mon, 19 Sep 2011 19:47:20 -0500
+Received: from server655-han.de-nserver.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id F05FB1DAC724
+	for <xfs@oss.sgi.com>; Mon, 19 Sep 2011 17:47:18 -0700 (PDT)
+Received: from server655-han.de-nserver.de (server655-han.de-nserver.de
+	[85.158.177.45]) by cuda.sgi.com with ESMTP id i53CHGJ9UQ4ekE5G
+	for <xfs@oss.sgi.com>; Mon, 19 Sep 2011 17:47:18 -0700 (PDT)
+References: <1D2B34A7-7BB9-4E4E-9CA2-382C210E125F@profihost.ag>
+	<20110912152133.GA8345@infradead.org>
+	<C6515E45-5724-43DD-95A8-1F89AFE29601@profihost.ag>
+	<20110912200543.GA22409@infradead.org>
+	<4E6EF274.7050007@profihost.ag>
+	<20110913205018.GA8543@infradead.org>
+	<4E70571A.80108@profihost.ag> <4E705C42.6020909@profihost.ag>
+	<20110914143005.GA28496@infradead.org>
+	<4E75B660.1030502@profihost.ag> <20110918230245.GF15688@dastard>
+In-Reply-To: <20110918230245.GF15688@dastard>
+Mime-Version: 1.0 (iPhone Mail 8H7)
+Message-Id: <1AF8D07B-0E3D-4EF8-A289-12D2339CBADE@profihost.ag>
+From: Stefan Priebe <s.priebe@profihost.ag>
+Subject: Re: xfs deadlock in stable kernel 3.0.4
+Date: Tue, 20 Sep 2011 02:47:12 +0200
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,179 +31,50 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: aelder@sgi.com
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, "xfs-masters@oss.sgi.com" <xfs-masters@oss.sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "aelder@sgi.com" <aelder@sgi.com>
 
-On 09/19/2011 03:12 PM, Alex Elder wrote:
-> On Mon, 2011-08-29 at 16:41 -0500, Bill Kendall wrote:
->> Various structures in a dump file optionally contain a checksum, but
->> the code to compute and validate the checksum has not been enabled.
->> The checksum code has a negligible performance impact and so this
->> patch enables the checksum code unconditionally. Also:
->>
->> - make sure all header sizes are multiples of 4 bytes
->>    (a requirement of the checksum routine)
->> - zero structures to ensure internal padding has a known value
->> - fix a bug in dump_extattr_buildrecord() which checksummed
->>    the wrong header structure
->> - add calc_checksum() and is_checksum_valid() routines to
->>    cut down on duplicate code
->>
->> Signed-off-by: Bill Kendall<wkendall@sgi.com>
->
-> I have a bunch of questions, and a few minor suggestions.
-> This is a really good thing to get back into dumps.  The
-> change looks OK to me, but I'd like to hear back from you
-> and maybe have you submit a new version with minor tweaks
-> before I commit this.
->
-> 					-Alex
->
-> How did you select your checksum algorithm?  As long as you're
-> computing one, perhaps you should use one of the established
-> standard ones with well-understood properties (like CRC-32).
->
-> Oh, now I see it was there in the code already.  Thank you for
-> encapsulating that...
->
-> Was this used previously in Irix, and thus needs to be done in
-> a compatible way?  Maybe you could implement this but at a
-> future date implement EXTENTHDR_FLAGS_CRC32 as another flag
-> that could provide a better checksum.
 
-Possibly on IRIX, or possibly there's a Linux distro out there
-that enabled the checksums. So yes, I wanted to preserve
-compatibility. Switching to a standard checksum in the future
-as you suggest is a good idea.
+Am 19.09.2011 um 01:02 schrieb Dave Chinner <david@fromorbit.com>:
 
->
-> The theory in doing this unconditionally is that we might as
-> well record it, even if the restore program chooses to ignore
-> it, right?
+> On Sun, Sep 18, 2011 at 11:14:08AM +0200, Stefan Priebe - Profihost AG wrote:
+>> Hi,
+>> 
+>> at least i'm now able to reproduce the issue. I hope this will help
+>> to investigate the issue and hopefully you can reproduce it as well.
+>> 
+>> I'm using vanilla 3.0.4 kernel + xfs as root filesystem and had
+>> detect hanging taks with 120s set. You'll then see that the bonnie++
+>> command get's stuck in xlog_grant_log_space while creating or
+>> deleting files. I was using a SSD or a fast Raid 10 (24x SAS Disks)
+>> - i was not able to reproduce it on normal SATA disks even a 20x
+>> SATA Raid 10 didn't work.
+>> 
+>> I used bonnie++ (V 1.96) to reproduce it. Mostly in the 1st run the
+>> bug is triggered - sometimes I needed two runs.
+>> 
+>> bonnie++ -u root -s 0 -n 1024:32768:0:1024:4096 -d /
+>> 
+>> I hope that helps - as i now have a testing machine and can trigger
+>> the bug pretty fast (10-30min instead of hours). I can also add
+>> debug code if you want or have one.
+> 
+> If it is a log space accounting issue, then the output of 'xfs_info
+> <mtpt>' is really necessary to set the filesystem up the same way
+> (e.g. same log size, number of AGs, etc) so that it behaves the same
+> way on different 
 
-Right. (You probably noticed this also changes restore to
-unconditionally verify the checksum, provided the flags
-indicate the checksum was recorded.)
+I can't get it. It just works on some part. and not on the other. Even xfs_info shows the same
+for them. Also i have one part where it only happens when that one is
+root (/). When i mount that one as /mnt it does not happen ;-(
 
->
-> Interesting that struct direnthdr has no flags field.  It
-> looks like the flag that signals it is in use is in the
-> content_inode_hdr structure.  Any idea why the others
-> include a flag with each structure instance indicating
-> they are checksummed?
+Any idea on how to proceed now?
 
-My guess was that each had a flags field for other purposes,
-but that's not true for all cases -- struct extenthdr just
-has the single checksum flag. So not sure why direnthdr
-was done this way.
-
->
->> ---
->>   common/content_inode.h |   20 +++++++++++
->>   dump/content.c         |   85 +++++++++++-------------------------------------
->>   restore/Makefile       |    2 +-
->>   restore/content.c      |   40 ++--------------------
->>   4 files changed, 44 insertions(+), 103 deletions(-)
->>
->> diff --git a/common/content_inode.h b/common/content_inode.h
->> index 479fdfc..e119354 100644
->> --- a/common/content_inode.h
->> +++ b/common/content_inode.h
->> @@ -347,4 +347,24 @@ typedef struct extattrhdr extattrhdr_t;
->>   	/* a linux "secure" mode attribute
->>   	 */
->>
->> +/* Routines for calculating and validating checksums on xfsdump headers
->> + */
->
-> I know it's fairly obvious on these simple functions, but it
-> might be nice to state in the header that the number of bytes
-> used in the checksum is a multiple of 4, and that endp marks
-> a point *beyond* the last byte used.
-
-I've changed this to be more conventional and take a length
-argument rather than an end pointer. Also added a comment
-about the length restriction.
-
->
->> +static inline u_int32_t
->> +calc_checksum(void *startp, void *endp)
->> +{
->> +	u_int32_t sum;
->> +	u_int32_t *sump = (u_int32_t *)startp;
->> +	for (sum = 0; sump<  (u_int32_t *)endp; sum += *sump++);
->
-> Put the semicolon on its own line to make it more obvious.
-
-I reworked this and the case below to be a while loop
-to avoid having a loop with an empty body.
-
-         u_int32_t sum = 0;
-         ...
-         while (sump < endp)
-                 sum += *sump++;
-
->
->> +	return ~sum + 1;
->> +}
->> +
->> +static inline bool_t
->> +is_checksum_valid(void *startp, void *endp)
->> +{
->> +	u_int32_t sum;
->> +	u_int32_t *sump = (u_int32_t *)startp;
->> +	for (sum = 0; sump<  (u_int32_t *)endp; sum += *sump++);
->
-> Here too.
->
->> +	return sum == 0 ? BOOL_TRUE : BOOL_FALSE;
->> +}
->> +
->>   #endif /* CONTENT_INODE_H */
->> diff --git a/dump/content.c b/dump/content.c
->> index 9905c88..2cf15ba 100644
->> --- a/dump/content.c
->> +++ b/dump/content.c
->> @@ -585,6 +585,13 @@ content_init( intgen_t argc,
->>   		sizeof( content_inode_hdr_t ));
->>   	ASSERT( sizeof( extattrhdr_t ) == EXTATTRHDR_SZ );
->>
->> +	/* must be a multiple of 32-bits for checksums
->> +	 */
->> +	ASSERT( FILEHDR_SZ % sizeof( u_int32_t ) == 0 );
->> +	ASSERT( EXTENTHDR_SZ  % sizeof( u_int32_t ) == 0 );
->> +	ASSERT( DIRENTHDR_SZ % sizeof( u_int32_t ) == 0 );
->> +	ASSERT( EXTATTRHDR_SZ % sizeof( u_int32_t ) == 0 );
->
-> If you take the mental leap to assume sizeof(u_int32_t) == 4,
-> then these checks can be made at compile time.  Others might
-> not like that mental leap, however.
->
-> #if (FILEHDR_SZ % 4)
-> # error "FILEHDR_SZ must be a multiple of 4 (for checksumming)"
-> #endif
-
-I think I prefer the way I have it, if only because there
-are other checks on those structure sizes in the same block
-of code.
-
-I'll repost with changes based on your comments.
-
-Thanks,
-Bill
-
->
->> +
->>   	/* calculate offsets of portions of the write hdr template
->>   	 */
->>   	dwhdrtemplatep = ( drive_hdr_t * )gwhdrtemplatep->gh_upper;
->
-> . . .
->
+Stefan
 
 _______________________________________________
 xfs mailing list
