@@ -1,15 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8KH69Bg071951 for <xfs@oss.sgi.com>; Tue, 20 Sep 2011 12:06:09 -0500
-Subject: Re: [PATCH v2] xfsdump: enable dump header checksums
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1316523954-7688-1-git-send-email-wkendall@sgi.com>
-References: <1316523954-7688-1-git-send-email-wkendall@sgi.com>
-Date: Tue, 20 Sep 2011 12:06:05 -0500
-Message-ID: <1316538365.2912.32.camel@doink>
+	p8KHCMfA072151 for <xfs@oss.sgi.com>; Tue, 20 Sep 2011 12:12:23 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D89431C29DA8
+	for <xfs@oss.sgi.com>; Tue, 20 Sep 2011 10:12:21 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	iJNwEKG3HC7jDkhR for <xfs@oss.sgi.com>;
+	Tue, 20 Sep 2011 10:12:21 -0700 (PDT)
+Date: Tue, 20 Sep 2011 13:12:20 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2] xfs: fix possible overflow in xfs_ioc_trim()
+Message-ID: <20110920171220.GA17204@infradead.org>
+References: <1315322977-22736-1-git-send-email-lczerner@redhat.com>
+	<20110906153301.GA21675@infradead.org>
+	<alpine.LFD.2.00.1109071200480.4579@dhcp-27-109.brq.redhat.com>
+	<20110907112155.GA1017@infradead.org>
+	<alpine.LFD.2.00.1109071333110.4579@dhcp-27-109.brq.redhat.com>
 MIME-Version: 1.0
-Reply-To: aelder@sgi.com
+Content-Disposition: inline
+In-Reply-To: <alpine.LFD.2.00.1109071333110.4579@dhcp-27-109.brq.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,79 +34,67 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Bill Kendall <wkendall@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Lukas Czerner <lczerner@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Tue, 2011-09-20 at 08:05 -0500, Bill Kendall wrote:
-> Various structures in a dump file optionally contain a checksum, but
-> the code to compute and validate the checksum has not been enabled.
-> The checksum code has a negligible performance impact and so this
-> patch enables the checksum code unconditionally. Also:
+On Wed, Sep 07, 2011 at 02:26:54PM +0200, Lukas Czerner wrote:
+> I do not think that start + len can overflow since we are doing
+> XFS_B_TO_FSBT() on it first. Am I missing something ?
+
+They don't have to overflow, but they can easily be outside
+the range of valid AGs.
+
+> > Care to update the test case to cover these cases as well?
+> > 
 > 
-> - make sure all header sizes are multiples of 4 bytes
->   (a requirement of the checksum routine)
-> - zero structures to ensure internal padding has a known value
-> - fix a bug in dump_extattr_buildrecord() which checksummed
->   the wrong header structure
-> - add calc_checksum() and is_checksum_valid() routines to
->   cut down on duplicate code
-> 
-> Signed-off-by: Bill Kendall <wkendall@sgi.com>
+> I am not sure what do you mean ? There already is a check when both
+> start and len are huge numbers. I am not sure if we can do more without
+> significantly complicating the test to cover various start, or len
+> numbers where can the fsblock->group_number overflow for various file
+> systems.
 
-This looks good.  I have a few comments for you
-below but unless you decide to send me an update
-I'll use this as-is.
+Add a testcase where start is a relatively small number (smaller than an
+AG/BG), but start + len is outside the fs.
 
-Reviewed-by: Alex Elder <aelder@sgi.com>
-
-> ---
->  common/content_inode.h |   25 ++++++++++++++
->  dump/content.c         |   85 +++++++++++-------------------------------------
->  restore/Makefile       |    2 +-
->  restore/content.c      |   40 ++--------------------
->  4 files changed, 49 insertions(+), 103 deletions(-)
-> 
-> diff --git a/common/content_inode.h b/common/content_inode.h
-> index 479fdfc..9c2c1cc 100644
-> --- a/common/content_inode.h
-> +++ b/common/content_inode.h
-> @@ -347,4 +347,29 @@ typedef struct extattrhdr extattrhdr_t;
->  	/* a linux "secure" mode attribute
+> @@ -145,7 +145,7 @@ xfs_ioc_trim(
+>  	struct request_queue	*q = mp->m_ddev_targp->bt_bdev->bd_disk->queue;
+>  	unsigned int		granularity = q->limits.discard_granularity;
+>  	struct fstrim_range	range;
+> +	xfs_fsblock_t		start, end, minlen;
+>  	xfs_agnumber_t		start_agno, end_agno, agno;
+>  	__uint64_t		blocks_trimmed = 0;
+>  	int			error, last_error = 0;
+> @@ -165,19 +165,21 @@ xfs_ioc_trim(
+>  	 * matter as trimming blocks is an advisory interface.
 >  	 */
+>  	start = XFS_B_TO_FSBT(mp, range.start);
+> +	end = start + XFS_B_TO_FSBT(mp, range.len) - 1;
+>  	minlen = XFS_B_TO_FSB(mp, max_t(u64, granularity, range.minlen));
 >  
-> +/* Routines for calculating and validating checksums on xfsdump headers.
-> + * The header length must be an integral number of u_int32_t's.
-> + */
-> +static inline u_int32_t
-> +calc_checksum(void *bufp, size_t len)
-> +{
-> +	u_int32_t sum = 0;
-> +	u_int32_t *sump = (u_int32_t *)bufp;
-> +	u_int32_t *endp = (void *)sump + len
+> +	if (start >= mp->m_sb.sb_dblocks)
+>  		return -XFS_ERROR(EINVAL);
+> +	start_agno = XFS_FSB_TO_AGNO(mp, start);
+>  
+> +	if (end >= mp->m_sb.sb_dblocks) {
+> +		end = mp->m_sb.sb_dblocks - 1;
+>  		end_agno = mp->m_sb.sb_agcount - 1;
+> +	} else
+> +		end_agno = XFS_FSB_TO_AGNO(mp, end);
 
-No need to cast a (void *) object to another
-pointer type (and vice-versa).
+I'd rather do something like:
 
-And although gcc allows arithmetic on void pointers,
-it is not standard, so (char *) would be a more
-portable choice.
-
-The multiple-of-4 assumption would be well stated with
-an assertion.
-
-> ;
-> +	while (sump < endp)
-> +		sum += *sump++;
-> +	return ~sum + 1;
-> +}
-> +
-> +static inline bool_t
-> +is_checksum_valid(void *bufp, size_t len)
-> +{
-
-. . .
+	if (start >= mp->m_sb.sb_dblocks)
+  		return -XFS_ERROR(EINVAL);
+	if (end > mp->m_sb.sb_dblocks - 1)
+		end = mp->m_sb.sb_dblocks - 1;
 
 
+	start_agno = XFS_FSB_TO_AGNO(mp, start);
+	end_agno = XFS_FSB_TO_AGNO(mp, end)
+
+here.
+
+Otherwise the patch looks fine.
 
 _______________________________________________
 xfs mailing list
