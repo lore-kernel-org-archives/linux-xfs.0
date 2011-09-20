@@ -1,28 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8KIgEtJ076803 for <xfs@oss.sgi.com>; Tue, 20 Sep 2011 13:42:14 -0500
-Received: from na3sys009aog104.obsmtp.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EC0161403C78
-	for <xfs@oss.sgi.com>; Tue, 20 Sep 2011 11:47:32 -0700 (PDT)
-Received: from na3sys009aog104.obsmtp.com (na3sys009aog104.obsmtp.com
-	[74.125.149.73]) by cuda.sgi.com with ESMTP id vK20t57FT3cXrnaR
-	for <xfs@oss.sgi.com>; Tue, 20 Sep 2011 11:47:32 -0700 (PDT)
-Received: by mail-yw0-f42.google.com with SMTP id 8so683834ywa.29
-	for <xfs@oss.sgi.com>; Tue, 20 Sep 2011 11:42:12 -0700 (PDT)
-Date: Tue, 20 Sep 2011 13:42:08 -0500
-From: Shawn Bohrer <sbohrer@rgmadvisors.com>
-Subject: Re: Stalls during writeback for mmaped I/O on XFS in 3.0
-Message-ID: <20110920184208.GB2119@BohrerMBP.rgmadvisors.com>
-References: <20110915144755.GB2235@BohrerMBP.rgmadvisors.com>
-	<20110915145556.GA19902@infradead.org>
-	<20110915154748.GC2235@BohrerMBP.rgmadvisors.com>
-	<20110916002557.GN11984@tux1.beaverton.ibm.com>
-	<20110916163232.GA2109@BohrerMBP.rgmadvisors.com>
-	<20110920163034.GB18914@infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110920163034.GB18914@infradead.org>
+	p8KI5uFH075158 for <xfs@oss.sgi.com>; Tue, 20 Sep 2011 13:05:57 -0500
+Received: from e8.ny.us.ibm.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8333D1C29D45
+	for <xfs@oss.sgi.com>; Tue, 20 Sep 2011 11:05:56 -0700 (PDT)
+Received: from e8.ny.us.ibm.com (e8.ny.us.ibm.com [32.97.182.138]) by
+	cuda.sgi.com with ESMTP id 8yQIBbw0TMzw8JDB for
+	<xfs@oss.sgi.com>; Tue, 20 Sep 2011 11:05:56 -0700 (PDT)
+Received: from d01relay01.pok.ibm.com (d01relay01.pok.ibm.com [9.56.227.233])
+	by e8.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p8KHpGB7012114
+	for <xfs@oss.sgi.com>; Tue, 20 Sep 2011 13:51:16 -0400
+Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
+	by d01relay01.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	p8KI5tSv246152 for <xfs@oss.sgi.com>; Tue, 20 Sep 2011 14:05:55 -0400
+Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
+	by d01av03.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
+	p8KE5gHI027121 for <xfs@oss.sgi.com>; Tue, 20 Sep 2011 11:05:42 -0300
+Subject: Re: [PATCH v2] xfs: Check the return value of xfs_trans_get_buf()
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+In-Reply-To: <20110920150029.GA5239@infradead.org>
+References: <1316527015.9298.60.camel@chandra-lucid.austin.ibm.com>
+	<20110920150029.GA5239@infradead.org>
+Date: Tue, 20 Sep 2011 13:05:54 -0500
+Message-ID: <1316541954.9298.65.camel@chandra-lucid.austin.ibm.com>
+Mime-Version: 1.0
+Reply-To: sekharan@us.ibm.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,66 +39,35 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, linux-kernel@vger.kernel.org, "Darrick J. Wong" <djwong@us.ibm.com>
+Cc: Alex Elder <aelder@sgi.com>, XFS Mailing List <xfs@oss.sgi.com>
 
-On Tue, Sep 20, 2011 at 12:30:34PM -0400, Christoph Hellwig wrote:
-> On Fri, Sep 16, 2011 at 11:32:32AM -0500, Shawn Bohrer wrote:
-> > So for the most part it sounds like this change is needed for DIF/DIX.
-> > Could we only enable the wait_on_page_writeback() if
-> > CONFIG_BLK_DEV_INTEGRITY is set?  Does it make sense to tie these
-> > together?
+On Tue, 2011-09-20 at 11:00 -0400, Christoph Hellwig wrote:
+> On Tue, Sep 20, 2011 at 08:56:55AM -0500, Chandra Seetharaman wrote:
+> > --- a/fs/xfs/xfs_attr_leaf.c
+> > +++ b/fs/xfs/xfs_attr_leaf.c
+> > @@ -2948,6 +2948,8 @@ xfs_attr_leaf_freextent(xfs_trans_t **trans, xfs_inode_t *dp,
+> >  			bp = xfs_trans_get_buf(*trans,
+> >  					dp->i_mount->m_ddev_targp,
+> >  					dblkno, dblkcnt, XBF_LOCK);
+> > +			if (!bp)
+> > +				return ENOMEM;
+> >  			xfs_trans_binval(*trans, bp);
 > 
-> It will also allow for huge efficiency gains on software raid.  There
-> have been some Lustre patches for that.
+> xfs_trans_binval only really does anything if the buffer was in memory.
 > 
-> > The other thread in this case is the [flush-8:0] daemon writing back
-> > the pages.  So in our case you could see the spikes every time it wakes
-> > up to write back dirty pages.  While we can control this to some
-> > extent with vm.dirty_writeback_centisecs and vm.dirty_expire_centisecs
-> > it essentially impossible to ensure the writeback doesn't coincide
-> > with us writing to the page again.
+> We have a few callers using that patterm, and I think they should simply
+> switch to not reading the buffer in if it's not there yet, e.g.
+> using something like an xfs_trans_incore.
+
+Hi Christoph,
+
+I do not understand. Can you elaborate on what needs to be done.
+
+Thanks
+
+Chandra
 > 
-> Can you explain how your use case looks in more details?  Right now
 
-In one case we have an app that receives multicast data from a socket
-and appends it to one of many memory mapped files.  Once it writes the
-data to the end of the file it updates the header to record the new
-size.  Since we update the header page frequently we are very likely
-to encounter a stall here as the header page gets flushed in the
-background.  We also have reader processes that check the file header
-to find the new data since the last time they checked.  A stall in
-updating the header means the readers do not get the latest data.
-
-It is also possible that as we append the data to the file a partially
-filled page at the end of the file could get flushed in the background
-causing a stall since we append in chunks smaller than 4K.  This is
-less likely though because we have tuned our
-vm.dirty_writeback_centisecs and vm.dirty_expire_centisecs so that we
-normally completely fill a page before the OS flushes it.
-
-> for example a mlock removes the page from the lru list and thus stops
-> VM writeback.  If such an interface would be useful for you we could
-> offer an fadvice call that stops writeback entirely, and requires you
-> to force it when you want it.
-
-For the case I described above I'm not sure this would help because
-we don't know the incoming rate of data so even if we force the sync
-it could still cause a stall.
-
-I do have a second application that is also suffering from these
-stalls and I believe we could avoid the stalls by using fadvise to
-disable writeback for a portion of the file and manually sync it
-ourselves.  So this could potentially solve one of my problems.
-
-Thanks,
-Shawn
-
-
----------------------------------------------------------------
-This email, along with any attachments, is confidential. If you 
-believe you received this message in error, please contact the 
-sender immediately and delete all copies of the message.  
-Thank you.
 
 _______________________________________________
 xfs mailing list
