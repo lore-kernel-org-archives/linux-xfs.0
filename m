@@ -1,15 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8KF0Xnp066731 for <xfs@oss.sgi.com>; Tue, 20 Sep 2011 10:00:33 -0500
-Date: Tue, 20 Sep 2011 11:00:29 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2] xfs: Check the return value of xfs_trans_get_buf()
-Message-ID: <20110920150029.GA5239@infradead.org>
-References: <1316527015.9298.60.camel@chandra-lucid.austin.ibm.com>
+	p8KFLjmJ067562 for <xfs@oss.sgi.com>; Tue, 20 Sep 2011 10:21:46 -0500
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8DF9017571F
+	for <xfs@oss.sgi.com>; Tue, 20 Sep 2011 08:21:44 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id KhJgTXsyxgFDe4uG for
+	<xfs@oss.sgi.com>; Tue, 20 Sep 2011 08:21:44 -0700 (PDT)
+Message-ID: <4E78AF6B.5010502@redhat.com>
+Date: Tue, 20 Sep 2011 11:21:15 -0400
+From: Rik van Riel <riel@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1316527015.9298.60.camel@chandra-lucid.austin.ibm.com>
+Subject: Re: [patch 1/4] mm: exclude reserved pages from dirtyable memory
+References: <1316526315-16801-1-git-send-email-jweiner@redhat.com>
+	<1316526315-16801-2-git-send-email-jweiner@redhat.com>
+In-Reply-To: <1316526315-16801-2-git-send-email-jweiner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,29 +24,25 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Chandra Seetharaman <sekharan@us.ibm.com>
-Cc: Alex Elder <aelder@sgi.com>, XFS Mailing List <xfs@oss.sgi.com>
+To: Johannes Weiner <jweiner@redhat.com>
+Cc: linux-ext4@vger.kernel.org, Jan Kara <jack@suse.cz>, linux-btrfs@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, Mel Gorman <mgorman@suse.de>, linux-fsdevel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andrew Morton <akpm@linux-foundation.org>, Wu Fengguang <fengguang.wu@intel.com>, Chris Mason <chris.mason@oracle.com>, Minchan Kim <minchan.kim@gmail.com>
 
-On Tue, Sep 20, 2011 at 08:56:55AM -0500, Chandra Seetharaman wrote:
-> --- a/fs/xfs/xfs_attr_leaf.c
-> +++ b/fs/xfs/xfs_attr_leaf.c
-> @@ -2948,6 +2948,8 @@ xfs_attr_leaf_freextent(xfs_trans_t **trans, xfs_inode_t *dp,
->  			bp = xfs_trans_get_buf(*trans,
->  					dp->i_mount->m_ddev_targp,
->  					dblkno, dblkcnt, XBF_LOCK);
-> +			if (!bp)
-> +				return ENOMEM;
->  			xfs_trans_binval(*trans, bp);
+On 09/20/2011 09:45 AM, Johannes Weiner wrote:
+> The amount of dirtyable pages should not include the total number of
+> free pages: there is a number of reserved pages that the page
+> allocator and kswapd always try to keep free.
+>
+> The closer (reclaimable pages - dirty pages) is to the number of
+> reserved pages, the more likely it becomes for reclaim to run into
+> dirty pages:
 
-xfs_trans_binval only really does anything if the buffer was in memory.
+> Signed-off-by: Johannes Weiner<jweiner@redhat.com>
 
-We have a few callers using that patterm, and I think they should simply
-switch to not reading the buffer in if it's not there yet, e.g.
-using something like an xfs_trans_incore.
+Reviewed-by: Rik van Riel <riel@redhat.com>
 
 _______________________________________________
 xfs mailing list
