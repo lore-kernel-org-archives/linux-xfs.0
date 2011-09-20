@@ -1,29 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8KDv0Q9063919 for <xfs@oss.sgi.com>; Tue, 20 Sep 2011 08:57:00 -0500
-Received: from e8.ny.us.ibm.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 34E281DADFAE
-	for <xfs@oss.sgi.com>; Tue, 20 Sep 2011 06:56:59 -0700 (PDT)
-Received: from e8.ny.us.ibm.com (e8.ny.us.ibm.com [32.97.182.138]) by
-	cuda.sgi.com with ESMTP id tgbtRCPkbGA2FCmi for
-	<xfs@oss.sgi.com>; Tue, 20 Sep 2011 06:56:59 -0700 (PDT)
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e8.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p8KDgKTn001855
-	for <xfs@oss.sgi.com>; Tue, 20 Sep 2011 09:42:20 -0400
-Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	p8KDuw4s259580 for <xfs@oss.sgi.com>; Tue, 20 Sep 2011 09:56:58 -0400
-Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av04.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
-	id p8KDuvbY017324
-	for <xfs@oss.sgi.com>; Tue, 20 Sep 2011 07:56:57 -0600
-Subject: [PATCH v2] xfs: Check the return value of xfs_trans_get_buf()
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-Date: Tue, 20 Sep 2011 08:56:55 -0500
-Message-ID: <1316527015.9298.60.camel@chandra-lucid.austin.ibm.com>
-Mime-Version: 1.0
-Reply-To: sekharan@us.ibm.com
+	p8KEA1af064694 for <xfs@oss.sgi.com>; Tue, 20 Sep 2011 09:10:02 -0500
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E30DD175224
+	for <xfs@oss.sgi.com>; Tue, 20 Sep 2011 07:10:00 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id lqz6ehmIJzLFffHM for
+	<xfs@oss.sgi.com>; Tue, 20 Sep 2011 07:10:00 -0700 (PDT)
+Message-ID: <4E789EA2.8070709@redhat.com>
+Date: Tue, 20 Sep 2011 10:09:38 -0400
+From: Josef Bacik <josef@redhat.com>
+MIME-Version: 1.0
+Subject: Re: [patch 4/4] Btrfs: pass __GFP_WRITE for buffered write page
+	allocations
+References: <1316526315-16801-1-git-send-email-jweiner@redhat.com>
+	<1316526315-16801-5-git-send-email-jweiner@redhat.com>
+	<20110920135631.GB16338@redhat.com>
+In-Reply-To: <20110920135631.GB16338@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,189 +30,53 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: XFS Mailing List <xfs@oss.sgi.com>
-Cc: Alex Elder <aelder@sgi.com>
+To: Johannes Weiner <jweiner@redhat.com>
+Cc: Rik van Riel <riel@redhat.com>, linux-ext4@vger.kernel.org, Jan Kara <jack@suse.cz>, linux-btrfs@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, Mel Gorman <mgorman@suse.de>, linux-fsdevel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andrew Morton <akpm@linux-foundation.org>, Wu Fengguang <fengguang.wu@intel.com>, Chris Mason <chris.mason@oracle.com>, Minchan Kim <minchan.kim@gmail.com>
 
-Ran the xfstests (auto) overnight and didn't see any new issues.
+On 09/20/2011 09:56 AM, Johannes Weiner wrote:
+> On Tue, Sep 20, 2011 at 03:45:15PM +0200, Johannes Weiner wrote:
+>> Tell the page allocator that pages allocated for a buffered write are
+>> expected to become dirty soon.
+>>
+>> Signed-off-by: Johannes Weiner <jweiner@redhat.com>
+>> ---
+>>  fs/btrfs/file.c |    2 +-
+>>  1 files changed, 1 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/fs/btrfs/file.c b/fs/btrfs/file.c
+>> index e7872e4..ea1b892 100644
+>> --- a/fs/btrfs/file.c
+>> +++ b/fs/btrfs/file.c
+>> @@ -1084,7 +1084,7 @@ static noinline int prepare_pages(struct btrfs_root *root, struct file *file,
+>>  again:
+>>  	for (i = 0; i < num_pages; i++) {
+>>  		pages[i] = find_or_create_page(inode->i_mapping, index + i,
+>> -					       GFP_NOFS);
+>> +					       GFP_NOFS | __GFP_WRITE);
+> 
+> Btw and unrelated to this particular series, I think this should use
+> grab_cache_page_write_begin() in the first place.
+> 
+> Most grab_cache_page calls were replaced recently (a94733d "Btrfs: use
+> find_or_create_page instead of grab_cache_page") to be able to pass
+> GFP_NOFS, but the pages are now also no longer __GFP_HIGHMEM and
+> __GFP_MOVABLE, which irks both x86_32 and memory hotplug.
+> 
+> It might be better to change grab_cache_page instead to take a flags
+> argument that allows passing AOP_FLAG_NOFS and revert the sites back
+> to this helper?
 
---
-Check the return value of xfs_trans_get_buf() and fail appropriately.
+So I can do
 
-Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
+pages[i] = grab_cache_page_write_begin(inode->i_mapping, index + i,
+				       AOP_FLAG_NOFS);
 
----
- fs/xfs/xfs_attr_leaf.c |    2 ++
- fs/xfs/xfs_btree.c     |    3 ++-
- fs/xfs/xfs_dquot.c     |    5 ++++-
- fs/xfs/xfs_ialloc.c    |   13 ++++++++-----
- fs/xfs/xfs_inode.c     |    9 ++++++---
- fs/xfs/xfs_vnodeops.c  |    9 ++++++++-
- 6 files changed, 30 insertions(+), 11 deletions(-)
+right?  All we need is nofs, so I can just go through and change
+everybody to that.  I'd rather not have to go through and change
+grab_cache_page() to take a flags argument and change all the callers, I
+have a bad habit of screwing stuff like that up :).  Thanks,
 
-diff --git a/fs/xfs/xfs_attr_leaf.c b/fs/xfs/xfs_attr_leaf.c
-index 8fad960..58c3add 100644
---- a/fs/xfs/xfs_attr_leaf.c
-+++ b/fs/xfs/xfs_attr_leaf.c
-@@ -2948,6 +2948,8 @@ xfs_attr_leaf_freextent(xfs_trans_t **trans, xfs_inode_t *dp,
- 			bp = xfs_trans_get_buf(*trans,
- 					dp->i_mount->m_ddev_targp,
- 					dblkno, dblkcnt, XBF_LOCK);
-+			if (!bp)
-+				return ENOMEM;
- 			xfs_trans_binval(*trans, bp);
- 			/*
- 			 * Roll to next transaction.
-diff --git a/fs/xfs/xfs_btree.c b/fs/xfs/xfs_btree.c
-index 2b9fd38..28cc019 100644
---- a/fs/xfs/xfs_btree.c
-+++ b/fs/xfs/xfs_btree.c
-@@ -970,7 +970,8 @@ xfs_btree_get_buf_block(
- 	*bpp = xfs_trans_get_buf(cur->bc_tp, mp->m_ddev_targp, d,
- 				 mp->m_bsize, flags);
- 
--	ASSERT(!xfs_buf_geterror(*bpp));
-+	if (!*bpp)
-+		return ENOMEM;
- 
- 	*block = XFS_BUF_TO_BLOCK(*bpp);
- 	return 0;
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index 3e2ccae..0c5fe66 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -402,8 +402,11 @@ xfs_qm_dqalloc(
- 			       dqp->q_blkno,
- 			       mp->m_quotainfo->qi_dqchunklen,
- 			       0);
--	if (!bp || (error = xfs_buf_geterror(bp)))
-+
-+	error = xfs_buf_geterror(bp);
-+	if (error)
- 		goto error1;
-+
- 	/*
- 	 * Make a chunk of dquots out of this buffer and log
- 	 * the entire thing.
-diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
-index 9f24ec2..207e0b0 100644
---- a/fs/xfs/xfs_ialloc.c
-+++ b/fs/xfs/xfs_ialloc.c
-@@ -150,7 +150,7 @@ xfs_check_agi_freecount(
- /*
-  * Initialise a new set of inodes.
-  */
--STATIC void
-+STATIC int
- xfs_ialloc_inode_init(
- 	struct xfs_mount	*mp,
- 	struct xfs_trans	*tp,
-@@ -202,8 +202,8 @@ xfs_ialloc_inode_init(
- 		fbuf = xfs_trans_get_buf(tp, mp->m_ddev_targp, d,
- 					 mp->m_bsize * blks_per_cluster,
- 					 XBF_LOCK);
--		ASSERT(!xfs_buf_geterror(fbuf));
--
-+		if (!fbuf)
-+			return ENOMEM;
- 		/*
- 		 * Initialize all inodes in this buffer and then log them.
- 		 *
-@@ -225,6 +225,7 @@ xfs_ialloc_inode_init(
- 		}
- 		xfs_trans_inode_alloc_buf(tp, fbuf);
- 	}
-+	return 0;
- }
- 
- /*
-@@ -369,9 +370,11 @@ xfs_ialloc_ag_alloc(
- 	 * rather than a linear progression to prevent the next generation
- 	 * number from being easily guessable.
- 	 */
--	xfs_ialloc_inode_init(args.mp, tp, agno, args.agbno, args.len,
--			      random32());
-+	error = xfs_ialloc_inode_init(args.mp, tp, agno, args.agbno,
-+			args.len, random32());
- 
-+	if (error)
-+		return error;
- 	/*
- 	 * Convert the results.
- 	 */
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 7f237ba..d689253 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1644,7 +1644,7 @@ xfs_iunlink_remove(
-  * inodes that are in memory - they all must be marked stale and attached to
-  * the cluster buffer.
-  */
--STATIC void
-+STATIC int
- xfs_ifree_cluster(
- 	xfs_inode_t	*free_ip,
- 	xfs_trans_t	*tp,
-@@ -1690,6 +1690,8 @@ xfs_ifree_cluster(
- 					mp->m_bsize * blks_per_cluster,
- 					XBF_LOCK);
- 
-+		if (!bp)
-+			return ENOMEM;
- 		/*
- 		 * Walk the inodes already attached to the buffer and mark them
- 		 * stale. These will all have the flush locks held, so an
-@@ -1799,6 +1801,7 @@ retry:
- 	}
- 
- 	xfs_perag_put(pag);
-+	return 0;
- }
- 
- /*
-@@ -1878,10 +1881,10 @@ xfs_ifree(
- 	dip->di_mode = 0;
- 
- 	if (delete) {
--		xfs_ifree_cluster(ip, tp, first_ino);
-+		error = xfs_ifree_cluster(ip, tp, first_ino);
- 	}
- 
--	return 0;
-+	return error;
- }
- 
- /*
-diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
-index c2ff0fc..0d1caec 100644
---- a/fs/xfs/xfs_vnodeops.c
-+++ b/fs/xfs/xfs_vnodeops.c
-@@ -308,6 +308,10 @@ xfs_inactive_symlink_rmt(
- 		bp = xfs_trans_get_buf(tp, mp->m_ddev_targp,
- 			XFS_FSB_TO_DADDR(mp, mval[i].br_startblock),
- 			XFS_FSB_TO_BB(mp, mval[i].br_blockcount), 0);
-+		if (!bp) {
-+			error = ENOMEM;
-+			goto error1;
-+		}
- 		xfs_trans_binval(tp, bp);
- 	}
- 	/*
-@@ -1648,7 +1652,10 @@ xfs_symlink(
- 			byte_cnt = XFS_FSB_TO_B(mp, mval[n].br_blockcount);
- 			bp = xfs_trans_get_buf(tp, mp->m_ddev_targp, d,
- 					       BTOBB(byte_cnt), 0);
--			ASSERT(!xfs_buf_geterror(bp));
-+			if (!bp) {
-+				error = ENOMEM;
-+				goto error2;
-+			}
- 			if (pathlen < byte_cnt) {
- 				byte_cnt = pathlen;
- 			}
--- 
-1.7.1
-
-
+Josef
 
 _______________________________________________
 xfs mailing list
