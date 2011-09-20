@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8KMUoYH088271 for <xfs@oss.sgi.com>; Tue, 20 Sep 2011 17:30:50 -0500
-Date: Tue, 20 Sep 2011 18:30:47 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: xfs deadlock in stable kernel 3.0.4
-Message-ID: <20110920223047.GA13758@infradead.org>
-References: <4E70571A.80108@profihost.ag> <4E705C42.6020909@profihost.ag>
-	<20110914143005.GA28496@infradead.org>
-	<4E75B660.1030502@profihost.ag> <20110918230245.GF15688@dastard>
-	<4E78665E.8030409@profihost.ag>
-	<20110920160226.GA25542@infradead.org>
-	<4E78CBF4.1030505@profihost.ag>
-	<20110920172455.GA30757@infradead.org>
-	<4E78CEFD.9030603@profihost.ag>
+	p8KN5pwR090970 for <xfs@oss.sgi.com>; Tue, 20 Sep 2011 18:05:51 -0500
+Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BE2EE160781B
+	for <xfs@oss.sgi.com>; Tue, 20 Sep 2011 16:11:10 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	5VrVpara4cCoQP6y for <xfs@oss.sgi.com>;
+	Tue, 20 Sep 2011 16:11:10 -0700 (PDT)
+Date: Wed, 21 Sep 2011 09:05:46 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfsprogs: fix some printf() warnings that show up for ia64 builds
+Message-ID: <20110920230546.GK15688@dastard>
+References: <20110814201239.GA26453@infradead.org>
+	<20110829083852.GA31515@infradead.org>
+	<20110830052226.GM3162@dastard>
+	<20110830085737.GA24793@infradead.org>
+	<1316544193.2912.34.camel@doink>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4E78CEFD.9030603@profihost.ag>
+In-Reply-To: <1316544193.2912.34.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,33 +33,84 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
-Cc: Christoph Hellwig <hch@infradead.org>, "xfs-masters@oss.sgi.com" <xfs-masters@oss.sgi.com>, aelder@sgi.com, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Alex Elder <aelder@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Tue, Sep 20, 2011 at 07:35:57PM +0200, Stefan Priebe - Profihost AG wrote:
-> Am 20.09.2011 19:24, schrieb Christoph Hellwig:
-> >On Tue, Sep 20, 2011 at 07:23:00PM +0200, Stefan Priebe - Profihost AG wrote:
-> >>>  - what is the fs geometry?
-> >>What do you exactly mean? I've seen this on 1TB and 160GB SSD
-> >>devices with totally different disk layout.
-> >
-> >The output of mkfs.xfs (of xfs_info after it's been created)
+On Tue, Sep 20, 2011 at 01:43:13PM -0500, Alex Elder wrote:
+> This applies on top of Christoph Hellwig's recent "xfs_repair: add
+> printf format checking and fix the fallout" patch.  It extends the
+> fixes for warnings beyond just xfs_repair and across everything in
+> xfsprogs.
 > 
-> ssd:~# xfs_info /dev/sda3
-> meta-data=/dev/root              isize=256    agcount=4, agsize=9517888 blks
->          =                       sectsz=512   attr=2
-> data     =                       bsize=4096   blocks=38071552, imaxpct=25
->          =                       sunit=0      swidth=0 blks
-> naming   =version 2              bsize=4096   ascii-ci=0
-> log      =internal               bsize=4096   blocks=18589, version=2
->          =                       sectsz=512   sunit=0 blks, lazy-count=1
-> realtime =none                   extsz=4096   blocks=0, rtextents=0
+> It builds cleanly on ia64 and x86_64, and builds without any
+> printf() format-related warnings on i386.
+> 
+> Signed-off-by: Alex Elder <aelder@sgi.com>
+> 
+> ---
+>  io/parent.c              |   28 ++++++++++++++++------------
+>  logprint/log_misc.c      |   34 ++++++++++++++++++++--------------
+>  logprint/log_print_all.c |   16 ++++++++++------
+>  repair/dinode.c          |   20 ++++++++++++--------
+>  repair/scan.c            |   14 +++++++++-----
+>  5 files changed, 67 insertions(+), 45 deletions(-)
+> 
+> Index: b/io/parent.c
+> ===================================================================
+> --- a/io/parent.c
+> +++ b/io/parent.c
+> @@ -52,12 +52,12 @@ check_parent_entry(xfs_bstat_t *bstatp,
+>         if (sts != 0) {
+>                 fprintf(stderr,
+>                         _("inode-path for inode: %llu is incorrect - path \"%s\" non-existent\n"),
+> -                       bstatp->bs_ino, fullpath);
+> +                       (unsigned long long) bstatp->bs_ino, fullpath);
 
-Nothing special there.
+Hmmm, didn't Christoph fix these inode number warnings by changing
+the format specifier to PRIU64, not by adding casts? bs_ino is
+defined as:
 
-So far I haven't been able to recreate it.  How many runs did you
-normally need on 3.1-rc?  Note that so far I've run my known working
-kernel, I'll test your config plus the drivers I need next.
+	__u64		bs_ino;
+
+So PRIu64 is the right thing to do, isn't it?
+
+Either way would work, but being consistent would be good. ;)
+
+....
+
+> ===================================================================
+> --- a/logprint/log_misc.c
+> +++ b/logprint/log_misc.c
+> @@ -307,12 +307,14 @@ xlog_print_trans_buffer(xfs_caddr_t *ptr
+>                          */
+>                         memmove(&x, *ptr, sizeof(__be64));
+>                         memmove(&y, *ptr+8, sizeof(__be64));
+> -                       printf(_("icount: %lld  ifree: %lld  "),
+> -                               be64_to_cpu(x), be64_to_cpu(y));
+> +                       printf(_("icount: %llu  ifree: %llu  "),
+> +                               (unsigned long long) be64_to_cpu(x),
+> +                               (unsigned long long) be64_to_cpu(y));
+
+Same for al the be64_to_cpu() functions - their return type is
+__u64, too.
+
+>                                         forkname);
+> @@ -1374,7 +1376,7 @@ process_lclinode(
+>                                                 XFS_DFORK_DSIZE(dip, mp)) {
+>                 do_warn(
+>         _("local inode %" PRIu64 " data fork is too large (size = %lld, max = %d)\n"),
+> -                       lino, be64_to_cpu(dip->di_size),
+> +                       lino, (unsigned long long) be64_to_cpu(dip->di_size),
+
+That format specifier is wrong - it is %lld. Should be %llu, or
+PRIu64 as previously mentioned without the cast.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
