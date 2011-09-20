@@ -1,25 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8KEQKd2065517 for <xfs@oss.sgi.com>; Tue, 20 Sep 2011 09:26:22 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 663801400CC6
-	for <xfs@oss.sgi.com>; Tue, 20 Sep 2011 07:31:37 -0700 (PDT)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	Qdgqn6A2mAW1qMSu for <xfs@oss.sgi.com>;
-	Tue, 20 Sep 2011 07:31:37 -0700 (PDT)
-Date: Tue, 20 Sep 2011 10:25:53 -0400
+	p8KF0Xnp066731 for <xfs@oss.sgi.com>; Tue, 20 Sep 2011 10:00:33 -0500
+Date: Tue, 20 Sep 2011 11:00:29 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [patch 3/4] mm: filemap: pass __GFP_WRITE from
-	grab_cache_page_write_begin()
-Message-ID: <20110920142553.GA2593@infradead.org>
-References: <1316526315-16801-1-git-send-email-jweiner@redhat.com>
-	<1316526315-16801-4-git-send-email-jweiner@redhat.com>
+Subject: Re: [PATCH v2] xfs: Check the return value of xfs_trans_get_buf()
+Message-ID: <20110920150029.GA5239@infradead.org>
+References: <1316527015.9298.60.camel@chandra-lucid.austin.ibm.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1316526315-16801-4-git-send-email-jweiner@redhat.com>
+In-Reply-To: <1316527015.9298.60.camel@chandra-lucid.austin.ibm.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,11 +22,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Johannes Weiner <jweiner@redhat.com>
-Cc: Rik van Riel <riel@redhat.com>, linux-ext4@vger.kernel.org, Jan Kara <jack@suse.cz>, linux-btrfs@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, Mel Gorman <mgorman@suse.de>, linux-fsdevel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andrew Morton <akpm@linux-foundation.org>, Wu Fengguang <fengguang.wu@intel.com>, Chris Mason <chris.mason@oracle.com>, Minchan Kim <minchan.kim@gmail.com>
+To: Chandra Seetharaman <sekharan@us.ibm.com>
+Cc: Alex Elder <aelder@sgi.com>, XFS Mailing List <xfs@oss.sgi.com>
 
-In addition to regular write shouldn't __do_fault and do_wp_page also
-calls this if they are called on file backed mappings?
+On Tue, Sep 20, 2011 at 08:56:55AM -0500, Chandra Seetharaman wrote:
+> --- a/fs/xfs/xfs_attr_leaf.c
+> +++ b/fs/xfs/xfs_attr_leaf.c
+> @@ -2948,6 +2948,8 @@ xfs_attr_leaf_freextent(xfs_trans_t **trans, xfs_inode_t *dp,
+>  			bp = xfs_trans_get_buf(*trans,
+>  					dp->i_mount->m_ddev_targp,
+>  					dblkno, dblkcnt, XBF_LOCK);
+> +			if (!bp)
+> +				return ENOMEM;
+>  			xfs_trans_binval(*trans, bp);
+
+xfs_trans_binval only really does anything if the buffer was in memory.
+
+We have a few callers using that patterm, and I think they should simply
+switch to not reading the buffer in if it's not there yet, e.g.
+using something like an xfs_trans_incore.
 
 _______________________________________________
 xfs mailing list
