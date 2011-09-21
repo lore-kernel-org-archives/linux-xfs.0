@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8LBgswk138499 for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 06:42:54 -0500
-Date: Wed, 21 Sep 2011 21:42:37 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [xfs-masters] xfs deadlock in stable kernel 3.0.4
-Message-ID: <20110921114237.GP15688@dastard>
-References: <4E75B660.1030502@profihost.ag> <20110918230245.GF15688@dastard>
-	<4E78665E.8030409@profihost.ag>
-	<20110920160226.GA25542@infradead.org>
-	<4E78CBF4.1030505@profihost.ag>
-	<20110920172455.GA30757@infradead.org>
-	<4E78CEFD.9030603@profihost.ag>
-	<20110920223047.GA13758@infradead.org>
-	<20110921021133.GM15688@dastard> <4E7994D3.5020103@profihost.ag>
+	p8LBQRCO137519 for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 06:26:28 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4F86717B68A
+	for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 04:26:26 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	sB0EZbmkhqtSQkVD for <xfs@oss.sgi.com>;
+	Wed, 21 Sep 2011 04:26:26 -0700 (PDT)
+Date: Wed, 21 Sep 2011 07:26:24 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 4/4] xfs: convert xfsbufd to use a workqueue
+Message-ID: <20110921112624.GA30934@infradead.org>
+References: <1314341497-23910-1-git-send-email-david@fromorbit.com>
+	<1314341497-23910-5-git-send-email-david@fromorbit.com>
+	<20110826082515.GD3551@infradead.org>
+	<20110921062539.GN15688@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4E7994D3.5020103@profihost.ag>
+In-Reply-To: <20110921062539.GN15688@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,76 +33,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
-Cc: Christoph Hellwig <hch@infradead.org>, "xfs-masters@oss.sgi.com" <xfs-masters@oss.sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Wed, Sep 21, 2011 at 09:40:03AM +0200, Stefan Priebe - Profihost AG wrote:
-> Am 21.09.2011 04:11, schrieb Dave Chinner:
-> >Also, what phase do you see it hanging in? the random stat phase is
-> >terribly slow on spinning disks, so if I can avoid that it woul dbe
-> >nice....
-> Creating or deleting files. never in the stat phase.
+On Wed, Sep 21, 2011 at 04:25:39PM +1000, Dave Chinner wrote:
+> Which is precisely what I want here - to wait for all the delwri
+> buffers that were promoted to be submitted before continuing
+> onwards.  This makes the scanning algorithm self throttling -
+> instead of simply pushing the buffers to the delwri queue and
+> kicking a background thread and hoping it can flush buffers faster
+> than we can promote them from the AIL, it explicitly pushes the
+> delwri buffers before the next round of AIL scanning. The ensures we
+> start timely IO on the buffers and don't simple continue to scan the
+> AIL while we wait for the background thread to send them off to
+> disk and complete.
 
-Ok, I got a hang in the random delete phase. Not sure what is wrong
-yet, but inode reclaim is trying to reclaim inodes but failing, and
-the AIL is trying to push items but failing. Hence the tail of the
-log is not being moved forward and new transactions are being
-blocked until log space bcomes available.
-
-The AIl is particularly interesting. the number of pushes being
-executed is precisely 50/s, and precisely 5000 items/s are being
-scanned. All those items are pinned, so the "stuck" processing is
-what is triggering this pattern.
-
-Thing is, all the items are aparently pinned - I see that stat
-incrementing at 5,000/s. It's here:
-
-                case XFS_ITEM_PINNED:
-                        XFS_STATS_INC(xs_push_ail_pinned);
-                        stuck++;
-                        flush_log = 1;
-                        break;
-
-so we should have the flush_log variable set. However, this code:
-
-        if (flush_log) {
-                /*
-                 * If something we need to push out was pinned, then
-                 * push out the log so it will become unpinned and
-                 * move forward in the AIL.
-                 */
-                XFS_STATS_INC(xs_push_ail_flush);
-                xfs_log_force(mp, 0);
-        }
-
-never seems to execute. I don't see the xs_push_ail_flush stat
-increase, nor the log force counter increase, either. Hence the
-pinned items are not getting unpinned, and progress is not being
-made. Background inode reclaim is not making progress, either,
-because it skips pinned inodes.
-
-The AIL code is clearly cycling - the push counter is increasing,
-and the run numbers match the stuck code precisely (aborts at 100
-stuck items a cycle). The question is now why isn't the log force
-being triggered.
-
-Given this, just triggering a log force is shoul dget everything
-moving again. Running "echo 2 > /proc/sys/vm/drop_caches" gets inode
-reclaim running in sync mode, which causes pinned inodes to trigger
-a log force. And once I've done this, everything starts running
-again.
-
-So, the log force not triggering in the AIL code looks to be the
-problem. That, I simply cannot explain right now - it makes no sense
-but that is what all the stats and trace events point to. I need to
-do more investigation.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+I didn't say I'm against it.  The important bit is that such changes
+in behaviour get documented in the patch description, including
+a rationale like the on in this mail.
 
 _______________________________________________
 xfs mailing list
