@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8LIjN7B166700 for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 13:45:24 -0500
-Subject: Re: [PATCH 3/4] libxfs: handle short reads in libxfs_readbufr
+	p8LIjHo7166678 for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 13:45:17 -0500
+Subject: Re: [PATCH 2/4] libxfs: save errno before possibly overwriting it
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110920220030.576600914@bombadil.infradead.org>
+In-Reply-To: <20110920220030.374670125@bombadil.infradead.org>
 References: <20110920215917.508421839@bombadil.infradead.org>
-	<20110920220030.576600914@bombadil.infradead.org>
-Date: Wed, 21 Sep 2011 13:45:13 -0500
-Message-ID: <1316630713.5872.15.camel@doink>
+	<20110920220030.374670125@bombadil.infradead.org>
+Date: Wed, 21 Sep 2011 13:45:10 -0500
+Message-ID: <1316630710.5872.14.camel@doink>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -27,16 +27,12 @@ To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
 On Tue, 2011-09-20 at 17:59 -0400, Christoph Hellwig wrote:
-> Copy the code from libxfs_writebufr to handle short reads, and also
-> tidy up a formatting issue found in the libxfs_writebufr copy.
+> Save away errno for a later error return before possibly overwriting
+> it in fprintf.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-That LIBXFS_B_EXIT == LIBXFS_EXIT_ON_FAILURE is a bad thing.
-It might be nice if libxfs_readbuf() and libxfs_writebuf()
-encoded that piece of information the same way (in b_flags).
-
-Anyway, what you have here looks good.
+Looks good.
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
 
