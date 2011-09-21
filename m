@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8L1Lvlv099213 for <xfs@oss.sgi.com>; Tue, 20 Sep 2011 20:21:57 -0500
-Received: from master.debian.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C52FB1C119C7
-	for <xfs@oss.sgi.com>; Tue, 20 Sep 2011 18:21:55 -0700 (PDT)
-Received: from master.debian.org (master.debian.org [70.103.162.29]) by
-	cuda.sgi.com with ESMTP id HQbGa7lYG3CQqPT2 for
-	<xfs@oss.sgi.com>; Tue, 20 Sep 2011 18:21:55 -0700 (PDT)
-Date: Tue, 20 Sep 2011 20:21:45 -0500
-From: =?iso-8859-1?Q?An=EDbal?= Monsalve Salazar <anibal@debian.org>
-Subject: Re: The xfsprogs debian package
-Message-ID: <20110921012145.GA7489@master.debian.org>
-References: <20110919170936.GA27014@infradead.org>
-	<20110919171047.GA3092@infradead.org>
-	<20110920105808.GA20601@hall.aurel32.net>
-	<CAAp5ZgML+9Pnni0eTCXvXN1uo8Hs7Ksrvfooto9aYr9Ctt2Hbw@mail.gmail.com>
+	p8L0uI4r098211 for <xfs@oss.sgi.com>; Tue, 20 Sep 2011 19:56:18 -0500
+Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D97AD1607DB2
+	for <xfs@oss.sgi.com>; Tue, 20 Sep 2011 18:01:36 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	xjJ0EN3NeFbvY8Qk for <xfs@oss.sgi.com>;
+	Tue, 20 Sep 2011 18:01:36 -0700 (PDT)
+Date: Wed, 21 Sep 2011 10:56:12 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2] xfs: Check the return value of xfs_trans_get_buf()
+Message-ID: <20110921005612.GL15688@dastard>
+References: <1316527015.9298.60.camel@chandra-lucid.austin.ibm.com>
 MIME-Version: 1.0
-In-Reply-To: <CAAp5ZgML+9Pnni0eTCXvXN1uo8Hs7Ksrvfooto9aYr9Ctt2Hbw@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <1316527015.9298.60.camel@chandra-lucid.austin.ibm.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,68 +25,52 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============0588922950969214233=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Nathan Scott <nathans@debian.org>
-Cc: Christoph Hellwig <hch@infradead.org>, Aurelien Jarno <aurel32@debian.org>, xfs@oss.sgi.com
+To: Chandra Seetharaman <sekharan@us.ibm.com>
+Cc: Alex Elder <aelder@sgi.com>, XFS Mailing List <xfs@oss.sgi.com>
 
+On Tue, Sep 20, 2011 at 08:56:55AM -0500, Chandra Seetharaman wrote:
+> Ran the xfstests (auto) overnight and didn't see any new issues.
 
---===============0588922950969214233==
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="cWoXeonUoKmBZSoM"
-Content-Disposition: inline
+Sure, but xfstests won't be triggering the new failure paths.
 
+It looks to me like any failure to get a buffer will now result in a
+cancelled transaction and a filesystem shutdown - the new failure
+paths really need to be tested to ensure that failures are handled
+gracefully and don't result in filesystem corruption.
 
---cWoXeonUoKmBZSoM
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
+As it is, I'm not sure we want to do this. The only reason we can
+fail to get a buffer is allocation failures in extremely low memory
+conditions. However, the last thing we want is for filesystem
+shutdowns to be triggered by transient low memory conditions.
 
-On Wed, Sep 21, 2011 at 08:48:19AM +1000, Nathan Scott wrote:
->Having said all that, I really don't have a strong opinion - what
->xfsprogs really needs is someone with the time to take ownership, and
->I've not found the time recently.  If someone would own it well, and
->for them its easier to not have a native package (which it likely will
->be)... please go ahead and manage the package however best suits.
+The current state of the code is that the xfs_buf_get() code tries
+really, really hard to allocate memory, and we don't have any
+evidence to point to the fact that is it failing to allocate memory.
+We'd be seeing asserts firing and/or NULL pointer deref panics if
+xfs_buf_get() was failing, and neither of these are happening.
 
-I'll manage it without changing its current Debian ownership. I'll keep
-the list as the Debian package owner and Nathan and myself as uploaders
-to the Debian package.
+As it is, before we can gracefully handle memory allocation failures
+in the xfs_buf layer, we need to be able to roll back dirty
+transactions so that memory allocation failure does not result
+filesystem shutdowns. That's actually possible to do now with the
+delayed logging infrastructure (because the CIL keeps a copy of the
+previous in memory modifications prior to the bad transaction), so
+we should look towards implementing transaction rollback first
+before allowing memory allocation to fail inside transaction
+contexts....
 
---cWoXeonUoKmBZSoM
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+Cheers,
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iQIcBAEBCAAGBQJOeTwpAAoJEHxWrP6UeJfYF3YQAJPKD+jQHVOp+j2s5mHMuVRa
-qMyXPhglmWznVGJr79I73nos35yrlaQCaQVFeZQ1CBcHZv/JHZqclbPWXzeJcnZZ
-C66+7j7unWFiX57Ih6O9n+MMS5JhUNzA2+GV3sZFFKgo2aXYJ5h7/2rGGXWUauyo
-EcYawxsuBN2fAgtnFjIGLOnFR08Q1medZzdNcTgq7w5MpaJUuRFt7KBILDJgpau5
-9hQcCIl+dV1OdUcIavoAlBNpLpEe2sN2mjEcEw+j1l4M/87RkbaAw4xGY7TUQCpb
-3Yey20jZqiaz6lrSS5xzQnUiun9NDF0tnKgsrMnL64tTRt+aLpBuMv9WY/BI6TyK
-zMPeppfNf/Oc8NXd856W+mRCuqIeFArXrp524PjPUKbLkUPSjR+6H9F+ALQI9PJo
-i4owxg4skZGm4sd2Yd0mmtsFzzAt5dIew7JxpOrd/vsUb6sAFHpN36ay2jAEjoGm
-+aBMeQ9U08aGK+VsTBvqIhfvavs3B6GxVfHc9qbQLgkcEvOO7FlUUZDJ1M0RjseX
-Uo0uSb7SZ3nE/VSspcQeqYV+JV6Z55m3l6DHGKQRbNEgWn/KVPCmlYgi0nJjb5+X
-9btKf/wJ80PZ+XtsMtFk1bpZT/06pekTj0WHN9AiA7Tm9i2NVV4kTMXfeDgGybPe
-L5hyBFN6vu7CyuI7opvm
-=e61W
------END PGP SIGNATURE-----
-
---cWoXeonUoKmBZSoM--
-
-
---===============0588922950969214233==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============0588922950969214233==--
