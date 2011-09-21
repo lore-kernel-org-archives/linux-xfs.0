@@ -1,29 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8L7e6No125048 for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 02:40:06 -0500
-Received: from server655-han.de-nserver.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 71BAD160870B
-	for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 00:45:26 -0700 (PDT)
-Received: from server655-han.de-nserver.de (server655-han.de-nserver.de
-	[85.158.177.45]) by cuda.sgi.com with ESMTP id T3KhPtWHjgBDGMAg
-	for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 00:45:26 -0700 (PDT)
-Message-ID: <4E7994D3.5020103@profihost.ag>
-Date: Wed, 21 Sep 2011 09:40:03 +0200
-From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
-MIME-Version: 1.0
-Subject: Re: [xfs-masters] xfs deadlock in stable kernel 3.0.4
-References: <4E705C42.6020909@profihost.ag>
-	<20110914143005.GA28496@infradead.org>
-	<4E75B660.1030502@profihost.ag> <20110918230245.GF15688@dastard>
-	<4E78665E.8030409@profihost.ag>
-	<20110920160226.GA25542@infradead.org>
-	<4E78CBF4.1030505@profihost.ag>
-	<20110920172455.GA30757@infradead.org>
-	<4E78CEFD.9030603@profihost.ag>
-	<20110920223047.GA13758@infradead.org>
-	<20110921021133.GM15688@dastard>
-In-Reply-To: <20110921021133.GM15688@dastard>
+	p8L9ggiT130484 for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 04:42:42 -0500
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A32511608D44
+	for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 02:48:03 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id VzEG5BvgCWpzxfuN for
+	<xfs@oss.sgi.com>; Wed, 21 Sep 2011 02:48:03 -0700 (PDT)
+From: Lukas Czerner <lczerner@redhat.com>
+Subject: [PATCH v3] xfs: fix possible overflow in xfs_ioc_trim()
+Date: Wed, 21 Sep 2011 11:42:30 +0200
+Message-Id: <1316598150-12447-1-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,57 +20,95 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "xfs-masters@oss.sgi.com" <xfs-masters@oss.sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
+Cc: hch@infradead.org, Lukas Czerner <lczerner@redhat.com>
 
-Am 21.09.2011 04:11, schrieb Dave Chinner:
+In xfs_ioc_trim it is possible that computing the last allocation group
+to discard might overflow for big start & len values, because the result
+might be bigger then xfs_agnumber_t which is 32 bit long. Fix this by not
+allowing the start and end block of the range to be beyond the end of the
+file system.
 
-> How much memory does your test machine have? The performance will be
-> vastly different if there is enough RAM to hold the working set of
-> inodes and page cache (~20GB all up), and that could be one of the
-> factors contributing to the problems.
-The livesystems which crash within hours have between 48GB and 64GB RAM. 
-But my testing system has only 8GB.
+Note that if the start is beyond the end of the file system we have to
+return -EINVAL, but in the "end" case we have to truncate it to the fs
+size.
 
-> The above xfs_info output is from your 160GB SSD - what's the output
-> from the 1TB device?
+Also introduce "end" variable, rather than using start+len which which
+might be more confusing to get right as this bug shows.
 
-The 1TB device is now doing something else and does not have XFS on it 
-anymore. But here are the layouts of two livesystems.
+Signed-off-by: Lukas Czerner <lczerner@redhat.com>
+---
+v2: Use sb_dblocks instead of XFS_MAX_DBLOCKS to get max block count
+v3: Rework the patch
 
-xfs_info /dev/sda6
-meta-data=/dev/root              isize=256    agcount=4, agsize=35767872 
-blks
-          =                       sectsz=512   attr=2
-data     =                       bsize=4096   blocks=143071488, imaxpct=25
-          =                       sunit=64     swidth=512 blks
-naming   =version 2              bsize=4096   ascii-ci=0
-log      =internal               bsize=4096   blocks=69888, version=2
-          =                       sectsz=512   sunit=64 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
+ fs/xfs/xfs_discard.c |   20 ++++++++++----------
+ 1 files changed, 10 insertions(+), 10 deletions(-)
 
-xfs_info /dev/sda6
-meta-data=/dev/root              isize=256    agcount=4, agsize=35768000 
-blks
-          =                       sectsz=512   attr=2
-data     =                       bsize=4096   blocks=143071774, imaxpct=25
-          =                       sunit=64     swidth=512 blks
-naming   =version 2              bsize=4096   ascii-ci=0
-log      =internal               bsize=4096   blocks=32768, version=2
-          =                       sectsz=512   sunit=64 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-
-
-> Also, what phase do you see it hanging in? the random stat phase is
-> terribly slow on spinning disks, so if I can avoid that it woul dbe
-> nice....
-Creating or deleting files. never in the stat phase.
-
-Stefan
+diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
+index 244e797..8a24f0c 100644
+--- a/fs/xfs/xfs_discard.c
++++ b/fs/xfs/xfs_discard.c
+@@ -38,7 +38,7 @@ xfs_trim_extents(
+ 	struct xfs_mount	*mp,
+ 	xfs_agnumber_t		agno,
+ 	xfs_fsblock_t		start,
+-	xfs_fsblock_t		len,
++	xfs_fsblock_t		end,
+ 	xfs_fsblock_t		minlen,
+ 	__uint64_t		*blocks_trimmed)
+ {
+@@ -100,7 +100,7 @@ xfs_trim_extents(
+ 		 * down partially overlapping ranges for now.
+ 		 */
+ 		if (XFS_AGB_TO_FSB(mp, agno, fbno) + flen < start ||
+-		    XFS_AGB_TO_FSB(mp, agno, fbno) >= start + len) {
++		    XFS_AGB_TO_FSB(mp, agno, fbno) > end) {
+ 			trace_xfs_discard_exclude(mp, agno, fbno, flen);
+ 			goto next_extent;
+ 		}
+@@ -145,7 +145,7 @@ xfs_ioc_trim(
+ 	struct request_queue	*q = mp->m_ddev_targp->bt_bdev->bd_disk->queue;
+ 	unsigned int		granularity = q->limits.discard_granularity;
+ 	struct fstrim_range	range;
+-	xfs_fsblock_t		start, len, minlen;
++	xfs_fsblock_t		start, end, minlen;
+ 	xfs_agnumber_t		start_agno, end_agno, agno;
+ 	__uint64_t		blocks_trimmed = 0;
+ 	int			error, last_error = 0;
+@@ -165,19 +165,19 @@ xfs_ioc_trim(
+ 	 * matter as trimming blocks is an advisory interface.
+ 	 */
+ 	start = XFS_B_TO_FSBT(mp, range.start);
+-	len = XFS_B_TO_FSBT(mp, range.len);
++	end = start + XFS_B_TO_FSBT(mp, range.len) - 1;
+ 	minlen = XFS_B_TO_FSB(mp, max_t(u64, granularity, range.minlen));
+ 
+-	start_agno = XFS_FSB_TO_AGNO(mp, start);
+-	if (start_agno >= mp->m_sb.sb_agcount)
++	if (start >= mp->m_sb.sb_dblocks)
+ 		return -XFS_ERROR(EINVAL);
++	if (end > mp->m_sb.sb_dblocks - 1)
++		end = mp->m_sb.sb_dblocks - 1;
+ 
+-	end_agno = XFS_FSB_TO_AGNO(mp, start + len);
+-	if (end_agno >= mp->m_sb.sb_agcount)
+-		end_agno = mp->m_sb.sb_agcount - 1;
++	start_agno = XFS_FSB_TO_AGNO(mp, start);
++	end_agno = XFS_FSB_TO_AGNO(mp, end);
+ 
+ 	for (agno = start_agno; agno <= end_agno; agno++) {
+-		error = -xfs_trim_extents(mp, agno, start, len, minlen,
++		error = -xfs_trim_extents(mp, agno, start, end, minlen,
+ 					  &blocks_trimmed);
+ 		if (error)
+ 			last_error = error;
+-- 
+1.7.4.4
 
 _______________________________________________
 xfs mailing list
