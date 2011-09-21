@@ -1,18 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8LDqm8d146619 for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 08:52:48 -0500
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 335011C2D4FC
-	for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 06:52:47 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id l29t5ToCQAPj6gcK for
-	<xfs@oss.sgi.com>; Wed, 21 Sep 2011 06:52:47 -0700 (PDT)
-Subject: xfstests 258: Test xfs fs creation with fs size close to 4 TB
-From: Boris Ranto <branto@redhat.com>
-Date: Wed, 21 Sep 2011 15:52:40 +0200
-Message-ID: <1316613160.781.8.camel@dhcp-26-208.brq.redhat.com>
+	p8LET6uq149276 for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 09:29:06 -0500
+Received: from e7.ny.us.ibm.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EBAE613FDB94
+	for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 07:34:29 -0700 (PDT)
+Received: from e7.ny.us.ibm.com (e7.ny.us.ibm.com [32.97.182.137]) by
+	cuda.sgi.com with ESMTP id H1lAV6DgCrXEJmTm for
+	<xfs@oss.sgi.com>; Wed, 21 Sep 2011 07:34:29 -0700 (PDT)
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e7.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p8LD8H6j002452
+	for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 09:08:17 -0400
+Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	p8LET1Cb106754 for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 10:29:03 -0400
+Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
+	by d01av03.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
+	p8LAShxL020392 for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 07:28:44 -0300
+Subject: Re: [PATCH v2] xfs: Check the return value of xfs_trans_get_buf()
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+In-Reply-To: <20110921005612.GL15688@dastard>
+References: <1316527015.9298.60.camel@chandra-lucid.austin.ibm.com>
+	<20110921005612.GL15688@dastard>
+Date: Wed, 21 Sep 2011 09:28:50 -0500
+Message-ID: <1316615330.9298.117.camel@chandra-lucid.austin.ibm.com>
 Mime-Version: 1.0
+Reply-To: sekharan@us.ibm.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,110 +38,63 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Alex Elder <aelder@sgi.com>, XFS Mailing List <xfs@oss.sgi.com>
 
-mkfs.xfs failed to create xfs filesystems with 4 TB minus few bytes due
-to round up error in mkfs.xfs code.
+On Wed, 2011-09-21 at 10:56 +1000, Dave Chinner wrote:
+> On Tue, Sep 20, 2011 at 08:56:55AM -0500, Chandra Seetharaman wrote:
+> > Ran the xfstests (auto) overnight and didn't see any new issues.
+>
+> Sure, but xfstests won't be triggering the new failure paths.
 
-This test case is a regression test for the fs creation problem.
+I meant to convey that I did not introduce any regressions.
 
-I've tested the test case with mkfs.xfs patch (in the form posted by
-Eric Sandeen) and the test passed (and therefore the patch fixed the
-issue for me).
+> 
+> It looks to me like any failure to get a buffer will now result in a
+> cancelled transaction and a filesystem shutdown - the new failure
+> paths really need to be tested to ensure that failures are handled
+> gracefully and don't result in filesystem corruption.
+> 
+> As it is, I'm not sure we want to do this. The only reason we can
+> fail to get a buffer is allocation failures in extremely low memory
+> conditions. However, the last thing we want is for filesystem
+> shutdowns to be triggered by transient low memory conditions.
+> 
+> The current state of the code is that the xfs_buf_get() code tries
+> really, really hard to allocate memory, and we don't have any
+> evidence to point to the fact that is it failing to allocate memory.
+> We'd be seeing asserts firing and/or NULL pointer deref panics if
+> xfs_buf_get() was failing, and neither of these are happening.
 
-Signed-off-by: Boris Ranto <branto@redhat.com>
+I am really confused. Are you saying we should rather let the kernel
+reference a null pointer and panic than making the file system shutdown
+gracefully ?!
 
+I do agree that we may not be seeing any buffer allocation failures (I
+was very surprised to see allocations not being checked in such a mature
+code). Under the very same token, we will not exercise the failure paths
+these patches introduce) and hence will not get into file system
+shutdown state. No ?
 
-diff --git a/258 b/258
-new file mode 100755
-index 0000000..b881626
---- /dev/null
-+++ b/258
-@@ -0,0 +1,60 @@
-+#! /bin/bash
-+# FS QA Test No. 258
-+#
-+# Test fs creation on 4 TB minus few bytes partition
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2011 Red Hat.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#
-+#-----------------------------------------------------------------------
-+#
-+# creator
-+owner=branto@redhat.com
-+
-+seq=`basename $0`
-+echo "QA output created by $seq"
-+
-+status=1	# failure is the default!
-+
-+_cleanup()
-+{
-+    rm -f "$testfile"
-+}
-+
-+trap "_cleanup ; exit \$status" 0 1 2 3 15
-+
-+# get standard environment, filters and checks
-+. ./common.rc
-+
-+# real QA test starts here
-+_supported_fs xfs
-+_supported_os Linux
-+
-+testfile=$TEST_DIR/258.image
-+
-+fourtb=4398046511104
-+for sub in 1 512 1024 1025 2048 4096;
-+do
-+	echo "Trying to make $fourtb - $sub B long xfs fs image"
-+	rm -f "$testfile"
-+	dd if=/dev/zero "of=$testfile" bs=1 count=0 seek=$(($fourtb - $sub))
->/dev/null 2>&1 || echo "dd failed"
-+	lofile=$(losetup -f)
-+	losetup $lofile "$testfile"
-+	"$MKFS_XFS_PROG" -b size=512 $lofile >/dev/null || echo "mkfs failed!"
-+	losetup -d $lofile
-+done
-+
-+status=0 ; exit
-diff --git a/258.out b/258.out
-new file mode 100644
-index 0000000..22e9652
---- /dev/null
-+++ b/258.out
-@@ -0,0 +1,7 @@
-+QA output created by 258
-+Trying to make 4398046511104 - 1 B long xfs fs image
-+Trying to make 4398046511104 - 512 B long xfs fs image
-+Trying to make 4398046511104 - 1024 B long xfs fs image
-+Trying to make 4398046511104 - 1025 B long xfs fs image
-+Trying to make 4398046511104 - 2048 B long xfs fs image
-+Trying to make 4398046511104 - 4096 B long xfs fs image
-diff --git a/group b/group
-index 84c45da..739f806 100644
---- a/group
-+++ b/group
-@@ -371,3 +371,4 @@ deprecated
- 255 auto quick prealloc
- 256 auto quick
- 257 auto quick
-+258 auto quick
+Just in case when the buffer allocation do fail, the changes in these
+patches would prevent a kernel panic and lead to a graceful file system
+shutdown. Isn't that a better option ?
+ 
+> 
+> As it is, before we can gracefully handle memory allocation failures
+> in the xfs_buf layer, we need to be able to roll back dirty
+> transactions so that memory allocation failure does not result
+> filesystem shutdowns. That's actually possible to do now with the
+> delayed logging infrastructure (because the CIL keeps a copy of the
+> previous in memory modifications prior to the bad transaction), so
+> we should look towards implementing transaction rollback first
+> before allowing memory allocation to fail inside transaction
+> contexts....
+> 
+> Cheers,
+> 
+> Dave.
+
 
 _______________________________________________
 xfs mailing list
