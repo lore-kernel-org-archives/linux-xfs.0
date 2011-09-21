@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8L6PiRI121445 for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 01:25:45 -0500
+	p8L6in7u122347 for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 01:44:49 -0500
 Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C487017A39B
-	for <xfs@oss.sgi.com>; Tue, 20 Sep 2011 23:25:42 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D44941608544
+	for <xfs@oss.sgi.com>; Tue, 20 Sep 2011 23:50:08 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	4aCI0vCbkZ31oNnE for <xfs@oss.sgi.com>;
-	Tue, 20 Sep 2011 23:25:42 -0700 (PDT)
-Date: Wed, 21 Sep 2011 16:25:39 +1000
+	aDFPsCgw3DE0FBPR for <xfs@oss.sgi.com>;
+	Tue, 20 Sep 2011 23:50:08 -0700 (PDT)
+Date: Wed, 21 Sep 2011 16:44:43 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 4/4] xfs: convert xfsbufd to use a workqueue
-Message-ID: <20110921062539.GN15688@dastard>
+Subject: Re: [PATCH 1/4] xfs: Don't allocate new buffers on every call to
+	_xfs_buf_find
+Message-ID: <20110921064443.GO15688@dastard>
 References: <1314341497-23910-1-git-send-email-david@fromorbit.com>
-	<1314341497-23910-5-git-send-email-david@fromorbit.com>
-	<20110826082515.GD3551@infradead.org>
+	<1314341497-23910-2-git-send-email-david@fromorbit.com>
+	<20110826081132.GA3551@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110826082515.GD3551@infradead.org>
+In-Reply-To: <20110826081132.GA3551@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,93 +35,111 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Fri, Aug 26, 2011 at 04:25:15AM -0400, Christoph Hellwig wrote:
-> > index 13188df..a3d1784 100644
-> > --- a/fs/xfs/xfs_trans_ail.c
-> > +++ b/fs/xfs/xfs_trans_ail.c
-> > @@ -494,7 +494,7 @@ xfs_ail_worker(
-> >  
-> >  	if (push_xfsbufd) {
-> >  		/* we've got delayed write buffers to flush */
-> > -		wake_up_process(mp->m_ddev_targp->bt_task);
-> > +		flush_delayed_work(&mp->m_ddev_targp->bt_delwrite_work);
+On Fri, Aug 26, 2011 at 04:11:32AM -0400, Christoph Hellwig wrote:
+> > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> > index c57836d..594cea5 100644
+> > --- a/fs/xfs/xfs_buf.c
+> > +++ b/fs/xfs/xfs_buf.c
+> > @@ -171,10 +171,16 @@ STATIC void
+> >  _xfs_buf_initialize(
+> >  	xfs_buf_t		*bp,
+> >  	xfs_buftarg_t		*target,
+> > -	xfs_off_t		range_base,
+> > -	size_t			range_length,
+> > +	xfs_off_t		bno,
+> > +	size_t			num_blocks,
+> >  	xfs_buf_flags_t		flags)
+> >  {
+> > +	xfs_off_t		range_base;
+> > +	size_t			range_length;
+> > +
+> > +	range_base = BBTOB(bno);
+> > +	range_length = BBTOB(num_blocks);
 > 
-> This is a huge change in behaviour.  wake_up_process just kicks the
-> thread to wakeup from sleep as soon as the schedule selects it, while
-> flush_delayed_work does not only queue a pending delayed work, but also
-> waits for it to finish.
+> What is the point of changing the mostly unrelated _xfs_buf_initialize
+> prototype in this patch?
 
-Which is precisely what I want here - to wait for all the delwri
-buffers that were promoted to be submitted before continuing
-onwards.  This makes the scanning algorithm self throttling -
-instead of simply pushing the buffers to the delwri queue and
-kicking a background thread and hoping it can flush buffers faster
-than we can promote them from the AIL, it explicitly pushes the
-delwri buffers before the next round of AIL scanning. The ensures we
-start timely IO on the buffers and don't simple continue to scan the
-AIL while we wait for the background thread to send them off to
-disk and complete.
+We were converting units backwards and forwards inconsistently, some
+functions taking bytes, some basic blocks, and conversions were
+being done all over the place.
 
-IOWs, instead of:
+> I think it (and the other renaming changes related to it) are fine,
+> but should be a separate patch.
 
-	AIL			bufd
-	promote
-	....
-	promote
-	wakeup
-	short sleep
-				woken
-				sort
-				dispatch
-				....
+OK, fine, I can do that.
 
-<sometime later, maybe before, during or after xfsbufd has run>
+> And once you touch _xfs_buf_initialize
+> after the core of this patch, please merge it with xfs_buf_allocate into
+> a new xfs_buf_alloc that does the full allocation + initialization and
+> can also replace xfs_buf_get_empty.
 
-	promote
-	.....
-	promote
-	wakeup
-	short sleep
-				woken
-				sort
-				dispatch
-				....
+Not right now. That restructing can be done separately, probably in
+the same patch set that fixes the API types problems...
 
-Where we *hope* the short sleep in the AIL processing is long enough
-to avoid repeated scanning of the AIL while the queued IO is
-dispatched. we end up with:
+> > +	bp = _xfs_buf_find(target, bno, num_blocks, flags, new_bp);
+> > +	if (!bp) {
+> > +		xfs_buf_deallocate(new_bp);
+> > +		return NULL;
+> > +	}
+> > +
+> >  	if (bp == new_bp) {
+> >  		error = xfs_buf_allocate_memory(bp, flags);
+> >  		if (error)
+> >  			goto no_buffer;
+> > +	} else
+> >  		xfs_buf_deallocate(new_bp);
+> 
+> I'd recommend moving the call to xfs_buf_allocate_memory into
+> _xfs_buf_find so that it returns a fully allocated buffer.  In fact I'd
+> also move the xfs_buf_deallocate(new_bp) into the found side of
+> _xfs_buf_find, avoiding any conditionals in xfs_buf_get.
 
-	AIL			bufd
-	promote
-	....
-	promote
-	flush_work
-				sort
-				dispatch
-	short sleep
+<sigh>
 
-	promote
-	....
-	promote
-	flush_work
-				sort
-				dispatch
-	short sleep
+This code s pretty much as you requested it after the first time I
+posted it.
 
-Which is much more controlled and means that the short sleep that
-that the AIL processing does actually gives time for IO completions
-to occur before continuing. It means that dispatch of IO from the
-AIL is throttled to the rate of device congestion as it now waits
-for the IO dispatch to complete instead of just sholving as much Io
-as possible into the bufd queue.
+http://oss.sgi.com/archives/xfs/2011-08/msg00146.html
 
-FWIW, if we move to building a direct IO buffer list in the AIL as
-we were recently discussing, this is -exactly- the IO dispatch
-patterns and delays that we will get from the AIL....
+I'll go rewrite this again, but IMO all you are asking for is for me
+to put a different colour on the bike shed....
 
-Cheers,
+> >  
+> > -	XFS_STATS_INC(xb_get);
+> > -
+> >  	/*
+> > -	 * Always fill in the block number now, the mapped cases can do
+> > -	 * their own overlay of this later.
+> > +	 * Now we have a workable buffer, fill in the block number so
+> > +	 * that we can do IO on it.
+> >  	 */
+> > -	bp->b_bn = ioff;
+> > -	bp->b_count_desired = bp->b_buffer_length;
+> > +	bp->b_bn = bno;
+> 
+> Note that we only need this if we did not find an existing buffer.  It's
+> not strictly related to the patch, but given that you stop assigning
+> b_count_desired and redo this whole area it might be worth shifting it
+> into the if (bp == new_bp) conditional area.
 
-Dave.
+OK.
+
+> >  
+> > +found:
+> > +	ASSERT(bp->b_flags & XBF_MAPPED);
+> 
+> This doesn't look right to me.  Various buffers like inode or remoate attrs
+> are unmapped, and I can't see any reason why we would assert not beeing
+> allowed to find them here.
+
+Yeah, a bit of a thinko, but it never tripped on me....
+
+> Thinking about it more I'm also not sure skipping the code to map
+> buffers on a straight cache hit is a good idea - there's nothing
+> inherent to requiring a given buffer to be mapped for all callers.
+
+OK, will fix.
+
 
 -- 
 Dave Chinner
