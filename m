@@ -1,28 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8LGmYjn159064 for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 11:48:35 -0500
-Received: from server655-han.de-nserver.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 324F817F311
-	for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 09:48:32 -0700 (PDT)
-Received: from server655-han.de-nserver.de (server655-han.de-nserver.de
-	[85.158.177.45]) by cuda.sgi.com with ESMTP id wr0eShTxH5YiHv9F
-	for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 09:48:32 -0700 (PDT)
-Message-ID: <4E7A155D.9060703@profihost.ag>
-Date: Wed, 21 Sep 2011 18:48:29 +0200
-From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+	p8LGserk159669 for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 11:54:40 -0500
+Subject: Re: xfstests 258: Test xfs fs creation with fs size close to 4 TB
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <1316613160.781.8.camel@dhcp-26-208.brq.redhat.com>
+References: <1316613160.781.8.camel@dhcp-26-208.brq.redhat.com>
+Date: Wed, 21 Sep 2011 11:54:35 -0500
+Message-ID: <1316624075.2986.22.camel@doink>
 MIME-Version: 1.0
-Subject: Re: [xfs-masters] xfs deadlock in stable kernel 3.0.4
-References: <20110918230245.GF15688@dastard> <4E78665E.8030409@profihost.ag>
-	<20110920160226.GA25542@infradead.org>
-	<4E78CBF4.1030505@profihost.ag>
-	<20110920172455.GA30757@infradead.org>
-	<4E78CEFD.9030603@profihost.ag>
-	<20110920223047.GA13758@infradead.org>
-	<20110921021133.GM15688@dastard> <4E7994D3.5020103@profihost.ag>
-	<20110921114237.GP15688@dastard>
-	<20110921122649.GA16602@infradead.org>
-In-Reply-To: <20110921122649.GA16602@infradead.org>
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,35 +18,61 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Boris Ranto <branto@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Sandeen <sandeen@redhat.com>, Eric@oss.sgi.com, xfs-oss <xfs@oss.sgi.com>
 
-Hi,
+On Wed, 2011-09-21 at 15:52 +0200, Boris Ranto wrote:
+> mkfs.xfs failed to create xfs filesystems with 4 TB minus few bytes due
+> to round up error in mkfs.xfs code.
+> 
+> This test case is a regression test for the fs creation problem.
+> 
+> I've tested the test case with mkfs.xfs patch (in the form posted by
+> Eric Sandeen) and the test passed (and therefore the patch fixed the
+> issue for me).
+> 
+> Signed-off-by: Boris Ranto <branto@redhat.com>
 
-Am 21.09.2011 14:26, schrieb Christoph Hellwig:
-> What is also strange is that we allocate a xfs_ail_wq, but don't
-> actually use it, although it would have the same idea.  Stefan,
-> can you try the following patch?  This moves the ail work to it's
-> explicit queue, and makes sure we never have the same work item
-> (= same fs to be pushed) concurrently.
+This looks OK, but I'm a little concerned about the
+shell's ability to handle > 32-bit values in its
+arithmetic expressions (within $((...))).
 
-Sorry, but with your patch everything is awfully slow. Just the sequ. 
-file creation takes on an SSD extremely long. I interrupted the test.
+Using ${fourtb} works for me, but I just don't know
+whether it is written somewhere that bash always
+supports 64-bit (or even arbitrary) precision values.
 
-i/o top from an SSD:
-Total DISK READ: 0 B/s | Total DISK WRITE: 9.88 M/s
-   PID USER      DISK READ  DISK WRITE   SWAPIN    IO>    COMMAND 
+Do you know?
 
-  1377 root           0 B/s       0 B/s  0.00 % 99.99 % [xfsbufd/sda3]
-  2219 root           0 B/s       0 B/s  0.00 % 99.99 % [flush-8:0]
-  2746 root           0 B/s    9.88 M/s  0.00 %  0.00 % bonnie++ -u root 
--s 0 -n 1024:32768:0:1024:4096 -d /mnt
+Same general concern goes for dd, but I am more inclined
+to think it can handle large numbers.
 
-Stefan
+Otherwise this looks good to me (though I haven't yet
+tried it out).
+
+Reviewed-by: Alex Elder <aelder@sgi.com>
+
+. . .
+
+> +fourtb=4398046511104
+> +for sub in 1 512 1024 1025 2048 4096;
+> +do
+> +	echo "Trying to make $fourtb - $sub B long xfs fs image"
+> +	rm -f "$testfile"
+> +	dd if=/dev/zero "of=$testfile" bs=1 count=0 seek=$(($fourtb - $sub))
+> >/dev/null 2>&1 || echo "dd failed"
+> +	lofile=$(losetup -f)
+> +	losetup $lofile "$testfile"
+> +	"$MKFS_XFS_PROG" -b size=512 $lofile >/dev/null || echo "mkfs failed!"
+> +	losetup -d $lofile
+> +done
+> +
+
+. . .
+
 
 _______________________________________________
 xfs mailing list
