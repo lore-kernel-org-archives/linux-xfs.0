@@ -1,14 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8LIjX6L166723 for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 13:45:34 -0500
-Subject: Re: [PATCH 4/4] libxfs: add b_error
+	p8LJBHLV168800 for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 14:11:17 -0500
+Received: from xmail.sgi.com (pv-excas3-dc21-nlb.corp.sgi.com [137.38.102.207])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3F7BB304043
+	for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 12:11:14 -0700 (PDT)
+Subject: Re: [PATCH] xfstests: simplify TRIM_OFF_LEN() in "ltp/fsx.c"
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110920220030.771822970@bombadil.infradead.org>
-References: <20110920215917.508421839@bombadil.infradead.org>
-	<20110920220030.771822970@bombadil.infradead.org>
-Date: Wed, 21 Sep 2011 13:45:15 -0500
-Message-ID: <1316630715.5872.16.camel@doink>
+In-Reply-To: <201107202310.p6KNAtQa026739@stout.americas.sgi.com>
+References: <201107202310.p6KNAtQa026739@stout.americas.sgi.com>
+Date: Wed, 21 Sep 2011 14:11:13 -0500
+Message-ID: <1316632273.5872.20.camel@doink>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -23,20 +25,132 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, 2011-09-20 at 17:59 -0400, Christoph Hellwig wrote:
-> Add a b_error field to struct xfs_buf so that we can return the exact error
-> fro libxfs_readbuf.  And explicit error return would be nice, but this
-> requires large changes to common code that should be done on the kernel
-> side first.
+Can someone review this please?		-Alex
+
+On Wed, 2011-07-20 at 18:10 -0500, Alex Elder wrote:
+> A recent commit added a TRIM_OFF_LEN() macro in "ltp/fsx.c":
+>     5843147e xfstests: fsx fallocate support is b0rked
+> A later commit fixed a problem with that macro:
+>     c47d7a51 xfstests: fix modulo-by-zero error in fsx
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> There is an extra flag parameter in that macro that I didn't like
+> in either version.  When looking at it the second time around I
+> concluded that there was no need for the flag after all.
+> 
+> Going back to the first commit, the code that TRIM_OFF_LEN()
+> replaced had one of two forms:
+>   - For OP_READ and OP_MAP_READ:
+> 	if (file_size)
+> 		offset %= file_size;
+> 	else
+> 		offset = 0;
+> 	if (offset + size > file_size)
+> 		size = file_size - offset;
+> 
+>   - For all other cases (except OP_TRUNCATE):
+> 	offset %= maxfilelen;
+> 	if (offset + size > maxfilelen)
+> 		size = maxfilelen - offset;
+> 
+> There's no harm in ensuring maxfilelen is non-zero (and doing so
+> is safer than what's done above).  So both of the above can be
+> generalized this way:
+> 	if (SIZE_LIMIT)
+> 		offset %= SIZE_LIMIT;
+> 	else
+> 		offset = 0;
+> 	if (offset + size > SIZE_LIMIT)
+> 		size = SIZE_LIMIT - offset;
+> 
+> In other words, there is no need for the extra flag in the macro.
+> 
+> The following patch just does away with it.  It uses the value of
+> the "size" parameter directly in avoiding a divide-by-zero, and in
+> the process avoids referencing the global "file_size" within the
+> macro expansion.
+> 
+> One more thing...  It seems like OP_HOLE_PUNCH should be
+> limited to the file size rather than to maximum file size
+> (but that's a separate discussion).
+> 
+> Signed-off-by: Alex Elder <aelder@sgi.com>
+> 
+> ---
+>  ltp/fsx.c |   28 ++++++++++++++--------------
+>  1 file changed, 14 insertions(+), 14 deletions(-)
+> 
+> Index: b/ltp/fsx.c
+> ===================================================================
+> --- a/ltp/fsx.c
+> +++ b/ltp/fsx.c
+> @@ -987,14 +987,14 @@ docloseopen(void)
+>  	}
+>  }
+>  
+> -#define TRIM_OFF_LEN(off, len, size, allow_zero_file_size)	\
+> -do {						\
+> -	if (allow_zero_file_size || file_size)	\
+> -		offset %= size;			\
+> -	else					\
+> -		offset = 0;			\
+> -	if (offset + len > size)		\
+> -		len = size - offset;		\
+> +#define TRIM_OFF_LEN(off, len, size)	\
+> +do {					\
+> +	if (size)			\
+> +		offset %= size;		\
+> +	else				\
+> +		offset = 0;		\
+> +	if (offset + len > size)	\
+> +		len = size - offset;	\
+>  } while (0)
+>  
+>  void
+> @@ -1054,22 +1054,22 @@ test(void)
+>  
+>  	switch (op) {
+>  	case OP_READ:
+> -		TRIM_OFF_LEN(offset, size, file_size, 0);
+> +		TRIM_OFF_LEN(offset, size, file_size);
+>  		doread(offset, size);
+>  		break;
+>  
+>  	case OP_WRITE:
+> -		TRIM_OFF_LEN(offset, size, maxfilelen, 1);
+> +		TRIM_OFF_LEN(offset, size, maxfilelen);
+>  		dowrite(offset, size);
+>  		break;
+>  
+>  	case OP_MAPREAD:
+> -		TRIM_OFF_LEN(offset, size, file_size, 0);
+> +		TRIM_OFF_LEN(offset, size, file_size);
+>  		domapread(offset, size);
+>  		break;
+>  
+>  	case OP_MAPWRITE:
+> -		TRIM_OFF_LEN(offset, size, maxfilelen, 1);
+> +		TRIM_OFF_LEN(offset, size, maxfilelen);
+>  		domapwrite(offset, size);
+>  		break;
+>  
+> @@ -1080,12 +1080,12 @@ test(void)
+>  		break;
+>  
+>  	case OP_FALLOCATE:
+> -		TRIM_OFF_LEN(offset, size, maxfilelen, 1);
+> +		TRIM_OFF_LEN(offset, size, maxfilelen);
+>  		do_preallocate(offset, size);
+>  		break;
+>  
+>  	case OP_PUNCH_HOLE:
+> -		TRIM_OFF_LEN(offset, size, maxfilelen, 1);
+> +		TRIM_OFF_LEN(offset, size, maxfilelen);
+>  		do_punch_hole(offset, size);
+>  		break;
+>  	default:
 
-Looks good.
-
-Reviewed-by: Alex Elder <aelder@sgi.com>
 
 
 _______________________________________________
