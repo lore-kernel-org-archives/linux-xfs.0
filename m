@@ -1,28 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8L7al9V124891 for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 02:36:47 -0500
-Received: from server655-han.de-nserver.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3E25D16086E8
-	for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 00:42:06 -0700 (PDT)
-Received: from server655-han.de-nserver.de (server655-han.de-nserver.de
-	[85.158.177.45]) by cuda.sgi.com with ESMTP id SFibpj1IR8tEboYt
-	for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 00:42:06 -0700 (PDT)
-Message-ID: <4E79940A.4000502@profihost.ag>
-Date: Wed, 21 Sep 2011 09:36:42 +0200
-From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+	p8L7l72G125475 for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 02:47:08 -0500
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 886BD16088EA
+	for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 00:52:29 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id UaIzr9FLzzogxDJd for
+	<xfs@oss.sgi.com>; Wed, 21 Sep 2011 00:52:29 -0700 (PDT)
+Date: Wed, 21 Sep 2011 09:46:59 +0200 (CEST)
+From: Lukas Czerner <lczerner@redhat.com>
+Subject: Re: [PATCH v2] xfs: fix possible overflow in xfs_ioc_trim()
+In-Reply-To: <20110920171220.GA17204@infradead.org>
+Message-ID: <alpine.LFD.2.00.1109210945130.3876@dhcp-27-109.brq.redhat.com>
+References: <1315322977-22736-1-git-send-email-lczerner@redhat.com>
+	<20110906153301.GA21675@infradead.org>
+	<alpine.LFD.2.00.1109071200480.4579@dhcp-27-109.brq.redhat.com>
+	<20110907112155.GA1017@infradead.org>
+	<alpine.LFD.2.00.1109071333110.4579@dhcp-27-109.brq.redhat.com>
+	<20110920171220.GA17204@infradead.org>
 MIME-Version: 1.0
-Subject: Re: xfs deadlock in stable kernel 3.0.4
-References: <4E70571A.80108@profihost.ag> <4E705C42.6020909@profihost.ag>
-	<20110914143005.GA28496@infradead.org>
-	<4E75B660.1030502@profihost.ag> <20110918230245.GF15688@dastard>
-	<4E78665E.8030409@profihost.ag>
-	<20110920160226.GA25542@infradead.org>
-	<4E78CBF4.1030505@profihost.ag>
-	<20110920172455.GA30757@infradead.org>
-	<4E78CEFD.9030603@profihost.ag>
-	<20110920223047.GA13758@infradead.org>
-In-Reply-To: <20110920223047.GA13758@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,51 +28,71 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: "xfs-masters@oss.sgi.com" <xfs-masters@oss.sgi.com>, aelder@sgi.com, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+Cc: Lukas Czerner <lczerner@redhat.com>, xfs@oss.sgi.com
 
-Am 21.09.2011 00:30, schrieb Christoph Hellwig:
-> On Tue, Sep 20, 2011 at 07:35:57PM +0200, Stefan Priebe - Profihost AG wrote:
->> Am 20.09.2011 19:24, schrieb Christoph Hellwig:
->>> On Tue, Sep 20, 2011 at 07:23:00PM +0200, Stefan Priebe - Profihost AG wrote:
->>>>>   - what is the fs geometry?
->>>> What do you exactly mean? I've seen this on 1TB and 160GB SSD
->>>> devices with totally different disk layout.
->>>
->>> The output of mkfs.xfs (of xfs_info after it's been created)
->>
->> ssd:~# xfs_info /dev/sda3
->> meta-data=/dev/root              isize=256    agcount=4, agsize=9517888 blks
->>           =                       sectsz=512   attr=2
->> data     =                       bsize=4096   blocks=38071552, imaxpct=25
->>           =                       sunit=0      swidth=0 blks
->> naming   =version 2              bsize=4096   ascii-ci=0
->> log      =internal               bsize=4096   blocks=18589, version=2
->>           =                       sectsz=512   sunit=0 blks, lazy-count=1
->> realtime =none                   extsz=4096   blocks=0, rtextents=0
->
-> Nothing special there.
->
-> So far I haven't been able to recreate it.  How many runs did you
-> normally need on 3.1-rc?  Note that so far I've run my known working
-> kernel, I'll test your config plus the drivers I need next.
+On Tue, 20 Sep 2011, Christoph Hellwig wrote:
 
-I had only used 3.0.4 with bonnie++ to reproduce. 3.1-rc was running on 
-a prod. system.
+> > 
+> > I am not sure what do you mean ? There already is a check when both
+> > start and len are huge numbers. I am not sure if we can do more without
+> > significantly complicating the test to cover various start, or len
+> > numbers where can the fsblock->group_number overflow for various file
+> > systems.
+> 
+> Add a testcase where start is a relatively small number (smaller than an
+> AG/BG), but start + len is outside the fs.
 
-Sadly i'm also not able to reproduce it reliable on every partition. 
-Sometimes it works sometimes not. Just retrying does not help. I had to 
-copy and delete random files from the part. and then start bonnie++ on 
-it. Perhaps i can give you a dd dump of the partition. But i had to 
-recreate one. My Intel SSD is now massivly slower than when i started 
-the tests. No idea why.
+Already done in the second version of the xfstests patch.
 
-Stefan
+> 
+> > @@ -145,7 +145,7 @@ xfs_ioc_trim(
+> >  	struct request_queue	*q = mp->m_ddev_targp->bt_bdev->bd_disk->queue;
+> >  	unsigned int		granularity = q->limits.discard_granularity;
+> >  	struct fstrim_range	range;
+> > +	xfs_fsblock_t		start, end, minlen;
+> >  	xfs_agnumber_t		start_agno, end_agno, agno;
+> >  	__uint64_t		blocks_trimmed = 0;
+> >  	int			error, last_error = 0;
+> > @@ -165,19 +165,21 @@ xfs_ioc_trim(
+> >  	 * matter as trimming blocks is an advisory interface.
+> >  	 */
+> >  	start = XFS_B_TO_FSBT(mp, range.start);
+> > +	end = start + XFS_B_TO_FSBT(mp, range.len) - 1;
+> >  	minlen = XFS_B_TO_FSB(mp, max_t(u64, granularity, range.minlen));
+> >  
+> > +	if (start >= mp->m_sb.sb_dblocks)
+> >  		return -XFS_ERROR(EINVAL);
+> > +	start_agno = XFS_FSB_TO_AGNO(mp, start);
+> >  
+> > +	if (end >= mp->m_sb.sb_dblocks) {
+> > +		end = mp->m_sb.sb_dblocks - 1;
+> >  		end_agno = mp->m_sb.sb_agcount - 1;
+> > +	} else
+> > +		end_agno = XFS_FSB_TO_AGNO(mp, end);
+> 
+> I'd rather do something like:
+> 
+> 	if (start >= mp->m_sb.sb_dblocks)
+>   		return -XFS_ERROR(EINVAL);
+> 	if (end > mp->m_sb.sb_dblocks - 1)
+> 		end = mp->m_sb.sb_dblocks - 1;
+> 
+> 
+> 	start_agno = XFS_FSB_TO_AGNO(mp, start);
+> 	end_agno = XFS_FSB_TO_AGNO(mp, end)
+> 
+> here.
+> 
+> Otherwise the patch looks fine.
+> 
 
+Thanks!
+-Lukas
 
 _______________________________________________
 xfs mailing list
