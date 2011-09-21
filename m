@@ -1,29 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8LDdUC4145762 for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 08:39:30 -0500
-Received: from server655-han.de-nserver.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 999F01C2ECB0
-	for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 06:39:28 -0700 (PDT)
-Received: from server655-han.de-nserver.de (server655-han.de-nserver.de
-	[85.158.177.45]) by cuda.sgi.com with ESMTP id t9CPVfL8Lom3cx9R
-	for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 06:39:28 -0700 (PDT)
-References: <20110914143005.GA28496@infradead.org>
-	<4E75B660.1030502@profihost.ag> <20110918230245.GF15688@dastard>
-	<4E78665E.8030409@profihost.ag>
-	<20110920160226.GA25542@infradead.org>
-	<4E78CBF4.1030505@profihost.ag>
-	<20110920172455.GA30757@infradead.org>
-	<4E78CEFD.9030603@profihost.ag>
-	<20110920223047.GA13758@infradead.org>
-	<4E79940A.4000502@profihost.ag>
-	<20110921113935.GA8947@infradead.org>
-In-Reply-To: <20110921113935.GA8947@infradead.org>
-Mime-Version: 1.0 (iPhone Mail 8H7)
-Message-Id: <588A4DF6-A9C7-4797-B30B-4CD38B521167@profihost.ag>
-From: Stefan Priebe <s.priebe@profihost.ag>
-Subject: Re: xfs deadlock in stable kernel 3.0.4
-Date: Wed, 21 Sep 2011 15:39:16 +0200
+	p8LE9tHF147802 for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 09:09:55 -0500
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6031C17E761
+	for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 07:09:54 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id lLVEoT5OwVIFpQ87 for
+	<xfs@oss.sgi.com>; Wed, 21 Sep 2011 07:09:54 -0700 (PDT)
+Date: Wed, 21 Sep 2011 16:09:35 +0200
+From: Johannes Weiner <jweiner@redhat.com>
+Subject: Re: [patch 3/4] mm: filemap: pass __GFP_WRITE from
+	grab_cache_page_write_begin()
+Message-ID: <20110921140935.GF22516@redhat.com>
+References: <1316526315-16801-1-git-send-email-jweiner@redhat.com>
+	<1316526315-16801-4-git-send-email-jweiner@redhat.com>
+	<20110920142553.GA2593@infradead.org> <4E78DD8B.1020605@redhat.com>
+	<20110920184034.GA27353@infradead.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20110920184034.GA27353@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,28 +33,27 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: "xfs-masters@oss.sgi.com" <xfs-masters@oss.sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "aelder@sgi.com" <aelder@sgi.com>
+Cc: Rik van Riel <riel@redhat.com>, linux-ext4@vger.kernel.org, Jan Kara <jack@suse.cz>, linux-btrfs@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, Mel Gorman <mgorman@suse.de>, linux-fsdevel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andrew Morton <akpm@linux-foundation.org>, Wu Fengguang <fengguang.wu@intel.com>, Chris Mason <chris.mason@oracle.com>, Minchan Kim <minchan.kim@gmail.com>
 
-
-> One thing I noticed is that your config seems to run many fs tasks
-> a lot slower than mine, but I'm not entirely sure why.
-Strange would you post your config too?
-
-> The only interesting things I noticed in your config where that you
-> use slub instead of slab, which does a lot of high order allocations
-> and has caused lots of trouble in the past, and that you enable
-> CONFIG_CC_OPTIMIZE_FOR_SIZE, which has caused mis-compilation
-> of complicated code in the past.  I don't want to blame it directly,
-> but I could see how that causes problems with some of the atomic64_t
-> games XFS plays since 2.6.38.
-Will remove it.
-
-At least dave was able to reproduce so he can probably help too.
-
-Thanks!
-
-Stefan
+On Tue, Sep 20, 2011 at 02:40:34PM -0400, Christoph Hellwig wrote:
+> On Tue, Sep 20, 2011 at 02:38:03PM -0400, Rik van Riel wrote:
+> > On 09/20/2011 10:25 AM, Christoph Hellwig wrote:
+> > >In addition to regular write shouldn't __do_fault and do_wp_page also
+> > >calls this if they are called on file backed mappings?
+> > 
+> > Probably not do_wp_page since it always creates an
+> > anonymous page, which are not very relevant to the
+> > dirty page cache accounting.
 > 
+> Well, it doesn't always - but for the case where it doesn't we
+> do not allocate a new page at all so you're right in the end :)
+
+I think it could be useful to annotate write-fault allocations in
+filemap_fault(), but these pages are mostly allocated in the readahead
+code, so this could turn into a more invasive project.
+
+It can be done incrementally, however, the series as it stands does
+not require it to be useful.
 
 _______________________________________________
 xfs mailing list
