@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8LBtWUE139501 for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 06:55:33 -0500
-Received: from server655-han.de-nserver.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0540317B7DD
-	for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 04:55:31 -0700 (PDT)
-Received: from server655-han.de-nserver.de (server655-han.de-nserver.de
-	[85.158.177.45]) by cuda.sgi.com with ESMTP id cxfe6rBPcEfOpwsS
-	for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 04:55:31 -0700 (PDT)
-Message-ID: <4E79D0B2.2010305@profihost.ag>
-Date: Wed, 21 Sep 2011 13:55:30 +0200
-From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
-MIME-Version: 1.0
+	p8LCQuSs141384 for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 07:26:56 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DD62916096D1
+	for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 05:32:18 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	WA8tG9WSeEAom0jq for <xfs@oss.sgi.com>;
+	Wed, 21 Sep 2011 05:32:18 -0700 (PDT)
+Date: Wed, 21 Sep 2011 08:26:49 -0400
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: [xfs-masters] xfs deadlock in stable kernel 3.0.4
-References: <4E75B660.1030502@profihost.ag> <20110918230245.GF15688@dastard>
-	<4E78665E.8030409@profihost.ag>
+Message-ID: <20110921122649.GA16602@infradead.org>
+References: <20110918230245.GF15688@dastard> <4E78665E.8030409@profihost.ag>
 	<20110920160226.GA25542@infradead.org>
 	<4E78CBF4.1030505@profihost.ag>
 	<20110920172455.GA30757@infradead.org>
@@ -22,6 +22,8 @@ References: <4E75B660.1030502@profihost.ag> <20110918230245.GF15688@dastard>
 	<20110920223047.GA13758@infradead.org>
 	<20110921021133.GM15688@dastard> <4E7994D3.5020103@profihost.ag>
 	<20110921114237.GP15688@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
 In-Reply-To: <20110921114237.GP15688@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -31,39 +33,72 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "xfs-masters@oss.sgi.com" <xfs-masters@oss.sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
 
-Am 21.09.2011 13:42, schrieb Dave Chinner:
-> Ok, I got a hang in the random delete phase. Not sure what is wrong
-> yet, but inode reclaim is trying to reclaim inodes but failing, and
-> the AIL is trying to push items but failing. Hence the tail of the
-> log is not being moved forward and new transactions are being
-> blocked until log space bcomes available.
-OK that matches my findings. It was also mostly in the random delete 
-phase. But i've also seen it on creates.
-
-> Given this, just triggering a log force is shoul dget everything
-> moving again. Running "echo 2>  /proc/sys/vm/drop_caches" gets inode
-> reclaim running in sync mode, which causes pinned inodes to trigger
-> a log force. And once I've done this, everything starts running
-> again.
-Oh man i was thinking about trying this. But then i forgot that idea ;-(
-
+On Wed, Sep 21, 2011 at 09:42:37PM +1000, Dave Chinner wrote:
 > So, the log force not triggering in the AIL code looks to be the
 > problem. That, I simply cannot explain right now - it makes no sense
 > but that is what all the stats and trace events point to. I need to
 > do more investigation.
-Thanks Dave and great that you were able to repeat it.
 
-What helps is to build bonnie++ yourself and just remove the stat tests. 
-I've done this too - so bonnie++ runs a lot faster.
+Could it be that we have a huge amount of instances of xfs_ail_worker
+running at the same time?  xfs_sync_wq is marked as WQ_CPU_INTENSIVE,
+so running/runnable workers are not counted towards the concurrency
+limit.  From my look at the workqueue code this means we'll spawn new
+instances fairly quickly if the others are stuck.  This means more
+and more of them hammering the pinned items, and we'll rarely reach
+the limit where we'd need to do a log force.
 
-Stefan
+What is also strange is that we allocate a xfs_ail_wq, but don't
+actually use it, although it would have the same idea.  Stefan,
+can you try the following patch?  This moves the ail work to it's
+explicit queue, and makes sure we never have the same work item
+(= same fs to be pushed) concurrently.
+
+Note that before Linux 3.1-rc you'll need to edit fs/xfs/xfs_super.c
+to be fs/xfs/linux-2.6/xfs_super.c in the patch manually.
+
+
+Index: linux-2.6/fs/xfs/xfs_super.c
+===================================================================
+--- linux-2.6.orig/fs/xfs/xfs_super.c	2011-09-21 08:00:01.864768359 -0400
++++ linux-2.6/fs/xfs/xfs_super.c	2011-09-21 08:04:01.335266079 -0400
+@@ -1654,7 +1654,7 @@ xfs_init_workqueues(void)
+ 	if (!xfs_syncd_wq)
+ 		goto out;
+ 
+-	xfs_ail_wq = alloc_workqueue("xfsail", WQ_CPU_INTENSIVE, 8);
++	xfs_ail_wq = alloc_workqueue("xfsail", WQ_NON_REENTRANT, 8);
+ 	if (!xfs_ail_wq)
+ 		goto out_destroy_syncd;
+ 
+Index: linux-2.6/fs/xfs/xfs_trans_ail.c
+===================================================================
+--- linux-2.6.orig/fs/xfs/xfs_trans_ail.c	2011-09-21 08:02:28.172765827 -0400
++++ linux-2.6/fs/xfs/xfs_trans_ail.c	2011-09-21 08:02:46.843266108 -0400
+@@ -538,7 +538,7 @@ out_done:
+ 	}
+ 
+ 	/* There is more to do, requeue us.  */
+-	queue_delayed_work(xfs_syncd_wq, &ailp->xa_work,
++	queue_delayed_work(xfs_ail_wq, &ailp->xa_work,
+ 					msecs_to_jiffies(tout));
+ }
+ 
+@@ -575,7 +575,7 @@ xfs_ail_push(
+ 	smp_wmb();
+ 	xfs_trans_ail_copy_lsn(ailp, &ailp->xa_target, &threshold_lsn);
+ 	if (!test_and_set_bit(XFS_AIL_PUSHING_BIT, &ailp->xa_flags))
+-		queue_delayed_work(xfs_syncd_wq, &ailp->xa_work, 0);
++		queue_delayed_work(xfs_ail_wq, &ailp->xa_work, 0);
+ }
+ 
+ /*
 
 _______________________________________________
 xfs mailing list
