@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8LMhR4i182410 for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 17:43:27 -0500
-Received: from ipmail07.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0A26914083EF
-	for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 15:48:51 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	IqYrVI2QCvbAIFat for <xfs@oss.sgi.com>;
-	Wed, 21 Sep 2011 15:48:51 -0700 (PDT)
-Date: Thu, 22 Sep 2011 08:43:22 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2] xfs: Check the return value of xfs_trans_get_buf()
-Message-ID: <20110921224322.GR15688@dastard>
-References: <1316527015.9298.60.camel@chandra-lucid.austin.ibm.com>
-	<20110921005612.GL15688@dastard> <1316637518.5872.39.camel@doink>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1316637518.5872.39.camel@doink>
+	p8LN3fOU183580 for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 18:03:41 -0500
+Received: from smtp-out.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EAC8C1408DAE
+	for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 16:09:05 -0700 (PDT)
+Received: from smtp-out.google.com (smtp-out.google.com [216.239.44.51]) by
+	cuda.sgi.com with ESMTP id f1fapVyRhQ7d0EqC for
+	<xfs@oss.sgi.com>; Wed, 21 Sep 2011 16:09:05 -0700 (PDT)
+Date: Wed, 21 Sep 2011 16:02:26 -0700
+From: Andrew Morton <akpm@google.com>
+Subject: Re: [patch 2/4] mm: writeback: distribute write pages across
+	allowable zones
+Message-Id: <20110921160226.1bf74494.akpm@google.com>
+In-Reply-To: <1316526315-16801-3-git-send-email-jweiner@redhat.com>
+References: <1316526315-16801-1-git-send-email-jweiner@redhat.com>
+	<1316526315-16801-3-git-send-email-jweiner@redhat.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,65 +29,157 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
-Cc: Chandra Seetharaman <sekharan@us.ibm.com>, XFS Mailing List <xfs@oss.sgi.com>
+To: Johannes Weiner <jweiner@redhat.com>
+Cc: Rik van Riel <riel@redhat.com>, linux-ext4@vger.kernel.org, Jan Kara <jack@suse.cz>, linux-btrfs@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, Mel Gorman <mgorman@suse.de>, linux-fsdevel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andrew Morton <akpm@linux-foundation.org>, Wu Fengguang <fengguang.wu@intel.com>, Chris Mason <chris.mason@oracle.com>, Minchan Kim <minchan.kim@gmail.com>
 
-On Wed, Sep 21, 2011 at 03:38:38PM -0500, Alex Elder wrote:
-> On Wed, 2011-09-21 at 10:56 +1000, Dave Chinner wrote:
-> > On Tue, Sep 20, 2011 at 08:56:55AM -0500, Chandra Seetharaman wrote:
-> > > Ran the xfstests (auto) overnight and didn't see any new issues.
-> > 
-> > Sure, but xfstests won't be triggering the new failure paths.
-> > 
-> > It looks to me like any failure to get a buffer will now result in a
-> > cancelled transaction and a filesystem shutdown - the new failure
-> > paths really need to be tested to ensure that failures are handled
-> > gracefully and don't result in filesystem corruption.
+On Tue, 20 Sep 2011 15:45:13 +0200
+Johannes Weiner <jweiner@redhat.com> wrote:
+
+> This patch allows allocators to pass __GFP_WRITE when they know in
+> advance that the allocated page will be written to and become dirty
+> soon.  The page allocator will then attempt to distribute those
+> allocations across zones, such that no single zone will end up full of
+> dirty, and thus more or less, unreclaimable pages.
+
+Across all zones, or across the zones within the node or what?  Some
+more description of how all this plays with NUMA is needed, please.
+
+> The global dirty limits are put in proportion to the respective zone's
+> amount of dirtyable memory
+
+I don't know what this means.  How can a global limit be controlled by
+what is happening within each single zone?  Please describe this design
+concept fully.
+
+> and allocations diverted to other zones
+> when the limit is reached.
+
+hm.
+
+> For now, the problem remains for NUMA configurations where the zones
+> allowed for allocation are in sum not big enough to trigger the global
+> dirty limits, but a future approach to solve this can reuse the
+> per-zone dirty limit infrastructure laid out in this patch to have
+> dirty throttling and the flusher threads consider individual zones.
 > 
-> This is true.
+> ...
+>
+> --- a/include/linux/gfp.h
+> +++ b/include/linux/gfp.h
+> @@ -36,6 +36,7 @@ struct vm_area_struct;
+>  #endif
+>  #define ___GFP_NO_KSWAPD	0x400000u
+>  #define ___GFP_OTHER_NODE	0x800000u
+> +#define ___GFP_WRITE		0x1000000u
+>  
+>  /*
+>   * GFP bitmasks..
 > 
-> > As it is, I'm not sure we want to do this. The only reason we can
-> > fail to get a buffer is allocation failures in extremely low memory
-> > conditions. However, the last thing we want is for filesystem
-> > shutdowns to be triggered by transient low memory conditions.
+> ...
+>
+> +static unsigned long zone_dirtyable_memory(struct zone *zone)
+
+Appears to return the number of pages in a particular zone which are
+considered "dirtyable".  Some discussion of how this decision is made
+would be illuminating.
+
+> +{
+> +	unsigned long x;
+> +	/*
+> +	 * To keep a reasonable ratio between dirty memory and lowmem,
+> +	 * highmem is not considered dirtyable on a global level.
+
+Whereabouts in the kernel is this policy implemented? 
+determine_dirtyable_memory()?  It does (or can) consider highmem
+pages?  Comment seems wrong?
+
+Should we rename determine_dirtyable_memory() to
+global_dirtyable_memory(), to get some sense of its relationship with
+zone_dirtyable_memory()?
+
+> +	 * But we allow individual highmem zones to hold a potentially
+> +	 * bigger share of that global amount of dirty pages as long
+> +	 * as they have enough free or reclaimable pages around.
+> +	 */
+> +	x = zone_page_state(zone, NR_FREE_PAGES) - zone->totalreserve_pages;
+> +	x += zone_reclaimable_pages(zone);
+> +	return x;
+> +}
+> +
 > 
-> But a failure to get a buffer, not checked, can't be good
-> can it?  In other words, the patch now adds handling for
-> a xfs_buf_get() failure, which avoids a kernel-mode null
-> pointer dereference in the off chance that would happen.
-> That's worse than a filesystem shutdown.
+> ...
+>
+> -void global_dirty_limits(unsigned long *pbackground, unsigned long *pdirty)
+> +static void dirty_limits(struct zone *zone,
+> +			 unsigned long *pbackground,
+> +			 unsigned long *pdirty)
+>  {
+> +	unsigned long uninitialized_var(zone_memory);
+> +	unsigned long available_memory;
+> +	unsigned long global_memory;
+>  	unsigned long background;
+> -	unsigned long dirty;
+> -	unsigned long uninitialized_var(available_memory);
+>  	struct task_struct *tsk;
+> +	unsigned long dirty;
+>  
+> -	if (!vm_dirty_bytes || !dirty_background_bytes)
+> -		available_memory = determine_dirtyable_memory();
+> +	global_memory = determine_dirtyable_memory();
+> +	if (zone)
+> +		available_memory = zone_memory = zone_dirtyable_memory(zone);
+> +	else
+> +		available_memory = global_memory;
+>  
+> -	if (vm_dirty_bytes)
+> +	if (vm_dirty_bytes) {
+>  		dirty = DIV_ROUND_UP(vm_dirty_bytes, PAGE_SIZE);
+> -	else
+> +		if (zone)
 
-See my previous post about how the behaviour of the FS after an oops
-is very different to a shutdown.
+So passing zone==NULL alters dirty_limits()'s behaviour.  Seems that it
+flips the function between global_dirty_limits and zone_dirty_limits?
 
-> Now I grant you your earlier statement, namely that it's
-> conceivable that the new error return could lead to a
-> previously un-exercised path that leads to file system
-> corruption.
+Would it be better if we actually had separate global_dirty_limits()
+and zone_dirty_limits() rather than a magical mode?
+
+> +			dirty = dirty * zone_memory / global_memory;
+> +	} else
+>  		dirty = (vm_dirty_ratio * available_memory) / 100;
+>  
+> -	if (dirty_background_bytes)
+> +	if (dirty_background_bytes) {
+>  		background = DIV_ROUND_UP(dirty_background_bytes, PAGE_SIZE);
+> -	else
+> +		if (zone)
+> +			background = background * zone_memory / global_memory;
+> +	} else
+>  		background = (dirty_background_ratio * available_memory) / 100;
+>  
+>  	if (background >= dirty)
 > 
-> But I do believe that all these places handle *an* error
-> (not the specific ENOMEM error), so those spots already
-> are generally prepared for something to go wrong.
+> ...
+>
+> +bool zone_dirty_ok(struct zone *zone)
 
-Yes, but that's making the assumption that those error handling
-routines handle the new failure cases correctly. The inode
-allocation case is one I'm particularly concerned about...
+Full description of the return value, please.
 
-> I didn't anticipate this, and the patch has already been
-> committed.  I need to know whether people think this is
-> critical enough for me to revert the patch.
+> +{
+> +	unsigned long background_thresh, dirty_thresh;
+> +
+> +	dirty_limits(zone, &background_thresh, &dirty_thresh);
+> +
+> +	return zone_page_state(zone, NR_FILE_DIRTY) +
+> +		zone_page_state(zone, NR_UNSTABLE_NFS) +
+> +		zone_page_state(zone, NR_WRITEBACK) <= dirty_thresh;
+> +}
 
-In the long run, it doesn't matter. All I'm concerned about is that
-everyone is aware of the potential downsides of this change, and why
-not handling the error might be preferrable in the short term until
-we get transaction rollbacks sorted out....
+We never needed to calculate &background_thresh,.  I wonder if that
+matters.
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> 
+> ...
+>
 
 _______________________________________________
 xfs mailing list
