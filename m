@@ -1,18 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8L22J1p102312 for <xfs@oss.sgi.com>; Tue, 20 Sep 2011 21:02:19 -0500
-Subject: Re: xfsprogs: fix some printf() warnings that show up for ia64 builds
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110920230546.GK15688@dastard>
-References: <20110814201239.GA26453@infradead.org>
-	<20110829083852.GA31515@infradead.org> <20110830052226.GM3162@dastard>
-	<20110830085737.GA24793@infradead.org> <1316544193.2912.34.camel@doink>
-	<20110920230546.GK15688@dastard>
-Date: Tue, 20 Sep 2011 21:02:13 -0500
-Message-ID: <1316570533.3348.6.camel@doink>
+	p8L6PiRI121445 for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 01:25:45 -0500
+Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C487017A39B
+	for <xfs@oss.sgi.com>; Tue, 20 Sep 2011 23:25:42 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	4aCI0vCbkZ31oNnE for <xfs@oss.sgi.com>;
+	Tue, 20 Sep 2011 23:25:42 -0700 (PDT)
+Date: Wed, 21 Sep 2011 16:25:39 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 4/4] xfs: convert xfsbufd to use a workqueue
+Message-ID: <20110921062539.GN15688@dastard>
+References: <1314341497-23910-1-git-send-email-david@fromorbit.com>
+	<1314341497-23910-5-git-send-email-david@fromorbit.com>
+	<20110826082515.GD3551@infradead.org>
 MIME-Version: 1.0
-Reply-To: aelder@sgi.com
+Content-Disposition: inline
+In-Reply-To: <20110826082515.GD3551@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,106 +31,100 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Wed, 2011-09-21 at 09:05 +1000, Dave Chinner wrote:
-> On Tue, Sep 20, 2011 at 01:43:13PM -0500, Alex Elder wrote:
-> > This applies on top of Christoph Hellwig's recent "xfs_repair: add
-> > printf format checking and fix the fallout" patch.  It extends the
-> > fixes for warnings beyond just xfs_repair and across everything in
-> > xfsprogs.
-> > 
-> > It builds cleanly on ia64 and x86_64, and builds without any
-> > printf() format-related warnings on i386.
-> > 
-> > Signed-off-by: Alex Elder <aelder@sgi.com>
-> > 
-> > ---
-> >  io/parent.c              |   28 ++++++++++++++++------------
-> >  logprint/log_misc.c      |   34 ++++++++++++++++++++--------------
-> >  logprint/log_print_all.c |   16 ++++++++++------
-> >  repair/dinode.c          |   20 ++++++++++++--------
-> >  repair/scan.c            |   14 +++++++++-----
-> >  5 files changed, 67 insertions(+), 45 deletions(-)
-> > 
-> > Index: b/io/parent.c
-> > ===================================================================
-> > --- a/io/parent.c
-> > +++ b/io/parent.c
-> > @@ -52,12 +52,12 @@ check_parent_entry(xfs_bstat_t *bstatp,
-> >         if (sts != 0) {
-> >                 fprintf(stderr,
-> >                         _("inode-path for inode: %llu is incorrect - path \"%s\" non-existent\n"),
-> > -                       bstatp->bs_ino, fullpath);
-> > +                       (unsigned long long) bstatp->bs_ino, fullpath);
+On Fri, Aug 26, 2011 at 04:25:15AM -0400, Christoph Hellwig wrote:
+> > index 13188df..a3d1784 100644
+> > --- a/fs/xfs/xfs_trans_ail.c
+> > +++ b/fs/xfs/xfs_trans_ail.c
+> > @@ -494,7 +494,7 @@ xfs_ail_worker(
+> >  
+> >  	if (push_xfsbufd) {
+> >  		/* we've got delayed write buffers to flush */
+> > -		wake_up_process(mp->m_ddev_targp->bt_task);
+> > +		flush_delayed_work(&mp->m_ddev_targp->bt_delwrite_work);
 > 
-> Hmmm, didn't Christoph fix these inode number warnings by changing
-> the format specifier to PRIU64, not by adding casts? bs_ino is
-> defined as:
-> 
-> 	__u64		bs_ino;
-> 
-> So PRIu64 is the right thing to do, isn't it?
+> This is a huge change in behaviour.  wake_up_process just kicks the
+> thread to wakeup from sleep as soon as the schedule selects it, while
+> flush_delayed_work does not only queue a pending delayed work, but also
+> waits for it to finish.
 
-I haven't checked right now but I wrote a small thesis
-in an e-mail a few months ago about it.  But as I recall
-uint64_t was defined based on long on some architectures
-and based on long long in others.  And __u64 is based
-on long long everywhere in the kernel.  Something like
-that.  OK, I went and found it.
+Which is precisely what I want here - to wait for all the delwri
+buffers that were promoted to be submitted before continuing
+onwards.  This makes the scanning algorithm self throttling -
+instead of simply pushing the buffers to the delwri queue and
+kicking a background thread and hoping it can flush buffers faster
+than we can promote them from the AIL, it explicitly pushes the
+delwri buffers before the next round of AIL scanning. The ensures we
+start timely IO on the buffers and don't simple continue to scan the
+AIL while we wait for the background thread to send them off to
+disk and complete.
 
-http://oss.sgi.com/archives/xfs/2011-07/msg00399.html
+IOWs, instead of:
 
-The problem lies in the kernel, which defines
-__u64 as a an (unsigned long) in ia64, but as
-(unsigned long long) in x86_64.  This would be
-fine, except that the user space code uses
-(unsigned long) as u_int64_t for both architectures
-(and that, after all is what PRIu64 is for).
+	AIL			bufd
+	promote
+	....
+	promote
+	wakeup
+	short sleep
+				woken
+				sort
+				dispatch
+				....
 
-Hence for inodes (and anything else defined as
-a __u64) you have to use explicit casts because
-PRIu64 won't always work for you.
+<sometime later, maybe before, during or after xfsbufd has run>
 
-					-Alex
-> 
-> Either way would work, but being consistent would be good. ;)
-> 
-> ....
-> 
-> > ===================================================================
-> > --- a/logprint/log_misc.c
-> > +++ b/logprint/log_misc.c
-> > @@ -307,12 +307,14 @@ xlog_print_trans_buffer(xfs_caddr_t *ptr
-> >                          */
-> >                         memmove(&x, *ptr, sizeof(__be64));
-> >                         memmove(&y, *ptr+8, sizeof(__be64));
-> > -                       printf(_("icount: %lld  ifree: %lld  "),
-> > -                               be64_to_cpu(x), be64_to_cpu(y));
-> > +                       printf(_("icount: %llu  ifree: %llu  "),
-> > +                               (unsigned long long) be64_to_cpu(x),
-> > +                               (unsigned long long) be64_to_cpu(y));
-> 
-> Same for al the be64_to_cpu() functions - their return type is
-> __u64, too.
-> 
-> >                                         forkname);
-> > @@ -1374,7 +1376,7 @@ process_lclinode(
-> >                                                 XFS_DFORK_DSIZE(dip, mp)) {
-> >                 do_warn(
-> >         _("local inode %" PRIu64 " data fork is too large (size = %lld, max = %d)\n"),
-> > -                       lino, be64_to_cpu(dip->di_size),
-> > +                       lino, (unsigned long long) be64_to_cpu(dip->di_size),
-> 
-> That format specifier is wrong - it is %lld. Should be %llu, or
-> PRIu64 as previously mentioned without the cast.
-> 
-> Cheers,
-> 
-> Dave.
+	promote
+	.....
+	promote
+	wakeup
+	short sleep
+				woken
+				sort
+				dispatch
+				....
 
+Where we *hope* the short sleep in the AIL processing is long enough
+to avoid repeated scanning of the AIL while the queued IO is
+dispatched. we end up with:
 
+	AIL			bufd
+	promote
+	....
+	promote
+	flush_work
+				sort
+				dispatch
+	short sleep
+
+	promote
+	....
+	promote
+	flush_work
+				sort
+				dispatch
+	short sleep
+
+Which is much more controlled and means that the short sleep that
+that the AIL processing does actually gives time for IO completions
+to occur before continuing. It means that dispatch of IO from the
+AIL is throttled to the rate of device congestion as it now waits
+for the IO dispatch to complete instead of just sholving as much Io
+as possible into the bufd queue.
+
+FWIW, if we move to building a direct IO buffer list in the AIL as
+we were recently discussing, this is -exactly- the IO dispatch
+patterns and delays that we will get from the AIL....
+
+Cheers,
+
+Dave.
+
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
