@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8LIjCBb166664 for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 13:45:12 -0500
-Subject: Re: [PATCH 1/4] libxfs: handle read errors in libxfs_trans_read_buf
+	p8LIjN7B166700 for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 13:45:24 -0500
+Subject: Re: [PATCH 3/4] libxfs: handle short reads in libxfs_readbufr
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110920220030.204339904@bombadil.infradead.org>
+In-Reply-To: <20110920220030.576600914@bombadil.infradead.org>
 References: <20110920215917.508421839@bombadil.infradead.org>
-	<20110920220030.204339904@bombadil.infradead.org>
-Date: Wed, 21 Sep 2011 13:45:07 -0500
-Message-ID: <1316630707.5872.13.camel@doink>
+	<20110920220030.576600914@bombadil.infradead.org>
+Date: Wed, 21 Sep 2011 13:45:13 -0500
+Message-ID: <1316630713.5872.15.camel@doink>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -27,33 +27,18 @@ To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
 On Tue, 2011-09-20 at 17:59 -0400, Christoph Hellwig wrote:
-> Libxfs_readbuf may return a NULL buffer to indicate that an error happend
-> during the read, but we currently ignore that if libxfs_trans_read_buf
-> is called with a NULL transaction pointer.  Fix this by copying the
-> relevant code from the kernel version of the routine, and also tidy
-> the code up a bit by using a common exit label.
-> 
-> This fixes a regression that was introduced in xfsprogs 3.0.0 by commit
-> 
-> 	"Implement buffer and inode caching in libxfs, groundwork for a
-> 	 parallel version of xfs_repair."
+> Copy the code from libxfs_writebufr to handle short reads, and also
+> tidy up a formatting issue found in the libxfs_writebufr copy.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Probably wouldn't hurt to initialize b_fsprivate2 even
-if the transaction pointer is null.  Looks good though.
+That LIBXFS_B_EXIT == LIBXFS_EXIT_ON_FAILURE is a bad thing.
+It might be nice if libxfs_readbuf() and libxfs_writebuf()
+encoded that piece of information the same way (in b_flags).
+
+Anyway, what you have here looks good.
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
-
-. . .
-> @@ -510,6 +516,7 @@ libxfs_trans_read_buf(
->  
->  	/* initialise b_fsprivate2 so we can find it incore */
->  	XFS_BUF_SET_FSPRIVATE2(bp, tp);
-> +done:
->  	*bpp = bp;
->  	return 0;
->  }
 
 
 _______________________________________________
