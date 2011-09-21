@@ -1,11 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8LKI71F173696 for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 15:18:08 -0500
-Date: Wed, 21 Sep 2011 15:18:06 -0500
-From: Alex Elder <aelder@americas.sgi.com>
-Message-Id: <201109212018.p8LKI6cF010020@alcatraz.americas.sgi.com>
-Subject: [PATCH] xfstests: limit OP_PUNCH_HOLE operations to the file size
+	p8LK55S3172375 for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 15:05:05 -0500
+Subject: Re: [PATCH v2] xfsdump: call mlog_exit in content_stream_restore
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <1316633674-25677-1-git-send-email-wkendall@sgi.com>
+References: <1316633674-25677-1-git-send-email-wkendall@sgi.com>
+Date: Wed, 21 Sep 2011 15:04:17 -0500
+Message-ID: <1316635457.5872.22.camel@doink>
+MIME-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -14,50 +18,27 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Bill Kendall <wkendall@sgi.com>
+Cc: xfs@oss.sgi.com
 
-Before punching a hole in a file, TRIM_OFF_LEN() calls
-TRIM_OFF_LEN() in order to make sure the offset and size
-used are in a reasonable range.  But currently the range
-it's limited to is maxfilelen, which allows the offset
-(and therefore offset + len) to be beyond EOF.
+On Wed, 2011-09-21 at 14:34 -0500, Bill Kendall wrote:
+> This patch adds mlog_exit() calls to all the return paths in
+> content_stream_restore(). mlog_exit() is supposed to be called before
+> returning from content_stream_dump() and content_stream_restore(), but the
+> latter did not do so, allowing for the stream exit status to be unset.
+> 
+> Signed-off-by: Bill Kendall <wkendall@sgi.com>
 
-Later, do_punch_hole() ignores any request that starts beyond
-EOF, so we might as well limit requests to the file size.
+I did not give this as thorough a review as I did last time.
+You have already implemented several of the suggestions I
+made, and this now looks better than before to me.
 
-It appears that a hole punch request that starts within a
-file but whose length extends beyond it is treated simply
-as a hole punch up to EOF.  So there's no harm in limiting
-the end of a hole punch request to the file size either.
+Reviewed-by: Alex Elder <aelder@sgi.com>
 
-Therefore, use TRIM_OFF_LEN() to put both the the offset
-and length of a request within the file size for hole
-punch requests.
-
-Signed-off-by: Alex Elder <aelder@sgi.com>
-
----
- ltp/fsx.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-Index: b/ltp/fsx.c
-===================================================================
---- a/ltp/fsx.c
-+++ b/ltp/fsx.c
-@@ -1085,7 +1085,7 @@ test(void)
- 		break;
- 
- 	case OP_PUNCH_HOLE:
--		TRIM_OFF_LEN(offset, size, maxfilelen);
-+		TRIM_OFF_LEN(offset, size, file_size);
- 		do_punch_hole(offset, size);
- 		break;
- 	default:
 
 _______________________________________________
 xfs mailing list
