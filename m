@@ -1,19 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8LN7Na2183803 for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 18:07:23 -0500
-Received: from ipmail07.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CB12F1807BB
-	for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 16:07:21 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	JXX1X8dUtYgOOAai for <xfs@oss.sgi.com>;
-	Wed, 21 Sep 2011 16:07:21 -0700 (PDT)
-Date: Thu, 22 Sep 2011 09:07:18 +1000
+	p8M0rIWD189279 for <xfs@oss.sgi.com>; Wed, 21 Sep 2011 19:53:19 -0500
+Date: Thu, 22 Sep 2011 10:53:12 +1000
 From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [xfs-masters] xfs deadlock in stable kernel 3.0.4
-Message-ID: <20110921230718.GS15688@dastard>
-References: <4E78665E.8030409@profihost.ag>
+Message-ID: <20110922005312.GT15688@dastard>
+References: <20110918230245.GF15688@dastard> <4E78665E.8030409@profihost.ag>
 	<20110920160226.GA25542@infradead.org>
 	<4E78CBF4.1030505@profihost.ag>
 	<20110920172455.GA30757@infradead.org>
@@ -21,10 +14,9 @@ References: <4E78665E.8030409@profihost.ag>
 	<20110920223047.GA13758@infradead.org>
 	<20110921021133.GM15688@dastard> <4E7994D3.5020103@profihost.ag>
 	<20110921114237.GP15688@dastard>
-	<20110921122649.GA16602@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110921122649.GA16602@infradead.org>
+In-Reply-To: <20110921114237.GP15688@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,89 +29,85 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+To: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+Cc: Christoph Hellwig <hch@infradead.org>, "xfs-masters@oss.sgi.com" <xfs-masters@oss.sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Wed, Sep 21, 2011 at 08:26:49AM -0400, Christoph Hellwig wrote:
-> On Wed, Sep 21, 2011 at 09:42:37PM +1000, Dave Chinner wrote:
-> > So, the log force not triggering in the AIL code looks to be the
-> > problem. That, I simply cannot explain right now - it makes no sense
-> > but that is what all the stats and trace events point to. I need to
-> > do more investigation.
+On Wed, Sep 21, 2011 at 09:42:37PM +1000, Dave Chinner wrote:
+> On Wed, Sep 21, 2011 at 09:40:03AM +0200, Stefan Priebe - Profihost AG wrote:
+> > Am 21.09.2011 04:11, schrieb Dave Chinner:
+> > >Also, what phase do you see it hanging in? the random stat phase is
+> > >terribly slow on spinning disks, so if I can avoid that it woul dbe
+> > >nice....
+> > Creating or deleting files. never in the stat phase.
 > 
-> Could it be that we have a huge amount of instances of xfs_ail_worker
-> running at the same time?  xfs_sync_wq is marked as WQ_CPU_INTENSIVE,
-> so running/runnable workers are not counted towards the concurrency
-> limit.  From my look at the workqueue code this means we'll spawn new
-> instances fairly quickly if the others are stuck.  This means more
-> and more of them hammering the pinned items, and we'll rarely reach
-> the limit where we'd need to do a log force.
-
-No, that's not possible. The XFS_AIL_PUSHING_BIT ensures that there
-is only one instance of AIL pushing per struct xfs_ail running at
-once. It's also backed up by the fact that I couldn't find a single
-worker thread blocked running AIL pushing - it ran the 100 item
-scan, got stuck, requeued itself to run again 20ms later....
-
-FYI, what we want the concurrency for in the AIL wq is for multiple
-filesystems to be able to run AIL pushing at the same time, which
-is why it was set up this way. If one filesystem AIL push blocks,
-then an unblocked one will simply run.
-
-> What is also strange is that we allocate a xfs_ail_wq, but don't
-> actually use it, although it would have the same idea.  Stefan,
-> can you try the following patch?  This moves the ail work to it's
-> explicit queue, and makes sure we never have the same work item
-> (= same fs to be pushed) concurrently.
-
-Oh, that's a bug. My bad. That definitely needs fixing.
-
-> Note that before Linux 3.1-rc you'll need to edit fs/xfs/xfs_super.c
-> to be fs/xfs/linux-2.6/xfs_super.c in the patch manually.
+> Ok, I got a hang in the random delete phase. Not sure what is wrong
+> yet, but inode reclaim is trying to reclaim inodes but failing, and
+> the AIL is trying to push items but failing. Hence the tail of the
+> log is not being moved forward and new transactions are being
+> blocked until log space bcomes available.
 > 
+> The AIl is particularly interesting. the number of pushes being
+> executed is precisely 50/s, and precisely 5000 items/s are being
+> scanned. All those items are pinned, so the "stuck" processing is
+> what is triggering this pattern.
 > 
-> Index: linux-2.6/fs/xfs/xfs_super.c
-> ===================================================================
-> --- linux-2.6.orig/fs/xfs/xfs_super.c	2011-09-21 08:00:01.864768359 -0400
-> +++ linux-2.6/fs/xfs/xfs_super.c	2011-09-21 08:04:01.335266079 -0400
-> @@ -1654,7 +1654,7 @@ xfs_init_workqueues(void)
->  	if (!xfs_syncd_wq)
->  		goto out;
->  
-> -	xfs_ail_wq = alloc_workqueue("xfsail", WQ_CPU_INTENSIVE, 8);
-> +	xfs_ail_wq = alloc_workqueue("xfsail", WQ_NON_REENTRANT, 8);
->  	if (!xfs_ail_wq)
->  		goto out_destroy_syncd;
+> Thing is, all the items are aparently pinned - I see that stat
+> incrementing at 5,000/s. It's here:
+> 
+>                 case XFS_ITEM_PINNED:
+>                         XFS_STATS_INC(xs_push_ail_pinned);
+>                         stuck++;
+>                         flush_log = 1;
+>                         break;
+> 
+> so we should have the flush_log variable set. However, this code:
+> 
+>         if (flush_log) {
+>                 /*
+>                  * If something we need to push out was pinned, then
+>                  * push out the log so it will become unpinned and
+>                  * move forward in the AIL.
+>                  */
+>                 XFS_STATS_INC(xs_push_ail_flush);
+>                 xfs_log_force(mp, 0);
+>         }
+> 
+> never seems to execute. I don't see the xs_push_ail_flush stat
+> increase, nor the log force counter increase, either. Hence the
+> pinned items are not getting unpinned, and progress is not being
+> made. Background inode reclaim is not making progress, either,
+> because it skips pinned inodes.
+> 
+> The AIL code is clearly cycling - the push counter is increasing,
+> and the run numbers match the stuck code precisely (aborts at 100
+> stuck items a cycle). The question is now why isn't the log force
+> being triggered.
+> 
+> Given this, just triggering a log force is shoul dget everything
+> moving again. Running "echo 2 > /proc/sys/vm/drop_caches" gets inode
+> reclaim running in sync mode, which causes pinned inodes to trigger
+> a log force. And once I've done this, everything starts running
+> again.
+> 
+> So, the log force not triggering in the AIL code looks to be the
+> problem. That, I simply cannot explain right now - it makes no sense
+> but that is what all the stats and trace events point to. I need to
+> do more investigation.
 
-Drop this hunk....
+Ok, it makes sense now. The kernel I was running (from before I went
+on holidays) had this patch in it:
 
->  
-> Index: linux-2.6/fs/xfs/xfs_trans_ail.c
-> ===================================================================
-> --- linux-2.6.orig/fs/xfs/xfs_trans_ail.c	2011-09-21 08:02:28.172765827 -0400
-> +++ linux-2.6/fs/xfs/xfs_trans_ail.c	2011-09-21 08:02:46.843266108 -0400
-> @@ -538,7 +538,7 @@ out_done:
->  	}
->  
->  	/* There is more to do, requeue us.  */
-> -	queue_delayed_work(xfs_syncd_wq, &ailp->xa_work,
-> +	queue_delayed_work(xfs_ail_wq, &ailp->xa_work,
->  					msecs_to_jiffies(tout));
->  }
->  
-> @@ -575,7 +575,7 @@ xfs_ail_push(
->  	smp_wmb();
->  	xfs_trans_ail_copy_lsn(ailp, &ailp->xa_target, &threshold_lsn);
->  	if (!test_and_set_bit(XFS_AIL_PUSHING_BIT, &ailp->xa_flags))
-> -		queue_delayed_work(xfs_syncd_wq, &ailp->xa_work, 0);
-> +		queue_delayed_work(xfs_ail_wq, &ailp->xa_work, 0);
->  }
+http://oss.sgi.com/archives/xfs/2011-08/msg00472.html
 
-just keep these. Can you repost with a sign-off?
+I found this out by disassembling the kernel code. That code has a
+bug it in when the stuck case is hit - it fails to issue the log
+force in that case, and that's why I've been seeing this kernel get
+stuck. False alarm - will now try to reproduce without any dev
+patches in the kernel.
 
 Cheers,
 
-Dave
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
