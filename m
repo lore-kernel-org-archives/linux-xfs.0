@@ -1,13 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8MKIRg0256666 for <xfs@oss.sgi.com>; Thu, 22 Sep 2011 15:18:27 -0500
-Subject: Re: [PATCH] xfstests: add new getdents test
+	p8MLEnLF259923 for <xfs@oss.sgi.com>; Thu, 22 Sep 2011 16:14:49 -0500
+Subject: Re: [PATCH] xfstests: Assume yes when test device is not partitioned
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1315786747-12109-1-git-send-email-notasas@gmail.com>
-References: <1315786747-12109-1-git-send-email-notasas@gmail.com>
-Date: Thu, 22 Sep 2011 15:18:22 -0500
-Message-ID: <1316722702.2009.59.camel@doink>
+In-Reply-To: <1315038799-2150-1-git-send-email-prasadjoshi.linux@gmail.com>
+References: <1315038799-2150-1-git-send-email-prasadjoshi.linux@gmail.com>
+Date: Thu, 22 Sep 2011 16:14:44 -0500
+Message-ID: <1316726084.2009.85.camel@doink>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -22,73 +22,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Grazvydas Ignotas <notasas@gmail.com>
-Cc: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: Prasad Joshi <prasadjoshi.linux@gmail.com>
+Cc: linux-ext4@vger.kernel.org, Chaitanya Kulkarni <chaitanyakulkarni15@gmail.com>, xfs@oss.sgi.com
 
-On Mon, 2011-09-12 at 03:19 +0300, Grazvydas Ignotas wrote:
-> The test checks if no duplicate d_off values are returned and that
-> those values are seekable to the right inodes.
+On Sat, 2011-09-03 at 14:03 +0530, Prasad Joshi wrote:
+> If an entire device used for file system creation, the mkfs.ext2/3/4
+> asks for confirmation before proceeding. Since the device is
+> configured for testing it is safe to assume positive response
+> during mkfs.
 > 
-> Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
+> The patch also replaces hard coded mkfs path with MKFS_PROG variable.
+> 
+> Signed-off-by: Chaitanya Kulkarni <chaitanyakulkarni15@gmail.com>
+> Signed-off-by: Prasad Joshi <prasadjoshi.linux@gmail.com>
 
-I have two minor comments on the C program below,
-but even if you don't want to address them this
-looks good.
+Thanks for submitting a patch, Prasad (and Chaitanya).
 
-Reviewed-by: Alex Elder <aelder@sgi.com>
+Can you please re-submit this?  Based on feedback what
+we're looking for would be:
+[PATCH 0/2] description e-mail
+[PATCH 1/2] patch that substitutes /sbin/mkfs with ${MKFS_PROG}
+[PATCH 2/2] patch that adds a '-f' flag to ${MKFS_PROG}.${FSTYP}
+            for all ext* filesystem types.
 
-. . .
+Thanks.
 
-> +#include <sys/syscall.h>
-> +
-> +struct linux_dirent64 {
-> +	uint64_t	d_ino;
-> +	uint64_t	d_off;
-> +	unsigned short	d_reclen;
-> +	unsigned char	d_type;
-> +	char		d_name[0];
-> +};
-> +
-> +#define BUF_SIZE 4096
-> +#define HISTORY_LEN 1024
-> +
-> +static uint64_t d_off_histoty[HISTORY_LEN];
-> +static uint64_t d_ino_histoty[HISTORY_LEN];
-
-Is "histoty" intentional or a typo?
-
-> +int
-> +main(int argc, char *argv[])
-> +{
-> +	int fd, nread;
-> +	char buf[BUF_SIZE];
-
-. . .
-
-> +
-> +	/* check if seek works correctly */
-> +	d = (struct linux_dirent64 *)buf;
-> +	for (i = total - 1; i >= 0; i--)
-> +	{
-> +		lret = lseek(fd, i > 0 ? d_off_histoty[i - 1] : 0, SEEK_SET);
-> +		if (lret == -1) {
-> +			perror("lseek");
-> +			exit(EXIT_FAILURE);
-> +		}
-> +
-> +		nread = syscall(SYS_getdents64, fd, buf, BUF_SIZE);
-
-You could just use sizeof (struct linux_dirent_64) rather than
-BUF_SIZE here.  I suppose it doesn't hurt but there's no real
-sense in reading more than the one you're going to look at.
-
-> +		if (nread == -1) {
-> +			perror("getdents");
-> +			exit(EXIT_FAILURE);
-> +		}
-> +
-
-. . .
+					-Alex
 
 
 _______________________________________________
