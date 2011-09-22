@@ -1,13 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8MJg4Dr254638 for <xfs@oss.sgi.com>; Thu, 22 Sep 2011 14:42:04 -0500
-Subject: Re: [PATCH] xfstests: test timestamps before the epoch
+	p8MKIRg0256666 for <xfs@oss.sgi.com>; Thu, 22 Sep 2011 15:18:27 -0500
+Subject: Re: [PATCH] xfstests: add new getdents test
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <4E778C51.7040100@redhat.com>
-References: <4E778C51.7040100@redhat.com>
-Date: Thu, 22 Sep 2011 14:41:59 -0500
-Message-ID: <1316720519.2009.53.camel@doink>
+In-Reply-To: <1315786747-12109-1-git-send-email-notasas@gmail.com>
+References: <1315786747-12109-1-git-send-email-notasas@gmail.com>
+Date: Thu, 22 Sep 2011 15:18:22 -0500
+Message-ID: <1316722702.2009.59.camel@doink>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -22,23 +22,73 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs-oss <xfs@oss.sgi.com>
+To: Grazvydas Ignotas <notasas@gmail.com>
+Cc: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Mon, 2011-09-19 at 13:39 -0500, Eric Sandeen wrote:
-> ext2/3/4 was sign-extending times before the timestamp when read
-> from disk on 64-bit systems.  This was fixed by:
+On Mon, 2011-09-12 at 03:19 +0300, Grazvydas Ignotas wrote:
+> The test checks if no duplicate d_off values are returned and that
+> those values are seekable to the right inodes.
 > 
-> 4d7bf11d649c72621ca31b8ea12b9c94af380e63
-> ext2/3/4: fix file date underflow on ext2 3 filesystems on 64 bit systems
-> 
-> Here's a generic regression test.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
 
-Looks good.
+I have two minor comments on the C program below,
+but even if you don't want to address them this
+looks good.
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
+
+. . .
+
+> +#include <sys/syscall.h>
+> +
+> +struct linux_dirent64 {
+> +	uint64_t	d_ino;
+> +	uint64_t	d_off;
+> +	unsigned short	d_reclen;
+> +	unsigned char	d_type;
+> +	char		d_name[0];
+> +};
+> +
+> +#define BUF_SIZE 4096
+> +#define HISTORY_LEN 1024
+> +
+> +static uint64_t d_off_histoty[HISTORY_LEN];
+> +static uint64_t d_ino_histoty[HISTORY_LEN];
+
+Is "histoty" intentional or a typo?
+
+> +int
+> +main(int argc, char *argv[])
+> +{
+> +	int fd, nread;
+> +	char buf[BUF_SIZE];
+
+. . .
+
+> +
+> +	/* check if seek works correctly */
+> +	d = (struct linux_dirent64 *)buf;
+> +	for (i = total - 1; i >= 0; i--)
+> +	{
+> +		lret = lseek(fd, i > 0 ? d_off_histoty[i - 1] : 0, SEEK_SET);
+> +		if (lret == -1) {
+> +			perror("lseek");
+> +			exit(EXIT_FAILURE);
+> +		}
+> +
+> +		nread = syscall(SYS_getdents64, fd, buf, BUF_SIZE);
+
+You could just use sizeof (struct linux_dirent_64) rather than
+BUF_SIZE here.  I suppose it doesn't hurt but there's no real
+sense in reading more than the one you're going to look at.
+
+> +		if (nread == -1) {
+> +			perror("getdents");
+> +			exit(EXIT_FAILURE);
+> +		}
+> +
+
+. . .
 
 
 _______________________________________________
