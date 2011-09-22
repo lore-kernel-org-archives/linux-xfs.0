@@ -1,24 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8M8rF08217684 for <xfs@oss.sgi.com>; Thu, 22 Sep 2011 03:53:15 -0500
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DE88C1C34CBC
-	for <xfs@oss.sgi.com>; Thu, 22 Sep 2011 01:53:14 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 8Kv4y7SaBdrmu1x7 for
-	<xfs@oss.sgi.com>; Thu, 22 Sep 2011 01:53:14 -0700 (PDT)
-Date: Thu, 22 Sep 2011 10:52:42 +0200
-From: Johannes Weiner <jweiner@redhat.com>
-Subject: Re: [patch 2/4] mm: writeback: distribute write pages across
-	allowable zones
-Message-ID: <20110922085242.GA29046@redhat.com>
-References: <1316526315-16801-1-git-send-email-jweiner@redhat.com>
-	<1316526315-16801-3-git-send-email-jweiner@redhat.com>
-	<20110921160226.1bf74494.akpm@google.com>
+	p8M9bau9220107 for <xfs@oss.sgi.com>; Thu, 22 Sep 2011 04:37:36 -0500
+Date: Thu, 22 Sep 2011 11:37:32 +0200 (CEST)
+From: Lukas Czerner <lczerner@redhat.com>
+Subject: Re: [PATCH 1/2 v2][xfstests] Add test 257: Check proper FITRIM
+	argument handling
+In-Reply-To: <1315410523-23925-1-git-send-email-lczerner@redhat.com>
+Message-ID: <alpine.LFD.2.00.1109221136590.4968@dhcp-27-109.brq.redhat.com>
+References: <1315410523-23925-1-git-send-email-lczerner@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20110921160226.1bf74494.akpm@google.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,195 +22,262 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Andrew Morton <akpm@google.com>
-Cc: Rik van Riel <riel@redhat.com>, linux-ext4@vger.kernel.org, Jan Kara <jack@suse.cz>, linux-btrfs@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, Mel Gorman <mgorman@suse.de>, linux-fsdevel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andrew Morton <akpm@linux-foundation.org>, Wu Fengguang <fengguang.wu@intel.com>, Chris Mason <chris.mason@oracle.com>, Minchan Kim <minchan.kim@gmail.com>
+To: Lukas Czerner <lczerner@redhat.com>
+Cc: aelder@sgi.com, xfs@oss.sgi.com
 
-On Wed, Sep 21, 2011 at 04:02:26PM -0700, Andrew Morton wrote:
-> On Tue, 20 Sep 2011 15:45:13 +0200
-> Johannes Weiner <jweiner@redhat.com> wrote:
+On Wed, 7 Sep 2011, Lukas Czerner wrote:
+
+> This test suppose to validate that file systems are using the fitrim
+> arguments right. It checks that the fstrim returns EINVAl in case that
+> the start of the range is beyond the end of the file system, and also
+> that the fstrim works without an error if the length of the range is
+> bigger than the file system (it should be truncated to the file system
+> length automatically within the fitrim implementation).
 > 
-> > This patch allows allocators to pass __GFP_WRITE when they know in
-> > advance that the allocated page will be written to and become dirty
-> > soon.  The page allocator will then attempt to distribute those
-> > allocations across zones, such that no single zone will end up full of
-> > dirty, and thus more or less, unreclaimable pages.
-> 
-> Across all zones, or across the zones within the node or what?  Some
-> more description of how all this plays with NUMA is needed, please.
+> This test should also catch common problem with overflow of start+len.
+> Some file systems (ext4,xfs) had overflow problems in the past so there
+> is a specific test for it (for ext4 and xfs) as well as generic test for
+> other file systems, but it would be nice if other fs can add their
+> specific checks if this problem does apply to them as well.
 
-Across the zones the allocator considers for allocation, which on NUMA
-is determined by the allocating task's NUMA memory policy.
+Any comments on this test ?
 
-> > The global dirty limits are put in proportion to the respective zone's
-> > amount of dirtyable memory
-> 
-> I don't know what this means.  How can a global limit be controlled by
-> what is happening within each single zone?  Please describe this design
-> concept fully.
-
-Yikes, it's mein English.
-
-A zone's dirty limit is to the zone's contribution of dirtyable memory
-what the global dirty limit is to the global amount of dirtyable
-memory.
-
-As a result, the sum of the dirty limits of all existing zones equals
-the global dirty limit, such that no single zone receives more than
-its fair share of the globally allowable dirty pages.
-
-When the allocator tries to allocate from the list of allowable zones,
-it skips those that have reached their maximum share of dirty pages.
-
-> > For now, the problem remains for NUMA configurations where the zones
-> > allowed for allocation are in sum not big enough to trigger the global
-> > dirty limits, but a future approach to solve this can reuse the
-> > per-zone dirty limit infrastructure laid out in this patch to have
-> > dirty throttling and the flusher threads consider individual zones.
-
-> > +static unsigned long zone_dirtyable_memory(struct zone *zone)
-> 
-> Appears to return the number of pages in a particular zone which are
-> considered "dirtyable".  Some discussion of how this decision is made
-> would be illuminating.
-
-Is the proportional relationship between zones and the global level a
-satisfactory explanation?
-
-Because I am looking for a central place to explain all this.
-
-> > +{
-> > +	unsigned long x;
-> > +	/*
-> > +	 * To keep a reasonable ratio between dirty memory and lowmem,
-> > +	 * highmem is not considered dirtyable on a global level.
-> 
-> Whereabouts in the kernel is this policy implemented? 
-> determine_dirtyable_memory()?  It does (or can) consider highmem
-> pages?  Comment seems wrong?
-
-Yes, in determine_dirtyable_memory().
-
-It is possible to configure an unreasonable ratio between dirty memory
-and lowmem with the vm_highmem_is_dirtyable sysctl.  The point is that
-even though highmem is subtracted from the effective amount of global
-dirtyable memory again (which is strictly a big-picture measure), we
-only care about the individual zone here and so highmem can very much
-always hold dirty pages up to its dirty limit.
-
-> Should we rename determine_dirtyable_memory() to
-> global_dirtyable_memory(), to get some sense of its relationship with
-> zone_dirtyable_memory()?
-
-Sounds good.
-
-> > +	 * But we allow individual highmem zones to hold a potentially
-> > +	 * bigger share of that global amount of dirty pages as long
-> > +	 * as they have enough free or reclaimable pages around.
-> > +	 */
-> > +	x = zone_page_state(zone, NR_FREE_PAGES) - zone->totalreserve_pages;
-> > +	x += zone_reclaimable_pages(zone);
-> > +	return x;
-> > +}
-> > +
-> > 
-> > ...
-> >
-> > -void global_dirty_limits(unsigned long *pbackground, unsigned long *pdirty)
-> > +static void dirty_limits(struct zone *zone,
-> > +			 unsigned long *pbackground,
-> > +			 unsigned long *pdirty)
-> >  {
-> > +	unsigned long uninitialized_var(zone_memory);
-> > +	unsigned long available_memory;
-> > +	unsigned long global_memory;
-> >  	unsigned long background;
-> > -	unsigned long dirty;
-> > -	unsigned long uninitialized_var(available_memory);
-> >  	struct task_struct *tsk;
-> > +	unsigned long dirty;
-> >  
-> > -	if (!vm_dirty_bytes || !dirty_background_bytes)
-> > -		available_memory = determine_dirtyable_memory();
-> > +	global_memory = determine_dirtyable_memory();
-> > +	if (zone)
-> > +		available_memory = zone_memory = zone_dirtyable_memory(zone);
-> > +	else
-> > +		available_memory = global_memory;
-> >  
-> > -	if (vm_dirty_bytes)
-> > +	if (vm_dirty_bytes) {
-> >  		dirty = DIV_ROUND_UP(vm_dirty_bytes, PAGE_SIZE);
-> > -	else
-> > +		if (zone)
-> 
-> So passing zone==NULL alters dirty_limits()'s behaviour.  Seems that it
-> flips the function between global_dirty_limits and zone_dirty_limits?
-
-Yes.
-
-> Would it be better if we actually had separate global_dirty_limits()
-> and zone_dirty_limits() rather than a magical mode?
-
-I did that the first time around, but Mel raised the valid point that
-this will be bad for maintainability.
-
-The global dirty limit and the per-zone dirty limit are not only
-incidentally calculated the same way, they are intentionally similar
-in the geometrical sense (modulo workarounds for not having fp
-arithmetic), so it would be good to keep this stuff together.
-
-But the same applies to determine_dirtyable_memory() and
-zone_dirtyable_memory(), so they should be done the same way and I
-don't care too much which that would be.
-
-If noone complains, I would structure the code such that
-global_dirtyable_memory() and zone_dirtyable_memory(), as well as
-global_dirty_limits() and zone_dirty_limits() are separate functions
-next to each other with a big fat comment above that block explaining
-the per-zone dirty limits and the proportional relationship to the
-global parameters.
-
-> > +			dirty = dirty * zone_memory / global_memory;
-> > +	} else
-> >  		dirty = (vm_dirty_ratio * available_memory) / 100;
-> >  
-> > -	if (dirty_background_bytes)
-> > +	if (dirty_background_bytes) {
-> >  		background = DIV_ROUND_UP(dirty_background_bytes, PAGE_SIZE);
-> > -	else
-> > +		if (zone)
-> > +			background = background * zone_memory / global_memory;
-> > +	} else
-> >  		background = (dirty_background_ratio * available_memory) / 100;
-> >  
-> >  	if (background >= dirty)
-> > 
-> > ...
-> >
-> > +bool zone_dirty_ok(struct zone *zone)
-> 
-> Full description of the return value, please.
-
-Returns false when the zone has reached its maximum share of the
-global allowed dirty pages, true otherwise.
+Thanks!
+-Lukas
 
 > 
-> > +{
-> > +	unsigned long background_thresh, dirty_thresh;
-> > +
-> > +	dirty_limits(zone, &background_thresh, &dirty_thresh);
-> > +
-> > +	return zone_page_state(zone, NR_FILE_DIRTY) +
-> > +		zone_page_state(zone, NR_UNSTABLE_NFS) +
-> > +		zone_page_state(zone, NR_WRITEBACK) <= dirty_thresh;
-> > +}
+> Signed-off-by: Lukas Czerner <lczerner@redhat.com>
+> ---
+> v2: add check for fsblock to agno overflow
 > 
-> We never needed to calculate &background_thresh,.  I wonder if that
-> matters.
+>  257     |  183 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  257.out |   14 +++++
+>  group   |    1 +
+>  3 files changed, 198 insertions(+), 0 deletions(-)
+>  create mode 100755 257
+>  create mode 100644 257.out
+> 
+> diff --git a/257 b/257
+> new file mode 100755
+> index 0000000..53efa92
+> --- /dev/null
+> +++ b/257
+> @@ -0,0 +1,183 @@
+> +#!/bin/bash
+> +# FS QA Test No. 251
+> +#
+> +# This test was created in order to verify filesystem FITRIM implementation.
+> +# By many concurrent copy and remove operations and checking that files
+> +# does not change after copied into SCRATCH_MNT test if FITRIM implementation
+> +# corrupts the filesystem (data/metadata).
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright 2010 (C) Red Hat, Inc., Lukas Czerner <lczerner@redhat.com>
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#-----------------------------------------------------------------------
+> +
+> +owner=lczerner@redhat.com
+> +
+> +seq=`basename $0`
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=`mktemp -d`
+> +status=0
+> +trap "exit \$status" 0 1 3
+> +trap "exit \$status" 2 15
+> +chpid=0
+> +mypid=$$
+> +
+> +_check_conversion_overflow()
+> +{
+> +	backup_mkfs_options=MKFS_OPTIONS
+> +
+> +	# (2^32-1) + 2 (this is set to overflow 32bit variable by 2)
+> +	base=$((4294967295+2))
+> +
+> +	case $FSTYP in
+> +		ext[34])
+> +			agsize=32768
+> +			bsize=4096
+> +			start=$(($base*$agsize*$bsize))
+> +			len=$(($base*$agsize*$bsize))
+> +			export MKFS_OPTIONS="-F -b $bsize -g $agsize"
+> +			;;
+> +		xfs)
+> +			agsize=65536
+> +			bsize=4096
+> +			start=$(($base*$agsize*$bsize))
+> +			len=$(($base*$agsize*$bsize))
+> +			export MKFS_OPTIONS="-f -d agsize=$(($agsize*$bsize)) -b size=$bsize"
+> +			;;
+> +		*)
+> +			# (2^32-1) * 4096 * 65536 == 32bit max size * block size * ag size
+> +			start="1152921504875282432"
+> +			len="1152921504875282432"
+> +			;;
+> +	esac
+> +
+> +	_scratch_unmount
+> +	_scratch_mkfs >/dev/null 2>&1
+> +	_scratch_mount
+> +	$here/src/fstrim -s$start -l$(($fsize/2)) $SCRATCH_MNT &> /dev/null
+> +	[ $? -eq 0 ] && status=1 && echo "It seems that fs logic handling start"\
+> +				         "argument overflows"
+> +
+> +	_scratch_unmount
+> +	_scratch_mkfs >/dev/null 2>&1
+> +	_scratch_mount
+> +
+> +	# len should be big enough to cover the whole file system, however this
+> +	# test suppose for the overflow, so if the number of discarded bytes is
+> +	# smaller than fsize/2 than it most likely does overflow.
+> +	out=$($here/src/fstrim -v -l$len $SCRATCH_MNT)
+> +	bytes=${out%% *}
+> +
+> +	# Btrfs is special and this test does not apply to it
+> +	if [ $bytes -le $(($fsize*512)) ] && [ $FSTYP != "btrfs" ]; then
+> +		status=1
+> +		echo "It seems that fs logic handling len argument overflows"
+> +	fi
+> +	export MKFS_OPTIONS=$backup_mkfs_options
+> +}
+> +
+> +
+> +# get standard environment, filters and checks
+> +. ./common.rc
+> +. ./common.filter
+> +
+> +# real QA test starts here
+> +_supported_fs generic
+> +_supported_os Linux
+> +_require_scratch
+> +_scratch_mkfs >/dev/null 2>&1
+> +_scratch_mount
+> +
+> +
+> +$here/src/fstrim -l 10M $SCRATCH_MNT &> /dev/null || _notrun "FSTRIM is not supported"
+> +
+> +fsize=$(df -k | grep "$SCRATCH_MNT" | grep "$SCRATCH_DEV"  | awk '{print $2}')
+> +
+> +# All these tests should return EINVAL
+> +# since the start is beyond the end of
+> +# the file system
+> +
+> +echo "[+] Start beyond the end of fs (should fail)"
+> +$here/src/fstrim -s$(($fsize*2048)) $SCRATCH_MNT
+> +[ $? -eq 0 ] && status=1
+> +
+> +echo "[+] Start beyond the end of fs with len set (should fail)"
+> +$here/src/fstrim -s$(($fsize*2048)) -l1M $SCRATCH_MNT
+> +[ $? -eq 0 ] && status=1
+> +
+> +echo "[+] Start = 2^64-1 (should fail)"
+> +$here/src/fstrim -s18446744073709551615 $SCRATCH_MNT
+> +[ $? -eq 0 ] && status=1
+> +
+> +echo "[+] Start = 2^64-1 and len is set (should fail)"
+> +$here/src/fstrim -s18446744073709551615 -l1M $SCRATCH_MNT
+> +[ $? -eq 0 ] && status=1
+> +
+> +_scratch_unmount
+> +_scratch_mkfs >/dev/null 2>&1
+> +_scratch_mount
+> +
+> +# All these tests should succeed
+> +# since the length should be truncated
+> +
+> +echo "[+] Default length (should succeed)"
+> +$here/src/fstrim $SCRATCH_MNT
+> +[ $? -ne 0 ] && status=1
+> +echo "[+] Default length with start set (should succeed)"
+> +$here/src/fstrim -s10M $SCRATCH_MNT
+> +[ $? -ne 0 ] && status=1
+> +echo "[+] Length beyond the end of fs (should succeed)"
+> +$here/src/fstrim -l$((fsize*2048)) $SCRATCH_MNT
+> +[ $? -ne 0 ] && status=1
+> +echo "[+] Length beyond the end of fs wich start set (should succeed)"
+> +$here/src/fstrim -s10M -l$((fsize*2048)) $SCRATCH_MNT
+> +[ $? -ne 0 ] && status=1
+> +
+> +_scratch_unmount
+> +_scratch_mkfs >/dev/null 2>&1
+> +_scratch_mount
+> +
+> +# This is a bit fuzzy, but since the file system is fresh
+> +# there should be at least (fsize/2) free space to trim.
+> +# This is supposed to catch wrong range.len handling and overflows.
+> +out=$($here/src/fstrim -v -s10M $SCRATCH_MNT)
+> +bytes=${out%% *}
+> +
+> +if [ $bytes -gt $(($fsize*1024)) ]; then
+> +	status=1
+> +	echo "After the full fs discard $bytes bytes were discarded"\
+> +	     "however the file system is $(($fsize*1024)) bytes long."\
+> +	     "This is suspicious."
+> +fi
+> +
+> +# Btrfs is special and this test does not apply to it
+> +if [ $bytes -le $(($fsize*512)) ] && [ $FSTYP != "btrfs" ]; then
+> +	status=1
+> +	echo "After the full fs discard $bytes bytes were discarded"\
+> +	     "however the file system is $(($fsize*1024)) bytes long."\
+> +	     "This is suspicious."
+> +fi
+> +
+> +# Now to catch overflows due to fsblk->allocation group number conversion
+> +# This is different for every file system and it also apply just to some of
+> +# them. In order to add check specific for file system you're interested in
+> +# compute the arguments as you need and make the file system with proper
+> +# alignment in function _check_conversion_overflow()
+> +_check_conversion_overflow
+> +
+> +echo "Test done"
+> +exit
+> diff --git a/257.out b/257.out
+> new file mode 100644
+> index 0000000..86a5246
+> --- /dev/null
+> +++ b/257.out
+> @@ -0,0 +1,14 @@
+> +QA output created by 257
+> +[+] Start beyond the end of fs (should fail)
+> +fstrim: FSTRIM: Invalid argument
+> +[+] Start beyond the end of fs with len set (should fail)
+> +fstrim: FSTRIM: Invalid argument
+> +[+] Start = 2^64-1 (should fail)
+> +fstrim: FSTRIM: Invalid argument
+> +[+] Start = 2^64-1 and len is set (should fail)
+> +fstrim: FSTRIM: Invalid argument
+> +[+] Default length (should succeed)
+> +[+] Default length with start set (should succeed)
+> +[+] Length beyond the end of fs (should succeed)
+> +[+] Length beyond the end of fs wich start set (should succeed)
+> +Test done
+> diff --git a/group b/group
+> index 0c746c8..b742f91 100644
+> --- a/group
+> +++ b/group
+> @@ -370,3 +370,4 @@ deprecated
+>  254 auto quick
+>  255 auto quick prealloc
+>  256 auto quick
+> +257 auto quick trim
+> 
 
-I didn't think dirty_limits() could take another branch, but if I
-split up the function I will drop it.  It's not rocket science and can
-be easily added on demand.
+-- 
 
 _______________________________________________
 xfs mailing list
