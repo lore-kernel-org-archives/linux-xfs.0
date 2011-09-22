@@ -1,13 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8MLEnLF259923 for <xfs@oss.sgi.com>; Thu, 22 Sep 2011 16:14:49 -0500
-Subject: Re: [PATCH] xfstests: Assume yes when test device is not partitioned
+	p8MKxGnm259222 for <xfs@oss.sgi.com>; Thu, 22 Sep 2011 15:59:16 -0500
+Subject: Re: [PATCH 2/2 v2][xfstests] fstrim: Use strtoull instead of strtoul
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1315038799-2150-1-git-send-email-prasadjoshi.linux@gmail.com>
-References: <1315038799-2150-1-git-send-email-prasadjoshi.linux@gmail.com>
-Date: Thu, 22 Sep 2011 16:14:44 -0500
-Message-ID: <1316726084.2009.85.camel@doink>
+In-Reply-To: <1315410523-23925-2-git-send-email-lczerner@redhat.com>
+References: <1315410523-23925-1-git-send-email-lczerner@redhat.com>
+	<1315410523-23925-2-git-send-email-lczerner@redhat.com>
+Date: Thu, 22 Sep 2011 15:59:14 -0500
+Message-ID: <1316725154.2009.80.camel@doink>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -22,32 +23,22 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Prasad Joshi <prasadjoshi.linux@gmail.com>
-Cc: linux-ext4@vger.kernel.org, Chaitanya Kulkarni <chaitanyakulkarni15@gmail.com>, xfs@oss.sgi.com
+To: Lukas Czerner <lczerner@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On Sat, 2011-09-03 at 14:03 +0530, Prasad Joshi wrote:
-> If an entire device used for file system creation, the mkfs.ext2/3/4
-> asks for confirmation before proceeding. Since the device is
-> configured for testing it is safe to assume positive response
-> during mkfs.
+On Wed, 2011-09-07 at 17:48 +0200, Lukas Czerner wrote:
+> When we are parsing input arguments we should really use stroull to get
+> unsigned long long numbers, since this is what we can specify on the
+> command line. With this fix it should parse long numbers on the 32 bit
+> architecture correctly.
 > 
-> The patch also replaces hard coded mkfs path with MKFS_PROG variable.
-> 
-> Signed-off-by: Chaitanya Kulkarni <chaitanyakulkarni15@gmail.com>
-> Signed-off-by: Prasad Joshi <prasadjoshi.linux@gmail.com>
+> Signed-off-by: Lukas Czerner <lczerner@redhat.com>
 
-Thanks for submitting a patch, Prasad (and Chaitanya).
+This looks good, and it can be applied independent of the
+first patch in this series.  (And at this point I plan to
+commit this first rather than wait.)
 
-Can you please re-submit this?  Based on feedback what
-we're looking for would be:
-[PATCH 0/2] description e-mail
-[PATCH 1/2] patch that substitutes /sbin/mkfs with ${MKFS_PROG}
-[PATCH 2/2] patch that adds a '-f' flag to ${MKFS_PROG}.${FSTYP}
-            for all ext* filesystem types.
-
-Thanks.
-
-					-Alex
+Reviewed-by: Alex Elder <aelder@sgi.com>
 
 
 _______________________________________________
