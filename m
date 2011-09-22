@@ -1,15 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8M9bau9220107 for <xfs@oss.sgi.com>; Thu, 22 Sep 2011 04:37:36 -0500
-Date: Thu, 22 Sep 2011 11:37:32 +0200 (CEST)
-From: Lukas Czerner <lczerner@redhat.com>
-Subject: Re: [PATCH 1/2 v2][xfstests] Add test 257: Check proper FITRIM
-	argument handling
-In-Reply-To: <1315410523-23925-1-git-send-email-lczerner@redhat.com>
-Message-ID: <alpine.LFD.2.00.1109221136590.4968@dhcp-27-109.brq.redhat.com>
-References: <1315410523-23925-1-git-send-email-lczerner@redhat.com>
+	p8MAsBCQ225154 for <xfs@oss.sgi.com>; Thu, 22 Sep 2011 05:54:11 -0500
+Received: from mx2.suse.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7076E1C3570D
+	for <xfs@oss.sgi.com>; Thu, 22 Sep 2011 03:54:09 -0700 (PDT)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id SeqRm5H3f1edTtSt for <xfs@oss.sgi.com>;
+	Thu, 22 Sep 2011 03:54:09 -0700 (PDT)
+Date: Thu, 22 Sep 2011 11:54:00 +0100
+From: Mel Gorman <mgorman@suse.de>
+Subject: Re: [patch 1/4] mm: exclude reserved pages from dirtyable memory
+Message-ID: <20110922105400.GL4849@suse.de>
+References: <1316526315-16801-1-git-send-email-jweiner@redhat.com>
+	<1316526315-16801-2-git-send-email-jweiner@redhat.com>
+	<20110921140423.GG4849@suse.de> <20110921150328.GJ4849@suse.de>
+	<20110922090326.GB29046@redhat.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20110922090326.GB29046@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,262 +31,113 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Lukas Czerner <lczerner@redhat.com>
-Cc: aelder@sgi.com, xfs@oss.sgi.com
+To: Johannes Weiner <jweiner@redhat.com>
+Cc: Rik van Riel <riel@redhat.com>, linux-ext4@vger.kernel.org, Jan Kara <jack@suse.cz>, linux-btrfs@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, Minchan Kim <minchan.kim@gmail.com>, linux-fsdevel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andrew Morton <akpm@linux-foundation.org>, Wu Fengguang <fengguang.wu@intel.com>, Chris Mason <chris.mason@oracle.com>
 
-On Wed, 7 Sep 2011, Lukas Czerner wrote:
+On Thu, Sep 22, 2011 at 11:03:26AM +0200, Johannes Weiner wrote:
+> On Wed, Sep 21, 2011 at 04:03:28PM +0100, Mel Gorman wrote:
+> > On Wed, Sep 21, 2011 at 03:04:23PM +0100, Mel Gorman wrote:
+> > > On Tue, Sep 20, 2011 at 03:45:12PM +0200, Johannes Weiner wrote:
+> > > > The amount of dirtyable pages should not include the total number of
+> > > > free pages: there is a number of reserved pages that the page
+> > > > allocator and kswapd always try to keep free.
+> > > > 
+> > > > The closer (reclaimable pages - dirty pages) is to the number of
+> > > > reserved pages, the more likely it becomes for reclaim to run into
+> > > > dirty pages:
+> > > > 
+> > > >        +----------+ ---
+> > > >        |   anon   |  |
+> > > >        +----------+  |
+> > > >        |          |  |
+> > > >        |          |  -- dirty limit new    -- flusher new
+> > > >        |   file   |  |                     |
+> > > >        |          |  |                     |
+> > > >        |          |  -- dirty limit old    -- flusher old
+> > > >        |          |                        |
+> > > >        +----------+                       --- reclaim
+> > > >        | reserved |
+> > > >        +----------+
+> > > >        |  kernel  |
+> > > >        +----------+
+> > > > 
+> > > > Not treating reserved pages as dirtyable on a global level is only a
+> > > > conceptual fix.  In reality, dirty pages are not distributed equally
+> > > > across zones and reclaim runs into dirty pages on a regular basis.
+> > > > 
+> > > > But it is important to get this right before tackling the problem on a
+> > > > per-zone level, where the distance between reclaim and the dirty pages
+> > > > is mostly much smaller in absolute numbers.
+> > > > 
+> > > > Signed-off-by: Johannes Weiner <jweiner@redhat.com>
+> > > > ---
+> > > >  include/linux/mmzone.h |    1 +
+> > > >  mm/page-writeback.c    |    8 +++++---
+> > > >  mm/page_alloc.c        |    1 +
+> > > >  3 files changed, 7 insertions(+), 3 deletions(-)
+> > > > 
+> > > > diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
+> > > > index 1ed4116..e28f8e0 100644
+> > > > --- a/include/linux/mmzone.h
+> > > > +++ b/include/linux/mmzone.h
+> > > > @@ -316,6 +316,7 @@ struct zone {
+> > > >  	 * sysctl_lowmem_reserve_ratio sysctl changes.
+> > > >  	 */
+> > > >  	unsigned long		lowmem_reserve[MAX_NR_ZONES];
+> > > > +	unsigned long		totalreserve_pages;
+> > > >  
+> > > 
+> > > This is nit-picking but totalreserve_pages is a poor name because it's
+> > > a per-zone value that is one of the lowmem_reserve[] fields instead
+> > > of a total. After this patch, we have zone->totalreserve_pages and
+> > > totalreserve_pages but are not related to the same thing.
+> > > but they are not the same.
+> > 
+> > As you correctly pointed out to be on IRC, zone->totalreserve_pages
+> > is not the lowmem_reserve because it takes the high_wmark into
+> > account. Sorry about that, I should have kept thinking.  The name is
+> > still poor though because it does not explain what the value is or
+> > what it means.
+> > 
+> > zone->FOO value needs to be related to lowmem_reserve because this
+> > 	is related to balancing zone usage.
+> > 
+> > zone->FOO value should also be related to the high_wmark because
+> > 	this is avoiding writeback from page reclaim
+> > 
+> > err....... umm... this?
+> > 
+> > 	/*
+> > 	 * When allocating a new page that is expected to be
+> > 	 * dirtied soon, the number of free pages and the
+> > 	 * dirty_balance reserve are taken into account. The
+> > 	 * objective is that the globally allowed number of dirty
+> > 	 * pages should be distributed throughout the zones such
+> > 	 * that it is very unlikely that page reclaim will call
+> > 	 * ->writepage.
+> > 	 *
+> > 	 * dirty_balance_reserve takes both lowmem_reserve and
+> > 	 * the high watermark into account. The lowmem_reserve
+> > 	 * is taken into account because we don't want the
+> > 	 * distribution of dirty pages to unnecessarily increase
+> > 	 * lowmem pressure. The watermark is taken into account
+> > 	 * because it's correlated with when kswapd wakes up
+> > 	 * and how long it stays awake.
+> > 	 */
+> > 	unsigned long		dirty_balance_reserve.
+> 
+> Yes, that's much better, thanks.
+> 
+> I assume this is meant the same for both the zone and the global level
+> and we should not mess with totalreserve_pages in either case?
 
-> This test suppose to validate that file systems are using the fitrim
-> arguments right. It checks that the fstrim returns EINVAl in case that
-> the start of the range is beyond the end of the file system, and also
-> that the fstrim works without an error if the length of the range is
-> bigger than the file system (it should be truncated to the file system
-> length automatically within the fitrim implementation).
-> 
-> This test should also catch common problem with overflow of start+len.
-> Some file systems (ext4,xfs) had overflow problems in the past so there
-> is a specific test for it (for ext4 and xfs) as well as generic test for
-> other file systems, but it would be nice if other fs can add their
-> specific checks if this problem does apply to them as well.
-
-Any comments on this test ?
-
-Thanks!
--Lukas
-
-> 
-> Signed-off-by: Lukas Czerner <lczerner@redhat.com>
-> ---
-> v2: add check for fsblock to agno overflow
-> 
->  257     |  183 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  257.out |   14 +++++
->  group   |    1 +
->  3 files changed, 198 insertions(+), 0 deletions(-)
->  create mode 100755 257
->  create mode 100644 257.out
-> 
-> diff --git a/257 b/257
-> new file mode 100755
-> index 0000000..53efa92
-> --- /dev/null
-> +++ b/257
-> @@ -0,0 +1,183 @@
-> +#!/bin/bash
-> +# FS QA Test No. 251
-> +#
-> +# This test was created in order to verify filesystem FITRIM implementation.
-> +# By many concurrent copy and remove operations and checking that files
-> +# does not change after copied into SCRATCH_MNT test if FITRIM implementation
-> +# corrupts the filesystem (data/metadata).
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright 2010 (C) Red Hat, Inc., Lukas Czerner <lczerner@redhat.com>
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#-----------------------------------------------------------------------
-> +
-> +owner=lczerner@redhat.com
-> +
-> +seq=`basename $0`
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=`mktemp -d`
-> +status=0
-> +trap "exit \$status" 0 1 3
-> +trap "exit \$status" 2 15
-> +chpid=0
-> +mypid=$$
-> +
-> +_check_conversion_overflow()
-> +{
-> +	backup_mkfs_options=MKFS_OPTIONS
-> +
-> +	# (2^32-1) + 2 (this is set to overflow 32bit variable by 2)
-> +	base=$((4294967295+2))
-> +
-> +	case $FSTYP in
-> +		ext[34])
-> +			agsize=32768
-> +			bsize=4096
-> +			start=$(($base*$agsize*$bsize))
-> +			len=$(($base*$agsize*$bsize))
-> +			export MKFS_OPTIONS="-F -b $bsize -g $agsize"
-> +			;;
-> +		xfs)
-> +			agsize=65536
-> +			bsize=4096
-> +			start=$(($base*$agsize*$bsize))
-> +			len=$(($base*$agsize*$bsize))
-> +			export MKFS_OPTIONS="-f -d agsize=$(($agsize*$bsize)) -b size=$bsize"
-> +			;;
-> +		*)
-> +			# (2^32-1) * 4096 * 65536 == 32bit max size * block size * ag size
-> +			start="1152921504875282432"
-> +			len="1152921504875282432"
-> +			;;
-> +	esac
-> +
-> +	_scratch_unmount
-> +	_scratch_mkfs >/dev/null 2>&1
-> +	_scratch_mount
-> +	$here/src/fstrim -s$start -l$(($fsize/2)) $SCRATCH_MNT &> /dev/null
-> +	[ $? -eq 0 ] && status=1 && echo "It seems that fs logic handling start"\
-> +				         "argument overflows"
-> +
-> +	_scratch_unmount
-> +	_scratch_mkfs >/dev/null 2>&1
-> +	_scratch_mount
-> +
-> +	# len should be big enough to cover the whole file system, however this
-> +	# test suppose for the overflow, so if the number of discarded bytes is
-> +	# smaller than fsize/2 than it most likely does overflow.
-> +	out=$($here/src/fstrim -v -l$len $SCRATCH_MNT)
-> +	bytes=${out%% *}
-> +
-> +	# Btrfs is special and this test does not apply to it
-> +	if [ $bytes -le $(($fsize*512)) ] && [ $FSTYP != "btrfs" ]; then
-> +		status=1
-> +		echo "It seems that fs logic handling len argument overflows"
-> +	fi
-> +	export MKFS_OPTIONS=$backup_mkfs_options
-> +}
-> +
-> +
-> +# get standard environment, filters and checks
-> +. ./common.rc
-> +. ./common.filter
-> +
-> +# real QA test starts here
-> +_supported_fs generic
-> +_supported_os Linux
-> +_require_scratch
-> +_scratch_mkfs >/dev/null 2>&1
-> +_scratch_mount
-> +
-> +
-> +$here/src/fstrim -l 10M $SCRATCH_MNT &> /dev/null || _notrun "FSTRIM is not supported"
-> +
-> +fsize=$(df -k | grep "$SCRATCH_MNT" | grep "$SCRATCH_DEV"  | awk '{print $2}')
-> +
-> +# All these tests should return EINVAL
-> +# since the start is beyond the end of
-> +# the file system
-> +
-> +echo "[+] Start beyond the end of fs (should fail)"
-> +$here/src/fstrim -s$(($fsize*2048)) $SCRATCH_MNT
-> +[ $? -eq 0 ] && status=1
-> +
-> +echo "[+] Start beyond the end of fs with len set (should fail)"
-> +$here/src/fstrim -s$(($fsize*2048)) -l1M $SCRATCH_MNT
-> +[ $? -eq 0 ] && status=1
-> +
-> +echo "[+] Start = 2^64-1 (should fail)"
-> +$here/src/fstrim -s18446744073709551615 $SCRATCH_MNT
-> +[ $? -eq 0 ] && status=1
-> +
-> +echo "[+] Start = 2^64-1 and len is set (should fail)"
-> +$here/src/fstrim -s18446744073709551615 -l1M $SCRATCH_MNT
-> +[ $? -eq 0 ] && status=1
-> +
-> +_scratch_unmount
-> +_scratch_mkfs >/dev/null 2>&1
-> +_scratch_mount
-> +
-> +# All these tests should succeed
-> +# since the length should be truncated
-> +
-> +echo "[+] Default length (should succeed)"
-> +$here/src/fstrim $SCRATCH_MNT
-> +[ $? -ne 0 ] && status=1
-> +echo "[+] Default length with start set (should succeed)"
-> +$here/src/fstrim -s10M $SCRATCH_MNT
-> +[ $? -ne 0 ] && status=1
-> +echo "[+] Length beyond the end of fs (should succeed)"
-> +$here/src/fstrim -l$((fsize*2048)) $SCRATCH_MNT
-> +[ $? -ne 0 ] && status=1
-> +echo "[+] Length beyond the end of fs wich start set (should succeed)"
-> +$here/src/fstrim -s10M -l$((fsize*2048)) $SCRATCH_MNT
-> +[ $? -ne 0 ] && status=1
-> +
-> +_scratch_unmount
-> +_scratch_mkfs >/dev/null 2>&1
-> +_scratch_mount
-> +
-> +# This is a bit fuzzy, but since the file system is fresh
-> +# there should be at least (fsize/2) free space to trim.
-> +# This is supposed to catch wrong range.len handling and overflows.
-> +out=$($here/src/fstrim -v -s10M $SCRATCH_MNT)
-> +bytes=${out%% *}
-> +
-> +if [ $bytes -gt $(($fsize*1024)) ]; then
-> +	status=1
-> +	echo "After the full fs discard $bytes bytes were discarded"\
-> +	     "however the file system is $(($fsize*1024)) bytes long."\
-> +	     "This is suspicious."
-> +fi
-> +
-> +# Btrfs is special and this test does not apply to it
-> +if [ $bytes -le $(($fsize*512)) ] && [ $FSTYP != "btrfs" ]; then
-> +	status=1
-> +	echo "After the full fs discard $bytes bytes were discarded"\
-> +	     "however the file system is $(($fsize*1024)) bytes long."\
-> +	     "This is suspicious."
-> +fi
-> +
-> +# Now to catch overflows due to fsblk->allocation group number conversion
-> +# This is different for every file system and it also apply just to some of
-> +# them. In order to add check specific for file system you're interested in
-> +# compute the arguments as you need and make the file system with proper
-> +# alignment in function _check_conversion_overflow()
-> +_check_conversion_overflow
-> +
-> +echo "Test done"
-> +exit
-> diff --git a/257.out b/257.out
-> new file mode 100644
-> index 0000000..86a5246
-> --- /dev/null
-> +++ b/257.out
-> @@ -0,0 +1,14 @@
-> +QA output created by 257
-> +[+] Start beyond the end of fs (should fail)
-> +fstrim: FSTRIM: Invalid argument
-> +[+] Start beyond the end of fs with len set (should fail)
-> +fstrim: FSTRIM: Invalid argument
-> +[+] Start = 2^64-1 (should fail)
-> +fstrim: FSTRIM: Invalid argument
-> +[+] Start = 2^64-1 and len is set (should fail)
-> +fstrim: FSTRIM: Invalid argument
-> +[+] Default length (should succeed)
-> +[+] Default length with start set (should succeed)
-> +[+] Length beyond the end of fs (should succeed)
-> +[+] Length beyond the end of fs wich start set (should succeed)
-> +Test done
-> diff --git a/group b/group
-> index 0c746c8..b742f91 100644
-> --- a/group
-> +++ b/group
-> @@ -370,3 +370,4 @@ deprecated
->  254 auto quick
->  255 auto quick prealloc
->  256 auto quick
-> +257 auto quick trim
-> 
+Yes. I'd even suggest changing the name of totalreserve_pages to make
+it clear it is related to overcommit rather than pfmemalloc, dirty
+or any other reserve. i.e. s/totalreserve_pages/overcommit_reserve/
 
 -- 
+Mel Gorman
+SUSE Labs
 
 _______________________________________________
 xfs mailing list
