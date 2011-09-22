@@ -1,16 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8MKqpuR258869 for <xfs@oss.sgi.com>; Thu, 22 Sep 2011 15:52:51 -0500
-Subject: Re: [PATCH 1/2 v2][xfstests] Add test 257: Check proper FITRIM
-	argument handling
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1315410523-23925-1-git-send-email-lczerner@redhat.com>
-References: <1315410523-23925-1-git-send-email-lczerner@redhat.com>
-Date: Thu, 22 Sep 2011 15:52:46 -0500
-Message-ID: <1316724766.2009.78.camel@doink>
+	p8MLo99t261649 for <xfs@oss.sgi.com>; Thu, 22 Sep 2011 16:50:09 -0500
+Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3BCE41841F1
+	for <xfs@oss.sgi.com>; Thu, 22 Sep 2011 14:50:00 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	Q3N6kK2pmKvnqi4E for <xfs@oss.sgi.com>;
+	Thu, 22 Sep 2011 14:50:00 -0700 (PDT)
+Date: Fri, 23 Sep 2011 07:49:56 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [xfs-masters] xfs deadlock in stable kernel 3.0.4
+Message-ID: <20110922214956.GX15688@dastard>
+References: <4E78CBF4.1030505@profihost.ag>
+	<20110920172455.GA30757@infradead.org>
+	<4E78CEFD.9030603@profihost.ag>
+	<20110920223047.GA13758@infradead.org>
+	<20110921021133.GM15688@dastard> <4E7994D3.5020103@profihost.ag>
+	<20110921114237.GP15688@dastard>
+	<20110921122649.GA16602@infradead.org>
+	<20110921230718.GS15688@dastard>
+	<20110922141457.GA11929@infradead.org>
 MIME-Version: 1.0
-Reply-To: aelder@sgi.com
+Content-Disposition: inline
+In-Reply-To: <20110922141457.GA11929@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,196 +37,78 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Lukas Czerner <lczerner@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
 
-On Wed, 2011-09-07 at 17:48 +0200, Lukas Czerner wrote:
-> This test suppose to validate that file systems are using the fitrim
-> arguments right. It checks that the fstrim returns EINVAl in case that
-> the start of the range is beyond the end of the file system, and also
-> that the fstrim works without an error if the length of the range is
-> bigger than the file system (it should be truncated to the file system
-> length automatically within the fitrim implementation).
+On Thu, Sep 22, 2011 at 10:14:57AM -0400, Christoph Hellwig wrote:
+> On Thu, Sep 22, 2011 at 09:07:18AM +1000, Dave Chinner wrote:
+> > No, that's not possible. The XFS_AIL_PUSHING_BIT ensures that there
+> > is only one instance of AIL pushing per struct xfs_ail running at
+> > once. It's also backed up by the fact that I couldn't find a single
+> > worker thread blocked running AIL pushing - it ran the 100 item
+> > scan, got stuck, requeued itself to run again 20ms later....
 > 
-> This test should also catch common problem with overflow of start+len.
-> Some file systems (ext4,xfs) had overflow problems in the past so there
-> is a specific test for it (for ext4 and xfs) as well as generic test for
-> other file systems, but it would be nice if other fs can add their
-> specific checks if this problem does apply to them as well.
+> True, it should prevent that - this was just my only theory based
+> on the (incorrect) assumption that we'd never get to the log force.
 > 
-> Signed-off-by: Lukas Czerner <lczerner@redhat.com>
-
-I point out the same thing I did earlier on a different
-test script.  This assumes bash is able to handle >32
-bit values in its arithmetic expressions (within $(( ))).
-That could be legitimate, I just haven't found an
-authoritative answer on it.
-
-I do know that bc supports arbitrary precision,
-so if necessary it could be used to do whatever
-calculations might exceed 32 bits.  E.g.:
-
-function mult64() {
-        [ $# = 2 ]      || exit 1       # Not enough arguments
-        echo "$1" '*' "$2" | bc
-}
-
-     ...
-	agsize=65536
-	bsize=4096
-	agbytes=$(mult64 $agsize $bsize)
-	start=$(mult64 $base $agbytes)
-
-I also have some other questions and comments
-below.  Sorry I didn't comment on your earlier
-edition.
-
-					-Alex
-
-> ---
-> v2: add check for fsblock to agno overflow
+> > FYI, what we want the concurrency for in the AIL wq is for multiple
+> > filesystems to be able to run AIL pushing at the same time, which
+> > is why it was set up this way. If one filesystem AIL push blocks,
+> > then an unblocked one will simply run.
 > 
->  257     |  183 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  257.out |   14 +++++
->  group   |    1 +
->  3 files changed, 198 insertions(+), 0 deletions(-)
->  create mode 100755 257
->  create mode 100644 257.out
+> A WQ_NON_REENTRANT workqueue will still provide that.  From the
+> documentation:
 > 
-> diff --git a/257 b/257
-> new file mode 100755
-> index 0000000..53efa92
-> --- /dev/null
-> +++ b/257
-> @@ -0,0 +1,183 @@
+>         By default, a wq guarantees non-reentrance only on the same
+> 	CPU.  A work item may not be executed concurrently on the same
+> 	CPU by multiple workers but is allowed to be executed
+> 	concurrently on multiple CPUs.  This flag makes sure
+> 	non-reentrance is enforced across all CPUs.  Work items queued
+> 	to a non-reentrant wq are guaranteed to be executed by at most
+> 	one worker system-wide at any given time.
+> 
+> So this still seems to preferable for the ail workqueue, and should be
+> able to replace the XFS_AIL_PUSHING_BIT protections.
 
-. . .
+No, we can't. WQ_NON_REENTRANT only protects against concurrency on
+the same CPU, not across all CPUs - it still allows concurrent
+per-CPU work processing on the same work item.
 
-> +			start="1152921504875282432"
-> +			len="1152921504875282432"
-> +			;;
-> +	esac
-> +
-> +	_scratch_unmount
-> +	_scratch_mkfs >/dev/null 2>&1
-> +	_scratch_mount
-> +	$here/src/fstrim -s$start -l$(($fsize/2)) $SCRATCH_MNT &> /dev/null
-> +	[ $? -eq 0 ] && status=1 && echo "It seems that fs logic handling start"\
-> +				         "argument overflows"
+However, we want only a *single* AIL worker instance executing per
+filesystem, not per-cpu per filesystem. Concurrent per-filesystem
+workers will simply bash on the AIL lock trying to walk the AIL at
+the same time, and this is precisely the issue the single AIL worker
+setup is avoiding. The XFS_AIL_PUSHING_BIT is what enforces the
+single per-filesystem push worker running at any time.
 
-Please put the status assignment and echo within a proper
-if/then/fi block.  I also don't really get what's going
-on here. $? equal to 0 means success--so if it's
-successful you report "it seems that...overflows"?
-If it is right, please add a comment to make sure it's
-clear what you're doing.
+> I also suspect that we should mark the ail workqueue as WQ_MEM_RECLAIM -
+> a lot of memory reclaim really requires moving the AIL forward.
 
-> +
-> +	_scratch_unmount
-> +	_scratch_mkfs >/dev/null 2>&1
-> +	_scratch_mount
-> +
-> +	# len should be big enough to cover the whole file system, however this
-> +	# test suppose for the overflow, so if the number of discarded bytes is
-> +	# smaller than fsize/2 than it most likely does overflow.
-> +	out=$($here/src/fstrim -v -l$len $SCRATCH_MNT)
-> +	bytes=${out%% *}
-> +
-> +	# Btrfs is special and this test does not apply to it
+Possibly, but I'm not sure it is necessary.
 
-Do all the other tests apply though?  Why doesn't this test
-apply to btrfs as well?
+> Currently we have other ways to reclaim inodes, but e.g. for buffers
+> we rely entirely on AIL pushing,
 
-> +	if [ $bytes -le $(($fsize*512)) ] && [ $FSTYP != "btrfs" ]; then
-> +		status=1
-> +		echo "It seems that fs logic handling len argument overflows"
-> +	fi
-> +	export MKFS_OPTIONS=$backup_mkfs_options
-> +}
-> +
-> +
-> +# get standard environment, filters and checks
-> +. ./common.rc
-> +. ./common.filter
-> +
-> +# real QA test starts here
-> +_supported_fs generic
-> +_supported_os Linux
-> +_require_scratch
-> +_scratch_mkfs >/dev/null 2>&1
-> +_scratch_mount
-> +
-> +
-> +$here/src/fstrim -l 10M $SCRATCH_MNT &> /dev/null || _notrun "FSTRIM is not supported"
+We have the xfs_buf shrinker that walks the LRU that frees clean
+buffers.
 
-You could define
-    FSTRIM="${here}/src/fstrim"
-since you use it so many times.
+> and with the proposed metadata
+> writeback changes we're going to rely even more on the ail, even if
+> we still keep emergency synchronous around it's going to be a lot
+> less efficient than real ail pushing under actual OOM conditions.
 
-> +
-> +fsize=$(df -k | grep "$SCRATCH_MNT" | grep "$SCRATCH_DEV"  | awk '{print $2}')
+The inode shrinker kicks the AIL pushing - if we cannot get memory
+to queue the work, then the very next iteration of the shrinker will
+try again. Hence I'm not sure that it is absolutely necessary,
+though it probably won't hurt...
 
-"fssize" would be a better name.
+Cheers,
 
-> +# All these tests should return EINVAL
-> +# since the start is beyond the end of
-> +# the file system
+Dave.
 
-. . .
-
-> +_scratch_unmount
-> +_scratch_mkfs >/dev/null 2>&1
-> +_scratch_mount
-> +
-> +# This is a bit fuzzy, but since the file system is fresh
-> +# there should be at least (fsize/2) free space to trim.
-> +# This is supposed to catch wrong range.len handling and overflows.
-
-I don't really don't understand what "wrong range.len
-handling and overflows" means.
-
-> +out=$($here/src/fstrim -v -s10M $SCRATCH_MNT)
-> +bytes=${out%% *}
-> +
-> +if [ $bytes -gt $(($fsize*1024)) ]; then
-> +	status=1
-> +	echo "After the full fs discard $bytes bytes were discarded"\
-> +	     "however the file system is $(($fsize*1024)) bytes long."\
-> +	     "This is suspicious."
-
-Is it possible to do a meaningful test of this case
-that is reliable?  I.e., one that (almost) always
-passes so we don't have to be overly concerned about
-"suspicious" (rather than pass/fail) test results?
-
-> +fi
-> +
-> +# Btrfs is special and this test does not apply to it
-> +if [ $bytes -le $(($fsize*512)) ] && [ $FSTYP != "btrfs" ]; then
-> +	status=1
-> +	echo "After the full fs discard $bytes bytes were discarded"\
-> +	     "however the file system is $(($fsize*1024)) bytes long."\
-> +	     "This is suspicious."
-> +fi
-> +
-> +# Now to catch overflows due to fsblk->allocation group number conversion
-> +# This is different for every file system and it also apply just to some of
-> +# them. In order to add check specific for file system you're interested in
-> +# compute the arguments as you need and make the file system with proper
-> +# alignment in function _check_conversion_overflow()
-> +_check_conversion_overflow
-
-This is just a bit structurally odd.  That is, it seems like
-you should call a function to encapsulate setting up the
-filesystem for the tests, then just run the tests here
-(at the same "scope" as the fstrim tests run just above).
-
-> +echo "Test done"
-> +exit
-> diff --git a/257.out b/257.out
-> new file mode 100644
-
-. . .
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
