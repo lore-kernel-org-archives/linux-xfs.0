@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8MGmESG245031 for <xfs@oss.sgi.com>; Thu, 22 Sep 2011 11:48:14 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4C692140E74B
-	for <xfs@oss.sgi.com>; Thu, 22 Sep 2011 09:53:40 -0700 (PDT)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	ICzoFsdTWufOiZ5e for <xfs@oss.sgi.com>;
-	Thu, 22 Sep 2011 09:53:40 -0700 (PDT)
-Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1R6mRW-0003Dg-5E
-	for xfs@oss.sgi.com; Thu, 22 Sep 2011 16:48:10 +0000
-Date: Thu, 22 Sep 2011 12:48:10 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] invutil: fix a gcc warning
-Message-ID: <20110922164810.GA12353@infradead.org>
+	p8MH1JnN246014 for <xfs@oss.sgi.com>; Thu, 22 Sep 2011 12:01:19 -0500
+Received: from mail.ud10.udmedia.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5AC7A140E4BA
+	for <xfs@oss.sgi.com>; Thu, 22 Sep 2011 10:06:47 -0700 (PDT)
+Received: from mail.ud10.udmedia.de (ud10.udmedia.de [194.117.254.50]) by
+	cuda.sgi.com with ESMTP id GlDbPdeVyZNZNE2b for
+	<xfs@oss.sgi.com>; Thu, 22 Sep 2011 10:06:47 -0700 (PDT)
+Date: Thu, 22 Sep 2011 19:01:14 +0200
+From: Markus Trippelsdorf <markus@trippelsdorf.de>
+Subject: Re: System stuck in D state while deleting messages in mutt
+Message-ID: <20110922170114.GA1627@x4.trippels.de>
+References: <20110919135622.GA13039@x4.trippels.de>
+	<20110922164930.GC12353@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <20110922164930.GC12353@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,31 +29,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-We never use the lines variable in put_line, except by writing to.  Replace
-the fairly ugly getmaxyx macro causing this with the getmaxx call (which
-is used by getmaxyx underneath) to only get the number of columns.
+On 2011.09.22 at 12:49 -0400, Christoph Hellwig wrote:
+> On Mon, Sep 19, 2011 at 03:56:22PM +0200, Markus Trippelsdorf wrote:
+> > My system just got stuck while I was trying to delete old messages in
+> > mutt. I'm running the latest git kernel. This happened on my SSD:
+> 
+> Stuck as in staying in it for a long time, or forever?
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Longer than 5 minutes and then I rebooted.
 
-Index: xfsdump/invutil/screen.c
-===================================================================
---- xfsdump.orig/invutil/screen.c	2011-09-22 12:36:55.445019732 -0400
-+++ xfsdump/invutil/screen.c	2011-09-22 12:38:39.272020235 -0400
-@@ -27,11 +27,10 @@ put_line(WINDOW *win, int line, char *ms
- {
-     int c;
-     int cols;
--    int lines;
-     int msglen;
-     static char text[256];
- 
--    getmaxyx(win, lines, cols);
-+    cols = getmaxx(win);
-     cols--;
-     if(cols > 255) {
- 	cols = 255;
+> Are you using Maildir?
+
+Yes. I was trying to delete ~3000 messages in one directory.
+
+I think this issue is a manifestation of the same deadlock that Stefan
+reported earlier.
+
+-- 
+Markus
 
 _______________________________________________
 xfs mailing list
