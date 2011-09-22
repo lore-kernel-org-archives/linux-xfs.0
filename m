@@ -1,17 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8MGUONk243709 for <xfs@oss.sgi.com>; Thu, 22 Sep 2011 11:30:24 -0500
-Subject: Re: xfstests 258: Test xfs fs creation with fs size close to 4 TB
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1316680229.6246.21.camel@dhcp-26-208.brq.redhat.com>
-References: <1316613160.781.8.camel@dhcp-26-208.brq.redhat.com>
-	<1316624075.2986.22.camel@doink>
-	<1316680229.6246.21.camel@dhcp-26-208.brq.redhat.com>
-Date: Thu, 22 Sep 2011 11:30:20 -0500
-Message-ID: <1316709020.2009.20.camel@doink>
+	p8MGmESG245031 for <xfs@oss.sgi.com>; Thu, 22 Sep 2011 11:48:14 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4C692140E74B
+	for <xfs@oss.sgi.com>; Thu, 22 Sep 2011 09:53:40 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	ICzoFsdTWufOiZ5e for <xfs@oss.sgi.com>;
+	Thu, 22 Sep 2011 09:53:40 -0700 (PDT)
+Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
+	Linux)) id 1R6mRW-0003Dg-5E
+	for xfs@oss.sgi.com; Thu, 22 Sep 2011 16:48:10 +0000
+Date: Thu, 22 Sep 2011 12:48:10 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH] invutil: fix a gcc warning
+Message-ID: <20110922164810.GA12353@infradead.org>
 MIME-Version: 1.0
-Reply-To: aelder@sgi.com
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,72 +31,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Boris Ranto <branto@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On Thu, 2011-09-22 at 10:30 +0200, Boris Ranto wrote:
-> On Wed, 2011-09-21 at 11:54 -0500, Alex Elder wrote:
-> > On Wed, 2011-09-21 at 15:52 +0200, Boris Ranto wrote:
-> > > mkfs.xfs failed to create xfs filesystems with 4 TB minus few bytes due
-> > > to round up error in mkfs.xfs code.
-> > > 
-> > > This test case is a regression test for the fs creation problem.
-> > > 
-> > > I've tested the test case with mkfs.xfs patch (in the form posted by
-> > > Eric Sandeen) and the test passed (and therefore the patch fixed the
-> > > issue for me).
-> > > 
-> > > Signed-off-by: Boris Ranto <branto@redhat.com>
-> > 
-> > This looks OK, but I'm a little concerned about the
-> > shell's ability to handle > 32-bit values in its
-> > arithmetic expressions (within $((...))).
-> > 
-> > Using ${fourtb} works for me, but I just don't know
-> > whether it is written somewhere that bash always
-> > supports 64-bit (or even arbitrary) precision values.
-> > 
-> > Do you know?
-> > 
-> > Same general concern goes for dd, but I am more inclined
-> > to think it can handle large numbers.
-> > 
-> > Otherwise this looks good to me (though I haven't yet
-> > tried it out).
-> > 
-> > Reviewed-by: Alex Elder <aelder@sgi.com>
-> > 
-> > . . .
-> > 
-> > _______________________________________________
-> > xfs mailing list
-> > xfs@oss.sgi.com
-> > http://oss.sgi.com/mailman/listinfo/xfs
-> 
-> I'm not sure whether bash guarantees at least 64-bit precision values in
-> its arithmetic operations.
-> Therefore I suppose the values can be computed in advance in this case
-> and the arithmetic operation can be simply left out:
+We never use the lines variable in put_line, except by writing to.  Replace
+the fairly ugly getmaxyx macro causing this with the getmaxx call (which
+is used by getmaxyx underneath) to only get the number of columns.
 
-This at least makes it so we only have to worry about
-one program (dd) handling >32-bit values correctly.
-Based on that alone I guess I prefer it.  However
-there should be a comment that explains where the
-numbers come from, i.e.:
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-# 4398046511103 = 2^42 - 1
-# 4398046510592 = 2^42 - 512
-# 4398046510080 = 2^42 - 1024
-# 4398046510079 = 2^42 - 1025
-# 4398046509056 = 2^42 - 2048
-# 4398046507008 = 2^42 - 4096
-
-If dd doesn't support numbers that big we aren't working
-in an environment suitable for running xfstests.  So
-at least from my perspective, this is good enough.
-
-Reviewed-by: Alex Elder <aelder@sgi.com>
-
+Index: xfsdump/invutil/screen.c
+===================================================================
+--- xfsdump.orig/invutil/screen.c	2011-09-22 12:36:55.445019732 -0400
++++ xfsdump/invutil/screen.c	2011-09-22 12:38:39.272020235 -0400
+@@ -27,11 +27,10 @@ put_line(WINDOW *win, int line, char *ms
+ {
+     int c;
+     int cols;
+-    int lines;
+     int msglen;
+     static char text[256];
+ 
+-    getmaxyx(win, lines, cols);
++    cols = getmaxx(win);
+     cols--;
+     if(cols > 255) {
+ 	cols = 255;
 
 _______________________________________________
 xfs mailing list
