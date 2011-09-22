@@ -1,23 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8MGnvfx245145 for <xfs@oss.sgi.com>; Thu, 22 Sep 2011 11:49:57 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3B4371C36D8A
-	for <xfs@oss.sgi.com>; Thu, 22 Sep 2011 09:49:31 -0700 (PDT)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	WFklbAzAGGHDHvPH for <xfs@oss.sgi.com>;
-	Thu, 22 Sep 2011 09:49:31 -0700 (PDT)
-Date: Thu, 22 Sep 2011 12:49:30 -0400
+	p8MGavll244029 for <xfs@oss.sgi.com>; Thu, 22 Sep 2011 11:36:58 -0500
+Date: Thu, 22 Sep 2011 12:36:55 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: System stuck in D state while deleting messages in mutt
-Message-ID: <20110922164930.GC12353@infradead.org>
-References: <20110919135622.GA13039@x4.trippels.de>
+Subject: Re: [PATCH 1/2 v2][xfstests] Add test 257: Check proper FITRIM
+	argument handling
+Message-ID: <20110922163655.GA627@infradead.org>
+References: <1315410523-23925-1-git-send-email-lczerner@redhat.com>
+	<alpine.LFD.2.00.1109221136590.4968@dhcp-27-109.brq.redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110919135622.GA13039@x4.trippels.de>
+In-Reply-To: <alpine.LFD.2.00.1109221136590.4968@dhcp-27-109.brq.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,16 +24,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Markus Trippelsdorf <markus@trippelsdorf.de>
-Cc: xfs@oss.sgi.com
+To: Lukas Czerner <lczerner@redhat.com>
+Cc: xfs@oss.sgi.com, aelder@sgi.com
 
-On Mon, Sep 19, 2011 at 03:56:22PM +0200, Markus Trippelsdorf wrote:
-> My system just got stuck while I was trying to delete old messages in
-> mutt. I'm running the latest git kernel. This happened on my SSD:
+On Thu, Sep 22, 2011 at 11:37:32AM +0200, Lukas Czerner wrote:
+> > +	# Btrfs is special and this test does not apply to it
+> > +	if [ $bytes -le $(($fsize*512)) ] && [ $FSTYP != "btrfs" ]; then
+> > +		status=1
+> > +		echo "It seems that fs logic handling len argument overflows"
+> > +	fi
+>
 
-Stuck as in staying in it for a long time, or forever?
+Care to explain why btrfs is "special"?
 
-Are you using Maildir?
+Also I can't parse the sentence above in the echo line.
+
+>
+> > +	export MKFS_OPTIONS=$backup_mkfs_options
+
+why backup?
+
+Otherwise this looks reasonable to me?
 
 _______________________________________________
 xfs mailing list
