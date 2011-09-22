@@ -1,31 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8MEFDsd236551 for <xfs@oss.sgi.com>; Thu, 22 Sep 2011 09:15:13 -0500
+	p8MGnvfx245145 for <xfs@oss.sgi.com>; Thu, 22 Sep 2011 11:49:57 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3BB8C1C34403
-	for <xfs@oss.sgi.com>; Thu, 22 Sep 2011 07:15:09 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3B4371C36D8A
+	for <xfs@oss.sgi.com>; Thu, 22 Sep 2011 09:49:31 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	F9FxVogIH1CC09jV for <xfs@oss.sgi.com>;
-	Thu, 22 Sep 2011 07:15:09 -0700 (PDT)
-Date: Thu, 22 Sep 2011 10:14:57 -0400
+	WFklbAzAGGHDHvPH for <xfs@oss.sgi.com>;
+	Thu, 22 Sep 2011 09:49:31 -0700 (PDT)
+Date: Thu, 22 Sep 2011 12:49:30 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [xfs-masters] xfs deadlock in stable kernel 3.0.4
-Message-ID: <20110922141457.GA11929@infradead.org>
-References: <20110920160226.GA25542@infradead.org>
-	<4E78CBF4.1030505@profihost.ag>
-	<20110920172455.GA30757@infradead.org>
-	<4E78CEFD.9030603@profihost.ag>
-	<20110920223047.GA13758@infradead.org>
-	<20110921021133.GM15688@dastard> <4E7994D3.5020103@profihost.ag>
-	<20110921114237.GP15688@dastard>
-	<20110921122649.GA16602@infradead.org>
-	<20110921230718.GS15688@dastard>
+Subject: Re: System stuck in D state while deleting messages in mutt
+Message-ID: <20110922164930.GC12353@infradead.org>
+References: <20110919135622.GA13039@x4.trippels.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110921230718.GS15688@dastard>
+In-Reply-To: <20110919135622.GA13039@x4.trippels.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,45 +30,16 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+To: Markus Trippelsdorf <markus@trippelsdorf.de>
+Cc: xfs@oss.sgi.com
 
-On Thu, Sep 22, 2011 at 09:07:18AM +1000, Dave Chinner wrote:
-> No, that's not possible. The XFS_AIL_PUSHING_BIT ensures that there
-> is only one instance of AIL pushing per struct xfs_ail running at
-> once. It's also backed up by the fact that I couldn't find a single
-> worker thread blocked running AIL pushing - it ran the 100 item
-> scan, got stuck, requeued itself to run again 20ms later....
+On Mon, Sep 19, 2011 at 03:56:22PM +0200, Markus Trippelsdorf wrote:
+> My system just got stuck while I was trying to delete old messages in
+> mutt. I'm running the latest git kernel. This happened on my SSD:
 
-True, it should prevent that - this was just my only theory based
-on the (incorrect) assumption that we'd never get to the log force.
+Stuck as in staying in it for a long time, or forever?
 
-> FYI, what we want the concurrency for in the AIL wq is for multiple
-> filesystems to be able to run AIL pushing at the same time, which
-> is why it was set up this way. If one filesystem AIL push blocks,
-> then an unblocked one will simply run.
-
-A WQ_NON_REENTRANT workqueue will still provide that.  From the
-documentation:
-
-        By default, a wq guarantees non-reentrance only on the same
-	CPU.  A work item may not be executed concurrently on the same
-	CPU by multiple workers but is allowed to be executed
-	concurrently on multiple CPUs.  This flag makes sure
-	non-reentrance is enforced across all CPUs.  Work items queued
-	to a non-reentrant wq are guaranteed to be executed by at most
-	one worker system-wide at any given time.
-
-So this still seems to preferable for the ail workqueue, and should be
-able to replace the XFS_AIL_PUSHING_BIT protections.
-
-I also suspect that we should mark the ail workqueue as WQ_MEM_RECLAIM -
-a lot of memory reclaim really requires moving the AIL forward.
-Currently we have other ways to reclaim inodes, but e.g. for buffers
-we rely entirely on AIL pushing, and with the proposed metadata
-writeback changes we're going to rely even more on the ail, even if
-we still keep emergency synchronous around it's going to be a lot
-less efficient than real ail pushing under actual OOM conditions.
+Are you using Maildir?
 
 _______________________________________________
 xfs mailing list
