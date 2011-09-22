@@ -1,23 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8MGmhVl245069 for <xfs@oss.sgi.com>; Thu, 22 Sep 2011 11:48:43 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 61099140EBEB
-	for <xfs@oss.sgi.com>; Thu, 22 Sep 2011 09:54:11 -0700 (PDT)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	aiAM9g2EYOKvgaIJ for <xfs@oss.sgi.com>;
-	Thu, 22 Sep 2011 09:54:11 -0700 (PDT)
-Date: Thu, 22 Sep 2011 12:48:41 -0400
+	p8MGhosk244390 for <xfs@oss.sgi.com>; Thu, 22 Sep 2011 11:43:51 -0500
+Date: Thu, 22 Sep 2011 12:43:47 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfstests: test timestamps before the epoch
-Message-ID: <20110922164841.GB12353@infradead.org>
-References: <4E778C51.7040100@redhat.com>
+Subject: Re: [PATCH] xfsdump: enable dump header checksums
+Message-ID: <20110922164347.GA8686@infradead.org>
+References: <1314654106-28548-1-git-send-email-wkendall@sgi.com>
+	<1316463141.2941.75.camel@doink> <4E77DBB9.7060400@sgi.com>
+	<1316537740.2912.25.camel@doink>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4E778C51.7040100@redhat.com>
+In-Reply-To: <1316537740.2912.25.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,24 +24,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs-oss <xfs@oss.sgi.com>
+To: Alex Elder <aelder@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Mon, Sep 19, 2011 at 01:39:13PM -0500, Eric Sandeen wrote:
-> ext2/3/4 was sign-extending times before the timestamp when read
-> from disk on 64-bit systems.  This was fixed by:
+On Tue, Sep 20, 2011 at 11:55:40AM -0500, Alex Elder wrote:
+> On Mon, 2011-09-19 at 19:18 -0500, Bill Kendall wrote:
+> > On 09/19/2011 03:12 PM, Alex Elder wrote:
+> . . .
+> > > The theory in doing this unconditionally is that we might as
+> > > well record it, even if the restore program chooses to ignore
+> > > it, right?
+> > 
+> > Right. (You probably noticed this also changes restore to
+> > unconditionally verify the checksum, provided the flags
+> > indicate the checksum was recorded.)
 > 
-> 4d7bf11d649c72621ca31b8ea12b9c94af380e63
-> ext2/3/4: fix file date underflow on ext2 3 filesystems on 64 bit systems
-> 
-> Here's a generic regression test.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> It *might* be nice to have an option to ignore the
+> checksum on restore.  I don't know though.  I was
+> thinking it might be useful if whatever dumped the
+> data did a buggy checksum but, well, we have no
+> evidence that xfsdump has ever done that.
 
-
-Looks good,
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+I think we really want this option before cutting a new release.
 
 _______________________________________________
 xfs mailing list
