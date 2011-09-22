@@ -1,13 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8MJIRct253209 for <xfs@oss.sgi.com>; Thu, 22 Sep 2011 14:18:28 -0500
-Subject: Re: [PATCH] invutil: fix a gcc warning
+	p8MJg4Dr254638 for <xfs@oss.sgi.com>; Thu, 22 Sep 2011 14:42:04 -0500
+Subject: Re: [PATCH] xfstests: test timestamps before the epoch
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110922164810.GA12353@infradead.org>
-References: <20110922164810.GA12353@infradead.org>
-Date: Thu, 22 Sep 2011 14:18:23 -0500
-Message-ID: <1316719103.2009.52.camel@doink>
+In-Reply-To: <4E778C51.7040100@redhat.com>
+References: <4E778C51.7040100@redhat.com>
+Date: Thu, 22 Sep 2011 14:41:59 -0500
+Message-ID: <1316720519.2009.53.camel@doink>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -22,15 +22,19 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs-oss <xfs@oss.sgi.com>
 
-On Thu, 2011-09-22 at 12:48 -0400, Christoph Hellwig wrote:
-> We never use the lines variable in put_line, except by writing to.  Replace
-> the fairly ugly getmaxyx macro causing this with the getmaxx call (which
-> is used by getmaxyx underneath) to only get the number of columns.
+On Mon, 2011-09-19 at 13:39 -0500, Eric Sandeen wrote:
+> ext2/3/4 was sign-extending times before the timestamp when read
+> from disk on 64-bit systems.  This was fixed by:
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 4d7bf11d649c72621ca31b8ea12b9c94af380e63
+> ext2/3/4: fix file date underflow on ext2 3 filesystems on 64 bit systems
+> 
+> Here's a generic regression test.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
 Looks good.
 
