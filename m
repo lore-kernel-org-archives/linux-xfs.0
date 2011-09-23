@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8NN4DPP168598 for <xfs@oss.sgi.com>; Fri, 23 Sep 2011 18:04:14 -0500
+	p8NN9sa6169224 for <xfs@oss.sgi.com>; Fri, 23 Sep 2011 18:09:55 -0500
 Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2D85A1411B5D
-	for <xfs@oss.sgi.com>; Fri, 23 Sep 2011 16:09:48 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 98EC7160C6B8
+	for <xfs@oss.sgi.com>; Fri, 23 Sep 2011 16:15:25 -0700 (PDT)
 Received: from mailsrv14.zmi.at (mailsrv14.zmi.at [212.69.164.54]) by
-	cuda.sgi.com with ESMTP id zbIjJrQSFQzIdvmf for
-	<xfs@oss.sgi.com>; Fri, 23 Sep 2011 16:09:48 -0700 (PDT)
+	cuda.sgi.com with ESMTP id JBwEoUu5IWLLObIL for
+	<xfs@oss.sgi.com>; Fri, 23 Sep 2011 16:15:25 -0700 (PDT)
 From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: Re: [PATCH 2/2] Add test 257: Check proper FITRIM argument handling
-Date: Sat, 24 Sep 2011 01:04:07 +0200
-References: <1316787311-23428-1-git-send-email-lczerner@redhat.com>
-	<1316787311-23428-2-git-send-email-lczerner@redhat.com>
-In-Reply-To: <1316787311-23428-2-git-send-email-lczerner@redhat.com>
+Subject: Re: Directory fsync
+Date: Sat, 24 Sep 2011 01:09:44 +0200
+References: <CAF7KpS8h2KDsLVzwAj=5ig-yuuiCwjQSVk0Nfy9UJ0qiyAqeCQ@mail.gmail.com>
+	<20110923163354.GA24319@infradead.org>
+In-Reply-To: <20110923163354.GA24319@infradead.org>
 MIME-Version: 1.0
-Message-Id: <201109240104.08410@zmi.at>
+Message-Id: <201109240109.45532@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,43 +24,41 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============9111166624764453189=="
+Content-Type: multipart/mixed; boundary="===============2315389955827944305=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: Lukas Czerner <lczerner@redhat.com>, aelder@sgi.com
+Cc: Christoph Hellwig <hch@infradead.org>, Zhu Han <schumi.han@gmail.com>
 
---===============9111166624764453189==
+--===============2315389955827944305==
 Content-Type: multipart/signed;
-  boundary="nextPart7029757.ghD0Q1Fo3l";
+  boundary="nextPart5489381.krzLeBB12H";
   protocol="application/pgp-signature";
   micalg=pgp-sha1
 Content-Transfer-Encoding: 7bit
 
---nextPart7029757.ghD0Q1Fo3l
+--nextPart5489381.krzLeBB12H
 Content-Type: Text/Plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 
-On Freitag, 23. September 2011 Lukas Czerner wrote:
-> +# FS QA Test No. 251
-> +#
-> +# This test was created in order to verify filesystem FITRIM
-> implementation. +# By many concurrent copy and remove operations and
-> checking that files +# does not change after copied into SCRATCH_MNT
-> test if FITRIM implementation +# corrupts the filesystem
-> (data/metadata).
+On Freitag, 23. September 2011 Christoph Hellwig wrote:
+> As far as standards are concerned it is.  As far as the current XFS
+> implementation is concerned you don't need it as the file fsync will
+> also force out all transactions that belong to the create.
 
-This is a bit misspelled and (for me being non-native english) hard to=20
-understand. I guess it should be
+Aren't you giving O_PONIES to the users? ;-)
 
-This test was created in order to verify the filesystem FITRIM=20
-implementation by doing many concurrent copy and remove operations and
-checking that files do not change after being copied into SCRATCH_MNT.
-Test if FITRIM implementation corrupts the filesystem (data/metadata).
+I understand your description, but we should always tell people to use a=20
+directory fsync to be sure. Their applications might run on other=20
+filesystems, or run for 10 years, and maybe XFS's implementation changes=20
+in between. And maybe in historical kernels even XFS's implementation=20
+wasn't like it's now?
 
-(Where I'm not sure if the last sentence belongs there, or in a separate=20
-paragraph, or is redundant to the first sentence)
+@schumi: If your application should be able to run in a safe way on=20
+other filesystems, or other kernel releases, or other unixes, it's best=20
+to fsync the directory inode too. It's better to use it always, then=20
+nothing won't break.
 
 =2D-=20
 mit freundlichen Gr=FCssen,
@@ -72,22 +70,22 @@ Tel: +43 660 / 415 6531
 
 // Haus zu verkaufen: http://zmi.at/langegg/
 
---nextPart7029757.ghD0Q1Fo3l
+--nextPart5489381.krzLeBB12H
 Content-Type: application/pgp-signature; name=signature.asc 
 Content-Description: This is a digitally signed message part.
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.16 (GNU/Linux)
 
-iEYEABECAAYFAk59EGgACgkQzhSR9xwSCbR+SQCg3ouOCVgkdgCXBfr5JiwP8pVO
-3eoAnjQEzbG0miwhH0ubTDvyplFokjEg
-=jzWU
+iEYEABECAAYFAk59EbkACgkQzhSR9xwSCbTzNACdHH7qhuzth6Fl7rVazl6/TrXH
+G4EAnR7wue/rrP95qyxRheH68eGRmBVf
+=BuTy
 -----END PGP SIGNATURE-----
 
---nextPart7029757.ghD0Q1Fo3l--
+--nextPart5489381.krzLeBB12H--
 
 
---===============9111166624764453189==
+--===============2315389955827944305==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -98,4 +96,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============9111166624764453189==--
+--===============2315389955827944305==--
