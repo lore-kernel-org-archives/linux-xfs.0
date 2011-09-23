@@ -1,16 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8MM2sLA000499 for <xfs@oss.sgi.com>; Thu, 22 Sep 2011 17:02:54 -0500
-Subject: Re: [PATCH] xfstests: Assume yes when test device is not partitioned
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1316726084.2009.85.camel@doink>
-References: <1315038799-2150-1-git-send-email-prasadjoshi.linux@gmail.com>
-	<1316726084.2009.85.camel@doink>
-Date: Thu, 22 Sep 2011 17:02:49 -0500
-Message-ID: <1316728969.2009.95.camel@doink>
+	p8N5STD0044540 for <xfs@oss.sgi.com>; Fri, 23 Sep 2011 00:28:30 -0500
+Received: from server655-han.de-nserver.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 213AD1411198
+	for <xfs@oss.sgi.com>; Thu, 22 Sep 2011 22:34:00 -0700 (PDT)
+Received: from server655-han.de-nserver.de (server655-han.de-nserver.de
+	[85.158.177.45]) by cuda.sgi.com with ESMTP id oyue1CzhRO5SDHTE
+	for <xfs@oss.sgi.com>; Thu, 22 Sep 2011 22:34:00 -0700 (PDT)
+Message-ID: <4E7C18F9.3020007@profihost.ag>
+Date: Fri, 23 Sep 2011 07:28:25 +0200
+From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
 MIME-Version: 1.0
-Reply-To: aelder@sgi.com
+Subject: Re: [xfs-masters] xfs deadlock in stable kernel 3.0.4
+References: <20110920172455.GA30757@infradead.org>
+	<4E78CEFD.9030603@profihost.ag>
+	<20110920223047.GA13758@infradead.org>
+	<20110921021133.GM15688@dastard> <4E7994D3.5020103@profihost.ag>
+	<20110921114237.GP15688@dastard>
+	<20110921122649.GA16602@infradead.org>
+	<20110921230718.GS15688@dastard>
+	<20110922141457.GA11929@infradead.org>
+	<20110922214956.GX15688@dastard>
+	<20110922220151.GA21701@infradead.org>
+In-Reply-To: <20110922220151.GA21701@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,48 +32,23 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Prasad Joshi <prasadjoshi.linux@gmail.com>
-Cc: linux-ext4@vger.kernel.org, Chaitanya Kulkarni <chaitanyakulkarni15@gmail.com>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Thu, 2011-09-22 at 16:14 -0500, Alex Elder wrote:
-> On Sat, 2011-09-03 at 14:03 +0530, Prasad Joshi wrote:
-> > If an entire device used for file system creation, the mkfs.ext2/3/4
-> > asks for confirmation before proceeding. Since the device is
-> > configured for testing it is safe to assume positive response
-> > during mkfs.
-> > 
-> > The patch also replaces hard coded mkfs path with MKFS_PROG variable.
-> > 
-> > Signed-off-by: Chaitanya Kulkarni <chaitanyakulkarni15@gmail.com>
-> > Signed-off-by: Prasad Joshi <prasadjoshi.linux@gmail.com>
-> 
-> Thanks for submitting a patch, Prasad (and Chaitanya).
-> 
-> Can you please re-submit this?  Based on feedback what
-> we're looking for would be:
-> [PATCH 0/2] description e-mail
-> [PATCH 1/2] patch that substitutes /sbin/mkfs with ${MKFS_PROG}
-> [PATCH 2/2] patch that adds a '-f' flag to ${MKFS_PROG}.${FSTYP}
->             for all ext* filesystem types.
+Hi,
 
+you can faster reproduce the issue if you set elevator=noop when 
+booting. It then happens always on the 1st run of deleting random files.
 
-Oh, and while I'm thinking about it...
+@Dave:
+Were you able to reproduce it too?
 
-/sbin/mkfs.${FSTYP} and ${MKFS_PROG}.${FSTYP} are most likely
-incorrect.  The switch to MKFS_PROG at least finds where the
-mkfs executable lies, but in theory anyway there is no guarantee
-that, for example, the mkfs.xfs program lies in the same directory.
-The mkfs executable uses the PATH (via execvp()) to find the
-filesystem-specific mkfs program to use, and I expect we should
-work the same way.
-
-					-Alex
-
-
+Greets
+Stefan
 
 _______________________________________________
 xfs mailing list
