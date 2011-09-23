@@ -1,17 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8NJ8l9E142389 for <xfs@oss.sgi.com>; Fri, 23 Sep 2011 14:08:48 -0500
-Subject: Re: [PATCH v3] xfs: fix possible overflow in xfs_ioc_trim()
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <alpine.LFD.2.00.1109231913400.3806@dhcp-27-109.brq.redhat.com>
-References: <1316598150-12447-1-git-send-email-lczerner@redhat.com>
-	<1316797735.2879.69.camel@doink>
-	<alpine.LFD.2.00.1109231913400.3806@dhcp-27-109.brq.redhat.com>
-Date: Fri, 23 Sep 2011 14:08:42 -0500
-Message-ID: <1316804922.2879.123.camel@doink>
+	p8NN4DPP168598 for <xfs@oss.sgi.com>; Fri, 23 Sep 2011 18:04:14 -0500
+Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2D85A1411B5D
+	for <xfs@oss.sgi.com>; Fri, 23 Sep 2011 16:09:48 -0700 (PDT)
+Received: from mailsrv14.zmi.at (mailsrv14.zmi.at [212.69.164.54]) by
+	cuda.sgi.com with ESMTP id zbIjJrQSFQzIdvmf for
+	<xfs@oss.sgi.com>; Fri, 23 Sep 2011 16:09:48 -0700 (PDT)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: Re: [PATCH 2/2] Add test 257: Check proper FITRIM argument handling
+Date: Sat, 24 Sep 2011 01:04:07 +0200
+References: <1316787311-23428-1-git-send-email-lczerner@redhat.com>
+	<1316787311-23428-2-git-send-email-lczerner@redhat.com>
+In-Reply-To: <1316787311-23428-2-git-send-email-lczerner@redhat.com>
 MIME-Version: 1.0
-Reply-To: aelder@sgi.com
+Message-Id: <201109240104.08410@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,64 +24,78 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============9111166624764453189=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Lukas Czerner <lczerner@redhat.com>
-Cc: hch@infradead.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Lukas Czerner <lczerner@redhat.com>, aelder@sgi.com
 
-On Fri, 2011-09-23 at 19:17 +0200, Lukas Czerner wrote:
-> On Fri, 23 Sep 2011, Alex Elder wrote:
-> 
-> > On Wed, 2011-09-21 at 11:42 +0200, Lukas Czerner wrote:
-> > > In xfs_ioc_trim it is possible that computing the last allocation group
-> > > to discard might overflow for big start & len values, because the result
-> > > might be bigger then xfs_agnumber_t which is 32 bit long. Fix this by not
-> > > allowing the start and end block of the range to be beyond the end of the
-> > > file system.
-> > > 
-> > > Note that if the start is beyond the end of the file system we have to
-> > > return -EINVAL, but in the "end" case we have to truncate it to the fs
-> > > size.
-> > > 
-> > > Also introduce "end" variable, rather than using start+len which which
-> > > might be more confusing to get right as this bug shows.
-> > > 
-> > > Signed-off-by: Lukas Czerner <lczerner@redhat.com>
-> > 
-> > There are cases where we're (still) not trimming
-> > blocks within the range specified when we could.
-> > I have an idea about how to do that but I'll send
-> > it out later and will commit this as-is.
-> 
-> What cases do you have in mind ? I have actually noticed that you are
-> discarding even more than user asked for in case that the free extent
-> and the range to trim overlaps, but that perfectly fine since the
-> duration of the discard command does not usually depends on the extent
-> size, so it is good thing to do.
+--===============9111166624764453189==
+Content-Type: multipart/signed;
+  boundary="nextPart7029757.ghD0Q1Fo3l";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 
-Suppose blocks from byte offset 4096 through 20480 are free,
-a FSB is 4096 bytes, and minlen computed in xfs_ioc_trim()
-is computed to be 4096.
+--nextPart7029757.ghD0Q1Fo3l
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 
-Now suppose a request comes in to trim range 7680 = (8KB - 512B)
-for 5KB = 5120 bytes (i.e., bytes 7680 through 12799).
+On Freitag, 23. September 2011 Lukas Czerner wrote:
+> +# FS QA Test No. 251
+> +#
+> +# This test was created in order to verify filesystem FITRIM
+> implementation. +# By many concurrent copy and remove operations and
+> checking that files +# does not change after copied into SCRATCH_MNT
+> test if FITRIM implementation +# corrupts the filesystem
+> (data/metadata).
 
-In xfs_ioc_trim(), "start" will be truncated to FSB 1, byte offset
-4096.  In computing "end", range.len will be truncated to 1 FSB
-or 4096 bytes.  So the resulting "end" byte will be 4096 + 4096 - 1
-or 8191, thereby *not* trimming FSB 2 at offset 8192B even though
-it is entirely within the requested range, and was free.
+This is a bit misspelled and (for me being non-native english) hard to=20
+understand. I guess it should be
 
-As pointed out by Christoph this isn't a big deal because
-it's an advisory interface.  I have a way to tighten this up
-but it'll be easier to see with code, which I'll try to post
-next week.
+This test was created in order to verify the filesystem FITRIM=20
+implementation by doing many concurrent copy and remove operations and
+checking that files do not change after being copied into SCRATCH_MNT.
+Test if FITRIM implementation corrupts the filesystem (data/metadata).
 
-					-Alex
+(Where I'm not sure if the last sentence belongs there, or in a separate=20
+paragraph, or is redundant to the first sentence)
+
+=2D-=20
+mit freundlichen Gr=FCssen,
+Michael Monnerie, Ing. BSc
+
+it-management Internet Services: Prot=E9ger
+http://proteger.at [gesprochen: Prot-e-schee]
+Tel: +43 660 / 415 6531
+
+// Haus zu verkaufen: http://zmi.at/langegg/
+
+--nextPart7029757.ghD0Q1Fo3l
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.16 (GNU/Linux)
+
+iEYEABECAAYFAk59EGgACgkQzhSR9xwSCbR+SQCg3ouOCVgkdgCXBfr5JiwP8pVO
+3eoAnjQEzbG0miwhH0ubTDvyplFokjEg
+=jzWU
+-----END PGP SIGNATURE-----
+
+--nextPart7029757.ghD0Q1Fo3l--
+
+
+--===============9111166624764453189==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============9111166624764453189==--
