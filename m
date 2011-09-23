@@ -1,11 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8NCjCse095492 for <xfs@oss.sgi.com>; Fri, 23 Sep 2011 07:45:12 -0500
-From: Bill Kendall <wkendall@sgi.com>
-Subject: [PATCH] xfsdump: handle dump files with checksum bug
-Date: Fri, 23 Sep 2011 07:45:02 -0500
-Message-Id: <1316781902-19803-1-git-send-email-wkendall@sgi.com>
+	p8ND3mQa098136 for <xfs@oss.sgi.com>; Fri, 23 Sep 2011 08:03:49 -0500
+Received: from mail-gy0-f181.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id ECF28141237E
+	for <xfs@oss.sgi.com>; Fri, 23 Sep 2011 06:09:16 -0700 (PDT)
+Received: from mail-gy0-f181.google.com (mail-gy0-f181.google.com
+	[209.85.160.181]) by cuda.sgi.com with ESMTP id
+	XAt66TEKjiWIsZti for <xfs@oss.sgi.com>;
+	Fri, 23 Sep 2011 06:09:16 -0700 (PDT)
+Received: by gyd10 with SMTP id 10so3408775gyd.26
+	for <xfs@oss.sgi.com>; Fri, 23 Sep 2011 06:03:41 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1316722702.2009.59.camel@doink>
+References: <1315786747-12109-1-git-send-email-notasas@gmail.com>
+	<1316722702.2009.59.camel@doink>
+Date: Fri, 23 Sep 2011 16:03:41 +0300
+Message-ID: <CANOLnOPm+BEQ0QOYnYRkJqpGPwyUD9D+23dJe2OwgrHXqYFyVA@mail.gmail.com>
+Subject: Re: [PATCH] xfstests: add new getdents test
+From: Grazvydas Ignotas <notasas@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -14,110 +27,83 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-13"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: aelder@sgi.com
+Cc: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-xfsdump previously contained a bug in the code which generated
-a checksum on the header for extended attributes. This bug
-was recently fixed, but a new xfsrestore will fail if it
-encounters an old dump file which had checksums enabled. (This
-is unlikely since checksums have just recently been enabled in
-the build, and the above-mentioned bug was fixed at the same time.)
+On Thu, Sep 22, 2011 at 11:18 PM, Alex Elder <aelder@sgi.com> wrote:
+> On Mon, 2011-09-12 at 03:19 +0300, Grazvydas Ignotas wrote:
+>> The test checks if no duplicate d_off values are returned and that
+>> those values are seekable to the right inodes.
+>>
+>> Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
+>
+> I have two minor comments on the C program below,
+> but even if you don't want to address them this
+> looks good.
+>
+> Reviewed-by: Alex Elder <aelder@sgi.com>
+>
+> . . .
+>
+>> +#include <sys/syscall.h>
+>> +
+>> +struct linux_dirent64 {
+>> + =A0 =A0 uint64_t =A0 =A0 =A0 =A0d_ino;
+>> + =A0 =A0 uint64_t =A0 =A0 =A0 =A0d_off;
+>> + =A0 =A0 unsigned short =A0d_reclen;
+>> + =A0 =A0 unsigned char =A0 d_type;
+>> + =A0 =A0 char =A0 =A0 =A0 =A0 =A0 =A0d_name[0];
+>> +};
+>> +
+>> +#define BUF_SIZE 4096
+>> +#define HISTORY_LEN 1024
+>> +
+>> +static uint64_t d_off_histoty[HISTORY_LEN];
+>> +static uint64_t d_ino_histoty[HISTORY_LEN];
+>
+> Is "histoty" intentional or a typo?
 
-This patch uses a new flag in an extattrhdr_t to indicate a
-checksum is present. If this is set, the checksum is validated.
-If instead the old checksum flag is set, a warning is issued saying
-the header could not be validated, and xfsrestore will assume the
-header is valid.
+whoops, it's a typo. I might send a patch for this later.
 
-Note that with this change a new dump cannot be restored with an
-old restore which has checksums enabled. But as I mentioned, old
-restores do not have checksums enabled.
+>
+>> +int
+>> +main(int argc, char *argv[])
+>> +{
+>> + =A0 =A0 int fd, nread;
+>> + =A0 =A0 char buf[BUF_SIZE];
+>
+> . . .
+>
+>> +
+>> + =A0 =A0 /* check if seek works correctly */
+>> + =A0 =A0 d =3D (struct linux_dirent64 *)buf;
+>> + =A0 =A0 for (i =3D total - 1; i >=3D 0; i--)
+>> + =A0 =A0 {
+>> + =A0 =A0 =A0 =A0 =A0 =A0 lret =3D lseek(fd, i > 0 ? d_off_histoty[i - 1=
+] : 0, SEEK_SET);
+>> + =A0 =A0 =A0 =A0 =A0 =A0 if (lret =3D=3D -1) {
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 perror("lseek");
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 exit(EXIT_FAILURE);
+>> + =A0 =A0 =A0 =A0 =A0 =A0 }
+>> +
+>> + =A0 =A0 =A0 =A0 =A0 =A0 nread =3D syscall(SYS_getdents64, fd, buf, BUF=
+_SIZE);
+>
+> You could just use sizeof (struct linux_dirent_64) rather than
+> BUF_SIZE here. =A0I suppose it doesn't hurt but there's no real
+> sense in reading more than the one you're going to look at.
 
-Signed-off-by: Bill Kendall <wkendall@sgi.com>
----
- common/content_inode.h |   10 +++++++---
- restore/content.c      |   25 +++++++++++++++++++------
- 2 files changed, 26 insertions(+), 9 deletions(-)
+I'm not sure if reading partial entry is allowed, manpage says it may
+fail with EINVAL if buffer size is too small..
 
-diff --git a/common/content_inode.h b/common/content_inode.h
-index 0f21840..85e60df 100644
---- a/common/content_inode.h
-+++ b/common/content_inode.h
-@@ -339,13 +339,17 @@ typedef struct extattrhdr extattrhdr_t;
- #define EXTATTRHDR_FLAGS_NULL		( 1 << 1 )
- 	/* marks the end of the attributes associated with the leading filehdr_t
- 	 */
--#define EXTATTRHDR_FLAGS_CHECKSUM	( 1 << 2 )
--	/* checksum is present
-+#define EXTATTRHDR_FLAGS_OLD_CHECKSUM	( 1 << 2 )
-+	/* old xfsdumps used this flag to indicate a checksum is present,
-+	 * but the checksum was not calculated properly. the presence of
-+	 * this flag now indicates a checksum that cannot be verified.
- 	 */
--
- #define EXTATTRHDR_FLAGS_SECURE		( 1 << 3 )
- 	/* a linux "secure" mode attribute
- 	 */
-+#define EXTATTRHDR_FLAGS_CHECKSUM	( 1 << 4 )
-+	/* checksum is present.
-+	 */
- 
- /* Routines for calculating and validating checksums on xfsdump headers.
-  * The header length must be an integral number of u_int32_t's.
-diff --git a/restore/content.c b/restore/content.c
-index a98a9c7..b90feae 100644
---- a/restore/content.c
-+++ b/restore/content.c
-@@ -8156,6 +8156,7 @@ read_dirent( drive_t *drivep,
- static rv_t
- read_extattrhdr( drive_t *drivep, extattrhdr_t *ahdrp, bool_t ahcs )
- {
-+	static bool_t warned = BOOL_FALSE;
- 	drive_ops_t *dop = drivep->d_opsp;
- 	/* REFERENCED */
- 	intgen_t nread;
-@@ -8197,16 +8198,28 @@ read_extattrhdr( drive_t *drivep, extattrhdr_t *ahdrp, bool_t ahcs )
- 	      ahdrp->ah_checksum );
- 
- 	if ( ahcs ) {
--		if ( ! ( ahdrp->ah_flags & EXTATTRHDR_FLAGS_CHECKSUM )) {
-+		if ( ahdrp->ah_flags & EXTATTRHDR_FLAGS_CHECKSUM ) {
-+			if ( !is_checksum_valid( ahdrp, EXTATTRHDR_SZ )) {
-+				mlog( MLOG_NORMAL | MLOG_WARNING, _(
-+					"bad extattr header checksum\n") );
-+				return RV_CORRUPT;
-+			}
-+		} else if ( ahdrp->ah_flags & EXTATTRHDR_FLAGS_OLD_CHECKSUM ) {
-+			/* possibly a corrupt header, but most likely an old
-+			 * header, which cannot be verified due to a bug in how
-+			 * its checksum was calculated.
-+			 */
-+			if ( !warned ) {
-+				mlog( MLOG_NORMAL | MLOG_WARNING, _(
-+					"extattr header checksum "
-+					"could not be verified\n") );
-+				warned = BOOL_TRUE;
-+			}
-+		} else {
- 			mlog( MLOG_NORMAL | MLOG_WARNING, _(
- 			      "corrupt extattr header\n") );
- 			return RV_CORRUPT;
- 		}
--		if ( !is_checksum_valid( ahdrp, EXTATTRHDR_SZ )) {
--			mlog( MLOG_NORMAL | MLOG_WARNING, _(
--			      "bad extattr header checksum\n") );
--			return RV_CORRUPT;
--		}
- 	}
- 
- 	return RV_OK;
--- 
-1.7.0.4
+
+-- =
+
+Gra=FEvydas
 
 _______________________________________________
 xfs mailing list
