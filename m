@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8QCIoRK159112 for <xfs@oss.sgi.com>; Mon, 26 Sep 2011 07:18:50 -0500
-Subject: Re: xfstests 258: Test xfs fs creation with fs size close to 4 TB
+	p8QCRojR160277 for <xfs@oss.sgi.com>; Mon, 26 Sep 2011 07:27:50 -0500
+Subject: Re: [PATCH] xfstests: test timestamps before the epoch
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110926114458.GA1176@infradead.org>
-References: <1316613160.781.8.camel@dhcp-26-208.brq.redhat.com>
-	<20110926114458.GA1176@infradead.org>
-Date: Mon, 26 Sep 2011 07:18:46 -0500
-Message-ID: <1317039526.3030.16.camel@doink>
+In-Reply-To: <20110926112716.GA22382@infradead.org>
+References: <4E778C51.7040100@redhat.com>
+	<20110926112716.GA22382@infradead.org>
+Date: Mon, 26 Sep 2011 07:27:49 -0500
+Message-ID: <1317040069.3030.18.camel@doink>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -24,29 +24,29 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: Eric Sandeen <sandeen@redhat.com>, Boris Ranto <branto@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Mon, 2011-09-26 at 07:44 -0400, Christoph Hellwig wrote:
-> This one actually fails for me in a 32-bit userspace VM:
+On Mon, 2011-09-26 at 07:27 -0400, Christoph Hellwig wrote:
+> This one actually ends up failing on XFS for me:
+> 
+> @@ -1,5 +1,5 @@
+>  QA output created by 258
+>  Creating file with timestamp of Jan 1, 1960
+>  -Stat of file yields: -315593940
+>  +Stat of file yields: -315615540
+>   Remounting to flush cache
+>  -Stat of file yields: -315593940
+>  +Stat of file yields: -315615540
+> 
+> Note that we still get the same for both, it just seems XFS rounds it
+> a bit different.
 
-This is my fault, and you busted me doing something I
-should not have.
 
-It doesn't matter in this case, but there is a window in
-which "testfile" is undefined but gets referenced in
-_cleanup() (which could get called due to interrupt).
-I "trivially" moved the definition to fix that oversight
-and as a result broke the test.
+I haven't seen this one fail.  Must have to do with
+some FS configuration options (like blocksize or
+something).
 
-I won't do that any more without taking proper credit
-when I commit.
-
-Sorry Boris (and all).
-
-Your fix looks fine, Christoph.
-
-Reviewed-by: Alex Elder <aelder@sgi.com>
-
+					-Alex
 
 _______________________________________________
 xfs mailing list
