@@ -1,16 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8QDqd6X167380 for <xfs@oss.sgi.com>; Mon, 26 Sep 2011 08:52:39 -0500
-Date: Mon, 26 Sep 2011 15:52:33 +0200 (CEST)
-From: Lukas Czerner <lczerner@redhat.com>
+	p8QFlWO7179859 for <xfs@oss.sgi.com>; Mon, 26 Sep 2011 10:47:33 -0500
 Subject: Re: [PATCH] Add test 257: Check proper FITRIM argument handling
-In-Reply-To: <1317041252.3030.24.camel@doink>
-Message-ID: <alpine.LFD.2.00.1109261541500.3806@dhcp-27-109.brq.redhat.com>
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <alpine.LFD.2.00.1109261541500.3806@dhcp-27-109.brq.redhat.com>
 References: <1316787311-23428-2-git-send-email-lczerner@redhat.com>
 	<1317021244-7556-1-git-send-email-lczerner@redhat.com>
 	<1317041252.3030.24.camel@doink>
+	<alpine.LFD.2.00.1109261541500.3806@dhcp-27-109.brq.redhat.com>
+Date: Mon, 26 Sep 2011 10:47:27 -0500
+Message-ID: <1317052047.2925.26.camel@doink>
 MIME-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,61 +25,44 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
-Cc: Lukas Czerner <lczerner@redhat.com>, xfs@oss.sgi.com
+To: Lukas Czerner <lczerner@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On Mon, 26 Sep 2011, Alex Elder wrote:
-
-> On Mon, 2011-09-26 at 09:14 +0200, Lukas Czerner wrote:
-> > This test suppose to validate that file systems are using the fitrim
-> > arguments right. It checks that the fstrim returns EINVAl in case that
-> > the start of the range is beyond the end of the file system, and also
-> > that the fstrim works without an error if the length of the range is
-> > bigger than the file system (it should be truncated to the file system
-> > length automatically within the fitrim implementation).
+On Mon, 2011-09-26 at 15:52 +0200, Lukas Czerner wrote:
+> On Mon, 26 Sep 2011, Alex Elder wrote:
+> 
+> > On Mon, 2011-09-26 at 09:14 +0200, Lukas Czerner wrote:
+. . .
+> > I think the use of "bc" to do certain math operations
+> > has some value, and as such I think the right fix is
+> > just to require "bc" in order for xfstests, or at least
+> > for any that use the _math() function, and drop the
+> > fall-back logic out of the definition of _math().
 > > 
-> > This test should also catch common problem with overflow of start+len.
-> > Some file systems (ext4,xfs) had overflow problems in the past so there
-> > is a specific test for it (for ext4 and xfs) as well as generic test for
-> > other file systems, but it would be nice if other fs can add their
-> > specific checks if this problem does apply to them as well.
-> > 
-> > Signed-off-by: Lukas Czerner <lczerner@redhat.com>
+> > What do you think?
 > 
-> OK, I know I suggested it, and I do like the result, but
-> there could be a problem with the use of things like
-> "2^32 - 1" being passed to the _math() function.
-> 
-> The problem lies in the way _math() backs off to try
-> to use shell built-in arithmetic, which interprets the
-> '^' as a bitwise XOR operator.  (Note, _math() was
-> defined in an earlier patch.)
-> 
-> I think the use of "bc" to do certain math operations
-> has some value, and as such I think the right fix is
-> just to require "bc" in order for xfstests, or at least
-> for any that use the _math() function, and drop the
-> fall-back logic out of the definition of _math().
-> 
-> What do you think?
+> Yes I had the same concern, but I guess I was just lazy to look at it
+> :). So if we can require "bc" for xfstests we can simply remove the
+> fallback. Also maybe adding helper _require_bc, or maybe even better
+> adding helper _require <whatever> so we can check for <whatever> tool
+> in any test.
 
-Yes I had the same concern, but I guess I was just lazy to look at it
-:). So if we can require "bc" for xfstests we can simply remove the
-fallback. Also maybe adding helper _require_bc, or maybe even better
-adding helper _require <whatever> so we can check for <whatever> tool
-in any test.
+Would you mind re-submitting the first patch (which defined
+the _math() function), adding the definition of _require_math
+which would be used in any script that uses the _math function?
+That would fail if "bc" weren't available.  It seems indirect
+but I think _require_math makes more sense in the context of
+whoever would be using it than _require_bc would.
 
-Thanks!
--Lukas
+And having heard nobody voice objection to the idea I think
+we should just go with it.
 
+I can take your other patch and insert the _require_math call
+for you, and will verify the result works before committing it.
 
-> 
-> Assuming we resolve that, this test now looks fine to me.
-> 
-> Reviewed-by: Alex Elder <aelder@sgi.com>
-> 
-> 
-> 
+Thanks.
+
+					-Alex
 
 _______________________________________________
 xfs mailing list
