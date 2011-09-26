@@ -1,18 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8QFlWO7179859 for <xfs@oss.sgi.com>; Mon, 26 Sep 2011 10:47:33 -0500
-Subject: Re: [PATCH] Add test 257: Check proper FITRIM argument handling
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <alpine.LFD.2.00.1109261541500.3806@dhcp-27-109.brq.redhat.com>
-References: <1316787311-23428-2-git-send-email-lczerner@redhat.com>
-	<1317021244-7556-1-git-send-email-lczerner@redhat.com>
-	<1317041252.3030.24.camel@doink>
-	<alpine.LFD.2.00.1109261541500.3806@dhcp-27-109.brq.redhat.com>
-Date: Mon, 26 Sep 2011 10:47:27 -0500
-Message-ID: <1317052047.2925.26.camel@doink>
+	p8QG29Hb181824 for <xfs@oss.sgi.com>; Mon, 26 Sep 2011 11:02:10 -0500
+Message-ID: <4E80A1FD.8070400@redhat.com>
+Date: Mon, 26 Sep 2011 11:02:05 -0500
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Reply-To: aelder@sgi.com
+Subject: Re: [PATCH] xfstests: test timestamps before the epoch
+References: <4E778C51.7040100@redhat.com>
+	<20110926112716.GA22382@infradead.org>
+	<1317040069.3030.18.camel@doink>
+In-Reply-To: <1317040069.3030.18.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,44 +23,38 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Lukas Czerner <lczerner@redhat.com>
-Cc: xfs@oss.sgi.com
+To: aelder@sgi.com
+Cc: Christoph Hellwig <hch@infradead.org>, xfs-oss <xfs@oss.sgi.com>
 
-On Mon, 2011-09-26 at 15:52 +0200, Lukas Czerner wrote:
-> On Mon, 26 Sep 2011, Alex Elder wrote:
+On 9/26/11 7:27 AM, Alex Elder wrote:
+> On Mon, 2011-09-26 at 07:27 -0400, Christoph Hellwig wrote:
+>> This one actually ends up failing on XFS for me:
+>>
+>> @@ -1,5 +1,5 @@
+>>  QA output created by 258
+>>  Creating file with timestamp of Jan 1, 1960
+>>  -Stat of file yields: -315593940
+>>  +Stat of file yields: -315615540
+>>   Remounting to flush cache
+>>  -Stat of file yields: -315593940
+>>  +Stat of file yields: -315615540
+>>
+>> Note that we still get the same for both, it just seems XFS rounds it
+>> a bit different.
+
+Hrm.  Should we just test to be sure the timestamp is negative?
+The sign extension is the real error, so as long as it's not
+positive it's probably OK.
+
+-Eric
+
 > 
-> > On Mon, 2011-09-26 at 09:14 +0200, Lukas Czerner wrote:
-. . .
-> > I think the use of "bc" to do certain math operations
-> > has some value, and as such I think the right fix is
-> > just to require "bc" in order for xfstests, or at least
-> > for any that use the _math() function, and drop the
-> > fall-back logic out of the definition of _math().
-> > 
-> > What do you think?
+> I haven't seen this one fail.  Must have to do with
+> some FS configuration options (like blocksize or
+> something).
 > 
-> Yes I had the same concern, but I guess I was just lazy to look at it
-> :). So if we can require "bc" for xfstests we can simply remove the
-> fallback. Also maybe adding helper _require_bc, or maybe even better
-> adding helper _require <whatever> so we can check for <whatever> tool
-> in any test.
-
-Would you mind re-submitting the first patch (which defined
-the _math() function), adding the definition of _require_math
-which would be used in any script that uses the _math function?
-That would fail if "bc" weren't available.  It seems indirect
-but I think _require_math makes more sense in the context of
-whoever would be using it than _require_bc would.
-
-And having heard nobody voice objection to the idea I think
-we should just go with it.
-
-I can take your other patch and insert the _require_math call
-for you, and will verify the result works before committing it.
-
-Thanks.
-
-					-Alex
+> 					-Alex
+> 
 
 _______________________________________________
 xfs mailing list
