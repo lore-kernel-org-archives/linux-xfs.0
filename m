@@ -1,18 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8QM534C222340 for <xfs@oss.sgi.com>; Mon, 26 Sep 2011 17:05:03 -0500
-Received: from xmail.sgi.com (pv-excas3-dc21-nlb.corp.sgi.com [137.38.102.207])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5FEE1304051
-	for <xfs@oss.sgi.com>; Mon, 26 Sep 2011 15:05:00 -0700 (PDT)
-Subject: Re: [PATCH] xfstests: 259: convert to use the _math() function
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <201109262159.p8QLxZtF016713@stout.americas.sgi.com>
-References: <201109262159.p8QLxZtF016713@stout.americas.sgi.com>
-Date: Mon, 26 Sep 2011 17:04:59 -0500
-Message-ID: <1317074699.2925.56.camel@doink>
+	p8QNCmiV229334 for <xfs@oss.sgi.com>; Mon, 26 Sep 2011 18:12:48 -0500
+Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id F360F141FFA4
+	for <xfs@oss.sgi.com>; Mon, 26 Sep 2011 16:18:40 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id b05iF8wBOipHlLn2
+	for <xfs@oss.sgi.com>; Mon, 26 Sep 2011 16:18:40 -0700 (PDT)
+Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
+	by greer.hardwarefreak.com (Postfix) with ESMTP id 423ED6C02C
+	for <xfs@oss.sgi.com>; Mon, 26 Sep 2011 18:12:46 -0500 (CDT)
+Message-ID: <4E8106ED.9040909@hardwarefreak.com>
+Date: Mon, 26 Sep 2011 18:12:45 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Reply-To: aelder@sgi.com
+Subject: XFS binary code size
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,75 +25,33 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-On Mon, 2011-09-26 at 16:59 -0500, Alex Elder wrote:
-> Make test 259 a bit more readable by using the new _math() function.
-> 
-> Signed-off-by: Alex Elder <aelder@sgi.com>
+I'm curious about the footprint of the XFS binary code, specifically for 
+32 bit systems, but knowing the 64 bit case would be educational as well 
+for comparison.  I don't use kernel modules or I'd already have a rough 
+answer.  My last build was 2.6.38.6 but I'm sure the size hasn't changed 
+much in more recent kernels.  My XFS build options were:
 
-Whoops, substitute "4 TB" for "2 TB" everwhere appropriate...	-Alex
+$ grep -i xfs .config
+CONFIG_XFS_FS=y
+# CONFIG_XFS_QUOTA is not set
+# CONFIG_XFS_POSIX_ACL is not set
+# CONFIG_XFS_RT is not set
 
-> ---
->  259     |   17 ++++++-----------
->  259.out |   12 ++++++------
->  2 files changed, 12 insertions(+), 17 deletions(-)
-> 
-> Index: b/259
-> ===================================================================
-> --- a/259
-> +++ b/259
-> @@ -43,20 +43,15 @@ trap "_cleanup ; exit \$status" 0 1 2 3 
->  _supported_fs xfs
->  _supported_os Linux
->  
-> +_require_math
-> +
->  testfile=$TEST_DIR/259.image
->  
->  # Test various sizes slightly less than 4 TB
-> -# 4398046511103 = 2^42 - 1
-> -# 4398046510592 = 2^42 - 512
-> -# 4398046510080 = 2^42 - 1024
-> -# 4398046510079 = 2^42 - 1025
-> -# 4398046509056 = 2^42 - 2048
-> -# 4398046507008 = 2^42 - 4096
-> -
-> -for ddseek in 4398046511103 4398046510592 4398046510080 \
-> -	4398046510079 4398046509056 4398046507008;
-> -do
-> -	echo "Trying to make $ddseek B long xfs fs image"
-> +four_TB=$(_math "2^42")
-> +for del in 1 512 1024 1025 2048 4096; do
-> +	ddseek=$(_math "$four_TB - $del")
-> +	echo "Trying to make (2 TB - $del) B long xfs fs image"
->  	rm -f "$testfile"
->  	dd if=/dev/zero "of=$testfile" bs=1 count=0 seek=$ddseek \
->  					>/dev/null 2>&1 || echo "dd failed"
-> Index: b/259.out
-> ===================================================================
-> --- a/259.out
-> +++ b/259.out
-> @@ -1,7 +1,7 @@
->  QA output created by 259
-> -Trying to make 4398046511103 B long xfs fs image
-> -Trying to make 4398046510592 B long xfs fs image
-> -Trying to make 4398046510080 B long xfs fs image
-> -Trying to make 4398046510079 B long xfs fs image
-> -Trying to make 4398046509056 B long xfs fs image
-> -Trying to make 4398046507008 B long xfs fs image
-> +Trying to make (2 TB - 1) B long xfs fs image
-> +Trying to make (2 TB - 512) B long xfs fs image
-> +Trying to make (2 TB - 1024) B long xfs fs image
-> +Trying to make (2 TB - 1025) B long xfs fs image
-> +Trying to make (2 TB - 2048) B long xfs fs image
-> +Trying to make (2 TB - 4096) B long xfs fs image
+My resulting kernel image is:
+$ la /boot/vmlinuz-2.6.38.6
+-rw-r--r--  1 root root 1.6M May 17 23:55 vmlinuz-2.6.38.6
 
+How much of that 1.6MB is XFS?  Also, what is the size of the hot path 
+code that we want to stay in L1 during heavy IO?
 
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
