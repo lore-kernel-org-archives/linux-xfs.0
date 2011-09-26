@@ -1,23 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8QBj1MZ155536 for <xfs@oss.sgi.com>; Mon, 26 Sep 2011 06:45:01 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BB80C160E003
-	for <xfs@oss.sgi.com>; Mon, 26 Sep 2011 04:50:50 -0700 (PDT)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	b4jRb2v6RX4Kj63r for <xfs@oss.sgi.com>;
-	Mon, 26 Sep 2011 04:50:50 -0700 (PDT)
-Date: Mon, 26 Sep 2011 07:44:58 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: xfstests 258: Test xfs fs creation with fs size close to 4 TB
-Message-ID: <20110926114458.GA1176@infradead.org>
-References: <1316613160.781.8.camel@dhcp-26-208.brq.redhat.com>
+	p8QBgx1c155133 for <xfs@oss.sgi.com>; Mon, 26 Sep 2011 06:42:59 -0500
+Date: Mon, 26 Sep 2011 13:42:53 +0200 (CEST)
+From: Lukas Czerner <lczerner@redhat.com>
+Subject: Re: [PATCH] Add test 257: Check proper FITRIM argument handling
+In-Reply-To: <1317021244-7556-1-git-send-email-lczerner@redhat.com>
+Message-ID: <alpine.LFD.2.00.1109261342360.3806@dhcp-27-109.brq.redhat.com>
+References: <1316787311-23428-2-git-send-email-lczerner@redhat.com>
+	<1317021244-7556-1-git-send-email-lczerner@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1316613160.781.8.camel@dhcp-26-208.brq.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,73 +22,260 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Boris Ranto <branto@redhat.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: Lukas Czerner <lczerner@redhat.com>
+Cc: aelder@sgi.com, xfs@oss.sgi.com
 
-This one actually fails for me in a 32-bit userspace VM:
+On Mon, 26 Sep 2011, Lukas Czerner wrote:
 
---- 259.out	2011-09-26 09:14:39.000000000 +0000
-+++ 259.out.bad	2011-09-26 11:22:44.000000000 +0000
-@@ -1,7 +1,157 @@
- QA output created by 259
- Trying to make 4398046511103 B long xfs fs image
-+dd failed
-+can't get size of data subvolume
-+Usage: mkfs.xfs
-+/* blocksize */		[-b log=n|size=num]
+> This test suppose to validate that file systems are using the fitrim
+> arguments right. It checks that the fstrim returns EINVAl in case that
+> the start of the range is beyond the end of the file system, and also
+> that the fstrim works without an error if the length of the range is
+> bigger than the file system (it should be truncated to the file system
+> length automatically within the fitrim implementation).
+> 
+> This test should also catch common problem with overflow of start+len.
+> Some file systems (ext4,xfs) had overflow problems in the past so there
+> is a specific test for it (for ext4 and xfs) as well as generic test for
+> other file systems, but it would be nice if other fs can add their
+> specific checks if this problem does apply to them as well.
+> 
+> Signed-off-by: Lukas Czerner <lczerner@redhat.com>
 
-...
+Agh, it should be v4.
 
-When removing the dd output redirection thus turn into a:
+> ---
+> v2: add check for fsblock to agno overflow
+> v3: Update comments, use bc math
+> v4: Update comments, copyright, and use precomputed values
+> 
+>  257     |  182 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  257.out |   14 +++++
+>  group   |    1 +
+>  3 files changed, 197 insertions(+), 0 deletions(-)
+>  create mode 100755 257
+>  create mode 100644 257.out
+> 
+> diff --git a/257 b/257
+> new file mode 100755
+> index 0000000..f605309
+> --- /dev/null
+> +++ b/257
+> @@ -0,0 +1,182 @@
+> +#!/bin/bash
+> +# FS QA Test No. 257
+> +#
+> +# Purpose of this test is to check FITRIM argument handling to make sure
+> +# that the argument processing is right and that it does not overflow.
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright 2011 (C) Red Hat, Inc., Lukas Czerner <lczerner@redhat.com>
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#-----------------------------------------------------------------------
+> +
+> +owner=lczerner@redhat.com
+> +
+> +seq=`basename $0`
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=`mktemp -d`
+> +status=0
+> +trap "exit \$status" 0 1 2 3 15
+> +chpid=0
+> +mypid=$$
+> +
+> +# get standard environment, filters and checks
+> +. ./common.rc
+> +. ./common.filter
+> +
+> +# real QA test starts here
+> +_supported_fs generic
+> +_supported_os Linux
+> +_require_scratch
+> +_scratch_mkfs >/dev/null 2>&1
+> +_scratch_mount
+> +
+> +FSTRIM="$here/src/fstrim"
+> +"$FSTRIM" -l 10M $SCRATCH_MNT &> /dev/null || _notrun "FSTRIM is not supported"
+> +
+> +fssize=$(df -k | grep "$SCRATCH_MNT" | grep "$SCRATCH_DEV"  | awk '{print $2}')
+> +
+> +beyond_eofs=$(_math "$fssize*2048")
+> +max_64bit=$(_math "2^64 - 1")
+> +
+> +# All these tests should return EINVAL
+> +# since the start is beyond the end of
+> +# the file system
+> +
+> +echo "[+] Start beyond the end of fs (should fail)"
+> +"$FSTRIM" -s $beyond_eofs $SCRATCH_MNT
+> +[ $? -eq 0 ] && status=1
+> +
+> +echo "[+] Start beyond the end of fs with len set (should fail)"
+> +"$FSTRIM" -s $beyond_eofs -l1M $SCRATCH_MNT
+> +[ $? -eq 0 ] && status=1
+> +
+> +echo "[+] Start = 2^64-1 (should fail)"
+> +"$FSTRIM" -s $max_64bit $SCRATCH_MNT
+> +[ $? -eq 0 ] && status=1
+> +
+> +echo "[+] Start = 2^64-1 and len is set (should fail)"
+> +"$FSTRIM" -s $max_64bit -l1M $SCRATCH_MNT
+> +[ $? -eq 0 ] && status=1
+> +
+> +_scratch_unmount
+> +_scratch_mkfs >/dev/null 2>&1
+> +_scratch_mount
+> +
+> +# All these tests should succeed
+> +# since the length should be truncated
+> +
+> +echo "[+] Default length (should succeed)"
+> +"$FSTRIM" $SCRATCH_MNT
+> +[ $? -ne 0 ] && status=1
+> +echo "[+] Default length with start set (should succeed)"
+> +"$FSTRIM" -s10M $SCRATCH_MNT
+> +[ $? -ne 0 ] && status=1
+> +echo "[+] Length beyond the end of fs (should succeed)"
+> +"$FSTRIM" -l $beyond_eofs $SCRATCH_MNT
+> +[ $? -ne 0 ] && status=1
+> +echo "[+] Length beyond the end of fs with start set (should succeed)"
+> +"$FSTRIM" -s10M -l $beyond_eofs $SCRATCH_MNT
+> +[ $? -ne 0 ] && status=1
+> +
+> +_scratch_unmount
+> +_scratch_mkfs >/dev/null 2>&1
+> +_scratch_mount
+> +
+> +# This is a bit fuzzy, but since the file system is fresh
+> +# there should be at least (fssize/2) free space to trim.
+> +# This is supposed to catch wrong FITRIM argument handling
+> +out=$("$FSTRIM" -v -s10M $SCRATCH_MNT)
+> +bytes=${out%% *}
+> +
+> +if [ $bytes -gt $(_math "$fssize*1024") ]; then
+> +	status=1
+> +	echo "After the full fs discard $bytes bytes were discarded"\
+> +	     "however the file system is $(_math "$fssize*1024") bytes long."
+> +fi
+> +
+> +# Btrfs is special and this test does not apply to it
+> +# It is because btrfs does not have not-yet-used parts of the device
+> +# mapped and since we got here right after the mkfs, there is not
+> +# enough free extents in the root tree.
+> +if [ $bytes -le $(_math "$fssize*512") ] && [ $FSTYP != "btrfs" ]; then
+> +	status=1
+> +	echo "After the full fs discard $bytes bytes were discarded"\
+> +	     "however the file system is $(_math "$fssize*1024") bytes long."
+> +fi
+> +
+> +# Now to catch overflows due to fsblk->allocation group number conversion
+> +# This is different for every file system and it also apply just to some of
+> +# them. In order to add check specific for file system you're interested in
+> +# compute the arguments as you need and make the file system with proper
+> +# alignment
+> +
+> +# (2^32-1) + 2 (this is set to overflow 32bit variable by 2)
+> +base=$(_math "2^32+1")
+> +
+> +case $FSTYP in
+> +	ext[34])
+> +		agsize=32768
+> +		bsize=4096
+> +		start=$(_math "$base*$agsize*$bsize")
+> +		len=$start
+> +		export MKFS_OPTIONS="-F -b $bsize -g $agsize"
+> +		;;
+> +	xfs)
+> +		agsize=65538
+> +		bsize=4096
+> +		start=$(_math "$base*$agsize*$bsize")
+> +		len=$start
+> +		export MKFS_OPTIONS="-f -d agsize=$(_math "$agsize*$bsize") -b size=$bsize"
+> +		;;
+> +	*)
+> +		# (2^32-1) * 4096 * 65536 == 32bit max size * block size * ag size
+> +		start=$(_math "(2^32 - 1) * 4096 * 65536")
+> +		len=$start
+> +		;;
+> +esac
+> +
+> +_scratch_unmount
+> +_scratch_mkfs >/dev/null 2>&1
+> +_scratch_mount
+> +# It should fail since $start is beyond the end of file system
+> +"$FSTRIM" -s$start -l10M $SCRATCH_MNT &> /dev/null
+> +if [ $? -eq 0 ]; then
+> +	status=1
+> +	echo "It seems that fs logic handling start"\
+> +	     "argument overflows"
+> +fi
+> +
+> +_scratch_unmount
+> +_scratch_mkfs >/dev/null 2>&1
+> +_scratch_mount
+> +
+> +# len should be big enough to cover the whole file system, so if the
+> +# number of discarded bytes is smaller than file system size/2 then it
+> +# most likely overflowed
+> +# Btrfs is special and this test does not apply to it
+> +# It is because btrfs does not have not-yet-used parts of the device
+> +# mapped and since we got here right after the mkfs, there is not
+> +# enough free extents in the root tree.
+> +out=$("$FSTRIM" -v -l$len $SCRATCH_MNT)
+> +bytes=${out%% *}
+> +if [ $bytes -le $(_math "$fssize*512") ] && [ $FSTYP != "btrfs" ]; then
+> +	status=1
+> +	echo "It seems that fs logic handling len argument overflows"
+> +fi
+> +
+> +echo "Test done"
+> +exit
+> diff --git a/257.out b/257.out
+> new file mode 100644
+> index 0000000..5dac8ac
+> --- /dev/null
+> +++ b/257.out
+> @@ -0,0 +1,14 @@
+> +QA output created by 257
+> +[+] Start beyond the end of fs (should fail)
+> +fstrim: FSTRIM: Invalid argument
+> +[+] Start beyond the end of fs with len set (should fail)
+> +fstrim: FSTRIM: Invalid argument
+> +[+] Start = 2^64-1 (should fail)
+> +fstrim: FSTRIM: Invalid argument
+> +[+] Start = 2^64-1 and len is set (should fail)
+> +fstrim: FSTRIM: Invalid argument
+> +[+] Default length (should succeed)
+> +[+] Default length with start set (should succeed)
+> +[+] Length beyond the end of fs (should succeed)
+> +[+] Length beyond the end of fs with start set (should succeed)
+> +Test done
+> diff --git a/group b/group
+> index 0c746c8..b742f91 100644
+> --- a/group
+> +++ b/group
+> @@ -370,3 +370,4 @@ deprecated
+>  254 auto quick
+>  255 auto quick prealloc
+>  256 auto quick
+> +257 auto quick trim
+> 
 
-+dd: failed to truncate to 4398046509056 bytes in output file `/259.image': File too large
-
-As it turns out testfile is assigned to early in the test, and we thus
-create the images on the root filesystem.
-
----
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] xfstests: fix test 259
-
-Move the assignment of testfile after the sourcing of the common.* files to
-make sure TEST_DIR is already defined - without this we end up creating
-the file on the root filesystem, which may not support large enough files.
-
-Also add a sync after the mkfs.xfs invocation, as losetup -d might fail
-the loop device deletion with -EBUSY otherwise.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Index: xfstests-dev/259
-===================================================================
---- xfstests-dev.orig/259	2011-09-26 11:29:17.000000000 +0000
-+++ xfstests-dev/259	2011-09-26 11:32:54.000000000 +0000
-@@ -29,8 +29,6 @@ echo "QA output created by $seq"
- 
- status=1	# failure is the default!
- 
--testfile=$TEST_DIR/259.image
--
- _cleanup()
- {
-     rm -f "$testfile"
-@@ -45,6 +43,8 @@ trap "_cleanup ; exit \$status" 0 1 2 3
- _supported_fs xfs
- _supported_os Linux
- 
-+testfile=$TEST_DIR/259.image
-+
- # Test various sizes slightly less than 4 TB
- # 4398046511103 = 2^42 - 1
- # 4398046510592 = 2^42 - 512
-@@ -63,6 +63,7 @@ do
- 	lofile=$(losetup -f)
- 	losetup $lofile "$testfile"
- 	"$MKFS_XFS_PROG" -b size=512 $lofile >/dev/null || echo "mkfs failed!"
-+	sync
- 	losetup -d $lofile
- done
- 
+-- 
 
 _______________________________________________
 xfs mailing list
