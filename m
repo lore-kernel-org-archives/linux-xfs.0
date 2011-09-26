@@ -1,16 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8QLWOId219000 for <xfs@oss.sgi.com>; Mon, 26 Sep 2011 16:32:24 -0500
-Subject: Re: [PATCH v4] commit.rc: Add helper for math operation using bc
+	p8QLxdvR221988 for <xfs@oss.sgi.com>; Mon, 26 Sep 2011 16:59:39 -0500
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1317062709-2133-1-git-send-email-lczerner@redhat.com>
-References: <1316787311-23428-1-git-send-email-lczerner@redhat.com>
-	<1317062709-2133-1-git-send-email-lczerner@redhat.com>
-Date: Mon, 26 Sep 2011 16:32:17 -0500
-Message-ID: <1317072737.2925.55.camel@doink>
+Message-Id: <201109262159.p8QLxZtF016713@stout.americas.sgi.com>
+Date: Mon, 26 Sep 2011 16:59:34 -0500
+Subject: [PATCH] xfstests: 259: convert to use the _math() function
 MIME-Version: 1.0
-Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,25 +19,66 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Lukas Czerner <lczerner@redhat.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mon, 2011-09-26 at 20:45 +0200, Lukas Czerner wrote:
-> Sometimes using bash $(()) math might not be enough due to some
-> limitation (big numbers), so add helper using 'bc' program. For
-> now the results are only in perfect numbers (as in bash) since this is
-> all I need for now.
-> 
-> This commit also adds _require_math() helper which should be called by
-> every test which uses _math() since it requires "bc" to be installed on
-> the system.
-> 
-> Signed-off-by: Lukas Czerner <lczerner@redhat.com>
+Make test 259 a bit more readable by using the new _math() function.
 
-Looks fine.  Thanks for updating it.
+Signed-off-by: Alex Elder <aelder@sgi.com>
 
-Reviewed-by: Alex Elder <aelder@sgi.com>
+---
+ 259     |   17 ++++++-----------
+ 259.out |   12 ++++++------
+ 2 files changed, 12 insertions(+), 17 deletions(-)
 
+Index: b/259
+===================================================================
+--- a/259
++++ b/259
+@@ -43,20 +43,15 @@ trap "_cleanup ; exit \$status" 0 1 2 3 
+ _supported_fs xfs
+ _supported_os Linux
+ 
++_require_math
++
+ testfile=$TEST_DIR/259.image
+ 
+ # Test various sizes slightly less than 4 TB
+-# 4398046511103 = 2^42 - 1
+-# 4398046510592 = 2^42 - 512
+-# 4398046510080 = 2^42 - 1024
+-# 4398046510079 = 2^42 - 1025
+-# 4398046509056 = 2^42 - 2048
+-# 4398046507008 = 2^42 - 4096
+-
+-for ddseek in 4398046511103 4398046510592 4398046510080 \
+-	4398046510079 4398046509056 4398046507008;
+-do
+-	echo "Trying to make $ddseek B long xfs fs image"
++four_TB=$(_math "2^42")
++for del in 1 512 1024 1025 2048 4096; do
++	ddseek=$(_math "$four_TB - $del")
++	echo "Trying to make (2 TB - $del) B long xfs fs image"
+ 	rm -f "$testfile"
+ 	dd if=/dev/zero "of=$testfile" bs=1 count=0 seek=$ddseek \
+ 					>/dev/null 2>&1 || echo "dd failed"
+Index: b/259.out
+===================================================================
+--- a/259.out
++++ b/259.out
+@@ -1,7 +1,7 @@
+ QA output created by 259
+-Trying to make 4398046511103 B long xfs fs image
+-Trying to make 4398046510592 B long xfs fs image
+-Trying to make 4398046510080 B long xfs fs image
+-Trying to make 4398046510079 B long xfs fs image
+-Trying to make 4398046509056 B long xfs fs image
+-Trying to make 4398046507008 B long xfs fs image
++Trying to make (2 TB - 1) B long xfs fs image
++Trying to make (2 TB - 512) B long xfs fs image
++Trying to make (2 TB - 1024) B long xfs fs image
++Trying to make (2 TB - 1025) B long xfs fs image
++Trying to make (2 TB - 2048) B long xfs fs image
++Trying to make (2 TB - 4096) B long xfs fs image
 
 _______________________________________________
 xfs mailing list
