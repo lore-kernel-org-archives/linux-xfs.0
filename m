@@ -1,27 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8R7HmWP016661
-	for <linux-xfs@oss.sgi.com>; Tue, 27 Sep 2011 02:17:49 -0500
-Received: from smtpauth.rollernet.us (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 32AEB1C477C0
-	for <linux-xfs@oss.sgi.com>; Tue, 27 Sep 2011 00:17:46 -0700 (PDT)
-Received: from smtpauth.rollernet.us (smtpauth.rollernet.us [208.79.240.5]) by
-	cuda.sgi.com with ESMTP id YcSUy6TdXtRFskTu for
-	<linux-xfs@oss.sgi.com>; Tue, 27 Sep 2011 00:17:46 -0700 (PDT)
-Received: from smtpauth.rollernet.us (localhost [127.0.0.1])
-	by smtpauth.rollernet.us (Postfix) with ESMTP id BEAA8594055
-	for <linux-xfs@oss.sgi.com>; Tue, 27 Sep 2011 00:17:29 -0700 (PDT)
-Received: from [192.168.1.104] (balticom-152-203.balticom.lv [83.99.152.203])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by smtpauth.rollernet.us (Postfix) with ESMTPSA
-	for <linux-xfs@oss.sgi.com>; Tue, 27 Sep 2011 00:17:28 -0700 (PDT)
-Message-ID: <4E817895.6030103@11.lv>
-Date: Tue, 27 Sep 2011 07:17:41 +0000
-From: =?UTF-8?B?S8SBcmxpcyBSZXBzb25z?= <k@11.lv>
+	p8RJH7We061571 for <xfs@oss.sgi.com>; Tue, 27 Sep 2011 14:17:07 -0500
+Message-ID: <4E822130.70004@sgi.com>
+Date: Tue, 27 Sep 2011 14:17:04 -0500
+From: Bill Kendall <wkendall@sgi.com>
 MIME-Version: 1.0
-Subject: question about XATTRS of symlinks in Linux
+Subject: Re: [PATCH] xfsdump: handle dump files with checksum bug
+References: <1316781902-19803-1-git-send-email-wkendall@sgi.com>
+	<1316791615.2879.50.camel@doink>
+In-Reply-To: <1316791615.2879.50.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,29 +18,37 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: aelder@sgi.com
+Cc: xfs@oss.sgi.com
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+On 09/23/2011 10:26 AM, Alex Elder wrote:
+> On Fri, 2011-09-23 at 07:45 -0500, Bill Kendall wrote:
+>> +				mlog( MLOG_NORMAL | MLOG_WARNING, _(
+>> +					"extattr header checksum "
+>> +					"could not be verified\n") );
+>
+> Is there any way to slightly change this message so
+> that someone who saw it would feel like "I got this
+> warning but it's really OK"?  If I were a user and
+> got this message I would be a little afraid that
+> it meant something was really wrong with what got
+> restored--possibly the whole thing, or just on
+> some unnamed file, never to be found.
+>
+> Maybe "old-style extattr header checksums being
+> ignored".  (I'm sure you can come up with better,
+> I just like to offer *something* when I suggest
+> a change.)
 
-Hello!
+I more or less like what you've suggested. How about this:
 
-Could you let me know if there is any way to attach extended attributes
-to symlinks in Linux or why shouldn't it be done? I'm considering to
-write some additions for ext filesystem modules with aim of providing
-Linux with a capability to identify and sign *all* objects in filesystem
-for later identification... That, of course, includes symlinks...
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
+    "ignoring old-style extattr header checksums"
 
-iEYEARECAAYFAk6BeJQACgkQHuSu329e3GG3fgCg4LHjUqlrXSoJQMkLGrA3Iy34
-6OEAn2V/46CDcV3SSfDqh1vj4J4JP4SL
-=+SO3
------END PGP SIGNATURE-----
+Bill
 
 _______________________________________________
 xfs mailing list
