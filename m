@@ -1,26 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8S9RRnY099110 for <xfs@oss.sgi.com>; Wed, 28 Sep 2011 04:27:28 -0500
-Received: from mx2.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CCA351C444BD
-	for <xfs@oss.sgi.com>; Wed, 28 Sep 2011 02:27:26 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id qwo4m95YzD0hFSKY for <xfs@oss.sgi.com>;
-	Wed, 28 Sep 2011 02:27:26 -0700 (PDT)
-Date: Wed, 28 Sep 2011 10:27:19 +0100
-From: Mel Gorman <mgorman@suse.de>
-Subject: Re: [patch 1/2/4] mm: writeback: cleanups in preparation for
-	per-zone dirty limits
-Message-ID: <20110928092718.GD11313@suse.de>
-References: <1316526315-16801-1-git-send-email-jweiner@redhat.com>
-	<1316526315-16801-3-git-send-email-jweiner@redhat.com>
-	<20110921160226.1bf74494.akpm@google.com>
-	<20110922085242.GA29046@redhat.com>
-	<20110923144107.GB2606@redhat.com>
+	p8SB7Wco103925 for <xfs@oss.sgi.com>; Wed, 28 Sep 2011 06:07:32 -0500
+Received: from ipmail07.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 464EF196879
+	for <xfs@oss.sgi.com>; Wed, 28 Sep 2011 04:07:30 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	EDC6Bedw26PJwWjG for <xfs@oss.sgi.com>;
+	Wed, 28 Sep 2011 04:07:30 -0700 (PDT)
+Date: Wed, 28 Sep 2011 21:07:27 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: 64-bit inodes and back again
+Message-ID: <20110928110726.GG3159@dastard>
+References: <4E825C25.6050804@cchtml.com> <20110928011020.GE3159@dastard>
+	<4E8278D8.9060309@cchtml.com> <4E828BE1.8030003@cchtml.com>
+	<20110928053539.GF3159@dastard> <4E82C5AF.8040203@cchtml.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20110923144107.GB2606@redhat.com>
+In-Reply-To: <4E82C5AF.8040203@cchtml.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,38 +31,46 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Johannes Weiner <jweiner@redhat.com>
-Cc: Andrew Morton <akpm@google.com>, Rik van Riel <riel@redhat.com>, linux-ext4@vger.kernel.org, Jan Kara <jack@suse.cz>, linux-btrfs@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, Minchan Kim <minchan.kim@gmail.com>, linux-fsdevel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andrew Morton <akpm@linux-foundation.org>, Wu Fengguang <fengguang.wu@intel.com>, Chris Mason <chris.mason@oracle.com>
+To: Michael Cronenworth <mike@cchtml.com>
+Cc: xfs@oss.sgi.com
 
-On Fri, Sep 23, 2011 at 04:41:07PM +0200, Johannes Weiner wrote:
-> On Thu, Sep 22, 2011 at 10:52:42AM +0200, Johannes Weiner wrote:
-> > On Wed, Sep 21, 2011 at 04:02:26PM -0700, Andrew Morton wrote:
-> > > Should we rename determine_dirtyable_memory() to
-> > > global_dirtyable_memory(), to get some sense of its relationship with
-> > > zone_dirtyable_memory()?
-> > 
-> > Sounds good.
+On Wed, Sep 28, 2011 at 01:58:55AM -0500, Michael Cronenworth wrote:
+> On 09/28/2011 12:35 AM, Dave Chinner wrote:
+> >It has to be able to access the files with inode numbers>  32 bit,
+> >so you need to run it on the 2.6.38 kernel. Once you've done that,
+> >you should be able to read all the files back on the .35 kernel,
+> >too.
 > 
-> ---
+> I tried that. It fails on the newer kernel, too. (32-bit inode mode)
 > 
-> The next patch will introduce per-zone dirty limiting functions in
-> addition to the traditional global dirty limiting.
-> 
-> Rename determine_dirtyable_memory() to global_dirtyable_memory()
-> before adding the zone-specific version, and fix up its documentation.
-> 
-> Also, move the functions to determine the dirtyable memory and the
-> function to calculate the dirty limit based on that together so that
-> their relationship is more apparent and that they can be commented on
-> as a group.
-> 
-> Signed-off-by: Johannes Weiner <jweiner@redhat.com>
+> # xfs_reno -vv /var/lib/mock.save
+> Scanning directory tree...
+> Processing 31 directories...
+> xfs_reno: directory: 4298768443 1 /var/lib/mock.save/dist-5E-build-377-1401
+> xfs_reno: unable to duplicate directory attributes:
+> /var/lib/mock.save/dist-5E-build-377-1401
+> 0 seconds elapsed
+> Done.
+> # ls -i
+> 12884946465 dist-5E-build-373-1401   17200292312 dist-f15-build-383-1416
+>  8612299211 dist-5E-build-375-1401    8626045248 dist-f15-build-384-1416
+>  4298768443 dist-5E-build-377-1401   12884946478 dist-f15-build-385-1417
+> 17196739302 dist-5E-build-378-1401   12885555358 dist-f15-build-386-1417
+>     3226235 dist-5E-build-379-1401    4298161997 dist-f15-build-387-1417
+> 17197934889 dist-5E-build-380-1401   30082488692 dist-f15-build-388-1417
+> 12917432680 dist-5E-build-381-1415   17196807090 dist-f15-build-389-1417
+>  4295007704 dist-6E-build-374-1403          1460 xfs_reno.recover
+> 21502499833 dist-f15-build-382-1416
 
-Acked-by: Mel Gorman <mel@suse.de>
+It's failing trying to copy the attributes on a directory. What are
+the attributes on the specific directory?
 
+Cheers,
+
+dave.
 -- 
-Mel Gorman
-SUSE Labs
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
