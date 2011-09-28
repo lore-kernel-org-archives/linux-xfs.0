@@ -1,30 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8S6x9xR093289 for <xfs@oss.sgi.com>; Wed, 28 Sep 2011 01:59:09 -0500
-Received: from mta11.charter.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7D9281C4D5A3
-	for <xfs@oss.sgi.com>; Tue, 27 Sep 2011 23:59:08 -0700 (PDT)
-Received: from mta11.charter.net (mta11.charter.net [216.33.127.80]) by
-	cuda.sgi.com with ESMTP id cNKtIcUXriTHzvFd for
-	<xfs@oss.sgi.com>; Tue, 27 Sep 2011 23:59:08 -0700 (PDT)
-Received: from imp10 ([10.20.200.15]) by mta11.charter.net
-	(InterMail vM.7.09.02.04 201-2219-117-106-20090629) with ESMTP
-	id <20110928065907.ICUE4091.mta11.charter.net@imp10>
-	for <xfs@oss.sgi.com>; Wed, 28 Sep 2011 02:59:07 -0400
-Received: from [IPv6:2002:6027:d601:1:21f:c6ff:fed7:f9d5] (unknown
-	[IPv6:2002:6027:d601:1:21f:c6ff:fed7:f9d5])
-	by cchtml.com (Postfix) with ESMTPSA id 7A815C0287BED
-	for <xfs@oss.sgi.com>; Wed, 28 Sep 2011 01:59:06 -0500 (CDT)
-Message-ID: <4E82C5AF.8040203@cchtml.com>
-Date: Wed, 28 Sep 2011 01:58:55 -0500
-From: Michael Cronenworth <mike@cchtml.com>
+	p8S7pCw3095488 for <xfs@oss.sgi.com>; Wed, 28 Sep 2011 02:51:13 -0500
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 761281C4D726
+	for <xfs@oss.sgi.com>; Wed, 28 Sep 2011 00:51:11 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id iuyqsF5cfGHTRAll for
+	<xfs@oss.sgi.com>; Wed, 28 Sep 2011 00:51:11 -0700 (PDT)
+Date: Wed, 28 Sep 2011 09:50:54 +0200
+From: Johannes Weiner <jweiner@redhat.com>
+Subject: Re: [patch 1/4 v2] mm: exclude reserved pages from dirtyable memory
+Message-ID: <20110928075054.GB23535@redhat.com>
+References: <1316526315-16801-1-git-send-email-jweiner@redhat.com>
+	<1316526315-16801-2-git-send-email-jweiner@redhat.com>
+	<20110921140423.GG4849@suse.de> <20110921150328.GJ4849@suse.de>
+	<20110922090326.GB29046@redhat.com> <20110922105400.GL4849@suse.de>
+	<20110923143816.GA2606@redhat.com>
+	<20110928045551.GA14561@barrios-desktop>
 MIME-Version: 1.0
-Subject: Re: 64-bit inodes and back again
-References: <4E825C25.6050804@cchtml.com> <20110928011020.GE3159@dastard>
-	<4E8278D8.9060309@cchtml.com> <4E828BE1.8030003@cchtml.com>
-	<20110928053539.GF3159@dastard>
-In-Reply-To: <20110928053539.GF3159@dastard>
+Content-Disposition: inline
+In-Reply-To: <20110928045551.GA14561@barrios-desktop>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,38 +29,168 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Minchan Kim <minchan.kim@gmail.com>
+Cc: Rik van Riel <riel@redhat.com>, linux-ext4@vger.kernel.org, Jan Kara <jack@suse.cz>, linux-btrfs@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, Mel Gorman <mgorman@suse.de>, linux-fsdevel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andrew Morton <akpm@linux-foundation.org>, Wu Fengguang <fengguang.wu@intel.com>, Chris Mason <chris.mason@oracle.com>
 
-On 09/28/2011 12:35 AM, Dave Chinner wrote:
-> It has to be able to access the files with inode numbers>  32 bit,
-> so you need to run it on the 2.6.38 kernel. Once you've done that,
-> you should be able to read all the files back on the .35 kernel,
-> too.
+On Wed, Sep 28, 2011 at 01:55:51PM +0900, Minchan Kim wrote:
+> Hi Hannes,
+> 
+> On Fri, Sep 23, 2011 at 04:38:17PM +0200, Johannes Weiner wrote:
+> > The amount of dirtyable pages should not include the full number of
+> > free pages: there is a number of reserved pages that the page
+> > allocator and kswapd always try to keep free.
+> > 
+> > The closer (reclaimable pages - dirty pages) is to the number of
+> > reserved pages, the more likely it becomes for reclaim to run into
+> > dirty pages:
+> > 
+> >        +----------+ ---
+> >        |   anon   |  |
+> >        +----------+  |
+> >        |          |  |
+> >        |          |  -- dirty limit new    -- flusher new
+> >        |   file   |  |                     |
+> >        |          |  |                     |
+> >        |          |  -- dirty limit old    -- flusher old
+> >        |          |                        |
+> >        +----------+                       --- reclaim
+> >        | reserved |
+> >        +----------+
+> >        |  kernel  |
+> >        +----------+
+> > 
+> > This patch introduces a per-zone dirty reserve that takes both the
+> > lowmem reserve as well as the high watermark of the zone into account,
+> > and a global sum of those per-zone values that is subtracted from the
+> > global amount of dirtyable pages.  The lowmem reserve is unavailable
+> > to page cache allocations and kswapd tries to keep the high watermark
+> > free.  We don't want to end up in a situation where reclaim has to
+> > clean pages in order to balance zones.
+> > 
+> > Not treating reserved pages as dirtyable on a global level is only a
+> > conceptual fix.  In reality, dirty pages are not distributed equally
+> > across zones and reclaim runs into dirty pages on a regular basis.
+> > 
+> > But it is important to get this right before tackling the problem on a
+> > per-zone level, where the distance between reclaim and the dirty pages
+> > is mostly much smaller in absolute numbers.
+> > 
+> > Signed-off-by: Johannes Weiner <jweiner@redhat.com>
+> > ---
+> >  include/linux/mmzone.h |    6 ++++++
+> >  include/linux/swap.h   |    1 +
+> >  mm/page-writeback.c    |    6 ++++--
+> >  mm/page_alloc.c        |   19 +++++++++++++++++++
+> >  4 files changed, 30 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
+> > index 1ed4116..37a61e7 100644
+> > --- a/include/linux/mmzone.h
+> > +++ b/include/linux/mmzone.h
+> > @@ -317,6 +317,12 @@ struct zone {
+> >  	 */
+> >  	unsigned long		lowmem_reserve[MAX_NR_ZONES];
+> >  
+> > +	/*
+> > +	 * This is a per-zone reserve of pages that should not be
+> > +	 * considered dirtyable memory.
+> > +	 */
+> > +	unsigned long		dirty_balance_reserve;
+> > +
+> >  #ifdef CONFIG_NUMA
+> >  	int node;
+> >  	/*
+> > diff --git a/include/linux/swap.h b/include/linux/swap.h
+> > index b156e80..9021453 100644
+> > --- a/include/linux/swap.h
+> > +++ b/include/linux/swap.h
+> > @@ -209,6 +209,7 @@ struct swap_list_t {
+> >  /* linux/mm/page_alloc.c */
+> >  extern unsigned long totalram_pages;
+> >  extern unsigned long totalreserve_pages;
+> > +extern unsigned long dirty_balance_reserve;
+> >  extern unsigned int nr_free_buffer_pages(void);
+> >  extern unsigned int nr_free_pagecache_pages(void);
+> >  
+> > diff --git a/mm/page-writeback.c b/mm/page-writeback.c
+> > index da6d263..c8acf8a 100644
+> > --- a/mm/page-writeback.c
+> > +++ b/mm/page-writeback.c
+> > @@ -170,7 +170,8 @@ static unsigned long highmem_dirtyable_memory(unsigned long total)
+> >  			&NODE_DATA(node)->node_zones[ZONE_HIGHMEM];
+> >  
+> >  		x += zone_page_state(z, NR_FREE_PAGES) +
+> > -		     zone_reclaimable_pages(z);
+> > +		     zone_reclaimable_pages(z) -
+> > +		     zone->dirty_balance_reserve;
+> >  	}
+> >  	/*
+> >  	 * Make sure that the number of highmem pages is never larger
+> > @@ -194,7 +195,8 @@ static unsigned long determine_dirtyable_memory(void)
+> >  {
+> >  	unsigned long x;
+> >  
+> > -	x = global_page_state(NR_FREE_PAGES) + global_reclaimable_pages();
+> > +	x = global_page_state(NR_FREE_PAGES) + global_reclaimable_pages() -
+> > +	    dirty_balance_reserve;
+> >  
+> >  	if (!vm_highmem_is_dirtyable)
+> >  		x -= highmem_dirtyable_memory(x);
+> > diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+> > index 1dba05e..f8cba89 100644
+> > --- a/mm/page_alloc.c
+> > +++ b/mm/page_alloc.c
+> > @@ -96,6 +96,14 @@ EXPORT_SYMBOL(node_states);
+> >  
+> >  unsigned long totalram_pages __read_mostly;
+> >  unsigned long totalreserve_pages __read_mostly;
+> > +/*
+> > + * When calculating the number of globally allowed dirty pages, there
+> > + * is a certain number of per-zone reserves that should not be
+> > + * considered dirtyable memory.  This is the sum of those reserves
+> > + * over all existing zones that contribute dirtyable memory.
+> > + */
+> > +unsigned long dirty_balance_reserve __read_mostly;
+> > +
+> >  int percpu_pagelist_fraction;
+> >  gfp_t gfp_allowed_mask __read_mostly = GFP_BOOT_MASK;
+> >  
+> > @@ -5076,8 +5084,19 @@ static void calculate_totalreserve_pages(void)
+> >  			if (max > zone->present_pages)
+> >  				max = zone->present_pages;
+> >  			reserve_pages += max;
+> > +			/*
+> > +			 * Lowmem reserves are not available to
+> > +			 * GFP_HIGHUSER page cache allocations and
+> > +			 * kswapd tries to balance zones to their high
+> > +			 * watermark.  As a result, neither should be
+> > +			 * regarded as dirtyable memory, to prevent a
+> > +			 * situation where reclaim has to clean pages
+> > +			 * in order to balance the zones.
+> > +			 */
+> 
+> Could you put Mel's description instead of it if you don't mind?
+> If I didn't see Mel's thing, maybe I wouldn't suggest but it looks
+> more easier to understand.
 
-I tried that. It fails on the newer kernel, too. (32-bit inode mode)
+I changed it because it was already referring to allocation placement,
+but at the point in time where this comment is introduced there is no
+allocation placement based on dirty pages yet.
 
-# xfs_reno -vv /var/lib/mock.save
-Scanning directory tree...
-Processing 31 directories...
-xfs_reno: directory: 4298768443 1 /var/lib/mock.save/dist-5E-build-377-1401
-xfs_reno: unable to duplicate directory attributes: 
-/var/lib/mock.save/dist-5E-build-377-1401
-0 seconds elapsed
-Done.
-# ls -i
-12884946465 dist-5E-build-373-1401   17200292312 dist-f15-build-383-1416
-  8612299211 dist-5E-build-375-1401    8626045248 dist-f15-build-384-1416
-  4298768443 dist-5E-build-377-1401   12884946478 dist-f15-build-385-1417
-17196739302 dist-5E-build-378-1401   12885555358 dist-f15-build-386-1417
-     3226235 dist-5E-build-379-1401    4298161997 dist-f15-build-387-1417
-17197934889 dist-5E-build-380-1401   30082488692 dist-f15-build-388-1417
-12917432680 dist-5E-build-381-1415   17196807090 dist-f15-build-389-1417
-  4295007704 dist-6E-build-374-1403          1460 xfs_reno.recover
-21502499833 dist-f15-build-382-1416
+The other thing is that it said lowmem_reserves were respected to
+prevent increasing lowmem pressure, but lowmem is protected by the
+watermark checks during the allocation.  I took it into account to not
+end up with a number of dirtyable pages that is bigger than the amount
+of technically available page cache pages.  Otherwise, you could end
+up with all page cache pages in a zone dirtied at the time reclaim
+kicks in and we are back to square one.
+
+Maybe you can fingerpoint to the part that is harder to understand so
+I can fix it?
 
 _______________________________________________
 xfs mailing list
