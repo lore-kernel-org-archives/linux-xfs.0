@@ -1,12 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8SBFhRt104242 for <xfs@oss.sgi.com>; Wed, 28 Sep 2011 06:15:43 -0500
+	p8SAvJgj103510 for <xfs@oss.sgi.com>; Wed, 28 Sep 2011 05:57:19 -0500
 From: Alex Elder <aelder@sgi.com>
-Subject: [PATCH] xfsprogs: xfs_quota: don't print invalid quota file inode
-	number
-Date: Wed, 28 Sep 2011 06:15:37 -0500
-Message-Id: <43b1c14570decac4b102616fb8e9b14d101edc39.1317208532.git.aelder@sgi.com>
+Subject: [PATCH 1/5] xfsprogs: libxcmd: don't clobber fs_table on realloc()
+Date: Wed, 28 Sep 2011 05:57:08 -0500
+Message-Id: <08dbe8c3d0f49bac0c18570a68e7aa983cb4c731.1317207144.git.aelder@sgi.com>
+In-Reply-To: <1317207432-8464-1-git-send-email-aelder@sgi.com>
+References: <1317207432-8464-1-git-send-email-aelder@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,40 +24,46 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Alex Elder <aelder@sgi.com>
 
-When the state of quota files is dumped, xfs_quota blindly shows
-whatever inode number is returned by the kernel.  If one of the
-quota types is not enabled or enforced, the inode number provided
-is an invalid value ((__u64) -1).  Rather than print a meaningless
-large integer, print "N/A" in its place to make interpreting the
-result it a little more obvious.
+In fs_table_insert(), realloc() is called to resize the global
+fs_table.  If it fails, it overwrites a previously valid fs_table
+pointer with NULL.
+
+Instead, assign the return value to a local temporary and overwrite
+fs_table only if the realloc() call succeeds.  The only defined
+errno value for a realloc() failure is ENOMEM, so return that
+explicitly in the event it fails.
 
 Signed-off-by: Alex Elder <aelder@sgi.com>
 ---
- quota/state.c |   11 +++++++----
- 1 files changed, 7 insertions(+), 4 deletions(-)
+ libxcmd/paths.c |    8 +++++---
+ 1 files changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/quota/state.c b/quota/state.c
-index 3862e67..42bffc0 100644
---- a/quota/state.c
-+++ b/quota/state.c
-@@ -122,10 +122,13 @@ state_qfilestat(
- 		mount->fs_dir, mount->fs_name);
- 	fprintf(fp, _("  Accounting: %s\n"), accounting ? _("ON") : _("OFF"));
- 	fprintf(fp, _("  Enforcement: %s\n"), enforcing ? _("ON") : _("OFF"));
--	fprintf(fp, _("  Inode: #%llu (%llu blocks, %lu extents)\n"),
--		(unsigned long long)qfs->qfs_ino,
--		(unsigned long long)qfs->qfs_nblks,
--		(unsigned long)qfs->qfs_nextents);
-+	if (qfs->qfs_ino != (__u64) -1)
-+		fprintf(fp, _("  Inode: #%llu (%llu blocks, %lu extents)\n"),
-+			(unsigned long long)qfs->qfs_ino,
-+			(unsigned long long)qfs->qfs_nblks,
-+			(unsigned long)qfs->qfs_nextents);
-+	else
-+		fprintf(fp, _("  Inode: N/A\n"));
- }
+diff --git a/libxcmd/paths.c b/libxcmd/paths.c
+index 1dbe0be..0e02eb7 100644
+--- a/libxcmd/paths.c
++++ b/libxcmd/paths.c
+@@ -102,6 +102,7 @@ fs_table_insert(
+ 	char		*fsrt)
+ {
+ 	dev_t		datadev, logdev, rtdev;
++	struct fs_path	*tmp_fs_table;
  
- static void
+ 	if (!dir || !fsname)
+ 		return EINVAL;
+@@ -114,9 +115,10 @@ fs_table_insert(
+ 	if (fsrt && (fsrt = fs_device_number(fsrt, &rtdev, 1)) == NULL)
+ 		return errno;
+ 
+-	fs_table = realloc(fs_table, sizeof(fs_path_t) * (fs_count + 1));
+-	if (!fs_table)
+-		return errno;
++	tmp_fs_table = realloc(fs_table, sizeof(fs_path_t) * (fs_count + 1));
++	if (!tmp_fs_table)
++		return ENOMEM;
++	fs_table = tmp_fs_table;
+ 
+ 	fs_path = &fs_table[fs_count];
+ 	fs_path->fs_dir = dir;
 -- 
 1.7.6.2
 
