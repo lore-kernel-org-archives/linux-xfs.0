@@ -1,31 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8SI5n1u123198 for <xfs@oss.sgi.com>; Wed, 28 Sep 2011 13:05:49 -0500
-Received: from mta31.charter.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2B5631C4EDDA
-	for <xfs@oss.sgi.com>; Wed, 28 Sep 2011 11:05:47 -0700 (PDT)
-Received: from mta31.charter.net (mta31.charter.net [216.33.127.82]) by
-	cuda.sgi.com with ESMTP id 01YVwsFhZIWAEJRJ for
-	<xfs@oss.sgi.com>; Wed, 28 Sep 2011 11:05:47 -0700 (PDT)
-Received: from imp10 ([10.20.200.15]) by mta31.charter.net
-	(InterMail vM.7.09.02.04 201-2219-117-106-20090629) with ESMTP
-	id <20110928180547.DCLF3994.mta31.charter.net@imp10>
-	for <xfs@oss.sgi.com>; Wed, 28 Sep 2011 14:05:47 -0400
-Received: from [172.17.100.41] (unknown [67.130.187.94])
-	by cchtml.com (Postfix) with ESMTPSA id 650E0C0287BED
-	for <xfs@oss.sgi.com>; Wed, 28 Sep 2011 13:05:46 -0500 (CDT)
-Message-ID: <4E8361F8.2040706@cchtml.com>
-Date: Wed, 28 Sep 2011 13:05:44 -0500
-From: Michael Cronenworth <mike@cchtml.com>
+	p8SI9JPR123392 for <xfs@oss.sgi.com>; Wed, 28 Sep 2011 13:09:19 -0500
+Received: from mail-vw0-f53.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 294E716AE0DA
+	for <xfs@oss.sgi.com>; Wed, 28 Sep 2011 11:15:21 -0700 (PDT)
+Received: from mail-vw0-f53.google.com (mail-vw0-f53.google.com
+	[209.85.212.53]) by cuda.sgi.com with ESMTP id kpp9Xsu7xOlSqblC
+	for <xfs@oss.sgi.com>; Wed, 28 Sep 2011 11:15:21 -0700 (PDT)
+Received: by vws19 with SMTP id 19so5273215vws.26
+	for <xfs@oss.sgi.com>; Wed, 28 Sep 2011 11:09:17 -0700 (PDT)
+Date: Thu, 29 Sep 2011 03:09:07 +0900
+From: Minchan Kim <minchan.kim@gmail.com>
+Subject: Re: [patch 2/2/4] mm: try to distribute dirty pages fairly across
+	zones
+Message-ID: <20110928180907.GD1696@barrios-desktop>
+References: <1316526315-16801-1-git-send-email-jweiner@redhat.com>
+	<1316526315-16801-3-git-send-email-jweiner@redhat.com>
+	<20110921160226.1bf74494.akpm@google.com>
+	<20110922085242.GA29046@redhat.com>
+	<20110923144248.GC2606@redhat.com>
+	<20110928055640.GB14561@barrios-desktop>
+	<20110928071154.GA23535@redhat.com>
 MIME-Version: 1.0
-Subject: Re: 64-bit inodes and back again
-References: <4E825C25.6050804@cchtml.com> <20110928011020.GE3159@dastard>
-	<4E8278D8.9060309@cchtml.com> <4E828BE1.8030003@cchtml.com>
-	<20110928053539.GF3159@dastard> <4E82C5AF.8040203@cchtml.com>
-	<20110928110726.GG3159@dastard> <4E831D81.6070102@cchtml.com>
-	<4E835B6F.5040500@hardwarefreak.com>
-In-Reply-To: <4E835B6F.5040500@hardwarefreak.com>
+Content-Disposition: inline
+In-Reply-To: <20110928071154.GA23535@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,18 +33,61 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Johannes Weiner <jweiner@redhat.com>
+Cc: Andrew Morton <akpm@google.com>, Rik van Riel <riel@redhat.com>, linux-ext4@vger.kernel.org, Jan Kara <jack@suse.cz>, linux-btrfs@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, Mel Gorman <mgorman@suse.de>, linux-fsdevel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andrew Morton <akpm@linux-foundation.org>, Wu Fengguang <fengguang.wu@intel.com>, Chris Mason <chris.mason@oracle.com>
 
-Stan Hoeppner wrote:
-> When you removed the inode64 mount option in fstab, did you change any
-> other mount options on this filesystem?
+On Wed, Sep 28, 2011 at 09:11:54AM +0200, Johannes Weiner wrote:
+> On Wed, Sep 28, 2011 at 02:56:40PM +0900, Minchan Kim wrote:
+> > On Fri, Sep 23, 2011 at 04:42:48PM +0200, Johannes Weiner wrote:
+> > > The maximum number of dirty pages that exist in the system at any time
+> > > is determined by a number of pages considered dirtyable and a
+> > > user-configured percentage of those, or an absolute number in bytes.
+> > 
+> > It's explanation of old approach.
+> 
+> What do you mean?  This does not change with this patch.  We still
+> have a number of dirtyable pages and a limit that is applied
+> relatively to this number.
+> 
+> > > This number of dirtyable pages is the sum of memory provided by all
+> > > the zones in the system minus their lowmem reserves and high
+> > > watermarks, so that the system can retain a healthy number of free
+> > > pages without having to reclaim dirty pages.
+> > 
+> > It's a explanation of new approach.
+> 
+> Same here, this aspect is also not changed with this patch!
+> 
+> > > But there is a flaw in that we have a zoned page allocator which does
+> > > not care about the global state but rather the state of individual
+> > > memory zones.  And right now there is nothing that prevents one zone
+> > > from filling up with dirty pages while other zones are spared, which
+> > > frequently leads to situations where kswapd, in order to restore the
+> > > watermark of free pages, does indeed have to write pages from that
+> > > zone's LRU list.  This can interfere so badly with IO from the flusher
+> > > threads that major filesystems (btrfs, xfs, ext4) mostly ignore write
+> > > requests from reclaim already, taking away the VM's only possibility
+> > > to keep such a zone balanced, aside from hoping the flushers will soon
+> > > clean pages from that zone.
+> > 
+> > It's a explanation of old approach, again!
+> > Shoudn't we move above phrase of new approach into below?
+> 
+> Everything above describes the current behaviour (at the point of this
+> patch, so respecting lowmem_reserve e.g. is part of the current
+> behaviour by now) and its problems.  And below follows a description
+> of how the patch tries to fix it.
 
-No. I do have quotas enabled, but they have been enabled all during this 
-time from switching 64-bit inodes on and off.
+It seems that it's not a good choice to use "old" and "new" terms.
+Hannes, please ignore, it's not a biggie.
+
+-- 
+Kind regards,
+Minchan Kim
 
 _______________________________________________
 xfs mailing list
