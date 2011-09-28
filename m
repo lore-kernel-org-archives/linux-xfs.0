@@ -1,11 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8SAvIIi103493 for <xfs@oss.sgi.com>; Wed, 28 Sep 2011 05:57:18 -0500
+	p8SAvJY3103518 for <xfs@oss.sgi.com>; Wed, 28 Sep 2011 05:57:19 -0500
 From: Alex Elder <aelder@sgi.com>
-Subject: [PATCH 3/5] xfsprogs: libxcmd: kill "search" arg in fs_device_number()
-Date: Wed, 28 Sep 2011 05:57:10 -0500
-Message-Id: <1b14f28de48534ea9bff229a6a3ff235923857c9.1317207144.git.aelder@sgi.com>
+Subject: [PATCH 5/5] xfsprogs: libxcmd: use fs_device_number() consistently
+Date: Wed, 28 Sep 2011 05:57:12 -0500
+Message-Id: <c6abffe0a5f72665410627b5a03333627a860818.1317207144.git.aelder@sgi.com>
 In-Reply-To: <1317207432-8464-1-git-send-email-aelder@sgi.com>
 References: <1317207432-8464-1-git-send-email-aelder@sgi.com>
 In-Reply-To: <08dbe8c3d0f49bac0c18570a68e7aa983cb4c731.1317207144.git.aelder@sgi.com>
@@ -26,94 +26,137 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Alex Elder <aelder@sgi.com>
 
-The function fs_device_number() in libxcmd allows the caller to
-optionally "search" in /dev for a given device path in order to look
-up the dev_t that represents that device path.
+The libxcmd code builds up a table that records information about
+all filesystems that might be subject to quotas, as well as a set
+of directories that are the roots of project quota trees.
 
-If set, all that function does is prepend "/dev/" to the path to see
-if that produces a device path that works.  So it appears this might
-have been to support providing just the basename of a device as a
-shorthand for its full path.
+When building the table, the device number for each affected
+filesystem is determined (in fs_device_number()) using a call to
+stat64().  It turns out that in all cases when doing this, a
+directory path (and *not* a device special file path) is specified,
+in which case the appropriate filesystem device id is found in the
+st_dev field produce by the call to stat64() (i.e., the device id
+for the mounted filesystem containing the path).  Accordingly,
+fs_device_number() always returns the st_dev field.
 
-In practice, the paths passed to this function with "search" set are
-those used in the mount options for a mounted XFS filesystem for the
-optional log and real-time device paths.  When such paths are used
-in the XFS mount path, they will have been subject to a AT_FDCWD
-path lookup, so unless the process mounting the filesystem was
-sitting in /dev no relative path would ever be specified as just the
-basename.
+Another routine, fs_table_lookup(), looks up an entry in this table
+based on the path name provided.  However this function allows a
+path to a device special file be provided.  In that case the right
+device id to use is found in the st_rdev field returned by stat64().
 
-Even though the "mounting with CWD=/dev" is a conceivable scenario,
-I think it is not likely enough to warrant the special handling to
-cover that case in fs_device_number().
+I found this to be confusing, and it took a while to convince
+myself that this wasn't actually bug.  (It wasn't initially clear
+that device special files were never passed to fs_device_number().)
 
-So delete the code that retries with a "/dev" prepended, eliminate
-the "search" argument that enables it, and fix the callers
-accordingly.
+In order to prevent myself and others from ever wasting time like
+this again, use fs_device_number() every time a device number is
+needed, and in doing so determine it consistently in all cases (that
+is--use st_rdev for device special files and st_dev otherwise).
+
+In the process, change fs_device_number() to return an zero on
+success (or an errno) rather than its first argument (or NULL).
 
 Signed-off-by: Alex Elder <aelder@sgi.com>
 ---
- libxcmd/paths.c |   33 +++++++--------------------------
- 1 files changed, 7 insertions(+), 26 deletions(-)
+ libxcmd/paths.c |   46 +++++++++++++++++++++-------------------------
+ 1 files changed, 21 insertions(+), 25 deletions(-)
 
 diff --git a/libxcmd/paths.c b/libxcmd/paths.c
-index 5aa343b..f1cd6c7 100644
+index aa0aeb6..f4110d4 100644
 --- a/libxcmd/paths.c
 +++ b/libxcmd/paths.c
-@@ -76,33 +76,14 @@ fs_table_lookup(
- static char *
+@@ -37,18 +37,26 @@ struct fs_path *fs_path;
+ char *mtab_file;
+ #define PROC_MOUNTS	"/proc/self/mounts"
+ 
+-static char *
++static int
  fs_device_number(
- 	char		*name,
--	dev_t		*devnum,
--	int		search)
-+	dev_t		*devnum)
+-	char		*name,
++	const char	*name,
+ 	dev_t		*devnum)
  {
  	struct stat64	sbuf;
--	int		len;
--
--	if (stat64(name, &sbuf) < 0) {
--		if (!search)
--			return NULL;
--		len = strlen(name) + 1;
--		name = realloc(name, len + 5);  /* "/dev/ */
--		if (!name) {
--			fprintf(stderr, _("%s: warning - out of memory\n"),
--				progname);
--			return NULL;
--		}
--		memmove(name + 5, name, len);
--		strncpy(name, "/dev/", 5);
--		if (stat64(name, &sbuf) < 0) {
--			fprintf(stderr,
--				_("%s: warning - cannot find %s: %s\n"),
--				progname, name, strerror(errno));
--			free(name);
--			return NULL;
--		}
--	}
-+
-+	if (stat64(name, &sbuf) < 0)
-+		return NULL;
- 	*devnum = sbuf.st_dev;
-+
- 	return name;
+ 
+ 	if (stat64(name, &sbuf) < 0)
+-		return NULL;
+-	*devnum = sbuf.st_dev;
++		return errno;
++	/*
++	 * We want to match st_rdev if the path provided is a device
++	 * special file.  Otherwise we are looking for the the
++	 * device id for the containing filesystem, in st_dev.
++	 */
++	if (S_ISBLK(sbuf.st_mode) || S_ISCHR(sbuf.st_mode))
++		*devnum = sbuf.st_rdev;
++	else
++		*devnum = sbuf.st_dev;
+ 
+-	return name;
++	return 0;
  }
  
-@@ -122,11 +103,11 @@ fs_table_insert(
+ /*
+@@ -61,23 +69,12 @@ fs_table_lookup(
+ 	const char	*dir,
+ 	uint		flags)
+ {
+-	struct stat64	sbuf;
+ 	uint		i;
+-	dev_t		dev;
++	dev_t		dev = 0;
+ 
+-	if (stat64(dir, &sbuf) < 0)
++	if (fs_device_number(dir, &dev))
+ 		return NULL;
+ 
+-	/*
+-	 * We want to match st_rdev if the directory provided is a
+-	 * device special file.  Otherwise we are looking for the
+-	 * the device id for the containing filesystem, in st_dev.
+-	 */
+-	if (S_ISBLK(sbuf.st_mode) || S_ISCHR(sbuf.st_mode))
+-		dev = sbuf.st_rdev;
+-	else
+-		dev = sbuf.st_dev;
+-
+ 	for (i = 0; i < fs_count; i++) {
+ 		if ((flags & fs_table[i].fs_flags) == 0)
+ 			continue;
+@@ -103,11 +100,11 @@ fs_table_insert(
  		return EINVAL;
  
  	datadev = logdev = rtdev = 0;
--	if (!fs_device_number(dir, &datadev, 0))
-+	if (!fs_device_number(dir, &datadev))
+-	if (!fs_device_number(dir, &datadev))
++	if (fs_device_number(dir, &datadev))
  		return errno;
--	if (fslog && (fslog = fs_device_number(fslog, &logdev, 1)) == NULL)
-+	if (fslog && !fs_device_number(fslog, &logdev))
+-	if (fslog && !fs_device_number(fslog, &logdev))
++	if (fslog && fs_device_number(fslog, &logdev))
  		return errno;
--	if (fsrt && (fsrt = fs_device_number(fsrt, &rtdev, 1)) == NULL)
-+	if (fsrt && !fs_device_number(fsrt, &rtdev))
+-	if (fsrt && !fs_device_number(fsrt, &rtdev))
++	if (fsrt && fs_device_number(fsrt, &rtdev))
  		return errno;
  
  	tmp_fs_table = realloc(fs_table, sizeof(fs_path_t) * (fs_count + 1));
+@@ -293,15 +290,14 @@ fs_mount_point_from_path(
+ {
+ 	fs_cursor_t	cursor;
+ 	fs_path_t	*fs;
+-	struct stat64	s;
++	dev_t		dev = 0;
+ 
+-	if (stat64(dir, &s) < 0) {
++	if (fs_device_number(dir, &dev))
+ 		return NULL;
+-	}
+ 
+ 	fs_cursor_initialise(NULL, FS_MOUNT_POINT, &cursor);
+ 	while ((fs = fs_cursor_next_entry(&cursor))) {
+-		if (fs->fs_datadev == s.st_dev)
++		if (fs->fs_datadev == dev)
+ 			break;
+ 	}
+ 	return fs;
 -- 
 1.7.6.2
 
