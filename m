@@ -1,16 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8TB5W1f185288 for <xfs@oss.sgi.com>; Thu, 29 Sep 2011 06:05:32 -0500
-Date: Thu, 29 Sep 2011 07:05:28 -0400
+	p8TB7qbN185412 for <xfs@oss.sgi.com>; Thu, 29 Sep 2011 06:07:52 -0500
+Date: Thu, 29 Sep 2011 07:07:50 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfsprogs: xfs_quota: don't print invalid quota file
-	inode number
-Message-ID: <20110929110528.GA509@infradead.org>
-References: <43b1c14570decac4b102616fb8e9b14d101edc39.1317208532.git.aelder@sgi.com>
+Subject: Re: [PATCH 2/2] xfsprogs: xfs_quota: kill local variable "type" from
+	free_f()
+Message-ID: <20110929110750.GC509@infradead.org>
+References: <a14d653e8a238b3207c5076eb6e6f3358e433422.1317210237.git.aelder@sgi.com>
+	<ccff8f308fbc7e15e9a74f28b5eb98490a0e3c82.1317210237.git.aelder@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <43b1c14570decac4b102616fb8e9b14d101edc39.1317208532.git.aelder@sgi.com>
+In-Reply-To: <ccff8f308fbc7e15e9a74f28b5eb98490a0e3c82.1317210237.git.aelder@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,17 +27,17 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Alex Elder <aelder@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, Sep 28, 2011 at 06:15:37AM -0500, Alex Elder wrote:
-> When the state of quota files is dumped, xfs_quota blindly shows
-> whatever inode number is returned by the kernel.  If one of the
-> quota types is not enabled or enforced, the inode number provided
-> is an invalid value ((__u64) -1).  Rather than print a meaningless
-> large integer, print "N/A" in its place to make interpreting the
-> result it a little more obvious.
-> 
-> Signed-off-by: Alex Elder <aelder@sgi.com>
+On Wed, Sep 28, 2011 at 06:44:34AM -0500, Alex Elder wrote:
+> Only one value is ever really used for the  "type" variable in
+> free_f(), and it indicates that either type of entry in fs_table
+> is wanted.  Just get rid of the variable and make use of the
+> ability to provide 0 to free_space_list() to indicate that.
 
-Looks good,
+This sounds like someone planned to add an argument to it to support
+looking at just normal or project quotas.
+
+Given that it never materialized and no one asked for it I'm fine
+with your cleanup.
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 
