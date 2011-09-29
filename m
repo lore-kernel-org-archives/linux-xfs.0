@@ -1,17 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8T11gbD150630 for <xfs@oss.sgi.com>; Wed, 28 Sep 2011 20:01:42 -0500
-Date: Wed, 28 Sep 2011 21:01:41 -0400
+	p8TB5W1f185288 for <xfs@oss.sgi.com>; Thu, 29 Sep 2011 06:05:32 -0500
+Date: Thu, 29 Sep 2011 07:05:28 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/5] xfsprogs: libxcmd: kill "search" arg in
-	fs_device_number()
-Message-ID: <20110929010141.GC26863@infradead.org>
-References: <08dbe8c3d0f49bac0c18570a68e7aa983cb4c731.1317207144.git.aelder@sgi.com>
-	<1b14f28de48534ea9bff229a6a3ff235923857c9.1317207144.git.aelder@sgi.com>
+Subject: Re: [PATCH] xfsprogs: xfs_quota: don't print invalid quota file
+	inode number
+Message-ID: <20110929110528.GA509@infradead.org>
+References: <43b1c14570decac4b102616fb8e9b14d101edc39.1317208532.git.aelder@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1b14f28de48534ea9bff229a6a3ff235923857c9.1317207144.git.aelder@sgi.com>
+In-Reply-To: <43b1c14570decac4b102616fb8e9b14d101edc39.1317208532.git.aelder@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,9 +26,17 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Alex Elder <aelder@sgi.com>
 Cc: xfs@oss.sgi.com
 
-I guess that code is some sort of IRIX leftover, but I can't really
-see any use in a Linux environment.
+On Wed, Sep 28, 2011 at 06:15:37AM -0500, Alex Elder wrote:
+> When the state of quota files is dumped, xfs_quota blindly shows
+> whatever inode number is returned by the kernel.  If one of the
+> quota types is not enabled or enforced, the inode number provided
+> is an invalid value ((__u64) -1).  Rather than print a meaningless
+> large integer, print "N/A" in its place to make interpreting the
+> result it a little more obvious.
+> 
+> Signed-off-by: Alex Elder <aelder@sgi.com>
 
+Looks good,
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 
