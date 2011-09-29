@@ -1,15 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8TEB40h196402 for <xfs@oss.sgi.com>; Thu, 29 Sep 2011 09:11:04 -0500
-Subject: Re: [PATCH 1/5] xfsprogs: libxcmd: don't clobber fs_table on realloc()
+	p8TEcF7x198031 for <xfs@oss.sgi.com>; Thu, 29 Sep 2011 09:38:15 -0500
+Subject: Re: [PATCH v2] xfsdump: handle dump files with checksum bug
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110929005946.GA26863@infradead.org>
-References: <1317207432-8464-1-git-send-email-aelder@sgi.com>
-	<08dbe8c3d0f49bac0c18570a68e7aa983cb4c731.1317207144.git.aelder@sgi.com>
-	<20110929005946.GA26863@infradead.org>
-Date: Thu, 29 Sep 2011 09:10:55 -0500
-Message-ID: <1317305455.3049.2.camel@doink>
+In-Reply-To: <1317156572-11897-1-git-send-email-wkendall@sgi.com>
+References: <1317156572-11897-1-git-send-email-wkendall@sgi.com>
+Date: Thu, 29 Sep 2011 09:38:10 -0500
+Message-ID: <1317307090.3049.3.camel@doink>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -24,35 +22,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Bill Kendall <wkendall@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, 2011-09-28 at 20:59 -0400, Christoph Hellwig wrote:
-> On Wed, Sep 28, 2011 at 05:57:08AM -0500, Alex Elder wrote:
-> > In fs_table_insert(), realloc() is called to resize the global
-> > fs_table.  If it fails, it overwrites a previously valid fs_table
-> > pointer with NULL.
-> > 
-> > Instead, assign the return value to a local temporary and overwrite
-> > fs_table only if the realloc() call succeeds.  The only defined
-> > errno value for a realloc() failure is ENOMEM, so return that
-> > explicitly in the event it fails.
+On Tue, 2011-09-27 at 15:49 -0500, Bill Kendall wrote:
+> xfsdump previously contained a bug in the code which generated
+> a checksum on the header for extended attributes. This bug
+> was recently fixed, but a new xfsrestore will fail if it
+> encounters an old dump file which had checksums enabled. (This
+> is unlikely since checksums have just recently been enabled in
+> the build, and the above-mentioned bug was fixed at the same time.)
 > 
-> Looks good.  Did you encounter this issue in real life?
+> This patch uses a new flag in an extattrhdr_t to indicate a
+> checksum is present. If this is set, the checksum is validated.
+> If instead the old checksum flag is set, a warning is issued saying
+> the header could not be validated, and xfsrestore will assume the
+> header is valid.
+> 
+> Note that with this change a new dump cannot be restored with an
+> old restore which has checksums enabled. But as I mentioned, old
+> restores do not have checksums enabled.
+> 
+> Signed-off-by: Bill Kendall <wkendall@sgi.com>
 
-No, just by inspection.
+Looks good.
 
-I'm working on fixing a different problem, and to do
-so I need to rearrange things a bit.  Along the way
-I found a bunch of little annoyances like this one,
-so I figured I might as well fix them while I'm in
-there.
-  
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-
-Thanks a lot for the reviews.
-
-					-Alex
+Reviewed-by: Alex Elder <aelder@sgi.com>
 
 
 _______________________________________________
