@@ -1,17 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8TGxxhO204214 for <xfs@oss.sgi.com>; Thu, 29 Sep 2011 11:59:59 -0500
-Subject: Re: [PATCH 3/3] xfs: unlock the inode before log force in
-	xfs_change_file_space
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20110918204910.285475671@bombadil.infradead.org>
-References: <20110918204748.547510183@bombadil.infradead.org>
-	<20110918204910.285475671@bombadil.infradead.org>
-Date: Thu, 29 Sep 2011 11:59:54 -0500
-Message-ID: <1317315594.3049.32.camel@doink>
-MIME-Version: 1.0
-Reply-To: aelder@sgi.com
+	p8U4jEEL236312 for <xfs@oss.sgi.com>; Thu, 29 Sep 2011 23:45:14 -0500
+Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A8A0F152A91B
+	for <xfs@oss.sgi.com>; Thu, 29 Sep 2011 21:51:24 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	WmHkHK8G0GKJe9AO for <xfs@oss.sgi.com>;
+	Thu, 29 Sep 2011 21:51:24 -0700 (PDT)
+Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1R9UyA-0005CR-Kp
+	for xfs@oss.sgi.com; Fri, 30 Sep 2011 14:45:06 +1000
+Received: from dave by disappointment with local (Exim 4.76)
+	(envelope-from <dave@disappointment.disaster>) id 1R9UyA-00071Z-DW
+	for xfs@oss.sgi.com; Fri, 30 Sep 2011 14:45:06 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 2/2] xfs: reduce the number of log forces from tail pushing
+Date: Fri, 30 Sep 2011 14:45:03 +1000
+Message-Id: <1317357903-26947-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1317357903-26947-1-git-send-email-david@fromorbit.com>
+References: <1317357903-26947-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,23 +29,138 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Sun, 2011-09-18 at 16:47 -0400, Christoph Hellwig wrote:
-> Let the transaction commit unlock the inode before it potentially causes
-> a synchronous log force.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+From: Dave Chinner <dchinner@redhat.com>
 
-Looks good.
+The AIL push code will issue a log force on ever single push loop
+that it exits and has encountered pinned items. It doesn't rescan
+these pinned items until it revisits the AIL from the start. Hence
+we only need to force the log once per walk from the start of the
+AIL to the target LSN.
 
+This results in numbers like this:
+
+	xs_push_ail_flush.....         1456
+	xs_log_force.........          1485
+
+For an 8-way 50M inode create workload - almost all the log forces
+are coming from the AIL pushing code.
+
+Reduce the number of log forces by only forcing the log if the
+previous walk found pinned buffers. This reduces the numbers to:
+
+	xs_push_ail_flush.....          665
+	xs_log_force.........           682
+
+For the same test.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Alex Elder <aelder@sgi.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_trans_ail.c  |   33 ++++++++++++++++++++-------------
+ fs/xfs/xfs_trans_priv.h |    1 +
+ 2 files changed, 21 insertions(+), 13 deletions(-)
 
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index c15aa29..9df7f9f 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -372,12 +372,24 @@ xfs_ail_worker(
+ 	xfs_lsn_t		lsn;
+ 	xfs_lsn_t		target;
+ 	long			tout = 10;
+-	int			flush_log = 0;
+ 	int			stuck = 0;
+ 	int			count = 0;
+ 	int			push_xfsbufd = 0;
+ 
++	/*
++	 * If last time we ran we encountered pinned items, force the log first
++	 * and wait for it before pushing again.
++	 */
+ 	spin_lock(&ailp->xa_lock);
++	if (ailp->xa_last_pushed_lsn == 0 && ailp->xa_log_flush &&
++	    !list_empty(&ailp->xa_ail)) {
++		ailp->xa_log_flush = 0;
++		spin_unlock(&ailp->xa_lock);
++		XFS_STATS_INC(xs_push_ail_flush);
++		xfs_log_force(mp, XFS_LOG_SYNC);
++		spin_lock(&ailp->xa_lock);
++	}
++
+ 	target = ailp->xa_target;
+ 	lip = xfs_trans_ail_cursor_first(ailp, &cur, ailp->xa_last_pushed_lsn);
+ 	if (!lip || XFS_FORCED_SHUTDOWN(mp)) {
+@@ -435,7 +447,7 @@ xfs_ail_worker(
+ 		case XFS_ITEM_PINNED:
+ 			XFS_STATS_INC(xs_push_ail_pinned);
+ 			stuck++;
+-			flush_log = 1;
++			ailp->xa_log_flush++;
+ 			break;
+ 
+ 		case XFS_ITEM_LOCKED:
+@@ -480,16 +492,6 @@ xfs_ail_worker(
+ 	xfs_trans_ail_cursor_done(ailp, &cur);
+ 	spin_unlock(&ailp->xa_lock);
+ 
+-	if (flush_log) {
+-		/*
+-		 * If something we need to push out was pinned, then
+-		 * push out the log so it will become unpinned and
+-		 * move forward in the AIL.
+-		 */
+-		XFS_STATS_INC(xs_push_ail_flush);
+-		xfs_log_force(mp, 0);
+-	}
+-
+ 	if (push_xfsbufd) {
+ 		/* we've got delayed write buffers to flush */
+ 		wake_up_process(mp->m_ddev_targp->bt_task);
+@@ -500,6 +502,7 @@ out_done:
+ 	if (!count) {
+ 		/* We're past our target or empty, so idle */
+ 		ailp->xa_last_pushed_lsn = 0;
++		ailp->xa_log_flush = 0;
+ 
+ 		/*
+ 		 * We clear the XFS_AIL_PUSHING_BIT first before checking
+@@ -532,9 +535,13 @@ out_done:
+ 		 * were stuck.
+ 		 *
+ 		 * Backoff a bit more to allow some I/O to complete before
+-		 * continuing from where we were.
++		 * restarting from the start of the AIL. This prevents us
++		 * from spinning on the same items, and if they are pinned will
++		 * all the restart to issue a log force to unpin the stuck
++		 * items.
+ 		 */
+ 		tout = 20;
++		ailp->xa_last_pushed_lsn = 0;
+ 	}
+ 
+ 	/* There is more to do, requeue us.  */
+diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
+index 212946b..0a6eec6 100644
+--- a/fs/xfs/xfs_trans_priv.h
++++ b/fs/xfs/xfs_trans_priv.h
+@@ -71,6 +71,7 @@ struct xfs_ail {
+ 	struct delayed_work	xa_work;
+ 	xfs_lsn_t		xa_last_pushed_lsn;
+ 	unsigned long		xa_flags;
++	int			xa_log_flush;
+ };
+ 
+ #define XFS_AIL_PUSHING_BIT	0
+-- 
+1.7.5.4
 
 _______________________________________________
 xfs mailing list
