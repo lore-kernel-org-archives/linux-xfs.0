@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8U88HpG248927
-	for <linux-xfs@oss.sgi.com>; Fri, 30 Sep 2011 03:08:17 -0500
-Received: from mail-fx0-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CF81219D243
-	for <linux-xfs@oss.sgi.com>; Fri, 30 Sep 2011 01:08:15 -0700 (PDT)
-Received: from mail-fx0-f53.google.com (mail-fx0-f53.google.com
-	[209.85.161.53]) by cuda.sgi.com with ESMTP id D9VPknqYW9Qvzdhn
-	for <linux-xfs@oss.sgi.com>; Fri, 30 Sep 2011 01:08:15 -0700 (PDT)
-Received: by fxh2 with SMTP id 2so2827798fxh.26
-	for <linux-xfs@oss.sgi.com>; Fri, 30 Sep 2011 01:08:15 -0700 (PDT)
+	p8U8udiF250963 for <xfs@oss.sgi.com>; Fri, 30 Sep 2011 03:56:40 -0500
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 13A96143568D
+	for <xfs@oss.sgi.com>; Fri, 30 Sep 2011 02:02:51 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id Dy8Fag6Gqf6tdx14 for
+	<xfs@oss.sgi.com>; Fri, 30 Sep 2011 02:02:51 -0700 (PDT)
+Date: Fri, 30 Sep 2011 10:55:39 +0200
+From: Johannes Weiner <jweiner@redhat.com>
+Subject: Re: [patch 3/5] mm: try to distribute dirty pages fairly across zones
+Message-ID: <20110930085539.GD30857@redhat.com>
+References: <1317367044-475-1-git-send-email-jweiner@redhat.com>
+	<1317367044-475-4-git-send-email-jweiner@redhat.com>
+	<CAOJsxLFWfH5zDG8ui=yQyOcZY_nXhK6r+ziapLg9Zhmb3ibuWQ@mail.gmail.com>
 MIME-Version: 1.0
-Date: Fri, 30 Sep 2011 13:38:15 +0530
-Message-ID: <CAAjPY7YmTQu_z_9Gz89hh7S9stQKhFzon69X0Uxad2St8PrHLg@mail.gmail.com>
-Subject: Need Assistance on using xattr
-From: Parag Amritkar <paragamritkar@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <CAOJsxLFWfH5zDG8ui=yQyOcZY_nXhK6r+ziapLg9Zhmb3ibuWQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,86 +26,72 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============9036954020369574116=="
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: Pekka Enberg <penberg@cs.helsinki.fi>
+Cc: Rik van Riel <riel@redhat.com>, linux-ext4@vger.kernel.org, Jan Kara <jack@suse.cz>, linux-btrfs@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, Mel Gorman <mgorman@suse.de>, Shaohua Li <shaohua.li@intel.com>, linux-fsdevel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andrew Morton <akpm@linux-foundation.org>, Wu Fengguang <fengguang.wu@intel.com>, Chris Mason <chris.mason@oracle.com>, Minchan Kim <minchan.kim@gmail.com>
 
---===============9036954020369574116==
-Content-Type: multipart/alternative; boundary=00151747b378932fda04ae242087
+On Fri, Sep 30, 2011 at 10:35:25AM +0300, Pekka Enberg wrote:
+> Hi Johannes!
+> =
 
---00151747b378932fda04ae242087
-Content-Type: text/plain; charset=ISO-8859-1
+> On Fri, Sep 30, 2011 at 10:17 AM, Johannes Weiner <jweiner@redhat.com> wr=
+ote:
+> > But there is a flaw in that we have a zoned page allocator which does
+> > not care about the global state but rather the state of individual
+> > memory zones. =A0And right now there is nothing that prevents one zone
+> > from filling up with dirty pages while other zones are spared, which
+> > frequently leads to situations where kswapd, in order to restore the
+> > watermark of free pages, does indeed have to write pages from that
+> > zone's LRU list. =A0This can interfere so badly with IO from the flusher
+> > threads that major filesystems (btrfs, xfs, ext4) mostly ignore write
+> > requests from reclaim already, taking away the VM's only possibility
+> > to keep such a zone balanced, aside from hoping the flushers will soon
+> > clean pages from that zone.
+> =
 
-i,We r working on inherent encryption decryption in kernel,nw we r stucked
-upon where to store key of encryption. Can we store it in xattr of that file
-? Will it be secure? Please reply as early as possible. This is our Project
-Abstract->
+> The obvious question is: how did you test this? Can you share the results?
 
-Abstract:
+Meh, sorry about that, they were in the series introduction the last
+time and I forgot to copy them over.
 
-In today's world securing file data is very important. The proposed Secure
-File System (SecFS), we will be providing file data security using
-cryptographic techniques in a transparent and convenient way. The proposed
-SecFS pushes encryption services into the Linux kernel space, mounting it
-between the virtual file system layer and underlying file system. After
-SecFS is integrated with the Linux operating system (OS), it enables OS to
-provide file data security as its inherent functionality. SecFS requires
-that the user creates a directory and name it with the prefix 'ecrypt' to
-store the encrypted file data, such as ecryptdir. Any directory on the
-system with the prefix 'ecrypt' will basically tells the system that the
-newly created directory will contain encrypted data. All files destined to
-be saved on this directory will be transparently encrypted on the fly
-without any user intervention. SecFS will be fully compatible with all
-underlying storage file systems.
+I did single-threaded, linear writing to an USB stick as the effect is
+most pronounced with slow backing devices.
 
-Please reply soon.
+[ The write deferring on ext4 because of delalloc is so extreme that I
+  could trigger it even with simple linear writers on a mediocre
+  rotating disk, though.  I can not access the logfiles right now, but
+  the nr_vmscan_writes went practically away here as well and runtime
+  was unaffected with the patched kernel. ]
 
-   Yours Sincerely
-  Parag S. Amritkar
+			Test results
 
---00151747b378932fda04ae242087
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+15M DMA + 3246M DMA32 + 504M Normal =3D 3765M memory
+40% dirty ratio, 10% background ratio
+16G USB thumb drive
+10 runs of dd if=3D/dev/zero of=3Ddisk/zeroes bs=3D32k count=3D$((10 << 15))
 
-i,We
- r working on inherent encryption decryption in kernel,nw we r stucked=20
-upon where to store key of encryption. Can we store it in xattr of that=20
-file ? Will it be secure? Please reply as early as possible. This is our
- Project=20
-Abstract-&gt;<br><div>
-<br> Abstract:<br> <br> In today&#39;s world securing file data is very=20
-important. The proposed Secure File System (SecFS), we will be providing
- file data security using cryptographic techniques in a transparent and=20
-convenient way. The proposed SecFS pushes encryption services into the=20
-Linux kernel space, mounting it between the virtual file system layer=20
-and underlying file system. After SecFS is integrated with the Linux=20
-operating system (OS), it enables OS to provide file data security as=20
-its inherent functionality. SecFS requires that the user creates a=20
-directory and name it with the prefix &#39;ecrypt&#39; to store the encrypt=
-ed=20
-file data, such as ecryptdir. Any directory on the system with the=20
-prefix &#39;ecrypt&#39; will basically tells the system that the newly crea=
-ted=20
-directory will contain encrypted data. All files destined to be saved on
- this directory will be transparently encrypted on the fly without any=20
-user intervention. SecFS will be fully compatible with all underlying=20
-storage file systems.</div>
-<div>=A0</div><div>Please reply soon.</div><div>=A0</div><div>=A0=A0 Yours =
-Sincerely</div><div>=A0 Parag S. Amritkar</div>
+		seconds			nr_vmscan_write
+		        (stddev)	       min|     median|        max
+xfs
+vanilla:	 549.747( 3.492)	     0.000|      0.000|      0.000
+patched:	 550.996( 3.802)	     0.000|      0.000|      0.000
 
---00151747b378932fda04ae242087--
+fuse-ntfs
+vanilla:	1183.094(53.178)	 54349.000|  59341.000|  65163.000
+patched:	 558.049(17.914)	     0.000|      0.000|     43.000
 
+btrfs
+vanilla:	 573.679(14.015)	156657.000| 460178.000| 606926.000
+patched:	 563.365(11.368)	     0.000|      0.000|   1362.000
 
---===============9036954020369574116==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+ext4
+vanilla:	 561.197(15.782)	     0.000|2725438.000|4143837.000
+patched:	 568.806(17.496)	     0.000|      0.000|      0.000
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============9036954020369574116==--
