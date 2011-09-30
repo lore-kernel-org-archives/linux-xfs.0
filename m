@@ -1,24 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8U7ZRBY247293 for <xfs@oss.sgi.com>; Fri, 30 Sep 2011 02:35:27 -0500
-Received: from mail-iy0-f181.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A1DE01C56C05
-	for <xfs@oss.sgi.com>; Fri, 30 Sep 2011 00:35:25 -0700 (PDT)
-Received: from mail-iy0-f181.google.com (mail-iy0-f181.google.com
-	[209.85.210.181]) by cuda.sgi.com with ESMTP id
-	sU8bTCDu8ODZEy5R for <xfs@oss.sgi.com>;
-	Fri, 30 Sep 2011 00:35:25 -0700 (PDT)
-Received: by iaeo4 with SMTP id o4so1917811iae.26
-	for <xfs@oss.sgi.com>; Fri, 30 Sep 2011 00:35:25 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1317367044-475-4-git-send-email-jweiner@redhat.com>
-References: <1317367044-475-1-git-send-email-jweiner@redhat.com>
-	<1317367044-475-4-git-send-email-jweiner@redhat.com>
-Date: Fri, 30 Sep 2011 10:35:25 +0300
-Message-ID: <CAOJsxLFWfH5zDG8ui=yQyOcZY_nXhK6r+ziapLg9Zhmb3ibuWQ@mail.gmail.com>
-Subject: Re: [patch 3/5] mm: try to distribute dirty pages fairly across zones
-From: Pekka Enberg <penberg@cs.helsinki.fi>
+	p8U7I8KR246149 for <xfs@oss.sgi.com>; Fri, 30 Sep 2011 02:18:09 -0500
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 444FB152ABAD
+	for <xfs@oss.sgi.com>; Fri, 30 Sep 2011 00:24:19 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 0ueDYC7wH8i3HkuB for
+	<xfs@oss.sgi.com>; Fri, 30 Sep 2011 00:24:19 -0700 (PDT)
+From: Johannes Weiner <jweiner@redhat.com>
+Subject: [patch 0/5] per-zone dirty limits v3
+Date: Fri, 30 Sep 2011 09:17:19 +0200
+Message-Id: <1317367044-475-1-git-send-email-jweiner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,32 +20,45 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Johannes Weiner <jweiner@redhat.com>
-Cc: Rik van Riel <riel@redhat.com>, linux-ext4@vger.kernel.org, Jan Kara <jack@suse.cz>, linux-btrfs@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, Mel Gorman <mgorman@suse.de>, Shaohua Li <shaohua.li@intel.com>, linux-fsdevel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andrew Morton <akpm@linux-foundation.org>, Wu Fengguang <fengguang.wu@intel.com>, Chris Mason <chris.mason@oracle.com>, Minchan Kim <minchan.kim@gmail.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Rik van Riel <riel@redhat.com>, linux-ext4@vger.kernel.org, Jan Kara <jack@suse.cz>, linux-btrfs@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, Mel Gorman <mgorman@suse.de>, Shaohua Li <shaohua.li@intel.com>, linux-fsdevel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Wu Fengguang <fengguang.wu@intel.com>, Chris Mason <chris.mason@oracle.com>, Minchan Kim <minchan.kim@gmail.com>
 
-Hi Johannes!
+Hi,
 
-On Fri, Sep 30, 2011 at 10:17 AM, Johannes Weiner <jweiner@redhat.com> wrot=
-e:
-> But there is a flaw in that we have a zoned page allocator which does
-> not care about the global state but rather the state of individual
-> memory zones. =A0And right now there is nothing that prevents one zone
-> from filling up with dirty pages while other zones are spared, which
-> frequently leads to situations where kswapd, in order to restore the
-> watermark of free pages, does indeed have to write pages from that
-> zone's LRU list. =A0This can interfere so badly with IO from the flusher
-> threads that major filesystems (btrfs, xfs, ext4) mostly ignore write
-> requests from reclaim already, taking away the VM's only possibility
-> to keep such a zone balanced, aside from hoping the flushers will soon
-> clean pages from that zone.
+this is the third revision of the per-zone dirty limits.  Changes from
+the second version have been mostly documentation, changelog, and
+naming fixes based on review feedback:
 
-The obvious question is: how did you test this? Can you share the results?
+o add new dirty_balance_reserve instead of abusing totalreserve_pages
+  for undirtyable (per-zone) reserves and document the variable and
+  its calculation (Mel)
+o use !ALLOC_WMARK_LOW instead of adding new ALLOC_SLOWPATH (Mel)
+o rename determine_dirtyable_memory -> global_dirtyable_memory (Andrew)
+o better explain behaviour on NUMA in changelog (Andrew)
+o extend changelogs and code comments on how per-zone dirty limits are
+  calculated, and why, and their proportions to the global limit (Mel, Andrew)
+o kernel-doc zone_dirty_ok() (Andrew)
+o extend changelogs and code comments on how per-zone dirty limits are
+  used to protect zones from dirty pages (Mel, Andrew)
+o revert back to a separate set of zone_dirtyable_memory() and zone_dirty_limit()
+  for easier reading (Andrew)
 
-                        Pekka
+Based on v3.1-rc3-mmotm-2011-08-24-14-08.
+
+ fs/btrfs/file.c           |    2 +-
+ include/linux/gfp.h       |    4 +-
+ include/linux/mmzone.h    |    6 ++
+ include/linux/swap.h      |    1 +
+ include/linux/writeback.h |    1 +
+ mm/filemap.c              |    5 +-
+ mm/page-writeback.c       |  181 +++++++++++++++++++++++++++++++++------------
+ mm/page_alloc.c           |   48 ++++++++++++
+ 8 files changed, 197 insertions(+), 51 deletions(-)
 
 _______________________________________________
 xfs mailing list
