@@ -1,24 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p8U4jEEL236312 for <xfs@oss.sgi.com>; Thu, 29 Sep 2011 23:45:14 -0500
+	p8U4jJRZ236332 for <xfs@oss.sgi.com>; Thu, 29 Sep 2011 23:45:19 -0500
 Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A8A0F152A91B
-	for <xfs@oss.sgi.com>; Thu, 29 Sep 2011 21:51:24 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id AC18C152A91D
+	for <xfs@oss.sgi.com>; Thu, 29 Sep 2011 21:51:29 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	WmHkHK8G0GKJe9AO for <xfs@oss.sgi.com>;
-	Thu, 29 Sep 2011 21:51:24 -0700 (PDT)
-Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1R9UyA-0005CR-Kp
-	for xfs@oss.sgi.com; Fri, 30 Sep 2011 14:45:06 +1000
+	AvfSxxOHPw5QYCzn for <xfs@oss.sgi.com>;
+	Thu, 29 Sep 2011 21:51:29 -0700 (PDT)
+Received: from [192.168.1.1] (helo=disappointment)
+	by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1R9UyK-0005CQ-FS
+	for xfs@oss.sgi.com; Fri, 30 Sep 2011 14:45:16 +1000
 Received: from dave by disappointment with local (Exim 4.76)
-	(envelope-from <dave@disappointment.disaster>) id 1R9UyA-00071Z-DW
+	(envelope-from <dave@disappointment.disaster>) id 1R9UyA-00071X-BA
 	for xfs@oss.sgi.com; Fri, 30 Sep 2011 14:45:06 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/2] xfs: reduce the number of log forces from tail pushing
-Date: Fri, 30 Sep 2011 14:45:03 +1000
-Message-Id: <1317357903-26947-3-git-send-email-david@fromorbit.com>
+Subject: [PATCH 1/2] xfs: Don't allocate new buffers on every call to
+	_xfs_buf_find
+Date: Fri, 30 Sep 2011 14:45:02 +1000
+Message-Id: <1317357903-26947-2-git-send-email-david@fromorbit.com>
 In-Reply-To: <1317357903-26947-1-git-send-email-david@fromorbit.com>
 References: <1317357903-26947-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,127 +40,157 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The AIL push code will issue a log force on ever single push loop
-that it exits and has encountered pinned items. It doesn't rescan
-these pinned items until it revisits the AIL from the start. Hence
-we only need to force the log once per walk from the start of the
-AIL to the target LSN.
+Stats show that for an 8-way unlink @ ~80,000 unlinks/s we are doing
+~1 million cache hit lookups to ~3000 buffer creates. That's almost
+3 orders of magnitude more cahce hits than misses, so optimising for
+cache hits is quite important. In the cache hit case, we do not need
+to allocate a new buffer in case of a cache miss, so we are
+effectively hitting the allocator for no good reason for vast the
+majority of calls to _xfs_buf_find. 8-way create workloads are
+showing similar cache hit/miss ratios.
 
-This results in numbers like this:
+The result is profiles that look like this:
 
-	xs_push_ail_flush.....         1456
-	xs_log_force.........          1485
+     samples  pcnt function                        DSO
+     _______ _____ _______________________________ _________________
 
-For an 8-way 50M inode create workload - almost all the log forces
-are coming from the AIL pushing code.
+     1036.00 10.0% _xfs_buf_find                   [kernel.kallsyms]
+      582.00  5.6% kmem_cache_alloc                [kernel.kallsyms]
+      519.00  5.0% __memcpy                        [kernel.kallsyms]
+      468.00  4.5% __ticket_spin_lock              [kernel.kallsyms]
+      388.00  3.7% kmem_cache_free                 [kernel.kallsyms]
+      331.00  3.2% xfs_log_commit_cil              [kernel.kallsyms]
 
-Reduce the number of log forces by only forcing the log if the
-previous walk found pinned buffers. This reduces the numbers to:
 
-	xs_push_ail_flush.....          665
-	xs_log_force.........           682
+Further, there is a fair bit of work involved in initialising a new
+buffer once a cache miss has occurred and we currently do that under
+the rbtree spinlock. That increases spinlock hold time on what are
+heavily used trees.
 
-For the same test.
+To fix this, remove the initialisation of the buffer from
+_xfs_buf_find() and only allocate the new buffer once we've had a
+cache miss. Initialise the buffer immediately after allocating it in
+xfs_buf_get, too, so that is it ready for insert if we get another
+cache miss after allocation. This minimises lock hold time and
+avoids unnecessary allocator churn. The resulting profiles look
+like:
+
+     samples  pcnt function                    DSO
+     _______ _____ ___________________________ _________________
+
+     8111.00  9.1% _xfs_buf_find               [kernel.kallsyms]
+     4380.00  4.9% __memcpy                    [kernel.kallsyms]
+     4341.00  4.8% __ticket_spin_lock          [kernel.kallsyms]
+     3401.00  3.8% kmem_cache_alloc            [kernel.kallsyms]
+     2856.00  3.2% xfs_log_commit_cil          [kernel.kallsyms]
+     2625.00  2.9% __kmalloc                   [kernel.kallsyms]
+     2380.00  2.7% kfree                       [kernel.kallsyms]
+     2016.00  2.3% kmem_cache_free             [kernel.kallsyms]
+
+Showing a significant reduction in time spent doing allocation and
+freeing from slabs (kmem_cache_alloc and kmem_cache_free).
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Alex Elder <aelder@sgi.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_trans_ail.c  |   33 ++++++++++++++++++++-------------
- fs/xfs/xfs_trans_priv.h |    1 +
- 2 files changed, 21 insertions(+), 13 deletions(-)
+ fs/xfs/xfs_buf.c |   48 ++++++++++++++++++++++++++++--------------------
+ 1 files changed, 28 insertions(+), 20 deletions(-)
 
-diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-index c15aa29..9df7f9f 100644
---- a/fs/xfs/xfs_trans_ail.c
-+++ b/fs/xfs/xfs_trans_ail.c
-@@ -372,12 +372,24 @@ xfs_ail_worker(
- 	xfs_lsn_t		lsn;
- 	xfs_lsn_t		target;
- 	long			tout = 10;
--	int			flush_log = 0;
- 	int			stuck = 0;
- 	int			count = 0;
- 	int			push_xfsbufd = 0;
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index e3af850..6785b7b 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -477,8 +477,6 @@ _xfs_buf_find(
  
-+	/*
-+	 * If last time we ran we encountered pinned items, force the log first
-+	 * and wait for it before pushing again.
-+	 */
- 	spin_lock(&ailp->xa_lock);
-+	if (ailp->xa_last_pushed_lsn == 0 && ailp->xa_log_flush &&
-+	    !list_empty(&ailp->xa_ail)) {
-+		ailp->xa_log_flush = 0;
-+		spin_unlock(&ailp->xa_lock);
-+		XFS_STATS_INC(xs_push_ail_flush);
-+		xfs_log_force(mp, XFS_LOG_SYNC);
-+		spin_lock(&ailp->xa_lock);
+ 	/* No match found */
+ 	if (new_bp) {
+-		_xfs_buf_initialize(new_bp, btp, range_base,
+-				range_length, flags);
+ 		rb_link_node(&new_bp->b_rbnode, parent, rbp);
+ 		rb_insert_color(&new_bp->b_rbnode, &pag->pag_buf_tree);
+ 		/* the buffer keeps the perag reference until it is freed */
+@@ -521,35 +519,53 @@ found:
+ }
+ 
+ /*
+- *	Assembles a buffer covering the specified range.
+- *	Storage in memory for all portions of the buffer will be allocated,
+- *	although backing storage may not be.
++ * Assembles a buffer covering the specified range. The code is optimised for
++ * cache hits, as metadata intensive workloads will see 3 orders of magnitude
++ * more hits than misses.
+  */
+-xfs_buf_t *
++struct xfs_buf *
+ xfs_buf_get(
+ 	xfs_buftarg_t		*target,/* target for buffer		*/
+ 	xfs_off_t		ioff,	/* starting offset of range	*/
+ 	size_t			isize,	/* length of range		*/
+ 	xfs_buf_flags_t		flags)
+ {
+-	xfs_buf_t		*bp, *new_bp;
++	struct xfs_buf		*bp;
++	struct xfs_buf		*new_bp;
+ 	int			error = 0;
+ 
++	bp = _xfs_buf_find(target, ioff, isize, flags, NULL);
++	if (likely(bp))
++		goto found;
++
+ 	new_bp = xfs_buf_allocate(flags);
+ 	if (unlikely(!new_bp))
+ 		return NULL;
+ 
++	_xfs_buf_initialize(new_bp, target,
++			    ioff << BBSHIFT, isize << BBSHIFT, flags);
++
+ 	bp = _xfs_buf_find(target, ioff, isize, flags, new_bp);
++	if (!bp) {
++		xfs_buf_deallocate(new_bp);
++		return NULL;
 +	}
 +
- 	target = ailp->xa_target;
- 	lip = xfs_trans_ail_cursor_first(ailp, &cur, ailp->xa_last_pushed_lsn);
- 	if (!lip || XFS_FORCED_SHUTDOWN(mp)) {
-@@ -435,7 +447,7 @@ xfs_ail_worker(
- 		case XFS_ITEM_PINNED:
- 			XFS_STATS_INC(xs_push_ail_pinned);
- 			stuck++;
--			flush_log = 1;
-+			ailp->xa_log_flush++;
- 			break;
- 
- 		case XFS_ITEM_LOCKED:
-@@ -480,16 +492,6 @@ xfs_ail_worker(
- 	xfs_trans_ail_cursor_done(ailp, &cur);
- 	spin_unlock(&ailp->xa_lock);
- 
--	if (flush_log) {
--		/*
--		 * If something we need to push out was pinned, then
--		 * push out the log so it will become unpinned and
--		 * move forward in the AIL.
--		 */
--		XFS_STATS_INC(xs_push_ail_flush);
--		xfs_log_force(mp, 0);
+ 	if (bp == new_bp) {
+ 		error = xfs_buf_allocate_memory(bp, flags);
+ 		if (error)
+ 			goto no_buffer;
+-	} else {
++	} else
+ 		xfs_buf_deallocate(new_bp);
+-		if (unlikely(bp == NULL))
+-			return NULL;
 -	}
--
- 	if (push_xfsbufd) {
- 		/* we've got delayed write buffers to flush */
- 		wake_up_process(mp->m_ddev_targp->bt_task);
-@@ -500,6 +502,7 @@ out_done:
- 	if (!count) {
- 		/* We're past our target or empty, so idle */
- 		ailp->xa_last_pushed_lsn = 0;
-+		ailp->xa_log_flush = 0;
  
- 		/*
- 		 * We clear the XFS_AIL_PUSHING_BIT first before checking
-@@ -532,9 +535,13 @@ out_done:
- 		 * were stuck.
- 		 *
- 		 * Backoff a bit more to allow some I/O to complete before
--		 * continuing from where we were.
-+		 * restarting from the start of the AIL. This prevents us
-+		 * from spinning on the same items, and if they are pinned will
-+		 * all the restart to issue a log force to unpin the stuck
-+		 * items.
- 		 */
- 		tout = 20;
-+		ailp->xa_last_pushed_lsn = 0;
++	/*
++	 * Now we have a workable buffer, fill in the block number so
++	 * that we can do IO on it.
++	 */
++	bp->b_bn = ioff;
++	bp->b_count_desired = bp->b_buffer_length;
++
++found:
+ 	if (!(bp->b_flags & XBF_MAPPED)) {
+ 		error = _xfs_buf_map_pages(bp, flags);
+ 		if (unlikely(error)) {
+@@ -560,18 +576,10 @@ xfs_buf_get(
  	}
  
- 	/* There is more to do, requeue us.  */
-diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
-index 212946b..0a6eec6 100644
---- a/fs/xfs/xfs_trans_priv.h
-+++ b/fs/xfs/xfs_trans_priv.h
-@@ -71,6 +71,7 @@ struct xfs_ail {
- 	struct delayed_work	xa_work;
- 	xfs_lsn_t		xa_last_pushed_lsn;
- 	unsigned long		xa_flags;
-+	int			xa_log_flush;
- };
+ 	XFS_STATS_INC(xb_get);
+-
+-	/*
+-	 * Always fill in the block number now, the mapped cases can do
+-	 * their own overlay of this later.
+-	 */
+-	bp->b_bn = ioff;
+-	bp->b_count_desired = bp->b_buffer_length;
+-
+ 	trace_xfs_buf_get(bp, flags, _RET_IP_);
+ 	return bp;
  
- #define XFS_AIL_PUSHING_BIT	0
+- no_buffer:
++no_buffer:
+ 	if (flags & (XBF_LOCK | XBF_TRYLOCK))
+ 		xfs_buf_unlock(bp);
+ 	xfs_buf_rele(bp);
 -- 
 1.7.5.4
 
