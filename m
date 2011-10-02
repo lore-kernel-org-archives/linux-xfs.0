@@ -1,27 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p91NKxGS092886 for <xfs@OSS.SGI.com>; Sat, 1 Oct 2011 18:20:59 -0500
-Received: from april.london.02.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id C2E831F17650
-	for <xfs@OSS.SGI.com>; Sat,  1 Oct 2011 16:20:57 -0700 (PDT)
-Received: from april.london.02.net (april.london.02.net [87.194.255.143]) by
-	cuda.sgi.com with ESMTP id 58zvdKv4t7gZmFg8 for
-	<xfs@OSS.SGI.com>; Sat, 01 Oct 2011 16:20:57 -0700 (PDT)
-Received: from ty.sabi.co.UK (87.194.99.40) by april.london.02.net (8.5.140)
-	id 4E261E720213E969 for xfs@OSS.SGI.com; Sun, 2 Oct 2011 00:20:55 +0100
-Received: from from [127.0.0.1] (helo=tree.ty.sabi.co.UK)
-	by ty.sabi.co.UK with esmtp(Exim 4.71 #1) id 1RA8rQ-0005Jp-0E
-	for <xfs@OSS.SGI.com>; Sun, 02 Oct 2011 00:20:48 +0100
+	p92EPMPP131104 for <xfs@oss.sgi.com>; Sun, 2 Oct 2011 09:25:23 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5E7BE5588D8
+	for <xfs@oss.sgi.com>; Sun,  2 Oct 2011 07:25:17 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	KGQp8P6w48JScnUr for <xfs@oss.sgi.com>;
+	Sun, 02 Oct 2011 07:25:17 -0700 (PDT)
+Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
+	Linux)) id 1RAMyj-0001sF-09
+	for xfs@oss.sgi.com; Sun, 02 Oct 2011 14:25:17 +0000
+Date: Sun, 2 Oct 2011 10:25:16 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH] xfs: optimize fsync on directories
+Message-ID: <20111002142516.GA6361@infradead.org>
 MIME-Version: 1.0
-Message-ID: <20103.41038.235842.915322@tree.ty.sabi.co.UK>
-Date: Sun, 2 Oct 2011 00:20:46 +0100
-Subject: Re: Directory fsync
-In-Reply-To: <CAF7KpS_zugTJUBnSXpHGJ8XR9N=+LZXNfPT-cuXx-LY2e=uCtA@mail.gmail.com>
-References: <CAF7KpS8h2KDsLVzwAj=5ig-yuuiCwjQSVk0Nfy9UJ0qiyAqeCQ@mail.gmail.com>
-	<20110923163354.GA24319@infradead.org> <201109240109.45532@zmi.at>
-	<CAF7KpS_zugTJUBnSXpHGJ8XR9N=+LZXNfPT-cuXx-LY2e=uCtA@mail.gmail.com>
-From: pg_xf2@xf2.for.sabi.co.uk (Peter Grandi)
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,87 +31,85 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Linux fs XFS <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
->>> As far as standards are concerned it is.  As far as the
->>> current XFS implementation is concerned you don't need it as
->>> the file fsync will also force out all transactions that
->>> belong to the create.
+Directories are only updated transactionally, which means fsync only
+needs to flush the log the inode is currently dirty, but not bother
+with checking for dirty data, non-transaction updates, an most importanly
+doesn't have to flush disk caches except as part of a transaction commit.
 
->> Aren't you giving O_PONIES to the users? ;-) I understand
->> your description, but we should always tell people to use a
->> directory fsync to be sure.
+While the first two optimizations can't easily be measured the latter
+actually make a difference when doing lots of fsync that do not actually
+have to commit the inode, e.g. becase an ealier fsync already pushed
+the log far enough.
 
-Sometimes users wish unicorns, not just ponies, and sometimes
-they really want winged unicorns, not just unicorns...
+The new xfs_dir_fsync is identifical to xfs_nfs_commit_metadata except
+for the prototype, but I'm not sure creating a common helper for the
+two is worth it given how simple the functions are.
 
-> I see the importance of following the standard. But I am glad
-> to know the current implementation of XFS enforce more strict
-> fsync semantic, just as every application developer wishes.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Stricter semantics means potetially more expensive IO and more
-complicated kernel implementation with more chances for subtle
-bugs.
-
-Unless you are arguing that applications developers demand
-O_PONIES and don't care about thsat much application performance
-of portability or kernel bug opportunities.
-
-It is a long time since I reminded anyone that the UNIX
-filesystem semantics were designed when the whole kernel was
-(well) under 64KiB, and that was an interesting constraint.
-
-> What I worry is not much applications syncs the directory
-> after new files are created, even if PostgreSQL[1] and many
-> other NoSQL database.  If the current implementation forces
-> more strict semantic, it makes our mind much much more
-> peaceful.
-
-Probably the developer should be a lot less peaceful, because
-the safer than required semantics could and perhaps should
-disappear tomorrow, and then application would be subtly buggy.
-
-It is not a theoretical issue; there have been a lot of problems
-and a huge O_PONIES discussion when the 'ext4' developers went
-for an implementation closer to the safety level madnated by the
-standard.
-
-Never mind exceptionally silly application developers who tend
-to forget that application files might reside on NFS or other
-network file systems that are both extremely popular and they
-cannot be ignored, and have semantics less safe then POSIX.
-
-Relying on implementations that implement safer behavior than
-POSIX seems to me a very bad, lazy (and common) idea.
-
-> [ ... ] a right semantic of fsync should be "The users wants
-> to assure the file is retrievable after system crash or power
-> failure if fsync returned successfully".
-
-Those would be really bad semantics, because UNIX/POSIX/Linux
-filesystem semantics don't allow this silly definition to have a
-useful meaning.
-
-The definition seems to be based on ignorance of the really
-important and big fact that UNIX/POSIX/Linux files have no
-names, and that only directory entries have names, and that a
-file can be linked to by zero or many directory entries, and
-that for the kernel it can be very expensive to keep track of
-all the directory entries (if any) that (hard) link to the file.
-
-A process only needs to 'fsync' a directory if it modified the
-directory (for example on entry, not necessarily file, creation
-or modification) and it would be really stupid and against all
-UNIX/POSIX/Linux logic to impose on the kernel the overhead of
-finding and 'fsync'ing all the directories that have entries (if
-any!) linking to a file being 'fsync'ed itself.
-
-It is up the user and/or the the applications managing file and
-named hard links to them to 'fsync' the file when appropriate,
-and if needed (and not necessarily at the same time) any
-directories containing the hard links to the file, because which
-directory entries should link to a file and where they are can
-only be part of the application/user data management logic.
+Index: xfs/fs/xfs/xfs_file.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_file.c	2011-09-26 10:56:48.607884402 +0200
++++ xfs/fs/xfs/xfs_file.c	2011-09-26 10:59:56.922867311 +0200
+@@ -124,6 +124,35 @@ xfs_iozero(
+ 	return (-status);
+ }
+ 
++/*
++ * Fsync operations on directories are much simpler than on regular files,
++ * as there is no file data to flush, and thus also no need for explicit
++ * cache flush operations, and there are no non-transaction metadata updates
++ * on directories either.
++ */
++STATIC int
++xfs_dir_fsync(
++	struct file		*file,
++	loff_t			start,
++	loff_t			end,
++	int			datasync)
++{
++	struct xfs_inode	*ip = XFS_I(file->f_mapping->host);
++	struct xfs_mount	*mp = ip->i_mount;
++	xfs_lsn_t		lsn = 0;
++
++	trace_xfs_dir_fsync(ip);
++
++	xfs_ilock(ip, XFS_ILOCK_SHARED);
++	if (xfs_ipincount(ip))
++		lsn = ip->i_itemp->ili_last_lsn;
++	xfs_iunlock(ip, XFS_ILOCK_SHARED);
++
++	if (!lsn)
++		return 0;
++	return _xfs_log_force_lsn(mp, lsn, XFS_LOG_SYNC, NULL);
++}
++
+ STATIC int
+ xfs_file_fsync(
+ 	struct file		*file,
+@@ -1140,7 +1169,7 @@ const struct file_operations xfs_dir_fil
+ #ifdef CONFIG_COMPAT
+ 	.compat_ioctl	= xfs_file_compat_ioctl,
+ #endif
+-	.fsync		= xfs_file_fsync,
++	.fsync		= xfs_dir_fsync,
+ };
+ 
+ static const struct vm_operations_struct xfs_file_vm_ops = {
+Index: xfs/fs/xfs/xfs_trace.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_trace.h	2011-09-26 11:00:05.367867252 +0200
++++ xfs/fs/xfs/xfs_trace.h	2011-09-26 11:00:22.090368120 +0200
+@@ -576,6 +576,7 @@ DEFINE_INODE_EVENT(xfs_vm_bmap);
+ DEFINE_INODE_EVENT(xfs_file_ioctl);
+ DEFINE_INODE_EVENT(xfs_file_compat_ioctl);
+ DEFINE_INODE_EVENT(xfs_ioctl_setattr);
++DEFINE_INODE_EVENT(xfs_dir_fsync);
+ DEFINE_INODE_EVENT(xfs_file_fsync);
+ DEFINE_INODE_EVENT(xfs_destroy_inode);
+ DEFINE_INODE_EVENT(xfs_write_inode);
 
 _______________________________________________
 xfs mailing list
