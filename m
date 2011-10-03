@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p938uMbl229957 for <xfs@oss.sgi.com>; Mon, 3 Oct 2011 03:56:22 -0500
-Received: from acsinet15.oracle.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BB118559EB7
-	for <xfs@oss.sgi.com>; Mon,  3 Oct 2011 01:56:21 -0700 (PDT)
-Received: from acsinet15.oracle.com (acsinet15.oracle.com [141.146.126.227])
-	by cuda.sgi.com with ESMTP id 2Bb95QlEi5VCCpOE for
-	<xfs@oss.sgi.com>; Mon, 03 Oct 2011 01:56:21 -0700 (PDT)
-Message-ID: <4E899BC7.6070607@oracle.com>
-Date: Mon, 03 Oct 2011 16:55:59 +0530
-From: Anand Jain <anand.jain@oracle.com>
+	p93BMGHa237630 for <xfs@oss.sgi.com>; Mon, 3 Oct 2011 06:22:16 -0500
+Received: from mx2.suse.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C4F1916B317D
+	for <xfs@oss.sgi.com>; Mon,  3 Oct 2011 04:28:43 -0700 (PDT)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id b6y7bLIt42vp7B4d for <xfs@oss.sgi.com>;
+	Mon, 03 Oct 2011 04:28:43 -0700 (PDT)
+Date: Mon, 3 Oct 2011 12:22:05 +0100
+From: Mel Gorman <mgorman@suse.de>
+Subject: Re: [patch 1/5] mm: exclude reserved pages from dirtyable memory
+Message-ID: <20111003112205.GA5011@suse.de>
+References: <1317367044-475-1-git-send-email-jweiner@redhat.com>
+	<1317367044-475-2-git-send-email-jweiner@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 3/3] Added test case 259 for the btrfs raid features
-References: <4E3BA2F7.4080500@oracle.com> <4E44351D.4020202@oracle.com>
-	<20110902084941.GB29054@infradead.org>
-In-Reply-To: <20110902084941.GB29054@infradead.org>
+Content-Disposition: inline
+In-Reply-To: <1317367044-475-2-git-send-email-jweiner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,76 +25,61 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-fsdevel@vger.kernel.org, Chris Mason <chris.mason@oracle.com>, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: Johannes Weiner <jweiner@redhat.com>
+Cc: Rik van Riel <riel@redhat.com>, linux-ext4@vger.kernel.org, Jan Kara <jack@suse.cz>, linux-btrfs@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, Minchan Kim <minchan.kim@gmail.com>, Shaohua Li <shaohua.li@intel.com>, linux-fsdevel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andrew Morton <akpm@linux-foundation.org>, Wu Fengguang <fengguang.wu@intel.com>, Chris Mason <chris.mason@oracle.com>
 
-
-Christoph,
-
-  apologies for the delay I was on a long leave.
-
-
-> Also is there a chance you could allow setting
-> only SCRATCH_DEV_POOL for btrfs, and derive SCRATCH_DEV for that as an
-> additional step?
-
-  There is some challenge to set SCRATCH_DEV based on FSTYP since
-  SCRATCH_DEV is used even before FSTYP is set.
-
-  common.config uses SCRATCH_DEV and we set FSTYP in common.
-  check calls these two script files in the following logic.
-  --------------------------
-  # we need common.config
-  if ! . ./common.config
-  then
-     echo "$iam: failed to source common.config"
-     exit 1
-  fi
-
-  # we need common
-  . ./common
-  ---------------------------
-
-  to avoid major changes what we could do is to find-out FSTYP on our
-  own in the file common.config and set SCRATCH_DEV based on
-  SCRATCH_DEV_POOL, but thats a bit ugly way. I am open to any
-  suggestions. thanks.
-
-
-
-> Please use the sysfs interface instead of the deprecated /proc/scsi/scsi
-> interface.  I would also suggest to split this routine into two for
-> removing and adding, and move them to the common helper library, so it
-> could be used for other tests.
-
-yes. will get something like below code. in the common
-
------
-remove:
-echo 1 > 
-/sys/class/scsi_device/${host}:${channel}:${id}:${lun}/device/delete
-
-add:
-echo "$channel $id $lun" > /sys/class/scsi_host/host${host}/scan
------
-
-
->> +# we need this to test removing a dev from the system
->> +_require_proc_scsi()
->> +{
->> +	[ -e /proc/scsi/scsi ]  || _notrun "/proc/scsi/scsi is not present"
->> +}
+On Fri, Sep 30, 2011 at 09:17:20AM +0200, Johannes Weiner wrote:
+> The amount of dirtyable pages should not include the full number of
+> free pages: there is a number of reserved pages that the page
+> allocator and kswapd always try to keep free.
 > 
-> The _require need really is that the device you want to work on is a
-> SCSI device.
+> The closer (reclaimable pages - dirty pages) is to the number of
+> reserved pages, the more likely it becomes for reclaim to run into
+> dirty pages:
+> 
+>        +----------+ ---
+>        |   anon   |  |
+>        +----------+  |
+>        |          |  |
+>        |          |  -- dirty limit new    -- flusher new
+>        |   file   |  |                     |
+>        |          |  |                     |
+>        |          |  -- dirty limit old    -- flusher old
+>        |          |                        |
+>        +----------+                       --- reclaim
+>        | reserved |
+>        +----------+
+>        |  kernel  |
+>        +----------+
+> 
+> This patch introduces a per-zone dirty reserve that takes both the
+> lowmem reserve as well as the high watermark of the zone into account,
+> and a global sum of those per-zone values that is subtracted from the
+> global amount of dirtyable pages.  The lowmem reserve is unavailable
+> to page cache allocations and kswapd tries to keep the high watermark
+> free.  We don't want to end up in a situation where reclaim has to
+> clean pages in order to balance zones.
+> 
+> Not treating reserved pages as dirtyable on a global level is only a
+> conceptual fix.  In reality, dirty pages are not distributed equally
+> across zones and reclaim runs into dirty pages on a regular basis.
+> 
+> But it is important to get this right before tackling the problem on a
+> per-zone level, where the distance between reclaim and the dirty pages
+> is mostly much smaller in absolute numbers.
+> 
+> Signed-off-by: Johannes Weiner <jweiner@redhat.com>
+> Reviewed-by: Rik van Riel <riel@redhat.com>
 
-will get this.
+Acked-by: Mel Gorman <mgorman@suse.de>
 
-Thanks -Anand
+-- 
+Mel Gorman
+SUSE Labs
 
 _______________________________________________
 xfs mailing list
