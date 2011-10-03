@@ -1,17 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p93EOAXP246534 for <xfs@oss.sgi.com>; Mon, 3 Oct 2011 09:24:10 -0500
-Date: Mon, 3 Oct 2011 10:23:43 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 0/6] xfsprogs: tolerate mount or project errors
-Message-ID: <20111003142343.GA19985@infradead.org>
-References: <1317646160-5437-1-git-send-email-aelder@sgi.com>
-	<20111003133127.GA7875@infradead.org>
-	<1317651685.1972.5.camel@doink>
+	p93GqZ0Z252881 for <xfs@oss.sgi.com>; Mon, 3 Oct 2011 11:52:36 -0500
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8FF851C62101
+	for <xfs@oss.sgi.com>; Mon,  3 Oct 2011 09:52:34 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id HS2pnq92EuNbY9gn for
+	<xfs@oss.sgi.com>; Mon, 03 Oct 2011 09:52:34 -0700 (PDT)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id p93GqYIW002779
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Mon, 3 Oct 2011 12:52:34 -0400
+Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
+	[10.5.9.1])
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id p93GqWcv015021
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Mon, 3 Oct 2011 12:52:33 -0400
+Message-ID: <4E89E851.80203@redhat.com>
+Date: Mon, 03 Oct 2011 11:52:33 -0500
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1317651685.1972.5.camel@doink>
+Subject: [PATCH] xfstests: make 258 more forgiving of timestamp rounding
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,42 +36,61 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-On Mon, Oct 03, 2011 at 09:21:25AM -0500, Alex Elder wrote:
-> > I'd really like to do some sort of QA for this.  Given that xfs_quota
-> > already has an (uncodumented) -t flag to use a replacement for
-> > /proc/mounts and /etc/mtab this seems fairly easy to do.
-> 
-> Yes I agree, and that's exactly what I intend to do (and how I
-> was thinking of doing it).  I also owe a quota test for the
-> doubling of what gets reported from a month ago or so.  I
-> thought I could address both issues in the same test (unless
-> someone feels it's important to have each test have a more
-> specific focus).
+Rather than testing for an exact timestamp, which could vary
+due to rounding, just check that it is not positive,
+which is the failure case we're looking for.
 
-I think these should be separate tests as they test very different
-things.  What could be rolled into the first one would be a test
-for RT quota reporting - despite the comment in your commit those
-should work just fine.
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-> > If you're motivated for even more cleanups it would be good if all
-> > xfs_quota options are actully documented, and making sure the
-> > /proc/mounts, /etc/mtab and co handling in xfsprogs doesn't differ
-> > for different tools.  Currently libxcmd, libxfs and xfs_fsr all
-> > have their own variants.
-> 
-> To be honest I kind of went further with this than I intended
-> to and I had to sort of put a stop to it...  I have three or
-> four other cleanup patches started but I just have to move on
-> and so posted what I have working and am content with.
-> 
-> I think what you suggest are all good but for now I'm not
-> planning to work on them.
-
-It's not that important, but maybe we should keep a todo list
-for these kinds of tidyups.
+diff --git a/258 b/258
+index 6fadca0..ad73494 100644
+--- a/258
++++ b/258
+@@ -53,8 +53,12 @@ TESTFILE=$TEST_DIR/timestamp-test.txt
+ echo "Creating file with timestamp of Jan 1, 1960"
+ touch -t 196001010101 $TESTFILE
+ # Should yield -315593940 (prior to epoch)
+-echo -n "Stat of file yields: "
+-stat -c %X $TESTFILE
++echo "Testing for negative seconds since epoch"
++ts=`stat -c %X $TESTFILE`
++if [ "$ts" -ge 0 ]; then
++	echo "Timestamp wrapped: $ts"
++	_fail "Timestamp wrapped"
++fi
+ 
+ # unmount, remount, and check the timestamp
+ echo "Remounting to flush cache"
+@@ -62,7 +66,12 @@ umount $TEST_DEV
+ mount $TEST_DEV $TEST_DIR
+ 
+ # Should yield -315593940 (prior to epoch)
+-echo -n "Stat of file yields: "
+-stat -c %X $TESTFILE
++echo "Testing for negative seconds since epoch"
++ts=`stat -c %X $TESTFILE`
++if [ "$ts" -ge 0 ]; then
++	echo "Timestamp wrapped: $ts"
++	_fail "Timestamp wrapped"
++fi
+ 
+ status=0 ; exit
++
+diff --git a/258.out b/258.out
+index 11b9168..87fae0f 100644
+--- a/258.out
++++ b/258.out
+@@ -1,5 +1,5 @@
+ QA output created by 258
+ Creating file with timestamp of Jan 1, 1960
+-Stat of file yields: -315593940
++Testing for negative seconds since epoch
+ Remounting to flush cache
+-Stat of file yields: -315593940
++Testing for negative seconds since epoch
 
 _______________________________________________
 xfs mailing list
