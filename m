@@ -1,12 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p93N1LOd003735 for <xfs@oss.sgi.com>; Mon, 3 Oct 2011 18:01:21 -0500
-From: Alex Elder <aelder@sgi.com>
-Message-Id: <201110032301.p93N1ISR023771@stout.americas.sgi.com>
-Date: Mon, 03 Oct 2011 18:01:18 -0500
-Subject: [PATCH] xfstests: 261: test failures caused by bogus mtab entries
+	p93NhBjV005175 for <xfs@oss.sgi.com>; Mon, 3 Oct 2011 18:43:12 -0500
+Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 555B6143E529
+	for <xfs@oss.sgi.com>; Mon,  3 Oct 2011 16:49:43 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	9ip0MkNY8l6GMTYA for <xfs@oss.sgi.com>;
+	Mon, 03 Oct 2011 16:49:43 -0700 (PDT)
+Date: Tue, 4 Oct 2011 10:43:05 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: SEEK_DATA/SEEK_HOLE support
+Message-ID: <20111003234305.GM3159@dastard>
+References: <4E887D7F.2010306@oracle.com>
+	<20111002154259.GA14543@infradead.org>
+	<4E888C0D.9060701@oracle.com> <20111002175902.GA9420@infradead.org>
+	<4E89343B.4030007@oracle.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4E89343B.4030007@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,187 +32,64 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Jeff Liu <jeff.liu@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-There is code in libxcmd that sets up a table of mount points and
-directories that may be subject to quota enforcement.  If any entry
-in the mount table (/proc/self/mounts) is inaccessible or has any
-other problems, libxcmd exits.
+On Mon, Oct 03, 2011 at 12:04:11PM +0800, Jeff Liu wrote:
+> On 10/03/2011 01:59 AM, Christoph Hellwig wrote:
+> 
+> > On Mon, Oct 03, 2011 at 12:06:37AM +0800, Jeff Liu wrote:
+> >> IMHO, to avoid data loss in some user application like cp(1), for
+> >> unwritten extents, we always need to check the pages status.  Just as
+> >> you mentioned above, return the map offset if pages are dirty for
+> >> SEEK_DATA, or a hole found.
+> > 
+> > I'd suggest to first implement the simple versions I schemed below,
+> > which would treat unwritten extents as data.  That is sub-optimal,
+> > but a) safe and b) easy to implement.  The second step would be to
+> > add probing for unwritten extents, which is even something we could
+> > do as a common helper routine shared by filesystems.
+> 
+> So I'll wait for Dave's patch become ready, and then continue to improve
+> it if necessary.
+> In the meantime, I'll try to figure out how to add a helper which can be
+> shared by all file systems for UNWRITTEN extents.
 
-We have encountered mtab entries that appear to be artifacts from
-autoumount that, when parsed for getmntent(), return paths in the
-mnt_fsname field that do not exist.  Such entries tend to have the
-text " (deleted)" appended to a legitimate pathname (although the
-space character is expanded to \040, as documented in getmntent(3)).
+The lookup is pretty simple - if there's cached data over the
+unwritten range, then I'm considering it a data range. If there's no
+cached data over the unwritten extent, it's a hole. That makes the
+lookup simply a case of finding the first cached page in the
+unwritten extent.
 
-The xfs_quota command supports the ability to specify an alternate
-mount table file, so this test makes use of that feature to exercise
-the problem.  The test simply uses xfs_quota to print the current
-set of paths, providing an alternate mount table file.  First it
-does so with a copy of the current mount table (which is assumed
-OK), then an extra bogus entry (very much like what has been seen
-in the wild) is appended to the mount table, and runs the xfs_quota
-command again.
+It'll end up reading something like this:
 
-It does this with no mount options, as well as with user, group, and
-project quota options enabled.  (Given the current state of the code
-however, only one of these is required.)
+	iomap = offset_to_extent(offset);
+	first_index = extent_to_page_index(iomap);
 
-Signed-off-by: Alex Elder <aelder@sgi.com>
+	nr_found = pagevec_lookup(&pvec, inode->i_mapping, first_index, 1);
+	if (!nr_found)
+		break;
 
----
- 261     |  126 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 261.out |    2 +
- group   |    1 
- 3 files changed, 129 insertions(+)
+	offset = page->index << PAGECACHE_SHIFT;
+	pagevec_release(&pvec);
 
-Index: b/261
-===================================================================
---- /dev/null
-+++ b/261
-@@ -0,0 +1,126 @@
-+#! /bin/bash
-+# FS QA Test No. 261
-+#
-+# This test exercises an issue in libxcmd where a problem with any
-+# mount point or project quota directory causes the program to exit
-+# complete.  The effect of this is that one cannot operate on any
-+# directory, even if the problem directory is completely unrelated
-+# to the directory one wants to operate on.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2011 SGI.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+# creator
-+owner=aelder@sgi.com
-+
-+seq=$(basename $0)
-+echo "QA output created by ${seq}"
-+
-+here=$(pwd)
-+
-+tmp=/tmp/$$
-+my_mtab=${tmp}.mtab
-+
-+mtab=/proc/self/mounts
-+if [ ! -r "${mtab}" ]; then
-+    mtab=/etc/mtab
-+    if [ ! -r "${mtab}" ]; then
-+	echo "warning: proceeding without use of mount table" >&2
-+    fi
-+fi
-+
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    cd /
-+    rm -f ${tmp}.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common.rc
-+. ./common.filter
-+. ./common.quota
-+
-+echo "Silence is golden."
-+
-+# real QA test starts here
-+
-+# Modify as appropriate.
-+_supported_fs xfs
-+_supported_os Linux
-+
-+_require_quota
-+_require_scratch
-+
-+# Just use the current mount table as an example mtab file.  Odds
-+# are good there's nothing wrong with it.
-+_setup_my_mtab() {
-+	cp "${mtab}" "${my_mtab}"
-+}
-+
-+# Any bogus entry in the mtab file is enough to trigger the problem.
-+# So just append a bogus entry at the end of the private mtab file.
-+# This matches an actually-observed entry in a mount table (with a
-+# few characters in the paths changed to protect the innocent).
-+_perturb_my_mtab() {
-+	cat <<-! >> "${my_mtab}"
-+		/dev/disk/by-id/scsi-3600508e000000000c329ba1d8b0c391b-part3 /tmp/autoY8qcJ9\040(deleted) xfs rw 0 0
-+	!
-+}
-+
-+_check() {
-+    	if [ $# -eq 0 ]; then
-+		export MOUNT_OPTIONS=""
-+	elif [ $# -eq 1 ]; then
-+		[ $1 = u -o $1 = g -o $1 = p ] || exit
-+		export MOUNT_OPTIONS="-o${1}quota"
-+	else
-+	    	exit
-+	fi
-+
-+	_qmount
-+
-+	# Set up a private mount table file, then try out a simple quota
-+	# command to show mounts
-+	_setup_my_mtab
-+	echo print | xfs_quota	-t "${my_mtab}" > /dev/null || exit
-+
-+	# Do the same simple quota command after adding a bogus entry to the
-+	# mount table.  Old code will bail on this because it has trouble
-+	# with the bogus entry.
-+	_perturb_my_mtab
-+	echo print | xfs_quota -t "${my_mtab}" > /dev/null || exit
-+}
-+
-+#########
-+
-+# Mount SCRATCH with no quota options
-+_check
-+
-+# user quota enabled
-+_check u
-+
-+# group quota enabled
-+_check g
-+
-+# user quota enabled
-+_check p
-+
-+status=0	# success, all done
-+
-Index: b/261.out
-===================================================================
---- /dev/null
-+++ b/261.out
-@@ -0,0 +1,2 @@
-+QA output created by 261
-+Silence is golden.
-Index: b/group
-===================================================================
---- a/group
-+++ b/group
-@@ -374,3 +374,4 @@ deprecated
- 258 auto quick
- 259 auto quick
- 260 auto quick trim
-+261 auto quick quota
+	/* If we fell off the end of the extent lookup next extent */
+	if (offset >= end_of_extent(iomap)) {
+		offset = end_of_extent(iomap);
+		goto next_extent;
+	}
+
+All the extent manipulations are pretty filesystem specific, so
+there's not much that can be extracted into generic helper, I
+think...
+
+Cheers,
+
+Dave.
+
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
