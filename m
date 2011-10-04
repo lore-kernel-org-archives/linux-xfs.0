@@ -1,17 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p94LUhjU064173 for <xfs@oss.sgi.com>; Tue, 4 Oct 2011 16:30:43 -0500
-Subject: Re: [PATCH 1/2] xfs: Don't allocate new buffers on every call to
-	_xfs_buf_find
+	p94NKMW9069735 for <xfs@oss.sgi.com>; Tue, 4 Oct 2011 18:20:22 -0500
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1317357903-26947-2-git-send-email-david@fromorbit.com>
-References: <1317357903-26947-1-git-send-email-david@fromorbit.com>
-	<1317357903-26947-2-git-send-email-david@fromorbit.com>
-Date: Tue, 4 Oct 2011 16:30:39 -0500
-Message-ID: <1317763839.3541.4.camel@doink>
+Message-Id: <201110042320.p94NKI32002327@stout.americas.sgi.com>
+Date: Tue, 04 Oct 2011 18:20:18 -0500
+Subject: [PATCH] xfstests: 262: test failures caused by bogus mtab entries
 MIME-Version: 1.0
-Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,69 +19,208 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Fri, 2011-09-30 at 14:45 +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Stats show that for an 8-way unlink @ ~80,000 unlinks/s we are doing
-> ~1 million cache hit lookups to ~3000 buffer creates. That's almost
-> 3 orders of magnitude more cahce hits than misses, so optimising for
-> cache hits is quite important. In the cache hit case, we do not need
-> to allocate a new buffer in case of a cache miss, so we are
-> effectively hitting the allocator for no good reason for vast the
-> majority of calls to _xfs_buf_find. 8-way create workloads are
-> showing similar cache hit/miss ratios.
-> 
-> The result is profiles that look like this:
-> 
->      samples  pcnt function                        DSO
->      _______ _____ _______________________________ _________________
-> 
->      1036.00 10.0% _xfs_buf_find                   [kernel.kallsyms]
->       582.00  5.6% kmem_cache_alloc                [kernel.kallsyms]
->       519.00  5.0% __memcpy                        [kernel.kallsyms]
->       468.00  4.5% __ticket_spin_lock              [kernel.kallsyms]
->       388.00  3.7% kmem_cache_free                 [kernel.kallsyms]
->       331.00  3.2% xfs_log_commit_cil              [kernel.kallsyms]
-> 
-> 
-> Further, there is a fair bit of work involved in initialising a new
-> buffer once a cache miss has occurred and we currently do that under
-> the rbtree spinlock. That increases spinlock hold time on what are
-> heavily used trees.
-> 
-> To fix this, remove the initialisation of the buffer from
-> _xfs_buf_find() and only allocate the new buffer once we've had a
-> cache miss. Initialise the buffer immediately after allocating it in
-> xfs_buf_get, too, so that is it ready for insert if we get another
-> cache miss after allocation. This minimises lock hold time and
-> avoids unnecessary allocator churn. The resulting profiles look
-> like:
-> 
->      samples  pcnt function                    DSO
->      _______ _____ ___________________________ _________________
-> 
->      8111.00  9.1% _xfs_buf_find               [kernel.kallsyms]
->      4380.00  4.9% __memcpy                    [kernel.kallsyms]
->      4341.00  4.8% __ticket_spin_lock          [kernel.kallsyms]
->      3401.00  3.8% kmem_cache_alloc            [kernel.kallsyms]
->      2856.00  3.2% xfs_log_commit_cil          [kernel.kallsyms]
->      2625.00  2.9% __kmalloc                   [kernel.kallsyms]
->      2380.00  2.7% kfree                       [kernel.kallsyms]
->      2016.00  2.3% kmem_cache_free             [kernel.kallsyms]
-> 
-> Showing a significant reduction in time spent doing allocation and
-> freeing from slabs (kmem_cache_alloc and kmem_cache_free).
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+There is code in libxcmd that sets up a table of mount points and
+directories that may be subject to quota enforcement.  If any entry
+in the mount table (/proc/self/mounts) is inaccessible or has any
+other problems, libxcmd exits.
 
-This looks good.  I've been testing with it for several days
-now as well.  I plan to commit it today or tomorrow.
+We have encountered mtab entries that appear to be artifacts from
+autoumount that, when parsed for getmntent(), return paths in the
+mnt_fsname field that do not exist.  Such entries tend to have the
+text " (deleted)" appended to a legitimate pathname (although the
+space character is expanded to \040, as documented in getmntent(3)).
 
-Reviewed-by: Alex Elder <aelder@sgi.com>
+The xfs_quota command supports the ability to specify an alternate
+mount table file, so this test makes use of that feature to exercise
+the problem.  The test simply uses xfs_quota to print the current
+set of paths, providing an alternate mount table file.  First it
+does so with a copy of the current mount table (which is assumed
+OK), then an extra bogus entry (very much like what has been seen
+in the wild) is appended to the mount table, and runs the xfs_quota
+command again.
 
+It does this with no mount options, as well as with user, group, and
+project quota options enabled.  (Given the current state of the code
+however, only one of these is required.)
+
+Signed-off-by: Alex Elder <aelder@sgi.com>
+
+---
+ 262     |  147 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 262.out |    2 
+ group   |    1 
+ 3 files changed, 150 insertions(+)
+
+Index: b/262
+===================================================================
+--- /dev/null
++++ b/262
+@@ -0,0 +1,147 @@
++#! /bin/bash
++# FS QA Test No. 262
++#
++# This test checks the project quota values reported by the quota
++# "df" subcommand to ensure they match what they should be.  There
++# was a bug (fixed by xfsprogs commit 7cb2d41b) where the values
++# reported were double what they should have been.
++#
++# SGI PV 1015651
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2011 SGI.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++# creator
++owner=aelder@sgi.com
++
++seq=$(basename $0)
++echo "QA output created by ${seq}"
++
++here=$(pwd)
++
++cp /dev/null "${seq}.full"
++
++tmp=/tmp/$$
++my_projects=${tmp}.projects
++my_projid=${tmp}.projid
++proj_name=test_project
++proj_num=1
++
++qlimit_meg=500	# 500M limit imposed = 500 * 1024 * 1024 bytes
++
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    cd /
++    rm -f ${tmp}.*
++}
++
++# get standard environment, filters and checks
++. ./common.rc
++. ./common.filter
++. ./common.quota
++
++echo "Silence is golden."
++
++# real QA test starts here
++
++proj_dir="${SCRATCH_MNT}/test"
++
++# Modify as appropriate.
++_supported_fs xfs
++_supported_os Linux
++
++_require_quota
++_require_scratch
++
++
++# Make sure the hard limits reported are what was set.
++# It is entirely too clever...
++# It exploits the fact that we've set the soft and hard limits to
++# the same value, and as a result the value in the fourth field in
++# both the "df" and the "report" output.  For "report", the line we're
++# interested in contains our project name in the first field.  For "df"
++# it contains our project directory in the last field.
++_filter_quota_rpt() {
++	awk '
++	BEGIN {
++		proj_name = "'${proj_name}'";
++		proj_dir = "'${proj_dir}'";
++		qlimit_meg = '${qlimit_meg}';
++		qlimit = qlimit_meg * 1024 * 1024;
++	}
++	# This function parses the human-readable values produced
++	# by xfs_quota output
++	function byte_size(value,  result) {
++		result = strtonum(value);
++		unit = value;
++		gsub("[0-9][0-9]*", "", unit);
++		shift = index("KMGTPE", unit);
++		while (shift--)
++			result *= 1024;
++		return result;
++	}
++	{
++		if ($1 !~ proj_name && $nf !~ proj_dir)
++			next;
++		bsize = byte_size($4);
++		if (bsize != qlimit)
++			printf("hard limit %d bytes, expected %d\n",
++				bsize, qlimit);
++	}
++	'
++}
++
++_quota_cmd() {
++	xfs_quota -P "${my_projid}" -D "${my_projects}" -x \
++		-c "$@" "${SCRATCH_MNT}"
++}
++
++# Set up--mount scratch and create the project directory
++
++echo ${proj_name}:${proj_num} > "${my_projid}"
++echo ${proj_num}:${proj_dir} > "${my_projects}"
++
++_scratch_mkfs						>> "${seq}.full" 2>&1
++
++export MOUNT_OPTIONS="-opquota"
++_qmount
++mkdir -p "${proj_dir}"
++
++# Setup the project quota directory
++_quota_cmd "project -s ${proj_name}"			>> "${seq}.full" 2>&1
++
++# Assign block quota limits
++_quota_cmd "limit -p bhard=${qlimit_meg}m bsoft=${qlimit_meg}m ${proj_name}" \
++							2>> "${seq}.full" 1>&2
++
++# See what gets reported
++_quota_cmd "report"		| _filter_quota_rpt	2>> "${seq}.full"
++_quota_cmd "df"			| _filter_quota_rpt 	2>> "${seq}.full"
++
++# This time using "human readable" output
++_quota_cmd "report -h"		| _filter_quota_rpt	2>> "${seq}.full"
++_quota_cmd "df -h" 		| _filter_quota_rpt	2>> "${seq}.full"
++
++# Clean up
++rm -rf "${proj_dir}"
++_scratch_unmount
++
++status=0	# success, all done
++
+Index: b/262.out
+===================================================================
+--- /dev/null
++++ b/262.out
+@@ -0,0 +1,2 @@
++QA output created by 262
++Silence is golden.
+Index: b/group
+===================================================================
+--- a/group
++++ b/group
+@@ -375,3 +375,4 @@ deprecated
+ 259 auto quick
+ 260 auto quick trim
+ 261 auto quick quota
++262 auto quick quota
 
 _______________________________________________
 xfs mailing list
