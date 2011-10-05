@@ -1,21 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p95IMQ2C132874 for <xfs@oss.sgi.com>; Wed, 5 Oct 2011 13:22:26 -0500
-Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9F4551C6B06B
-	for <xfs@oss.sgi.com>; Wed,  5 Oct 2011 11:22:22 -0700 (PDT)
-Received: from mailsrv14.zmi.at (mailsrv14.zmi.at [212.69.164.54]) by
-	cuda.sgi.com with ESMTP id UKAnMDZ9a57glwll for
-	<xfs@oss.sgi.com>; Wed, 05 Oct 2011 11:22:22 -0700 (PDT)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: Re: SEEK_DATA/SEEK_HOLE support
-Date: Wed, 5 Oct 2011 20:22:18 +0200
-References: <4E887D7F.2010306@oracle.com> <201110050934.28021@zmi.at>
-	<20111005093615.GQ3159@dastard>
-In-Reply-To: <20111005093615.GQ3159@dastard>
+	p95LiMqD142921 for <xfs@oss.sgi.com>; Wed, 5 Oct 2011 16:44:22 -0500
+From: Alex Elder <aelder@sgi.com>
+Message-Id: <201110052144.p95LiI8H011318@stout.americas.sgi.com>
+Date: Wed, 05 Oct 2011 16:44:18 -0500
+Subject: [PATCH] xfsprogs: update summaries in preparation for release
+ 3.1.6
 MIME-Version: 1.0
-Message-Id: <201110052022.19953@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,67 +16,71 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============1629795682993800905=="
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: Christoph Hellwig <hch@infradead.org>, Jeff Liu <jeff.liu@oracle.com>
+Cc: nathans@debian.org
 
---===============1629795682993800905==
-Content-Type: multipart/signed;
-  boundary="nextPart1865917.jtnClSfrVT";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
-
---nextPart1865917.jtnClSfrVT
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-
-On Mittwoch, 5. Oktober 2011 Dave Chinner wrote:
-> It's a data corruption problem, pure and simple....
-
-Thanks for the thorough explanation. So it's a problem when a file has=20
-recently been modified and not yet been written back to disk. Would it=20
-be worth to force a flush to disk before SEEK_* operations can start? I=20
-don't know if it's easier to do all the lookups you suggested, or do an=20
-fsync. That could have it's own impacts, though.
-
-=2D-=20
-mit freundlichen Gr=FCssen,
-Michael Monnerie, Ing. BSc
-
-it-management Internet Services: Prot=E9ger
-http://proteger.at [gesprochen: Prot-e-schee]
-Tel: +43 660 / 415 6531
-
-// Haus zu verkaufen: http://zmi.at/langegg/
-
---nextPart1865917.jtnClSfrVT
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.16 (GNU/Linux)
-
-iEYEABECAAYFAk6MoFsACgkQzhSR9xwSCbSbAQCfbv/RCH3Q1kvzFvi1FJX8MOck
-aJkAn1rmPX1eLAJE93cRKzaaCl1uClpJ
-=bS6w
------END PGP SIGNATURE-----
-
---nextPart1865917.jtnClSfrVT--
-
-
---===============1629795682993800905==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
-
---===============1629795682993800905==--
+VGhlIGZvbGxvd2luZyBpcyBhIGRyYWZ0IG9mIHN1bW1hcmllcyB0byBiZSBpbmNsdWRlZCBpbiB0
+aGUgbmV4dApyZWxlYXNlIG9mIHhmc3Byb2dzLgoKU2lnbmVkLW9mZi1ieTogQWxleCBFbGRlciA8
+YWxkZXJAc2dpLmNvbT4KCi0tLQogZGViaWFuL2NoYW5nZWxvZyB8ICAgIDcgKysrKysrKwogZG9j
+L0NIQU5HRVMgICAgICB8ICAgNDcgKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
+KysrKysrKysrKysKIDIgZmlsZXMgY2hhbmdlZCwgNTQgaW5zZXJ0aW9ucygrKQoKSW5kZXg6IGIv
+ZGViaWFuL2NoYW5nZWxvZwo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBhL2RlYmlhbi9jaGFuZ2Vsb2cKKysrIGIv
+ZGViaWFuL2NoYW5nZWxvZwpAQCAtMSwzICsxLDEwIEBACit4ZnNwcm9ncyAoMy4xLjYpIHVuc3Rh
+YmxlOyB1cmdlbmN5PWxvdworCisgICogTmV3IHVwc3RyZWFtIHJlbGVhc2UKKyAgKiBIYW5kbGUg
+dXBjb21pbmcgbGlicmVhZGxpbmU1LWRldiByZW1vdmFsIChjbG9zZXM6ICM1NTM4NzUpCisKKyAt
+LSBOYXRoYW4gU2NvdHQgPG5hdGhhbnNAZGViaWFuLm9yZz4gIFdlZCwgMzEgTWFyIDIwMTEgMDk6
+MDA6MDAgKzExMDAKKwogeGZzcHJvZ3MgKDMuMS41KSB1bnN0YWJsZTsgdXJnZW5jeT1sb3cKIAog
+ICAqIE5ldyB1cHN0cmVhbSByZWxlYXNlCkluZGV4OiBiL2RvYy9DSEFOR0VTCj09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0K
+LS0tIGEvZG9jL0NIQU5HRVMKKysrIGIvZG9jL0NIQU5HRVMKQEAgLTEsMyArMSw1MCBAQAoreGZz
+cHJvZ3MtMy4xLjYgKDUgT2N0IDIwMTEpCisJLSBUaGUgYmlnZ2VzdCBjaGFuZ2VzIHNpbmNlIGxh
+c3QgcmVsZWFzZSBhcmUgcmVsYXRlZCB0byBhCisJICByZS1zeW5jaCBvZiB0aGUgaGVhZGVyIGFu
+ZCBsaWJ4ZnMgZmlsZXMgd2l0aCB0aGUga2VybmVsCisJICBjb2RlIGFzIG9mIExpbnV4IDIuNi4z
+Ny4gIFRoaXMgaW5jbHVkZWQgcmUtaW50cm9kdWNpbmcgdGhlCisJICByYWRpeCB0cmVlIGNvZGUs
+IHdoaWNoIGhhZCBiZWVuIHByZXZpb3VzbHkgcmVtb3ZlZCBmcm9tCisJICB4ZnNfcmVwYWlyLgor
+CS0gQSBzdWJ0bGUgYnRyZWUgdXBkYXRlIGJ1ZyB3YXMgZml4ZWQuICBUaGUgcHJvYmxlbSBjb3Vs
+ZAorCSAgbGVhZCB0byBhIGhhbmcgaW4gcGhhc2UgNCBvZiB4ZnNfcmVwYWlyLiAgVGhhbmtzIHRv
+IEFqZWV0CisJICBZYWRhdi4KKwktIFN1YmNvbW1hbmQgbmFtZXMgd2l0aGluIHZhcmlvdXMgcHJv
+Z3JhbXMgYXJlIG5vIGxvbmdlcgorCSAgdHJhbnNsYXRlZC9sb2NhbGl6ZWQuICBUaGFua3MgdG8g
+QXJrYWRpdXN6IE1pxZtraWV3aWN6LgorCS0geGZzX3JlcGFpciBpcyBub3cgbW9yZSBjYXJlZnVs
+IGFib3V0IGludGVycHJldGluZyB0aGUKKwkgIGNvbnRlbnRzIG9mIGRpcmVjdG9yeSBlbnRyaWVz
+LCB2ZXJpZnlpbmcgdGhhdCBmb3VuZCBBRworCSAgbnVtYmVycyBhcmUgaW4gcmFuZ2UgZm9yIHRo
+ZSBmaWxlc3lzdGVtLgorCS0gVGVkIFRzJ28gcHJvdmlkZWQgc29tZSBpbXByb3ZlbWVudHMgaW4g
+c3VwcG9ydCBvZiBidWlsZGluZworCSAgaW4gYSAiaGVybWV0aWMiIGVudmlyb25tZW50LgorCS0g
+VGhlIHhmc19pbmZvKDgpL3hmc19ncm93ZnMoOCkgbWFuIHBhZ2UgaGFzIGJlZW4gdXBkYXRlZCB0
+bworCSAgaW5jbHVkZSBhbiBleGFtcGxlIG9mIHhmc19pbmZvIG91dHB1dCwgYWxvbmcgd2l0aCBh
+bgorCSAgZXhwbGFuYXRpb24uICBUaGFua3MgdG8gUm9tYW4gT3ZjaGlubmlrb3YuCisJLSB4ZnNf
+cXVvdGEgbm93IHJlcG9ydHMgdGhlIHByb3BlciBwcm9qZWN0IGJsb2NrIGNvdW50cyBmb3IKKwkg
+IHRoZSAiZGYiIGNvbW1hbmQuICBJdCBoYWQgcHJldmlvdXNseSByZXBvcnRlZCB2YWx1ZXMgdHdp
+Y2UKKwkgIHdoYXQgdGhleSBzaG91bGQgaGF2ZSBiZWVuLgorCS0gbWtmcy54ZnMgbm93IHByb3Bl
+cmx5IHJlcXVpcmVzIHRoYXQgc3ViLW9wdGlvbnMgYXJlCisJICBub24tZW1wdHkgc3RyaW5ncy4g
+IFRoYW5rcyB0byBDaHJpcyBQZWFyc29uIGZvciByZXBvcnRpbmcKKwktIG1rZnMueGZzIG5vdyBh
+dm9pZHMgYSBwcmV2aW91cyBvdmVyZmxvdyBmYWlsdXJlIHRoYXQKKwkgIG9jY3VycmVkIHdoZW4g
+dGhlIHVuZGVybHlpbmcgZmlsZXN5c3RlbSBzaXplIHdhcyBjbG9zZSB0bworCSAgdGhlIEFHIHNp
+emUgbGltaXQuCisJLSBUaGUgeGZzX3JlcGFpciBpbnRlcm5hbCBsb2dnaW5nIHJvdXRpbmVzIGhh
+dmUgYmVlbgorCSAgYXVnbWVudGVkIHdpdGggcHJpbnRmKCkgZm9ybWF0IGF0dHJpYnV0ZXMuICBU
+aGUgbWFueSBidWlsZAorCSAgd2FybmluZ3MgdGhhdCByZXN1bHRlZCBoYXZlIGJlZW4gYWRkcmVz
+c2VkLiAgTWFueSBvdGhlcgorCSAgYnVpbGQgd2FybmluZ3MgaW4geGZzcHJvZ3MgaGF2ZSBhbHNv
+IGJlZW4gZWxpbWluYXRlZCBhcworCSAgd2VsbC4KKwktIGxpYnhmc190cmFuc19yZWFkX2J1ZiBp
+cyBjYWxsZWQgd2l0aCBhIE5VTEwgdHJhbnNhY3Rpb24KKwktIEluIGxpYnhmcywgbGlieGZzX3Jl
+YWRidWZyKCkgbm93IGhhbmRsZXMgc2hvcnQgcmVhZHMKKwkgIHJlY29yZHMgZXJyb3IgY29kZXMg
+aW4gYSBuZXcgYl9lcnJvciBmaWVsZCBpbiBzdHJ1Y3QKKwkgIHhmc19idWYuCisJLSBsaWJ4Y21k
+IG5vIGxvbmdlciBhdHRlbXB0cyB0byBvcGVuICIvZGV2LzxkZXZuYW1lPiIgaWYgYW4KKwkgIGF0
+dGVtcHQgdG8gb3BlbiAiPGRldm5hbWU+IiBmYWlscy4KKwktIHhmc19xdW90YSBub3cgcHJpbnRz
+ICJOL0EiIHJhdGhlciB0aGFuIGEgbGFyZ2UgbnVtYmVyIGZvcgorCSAgdGhlIGlub2RlIG51bWJl
+ciB3aGVuIGR1bXBpbmcgdGhlIHN0YXRlIG9mIHF1b3RhIGZpbGVzCisJICB3aGVuIGEgcGFydGlj
+dWxhciB0eXBlIG9mIHF1b3RhIGlzIG5vdCBlbmFibGVkLgorKioqIChUaGUgbmV4dCBvbmUgaXMg
+Zm9yIGEgY2hhbmdlIGN1cnJlbnRseSBvdXQgZm9yIHJldmlldykKKwktIGxpYnhjbWQgbm8gbG9u
+Z2VyIGNhdXNlcyBhIGZhaWx1cmUgd2hlbiBlbmNvdW50ZXJpbmcgYQorCSAgYm9ndXMgbW91bnQg
+dGFibGUgZW50cnkuICBUaGlzIGFmZmVjdHMgeGZzX2dyb3dmcywgeGZzX2lvLAorCSAgYW5kIHhm
+c19xdW90YS4gIFRoZSBhZmZlY3RlZCBjb2RlIGhhcyBiZWVuIHJlZmFjdG9yZWQgYQorCSAgYml0
+IGFzIHdlbGwuCisKIHhmc3Byb2dzLTMuMS41ICgzMCBNYXJjaCAyMDExKQogCS0gUG9saXNoIHRy
+YW5zbGF0aW9uIHVwZGF0ZSwgdGhhbmtzIHRvIEpha3ViIEJvZ3VzegogCS0geGZzX3JlcGFpciBu
+b3cgd2FybnMgaWYgcnVubmluZyBpbiBsb3cgbWVtb3J5IG1vZGUKCl9fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5z
+Z2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
