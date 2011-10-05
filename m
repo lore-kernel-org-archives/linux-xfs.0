@@ -1,27 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p95DvO1e119100 for <xfs@oss.sgi.com>; Wed, 5 Oct 2011 08:57:24 -0500
-Received: from acsinet15.oracle.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8052E1448962
-	for <xfs@oss.sgi.com>; Wed,  5 Oct 2011 07:04:04 -0700 (PDT)
-Received: from acsinet15.oracle.com (acsinet15.oracle.com [141.146.126.227])
-	by cuda.sgi.com with ESMTP id mwFGv5wVirnqXYRh for
-	<xfs@oss.sgi.com>; Wed, 05 Oct 2011 07:04:04 -0700 (PDT)
-Message-ID: <4E8C61F8.5080308@oracle.com>
-Date: Wed, 05 Oct 2011 21:56:08 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
-MIME-Version: 1.0
+	p95IMQ2C132874 for <xfs@oss.sgi.com>; Wed, 5 Oct 2011 13:22:26 -0500
+Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9F4551C6B06B
+	for <xfs@oss.sgi.com>; Wed,  5 Oct 2011 11:22:22 -0700 (PDT)
+Received: from mailsrv14.zmi.at (mailsrv14.zmi.at [212.69.164.54]) by
+	cuda.sgi.com with ESMTP id UKAnMDZ9a57glwll for
+	<xfs@oss.sgi.com>; Wed, 05 Oct 2011 11:22:22 -0700 (PDT)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
 Subject: Re: SEEK_DATA/SEEK_HOLE support
-References: <4E887D7F.2010306@oracle.com>
-	<20111002154259.GA14543@infradead.org>
-	<4E888C0D.9060701@oracle.com> <20111002175902.GA9420@infradead.org>
-	<4E89343B.4030007@oracle.com> <20111003234305.GM3159@dastard>
-	<20111004130208.GA19263@infradead.org>
-	<20111005043659.GO3159@dastard> <4E8BEBDB.8040207@oracle.com>
-	<20111005092329.GP3159@dastard>
-In-Reply-To: <20111005092329.GP3159@dastard>
-Reply-To: jeff.liu@oracle.com
+Date: Wed, 5 Oct 2011 20:22:18 +0200
+References: <4E887D7F.2010306@oracle.com> <201110050934.28021@zmi.at>
+	<20111005093615.GQ3159@dastard>
+In-Reply-To: <20111005093615.GQ3159@dastard>
+MIME-Version: 1.0
+Message-Id: <201110052022.19953@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,116 +24,67 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============1629795682993800905=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Christoph Hellwig <hch@infradead.org>, Jeff Liu <jeff.liu@oracle.com>
 
-On 10/05/2011 05:23 PM, Dave Chinner wrote:
+--===============1629795682993800905==
+Content-Type: multipart/signed;
+  boundary="nextPart1865917.jtnClSfrVT";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 
-> On Tue, Oct 04, 2011 at 10:32:11PM -0700, Jeff Liu wrote:
->> On 10/05/2011 12:36 PM, Dave Chinner wrote:
->>
->>> On Tue, Oct 04, 2011 at 09:02:08AM -0400, Christoph Hellwig wrote:
->>>> On Tue, Oct 04, 2011 at 10:43:05AM +1100, Dave Chinner wrote:
->>>>> The lookup is pretty simple - if there's cached data over the
->>>>> unwritten range, then I'm considering it a data range. If there's no
->>>>> cached data over the unwritten extent, it's a hole. That makes the
->>>>> lookup simply a case of finding the first cached page in the
->>>>> unwritten extent.
->>>>>
->>>>> It'll end up reading something like this:
->>>>>
->>>>> 	iomap = offset_to_extent(offset);
->>>>> 	first_index = extent_to_page_index(iomap);
->>>>>
->>>>> 	nr_found = pagevec_lookup(&pvec, inode->i_mapping, first_index, 1);
->>>>> 	if (!nr_found)
->>>>> 		break;
->>>>>
->>>>> 	offset = page->index << PAGECACHE_SHIFT;
->>>>> 	pagevec_release(&pvec);
->>>>>
->>>>> 	/* If we fell off the end of the extent lookup next extent */
->>>>> 	if (offset >= end_of_extent(iomap)) {
->>>>> 		offset = end_of_extent(iomap);
->>>>> 		goto next_extent;
->>>>> 	}
->>>>>
->>>>> All the extent manipulations are pretty filesystem specific, so
->>>>> there's not much that can be extracted into generic helper, I
->>>>> think...
->>>>
->>>> Actually pretty similar code will work just fine if you passt the
->>>> start + len of the extents in (which we got from looking it up
->>>> fs-specificly):
->>>>
->>>> Note that we have to look for both dirty and writeback pages to
->>>> make it safe.
->>>
->>> That will only work if you can prevent concurrent unwritten extent
->>> conversion from happening while we do the separate tag lookups on
->>> the range because it requires two radix tree tag lookups rather than
->>> just one index lookup. i.e. miss the dirty page because it went
->>> dirty->writeback during the dirty tag search, and miss the same page
->>> when doing the writeback lookup because it went writeback->clean
->>> very quickly due to IO completion.
->>
->>>
->>> So to stop that from happening, it requires that filesystems can
->>> exclude unwritten extent conversion from happening while a
->>> SEEK_HOLE/SEEK_DATA operation is in progress, and that the
->>> filesystem can safely do mapping tree lookups while providing that
->>> extent tree exclusion.  I know that XFS has no problems here, but
->>> filesystems that use i_mutex for everything might be in trouble.
->>>
->>> Besides, if we just look for pages in the cache over unwritten
->>> extents (i.e. someone has treated it as data already), then it can
->>> be done locklessly without having to worry about page state changes
->>> occurring concurrently...
->>
->> From some backup utility's point of view,  AFAICS, the benefits is,
->> utilites does not need to perform read/write for an unwritten extents
->> without dirty or writeback pages, instead, just call lseek(2) to treat
->> it as hole. 
-> 
-> Yes, that's a use case for SEEK_HOLE/DATA, but that has nothing to
-> do with the filesystem implementation issues involved with page
-> state changes. What we nee dto avoid is a page state change from
-> causing a SEEK_XXX from missing a page it should have stopped the
-> seek at because it changed state concurrently. A page changing from
-> dirty to writeback is still a page containing DATA, so if we miss it
-> in both the scan for dirty pages and for writeback pages, then the
-> backup application will seek over data it should have backed up....
-> 
->> The issue is, is it worth to do that? i.e, exclude
->> unwritten extent conversions when SEEK_XXX is ongoing.
-> 
-> It's a moot point for XFS - we need to hold the ILOCK shared
-> while doing the extent tree walk, so we are going to hold off
-> unwritten extent conversion as that requires the ILOCK
-> exclusively...
+--nextPart1865917.jtnClSfrVT
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 
-Thanks for your clarification!
-Now I understood your option. Indeed, if the utility treat unwritten
-extents as data, we do not need to worry about the pages state
-conversion procedures. Otherwise, we need to hold off that until
-SEEK_XXX iteration done to avoid missing a page copy.
+On Mittwoch, 5. Oktober 2011 Dave Chinner wrote:
+> It's a data corruption problem, pure and simple....
+
+Thanks for the thorough explanation. So it's a problem when a file has=20
+recently been modified and not yet been written back to disk. Would it=20
+be worth to force a flush to disk before SEEK_* operations can start? I=20
+don't know if it's easier to do all the lookups you suggested, or do an=20
+fsync. That could have it's own impacts, though.
+
+=2D-=20
+mit freundlichen Gr=FCssen,
+Michael Monnerie, Ing. BSc
+
+it-management Internet Services: Prot=E9ger
+http://proteger.at [gesprochen: Prot-e-schee]
+Tel: +43 660 / 415 6531
+
+// Haus zu verkaufen: http://zmi.at/langegg/
+
+--nextPart1865917.jtnClSfrVT
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.16 (GNU/Linux)
+
+iEYEABECAAYFAk6MoFsACgkQzhSR9xwSCbSbAQCfbv/RCH3Q1kvzFvi1FJX8MOck
+aJkAn1rmPX1eLAJE93cRKzaaCl1uClpJ
+=bS6w
+-----END PGP SIGNATURE-----
+
+--nextPart1865917.jtnClSfrVT--
 
 
-Thanks,
--Jeff
-
-> 
-> Cheers,
-> 
-> Dave.
-> 
-
+--===============1629795682993800905==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============1629795682993800905==--
