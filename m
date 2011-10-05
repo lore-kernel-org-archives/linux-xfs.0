@@ -1,12 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p95LiMqD142921 for <xfs@oss.sgi.com>; Wed, 5 Oct 2011 16:44:22 -0500
+	p95MAaDL144036 for <xfs@oss.sgi.com>; Wed, 5 Oct 2011 17:10:36 -0500
 From: Alex Elder <aelder@sgi.com>
-Message-Id: <201110052144.p95LiI8H011318@stout.americas.sgi.com>
-Date: Wed, 05 Oct 2011 16:44:18 -0500
-Subject: [PATCH] xfsprogs: update summaries in preparation for release
- 3.1.6
+Message-Id: <201110052210.p95MAXGI012463@stout.americas.sgi.com>
+Date: Wed, 05 Oct 2011 17:10:33 -0500
+Subject: [PATCH] xfsdump: update summaries in preparation for release
+ 3.0.6
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -16,71 +16,71 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: nathans@debian.org
 
-VGhlIGZvbGxvd2luZyBpcyBhIGRyYWZ0IG9mIHN1bW1hcmllcyB0byBiZSBpbmNsdWRlZCBpbiB0
-aGUgbmV4dApyZWxlYXNlIG9mIHhmc3Byb2dzLgoKU2lnbmVkLW9mZi1ieTogQWxleCBFbGRlciA8
-YWxkZXJAc2dpLmNvbT4KCi0tLQogZGViaWFuL2NoYW5nZWxvZyB8ICAgIDcgKysrKysrKwogZG9j
-L0NIQU5HRVMgICAgICB8ICAgNDcgKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
-KysrKysrKysrKysKIDIgZmlsZXMgY2hhbmdlZCwgNTQgaW5zZXJ0aW9ucygrKQoKSW5kZXg6IGIv
-ZGViaWFuL2NoYW5nZWxvZwo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBhL2RlYmlhbi9jaGFuZ2Vsb2cKKysrIGIv
-ZGViaWFuL2NoYW5nZWxvZwpAQCAtMSwzICsxLDEwIEBACit4ZnNwcm9ncyAoMy4xLjYpIHVuc3Rh
-YmxlOyB1cmdlbmN5PWxvdworCisgICogTmV3IHVwc3RyZWFtIHJlbGVhc2UKKyAgKiBIYW5kbGUg
-dXBjb21pbmcgbGlicmVhZGxpbmU1LWRldiByZW1vdmFsIChjbG9zZXM6ICM1NTM4NzUpCisKKyAt
-LSBOYXRoYW4gU2NvdHQgPG5hdGhhbnNAZGViaWFuLm9yZz4gIFdlZCwgMzEgTWFyIDIwMTEgMDk6
-MDA6MDAgKzExMDAKKwogeGZzcHJvZ3MgKDMuMS41KSB1bnN0YWJsZTsgdXJnZW5jeT1sb3cKIAog
-ICAqIE5ldyB1cHN0cmVhbSByZWxlYXNlCkluZGV4OiBiL2RvYy9DSEFOR0VTCj09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0K
-LS0tIGEvZG9jL0NIQU5HRVMKKysrIGIvZG9jL0NIQU5HRVMKQEAgLTEsMyArMSw1MCBAQAoreGZz
-cHJvZ3MtMy4xLjYgKDUgT2N0IDIwMTEpCisJLSBUaGUgYmlnZ2VzdCBjaGFuZ2VzIHNpbmNlIGxh
-c3QgcmVsZWFzZSBhcmUgcmVsYXRlZCB0byBhCisJICByZS1zeW5jaCBvZiB0aGUgaGVhZGVyIGFu
-ZCBsaWJ4ZnMgZmlsZXMgd2l0aCB0aGUga2VybmVsCisJICBjb2RlIGFzIG9mIExpbnV4IDIuNi4z
-Ny4gIFRoaXMgaW5jbHVkZWQgcmUtaW50cm9kdWNpbmcgdGhlCisJICByYWRpeCB0cmVlIGNvZGUs
-IHdoaWNoIGhhZCBiZWVuIHByZXZpb3VzbHkgcmVtb3ZlZCBmcm9tCisJICB4ZnNfcmVwYWlyLgor
-CS0gQSBzdWJ0bGUgYnRyZWUgdXBkYXRlIGJ1ZyB3YXMgZml4ZWQuICBUaGUgcHJvYmxlbSBjb3Vs
-ZAorCSAgbGVhZCB0byBhIGhhbmcgaW4gcGhhc2UgNCBvZiB4ZnNfcmVwYWlyLiAgVGhhbmtzIHRv
-IEFqZWV0CisJICBZYWRhdi4KKwktIFN1YmNvbW1hbmQgbmFtZXMgd2l0aGluIHZhcmlvdXMgcHJv
-Z3JhbXMgYXJlIG5vIGxvbmdlcgorCSAgdHJhbnNsYXRlZC9sb2NhbGl6ZWQuICBUaGFua3MgdG8g
-QXJrYWRpdXN6IE1pxZtraWV3aWN6LgorCS0geGZzX3JlcGFpciBpcyBub3cgbW9yZSBjYXJlZnVs
-IGFib3V0IGludGVycHJldGluZyB0aGUKKwkgIGNvbnRlbnRzIG9mIGRpcmVjdG9yeSBlbnRyaWVz
-LCB2ZXJpZnlpbmcgdGhhdCBmb3VuZCBBRworCSAgbnVtYmVycyBhcmUgaW4gcmFuZ2UgZm9yIHRo
-ZSBmaWxlc3lzdGVtLgorCS0gVGVkIFRzJ28gcHJvdmlkZWQgc29tZSBpbXByb3ZlbWVudHMgaW4g
-c3VwcG9ydCBvZiBidWlsZGluZworCSAgaW4gYSAiaGVybWV0aWMiIGVudmlyb25tZW50LgorCS0g
-VGhlIHhmc19pbmZvKDgpL3hmc19ncm93ZnMoOCkgbWFuIHBhZ2UgaGFzIGJlZW4gdXBkYXRlZCB0
-bworCSAgaW5jbHVkZSBhbiBleGFtcGxlIG9mIHhmc19pbmZvIG91dHB1dCwgYWxvbmcgd2l0aCBh
-bgorCSAgZXhwbGFuYXRpb24uICBUaGFua3MgdG8gUm9tYW4gT3ZjaGlubmlrb3YuCisJLSB4ZnNf
-cXVvdGEgbm93IHJlcG9ydHMgdGhlIHByb3BlciBwcm9qZWN0IGJsb2NrIGNvdW50cyBmb3IKKwkg
-IHRoZSAiZGYiIGNvbW1hbmQuICBJdCBoYWQgcHJldmlvdXNseSByZXBvcnRlZCB2YWx1ZXMgdHdp
-Y2UKKwkgIHdoYXQgdGhleSBzaG91bGQgaGF2ZSBiZWVuLgorCS0gbWtmcy54ZnMgbm93IHByb3Bl
-cmx5IHJlcXVpcmVzIHRoYXQgc3ViLW9wdGlvbnMgYXJlCisJICBub24tZW1wdHkgc3RyaW5ncy4g
-IFRoYW5rcyB0byBDaHJpcyBQZWFyc29uIGZvciByZXBvcnRpbmcKKwktIG1rZnMueGZzIG5vdyBh
-dm9pZHMgYSBwcmV2aW91cyBvdmVyZmxvdyBmYWlsdXJlIHRoYXQKKwkgIG9jY3VycmVkIHdoZW4g
-dGhlIHVuZGVybHlpbmcgZmlsZXN5c3RlbSBzaXplIHdhcyBjbG9zZSB0bworCSAgdGhlIEFHIHNp
-emUgbGltaXQuCisJLSBUaGUgeGZzX3JlcGFpciBpbnRlcm5hbCBsb2dnaW5nIHJvdXRpbmVzIGhh
-dmUgYmVlbgorCSAgYXVnbWVudGVkIHdpdGggcHJpbnRmKCkgZm9ybWF0IGF0dHJpYnV0ZXMuICBU
-aGUgbWFueSBidWlsZAorCSAgd2FybmluZ3MgdGhhdCByZXN1bHRlZCBoYXZlIGJlZW4gYWRkcmVz
-c2VkLiAgTWFueSBvdGhlcgorCSAgYnVpbGQgd2FybmluZ3MgaW4geGZzcHJvZ3MgaGF2ZSBhbHNv
-IGJlZW4gZWxpbWluYXRlZCBhcworCSAgd2VsbC4KKwktIGxpYnhmc190cmFuc19yZWFkX2J1ZiBp
-cyBjYWxsZWQgd2l0aCBhIE5VTEwgdHJhbnNhY3Rpb24KKwktIEluIGxpYnhmcywgbGlieGZzX3Jl
-YWRidWZyKCkgbm93IGhhbmRsZXMgc2hvcnQgcmVhZHMKKwkgIHJlY29yZHMgZXJyb3IgY29kZXMg
-aW4gYSBuZXcgYl9lcnJvciBmaWVsZCBpbiBzdHJ1Y3QKKwkgIHhmc19idWYuCisJLSBsaWJ4Y21k
-IG5vIGxvbmdlciBhdHRlbXB0cyB0byBvcGVuICIvZGV2LzxkZXZuYW1lPiIgaWYgYW4KKwkgIGF0
-dGVtcHQgdG8gb3BlbiAiPGRldm5hbWU+IiBmYWlscy4KKwktIHhmc19xdW90YSBub3cgcHJpbnRz
-ICJOL0EiIHJhdGhlciB0aGFuIGEgbGFyZ2UgbnVtYmVyIGZvcgorCSAgdGhlIGlub2RlIG51bWJl
-ciB3aGVuIGR1bXBpbmcgdGhlIHN0YXRlIG9mIHF1b3RhIGZpbGVzCisJICB3aGVuIGEgcGFydGlj
-dWxhciB0eXBlIG9mIHF1b3RhIGlzIG5vdCBlbmFibGVkLgorKioqIChUaGUgbmV4dCBvbmUgaXMg
-Zm9yIGEgY2hhbmdlIGN1cnJlbnRseSBvdXQgZm9yIHJldmlldykKKwktIGxpYnhjbWQgbm8gbG9u
-Z2VyIGNhdXNlcyBhIGZhaWx1cmUgd2hlbiBlbmNvdW50ZXJpbmcgYQorCSAgYm9ndXMgbW91bnQg
-dGFibGUgZW50cnkuICBUaGlzIGFmZmVjdHMgeGZzX2dyb3dmcywgeGZzX2lvLAorCSAgYW5kIHhm
-c19xdW90YS4gIFRoZSBhZmZlY3RlZCBjb2RlIGhhcyBiZWVuIHJlZmFjdG9yZWQgYQorCSAgYml0
-IGFzIHdlbGwuCisKIHhmc3Byb2dzLTMuMS41ICgzMCBNYXJjaCAyMDExKQogCS0gUG9saXNoIHRy
-YW5zbGF0aW9uIHVwZGF0ZSwgdGhhbmtzIHRvIEpha3ViIEJvZ3VzegogCS0geGZzX3JlcGFpciBu
-b3cgd2FybnMgaWYgcnVubmluZyBpbiBsb3cgbWVtb3J5IG1vZGUKCl9fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5z
-Z2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+The following is a draft of summaries to be included in the next
+release of xfsdump.
+
+Signed-off-by: Alex Elder <alder@sgi.com>
+---
+ debian/changelog |    6 ++++++
+ doc/CHANGES      |   26 ++++++++++++++++++++++++++
+ 2 files changed, 32 insertions(+)
+
+Index: b/debian/changelog
+===================================================================
+--- a/debian/changelog
++++ b/debian/changelog
+@@ -1,3 +1,9 @@
++xfsdump (3.0.6) unstable; urgency=low
++
++  * New upstream release
++
++ -- Nathan Scott <nathans@debian.org>  Wed,  5 Oct 2011 16:46:01 +1100
++
+ xfsdump (3.0.5) unstable; urgency=low
+ 
+   * New upstream release
+Index: b/doc/CHANGES
+===================================================================
+--- a/doc/CHANGES
++++ b/doc/CHANGES
+@@ -1,3 +1,29 @@
++xfsdump-3.0.6 (5 October 2011)
++	- Checksums available in various dump headers have now been
++	  enabled--unconditionally.  Previous Linux versions never
++	  appeared to have generated these.  A bug in generating the
++	  checksum for extended attributes was fixed, and the
++	  presence of this fix is now recorded with a different flag
++	  bit in the attribute header.
++	- Signal handling has been reworked to use a common signal
++	  handler and the POSIX signal API.  It has also been
++	  restructured a bit to be more amenable to a future
++	  conversion to using pthread model.
++	- A number of other changes have been implemented in
++	  preparation for support for multi-threaded dump and
++	  restore.
++	- Exit status for an individual restore stream is now
++	  properly reported to its parent process.
++	- Some areas of code have been refactored and cleaned up
++	  considerably.  Some dead code (always #ifdef'd) code has
++	  been eliminated.  Some other conditionally compiled
++	  code--always included--has been changed to be built
++	  unconditionally.
++	- Some dialogs, which were previously restricted to at most
++	  8 options, are now able to present up to 99.
++	- Ted Ts'o provided some improvements in support of building
++	  in a "hermetic" environment.
++
+ xfsdump-3.0.5 (30 March 2011)
+ 	- Release tags will now be digitally signed
+ 	- Quota files will now be dumped, regardless of the maxsize
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
