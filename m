@@ -1,16 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p95LwKUs143467 for <xfs@oss.sgi.com>; Wed, 5 Oct 2011 16:58:22 -0500
-Date: Wed, 5 Oct 2011 17:58:16 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/6] xfsprogs: libxcmd: avoid using strtok()
-Message-ID: <20111005215816.GA16977@infradead.org>
-References: <4a7a9e630aa7c62357a606f762abc19fc1d7073b.1317646036.git.aelder@sgi.com>
-	<eba9155609154e80e0c529039ae98e1be8b3984c.1317646036.git.aelder@sgi.com>
+	p95MYn5n145155 for <xfs@oss.sgi.com>; Wed, 5 Oct 2011 17:34:49 -0500
+Message-ID: <4E8CDB85.7080108@sgi.com>
+Date: Wed, 05 Oct 2011 17:34:45 -0500
+From: Bill Kendall <wkendall@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <eba9155609154e80e0c529039ae98e1be8b3984c.1317646036.git.aelder@sgi.com>
+Subject: Re: [PATCH] xfsdump: update summaries in preparation for release 3.0.6
+References: <201110052210.p95MAXGI012463@stout.americas.sgi.com>
+In-Reply-To: <201110052210.p95MAXGI012463@stout.americas.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,14 +17,36 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Alex Elder <aelder@sgi.com>
 Cc: xfs@oss.sgi.com
 
-Looks reasonable.
+On 10/05/2011 05:10 PM, Alex Elder wrote:
+> The following is a draft of summaries to be included in the next
+> release of xfsdump.
+>
+> Signed-off-by: Alex Elder<alder@sgi.com>
+
+Looks like this covers everything. Just one minor correction below.
+
+Reviewed-by: Bill Kendall <wkendall@sgi.com>
+
+> Index: b/doc/CHANGES
+> ===================================================================
+> --- a/doc/CHANGES
+> +++ b/doc/CHANGES
+> @@ -1,3 +1,29 @@
+
+...
+
+> +	- Some dialogs, which were previously restricted to at most
+> +	  8 options, are now able to present up to 99.
+
+Actually there's no realistic limit anymore (whatever fits in
+a size_t).
 
 _______________________________________________
 xfs mailing list
