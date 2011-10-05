@@ -1,21 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p952FvgI078388 for <xfs@oss.sgi.com>; Tue, 4 Oct 2011 21:15:57 -0500
-Received: from server510.webhostingpad.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 066461F1C16F
-	for <xfs@oss.sgi.com>; Tue,  4 Oct 2011 19:15:54 -0700 (PDT)
-Received: from server510.webhostingpad.com (server510.webhostingpad.com
-	[204.93.163.99]) by cuda.sgi.com with ESMTP id icwTn5IlI43NoRLe
-	for <xfs@oss.sgi.com>; Tue, 04 Oct 2011 19:15:54 -0700 (PDT)
-Received: from allstarw by server510.webhostingpad.com with local (Exim 4.69)
-	(envelope-from <allstarw@server510.webhostingpad.com>)
-	id 1RBH1Y-001o4t-Mw
-	for xfs@oss.sgi.com; Tue, 04 Oct 2011 21:15:56 -0500
-Subject: Let me help you increase your sales and customer base.
-Date: Tue, 4 Oct 2011 21:15:56 -0500
-From: dan@allstarwebworks.com
-Message-ID: <5aa118c5671e7c9493c4c5d191d6fefb@www.allstarwebworks.com>
+	p9526WZn077962 for <xfs@oss.sgi.com>; Tue, 4 Oct 2011 21:06:32 -0500
+From: Alex Elder <aelder@sgi.com>
+Message-Id: <201110050206.p9526TgQ007503@stout.americas.sgi.com>
+Date: Tue, 04 Oct 2011 21:06:29 -0500
+Subject: [PATCH,v2] xfstests: 262: verify project quota values aren't doubled
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -25,82 +15,197 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============7732500287603311123=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
---===============7732500287603311123==
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain; charset="UTF-10"
+(This time with the right description.)
 
- 
+This test checks the project quota values reported by the quota "df"
+and "report" subcommands to ensure they match what they should be.
+There was a bug (fixed by xfsprogs commit 7cb2d41b) where the values
+reported were double what they should have been.
 
-My name is Dan and I am with a small marketing firm that has developed
-a marketing strategy that has been very successful in helping hundreds
-of small businesses increase their sales and customer base for less
-than the cost of what they currently spend on advertising. We can be
-doing the exact same thing for your business whether you are local or
-nation wide. This is NOT a web based strategy and does not require a
-web site.
+Signed-off-by: Alex Elder <aelder@sgi.com>
 
-Our philosophy is simple. Do something small with us and let me show
-you the return. Once you see that our system does work, you will be
-more excited to do something larger. With a weak economy and record
-levels of low consumer spending, small businesses need to help take
-care of each other now more than ever.
+---
+ 262     |  147 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 262.out |    2 
+ group   |    1 
+ 3 files changed, 150 insertions(+)
 
-We have decided to try and reach out to more small businesses in
-different ways which is why you received this email. We have been
-looking through online listings such as Merchant Circle, Yellow Pages,
-Google Places, and Yahoo Business in an attempt to contact and make
-relationships with more small businesses.
-
-If you would like some more information, please reply to this email
-with a phone number and I can give you a call, or you can call me
-directly at 517-586-1329 10am - 6pm EST. Again we are very small and
-sometimes cannot get to every call. If no one is available, please
-leave a message and I WILL return your call as soon as I possibly can.
-
-Thank you for your time, and I look forward to working with you.
-
----------------------------
-
- Dan Miler
-
-Allstar Web Works
-
-517-586-1329
-
----------------------------
-
-
-
---
-Your address was originally selected to receive this message because we
-believe we offer a service that would benefit you and your business.
-However, we do respect your privacy and if you do not wish to receive any
-more messages, please click the link below and your email address will be
-removed from our system.
-
-http://allstarwebworks.com/phplist/?p=blacklist&email=xfs@oss.sgi.com
-
-
-
---
-powered by phpList, www.phplist.com --
-
-
-
---===============7732500287603311123==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Index: b/262
+===================================================================
+--- /dev/null
++++ b/262
+@@ -0,0 +1,147 @@
++#! /bin/bash
++# FS QA Test No. 262
++#
++# This test checks the project quota values reported by the quota
++# "df" and "report" subcommands to ensure they match what they
++# should be.  There was a bug (fixed by xfsprogs commit 7cb2d41b)
++# where the values reported were double what they should have been.
++#
++# SGI PV 1015651
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2011 SGI.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++# creator
++owner=aelder@sgi.com
++
++seq=$(basename $0)
++echo "QA output created by ${seq}"
++
++here=$(pwd)
++
++cp /dev/null "${seq}.full"
++
++tmp=/tmp/$$
++my_projects=${tmp}.projects
++my_projid=${tmp}.projid
++proj_name=test_project
++proj_num=1
++
++qlimit_meg=500	# 500M limit imposed = 500 * 1024 * 1024 bytes
++
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    cd /
++    rm -f ${tmp}.*
++}
++
++# get standard environment, filters and checks
++. ./common.rc
++. ./common.filter
++. ./common.quota
++
++echo "Silence is golden."
++
++# real QA test starts here
++
++proj_dir="${SCRATCH_MNT}/test"
++
++# Modify as appropriate.
++_supported_fs xfs
++_supported_os Linux
++
++_require_quota
++_require_scratch
++
++
++# Make sure the hard limits reported are what was set.
++# It is entirely too clever...
++# It exploits the fact that we've set the soft and hard limits to
++# the same value, and as a result the value in the fourth field in
++# both the "df" and the "report" output.  For "report", the line we're
++# interested in contains our project name in the first field.  For "df"
++# it contains our project directory in the last field.
++_filter_quota_rpt() {
++	awk '
++	BEGIN {
++		proj_name = "'${proj_name}'";
++		proj_dir = "'${proj_dir}'";
++		qlimit_meg = '${qlimit_meg}';
++		qlimit = qlimit_meg * 1024 * 1024;
++	}
++	# This function parses the human-readable values produced
++	# by xfs_quota output
++	function byte_size(value,  result) {
++		result = strtonum(value);
++		unit = value;
++		gsub("[0-9][0-9]*", "", unit);
++		shift = index("KMGTPE", unit);
++		while (shift--)
++			result *= 1024;
++		return result;
++	}
++	{
++		if ($1 !~ proj_name && $nf !~ proj_dir)
++			next;
++		bsize = byte_size($4);
++		if (bsize != qlimit)
++			printf("hard limit %d bytes, expected %d\n",
++				bsize, qlimit);
++	}
++	'
++}
++
++_quota_cmd() {
++	xfs_quota -P "${my_projid}" -D "${my_projects}" -x \
++		-c "$@" "${SCRATCH_MNT}"
++}
++
++# Set up--mount scratch and create the project directory
++
++echo ${proj_name}:${proj_num} > "${my_projid}"
++echo ${proj_num}:${proj_dir} > "${my_projects}"
++
++_scratch_mkfs						>> "${seq}.full" 2>&1
++
++export MOUNT_OPTIONS="-opquota"
++_qmount
++mkdir -p "${proj_dir}"
++
++# Setup the project quota directory
++_quota_cmd "project -s ${proj_name}"			>> "${seq}.full" 2>&1
++
++# Assign block quota limits
++_quota_cmd "limit -p bhard=${qlimit_meg}m bsoft=${qlimit_meg}m ${proj_name}" \
++							2>> "${seq}.full" 1>&2
++
++# See what gets reported
++_quota_cmd "report"		| _filter_quota_rpt	2>> "${seq}.full"
++_quota_cmd "df"			| _filter_quota_rpt	2>> "${seq}.full"
++
++# This time using "human readable" output
++_quota_cmd "report -h"		| _filter_quota_rpt	2>> "${seq}.full"
++_quota_cmd "df -h"		| _filter_quota_rpt	2>> "${seq}.full"
++
++# Clean up
++rm -rf "${proj_dir}"
++_scratch_unmount
++
++status=0	# success, all done
++
+Index: b/262.out
+===================================================================
+--- /dev/null
++++ b/262.out
+@@ -0,0 +1,2 @@
++QA output created by 262
++Silence is golden.
+Index: b/group
+===================================================================
+--- a/group
++++ b/group
+@@ -375,3 +375,4 @@ deprecated
+ 259 auto quick
+ 260 auto quick trim
+ 261 auto quick quota
++262 auto quick quota
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============7732500287603311123==--
