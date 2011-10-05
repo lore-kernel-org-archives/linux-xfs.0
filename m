@@ -1,12 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9526WZn077962 for <xfs@oss.sgi.com>; Tue, 4 Oct 2011 21:06:32 -0500
+	p952NjDx078776 for <xfs@oss.sgi.com>; Tue, 4 Oct 2011 21:23:45 -0500
+Subject: Re: [PATCH] xfs: optimize fsync on directories
 From: Alex Elder <aelder@sgi.com>
-Message-Id: <201110050206.p9526TgQ007503@stout.americas.sgi.com>
-Date: Tue, 04 Oct 2011 21:06:29 -0500
-Subject: [PATCH,v2] xfstests: 262: verify project quota values aren't doubled
+In-Reply-To: <20111002142516.GA6361@infradead.org>
+References: <20111002142516.GA6361@infradead.org>
+Date: Tue, 4 Oct 2011 21:23:40 -0500
+Message-ID: <1317781420.2270.4.camel@doink>
 MIME-Version: 1.0
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,191 +22,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-(This time with the right description.)
+On Sun, 2011-10-02 at 10:25 -0400, Christoph Hellwig wrote:
+> Directories are only updated transactionally, which means fsync only
+> needs to flush the log the inode is currently dirty, but not bother
+> with checking for dirty data, non-transaction updates, an most importanly
+> doesn't have to flush disk caches except as part of a transaction commit.
+> 
+> While the first two optimizations can't easily be measured the latter
+> actually make a difference when doing lots of fsync that do not actually
+> have to commit the inode, e.g. becase an ealier fsync already pushed
+> the log far enough.
+> 
+> The new xfs_dir_fsync is identifical to xfs_nfs_commit_metadata except
+> for the prototype, but I'm not sure creating a common helper for the
+> two is worth it given how simple the functions are.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-This test checks the project quota values reported by the quota "df"
-and "report" subcommands to ensure they match what they should be.
-There was a bug (fixed by xfsprogs commit 7cb2d41b) where the values
-reported were double what they should have been.
+Looks good.
 
-Signed-off-by: Alex Elder <aelder@sgi.com>
+Reviewed-by: Alex Elder <aelder@sgi.com>
 
----
- 262     |  147 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 262.out |    2 
- group   |    1 
- 3 files changed, 150 insertions(+)
-
-Index: b/262
-===================================================================
---- /dev/null
-+++ b/262
-@@ -0,0 +1,147 @@
-+#! /bin/bash
-+# FS QA Test No. 262
-+#
-+# This test checks the project quota values reported by the quota
-+# "df" and "report" subcommands to ensure they match what they
-+# should be.  There was a bug (fixed by xfsprogs commit 7cb2d41b)
-+# where the values reported were double what they should have been.
-+#
-+# SGI PV 1015651
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2011 SGI.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+# creator
-+owner=aelder@sgi.com
-+
-+seq=$(basename $0)
-+echo "QA output created by ${seq}"
-+
-+here=$(pwd)
-+
-+cp /dev/null "${seq}.full"
-+
-+tmp=/tmp/$$
-+my_projects=${tmp}.projects
-+my_projid=${tmp}.projid
-+proj_name=test_project
-+proj_num=1
-+
-+qlimit_meg=500	# 500M limit imposed = 500 * 1024 * 1024 bytes
-+
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    cd /
-+    rm -f ${tmp}.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common.rc
-+. ./common.filter
-+. ./common.quota
-+
-+echo "Silence is golden."
-+
-+# real QA test starts here
-+
-+proj_dir="${SCRATCH_MNT}/test"
-+
-+# Modify as appropriate.
-+_supported_fs xfs
-+_supported_os Linux
-+
-+_require_quota
-+_require_scratch
-+
-+
-+# Make sure the hard limits reported are what was set.
-+# It is entirely too clever...
-+# It exploits the fact that we've set the soft and hard limits to
-+# the same value, and as a result the value in the fourth field in
-+# both the "df" and the "report" output.  For "report", the line we're
-+# interested in contains our project name in the first field.  For "df"
-+# it contains our project directory in the last field.
-+_filter_quota_rpt() {
-+	awk '
-+	BEGIN {
-+		proj_name = "'${proj_name}'";
-+		proj_dir = "'${proj_dir}'";
-+		qlimit_meg = '${qlimit_meg}';
-+		qlimit = qlimit_meg * 1024 * 1024;
-+	}
-+	# This function parses the human-readable values produced
-+	# by xfs_quota output
-+	function byte_size(value,  result) {
-+		result = strtonum(value);
-+		unit = value;
-+		gsub("[0-9][0-9]*", "", unit);
-+		shift = index("KMGTPE", unit);
-+		while (shift--)
-+			result *= 1024;
-+		return result;
-+	}
-+	{
-+		if ($1 !~ proj_name && $nf !~ proj_dir)
-+			next;
-+		bsize = byte_size($4);
-+		if (bsize != qlimit)
-+			printf("hard limit %d bytes, expected %d\n",
-+				bsize, qlimit);
-+	}
-+	'
-+}
-+
-+_quota_cmd() {
-+	xfs_quota -P "${my_projid}" -D "${my_projects}" -x \
-+		-c "$@" "${SCRATCH_MNT}"
-+}
-+
-+# Set up--mount scratch and create the project directory
-+
-+echo ${proj_name}:${proj_num} > "${my_projid}"
-+echo ${proj_num}:${proj_dir} > "${my_projects}"
-+
-+_scratch_mkfs						>> "${seq}.full" 2>&1
-+
-+export MOUNT_OPTIONS="-opquota"
-+_qmount
-+mkdir -p "${proj_dir}"
-+
-+# Setup the project quota directory
-+_quota_cmd "project -s ${proj_name}"			>> "${seq}.full" 2>&1
-+
-+# Assign block quota limits
-+_quota_cmd "limit -p bhard=${qlimit_meg}m bsoft=${qlimit_meg}m ${proj_name}" \
-+							2>> "${seq}.full" 1>&2
-+
-+# See what gets reported
-+_quota_cmd "report"		| _filter_quota_rpt	2>> "${seq}.full"
-+_quota_cmd "df"			| _filter_quota_rpt	2>> "${seq}.full"
-+
-+# This time using "human readable" output
-+_quota_cmd "report -h"		| _filter_quota_rpt	2>> "${seq}.full"
-+_quota_cmd "df -h"		| _filter_quota_rpt	2>> "${seq}.full"
-+
-+# Clean up
-+rm -rf "${proj_dir}"
-+_scratch_unmount
-+
-+status=0	# success, all done
-+
-Index: b/262.out
-===================================================================
---- /dev/null
-+++ b/262.out
-@@ -0,0 +1,2 @@
-+QA output created by 262
-+Silence is golden.
-Index: b/group
-===================================================================
---- a/group
-+++ b/group
-@@ -375,3 +375,4 @@ deprecated
- 259 auto quick
- 260 auto quick trim
- 261 auto quick quota
-+262 auto quick quota
 
 _______________________________________________
 xfs mailing list
