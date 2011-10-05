@@ -1,24 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p959aM33104785 for <xfs@oss.sgi.com>; Wed, 5 Oct 2011 04:36:22 -0500
+	p959Nbpe104013 for <xfs@oss.sgi.com>; Wed, 5 Oct 2011 04:23:38 -0500
 Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 02BF91C69965
-	for <xfs@oss.sgi.com>; Wed,  5 Oct 2011 02:36:21 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 398911C694FD
+	for <xfs@oss.sgi.com>; Wed,  5 Oct 2011 02:23:35 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	B4E5mRG1CN5muR2C for <xfs@oss.sgi.com>;
-	Wed, 05 Oct 2011 02:36:21 -0700 (PDT)
-Date: Wed, 5 Oct 2011 20:36:15 +1100
+	JS50Ui23xF5sQxv1 for <xfs@oss.sgi.com>;
+	Wed, 05 Oct 2011 02:23:35 -0700 (PDT)
+Date: Wed, 5 Oct 2011 20:23:29 +1100
 From: Dave Chinner <david@fromorbit.com>
 Subject: Re: SEEK_DATA/SEEK_HOLE support
-Message-ID: <20111005093615.GQ3159@dastard>
+Message-ID: <20111005092329.GP3159@dastard>
 References: <4E887D7F.2010306@oracle.com>
+	<20111002154259.GA14543@infradead.org>
+	<4E888C0D.9060701@oracle.com> <20111002175902.GA9420@infradead.org>
+	<4E89343B.4030007@oracle.com> <20111003234305.GM3159@dastard>
 	<20111004130208.GA19263@infradead.org>
-	<20111005043659.GO3159@dastard> <201110050934.28021@zmi.at>
+	<20111005043659.GO3159@dastard> <4E8BEBDB.8040207@oracle.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <201110050934.28021@zmi.at>
+In-Reply-To: <4E8BEBDB.8040207@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,11 +34,49 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Michael Monnerie <michael.monnerie@is.it-management.at>
-Cc: Christoph Hellwig <hch@infradead.org>, Jeff Liu <jeff.liu@oracle.com>, xfs@oss.sgi.com
+To: Jeff Liu <jeff.liu@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Wed, Oct 05, 2011 at 09:34:26AM +0200, Michael Monnerie wrote:
-> On Mittwoch, 5. Oktober 2011 Dave Chinner wrote:
+On Tue, Oct 04, 2011 at 10:32:11PM -0700, Jeff Liu wrote:
+> On 10/05/2011 12:36 PM, Dave Chinner wrote:
+> 
+> > On Tue, Oct 04, 2011 at 09:02:08AM -0400, Christoph Hellwig wrote:
+> >> On Tue, Oct 04, 2011 at 10:43:05AM +1100, Dave Chinner wrote:
+> >>> The lookup is pretty simple - if there's cached data over the
+> >>> unwritten range, then I'm considering it a data range. If there's no
+> >>> cached data over the unwritten extent, it's a hole. That makes the
+> >>> lookup simply a case of finding the first cached page in the
+> >>> unwritten extent.
+> >>>
+> >>> It'll end up reading something like this:
+> >>>
+> >>> 	iomap = offset_to_extent(offset);
+> >>> 	first_index = extent_to_page_index(iomap);
+> >>>
+> >>> 	nr_found = pagevec_lookup(&pvec, inode->i_mapping, first_index, 1);
+> >>> 	if (!nr_found)
+> >>> 		break;
+> >>>
+> >>> 	offset = page->index << PAGECACHE_SHIFT;
+> >>> 	pagevec_release(&pvec);
+> >>>
+> >>> 	/* If we fell off the end of the extent lookup next extent */
+> >>> 	if (offset >= end_of_extent(iomap)) {
+> >>> 		offset = end_of_extent(iomap);
+> >>> 		goto next_extent;
+> >>> 	}
+> >>>
+> >>> All the extent manipulations are pretty filesystem specific, so
+> >>> there's not much that can be extracted into generic helper, I
+> >>> think...
+> >>
+> >> Actually pretty similar code will work just fine if you passt the
+> >> start + len of the extents in (which we got from looking it up
+> >> fs-specificly):
+> >>
+> >> Note that we have to look for both dirty and writeback pages to
+> >> make it safe.
+> > 
 > > That will only work if you can prevent concurrent unwritten extent
 > > conversion from happening while we do the separate tag lookups on
 > > the range because it requires two radix tree tag lookups rather than
@@ -43,6 +84,7 @@ On Wed, Oct 05, 2011 at 09:34:26AM +0200, Michael Monnerie wrote:
 > > dirty->writeback during the dirty tag search, and miss the same page
 > > when doing the writeback lookup because it went writeback->clean
 > > very quickly due to IO completion.
+> 
 > > 
 > > So to stop that from happening, it requires that filesystems can
 > > exclude unwritten extent conversion from happening while a
@@ -56,52 +98,32 @@ On Wed, Oct 05, 2011 at 09:34:26AM +0200, Michael Monnerie wrote:
 > > be done locklessly without having to worry about page state changes
 > > occurring concurrently...
 > 
-> I'd like to understand why it's important to care about locking here. As 
-> I understand it, SEEK_* is used for example to copy a file efficiently. 
-> If that is performed on a file that is currently being written to, the 
-> resulting copy will probably be bogus anyway, even without SEEK_* usage.
+> From some backup utility's point of view,  AFAICS, the benefits is,
+> utilites does not need to perform read/write for an unwritten extents
+> without dirty or writeback pages, instead, just call lseek(2) to treat
+> it as hole. 
 
-The problem is that copying a file with dirty data hot in the cache
-concurrently when writeback to that file is occurring. The
-application is not modifying the file, and the state changes that
-could lead SEEK_DATA missing data are driven entirely by background
-kernel threads. The application leaves a file in this state:
+Yes, that's a use case for SEEK_HOLE/DATA, but that has nothing to
+do with the filesystem implementation issues involved with page
+state changes. What we nee dto avoid is a page state change from
+causing a SEEK_XXX from missing a page it should have stopped the
+seek at because it changed state concurrently. A page changing from
+dirty to writeback is still a page containing DATA, so if we miss it
+in both the scan for dirty pages and for writeback pages, then the
+backup application will seek over data it should have backed up....
 
-                     dirty page
-              +------D--------+
-               unwritten extent
+> The issue is, is it worth to do that? i.e, exclude
+> unwritten extent conversions when SEEK_XXX is ongoing.
 
-SEEK_DATA must stop at that dirty page over the unwritten extent.
-If we do a dirty page lookup, but the flusher thread has started IO
-on it, it will have transitioned to this state:
-
-                     writeback page
-              +------W--------+
-               unwritten extent
-
-And the dirty page lookup will not find it. If we allow unwritten
-extent conversion to also run while we are doing the writeback page
-cache lookup, then IO completion and conversion can occur before we
-find the writeback page in the cache. i.e we see this state:
-
-                     clean page
-              +------C--------+
-               unwritten extent
-
-And we don't find the data page over the unwritten extent at all
-because we haven't looked up clean pages in the cache.
-
-At that point, our SEEK_DATA call has skipped over a valid data
-page, the copy utility fails to copy the data over the unwritten
-extent, thereby silently creating a corrupt copy....
-
-> There might be a case where it is important, but I can't see that atm. 
-
-It's a data corruption problem, pure and simple....
+It's a moot point for XFS - we need to hold the ILOCK shared
+while doing the extent tree walk, so we are going to hold off
+unwritten extent conversion as that requires the ILOCK
+exclusively...
 
 Cheers,
 
 Dave.
+
 -- 
 Dave Chinner
 david@fromorbit.com
