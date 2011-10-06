@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9611cZs153352 for <xfs@oss.sgi.com>; Wed, 5 Oct 2011 20:01:38 -0500
+	p9611mQE153385 for <xfs@oss.sgi.com>; Wed, 5 Oct 2011 20:01:48 -0500
 Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7D385144A3FD
-	for <xfs@oss.sgi.com>; Wed,  5 Oct 2011 18:08:21 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4A294144A402
+	for <xfs@oss.sgi.com>; Wed,  5 Oct 2011 18:08:31 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	jSneQsFA8QAfH1cy for <xfs@oss.sgi.com>;
-	Wed, 05 Oct 2011 18:08:21 -0700 (PDT)
+	Kj5YvROBQBZSuOoq for <xfs@oss.sgi.com>;
+	Wed, 05 Oct 2011 18:08:31 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1RBcL8-0003AU-Iw
+	(envelope-from <dave@fromorbit.com>) id 1RBcL8-0003AV-KV
 	for xfs@oss.sgi.com; Thu, 06 Oct 2011 12:01:34 +1100
 Received: from dave by disappointment with local (Exim 4.76)
-	(envelope-from <dave@disappointment.disaster>) id 1RBcL8-0000nd-AX
+	(envelope-from <dave@disappointment.disaster>) id 1RBcL8-0000nf-D6
 	for xfs@oss.sgi.com; Thu, 06 Oct 2011 12:01:34 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/2] repair: handle repair of image files on large sector size
-	filesystems
-Date: Thu,  6 Oct 2011 12:01:30 +1100
-Message-Id: <1317862891-3033-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH 2/2] repair: fix some valgrind reported errors on i686
+Date: Thu,  6 Oct 2011 12:01:31 +1100
+Message-Id: <1317862891-3033-3-git-send-email-david@fromorbit.com>
 In-Reply-To: <1317862891-3033-1-git-send-email-david@fromorbit.com>
 References: <1317862891-3033-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,97 +38,138 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Because repair uses direct IO, it cannot do IO smaller than a sector
-on the underlying device. When repairing a filesystem image, the
-filesystem hosting the image may have a sector size larger than the
-sector size of the image, and so single image sector reads and
-writes will fail.
+Fix a potential prefetch read problem due to the first loop
+execution of pf_batch_read potentially not initialising the fsbno
+varaible:
 
-To avoid this, when checking a file and there is a sector size
-mismatch like this, turn off direct IO. While there, fix a compile
-bug in the IO_DEBUG option for libxfs which was found during triage.
+==10177== Thread 6:
+==10177== Conditional jump or move depends on uninitialised value(s)
+==10177==    at 0x8079CAB: pf_batch_read (prefetch.c:408)
+==10177==    by 0x6A2996D: clone (clone.S:130)
+==10177==
+
+Fix a bunch of invalid read/write errors due to excessive blkmap
+allocations when inode forks are corrupted. These show up some time
+after making a blkmap allocation for 536870913 extents on i686,
+which is followed some time later by a crash caused bymemory
+corruption.
+
+This blkmap allocation size overflows 32 bits in such a
+way that it results in a 32 byte allocation and so access to the
+second extent results in access beyond the allocated memory and
+corrupts random memory.
+
+==5419== Invalid write of size 4
+==5419==    at 0x80507DA: blkmap_set_ext (bmap.c:260)
+==5419==    by 0x8055CF4: process_bmbt_reclist_int (dinode.c:712)
+==5419==    by 0x8056206: process_bmbt_reclist (dinode.c:813)
+==5419==    by 0x80579DA: process_exinode (dinode.c:1324)
+==5419==    by 0x8059B77: process_dinode_int (dinode.c:2036)
+==5419==    by 0x805ABE6: process_dinode (dinode.c:2823)
+==5419==    by 0x8052493: process_inode_chunk.isra.4 (dino_chunks.c:777)
+==5419==    by 0x8054012: process_aginodes (dino_chunks.c:1024)
+==5419==    by 0xFFF: ???
+==5419==  Address 0x944cfb8 is 0 bytes after a block of size 32 alloc'd
+==5419==    at 0x48E1102: realloc (in
+/usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+==5419==    by 0x80501F3: blkmap_alloc (bmap.c:56)
+==5419==    by 0x80599F5: process_dinode_int (dinode.c:2027)
+==5419==    by 0x805ABE6: process_dinode (dinode.c:2823)
+==5419==    by 0x8052493: process_inode_chunk.isra.4 (dino_chunks.c:777)
+==5419==    by 0x8054012: process_aginodes (dino_chunks.c:1024)
+==5419==    by 0xFFF: ???
+
+Add overflow detection code into the blkmap allocation code to avoid
+this problem, and also free large allocations once they are finished
+with to avoid pinning large amounts of memory due to the occasional
+large extent list in a filesystem.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- libxfs/rdwr.c       |    2 +-
- repair/sb.c         |    9 ++++++++-
- repair/xfs_repair.c |   30 ++++++++++++++++++++++++++++++
- 3 files changed, 39 insertions(+), 2 deletions(-)
+ repair/bmap.c     |   37 ++++++++++++++++++++++++++++++++++++-
+ repair/prefetch.c |    2 +-
+ 2 files changed, 37 insertions(+), 2 deletions(-)
 
-diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-index ec2675e..a656851 100644
---- a/libxfs/rdwr.c
-+++ b/libxfs/rdwr.c
-@@ -364,7 +364,7 @@ libxfs_getbufr(dev_t device, xfs_daddr_t blkno, int bblen)
- 		libxfs_initbuf(bp, device, blkno, blen);
- #ifdef IO_DEBUG
- 	printf("%lx: %s: allocated %u bytes buffer, key=%llu(%llu), %p\n",
--		pthread_self(), __FUNCTION__, BBTOB(len),
-+		pthread_self(), __FUNCTION__, blen,
- 		(long long)LIBXFS_BBTOOFF64(blkno), (long long)blkno, bp);
- #endif
+diff --git a/repair/bmap.c b/repair/bmap.c
+index 79b9f79..1127a87 100644
+--- a/repair/bmap.c
++++ b/repair/bmap.c
+@@ -47,6 +47,17 @@ blkmap_alloc(
+ 	if (nex < 1)
+ 		nex = 1;
  
-diff --git a/repair/sb.c b/repair/sb.c
-index 0ee2345..c8df076 100644
---- a/repair/sb.c
-+++ b/repair/sb.c
-@@ -689,7 +689,14 @@ verify_set_primary_sb(xfs_sb_t		*rsb,
- 	 */
- 	num_sbs = MIN(NUM_SBS, rsb->sb_agcount);
- 	skip = howmany(num_sbs, rsb->sb_agcount);
--	size = NUM_AGH_SECTS * rsb->sb_sectsize;
-+
-+	/*
-+	 * We haven't been able to validate the sector size yet properly
-+	 * (e.g. in the case of repairing an image in a file), so we need to
-+	 * take into account sector mismatches and so use the maximum possible
-+	 * sector size rather than that in @rsb.
-+	 */
-+	size = NUM_AGH_SECTS * (1 << (XFS_MAX_SECTORSIZE_LOG));
- 	retval = 0;
- 	list = NULL;
- 	num_ok = 0;
-diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-index 4707b83..dda9daa 100644
---- a/repair/xfs_repair.c
-+++ b/repair/xfs_repair.c
-@@ -569,6 +569,36 @@ main(int argc, char **argv)
- 	memset(&xfs_m, 0, sizeof(xfs_mount_t));
- 	libxfs_sb_from_disk(&xfs_m.m_sb, XFS_BUF_TO_SBP(sbp));
- 
-+	/*
-+	 * if the sector size of the filesystem we are trying to repair is
-+	 * smaller than that of the underlying filesystem (i.e. we are repairing
-+	 * an image), the we have to turn off direct IO because we cannot do IO
-+	 * smaller than the host filesystem's sector size.
-+	 */
-+	if (isa_file) {
-+		int     fd = libxfs_device_to_fd(x.ddev);
-+		struct xfs_fsop_geom_v1 geom = {
-+			.sectsize = BBSIZE,
-+		};
-+
-+		if (ioctl(fd, XFS_IOC_FSGEOMETRY_V1, &geom) < 0) {
-+			do_warn(_("Cannot get host fiesystem geometry.\n"
-+		"Repair may fail if there is a sector size mismatch between "
-+		"the image and the host filesystem.\n"));
-+		}
-+
-+		if (xfs_m.m_sb.sb_sectsize < geom.sectsize) {
-+			long	old_flags;
-+
-+			old_flags = fcntl(fd, F_GETFL, 0);
-+			if (fcntl(fd, F_SETFL, old_flags & ~O_DIRECT) < 0) {
-+				do_warn(_(
-+		"Sector size on host filesystem larger than image sector size.\n"
-+		"Cannot turn off direct IO, so exiting.\n"));
-+				exit(1);
-+			}
-+		}
++#if (BITS_PER_LONG != 64)
++	if (nex > (INT_MAX / sizeof(bmap_ext_t) - 1)) {
++		do_warn(
++	_("Number of extents requested in blkmap_alloc (%u) overflows 32 bits.\n"
++	  "If this is not a corruption, then will need a 64 bit system\n"
++	  "to repair this filesystem.\n"),
++			nex);
++		return NULL;
 +	}
- 	mp = libxfs_mount(&xfs_m, &xfs_m.m_sb, x.ddev, x.logdev, x.rtdev, 0);
++#endif
++
+ 	key = whichfork ? ablkmap_key : dblkmap_key;
+ 	blkmap = pthread_getspecific(key);
+ 	if (!blkmap || blkmap->naexts < nex) {
+@@ -66,12 +77,27 @@ blkmap_alloc(
  
- 	if (!mp)  {
+ /*
+  * Free a block map.
++ *
++ * If the map is a large, uncommon size (say for hundreds of thousands of
++ * extents) then free it to release the memory. This prevents us from pinning
++ * large tracts of memory due to corrupted fork values or one-off fragmented
++ * files. Otherwise we have nothing to do but keep the memory around for the
++ * next inode
+  */
+ void
+ blkmap_free(
+ 	blkmap_t	*blkmap)
+ {
+-	/* nothing to do! - keep the memory around for the next inode */
++	/* consider more than 100k extents rare */
++	if (blkmap->naexts < 100 * 1024)
++		return;
++
++	if (blkmap == pthread_getspecific(dblkmap_key))
++		pthread_setspecific(dblkmap_key, NULL);
++	else
++		pthread_setspecific(ablkmap_key, NULL);
++
++	free(blkmap);
+ }
+ 
+ /*
+@@ -218,6 +244,15 @@ blkmap_grow(
+ 	}
+ 
+ 	blkmap->naexts += 4;
++#if (BITS_PER_LONG != 64)
++	if (blkmap->naexts > (INT_MAX / sizeof(bmap_ext_t) - 1)) {
++		do_error(
++	_("Number of extents requested in blkmap_grow (%u) overflows 32 bits.\n"
++	  "You need a 64 bit system to repair this filesystem.\n"),
++			blkmap->naexts);
++		return NULL;
++	}
++#endif
+ 	blkmap = realloc(blkmap, BLKMAP_SIZE(blkmap->naexts));
+ 	if (blkmap == NULL)
+ 		do_error(_("realloc failed in blkmap_grow\n"));
+diff --git a/repair/prefetch.c b/repair/prefetch.c
+index d2fdf90..da074a8 100644
+--- a/repair/prefetch.c
++++ b/repair/prefetch.c
+@@ -397,7 +397,7 @@ pf_batch_read(
+ 	int			len, size;
+ 	int			i;
+ 	int			inode_bufs;
+-	unsigned long		fsbno;
++	unsigned long		fsbno = 0;
+ 	unsigned long		max_fsbno;
+ 	char			*pbuf;
+ 
 -- 
 1.7.5.4
 
