@@ -1,23 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p960Wg0Y152090 for <xfs@oss.sgi.com>; Wed, 5 Oct 2011 19:32:43 -0500
+	p9611cZs153352 for <xfs@oss.sgi.com>; Wed, 5 Oct 2011 20:01:38 -0500
 Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F110C144A641
-	for <xfs@oss.sgi.com>; Wed,  5 Oct 2011 17:39:24 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7D385144A3FD
+	for <xfs@oss.sgi.com>; Wed,  5 Oct 2011 18:08:21 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	3GOrWayBLnDjuiyp for <xfs@oss.sgi.com>;
-	Wed, 05 Oct 2011 17:39:24 -0700 (PDT)
-Date: Thu, 6 Oct 2011 11:32:34 +1100
+	jSneQsFA8QAfH1cy for <xfs@oss.sgi.com>;
+	Wed, 05 Oct 2011 18:08:21 -0700 (PDT)
+Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1RBcL8-0003AU-Iw
+	for xfs@oss.sgi.com; Thu, 06 Oct 2011 12:01:34 +1100
+Received: from dave by disappointment with local (Exim 4.76)
+	(envelope-from <dave@disappointment.disaster>) id 1RBcL8-0000nd-AX
+	for xfs@oss.sgi.com; Thu, 06 Oct 2011 12:01:34 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: SEEK_DATA/SEEK_HOLE support
-Message-ID: <20111006003234.GR3159@dastard>
-References: <4E887D7F.2010306@oracle.com> <201110050934.28021@zmi.at>
-	<20111005093615.GQ3159@dastard> <201110052022.19953@zmi.at>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <201110052022.19953@zmi.at>
+Subject: [PATCH 1/2] repair: handle repair of image files on large sector size
+	filesystems
+Date: Thu,  6 Oct 2011 12:01:30 +1100
+Message-Id: <1317862891-3033-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1317862891-3033-1-git-send-email-david@fromorbit.com>
+References: <1317862891-3033-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,41 +30,108 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Michael Monnerie <michael.monnerie@is.it-management.at>
-Cc: Christoph Hellwig <hch@infradead.org>, Jeff Liu <jeff.liu@oracle.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Wed, Oct 05, 2011 at 08:22:18PM +0200, Michael Monnerie wrote:
-> On Mittwoch, 5. Oktober 2011 Dave Chinner wrote:
-> > It's a data corruption problem, pure and simple....
-> 
-> Thanks for the thorough explanation. So it's a problem when a file has 
-> recently been modified and not yet been written back to disk. Would it 
-> be worth to force a flush to disk before SEEK_* operations can start? I 
-> don't know if it's easier to do all the lookups you suggested, or do an 
-> fsync. That could have it's own impacts, though.
+From: Dave Chinner <dchinner@redhat.com>
 
-The problem is that application does not know whether fsync is
-needed or not, so it would have to do that unconditionally for every
-file it was copying. That has potential for quite severe, unexpected
-performance regressions, so it's something we want to avoid.
+Because repair uses direct IO, it cannot do IO smaller than a sector
+on the underlying device. When repairing a filesystem image, the
+filesystem hosting the image may have a sector size larger than the
+sector size of the image, and so single image sector reads and
+writes will fail.
 
-There isn't really any additional complexity on the side of the
-XFS SEEK_XXX code to handle this properly - my comments were
-aimed at making sure that everyone understood the constraints of
-taking parts of the XFS code and making it a generic helper because
-other filesystems do not have the same locking heirachyi or
-unwritten extent implementation as XFS does....
+To avoid this, when checking a file and there is a sector size
+mismatch like this, turn off direct IO. While there, fix a compile
+bug in the IO_DEBUG option for libxfs which was found during triage.
 
-Cheers,
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ libxfs/rdwr.c       |    2 +-
+ repair/sb.c         |    9 ++++++++-
+ repair/xfs_repair.c |   30 ++++++++++++++++++++++++++++++
+ 3 files changed, 39 insertions(+), 2 deletions(-)
 
-Dave.
+diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+index ec2675e..a656851 100644
+--- a/libxfs/rdwr.c
++++ b/libxfs/rdwr.c
+@@ -364,7 +364,7 @@ libxfs_getbufr(dev_t device, xfs_daddr_t blkno, int bblen)
+ 		libxfs_initbuf(bp, device, blkno, blen);
+ #ifdef IO_DEBUG
+ 	printf("%lx: %s: allocated %u bytes buffer, key=%llu(%llu), %p\n",
+-		pthread_self(), __FUNCTION__, BBTOB(len),
++		pthread_self(), __FUNCTION__, blen,
+ 		(long long)LIBXFS_BBTOOFF64(blkno), (long long)blkno, bp);
+ #endif
+ 
+diff --git a/repair/sb.c b/repair/sb.c
+index 0ee2345..c8df076 100644
+--- a/repair/sb.c
++++ b/repair/sb.c
+@@ -689,7 +689,14 @@ verify_set_primary_sb(xfs_sb_t		*rsb,
+ 	 */
+ 	num_sbs = MIN(NUM_SBS, rsb->sb_agcount);
+ 	skip = howmany(num_sbs, rsb->sb_agcount);
+-	size = NUM_AGH_SECTS * rsb->sb_sectsize;
++
++	/*
++	 * We haven't been able to validate the sector size yet properly
++	 * (e.g. in the case of repairing an image in a file), so we need to
++	 * take into account sector mismatches and so use the maximum possible
++	 * sector size rather than that in @rsb.
++	 */
++	size = NUM_AGH_SECTS * (1 << (XFS_MAX_SECTORSIZE_LOG));
+ 	retval = 0;
+ 	list = NULL;
+ 	num_ok = 0;
+diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+index 4707b83..dda9daa 100644
+--- a/repair/xfs_repair.c
++++ b/repair/xfs_repair.c
+@@ -569,6 +569,36 @@ main(int argc, char **argv)
+ 	memset(&xfs_m, 0, sizeof(xfs_mount_t));
+ 	libxfs_sb_from_disk(&xfs_m.m_sb, XFS_BUF_TO_SBP(sbp));
+ 
++	/*
++	 * if the sector size of the filesystem we are trying to repair is
++	 * smaller than that of the underlying filesystem (i.e. we are repairing
++	 * an image), the we have to turn off direct IO because we cannot do IO
++	 * smaller than the host filesystem's sector size.
++	 */
++	if (isa_file) {
++		int     fd = libxfs_device_to_fd(x.ddev);
++		struct xfs_fsop_geom_v1 geom = {
++			.sectsize = BBSIZE,
++		};
++
++		if (ioctl(fd, XFS_IOC_FSGEOMETRY_V1, &geom) < 0) {
++			do_warn(_("Cannot get host fiesystem geometry.\n"
++		"Repair may fail if there is a sector size mismatch between "
++		"the image and the host filesystem.\n"));
++		}
++
++		if (xfs_m.m_sb.sb_sectsize < geom.sectsize) {
++			long	old_flags;
++
++			old_flags = fcntl(fd, F_GETFL, 0);
++			if (fcntl(fd, F_SETFL, old_flags & ~O_DIRECT) < 0) {
++				do_warn(_(
++		"Sector size on host filesystem larger than image sector size.\n"
++		"Cannot turn off direct IO, so exiting.\n"));
++				exit(1);
++			}
++		}
++	}
+ 	mp = libxfs_mount(&xfs_m, &xfs_m.m_sb, x.ddev, x.logdev, x.rtdev, 0);
+ 
+ 	if (!mp)  {
 -- 
-Dave Chinner
-david@fromorbit.com
+1.7.5.4
 
 _______________________________________________
 xfs mailing list
