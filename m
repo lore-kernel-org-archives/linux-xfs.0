@@ -1,13 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p96BOY3L181119 for <xfs@oss.sgi.com>; Thu, 6 Oct 2011 06:24:34 -0500
-Subject: Re: [PATCH] xfs: fix unused variable warning
+	p96CHpaW182577 for <xfs@oss.sgi.com>; Thu, 6 Oct 2011 07:17:51 -0500
+Subject: Re: [PATCH 1/2] repair: handle repair of image files on large
+	sector size filesystems
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1317877059-7024-1-git-send-email-david@fromorbit.com>
-References: <1317877059-7024-1-git-send-email-david@fromorbit.com>
-Date: Thu, 6 Oct 2011 06:24:27 -0500
-Message-ID: <1317900267.3139.9.camel@doink>
+In-Reply-To: <1317862891-3033-2-git-send-email-david@fromorbit.com>
+References: <1317862891-3033-1-git-send-email-david@fromorbit.com>
+	<1317862891-3033-2-git-send-email-david@fromorbit.com>
+Date: Thu, 6 Oct 2011 07:17:45 -0500
+Message-ID: <1317903465.3139.29.camel@doink>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -25,38 +27,31 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, 2011-10-06 at 15:57 +1100, Dave Chinner wrote:
+On Thu, 2011-10-06 at 12:01 +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> Fix this warning:
+> Because repair uses direct IO, it cannot do IO smaller than a sector
+> on the underlying device. When repairing a filesystem image, the
+> filesystem hosting the image may have a sector size larger than the
+> sector size of the image, and so single image sector reads and
+> writes will fail.
 > 
-> fs/xfs/xfs_aops.c: In function 'xfs_end_io_direct_write':
-> fs/xfs/xfs_aops.c:1280:17: warning: unused variable 'inode' [-Wunused-variable]
+> To avoid this, when checking a file and there is a sector size
+> mismatch like this, turn off direct IO. While there, fix a compile
+> bug in the IO_DEBUG option for libxfs which was found during triage.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-That line of code is not present in the current XFS
-master branch on oss.sgi.com.
+I had a few suggestions for you to consider when I
+reviewed this before.  The second patch in this series
+needs an update so you have a chance to address those
+suggestions if you so choose.
 
-					-Alex
+    http://patchwork.xfs.org/patch/2336/
 
-> ---
->  fs/xfs/xfs_aops.c |    1 -
->  1 files changed, 0 insertions(+), 1 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 462e937..11b2aad 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -1277,7 +1277,6 @@ xfs_end_io_direct_write(
->  	bool			is_async)
->  {
->  	struct xfs_ioend	*ioend = iocb->private;
-> -	struct inode		*inode = ioend->io_inode;
->  
->  	/*
->  	 * blockdev_direct_IO can return an error even after the I/O
+Either way, I'll mark this as I did before.
 
+Reviewed-by: Alex Elder <aelder@sgi.com>
 
 
 _______________________________________________
