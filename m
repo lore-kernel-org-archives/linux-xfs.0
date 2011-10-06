@@ -1,23 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p96Jle14198216 for <xfs@oss.sgi.com>; Thu, 6 Oct 2011 14:47:40 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5B0E116B768C
-	for <xfs@oss.sgi.com>; Thu,  6 Oct 2011 12:54:29 -0700 (PDT)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	mQONXazSbZhQhsBg for <xfs@oss.sgi.com>;
-	Thu, 06 Oct 2011 12:54:29 -0700 (PDT)
-Date: Thu, 6 Oct 2011 15:47:38 -0400
+	p96Jnwj2198327 for <xfs@oss.sgi.com>; Thu, 6 Oct 2011 14:49:58 -0500
+Date: Thu, 6 Oct 2011 15:49:53 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfstests: make 258 more forgiving of timestamp rounding
-Message-ID: <20111006194738.GE13434@infradead.org>
-References: <4E89E851.80203@redhat.com>
+Subject: Re: [PATCH,v2] xfstests: 262: verify project quota values aren't
+	doubled
+Message-ID: <20111006194953.GG13434@infradead.org>
+References: <201110050206.p9526TgQ007503@stout.americas.sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4E89E851.80203@redhat.com>
+In-Reply-To: <201110050206.p9526TgQ007503@stout.americas.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,15 +23,8 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
-
-On Mon, Oct 03, 2011 at 11:52:33AM -0500, Eric Sandeen wrote:
-> Rather than testing for an exact timestamp, which could vary
-> due to rounding, just check that it is not positive,
-> which is the failure case we're looking for.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+To: Alex Elder <aelder@sgi.com>
+Cc: xfs@oss.sgi.com
 
 Looks good,
 
