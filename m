@@ -1,17 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p96JpCKY198376 for <xfs@oss.sgi.com>; Thu, 6 Oct 2011 14:51:13 -0500
-Date: Thu, 6 Oct 2011 15:51:09 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/2] xfstest: fsstress should kill children tasks before
-	exit
-Message-ID: <20111006195109.GH13434@infradead.org>
-References: <1316357699-22692-1-git-send-email-dmonakhov@openvz.org>
-	<1317820838.2226.11.camel@doink> <87zkhf369y.fsf@dmbot.sw.ru>
+	p96JlvUA198238 for <xfs@oss.sgi.com>; Thu, 6 Oct 2011 14:47:57 -0500
+Subject: Re: [PATCH 4/6] xfsprogs: libxcmd: isolate strdup() calls to
+	fs_table_insert()
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <20111006194514.GB13434@infradead.org>
+References: <4a7a9e630aa7c62357a606f762abc19fc1d7073b.1317646036.git.aelder@sgi.com>
+	<0f871eebf39384818415253082320f860739f113.1317646036.git.aelder@sgi.com>
+	<20111006194514.GB13434@infradead.org>
+Date: Thu, 6 Oct 2011 14:47:52 -0500
+Message-ID: <1317930472.2870.21.camel@doink>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <87zkhf369y.fsf@dmbot.sw.ru>
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,19 +25,19 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dmitry Monakhov <dmonakhov@openvz.org>
-Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, linux-ext4@vger.kernel.org, aelder@sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Wed, Oct 05, 2011 at 05:41:13PM +0400, Dmitry Monakhov wrote:
-> Ok i'll resend patch shortly, Actually test_case was explained inside
-> description. So far i've able to caught 3 different minor
-> fs-corruptions, one BUG_ON on ext4. And when i've run this test
-> on host with 24-cores it deadlock inside dcache core. 
+On Thu, 2011-10-06 at 15:45 -0400, Christoph Hellwig wrote:
+...
 
-Having the test in the commit message doesn't really help with running
-it as part of a regression test suite :)
+> If you touch these anyway please move assignments outside the
+> conditionals, e.g.
 
-Please report the details on the dcache deadlock to linux-fsdevel.
+OK.  No problem.  I was opting for less indent depth
+but *almost* did what you say in the first place...
+
+					-Alex
 
 _______________________________________________
 xfs mailing list
