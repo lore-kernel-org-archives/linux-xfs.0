@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p96L6fo7201682 for <xfs@oss.sgi.com>; Thu, 6 Oct 2011 16:06:41 -0500
+	p96L6fQK201678 for <xfs@oss.sgi.com>; Thu, 6 Oct 2011 16:06:41 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4280814518F7
-	for <xfs@oss.sgi.com>; Thu,  6 Oct 2011 14:13:29 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 43E861C6F179
+	for <xfs@oss.sgi.com>; Thu,  6 Oct 2011 14:06:40 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	mX9lOKRh3LqESgHv for <xfs@oss.sgi.com>;
-	Thu, 06 Oct 2011 14:13:29 -0700 (PDT)
+	ZYwcU6saY1OFxrV7 for <xfs@oss.sgi.com>;
+	Thu, 06 Oct 2011 14:06:40 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1RBv9L-0004Dy-7j
+	Linux)) id 1RBv9L-0004F1-IL
 	for xfs@oss.sgi.com; Thu, 06 Oct 2011 21:06:39 +0000
-Message-Id: <20111006210639.188823960@bombadil.infradead.org>
-Date: Thu, 06 Oct 2011 17:06:11 -0400
+Message-Id: <20111006210639.521140680@bombadil.infradead.org>
+Date: Thu, 06 Oct 2011 17:06:13 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 4/9] xfs: remove XFS_BUF_STALE and XFS_BUF_SUPER_STALE
+Subject: [PATCH 6/9] xfs: clean up buffer allocation
 References: <20111006210607.175284390@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-kill-XFS_BUF_STALE
+Content-Disposition: inline; filename=xfs-cleanup-buffer-allocation
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,190 +34,168 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
+Change _xfs_buf_initialize to allocate the buffer directly and rename it to
+xfs_buf_alloc now that is the only buffer allocation routine.  Also remove
+the xfs_buf_deallocate wrapper around the kmem_zone_free calls for buffers.
+
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: xfs/fs/xfs/xfs_attr.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_attr.c	2011-10-06 14:37:08.850919140 -0400
-+++ xfs/fs/xfs/xfs_attr.c	2011-10-06 14:37:11.010920453 -0400
-@@ -2168,7 +2168,7 @@ xfs_attr_rmtval_remove(xfs_da_args_t *ar
- 		 */
- 		bp = xfs_incore(mp->m_ddev_targp, dblkno, blkcnt, XBF_TRYLOCK);
- 		if (bp) {
--			XFS_BUF_STALE(bp);
-+			xfs_buf_stale(bp);
- 			xfs_buf_delwri_dequeue(bp);
- 			xfs_buf_relse(bp);
- 			bp = NULL;
 Index: xfs/fs/xfs/xfs_buf.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_buf.c	2011-10-06 14:37:08.862918712 -0400
-+++ xfs/fs/xfs/xfs_buf.c	2011-10-06 14:37:11.014920137 -0400
-@@ -1061,7 +1061,7 @@ xfs_bioerror(
- 	XFS_BUF_UNREAD(bp);
- 	xfs_buf_delwri_dequeue(bp);
- 	XFS_BUF_UNDONE(bp);
--	XFS_BUF_STALE(bp);
-+	xfs_buf_stale(bp);
+--- xfs.orig/fs/xfs/xfs_buf.c	2011-10-02 16:08:22.484275559 +0200
++++ xfs/fs/xfs/xfs_buf.c	2011-10-02 16:17:59.831271600 +0200
+@@ -65,10 +65,6 @@ struct workqueue_struct *xfsconvertd_wor
+ #define xb_to_km(flags) \
+ 	 (((flags) & XBF_DONT_BLOCK) ? KM_NOFS : KM_SLEEP)
  
- 	xfs_buf_ioend(bp, 0);
+-#define xfs_buf_allocate(flags) \
+-	kmem_zone_alloc(xfs_buf_zone, xb_to_km(flags))
+-#define xfs_buf_deallocate(bp) \
+-	kmem_zone_free(xfs_buf_zone, (bp));
  
-@@ -1090,7 +1090,7 @@ xfs_bioerror_relse(
- 	XFS_BUF_UNREAD(bp);
- 	xfs_buf_delwri_dequeue(bp);
- 	XFS_BUF_DONE(bp);
--	XFS_BUF_STALE(bp);
-+	xfs_buf_stale(bp);
- 	bp->b_iodone = NULL;
- 	if (!(fl & XBF_ASYNC)) {
- 		/*
+ static inline int
+ xfs_buf_is_vmapped(
+@@ -167,14 +163,19 @@ xfs_buf_stale(
+ 	ASSERT(atomic_read(&bp->b_hold) >= 1);
+ }
+ 
+-STATIC void
+-_xfs_buf_initialize(
+-	xfs_buf_t		*bp,
+-	xfs_buftarg_t		*target,
++struct xfs_buf *
++xfs_buf_alloc(
++	struct xfs_buftarg	*target,
+ 	xfs_off_t		range_base,
+ 	size_t			range_length,
+ 	xfs_buf_flags_t		flags)
+ {
++	struct xfs_buf		*bp;
++
++	bp = kmem_zone_alloc(xfs_buf_zone, xb_to_km(flags));
++	if (unlikely(!bp))
++		return NULL;
++
+ 	/*
+ 	 * We don't want certain flags to appear in b_flags.
+ 	 */
+@@ -203,8 +204,9 @@ _xfs_buf_initialize(
+ 	init_waitqueue_head(&bp->b_waiters);
+ 
+ 	XFS_STATS_INC(xb_create);
+-
+ 	trace_xfs_buf_init(bp, _RET_IP_);
++
++	return bp;
+ }
+ 
+ /*
+@@ -277,7 +279,7 @@ xfs_buf_free(
+ 	} else if (bp->b_flags & _XBF_KMEM)
+ 		kmem_free(bp->b_addr);
+ 	_xfs_buf_free_pages(bp);
+-	xfs_buf_deallocate(bp);
++	kmem_zone_free(xfs_buf_zone, bp);
+ }
+ 
+ /*
+@@ -539,16 +541,14 @@ xfs_buf_get(
+ 	if (likely(bp))
+ 		goto found;
+ 
+-	new_bp = xfs_buf_allocate(flags);
++	new_bp = xfs_buf_alloc(target, ioff << BBSHIFT, isize << BBSHIFT,
++			       flags);
+ 	if (unlikely(!new_bp))
+ 		return NULL;
+ 
+-	_xfs_buf_initialize(new_bp, target,
+-			    ioff << BBSHIFT, isize << BBSHIFT, flags);
+-
+ 	bp = _xfs_buf_find(target, ioff, isize, flags, new_bp);
+ 	if (!bp) {
+-		xfs_buf_deallocate(new_bp);
++		kmem_zone_free(xfs_buf_zone, new_bp);
+ 		return NULL;
+ 	}
+ 
+@@ -557,7 +557,7 @@ xfs_buf_get(
+ 		if (error)
+ 			goto no_buffer;
+ 	} else
+-		xfs_buf_deallocate(new_bp);
++		kmem_zone_free(xfs_buf_zone, new_bp);
+ 
+ 	/*
+ 	 * Now we have a workable buffer, fill in the block number so
+@@ -694,19 +694,6 @@ xfs_buf_read_uncached(
+ 	return bp;
+ }
+ 
+-xfs_buf_t *
+-xfs_buf_get_empty(
+-	size_t			len,
+-	xfs_buftarg_t		*target)
+-{
+-	xfs_buf_t		*bp;
+-
+-	bp = xfs_buf_allocate(0);
+-	if (bp)
+-		_xfs_buf_initialize(bp, target, 0, len, 0);
+-	return bp;
+-}
+-
+ /*
+  * Return a buffer allocated as an empty buffer and associated to external
+  * memory via xfs_buf_associate_memory() back to it's empty state.
+@@ -792,10 +779,9 @@ xfs_buf_get_uncached(
+ 	int			error, i;
+ 	xfs_buf_t		*bp;
+ 
+-	bp = xfs_buf_allocate(0);
++	bp = xfs_buf_alloc(target, 0, len, 0);
+ 	if (unlikely(bp == NULL))
+ 		goto fail;
+-	_xfs_buf_initialize(bp, target, 0, len, 0);
+ 
+ 	error = _xfs_buf_get_pages(bp, page_count, 0);
+ 	if (error)
+@@ -823,7 +809,7 @@ xfs_buf_get_uncached(
+ 		__free_page(bp->b_pages[i]);
+ 	_xfs_buf_free_pages(bp);
+  fail_free_buf:
+-	xfs_buf_deallocate(bp);
++	kmem_zone_free(xfs_buf_zone, bp);
+  fail:
+ 	return NULL;
+ }
 Index: xfs/fs/xfs/xfs_buf.h
 ===================================================================
---- xfs.orig/fs/xfs/xfs_buf.h	2011-10-06 14:37:08.870920884 -0400
-+++ xfs/fs/xfs/xfs_buf.h	2011-10-06 14:37:11.014920137 -0400
-@@ -242,14 +242,8 @@ xfs_buf_target_name(struct xfs_buftarg *
- 			    XBF_SYNCIO|XBF_FUA|XBF_FLUSH))
+--- xfs.orig/fs/xfs/xfs_buf.h	2011-10-02 16:15:08.656771306 +0200
++++ xfs/fs/xfs/xfs_buf.h	2011-10-02 16:16:39.771770418 +0200
+@@ -175,7 +175,8 @@ extern xfs_buf_t *xfs_buf_get(xfs_buftar
+ extern xfs_buf_t *xfs_buf_read(xfs_buftarg_t *, xfs_off_t, size_t,
+ 				xfs_buf_flags_t);
  
- void xfs_buf_stale(struct xfs_buf *bp);
--#define XFS_BUF_STALE(bp)	xfs_buf_stale(bp);
- #define XFS_BUF_UNSTALE(bp)	((bp)->b_flags &= ~XBF_STALE)
- #define XFS_BUF_ISSTALE(bp)	((bp)->b_flags & XBF_STALE)
--#define XFS_BUF_SUPER_STALE(bp)	do {				\
--					XFS_BUF_STALE(bp);	\
--					xfs_buf_delwri_dequeue(bp);	\
--					XFS_BUF_DONE(bp);	\
--				} while (0)
- 
- #define XFS_BUF_ISDELAYWRITE(bp)	((bp)->b_flags & XBF_DELWRI)
- 
-Index: xfs/fs/xfs/xfs_buf_item.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_buf_item.c	2011-10-06 14:37:08.882920547 -0400
-+++ xfs/fs/xfs/xfs_buf_item.c	2011-10-06 14:37:11.014920137 -0400
-@@ -967,7 +967,9 @@ xfs_buf_iodone_callbacks(
- 	 * I/O errors, there's no point in giving this a retry.
- 	 */
- 	if (XFS_FORCED_SHUTDOWN(mp)) {
--		XFS_BUF_SUPER_STALE(bp);
-+		xfs_buf_stale(bp);
-+		xfs_buf_delwri_dequeue(bp);
-+		XFS_BUF_DONE(bp);
- 		trace_xfs_buf_item_iodone(bp, _RET_IP_);
- 		goto do_callbacks;
- 	}
-@@ -1006,7 +1008,7 @@ xfs_buf_iodone_callbacks(
- 	 * If the write of the buffer was synchronous, we want to make
- 	 * sure to return the error to the caller of xfs_bwrite().
- 	 */
--	XFS_BUF_STALE(bp);
-+	xfs_buf_stale(bp);
- 	XFS_BUF_DONE(bp);
- 	xfs_buf_delwri_dequeue(bp);
- 
-Index: xfs/fs/xfs/xfs_inode.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_inode.c	2011-10-06 14:37:08.894917822 -0400
-+++ xfs/fs/xfs/xfs_inode.c	2011-10-06 14:37:11.018917565 -0400
-@@ -2469,11 +2469,11 @@ cluster_corrupt_out:
- 		 */
- 		if (bp->b_iodone) {
- 			XFS_BUF_UNDONE(bp);
--			XFS_BUF_STALE(bp);
-+			xfs_buf_stale(bp);
- 			xfs_buf_ioerror(bp, EIO);
- 			xfs_buf_ioend(bp, 0);
- 		} else {
--			XFS_BUF_STALE(bp);
-+			xfs_buf_stale(bp);
- 			xfs_buf_relse(bp);
- 		}
- 	}
+-extern xfs_buf_t *xfs_buf_get_empty(size_t, xfs_buftarg_t *);
++struct xfs_buf *xfs_buf_alloc(struct xfs_buftarg *, xfs_off_t, size_t,
++			      xfs_buf_flags_t);
+ extern void xfs_buf_set_empty(struct xfs_buf *bp, size_t len);
+ extern xfs_buf_t *xfs_buf_get_uncached(struct xfs_buftarg *, size_t, int);
+ extern int xfs_buf_associate_memory(xfs_buf_t *, void *, size_t);
 Index: xfs/fs/xfs/xfs_log.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_log.c	2011-10-06 14:37:08.902920983 -0400
-+++ xfs/fs/xfs/xfs_log.c	2011-10-06 14:37:11.022918855 -0400
-@@ -869,7 +869,7 @@ xlog_iodone(xfs_buf_t *bp)
- 	if (XFS_TEST_ERROR((xfs_buf_geterror(bp)), l->l_mp,
- 			XFS_ERRTAG_IODONE_IOERR, XFS_RANDOM_IODONE_IOERR)) {
- 		xfs_ioerror_alert("xlog_iodone", l->l_mp, bp, XFS_BUF_ADDR(bp));
--		XFS_BUF_STALE(bp);
-+		xfs_buf_stale(bp);
- 		xfs_force_shutdown(l->l_mp, SHUTDOWN_LOG_IO_ERROR);
- 		/*
- 		 * This flag will be propagated to the trans-committed
-@@ -1235,7 +1235,7 @@ xlog_bdstrat(
+--- xfs.orig/fs/xfs/xfs_log.c	2011-10-02 16:15:08.636789023 +0200
++++ xfs/fs/xfs/xfs_log.c	2011-10-02 16:15:36.039418844 +0200
+@@ -1035,7 +1035,7 @@ xlog_alloc_log(xfs_mount_t	*mp,
+ 	xlog_get_iclog_buffer_size(mp, log);
  
- 	if (iclog->ic_state & XLOG_STATE_IOERROR) {
- 		xfs_buf_ioerror(bp, EIO);
--		XFS_BUF_STALE(bp);
-+		xfs_buf_stale(bp);
- 		xfs_buf_ioend(bp, 0);
- 		/*
- 		 * It would seem logical to return EIO here, but we rely on
-Index: xfs/fs/xfs/xfs_log_recover.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_log_recover.c	2011-10-06 14:37:08.914921299 -0400
-+++ xfs/fs/xfs/xfs_log_recover.c	2011-10-06 14:37:11.026919015 -0400
-@@ -2174,7 +2174,7 @@ xlog_recover_buffer_pass2(
- 	    be16_to_cpu(*((__be16 *)xfs_buf_offset(bp, 0))) &&
- 	    (XFS_BUF_COUNT(bp) != MAX(log->l_mp->m_sb.sb_blocksize,
- 			(__uint32_t)XFS_INODE_CLUSTER_SIZE(log->l_mp)))) {
--		XFS_BUF_STALE(bp);
-+		xfs_buf_stale(bp);
- 		error = xfs_bwrite(bp);
- 	} else {
- 		ASSERT(bp->b_target->bt_mount == mp);
-Index: xfs/fs/xfs/xfs_rw.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_rw.c	2011-10-06 14:37:08.926918084 -0400
-+++ xfs/fs/xfs/xfs_rw.c	2011-10-06 14:37:11.030919219 -0400
-@@ -150,7 +150,7 @@ xfs_read_buf(
- 		if (bp) {
- 			XFS_BUF_UNDONE(bp);
- 			xfs_buf_delwri_dequeue(bp);
--			XFS_BUF_STALE(bp);
-+			xfs_buf_stale(bp);
- 			/*
- 			 * brelse clears B_ERROR and b_error
- 			 */
-Index: xfs/fs/xfs/xfs_trans_buf.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_trans_buf.c	2011-10-06 14:37:08.942920379 -0400
-+++ xfs/fs/xfs/xfs_trans_buf.c	2011-10-06 14:37:11.030919219 -0400
-@@ -160,8 +160,11 @@ xfs_trans_get_buf(xfs_trans_t	*tp,
- 	bp = xfs_trans_buf_item_match(tp, target_dev, blkno, len);
- 	if (bp != NULL) {
- 		ASSERT(xfs_buf_islocked(bp));
--		if (XFS_FORCED_SHUTDOWN(tp->t_mountp))
--			XFS_BUF_SUPER_STALE(bp);
-+		if (XFS_FORCED_SHUTDOWN(tp->t_mountp)) {
-+			xfs_buf_stale(bp);
-+			xfs_buf_delwri_dequeue(bp);
-+			XFS_BUF_DONE(bp);
-+		}
- 
- 		/*
- 		 * If the buffer is stale then it was binval'ed
-@@ -387,7 +390,9 @@ xfs_trans_read_buf(
- 	}
- 	if (bp->b_error) {
- 		error = bp->b_error;
--		XFS_BUF_SUPER_STALE(bp);
-+		xfs_buf_stale(bp);
-+		xfs_buf_delwri_dequeue(bp);
-+		XFS_BUF_DONE(bp);
- 		xfs_ioerror_alert("xfs_trans_read_buf", mp,
- 				  bp, blkno);
- 		if (tp->t_flags & XFS_TRANS_DIRTY)
-@@ -740,7 +745,7 @@ xfs_trans_binval(
- 	 * rid of it.
- 	 */
- 	xfs_buf_delwri_dequeue(bp);
--	XFS_BUF_STALE(bp);
-+	xfs_buf_stale(bp);
- 	bip->bli_flags |= XFS_BLI_STALE;
- 	bip->bli_flags &= ~(XFS_BLI_INODE_BUF | XFS_BLI_LOGGED | XFS_BLI_DIRTY);
- 	bip->bli_format.blf_flags &= ~XFS_BLF_INODE_BUF;
+ 	error = ENOMEM;
+-	bp = xfs_buf_get_empty(log->l_iclog_size, mp->m_logdev_targp);
++	bp = xfs_buf_alloc(mp->m_logdev_targp, 0, log->l_iclog_size, 0);
+ 	if (!bp)
+ 		goto out_free_log;
+ 	bp->b_iodone = xlog_iodone;
 
 _______________________________________________
 xfs mailing list
