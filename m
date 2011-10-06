@@ -1,13 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p95MhBW5145667 for <xfs@oss.sgi.com>; Wed, 5 Oct 2011 17:43:11 -0500
-From: Alex Elder <aelder@sgi.com>
-Message-Id: <201110052243.p95MhBtl015550@stout.americas.sgi.com>
-Date: Wed, 05 Oct 2011 17:43:11 -0500
-Subject: [PATCH] xfstests: prepare for marking an initial versioned
- release
+	p960Wg0Y152090 for <xfs@oss.sgi.com>; Wed, 5 Oct 2011 19:32:43 -0500
+Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id F110C144A641
+	for <xfs@oss.sgi.com>; Wed,  5 Oct 2011 17:39:24 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	3GOrWayBLnDjuiyp for <xfs@oss.sgi.com>;
+	Wed, 05 Oct 2011 17:39:24 -0700 (PDT)
+Date: Thu, 6 Oct 2011 11:32:34 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: SEEK_DATA/SEEK_HOLE support
+Message-ID: <20111006003234.GR3159@dastard>
+References: <4E887D7F.2010306@oracle.com> <201110050934.28021@zmi.at>
+	<20111005093615.GQ3159@dastard> <201110052022.19953@zmi.at>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <201110052022.19953@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,91 +30,37 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Michael Monnerie <michael.monnerie@is.it-management.at>
+Cc: Christoph Hellwig <hch@infradead.org>, Jeff Liu <jeff.liu@oracle.com>, xfs@oss.sgi.com
 
-I would like to start marking versioned releases of xfstests.  The
-following adds the release script used in the other XFS user space
-packages.  I have arbitrarily set the version to 3.0.0 to make it
-more in line with the other XFS user space packages as well.  I
-created an initial CHANGES file with a simple summary of some
-recently-added tests.
+On Wed, Oct 05, 2011 at 08:22:18PM +0200, Michael Monnerie wrote:
+> On Mittwoch, 5. Oktober 2011 Dave Chinner wrote:
+> > It's a data corruption problem, pure and simple....
+> 
+> Thanks for the thorough explanation. So it's a problem when a file has 
+> recently been modified and not yet been written back to disk. Would it 
+> be worth to force a flush to disk before SEEK_* operations can start? I 
+> don't know if it's easier to do all the lookups you suggested, or do an 
+> fsync. That could have it's own impacts, though.
 
-Signed-off-by: Alex Elder <aelder@sgi.com>
----
- VERSION     |    2 +-
- doc/CHANGES |   21 +++++++++++++++++++++
- release.sh  |   25 +++++++++++++++++++++++++
- 3 files changed, 47 insertions(+), 1 deletion(-)
+The problem is that application does not know whether fsync is
+needed or not, so it would have to do that unconditionally for every
+file it was copying. That has potential for quite severe, unexpected
+performance regressions, so it's something we want to avoid.
 
-Index: b/VERSION
-===================================================================
---- a/VERSION
-+++ b/VERSION
-@@ -1,7 +1,7 @@
- #
- # This file is used by configure to get version information
- #
--PKG_MAJOR=1
-+PKG_MAJOR=3
- PKG_MINOR=0
- PKG_REVISION=0
- PKG_BUILD=1
-Index: b/doc/CHANGES
-===================================================================
---- /dev/null
-+++ b/doc/CHANGES
-@@ -0,0 +1,21 @@
-+
-+xfstests-3.0.0 (5 October 2011)
-+	- This is the first versioned release recorded for the
-+	  xfstests suite.  Tests 240-262 have been added to the
-+	  suite (to date) in 2011.
-+	- Here are some one-line summaries for some recently-added
-+	  tests:
-+		- 250: bmap BTREE corruption regression
-+		- 251: concurrent FITRIM operations
-+		- 252: fallocate hole punching
-+		- 253: xfs_db metadump filename obfuscation
-+		- 254: btrfs subvolume and snapshot
-+		- 255: generic fallocate hole punching
-+		- 256: full filesystem hole punching
-+		- 257: getdents64() returning usable d_off values
-+		- 258: file timestamps prior to the epoch
-+		- 259: filesystem creation on just under 4TB storage
-+		- 260: FITRIM argument handling
-+		- 261: libxcmd giving up on bogus mtab entry
-+		- 262: quota reporting doubled project quota values
-+
-Index: b/release.sh
-===================================================================
---- /dev/null
-+++ b/release.sh
-@@ -0,0 +1,25 @@
-+#!/bin/bash
-+#
-+# Automate generation a new release
-+#
-+
-+. ./VERSION
-+
-+version=${PKG_MAJOR}.${PKG_MINOR}.${PKG_REVISION}
-+date=`date +"%-d %B %Y"`
-+
-+echo "Updating CHANGES"
-+sed -e "s/${version}.*/${version} (${date})/" doc/CHANGES > doc/CHANGES.tmp && \
-+	mv doc/CHANGES.tmp doc/CHANGES
-+
-+echo "Commiting CHANGES update to git"
-+git commit -s -a -m "${version} release"
-+
-+echo "Tagging git repository"
-+git tag -s -a -m "${version} release" v${version}
-+
-+# echo "Creating source tarball"
-+# make dist
-+
-+echo "Done."
-+echo "Please remember to push out tags using \"git push --tags\""
+There isn't really any additional complexity on the side of the
+XFS SEEK_XXX code to handle this properly - my comments were
+aimed at making sure that everyone understood the constraints of
+taking parts of the XFS code and making it a generic helper because
+other filesystems do not have the same locking heirachyi or
+unwritten extent implementation as XFS does....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
