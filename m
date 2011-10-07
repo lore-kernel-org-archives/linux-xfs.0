@@ -1,15 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p97JdChw258893 for <xfs@oss.sgi.com>; Fri, 7 Oct 2011 14:39:12 -0500
-Subject: Re: [PATCH 5/9] xfs: remove buffers from the delwri list in
-	xfs_buf_stale
+	p97JeCd3258962 for <xfs@oss.sgi.com>; Fri, 7 Oct 2011 14:40:12 -0500
+Subject: Re: [PATCH 7/9] xfs: clean up xfs_ioerror_alert
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20111006210639.352441913@bombadil.infradead.org>
+In-Reply-To: <20111006210639.731475087@bombadil.infradead.org>
 References: <20111006210607.175284390@bombadil.infradead.org>
-	<20111006210639.352441913@bombadil.infradead.org>
-Date: Fri, 7 Oct 2011 14:36:59 -0500
-Message-ID: <1318016219.2810.43.camel@doink>
+	<20111006210639.731475087@bombadil.infradead.org>
+Date: Fri, 7 Oct 2011 14:37:16 -0500
+Message-ID: <1318016236.2810.45.camel@doink>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -28,19 +27,25 @@ To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
 On Thu, 2011-10-06 at 17:06 -0400, Christoph Hellwig wrote:
-> For each call to xfs_buf_stale we call xfs_buf_delwri_dequeue either
-> directly before or after it, or are guaranteed by the surrounding
-> conditionals that we are never called on delwri buffers.  Simply
-> this situation by moving the call to xfs_buf_delwri_dequeue into
-> xfs_buf_stale.
+> Instead of passing the block number and mount structure explicitly
+> get them off the bp and fix make the argument order more natural.
+> 
+> Also move it to xfs_buf.c and stop printing the device name given
+> that we already get the fs name as part of xfs_alert, and we know
+> what device is operates on because of the caller that gets printed.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-I see 6 or so spots where xfs_buf_stale() is (was) called with no call
-to xfs_buf_delwri_dequeue().  This adds such a call, but it looks to me
-like that's OK.
+I agree on the name change suggestion, possibly to
+xfs_buf_error_alert().  Also, with just one exception
+it seems that the "func" argument is simply the name
+of the calling function.  I would favor adding that
+via passing __func__ in a macro.  If distinguishing
+between the cases in xlog_sync(), xfs_trans_read_buf(),
+and xfs_zero_remaining_bytes() were important then
+the line number could be included.
 
-Looks good.
+Anyway, looks good.
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
 
