@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p971epa6211973 for <xfs@oss.sgi.com>; Thu, 6 Oct 2011 20:40:51 -0500
+	p971bewS211832 for <xfs@oss.sgi.com>; Thu, 6 Oct 2011 20:37:41 -0500
 Received: from ipmail07.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9B2161B3AFB
-	for <xfs@oss.sgi.com>; Thu,  6 Oct 2011 18:40:49 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 984941B3ADB
+	for <xfs@oss.sgi.com>; Thu,  6 Oct 2011 18:37:38 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	9qGcdHlAEmD0xiiw for <xfs@oss.sgi.com>;
-	Thu, 06 Oct 2011 18:40:49 -0700 (PDT)
-Date: Fri, 7 Oct 2011 12:40:27 +1100
+	yUnzRjGD74IQlsWW for <xfs@oss.sgi.com>;
+	Thu, 06 Oct 2011 18:37:38 -0700 (PDT)
+Date: Fri, 7 Oct 2011 12:37:11 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 3/9] xfs: remove XFS_BUF_SET_VTYPE and
-	XFS_BUF_SET_VTYPE_REF
-Message-ID: <20111007014027.GZ3159@dastard>
-References: <20111006210607.175284390@bombadil.infradead.org>
-	<20111006210639.006564226@bombadil.infradead.org>
+Subject: Re: Premature "No Space left on device" on XFS
+Message-ID: <20111007013711.GW3159@dastard>
+References: <4E8E079B.4040103@birkenwald.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20111006210639.006564226@bombadil.infradead.org>
+In-Reply-To: <4E8E079B.4040103@birkenwald.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,17 +29,52 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Bernhard Schmidt <berni@birkenwald.de>
 Cc: xfs@oss.sgi.com
 
-On Thu, Oct 06, 2011 at 05:06:10PM -0400, Christoph Hellwig wrote:
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Thu, Oct 06, 2011 at 09:55:07PM +0200, Bernhard Schmidt wrote:
+> Hi,
+> 
+> this is an XFS-related summary of a problem report I sent to the
+> postfix mailinglist a few minutes ago after a bulkmail test system
+> blew up during a stress test.
+> 
+> We have a few MTAs running SLES11.1 amd64 (2.6.32.45-0.3-default),
+> 10 GB XFS Spooldirectory with default blocksize (4k). It was
+> bombarded with mails faster than it could send them on, which
+> eventually led to almost 2 million files of ~1.5kB in one directory.
+> Suddenly, this started to happen
+> 
+> lxmhs45:/var/spool/postfix-bulk/postfix-bulkinhss # touch a
+> touch: cannot touch `a': No space left on device
+> lxmhs45:/var/spool/postfix-bulk/postfix-bulkinhss # df .
+> Filesystem           1K-blocks      Used Available Use% Mounted on
+> /dev/sdb              10475520   7471160   3004360  72%
 
-Yeah, we don't need the type for the CRC code as I thought we might,
-so getting rid of it is fine.
+So you have a 10GB filesystem, with about 3GB of free space.
 
-Reviewed-by: Dave Chinner <david@fromorbit.com>
+> /var/spool/postfix-bulk
+> lxmhs45:/var/spool/postfix-bulk/postfix-bulkinhss # df -i .
+> Filesystem            Inodes   IUsed   IFree IUse% Mounted on
+> /dev/sdb             10485760 1742528 8743232   17% /var/spool/postfix-bulk
 
+And with 1.7 million inodes in it. That's a lot for a tiny
+filesystem, and not really a use case that XFS is well suited to.
+XFS will work, but it won't age gracefully under these conditions...
+
+As it is, your problem is most likely fragmented free space (an
+aging problem). Inodes are allocated in chunks of 64, so require an
+-aligned- contiguous 16k extent for the default 256 byte inode size.
+If you have no aligned contiguous 16k extents free then inode
+allocation will fail.
+
+Running 'xfs_db -r "-c freesp -s" /dev/sdb' will give you a
+histogram of free space extents in the filesystem, which will tell
+us if you are hitting this problem.
+
+Cheers,
+
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
