@@ -1,14 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p97MIAeK002314 for <xfs@oss.sgi.com>; Fri, 7 Oct 2011 17:18:10 -0500
-Subject: Re: [PATCH 1/4] xfs: do not update xa_last_pushed_lsn for locked items
+	p97MgScT003288 for <xfs@oss.sgi.com>; Fri, 7 Oct 2011 17:42:29 -0500
+Received: from xmail.sgi.com (pv-excas3-dc21-nlb.corp.sgi.com [137.38.102.207])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id AA0F18F8033
+	for <xfs@oss.sgi.com>; Fri,  7 Oct 2011 15:42:28 -0700 (PDT)
+Subject: [Fwd: [PATCH] xfstests: limit OP_PUNCH_HOLE operations to the file
+	size]
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20111006183549.399127499@bombadil.infradead.org>
-References: <20111006183257.036884724@bombadil.infradead.org>
-	<20111006183549.399127499@bombadil.infradead.org>
-Date: Fri, 7 Oct 2011 17:18:05 -0500
-Message-ID: <1318025885.2810.77.camel@doink>
+Date: Fri, 7 Oct 2011 17:41:38 -0500
+Message-ID: <1318027298.2810.82.camel@doink>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -23,28 +24,54 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Stefan Priebe <s.priebe@profihost.ag>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, 2011-10-06 at 14:32 -0400, Christoph Hellwig wrote:
-> If an item was locked we should not update xa_last_pushed_lsn and thus skip
-> it when restarting the AIL scan as we need to be able to lock and write it
-> out as soon as possible.  Otherwise heavy lock contention might starve AIL
-> pushing too easily, especially given the larger backoff once we moved
-> xa_last_pushed_lsn all the way to the target lsn.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reported-by: Stefan Priebe <s.priebe@profihost.ag>
-> Tested-by: Stefan Priebe <s.priebe@profihost.ag>
+Review?
 
-I remember wondering about that one line during review, but
-I believe I reasoned something about the "already being
-reflushed or relogged" made it the right thing to do.
+-------- Forwarded Message --------
+From: Alex Elder <aelder@americas.sgi.com>
+To: xfs@oss.sgi.com
+Subject: [PATCH] xfstests: limit OP_PUNCH_HOLE operations to the file
+size
+Date: Wed, 21 Sep 2011 15:18:06 -0500
 
-Your explanation makes sense though (but what do I know,
-the original code seemed OK too...).
+Before punching a hole in a file, TRIM_OFF_LEN() calls
+TRIM_OFF_LEN() in order to make sure the offset and size
+used are in a reasonable range.  But currently the range
+it's limited to is maxfilelen, which allows the offset
+(and therefore offset + len) to be beyond EOF.
 
-Reviewed-by: Alex Elder <aelder@sgi.com>
+Later, do_punch_hole() ignores any request that starts beyond
+EOF, so we might as well limit requests to the file size.
+
+It appears that a hole punch request that starts within a
+file but whose length extends beyond it is treated simply
+as a hole punch up to EOF.  So there's no harm in limiting
+the end of a hole punch request to the file size either.
+
+Therefore, use TRIM_OFF_LEN() to put both the the offset
+and length of a request within the file size for hole
+punch requests.
+
+Signed-off-by: Alex Elder <aelder@sgi.com>
+
+---
+ ltp/fsx.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+Index: b/ltp/fsx.c
+===================================================================
+--- a/ltp/fsx.c
++++ b/ltp/fsx.c
+@@ -1085,7 +1085,7 @@ test(void)
+ 		break;
+ 
+ 	case OP_PUNCH_HOLE:
+-		TRIM_OFF_LEN(offset, size, maxfilelen);
++		TRIM_OFF_LEN(offset, size, file_size);
+ 		do_punch_hole(offset, size);
+ 		break;
+ 	default:
 
 
 _______________________________________________
