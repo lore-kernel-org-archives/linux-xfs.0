@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p97NEHmb004243 for <xfs@oss.sgi.com>; Fri, 7 Oct 2011 18:14:18 -0500
+	p97NVNQt008221 for <xfs@oss.sgi.com>; Fri, 7 Oct 2011 18:31:23 -0500
 Received: from ipmail07.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 107211B80A7
-	for <xfs@oss.sgi.com>; Fri,  7 Oct 2011 16:14:14 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EBF7B1B846D
+	for <xfs@oss.sgi.com>; Fri,  7 Oct 2011 16:31:22 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	hQWEndkjZyDeckvB for <xfs@oss.sgi.com>;
-	Fri, 07 Oct 2011 16:14:14 -0700 (PDT)
-Date: Sat, 8 Oct 2011 10:14:11 +1100
+	46u6ah91R2nGR63o for <xfs@oss.sgi.com>;
+	Fri, 07 Oct 2011 16:31:22 -0700 (PDT)
+Date: Sat, 8 Oct 2011 10:31:19 +1100
 From: Dave Chinner <david@fromorbit.com>
 Subject: Re: Premature "No Space left on device" on XFS
-Message-ID: <20111007231410.GG3159@dastard>
+Message-ID: <20111007233119.GJ3159@dastard>
 References: <4E8E079B.4040103@birkenwald.de> <20111007013711.GW3159@dastard>
-	<4E8F0385.7060906@birkenwald.de>
+	<1317995933.17433.YahooMailNeo@web122515.mail.ne1.yahoo.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4E8F0385.7060906@birkenwald.de>
+In-Reply-To: <1317995933.17433.YahooMailNeo@web122515.mail.ne1.yahoo.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,123 +26,83 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Bernhard Schmidt <berni@birkenwald.de>
-Cc: xfs@oss.sgi.com
+To: Bryan J Smith <b.j.smith@ieee.org>
+Cc: Bernhard Schmidt <berni@birkenwald.de>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Fri, Oct 07, 2011 at 03:49:57PM +0200, Bernhard Schmidt wrote:
-> Am 07.10.2011 03:37, schrieb Dave Chinner:
-> 
-> Hi,
-> 
-> >> this is an XFS-related summary of a problem report I sent to the
-> >> postfix mailinglist a few minutes ago after a bulkmail test system
-> >> blew up during a stress test.
-> >>
-> >> We have a few MTAs running SLES11.1 amd64 (2.6.32.45-0.3-default),
-> >> 10 GB XFS Spooldirectory with default blocksize (4k). It was
-> >> bombarded with mails faster than it could send them on, which
-> >> eventually led to almost 2 million files of ~1.5kB in one directory.
-> >> Suddenly, this started to happen
-> >>
-> >> lxmhs45:/var/spool/postfix-bulk/postfix-bulkinhss # touch a
-> >> touch: cannot touch `a': No space left on device
-> >> lxmhs45:/var/spool/postfix-bulk/postfix-bulkinhss # df .
-> >> Filesystem           1K-blocks      Used Available Use% Mounted on
-> >> /dev/sdb              10475520   7471160   3004360  72%
-> > 
-> > So you have a 10GB filesystem, with about 3GB of free space.
-> > 
-> >> /var/spool/postfix-bulk
-> >> lxmhs45:/var/spool/postfix-bulk/postfix-bulkinhss # df -i .
-> >> Filesystem            Inodes   IUsed   IFree IUse% Mounted on
-> >> /dev/sdb             10485760 1742528 8743232   17% /var/spool/postfix-bulk
-> > 
-> > And with 1.7 million inodes in it. That's a lot for a tiny
-> > filesystem, and not really a use case that XFS is well suited to.
-> > XFS will work, but it won't age gracefully under these conditions...
-> > 
-> > As it is, your problem is most likely fragmented free space (an
-> > aging problem). Inodes are allocated in chunks of 64, so require an
-> > -aligned- contiguous 16k extent for the default 256 byte inode size.
-> > If you have no aligned contiguous 16k extents free then inode
-> > allocation will fail.
-> > 
-> > Running 'xfs_db -r "-c freesp -s" /dev/sdb' will give you a
-> > histogram of free space extents in the filesystem, which will tell
-> > us if you are hitting this problem.
-> 
-> I managed to create the situation again. This time the total usage is a
-> bit higher, but it still failed.
+On Fri, Oct 07, 2011 at 06:58:53AM -0700, Bryan J Smith wrote:
+> [ Not really adding any technical meat, but just some past
+> experience with XFS, plus Ext3 experience ]
+> =
 
-No surprise. The way you are using the filesystem is pre-disposed to
-this sort of problem.
+> I remember running into this a long time ago when I was first
+> playing with XFS for /tmp and /var (I was still a Linux/XFS noob
+> at the time, not that I'm an expert today).=A0 I ran into the same
+> case where both free block and inodes were still available
+> (although similarly well utilized), and the median file size was
+> around 1KiB.=A0 It was also in the case of many small files being
+> written out in a short period.
+> =
 
-> lxmhs45:~ # df /var/spool/postfix-bulk
-> Filesystem           1K-blocks      Used Available Use% Mounted on
-> /dev/sdb              10475520   8071008   2404512  78%
-> /var/spool/postfix-bulk
-> lxmhs45:~ # df -i /var/spool/postfix-bulk
-> Filesystem            Inodes   IUsed   IFree IUse% Mounted on
-> /dev/sdb             11500544 1882496 9618048   17% /var/spool/postfix-bulk
-> 
-> This is the output requested.
-> 
-> lxmhs45:~ # xfs_db -r "-c freesp -s" /dev/sdb
->    from      to extents  blocks    pct
->       1       1   32230   32230   5.36
->       2       3    6874   16476   2.74
->       4       7  138151  552604  91.90
-> total free extents 177255
-> total free blocks 601310
-> average free extent size 3.39234
+> In my case, I didn't use the XFS debugger to get into the
+> allocation of the extents (would have if I wasn't such a noob,
+> good, discrete command to know, thanx!).
+> =
 
-And that shows your freespace is indeed badly fragmentedi and the
-cause of your problem. The majority of the free space is in 4-7
-block extents which, if inode allocation is failing, are all
-unaligned even though they are large enough for an inode chunk.
+> Extents are outstanding for data and similar directories, ordering
+> and placing large and small files to mitigate fragmentation.=A0 But
+> in this case, and correct me if I'm wrong, it's really just a
+> wasteful use for the extents approach, as the files typically fit
+> in a single data block or two.=A0
 
-> lxmhs45:~ # xfs_info /dev/sdb
-> meta-data=/dev/sdb               isize=256    agcount=4, agsize=655360 blks
->          =                       sectsz=512   attr=2
-> data     =                       bsize=4096   blocks=2621440, imaxpct=50
-                                                                ^^^^^^^^^^
+And single blocks still an extent, so there's nothing "wasted" by
+having a single block extent.
 
-And there lies the reason you are getting the filesystem into this
-situation - you're allowing a very large number of inodes to be created
-in the filesystem.
+....
 
-I'd suggest that for your workload, you need to allow at least 10GB
-of disk space per million inodes. Because of the number of small
-files, XFS is going to need a much larger amount of free space
-available to prevent aging related freespace fragmentation problems.
-The above ratio results in a maximum space usage of about 50%, which
-will avoid such issues. If you need to hold 2 million files, use a
-20GB filesystem...
+> I've used Ext3 with around 8 million files with a median size well
+> under 4KiB (under 32GiB total).=A0 It works "well enough."=A0 I'm
+> curious how Ext4 would do though.=A0 I think Ric Wheeler's team (at
+> Red Hat) has done some benchmarks on 7+ figure file counts on Ext3
+> and Ext4.
 
->          =                       sunit=0      swidth=0 blks
-> naming   =version 2              bsize=4096   ascii-ci=0
-> log      =internal               bsize=4096   blocks=2560, version=2
-                                               ^^^^^^^^^^^^^
+And against XFS, too. In case you didn't realise, you're talking to
+the person who ran a large number of those tests. ;)
 
-And you'll probably get better performance if you use a larger log
-as well.
+The results were ext4 is good for create/delete workloads up to 2-4
+threads and about 100k files per directory on a decent disk
+subsystem (4000 iops). It's much better than ext3, and for those
+workloads about 2x as fast as XFS at 1-2 threads. This pattern held
+true as long as the disk subsystem could handle the number of iops
+that ext4 threw at it. XFS performance came at a much, much lower
+iops cost (think order of magnitude), so shoul dbe more consistent
+on a wider range of storage hardware than ext4.
 
-FWIW, if you have anyone with developer time available, finishing
-off this work:
+However, XFS was about 3x faster on cold cache lookups than ext4, so
+if you're workload is dominated by lookups, XFS is definitely the
+faster filesystem to use even if creates/unlinks on ext4 are
+faster..
 
-http://xfs.org/index.php/Unfinished_work#Inline_data_in_inodes
+As soon as you have more parallelism than 2-4 threads or large
+directories, XFS create/unlink speed surpasses ext4 by a large
+amount - the best I got out of ext4 was ~80k creates a second, while
+XFS topped 130k creates/s at 8 threads. And the lookup speed
+differential increase in XFS's favour at larger thread counts as
+well.
 
-and using 2kB inodes (which would fit ~1900 bytes of data in line)
-would solve you problem entirely and perform much, much better.
+So it really depends on your workload as to which filesystem will
+handle your small files best. Mail spools tend to have lots of
+parallelism, which is why XFS works pretty well, even though it is
+a small file workload.
 
 Cheers,
 
 Dave.
--- 
+-- =
+
 Dave Chinner
 david@fromorbit.com
 
