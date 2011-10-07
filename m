@@ -1,23 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p972Bin6213380 for <xfs@oss.sgi.com>; Thu, 6 Oct 2011 21:11:44 -0500
-Received: from ipmail07.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7A94A14520A3
-	for <xfs@oss.sgi.com>; Thu,  6 Oct 2011 19:01:34 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	2lIH0XNodt2CqPze for <xfs@oss.sgi.com>;
-	Thu, 06 Oct 2011 19:01:34 -0700 (PDT)
-Date: Fri, 7 Oct 2011 12:54:41 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 7/9] xfs: clean up xfs_ioerror_alert
-Message-ID: <20111007015441.GD3159@dastard>
-References: <20111006210607.175284390@bombadil.infradead.org>
-	<20111006210639.731475087@bombadil.infradead.org>
+	p978eH7M228353 for <xfs@oss.sgi.com>; Fri, 7 Oct 2011 03:40:18 -0500
+Received: from nm7.bullet.mail.sg1.yahoo.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with SMTP id D3FBB144B587
+	for <xfs@oss.sgi.com>; Fri,  7 Oct 2011 01:47:07 -0700 (PDT)
+Received: from nm7.bullet.mail.sg1.yahoo.com (nm7.bullet.mail.sg1.yahoo.com
+	[115.178.12.209]) by cuda.sgi.com with SMTP id MbOdjhGEsTXqYNhl
+	for <xfs@oss.sgi.com>; Fri, 07 Oct 2011 01:47:07 -0700 (PDT)
+Message-ID: <1317976813.82044.YahooMailClassic@web77716.mail.sg1.yahoo.com>
+Date: Fri, 7 Oct 2011 16:40:13 +0800 (SGT)
+From: Gim Leong Chin <chingimleong@yahoo.com.sg>
+Subject: Re: Premature "No Space left on device" on XFS
+In-Reply-To: <20111007013711.GW3159@dastard>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20111006210639.731475087@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,32 +26,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Bernhard Schmidt <berni@birkenwald.de>, Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Oct 06, 2011 at 05:06:14PM -0400, Christoph Hellwig wrote:
-> Instead of passing the block number and mount structure explicitly
-> get them off the bp and fix make the argument order more natural.
+Hi Dave,
+
+
 > 
-> Also move it to xfs_buf.c and stop printing the device name given
-> that we already get the fs name as part of xfs_alert, and we know
-> what device is operates on because of the caller that gets printed.
+> As it is, your problem is most likely fragmented free space
+> (an
+> aging problem). Inodes are allocated in chunks of 64, so
+> require an
+> -aligned- contiguous 16k extent for the default 256 byte
+> inode size.
+> If you have no aligned contiguous 16k extents free then
+> inode
+> allocation will fail.
 > 
 
-Only thing I'm wondering about is whether is should be renamed
-xfs_buf_ioerror_alert(), now that it really is a xfs_buf specific
-function?
+I understand from the mkfs.xfs man page "The  XFS  inode  contains a fixed-size part and a variable-size part."
 
-Also, many of the callers could probably pass __func__ rather than a
-manually set string...
+1) Do you mean inodes are allocated in units of 64 at one go?
+2) What is the size of the fixed-size part?
+3) Are the fixed-size parts of inodes also allocated in units of 64 at one go?
+4) Where are the fixed-size parts located?  On special extents just like the variable-size part?
+5) What about the locality of the variable and fixed size parts of the inodes?  Can they be any distance apart?
 
-Otherwise, another nice cleanup.
+Thanks!
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
--- 
-Dave Chinner
-david@fromorbit.com
+GL
 
 _______________________________________________
 xfs mailing list
