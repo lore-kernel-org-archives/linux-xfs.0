@@ -1,25 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9706gD7208552 for <xfs@oss.sgi.com>; Thu, 6 Oct 2011 19:06:42 -0500
-Received: from ipmail07.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D7CCE1C6FAB7
-	for <xfs@oss.sgi.com>; Thu,  6 Oct 2011 17:06:40 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	brQfrD6hHopXnoBv for <xfs@oss.sgi.com>;
-	Thu, 06 Oct 2011 17:06:40 -0700 (PDT)
-Date: Fri, 7 Oct 2011 11:06:27 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/2] repair: fix some valgrind reported errors on i686
-Message-ID: <20111007000627.GV3159@dastard>
-References: <1317862891-3033-1-git-send-email-david@fromorbit.com>
-	<1317862891-3033-3-git-send-email-david@fromorbit.com>
-	<1317903472.3139.30.camel@doink> <20111006221542.GU3159@dastard>
-	<1317941658.2870.50.camel@doink>
+	p970M8Lq209056 for <xfs@oss.sgi.com>; Thu, 6 Oct 2011 19:22:08 -0500
+Received: from greer.hardwarefreak.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7DFA51B457A
+	for <xfs@oss.sgi.com>; Thu,  6 Oct 2011 17:22:06 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id 1nGgA3SY4GiFhcA8
+	for <xfs@oss.sgi.com>; Thu, 06 Oct 2011 17:22:06 -0700 (PDT)
+Message-ID: <4E8E4630.8030108@hardwarefreak.com>
+Date: Thu, 06 Oct 2011 19:22:08 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1317941658.2870.50.camel@doink>
+Subject: Re: Premature "No Space left on device" on XFS
+References: <4E8E079B.4040103@birkenwald.de>
+In-Reply-To: <4E8E079B.4040103@birkenwald.de>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,72 +28,49 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
+To: Bernhard Schmidt <berni@birkenwald.de>
 Cc: xfs@oss.sgi.com
 
-On Thu, Oct 06, 2011 at 05:54:18PM -0500, Alex Elder wrote:
-> On Fri, 2011-10-07 at 09:15 +1100, Dave Chinner wrote:
-> > On Thu, Oct 06, 2011 at 07:17:52AM -0500, Alex Elder wrote:
-> > > On Thu, 2011-10-06 at 12:01 +1100, Dave Chinner wrote:
-> > > > @@ -218,6 +244,15 @@ blkmap_grow(
-> > > >  	}
-> > > >  
-> > > >  	blkmap->naexts += 4;
-> > > 
-> > > The check needs to go *before* you update naexts.
-> > 
-> > It's in the right place - adding 4 to the unchecked extent count can
-> > push it over the limit, so we have to check it after adding 4 to it.
+On 10/6/2011 2:55 PM, Bernhard Schmidt wrote:
+> Hi,
 > 
-> My point was that I'd rather see the check be whether it *will*
-> overflow, rather than allowing it to overflow.
+> this is an XFS-related summary of a problem report I sent to the postfix
+> mailinglist a few minutes ago after a bulkmail test system blew up
+> during a stress test.
 > 
-> The other reason though, even if you do the calculation
-> at that spot, is that you shouldn't update what blkmap
-> records as the number of allocated extents unless you
-> have actually updated it the amount of allocated memory.
-> As it stands, you will have updated blkmap->naexts, then
-> if it overflows you return before actually attempting
-> to reallocate.
+> We have a few MTAs running SLES11.1 amd64 (2.6.32.45-0.3-default), 10 GB
+> XFS Spooldirectory with default blocksize (4k). It was bombarded with
+> mails faster than it could send them on, which eventually led to almost
+> 2 million files of ~1.5kB in one directory. Suddenly, this started to
+> happen
 > 
-> In other words, blkmap->naexts should reflect the actual
-> amount of memory allotted in the blkmap->exts array, which
-> is not going to be the case if it returns early (and this
-> can be avoided).
-
-Fair point.
-
-And just checking the single caller of blkmap_grow indicates that it
-doesn't handle allocation failure *at all*, so I need to fix that as
-well.
-
-> > IOWs, we can't use BLKMAP_SIZE to detect an overflow, because it
-> > is the code that overflows...
+> lxmhs45:/var/spool/postfix-bulk/postfix-bulkinhss # touch a
+> touch: cannot touch `a': No space left on device
+> lxmhs45:/var/spool/postfix-bulk/postfix-bulkinhss # df .
+> Filesystem           1K-blocks      Used Available Use% Mounted on
+> /dev/sdb              10475520   7471160   3004360  72%
+> /var/spool/postfix-bulk
+> lxmhs45:/var/spool/postfix-bulk/postfix-bulkinhss # df -i .
+> Filesystem            Inodes   IUsed   IFree IUse% Mounted on
+> /dev/sdb             10485760 1742528 8743232   17% /var/spool/postfix-bulk
 > 
-> I understand that argument.  I'm in a hurry at the moment so
-> I haven't thought through this very well right now.
+> So we could not create any file in the spool directory anymore despite
+> df claiming to have both free blocks and inodes. This led to a pretty
+> spectacular lockup of the mail processing chain.
 > 
-> But if you do have BLKMAP_NENTS_MAX, you could check nex
-> against that before attempting to use BLKMAP_SIZE to
-> compute how many bytes need to be allocated.
+> My theory is that XFS is using a full 4k block for each 1.5kB file,
+> which accounts to some loss. But still, 10GB / 4kB makes 2.5 mio files,
+> which have surely not been reached here. Is there that high overhead?
+> Why is neither df-metric reporting this problem? Is there any way to get
+> reasonable readings out of df in this case? The system would have
+> stopped accepting mail from outside if the freespace would have sunk
+> below 2GB, so out-of-space happened way to early for it.
 
-Yup, that's what the patch does, just without the BLKMAP_NENTS_MAX
-macro. Which I've already added. ;)
+Dig deeper so you can get past theory and find facts.  Do you see any
+errors in dmseg?
 
-FWIW, because the extent count fields are all signed ints,
-overflow checks also need to check for values <= 0. So I've added
-that too.
-
-And I think now I need to split this into separate patches for each
-issue, as there are now about 5 different problems this one patch
-fixes.
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Stan
 
 _______________________________________________
 xfs mailing list
