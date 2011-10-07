@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p97JbIkN258675 for <xfs@oss.sgi.com>; Fri, 7 Oct 2011 14:37:19 -0500
-Subject: Re: [PATCH 1/9] xfs: remove xfs_get_buftarg_list
+	p97JbJm6258680 for <xfs@oss.sgi.com>; Fri, 7 Oct 2011 14:37:20 -0500
+Subject: Re: [PATCH 2/9] xfs: remove XFS_BUF_FINISH_IOWAIT
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20111006210638.571822778@bombadil.infradead.org>
+In-Reply-To: <20111006210638.768207092@bombadil.infradead.org>
 References: <20111006210607.175284390@bombadil.infradead.org>
-	<20111006210638.571822778@bombadil.infradead.org>
-Date: Fri, 7 Oct 2011 14:36:35 -0500
-Message-ID: <1318016195.2810.38.camel@doink>
+	<20111006210638.768207092@bombadil.infradead.org>
+Date: Fri, 7 Oct 2011 14:36:39 -0500
+Message-ID: <1318016199.2810.39.camel@doink>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -27,8 +27,6 @@ To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
 On Thu, 2011-10-06 at 17:06 -0400, Christoph Hellwig wrote:
-> The code is unused and under a config option that doesn't exist, remove it.
-> 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 Looks good.
