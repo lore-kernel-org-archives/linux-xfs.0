@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p97JbJm6258680 for <xfs@oss.sgi.com>; Fri, 7 Oct 2011 14:37:20 -0500
-Subject: Re: [PATCH 2/9] xfs: remove XFS_BUF_FINISH_IOWAIT
+	p97JeEIJ258978 for <xfs@oss.sgi.com>; Fri, 7 Oct 2011 14:40:14 -0500
+Subject: Re: [PATCH 9/9] xfs: remove xfs_buf_target_name
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20111006210638.768207092@bombadil.infradead.org>
+In-Reply-To: <20111006210640.089607475@bombadil.infradead.org>
 References: <20111006210607.175284390@bombadil.infradead.org>
-	<20111006210638.768207092@bombadil.infradead.org>
-Date: Fri, 7 Oct 2011 14:36:39 -0500
-Message-ID: <1318016199.2810.39.camel@doink>
+	<20111006210640.089607475@bombadil.infradead.org>
+Date: Fri, 7 Oct 2011 14:37:23 -0500
+Message-ID: <1318016243.2810.47.camel@doink>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -27,9 +27,15 @@ To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
 On Thu, 2011-10-06 at 17:06 -0400, Christoph Hellwig wrote:
+> The calling convention that returns a pointer to a static buffer is
+> fairly nasty, so just opencode it in the only caller that is left.
+> 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Looks good.
+Yay!  The name buffer needs not to be static any more though.
+I will remove it for you unless you want to re-post it.
+
+Other than that, looks good.
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
 
