@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p97KA3KU260284 for <xfs@oss.sgi.com>; Fri, 7 Oct 2011 15:10:03 -0500
-Date: Fri, 7 Oct 2011 16:10:01 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 9/9] xfs: remove xfs_buf_target_name
-Message-ID: <20111007201001.GA23256@infradead.org>
-References: <20111006210607.175284390@bombadil.infradead.org>
-	<20111006210640.089607475@bombadil.infradead.org>
-	<1318016243.2810.47.camel@doink>
+	p97MIFbA002325 for <xfs@oss.sgi.com>; Fri, 7 Oct 2011 17:18:15 -0500
+Subject: Re: [PATCH 2/4] xfs: force the log if we encounter pinned buffers
+	in .iop_pushbuf
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <20111006183549.598050900@bombadil.infradead.org>
+References: <20111006183257.036884724@bombadil.infradead.org>
+	<20111006183549.598050900@bombadil.infradead.org>
+Date: Fri, 7 Oct 2011 17:18:11 -0500
+Message-ID: <1318025891.2810.78.camel@doink>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1318016243.2810.47.camel@doink>
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,22 +24,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Stefan Priebe <s.priebe@profihost.ag>, xfs@oss.sgi.com
 
-On Fri, Oct 07, 2011 at 02:37:23PM -0500, Alex Elder wrote:
-> On Thu, 2011-10-06 at 17:06 -0400, Christoph Hellwig wrote:
-> > The calling convention that returns a pointer to a static buffer is
-> > fairly nasty, so just opencode it in the only caller that is left.
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Thu, 2011-10-06 at 14:32 -0400, Christoph Hellwig wrote:
+> We need to check for pinned buffers even in .iop_pushbuf given that inode
+> items flush into the same buffers that may be pinned directly due operations
+> on the unlinked inode list operating directly on buffers.  To do this add a
+> return value to .iop_pushbuf that tells the AIL push about this and use
+> the existing log force mechanisms to unpin it.
 > 
-> Yay!  The name buffer needs not to be static any more though.
-> I will remove it for you unless you want to re-post it.
-> 
-> Other than that, looks good.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reported-by: Stefan Priebe <s.priebe@profihost.ag>
+> Tested-by: Stefan Priebe <s.priebe@profihost.ag>
 
-I'll resping the series with this and the naming change.
+Looks ok to me.
+
+Reviewed-by: Alex Elder <aelder@sgi.com>
+
 
 _______________________________________________
 xfs mailing list
