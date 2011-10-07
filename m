@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p97NHL4f004355 for <xfs@oss.sgi.com>; Fri, 7 Oct 2011 18:17:22 -0500
+	p97NKGQ7004460 for <xfs@oss.sgi.com>; Fri, 7 Oct 2011 18:20:16 -0500
 Received: from ipmail07.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1395F16B9A62
-	for <xfs@oss.sgi.com>; Fri,  7 Oct 2011 16:24:16 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 77E3D1B6981
+	for <xfs@oss.sgi.com>; Fri,  7 Oct 2011 16:20:14 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	AyHTP5rAsprdDDyo for <xfs@oss.sgi.com>;
-	Fri, 07 Oct 2011 16:24:16 -0700 (PDT)
-Date: Sat, 8 Oct 2011 10:17:18 +1100
+	AQQXZzDgzM2BmNMU for <xfs@oss.sgi.com>;
+	Fri, 07 Oct 2011 16:20:14 -0700 (PDT)
+Date: Sat, 8 Oct 2011 10:20:12 +1100
 From: Dave Chinner <david@fromorbit.com>
 Subject: Re: Premature "No Space left on device" on XFS
-Message-ID: <20111007231718.GH3159@dastard>
-References: <4E8E079B.4040103@birkenwald.de> <20111007013711.GW3159@dastard>
-	<201110071340.25077@zmi.at>
+Message-ID: <20111007232012.GI3159@dastard>
+References: <20111007013711.GW3159@dastard>
+	<1317976813.82044.YahooMailClassic@web77716.mail.sg1.yahoo.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <201110071340.25077@zmi.at>
+In-Reply-To: <1317976813.82044.YahooMailClassic@web77716.mail.sg1.yahoo.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,44 +30,42 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Michael Monnerie <michael.monnerie@is.it-management.at>
-Cc: xfs@oss.sgi.com
+To: Gim Leong Chin <chingimleong@yahoo.com.sg>
+Cc: Bernhard Schmidt <berni@birkenwald.de>, xfs@oss.sgi.com
 
-On Fri, Oct 07, 2011 at 01:40:24PM +0200, Michael Monnerie wrote:
-> On Freitag, 7. Oktober 2011 Dave Chinner wrote:
-> > And with 1.7 million inodes in it. That's a lot for a tiny
-> > filesystem, and not really a use case that XFS is well suited to.
-> > XFS will work, but it won't age gracefully under these conditions...
+On Fri, Oct 07, 2011 at 04:40:13PM +0800, Gim Leong Chin wrote:
+> Hi Dave,
 > 
-> But which FS would fit better for that? We have similar usages, so I'm 
-> curious.
 > 
-> > As it is, your problem is most likely fragmented free space (an
-> > aging problem). Inodes are allocated in chunks of 64, so require an
-> > -aligned- contiguous 16k extent for the default 256 byte inode size.
-> > If you have no aligned contiguous 16k extents free then inode
+> > 
+> > As it is, your problem is most likely fragmented free space
+> > (an
+> > aging problem). Inodes are allocated in chunks of 64, so
+> > require an
+> > -aligned- contiguous 16k extent for the default 256 byte
+> > inode size.
+> > If you have no aligned contiguous 16k extents free then
+> > inode
 > > allocation will fail.
+> > 
 > 
-> Would this be a use case for the "noikeep" mount option?
+> I understand from the mkfs.xfs man page "The  XFS  inode  contains a fixed-size part and a variable-size part."
+> 
+> 1) Do you mean inodes are allocated in units of 64 at one go?
 
-Possibly, but you still end up with the same problems when you have
-to grow the inode count and free space is low.
+http://xfs.org/docs/xfsdocs-xml-dev/XFS_Filesystem_Structure//tmp/en-US/html/AG_Inode_Management.html
+http://xfs.org/docs/xfsdocs-xml-dev/XFS_Filesystem_Structure//tmp/en-US/html/Inode_Btrees.html
 
-> When would be the time XFS drops inode clusters that are already empty, 
-> when I use noikeep on an aged XFS with lots of such unused inode 
-> allocations?
+> 2) What is the size of the fixed-size part?
+> 3) Are the fixed-size parts of inodes also allocated in units of 64 at one go?
+> 4) Where are the fixed-size parts located?  On special extents just like the variable-size part?
+> 5) What about the locality of the variable and fixed size parts of the inodes?  Can they be any distance apart?
 
-XFS frees inode chunks the when the last inode in the chunk is
-freed. IF you have a random create/unlink workload, most of the
-inode chunks will be partially populated and so the filesystem will
-behave mostly as though it has noikeep sepcified, anyway. (i.e.
-allocate inode from partially populated chunks before allocating new
-chunks).
+http://xfs.org/docs/xfsdocs-xml-dev/XFS_Filesystem_Structure//tmp/en-US/html/On-disk_Inode.html
 
 Cheers,
 
 Dave.
-
 -- 
 Dave Chinner
 david@fromorbit.com
