@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p98DH0Kv050131 for <xfs@oss.sgi.com>; Sat, 8 Oct 2011 08:17:02 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F3F601C78F90
-	for <xfs@oss.sgi.com>; Sat,  8 Oct 2011 06:16:59 -0700 (PDT)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	s3dEZuX0JST0ad2Q for <xfs@oss.sgi.com>;
-	Sat, 08 Oct 2011 06:16:59 -0700 (PDT)
-Date: Sat, 8 Oct 2011 09:16:51 -0400
-From: Christoph Hellwig <hch@infradead.org>
+	p98MYElF071040 for <xfs@oss.sgi.com>; Sat, 8 Oct 2011 17:34:14 -0500
+Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3F7E814594D2
+	for <xfs@oss.sgi.com>; Sat,  8 Oct 2011 15:41:12 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	4wcvw7TvxVWQgQfR for <xfs@oss.sgi.com>;
+	Sat, 08 Oct 2011 15:41:12 -0700 (PDT)
+Date: Sun, 9 Oct 2011 09:34:04 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: Premature "No Space left on device" on XFS
-Message-ID: <20111008131651.GA25855@infradead.org>
+Message-ID: <20111008223404.GM3159@dastard>
 References: <4E8E079B.4040103@birkenwald.de> <20111007013711.GW3159@dastard>
-	<1317995933.17433.YahooMailNeo@web122515.mail.ne1.yahoo.com>
-	<20111007233119.GJ3159@dastard>
-	<f7b04e83-0303-4fa2-9bc0-db42c99228c0@email.android.com>
+	<4E8F0385.7060906@birkenwald.de> <20111007231410.GG3159@dastard>
+	<4E90422E.3060805@birkenwald.de>
+	<20111008131809.GB25855@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <f7b04e83-0303-4fa2-9bc0-db42c99228c0@email.android.com>
+In-Reply-To: <20111008131809.GB25855@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,16 +32,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Bryan J Smith <b.j.smith@ieee.org>
-Cc: Bernhard Schmidt <berni@birkenwald.de>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Bernhard Schmidt <berni@birkenwald.de>, xfs@oss.sgi.com
 
-On Sat, Oct 08, 2011 at 02:30:04AM -0400, Bryan J Smith wrote:
-> I figured someone would fill in the gaps in my experience-assumptions. Excellent info, especially on those fs comparisons.
+On Sat, Oct 08, 2011 at 09:18:09AM -0400, Christoph Hellwig wrote:
+> On Sat, Oct 08, 2011 at 02:29:34PM +0200, Bernhard Schmidt wrote:
+> > Can I avoid XFS giving ENOSPC due to inode shortage even in worst
+> > case situations? I would be fine preallocating 1 GB for inode
+> > storage if that would fix the problem. ext4 with bytes-per-inode =
+> > blocksize does this fine.
+> 
+> It's a bit of a hack, but you can do that fairly easily by:
+> 
+>  - mounting the filesystem with the ikeep option
+>  - creating the numbers of inodes you need (use a worst case allocation)
+>    before starting the workload
 
-If you want to help the project with some relatively simple work
-summarizing posts like these on pages on the xfs.org wiki would be fairly
-useful.  If you;'re interested in that we could even dump raw data
-of benchmarks for graphs / etc.
+Just bear in mind that this can result in all inodes being allocated
+in the same AG, thereby serialising all future file creation and
+deletion in the filesystem. If you take this route, using a directory
+hashing scheme is, IMO, absolutely necessary.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
