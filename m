@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p986URNe031470 for <xfs@oss.sgi.com>; Sat, 8 Oct 2011 01:30:28 -0500
-Received: from nm7.bullet.mail.ac4.yahoo.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with SMTP id EB5961B7E5D
-	for <xfs@oss.sgi.com>; Fri,  7 Oct 2011 23:30:24 -0700 (PDT)
-Received: from nm7.bullet.mail.ac4.yahoo.com (nm7.bullet.mail.ac4.yahoo.com
-	[98.139.52.204]) by cuda.sgi.com with SMTP id rcpi5IXw10IOpCok
-	for <xfs@oss.sgi.com>; Fri, 07 Oct 2011 23:30:24 -0700 (PDT)
-References: <4E8E079B.4040103@birkenwald.de> <20111007013711.GW3159@dastard>
-	<1317995933.17433.YahooMailNeo@web122515.mail.ne1.yahoo.com>
-	<20111007233119.GJ3159@dastard>
-In-Reply-To: <20111007233119.GJ3159@dastard>
+	p98CTdtN048197 for <xfs@oss.sgi.com>; Sat, 8 Oct 2011 07:29:39 -0500
+Received: from mailout.mucip.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0A2AD1B8CF2
+	for <xfs@oss.sgi.com>; Sat,  8 Oct 2011 05:29:37 -0700 (PDT)
+Received: from mailout.mucip.net (mail.svr02.mucip.net [83.170.6.69]) by
+	cuda.sgi.com with ESMTP id zFok3DAmARtkVNxt for
+	<xfs@oss.sgi.com>; Sat, 08 Oct 2011 05:29:37 -0700 (PDT)
+Message-ID: <4E90422E.3060805@birkenwald.de>
+Date: Sat, 08 Oct 2011 14:29:34 +0200
+From: Bernhard Schmidt <berni@birkenwald.de>
 MIME-Version: 1.0
 Subject: Re: Premature "No Space left on device" on XFS
-From: Bryan J Smith <b.j.smith@ieee.org>
-Date: Sat, 08 Oct 2011 02:30:04 -0400
-Message-ID: <f7b04e83-0303-4fa2-9bc0-db42c99228c0@email.android.com>
+References: <4E8E079B.4040103@birkenwald.de> <20111007013711.GW3159@dastard>
+	<4E8F0385.7060906@birkenwald.de> <20111007231410.GG3159@dastard>
+In-Reply-To: <20111007231410.GG3159@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,123 +24,80 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============2191253803453333370=="
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Bernhard Schmidt <berni@birkenwald.de>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+Cc: xfs@oss.sgi.com
 
---===============2191253803453333370==
-Content-Type: multipart/alternative; boundary="----570JKCQR6CXFRGYHNXD3331CY894Y2"
+Hi,
 
-------570JKCQR6CXFRGYHNXD3331CY894Y2
-Content-Type: text/plain;
- charset=UTF-8
-Content-Transfer-Encoding: 8bit
+>> lxmhs45:~ # xfs_info /dev/sdb
+>> meta-data=/dev/sdb               isize=256    agcount=4, agsize=655360 blks
+>>           =                       sectsz=512   attr=2
+>> data     =                       bsize=4096   blocks=2621440, imaxpct=50
+>                                                                  ^^^^^^^^^^
+>
+> And there lies the reason you are getting the filesystem into this
+> situation - you're allowing a very large number of inodes to be created
+> in the filesystem.
 
-I figured someone would fill in the gaps in my experience-assumptions. Excellent info, especially on those fs comparisons.
--- 
-Sent from my Android phone with K-9 Mail. Please excuse my brevity.
+Ah, sorry, I changed that to 50% _after_ the first fuckup due to a 
+suggestion on the postfix ml, it used to be the default 25% before.
+>
+> I'd suggest that for your workload, you need to allow at least 10GB
+> of disk space per million inodes. Because of the number of small
+> files, XFS is going to need a much larger amount of free space
+> available to prevent aging related freespace fragmentation problems.
+> The above ratio results in a maximum space usage of about 50%, which
+> will avoid such issues. If you need to hold 2 million files, use a
+> 20GB filesystem...
 
-Dave Chinner <david@fromorbit.com> wrote:
+I don't need to hold 2 million files, 1 million might be enough, I have 
+to make sure I cannot run out of inodes way before I run out of free space.
 
-On Fri, Oct 07, 2011 at 06:58:53AM -0700, Bryan J Smith wrote:
-> [ Not really adding any technical meat, but just some past
-> experience with XFS, plus Ext3 experience ]
-> 
-> I remember running into this a long time ago when I was first
-> playing with XFS for /tmp and /var (I was still a Linux/XFS noob
-> at the time, not that I'm an expert today).  I ran into the same
-> case where both free block and inodes were still available
-> (although similarly well utilized), and the median file size was
-> around 1KiB.  It was also in the case of many small files being
-> written out in a short period.
-> 
-> In my case, I didn't use the XFS debugger to get into the
-> allocation of the extents (would have if I wasn't such a noob,
-> good, discrete command to know, thanx!).
-> 
-> Extents are outstanding for data and similar directories, ordering
-> and placing large and small files to mitigate fragmentation.  But
-> in this case, and correct me if I'm wrong, it's really just a
-> wasteful use for the extents approach, as the files typically fit
-> in a single data block or two. 
+Generally speaking I have the following problem:
 
-And single blocks still an extent, so there's nothing "wasted" by
-having a single block extent.
+External nodes are submitting data (mails) to this system as fast as 
+they can. The mails can be between 800 bytes and several megabytes. 
+There are 50 receiver that write those mails as single files flat in a 
+single directory.
 
-....
+There are 4 worker threads that process a _random_ file out of this 
+directory. To process it they need to be able to create a temporary file 
+on the same filesystem. Together they are slower than the 50 receivers 
+(they can process maybe 20% of the incoming rate), which means that this 
+incoming directory is going to fill. For the sake of the argument lets 
+assume that the amount of mails to be sent is unlimited.
 
-> I've used Ext3 with around 8 million files with a median size well
-> under 4KiB (under 32GiB total).  It works "well enough."  I'm
-> curious how Ext4 would do though.  I think Ric Wheeler's team (at
-> Red Hat) has done some benchmarks on 7+ figure file counts on Ext3
-> and Ext4.
+The only knob the software knows to prevent this from going over is free 
+disk space. When free disk space is lower than 2 Gigabyte, the 
+acceptance of new mails is blocked gracefully until there is free space 
+again.
 
-And against XFS, too. In case you didn't realise, you're talking to
-the person who ran a large number of those tests. ;)
+It has, however, no way to deal with ENOSPC before that. When it cannot 
+create new files due no free inodes (ext4 with default settings) or 
+fragmentation in XFS, it breaks quite horribly and cannot recover by itself.
 
-The results were ext4 is good for create/delete workloads up to 2-4
-threads and about 100k files per directory on a decent disk
-subsystem (4000 iops). It's much better than ext3, and for those
-workloads about 2x as fast as XFS at 1-2 threads. This pattern held
-true as long as the disk subsystem could handle the number of iops
-that ext4 threw at it. XFS performance came at a much, much lower
-iops cost (think order of magnitude), so shoul dbe more consistent
-on a wider range of storage hardware than ext4.
+Can I avoid XFS giving ENOSPC due to inode shortage even in worst case 
+situations? I would be fine preallocating 1 GB for inode storage if that 
+would fix the problem. ext4 with bytes-per-inode = blocksize does this fine.
 
-However, XFS was about 3x faster on cold cache lookups than ext4, so
-if you're workload is dominated by lookups, XFS is definitely the
-faster filesystem to use even if creates/unlinks on ext4 are
-faster..
+You mentioned an aging problem with XFS. I guess you mean that an XFS 
+filesystem will get slower/more fragmented by time with abuse like this. 
+These mail submission above will happen in bursts, during normal times 
+it will go down to << 1000 files on the entire filesystem (empty 
+incoming directory). Is this enough for XFS to "fix itself"?
 
-As soon as you have more parallelism than 2-4 threads or large
-directories, XFS create/unlink speed surpasses ext4 by a large
-amount - the best I got out of ext4 was ~80k creates a second, while
-XFS topped 130k creates/s at 8 threads. And the lookup speed
-differential increase in XFS's favour at larger thread counts as
-well.
+BTW, the software can hash the incoming directory in 16 or 16x16 
+subdirectories. Would that help XFS in any way with those filesizes? At 
+first glance I would have said yes, but due to the random access in 
+those directories it would still have the entire spool as workload.
 
-So it really depends on your workload as to which filesystem will
-handle your small files best. Mail spools tend to have lots of
-parallelism, which is why XFS works pretty well, even though it is
-a small file workload.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-
-------570JKCQR6CXFRGYHNXD3331CY894Y2
-Content-Type: text/html;
- charset=utf-8
-Content-Transfer-Encoding: 8bit
-
-<html><head></head><body>I figured someone would fill in the gaps in my experience-assumptions. Excellent info, especially on those fs comparisons.<br>
--- <br>
-Sent from my Android phone with K-9 Mail. Please excuse my brevity.<br><br><div class="gmail_quote">Dave Chinner &lt;david@fromorbit.com&gt; wrote:<blockquote class="gmail_quote" style="margin: 0pt 0pt 0pt 0.8ex; border-left: 1px solid rgb(204, 204, 204); padding-left: 1ex;">
-<pre style="white-space: pre-wrap; word-wrap:break-word; font-family: sans-serif">On Fri, Oct 07, 2011 at 06:58:53AM -0700, Bryan J Smith wrote:<br />&gt; [ Not really adding any technical meat, but just some past<br />&gt; experience with XFS, plus Ext3 experience ]<br />&gt; <br />&gt; I remember running into this a long time ago when I was first<br />&gt; playing with XFS for /tmp and /var (I was still a Linux/XFS noob<br />&gt; at the time, not that I'm an expert today).  I ran into the same<br />&gt; case where both free block and inodes were still available<br />&gt; (although similarly well utilized), and the median file size was<br />&gt; around 1KiB.  It was also in the case of many small files being<br />&gt; written out in a short period.<br />&gt; <br />&gt; In my case, I didn't use the XFS debugger to get into the<br />&gt; allocation of the extents (would have if I wasn't such a noob,<br />&gt; good, discrete command to know, thanx!).<br />&gt; <br />&gt; Exte
- nts are
-outstanding for data and similar directories, ordering<br />&gt; and placing large and small files to mitigate fragmentation.  But<br />&gt; in this case, and correct me if I'm wrong, it's really just a<br />&gt; wasteful use for the extents approach, as the files typically fit<br />&gt; in a single data block or two. <br /><br />And single blocks still an extent, so there's nothing "wasted" by<br />having a single block extent.<br /><br />....<br /><br />&gt; I've used Ext3 with around 8 million files with a median size well<br />&gt; under 4KiB (under 32GiB total).  It works "well enough."  I'm<br />&gt; curious how Ext4 would do though.  I think Ric Wheeler's team (at<br />&gt; Red Hat) has done some benchmarks on 7+ figure file counts on Ext3<br />&gt; and Ext4.<br /><br />And against XFS, too. In case you didn't realise, you're talking to<br />the person who ran a large number of those tests. ;)<br /><br />The results were ext4 is good for create/delete workloads up
-  to
-2-4<br />threads and about 100k files per directory on a decent disk<br />subsystem (4000 iops). It's much better than ext3, and for those<br />workloads about 2x as fast as XFS at 1-2 threads. This pattern held<br />true as long as the disk subsystem could handle the number of iops<br />that ext4 threw at it. XFS performance came at a much, much lower<br />iops cost (think order of magnitude), so shoul dbe more consistent<br />on a wider range of storage hardware than ext4.<br /><br />However, XFS was about 3x faster on cold cache lookups than ext4, so<br />if you're workload is dominated by lookups, XFS is definitely the<br />faster filesystem to use even if creates/unlinks on ext4 are<br />faster..<br /><br />As soon as you have more parallelism than 2-4 threads or large<br />directories, XFS create/unlink speed surpasses ext4 by a large<br />amount - the best I got out of ext4 was ~80k creates a second, while<br />XFS topped 130k creates/s at 8 threads. And the lookup spe
- ed<br
-/>differential increase in XFS's favour at larger thread counts as<br />well.<br /><br />So it really depends on your workload as to which filesystem will<br />handle your small files best. Mail spools tend to have lots of<br />parallelism, which is why XFS works pretty well, even though it is<br />a small file workload.<br /><br />Cheers,<br /><br />Dave.<br />-- <br />Dave Chinner<br />david@fromorbit.com<br /></pre></blockquote></div></body></html>
-------570JKCQR6CXFRGYHNXD3331CY894Y2--
-
-
---===============2191253803453333370==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Bernhard
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============2191253803453333370==--
