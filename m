@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p99NC0NC130659 for <xfs@oss.sgi.com>; Sun, 9 Oct 2011 18:12:00 -0500
-Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B4FBB1C79D31
-	for <xfs@oss.sgi.com>; Sun,  9 Oct 2011 16:11:58 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	x1KvXB5ek3uV5ChV for <xfs@oss.sgi.com>;
-	Sun, 09 Oct 2011 16:11:58 -0700 (PDT)
-Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1RD2XB-0003au-US
-	for xfs@oss.sgi.com; Mon, 10 Oct 2011 10:11:53 +1100
-Received: from dave by disappointment with local (Exim 4.76)
-	(envelope-from <dave@disappointment.disaster>) id 1RD2XB-0002vV-Fz
-	for xfs@oss.sgi.com; Mon, 10 Oct 2011 10:11:53 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 0/5, v2] repair: sector size and blkmap fixes
-Date: Mon, 10 Oct 2011 10:11:45 +1100
-Message-Id: <1318201910-11144-1-git-send-email-david@fromorbit.com>
+	p99NmBoM132506 for <xfs@oss.sgi.com>; Sun, 9 Oct 2011 18:48:11 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9425C4EEBFE
+	for <xfs@oss.sgi.com>; Sun,  9 Oct 2011 16:48:10 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	N43NWHxTPu2IrCr5 for <xfs@oss.sgi.com>;
+	Sun, 09 Oct 2011 16:48:10 -0700 (PDT)
+Date: Sun, 9 Oct 2011 19:48:09 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 4/5] repair: don't cache large blkmap allocations
+Message-ID: <20111009234809.GB13527@infradead.org>
+References: <1318201910-11144-1-git-send-email-david@fromorbit.com>
+	<1318201910-11144-5-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1318201910-11144-5-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,36 +27,21 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Hi Alex,
+> +	/* consider more than 100k extents rare */
+> +	if (blkmap->naexts < 100 * 1024)
+> +		return;
 
-Here's the fixes I posted a few days ago with all the review
-comments fixed up.
+100k extents still seems like a fairly high number.  Otherwise looks
+okay.
 
-Version 2:
-- fixed typos in sector size comments
-- fixed setting default sector size so that the ioctl doesn't wipe
-  it out
-- separate out prefetch valgrind error fix.
-- separate out large blkmap allocation caching fix
-- separate out handling of blkmap memory allocation failure during a
-  grow to avoid a buffer overrun situation when moving extents
-  around in the array
-- avoid modifying blkmap->naexts when allocation fails.
-- separate extent count overflow checking in blkmap allocation and
-  growing
-- use #if BITS_PER_LONG == 32
-- Introduce BLKMAP_NEXTS_MAX and use it unconditionally rather than
-  open code it and only include the check on 32 bit builds
-- add checking for negative extent counts to avoid grow overflows
-  past INT_MAX going undetected.
-
+(If only we had a non-sucky threaded memory allocator in userspace..)
 
 _______________________________________________
 xfs mailing list
