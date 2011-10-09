@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p99NpSJq132643 for <xfs@oss.sgi.com>; Sun, 9 Oct 2011 18:51:28 -0500
+	p99NjXJP132379 for <xfs@oss.sgi.com>; Sun, 9 Oct 2011 18:45:34 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9A93A4EF0EE
-	for <xfs@oss.sgi.com>; Sun,  9 Oct 2011 16:51:27 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3B73A1C79879
+	for <xfs@oss.sgi.com>; Sun,  9 Oct 2011 16:45:30 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	3psXnyPVFlxTNGtl for <xfs@oss.sgi.com>;
-	Sun, 09 Oct 2011 16:51:27 -0700 (PDT)
-Date: Sun, 9 Oct 2011 19:51:26 -0400
+	aZkzfr2Drce97Qq6 for <xfs@oss.sgi.com>;
+	Sun, 09 Oct 2011 16:45:30 -0700 (PDT)
+Date: Sun, 9 Oct 2011 19:45:29 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/5] repair: handle memory allocation failure from
-	blkmap_grow
-Message-ID: <20111009235126.GC13527@infradead.org>
+Subject: Re: [PATCH 2/5] repair: fix some valgrind reported errors on i686
+Message-ID: <20111009234529.GA13527@infradead.org>
 References: <1318201910-11144-1-git-send-email-david@fromorbit.com>
-	<1318201910-11144-4-git-send-email-david@fromorbit.com>
+	<1318201910-11144-3-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1318201910-11144-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1318201910-11144-3-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,38 +34,42 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
->  static blkmap_t *
->  blkmap_grow(
-> -	blkmap_t	**blkmapp)
-> +	blkmap_t	*blkmap)
->  {
->  	pthread_key_t	key = dblkmap_key;
-> -	blkmap_t	*blkmap = *blkmapp;
-> +	blkmap_t	*new_blkmap;
-> +	int		new_naexts = blkmap->naexts + 4;
->  
->  	if (pthread_getspecific(key) != blkmap) {
->  		key = ablkmap_key;
->  		ASSERT(pthread_getspecific(key) == blkmap);
->  	}
->  
-> -	blkmap->naexts += 4;
-> -	blkmap = realloc(blkmap, BLKMAP_SIZE(blkmap->naexts));
-> -	if (blkmap == NULL)
-> - 		do_error(_("realloc failed in blkmap_grow\n"));
-> -	*blkmapp = blkmap;
-> -	pthread_setspecific(key, blkmap);
-> -	return blkmap;
-> +	new_blkmap = realloc(blkmap, BLKMAP_SIZE(new_naexts));
-> +	if (!new_blkmap) {
-> + 		do_error(_("realloc failed in blkmap_grow\n"));
-> +		return NULL;
-> +	}
-> +	blkmap->naexts = new_naexts;
+On Mon, Oct 10, 2011 at 10:11:47AM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Fix a potential prefetch read problem due to the first loop
+> execution of pf_batch_read potentially not initialising the fsbno
+> varaible:
 
-Why would we modify naexts in the old blkmap?
+variable.
 
-Otherwise looks fine.
+> 
+> ==10177== Thread 6:
+> ==10177== Conditional jump or move depends on uninitialised value(s)
+> ==10177==    at 0x8079CAB: pf_batch_read (prefetch.c:408)
+> ==10177==    by 0x6A2996D: clone (clone.S:130)
+> ==10177==
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  repair/prefetch.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/repair/prefetch.c b/repair/prefetch.c
+> index d2fdf90..da074a8 100644
+> --- a/repair/prefetch.c
+> +++ b/repair/prefetch.c
+> @@ -397,7 +397,7 @@ pf_batch_read(
+>  	int			len, size;
+>  	int			i;
+>  	int			inode_bufs;
+> -	unsigned long		fsbno;
+> +	unsigned long		fsbno = 0;
+
+Call me stupid, but I can't see how this could actually be a real
+life issue.  The first thing we do in the loop is to to write
+to fsbno in btree_find.  I'm fine adding this to shut up warnins,
+but I can't see a real issue.
 
 _______________________________________________
 xfs mailing list
