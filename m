@@ -1,23 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9A66Tdo155153 for <xfs@oss.sgi.com>; Mon, 10 Oct 2011 01:06:29 -0500
-Received: from server655-han.de-nserver.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5D7E01C7A1E6
-	for <xfs@oss.sgi.com>; Sun,  9 Oct 2011 23:06:25 -0700 (PDT)
-Received: from server655-han.de-nserver.de (server655-han.de-nserver.de
-	[85.158.177.45]) by cuda.sgi.com with ESMTP id xQGgWBJEOLXNAnG8
-	for <xfs@oss.sgi.com>; Sun, 09 Oct 2011 23:06:25 -0700 (PDT)
-Message-ID: <4E928B61.8080107@profihost.ag>
-Date: Mon, 10 Oct 2011 08:06:25 +0200
-From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+	p9A6TolM156369 for <xfs@oss.sgi.com>; Mon, 10 Oct 2011 01:29:51 -0500
+Received: from mailsrv14.zmi.at (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8FF56152F32F
+	for <xfs@oss.sgi.com>; Sun,  9 Oct 2011 23:36:57 -0700 (PDT)
+Received: from mailsrv14.zmi.at (mailsrv14.zmi.at [212.69.164.54]) by
+	cuda.sgi.com with ESMTP id 14KgY7LyRGnART52 for
+	<xfs@oss.sgi.com>; Sun, 09 Oct 2011 23:36:57 -0700 (PDT)
+Received: from mailsrv.i.zmi.at (h081217106033.dyn.cm.kabsi.at [81.217.106.33])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
+	by mailsrv14.zmi.at (Postfix) with ESMTPSA id 4969C41D
+	for <xfs@oss.sgi.com>; Mon, 10 Oct 2011 08:29:47 +0200 (CEST)
+Received: from saturn.localnet (saturn.i.zmi.at [10.72.27.2])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client did not present a certificate)
+	by mailsrv.i.zmi.at (Postfix) with ESMTPSA id 03B7FC000AD
+	for <xfs@oss.sgi.com>; Mon, 10 Oct 2011 08:29:47 +0200 (CEST)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: Re: TRIM on XFS
+Date: Mon, 10 Oct 2011 08:29:44 +0200
+References: <201110071352.20135@zmi.at> <20111007233450.GK3159@dastard>
+In-Reply-To: <20111007233450.GK3159@dastard>
 MIME-Version: 1.0
-Subject: Re: [PATCH 3/4] xfs: revert to using a kthread for AIL pushing
-References: <20111006183257.036884724@bombadil.infradead.org>
-	<20111006183549.770414484@bombadil.infradead.org>
-	<20111010014509.GT3159@dastard>
-	<20111010055546.GA1641@x4.trippels.de>
-In-Reply-To: <20111010055546.GA1641@x4.trippels.de>
+Message-Id: <201110100829.45823@zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,85 +33,79 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: multipart/mixed; boundary="===============0469652275136954008=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Markus Trippelsdorf <markus@trippelsdorf.de>
-Cc: Christoph Hellwig <hch@infradead.org>, Tejun Heo <tj@kernel.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Am 10.10.2011 07:55, schrieb Markus Trippelsdorf:
-> Wouldn't it be possible to verify that the problem also goes away with
-> this simple one liner?
->
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 2366c54..daf30c9 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -1654,7 +1654,7 @@ xfs_init_workqueues(void)
->   	if (!xfs_syncd_wq)
->   		goto out;
->
-> -	xfs_ail_wq = alloc_workqueue("xfsail", WQ_CPU_INTENSIVE, 8);
-> +	xfs_ail_wq = alloc_workqueue("xfsail", WQ_HIGHPRI | WQ_CPU_INTENSIVE, 8);
->   	if (!xfs_ail_wq)
->   		goto out_destroy_syncd;
->
->  From Documentation/workqueue.txt:
->
->    WQ_HIGHPRI | WQ_CPU_INTENSIVE
->
-> 	This combination makes the wq avoid interaction with
-> 	concurrency management completely and behave as a simple
-> 	per-CPU execution context provider.  Work items queued on a
-> 	highpri CPU-intensive wq start execution as soon as resources
-> 	are available and don't affect execution of other work items.
->
-> So this should be identical to reverting back to the kthread. No?
-> CCing Tejun, maybe he can comment on this?
+--===============0469652275136954008==
+Content-Type: multipart/signed;
+  boundary="nextPart4075793.PJRUQKi2J8";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 
-We already tested this patch and it still fails / deadlocks:
+--nextPart4075793.PJRUQKi2J8
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
-index a1a881e..6377f51 100644
---- a/fs/xfs/linux-2.6/xfs_super.c
-+++ b/fs/xfs/linux-2.6/xfs_super.c
-@@ -1669,7 +1669,7 @@ xfs_init_workqueues(void)
-  	if (!xfs_syncd_wq)
-  		goto out;
+On Samstag, 8. Oktober 2011 Dave Chinner wrote:
+> e84661a xfs: add online discard support
+>=20
+> and=20
+>=20
+> a46db60 xfs: add FITRIM support
 
--	xfs_ail_wq = alloc_workqueue("xfsail", WQ_CPU_INTENSIVE, 8);
-+	xfs_ail_wq = alloc_workqueue("xfsail", WQ_MEM_RECLAIM | WQ_HIGHPRI, 512);
-  	if (!xfs_ail_wq)
-  		goto out_destroy_syncd;
+I guess that means those patches are not released by now? Sorry, I know=20
+that these numbers are the patch ID, but don't know what to do with it.
 
-diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-index 953b142..638ea8b 100644
---- a/fs/xfs/xfs_trans_ail.c
-+++ b/fs/xfs/xfs_trans_ail.c
-@@ -600,7 +600,7 @@ out_done:
-  	}
+> So both online and background trim methods are available.=20
 
-  	/* There is more to do, requeue us.  */
--	queue_delayed_work(xfs_syncd_wq, &ailp->xa_work,
-+	queue_delayed_work(xfs_ail_wq, &ailp->xa_work,
-  					msecs_to_jiffies(tout));
-  }
+I found the threads in the mailing list. FITRIM v3 Patch was posted=20
+7.Jan.2011, but even if it's in default kernel already - how would you=20
+call it?
 
-@@ -637,7 +637,7 @@ xfs_ail_push(
-  	smp_wmb();
-  	xfs_trans_ail_copy_lsn(ailp, &ailp->xa_target, &threshold_lsn);
-  	if (!test_and_set_bit(XFS_AIL_PUSHING_BIT, &ailp->xa_flags))
--		queue_delayed_work(xfs_syncd_wq, &ailp->xa_work, 0);
-+		queue_delayed_work(xfs_ail_wq, &ailp->xa_work, 0);
-  }
+> Test well before using them in production, though, as buggy hardware
+> or thinp implementations are quite common....
 
-  /*
+I have a NetApp Storage here that is quite capable :-)
+Just having no idea how to activate filesystem discard support :-(
+
+=2D-=20
+mit freundlichen Gr=FCssen,
+Michael Monnerie, Ing. BSc
+
+it-management Internet Services: Prot=E9ger
+http://proteger.at [gesprochen: Prot-e-schee]
+Tel: +43 660 / 415 6531
+
+// Haus zu verkaufen: http://zmi.at/langegg/
+
+--nextPart4075793.PJRUQKi2J8
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.16 (GNU/Linux)
+
+iEYEABECAAYFAk6SkNkACgkQzhSR9xwSCbRt4wCcDnXo/fVgtpU4hpAWkKx9bRCA
+fPoAoNcv/r3urszA1Z/Sc20dHTsFo5fd
+=a0TZ
+-----END PGP SIGNATURE-----
+
+--nextPart4075793.PJRUQKi2J8--
 
 
-Stefan
+--===============0469652275136954008==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============0469652275136954008==--
