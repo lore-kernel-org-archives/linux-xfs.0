@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9A0B1hV133519 for <xfs@oss.sgi.com>; Sun, 9 Oct 2011 19:11:01 -0500
+	p9A0E4FR133648 for <xfs@oss.sgi.com>; Sun, 9 Oct 2011 19:14:05 -0500
 Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B1DD44EF2CA
-	for <xfs@oss.sgi.com>; Sun,  9 Oct 2011 17:10:59 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D2DCD152E8DD
+	for <xfs@oss.sgi.com>; Sun,  9 Oct 2011 17:21:09 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	JwmmwDwaGSqR0Elf for <xfs@oss.sgi.com>;
-	Sun, 09 Oct 2011 17:10:59 -0700 (PDT)
-Date: Mon, 10 Oct 2011 11:10:57 +1100
+	K4SNlmWMy0PWBd5w for <xfs@oss.sgi.com>;
+	Sun, 09 Oct 2011 17:21:09 -0700 (PDT)
+Date: Mon, 10 Oct 2011 11:14:00 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 3/5] repair: handle memory allocation failure from
-	blkmap_grow
-Message-ID: <20111010001057.GN3159@dastard>
+Subject: Re: [PATCH 4/5] repair: don't cache large blkmap allocations
+Message-ID: <20111010001400.GO3159@dastard>
 References: <1318201910-11144-1-git-send-email-david@fromorbit.com>
-	<1318201910-11144-4-git-send-email-david@fromorbit.com>
-	<20111009235126.GC13527@infradead.org>
+	<1318201910-11144-5-git-send-email-david@fromorbit.com>
+	<20111009234809.GB13527@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20111009235126.GC13527@infradead.org>
+In-Reply-To: <20111009234809.GB13527@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,40 +34,23 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Sun, Oct 09, 2011 at 07:51:26PM -0400, Christoph Hellwig wrote:
-> >  static blkmap_t *
-> >  blkmap_grow(
-> > -	blkmap_t	**blkmapp)
-> > +	blkmap_t	*blkmap)
-> >  {
-> >  	pthread_key_t	key = dblkmap_key;
-> > -	blkmap_t	*blkmap = *blkmapp;
-> > +	blkmap_t	*new_blkmap;
-> > +	int		new_naexts = blkmap->naexts + 4;
-> >  
-> >  	if (pthread_getspecific(key) != blkmap) {
-> >  		key = ablkmap_key;
-> >  		ASSERT(pthread_getspecific(key) == blkmap);
-> >  	}
-> >  
-> > -	blkmap->naexts += 4;
-> > -	blkmap = realloc(blkmap, BLKMAP_SIZE(blkmap->naexts));
-> > -	if (blkmap == NULL)
-> > - 		do_error(_("realloc failed in blkmap_grow\n"));
-> > -	*blkmapp = blkmap;
-> > -	pthread_setspecific(key, blkmap);
-> > -	return blkmap;
-> > +	new_blkmap = realloc(blkmap, BLKMAP_SIZE(new_naexts));
-> > +	if (!new_blkmap) {
-> > + 		do_error(_("realloc failed in blkmap_grow\n"));
-> > +		return NULL;
-> > +	}
-> > +	blkmap->naexts = new_naexts;
+On Sun, Oct 09, 2011 at 07:48:09PM -0400, Christoph Hellwig wrote:
+> > +	/* consider more than 100k extents rare */
+> > +	if (blkmap->naexts < 100 * 1024)
+> > +		return;
 > 
-> Why would we modify naexts in the old blkmap?
+> 100k extents still seems like a fairly high number.  Otherwise looks
+> okay.
 
-Ooops. Will fix.
+But not unreasonable for a filesystem full of torrents ;)
 
+> (If only we had a non-sucky threaded memory allocator in userspace..)
+
+Perhaps we should look at the talloc code from ccan?
+
+Cheers,
+
+Dave.
 
 -- 
 Dave Chinner
