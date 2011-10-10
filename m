@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9A1dWtx137743 for <xfs@oss.sgi.com>; Sun, 9 Oct 2011 20:39:33 -0500
+	p9A2EO5M139928 for <xfs@oss.sgi.com>; Sun, 9 Oct 2011 21:14:24 -0500
 Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F017A152E999
-	for <xfs@oss.sgi.com>; Sun,  9 Oct 2011 18:46:39 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6EB7655E1C5
+	for <xfs@oss.sgi.com>; Sun,  9 Oct 2011 19:14:21 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	QyQQ3KFPZ3iFTXvO for <xfs@oss.sgi.com>;
-	Sun, 09 Oct 2011 18:46:39 -0700 (PDT)
-Date: Mon, 10 Oct 2011 12:39:29 +1100
+	QkIQnyJjeL5xOype for <xfs@oss.sgi.com>;
+	Sun, 09 Oct 2011 19:14:21 -0700 (PDT)
+Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1RD5Nj-0003tT-AD
+	for xfs@oss.sgi.com; Mon, 10 Oct 2011 13:14:19 +1100
+Received: from dave by disappointment with local (Exim 4.76)
+	(envelope-from <dave@disappointment.disaster>) id 1RD5Ni-0005H0-QZ
+	for xfs@oss.sgi.com; Mon, 10 Oct 2011 13:14:18 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/4] xfs: force the log if we encounter pinned buffers in
-	.iop_pushbuf
-Message-ID: <20111010013929.GS3159@dastard>
-References: <20111006183257.036884724@bombadil.infradead.org>
-	<20111006183549.598050900@bombadil.infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20111006183549.598050900@bombadil.infradead.org>
+Subject: [PATCH 0/2] xfstests: test different block sizes in a couple of tests
+Date: Mon, 10 Oct 2011 13:14:13 +1100
+Message-Id: <1318212855-20212-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,29 +27,25 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Stefan Priebe <s.priebe@profihost.ag>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, Oct 06, 2011 at 02:32:59PM -0400, Christoph Hellwig wrote:
-> We need to check for pinned buffers even in .iop_pushbuf given that inode
-> items flush into the same buffers that may be pinned directly due operations
-> on the unlinked inode list operating directly on buffers.  To do this add a
-> return value to .iop_pushbuf that tells the AIL push about this and use
-> the existing log force mechanisms to unpin it.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reported-by: Stefan Priebe <s.priebe@profihost.ag>
-> Tested-by: Stefan Priebe <s.priebe@profihost.ag>
+Recently a problem was reported on test 225 when using a 512 byte
+block size. I couldn't reproduce this problem using MKFS_OPTION="-b
+size=512". The problem is that some tests use the TEST_DEV and
+MKFS_OPTION only applies to the SCRATCH_DEV. To change the block
+size of these tests, you need to specifically mkfs the TEST_DEV to
+use those block sizes. This is not a typical test config - the
+TEST_DEV is not supposed to be remade frequently, as it is designed
+to be used for aging and testing aged filesystems.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
--- 
-Dave Chinner
-david@fromorbit.com
+Change a couple of tests that are testing hole/allocation patterns
+to use the scratch device so that we get test coverage on multiple
+block sizes, not just the default 4k block size filesystems.
 
 _______________________________________________
 xfs mailing list
