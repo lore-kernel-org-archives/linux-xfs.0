@@ -1,25 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9AEEc2k181795 for <xfs@oss.sgi.com>; Mon, 10 Oct 2011 09:14:38 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D3C1255F86E
-	for <xfs@oss.sgi.com>; Mon, 10 Oct 2011 07:14:37 -0700 (PDT)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	jvIRb27YykEMwTaa for <xfs@oss.sgi.com>;
-	Mon, 10 Oct 2011 07:14:37 -0700 (PDT)
-Date: Mon, 10 Oct 2011 10:14:37 -0400
+	p9AGTbiR188387 for <xfs@oss.sgi.com>; Mon, 10 Oct 2011 11:29:37 -0500
+Date: Mon, 10 Oct 2011 12:29:34 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/5] repair: handle memory allocation failure from
-	blkmap_grow
-Message-ID: <20111010141437.GC31429@infradead.org>
-References: <1318208915-14975-1-git-send-email-david@fromorbit.com>
-	<1318208915-14975-4-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH] xfstests: prepare for marking an initial versioned release
+Message-ID: <20111010162934.GC11902@infradead.org>
+References: <201110052243.p95MhBtl015550@stout.americas.sgi.com>
+	<20111006195229.GJ13434@infradead.org>
+	<1317931394.2870.30.camel@doink>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1318208915-14975-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1317931394.2870.30.camel@doink>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,31 +24,44 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Alex Elder <aelder@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Mon, Oct 10, 2011 at 12:08:33PM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Thu, Oct 06, 2011 at 03:03:14PM -0500, Alex Elder wrote:
+> > On Wed, Oct 05, 2011 at 05:43:11PM -0500, Alex Elder wrote:
+> > > I would like to start marking versioned releases of xfstests.  The
+> > > following adds the release script used in the other XFS user space
+> > > packages.  I have arbitrarily set the version to 3.0.0 to make it
+> > > more in line with the other XFS user space packages as well.  I
+> > > created an initial CHANGES file with a simple summary of some
+> > > recently-added tests.
+> > 
+> > Whye the bump to 3.x?
 > 
-> If blkmap_grow fails to allocate a new chunk of memory, it returns
-> with a null blkmap. The sole caller of blkmap_grow does not check
-> for this failure, and so will segfault if this error ever occurs.
+> Like I said, it was somewhat just to align it better with
+> the other XFS user space packages.  One could also think
+> about lining it up with kernel versions as well, and we
+> could plan on releasing a new edition of xfstests roughly
+> corresponding with the Linux releases.
+> 
+> But it really is arbitrary, and if you have a reason to
+> use something else, great, we'll use it.  If not, it
+> doesn't much matter.
 
-Looks good,
+I don't really care that much, but doing a 1.0 release for the first
+public release is what I'd expect.  To be honest until it is in a shape
+where it can nicely packaged (e.g. different directory for operations
+vs source code/scripts) I'm not even sure it warrants 1.0 and shouldn't
+be 0.1 intead.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-
-Two comments on the code not directly related to your change:
-
- - it seems like xfs_db has another copy of these blkmap routines,
-   which even missed the last round of updates during the repair
-   scalability work.  It seems like it should be switched to reuse
-   the repair code
- - growing the map by four seems to be incredibly inefficient for
-   large files.  Given that the only caller actually knows how many
-   entries it processes in that batch we should grow it at least by
-   the number, reducing the allocations to one per call to
-   process_bmbt_reclist_int.
+> 
+> 					-Alex
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+---end quoted text---
 
 _______________________________________________
 xfs mailing list
