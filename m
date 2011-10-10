@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9AGrUf0189865 for <xfs@oss.sgi.com>; Mon, 10 Oct 2011 11:53:30 -0500
+	p9AGrTvb189854 for <xfs@oss.sgi.com>; Mon, 10 Oct 2011 11:53:29 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 59AFB16BAEC9
-	for <xfs@oss.sgi.com>; Mon, 10 Oct 2011 10:00:40 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 66CD44EF9B9
+	for <xfs@oss.sgi.com>; Mon, 10 Oct 2011 09:53:28 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	rmV1pVAz2pbf4qoE for <xfs@oss.sgi.com>;
-	Mon, 10 Oct 2011 10:00:40 -0700 (PDT)
+	u987BrVi6GLIP0yF for <xfs@oss.sgi.com>;
+	Mon, 10 Oct 2011 09:53:28 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1RDJ6W-0008IP-E5
-	for xfs@oss.sgi.com; Mon, 10 Oct 2011 16:53:28 +0000
-Message-Id: <20111010165328.386947740@bombadil.infradead.org>
-Date: Mon, 10 Oct 2011 12:52:53 -0400
+	Linux)) id 1RDJ6V-0008Gr-Tj
+	for xfs@oss.sgi.com; Mon, 10 Oct 2011 16:53:27 +0000
+Message-Id: <20111010165327.877026051@bombadil.infradead.org>
+Date: Mon, 10 Oct 2011 12:52:50 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 11/11] xfs: do not flush data workqueues in xfs_flush_buftarg
+Subject: [PATCH 08/11] xfs: use xfs_ioerror_alert in xfs_buf_iodone_callbacks
 References: <20111010165242.656850411@bombadil.infradead.org>
-Content-Disposition: inline;
-	filename=xfs-stop-flushing-data-wqs-in-xfs_flush_buftarg
+Content-Disposition: inline; filename=xfs-cleanup-xfs_buf_iodone_callbacks
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,44 +34,28 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-When we call xfs_flush_buftarg (generally from sync or umount) it already
-is too late to flush the data workqueues, as I/O completion is signalled
-for them and we are thus already done with the data we would flush here.
-
-There are places where flushing them might be useful, but the current
-sync interface doesn't give us that opportunity.
+Use xfs_ioerror_alert instead of opencoding a very similar error
+message.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Alex Elder <aelder@sgi.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-Index: xfs/fs/xfs/xfs_buf.c
+Index: xfs/fs/xfs/xfs_buf_item.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_buf.c	2011-10-10 18:43:04.493870127 +0200
-+++ xfs/fs/xfs/xfs_buf.c	2011-10-10 18:43:20.552427959 +0200
-@@ -1623,13 +1623,6 @@ xfs_buf_delwri_promote(
- 	spin_unlock(&btp->bt_delwri_lock);
- }
+--- xfs.orig/fs/xfs/xfs_buf_item.c	2011-10-07 10:20:39.638016942 -0400
++++ xfs/fs/xfs/xfs_buf_item.c	2011-10-07 10:29:05.816517834 -0400
+@@ -976,9 +976,7 @@ xfs_buf_iodone_callbacks(
+ 	if (bp->b_target != lasttarg ||
+ 	    time_after(jiffies, (lasttime + 5*HZ))) {
+ 		lasttime = jiffies;
+-		xfs_alert(mp, "Device %s: metadata write error block 0x%llx",
+-			xfs_buf_target_name(bp->b_target),
+-		      (__uint64_t)XFS_BUF_ADDR(bp));
++		xfs_buf_ioerror_alert(bp, __func__);
+ 	}
+ 	lasttarg = bp->b_target;
  
--STATIC void
--xfs_buf_runall_queues(
--	struct workqueue_struct	*queue)
--{
--	flush_workqueue(queue);
--}
--
- /*
-  * Move as many buffers as specified to the supplied list
-  * idicating if we skipped any buffers to prevent deadlocks.
-@@ -1752,9 +1745,7 @@ xfs_flush_buftarg(
- 	LIST_HEAD(wait_list);
- 	struct blk_plug plug;
- 
--	xfs_buf_runall_queues(xfsconvertd_workqueue);
--	xfs_buf_runall_queues(xfsdatad_workqueue);
--	xfs_buf_runall_queues(xfslogd_workqueue);
-+	flush_workqueue(xfslogd_workqueue);
- 
- 	set_bit(XBT_FORCE_FLUSH, &target->bt_flags);
- 	pincount = xfs_buf_delwri_split(target, &tmp_list, 0);
 
 _______________________________________________
 xfs mailing list
