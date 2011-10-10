@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9AGrS3m189838 for <xfs@oss.sgi.com>; Mon, 10 Oct 2011 11:53:28 -0500
+	p9AGrUf0189865 for <xfs@oss.sgi.com>; Mon, 10 Oct 2011 11:53:30 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CEC6016BAE3C
-	for <xfs@oss.sgi.com>; Mon, 10 Oct 2011 10:00:38 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 59AFB16BAEC9
+	for <xfs@oss.sgi.com>; Mon, 10 Oct 2011 10:00:40 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	apOeUaC6FL3DK3Z7 for <xfs@oss.sgi.com>;
-	Mon, 10 Oct 2011 10:00:38 -0700 (PDT)
+	rmV1pVAz2pbf4qoE for <xfs@oss.sgi.com>;
+	Mon, 10 Oct 2011 10:00:40 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1RDJ6U-0008Dl-QH
-	for xfs@oss.sgi.com; Mon, 10 Oct 2011 16:53:26 +0000
-Message-Id: <20111010165326.771579338@bombadil.infradead.org>
-Date: Mon, 10 Oct 2011 12:52:44 -0400
+	Linux)) id 1RDJ6W-0008IP-E5
+	for xfs@oss.sgi.com; Mon, 10 Oct 2011 16:53:28 +0000
+Message-Id: <20111010165328.386947740@bombadil.infradead.org>
+Date: Mon, 10 Oct 2011 12:52:53 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 02/11] xfs: remove XFS_BUF_FINISH_IOWAIT
+Subject: [PATCH 11/11] xfs: do not flush data workqueues in xfs_flush_buftarg
 References: <20111010165242.656850411@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-kill-XFS_BUF_FINISH_IOWAIT
+Content-Disposition: inline;
+	filename=xfs-stop-flushing-data-wqs-in-xfs_flush_buftarg
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,36 +35,44 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
+When we call xfs_flush_buftarg (generally from sync or umount) it already
+is too late to flush the data workqueues, as I/O completion is signalled
+for them and we are thus already done with the data we would flush here.
+
+There are places where flushing them might be useful, but the current
+sync interface doesn't give us that opportunity.
+
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Alex Elder <aelder@sgi.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
 Index: xfs/fs/xfs/xfs_buf.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_buf.c	2011-10-02 14:06:02.936771751 +0200
-+++ xfs/fs/xfs/xfs_buf.c	2011-10-02 14:06:08.028771236 +0200
-@@ -1100,7 +1100,7 @@ xfs_bioerror_relse(
- 		 * ASYNC buffers.
- 		 */
- 		xfs_buf_ioerror(bp, EIO);
--		XFS_BUF_FINISH_IOWAIT(bp);
-+		complete(&bp->b_iowait);
- 	} else {
- 		xfs_buf_relse(bp);
- 	}
-Index: xfs/fs/xfs/xfs_buf.h
-===================================================================
---- xfs.orig/fs/xfs/xfs_buf.h	2011-10-02 14:06:02.936771751 +0200
-+++ xfs/fs/xfs/xfs_buf.h	2011-10-02 14:06:08.028771236 +0200
-@@ -293,8 +293,6 @@ static inline int xfs_buf_ispinned(struc
- 	return atomic_read(&bp->b_pin_count);
+--- xfs.orig/fs/xfs/xfs_buf.c	2011-10-10 18:43:04.493870127 +0200
++++ xfs/fs/xfs/xfs_buf.c	2011-10-10 18:43:20.552427959 +0200
+@@ -1623,13 +1623,6 @@ xfs_buf_delwri_promote(
+ 	spin_unlock(&btp->bt_delwri_lock);
  }
  
--#define XFS_BUF_FINISH_IOWAIT(bp)	complete(&bp->b_iowait);
+-STATIC void
+-xfs_buf_runall_queues(
+-	struct workqueue_struct	*queue)
+-{
+-	flush_workqueue(queue);
+-}
 -
- static inline void xfs_buf_relse(xfs_buf_t *bp)
- {
- 	xfs_buf_unlock(bp);
+ /*
+  * Move as many buffers as specified to the supplied list
+  * idicating if we skipped any buffers to prevent deadlocks.
+@@ -1752,9 +1745,7 @@ xfs_flush_buftarg(
+ 	LIST_HEAD(wait_list);
+ 	struct blk_plug plug;
+ 
+-	xfs_buf_runall_queues(xfsconvertd_workqueue);
+-	xfs_buf_runall_queues(xfsdatad_workqueue);
+-	xfs_buf_runall_queues(xfslogd_workqueue);
++	flush_workqueue(xfslogd_workqueue);
+ 
+ 	set_bit(XBT_FORCE_FLUSH, &target->bt_flags);
+ 	pincount = xfs_buf_delwri_split(target, &tmp_list, 0);
 
 _______________________________________________
 xfs mailing list
