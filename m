@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9ABLsE6173158 for <xfs@oss.sgi.com>; Mon, 10 Oct 2011 06:21:55 -0500
+	p9ADMZaM179367 for <xfs@oss.sgi.com>; Mon, 10 Oct 2011 08:22:35 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1B5C055EE8F
-	for <xfs@oss.sgi.com>; Mon, 10 Oct 2011 04:21:53 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7E9191F1EC13
+	for <xfs@oss.sgi.com>; Mon, 10 Oct 2011 06:22:34 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	kgqJEiAC6v3mG2u6 for <xfs@oss.sgi.com>;
-	Mon, 10 Oct 2011 04:21:53 -0700 (PDT)
-Date: Mon, 10 Oct 2011 07:21:52 -0400
+	OuaT4uJ9E5xrBxOp for <xfs@oss.sgi.com>;
+	Mon, 10 Oct 2011 06:22:34 -0700 (PDT)
+Date: Mon, 10 Oct 2011 09:22:33 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] Changes to received review comments
-Message-ID: <20111010112151.GA28627@infradead.org>
-References: <4E3BA2F7.4080500@oracle.com> <4E44351D.4020202@oracle.com>
-	<20110902084941.GB29054@infradead.org>
-	<4E92C1D7.2010301@oracle.com>
+Subject: Re: [PATCH 4/5] repair: don't cache large blkmap allocations
+Message-ID: <20111010132233.GB15671@infradead.org>
+References: <1318201910-11144-1-git-send-email-david@fromorbit.com>
+	<1318201910-11144-5-git-send-email-david@fromorbit.com>
+	<20111009234809.GB13527@infradead.org>
+	<20111010001400.GO3159@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4E92C1D7.2010301@oracle.com>
+In-Reply-To: <20111010001400.GO3159@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,16 +33,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Anand Jain <Anand.Jain@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, Chris Mason <chris.mason@oracle.com>, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Mon, Oct 10, 2011 at 05:58:47PM +0800, Anand Jain wrote:
->  Now SCRATCH_DEV is derived from SCRATCH_DEV_POOL.
->  Moved code to delete and scan block device to common.rc and
->  updated README.
+On Mon, Oct 10, 2011 at 11:14:00AM +1100, Dave Chinner wrote:
+> > okay.
+> 
+> But not unreasonable for a filesystem full of torrents ;)
 
-Can you resend the whole patch?   Note that xfstests is up to test 262
-in the meantime, so it will also need to be renumbered.
+I'm just wondering if it's still the right memory / overhead tradeoff
+at that point.
+
+> 
+> > (If only we had a non-sucky threaded memory allocator in userspace..)
+> 
+> Perhaps we should look at the talloc code from ccan?
+
+I'm not sure the interface is compatible enough with the kernel style
+allocator we use in libxfs.  Except for that it's probably worth
+taking a look.
 
 _______________________________________________
 xfs mailing list
