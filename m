@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9AGrTFC189858 for <xfs@oss.sgi.com>; Mon, 10 Oct 2011 11:53:29 -0500
+	p9AGrTUQ189844 for <xfs@oss.sgi.com>; Mon, 10 Oct 2011 11:53:29 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D4D5B4EF9B6
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 062F71C7C9CF
 	for <xfs@oss.sgi.com>; Mon, 10 Oct 2011 09:53:27 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	1EIitXCwAhGjxKzs for <xfs@oss.sgi.com>;
+	KtFBhBD5xST2mApc for <xfs@oss.sgi.com>;
 	Mon, 10 Oct 2011 09:53:27 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1RDJ6V-0008FJ-Bw
+	Linux)) id 1RDJ6V-0008Fp-IG
 	for xfs@oss.sgi.com; Mon, 10 Oct 2011 16:53:27 +0000
-Message-Id: <20111010165327.328991699@bombadil.infradead.org>
-Date: Mon, 10 Oct 2011 12:52:47 -0400
+Message-Id: <20111010165327.509965692@bombadil.infradead.org>
+Date: Mon, 10 Oct 2011 12:52:48 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 05/11] xfs: remove buffers from the delwri list in
-	xfs_buf_stale
+Subject: [PATCH 06/11] xfs: clean up buffer allocation
 References: <20111010165242.656850411@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-buf-stale-delwri-remove
+Content-Disposition: inline; filename=xfs-cleanup-buffer-allocation
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,116 +34,170 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-For each call to xfs_buf_stale we call xfs_buf_delwri_dequeue either
-directly before or after it, or are guaranteed by the surrounding
-conditionals that we are never called on delwri buffers.  Simply
-this situation by moving the call to xfs_buf_delwri_dequeue into
-xfs_buf_stale.
+Change _xfs_buf_initialize to allocate the buffer directly and rename it to
+xfs_buf_alloc now that is the only buffer allocation routine.  Also remove
+the xfs_buf_deallocate wrapper around the kmem_zone_free calls for buffers.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Alex Elder <aelder@sgi.com>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-Index: xfs/fs/xfs/xfs_attr.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_attr.c	2011-10-06 14:37:11.010920453 -0400
-+++ xfs/fs/xfs/xfs_attr.c	2011-10-06 14:37:13.674921044 -0400
-@@ -2169,7 +2169,6 @@ xfs_attr_rmtval_remove(xfs_da_args_t *ar
- 		bp = xfs_incore(mp->m_ddev_targp, dblkno, blkcnt, XBF_TRYLOCK);
- 		if (bp) {
- 			xfs_buf_stale(bp);
--			xfs_buf_delwri_dequeue(bp);
- 			xfs_buf_relse(bp);
- 			bp = NULL;
- 		}
 Index: xfs/fs/xfs/xfs_buf.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_buf.c	2011-10-06 14:37:11.014920137 -0400
-+++ xfs/fs/xfs/xfs_buf.c	2011-10-06 14:37:13.674921044 -0400
-@@ -151,6 +151,7 @@ xfs_buf_stale(
- 	struct xfs_buf	*bp)
+--- xfs.orig/fs/xfs/xfs_buf.c	2011-10-02 16:08:22.484275559 +0200
++++ xfs/fs/xfs/xfs_buf.c	2011-10-02 16:17:59.831271600 +0200
+@@ -65,10 +65,6 @@ struct workqueue_struct *xfsconvertd_wor
+ #define xb_to_km(flags) \
+ 	 (((flags) & XBF_DONT_BLOCK) ? KM_NOFS : KM_SLEEP)
+ 
+-#define xfs_buf_allocate(flags) \
+-	kmem_zone_alloc(xfs_buf_zone, xb_to_km(flags))
+-#define xfs_buf_deallocate(bp) \
+-	kmem_zone_free(xfs_buf_zone, (bp));
+ 
+ static inline int
+ xfs_buf_is_vmapped(
+@@ -167,14 +163,19 @@ xfs_buf_stale(
+ 	ASSERT(atomic_read(&bp->b_hold) >= 1);
+ }
+ 
+-STATIC void
+-_xfs_buf_initialize(
+-	xfs_buf_t		*bp,
+-	xfs_buftarg_t		*target,
++struct xfs_buf *
++xfs_buf_alloc(
++	struct xfs_buftarg	*target,
+ 	xfs_off_t		range_base,
+ 	size_t			range_length,
+ 	xfs_buf_flags_t		flags)
  {
- 	bp->b_flags |= XBF_STALE;
-+	xfs_buf_delwri_dequeue(bp);
- 	atomic_set(&(bp)->b_lru_ref, 0);
- 	if (!list_empty(&bp->b_lru)) {
- 		struct xfs_buftarg *btp = bp->b_target;
-@@ -1059,7 +1060,6 @@ xfs_bioerror(
- 	 * We're calling xfs_buf_ioend, so delete XBF_DONE flag.
++	struct xfs_buf		*bp;
++
++	bp = kmem_zone_alloc(xfs_buf_zone, xb_to_km(flags));
++	if (unlikely(!bp))
++		return NULL;
++
+ 	/*
+ 	 * We don't want certain flags to appear in b_flags.
  	 */
- 	XFS_BUF_UNREAD(bp);
--	xfs_buf_delwri_dequeue(bp);
- 	XFS_BUF_UNDONE(bp);
- 	xfs_buf_stale(bp);
+@@ -203,8 +204,9 @@ _xfs_buf_initialize(
+ 	init_waitqueue_head(&bp->b_waiters);
  
-@@ -1088,7 +1088,6 @@ xfs_bioerror_relse(
- 	 * change that interface.
- 	 */
- 	XFS_BUF_UNREAD(bp);
--	xfs_buf_delwri_dequeue(bp);
- 	XFS_BUF_DONE(bp);
- 	xfs_buf_stale(bp);
- 	bp->b_iodone = NULL;
-Index: xfs/fs/xfs/xfs_buf_item.c
+ 	XFS_STATS_INC(xb_create);
+-
+ 	trace_xfs_buf_init(bp, _RET_IP_);
++
++	return bp;
+ }
+ 
+ /*
+@@ -277,7 +279,7 @@ xfs_buf_free(
+ 	} else if (bp->b_flags & _XBF_KMEM)
+ 		kmem_free(bp->b_addr);
+ 	_xfs_buf_free_pages(bp);
+-	xfs_buf_deallocate(bp);
++	kmem_zone_free(xfs_buf_zone, bp);
+ }
+ 
+ /*
+@@ -539,16 +541,14 @@ xfs_buf_get(
+ 	if (likely(bp))
+ 		goto found;
+ 
+-	new_bp = xfs_buf_allocate(flags);
++	new_bp = xfs_buf_alloc(target, ioff << BBSHIFT, isize << BBSHIFT,
++			       flags);
+ 	if (unlikely(!new_bp))
+ 		return NULL;
+ 
+-	_xfs_buf_initialize(new_bp, target,
+-			    ioff << BBSHIFT, isize << BBSHIFT, flags);
+-
+ 	bp = _xfs_buf_find(target, ioff, isize, flags, new_bp);
+ 	if (!bp) {
+-		xfs_buf_deallocate(new_bp);
++		kmem_zone_free(xfs_buf_zone, new_bp);
+ 		return NULL;
+ 	}
+ 
+@@ -557,7 +557,7 @@ xfs_buf_get(
+ 		if (error)
+ 			goto no_buffer;
+ 	} else
+-		xfs_buf_deallocate(new_bp);
++		kmem_zone_free(xfs_buf_zone, new_bp);
+ 
+ 	/*
+ 	 * Now we have a workable buffer, fill in the block number so
+@@ -694,19 +694,6 @@ xfs_buf_read_uncached(
+ 	return bp;
+ }
+ 
+-xfs_buf_t *
+-xfs_buf_get_empty(
+-	size_t			len,
+-	xfs_buftarg_t		*target)
+-{
+-	xfs_buf_t		*bp;
+-
+-	bp = xfs_buf_allocate(0);
+-	if (bp)
+-		_xfs_buf_initialize(bp, target, 0, len, 0);
+-	return bp;
+-}
+-
+ /*
+  * Return a buffer allocated as an empty buffer and associated to external
+  * memory via xfs_buf_associate_memory() back to it's empty state.
+@@ -792,10 +779,9 @@ xfs_buf_get_uncached(
+ 	int			error, i;
+ 	xfs_buf_t		*bp;
+ 
+-	bp = xfs_buf_allocate(0);
++	bp = xfs_buf_alloc(target, 0, len, 0);
+ 	if (unlikely(bp == NULL))
+ 		goto fail;
+-	_xfs_buf_initialize(bp, target, 0, len, 0);
+ 
+ 	error = _xfs_buf_get_pages(bp, page_count, 0);
+ 	if (error)
+@@ -823,7 +809,7 @@ xfs_buf_get_uncached(
+ 		__free_page(bp->b_pages[i]);
+ 	_xfs_buf_free_pages(bp);
+  fail_free_buf:
+-	xfs_buf_deallocate(bp);
++	kmem_zone_free(xfs_buf_zone, bp);
+  fail:
+ 	return NULL;
+ }
+Index: xfs/fs/xfs/xfs_buf.h
 ===================================================================
---- xfs.orig/fs/xfs/xfs_buf_item.c	2011-10-06 14:37:11.014920137 -0400
-+++ xfs/fs/xfs/xfs_buf_item.c	2011-10-06 14:37:13.678919098 -0400
-@@ -968,7 +968,6 @@ xfs_buf_iodone_callbacks(
- 	 */
- 	if (XFS_FORCED_SHUTDOWN(mp)) {
- 		xfs_buf_stale(bp);
--		xfs_buf_delwri_dequeue(bp);
- 		XFS_BUF_DONE(bp);
- 		trace_xfs_buf_item_iodone(bp, _RET_IP_);
- 		goto do_callbacks;
-@@ -1010,7 +1007,6 @@ xfs_buf_iodone_callbacks(
- 	 */
- 	xfs_buf_stale(bp);
- 	XFS_BUF_DONE(bp);
--	xfs_buf_delwri_dequeue(bp);
+--- xfs.orig/fs/xfs/xfs_buf.h	2011-10-02 16:15:08.656771306 +0200
++++ xfs/fs/xfs/xfs_buf.h	2011-10-02 16:16:39.771770418 +0200
+@@ -175,7 +175,8 @@ extern xfs_buf_t *xfs_buf_get(xfs_buftar
+ extern xfs_buf_t *xfs_buf_read(xfs_buftarg_t *, xfs_off_t, size_t,
+ 				xfs_buf_flags_t);
  
- 	trace_xfs_buf_error_relse(bp, _RET_IP_);
- 
-Index: xfs/fs/xfs/xfs_rw.c
+-extern xfs_buf_t *xfs_buf_get_empty(size_t, xfs_buftarg_t *);
++struct xfs_buf *xfs_buf_alloc(struct xfs_buftarg *, xfs_off_t, size_t,
++			      xfs_buf_flags_t);
+ extern void xfs_buf_set_empty(struct xfs_buf *bp, size_t len);
+ extern xfs_buf_t *xfs_buf_get_uncached(struct xfs_buftarg *, size_t, int);
+ extern int xfs_buf_associate_memory(xfs_buf_t *, void *, size_t);
+Index: xfs/fs/xfs/xfs_log.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_rw.c	2011-10-06 14:37:11.030919219 -0400
-+++ xfs/fs/xfs/xfs_rw.c	2011-10-06 14:37:13.682917913 -0400
-@@ -149,7 +149,6 @@ xfs_read_buf(
- 		}
- 		if (bp) {
- 			XFS_BUF_UNDONE(bp);
--			xfs_buf_delwri_dequeue(bp);
- 			xfs_buf_stale(bp);
- 			/*
- 			 * brelse clears B_ERROR and b_error
-Index: xfs/fs/xfs/xfs_trans_buf.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_trans_buf.c	2011-10-06 14:37:11.030919219 -0400
-+++ xfs/fs/xfs/xfs_trans_buf.c	2011-10-06 14:37:13.686917964 -0400
-@@ -162,7 +162,6 @@ xfs_trans_get_buf(xfs_trans_t	*tp,
- 		ASSERT(xfs_buf_islocked(bp));
- 		if (XFS_FORCED_SHUTDOWN(tp->t_mountp)) {
- 			xfs_buf_stale(bp);
--			xfs_buf_delwri_dequeue(bp);
- 			XFS_BUF_DONE(bp);
- 		}
+--- xfs.orig/fs/xfs/xfs_log.c	2011-10-02 16:15:08.636789023 +0200
++++ xfs/fs/xfs/xfs_log.c	2011-10-02 16:15:36.039418844 +0200
+@@ -1035,7 +1035,7 @@ xlog_alloc_log(xfs_mount_t	*mp,
+ 	xlog_get_iclog_buffer_size(mp, log);
  
-@@ -391,7 +390,6 @@ xfs_trans_read_buf(
- 	if (bp->b_error) {
- 		error = bp->b_error;
- 		xfs_buf_stale(bp);
--		xfs_buf_delwri_dequeue(bp);
- 		XFS_BUF_DONE(bp);
- 		xfs_ioerror_alert("xfs_trans_read_buf", mp,
- 				  bp, blkno);
-@@ -744,7 +742,6 @@ xfs_trans_binval(
- 	 * We set the stale bit in the buffer as well since we're getting
- 	 * rid of it.
- 	 */
--	xfs_buf_delwri_dequeue(bp);
- 	xfs_buf_stale(bp);
- 	bip->bli_flags |= XFS_BLI_STALE;
- 	bip->bli_flags &= ~(XFS_BLI_INODE_BUF | XFS_BLI_LOGGED | XFS_BLI_DIRTY);
+ 	error = ENOMEM;
+-	bp = xfs_buf_get_empty(log->l_iclog_size, mp->m_logdev_targp);
++	bp = xfs_buf_alloc(mp->m_logdev_targp, 0, log->l_iclog_size, 0);
+ 	if (!bp)
+ 		goto out_free_log;
+ 	bp->b_iodone = xlog_iodone;
 
 _______________________________________________
 xfs mailing list
