@@ -1,28 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9AIbZO9196156 for <xfs@oss.sgi.com>; Mon, 10 Oct 2011 13:37:35 -0500
-Received: from mail-iy0-f181.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E0BB64F0372
-	for <xfs@oss.sgi.com>; Mon, 10 Oct 2011 11:37:34 -0700 (PDT)
-Received: from mail-iy0-f181.google.com (mail-iy0-f181.google.com
-	[209.85.210.181]) by cuda.sgi.com with ESMTP id
-	DWUTx1wuJv1rwfZE for <xfs@oss.sgi.com>;
-	Mon, 10 Oct 2011 11:37:34 -0700 (PDT)
-Received: by iahk25 with SMTP id k25so2500857iah.26
-	for <xfs@oss.sgi.com>; Mon, 10 Oct 2011 11:37:34 -0700 (PDT)
-Date: Mon, 10 Oct 2011 11:37:30 -0700
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 3/4] xfs: revert to using a kthread for AIL pushing
-Message-ID: <20111010183730.GJ8100@google.com>
-References: <20111006183257.036884724@bombadil.infradead.org>
-	<20111006183549.770414484@bombadil.infradead.org>
-	<20111010014509.GT3159@dastard>
-	<20111010055546.GA1641@x4.trippels.de>
-	<20111010132611.GA1248@infradead.org>
+	p9AKT5Sr201917 for <xfs@oss.sgi.com>; Mon, 10 Oct 2011 15:29:05 -0500
+Received: from mail-gy0-f181.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DCC5716BB87A
+	for <xfs@oss.sgi.com>; Mon, 10 Oct 2011 13:36:15 -0700 (PDT)
+Received: from mail-gy0-f181.google.com (mail-gy0-f181.google.com
+	[209.85.160.181]) by cuda.sgi.com with ESMTP id
+	a0yVpf5J4QvxaVa4 for <xfs@oss.sgi.com>;
+	Mon, 10 Oct 2011 13:36:15 -0700 (PDT)
+Received: by gyd10 with SMTP id 10so7825225gyd.26
+	for <xfs@oss.sgi.com>; Mon, 10 Oct 2011 13:29:03 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20111010132611.GA1248@infradead.org>
+In-Reply-To: <201110100829.45823@zmi.at>
+References: <201110071352.20135@zmi.at> <20111007233450.GK3159@dastard>
+	<201110100829.45823@zmi.at>
+From: Greg Freemyer <greg.freemyer@gmail.com>
+Date: Mon, 10 Oct 2011 16:28:33 -0400
+Message-ID: <CAGpXXZJs8kjZaSp248rA+-d=gpwWe=oK0xtUUirv+zgE3Vq3kA@mail.gmail.com>
+Subject: Re: TRIM on XFS
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,61 +27,77 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Stefan Priebe <s.priebe@profihost.ag>, Markus Trippelsdorf <markus@trippelsdorf.de>, xfs@oss.sgi.com
+To: Michael Monnerie <michael.monnerie@is.it-management.at>
+Cc: xfs@oss.sgi.com
 
-Hello,
+On Mon, Oct 10, 2011 at 2:29 AM, Michael Monnerie
+<michael.monnerie@is.it-management.at> wrote:
+>
+> On Samstag, 8. Oktober 2011 Dave Chinner wrote:
+> > e84661a xfs: add online discard support
+> >
+> > and
+> >
+> > a46db60 xfs: add FITRIM support
+>
+> I guess that means those patches are not released by now? Sorry, I know
+> that these numbers are the patch ID, but don't know what to do with it.
 
-On Mon, Oct 10, 2011 at 09:26:11AM -0400, Christoph Hellwig wrote:
-> On Mon, Oct 10, 2011 at 07:55:46AM +0200, Markus Trippelsdorf wrote:
-> > Wouldn't it be possible to verify that the problem also goes away with
-> > this simple one liner?
-> 
-> We've been through a few variants, and none fixed it while Stefan had
-> to try them on production machines.
-> 
-> To be honest I'm not convinced at all that a workqueue was such a good
-> idea for the ail in particular.  It works extremly well for things were
-> we can easily define a work item, e.g. an object that gets queued up
-> and a method on it gets exectured.  But for the AIL we really have
-> a changing target that needs more or less constant pushing, and the
-> target keeps changing while executing our work.  Conceptually it fits
-> the idea of an thread much better, with the added benefit of not relying
-> on finding a combination of workqueue flags that gets the exact
-> behaviour (exectuion ASAP without any limits because of other items
-> or required memory allocation).
-> 
-> And unlike the various per-cpu threads we used to have it is only one
-> thread per filesystem anyway.
+I think online was added in the spring of this year, so around 2.6.38.
 
-I don't know xfs internals at all so I don't have too strong an
-opinion at this point but don't we at least need to understand what's
-going on?  CPU_INTENSIVE / HIGHPRI flags shouldn't cause deadlock
-unless some work items are doing busy looping waiting for another work
-item to do something (busy yielding might achieve similar effect tho).
-They don't change forward progress guarantee.
+I don't know when batch kernel support went in, but I assume some time ago.
 
-The only thing which can cause stall is lack of MEM_RECLAIM.  One
-thing to be careful about is that each wq has only one rescuer, so if
-more than one work items have inter-dependency, it might still lead to
-deadlock and they need to be served by different workqueues.
+>
+> > So both online and background trim methods are available.
+>
+> I found the threads in the mailing list. FITRIM v3 Patch was posted
+> 7.Jan.2011, but even if it's in default kernel already - how would you
+> call it?
 
-The reasons for moving away from using kthread directly are two folded
-- resources and correctness.  I've gone through a number of kthread
-users during auditing freezer usage recently and more than half of
-them get the synchronization against kthread_stop() or freezer wrong
-(to be fair, the rules are quite tricky).  The problem with those bugs
-is that they are really obscure race conditions and won't trigger
-easily.
+fitrim is the batch mode.
 
-Thank you.
+To enable realtime discard, add --discard to your mount options.
 
--- 
-tejun
+Documented at http://lxr.linux.no/#linux+v3.0.4/Documentation/filesystems/x=
+fs.txt
+
+To invoke batch mode, simply use fstrim from user space.
+
+>
+> > Test well before using them in production, though, as buggy hardware
+> > or thinp implementations are quite common....
+>
+> I have a NetApp Storage here that is quite capable :-)
+> Just having no idea how to activate filesystem discard support :-(
+
+Definitely test.  Particularly for performance.  Many are surprised to
+see their performance drop not go up when they start using discard
+heavily.
+
+Many people assume realtime support is better than a batched version.
+
+In most cases I believe users find the opposite to be true.
+
+They can simply have cron call fstrim on a routine basis and all is
+good.  ie. Maybe every night right after the backups complete.
+
+Especially when talking about thin provisioning, fstrim has more
+flexibility.=A0 You can tell it to only discard free areas that meet
+minimum size criteria.=A0 So if your thin provisioning is 1MB at a time,
+it would be logical to pass 1 MB to fstrim as a minimum discard size.
+You can't do that with mount --discard
+
+>
+> --
+> mit freundlichen Gr=FCssen,
+> Michael Monnerie, Ing. BSc
+
+HTH
+Greg
 
 _______________________________________________
 xfs mailing list
