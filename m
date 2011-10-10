@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9A18gGr136196 for <xfs@oss.sgi.com>; Sun, 9 Oct 2011 20:08:42 -0500
+	p9A18rf4136253 for <xfs@oss.sgi.com>; Sun, 9 Oct 2011 20:08:53 -0500
 Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 070BA1C7415B
-	for <xfs@oss.sgi.com>; Sun,  9 Oct 2011 18:08:40 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4B4251C78C39
+	for <xfs@oss.sgi.com>; Sun,  9 Oct 2011 18:08:51 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	QKNHDyvlTj5FMMsz for <xfs@oss.sgi.com>;
-	Sun, 09 Oct 2011 18:08:40 -0700 (PDT)
+	LBnRT2BBkxtmRHWT for <xfs@oss.sgi.com>;
+	Sun, 09 Oct 2011 18:08:51 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1RD4MA-0003mU-8p
-	for xfs@oss.sgi.com; Mon, 10 Oct 2011 12:08:38 +1100
+	(envelope-from <dave@fromorbit.com>) id 1RD4MK-0003mV-BM
+	for xfs@oss.sgi.com; Mon, 10 Oct 2011 12:08:48 +1100
 Received: from dave by disappointment with local (Exim 4.76)
-	(envelope-from <dave@disappointment.disaster>) id 1RD4MA-0003ul-0u
+	(envelope-from <dave@disappointment.disaster>) id 1RD4MA-0003uq-4x
 	for xfs@oss.sgi.com; Mon, 10 Oct 2011 12:08:38 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/5] repair: handle repair of image files on large sector size
-	filesystems
-Date: Mon, 10 Oct 2011 12:08:31 +1100
-Message-Id: <1318208915-14975-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH 3/5] repair: handle memory allocation failure from blkmap_grow
+Date: Mon, 10 Oct 2011 12:08:33 +1100
+Message-Id: <1318208915-14975-4-git-send-email-david@fromorbit.com>
 In-Reply-To: <1318208915-14975-1-git-send-email-david@fromorbit.com>
 References: <1318208915-14975-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,96 +38,135 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Because repair uses direct IO, it cannot do IO smaller than a sector
-on the underlying device. When repairing a filesystem image, the
-filesystem hosting the image may have a sector size larger than the
-sector size of the image, and so single image sector reads and
-writes will fail.
-
-To avoid this, when checking a file and there is a sector size
-mismatch like this, turn off direct IO. While there, fix a compile
-bug in the IO_DEBUG option for libxfs which was found during triage.
+If blkmap_grow fails to allocate a new chunk of memory, it returns
+with a null blkmap. The sole caller of blkmap_grow does not check
+for this failure, and so will segfault if this error ever occurs.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- libxfs/rdwr.c       |    2 +-
- repair/sb.c         |    9 ++++++++-
- repair/xfs_repair.c |   29 +++++++++++++++++++++++++++++
- 3 files changed, 38 insertions(+), 2 deletions(-)
+ repair/bmap.c   |   33 ++++++++++++++++++++++-----------
+ repair/bmap.h   |    2 +-
+ repair/dinode.c |   22 ++++++++++++++++++++--
+ 3 files changed, 43 insertions(+), 14 deletions(-)
 
-diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-index fe8ae09..c3edb89 100644
---- a/libxfs/rdwr.c
-+++ b/libxfs/rdwr.c
-@@ -365,7 +365,7 @@ libxfs_getbufr(dev_t device, xfs_daddr_t blkno, int bblen)
- 		libxfs_initbuf(bp, device, blkno, blen);
- #ifdef IO_DEBUG
- 	printf("%lx: %s: allocated %u bytes buffer, key=%llu(%llu), %p\n",
--		pthread_self(), __FUNCTION__, BBTOB(len),
-+		pthread_self(), __FUNCTION__, blen,
- 		(long long)LIBXFS_BBTOOFF64(blkno), (long long)blkno, bp);
- #endif
+diff --git a/repair/bmap.c b/repair/bmap.c
+index 0ff9315..e290515 100644
+--- a/repair/bmap.c
++++ b/repair/bmap.c
+@@ -207,29 +207,34 @@ blkmap_next_off(
+  */
+ static blkmap_t *
+ blkmap_grow(
+-	blkmap_t	**blkmapp)
++	blkmap_t	*blkmap)
+ {
+ 	pthread_key_t	key = dblkmap_key;
+-	blkmap_t	*blkmap = *blkmapp;
++	blkmap_t	*new_blkmap;
++	int		new_naexts = blkmap->naexts + 4;
  
-diff --git a/repair/sb.c b/repair/sb.c
-index 6d2e91a..004319f 100644
---- a/repair/sb.c
-+++ b/repair/sb.c
-@@ -689,7 +689,14 @@ verify_set_primary_sb(xfs_sb_t		*rsb,
- 	 */
- 	num_sbs = MIN(NUM_SBS, rsb->sb_agcount);
- 	skip = howmany(num_sbs, rsb->sb_agcount);
--	size = NUM_AGH_SECTS * rsb->sb_sectsize;
-+
-+	/*
-+	 * We haven't been able to validate the sector size yet properly
-+	 * (e.g. in the case of repairing an image in a file), so we need to
-+	 * take into account sector mismatches and so use the maximum possible
-+	 * sector size rather than the sector size in @rsb.
-+	 */
-+	size = NUM_AGH_SECTS * (1 << (XFS_MAX_SECTORSIZE_LOG));
- 	retval = 0;
- 	list = NULL;
- 	num_ok = 0;
-diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-index 4e2b022..69b7eab 100644
---- a/repair/xfs_repair.c
-+++ b/repair/xfs_repair.c
-@@ -569,6 +569,35 @@ main(int argc, char **argv)
- 	memset(&xfs_m, 0, sizeof(xfs_mount_t));
- 	libxfs_sb_from_disk(&xfs_m.m_sb, XFS_BUF_TO_SBP(sbp));
+ 	if (pthread_getspecific(key) != blkmap) {
+ 		key = ablkmap_key;
+ 		ASSERT(pthread_getspecific(key) == blkmap);
+ 	}
  
-+	/*
-+	 * if the sector size of the filesystem we are trying to repair is
-+	 * smaller than that of the underlying filesystem (i.e. we are repairing
-+	 * an image), the we have to turn off direct IO because we cannot do IO
-+	 * smaller than the host filesystem's sector size.
-+	 */
-+	if (isa_file) {
-+		int     fd = libxfs_device_to_fd(x.ddev);
-+		struct xfs_fsop_geom_v1 geom = { 0 };
-+
-+		if (ioctl(fd, XFS_IOC_FSGEOMETRY_V1, &geom) < 0) {
-+			do_warn(_("Cannot get host filesystem geometry.\n"
-+		"Repair may fail if there is a sector size mismatch between\n"
-+		"the image and the host filesystem.\n"));
-+			geom.sectsize = BBSIZE;
-+		}
-+
-+		if (xfs_m.m_sb.sb_sectsize < geom.sectsize) {
-+			long	old_flags;
-+
-+			old_flags = fcntl(fd, F_GETFL, 0);
-+			if (fcntl(fd, F_SETFL, old_flags & ~O_DIRECT) < 0) {
-+				do_warn(_(
-+		"Sector size on host filesystem larger than image sector size.\n"
-+		"Cannot turn off direct IO, so exiting.\n"));
-+				exit(1);
+-	blkmap->naexts += 4;
+-	blkmap = realloc(blkmap, BLKMAP_SIZE(blkmap->naexts));
+-	if (blkmap == NULL)
++	new_blkmap = realloc(blkmap, BLKMAP_SIZE(new_naexts));
++	if (!new_blkmap) {
+ 		do_error(_("realloc failed in blkmap_grow\n"));
+-	*blkmapp = blkmap;
+-	pthread_setspecific(key, blkmap);
+-	return blkmap;
++		return NULL;
++	}
++	new_blkmap->naexts = new_naexts;
++	pthread_setspecific(key, new_blkmap);
++	return new_blkmap;
+ }
+ 
+ /*
+  * Set an extent into a block map.
++ *
++ * If this function fails, it leaves the blkmapp untouched so the caller can
++ * handle the error and free the blkmap appropriately.
+  */
+-void
++int
+ blkmap_set_ext(
+ 	blkmap_t	**blkmapp,
+ 	xfs_dfiloff_t	o,
+@@ -239,9 +244,14 @@ blkmap_set_ext(
+ 	blkmap_t	*blkmap = *blkmapp;
+ 	xfs_extnum_t	i;
+ 
+-	if (blkmap->nexts == blkmap->naexts)
+-		blkmap = blkmap_grow(blkmapp);
++	if (blkmap->nexts == blkmap->naexts) {
++		blkmap = blkmap_grow(blkmap);
++		if (!blkmap)
++			return ENOMEM;
++		*blkmapp = blkmap;
++	}
+ 
++	ASSERT(blkmap->nexts < blkmap->naexts);
+ 	for (i = 0; i < blkmap->nexts; i++) {
+ 		if (blkmap->exts[i].startoff > o) {
+ 			memmove(blkmap->exts + i + 1,
+@@ -255,4 +265,5 @@ blkmap_set_ext(
+ 	blkmap->exts[i].startblock = b;
+ 	blkmap->exts[i].blockcount = c;
+ 	blkmap->nexts++;
++	return 0;
+ }
+diff --git a/repair/bmap.h b/repair/bmap.h
+index 58abf95..118ae1e 100644
+--- a/repair/bmap.h
++++ b/repair/bmap.h
+@@ -43,7 +43,7 @@ typedef	struct blkmap {
+ blkmap_t	*blkmap_alloc(xfs_extnum_t nex, int whichfork);
+ void		blkmap_free(blkmap_t *blkmap);
+ 
+-void		blkmap_set_ext(blkmap_t **blkmapp, xfs_dfiloff_t o,
++int		blkmap_set_ext(blkmap_t **blkmapp, xfs_dfiloff_t o,
+ 			       xfs_dfsbno_t b, xfs_dfilblks_t c);
+ 
+ xfs_dfsbno_t	blkmap_get(blkmap_t *blkmap, xfs_dfiloff_t o);
+diff --git a/repair/dinode.c b/repair/dinode.c
+index 5a74538..39a0cb1 100644
+--- a/repair/dinode.c
++++ b/repair/dinode.c
+@@ -730,9 +730,27 @@ _("inode %" PRIu64 " - extent offset too large - start %" PRIu64 ", "
+ 			goto done;
+ 		}
+ 
+-		if (blkmapp && *blkmapp)
+-			blkmap_set_ext(blkmapp, irec.br_startoff,
++		if (blkmapp && *blkmapp) {
++			error = blkmap_set_ext(blkmapp, irec.br_startoff,
+ 					irec.br_startblock, irec.br_blockcount);
++			if (error) {
++				/*
++				 * we don't want to clear the inode due to an
++				 * internal bmap tracking error, but if we've
++				 * run out of memory then we simply can't
++				 * validate that the filesystem is consistent.
++				 * Hence just abort at this point with an ENOMEM
++				 * error.
++				 */
++				do_abort(
++_("Fatal error: inode %" PRIu64 " - blkmap_set_ext(): %s\n"
++  "\t%s fork, off - %" PRIu64 ", start - %" PRIu64 ", cnt %" PRIu64 "\n"),
++					ino, strerror(error), forkname,
++					irec.br_startoff, irec.br_startblock,
++					irec.br_blockcount);
 +			}
 +		}
-+	}
- 	mp = libxfs_mount(&xfs_m, &xfs_m.m_sb, x.ddev, x.logdev, x.rtdev, 0);
- 
- 	if (!mp)  {
++
+ 		/*
+ 		 * Profiling shows that the following loop takes the
+ 		 * most time in all of xfs_repair.
 -- 
 1.7.5.4
 
