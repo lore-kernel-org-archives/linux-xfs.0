@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9A0HCQL133785 for <xfs@oss.sgi.com>; Sun, 9 Oct 2011 19:17:12 -0500
+	p9A0B1hV133519 for <xfs@oss.sgi.com>; Sun, 9 Oct 2011 19:11:01 -0500
 Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F33B71C79C2D
-	for <xfs@oss.sgi.com>; Sun,  9 Oct 2011 17:17:10 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B1DD44EF2CA
+	for <xfs@oss.sgi.com>; Sun,  9 Oct 2011 17:10:59 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	eiSIBZNkGymtDlmR for <xfs@oss.sgi.com>;
-	Sun, 09 Oct 2011 17:17:10 -0700 (PDT)
-Date: Mon, 10 Oct 2011 11:17:08 +1100
+	JwmmwDwaGSqR0Elf for <xfs@oss.sgi.com>;
+	Sun, 09 Oct 2011 17:10:59 -0700 (PDT)
+Date: Mon, 10 Oct 2011 11:10:57 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/5] repair: handle repair of image files on large sector
-	size filesystems
-Message-ID: <20111010001708.GP3159@dastard>
+Subject: Re: [PATCH 3/5] repair: handle memory allocation failure from
+	blkmap_grow
+Message-ID: <20111010001057.GN3159@dastard>
 References: <1318201910-11144-1-git-send-email-david@fromorbit.com>
-	<1318201910-11144-2-git-send-email-david@fromorbit.com>
-	<20111009235240.GD13527@infradead.org>
+	<1318201910-11144-4-git-send-email-david@fromorbit.com>
+	<20111009235126.GC13527@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20111009235240.GD13527@infradead.org>
+In-Reply-To: <20111009235126.GC13527@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,31 +35,41 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Sun, Oct 09, 2011 at 07:52:40PM -0400, Christoph Hellwig wrote:
-> On Mon, Oct 10, 2011 at 10:11:46AM +1100, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > Because repair uses direct IO, it cannot do IO smaller than a sector
-> > on the underlying device. When repairing a filesystem image, the
-> > filesystem hosting the image may have a sector size larger than the
-> > sector size of the image, and so single image sector reads and
-> > writes will fail.
+On Sun, Oct 09, 2011 at 07:51:26PM -0400, Christoph Hellwig wrote:
+> >  static blkmap_t *
+> >  blkmap_grow(
+> > -	blkmap_t	**blkmapp)
+> > +	blkmap_t	*blkmap)
+> >  {
+> >  	pthread_key_t	key = dblkmap_key;
+> > -	blkmap_t	*blkmap = *blkmapp;
+> > +	blkmap_t	*new_blkmap;
+> > +	int		new_naexts = blkmap->naexts + 4;
+> >  
+> >  	if (pthread_getspecific(key) != blkmap) {
+> >  		key = ablkmap_key;
+> >  		ASSERT(pthread_getspecific(key) == blkmap);
+> >  	}
+> >  
+> > -	blkmap->naexts += 4;
+> > -	blkmap = realloc(blkmap, BLKMAP_SIZE(blkmap->naexts));
+> > -	if (blkmap == NULL)
+> > - 		do_error(_("realloc failed in blkmap_grow\n"));
+> > -	*blkmapp = blkmap;
+> > -	pthread_setspecific(key, blkmap);
+> > -	return blkmap;
+> > +	new_blkmap = realloc(blkmap, BLKMAP_SIZE(new_naexts));
+> > +	if (!new_blkmap) {
+> > + 		do_error(_("realloc failed in blkmap_grow\n"));
+> > +		return NULL;
+> > +	}
+> > +	blkmap->naexts = new_naexts;
 > 
-> Does it?  Given that the loop driver uses buffered I/O that would be
-> unexpected behaviour.  I'll try to reproduce it as soon as my 4k
-> disk is available again.
+> Why would we modify naexts in the old blkmap?
 
-My 3TB, RAID6 based image storage filesystem has a 4k sector size,
-and I can't run xfs_repair on an image file that has smaller sector
-sizes than 4k without this mod. In that case, xfs_repair is doing
-direct IO on a file, not a device, and the file is on the 4k sector
-sized filesytem. I've been carrying this patch for a while.
+Ooops. Will fix.
 
-So it's definitely a real problem.
 
-Cheers,
-
-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
