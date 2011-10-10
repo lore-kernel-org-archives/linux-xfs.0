@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9AEIQjd182012 for <xfs@oss.sgi.com>; Mon, 10 Oct 2011 09:18:26 -0500
+	p9AE763X181533 for <xfs@oss.sgi.com>; Mon, 10 Oct 2011 09:07:07 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9CD50145BFD6
-	for <xfs@oss.sgi.com>; Mon, 10 Oct 2011 07:25:36 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B5240145BF15
+	for <xfs@oss.sgi.com>; Mon, 10 Oct 2011 07:14:16 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	4A407jYp5g4lvHHa for <xfs@oss.sgi.com>;
-	Mon, 10 Oct 2011 07:25:36 -0700 (PDT)
-Date: Mon, 10 Oct 2011 10:18:25 -0400
+	2fl2dDhfbIT5TERv for <xfs@oss.sgi.com>;
+	Mon, 10 Oct 2011 07:14:16 -0700 (PDT)
+Date: Mon, 10 Oct 2011 10:07:05 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 0/5, v3] repair: sector size and blkmap fixes
-Message-ID: <20111010141825.GF31429@infradead.org>
+Subject: Re: [PATCH 2/5] repair: fix a valgrind reported error on i686
+Message-ID: <20111010140705.GB31429@infradead.org>
 References: <1318208915-14975-1-git-send-email-david@fromorbit.com>
+	<1318208915-14975-3-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1318208915-14975-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <1318208915-14975-3-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,9 +34,16 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-Any chance we can get some coverage for the losts of extents cases
-in xfstests?  It will probably require pre-created images, but I'd
-really hate not beeing able to regression test this.
+On Mon, Oct 10, 2011 at 12:08:32PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Fix a potential prefetch read problem due to the first loop
+> execution of pf_batch_read potentially not initialising the fsbno
+> variable:
+
+Looks good, even if I can't figure out how we could ever hit this in practice.
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
