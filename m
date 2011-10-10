@@ -1,24 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9AKT5Sr201917 for <xfs@oss.sgi.com>; Mon, 10 Oct 2011 15:29:05 -0500
-Received: from mail-gy0-f181.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DCC5716BB87A
-	for <xfs@oss.sgi.com>; Mon, 10 Oct 2011 13:36:15 -0700 (PDT)
-Received: from mail-gy0-f181.google.com (mail-gy0-f181.google.com
-	[209.85.160.181]) by cuda.sgi.com with ESMTP id
-	a0yVpf5J4QvxaVa4 for <xfs@oss.sgi.com>;
-	Mon, 10 Oct 2011 13:36:15 -0700 (PDT)
-Received: by gyd10 with SMTP id 10so7825225gyd.26
-	for <xfs@oss.sgi.com>; Mon, 10 Oct 2011 13:29:03 -0700 (PDT)
+	p9AM4k8N207308 for <xfs@oss.sgi.com>; Mon, 10 Oct 2011 17:04:46 -0500
+Received: from mail.mnsu.edu (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E0515145CCBD
+	for <xfs@oss.sgi.com>; Mon, 10 Oct 2011 15:11:56 -0700 (PDT)
+Received: from mail.mnsu.edu (Mail.MNSU.EDU [134.29.1.12]) by cuda.sgi.com
+	with ESMTP id c3aitihE5OGziA4F for <xfs@oss.sgi.com>;
+	Mon, 10 Oct 2011 15:11:56 -0700 (PDT)
+Received: from [134.29.32.1] (j3gum-3.ITS.MNSU.EDU [134.29.32.1])
+	by mail.mnsu.edu (8.13.7/8.13.7) with ESMTP id p9AM4hP2030033
+	(version=TLSv1/SSLv3 cipher=AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Mon, 10 Oct 2011 17:04:43 -0500
+Message-ID: <4E936BFB.5060907@mnsu.edu>
+Date: Mon, 10 Oct 2011 17:04:43 -0500
+From: Jeffrey Hundstad <jeffrey.hundstad@mnsu.edu>
 MIME-Version: 1.0
-In-Reply-To: <201110100829.45823@zmi.at>
-References: <201110071352.20135@zmi.at> <20111007233450.GK3159@dastard>
-	<201110100829.45823@zmi.at>
-From: Greg Freemyer <greg.freemyer@gmail.com>
-Date: Mon, 10 Oct 2011 16:28:33 -0400
-Message-ID: <CAGpXXZJs8kjZaSp248rA+-d=gpwWe=oK0xtUUirv+zgE3Vq3kA@mail.gmail.com>
 Subject: Re: TRIM on XFS
+References: <201110071352.20135@zmi.at>
+	<20111007233450.GK3159@dastard>	<201110100829.45823@zmi.at>
+	<CAGpXXZJs8kjZaSp248rA+-d=gpwWe=oK0xtUUirv+zgE3Vq3kA@mail.gmail.com>
+In-Reply-To: <CAGpXXZJs8kjZaSp248rA+-d=gpwWe=oK0xtUUirv+zgE3Vq3kA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,77 +29,47 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Michael Monnerie <michael.monnerie@is.it-management.at>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mon, Oct 10, 2011 at 2:29 AM, Michael Monnerie
-<michael.monnerie@is.it-management.at> wrote:
+On 10/10/2011 03:28 PM, Greg Freemyer wrote:
+> fitrim is the batch mode.
 >
-> On Samstag, 8. Oktober 2011 Dave Chinner wrote:
-> > e84661a xfs: add online discard support
-> >
-> > and
-> >
-> > a46db60 xfs: add FITRIM support
+> To enable realtime discard, add --discard to your mount options.
 >
-> I guess that means those patches are not released by now? Sorry, I know
-> that these numbers are the patch ID, but don't know what to do with it.
-
-I think online was added in the spring of this year, so around 2.6.38.
-
-I don't know when batch kernel support went in, but I assume some time ago.
-
+> Documented athttp://lxr.linux.no/#linux+v3.0.4/Documentation/filesystems/xfs.txt
 >
-> > So both online and background trim methods are available.
->
-> I found the threads in the mailing list. FITRIM v3 Patch was posted
-> 7.Jan.2011, but even if it's in default kernel already - how would you
-> call it?
+> To invoke batch mode, simply use fstrim from user space.
 
-fitrim is the batch mode.
+Hello,
 
-To enable realtime discard, add --discard to your mount options.
+I'm also trying to use FITRIM on a simple XFS partition on a spinning 
+magnetic hard drive (remember those).  I haven't had much luck.  I'm 
+doing this just to get used to the commands when using this against a 
+thinly provisioned disk.  I have no idea if this should work in this 
+configuration.
 
-Documented at http://lxr.linux.no/#linux+v3.0.4/Documentation/filesystems/x=
-fs.txt
+On a Debian system with Linux 3.0.0-2-amd64 when I issue:
+# fstrim /
 
-To invoke batch mode, simply use fstrim from user space.
+I receive:
+fstrim: /: FITRIM ioctl failed: Operation not supported
 
->
-> > Test well before using them in production, though, as buggy hardware
-> > or thinp implementations are quite common....
->
-> I have a NetApp Storage here that is quite capable :-)
-> Just having no idea how to activate filesystem discard support :-(
+With an strace this looks like:
+open("/", O_RDONLY)                     = 3
+ioctl(3, 0xc0185879, 0x7fff4ea851b0)    = -1 EOPNOTSUPP (Operation not 
+supported)
 
-Definitely test.  Particularly for performance.  Many are surprised to
-see their performance drop not go up when they start using discard
-heavily.
+My fstrim is from util-linux-2.19.1-5
 
-Many people assume realtime support is better than a batched version.
+I'd be happy to try to diagnose this further if people are interested.  
+Any suggestions where I should start would be much appreciated.
 
-In most cases I believe users find the opposite to be true.
-
-They can simply have cron call fstrim on a routine basis and all is
-good.  ie. Maybe every night right after the backups complete.
-
-Especially when talking about thin provisioning, fstrim has more
-flexibility.=A0 You can tell it to only discard free areas that meet
-minimum size criteria.=A0 So if your thin provisioning is 1MB at a time,
-it would be logical to pass 1 MB to fstrim as a minimum discard size.
-You can't do that with mount --discard
-
->
-> --
-> mit freundlichen Gr=FCssen,
-> Michael Monnerie, Ing. BSc
-
-HTH
-Greg
+-- 
+Jeffrey Hundstad
 
 _______________________________________________
 xfs mailing list
