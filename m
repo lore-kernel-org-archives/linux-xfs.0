@@ -1,24 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9A0KLw5133900 for <xfs@oss.sgi.com>; Sun, 9 Oct 2011 19:20:21 -0500
-Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 019B2145B0BF
-	for <xfs@oss.sgi.com>; Sun,  9 Oct 2011 17:27:27 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	gj3TOszPHwid5CUH for <xfs@oss.sgi.com>;
-	Sun, 09 Oct 2011 17:27:27 -0700 (PDT)
-Date: Mon, 10 Oct 2011 11:20:17 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/5] repair: fix some valgrind reported errors on i686
-Message-ID: <20111010002017.GQ3159@dastard>
+	p9A0JAD6133852 for <xfs@oss.sgi.com>; Sun, 9 Oct 2011 19:19:11 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8697D4EF2EC
+	for <xfs@oss.sgi.com>; Sun,  9 Oct 2011 17:19:10 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	NaJvMfGKLf3tBJCp for <xfs@oss.sgi.com>;
+	Sun, 09 Oct 2011 17:19:10 -0700 (PDT)
+Date: Sun, 9 Oct 2011 20:19:09 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/5] repair: handle repair of image files on large sector
+	size filesystems
+Message-ID: <20111010001909.GA4886@infradead.org>
 References: <1318201910-11144-1-git-send-email-david@fromorbit.com>
-	<1318201910-11144-3-git-send-email-david@fromorbit.com>
-	<20111009234529.GA13527@infradead.org>
+	<1318201910-11144-2-git-send-email-david@fromorbit.com>
+	<20111009235240.GD13527@infradead.org>
+	<20111010001708.GP3159@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20111009234529.GA13527@infradead.org>
+In-Reply-To: <20111010001708.GP3159@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,56 +34,22 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Sun, Oct 09, 2011 at 07:45:29PM -0400, Christoph Hellwig wrote:
-> On Mon, Oct 10, 2011 at 10:11:47AM +1100, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > Fix a potential prefetch read problem due to the first loop
-> > execution of pf_batch_read potentially not initialising the fsbno
-> > varaible:
+On Mon, Oct 10, 2011 at 11:17:08AM +1100, Dave Chinner wrote:
+> > Does it?  Given that the loop driver uses buffered I/O that would be
+> > unexpected behaviour.  I'll try to reproduce it as soon as my 4k
+> > disk is available again.
 > 
-> variable.
-> 
-> > 
-> > ==10177== Thread 6:
-> > ==10177== Conditional jump or move depends on uninitialised value(s)
-> > ==10177==    at 0x8079CAB: pf_batch_read (prefetch.c:408)
-> > ==10177==    by 0x6A2996D: clone (clone.S:130)
-> > ==10177==
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > ---
-> >  repair/prefetch.c |    2 +-
-> >  1 files changed, 1 insertions(+), 1 deletions(-)
-> > 
-> > diff --git a/repair/prefetch.c b/repair/prefetch.c
-> > index d2fdf90..da074a8 100644
-> > --- a/repair/prefetch.c
-> > +++ b/repair/prefetch.c
-> > @@ -397,7 +397,7 @@ pf_batch_read(
-> >  	int			len, size;
-> >  	int			i;
-> >  	int			inode_bufs;
-> > -	unsigned long		fsbno;
-> > +	unsigned long		fsbno = 0;
-> 
-> Call me stupid, but I can't see how this could actually be a real
-> life issue.  The first thing we do in the loop is to to write
-> to fsbno in btree_find.  I'm fine adding this to shut up warnins,
-> but I can't see a real issue.
+> My 3TB, RAID6 based image storage filesystem has a 4k sector size,
+> and I can't run xfs_repair on an image file that has smaller sector
+> sizes than 4k without this mod. In that case, xfs_repair is doing
+> direct IO on a file, not a device, and the file is on the 4k sector
+> sized filesytem. I've been carrying this patch for a while.
 
-If btree_find() fails to find the key being looked up, it returns
-without having initialised fsbno.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Got it - you repair the image on directly on the device, without the
+loop driver.
 
 _______________________________________________
 xfs mailing list
