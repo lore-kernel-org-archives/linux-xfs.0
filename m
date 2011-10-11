@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9BMZUCX025422 for <xfs@oss.sgi.com>; Tue, 11 Oct 2011 17:35:30 -0500
+	p9BMavBc025467 for <xfs@oss.sgi.com>; Tue, 11 Oct 2011 17:36:57 -0500
 Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D52371BD6CC
-	for <xfs@oss.sgi.com>; Tue, 11 Oct 2011 15:35:28 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1A6E71BD840
+	for <xfs@oss.sgi.com>; Tue, 11 Oct 2011 15:36:56 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	Wgmv2sRwdPywgnCA for <xfs@oss.sgi.com>;
-	Tue, 11 Oct 2011 15:35:28 -0700 (PDT)
-Date: Wed, 12 Oct 2011 09:35:25 +1100
+	BsB3lrykcxS8nByJ for <xfs@oss.sgi.com>;
+	Tue, 11 Oct 2011 15:36:56 -0700 (PDT)
+Date: Wed, 12 Oct 2011 09:36:54 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 11/11] xfs: do not flush data workqueues in
-	xfs_flush_buftarg
-Message-ID: <20111011223525.GE3159@dastard>
-References: <20111010165242.656850411@bombadil.infradead.org>
-	<20111010165328.386947740@bombadil.infradead.org>
+Subject: Re: [PATCH 1/3] xfstests: fix 122 for recent xfsprogs
+Message-ID: <20111011223654.GF3159@dastard>
+References: <20111010182156.GA1323@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20111010165328.386947740@bombadil.infradead.org>
+In-Reply-To: <20111010182156.GA1323@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,13 +32,14 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Mon, Oct 10, 2011 at 12:52:53PM -0400, Christoph Hellwig wrote:
-> When we call xfs_flush_buftarg (generally from sync or umount) it already
-> is too late to flush the data workqueues, as I/O completion is signalled
-> for them and we are thus already done with the data we would flush here.
-> 
-> There are places where flushing them might be useful, but the current
-> sync interface doesn't give us that opportunity.
+On Mon, Oct 10, 2011 at 02:21:56PM -0400, Christoph Hellwig wrote:
+>  - filter out xfs_alloctype_t, this was an internal emum that got removed
+>  - filter out xfs_bmbt_rec_32_t, this is a variant of the xfs_bmbt_rec_t
+>    that had almost no users and was removed
+>  - filter out xfs_dinode_core_t, the separate dinode core is gone, and just
+>    checking the size of the full dinode is enough
+>  - accept xfs_bmbt_rec_t as the new canonical name for xfs_bmbt_rec_64_t,
+>    and replace the old name with the new one in the output stream.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
