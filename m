@@ -1,17 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9B44Fwa226878 for <xfs@oss.sgi.com>; Mon, 10 Oct 2011 23:04:15 -0500
-Subject: Re: [PATCH 11/11] xfs: do not flush data workqueues in
-	xfs_flush_buftarg
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20111010165328.386947740@bombadil.infradead.org>
-References: <20111010165242.656850411@bombadil.infradead.org>
-	<20111010165328.386947740@bombadil.infradead.org>
-Date: Mon, 10 Oct 2011 23:04:14 -0500
-Message-ID: <1318305854.3804.4.camel@doink>
+	p9BBMLna257277 for <xfs@oss.sgi.com>; Tue, 11 Oct 2011 06:22:21 -0500
+Received: from acsinet15.oracle.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C7B1F16BBF7A
+	for <xfs@oss.sgi.com>; Tue, 11 Oct 2011 04:29:35 -0700 (PDT)
+Received: from acsinet15.oracle.com (acsinet15.oracle.com [141.146.126.227])
+	by cuda.sgi.com with ESMTP id 2Yi1sQg5VtokYvjv for
+	<xfs@oss.sgi.com>; Tue, 11 Oct 2011 04:29:35 -0700 (PDT)
+Message-ID: <4E9427A1.7020608@oracle.com>
+Date: Tue, 11 Oct 2011 19:25:21 +0800
+From: Anand Jain <Anand.Jain@oracle.com>
 MIME-Version: 1.0
-Reply-To: aelder@sgi.com
+Subject: Re: [PATCH] Changes to received review comments
+References: <4E3BA2F7.4080500@oracle.com> <4E44351D.4020202@oracle.com>
+	<20110902084941.GB29054@infradead.org>
+	<4E92C1D7.2010301@oracle.com>
+	<20111010112151.GA28627@infradead.org>
+In-Reply-To: <20111010112151.GA28627@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,30 +26,29 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+Cc: linux-fsdevel@vger.kernel.org, Chris Mason <chris.mason@oracle.com>, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Mon, 2011-10-10 at 12:52 -0400, Christoph Hellwig wrote:
-> plain text document attachment
-> (xfs-stop-flushing-data-wqs-in-xfs_flush_buftarg)
-> When we call xfs_flush_buftarg (generally from sync or umount) it already
-> is too late to flush the data workqueues, as I/O completion is signalled
-> for them and we are thus already done with the data we would flush here.
-> 
-> There are places where flushing them might be useful, but the current
-> sync interface doesn't give us that opportunity.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-This looks fine to me for now but I'm going to review it
-again in the morning.  I'll be testing with it overnight
-though.
+Christoph,
 
-					-Alex
+  Email following this will have patches, kindly find them.
+
+Thanks, Anand
+
+
+On 10/10/2011 07:21 PM, Christoph Hellwig wrote:
+> On Mon, Oct 10, 2011 at 05:58:47PM +0800, Anand Jain wrote:
+>>   Now SCRATCH_DEV is derived from SCRATCH_DEV_POOL.
+>>   Moved code to delete and scan block device to common.rc and
+>>   updated README.
+>
+> Can you resend the whole patch?   Note that xfstests is up to test 262
+> in the meantime, so it will also need to be renumbered.
 
 _______________________________________________
 xfs mailing list
