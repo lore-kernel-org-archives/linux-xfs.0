@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9BG6gMq010962 for <xfs@oss.sgi.com>; Tue, 11 Oct 2011 11:06:42 -0500
-Received: from mail.mnsu.edu (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D084E1BD069
-	for <xfs@oss.sgi.com>; Tue, 11 Oct 2011 09:06:37 -0700 (PDT)
-Received: from mail.mnsu.edu (Mail.MNSU.EDU [134.29.1.12]) by cuda.sgi.com
-	with ESMTP id iKblBF9UMCLO1cJS for <xfs@oss.sgi.com>;
-	Tue, 11 Oct 2011 09:06:37 -0700 (PDT)
-Message-ID: <4E946980.4060702@mnsu.edu>
-Date: Tue, 11 Oct 2011 11:06:24 -0500
-From: Jeffrey Hundstad <jeffrey.hundstad@mnsu.edu>
+	p9BG85ID011014 for <xfs@oss.sgi.com>; Tue, 11 Oct 2011 11:08:05 -0500
+Received: from shrek.krogh.cc (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7D95D145F93D
+	for <xfs@oss.sgi.com>; Tue, 11 Oct 2011 09:15:19 -0700 (PDT)
+Received: from shrek.krogh.cc (2605ds1-ynoe.0.fullrate.dk [90.184.12.24]) by
+	cuda.sgi.com with ESMTP id qF2Dff0cgBbd9uQP for
+	<xfs@oss.sgi.com>; Tue, 11 Oct 2011 09:15:19 -0700 (PDT)
+Message-ID: <4E9469CC.4090507@krogh.cc>
+Date: Tue, 11 Oct 2011 18:07:40 +0200
+From: Jesper Krogh <jesper@krogh.cc>
 MIME-Version: 1.0
-Subject: Re: TRIM on XFS
-References: <201110071352.20135@zmi.at> <20111007233450.GK3159@dastard>
-	<201110100829.45823@zmi.at>
-	<CAGpXXZJs8kjZaSp248rA+-d=gpwWe=oK0xtUUirv+zgE3Vq3kA@mail.gmail.com>
-	<4E936BFB.5060907@mnsu.edu> <20111011020552.GY3159@dastard>
-In-Reply-To: <20111011020552.GY3159@dastard>
+Subject: Re: 2.6.38.8 kernel bug in XFS or megaraid driver with heavy I/O load
+References: <20111011091757.GA32589@otto.nzcorp.net>
+	<20111011133448.GA10692@infradead.org>
+	<20111011141338.GA11808@otto.nzcorp.net>
+In-Reply-To: <20111011141338.GA11808@otto.nzcorp.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,57 +29,31 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, aradford@gmail.com, xfs@oss.sgi.com
 
-Dave,
+On 2011-10-11 16:13, Anders Ossowicki wrote:
+> On Tue, Oct 11, 2011 at 03:34:48PM +0200, Christoph Hellwig wrote:
+>> This is core VM code, and operates purely on on-stack variables except
+>> for the page cache radix tree nodes / pages.  So this either could be a
+>> core VM bug that no one has noticed yet, or memory corruption.  Can you
+>> run memtest86 on the box?
+> Unfortunately not, as it is a production server. Pulling it out to memtest 256G
+> properly would take too long. But it seems unlikely to me that it should be
+> memory corruption. The machine has been running with the same (ecc) memory for
+> more than a year and neither the service processor nor the kernel (according to
+> dmesg) has caught anything before this. It would be a rare (though I admit not
+> impossible) coincidence if we got catastrophic, undetected memory corruption a
+> week after attaching a new raid controller with a new disk array.
+A sidenote that Anders forgot.. the system was stable for very long time,
+but on a 2.6.37 kernel. We upgraded to 2.6.38 to get the raid-controller
+support and then it crashed.
 
-Thank you.  I suspected this may be the case.  It is awfully nice to 
-have a definitive answer though.  It is especially nice to have a way to 
-determine if it is possible.  Thank you!
-
-I've created a an XFS Wiki page for this info:
-     http://xfs.org/index.php/FITRIM/discard
+Now we're trying to get the new hardware in the air on 2.6.37 with  
+backpatched
+megaraid driver for the RAID-controller.
 
 -- 
-Jeffrey Hundstad
-
-On 10/10/2011 09:05 PM, Dave Chinner wrote:
-> On Mon, Oct 10, 2011 at 05:04:43PM -0500, Jeffrey Hundstad wrote:
->> On 10/10/2011 03:28 PM, Greg Freemyer wrote:
->>> fitrim is the batch mode.
->>>
->>> To enable realtime discard, add --discard to your mount options.
->>>
->>> Documented athttp://lxr.linux.no/#linux+v3.0.4/Documentation/filesystems/xfs.txt
->>>
->>> To invoke batch mode, simply use fstrim from user space.
->> Hello,
->>
->> I'm also trying to use FITRIM on a simple XFS partition on a
->> spinning magnetic hard drive (remember those).  I haven't had much
->> luck.  I'm doing this just to get used to the commands when using
->> this against a thinly provisioned disk.  I have no idea if this
->> should work in this configuration.
->>
->> On a Debian system with Linux 3.0.0-2-amd64 when I issue:
->> # fstrim /
->>
->> I receive:
->> fstrim: /: FITRIM ioctl failed: Operation not supported
->>
->> With an strace this looks like:
->> open("/", O_RDONLY)                     = 3
->> ioctl(3, 0xc0185879, 0x7fff4ea851b0)    = -1 EOPNOTSUPP (Operation
->> not supported)
-> It means the block device underneath the filesystem doesn't support
-> the TRIM operation. Check /sys/block/<dev>/queue/discard_max_bytes -
-> if the value is zero then your device doesn't support discard
-> operations.
->
-> Cheers,
->
-> Dave.
+Jesper
 
 _______________________________________________
 xfs mailing list
