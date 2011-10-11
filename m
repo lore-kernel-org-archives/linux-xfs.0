@@ -1,14 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9B43dnq226826 for <xfs@oss.sgi.com>; Mon, 10 Oct 2011 23:03:39 -0500
-Subject: Re: [PATCH 10/11] xfs: remove XFS_bflush
+	p9B44Fwa226878 for <xfs@oss.sgi.com>; Mon, 10 Oct 2011 23:04:15 -0500
+Subject: Re: [PATCH 11/11] xfs: do not flush data workqueues in
+	xfs_flush_buftarg
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20111010165328.240744351@bombadil.infradead.org>
+In-Reply-To: <20111010165328.386947740@bombadil.infradead.org>
 References: <20111010165242.656850411@bombadil.infradead.org>
-	<20111010165328.240744351@bombadil.infradead.org>
-Date: Mon, 10 Oct 2011 23:03:34 -0500
-Message-ID: <1318305814.3804.3.camel@doink>
+	<20111010165328.386947740@bombadil.infradead.org>
+Date: Mon, 10 Oct 2011 23:04:14 -0500
+Message-ID: <1318305854.3804.4.camel@doink>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -27,12 +28,22 @@ To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
 On Mon, 2011-10-10 at 12:52 -0400, Christoph Hellwig wrote:
+> plain text document attachment
+> (xfs-stop-flushing-data-wqs-in-xfs_flush_buftarg)
+> When we call xfs_flush_buftarg (generally from sync or umount) it already
+> is too late to flush the data workqueues, as I/O completion is signalled
+> for them and we are thus already done with the data we would flush here.
+> 
+> There are places where flushing them might be useful, but the current
+> sync interface doesn't give us that opportunity.
+> 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Looks good.
+This looks fine to me for now but I'm going to review it
+again in the morning.  I'll be testing with it overnight
+though.
 
-Reviewed-by: Alex Elder <aelder@sgi.com>
-
+					-Alex
 
 _______________________________________________
 xfs mailing list
