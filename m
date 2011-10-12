@@ -1,24 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9C0ZWuj030249 for <xfs@oss.sgi.com>; Tue, 11 Oct 2011 19:35:33 -0500
-Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 449DF1918F10
-	for <xfs@oss.sgi.com>; Tue, 11 Oct 2011 17:35:29 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	ULhItF3VsUUjER8q for <xfs@oss.sgi.com>;
-	Tue, 11 Oct 2011 17:35:29 -0700 (PDT)
-Date: Wed, 12 Oct 2011 11:35:26 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: 2.6.38.8 kernel bug in XFS or megaraid driver with heavy I/O load
-Message-ID: <20111012003526.GI3159@dastard>
-References: <20111011091757.GA32589@otto.nzcorp.net>
-	<20111011133448.GA10692@infradead.org>
-	<20111011141338.GA11808@otto.nzcorp.net>
+	p9C1NhDI031698 for <xfs@oss.sgi.com>; Tue, 11 Oct 2011 20:23:44 -0500
+Received: from mail-ey0-f181.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E13641BD457
+	for <xfs@oss.sgi.com>; Tue, 11 Oct 2011 18:23:42 -0700 (PDT)
+Received: from mail-ey0-f181.google.com (mail-ey0-f181.google.com
+	[209.85.215.181]) by cuda.sgi.com with ESMTP id
+	lKmTkznutfLLFp0y for <xfs@oss.sgi.com>;
+	Tue, 11 Oct 2011 18:23:42 -0700 (PDT)
+Received: by eyx24 with SMTP id 24so267574eyx.26
+	for <xfs@oss.sgi.com>; Tue, 11 Oct 2011 18:23:41 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20111011141338.GA11808@otto.nzcorp.net>
+Date: Tue, 11 Oct 2011 18:23:41 -0700
+Message-ID: <CADDFK--585nmGJMuVhbhyO5S7tvCxR0Ur_1qxX73AvpAgau8Ew@mail.gmail.com>
+Subject: Help with xfs and Fedora 8
+From: Ram Natarajan <ram@arohisystems.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,47 +24,68 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============7843725816445266085=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, aradford@gmail.com, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Oct 11, 2011 at 04:13:38PM +0200, Anders Ossowicki wrote:
-> On Tue, Oct 11, 2011 at 03:34:48PM +0200, Christoph Hellwig wrote:
-> > This is core VM code, and operates purely on on-stack variables except
-> > for the page cache radix tree nodes / pages.  So this either could be a
-> > core VM bug that no one has noticed yet, or memory corruption.  Can you
-> > run memtest86 on the box?
-> 
-> Unfortunately not, as it is a production server. Pulling it out to memtest 256G
-> properly would take too long. But it seems unlikely to me that it should be
-> memory corruption.  The machine has been running with the same (ecc) memory for
-> more than a year and neither the service processor nor the kernel (according to
-> dmesg) has caught anything before this. It would be a rare (though I admit not
-> impossible) coincidence if we got catastrophic, undetected memory corruption a
-> week after attaching a new raid controller with a new disk array.
+--===============7843725816445266085==
+Content-Type: multipart/alternative; boundary=0016364c72b5d220d204af0fdf6f
 
-Memory corruption can be caused by more than just a bad memory
-stick. You've got a brand new driver running your brand new
-controller and it may still have bugs - it might be scribbling over
-memory it doesn't own because of off-by-one index errors, etc. It's
-much more likely that that new hardware or driver code is the cause
-of your problem than an undetected ECC memory error or core VM
-problem.
+--0016364c72b5d220d204af0fdf6f
+Content-Type: text/plain; charset=ISO-8859-1
 
-FWIW, if it's a repeatable problem, you might want to update the
-driver and controller firmware to something more recent and see if
-that solves the problem....
+I have a bunch of Fedora 8 machines running Kernel 2.6.23.1.
+I am noticing that the xfs partitions on these machines 'freeze up' once in
+a while. I have  to manually run xfs_repair on these partitions to get them
+going again. Note that SMART does not report any hard disk errors - these
+are purely xfs related. I also see some xfs kernel module messages in the
+kernel logs. My question is this:
+Can I move to the latest xfs by recompiling xfs kernel module and xfs
+support code for 2.6.23. For various technical reasons, I cannot move to a
+later kernel, but it would be great if I can build the latest xfs modules
+and xfs support code for 2.6.23. Does anybody know if this is possible, and
+if it is possible, will it work reliably?
+Thanks,
+Ram
 
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+This message may contain confidential information for the exclusive use of
+intended addressee. If you are not the addressee, could you please delete
+the mail and attachments from your system and inform the sender?
+
+--0016364c72b5d220d204af0fdf6f
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+
+I have a bunch of Fedora 8 machines running Kernel 2.6.23.1. <br>I am notic=
+ing that the xfs partitions on these machines &#39;freeze up&#39; once in a=
+ while. I have=A0 to manually run xfs_repair on these partitions to get the=
+m going again. Note that SMART does not report any hard disk errors - these=
+ are purely xfs related. I also see some xfs kernel module messages in the =
+kernel logs. My question is this:<br>
+Can I move to the latest xfs by recompiling xfs kernel module and xfs suppo=
+rt code for 2.6.23. For various technical reasons, I cannot move to a later=
+ kernel, but it would be great if I can build the latest xfs modules and xf=
+s support code for 2.6.23. Does anybody know if this is possible, and if it=
+ is possible, will it work reliably?<br>
+Thanks,<br>Ram<br clear=3D"all"><br>-- <br>This message may contain confide=
+ntial information for the exclusive use=20
+of intended addressee. If you are not the addressee, could you please=20
+delete the mail and attachments from your system and inform the sender?<br>
+
+--0016364c72b5d220d204af0fdf6f--
+
+
+--===============7843725816445266085==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============7843725816445266085==--
