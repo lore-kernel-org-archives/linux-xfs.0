@@ -1,15 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9DB6smT168027 for <xfs@oss.sgi.com>; Thu, 13 Oct 2011 06:06:54 -0500
-Subject: Re: [PATCH 2/2] xfstests: split mapped writes vs direct I/O tests
-	from 091
+	p9DBCRkU168395 for <xfs@oss.sgi.com>; Thu, 13 Oct 2011 06:12:27 -0500
+Subject: Re: [PATCH] xfstests: fix 165 for different block sizes
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20111011224010.GG3159@dastard>
-References: <20111010182156.GA1323@infradead.org>
-	<20111010182216.GA1335@infradead.org> <20111011224010.GG3159@dastard>
-Date: Thu, 13 Oct 2011 06:06:49 -0500
-Message-ID: <1318504009.3172.30.camel@doink>
+In-Reply-To: <1318463319-14257-1-git-send-email-david@fromorbit.com>
+References: <1318463319-14257-1-git-send-email-david@fromorbit.com>
+Date: Thu, 13 Oct 2011 06:12:22 -0500
+Message-ID: <1318504342.3172.31.camel@doink>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -25,74 +23,22 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-On Wed, 2011-10-12 at 09:40 +1100, Dave Chinner wrote:
-> On Mon, Oct 10, 2011 at 02:22:16PM -0400, Christoph Hellwig wrote:
-> > This effectively reverts
-> > 
-> > 	xfstests: add mapped write fsx operations to 091
-> > 
-> > and adds a new test case for it.  It tests something slightly different, and
-> > regressions in existing tests due to new features are pretty nasty in a
-> > test suite.
+On Thu, 2011-10-13 at 10:48 +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Makes sense.
+> xfs_io uses the filesystem block size as the default write buffer
+> size. 165 does not filter the ops counts out of the golden output,
+> and hnce causes failures because the ops count doesn't match for a
+> given sized write. Fix this by changing the filter to the generic
+> xfs_io no-numbers filter.
 > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > 
-> > Index: xfstests-dev/263
-> > ===================================================================
-> > --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-> > +++ xfstests-dev/263	2011-10-10 18:06:59.000000000 +0000
-> > @@ -0,0 +1,64 @@
-> > +#! /bin/bash
-> > +# FS QA Test No. 263
-> > +#
-> > +# fsx exercising direct IO vs sub-block buffered I/O
-> > +#
-> > +#-----------------------------------------------------------------------
-> > +# Copyright (c) 2000-2004 Silicon Graphics, Inc.  All Rights Reserved.
-> > +#
-> > +# This program is free software; you can redistribute it and/or
-> > +# modify it under the terms of the GNU General Public License as
-> > +# published by the Free Software Foundation.
-> > +#
-> > +# This program is distributed in the hope that it would be useful,
-> > +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> > +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> > +# GNU General Public License for more details.
-> > +#
-> > +# You should have received a copy of the GNU General Public License
-> > +# along with this program; if not, write the Free Software Foundation,
-> > +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> > +#
-> > +#-----------------------------------------------------------------------
-> > +#
-> > +# creator
-> > +owner=nathans@sgi.com
-> 
-> No point keeping an invalid email address as the owner of a new
-> test.
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-My only comment was that there is some small value in
-knowing who the original author of the test.
+Looks good.
 
-> FWIW, I'm considering removing this from the tests as the
-> information is in the commit history, and the use of the field
-> (emailing the owner when the automated test infrastructure SGI used
-> 10 years ago failed) is no longer used...
-
-...but you're right, it would be in the commit history
-so that's probably sufficient.  I have no objection to
-deleting it from all the tests (and the template).
-
-					-Alex
-
-> Otherwise looks OK.
-> 
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
+Reviewed-by: Alex Elder <aelder@sgi.com>
 
 
 _______________________________________________
