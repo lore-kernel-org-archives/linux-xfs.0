@@ -1,14 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9DAhV5u166635 for <xfs@oss.sgi.com>; Thu, 13 Oct 2011 05:43:31 -0500
-Subject: Re: [PATCH] xfsdump: update summaries in preparation for release 3.0.6
+	p9DAZfMV166165 for <xfs@oss.sgi.com>; Thu, 13 Oct 2011 05:35:41 -0500
+Subject: Re: [PATCH 2/2] xfstests: make 203 pass on non-default block size
+	filesystems
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20111010163423.GD11902@infradead.org>
-References: <201110052210.p95MAXGI012463@stout.americas.sgi.com>
-	<20111010163423.GD11902@infradead.org>
-Date: Thu, 13 Oct 2011 05:43:28 -0500
-Message-ID: <1318502608.3172.22.camel@doink>
+In-Reply-To: <1318212855-20212-3-git-send-email-david@fromorbit.com>
+References: <1318212855-20212-1-git-send-email-david@fromorbit.com>
+	<1318212855-20212-3-git-send-email-david@fromorbit.com>
+Date: Thu, 13 Oct 2011 05:35:34 -0500
+Message-ID: <1318502134.3172.19.camel@doink>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -23,42 +24,45 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, 2011-10-10 at 12:34 -0400, Christoph Hellwig wrote:
-> On Wed, Oct 05, 2011 at 05:10:33PM -0500, Alex Elder wrote:
-> > The following is a draft of summaries to be included in the next
-> > release of xfsdump.
+On Mon, 2011-10-10 at 13:14 +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> The content looks good, but it's fairly different and much more verbose
-> style than we traditionally did, which also generally focussed on user
-> visible changes.
-
-This is pretty reasonable feedback and I guess not a
-surprise to me.  I was sort of throwing these together
-at the end of a long day and didn't really distill them
-down before sending them out.
-
-I'll take another pass at all of them and will re-post.
-Thanks.
-
-					-Alex
-
-> This is how I would have written the log in the "old" style:
+> The xfs_bmap output in the golden image is filesystem block size
+> dependent. Make all writes 64k to ensure that the allocation/hole
+> pattern is consistent across all supported filesystem block sizes.
 > 
-> xfsdump-3.0.6 (5 October 2011)
-> 	- unconditionally add checksums to various dump headers in
-> 	  xfsdump.
-> 	- verify checksums if present in xfsrestore.
-> 	- use the POSIX signal API instead of the legacy SysV API.
-> 	- various internal cleanups and refactoring in xfsdump and
-> 	  xfsrestore.
-> 	- lift the limit of options in dialogs from 8 to 99.
-> 	- various build system fixes, thanks to Ted Ts'o.
+> Also, use the SCRATCH_DEV instead of the TEST_DEV so that we test
+> according to MKFS_OPTIONS rather than test on whatever setup the
+> TEST_DEV was created with.
 > 
-> same applies to the other logs.
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
+A minor thing below, which I'll fix for you.
+Also one question.  Otherwise looks good.
+
+Reviewed-by: Alex Elder <aelder@sgi.com>
+
+. . .
+>  _cleanup()
+>  {
+> -	rm -f $TEST_DIR/hole_file*
+
+You no longer delete the hole files because there's
+no need to (because scratch will likely be clobbered
+anyway)?
+
+> -	rm -f $TEST_DIR/r??
+> +	rm -f $SCRATCH_DIR/r??
+
+SCRATCH_MNT
+
+(This is an annoyance that ought to be fixed everywhere
+I think--either make it SCRATCH_DIR or TEST_MNT.)
+
+. . .
 
 
 _______________________________________________
