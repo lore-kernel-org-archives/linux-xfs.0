@@ -1,15 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9D9w18L162834 for <xfs@oss.sgi.com>; Thu, 13 Oct 2011 04:58:01 -0500
-Subject: Re: [PATCH 3/5] repair: handle memory allocation failure from
-	blkmap_grow
+	p9D9w4n5162852 for <xfs@oss.sgi.com>; Thu, 13 Oct 2011 04:58:04 -0500
+Subject: Re: [PATCH 4/5] repair: don't cache large blkmap allocations
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1318208915-14975-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1318208915-14975-5-git-send-email-david@fromorbit.com>
 References: <1318208915-14975-1-git-send-email-david@fromorbit.com>
-	<1318208915-14975-4-git-send-email-david@fromorbit.com>
-Date: Thu, 13 Oct 2011 04:57:54 -0500
-Message-ID: <1318499874.3172.11.camel@doink>
+	<1318208915-14975-5-git-send-email-david@fromorbit.com>
+Date: Thu, 13 Oct 2011 04:57:57 -0500
+Message-ID: <1318499877.3172.12.camel@doink>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -30,9 +29,17 @@ Cc: xfs@oss.sgi.com
 On Mon, 2011-10-10 at 12:08 +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> If blkmap_grow fails to allocate a new chunk of memory, it returns
-> with a null blkmap. The sole caller of blkmap_grow does not check
-> for this failure, and so will segfault if this error ever occurs.
+> We currently use thread local storage for storing blkmap allocations
+> from one inode to another as a way of reducing the number of short
+> term allocations we do. However, the stored allocations can only
+> ever grow, so once we've done a large allocation we never free than
+> memory even if we never need that much memory again. This can occur
+> if we have corrupted extent counts in inodes, and can greatly
+> increase the memory footprint of the repair process.
+> 
+> Hence if the cached blkmap array id greater than a reasonable number
+> of extents (say 100,000), then don't store the blkmap in TLS and
+> instead free it.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
