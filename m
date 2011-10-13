@@ -1,18 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9DB6pt1168011 for <xfs@oss.sgi.com>; Thu, 13 Oct 2011 06:06:52 -0500
-Subject: Re: [PATCH 3/3 v2] xfstests: allow 091 for non-xfs filesystems
+	p9DFYGEY188591 for <xfs@oss.sgi.com>; Thu, 13 Oct 2011 10:34:16 -0500
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <20111011141840.GA14750@infradead.org>
-References: <20111010182156.GA1323@infradead.org>
-	<20111010182216.GA1335@infradead.org>
-	<20111010182233.GB1335@infradead.org>
-	<20111011141840.GA14750@infradead.org>
-Date: Thu, 13 Oct 2011 06:06:45 -0500
-Message-ID: <1318504005.3172.29.camel@doink>
+Message-Id: <201110131534.p9DFYAgh032034@stout.americas.sgi.com>
+Date: Thu, 13 Oct 2011 10:34:10 -0500
+Subject: [GIT PULL] XFS update for 3.1
 MIME-Version: 1.0
-Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,22 +19,60 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Tue, 2011-10-11 at 10:18 -0400, Christoph Hellwig wrote:
-> The tests in 091 are entirely generic and pass e.g. on ext4 and jfs.
-> btrfs fails it, but that looks a like a btrfs-specific issue to me.
-> 
-> Also use _supported_os properly instead of erroring out manually on
-> IRIX.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+Linus, please pull the following XFS changes for Linux 3.1.
 
-Looks OK to me.
+In trying to track down the source of an XFS hang related to active
+item pushing Christoph Hellwig identified three contributing
+problems, addressed in the commits below.
+- The first was that a "last pushed log sequence number" value was
+  being updated when it should not have been.
+- The second is that it is possible for a buffer containing inodes
+  to be found pinned at the time it gets pushed, and that could
+  cause pushing to stall.
+- The third is related to the switch to using a workqueue for AIL
+  pushing, which made it possible for pushing to get starved behind
+  syncing activity.  At this late point in the cycle, the best
+  course of action was to revert to using a kernel thread as was
+  done previously.
+The last change is simply adding tracepoints; feel free to exclude
+it if you see fit.
 
-Reviewed-by: Alex Elder <aelder@sgi.com>
+These changes have not been through a linux-next build; portions of
+them are incompatible with the XFS code that's being included there.
+I have done builds and repeated tests with them however and expect
+no problems.
 
+Thank you.
+
+					-Alex
+
+The following changes since commit 65112dccf8a113737684366349d7f9ec373ddc47:
+
+  Merge git://git.samba.org/sfrench/cifs-2.6 (2011-10-10 14:53:11 +1200)
+
+are available in the git repository at:
+
+  git://oss.sgi.com/xfs/xfs for-linus
+
+Christoph Hellwig (4):
+      xfs: do not update xa_last_pushed_lsn for locked items
+      xfs: force the log if we encounter pinned buffers in .iop_pushbuf
+      xfs: revert to using a kthread for AIL pushing
+      xfs: add AIL pushing tracepoints
+
+ fs/xfs/xfs_buf_item.c   |    3 +-
+ fs/xfs/xfs_dquot_item.c |   10 ++++--
+ fs/xfs/xfs_inode_item.c |   10 ++++--
+ fs/xfs/xfs_linux.h      |    2 +
+ fs/xfs/xfs_super.c      |   13 +------
+ fs/xfs/xfs_trace.h      |   37 +++++++++++++++++++
+ fs/xfs/xfs_trans.h      |    2 +-
+ fs/xfs/xfs_trans_ail.c  |   91 +++++++++++++++++++++++++++++------------------
+ fs/xfs/xfs_trans_priv.h |    8 +----
+ 9 files changed, 114 insertions(+), 62 deletions(-)
 
 _______________________________________________
 xfs mailing list
