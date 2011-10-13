@@ -1,13 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9DBCRkU168395 for <xfs@oss.sgi.com>; Thu, 13 Oct 2011 06:12:27 -0500
-Subject: Re: [PATCH] xfstests: fix 165 for different block sizes
+	p9DB6pt1168011 for <xfs@oss.sgi.com>; Thu, 13 Oct 2011 06:06:52 -0500
+Subject: Re: [PATCH 3/3 v2] xfstests: allow 091 for non-xfs filesystems
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1318463319-14257-1-git-send-email-david@fromorbit.com>
-References: <1318463319-14257-1-git-send-email-david@fromorbit.com>
-Date: Thu, 13 Oct 2011 06:12:22 -0500
-Message-ID: <1318504342.3172.31.camel@doink>
+In-Reply-To: <20111011141840.GA14750@infradead.org>
+References: <20111010182156.GA1323@infradead.org>
+	<20111010182216.GA1335@infradead.org>
+	<20111010182233.GB1335@infradead.org>
+	<20111011141840.GA14750@infradead.org>
+Date: Thu, 13 Oct 2011 06:06:45 -0500
+Message-ID: <1318504005.3172.29.camel@doink>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -22,21 +25,19 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Thu, 2011-10-13 at 10:48 +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Tue, 2011-10-11 at 10:18 -0400, Christoph Hellwig wrote:
+> The tests in 091 are entirely generic and pass e.g. on ext4 and jfs.
+> btrfs fails it, but that looks a like a btrfs-specific issue to me.
 > 
-> xfs_io uses the filesystem block size as the default write buffer
-> size. 165 does not filter the ops counts out of the golden output,
-> and hnce causes failures because the ops count doesn't match for a
-> given sized write. Fix this by changing the filter to the generic
-> xfs_io no-numbers filter.
+> Also use _supported_os properly instead of erroring out manually on
+> IRIX.
 > 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Looks good.
+Looks OK to me.
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
 
