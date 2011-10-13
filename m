@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9D9w4n5162852 for <xfs@oss.sgi.com>; Thu, 13 Oct 2011 04:58:04 -0500
-Subject: Re: [PATCH 4/5] repair: don't cache large blkmap allocations
+	p9D9vuqo162808 for <xfs@oss.sgi.com>; Thu, 13 Oct 2011 04:57:56 -0500
+Subject: Re: [PATCH 2/5] repair: fix a valgrind reported error on i686
 From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1318208915-14975-5-git-send-email-david@fromorbit.com>
+In-Reply-To: <1318208915-14975-3-git-send-email-david@fromorbit.com>
 References: <1318208915-14975-1-git-send-email-david@fromorbit.com>
-	<1318208915-14975-5-git-send-email-david@fromorbit.com>
-Date: Thu, 13 Oct 2011 04:57:57 -0500
-Message-ID: <1318499877.3172.12.camel@doink>
+	<1318208915-14975-3-git-send-email-david@fromorbit.com>
+Date: Thu, 13 Oct 2011 04:57:52 -0500
+Message-ID: <1318499872.3172.10.camel@doink>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -29,17 +29,15 @@ Cc: xfs@oss.sgi.com
 On Mon, 2011-10-10 at 12:08 +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> We currently use thread local storage for storing blkmap allocations
-> from one inode to another as a way of reducing the number of short
-> term allocations we do. However, the stored allocations can only
-> ever grow, so once we've done a large allocation we never free than
-> memory even if we never need that much memory again. This can occur
-> if we have corrupted extent counts in inodes, and can greatly
-> increase the memory footprint of the repair process.
+> Fix a potential prefetch read problem due to the first loop
+> execution of pf_batch_read potentially not initialising the fsbno
+> variable:
 > 
-> Hence if the cached blkmap array id greater than a reasonable number
-> of extents (say 100,000), then don't store the blkmap in TLS and
-> instead free it.
+> ==10177== Thread 6:
+> ==10177== Conditional jump or move depends on uninitialised value(s)
+> ==10177==    at 0x8079CAB: pf_batch_read (prefetch.c:408)
+> ==10177==    by 0x6A2996D: clone (clone.S:130)
+> ==10177==
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
