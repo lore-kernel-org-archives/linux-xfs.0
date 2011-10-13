@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9DJp9aj204167 for <xfs@oss.sgi.com>; Thu, 13 Oct 2011 14:51:09 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1C5901C537E
-	for <xfs@oss.sgi.com>; Thu, 13 Oct 2011 12:51:07 -0700 (PDT)
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id 9GwSvIfQfLn5ohEL for <xfs@oss.sgi.com>;
-	Thu, 13 Oct 2011 12:51:07 -0700 (PDT)
-Message-ID: <4E974129.3010708@sandeen.net>
-Date: Thu, 13 Oct 2011 14:51:05 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
+	p9DMlpKg217715 for <xfs@oss.sgi.com>; Thu, 13 Oct 2011 17:47:51 -0500
+Received: from ipmail07.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3F5941C851EB
+	for <xfs@oss.sgi.com>; Thu, 13 Oct 2011 15:47:48 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	lRHCnr6qnX3O3qwg for <xfs@oss.sgi.com>;
+	Thu, 13 Oct 2011 15:47:48 -0700 (PDT)
+Date: Fri, 14 Oct 2011 09:47:44 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH] xfsprogs: libxfs: Don't forget to initialize the radix
 	tree subsystem
+Message-ID: <20111013224744.GO3159@dastard>
 References: <201110131850.p9DIoEvU006578@stout.americas.sgi.com>
+MIME-Version: 1.0
+Content-Disposition: inline
 In-Reply-To: <201110131850.p9DIoEvU006578@stout.americas.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -31,7 +33,7 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Alex Elder <aelder@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On 10/13/11 1:50 PM, Alex Elder wrote:
+On Thu, Oct 13, 2011 at 01:50:14PM -0500, Alex Elder wrote:
 > The libxfs code uses radix tree routines to manage a mount
 > point's m_perag_tree.  But the radix tree routines assume
 > that radix_tree_init() has been called to initialize the
@@ -65,34 +67,14 @@ On 10/13/11 1:50 PM, Alex Elder wrote:
 > 
 > Signed-off-by: Alex Elder <aelder@sgi.com>
 
-I suppose if we have an init function we may as well call it at
-least once.  ;)
+/me wonders why valgrind didn't catch that
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Anyway, the fix looks good, and well caught!
 
-> ---
->  libxfs/init.c |    2 ++
->  1 file changed, 2 insertions(+)
-> 
-> Index: b/libxfs/init.c
-> ===================================================================
-> --- a/libxfs/init.c
-> +++ b/libxfs/init.c
-> @@ -249,6 +249,8 @@ libxfs_init(libxfs_init_t *a)
->  	fd = -1;
->  	flags = (a->isreadonly | a->isdirect);
->  
-> +	radix_tree_init();
-> +
->  	if (a->volname) {
->  		if(!check_open(a->volname,flags,&rawfile,&blockfile))
->  			goto done;
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
