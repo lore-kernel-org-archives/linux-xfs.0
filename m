@@ -1,24 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9D0uvDn119638 for <xfs@oss.sgi.com>; Wed, 12 Oct 2011 19:56:57 -0500
-Received: from ipmail07.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4F3941C8397C
-	for <xfs@oss.sgi.com>; Wed, 12 Oct 2011 17:56:55 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	cIBt7G7J2hRAhoZ7 for <xfs@oss.sgi.com>;
-	Wed, 12 Oct 2011 17:56:55 -0700 (PDT)
-Date: Thu, 13 Oct 2011 11:56:52 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/3] 263: Functional test case for the btrfs snapshot
-Message-ID: <20111013005652.GM3159@dastard>
-References: <4E3BA2F7.4080500@oracle.com>
-	<1318395174-4075-1-git-send-email-Anand.Jain@oracle.com>
-	<1318395174-4075-2-git-send-email-Anand.Jain@oracle.com>
+	p9D9vsqw162798 for <xfs@oss.sgi.com>; Thu, 13 Oct 2011 04:57:54 -0500
+Subject: Re: [PATCH 1/5] repair: handle repair of image files on large
+	sector size filesystems
+From: Alex Elder <aelder@sgi.com>
+In-Reply-To: <1318208915-14975-2-git-send-email-david@fromorbit.com>
+References: <1318208915-14975-1-git-send-email-david@fromorbit.com>
+	<1318208915-14975-2-git-send-email-david@fromorbit.com>
+Date: Thu, 13 Oct 2011 04:57:49 -0500
+Message-ID: <1318499869.3172.8.camel@doink>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1318395174-4075-2-git-send-email-Anand.Jain@oracle.com>
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,60 +24,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Anand Jain <Anand.Jain@oracle.com>
-Cc: hch@infradead.org, linux-fsdevel@vger.kernel.org, chris.mason@oracle.com, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Wed, Oct 12, 2011 at 12:52:52PM +0800, Anand Jain wrote:
-> Create snapshots in various ways, modify the data around the block and
-> file boundaries and verify the data integrity.
-....
+On Mon, 2011-10-10 at 12:08 +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Because repair uses direct IO, it cannot do IO smaller than a sector
+> on the underlying device. When repairing a filesystem image, the
+> filesystem hosting the image may have a sector size larger than the
+> sector size of the image, and so single image sector reads and
+> writes will fail.
+> 
+> To avoid this, when checking a file and there is a sector size
+> mismatch like this, turn off direct IO. While there, fix a compile
+> bug in the IO_DEBUG option for libxfs which was found during triage.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-> +
-> +# Create Dir tree and files in it.
-> +# arg1 basedir
-> +# arg2 dir depth
-> +# arg3 nfile_min
-> +# arg4 nfile_max
-> +# arg5 fsize_min
-> +# arg6 fsize_max
-> +_fillfs()
-> +{
-> +	umask 000
-> +	local j
-> +	local i
-> +	local DIRP
-> +	local FCNT
-> +	local FILEP
-> +	local SCNT
-> +	local BCNT
-> +	DIRP=$6
-> +	for ((j=0; j<$1; j++)); do
-> +		DIRP=`mktemp -dq $DIRP/dir.XXXXXX`
-> +		FCNT=$(_rand_range $2 $3)
-> +		for ((i=0; i<$FCNT; i++)); do
-> +			FILEP=`mktemp -q $DIRP/file.XXXXXX`
-> +			SCNT=$(_rand_range $4 $5)
-> +			dd if=/dev/urandom of=$FILEP bs=$SCNT count=1 status=noxfer 2>/dev/null &
-> +		done
-> +	done
-> +	wait $!
-> +}
+Looks good.
 
-Please, no, not -another- new and just a bit different "fill
-filesystem" function.
-
-There's already been one added recently in test 256 which I
-commented at the time could use _populate_fs, and I said the same
-thing in my original review of this series, too.
-
-So please modify the _populate_fs function to do what you need.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Reviewed-by: Alex Elder <aelder@sgi.com>
 
 _______________________________________________
 xfs mailing list
