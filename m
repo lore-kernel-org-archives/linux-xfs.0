@@ -1,17 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9DAZfMV166165 for <xfs@oss.sgi.com>; Thu, 13 Oct 2011 05:35:41 -0500
-Subject: Re: [PATCH 2/2] xfstests: make 203 pass on non-default block size
-	filesystems
-From: Alex Elder <aelder@sgi.com>
-In-Reply-To: <1318212855-20212-3-git-send-email-david@fromorbit.com>
-References: <1318212855-20212-1-git-send-email-david@fromorbit.com>
-	<1318212855-20212-3-git-send-email-david@fromorbit.com>
-Date: Thu, 13 Oct 2011 05:35:34 -0500
-Message-ID: <1318502134.3172.19.camel@doink>
+	p9DAZAaw166124 for <xfs@oss.sgi.com>; Thu, 13 Oct 2011 05:35:11 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6FC0315306FD
+	for <xfs@oss.sgi.com>; Thu, 13 Oct 2011 03:42:36 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	E7uWByAQ5F2nhhj1 for <xfs@oss.sgi.com>;
+	Thu, 13 Oct 2011 03:42:36 -0700 (PDT)
+Date: Thu, 13 Oct 2011 06:35:04 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Help with xfs and Fedora 8
+Message-ID: <20111013103504.GA16466@infradead.org>
+References: <CADDFK--585nmGJMuVhbhyO5S7tvCxR0Ur_1qxX73AvpAgau8Ew@mail.gmail.com>
+	<20111012231424.GK3159@dastard>
 MIME-Version: 1.0
-Reply-To: aelder@sgi.com
+Content-Disposition: inline
+In-Reply-To: <20111012231424.GK3159@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,45 +32,27 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+Cc: Ram Natarajan <ram@arohisystems.com>, xfs@oss.sgi.com
 
-On Mon, 2011-10-10 at 13:14 +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Thu, Oct 13, 2011 at 10:14:24AM +1100, Dave Chinner wrote:
+> > For various technical reasons, I cannot move to a
+> > later kernel, but it would be great if I can build the latest xfs modules
+> > and xfs support code for 2.6.23. Does anybody know if this is possible, and
+> > if it is possible, will it work reliably?
 > 
-> The xfs_bmap output in the golden image is filesystem block size
-> dependent. Make all writes 64k to ensure that the allocation/hole
-> pattern is consistent across all supported filesystem block sizes.
+> The kernel code is not so simple. Indeed, if you're not a kernel
+> programmer and familiar with the XFS code, then I'd put it in the
+> impossible basket. It'll take at least 3 months to do the backport
+> and adequately test it for production use, and that's if you pay an
+> expert to do it.
 > 
-> Also, use the SCRATCH_DEV instead of the TEST_DEV so that we test
-> according to MKFS_OPTIONS rather than test on whatever setup the
-> TEST_DEV was created with.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> It's far, far simpler to just upgrade your machines to a more recent
+> distribution that it is to backport code to kernels that old....
 
-A minor thing below, which I'll fix for you.
-Also one question.  Otherwise looks good.
-
-Reviewed-by: Alex Elder <aelder@sgi.com>
-
-. . .
->  _cleanup()
->  {
-> -	rm -f $TEST_DIR/hole_file*
-
-You no longer delete the hole files because there's
-no need to (because scratch will likely be clobbered
-anyway)?
-
-> -	rm -f $TEST_DIR/r??
-> +	rm -f $SCRATCH_DIR/r??
-
-SCRATCH_MNT
-
-(This is an annoyance that ought to be fixed everywhere
-I think--either make it SCRATCH_DIR or TEST_MNT.)
-
-. . .
-
+Indeed.  If you insist on an old kernel version with a semi recent XFS
+please get a RHEL/Centos 5 kernel.  That one is actually labelled 2.6.18
+but contains many fixes and updated components, including a relatively
+new XFS codebase.
 
 _______________________________________________
 xfs mailing list
