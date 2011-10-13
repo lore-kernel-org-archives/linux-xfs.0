@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9DGPN4w191910 for <xfs@oss.sgi.com>; Thu, 13 Oct 2011 11:25:24 -0500
+	p9DGV5Ah192187 for <xfs@oss.sgi.com>; Thu, 13 Oct 2011 11:31:05 -0500
 Received: from stout.americas.sgi.com (stout.americas.sgi.com [128.162.232.50])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 6E025AC005
-	for <xfs@oss.sgi.com>; Thu, 13 Oct 2011 09:25:20 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D2979AC007
+	for <xfs@oss.sgi.com>; Thu, 13 Oct 2011 09:31:04 -0700 (PDT)
 Received: from stout.americas.sgi.com (localhost6.localdomain6 [127.0.0.1])
-	by stout.americas.sgi.com (8.14.5/8.14.2) with ESMTP id p9DGPJ4B001557
-	for <xfs@oss.sgi.com>; Thu, 13 Oct 2011 11:25:19 -0500
+	by stout.americas.sgi.com (8.14.5/8.14.2) with ESMTP id p9DGV4f1002217
+	for <xfs@oss.sgi.com>; Thu, 13 Oct 2011 11:31:04 -0500
 Received: (from aelder@localhost)
-	by stout.americas.sgi.com (8.14.5/8.14.5/Submit) id p9DGPJwn001556
-	for xfs@oss.sgi.com; Thu, 13 Oct 2011 11:25:19 -0500
+	by stout.americas.sgi.com (8.14.5/8.14.5/Submit) id p9DGV4oE002216
+	for xfs@oss.sgi.com; Thu, 13 Oct 2011 11:31:04 -0500
 From: Alex Elder <aelder@sgi.com>
-Message-Id: <201110131625.p9DGPJwn001556@stout.americas.sgi.com>
-Date: Thu, 13 Oct 2011 11:25:19 -0500
-Subject: [PATCH,v2] xfsprogs: update summaries in preparation for release 3.1.6
+Message-Id: <201110131631.p9DGV4oE002216@stout.americas.sgi.com>
+Date: Thu, 13 Oct 2011 11:31:04 -0500
+Subject: [PATCH,v2] xfstests: prepare for marking an initial versioned release
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -24,52 +24,81 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-VGhlIGZvbGxvd2luZyBpcyBhIGRyYWZ0IG9mIHN1bW1hcmllcyB0byBiZSBpbmNsdWRlZCBpbiB0
-aGUgbmV4dApyZWxlYXNlIG9mIHhmc3Byb2dzLgoKU2lnbmVkLW9mZi1ieTogQWxleCBFbGRlciA8
-YWxkZXJAc2dpLmNvbT4KU2lnbmVkLW9mZi1ieTogTmF0aGFuIFNjb3R0IDxuYXRoYW5zQGRlYmlh
-bi5vcmc+CgotLS0KQ2hhbmdlZCBmb3IgdjI6CiAtIEFiYnJldmlhdGVkIHRoZSBzdW1tYXJ5IGlu
-IHRoZSBDSEFOR0VTIGZpbGUKCiBkZWJpYW4vY2hhbmdlbG9nIHwgICAgNyArKysrKysrCiBkb2Mv
-Q0hBTkdFUyAgICAgIHwgICAyNSArKysrKysrKysrKysrKysrKysrKysrKysrCiAyIGZpbGVzIGNo
-YW5nZWQsIDMyIGluc2VydGlvbnMoKykKCkluZGV4OiBiL2RlYmlhbi9jaGFuZ2Vsb2cKPT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PQotLS0gYS9kZWJpYW4vY2hhbmdlbG9nCisrKyBiL2RlYmlhbi9jaGFuZ2Vsb2cKQEAgLTEs
-MyArMSwxMCBAQAoreGZzcHJvZ3MgKDMuMS42KSB1bnN0YWJsZTsgdXJnZW5jeT1sb3cKKworICAq
-IE5ldyB1cHN0cmVhbSByZWxlYXNlCisgICogSGFuZGxlIHVwY29taW5nIGxpYnJlYWRsaW5lNS1k
-ZXYgcmVtb3ZhbCAoY2xvc2VzOiAjNTUzODc1KQorCisgLS0gTmF0aGFuIFNjb3R0IDxuYXRoYW5z
-QGRlYmlhbi5vcmc+ICBXZWQsIDExIE9jdCAyMDExIDE2OjQ3OjEwICsxMTAwCisKIHhmc3Byb2dz
-ICgzLjEuNSkgdW5zdGFibGU7IHVyZ2VuY3k9bG93CiAKICAgKiBOZXcgdXBzdHJlYW0gcmVsZWFz
-ZQpJbmRleDogYi9kb2MvQ0hBTkdFUwo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBhL2RvYy9DSEFOR0VTCisrKyBi
-L2RvYy9DSEFOR0VTCkBAIC0xLDMgKzEsMjggQEAKK3hmc3Byb2dzLTMuMS42ICgxMyBPY3QgMjAx
-MSkKKwktIFJlLXN5bmNoIG9mIHRoZSBoZWFkZXIgYW5kIGxpYnhmcyBmaWxlcyB3aXRoIHRoZSBr
-ZXJuZWwKKwkgIGNvZGUgYXMgb2YgTGludXggMi42LjM3LCBpbmNsdWRpbmcgcmV2aXZpbmcgeGZz
-X3JlcGFpcgorCSAgcmFkaXggdHJlZSBjb2RlLgorCS0gRml4IGEgeGZzX3JlcGFpciBwaGFzZSA0
-IGhhbmcsIHRoYW5rcyB0byBBamVldCBZYWRhdi4KKwktIFN1YmNvbW1hbmQgbmFtZXMgd2l0aGlu
-IHZhcmlvdXMgcHJvZ3JhbXMgYXJlIG5vIGxvbmdlcgorCSAgdHJhbnNsYXRlZC9sb2NhbGl6ZWQs
-IHRoYW5rcyB0byBBcmthZGl1c3ogTWnFm2tpZXdpY3ouCisJLSBCdWlsZCBzeXN0ZW0gZml4ZXMs
-IHRoYW5rcyB0byBUZWQgVHMnby4KKwktIFVwZGF0ZXMgdG8gdGVoIHhmc19pbmZvKDgpL3hmc19n
-cm93ZnMoOCkgbWFuIHBhZ2UsIHRoYW5rcworCSAgdG8gUm9tYW4gT3ZjaGlubmlrb3YuCisJLSB4
-ZnNfcXVvdGEgImRmIiBubyBsb25nZXIgcmVwb3J0cyB2YWx1ZXMgdHdpY2Ugd2hhdCB0aGV5CisJ
-ICBzaG91bGQgaGF2ZSBiZWVuIGZvciBwcm9qZWN0IHF1b3Rhcy4KKwktIG1rZnMueGZzIG5vdyBy
-ZXF1aXJlcyB0aGF0IHN1Yi1vcHRpb25zIGFyZSBub24tZW1wdHkKKwkgIHN0cmluZ3M7IHRoYW5r
-cyB0byBDaHJpcyBQZWFyc29uIGZvciByZXBvcnRpbmcuCisJLSBCZXR0ZXIgaGFuZGxpbmcgb2Yg
-c2hvcnQgcmVhZHMgaW4gbGlieGZzLgorCS0geGZzX3F1b3RhIG5vdyBwcmludHMgIk4vQSIgcmF0
-aGVyIHRoYW4gYSBsYXJnZSBudW1iZXIgZm9yCisJICB0aGUgcXVvdGEgZmlsZSBpbm9kZSBudW1i
-ZXIgZm9yIGRpc2FibGVkIHF1b3RhIHR5cGVzLgorCS0gQm9ndXMgKHVucmVsYXRlZCkgbW91bnQg
-cG9pbnQgZW50cmllcyBubyBsb25nZXIgY2F1c2UKKwkgIHhmc19ncm93ZnMsIHhmc19xdW90YSwg
-YW5kIHhmc19pbyB0byBxdWl0IGVhcmx5LgorCS0geGZzX3JlcGFpciBubyBsb25nZXIgZmFpbHMg
-d2hlbiB0aGUgc2VjdG9yIHNpemUgb2YgYW4KKwkgIHVuZGVybHlpbmcgZGV2aWNlIGlzIGxhcmdl
-ciB0aGFuIHRoZSBzZWN0b3Igc2l6ZSBpbiBhCisJICBob3N0ZWQgZmlsZXN5c3RlbSBpbWFnZS4K
-KwktIFZhcmlvdXMgb3RoZXIgaW50ZXJuYWwgaW1wcm92ZW1lbnRzLCBpbmNsdWRpbmcgcmVmYWN0
-b3JpbmcKKwkgIGFuZCBlbGltaW5hdGluZyBtb3JlIGJ1aWxkIHdhcm5pbmdzLgorCiB4ZnNwcm9n
-cy0zLjEuNSAoMzAgTWFyY2ggMjAxMSkKIAktIFBvbGlzaCB0cmFuc2xhdGlvbiB1cGRhdGUsIHRo
-YW5rcyB0byBKYWt1YiBCb2d1c3oKIAktIHhmc19yZXBhaXIgbm93IHdhcm5zIGlmIHJ1bm5pbmcg
-aW4gbG93IG1lbW9yeSBtb2RlCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNn
-aS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+The following adds the release script used in the other XFS user
+space packages.  The version is arbitrarily set to 3.0.0, aligning
+it roughly with the current version of the Linux kernel as well as
+to the other XFS user space packages.
+
+Signed-off-by: Alex Elder <aelder@sgi.com>
+---
+Changed for v2:
+ - Dropped recent test summaries from the CHANGES file
+
+ VERSION     |    2 +-
+ doc/CHANGES |    4 ++++
+ release.sh  |   25 +++++++++++++++++++++++++
+ 3 files changed, 30 insertions(+), 1 deletion(-)
+
+Index: b/VERSION
+===================================================================
+--- a/VERSION
++++ b/VERSION
+@@ -1,7 +1,7 @@
+ #
+ # This file is used by configure to get version information
+ #
+-PKG_MAJOR=1
++PKG_MAJOR=3
+ PKG_MINOR=0
+ PKG_REVISION=0
+ PKG_BUILD=1
+Index: b/doc/CHANGES
+===================================================================
+--- /dev/null
++++ b/doc/CHANGES
+@@ -0,0 +1,4 @@
++xfstests-3.0.0 (13 October 2011)
++	- This is the first versioned release recorded for the
++	  xfstests suite.  Tests 240-263 have been added to the
++	  suite (to date) in 2011.
+Index: b/release.sh
+===================================================================
+--- /dev/null
++++ b/release.sh
+@@ -0,0 +1,25 @@
++#!/bin/bash
++#
++# Automate generation a new release
++#
++
++. ./VERSION
++
++version=${PKG_MAJOR}.${PKG_MINOR}.${PKG_REVISION}
++date=`date +"%-d %B %Y"`
++
++echo "Updating CHANGES"
++sed -e "s/${version}.*/${version} (${date})/" doc/CHANGES > doc/CHANGES.tmp && \
++	mv doc/CHANGES.tmp doc/CHANGES
++
++echo "Commiting CHANGES update to git"
++git commit -s -a -m "${version} release"
++
++echo "Tagging git repository"
++git tag -s -a -m "${version} release" v${version}
++
++# echo "Creating source tarball"
++# make dist
++
++echo "Done."
++echo "Please remember to push out tags using \"git push --tags\""
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
