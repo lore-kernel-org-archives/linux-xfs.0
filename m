@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9ECZFvS260825 for <xfs@oss.sgi.com>; Fri, 14 Oct 2011 07:35:15 -0500
-Date: Fri, 14 Oct 2011 08:35:13 -0400
+	p9ECgJ61261070 for <xfs@oss.sgi.com>; Fri, 14 Oct 2011 07:42:19 -0500
+Date: Fri, 14 Oct 2011 08:42:17 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH, v2] xfsprogs: update summaries in preparation for release
-	3.1.6
-Message-ID: <20111014123513.GB32040@infradead.org>
-References: <201110131625.p9DGPJwn001556@stout.americas.sgi.com>
+Subject: Re: [PATCH,v2] xfsdump: update summaries in preparation for release
+	3.0.6
+Message-ID: <20111014124217.GA6842@infradead.org>
+References: <201110131627.p9DGRF6Y001891@stout.americas.sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <201110131625.p9DGPJwn001556@stout.americas.sgi.com>
+In-Reply-To: <201110131627.p9DGRF6Y001891@stout.americas.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
