@@ -1,23 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9DMlpKg217715 for <xfs@oss.sgi.com>; Thu, 13 Oct 2011 17:47:51 -0500
-Received: from ipmail07.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3F5941C851EB
-	for <xfs@oss.sgi.com>; Thu, 13 Oct 2011 15:47:48 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	lRHCnr6qnX3O3qwg for <xfs@oss.sgi.com>;
-	Thu, 13 Oct 2011 15:47:48 -0700 (PDT)
-Date: Fri, 14 Oct 2011 09:47:44 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfsprogs: libxfs: Don't forget to initialize the radix
-	tree subsystem
-Message-ID: <20111013224744.GO3159@dastard>
-References: <201110131850.p9DIoEvU006578@stout.americas.sgi.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <201110131850.p9DIoEvU006578@stout.americas.sgi.com>
+	p9E1j9HC227860
+	for <linux-xfs@oss.sgi.com>; Thu, 13 Oct 2011 20:45:12 -0500
+Received: from lo.gmane.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 784E31C7267
+	for <linux-xfs@oss.sgi.com>; Thu, 13 Oct 2011 18:45:07 -0700 (PDT)
+Received: from lo.gmane.org (lo.gmane.org [80.91.229.12]) by cuda.sgi.com with
+	ESMTP id DmkNLwCC46fI2m86 for <linux-xfs@oss.sgi.com>;
+	Thu, 13 Oct 2011 18:45:07 -0700 (PDT)
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1REWpd-00040t-EM
+	for linux-xfs@oss.sgi.com; Fri, 14 Oct 2011 03:45:05 +0200
+Received: from ip-89-176-6-41.net.upcbroadband.cz ([89.176.6.41])
+	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+	id 1AlnuQ-0007hv-00
+	for <linux-xfs@oss.sgi.com>; Fri, 14 Oct 2011 03:45:05 +0200
+Received: from zkaspar82 by ip-89-176-6-41.net.upcbroadband.cz with local
+	(Gmexim 0.1 (Debian)) id 1AlnuQ-0007hv-00
+	for <linux-xfs@oss.sgi.com>; Fri, 14 Oct 2011 03:45:05 +0200
+From: Zdenek Kaspar <zkaspar82@gmail.com>
+Subject: Advanced Format drive - sectsz question
+Date: Fri, 14 Oct 2011 03:38:14 +0200
+Message-ID: <j783rh$gn7$1@dough.gmane.org>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,51 +36,21 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
-Cc: xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-On Thu, Oct 13, 2011 at 01:50:14PM -0500, Alex Elder wrote:
-> The libxfs code uses radix tree routines to manage a mount
-> point's m_perag_tree.  But the radix tree routines assume
-> that radix_tree_init() has been called to initialize the
-> height_to_maxindex[] global array, and this was not being
-> done.
-> 
-> This showed up when running mkfs.xfs on an ia64 system.  Since
-> it wasn't initialized, the array was filled with zeroes.  The
-> first time radix_tree_extend() got called (with index 0), the
-> height would be set to 1 and all would seem fine.
-> 
-> The *second* time it got called (with index 1) a problem would
-> arise--though we were apparently "lucky" enough for it not to
-> matter.  The following loop would simply reference invalid slots
-> beyond the end of the array until it happened upon one that was
-> non-zero.  (I've expanded the function radix_tree_maxindex() here.)
-> 
->         /* Figure out what the height should be.  */
->         height = root->height + 1;
->         while (index > height_to_maxindex[height])
->                 height++;
-> 
-> As an example, this looped 1937 times before it found a non-zere
-> value that would cause it to break out of the loop.
-> 
-> Even that *seemed* to be OK.  But at the end of mkfs.xfs, when
-> it calls libxfs_umount(), non-initialized "slots" are dereferenced
-> and we hit a fault.
-> 
-> Wow.
-> 
-> Signed-off-by: Alex Elder <aelder@sgi.com>
+Hello list, I have hard drive which reports:
 
-/me wonders why valgrind didn't catch that
+logical_block_size  ->  512
+physical_block_size -> 4096
 
-Anyway, the fix looks good, and well caught!
+Default mkfs.xfs sets sectsz to 512.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
--- 
-Dave Chinner
-david@fromorbit.com
+kernel-2.6.32-131.17.1.el6.x86_64
+xfsprogs-3.1.1-4.el6.x86_64
+
+Is mkfs.xfs -s size=4096 the right way?
+
+TIA!, Z.
 
 _______________________________________________
 xfs mailing list
