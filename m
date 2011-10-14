@@ -1,16 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9EChBes261099 for <xfs@oss.sgi.com>; Fri, 14 Oct 2011 07:43:12 -0500
-Date: Fri, 14 Oct 2011 08:43:09 -0400
+	p9EDBheg000639 for <xfs@oss.sgi.com>; Fri, 14 Oct 2011 08:11:44 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E25E416129F5
+	for <xfs@oss.sgi.com>; Fri, 14 Oct 2011 06:19:15 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	vcroY3hykvizHLDE for <xfs@oss.sgi.com>;
+	Fri, 14 Oct 2011 06:19:15 -0700 (PDT)
+Date: Fri, 14 Oct 2011 09:11:42 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH,v2] xfstests: prepare for marking an initial versioned
-	release
-Message-ID: <20111014124309.GB6842@infradead.org>
-References: <201110131631.p9DGV4oE002216@stout.americas.sgi.com>
+Subject: XFS status update for September 2011
+Message-ID: <20111014131142.GA997@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <201110131631.p9DGV4oE002216@stout.americas.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,21 +28,23 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, Oct 13, 2011 at 11:31:04AM -0500, Alex Elder wrote:
-> The following adds the release script used in the other XFS user
-> space packages.  The version is arbitrarily set to 3.0.0, aligning
-> it roughly with the current version of the Linux kernel as well as
-> to the other XFS user space packages.
-> 
-> Signed-off-by: Alex Elder <aelder@sgi.com>
+August saw further release candidates of Linux 3.1, which had been
+completely uneventful with just a single small regression fix being
+merged.
 
-Fine with me, although with the current state of affairs 0.1 really
-seems like a much more fitting version number.
+In the meantime developments for the Linux 3.2 kernel went on with the merge
+of a large series that completely refactors the XFS-internal xfs_bmapi
+interfaces for simpler interfaces and less stack usage, as well as various
+smaller cleanups and fixes.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+September also was a very busy month for userspace development. In xfsprogs
+we saw various error handling fixes to libxcmd, libxfs, mkfs.xfs, xfs_quota
+and xfs_repair, xfsdump saw a few smaller changes finishing up the large
+work done in August.  Xfstests saw 4 new test cases contributed from
+various developers, and the usual handful of bug fixes.
 
 _______________________________________________
 xfs mailing list
