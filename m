@@ -1,23 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9FM9SO6136726
-	for <linux-xfs@oss.sgi.com>; Sat, 15 Oct 2011 17:09:28 -0500
-Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E36AF1CDD2A
-	for <linux-xfs@oss.sgi.com>; Sat, 15 Oct 2011 15:09:25 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	JjAxZMDgGxxfeZEO for <linux-xfs@oss.sgi.com>;
-	Sat, 15 Oct 2011 15:09:25 -0700 (PDT)
-Date: Sun, 16 Oct 2011 09:09:22 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: tasks hangs in D state while writing to xfs
-Message-ID: <20111015220922.GR3159@dastard>
-References: <j7bs98$5bs$1@dough.gmane.org>
+	p9FMNfXi137824
+	for <linux-xfs@oss.sgi.com>; Sat, 15 Oct 2011 17:23:41 -0500
+Received: from blu0-omc3-s21.blu0.hotmail.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4BCD81477C2E
+	for <linux-xfs@oss.sgi.com>; Sat, 15 Oct 2011 15:31:20 -0700 (PDT)
+Received: from blu0-omc3-s21.blu0.hotmail.com (blu0-omc3-s21.blu0.hotmail.com
+	[65.55.116.96]) by cuda.sgi.com with ESMTP id Gu63yJzmoqHl1rNE
+	for <linux-xfs@oss.sgi.com>; Sat, 15 Oct 2011 15:31:20 -0700 (PDT)
+Message-ID: <BLU0-SMTP3451B172CBB0EFA083554F7C9E60@phx.gbl>
+From: Boopathi Veerappan <boopathi@hotmail.com>
+Subject: RE: Hi linux-xfs@oss.sgi.com
+Date: Sat, 15 Oct 2011 15:24:33 +0000
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <j7bs98$5bs$1@dough.gmane.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,29 +26,9 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Marcin M <gmane@mejor.pl>
-Cc: linux-xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-On Sat, Oct 15, 2011 at 01:54:15PM +0200, Marcin M wrote:
-> Hello!
-> I've noticed strange problem with xfs. I've created filesystem with
-> blocksize=1024 and log as small as it possible. Next i'm copying files
-> using rsync, after sometime rsync hangs in D state. So i can't kill it,
-> i've got to reboot hosts. In dmesg i'm getting such messages:
-
-Known problem - it's a log space hang. You can often get stuff
-moving again via "echo 2 > /proc/sys/vm/drop_caches".
-
-That said, Christoph's fixes for the 3.0.x kernel series are here:
-
-http://oss.sgi.com/archives/xfs/2011-10/msg00305.html
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+hello linux-xfs@oss.sgi.com how have you been? Do you have any spare time to make some extra money? http://t.co/hAXpcXA8 Just check out this news article! I will never have to worry about money again!
 
 _______________________________________________
 xfs mailing list
