@@ -1,19 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9FMNfXi137824
-	for <linux-xfs@oss.sgi.com>; Sat, 15 Oct 2011 17:23:41 -0500
-Received: from blu0-omc3-s21.blu0.hotmail.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4BCD81477C2E
-	for <linux-xfs@oss.sgi.com>; Sat, 15 Oct 2011 15:31:20 -0700 (PDT)
-Received: from blu0-omc3-s21.blu0.hotmail.com (blu0-omc3-s21.blu0.hotmail.com
-	[65.55.116.96]) by cuda.sgi.com with ESMTP id Gu63yJzmoqHl1rNE
-	for <linux-xfs@oss.sgi.com>; Sat, 15 Oct 2011 15:31:20 -0700 (PDT)
-Message-ID: <BLU0-SMTP3451B172CBB0EFA083554F7C9E60@phx.gbl>
-From: Boopathi Veerappan <boopathi@hotmail.com>
-Subject: RE: Hi linux-xfs@oss.sgi.com
-Date: Sat, 15 Oct 2011 15:24:33 +0000
+	p9GBmxp5181605
+	for <linux-xfs@oss.sgi.com>; Sun, 16 Oct 2011 06:48:59 -0500
+Received: from meteor.mejor.pl (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6484B1CF19F
+	for <linux-xfs@oss.sgi.com>; Sun, 16 Oct 2011 04:48:57 -0700 (PDT)
+Received: from meteor.mejor.pl (meteor.mejor.pl [88.198.102.195]) by
+	cuda.sgi.com with ESMTP id OUmmoGgEYtuiCEBx for
+	<linux-xfs@oss.sgi.com>; Sun, 16 Oct 2011 04:48:57 -0700 (PDT)
+Message-ID: <4E9AC49D.60303@mejor.pl>
+Date: Sun, 16 Oct 2011 13:48:45 +0200
+From: =?ISO-8859-2?Q?Marcin_Miros=B3aw?= <marcin@mejor.pl>
 MIME-Version: 1.0
+Subject: Re: tasks hangs in D state while writing to xfs
+References: <j7bs98$5bs$1@dough.gmane.org> <20111015220922.GR3159@dastard>
+In-Reply-To: <20111015220922.GR3159@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,9 +28,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@oss.sgi.com
 
-hello linux-xfs@oss.sgi.com how have you been? Do you have any spare time to make some extra money? http://t.co/hAXpcXA8 Just check out this news article! I will never have to worry about money again!
+W dniu 2011-10-16 00:09, Dave Chinner pisze:
+> Known problem - it's a log space hang. You can often get stuff
+> moving again via "echo 2 > /proc/sys/vm/drop_caches".
+> 
+> That said, Christoph's fixes for the 3.0.x kernel series are here:
+> 
+> http://oss.sgi.com/archives/xfs/2011-10/msg00305.html
+
+Thanks for link. I've tried kernel linux-3.1-rc9, xfs behaves better but
+still is something not right. I'm rsyncincg many files, after sometime
+rsync hangs, it looks like do nothing for about 30-90 seconds and
+continues copying. I did run "sync" when rsync was hanging and sync also
+hangs. It looks like xfs has hiccup.
+Regards,
+Marcin
 
 _______________________________________________
 xfs mailing list
