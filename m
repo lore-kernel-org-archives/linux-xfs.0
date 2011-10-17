@@ -1,32 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9HCPOKJ259661 for <xfs@oss.sgi.com>; Mon, 17 Oct 2011 07:25:24 -0500
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B7E961C90B3D
-	for <xfs@oss.sgi.com>; Mon, 17 Oct 2011 05:25:23 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id QrDJEuxIB7ctzT4P for
-	<xfs@oss.sgi.com>; Mon, 17 Oct 2011 05:25:23 -0700 (PDT)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id p9HCPM11025253
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Mon, 17 Oct 2011 08:25:22 -0400
-Received: from andromeda.usersys.redhat.com ([10.3.113.8])
-	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id p9HCPJ6x013222
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
-	for <xfs@oss.sgi.com>; Mon, 17 Oct 2011 08:25:22 -0400
-Date: Mon, 17 Oct 2011 10:24:12 -0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH] xfs: Fix possible memory corruption in xfs_readlink
-Message-ID: <20111017122412.GA32608@andromeda.usersys.redhat.com>
-References: <20111016234121.GS3159@dastard>
-	<1318863168-3187-1-git-send-email-cmaiolino@redhat.com>
+	p9HCeHea260256 for <xfs@oss.sgi.com>; Mon, 17 Oct 2011 07:40:17 -0500
+Received: from shrek.krogh.cc (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5384E1C90B53
+	for <xfs@oss.sgi.com>; Mon, 17 Oct 2011 05:40:15 -0700 (PDT)
+Received: from shrek.krogh.cc (2605ds1-ynoe.0.fullrate.dk [90.184.12.24]) by
+	cuda.sgi.com with ESMTP id cRylKqs50wAZOASu for
+	<xfs@oss.sgi.com>; Mon, 17 Oct 2011 05:40:15 -0700 (PDT)
+Message-ID: <e78a7c38af135cee4b742c99ecd1c011.squirrel@shrek.krogh.cc>
+In-Reply-To: <20111011133448.GA10692@infradead.org>
+References: <20111011091757.GA32589@otto.nzcorp.net>
+	<20111011133448.GA10692@infradead.org>
+Date: Mon, 17 Oct 2011 14:40:07 +0200 (CEST)
+Subject: Re: 2.6.38.8 kernel bug in XFS or megaraid driver with heavy I/O load
+From: jesper@krogh.cc
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1318863168-3187-1-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,23 +28,29 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: aradford@gmail.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-Hi,
+> On Tue, Oct 11, 2011 at 11:17:57AM +0200, Anders Ossowicki wrote:
+>> Pid: 27512, comm: flush-8:32 Tainted: G        W   2.6.38.8 #1 Dell Inc.
+>>  PowerEdge R815/04Y8PT
+>> RIP: 0010:[<ffffffff810f8d71>]  [<ffffffff810f8d71>]
+>> find_get_pages+0x61/0x110
+>
+> This is core VM code, and operates purely on on-stack variables except
+> for the page cache radix tree nodes / pages.  So this either could be a
+> core VM bug that no one has noticed yet, or memory corruption.  Can you
+> run memtest86 on the box?
 
-On Mon, Oct 17, 2011 at 12:52:48PM -0200, Carlos Maiolino wrote:
-> This patch fix a possible memory corruption when
-> the link is larger than MAXPATHLEN and XFS_DEBUG
-> is not enabled. This also uses S_IFLNK to check
-> link not only in DEBUG mode.
-> 
+Over the weekend, we have run memtest for 4 hours (50% of the complete
+tests according to memtest) and it didnt find anything.
 
-please, disconsider this last patch. I did two mistakes here and
-I'll be sending a fixed version of it.
-My apologies for this
+We've also backpatched the raid-driver into 2.6.37 and the problem continued,
+so it seems to be related to the driver and/or combinations with hardware.
 
+Jesper
 -- 
---Carlos
+Jesper
 
 _______________________________________________
 xfs mailing list
