@@ -1,15 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9HMdnPk027263 for <xfs@oss.sgi.com>; Mon, 17 Oct 2011 17:39:49 -0500
-Message-ID: <1318891184.17387.5.camel@doink>
+	p9HMhFOM027498 for <xfs@oss.sgi.com>; Mon, 17 Oct 2011 17:43:16 -0500
+Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2DD9A147F54C
+	for <xfs@oss.sgi.com>; Mon, 17 Oct 2011 15:51:04 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	wXcMNuhpZ1xFsdQ5 for <xfs@oss.sgi.com>;
+	Mon, 17 Oct 2011 15:51:04 -0700 (PDT)
+Date: Tue, 18 Oct 2011 09:43:09 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH] Fix possible memory corruption in xfs_readlink
-From: Alex Elder <aelder@sgi.com>
-Date: Mon, 17 Oct 2011 17:39:44 -0500
-In-Reply-To: <1318885528-7650-1-git-send-email-cmaiolino@redhat.com>
+Message-ID: <20111017224309.GT3159@dastard>
 References: <1318885528-7650-1-git-send-email-cmaiolino@redhat.com>
 MIME-Version: 1.0
-Reply-To: aelder@sgi.com
+Content-Disposition: inline
+In-Reply-To: <1318885528-7650-1-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,7 +32,7 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Carlos Maiolino <cmaiolino@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, 2011-10-17 at 19:05 -0200, Carlos Maiolino wrote:
+On Mon, Oct 17, 2011 at 07:05:28PM -0200, Carlos Maiolino wrote:
 > Fixes a possible memory corruption when the link is larger than
 > MAXPATHLEN and XFS_DEBUG is not enabled. This also remove the
 > S_ISLNK assert, since the inode mode is checked previously in
@@ -33,21 +40,42 @@ On Mon, 2011-10-17 at 19:05 -0200, Carlos Maiolino wrote:
 > 
 > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-I know this was discussed to death on IRC.  But I didn't
-get a chance to be a part of that committee so I have
-a suggested change:  use %llu format, not %lld.
+Looks good. One minor thing for consistency, but consider it:
 
-Just to clarify, this is addressing something that could
-happen if a corrupt filesystem led to an inode whose flags
-indicate it's a symlink has a size that exceeds the maximum
-path length.  And without your fix, the memcpy() in
-xfs_readlink() could overflow the memory it's provided.
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-I can implement the format string fix before I commit your
-change.  But I'll wait for your permission before doing so.
+> ---
+>  fs/xfs/xfs_vnodeops.c |   11 ++++++++---
+>  1 files changed, 8 insertions(+), 3 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
+> index 51fc429..9ca6676 100644
+> --- a/fs/xfs/xfs_vnodeops.c
+> +++ b/fs/xfs/xfs_vnodeops.c
+> @@ -123,13 +123,18 @@ xfs_readlink(
+>  
+>  	xfs_ilock(ip, XFS_ILOCK_SHARED);
+>  
+> -	ASSERT(S_ISLNK(ip->i_d.di_mode));
+> -	ASSERT(ip->i_d.di_size <= MAXPATHLEN);
+> -
+>  	pathlen = ip->i_d.di_size;
+>  	if (!pathlen)
+>  		goto out;
+>  
+> +	if (pathlen > MAXPATHLEN) {
+> +		xfs_emerg(mp, "%s: inode (%lld) symlink length (%d) too long",
+> +			 __func__, (unsigned long long)ip->i_ino, pathlen);
 
-Reviewed-by: Alex Elder <aelder@sgi.com>
+xfs_alert() is generally used for such messages - it's not a fatal
+error (yet)....
 
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
