@@ -1,21 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9HCeHea260256 for <xfs@oss.sgi.com>; Mon, 17 Oct 2011 07:40:17 -0500
-Received: from shrek.krogh.cc (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5384E1C90B53
-	for <xfs@oss.sgi.com>; Mon, 17 Oct 2011 05:40:15 -0700 (PDT)
-Received: from shrek.krogh.cc (2605ds1-ynoe.0.fullrate.dk [90.184.12.24]) by
-	cuda.sgi.com with ESMTP id cRylKqs50wAZOASu for
-	<xfs@oss.sgi.com>; Mon, 17 Oct 2011 05:40:15 -0700 (PDT)
-Message-ID: <e78a7c38af135cee4b742c99ecd1c011.squirrel@shrek.krogh.cc>
-In-Reply-To: <20111011133448.GA10692@infradead.org>
-References: <20111011091757.GA32589@otto.nzcorp.net>
-	<20111011133448.GA10692@infradead.org>
-Date: Mon, 17 Oct 2011 14:40:07 +0200 (CEST)
-Subject: Re: 2.6.38.8 kernel bug in XFS or megaraid driver with heavy I/O load
-From: jesper@krogh.cc
-MIME-Version: 1.0
+	p9HCVMeW259902 for <xfs@oss.sgi.com>; Mon, 17 Oct 2011 07:31:23 -0500
+Received: from hades.usersys.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A50E61C905B2
+	for <xfs@oss.sgi.com>; Mon, 17 Oct 2011 05:31:21 -0700 (PDT)
+Received: from hades.usersys.redhat.com ([187.60.101.4]) by cuda.sgi.com with
+	ESMTP id Y3ITHsGreHkvolpJ for <xfs@oss.sgi.com>;
+	Mon, 17 Oct 2011 05:31:21 -0700 (PDT)
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: [PATCH] Fix possible memory corruption in xfs_readlink
+Date: Mon, 17 Oct 2011 13:30:12 -0200
+Message-Id: <1318865412-4655-1-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,33 +20,47 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: aradford@gmail.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Carlos Maiolino <cmaiolino@redhat.com>
 
-> On Tue, Oct 11, 2011 at 11:17:57AM +0200, Anders Ossowicki wrote:
->> Pid: 27512, comm: flush-8:32 Tainted: G        W   2.6.38.8 #1 Dell Inc.
->>  PowerEdge R815/04Y8PT
->> RIP: 0010:[<ffffffff810f8d71>]  [<ffffffff810f8d71>]
->> find_get_pages+0x61/0x110
->
-> This is core VM code, and operates purely on on-stack variables except
-> for the page cache radix tree nodes / pages.  So this either could be a
-> core VM bug that no one has noticed yet, or memory corruption.  Can you
-> run memtest86 on the box?
+Fixes a possible memory corruption when the link
+is larger than MAXPATHLEN and XFS_DEBUG is not
+enabled.
+This also uses S_IFLNK to check link not only
+in DEBUG mode.
 
-Over the weekend, we have run memtest for 4 hours (50% of the complete
-tests according to memtest) and it didnt find anything.
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+---
+ fs/xfs/xfs_vnodeops.c |    9 +++++++--
+ 1 files changed, 7 insertions(+), 2 deletions(-)
 
-We've also backpatched the raid-driver into 2.6.37 and the problem continued,
-so it seems to be related to the driver and/or combinations with hardware.
-
-Jesper
+diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
+index 51fc429..3bc4fda 100644
+--- a/fs/xfs/xfs_vnodeops.c
++++ b/fs/xfs/xfs_vnodeops.c
+@@ -123,8 +123,13 @@ xfs_readlink(
+ 
+ 	xfs_ilock(ip, XFS_ILOCK_SHARED);
+ 
+-	ASSERT(S_ISLNK(ip->i_d.di_mode));
+-	ASSERT(ip->i_d.di_size <= MAXPATHLEN);
++	if (!(S_ISLNK(ip->i_d.di_mode)) || !(ip->i_d.di_size <= MAXPATHLEN )){
++
++		xfs_emerg(mp, "inode (%lld), link too long or not a link",
++			 (unsigned long long)ip->i_ino);
++		ASSERT(0);
++		return XFS_ERROR(EFSCORRUPTED);
++	}
+ 
+ 	pathlen = ip->i_d.di_size;
+ 	if (!pathlen)
 -- 
-Jesper
+1.7.6.2
 
 _______________________________________________
 xfs mailing list
