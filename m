@@ -1,29 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9H097l1219776
-	for <linux-xfs@oss.sgi.com>; Sun, 16 Oct 2011 19:09:08 -0500
-Received: from lo.gmane.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F18D716C0B3F
-	for <linux-xfs@oss.sgi.com>; Sun, 16 Oct 2011 17:16:52 -0700 (PDT)
-Received: from lo.gmane.org (lo.gmane.org [80.91.229.12]) by cuda.sgi.com with
-	ESMTP id zYmYSkJCRgSm8of0 for <linux-xfs@oss.sgi.com>;
-	Sun, 16 Oct 2011 17:16:52 -0700 (PDT)
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1RFalM-0001fe-HV
-	for linux-xfs@oss.sgi.com; Mon, 17 Oct 2011 02:09:04 +0200
-Received: from s0106000acd1d509c.du.shawcable.net ([70.67.174.161])
-	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-	id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Mon, 17 Oct 2011 02:09:04 +0200
-Received: from prad by s0106000acd1d509c.du.shawcable.net with local (Gmexim
-	0.1 (Debian)) id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Mon, 17 Oct 2011 02:09:04 +0200
-From: prad <prad@towardsfreedom.com>
-Subject: best way to duplicate hard drive for backup
-Date: Sun, 16 Oct 2011 17:04:42 -0700
-Message-ID: <871uuciiud.fsf@psinom.home>
-Mime-Version: 1.0
+	p9H8Ca2R247147
+	for <linux-xfs@oss.sgi.com>; Mon, 17 Oct 2011 03:12:36 -0500
+Received: from seldrel01.sonyericsson.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5B2DC1D1198
+	for <linux-xfs@oss.sgi.com>; Mon, 17 Oct 2011 01:12:35 -0700 (PDT)
+Received: from seldrel01.sonyericsson.com (seldrel01.sonyericsson.com
+	[212.209.106.2]) by cuda.sgi.com with ESMTP id 3GxuwnnHpWJWMbn9
+	for <linux-xfs@oss.sgi.com>; Mon, 17 Oct 2011 01:12:35 -0700 (PDT)
+From: "Assarsson, Emil" <Emil.Assarsson@sonyericsson.com>
+Date: Mon, 17 Oct 2011 10:12:33 +0200
+Subject: Re: best way to duplicate hard drive for backup
+Message-ID: <2BF070A7A2375D46BA1B6087F8D5DCB68BEA722B9E@seldmbx01.corpusers.net>
+References: <871uuciiud.fsf@psinom.home>
+In-Reply-To: <871uuciiud.fsf@psinom.home>
+Content-Language: en-US
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,48 +25,28 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: "prad@towardsfreedom.com" <prad@towardsfreedom.com>
+Cc: "linux-xfs@oss.sgi.com" <linux-xfs@oss.sgi.com>
 
-we have a system with the following xfs filesystems on 1T hd:
-/
-/home
-/var/lib/vz (2 servers running on separate ips)
-/data (used for temporary bkps and experiments)
-
-the latter three are backed up to an external hard drive each night
-
-i would like to keep fairly uptodate bkp of this drive in case it
-crashes. then, i'd just plug in the bkp.
-
-i don't want to use raid especially because it would mean running 2
-drives continuously (i presume this would be the case even with the
-western digital green drives?)
-
-i know i can rebuild the system from the external, but would prefer to
-have another drive ready to go rather than rebuilding things from the
-xfs dumps.
-
-so i figured duplicating the first hd and then keeping it uptodate with
-rsync. i'd still have the xfsdumps on the external as a 3rd bkp for
-everything other than /.
-
-questions:
-1. is my plan an intelligent one?
-2. if so, what is the most sensible way of duplicating the first hd?
-a) dd?
-b) install from scratch and then overwrite with xfs dumps from external?
-c) something else entirely?
-
-
--- 
-in friendship,
-prad
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+c8O2biAyMDExLTEwLTE2IGtsb2NrYW4gMTc6MDQgLTA3MDAgc2tyZXYgcHJhZDoKPiAxLiBpcyBt
+eSBwbGFuIGFuIGludGVsbGlnZW50IG9uZT8KPiAyLiBpZiBzbywgd2hhdCBpcyB0aGUgbW9zdCBz
+ZW5zaWJsZSB3YXkgb2YgZHVwbGljYXRpbmcgdGhlIGZpcnN0IGhkPwo+IGEpIGRkPwo+IGIpIGlu
+c3RhbGwgZnJvbSBzY3JhdGNoIGFuZCB0aGVuIG92ZXJ3cml0ZSB3aXRoIHhmcyBkdW1wcyBmcm9t
+Cj4gZXh0ZXJuYWw/Cj4gYykgc29tZXRoaW5nIGVsc2UgZW50aXJlbHk/Cj4gCmEpICJkZCIgcmVx
+dWlyZXMgdGhhdCB0aGUgZmlsZXN5c3RlbSBpcyBvZmZsaW5lLiBJdCBkdXBsaWNhdGVzCmV2ZXJ5
+dGhpbmcgb24gdGhlIGRpc2ssIGV2ZW4gYWxsIHRoZSByYW5kb20gc3R1ZmYgb24gdGhlIGRpc2sg
+dGhhdAphcmVuJ3QgZmlsZXMuCmIpIElmIHlvdSBoYXZlIGEgcHJvcGVyIGJhY2t1cCBzY2hlZHVs
+ZSB0aGlzIHdpbGwgYWxsb3cgdG8gcmVzdG9yZSBhCm9sZGVyIHN5c3RlbSBpZiBzb21ldGhpbmcg
+YnJva2UgYSBmZXcgZGF5cyBhZ28uIFBsZWFzZSBub3RlCnRoYXQgL2V0Yy9mc3RhYiBvZnRlbiBj
+b250YWlucyByZWZlcmVuY2VzIHRvIHRoZSBVVUlEIG9mIHRoZSBmaWxlCnN5c3RlbS4gWW91IGFs
+c28gbmVlZCB0byBtYWtlIHN1cmUgdGhhdCB0aGUgYm9vdGxvYWRlciBpcyB1cGRhdGVkLgpjKSBZ
+b3UgY2FuIGhhdmUgYSB3b3JraW5nIGFuZCB0ZXN0ZWQgc3RhbmRieSBhbmQgdGhlbiByZXN0b3Jl
+IGZyb20KeGZzZHVtcCB3aGVuIHlvdSBuZWVkIHRvLiBZb3UgY2FuIHNldCAibm8gYmFja3VwIiBm
+aWxlIHN5c3RlbSBhdHRyaWJ1dGUKb24gZmlsZXMgYW5kIGRpcmVjdG9yaWVzIHRoYXQgaXNuJ3Qg
+bmVlZGVkIHRvIGJhY2t1cC4KCi0tCkVtaWwKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDov
+L29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
