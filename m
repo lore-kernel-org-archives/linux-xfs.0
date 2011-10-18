@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9I6qge0060338 for <xfs@oss.sgi.com>; Tue, 18 Oct 2011 01:52:49 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7F148F77F90
-	for <xfs@oss.sgi.com>; Tue, 18 Oct 2011 00:00:35 -0700 (PDT)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	FABhE3gjDEv2anTv for <xfs@oss.sgi.com>;
-	Tue, 18 Oct 2011 00:00:35 -0700 (PDT)
-Date: Tue, 18 Oct 2011 02:52:40 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] Fix possible memory corruption in xfs_readlink
-Message-ID: <20111018065240.GA2490@infradead.org>
-References: <1318911538-9174-1-git-send-email-cmaiolino@redhat.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1318911538-9174-1-git-send-email-cmaiolino@redhat.com>
+	p9I6Q71R058152 for <xfs@oss.sgi.com>; Tue, 18 Oct 2011 01:26:07 -0500
+Received: from acsinet15.oracle.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 289B01C92A6F
+	for <xfs@oss.sgi.com>; Mon, 17 Oct 2011 23:26:05 -0700 (PDT)
+Received: from acsinet15.oracle.com (acsinet15.oracle.com [141.146.126.227])
+	by cuda.sgi.com with ESMTP id QmWF0jXiB4QeVg3D for
+	<xfs@oss.sgi.com>; Mon, 17 Oct 2011 23:26:05 -0700 (PDT)
+From: Anand Jain <Anand.Jain@oracle.com>
+Subject: [PATCH 3/3] 266: Functional test case for the btrfs raid operations
+Date: Tue, 18 Oct 2011 14:28:56 +0800
+Message-Id: <1318919336-32206-4-git-send-email-Anand.Jain@oracle.com>
+In-Reply-To: <1318919336-32206-1-git-send-email-Anand.Jain@oracle.com>
+References: <20111013005652.GM3159@dastard>
+	<1318919336-32206-1-git-send-email-Anand.Jain@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,16 +23,238 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Carlos Maiolino <cmaiolino@redhat.com>
-Cc: xfs@oss.sgi.com
+To: hch@infradead.org, linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com, david@fromorbit.com
+Cc: Anand Jain <Anand.Jain@oracle.com>
 
-Looks good,
+This will verify the various raid features in btrfs and device
+replacement functionality.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Anand Jain <Anand.Jain@oracle.com>
+---
+ 266     |  187 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 266.out |    2 +
+ group   |    1 +
+ 3 files changed, 190 insertions(+), 0 deletions(-)
+ create mode 100755 266
+ create mode 100644 266.out
+
+diff --git a/266 b/266
+new file mode 100755
+index 0000000..3e70630
+--- /dev/null
++++ b/266
+@@ -0,0 +1,187 @@
++#! /bin/bash
++# FS QA Test No. 266
++#
++# btrfs vol tests
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2011 Oracle.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++# creator
++owner=anand.jain@oracle.com
++
++seq=`basename $0`
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++dev_removed=0
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    cd /
++    rm -f $tmp.*
++    if [ $dev_removed == 1 ]; then
++	umount $SCRATCH_MNT
++        _devmgt_add "${DEVHTL}"
++    fi
++}
++
++# get standard environment, filters and checks
++. ./common.rc
++. ./common.filter
++
++_need_to_be_root
++_supported_fs btrfs
++_supported_os Linux
++_require_scratch
++_require_scratch_dev_pool
++_require_deletable_scratch_dev_pool
++
++# Test cases related to raid in btrfs
++_test_raid0()
++{
++	export MKFS_OPTIONS="-m raid0 -d raid0"
++	_scratch_mkfs $SCRATCH_DEV_POOL > /dev/null 2>&1 || _fail "mkfs failed"
++	_scratch_mount
++	_populate_fs -n 1 -f 20 -d 10 -r $SCRATCH_MNT -s 10
++	umount $SCRATCH_MNT
++}
++
++_test_raid1()
++{
++	export MKFS_OPTIONS="-m raid1 -d raid1"
++	_scratch_mkfs $SCRATCH_DEV_POOL > /dev/null 2>&1 || _fail "mkfs failed"
++	_scratch_mount
++	_populate_fs -n 1 -f 20 -d 10 -r $SCRATCH_MNT -s 10
++	umount $SCRATCH_MNT
++}
++
++_test_raid10()
++{
++	export MKFS_OPTIONS="-m raid10 -d raid10"
++	_scratch_mkfs $SCRATCH_DEV_POOL > /dev/null 2>&1 || _fail "mkfs failed"
++	_scratch_mount
++	_populate_fs -n 1 -f 20 -d 10 -r $SCRATCH_MNT -s 10
++	umount $SCRATCH_MNT
++}
++
++_test_single()
++{
++	export MKFS_OPTIONS="-m single -d single"
++	_scratch_mkfs $SCRATCH_DEV_POOL > /dev/null 2>&1 || _fail "mkfs failed"
++	_scratch_mount
++	_populate_fs -n 1 -f 20 -d 10 -r $SCRATCH_MNT -s 10
++	umount $SCRATCH_MNT
++}
++
++_test_add()
++{
++	local i
++	local devs[]="( $SCRATCH_DEV_POOL )"
++	local n=${#devs[@]}
++
++	n=$(($n-1))
++
++	export MKFS_OPTIONS=""
++	_scratch_mkfs > /dev/null 2>&1 || _fail "mkfs failed"
++	_scratch_mount
++	_populate_fs -n 1 -f 20 -d 10 -r $SCRATCH_MNT -s 10
++	for i in `seq 1 $n`
++	do
++		btrfs device add ${devs[$i]} $SCRATCH_MNT > /dev/null 2>&1 || _fail "device add failed"
++	done
++	btrfs filesystem balance $SCRATCH_MNT || _fail "balance failed"
++	#btrfs filesystem show $SCRATCH_DEV 2>&1 | egrep devid |awk '{
++	#	if ( $6 == "0.00" ) { exit 1 }
++	#}' || _fail "test6_add... failed"
++	umount $SCRATCH_MNT
++}
++
++_test_replace()
++{
++	local i
++	local devs=( $SCRATCH_DEV_POOL )
++	local n=${#devs[@]}
++	local ds
++	local d
++	local DEVHTL=""
++
++	# exclude the last disk in the disk pool
++	n=$(($n-1))
++	ds=${devs[@]:0:$n}
++
++	export MKFS_OPTIONS="-m raid1 -d raid1"
++	_scratch_mkfs "$ds" > /dev/null 2>&1 || _fail "tr: mkfs failed"
++	_scratch_mount
++	_populate_fs -n 1 -f 20 -d 10 -r $SCRATCH_MNT -s 10
++
++	#pick the 2nd last disk 
++	ds=${devs[@]:$(($n-1)):1}
++
++	# retrive the HTL for this scsi disk
++	d=`echo $ds|cut -d"/" -f3`
++	DEVHTL=`ls -l /sys/class/block/${d} | rev | cut -d "/" -f 3 | rev`
++
++	#fail disk
++	_devmgt_remove ${DEVHTL}
++	dev_removed=1
++
++	btrfs fi show $SCRATCH_DEV | grep "Some devices missing" > /dev/null || _fail \
++							"btrfs did not report device missing"
++
++	# add a new disk to btrfs
++	ds=${devs[@]:$(($n)):1}
++	btrfs device add ${ds} $SCRATCH_MNT > /dev/null 2>&1 || _fail "dev add failed"
++	# in some system balance fails if there is no delay (a bug)
++	# putting sleep 10 to work around as of now
++	# sleep 10
++	btrfs fi balance $SCRATCH_MNT || _fail "dev balance failed"
++	#btrfs filesystem show | egrep devid |awk '{
++	#	if ( $6 == "0.00" ) { exit 1 }
++	#}' || _fail "btrfs balance failed"
++
++	# cleaup. add the removed disk
++	umount $SCRATCH_MNT
++	_devmgt_add "${DEVHTL}"
++	dev_removed=0
++}
++
++_test_remove()
++{
++	_scratch_mkfs "$SCRATCH_DEV_POOL" > /dev/null 2>&1 || _fail "mkfs failed"
++	_scratch_mount
++	_populate_fs -n 1 -f 20 -d 10 -r $SCRATCH_MNT -s 10
++
++	# pick last dev in the list
++	dev_del=`echo ${SCRATCH_DEV_POOL} | awk '{print $NF}'`
++	btrfs device delete $dev_del $SCRATCH_MNT || _fail "btrfs device delete failed"
++	btrfs fi show $SCRATCH_DEV 2>&1 | grep $dev_del > /dev/null && _fail "btrfs still shows the deleted dev"
++	umount $SCRATCH_MNT
++}
++
++_test_raid0
++_test_raid1
++_test_raid10
++_test_single
++_test_add
++_test_replace
++_test_remove
++
++echo "Silence is golden"
++status=0; exit
+diff --git a/266.out b/266.out
+new file mode 100644
+index 0000000..54ba60f
+--- /dev/null
++++ b/266.out
+@@ -0,0 +1,2 @@
++QA output created by 266
++Silence is golden
+diff --git a/group b/group
+index 6bac8b5..817d245 100644
+--- a/group
++++ b/group
+@@ -379,3 +379,4 @@ deprecated
+ 263 rw auto quick
+ 264 auto quick
+ 265 auto quick
++266 auto
+-- 
+1.7.7
 
 _______________________________________________
 xfs mailing list
