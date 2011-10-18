@@ -1,17 +1,36 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9IMe9Dv135355 for <xfs@oss.sgi.com>; Tue, 18 Oct 2011 17:40:09 -0500
-Message-ID: <1318977605.2877.60.camel@doink>
+	p9IMxljF136683 for <xfs@oss.sgi.com>; Tue, 18 Oct 2011 17:59:47 -0500
+Received: from e5.ny.us.ibm.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 129E51C9464E
+	for <xfs@oss.sgi.com>; Tue, 18 Oct 2011 15:59:40 -0700 (PDT)
+Received: from e5.ny.us.ibm.com (e5.ny.us.ibm.com [32.97.182.145]) by
+	cuda.sgi.com with ESMTP id d0E9ZbJrR3QSVpjW for
+	<xfs@oss.sgi.com>; Tue, 18 Oct 2011 15:59:40 -0700 (PDT)
+Received: from /spool/local
+	by e5.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	Violators will be prosecuted
+	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
+	Tue, 18 Oct 2011 18:52:17 -0400
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d01relay03.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	p9IMnWg9165678 for <xfs@oss.sgi.com>; Tue, 18 Oct 2011 18:51:21 -0400
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
+	id p9IEFMqN008211
+	for <xfs@oss.sgi.com>; Tue, 18 Oct 2011 08:15:22 -0600
 Subject: Re: [RFC PATCH 1/3] Remove in core use of XFS_OQUOTA_ENFD and
 	XFS_OQUOTA_CHKD
-From: Alex Elder <aelder@sgi.com>
-Date: Tue, 18 Oct 2011 17:40:05 -0500
-In-Reply-To: <20111018000938.14942.44199.sendpatchset@chandra-lucid.austin.ibm.com>
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+In-Reply-To: <201110180716.14756.arekm@maven.pl>
 References: <20111018000932.14942.11597.sendpatchset@chandra-lucid.austin.ibm.com>
 	<20111018000938.14942.44199.sendpatchset@chandra-lucid.austin.ibm.com>
-MIME-Version: 1.0
-Reply-To: aelder@sgi.com
+	<201110180716.14756.arekm@maven.pl>
+Date: Tue, 18 Oct 2011 09:15:11 -0500
+Message-ID: <1318947311.9298.141.camel@chandra-lucid.austin.ibm.com>
+Mime-Version: 1.0
+Reply-To: sekharan@us.ibm.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,255 +39,40 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Chandra Seetharaman <sekharan@us.ibm.com>
+To: Arkadiusz =?UTF-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
 Cc: xfs@oss.sgi.com
 
-On Mon, 2011-10-17 at 19:09 -0500, Chandra Seetharaman wrote:
-> Remove incore use of XFS_OQUOTA_ENFD and XFS_OQUOTA_CHKD. Instead,
-> start using XFS_GQUOTA_.* XFS_PQUOTA_.* counterparts.
-> 
-> No changes is made to the on-disk version of the superblock yey. On-disk
-> copy still uses XFS_OQUOTA_ENFD and XFS_OQUOTA_CHKD.
-> 
-> Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
-
-OK, I have a few things you should change below.
-
-Some are based on the assumption that where we're
-headed is to support *both* group *and* project
-quotas simultaneously.
-
-I haven't looked at the other two yet, I'll start
-that tomorrow.
-
-					-Alex
-
-. . .
-
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index d06afbc..366bbb7 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -591,6 +591,14 @@ xfs_sb_from_disk(
->  	to->sb_uquotino = be64_to_cpu(from->sb_uquotino);
->  	to->sb_gquotino = be64_to_cpu(from->sb_gquotino);
->  	to->sb_qflags = be16_to_cpu(from->sb_qflags);
-
-OK, based on the comment you have in "xfs_quota.h" below:
-This stuff is coming off disk, so it will be done
-unconditionally (i.e., not related to the superblock
-version).  However, you could add an assertion that
-if OQUOTA_ENFD or OQUOTA_CHKD are set, then neither
-{P,G}QUOTA_{CHKD,ENFD} is set, and vice-versa.
-Or perhaps not an assertion, maybe just issue a
-warning and correct it.  (Or perhaps some other
-handling is more appropriate, have to think it
-through.)
-
-> +	if (to->sb_qflags & XFS_OQUOTA_ENFD)
-> +		to->sb_qflags |= (to->sb_qflags & XFS_PQUOTA_ACCT) ?
-> +					XFS_PQUOTA_ENFD : XFS_GQUOTA_ENFD;
-> +	if (to->sb_qflags & XFS_OQUOTA_CHKD)
-> +		to->sb_qflags |= (to->sb_qflags & XFS_PQUOTA_ACCT) ?
-> +					XFS_PQUOTA_CHKD : XFS_GQUOTA_CHKD;
-> +	to->sb_qflags &= ~(XFS_OQUOTA_ENFD | XFS_OQUOTA_CHKD);
-> +
->  	to->sb_flags = from->sb_flags;
->  	to->sb_shared_vn = from->sb_shared_vn;
->  	to->sb_inoalignmt = be32_to_cpu(from->sb_inoalignmt);
-> @@ -625,6 +633,12 @@ xfs_sb_to_disk(
->  	if (!fields)
->  		return;
->  
-
-Meanwhile, this will be going to disk, so will eventually
-be done only if XFS_SB_VERSION_NO_OQUOTA is *not* set.
-Otherwise the P and G flags will go as-is to disk.  (Not
-suggesting a change here--just sort of finishing my
-thought from above.)
-
-> +	if (from->sb_qflags & (XFS_PQUOTA_ENFD | XFS_GQUOTA_ENFD))
-> +		from->sb_qflags |= XFS_OQUOTA_ENFD;
-> +	if (from->sb_qflags & (XFS_PQUOTA_CHKD | XFS_GQUOTA_CHKD))
-> +		from->sb_qflags |= XFS_OQUOTA_CHKD;
-> +	from->sb_qflags &= ~(XFS_PQUOTA_ENFD | XFS_PQUOTA_CHKD |
-> +					XFS_GQUOTA_ENFD | XFS_GQUOTA_CHKD);
->  	while (fields) {
->  		f = (xfs_sb_field_t)xfs_lowbit64((__uint64_t)fields);
->  		first = xfs_sb_info[f].offset;
-> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-> index 5cff443..cb2ed78 100644
-> --- a/fs/xfs/xfs_qm.c
-> +++ b/fs/xfs/xfs_qm.c
-
-. . .
-
-> @@ -1688,7 +1691,7 @@ xfs_qm_quotacheck(
->  	 * quotachecked status, since we won't be doing accounting for
->  	 * that type anymore.
->  	 */
-> -	mp->m_qflags &= ~(XFS_OQUOTA_CHKD | XFS_UQUOTA_CHKD);
-> +	mp->m_qflags &= ~(XFS_GQUOTA_CHKD | XFS_PQUOTA_CHKD | XFS_UQUOTA_CHKD);
-
-	mp->m_qflags &= ~XFS_ALL_QUOTA_CHKD;
-
->  	mp->m_qflags |= flags;
->  
->   error_return:
-> diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-> index 5cc3dde..3a67805 100644
-> --- a/fs/xfs/xfs_qm_syscalls.c
-> +++ b/fs/xfs/xfs_qm_syscalls.c
-> @@ -120,11 +120,11 @@ xfs_qm_scall_quotaoff(
->  	}
->  	if (flags & XFS_GQUOTA_ACCT) {
->  		dqtype |= XFS_QMOPT_GQUOTA;
-> -		flags |= (XFS_OQUOTA_CHKD | XFS_OQUOTA_ENFD);
-> +		flags |= (XFS_GQUOTA_CHKD | XFS_GQUOTA_ENFD);
->  		inactivate_flags |= XFS_GQUOTA_ACTIVE;
->  	} else if (flags & XFS_PQUOTA_ACCT) {
-
-We don't want the "else" here, right?  Only one
-or the other branch will be taken at this point
-anyway, since we distinguished between group and
-project quotas when we read the superblock from
-disk?
-
->  		dqtype |= XFS_QMOPT_PQUOTA;
-> -		flags |= (XFS_OQUOTA_CHKD | XFS_OQUOTA_ENFD);
-> +		flags |= (XFS_PQUOTA_CHKD | XFS_PQUOTA_ENFD);
->  		inactivate_flags |= XFS_PQUOTA_ACTIVE;
->  	}
->  
-
-. . .
-
-> diff --git a/fs/xfs/xfs_quota.h b/fs/xfs/xfs_quota.h
-> index a595f29..41483d8 100644
-> --- a/fs/xfs/xfs_quota.h
-> +++ b/fs/xfs/xfs_quota.h
-> @@ -154,19 +154,35 @@ typedef struct xfs_qoff_logformat {
->  #define XFS_GQUOTA_ACCT	0x0040  /* group quota accounting ON */
->  
->  /*
-> + * If the superblock version is earlier than XFS_SB_VERSION_NO_OQUOTA,
-> + * following flags will only be used in m_qflags and incore sb_qflags
-> + * From XFS_SB_VERSION_NO_OQUOTA, these flags will be stored in
-> + * on-disk sb_qflags too.
-> + * Also from XFS_SB_VERSION_NO_OQUOTA, XFS_OQUOTA_.* will not be used 
-> + * in on-disk sb_qflags.
-
-I think this could benefit a little from rewording.
-Maybe something that emphasizes things more in this
-order:
-- in-core, we (now) always distinguish between group and
-  project quotas using distinct flags
-- on-disk, they may either be separate or combined,
-  depending on the whether XFS_SB_VERSION_NO_OQUOTA
-  is set in the superblock version bits
-- conversion to and from the combined OQUOTA flag (if
-  necessary) is done only in xfs_sb_{to,from}_disk()
-
-Also, I see in the later patch you use a macro like
-xfs_sb_version_hasseparatepquota() (whose name I'm not
-sure I like at this point), and it *might* read better
-if you use that rather in describing things rather than
-the XFS_SB_VERSION_NO_OQUOTA bit.
-
-> + */
-> +#define XFS_GQUOTA_ENFD	0x0080  /* group quota limits enforced */
-> +#define XFS_GQUOTA_CHKD	0x0100  /* quotacheck run on group quotas */
-> +#define XFS_PQUOTA_ENFD	0x0200  /* project quota limits enforced */
-> +#define XFS_PQUOTA_CHKD	0x0400  /* quotacheck run on project quotas */
-> +
-> +/*
-
-. . .
-
->  
->  #define XFS_MOUNT_QUOTA_SET1	(XFS_UQUOTA_ACCT|XFS_UQUOTA_ENFD|\
->  				 XFS_UQUOTA_CHKD|XFS_PQUOTA_ACCT|\
-> -				 XFS_OQUOTA_ENFD|XFS_OQUOTA_CHKD)
-> +				 XFS_PQUOTA_ENFD|XFS_PQUOTA_CHKD)
->  
->  #define XFS_MOUNT_QUOTA_SET2	(XFS_UQUOTA_ACCT|XFS_UQUOTA_ENFD|\
->  				 XFS_UQUOTA_CHKD|XFS_GQUOTA_ACCT|\
-> -				 XFS_OQUOTA_ENFD|XFS_OQUOTA_CHKD)
-> +				 XFS_GQUOTA_ENFD|XFS_GQUOTA_CHKD)
-
-There is nothing preventing a SET3--only group and project
-quotas enabled but not user quotas.
-
-But the place these symbols are is xfs_qm_scall_quotaoff(),
-and because you are no longer going to be combining the
-group and project interpretation I think these two are
-no longer needed and that logic can be simplified.  Take a
-look at that code and see if you can just get rid of these
-SET1 and SET2 symbols altogether.
-
->  
->  #define XFS_MOUNT_QUOTA_ALL	(XFS_UQUOTA_ACCT|XFS_UQUOTA_ENFD|\
->  				 XFS_UQUOTA_CHKD|XFS_PQUOTA_ACCT|\
-> -				 XFS_OQUOTA_ENFD|XFS_OQUOTA_CHKD|\
-> -				 XFS_GQUOTA_ACCT)
-> +				 XFS_PQUOTA_ENFD|XFS_PQUOTA_CHKD|\
-> +				 XFS_GQUOTA_ACCT|XFS_GQUOTA_ENFD|\
-> +				 XFS_GQUOTA_CHKD)
->  
-> 
-
-. . .
-
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index ba16248..b1c8d5b 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -328,7 +328,8 @@ xfs_parseargs(
->  			mp->m_qflags &= ~(XFS_UQUOTA_ACCT | XFS_UQUOTA_ACTIVE |
->  					  XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE |
->  					  XFS_PQUOTA_ACCT | XFS_PQUOTA_ACTIVE |
-> -					  XFS_UQUOTA_ENFD | XFS_OQUOTA_ENFD);
-> +					  XFS_UQUOTA_ENFD | XFS_PQUOTA_ENFD |
-> +					  XFS_GQUOTA_ENFD);
-
-		mp->m_qflags &= ~XFS_ALL_QUOTA_ACCT;			
-		mp->m_qflags &= ~XFS_ALL_QUOTA_ENFD;
-		mp->m_qflags &= ~XFS_ALL_QUOTA_ACTIVE;
-
-That last one is actually not yet defined.
-
->  		} else if (!strcmp(this_char, MNTOPT_QUOTA) ||
->  			   !strcmp(this_char, MNTOPT_UQUOTA) ||
->  			   !strcmp(this_char, MNTOPT_USRQUOTA)) {
-
-. . .
-
-> @@ -552,12 +553,12 @@ xfs_showargs(
->  	/* Either project or group quotas can be active, not both */
->  
->  	if (mp->m_qflags & XFS_PQUOTA_ACCT) {
-> -		if (mp->m_qflags & XFS_OQUOTA_ENFD)
-> +		if (mp->m_qflags & XFS_PQUOTA_ENFD)
->  			seq_puts(m, "," MNTOPT_PRJQUOTA);
->  		else
->  			seq_puts(m, "," MNTOPT_PQUOTANOENF);
->  	} else if (mp->m_qflags & XFS_GQUOTA_ACCT) {
-
-I think you want to drop the "else" here also.
-
-> -		if (mp->m_qflags & XFS_OQUOTA_ENFD)
-> +		if (mp->m_qflags & XFS_GQUOTA_ENFD)
->  			seq_puts(m, "," MNTOPT_GRPQUOTA);
->  		else
->  			seq_puts(m, "," MNTOPT_GQUOTANOENF);
-
-. . .
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+R29vZCBjYXRjaC4gV2lsbCBmaXggdGhlbSBpbiB0aGUgbmV4dCBpdGVyYXRpb24uCgpUaGFua3Mu
+CgpDaGFuZHJhCk9uIFR1ZSwgMjAxMS0xMC0xOCBhdCAwNzoxNiArMDIwMCwgQXJrYWRpdXN6IE1p
+xZtraWV3aWN6IHdyb3RlOgo+IE9uIFR1ZXNkYXkgMTggb2YgT2N0b2JlciAyMDExLCBDaGFuZHJh
+IFNlZXRoYXJhbWFuIHdyb3RlOgo+IAo+IFF1aWNrIGxvb2sgZm9yIGRpZmYgYmV0d2VlbiB5b3Vy
+IGFuZCBtaW5lIHBhdGNoIHdoZW4gSSB3YXMgcGxheWluZyB3aXRoIAo+IHNlcGFyYXRlIHByb2pl
+Y3QgcXVvdGEgc29tZSB0aW1lIGFnbyBhbmQ6Cj4gCj4gPiBkaWZmIC0tZ2l0IGEvZnMveGZzL3hm
+c19xbV9zeXNjYWxscy5jIGIvZnMveGZzL3hmc19xbV9zeXNjYWxscy5jCj4gPiBpbmRleCA1Y2Mz
+ZGRlLi4zYTY3ODA1IDEwMDY0NAo+ID4gLS0tIGEvZnMveGZzL3hmc19xbV9zeXNjYWxscy5jCj4g
+PiArKysgYi9mcy94ZnMveGZzX3FtX3N5c2NhbGxzLmMKPiA+IEBAIC0xMjAsMTEgKzEyMCwxMSBA
+QCB4ZnNfcW1fc2NhbGxfcXVvdGFvZmYoCj4gPiAgCX0KPiA+ICAJaWYgKGZsYWdzICYgWEZTX0dR
+VU9UQV9BQ0NUKSB7Cj4gPiAgCQlkcXR5cGUgfD0gWEZTX1FNT1BUX0dRVU9UQTsKPiA+IC0JCWZs
+YWdzIHw9IChYRlNfT1FVT1RBX0NIS0QgfCBYRlNfT1FVT1RBX0VORkQpOwo+ID4gKwkJZmxhZ3Mg
+fD0gKFhGU19HUVVPVEFfQ0hLRCB8IFhGU19HUVVPVEFfRU5GRCk7Cj4gPiAgCQlpbmFjdGl2YXRl
+X2ZsYWdzIHw9IFhGU19HUVVPVEFfQUNUSVZFOwo+ID4gIAl9IGVsc2UgaWYgKGZsYWdzICYgWEZT
+X1BRVU9UQV9BQ0NUKSB7Cj4gCj4gVGhlc2UgY2FuIGJlIHNlcGFyYXRlIHNvLCBubyBlbHNlIGlm
+IGJ1dCBqdXN0IHNlcGFyYXRlIGlmLgo+IAo+IAo+ID4gZGlmZiAtLWdpdCBhL2ZzL3hmcy94ZnNf
+c3VwZXIuYyBiL2ZzL3hmcy94ZnNfc3VwZXIuYwo+ID4gaW5kZXggYmExNjI0OC4uYjFjOGQ1YiAx
+MDA2NDQKPiA+IC0tLSBhL2ZzL3hmcy94ZnNfc3VwZXIuYwo+ID4gKysrIGIvZnMveGZzL3hmc19z
+dXBlci5jCj4gCj4gPiBAQCAtNTUyLDEyICs1NTMsMTIgQEAgeGZzX3Nob3dhcmdzKAo+ID4gIAkv
+KiBFaXRoZXIgcHJvamVjdCBvciBncm91cCBxdW90YXMgY2FuIGJlIGFjdGl2ZSwgbm90IGJvdGgg
+Ki8KPiAKPiBObyBsb25nZXIgdHJ1ZS4KPiAKPiA+IAo+ID4gIAlpZiAobXAtPm1fcWZsYWdzICYg
+WEZTX1BRVU9UQV9BQ0NUKSB7Cj4gPiAtCQlpZiAobXAtPm1fcWZsYWdzICYgWEZTX09RVU9UQV9F
+TkZEKQo+ID4gKwkJaWYgKG1wLT5tX3FmbGFncyAmIFhGU19QUVVPVEFfRU5GRCkKPiA+ICAJCQlz
+ZXFfcHV0cyhtLCAiLCIgTU5UT1BUX1BSSlFVT1RBKTsKPiA+ICAJCWVsc2UKPiA+ICAJCQlzZXFf
+cHV0cyhtLCAiLCIgTU5UT1BUX1BRVU9UQU5PRU5GKTsKPiA+ICAJfSBlbHNlIGlmIChtcC0+bV9x
+ZmxhZ3MgJiBYRlNfR1FVT1RBX0FDQ1QpIHsKPiAKPiBBbHNvIG5vdCBlbHNlIGlmIC0ganVzdCBp
+Zi4KPiAKPiA+IC0JCWlmIChtcC0+bV9xZmxhZ3MgJiBYRlNfT1FVT1RBX0VORkQpCj4gPiArCQlp
+ZiAobXAtPm1fcWZsYWdzICYgWEZTX0dRVU9UQV9FTkZEKQo+IAoKCl9fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5z
+Z2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
