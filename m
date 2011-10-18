@@ -1,17 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9I1KBVD036341 for <xfs@oss.sgi.com>; Mon, 17 Oct 2011 20:20:11 -0500
-Received: from hades.usersys.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B9D1DF75F0A
-	for <xfs@oss.sgi.com>; Mon, 17 Oct 2011 18:28:01 -0700 (PDT)
-Received: from hades.usersys.redhat.com ([187.60.101.4]) by cuda.sgi.com with
-	ESMTP id 81CuyNdYBqrtvtnD for <xfs@oss.sgi.com>;
-	Mon, 17 Oct 2011 18:28:01 -0700 (PDT)
+	p9I1UG2Q036737 for <xfs@oss.sgi.com>; Mon, 17 Oct 2011 20:30:17 -0500
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C6C66147F41C
+	for <xfs@oss.sgi.com>; Mon, 17 Oct 2011 18:38:08 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 1NvN9CNupvGNd24K for
+	<xfs@oss.sgi.com>; Mon, 17 Oct 2011 18:38:08 -0700 (PDT)
+Date: Mon, 17 Oct 2011 23:28:56 -0200
 From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH] Fix possible memory corruption in xfs_readlink
-Date: Tue, 18 Oct 2011 02:18:58 -0200
-Message-Id: <1318911538-9174-1-git-send-email-cmaiolino@redhat.com>
+Subject: Re: [PATCH] Fix possible memory corruption in xfs_readlink
+Message-ID: <20111018012856.GB32608@andromeda.usersys.redhat.com>
+References: <1318885528-7650-1-git-send-email-cmaiolino@redhat.com>
+	<20111017224309.GT3159@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20111017224309.GT3159@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,52 +25,27 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Carlos Maiolino <cmaiolino@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Fixes a possible memory corruption when the link is larger than
-MAXPATHLEN and XFS_DEBUG is not enabled. This also remove the
-S_ISLNK assert, since the inode mode is checked previously in
-xfs_readlink_by_handle() and via VFS.
+Hey, Alex and Dave
 
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
----
- fs/xfs/xfs_vnodeops.c |   11 ++++++++---
- 1 files changed, 8 insertions(+), 3 deletions(-)
+I did both changes and sent the path again, so, hopefuly its ok now :-)
 
-diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
-index 51fc429..c3288be 100644
---- a/fs/xfs/xfs_vnodeops.c
-+++ b/fs/xfs/xfs_vnodeops.c
-@@ -123,13 +123,18 @@ xfs_readlink(
- 
- 	xfs_ilock(ip, XFS_ILOCK_SHARED);
- 
--	ASSERT(S_ISLNK(ip->i_d.di_mode));
--	ASSERT(ip->i_d.di_size <= MAXPATHLEN);
--
- 	pathlen = ip->i_d.di_size;
- 	if (!pathlen)
- 		goto out;
- 
-+	if (pathlen > MAXPATHLEN) {
-+		xfs_alert(mp, "%s: inode (%llu) symlink length (%d) too long",
-+			 __func__, (unsigned long long)ip->i_ino, pathlen);
-+		ASSERT(0);
-+		return XFS_ERROR(EFSCORRUPTED);
-+	}
-+
-+
- 	if (ip->i_df.if_flags & XFS_IFINLINE) {
- 		memcpy(link, ip->i_df.if_u1.if_data, pathlen);
- 		link[pathlen] = '\0';
+Alex, if is there anything else you need to change, please, feel free to
+do. I just read your email and since you should not be online now, I did
+the changes and submitted the patch again.
+The discussion was nice. At least everyone survived :D
+
+Thanks hch and sandeen by the nice discussion about this patch.
+
+
 -- 
-1.7.6.2
+--Carlos
 
 _______________________________________________
 xfs mailing list
