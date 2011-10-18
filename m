@@ -1,13 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9IDxW3S100051 for <xfs@oss.sgi.com>; Tue, 18 Oct 2011 08:59:32 -0500
-Message-ID: <1318946368.3776.7.camel@doink>
-Subject: Re: [PATCH] Fix possible memory corruption in xfs_readlink
+	p9IEhfNc102920 for <xfs@oss.sgi.com>; Tue, 18 Oct 2011 09:43:41 -0500
+Message-ID: <1318949016.3776.9.camel@doink>
+Subject: Re: [PATCH] xfs: constify xfs_item_ops
 From: Alex Elder <aelder@sgi.com>
-Date: Tue, 18 Oct 2011 08:59:28 -0500
-In-Reply-To: <1318911538-9174-1-git-send-email-cmaiolino@redhat.com>
-References: <1318911538-9174-1-git-send-email-cmaiolino@redhat.com>
+Date: Tue, 18 Oct 2011 09:43:36 -0500
+In-Reply-To: <20111018091144.GA13240@infradead.org>
+References: <20111018091144.GA13240@infradead.org>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -22,18 +22,17 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Carlos Maiolino <cmaiolino@redhat.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Tue, 2011-10-18 at 02:18 -0200, Carlos Maiolino wrote:
-> Fixes a possible memory corruption when the link is larger than
-> MAXPATHLEN and XFS_DEBUG is not enabled. This also remove the
-> S_ISLNK assert, since the inode mode is checked previously in
-> xfs_readlink_by_handle() and via VFS.
+On Tue, 2011-10-18 at 05:11 -0400, Christoph Hellwig wrote:
+> The log item ops aren't nessecarily the biggest exploit vector, but marking
+> them const is easy enough.  Also remove the unused xfs_item_ops_t typedef
+> while we're at it.
 > 
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-OK, looks good.  I'll commit it soon.
+Looks good.
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
 
