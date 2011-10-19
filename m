@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9JAU8P1178164 for <xfs@oss.sgi.com>; Wed, 19 Oct 2011 05:30:08 -0500
-Received: from mail-bw0-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 75E8E1D98D2
-	for <xfs@oss.sgi.com>; Wed, 19 Oct 2011 03:30:06 -0700 (PDT)
-Received: from mail-bw0-f53.google.com (mail-bw0-f53.google.com
-	[209.85.214.53]) by cuda.sgi.com with ESMTP id 3pVg3rxsj1fCtGlz
-	for <xfs@oss.sgi.com>; Wed, 19 Oct 2011 03:30:06 -0700 (PDT)
-Received: by mail-bw0-f53.google.com with SMTP id 11so2102080bke.26
-	for <xfs@oss.sgi.com>; Wed, 19 Oct 2011 03:30:06 -0700 (PDT)
-From: Dmitry Monakhov <dmonakhov@openvz.org>
-Subject: [PATCH 7/8] xfstests: add new stress test
-Date: Wed, 19 Oct 2011 14:29:48 +0400
-Message-Id: <1319020189-13584-8-git-send-email-dmonakhov@openvz.org>
-In-Reply-To: <1319020189-13584-1-git-send-email-dmonakhov@openvz.org>
-References: <1319020189-13584-1-git-send-email-dmonakhov@openvz.org>
+	p9JBGSEO180922 for <xfs@oss.sgi.com>; Wed, 19 Oct 2011 06:16:29 -0500
+Received: from server655-han.de-nserver.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id AA4A21C9A92A
+	for <xfs@oss.sgi.com>; Wed, 19 Oct 2011 04:16:25 -0700 (PDT)
+Received: from server655-han.de-nserver.de (server655-han.de-nserver.de
+	[85.158.177.45]) by cuda.sgi.com with ESMTP id BPIc4yMDVrFwRUug
+	for <xfs@oss.sgi.com>; Wed, 19 Oct 2011 04:16:25 -0700 (PDT)
+Message-ID: <4E9EB187.40306@profihost.ag>
+Date: Wed, 19 Oct 2011 13:16:23 +0200
+From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+MIME-Version: 1.0
+Subject: Re: [PATCH 3/4] xfs: revert to using a kthread for AIL pushing
+References: <20111006183257.036884724@bombadil.infradead.org>
+	<20111006183549.770414484@bombadil.infradead.org>
+	<20111010014509.GT3159@dastard>
+	<20111010055546.GA1641@x4.trippels.de>
+In-Reply-To: <20111010055546.GA1641@x4.trippels.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,144 +26,47 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, linux-ext4@vger.kernel.org, jack@suse.cz, hch@infradead.org, aelder@sgi.com
-Cc: Dmitry Monakhov <dmonakhov@openvz.org>
+To: Markus Trippelsdorf <markus@trippelsdorf.de>
+Cc: Christoph Hellwig <hch@infradead.org>, Tejun Heo <tj@kernel.org>, xfs@oss.sgi.com
 
-During stress testing we want to cover as much code paths as possible
-fsstress is very good for this purpose. But it has expandable nature
-(disk usage almost continually grow). So once it goes in no ENOSPC
-condition it will be where till the end. But by running 'dd' writers
-in parallel we can regularly trigger ENOSPC but only for a limited
-periods of time because each time it opens file with O_TRUNC.
+> On 2011.10.10 at 12:45 +1100, Dave Chinner wrote:
+>> On Thu, Oct 06, 2011 at 02:33:00PM -0400, Christoph Hellwig wrote:
+>>> Currently we have a few issues with the way the workqueue code is used to
+>>> implement AIL pushing:
+>>>
+>>>   - it accidentally uses the same workqueue as the syncer action, and thus
+>>>     can be prevented from running if there are enough sync actions active
+>>>     in the system.
+>>>   - it doesn't use the HIGHPRI flag to queue at the head of the queue of
+>>>     work items
+>>>
+>>> At this point I'm not confident enough in getting all the workqueue flags and
+>>> tweaks right to provide a perfectly reliable execution context for AIL
+>>> pushing, which is the most important piece in XFS to make forward progress
+>>> when the log fills.
+>>>
+>>> Revert back to use a kthread per filesystem which fixes all the above issues
+>>> at the cost of having a task struct and stack around for each mounted
+>>> filesystem.  In addition this also gives us much better ways to diagnose
+>>> any issues involving hung AIL pushing and removes a small amount of code.
+>>>
+>>> Signed-off-by: Christoph Hellwig<hch@lst.de>
+>>> Reported-by: Stefan Priebe<s.priebe@profihost.ag>
+>>> Tested-by: Stefan Priebe<s.priebe@profihost.ag>
+>>
+>> I'd much prefer to fix the problems with the workqueue usage than
+>> revert back to using a thread, but seeing as I cannot reproduce the
+>> hangs I can't really track down whatever problem there is. So,
+>> a bit reluctantly:
 
-Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
----
- 264     |   86 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 264.out |    5 +++
- group   |    1 +
- 3 files changed, 92 insertions(+), 0 deletions(-)
- create mode 100755 264
- create mode 100644 264.out
+Any news on this problem? What happens with the next long term stable 
+kernel 3.0.X? How do you proceed with this bug?
 
-diff --git a/264 b/264
-new file mode 100755
-index 0000000..fc6df23
---- /dev/null
-+++ b/264
-@@ -0,0 +1,86 @@
-+#! /bin/bash
-+# FSQA Test No. 264
-+#
-+# Run fsstress and ENSPC hitters in parallel, check fs consistency an the end
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2006 Silicon Graphics, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#
-+#-----------------------------------------------------------------------
-+#
-+# creator
-+owner=dmonakhov@openvz.org
-+
-+seq=`basename $0`
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
-+
-+# get standard environment, filters and checks
-+. ./common.rc
-+. ./common.filter
-+# Disable all sync operations to get higher load
-+FSSTRESS_AVOID="$FSSTRESS_AVOID -ffsync=0 -fsync=0 -ffdatasync=0"
-+_workout()
-+{
-+	echo ""
-+	echo "Run fsstress"
-+	echo ""
-+	num_iterations=10
-+	enospc_time=2
-+	out=$SCRATCH_MNT/fsstress.$$
-+	args="-p128 -n999999999 -f setattr=1 $FSSTRESS_AVOID -d $out"
-+	echo "fsstress $args" >> $here/$seq.full
-+	$FSSTRESS_PROG $args > /dev/null 2>&1 &
-+	pid=$!
-+	echo "Run dd writers in parallel"
-+	for ((i=0; i < num_iterations; i++))
-+	do
-+		# File will be opened with O_TRUNC each time
-+		dd if=/dev/zero of=$SCRATCH_MNT/SPACE_CONSUMER bs=1M count=1 \
-+			> /dev/null 2>&1
-+		sleep $enospc_time
-+	done
-+	kill $pid
-+	wait $pid
-+}
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
-+_require_scratch
-+_need_to_be_root
-+
-+umount $SCRATCH_DEV 2>/dev/null
-+_scratch_mkfs_sized $((512 * 1024 * 1024)) >> $seq.full 2>&1
-+_scratch_mount
-+
-+if ! _workout; then
-+	umount $SCRATCH_DEV 2>/dev/null
-+	exit
-+fi
-+
-+if ! _scratch_unmount; then
-+	echo "failed to umount"
-+	status=1
-+	exit
-+fi
-+_check_scratch_fs
-+status=$?
-+exit
-diff --git a/264.out b/264.out
-new file mode 100644
-index 0000000..81b50e5
---- /dev/null
-+++ b/264.out
-@@ -0,0 +1,5 @@
-+QA output created by 264
-+
-+Run fsstress
-+
-+Run dd writers in parallel
-diff --git a/group b/group
-index 2a8970c..e79c29b 100644
---- a/group
-+++ b/group
-@@ -377,3 +377,4 @@ deprecated
- 261 auto quick quota
- 262 auto quick quota
- 263 rw auto quick
-+264 auto rw prealloc ioctl enospc
--- 
-1.7.1
+Stefan
 
 _______________________________________________
 xfs mailing list
