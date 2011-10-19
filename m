@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9J0gAf8142513 for <xfs@oss.sgi.com>; Tue, 18 Oct 2011 19:42:11 -0500
+	p9J0oe1m142997 for <xfs@oss.sgi.com>; Tue, 18 Oct 2011 19:50:40 -0500
 Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 566471D8A7C
-	for <xfs@oss.sgi.com>; Tue, 18 Oct 2011 17:42:09 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CD6C11D372C
+	for <xfs@oss.sgi.com>; Tue, 18 Oct 2011 17:50:38 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	4uyvNFu4TaL88WeI for <xfs@oss.sgi.com>;
-	Tue, 18 Oct 2011 17:42:09 -0700 (PDT)
-Date: Wed, 19 Oct 2011 11:42:06 +1100
+	QSdnIQD0fdEnYYOS for <xfs@oss.sgi.com>;
+	Tue, 18 Oct 2011 17:50:38 -0700 (PDT)
+Date: Wed, 19 Oct 2011 11:50:36 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/4] xfs: replace i_flock with a sleeping bitlock
-Message-ID: <20111019004206.GB21338@dastard>
+Subject: Re: [PATCH 3/4] xfs: replace i_pin_wait with a bit waitqueue
+Message-ID: <20111019005036.GC21338@dastard>
 References: <20111018201304.279051318@bombadil.infradead.org>
-	<20111018201405.357001594@bombadil.infradead.org>
+	<20111018201405.557330194@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20111018201405.357001594@bombadil.infradead.org>
+In-Reply-To: <20111018201405.557330194@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,62 +33,67 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Tue, Oct 18, 2011 at 04:13:06PM -0400, Christoph Hellwig wrote:
-> We almost never block on i_flock, the exception is synchronous inode
-> flushing.  Instead of bloating the inode with a 16/24-byte completion
-> that we abuse as a semaphore just implement it as a bitlock that uses
-> a bit waitqueue for the rare sleeping path.  This primarily is a
-> tradeoff between a much smaller inode and a faster non-blocking
-> path vs a faster faster wakeups, and we are much better off with
-> the former.
-> 
-> A small downside is that we will lose lockdep checking for i_flock, but
-> given that it's always taken inside the ilock that should be acceptable.
-> 
-> Note that for example the inode writeback locking is implemented in a
-> very similar way.
+On Tue, Oct 18, 2011 at 04:13:07PM -0400, Christoph Hellwig wrote:
+> Replace i_pin_wait, which is only used during synchronous inode flushing
+> with a bit waitqueue.  This trades off a much smaller inode against
+> slightly slower wakeup performance, and saves 12 (32-bit) or 20 (64-bit)
+> bytes in the XFS inode.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-.....
-> @@ -716,3 +716,19 @@ xfs_isilocked(
->  	return 0;
+> 
+> Index: xfs/fs/xfs/xfs_inode.c
+> ===================================================================
+> --- xfs.orig/fs/xfs/xfs_inode.c	2011-10-18 20:58:40.141854067 +0200
+> +++ xfs/fs/xfs/xfs_inode.c	2011-10-18 21:01:48.296353322 +0200
+> @@ -2151,7 +2151,7 @@ xfs_idestroy_fork(
+>   * once someone is waiting for it to be unpinned.
+>   */
+>  static void
+> -xfs_iunpin_nowait(
+> +xfs_iunpin(
+>  	struct xfs_inode	*ip)
+>  {
+>  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_ILOCK_SHARED));
+> @@ -2163,14 +2163,29 @@ xfs_iunpin_nowait(
+>  
 >  }
->  #endif
-> +
-> +void
-> +__xfs_iflock(
+>  
+> +static void
+> +__xfs_iunpin_wait(
 > +	struct xfs_inode	*ip)
 > +{
-> +	wait_queue_head_t *wq = bit_waitqueue(&ip->i_flags, __XFS_IFLOCK);
-> +	DEFINE_WAIT_BIT(wait, &ip->i_flags, __XFS_IFLOCK);
+> +	wait_queue_head_t *wq = bit_waitqueue(&ip->i_flags, __XFS_IPINNED);
+> +	DEFINE_WAIT_BIT(q, &ip->i_flags, __XFS_IPINNED);
+> +
+> +	xfs_iunpin(ip);
 > +
 > +	do {
-> +		prepare_to_wait_exclusive(wq, &wait.wait, TASK_UNINTERRUPTIBLE);
-> +		if (xfs_isiflocked(ip))
+> +		prepare_to_wait(wq, &q.wait, TASK_UNINTERRUPTIBLE);
+> +		if (xfs_ipincount(ip))
 > +			schedule();
-> +	} while (!xfs_iflock_nowait(ip));
-> +
-> +	finish_wait(wq, &wait.wait);
+> +	} while (xfs_ipincount(ip));
+> +	finish_wait(wq, &q.wait);
 > +}
 
-Given that the only way that the inode will become unlocked is for
-IO to complete, that makes this an IO wait, right? Perhaps this
-should call io_schedule() in that case?
+Same comment about io_schedule() here - it's an IO we're waiting to
+complete here. And it's not an exclusive wait because we can have
+multiple callers waiting on the inode being unpinned and we want
+them all woken in one go?
 
-> @@ -380,6 +372,8 @@ static inline void xfs_ifunlock(xfs_inod
->  #define XFS_IFILESTREAM		0x0010	/* inode is in a filestream directory */
->  #define XFS_ITRUNCATED		0x0020	/* truncated down so flush-on-close */
+> @@ -374,6 +373,7 @@ xfs_set_projid(struct xfs_inode *ip,
 >  #define XFS_IDIRTY_RELEASE	0x0040	/* dirty release already seen */
-> +#define __XFS_IFLOCK		8	/* inode is beeing flushed right now */
-> +#define XFS_IFLOCK		(1 << __XFS_IFLOCK)
+>  #define __XFS_IFLOCK		8	/* inode is beeing flushed right now */
+>  #define XFS_IFLOCK		(1 << __XFS_IFLOCK)
+> +#define __XFS_IPINNED		9	/* wakeup key for zero pin count */
 
-Any reason for leaving a gap in the flag space here?
+Should you also define XFS_IPINNED for consistency, even though it
+is not used?
 
-Otherwise looks good.
+Otherwise looks OK.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Cheers,
 
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
