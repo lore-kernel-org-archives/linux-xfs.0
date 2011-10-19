@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9JAU1o8178098 for <xfs@oss.sgi.com>; Wed, 19 Oct 2011 05:30:02 -0500
+	p9JAU8P1178164 for <xfs@oss.sgi.com>; Wed, 19 Oct 2011 05:30:08 -0500
 Received: from mail-bw0-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 43D76F7DE20
-	for <xfs@oss.sgi.com>; Wed, 19 Oct 2011 03:38:00 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 75E8E1D98D2
+	for <xfs@oss.sgi.com>; Wed, 19 Oct 2011 03:30:06 -0700 (PDT)
 Received: from mail-bw0-f53.google.com (mail-bw0-f53.google.com
-	[209.85.214.53]) by cuda.sgi.com with ESMTP id hINzCsH7jr3oTbUX
-	for <xfs@oss.sgi.com>; Wed, 19 Oct 2011 03:38:00 -0700 (PDT)
-Received: by mail-bw0-f53.google.com with SMTP id 11so2102048bke.26
-	for <xfs@oss.sgi.com>; Wed, 19 Oct 2011 03:30:00 -0700 (PDT)
+	[209.85.214.53]) by cuda.sgi.com with ESMTP id 3pVg3rxsj1fCtGlz
+	for <xfs@oss.sgi.com>; Wed, 19 Oct 2011 03:30:06 -0700 (PDT)
+Received: by mail-bw0-f53.google.com with SMTP id 11so2102080bke.26
+	for <xfs@oss.sgi.com>; Wed, 19 Oct 2011 03:30:06 -0700 (PDT)
 From: Dmitry Monakhov <dmonakhov@openvz.org>
-Subject: [PATCH 4/8] xfstests: fsstress add FS_IOC_{SET,GET}FLAGS operations
-Date: Wed, 19 Oct 2011 14:29:45 +0400
-Message-Id: <1319020189-13584-5-git-send-email-dmonakhov@openvz.org>
+Subject: [PATCH 7/8] xfstests: add new stress test
+Date: Wed, 19 Oct 2011 14:29:48 +0400
+Message-Id: <1319020189-13584-8-git-send-email-dmonakhov@openvz.org>
 In-Reply-To: <1319020189-13584-1-git-send-email-dmonakhov@openvz.org>
 References: <1319020189-13584-1-git-send-email-dmonakhov@openvz.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -32,167 +32,134 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, linux-ext4@vger.kernel.org, jack@suse.cz, hch@infradead.org, aelder@sgi.com
 Cc: Dmitry Monakhov <dmonakhov@openvz.org>
 
-Add two new operations:
-- getattr: ioctl(fd, FS_IOC_GETFLAGS, &fl)
-- setattr: ioctl(fd, FS_IOC_SETFLAGS, &random_flags)
-By default FS_IOC_SETFLAGS has zero probability because
-it may produce inodes with APPEND or IMMUTABLE flags which
-are not deletable by default. Let's assumes that one who
-enable it knows how to delete such inodes.
-For example like follows:
-find $TEST_PATH -exec chattr -i -a {} \;
-rm -rf $TEST_PATH
+During stress testing we want to cover as much code paths as possible
+fsstress is very good for this purpose. But it has expandable nature
+(disk usage almost continually grow). So once it goes in no ENOSPC
+condition it will be where till the end. But by running 'dd' writers
+in parallel we can regularly trigger ENOSPC but only for a limited
+periods of time because each time it opens file with O_TRUNC.
 
 Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
 ---
- aclocal.m4     |    4 +++
- configure.in   |    1 +
- ltp/fsstress.c |   63 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 68 insertions(+), 0 deletions(-)
+ 264     |   86 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 264.out |    5 +++
+ group   |    1 +
+ 3 files changed, 92 insertions(+), 0 deletions(-)
+ create mode 100755 264
+ create mode 100644 264.out
 
-diff --git a/aclocal.m4 b/aclocal.m4
-index 5532606..5739004 100644
---- a/aclocal.m4
-+++ b/aclocal.m4
-@@ -21,6 +21,10 @@ AC_DEFUN([AC_PACKAGE_WANT_LINUX_PRCTL_H],
-     AC_SUBST(have_prctl)
-   ])
- 
-+AC_DEFUN([AC_PACKAGE_WANT_LINUX_FS_H],
-+  [ AC_CHECK_HEADER([linux/fs.h])
-+  ])
+diff --git a/264 b/264
+new file mode 100755
+index 0000000..fc6df23
+--- /dev/null
++++ b/264
+@@ -0,0 +1,86 @@
++#! /bin/bash
++# FSQA Test No. 264
++#
++# Run fsstress and ENSPC hitters in parallel, check fs consistency an the end
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2006 Silicon Graphics, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#
++#-----------------------------------------------------------------------
++#
++# creator
++owner=dmonakhov@openvz.org
 +
- AC_DEFUN([AC_PACKAGE_WANT_FALLOCATE],
-   [ AC_MSG_CHECKING([for fallocate])
-     AC_TRY_LINK([
-diff --git a/configure.in b/configure.in
-index 76d23e4..3b40e55 100644
---- a/configure.in
-+++ b/configure.in
-@@ -68,6 +68,7 @@ in
- 		AC_PACKAGE_WANT_LINUX_FIEMAP_H
- 		AC_PACKAGE_WANT_FALLOCATE
- 		AC_PACKAGE_WANT_LINUX_PRCTL_H
-+		AC_PACKAGE_WANT_LINUX_FS_H
- 		;;
- esac
- 
-diff --git a/ltp/fsstress.c b/ltp/fsstress.c
-index 4aba34f..756bdd6 100644
---- a/ltp/fsstress.c
-+++ b/ltp/fsstress.c
-@@ -37,6 +37,15 @@
- #ifdef HAVE_SYS_PRCTL_H
- #include <sys/prctl.h>
- #endif
++seq=`basename $0`
++echo "QA output created by $seq"
 +
-+#include <linux/fs.h>
-+#ifndef FS_IOC_GETFLAGS
-+#define FS_IOC_GETFLAGS                 _IOR('f', 1, long)
-+#endif
-+#ifndef FS_IOC_SETFLAGS
-+#define FS_IOC_SETFLAGS                 _IOW('f', 2, long)
-+#endif
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
 +
- #include <math.h>
- #define XFS_ERRTAG_MAX		17
- #define XFS_IDMODULO_MAX	31	/* user/group IDs (1 << x)  */
-@@ -58,6 +67,7 @@ typedef enum {
- 	OP_FDATASYNC,
- 	OP_FREESP,
- 	OP_FSYNC,
-+	OP_GETATTR,
- 	OP_GETDENTS,
- 	OP_LINK,
- 	OP_MKDIR,
-@@ -68,6 +78,7 @@ typedef enum {
- 	OP_RENAME,
- 	OP_RESVSP,
- 	OP_RMDIR,
-+	OP_SETATTR,
- 	OP_SETXATTR,
- 	OP_STAT,
- 	OP_SYMLINK,
-@@ -152,6 +163,8 @@ void	resvsp_f(int, long);
- void	rmdir_f(int, long);
- void	setxattr_f(int, long);
- void	stat_f(int, long);
-+void	getattr_f(int, long);
-+void	setattr_f(int, long);
- void	symlink_f(int, long);
- void	sync_f(int, long);
- void	truncate_f(int, long);
-@@ -173,6 +186,7 @@ opdesc_t	ops[] = {
- 	{ OP_FDATASYNC, "fdatasync", fdatasync_f, 1, 1 },
- 	{ OP_FREESP, "freesp", freesp_f, 1, 1 },
- 	{ OP_FSYNC, "fsync", fsync_f, 1, 1 },
-+	{ OP_GETATTR, "getattr", getattr_f, 1, 0 },
- 	{ OP_GETDENTS, "getdents", getdents_f, 1, 0 },
- 	{ OP_LINK, "link", link_f, 1, 1 },
- 	{ OP_MKDIR, "mkdir", mkdir_f, 2, 1 },
-@@ -183,6 +197,7 @@ opdesc_t	ops[] = {
- 	{ OP_RENAME, "rename", rename_f, 2, 1 },
- 	{ OP_RESVSP, "resvsp", resvsp_f, 1, 1 },
- 	{ OP_RMDIR, "rmdir", rmdir_f, 1, 1 },
-+	{ OP_SETATTR, "setattr", setattr_f, 0, 1 },
- 	{ OP_SETXATTR, "setxattr", setxattr_f, 1, 1 },
- 	{ OP_STAT, "stat", stat_f, 1, 0 },
- 	{ OP_SYMLINK, "symlink", symlink_f, 2, 1 },
-@@ -1769,6 +1784,54 @@ setxattr_f(int opno, long r)
- }
- 
- void
-+getattr_f(int opno, long r)
++# get standard environment, filters and checks
++. ./common.rc
++. ./common.filter
++# Disable all sync operations to get higher load
++FSSTRESS_AVOID="$FSSTRESS_AVOID -ffsync=0 -fsync=0 -ffdatasync=0"
++_workout()
 +{
-+	int		fd;
-+	int		e;
-+	pathname_t	f;
-+	uint		fl;
-+	int		v;
-+
-+	init_pathname(&f);
-+	if (!get_fname(FT_ANYm, r, &f, NULL, NULL, &v))
-+		append_pathname(&f, ".");
-+	fd = open_path(&f, O_RDWR);
-+	e = fd < 0 ? errno : 0;
-+	check_cwd();
-+
-+	e = ioctl(fd, FS_IOC_GETFLAGS, &fl);
-+	if (v)
-+		printf("%d/%d: getattr %s %u %d\n", procid, opno, f.path, fl, e);
-+	free_pathname(&f);
-+	close(fd);
++	echo ""
++	echo "Run fsstress"
++	echo ""
++	num_iterations=10
++	enospc_time=2
++	out=$SCRATCH_MNT/fsstress.$$
++	args="-p128 -n999999999 -f setattr=1 $FSSTRESS_AVOID -d $out"
++	echo "fsstress $args" >> $here/$seq.full
++	$FSSTRESS_PROG $args > /dev/null 2>&1 &
++	pid=$!
++	echo "Run dd writers in parallel"
++	for ((i=0; i < num_iterations; i++))
++	do
++		# File will be opened with O_TRUNC each time
++		dd if=/dev/zero of=$SCRATCH_MNT/SPACE_CONSUMER bs=1M count=1 \
++			> /dev/null 2>&1
++		sleep $enospc_time
++	done
++	kill $pid
++	wait $pid
 +}
 +
-+void
-+setattr_f(int opno, long r)
-+{
-+	int		fd;
-+	int		e;
-+	pathname_t	f;
-+	uint		fl;
-+	int		v;
++# real QA test starts here
++_supported_fs generic
++_supported_os Linux
++_require_scratch
++_need_to_be_root
 +
-+	init_pathname(&f);
-+	if (!get_fname(FT_ANYm, r, &f, NULL, NULL, &v))
-+		append_pathname(&f, ".");
-+	fd = open_path(&f, O_RDWR);
-+	e = fd < 0 ? errno : 0;
-+	check_cwd();
++umount $SCRATCH_DEV 2>/dev/null
++_scratch_mkfs_sized $((512 * 1024 * 1024)) >> $seq.full 2>&1
++_scratch_mount
 +
-+	fl = (uint)random();
-+	e = ioctl(fd, FS_IOC_SETFLAGS, &fl);
-+	if (v)
-+		printf("%d/%d: setattr %s %u %d\n", procid, opno, f.path, fl, e);
-+	free_pathname(&f);
-+	close(fd);
-+}
++if ! _workout; then
++	umount $SCRATCH_DEV 2>/dev/null
++	exit
++fi
 +
++if ! _scratch_unmount; then
++	echo "failed to umount"
++	status=1
++	exit
++fi
++_check_scratch_fs
++status=$?
++exit
+diff --git a/264.out b/264.out
+new file mode 100644
+index 0000000..81b50e5
+--- /dev/null
++++ b/264.out
+@@ -0,0 +1,5 @@
++QA output created by 264
 +
-+void
- creat_f(int opno, long r)
- {
- 	struct fsxattr	a;
++Run fsstress
++
++Run dd writers in parallel
+diff --git a/group b/group
+index 2a8970c..e79c29b 100644
+--- a/group
++++ b/group
+@@ -377,3 +377,4 @@ deprecated
+ 261 auto quick quota
+ 262 auto quick quota
+ 263 rw auto quick
++264 auto rw prealloc ioctl enospc
 -- 
 1.7.1
 
