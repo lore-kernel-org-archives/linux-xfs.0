@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9JATxBL178070 for <xfs@oss.sgi.com>; Wed, 19 Oct 2011 05:29:59 -0500
+	p9JAU1o8178098 for <xfs@oss.sgi.com>; Wed, 19 Oct 2011 05:30:02 -0500
 Received: from mail-bw0-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 08E8C1D98CD
-	for <xfs@oss.sgi.com>; Wed, 19 Oct 2011 03:29:58 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 43D76F7DE20
+	for <xfs@oss.sgi.com>; Wed, 19 Oct 2011 03:38:00 -0700 (PDT)
 Received: from mail-bw0-f53.google.com (mail-bw0-f53.google.com
-	[209.85.214.53]) by cuda.sgi.com with ESMTP id 73BD3CpNeEQCSYad
-	for <xfs@oss.sgi.com>; Wed, 19 Oct 2011 03:29:58 -0700 (PDT)
-Received: by mail-bw0-f53.google.com with SMTP id 11so2102080bke.26
-	for <xfs@oss.sgi.com>; Wed, 19 Oct 2011 03:29:58 -0700 (PDT)
+	[209.85.214.53]) by cuda.sgi.com with ESMTP id hINzCsH7jr3oTbUX
+	for <xfs@oss.sgi.com>; Wed, 19 Oct 2011 03:38:00 -0700 (PDT)
+Received: by mail-bw0-f53.google.com with SMTP id 11so2102048bke.26
+	for <xfs@oss.sgi.com>; Wed, 19 Oct 2011 03:30:00 -0700 (PDT)
 From: Dmitry Monakhov <dmonakhov@openvz.org>
-Subject: [PATCH 3/8] xfstests: add fallocate support to fsstress
-Date: Wed, 19 Oct 2011 14:29:44 +0400
-Message-Id: <1319020189-13584-4-git-send-email-dmonakhov@openvz.org>
+Subject: [PATCH 4/8] xfstests: fsstress add FS_IOC_{SET,GET}FLAGS operations
+Date: Wed, 19 Oct 2011 14:29:45 +0400
+Message-Id: <1319020189-13584-5-git-send-email-dmonakhov@openvz.org>
 In-Reply-To: <1319020189-13584-1-git-send-email-dmonakhov@openvz.org>
 References: <1319020189-13584-1-git-send-email-dmonakhov@openvz.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -32,207 +32,167 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, linux-ext4@vger.kernel.org, jack@suse.cz, hch@infradead.org, aelder@sgi.com
 Cc: Dmitry Monakhov <dmonakhov@openvz.org>
 
-Add tests for fallocate(2) syscall
-- fallocate: reserve the disk space
-- punch: de-allocates the disk space
-Since FALLOC_FL_PUNCH_HOLE is relatively new it's value defined
-explicitly if not yet defined. Later we may clear that define.
+Add two new operations:
+- getattr: ioctl(fd, FS_IOC_GETFLAGS, &fl)
+- setattr: ioctl(fd, FS_IOC_SETFLAGS, &random_flags)
+By default FS_IOC_SETFLAGS has zero probability because
+it may produce inodes with APPEND or IMMUTABLE flags which
+are not deletable by default. Let's assumes that one who
+enable it knows how to delete such inodes.
+For example like follows:
+find $TEST_PATH -exec chattr -i -a {} \;
+rm -rf $TEST_PATH
 
 Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
 ---
- ltp/fsstress.c |  123 +++++++++++++++++++++++++++++++++++++++++++++++++++++++-
- 1 files changed, 122 insertions(+), 1 deletions(-)
+ aclocal.m4     |    4 +++
+ configure.in   |    1 +
+ ltp/fsstress.c |   63 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 68 insertions(+), 0 deletions(-)
 
+diff --git a/aclocal.m4 b/aclocal.m4
+index 5532606..5739004 100644
+--- a/aclocal.m4
++++ b/aclocal.m4
+@@ -21,6 +21,10 @@ AC_DEFUN([AC_PACKAGE_WANT_LINUX_PRCTL_H],
+     AC_SUBST(have_prctl)
+   ])
+ 
++AC_DEFUN([AC_PACKAGE_WANT_LINUX_FS_H],
++  [ AC_CHECK_HEADER([linux/fs.h])
++  ])
++
+ AC_DEFUN([AC_PACKAGE_WANT_FALLOCATE],
+   [ AC_MSG_CHECKING([for fallocate])
+     AC_TRY_LINK([
+diff --git a/configure.in b/configure.in
+index 76d23e4..3b40e55 100644
+--- a/configure.in
++++ b/configure.in
+@@ -68,6 +68,7 @@ in
+ 		AC_PACKAGE_WANT_LINUX_FIEMAP_H
+ 		AC_PACKAGE_WANT_FALLOCATE
+ 		AC_PACKAGE_WANT_LINUX_PRCTL_H
++		AC_PACKAGE_WANT_LINUX_FS_H
+ 		;;
+ esac
+ 
 diff --git a/ltp/fsstress.c b/ltp/fsstress.c
-index 385d5a0..4aba34f 100644
+index 4aba34f..756bdd6 100644
 --- a/ltp/fsstress.c
 +++ b/ltp/fsstress.c
-@@ -24,7 +24,13 @@
- #ifdef HAVE_ATTR_ATTRIBUTES_H
- #include <attr/attributes.h>
+@@ -37,6 +37,15 @@
+ #ifdef HAVE_SYS_PRCTL_H
+ #include <sys/prctl.h>
  #endif
--
-+#ifdef FALLOCATE
-+#include <linux/falloc.h>
-+#ifndef FALLOC_FL_PUNCH_HOLE
-+/* Copy-paste from linux/falloc.h */
-+#define FALLOC_FL_PUNCH_HOLE    0x02 /* de-allocates range */
++
++#include <linux/fs.h>
++#ifndef FS_IOC_GETFLAGS
++#define FS_IOC_GETFLAGS                 _IOR('f', 1, long)
 +#endif
++#ifndef FS_IOC_SETFLAGS
++#define FS_IOC_SETFLAGS                 _IOW('f', 2, long)
 +#endif
- #ifndef HAVE_ATTR_LIST
- #define attr_list(path, buf, size, flags, cursor) (errno = -ENOSYS, -1)
- #endif
-@@ -48,6 +54,7 @@ typedef enum {
- 	OP_CREAT,
- 	OP_DREAD,
- 	OP_DWRITE,
-+	OP_FALLOCATE,
++
+ #include <math.h>
+ #define XFS_ERRTAG_MAX		17
+ #define XFS_IDMODULO_MAX	31	/* user/group IDs (1 << x)  */
+@@ -58,6 +67,7 @@ typedef enum {
  	OP_FDATASYNC,
  	OP_FREESP,
  	OP_FSYNC,
-@@ -55,6 +62,7 @@ typedef enum {
++	OP_GETATTR,
+ 	OP_GETDENTS,
  	OP_LINK,
  	OP_MKDIR,
- 	OP_MKNOD,
-+	OP_PUNCH,
- 	OP_READ,
- 	OP_READLINK,
+@@ -68,6 +78,7 @@ typedef enum {
  	OP_RENAME,
-@@ -128,6 +136,7 @@ void	chown_f(int, long);
- void	creat_f(int, long);
- void	dread_f(int, long);
- void	dwrite_f(int, long);
-+void	fallocate_f(int, long);
- void	fdatasync_f(int, long);
- void	freesp_f(int, long);
- void	fsync_f(int, long);
-@@ -135,6 +144,7 @@ void	getdents_f(int, long);
- void	link_f(int, long);
- void	mkdir_f(int, long);
- void	mknod_f(int, long);
-+void	punch_f(int, long);
- void	read_f(int, long);
- void	readlink_f(int, long);
- void	rename_f(int, long);
-@@ -159,6 +169,7 @@ opdesc_t	ops[] = {
- 	{ OP_CREAT, "creat", creat_f, 4, 1 },
- 	{ OP_DREAD, "dread", dread_f, 4, 0 },
- 	{ OP_DWRITE, "dwrite", dwrite_f, 4, 1 },
-+	{ OP_FALLOCATE, "fallocate", fallocate_f, 1, 1 },
+ 	OP_RESVSP,
+ 	OP_RMDIR,
++	OP_SETATTR,
+ 	OP_SETXATTR,
+ 	OP_STAT,
+ 	OP_SYMLINK,
+@@ -152,6 +163,8 @@ void	resvsp_f(int, long);
+ void	rmdir_f(int, long);
+ void	setxattr_f(int, long);
+ void	stat_f(int, long);
++void	getattr_f(int, long);
++void	setattr_f(int, long);
+ void	symlink_f(int, long);
+ void	sync_f(int, long);
+ void	truncate_f(int, long);
+@@ -173,6 +186,7 @@ opdesc_t	ops[] = {
  	{ OP_FDATASYNC, "fdatasync", fdatasync_f, 1, 1 },
  	{ OP_FREESP, "freesp", freesp_f, 1, 1 },
  	{ OP_FSYNC, "fsync", fsync_f, 1, 1 },
-@@ -166,6 +177,7 @@ opdesc_t	ops[] = {
++	{ OP_GETATTR, "getattr", getattr_f, 1, 0 },
+ 	{ OP_GETDENTS, "getdents", getdents_f, 1, 0 },
  	{ OP_LINK, "link", link_f, 1, 1 },
  	{ OP_MKDIR, "mkdir", mkdir_f, 2, 1 },
- 	{ OP_MKNOD, "mknod", mknod_f, 2, 1 },
-+	{ OP_PUNCH, "punch", punch_f, 1, 1 },
- 	{ OP_READ, "read", read_f, 1, 0 },
- 	{ OP_READLINK, "readlink", readlink_f, 1, 0 },
+@@ -183,6 +197,7 @@ opdesc_t	ops[] = {
  	{ OP_RENAME, "rename", rename_f, 2, 1 },
-@@ -1981,6 +1993,61 @@ dwrite_f(int opno, long r)
+ 	{ OP_RESVSP, "resvsp", resvsp_f, 1, 1 },
+ 	{ OP_RMDIR, "rmdir", rmdir_f, 1, 1 },
++	{ OP_SETATTR, "setattr", setattr_f, 0, 1 },
+ 	{ OP_SETXATTR, "setxattr", setxattr_f, 1, 1 },
+ 	{ OP_STAT, "stat", stat_f, 1, 0 },
+ 	{ OP_SYMLINK, "symlink", symlink_f, 2, 1 },
+@@ -1769,6 +1784,54 @@ setxattr_f(int opno, long r)
  }
  
  void
-+fallocate_f(int opno, long r)
++getattr_f(int opno, long r)
 +{
-+#ifdef FALLOCATE
++	int		fd;
 +	int		e;
 +	pathname_t	f;
-+	int		fd;
-+	__int64_t	lr;
-+	off64_t		off;
-+	off64_t		len;
-+	struct stat64	stb;
++	uint		fl;
 +	int		v;
-+	int mode = 0;
 +
 +	init_pathname(&f);
-+	if (!get_fname(FT_REGFILE, r, &f, NULL, NULL, &v)) {
-+		if (v)
-+			printf("%d/%d: fallocate - no filename\n", procid, opno);
-+		free_pathname(&f);
-+		return;
-+	}
++	if (!get_fname(FT_ANYm, r, &f, NULL, NULL, &v))
++		append_pathname(&f, ".");
 +	fd = open_path(&f, O_RDWR);
 +	e = fd < 0 ? errno : 0;
 +	check_cwd();
-+	if (fd < 0) {
-+		if (v)
-+			printf("%d/%d: fallocate - open %s failed %d\n",
-+				procid, opno, f.path, e);
-+		free_pathname(&f);
-+		return;
-+	}
-+	if (fstat64(fd, &stb) < 0) {
-+		if (v)
-+			printf("%d/%d: fallocate - fstat64 %s failed %d\n",
-+				procid, opno, f.path, errno);
-+		free_pathname(&f);
-+		close(fd);
-+		return;
-+	}
-+	lr = ((__int64_t)random() << 32) + random();
-+	off = (off64_t)(lr % MIN(stb.st_size + (1024 * 1024), MAXFSIZE));
-+	off %= maxfsize;
-+	len = (off64_t)(random() % (1024 * 1024));
-+	mode |= FALLOC_FL_KEEP_SIZE & random();
-+	e = fallocate(fd, mode, (loff_t)off, (loff_t)len) < 0 ? errno : 0;
++
++	e = ioctl(fd, FS_IOC_GETFLAGS, &fl);
 +	if (v)
-+		printf("%d/%d: fallocate(%d) %s %lld %lld %d\n",
-+		       procid, opno, mode,
-+		       f.path, (long long)off, (long long)len, e);
++		printf("%d/%d: getattr %s %u %d\n", procid, opno, f.path, fl, e);
 +	free_pathname(&f);
 +	close(fd);
-+#endif
++}
++
++void
++setattr_f(int opno, long r)
++{
++	int		fd;
++	int		e;
++	pathname_t	f;
++	uint		fl;
++	int		v;
++
++	init_pathname(&f);
++	if (!get_fname(FT_ANYm, r, &f, NULL, NULL, &v))
++		append_pathname(&f, ".");
++	fd = open_path(&f, O_RDWR);
++	e = fd < 0 ? errno : 0;
++	check_cwd();
++
++	fl = (uint)random();
++	e = ioctl(fd, FS_IOC_SETFLAGS, &fl);
++	if (v)
++		printf("%d/%d: setattr %s %u %d\n", procid, opno, f.path, fl, e);
++	free_pathname(&f);
++	close(fd);
 +}
 +
 +
 +void
- fdatasync_f(int opno, long r)
+ creat_f(int opno, long r)
  {
- 	int		e;
-@@ -2251,6 +2318,60 @@ mknod_f(int opno, long r)
- }
- 
- void
-+punch_f(int opno, long r)
-+{
-+#ifdef FALLOCATE
-+	int		e;
-+	pathname_t	f;
-+	int		fd;
-+	__int64_t	lr;
-+	off64_t		off;
-+	off64_t		len;
-+	struct stat64	stb;
-+	int		v;
-+	int mode = FALLOC_FL_PUNCH_HOLE;
-+
-+	init_pathname(&f);
-+	if (!get_fname(FT_REGFILE, r, &f, NULL, NULL, &v)) {
-+		if (v)
-+			printf("%d/%d: punch hole - no filename\n", procid, opno);
-+		free_pathname(&f);
-+		return;
-+	}
-+	fd = open_path(&f, O_RDWR);
-+	e = fd < 0 ? errno : 0;
-+	check_cwd();
-+	if (fd < 0) {
-+		if (v)
-+			printf("%d/%d: punch hole - open %s failed %d\n",
-+				procid, opno, f.path, e);
-+		free_pathname(&f);
-+		return;
-+	}
-+	if (fstat64(fd, &stb) < 0) {
-+		if (v)
-+			printf("%d/%d: punch hole - fstat64 %s failed %d\n",
-+				procid, opno, f.path, errno);
-+		free_pathname(&f);
-+		close(fd);
-+		return;
-+	}
-+	lr = ((__int64_t)random() << 32) + random();
-+	off = (off64_t)(lr % MIN(stb.st_size + (1024 * 1024), MAXFSIZE));
-+	off %= maxfsize;
-+	len = (off64_t)(random() % (1024 * 1024));
-+	mode |= FALLOC_FL_KEEP_SIZE & random();
-+	e = fallocate(fd, mode, (loff_t)off, (loff_t)len) < 0 ? errno : 0;
-+	if (v)
-+		printf("%d/%d: punch hole(%d) %s %lld %lld %d\n",
-+		       procid, opno, mode,
-+		       f.path, (long long)off, (long long)len, e);
-+	free_pathname(&f);
-+	close(fd);
-+#endif
-+}
-+
-+void
- read_f(int opno, long r)
- {
- 	char		*buf;
+ 	struct fsxattr	a;
 -- 
 1.7.1
 
