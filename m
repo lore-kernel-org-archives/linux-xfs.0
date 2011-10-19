@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9JATwQ4178058 for <xfs@oss.sgi.com>; Wed, 19 Oct 2011 05:29:58 -0500
+	p9JATxBL178070 for <xfs@oss.sgi.com>; Wed, 19 Oct 2011 05:29:59 -0500
 Received: from mail-bw0-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 896CCF7DE14
-	for <xfs@oss.sgi.com>; Wed, 19 Oct 2011 03:37:56 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 08E8C1D98CD
+	for <xfs@oss.sgi.com>; Wed, 19 Oct 2011 03:29:58 -0700 (PDT)
 Received: from mail-bw0-f53.google.com (mail-bw0-f53.google.com
-	[209.85.214.53]) by cuda.sgi.com with ESMTP id mdCWijggWP2NdOAd
-	for <xfs@oss.sgi.com>; Wed, 19 Oct 2011 03:37:56 -0700 (PDT)
-Received: by mail-bw0-f53.google.com with SMTP id 11so2102048bke.26
-	for <xfs@oss.sgi.com>; Wed, 19 Oct 2011 03:29:56 -0700 (PDT)
+	[209.85.214.53]) by cuda.sgi.com with ESMTP id 73BD3CpNeEQCSYad
+	for <xfs@oss.sgi.com>; Wed, 19 Oct 2011 03:29:58 -0700 (PDT)
+Received: by mail-bw0-f53.google.com with SMTP id 11so2102080bke.26
+	for <xfs@oss.sgi.com>; Wed, 19 Oct 2011 03:29:58 -0700 (PDT)
 From: Dmitry Monakhov <dmonakhov@openvz.org>
-Subject: [PATCH 2/8] xfstests: add different logging option to fsstress
-Date: Wed, 19 Oct 2011 14:29:43 +0400
-Message-Id: <1319020189-13584-3-git-send-email-dmonakhov@openvz.org>
+Subject: [PATCH 3/8] xfstests: add fallocate support to fsstress
+Date: Wed, 19 Oct 2011 14:29:44 +0400
+Message-Id: <1319020189-13584-4-git-send-email-dmonakhov@openvz.org>
 In-Reply-To: <1319020189-13584-1-git-send-email-dmonakhov@openvz.org>
 References: <1319020189-13584-1-git-send-email-dmonakhov@openvz.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -32,97 +32,207 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, linux-ext4@vger.kernel.org, jack@suse.cz, hch@infradead.org, aelder@sgi.com
 Cc: Dmitry Monakhov <dmonakhov@openvz.org>
 
-Currently the only way to log fsstress's output is to redirect it's shared
-stdout to pipe which is very painfull because:
-
-1) Pipe writers are serialized via i_mutex so we waste cpu-cores power on stupid
-   sinchronization for loging purpose, instead of hunting real race conditions,
-   and bugs inside file system.
-2) Usually output is corrupted due to luck of sychronization on shared stdout.
-
-Since fsstress's children operate on independend paths, let's just open didicated
-log file for each child and simply avoid useless sycnhronization.
+Add tests for fallocate(2) syscall
+- fallocate: reserve the disk space
+- punch: de-allocates the disk space
+Since FALLOC_FL_PUNCH_HOLE is relatively new it's value defined
+explicitly if not yet defined. Later we may clear that define.
 
 Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
 ---
- ltp/fsstress.c |   32 +++++++++++++++++++++++++++++++-
- 1 files changed, 31 insertions(+), 1 deletions(-)
+ ltp/fsstress.c |  123 +++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 122 insertions(+), 1 deletions(-)
 
 diff --git a/ltp/fsstress.c b/ltp/fsstress.c
-index 34adacc..385d5a0 100644
+index 385d5a0..4aba34f 100644
 --- a/ltp/fsstress.c
 +++ b/ltp/fsstress.c
-@@ -265,6 +265,8 @@ int main(int argc, char **argv)
- 	char		buf[10];
- 	int		c;
- 	char		*dirname = NULL;
-+	char		*logname = NULL;
-+	char		rpath[PATH_MAX];
- 	int		fd;
- 	int		i;
- 	int		j;
-@@ -281,7 +283,7 @@ int main(int argc, char **argv)
- 	nops = sizeof(ops) / sizeof(ops[0]);
- 	ops_end = &ops[nops];
- 	myprog = argv[0];
--	while ((c = getopt(argc, argv, "d:e:f:i:m:n:p:rs:vwzHS")) != -1) {
-+	while ((c = getopt(argc, argv, "d:e:f:i:m:n:o:p:rs:vwzHS")) != -1) {
- 		switch (c) {
- 		case 'd':
- 			dirname = optarg;
-@@ -319,6 +321,10 @@ int main(int argc, char **argv)
- 		case 'n':
- 			operations = atoi(optarg);
- 			break;
-+		case 'o':
-+			logname = optarg;
-+			break;
-+
- 		case 'p':
- 			nproc = atoi(optarg);
- 			break;
-@@ -359,10 +365,26 @@ int main(int argc, char **argv)
-         }
- 
- 	(void)mkdir(dirname, 0777);
-+	if (logname && logname[0] != '/') {
-+		if (getcwd(rpath, sizeof(rpath)) < 0){
-+			perror("getcwd failed");
-+			exit(1);
-+		}
-+	} else {
-+		rpath[0] = '\0';
-+	}
- 	if (chdir(dirname) < 0) {
- 		perror(dirname);
- 		exit(1);
- 	}
-+	if (logname) {
-+		char path[PATH_MAX];
-+		snprintf(path, sizeof(path), "%s/%s", rpath, logname);
-+		if (freopen(path, "a", stdout) == NULL) {
-+			perror("freopen logfile failed");
-+			exit(1);
-+		}
-+	}
- 	sprintf(buf, "fss%x", (unsigned int)getpid());
- 	fd = creat(buf, 0666);
- 	if (lseek64(fd, (off64_t)(MAXFSIZE32 + 1ULL), SEEK_SET) < 0)
-@@ -436,6 +458,14 @@ int main(int argc, char **argv)
- 			if (getppid() == 1) /* parent died already? */
- 				return 0;
+@@ -24,7 +24,13 @@
+ #ifdef HAVE_ATTR_ATTRIBUTES_H
+ #include <attr/attributes.h>
  #endif
-+			if (logname) {
-+				char path[PATH_MAX];
-+				snprintf(path, sizeof(path), "%s/%s.%d", rpath, logname, i);
-+				if (freopen(path, "a", stdout) == NULL) {
-+					perror("freopen logfile failed");
-+					exit(1);
-+				}
-+			}
- 			procid = i;
- 			doproc();
- 			return 0;
+-
++#ifdef FALLOCATE
++#include <linux/falloc.h>
++#ifndef FALLOC_FL_PUNCH_HOLE
++/* Copy-paste from linux/falloc.h */
++#define FALLOC_FL_PUNCH_HOLE    0x02 /* de-allocates range */
++#endif
++#endif
+ #ifndef HAVE_ATTR_LIST
+ #define attr_list(path, buf, size, flags, cursor) (errno = -ENOSYS, -1)
+ #endif
+@@ -48,6 +54,7 @@ typedef enum {
+ 	OP_CREAT,
+ 	OP_DREAD,
+ 	OP_DWRITE,
++	OP_FALLOCATE,
+ 	OP_FDATASYNC,
+ 	OP_FREESP,
+ 	OP_FSYNC,
+@@ -55,6 +62,7 @@ typedef enum {
+ 	OP_LINK,
+ 	OP_MKDIR,
+ 	OP_MKNOD,
++	OP_PUNCH,
+ 	OP_READ,
+ 	OP_READLINK,
+ 	OP_RENAME,
+@@ -128,6 +136,7 @@ void	chown_f(int, long);
+ void	creat_f(int, long);
+ void	dread_f(int, long);
+ void	dwrite_f(int, long);
++void	fallocate_f(int, long);
+ void	fdatasync_f(int, long);
+ void	freesp_f(int, long);
+ void	fsync_f(int, long);
+@@ -135,6 +144,7 @@ void	getdents_f(int, long);
+ void	link_f(int, long);
+ void	mkdir_f(int, long);
+ void	mknod_f(int, long);
++void	punch_f(int, long);
+ void	read_f(int, long);
+ void	readlink_f(int, long);
+ void	rename_f(int, long);
+@@ -159,6 +169,7 @@ opdesc_t	ops[] = {
+ 	{ OP_CREAT, "creat", creat_f, 4, 1 },
+ 	{ OP_DREAD, "dread", dread_f, 4, 0 },
+ 	{ OP_DWRITE, "dwrite", dwrite_f, 4, 1 },
++	{ OP_FALLOCATE, "fallocate", fallocate_f, 1, 1 },
+ 	{ OP_FDATASYNC, "fdatasync", fdatasync_f, 1, 1 },
+ 	{ OP_FREESP, "freesp", freesp_f, 1, 1 },
+ 	{ OP_FSYNC, "fsync", fsync_f, 1, 1 },
+@@ -166,6 +177,7 @@ opdesc_t	ops[] = {
+ 	{ OP_LINK, "link", link_f, 1, 1 },
+ 	{ OP_MKDIR, "mkdir", mkdir_f, 2, 1 },
+ 	{ OP_MKNOD, "mknod", mknod_f, 2, 1 },
++	{ OP_PUNCH, "punch", punch_f, 1, 1 },
+ 	{ OP_READ, "read", read_f, 1, 0 },
+ 	{ OP_READLINK, "readlink", readlink_f, 1, 0 },
+ 	{ OP_RENAME, "rename", rename_f, 2, 1 },
+@@ -1981,6 +1993,61 @@ dwrite_f(int opno, long r)
+ }
+ 
+ void
++fallocate_f(int opno, long r)
++{
++#ifdef FALLOCATE
++	int		e;
++	pathname_t	f;
++	int		fd;
++	__int64_t	lr;
++	off64_t		off;
++	off64_t		len;
++	struct stat64	stb;
++	int		v;
++	int mode = 0;
++
++	init_pathname(&f);
++	if (!get_fname(FT_REGFILE, r, &f, NULL, NULL, &v)) {
++		if (v)
++			printf("%d/%d: fallocate - no filename\n", procid, opno);
++		free_pathname(&f);
++		return;
++	}
++	fd = open_path(&f, O_RDWR);
++	e = fd < 0 ? errno : 0;
++	check_cwd();
++	if (fd < 0) {
++		if (v)
++			printf("%d/%d: fallocate - open %s failed %d\n",
++				procid, opno, f.path, e);
++		free_pathname(&f);
++		return;
++	}
++	if (fstat64(fd, &stb) < 0) {
++		if (v)
++			printf("%d/%d: fallocate - fstat64 %s failed %d\n",
++				procid, opno, f.path, errno);
++		free_pathname(&f);
++		close(fd);
++		return;
++	}
++	lr = ((__int64_t)random() << 32) + random();
++	off = (off64_t)(lr % MIN(stb.st_size + (1024 * 1024), MAXFSIZE));
++	off %= maxfsize;
++	len = (off64_t)(random() % (1024 * 1024));
++	mode |= FALLOC_FL_KEEP_SIZE & random();
++	e = fallocate(fd, mode, (loff_t)off, (loff_t)len) < 0 ? errno : 0;
++	if (v)
++		printf("%d/%d: fallocate(%d) %s %lld %lld %d\n",
++		       procid, opno, mode,
++		       f.path, (long long)off, (long long)len, e);
++	free_pathname(&f);
++	close(fd);
++#endif
++}
++
++
++void
+ fdatasync_f(int opno, long r)
+ {
+ 	int		e;
+@@ -2251,6 +2318,60 @@ mknod_f(int opno, long r)
+ }
+ 
+ void
++punch_f(int opno, long r)
++{
++#ifdef FALLOCATE
++	int		e;
++	pathname_t	f;
++	int		fd;
++	__int64_t	lr;
++	off64_t		off;
++	off64_t		len;
++	struct stat64	stb;
++	int		v;
++	int mode = FALLOC_FL_PUNCH_HOLE;
++
++	init_pathname(&f);
++	if (!get_fname(FT_REGFILE, r, &f, NULL, NULL, &v)) {
++		if (v)
++			printf("%d/%d: punch hole - no filename\n", procid, opno);
++		free_pathname(&f);
++		return;
++	}
++	fd = open_path(&f, O_RDWR);
++	e = fd < 0 ? errno : 0;
++	check_cwd();
++	if (fd < 0) {
++		if (v)
++			printf("%d/%d: punch hole - open %s failed %d\n",
++				procid, opno, f.path, e);
++		free_pathname(&f);
++		return;
++	}
++	if (fstat64(fd, &stb) < 0) {
++		if (v)
++			printf("%d/%d: punch hole - fstat64 %s failed %d\n",
++				procid, opno, f.path, errno);
++		free_pathname(&f);
++		close(fd);
++		return;
++	}
++	lr = ((__int64_t)random() << 32) + random();
++	off = (off64_t)(lr % MIN(stb.st_size + (1024 * 1024), MAXFSIZE));
++	off %= maxfsize;
++	len = (off64_t)(random() % (1024 * 1024));
++	mode |= FALLOC_FL_KEEP_SIZE & random();
++	e = fallocate(fd, mode, (loff_t)off, (loff_t)len) < 0 ? errno : 0;
++	if (v)
++		printf("%d/%d: punch hole(%d) %s %lld %lld %d\n",
++		       procid, opno, mode,
++		       f.path, (long long)off, (long long)len, e);
++	free_pathname(&f);
++	close(fd);
++#endif
++}
++
++void
+ read_f(int opno, long r)
+ {
+ 	char		*buf;
 -- 
 1.7.1
 
