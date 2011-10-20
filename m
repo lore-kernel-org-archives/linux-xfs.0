@@ -1,20 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9KFc85P009940 for <xfs@oss.sgi.com>; Thu, 20 Oct 2011 10:38:08 -0500
-Received: from acsinet15.oracle.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E15061C9F344
-	for <xfs@oss.sgi.com>; Thu, 20 Oct 2011 08:38:07 -0700 (PDT)
-Received: from acsinet15.oracle.com (acsinet15.oracle.com [141.146.126.227])
-	by cuda.sgi.com with ESMTP id i9dFFnH6D4Wi3Acx for
-	<xfs@oss.sgi.com>; Thu, 20 Oct 2011 08:38:07 -0700 (PDT)
-From: Anand Jain <Anand.Jain@oracle.com>
-Subject: [PATCH 5/5] _populate_fs should use OPTIND when getopts is used
-Date: Thu, 20 Oct 2011 23:41:22 +0800
-Message-Id: <1319125282-17062-6-git-send-email-Anand.Jain@oracle.com>
-In-Reply-To: <1319125282-17062-1-git-send-email-Anand.Jain@oracle.com>
-References: <1318919336-32206-1-git-send-email-Anand.Jain@oracle.com>
-	<1319125282-17062-1-git-send-email-Anand.Jain@oracle.com>
+	p9KFfQpo010148 for <xfs@oss.sgi.com>; Thu, 20 Oct 2011 10:41:27 -0500
+Received: from mail.qboosh.pl (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 675BEF80F6D
+	for <xfs@oss.sgi.com>; Thu, 20 Oct 2011 08:49:29 -0700 (PDT)
+Received: from mail.qboosh.pl (mail.qboosh.pl [217.73.31.61]) by cuda.sgi.com
+	with ESMTP id w59jiKHGCblJkMZh for <xfs@oss.sgi.com>;
+	Thu, 20 Oct 2011 08:49:29 -0700 (PDT)
+Received: from stranger.qboosh.pl (77-255-49-134.adsl.inetia.pl
+	[77.255.49.134])
+	by mail.qboosh.pl (Postfix) with ESMTPSA id A5BA5CF9E3
+	for <xfs@oss.sgi.com>; Thu, 20 Oct 2011 17:45:34 +0200 (CEST)
+Received: from stranger.qboosh.pl (localhost [127.0.0.1])
+	by stranger.qboosh.pl (8.14.3/8.14.3) with ESMTP id p9KFfPnd003043
+	for <xfs@oss.sgi.com>; Thu, 20 Oct 2011 17:41:25 +0200
+Received: (from qboosh@localhost)
+	by stranger.qboosh.pl (8.14.3/8.14.3/Submit) id p9KFfOjV003042
+	for xfs@oss.sgi.com; Thu, 20 Oct 2011 17:41:25 +0200
+Date: Thu, 20 Oct 2011 17:41:24 +0200
+From: Jakub Bogusz <qboosh@pld-linux.org>
+Subject: xfsprogs: Polish translation update + msgid bugs
+Message-ID: <20111020154124.GB23961@stranger.qboosh.pl>
+MIME-Version: 1.0
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,34 +32,68 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: hch@infradead.org, linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
-Cc: Anand Jain <Anand.Jain@oracle.com>
+To: xfs@oss.sgi.com
+
+Hello,
+
+I've just updated pl.po file for xfsprogs 3.1.6.
+It's available at http://qboosh.pl/pl.po/xfsprogs-3.1.6.pl.po
 
 
-Signed-off-by: Anand Jain <Anand.Jain@oracle.com>
----
- common.rc |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+I also found some mistakes in messages used as msgid strings;
+they are marked with "# XXX msgid bug:" in the above file.
 
-diff --git a/common.rc b/common.rc
-index e3c4e67..cab0b64 100644
---- a/common.rc
-+++ b/common.rc
-@@ -1547,6 +1547,7 @@ _populate_fs()
-     root=root       # path of initial root of directory tree
-     randomdata=false # -x data type urandom or zero
- 
-+    OPTIND=1
-     while getopts "d:f:n:r:s:v:x" c
-     do
-         case $c in
+There are two places with "n" instead of "\n" at the end of file:
+
+#: .././repair/dinode.c:1442
+#, c-format
+msgid ""
+"mismatch between format (%d) and size (%<PRId64>) in symlink inode %<PRIu64>n"
+
+#: .././libxfs/freebsd.c:129
+#, c-format
+msgid "%s: Not a device or file: \"%s\"n"
+
+one <PRIu64> without leading '%':
+
+#: .././repair/phase6.c:2074
+#, c-format
+msgid "entry \"%s\" in directory inode %<PRIu64> points to free inode <PRIu64>"
+
+one extra "u" after <PRIu64>:
+
+#: .././repair/dir2.c:1177
+#, c-format
+msgid "corrected entry count in directory %<PRIu64>u, was %d, now %d\n"
+
+and a few "0x" prefixes to %<PRIu64> (these values used to be printed
+with %llx, so either <PRIu64> should be changed to <PRIx64>, or "0x" prefix
+removed (I think the second version is better, as the value referred is
+inode number, which in all other cases is printed decimal).
+
+#: .././repair/scan.c:292
+#, c-format
+msgid "inode 0x%<PRIu64>bmap block 0x%<PRIu64> claimed, state is %d\n"
+
+#: .././repair/scan.c:299
+#, c-format
+msgid "inode 0x%<PRIu64> bmap block 0x%<PRIu64> claimed, state is %d\n"
+
+#: .././repair/scan.c:314
+#, c-format
+msgid "bad state %d, inode 0x%<PRIu64> bmap block 0x%<PRIu64>\n"
+
+#: .././repair/scan.c:341 .././repair/scan.c:391
+#, c-format
+msgid "inode 0x%<PRIu64> bad # of bmap records (%u, min - %u, max - %u)\n"
+
+
 -- 
-1.7.7
+Jakub Bogusz    http://qboosh.pl/
 
 _______________________________________________
 xfs mailing list
