@@ -1,31 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9L202nK038060 for <xfs@oss.sgi.com>; Thu, 20 Oct 2011 21:00:02 -0500
-Received: from e9.ny.us.ibm.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 323EF16158A5
-	for <xfs@oss.sgi.com>; Thu, 20 Oct 2011 19:08:10 -0700 (PDT)
-Received: from e9.ny.us.ibm.com (e9.ny.us.ibm.com [32.97.182.139]) by
-	cuda.sgi.com with ESMTP id yV11HbcdRVejsBeH for
-	<xfs@oss.sgi.com>; Thu, 20 Oct 2011 19:08:10 -0700 (PDT)
-Received: from d01relay03.pok.ibm.com (d01relay03.pok.ibm.com [9.56.227.235])
-	by e9.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p9KMPxsX031640
-	for <xfs@oss.sgi.com>; Thu, 20 Oct 2011 18:25:59 -0400
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay03.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	p9KN2RFN228900 for <xfs@oss.sgi.com>; Thu, 20 Oct 2011 19:02:27 -0400
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
-	p9KN2Rjm027660 for <xfs@oss.sgi.com>; Thu, 20 Oct 2011 21:02:27 -0200
-Received: from [9.53.40.164] (chandra-lucid.austin.ibm.com [9.53.40.164])
-	by d01av02.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVin) with ESMTP id
-	p9KN2Q35027632 for <xfs@oss.sgi.com>; Thu, 20 Oct 2011 21:02:26 -0200
-Subject: A question in the context of independent pquota
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-Date: Thu, 20 Oct 2011 18:02:26 -0500
-Message-ID: <1319151746.1959.63.camel@chandra-lucid.austin.ibm.com>
-Mime-Version: 1.0
-Reply-To: sekharan@us.ibm.com
+	p9LDMhFB073411 for <xfs@oss.sgi.com>; Fri, 21 Oct 2011 08:22:45 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8913F16C3C0F
+	for <xfs@oss.sgi.com>; Fri, 21 Oct 2011 06:30:54 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	sWYmGTfiXASPiszY for <xfs@oss.sgi.com>;
+	Fri, 21 Oct 2011 06:30:54 -0700 (PDT)
+Date: Fri, 21 Oct 2011 09:22:40 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: XFS read hangs in 3.1-rc10
+Message-ID: <20111021132240.GA24136@infradead.org>
+References: <20111020224214.GC22772@hostway.ca>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20111020224214.GC22772@hostway.ca>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,34 +30,74 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: XFS Mailing List <xfs@oss.sgi.com>
+To: Simon Kirby <sim@hostway.ca>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-Hi All,
+On Thu, Oct 20, 2011 at 03:42:14PM -0700, Simon Kirby wrote:
+> 
+> [<ffffffff8126f205>] xfs_reclaim_inode+0x85/0x2b0
+> [<ffffffff8126f5b0>] xfs_reclaim_inodes_ag+0x180/0x2f0
+> [<ffffffff8126f74e>] xfs_reclaim_inodes_nr+0x2e/0x40
+> [<ffffffff8126ccf0>] xfs_fs_free_cached_objects+0x10/0x20
+> [<ffffffff81119a70>] prune_super+0x110/0x1b0
+> [<ffffffff810e4fa5>] shrink_slab+0x1e5/0x2a0
+> [<ffffffff810e5821>] kswapd+0x7c1/0xba0
+> [<ffffffff8107ada6>] kthread+0x96/0xb0
+> [<ffffffff816c0474>] kernel_thread_helper+0x4/0x10
+> [<ffffffffffffffff>] 0xffffffffffffffff
 
-Few days back I posted a patchset to allow pquota and gquota to be used
-together. I have a question in that context.
+We're stuck in synchronous inode reclaim.
 
-In order for the user space to get the stats for pguota and gquota
-together (quotactl command Q_XGETQSTAT), I need to add a field to
-fs_quota_stat. So, I have to change the version number.
+> All of the other processes that get stuck have this stack:
+> 
+> [<ffffffff81080587>] down+0x47/0x50
+> [<ffffffff8125e816>] xfs_buf_lock+0x66/0xd0
+> [<ffffffff812603ad>] _xfs_buf_find+0x16d/0x270
+> [<ffffffff81260517>] xfs_buf_get+0x67/0x1a0
+> [<ffffffff8126067a>] xfs_buf_read+0x2a/0x120
+> [<ffffffff812b876f>] xfs_trans_read_buf+0x28f/0x3f0
+> [<ffffffff8129e161>] xfs_read_agi+0x71/0x100
 
-But, the version number is only set in the kernel and not checked. Which
-means the kernel cannot know what size of the fs_quota_stat data
-structure the user space has provided in order to decide if the kernel
-can copy the newer (bigger) data structure to the user space or not.
+They are waiting for the AGI buffer to become unlocked.  The only reason
+it is held locked for longer time is when it is under I/O.
 
-One option I see is to add a new command to the ioctl.
+> 
+> By the way, xfs_reclaim_inode+0x85 (133) disassembles as:
 
-Is there any other options ? ( or am I totally missing it :) ?
+> 
+> ...So the next function is wait_for_completion(), which is marked
+> __sched and thus doesn't show up in the trace.
 
-Thanks
-
-Chandra
-
+So we're waiting for the inode to be flushed, aka I/O again.
 
 
 
+What is interesting here is that we're always blocking on the AGI
+buffer - which is used during unlinks of inodes, and thus gets hit
+fairly heavily for a workload that does a lot of unlinks.
 
+> When the clog happens, "iostat -x -k 1" shows no reads from the XFS
+> devices, though writes keep happening. "vmstat 1" matches. I tried
+> switching schedulers from CFQ to deadline -- no difference. Queue depth
+> is empty on the devices and nothing is actually clogged up at the device
+> -- it's not actually plugged at the controller or disk. I did a sysreq-w
+> while this was happening. About 10 seconds later, everything unclogs and
+> continues. Sysreq-W output below. I poked around at the various XFS
+> tracepoints in /sys/kernel/debug/tracing/events/xfs, but I'm not sure
+> which tracepoints to use and many of them scroll too fast to see
+> anything. Any suggestions?
+
+Given that you are doing a lot of unlinks I wonder if it is related
+to the recent ail pushing issues in that area.  While your symptoms
+looks completely different we could be blocking on the flush completion
+for an inode that gets stuck in the AIL.
+
+Can you run with latest 3.0-stable plus the patches at:
+
+	http://oss.sgi.com/pipermail/xfs/2011-October/053464.html
+
+If this doesn't help I'll probably need to come up with some tracing
+patches for you.
 
 _______________________________________________
 xfs mailing list
