@@ -1,17 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9ML8sLk183446 for <xfs@oss.sgi.com>; Sat, 22 Oct 2011 16:08:54 -0500
-Message-ID: <1319317728.3297.2.camel@doink>
-Subject: Re: Can you please create a git tree mirror on git.kernel.org?
-From: Alex Elder <aelder@sgi.com>
-Date: Sat, 22 Oct 2011 16:08:48 -0500
-In-Reply-To: <20111020083307.GA16743@infradead.org>
-References: <4E9F8BE0.9010407@cn.fujitsu.com>
-	<20111020035308.GG21338@dastard> <4E9FA3E9.4050507@cn.fujitsu.com>
-	<20111020075334.GH21338@dastard> <20111020083307.GA16743@infradead.org>
+	p9MLX6lD184887 for <xfs@oss.sgi.com>; Sat, 22 Oct 2011 16:33:07 -0500
+Received: from ogre.sisk.pl (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 45738161A269
+	for <xfs@oss.sgi.com>; Sat, 22 Oct 2011 14:33:04 -0700 (PDT)
+Received: from ogre.sisk.pl (ogre.sisk.pl [217.79.144.158]) by cuda.sgi.com
+	with ESMTP id UT5C3tXqPxyOwNmN for <xfs@oss.sgi.com>;
+	Sat, 22 Oct 2011 14:33:04 -0700 (PDT)
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [PATCH] PM / Freezer: Freeze filesystems while freezing processes
+	(v2)
+Date: Sat, 22 Oct 2011 23:35:29 +0200
+References: <4E1C70AD.1010101@u-club.de> <201109260010.50649.rjw@sisk.pl>
+	<4EA2DDD3.8080306@u-club.de>
+In-Reply-To: <4EA2DDD3.8080306@u-club.de>
 MIME-Version: 1.0
-Reply-To: aelder@sgi.com
+Message-Id: <201110222335.29573.rjw@sisk.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,38 +29,100 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Wanlong Gao <gaowanlong@cn.fujitsu.com>, xfs@oss.sgi.com
+To: Christoph <cr2005@u-club.de>, Takashi Iwai <tiwai@suse.de>
+Cc: Theodore Ts'o <tytso@mit.edu>, Linux PM list <linux-pm@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Nigel Cunningham <nigel@tuxonice.net>, Pavel Machek <pavel@ucw.cz>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
 
-On Thu, 2011-10-20 at 04:33 -0400, Christoph Hellwig wrote:
-> On Thu, Oct 20, 2011 at 06:53:34PM +1100, Dave Chinner wrote:
-> > As it is, I'm not sure we're going to put those trees back on
-> > kernel.org - there's been no discussion I've seen about doing this,
-> > and the absence of the trees hasn't hurt us at all thanks to Alex
-> > pushing stuff into the oss.sgi.com trees quickly.
+On Saturday, October 22, 2011, Christoph wrote:
+> > PM / Freezer: Freeze filesystems while freezing processes (v2)
+> > 
+> > On Sunday, August 07, 2011, Dave Chinner wrote:
+> >> On Sat, Aug 06, 2011 at 11:17:18PM +0200, Rafael J. Wysocki wrote:
+> >>> From: Rafael J. Wysocki <rjw@sisk.pl>
+> >>> 
+> >>> Freeze all filesystems during the freezing of tasks by calling 
+> >>> freeze_bdev() for each of them and thaw them during the thawing of
+> >>> tasks with the help of thaw_bdev().
+> >>> 
+> >>> This is needed by hibernation, because some filesystems (e.g. XFS) 
+> >>> deadlock with the preallocation of memory used by it if the memory 
+> >>> pressure caused by it is too heavy.
+> >>> 
+> ...
+> > 
+> > Below is an alternative fix, the changelog pretty much explains the
+> > idea.
+> > 
+> > I've tested it on Toshiba Portege R500, but I don't have an XFS
+> > partition to verify that it really helps, so I'd appreciate it if
+> > someone able to reproduce the original issue could test it and report
+> > back.
 > 
-> I'd like to put them back.  Right now it means we have a single point
-> of failure, and overload Alex who is pretty busy already.
-
-My plan all along has been to update the kernel.org
-trees when that became possible.  I have not yet updated
-my various credentials and have not re-synched kernel.org.
-
-I am out of town and will be until Tuesday night.  This
-is my first time back online for a few days.  I expect
-to be updating things this coming week, unless I run into
-some sort of roadblock.
-
-					-Alex
-
-> > And FWIW, I'm not planning on putting my dev trees back on
-> > kernel.org any time soon - too many hoops to jump through now. I'll
-> > probably use github or some other site for doing that when the need
-> > arises.
+> Hi Rafael!
 > 
-> Of course we'd need all the regular contributors to have access,
-> otherwise a shared repository is rather pointless.
+> Well, the kernel bugtracker is still down and I just like to post my
+> experience with kernel (x64) v3.1-rc8/9 + patches. My machine is a
+> MacBookPro, doomed with 4GB RAM running debian.
+> 
+> Bug #1
+> 
+> on the way to hibernate, machine hangs on
+> 
+> "PM: Preallocating image memory..."
+> 
+> this patch worked for me now for weeks:
+> "[PATCH] PM / Freezer: Freeze filesystems while freezing processes (v2)"
+> https://lkml.org/lkml/2011/9/24/77
 
+This patch is going to be merged into 3.2.
+
+> I was able to reproduce this bug with virtualbox and tested the patch ~40
+> cycles.
+> 
+> Bug#2
+> 
+> on resume from hibernate, hard reset (x64 only):
+> http://marc.info/?l=linux-kernel&m=131653513414314&w=2
+> 
+> With this patch I haven't got this issue again the last weeks.
+
+Hmm.  This issue appears to be still under investigation to me, but perhaps
+that's taken too much already.
+
+Takashi, perhaps you can repost the patch as a proper submission?  It would
+be good to have this regression fixed even if we don't know the real source of
+it.
+
+> I wasn't able to reproduce this bug with virtualbox.
+> 
+> 
+> 
+> 
+> 
+> I only got one pm-hibernate issue. Last line:
+> 
+> Disabling non-boot CPUs ...
+> 
+> This time I've enabled debug hung task :)
+> 
+> schedule_timeout
+> ...
+> workqueue_cpu_callback
+> notifier_call_chain
+> ...
+> __cpu_notify
+> _cpu_down
+> printk
+> disable_nonboot_cpus
+> hibernation_snapshot
+> hibernate
+> ...
+> 
+> Any other idea besides the possibility it's caused by evil earth
+> radiation, isn't it?
+
+I'm not exactly sure what happened from your description, care to explain?
+
+Rafael
 
 _______________________________________________
 xfs mailing list
