@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9LKT1KR094456 for <xfs@oss.sgi.com>; Fri, 21 Oct 2011 15:29:01 -0500
-Received: from peace.netnation.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 16E011CA9A3F
-	for <xfs@oss.sgi.com>; Fri, 21 Oct 2011 13:28:59 -0700 (PDT)
-Received: from peace.netnation.com (peace.netnation.com [204.174.223.2]) by
-	cuda.sgi.com with ESMTP id fo87IcPuzpn08SLV for
-	<xfs@oss.sgi.com>; Fri, 21 Oct 2011 13:28:59 -0700 (PDT)
-Date: Fri, 21 Oct 2011 13:28:57 -0700
-From: Simon Kirby <sim@hostway.ca>
-Subject: Re: XFS read hangs in 3.1-rc10
-Message-ID: <20111021202857.GB30100@hostway.ca>
-References: <20111020224214.GC22772@hostway.ca>
-	<20111021132240.GA24136@infradead.org>
+	p9MFEXwT166577 for <xfs@oss.sgi.com>; Sat, 22 Oct 2011 10:14:34 -0500
+Received: from mail.uscreen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 44B891E97EFA
+	for <xfs@oss.sgi.com>; Sat, 22 Oct 2011 08:14:32 -0700 (PDT)
+Received: from mail.uscreen.net (mail.uscreen.net [62.67.233.10]) by
+	cuda.sgi.com with ESMTP id mG9v1dmFa57TzvtS for
+	<xfs@oss.sgi.com>; Sat, 22 Oct 2011 08:14:32 -0700 (PDT)
+Message-ID: <4EA2DDD3.8080306@u-club.de>
+Date: Sat, 22 Oct 2011 17:14:27 +0200
+From: Christoph <cr2005@u-club.de>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20111021132240.GA24136@infradead.org>
+Subject: Re: [PATCH] PM / Freezer: Freeze filesystems while freezing processes
+	(v2)
+References: <4E1C70AD.1010101@u-club.de>
+	<201109251532.20025.rjw@sisk.pl>	<4E7FA3C7.5050503@u-club.de>
+	<201109260010.50649.rjw@sisk.pl>
+In-Reply-To: <201109260010.50649.rjw@sisk.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,89 +30,136 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Theodore Ts'o <tytso@mit.edu>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Nigel Cunningham <nigel@tuxonice.net>, Pavel Machek <pavel@ucw.cz>, linux-fsdevel@vger.kernel.org, Linux PM mailing list <linux-pm@lists.linux-foundation.org>, linux-ext4@vger.kernel.org
 
-On Fri, Oct 21, 2011 at 09:22:40AM -0400, Christoph Hellwig wrote:
+> PM / Freezer: Freeze filesystems while freezing processes (v2)
+> 
+> On Sunday, August 07, 2011, Dave Chinner wrote:
+>> On Sat, Aug 06, 2011 at 11:17:18PM +0200, Rafael J. Wysocki wrote:
+>>> From: Rafael J. Wysocki <rjw@sisk.pl>
+>>> 
+>>> Freeze all filesystems during the freezing of tasks by calling 
+>>> freeze_bdev() for each of them and thaw them during the thawing of
+>>> tasks with the help of thaw_bdev().
+>>> 
+>>> This is needed by hibernation, because some filesystems (e.g. XFS) 
+>>> deadlock with the preallocation of memory used by it if the memory 
+>>> pressure caused by it is too heavy.
+>>> 
+...
+> 
+> Below is an alternative fix, the changelog pretty much explains the
+> idea.
+> 
+> I've tested it on Toshiba Portege R500, but I don't have an XFS
+> partition to verify that it really helps, so I'd appreciate it if
+> someone able to reproduce the original issue could test it and report
+> back.
 
-> On Thu, Oct 20, 2011 at 03:42:14PM -0700, Simon Kirby wrote:
-> > 
-> > [<ffffffff8126f205>] xfs_reclaim_inode+0x85/0x2b0
-> > [<ffffffff8126f5b0>] xfs_reclaim_inodes_ag+0x180/0x2f0
-> > [<ffffffff8126f74e>] xfs_reclaim_inodes_nr+0x2e/0x40
-> > [<ffffffff8126ccf0>] xfs_fs_free_cached_objects+0x10/0x20
-> > [<ffffffff81119a70>] prune_super+0x110/0x1b0
-> > [<ffffffff810e4fa5>] shrink_slab+0x1e5/0x2a0
-> > [<ffffffff810e5821>] kswapd+0x7c1/0xba0
-> > [<ffffffff8107ada6>] kthread+0x96/0xb0
-> > [<ffffffff816c0474>] kernel_thread_helper+0x4/0x10
-> > [<ffffffffffffffff>] 0xffffffffffffffff
-> 
-> We're stuck in synchronous inode reclaim.
-> 
-> > All of the other processes that get stuck have this stack:
-> > 
-> > [<ffffffff81080587>] down+0x47/0x50
-> > [<ffffffff8125e816>] xfs_buf_lock+0x66/0xd0
-> > [<ffffffff812603ad>] _xfs_buf_find+0x16d/0x270
-> > [<ffffffff81260517>] xfs_buf_get+0x67/0x1a0
-> > [<ffffffff8126067a>] xfs_buf_read+0x2a/0x120
-> > [<ffffffff812b876f>] xfs_trans_read_buf+0x28f/0x3f0
-> > [<ffffffff8129e161>] xfs_read_agi+0x71/0x100
-> 
-> They are waiting for the AGI buffer to become unlocked.  The only reason
-> it is held locked for longer time is when it is under I/O.
-> 
-> > 
-> > By the way, xfs_reclaim_inode+0x85 (133) disassembles as:
-> 
-> > 
-> > ...So the next function is wait_for_completion(), which is marked
-> > __sched and thus doesn't show up in the trace.
-> 
-> So we're waiting for the inode to be flushed, aka I/O again.
+Hi Rafael!
 
-But I don't seem to see any queued I/O, hmm.
+Well, the kernel bugtracker is still down and I just like to post my
+experience with kernel (x64) v3.1-rc8/9 + patches. My machine is a
+MacBookPro, doomed with 4GB RAM running debian.
 
-> What is interesting here is that we're always blocking on the AGI
-> buffer - which is used during unlinks of inodes, and thus gets hit
-> fairly heavily for a workload that does a lot of unlinks.
+Bug #1
 
-I don't think we do too many unlinks, but there are quite a bit of
-renames over existing files (dovecot-2.0 w/mdbox).
+on the way to hibernate, machine hangs on
 
-> > When the clog happens, "iostat -x -k 1" shows no reads from the XFS
-> > devices, though writes keep happening. "vmstat 1" matches. I tried
-> > switching schedulers from CFQ to deadline -- no difference. Queue depth
-> > is empty on the devices and nothing is actually clogged up at the device
-> > -- it's not actually plugged at the controller or disk. I did a sysreq-w
-> > while this was happening. About 10 seconds later, everything unclogs and
-> > continues. Sysreq-W output below. I poked around at the various XFS
-> > tracepoints in /sys/kernel/debug/tracing/events/xfs, but I'm not sure
-> > which tracepoints to use and many of them scroll too fast to see
-> > anything. Any suggestions?
+"PM: Preallocating image memory..."
+
+this patch worked for me now for weeks:
+"[PATCH] PM / Freezer: Freeze filesystems while freezing processes (v2)"
+https://lkml.org/lkml/2011/9/24/77
+
+I was able to reproduce this bug with virtualbox and tested the patch ~40
+cycles.
+
+Bug#2
+
+on resume from hibernate, hard reset (x64 only):
+http://marc.info/?l=linux-kernel&m=131653513414314&w=2
+
+With this patch I haven't got this issue again the last weeks.
+
+I wasn't able to reproduce this bug with virtualbox.
+
+
+
+
+
+I only got one pm-hibernate issue. Last line:
+
+Disabling non-boot CPUs ...
+
+This time I've enabled debug hung task :)
+
+schedule_timeout
+...
+workqueue_cpu_callback
+notifier_call_chain
+...
+__cpu_notify
+_cpu_down
+printk
+disable_nonboot_cpus
+hibernation_snapshot
+hibernate
+...
+
+Any other idea besides the possibility it's caused by evil earth
+radiation, isn't it?
+
+
+Gruss,
+chris
+
+
+
+
+On 26.09.2011 00:10, Rafael J. Wysocki wrote:
+> On Sunday, September 25, 2011, Christoph wrote:
+>> On 25.09.2011 15:32, Rafael J. Wysocki wrote:
+>>> On Sunday, September 25, 2011, Christoph wrote:
+>>>> test results of the patch below:
+>>>>
+>>>> 1. real machine
+>>>>
+>>>> suspends fine but on wakeup, after loading image: hard reset. nvidia
+>>>> gpu => disabled compitz  => wakeup worked two times.
+>>>
+>>> Hmm, so there's a separate bug related to NVidia I guess.
+>>
+>> Maybe.
+>>
+>> Just made another test: the machine (macbook) woke up, loaded image, thaw.
+>> It got stuck at vt#1, displaying console with login. Cursor blinking, but
+>> no (usb) keyboard or network enabled. Bricked?!!
+>>
+>>
+>> On the other hand I've got another box with nvidia gpu:
+>>
+>> debian5 32bit
+>> 2.6.38.2+ #3 SMP Fri Apr 1
+>> nvidia 260.19.36
+>>
+>> It's up since I compiled the kernel: I use it twice a week and I kept it
+>> freezed all the time. It was solid rock until today: hard reset on resume.
+>> WTF? (I remember this version combo was stable on the macbook but the
+>> kernel lacks a solid wireless driver).
 > 
-> Given that you are doing a lot of unlinks I wonder if it is related
-> to the recent ail pushing issues in that area.  While your symptoms
-> looks completely different we could be blocking on the flush completion
-> for an inode that gets stuck in the AIL.
+> If that's an x86_64 system, there is a known bug causing problems like
+> this to happen.  There's a patch fixing it, but not conclusive:
+> http://marc.info/?l=linux-kernel&m=131653513414314&w=2
 > 
-> Can you run with latest 3.0-stable plus the patches at:
+> Thanks,
+> Rafael
 > 
-> 	http://oss.sgi.com/pipermail/xfs/2011-October/053464.html
-> 
-> If this doesn't help I'll probably need to come up with some tracing
-> patches for you.
-
-It seemes 3.0.7+gregkh's stable-queue queue-3.0 patches seems to be
-running fine without blocking at all on this SSD box, so that should
-narrow it down significantly.
-
-Hmm, looking at git diff --stat v3.0.7..v3.1-rc10 fs/xfs , maybe not.. :)
-
-Maybe 3.1 fs/xfs would transplant into 3.0 or vice-versa?
-
-Simon-
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
