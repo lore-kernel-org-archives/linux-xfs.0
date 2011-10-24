@@ -1,22 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9O9mjID063427 for <xfs@oss.sgi.com>; Mon, 24 Oct 2011 04:48:46 -0500
-Received: from smtp-relay.maven.pl (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 17B831536AA5
-	for <xfs@oss.sgi.com>; Mon, 24 Oct 2011 02:48:43 -0700 (PDT)
-Received: from smtp-relay.maven.pl (smtp-relay.maven.pl [193.239.45.138]) by
-	cuda.sgi.com with ESMTP id UBcgBMyQlH2A3SIb for
-	<xfs@oss.sgi.com>; Mon, 24 Oct 2011 02:48:43 -0700 (PDT)
-Received: from [83.238.65.58] (port=51256 helo=t400.localnet ident=matrix157)
-	by smtp-relay.maven.pl with esmtpsa (TLSv1:DHE-RSA-AES256-SHA:256)
-	(Exim 4.76) (envelope-from <arekm@maven.pl>) id 1RIH98-0004W6-9O
-	for xfs@oss.sgi.com; Mon, 24 Oct 2011 11:48:42 +0200
-From: Arkadiusz =?utf-8?q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
-Subject: xfs_symlink problem? 3.1 after rc10
-Date: Mon, 24 Oct 2011 11:48:39 +0200
+	p9OBlPSL071862 for <xfs@oss.sgi.com>; Mon, 24 Oct 2011 06:47:26 -0500
+Received: from server655-han.de-nserver.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 02ECD1E9541
+	for <xfs@oss.sgi.com>; Mon, 24 Oct 2011 04:47:23 -0700 (PDT)
+Received: from server655-han.de-nserver.de (server655-han.de-nserver.de
+	[85.158.177.45]) by cuda.sgi.com with ESMTP id nE15I8zAQwfEp8zZ
+	for <xfs@oss.sgi.com>; Mon, 24 Oct 2011 04:47:23 -0700 (PDT)
+Message-ID: <4EA5504D.9090302@profihost.ag>
+Date: Mon, 24 Oct 2011 13:47:25 +0200
+From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
 MIME-Version: 1.0
-Message-Id: <201110241148.39772.arekm@maven.pl>
+Subject: XFS deadlock the second
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,19 +21,23 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>
 
-Ck15IDMuMSAoYWZ0ZXIpIHJjMTAgY3Jhc2hlZCAodGhlcmUgd2FzIG5vIHhmcyBjaGFuZ2VzIGFm
-dGVyIGl0IGFmYWlrKS4KCkNvdWxkIGFueW9uZSB2ZXJpZnkgdGhhdCB0aGlzIGlzbid0IHNvbWUg
-bmFzdHkgeGZzIHByb2JsZW0gc2luY2UgaXQncyBjbG9zZSB0byAKZmluYWwgMy4xPyBIYXBwZW5l
-ZCBvbmx5IG9uY2UuCgpodHRwOi8vaXhpb24ucGxkLWxpbnV4Lm9yZy9+YXJla20vSU1HXzYwMTku
-SlBHCgpObyBxdW90YSB3YXMgdXNlZCwgeGZzIG9uIHRvcCBvZiBsdWtzIG9uIHRvcCBvZiBzc2Qg
-ZHJpdmUuCi0tIApBcmthZGl1c3ogTWnFm2tpZXdpY3ogICAgICAgIFBMRC9MaW51eCBUZWFtCmFy
-ZWttIC8gbWF2ZW4ucGwgICAgICAgICAgICBodHRwOi8vZnRwLnBsZC1saW51eC5vcmcvCgpfX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBs
-aXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94
-ZnMK
+Hi,
+
+today i received another deadlock while running all your patches.
+
+Output sysrq + w:
+http://pastebin.com/raw.php?i=YZGV6hxm
+
+Stefan
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
