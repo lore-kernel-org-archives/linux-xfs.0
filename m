@@ -1,31 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9PGxOXi188742 for <xfs@oss.sgi.com>; Tue, 25 Oct 2011 11:59:26 -0500
-Received: from e9.ny.us.ibm.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8C3A71F26FF0
-	for <xfs@oss.sgi.com>; Tue, 25 Oct 2011 09:59:23 -0700 (PDT)
-Received: from e9.ny.us.ibm.com (e9.ny.us.ibm.com [32.97.182.139]) by
-	cuda.sgi.com with ESMTP id YzMfEopilAetE0Is for
-	<xfs@oss.sgi.com>; Tue, 25 Oct 2011 09:59:23 -0700 (PDT)
-Received: from d01relay05.pok.ibm.com (d01relay05.pok.ibm.com [9.56.227.237])
-	by e9.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p9PGMfIQ007968
-	for <xfs@oss.sgi.com>; Tue, 25 Oct 2011 12:22:41 -0400
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay05.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	p9PGxH8Y190890 for <xfs@oss.sgi.com>; Tue, 25 Oct 2011 12:59:18 -0400
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
-	p9PGxEki003953 for <xfs@oss.sgi.com>; Tue, 25 Oct 2011 14:59:17 -0200
-Subject: Re: A question in the context of independent pquota
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-In-Reply-To: <20111025115428.GC22103@infradead.org>
-References: <1319151746.1959.63.camel@chandra-lucid.austin.ibm.com>
-	<20111025115428.GC22103@infradead.org>
-Date: Tue, 25 Oct 2011 11:59:12 -0500
-Message-ID: <1319561952.1959.85.camel@chandra-lucid.austin.ibm.com>
-Mime-Version: 1.0
-Reply-To: sekharan@us.ibm.com
+	p9PK7ph4200461 for <xfs@oss.sgi.com>; Tue, 25 Oct 2011 15:07:52 -0500
+Received: from peace.netnation.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2839E1F386B
+	for <xfs@oss.sgi.com>; Tue, 25 Oct 2011 13:07:50 -0700 (PDT)
+Received: from peace.netnation.com (peace.netnation.com [204.174.223.2]) by
+	cuda.sgi.com with ESMTP id 6UfDiWJ1YOdQhfQa for
+	<xfs@oss.sgi.com>; Tue, 25 Oct 2011 13:07:50 -0700 (PDT)
+Date: Tue, 25 Oct 2011 13:07:48 -0700
+From: Simon Kirby <sim@hostway.ca>
+Subject: Re: XFS read hangs in 3.1-rc10
+Message-ID: <20111025200748.GA25043@hostway.ca>
+References: <20111020224214.GC22772@hostway.ca>
+	<20111021132240.GA24136@infradead.org>
+	<20111021202857.GB30100@hostway.ca>
+	<20111024082219.GA19941@infradead.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20111024082219.GA19941@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,45 +32,78 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: XFS Mailing List <xfs@oss.sgi.com>
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Tue, 2011-10-25 at 07:54 -0400, Christoph Hellwig wrote:
-> Hi Chandra,
+On Mon, Oct 24, 2011 at 04:22:19AM -0400, Christoph Hellwig wrote:
+
+> On Fri, Oct 21, 2011 at 01:28:57PM -0700, Simon Kirby wrote:
+> > > So we're waiting for the inode to be flushed, aka I/O again.
+> > 
+> > But I don't seem to see any queued I/O, hmm.
 > 
-> I don't think there is an easy way to add a field there.  Please
-> just add a new Q_XGETQSTAT_2 call that takes the new, larger structure.
-
-Christoph,
-
-I came up with couple of ideas.
-
-- Add a new version FS_QSTAT_VERSION2 (with a value of 2) that uses
-  the newer fs_quota_stat
-- Start using qs_version in the user space code, with the bigger 
-  fs_quota_stat
-- Define a macro to check if the given version is a valid one.
-- In xfs_qm_scall_getqstat()(kernel), copy in the newer fs_quota_stat
-  structure from user space.
-  If copy in succeeded, check qs_version. 
-     If valid, use the structure relevant to the version.
-     If invalid, use structure for the version FS_QSTAT_VERSION.
-  If copy in failed,
-     use structure for the version FS_QSTAT_VERSION.
-
-I think it should work with the current user space code.
-
-Let me know what you think of it.
-
-Thanks & Regards,
-
-Chandra
+> Well, as far as XFS is concerned the inode is beeing flushed and
+> the buffer is locked.  It could be stuck in the XFS internal delwri
+> list because a buffer for example is pinned.
 > 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> If that is the case the big hammer patch I attached below - probably
+> not the final issue, but it should fix the hang if that is the case.
 > 
+> > > If this doesn't help I'll probably need to come up with some tracing
+> > > patches for you.
+> > 
+> > It seemes 3.0.7+gregkh's stable-queue queue-3.0 patches seems to be
+> > running fine without blocking at all on this SSD box, so that should
+> > narrow it down significantly.
+> > 
+> > Hmm, looking at git diff --stat v3.0.7..v3.1-rc10 fs/xfs , maybe not.. :)
+> > 
+> > Maybe 3.1 fs/xfs would transplant into 3.0 or vice-versa?
+> 
+> If the patch above doesn't work I'll prepare a backport for you.
+> 
+> Index: linux-2.6/fs/xfs/xfs_sync.c
+> ===================================================================
+> --- linux-2.6.orig/fs/xfs/xfs_sync.c	2011-10-24 10:02:27.361971264 +0200
+> +++ linux-2.6/fs/xfs/xfs_sync.c	2011-10-24 10:11:03.301036954 +0200
+> @@ -764,7 +764,8 @@ xfs_reclaim_inode(
+>  	struct xfs_perag	*pag,
+>  	int			sync_mode)
+>  {
+> -	int	error;
+> +	struct xfs_mount	*mp = ip->i_mount;
+> +	int			error;
+>  
+>  restart:
+>  	error = 0;
+> @@ -772,6 +773,18 @@ restart:
+>  	if (!xfs_iflock_nowait(ip)) {
+>  		if (!(sync_mode & SYNC_WAIT))
+>  			goto out;
+> +
+> +		/*
+> +		 * If the inode is flush locked we probably had someone else
+> +		 * push it to the buffer and the buffer is now sitting in
+> +		 * the delwri list.
+> +		 *
+> +		 * Use the big hammer to force it.
+> +		 */
+> +		xfs_log_force(mp, XFS_LOG_SYNC);
+> +		set_bit(XBT_FORCE_FLUSH, &mp->m_ddev_targp->bt_flags);
+> +		wake_up_process(mp->m_ddev_targp->bt_task);
+> +
+>  		xfs_iflock(ip);
+>  	}
+>  
 
+This patch seems to work, at least on an SSD box. No more hung task
+warnings, and everything appears normal.
+
+Do we know what caused this regression and/or how to fix it without the
+big hammer, or do we need to break it down further?
+
+Thanks!
+
+Simon-
 
 _______________________________________________
 xfs mailing list
