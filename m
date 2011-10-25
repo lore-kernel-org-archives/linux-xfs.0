@@ -1,22 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9PG1cJP185136 for <xfs@oss.sgi.com>; Tue, 25 Oct 2011 11:01:39 -0500
-Received: from mail.qboosh.pl (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DF6DB1CB9CD6
-	for <xfs@oss.sgi.com>; Tue, 25 Oct 2011 09:01:36 -0700 (PDT)
-Received: from mail.qboosh.pl (mail.qboosh.pl [217.73.31.61]) by cuda.sgi.com
-	with ESMTP id A5UaI6bCyHDYemfs for <xfs@oss.sgi.com>;
-	Tue, 25 Oct 2011 09:01:36 -0700 (PDT)
-Date: Tue, 25 Oct 2011 18:01:38 +0200
-From: Jakub Bogusz <qboosh@pld-linux.org>
-Subject: Re: xfsprogs: Polish translation update + msgid bugs
-Message-ID: <20111025160138.GB19818@stranger.qboosh.pl>
-References: <20111020154124.GB23961@stranger.qboosh.pl>
-	<20111025115112.GA22103@infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20111025115112.GA22103@infradead.org>
+	p9PGxOXi188742 for <xfs@oss.sgi.com>; Tue, 25 Oct 2011 11:59:26 -0500
+Received: from e9.ny.us.ibm.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8C3A71F26FF0
+	for <xfs@oss.sgi.com>; Tue, 25 Oct 2011 09:59:23 -0700 (PDT)
+Received: from e9.ny.us.ibm.com (e9.ny.us.ibm.com [32.97.182.139]) by
+	cuda.sgi.com with ESMTP id YzMfEopilAetE0Is for
+	<xfs@oss.sgi.com>; Tue, 25 Oct 2011 09:59:23 -0700 (PDT)
+Received: from d01relay05.pok.ibm.com (d01relay05.pok.ibm.com [9.56.227.237])
+	by e9.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p9PGMfIQ007968
+	for <xfs@oss.sgi.com>; Tue, 25 Oct 2011 12:22:41 -0400
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay05.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	p9PGxH8Y190890 for <xfs@oss.sgi.com>; Tue, 25 Oct 2011 12:59:18 -0400
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
+	p9PGxEki003953 for <xfs@oss.sgi.com>; Tue, 25 Oct 2011 14:59:17 -0200
+Subject: Re: A question in the context of independent pquota
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+In-Reply-To: <20111025115428.GC22103@infradead.org>
+References: <1319151746.1959.63.camel@chandra-lucid.austin.ibm.com>
+	<20111025115428.GC22103@infradead.org>
+Date: Tue, 25 Oct 2011 11:59:12 -0500
+Message-ID: <1319561952.1959.85.camel@chandra-lucid.austin.ibm.com>
+Mime-Version: 1.0
+Reply-To: sekharan@us.ibm.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,27 +39,45 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+Cc: XFS Mailing List <xfs@oss.sgi.com>
 
-On Tue, Oct 25, 2011 at 07:51:12AM -0400, Christoph Hellwig wrote:
-> On Thu, Oct 20, 2011 at 05:41:24PM +0200, Jakub Bogusz wrote:
-> > Hello,
-> > 
-> > I've just updated pl.po file for xfsprogs 3.1.6.
-> > It's available at http://qboosh.pl/pl.po/xfsprogs-3.1.6.pl.po
+On Tue, 2011-10-25 at 07:54 -0400, Christoph Hellwig wrote:
+> Hi Chandra,
 > 
-> Thanks a lot for the update and the string audit Jakub!  I'll send a
-> patch to fix the strings ASAP.
+> I don't think there is an easy way to add a field there.  Please
+> just add a new Q_XGETQSTAT_2 call that takes the new, larger structure.
+
+Christoph,
+
+I came up with couple of ideas.
+
+- Add a new version FS_QSTAT_VERSION2 (with a value of 2) that uses
+  the newer fs_quota_stat
+- Start using qs_version in the user space code, with the bigger 
+  fs_quota_stat
+- Define a macro to check if the given version is a valid one.
+- In xfs_qm_scall_getqstat()(kernel), copy in the newer fs_quota_stat
+  structure from user space.
+  If copy in succeeded, check qs_version. 
+     If valid, use the structure relevant to the version.
+     If invalid, use structure for the version FS_QSTAT_VERSION.
+  If copy in failed,
+     use structure for the version FS_QSTAT_VERSION.
+
+I think it should work with the current user space code.
+
+Let me know what you think of it.
+
+Thanks & Regards,
+
+Chandra
 > 
-> Is there any good way to reach you for a translation update before
-> spinning a release?  E.g. a personal ping mail or similar?
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
-Just send an email to the address in my From field.
-I'll try to prepare translation update as soon as I could.
-
-
--- 
-Jakub Bogusz    http://qboosh.pl/
 
 _______________________________________________
 xfs mailing list
