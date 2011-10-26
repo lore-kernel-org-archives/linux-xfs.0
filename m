@@ -1,16 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9QL7Pro036184 for <xfs@oss.sgi.com>; Wed, 26 Oct 2011 16:07:26 -0500
-Message-ID: <1319663241.5239.74.camel@doink>
-Subject: Re: [PATCH 2/4] xfs: replace i_flock with a sleeping bitlock
-From: Alex Elder <aelder@sgi.com>
-Date: Wed, 26 Oct 2011 16:07:21 -0500
-In-Reply-To: <20111019182420.881974453@bombadil.infradead.org>
-References: <20111019182343.762985925@bombadil.infradead.org>
-	<20111019182420.881974453@bombadil.infradead.org>
-MIME-Version: 1.0
-Reply-To: aelder@sgi.com
+	p9QLMeVt037045 for <xfs@oss.sgi.com>; Wed, 26 Oct 2011 16:22:41 -0500
+Received: from e39.co.us.ibm.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 755C15634AB
+	for <xfs@oss.sgi.com>; Wed, 26 Oct 2011 14:22:39 -0700 (PDT)
+Received: from e39.co.us.ibm.com (e39.co.us.ibm.com [32.97.110.160]) by
+	cuda.sgi.com with ESMTP id W4RyMythosA5QhDD for
+	<xfs@oss.sgi.com>; Wed, 26 Oct 2011 14:22:39 -0700 (PDT)
+Received: from d03relay05.boulder.ibm.com (d03relay05.boulder.ibm.com
+	[9.17.195.107])
+	by e39.co.us.ibm.com (8.14.4/8.13.1) with ESMTP id p9QL6Msm030694
+	for <xfs@oss.sgi.com>; Wed, 26 Oct 2011 15:06:22 -0600
+Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
+	by d03relay05.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	p9QLMQnG109750 for <xfs@oss.sgi.com>; Wed, 26 Oct 2011 15:22:30 -0600
+Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av01.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
+	id p9QLMNI0008568
+	for <xfs@oss.sgi.com>; Wed, 26 Oct 2011 15:22:24 -0600
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Date: Wed, 26 Oct 2011 16:22:22 -0500
+Message-Id: <20111026212222.6513.95044.sendpatchset@chandra-lucid.austin.ibm.com>
+In-Reply-To: <20111026212150.6513.38058.sendpatchset@chandra-lucid.austin.ibm.com>
+References: <20111026212150.6513.38058.sendpatchset@chandra-lucid.austin.ibm.com>
+Subject: [RFC v2 PATCH 5/5] xfs: Add a new field to fs_quota_stat to get
+	pquota information
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,80 +34,161 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Chandra Seetharaman <sekharan@us.ibm.com>
 
-On Wed, 2011-10-19 at 14:23 -0400, Christoph Hellwig wrote:
-> plain text document attachment (xfs-kill-i_flush)
-> We almost never block on i_flock, the exception is synchronous inode
-> flushing.  Instead of bloating the inode with a 16/24-byte completion
-> that we abuse as a semaphore just implement it as a bitlock that uses
-> a bit waitqueue for the rare sleeping path.  This primarily is a
-> tradeoff between a much smaller inode and a faster non-blocking
-> path vs a faster faster wakeups, and we are much better off with
-       vs faster wakeups
-> the former.
-> 
-> A small downside is that we will lose lockdep checking for i_flock, but
-> given that it's always taken inside the ilock that should be acceptable.
-> 
-> Note that for example the inode writeback locking is implemented in a
-> very similar way.
+Add a new field to fs_quota_stat and define a new version for
+the bigger size.
 
-Substitute "beeing" -> "being" throughout.  There's
-also one thing I'd like you to check and likely fix,
-below.  Otherwise looks good.
+Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
+---
+ fs/quota/quota.c          |    6 +++++-
+ fs/xfs/xfs_qm_syscalls.c  |   26 +++++++++++++-------------
+ include/linux/dqblk_xfs.h |   28 +++++++++++++++++++++++++++-
+ 3 files changed, 45 insertions(+), 15 deletions(-)
 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Reviewed-by: Alex Elder <aelder@sgi.com>
-
-. . .
-
-> @@ -331,6 +330,19 @@ xfs_iflags_test_and_clear(xfs_inode_t *i
->  	return ret;
->  }
->  
-> +static inline int
-> +xfs_iflags_test_and_set(xfs_inode_t *ip, unsigned short flags)
-
-i_flags is now an unsigned long (so make the
-flags argument here match that type).
-
-> +{
-> +	int ret;
-> +
-> +	spin_lock(&ip->i_flags_lock);
-> +	ret = ip->i_flags & flags;
-> +	if (!ret)
-> +		ip->i_flags |= flags;
-
-Although you are now only passing in a single
-flag bit, the interface doesn't preclude you
-passing in multiple bits.
-
-Therefore I think the correct logic would be:
-
-	ret = (ip->i_flags & flags) != flags;
-	if (ret)
-		ip->flags |= flags;
-
-Either that, or change the name of the "flags"
-argument to better reflect that we really want
-a single lock bit provided (and perhaps,
-ASSERT(is_power_of_2(flags))).
-
-> +	spin_unlock(&ip->i_flags_lock);
-> +	return ret;
-> +}
-> +
-
-. . .
-
+diff --git a/fs/quota/quota.c b/fs/quota/quota.c
+index 10b6be3..221d9ff 100644
+--- a/fs/quota/quota.c
++++ b/fs/quota/quota.c
+@@ -204,8 +204,12 @@ static int quota_getxstate(struct super_block *sb, void __user *addr)
+ 
+ 	if (!sb->s_qcop->get_xstate)
+ 		return -ENOSYS;
++	if (copy_from_user(&fqs, addr, 1)) /* just get the version */
++		return -EFAULT;
++	if (!valid_qstat_version(fqs.qs_version))
++		fqs.qs_version = FS_QSTAT_VERSION;
+ 	ret = sb->s_qcop->get_xstate(sb, &fqs);
+-	if (!ret && copy_to_user(addr, &fqs, sizeof(fqs)))
++	if (!ret && copy_to_user(addr, &fqs, qstatsize(fqs.qs_version)))
+ 		return -EFAULT;
+ 	return ret;
+ }
+diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
+index 7ce4034..7267ee4 100644
+--- a/fs/xfs/xfs_qm_syscalls.c
++++ b/fs/xfs/xfs_qm_syscalls.c
+@@ -425,7 +425,6 @@ xfs_qm_scall_getqstat(
+ 	tempuqip = tempgqip = temppqip = B_FALSE;
+ 	memset(out, 0, sizeof(fs_quota_stat_t));
+ 
+-	out->qs_version = FS_QSTAT_VERSION;
+ 	if (!xfs_sb_version_hasquota(&mp->m_sb)) {
+ 		out->qs_uquota.qfs_ino = NULLFSINO;
+ 		out->qs_gquota.qfs_ino = NULLFSINO;
+@@ -438,8 +437,6 @@ xfs_qm_scall_getqstat(
+ 	out->qs_pad = 0;
+ 	out->qs_uquota.qfs_ino = mp->m_sb.sb_uquotino;
+ 	out->qs_gquota.qfs_ino = mp->m_sb.sb_gquotino;
+-	if (&out->qs_gquota != &out->qs_pquota)
+-		out->qs_pquota.qfs_ino = mp->m_sb.sb_pquotino;
+ 
+ 	if (q) {
+ 		uip = q->qi_uquotaip;
+@@ -456,11 +453,6 @@ xfs_qm_scall_getqstat(
+ 					0, 0, &gip) == 0)
+ 			tempgqip = B_TRUE;
+ 	}
+-	if (!pip && mp->m_sb.sb_pquotino != NULLFSINO) {
+-		if (xfs_iget(mp, NULL, mp->m_sb.sb_pquotino,
+-					0, 0, &pip) == 0)
+-			temppqip = B_TRUE;
+-	}
+ 	if (uip) {
+ 		out->qs_uquota.qfs_nblks = uip->i_d.di_nblocks;
+ 		out->qs_uquota.qfs_nextents = uip->i_d.di_nextents;
+@@ -473,11 +465,19 @@ xfs_qm_scall_getqstat(
+ 		if (tempgqip)
+ 			IRELE(gip);
+ 	}
+-	if (pip) {
+-		out->qs_pquota.qfs_nblks = pip->i_d.di_nblocks;
+-		out->qs_pquota.qfs_nextents = pip->i_d.di_nextents;
+-		if (temppqip)
+-			IRELE(pip);
++	if (out->qs_version >= FS_QSTAT_VERSION_2) {
++		out->qs_pquota.qfs_ino = mp->m_sb.sb_pquotino;
++		if (!pip && mp->m_sb.sb_pquotino != NULLFSINO) {
++			if (xfs_iget(mp, NULL, mp->m_sb.sb_pquotino,
++						0, 0, &pip) == 0)
++				temppqip = B_TRUE;
++		}
++		if (pip) {
++			out->qs_pquota.qfs_nblks = pip->i_d.di_nblocks;
++			out->qs_pquota.qfs_nextents = pip->i_d.di_nextents;
++			if (temppqip)
++				IRELE(pip);
++		}
+ 	}
+ 	if (q) {
+ 		out->qs_incoredqs = q->qi_dquots;
+diff --git a/include/linux/dqblk_xfs.h b/include/linux/dqblk_xfs.h
+index f17e3bb..74cc847 100644
+--- a/include/linux/dqblk_xfs.h
++++ b/include/linux/dqblk_xfs.h
+@@ -18,6 +18,7 @@
+ #define _LINUX_DQBLK_XFS_H
+ 
+ #include <linux/types.h>
++#include <linux/stddef.h>
+ 
+ /*
+  * Disk quota - quotactl(2) commands for the XFS Quota Manager (XQM).
+@@ -139,6 +140,7 @@ typedef struct fs_disk_quota {
+  * incore.
+  */
+ #define FS_QSTAT_VERSION	1	/* fs_quota_stat.qs_version */
++#define FS_QSTAT_VERSION_2	2	/* new field qs_pquota */
+ 
+ /*
+  * Some basic information about 'quota files'.
+@@ -155,13 +157,37 @@ typedef struct fs_quota_stat {
+ 	__s8		qs_pad;		/* unused */
+ 	fs_qfilestat_t	qs_uquota;	/* user quota storage information */
+ 	fs_qfilestat_t	qs_gquota;	/* group quota storage information */
+-#define qs_pquota	qs_gquota
+ 	__u32		qs_incoredqs;	/* number of dquots incore */
+ 	__s32		qs_btimelimit;  /* limit for blks timer */	
+ 	__s32		qs_itimelimit;  /* limit for inodes timer */	
+ 	__s32		qs_rtbtimelimit;/* limit for rt blks timer */	
+ 	__u16		qs_bwarnlimit;	/* limit for num warnings */
+ 	__u16		qs_iwarnlimit;	/* limit for num warnings */
++	fs_qfilestat_t	qs_pquota;	/* project quota storage information */
+ } fs_quota_stat_t;
+ 
++#define FS_QSTAT_V1_SIZE	(offsetof(fs_quota_stat_t, qs_pquota))
++#define FS_QSTAT_V2_SIZE	(FS_QSTAT_V1_SIZE + sizeof (fs_qfilestat_t))
++
++static inline int valid_qstat_version(int version)
++{
++	switch(version) {
++	case FS_QSTAT_VERSION:
++	case FS_QSTAT_VERSION_2:
++		return 1;
++	default:
++		return 0;
++	}
++}
++static inline int qstatsize(int version)
++{
++	switch(version) {
++	case FS_QSTAT_VERSION_2:
++		return FS_QSTAT_V2_SIZE;
++	case FS_QSTAT_VERSION:
++	default:
++		return FS_QSTAT_V1_SIZE;
++	}
++}
++		
+ #endif	/* _LINUX_DQBLK_XFS_H */
+-- 
+1.7.1
 
 _______________________________________________
 xfs mailing list
