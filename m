@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9SA3gHO145437 for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 05:03:42 -0500
+	p9SA3cI7145303 for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 05:03:38 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 963CD203861
-	for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 03:03:40 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 10509FCE479
+	for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 03:03:36 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	Eb4YpslBA6HwiXdZ for <xfs@oss.sgi.com>;
-	Fri, 28 Oct 2011 03:03:40 -0700 (PDT)
+	WiIcmuMOMix2QKcH for <xfs@oss.sgi.com>;
+	Fri, 28 Oct 2011 03:03:36 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1RJjHn-00033D-Vr
-	for xfs@oss.sgi.com; Fri, 28 Oct 2011 10:03:40 +0000
-Message-Id: <20111028100339.939836180@bombadil.infradead.org>
-Date: Fri, 28 Oct 2011 05:54:47 -0400
+	Linux)) id 1RJjHj-0002sB-VK
+	for xfs@oss.sgi.com; Fri, 28 Oct 2011 10:03:36 +0000
+Message-Id: <20111028100335.931525952@bombadil.infradead.org>
+Date: Fri, 28 Oct 2011 05:54:26 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 24/45] xfs: flatten the dquot lock ordering
+Subject: [PATCH 03/45] xfs: replace i_flock with a sleeping bitlock
 References: <20111028095423.796574703@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-add-DQ_FREEING
+Content-Disposition: inline; filename=xfs-kill-i_flush
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,490 +34,270 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Introduce a new XFS_DQ_FREEING flag that tells lookup and mplist walks
-to skip a dquot that is beeing freed, and use this avoid the trylock
-on the hash and mplist locks in xfs_qm_dqreclaim_one.  Also simplify
-xfs_dqpurge by moving the inodes to a dispose list after marking them
-XFS_DQ_FREEING and avoid the locker ordering constraints.
+We almost never block on i_flock, the exception is synchronous inode
+flushing.  Instead of bloating the inode with a 16/24-byte completion
+that we abuse as a semaphore just implement it as a bitlock that uses
+a bit waitqueue for the rare sleeping path.  This primarily is a
+tradeoff between a much smaller inode and a faster non-blocking
+path vs faster wakeups, and we are much better off with the former.
+
+A small downside is that we will lose lockdep checking for i_flock, but
+given that it's always taken inside the ilock that should be acceptable.
+
+Note that for example the inode writeback locking is implemented in a
+very similar way.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Alex Elder <aelder@sgi.com>
 
 ---
- fs/xfs/xfs_dquot.c |  110 ++++++++++++++++++---------------------------
- fs/xfs/xfs_dquot.h |    2 
- fs/xfs/xfs_qm.c    |  129 ++++++++++++++++++-----------------------------------
- fs/xfs/xfs_quota.h |    4 +
- 4 files changed, 96 insertions(+), 149 deletions(-)
+ fs/xfs/xfs_iget.c       |   20 +++++++++++-
+ fs/xfs/xfs_inode.c      |    4 +-
+ fs/xfs/xfs_inode.h      |   78 ++++++++++++++++++++++++++++++------------------
+ fs/xfs/xfs_inode_item.c |    4 +-
+ fs/xfs/xfs_super.c      |    7 ----
+ fs/xfs/xfs_sync.c       |    9 ++---
+ 6 files changed, 76 insertions(+), 46 deletions(-)
 
-Index: xfs/fs/xfs/xfs_dquot.c
+Index: xfs/fs/xfs/xfs_iget.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_dquot.c	2011-10-27 22:40:03.870173003 +0200
-+++ xfs/fs/xfs/xfs_dquot.c	2011-10-27 22:40:04.372672510 +0200
-@@ -728,6 +728,12 @@ xfs_qm_dqlookup(
- 		trace_xfs_dqlookup_found(dqp);
+--- xfs.orig/fs/xfs/xfs_iget.c	2011-10-27 22:39:36.932670919 +0200
++++ xfs/fs/xfs/xfs_iget.c	2011-10-27 22:39:53.000673410 +0200
+@@ -77,7 +77,7 @@ xfs_inode_alloc(
  
- 		xfs_dqlock(dqp);
-+		if (dqp->dq_flags & XFS_DQ_FREEING) {
-+			*O_dqpp = NULL;
-+			xfs_dqunlock(dqp);
-+			return -1;
-+		}
-+
- 		XFS_DQHOLD(dqp);
+ 	ASSERT(atomic_read(&ip->i_pincount) == 0);
+ 	ASSERT(!spin_is_locked(&ip->i_flags_lock));
+-	ASSERT(completion_done(&ip->i_flush));
++	ASSERT(!xfs_isiflocked(ip));
+ 	ASSERT(ip->i_ino == 0);
  
- 		/*
-@@ -781,11 +787,7 @@ xfs_qm_dqget(
- 			return (EIO);
- 		}
- 	}
--#endif
- 
-- again:
--
--#ifdef DEBUG
- 	ASSERT(type == XFS_DQ_USER ||
- 	       type == XFS_DQ_PROJ ||
- 	       type == XFS_DQ_GROUP);
-@@ -797,13 +799,21 @@ xfs_qm_dqget(
- 			ASSERT(ip->i_gdquot == NULL);
- 	}
- #endif
-+
-+restart:
- 	mutex_lock(&h->qh_lock);
+ 	mrlock_init(&ip->i_iolock, MRLOCK_BARRIER, "xfsio", ip->i_ino);
+@@ -151,7 +151,7 @@ xfs_inode_free(
+ 	/* asserts to verify all state is correct here */
+ 	ASSERT(atomic_read(&ip->i_pincount) == 0);
+ 	ASSERT(!spin_is_locked(&ip->i_flags_lock));
+-	ASSERT(completion_done(&ip->i_flush));
++	ASSERT(!xfs_isiflocked(ip));
  
  	/*
- 	 * Look in the cache (hashtable).
- 	 * The chain is kept locked during lookup.
- 	 */
--	if (xfs_qm_dqlookup(mp, id, h, O_dqpp) == 0) {
-+	switch (xfs_qm_dqlookup(mp, id, h, O_dqpp)) {
-+	case -1:
-+		XQM_STATS_INC(xqmstats.xs_qm_dquot_dups);
-+		mutex_unlock(&h->qh_lock);
-+		delay(1);
-+		goto restart;
-+	case 0:
- 		XQM_STATS_INC(xqmstats.xs_qm_dqcachehits);
- 		/*
- 		 * The dquot was found, moved to the front of the chain,
-@@ -814,9 +824,11 @@ xfs_qm_dqget(
- 		ASSERT(XFS_DQ_IS_LOCKED(*O_dqpp));
- 		mutex_unlock(&h->qh_lock);
- 		trace_xfs_dqget_hit(*O_dqpp);
--		return (0);	/* success */
-+		return 0;	/* success */
-+	default:
-+		XQM_STATS_INC(xqmstats.xs_qm_dqcachemisses);
-+		break;
- 	}
--	XQM_STATS_INC(xqmstats.xs_qm_dqcachemisses);
- 
- 	/*
- 	 * Dquot cache miss. We don't want to keep the inode lock across
-@@ -913,16 +925,21 @@ xfs_qm_dqget(
- 		 * lock order between the two dquots here since dqp isn't
- 		 * on any findable lists yet.
- 		 */
--		if (xfs_qm_dqlookup(mp, id, h, &tmpdqp) == 0) {
-+		switch (xfs_qm_dqlookup(mp, id, h, &tmpdqp)) {
-+		case 0:
-+		case -1:
- 			/*
--			 * Duplicate found. Just throw away the new dquot
--			 * and start over.
-+			 * Duplicate found, either in cache or on its way out.
-+			 * Just throw away the new dquot and start over.
- 			 */
--			xfs_qm_dqput(tmpdqp);
-+			if (tmpdqp)
-+				xfs_qm_dqput(tmpdqp);
- 			mutex_unlock(&h->qh_lock);
- 			xfs_qm_dqdestroy(dqp);
- 			XQM_STATS_INC(xqmstats.xs_qm_dquot_dups);
--			goto again;
-+			goto restart;
-+		default:
-+			break;
- 		}
- 	}
- 
-@@ -1250,51 +1267,18 @@ xfs_dqlock2(
- 	}
- }
- 
--
- /*
-- * Take a dquot out of the mount's dqlist as well as the hashlist.
-- * This is called via unmount as well as quotaoff, and the purge
-- * will always succeed unless there are soft (temp) references
-- * outstanding.
-- *
-- * This returns 0 if it was purged, 1 if it wasn't. It's not an error code
-- * that we're returning! XXXsup - not cool.
-+ * Take a dquot out of the mount's dqlist as well as the hashlist.  This is
-+ * called via unmount as well as quotaoff, and the purge will always succeed.
-  */
--/* ARGSUSED */
--int
-+void
- xfs_qm_dqpurge(
--	xfs_dquot_t	*dqp)
-+	struct xfs_dquot	*dqp)
- {
--	xfs_dqhash_t	*qh = dqp->q_hash;
--	xfs_mount_t	*mp = dqp->q_mount;
--
--	ASSERT(mutex_is_locked(&mp->m_quotainfo->qi_dqlist_lock));
--	ASSERT(mutex_is_locked(&dqp->q_hash->qh_lock));
--
--	/*
--	 * XXX(hch): horrible locking order, will get cleaned up ASAP.
--	 */
--	if (!mutex_trylock(&xfs_Gqm->qm_dqfrlist_lock)) {
--		mutex_unlock(&dqp->q_hash->qh_lock);
--		return 1;
--	}
-+	struct xfs_mount	*mp = dqp->q_mount;
-+	struct xfs_dqhash	*qh = dqp->q_hash;
- 
- 	xfs_dqlock(dqp);
--	/*
--	 * We really can't afford to purge a dquot that is
--	 * referenced, because these are hard refs.
--	 * It shouldn't happen in general because we went thru _all_ inodes in
--	 * dqrele_all_inodes before calling this and didn't let the mountlock go.
--	 * However it is possible that we have dquots with temporary
--	 * references that are not attached to an inode. e.g. see xfs_setattr().
--	 */
--	if (dqp->q_nrefs != 0) {
--		xfs_dqunlock(dqp);
--		mutex_unlock(&dqp->q_hash->qh_lock);
--		return (1);
--	}
--
--	ASSERT(!list_empty(&dqp->q_freelist));
- 
- 	/*
- 	 * If we're turning off quotas, we have to make sure that, for
-@@ -1313,19 +1297,14 @@ xfs_qm_dqpurge(
- 	}
- 
- 	/*
--	 * XXXIf we're turning this type of quotas off, we don't care
-+	 * If we are turning this type of quotas off, we don't care
- 	 * about the dirty metadata sitting in this dquot. OTOH, if
- 	 * we're unmounting, we do care, so we flush it and wait.
- 	 */
- 	if (XFS_DQ_IS_DIRTY(dqp)) {
- 		int	error;
- 
--		/* dqflush unlocks dqflock */
- 		/*
--		 * Given that dqpurge is a very rare occurrence, it is OK
--		 * that we're holding the hashlist and mplist locks
--		 * across the disk write. But, ... XXXsup
--		 *
- 		 * We don't care about getting disk errors here. We need
- 		 * to purge this dquot anyway, so we go ahead regardless.
- 		 */
-@@ -1335,31 +1314,34 @@ xfs_qm_dqpurge(
- 				__func__, dqp);
- 		xfs_dqflock(dqp);
- 	}
-+
- 	ASSERT(atomic_read(&dqp->q_pincount) == 0);
- 	ASSERT(XFS_FORCED_SHUTDOWN(mp) ||
- 	       !(dqp->q_logitem.qli_item.li_flags & XFS_LI_IN_AIL));
- 
-+	xfs_dqfunlock(dqp);
-+	xfs_dqunlock(dqp);
-+
-+	mutex_lock(&qh->qh_lock);
- 	list_del_init(&dqp->q_hashlist);
- 	qh->qh_version++;
-+	mutex_unlock(&qh->qh_lock);
- 
-+	mutex_lock(&mp->m_quotainfo->qi_dqlist_lock);
- 	list_del_init(&dqp->q_mplist);
- 	mp->m_quotainfo->qi_dqreclaims++;
- 	mp->m_quotainfo->qi_dquots--;
-+	mutex_unlock(&mp->m_quotainfo->qi_dqlist_lock);
- 
-+	mutex_lock(&xfs_Gqm->qm_dqfrlist_lock);
-+	ASSERT(!list_empty(&dqp->q_freelist));
- 	list_del_init(&dqp->q_freelist);
- 	xfs_Gqm->qm_dqfrlist_cnt--;
--
--	xfs_dqfunlock(dqp);
--	xfs_dqunlock(dqp);
--
- 	mutex_unlock(&xfs_Gqm->qm_dqfrlist_lock);
--	mutex_unlock(&qh->qh_lock);
- 
- 	xfs_qm_dqdestroy(dqp);
--	return (0);
- }
- 
--
- /*
-  * Give the buffer a little push if it is incore and
-  * wait on the flush lock.
-Index: xfs/fs/xfs/xfs_qm.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_qm.c	2011-10-27 22:40:03.874199381 +0200
-+++ xfs/fs/xfs/xfs_qm.c	2011-10-27 22:40:04.372672510 +0200
-@@ -398,7 +398,8 @@ again:
- 	mutex_lock(&q->qi_dqlist_lock);
- 	list_for_each_entry(dqp, &q->qi_dqlist, q_mplist) {
- 		xfs_dqlock(dqp);
--		if (! XFS_DQ_IS_DIRTY(dqp)) {
-+		if ((dqp->dq_flags & XFS_DQ_FREEING) ||
-+		    !XFS_DQ_IS_DIRTY(dqp)) {
- 			xfs_dqunlock(dqp);
- 			continue;
- 		}
-@@ -437,6 +438,7 @@ again:
- 	/* return ! busy */
+ 	 * Because we use RCU freeing we need to ensure the inode always
+@@ -716,3 +716,19 @@ xfs_isilocked(
  	return 0;
  }
+ #endif
 +
- /*
-  * Release the group dquot pointers the user dquots may be
-  * carrying around as a hint. mplist is locked on entry and exit.
-@@ -453,6 +455,13 @@ xfs_qm_detach_gdquots(
- 	ASSERT(mutex_is_locked(&q->qi_dqlist_lock));
- 	list_for_each_entry(dqp, &q->qi_dqlist, q_mplist) {
- 		xfs_dqlock(dqp);
-+		if (dqp->dq_flags & XFS_DQ_FREEING) {
-+			xfs_dqunlock(dqp);
-+			mutex_unlock(&q->qi_dqlist_lock);
-+			delay(1);
-+			mutex_lock(&q->qi_dqlist_lock);
-+			goto again;
-+		}
- 		if ((gdqp = dqp->q_gdquot)) {
- 			xfs_dqlock(gdqp);
- 			dqp->q_gdquot = NULL;
-@@ -489,8 +498,8 @@ xfs_qm_dqpurge_int(
- 	struct xfs_quotainfo	*q = mp->m_quotainfo;
- 	struct xfs_dquot	*dqp, *n;
- 	uint			dqtype;
--	int			nrecl;
--	int			nmisses;
-+	int			nmisses = 0;
-+	LIST_HEAD		(dispose_list);
++void
++__xfs_iflock(
++	struct xfs_inode	*ip)
++{
++	wait_queue_head_t *wq = bit_waitqueue(&ip->i_flags, __XFS_IFLOCK_BIT);
++	DEFINE_WAIT_BIT(wait, &ip->i_flags, __XFS_IFLOCK_BIT);
++
++	do {
++		prepare_to_wait_exclusive(wq, &wait.wait, TASK_UNINTERRUPTIBLE);
++		if (xfs_isiflocked(ip))
++			io_schedule();
++	} while (!xfs_iflock_nowait(ip));
++
++	finish_wait(wq, &wait.wait);
++}
+Index: xfs/fs/xfs/xfs_inode.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_inode.c	2011-10-27 22:39:36.936671273 +0200
++++ xfs/fs/xfs/xfs_inode.c	2011-10-27 22:39:53.004672919 +0200
+@@ -2510,7 +2510,7 @@ xfs_iflush(
+ 	XFS_STATS_INC(xs_iflush_count);
  
- 	if (!q)
- 		return 0;
-@@ -509,46 +518,27 @@ xfs_qm_dqpurge_int(
- 	 */
- 	xfs_qm_detach_gdquots(mp);
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_ILOCK_SHARED));
+-	ASSERT(!completion_done(&ip->i_flush));
++	ASSERT(xfs_isiflocked(ip));
+ 	ASSERT(ip->i_d.di_format != XFS_DINODE_FMT_BTREE ||
+ 	       ip->i_d.di_nextents > ip->i_df.if_ext_max);
  
--      again:
--	nmisses = 0;
--	ASSERT(mutex_is_locked(&q->qi_dqlist_lock));
- 	/*
- 	 * Try to get rid of all of the unwanted dquots. The idea is to
- 	 * get them off mplist and hashlist, but leave them on freelist.
- 	 */
- 	list_for_each_entry_safe(dqp, n, &q->qi_dqlist, q_mplist) {
- 		xfs_dqlock(dqp);
--		if ((dqp->dq_flags & dqtype) == 0) {
--			xfs_dqunlock(dqp);
--			continue;
-+		if ((dqp->dq_flags & dqtype) != 0 &&
-+		    !(dqp->dq_flags & XFS_DQ_FREEING)) {
-+			if (dqp->q_nrefs == 0) {
-+				dqp->dq_flags |= XFS_DQ_FREEING;
-+				list_move_tail(&dqp->q_mplist, &dispose_list);
-+			} else
-+				nmisses++;
- 		}
- 		xfs_dqunlock(dqp);
--
--		if (!mutex_trylock(&dqp->q_hash->qh_lock)) {
--			nrecl = q->qi_dqreclaims;
--			mutex_unlock(&q->qi_dqlist_lock);
--			mutex_lock(&dqp->q_hash->qh_lock);
--			mutex_lock(&q->qi_dqlist_lock);
--
--			/*
--			 * XXXTheoretically, we can get into a very long
--			 * ping pong game here.
--			 * No one can be adding dquots to the mplist at
--			 * this point, but somebody might be taking things off.
--			 */
--			if (nrecl != q->qi_dqreclaims) {
--				mutex_unlock(&dqp->q_hash->qh_lock);
--				goto again;
--			}
--		}
--
--		/*
--		 * Take the dquot off the mplist and hashlist. It may remain on
--		 * freelist in INACTIVE state.
--		 */
--		nmisses += xfs_qm_dqpurge(dqp);
- 	}
- 	mutex_unlock(&q->qi_dqlist_lock);
-+
-+	list_for_each_entry_safe(dqp, n, &dispose_list, q_mplist)
-+		xfs_qm_dqpurge(dqp);
-+
- 	return nmisses;
+@@ -2626,7 +2626,7 @@ xfs_iflush_int(
+ #endif
+ 
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_ILOCK_SHARED));
+-	ASSERT(!completion_done(&ip->i_flush));
++	ASSERT(xfs_isiflocked(ip));
+ 	ASSERT(ip->i_d.di_format != XFS_DINODE_FMT_BTREE ||
+ 	       ip->i_d.di_nextents > ip->i_df.if_ext_max);
+ 
+Index: xfs/fs/xfs/xfs_inode.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_inode.h	2011-10-27 22:39:52.102172907 +0200
++++ xfs/fs/xfs/xfs_inode.h	2011-10-27 22:39:53.008686681 +0200
+@@ -244,7 +244,6 @@ typedef struct xfs_inode {
+ 	struct xfs_inode_log_item *i_itemp;	/* logging information */
+ 	mrlock_t		i_lock;		/* inode lock */
+ 	mrlock_t		i_iolock;	/* inode IO lock */
+-	struct completion	i_flush;	/* inode flush completion q */
+ 	atomic_t		i_pincount;	/* inode pin count */
+ 	wait_queue_head_t	i_ipin_wait;	/* inode pinning wait queue */
+ 	spinlock_t		i_flags_lock;	/* inode i_flags lock */
+@@ -331,6 +330,19 @@ xfs_iflags_test_and_clear(xfs_inode_t *i
+ 	return ret;
  }
  
-@@ -1666,25 +1656,16 @@ xfs_qm_init_quotainos(
- 
++static inline int
++xfs_iflags_test_and_set(xfs_inode_t *ip, unsigned short flags)
++{
++	int ret;
++
++	spin_lock(&ip->i_flags_lock);
++	ret = ip->i_flags & flags;
++	if (!ret)
++		ip->i_flags |= flags;
++	spin_unlock(&ip->i_flags_lock);
++	return ret;
++}
++
+ /*
+  * Project quota id helpers (previously projid was 16bit only
+  * and using two 16bit values to hold new 32bit projid was chosen
+@@ -351,35 +363,17 @@ xfs_set_projid(struct xfs_inode *ip,
+ }
  
  /*
-- * Just pop the least recently used dquot off the freelist and
-- * recycle it. The returned dquot is locked.
-+ * Pop the least recently used dquot off the freelist and recycle it.
+- * Manage the i_flush queue embedded in the inode.  This completion
+- * queue synchronizes processes attempting to flush the in-core
+- * inode back to disk.
+- */
+-static inline void xfs_iflock(xfs_inode_t *ip)
+-{
+-	wait_for_completion(&ip->i_flush);
+-}
+-
+-static inline int xfs_iflock_nowait(xfs_inode_t *ip)
+-{
+-	return try_wait_for_completion(&ip->i_flush);
+-}
+-
+-static inline void xfs_ifunlock(xfs_inode_t *ip)
+-{
+-	complete(&ip->i_flush);
+-}
+-
+-/*
+  * In-core inode flags.
   */
--STATIC xfs_dquot_t *
-+STATIC struct xfs_dquot *
- xfs_qm_dqreclaim_one(void)
- {
--	xfs_dquot_t	*dqpout;
--	xfs_dquot_t	*dqp;
--	int		restarts;
--	int		startagain;
--
--	restarts = 0;
--	dqpout = NULL;
-+	struct xfs_dquot	*dqp;
-+	int			restarts = 0;
- 
--	/* lockorder: hashchainlock, freelistlock, mplistlock, dqlock, dqflock */
--again:
--	startagain = 0;
- 	mutex_lock(&xfs_Gqm->qm_dqfrlist_lock);
--
-+restart:
- 	list_for_each_entry(dqp, &xfs_Gqm->qm_dqfrlist, q_freelist) {
- 		struct xfs_mount *mp = dqp->q_mount;
- 		xfs_dqlock(dqp);
-@@ -1700,7 +1681,6 @@ again:
- 			list_del_init(&dqp->q_freelist);
- 			xfs_Gqm->qm_dqfrlist_cnt--;
- 			restarts++;
--			startagain = 1;
- 			goto dqunlock;
- 		}
- 
-@@ -1736,57 +1716,40 @@ again:
- 			}
- 			goto dqunlock;
- 		}
-+		xfs_dqfunlock(dqp);
- 
- 		/*
--		 * We're trying to get the hashlock out of order. This races
--		 * with dqlookup; so, we giveup and goto the next dquot if
--		 * we couldn't get the hashlock. This way, we won't starve
--		 * a dqlookup process that holds the hashlock that is
--		 * waiting for the freelist lock.
-+		 * Prevent lookups now that we are past the point of no return.
- 		 */
--		if (!mutex_trylock(&dqp->q_hash->qh_lock)) {
--			restarts++;
--			goto dqfunlock;
--		}
-+		dqp->dq_flags |= XFS_DQ_FREEING;
-+		xfs_dqunlock(dqp);
- 
--		/*
--		 * This races with dquot allocation code as well as dqflush_all
--		 * and reclaim code. So, if we failed to grab the mplist lock,
--		 * giveup everything and start over.
--		 */
--		if (!mutex_trylock(&mp->m_quotainfo->qi_dqlist_lock)) {
--			restarts++;
--			startagain = 1;
--			goto qhunlock;
--		}
-+		mutex_lock(&dqp->q_hash->qh_lock);
-+		list_del_init(&dqp->q_hashlist);
-+		dqp->q_hash->qh_version++;
-+		mutex_unlock(&dqp->q_hash->qh_lock);
- 
--		ASSERT(dqp->q_nrefs == 0);
-+		mutex_lock(&mp->m_quotainfo->qi_dqlist_lock);
- 		list_del_init(&dqp->q_mplist);
- 		mp->m_quotainfo->qi_dquots--;
- 		mp->m_quotainfo->qi_dqreclaims++;
--		list_del_init(&dqp->q_hashlist);
--		dqp->q_hash->qh_version++;
-+		mutex_unlock(&mp->m_quotainfo->qi_dqlist_lock);
-+
-+		ASSERT(dqp->q_nrefs == 0);
- 		list_del_init(&dqp->q_freelist);
- 		xfs_Gqm->qm_dqfrlist_cnt--;
--		dqpout = dqp;
--		mutex_unlock(&mp->m_quotainfo->qi_dqlist_lock);
--qhunlock:
--		mutex_unlock(&dqp->q_hash->qh_lock);
--dqfunlock:
--		xfs_dqfunlock(dqp);
-+
-+		mutex_unlock(&xfs_Gqm->qm_dqfrlist_lock);
-+		return dqp;
- dqunlock:
- 		xfs_dqunlock(dqp);
--		if (dqpout)
--			break;
- 		if (restarts >= XFS_QM_RECLAIM_MAX_RESTARTS)
- 			break;
--		if (startagain) {
--			mutex_unlock(&xfs_Gqm->qm_dqfrlist_lock);
--			goto again;
--		}
-+		goto restart;
- 	}
-+
- 	mutex_unlock(&xfs_Gqm->qm_dqfrlist_lock);
--	return dqpout;
-+	return NULL;
- }
+-#define XFS_IRECLAIM		0x0001  /* started reclaiming this inode */
+-#define XFS_ISTALE		0x0002	/* inode has been staled */
+-#define XFS_IRECLAIMABLE	0x0004	/* inode can be reclaimed */
+-#define XFS_INEW		0x0008	/* inode has just been allocated */
+-#define XFS_IFILESTREAM		0x0010	/* inode is in a filestream directory */
+-#define XFS_ITRUNCATED		0x0020	/* truncated down so flush-on-close */
+-#define XFS_IDIRTY_RELEASE	0x0040	/* dirty release already seen */
++#define XFS_IRECLAIM		(1 << 0) /* started reclaiming this inode */
++#define XFS_ISTALE		(1 << 1) /* inode has been staled */
++#define XFS_IRECLAIMABLE	(1 << 2) /* inode can be reclaimed */
++#define XFS_INEW		(1 << 3) /* inode has just been allocated */
++#define XFS_IFILESTREAM		(1 << 4) /* inode is in a filestream dir. */
++#define XFS_ITRUNCATED		(1 << 5) /* truncated down so flush-on-close */
++#define XFS_IDIRTY_RELEASE	(1 << 6) /* dirty release already seen */
++#define __XFS_IFLOCK_BIT	7	 /* inode is being flushed right now */
++#define XFS_IFLOCK		(1 << __XFS_IFLOCK_BIT)
  
  /*
-Index: xfs/fs/xfs/xfs_quota.h
-===================================================================
---- xfs.orig/fs/xfs/xfs_quota.h	2011-10-27 22:40:03.878172958 +0200
-+++ xfs/fs/xfs/xfs_quota.h	2011-10-27 22:40:04.376671215 +0200
-@@ -87,6 +87,7 @@ typedef struct xfs_dqblk {
- #define XFS_DQ_PROJ		0x0002		/* project quota */
- #define XFS_DQ_GROUP		0x0004		/* a group quota */
- #define XFS_DQ_DIRTY		0x0008		/* dquot is dirty */
-+#define XFS_DQ_FREEING		0x0010		/* dquot is beeing torn down */
- 
- #define XFS_DQ_ALLTYPES		(XFS_DQ_USER|XFS_DQ_PROJ|XFS_DQ_GROUP)
- 
-@@ -94,7 +95,8 @@ typedef struct xfs_dqblk {
- 	{ XFS_DQ_USER,		"USER" }, \
- 	{ XFS_DQ_PROJ,		"PROJ" }, \
- 	{ XFS_DQ_GROUP,		"GROUP" }, \
--	{ XFS_DQ_DIRTY,		"DIRTY" }
-+	{ XFS_DQ_DIRTY,		"DIRTY" }, \
-+	{ XFS_DQ_FREEING,	"FREEING" }
+  * Per-lifetime flags need to be reset when re-using a reclaimable inode during
+@@ -392,6 +386,34 @@ static inline void xfs_ifunlock(xfs_inod
+ 	 XFS_IFILESTREAM);
  
  /*
-  * In the worst case, when both user and group quotas are on,
-Index: xfs/fs/xfs/xfs_dquot.h
++ * Synchronize processes attempting to flush the in-core inode back to disk.
++ */
++
++extern void __xfs_iflock(struct xfs_inode *ip);
++
++static inline int xfs_iflock_nowait(struct xfs_inode *ip)
++{
++	return !xfs_iflags_test_and_set(ip, XFS_IFLOCK);
++}
++
++static inline void xfs_iflock(struct xfs_inode *ip)
++{
++	if (!xfs_iflock_nowait(ip))
++		__xfs_iflock(ip);
++}
++
++static inline void xfs_ifunlock(struct xfs_inode *ip)
++{
++	xfs_iflags_clear(ip, XFS_IFLOCK);
++	wake_up_bit(&ip->i_flags, __XFS_IFLOCK_BIT);
++}
++
++static inline int xfs_isiflocked(struct xfs_inode *ip)
++{
++	return xfs_iflags_test(ip, XFS_IFLOCK);
++}
++
++/*
+  * Flags for inode locking.
+  * Bit ranges:	1<<1  - 1<<16-1 -- iolock/ilock modes (bitfield)
+  *		1<<16 - 1<<32-1 -- lockdep annotation (integers)
+Index: xfs/fs/xfs/xfs_inode_item.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_dquot.h	2011-10-27 22:40:02.250173174 +0200
-+++ xfs/fs/xfs/xfs_dquot.h	2011-10-27 22:40:04.376671215 +0200
-@@ -133,7 +133,7 @@ static inline void xfs_dqunlock_nonotify
+--- xfs.orig/fs/xfs/xfs_inode_item.c	2011-10-27 22:39:42.528674212 +0200
++++ xfs/fs/xfs/xfs_inode_item.c	2011-10-27 22:39:53.012672850 +0200
+@@ -721,7 +721,7 @@ xfs_inode_item_pushbuf(
+ 	 * If a flush is not in progress anymore, chances are that the
+ 	 * inode was taken off the AIL. So, just get out.
+ 	 */
+-	if (completion_done(&ip->i_flush) ||
++	if (!xfs_isiflocked(ip) ||
+ 	    !(lip->li_flags & XFS_LI_IN_AIL)) {
+ 		xfs_iunlock(ip, XFS_ILOCK_SHARED);
+ 		return true;
+@@ -754,7 +754,7 @@ xfs_inode_item_push(
+ 	struct xfs_inode	*ip = iip->ili_inode;
  
- extern void		xfs_qm_dqdestroy(xfs_dquot_t *);
- extern int		xfs_qm_dqflush(xfs_dquot_t *, uint);
--extern int		xfs_qm_dqpurge(xfs_dquot_t *);
-+extern void		xfs_qm_dqpurge(xfs_dquot_t *);
- extern void		xfs_qm_dqunpin_wait(xfs_dquot_t *);
- extern void		xfs_qm_adjust_dqtimers(xfs_mount_t *,
- 					xfs_disk_dquot_t *);
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_SHARED));
+-	ASSERT(!completion_done(&ip->i_flush));
++	ASSERT(xfs_isiflocked(ip));
+ 
+ 	/*
+ 	 * Since we were able to lock the inode's flush lock and
+Index: xfs/fs/xfs/xfs_super.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_super.c	2011-10-27 22:39:36.964673921 +0200
++++ xfs/fs/xfs/xfs_super.c	2011-10-27 22:39:53.012672850 +0200
+@@ -838,13 +838,6 @@ xfs_fs_inode_init_once(
+ 	atomic_set(&ip->i_pincount, 0);
+ 	spin_lock_init(&ip->i_flags_lock);
+ 	init_waitqueue_head(&ip->i_ipin_wait);
+-	/*
+-	 * Because we want to use a counting completion, complete
+-	 * the flush completion once to allow a single access to
+-	 * the flush completion without blocking.
+-	 */
+-	init_completion(&ip->i_flush);
+-	complete(&ip->i_flush);
+ 
+ 	mrlock_init(&ip->i_lock, MRLOCK_ALLOW_EQUAL_PRI|MRLOCK_BARRIER,
+ 		     "xfsino", ip->i_ino);
+Index: xfs/fs/xfs/xfs_sync.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_sync.c	2011-10-27 22:39:36.972673407 +0200
++++ xfs/fs/xfs/xfs_sync.c	2011-10-27 22:39:53.016673088 +0200
+@@ -675,14 +675,13 @@ xfs_reclaim_inode_grab(
+ 		return 1;
+ 
+ 	/*
+-	 * do some unlocked checks first to avoid unnecessary lock traffic.
+-	 * The first is a flush lock check, the second is a already in reclaim
+-	 * check. Only do these checks if we are not going to block on locks.
++	 * If we are asked for non-blocking operation, do unlocked checks to
++	 * see if the inode already is being flushed or in reclaim to avoid
++	 * lock traffic.
+ 	 */
+ 	if ((flags & SYNC_TRYLOCK) &&
+-	    (!ip->i_flush.done || __xfs_iflags_test(ip, XFS_IRECLAIM))) {
++	    __xfs_iflags_test(ip, XFS_IFLOCK | XFS_IRECLAIM))
+ 		return 1;
+-	}
+ 
+ 	/*
+ 	 * The radix tree lock here protects a thread in xfs_iget from racing
 
 _______________________________________________
 xfs mailing list
