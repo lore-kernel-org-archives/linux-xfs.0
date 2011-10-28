@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9SA3iK8145539 for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 05:03:44 -0500
+	p9SA3gXt145450 for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 05:03:42 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2755C203865
-	for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 03:03:42 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8544A203865
+	for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 03:03:41 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	tfCROLzB29BfxPpD for <xfs@oss.sgi.com>;
-	Fri, 28 Oct 2011 03:03:42 -0700 (PDT)
+	5AMRPSLPBS08TAiZ for <xfs@oss.sgi.com>;
+	Fri, 28 Oct 2011 03:03:41 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1RJjHq-0003B3-L0
-	for xfs@oss.sgi.com; Fri, 28 Oct 2011 10:03:42 +0000
-Message-Id: <20111028100342.601864545@bombadil.infradead.org>
-Date: Fri, 28 Oct 2011 05:55:02 -0400
+	Linux)) id 1RJjHo-00035q-TH
+	for xfs@oss.sgi.com; Fri, 28 Oct 2011 10:03:40 +0000
+Message-Id: <20111028100340.854952585@bombadil.infradead.org>
+Date: Fri, 28 Oct 2011 05:54:52 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 39/45] xfs: do not write the buffer from xfs_iflush
+Subject: [PATCH 29/45] xfs: kill xfs_qm_idtodq
 References: <20111028095423.796574703@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-iflush-dont-write-buffer
+Content-Disposition: inline; filename=xfs-cleanup-quota-read
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,210 +34,201 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Instead of writing the buffer directly from inside xfs_iflush return it to
-the caller and let the caller decide what to do with it.  While we're at
-it also remove the pincount check that all non-blocking callers already
-implement and the new now unused flags parameter.
+This function doesn't help the code flow, so merge the dquot allocation and
+transaction handling into xfs_qm_dqread.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 ---
- fs/xfs/xfs_inode.c      |   56 +++++++++++++++---------------------------------
- fs/xfs/xfs_inode.h      |    2 -
- fs/xfs/xfs_inode_item.c |   17 +++++++++++++-
- fs/xfs/xfs_sync.c       |   12 +++++-----
- 4 files changed, 41 insertions(+), 46 deletions(-)
+ fs/xfs/xfs_dquot.c |  134 ++++++++++++++++++-----------------------------------
+ 1 file changed, 47 insertions(+), 87 deletions(-)
 
-Index: xfs/fs/xfs/xfs_inode.c
+Index: xfs/fs/xfs/xfs_dquot.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_inode.c	2011-10-27 22:40:11.904690190 +0200
-+++ xfs/fs/xfs/xfs_inode.c	2011-10-27 22:40:13.673170747 +0200
-@@ -2394,22 +2394,24 @@ cluster_corrupt_out:
+--- xfs.orig/fs/xfs/xfs_dquot.c	2011-10-27 22:40:06.408674693 +0200
++++ xfs/fs/xfs/xfs_dquot.c	2011-10-27 22:40:06.948673259 +0200
+@@ -551,36 +551,59 @@ xfs_qm_dqtobp(
+  * Read in the ondisk dquot using dqtobp() then copy it to an incore version,
+  * and release the buffer immediately.
+  *
++ * If XFS_QMOPT_DQALLOC is set, allocate a dquot on disk if it needed.
+  */
+-/* ARGSUSED */
+ STATIC int
+ xfs_qm_dqread(
+-	xfs_trans_t	**tpp,
+-	xfs_dqid_t	id,
+-	xfs_dquot_t	*dqp,	/* dquot to get filled in */
+-	uint		flags)
++	struct xfs_mount	*mp,
++	xfs_dqid_t   		id,
++	uint	     		type,
++	uint			flags,
++	struct xfs_dquot	**O_dqpp)
+ {
+-	xfs_disk_dquot_t *ddqp;
+-	xfs_buf_t	 *bp;
+-	int		 error;
+-	xfs_trans_t	 *tp;
++	struct xfs_dquot	*dqp;
++	struct xfs_disk_dquot	*ddqp;
++	struct xfs_buf		 *bp;
++	struct xfs_trans	 *tp = NULL;
++	int			 error;
++	int			cancelflags = 0;
+ 
+-	ASSERT(tpp);
++	dqp = xfs_qm_dqinit(mp, id, type);
+ 
+ 	trace_xfs_dqread(dqp);
+ 
++	if (flags & XFS_QMOPT_DQALLOC) {
++		tp = xfs_trans_alloc(mp, XFS_TRANS_QM_DQALLOC);
++		error = xfs_trans_reserve(tp, XFS_QM_DQALLOC_SPACE_RES(mp),
++				XFS_WRITE_LOG_RES(mp) +
++				BBTOB(mp->m_quotainfo->qi_dqchunklen) - 1 +
++				128,
++				0,
++				XFS_TRANS_PERM_LOG_RES,
++				XFS_WRITE_LOG_COUNT);
++		if (error)
++			goto error1;
++		cancelflags = XFS_TRANS_RELEASE_LOG_RES;
++	}
++
+ 	/*
+ 	 * get a pointer to the on-disk dquot and the buffer containing it
+ 	 * dqp already knows its own type (GROUP/USER).
+ 	 */
+-	if ((error = xfs_qm_dqtobp(tpp, dqp, &ddqp, &bp, flags))) {
+-		return (error);
++	error = xfs_qm_dqtobp(&tp, dqp, &ddqp, &bp, flags);
++	if (error) {
++		/*
++		 * This can happen if quotas got turned off (ESRCH),
++		 * or if the dquot didn't exist on disk and we ask to
++		 * allocate (ENOENT).
++		 */
++		trace_xfs_dqread_fail(dqp);
++		cancelflags |= XFS_TRANS_ABORT;
++		goto error1;
+ 	}
+-	tp = *tpp;
+ 
+ 	/* copy everything from disk dquot to the incore dquot */
+ 	memcpy(&dqp->q_core, ddqp, sizeof(xfs_disk_dquot_t));
+-	ASSERT(be32_to_cpu(dqp->q_core.d_id) == id);
+ 	xfs_qm_dquot_logitem_init(dqp);
+ 
+ 	/*
+@@ -609,77 +632,22 @@ xfs_qm_dqread(
+ 	ASSERT(xfs_buf_islocked(bp));
+ 	xfs_trans_brelse(tp, bp);
+ 
+-	return (error);
+-}
+-
+-
+-/*
+- * allocate an incore dquot from the kernel heap,
+- * and fill its core with quota information kept on disk.
+- * If XFS_QMOPT_DQALLOC is set, it'll allocate a dquot on disk
+- * if it wasn't already allocated.
+- */
+-STATIC int
+-xfs_qm_idtodq(
+-	xfs_mount_t	*mp,
+-	xfs_dqid_t	id,	 /* gid or uid, depending on type */
+-	uint		type,	 /* UDQUOT or GDQUOT */
+-	uint		flags,	 /* DQALLOC, DQREPAIR */
+-	xfs_dquot_t	**O_dqpp)/* OUT : incore dquot, not locked */
+-{
+-	xfs_dquot_t	*dqp;
+-	int		error;
+-	xfs_trans_t	*tp;
+-	int		cancelflags=0;
+-
+-	dqp = xfs_qm_dqinit(mp, id, type);
+-	tp = NULL;
+-	if (flags & XFS_QMOPT_DQALLOC) {
+-		tp = xfs_trans_alloc(mp, XFS_TRANS_QM_DQALLOC);
+-		error = xfs_trans_reserve(tp, XFS_QM_DQALLOC_SPACE_RES(mp),
+-				XFS_WRITE_LOG_RES(mp) +
+-				BBTOB(mp->m_quotainfo->qi_dqchunklen) - 1 +
+-				128,
+-				0,
+-				XFS_TRANS_PERM_LOG_RES,
+-				XFS_WRITE_LOG_COUNT);
+-		if (error) {
+-			cancelflags = 0;
+-			goto error0;
+-		}
+-		cancelflags = XFS_TRANS_RELEASE_LOG_RES;
+-	}
+-
+-	/*
+-	 * Read it from disk; xfs_dqread() takes care of
+-	 * all the necessary initialization of dquot's fields (locks, etc)
+-	 */
+-	if ((error = xfs_qm_dqread(&tp, id, dqp, flags))) {
+-		/*
+-		 * This can happen if quotas got turned off (ESRCH),
+-		 * or if the dquot didn't exist on disk and we ask to
+-		 * allocate (ENOENT).
+-		 */
+-		trace_xfs_dqread_fail(dqp);
+-		cancelflags |= XFS_TRANS_ABORT;
+-		goto error0;
+-	}
+ 	if (tp) {
+-		if ((error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES)))
+-			goto error1;
++		error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
++		if (error)
++			goto error0;
+ 	}
+ 
+ 	*O_dqpp = dqp;
+-	return (0);
++	return error;
+ 
+- error0:
+-	ASSERT(error);
++error1:
+ 	if (tp)
+ 		xfs_trans_cancel(tp, cancelflags);
+- error1:
++error0:
+ 	xfs_qm_dqdestroy(dqp);
+ 	*O_dqpp = NULL;
+-	return (error);
++	return error;
  }
  
  /*
-- * xfs_iflush() will write a modified inode's changes out to the
-- * inode's on disk home.  The caller must have the inode lock held
-- * in at least shared mode and the inode flush completion must be
-- * active as well.  The inode lock will still be held upon return from
-- * the call and the caller is free to unlock it.
-- * The inode flush will be completed when the inode reaches the disk.
-- * The flags indicate how the inode's buffer should be written out.
-+ * Format a modified inode's changes out to the backing buffer.
-+ *
-+ * The caller must have the inode lock (shared or exclusive) and inode flush
-+ * lock held.  The inode lock will still be held upon return from the call
-+ * and the caller is free to unlock it. The inode flush lock will be released
-+ * when the inode reaches the disk.
-+ *
-+ * The caller must write out the buffer returned in *bpp and unlocked it using
-+ * xfs_buf_relse.
-  */
- int
- xfs_iflush(
--	xfs_inode_t		*ip,
--	uint			flags)
-+	struct xfs_inode	*ip,
-+	struct xfs_buf		**bpp)
- {
--	xfs_buf_t		*bp;
--	xfs_dinode_t		*dip;
--	xfs_mount_t		*mp;
-+	struct xfs_mount	*mp = ip->i_mount;
-+	struct xfs_buf		*bp;
-+	struct xfs_dinode	*dip;
- 	int			error;
- 
- 	XFS_STATS_INC(xs_iflush_count);
-@@ -2419,24 +2421,8 @@ xfs_iflush(
- 	ASSERT(ip->i_d.di_format != XFS_DINODE_FMT_BTREE ||
- 	       ip->i_d.di_nextents > ip->i_df.if_ext_max);
- 
--	mp = ip->i_mount;
-+	*bpp = NULL;
+@@ -833,19 +801,11 @@ restart:
+ 	version = h->qh_version;
+ 	mutex_unlock(&h->qh_lock);
  
 -	/*
--	 * We can't flush the inode until it is unpinned, so wait for it if we
--	 * are allowed to block.  We know no one new can pin it, because we are
--	 * holding the inode lock shared and you need to hold it exclusively to
--	 * pin the inode.
--	 *
--	 * If we are not allowed to block, force the log out asynchronously so
--	 * that when we come back the inode will be unpinned. If other inodes
--	 * in the same cluster are dirty, they will probably write the inode
--	 * out for us if they occur after the log force completes.
+-	 * Allocate the dquot on the kernel heap, and read the ondisk
+-	 * portion off the disk. Also, do all the necessary initialization
+-	 * This can return ENOENT if dquot didn't exist on disk and we didn't
+-	 * ask it to allocate; ESRCH if quotas got turned off suddenly.
 -	 */
--	if (!(flags & SYNC_WAIT) && xfs_ipincount(ip)) {
--		xfs_iunpin(ip);
--		xfs_ifunlock(ip);
--		return EAGAIN;
--	}
- 	xfs_iunpin_wait(ip);
- 
- 	/*
-@@ -2468,8 +2454,7 @@ xfs_iflush(
- 	/*
- 	 * Get the buffer containing the on-disk inode.
- 	 */
--	error = xfs_itobp(mp, NULL, ip, &dip, &bp,
--				(flags & SYNC_TRYLOCK) ? XBF_TRYLOCK : XBF_LOCK);
-+	error = xfs_itobp(mp, NULL, ip, &dip, &bp, XBF_TRYLOCK);
- 	if (error || !bp) {
- 		xfs_ifunlock(ip);
- 		return error;
-@@ -2497,13 +2482,8 @@ xfs_iflush(
- 	if (error)
- 		goto cluster_corrupt_out;
- 
--	if (flags & SYNC_WAIT)
--		error = xfs_bwrite(bp);
--	else
--		xfs_buf_delwri_queue(bp);
--
--	xfs_buf_relse(bp);
--	return error;
-+	*bpp = bp;
-+	return 0;
- 
- corrupt_out:
- 	xfs_buf_relse(bp);
-Index: xfs/fs/xfs/xfs_inode.h
-===================================================================
---- xfs.orig/fs/xfs/xfs_inode.h	2011-10-27 22:39:59.613171175 +0200
-+++ xfs/fs/xfs/xfs_inode.h	2011-10-27 22:40:13.673170747 +0200
-@@ -530,7 +530,7 @@ int		xfs_iunlink(struct xfs_trans *, xfs
- 
- void		xfs_iext_realloc(xfs_inode_t *, int, int);
- void		xfs_iunpin_wait(xfs_inode_t *);
--int		xfs_iflush(xfs_inode_t *, uint);
-+int		xfs_iflush(struct xfs_inode *, struct xfs_buf **);
- void		xfs_lock_inodes(xfs_inode_t **, int, uint);
- void		xfs_lock_two_inodes(xfs_inode_t *, xfs_inode_t *, uint);
- 
-Index: xfs/fs/xfs/xfs_inode_item.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_inode_item.c	2011-10-27 22:39:59.621171049 +0200
-+++ xfs/fs/xfs/xfs_inode_item.c	2011-10-27 22:40:13.681172022 +0200
-@@ -552,6 +552,15 @@ xfs_inode_item_trylock(
- 	if (!xfs_ilock_nowait(ip, XFS_ILOCK_SHARED))
- 		return XFS_ITEM_LOCKED;
- 
-+	/*
-+	 * Re-check the pincount now that we stabilized the value by
-+	 * taking the ilock.
-+	 */
-+	if (xfs_ipincount(ip) > 0) {
-+		xfs_iunlock(ip, XFS_ILOCK_SHARED);
-+		return XFS_ITEM_PINNED;
-+	}
-+
- 	if (!xfs_iflock_nowait(ip)) {
- 		/*
- 		 * inode has already been flushed to the backing buffer,
-@@ -716,6 +725,8 @@ xfs_inode_item_push(
- {
- 	struct xfs_inode_log_item *iip = INODE_ITEM(lip);
- 	struct xfs_inode	*ip = iip->ili_inode;
-+	struct xfs_buf		*bp = NULL;
-+	int			error;
- 
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_SHARED));
- 	ASSERT(xfs_isiflocked(ip));
-@@ -740,7 +751,11 @@ xfs_inode_item_push(
- 	 * will pull the inode from the AIL, mark it clean and unlock the flush
- 	 * lock.
- 	 */
--	(void) xfs_iflush(ip, SYNC_TRYLOCK);
-+	error = xfs_iflush(ip, &bp);
-+	if (!error) {
-+		xfs_buf_delwri_queue(bp);
-+		xfs_buf_relse(bp);
-+	}
- 	xfs_iunlock(ip, XFS_ILOCK_SHARED);
- }
- 
-Index: xfs/fs/xfs/xfs_sync.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_sync.c	2011-10-27 22:40:12.489171652 +0200
-+++ xfs/fs/xfs/xfs_sync.c	2011-10-27 22:40:13.685172888 +0200
-@@ -645,10 +645,6 @@ xfs_reclaim_inode_grab(
-  * (*) dgc: I don't think the clean, pinned state is possible but it gets
-  * handled anyway given the order of checks implemented.
-  *
-- * As can be seen from the table, the return value of xfs_iflush() is not
-- * sufficient to correctly decide the reclaim action here. The checks in
-- * xfs_iflush() might look like duplicates, but they are not.
-- *
-  * Also, because we get the flush lock first, we know that any inode that has
-  * been flushed delwri has had the flush completed by the time we check that
-  * the inode is clean.
-@@ -676,7 +672,8 @@ xfs_reclaim_inode(
- 	struct xfs_perag	*pag,
- 	int			sync_mode)
- {
--	int	error;
-+	struct xfs_buf		*bp = NULL;
-+	int			error;
- 
- restart:
- 	error = 0;
-@@ -727,12 +724,15 @@ restart:
- 	 * just unlock the inode, back off and try again. Hopefully the next
- 	 * pass through will see the stale flag set on the inode.
- 	 */
--	error = xfs_iflush(ip, SYNC_TRYLOCK | sync_mode);
-+	error = xfs_iflush(ip, &bp);
- 	if (error == EAGAIN) {
- 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 		/* backoff longer than in xfs_ifree_cluster */
- 		delay(2);
- 		goto restart;
-+	} else if (!error) {
-+		error = xfs_bwrite(bp);
-+		xfs_buf_relse(bp);
+-	if ((error = xfs_qm_idtodq(mp, id, type,
+-				  flags & (XFS_QMOPT_DQALLOC|XFS_QMOPT_DQREPAIR|
+-					   XFS_QMOPT_DOWARN),
+-				  &dqp))) {
++	error = xfs_qm_dqread(mp, id, type, flags, &dqp);
++	if (error) {
+ 		if (ip)
+ 			xfs_ilock(ip, XFS_ILOCK_EXCL);
+-		return (error);
++		return error;
  	}
- 	xfs_iflock(ip);
  
+ 	/*
 
 _______________________________________________
 xfs mailing list
