@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9SDWYZ0154949 for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 08:32:34 -0500
-Message-ID: <4EAAAEEE.5030600@sgi.com>
-Date: Fri, 28 Oct 2011 08:32:30 -0500
+	p9SDZZkq155079 for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 08:35:36 -0500
+Message-ID: <4EAAAFA3.1070109@sgi.com>
+Date: Fri, 28 Oct 2011 08:35:31 -0500
 From: Bill Kendall <wkendall@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfsdump: incremental dump directory selection
-References: <1319214933-16276-1-git-send-email-wkendall@sgi.com>
-	<20111028093752.GB23069@infradead.org>
-In-Reply-To: <20111028093752.GB23069@infradead.org>
+Subject: Re: [PATCH] xfsdump: fix metadata restore on split files
+References: <1319671483-27787-1-git-send-email-wkendall@sgi.com>
+	<20111028093716.GA23069@infradead.org>
+In-Reply-To: <20111028093716.GA23069@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,26 +26,37 @@ To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
 Christoph Hellwig wrote:
-> On Fri, Oct 21, 2011 at 11:35:33AM -0500, Bill Kendall wrote:
->> When doing incremental backups, xfsdump does a recursive scan through
->> the filesystems to determine the proper set of unchanged directories
->> to include in the dump in order to make the dump self-contained
->> (allowing files to be restored from this dump without applying the
->> base dumps first).
+> On Wed, Oct 26, 2011 at 06:24:43PM -0500, Bill Kendall wrote:
+>> xfsrestore does not apply certain metadata until all of the file's
+>> data has been restored. This allows, for example, files with the
+>> immutable flag set to be restored properly.
 >>
->> For high-inode count filesystems, the recursive scan may consume a
->> significant portion of the backup time. This patch adds a -D option
->> which causes xfsdump to skip the recursive scan. Unchanged directories
->> will not be dumped, so the base dump(s) will have to be loaded prior
->> to restoring files from the dump. When restoring files from such a
->> dump, a message is issued to alert the user that files may end up in
->> the orphanage if the base dump(s) has not been applied.
+>> While testing multi-stream restores, I noticed that files split
+>> across multiple streams did not have their metadata restored.
+>> Looking into this further, it also applies to the single-stream
+>> case where files are split across media files, such as when a
+>> backup spans multiple tapes.
+>>
+>> The fix is to check to see if a file is completely restored
+>> whenever we hit the end of a media file. The current code
+>> is broken because it relies on all media files being applied
+>> during the same restore session.
+>>
+>> This also moves the S_ISREG() check into restore_complete_reg()
+>> rather than relying on callers to make the check.
 > 
-> Any chance you could submit some xfstests coverage for this feature?
+> Uhh, that's a nasty bug for people storing large files over multiple
+> tapes.  Any chance we could get an xfstests test case for this?
+> 
+> Can we somehow simulate multiple tapes using small files?
 
-Sure, will do.
+I'll look into this.
 
 Bill
+
+> 
+> The code change looks okay to me, but I have to admit I don't really
+> understand the code very well.
 
 _______________________________________________
 xfs mailing list
