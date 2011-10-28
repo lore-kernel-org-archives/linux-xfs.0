@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9SA3jtA145582 for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 05:03:45 -0500
+	p9SA3g93145439 for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 05:03:42 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 47DC8203865
-	for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 03:03:44 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 26A4BFCE485
+	for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 03:03:40 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	HFAqdjCgBaswtISm for <xfs@oss.sgi.com>;
-	Fri, 28 Oct 2011 03:03:44 -0700 (PDT)
+	UpIroVrBz1Soa1hI for <xfs@oss.sgi.com>;
+	Fri, 28 Oct 2011 03:03:40 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1RJjHr-0003E9-Ne
-	for xfs@oss.sgi.com; Fri, 28 Oct 2011 10:03:43 +0000
-Message-Id: <20111028100343.681567769@bombadil.infradead.org>
-Date: Fri, 28 Oct 2011 05:55:08 -0400
+	Linux)) id 1RJjHo-00034F-C7
+	for xfs@oss.sgi.com; Fri, 28 Oct 2011 10:03:40 +0000
+Message-Id: <20111028100340.324675133@bombadil.infradead.org>
+Date: Fri, 28 Oct 2011 05:54:49 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 45/45] xfs: force the log in xfs_buf_wait_unpin
+Subject: [PATCH 26/45] xfs: simplify xfs_qm_dqattach_grouphint
 References: <20111028095423.796574703@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs_buf_wait_unpin-force-log
+Content-Disposition: inline;
+	filename=xfs-quota-cleanup-xfs_qm_dqattach_grouphint
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,138 +35,111 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-For the log if we are waiting for a buffered to be unpinned for writing
-it out.  Currently all synchronous callers already do this unless they
-might never encounter a pinned buffer, and non-blocking writes already
-have a check for the pincount.
+No need to play games with the qlock now that the freelist lock nestst
+inside it.  Also clean up lots of outdated comments.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 ---
- fs/xfs/xfs_buf.c   |    5 +++++
- fs/xfs/xfs_dquot.c |    7 -------
- fs/xfs/xfs_qm.c    |   16 ----------------
- fs/xfs/xfs_sync.c  |   17 -----------------
- 4 files changed, 5 insertions(+), 40 deletions(-)
+ fs/xfs/xfs_qm.c |   64 ++++++++++++++------------------------------------------
+ 1 file changed, 16 insertions(+), 48 deletions(-)
 
-Index: xfs/fs/xfs/xfs_sync.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_sync.c	2011-10-27 22:40:16.821171772 +0200
-+++ xfs/fs/xfs/xfs_sync.c	2011-10-27 22:40:19.445176345 +0200
-@@ -268,17 +268,7 @@ xfs_sync_fsdata(
- 	struct xfs_buf		*bp;
- 	int			error;
- 
--	/*
--	 * If the buffer is pinned then push on the log so we won't get stuck
--	 * waiting in the write for someone, maybe ourselves, to flush the log.
--	 *
--	 * Even though we just pushed the log above, we did not have the
--	 * superblock buffer locked at that point so it can become pinned in
--	 * between there and here.
--	 */
- 	bp = xfs_getsb(mp, 0);
--	if (xfs_buf_ispinned(bp))
--		xfs_log_force(mp, 0);
- 	error = xfs_bwrite(bp);
- 	xfs_buf_relse(bp);
- 	return error;
-@@ -724,13 +714,6 @@ restart:
- 		delay(2);
- 		goto restart;
- 	} else if (!error) {
--		/*
--		 * If the buffer is pinned then push on the log now so we
--		 * won't get stuck waiting in the write for too long.
--		 */
--		if (xfs_buf_ispinned(bp))
--			xfs_log_force(ip->i_mount, 0);
--
- 		error = xfs_bwrite(bp);
- 		xfs_buf_relse(bp);
- 	}
-Index: xfs/fs/xfs/xfs_buf.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_buf.c	2011-10-27 22:40:16.210189457 +0200
-+++ xfs/fs/xfs/xfs_buf.c	2011-10-27 22:40:19.445176345 +0200
-@@ -936,6 +936,11 @@ xfs_buf_wait_unpin(
- 	if (atomic_read(&bp->b_pin_count) == 0)
- 		return;
- 
-+	/*
-+	 * Give the log a push so we don't wait here too long.
-+	 */
-+	xfs_log_force(bp->b_target->bt_mount, 0);
-+
- 	add_wait_queue(&bp->b_waiters, &wait);
- 	for (;;) {
- 		set_current_state(TASK_UNINTERRUPTIBLE);
-Index: xfs/fs/xfs/xfs_dquot.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_dquot.c	2011-10-27 22:40:18.049202868 +0200
-+++ xfs/fs/xfs/xfs_dquot.c	2011-10-27 22:40:19.449175026 +0200
-@@ -1143,13 +1143,6 @@ xfs_qm_dqpurge(
- 		 */
- 		error = xfs_qm_dqflush(dqp, &bp);
- 		if (!error && bp) {
--			/*
--			 * If the buffer is pinned then push on the log so we
--			 * won't get stuck waiting in the write for too long.
--			 */
--			if (xfs_buf_ispinned(bp))
--				xfs_log_force(mp, 0);
--
- 			error = xfs_bwrite(bp);
- 			xfs_buf_relse(bp);
- 		}
 Index: xfs/fs/xfs/xfs_qm.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_qm.c	2011-10-27 22:40:18.049202868 +0200
-+++ xfs/fs/xfs/xfs_qm.c	2011-10-27 22:40:19.453172157 +0200
-@@ -388,7 +388,6 @@ xfs_qm_dqflush_all(
- 	int			recl;
- 	struct xfs_dquot	*dqp;
- 	int			error = 0, error2;
--	int			pinned = 0;
- 	LIST_HEAD		(buffer_list);
+--- xfs.orig/fs/xfs/xfs_qm.c	2011-10-27 22:40:04.892672352 +0200
++++ xfs/fs/xfs/xfs_qm.c	2011-10-27 22:40:05.388673160 +0200
+@@ -650,11 +650,7 @@ xfs_qm_dqattach_one(
  
- 	if (!q)
-@@ -416,12 +415,6 @@ again:
- 		mutex_unlock(&q->qi_dqlist_lock);
- 		error = xfs_qm_dqflush(dqp, &bp);
- 		if (!error && bp) {
--			/*
--			 * If the buffer is pinned then push on the log so we
--			 * won't get stuck waiting in the write for too long.
--			 */
--			if (xfs_buf_ispinned(bp))
--				pinned++;
- 			xfs_buf_delwri_queue(bp, &buffer_list);
- 			xfs_buf_relse(bp);
- 		}
-@@ -439,8 +432,6 @@ again:
+ /*
+  * Given a udquot and gdquot, attach a ptr to the group dquot in the
+- * udquot as a hint for future lookups. The idea sounds simple, but the
+- * execution isn't, because the udquot might have a group dquot attached
+- * already and getting rid of that gets us into lock ordering constraints.
+- * The process is complicated more by the fact that the dquots may or may not
+- * be locked on entry.
++ * udquot as a hint for future lookups.
+  */
+ STATIC void
+ xfs_qm_dqattach_grouphint(
+@@ -665,45 +661,21 @@ xfs_qm_dqattach_grouphint(
  
- 	mutex_unlock(&q->qi_dqlist_lock);
- out:
--	if (pinned)
--		xfs_log_force(mp, 0);
- 	error2 = xfs_buf_delwri_submit(&buffer_list);
- 	return error ? error : error2;
+ 	xfs_dqlock(udq);
+ 
+-	if ((tmp = udq->q_gdquot)) {
+-		if (tmp == gdq) {
+-			xfs_dqunlock(udq);
+-			return;
+-		}
++	tmp = udq->q_gdquot;
++	if (tmp) {
++		if (tmp == gdq)
++			goto done;
+ 
+ 		udq->q_gdquot = NULL;
+-		/*
+-		 * We can't keep any dqlocks when calling dqrele,
+-		 * because the freelist lock comes before dqlocks.
+-		 */
+-		xfs_dqunlock(udq);
+-		/*
+-		 * we took a hard reference once upon a time in dqget,
+-		 * so give it back when the udquot no longer points at it
+-		 * dqput() does the unlocking of the dquot.
+-		 */
+ 		xfs_qm_dqrele(tmp);
+-
+-		xfs_dqlock(udq);
+-		xfs_dqlock(gdq);
+-
+-	} else {
+-		ASSERT(XFS_DQ_IS_LOCKED(udq));
+-		xfs_dqlock(gdq);
+-	}
+-
+-	ASSERT(XFS_DQ_IS_LOCKED(udq));
+-	ASSERT(XFS_DQ_IS_LOCKED(gdq));
+-	/*
+-	 * Somebody could have attached a gdquot here,
+-	 * when we dropped the uqlock. If so, just do nothing.
+-	 */
+-	if (udq->q_gdquot == NULL) {
+-		XFS_DQHOLD(gdq);
+-		udq->q_gdquot = gdq;
+ 	}
+ 
++	xfs_dqlock(gdq);
++	XFS_DQHOLD(gdq);
+ 	xfs_dqunlock(gdq);
++
++	udq->q_gdquot = gdq;
++done:
+ 	xfs_dqunlock(udq);
  }
-@@ -1659,13 +1650,6 @@ xfs_qm_dqreclaim_one(
- 			mutex_unlock(&xfs_Gqm->qm_dqfrlist_lock);
- 			error = xfs_qm_dqflush(dqp, &bp);
- 			if (!error && bp) {
--				/*
--				 * If the buffer is pinned then push on the
--				 * log so we won't get stuck waiting in the
--				 * write for too long.
--				 */
--				if (xfs_buf_ispinned(bp))
--					xfs_log_force(mp, 0);
- 				xfs_buf_delwri_queue(bp, &buffer_list);
- 				xfs_buf_relse(bp);
- 			}
+ 
+@@ -770,17 +742,13 @@ xfs_qm_dqattach_locked(
+ 		ASSERT(ip->i_gdquot);
+ 
+ 		/*
+-		 * We may or may not have the i_udquot locked at this point,
+-		 * but this check is OK since we don't depend on the i_gdquot to
+-		 * be accurate 100% all the time. It is just a hint, and this
+-		 * will succeed in general.
+-		 */
+-		if (ip->i_udquot->q_gdquot == ip->i_gdquot)
+-			goto done;
+-		/*
+-		 * Attach i_gdquot to the gdquot hint inside the i_udquot.
++		 * We do not have i_udquot locked at this point, but this check
++		 * is OK since we don't depend on the i_gdquot to be accurate
++		 * 100% all the time. It is just a hint, and this will
++		 * succeed in general.
+ 		 */
+-		xfs_qm_dqattach_grouphint(ip->i_udquot, ip->i_gdquot);
++		if (ip->i_udquot->q_gdquot != ip->i_gdquot)
++			xfs_qm_dqattach_grouphint(ip->i_udquot, ip->i_gdquot);
+ 	}
+ 
+  done:
 
 _______________________________________________
 xfs mailing list
