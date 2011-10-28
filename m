@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9SA3dNl145337 for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 05:03:39 -0500
+	p9SA3gkB145448 for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 05:03:42 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5C6121CC6FB0
-	for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 03:03:37 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7495CFCE484
+	for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 03:03:41 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	pYZaVbIV9RER6i9a for <xfs@oss.sgi.com>;
-	Fri, 28 Oct 2011 03:03:37 -0700 (PDT)
+	CsAuHry7Sraw1FEj for <xfs@oss.sgi.com>;
+	Fri, 28 Oct 2011 03:03:41 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1RJjHl-0002wL-Kn
-	for xfs@oss.sgi.com; Fri, 28 Oct 2011 10:03:37 +0000
-Message-Id: <20111028100337.591556948@bombadil.infradead.org>
-Date: Fri, 28 Oct 2011 05:54:34 -0400
+	Linux)) id 1RJjHo-00034l-I1
+	for xfs@oss.sgi.com; Fri, 28 Oct 2011 10:03:40 +0000
+Message-Id: <20111028100340.512340316@bombadil.infradead.org>
+Date: Fri, 28 Oct 2011 05:54:50 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 11/45] xfs: use per-filesystem I/O completion workqueues
+Subject: [PATCH 27/45] xfs: add a xfs_dqhold helper
 References: <20111028095423.796574703@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-split-workqueues
+Content-Disposition: inline; filename=xfs-quota-add-xfs_dqhold
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,249 +34,178 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-The new concurrency managed workqueues are cheap enough that we can create
-per-filesystem instead of global workqueues.  This allows us to remove the
-trylock or defer scheme on the ilock, which is not helpful once we have
-outstanding log reservations until finishing a size update.
+Factor the common:
+
+	xfs_dqlock(dqp);
+	XFS_DQHOLD(dqp);
+	xfs_dqunlock(dqp);
+
+pattern into a new helper, and remove XFS_DQHOLD now that only two callers
+are left.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 ---
- fs/xfs/xfs_aops.c  |   39 ++++++++++-----------------------------
- fs/xfs/xfs_aops.h  |    2 --
- fs/xfs/xfs_buf.c   |   17 -----------------
- fs/xfs/xfs_mount.h |    3 +++
- fs/xfs/xfs_super.c |   43 ++++++++++++++++++++++++++++++++++++++++++-
- 5 files changed, 55 insertions(+), 49 deletions(-)
+ fs/xfs/xfs_dquot.c |    2 +-
+ fs/xfs/xfs_dquot.h |   10 ++++++++--
+ fs/xfs/xfs_qm.c    |   50 +++++++++++++-------------------------------------
+ 3 files changed, 22 insertions(+), 40 deletions(-)
 
-Index: xfs/fs/xfs/xfs_aops.c
+Index: xfs/fs/xfs/xfs_qm.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_aops.c	2011-10-27 22:39:56.902173367 +0200
-+++ xfs/fs/xfs/xfs_aops.c	2011-10-27 22:39:57.490177027 +0200
-@@ -126,21 +126,15 @@ static inline bool xfs_ioend_is_append(s
+--- xfs.orig/fs/xfs/xfs_qm.c	2011-10-27 22:40:05.388673160 +0200
++++ xfs/fs/xfs/xfs_qm.c	2011-10-27 22:40:05.868674047 +0200
+@@ -606,12 +606,9 @@ xfs_qm_dqattach_one(
+ 		 */
+ 		dqp = udqhint->q_gdquot;
+ 		if (dqp && be32_to_cpu(dqp->q_core.d_id) == id) {
+-			xfs_dqlock(dqp);
+-			XFS_DQHOLD(dqp);
+ 			ASSERT(*IO_idqpp == NULL);
+-			*IO_idqpp = dqp;
  
- /*
-  * Update on-disk file size now that data has been written to disk.
-- *
-- * This function does not block as blocking on the inode lock in IO completion
-- * can lead to IO completion order dependency deadlocks.. If it can't get the
-- * inode ilock it will return EAGAIN. Callers must handle this.
-  */
--STATIC int
-+STATIC void
- xfs_setfilesize(
--	xfs_ioend_t		*ioend)
-+	struct xfs_ioend	*ioend)
- {
--	xfs_inode_t		*ip = XFS_I(ioend->io_inode);
-+	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
- 	xfs_fsize_t		isize;
- 
--	if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL))
--		return EAGAIN;
--
-+	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 	isize = xfs_ioend_new_eof(ioend);
- 	if (isize) {
- 		trace_xfs_setfilesize(ip, ioend->io_offset, ioend->io_size);
-@@ -149,7 +143,6 @@ xfs_setfilesize(
+-			xfs_dqunlock(dqp);
++			*IO_idqpp = xfs_qm_dqhold(dqp);
+ 			xfs_dqunlock(udqhint);
+ 			return 0;
+ 		}
+@@ -670,11 +667,7 @@ xfs_qm_dqattach_grouphint(
+ 		xfs_qm_dqrele(tmp);
  	}
  
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
--	return 0;
- }
- 
- /*
-@@ -163,10 +156,12 @@ xfs_finish_ioend(
- 	struct xfs_ioend	*ioend)
- {
- 	if (atomic_dec_and_test(&ioend->io_remaining)) {
-+		struct xfs_mount	*mp = XFS_I(ioend->io_inode)->i_mount;
-+
- 		if (ioend->io_type == IO_UNWRITTEN)
--			queue_work(xfsconvertd_workqueue, &ioend->io_work);
-+			queue_work(mp->m_unwritten_workqueue, &ioend->io_work);
- 		else if (xfs_ioend_is_append(ioend))
--			queue_work(xfsdatad_workqueue, &ioend->io_work);
-+			queue_work(mp->m_data_workqueue, &ioend->io_work);
- 		else
- 			xfs_destroy_ioend(ioend);
- 	}
-@@ -207,23 +202,9 @@ xfs_end_io(
- 	 * We might have to update the on-disk file size after extending
- 	 * writes.
- 	 */
--	error = xfs_setfilesize(ioend);
--	ASSERT(!error || error == EAGAIN);
+-	xfs_dqlock(gdq);
+-	XFS_DQHOLD(gdq);
+-	xfs_dqunlock(gdq);
 -
-+	xfs_setfilesize(ioend);
+-	udq->q_gdquot = gdq;
++	udq->q_gdquot = xfs_qm_dqhold(gdq);
  done:
--	/*
--	 * If we didn't complete processing of the ioend, requeue it to the
--	 * tail of the workqueue for another attempt later. Otherwise destroy
--	 * it.
+ 	xfs_dqunlock(udq);
+ }
+@@ -1939,10 +1932,7 @@ xfs_qm_vop_dqalloc(
+ 			 * this to caller
+ 			 */
+ 			ASSERT(ip->i_udquot);
+-			uq = ip->i_udquot;
+-			xfs_dqlock(uq);
+-			XFS_DQHOLD(uq);
+-			xfs_dqunlock(uq);
++			uq = xfs_qm_dqhold(ip->i_udquot);
+ 		}
+ 	}
+ 	if ((flags & XFS_QMOPT_GQUOTA) && XFS_IS_GQUOTA_ON(mp)) {
+@@ -1963,10 +1953,7 @@ xfs_qm_vop_dqalloc(
+ 			xfs_ilock(ip, lockflags);
+ 		} else {
+ 			ASSERT(ip->i_gdquot);
+-			gq = ip->i_gdquot;
+-			xfs_dqlock(gq);
+-			XFS_DQHOLD(gq);
+-			xfs_dqunlock(gq);
++			gq = xfs_qm_dqhold(ip->i_gdquot);
+ 		}
+ 	} else if ((flags & XFS_QMOPT_PQUOTA) && XFS_IS_PQUOTA_ON(mp)) {
+ 		if (xfs_get_projid(ip) != prid) {
+@@ -1986,10 +1973,7 @@ xfs_qm_vop_dqalloc(
+ 			xfs_ilock(ip, lockflags);
+ 		} else {
+ 			ASSERT(ip->i_gdquot);
+-			gq = ip->i_gdquot;
+-			xfs_dqlock(gq);
+-			XFS_DQHOLD(gq);
+-			xfs_dqunlock(gq);
++			gq = xfs_qm_dqhold(ip->i_gdquot);
+ 		}
+ 	}
+ 	if (uq)
+@@ -2039,14 +2023,10 @@ xfs_qm_vop_chown(
+ 	xfs_trans_mod_dquot(tp, newdq, XFS_TRANS_DQ_ICOUNT, 1);
+ 
+ 	/*
+-	 * Take an extra reference, because the inode
+-	 * is going to keep this dquot pointer even
+-	 * after the trans_commit.
 -	 */
--	if (error == EAGAIN) {
--		atomic_inc(&ioend->io_remaining);
--		xfs_finish_ioend(ioend);
--		/* ensure we don't spin on blocked ioends */
--		delay(1);
--	} else {
--		xfs_destroy_ioend(ioend);
--	}
-+	xfs_destroy_ioend(ioend);
+-	xfs_dqlock(newdq);
+-	XFS_DQHOLD(newdq);
+-	xfs_dqunlock(newdq);
+-	*IO_olddq = newdq;
++	 * Take an extra reference, because the inode is going to keep
++	 * this dquot pointer even after the trans_commit.
++	 */
++	*IO_olddq = xfs_qm_dqhold(newdq);
+ 
+ 	return prevdq;
  }
+@@ -2178,25 +2158,21 @@ xfs_qm_vop_create_dqattach(
+ 	ASSERT(XFS_IS_QUOTA_RUNNING(mp));
  
- /*
-Index: xfs/fs/xfs/xfs_aops.h
+ 	if (udqp) {
+-		xfs_dqlock(udqp);
+-		XFS_DQHOLD(udqp);
+-		xfs_dqunlock(udqp);
+ 		ASSERT(ip->i_udquot == NULL);
+-		ip->i_udquot = udqp;
+ 		ASSERT(XFS_IS_UQUOTA_ON(mp));
+ 		ASSERT(ip->i_d.di_uid == be32_to_cpu(udqp->q_core.d_id));
++
++		ip->i_udquot = xfs_qm_dqhold(udqp);
+ 		xfs_trans_mod_dquot(tp, udqp, XFS_TRANS_DQ_ICOUNT, 1);
+ 	}
+ 	if (gdqp) {
+-		xfs_dqlock(gdqp);
+-		XFS_DQHOLD(gdqp);
+-		xfs_dqunlock(gdqp);
+ 		ASSERT(ip->i_gdquot == NULL);
+-		ip->i_gdquot = gdqp;
+ 		ASSERT(XFS_IS_OQUOTA_ON(mp));
+ 		ASSERT((XFS_IS_GQUOTA_ON(mp) ?
+ 			ip->i_d.di_gid : xfs_get_projid(ip)) ==
+ 				be32_to_cpu(gdqp->q_core.d_id));
++
++		ip->i_gdquot = xfs_qm_dqhold(gdqp);
+ 		xfs_trans_mod_dquot(tp, gdqp, XFS_TRANS_DQ_ICOUNT, 1);
+ 	}
+ }
+Index: xfs/fs/xfs/xfs_dquot.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_aops.h	2011-10-27 22:39:35.702172559 +0200
-+++ xfs/fs/xfs/xfs_aops.h	2011-10-27 22:39:57.490177027 +0200
-@@ -18,8 +18,6 @@
- #ifndef __XFS_AOPS_H__
- #define __XFS_AOPS_H__
+--- xfs.orig/fs/xfs/xfs_dquot.c	2011-10-27 22:40:04.892672352 +0200
++++ xfs/fs/xfs/xfs_dquot.c	2011-10-27 22:40:05.872671537 +0200
+@@ -734,7 +734,7 @@ xfs_qm_dqlookup(
+ 			return -1;
+ 		}
  
--extern struct workqueue_struct *xfsdatad_workqueue;
--extern struct workqueue_struct *xfsconvertd_workqueue;
- extern mempool_t *xfs_ioend_pool;
+-		XFS_DQHOLD(dqp);
++		dqp->q_nrefs++;
  
- /*
-Index: xfs/fs/xfs/xfs_buf.c
+ 		/*
+ 		 * move the dquot to the front of the hashchain
+Index: xfs/fs/xfs/xfs_dquot.h
 ===================================================================
---- xfs.orig/fs/xfs/xfs_buf.c	2011-10-27 22:39:35.714171799 +0200
-+++ xfs/fs/xfs/xfs_buf.c	2011-10-27 22:39:57.490177027 +0200
-@@ -45,8 +45,6 @@ static kmem_zone_t *xfs_buf_zone;
- STATIC int xfsbufd(void *);
+--- xfs.orig/fs/xfs/xfs_dquot.h	2011-10-27 22:40:04.376671215 +0200
++++ xfs/fs/xfs/xfs_dquot.h	2011-10-27 22:40:05.876670670 +0200
+@@ -80,8 +80,6 @@ enum {
+ 	XFS_QLOCK_NESTED,
+ };
  
- static struct workqueue_struct *xfslogd_workqueue;
--struct workqueue_struct *xfsdatad_workqueue;
--struct workqueue_struct *xfsconvertd_workqueue;
- 
- #ifdef XFS_BUF_LOCK_TRACKING
- # define XB_SET_OWNER(bp)	((bp)->b_last_holder = current->pid)
-@@ -1797,21 +1795,8 @@ xfs_buf_init(void)
- 	if (!xfslogd_workqueue)
- 		goto out_free_buf_zone;
- 
--	xfsdatad_workqueue = alloc_workqueue("xfsdatad", WQ_MEM_RECLAIM, 1);
--	if (!xfsdatad_workqueue)
--		goto out_destroy_xfslogd_workqueue;
+-#define XFS_DQHOLD(dqp)		((dqp)->q_nrefs++)
 -
--	xfsconvertd_workqueue = alloc_workqueue("xfsconvertd",
--						WQ_MEM_RECLAIM, 1);
--	if (!xfsconvertd_workqueue)
--		goto out_destroy_xfsdatad_workqueue;
--
- 	return 0;
+ /*
+  * Manage the q_flush completion queue embedded in the dquot.  This completion
+  * queue synchronizes processes attempting to flush the in-core dquot back to
+@@ -147,4 +145,12 @@ extern void		xfs_dqlock2(struct xfs_dquo
+ extern void		xfs_dqunlock(struct xfs_dquot *);
+ extern void		xfs_dqflock_pushbuf_wait(struct xfs_dquot *dqp);
  
-- out_destroy_xfsdatad_workqueue:
--	destroy_workqueue(xfsdatad_workqueue);
-- out_destroy_xfslogd_workqueue:
--	destroy_workqueue(xfslogd_workqueue);
-  out_free_buf_zone:
- 	kmem_zone_destroy(xfs_buf_zone);
-  out:
-@@ -1821,8 +1806,6 @@ xfs_buf_init(void)
- void
- xfs_buf_terminate(void)
- {
--	destroy_workqueue(xfsconvertd_workqueue);
--	destroy_workqueue(xfsdatad_workqueue);
- 	destroy_workqueue(xfslogd_workqueue);
- 	kmem_zone_destroy(xfs_buf_zone);
- }
-Index: xfs/fs/xfs/xfs_super.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_super.c	2011-10-27 22:39:53.702172231 +0200
-+++ xfs/fs/xfs/xfs_super.c	2011-10-27 22:39:57.498171619 +0200
-@@ -769,6 +769,40 @@ xfs_setup_devices(
- 	return 0;
- }
- 
-+STATIC int
-+xfs_init_mount_workqueues(
-+	struct xfs_mount	*mp)
++static inline struct xfs_dquot *xfs_qm_dqhold(struct xfs_dquot *dqp)
 +{
-+#define XFS_WQ_NAME_LEN		512
-+	char			name[XFS_WQ_NAME_LEN];
-+
-+	snprintf(name, XFS_WQ_NAME_LEN, "xfs-data/%s", mp->m_fsname);
-+	mp->m_data_workqueue = alloc_workqueue(name, WQ_MEM_RECLAIM, 1);
-+	if (!mp->m_data_workqueue)
-+		goto out;
-+
-+	snprintf(name, XFS_WQ_NAME_LEN, "xfs-conv/%s", mp->m_fsname);
-+	mp->m_unwritten_workqueue = alloc_workqueue(name, WQ_MEM_RECLAIM, 1);
-+	if (!mp->m_unwritten_workqueue)
-+		goto out_destroy_data_iodone_queue;
-+
-+	return 0;
-+
-+out_destroy_data_iodone_queue:
-+	destroy_workqueue(mp->m_data_workqueue);
-+out:
-+	return -ENOMEM;
-+#undef XFS_WQ_NAME_LEN
++	xfs_dqlock(dqp);
++	dqp->q_nrefs++;
++	xfs_dqunlock(dqp);
++	return dqp;
 +}
 +
-+STATIC void
-+xfs_destroy_mount_workqueues(
-+	struct xfs_mount	*mp)
-+{
-+	destroy_workqueue(mp->m_data_workqueue);
-+	destroy_workqueue(mp->m_unwritten_workqueue);
-+}
-+
- /* Catch misguided souls that try to use this interface on XFS */
- STATIC struct inode *
- xfs_fs_alloc_inode(
-@@ -1012,6 +1046,7 @@ xfs_fs_put_super(
- 	xfs_unmountfs(mp);
- 	xfs_freesb(mp);
- 	xfs_icsb_destroy_counters(mp);
-+	xfs_destroy_mount_workqueues(mp);
- 	xfs_close_devices(mp);
- 	xfs_free_fsname(mp);
- 	kfree(mp);
-@@ -1345,10 +1380,14 @@ xfs_fs_fill_super(
- 	if (error)
- 		goto out_free_fsname;
- 
--	error = xfs_icsb_init_counters(mp);
-+	error = xfs_init_mount_workqueues(mp);
- 	if (error)
- 		goto out_close_devices;
- 
-+	error = xfs_icsb_init_counters(mp);
-+	if (error)
-+		goto out_destroy_workqueues;
-+
- 	error = xfs_readsb(mp, flags);
- 	if (error)
- 		goto out_destroy_counters;
-@@ -1411,6 +1450,8 @@ xfs_fs_fill_super(
- 	xfs_freesb(mp);
-  out_destroy_counters:
- 	xfs_icsb_destroy_counters(mp);
-+out_destroy_workqueues:
-+	xfs_destroy_mount_workqueues(mp);
-  out_close_devices:
- 	xfs_close_devices(mp);
-  out_free_fsname:
-Index: xfs/fs/xfs/xfs_mount.h
-===================================================================
---- xfs.orig/fs/xfs/xfs_mount.h	2011-10-27 22:39:35.738171837 +0200
-+++ xfs/fs/xfs/xfs_mount.h	2011-10-27 22:39:57.502188861 +0200
-@@ -211,6 +211,9 @@ typedef struct xfs_mount {
- 	struct shrinker		m_inode_shrink;	/* inode reclaim shrinker */
- 	int64_t			m_low_space[XFS_LOWSP_MAX];
- 						/* low free space thresholds */
-+
-+	struct workqueue_struct	*m_data_workqueue;
-+	struct workqueue_struct	*m_unwritten_workqueue;
- } xfs_mount_t;
- 
- /*
+ #endif /* __XFS_DQUOT_H__ */
 
 _______________________________________________
 xfs mailing list
