@@ -1,15 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9S9bKbx144389 for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 04:37:20 -0500
-Date: Fri, 28 Oct 2011 05:37:16 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfsdump: fix metadata restore on split files
-Message-ID: <20111028093716.GA23069@infradead.org>
-References: <1319671483-27787-1-git-send-email-wkendall@sgi.com>
+	p9S9PNTO144024 for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 04:25:23 -0500
+Received: from mx3-phx2.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 21A581CC6AB7
+	for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 02:25:22 -0700 (PDT)
+Received: from mx3-phx2.redhat.com (mx3-phx2.redhat.com [209.132.183.24]) by
+	cuda.sgi.com with ESMTP id ozVLSRhyHqLU8DTO for
+	<xfs@oss.sgi.com>; Fri, 28 Oct 2011 02:25:22 -0700 (PDT)
+Date: Fri, 28 Oct 2011 05:25:16 -0400 (EDT)
+From: Boris Ranto <branto@redhat.com>
+Subject: Re: [PATCH] xfstests 016: Do not discard blocks at the mkfs time
+Message-ID: <7b17b1e4-538b-48ff-bced-ab67fc5bd49b@zmail16.collab.prod.int.phx2.redhat.com>
+In-Reply-To: <20111027160434.GA21551@infradead.org>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1319671483-27787-1-git-send-email-wkendall@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,35 +26,62 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Bill Kendall <wkendall@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Eric Sandeen <esandeen@redhat.com>, xfs <xfs@oss.sgi.com>
 
-On Wed, Oct 26, 2011 at 06:24:43PM -0500, Bill Kendall wrote:
-> xfsrestore does not apply certain metadata until all of the file's
-> data has been restored. This allows, for example, files with the
-> immutable flag set to be restored properly.
+On Thu, Oct 27, 2011, Christoph Hellwig wrote:
+> On Wed, Oct 26, 2011 at 12:46:23PM +0200, Boris Ranto wrote:
+> > The test 016 fills scratch device with some data and then creates
+> > xfs fs
+> > on the scratch device. Later, the test assumes that the previously
+> > written data are still in there and checks for them at specific
+> > locations. On ssd drive this will lead to failure since the blocks
+> > are
+> > discarded by default when the mkfs command is run.
+> > This simple patch that adds -K to stop the discarding (if the mkfs
+> > command supports it) fixed the issue for me:
+> > 
+> > Signed-off-by: Boris Ranto <branto@redhat.com>
+> > 
+> > diff --git a/016 b/016
+> > index 9275ade..db76398 100755
+> > --- a/016
+> > +++ b/016
+> > @@ -65,6 +65,8 @@ _init()
+> >      $here/src/devzero -b 2048 -n 50 -v 198 $SCRATCH_DEV
+> >      echo "*** mkfs"
+> >      force_opts="-dsize=50m -lsize=$log_size"
+> > +    # Do not discard blocks, we need them for further reads
+> > +    _scratch_mkfs_xfs -N -K $force_opts >/dev/null 2>&1 &&
+> > force_opts="-K $force_opts"
+> >      echo mkfs_xfs $force_opts $SCRATCH_DEV >>$seq.full
+> >      _scratch_mkfs_xfs $force_opts >$tmp.mkfs0 2>&1
 > 
-> While testing multi-stream restores, I noticed that files split
-> across multiple streams did not have their metadata restored.
-> Looking into this further, it also applies to the single-stream
-> case where files are split across media files, such as when a
-> backup spans multiple tapes.
+> It took me very long understanding why you do mkfs.xfs calls here,
+> but I suspect now that it is to detect if -K is supported?
 > 
-> The fix is to check to see if a file is completely restored
-> whenever we hit the end of a media file. The current code
-> is broken because it relies on all media files being applied
-> during the same restore session.
+> If so please document it in a comment, and maybe also write the
+> code a bit more verbose, e.g.
 > 
-> This also moves the S_ISREG() check into restore_complete_reg()
-> rather than relying on callers to make the check.
+> 	#
+> 	# Do not discard blocks as we check for patterns in freespace.
+> 	#
+> 	# Given that older xfsprogs versions do not have the -K option
+> 	# make sure it works first.
+> 	#
+> 	if _scratch_mkfs_xfs -N -K $force_opts >/dev/null 2>&1; then
+> 	    force_opts="-K $force_opts"
+> 	fi
+> 
+> Otherwise the test looks good and will fix the 016 failure on TP /
+> TRIM
+> capable devices that I've been seeing for a while.
+> 
+> Thanks a lot for doing this!
+> 
 
-Uhh, that's a nasty bug for people storing large files over multiple
-tapes.  Any chance we could get an xfstests test case for this?
-
-Can we somehow simulate multiple tapes using small files?
-
-The code change looks okay to me, but I have to admit I don't really
-understand the code very well.
+Yes, the dry mkfs.xfs call is there just to check whether mkfs supports the '-K' option.
+I'll resend the patch in its more verbose form to make it more clear.
 
 _______________________________________________
 xfs mailing list
