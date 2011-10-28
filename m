@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9SA3dX6145325 for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 05:03:39 -0500
+	p9SA3gHO145437 for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 05:03:42 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3A14E203849
-	for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 03:03:36 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 963CD203861
+	for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 03:03:40 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	9pB9dqOwNC6DA6fY for <xfs@oss.sgi.com>;
-	Fri, 28 Oct 2011 03:03:36 -0700 (PDT)
+	Eb4YpslBA6HwiXdZ for <xfs@oss.sgi.com>;
+	Fri, 28 Oct 2011 03:03:40 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1RJjHk-0002tl-I0
-	for xfs@oss.sgi.com; Fri, 28 Oct 2011 10:03:36 +0000
-Message-Id: <20111028100336.504680215@bombadil.infradead.org>
-Date: Fri, 28 Oct 2011 05:54:29 -0400
+	Linux)) id 1RJjHn-00033D-Vr
+	for xfs@oss.sgi.com; Fri, 28 Oct 2011 10:03:40 +0000
+Message-Id: <20111028100339.939836180@bombadil.infradead.org>
+Date: Fri, 28 Oct 2011 05:54:47 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 06/45] xfs: remove xfs_itruncate_data
+Subject: [PATCH 24/45] xfs: flatten the dquot lock ordering
 References: <20111028095423.796574703@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-kill-xfs_itruncate_data
+Content-Disposition: inline; filename=xfs-add-DQ_FREEING
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,428 +34,490 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-This wrapper isn't overly useful, not to say rather confusing.
-
-Around the call to xfs_itruncate_extents it does:
-
- - add tracing
- - add a few asserts in debug builds
- - conditionally update the inode size in two places
- - log the inode
-
-Both the tracing and the inode logging can be moved to xfs_itruncate_extents
-as they are useful for the attribute fork as well - in fact the attr code
-already does an equivalent xfs_trans_log_inode call just after calling
-xfs_itruncate_extents.  The conditional size updates are a mess, and there
-was no reason to do them in two places anyway, as the first one was
-conditional on the inode having extents - but without extents we
-xfs_itruncate_extents would be a no-op and the placement wouldn't matter
-anyway.  Instead move the size assignments and the asserts that make sense
-to the callers that want it.
-
-As a side effect of this clean up xfs_setattr_size by introducing variables
-for the old and new inode size, and moving the size updates into a common
-place.
+Introduce a new XFS_DQ_FREEING flag that tells lookup and mplist walks
+to skip a dquot that is beeing freed, and use this avoid the trylock
+on the hash and mplist locks in xfs_qm_dqreclaim_one.  Also simplify
+xfs_dqpurge by moving the inodes to a dispose list after marking them
+XFS_DQ_FREEING and avoid the locker ordering constraints.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 ---
- fs/xfs/xfs_attr.c        |    4 -
- fs/xfs/xfs_inode.c       |  124 +++--------------------------------------------
- fs/xfs/xfs_inode.h       |    2 
- fs/xfs/xfs_iops.c        |   47 +++++++++++------
- fs/xfs/xfs_qm_syscalls.c |    9 +++
- fs/xfs/xfs_trace.h       |    4 -
- fs/xfs/xfs_vnodeops.c    |   17 +++++-
- 7 files changed, 65 insertions(+), 142 deletions(-)
+ fs/xfs/xfs_dquot.c |  110 ++++++++++++++++++---------------------------
+ fs/xfs/xfs_dquot.h |    2 
+ fs/xfs/xfs_qm.c    |  129 ++++++++++++++++++-----------------------------------
+ fs/xfs/xfs_quota.h |    4 +
+ 4 files changed, 96 insertions(+), 149 deletions(-)
 
-Index: xfs/fs/xfs/xfs_attr.c
+Index: xfs/fs/xfs/xfs_dquot.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_attr.c	2011-10-27 22:39:36.520671560 +0200
-+++ xfs/fs/xfs/xfs_attr.c	2011-10-27 22:39:54.750171592 +0200
-@@ -827,10 +827,6 @@ xfs_attr_inactive(xfs_inode_t *dp)
- 	if (error)
- 		goto out;
+--- xfs.orig/fs/xfs/xfs_dquot.c	2011-10-27 22:40:03.870173003 +0200
++++ xfs/fs/xfs/xfs_dquot.c	2011-10-27 22:40:04.372672510 +0200
+@@ -728,6 +728,12 @@ xfs_qm_dqlookup(
+ 		trace_xfs_dqlookup_found(dqp);
  
--	/*
--	 * Commit the last in the sequence of transactions.
--	 */
--	xfs_trans_log_inode(trans, dp, XFS_ILOG_CORE);
- 	error = xfs_trans_commit(trans, XFS_TRANS_RELEASE_LOG_RES);
- 	xfs_iunlock(dp, XFS_ILOCK_EXCL);
- 
-Index: xfs/fs/xfs/xfs_inode.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_inode.c	2011-10-27 22:39:53.698172120 +0200
-+++ xfs/fs/xfs/xfs_inode.c	2011-10-27 22:39:54.754172457 +0200
-@@ -1166,52 +1166,6 @@ xfs_ialloc(
- }
- 
- /*
-- * Check to make sure that there are no blocks allocated to the
-- * file beyond the size of the file.  We don't check this for
-- * files with fixed size extents or real time extents, but we
-- * at least do it for regular files.
-- */
--#ifdef DEBUG
--STATIC void
--xfs_isize_check(
--	struct xfs_inode	*ip,
--	xfs_fsize_t		isize)
--{
--	struct xfs_mount	*mp = ip->i_mount;
--	xfs_fileoff_t		map_first;
--	int			nimaps;
--	xfs_bmbt_irec_t		imaps[2];
--	int			error;
--
--	if (!S_ISREG(ip->i_d.di_mode))
--		return;
--
--	if (XFS_IS_REALTIME_INODE(ip))
--		return;
--
--	if (ip->i_d.di_flags & XFS_DIFLAG_EXTSIZE)
--		return;
--
--	nimaps = 2;
--	map_first = XFS_B_TO_FSB(mp, (xfs_ufsize_t)isize);
--	/*
--	 * The filesystem could be shutting down, so bmapi may return
--	 * an error.
--	 */
--	error = xfs_bmapi_read(ip, map_first,
--			 (XFS_B_TO_FSB(mp,
--			       (xfs_ufsize_t)XFS_MAXIOFFSET(mp)) - map_first),
--			 imaps, &nimaps, XFS_BMAPI_ENTIRE);
--	if (error)
--		return;
--	ASSERT(nimaps == 1);
--	ASSERT(imaps[0].br_startblock == HOLESTARTBLOCK);
--}
--#else	/* DEBUG */
--#define xfs_isize_check(ip, isize)
--#endif	/* DEBUG */
--
--/*
-  * Free up the underlying blocks past new_size.  The new size must be smaller
-  * than the current size.  This routine can be used both for the attribute and
-  * data fork, and does not modify the inode size, which is left to the caller.
-@@ -1258,6 +1212,8 @@ xfs_itruncate_extents(
- 	ASSERT(ip->i_itemp->ili_lock_flags == 0);
- 	ASSERT(!XFS_NOT_DQATTACHED(mp, ip));
- 
-+	trace_xfs_itruncate_extents_start(ip, new_size);
+ 		xfs_dqlock(dqp);
++		if (dqp->dq_flags & XFS_DQ_FREEING) {
++			*O_dqpp = NULL;
++			xfs_dqunlock(dqp);
++			return -1;
++		}
 +
- 	/*
- 	 * Since it is possible for space to become allocated beyond
- 	 * the end of the file (in a crash where the space is allocated
-@@ -1325,6 +1281,14 @@ xfs_itruncate_extents(
- 			goto out;
- 	}
+ 		XFS_DQHOLD(dqp);
  
-+	/*
-+	 * Always re-log the inode so that our permanent transaction can keep
-+	 * on rolling it forward in the log.
-+	 */
-+	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-+
-+	trace_xfs_itruncate_extents_end(ip, new_size);
-+
- out:
- 	*tpp = tp;
- 	return error;
-@@ -1338,74 +1302,6 @@ out_bmap_cancel:
- 	goto out;
- }
- 
--int
--xfs_itruncate_data(
--	struct xfs_trans	**tpp,
--	struct xfs_inode	*ip,
--	xfs_fsize_t		new_size)
--{
--	int			error;
--
--	trace_xfs_itruncate_data_start(ip, new_size);
--
--	/*
--	 * The first thing we do is set the size to new_size permanently on
--	 * disk.  This way we don't have to worry about anyone ever being able
--	 * to look at the data being freed even in the face of a crash.
--	 * What we're getting around here is the case where we free a block, it
--	 * is allocated to another file, it is written to, and then we crash.
--	 * If the new data gets written to the file but the log buffers
--	 * containing the free and reallocation don't, then we'd end up with
--	 * garbage in the blocks being freed.  As long as we make the new_size
--	 * permanent before actually freeing any blocks it doesn't matter if
--	 * they get written to.
--	 */
--	if (ip->i_d.di_nextents > 0) {
--		/*
--		 * If we are not changing the file size then do not update
--		 * the on-disk file size - we may be called from
--		 * xfs_inactive_free_eofblocks().  If we update the on-disk
--		 * file size and then the system crashes before the contents
--		 * of the file are flushed to disk then the files may be
--		 * full of holes (ie NULL files bug).
--		 */
--		if (ip->i_size != new_size) {
--			ip->i_d.di_size = new_size;
--			ip->i_size = new_size;
--			xfs_trans_log_inode(*tpp, ip, XFS_ILOG_CORE);
--		}
--	}
--
--	error = xfs_itruncate_extents(tpp, ip, XFS_DATA_FORK, new_size);
--	if (error)
--		return error;
--
--	/*
--	 * If we are not changing the file size then do not update the on-disk
--	 * file size - we may be called from xfs_inactive_free_eofblocks().
--	 * If we update the on-disk file size and then the system crashes
--	 * before the contents of the file are flushed to disk then the files
--	 * may be full of holes (ie NULL files bug).
--	 */
--	xfs_isize_check(ip, new_size);
--	if (ip->i_size != new_size) {
--		ip->i_d.di_size = new_size;
--		ip->i_size = new_size;
--	}
--
--	ASSERT(new_size != 0 || ip->i_delayed_blks == 0);
--	ASSERT(new_size != 0 || ip->i_d.di_nextents == 0);
--
--	/*
--	 * Always re-log the inode so that our permanent transaction can keep
--	 * on rolling it forward in the log.
--	 */
--	xfs_trans_log_inode(*tpp, ip, XFS_ILOG_CORE);
--
--	trace_xfs_itruncate_data_end(ip, new_size);
--	return 0;
--}
--
- /*
-  * This is called when the inode's link count goes to 0.
-  * We place the on-disk inode on a list in the AGI.  It
-Index: xfs/fs/xfs/xfs_inode.h
-===================================================================
---- xfs.orig/fs/xfs/xfs_inode.h	2011-10-27 22:39:54.225671131 +0200
-+++ xfs/fs/xfs/xfs_inode.h	2011-10-27 22:39:54.754172457 +0200
-@@ -507,8 +507,6 @@ int		xfs_ifree(struct xfs_trans *, xfs_i
- 			   struct xfs_bmap_free *);
- int		xfs_itruncate_extents(struct xfs_trans **, struct xfs_inode *,
- 				      int, xfs_fsize_t);
--int		xfs_itruncate_data(struct xfs_trans **, struct xfs_inode *,
--				   xfs_fsize_t);
- int		xfs_iunlink(struct xfs_trans *, xfs_inode_t *);
- 
- void		xfs_iext_realloc(xfs_inode_t *, int, int);
-Index: xfs/fs/xfs/xfs_iops.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_iops.c	2011-10-27 22:39:36.556673625 +0200
-+++ xfs/fs/xfs/xfs_iops.c	2011-10-27 22:39:54.754172457 +0200
-@@ -749,6 +749,7 @@ xfs_setattr_size(
- 	struct xfs_mount	*mp = ip->i_mount;
- 	struct inode		*inode = VFS_I(ip);
- 	int			mask = iattr->ia_valid;
-+	xfs_off_t		oldsize, newsize;
- 	struct xfs_trans	*tp;
- 	int			error;
- 	uint			lock_flags;
-@@ -776,11 +777,13 @@ xfs_setattr_size(
- 		lock_flags |= XFS_IOLOCK_EXCL;
- 	xfs_ilock(ip, lock_flags);
- 
-+	oldsize = ip->i_size;
-+	newsize = iattr->ia_size;
-+
- 	/*
- 	 * Short circuit the truncate case for zero length files.
- 	 */
--	if (iattr->ia_size == 0 &&
--	    ip->i_size == 0 && ip->i_d.di_nextents == 0) {
-+	if (newsize == 0 && oldsize == 0 && ip->i_d.di_nextents == 0) {
- 		if (!(mask & (ATTR_CTIME|ATTR_MTIME)))
- 			goto out_unlock;
- 
-@@ -806,14 +809,14 @@ xfs_setattr_size(
- 	 * the inode to the transaction, because the inode cannot be unlocked
- 	 * once it is a part of the transaction.
- 	 */
--	if (iattr->ia_size > ip->i_size) {
-+	if (newsize > oldsize) {
  		/*
- 		 * Do the first part of growing a file: zero any data in the
- 		 * last block that is beyond the old EOF.  We need to do this
- 		 * before the inode is joined to the transaction to modify
- 		 * i_size.
- 		 */
--		error = xfs_zero_eof(ip, iattr->ia_size, ip->i_size);
-+		error = xfs_zero_eof(ip, newsize, oldsize);
- 		if (error)
- 			goto out_unlock;
- 	}
-@@ -832,8 +835,8 @@ xfs_setattr_size(
- 	 * here and prevents waiting for other data not within the range we
- 	 * care about here.
- 	 */
--	if (ip->i_size != ip->i_d.di_size && iattr->ia_size > ip->i_d.di_size) {
--		error = xfs_flush_pages(ip, ip->i_d.di_size, iattr->ia_size, 0,
-+	if (oldsize != ip->i_d.di_size && newsize > ip->i_d.di_size) {
-+		error = xfs_flush_pages(ip, ip->i_d.di_size, newsize, 0,
- 					FI_NONE);
- 		if (error)
- 			goto out_unlock;
-@@ -844,8 +847,7 @@ xfs_setattr_size(
- 	 */
- 	inode_dio_wait(inode);
- 
--	error = -block_truncate_page(inode->i_mapping, iattr->ia_size,
--				     xfs_get_blocks);
-+	error = -block_truncate_page(inode->i_mapping, newsize, xfs_get_blocks);
- 	if (error)
- 		goto out_unlock;
- 
-@@ -856,7 +858,7 @@ xfs_setattr_size(
- 	if (error)
- 		goto out_trans_cancel;
- 
--	truncate_setsize(inode, iattr->ia_size);
-+	truncate_setsize(inode, newsize);
- 
- 	commit_flags = XFS_TRANS_RELEASE_LOG_RES;
- 	lock_flags |= XFS_ILOCK_EXCL;
-@@ -875,19 +877,30 @@ xfs_setattr_size(
- 	 * these flags set.  For all other operations the VFS set these flags
- 	 * explicitly if it wants a timestamp update.
- 	 */
--	if (iattr->ia_size != ip->i_size &&
--	    (!(mask & (ATTR_CTIME | ATTR_MTIME)))) {
-+	if (newsize != oldsize && (!(mask & (ATTR_CTIME | ATTR_MTIME)))) {
- 		iattr->ia_ctime = iattr->ia_mtime =
- 			current_fs_time(inode->i_sb);
- 		mask |= ATTR_CTIME | ATTR_MTIME;
- 	}
- 
--	if (iattr->ia_size > ip->i_size) {
--		ip->i_d.di_size = iattr->ia_size;
--		ip->i_size = iattr->ia_size;
--	} else if (iattr->ia_size <= ip->i_size ||
--		   (iattr->ia_size == 0 && ip->i_d.di_nextents)) {
--		error = xfs_itruncate_data(&tp, ip, iattr->ia_size);
-+	/*
-+	 * The first thing we do is set the size to new_size permanently on
-+	 * disk.  This way we don't have to worry about anyone ever being able
-+	 * to look at the data being freed even in the face of a crash.
-+	 * What we're getting around here is the case where we free a block, it
-+	 * is allocated to another file, it is written to, and then we crash.
-+	 * If the new data gets written to the file but the log buffers
-+	 * containing the free and reallocation don't, then we'd end up with
-+	 * garbage in the blocks being freed.  As long as we make the new size
-+	 * permanent before actually freeing any blocks it doesn't matter if
-+	 * they get written to.
-+	 */
-+	ip->i_d.di_size = newsize;
-+	ip->i_size = newsize;
-+	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-+
-+	if (newsize <= oldsize) {
-+		error = xfs_itruncate_extents(&tp, ip, XFS_DATA_FORK, newsize);
- 		if (error)
- 			goto out_trans_abort;
- 
-Index: xfs/fs/xfs/xfs_qm_syscalls.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_qm_syscalls.c	2011-10-27 22:39:36.564671247 +0200
-+++ xfs/fs/xfs/xfs_qm_syscalls.c	2011-10-27 22:39:54.758172111 +0200
-@@ -31,6 +31,7 @@
- #include "xfs_mount.h"
- #include "xfs_bmap_btree.h"
- #include "xfs_inode.h"
-+#include "xfs_inode_item.h"
- #include "xfs_itable.h"
- #include "xfs_bmap.h"
- #include "xfs_rtalloc.h"
-@@ -263,13 +264,19 @@ xfs_qm_scall_trunc_qfile(
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 	xfs_trans_ijoin(tp, ip, 0);
- 
--	error = xfs_itruncate_data(&tp, ip, 0);
-+	ip->i_d.di_size = 0;
-+	ip->i_size = 0;
-+	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-+
-+	error = xfs_itruncate_extents(&tp, ip, XFS_DATA_FORK, 0);
- 	if (error) {
- 		xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES |
- 				     XFS_TRANS_ABORT);
- 		goto out_unlock;
- 	}
- 
-+	ASSERT(ip->i_d.di_nextents == 0);
-+
- 	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
- 	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
- 
-Index: xfs/fs/xfs/xfs_trace.h
-===================================================================
---- xfs.orig/fs/xfs/xfs_trace.h	2011-10-27 22:39:36.576673656 +0200
-+++ xfs/fs/xfs/xfs_trace.h	2011-10-27 22:39:54.766219243 +0200
-@@ -1096,8 +1096,8 @@ DECLARE_EVENT_CLASS(xfs_itrunc_class,
- DEFINE_EVENT(xfs_itrunc_class, name, \
- 	TP_PROTO(struct xfs_inode *ip, xfs_fsize_t new_size), \
- 	TP_ARGS(ip, new_size))
--DEFINE_ITRUNC_EVENT(xfs_itruncate_data_start);
--DEFINE_ITRUNC_EVENT(xfs_itruncate_data_end);
-+DEFINE_ITRUNC_EVENT(xfs_itruncate_extents_start);
-+DEFINE_ITRUNC_EVENT(xfs_itruncate_extents_end);
- 
- TRACE_EVENT(xfs_pagecache_inval,
- 	TP_PROTO(struct xfs_inode *ip, xfs_off_t start, xfs_off_t finish),
-Index: xfs/fs/xfs/xfs_vnodeops.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_vnodeops.c	2011-10-27 22:39:36.592672594 +0200
-+++ xfs/fs/xfs/xfs_vnodeops.c	2011-10-27 22:39:54.774174431 +0200
-@@ -220,7 +220,14 @@ xfs_free_eofblocks(
- 		xfs_ilock(ip, XFS_ILOCK_EXCL);
- 		xfs_trans_ijoin(tp, ip, 0);
- 
--		error = xfs_itruncate_data(&tp, ip, ip->i_size);
-+		/*
-+		 * Do not update the on-disk file size.  If we update the
-+		 * on-disk file size and then the system crashes before the
-+		 * contents of the file are flushed to disk then the files
-+		 * may be full of holes (ie NULL files bug).
-+		 */
-+		error = xfs_itruncate_extents(&tp, ip, XFS_DATA_FORK,
-+					      ip->i_size);
- 		if (error) {
- 			/*
- 			 * If we get an error at this point we simply don't
-@@ -664,13 +671,19 @@ xfs_inactive(
- 		xfs_ilock(ip, XFS_ILOCK_EXCL);
- 		xfs_trans_ijoin(tp, ip, 0);
- 
--		error = xfs_itruncate_data(&tp, ip, 0);
-+		ip->i_d.di_size = 0;
-+		ip->i_size = 0;
-+		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-+
-+		error = xfs_itruncate_extents(&tp, ip, XFS_DATA_FORK, 0);
- 		if (error) {
- 			xfs_trans_cancel(tp,
- 				XFS_TRANS_RELEASE_LOG_RES | XFS_TRANS_ABORT);
- 			xfs_iunlock(ip, XFS_IOLOCK_EXCL | XFS_ILOCK_EXCL);
- 			return VN_INACTIVE_CACHE;
+@@ -781,11 +787,7 @@ xfs_qm_dqget(
+ 			return (EIO);
  		}
+ 	}
+-#endif
+ 
+- again:
+-
+-#ifdef DEBUG
+ 	ASSERT(type == XFS_DQ_USER ||
+ 	       type == XFS_DQ_PROJ ||
+ 	       type == XFS_DQ_GROUP);
+@@ -797,13 +799,21 @@ xfs_qm_dqget(
+ 			ASSERT(ip->i_gdquot == NULL);
+ 	}
+ #endif
 +
-+		ASSERT(ip->i_d.di_nextents == 0);
- 	} else if (S_ISLNK(ip->i_d.di_mode)) {
++restart:
+ 	mutex_lock(&h->qh_lock);
+ 
+ 	/*
+ 	 * Look in the cache (hashtable).
+ 	 * The chain is kept locked during lookup.
+ 	 */
+-	if (xfs_qm_dqlookup(mp, id, h, O_dqpp) == 0) {
++	switch (xfs_qm_dqlookup(mp, id, h, O_dqpp)) {
++	case -1:
++		XQM_STATS_INC(xqmstats.xs_qm_dquot_dups);
++		mutex_unlock(&h->qh_lock);
++		delay(1);
++		goto restart;
++	case 0:
+ 		XQM_STATS_INC(xqmstats.xs_qm_dqcachehits);
+ 		/*
+ 		 * The dquot was found, moved to the front of the chain,
+@@ -814,9 +824,11 @@ xfs_qm_dqget(
+ 		ASSERT(XFS_DQ_IS_LOCKED(*O_dqpp));
+ 		mutex_unlock(&h->qh_lock);
+ 		trace_xfs_dqget_hit(*O_dqpp);
+-		return (0);	/* success */
++		return 0;	/* success */
++	default:
++		XQM_STATS_INC(xqmstats.xs_qm_dqcachemisses);
++		break;
+ 	}
+-	XQM_STATS_INC(xqmstats.xs_qm_dqcachemisses);
+ 
+ 	/*
+ 	 * Dquot cache miss. We don't want to keep the inode lock across
+@@ -913,16 +925,21 @@ xfs_qm_dqget(
+ 		 * lock order between the two dquots here since dqp isn't
+ 		 * on any findable lists yet.
+ 		 */
+-		if (xfs_qm_dqlookup(mp, id, h, &tmpdqp) == 0) {
++		switch (xfs_qm_dqlookup(mp, id, h, &tmpdqp)) {
++		case 0:
++		case -1:
+ 			/*
+-			 * Duplicate found. Just throw away the new dquot
+-			 * and start over.
++			 * Duplicate found, either in cache or on its way out.
++			 * Just throw away the new dquot and start over.
+ 			 */
+-			xfs_qm_dqput(tmpdqp);
++			if (tmpdqp)
++				xfs_qm_dqput(tmpdqp);
+ 			mutex_unlock(&h->qh_lock);
+ 			xfs_qm_dqdestroy(dqp);
+ 			XQM_STATS_INC(xqmstats.xs_qm_dquot_dups);
+-			goto again;
++			goto restart;
++		default:
++			break;
+ 		}
+ 	}
+ 
+@@ -1250,51 +1267,18 @@ xfs_dqlock2(
+ 	}
+ }
+ 
+-
+ /*
+- * Take a dquot out of the mount's dqlist as well as the hashlist.
+- * This is called via unmount as well as quotaoff, and the purge
+- * will always succeed unless there are soft (temp) references
+- * outstanding.
+- *
+- * This returns 0 if it was purged, 1 if it wasn't. It's not an error code
+- * that we're returning! XXXsup - not cool.
++ * Take a dquot out of the mount's dqlist as well as the hashlist.  This is
++ * called via unmount as well as quotaoff, and the purge will always succeed.
+  */
+-/* ARGSUSED */
+-int
++void
+ xfs_qm_dqpurge(
+-	xfs_dquot_t	*dqp)
++	struct xfs_dquot	*dqp)
+ {
+-	xfs_dqhash_t	*qh = dqp->q_hash;
+-	xfs_mount_t	*mp = dqp->q_mount;
+-
+-	ASSERT(mutex_is_locked(&mp->m_quotainfo->qi_dqlist_lock));
+-	ASSERT(mutex_is_locked(&dqp->q_hash->qh_lock));
+-
+-	/*
+-	 * XXX(hch): horrible locking order, will get cleaned up ASAP.
+-	 */
+-	if (!mutex_trylock(&xfs_Gqm->qm_dqfrlist_lock)) {
+-		mutex_unlock(&dqp->q_hash->qh_lock);
+-		return 1;
+-	}
++	struct xfs_mount	*mp = dqp->q_mount;
++	struct xfs_dqhash	*qh = dqp->q_hash;
+ 
+ 	xfs_dqlock(dqp);
+-	/*
+-	 * We really can't afford to purge a dquot that is
+-	 * referenced, because these are hard refs.
+-	 * It shouldn't happen in general because we went thru _all_ inodes in
+-	 * dqrele_all_inodes before calling this and didn't let the mountlock go.
+-	 * However it is possible that we have dquots with temporary
+-	 * references that are not attached to an inode. e.g. see xfs_setattr().
+-	 */
+-	if (dqp->q_nrefs != 0) {
+-		xfs_dqunlock(dqp);
+-		mutex_unlock(&dqp->q_hash->qh_lock);
+-		return (1);
+-	}
+-
+-	ASSERT(!list_empty(&dqp->q_freelist));
+ 
+ 	/*
+ 	 * If we're turning off quotas, we have to make sure that, for
+@@ -1313,19 +1297,14 @@ xfs_qm_dqpurge(
+ 	}
+ 
+ 	/*
+-	 * XXXIf we're turning this type of quotas off, we don't care
++	 * If we are turning this type of quotas off, we don't care
+ 	 * about the dirty metadata sitting in this dquot. OTOH, if
+ 	 * we're unmounting, we do care, so we flush it and wait.
+ 	 */
+ 	if (XFS_DQ_IS_DIRTY(dqp)) {
+ 		int	error;
+ 
+-		/* dqflush unlocks dqflock */
+ 		/*
+-		 * Given that dqpurge is a very rare occurrence, it is OK
+-		 * that we're holding the hashlist and mplist locks
+-		 * across the disk write. But, ... XXXsup
+-		 *
+ 		 * We don't care about getting disk errors here. We need
+ 		 * to purge this dquot anyway, so we go ahead regardless.
+ 		 */
+@@ -1335,31 +1314,34 @@ xfs_qm_dqpurge(
+ 				__func__, dqp);
+ 		xfs_dqflock(dqp);
+ 	}
++
+ 	ASSERT(atomic_read(&dqp->q_pincount) == 0);
+ 	ASSERT(XFS_FORCED_SHUTDOWN(mp) ||
+ 	       !(dqp->q_logitem.qli_item.li_flags & XFS_LI_IN_AIL));
+ 
++	xfs_dqfunlock(dqp);
++	xfs_dqunlock(dqp);
++
++	mutex_lock(&qh->qh_lock);
+ 	list_del_init(&dqp->q_hashlist);
+ 	qh->qh_version++;
++	mutex_unlock(&qh->qh_lock);
+ 
++	mutex_lock(&mp->m_quotainfo->qi_dqlist_lock);
+ 	list_del_init(&dqp->q_mplist);
+ 	mp->m_quotainfo->qi_dqreclaims++;
+ 	mp->m_quotainfo->qi_dquots--;
++	mutex_unlock(&mp->m_quotainfo->qi_dqlist_lock);
+ 
++	mutex_lock(&xfs_Gqm->qm_dqfrlist_lock);
++	ASSERT(!list_empty(&dqp->q_freelist));
+ 	list_del_init(&dqp->q_freelist);
+ 	xfs_Gqm->qm_dqfrlist_cnt--;
+-
+-	xfs_dqfunlock(dqp);
+-	xfs_dqunlock(dqp);
+-
+ 	mutex_unlock(&xfs_Gqm->qm_dqfrlist_lock);
+-	mutex_unlock(&qh->qh_lock);
+ 
+ 	xfs_qm_dqdestroy(dqp);
+-	return (0);
+ }
+ 
+-
+ /*
+  * Give the buffer a little push if it is incore and
+  * wait on the flush lock.
+Index: xfs/fs/xfs/xfs_qm.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_qm.c	2011-10-27 22:40:03.874199381 +0200
++++ xfs/fs/xfs/xfs_qm.c	2011-10-27 22:40:04.372672510 +0200
+@@ -398,7 +398,8 @@ again:
+ 	mutex_lock(&q->qi_dqlist_lock);
+ 	list_for_each_entry(dqp, &q->qi_dqlist, q_mplist) {
+ 		xfs_dqlock(dqp);
+-		if (! XFS_DQ_IS_DIRTY(dqp)) {
++		if ((dqp->dq_flags & XFS_DQ_FREEING) ||
++		    !XFS_DQ_IS_DIRTY(dqp)) {
+ 			xfs_dqunlock(dqp);
+ 			continue;
+ 		}
+@@ -437,6 +438,7 @@ again:
+ 	/* return ! busy */
+ 	return 0;
+ }
++
+ /*
+  * Release the group dquot pointers the user dquots may be
+  * carrying around as a hint. mplist is locked on entry and exit.
+@@ -453,6 +455,13 @@ xfs_qm_detach_gdquots(
+ 	ASSERT(mutex_is_locked(&q->qi_dqlist_lock));
+ 	list_for_each_entry(dqp, &q->qi_dqlist, q_mplist) {
+ 		xfs_dqlock(dqp);
++		if (dqp->dq_flags & XFS_DQ_FREEING) {
++			xfs_dqunlock(dqp);
++			mutex_unlock(&q->qi_dqlist_lock);
++			delay(1);
++			mutex_lock(&q->qi_dqlist_lock);
++			goto again;
++		}
+ 		if ((gdqp = dqp->q_gdquot)) {
+ 			xfs_dqlock(gdqp);
+ 			dqp->q_gdquot = NULL;
+@@ -489,8 +498,8 @@ xfs_qm_dqpurge_int(
+ 	struct xfs_quotainfo	*q = mp->m_quotainfo;
+ 	struct xfs_dquot	*dqp, *n;
+ 	uint			dqtype;
+-	int			nrecl;
+-	int			nmisses;
++	int			nmisses = 0;
++	LIST_HEAD		(dispose_list);
+ 
+ 	if (!q)
+ 		return 0;
+@@ -509,46 +518,27 @@ xfs_qm_dqpurge_int(
+ 	 */
+ 	xfs_qm_detach_gdquots(mp);
+ 
+-      again:
+-	nmisses = 0;
+-	ASSERT(mutex_is_locked(&q->qi_dqlist_lock));
+ 	/*
+ 	 * Try to get rid of all of the unwanted dquots. The idea is to
+ 	 * get them off mplist and hashlist, but leave them on freelist.
+ 	 */
+ 	list_for_each_entry_safe(dqp, n, &q->qi_dqlist, q_mplist) {
+ 		xfs_dqlock(dqp);
+-		if ((dqp->dq_flags & dqtype) == 0) {
+-			xfs_dqunlock(dqp);
+-			continue;
++		if ((dqp->dq_flags & dqtype) != 0 &&
++		    !(dqp->dq_flags & XFS_DQ_FREEING)) {
++			if (dqp->q_nrefs == 0) {
++				dqp->dq_flags |= XFS_DQ_FREEING;
++				list_move_tail(&dqp->q_mplist, &dispose_list);
++			} else
++				nmisses++;
+ 		}
+ 		xfs_dqunlock(dqp);
+-
+-		if (!mutex_trylock(&dqp->q_hash->qh_lock)) {
+-			nrecl = q->qi_dqreclaims;
+-			mutex_unlock(&q->qi_dqlist_lock);
+-			mutex_lock(&dqp->q_hash->qh_lock);
+-			mutex_lock(&q->qi_dqlist_lock);
+-
+-			/*
+-			 * XXXTheoretically, we can get into a very long
+-			 * ping pong game here.
+-			 * No one can be adding dquots to the mplist at
+-			 * this point, but somebody might be taking things off.
+-			 */
+-			if (nrecl != q->qi_dqreclaims) {
+-				mutex_unlock(&dqp->q_hash->qh_lock);
+-				goto again;
+-			}
+-		}
+-
+-		/*
+-		 * Take the dquot off the mplist and hashlist. It may remain on
+-		 * freelist in INACTIVE state.
+-		 */
+-		nmisses += xfs_qm_dqpurge(dqp);
+ 	}
+ 	mutex_unlock(&q->qi_dqlist_lock);
++
++	list_for_each_entry_safe(dqp, n, &dispose_list, q_mplist)
++		xfs_qm_dqpurge(dqp);
++
+ 	return nmisses;
+ }
+ 
+@@ -1666,25 +1656,16 @@ xfs_qm_init_quotainos(
+ 
+ 
+ /*
+- * Just pop the least recently used dquot off the freelist and
+- * recycle it. The returned dquot is locked.
++ * Pop the least recently used dquot off the freelist and recycle it.
+  */
+-STATIC xfs_dquot_t *
++STATIC struct xfs_dquot *
+ xfs_qm_dqreclaim_one(void)
+ {
+-	xfs_dquot_t	*dqpout;
+-	xfs_dquot_t	*dqp;
+-	int		restarts;
+-	int		startagain;
+-
+-	restarts = 0;
+-	dqpout = NULL;
++	struct xfs_dquot	*dqp;
++	int			restarts = 0;
+ 
+-	/* lockorder: hashchainlock, freelistlock, mplistlock, dqlock, dqflock */
+-again:
+-	startagain = 0;
+ 	mutex_lock(&xfs_Gqm->qm_dqfrlist_lock);
+-
++restart:
+ 	list_for_each_entry(dqp, &xfs_Gqm->qm_dqfrlist, q_freelist) {
+ 		struct xfs_mount *mp = dqp->q_mount;
+ 		xfs_dqlock(dqp);
+@@ -1700,7 +1681,6 @@ again:
+ 			list_del_init(&dqp->q_freelist);
+ 			xfs_Gqm->qm_dqfrlist_cnt--;
+ 			restarts++;
+-			startagain = 1;
+ 			goto dqunlock;
+ 		}
+ 
+@@ -1736,57 +1716,40 @@ again:
+ 			}
+ 			goto dqunlock;
+ 		}
++		xfs_dqfunlock(dqp);
  
  		/*
+-		 * We're trying to get the hashlock out of order. This races
+-		 * with dqlookup; so, we giveup and goto the next dquot if
+-		 * we couldn't get the hashlock. This way, we won't starve
+-		 * a dqlookup process that holds the hashlock that is
+-		 * waiting for the freelist lock.
++		 * Prevent lookups now that we are past the point of no return.
+ 		 */
+-		if (!mutex_trylock(&dqp->q_hash->qh_lock)) {
+-			restarts++;
+-			goto dqfunlock;
+-		}
++		dqp->dq_flags |= XFS_DQ_FREEING;
++		xfs_dqunlock(dqp);
+ 
+-		/*
+-		 * This races with dquot allocation code as well as dqflush_all
+-		 * and reclaim code. So, if we failed to grab the mplist lock,
+-		 * giveup everything and start over.
+-		 */
+-		if (!mutex_trylock(&mp->m_quotainfo->qi_dqlist_lock)) {
+-			restarts++;
+-			startagain = 1;
+-			goto qhunlock;
+-		}
++		mutex_lock(&dqp->q_hash->qh_lock);
++		list_del_init(&dqp->q_hashlist);
++		dqp->q_hash->qh_version++;
++		mutex_unlock(&dqp->q_hash->qh_lock);
+ 
+-		ASSERT(dqp->q_nrefs == 0);
++		mutex_lock(&mp->m_quotainfo->qi_dqlist_lock);
+ 		list_del_init(&dqp->q_mplist);
+ 		mp->m_quotainfo->qi_dquots--;
+ 		mp->m_quotainfo->qi_dqreclaims++;
+-		list_del_init(&dqp->q_hashlist);
+-		dqp->q_hash->qh_version++;
++		mutex_unlock(&mp->m_quotainfo->qi_dqlist_lock);
++
++		ASSERT(dqp->q_nrefs == 0);
+ 		list_del_init(&dqp->q_freelist);
+ 		xfs_Gqm->qm_dqfrlist_cnt--;
+-		dqpout = dqp;
+-		mutex_unlock(&mp->m_quotainfo->qi_dqlist_lock);
+-qhunlock:
+-		mutex_unlock(&dqp->q_hash->qh_lock);
+-dqfunlock:
+-		xfs_dqfunlock(dqp);
++
++		mutex_unlock(&xfs_Gqm->qm_dqfrlist_lock);
++		return dqp;
+ dqunlock:
+ 		xfs_dqunlock(dqp);
+-		if (dqpout)
+-			break;
+ 		if (restarts >= XFS_QM_RECLAIM_MAX_RESTARTS)
+ 			break;
+-		if (startagain) {
+-			mutex_unlock(&xfs_Gqm->qm_dqfrlist_lock);
+-			goto again;
+-		}
++		goto restart;
+ 	}
++
+ 	mutex_unlock(&xfs_Gqm->qm_dqfrlist_lock);
+-	return dqpout;
++	return NULL;
+ }
+ 
+ /*
+Index: xfs/fs/xfs/xfs_quota.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_quota.h	2011-10-27 22:40:03.878172958 +0200
++++ xfs/fs/xfs/xfs_quota.h	2011-10-27 22:40:04.376671215 +0200
+@@ -87,6 +87,7 @@ typedef struct xfs_dqblk {
+ #define XFS_DQ_PROJ		0x0002		/* project quota */
+ #define XFS_DQ_GROUP		0x0004		/* a group quota */
+ #define XFS_DQ_DIRTY		0x0008		/* dquot is dirty */
++#define XFS_DQ_FREEING		0x0010		/* dquot is beeing torn down */
+ 
+ #define XFS_DQ_ALLTYPES		(XFS_DQ_USER|XFS_DQ_PROJ|XFS_DQ_GROUP)
+ 
+@@ -94,7 +95,8 @@ typedef struct xfs_dqblk {
+ 	{ XFS_DQ_USER,		"USER" }, \
+ 	{ XFS_DQ_PROJ,		"PROJ" }, \
+ 	{ XFS_DQ_GROUP,		"GROUP" }, \
+-	{ XFS_DQ_DIRTY,		"DIRTY" }
++	{ XFS_DQ_DIRTY,		"DIRTY" }, \
++	{ XFS_DQ_FREEING,	"FREEING" }
+ 
+ /*
+  * In the worst case, when both user and group quotas are on,
+Index: xfs/fs/xfs/xfs_dquot.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_dquot.h	2011-10-27 22:40:02.250173174 +0200
++++ xfs/fs/xfs/xfs_dquot.h	2011-10-27 22:40:04.376671215 +0200
+@@ -133,7 +133,7 @@ static inline void xfs_dqunlock_nonotify
+ 
+ extern void		xfs_qm_dqdestroy(xfs_dquot_t *);
+ extern int		xfs_qm_dqflush(xfs_dquot_t *, uint);
+-extern int		xfs_qm_dqpurge(xfs_dquot_t *);
++extern void		xfs_qm_dqpurge(xfs_dquot_t *);
+ extern void		xfs_qm_dqunpin_wait(xfs_dquot_t *);
+ extern void		xfs_qm_adjust_dqtimers(xfs_mount_t *,
+ 					xfs_disk_dquot_t *);
 
 _______________________________________________
 xfs mailing list
