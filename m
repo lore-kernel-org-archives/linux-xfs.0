@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9SA3d4r145352 for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 05:03:40 -0500
+	p9SA3iTE145554 for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 05:03:44 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id ED544FCE47D
-	for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 03:03:37 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5AF5DFCE488
+	for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 03:03:41 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	zpTSGy5BOdrGDFHa for <xfs@oss.sgi.com>;
-	Fri, 28 Oct 2011 03:03:37 -0700 (PDT)
+	YoPQRoLTuPdvDWR6 for <xfs@oss.sgi.com>;
+	Fri, 28 Oct 2011 03:03:41 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1RJjHk-0002un-TY
-	for xfs@oss.sgi.com; Fri, 28 Oct 2011 10:03:36 +0000
-Message-Id: <20111028100336.871530747@bombadil.infradead.org>
-Date: Fri, 28 Oct 2011 05:54:31 -0400
+	Linux)) id 1RJjHp-00037O-EC
+	for xfs@oss.sgi.com; Fri, 28 Oct 2011 10:03:41 +0000
+Message-Id: <20111028100341.388182220@bombadil.infradead.org>
+Date: Fri, 28 Oct 2011 05:54:55 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 08/45] xfs: remove the i_size field in struct xfs_inode
+Subject: [PATCH 32/45] xfs: use a normal shrinker for the dquot freelist
 References: <20111028095423.796574703@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-kill-i_size
+Content-Disposition: inline; filename=xfs-quota-fix-shrinker
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,540 +34,562 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-There is no fundamental need to keep an in-memory inode size copy in the
-XFS inode.  We already have the on-disk value in the dinode, and the
-separate in-memory copy that we need for regular files only in the
-XFS inode.
-
-Remove the xfs_inode i_size field and change the XFS_ISIZE macro to use
-the VFS inode i_size field for regular fields.  Switch code that was
-directly accessing it to either the XFS_ISIZE macro or direct access
-of the VFS i_size if the code is limited to regular files and in
-highlevel code.
-
-This also allows dropping a a big bunch of fairly complicated code in the
-write path which dealt with keeping the xfs_inode i_size uptodate with the
-VFS i_size that is getting updated inside ->write_end.
-
-Note that we do not bother resetting the VFS i_size when truncating a file
-that gets freed to zero as there is point in doing so.  Just relax the
-assert in xfs_ifree to only check the on-disk size instead.
+Stop reusing dquots from the freelist when allocating new ones directly, and
+implement a shrinker that actually follows the specifications for the
+interface.  The shrinker implementation is still highly suboptimal at this
+point, but we can gradually work on it.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-
 ---
- fs/xfs/xfs_aops.c        |    2 +-
- fs/xfs/xfs_bmap.c        |   15 ++++++---------
- fs/xfs/xfs_file.c        |   45 +++++++++++----------------------------------
- fs/xfs/xfs_fs_subr.c     |    2 +-
- fs/xfs/xfs_iget.c        |    1 -
- fs/xfs/xfs_inode.c       |    8 ++------
- fs/xfs/xfs_inode.h       |   16 ++++++++++++----
- fs/xfs/xfs_iomap.c       |   12 ++++++------
- fs/xfs/xfs_iops.c        |    3 +--
- fs/xfs/xfs_qm_syscalls.c |    1 -
- fs/xfs/xfs_trace.h       |    2 +-
- fs/xfs/xfs_vnodeops.c    |   31 +++++++++++++++----------------
- 12 files changed, 56 insertions(+), 82 deletions(-)
+ fs/xfs/kmem.h         |    6 -
+ fs/xfs/xfs_dquot.c    |  103 ++++---------------
+ fs/xfs/xfs_qm.c       |  271 ++++++++++++++++----------------------------------
+ fs/xfs/xfs_qm.h       |    9 -
+ fs/xfs/xfs_qm_stats.c |    4 
+ fs/xfs/xfs_trace.h    |    2 
+ 6 files changed, 120 insertions(+), 275 deletions(-)
 
-Index: xfs/fs/xfs/xfs_aops.c
+Index: xfs/fs/xfs/kmem.h
 ===================================================================
---- xfs.orig/fs/xfs/xfs_aops.c	2011-10-27 22:39:36.176673721 +0200
-+++ xfs/fs/xfs/xfs_aops.c	2011-10-27 22:39:55.654173048 +0200
-@@ -111,7 +111,7 @@ xfs_ioend_new_eof(
- 	xfs_fsize_t		bsize;
+--- xfs.orig/fs/xfs/kmem.h	2011-10-27 22:39:33.216674214 +0200
++++ xfs/fs/xfs/kmem.h	2011-10-27 22:40:08.594173542 +0200
+@@ -115,10 +115,4 @@ kmem_zone_destroy(kmem_zone_t *zone)
+ extern void *kmem_zone_alloc(kmem_zone_t *, unsigned int __nocast);
+ extern void *kmem_zone_zalloc(kmem_zone_t *, unsigned int __nocast);
  
- 	bsize = ioend->io_offset + ioend->io_size;
--	isize = MAX(ip->i_size, ip->i_new_size);
-+	isize = MAX(i_size_read(VFS_I(ip)), ip->i_new_size);
- 	isize = MIN(isize, bsize);
- 	return isize > ip->i_d.di_size ? isize : 0;
- }
-Index: xfs/fs/xfs/xfs_file.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_file.c	2011-10-27 22:39:36.188673903 +0200
-+++ xfs/fs/xfs/xfs_file.c	2011-10-27 22:39:55.658175758 +0200
-@@ -327,7 +327,7 @@ xfs_file_aio_read(
- 				mp->m_rtdev_targp : mp->m_ddev_targp;
- 		if ((iocb->ki_pos & target->bt_smask) ||
- 		    (size & target->bt_smask)) {
--			if (iocb->ki_pos == ip->i_size)
-+			if (iocb->ki_pos == i_size_read(inode))
- 				return 0;
- 			return -XFS_ERROR(EINVAL);
- 		}
-@@ -412,30 +412,6 @@ xfs_file_splice_read(
- 	return ret;
- }
- 
--STATIC void
--xfs_aio_write_isize_update(
--	struct inode	*inode,
--	loff_t		*ppos,
--	ssize_t		bytes_written)
+-static inline int
+-kmem_shake_allow(gfp_t gfp_mask)
 -{
--	struct xfs_inode	*ip = XFS_I(inode);
--	xfs_fsize_t		isize = i_size_read(inode);
--
--	if (bytes_written > 0)
--		XFS_STATS_ADD(xs_write_bytes, bytes_written);
--
--	if (unlikely(bytes_written < 0 && bytes_written != -EFAULT &&
--					*ppos > isize))
--		*ppos = isize;
--
--	if (*ppos > ip->i_size) {
--		xfs_rw_ilock(ip, XFS_ILOCK_EXCL);
--		if (*ppos > ip->i_size)
--			ip->i_size = *ppos;
--		xfs_rw_iunlock(ip, XFS_ILOCK_EXCL);
--	}
+-	return ((gfp_mask & __GFP_WAIT) && (gfp_mask & __GFP_FS));
 -}
 -
- /*
-  * If this was a direct or synchronous I/O that failed (such as ENOSPC) then
-  * part of the I/O may have been written to disk before the error occurred.  In
-@@ -451,8 +427,8 @@ xfs_aio_write_newsize_update(
- 		xfs_rw_ilock(ip, XFS_ILOCK_EXCL);
- 		if (new_size == ip->i_new_size)
- 			ip->i_new_size = 0;
--		if (ip->i_d.di_size > ip->i_size)
--			ip->i_d.di_size = ip->i_size;
-+		if (ip->i_d.di_size > i_size_read(VFS_I(ip)))
-+			ip->i_d.di_size = i_size_read(VFS_I(ip));
- 		xfs_rw_iunlock(ip, XFS_ILOCK_EXCL);
- 	}
- }
-@@ -492,15 +468,16 @@ xfs_file_splice_write(
- 	new_size = *ppos + count;
- 
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
--	if (new_size > ip->i_size)
-+	if (new_size > i_size_read(inode))
- 		ip->i_new_size = new_size;
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 
- 	trace_xfs_file_splice_write(ip, count, *ppos, ioflags);
- 
- 	ret = generic_file_splice_write(pipe, outfilp, ppos, count, flags);
-+	if (ret > 0)
-+		XFS_STATS_ADD(xs_write_bytes, ret);
- 
--	xfs_aio_write_isize_update(inode, ppos, ret);
- 	xfs_aio_write_newsize_update(ip, new_size);
- 	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
- 	return ret;
-@@ -728,14 +705,14 @@ restart:
- 	 * values are still valid.
- 	 */
- 	if ((ip->i_new_size && *pos > ip->i_new_size) ||
--	    (!ip->i_new_size && *pos > ip->i_size)) {
-+	    (!ip->i_new_size && *pos > i_size_read(inode))) {
- 		if (*iolock == XFS_IOLOCK_SHARED) {
- 			xfs_rw_iunlock(ip, XFS_ILOCK_EXCL | *iolock);
- 			*iolock = XFS_IOLOCK_EXCL;
- 			xfs_rw_ilock(ip, XFS_ILOCK_EXCL | *iolock);
- 			goto restart;
- 		}
--		error = -xfs_zero_eof(ip, *pos, ip->i_size);
-+		error = -xfs_zero_eof(ip, *pos, i_size_read(inode));
- 	}
- 
- 	/*
-@@ -744,7 +721,7 @@ restart:
- 	 * ip->i_new_size if this IO ends beyond any other in-flight writes.
- 	 */
- 	new_size = *pos + *count;
--	if (new_size > ip->i_size) {
-+	if (new_size > i_size_read(inode)) {
- 		if (new_size > ip->i_new_size)
- 			ip->i_new_size = new_size;
- 		*new_sizep = new_size;
-@@ -957,11 +934,11 @@ xfs_file_aio_write(
- 		ret = xfs_file_buffered_aio_write(iocb, iovp, nr_segs, pos,
- 						ocount, &new_size, &iolock);
- 
--	xfs_aio_write_isize_update(inode, &iocb->ki_pos, ret);
--
- 	if (ret <= 0)
- 		goto out_unlock;
- 
-+	XFS_STATS_ADD(xs_write_bytes, ret);
-+
- 	/* Handle various SYNC-type writes */
- 	if ((file->f_flags & O_DSYNC) || IS_SYNC(inode)) {
- 		loff_t end = pos + ret - 1;
-Index: xfs/fs/xfs/xfs_fs_subr.c
+ #endif /* __XFS_SUPPORT_KMEM_H__ */
+Index: xfs/fs/xfs/xfs_qm.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_fs_subr.c	2011-10-27 22:39:36.200674939 +0200
-+++ xfs/fs/xfs/xfs_fs_subr.c	2011-10-27 22:39:55.658175758 +0200
-@@ -90,7 +90,7 @@ xfs_wait_on_pages(
+--- xfs.orig/fs/xfs/xfs_qm.c	2011-10-27 22:40:08.124671538 +0200
++++ xfs/fs/xfs/xfs_qm.c	2011-10-27 22:40:08.594173542 +0200
+@@ -50,7 +50,6 @@
+  */
+ struct mutex	xfs_Gqm_lock;
+ struct xfs_qm	*xfs_Gqm;
+-uint		ndquot;
  
- 	if (mapping_tagged(mapping, PAGECACHE_TAG_WRITEBACK)) {
- 		return -filemap_fdatawait_range(mapping, first,
--					last == -1 ? ip->i_size - 1 : last);
-+					last == -1 ? XFS_ISIZE(ip) - 1 : last);
- 	}
+ kmem_zone_t	*qm_dqzone;
+ kmem_zone_t	*qm_dqtrxzone;
+@@ -93,7 +92,6 @@ xfs_Gqm_init(void)
+ 		goto out_free_udqhash;
+ 
+ 	hsize /= sizeof(xfs_dqhash_t);
+-	ndquot = hsize << 8;
+ 
+ 	xqm = kmem_zalloc(sizeof(xfs_qm_t), KM_SLEEP);
+ 	xqm->qm_dqhashmask = hsize - 1;
+@@ -137,7 +135,6 @@ xfs_Gqm_init(void)
+ 		xqm->qm_dqtrxzone = qm_dqtrxzone;
+ 
+ 	atomic_set(&xqm->qm_totaldquots, 0);
+-	xqm->qm_dqfree_ratio = XFS_QM_DQFREE_RATIO;
+ 	xqm->qm_nrefs = 0;
+ 	return xqm;
+ 
+@@ -1600,214 +1597,130 @@ xfs_qm_init_quotainos(
  	return 0;
  }
-Index: xfs/fs/xfs/xfs_iops.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_iops.c	2011-10-27 22:39:54.754172457 +0200
-+++ xfs/fs/xfs/xfs_iops.c	2011-10-27 22:39:55.662176606 +0200
-@@ -777,7 +777,7 @@ xfs_setattr_size(
- 		lock_flags |= XFS_IOLOCK_EXCL;
- 	xfs_ilock(ip, lock_flags);
  
--	oldsize = ip->i_size;
-+	oldsize = inode->i_size;
- 	newsize = iattr->ia_size;
++STATIC bool
++xfs_qm_dqreclaim_one(
++	struct xfs_dquot	*dqp)
++{
++	struct xfs_mount	*mp = dqp->q_mount;
++	int			error;
  
- 	/*
-@@ -896,7 +896,6 @@ xfs_setattr_size(
- 	 * they get written to.
- 	 */
- 	ip->i_d.di_size = newsize;
--	ip->i_size = newsize;
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
++	/*
++	 * Move the dquot to the tail so that we don't spin on it.
++	 */
++	if (!xfs_dqlock_nowait(dqp))
++		goto out_busy;
  
- 	if (newsize <= oldsize) {
-Index: xfs/fs/xfs/xfs_trace.h
-===================================================================
---- xfs.orig/fs/xfs/xfs_trace.h	2011-10-27 22:39:54.766219243 +0200
-+++ xfs/fs/xfs/xfs_trace.h	2011-10-27 22:39:55.670178173 +0200
-@@ -1044,7 +1044,7 @@ DECLARE_EVENT_CLASS(xfs_simple_io_class,
- 	TP_fast_assign(
- 		__entry->dev = VFS_I(ip)->i_sb->s_dev;
- 		__entry->ino = ip->i_ino;
--		__entry->isize = ip->i_size;
-+		__entry->isize = VFS_I(ip)->i_size;
- 		__entry->disize = ip->i_d.di_size;
- 		__entry->new_size = ip->i_new_size;
- 		__entry->offset = offset;
-Index: xfs/fs/xfs/xfs_bmap.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_bmap.c	2011-10-27 22:39:36.232674580 +0200
-+++ xfs/fs/xfs/xfs_bmap.c	2011-10-27 22:39:55.678179028 +0200
-@@ -3992,11 +3992,8 @@ xfs_bmap_one_block(
- 	xfs_bmbt_irec_t	s;		/* internal version of extent */
+-/*
+- * Pop the least recently used dquot off the freelist and recycle it.
+- */
+-STATIC struct xfs_dquot *
+-xfs_qm_dqreclaim_one(void)
+-{
+-	struct xfs_dquot	*dqp;
+-	int			restarts = 0;
++	/*
++	 * This dquot has already been grabbed by dqlookup.
++	 * Remove it from the freelist and try again.
++	 */
++	if (dqp->q_nrefs) {
++		xfs_dqunlock(dqp);
  
- #ifndef DEBUG
--	if (whichfork == XFS_DATA_FORK) {
--		return S_ISREG(ip->i_d.di_mode) ?
--			(ip->i_size == ip->i_mount->m_sb.sb_blocksize) :
--			(ip->i_d.di_size == ip->i_mount->m_sb.sb_blocksize);
--	}
-+	if (whichfork == XFS_DATA_FORK)
-+		return XFS_ISIZE(ip) == ip->i_mount->m_sb.sb_blocksize;
- #endif	/* !DEBUG */
- 	if (XFS_IFORK_NEXTENTS(ip, whichfork) != 1)
- 		return 0;
-@@ -4008,7 +4005,7 @@ xfs_bmap_one_block(
- 	xfs_bmbt_get_all(ep, &s);
- 	rval = s.br_startoff == 0 && s.br_blockcount == 1;
- 	if (rval && whichfork == XFS_DATA_FORK)
--		ASSERT(ip->i_size == ip->i_mount->m_sb.sb_blocksize);
-+		ASSERT(XFS_ISIZE(ip) == ip->i_mount->m_sb.sb_blocksize);
- 	return rval;
- }
+-	mutex_lock(&xfs_Gqm->qm_dqfrlist_lock);
+-restart:
+-	list_for_each_entry(dqp, &xfs_Gqm->qm_dqfrlist, q_freelist) {
+-		struct xfs_mount *mp = dqp->q_mount;
++		trace_xfs_dqreclaim_want(dqp);
++		XQM_STATS_INC(xqmstats.xs_qm_dqwants);
  
-@@ -5416,7 +5413,7 @@ xfs_getbmapx_fix_eof_hole(
- 	if (startblock == HOLESTARTBLOCK) {
- 		mp = ip->i_mount;
- 		out->bmv_block = -1;
--		fixlen = XFS_FSB_TO_BB(mp, XFS_B_TO_FSB(mp, ip->i_size));
-+		fixlen = XFS_FSB_TO_BB(mp, XFS_B_TO_FSB(mp, XFS_ISIZE(ip)));
- 		fixlen -= out->bmv_offset;
- 		if (prealloced && out->bmv_offset + out->bmv_length == end) {
- 			/* Came to hole at EOF. Trim it. */
-@@ -5504,7 +5501,7 @@ xfs_getbmap(
- 			fixlen = XFS_MAXIOFFSET(mp);
- 		} else {
- 			prealloced = 0;
--			fixlen = ip->i_size;
-+			fixlen = XFS_ISIZE(ip);
- 		}
- 	}
+-		if (!xfs_dqlock_nowait(dqp))
+-			continue;
++		list_del_init(&dqp->q_freelist);
++		xfs_Gqm->qm_dqfrlist_cnt--;
++		return true;
++	}
  
-@@ -5533,7 +5530,7 @@ xfs_getbmap(
- 
- 	xfs_ilock(ip, XFS_IOLOCK_SHARED);
- 	if (whichfork == XFS_DATA_FORK && !(iflags & BMV_IF_DELALLOC)) {
--		if (ip->i_delayed_blks || ip->i_size > ip->i_d.di_size) {
-+		if (ip->i_delayed_blks || XFS_ISIZE(ip) > ip->i_d.di_size) {
- 			error = xfs_flush_pages(ip, 0, -1, 0, FI_REMAPF);
- 			if (error)
- 				goto out_unlock_iolock;
-Index: xfs/fs/xfs/xfs_iget.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_iget.c	2011-10-27 22:39:53.000673410 +0200
-+++ xfs/fs/xfs/xfs_iget.c	2011-10-27 22:39:55.686173105 +0200
-@@ -94,7 +94,6 @@ xfs_inode_alloc(
- 	ip->i_update_core = 0;
- 	ip->i_delayed_blks = 0;
- 	memset(&ip->i_d, 0, sizeof(xfs_icdinode_t));
--	ip->i_size = 0;
- 	ip->i_new_size = 0;
- 
- 	return ip;
-Index: xfs/fs/xfs/xfs_inode.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_inode.c	2011-10-27 22:39:54.754172457 +0200
-+++ xfs/fs/xfs/xfs_inode.c	2011-10-27 22:39:55.694176578 +0200
-@@ -350,7 +350,6 @@ xfs_iformat(
- 			return XFS_ERROR(EFSCORRUPTED);
- 		}
- 		ip->i_d.di_size = 0;
--		ip->i_size = 0;
- 		ip->i_df.if_u2.if_rdev = xfs_dinode_get_rdev(dip);
- 		break;
- 
-@@ -861,7 +860,6 @@ xfs_iread(
- 	}
- 
- 	ip->i_delayed_blks = 0;
--	ip->i_size = ip->i_d.di_size;
- 
- 	/*
- 	 * Mark the buffer containing the inode as something to keep
-@@ -1051,7 +1049,6 @@ xfs_ialloc(
- 	}
- 
- 	ip->i_d.di_size = 0;
--	ip->i_size = 0;
- 	ip->i_d.di_nextents = 0;
- 	ASSERT(ip->i_d.di_nblocks == 0);
- 
-@@ -1206,7 +1203,7 @@ xfs_itruncate_extents(
- 	int			done = 0;
- 
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_IOLOCK_EXCL));
--	ASSERT(new_size <= ip->i_size);
-+	ASSERT(new_size <= XFS_ISIZE(ip));
- 	ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
- 	ASSERT(ip->i_itemp != NULL);
- 	ASSERT(ip->i_itemp->ili_lock_flags == 0);
-@@ -1720,8 +1717,7 @@ xfs_ifree(
- 	ASSERT(ip->i_d.di_nlink == 0);
- 	ASSERT(ip->i_d.di_nextents == 0);
- 	ASSERT(ip->i_d.di_anextents == 0);
--	ASSERT((ip->i_d.di_size == 0 && ip->i_size == 0) ||
--	       (!S_ISREG(ip->i_d.di_mode)));
-+	ASSERT(ip->i_d.di_size == 0 || !S_ISREG(ip->i_d.di_mode));
- 	ASSERT(ip->i_d.di_nblocks == 0);
- 
- 	/*
-Index: xfs/fs/xfs/xfs_iomap.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_iomap.c	2011-10-27 22:39:55.230179804 +0200
-+++ xfs/fs/xfs/xfs_iomap.c	2011-10-27 22:39:55.694176578 +0200
-@@ -74,7 +74,7 @@ xfs_iomap_eof_align_last_fsb(
- 		else if (mp->m_dalign)
- 			align = mp->m_dalign;
- 
--		if (align && ip->i_size >= XFS_FSB_TO_B(mp, align))
-+		if (align && XFS_ISIZE(ip) >= XFS_FSB_TO_B(mp, align))
- 			new_last_fsb = roundup_64(*last_fsb, align);
- 	}
- 
-@@ -154,7 +154,7 @@ xfs_iomap_write_direct(
- 
- 	offset_fsb = XFS_B_TO_FSBT(mp, offset);
- 	last_fsb = XFS_B_TO_FSB(mp, ((xfs_ufsize_t)(offset + count)));
--	if ((offset + count) > ip->i_size) {
-+	if ((offset + count) > XFS_ISIZE(ip)) {
- 		error = xfs_iomap_eof_align_last_fsb(mp, ip, extsz, &last_fsb);
- 		if (error)
- 			goto error_out;
-@@ -211,7 +211,7 @@ xfs_iomap_write_direct(
- 	xfs_trans_ijoin(tp, ip, 0);
- 
- 	bmapi_flag = 0;
--	if (offset < ip->i_size || extsz)
-+	if (offset < XFS_ISIZE(ip) || extsz)
- 		bmapi_flag |= XFS_BMAPI_PREALLOC;
- 
- 	/*
-@@ -286,7 +286,7 @@ xfs_iomap_eof_want_preallocate(
- 	int		found_delalloc = 0;
- 
- 	*prealloc = 0;
--	if ((offset + count) <= ip->i_size)
-+	if (offset + count <= XFS_ISIZE(ip))
- 		return 0;
- 
- 	/*
-@@ -340,7 +340,7 @@ xfs_iomap_prealloc_size(
- 		 * if we pass in alloc_blocks = 0. Hence the "+ 1" to
- 		 * ensure we always pass in a non-zero value.
- 		 */
--		alloc_blocks = XFS_B_TO_FSB(mp, ip->i_size) + 1;
-+		alloc_blocks = XFS_B_TO_FSB(mp, XFS_ISIZE(ip)) + 1;
- 		alloc_blocks = XFS_FILEOFF_MIN(MAXEXTLEN,
- 					rounddown_pow_of_two(alloc_blocks));
- 
-@@ -564,7 +564,7 @@ xfs_iomap_write_allocate(
- 			 * back....
- 			 */
- 			nimaps = 1;
--			end_fsb = XFS_B_TO_FSB(mp, ip->i_size);
-+			end_fsb = XFS_B_TO_FSB(mp, XFS_ISIZE(ip));
- 			error = xfs_bmap_last_offset(NULL, ip, &last_block,
- 							XFS_DATA_FORK);
- 			if (error)
-Index: xfs/fs/xfs/xfs_vnodeops.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_vnodeops.c	2011-10-27 22:39:54.774174431 +0200
-+++ xfs/fs/xfs/xfs_vnodeops.c	2011-10-27 22:39:55.698174631 +0200
-@@ -169,7 +169,7 @@ xfs_free_eofblocks(
- 	 * Figure out if there are any blocks beyond the end
- 	 * of the file.  If not, then there is nothing to do.
- 	 */
--	end_fsb = XFS_B_TO_FSB(mp, ((xfs_ufsize_t)ip->i_size));
-+	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)XFS_ISIZE(ip));
- 	last_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)XFS_MAXIOFFSET(mp));
- 	if (last_fsb <= end_fsb)
- 		return 0;
-@@ -227,7 +227,7 @@ xfs_free_eofblocks(
- 		 * may be full of holes (ie NULL files bug).
- 		 */
- 		error = xfs_itruncate_extents(&tp, ip, XFS_DATA_FORK,
--					      ip->i_size);
-+					      XFS_ISIZE(ip));
- 		if (error) {
- 			/*
- 			 * If we get an error at this point we simply don't
-@@ -541,8 +541,8 @@ xfs_release(
- 		return 0;
- 
- 	if ((S_ISREG(ip->i_d.di_mode) &&
--	     ((ip->i_size > 0) || (VN_CACHED(VFS_I(ip)) > 0 ||
--	       ip->i_delayed_blks > 0)) &&
-+	     (VFS_I(ip)->i_size > 0 ||
-+	      (VN_CACHED(VFS_I(ip)) > 0 || ip->i_delayed_blks > 0)) &&
- 	     (ip->i_df.if_flags & XFS_IFEXTENTS))  &&
- 	    (!(ip->i_d.di_flags & (XFS_DIFLAG_PREALLOC | XFS_DIFLAG_APPEND)))) {
- 
-@@ -619,7 +619,7 @@ xfs_inactive(
- 	 * only one with a reference to the inode.
- 	 */
- 	truncate = ((ip->i_d.di_nlink == 0) &&
--	    ((ip->i_d.di_size != 0) || (ip->i_size != 0) ||
-+	    ((ip->i_d.di_size != 0) || XFS_ISIZE(ip) != 0 ||
- 	     (ip->i_d.di_nextents > 0) || (ip->i_delayed_blks > 0)) &&
- 	    S_ISREG(ip->i_d.di_mode));
- 
-@@ -633,12 +633,12 @@ xfs_inactive(
- 
- 	if (ip->i_d.di_nlink != 0) {
- 		if ((S_ISREG(ip->i_d.di_mode) &&
--                     ((ip->i_size > 0) || (VN_CACHED(VFS_I(ip)) > 0 ||
--                       ip->i_delayed_blks > 0)) &&
--		      (ip->i_df.if_flags & XFS_IFEXTENTS) &&
--		     (!(ip->i_d.di_flags &
-+		    (VFS_I(ip)->i_size > 0 ||
-+		     (VN_CACHED(VFS_I(ip)) > 0 || ip->i_delayed_blks > 0)) &&
-+		    (ip->i_df.if_flags & XFS_IFEXTENTS) &&
-+		    (!(ip->i_d.di_flags &
- 				(XFS_DIFLAG_PREALLOC | XFS_DIFLAG_APPEND)) ||
--		      (ip->i_delayed_blks != 0)))) {
-+		     ip->i_delayed_blks != 0))) {
- 			error = xfs_free_eofblocks(mp, ip, 0);
- 			if (error)
- 				return VN_INACTIVE_CACHE;
-@@ -672,7 +672,6 @@ xfs_inactive(
- 		xfs_trans_ijoin(tp, ip, 0);
- 
- 		ip->i_d.di_size = 0;
--		ip->i_size = 0;
- 		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 
- 		error = xfs_itruncate_extents(&tp, ip, XFS_DATA_FORK, 0);
-@@ -1968,11 +1967,11 @@ xfs_zero_remaining_bytes(
- 	 * since nothing can read beyond eof.  The space will
- 	 * be zeroed when the file is extended anyway.
- 	 */
--	if (startoff >= ip->i_size)
-+	if (startoff >= XFS_ISIZE(ip))
- 		return 0;
- 
--	if (endoff > ip->i_size)
--		endoff = ip->i_size;
-+	if (endoff > XFS_ISIZE(ip))
-+		endoff = XFS_ISIZE(ip);
- 
- 	bp = xfs_buf_get_uncached(XFS_IS_REALTIME_INODE(ip) ?
- 					mp->m_rtdev_targp : mp->m_ddev_targp,
-@@ -2267,7 +2266,7 @@ xfs_change_file_space(
- 		bf->l_start += offset;
- 		break;
- 	case 2: /*SEEK_END*/
--		bf->l_start += ip->i_size;
-+		bf->l_start += XFS_ISIZE(ip);
- 		break;
- 	default:
- 		return XFS_ERROR(EINVAL);
-@@ -2284,7 +2283,7 @@ xfs_change_file_space(
- 	bf->l_whence = 0;
- 
- 	startoffset = bf->l_start;
--	fsize = ip->i_size;
-+	fsize = XFS_ISIZE(ip);
- 
- 	/*
- 	 * XFS_IOC_RESVSP and XFS_IOC_UNRESVSP will reserve or unreserve
-Index: xfs/fs/xfs/xfs_inode.h
-===================================================================
---- xfs.orig/fs/xfs/xfs_inode.h	2011-10-27 22:39:54.754172457 +0200
-+++ xfs/fs/xfs/xfs_inode.h	2011-10-27 22:39:55.704670968 +0200
-@@ -246,16 +246,12 @@ typedef struct xfs_inode {
- 
- 	xfs_icdinode_t		i_d;		/* most of ondisk inode */
- 
--	xfs_fsize_t		i_size;		/* in-memory size */
- 	xfs_fsize_t		i_new_size;	/* size when write completes */
- 
- 	/* VFS inode */
- 	struct inode		i_vnode;	/* embedded VFS inode */
- } xfs_inode_t;
- 
--#define XFS_ISIZE(ip)	S_ISREG((ip)->i_d.di_mode) ? \
--				(ip)->i_size : (ip)->i_d.di_size;
+-		/*
+-		 * This dquot has already been grabbed by dqlookup.
+-		 * Remove it from the freelist and try again.
+-		 */
+-		if (dqp->q_nrefs) {
+-			trace_xfs_dqreclaim_want(dqp);
+-			XQM_STATS_INC(xqmstats.xs_qm_dqwants);
 -
- /* Convert from vfs inode to xfs inode */
- static inline struct xfs_inode *XFS_I(struct inode *inode)
- {
-@@ -269,6 +265,18 @@ static inline struct inode *VFS_I(struct
+-			list_del_init(&dqp->q_freelist);
+-			xfs_Gqm->qm_dqfrlist_cnt--;
+-			restarts++;
+-			goto dqunlock;
+-		}
++	ASSERT(dqp->q_hash);
++	ASSERT(!list_empty(&dqp->q_mplist));
+ 
+-		ASSERT(dqp->q_hash);
+-		ASSERT(!list_empty(&dqp->q_mplist));
++	/*
++	 * Try to grab the flush lock. If this dquot is in the process of
++	 * getting flushed to disk, we don't want to reclaim it.
++	 */
++	if (!xfs_dqflock_nowait(dqp))
++		goto out_busy;
+ 
+-		/*
+-		 * Try to grab the flush lock. If this dquot is in the process
+-		 * of getting flushed to disk, we don't want to reclaim it.
+-		 */
+-		if (!xfs_dqflock_nowait(dqp))
+-			goto dqunlock;
++	/*
++	 * We have the flush lock so we know that this is not in the
++	 * process of being flushed. So, if this is dirty, flush it
++	 * DELWRI so that we don't get a freelist infested with
++	 * dirty dquots.
++	 */
++	if (XFS_DQ_IS_DIRTY(dqp)) {
++		trace_xfs_dqreclaim_dirty(dqp);
+ 
+ 		/*
+-		 * We have the flush lock so we know that this is not in the
+-		 * process of being flushed. So, if this is dirty, flush it
+-		 * DELWRI so that we don't get a freelist infested with
+-		 * dirty dquots.
++		 * We flush it delayed write, so don't bother releasing the
++		 * freelist lock.
+ 		 */
+-		if (XFS_DQ_IS_DIRTY(dqp)) {
+-			int	error;
+-
+-			trace_xfs_dqreclaim_dirty(dqp);
+-
+-			/*
+-			 * We flush it delayed write, so don't bother
+-			 * releasing the freelist lock.
+-			 */
+-			error = xfs_qm_dqflush(dqp, 0);
+-			if (error) {
+-				xfs_warn(mp, "%s: dquot %p flush failed",
+-					__func__, dqp);
+-			}
+-			goto dqunlock;
++		error = xfs_qm_dqflush(dqp, 0);
++		if (error) {
++			xfs_warn(mp, "%s: dquot %p flush failed",
++				 __func__, dqp);
+ 		}
+-		xfs_dqfunlock(dqp);
+ 
+ 		/*
+-		 * Prevent lookups now that we are past the point of no return.
++		 * Give the dquot another try on the freelist, as the
++		 * flushing will take some time.
+ 		 */
+-		dqp->dq_flags |= XFS_DQ_FREEING;
+-		xfs_dqunlock(dqp);
+-
+-		mutex_lock(&dqp->q_hash->qh_lock);
+-		list_del_init(&dqp->q_hashlist);
+-		dqp->q_hash->qh_version++;
+-		mutex_unlock(&dqp->q_hash->qh_lock);
+-
+-		mutex_lock(&mp->m_quotainfo->qi_dqlist_lock);
+-		list_del_init(&dqp->q_mplist);
+-		mp->m_quotainfo->qi_dquots--;
+-		mp->m_quotainfo->qi_dqreclaims++;
+-		mutex_unlock(&mp->m_quotainfo->qi_dqlist_lock);
+-
+-		ASSERT(dqp->q_nrefs == 0);
+-		list_del_init(&dqp->q_freelist);
+-		xfs_Gqm->qm_dqfrlist_cnt--;
+-
+-		mutex_unlock(&xfs_Gqm->qm_dqfrlist_lock);
+-		return dqp;
+-dqunlock:
+-		xfs_dqunlock(dqp);
+-		if (restarts >= XFS_QM_RECLAIM_MAX_RESTARTS)
+-			break;
+-		goto restart;
++		goto out_busy;
+ 	}
++	xfs_dqfunlock(dqp);
+ 
+-	mutex_unlock(&xfs_Gqm->qm_dqfrlist_lock);
+-	return NULL;
+-}
++	/*
++	 * Prevent lookups now that we are past the point of no return.
++	 */
++	dqp->dq_flags |= XFS_DQ_FREEING;
++	xfs_dqunlock(dqp);
+ 
+-/*
+- * Traverse the freelist of dquots and attempt to reclaim a maximum of
+- * 'howmany' dquots. This operation races with dqlookup(), and attempts to
+- * favor the lookup function ...
+- */
+-STATIC int
+-xfs_qm_shake_freelist(
+-	int	howmany)
+-{
+-	int		nreclaimed = 0;
+-	xfs_dquot_t	*dqp;
++	mutex_lock(&dqp->q_hash->qh_lock);
++	list_del_init(&dqp->q_hashlist);
++	dqp->q_hash->qh_version++;
++	mutex_unlock(&dqp->q_hash->qh_lock);
++
++	mutex_lock(&mp->m_quotainfo->qi_dqlist_lock);
++	list_del_init(&dqp->q_mplist);
++	mp->m_quotainfo->qi_dquots--;
++	mp->m_quotainfo->qi_dqreclaims++;
++	mutex_unlock(&mp->m_quotainfo->qi_dqlist_lock);
++
++	ASSERT(dqp->q_nrefs == 0);
++	list_del_init(&dqp->q_freelist);
++	xfs_Gqm->qm_dqfrlist_cnt--;
++	XQM_STATS_INC(xqmstats.xs_qm_dqreclaims);
+ 
+-	if (howmany <= 0)
+-		return 0;
++	xfs_qm_dqdestroy(dqp);
++	return true;
+ 
+-	while (nreclaimed < howmany) {
+-		dqp = xfs_qm_dqreclaim_one();
+-		if (!dqp)
+-			return nreclaimed;
+-		xfs_qm_dqdestroy(dqp);
+-		nreclaimed++;
+-	}
+-	return nreclaimed;
++out_busy:
++	xfs_dqunlock(dqp);
++	return false;
  }
+ 
+-/*
+- * The kmem_shake interface is invoked when memory is running low.
+- */
+-/* ARGSUSED */
+ STATIC int
+ xfs_qm_shake(
+-	struct shrinker	*shrink,
+-	struct shrink_control *sc)
++	struct shrinker		*shrink,
++	struct shrink_control	*sc)
+ {
+-	int	ndqused, nfree, n;
+-	gfp_t gfp_mask = sc->gfp_mask;
+-
+-	if (!kmem_shake_allow(gfp_mask))
+-		return 0;
+-	if (!xfs_Gqm)
+-		return 0;
+-
+-	nfree = xfs_Gqm->qm_dqfrlist_cnt; /* free dquots */
+-	/* incore dquots in all f/s's */
+-	ndqused = atomic_read(&xfs_Gqm->qm_totaldquots) - nfree;
+-
+-	ASSERT(ndqused >= 0);
++	int			nr_to_scan = sc->nr_to_scan;
++	struct xfs_dquot	*dqp;
+ 
+-	if (nfree <= ndqused && nfree < ndquot)
++	if ((sc->gfp_mask & (__GFP_FS|__GFP_WAIT)) != (__GFP_FS|__GFP_WAIT))
+ 		return 0;
+ 
+-	ndqused *= xfs_Gqm->qm_dqfree_ratio;	/* target # of free dquots */
+-	n = nfree - ndqused - ndquot;		/* # over target */
+-
+-	return xfs_qm_shake_freelist(MAX(nfree, n));
+-}
+-
+-
+-/*------------------------------------------------------------------*/
++	if (!nr_to_scan)
++		goto out;
+ 
+-/*
+- * Return a new incore dquot. Depending on the number of
+- * dquots in the system, we either allocate a new one on the kernel heap,
+- * or reclaim a free one.
+- * Return value is B_TRUE if we allocated a new dquot, B_FALSE if we managed
+- * to reclaim an existing one from the freelist.
+- */
+-boolean_t
+-xfs_qm_dqalloc_incore(
+-	xfs_dquot_t **O_dqpp)
+-{
+-	xfs_dquot_t	*dqp;
++	mutex_lock(&xfs_Gqm->qm_dqfrlist_lock);
++	while (!list_empty(&xfs_Gqm->qm_dqfrlist)) {
++		if (nr_to_scan-- <= 0)
++			break;
++		dqp = list_first_entry(&xfs_Gqm->qm_dqfrlist, struct xfs_dquot,
++				       q_freelist);
+ 
+-	/*
+-	 * Check against high water mark to see if we want to pop
+-	 * a nincompoop dquot off the freelist.
+-	 */
+-	if (atomic_read(&xfs_Gqm->qm_totaldquots) >= ndquot) {
+-		/*
+-		 * Try to recycle a dquot from the freelist.
+-		 */
+-		if ((dqp = xfs_qm_dqreclaim_one())) {
+-			XQM_STATS_INC(xqmstats.xs_qm_dqreclaims);
+-			/*
+-			 * Just zero the core here. The rest will get
+-			 * reinitialized by caller. XXX we shouldn't even
+-			 * do this zero ...
+-			 */
+-			memset(&dqp->q_core, 0, sizeof(dqp->q_core));
+-			*O_dqpp = dqp;
+-			return B_FALSE;
+-		}
+-		XQM_STATS_INC(xqmstats.xs_qm_dqreclaim_misses);
++		if (!xfs_qm_dqreclaim_one(dqp))
++			list_move_tail(&dqp->q_freelist, &xfs_Gqm->qm_dqfrlist);
+ 	}
+-
+-	/*
+-	 * Allocate a brand new dquot on the kernel heap and return it
+-	 * to the caller to initialize.
+-	 */
+-	ASSERT(xfs_Gqm->qm_dqzone != NULL);
+-	*O_dqpp = kmem_zone_zalloc(xfs_Gqm->qm_dqzone, KM_SLEEP);
+-	atomic_inc(&xfs_Gqm->qm_totaldquots);
+-
+-	return B_TRUE;
++	mutex_unlock(&xfs_Gqm->qm_dqfrlist_lock);
++out:
++	return (xfs_Gqm->qm_dqfrlist_cnt / 100) * sysctl_vfs_cache_pressure;
+ }
+ 
+-
+ /*
+  * Start a transaction and write the incore superblock changes to
+  * disk. flags parameter indicates which fields have changed.
+Index: xfs/fs/xfs/xfs_dquot.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_dquot.c	2011-10-27 22:40:07.534173092 +0200
++++ xfs/fs/xfs/xfs_dquot.c	2011-10-27 22:40:08.598176882 +0200
+@@ -64,82 +64,6 @@ int xfs_dqerror_mod = 33;
+ static struct lock_class_key xfs_dquot_other_class;
  
  /*
-+ * For regular files we only update the on-disk filesize when actually
-+ * writing data back to disk.  Until then only the copy in the VFS inode
-+ * is uptodate.
-+ */
-+static inline xfs_fsize_t XFS_ISIZE(struct xfs_inode *ip)
-+{
-+	if (S_ISREG(ip->i_d.di_mode))
-+		return i_size_read(VFS_I(ip));
-+	return ip->i_d.di_size;
-+}
-+
-+/*
-  * i_flags helper functions
+- * Allocate and initialize a dquot. We don't always allocate fresh memory;
+- * we try to reclaim a free dquot if the number of incore dquots are above
+- * a threshold.
+- * The only field inside the core that gets initialized at this point
+- * is the d_id field. The idea is to fill in the entire q_core
+- * when we read in the on disk dquot.
+- */
+-STATIC xfs_dquot_t *
+-xfs_qm_dqinit(
+-	xfs_mount_t  *mp,
+-	xfs_dqid_t   id,
+-	uint	     type)
+-{
+-	xfs_dquot_t	*dqp;
+-	boolean_t	brandnewdquot;
+-
+-	brandnewdquot = xfs_qm_dqalloc_incore(&dqp);
+-	dqp->dq_flags = type;
+-	dqp->q_core.d_id = cpu_to_be32(id);
+-	dqp->q_mount = mp;
+-
+-	/*
+-	 * No need to re-initialize these if this is a reclaimed dquot.
+-	 */
+-	if (brandnewdquot) {
+-		INIT_LIST_HEAD(&dqp->q_freelist);
+-		mutex_init(&dqp->q_qlock);
+-		init_waitqueue_head(&dqp->q_pinwait);
+-
+-		/*
+-		 * Because we want to use a counting completion, complete
+-		 * the flush completion once to allow a single access to
+-		 * the flush completion without blocking.
+-		 */
+-		init_completion(&dqp->q_flush);
+-		complete(&dqp->q_flush);
+-
+-		trace_xfs_dqinit(dqp);
+-	} else {
+-		/*
+-		 * Only the q_core portion was zeroed in dqreclaim_one().
+-		 * So, we need to reset others.
+-		 */
+-		dqp->q_nrefs = 0;
+-		dqp->q_blkno = 0;
+-		INIT_LIST_HEAD(&dqp->q_mplist);
+-		INIT_LIST_HEAD(&dqp->q_hashlist);
+-		dqp->q_bufoffset = 0;
+-		dqp->q_fileoffset = 0;
+-		dqp->q_transp = NULL;
+-		dqp->q_gdquot = NULL;
+-		dqp->q_res_bcount = 0;
+-		dqp->q_res_icount = 0;
+-		dqp->q_res_rtbcount = 0;
+-		atomic_set(&dqp->q_pincount, 0);
+-		dqp->q_hash = NULL;
+-		ASSERT(list_empty(&dqp->q_freelist));
+-
+-		trace_xfs_dqreuse(dqp);
+-	}
+-
+-	/*
+-	 * In either case we need to make sure group quotas have a different
+-	 * lock class than user quotas, to make sure lockdep knows we can
+-	 * locks of one of each at the same time.
+-	 */
+-	if (!(type & XFS_DQ_USER))
+-		lockdep_set_class(&dqp->q_qlock, &xfs_dquot_other_class);
+-
+-	/*
+-	 * log item gets initialized later
+-	 */
+-	return (dqp);
+-}
+-
+-/*
+  * This is called to free all the memory associated with a dquot
   */
- static inline void
-Index: xfs/fs/xfs/xfs_qm_syscalls.c
+ void
+@@ -568,7 +492,32 @@ xfs_qm_dqread(
+ 	int			 error;
+ 	int			cancelflags = 0;
+ 
+-	dqp = xfs_qm_dqinit(mp, id, type);
++
++	dqp = kmem_zone_zalloc(xfs_Gqm->qm_dqzone, KM_SLEEP);
++
++	dqp->dq_flags = type;
++	dqp->q_core.d_id = cpu_to_be32(id);
++	dqp->q_mount = mp;
++	INIT_LIST_HEAD(&dqp->q_freelist);
++	mutex_init(&dqp->q_qlock);
++	init_waitqueue_head(&dqp->q_pinwait);
++
++	/*
++	 * Because we want to use a counting completion, complete
++	 * the flush completion once to allow a single access to
++	 * the flush completion without blocking.
++	 */
++	init_completion(&dqp->q_flush);
++	complete(&dqp->q_flush);
++
++	/*
++	 * Make sure group quotas have a different lock class than user
++	 * quotas.
++	 */
++	if (!(type & XFS_DQ_USER))
++		lockdep_set_class(&dqp->q_qlock, &xfs_dquot_other_class);
++
++	atomic_inc(&xfs_Gqm->qm_totaldquots);
+ 
+ 	trace_xfs_dqread(dqp);
+ 
+Index: xfs/fs/xfs/xfs_qm.h
 ===================================================================
---- xfs.orig/fs/xfs/xfs_qm_syscalls.c	2011-10-27 22:39:54.758172111 +0200
-+++ xfs/fs/xfs/xfs_qm_syscalls.c	2011-10-27 22:39:55.704670968 +0200
-@@ -265,7 +265,6 @@ xfs_qm_scall_trunc_qfile(
- 	xfs_trans_ijoin(tp, ip, 0);
+--- xfs.orig/fs/xfs/xfs_qm.h	2011-10-27 22:40:01.234172361 +0200
++++ xfs/fs/xfs/xfs_qm.h	2011-10-27 22:40:08.606225990 +0200
+@@ -26,7 +26,6 @@
+ struct xfs_qm;
+ struct xfs_inode;
  
- 	ip->i_d.di_size = 0;
--	ip->i_size = 0;
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+-extern uint		ndquot;
+ extern struct mutex	xfs_Gqm_lock;
+ extern struct xfs_qm	*xfs_Gqm;
+ extern kmem_zone_t	*qm_dqzone;
+@@ -38,12 +37,6 @@ extern kmem_zone_t	*qm_dqtrxzone;
+ #define XFS_QM_RECLAIM_MAX_RESTARTS	4
  
- 	error = xfs_itruncate_extents(&tp, ip, XFS_DATA_FORK, 0);
+ /*
+- * Ideal ratio of free to in use dquots. Quota manager makes an attempt
+- * to keep this balance.
+- */
+-#define XFS_QM_DQFREE_RATIO		2
+-
+-/*
+  * Dquot hashtable constants/threshold values.
+  */
+ #define XFS_QM_HASHSIZE_LOW		(PAGE_SIZE / sizeof(xfs_dqhash_t))
+@@ -74,7 +67,6 @@ typedef struct xfs_qm {
+ 	int		 qm_dqfrlist_cnt;
+ 	atomic_t	 qm_totaldquots; /* total incore dquots */
+ 	uint		 qm_nrefs;	 /* file systems with quota on */
+-	int		 qm_dqfree_ratio;/* ratio of free to inuse dquots */
+ 	kmem_zone_t	*qm_dqzone;	 /* dquot mem-alloc zone */
+ 	kmem_zone_t	*qm_dqtrxzone;	 /* t_dqinfo of transactions */
+ } xfs_qm_t;
+@@ -143,7 +135,6 @@ extern int		xfs_qm_quotacheck(xfs_mount_
+ extern int		xfs_qm_write_sb_changes(xfs_mount_t *, __int64_t);
+ 
+ /* dquot stuff */
+-extern boolean_t	xfs_qm_dqalloc_incore(xfs_dquot_t **);
+ extern int		xfs_qm_dqpurge_all(xfs_mount_t *, uint);
+ extern void		xfs_qm_dqrele_all_inodes(xfs_mount_t *, uint);
+ 
+Index: xfs/fs/xfs/xfs_qm_stats.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_qm_stats.c	2011-10-27 22:39:33.264675954 +0200
++++ xfs/fs/xfs/xfs_qm_stats.c	2011-10-27 22:40:08.610173785 +0200
+@@ -42,9 +42,9 @@ static int xqm_proc_show(struct seq_file
+ {
+ 	/* maximum; incore; ratio free to inuse; freelist */
+ 	seq_printf(m, "%d\t%d\t%d\t%u\n",
+-			ndquot,
++			INT_MAX,
+ 			xfs_Gqm? atomic_read(&xfs_Gqm->qm_totaldquots) : 0,
+-			xfs_Gqm? xfs_Gqm->qm_dqfree_ratio : 0,
++			0,
+ 			xfs_Gqm? xfs_Gqm->qm_dqfrlist_cnt : 0);
+ 	return 0;
+ }
+Index: xfs/fs/xfs/xfs_trace.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_trace.h	2011-10-27 22:40:03.870173003 +0200
++++ xfs/fs/xfs/xfs_trace.h	2011-10-27 22:40:08.610173785 +0200
+@@ -736,8 +736,6 @@ DEFINE_DQUOT_EVENT(xfs_dqreclaim_dirty);
+ DEFINE_DQUOT_EVENT(xfs_dqreclaim_unlink);
+ DEFINE_DQUOT_EVENT(xfs_dqattach_found);
+ DEFINE_DQUOT_EVENT(xfs_dqattach_get);
+-DEFINE_DQUOT_EVENT(xfs_dqinit);
+-DEFINE_DQUOT_EVENT(xfs_dqreuse);
+ DEFINE_DQUOT_EVENT(xfs_dqalloc);
+ DEFINE_DQUOT_EVENT(xfs_dqtobp_read);
+ DEFINE_DQUOT_EVENT(xfs_dqread);
 
 _______________________________________________
 xfs mailing list
